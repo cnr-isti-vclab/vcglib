@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.16  2004/07/15 11:25:01  ganovelli
+VFb moved to VFp, userbit to bitflag,setV, inclusion of pos.h
+
 Revision 1.15  2004/07/15 10:13:48  pietroni
 adde NormalizedNormalV funtion to compute the normal on a vertex
 
@@ -39,6 +42,9 @@ Revision 1.12  2004/05/10 13:31:13  ganovelli
 function for edge adjacency added
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2004/07/15 11:25:01  ganovelli
+VFb moved to VFp, userbit to bitflag,setV, inclusion of pos.h
+
 Revision 1.15  2004/07/15 10:13:48  pietroni
 adde NormalizedNormalV funtion to compute the normal on a vertex
 
@@ -827,20 +833,23 @@ inline void Convert( VERT_TYPE &v )
 
 template <class VERTEX_TYPE> typename VERTEX_TYPE::CoordType NormalizedNormalV(VERTEX_TYPE *v)
 {
-  if (!v->HasVTAdjacency())
+  if (!v->HasVFAdjacency())
   {
     assert(0);
-		return (CoordType (0,0,0));
+		return (VERTEX_TYPE::CoordType (0,0,0));
   }
   else
   {
-    vcg::face::VFIterator<VERTEX_TYPE::FaceType> VFi(v);
-    VERTEX_TYPE::CoordType N=CoordType(0,0,0);
+    vcg::face::VFIterator<VERTEX_TYPE::FaceType> VFi=vcg::face::VFIterator<VERTEX_TYPE::FaceType>();
+    VFi.f=v->VFp();
+    VFi.z=v->VFi();
+    VERTEX_TYPE::CoordType N=VERTEX_TYPE::CoordType(0,0,0);
     int i=0;
-    while (!Vfi.End())
+    while (!VFi.End())
     {
-      N+=Vfi->f->NormalizedNormal()
+      N+=VFi.f->NormalizedNormal();
       i++;
+      VFi++;
     }
     return ((VERTEX_TYPE::CoordType) N/(VERTEX_TYPE::CoordType::ScalarType)i);
   }
