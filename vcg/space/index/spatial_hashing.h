@@ -1,9 +1,35 @@
+/****************************************************************************
+* VCGLib                                                            o o     *
+* Visual and Computer Graphics Library                            o     o   *
+*                                                                _   O  _   *
+* Copyright(C) 2004                                                \/)\/    *
+* Visual Computing Lab                                            /\/|      *
+* ISTI - Italian National Research Council                           |      *
+*                                                                    \      *
+* All rights reserved.                                                      *
+*                                                                           *
+* This program is free software; you can redistribute it and/or modify      *   
+* it under the terms of the GNU General Public License as published by      *
+* the Free Software Foundation; either version 2 of the License, or         *
+* (at your option) any later version.                                       *
+*                                                                           *
+* This program is distributed in the hope that it will be useful,           *
+* but WITHOUT ANY WARRANTY; without even the implied warranty of            *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
+* GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
+* for more details.                                                         *
+*                                                                           *
+****************************************************************************/
+/****************************************************************************
+  History
+
+$Log: not supported by cvs2svn $
+
+
+****************************************************************************/
+
 #ifndef SPATIAL_HASHING
 #define SPATIAL_HASHING
-
-//#define P0 73856093
-//#define P1 19349663
-//#define P2 83492791
 
 #define P0 73
 #define P1 19
@@ -33,7 +59,7 @@ public:
 	struct Helement
 		{
 		
-			std::map<SimplexType*,int> Elem;
+			std::map<SimplexType*,int> elem;
 			//int flag;
 
 			public:
@@ -45,26 +71,26 @@ public:
 
 			Helement(SimplexType* sim,int _tempMark)
 			{
-				Elem.insert(MapCellElem(sim,_tempMark));
+				elem.insert(MapCellElem(sim,_tempMark));
 			//	flag=0;
 			}
 
 			///return true if the element is in the cell
 			bool IsIn(SimplexType* sim)
 			{
-				int n=Elem.count(sim);
+				int n=elem.count(sim);
 				return (n==1);
 			}
 			
 			int Size()
 			{
-				return (Elem.size());
+				return (elem.size());
 			}
 			
 			///update or insert an element into a cell
 			void Update(SimplexType* sim,int _tempMark)
 			{
-				std::pair<IteMap, bool> res=Elem.insert(MapCellElem(sim,_tempMark));
+				std::pair<IteMap, bool> res=elem.insert(MapCellElem(sim,_tempMark));
 				//the element was already in the map structure so update the temporary mark
 				if (res.second==false)
 				{
@@ -74,12 +100,12 @@ public:
 				}
 			}
 			
-			//return an array of all simplexes of the map that have a right timastamp or are not deleted
+			//return an array of all simplexes of the map that have a right timestamp or are not deleted
 			std::vector<SimplexType*> Simplexes(int _tempMark)
 			{
 				std::vector<SimplexType*> result;
 				result.clear();
-				for (IteMap ite=Elem.begin();ite!=Elem.end();ite++)
+				for (IteMap ite=elem.begin();ite!=elem.end();ite++)
 				{
 					SimplexType* sim=(*ite).first;
 					int t=(*ite).second;
@@ -120,7 +146,7 @@ public:
 	//	}
 
 	//hash table definition
-	typedef typename std::hash_map<int,Helement> Htable;
+	typedef typename stdext::hash_map<int,Helement> Htable;
 	//record of the hash table
 	typedef typename std::pair<int,Helement> HRecord;
 	//iterator to the hash table
@@ -356,4 +382,9 @@ private:
 		}
 
 };
+
+#undef P0
+#undef P1
+#undef P2
+
 #endif
