@@ -1,5 +1,5 @@
-#ifndef __VCGLIB_VERTEX__VCVN__TYPE
-#define __VCGLIB_VERTEX__VCVN__TYPE
+#ifndef __VCGLIB_VERTEX__VCVMVNVQ__TYPE
+#define __VCGLIB_VERTEX__VCVMVNVQ__TYPE
 
 
 #define VERTEX_TYPE VertexVCVMVNVQ 
@@ -20,13 +20,8 @@
 
 
 namespace vcg {
-
-template < class VETYPE, class VFTYPE, class VTTYPE>
-class VertexVCVMVNVQf : public VertexVCVMVNVQ<float,VETYPE,VFTYPE,VTTYPE> {};
-
-template < class VETYPE, class VFTYPE, class VTTYPE>
-class VertexVCVMVNVQd : public VertexVCVMVNVQ<double,VETYPE,VFTYPE,VTTYPE> {};
-
+typedef  VertexVCVMVNVQ<float> VertexVCVMVNVQf;
+typedef  VertexVCVMVNVQ<double> VertexVCVMVNVQd;
 }
 
 #endif
