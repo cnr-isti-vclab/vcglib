@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/02/19 16:22:45  ponchio
+Minor changes (visited and Cell)
+
 Revision 1.4  2005/02/08 12:43:03  ponchio
 Added copyright
 
@@ -43,22 +46,25 @@ namespace nxs {
 
   class Metric {
   public:
-    virtual void GetView() {}
+    vcg::Frustumf frustum;    
+    bool culling;
+
+    Metric(): culling(true) {}
+    virtual void GetView() { frustum.GetView(); }
     virtual float GetError(Entry &entry, bool &visible) = 0;
+
   };
   
   class FlatMetric: public Metric {
   public:
     float GetError(Entry &entry, bool &visible) { 
       visible = true;
-      return entry.error; }
+      return entry.error; 
+    }
   };
 
   class FrustumMetric: public Metric {
   public:
-    vcg::Frustumf frustum;
-
-    virtual void GetView() { frustum.GetView(); }
     float GetError(Entry &entry, bool &visible) {
       visible = true;
       vcg::Sphere3f &sph = entry.sphere;
@@ -66,12 +72,16 @@ namespace nxs {
 
       if(dist < 0) return 1e20f;
 
-      float remote = frustum.Remoteness(sph.Center(), sph.Radius());      
       float error = entry.error/frustum.Resolution(dist);
-      if(remote > 0) {
-	visible = false;
-	error /= remote;
-      } 
+      if(culling) {
+	float remote = frustum.Remoteness(sph.Center(), sph.Radius());      
+	if(remote > 0) {
+	  visible = false;
+	  error /= remote;
+	} else if(entry.cone.Backface(sph, frustum.ViewPoint())) {
+	  visible = false;
+	}
+      }
       return error;
     }
   };

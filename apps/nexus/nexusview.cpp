@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.42  2005/02/20 00:43:24  ponchio
+Less memory x extraction.  (removed frags)
+
 Revision 1.41  2005/02/19 12:06:55  ponchio
 Debug...
 
@@ -314,9 +317,6 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-
-  //  FrustumPolicy frustum_policy;
-
   cerr << "Commands: \n"
     " q          : quit\n"
     " t          : toggle statistics\n"
@@ -408,7 +408,6 @@ int main(int argc, char *argv[]) {
 	case SDLK_0:        extraction.extr_max *= 1.3; break;
 	case SDLK_9:        extraction.extr_max *= 0.8; break;
   
-	  //  case SDLK_s: metric = NexusMt::FRUSTUM; break;
 	case SDLK_p: contest.mode = DrawContest::POINTS; break;
 	case SDLK_d: contest.mode = DrawContest::PATCHES; break;
 	case SDLK_f: contest.mode = DrawContest::FLAT; break;
@@ -517,7 +516,8 @@ int main(int argc, char *argv[]) {
     glColor3f(0.8f, 0.8f, 0.8f);
     
     if(extract) {
-      extraction.frustum.GetView();
+      // Sould we want a different view from metric and extraction
+      // extraction.frustum->GetView();
       extraction.metric->GetView();
       if(!realtime) {
 	extraction.Extract(&nexus);

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/02/19 10:45:04  ponchio
+Patch generalized and small fixes.
+
 Revision 1.5  2005/02/18 13:04:13  ponchio
 Added patch reordering.
 
@@ -38,11 +41,13 @@ Added copyright
 
 #include <vector>
 #include "patch.h"
+#include <vcg/space/sphere3.h>
 
 namespace nxs {
   
   class Nexus;
   class Patch;
+
 
   struct ZEntry {
     unsigned int id;
@@ -57,6 +62,7 @@ namespace nxs {
   void Unify(Nexus &nexus, float threshold);
   void ZSort(Nexus &nexus, std::vector<unsigned int> &forward,
 	     std::vector<unsigned int> &backward);
+  void TightSphere(vcg::Sphere3f &sphere, std::vector<vcg::Point3f> &points);
 }
 
 #endif

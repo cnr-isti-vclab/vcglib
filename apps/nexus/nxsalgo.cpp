@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2005/02/19 10:45:04  ponchio
+Patch generalized and small fixes.
+
 Revision 1.19  2005/02/18 13:04:12  ponchio
 Added patch reordering.
 
@@ -57,6 +60,57 @@ using namespace vcg;
 #include "tristripper/tri_stripper.h"
 using namespace triangle_stripper;
 
+
+void nxs::TightSphere(vcg::Sphere3f &sphere, 
+		      std::vector<vcg::Point3f> &points) {
+  //test:
+  //assumes radius is ok.... and try to optimize moving center.
+  //TODO using a gradiend descent? really a mess.
+  Point3f center;
+  float radius;
+  Point3f pert[14];
+  while(1) {
+    radius = sphere.Radius();
+    float step = radius/40;
+    pert[0] = Point3f(step, 0, 0);
+    pert[1] = -pert[0];
+    pert[2] = Point3f(0, step, 0);
+    pert[3] = -pert[2];
+    pert[4] = Point3f(0, 0, step);
+    pert[5] = -pert[4];
+    pert[6] = Point3f(step, step, step);
+    pert[7] = Point3f(step, step, -step);
+    pert[8] = Point3f(step, -step, step);
+    pert[9] = Point3f(step, -step, -step);
+    pert[10] = Point3f(-step, step, step);
+    pert[11] = Point3f(-step, step, -step);
+    pert[12] = Point3f(-step, -step, step);
+    pert[13] = Point3f(-step, -step, -step);
+
+    unsigned int best = 14;
+    float best_radius = sphere.Radius();
+
+    for(unsigned int k = 0; k < 14; k++) {
+      center = sphere.Center() + pert[k];
+      radius = 0;
+      for(unsigned int i = 0; i < points.size(); i++) {
+	float r = 1.01 * Distance(center, points[i]);
+	  if(r > radius)
+	    radius = r;
+      }
+      if(radius < best_radius) {
+	best = k;
+	best_radius = radius;
+      }
+    }
+    if(best == 14) break;
+    sphere.Center() = sphere.Center() + pert[best];
+    sphere.Radius() = best_radius;
+  }
+}
+
+
+
 void nxs::ComputeNormals(Nexus &nexus) {
   assert(nexus.signature.vnorm);
 
@@ -74,9 +128,8 @@ void nxs::ComputeNormals(Nexus &nexus) {
     exit(0);
   }
 
-  //TODO optimize! it is not necessary to read all the borders.
   for(unsigned int p = 0; p < nexus.size(); p++) {
-    Border &border = nexus.GetBorder(p);
+    Border &border = nexus.borders[p];
     tmpb_start.push_back(tmpb_offset);
     tmpb_offset += border.Size();
   }
@@ -131,6 +184,10 @@ void nxs::ComputeNormals(Nexus &nexus) {
 	      normals[f[2]] += norm;
       }
     
+    //compute normalscone (done in building...
+    //    ANCone3f cone;
+    //    cone.AddNormals(normals, cone_threshold);
+    //    nexus[p].cone.Import(cone);
     if(nexus.signature.vnorm == Encodings::SHORT4) {
       short *n = (short *)patch.VNormBegin();
       for(unsigned int i = 0; i < patch.nv; i++, n += 4) {

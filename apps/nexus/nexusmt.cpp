@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.33  2005/02/20 00:43:23  ponchio
+Less memory x extraction.  (removed frags)
+
 Revision 1.32  2005/02/19 12:06:53  ponchio
 Debug...
 
@@ -129,7 +132,6 @@ bool NexusMt::InitGL(bool vbo) {
 
 void NexusMt::Render(DrawContest contest) {
   Extraction extraction;
-  extraction.frustum.GetView();
   extraction.metric->GetView();
   extraction.Extract(this);
   Render(extraction, contest);
@@ -162,11 +164,9 @@ void NexusMt::Render(Extraction &extraction, DrawContest &contest,
   for(unsigned int i = 0; i < extraction.draw_size; i++) {
     unsigned int patch = extraction.selected[i].id;
     Entry &entry = operator[](patch);
-    vcg::Sphere3f &sphere = entry.sphere;
-
     if(stats) stats->extr += 2*entry.nvert;
 
-    if(extraction.frustum.IsOutside(sphere.Center(), sphere.Radius())) 
+    if(!extraction.Visible(patch))
       continue;
 
     if(stats) stats->tri += 2*entry.nvert;

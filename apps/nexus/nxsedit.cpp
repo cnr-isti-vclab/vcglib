@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2005/02/20 00:43:24  ponchio
+Less memory x extraction.  (removed frags)
+
 Revision 1.21  2005/02/19 17:14:02  ponchio
 History quick by default.
 
@@ -86,21 +89,25 @@ string getSuffix(Signature &signature) {
   return suff;
 }
 
+void printInfo(Nexus &nexus, bool verbose, bool dump_history);
+
 int main(int argc, char *argv[]) {
   
   string input;
   string output;
   string plysource;
+
   bool info = false;
   bool verbose = false;
   bool dump_history = false;
+
   unsigned int ram_size = 128000000;
   unsigned int chunk_size = 0;
 
   bool add = false;
   bool add_strips = false;
   bool add_colors = false;
-  bool add_normals = false;
+  unsigned char add_normals = 0;
   bool add_textures = false;
   bool add_data = false;
 
@@ -113,45 +120,32 @@ int main(int argc, char *argv[]) {
 
   bool compress = false;
   bool uncompress = false;
+  bool zsort = false;
+
   float qvertex = 0;
   float qnormal = 0;
   float qcolor = 0;
   float qtexture = 0;
-  bool zsort = false;
+  float cone_threshold = 0;
 
   int option;
-  while((option = getopt(argc, argv, "ilho:a:r:zxsv:n:k:t:b:c:")) != EOF) {
+  while((option = getopt(argc, argv, "ilho:a:r:zxsv:n:k:t:b:c:V:")) != EOF) {
     switch(option) {
     case 'i': info = true; break;
     case 'l': verbose = true; break;
     case 'h': dump_history = true; break;
     case 'o': output = optarg; break;
+    case 'p': plysource = optarg; break;
+
     case 'a': {
-      if(strstr(optarg, "strips")) {
-	add_strips = true;
-	add = true;
-	//	add |= NXS_STRIP;
-	//	remove |= NXS_FACES;
-      }
-      if(strstr(optarg, "colors")) {
-	add_colors = true;
-	add = true;
-	//	add |= NXS_COLORS;
-      }
-      if(strstr(optarg, "normals")) {
-	add_normals = true;
-	add = true;
-	//	add |= NXS_NORMALS_SHORT;
-      }
-      if(strstr(optarg, "textures")) {
-	add_textures = true;
-	add = true;
-	//	add |= NXS_TEXTURES_SHORT;
-      }
-      if(strstr(optarg, "data")) {
-	add_data = true;
-	//	add |= NXS_DATA32;
-      }
+      if(strstr(optarg, "strips"))   { add_strips = true;   add = true; }
+      if(strstr(optarg, "colors"))   { add_colors = true;   add = true; }
+      if(strstr(optarg, "normals"))  { 
+	add_normals = Encodings::SHORT4;  add = true; }
+      if(strstr(optarg, "normalf"))  { 
+	add_normals = Encodings::FLOAT3;  add = true; }
+      if(strstr(optarg, "textures")) { add_textures = true; add = true; }
+      if(strstr(optarg, "data"))     { add_data = true;     add = true; }
       if(add == false) {
 	cerr << "Invalid -a argument: " << optarg << "\n"
 	     << "Valid options are: strips, colors, normals, textures, data\n";
@@ -159,50 +153,31 @@ int main(int argc, char *argv[]) {
       }
       break;
     }
-      
     case 'r': {
       if(strstr(optarg, "strips")) {
 	cerr << "Strips removing not supported!\n";
 	return -1;
-	remove_strips = true;
-	remove = true;
-	add = true;
-	//	add |= NXS_FACES;
-	//	remove |= NXS_STRIP;
       }
-      if(strstr(optarg, "colors")) {
-	remove_colors = true;
-	remove = true;	
-	//	remove |= NXS_COLORS;
-      }
-      if(strstr(optarg, "normals")) {
-	remove_normals = true;
-	remove = true;
-	//	remove |= NXS_NORMALS_SHORT;
-      }
-      if(strstr(optarg, "textures")) {
-	remove_textures = true;
-	remove = true;
-	//	remove |= NXS_TEXTURES_SHORT;
-      }
-      if(strstr(optarg, "data")) {
-	remove_data = true;
-	remove = true;
-	//	remove |= NXS_DATA32;
-      }
+      if(strstr(optarg, "colors"))   { remove_colors = true;   remove = true; }
+      if(strstr(optarg, "normals"))  { remove_normals = true;  remove = true; }
+      if(strstr(optarg, "textures")) { remove_textures = true; remove = true; }
+      if(strstr(optarg, "data"))     { remove_data = true;     remove = true; }
       if(remove == false) {
 	cerr << "Invalid -a argument: " << optarg << "\n"
-	     << "Valid options are: strip, colors, normals, textures, data\n";
+	     << "Valid options are: strip, colors, normals, normalf, "
+	     << "textures, data\n";
 	return -1;
       }
       break;
     }
       
-    case 'p': plysource = optarg; break;
+
+
     case 'z': compress = true; break;
     case 'x': uncompress = true; break;
     case 's': zsort = true; break;
 
+    case 'V': cone_threshold = atof(optarg); break;
     case 'v': qvertex = (float)atof(optarg); 
       if(qvertex == 0) {
 	cerr << "Invalid value for quantization: " << optarg << endl;
@@ -227,6 +202,7 @@ int main(int argc, char *argv[]) {
 	return -1;
       }
       break;
+
     case 'b': ram_size = atoi(optarg); 
       if(ram_size == 0) {
 	cerr << "Invalid ram_size: " << optarg << endl;
@@ -244,18 +220,13 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  if(compress && uncompress) {
-    cerr << "x and z are obviously exclusive :P\n";
-    return -1;
-  }
-
   if(optind != argc - 1) {
     cerr << "Usage: " << argv[0] << " <nexus file> [options]\n"
 	 << " -i       : display some info about nexus file\n"
 	 << " -l       : list nodes\n"
          << " -h       : list history\n"
          << " -o <file>: output filename (default is adding 00 to nexus)\n"
-	 << " -a <what>: Add [colors|normals|strips|textures|data|borders]\n"
+	 << " -a <what>: Add [colors|normals|normalf|strips|textures|data|borders]\n"
          << " -r <what>: As add...\n"
 	 << " -p <ply> : Ply source for colors or textures or data\n"
 	 << " -z       : compress\n"
@@ -264,12 +235,34 @@ int main(int argc, char *argv[]) {
 	 << " -v<float>: Vertex quantization (float is the 0 level amount)\n"
 	 << " -n<float>: Normal quantization\n"
          << " -c<float>: Color quantization\n"
-	 << " -t<float>: Texture quantization\n\n";
+	 << " -t<float>: Texture quantization\n"
+	 << " -V<float>: Normal cone threshold [0, 1] (0.95 default)\n\n"
+	 << "            This option will not create a new nexus file\n";
     return -1;
   }
   input = argv[optind];
 
+  //Sanity test of options...
 
+  if(compress && uncompress) {
+    cerr << "x and z are obviously exclusive :P\n";
+    return -1;
+  }
+
+  if(add_normals && compress) {
+    cerr << "Its not possible to add normals and compress in the same step\n"
+	 << "Because normals requires 2 passes to be calculated\n\n";
+    return -1;
+  }
+  
+
+
+  bool compute_cones = false;
+  if(!add && !remove && !compress && !uncompress && !zsort &&
+     !qvertex && !qcolor && !qnormal && !qtexture && cone_threshold != 0)
+    compute_cones = true;
+  
+  
   Nexus nexus;
   
   if(!nexus.Load(input, true)) {
@@ -301,6 +294,26 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
+  if(add_strips && (nexus.signature.face == Signature::STRIPS)) {
+    cerr << "Nexus file already has strips\n";
+    return -1;
+  }
+  if(add_colors && nexus.signature.vcolor) {
+    cerr << "Nexus file already has colors\n";
+    return -1;
+  }
+  if(add_normals && nexus.signature.vnorm) {
+    cerr << "Nexus file already has normals\n";
+    return -1;
+  }
+  if(add_textures && nexus.signature.vtext) {
+    cerr << "Nexus file already has textures\n";
+    return -1;
+  }
+  if(add_data && nexus.signature.vdata) {
+    cerr << "Nexus file already has data\n";
+    return -1;
+  }
 
   if(nexus.IsCompressed() && compress) {
     cerr << "File already compressed.\n";
@@ -314,91 +327,29 @@ int main(int argc, char *argv[]) {
 
 
   if(info) {
-    //perform locality statistics
-    double meandist = 0;
-    vcg::Sphere3f last = nexus[0].sphere;
-    for(unsigned int i = 1; i < nexus.size(); i++) {
-      vcg::Sphere3f &sphere = nexus[i].sphere;
-      double dist = vcg::Distance(last.Center(), sphere.Center());
-      meandist += dist;
-      last = sphere;
-    }
-    meandist /= nexus.size() -1;
-    cout << "Nexus file: " << input << "\n"
-	 << "\n\tCompressed: " << nexus.IsCompressed() 
-	 << "\n\tStripped: " 
-	 << (int)(nexus.signature.face == Signature::STRIPS)
-	 << "\n\tColor   : " << (int)(nexus.signature.vcolor !=0)
-	 << "\n\tNormal  : " << (int)((nexus.signature.vnorm) !=0)
-	 << "\n\tTexture : " << (int)((nexus.signature.vtext) !=0)
-	 << "\n\tData    : " << (int)((nexus.signature.vdata) !=0)
-	 << "\n\n\tVertices: " << nexus.totvert 
-	 << "\tFaces: " << nexus.totface
-	 << "\tPatches: " << nexus.size() 
-	 << "\n\tSphere: " 
-	 << nexus.sphere.Center()[0] << " "
-	 << nexus.sphere.Center()[1] << " "
-	 << nexus.sphere.Center()[2] << " R: "
-	 << nexus.sphere.Radius()
-	 << "\n\tAverage distance: " << meandist
-	 << "\n\tChunk size " << nexus.chunk_size << endl;
-   
-    if(dump_history) {
-      if(nexus.history.IsQuick()) {
-	cout << "Quick format\n";
-	for(unsigned int i = 0; i < nexus.history.n_nodes(); i++) {
-	  cout << "Node: " << i << " out: ";
-	  History::History::Node node = nexus.history.nodes[i];
-	  for(History::Node::iterator l = node.out_begin(); l != node.out_end(); l++) {
-	    cout << ".";
-	    History::Link &link = *l;
-	    for(History::Link::iterator p = link.begin(); p != link.end(); p++) {
-	      cout << p << " ";
-	    }
-	  }
-	  cout << " in: ";
-	  for(History::Node::iterator j = node.in_begin(); j != node.in_end(); j++) {
-	    cout << ".";
-	    History::Link &link = *j;
-	    for(History::Link::iterator p = link.begin(); p != link.end(); p++) {
-	      cout << p << " ";
-	    }
-	  }
-	  cout << endl;
-	}
-
-      } else {
-	cout << "Update format\n";
-	for(unsigned int i = 0; i < nexus.history.updates.size(); i++) {
-	  History::Update &update = nexus.history.updates[i];
-	  cout << "Created: ";
-	  for(unsigned int k = 0; k < update.created.size(); k++) {
-	    cout << update.created[k] << " ";
-	  }
-	  cout << "\nErased: ";
-	  for(unsigned int k = 0; k < update.erased.size(); k++) {
-	    cout << update.erased[k] << " ";
-	  }
-	  cout << "\n\n";
-	}
-      }
-    }
-
-    if(verbose) {
-      for(unsigned int i = 0; i < nexus.size(); i++) {
-        Entry &entry = nexus[i];
-        cout << i << " -> nv: " << entry.nvert << " nf: " << entry.nface 
-             << " error: " << entry.error 
-	     << " disk_size: " << entry.disk_size 
-	     << " start: " << entry.patch_start << endl;
-      }
-      cout << endl;
-    }
+    cout << "Nexus file: " << input << "\n";
+    printInfo(nexus, verbose, dump_history);
   }
+
   
   //determine if we must proceed:
   if(!add && !remove && !compress && !uncompress && !zsort &&
-     qvertex == 0 && qnormal == 0 && qcolor == 0 && qtexture == 0) {
+     qvertex == 0 && qnormal == 0 && qcolor == 0 && qtexture == 0 &&
+     cone_threshold == 0) {
+    nexus.Close();
+    return 0;
+  }
+  
+  if(compute_cones) {//just recalculate normal cones
+    cerr << "Unimplemented at the moment...\n";
+
+    /*vector<NCone3s> cones;
+    //    ComputeCones(Nexus &nexus, float cone_threshold);
+    nexus.Close();
+    nexus.Load(intput, false);
+    for(unsigned int i = 0; i < nexus.size(); i++) {
+      nexus[i].cone = cones[i];
+      }*/
     nexus.Close();
     return 0;
   }
@@ -422,15 +373,9 @@ int main(int argc, char *argv[]) {
     grid.Set(mesh.face);
   }
   
-  if(add_normals && compress) {
-    cerr << "Its not possible to add normals and compress in the same step\n"
-	 << "Because normals requires 2 passes to be calculated\n\n";
-    return -1;
-  }
-  
   Signature signature = nexus.signature;
   if(add_strips) signature.face = Signature::STRIPS;
-  if(add_normals) signature.vnorm = Encodings::SHORT4;   
+  if(add_normals) signature.vnorm = add_normals;
   if(add_colors) signature.vcolor = Encodings::BYTE4;   
 
   if(remove_normals) signature.vnorm = 0;
@@ -442,6 +387,7 @@ int main(int argc, char *argv[]) {
   if(!output.size()) output = input + getSuffix(signature);
   if(output == input) {
     cerr << "Output and input files are the same.\n"
+	 << "Use option -o <filename>\n"
 	 << "You do not want to overwrite your data. Trust me.\n";
     return -1;
   }
@@ -576,7 +522,7 @@ int main(int argc, char *argv[]) {
     //copying entry information;
     dst_entry.sphere = src_entry.sphere;
     dst_entry.error = src_entry.error;
-    //WARNING copy also normals cone
+    dst_entry.cone = src_entry.cone;
 
     out.borders.ResizeBorder(p, src_border.Size());
     Border &dst_border = out.GetBorder(p);
@@ -623,3 +569,87 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
+
+void printInfo(Nexus &nexus, bool verbose, bool dump_history) {
+  //perform locality statistics
+  double meandist = 0;
+  vcg::Sphere3f last = nexus[0].sphere;
+  for(unsigned int i = 1; i < nexus.size(); i++) {
+    vcg::Sphere3f &sphere = nexus[i].sphere;
+    double dist = vcg::Distance(last.Center(), sphere.Center());
+    meandist += dist;
+    last = sphere;
+  }
+  meandist /= nexus.size() -1;
+  cout << "\n\tCompressed: " << nexus.IsCompressed() 
+       << "\n\tStripped: " 
+       << (int)(nexus.signature.face == Signature::STRIPS)
+       << "\n\tColor   : " << (int)(nexus.signature.vcolor !=0)
+       << "\n\tNormal  : " << (int)((nexus.signature.vnorm) !=0)
+       << "\n\tTexture : " << (int)((nexus.signature.vtext) !=0)
+       << "\n\tData    : " << (int)((nexus.signature.vdata) !=0)
+       << "\n\n\tVertices: " << nexus.totvert 
+       << "\tFaces: " << nexus.totface
+       << "\tPatches: " << nexus.size() 
+       << "\n\tSphere: " 
+       << nexus.sphere.Center()[0] << " "
+       << nexus.sphere.Center()[1] << " "
+       << nexus.sphere.Center()[2] << " R: "
+       << nexus.sphere.Radius()
+       << "\n\tAverage distance: " << meandist
+       << "\n\tChunk size " << nexus.chunk_size << endl;
+   
+  if(dump_history) {
+    if(nexus.history.IsQuick()) {
+      cout << "Quick format\n";
+      for(unsigned int i = 0; i < nexus.history.n_nodes(); i++) {
+	cout << "Node: " << i << " out: ";
+	History::History::Node node = nexus.history.nodes[i];
+	for(History::Node::iterator l = node.out_begin(); 
+	    l != node.out_end(); l++) {
+	  cout << ".";
+	  History::Link &link = *l;
+	  for(History::Link::iterator p = link.begin(); p != link.end(); p++) {
+	    cout << p << " ";
+	  }
+	}
+	cout << " in: ";
+	for(History::Node::iterator j = node.in_begin(); 
+	    j != node.in_end(); j++) {
+	  cout << ".";
+	  History::Link &link = *j;
+	  for(History::Link::iterator p = link.begin(); p != link.end(); p++) {
+	    cout << p << " ";
+	  }
+	}
+	cout << endl;
+      }
+
+    } else {
+      cout << "Update format\n";
+      for(unsigned int i = 0; i < nexus.history.updates.size(); i++) {
+	History::Update &update = nexus.history.updates[i];
+	cout << "Created: ";
+	for(unsigned int k = 0; k < update.created.size(); k++) {
+	  cout << update.created[k] << " ";
+	}
+	cout << "\nErased: ";
+	for(unsigned int k = 0; k < update.erased.size(); k++) {
+	  cout << update.erased[k] << " ";
+	}
+	cout << "\n\n";
+      }
+    }
+  }
+
+  if(verbose) {
+    for(unsigned int i = 0; i < nexus.size(); i++) {
+      Entry &entry = nexus[i];
+      cout << i << " -> nv: " << entry.nvert << " nf: " << entry.nface 
+	   << " error: " << entry.error 
+	   << " disk_size: " << entry.disk_size 
+	   << " start: " << entry.patch_start << endl;
+    }
+    cout << endl;
+  }
+}

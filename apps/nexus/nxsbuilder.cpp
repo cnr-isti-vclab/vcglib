@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2005/02/20 00:43:24  ponchio
+Less memory x extraction.  (removed frags)
+
 Revision 1.17  2005/02/19 17:14:02  ponchio
 History quick by default.
 
@@ -338,7 +341,8 @@ void ThirdStep(const string &crudefile, const string &output,
     assert(vcount == vertices.size());
     assert(fcount == faces.size());
 
-    //TODO deal with this case adding another patch at the end... its not that difficult!
+    //TODO deal with this case adding another patch at the end... 
+    //its not that difficult!
     
     //This can happen on degenerate cases when we have a lot of detached faces....
     if(vcount > 65000 && fcount > 65000) {
@@ -358,6 +362,23 @@ void ThirdStep(const string &crudefile, const string &output,
     for(int i = 0; i < vertices.size(); i++)
       sphere.Add(vertices[i]);
     sphere.Radius() *= 1.01;
+
+    TightSphere(sphere, vertices);
+
+    vector<Point3f> normals; 
+    for(unsigned int i = 0; i < patch.nf; i++) {
+      unsigned short *f = patch.Face(i);
+      Point3f &v0 = patch.Vert3f(f[0]);
+      Point3f &v1 = patch.Vert3f(f[1]);
+      Point3f &v2 = patch.Vert3f(f[2]);
+      
+      Point3f norm = (v1 - v0) ^ (v2 - v0); 
+      normals.push_back(norm.Normalize());
+    }
+    ANCone3f cone;
+    cone.AddNormals(normals, 0.99f);
+    nexus[patch_idx].cone.Import(cone);
+    
 
 #ifndef NDEBUG
     for(int i = 0; i < vertices.size(); i++) {
@@ -836,6 +857,7 @@ void SaveFragment(Nexus &nexus, VChain &chain,
       nexus.sphere.Add(outpatch.vert[v]);
     } 
     entry.sphere.Radius() *= 1.01;
+    TightSphere(entry.sphere, outpatch.vert);
 
     //remap internal borders
     for(unsigned int k = 0; k < outpatch.bord.size(); k++) {

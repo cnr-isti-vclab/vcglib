@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/02/19 16:22:45  ponchio
+Minor changes (visited and Cell)
+
 Revision 1.7  2005/02/10 09:18:20  ponchio
 Statistics.
 
@@ -81,12 +84,9 @@ class Extraction {
   };
 
   Metric *metric;
-
-  //TODO make a pointer so no need to doubl check visibility...!
-  vcg::Frustumf frustum;
-
   float target_error;
-  float max_error;
+
+  float max_error; //actual error at end of extraction
   unsigned int extr_used, extr_max;
   unsigned int draw_used, draw_max;
   unsigned int disk_used, disk_max;
@@ -98,7 +98,7 @@ class Extraction {
   std::vector<Item> selected;
   unsigned int draw_size; //first in selected should be drawn
 
-  std::vector<HeapNode> heap; //no realtime extraxtion
+  std::vector<HeapNode> heap; //no realtime extraxtion TODO (use front)
 
   //nodes that i can expand to
   std::vector<HeapNode> front;
@@ -114,6 +114,8 @@ class Extraction {
   void Update(NexusMt *mt);
 
 
+  bool Visible(unsigned int p)            { return visible[p]; }
+  void SetVisible(unsigned int p, bool v) { visible[p] = v; }
  protected:         
 
   void Select();
@@ -126,15 +128,14 @@ class Extraction {
   bool Coarse(HeapNode node);
 
   void Init();
+
+  bool Visited(Node *node)            { return visited[node - root]; }
+  void SetVisited(Node *node, bool v) { visited[node - root] = v; }
+
  private:
   NexusMt *mt;
   Node *root;
   Node *sink;
-
-  bool Visited(Node *node)            { return visited[node - root]; }
-  void SetVisited(Node *node, bool v) { visited[node - root] = v; }
-  bool Visible(Node *node)            { return visible[node - root]; }
-  void SetVisible(Node *node, bool v) { visible[node - root] = v; }
 
   float GetRefineError(Node *node);
 };
