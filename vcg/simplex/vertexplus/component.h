@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/04/03 13:35:51  cignoni
+minor changes
+
 Revision 1.4  2004/03/31 13:15:28  cignoni
 Added optional cpmponent
 
@@ -56,6 +59,8 @@ public:
   typedef CoordType::ScalarType      ScalarType;
 
   CoordType &P() { static CoordType coord(0, 0, 0); return coord; }
+  const CoordType &P() const { static CoordType coord(0, 0, 0); return coord; }
+  const CoordType &cP() const { static CoordType coord(0, 0, 0); return coord; }
   CoordType &UberP() { static CoordType coord(0, 0, 0); return coord; }
 };
 
@@ -64,6 +69,8 @@ public:
   typedef A CoordType;
   typedef typename CoordType::ScalarType      ScalarType;
   CoordType &P() { return _coord; }
+  const CoordType &P() const { return _coord; }
+  const CoordType &cP() const { return _coord; }
   CoordType &UberP() { return _coord; }
 private:
   CoordType _coord;    
