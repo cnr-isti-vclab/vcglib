@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/03/12 15:22:19  cignoni
+Written some documentation and added to the trimes doxygen module
+
 Revision 1.2  2004/03/10 00:46:10  cignoni
 changed to the face::IsBorder() style
 
@@ -58,6 +61,15 @@ typedef typename MeshType::FaceType       FaceType;
 typedef typename MeshType::FacePointer    FacePointer;
 typedef typename MeshType::FaceIterator   FaceIterator;
 
+static void Clear(MeshType &m)
+{
+	FaceIterator fi;
+	VertexIterator vi;
+	for(fi=m.face.begin(); fi!=m.face.end(); ++fi)
+		(*fi).Flags() = 0;
+	for(vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
+		(*vi).Flags() = 0;
+}
 
 static void FaceBorderFromFF(MeshType &m)
 {
