@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2004/07/08 08:43:22  pietroni
+changed functions used to compute the aspect ratio
+
 Revision 1.8  2004/05/20 13:04:23  pietroni
 modified setBorderV function
 
@@ -140,6 +143,12 @@ static inline bool DeleteBitFlag(int bitval)
 			return false;
 		}
 
+	/// Get the flags without any control
+	inline int & UberFlags()
+	{
+		return _flags;
+	}
+
 /// This function checks if the given user bit is true.
 bool IsUserBit(int userBit){return (_flags & userBit) != 0;}
 /// This function set  the given user bit.
@@ -201,6 +210,10 @@ public:
 		assert(j<4);
 		return _v[j];
 	}
+
+	inline CoordType & P( const int j ) { return V(j)->P();}
+	inline const CoordType & cP( const int j ) const { return V(j)->cP();}
+
 
 /***********************************************/
 /** @name Topology Structures
@@ -268,7 +281,7 @@ public:
 					_v[2]=p2;
 					_v[3]=p3;
 
-					if(ComputeVolume()<0 )
+					if(vcg::ComputeVolume(*this)<0 )
 						std::swap(_v[1],_v[2]);
 
 #ifdef		__VCGLIB_TETRA_TA
@@ -316,12 +329,12 @@ public:
   #ifdef __VCGLIB_TETRA_TN		
       return _n[i];
     #else	  
-  Tetra3<ScalarType> T=Tetra3<ScalarType>();
+ /* Tetra3<ScalarType> T=Tetra3<ScalarType>();
    T.P0(0)=V(0)->P();
    T.P1(0)=V(1)->P();
    T.P2(0)=V(2)->P();
-   T.P3(0)=V(3)->P();
-  return (Normal<Tetra3<ScalarType> >(T,i));
+   T.P3(0)=V(3)->P();*/
+  return (Normal(*this,i));
   #endif
 		}	
 
@@ -349,21 +362,34 @@ void ComputeNormal()
 
 #ifdef __VCGLIB_TETRA_TQ
 		ScalarType _volume;	
-		ScalarType _aspect_ratio; 
+		ScalarType _aspect_ratio;
+		ScalarType _q;
 #endif
 
+		ScalarType & Q(){
+#ifdef __VCGLIB_TETRA_TQ
+          return _q;
+#else
+			assert(0);
+			return 0;
+#endif
+		}
+
+const 		ScalarType & Q()const{
+#ifdef __VCGLIB_TETRA_TQ
+          return _q;
+#else
+			assert(0);
+			return 0;
+#endif
+		}
 
  	ScalarType ComputeVolume(){
-      Tetra3<ScalarType> T=Tetra3<ScalarType>();
-       T.P0(0)=V(0)->cP();
-       T.P1(0)=V(1)->cP();
-       T.P2(0)=V(2)->cP();
-       T.P3(0)=V(3)->cP();
       #ifdef __VCGLIB_TETRA_TQ
-			_volume = T.ComputeVolume();
+			_volume = vcg::ComputeVolume<BaseTetraType>(*this);
       return _volume;
       #else
-       return (T.ComputeVolume());
+			return vcg::ComputeVolume<BaseTetraType>(*this);
       #endif
 		}
 
@@ -387,17 +413,37 @@ void ComputeNormal()
 ///set if exist local value of aspect ratio
 ScalarType ComputeAspectRatio(){
 
-    Tetra3<ScalarType> T=Tetra3<ScalarType>();
-    T.P0(0)=V(0)->cP();
-    T.P1(0)=V(1)->cP();
-    T.P2(0)=V(2)->cP();
-    T.P3(0)=V(3)->cP();
+    //Tetra3<ScalarType> T=Tetra3<ScalarType>();
+    //T.P0(0)=V(0)->cP();
+    //T.P1(0)=V(1)->cP();
+    //T.P2(0)=V(2)->cP();
+    //T.P3(0)=V(3)->cP();
 
+	
 #ifdef __VCGLIB_TETRA_TQ
-		 _aspect_ratio= T.ComputeAspectRatio();
+		 _aspect_ratio= ( (Tetra3<ScalarType>* ) this) -> ComputeAspectRatio();
      return(_aspect_ratio);
 #else
-		return (T.ComputeAspectRatio());
+		return (( (Tetra3<ScalarType> *) this) -> ComputeAspectRatio());
+#endif
+		}
+//@}
+
+
+/***********************************************/
+ /** @name Color 
+ **/
+ //@{
+#ifdef __VCGLIB_TETRA_TC
+		Color4b c;
+#endif
+
+		Color4b & C(){
+#ifdef __VCGLIB_TETRA_TC
+          return _c;
+#else
+			assert(0);
+			return (*new Color4b());
 #endif
 		}
 //@}
@@ -426,6 +472,14 @@ static bool HasTetraMark()  {
 }
 static bool HasTetraQuality()  { 
 #ifdef __VCGLIB_TETRA_TQ 
+  return true;
+#else
+  return false;
+#endif
+}
+
+static bool HasTetraColor()  { 
+#ifdef __VCGLIB_TETRA_TC 
   return true;
 #else
   return false;
