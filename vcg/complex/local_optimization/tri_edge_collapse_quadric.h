@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/11/23 10:34:23  cignoni
+passed parameters by reference in many funcs and gcc cleaning
+
 Revision 1.3  2004/10/25 07:07:56  ganovelli
 A vcg.::Pos was used to implement the collapse type. CHanged
 to vcg::Edge
@@ -51,30 +54,7 @@ corrected error in -error (see localoptimization)
 namespace vcg{
 namespace tri{
 
-class QCollapseParameter
-{
-public:
-	double	QualityThr; // all 
-	double	BoundaryWeight;
-	double	NormalThr;
-	double	CosineThr;
-	double	QuadricEpsilon;
-	double	ScaleFactor;
-	bool		UseArea;
-	bool		UseVertexWeight;
-	bool		NormalCheck;
-	bool		QualityCheck;
-	bool		OptimalPlacement;
-	bool		MemoryLess;
-	bool		ComplexCheck;
-	bool		ScaleIndependent;
-	//***********************
-	bool		PreserveTopology; 
-	bool		PreserveBoundary; 
-	bool		MarkComplex;
-	bool		FastPreserveBoundary; 
-	bool		SafeHeapUpdate;
-};
+
 
 
 /** 
@@ -116,7 +96,33 @@ public:
 		typedef  math::Quadric< double > QuadricType;
 		typedef typename TriMeshType::FaceType FaceType;
 
-		static QCollapseParameter & Params(){static QCollapseParameter p; return p;}
+class QParameter
+{
+public:
+	double	QualityThr; // all 
+	double	BoundaryWeight;
+	double	NormalThr;
+	double	CosineThr;
+	double	QuadricEpsilon;
+	double	ScaleFactor;
+	bool		UseArea;
+	bool		UseVertexWeight;
+	bool		NormalCheck;
+	bool		QualityCheck;
+	bool		OptimalPlacement;
+	bool		MemoryLess;
+	bool		ComplexCheck;
+	bool		ScaleIndependent;
+	//***********************
+	bool		PreserveTopology; 
+	bool		PreserveBoundary; 
+	bool		MarkComplex;
+	bool		FastPreserveBoundary; 
+	bool		SafeHeapUpdate;
+};
+
+
+		static QParameter & Params(){static QParameter p; return p;}
 		enum Hint {
 			HNHasFFTopology       = 0x0001,  // La mesh arriva con la topologia ff gia'fatta
 			HNHasVFTopology       = 0x0002,  // La mesh arriva con la topologia bf gia'fatta
@@ -148,10 +154,11 @@ public:
     }
 
 		void Execute(TriMeshType &m)
-  {	
-		CoordType newPos = ComputeMinimal();
+  {	CoordType newPos;
+    if(Params().OptimalPlacement) newPos= ComputeMinimal();
+    else newPos=pos.V(1)->P();
 		pos.V(1)->q+=pos.V(0)->q;
-		int FaceDel=DoCollapse(pos, newPos);
+		int FaceDel=DoCollapse(pos, newPos); // v0 is deleted and v1 take the new position
 		m.fn-=FaceDel;
 		--m.vn;
   }
@@ -233,12 +240,10 @@ public:
 			for( x.F() = (*vi).VFp(), x.I() = (*vi).VFi(); x.F()!=0; ++ x){
 				assert(x.F()->V(x.I())==&(*vi));
 				if(x.F()->V(x.I())->IsRW() && x.F()->V1(x.I())->IsRW() && !m.IsMarked(x.F()->V1(x.I()))){
-							m.Mark( x.F()->V1(x.I()) );
-							h_ret.push_back( HeapElem( new MYTYPE( EdgeType (x.F()->V(x.I()),x.F()->V1(x.I())), m.imark)));
+							h_ret.push_back( HeapElem( new MYTYPE( EdgeType (x.F()->V(x.I()),x.F()->V1(x.I())),GlobalMark())));
 							}
 				if(x.F()->V(x.I())->IsRW() && x.F()->V2(x.I())->IsRW()&& !m.IsMarked(x.F()->V2(x.I()))){
-							m.Mark( x.F()->V2(x.I()) );
-							h_ret.push_back( HeapElem( new MYTYPE( EdgeType (x.F()->V(x.I()),x.F()->V2(x.I())), m.imark)));
+							h_ret.push_back( HeapElem( new MYTYPE( EdgeType (x.F()->V(x.I()),x.F()->V2(x.I())),GlobalMark())));
 						}
 			}
 		}	
@@ -293,10 +298,8 @@ public:
 		//// Move the two vertexe  into new position (storing the old ones)
 		CoordType OldPos0=v[0]->P();
 		CoordType OldPos1=v[1]->P();
-		if(Params().OptimalPlacement)	 
-			{ v[0]->P() = ComputeMinimal(); v[1]->P()=v[0]->P();}
-				else  
-			v[0]->P() = v[1]->P();
+		if(Params().OptimalPlacement)	 { v[0]->P() = ComputeMinimal(); v[1]->P()=v[0]->P();}
+				else  v[0]->P() = v[1]->P();
 
 		//// Rescan faces and compute quality and difference between normals
 		int i;
@@ -365,6 +368,56 @@ public:
 //	
 //static double MaxError() {return 1e100;}
 //
+  inline  void UpdateHeap(HeapType & h_ret)
+  {
+		GlobalMark()++; int nn=0;
+		VertexType *v[2];
+		v[0]= pos.V(0);v[1]=pos.V(1);	
+		v[1]->IMark() = GlobalMark();
+
+		// First loop around the remaining vertex to unmark visited flags
+    vcg::face::VFIterator<FaceType> vfi(v[1]->VFp(),v[1]->VFi());	
+		while (!vfi.End()){
+			vfi.F()->V1(vfi.I())->ClearV();
+			vfi.F()->V2(vfi.I())->ClearV();
+			++vfi;
+		}
+
+    // Second Loop 
+		vfi.F() = v[1]->VFp();
+		vfi.I() = v[1]->VFi();	
+    while (!vfi.End())
+    {
+			assert(!vfi.F()->IsD());
+      for (int j=0;j<3;j++)
+			{
+				if( !(vfi.F()->V1(vfi.I())->IsV()) && (vfi.F()->V1(vfi.I())->IsRW()))
+				{
+				vfi.F()->V1(vfi.I())->SetV();
+				h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.F()->V(vfi.I()),vfi.F()->V1(vfi.I())),GlobalMark())));
+				std::push_heap(h_ret.begin(),h_ret.end());
+				if(!IsSymmetric()){				
+					h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.F()->V1(vfi.I()),vfi.F()->V(vfi.I())),GlobalMark())));
+					std::push_heap(h_ret.begin(),h_ret.end());
+				}
+      }
+				if(  !(vfi.F()->V2(vfi.I())->IsV()) && (vfi.F()->V2(vfi.I())->IsRW()))
+				{
+					vfi.F()->V2(vfi.I())->SetV();
+				h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.F()->V(vfi.I()),vfi.F()->V2(vfi.I())),GlobalMark())));
+				std::push_heap(h_ret.begin(),h_ret.end());
+				if(!IsSymmetric()){				
+					h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.F()->V2(vfi.I()),vfi.F()->V(vfi.I())),GlobalMark())));
+					std::push_heap(h_ret.begin(),h_ret.end());
+				}
+      }
+
+
+			}
+      ++vfi;nn++;
+    }
+//		printf("ADDED %d\n",nn);
+  }
 
 static void InitQuadric(TriMeshType &m)
 {
