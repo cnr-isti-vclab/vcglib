@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/09/09 14:35:54  ponchio
+Various changes for gcc compatibility
+
 Revision 1.2  2004/07/11 22:13:30  cignoni
 Added GPL comments
 
@@ -31,6 +34,7 @@ Added GPL comments
 ****************************************************************************/
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <time.h>
 #include <GL/glew.h>
 #include <GL/glut.h>
@@ -48,6 +52,7 @@ Added GPL comments
 #include<wrap/io_trimesh/import_ply.h>
 #include<vcg/complex/trimesh/update/normal.h>
 #include<vcg/complex/trimesh/update/bounding.h>
+#include<vcg/complex/trimesh/update/color.h>
 
 #include "visshader.h"
 using namespace vcg;
@@ -65,43 +70,30 @@ class AMesh     : public tri::TriMesh< vector<AVertex>, vector<AFace> > {};
 
 ///////// Global ////////
 
-int SampleNum=32;
+int SampleNum=64;
 int WindowRes=800;
-
+unsigned int TexInd=0;
 bool SwapFlag=false;
+bool CullFlag=false;
+bool ClosedFlag=false;
 
-float lopass=0,hipass=1,Gamma=1;
+float lopass=0,hipass=1,gamma=1;
+float diff=.8;
+float ambi=.2;
+
 bool LightFlag=true;
 bool ColorFlag=true;
+bool ShowDirFlag=false;
+int imgcnt=0;
 
-Trackball Q;
+Color4b BaseColor=Color4b::White;
+Trackball QV;
+Trackball QL;
+Trackball *Q=&QV;
 
 int ScreenH,ScreenW;
-float ViewAngle=45;
-
-class TimeOracle 
-{
-public:
-	time_t start;
-	time_t cur;
-
-	char buf[128];
-
-	char const *TimeToEndStr(double perc)
-	{
-		time(&cur);
-		double diff=difftime(cur,start);
-    diff= diff/perc - diff;
-
-		int hh=diff/3600;
-		int mm=(diff-hh*3600)/60;
-		int ss=diff-hh*3600-mm*60;
-		sprintf(buf,"%02i:%02i:%02i",hh,mm,ss);
-		return buf;
-	}
-
-	void Start(){time(&start);};
-};
+float ViewAngle=33;
+vector<Point3f> ViewVector;
 
 bool cb(const char *buf)
 {
@@ -109,8 +101,78 @@ bool cb(const char *buf)
 	return true;
 }
 
+void BuildOnePixelTexture(Color4b c, unsigned int &TexInd)
+{
+  if(TexInd==0) glGenTextures(1,&TexInd);
+
+  glBindTexture(GL_TEXTURE_1D,TexInd);
+  glTexImage1D(GL_TEXTURE_1D,0,GL_RGBA,1,0,GL_RGBA,GL_UNSIGNED_BYTE,&c);
+  glEnable(GL_TEXTURE_1D);
+  glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
+}
+void glutPrintf(int x, int y, const char * f, ... )
+{
+  glMatrixMode (GL_PROJECTION);   
+  glPushMatrix();
+  glLoadIdentity (); 
+  glOrtho(0,ScreenW,0,ScreenH,-1,1);
+  glMatrixMode (GL_MODELVIEW);    
+  glPushMatrix();
+  glLoadIdentity ();  
+  
+  int len, i;
+  char buf[4096];
+  va_list marker;
+  va_start( marker, f );     
+
+  int n = vsprintf(buf,f,marker);
+  va_end( marker );              
+
+  glColor3f(0,0,0);
+  glRasterPos2f(x, y);
+  len = (int) strlen(buf);
+  for (i = 0; i < len; i++) {
+    glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, buf[i]);
+  }
+  glMatrixMode (GL_PROJECTION);   
+  glPopMatrix();
+  glMatrixMode (GL_MODELVIEW);    
+  glPopMatrix();
+  
+}
+
 // prototypes
 void SaveTexturedGround();
+
+void DrawViewVector()
+{
+  glDisable(GL_LIGHTING);  
+  glColor3f(0,0,1);
+  glBegin(GL_LINES);
+  for(unsigned int i=0;i<ViewVector.size();++i)
+  {
+    glVertex3f(0,0,0);glVertex(ViewVector[i]);
+  }
+  glEnd();
+}
+void DrawLightVector()
+{
+  const int sz=5;
+  glPushMatrix();
+  QL.Apply();
+  glDisable(GL_LIGHTING);  
+  glBegin(GL_LINES);
+  glColor3f(1,1,0);
+  for(unsigned int i=0;i<=sz;++i)
+    for(unsigned int j=0;j<=sz;++j)
+      {
+        glColor3f(1,1,0);
+        glVertex3f(-1.0f+i*2.0/sz,-1.0f+j*2.0/sz,-1);
+        glVertex3f(-1.0f+i*2.0/sz,-1.0f+j*2.0/sz, 1);
+      }
+  glEnd();
+  glPopMatrix();
+}
 
 void Draw(AMesh &mm)
 {
@@ -118,10 +180,9 @@ void Draw(AMesh &mm)
   glBegin(GL_TRIANGLES);
   for(fi=mm.face.begin();fi!=mm.face.end();++fi)
   {
-    
-    glNormal((*fi).V(0)->N()); glColor((*fi).V(0)->C());  glVertex((*fi).V(0)->P());
-    glNormal((*fi).V(1)->N()); glColor((*fi).V(1)->C());  glVertex((*fi).V(1)->P());
-    glNormal((*fi).V(2)->N()); glColor((*fi).V(2)->C());  glVertex((*fi).V(2)->P());
+    glNormal((*fi).V(0)->N()); if(ColorFlag) glColor((*fi).V(0)->C());  glVertex((*fi).V(0)->P());
+    glNormal((*fi).V(1)->N()); if(ColorFlag) glColor((*fi).V(1)->C());  glVertex((*fi).V(1)->P());
+    glNormal((*fi).V(2)->N()); if(ColorFlag) glColor((*fi).V(2)->C());  glVertex((*fi).V(2)->P());
   }
   glEnd();
 }
@@ -138,31 +199,52 @@ string OutNameMsh;
 void  ViewReshape(GLsizei w, GLsizei h)
 {
 	ScreenW=w; ScreenH=h;
-	glMatrixMode (GL_PROJECTION);   
-	glLoadIdentity (); 
-	gluPerspective(ViewAngle,(float)w/(float)h,.1,10000);
-	glViewport (0, 0, (GLsizei) w, (GLsizei) h); 
+  glViewport(0,0,w,h);
 }
 
 void  ViewDisplay (void)
 {
+  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glMatrixMode (GL_PROJECTION);   
   glLoadIdentity (); 
-  gluPerspective(ViewAngle,1,.1,10);
+  gluPerspective(ViewAngle,(float)ScreenW/ScreenH,1,7);
   glMatrixMode (GL_MODELVIEW);    
   glLoadIdentity ();  
+  glPushMatrix();
+  QL.Apply();
+  glutPrintf(5,5,"Diffuse %04.2f   Ambient %04.2f    LowPass %04.2f    HiPass %04.2f    Gamma %04.2f ",diff,ambi,lopass,hipass,gamma);
+  GLfloat light_position0[] = {0.0, 10.0, 300.0, 0.0};
+	glLightfv(GL_LIGHT0, GL_POSITION, light_position0);
+  glPopMatrix();
   glTranslatef(0,0,-4);
-  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  Q.GetView();
-  Q.Apply();
-  Q.Draw();
+  if(Q==&QL) DrawLightVector();	
+  QL.GetView();
+  QV.GetView();
+  QV.Apply();
+  if(ShowDirFlag) DrawViewVector();
+
   float d = 2.0/m.bbox.Diag();
   glScalef(d, d, d);
+  glColor3f(diff,diff,diff); 
   glTranslate(-m.bbox.Center());
   if(LightFlag) glEnable(GL_LIGHTING);
           else glDisable(GL_LIGHTING);
   if(ColorFlag) glEnable(GL_COLOR_MATERIAL);
           else glDisable(GL_COLOR_MATERIAL);
+  glColorMaterial(GL_FRONT,GL_AMBIENT);
+  glMateriali(GL_FRONT,GL_SHININESS,0);
+  float spec[4]={0,0,0,1};
+  float ambientV[4]={ambi,ambi,ambi,1};
+  float diffuseV[4]={diff,diff,diff,1};
+  glMaterialfv(GL_FRONT,GL_SPECULAR,spec);
+  glMaterialfv(GL_FRONT,GL_AMBIENT, ambientV);
+  glMaterialfv(GL_FRONT,GL_DIFFUSE, diffuseV);
+  glCullFace(GL_BACK);
+    
+  if(CullFlag) glEnable(GL_CULL_FACE);
+  else        glDisable(GL_CULL_FACE);
+ 
+  BuildOnePixelTexture(BaseColor,TexInd);
   Draw(m);
   glutSwapBuffers();
 }
@@ -172,6 +254,11 @@ void ViewSpecialKey(int , int , int )
   glutPostRedisplay();
 }
 void Toggle(bool &flag) {flag = !flag;}
+void UpdateVis()
+{
+  if(LightFlag) Vis.MapVisibility(gamma,lopass,hipass,ambi);
+  if(!LightFlag) Vis.MapVisibility(gamma,lopass,hipass,1.0);
+}
 /*********************************************************************/
 /*********************************************************************/
 /*********************************************************************/
@@ -180,48 +267,66 @@ void ViewKey(unsigned char key, int , int )
 	Point3f dir;
   switch (key) {
   case 27: exit(0);   	break;
+  case 9: if(Q==&QV) Q=&QL;else Q=&QV;   	break;
 	case 'l' :
-		lopass=lopass+.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,Gamma); 
-		Vis.MapVisibility(Gamma,lopass,hipass);
+		lopass=lopass+.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma); 
+		UpdateVis();
 		break;
 	case 'L' :
-		lopass=lopass-.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,Gamma); 
-		Vis.MapVisibility(Gamma,lopass,hipass);
-		break;
+		lopass=lopass-.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma); 
+		UpdateVis(); break;
 	case 'h' :
-		hipass=hipass-.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,Gamma); 
-		Vis.MapVisibility(Gamma,lopass,hipass);
-		break;
+		hipass=hipass-.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma); 
+		UpdateVis(); break;
 	case 'H' :
-		hipass=hipass+.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,Gamma); 
-		Vis.MapVisibility(Gamma,lopass,hipass);
-		break;
-	case 'g' :
-		Gamma=Gamma-.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,Gamma); 
-		Vis.MapVisibility(Gamma,lopass,hipass);
-		break;
-	case 'G' :
-		Gamma=Gamma+.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,Gamma); 
-		Vis.MapVisibility(Gamma,lopass,hipass);
-		break;
-	case 'c' : 
-		Vis.ComputeUniform(SampleNum,cb); 
-		Vis.MapVisibility(Gamma,lopass,hipass);
-		break;
+		hipass=hipass+.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma); 
+		UpdateVis(); break;
+  case 'd' :  diff+=.05; printf("Ambient %f Diffuse %f, \n",ambi,diff); 		UpdateVis(); break;
+  case 'D' :  diff-=.05; printf("Ambient %f Diffuse %f, \n",ambi,diff); 		UpdateVis(); break;
+  case 'a' :  ambi+=.05; printf("Ambient %f Diffuse %f, \n",ambi,diff); 		UpdateVis(); break;
+  case 'A' :  ambi-=.05; printf("Ambient %f Diffuse %f, \n",ambi,diff); 		UpdateVis(); break;
+
+  case 'e' :  ambi+=.05; diff-=.05; printf("Ambient %f Diffuse %f, \n",ambi,diff); 		UpdateVis(); break;
+  case 'E' :  ambi-=.05; diff+=.05; printf("Ambient %f Diffuse %f, \n",ambi,diff); 		UpdateVis(); break;
+
+	case 'p' :
+		gamma=gamma-.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma); 
+		UpdateVis(); break;
+	case 'P' :
+		gamma=gamma+.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma); 
+		UpdateVis(); break;
+	case 13 : 
+		Vis.ComputeUniform(SampleNum,ViewVector,cb); 
+		UpdateVis(); break;
   case ' ' : {
-    Point3f dir = Q.camera.ViewPoint();
+    Point3f dir = Q->camera.ViewPoint();
     printf("ViewPoint %f %f %f\n",dir[0],dir[1],dir[2]);
     dir.Normalize();
-    dir=Inverse(Q.track.Matrix())*dir;
+    dir=Inverse(Q->track.Matrix())*dir;
     printf("ViewPoint %f %f %f\n",dir[0],dir[1],dir[2]);
     dir.Normalize();
-		Vis.ComputeSingle(dir,cb); 
-    Vis.MapVisibility(Gamma,lopass,hipass); }
-		break;
+		Vis.ComputeSingle(dir,ViewVector,cb); 
+		UpdateVis(); 
+             } break;
+  case 'r' : BaseColor[0]=min(255,BaseColor[0]+2); printf("BaseColor %3i %3i %3i \n",BaseColor[0],BaseColor[1],BaseColor[2]); break;
+  case 'R' : BaseColor[0]=max(  0,BaseColor[0]-2); printf("BaseColor %3i %3i %3i \n",BaseColor[0],BaseColor[1],BaseColor[2]); break;
+  case 'g' : BaseColor[1]=min(255,BaseColor[1]+2); printf("BaseColor %3i %3i %3i \n",BaseColor[0],BaseColor[1],BaseColor[2]); break;
+  case 'G' : BaseColor[1]=max(  0,BaseColor[1]-2); printf("BaseColor %3i %3i %3i \n",BaseColor[0],BaseColor[1],BaseColor[2]); break;
+  case 'b' : BaseColor[2]=min(255,BaseColor[2]+2); printf("BaseColor %3i %3i %3i \n",BaseColor[0],BaseColor[1],BaseColor[2]); break;
+  case 'B' : BaseColor[2]=max(  0,BaseColor[2]-2); printf("BaseColor %3i %3i %3i \n",BaseColor[0],BaseColor[1],BaseColor[2]); break;
+
+  case 'v' : Toggle(ShowDirFlag); break;
+  case 'V' : 
+    {
+      SimplePic<Color4b> snapC;
+      snapC.OpenGLSnap();
+      char buf[128];
+      sprintf(buf,"Snap%03i.ppm",imgcnt++);
+      snapC.SavePPM(buf);
+    }
 	case 's' :
 		Vis.SmoothVisibility();
-		Vis.MapVisibility(Gamma,lopass,hipass); 
-		break;
+		UpdateVis(); break;
   case 'S' :
     { 
       vcg::tri::io::PlyInfo p; 
@@ -229,8 +334,12 @@ void ViewKey(unsigned char key, int , int )
       tri::io::ExporterPLY<AMesh>::Save(m,OutNameMsh.c_str(),false,p);
     }
 		break;
-  case 'a' : LightFlag = !LightFlag; printf("Toggled Light\n"); break;
-  case 'A' : ColorFlag = !ColorFlag; printf("Toggled Color\n"); break;
+  case 'C' : LightFlag = !LightFlag; printf("Toggled Light %s\n",LightFlag?"on":"off"); 		UpdateVis(); break;
+  case 'c' : ColorFlag = !ColorFlag; printf("Toggled Color %s\n",ColorFlag?"on":"off"); break;
+  case '1' : diff=0.80f; ambi=0.10f; gamma=1.0; lopass=0.00f; hipass=1.00f; ColorFlag=false; UpdateVis(); break;
+  case '2' : diff=0.65f; ambi=0.30f; gamma=1.0; lopass=0.15f; hipass=0.80f; ColorFlag=true;  UpdateVis(); break;
+  case '3' : diff=0.45f; ambi=0.50f; gamma=1.0; lopass=0.20f; hipass=0.75f; ColorFlag=true;  UpdateVis(); break;
+  case '4' : diff=0.35f; ambi=0.60f; gamma=1.0; lopass=0.25f; hipass=0.70f; ColorFlag=true;  UpdateVis(); break;
 	}
 	glutPostRedisplay(); ;
 } 
@@ -242,36 +351,34 @@ void ViewMenu(int val)
 // TrackBall Functions
 /*********************************************************************/
 
-int PressedButton; // What is the button actually pressed? 
-int KeyMod;
 int GW,GH; // Grandezza della finestra
-int B[3]={0,0,0}; // Variabile globale che tiene lo stato dei tre bottoni;
-
 
 void ViewMouse(int button, int state, int x, int y)
 {
+  static int KeyMod=0;
   static int glut_buttons=0;
-
+  //printf("ViewMouse %i %i %i %i\n",x,y,button,state);
   int m_mask = 0;
-  KeyMod=glutGetModifiers();
-  if(GLUT_ACTIVE_SHIFT & KeyMod)		m_mask |=  Trackball::KEY_SHIFT;
-  if(GLUT_ACTIVE_ALT & KeyMod)			m_mask |=  Trackball::KEY_ALT;
-  if(GLUT_ACTIVE_CTRL & KeyMod)			m_mask |=  Trackball::KEY_CTRL;
-
   if(state == GLUT_DOWN) {
+    KeyMod=glutGetModifiers();
+    if(GLUT_ACTIVE_SHIFT & KeyMod)		m_mask |=  Trackball::KEY_SHIFT;
+    if(GLUT_ACTIVE_ALT & KeyMod)			m_mask |=  Trackball::KEY_ALT;
+    if(GLUT_ACTIVE_CTRL & KeyMod)			m_mask |=  Trackball::KEY_CTRL;
+
     glut_buttons |= (1<<button);
-    Q.MouseDown(x, ScreenH-y, glut_buttons | m_mask);
+    Q->MouseDown(x, ScreenH-y, glut_buttons | m_mask);
   } else {
-    //glut_buttons &= ~(1<<button);
-    glut_buttons = 0;
-    m_mask = 0;
-    Q.MouseUp(x, ScreenH-y, glut_buttons);
+    if(GLUT_ACTIVE_SHIFT & KeyMod)		m_mask |=  Trackball::KEY_SHIFT;
+    if(GLUT_ACTIVE_ALT & KeyMod)			m_mask |=  Trackball::KEY_ALT;
+    if(GLUT_ACTIVE_CTRL & KeyMod)			m_mask |=  Trackball::KEY_CTRL;
+    glut_buttons |= (1<<button);
+    Q->MouseUp(x, ScreenH-y, glut_buttons | m_mask);
   }
 }
 
 void ViewMouseMotion(int x, int y)
 {
-	Q.MouseMove(x,ScreenH-y);
+ 	Q->MouseMove(x,ScreenH-y);
 	glutPostRedisplay();
 }
 
@@ -280,16 +387,18 @@ void SetLight()
   GLfloat light_ambient0[] = {0.0, 0.0, 0.0, 1.0};  
   GLfloat light_diffuse0[] = {1.0, 1.0, 1.0, 1.0};  
   GLfloat light_position0[] = {0.0, 10.0, 300.0, 0.0};
-	glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient0);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse0);
 	glLightfv(GL_LIGHT0, GL_POSITION, light_position0);
+	glLightfv(GL_LIGHT0, GL_AMBIENT, light_diffuse0);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse0);
 	glEnable(GL_LIGHT0);
+  glLightModelfv(GL_LIGHT_MODEL_AMBIENT,light_ambient0);
+  
 }
  
 void  ViewInit (void) {
   SetLight();
-	Q.Reset();
-  Q.radius= 1;
+	Q->Reset();
+  Q->radius= 1;
   glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 	glClearColor (0.8, 0.8, 0.8, 0.0);
@@ -300,16 +409,8 @@ void  ViewInit (void) {
 	glShadeModel(GL_SMOOTH);
 //  glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);     
-	glEnable(GL_COLOR_MATERIAL);
-	glColorMaterial(GL_FRONT,GL_DIFFUSE);
-	//glColorMaterial(GL_FRONT,GL_AMBIENT_AND_DIFFUSE);
-	//glColorMaterial(GL_FRONT,GL_AMBIENT);
-  glMateriali(GL_FRONT,GL_SHININESS,0);
-  float spec[4]={0,0,0,1};
-  glMaterialfv(GL_FRONT,GL_SPECULAR,spec);
   glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
-	
+	glCullFace(GL_BACK);	
 }
 
 
@@ -324,18 +425,18 @@ int main(int argc, char** argv)
 			"Usage: shadevis file.ply [options]\n"
 			"Options:\n"
 			"     -w#      WindowResolution (default 600)\n"
-			"     -n#      Sample Directions (default 32)\n"
-			"     -z#      z offset (default 1e-4)\n"
-			"     -da #    Cone Direction Angle in degree (default 45)\n"
-			"     -dv # # # Cone Direction vector (default 0 0 1)\n"			
-			"     -c       Set IsClosed Flag\n"
+			"     -n#      Sample Directions (default 64)\n"
+			"     -z#      z offset (default 1e-3)\n"
+			"     -c       assume that the mesh is closed (slightly faster, default false)\n"
 			"     -f       Flip normal of the model\n"
-					 );
+			//"     -da #    Cone Direction Angle in degree (default 45)\n"
+			//"     -dv # # # Cone Direction vector (default 0 0 1)\n"			
+      		 );
 
 		return 1;
 	}
 
-	
+	srand(time(0));
   int i=1;  
 	while(i<argc 	&& (argv[i][0]=='-'))
 		{
@@ -343,6 +444,7 @@ int main(int argc, char** argv)
 			{
 				case 'n'  : SampleNum = atoi(argv[i]+2); break;
 				case 'f'  : SwapFlag=false; break;
+				case 'c'  : ClosedFlag=true; break;
         case 'w'  : WindowRes= atoi(argv[i]+2); printf("Set WindowRes to %i\n",WindowRes ); break;
         case 's'  : Vis.SplitNum= atoi(argv[i]+2); printf("Set SplitNum to %i\n",Vis.SplitNum ); break;
         case 'z'  : Vis.ZTWIST = atof(argv[i]+2); printf("Set ZTWIST to %f\n",Vis.ZTWIST ); break;
@@ -364,6 +466,10 @@ int main(int argc, char** argv)
 	if(ret) {printf("Error unable to open mesh %s\n",argv[i]);exit(-1);}
   tri::UpdateNormals<AMesh>::PerVertexNormalized(m);
   tri::UpdateBounding<AMesh>::Box(m);
+  tri::UpdateColor<AMesh>::VertexConstant(m,Color4b::White);
+  Vis.IsClosedFlag=ClosedFlag;
+  Vis.Init();
+  UpdateVis();
 
   printf("Mesh bbox (%f %f %f)-(%f %f %f)\n\n",m.bbox.min[0],m.bbox.min[1],m.bbox.min[2],m.bbox.max[0],m.bbox.max[1],m.bbox.max[2]);
   OutNameMsh=(string(argv[i]).substr(0,strlen(argv[i])-4));
