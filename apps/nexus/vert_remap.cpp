@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/06/24 14:32:45  ponchio
+Moved from wrap/nexus
+
 Revision 1.1  2004/06/24 14:18:58  ponchio
 Created
 
@@ -37,8 +40,8 @@ using namespace std;
 using namespace nxs;
 
 bool VertRemap::Create(const std::string &file) {
-  if(all.Create(file)) return false;
-  if(!borders.Create(file)) return false;
+  if(!all.Create(file + ".vrm")) return false;
+  if(!borders.Create(file + ".vrb")) return false;
   return true;
 }
 
@@ -67,10 +70,11 @@ unsigned int VertRemap::Count(unsigned int key) {
 }
 
 void VertRemap::Insert(unsigned int key, unsigned int value) {
-  if(all[key] == 0xffffffff)
+  if(all[key] == 0xffffffff) {
     all[key] = value;
-  else
+  } else if(all[key] != value) {
     borders.Insert(key, value);
+  }
 }
 
 unsigned int VertRemap::GetValue(unsigned int key) { //return first value
