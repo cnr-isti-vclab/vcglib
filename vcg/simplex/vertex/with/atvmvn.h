@@ -1,5 +1,5 @@
-#ifndef __VCGLIB_VERTEX__AT__TYPE
-#define __VCGLIB_VERTEX__AT__TYPE
+#ifndef __VCGLIB_VERTEX__ATVMVN__TYPE
+#define __VCGLIB_VERTEX__ATVMVN__TYPE
 
 #define VERTEX_TYPE VertexATVMVN
 
@@ -16,8 +16,8 @@
 
 namespace vcg {
 
-template < class VETYPE, class VFTYPE, class VTTYPE>
-class VertexATVMVNf : public VertexATVMVN<float,VETYPE,VFTYPE,VTTYPE> {};
+template < class VETYPE, class VFTYPE, class VTTYPE,class TCTYPE = TCoord2<float,1>, class CoordTYPE= Point<3,float> >
+class VertexATVMVNf : public VertexATVMVN<float,VETYPE,VFTYPE,VTTYPE,TCTYPE,CoordTYPE> {};
 
 template < class VETYPE, class VFTYPE, class VTTYPE>
 class VertexATVMVNd : public VertexATVMVN<double,VETYPE,VFTYPE,VTTYPE> {};
