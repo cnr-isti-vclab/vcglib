@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/09/28 14:04:36  ganovelli
+glGet added
+
 Revision 1.7  2004/07/13 15:55:57  cignoni
 Added test on presence of glTranspose extension (for old hw support)
 
@@ -56,7 +59,7 @@ Revision 1.1  2004/03/31 15:27:17  ponchio
 
 #include <vcg/math/matrix44.h>
 #include <vcg/math/similarity.h>
-#include <gl/glew.h>
+#include <GL/glew.h>
 
 namespace vcg {
 
