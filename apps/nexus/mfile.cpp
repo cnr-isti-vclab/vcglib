@@ -66,7 +66,7 @@ void MFile::Redim(int64 sz) {
     //TODO test rhis!!!!
     while(files.size() <= totfile) {
       RedimLast(max_size);
-      assert(size == max_size * (files.size()));
+      assert(size == (int64)max_size * (int64)(files.size()));
       AddFile();
     }
     assert(size <= sz);
