@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/04/05 11:51:22  cignoni
+wrong define FACE_N instead of FACE_FN
+
 Revision 1.4  2004/03/29 08:37:09  cignoni
 missing include
 
@@ -45,7 +48,9 @@ First commit...
 #include <vcg/space/box3.h>
 #include <vcg/space/tcoord2.h>
 #include <vcg/space/triangle3.h>
+#include <vcg/space/color4.h>
 #include <vcg/simplex/face/topology.h>
+
 
 namespace vcg {
 
