@@ -24,6 +24,11 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2004/05/10 13:19:38  cignoni
+Added mandatory template params for edge and face class names to the face class
+Changed type of return face pointer to the one passed by templ params
+Changed name of func FV to VF (it stores Vertex-Face Topology)
+
 Revision 1.8  2004/05/06 09:06:59  pietroni
 changed names to topology functions
 
@@ -349,7 +354,7 @@ public:
 #ifdef __VCGLIB_FACE_WT
 		return _wt[i];
 #else
-		assert(0);
+		assert(i*0);
 		return *(TCTYPE*)(&_flags);
 #endif
 	}
@@ -408,7 +413,7 @@ public:
 #ifdef __VCGLIB_FACE_WC
 		return _wc[i];
 #else
-		assert(0);
+		assert(i*0);
 		return *(Color4b*)(&_flags);
 #endif
 	}
