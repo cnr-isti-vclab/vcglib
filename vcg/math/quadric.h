@@ -228,7 +228,7 @@ bool Minimum(Point3<ReturnScalarType> &x)
 }
 
 
-bool Minimum(Point3<ScalarType> &x) const
+bool MinimumNew(Point3<ScalarType> &x) const
 {	
   ScalarType c0=-b[0]/2;
   ScalarType c1=-b[1]/2;
