@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.14  2004/05/13 22:44:40  ganovelli
+syntax error (typo)
+
 Revision 1.13  2004/05/13 22:40:02  ganovelli
 default template parameters
 
@@ -33,6 +36,9 @@ Revision 1.12  2004/05/10 13:31:13  ganovelli
 function for edge adjacency added
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2004/05/13 22:44:40  ganovelli
+syntax error (typo)
+
 Revision 1.13  2004/05/13 22:40:02  ganovelli
 default template parameters
 
@@ -85,6 +91,7 @@ Edited Comments and GPL license
 #include<vcg/space/point3.h>
 #include<vcg/space/color4.h>
 #include<vcg/space/tcoord2.h>
+#include<vcg/simplex/face/pos.h>
 
 class DUMMYFACETYPE;
 class DUMMYEDGETYPE;
@@ -805,6 +812,26 @@ inline void Convert( VERT_TYPE &v )
 
 };
 
+template <class VERTEX_TYPE> typename VERTEX_TYPE::CoordType NormalizedNormalV(VERTEX_TYPE *v)
+{
+  if (!v->HasVTAdjacency())
+  {
+    assert(0);
+		return (CoordType (0,0,0));
+  }
+  else
+  {
+    vcg::face::VFIterator<VERTEX_TYPE::FaceType> VFi(v);
+    VERTEX_TYPE::CoordType N=CoordType(0,0,0);
+    int i=0;
+    while (!Vfi.End())
+    {
+      N+=Vfi->f->NormalizedNormal()
+      i++;
+    }
+    return ((VERTEX_TYPE::CoordType) N/(VERTEX_TYPE::CoordType::ScalarType)i);
+  }
+}
 
 }	 // end namespace
 #endif
