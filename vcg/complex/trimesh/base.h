@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/05/04 02:29:54  ganovelli
+removed  Const from ConstFacePointer and ConstVertexPointer in the arguement function Mark, which are meant to be changed
+
 Revision 1.5  2004/03/18 16:00:10  cignoni
 minor changes
 
@@ -166,6 +169,8 @@ static bool HasFFTopology()       { return FaceType::HasFFAdjacency();  }
 static bool HasVFTopology()       { return FaceType::HasVFAdjacency(); }
 static bool HasTopology()         { return HasFFTopology() || HasVFTopology(); }
 
+int & SimplexNumber(){ return fn;}
+int & VertexNumber(){ return vn;}
 
 /// Initialize the imark-system of the faces
 void InitFaceIMark()
