@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2005/01/03 11:21:26  cignoni
+Added some casts
+
 Revision 1.10  2004/09/28 10:25:05  ponchio
 SetBox minimal change.
 
@@ -68,7 +71,7 @@ Initial commit
 
 #include <vcg/space/box3.h>
 #include <vcg/space/line3.h>
-
+#include <vcg/space/index/grid_util.h>
 namespace vcg {
   
   /** Static Uniform Grid
@@ -454,80 +457,7 @@ class GridStaticPtr
 	}
       
     }
-  
-  /** Calcolo dimensioni griglia.
-      Calcola la dimensione della griglia in funzione
-      della ratio del bounding box e del numero di elementi
-  */
-  static void BestDim( const int elems, const Point3x & size, Point3i & dim )
-    {
-      const int mincells   = 1;		// Numero minimo di celle
-      const double GFactor = 1.0;	// GridEntry = NumElem*GFactor
-      double diag = size.Norm();	// Diagonale del box
-      double eps  = diag*1e-4;		// Fattore di tolleranza
-      
-      assert(elems>0);
-      assert(size[0]>=0.0);
-      assert(size[1]>=0.0);
-      assert(size[2]>=0.0);
-      
-
-      int ncell = int(elems*GFactor);	// Calcolo numero di voxel
-      if(ncell<mincells)
-	ncell = mincells;
-      
-      dim[0] = 1;
-      dim[1] = 1;
-      dim[2] = 1;
-      
-      if(size[0]>eps)
-	{
-	  if(size[1]>eps)
-	    {
-	      if(size[2]>eps)
-		{
-		  double k = pow((double)(ncell/(size[0]*size[1]*size[2])),double(1.0/3.f));
-		  dim[0] = int(size[0] * k);
-		  dim[1] = int(size[1] * k);
-		  dim[2] = int(size[2] * k);
-		} 
-	      else 
-		{
-		  dim[0] = int(::sqrt(ncell*size[0]/size[1]));
-		  dim[1] = int(::sqrt(ncell*size[1]/size[0]));
-		}
-	    }
-	  else
-	    {
-	      if(size[2]>eps)
-		{
-		  dim[0] = int(::sqrt(ncell*size[0]/size[2]));
-		  dim[2] = int(::sqrt(ncell*size[2]/size[0]));
-		}
-	      else
-		dim[0] = int(ncell);
-	    }
-	}
-      else
-	{
-	  if(size[1]>eps)
-	    {
-	      if(size[2]>eps)
-		{
-		  dim[1] = int(::sqrt(ncell*size[1]/size[2]));
-		  dim[2] = int(::sqrt(ncell*size[2]/size[1]));
-		}
-	      else
-		dim[1] = int(ncell);
-	    }
-	  else if(size[2]>eps)
-	    dim[2] = int(ncell);
-	}
-      dim[0] = math::Max(dim[0],1);
-      dim[1] = math::Max(dim[1],1);
-      dim[2] = math::Max(dim[2],1);
-    }
-  
+    
   
   int MemUsed()
     {
