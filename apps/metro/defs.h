@@ -16,13 +16,14 @@
 #define CMD_LINE_ARG_SAMPLES_PER_AREA_UNIT          'A'
 #define CMD_LINE_ARG_SAVE_DISPLACEMENT              'O'
 #define CMD_LINE_ARG_SAVE_ERROR_AS_COLOUR           'C'
-
+#define CMR_LINE_ARG_IGNORE_UNREF										'U'
 
 // error messages
 #define MSG_ERR_N_ARGS                  "\nUsage:  "\
                                         "metro file1 file2  [opt]\n"\
                                         "where opt can be:\n"\
                                         "-V         disable vertex sampling\n"\
+                                        "-U         ignore unreferred vertices\n"\
                                         "-E         disable edge sampling\n"\
                                         "-F         disable face sampling\n"\
                                         "-Sx        set the face sampling mode\n"\
