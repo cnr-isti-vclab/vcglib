@@ -26,7 +26,7 @@ class PatchServer: public MFile {
     Patch *patch;
     unsigned int vbo_array;
     unsigned int vbo_element;
-    bool locked;
+    //bool locked;
 
     PTime(unsigned int p = 0xffffffff, unsigned int f = 0xffffffff):
 	 npatch(p), frame(f), patch(NULL), 
@@ -45,8 +45,8 @@ class PatchServer: public MFile {
   unsigned int vbo_used;
   unsigned int frame;
 
-  pt::rwlock ramlock; //read only thread safety...
-  pt::rwlock disklock; //read only thread safety...
+  //pt::rwlock ramlock; //read only thread safety...
+  //pt::rwlock disklock; //read only thread safety...
 
   //statistics:
   unsigned int ram_readed;
