@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/04/28 11:37:14  pietroni
+*** empty log message ***
+
 Revision 1.6  2004/04/26 09:40:15  pietroni
 *** empty log message ***
 
@@ -57,7 +60,7 @@ Edited Comments and GPL license
 #include<vcg/space/tcoord2.h>
 
 class DUMMYFACETYPE;
-
+class DUMMYTETRATYPE;
 namespace vcg {
 
 /**
@@ -68,7 +71,7 @@ namespace vcg {
 	@param FLTYPE (Template Parameter) Specifies the scalar field of the vertex coordinate type.
 	@param VFTYPE (Template Parameter) Specifies the type for the face, needed only for VF adjacency.
  */
-template <class FLTYPE, class VFTYPE = DUMMYFACETYPE, class TCTYPE = TCoord2<float,1> > class VERTEX_TYPE
+template <class FLTYPE, class VFTYPE = DUMMYFACETYPE, class VTTYPE = DUMMYTETRATYPE,class TCTYPE = TCoord2<float,1> > class VERTEX_TYPE
 {
 public:
 
@@ -250,7 +253,7 @@ static inline bool DeleteUserBit(int bitval)
    **/
 //@{
 
-#ifdef __VCGLIB_VERTEX_T
+#ifdef __VCGLIB_VERTEX_VT
 protected:
 	TCTYPE _t;
 #endif
@@ -258,7 +261,7 @@ protected:
 public:
 	TCTYPE & T()
 	{
-#ifdef __VCGLIB_VERTEX_T
+#ifdef __VCGLIB_VERTEX_VT
 		return _t;
 #else
 		assert(0);
@@ -268,7 +271,7 @@ public:
 
 	const TCTYPE & T() const
 	{
-#ifdef __VCGLIB_VERTEX_T
+#ifdef __VCGLIB_VERTEX_VT
 		return _t;
 #else
 		assert(0);
@@ -285,7 +288,7 @@ public:
    **/
 //@{
 
-#ifdef __VCGLIB_VERTEX_C
+#ifdef __VCGLIB_VERTEX_VC
 protected:
 	Color4b _c;
 #endif
@@ -293,7 +296,7 @@ protected:
 public:
 	Color4b & C()
 	{
-#ifdef __VCGLIB_VERTEX_C
+#ifdef __VCGLIB_VERTEX_VC
 		return _c;
 #else
 		assert(0);
@@ -303,7 +306,7 @@ public:
 
 	const Color4b & C() const
 	{
-#ifdef __VCGLIB_VERTEX_C
+#ifdef __VCGLIB_VERTEX_VC
 		return _c;
 #else
 		return Color4b(Color4b::White);
@@ -318,7 +321,7 @@ public:
   **/
   //@{
 
-#ifdef __VCGLIB_VERTEX_Q
+#ifdef __VCGLIB_VERTEX_VQ
 protected:
 	float _q;
 #endif
@@ -326,7 +329,7 @@ protected:
 public:
 	float & Q()
 	{
-#ifdef __VCGLIB_VERTEX_Q
+#ifdef __VCGLIB_VERTEX_VQ
 		return _q;
 #else
 		assert(0);
@@ -336,7 +339,7 @@ public:
 
 	const float & Q() const
 	{
-#ifdef __VCGLIB_VERTEX_Q
+#ifdef __VCGLIB_VERTEX_VQ
 		return _q;
 #else
 		return 1;
@@ -351,49 +354,109 @@ public:
  **/
  //@{
 
-#if ((defined __VCGLIB_VERTEX_A) || (defined __VCGLIB_VERTEX_AS)) 
+#if ((defined __VCGLIB_VERTEX_AF) || (defined __VCGLIB_VERTEX_AFS)) 
 	// Puntatore ad una faccia appartenente alla stella del vertice, implementa l'adiacenza vertice-faccia
 protected:
-	VFTYPE *_fp;
-	int _zp;
+	VFTYPE *_vfb;
+	int _vfi;
 #endif
 
 public:
-inline VFTYPE * & Fp()
+inline VFTYPE * & VFb()
 	{
-#if ((defined __VCGLIB_VERTEX_A) || (defined __VCGLIB_VERTEX_AS))
-		  return _fp;
+#if ((defined __VCGLIB_VERTEX_AF) || (defined __VCGLIB_VERTEX_AFS))
+		  return _vfb;
 #else
     assert(0);// you are probably trying to use VF topology in a vertex without it
 		return *((VFTYPE **)(_flags));  
 #endif
 	}
 
-inline const VFTYPE * & Fp() const
+inline const VFTYPE * & VFb() const
 	{
-#if ((defined __VCGLIB_VERTEX_A) || (defined __VCGLIB_VERTEX_AS))
-		  return _fp;
+#if ((defined __VCGLIB_VERTEX_AF) || (defined __VCGLIB_VERTEX_AFS))
+		  return _vfb;
 #else
 		assert(0);// you are probably trying to use VF topology in a vertex without it
 		return (VFTYPE *)this;
 #endif
 	}
 
-inline int & Zp()
+inline int & _VFi()
 	{
-#if ((defined __VCGLIB_VERTEX_A) || (defined __VCGLIB_VERTEX_AS))
+#if ((defined __VCGLIB_VERTEX_AF) || (defined __VCGLIB_VERTEX_AFS))
 
-		  return _zp;
+		  return _vfi;
 #else
     assert(0);// you are probably trying to use VF topology in a vertex without it
 		return _flags;
 #endif
 	}
 
-inline const int & Zp() const
+inline const int & _VFi() const
 	{
-#if ((defined __VCGLIB_VERTEX_A) || (defined __VCGLIB_VERTEX_AS))
-		  return _zp;
+#if ((defined __VCGLIB_VERTEX_AF) || (defined __VCGLIB_VERTEX_AFS))
+		  return _vfi;
+#else
+		assert(0);// you are probably trying to use VF topology in a vertex without it
+		return (void *)this;
+#endif
+	}
+
+
+
+ //@}
+
+  /***********************************************/
+/** @name Vertex-Tetrahedron Adjacency
+   blah
+   blah
+ **/
+ //@{
+
+#if ((defined __VCGLIB_VERTEX_AT) || (defined __VCGLIB_VERTEX_ATS)) 
+	// Pointer to first tetrahedron of the start implements the Vertex-Tetrahedron Topology
+protected:
+	VTTYPE *_vtb;
+	int _vti;
+#endif
+
+public:
+inline VTTYPE * & VTb()
+	{
+#if ((defined __VCGLIB_VERTEX_AT) || (defined __VCGLIB_VERTEX_ATS))
+		  return _vtb;
+#else
+    assert(0);// you are probably trying to use VF topology in a vertex without it
+		return *((VTTYPE **)(_flags));  
+#endif
+	}
+
+inline const VTTYPE * &  VTb() const
+	{
+#if ((defined __VCGLIB_VERTEX_AT) || (defined __VCGLIB_VERTEX_ATS))
+		  return _vtb;
+#else
+		assert(0);// you are probably trying to use VF topology in a vertex without it
+		return (VTTYPE *)this;
+#endif
+	}
+
+inline int & VTi()
+	{
+#if ((defined __VCGLIB_VERTEX_AT) || (defined __VCGLIB_VERTEX_ATS))
+
+		  return _vti;
+#else
+    assert(0);// you are probably trying to use VF topology in a vertex without it
+		return _flags;
+#endif
+	}
+
+inline const int & VTi() const
+	{
+#if ((defined __VCGLIB_VERTEX_AT) || (defined __VCGLIB_VERTEX_ATS))
+		  return _vti;
 #else
 		assert(0);// you are probably trying to use VF topology in a vertex without it
 		return (void *)this;
@@ -411,13 +474,13 @@ inline const int & Zp() const
  **/
  //@{
 
-#ifdef __VCGLIB_VERTEX_M
+#ifdef __VCGLIB_VERTEX_VM
 protected:
   /// The incremental vertex mark
 	int _imark;
 #endif // Mark
 public:
-#ifdef __VCGLIB_VERTEX_M
+#ifdef __VCGLIB_VERTEX_VM
 	/// This function return the vertex incremental mark
 	inline int & IMark()
 	{
@@ -439,7 +502,7 @@ public:
 	/// Initialize the _imark system of the vertex
 	inline void InitIMark()
 	{
-#ifdef __VCGLIB_VERTEX_M
+#ifdef __VCGLIB_VERTEX_VM
 		_imark = 0;
 #endif
 	}
@@ -453,7 +516,7 @@ public:
  **/
  //@{
 
-#ifdef __VCGLIB_VERTEX_N
+#ifdef __VCGLIB_VERTEX_VN
 protected:
     CoordType _n;
 #endif 
@@ -465,7 +528,7 @@ public:
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
 		assert( (_flags & NOTWRITE) == 0 );
-#ifdef __VCGLIB_VERTEX_N
+#ifdef __VCGLIB_VERTEX_VN
 		return _n;
 #else
 		assert(0);
@@ -478,7 +541,7 @@ public:
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
-#ifdef __VCGLIB_VERTEX_N
+#ifdef __VCGLIB_VERTEX_VN
 		return _n;
 #else
 		assert(0);
@@ -490,7 +553,7 @@ public:
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
-#ifdef __VCGLIB_VERTEX_N
+#ifdef __VCGLIB_VERTEX_VN
 		return _n;
 #else
 		return CoordType(0,0,0);
@@ -499,7 +562,7 @@ public:
    /// Return the Normal of the vertex
 	inline CoordType & UberN()
 	{
-#ifdef __VCGLIB_VERTEX_N
+#ifdef __VCGLIB_VERTEX_VN
 		return _n;
 #else
 		assert(0);
@@ -510,7 +573,7 @@ public:
 	/// Return the constant normal of the vertex
 	inline const CoordType & UberN() const
 	{
-#ifdef __VCGLIB_VERTEX_N
+#ifdef __VCGLIB_VERTEX_VN
 		return _n;
 #else
 		assert(0);
@@ -527,42 +590,49 @@ Reflection is a mechanism making it possible to investigate yourself. Reflection
  //@{
 
 static bool HasNormal()  { 
-#ifdef __VCGLIB_VERTEX_N 
+#ifdef __VCGLIB_VERTEX_VN 
   return true;
 #else
   return false;
 #endif
 }
 static bool HasColor()  { 
-#ifdef __VCGLIB_VERTEX_C 
+#ifdef __VCGLIB_VERTEX_VC 
   return true;
 #else
   return false;
 #endif
 }
 static bool HasMark()     { 
-#ifdef __VCGLIB_VERTEX_M 
+#ifdef __VCGLIB_VERTEX_VM 
   return true;
 #else
   return false;
 #endif
 }
 static bool HasQuality()   { 
-#ifdef __VCGLIB_VERTEX_Q 
+#ifdef __VCGLIB_VERTEX_VQ 
   return true;
 #else
   return false;
 #endif
 }
 static bool HasTexture()   { 
-#ifdef __VCGLIB_VERTEX_T 
+#ifdef __VCGLIB_VERTEX_VT 
   return true;
 #else
   return false;
 #endif
 }
 static bool HasVFAdjacency()   { 
-#ifdef __VCGLIB_VERTEX_A 
+#ifdef  __VCGLIB_VERTEX_AF
+  return true;
+#else
+  return false;
+#endif
+}
+static bool HasVTAdjacency()   { 
+#ifdef  __VCGLIB_VERTEX_AT
   return true;
 #else
   return false;
@@ -584,7 +654,7 @@ inline Convert( VERT_TYPE &v )
     N()=v.N();
   if ((HasColor())&&(v.HasColor()))
     C()=v.C();
-#ifdef __VCGLIB_VERTEX_M
+#ifdef __VCGLIB_VERTEX_VM
   if ((HasMark())&&(v.HasMark()))
     IMark()=v.IMark();
 #endif
