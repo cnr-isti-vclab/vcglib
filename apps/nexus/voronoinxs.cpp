@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.24  2004/11/28 07:58:49  ponchio
+*** empty log message ***
+
 Revision 1.23  2004/11/28 01:23:26  ponchio
 Fixing borders... let's hope.
 
@@ -147,13 +150,14 @@ int main(int argc, char *argv[]) {
   unsigned int patch_threshold = 0xffffffff;
   unsigned int optimization_steps = 5;
   bool stop_after_remap = false;
+  bool skip_remap = false;
   unsigned int max_level = 0xffffffff;
   float scaling = 0.5;
   unsigned int ram_buffer = 128000000;
   unsigned int chunk_size = 1024;
 
   int option;
-  while((option = getopt(argc, argv, "f:t:l:s:d:ro:b:c:")) != EOF) {
+  while((option = getopt(argc, argv, "f:t:l:s:d:rko:b:c:")) != EOF) {
     switch(option) {
     case 'f': patch_size = atoi(optarg);
       if(patch_size == 0 || patch_size > 32000) {
@@ -190,6 +194,7 @@ int main(int argc, char *argv[]) {
       }
       break;
     case 'r': stop_after_remap = true; break;
+    case 'k': skip_remap = true; break;
     case 'o': optimization_steps = atoi(optarg); break;
     case 'b': ram_buffer = atoi(optarg); 
       if(ram_buffer == 0) {
@@ -220,6 +225,7 @@ int main(int argc, char *argv[]) {
     cerr << " -d <method>: decimation method: quadric, cluster. (default quadric)\n";
     cerr << " -b N: ram buffer size (in bytes)\n";
     cerr << " -r  : stop after remapping fase\n";
+    cerr << " -k  : skip remapping fase\n";
     return -1;
   }
 
@@ -247,57 +253,189 @@ int main(int argc, char *argv[]) {
 
   if(patch_threshold == 0xffffffff)
     patch_threshold = patch_size/4;
+
   VoronoiChain vchain(patch_size, patch_threshold);
   //  vchain.scaling = scaling;
 
   //Now building level 0 of the Nexus
 
   VFile<unsigned int> face_remap;
-  if(!face_remap.Create(output + ".rmf")) {
-    cerr << "Could not create remap files: " << output << ".rmf\n";
-    return -1;
-  }
-  face_remap.Resize(crude.Faces());
-
   VertRemap vert_remap;
-  if(!vert_remap.Create(output)) {
-    cerr << "Could not create remap file: " << output << ".rmv and .rmb\n";
-    return -1;
-  }
-  vert_remap.Resize(crude.Vertices());
-  
   VFile<RemapLink> border_remap;
-  if(!border_remap.Create(output + string(".tmp"))) {
-    cerr << "Could not create temporary border remap file\n";
-    return -1;
-  }
-
   VFile<Point3f> baricenters;
-  if(!baricenters.Create(output + string(".bvr"))) {
-    cerr << "Could not create temporary baricenters file\n";
-    return -1;
-  } 
-  baricenters.Resize(crude.Faces());
-
-  //TODO use some smarter rule :P
-  for(unsigned int i = 0; i < crude.Faces(); i++) {
-    baricenters[i] = crude.GetBari(i);
-  }
-  /* BUILDING FIRST LEVEL */
-
-  //Remapping faces and vertices using level 0 and 1 of the chain
-  cerr << "Remapping faces.\n";
   vector<unsigned int> patch_faces;
-  
-  vchain.RemapFaces(baricenters, face_remap, patch_faces, 
-		    scaling, optimization_steps);
-
-  cerr << "Remapping vertices.\n";
   vector<unsigned int> patch_verts;
-  patch_verts.resize(patch_faces.size(), 0);
-  RemapVertices(crude, vert_remap, face_remap, patch_verts);
 
-  if(stop_after_remap) return 0;
+  if(skip_remap) {
+    if(!face_remap.Load(output + ".rmf")) {
+      cerr << "Could not cload remap files: " << output << ".rmf\n";
+      return -1;
+    }    
+  
+    if(!vert_remap.Load(output)) {
+      cerr << "Could not load remap file: " << output << ".rmv and .rmb\n";
+      return -1;
+    }    
+    
+    if(!border_remap.Load(output + string(".tmp"))) {
+      cerr << "Could not load temporary border remap file\n";
+      return -1;
+    }
+  
+    if(!baricenters.Load(output + string(".bvr"))) {
+      cerr << "Could not create temporary baricenters file\n";
+      return -1;
+    }
+    //fine, coarse, patch_faces, patch_vert
+    FILE *fp = fopen((output + ".remap").c_str(), "rb");
+    if(!fp) {
+      cerr << "Could not open remapping info\n";
+      return -1;
+    }
+    unsigned int fine_size, coarse_size, pfaces_size, pvert_size;
+    fread(&fine_size, sizeof(unsigned int), 1, fp);
+    fread(&coarse_size, sizeof(unsigned int), 1, fp);
+    fread(&pfaces_size, sizeof(unsigned int), 1, fp);
+    fread(&pvert_size, sizeof(unsigned int), 1, fp);
+    vchain.levels.push_back(VoronoiPartition());
+    vchain.levels.push_back(VoronoiPartition());
+    VoronoiPartition &fine = vchain.levels[0];
+    VoronoiPartition &coarse = vchain.levels[1];
+    cerr << "fine_size: " << fine_size << endl;
+    cerr << "coarse_size: " << fine_size << endl;
+    fine.resize(fine_size);
+    fread(&(fine[0]), sizeof(Point3f), fine_size, fp);
+    fine.Init();
+    coarse.resize(coarse_size);
+    fread(&(coarse[0]), sizeof(Point3f), coarse_size, fp);
+    coarse.Init();
+    patch_faces.resize(pfaces_size);
+    fread(&(patch_faces[0]), sizeof(unsigned int), pvert_size, fp);
+    patch_verts.resize(pvert_size);
+    fread(&(patch_verts[0]), sizeof(unsigned int), pvert_size, fp);
+
+    unsigned int nfrag;
+    fread(&nfrag, sizeof(unsigned int), 1, fp);
+    for(unsigned int i = 0; i < nfrag; i++) {
+      unsigned int p, n;
+      fread(&p, sizeof(unsigned int), 1, fp);
+      set<unsigned int> &s = vchain.newfragments[p];
+      fread(&n, sizeof(unsigned int), 1, fp);
+      for(unsigned int k = 0; k < n; k++) {
+        unsigned int j;
+        fread(&j, sizeof(unsigned int), 1, fp);        
+        s.insert(j);
+      }
+      
+    }
+    
+    fread(&nfrag, sizeof(unsigned int), 1, fp);
+    for(unsigned int i = 0; i < nfrag; i++) {
+      unsigned int p, n;
+      fread(&p, sizeof(unsigned int), 1, fp);
+      set<unsigned int> &s = vchain.oldfragments[p];
+      fread(&n, sizeof(unsigned int), 1, fp);
+      for(unsigned int k = 0; k < n; k++) {
+        unsigned int j;
+        fread(&j, sizeof(unsigned int), 1, fp);        
+        s.insert(j);
+      }
+      
+    }
+    
+    fclose(fp);
+
+  } else {
+    if(!face_remap.Create(output + ".rmf")) {
+      cerr << "Could not create remap files: " << output << ".rmf\n";
+      return -1;
+    }
+    face_remap.Resize(crude.Faces());
+  
+    if(!vert_remap.Create(output)) {
+      cerr << "Could not create remap file: " << output << ".rmv and .rmb\n";
+      return -1;
+    }
+    vert_remap.Resize(crude.Vertices());
+    
+    if(!border_remap.Create(output + string(".tmp"))) {
+      cerr << "Could not create temporary border remap file\n";
+      return -1;
+    }
+  
+    if(!baricenters.Create(output + string(".bvr"))) {
+      cerr << "Could not create temporary baricenters file\n";
+      return -1;
+    } 
+    baricenters.Resize(crude.Faces());
+
+    //TODO use some smarter rule :P
+    for(unsigned int i = 0; i < crude.Faces(); i++) {
+      baricenters[i] = crude.GetBari(i);
+    }
+    /* BUILDING FIRST LEVEL */
+
+    //Remapping faces and vertices using level 0 and 1 of the chain
+    cerr << "Remapping faces.\n";
+    
+  
+    vchain.RemapFaces(baricenters, face_remap, patch_faces, 
+		                  scaling, optimization_steps);
+
+    cerr << "Remapping vertices.\n";
+    
+    patch_verts.resize(patch_faces.size(), 0);
+    RemapVertices(crude, vert_remap, face_remap, patch_verts);
+  }
+
+  if(stop_after_remap) {
+    //fine, coarse, patch_faces, patch_vert
+    FILE *fp = fopen((output + ".remap").c_str(), "wb+");
+    if(!fp) {
+      cerr << "Could not create remapping info\n";
+      return -1;
+    }
+    VoronoiPartition &fine = vchain.levels[0];
+    VoronoiPartition &coarse = vchain.levels[1];
+    
+    unsigned int fine_size = fine.size();
+    unsigned int coarse_size = coarse.size();
+    unsigned int pfaces_size = patch_faces.size();
+    unsigned int pvert_size = patch_verts.size();
+    fwrite(&fine_size, sizeof(unsigned int), 1, fp);
+    fwrite(&coarse_size, sizeof(unsigned int), 1, fp);
+    fwrite(&pfaces_size, sizeof(unsigned int), 1, fp);
+    fwrite(&pvert_size, sizeof(unsigned int), 1, fp);
+    
+    fwrite(&(fine[0]), sizeof(Point3f), fine_size, fp);
+    fwrite(&(coarse[0]), sizeof(Point3f), coarse_size, fp);    
+    fwrite(&(patch_faces[0]), sizeof(unsigned int), pvert_size, fp);    
+    fwrite(&(patch_verts[0]), sizeof(unsigned int), pvert_size, fp);
+
+    unsigned int nfrag = vchain.newfragments.size();
+    fwrite(&nfrag, sizeof(unsigned int), 1, fp);
+    std::map<unsigned int, std::set<unsigned int> >::iterator i;
+    for(i = vchain.newfragments.begin(); i != vchain.newfragments.end(); i++) {
+      unsigned int n = (*i).second.size();
+      fwrite(&((*i).first), sizeof(unsigned int), 1, fp);
+      fwrite(&n, sizeof(unsigned int), 1, fp);
+      set<unsigned int>::iterator k;
+      for(k = (*i).second.begin(); k != (*i).second.end(); k++)
+        fwrite(&*k, sizeof(unsigned int), 1, fp);
+    }
+    nfrag = vchain.oldfragments.size();
+    fwrite(&nfrag, sizeof(unsigned int), 1, fp);    
+    for(i = vchain.oldfragments.begin(); i != vchain.oldfragments.end(); i++) {
+      unsigned int n = (*i).second.size();
+      fwrite(&((*i).first), sizeof(unsigned int), 1, fp);
+      fwrite(&n, sizeof(unsigned int), 1, fp);
+      set<unsigned int>::iterator k;
+      for(k = (*i).second.begin(); k != (*i).second.end(); k++)
+        fwrite(&*k, sizeof(unsigned int), 1, fp);
+    }
+    fclose(fp);
+    return 0;
+  }
 
 
 
@@ -306,6 +444,11 @@ int main(int argc, char *argv[]) {
   NexusAllocate(crude, nexus, face_remap, patch_faces, patch_verts);
 
   cerr << "Filling first level\n";
+  face_remap.Flush();
+  vert_remap.all.Flush();
+  vert_remap.borders.buffer.Flush();
+  border_remap.Flush();
+  baricenters.Flush();
   //insert vertices and remap faces, prepare borders
   NexusFill(crude, nexus, vert_remap, border_remap);
 
