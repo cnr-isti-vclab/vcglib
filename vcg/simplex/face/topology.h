@@ -31,11 +31,9 @@ $LOG$
 #define _VCG_FACE_TOPOLOGY
 
 namespace vcg {
-  namespace face {
-/*#*******************	
-*  Adjacency Members *
-**********************/
-
+namespace face {
+/** \addtogroup face */
+/*@{*/
 
 /** Return a boolean that indicate if the face is complex.
     @param j Index of the edge
@@ -260,7 +258,7 @@ void VFDetach(FaceType & f, int z)
 	}
 }
 
-
+/*@}*/
 }	 // end namespace
 }	 // end namespace
 
