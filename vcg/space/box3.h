@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/07/15 09:47:55  ganovelli
+added function P(int i) to list the box's vertices
+
 Revision 1.6  2004/07/07 23:26:25  cignoni
 removed the infamous Inflate. Now only Offset exists
 
@@ -50,6 +53,8 @@ First working release.
 #define __VCGLIB_BOX3
 
 #include <vcg/space/point3.h>
+#include <vcg/math/matrix44.h>
+
 
 namespace vcg {
 
@@ -152,21 +157,21 @@ public:
 			if(max.Z() < p.Z()) max.Z() = p.Z();
 		}
 	}
-	//
-	//// Aggiunge ad un box un altro box trasformato secondo la matrice m
-	//void Add( const Matrix44<BoxScalarType> &m, const Box3<BoxScalarType> & b )
-	//{
-	//		const Point3<BoxScalarType> &mn= b.min;
-	//		const Point3<BoxScalarType> &mx= b.max;
- //     Add(m.Apply(Point3<BoxScalarType>(mn[0],mn[1],mn[2])));
-	//		Add(m.Apply(Point3<BoxScalarType>(mx[0],mn[1],mn[2])));
-	//		Add(m.Apply(Point3<BoxScalarType>(mn[0],mx[1],mn[2])));
-	//		Add(m.Apply(Point3<BoxScalarType>(mx[0],mx[1],mn[2])));
-	//		Add(m.Apply(Point3<BoxScalarType>(mn[0],mn[1],mx[2])));
-	//		Add(m.Apply(Point3<BoxScalarType>(mx[0],mn[1],mx[2])));
-	//		Add(m.Apply(Point3<BoxScalarType>(mn[0],mx[1],mx[2])));
-	//		Add(m.Apply(Point3<BoxScalarType>(mx[0],mx[1],mx[2])));
-	//}
+	
+	// Aggiunge ad un box un altro box trasformato secondo la matrice m
+	void Add( const Matrix44<BoxScalarType> &m, const Box3<BoxScalarType> & b )
+	{
+			const Point3<BoxScalarType> &mn= b.min;
+			const Point3<BoxScalarType> &mx= b.max;
+      Add(m*(Point3<BoxScalarType>(mn[0],mn[1],mn[2])));
+			Add(m*(Point3<BoxScalarType>(mx[0],mn[1],mn[2])));
+			Add(m*(Point3<BoxScalarType>(mn[0],mx[1],mn[2])));
+			Add(m*(Point3<BoxScalarType>(mx[0],mx[1],mn[2])));
+			Add(m*(Point3<BoxScalarType>(mn[0],mn[1],mx[2])));
+			Add(m*(Point3<BoxScalarType>(mx[0],mn[1],mx[2])));
+			Add(m*(Point3<BoxScalarType>(mn[0],mx[1],mx[2])));
+			Add(m*(Point3<BoxScalarType>(mx[0],mx[1],mx[2])));
+	}
 		/** Calcola l'intersezione tra due bounding box. Al bounding box viene assegnato il valore risultante.
 			@param b Il bounding box con il quale si vuole effettuare l'intersezione
 		*/
