@@ -401,32 +401,30 @@ void TestTTTopology(VertexContainer &vert,TetraContainer &tetra)
  		
 	}
 
-void setExternalVertices()
-  {	
+void setExternalVertices(VertexContainer &vert,TetraContainer &tetra)
+{	
     
 		TetraIterator tt;
+    VertexIterator vi;
 		int i;
-    for (tt=_tetra.begin();tt<_tetra.end();++tt)
+    for (vi=vert.begin();vi<vert.end();++vi)
+        vi->ClearB();
+    for (tt=tetra.begin();tt<tetra.end();++tt)
     {
-     
 			for(i=0;i<4;i++)
 			{
 				if ((*tt).IsBorderF(i))
 				{
-					(*tt).FV(i,0)->SetB();
-					(*tt).FV(i,1)->SetB();
-					(*tt).FV(i,2)->SetB();
+          (*tt).V(Tetra::VofF(i,0))->SetB();
+					(*tt).V(Tetra::VofF(i,1))->SetB();
+					(*tt).V(Tetra::VofF(i,2))->SetB();
 				}
-        else
-        {
-          (*tt).FV(i,0)->SetB();
-					(*tt).FV(i,1)->SetB();
-					(*tt).FV(i,2)->SetB();
-        }
+        
       }
        
     }
 	}
+
 
 /*@}*/
 }; // end class
