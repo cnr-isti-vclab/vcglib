@@ -125,7 +125,13 @@ public:
 		// puntatori ai vertici che sono stati messi non-w per preservare il boundary
 		static std::vector<typename TriMeshType::VertexPointer>  & WV(){static std::vector<typename TriMeshType::VertexPointer> _WV; return _WV;}; 
 
-		TriEdgeCollapseQuadric(PosType p, int i):TEC(p,i){}
+		TriEdgeCollapseQuadric(PosType p, int i)
+			//:TEC(p,i){}
+		{
+				_Imark() = i;
+				pos=p;
+				_priority = ComputePriority();
+		}
 
 
 		bool IsFeasible(){
@@ -241,15 +247,15 @@ public:
 	static void SetDefaultParams(){
 		Params().UseArea=true;
 		Params().UseVertexWeight=false;
-		Params().NormalCheck=false;
-		Params().NormalThr=M_PI/2;
+		Params().NormalCheck=true;
+		Params().CosineThr=M_PI/2;
 		Params().QualityCheck=true;
 		Params().QualityThr=.1;
 		Params().BoundaryWeight=.5;
 		Params().OptimalPlacement=true;
 		Params().ScaleIndependent=true;
 		Params().ComplexCheck=false;
-		Params().QuadricEpsilon = 1e-15;
+		Params().QuadricEpsilon =1e-15;
 		Params().ScaleFactor=1.0;
 	}
 	
@@ -259,11 +265,10 @@ public:
 //
 //	Da ottimizzare il ciclo sulle normali (deve sparire on e si deve usare per face normals)
 //*/
-		ScalarType ComputePriority()  {
+	ScalarType ComputePriority()  {
 		ScalarType error;
 		typename vcg::face::VFIterator<FaceType> x;
 		std::vector<CoordType> on; // original normals
-
 		typename TriMeshType::VertexType * v[2];
 		v[0] = pos.V();
 		v[1] = pos.V(1);
@@ -344,13 +349,10 @@ public:
 		if(!Params().QualityCheck &&  Params().NormalCheck) error = QuadErr / MinCos;
 		if( Params().QualityCheck &&  Params().NormalCheck) error = QuadErr / (MinQual*MinCos);
 																							           
-																								
-		error=QuadErr;
-
 		//Rrestore old position of v0 and v1
 		v[0]->P()=OldPos0;
 		v[1]->P()=OldPos1;
-		_priority = error;
+		_priority = -error;
 		return _priority;
 	}
 
@@ -380,7 +382,7 @@ static void InitQuadric(TriMeshType &m)
 							// Se normalizzo non dipende dall'area
 
 						if(!Params().UseArea)	
-							{ p.SetDirection(p.Direction()); p.Normalize();}
+							p.Normalize();
 
 						p.SetOffset( p.Direction() * (*pf).V(0)->cP());
 
