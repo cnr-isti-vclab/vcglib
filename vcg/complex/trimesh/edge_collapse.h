@@ -44,7 +44,7 @@ class EdgeCollapse
 {
 	public:
   /// The tetrahedral mesh type
-  typedef	typename TRI_MESH_TYPE TriMeshType;
+  typedef	 TRI_MESH_TYPE TriMeshType;
   /// The tetrahedron type
   typedef	typename TriMeshType::FaceType FaceType;
 	/// The vertex type
@@ -151,12 +151,12 @@ class EdgeCollapse
 		const int ADJ_E = TriMeshType::VertexType::NewBitFlag();
 		//enum {ADJ_1= MeshType::VertexType::USER0,
 		//	    ADJ_E= MeshType::VertexType::USER0<<1} ;
-		const int ALLADJ = ADJ_1|ADJ_E;
+		// const int ALLADJ = ADJ_1|ADJ_E;
 		const int NOTALLADJ = ~(ADJ_1 | ADJ_E | TriMeshType::VertexType::VISITED);
 		const int NOTALLADJ1 = ~(ADJ_E | TriMeshType::VertexType::VISITED);
 
 		//EdgePosB<MeshType::face_type::face_base> x;
-		vcg::face::VFIterator<FaceType> x;
+		typename vcg::face::VFIterator<FaceType> x;
 		// Clear visited and adj flag for all vertices adj to v0;
 		for(x.f = pos.V(0)->VFp(), x.z = pos.V(0)->VFi(); x.f!=0; ++x )	 	{
 			x.f->V1(x.z)->Flags() &= NOTALLADJ;
@@ -204,7 +204,7 @@ class EdgeCollapse
 	int DoCollapse(PosType & c, Point3<ScalarType> p)
 	{
 		FindSets(c);
-		VFIVec::iterator i;
+		typename VFIVec::iterator i;
 		int n_face_del =0 ;
 		
 		//set Face Face topology

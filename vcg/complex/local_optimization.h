@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.3  2004/07/27 09:46:15  cignoni
+  First working version of the LocalOptimization/Simplification Framework
+
   Revision 1.1  2004/07/15 12:04:14  ganovelli
   minor changes
 
@@ -58,7 +61,7 @@ class LocalModification
 
  public:
 	LocalModification(){};
-	~LocalModification(){};
+	virtual ~LocalModification(){};
   
 	/// return the type of operation
 	virtual ModifierType IsOfType() = 0 ;
@@ -206,9 +209,9 @@ public:
     start=clock();
 		nPerfmormedOps =0;
 
-    int i=0;
+    
 		while( !GoalReached() && !h.empty())
-			{int size = h.size();
+			{
 				std::pop_heap(h.begin(),h.end());
         LocModPtrType  locMod   = h.back().locModPtr;
 				h.pop_back();
