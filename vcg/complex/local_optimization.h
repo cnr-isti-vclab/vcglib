@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.9  2004/11/05 10:03:47  fiorin
+  Added ModifierType::TriEdgeFlipOp
+
   Revision 1.8  2004/10/25 07:02:56  ganovelli
   some inline function, logs on file (precompiler directive)
 
@@ -193,18 +196,21 @@ public:
 
     ///pointer to instance of local modifier
     LocModPtrType locModPtr;
+    float pri;
 
    
     inline HeapElem( LocModPtrType _locModPtr)
     {
-		locModPtr = _locModPtr;
+		  locModPtr = _locModPtr;
+      pri=float(locModPtr->Priority());
     };
 
     /// STL heap has the largest element as the first one.
     /// usually we mean priority as an error so we should invert the comparison
     const bool operator <(const HeapElem & h) const 
     { 
-		  return (locModPtr->Priority() < h.locModPtr->Priority());
+		  return (pri < h.pri);
+		  //return (locModPtr->Priority() < h.locModPtr->Priority());
 	  }
 
     bool IsUpToDate()
@@ -227,7 +233,7 @@ public:
 		nPerfmormedOps =0;
 #ifdef __SAVE__LOG__
  		FILE * fo=fopen("log.txt","w");
-#endif __SAVE__LOG__    
+#endif // __SAVE__LOG__    
 		while( !GoalReached() && !h.empty())
 			{
 				std::pop_heap(h.begin(),h.end());
@@ -242,7 +248,7 @@ public:
 					{
 #ifdef __SAVE__LOG__
 						fprintf(fo,"%s",locMod->Info(m));
-#endif __SAVE__LOG__
+#endif // __SAVE__LOG__
 	
 						nPerfmormedOps++;
 						locMod->Execute(m);
@@ -254,7 +260,7 @@ public:
 			}
 #ifdef __SAVE__LOG__
 			fclose(fo);
-#endif __SAVE__LOG__
+#endif // __SAVE__LOG__
 		return !(h.empty());
   }
  
