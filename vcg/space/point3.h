@@ -38,14 +38,6 @@ Edited Comments and GPL license
 
 Revision 1.4  2004/02/09 13:48:02  cignoni
 Edited doxygen comments
-
-Revision 1.3  2004/02/06 02:25:54  cignoni
-First working release.
-
-Revision 1.2  2004/02/06 02:17:09  cignoni
-First commit...
-
-
 ****************************************************************************/
 
 #ifndef __VCGLIB_POINT3
@@ -239,7 +231,7 @@ public:
 		// Norme
 	inline P3ScalarType Norm() const
 	{
-    return Math<P3ScalarType>::Sqrt( _v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2] );
+		return Sqrt( _v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2] );
 	}
 	inline P3ScalarType SquaredNorm() const
 	{
@@ -264,7 +256,7 @@ public:
 	// Normalizzazione
 	inline Point3 & Normalize()
 	{
-    P3ScalarType n = Math<P3ScalarType>::Sqrt(_v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2]);
+		P3ScalarType n = Sqrt(_v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2]);
 		if(n>0.0) {	_v[0] /= n;	_v[1] /= n;	_v[2] /= n;  }
 		return *this;
 	}
