@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/05/07 10:06:55  cignoni
+Corrected template specialization syntax for gcc compiling
+
 Revision 1.3  2004/03/10 21:38:40  cignoni
 Written some documentation and added to the space module
 
@@ -219,7 +222,11 @@ inline void Color4<T>::ColorRamp(const float &minf,const float  &maxf ,float v )
 
 }
 
+
+#if !defined(__GNUC__)
 template <>
+#endif
+template <> 
 inline void Color4<float>::Import(const Color4<unsigned char> &b)
 {
   _v[0]=b[0]/255.0f;
@@ -227,6 +234,10 @@ inline void Color4<float>::Import(const Color4<unsigned char> &b)
   _v[2]=b[2]/255.0f;
   _v[3]=b[3]/255.0f;
 }
+
+#if !defined(__GNUC__)
+template <> // [Bug c++/14479] enum definition in template class with template methods causes error.
+#endif
 template <>
 inline void Color4<unsigned char>::Import(const Color4<float> &b)
 {
