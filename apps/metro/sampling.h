@@ -24,6 +24,16 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/05/14 00:38:01  ganovelli
+a bit of cleaning:
+SamplingFlags struct added
+optional treatment for unreferred vertices.
+Note: unref vertices are tested against unref vertices without
+using the grid...it is n^2 with n number of unreferred vertices. To make it
+with the grid in the proper way :
+derive face and vertex from a simplexClass,
+instantiate GridStaticPtr on the simplexClass template.
+
 
 
 ****************************************************************************/
@@ -78,7 +88,6 @@ private:
     MetroMesh       &S2;
     MetroMeshGrid   gS2;
 
-		std::vector<VertexPointer>  unrefVert2; //unreferred vertices
 
 		int n_samples_per_face             ;
 		float n_samples_edge_to_face_ratio ;
@@ -111,7 +120,7 @@ private:
 
     // private methods
     inline double   ComputeMeshArea(MetroMesh & mesh);
-    float           AddSample(const Point3x &p,ScalarType upper_bound);
+    float           AddSample(const Point3x &p);
     inline void     AddRandomSample(FaceIterator &T);
     inline void     SampleEdge(const Point3x & v0, const Point3x & v1, int n_samples_per_edge);
     void            VertexSampling();
@@ -125,6 +134,7 @@ private:
 public :
     // public methods
     Sampling(MetroMesh &_s1, MetroMesh &_s2);
+		~Sampling();
     void            Hausdorff();
     double          GetArea()                   {return area_S1;}
     double          GetDistMax()                {return max_dist;}
@@ -166,12 +176,13 @@ Sampling<MetroMesh>::Sampling(MetroMesh &_s1, MetroMesh &_s2):S1(_s1),S2(_s2)
 			// store the unreferred vertices
 			FaceIterator fi; VertexIterator vi; int i;
 			for(fi = _s1.face.begin(); fi!= _s1.face.end(); ++fi)
-				for(i=0;i<3;++i) (*fi).V(i)->SetUserBit(referredBit);
-			for(fi = _s2.face.begin(); fi!= _s2.face.end(); ++fi)
-				for(i=0;i<3;++i) (*fi).V(i)->SetUserBit(referredBit);
+				for(i=0;i<3;++i) (*fi).V(i)->SetUserBit(referredBit);	
+}
 
-
-	
+template <class MetroMesh>
+Sampling<MetroMesh>::~Sampling()
+{
+	VertexType::DeleteUserBit(referredBit);
 }
 
 
@@ -206,13 +217,13 @@ inline double Sampling<MetroMesh>::ComputeMeshArea(MetroMesh & mesh)
 }
 
 template <class MetroMesh>
-float Sampling<MetroMesh>::AddSample(const Point3x &p, ScalarType upper_bound )
+float Sampling<MetroMesh>::AddSample(const Point3x &p )
 {
     FaceType   *f=0;
     Point3x             normf, bestq, ip;
 		ScalarType              dist;
 
-    dist = upper_bound;
+    dist = dist_upper_bound;
 
     // compute distance between p_i and the mesh S2
     MinDistPoint(S2, p, gS2, dist, normf, bestq, f, ip);
@@ -251,17 +262,7 @@ void Sampling<MetroMesh>::VertexSampling()
 			if(  (*vi).IsUserBit(referredBit) || // it is referred
 					((Flags&SamplingFlags::INCLUDE_UNREFERENCED_VERTICES) != 0) ) //include also unreferred
     {
-				error = dist_upper_bound;
-				if( !(*vi).IsUserBit(referredBit) && 
-						((Flags&SamplingFlags::INCLUDE_UNREFERENCED_VERTICES) != 0) )
-						for(vif = unrefVert2.begin(); vif != unrefVert2.end(); ++vif)
-							{
-							ScalarType d = Distance((*vif)->cP(),(*vi).cP());
-							if(d < error)
-								error = d;
-							}
-
-        error = AddSample((*vi).cP(),error);
+        error = AddSample((*vi).cP());
 
         n_total_vertex_samples++;
 
@@ -304,7 +305,7 @@ inline void Sampling<MetroMesh>::SampleEdge(const Point3x & v0, const Point3x & 
     
     for(i=1; i <= n_samples_per_edge; i++)
     {
-        AddSample(v0 + e*i,dist_upper_bound);
+        AddSample(v0 + e*i);
         n_total_edge_samples++;
     }
 }
@@ -384,7 +385,7 @@ inline void Sampling<MetroMesh>::AddRandomSample(FaceIterator &T)
     }
 
     // add a random point on the face T.
-    AddSample (p0 + (v1 * rnd_1 + v2 * rnd_2),dist_upper_bound);
+    AddSample (p0 + (v1 * rnd_1 + v2 * rnd_2));
     n_total_area_samples++;
 }
 
@@ -427,7 +428,7 @@ void Sampling<MetroMesh>::FaceSubdiv(const Point3x & v0, const Point3x & v1, con
     if(maxdepth == 0) 
     {
         // ground case.
-        AddSample((v0+v1+v2)/3.0f,dist_upper_bound);
+        AddSample((v0+v1+v2)/3.0f);
         n_total_area_samples++;
         n_samples++;
         return;
@@ -507,7 +508,7 @@ void Sampling<MetroMesh>::SimilarTriangles(const Point3x & v0, const Point3x & v
     for(i=1; i < n_samples_per_edge-1; i++)
         for(j=1; j < n_samples_per_edge-1-i; j++)
         {
-            AddSample( v0 + (V1*(double)i + V2*(double)j) ,dist_upper_bound);
+            AddSample( v0 + (V1*(double)i + V2*(double)j) );
             n_total_area_samples++;
             n_samples++;
         }
@@ -551,12 +552,6 @@ template <class MetroMesh>
 void Sampling<MetroMesh>::Hausdorff()
 {
 		Box3< ScalarType> bbox;
-
-		FaceIterator fi; VertexIterator vi; 
-		if( (Flags & SamplingFlags::INCLUDE_UNREFERENCED_VERTICES) != 0){
-				for(vi = S2.vert.begin(); vi!= S2.vert.end(); ++vi)
-					if(!(*vi).IsUserBit(referredBit)) unrefVert2.push_back(&(*vi));
-			}
 
     // set grid meshes.
     gS2.SetBBox(S2.bbox);
