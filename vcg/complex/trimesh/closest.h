@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/01/28 12:00:33  cignoni
+small gcc compiling issues for namespaces
+
 Revision 1.3  2005/01/24 11:47:23  cignoni
 Now used also by the official Metro
 Removed using namespace (NEVER IN HEADERS!)
@@ -128,17 +131,19 @@ void Closest( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & mdist,
 			A2UGridLink *first, *last, *l;
 			gr.Grid( gx, gy, gz, first, last );
 			for(l=first;l!=last;++l)
-
+			  if (!l->Elem()->IsD())
+			  {
 				if( ! mesh.IsMarked( &*(l->Elem())) )
-			{
-				if( face::PointDistance((*(l->Elem())), p, error, q) )
 				{
-					bestq = q;
-					bestf = l->Elem();
-				}
+					if( face::PointDistance((*(l->Elem())), p, error, q) )
+					{
+						bestq = q;
+						bestf = l->Elem();
+					}
 
-				mesh.Mark( &*(l->Elem()) );
-			}
+					mesh.Mark( &*(l->Elem()) );
+				}
+			  }
 		}
 		else
 		{
@@ -156,14 +161,17 @@ void Closest( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & mdist,
 									A2UGridLink *first, *last, *l;
 									gr.Grid( ix, iy, iz, first, last );
 									for(l=first;l!=last;++l)
-									if( ! mesh.IsMarked( &*(l->Elem())) )
+									if (!l->Elem()->IsD())
 									{
-										if( vcg::face::PointDistance((*(l->Elem())),  p, error, q) )
+										if( ! mesh.IsMarked( &*(l->Elem())) )
 										{
-											bestq = q;
-											bestf = l->Elem();
-											}
-										mesh.Mark(&*l->Elem());
+											if( vcg::face::PointDistance((*(l->Elem())),  p, error, q) )
+											{
+												bestq = q;
+												bestf = l->Elem();
+											}	
+											mesh.Mark(&*l->Elem());
+										}
 									}
 								}
 						}
