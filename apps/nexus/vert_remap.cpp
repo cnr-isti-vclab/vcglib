@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/07/01 21:36:30  ponchio
+Various debug
+
 Revision 1.1  2004/06/24 14:32:45  ponchio
 Moved from wrap/nexus
 
@@ -40,14 +43,14 @@ using namespace std;
 using namespace nxs;
 
 bool VertRemap::Create(const std::string &file) {
-  if(!all.Create(file + ".vrm")) return false;
-  if(!borders.Create(file + ".vrb")) return false;
+  if(!all.Create(file + ".rmv")) return false;
+  if(!borders.Create(file + ".rmb")) return false;
   return true;
 }
 
 bool VertRemap::Load(const std::string &file) {
-  if(!all.Load(file)) return false;
-  if(!borders.Create(file)) return false;
+  if(!all.Load(file + ".rmv")) return false;
+  if(!borders.Load(file + ".rmb")) return false;
   return true;
 }
 
