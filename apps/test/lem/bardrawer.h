@@ -99,6 +99,8 @@ public:
        glColor4d(0.8,0.8,0.8,0.9);
        for (Fi=m->face.begin();Fi<m->face.end();Fi++)
        {
+	   if (!Fi->IsD())
+	   {
 	    glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_SRC_ALPHA);
 	    glEnable(GL_LIGHTING);
@@ -119,6 +121,7 @@ public:
           glVertex(Fi->V(1)->P());
           glVertex(Fi->V(2)->P());
         glEnd();
+	   }
        }
        glPopAttrib(); 
     }

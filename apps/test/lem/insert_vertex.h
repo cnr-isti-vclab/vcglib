@@ -30,19 +30,26 @@
 
 #include<vcg\simplex\face\pos.h>
 #include<vcg\simplex\face\topology.h>
+#include<vcg\complex\trimesh\update\topology.h>
 #include<vcg\complex\trimesh\allocate.h>
 
 /// This Class is used for insertiong a vertex in a face
 namespace vcg{
   namespace tri{	
-
 	
+  
   template <class MESH_TYPE> 
   ///insert a vertex iside a face and re-triangolarize v will be pointer to inserted vertex
-  void InsertVert(MESH_TYPE &m,typename MESH_TYPE::FaceType *f,typename MESH_TYPE::VertexType* &v)
+  void InsertVert(MESH_TYPE &m,typename MESH_TYPE::FaceType* &f,typename MESH_TYPE::VertexType* &v)
   {
-	MESH_TYPE::FaceIterator Finit=vcg::tri::Allocator<MESH_TYPE>::AddFaces(m,3);
+	std::vector<MESH_TYPE::FaceType **> local_var;
+    local_var.push_back(&f);
+	MESH_TYPE::FaceIterator Finit=vcg::tri::Allocator<MESH_TYPE>::AddFaces(m,3,local_var);
 	MESH_TYPE::VertexIterator Vi=vcg::tri::Allocator<MESH_TYPE>::AddVertices(m,1);
+
+	if (MESH_TYPE::HasVFTopology())
+		Vi->VFp()=0;
+	
 	MESH_TYPE::FaceIterator Fi=Finit;
 	MESH_TYPE::FaceType *F;
 	//set vertex pointer of new face
@@ -56,7 +63,9 @@ namespace vcg{
 
 		//assign topology in substitution of the old one
 		if (MESH_TYPE::HasFFTopology())
-			vcg::face::Attach<MESH_TYPE::FaceType>(F,0,f->FFp(i),f->FFi(i));
+		{
+			vcg::face::FFAttach<MESH_TYPE::FaceType>(F,0,f->FFp(i),f->FFi(i));
+		}
 		if (MESH_TYPE::HasVFTopology())
 		{
 			vcg::face::VFDetach(f,i);
@@ -76,20 +85,24 @@ namespace vcg{
 	MESH_TYPE::FaceType *F0=&(*Fi);
 	MESH_TYPE::FaceType *F1=&(*Fsucc);
 
-	/*vcg::face::Attach<MESH_TYPE::FaceType>(F0,1,F1,2);*/
+	vcg::face::FFAttach<MESH_TYPE::FaceType>(F0,1,F1,2);
+
 	Fi++;
 	Fsucc++;
 	F0=&(*Fi);
 	F1=&(*Fsucc);
-	/*vcg::face::Attach<MESH_TYPE::FaceType>(F0,1,F1,2);*/
+
+	vcg::face::FFAttach<MESH_TYPE::FaceType>(F0,1,F1,2);
 	Fsucc=Finit;
 	Fi++;
 	F0=&(*Fi);
 	F1=&(*Fsucc);
-	/*vcg::face::Attach<MESH_TYPE::FaceType>(F0,1,F1,2);*/
+
+	vcg::face::FFAttach<MESH_TYPE::FaceType>(F0,1,F1,2);
 	//at the end set as deleted the old face that was substituted
 	f->SetD();
 	v=&(*Vi);
+
   }
 
 
