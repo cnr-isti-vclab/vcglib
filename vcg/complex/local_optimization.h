@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.4  2004/09/08 15:10:59  ganovelli
+  *** empty log message ***
+
   Revision 1.3  2004/07/27 09:46:15  cignoni
   First working version of the LocalOptimization/Simplification Framework
 
@@ -56,10 +59,11 @@ enum ModifierType{	TetraEdgeCollapseOp, TriEdgeSwapOp, TriVertexSplitOp,
 template <class MeshType>
 class LocalModification
 {
-  typedef typename LocalOptimization<MeshType>::HeapType HeapType;
-  typedef typename MeshType::ScalarType ScalarType;
-
  public:
+        typedef typename LocalOptimization<MeshType>::HeapType HeapType;
+        typedef typename MeshType::ScalarType ScalarType;
+
+
 	LocalModification(){};
 	virtual ~LocalModification(){};
   
