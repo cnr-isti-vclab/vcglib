@@ -86,7 +86,7 @@ void 	_DrawFlatWire(){
 		glDisable(GL_LIGHTING);
 		glColor3f(0.0,0.0,0.0);
 		glDepthRange(0.0,0.999);
-		Draw<DMWire,nm,cm>();
+		Draw<DMHidden,nm,cm>();
 		glPopAttrib();
 }
 
@@ -122,7 +122,8 @@ void _DrawTetra(TetraType &t)
 {
   if(!(t.IsD()))
       {
-       _ChooseColorTetra<cm>(t);
+       if ((dm!=DMWire)&&(dm!=DMHidden))
+          _ChooseColorTetra<cm>(t);
        for(int i = 0; i < 4; ++i){
          if (dm == DMWire)
            _DrawFace<cm>(t,i);
