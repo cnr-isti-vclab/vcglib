@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2004/07/09 10:13:00  ganovelli
+C() ,Q() ,hastetracolor(),hasqualityt()....
+plus some misuse of tetra3 corrected
+
 Revision 1.9  2004/07/08 08:43:22  pietroni
 changed functions used to compute the aspect ratio
 
@@ -161,6 +165,8 @@ bool IsD() const {return (_flags & DELETED) != 0;}
 void SetD()		{_flags |=DELETED;}
 /// This function mark the tetrahedron as not deleted.
 void ClearD() {_flags &=~DELETED;}
+/// This answer true if a tetrahedron is selected
+bool IsS() const {return (_flags & SELECTED) != 0;}
 /// This function mark the tetrahedron as selected.
 void SetS() {_flags |=SELECTED;}
 /// This function mark the tetrahedron as not selected.
@@ -324,7 +330,7 @@ public:
 #endif
 
 ///return the normal of a face of the tetrahedron
-	const CoordType & N(const int &i){
+  CoordType N(const int &i){
     assert((i>=0)&&(i<4));
   #ifdef __VCGLIB_TETRA_TN		
       return _n[i];
@@ -334,6 +340,7 @@ public:
    T.P1(0)=V(1)->P();
    T.P2(0)=V(2)->P();
    T.P3(0)=V(3)->P();*/
+
   return (Normal(*this,i));
   #endif
 		}	
