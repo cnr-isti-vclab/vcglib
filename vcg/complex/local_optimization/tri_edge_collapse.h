@@ -189,7 +189,7 @@ public:
   }
   
   
-  void UpdateHeap(LocalOptimization<TRI_MESH_TYPE>::HeapType & h_ret)
+  void UpdateHeap(typename LocalOptimization<TRI_MESH_TYPE>::HeapType & h_ret)
   {
 		_Imark()++;
 		vcg::face::VFIterator<FaceType> VFi(pos.V(1)->VFp(),pos.V(1)->VFi());
@@ -198,14 +198,14 @@ public:
       for (int j=0;j<3;j++)
       {
 				PosType p;
-				p.Set(VFi.f,VFi.z,VFi.f->V(VFi.z));
+				p.Set(VFi.F(),VFi.I(),VFi.f->V(VFi.z));
 				h_ret.push_back(HeapElem(new TriEdgeCollapse<TriMeshType>(p,_Imark())));
 				std::push_heap(h_ret.begin(),h_ret.end());
 				//// update the mark of the vertices
 				VFi.f->V(VFi.z)->IMark() = _Imark();
 				VFi.f->V( (VFi.z+1) % 3 )->IMark() = _Imark();
       }
-      VFi++;
+      ++VFi;
     }
   }
 
@@ -235,7 +235,7 @@ public:
 //		return _priority;
 	}
 
-	virtual void Init(TriMeshType&m,LocalOptimization<TRI_MESH_TYPE>::HeapType&h_ret){
+	virtual void Init(TriMeshType&m,typename LocalOptimization<TRI_MESH_TYPE>::HeapType&h_ret){
 		h_ret.clear();
 		TriMeshType::FaceIterator fi;
 		int j;

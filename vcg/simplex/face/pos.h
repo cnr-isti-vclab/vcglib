@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/07/15 11:28:44  ganovelli
+basefacetype to facetype
+
 Revision 1.6  2004/07/06 06:25:44  cignoni
 changed the VFIterator ++ to return a facepointer instead of a bool
 
@@ -325,24 +328,27 @@ public:
 	/// The vertex type
 	typedef typename FaceType::VertexType VertexType;
 	/// The Base face type
-	typedef typename FaceType::FaceType  FaceType;
+	typedef typename FaceType  VFIFaceType;
 	/// The vector type
 	typedef typename VertexType::CoordType CoordType;
 	/// The scalar type
 	typedef typename VertexType::ScalarType ScalarType;
 
 	/// Pointer to the face of the half-edge
-	typename FaceType::FaceType *f;
+	VFIFaceType *f;
 	/// Index of the vertex
 	int z;
 	
 	/// Default constructor
 	VFIterator(){}
 	/// Constructor which associates the half-edge elementet with a face and its vertex
-	VFIterator(FaceType * _f, const int &  _z){f = _f; z = _z;}
+	VFIterator(FaceType const * _f, const int &  _z){f = _f; z = _z;}
+
+	const VFIFaceType *	F() const { return f;}
+	const int					I() const { return z;}
 
   bool End() const {return f==0;}
-  FaceType *operator++() {
+  VFIFaceType *operator++() {
     FaceType* t = f;
 		f = t->VFp(z);
 		z = t->VFi(z);

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2004/07/15 11:31:59  ganovelli
+minor changes
+
 Revision 1.15  2004/07/12 12:17:09  pietroni
 added function NormalizedNormal
 
@@ -100,7 +103,7 @@ public:
 	///	The base type of the face
 	typedef FACE_TYPE BaseFaceType;
 	///	The base type of the face itself
-	typedef FACE_TYPE FaceType;
+	typedef FFTYPE FaceType;
 	/// The vertex type
 	typedef FVTYPE VertexType;
 	/// The type of the scalar field of the vertex coordinate

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/07/15 11:26:48  ganovelli
+VFDetach corrected
+
 Revision 1.7  2004/05/12 12:23:23  cignoni
 Conformed C++ syntax to GCC requirements
 
@@ -221,7 +224,6 @@ void Swap (SwapFaceType &f, const int z )
 template <class FaceType>
 void VFDetach(FaceType & f, int z)
 {
-	printf("detach %d \n",&f);
 	if(f.V(z)->VFp()==&f )  //if it is the first face detach from the begin
 	{
 		int fz = f.V(z)->VFi();
