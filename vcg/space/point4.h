@@ -24,9 +24,6 @@
   History
 
 $Log: not supported by cvs2svn $
-Revision 1.2  2004/03/10 00:35:24  cignoni
-added a math namespace reference
-
 Revision 1.1  2004/02/10 01:11:28  cignoni
 Edited Comments and GPL license
 
@@ -35,25 +32,29 @@ Edited Comments and GPL license
 #ifndef __VCGLIB_POINT4
 #define __VCGLIB_POINT4
 
-#include <vcg/space/point3.h>
-
 namespace vcg {
-
 /** \addtogroup space */
 /*@{*/
     /**
         The templated class for representing a point in 4D space.
-        The class is templated over the ScalarType class that is used to represent coordinates. All the usual
-        operator overloading (* + - ...) is present. This class is also the base for vcg::Color4
+        The class is templated over the ScalarType class that is used to represent coordinates. 
+				All the usual operator (* + - ...) are defined. 
      */
+
 template <class T> class Point4
 {
 protected:
+  /// The only data member. Hidden to user.
 	T _v[4];
 
 public:
-	typedef T scalar;
+	typedef T ScalarType;
 
+//@{
+
+  /** @name Standard Constructors and Initializers 
+   No casting operators have been introduced to avoid automatic unattended (and costly) conversion between different point types
+   **/
 
 	inline Point4 () { }
 	inline Point4 ( const T nx, const T ny, const T nz , const T nw )
@@ -68,22 +69,32 @@ public:
 	{   
 		_v[0]= p._v[0]; _v[1]= p._v[1]; _v[2]= p._v[2]; _v[3]= p._v[3];
 	}
-	inline Point4 ( const Point3<T> & p )
-	{
-		_v[0] = p.V(0);
-		_v[1] = p.V(1);
-		_v[2] = p.V(2);
-		_v[3] = 1.0;
+	inline Zero()
+	{   
+		_v[0] = _v[1] = _v[2] = _v[3]= 0;
 	}
-	inline Point4 & operator = ( const Point4 & p )
+	template <class Q>
+	/// importer from different Point4 types
+	inline void Import( const Point4<Q> & b )
 	{
-		_v[0]= p._v[0]; _v[1]= p._v[1]; _v[2]= p._v[2]; _v[3]= p._v[3];
-		return *this;
+		_v[0] = T(b[0]);		_v[1] = T(b[1]);
+		_v[2] = T(b[2]);
+		_v[3] = T(b[3]);
 	}
-	inline T &x() {return _v[0];}
-	inline T &y() {return _v[1];}
-	inline T &z() {return _v[2];}
-	inline T &w() {return _v[3];}
+	/// constuctor that imports from different Point4 types
+  template <class Q> 
+  static inline Point4 Construct( const Point4<Q> & b )
+  {
+    return Point4(T(b[0]),T(b[1]),T(b[2]),T(b[3]));
+  }
+
+//@}
+
+//@{
+
+  /** @name Data Access. 
+   access to data is done by overloading of [] or explicit naming of coords (x,y,z,w)
+	**/
 	inline const T & operator [] ( const int i ) const
 	{
 		assert(i>=0 && i<4);
@@ -94,6 +105,10 @@ public:
 		assert(i>=0 && i<4);
 		return _v[i];
 	}
+	inline T &X() {return _v[0];}
+	inline T &Y() {return _v[1];}
+	inline T &Z() {return _v[2];}
+	inline T &W() {return _v[3];}
 	inline T const * V() const
 	{
 		return _v;
@@ -108,7 +123,18 @@ public:
 		assert(i>=0 && i<4);
 		return _v[i];
 	}
+		/// Padding function: give a default 0 value to all the elements that are not in the [0..2] range. 
+		/// Useful for managing in a consistent way object that could have point2 / point3 / point4
+	inline T Ext( const int i ) const
+	{
+		if(i>=0 && i<=3) return _v[i];
+		else             return 0;
+	}
+//@}
 	
+//@{
+  /** @name Linear operators and the likes
+  **/
 	inline Point4 operator + ( const Point4 & p) const
 	{ 
 		return Point4( _v[0]+p._v[0], _v[1]+p._v[1], _v[2]+p._v[2], _v[3]+p._v[3] );
@@ -125,10 +151,6 @@ public:
 	{
 		return Point4( _v[0]/s, _v[1]/s, _v[2]/s, _v[3]/s );
 	}
-	inline T operator * ( const Point4 & p ) const
-	{
-		return _v[0]*p._v[0] + _v[1]*p._v[1] + _v[2]*p._v[2] + _v[3]*p._v[3];
-	} 
 	inline Point4 & operator += ( const Point4 & p)
 	{
 		_v[0] += p._v[0]; _v[1] += p._v[1]; _v[2] += p._v[2]; _v[3] += p._v[3];
@@ -149,25 +171,43 @@ public:
 		_v[0] /= s; _v[1] /= s; _v[2] /= s; _v[3] /= s;
 		return *this;
 	}
+	inline Point4 operator - () const
+	{
+		return Point4( -_v[0], -_v[1], -_v[2], -_v[3] );
+	}
+//@}
+	
+//@{
+  /** @name Norms and normalizations
+  **/
+	/// Euclidian normal
 	inline T Norm() const
 	{
 		return Sqrt( _v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2] + _v[3]*_v[3] );
 	}
+	/// Squared euclidian normal
 	inline T SquaredNorm() const
 	{
 		return _v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2] + _v[3]*_v[3];
 	}
-
+	/// Euclidian normalization 
   inline Point4 & Normalize()
 	{
 		T n = Sqrt(_v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2] + _v[3]*_v[3] );
 		if(n>0.0) {	_v[0] /= n;	_v[1] /= n;	_v[2] /= n; _v[3] /= n; }
 		return *this;
 	}
-	inline Point4 operator - () const
-	{
-		return Point4( -_v[0], -_v[1], -_v[2], -_v[3] );
-	}
+	/// Homogeneous normalization (division by W)
+	inline Point4 & HomoNormalize(){
+		if (_v[3]!=0.0) {	_v[0] /= _v[3];	_v[1] /= _v[3];	_v[2] /= _v[3]; _v[3]=1.0; }
+		return *this;
+	};
+
+//@}
+	
+//@{
+  /** @name Comparison operators (lexicographical order)
+  **/
 	inline bool operator == (  const Point4& p ) const
 	{
 		return _v[0]==p._v[0] && _v[1]==p._v[1] && _v[2]==p._v[2] && _v[3]==p._v[3];
@@ -204,44 +244,39 @@ public:
 				(_v[1]!=p._v[1])?(_v[1]> p._v[1]):
 				(_v[0]>=p._v[0]);
 	}
-		/// Questa funzione estende il vettore ad un qualsiasi numero di dimensioni
-		/// paddando gli elementi estesi con zeri
-	inline T Ext( const int i ) const
-	{
-		if(i>=0 && i<=3) return _v[i];
-		else             return 0;
-	}
+//@}
+	
+//@{
+  /** @name Dot products
+  **/
 
-	T stable_dot ( const Point4<T> & p ) const
+	// dot product
+	inline T operator * ( const Point4 & p ) const
 	{
-		T k[4];
+		return _v[0]*p._v[0] + _v[1]*p._v[1] + _v[2]*p._v[2] + _v[3]*p._v[3];
+	} 
+	/// slower version, more stable (double precision only)
+	T StableDot ( const Point4<T> & p ) const
+	{
 
-		k[0] = _v[0]*p._v[0];
-		k[1] = _v[1]*p._v[1];
-		k[2] = _v[2]*p._v[2];
-		k[3] = _v[3]*p._v[3];
-    sort(k+0,k+4, math::MagnitudoComparer<T>() );
-		T q = k[0];
-		q += k[1];
-		q += k[2];
-		q += k[3];
-		return q;
+		T k0=_v[0]*p._v[0],	k1=_v[1]*p._v[1], k2=_v[2]*p._v[2], k3=_v[3]*p._v[3];
+		int exp0,exp1,exp2,exp3;
+
+		frexp( double(k0), &exp0 );frexp( double(k1), &exp1 );
+		frexp( double(k2), &exp2 );frexp( double(k3), &exp3 );
+
+		if (exp0>exp1) { math::Swap(k0,k1); math::Swap(exp0,exp1); }
+		if (exp2>exp3) { math::Swap(k2,k3); math::Swap(exp2,exp3); }
+		if (exp0>exp2) { math::Swap(k0,k2); math::Swap(exp0,exp2); }
+		if (exp1>exp3) { math::Swap(k1,k3); math::Swap(exp1,exp3); }
+		if (exp2>exp3) { math::Swap(k2,k3); math::Swap(exp2,exp3); }
+
+		return ( (k0 + k1) + k2 ) +k3;
 	}  
+//@}
 
-	template <class Q>
-	inline void Import( const Point4<Q> & b )
-	{
-		_v[0] = T(b[0]);
-		_v[1] = T(b[1]);
-		_v[2] = T(b[2]);
-		_v[3] = T(b[3]);
-	}
 
 }; // end class definition
-
-#ifdef __VCG_USE_P4_INTRINSIC__
-#include <vcg/p4/point4p4.h>
-#endif
 
 template <class T>
 T Angle( const Point4<T>& p1, const Point4<T>  & p2 )
@@ -250,10 +285,8 @@ T Angle( const Point4<T>& p1, const Point4<T>  & p2 )
 	if(w==0) return -1;
 	T t = (p1*p2)/w;
 	if(t>1) t=1;
-    return T( acos(t) );
+	return T( math::Acos(t) );
 }
-
-
 
 template <class T>
 inline T Norm( const Point4<T> & p )
@@ -267,15 +300,6 @@ inline T SquaredNorm( const Point4<T> & p )
     return p.SquaredNorm();
 }
 
-/* Deprecato
-template <class T>
-inline Point4<T> & Normalize( Point4<T> & p ){
-		T n = Sqrt( p._v[0]*p._v[0] + p._v[1]*p._v[1] + p._v[2]*p._v[2] + p._v[3]*p._v[3] );
-    if(n>0.0) p/=n;
-    return p;
-}
-*/
-
 template <class T>
 inline T Distance( const Point4<T> & p1, const Point4<T> & p2 )
 {
@@ -288,6 +312,12 @@ inline T SquaredDistance( const Point4<T> & p1, const Point4<T> & p2 )
     return SquaredNorm(p1-p2);
 }
 
+	/// slower version of dot product, more stable (double precision only)
+template<class T>
+double StableDot ( Point4<T> const & p0, Point4<T> const & p1 )
+{
+	return p0.StableDot(p1);
+}  
 
 typedef Point4<short>  Point4s;
 typedef Point4<int>	   Point4i;
@@ -295,6 +325,5 @@ typedef Point4<float>  Point4f;
 typedef Point4<double> Point4d;
 
 /*@}*/
-
 } // end namespace
 #endif
