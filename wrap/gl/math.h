@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/05/26 15:12:39  cignoni
+Removed inclusion of gl extension stuff
+
 Revision 1.5  2004/05/12 20:54:55  ponchio
 *** empty log message ***
 
@@ -55,12 +58,22 @@ namespace vcg {
 
 inline void glMultMatrix(const Matrix44f &matrix) {
   //glMultMatrixf((const GLfloat *)(matrix[0]));  
-  glMultTransposeMatrixf((const GLfloat *)(matrix[0])); 
+  if(glMultTransposeMatrixf) glMultTransposeMatrixf((const GLfloat *)(matrix[0])); 
+  else  {
+    Matrix44f tmp(matrix);
+    Transpose(tmp);
+    glMultMatrixf((const GLfloat *)(tmp[0]));
+  }
 }
 
 inline void glMultMatrix(const Matrix44d &matrix) {
 //  glMultMatrixd((const GLdouble *)(matrix[0]));
-  glMultTransposeMatrixd((const GLdouble *)(matrix[0])); 
+  if(glMultTransposeMatrixd) glMultTransposeMatrixd((const GLdouble *)(matrix[0])); 
+  else  {
+    Matrix44d tmp(matrix);
+    Transpose(tmp);
+    glMultMatrixd((const GLdouble *)(tmp[0]));
+  }
 }
 
 inline void glMultMatrix(const Similarityf &s) {
