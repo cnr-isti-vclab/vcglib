@@ -129,25 +129,25 @@ int main(int argc, char *argv[]) {
     case 'z': compress = true; break;
     case 'x': uncompress = true; break;
 
-    case 'v': qvertex = atof(optarg); 
+    case 'v': qvertex = (float)atof(optarg); 
       if(qvertex == 0) {
 	cerr << "Invalid value for quantization: " << optarg << endl;
 	return -1;
       }
       break;
-    case 'n': qnormal = atof(optarg); 
+    case 'n': qnormal = (float)atof(optarg); 
       if(qnormal == 0) {
 	cerr << "Invalid value for quantization: " << optarg << endl;
 	return -1;
       }
       break;
-    case 'k': qcolor = atof(optarg); 
+    case 'k': qcolor = (float)atof(optarg); 
       if(qcolor == 0) {
 	cerr << "Invalid value for quantization: " << optarg << endl;
 	return -1;
       }
       break;
-    case 't': qtexture = atof(optarg); 
+    case 't': qtexture = (float)atof(optarg); 
       if(qtexture == 0) {
 	cerr << "Invalid value for quantization: " << optarg << endl;
 	return -1;
@@ -262,6 +262,10 @@ int main(int argc, char *argv[]) {
     return 0;
   }
 
+  if((add & NXS_NORMALS_SHORT) && compress) {
+    cerr << "Its not possible to add normals and compress in the same step\n";
+    return -1;
+  }
   unsigned int signature = nexus.signature;
   signature |= add;
   signature &= ~remove;
@@ -303,16 +307,17 @@ int main(int argc, char *argv[]) {
 
 
     Nexus::PatchInfo &dst_entry = out.index[patch];
+
     Patch dst_patch = out.GetPatch(patch);
 
     //copy vertices: 
     memcpy(dst_patch.VertBegin(), src_patch.VertBegin(), 
 	   src_patch.nv * sizeof(Point3f));
 
-    if(qvertex) {
+    if(qvertex && !add_normals) {
       float *ptr = (float *)dst_patch.VertBegin();
-      for(unsigned int i = 0; i < dst_patch.nv*3; i++) {
-	ptr[i] =  qvertex * nearbyintf(ptr[i]/qvertex);
+      for(int i = 0; i < dst_patch.nv*3; i++) {
+	      ptr[i] =  qvertex * (int)(ptr[i]/qvertex);
 	//ptr[i] = 0;
       }
     } 
@@ -324,22 +329,22 @@ int main(int argc, char *argv[]) {
 	     strip.size() * sizeof(short));
     } else {
       if(nexus.signature & NXS_STRIP) {
-	memcpy(dst_patch.FaceBegin(), src_patch.FaceBegin(), 
-	       src_patch.nf * sizeof(unsigned short));
+	      memcpy(dst_patch.FaceBegin(), src_patch.FaceBegin(), 
+	      src_patch.nf * sizeof(unsigned short));
       } else {
-	memcpy(dst_patch.FaceBegin(), src_patch.FaceBegin(), 
-	       src_patch.nf * sizeof(unsigned short) * 3);
+	      memcpy(dst_patch.FaceBegin(), src_patch.FaceBegin(), 
+	      src_patch.nf * sizeof(unsigned short) * 3);
       }
     }
 
     if((nexus.signature & NXS_COLORS) && (out.signature & NXS_COLORS))
       memcpy(dst_patch.ColorBegin(), src_patch.ColorBegin(), 
-	     src_patch.nv * sizeof(unsigned int));
+	    src_patch.nv * sizeof(unsigned int));
 
     if((nexus.signature & NXS_NORMALS_SHORT) && 
        (out.signature & NXS_NORMALS_SHORT))
       memcpy(dst_patch.Norm16Begin(), src_patch.Norm16Begin(), 
-	     src_patch.nv * sizeof(short)*4);
+	    src_patch.nv * sizeof(short)*4);
 
     //reordering
     //WATCH OUT BORDERS!
@@ -372,7 +377,7 @@ int main(int argc, char *argv[]) {
     cerr << "Unsupported color\n";
     return -1;
   }
-  if(qvertex) { 
+  if(qvertex && add_normals) { 
     report.Init(nexus.index.size());
     cout << "Quantizing vertices\n";
     for(unsigned int patch = 0; patch < nexus.index.size(); patch++) {
@@ -380,8 +385,8 @@ int main(int argc, char *argv[]) {
       Patch src_patch = nexus.GetPatch(patch);
 
       float *ptr = (float *)src_patch.VertBegin();
-      for(unsigned int i = 0; i < src_patch.nv*3; i++) 
-	ptr[i] =  qvertex * nearbyintf(ptr[i]/qvertex);
+      for(int i = 0; i < src_patch.nv*3; i++) 
+	      ptr[i] =  qvertex * (int)(ptr[i]/qvertex);
     }
     report.Finish();
   }

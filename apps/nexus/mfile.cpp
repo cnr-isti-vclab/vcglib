@@ -5,8 +5,6 @@
 using namespace std;
 using namespace nxs;
 
-typedef unsigned long long u64;
-
 bool MFile::Create(const string &fname, unsigned int mxs) {
   filename = fname;
   files.clear();
@@ -14,8 +12,7 @@ bool MFile::Create(const string &fname, unsigned int mxs) {
   readonly = false;
   assert(mxs <= (1<<30));
   max_size = mxs;
-  AddFile();
-  return true;
+  return AddFile();  
 }
 
 bool MFile::Load(const string &fname, bool ronly) {
@@ -55,26 +52,30 @@ void MFile::Close() {
   files.clear();
 }
 
-void MFile::Redim(unsigned long long sz) {
+void MFile::Redim(int64 sz) {
   assert(!readonly);
   if(sz > size) {
-    while(sz - size >= max_size) {
+    unsigned int totfile = (unsigned int)(sz/max_size);
+    //TODO test rhis!!!!
+    while(files.size() < totfile) {
       RedimLast(max_size);
       AddFile();
     }
-    RedimLast(sz - size);
+    assert(size < sz);
+    assert(sz - size < max_size);
+    RedimLast(files.back().Length() + (unsigned int)(sz - size));
   } else {
     while(size - files.back().Length() > sz)
       RemoveFile();
     assert(sz <= size);
-    RedimLast(files.back().Length() - (size - sz));
+    RedimLast(files.back().Length() - (unsigned int)(size - sz));
   }    
 }
 
-void MFile::SetPosition(unsigned long long pos) {
+void MFile::SetPosition(int64 pos) {
   assert(pos < size);
-  curr_fp = pos/(u64)max_size;
-  curr_pos = pos - (u64)max_size * (u64)curr_fp;
+  curr_fp = (unsigned int)(pos/(int64)max_size);
+  curr_pos = (unsigned int)(pos - (int64)max_size * (int64)curr_fp);
   assert(curr_fp < files.size());
   files[curr_fp].SetPosition(curr_pos);
 }
@@ -106,11 +107,11 @@ void MFile::WriteBuffer(void *data, unsigned int sz) {
   files[curr_fp].WriteBuffer(data, sz);
 }
 
- void MFile::AddFile() {
+ bool MFile::AddFile() {
    string name = Name(files.size());
    files.push_back(File());
    File &file = files.back();
-   file.Create(name);
+   return file.Create(name);     
  }
 
  void MFile::RemoveFile() {

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2004/10/21 12:22:21  ponchio
+Small changes.
+
 Revision 1.16  2004/10/19 01:23:02  ponchio
 Daily backup (fragment...)
 
@@ -390,7 +393,7 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
   }
   centroid /= newface.size()/3;
   //prune small cells:
-  float min_size = (newface.size()/3) / 20;
+  float min_size = (newface.size()/3) / 20.0f;
 
   vector<unsigned int> cellremap;
   VoronoiPartition local;

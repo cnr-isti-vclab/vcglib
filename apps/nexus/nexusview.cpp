@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2004/10/21 12:22:21  ponchio
+Small changes.
+
 Revision 1.16  2004/10/19 01:23:02  ponchio
 Daily backup (fragment...)
 
@@ -431,7 +434,7 @@ int main(int argc, char *argv[]) {
 
 void gl_print(float x, float y, char *str) {
   glRasterPos2f(x, y);
-  int len = strlen(str);
+  int len = (int)strlen(str);
   for(int i = 0; i < len; i++) 
     glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, str[i]);
 }

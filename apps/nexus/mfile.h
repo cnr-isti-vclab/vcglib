@@ -8,6 +8,11 @@
 
 namespace nxs {
 
+#ifdef WIN32
+typedef __int64 int64;
+#else
+typedef unsigned long long int64;
+#endif
 
 class MFile {
  public:
@@ -21,10 +26,10 @@ class MFile {
   bool Load(const std::string &filename, bool readonly = false);
   void Close();
   
-  unsigned long long Length() { return size; }
-  void Redim(unsigned long long size);
+  int64 Length() { return size; }
+  void Redim(int64 size);
 
-  void SetPosition(unsigned long long pos);
+  void SetPosition(int64 pos);
   void ReadBuffer(void *data, unsigned int size);
   void WriteBuffer(void *data, unsigned int size);
 
@@ -35,12 +40,12 @@ class MFile {
   std::vector<File> files;
   unsigned int curr_pos;
   unsigned int curr_fp;
-  unsigned long long size;
+  int64 size;
   unsigned int max_size;
   bool readonly;
  private:
   //all theese refer to the last in the fp.
-  void AddFile();
+  bool AddFile();
   void RemoveFile();
   void RedimLast(unsigned int sz);
   unsigned int GetSize();

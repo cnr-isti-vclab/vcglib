@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/10/21 12:14:02  ponchio
+Support for mfile (>4Gb)
+
 Revision 1.1  2004/10/19 17:20:24  ponchio
 renamed
 
@@ -53,10 +56,10 @@ class Watch {
 public:
   Watch();
   void Start();
-  double Pause();
+  float Pause();
   void Continue();
   void Reset();
-  double Time();
+  float Time();
   int Usec();
 private:
   double Diff();

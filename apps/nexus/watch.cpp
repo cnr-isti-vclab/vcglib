@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/10/21 12:14:02  ponchio
+Support for mfile (>4Gb)
+
 Revision 1.1  2004/10/19 17:20:24  ponchio
 renamed
 
@@ -58,19 +61,19 @@ void Watch::Start(void) {
   elapsed = 0;
 }
 
-double Watch::Pause() {
+float Watch::Pause() {
   QueryPerformanceCounter(&tend);         
   elapsed += Diff();
-  return elapsed;
+  return (float)elapsed;
 }               
 
 void Watch::Continue() {
   QueryPerformanceCounter(&tstart);
 }
 
-double Watch::Time() {
+float Watch::Time() {
   QueryPerformanceCounter(&tend);         
-  return elapsed + Diff();
+  return (float)(elapsed + Diff());
 }
 
 double Watch::Diff() {  
@@ -88,19 +91,19 @@ void Watch::Start() {
    elapsed = 0;
 }
 
-double Watch::Pause() {
+float Watch::Pause() {
   gettimeofday(&tend, &tz); 
   elapsed += Diff();
-  return elapsed;
+  return (float)elapsed;
 }
 
 void Watch::Continue() {
   gettimeofday(&tstart, &tz); 
 }
 
-double Watch::Time() {
+float Watch::Time() {
   gettimeofday(&tend, &tz); 
-  return elapsed + Diff();
+  return (float)(elapsed + Diff());
 }
  
 double Watch::Diff() {

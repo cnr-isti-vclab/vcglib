@@ -221,7 +221,7 @@ void PatchServer::Flush(PTime &ptime) {
       if(entry.disk_size == 0xffff) {//allocate space 
 	assert(entry.patch_start == 0xffffffff);
 	entry.disk_size = (unsigned int)((compressed_size-1)/chunk_size) + 1;
-	entry.patch_start = Length()/chunk_size;
+	entry.patch_start = (unsigned int)(Length()/chunk_size);
 	Redim(Length() + entry.disk_size * chunk_size);
       } else {
 	cerr << "OOOOPSPPPS not supported!" << endl;
@@ -233,7 +233,7 @@ void PatchServer::Flush(PTime &ptime) {
     } else {
       if(entry.disk_size == 0xffff) {
 	entry.disk_size = entry.ram_size;
-	entry.patch_start = Length()/chunk_size;
+	entry.patch_start = (unsigned int)(Length()/chunk_size);
 	Redim(Length() + entry.disk_size * chunk_size);
       }
       SetPosition(entry.patch_start * chunk_size);
