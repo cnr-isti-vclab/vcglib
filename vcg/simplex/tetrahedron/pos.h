@@ -85,14 +85,14 @@ inline const int & Vi() const
 inline bool End(){return (Vt()==NULL);}
 
 	/// move on the next tetrahedron that share the vertex
-bool operator++() 
+void operator++() 
 {
 		int vi=Vi();
 		TetraType * tw = Vt();
 		Vt() = tw->TVp(vi);
 		Vi() = tw->TVi(vi);
-		assert(((tw->V(vi))==(Vt()->V(Vi())))||(Vt()==NULL));
-    return (Vt()!=NULL);
+
+		assert((Vt()==NULL)||((tw->V(vi))==(Vt()->V(Vi()))));
 }
 
 };
