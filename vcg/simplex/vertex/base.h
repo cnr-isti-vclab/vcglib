@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/02/13 02:09:39  cignoni
+First working release, with doxygen comment structure
+
 Revision 1.1  2004/02/10 01:11:28  cignoni
 Edited Comments and GPL license
 
@@ -42,7 +45,9 @@ class DUMMYFACETYPE;
 
 namespace vcg {
 
-/** @name Vertex
+/**
+    \ingroup vertex
+    @name Vertex
     Class Vertex.
     This is the base class for definition of a vertex of the mesh.
 	@param FLTYPE (Template Parameter) Specifies the scalar field of the vertex coordinate type.
@@ -59,7 +64,7 @@ public:
 	/// The type base of the vertex, useful for recovering the original typename after user subclassing
 	typedef VERTEX_TYPE    BaseVertexType;
 	/// The type base of the vertex, useful for recovering the original typename after user subclassing
-  typedef VFTYPE         face_type;
+  typedef VFTYPE         FaceType;
 
 
 /***********************************************/
@@ -114,13 +119,17 @@ public:
 
 /***********************************************/
 /** @name Vertex Flags
-  blah
-  blah
+For each vertex we store a set of boolean values packed in a int. 
+The default value for each flag is 0. Most commonly used flags are the \a deleted and the \a selected ones. 
+Users can ask and dispose for a bit for their own purposes with the  vcg::VertexFull::NewUserBit() and vcg::VertexFull::DeleteUserBit() functions. 
+The value returned by these functions has to be passed to the 
+vcg::VertexFull::SetUserBit() vcg::VertexFull::ClearUserBit() and vcg::VertexFull::IsUserBit() functions to check and modify the obtained bit flag.
+
 **/
 //@{
 
 protected:
-	/// This are the _flags of vertex, the default value is 0
+	/// This are the flags of vertex, the default (reasonable) value is 0
 	int _flags;		
 
 public:
@@ -141,6 +150,80 @@ public:
 	{
 		return _flags;
 	}
+
+ 	///  checks if the vertex is deleted
+	bool IsD() const {return (_flags & DELETED) != 0;}
+	///  checks if the vertex is readable
+	bool IsR() const {return (_flags & NOTREAD) == 0;}
+	///  checks if the vertex is modifiable
+	bool IsW() const {return (_flags & NOTWRITE)== 0;}
+	/// This funcion checks whether the vertex is both readable and modifiable
+	bool IsRW() const {return (_flags & (NOTREAD | NOTWRITE)) == 0;}
+	///  checks if the vertex is Modified
+	bool IsS() const {return (_flags & SELECTED) != 0;}
+	///  checks if the vertex is readable
+	bool IsB() const {return (_flags & BORDER) != 0;}
+
+	/** Set the flag value
+		@param flagp Valore da inserire nel flag
+	*/
+	void SetFlags(int flagp) {_flags=flagp;}
+
+	/** Set the flag value
+		@param flagp Valore da inserire nel flag
+	*/
+	void ClearFlags() {_flags=0;}
+
+	///  deletes the vertex from the mesh
+	void SetD() {_flags |=DELETED;}
+	///  un-delete a vertex
+	void ClearD() {_flags &=(~DELETED);}
+	///  marks the vertex as readable
+	void SetR() {_flags &=(~NOTREAD);}
+	///  marks the vertex as not readable
+	void ClearR() {_flags |=NOTREAD;}
+	///  marks the vertex as writable
+	void ClearW() {_flags |=NOTWRITE;}
+	///  marks the vertex as not writable
+	void SetW() {_flags &=(~NOTWRITE);}
+	///  select the vertex
+	void SetS()		{_flags |=SELECTED;}
+	/// Un-select a vertex
+	void ClearS()	{_flags &= ~SELECTED;}
+	void SetB()		{_flags |=BORDER;}
+	void ClearB()	{_flags &=~BORDER;}
+	
+///  Return the first bit that is not still used
+static int &LastBitFlag()
+		{
+			static int b =USER0;
+			return b;
+		}
+
+/// allocate a bit among the flags that can be used by user.
+static inline int NewUserBit()
+		{
+			LastBitFlag()=LastBitFlag()<<1;
+			return LastBitFlag();
+		}
+// de-allocate a bit among the flags that can be used by user.
+static inline bool DeleteUserBit(int bitval)
+		{	
+			if(LastBitFlag()==bitval) {
+					LastBitFlag()= LastBitFlag()>>1;
+					return true;
+			}
+			assert(0);
+			return false;
+		}
+	/// This function checks if the given user bit is true
+	bool IsUserBit(int userBit){return (_flags & userBit) != 0;}
+	/// This function set  the given user bit 
+	void SetUserBit(int userBit){_flags |=userBit;}
+	/// This function clear the given user bit 
+	void ClearUserBit(int userBit){_flags &= (~userBit);}
+ 
+ 
  //@}
   
   
@@ -420,43 +503,51 @@ public:
 	}
  //@}
 
+ /***********************************************/
+ /** @name Reflection Functions 
+ Static functions  that give information about the current vertex type.
+Reflection is a mechanism making it possible to investigate yourself. Reflection is used to investigate format of objects at runtime, invoke methods and access fields of these objects. Here we provide static const functions that are resolved at compile time and they give information about the data (normal, color etc.) supported by the current vertex type.
+ **/
+ //@{
+
+static bool HasNormal()  { 
+#ifdef __VCGLIB_VERTEX_N 
+  return true
+#else
+  return false
+#endif
+}
+static bool HasColor()  { 
+#ifdef __VCGLIB_VERTEX_C 
+  return true
+#else
+  return false
+#endif
+}
+static bool HasMark()     { 
+#ifdef __VCGLIB_VERTEX_M 
+  return true
+#else
+  return false
+#endif
+}
+static bool HasQuality()   { 
+#ifdef __VCGLIB_VERTEX_Q 
+  return true
+#else
+  return false
+#endif
+}
+static bool HasTexture()   { 
+#ifdef __VCGLIB_VERTEX_T 
+  return true
+#else
+  return false
+#endif
+}
+ //@}
 
 
-	enum {
-		OBJ_TYPE_N =  0x0001,
-		OBJ_TYPE_M =  0x0002,
-		OBJ_TYPE_A =  0x0004,
-		OBJ_TYPE_AS = 0x0008,
-		OBJ_TYPE_C  = 0x0010,
-		OBJ_TYPE_T  = 0x0020,
-		OBJ_TYPE_Q  = 0x0040,
-	};
-
-	enum {
-		OBJ_TYPE = 
-#ifdef __VCGLIB_VERTEX_N
-		OBJ_TYPE_N |
-#endif
-#ifdef __VCGLIB_VERTEX_M
-		OBJ_TYPE_M |
-#endif
-#ifdef __VCGLIB_VERTEX_A
-		OBJ_TYPE_A |
-#endif
-#ifdef __VCGLIB_VERTEX_AS
-		OBJ_TYPE_AS |
-#endif
-#ifdef __VCGLIB_VERTEX_C
-		OBJ_TYPE_C |
-#endif
-#ifdef __VCGLIB_VERTEX_T
-		OBJ_TYPE_T |
-#endif
-#ifdef __VCGLIB_VERTEX_Q
-		OBJ_TYPE_Q |
-#endif
-		0
-	};
 	
 
 	enum { 
@@ -478,29 +569,6 @@ public:
 		USER0      = 0x0200			// Fisrt user bit
 			};
 
-/*
-Queste funzioni servono per ottenere a runtime un bit per i flag
-
-*/	
-static int &LastBitFlag()
-		{
-			static int b =USER0;
-			return b;
-		}
-static inline int NewBitFlag()
-		{
-			LastBitFlag()=LastBitFlag()<<1;
-			return LastBitFlag();
-		}
-static inline bool DeleteBitFlag(int bitval)
-		{	
-			if(LastBitFlag()==bitval) {
-					LastBitFlag()= LastBitFlag()>>1;
-					return true;
-			}
-			assert(0);
-			return false;
-		}
 
 	/** Return the i-th spatial value of the vertex coordinate.
 	    @param i Index of the spatial vertex coordinate (x=0 y=1 z=2).
@@ -526,66 +594,6 @@ static inline bool DeleteBitFlag(int bitval)
 #endif
 	};
 
-	/// This function checks if the vertex is deleted
-	bool IsD() const {return (_flags & DELETED) != 0;}
-	/// This function checks if the vertex is readable
-	bool IsR() const {return (_flags & NOTREAD) == 0;}
-	/// This function checks if the vertex is modifiable
-	bool IsW() const {return (_flags & NOTWRITE)== 0;}
-	/// This funcion checks whether the vertex is both readable and modifiable
-	bool IsRW() const {return (_flags & (NOTREAD | NOTWRITE)) == 0;}
-	/// This function checks if the vertex is Modified
-	bool IsM() const {return (_flags & MODIFIED)!= 0;}
-	/// This function checks if the vertex is marked as visited
-	bool IsV() const {return (_flags & VISITED) != 0;}
-	/// This function checks if the vertex is selected
-	bool IsS() const {return (_flags & SELECTED) != 0;}
-	/// This function checks if the vertex is readable
-	bool IsB() const {return (_flags & BORDER) != 0;}
-//	bool IsMF() const {return (_flags & NOTMANIFOLD) == 0;}
-
-	/// This function checks if the vertex is deleted from the mesh
-	bool IsDeleted() const {return IsD();}
-	/// This function checks if the vertex is readable
-	bool IsReadable() const {return IsR();}
-	/** Set the flag value
-		@param flagp Valore da inserire nel flag
-	*/
-	void SetFlags(int flagp) {_flags=flagp;}
-
-	/// This function deletes the vertex from the mesh
-	void SetD() {_flags |=DELETED;}
-	/// This funcion execute the inverse operation of SetD()
-	void ClearD() {_flags &=(~DELETED);}
-	/// This function marks the vertex as modified. It's necessary to mark all modified vertex to have a consistent mesh
-	void SetM() {_flags |=MODIFIED;}
-	/// This function marks the vertex as not modified
-	void ClearM() {_flags &=(~MODIFIED);}
-	/// This function marks the vertex as readable
-	void SetR() {_flags &=(~NOTREAD);}
-	/// This function marks the vertex as not readable
-	void ClearR() {_flags |=NOTREAD;}
-	/// This function marks the vertex as writable
-	void ClearW() {_flags |=NOTWRITE;}
-	/// This function marks the vertex as not writable
-	void SetW() {_flags &=(~NOTWRITE);}
-	/// This funcion marks the vertex as visited
-	void SetV() {_flags |=VISITED;}
-	/// This function marks the vertex as not visited. This flag, initially, is setted to random value, therefore, to the beginnig of every function it is necessary to clean up the flag
-	void ClearV() {_flags &=(~VISITED);}
-	/// This function select the vertex
-	void SetS()		{_flags |=SELECTED;}
-	/// This funcion execute the inverse operation of SetS()
-	void ClearS()	{_flags &= ~SELECTED;}
-	void SetB()		{_flags |=BORDER;}
-	void ClearB()	{_flags &=~BORDER;}
-	
-	/// This function checks if the given user bit is true
-	bool IsUserBit(int userBit){return (_flags & userBit) != 0;}
-	/// This function set  the given user bit 
-	void SetUserBit(int userBit){_flags |=userBit;}
-	/// This function clear the given user bit 
-	void ClearUserBit(int userBit){_flags &= (~userBit);}
 };
 
 
