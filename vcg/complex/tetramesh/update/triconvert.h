@@ -77,6 +77,9 @@ public:
   /// The type of const face iterator
   typedef typename TriangleMeshType::ConstFaceIterator ConstFaceIterator;
 
+  /// The type of tetrahedrons container
+  typedef typename TetraMeshType::TetraContainer TetraContainer;
+
    /// The type of const vertex pointer of tetrahedral mesh
   typedef typename TetraMeshType::const_VertexPointer const_VertexPointer;
 
@@ -89,7 +92,7 @@ public:
 //@{
 
 ///this function build a triangle mesh using the same pointers to the tetrahedral mesh vertex
-void Convert(TetraMeshType &tetram,TriangleMeshType &trim)
+void Convert(TetraContainer &tetra,TriangleMeshType &trim)
 {
   TetraIterator ti;
   
@@ -98,7 +101,7 @@ void Convert(TetraMeshType &tetram,TriangleMeshType &trim)
   TetraVertexType *v2;
  
   trim.Clear();
-  for (ti=tetram.tetra.begin();ti<tetram.tetra.end();ti++)
+  for (ti=tetra.begin();ti<tetra.end();ti++)
   {
     if (!(ti->IsD()))
     {
@@ -144,14 +147,14 @@ struct InsertedV{
 
 ///this function build a triangle mesh using new pointers to the tetrahedral mesh vertex
 
-void ConvertCopy(TetraMeshType &tetram,TriangleMeshType &trim)
+void ConvertCopy(TetraContainer &tetra,TriangleMeshType &trim)
 {
 	vector<InsertedV > newVertices;
 
 	TriVertexIterator vi;
 	vector<TriVertexType*> redirect;
 
-  Convert(tetram,trim);
+  Convert(tetra,trim);
 
 	FaceIterator fi;
 
