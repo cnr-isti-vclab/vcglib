@@ -24,8 +24,14 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/05/04 23:23:45  cignoni
+unified to the gl stlyle matix*vector. removed vector*matrix operator
+
 Revision 1.6  2004/03/25 14:57:49  ponchio
 Microerror. ($LOG$ -> $Log: not supported by cvs2svn $
+Microerror. ($LOG$ -> Revision 1.7  2004/05/04 23:23:45  cignoni
+Microerror. ($LOG$ -> unified to the gl stlyle matix*vector. removed vector*matrix operator
+Microerror. ($LOG$ ->
 
 
 ****************************************************************************/
