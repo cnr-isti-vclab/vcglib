@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/02/11 11:43:09  tommyfranken
+FromTrackball() corrected
+
 Revision 1.4  2004/12/15 18:45:06  tommyfranken
 *** empty log message ***
 
@@ -129,11 +132,11 @@ static void FromTrackball(const vcg::Trackball & tr,
 						  const vcg::Shot<ScalarType> & sShot, 
 						  vcg::Shot<ScalarType> & shot )
 {
-	Point3<ScalarType>		cen; cen.Import(tr.center);
-	Point3<ScalarType>		tra; tra.Import(tr.track.tra);
-	Matrix44<ScalarType>	trM; trM.FromMatrix(tr.track.Matrix());
+	vcg::Point3<ScalarType>		cen; cen.Import(tr.center);
+	vcg::Point3<ScalarType>		tra; tra.Import(tr.track.tra);
+	vcg::Matrix44<ScalarType>	trM; trM.FromMatrix(tr.track.Matrix());
 
-	Point3<ScalarType>		vp = Inverse(trM)*(sShot.ViewPoint()-cen) +cen +tra;
+	vcg::Point3<ScalarType>		vp = Inverse(trM)*(sShot.ViewPoint()-cen) +cen +tra;
 
 	shot.SetViewPoint(vp);
 	shot.similarity.rot =   sShot.similarity.rot*trM;
