@@ -106,51 +106,6 @@ FacePair _FindNoEdgeFace(TetraType *t,int edge)
         return FacePair(fa2,fa3);
 }
 
-///Calculate the volume on the vertex resulting after collapse...
-ScalarType _VolumeSimulateCollapse(PosType Pos,ScalarType alfa)
-{
-  VertexType *Vrem=(Pos.T()->V(Tetra::VofE(Pos.E(),0)));
-  VertexType *Vdel=(Pos.T()->V(Tetra::VofE(Pos.E(),1)));
-
-  if (Vrem!=Pos.T()->V(Pos.V()))
-    swap<VertexType*>(Vdel,Vrem);
-
-  ScalarType vol=0;
-  CoordType oldpos = Vrem->P();
-  CoordType newpos=((Vrem->P()*alfa)+(Vdel->P()*(1.f-alfa)));
-
-//move vertex that remain in the new position
-  Vrem->P() = newpos;
-
-  vector< TetraType *>::iterator ti=_Sets.no_E.begin(); 
-
-  while (ti!=_Sets.no_E.end())
-  {
-        Tetra3<ScalarType> T=Tetra3<ScalarType>();
-        T.P0(0)=(*ti)->V(0)->cP();
-        T.P1(0)=(*ti)->V(1)->cP();
-        T.P2(0)=(*ti)->V(2)->cP();
-        T.P3(0)=(*ti)->V(3)->cP();
-        vol+=T.ComputeVolume();
-        ti++;
-  }
-  Vrem->P()=oldpos;
-  return vol;
-}
-
-///return the sum of volumes of the union of  stars on vertices
-ScalarType _VolumeUnion()
-{
-  vector< TetraType *>::iterator ti=_Sets.v0_U_v1.begin(); 
-  ScalarType vol=0;
-  while (ti!=_Sets.v0_U_v1.end())
-  {
-    vol+=(*ti)->Volume();
-    ti++;
-  }
-  return vol;
-}
-
 #ifdef _DEBUG
 void _AssertingVolume(TetraType *t)
 {
@@ -160,11 +115,12 @@ void _AssertingVolume(TetraType *t)
 
 
 ///collpse de edge specified by pos (the first vertex on edge remain)
-void _Collapse(PosType p,ScalarType alfa)
+void _Collapse(PosType p,CoordType NewP)
 {
       VertexType *Vrem=(p.T()->V(Tetra::VofE(p.E(),0)));
       VertexType *Vdel=(p.T()->V(Tetra::VofE(p.E(),1)));
-      Vrem->P()=(Vrem->P()*alfa)+(Vdel->P()*(1.f-alfa));
+      //Vrem->P()=(Vrem->P()*alfa)+(Vdel->P()*(1.f-alfa));
+      Vrem->P()=NewP;
       PosLType pos(p.T(),p.F(),p.E(),p.V());
       pos.Reset();
       To_Del.reserve(40);
@@ -352,6 +308,15 @@ struct TetraSets
   std::vector <char> indexE;
   std::vector <char> indexv0;
   std::vector <char> indexv1;
+
+  void clear()
+  {
+    v0.clear();
+    v1.clear();
+    v0_U_v1.clear();
+    no_E.clear();
+    E.clear();
+  }
 };
 
 TetraSets _Sets;
@@ -649,14 +614,14 @@ bool _LinkConditionsV()
 }
 
 ///verify the flip condition
-bool _FlipCondition(PosType pos,ScalarType alfa)
+bool _FlipCondition(PosType pos,CoordType NewP)
 {	
   int edge=pos.E();
   VertexType *ve0=pos.T()->V(Tetra::VofE(edge,0));
 	VertexType *ve1=pos.T()->V(Tetra::VofE(edge,1));
 	CoordType oldpos0;
   CoordType oldpos1;
-  CoordType newpos=((ve0->P()*alfa)+(ve1->P()*(1.f-alfa)));
+  //CoordType newpos=((ve0->P()*alfa)+(ve1->P()*(1.f-alfa)));
 
   vector< TetraType *>::iterator ti=_Sets.no_E.begin();
 
@@ -665,8 +630,8 @@ bool _FlipCondition(PosType pos,ScalarType alfa)
 	oldpos1 = ve1->P();
 
   //assegning new position
-  ve0->P() =newpos;
-	ve1->P() =newpos;
+  ve0->P() =NewP;
+	ve1->P() =NewP;
 
 	while (ti!=_Sets.no_E.end())
     {
@@ -697,20 +662,43 @@ bool _FlipCondition(PosType pos,ScalarType alfa)
 }
 
 ///update the normal of the modified tetrahedrons ond the normal of the vertex that remain after collapse
-void _SetNormal(VertexType* v)
+void _InitTetrahedronValues(VertexType* v)
 {
- if (TetraType::HasTetraNormal())
- {
+ 
   VTIterator<TetraType> VTi=VTIterator<TetraType>(v->VTb(),v->VTi());
   while (!VTi.End())
   {
-    VTi.Vt()->ComputeNormal();
+    if (TetraType::HasTetraQuality())
+    {
+      VTi.Vt()->ComputeAspectRatio();
+    }
+
+    if (TetraType::HasTetraNormal())
+    {
+      VTi.Vt()->ComputeNormal();
+    }
+
     VTi++;
   }
- }
-  if (VertexType::HasNormal())
-   _UN.PerVertex(v);
+
+  VTi.Vt()=v->VTb();
+  VTi.Vi()=v->VTi();
+  while (!VTi.End())
+  {
+    for (int i=0;i<4;i++)
+    {
+      if (VTi.Vt()->V(i)->IsB())
+      {
+        if (VertexType::HasNormal)
+        _UN.PerVertex(VTi.Vt()->V(i));
+      }
+      
+    }
+      ++VTi;
+  }
+
 }
+
 public:
 
 
@@ -734,7 +722,7 @@ ScalarType AspectRatioCollapsed(PosType p)
 
 
 ///check the topologycal preserving  conditions for the collapse indicated by pos
-bool  CheckPreconditions(PosType pos,ScalarType alfa)
+bool  CheckPreconditions(PosType pos,CoordType NewP)
 {	
   VertexType *v0=pos.T()->V(Tetra::VofE(pos.E(),0));
 	VertexType *v1=pos.T()->V(Tetra::VofE(pos.E(),1));
@@ -750,65 +738,102 @@ bool  CheckPreconditions(PosType pos,ScalarType alfa)
  	else
   //if both vertex are internal so is enougth to verify flip conditions
 	if ((!border0) && (!border1))
-			return (_FlipCondition(pos,alfa));
+			return (_FlipCondition(pos,NewP));
   else
   //if the edge is internal is enougth to verify link condition on vertex
   if (!bordere)
-      return((_FlipCondition(pos,alfa))&&(_LinkConditionsV()));
+      return((_FlipCondition(pos,NewP))&&(_LinkConditionsV()));
   else
   //at the end if trh edge is on the border we must verify also with the complete test
-		return ((_FlipCondition(pos,alfa))&&(_LinkConditionsV())&&(_LinkConditionsE(pos))&&(_LinkConditionsF(pos)));
+		return ((_FlipCondition(pos,NewP))&&(_LinkConditionsV())&&(_LinkConditionsE(pos))&&(_LinkConditionsF(pos)));
    //return false;
 }
 
 
-///Modify pos and alfa to obtain the collapse that minimize the error
-void BestCollapse(PosType &pos,ScalarType &alfa,int nsteps)
-{
-  bool ext_v0=(pos.T()->V(Tetra::VofE(pos.E(),0)))->IsB();
-  bool ext_v1=(pos.T()->V(Tetra::VofE(pos.E(),1)))->IsB();
+/////Modify pos and alfa to obtain the collapse that minimize the error in terms of volume loss
+//void MinVolume(PosType &pos,ScalarType &alfa,int nsteps)
+//{
+//  bool ext_v0=(pos.T()->V(Tetra::VofE(pos.E(),0)))->IsB();
+//  bool ext_v1=(pos.T()->V(Tetra::VofE(pos.E(),1)))->IsB();
+//
+//   if ((ext_v0)&&(!ext_v1))
+//      alfa=1.f;
+//   else
+//   if ((!ext_v0)&&(ext_v1))
+//      alfa=0.f;
+//   else
+//   if ((!ext_v0)&&(!ext_v1))
+//     alfa=0.5f;
+//   else
+//   if ((ext_v0)&&(ext_v1))//both are external vertex
+//   {
+//    /*alfa=1.f;*/
+//    ScalarType step=1.f/(nsteps-1);
+//    ScalarType best_error=1000000.f;
+//    ScalarType Vol_Original=_VolumeUnion();
+//    for (int i=0;i<nsteps;i++)
+//    {
+//      ScalarType alfatemp=step*((double)i);
+//      //the error is the absolute value of difference of volumes
+//      ScalarType error=fabs(Vol_Original-_VolumeSimulateCollapse(pos,alfa));
+//      if(error<best_error)
+//      {
+//       alfa=alfatemp;
+//       best_error=error;
+//      }
+//    }
+//   }
+//}
 
-   if ((ext_v0)&&(!ext_v1))
-      alfa=1.f;
-   else
-   if ((!ext_v0)&&(ext_v1))
-      alfa=0.f;
-   else
-   if ((!ext_v0)&&(!ext_v1))
-     alfa=0.5f;
-   else
-   if ((ext_v0)&&(ext_v1))//both are external vertex
-   {
-    /*alfa=1.f;*/
-    ScalarType step=1.f/(nsteps-1);
-    ScalarType best_error=1000000.f;
-    ScalarType Vol_Original=_VolumeUnion();
-    for (int i=0;i<nsteps;i++)
-    {
-      ScalarType alfatemp=step*((double)i);
-      //the error is the absolute value of difference of volumes
-      ScalarType error=fabs(Vol_Original-_VolumeSimulateCollapse(pos,alfa));
-      if(error<best_error)
-      {
-       alfa=alfatemp;
-       best_error=error;
-      }
-    }
-   }
+///return the sum of volumes of the union of  stars on vertices (the original volume of tetrahedrons)
+ScalarType VolumeOriginal()
+{
+  vector< TetraType *>::iterator ti=_Sets.v0_U_v1.begin(); 
+  ScalarType vol=0;
+  while (ti!=_Sets.v0_U_v1.end())
+  {
+    vol+=(*ti)->Volume();
+    ti++;
+  }
+  return vol;
+}
+
+///Calculate the volume on the vertex resulting after collapse...
+ScalarType VolumeSimulateCollapse(PosType Pos,CoordType newP)
+{
+  VertexType *Vrem=(Pos.T()->V(Tetra::VofE(Pos.E(),0)));
+  VertexType *Vdel=(Pos.T()->V(Tetra::VofE(Pos.E(),1)));
+
+  if (Vrem!=Pos.T()->V(Pos.V()))
+    swap<VertexType*>(Vdel,Vrem);
+
+  ScalarType vol=0;
+  CoordType oldpos = Vrem->P();
+ 
+//move vertex that remain in the new position
+  Vrem->P() = newP;
+
+  vector< TetraType *>::iterator ti=_Sets.no_E.begin(); 
+
+  while (ti!=_Sets.no_E.end())
+  {
+        Tetra3<ScalarType> T=Tetra3<ScalarType>();
+        T.P0(0)=(*ti)->V(0)->cP();
+        T.P1(0)=(*ti)->V(1)->cP();
+        T.P2(0)=(*ti)->V(2)->cP();
+        T.P3(0)=(*ti)->V(3)->cP();
+        vol+=T.ComputeVolume();
+        ti++;
+  }
+  Vrem->P()=oldpos;
+  return vol;
 }
 
 ///finds sets used for all test in edge collapse
 void FindSets(vcg::tetra::Pos<TetraType> pos)
 {
  
-  _Sets.v0.clear();
-  _Sets.indexv0.clear();
-  _Sets.v1.clear();
-  _Sets.indexv1.clear();
-  _Sets.v0_U_v1.clear();
-  _Sets.E.clear();
-  _Sets.no_E.clear();
-  _Sets.indexE.clear();
+  _Sets.clear();
   int size=40;
   _Sets.v0.reserve(size);
   _Sets.indexv0.reserve(size);
@@ -870,16 +895,17 @@ void FindSets(vcg::tetra::Pos<TetraType> pos)
       _Sets.indexE.push_back(PL.E());
       PL.NextT();
     }
+
 }
 
 ///do the collapse on the edge in postype p
-void DoCollapse(PosType p,ScalarType alfa)
+void DoCollapse(PosType p,CoordType newP)
 {
   VertexType *v=p.T()->V(p.V());
   assert(p.T()->HasVTAdjacency());
-  assert((alfa>=0)&&(alfa<=1.f));
-  _Collapse(p,alfa);
-  _SetNormal(v);
+  _Collapse(p,newP);
+  _InitTetrahedronValues(v);
+  
 }
 
 
