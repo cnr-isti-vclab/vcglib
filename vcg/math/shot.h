@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/10/05 19:04:25  ganovelli
+version 5-10-2004 in progress
+
 Revision 1.1  2004/09/15 22:58:05  ganovelli
 re-creation
 
@@ -53,19 +56,35 @@ class Shot {
 public:	
 	typedef Camera<S> CameraType;
 	typedef S ScalarType;
-	
+
+	enum {
+		NOTVALID_BIT = 0x1
+	};
+	char flags;
+	bool IsValid(){ return (flags& NOTVALID_BIT)==0;}
+	void SetValid(bool v){ if(!v) flags|=NOTVALID_BIT; else flags&=~NOTVALID_BIT;}
+
 	Camera<S> & camera;								// the camera that shot
-	vcg::Similarity<S> similarity;		// the position from where it did it
+	vcg::Similarity<S,vcg::Matrix44f> similarity;		// the position from where it did it
 
 	Shot( Camera<S> & c):camera(c){}
 
 	Camera<S> & Camera(){return camera;};
 
 	/// take the i-th axis of the coordinate system of the camera
-	vcg::Point3<S>const &  Axis(const int & i)const {	vcg::Matrix44<S> m; similarity.rot.ToMatrix(m); return m.Column3(i);}
-	
+	vcg::Point3<S> Axis(const int & i)const;
+
 	/// take the viewpoint
-	vcg::Point3<S>const & ViewPoint();
+	vcg::Point3<S> const &ViewPoint();
+
+	/// set the viewpoint
+	void SetViewPoint(const vcg::Point3<S> & viewpoint);
+
+	/// look at
+	void LookAt(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up);
+
+	/// look at
+	void LookTowards(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up);
 
 	/// convert a 3d point in camera coordinates
 	vcg::Point3<S>  ConvertToCameraCoordinates(const vcg::Point3<S> & p) const;
@@ -80,24 +99,49 @@ public:
 
 template <class S>
 vcg::Point3<S>const & Shot<S>::ViewPoint(){
-	Matrix44 m = similarity.Matrix();
-	return Point3<S>(m[0][3],m[1][3],m[2][3]);
+	//Matrix44<S> m = similarity.Matrix();
+	//return Point3<S>(m[0][3],m[1][3],m[2][3]);
+	return -similarity.tra;
+}
+
+template <class S>
+	vcg::Point3<S>  Shot<S>::Axis(const int & i) const {	
+			vcg::Matrix44<S> m; 
+			similarity.rot.ToMatrix(m); 
+			vcg::Point3f aa = m.Row3(i);
+			return aa;
+	}
+
+template <class S>
+void Shot<S>::SetViewPoint(const vcg::Point3<S> & viewpoint){
+	similarity.tra = -viewpoint;
+}
+
+template <class S>
+void Shot<S>::LookAt(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up){
+	  LookTowards(z_dir-ViewPoint(),up);
+}
+
+template <class S>
+void Shot<S>::LookTowards(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up){
+		vcg::Point3<S> x_dir = up ^-z_dir ;
+		vcg::Point3<S> y_dir = -z_dir ^x_dir ;
+		
+		Matrix44<S> m;
+		m.SetIdentity();
+		*(vcg::Point3<S> *)&m[0][0] = x_dir/x_dir.SquaredNorm();
+		*(vcg::Point3<S> *)&m[1][0] = y_dir/y_dir.SquaredNorm();
+		*(vcg::Point3<S> *)&m[2][0] = -z_dir/z_dir.SquaredNorm();
+
+		similarity.rot.FromMatrix(m);
 }
 
 template <class S>
 vcg::Point3<S> Shot<S>::ConvertToCameraCoordinates(const vcg::Point3<S> & p) const{
-	::QMessageBox mb;
-	char t[200];
-	sprintf(t,"shot in %f %f %f",p[0],p[1],p[2]);
-	mb.setText(t);
-	mb.exec();
-
-		vcg::Point3<S> tmp = similarity.Matrix()*p;
-
-	sprintf(t,"shot out %f %f %f",tmp[0],tmp[1],tmp[2]);
-	mb.setText(t);
-	mb.exec();
-	return tmp;
+	vcg::Point3<S> cp = similarity.Matrix()*p;
+	// note: the camera reference system is right handed
+	cp[2]=-cp[2];
+	return cp;
 	}
 
 template <class S>
@@ -107,7 +151,7 @@ vcg::Point2<S> Shot<S>::Project(const vcg::Point3<S> & p) const{
 
 template <class S>
 S Shot<S>::Depth(const vcg::Point3<S> & p)const {
-	return (camera.Project(ConvertToCameraCoordinates(p))).
+	return ConvertToCameraCoordinates(p).Z();
 }
 
 }
