@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/03/08 19:38:29  tarini
+aggiunti Min e Max, si usano cosi: Min<float>::Value (tarini)
+
 Revision 1.6  2004/03/08 14:49:37  ponchio
 Aggiunti un po di inline davanti alle funzioni
 
