@@ -24,13 +24,18 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2004/03/10 17:37:54  tarini
+Added Atan2.
+Added common utilities: Max, Min, Swap, Sort(a,b), Sort(a,b,c).
+Changed Max values syntax. example:  Value<float>::Max
+
 Revision 1.10  2004/03/10 16:54:57  tarini
 Added Atan2.
 Added common utilities: Max, Min, Swap, Sort(a,b), Sort(a,b,c).
 Changed Max values syntax. example:  Value<float>::Max
 
 Revision 1.7  2004/03/08 19:38:29  tarini
-aggiunti Min e Max, si usano cosi: Min<float>::Value (tarini)
+Added Min e Max. usage: Min<float>::Value (tarini)
 
 Revision 1.6  2004/03/08 14:49:37  ponchio
 Aggiunti un po di inline davanti alle funzioni
@@ -54,12 +59,18 @@ Edited Comments and GPL license
 #include <assert.h>
 #include <limits.h>
 
+/// static_assert: implemented as a macro for "assert", but it is separated for clarity.
+/// Should be used for checking integrity constraints that can be tested at complile time,
+/// as the ones involving templated constants in templated classes.
+#define static_assert assert
+
   #ifdef __BORLANDC__
     float sqrtf (float v) {return sqrt(v);}
     float fabsf (float v) {return fabs(v);}
   #endif     
 
 namespace vcg {
+
 namespace math {
 
  template <class SCALAR> 
@@ -156,8 +167,14 @@ inline float   ToRad(const float &a){return float(M_PI)*a/180.0f;}
 inline double  ToDeg(const double &a){return a*180.0/M_PI;}
 inline double  ToRad(const double &a){return M_PI*a/180.0;}
 
-}	// End namespace
-}	// End namespace
+}	// End math namespace
+
+/// a type that stands for "void". Useful for Parameter type of a point.
+class VoidType{ public:
+	VoidType(){};
+};
+
+}	// End vcg namespace
 
 
 #endif
