@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/05/13 23:43:54  ponchio
+minor bug
+
 Revision 1.5  2004/05/05 08:21:55  cignoni
 syntax errors in inersection plane line.
 
@@ -76,16 +79,16 @@ namespace vcg {
     // fino a portare il centro della sfera nell'origine
     Point3<T> neworig=li.Origin()-sp.Center();
     // poi si risolve il sistema di secondo grado (con maple...)
-    T t1 = li.Direction().x()*li.Direction().x();
-    T t2 = li.Direction().y()*li.Direction().y();
-    T t3 = li.Direction().z()*li.Direction().z();
-    T t6 = neworig.y()*li.Direction().y();
-    T t7 = neworig.x()*li.Direction().x();
-    T t8 = neworig.z()*li.Direction().z();
+    T t1 = li.Direction().X()*li.Direction().X();
+    T t2 = li.Direction().Y()*li.Direction().Y();
+    T t3 = li.Direction().Z()*li.Direction().Z();
+    T t6 = neworig.Y()*li.Direction().Y();
+    T t7 = neworig.X()*li.Direction().X();
+    T t8 = neworig.Z()*li.Direction().Z();
     T t15 = sp.Radius()*sp.Radius();
-    T t17 = neworig.z()*neworig.z();
-    T t19 = neworig.y()*neworig.y();
-    T t21 = neworig.x()*neworig.x();
+    T t17 = neworig.Z()*neworig.Z();
+    T t19 = neworig.Y()*neworig.Y();
+    T t21 = neworig.X()*neworig.X();
     T t28 = 2.0*t7*t6+2.0*t6*t8+2.0*t7*t8+t1*t15-t1*t17-t1*t19-t2*t21+t2*t15-t2*t17-t3*t21+t3*t15-t3*t19;
     if(t28<0) return false;
     T t29 = sqrt(t28);      
