@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/05/26 11:53:17  pietroni
+modified face declaration
+
 Revision 1.2  2004/05/26 11:48:53  turini
 Changed : include Path.
 
@@ -66,7 +69,7 @@ typedef typename TetraMeshType::TetraPointer   TetraPointer;
 typedef typename TetraMeshType::TetraIterator  TetraIterator;
 
 typedef vcg::Face<VertexType,vcg::DUMMYEDGETYPE,vcg::DUMMYFACETYPE> FaceTemp;
-typedef vcg::tri::TriMesh< vector<VertexType>,vector<FaceTemp> > TriMeshTemp;
+typedef vcg::tri::TriMesh< std::vector<VertexType>,std::vector<FaceTemp> > TriMeshTemp;
 
 /// Calculates the vertex normal (if stored in the current face type)
 static void PerTetraFace(TetraMeshType &m)
