@@ -5,6 +5,7 @@
 #include <string>
 #include "nxstypes.h"
 #include "vchain.h"
+#include "nexus.h"
 #include "vfile.h"
 
 namespace nxs {
@@ -37,7 +38,16 @@ namespace nxs {
 		      unsigned int min_size,
 		      unsigned int max_size,
 		      int steps);
-  
+
+  void BuildLevel(VChain &chain,
+		  Nexus &nexus,
+		  unsigned int offset, 
+		  float scaling,
+		   unsigned int target_size,
+		  unsigned int min_size,
+		  unsigned int max_size,
+		  int steps);
+
   //removes small or really big patches.
   bool Optimize(VPartition &part, 
 		unsigned int target_size,

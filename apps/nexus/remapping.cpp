@@ -187,7 +187,7 @@ void nxs::BuildPartition(VPartition &part,
   //TODO! Check for duplicates (use the closest :P)
   part.Init();
 
-  Report report;
+
   vector<Point3f> centroids;
   vector<unsigned int> counts;  
   
@@ -198,8 +198,8 @@ void nxs::BuildPartition(VPartition &part,
     counts.clear();
     centroids.resize(part.size(), Point3f(0, 0, 0));
     counts.resize(part.size(), 0);
-    
-    report.Init(points.Size());
+
+    Report report(points.Size());
 
     for(unsigned int v = 0; v < points.Size(); v++) {
       report.Step(v);
@@ -221,6 +221,98 @@ void nxs::BuildPartition(VPartition &part,
       Optimize(part, target_size, min_size, max_size, 
 	       centroids, counts, true);
   }
+}
+
+void nxs::BuildLevel(VChain &chain,
+		     Nexus &nexus,
+		     unsigned int offset, 
+		     float scaling,
+		     unsigned int target_size,
+		     unsigned int min_size,
+		     unsigned int max_size,
+		     int steps) { 
+
+  unsigned int totface = 0;
+  unsigned int totvert = 0;
+  for(unsigned int idx = offset; idx < nexus.index.size(); idx++) {
+    totface += nexus.index[idx].nface;
+    totvert += nexus.index[idx].nvert;
+  }
+  
+  chain.push_back(VPartition());
+  VPartition &coarse = chain[chain.size()-1];
+  VPartition &fine = chain[chain.size()-2];
+  fine.Init();
+  
+  unsigned int ncells = (unsigned int)(fine.size() * scaling);
+  
+  //TODO this method for selecting the seeds is ugly!
+  float ratio = ncells/(float)(nexus.index.size() - offset);
+  float cratio = 0;
+  for(unsigned int idx = offset; idx < nexus.index.size(); idx++) {
+    cratio += ratio;
+    if(cratio > 1) {
+      Patch patch = nexus.GetPatch(idx);
+      Point3f &v = patch.Vert(0);
+      coarse.push_back(v);
+      cratio -= 1;
+    }
+  }
+  
+  if(coarse.size() == 0) {
+    Patch patch = nexus.GetPatch(0);
+    coarse.push_back(patch.Vert(0));
+  }
+  
+  float coarse_vmean = totface/(float)coarse.size();
+  
+  coarse.Init();
+  cerr << "Ncells: " << ncells << endl;
+  cerr << "Coarse size: " << coarse.size() << endl;
+  cerr << "Coarse mean: " << coarse_vmean << " mean_size: " << target_size << endl;
+
+  //here goes some optimization pass.
+  //Coarse optimization.
+  vector<Point3f> centroids;
+  vector<unsigned int> counts;
+
+  for(int step = 0; step < steps; step++) {
+    cerr << "Optimization step: " << step+1 << "/" << steps << endl;
+    centroids.clear();
+    counts.clear();
+    centroids.resize(coarse.size(), Point3f(0, 0, 0));
+    counts.resize(coarse.size(), 0);
+
+    Report report(nexus.index.size());
+    for(unsigned int idx = offset; idx < nexus.index.size(); idx++) {
+      report.Step(idx);
+      Patch patch = nexus.GetPatch(idx);
+      for(unsigned int i = 0; i < patch.nf; i++) {
+        unsigned short *face = patch.Face(i);	                                          
+        Point3f bari = (patch.Vert(face[0]) + 
+			patch.Vert(face[1]) + 
+			patch.Vert(face[2]))/3;
+
+	unsigned int target = coarse.Locate(bari);
+	assert(target < coarse.size());
+	centroids[target] += bari;
+	counts[target]++;
+      }
+    }
+    
+    for(unsigned int v = 0; v < centroids.size(); v++)
+      if(counts[v] != 0)
+	centroids[v]/= counts[v];
+    
+    if(step == steps-1) {
+      if(!Optimize(coarse, (int)coarse_vmean, min_size, max_size, 
+		   centroids, counts, false))
+	      step--;
+    } else 
+      Optimize(coarse, (int)coarse_vmean, min_size, max_size, 
+	       centroids, counts, true);
+  }    
+  chain.newfragments.clear();
 }
 
 int nxs::GetBest(VPartition &part, unsigned int seed,

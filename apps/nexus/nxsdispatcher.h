@@ -17,7 +17,7 @@ namespace nxs {
   
   class Fragment;
   class Nexus;
-  class VoronoiChain;
+  class VChain;
   
   class Server;
   class FragIO;
@@ -50,7 +50,7 @@ namespace nxs {
 
   class Dispatcher: public pt::msgqueue {
   public:
-    Dispatcher(Nexus *nx, VoronoiChain *ch):
+    Dispatcher(Nexus *nx, VChain *ch):
       count(0), maxqueue(3), nexus(nx), chain(ch) {}
     ~Dispatcher();
     
@@ -64,7 +64,7 @@ namespace nxs {
     int count;
     int maxqueue;
     Nexus *nexus;
-    VoronoiChain *chain;
+    VChain *chain;
     Decimation mode;
     float scaling;
     std::vector<Server *> servers;

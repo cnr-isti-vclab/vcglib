@@ -9,7 +9,7 @@ using namespace vcg;
 using namespace nxs;
 using namespace pt;
 
-void SaveFragment(Nexus &nexus, VoronoiChain &chain,
+void SaveFragment(Nexus &nexus, VChain &chain,
 		  Fragment &fragin,
 		  Fragment &fragout);
 

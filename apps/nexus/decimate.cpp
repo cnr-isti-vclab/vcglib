@@ -14,7 +14,7 @@
 
 #include <vcg/space/point3.h>
 
-#include "pvoronoi.h"
+#include "vpartition.h"
 #include "fragment.h"
 
 #include "decimate.h"
@@ -176,7 +176,7 @@ float Cluster(MyMesh &mesh, unsigned int target_faces) {
   
   vector<unsigned int> remap;
   
-  VoronoiPartition part;
+  VPartition part;
   for(unsigned int i = 0; i < mesh.vert.size(); i++) {
     const Point3f &p = mesh.vert[i].cP();
     if(!mesh.vert[i].IsW()) {
