@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/03/31 14:59:14  cignoni
+First working version!
+
 Revision 1.2  2004/03/29 14:26:57  cignoni
 First working version!
 
@@ -31,7 +34,7 @@ First working version!
 
 #ifndef __VCG_TRI_UPDATE_QUALITY
 #define __VCG_TRI_UPDATE_QUALITY
-
+#include <vcg/simplex/face/pos.h>
 
 namespace vcg {
 namespace tri {
@@ -124,15 +127,15 @@ static void VertexGeodesicFromBorder(MeshType &m)	// R1
 		}
 		pv = heap.back().p;
 		heap.pop_back();
-	 MeshType::vedgepos_type x;
-		for( x.f = pv->Fp(), x.z = pv->Zp(); x.f!=0; x.NextF() )
+	  
+		for(face::VFIterator<FaceType> vfi(pv) ; !vfi.End(); ++vfi )
 		{
 			for(int k=0;k<2;++k)
 			{
 				VertexPointer pw;
 				float d;
-				if(k==0) pw = x.f->V1(x.z);
-				else     pw = x.f->V2(x.z);
+				if(k==0) pw = vfi.f->V1(vfi.z);
+				else     pw = vfi.f->V2(vfi.z);
 				d = Distance(pv->P(),pw->P());
 				if( pw->Q()==-1 || pw->Q() > pv->Q()+d + loc_eps)
 				{
