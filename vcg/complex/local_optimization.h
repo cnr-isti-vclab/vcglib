@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.8  2004/10/25 07:02:56  ganovelli
+  some inline function, logs on file (precompiler directive)
+
   Revision 1.7  2004/09/29 17:08:39  ganovelli
   changed > to < in heapelem comparison
 
@@ -61,7 +64,7 @@ template<class MeshType>
 class LocalOptimization;
 
 enum ModifierType{	TetraEdgeCollapseOp, TriEdgeSwapOp, TriVertexSplitOp,
-				TriEdgeCollapseOp,TetraEdgeSpliOpt,TetraEdgeSwapOp};
+				TriEdgeCollapseOp,TetraEdgeSpliOpt,TetraEdgeSwapOp, TriEdgeFlipOp};
 /** \addtogroup tetramesh */
 /*@{*/
 /// This abstract class define which functions  a local modification to be used in the LocalOptimization.
