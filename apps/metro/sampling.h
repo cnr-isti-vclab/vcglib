@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2004/09/09 22:59:15  cignoni
+Removed many small warnings
+
 Revision 1.11  2004/08/25 15:28:15  ponchio
 Comma at end of enum.
 
@@ -188,6 +191,9 @@ Sampling<MetroMesh>::Sampling(MetroMesh &_s1, MetroMesh &_s2):S1(_s1),S2(_s2)
 		n_hist_bins                    = 256;
 		print_every_n_elements         = S1.fn/100;
 
+		if(print_every_n_elements <= 1)
+		  print_every_n_elements = 2;
+
 			referredBit = VertexType::NewBitFlag();
 			// store the unreferred vertices
 			FaceIterator fi; VertexIterator vi; int i;
@@ -284,7 +290,7 @@ void Sampling<MetroMesh>::VertexSampling()
 
         // save vertex quality
         if(Flags & SamplingFlags::SAVE_ERROR)  (*vi).Q() = error;
-
+	
         // print progress information
         if(!(++cnt % print_every_n_elements))
             printf("Sampling vertices %d%%\r", (100 * cnt/S1.vn));
