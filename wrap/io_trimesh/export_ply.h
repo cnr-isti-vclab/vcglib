@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/05/28 14:11:13  ganovelli
+changes to comply io_mask moving in vcg::ply namesp
+
 Revision 1.5  2004/05/12 14:43:36  cignoni
 removed warning of unused variables
 
@@ -330,7 +333,7 @@ static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &
 
 
 	int j;
-	vector<int> FlagV; 
+std::vector<int> FlagV; 
 	VertexPointer  vp;
 	VertexIterator vi;
 	for(j=0,vi=m.vert.begin();vi!=m.vert.end();++vi)
