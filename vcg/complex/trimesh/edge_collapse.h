@@ -63,9 +63,9 @@ class EdgeCollapse
   ///the container of vertex type
   typedef typename TriMeshType::VertContainer VertContainer;
   ///half edge type
-	typedef typename vcg::face::Pos<FaceType> PosType;
+	typedef typename TriMeshType::FaceType::EdgeType EdgeType;
 	/// vector of pos
-	typedef typename std::vector<PosType> PosVec;
+	typedef typename std::vector<EdgeType> EdgeVec;
 	///of VFIterator
 	typedef typename vcg::face::VFIterator<FaceType>  VFI;
 	/// vector of VFIterator
@@ -108,7 +108,7 @@ class EdgeCollapse
 	static VFIVec & AV01(){static VFIVec av01; return av01;}
 
 
-	void FindSets(PosType p)
+	void FindSets(EdgeType p)
 	{
 		VertexType * v0 = p.V(0);
 		VertexType * v1 = p.V(1);
@@ -145,7 +145,7 @@ class EdgeCollapse
 		}
 }
 
-	bool LinkConditions(PosType  pos){
+	bool LinkConditions(EdgeType  pos){
 		
 		const int ADJ_1 = TriMeshType::VertexType::NewBitFlag();
 		const int ADJ_E = TriMeshType::VertexType::NewBitFlag();
@@ -201,7 +201,7 @@ class EdgeCollapse
 
 
 
-	int DoCollapse(PosType & c, Point3<ScalarType> p)
+	int DoCollapse(EdgeType & c, Point3<ScalarType> p)
 	{
 		FindSets(c);
 		typename VFIVec::iterator i;
@@ -246,8 +246,6 @@ class EdgeCollapse
 		{	
 			FaceType  & f = *((*i).f);
 			assert(f.V((*i).z) == c.V(0));
-
-			vcg::face::VFDetach(f,(*i).z);
 			vcg::face::VFDetach(f,((*i).z+1)%3);
 			vcg::face::VFDetach(f,((*i).z+2)%3);
 			f.SetD();
@@ -262,11 +260,8 @@ class EdgeCollapse
 			(*i).f->VFi((*i).z) = (*i).f->V((*i).z)->VFi();
 			(*i).f->V((*i).z)->VFp() = (*i).f;
 			(*i).f->V((*i).z)->VFi() = (*i).z;
-			vcg::Quality((*i).f->P(0),(*i).f->P(1),(*i).f->P(2));
 		}
 		
-		/*TriMeshType::VertexType nv;*/
-//*		c.v[1]->Merge(*c.v[0]);
 		c.V(0)->SetD();
 		c.V(1)->P()=p;
 		return n_face_del;
