@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/12/15 18:45:07  tommyfranken
+*** empty log message ***
+
 Revision 1.4  2004/09/30 01:40:39  ponchio
 <gl/glew.h>  --> <GL/glew.h>
 
@@ -122,7 +125,7 @@ class GlTrimesh : public GLW
 	public:
 		
 	MESH_TYPE *m;
-	GLWrap(){
+	GlTrimesh(){
 		m=0;
 		dl=0xffffffff;
 		h=HNUseLazyEdgeStrip;
