@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/05/10 14:41:45  ganovelli
+name of adhacency function updated
+
 Revision 1.1  2004/04/26 19:10:04  ganovelli
 created
 
@@ -41,7 +44,7 @@ People should subclass his vertex class from these one...
 
 namespace vcg {
 namespace edge {
-/** \addtogroup polyline */
+/** \addtogroup edgemesh */
 /*@{*/
 
 /** Class Mesh.
@@ -111,12 +114,12 @@ public:
 
 	inline int MemUsed() const
 	{
-		return sizeof(Polyline)+sizeof(VertexType)*vert.size()+sizeof(EdgeType)*edges.size();
+		return sizeof(EdgeMesh)+sizeof(VertexType)*vert.size()+sizeof(EdgeType)*edges.size();
 	}
 
 	inline int MemNeeded() const
 	{
-		return sizeof(Polyline)+sizeof(VertexType)*vn+sizeof(EdgeType)*fn;
+		return sizeof(EdgeMesh)+sizeof(VertexType)*vn+sizeof(EdgeType)*fn;
 	}
 
 
@@ -191,7 +194,7 @@ inline void Mark( ConstEdgePointer f ) const { f->IMark() = imark; }
 /// Unmark the mesh
 inline void UnMarkAll() { ++imark; }
 
-};	// end class Polyline
+};	// end class EdgeMesh
 
 /*@}*/
 }	 // end namespace
