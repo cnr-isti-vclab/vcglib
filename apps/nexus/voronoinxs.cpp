@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2004/10/09 17:29:04  ponchio
+Ram buffer option added (again)
+
 Revision 1.11  2004/10/09 17:22:57  ponchio
 Ram buffer option added.
 
@@ -130,7 +133,7 @@ int main(int argc, char *argv[]) {
   unsigned int ram_buffer = 128000000;
 
   int option;
-  while((option = getopt(argc, argv, "f:t:l:s:d:ro:b")) != EOF) {
+  while((option = getopt(argc, argv, "f:t:l:s:d:ro:b:")) != EOF) {
     switch(option) {
     case 'f': patch_size = atoi(optarg);
       if(patch_size == 0 || patch_size > 32000) {
