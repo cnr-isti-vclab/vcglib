@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.18  2005/02/21 18:11:07  ganovelli
+GetFrustum moved from gl/camera to math/camera.h
+
 Revision 1.17  2005/02/15 14:55:52  tommyfranken
 added principal point
 
@@ -139,7 +142,7 @@ public:
 	inline void SetFrustum(S dx, S sx, S bt, S tp, S nearend, S farend,vcg::Point2<S> viewport=vcg::Point2<S>(500,-1));
 
 	/// get the camera frustum view
-	inline void GetFrustum(const CameraType & camera,S & sx,S & dx,S & bt,S & tp, S & f ,S & fr);
+	inline void GetFrustum(S & sx,S & dx,S & bt,S & tp, S & f ,S & fr);
 
 	/// project a point from space 3d (in the reference system of the camera) to the camera's plane
 	/// the result is in absolute coordinates
@@ -188,7 +191,12 @@ vcg::Point2<S> Camera<S>::LocalTo_neg1_1(const vcg::Point2<S> & p){
 
 /// set the camera specifying the perspective view
 template<class S>
-	void Camera<S>::SetPerspective(S angle, S ratio, S near_thr, S far_thr, vcg::Point2<S> vp){
+	void Camera<S>::SetPerspective(	S angle, 
+									S ratio, 
+									S near_thr, 
+									S far_thr, 
+									vcg::Point2<S> vp)
+{
 		S halfsize[2];
 		halfsize[1] = tan(math::ToRad(angle/2)) * near_thr;
 		halfsize[0] = halfsize[1]*ratio;
@@ -197,47 +205,53 @@ template<class S>
 
 /// set the camera specifying the frustum view
 template<class S>
-	void Camera<S>::SetFrustum(S sx, S dx, S bt, S tp, S near_thr, S far_thr,vcg::Point2<S> vp){
-		S vpt[2];
-		vpt[0] = dx-sx;
-		vpt[1] = tp-bt;
+	void Camera<S>::SetFrustum(	S sx, 
+								S dx, 
+								S bt, 
+								S tp, 
+								S near_thr, 
+								S far_thr,
+								vcg::Point2<S> vp )
+{
+	S vpt[2];
+	vpt[0] = dx-sx;
+	vpt[1] = tp-bt;
 
-		viewport[0] = vp[0];
-		if(vp[1] != -1)
-			viewport[1] = vp[1];// the user specified the viewport
-		else
-			viewport[1] = viewport[0];// default viewport
+	viewport[0] = vp[0];
+	if(vp[1] != -1)
+		viewport[1] = vp[1];// the user specified the viewport
+	else
+		viewport[1] = viewport[0];// default viewport
 
-		s[0] = vpt[0]/(S) viewport[0];
-		s[1] = vpt[1]/(S) viewport[1];
+	s[0] = vpt[0]/(S) viewport[0];
+	s[1] = vpt[1]/(S) viewport[1];
 
-		c[0] = -sx/vpt[0] * viewport[0];
-		c[1] = -bt/vpt[1] * viewport[1];
+	c[0] = -sx/vpt[0] * viewport[0];
+	c[1] = -bt/vpt[1] * viewport[1];
 
-		f =near_thr;
-		farend = far_thr;
-	}
-
-	template<class S>
-		void Camera<S>:: GetFrustum(
-		typename S & sx,
-								typename S & dx,
-								typename S & bt,
-								typename S & tp,
-								typename S & f ,
-								typename S & fr
-								){
-		dx = c.X()*s.X();			//scaled center
-		sx = -( viewport.X() - c.X() ) * s.X();
-
-		bt = -c.Y()*s.Y();
-		tp = ( viewport.Y() - c.Y() ) * s.Y();
-
-		f  = f;
-		fr = farend; 
+	f =near_thr;
+	farend = far_thr;
 }
 
+template<class S>
+	void Camera<S>:: GetFrustum( S & sx,
+								 S & dx,
+								 S & bt,
+								 S & tp,
+								 S & nr ,
+								 S & fr )
+{
+	dx = c.X()*s.X();			//scaled center
+	sx = -( viewport.X() - c.X() ) * s.X();
+
+	bt = -c.Y()*s.Y();
+	tp = ( viewport.Y() - c.Y() ) * s.Y();
+
+	nr = f;
+	fr = farend; 
 }
+
+};
 #endif
 
 
