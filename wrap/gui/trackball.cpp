@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2004/09/28 15:30:12  ponchio
+Added a 'else'.
+
 Revision 1.10  2004/09/09 14:38:52  ponchio
 #include <gl... -> #include <GL...
 
@@ -186,10 +189,10 @@ void Trackball::Draw() {
   
   glPushMatrix();
   ApplyInverse();
-  glBegin(GL_POINTS);
+/*  glBegin(GL_POINTS);
   for(vector<Point3f>::iterator vi=Hits.begin();vi!=Hits.end();++vi)
     glVertex(*vi);
-  glEnd();
+  glEnd()*/;
   glPopMatrix();
 
   glPushMatrix();
