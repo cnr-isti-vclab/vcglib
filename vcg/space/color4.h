@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2004/09/09 08:39:33  cignoni
+added a 'template<>' to the specialized constructors from a enum
+
 Revision 1.9  2004/09/03 13:58:48  fasano
 Corretto errore sintattico nelle specializzazioni parziali (float e char) di due costruttori di Color4
 
@@ -224,19 +227,19 @@ template <class T>
 inline void Color4<T>::ColorRamp(const float &minf,const float  &maxf ,float v )
 {
   if(minf>maxf) { ColorRamp(maxf,minf,maxf+(minf-v)); return; }
-	if(v <  minf ) { *this=Color4(Color4<T>::Red); return; }
-	
+	if(v <  minf ) { *this=Color4<T>(Color4<T>::Red); return; }
+
 	float step=(maxf-minf)/4;
 	v-=minf;
-	if(v<step) {lerp(Color4(Color4<T>::Red),  Color4(Color4<T>::Yellow),v/step); return;}
+	if(v<step) {lerp(Color4<T>(Color4<T>::Red),  Color4<T>(Color4<T>::Yellow),v/step); return;}
 	v-=step;
-	if(v<step) {lerp(Color4(Color4<T>::Yellow),Color4(Color4<T>::Green),v/step);return;}
+	if(v<step) {lerp(Color4<T>(Color4<T>::Yellow),Color4<T>(Color4<T>::Green),v/step);return;}
 	v-=step;
-	if(v<step) {lerp(Color4(Color4<T>::Green),Color4(Color4<T>::Cyan),v/step);  return;}
+	if(v<step) {lerp(Color4<T>(Color4<T>::Green),Color4<T>(Color4<T>::Cyan),v/step);  return;}
 	v-=step;
-	if(v<step) {lerp(Color4(Color4<T>::Cyan),Color4(Color4<T>::Blue),v/step);   return;}
+	if(v<step) {lerp(Color4<T>(Color4<T>::Cyan),Color4<T>(Color4<T>::Blue),v/step);   return;}
 
-	*this= Color4(Color4<T>::Blue);
+	*this= Color4<T>(Color4<T>::Blue);
 
 }
 
