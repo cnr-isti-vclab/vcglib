@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.9  2004/12/15 18:45:50  tommyfranken
+*** empty log message ***
+
 Revision 1.4  2004/10/07 14:41:31  fasano
 Little fix on ViewPoint() method
 
@@ -162,16 +165,21 @@ void Shot<S>::LookTowards(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up
 
 template <class S>
 vcg::Point3<S> Shot<S>::ConvertToCameraCoordinates(const vcg::Point3<S> & p) const{
-	vcg::Point3<S> cp = similarity.Matrix()*p;
+	Matrix44<S> rotM;
+	similarity.rot.ToMatrix(rotM);
+	vcg::Point3<S> cp = rotM * (p+similarity.tra);
 	// note: the camera reference system is right handed
 	cp[2]=-cp[2];
 	return cp;
 	}
 template <class S>
 vcg::Point3<S> Shot<S>::ConvertToWorldCoordinates(const vcg::Point3<S> & p) const{
-	vcg::Point3<S> cp = Inverse(similarity.Matrix())*p;
+	Matrix44<S> rotM;
+	vcg::Point3<S> cp = p;
 	// note: the World reference system is left handed
 	cp[2]=-cp[2];
+	similarity.rot.ToMatrix(rotM);
+	cp = Inverse(rotM) * cp-similarity.tra;
 	return cp;
 }
 template <class S>
