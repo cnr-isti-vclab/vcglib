@@ -24,6 +24,8 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/03/29 14:26:57  cignoni
+First working version!
 
 ****************************************************************************/
 
@@ -36,9 +38,10 @@ template <class MESH>
 class VQualityHeap
 {
 public:
+  typedef typename MESH::VertexPointer VertexPointer;
 	float q;
-	MESH::vertex_pointer p;
-	inline VQualityHeap( MESH::vertex_pointer np )
+	VertexPointer p;
+	inline VQualityHeap( VertexPointer np )
 	{
 		q = np->Q();
 		p = np;
@@ -86,7 +89,7 @@ void ComputeGeodesicQuality(MESH &m, bool per_face )	// R1
 				{
 					for(int k=0;k<2;++k)
 					{
-						MESH::vertex_pointer pv = (*f).V((j+k)%3);
+						MESH::VertexPointer pv = (*f).V((j+k)%3);
 						if( pv->Q()==-1 )
 						{
 							pv->Q() = 0;
@@ -98,7 +101,7 @@ void ComputeGeodesicQuality(MESH &m, bool per_face )	// R1
  const MESH::scalar_type loc_eps=m.bbox.Diag()/MESH::scalar_type(100000);
  while( heap.size()!=0 )							// Shortest path tree
 	{
-		MESH::vertex_pointer pv;
+		MESH::VertexPointer pv;
 		pop_heap(heap.begin(),heap.end());
 		if( ! heap.back().is_valid() )
 		{
@@ -112,7 +115,7 @@ void ComputeGeodesicQuality(MESH &m, bool per_face )	// R1
 		{
 			for(int k=0;k<2;++k)
 			{
-				MESH::vertex_pointer pw;
+				MESH::VertexPointer pw;
 				float d;
 				if(k==0) pw = x.f->V1(x.z);
 				else     pw = x.f->V2(x.z);
@@ -139,7 +142,5 @@ void ComputeGeodesicQuality(MESH &m, bool per_face )	// R1
 }
 
 
-
-
-
+} // end namespace
 #endif
