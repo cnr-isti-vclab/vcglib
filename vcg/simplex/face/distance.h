@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/01/28 12:00:33  cignoni
+small gcc compiling issues for namespaces
+
 Revision 1.3  2005/01/24 15:35:25  cignoni
 Removed a 'using namespace'
 
@@ -78,8 +81,8 @@ namespace vcg {
 	{
 		typedef typename FaceType::ScalarType ScalarType;
 
-		//const ScalarType EPSILON = ScalarType( 0.000001);
-		const ScalarType EPSILON = 0.00000001;
+		const ScalarType EPSILON = ScalarType( 0.000001);
+		//const ScalarType EPSILON = 0.00000001;
 		ScalarType b,b0,b1,b2;
 			// Calcolo distanza punto piano
 		ScalarType d = Distance( f.plane, q );
