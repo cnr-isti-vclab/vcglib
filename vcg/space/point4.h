@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/10/11 17:46:11  ganovelli
+added definition of vector product (not implemented)
+
 Revision 1.6  2004/05/10 11:16:19  ganovelli
 include assert.h added
 
@@ -60,6 +63,7 @@ protected:
 
 public:
 	typedef T ScalarType;
+	enum {Dimension = 4};
 
 //@{
 
@@ -186,10 +190,18 @@ public:
 	{
 		return Point4( -_v[0], -_v[1], -_v[2], -_v[3] );
 	}
-	inline Point4 operator ^ ( const Point4 t ) const
-	{
-		assert(0);
-		return Point4();
+	inline Point4 VectProd ( const Point4 x, const Point4 z ) const
+	{	
+		Point4 res;
+		Matrix44<T> b;
+		*(vcg::Point4<T>*)&b[1][0] = *this;
+		*(vcg::Point4<T>*)&b[2][0] = x;
+		*(vcg::Point4<T>*)&b[3][0] = z;
+
+		 res[0] = b[1][1]*b[2][2]*b[3][3]-b[1][1]*b[2][3]*b[3][2]-b[2][1]*b[1][2]*b[3][3]+							b[2][1]*b[1][3]*b[3][2]+b[3][1]*b[1][2]*b[2][3]-b[3][1]*b[1][3]*b[2][2];		 res[1] =	b[1][0]*b[2][3]*b[3][2]-b[3][0]*b[1][2]*b[2][3]-b[1][0]*b[2][2]*
+							b[3][3]+b[3][0]*b[1][3]*b[2][2]+b[2][0]*b[1][2]*b[3][3]-b[2][0]*b[1][3]*b[3][2];		 res[2] = -b[1][0]*b[3][1]*b[2][3]+b[2][0]*b[3][1]*b[1][3]+b[1][0]*b[2][1]*
+							b[3][3]-b[2][0]*b[1][1]*b[3][3]-b[3][0]*b[2][1]*b[1][3]+b[3][0]*b[1][1]*b[2][3];		 res[3] = -b[3][0]*b[1][1]*b[2][2]-b[1][0]*b[2][1]*b[3][2]+b[2][0]*b[1][1]*
+							b[3][2]+b[1][0]*b[3][1]*b[2][2]-b[2][0]*b[3][1]*b[1][2]+b[3][0]*b[2][1]*b[1][2];		return res;
 	}
 //@}
 	
@@ -199,7 +211,7 @@ public:
 	/// Euclidian normal
 	inline T Norm() const
 	{
-		return Sqrt( _v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2] + _v[3]*_v[3] );
+		return math::Sqrt( _v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2] + _v[3]*_v[3] );
 	}
 	/// Squared euclidian normal
 	inline T SquaredNorm() const
@@ -209,7 +221,7 @@ public:
 	/// Euclidian normalization 
   inline Point4 & Normalize()
 	{
-		T n = Sqrt(_v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2] + _v[3]*_v[3] );
+		T n = sqrt(_v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2] + _v[3]*_v[3] );
 		if(n>0.0) {	_v[0] /= n;	_v[1] /= n;	_v[2] /= n; _v[3] /= n; }
 		return *this;
 	}
@@ -271,6 +283,12 @@ public:
 	{
 		return _v[0]*p._v[0] + _v[1]*p._v[1] + _v[2]*p._v[2] + _v[3]*p._v[3];
 	} 
+	inline Point4 operator ^ (  const Point4& p ) const
+	{
+		assert(0);// not defined by two vectors (only put for metaprogramming)
+		return Point4();
+	}
+
 	/// slower version, more stable (double precision only)
 	T StableDot ( const Point4<T> & p ) const
 	{
