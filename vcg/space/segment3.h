@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/03/08 19:46:47  tarini
+First Version (tarini)
+
 
 
 ****************************************************************************/
@@ -122,6 +125,13 @@ typedef Segment3<int>	   Segment3i;
 typedef Segment3<float>  Segment3f;
 typedef Segment3<double> Segment3d;
 
+template <class ScalarType> 
+Point3<ScalarType> ClosestPoint( Segment3<ScalarType> s, const Point3<ScalarType> & p) 
+{
+	ScalarType t = s.Projection(p); 
+	clamp (); if (s<0) s=0;
+	return r.P(t); 
+}
 
 /*@}*/
 

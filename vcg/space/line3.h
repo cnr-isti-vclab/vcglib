@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/03/09 16:47:32  tarini
+Added "Normalize" flag
+
 Revision 1.2  2004/03/08 19:46:47  tarini
 First Version (tarini)
 
@@ -99,33 +102,39 @@ public:
 	{ if (NORM) return ScalarType((p-_ori)*_dir); 
 		else      return ScalarType((p-_ori)*_dir/_dir.SquaredNorm()); 
 	}
-	bool IsNorm() const {return NORM;};
+	inline bool IsNorm() const {return NORM;};
 		///set the origin
-	void SetOri( const PointType & ori )
+	inline void SetOri( const PointType & ori )
 	{	_ori=ori; }
 		///set the direction
-	void SetDir( const PointType & dir)
+	inline void SetDir( const PointType & dir)
 	{	_dir=dir; if (NORM) _dir.Normalize();  }
 		///set both the origina and direction.
-	void Set( const PointType & ori, const PointType & dir )
+	inline void Set( const PointType & ori, const PointType & dir )
 	{	SetOri(ori); SetDir(dir); }
 	  /// calculates the point of parameter t on the line.
 	inline PointType P( const ScalarType t ) const
-	{ return orig + dire * t; }
-		/// normalizes direction field
+	{ return _ori + _dir * t; }
+		/// normalizes direction field (returns a Normalized Line)
 	Line3<ScalarType,true> &Normalize()
 	{ if (!NORM) _dir.Normalize(); return *((Line3<ScalarType,true>*)this);}
+		/// normalizes direction field (returns a Normalized Line) - static version
 	static Line3<ScalarType,true> &Normalize(LineType &p)
 	{ p.Normalize(); return *((Line3<ScalarType,true>*)(&p));}
 	  /// importer for different line types
 	template <class Q, bool K>
 	inline void Import( const Line3<Q,K> & b )
-	{ _ori.Import( b._ori);	_dir.Import( b._dir); 
+	{ _ori.Import( b.Ori());	_dir.Import( b.Dir()); 
 	  if ((NORM) && (!K)) _dir.Normalize();
 	}
+	PointType ClosestPoint(const PointType & p) const{
+	return P(Projection(p));
+	}
+	  /// flips the line
+	inline void Flip(){
+		_dir=-_dir;
+	};
 }; // end class definition
-
-
 
 typedef Line3<short>  Line3s;
 typedef Line3<int>	  Line3i;
@@ -137,6 +146,12 @@ typedef Line3<int   ,true> Line3iN;
 typedef Line3<float ,true> Line3fN;
 typedef Line3<double,true> Line3dN;
 
+	  /// returns closest point
+template <class ScalarType, bool NORM> 
+Point3<ScalarType> ClosestPoint( Line3<ScalarType,NORM> l, const Point3<ScalarType> & p) 
+{
+	return l.P(l.Projection(p)); 
+}
 
 /*@}*/
 
