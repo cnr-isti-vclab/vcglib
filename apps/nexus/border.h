@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/01/21 17:09:12  ponchio
+Porting and debug.
+
 Revision 1.5  2004/10/08 14:46:26  ponchio
 Working version.
 
@@ -77,7 +80,7 @@ class Border {
     links(l), used(_used), size(_size), start(0) {}
   unsigned int Size() { return used; }
   //TODO rename available to capacity.
-  unsigned int Available() { return size; }
+  unsigned int Capacity() { return size; }
   Link &operator[](unsigned int i) { return links[i]; }
   Link *Start() { return links; }
 

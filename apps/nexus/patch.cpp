@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2005/02/21 19:05:58  ponchio
+i already fixed this bug. I hate you cvs.
+
 Revision 1.11  2005/02/19 12:06:55  ponchio
 Debug...
 
@@ -85,9 +88,9 @@ Encodings::Encodings() {
 }
 
 
-void pad64(unsigned int &s) {
-  if((s & 0x0000003f) != 0) {
-    s>>=6; s++; s<<=6;
+void pad8(unsigned int &s) {
+  if((s & 0x00000007) != 0) {
+    s>>=3; s++; s<<=3;
   }
 }
 void pad(unsigned int &size) {
@@ -165,34 +168,33 @@ void Patch::Init(Signature &signature,
     assert(0);
     //non lo so...
   }
-  pad64(offset);
+  pad8(offset);
 
-  fstartc = (unsigned short)(offset/64);
+  fstartc = fstart + offset;
   offset += encodings[signature.fcolor].size(nf);
-  fstartn = (unsigned short)(offset/64);
+  fstartn = fstart + offset;
   offset += encodings[signature.fnorm].size(nf);
-  fstartt = (unsigned short)(offset/64);
+  fstartt = fstart + offset;
   offset += encodings[signature.ftext].size(nf);
-  fstartd = (unsigned short)(offset/64);
+  fstartd = fstart + offset;
   offset += encodings[signature.fdata].size(nf);
 
   vstart = fstart + offset;
-  offset = 0;
   if(signature.vert == Signature::POINT3F)
     offset += nv * sizeof(float) * 3;
   else if(signature.vert == Signature::POINT4F)
     offset += nv * sizeof(float) * 4;
   else 
     assert(0);
-  pad64(offset);
+  pad8(offset);
 
-  vstartc = (unsigned short)(offset/64);
+  vstartc = fstart + offset;
   offset += encodings[signature.vcolor].size(nv);
-  vstartn = (unsigned short)(offset/64);
+  vstartn = fstart + offset;
   offset += encodings[signature.vnorm].size(nv);
-  vstartt = (unsigned short)(offset/64);
+  vstartt = fstart + offset;
   offset += encodings[signature.vtext].size(nv);
-  vstartd = (unsigned short)(offset/64);
+  vstartd = fstart + offset;
   offset += encodings[signature.vdata].size(nv);
   
 
@@ -251,7 +253,7 @@ unsigned int Patch::ByteSize(Signature &signature,
     assert(0);
     //non lo so...
   }
-  pad64(size);
+  pad8(size);
 
   size += encodings[signature.fcolor].size(nface);
   size += encodings[signature.fnorm].size(nface);
@@ -264,7 +266,7 @@ unsigned int Patch::ByteSize(Signature &signature,
     size += nvert * sizeof(float) * 4;
   else 
     assert(0);
-  pad64(size);
+  pad8(size);
 
   size += encodings[signature.vcolor].size(nvert);
   size += encodings[signature.vnorm].size(nvert);

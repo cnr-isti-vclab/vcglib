@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/02/21 17:55:49  ponchio
+debug debug debug
+
 Revision 1.3  2005/01/18 22:46:58  ponchio
 Small changes.
 
@@ -53,6 +56,7 @@ class ANNbruteForce;
 
 namespace nxs {
 
+  //WARNING: all distances returned are SQUARED!!!!
 class VPartition: public std::vector<vcg::Point3f> {
   public:
   VPartition(): bd(NULL) {}
@@ -75,6 +79,11 @@ class VPartition: public std::vector<vcg::Point3f> {
 	       std::vector<float> &dist);
   void Closest(const vcg::Point3f &p, 
 	       int &target, float &dist);
+
+  //return all targets widthin that distance (SQUARED!!!)
+  void Closest(const vcg::Point3f &p, std::vector<int> &targets,
+	       std::vector<double> &dists,
+	       float max_distance);
   //most efficient!
   void Closest(const vcg::Point3f &p, unsigned int nsize,
 	       int *targets, 

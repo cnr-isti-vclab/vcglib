@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2005/02/08 12:43:03  ponchio
+Added copyright
+
 
 ****************************************************************************/
 
@@ -86,6 +89,9 @@ Border &BorderServer::GetBorder(unsigned int border, bool flush) {
     index[border] = pqueue.begin();
   } else {
     while(flush && ram_used > ram_max) { 
+      if(!pqueue.size()) {
+	cerr << "Ram used: " << ram_used << " ram max: " << ram_max << endl;
+      }
       assert(pqueue.size());
       unsigned int to_flush = pqueue.back();
       pqueue.pop_back();
@@ -115,6 +121,8 @@ void BorderServer::ResizeBorder(unsigned int border, unsigned int used) {
   unsigned int newstart = Length()/sizeof(Link);  
   Redim((int64)(newstart + capacity) * (int64)sizeof(Link));
   Link *newlinks = new Link[capacity];
+  ram_used += (capacity - entry.size);
+
   if(entry.used > 0) {
     assert(entry.links);
     memcpy(newlinks, entry.links, entry.used * sizeof(Link));

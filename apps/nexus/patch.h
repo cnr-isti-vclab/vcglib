@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2005/02/19 12:06:55  ponchio
+Debug...
+
 Revision 1.12  2005/02/19 10:45:05  ponchio
 Patch generalized and small fixes.
 
@@ -81,9 +84,9 @@ namespace nxs {
    
    unsigned int size(unsigned short n) { 
      unsigned int s = (int)n * (int)bytes * (int)comps; 
-     //padding a 64 bytes
-     if((s & 0x0000003f) != 0) {
-       s>>=6; s++; s<<=6;
+     //padding a 8 bytes
+     if((s & 0x0000007) != 0) {
+       s>>=3; s++; s<<=3;
      }
      return s;
    }
@@ -121,15 +124,15 @@ class Patch {
   //vcg::Point3f &Vert(unsigned short v)   { return VertBegin()[v]; }
   //  unsigned short *Face(unsigned short f) { return FaceBegin() + f * 3; }
 
-  char *VColorBegin() { return vstart + 64*(int)vstartc; }
-  char *VNormBegin()  { return vstart + 64*(int)vstartn; }
-  char *VTextBegin()  { return vstart + 64*(int)vstartt; }
-  char *VDataBegin()  { return vstart + 64*(int)vstartd; }
+  char *VColorBegin() { return vstartc; }
+  char *VNormBegin()  { return vstartn; }
+  char *VTextBegin()  { return vstartt; }
+  char *VDataBegin()  { return vstartd; }
 
-  char *FColorBegin() { return fstart + 64*(int)fstartc; }
-  char *FNormBegin()  { return fstart + 64*(int)fstartn; }
-  char *FTextBegin()  { return fstart + 64*(int)fstartt; }
-  char *FDataBegin()  { return fstart + 64*(int)fstartd; }
+  char *FColorBegin() { return fstartc; }
+  char *FNormBegin()  { return fstartn; }
+  char *FTextBegin()  { return fstartt; }
+  char *FDataBegin()  { return fstartd; }
 
   static unsigned int ChunkSize(Signature &signature, 
 				unsigned short nvert, 
@@ -150,17 +153,15 @@ class Patch {
   unsigned short nf;
   unsigned short nv;
 
-  //these offset are from fstart in 64 bytes
-  unsigned short fstartc;
-  unsigned short fstartn;
-  unsigned short fstartt;
-  unsigned short fstartd;
+  char *fstartc;
+  char *fstartn;
+  char *fstartt;
+  char *fstartd;
 
-  //these offset are from vstart in 64 bytes
-  unsigned short vstartc;
-  unsigned short vstartn;
-  unsigned short vstartt;
-  unsigned short vstartd;
+  char *vstartc;
+  char *vstartn;
+  char *vstartt;
+  char *vstartd;
 };
 
 } //namespace

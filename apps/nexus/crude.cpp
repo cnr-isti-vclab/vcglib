@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/11/30 22:50:30  ponchio
+Level 0.
+
 Revision 1.2  2004/07/02 13:08:11  ponchio
 Changed extension to .cri, crv, crf
 
@@ -36,6 +39,7 @@ Created
 
 ****************************************************************************/
 
+#include <stdio.h>
 #include "crude.h"
 
 using namespace std;

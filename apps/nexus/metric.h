@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/02/21 20:49:30  ponchio
+some culling bug.
+
 Revision 1.7  2005/02/20 19:49:44  ponchio
 cleaning (a bit more).
 
@@ -90,7 +93,7 @@ namespace nxs {
 	    visible = false;
 	  error /= remote;
 	} else if(entry.cone.Backface(sph, frustum.ViewPoint())) {
-	  //visible = false;
+	  visible = false;
 	}
       }
       return error;

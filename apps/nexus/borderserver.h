@@ -24,6 +24,8 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/02/08 12:43:03  ponchio
+Added copyright
 
 ****************************************************************************/
 
@@ -44,14 +46,6 @@ $Log: not supported by cvs2svn $
 
 namespace nxs {
 
-  //This should be Border class!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-/*struct BorderEntry {
-  unsigned int start; //granuralita' Link
-  unsigned short size; //in Links             //TODO what are this? be clear!
-  unsigned short used; //in Links
-  Link *links;
-};*/
-
 class BorderServer: public IndexFile<Border> {
  public:
   BorderServer(): ram_max(1000000), ram_used(0) {}
@@ -65,15 +59,9 @@ class BorderServer: public IndexFile<Border> {
   Border &GetBorder(unsigned int border, bool flush = true);  
   void ResizeBorder(unsigned int border, unsigned int size);
 
-  /*unsigned int BorderSize(unsigned int i) { 
-    return operator[](i).used; 
-  }
-  unsigned int BorderCapacity(unsigned int i) { 
-    return operator[](i).size; 
-  } */
- protected:
   unsigned int ram_max;
   unsigned int ram_used;		
+ protected:
   std::list<unsigned int> pqueue;
   std::map<unsigned int, std::list<unsigned int>::iterator> index;
 

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2005/02/21 17:55:47  ponchio
+debug debug debug
+
 Revision 1.19  2005/02/20 18:07:01  ponchio
 cleaning.
 
@@ -432,7 +435,6 @@ void FourthStep(const string &crudefile, const string &output,
     exit(0);
   }
   nexus.MaxRam() = ram_buffer / nexus.chunk_size;  
-  //TODO Clear borders in case of failure!
 
   VFile<unsigned int> vert_remap;
   if(!vert_remap.Load(output + ".rvm", true)) {
@@ -446,71 +448,48 @@ void FourthStep(const string &crudefile, const string &output,
     exit(0);
   }
 
-  /*float max_radius = 0;
-  VPartition grid;
-  for(int start = 0; start < nexus.size(); start++) {    
-    Entry &entry = nexus[start];
-    Sphere3f &sphere = entry.sphere;
-    if(sphere.Radius() > max_radius) max_radius = sphere.Radius();
-    grid.push_back(sphere.Center());
-  }
-  grid.Init();
-  max_radius *= max_radius * 4;
-  vector<int> nears;
-  vector<float> dists;   */
-    
+  vector<set<unsigned int> > close;
+  Connect(nexus, close, 0.0001);
 
   Report report(nexus.size());
 
   for(int start = 0; start < nexus.size(); start++) {    
     report.Step(start);
-    Entry &s_entry = nexus[start];
-    Sphere3f &sphere = s_entry.sphere;
+    //        Entry &s_entry = nexus[start];
+    //        Sphere3f &sphere = s_entry.sphere;
 
     vector<Link> links;   
-#ifdef WIN32
-    hash_map<unsigned int, unsigned short> vremap;
-#else
     map<unsigned int, unsigned short> vremap;
-#endif
     for(unsigned int i = 0; i < vert_index[start].size; i++) {
       unsigned int global = vert_remap[vert_index[start].offset + i];      
       vremap[global] = i;
     }    
-
-    /*unsigned int n_nears = 10;    
-    while(1) {
-      if(n_nears > grid.size()) n_nears = grid.size();  
-      grid.Closest(sphere.Center(), n_nears, nears, dists);
-      if(dists.back() > max_radius) break;
-      if(n_nears == grid.size()) break;
-      n_nears *= 2;      
-    }
+    
+    //    for(int end = 0; end < nexus.size(); end++) {
+    //      if(start == end) continue;      
+    set<unsigned int>::iterator t;
+    for(t = close[start].begin(); t != close[start].end(); t++) {
+      unsigned int end = (*t);
       
-    for(int n = 0; n < nears.size(); n++) {
-      unsigned int end = nears[n]; */
-    for(int end = 0; end < nexus.size(); end++) {
-      if(start == end) continue;      
-
-      Entry &e_entry = nexus[end];
-      float dist = Distance(s_entry.sphere, e_entry.sphere);
+      //      Entry &e_entry = nexus[end];
+      //      float dist = Distance(s_entry.sphere.Center(), e_entry.sphere.Center());
       
-      if(dist > s_entry.sphere.Radius() + e_entry.sphere.Radius()) {
-        continue;
-      }
+      //      if(dist > s_entry.sphere.Radius() + e_entry.sphere.Radius()) {
+      //	continue;
+      //      }
+      //      assert(close[start].count(end));
       
       for(unsigned int i = 0; i < vert_index[end].size; i++) {           
-	      unsigned int global = vert_remap[vert_index[end].offset + i];
-	      if(vremap.count(global)) {       
-	        Link link;
-	        link.start_vert = vremap[global];
-	        link.end_vert = i;
-	        link.end_patch = end;
-	        links.push_back(link);
-	      }
+	unsigned int global = vert_remap[vert_index[end].offset + i];
+	if(vremap.count(global)) {       
+	  Link link;
+	  link.start_vert = vremap[global];
+	  link.end_vert = i;
+	  link.end_patch = end;
+	  links.push_back(link);
+	}
       }      
     }
-
     Border &border = nexus.GetBorder(start);
     nexus.borders.ResizeBorder(start, 3 * links.size());
     border.used = links.size();        

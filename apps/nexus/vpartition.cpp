@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/02/21 17:55:48  ponchio
+debug debug debug
+
 Revision 1.3  2005/01/21 17:09:13  ponchio
 Porting and debug.
 
@@ -93,6 +96,32 @@ void VPartition::Closest(const vcg::Point3f &p,
   assert(target < size());
 
   dist = (float)dists;
+}
+
+void VPartition::Closest(const vcg::Point3f &p, 
+			 vector<int> &targets,
+			 vector<double> &dists,
+			 float max_distance) {
+
+  double point[3];  point[0] = p[0];  point[1] = p[1];  point[2] = p[2];
+
+  int seeds = 6;
+  while(1) {
+    if(seeds > size()) seeds = size();
+    targets.resize(seeds);
+    dists.resize(seeds);
+    bd->annkSearch(&point[0], seeds, &(targets[0]), &(dists[0]));
+    for(int i = 0; i < seeds; i++) {
+      if(dists[i] > max_distance) {
+	targets.resize(i);
+	dists.resize(i);
+	break;
+      }
+    }
+    if(targets.size() < seeds) break;
+    if(seeds == size()) break;
+    seeds *= 2;
+  }
 }
 
 void VPartition::Closest(const vcg::Point3f &p, unsigned int nsize,

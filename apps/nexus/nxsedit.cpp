@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.25  2005/02/21 17:55:47  ponchio
+debug debug debug
+
 Revision 1.24  2005/02/20 19:49:44  ponchio
 cleaning (a bit more).
 
@@ -68,6 +71,7 @@ Added copyright
 #include <vcg/space/index/grid_static_ptr.h>
 
 #include "nxsalgo.h"
+#include "strip.h"
 #include "nexus.h"
 #include "watch.h"
 
@@ -463,14 +467,14 @@ int main(int argc, char *argv[]) {
     if(add_strips) {
       ComputeTriStrip(src_patch.nf, src_patch.FaceBegin(), strip);
       assert(strip.size() < 32767);
-      out.AddPatch(src_entry.nvert, strip.size(), src_border.Available());
+      out.AddPatch(src_entry.nvert, strip.size(), src_border.Capacity());
       if(verbose) {
 	cerr << "tri: " << src_patch.nf << " strip: " << strip.size() 
 	     << " ratio: " << (float)strip.size()/(float)src_patch.nf  
 	     << endl;
       }
     } else
-      out.AddPatch(src_entry.nvert, src_entry.nface, src_border.Available());
+      out.AddPatch(src_entry.nvert, src_entry.nface, src_border.Capacity());
 
 
     Entry &dst_entry = out[p];

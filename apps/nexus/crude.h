@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/11/30 22:50:30  ponchio
+Level 0.
+
 Revision 1.4  2004/07/05 15:49:38  ponchio
 Windows (DevCpp, mingw) port.
 
@@ -45,7 +48,7 @@ Created
 #ifndef NXS_CRUDE_H
 #define NXS_CRUDE_H
 
-#include <stdio.h>
+
 #include <string>
 #include <vcg/space/point3.h>
 #include <vcg/space/box3.h>

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.35  2005/02/20 19:49:44  ponchio
+cleaning (a bit more).
+
 Revision 1.34  2005/02/20 18:07:01  ponchio
 cleaning.
 
@@ -241,8 +244,8 @@ void NexusMt::Draw(unsigned int cell, DrawContest &contest) {
     
     fstart = NULL;
     vstart = NULL;
-    cstart = (char *)(64 * (int)patch.vstartc);
-    nstart = (char *)(64 * (int)patch.vstartn);
+    cstart = (char *)(patch.vstartc - patch.vstart);
+    nstart = (char *)(patch.vstartn - patch.vstart);
   } else {
     fstart = (char *)patch.FaceBegin();
     vstart = (char *)patch.Vert3fBegin();
@@ -388,7 +391,7 @@ void NexusMt::LoadVbo(Entry &entry) {
   vbo_used += size;
   
   //TODO fix this when we allow data :p
-  size = 64 * (int)patch.vstartd;
+  size = patch.vstartd - patch.vstart;
     
   glGenBuffersARB(1, &entry.vbo_array);
   assert(entry.vbo_array);
@@ -410,7 +413,7 @@ void NexusMt::FlushVbo(Entry &entry) {
 
   Patch &patch  = *entry.patch; 
   vbo_used -= patch.nf * sizeof(unsigned short);
-  vbo_used -= sizeof(float) * patch.vstartd;
+  vbo_used -= sizeof(float) * (patch.vstart - patch.vstartd);
 }
 
 //Kept for historical reasons.

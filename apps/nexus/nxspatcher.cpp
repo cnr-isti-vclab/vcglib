@@ -26,8 +26,9 @@ int main(int argc, char *argv[]) {
   crude.Resize(side * side, (side-1) * (side-1) * 2);
   for(unsigned int x = 0; x < side; x++) 
     for(unsigned int y = 0; y < side; y++) {
-      Point3f p(x*x*x/((float)side), 
-		y*y*y/((float)side), x*y/((float)side));
+      //      Point3f p(x*x*x/((float)side), 
+      //		y*y*y/((float)side), x*y/((float)side));
+      Point3f p(x, y, sqrt((float)x*x + y*y));
       crude.SetVertex(x + side * y, p);
       crude.GetBox().Add(p);
     }

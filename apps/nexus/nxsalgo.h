@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/02/21 17:55:36  ponchio
+debug debug debug
+
 Revision 1.7  2005/02/20 18:07:01  ponchio
 cleaning.
 
@@ -42,6 +45,7 @@ Added copyright
 #ifndef NXS_ALGO_H
 #define NXS_ALGO_H
 
+#include <set>
 #include <vector>
 #include "patch.h"
 #include <vcg/space/sphere3.h>
@@ -58,10 +62,13 @@ namespace nxs {
     bool operator<(const ZEntry &e) const { return pos < e.pos; }
   };
 
+  //for every patch return close by (sphere intersecting)
+  //threshold is added to the distance to make sure we do not miss anything
+  void Connect(Nexus &nexus, std::vector< std::set<unsigned int> > &close,
+	       float threshold);
+
   void ComputeNormals(Nexus &nexus);
-  void ComputeTriStrip(unsigned short nfaces, unsigned short *faces, 
-		    std::vector<unsigned short> &strip);
-  void Reorder(Signature &signature, nxs::Patch &patch);
+
   void Unify(Nexus &nexus, float threshold);
   void ZSort(Nexus &nexus, std::vector<unsigned int> &forward,
 	     std::vector<unsigned int> &backward);

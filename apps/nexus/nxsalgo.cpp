@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2005/02/21 17:55:36  ponchio
+debug debug debug
+
 Revision 1.21  2005/02/20 18:07:01  ponchio
 cleaning.
 
@@ -61,61 +64,184 @@ using namespace std;
 using namespace nxs;
 using namespace vcg;
 
-#include "tristripper/tri_stripper.h"
-using namespace triangle_stripper;
 
+void nxs::Connect(Nexus &nexus, std::vector< set<unsigned int> > &close, 
+		  float threshold) {
 
-/*void nxs::TightSphere(vcg::Sphere3f &sphere, 
-		      std::vector<vcg::Point3f> &points) {
-  //test:
-  //assumes radius is ok.... and try to optimize moving center.
-  //TODO using a gradiend descent? really a mess.
-  Point3f center;
-  float radius;
-  Point3f pert[14];
-  while(1) {
-    radius = sphere.Radius();
-    float step = radius/40;
-    pert[0] = Point3f(step, 0, 0);
-    pert[1] = -pert[0];
-    pert[2] = Point3f(0, step, 0);
-    pert[3] = -pert[2];
-    pert[4] = Point3f(0, 0, step);
-    pert[5] = -pert[4];
-    pert[6] = Point3f(step, step, step);
-    pert[7] = Point3f(step, step, -step);
-    pert[8] = Point3f(step, -step, step);
-    pert[9] = Point3f(step, -step, -step);
-    pert[10] = Point3f(-step, step, step);
-    pert[11] = Point3f(-step, step, -step);
-    pert[12] = Point3f(-step, -step, step);
-    pert[13] = Point3f(-step, -step, -step);
+  VPartition grid;
+  float max_radius = 0;
+  
+  for(unsigned int patch = 0; patch < nexus.size(); patch++) {
+    Sphere3f &sphere = nexus[patch].sphere;
+    grid.push_back(sphere.Center());
+    float r = sphere.Radius();
+    if(r > max_radius) max_radius = r;
+  }
+  grid.Init();
+  close.clear();
+  close.resize(nexus.size());
 
-    unsigned int best = 14;
-    float best_radius = sphere.Radius();
+  vector<int> targets;
+  vector<double> dists;
+  for(unsigned int patch = 0; patch < nexus.size(); patch++) {
+    float radius = nexus[patch].sphere.Radius();
+    float max_distance = radius + max_radius + threshold;
+    max_distance *= max_distance;
+    grid.Closest(grid[patch], targets, dists, max_distance);
 
-    for(unsigned int k = 0; k < 14; k++) {
-      center = sphere.Center() + pert[k];
-      radius = 0;
-      for(unsigned int i = 0; i < points.size(); i++) {
-	float r = 1.01 * Distance(center, points[i]);
-	  if(r > radius)
-	    radius = r;
-      }
-      if(radius < best_radius) {
-	best = k;
-	best_radius = radius;
+    for(unsigned int i = 0; i < targets.size(); i++) {
+      unsigned int target = targets[i];
+      if(target == patch) continue;
+      float dist = radius + nexus[target].sphere.Radius() + threshold;
+      dist *= dist;
+      if(dist >= dists[i]) {
+	close[patch].insert(target);     
       }
     }
-    if(best == 14) break;
-    sphere.Center() = sphere.Center() + pert[best];
-    sphere.Radius() = best_radius;
   }
-  }*/
+  
+  //DOUBLECROSS CHECK
+  for(unsigned int patch = 0; patch < nexus.size(); patch++) {
+    set<unsigned int>::iterator i;
+    for(i = close[patch].begin(); i != close[patch].end(); i++) {
+      if(!close[*i].count(patch)) {
+	cerr << "Some problem width sphere intersection. Have alook.\n";
+	cerr << "Meanwhile i fix it.\n";
+	close[*i].insert(patch);
+      }
+    }
+  }
+}
+
+void nxs::ComputeNormals(Nexus &nexus) { 
+  assert(nexus.signature.vnorm);
+  assert(!nexus.borders.IsReadOnly()); 
+
+  //first calculate level 0 normals
+  //I load all patches in a fragment
+  //calculate normals
+  //fix external borders getting from level below
+
+  //first try naive approach just load neighborough get normals and
+  //fix border with lower level
+
+  vector<int> levels;
+  nexus.history.BuildLevels(levels); 
+  Report report(nexus.size(), 15);
+
+  //TODO check level 0 is the finer onr
+
+  int current_level = 0;
+  while(1) {
+    int count = 0;
+    for(unsigned int p = 0; p < nexus.size(); p++) {
+      if(levels[p] != current_level) continue;
+      count++;
+      report.Step(p);
+
+      Border &border = nexus.GetBorder(p);
+
+      map<unsigned int, vector<Point3f> > normals;
+      normals[p] = vector<Point3f>();
+
+      for(unsigned int i = 0; i < border.Size(); i++) {
+	Link &link = border[i];
+	if(levels[link.end_patch] == current_level)
+	  normals[link.end_patch] = vector<Point3f>();
+      }
+      map<unsigned int, vector<Point3f> >::iterator k;
+      for(k = normals.begin(); k != normals.end(); k++) {
+	Patch &patch = nexus.GetPatch((*k).first);
+
+	vector<Point3f> &normal = (*k).second;
+	normal.resize(patch.nv, Point3f(0, 0, 0));    
+      
+	if(nexus.signature.face == Signature::TRIANGLES) {
+	  for(unsigned int i = 0; i < patch.nf; i++) {
+	    unsigned short *f = patch.Face(i);
+	    Point3f &v0 = patch.Vert3f(f[0]);
+	    Point3f &v1 = patch.Vert3f(f[1]);
+	    Point3f &v2 = patch.Vert3f(f[2]);
+	    Point3f norm = (v1 - v0) ^ (v2 - v0); 
+	    normal[f[0]] += norm;
+	    normal[f[1]] += norm;
+	    normal[f[2]] += norm;
+	  }
+	} else if(nexus.signature.face == Signature::STRIPS) {
+	  for(int i = 0; i < patch.nf - 2; i++) {
+	    unsigned short *f = patch.FaceBegin() + i;
+	    Point3f &v0 = patch.Vert3f(f[0]);
+	    Point3f &v1 = patch.Vert3f(f[1]);
+	    Point3f &v2 = patch.Vert3f(f[2]);
+	    Point3f norm = (v1 - v0) ^ (v2 - v0); 
+	    if(i%2) norm = -norm;
+	    normal[f[0]] += norm;
+	    normal[f[1]] += norm;
+	    normal[f[2]] += norm;
+	  }
+	} else
+	  assert(0);
+      }
+
+      //now fix borders
+      map<unsigned int, vector<Link> > lowers;
+      for(unsigned int i = 0; i < border.Size(); i++) {
+	Link &link = border[i];
+	if(levels[link.end_patch] == current_level) {
+	  //TODO remove these asserts
+	  assert(normals[p].size() > link.start_vert);
+	  assert(normals.count(link.end_patch));
+	  assert(normals[link.end_patch].size() > link.end_vert);
+	  normals[p][link.start_vert] += normals[link.end_patch][link.end_vert];
+	} else if (levels[link.end_patch] < current_level) {
+	  lowers[link.end_patch].push_back(link);
+	}
+      }
+
+      map<unsigned int, vector<Link> >::iterator s;
+      for(s = lowers.begin(); s != lowers.end(); s++) {
+	Patch &patch = nexus.GetPatch((*s).first);
+	for(unsigned int i = 0; i < (*s).second.size(); i++) {
+	  Link &link = (*s).second[i];
+	  if(nexus.signature.vnorm == Encodings::FLOAT3) 
+	    normals[p][link.start_vert] = 
+	      ((Point3f *)patch.VNormBegin())[link.end_vert];
+	  else if(nexus.signature.vnorm == Encodings::SHORT4) {
+	    Point3f &nor = normals[p][link.start_vert];
+	    short *n = ((short *)patch.VNormBegin()) + 4*link.end_vert;
+	    nor[0] = n[0];
+	    nor[1] = n[1];
+	    nor[2] = n[2];
+	  }
+	}
+      }
+      //copy and normalize
+      Patch &patch = nexus.GetPatch(p);
+      Entry &entry = nexus[p];
+      Point3f *norm = (Point3f *)patch.VNormBegin();
+      vector<Point3f> &newnormals = normals[p];
+      assert(newnormals.size() == patch.nv);
+      for(unsigned int i = 0; i < patch.nv; i++) {
+	newnormals[i].Normalize();
+	if(nexus.signature.vnorm == Encodings::SHORT4) {
+	  newnormals[i] *= 32766;
+	  short *np = ((short *)norm) + 4 * i;
+	  np[0] = (short)newnormals[i][0];
+	  np[1] = (short)newnormals[i][1];
+	  np[2] = (short)newnormals[i][2];
+	  np[3] = 0;
+	} else if(nexus.signature.vnorm == Encodings::FLOAT3) 
+	  norm[i] = newnormals[i];
+      }
+    }
+    if(count == 0) break;
+    current_level++;
+  }
+}
 
 
 
-void nxs::ComputeNormals(Nexus &nexus) {
+/*void nxs::ComputeNormals(Nexus &nexus) {
   assert(nexus.signature.vnorm);
 
   //setting borders readonly:
@@ -254,37 +380,7 @@ void nxs::ComputeNormals(Nexus &nexus) {
 	}
       }
     }
-    
-
-
-    /*    set<unsigned int> close;
-    for(unsigned int i = 0; i < border.Size(); i++) {
-      Link &link = border[i];
-      if(link.IsNull()) continue;
-      unsigned int off = tmpb_start[p];
-      Point3f p = tmpb.read(off + i);
-      p += normals[link.start_vert];
-      tmpb.write(off + i, p);
-      //      tmpb[off + i] += normals[link.start_vert];
-      close.insert(link.end_patch);
-    }
-
-    set<unsigned int>::iterator k;
-    for(k = close.begin(); k != close.end(); k++) {
-      Border &remote = nexus.GetBorder(*k);
-      unsigned int off = tmpb_start[*k];
-
-      for(unsigned int i = 0; i < remote.Size(); i++) {
-	Link &link = remote[i];
-	if(link.IsNull()) continue;
-	if(link.end_patch != p) continue;
-	Point3f p = tmpb.read(off + i);
-	p += normals[link.end_vert];
-	tmpb.write(off + i, p);
-	//	tmpb[off + i] += normals[link.end_vert];
-      }
-    }*/
-  }
+    } 
 
   //Second step unify normals across borders
   cerr << "Second step\n";
@@ -321,60 +417,9 @@ void nxs::ComputeNormals(Nexus &nexus) {
   tmpb.Delete();
   //TODO remove temporary file.
   nexus.borders.SetReadOnly(false);
-}
+  }*/
 
-void nxs::ComputeTriStrip(unsigned short nfaces, unsigned short *faces, 
-		  vector<unsigned short> &strip) {
 
-  
-  vector<unsigned int> index;
-  index.resize(nfaces*3);
-  for(int i = 0; i < nfaces*3; i++) {
-    index[i] = faces[i];
-  }
-  int cache_size = 0;
-  tri_stripper stripper(index);
-  stripper.SetCacheSize(cache_size);		
-  // = 0 will disable the cache optimizer
-  stripper.SetMinStripSize(0);
-  tri_stripper::primitives_vector primitives;
-  stripper.Strip(&primitives);
-
-  if(primitives.back().m_Indices.size() < 3) {
-    primitives.pop_back();
-  }
-  //TODO spostare questo dentro il ciclo che rimonta le strip.
-  if(primitives.back().m_Type == tri_stripper::PT_Triangles) {
-    tri_stripper::primitives p;
-    p = primitives.back();
-    primitives.pop_back();		
-    for(unsigned int i = 0; i < p.m_Indices.size(); i += 3) {
-      tri_stripper::primitives s;
-      s.m_Type = tri_stripper::PT_Triangle_Strip;
-      s.m_Indices.push_back(p.m_Indices[i]);
-      s.m_Indices.push_back(p.m_Indices[i+1]);
-      s.m_Indices.push_back(p.m_Indices[i+2]);
-      primitives.push_back(s);
-    }
-  }
-  
-  for(unsigned int i = 0; i < primitives.size(); i++) {
-    tri_stripper::primitives &primitive = primitives[i];
-    assert(primitive.m_Indices.size() != 0);
-    int len = primitive.m_Indices.size();
-    for(int l = 0; l < len; l++)  		
-      strip.push_back(primitive.m_Indices[l]);
-    
-    
-    if(i < primitives.size()-1) { //not the last primitive.
-      strip.push_back(primitive.m_Indices[len-1]);
-      //TODO optimize this!
-      if((len%2) == 1) 	//do not change orientation....
-	strip.push_back(primitive.m_Indices[len-1]);
-      strip.push_back(primitives[i+1].m_Indices[0]);
-    }			
-  }
-}
 
 /*
   //TODO why i created this function? wonder...
@@ -415,6 +460,35 @@ void nxs::Reorder(Signature &signature, Patch &patch) {
     }*/
 
 //TODO actually use threshold
+
+void nxs::Unify(Nexus &nexus, float threshold) {
+  /*  threshold = 0.00001;
+  unsigned int duplicated = 0;
+  unsigned int degenerate = 0;
+
+  for(unsigned int p = 0; p < nexus.size(); p++) {
+    if(levels[p] != current_level) continue;
+    count++;
+    report.Step(p);
+    
+    Border &border = nexus.GetBorder(p);
+    
+      map<unsigned int, vector<Point3f> > normals;
+      normals[p] = vector<Point3f>();
+      
+      for(unsigned int i = 0; i < border.Size(); i++) {
+	Link &link = border[i];
+	if(levels[link.end_patch] == current_level)
+	  normals[link.end_patch] = vector<Point3f>();
+      }
+      map<unsigned int, vector<Point3f> >::iterator k;
+      for(k = normals.begin(); k != normals.end(); k++) {
+	Patch &patch = nexus.GetPatch((*k).first);
+      }
+      }*/
+}
+
+/*
 void nxs::Unify(Nexus &nexus, float threshold) {
   threshold = 0.001;
   //TODO what if colors or normals or strips?
@@ -551,7 +625,7 @@ void nxs::Unify(Nexus &nexus, float threshold) {
   if(degenerate)
     cerr << "Found " << degenerate << " degenerate face while unmifying\n";
 }
-
+*/
 void nxs::ZSort(Nexus &nexus, vector<unsigned int> &forward,
 		vector<unsigned int> &backward) {
   //lets get a bounding box from the sphere:
@@ -590,3 +664,4 @@ void nxs::ZSort(Nexus &nexus, vector<unsigned int> &forward,
   for(unsigned int i = 0; i < backward.size(); i++) 
     backward[forward[i]] = i;
 }
+
