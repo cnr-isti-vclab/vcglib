@@ -2,11 +2,11 @@
    VCGLib  http://vcg.sf.net                                         o o     
    Visual and Computer Graphics Library                            o     o   
                                                                   _   O  _   
-   Copyright(C) 2004-2005                                                \/)\/    
+   Copyright(C) 2005-2006                                           \/)\/    
    Visual Computing Lab  http://vcg.isti.cnr.it                    /\/|      
    ISTI - Italian National Research Council                           |      
                                                                       \      
-   Metro 4.01 21/09/2004
+   Metro 4.04 24/01/2005
    All rights reserved.                                                      
    
 
@@ -28,9 +28,13 @@ Metro is a tool designed to evaluate the difference between two triangular meshe
 Metro adopts an approximated approach based on surface sampling and point-to-surface distance computation. 
 Please, when using this tool, cite the following reference:
 
+
 P. Cignoni, C. Rocchini and R. Scopigno
 "Metro: measuring error on simplified surfaces"
 Computer Graphics Forum, Blackwell Publishers, vol. 17(2), June 1998, pp 167-174
+Available at http://vcg.sf.net
+
+
 
 You can find some sample mesh to test in the 'Metro Sample dataset' package downloadable from sourceforge.
 
@@ -58,14 +62,14 @@ A list of the command-line parameters accepted by the tool is shown in the follo
 
 Usage: Metro file1 file2 [opts]
 
-where "file1" and "file2" are the input meshes in PLY or STL format, and opts can be:
+where "file1" and "file2" are the input meshes in PLY, OFF or STL format, and opts can be:
 
    -v       disable vertex sampling
    -e       disable edge sampling
    -f       disable face sampling
-   -u       does not ignore unreferred vertices (sample also unreferenced vertices 
+   -u       does not ignore unreferred vertices and sample also unreferenced vertices 
             (useful for sampling point clouds against meshes)
-   -Sx      set the face sampling mode
+   -sx      set the face sampling mode
             where x can be:
              -S0  montecarlo sampling
              -S1  subdivision sampling

@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2005/01/03 11:28:52  cignoni
+Release 4.03
+Better ply compatibility, and improved error reporting
+
 Revision 1.11  2004/11/29 09:07:04  cignoni
 Release 4.02
 removed bug in printing Hausdorf distance,
@@ -143,7 +147,7 @@ int main(int argc, char**argv)
  
     // print program info
     printf("-------------------------------\n"
-           "         Metro V.4.03 \n"
+           "         Metro V.4.04 \n"
            "     http://vcg.isti.cnr.it\n"
            "   release date: "__DATE__"\n"
            "-------------------------------\n\n");
