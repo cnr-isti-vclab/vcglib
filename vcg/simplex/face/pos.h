@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2004/07/18 07:45:30  cignoni
+Removed two const modifiers from the VFIterator
+
 Revision 1.8  2004/07/15 12:03:07  ganovelli
 minor changes
 
@@ -98,6 +101,7 @@ public:
 	Pos(FaceType  * const fp, int const zp){f=fp; z=zp; v=f->V(zp);}
 
 	// access functions
+	VertexType *& V(){return f->UberV(z);}
 	VertexType *& V(const int & i){assert( (i>=0) && (i<2)); return f->UberV( (z +i) %3);}
 
 	/// Operator to compare two half-edge
