@@ -18,8 +18,11 @@
  *****************************************************************************/
 /*#**************************************************************************
   History
-$Id: point3.h,v 1.3 2004-02-06 02:25:54 cignoni Exp $
+$Id: point3.h,v 1.4 2004-02-09 13:48:02 cignoni Exp $
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/02/06 02:25:54  cignoni
+First working release.
+
 Revision 1.2  2004/02/06 02:17:09  cignoni
 First commit...
 
@@ -35,21 +38,28 @@ First commit...
 
 namespace vcg {
 
-    /** The class for representing a 3D point
-     *  More details about this class.
+    /** The templated class for representing a point in 3D space.
+     *  The class is templated over the scalar value representing coordinates.
      */
 
 template <class T> class Point3
 {
 protected:
+  /// The only data member. Hidden to user.
 	T _v[3];
 
 public:
 	typedef T scalar;
 
 	
-		// Costruttori & assegnatori
-	inline Point3 () { }
+	
+//@{
+
+  /** @name Standard Constructors and Initializer. 
+   No casting operators have been introduced to avoid automatic unattended (and costly) conversion between different point types
+   **/
+
+  inline Point3 () { }
 	inline Point3 ( const T nx, const T ny, const T nz )
 	{
 		_v[0] = nx;
@@ -79,6 +89,31 @@ public:
 		_v[1] = 0;
 		_v[2] = 0;
 	}
+  
+  /// Questa funzione estende il vettore ad un qualsiasi numero di dimensioni
+	/// paddando gli elementi estesi con zeri
+	inline T Ext( const int i ) const
+	{
+		if(i>=0 && i<=2) return _v[i];
+		else             return 0;
+	}
+
+	template <class Q>
+	inline void Import( const Point3<Q> & b )
+	{
+		_v[0] = T(b[0]);
+		_v[1] = T(b[1]);
+		_v[2] = T(b[2]);
+	}
+
+  template <class Q> 
+  static inline Point3 Construct( const Point3<Q> & b )
+  {
+    return Point3(T(b[0]),T(b[1]),T(b[2]));
+  }
+
+  //@}
+
 		// Accesso alle componenti
 	inline const T &x() const { return _v[0]; } 
 	inline const T &y() const { return _v[1]; }
@@ -245,22 +280,7 @@ public:
 							   (_v[0]>=p._v[0]);
 	}
 
-	/// Questa funzione estende il vettore ad un qualsiasi numero di dimensioni
-	/// paddando gli elementi estesi con zeri
-	inline T Ext( const int i ) const
-	{
-		if(i>=0 && i<=2) return _v[i];
-		else             return 0;
-	}
-
-	template <class Q>
-	inline void Import( const Point3<Q> & b )
-	{
-		_v[0] = T(b[0]);
-		_v[1] = T(b[1]);
-		_v[2] = T(b[2]);
-	}
-
+	
 	inline Point3 operator - () const
 	{
 		return Point3<T> ( -_v[0], -_v[1], -_v[2] );
