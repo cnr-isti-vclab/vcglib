@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/04/05 12:36:43  tarini
+unified version: PointBase version, with no guards "(N==3)"
+
 
 
 Revision 1.1  2004/03/16 03:07:38  tarini
@@ -304,7 +307,7 @@ public:
 	}
 
 	  /// returns the angle with X axis (radiants, in [-PI, +PI] )
-	inline Scalar &Angle(){
+	inline S &Angle(){
 		return Math::Atan2(_v[1],_v[0]);};
 
 		/// transform the point in cartesian coords into polar coords
@@ -382,7 +385,7 @@ public:
 		return ( p.V(0)*p.V(0) + p.V(1)*p.V(1) );}
 
 	inline S operator * ( PointType const & p ) const {
-    return ( _v[0]*p._v[0] + _v[1]*p._v[1] ; }
+    return ( _v[0]*p._v[0] + _v[1]*p._v[1]) ; }
 
 	inline bool operator == ( PointType const & p ) const {
 		return _v[0]==p._v[0] && _v[1]==p._v[1] ;}
@@ -514,7 +517,7 @@ public:
 		return ( p.V(0)*p.V(0) + p.V(1)*p.V(1) + p.V(2)*p.V(2)  );}
 
 	inline S operator * ( PointType const & p ) const {
-    return ( _v[0]*p._v[0] + _v[1]*p._v[1] + _v[2]*p._v[2] ; }
+    return ( _v[0]*p._v[0] + _v[1]*p._v[1] + _v[2]*p._v[2]) ; }
 
 	inline bool operator == ( PointType const & p ) const {
 		return _v[0]==p._v[0] && _v[1]==p._v[1] && _v[2]==p._v[2] ;}
@@ -555,7 +558,7 @@ public:
 			                math::Abs(_v[3])  ); }  
 
 	inline S NormOne() const {
-		return math::Abs(_v[0])+ math::Abs(_v[1])+math::Max(math::Abs(_v[2]);}  
+		return math::Abs(_v[0])+ math::Abs(_v[1])+math::Max(math::Abs(_v[2]));}  
 
 	inline S operator % ( PointType const & p ) const {
 		S t = (*this)*p; /* Area, general formula */
@@ -694,7 +697,7 @@ public:
 			                math::Max( math::Abs(_v[2]), math::Abs(_v[3]) ) ); }  
 
 	inline S NormOne() const {
-		return math::Abs(_v[0])+ math::Abs(_v[1])+math::Max(math::Abs(_v[2])+math::Abs(_v[3]);}  
+		return math::Abs(_v[0])+ math::Abs(_v[1])+math::Max(math::Abs(_v[2]),math::Abs(_v[3]));}  
 
 	inline S operator % ( PointType const & p ) const {
 		S t = (*this)*p; /* Area, general formula */
