@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2004/07/15 00:16:37  cignoni
+Better doxigen documentation
+
 Revision 1.8  2004/07/09 10:18:49  ganovelli
 added access functions to vn and tn
 
@@ -62,6 +65,7 @@ Revision 1.1  2004/04/15 08:54:20  pietroni
 #ifndef __VCG_TETRAMESH
 #define __VCG_TETRAMESH
 #include <vcg\space\box3.h>
+#include <vcg\space\Color4.h>
 
 
 namespace vcg {
