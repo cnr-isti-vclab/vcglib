@@ -1,45 +1,29 @@
-/*****************************************************************************
- * VCGLib                                                                    *
- *					                                                                 *
- * Visual Computing Group                                                o>  *
- * IEI Institute, CNUCE Institute, CNR Pisa                             <|   *
- *                                                                      / \  *
- * Copyright(C) 1999 by Paolo Cignoni, Claudio Rocchini                      *
- * All rights reserved.                                                      *
- *																																					 *
- * Permission  to use, copy, modify, distribute  and sell this  software and *
- * its documentation for any purpose is hereby granted without fee, provided *
- * that  the above copyright notice appear  in all copies and that both that *
- * copyright   notice  and  this  permission  notice  appear  in  supporting *
- * documentation. the author makes  no representations about the suitability *
- * of this software for any purpose. It is provided  "as is" without express *
- * or implied warranty.                                                      *
- *																																					 *
- *****************************************************************************/
+/****************************************************************************
+* VCGLib                                                            o o     *
+* Visual and Computer Graphics Library                            o     o   *
+*                                                                _   O  _   *
+* Copyright(C) 2004                                                \/)\/    *
+* Visual Computing Lab                                            /\/|      *
+* ISTI - Italian National Research Council                           |      *
+*                                                                    \      *
+* All rights reserved.                                                      *
+*                                                                           *
+* This program is free software; you can redistribute it and/or modify      *   
+* it under the terms of the GNU General Public License as published by      *
+* the Free Software Foundation; either version 2 of the License, or         *
+* (at your option) any later version.                                       *
+*                                                                           *
+* This program is distributed in the hope that it will be useful,           *
+* but WITHOUT ANY WARRANTY; without even the implied warranty of            *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
+* GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
+* for more details.                                                         *
+*                                                                           *
+****************************************************************************/
 /****************************************************************************
   History
 
- 1999 Feb 02 First Draft.
-
- 1999 May 15 Corrected Scope of sqrt.. (added ::)
-
- 2000	Jan 26 inserito include condizionale
-						 corretto Distance() e init()
-			Jan 28 aggiunti Sin e Cos (per quaternion!) (con assert se uno li usa con int!)			
-			Jun 26 Aggiunto Gauss33 (prima stava in lfield3) 
-						 Nota: era stato scritto con Fabs invece di Abs....
-			Jun 30 Aggiunto TRACE e Definizione M_PI
-			Jul  4 aggiunto un cast a FL_TYPE in Gauss33;
-			     5 Tolti i parametri inutili (warning 4100)
-					 6 Aggiunto include assert.h
- 2001 Jul 17 TRACE Release compilabile in unix (CR)
- 2002 Jan 17 Aggiunte conversioni Radianti in Gradi
-      Feb 27 Aggiunto tipo per Generica funzione di Callback
-			Jul 28 Aggiunta seconda callback (utile per progress bar) (pc)
- 2003 Jan 09 Aggiunta Clamp (pc)
- 2003 Jan 17 Aggiunta MaxVal (mt)
-      Sep 10 [BCB] Ridefinite sqrtf e fabsf per C++ Builder 
-			    19 Aggiunto suffisso 'u' per evitare un warning (pc)
+$Log: not supported by cvs2svn $
 
 ****************************************************************************/
 
