@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2004/09/09 14:38:52  ponchio
+#include <gl... -> #include <GL...
+
 Revision 1.9  2004/07/11 22:06:55  cignoni
 Added scaling by wheel
 
@@ -301,7 +304,7 @@ void Trackball::MouseWheel(float notch  ) {
   {
     SphereMode tm;
     tm.TrackMode::Apply(this, notch);
-  }
+  } else
   current_mode->Apply(this, notch);
 }
 
