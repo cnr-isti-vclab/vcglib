@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/03/15 11:48:50  cignoni
+Added missing include assert and improved comments and requirements of geodesic quality
+
 Revision 1.5  2004/07/15 00:13:39  cignoni
 Better doxigen documentation
 
@@ -48,6 +51,7 @@ First working version!
 #define __VCG_TRI_UPDATE_QUALITY
 #include <vcg/simplex/face/pos.h>
 #include <algorithm>
+#include <vector>
 #include <assert.h>
 
 namespace vcg {
@@ -67,6 +71,7 @@ class UpdateQuality
 {
 public:
   typedef UpdateMeshType MeshType; 
+  typedef typename MeshType::ScalarType     ScalarType;
   typedef typename MeshType::VertexType     VertexType;
   typedef typename MeshType::VertexPointer  VertexPointer;
   typedef typename MeshType::VertexIterator VertexIterator;
@@ -121,7 +126,7 @@ static void VertexGeodesicFromBorder(MeshType &m)	// R1
 	assert(m.HasVFTopology());
 	assert(m.HasPerVertexQuality());
 
-	vector<VQualityHeap > heap;
+  std::vector< VQualityHeap > heap;
 	VertexIterator v;
 	FaceIterator f;
 	int j;
@@ -144,7 +149,7 @@ static void VertexGeodesicFromBorder(MeshType &m)	// R1
 					}
 				}
 	
- const MeshType::ScalarType loc_eps=m.bbox.Diag()/MeshType::ScalarType(100000);
+ const ScalarType loc_eps=m.bbox.Diag()/ScalarType(100000);
  while( heap.size()!=0 )							// Shortest path tree
 	{
 		VertexPointer pv;
@@ -186,7 +191,7 @@ static void VertexGeodesicFromBorder(MeshType &m)	// R1
 */
 static void VertexConstant(MeshType &m, float q)
 {
-	MeshType::VertexIterator vi;
+	VertexIterator vi;
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD()) 
 		(*vi).Q()=q;
 }
@@ -195,7 +200,7 @@ static void VertexConstant(MeshType &m, float q)
 */
 static void FaceConstant(MeshType &m, float q)
 {
-	MeshType::FaceIterator fi;
+	FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi)		
 		(*fi).Q()=q;
 }
