@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/04/28 11:37:14  pietroni
+*** empty log message ***
+
 Revision 1.1  2004/04/20 12:41:39  pietroni
 *** empty log message ***
 
@@ -155,16 +158,25 @@ class Tetramesh{
 //@}
 
 /***********************************************/
-/** @Functions used to retrieve vertex informations**/
+/** @Functions used to retrieve informations**/
 //@{
-  static bool HasPerVertexNormal()  { return bool(VertexType::OBJ_TYPE & (VertexType::OBJ_TYPE_N)); }
-	static bool HasPerVertexColor()   { return bool(VertexType::OBJ_TYPE & (VertexType::OBJ_TYPE_C)); }
-	static bool HasPerVertexMark()    { return bool(VertexType::OBJ_TYPE & (VertexType::OBJ_TYPE_M)); }
-	static bool HasPerVertexQuality() { return bool(VertexType::OBJ_TYPE & (VertexType::OBJ_TYPE_Q)); }
-	static bool HasPerVertexTexture() { return bool(VertexType::OBJ_TYPE & (VertexType::OBJ_TYPE_T)); }
-//@}
+ /// Reflection functions that speak about vertex and face properties.
+static bool HasPerVertexNormal()  { return VertexType::HasNormal() ; }
+static bool HasPerVertexColor()   { return VertexType::HasColor()  ; }
+static bool HasPerVertexMark()    { return VertexType::HasMark()   ; }
+static bool HasPerVertexQuality() { return VertexType::HasQuality(); }
+static bool HasPerVertexTexture() { return VertexType::HasTexture(); }
+
+static bool HasPerTetraNormal()    { return TetraType::HasTetraNormal()  ; }
+static bool HasPerTetraMark()      { return TetraType::HasTetraMark()   ; }
+static bool HasPerTetraQuality()   { return TetraType::HasTetraQuality(); }
+
+static bool HasTTTopology()       { return TetraType::HasTTAdjacency();  }
+static bool HasVTTopology()       { return TetraType::HasVTAdjacency(); }
+static bool HasTopology()         { return HasTTTopology() || HasVTTopology(); }
 
 /***********************************************/
+
 /** @Functions used for handle the temporany mark of a tetrahedron used in decimation**/
 //@{
 
@@ -222,6 +234,7 @@ void LoadTs(char * filename, double meshscale )
 			fscanf(f, "%f", &y );
 			fscanf(f, "%f", &z );
 		  //fscanf(f, "%f", &mass );
+      p1.ClearFlags();
       p1.P()=Point3d(x*meshscale, y*meshscale ,z*meshscale );
 			vert.push_back(p1);
 		}
