@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/01/21 18:06:05  ponchio
+Added remoteness ("distance" from frustum)
+
 Revision 1.6  2004/10/04 12:33:02  ponchio
 Cleaning up and planes init more stable.
 
@@ -96,7 +99,7 @@ template <class T> float Frustum<T>::Remoteness(Point3<T> &point, T radius) {
   Point3<T> r = Project(point);
   T dist = (point - view_point).Norm();
   if(dist == 0) return 0;
-  T rad = resolution * radius / dist;
+  T rad =  1 + radius / (resolution * dist);
   T mindist = 0;
   T tmp;
   tmp = viewport[0] - r[0] - rad;
@@ -109,6 +112,7 @@ template <class T> float Frustum<T>::Remoteness(Point3<T> &point, T radius) {
   tmp = r[1] - rad - (viewport[1] + viewport[3]);
   if(tmp > mindist) mindist = tmp;
   
+  if(mindist == 0) return 0;
   return 1 + (mindist / (viewport[0] + viewport[2]));
 }
 
