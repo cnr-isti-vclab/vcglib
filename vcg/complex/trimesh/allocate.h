@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/03/03 15:35:52  cignoni
+Yet another cr lf mismatch
+
 Revision 1.1  2004/02/24 21:36:42  cignoni
 grouped documentation, changed typenames and reflection mechanism
 
@@ -35,7 +38,10 @@ Initial commit
 
 namespace vcg {
 namespace tri {
-
+/** \addtogroup trimesh */
+/*@{*/
+/// Class to safely add vertexes and faces to a mesh updating all the involved pointers.
+/// It provides static memeber to add either vertex or faces to a trimesh.
 template <class AllocateMeshType>
 class Allocator
 {
@@ -49,8 +55,8 @@ typedef typename MeshType::FaceType       FaceType;
 typedef typename MeshType::FacePointer    FacePointer;
 typedef typename MeshType::FaceIterator   FaceIterator;
 
-/* This class is used when allocating new vertex and faces to update 
-   the pointer that can be changed when resizing the vector of vertex or faces.
+/** This class is used when allocating new vertexes and faces to update 
+   the pointers that can be changed when resizing the involved vectors of vertex or faces.
    It can also be used to prevent any update of the various mesh fields
    (e.g. in case you are building all the connections by hand as in a importer);
 */ 
@@ -69,7 +75,7 @@ public:
   SimplexPointerType newBase;
   SimplexPointerType newEnd;
   SimplexPointerType oldEnd;
-  bool preventUpdateFlag; // when true no update is considered necessary.
+  bool preventUpdateFlag; /// when true no update is considered necessary.
 };
 
 
@@ -108,10 +114,11 @@ static VertexIterator AddVertices(MeshType &m,int n, PointerUpdater<VertexPointe
         }
 		
 		// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
-		if(last!=0)  
+			unsigned int siz=m.vert.size()-n;	
+		  if(last!=0)  
 			{ 
 				last = m.vert.begin(); 
-				advance(last,n);
+				advance(last,siz);
 			}
 			else last=m.vert.begin(); 
 		}
@@ -138,12 +145,16 @@ static FaceIterator AddFaces(MeshType &m, int n)
 */
 static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu)
 {
-  FaceIterator last=m.face.end();
+  FaceIterator last=0;
   pu.Clear();
-	if(m.face.empty()) pu.oldBase=0;  // if the vector is empty we cannot find the last valid element
-	else               pu.oldBase=&*m.face.begin(); 
-    
-	unsigned int siz=0;	for(int i=0; i<n; ++i)
+  if(m.face.empty()) {
+    pu.oldBase=0;  // if the vector is empty we cannot find the last valid element
+    last=0;
+  }	else  {
+    pu.oldBase=&*m.face.begin(); 
+    last=m.face.end();
+  } 
+	for(int i=0; i<n; ++i)
 	{
     m.face.push_back(MeshType::FaceType());
 		m.face.back().ClearFlags();
@@ -155,7 +166,7 @@ static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu
 
   if(pu.NeedUpdate())
 		{
-			FaceIterator fi;
+      FaceIterator fi;
 			for (fi=m.face.begin(); fi!=m.face.end(); ++fi)
         if(!(*fi).IsD())
         {
@@ -178,17 +189,19 @@ static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu
           }
         }
         		// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
+		unsigned int siz=m.face.size()-n;	
 		if(last!=0)  
 			{ 
 				last = m.face.begin(); 
-				advance(last,n);
+				advance(last,siz);
 			}
-			else last=m.face.begin(); 
+ 		else last=m.face.begin(); 
 		}
 
 	return last;
 }
 
 }; // end class
+/*@}*/
 } // End Namespace TriMesh
 } // End Namespace vcg
