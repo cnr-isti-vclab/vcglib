@@ -1,25 +1,32 @@
-/*#***************************************************************************
- * VCGLib                                                                    *
- *																																					 *
- * Visual Computing Group                                                o>  *
- * IEI Institute, CNUCE Institute, CNR Pisa                             <|   *
- *                                                                      / \  *
- * Copyright(C) 1999 by Paolo Cignoni, Claudio Rocchini                      *
- * All rights reserved.                                                      *
- *																																					 *
- * Permission  to use, copy, modify, distribute  and sell this  software and *
- * its documentation for any purpose is hereby granted without fee, provided *
- * that  the above copyright notice appear  in all copies and that both that *
- * copyright   notice  and  this  permission  notice  appear  in  supporting *
- * documentation. the author makes  no representations about the suitability *
- * of this software for any purpose. It is provided  "as is" without express *
- * or implied warranty.                                                      *
- *					                                                         *
- *****************************************************************************/
-/*#**************************************************************************
+/****************************************************************************
+* VCGLib                                                            o o     *
+* Visual and Computer Graphics Library                            o     o   *
+*                                                                _   O  _   *
+* Copyright(C) 2004                                                \/)\/    *
+* Visual Computing Lab                                            /\/|      *
+* ISTI - Italian National Research Council                           |      *
+*                                                                    \      *
+* All rights reserved.                                                      *
+*                                                                           *
+* This program is free software; you can redistribute it and/or modify      *   
+* it under the terms of the GNU General Public License as published by      *
+* the Free Software Foundation; either version 2 of the License, or         *
+* (at your option) any later version.                                       *
+*                                                                           *
+* This program is distributed in the hope that it will be useful,           *
+* but WITHOUT ANY WARRANTY; without even the implied warranty of            *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
+* GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
+* for more details.                                                         *
+*                                                                           *
+****************************************************************************/
+/****************************************************************************
   History
-$Id: point3.h,v 1.4 2004-02-09 13:48:02 cignoni Exp $
+
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/02/09 13:48:02  cignoni
+Edited doxygen comments
+
 Revision 1.3  2004/02/06 02:25:54  cignoni
 First working release.
 
@@ -32,7 +39,6 @@ First commit...
 #ifndef __VCGLIB_POINT3
 #define __VCGLIB_POINT3
 
-//#include <limits>
 #include <assert.h>
 #include <vcg/math/base.h>
 
@@ -55,7 +61,7 @@ public:
 	
 //@{
 
-  /** @name Standard Constructors and Initializer. 
+  /** @name Standard Constructors and Initializers 
    No casting operators have been introduced to avoid automatic unattended (and costly) conversion between different point types
    **/
 
@@ -112,15 +118,13 @@ public:
     return Point3(T(b[0]),T(b[1]),T(b[2]));
   }
 
-  //@}
+//@}
 
-		// Accesso alle componenti
-	inline const T &x() const { return _v[0]; } 
-	inline const T &y() const { return _v[1]; }
-	inline const T &z() const { return _v[2]; }
-	inline T &x() { return _v[0]; }
-	inline T &y() { return _v[1]; }
-	inline T &z() { return _v[2]; }
+//@{
+
+  /** @name Data Access. 
+   access to data is done by overloading of [] or explicit naming of coords (x,y,z)**/
+
 	inline T & operator [] ( const int i )
 	{
 		assert(i>=0 && i<3);
@@ -131,6 +135,12 @@ public:
 		assert(i>=0 && i<3);
 		return _v[i];
 	}
+  inline const T &X() const { return _v[0]; } 
+	inline const T &Y() const { return _v[1]; }
+	inline const T &Z() const { return _v[2]; }
+	inline T &X() { return _v[0]; }
+	inline T &Y() { return _v[1]; }
+	inline T &Z() { return _v[2]; }
 	inline const T * V() const
 	{
 		return _v;
@@ -145,7 +155,13 @@ public:
 		assert(i>=0 && i<3);
 		return _v[i];
 	}
-		// Operatori matematici di base
+//@}
+//@{
+
+  /** @name Classical overloading of operators 
+  Note   
+  **/
+
 	inline Point3 operator + ( Point3 const & p) const
 	{
 		return Point3<T>( _v[0]+p._v[0], _v[1]+p._v[1], _v[2]+p._v[2] );
@@ -162,12 +178,12 @@ public:
 	{
 		return Point3<T>( _v[0]/s, _v[1]/s, _v[2]/s );
 	}
-		// dot product
+		/// Dot product
 	inline T operator * ( Point3 const & p ) const
 	{
 		return ( _v[0]*p._v[0] + _v[1]*p._v[1] + _v[2]*p._v[2] );
 	}
-		// Cross product
+		/// Cross product
 	inline Point3 operator ^ ( Point3 const & p ) const
 	{
 		return Point3 <T>
@@ -246,8 +262,14 @@ public:
 		fi    = (T)acos( _v[2]/ro );
 	}
 
-		// Operatori di confronto (ordinamento lessicografico)
-	inline bool operator == ( Point3 const & p ) const
+//@}
+//@{
+
+  /** @name Comparison Operators. 
+   Note that the reverse z prioritized ordering, useful in many situations.
+   **/
+
+inline bool operator == ( Point3 const & p ) const
 	{
 		return _v[0]==p._v[0] && _v[1]==p._v[1] && _v[2]==p._v[2];
 	}
@@ -285,7 +307,7 @@ public:
 	{
 		return Point3<T> ( -_v[0], -_v[1], -_v[2] );
 	}
-
+ //@}
 		// Casts
 #ifdef __VCG_USE_CAST
 inline operator Point3<int>			 (){ return Point3<int>			(_v[0],_v[1],_v[2]); }
