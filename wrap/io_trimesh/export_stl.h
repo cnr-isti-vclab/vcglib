@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 * VCGLib                                                            o o     *
 * Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/03/03 15:35:53  cignoni
+Yet another cr lf mismatch
+
 Revision 1.3  2004/02/19 15:28:01  ponchio
 *** empty log message ***
 
@@ -43,6 +46,10 @@ namespace vcg {
 namespace tri {
 namespace io {
 
+/** 
+This class encapsulate a filter for opening stl (sterolitograpy) meshes.
+The stl format is quite simple and rather un-flexible. It just stores, in ascii or binary the, unindexed, geometry of the faces.
+*/
 template <class SaveMeshType>
 class ExporterSTL
 {
@@ -71,7 +78,7 @@ static bool Save(SaveMeshType &m, const char * filename , bool binary =true, con
 		for(fi=m.face.begin(); fi!=m.face.end(); ++fi) if( !(*fi).IsD() )
 		{
 			// For each triangle write the normal, the three coords and a short set to zero
-			p.Import(vcg::NormalizedNormal((*fi).V(0)->P(), (*fi).V(1)->P(), (*fi).V(2)->P()));
+			p.Import(vcg::NormalizedNormal(*fi));
 			fwrite(p.V(),3,sizeof(float),fp);
  
 			for(int k=0;k<3;++k){
@@ -91,7 +98,7 @@ static bool Save(SaveMeshType &m, const char * filename , bool binary =true, con
 		for(fi=m.face.begin(); fi!=m.face.end(); ++fi) if( !(*fi).IsD() )
 		{
 	  	// For each triangle write the normal, the three coords and a short set to zero
-			p.Import(vcg::NormalizedNormal((*fi).V(0)->P(), (*fi).V(1)->P(), (*fi).V(2)->P()));
+			p.Import(vcg::NormalizedNormal(*fi));
 			fprintf(fp,"  facet normal %13e %13e %13e\n",p[0],p[1],p[2]);
 			fprintf(fp,"    outer loop\n");
 			for(int k=0;k<3;++k){

@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 * VCGLib                                                            o o     *
 * Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/03/08 09:21:33  cignoni
+Initial commit
+
 Revision 1.1  2004/03/03 15:00:51  cignoni
 Initial commit
 
@@ -50,29 +53,50 @@ namespace io {
 template <class SaveMeshType>
 class ExporterPLY
 {
+  // Si occupa di convertire da un tipo all'altro.
+// usata nella saveply per matchare i tipi tra stotype e memtype.
+// Ad es se in memoria c'e' un int e voglio salvare un float
+// src sara in effetti un puntatore a int il cui valore deve 
+// essere convertito al tipo di ritorno desiderato (stotype)
+
+template <class StoType> 
+static void PlyConv(int mem_type, void *src, StoType &dest)
+{
+		switch (mem_type){
+				case ply::T_FLOAT	:		dest = (StoType) (*  ((float  *) src)); break;
+				case ply::T_DOUBLE:		dest = (StoType) (*  ((double *) src)); break;
+				case ply::T_INT		:		dest = (StoType) (*  ((int    *) src)); break;
+				case ply::T_SHORT	:		dest = (StoType) (*  ((short  *) src)); break;
+				case ply::T_CHAR	:		dest = (StoType) (*  ((char   *) src)); break;
+				case ply::T_UCHAR	:		dest = (StoType) (*  ((unsigned char *)src)); break;
+			 	default : assert(0);
+		}
+}
+
 public:
 typedef ::vcg::ply::PropDescriptor PropDescriptor ;
 typedef typename SaveMeshType::VertexPointer VertexPointer;
 typedef typename SaveMeshType::ScalarType ScalarType;
 typedef typename SaveMeshType::VertexType VertexType;
 typedef typename SaveMeshType::FaceType FaceType;
+typedef typename SaveMeshType::FacePointer FacePointer;
 typedef typename SaveMeshType::VertexIterator VertexIterator;
 typedef typename SaveMeshType::FaceIterator FaceIterator;
 
 static bool Save(SaveMeshType &m, const char * filename, bool binary=true)
 {
   PlyInfo pi;
-  return SavePly(m,filename,binary,pi);
+  return Save(m,filename,binary,pi);
 }
 
-static bool SavePly(SaveMeshType &m,  const char * filename, int savemask )
+static bool Save(SaveMeshType &m,  const char * filename, int savemask )
 {
 	PlyInfo pi;
   pi.mask=savemask;
-  return SavePly(m,filename,true,pi);
+  return Save(m,filename,true,pi);
 }
 
-static bool SavePly(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &pi )	// V1.0
+static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &pi )	// V1.0
 {
 	FILE * fpout;
 	int i;
@@ -154,7 +178,7 @@ static bool SavePly(SaveMeshType &m,  const char * filename, bool binary, PlyInf
 		);
 	}
 	
-	if( HasPerVertexColor()  && (pi.mask & PLYMask::PM_VERTCOLOR) )
+	if( m.HasPerVertexColor()  && (pi.mask & PLYMask::PM_VERTCOLOR) )
 	{
 		fprintf(fpout,
 			"property uchar red\n"
@@ -164,7 +188,7 @@ static bool SavePly(SaveMeshType &m,  const char * filename, bool binary, PlyInf
 		);
 	}
 
-	if( HasPerVertexQuality() && (pi.mask & PLYMask::PM_VERTQUALITY) )
+	if( m.HasPerVertexQuality() && (pi.mask & PLYMask::PM_VERTQUALITY) )
 	{
 		fprintf(fpout,
 			"property float quality\n"
@@ -187,8 +211,7 @@ static bool SavePly(SaveMeshType &m,  const char * filename, bool binary, PlyInf
 		);
 	}
 
-	if( ( (vertex_type::OBJ_TYPE & vertex_type::OBJ_TYPE_T ) && (pi.mask & PLYMask::PM_VERTTEXCOORD) ) ||
-	    ( (face_type::  OBJ_TYPE & face_type::  OBJ_TYPE_WT) && (pi.mask & PLYMask::PM_WEDGTEXCOORD) )  )
+	if(  m.HasPerVertexTexture() || m.HasPerWedgeTexture()  )
 	{
 		fprintf(fpout,
 			"property list uchar float texcoord\n"
@@ -200,7 +223,7 @@ static bool SavePly(SaveMeshType &m,  const char * filename, bool binary, PlyInf
 			);
 	}
 
-	if( HasPerFaceColor() && (pi.mask & PLYMask::PM_FACECOLOR) )
+	if( m.HasPerFaceColor() && (pi.mask & PLYMask::PM_FACECOLOR) )
 	{
 		fprintf(fpout,
 			"property uchar red\n"
@@ -210,14 +233,14 @@ static bool SavePly(SaveMeshType &m,  const char * filename, bool binary, PlyInf
 		);
 	}
 	
-	if ( HasPerWedgeColor() && (pi.mask & PLYMask::PM_WEDGCOLOR)  )
+	if ( m.HasPerWedgeColor() && (pi.mask & PLYMask::PM_WEDGCOLOR)  )
 	{
 		fprintf(fpout,
 			"property list uchar float color\n"
 		);
 	}
 
-	if( HasPerFaceQuality() && (pi.mask & PLYMask::PM_FACEQUALITY) )
+	if( m.HasPerFaceQuality() && (pi.mask & PLYMask::PM_FACEQUALITY) )
 	{
 		fprintf(fpout,
 			"property float quality\n"
@@ -230,8 +253,8 @@ static bool SavePly(SaveMeshType &m,  const char * filename, bool binary, PlyInf
 	fprintf(fpout, "end_header\n"	);
 
 		// Salvataggio camera
-	if( (pi.mask & PLYMask::PM_CAMERA) && camera.IsValid() )
-	{
+	//if( (pi.mask & PLYMask::PM_CAMERA) && camera.IsValid() )
+	//{
 		//if(binary)
 		//{
 		//	float t[17];
@@ -291,48 +314,48 @@ static bool SavePly(SaveMeshType &m,  const char * filename, bool binary, PlyInf
 		//		,camera.k[3]
 		//	);
 		//}		
-	}
+	//}
 
 
 	int j;
 	vector<int> FlagV; 
-	MVTYPE * vp;
-	vertex_iterator vi;
+	VertexPointer  vp;
+	VertexIterator vi;
 	for(j=0,vi=m.vert.begin();vi!=m.vert.end();++vi)
 	{
 		vp=&(*vi);
-		FlagV.push_back(vp->Supervisor_Flags()); // Salva in ogni caso flag del vertice
-		if( ! vp->IsDeleted() )
+		FlagV.push_back(vp->UberFlags()); // Salva in ogni caso flag del vertice
+		if( ! vp->IsD() )
 		{
 			if(binary)
 			{
 				float t;
 
-				t = float(vp->Supervisor_P()[0]); fwrite(&t,sizeof(float),1,fpout);
-				t = float(vp->Supervisor_P()[1]); fwrite(&t,sizeof(float),1,fpout);
-				t = float(vp->Supervisor_P()[2]); fwrite(&t,sizeof(float),1,fpout);
+				t = float(vp->UberP()[0]); fwrite(&t,sizeof(float),1,fpout);
+				t = float(vp->UberP()[1]); fwrite(&t,sizeof(float),1,fpout);
+				t = float(vp->UberP()[2]); fwrite(&t,sizeof(float),1,fpout);
 				
 				if( pi.mask & PLYMask::PM_VERTFLAGS )
-					fwrite(&(vp->Supervisor_Flags()),sizeof(int),1,fpout);
+					fwrite(&(vp->UberFlags()),sizeof(int),1,fpout);
 
-				if( HasPerVertexColor() && (pi.mask & PLYMask::PM_VERTCOLOR) )
+				if( m.HasPerVertexColor() && (pi.mask & PLYMask::PM_VERTCOLOR) )
 					fwrite(&( vp->C() ),sizeof(char),4,fpout);
 
-				if( HasPerVertexQuality() && (pi.mask & PLYMask::PM_VERTQUALITY) )
+				if( m.HasPerVertexQuality() && (pi.mask & PLYMask::PM_VERTQUALITY) )
 					fwrite(&( vp->Q() ),sizeof(float),1,fpout);
 
 
-				for(i=0;i<vdn;i++)
+				for(i=0;i<pi.vdn;i++)
 				{
 					double td; float tf;int ti;short ts; char tc; unsigned char tuc;
-					switch (VertexData[i].stotype1)
+					switch (pi.VertexData[i].stotype1)
 					{
-					case T_FLOAT	:		PlyConv(VertexData[i].memtype1,  ((char *)vp)+VertexData[i].offset1, tf );	fwrite(&tf, sizeof(float),1,fpout); break;
-					case T_DOUBLE :			PlyConv(VertexData[i].memtype1,  ((char *)vp)+VertexData[i].offset1, td );	fwrite(&td, sizeof(double),1,fpout); break;
-					case T_INT		:		PlyConv(VertexData[i].memtype1,  ((char *)vp)+VertexData[i].offset1, ti );	fwrite(&ti, sizeof(int),1,fpout); break;
-					case T_SHORT	:		PlyConv(VertexData[i].memtype1,  ((char *)vp)+VertexData[i].offset1, ts );	fwrite(&ts, sizeof(short),1,fpout); break;
-					case T_CHAR		:		PlyConv(VertexData[i].memtype1,  ((char *)vp)+VertexData[i].offset1, tc );	fwrite(&tc, sizeof(char),1,fpout); break;
-					case T_UCHAR	:		PlyConv(VertexData[i].memtype1,  ((char *)vp)+VertexData[i].offset1, tuc);	fwrite(&tuc,sizeof(unsigned char),1,fpout); break;
+          case ply::T_FLOAT	 :		PlyConv(pi.VertexData[i].memtype1,  ((char *)vp)+pi.VertexData[i].offset1, tf );	fwrite(&tf, sizeof(float),1,fpout); break;
+					case ply::T_DOUBLE :		PlyConv(pi.VertexData[i].memtype1,  ((char *)vp)+pi.VertexData[i].offset1, td );	fwrite(&td, sizeof(double),1,fpout); break;
+					case ply::T_INT		 :		PlyConv(pi.VertexData[i].memtype1,  ((char *)vp)+pi.VertexData[i].offset1, ti );	fwrite(&ti, sizeof(int),1,fpout); break;
+					case ply::T_SHORT	 :		PlyConv(pi.VertexData[i].memtype1,  ((char *)vp)+pi.VertexData[i].offset1, ts );	fwrite(&ts, sizeof(short),1,fpout); break;
+					case ply::T_CHAR	 :		PlyConv(pi.VertexData[i].memtype1,  ((char *)vp)+pi.VertexData[i].offset1, tc );	fwrite(&tc, sizeof(char),1,fpout); break;
+					case ply::T_UCHAR	 :		PlyConv(pi.VertexData[i].memtype1,  ((char *)vp)+pi.VertexData[i].offset1, tuc);	fwrite(&tuc,sizeof(unsigned char),1,fpout); break;
 					default : assert(0);
 					}
 				}
@@ -342,26 +365,26 @@ static bool SavePly(SaveMeshType &m,  const char * filename, bool binary, PlyInf
 				fprintf(fpout,"%g %g %g " ,vp->P()[0],vp->P()[1],vp->P()[2]);
 
 				if( pi.mask & PLYMask::PM_VERTFLAGS )
-					fprintf(fpout,"%d ",vp->Supervisor_Flags());
+					fprintf(fpout,"%d ",vp->UberFlags());
 
-				if( (vertex_type::OBJ_TYPE & vertex_type::OBJ_TYPE_C) && (pi.mask & PLYMask::PM_VERTCOLOR) )
+				if( m.HasPerVertexColor() && (pi.mask & PLYMask::PM_VERTCOLOR) )
 					fprintf(fpout,"%d %d %d %d ",vp->C()[0],vp->C()[1],vp->C()[2],vp->C()[3] );
 
-				if( (vertex_type::OBJ_TYPE & vertex_type::OBJ_TYPE_Q) && (pi.mask & PLYMask::PM_VERTQUALITY) )
+				if( m.HasPerVertexQuality() && (pi.mask & PLYMask::PM_VERTQUALITY) )
 					fprintf(fpout,"%g ",vp->Q());
 
-				for(i=0;i<vdn;i++)
+				for(i=0;i<pi.vdn;i++)
 				{
 					float tf;
 					int ti;
-					switch (VertexData[i].memtype1)
+					switch (pi.VertexData[i].memtype1)
 					{
-					case T_FLOAT	:		tf=*( (float  *)        (((char *)vp)+VertexData[i].offset1));	fprintf(fpout,"%g ",tf); break;
-					case T_DOUBLE :   tf=*( (double *)        (((char *)vp)+VertexData[i].offset1));	fprintf(fpout,"%g ",tf); break;
-					case T_INT		:		ti=*( (int    *)        (((char *)vp)+VertexData[i].offset1));	fprintf(fpout,"%i ",ti); break;
-					case T_SHORT	:		ti=*( (short  *)        (((char *)vp)+VertexData[i].offset1));  fprintf(fpout,"%i ",ti); break;
-					case T_CHAR		:		ti=*( (char   *)        (((char *)vp)+VertexData[i].offset1));	fprintf(fpout,"%i ",ti); break;
-					case T_UCHAR	:		ti=*( (unsigned char *) (((char *)vp)+VertexData[i].offset1));	fprintf(fpout,"%i ",ti); break;
+					case ply::T_FLOAT	 :		tf=*( (float  *)        (((char *)vp)+pi.VertexData[i].offset1));	fprintf(fpout,"%g ",tf); break;
+					case ply::T_DOUBLE :    tf=*( (double *)        (((char *)vp)+pi.VertexData[i].offset1));	fprintf(fpout,"%g ",tf); break;
+					case ply::T_INT		 :		ti=*( (int    *)        (((char *)vp)+pi.VertexData[i].offset1));	fprintf(fpout,"%i ",ti); break;
+					case ply::T_SHORT	 :		ti=*( (short  *)        (((char *)vp)+pi.VertexData[i].offset1));  fprintf(fpout,"%i ",ti); break;
+					case ply::T_CHAR	 :		ti=*( (char   *)        (((char *)vp)+pi.VertexData[i].offset1));	fprintf(fpout,"%i ",ti); break;
+					case ply::T_UCHAR	 :		ti=*( (unsigned char *) (((char *)vp)+pi.VertexData[i].offset1));	fprintf(fpout,"%i ",ti); break;
 					default : assert(0);
 					}
 				}
@@ -369,37 +392,37 @@ static bool SavePly(SaveMeshType &m,  const char * filename, bool binary, PlyInf
 				fprintf(fpout,"\n");
 			}
 
-			vp->Supervisor_Flags()=j; // Trucco! Nascondi nei flags l'indice del vertice non deletato!
+			vp->UberFlags()=j; // Trucco! Nascondi nei flags l'indice del vertice non deletato!
 			j++;
 		}
 	}
-	assert(j==vn);
+	assert(j==m.vn);
 
 	char c = 3;
 	char k = 9;
 	unsigned char b9 = 9;
 	unsigned char b6 = 6;
-	const MFTYPE * fp;
+	FacePointer fp;
 	int vv[3];
-	face_iterator fi;
+	FaceIterator fi;
 	int fcnt=0;
-	for(j=0,fi=face.begin();fi!=face.end();++fi)
+	for(j=0,fi=m.face.begin();fi!=m.face.end();++fi)
 		{
 			fp=&(*fi);
-			if( ! fp->IsDeleted() )
+			if( ! fp->IsD() )
 			{ fcnt++;
 				if(binary)
 				{
-					vv[0]=fp->cV(0)->Supervisor_Flags();
-					vv[1]=fp->cV(1)->Supervisor_Flags();
-					vv[2]=fp->cV(2)->Supervisor_Flags();
+					vv[0]=fp->cV(0)->UberFlags();
+					vv[1]=fp->cV(1)->UberFlags();
+					vv[2]=fp->cV(2)->UberFlags();
 					fwrite(&c,1,1,fpout);
 					fwrite(vv,sizeof(int),3,fpout);
 
 					if( pi.mask & PLYMask::PM_FACEFLAGS )
 						fwrite(&(fp->Flags()),sizeof(int),1,fpout);
 
-					if( (vertex_type::OBJ_TYPE & vertex_type::OBJ_TYPE_T) && (pi.mask & PLYMask::PM_VERTTEXCOORD) )
+					if( m.HasPerVertexTexture() && (pi.mask & PLYMask::PM_VERTTEXCOORD) )
 					{
 						fwrite(&b6,sizeof(char),1,fpout);
 						float t[6];
@@ -410,7 +433,7 @@ static bool SavePly(SaveMeshType &m,  const char * filename, bool binary, PlyInf
 						}
 						fwrite(t,sizeof(float),6,fpout);
 					}
-					else if( (face_type::  OBJ_TYPE & face_type::  OBJ_TYPE_WT) && (pi.mask & PLYMask::PM_WEDGTEXCOORD)  )
+					else if( m.HasPerWedgeTexture() && (pi.mask & PLYMask::PM_WEDGTEXCOORD)  )
 					{
 						fwrite(&b6,sizeof(char),1,fpout);
 						float t[6];
@@ -428,11 +451,11 @@ static bool SavePly(SaveMeshType &m,  const char * filename, bool binary, PlyInf
 						fwrite(&t,sizeof(int),1,fpout);
 					}
           
-					if( HasPerFaceColor() && (pi.mask & PLYMask::PM_FACECOLOR) )
+					if( m.HasPerFaceColor() && (pi.mask & PLYMask::PM_FACECOLOR) )
 					   fwrite(&( fp->C() ),sizeof(char),4,fpout);
 
 
-					if( HasPerWedgeColor() && (pi.mask & PLYMask::PM_WEDGCOLOR)  )
+					if( m.HasPerWedgeColor() && (pi.mask & PLYMask::PM_WEDGCOLOR)  )
 					{
 						fwrite(&b9,sizeof(char),1,fpout);
 						float t[3];
@@ -445,20 +468,20 @@ static bool SavePly(SaveMeshType &m,  const char * filename, bool binary, PlyInf
 						}
 					}
 
-					if( (face_type::OBJ_TYPE & face_type::OBJ_TYPE_Q) && (pi.mask & PLYMask::PM_FACEQUALITY) )
+					if( m.HasPerFaceQuality() && (pi.mask & PLYMask::PM_FACEQUALITY) )
 						fwrite( &(fp->Q()),sizeof(float),1,fpout);
 
 
-					for(i=0;i<fdn;i++)
+					for(i=0;i<pi.fdn;i++)
 						{
 						double td; float tf;int ti;short ts; char tc; unsigned char tuc;
-						switch (FaceData[i].stotype1){
-								case T_FLOAT	:		PlyConv(FaceData[i].memtype1,  ((char *)fp)+FaceData[i].offset1, tf );	fwrite(&tf, sizeof(float),1,fpout); break;
-								case T_DOUBLE :		PlyConv(FaceData[i].memtype1,  ((char *)fp)+FaceData[i].offset1, td );	fwrite(&td, sizeof(double),1,fpout); break;
-								case T_INT		:		PlyConv(FaceData[i].memtype1,  ((char *)fp)+FaceData[i].offset1, ti );	fwrite(&ti, sizeof(int),1,fpout); break;
-								case T_SHORT	:		PlyConv(FaceData[i].memtype1,  ((char *)fp)+FaceData[i].offset1, ts );	fwrite(&ts, sizeof(short),1,fpout); break;
-								case T_CHAR		:		PlyConv(FaceData[i].memtype1,  ((char *)fp)+FaceData[i].offset1, tc );	fwrite(&tc, sizeof(char),1,fpout); break;
-								case T_UCHAR	:		PlyConv(FaceData[i].memtype1,  ((char *)fp)+FaceData[i].offset1, tuc);	fwrite(&tuc,sizeof(unsigned char),1,fpout); break;
+						switch (pi.FaceData[i].stotype1){
+								case ply::T_FLOAT	 :		PlyConv(pi.FaceData[i].memtype1,  ((char *)fp)+pi.FaceData[i].offset1, tf );	fwrite(&tf, sizeof(float),1,fpout); break;
+								case ply::T_DOUBLE :		PlyConv(pi.FaceData[i].memtype1,  ((char *)fp)+pi.FaceData[i].offset1, td );	fwrite(&td, sizeof(double),1,fpout); break;
+								case ply::T_INT		 :		PlyConv(pi.FaceData[i].memtype1,  ((char *)fp)+pi.FaceData[i].offset1, ti );	fwrite(&ti, sizeof(int),1,fpout); break;
+								case ply::T_SHORT	 :		PlyConv(pi.FaceData[i].memtype1,  ((char *)fp)+pi.FaceData[i].offset1, ts );	fwrite(&ts, sizeof(short),1,fpout); break;
+								case ply::T_CHAR	 :		PlyConv(pi.FaceData[i].memtype1,  ((char *)fp)+pi.FaceData[i].offset1, tc );	fwrite(&tc, sizeof(char),1,fpout); break;
+								case ply::T_UCHAR	 :		PlyConv(pi.FaceData[i].memtype1,  ((char *)fp)+pi.FaceData[i].offset1, tuc);	fwrite(&tuc,sizeof(unsigned char),1,fpout); break;
 								default : assert(0);
 						}
 					}
@@ -466,12 +489,12 @@ static bool SavePly(SaveMeshType &m,  const char * filename, bool binary, PlyInf
 				else	// ***** ASCII *****
 				{
 					fprintf(fpout,"3 %d %d %d ",
-						fp->cV(0)->Supervisor_Flags(),	fp->cV(1)->Supervisor_Flags(), fp->cV(2)->Supervisor_Flags() );
+						fp->cV(0)->UberFlags(),	fp->cV(1)->UberFlags(), fp->cV(2)->UberFlags() );
 
 					if( pi.mask & PLYMask::PM_FACEFLAGS )
 						fprintf(fpout,"%d ",fp->Flags());
 
-					if( (vertex_type::OBJ_TYPE & vertex_type::OBJ_TYPE_T) && (pi.mask & PLYMask::PM_VERTTEXCOORD) )
+					if( m.HasPerVertexTexture() && (pi.mask & PLYMask::PM_VERTTEXCOORD) )
 					{
 						fprintf(fpout,"6 ");
 						for(int k=0;k<3;++k)
@@ -480,7 +503,7 @@ static bool SavePly(SaveMeshType &m,  const char * filename, bool binary, PlyInf
 								,fp->V(k)->T().v()
 							);
 					}
-					else if( (face_type::  OBJ_TYPE & face_type::  OBJ_TYPE_WT) && (pi.mask & PLYMask::PM_WEDGTEXCOORD)  )
+					else if( m.HasPerWedgeTexture() && (pi.mask & PLYMask::PM_WEDGTEXCOORD)  )
 					{
 						fprintf(fpout,"6 ");
 						for(int k=0;k<3;++k)
@@ -495,7 +518,7 @@ static bool SavePly(SaveMeshType &m,  const char * filename, bool binary, PlyInf
 						fprintf(fpout,"%d ",fp->WT(0).n());
 					}
 
-					if( (face_type::OBJ_TYPE & face_type::OBJ_TYPE_C) && (pi.mask & PLYMask::PM_FACECOLOR)  )
+					if( m.HasPerFaceColor() && (pi.mask & PLYMask::PM_FACECOLOR)  )
 					{
 						float t[3];
 						t[0] = float(fp->C()[0])/255;
@@ -506,7 +529,7 @@ static bool SavePly(SaveMeshType &m,  const char * filename, bool binary, PlyInf
 						fprintf(fpout,"%g %g %g ",t[0],t[1],t[2]);
 						fprintf(fpout,"%g %g %g ",t[0],t[1],t[2]);
 					}
-					else if( (face_type::OBJ_TYPE & face_type::OBJ_TYPE_WC) && (pi.mask & PLYMask::PM_WEDGCOLOR)  )
+					else if( m.HasPerWedgeColor() && (pi.mask & PLYMask::PM_WEDGCOLOR)  )
 					{
 						fprintf(fpout,"9 ");
 						for(int z=0;z<3;++z)
@@ -517,21 +540,21 @@ static bool SavePly(SaveMeshType &m,  const char * filename, bool binary, PlyInf
 							);
 					}
 
-					if( (face_type::OBJ_TYPE & face_type::OBJ_TYPE_Q) && (pi.mask & PLYMask::PM_FACEQUALITY) )
+					if( m.HasPerFaceQuality() && (pi.mask & PLYMask::PM_FACEQUALITY) )
 						fprintf(fpout,"%g ",fp->Q());
 
-					for(i=0;i<fdn;i++)
+					for(i=0;i<pi.fdn;i++)
 					{
 						float tf;
 						int ti;
-						switch (FaceData[i].memtype1)
+						switch (pi.FaceData[i].memtype1)
 						{
-						case T_FLOAT	:		tf=*( (float  *)        (((char *)fp)+FaceData[i].offset1));	fprintf(fpout,"%g ",tf); break;
-						case T_DOUBLE   :		tf=*( (double *)        (((char *)fp)+FaceData[i].offset1));	fprintf(fpout,"%g ",tf); break;
-						case T_INT		:		ti=*( (int    *)        (((char *)fp)+FaceData[i].offset1));	fprintf(fpout,"%i ",ti); break;
-						case T_SHORT	:		ti=*( (short  *)        (((char *)fp)+FaceData[i].offset1));	fprintf(fpout,"%i ",ti); break;
-						case T_CHAR		:		ti=*( (char   *)        (((char *)fp)+FaceData[i].offset1));	fprintf(fpout,"%i ",ti); break;
-						case T_UCHAR	:		ti=*( (unsigned char *) (((char *)fp)+FaceData[i].offset1));	fprintf(fpout,"%i ",ti); break;
+						case  ply::T_FLOAT	:		tf=*( (float  *)        (((char *)fp)+pi.FaceData[i].offset1));	fprintf(fpout,"%g ",tf); break;
+						case  ply::T_DOUBLE :		tf=*( (double *)        (((char *)fp)+pi.FaceData[i].offset1));	fprintf(fpout,"%g ",tf); break;
+						case  ply::T_INT		:		ti=*( (int    *)        (((char *)fp)+pi.FaceData[i].offset1));	fprintf(fpout,"%i ",ti); break;
+						case  ply::T_SHORT	:		ti=*( (short  *)        (((char *)fp)+pi.FaceData[i].offset1));	fprintf(fpout,"%i ",ti); break;
+						case  ply::T_CHAR		:		ti=*( (char   *)        (((char *)fp)+pi.FaceData[i].offset1));	fprintf(fpout,"%i ",ti); break;
+						case  ply::T_UCHAR	:		ti=*( (unsigned char *) (((char *)fp)+pi.FaceData[i].offset1));	fprintf(fpout,"%i ",ti); break;
 						default : assert(0);
 						}
 					}
@@ -540,12 +563,12 @@ static bool SavePly(SaveMeshType &m,  const char * filename, bool binary, PlyInf
 				}			  
 			}
 		}
-	assert(fcnt==fn);
+	assert(fcnt==m.fn);
 	fclose(fpout); 
 	
 	// Recupera i flag originali
-	for(j=0,vi=vert.begin();vi!=vert.end();++vi)
-		(*vi).Supervisor_Flags()=FlagV[j++]; 
+	for(j=0,vi=m.vert.begin();vi!=m.vert.end();++vi)
+		(*vi).UberFlags()=FlagV[j++]; 
 	
 	return 0;
 }

@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 * VCGLib                                                            o o     *
 * Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/03/08 09:21:34  cignoni
+Initial commit
+
 Revision 1.1  2004/03/03 15:00:51  cignoni
 Initial commit
 

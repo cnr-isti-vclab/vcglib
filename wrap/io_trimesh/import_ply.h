@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 * VCGLib                                                            o o     *
 * Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
@@ -24,15 +24,15 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/03/03 15:00:51  cignoni
+Initial commit
+
 ****************************************************************************/
 
-/**
-@name Load and Save in Ply format
-*/
-//@{
 #include<wrap/callback.h>
 #include<wrap/ply/plylib.h>
 #include<wrap/io_trimesh/io_mask.h>
+#include<wrap/io_trimesh/io_ply.h>
 
 
 namespace vcg {
@@ -42,13 +42,16 @@ namespace io {
 template <class TYPE>
 int PlyType ()  { return 0;}
 
-//template <class OpenMeshType>
 template <> int PlyType <float >()  { return ply::T_FLOAT; }
 template <> int PlyType <double>()  { return ply::T_DOUBLE; }
 template <> int PlyType <int   >()  { return ply::T_INT; } 
 template <> int PlyType <short >()  { return ply::T_SHORT; }
 template <> int PlyType <unsigned char >()  { return ply::T_UCHAR; }
-  
+
+/** 
+This class encapsulate a filter for opening ply meshes.
+The ply file format is quite extensible...
+*/
 template <class OpenMeshType>
 class ImporterPLY
 {
@@ -62,63 +65,8 @@ typedef typename OpenMeshType::FaceType FaceType;
 typedef typename OpenMeshType::VertexIterator VertexIterator;
 typedef typename OpenMeshType::FaceIterator FaceIterator;
 
-class PlyInfo
-{
-public:
-  PlyInfo()
-  {
-    status=0;
-    mask=0;
-    cb=0;
-    vdn=fdn=0;
-    VertexData=FaceData=0;
-  }
-  int status;
-  int mask;   // it overwritten by Open and used by Save
-  CallBackPos *cb;
-
-  int vdn;
-  PropDescriptor *VertexData;
-  int fdn;
-  PropDescriptor *FaceData;
-  std::string header;
-};
-
-enum Error
-{
-
-		// Funzioni superiori
-	E_NO_VERTEX,			// 14
-	E_NO_FACE,				// 15
-	E_SHORTFILE,			// 16
-	E_NO_3VERTINFACE,		// 17
-	E_BAD_VERT_INDEX,		// 18
-	E_NO_6TCOORD,			// 19
-	E_DIFFER_COLORS,		// 20
-};
-
 //template <class T> int PlyType () {	assert(0);  return 0;}
 
-// Si occupa di convertire da un tipo all'altro.
-// usata nella saveply per matchare i tipi tra stotype e memtype.
-// Ad es se in memoria c'e' un int e voglio salvare un float
-// src sara in effetti un puntatore a int il cui valore deve 
-// essere convertito al tipo di ritorno desiderato (stotype)
-
-template <class StoType> 
-void PlyConv(int mem_type, void *src, StoType &dest)
-{
-//		float tf;	int ti;short ts; char tc;
-		switch (mem_type){
-				case ply::T_FLOAT	:		dest = (StoType) (*  ((float  *) src)); break;
-				case T_DOUBLE :		dest = (StoType) (*  ((double *) src)); break;
-				case T_INT		:		dest = (StoType) (*  ((int    *) src)); break;
-				case T_SHORT	:		dest = (StoType) (*  ((short  *) src)); break;
-				case T_CHAR		:		dest = (StoType) (*  ((char   *) src)); break;
-				case T_UCHAR	:		dest = (StoType) (*  ((unsigned char *)src)); break;
-			 	default : assert(0);
-		}
-}
 #define MAX_USER_DATA 256
 // Struttura ausiliaria per la lettura del file ply
 struct LoadPly_FaceAux
@@ -264,7 +212,7 @@ static const  PropDescriptor &CameraDesc(int i)
 }
 
 
-
+/// Standard call for reading a mesh
 static int Open( OpenMeshType &m, const char * filename, CallBackPos *cb=0)
 {
 	PlyInfo pi;
@@ -272,6 +220,7 @@ static int Open( OpenMeshType &m, const char * filename, CallBackPos *cb=0)
   return Open(m, filename, pi);
 }
 
+/// Read a mesh and store in loadmask the loaded field
 static int Open( OpenMeshType &m, const char * filename, int & loadmask, CallBackPos *cb =0)
 {
   PlyInfo pi;
@@ -281,6 +230,7 @@ static int Open( OpenMeshType &m, const char * filename, int & loadmask, CallBac
 }
 
 
+/// read a mesh with all the possible option specified in the PlyInfo obj.
 static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 {
   assert(filename!=0);
@@ -337,13 +287,13 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 	}
 
   // Descrittori dati standard (vertex coord e faces)
-	if( pf.AddToRead(VertDesc(0))==-1 ) { pi.status = E_NO_VERTEX; return -1; }
-	if( pf.AddToRead(VertDesc(1))==-1 ) { pi.status = E_NO_VERTEX; return -1; }
-	if( pf.AddToRead(VertDesc(2))==-1 ) { pi.status = E_NO_VERTEX; return -1; }
+  if( pf.AddToRead(VertDesc(0))==-1 ) { pi.status = PlyInfo::E_NO_VERTEX; return -1; }
+	if( pf.AddToRead(VertDesc(1))==-1 ) { pi.status = PlyInfo::E_NO_VERTEX; return -1; }
+	if( pf.AddToRead(VertDesc(2))==-1 ) { pi.status = PlyInfo::E_NO_VERTEX; return -1; }
 	if( pf.AddToRead(FaceDesc(0))==-1 ) // Se fallisce si prova anche la sintassi di rapidform con index al posto di indices
 		if( pf.AddToRead(FaceDesc(9))==-1 ) 
 			if(pf.AddToRead(TristripDesc(0))==-1) // Se fallisce tutto si prova a vedere se ci sono tristrip alla levoy.
-						{ pi.status = E_NO_FACE;   return -1; }
+						{ pi.status = PlyInfo::E_NO_FACE;   return -1; }
 
 		// Descrittori facoltativi dei flags
 	if( pf.AddToRead(VertDesc(3))!=-1 )
@@ -458,7 +408,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 			{
 				if( pf.Read( (void *)&(ca) )==-1 )
 				{
-					pi.status = E_SHORTFILE;
+					pi.status = PlyInfo::E_SHORTFILE;
 					return -1;
 				}	
 				//camera.valid     = true;
@@ -500,7 +450,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				(*vi).UberFlags()=0;
 			  if( pf.Read( (void *)&(va) )==-1 )
 				{
-					pi.status = E_SHORTFILE;
+					pi.status = PlyInfo::E_SHORTFILE;
 					return -1;
 				}
 				
@@ -548,12 +498,12 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				if(pi.cb && (j%1000)==0) pi.cb(50+j*50/n,"Face Loading");
 				if( pf.Read(&fa)==-1 )
 				{
-					pi.status = E_SHORTFILE;
+					pi.status = PlyInfo::E_SHORTFILE;
 					return -1;
 				}
 				if(fa.size!=3)
 				{
-					pi.status = E_NO_3VERTINFACE;
+					pi.status = PlyInfo::E_NO_3VERTINFACE;
 					return -1;
 				}
 
@@ -561,7 +511,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				{
 					if( fa.v[k]<0 || fa.v[k]>=m.vn )
 					{
-						pi.status = E_BAD_VERT_INDEX;
+						pi.status = PlyInfo::E_BAD_VERT_INDEX;
 						return -1;
 					}
 					(*fi).V(k) = index[ fa.v[k] ];
@@ -631,7 +581,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				if(pi.cb && (j%1000)==0) pi.cb(50+j*50/n,"Tristrip Face Loading");
 				if( pf.Read(&tsa)==-1 )
 				{
-					pi.status = E_SHORTFILE;
+					pi.status = PlyInfo::E_SHORTFILE;
 					return -1;
 				}
 				int remainder=0;
@@ -640,7 +590,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				{
 					if(pi.cb && (k%1000)==0) pi.cb(50+k*50/tsa.size,"Tristrip Face Loading");				
           if(tsa.v[k]<0 || tsa.v[k]>=numvert_tmp )	{
-						pi.status = E_BAD_VERT_INDEX;
+						pi.status = PlyInfo::E_BAD_VERT_INDEX;
 						return -1;
 					}
 				  if(tsa.v[k+2]==-1)
@@ -668,7 +618,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 			{
 				if( pf.Read(0)==-1)
 				{
-					pi.status = E_SHORTFILE;
+					pi.status = PlyInfo::E_SHORTFILE;
 					return -1;
 				}
 			}
@@ -769,7 +719,7 @@ int LoadCamera(const char * filename)
 			{
 				if( pf.Read( (void *)&(ca) )==-1 )
 				{
-					pi.status = E_SHORTFILE;
+					pi.status = PlyInfo::E_SHORTFILE;
 					return -1;
 				}	
 				camera.valid     = true;
