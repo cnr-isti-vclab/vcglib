@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2004/09/08 15:15:05  ganovelli
+changes for gcc
+
 Revision 1.9  2004/07/15 12:03:50  ganovelli
 access to imark added
 
@@ -57,6 +60,7 @@ Initial commit
 #pragma warning( disable : 4804 )
 #endif
 #include <vcg/space/box3.h>
+#include <vcg/math/shot.h>
 
 /*
 People should subclass his vertex class from these one...
@@ -110,7 +114,8 @@ class TriMesh{
 	//vector<string> normalmaps;
 
 		/// La camera
-	//Camera<ScalarType> camera;
+	Camera<ScalarType> camera; // intrinsic
+	Shot<ScalarType> shot;		// extrinsic
 
 		/// Il colore della mesh
 private:
@@ -129,7 +134,7 @@ public:
 
 
 	/// Default constructor
-	TriMesh()
+	TriMesh():shot(camera)
 	{
 		fn = vn = 0;
 		imark = 0;
