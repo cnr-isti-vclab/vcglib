@@ -27,7 +27,8 @@ namespace nxs {
     virtual void GetView() { frustum.GetView(); }
     float GetError(Entry &entry) {
       vcg::Sphere3f &sphere = entry.sphere;
-      float dist = Distance(sphere, frustum.ViewPoint());
+      float dist = (sphere.Center() - frustum.ViewPoint()).Norm() - sphere.Radius();
+      //float dist = Distance(sphere, frustum.ViewPoint());
       if(dist < 0) 
 	return 1e20f;
       if(frustum.IsOutside(sphere.Center(), sphere.Radius()))

@@ -37,6 +37,7 @@ void nxs::ComputeNormals(Nexus &nexus) {
     exit(0);
   }
 
+  //TODO optimize! it is not necessary to read all the borders.
   for(unsigned int p = 0; p < nexus.size(); p++) {
     Border border = nexus.GetBorder(p);
     tmpb_start.push_back(tmpb_offset);
@@ -47,7 +48,7 @@ void nxs::ComputeNormals(Nexus &nexus) {
 
   tmpb.Resize(tmpb_offset);
   for(unsigned int i = 0; i < tmpb.Size(); i++)
-    tmpb[i] = zero;
+    tmpb[i] = zero;  
   tmpb.Flush();
   
   //first step normals in the same patch.
@@ -60,8 +61,7 @@ void nxs::ComputeNormals(Nexus &nexus) {
     Patch &patch = nexus.GetPatch(p);
     
     normals.clear();  
-    normals.resize(patch.nv, Point3f(0, 0, 0));
-    
+    normals.resize(patch.nv, Point3f(0, 0, 0));    
 
     if(nexus.signature & NXS_FACES) 
       for(unsigned int i = 0; i < patch.nf; i++) {
@@ -95,9 +95,9 @@ void nxs::ComputeNormals(Nexus &nexus) {
 	      Point3f &norm = normals[i];
 	      norm.Normalize();
 	      short *n = patch.Norm16(i);
-	      for(int k = 0; k < 3; k++) {
+	      for(int k = 0; k < 3; k++) 
 	        n[k] = (short)(norm[k] * 32766);
-	      }
+	      
 	      n[3] = 0;
       }
     } else {
@@ -111,15 +111,15 @@ void nxs::ComputeNormals(Nexus &nexus) {
     
     map<unsigned int, map<unsigned short, Point3f> > bnorm;
 
-
     unsigned int poff = tmpb_start[p];
     for(unsigned int i = 0; i < border.Size(); i++) {
       Link &link = border[i];
-      if(link.IsNull()) continue;
+      if(link.IsNull()) continue;  //this should never happen now.
       Point3f pt = normals[link.start_vert];
       //bnorm[p][link.start_vert] = pt;
       bnorm[link.end_patch][link.end_vert] = pt;
       tmpb[poff + i] += pt;                          
+
     }
 
     map<unsigned int, map<unsigned short, Point3f> >::iterator k;

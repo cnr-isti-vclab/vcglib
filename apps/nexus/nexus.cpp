@@ -113,6 +113,7 @@ bool Nexus::LoadHeader() {
   ReadBuffer(&totvert, sizeof(unsigned int));
   ReadBuffer(&totface, sizeof(unsigned int));
   ReadBuffer(&sphere, sizeof(Sphere3f));
+  return true;
 }
 
 void Nexus::Flush(bool all) {
@@ -140,10 +141,10 @@ Patch &Nexus::GetPatch(unsigned int patch, bool flush) {
   Entry &entry = operator[](patch);
   if(index.count(patch)) {
     assert(entry.patch);
-    list<unsigned int>::iterator &i = index[patch];
+    list<unsigned int>::iterator i = index[patch];
     pqueue.erase(i);
     pqueue.push_front(patch);
-
+    index[patch] = pqueue.begin();
   } else {
     while(flush && ram_used > ram_max) {    
       unsigned int to_flush = pqueue.back();

@@ -155,7 +155,7 @@ void Dispatcher::msghandler(message &msg) {
     Server *best = BestServer();
     Fragment *fragin = (Fragment *)(msg.param);
 
-    if(!best) { //no server process locally....
+    if(!best || mode == CLUSTER) { //no server process locally....
       //      cerr << "Local: " << fragin->id << endl;
       vector<Point3f> newvert;
       vector<unsigned int> newface;
@@ -178,7 +178,7 @@ void Dispatcher::msghandler(message &msg) {
       //      cerr << "Server: " << fragin->id << endl;
       FragIO *frag = new FragIO(best, this, fragin);
       if(msg.id == MSG_SEND)
-	assert(!frags.count(fragin->id));
+	      assert(!frags.count(fragin->id));
       frags[fragin->id] = frag;
       frag->start();
     }
