@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/04/21 14:22:27  cignoni
+Initial Commit
+
 
 ****************************************************************************/
 
@@ -33,10 +36,24 @@ $Log: not supported by cvs2svn $
 #define __VCGLIB_INTERSECTION_3
 
 #include <vcg/space/point3.h>
+#include <vcg/space/line3.h>
+#include <vcg/space/plane3.h>
+#include <vcg/space/segment3.h>
+#include <vcg/space/sphere3.h>
+#include <vcg/space/triangle3.h>
+#include <vcg/space/intersection/triangle_triangle3.h>
+
+
+
+/** \addtogroup space */
+/*@{*/
+/** 
+		Function computing the intersection between couple of geometric primitives in
+		3 dimension
+ */
 
 namespace vcg {
-// sphere line
-
+/// interseciton between sphere and line
 template<class T>
 inline bool Intersection( const Sphere3<T> & sp, const Line3<T> & li, Point3<T> & p0,Point3<T> & p1 ){
 
@@ -65,6 +82,62 @@ inline bool Intersection( const Sphere3<T> & sp, const Line3<T> & li, Point3<T> 
 return true;
 }
 
+/// intersection between line and plane
+template<class T>
+inline bool Intersection( const Plane3<T> & pl, const Line3<T> & li, Point3<T> & po){
+	const T epsilon = T(1e-8);
+
+	T k = pl.n * li.dire;						// Compute 'k' factor
+	if( (k > -epsilon) && (k < epsilon))
+			return false;
+	T r = (pl.d - pl.n*li.orig)/k;	// Compute ray distance
+	po = li.orig + li.dire*r;
+	return true;
+	}
+
+/// intersection between segment and plane
+template<class T>
+inline bool Intersection( const Plane3<T> & pl, const Segment3<T> & sg, Point3<T> & po){
+	const T epsilon = T(1e-8);
+	T k = pl.d - pl.n * (sg.P1()-sg.P0());
+	if( (k > -epsilon) && (k < epsilon))
+			return false;
+	T r = (pl.d - pl.n*sg.P0())/k;	// Compute ray distance
+	if( (r<0) || (r > 1.0))
+		return false;
+	po = sg.P0()*(1-r)+sg.P1() * r;
+	return true;
+	}
+
+/// intersection between two triangles
+template<class T>
+inline bool Intersection(		Triangle3<T> t0,Triangle3<T> t1){
+														return NoDivTriTriIsect(t0.P0(0),t0.P0(1),t0.P0(2),
+																										t1.P0(0),t1.P0(1),t1.P0(2));
+	}
+template<class T>
+inline bool Intersection(		Point3<T> V0,Point3<T> V1,Point3<T> V2,
+														Point3<T> U0,Point3<T> U1,Point3<T> U2){
+														return NoDivTriTriIsect(V0,V1,V2,U0,U1,U2);
+	}
+
+template<class T>
+inline bool Intersection(		Point3<T> V0,Point3<T> V1,Point3<T> V2,
+														Point3<T> U0,Point3<T> U1,Point3<T> U2,int *coplanar,
+														Point3<T> &isectpt1,Point3<T> &isectpt2){
+
+														return tri_tri_intersect_with_isectline(V0,V1,V2,U0,U1,U2,
+																															coplanar,isectpt1,isectpt2);
+											}
+template<class T>
+inline bool Intersection(		Triangle3<T> t0,Triangle3<T> t1,bool &coplanar,
+														Segment3<T>  & sg){
+														Point3<T> ip0,ip1;	
+														return  tri_tri_intersect_with_isectline(t0.P0(0),t0.P0(1),t0.P0(2),
+																																		 t1.P0(0),t1.P0(1),t1.P0(2),
+																																			coplanar,sg.P0(),sg.P1()
+																																			);														
+															}
 
 } // end namespace
 #endif
