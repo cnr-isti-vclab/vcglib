@@ -24,13 +24,16 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/03/25 14:55:25  ponchio
+Adding copyright.
+
 
 ****************************************************************************/
 
 #ifndef FRUSTUM_H
 #define FRUSTUM_H
 
-#include <wrap/gui/camera.h>
+#include <wrap/gui/view.h>
 #include <vcg/space/plane3.h>
 #include <vcg/space/line3.h>
 
