@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/05/06 15:29:42  pietroni
+changed names to topology functions
+
 Revision 1.4  2004/04/28 11:37:14  pietroni
 *** empty log message ***
 
@@ -257,7 +260,7 @@ public:
 					_v[3]=p3;
 
 					if(ComputeVolume()<0 )
-						swap(_v[1],_v[2]);
+						std::swap(_v[1],_v[2]);
 
 #ifdef		__VCGLIB_TETRA_TA
 					_z[0]=_z[1]=_z[2]=_z[3]=-1;
