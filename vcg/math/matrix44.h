@@ -118,6 +118,11 @@ public:
   Matrix44 &SetRotate(T angle, const Point3<T> & axis); 
 
   T Determinant() const;
+
+  template <class Q> void Import(const Matrix44<Q> &m) {
+    for(int i = 0; i < 16; i++) 
+      _a[i] = (T)m._a[i];
+  }
 };
 
 
