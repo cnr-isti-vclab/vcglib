@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.17  2005/02/15 14:55:52  tommyfranken
+added principal point
+
 Revision 1.16  2005/01/18 16:40:50  ricciodimare
 *** empty log message ***
 
@@ -135,6 +138,9 @@ public:
 	/// set the camera specifying the frustum view
 	inline void SetFrustum(S dx, S sx, S bt, S tp, S nearend, S farend,vcg::Point2<S> viewport=vcg::Point2<S>(500,-1));
 
+	/// get the camera frustum view
+	inline void GetFrustum(const CameraType & camera,S & sx,S & dx,S & bt,S & tp, S & f ,S & fr);
+
 	/// project a point from space 3d (in the reference system of the camera) to the camera's plane
 	/// the result is in absolute coordinates
 	inline vcg::Point2<S> Project(const vcg::Point3<S> & p);
@@ -212,6 +218,24 @@ template<class S>
 		farend = far_thr;
 	}
 
+	template<class S>
+		void Camera<S>:: GetFrustum(
+		typename S & sx,
+								typename S & dx,
+								typename S & bt,
+								typename S & tp,
+								typename S & f ,
+								typename S & fr
+								){
+		dx = c.X()*s.X();			//scaled center
+		sx = -( viewport.X() - c.X() ) * s.X();
+
+		bt = -c.Y()*s.Y();
+		tp = ( viewport.Y() - c.Y() ) * s.Y();
+
+		f  = f;
+		fr = farend; 
+}
 
 }
 #endif
