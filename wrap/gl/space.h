@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/04/05 11:56:14  cignoni
+First working version!
+
 
 ****************************************************************************/
 
@@ -35,7 +38,7 @@ $Log: not supported by cvs2svn $
 #ifdef WIN32
 #include <windows.h>
 #endif
-#include <GL/GL.h>
+#include <GL/gl.h>
 
 namespace vcg {
 
