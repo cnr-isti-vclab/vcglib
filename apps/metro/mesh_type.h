@@ -32,7 +32,7 @@
 
 // VCG library.
 //#include <vcg/tools/plylib.h>
-#include <vcg/simplex/vertex/with/cmnq.h>
+#include <vcg/simplex/vertex/with/vcvmvnvq.h>
 #include <vcg/simplex/face/with/rtfmfn.h>
 #include <vcg/space/index/grid_static_ptr.h>
 #include <vcg/complex/trimesh/base.h>
