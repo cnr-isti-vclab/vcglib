@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/06/25 11:27:21  pietroni
+added function to access temporary mark for decimation
+
 Revision 1.6  2004/06/01 17:17:29  ganovelli
 pragma once removed ,
 load ts removed to be put in io_tetramesh
@@ -195,6 +198,8 @@ static bool HasTTTopology()       { return TetraType::HasTTAdjacency();  }
 static bool HasVTTopology()       { return TetraType::HasVTAdjacency(); }
 static bool HasTopology()         { return HasTTTopology() || HasVTTopology(); }
 
+int & SimplexNumber(){ return tn;}
+int & VertexNumber(){ return vn;}
 /***********************************************/
 
 /** @Functions used for handle the temporany mark of a tetrahedron used in decimation**/
@@ -238,3 +243,4 @@ static bool HasTopology()         { return HasTTTopology() || HasVTTopology(); }
 };//end namespace
 };//end namespace
 #endif
+
