@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2005/01/26 10:03:08  spinelli
+aggiunta intersect  ray-box
+
 Revision 1.12  2004/10/13 12:45:51  cignoni
 Better Doxygen documentation
 
@@ -379,6 +382,47 @@ bool Intersection( const Box3<T> & box, const Line3<T> & r, Point3<T> & coord )
     return true;			// ray hits box
 }	
 
+template<class T>
+bool Intersection (const Plane3<T> & plane0, const Plane3<T> & plane1,
+                       Line3<T> & line)
+{
+    // If Cross(N0,N1) is zero, then either planes are parallel and separated
+    // or the same plane.  In both cases, 'false' is returned.  Otherwise,
+    // the intersection line is
+    //
+    //   L(t) = t*Cross(N0,N1) + c0*N0 + c1*N1
+    //
+    // for some coefficients c0 and c1 and for t any real number (the line
+    // parameter).  Taking dot products with the normals,
+    //
+    //   d0 = Dot(N0,L) = c0*Dot(N0,N0) + c1*Dot(N0,N1)
+    //   d1 = Dot(N1,L) = c0*Dot(N0,N1) + c1*Dot(N1,N1)
+    //
+    // which are two equations in two unknowns.  The solution is
+    //
+    //   c0 = (Dot(N1,N1)*d0 - Dot(N0,N1)*d1)/det
+    //   c1 = (Dot(N0,N0)*d1 - Dot(N0,N1)*d0)/det
+    //
+    // where det = Dot(N0,N0)*Dot(N1,N1)-Dot(N0,N1)^2.
+
+    T n00 = plane0.Direction()*plane0.Direction();
+    T n01 = plane0.Direction()*plane1.Direction();
+    T n11 = plane1.Direction()*plane1.Direction();
+    T det = n00*n11-n01*n01;
+
+    const T tolerance = (T)(1e-06f);
+		if ( math::Abs(det) < tolerance )
+        return false;
+
+    T invDet = 1.0f/det;
+    T c0 = (n11*plane0.Offset() - n01*plane1.Offset())*invDet;
+    T c1 = (n00*plane1.Offset() - n01*plane0.Offset())*invDet;
+
+    line.SetDirection(plane0.Direction()^plane1.Direction());
+    line.SetOrigin(plane0.Direction()*c0+ plane1.Direction()*c1);
+
+    return true;
+}
 
 
 
