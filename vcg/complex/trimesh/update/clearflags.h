@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/05/13 15:51:40  turini
+Initial Commit
+
 
 
 ****************************************************************************/
@@ -39,7 +42,7 @@ namespace tri {
 /// Updating of Mesh Vertexes and Faces Flags.
 /// This class is used to clear the vertex and face flags of a mesh.
 template <class ComputeMeshType>
-class UpdateClearFlags
+class UpdateFlags
 {
 
 public:
@@ -52,7 +55,7 @@ typedef typename MeshType::FacePointer    FacePointer;
 typedef typename MeshType::FaceIterator   FaceIterator;
 
 /// Rimmette a zero tutti i flags della mesh.
-static void ClearFlags()
+static void Clear()
 {
 	FaceIterator fi;
 	VertexIterator vi;
