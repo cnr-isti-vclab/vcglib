@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2004/08/04 20:55:02  pietroni
+added rey triangle intersections funtions
+
 Revision 1.8  2004/07/11 22:08:04  cignoni
 Added a cast to remove a warning
 
@@ -210,7 +213,7 @@ bool Intersection( const Line3<T> & ray, const Point3<T> & vert0,
 	Point3<T> edge2 = vert2 - vert0;
 
 	// determinant 
-	Point3<T> pvec  = ray.dire ^ edge2;
+	Point3<T> pvec  = ray.Direction() ^ edge2;
 
 	T det = edge1*pvec;
 
@@ -218,7 +221,7 @@ bool Intersection( const Line3<T> & ray, const Point3<T> & vert0,
   if (fabs(det) < EPSILON) return false;
 
   // calculate distance from vert0 to ray origin 
-  Point3<T> tvec = ray.orig - vert0;
+  Point3<T> tvec = ray.Origin()- vert0;
 
   // calculate A parameter and test bounds 
   a = tvec * pvec;
@@ -228,7 +231,7 @@ bool Intersection( const Line3<T> & ray, const Point3<T> & vert0,
   Point3<T> qvec = tvec ^ edge1;
 
   // calculate B parameter and test bounds 
-  b = ray.dire * qvec ;
+  b = ray.Direction() * qvec ;
   if (b < -EPSILON2*det || b + a > det+det*EPSILON2) return false;
 
   // calculate t, scale parameters, ray intersects triangle 
