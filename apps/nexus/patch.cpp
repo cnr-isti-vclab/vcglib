@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2005/02/19 10:45:05  ponchio
+Patch generalized and small fixes.
+
 Revision 1.9  2005/02/08 12:43:03  ponchio
 Added copyright
 
@@ -161,13 +164,13 @@ void Patch::Init(Signature &signature,
   }
   pad64(offset);
 
-  fstartc = (unsigned short)offset/64;
+  fstartc = (unsigned short)(offset/64);
   offset += encodings[signature.fcolor].size(nf);
-  fstartn = (unsigned short)offset/64;
+  fstartn = (unsigned short)(offset/64);
   offset += encodings[signature.fnorm].size(nf);
-  fstartt = (unsigned short)offset/64;
+  fstartt = (unsigned short)(offset/64);
   offset += encodings[signature.ftext].size(nf);
-  fstartd = (unsigned short)offset/64;
+  fstartd = (unsigned short)(offset/64);
   offset += encodings[signature.fdata].size(nf);
 
   vstart = fstart + offset;
@@ -180,13 +183,13 @@ void Patch::Init(Signature &signature,
     assert(0);
   pad64(offset);
 
-  vstartc = (unsigned short)offset/64;
+  vstartc = (unsigned short)(offset/64);
   offset += encodings[signature.vcolor].size(nv);
-  vstartn = (unsigned short)offset/64;
+  vstartn = (unsigned short)(offset/64);
   offset += encodings[signature.vnorm].size(nv);
-  vstartt = (unsigned short)offset/64;
+  vstartt = (unsigned short)(offset/64);
   offset += encodings[signature.vtext].size(nv);
-  vstartd = (unsigned short)offset/64;
+  vstartd = (unsigned short)(offset/64);
   offset += encodings[signature.vdata].size(nv);
   
 

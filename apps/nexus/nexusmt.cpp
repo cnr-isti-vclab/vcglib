@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.31  2005/02/19 10:45:04  ponchio
+Patch generalized and small fixes.
+
 Revision 1.30  2005/02/17 15:39:44  ponchio
 Reorderes statistics a bit.
 
@@ -232,8 +235,8 @@ void NexusMt::Draw(unsigned int cell, DrawContest &contest) {
     
     fstart = NULL;
     vstart = NULL;
-    cstart = (char *)(64 * patch.vstartc);
-    nstart = (char *)(64 * patch.vstartn);
+    cstart = (char *)(64 * (int)patch.vstartc);
+    nstart = (char *)(64 * (int)patch.vstartn);
   } else {
     fstart = (char *)patch.FaceBegin();
     vstart = (char *)patch.Vert3fBegin();
@@ -376,7 +379,7 @@ void NexusMt::LoadVbo(Entry &entry) {
   vbo_used += size;
   
   //TODO fix this when we allow data :p
-  size = 64 * patch.vstartd;
+  size = 64 * (int)patch.vstartd;
     
   glGenBuffersARB(1, &entry.vbo_array);
   assert(entry.vbo_array);

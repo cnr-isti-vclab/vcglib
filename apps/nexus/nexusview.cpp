@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.40  2005/02/17 15:39:44  ponchio
+Reorderes statistics a bit.
+
 Revision 1.39  2005/02/17 14:02:03  ponchio
 Full screen options...
 
@@ -371,7 +374,7 @@ int main(int argc, char *argv[]) {
       SDL_WaitEvent(&event);
       anything = true;
     }
-    if(anything) {        
+    while(anything) { 
       switch( event.type ) {
       case SDL_QUIT:  quit = 1; break;      
       case SDL_KEYDOWN:                                        
@@ -462,6 +465,8 @@ int main(int argc, char *argv[]) {
       case SDL_VIDEOEXPOSE:
       default: break;
       }
+      anything = SDL_PeepEvents(&event, 1, SDL_GETEVENT, 
+				SDL_ALLEVENTS);
     }
                                                                                
 

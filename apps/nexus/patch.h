@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2005/02/19 10:45:05  ponchio
+Patch generalized and small fixes.
+
 Revision 1.11  2005/02/08 12:43:03  ponchio
 Added copyright
 
@@ -118,15 +121,15 @@ class Patch {
   //vcg::Point3f &Vert(unsigned short v)   { return VertBegin()[v]; }
   //  unsigned short *Face(unsigned short f) { return FaceBegin() + f * 3; }
 
-  char *VColorBegin() { return vstart + 64*vstartc; }
-  char *VNormBegin()  { return vstart + 64*vstartn; }
-  char *VTextBegin()  { return vstart + 64*vstartt; }
-  char *VDataBegin()  { return vstart + 64*vstartd; }
+  char *VColorBegin() { return vstart + 64*(int)vstartc; }
+  char *VNormBegin()  { return vstart + 64*(int)vstartn; }
+  char *VTextBegin()  { return vstart + 64*(int)vstartt; }
+  char *VDataBegin()  { return vstart + 64*(int)vstartd; }
 
-  char *FColorBegin() { return fstart + 64*fstartc; }
-  char *FNormBegin()  { return fstart + 64*fstartn; }
-  char *FTextBegin()  { return fstart + 64*fstartt; }
-  char *FDataBegin()  { return fstart + 64*fstartd; }
+  char *FColorBegin() { return fstart + 64*(int)fstartc; }
+  char *FNormBegin()  { return fstart + 64*(int)fstartn; }
+  char *FTextBegin()  { return fstart + 64*(int)fstartt; }
+  char *FDataBegin()  { return fstart + 64*(int)fstartd; }
 
   static unsigned int ChunkSize(Signature &signature, 
 				unsigned short nvert, 
