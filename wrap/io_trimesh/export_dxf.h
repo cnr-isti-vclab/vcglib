@@ -50,7 +50,7 @@ public:
 		fprintf(o,"2\n");
 		fprintf(o,"ENTITIES\n");
 
-		MyMesh::FaceIterator fi;
+		SaveMeshType::FaceIterator fi;
 		for(fi=m.face.begin(); fi!=m.face.end(); ++fi)
 		{
 			Point3f v0 = (*fi).V(0)->P();
