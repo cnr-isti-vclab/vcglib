@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/11/30 22:50:30  ponchio
+Level 0.
+
 
 ****************************************************************************/
 
@@ -35,6 +38,10 @@ $Log: not supported by cvs2svn $
 using namespace std;
 using namespace vcg;
 using namespace nxs;
+
+VPartition::~VPartition() {
+  if(bd) delete bd;
+}
 
 void VPartition::Init() {  
   if(bd) delete bd;

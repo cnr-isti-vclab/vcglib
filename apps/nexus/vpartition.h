@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/11/30 22:50:30  ponchio
+Level 0.
+
 
 ****************************************************************************/
 
@@ -47,6 +50,14 @@ namespace nxs {
 class VPartition: public std::vector<vcg::Point3f> {
   public:
   VPartition(): bd(NULL) {}
+  ~VPartition();
+ private:
+  VPartition &operator=(const VPartition &part) {
+    for(unsigned int i = 0; i < part.size(); i++)
+      push_back(part[i]);
+    Init();
+  }
+ public:
   void Init();
   int Locate(const vcg::Point3f &p);
 
