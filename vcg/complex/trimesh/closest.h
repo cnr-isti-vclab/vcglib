@@ -24,6 +24,12 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/01/24 11:47:23  cignoni
+Now used also by the official Metro
+Removed using namespace (NEVER IN HEADERS!)
+Made  the computation of barycentric coords only when necessary
+Renamed Mindistpoint to Closest
+
 Revision 1.2  2005/01/21 17:13:09  pietroni
 included distance.h changed Dist to  vcg::face::PointDistance
 
@@ -125,7 +131,7 @@ void Closest( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & mdist,
 
 				if( ! mesh.IsMarked( &*(l->Elem())) )
 			{
-				if( vcg::face::PointDistance<MESH::FaceType>((*(l->Elem())), p, error, q) )
+				if( face::PointDistance((*(l->Elem())), p, error, q) )
 				{
 					bestq = q;
 					bestf = l->Elem();
@@ -152,7 +158,7 @@ void Closest( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & mdist,
 									for(l=first;l!=last;++l)
 									if( ! mesh.IsMarked( &*(l->Elem())) )
 									{
-										if( vcg::face::PointDistance<MESH::FaceType>((*(l->Elem())),  p, error, q) )
+										if( vcg::face::PointDistance((*(l->Elem())),  p, error, q) )
 										{
 											bestq = q;
 											bestf = l->Elem();

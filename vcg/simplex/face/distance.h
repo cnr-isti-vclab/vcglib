@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/01/24 15:35:25  cignoni
+Removed a 'using namespace'
+
 Revision 1.2  2005/01/21 17:11:03  pietroni
 changed Dist Function to PointDistance... the function is on vcg::face::PointDistance this file will contain all distance functions between a face and othe entities
 
@@ -69,9 +72,9 @@ namespace vcg {
 */
 	template <class FaceType>
 	bool PointDistance(	const FaceType &f, 
-							const Point3<typename FaceType::ScalarType> & q, 
+							const vcg::Point3<typename FaceType::ScalarType> & q, 
 							typename FaceType::ScalarType & dist, 
-							Point3<typename FaceType::ScalarType> & p )
+							vcg::Point3<typename FaceType::ScalarType> & p )
 	{
 		typedef typename FaceType::ScalarType ScalarType;
 
