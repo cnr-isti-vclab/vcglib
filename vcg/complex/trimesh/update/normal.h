@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/08/31 15:18:54  pietroni
+minor changes to comply gcc compiler (typename's )
+
 Revision 1.2  2004/03/12 15:22:19  cignoni
 Written some documentation and added to the trimes doxygen module
 
@@ -54,8 +57,10 @@ class UpdateNormals
 {
 
 public:
-typedef ComputeMeshType MeshType; 
+typedef ComputeMeshType MeshType; 	
 typedef typename MeshType::VertexType     VertexType;
+typedef typename VertexType::NormalType     NormalType;
+typedef typename VertexType::ScalarType ScalarType;
 typedef typename MeshType::VertexPointer  VertexPointer;
 typedef typename MeshType::VertexIterator VertexIterator;
 typedef typename MeshType::FaceType       FaceType;
@@ -81,7 +86,7 @@ static void PerVertex(ComputeMeshType &m)
  VertexIterator vi;
  for(vi=m.vert.begin();vi!=m.vert.end();++vi)
    if( !(*vi).IsD() && (*vi).IsRW() )
-     (*vi).N() = VertexType::NormalType(0,0,0);
+     (*vi).N() = NormalType((ScalarType)0,(ScalarType)0,(ScalarType)0);
 
  FaceIterator f;
 
@@ -106,7 +111,7 @@ static void PerVertexPerFace(ComputeMeshType &m)
  VertexIterator vi;
  for(vi=m.vert.begin();vi!=m.vert.end();++vi)
    if( !(*vi).IsD() && (*vi).IsRW() )
-     (*vi).N() = VertexType::NormalType(0,0,0);
+     (*vi).N() = NormalType((ScalarType)0,(ScalarType)0,(ScalarType)0);
 
  FaceIterator f;
 
