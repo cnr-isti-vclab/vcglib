@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2004/10/21 12:22:21  ponchio
+Small changes.
+
 Revision 1.14  2004/10/19 04:23:29  ponchio
 *** empty log message ***
 
@@ -276,16 +279,13 @@ void VoronoiChain::Init(Crude &crude, float scaling, int steps) {
 unsigned int VoronoiChain::Locate(unsigned int level, 
 				  const vcg::Point3f &p) {
   return levels[level].Locate(p);
-  /*  assert(levels.size() > level+1);
-  unsigned int fine = levels[level].Locate(p);
-  unsigned int coarse = levels[level+1].Locate(p);
-  return fine + coarse * levels[level].size();*/
 }
 
 //TODO move this to nxsbuild
-void VoronoiChain::RemapFaces(Crude &crude, 			      VFile<unsigned int> &face_remap,
-			      vector<unsigned int> &patch_faces,
-			      float scaling, int steps) {
+void VoronoiChain::RemapFaces(Crude &crude, 
+                              VFile<unsigned int> &face_remap,
+			                        vector<unsigned int> &patch_faces,
+			                        float scaling, int steps) {
   
   Init(crude, scaling, steps);
 
@@ -300,7 +300,7 @@ void VoronoiChain::RemapFaces(Crude &crude, 			      VFile<unsigned int> &face_r
   Point3f bari;
   for(unsigned int i = 0; i < crude.Faces(); i++) {
     bari = crude.GetBari(i);
-    //    unsigned int patch = Locate(0, bari);
+    
     unsigned int fine = Locate(0, bari);
     unsigned int coarse = Locate(1, bari);
 
@@ -315,14 +315,13 @@ void VoronoiChain::RemapFaces(Crude &crude, 			      VFile<unsigned int> &face_r
     face_remap[i] = patch;
     //face_remap[i] = fine;
 
-    if(patch_faces.size() <= patch) 
-      patch_faces.resize(patch+1, 0);
+    while(patch_faces.size() <= patch) 
+      patch_faces.push_back(0);      
     patch_faces[patch]++;
   }
 
-
-
   //prune faces (now only 0 faces);
+  //TODO prune really small faces
   unsigned int tot_patches = 0;
   vector<int> patch_remap;
   for(unsigned int i = 0; i < patch_faces.size(); i++) {
@@ -331,6 +330,12 @@ void VoronoiChain::RemapFaces(Crude &crude, 			      VFile<unsigned int> &face_r
       patch_remap.push_back(-1);
     else
       patch_remap.push_back(tot_patches++);
+
+    if(patch_faces[i] > 32000) {
+      //TODO do something to reduce patch size... :P
+      cerr << "Found a patch too big... sorry\n";
+      exit(0);
+    }
   }
 
 
@@ -344,23 +349,26 @@ void VoronoiChain::RemapFaces(Crude &crude, 			      VFile<unsigned int> &face_r
   }  
 
   //remapping faces
+  patch_faces.clear();
+  patch_faces.resize(totpatches, 0);
   for(unsigned int i = 0; i < face_remap.Size(); i++) {
     unsigned int patch = face_remap[i];
-    assert(patch != 0xffffffff);
-    assert(patch_remap[patch] != -1);
-    face_remap[i] = patch_remap[patch];
-  }
-
-  //remapping patch_faces
-  for(unsigned int i = 0; i < patch_faces.size(); i++) {
-    assert(patch_remap[i] <= (int)i);
-    if(patch_remap[i] != -1) {
-      assert(patch_faces[i] > 0);
-      patch_faces[patch_remap[i]] = patch_faces[i];
+#ifdef CONTROLS
+    if(patch == 0xffffffff) {
+      cerr << "RESIGH\n";
+      exit(0);
     }
+    if(patch_remap[patch] == -1) {
+        cerr << "SIGH!\n";
+        exit(0);
+    }
+#endif
+    unsigned int newpatch = patch_remap[patch];
+    face_remap[i] = newpatch;
+    patch_faces[newpatch]++;
   }
 
-  patch_faces.resize(tot_patches);
+  
 }
 
 void VoronoiChain::BuildLevel(Nexus &nexus, unsigned int offset, 
@@ -425,12 +433,12 @@ void VoronoiChain::BuildLevel(Nexus &nexus, unsigned int offset,
       Patch patch = nexus.GetPatch(idx);
       for(unsigned int i = 0; i < patch.nv; i++) {
 
-	unsigned int ctarget = 0xffffffff;
-	float dist = coarse.Closest(patch.Vert(i), ctarget);
-	assert(ctarget != 0xffffffff);
-	ccentroids[ctarget] += patch.Vert(i);
-	ccount[ctarget]++;
-	if(dist > radius[ctarget]) radius[ctarget] = dist;
+  	    unsigned int ctarget = 0xffffffff;
+	      float dist = coarse.Closest(patch.Vert(i), ctarget);
+	      assert(ctarget != 0xffffffff);
+	      ccentroids[ctarget] += patch.Vert(i);
+	      ccount[ctarget]++;
+	      if(dist > radius[ctarget]) radius[ctarget] = dist;
       }
     }
     for(unsigned int v = 0; v < coarse.size(); v++) {
@@ -457,71 +465,6 @@ void VoronoiChain::BuildLevel(Nexus &nexus, unsigned int offset,
 
   if(coarse.size() == 0) coarse.push_back(Point3f(0,0,0));
   coarse.Init();
-
-//Coarse optimization
-/*  vector< map<unsigned int, Point3f> > ccentroids;
-  vector< map<unsigned int, unsigned int> > ccount;
-
-  for(unsigned int step = 0; step < steps; step++) {
-    cerr << "Optimization step " << levels.size()-1 << ":" 
-	 << step << "/" << steps << endl;
-    ccentroids.clear();
-    ccount.clear();
-    ccentroids.resize(coarse.size());
-    ccount.resize(coarse.size());
-
-    for(unsigned int idx = offset; idx < nexus.index.size(); idx++) {
-      Patch patch = nexus.GetPatch(idx);
-
-      for(unsigned int i = 0; i < patch.nv; i++) {
-	Point3f &v = patch.Vert(i);
-	unsigned int ftarget;
-	float dist = fine.Closest(v, ftarget);
-
-	dist = fine.Closest(v, ftarget);
-	assert(ftarget != -1);
-
-	unsigned int ctarget;
-	dist = coarse.Closest(v, ctarget);
-	assert(ctarget != -1);
-
-	map<unsigned int, Point3f> &centroids = ccentroids[ctarget];
-	map<unsigned int, unsigned int> &count = ccount[ctarget];
-
-	if(!centroids.count(ftarget)) 
-	  centroids[ftarget]= Point3f(0, 0, 0);
-	
-	if(!count.count(ftarget))
-	  count[ftarget] = 0;
-	
-	centroids[ftarget] += v;
-	count[ftarget]++;
-      }
-    }
-
-    cerr << "recentring" << endl;
-    for(unsigned int v = 0; v < coarse.size(); v++) {
-      
-      map<unsigned int, Point3f> &centroids = ccentroids[v];
-      map<unsigned int, unsigned int> &count = ccount[v];
-      
-      coarse[v].p = Point3f(0, 0, 0);
-      float weight = 0;
-      unsigned int tot_size =0;
-      map<unsigned int, Point3f>::iterator k;
-      for(k = centroids.begin();k != centroids.end(); k++) {
-	unsigned int size = count[(*k).first];
-	tot_size += size;
-	coarse[v].p += (*k).second / size;
-	weight += 1;
-      }
-      assert(weight > 0);
-      coarse[v].p /= weight;
-      //TODO find a solution!
-      //      coarse[v].weight = pow(tot_size/coarse_vmean, 0.25f);
-    }
-    coarse.Init();
-    }*/
   newfragments.clear();
   //TODO add some optimization
 }

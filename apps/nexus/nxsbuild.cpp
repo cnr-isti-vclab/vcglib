@@ -19,8 +19,8 @@ void nxs::RemapVertices(Crude &crude,
       set<unsigned int> pp;
       vert_remap.GetValues(face[k], pp);
       if(!pp.count(patch)) {
-	vert_remap.Insert(face[k], patch);      
-	patch_verts[patch]++;
+	      vert_remap.Insert(face[k], patch);      
+	      patch_verts[patch]++;
       }
     }
   }
@@ -37,6 +37,7 @@ void nxs::NexusAllocate(Crude &crude,
   
   //  unsigned int totchunks = 0;
   //now that we know various sizes, lets allocate space
+  cerr << "Fixing entries\n";
   for(unsigned int i = 0; i < nexus.index.size(); i++) {
     Nexus::PatchInfo &entry = nexus.index[i];
     
@@ -47,7 +48,7 @@ void nxs::NexusAllocate(Crude &crude,
 
     entry.nvert = patch_verts[i];
     entry.nface = patch_faces[i];
-    entry.error = 0;
+    entry.error = 0;    
   }
 
   patch_faces.clear();
@@ -55,12 +56,18 @@ void nxs::NexusAllocate(Crude &crude,
 
   //now we sort the faces into the patches (but still using absolute indexing
   //instead of relative indexing
+  cerr << "Moving faces into patches\n";
+
   for(unsigned int i = 0; i < crude.face.Size(); i++) {
     Crude::Face &face = crude.face[i];
     unsigned int npatch = face_remap[i];
-    
-    Nexus::PatchInfo &entry = nexus.index[npatch];
-    //    cerr << "Entrynf: " << entry.nface << endl;
+#ifdef CONTROLS
+    if(npatch > nexus.index.size()) {
+      cerr << "INvalid index\n";
+      exit(0);
+    }
+#endif
+    Nexus::PatchInfo &entry = nexus.index[npatch];    
     //TODO this is slow because we have to initialize patch.
     //just get patch.start.
     Patch patch = nexus.GetPatch(npatch);
@@ -72,8 +79,17 @@ void nxs::NexusAllocate(Crude &crude,
       cerr << "Found degenerate.\n";
       continue;
     }
+#ifdef CONTROLS
+    if(patch_faces[npatch] > entry.nface) {
+      cerr << "patch_faces[npatch]: " << patch_faces[npatch] 
+      << " should be <= " << entry.nface << endl;
+      cerr << "something not workin here!\n";
+      exit(0);
+    }    
+#endif
     faces[patch_faces[npatch]++] = face;
   }
+  cerr << "Fixing entry faces\n";
   for(unsigned int i = 0; i < nexus.index.size(); i++) {
     Nexus::PatchInfo &entry = nexus.index[i];
     entry.nface = patch_faces[i];

@@ -99,6 +99,12 @@ Patch &PatchServer::GetPatch(unsigned int idx,
     PTime nptime(idx);
 
     char *ram = new char[entry.ram_size * chunk_size];
+#ifdef CONTROLS
+    if(!ram) {
+      cerr << "COuld not allocate ram!\n";
+      exit(0);
+    }
+#endif
     nptime.patch = new Patch(signature, ram, nvert, nface);
     
     if(entry.patch_start != 0xffffffff) { //was allocated.
@@ -107,15 +113,15 @@ Patch &PatchServer::GetPatch(unsigned int idx,
       SetPosition(entry.patch_start * chunk_size);
     
       if((signature & NXS_COMPRESSED) == 0) { //not compressed
-	ReadBuffer(ram, entry.disk_size * chunk_size);
+	      ReadBuffer(ram, entry.disk_size * chunk_size);
       } else {
 
-	unsigned char *disk = new unsigned char[entry.disk_size * chunk_size];
-	ReadBuffer(disk, entry.disk_size * chunk_size);
+	      unsigned char *disk = new unsigned char[entry.disk_size * chunk_size];
+	      ReadBuffer(disk, entry.disk_size * chunk_size);
 
-	nptime.patch->Decompress(entry.ram_size * chunk_size, 
-				 disk, entry.disk_size * chunk_size);
-	delete []disk;
+      	nptime.patch->Decompress(entry.ram_size * chunk_size, 
+			                        	 disk, entry.disk_size * chunk_size);
+	      delete []disk;
       } 
     }
     
