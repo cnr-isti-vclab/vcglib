@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/03/31 22:36:44  ganovelli
+First Working Release (with this comment)
+
 
 /****************************************************************************/ 
 #ifndef __VCGLIB_ENTRIES__
@@ -38,7 +41,7 @@ template <class STL_CONT>
 struct EntryCATBase{
 
 EntryCATBase(STL_CONT & _c):c(_c){};
-STL_CONT::value_type * Start() const;
+typename STL_CONT::value_type * Start() const;
 virtual bool Empty(){};
 const STL_CONT *  C();
 virtual void Push_back(const int &){};
