@@ -15,7 +15,8 @@ bool PatchServer::Create(const std::string &filename,
   signature = sig;
   chunk_size = csize;
 
-  ram_size = rsize;
+  if(ram_size == 0) ram_size = 128000000;
+  ram_size = rsize/chunk_size;
   ram_used = 0;
   vbo_size = 0;
   vbo_used = 0;
@@ -35,7 +36,9 @@ bool PatchServer::Load(const std::string &filename, Signature sig,
   signature = sig;
   chunk_size = csize;
 
-  ram_size = rsize;
+  if(ram_size == 0) ram_size = 128000000;
+  ram_size = rsize/chunk_size;
+    
   ram_used = 0;
   vbo_size = 0;
   vbo_used = 0;
@@ -272,5 +275,6 @@ bool PatchServer::FlushVbo(PTime &ptime) {
 }
 
 void PatchServer::SetRamBufferSize(unsigned int r_buffer) {
+  cerr << "Chunk_size: " << chunk_size << endl;
   ram_size = (unsigned int)(r_buffer/chunk_size) + 1;
 }

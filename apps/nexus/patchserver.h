@@ -49,11 +49,12 @@ class PatchServer: public File {
   unsigned int ram_flushed;
     
 
+  PatchServer(): chunk_size(1024), ram_size(128000000), vbo_size(32000000) {}
   bool Create(const std::string &filename, Signature signature, 
-	      unsigned int chunk_size, unsigned int ram_size = 128000);
+	      unsigned int chunk_size, unsigned int ram_size = 0);
   bool Load(const std::string &filename, Signature sig, 
 	    unsigned int chunk_size, bool readonly, 
-	    unsigned int ram_size = 128000);
+	    unsigned int ram_size = 0);
 
   void Close();
 
