@@ -175,7 +175,7 @@ namespace vcg
 
 				size_t vertices_idx[12];
 				memset(vertices_idx, -1, 12*sizeof(size_t));
-				int code = edgeTable[cubetype];
+				int code = EMCLookUpTable::EdgeTable(cubetype);
 				VertexPointer vp = NULL;
 				if (   1&code ) { _walker->GetXIntercept(_corners[0], _corners[1], vp); vertices_idx[ 0] = vp - &_mesh->vert[0]; }
 				if (   2&code ) { _walker->GetYIntercept(_corners[1], _corners[2], vp); vertices_idx[ 1] = vp - &_mesh->vert[0]; }
@@ -190,15 +190,15 @@ namespace vcg
 				if (1024&code ) { _walker->GetZIntercept(_corners[2], _corners[6], vp); vertices_idx[10] = vp - &_mesh->vert[0]; }
 				if (2048&code ) { _walker->GetZIntercept(_corners[3], _corners[7], vp); vertices_idx[11] = vp - &_mesh->vert[0]; }
 
-				unsigned int m, n, vertices_num;
-				unsigned int components =  triTable[cubetype][1][0];
-				int					 *indices   = &triTable[cubetype][1][components+1];
+				int m, n, vertices_num;
+				int components = EMCLookUpTable::TriTable(cubetype, 1)[0]; //unsigned int components =  triTable[cubetype][1][0];
+				int	*indices   = &EMCLookUpTable::TriTable(cubetype, 1)[components+1]; //int					 *indices   = &EMCLookUpTable::TriTable(cubetype, 1, components+1);
 
 				std::vector< size_t > vertices_list;
 				for (m=1; m<=components; m++)
 				{
 					// current sheet contains vertices_num vertices
-					vertices_num = triTable[cubetype][1][m];
+					vertices_num = EMCLookUpTable::TriTable(cubetype, 1)[m]; //vertices_num = triTable[cubetype][1][m];
 
 					// collect vertices
 					vertices_list.clear();
@@ -213,7 +213,7 @@ namespace vcg
 						size_t face_idx			= _mesh->face.size();
 						vertices_list.push_back( vertices_list[0] );
 						AllocatorType::AddFaces(*_mesh, (int) vertices_num);
-						for (unsigned int j=0; j<vertices_num; ++j, face_idx++)
+						for (int j=0; j<vertices_num; ++j, face_idx++)
 						{
 							_mesh->face[face_idx].V(0) = &_mesh->vert[ vertices_list[j  ] ];
 							_mesh->face[face_idx].V(1) = &_mesh->vert[ vertices_list[j+1] ];
@@ -223,13 +223,16 @@ namespace vcg
 					else
 					{
 						// no feature -> old marching cubes triangle table
-						for (int j=0; polyTable[vertices_num][j] != -1; j+=3)
+						for (int j=0; EMCLookUpTable::PolyTable(vertices_num, j) != -1; j+=3) //for (int j=0; polyTable[vertices_num][j] != -1; j+=3)
 						{
 							size_t face_idx			= _mesh->face.size();
 							AllocatorType::AddFaces(*_mesh, 1);
-							_mesh->face[ face_idx].V(0) = &_mesh->vert[ vertices_idx[ indices[ polyTable[vertices_num][j  ] ] ] ];
-							_mesh->face[ face_idx].V(1) = &_mesh->vert[ vertices_idx[ indices[ polyTable[vertices_num][j+1] ] ] ];
-							_mesh->face[ face_idx].V(2) = &_mesh->vert[ vertices_idx[ indices[ polyTable[vertices_num][j+2] ] ] ];
+							//_mesh->face[ face_idx].V(0) = &_mesh->vert[ vertices_idx[ indices[ polyTable[vertices_num][j  ] ] ] ];
+							//_mesh->face[ face_idx].V(1) = &_mesh->vert[ vertices_idx[ indices[ polyTable[vertices_num][j+1] ] ] ];
+							//_mesh->face[ face_idx].V(2) = &_mesh->vert[ vertices_idx[ indices[ polyTable[vertices_num][j+2] ] ] ];
+							_mesh->face[ face_idx].V(0) = &_mesh->vert[ vertices_idx[ indices[ EMCLookUpTable::PolyTable(vertices_num, j  ) ] ] ];
+							_mesh->face[ face_idx].V(1) = &_mesh->vert[ vertices_idx[ indices[ EMCLookUpTable::PolyTable(vertices_num, j+1) ] ] ];
+							_mesh->face[ face_idx].V(2) = &_mesh->vert[ vertices_idx[ indices[ EMCLookUpTable::PolyTable(vertices_num, j+2) ] ] ];
 						}
 					}
 					indices += vertices_num;
@@ -425,7 +428,7 @@ namespace vcg
 				for( ; e_it!=e_end; e_it++)
 				{
 					f = &_mesh->face[e_it->face];
-					z = e_it->edge;
+					z = (int) e_it->edge;
 
 					if (vcg::face::CheckFlipEdge< FaceType >(*f, z))
 					{

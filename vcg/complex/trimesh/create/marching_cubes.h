@@ -139,8 +139,8 @@ namespace vcg
 				for (int i=0; i<8; i++)
 					if (_field[i]>0) cubetype += 1<<i;
 
-				_case				= cases[cubetype][0];
-				_config			= cases[cubetype][1];	
+				_case				= MCLookUpTable::Cases(cubetype, 0); //_case				= cases[cubetype][0];
+				_config			= MCLookUpTable::Cases(cubetype, 1); //_config			= cases[cubetype][1];	
 				_subconfig	= 0;
 
 				VertexPointer v12 = NULL;
@@ -148,197 +148,230 @@ namespace vcg
 				switch( _case )
 				{
 				case  0 : { break ; }
-				case  1 : { AddTriangles( tiling1[_config], 1 ); break; }
-				case  2 : { AddTriangles( tiling2[_config], 2 ); break; }
+				case  1 : { AddTriangles( MCLookUpTable::Tiling1(_config), 1 ); break; } //case  1 : { AddTriangles( tiling1[_config], 1 ); break; }
+				case  2 : { AddTriangles( MCLookUpTable::Tiling2(_config), 2 ); break; } //case  2 : { AddTriangles( tiling2[_config], 2 ); break; }
 				case  3 :
 					{
-						if( TestFace( test3[_config]) ) AddTriangles( tiling3_2[_config], 4 ) ; // 3.2
-						else														AddTriangles( tiling3_1[_config], 2 ) ; // 3.1
+						//if( TestFace( test3[_config]) ) AddTriangles( tiling3_2[_config], 4 ) ; // 3.2
+						if( TestFace( MCLookUpTable::Test3(_config)) ) 
+							AddTriangles( MCLookUpTable::Tiling3_2(_config), 4 ) ; // 3.2
+						else																					 
+							AddTriangles( MCLookUpTable::Tiling3_1(_config), 2 ) ; // 3.1
 						break ;
 					}
 				case  4 :
 					{
-						if( TestInterior( test4[_config]) ) AddTriangles( tiling4_1[_config], 2 ) ; // 4.1.1
-						else																AddTriangles( tiling4_2[_config], 6 ) ; // 4.1.2
+						//if( TestInterior( test4[_config]) ) AddTriangles( tiling4_1[_config], 2 ) ; // 4.1.1
+						if( TestInterior( MCLookUpTable::Test4(_config) ) ) 
+							AddTriangles( MCLookUpTable::Tiling4_1(_config), 2 ) ; // 4.1.1
+						else																								
+							AddTriangles( MCLookUpTable::Tiling4_2(_config), 6 ) ; // 4.1.2
 						break ;
 					}
-				case  5 : { AddTriangles( tiling5[_config], 3 ); break; }
+				case  5 : { AddTriangles( MCLookUpTable::Tiling5(_config), 3 ); break; }
 				case  6 : 
 					{
-						if( TestFace( test6[_config][0]) )
-							AddTriangles( tiling6_2[_config], 5 ) ; // 6.2
+						//if( TestFace( test6[_config][0]) )
+						if( TestFace( MCLookUpTable::Test6(_config, 0)) )
+							AddTriangles( MCLookUpTable::Tiling6_2(_config), 5 ) ; // 6.2
 						else
 						{
-							if( TestInterior( test6[_config][1]) )	AddTriangles( tiling6_1_1[_config], 3 ) ; // 6.1.1
-							else																		AddTriangles( tiling6_1_2[_config], 7 ) ; // 6.1.2
+							if( TestInterior( MCLookUpTable::Test6(_config, 1)) )	
+								AddTriangles( MCLookUpTable::Tiling6_1_1(_config), 3 ) ; // 6.1.1
+							else																		
+								AddTriangles( MCLookUpTable::Tiling6_1_2(_config), 7 ) ; // 6.1.2
 						}
 						break ;
 					}
 				case  7 :
 					{
-						if( TestFace( test7[_config][0] ) ) _subconfig +=  1 ;
-						if( TestFace( test7[_config][1] ) ) _subconfig +=  2 ;
-						if( TestFace( test7[_config][2] ) ) _subconfig +=  4 ;
+						//if( TestFace( test7[_config][0] ) ) _subconfig +=  1 ;
+						//if( TestFace( test7[_config][1] ) ) _subconfig +=  2 ;
+						//if( TestFace( test7[_config][2] ) ) _subconfig +=  4 ;
+						if( TestFace( MCLookUpTable::Test7(_config, 0) ) ) _subconfig +=  1 ;
+						if( TestFace( MCLookUpTable::Test7(_config, 1) ) ) _subconfig +=  2 ;
+						if( TestFace( MCLookUpTable::Test7(_config, 2) ) ) _subconfig +=  4 ;
 						switch( _subconfig )
 						{
-						case 0 : { AddTriangles( tiling7_1[_config],		3 ) ; break; }
-						case 1 : { AddTriangles( tiling7_2[_config][0], 5 ) ; break; }
-						case 2 : { AddTriangles( tiling7_2[_config][1], 5 ) ; break; }
-						case 3 : { ComputeCVertex(v12); AddTriangles( tiling7_3[_config][0], 9, v12 ) ; break ; }
-						case 4 : { AddTriangles( tiling7_2[_config][2], 5 ) ; break ;}
-						case 5 : { ComputeCVertex(v12); AddTriangles( tiling7_3[_config][1], 9, v12 ) ; break ; }
-						case 6 : { ComputeCVertex(v12); AddTriangles( tiling7_3[_config][2], 9, v12 ) ; break ; }
+						case 0 : { AddTriangles( MCLookUpTable::Tiling7_1(_config),		3 ) ; break; }
+						case 1 : { AddTriangles( MCLookUpTable::Tiling7_2(_config,0), 5 ) ; break; }
+						case 2 : { AddTriangles( MCLookUpTable::Tiling7_2(_config,1), 5 ) ; break; }
+						case 3 : { ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling7_3(_config,0), 9, v12 ) ; break ; }
+						case 4 : { AddTriangles( MCLookUpTable::Tiling7_2(_config, 2), 5 ) ; break ;}
+						case 5 : { ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling7_3(_config,1), 9, v12 ) ; break ; }
+						case 6 : { ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling7_3(_config,2), 9, v12 ) ; break ; }
 						case 7 : 
 							{
-								if( TestInterior( test7[_config][3]) ) AddTriangles( tiling7_4_2[_config], 9 ) ;
-								else																	 AddTriangles( tiling7_4_1[_config], 5 ) ;
+								if( TestInterior( MCLookUpTable::Test7(_config, 3) ) ) 
+									AddTriangles( MCLookUpTable::Tiling7_4_2(_config), 9 ) ;
+								else
+									AddTriangles( MCLookUpTable::Tiling7_4_1(_config), 5 ) ;
 								break ;
 							}
 						};
 						break ;
 					} // end of case 7
-				case  8 : { AddTriangles( tiling8[_config], 2 ) ; break ;}
-				case  9 : { AddTriangles( tiling9[_config], 4 ) ; break ;} 
+				case  8 : { AddTriangles( MCLookUpTable::Tiling8(_config), 2 ) ; break ;}
+				case  9 : { AddTriangles( MCLookUpTable::Tiling9(_config), 4 ) ; break ;} 
 				case 10 :
 					{
-						if( TestFace( test10[_config][0]) )
+						if( TestFace( MCLookUpTable::Test10(_config, 0)) ) //if( TestFace( test10[_config][0]) )
 						{
-							if( TestFace( test10[_config][1]) ) 
-								AddTriangles( tiling10_1_1_[_config], 4 ) ; // 10.1.1
+							if( TestFace( MCLookUpTable::Test10(_config,1) ) ) 
+								AddTriangles( MCLookUpTable::Tiling10_1_1_(_config), 4 ) ; // 10.1.1
 							else 
 							{ 
 								ComputeCVertex(v12); 
-								AddTriangles( tiling10_2[_config], 8, v12 ) ; // 10.2
+								AddTriangles( MCLookUpTable::Tiling10_2(_config), 8, v12 ) ; // 10.2
 							}
 						}
 						else
 						{
-							if( TestFace( test10[_config][1]) )
+							if( TestFace( MCLookUpTable::Test10(_config, 1) ) )
 							{
 								ComputeCVertex(v12) ;
-								AddTriangles( tiling10_2_[_config], 8, v12 ) ; // 10.2
+								AddTriangles( MCLookUpTable::Tiling10_2_(_config), 8, v12 ) ; // 10.2
 							}
 							else
 							{
-								if( TestInterior( test10[_config][2]) ) AddTriangles( tiling10_1_1[_config], 4 ) ; // 10.1.1
-								else																		AddTriangles( tiling10_1_2[_config], 8 ) ; // 10.1.2
+								if( TestInterior( MCLookUpTable::Test10(_config, 2) ) ) 
+									AddTriangles( MCLookUpTable::Tiling10_1_1(_config), 4 ) ; // 10.1.1
+								else
+									AddTriangles( MCLookUpTable::Tiling10_1_2(_config), 8 ) ; // 10.1.2
 							}
 						}
 						break ;
 					} // end of case 10
-				case 11 : { AddTriangles( tiling11[_config], 4 ) ; break ; }
+				case 11 : { AddTriangles( MCLookUpTable::Tiling11(_config), 4 ) ; break ; }
 				case 12 :
 					{
-						if( TestFace( test12[_config][0]) )
+						if( TestFace( MCLookUpTable::Test12(_config, 0) ) ) //if( TestFace( test12[_config][0]) )
 						{
-							if( TestFace( test12[_config][1]) ) AddTriangles( tiling12_1_1_[_config], 4 ) ; // 12.1.1
+							if( TestFace( MCLookUpTable::Test12(_config, 1) ) ) 
+								AddTriangles( MCLookUpTable::Tiling12_1_1_(_config), 4 ) ; // 12.1.1
 							else
 							{
 								ComputeCVertex(v12) ;
-								AddTriangles( tiling12_2[_config], 8, v12 ) ; // 12.2
+								AddTriangles( MCLookUpTable::Tiling12_2(_config), 8, v12 ) ; // 12.2
 							}
 						}
 						else
 						{
-							if( TestFace( test12[_config][1]) )
+							if( TestFace( MCLookUpTable::Test12(_config, 1) ) )
 							{
 								ComputeCVertex(v12) ;
-								AddTriangles( tiling12_2_[_config], 8, v12 ) ; // 12.2
+								AddTriangles( MCLookUpTable::Tiling12_2_(_config), 8, v12 ) ; // 12.2
 							}
 							else
 							{
-								if( TestInterior( test12[_config][2]) ) AddTriangles( tiling12_1_1[_config], 4 ) ; // 12.1.1
-								else																		AddTriangles( tiling12_1_2[_config], 8 ) ; // 12.1.2
+								if( TestInterior( MCLookUpTable::Test12(_config, 2) ) ) 
+									AddTriangles( MCLookUpTable::Tiling12_1_1(_config), 4 ) ; // 12.1.1
+								else																		
+									AddTriangles( MCLookUpTable::Tiling12_1_2(_config), 8 ) ; // 12.1.2
 							}
 						}
 						break ;
 					} // end of case 12
 				case 13 :
 					{
-						if( TestFace( test13[_config][0] ) ) _subconfig +=  1 ;
-						if( TestFace( test13[_config][1] ) ) _subconfig +=  2 ;
-						if( TestFace( test13[_config][2] ) ) _subconfig +=  4 ;
-						if( TestFace( test13[_config][3] ) ) _subconfig +=  8 ;
-						if( TestFace( test13[_config][4] ) ) _subconfig += 16 ;
-						if( TestFace( test13[_config][5] ) ) _subconfig += 32 ;
-						switch( subconfig13[_subconfig] )
+						//if( TestFace( test13[_config][0] ) ) _subconfig +=  1 ;
+						//if( TestFace( test13[_config][1] ) ) _subconfig +=  2 ;
+						//if( TestFace( test13[_config][2] ) ) _subconfig +=  4 ;
+						//if( TestFace( test13[_config][3] ) ) _subconfig +=  8 ;
+						//if( TestFace( test13[_config][4] ) ) _subconfig += 16 ;
+						//if( TestFace( test13[_config][5] ) ) _subconfig += 32 ;
+						if( TestFace( MCLookUpTable::Test13(_config, 0) ) ) _subconfig +=  1 ;
+						if( TestFace( MCLookUpTable::Test13(_config, 1) ) ) _subconfig +=  2 ;
+						if( TestFace( MCLookUpTable::Test13(_config, 2) ) ) _subconfig +=  4 ;
+						if( TestFace( MCLookUpTable::Test13(_config, 3) ) ) _subconfig +=  8 ;
+						if( TestFace( MCLookUpTable::Test13(_config, 4) ) ) _subconfig += 16 ;
+						if( TestFace( MCLookUpTable::Test13(_config, 5) ) ) _subconfig += 32 ;
+						switch( MCLookUpTable::Subconfig13(_subconfig) ) //switch( subconfig13[_subconfig] )
 						{
-						case 0  : { /* 13.1 */ AddTriangles( tiling13_1[_config]	 , 4 ) ; break ; }
-						case 1  : { /* 13.2 */ AddTriangles( tiling13_2[_config][0], 6 ) ; break ; }
-						case 2  : { /* 13.2 */ AddTriangles( tiling13_2[_config][1], 6 ) ; break ; }
-						case 3  : { /* 13.2 */ AddTriangles( tiling13_2[_config][2], 6 ) ; break ; }
-						case 4  : { /* 13.2 */ AddTriangles( tiling13_2[_config][3], 6 ) ; break ; }
-						case 5  : { /* 13.2 */ AddTriangles( tiling13_2[_config][4], 6 ) ; break ; }
-						case 6  : { /* 13.2 */ AddTriangles( tiling13_2[_config][5], 6 ) ; break ; }
-						case 7  : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( tiling13_3[_config][ 0], 10, v12 ) ; break ; }
-						case 8  : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( tiling13_3[_config][ 1], 10, v12 ) ; break ; }
-						case 9  : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( tiling13_3[_config][ 2], 10, v12 ) ; break ; }
-						case 10 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( tiling13_3[_config][ 3], 10, v12 ) ; break ; }
-						case 11 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( tiling13_3[_config][ 4], 10, v12 ) ; break ; }
-						case 12 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( tiling13_3[_config][ 5], 10, v12 ) ; break ; }
-						case 13 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( tiling13_3[_config][ 6], 10, v12 ) ; break ; }
-						case 14 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( tiling13_3[_config][ 7], 10, v12 ) ; break ; }
-						case 15 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( tiling13_3[_config][ 8], 10, v12 ) ; break ; }
-						case 16 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( tiling13_3[_config][ 9], 10, v12 ) ; break ; }
-						case 17 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( tiling13_3[_config][10], 10, v12 ) ; break ; }
-						case 18 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( tiling13_3[_config][11], 10, v12 ) ; break ; }
-						case 19 : { /* 13.4 */ ComputeCVertex(v12); AddTriangles( tiling13_4[_config][ 0], 12, v12 ) ; break ; }
-						case 20 : { /* 13.4 */ ComputeCVertex(v12); AddTriangles( tiling13_4[_config][ 1], 12, v12 ) ; break ; }
-						case 21 : { /* 13.4 */ ComputeCVertex(v12); AddTriangles( tiling13_4[_config][ 2], 12, v12 ) ; break ; }
-						case 22 : { /* 13.4 */ ComputeCVertex(v12); AddTriangles( tiling13_4[_config][ 3], 12, v12 ) ; break ; }
+						case 0  : { /* 13.1 */ AddTriangles( MCLookUpTable::Tiling13_1(_config)	 , 4 ) ; break ; }
+						case 1  : { /* 13.2 */ AddTriangles( MCLookUpTable::Tiling13_2(_config, 0), 6 ) ; break ; }
+						case 2  : { /* 13.2 */ AddTriangles( MCLookUpTable::Tiling13_2(_config, 1), 6 ) ; break ; }
+						case 3  : { /* 13.2 */ AddTriangles( MCLookUpTable::Tiling13_2(_config, 2), 6 ) ; break ; }
+						case 4  : { /* 13.2 */ AddTriangles( MCLookUpTable::Tiling13_2(_config, 3), 6 ) ; break ; }
+						case 5  : { /* 13.2 */ AddTriangles( MCLookUpTable::Tiling13_2(_config, 4), 6 ) ; break ; }
+						case 6  : { /* 13.2 */ AddTriangles( MCLookUpTable::Tiling13_2(_config, 5), 6 ) ; break ; }
+						case 7  : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling13_3(_config, 0), 10, v12 ) ; break ; }
+						case 8  : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling13_3(_config, 1), 10, v12 ) ; break ; }
+						case 9  : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling13_3(_config, 2), 10, v12 ) ; break ; }
+						case 10 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling13_3(_config, 3), 10, v12 ) ; break ; }
+						case 11 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling13_3(_config, 4), 10, v12 ) ; break ; }
+						case 12 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling13_3(_config, 5), 10, v12 ) ; break ; }
+						case 13 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling13_3(_config, 6), 10, v12 ) ; break ; }
+						case 14 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling13_3(_config, 7), 10, v12 ) ; break ; }
+						case 15 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling13_3(_config, 8), 10, v12 ) ; break ; }
+						case 16 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling13_3(_config, 9), 10, v12 ) ; break ; }
+						case 17 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling13_3(_config,10), 10, v12 ) ; break ; }
+						case 18 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling13_3(_config,11), 10, v12 ) ; break ; }
+						case 19 : { /* 13.4 */ ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling13_4(_config, 0), 12, v12 ) ; break ; }
+						case 20 : { /* 13.4 */ ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling13_4(_config, 1), 12, v12 ) ; break ; }
+						case 21 : { /* 13.4 */ ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling13_4(_config, 2), 12, v12 ) ; break ; }
+						case 22 : { /* 13.4 */ ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling13_4(_config, 3), 12, v12 ) ; break ; }
 						case 23 : 
 							{ /* 13.5 */
 								_subconfig = 0 ;
-								if( TestInterior( test13[_config][6] ) ) AddTriangles( tiling13_5_1[_config][0], 6 ) ;
-								else																		 AddTriangles( tiling13_5_2[_config][0], 10 ) ;
+								if( TestInterior( MCLookUpTable::Test13(_config, 6) ) ) 
+									AddTriangles( MCLookUpTable::Tiling13_5_1(_config, 0), 6 ) ;
+								else																		 
+									AddTriangles( MCLookUpTable::Tiling13_5_2(_config, 0), 10 ) ;
 								break ;
 							}
 						case 24 :
 							{ /* 13.5 */
 								_subconfig = 1 ;
-								if( TestInterior( test13[_config][6] ) ) AddTriangles( tiling13_5_1[_config][1], 6 ) ;
-								else																		 AddTriangles( tiling13_5_2[_config][1], 10 ) ;
+								if( TestInterior( MCLookUpTable::Test13(_config, 6) ) ) 
+									AddTriangles( MCLookUpTable::Tiling13_5_1(_config, 1), 6 ) ;
+								else																		 
+									AddTriangles( MCLookUpTable::Tiling13_5_2(_config, 1), 10 ) ;
 								break ;
 							}
 						case 25 :
 							{/* 13.5 */
 								_subconfig = 2 ;
-								if( TestInterior( test13[_config][6] ) ) AddTriangles( tiling13_5_1[_config][2], 6 ) ;
-								else																		 AddTriangles( tiling13_5_2[_config][2], 10 ) ;
+								if( TestInterior( MCLookUpTable::Test13(_config, 6) ) ) 
+									AddTriangles( MCLookUpTable::Tiling13_5_1(_config, 2), 6 ) ;
+								else																		 
+									AddTriangles( MCLookUpTable::Tiling13_5_2(_config, 2), 10 ) ;
 								break ;
 							}
 						case 26 :
 							{/* 13.5 */
 								_subconfig = 3 ;
-								if( TestInterior( test13[_config][6] ) ) AddTriangles( tiling13_5_1[_config][3], 6 ) ;
-								else																		 AddTriangles( tiling13_5_2[_config][3], 10 ) ;
+								if( TestInterior( MCLookUpTable::Test13(_config, 6) ) ) 
+									AddTriangles( MCLookUpTable::Tiling13_5_1(_config, 3), 6 ) ;
+								else																		 
+									AddTriangles( MCLookUpTable::Tiling13_5_2(_config, 3), 10 ) ;
 								break ;
 							}
-						case 27 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( tiling13_3_[_config][ 0], 10, v12 ) ; break ; } 
-						case 28 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( tiling13_3_[_config][ 1], 10, v12 ) ; break ; }
-						case 29 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( tiling13_3_[_config][ 2], 10, v12 ) ; break ; }
-						case 30 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( tiling13_3_[_config][ 3], 10, v12 ) ; break ; }
-						case 31 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( tiling13_3_[_config][ 4], 10, v12 ) ; break ; }
-						case 32 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( tiling13_3_[_config][ 5], 10, v12 ) ; break ; }
-						case 33 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( tiling13_3_[_config][ 6], 10, v12 ) ; break ; }
-						case 34 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( tiling13_3_[_config][ 7], 10, v12 ) ; break ; }
-						case 35 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( tiling13_3_[_config][ 8], 10, v12 ) ; break ; }
-						case 36 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( tiling13_3_[_config][ 9], 10, v12 ) ; break ; }
-						case 37 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( tiling13_3_[_config][10], 10, v12 ) ; break ; }
-						case 38 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( tiling13_3_[_config][11], 10, v12 ) ; break ; }
-						case 39 : { /* 13.2 */ AddTriangles( tiling13_2_[_config][0], 6 ) ; break ; } 
-						case 40 : { /* 13.2 */ AddTriangles( tiling13_2_[_config][1], 6 ) ; break ; }
-						case 41 : { /* 13.2 */ AddTriangles( tiling13_2_[_config][2], 6 ) ; break ; } 
-						case 42 : { /* 13.2 */ AddTriangles( tiling13_2_[_config][3], 6 ) ; break ; }
-						case 43 : { /* 13.2 */ AddTriangles( tiling13_2_[_config][4], 6 ) ; break ; }
-						case 44 : { /* 13.2 */ AddTriangles( tiling13_2_[_config][5], 6 ) ; break ; }
-						case 45 : { /* 13.1 */ AddTriangles( tiling13_1_[_config]		, 4 ) ; break ; }
+						case 27 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling13_3_(_config, 0), 10, v12 ) ; break ; } 
+						case 28 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling13_3_(_config, 1), 10, v12 ) ; break ; }
+						case 29 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling13_3_(_config, 2), 10, v12 ) ; break ; }
+						case 30 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling13_3_(_config, 3), 10, v12 ) ; break ; }
+						case 31 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling13_3_(_config, 4), 10, v12 ) ; break ; }
+						case 32 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling13_3_(_config, 5), 10, v12 ) ; break ; }
+						case 33 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling13_3_(_config, 6), 10, v12 ) ; break ; }
+						case 34 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling13_3_(_config, 7), 10, v12 ) ; break ; }
+						case 35 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling13_3_(_config, 8), 10, v12 ) ; break ; }
+						case 36 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling13_3_(_config, 9), 10, v12 ) ; break ; }
+						case 37 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling13_3_(_config,10), 10, v12 ) ; break ; }
+						case 38 : { /* 13.3 */ ComputeCVertex(v12); AddTriangles( MCLookUpTable::Tiling13_3_(_config,11), 10, v12 ) ; break ; }
+						case 39 : { /* 13.2 */ AddTriangles( MCLookUpTable::Tiling13_2_(_config,0), 6 ) ; break ; } 
+						case 40 : { /* 13.2 */ AddTriangles( MCLookUpTable::Tiling13_2_(_config,1), 6 ) ; break ; }
+						case 41 : { /* 13.2 */ AddTriangles( MCLookUpTable::Tiling13_2_(_config,2), 6 ) ; break ; } 
+						case 42 : { /* 13.2 */ AddTriangles( MCLookUpTable::Tiling13_2_(_config,3), 6 ) ; break ; }
+						case 43 : { /* 13.2 */ AddTriangles( MCLookUpTable::Tiling13_2_(_config,4), 6 ) ; break ; }
+						case 44 : { /* 13.2 */ AddTriangles( MCLookUpTable::Tiling13_2_(_config,5), 6 ) ; break ; }
+						case 45 : { /* 13.1 */ AddTriangles( MCLookUpTable::Tiling13_1_(_config)	, 4 ) ; break ; }
 						default : { /*Impossible case 13*/  assert(false); }
 						}
 						break ;
 					} // end of case 13
 
-				case 14 : { AddTriangles( tiling14[_config], 4 ) ; }
+				case 14 : { AddTriangles( MCLookUpTable::Tiling14(_config), 4 ) ; }
 									break ;
 				} //end of switch (_case)
 
@@ -433,10 +466,10 @@ namespace vcg
 				case 13 :
 					switch( _case )
 					{
-					case  6 : edge = test6 [_config][2] ; break ;
-					case  7 : edge = test7 [_config][4] ; break ;
-					case 12 : edge = test12[_config][3] ; break ;
-					case 13 : edge = tiling13_5_1[_config][_subconfig][0] ; break ;
+					case  6 : edge = MCLookUpTable::Test6 (_config, 2) ; break ;
+					case  7 : edge = MCLookUpTable::Test7 (_config, 4) ; break ;
+					case 12 : edge = MCLookUpTable::Test12(_config, 3) ; break ;
+					case 13 : edge = MCLookUpTable::Tiling13_5_1(_config, _subconfig)[0] ; break ;
 					}
 					switch( edge )
 					{
