@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/05/10 11:16:19  ganovelli
+include assert.h added
+
 Revision 1.5  2004/03/31 10:09:58  cignoni
 missing return value in zero()
 
@@ -182,6 +185,11 @@ public:
 	inline Point4 operator - () const
 	{
 		return Point4( -_v[0], -_v[1], -_v[2], -_v[3] );
+	}
+	inline Point4 operator ^ ( const Point4 t ) const
+	{
+		assert(0);
+		return Point4();
 	}
 //@}
 	
