@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/05/10 13:43:00  cignoni
+Added use of VFIterator in VertexGeodesicFromBorder
+
 Revision 1.1  2004/03/31 14:59:14  cignoni
 First working version!
 
@@ -40,8 +43,7 @@ namespace vcg {
 namespace tri {
 /** \addtogroup trimesh */
 /*@{*/
-/// Generation of per-vertex and per-face Qualities according to various strategy.
-/// This class is used to compute per face or per vertex color with respect to for example Border (UpdateColor::VertexBorderFlag), Selection (UpdateColor::FaceSelected), Quality .
+/// Generation of per-vertex and per-face Qualities according to various strategy, like geodesic distance from the border (UpdateQuality::VertexGeodesicFromBorder) or curvature ecc.
 
 template <class UpdateMeshType>
 class UpdateQuality
@@ -85,7 +87,11 @@ public:
 // che per approx numeriche ben strane pw->Q() > pv->Q()+d ma durante la memorizzazione 
 // della nuova distanza essa rimanesse uguale a prima. Patchato rimettendo i vertici nello 
 // heap solo se migliorano la distanza di un epsilon == 1/100000 della mesh diag.
-
+/** Compute, for each vertex of the mesh the geodesic distance from the border of the mesh itself;
+Requirements: VF topology, Per Vertex Quality;
+it uses the classical dijkstra Shortest Path Tree algorithm. 
+The geodesic distance is approximated by allowing to walk only along edges of the mesh.
+*/
 static void VertexGeodesicFromBorder(MeshType &m)	// R1
 {
 	//Requirements
