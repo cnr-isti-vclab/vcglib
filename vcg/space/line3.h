@@ -24,11 +24,12 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/03/10 15:27:48  tarini
+added Normalized flag
+
 
 Revision 1.1  2004/03/08 16:15:48  tarini
 first version (tarini)
-
-
 
 ****************************************************************************/
 
@@ -61,31 +62,48 @@ public:
 	/// The point type
 	typedef Point3<LineScalarType> PointType;
 
-	/// The point type
+	/// The line type
 	typedef Line3<LineScalarType,NORM> LineType;
 
 private:
 
-	/// Origingin
+	/// Origin
 	PointType _ori;
 
-	/// Directionection (not necessarily normalized)
+	/// Direction (not necessarily normalized, unless so specified by NORM)
 	PointType _dir;
 
 public:
 
-		/// Members to access the origin, direction
+//@{
+	 /** @name Members to access the origin or direction
+	   Direction() cannot be assigned directly.
+		 Use SetDirection() or Set() instead.
+	**/
+		/// 
   inline const PointType &Origin() const { return _ori; } 
-  inline const PointType &Direction() const { return _dir; } 
   inline PointType &Origin() { return _ori; } 
-  inline PointType &Direction() {
-		assert(!IsNormalized()); // Directionection can't be set for NORMALIZED Lines! Use SetDirection instead!
-		return _dir; 
-	} 
-		/// The empty constructor
+  inline const PointType &Direction() const { return _dir; } 
+		/// sets the origin
+	inline void SetOrigin( const PointType & ori )
+	{	_ori=ori; }
+		/// sets the direction
+	inline void SetDirection( const PointType & dir)
+	{	_dir=dir; if (NORM) _dir.Normalize();  }
+		/// sets origin and direction.
+	inline void Set( const PointType & ori, const PointType & dir )
+	{	SetOrigin(ori); SetDirection(dir); }
+//@}
+
+//@{
+	 /** @name Constructors 
+	**/
+ 		/// The empty constructor
 	Line3() {};
 		/// The (origin, direction) constructor
-	LineType(const PointType &ori, const PointType &dir) {SetOrigin(ori); SetDirection(dir);};
+	Line3(const PointType &ori, const PointType &dir) {SetOrigin(ori); SetDirection(dir);};
+//@}
+
 		/// Operator to compare two lines
 	inline bool operator == ( LineType const & p ) const
 	{	return _ori==p._ori && _dir==p._dir; }
@@ -97,31 +115,29 @@ public:
 	{ if (NORM) return ScalarType((p-_ori)*_dir); 
 		else      return ScalarType((p-_ori)*_dir/_dir.SquaredNorm()); 
 	}
-	inline bool IsNormalized() const {return NORM;};
-		///set the origin
-	inline void SetOrigin( const PointType & ori )
-	{	_ori=ori; }
-		///set the direction
-	inline void SetDirection( const PointType & dir)
-	{	_dir=dir; if (NORM) _dir.Normalize();  }
-		///set both the origina and direction.
-	inline void Set( const PointType & ori, const PointType & dir )
-	{	SetOrigin(ori); SetDirection(dir); }
+	  /// returns wheter this type is normalized or not
+	static bool IsNormalized() {return NORM;};
 	  /// calculates the point of parameter t on the line.
 	inline PointType P( const ScalarType t ) const
 	{ return _ori + _dir * t; }
 		/// normalizes direction field (returns a Normalized Line)
-	Line3<ScalarType,true> &Normalize()
+	inline Line3<ScalarType,true> &Normalize()
 	{ if (!NORM) _dir.Normalize(); return *((Line3<ScalarType,true>*)this);}
 		/// normalizes direction field (returns a Normalized Line) - static version
 	static Line3<ScalarType,true> &Normalize(LineType &p)
 	{ p.Normalize(); return *((Line3<ScalarType,true>*)(&p));}
-	  /// importer for different line types
+	  /// importer for different line types (with any scalar type or normalization beaviour)
 	template <class Q, bool K>
 	inline void Import( const Line3<Q,K> & b )
-	{ _ori.Import( b.Origin());	_dir.Import( b.Direction()); 
-	  if ((NORM) && (!K)) _dir.Normalize();
+	{ _ori.Import( b.Origin() );	_dir.Import( b.Direction() ); 
+	  if ((NORM) && (!K)) _dir.Normalize(); 
+		//printf("(=)%c->%c ",(!NORM)?'N':'n', NORM?'N':'n');
 	}
+		/// constructs a new line importing it from an existing one
+	template <class Q, bool K>
+	static LineType Construct( const Line3<Q,K> & b )
+	{ LineType res; res.Import(b);  return res;
+	}	
 	PointType ClosestPoint(const PointType & p) const{
 	return P(Projection(p));
 	}
@@ -129,6 +145,39 @@ public:
 	inline void Flip(){
 		_dir=-_dir;
 	};
+
+//@{
+	 /** @name Linearity for 3d lines 
+   (operators +, -, *, /) so a line can be set as a linear combination
+	 of several lines. Note that the result of any operation returns 
+	 a non-normalized line; however, the command r0 = r1*a + r2*b is licit 
+	 even if r0,r1,r2 are normalized lines, as the normalization will
+	 take place within the final assignement operation. 
+	**/
+	inline Line3<ScalarType,false> operator + ( LineType const & p) const
+	{return Line3<ScalarType,false> ( _ori+p.Origin(), _dir+p.Direction() );}
+	inline Line3<ScalarType,false> operator - ( LineType const & p) const
+	{return Line3<ScalarType,false> ( _ori-p.Origin(), _dir-p.Direction() );}
+	inline Line3<ScalarType,false> operator * ( const ScalarType s ) const
+	{return Line3<ScalarType,false> ( _ori*s, _dir*s );}
+	inline Line3<ScalarType,false> operator / ( const ScalarType s ) const
+	{ScalarType s0=((ScalarType)1.0)/s; return LineType( _ori*s0, _dir*s0 );}
+//@}
+
+
+//@{
+	 /** @name Automatic normalized to non-normalized
+	 "Line3dN r0 = r1" is equivalent to
+	 "Line3dN r0 = r1.Normalize()" if r1 is a Line3d
+	**/
+		/// copy constructor that takes opposite beaviour
+	LineType (const Line3<ScalarType,!NORM > &r) 
+	{ Import(r); };
+		/// assignment
+	inline LineType & operator = ( Line3<ScalarType,!NORM> const &r) 
+	{ Import(r); return *this; };
+//@}
+
 }; // end class definition
 
 typedef Line3<short>  Line3s;
