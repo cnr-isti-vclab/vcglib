@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/06/23 15:49:03  ponchio
+Added some help and inndentation
+
 Revision 1.3  2004/05/12 18:50:58  ganovelli
 changed calls to Dist
 
@@ -167,11 +170,10 @@ class GridStaticPtr
     }
   
   
-  /// Date le coordinate di un grid point ritorna le celle che condividono
+  /// Date le coordinate di un grid point (corner minx,miy,minz) ritorna le celle che condividono
   /// l'edge cell che parte dal grid point in direzione axis
   inline void Grid( Point3i p, const int axis,
-		    std::vector<Cell*> & cl,
-		    std::vector<Point3i> &o) 
+		    std::vector<Cell*> & cl) 
     {
 #ifndef NDEBUG
       if ( p[0]<0 || p[0]>siz[0] || 
@@ -192,8 +194,7 @@ class GridStaticPtr
 	for(j = max(y-1,0); j <= min( y,siz[axis1]-1);++j){
 	  p[axis0]=i;
 	  p[axis1]=j;
-	  cl.push_back(Grid(p[0]+siz[0]*(p[1]+siz[1]*p[2]))); ;
-	  o.push_back(p);
+	  cl.push_back(Grid(p[0]+siz[0]*(p[1]+siz[1]*p[2])));
 	}
     }
   
