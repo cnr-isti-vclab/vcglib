@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/07/11 22:13:30  cignoni
+Added GPL comments
+
 
 ****************************************************************************/
 #include <stdlib.h>
@@ -67,7 +70,7 @@ int WindowRes=800;
 
 bool SwapFlag=false;
 
-float lopass=0,hipass=1,gamma=1;
+float lopass=0,hipass=1,Gamma=1;
 bool LightFlag=true;
 bool ColorFlag=true;
 
@@ -178,32 +181,32 @@ void ViewKey(unsigned char key, int , int )
   switch (key) {
   case 27: exit(0);   	break;
 	case 'l' :
-		lopass=lopass+.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma); 
-		Vis.MapVisibility(gamma,lopass,hipass);
+		lopass=lopass+.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,Gamma); 
+		Vis.MapVisibility(Gamma,lopass,hipass);
 		break;
 	case 'L' :
-		lopass=lopass-.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma); 
-		Vis.MapVisibility(gamma,lopass,hipass);
+		lopass=lopass-.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,Gamma); 
+		Vis.MapVisibility(Gamma,lopass,hipass);
 		break;
 	case 'h' :
-		hipass=hipass-.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma); 
-		Vis.MapVisibility(gamma,lopass,hipass);
+		hipass=hipass-.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,Gamma); 
+		Vis.MapVisibility(Gamma,lopass,hipass);
 		break;
 	case 'H' :
-		hipass=hipass+.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma); 
-		Vis.MapVisibility(gamma,lopass,hipass);
+		hipass=hipass+.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,Gamma); 
+		Vis.MapVisibility(Gamma,lopass,hipass);
 		break;
 	case 'g' :
-		gamma=gamma-.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma); 
-		Vis.MapVisibility(gamma,lopass,hipass);
+		Gamma=Gamma-.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,Gamma); 
+		Vis.MapVisibility(Gamma,lopass,hipass);
 		break;
 	case 'G' :
-		gamma=gamma+.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma); 
-		Vis.MapVisibility(gamma,lopass,hipass);
+		Gamma=Gamma+.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,Gamma); 
+		Vis.MapVisibility(Gamma,lopass,hipass);
 		break;
 	case 'c' : 
 		Vis.ComputeUniform(SampleNum,cb); 
-		Vis.MapVisibility(gamma,lopass,hipass);
+		Vis.MapVisibility(Gamma,lopass,hipass);
 		break;
   case ' ' : {
     Point3f dir = Q.camera.ViewPoint();
@@ -213,11 +216,11 @@ void ViewKey(unsigned char key, int , int )
     printf("ViewPoint %f %f %f\n",dir[0],dir[1],dir[2]);
     dir.Normalize();
 		Vis.ComputeSingle(dir,cb); 
-    Vis.MapVisibility(gamma,lopass,hipass); }
+    Vis.MapVisibility(Gamma,lopass,hipass); }
 		break;
 	case 's' :
 		Vis.SmoothVisibility();
-		Vis.MapVisibility(gamma,lopass,hipass); 
+		Vis.MapVisibility(Gamma,lopass,hipass); 
 		break;
   case 'S' :
     { 

@@ -24,11 +24,17 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/07/11 22:13:30  cignoni
+Added GPL comments
+
 
 ****************************************************************************/
 
 #ifndef __VCG_MESH_VISIBILITY
 #define __VCG_MESH_VISIBILITY
+
+#include <stdlib.h>
+
 #include <bitset>
 #include <vcg/math/matrix44.h>
 #include "simplepic.h"
@@ -41,7 +47,9 @@ void GenNormal(int vn, std::vector<Point3<ScalarType > > &NN)
     NN.clear();
     while(NN.size()<vn)
     {
-      Point3x pp(float(rand())/RAND_MAX,float(rand())/RAND_MAX,float(rand())/RAND_MAX);
+      Point3x pp(((float)rand())/RAND_MAX,
+		 ((float)rand())/RAND_MAX,
+		 ((float)rand())/RAND_MAX);
       pp=pp*2.0-Point3x(1,1,1);
       if(pp.SquaredNorm()<1)
       {
@@ -169,7 +177,7 @@ void Compute( CallBack *cb)
   //cb(buf.format("Start to compute %i dir\n",VN.size()));
 	InitGL();
 	VV.resize(m.vert.size());
-	vector<int> PixSeen(VV.size(),0);
+	std::vector<int> PixSeen(VV.size(),0);
 	
 	for(int i=0;i<VN.size();++i)
 		{
@@ -186,7 +194,7 @@ void Compute( CallBack *cb)
 
 void ComputeCone(int nn, Point3x &dir, ScalarType ConeAngleDeg, CallBack *cb)
 {
-	string buf;
+	std::string buf;
 	ScalarType ConeAngleRad=ToRad(ConeAngleDeg);
 	ScalarType SolidAngleSter = (1.0 - Cos(ConeAngleRad))*2*M_PI;
 	int Frac=(4.0*M_PI)/SolidAngleSter;
@@ -194,7 +202,7 @@ void ComputeCone(int nn, Point3x &dir, ScalarType ConeAngleDeg, CallBack *cb)
 				ConeAngleDeg,SolidAngleSter/M_PI,nn,nn*Frac);
 
 	VN.clear();
-	vector<Point3x> nvt;
+	std::vector<Point3x> nvt;
 	GenNormal(nn*Frac,nvt);
 	ScalarType CosConeAngle=Cos(ConeAngleRad);
 	for(int i=0;i<nvt.size();++i)
@@ -206,10 +214,10 @@ void ComputeCone(int nn, Point3x &dir, ScalarType ConeAngleDeg, CallBack *cb)
 
 void ComputeHalf(int nn, Point3x &dir, CallBack *cb)
 {
-	string buf;
+	std::string buf;
 	
 	VN.clear();
-	vector<Point3x> nvt;
+	std::vector<Point3x> nvt;
 	GenNormal(nn*2,nvt);
 	for(int i=0;i<nvt.size();++i)
 		if(dir*nvt[i]>0) VN.push_back(nvt[i]);
@@ -292,7 +300,7 @@ void SetupOrthoViewMatrix(Point3x &ViewDir, int subx, int suby,int LocSplit)
 void ComputeSingleDirection(Point3x BaseDir, std::vector<int> &PixSeen, CallBack *cb=DummyCallBack)
 {
 	int t0=clock();
-	string buf;
+	std::string buf;
  
 	int added=SplittedRendering(BaseDir, PixSeen,cb);	
   int t1=clock();
@@ -372,7 +380,7 @@ template <class MESH_TYPE> class VertexVisShader : public VisShader<MESH_TYPE>
 void DrawFill(MESH_TYPE &mm)
 {
   glBegin(GL_TRIANGLES);
-  MESH_TYPE::FaceIterator fi;
+  FaceIterator fi;
   for(fi=mm.face.begin();fi!=mm.face.end();++fi)
   {
     glVertex((*fi).V(0)->P());
@@ -467,9 +475,9 @@ return cnt;
 
 void SmoothVisibility()
 {
-	MESH_TYPE::FaceIterator fi;
-	vector<float> VV2;
-	vector<int> VC(VV.size(),1);
+	FaceIterator fi;
+	std::vector<float> VV2;
+	std::vector<int> VC(VV.size(),1);
 	VV2=VV;
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 		for(int i=0;i<3;++i)
@@ -488,7 +496,7 @@ void MapVisibility(float Gamma=1, float LowPass=0, float HighPass=1, bool FalseC
 	float maxv=*max_element(VV.begin(),VV.end());
 	printf("Visibility Range %f %f\n", minv,maxv);
 
-			MESH_TYPE::VertexIterator vi;
+	VertexIterator vi;
 			for(vi=m.vert.begin();vi!=m.vert.end();++vi){
 				float gval=(VV[vi-m.vert.begin()]-minv)/(maxv-minv);
 				if(gval<LowPass) gval=LowPass;
