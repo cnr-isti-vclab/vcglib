@@ -30,13 +30,14 @@ class MFile {
   void Close();
   void Delete();
   
-  int64 Length() { return size; }
+  int64 Length() { return _size; }
   void Redim(int64 size);
 
   void SetPosition(int64 pos);
   void ReadBuffer(void *data, unsigned int size);
   void WriteBuffer(void *data, unsigned int size);
 
+  bool Opened() { return files.size() > 0; }
   bool IsReadOnly() { return readonly; }
   void SetReadOnly(bool rd) { readonly = rd; } //USE WITH CARE!!!!
  protected:
@@ -44,7 +45,7 @@ class MFile {
   std::vector<File *> files;
   unsigned int curr_pos;
   unsigned int curr_fp;
-  int64 size;
+  int64 _size;
   unsigned int max_size;
   bool readonly;
  private:

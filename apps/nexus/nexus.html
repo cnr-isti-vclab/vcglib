@@ -39,6 +39,10 @@
 
 
 <a name="picture"><h1>Big picture</h1></a>
+La truttura nexus divide la mesh in tante piccole parti.<br>
+Ciascuna parte ha le facce indicizzate localmente, e sono codificate
+esplicitamente le corrispondenze tra vertici di patches diverse.<br>
+
 <a name="struct"><h1>Structures and interfaces</h1></a>
 
 <a name="vfile"><h2>VFile</h2></a>
@@ -46,12 +50,24 @@ VFile dovrebbe avere piu' o meno la stessa interfaccia di <em>vector</em>
 ma usare un file per storare i dati (un mmapping, ma non limitato a 4Gb).<br>
 
 <a name="crude"><h2>Crude</h2></a>
+<pre>
 Crude e' un formato tipo il ply... solo che usa dei VFile per 
-storare i dati.(3 unsigned int per una faccia e 3 float per un vertice)<br>
-Per cui e' composto di 3 files almeno: header (numero di facce,
-vertici e Bounding box), file dei vertici, file delle facce ed
-opzionalmente file degli attributi dei vertici e delle facce.<br>
-Come interfaccia e' sufficente che dia accesso casuale a facce e vertici...
+storare i dati.(3 unsigned int per una faccia e 3 float per un vertice).
+Per cui e' composto di 3 files:
+ Header (<b>.crd</b>)
+  Magic:     'c' 'r' 'd' 0x00 (4 bytes)
+  N vertici: unsigned int (4 bytes)
+  N facce: unsigned int (4 bytes)
+  Box: Box3f (6 float min(x, y, z) e max(x, y, z))
+  
+ File dei vertici:  Point3f in sequenza (3 float, x, y, z)
+ File delle facce:  3 unsigned int
+  
+ opzionalmente file degli attributi dei vertici e delle facce.
+
+ Come interfaccia e' sufficente che dia accesso casuale a facce e vertici...
+</pre>
+
 <a name="pchain"><h2>PChain</h2></a>
 Sta per 'partition  chain' cioe' una catena di partizioni dello
 spazio.<br>
@@ -62,29 +78,47 @@ Oltre a questo va aggiunta una funzione che dato un punto e una patch
 ne restituisce la distanza (o un valore 'equivalente').<br>
 Si deve poter salvare su disco e recuperare una pchain<br>
 
-<a name="remap"><h2>Remap</h2></a>
-E' composta da 3 files:<br>
-indice delle patches: per ogni patch il numero di vertici, di facce e
-di bordi<br>
- vertici -> lista di patches: per ogni vertice una lista di patch
-di cui fa parte (se sono + di 1 e' ovviamente di bordo.<br>
-facce->patches: per ogni faccia un intero che dice in quale patch
-sta.<br>
 
 
 <a name="nexus"><h2>Nexus</h2></a>
-E' una struttura con 3 files: 'index', 'patches' e 'borders'.<br>
-'Index' contiene l'indice delle patches: per ogni patch viene storato
-offset, size (ma questa potrebbe essere storata direttamente nei
-files?) dei dati geometrici nel file delle patches e dei bordi nel
-file dei borders, oltre alla bounding sphere.<br>
-'Patches' e' un VFile di chunks da 4k dove i dati geometrici di una
-patch occupano un numero intero di chunks. P.S. Come ce la caviamo con
-gli attributi dei vertici e delle facce?<br>
-'Borders' e' un VFile di 'links' dove ogni link fa riferimento ad un
-vertice di bordo tra la patch A (V_a) e la B (V_b) e contiene
-(V_a, V_b, B) (A e' implicito). L'informazione e' replicata nei bordi
-relativi a B con (V_b, V_a, A)<br>
+<pre>
+E' una struttura con 2 files:
+
+File delle patches: (<b>.nxs</b>)
+  1Kb riservato per dati globali:
+     Magic:        'n' 'x' 's' 0x00
+     Signature:    unsigned int (maschera di bit)
+     Chunk size:   unsigned int
+     Index offset: int64 (offset to the index begin, 
+                                 must be a multiple of chunk size)
+     History offset: int64: multiple of chunk_size
+
+     Tot vert:     unsigned int
+     Tot face:     unsigned int  
+     Bound sphere: Sphere3f (4 float: Point3f center (x, y, z), (radius))
+
+  Dati (la sequenza di patches)
+ 
+  Index
+  History
+
+  'Index' contiene l'indice delle patches, per ogni patch viene storato:
+  offset, size dei dati geometrici nel file delle patches etc.
+  'History' vedi history.h
+
+  Index e History sono tenuti in memoria se il file e' aperto per creare
+  o per modificare, e sono salvati quando si chiude il file.
+
+File dei bordi:
+   Links.
+   Index (offset, size tot size used)
+
+
+  Ogni link fa riferimento ad un vertice di bordo 
+  tra la patch A (V_a) e la B (V_b) e contiene (V_a, V_b, B) (A e' implicito). 
+   L'informazione e' replicata nei bordi relativi a B con (V_b, V_a, A)
+</pre>
+<br>
 
 <a name="bmt"><h2>Bmt</h2></a>
 Bmt (batched multi triangulation) e' il formato per la

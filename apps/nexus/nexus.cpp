@@ -4,8 +4,6 @@
 #include <set>
 
 #include "nexus.h"
-#include "lrupserver.h"
-#include "queuepserver.h"
 
 using namespace std;
 using namespace vcg;
@@ -16,155 +14,157 @@ Nexus::~Nexus() {
 }
 
 bool Nexus::Create(const string &file, Signature sig, unsigned int c_size) {
-  index_file = fopen((file + ".nxs").c_str(), "wb+");
-  if(!index_file) {
-    cerr << "Could not create file: " << file << ".nxs\n";
-    return false;
-  }
-  
   signature = sig;
   totvert = 0;
   totface = 0;
   sphere = Sphere3f();
-  
-  index.clear();
-
   chunk_size = c_size;
+  unsigned int header_size = 256;
+  if(chunk_size > header_size) header_size = chunk_size;
+  
+  history.Clear();
+  ram_used = 0;
+  ram_max = 50 * (1<<20) / chunk_size;
 
-  history.clear();
-
-  if(!patches.Create(file + ".nxp", signature, chunk_size)) {
+  if(!IndexFile<Entry>::Create(file + ".nxp", header_size)) {
     cerr << "Could not create file: " << file << ".nxp" << endl;
     return false;
   }
+
   //Important: chunk_size must be 1 so that i can use Region in VFile.
-  if(!borders.Create(file + ".nxb", 1, 100)) {
+  if(!borders.Create(file + ".nxb")) {
     cerr << "Could not create file: " << file << ".nxb" << endl;
     return false;
   }
-  history.clear();
   return true;
 }
 
 
 bool Nexus::Load(const string &file, bool rdonly) {
-  readonly = rdonly;
+  if(!IndexFile<Entry>::Load(file + ".nxp", rdonly)) return false;
+  ram_used = 0;
+  ram_max = 50 * (1<<20) / chunk_size;
 
-  index_file = fopen((file + ".nxs").c_str(), "rb+");
-  if(!index_file) return false;
-  
-  unsigned int readed;
-  readed = fread(&signature, sizeof(unsigned int), 1, index_file);
-  if(!readed) return false;
-  readed = fread(&totvert, sizeof(unsigned int), 1, index_file);
-  if(!readed) return false;
-  readed = fread(&totface, sizeof(unsigned int), 1, index_file);
-  if(!readed) return false;
-  readed = fread(&sphere, sizeof(Sphere3f), 1, index_file);
-  if(!readed) return false;
-  readed = fread(&chunk_size, sizeof(unsigned int), 1, index_file);
-    if(!readed) return false;
+  history.Clear();
+  SetPosition(history_offset);
+  unsigned int history_size;
+  ReadBuffer(&history_size, sizeof(unsigned int));
 
-  unsigned int size; //size of index
-  readed = fread(&size, sizeof(unsigned int), 1, index_file);
-  if(!readed) return false;
+  char *buffer = new char[history_size];
+  ReadBuffer(buffer, history_size);
 
-  index.resize(size);
-  readed = fread(&index[0], sizeof(PatchInfo), size, index_file);
-  if(readed != size) return false;
-
-  patches.ReadEntries(index_file);
-  borders.ReadEntries(index_file);
-  
-  //history size;
-  fread(&size, sizeof(unsigned int), 1, index_file);
-  vector<unsigned int> buffer;
-  buffer.resize(size);
-  fread(&(buffer[0]), sizeof(unsigned int), size, index_file);
-
-  //number of history updates
-  size = buffer[0];
-  history.resize(size);
-
-  unsigned int pos = 1;
-  for(unsigned int i = 0; i < size; i++) {
-    unsigned int erased = buffer[pos++];
-    unsigned int created = buffer[pos++];
-    history[i].erased.resize(erased);
-    history[i].created.resize(created);
-    for(unsigned int e = 0; e < erased; e++) 
-      history[i].erased[e] = buffer[pos++];
-    for(unsigned int e = 0; e < created; e++) 
-      history[i].created[e] = buffer[pos++];
-  }
-  
-  if(readonly) {
-    fclose(index_file);
-    index_file = NULL;
+  if(!history.Load(history_size, buffer)) {
+    cerr << "Error loading history\n";
+    return false;
   }
 
-  //TODO support readonly
-  if(!patches.Load(file + ".nxp", signature, chunk_size, readonly)) 
-    return false;
-  if(!borders.Load(file + ".nxb", readonly, 1, 500)) 
-    return false;
+  borders.Load(file + ".nxb", rdonly);
+  //TODO on nxsbuilder assure borders are loaded
   return true;
 }
 
-void Nexus::Close() {  
-  patches.Close();
-  borders.Close();
-  if(!index_file) return;
-  
-  rewind(index_file);
-  
-  fwrite(&signature, sizeof(unsigned int), 1, index_file);  
-  fwrite(&totvert, sizeof(unsigned int), 1, index_file);
-  fwrite(&totface, sizeof(unsigned int), 1, index_file);
-  fwrite(&sphere, sizeof(Sphere3f), 1, index_file);
-  fwrite(&chunk_size, sizeof(unsigned int), 1, index_file);
-  
-  unsigned int size = index.size(); //size of index
-  fwrite(&size, sizeof(unsigned int), 1, index_file);
-  fwrite(&(index[0]), sizeof(PatchInfo), size, index_file);
+void Nexus::Close() { 
+  if(!Opened()) return;
 
-  //TODO this should be moved to the end... 
-  //BUT it will break compatibility with existing models.
-  patches.WriteEntries(index_file);
-  borders.WriteEntries(index_file);
-  
-  vector<unsigned int> buffer;
-  buffer.push_back(history.size());
-  for(unsigned int i = 0; i < history.size(); i++) {
-    Update &update = history[i];
-    buffer.push_back(update.erased.size());
-    buffer.push_back(update.created.size());
-    for(unsigned int e = 0; e < update.erased.size(); e++)
-      buffer.push_back(update.erased[e]);
-    for(unsigned int e = 0; e < update.created.size(); e++)
-      buffer.push_back(update.created[e]);
+  Flush();
+
+  if(!IsReadOnly()) {
+    //set history_offset
+    if(!size()) history_offset = 0;
+    else 
+      history_offset = (back().patch_start + back().disk_size);
+    history_offset *= chunk_size;
+
+    unsigned int history_size;
+    char *mem = history.Save(history_size);
+    Redim(history_offset + history_size + sizeof(unsigned int));
+    SetPosition(history_offset);
+    WriteBuffer(&history_size, sizeof(unsigned int));
+    WriteBuffer(mem, history_size);
+    delete []mem;
   }
-  
-  size = buffer.size();
-  fwrite(&size, sizeof(unsigned int), 1, index_file);
-  fwrite(&(buffer[0]), sizeof(unsigned int), size, index_file);
-  
-  fclose(index_file);
-  index_file = NULL;
+  borders.Close();
+  IndexFile<Entry>::Close();
 }
 
-Patch &Nexus::GetPatch(unsigned int patch, bool flush) {
-  assert(patch < index.size());
-  PatchInfo &info = index[patch];
-  return patches.Lookup(patch, info.nvert, info.nface);
+void Nexus::SaveHeader() {
+  unsigned int magic = 0x3053584e; // nxs0
+  WriteBuffer(&magic, sizeof(unsigned int));
+  WriteBuffer(&signature, sizeof(unsigned int));
+  WriteBuffer(&chunk_size, sizeof(unsigned int));
+  WriteBuffer(&offset, sizeof(int64));
+  WriteBuffer(&history_offset, sizeof(int64));
+  WriteBuffer(&totvert, sizeof(unsigned int));
+  WriteBuffer(&totface, sizeof(unsigned int));
+  WriteBuffer(&sphere, sizeof(Sphere3f));
+}
+
+bool Nexus::LoadHeader() {
+  unsigned int magic;
+  ReadBuffer(&magic, sizeof(unsigned int));
+  if(magic != 0x3053584e) {
+    cerr << "Invalid magic. Not a nxs file\n";
+    return false;
+  }
+  ReadBuffer(&signature, sizeof(unsigned int));
+  ReadBuffer(&chunk_size, sizeof(unsigned int));
+  ReadBuffer(&offset, sizeof(int64));
+  ReadBuffer(&history_offset, sizeof(int64));
+  ReadBuffer(&totvert, sizeof(unsigned int));
+  ReadBuffer(&totface, sizeof(unsigned int));
+  ReadBuffer(&sphere, sizeof(Sphere3f));
+}
+
+void Nexus::Flush(bool all) {
+  if(all) {
+    std::map<unsigned int, list<unsigned int>::iterator>::iterator i;
+    for(i = index.begin(); i != index.end(); i++) {
+      unsigned int patch = (*i).first;
+      FlushPatch(patch);
+    }
+    pqueue.clear();
+    index.clear();
+  } else {
+    while(ram_used > ram_max) {    
+      unsigned int to_flush = pqueue.back();
+      pqueue.pop_back();
+      index.erase(to_flush);        
+      FlushPatch(to_flush);
+    }
+  }
+}
+
+
+
+Patch &Nexus::GetPatch(unsigned int patch, bool flush) { 
+  Entry &entry = operator[](patch);
+  if(index.count(patch)) {
+    assert(entry.patch);
+    list<unsigned int>::iterator &i = index[patch];
+    pqueue.erase(i);
+    pqueue.push_front(patch);
+
+  } else {
+    while(flush && ram_used > ram_max) {    
+      unsigned int to_flush = pqueue.back();
+      pqueue.pop_back();
+      index.erase(to_flush);        
+      FlushPatch(to_flush);
+    }
+    assert(!entry.patch);
+    entry.patch = LoadPatch(patch);
+    pqueue.push_front(patch);
+    list<unsigned int>::iterator i = pqueue.begin();
+    index[patch] = i;      
+  }                        
+  return *(entry.patch);
 }
 
 Border Nexus::GetBorder(unsigned int patch, bool flush) {
-  PatchInfo &info = index[patch];
   return borders.GetBorder(patch);
 }
 
-void Nexus::AddBorder(unsigned int patch, Link &link) {
+/*void Nexus::AddBorder(unsigned int patch, Link &link) {
   Border border = GetBorder(patch);
 	
   unsigned int pos = border.Size();
@@ -179,27 +179,30 @@ void Nexus::AddBorder(unsigned int patch, Link &link) {
   assert(border.Available() > pos);
 
   border[pos] = link;  
-}
+  }*/
 
 unsigned int Nexus::AddPatch(unsigned int nvert, unsigned int nface,
 			     unsigned int nbord) {
 
-  PatchInfo info;
-  info.nvert = nvert;
-  info.nface = nface;
+  Entry entry;
+  entry.patch_start = 0xffffffff;
+  entry.ram_size = Patch::ChunkSize(signature, nvert, nface, chunk_size);
+  entry.disk_size = 0xffff;
+  entry.nvert = nvert;
+  entry.nface = nface;
+  entry.error = 0;
+  //sphere undefined.
+  entry.patch = NULL;
+  entry.vbo_array = 0;
+  entry.vbo_element = 0;
   
-  patches.AddPatch(nvert, nface);
+  push_back(entry);
+  
   borders.AddBorder(nbord);
 
-  index.push_back(info);
   totvert += nvert;
   totface += nface;
-  return index.size() -1;
-}
-
-void Nexus::MaxRamBuffer(unsigned int r_size) {    
-  patches.MaxRamBuffer(r_size);
-  //TODO do the same with borders
+  return size() - 1;
 }
 
 void Nexus::Unify(float threshold) {
@@ -207,9 +210,9 @@ void Nexus::Unify(float threshold) {
   unsigned int duplicated = 0;
   unsigned int degenerate = 0;
 
-  for(unsigned int p = 0; p < index.size(); p++) {
-    PatchInfo &entry = index[p];
-    Patch patch = GetPatch(p);
+  for(unsigned int p = 0; p < size(); p++) {
+    Entry &entry = operator[](p);
+    Patch &patch = GetPatch(p);
 
     unsigned int vcount = 0;
     map<Point3f, unsigned short> vertices;
@@ -294,7 +297,7 @@ void Nexus::Unify(float threshold) {
   }
   //better to compact directly borders than setting them null.
   //finally: there may be duplicated borders
-  for(unsigned int p = 0; p < index.size(); p++) {
+  for(unsigned int p = 0; p < size(); p++) {
     Border border = GetBorder(p);
     set<Link> links;
     for(unsigned int b = 0; b < border.Size(); b++) {
@@ -307,7 +310,7 @@ void Nexus::Unify(float threshold) {
     for(set<Link>::iterator k = links.begin(); k != links.end(); k++)
       border[count++] = *k;      
     
-    borders.borders[p].border_used = links.size();
+    borders[p].used = links.size();
   }
   
   totvert -= duplicated;
@@ -315,4 +318,78 @@ void Nexus::Unify(float threshold) {
     cerr << "Found " << duplicated << " duplicated vertices" << endl;
   if(degenerate)
     cerr << "Found " << degenerate << " degenerate face while unmifying\n";
+}
+
+Patch *Nexus::LoadPatch(unsigned int idx) {
+  assert(idx < size());
+  Entry &entry = operator[](idx);
+  if(entry.patch) return entry.patch;
+  
+  char *ram = new char[entry.ram_size * chunk_size];
+#ifndef NDEBUG
+  if(!ram) {
+    cerr << "COuld not allocate ram!\n";
+    exit(0);
+  }
+#endif
+  
+  Patch *patch = new Patch(signature, ram, entry.nvert, entry.nface);
+  
+  if(entry.patch_start != 0xffffffff) { //was allocated.
+    assert(entry.disk_size != 0xffff);
+    
+    MFile::SetPosition((int64)entry.patch_start * (int64)chunk_size);
+    
+    if((signature & NXS_COMPRESSED) == 0) { //not compressed
+      MFile::ReadBuffer(ram, entry.disk_size * chunk_size);
+    } else {
+      unsigned char *disk = new unsigned char[entry.disk_size * chunk_size];
+      MFile::ReadBuffer(disk, entry.disk_size * chunk_size);
+      
+      patch->Decompress(entry.ram_size * chunk_size, 
+			disk, entry.disk_size * chunk_size);
+      delete []disk;
+    } 
+  }
+  ram_used += entry.ram_size;  
+  entry.patch = patch;  
+  return patch;
+}
+
+void Nexus::FlushPatch(unsigned int id) {
+  Entry &entry = operator[](id);    
+  assert(entry.patch);
+
+  if(!MFile::IsReadOnly()) { //write back patch
+    if((signature & NXS_COMPRESSED)) {
+      unsigned int compressed_size;
+      char *compressed = entry.patch->Compress(entry.ram_size * chunk_size,
+					       compressed_size);
+      if(entry.disk_size == 0xffff) {//allocate space 
+	assert(entry.patch_start == 0xffffffff);
+	entry.disk_size = (unsigned int)((compressed_size-1)/chunk_size) + 1;
+	entry.patch_start = (unsigned int)(Length()/chunk_size);
+	Redim(Length() + entry.disk_size * chunk_size);
+      } else {
+	//cerr << "OOOOPSPPPS not supported!" << endl;
+	exit(-1);
+      }
+      MFile::SetPosition((int64)entry.patch_start * (int64)chunk_size);
+      MFile::WriteBuffer(compressed, entry.disk_size * chunk_size);
+      delete []compressed;
+    } else {
+      if(entry.disk_size == 0xffff) {
+	entry.disk_size = entry.ram_size;
+	entry.patch_start = (unsigned int)(Length()/chunk_size);
+	Redim(Length() + entry.disk_size * chunk_size);
+      }
+      MFile::SetPosition((int64)entry.patch_start * (int64)chunk_size);
+      MFile::WriteBuffer(entry.patch->start, entry.disk_size * chunk_size);
+    }
+  }
+
+  delete [](entry.patch->start);
+  delete entry.patch;  
+  entry.patch = NULL;    
+  ram_used -= entry.ram_size;      
 }

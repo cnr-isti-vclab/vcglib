@@ -5,6 +5,7 @@
 //#include <wrap/strip/tristrip.h>
 
 #include "nxsalgo.h"
+#include "vfile.h"
 #include "nexus.h"
 #include "watch.h"
 
@@ -35,7 +36,7 @@ void nxs::ComputeNormals(Nexus &nexus) {
     exit(0);
   }
 
-  for(unsigned int p = 0; p < nexus.index.size(); p++) {
+  for(unsigned int p = 0; p < nexus.size(); p++) {
     Border border = nexus.GetBorder(p);
     tmpb_start.push_back(tmpb_offset);
     tmpb_offset += border.Size();
@@ -50,10 +51,10 @@ void nxs::ComputeNormals(Nexus &nexus) {
   
   //first step normals in the same patch.
   cerr << "First Step\n";
-  Report report(nexus.index.size(), 5);
+  Report report(nexus.size(), 5);
   vector<Point3f> normals;
 
-  for(unsigned int p = 0; p < nexus.index.size(); p++) {
+  for(unsigned int p = 0; p < nexus.size(); p++) {
     report.Step(p);
     Patch &patch = nexus.GetPatch(p);
     
@@ -166,8 +167,8 @@ void nxs::ComputeNormals(Nexus &nexus) {
 
   //Second step unify normals across borders
   cerr << "Second step\n";
-  report.Init(nexus.index.size());
-  for(unsigned int p = 0; p < nexus.index.size(); p++) {
+  report.Init(nexus.size());
+  for(unsigned int p = 0; p < nexus.size(); p++) {
     report.Step(p);
     Patch &patch = nexus.GetPatch(p);
     Border border = nexus.GetBorder(p);

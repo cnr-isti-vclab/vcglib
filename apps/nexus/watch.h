@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/12/15 13:50:32  ponchio
+Optimizing realtime vis.
+
 Revision 1.5  2004/12/01 16:00:35  ponchio
 Level 3
 
@@ -53,6 +56,9 @@ First draft created.
 
 
 ****************************************************************************/
+
+#ifndef VCG_WATCH_H
+#define VCG_WATCH_H
 
 #ifdef WIN32
 #ifndef _WINDOWS_
@@ -98,3 +104,5 @@ class Report {
   double last;
   double interval;
 };
+
+#endif

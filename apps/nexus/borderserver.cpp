@@ -4,61 +4,131 @@
 using namespace std;
 using namespace nxs;
 
+bool BorderServer::Create(const string &file) {
+  ram_used = 0;
+  return IndexFile<BorderEntry>::Create(file, 2 * sizeof(Link));
+}
+
+bool BorderServer::Load(const string &file, bool rdonly) {
+  ram_used = 0;
+  cerr << "Loading...\n";
+  return IndexFile<BorderEntry>::Load(file, rdonly);
+}
+
+void BorderServer::Close() {
+  if(!Opened()) return;
+  Flush();
+  IndexFile<BorderEntry>::Close();
+}
+
+void BorderServer::Flush() {
+  std::map<unsigned int, list<unsigned int>::iterator>::iterator i;
+  for(i = index.begin(); i != index.end(); i++) {
+    unsigned int patch = (*i).first;
+    FlushBorder(patch);
+  }
+  pqueue.clear();
+  index.clear();
+}
+
 void BorderServer::AddBorder(unsigned short nbord, unsigned int used) {
   BorderEntry entry;
-  entry.border_start = Size();
-  entry.border_size = nbord;
-  entry.border_used = used;
-  borders.push_back(entry);
-  Resize(entry.border_start + nbord);
+  assert((Length() % sizeof(Link)) == 0);
+
+  entry.start = Length()/ sizeof(Link);
+  entry.size = nbord;
+  entry.used = used;
+  entry.links = NULL;
+  push_back(entry);
+  Redim(entry.start * sizeof(Link) + nbord * sizeof(Link));
 }
 
 Border BorderServer::GetBorder(unsigned int border, bool flush) {
-  assert(border < borders.size());
-  BorderEntry &entry = borders[border];
-  Link *start = GetRegion(entry.border_start, entry.border_size, flush);
-  return Border(start, entry.border_used, entry.border_size);
+  BorderEntry &entry = operator[](border);
+  if(index.count(border)) {
+    assert(entry.links);
+    list<unsigned int>::iterator &i = index[border];
+    pqueue.erase(i);
+    pqueue.push_front(border);
+
+  } else {
+    while(flush && ram_used > ram_max) {    
+      unsigned int to_flush = pqueue.back();
+      pqueue.pop_back();
+      index.erase(to_flush);        
+      FlushBorder(to_flush);
+    }
+    assert(!entry.links);
+    entry.links = GetRegion(entry.start, entry.size);
+    pqueue.push_front(border);
+    list<unsigned int>::iterator i = pqueue.begin();
+    index[border] = i;      
+    ram_used += entry.size;
+  }                        
+  return Border(entry.links, entry.used, entry.size);
 }
 
 bool BorderServer::ResizeBorder(unsigned int border, unsigned int nbord) {
   assert(nbord < 65500);
-  assert(border < borders.size());
-  BorderEntry &entry = borders[border];
-  if(nbord > entry.border_size) {
+  assert(border < size());
+  BorderEntry &entry = operator[](border);
+  if(nbord > entry.size) {
     int capacity = nbord;
-    if(capacity < entry.border_size*2) 
-      capacity = entry.border_size * 2;
+    if(capacity < entry.size*2) 
+      capacity = entry.size * 2;
     if(capacity > 65500) 
       capacity = 65500;
-    unsigned int newstart = Size(); 
-    Resize(newstart + capacity);
-    if(entry.border_used > 0) {
-      Link *src = GetRegion(entry.border_start, entry.border_size);
-      Link *dst = GetRegion(newstart, capacity, false);
-      memcpy(dst, src, entry.border_used * sizeof(Link));
+    unsigned int newstart = Length()/sizeof(Link);
+    Redim((newstart + capacity) * sizeof(Link));
+    if(entry.used > 0) {
+      Link *src = GetRegion(entry.start, entry.size);
+      Link *dst = GetRegion(newstart, capacity);
+      memcpy(dst, src, entry.used * sizeof(Link));
     }
-    entry.border_start = newstart;
-    entry.border_size = capacity;
-    entry.border_used = nbord;
+    entry.start = newstart;
+    entry.size = capacity;
+    entry.used = nbord;
     return true;
   }
-  entry.border_used = nbord;
+  entry.used = nbord;
   return false;
 }
 
-bool BorderServer::ReadEntries(FILE *fp) {
-  unsigned int n;
-  fread(&n, 1, sizeof(int), fp);
-  borders.resize(n);
-  fread(&*borders.begin(), n, sizeof(BorderEntry), fp);
+void BorderServer::FlushBorder(unsigned int border) {
+  BorderEntry &entry = operator[](border);
+  assert(entry.links);
+  if(!MFile::IsReadOnly()) { //write back patch
+    MFile::SetPosition((int64)entry.start * sizeof(Link));
+    MFile::WriteBuffer(entry.links, entry.used * sizeof(Link));
+  }
+
+  delete [](entry.links);
+  entry.links = NULL;    
+  ram_used -= entry.size;
+}
+
+Link *BorderServer::GetRegion(unsigned int start, unsigned int size) {
+  SetPosition(start * sizeof(Link));
+  Link *buf = new Link[size];
+  assert(buf);
+  ReadBuffer(buf, size * sizeof(Link));
+  return buf;
+}
+
+bool BorderServer::LoadHeader() {
+  unsigned int magic;
+  ReadBuffer(&magic, sizeof(unsigned int));
+  if(magic != 0x3042584e) { //NXB0
+    cerr << "Invalid magic. Not a nxs file\n";
+    return false;
+  } 
+  ReadBuffer(&offset, sizeof(int64));
+  cerr << "Offset: " << offset << endl;
   return true;
 }
 
-bool BorderServer::WriteEntries(FILE *fp) {
-  unsigned int n = borders.size();
-  fwrite(&n, 1, sizeof(int), fp);
-  fwrite(&*borders.begin(), n, sizeof(BorderEntry), fp);
-  return true;
+void BorderServer::SaveHeader() {
+  unsigned int magic = 0x3042584e; // NXB0
+  WriteBuffer(&magic, sizeof(unsigned int));
+  WriteBuffer(&offset, sizeof(int64));
 }
-
-  

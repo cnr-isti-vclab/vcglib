@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.27  2004/12/15 16:37:55  ponchio
+Optimizing realtime vis.
+
 Revision 1.26  2004/12/15 13:50:32  ponchio
 Optimizing realtime vis.
 
@@ -205,7 +208,11 @@ int main(int argc, char *argv[]) {
     cerr << "Could not load nexus file: " << argv[1] << endl;
     return -1;
   }
+
   Sphere3f sphere = nexus.sphere;
+  Extraction extraction;
+  DrawContest contest;
+  Stats stats;
 
   if(!init(argv[1])) {
     cerr << "Could not init SDL window\n";
@@ -244,11 +251,11 @@ int main(int argc, char *argv[]) {
   bool show_statistics = true;
   bool extract = true;
   
-  NexusMt::MetricKind metric;
-  NexusMt::Mode mode = NexusMt::SMOOTH;  
+  //  NexusMt::MetricKind metric;
+  //DrawContest::Mode mode = DrawContest::SMOOTH;  
 
-  nexus.SetError(error);  
-  nexus.SetMetric(NexusMt::FRUSTUM);    
+  //nexus.SetError(error);  
+  //  nexus.SetMetric(NexusMt::FRUSTUM);    
   if(!nexus.InitGL()) {
     cerr << "Could not init glew.\n";
   }
@@ -274,50 +281,52 @@ int main(int argc, char *argv[]) {
   
   watch.Start();
   while( !quit ) {           
-      unsigned int anything = SDL_PollEvent(&event);      
-      if(!anything && !keepdrawing) {
-        SDL_WaitEvent(&event);
-        anything = true;
-      }
-      if(anything) {        
-        switch( event.type ) {
-          case SDL_QUIT:  quit = 1; break;      
-          case SDL_KEYDOWN:                                        
-	        switch(event.key.keysym.sym) {
-	          case SDLK_RCTRL:
-	          case SDLK_LCTRL: track.ButtonDown(Trackball::KEY_CTRL); break;
-	          case SDLK_q: exit(0); break;	
-            case SDLK_k: keepdrawing = !keepdrawing; break;
-	          case SDLK_e: extract = !extract; break;
-	          case SDLK_c: show_colors = !show_colors; break;
-	          case SDLK_n: show_normals = !show_normals; break;
-        	        
-            case SDLK_LEFT: nexus.patches.ram_max *= 0.8; break;
-            case SDLK_RIGHT: nexus.patches.ram_max *= 1.3; break;
-            case SDLK_UP: nexus.draw_max *= 1.3; break;
-            case SDLK_DOWN: nexus.draw_max *= 0.8; break;
-            case SDLK_PAGEUP: nexus.disk_max *= 1.3; break;
-            case SDLK_PAGEDOWN: nexus.disk_max *= 0.8; break;
+    unsigned int anything = SDL_PollEvent(&event);      
+    if(!anything && !keepdrawing) {
+      SDL_WaitEvent(&event);
+      anything = true;
+    }
+    if(anything) {        
+      switch( event.type ) {
+	case SDL_QUIT:  quit = 1; break;      
+	case SDL_KEYDOWN:                                        
+	  switch(event.key.keysym.sym) {
+	  case SDLK_RCTRL:
+	  case SDLK_LCTRL: track.ButtonDown(Trackball::KEY_CTRL); break;
+	  case SDLK_q: exit(0); break;	
+	  case SDLK_k: keepdrawing = !keepdrawing; break;
+	  case SDLK_e: extract = !extract; break;
+	  case SDLK_c: show_colors = !show_colors; break;
+	  case SDLK_n: show_normals = !show_normals; break;
+	    
+	  case SDLK_LEFT:     nexus.MaxRam() *= 0.8; break;
+	  case SDLK_RIGHT:    nexus.MaxRam() *= 1.3; break;
+	  case SDLK_UP:       extraction.draw_max *= 1.3; break;
+	  case SDLK_DOWN:     extraction.draw_max *= 0.8; break;
+	  case SDLK_PAGEUP:   extraction.disk_max *= 1.3; break;
+	  case SDLK_PAGEDOWN: extraction.disk_max *= 0.8; break;
+	  case SDLK_0:        extraction.extr_max *= 1.3; break;
+	  case SDLK_9:        extraction.extr_max *= 0.8; break;
   
-	          case SDLK_s: metric = NexusMt::FRUSTUM; break;
-	          case SDLK_p: mode = NexusMt::POINTS; nexus.SetMode(mode); break;
-	          case SDLK_d: mode = NexusMt::PATCHES; nexus.SetMode(mode); break;
-	          case SDLK_f: mode = NexusMt::FLAT; nexus.SetMode(mode); break;
-	          case SDLK_m: mode = NexusMt::SMOOTH; nexus.SetMode(mode); break;
+		  //  case SDLK_s: metric = NexusMt::FRUSTUM; break;
+		case SDLK_p: contest.mode = DrawContest::POINTS; break;
+	        case SDLK_d: contest.mode = DrawContest::PATCHES; break;
+	        case SDLK_f: contest.mode = DrawContest::FLAT; break;
+	        case SDLK_m: contest.mode = DrawContest::SMOOTH; break;
 
 	          case SDLK_r:
 	          case SDLK_SPACE: rotate = !rotate; break;
 	  
 	          case SDLK_MINUS: 
-                error *= 0.9f;
-                nexus.SetError(error);
-	              cerr << "Error: " << error << endl; break;
+		    extraction.target_error *= 0.9f;
+		    cerr << "Error: " << extraction.target_error << endl; 
+		    break;
 	  
 	          case SDLK_EQUALS:
 	          case SDLK_PLUS: 
-                error *= 1.1f; 
-                nexus.SetError(error);
-	              cerr << "Error: " << error << endl; break;
+		    extraction.target_error *= 1.1f; 
+		    cerr << "Error: " << extraction.target_error << endl; 
+		    break;
 	        }
 	        break;
           case SDL_KEYUP: 
@@ -399,23 +408,12 @@ int main(int argc, char *argv[]) {
 
     glColor3f(0.8f, 0.8f, 0.8f);
         
-     
-    //nexus.SetPolicy(policy, error);
-    nexus.SetComponent(NexusMt::COLOR, show_colors);
-    nexus.SetComponent(NexusMt::NORMAL, show_normals);
-
-    static vector<unsigned int> cells;    
-    //watch.Start();
     if(extract) {
-      //      nexus.patches.Flush();
-      
-      nexus.metric->GetView();
-      //      nexus.policy.Init();
-      nexus.tri_total = 0;
-      nexus.tri_rendered = 0;
-      nexus.Extract(cells);      
-    } 
-    nexus.Draw(cells);
+      extraction.frustum.GetView();
+      extraction.metric->GetView();
+      extraction.Extract(&nexus);
+    }
+    nexus.Render(extraction, contest, &stats);
 
     /*    if(show_borders) {
       for(unsigned int i = 0; i < cells.size(); i++) {
@@ -452,26 +450,36 @@ int main(int argc, char *argv[]) {
 
       double ftime = (tframe[(offset+4)%5] - tframe[(offset)%5])/5.0f;
 
-      /*      sprintf(buffer, "Ram size : %.3fMb (max)   %.3fMb (cur)", 
-	      nexus.patches->ram_size * nexus.chunk_size/(float)(1<<20), 
-	      nexus.patches->ram_used * nexus.chunk_size/(float)(1<<20));
-	      gl_print(0.03, 0.12, buffer);*/
+      sprintf(buffer, "Ram size : %.3fMb (max)   %.3fMb (cur)", 
+	      nexus.ram_max * nexus.chunk_size/(float)(1<<20), 
+	      nexus.ram_used * nexus.chunk_size/(float)(1<<20));
+      gl_print(0.03, 0.15, buffer);
 
-      sprintf(buffer, "Ram size: %.3fMb(max)   %.3fMb(cur)",
-	      nexus.patches.ram_max * nexus.chunk_size/(float)(1<<20), 
-	      nexus.patches.ram_used * nexus.chunk_size/(float)(1<<20));
+      sprintf(buffer, "Extr size: %.3fMb(max)   %.3fMb(cur)",
+      	      extraction.extr_max * nexus.chunk_size/(float)(1<<20), 
+      	      extraction.extr_used * nexus.chunk_size/(float)(1<<20));
+      gl_print(0.03, 0.12, buffer);
+
+      sprintf(buffer, "Draw size: %.3fMb(max)   %.3fMb(cur)",
+      	      extraction.draw_max * nexus.chunk_size/(float)(1<<20), 
+      	      extraction.draw_used * nexus.chunk_size/(float)(1<<20));
       gl_print(0.03, 0.09, buffer);
       
-      sprintf(buffer, "Vbo size : %.3fMb(cur) Load: %.4fK  Pref: %.4fK",	      
-	      nexus.patches.vbo_used * nexus.chunk_size/(float)(1<<20),
-        nexus.prefetch.loading, nexus.prefetch.prefetching);
+      sprintf(buffer, "Disk size: %.3fMb(max)   %.3fMb(cur)",
+      	      extraction.disk_max * nexus.chunk_size/(float)(1<<20), 
+      	      extraction.disk_used * nexus.chunk_size/(float)(1<<20));
       gl_print(0.03, 0.06, buffer);
 
+      //      sprintf(buffer, "Vbo size : %.3fMb(cur) Load: %.4fK  Pref: %.4fK",	      
+      //	      nexus.patches.vbo_used * nexus.chunk_size/(float)(1<<20),
+      //        nexus.prefetch.loading, nexus.prefetch.prefetching);
+      //      gl_print(0.03, 0.06, buffer);
+
       sprintf(buffer, "Triangles: %.2fK (tot)   %.2fK (vis)    "
-                      "%.3f time    %.2f FPS",
-	      nexus.tri_total/(float)(1<<10),
-	      nexus.tri_rendered/(float)(1<<10),
-	      ftime, 1/ftime);
+	      " %.2f FPS",
+      	      stats.ktri/(float)(1<<10),
+	      stats.ktri/(float)(1<<10),
+      	      stats.fps);
       gl_print(0.03, 0.03, buffer);
       
       glEnable(GL_DEPTH_TEST);

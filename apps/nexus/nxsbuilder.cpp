@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2004/12/13 00:44:48  ponchio
+Lotsa changes...
+
 Revision 1.10  2004/12/09 22:33:28  ponchio
 Different splitting optimization.
 
@@ -93,7 +96,7 @@ void SaveFragment(Nexus &nexus, VChain &chain,
 		  Fragment &fragin,
 		  Fragment &fragout);
 
-void ReverseHistory(vector<Nexus::Update> &history);
+void ReverseHistory(vector<History::Update> &history);
 
 
 unsigned int current_level;
@@ -285,7 +288,7 @@ void ThirdStep(const string &crudefile, const string &output,
 
   Nexus nexus;
   //TODO here i really need no ram_buffer.....
-  nexus.MaxRamBuffer(0);
+  nexus.MaxRam() = 0;
   if(!nexus.Create(output, NXS_FACES, chunk_size)) {
     cerr << "Could not create nexus output: " << output << endl;
     getchar();
@@ -341,7 +344,7 @@ void ThirdStep(const string &crudefile, const string &output,
     memcpy(patch.FaceBegin(), &*faces.begin(), fcount * sizeof(short));
     memcpy(patch.VertBegin(), &*vertices.begin(), vcount * sizeof(Point3f));
 
-    Sphere3f &sphere = nexus.index[patch_idx].sphere;
+    Sphere3f &sphere = nexus[patch_idx].sphere;
     for(int i = 0; i < vertices.size(); i++)
       sphere.Add(vertices[i]);
     sphere.Radius() *= 1.01;
@@ -367,21 +370,21 @@ void ThirdStep(const string &crudefile, const string &output,
   }
 
   //we can now update bounding sphere.
-  for(unsigned int i = 0; i < nexus.index.size(); i++) 
-    nexus.sphere.Add(nexus.index[i].sphere);
+  for(unsigned int i = 0; i < nexus.size(); i++) 
+    nexus.sphere.Add(nexus[i].sphere);
   
-  Nexus::Update update;
-  for(unsigned int i = 1; i < nexus.index.size(); i++) {
+  History::Update update;
+  for(unsigned int i = 1; i < nexus.size(); i++) {
     update.created.push_back(i);
   }
-  nexus.history.push_back(update);
+  nexus.history.updates.push_back(update);
   
   update.created.clear();
   update.created.push_back(0);
-  for(unsigned int i = 1; i < nexus.index.size(); i++) {
+  for(unsigned int i = 1; i < nexus.size(); i++) {
     update.erased.push_back(i);
   }
-  nexus.history.push_back(update);
+  nexus.history.updates.push_back(update);
 
   if(!vert_index.Save(output + ".rvi")) {
     cerr << "Could not save: " << output << ".rvi\n";
@@ -397,7 +400,7 @@ void FourthStep(const string &crudefile, const string &output,
     cerr << "Could not load nexus " << output << endl;
     exit(0);
   }
-  nexus.MaxRamBuffer(ram_buffer);
+  nexus.MaxRam() = ram_buffer / nexus.chunk_size;
   //TODO Clear borders in case of failure!
 
   VFile<unsigned int> vert_remap;
@@ -411,11 +414,11 @@ void FourthStep(const string &crudefile, const string &output,
     cerr << "Could not load index\n";
     exit(0);
   }
-  Report report(nexus.index.size());
+  Report report(nexus.size());
 
-  for(int start = 0; start < nexus.index.size(); start++) {
+  for(int start = 0; start < nexus.size(); start++) {
     report.Step(start);
-    PatchInfo &s_entry = nexus.index[start];
+    Entry &s_entry = nexus[start];
 
     vector<Link> links;   
 #ifdef WIN32
@@ -428,10 +431,10 @@ void FourthStep(const string &crudefile, const string &output,
       vremap[global] = i;
     }
       
-    for(int end = 0; end < nexus.index.size(); end++) {
+    for(int end = 0; end < nexus.size(); end++) {
       if(start == end) continue;      
 
-      PatchInfo &e_entry = nexus.index[end];
+      Entry &e_entry = nexus[end];
       float dist = Distance(s_entry.sphere, e_entry.sphere);
       
       if(dist > s_entry.sphere.Radius() + e_entry.sphere.Radius()) {
@@ -451,7 +454,7 @@ void FourthStep(const string &crudefile, const string &output,
     }
     //TODO Horribili visu (interfaccia di cacca!)
     nexus.borders.ResizeBorder(start, 3 * links.size());
-    nexus.borders.borders[start].border_used = links.size();
+    nexus.borders[start].used = links.size();
     Border border = nexus.GetBorder(start);
     memcpy(&(border[0]), &*links.begin(), links.size() * sizeof(Link));
   }
@@ -471,22 +474,22 @@ void FifthStep(const string &crudefile, const string &output,
     cerr << "Could not load nexus " << output << endl;
     exit(0);
   }
-  nexus.MaxRamBuffer(ram_buffer);
+  nexus.MaxRam() = ram_buffer / nexus.chunk_size;
 
   VChain vchain;
   if(!vchain.Load(output + ".vchain")) {
     cerr << "Could not load : " << output << ".vchain\n";
     exit(0);
   }
-  nexus.history.clear();
-  Nexus::Update update;
-  for(unsigned int i = 0; i < nexus.index.size(); i++) {
+  nexus.history.Clear();
+  History::Update update;
+  for(unsigned int i = 0; i < nexus.size(); i++) {
     update.created.push_back(i);
     patch_levels.push_back(0);
   }
-  nexus.history.push_back(update); 
+  nexus.history.updates.push_back(update); 
   nexus.Unify();
-  nexus.patches.Flush();
+  nexus.Flush();
 
 
   Dispatcher dispatcher(&nexus, &vchain);
@@ -502,7 +505,7 @@ void FifthStep(const string &crudefile, const string &output,
     current_level = level;
     cerr << "Level: " << level << endl;
 
-    unsigned int newoffset = nexus.index.size();
+    unsigned int newoffset = nexus.size();
     BuildLevel(vchain, nexus, oldoffset, scaling, 
 	       patch_size, patch_threshold, 65000,
 	       optimization_steps);
@@ -571,8 +574,8 @@ void FifthStep(const string &crudefile, const string &output,
     for(s = fcells.begin(); s != fcells.end(); s++)
       update.erased.push_back(*s);
   }
-  nexus.history.push_back(update);
-  ReverseHistory(nexus.history);
+  nexus.history.updates.push_back(update);
+  ReverseHistory(nexus.history.updates);
 
   //  TestBorders(nexus);
   nexus.Close();
@@ -719,7 +722,7 @@ void BuildFragment(Nexus &nexus, VPartition &part,
   int nnears = 10;
   if(part.size() < 10) nnears = part.size();
   for(f = patches.begin(); f != patches.end(); f++) {
-    Point3f &center = nexus.index[*f].sphere.Center();
+    Point3f &center = nexus[*f].sphere.Center();
     part.Closest(center, nnears, nears, dists);
     for(int i = 0; i < nnears; i++) 
       seeds.insert(nears[i]);
@@ -737,7 +740,7 @@ void SaveFragment(Nexus &nexus, VChain &chain,
 
   set<unsigned int> orig_patches;
 
-  Nexus::Update update;  
+  History::Update update;  
   for(unsigned int i = 0; i < fragin.pieces.size(); i++) {
     NxsPatch &patch = fragin.pieces[i];
     update.erased.push_back(patch.patch);
@@ -756,7 +759,7 @@ void SaveFragment(Nexus &nexus, VChain &chain,
 					    patch.face.size()/3,
 					    bordsize);
     patch_levels.push_back(current_level);
-    PatchInfo &entry = nexus.index[patch_idx];
+    Entry &entry = nexus[patch_idx];
     entry.error = fragout.error;
 
     patch_remap[i] = patch_idx;
@@ -784,7 +787,7 @@ void SaveFragment(Nexus &nexus, VChain &chain,
     memcpy(patch.VertBegin(), &outpatch.vert[0], 
 	          outpatch.vert.size() * sizeof(Point3f));
     
-    PatchInfo &entry = nexus.index[patch_idx];
+    Entry &entry = nexus[patch_idx];
     for(unsigned int v = 0; v < outpatch.vert.size(); v++) {
       entry.sphere.Add(outpatch.vert[v]);
       nexus.sphere.Add(outpatch.vert[v]);
@@ -866,16 +869,16 @@ void SaveFragment(Nexus &nexus, VChain &chain,
       border[bstart++] = link;
     }
   }
-  nexus.history.push_back(update);
+  nexus.history.updates.push_back(update);
 }
 
-void ReverseHistory(vector<Nexus::Update> &history) {
-  vector<Nexus::Update> revert = history;
+void ReverseHistory(vector<History::Update> &history) {
+  vector<History::Update> revert = history;
   history.clear();
   for(int i = revert.size()-1; i >= 0; i--)
     history.push_back(revert[i]);    
   //std::reverse(history.begin(), history.end());
-  vector<Nexus::Update>::iterator i;
+  vector<History::Update>::iterator i;
   for(i = history.begin(); i != history.end(); i++)
     swap((*i).erased, (*i).created);
 }

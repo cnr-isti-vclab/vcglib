@@ -216,7 +216,7 @@ int main(int argc, char *argv[]) {
     cerr << "Could not open nexus file: " << input << "\n";
     return -1;
   }
-  nexus.MaxRamBuffer(ram_size);
+  nexus.MaxRam() = ram_size / nexus.chunk_size;
 
 
   //Sanity tests
@@ -263,7 +263,7 @@ int main(int argc, char *argv[]) {
 	 << "\n\tData    : " << (int)((nexus.signature&NXS_DATA32) !=0)
 	 << "\n\n\tVertices: " << nexus.totvert 
 	 << "\tFaces: " << nexus.totface
-	 << "\tPatches: " << nexus.index.size() 
+	 << "\tPatches: " << nexus.size() 
 	 << "\n\tSphere: " 
 	 << nexus.sphere.Center()[0] << " "
 	 << nexus.sphere.Center()[1] << " "
@@ -315,22 +315,22 @@ int main(int argc, char *argv[]) {
   Nexus out;
   
   if(!chunk_size)
-    chunk_size = nexus.patches.chunk_size;
+    chunk_size = nexus.chunk_size;
 
   if(!out.Create(output, (Signature)signature, chunk_size)) {
     cerr << "Could not open output: " << output << endl;
     return -1;
   }
-  out.MaxRamBuffer(ram_size);
+  out.MaxRam() = ram_size / out.chunk_size;
 
   //TODO set rambuffer low (or even direct access!)
 
-  Report report(nexus.index.size());
+  Report report(nexus.size());
   cout << "Copying and allocating...\n";
-  for(unsigned int patch = 0; patch < nexus.index.size(); patch++) {
+  for(unsigned int patch = 0; patch < nexus.size(); patch++) {
     report.Step(patch);
-    PatchInfo &src_entry = nexus.index[patch];
-    Patch src_patch = nexus.GetPatch(patch);
+    Entry &src_entry = nexus[patch];
+    Patch &src_patch = nexus.GetPatch(patch);
     Border src_border = nexus.GetBorder(patch);
 
 
@@ -343,9 +343,9 @@ int main(int argc, char *argv[]) {
       out.AddPatch(src_entry.nvert, src_entry.nface, src_border.Available());
 
 
-    PatchInfo &dst_entry = out.index[patch];
+    Entry &dst_entry = out[patch];
 
-    Patch dst_patch = out.GetPatch(patch);
+    Patch &dst_patch = out.GetPatch(patch);
 
     //copy vertices: 
     memcpy(dst_patch.VertBegin(), src_patch.VertBegin(), 
@@ -396,8 +396,8 @@ int main(int argc, char *argv[]) {
       if(link.IsNull()) continue;
       assert(link.end_patch < nexus.index.size());
     }*/
-    Border dst_border = out.GetBorder(patch);
     out.borders.ResizeBorder(patch, src_border.Size());
+    Border dst_border = out.GetBorder(patch);
     memcpy(dst_border.Start(), src_border.Start(), 
 	   src_border.Size() * sizeof(Link));    
   }
@@ -416,9 +416,9 @@ int main(int argc, char *argv[]) {
   }
 
   if(qvertex && add_normals) { 
-    report.Init(nexus.index.size());
+    report.Init(nexus.size());
     cout << "Quantizing vertices\n";
-    for(unsigned int patch = 0; patch < nexus.index.size(); patch++) {
+    for(unsigned int patch = 0; patch < nexus.size(); patch++) {
       report.Step(patch);
       Patch src_patch = nexus.GetPatch(patch);
 
@@ -430,7 +430,12 @@ int main(int argc, char *argv[]) {
   }
 
   out.sphere = nexus.sphere;
-  out.history = nexus.history;
+  
+  //Fixing history
+  unsigned int h_size;
+  char *buffer = nexus.history.Save(h_size);
+  out.history.Load(h_size, buffer);
+  //  out.history = nexus.history;
   
   out.Close();
   nexus.Close();

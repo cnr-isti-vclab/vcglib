@@ -20,7 +20,7 @@ class LruPServer: public PServer {
     Flush();
   }
 
-  Patch &Lookup(unsigned int patch, unsigned short nv, unsigned short nf) {    
+  Patch &Lookup(unsigned int patch) {    
     if(index.count(patch)) {
       Items::iterator &i = index[patch];
       Item item = *i;
@@ -32,12 +32,12 @@ class LruPServer: public PServer {
       while(ram_used > ram_max) {
         Item item = items.back();        
 	      index.erase(item.first);
-	      FlushPatch(item.first, item.second);
+	      FlushPatch(item.first);
 	      items.pop_back();
       }
       Item item;
       item.first = patch;
-      item.second = LoadPatch(patch, nv, nf);
+      item.second = LoadPatch(patch);
       items.push_front(item);
       Items::iterator i = items.begin();
       index[patch] = i;
@@ -52,10 +52,10 @@ class LruPServer: public PServer {
     std::map<unsigned int, Items::iterator>::iterator i;
     for(i = index.begin(); i != index.end(); i++) {
       Item &item = *((*i).second);
-      FlushPatch((*i).first, item.second);
+      FlushPatch((*i).first);
     }             
-    for(int k = 0; k < entries.size(); k++)
-      entries[k].patch = NULL;
+    for(int k = 0; k < size(); k++)
+      operator[](k).patch = NULL;
         
     items.clear();
     index.clear();

@@ -2,81 +2,95 @@
 #define NXS_PSERVER_H
 
 #include <vector>
+#include <list>
 #include <map>
 #include <iostream>
+
 #include "patch.h"
 #include "mfile.h"
 
-namespace nxs {
+namespace nxs { 
 
-class PServer: public MFile {
- public:
+  /* HEader fo pserver
+  1Kb riservato per dati globali:
+     Magic:        'n' 'x' 's' 0x00
+     Signature:    unsigned int (maschera di bit)
+     Chunk size:   unsigned int
+     Index offset: unsigned int (offset to the index begin, 
+                                 must be a multiple of chunk size)
+     Index size:   unsigned int (in number of entryies)
+     History mode: unsigned int 0 means erased and created 
+                                1 means ready for drawing
+     History offset: unsigned int: multiple of chunk_size
+     History size: unsigned int (in chars)
+
+     Tot vert:     unsigned int
+     Tot face:     unsigned int  
+     Bound sphere: Sphere3f (4 float: Point3f center (x, y, z), (radius))*/
+
+
+
+struct Entry { 
+  unsigned int patch_start;  //granularita' Chunk
+  unsigned short ram_size;  //in chunks 
+  unsigned short disk_size;  // in chunks (used when compressed)
+
+  unsigned short nvert;
+  unsigned short nface;
   
-  struct Entry { 
-    unsigned int patch_start;  //granularita' Chunk
-    unsigned short ram_size;  //in chunks 
-    unsigned short disk_size;  // in chunks (used when compressed)
-    Patch *patch;
-  };
+  vcg::Sphere3f sphere;
+  float error;
 
-  /*  struct Data {
-    //    unsigned int npatch;
-    Patch *patch;
-    unsigned int vbo_array;
-    unsigned int vbo_element;
-    Data(): patch(NULL), vbo_array(0), vbo_element(0) {}
-    };*/
+  Patch *patch;
+  unsigned int vbo_array;
+  unsigned int vbo_element;
+};
+ 
+ class PServer: public IndexFile<Entry, 
+public:
 
-  struct Item { //used by lru and pqueue.
-    unsigned int patch;
-    float priority;
-    Item(unsigned int p, float f): patch(p), priority(f) {}
-    bool operator<(const Item &i) const {
-      return priority < i.priority;
-    }
-  };
+  std::list<unsigned int> pqueue;
+  std::map<unsigned int, std::list<unsigned int>::iterator> index;
   
-
-
   Signature signature;
   unsigned int chunk_size;
 
   unsigned int ram_max;
   unsigned int ram_used;
   
-  std::vector<Entry> entries;    
-  
   PServer(): chunk_size(1024), 
-             ram_max(128000000), 
-             ram_used(0) {}
-  virtual ~PServer() {    
-    MFile::Close();
-  }
+    ram_max(128000000), 
+    ram_used(0) {}
+  
+  ~PServer() { PServer::Close(); }
 
   bool Create(const std::string &filename, Signature signature, 
-	      unsigned int chunk_size, unsigned int ram_max = 128000000);
-  bool Load(const std::string &filename, Signature sig, 
-	    unsigned int chunk_size, bool readonly, 
-	    unsigned int ram_max = 128000000);
+	      unsigned int chunk_size = 1024);
+  bool Load(const std::string &filename, Signature signature, 
+	    bool readonly = true, unsigned int chunk_size = 1024);
+  void Close();
 
   bool ReadEntries(FILE *fp);
   bool WriteEntries(FILE *fp);
-  virtual void Close();
+
 
   void AddPatch(unsigned short nvert, unsigned short nface);
-  Patch *LoadPatch(unsigned int id, unsigned short nv, unsigned short nf);
-  void FlushPatch(unsigned int id, Patch *patch);
-  
-  virtual bool IsLoaded(unsigned int patch) = 0;
-  //  virtual Patch &Lookup(unsigned int patch, 
-  //		      unsigned short nv, unsigned short nf) = 0;
-  virtual void Flush() = 0;
+  Patch *LoadPatch(unsigned int id);
+  void FlushPatch(unsigned int id);
+  void Flush();    
+
+  bool IsLoaded(unsigned int patch);
+  Entry &Lookup(unsigned int patch, std::vector<unsigned int> &flushed);
+  void LoadVbo(unsigned int patch);
+  void FlushVbo(unsigned int patch);
+
+  bool IsCompressed()    { return (signature & NXS_COMPRESSED) != 0; }
+  bool HasStrips()       { return (signature & NXS_STRIP) != 0; }
+  bool HasColors()       { return (signature & NXS_COLORS) != 0; }
+  bool HasNormalsShort() { return (signature & NXS_NORMALS_SHORT) != 0; }
+  bool HasNormalsFloat() { return (signature & NXS_NORMALS_FLOAT) != 0; }
 
   void MaxRamBuffer(unsigned int ram_buffer);
-
-  //void GetVbo(unsigned int patch, unsigned int &elem, unsigned int &array);  
-  //bool FlushVbo(unsigned int patch, Data &data);
-  //void MaxVboBuffer(unsigned int ram_buffer);
 };
 
 

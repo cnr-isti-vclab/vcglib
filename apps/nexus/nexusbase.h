@@ -8,13 +8,13 @@
 
 namespace nxs {
 
-struct PatchInfo {
+  /*struct PatchInfo {
   unsigned short nvert;
   unsigned short nface;
   
   vcg::Sphere3f sphere;
   float error;
-};
+  };*/
 
 
 class NexusBase {
@@ -49,7 +49,7 @@ class NexusBase {
   unsigned int totface;
   vcg::Sphere3f sphere;
     
-  std::vector<PatchInfo> index;
+  //  std::vector<PatchInfo> index;
   std::vector<Update> history;
 
   bool readonly;

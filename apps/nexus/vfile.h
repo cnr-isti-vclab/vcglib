@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2004/12/03 01:20:56  ponchio
+Debug
+
 Revision 1.18  2004/12/01 03:24:32  ponchio
 Level 2.
 
@@ -168,7 +171,7 @@ template <class T> class VFile: public MFile {
     queue_size = _queue_size;
 
     if(!MFile::Load(filename, rdonly)) return false;
-    n_elements = size/sizeof(T);
+    n_elements = _size/sizeof(T);
     return true;
   }
 

@@ -11,24 +11,28 @@ using namespace nxs;
 using namespace vcg;
 using namespace std;
 
-/*void Policy::Visit(Node *node, std::queue<Node *> &qnode) {    
-  std::vector<Node *>::iterator n;
-  for(n = node->in.begin(); n != node->in.end(); n++) 
-    if(!(*n)->visited) 
-      Visit(*n, qnode);  
-  
-  node->visited = true;
-  qnode.push(node);
+void Stats::Init() {
+  ktri = 0;
+  kdisk = 0;
+  if(count == 25) count = 0;
+  if(!count) {
+    fps = 25/watch.Time();
+    watch.Start();
+  }
+  count++;
 }
 
-bool FrustumPolicy::Expand(unsigned int patch, Nexus::PatchInfo &entry) {
-  if(entry.error == 0) return false;
-  float dist = Distance(entry.sphere, frustum.ViewPoint());
-  if(dist < 0) return true;
-  //  dist = pow(dist, 1.2);
-  return entry.error > error * frustum.Resolution(dist);
-} */
+/*float ExtractContest::GetError(PatchInfo &entry) {
+  Sphere3f &sphere = entry.sphere;
+  float dist = Distance(sphere, frustum.ViewPoint());
+  if(dist < 0) 
+    return 1e20f;
+  if(frustum.IsOutside(sphere.Center(), sphere.Radius()))
+    return -1;
+  return entry.error/frustum.Resolution(dist);
+  }*/
 
+/*
 float Metric::GetError(Node *node) {
   float max_error = 0;
   vector<Frag>::iterator frag;
@@ -71,14 +75,14 @@ bool NexusMt::Expand(TNode &tnode) {
     return error > target_error;
   }
   return tnode.error > target_error; 
-}
+  }*/
 
-void NexusMt::NodeVisited(Node *node) {  
+/*void NexusMt::NodeVisited(Node *node) {  
   //TODO write this a bit more elegant.
   //first we process arcs removed:
   
   for(unsigned int i = 0; i < node->out.size(); i++) {
-    assert(!(node->out[i]->visited));
+    //assert(!(node->out[i]->visited));
     Frag &frag = node->frags[i];
     for(unsigned int k = 0; k < frag.size(); k++) {
       unsigned int patch = frag[k];
@@ -113,154 +117,128 @@ void NexusMt::NodeVisited(Node *node) {
       }
     }
   }  
-}
+  }*/
 
-NexusMt::NexusMt(): vbo_mode(VBO_AUTO), 
-                    metric(NULL), mode(SMOOTH) {
-  metric = new FrustumMetric();
-  metric->index = &index;
-  target_error = 4.0f;
-  extraction_max = 64000000000;
-  draw_max =  12000;   //1M triangles (ZSN)
-  disk_max = 300;
-
+NexusMt::NexusMt() {
+  preload.mt = this;
+  preload.start();
+  
+  cerr << "Ramsize: " << ram_max << endl;
+  //  SetPrefetchSize(patches.ram_max/2);
+  //  prefetch.start();
 }
 
 NexusMt::~NexusMt() {
-  if(metric)
-    delete metric;
-  prefetch.signal();
-  prefetch.waitfor();
+  preload.signal();
+  preload.waitfor();
 }
 
 bool NexusMt::Load(const string &filename) {
-  index_file = fopen((filename + ".nxs").c_str(), "rb+");
-  if(!index_file) return false;
-  
-  unsigned int readed;
-  readed = fread(&signature, sizeof(unsigned int), 1, index_file);
-  if(!readed) return false;
-  readed = fread(&totvert, sizeof(unsigned int), 1, index_file);
-  if(!readed) return false;
-  readed = fread(&totface, sizeof(unsigned int), 1, index_file);
-  if(!readed) return false;
-  readed = fread(&sphere, sizeof(Sphere3f), 1, index_file);
-  if(!readed) return false;
-  readed = fread(&chunk_size, sizeof(unsigned int), 1, index_file);
-    if(!readed) return false;
-
-  unsigned int size; //size of index
-  readed = fread(&size, sizeof(unsigned int), 1, index_file);
-  if(!readed) return false;
-
-  index.resize(size);
-  readed = fread(&index[0], sizeof(PatchInfo), size, index_file);
-  if(readed != size) return false;
-
-  patches.ReadEntries(index_file);
-  borders.ReadEntries(index_file);
-  
-  //history size;
-  fread(&size, sizeof(unsigned int), 1, index_file);
-  vector<unsigned int> buffer;
-  buffer.resize(size);
-  fread(&(buffer[0]), sizeof(unsigned int), size, index_file);
-
-  //number of history updates
-  size = buffer[0];
-  history.resize(size);
-
-  unsigned int pos = 1;
-  for(unsigned int i = 0; i < size; i++) {
-    unsigned int erased = buffer[pos++];
-    unsigned int created = buffer[pos++];
-    history[i].erased.resize(erased);
-    history[i].created.resize(created);
-    for(unsigned int e = 0; e < erased; e++) 
-      history[i].erased[e] = buffer[pos++];
-    for(unsigned int e = 0; e < created; e++) 
-      history[i].created[e] = buffer[pos++];
-  }
-  
-  fclose(index_file);
-  index_file = NULL;
-
-  if(!patches.Load(filename + ".nxp", signature, chunk_size, true)) 
+  if(!Nexus::Load(filename, true)) return false;
+  if(!history.IsQuick() && !history.UpdatesToQuick())
     return false;
-  
-  LoadHistory();
-  
-  use_colors = false;
-  use_normals = false;
-  use_textures = false;
-  use_data = false;
-
-  SetComponent(COLOR, true);
-  SetComponent(NORMAL, true);
-  SetComponent(TEXTURE, true);
-  SetComponent(DATA, true);
-  
-  SetPrefetchSize(patches.ram_max/2);
-  cerr << "Start!\n";
-  
-  cerr << "Started\n";
   return true;
 }
 
-void NexusMt::Close() {
-  patches.Close();
-}
+//void NexusMt::Close() {
+  //  prefetch.signal();
+  //  prefetch.waitfor();
+  //  patches.Close();
+//}
 
-bool NexusMt::InitGL(Vbo mode, unsigned int vbosize) {
+bool NexusMt::InitGL(bool vbo) {
+  use_vbo = vbo;
+
   GLenum ret = glewInit();
   if(ret != GLEW_OK) return false;
-  if(!GLEW_ARB_vertex_buffer_object) {
+  if(vbo && !GLEW_ARB_vertex_buffer_object) {
     cerr << "No vbo available!" << endl;
-    vbo_mode = VBO_OFF;
+    use_vbo = false;
   }
-/*WORKING?  patches.vbo_max = vbosize / chunk_size;
-  if(vbo_mode == VBO_OFF)
-    patches.vbo_max = 0;*/
-
-  prefetch.start();
   return true;
 }
 
-void NexusMt::Render() {
-
-  vector<unsigned int> cells;
-  metric->GetView();
-  
-  Extract(cells);
-  Draw(cells);
+void NexusMt::Render(DrawContest contest) {
+  Extraction extraction;
+  extraction.frustum.GetView();
+  extraction.metric->GetView();
+  extraction.Extract(this);
+  Render(extraction, contest);
 }
 
-void NexusMt::Draw(vector<unsigned int> &cells) {
-  tri_total = 0;
-  tri_rendered = 0;
+void NexusMt::Render(Extraction &extraction, DrawContest &contest,
+		     Stats *stats) {
+  if(stats) stats->Init();
 
-  frustum.GetView();
-
-  vector<unsigned int> draw;
-  for(unsigned int i = 0; i < cells.size(); i++) {
-    PatchInfo &entry = index[cells[i]];    
-    tri_total += entry.nface;
-
-    if(!frustum.IsOutside(entry.sphere.Center(), entry.sphere.Radius())) {
-      draw.push_back(cells[i]);
-      tri_rendered += entry.nface;
-    }
-  }
-  prefetch.init(this, draw, visited);
+  preload.post(extraction.selected);
 
   glEnableClientState(GL_VERTEX_ARRAY);
-  if(use_colors)
+  if((signature & NXS_COLORS) && (contest.attrs & DrawContest::COLOR))
     glEnableClientState(GL_COLOR_ARRAY);
-  if(use_normals)
+  if((signature & NXS_NORMALS_SHORT) && (contest.attrs & DrawContest::NORMAL))
+    glEnableClientState(GL_NORMAL_ARRAY);
+
+  vector<unsigned int> skipped;
+  
+  vector<unsigned int>::iterator i;
+  for(i = extraction.selected.begin(); i != extraction.selected.end(); i++) {
+    Entry &entry = operator[](*i);
+    vcg::Sphere3f &sphere = entry.sphere;
+    if(extraction.frustum.IsOutside(sphere.Center(), sphere.Radius())) 
+      continue;
+
+    if(stats) stats->ktri += entry.nface;
+
+    if(!entry.patch) {
+      skipped.push_back(*i);
+      continue;
+    }
+
+    Draw(*i, contest);
+  }
+
+  preload.lock.enter();  
+  for(i = skipped.begin(); i != skipped.end(); i++) {
+    GetPatch(*i);
+    Draw(*i, contest);
+  }
+  //  Flush(false); //not useful now
+  preload.lock.leave();
+
+  glDisableClientState(GL_VERTEX_ARRAY);
+  glDisableClientState(GL_COLOR_ARRAY);
+  glDisableClientState(GL_NORMAL_ARRAY);
+
+  //flushing mem
+
+
+
+}
+
+
+
+/*void NexusMt::Draw(vector<unsigned int> &cells) {
+  stats.start();
+  
+  todraw.clear();
+  vector<QueuePServer::Data> flush;
+  for(unsigned int i = 0; i < cells.size(); i++) {
+    PatchInfo &entry = index[cells[i]];    
+    QueuePServer::Data &data = patches.Lookup(cells[i], entry.nvert,
+					      entry.nface, flush);
+    todraw.push_back(&data);
+  }
+
+  glEnableClientState(GL_VERTEX_ARRAY);
+  if(draw_cnt.use_colors)
+    glEnableClientState(GL_COLOR_ARRAY);
+  if(draw_cnt.use_normals)
     glEnableClientState(GL_NORMAL_ARRAY);
   //TODO textures and data.
 
-  unsigned int count = draw.size();
+  
+  //  unsigned int count = draw.size();
+  unsigned int count = todraw.size();
   while(count > 0 || prefetch.draw.get_count()) {
     if(todraw.size()) {
       QueuePServer::Data *data = todraw.back();
@@ -270,17 +248,17 @@ void NexusMt::Draw(vector<unsigned int> &cells) {
     // cerr << "Getting message: " << count << endl;
       pt::message *msg = prefetch.draw.getmessage();
       QueuePServer::Data *data = (QueuePServer::Data *)(msg->param);
-      if(msg->id == QueuePServer::FLUSH) {        
-        if(data->vbo_element) {
-	        glDeleteBuffersARB(1, &(data->vbo_element));
-	        glDeleteBuffersARB(1, &(data->vbo_array));
-        }
+      if(msg->id == Prefetch::FLUSH) {        
+	patches.FlushVbo(*data);
+	//        if(data->vbo_element) {
+	//glDeleteBuffersARB(1, &(data->vbo_element));
+	//glDeleteBuffersARB(1, &(data->vbo_array));
         delete data;
         delete msg;
         continue;
       }
 
-      if(msg->id != QueuePServer::DRAW) {
+      if(msg->id != Prefetch::DRAW) {
         cerr << "Unknown message!\n";
         continue;
       }
@@ -295,23 +273,22 @@ void NexusMt::Draw(vector<unsigned int> &cells) {
   glDisableClientState(GL_VERTEX_ARRAY);
   glDisableClientState(GL_COLOR_ARRAY);
   glDisableClientState(GL_NORMAL_ARRAY);
-}
+  }*/
 
-void NexusMt::Draw(unsigned int cell, QueuePServer::Data &data) {
-
-  Patch &patch = *(data.patch);
+void NexusMt::Draw(unsigned int cell, DrawContest &contest) {
+  Entry &entry = operator[](cell);
+  Patch &patch = *(entry.patch);
   char *fstart;
   char *vstart;
   char *cstart;
   char *nstart;
   
-  if(vbo_mode != VBO_OFF) {
-    if(!data.vbo_element) {
-      patches.LoadVbo(data);
-    }
+  if(use_vbo) {
+    if(!entry.vbo_element) 
+      LoadVbo(entry);
     
-    glBindBufferARB(GL_ARRAY_BUFFER_ARB, data.vbo_array);
-    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, data.vbo_element);
+    glBindBufferARB(GL_ARRAY_BUFFER_ARB, entry.vbo_array);
+    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, entry.vbo_element);
     
     fstart = NULL;
     vstart = NULL;
@@ -325,17 +302,17 @@ void NexusMt::Draw(unsigned int cell, QueuePServer::Data &data) {
   }
   
   glVertexPointer(3, GL_FLOAT, 0, vstart);
-  if(use_colors)
+  if(contest.attrs & DrawContest::COLOR)
     glColorPointer(4, GL_UNSIGNED_BYTE, 0, cstart);
-  if(use_normals)
+  if(contest.attrs & DrawContest::NORMAL)
     glNormalPointer(GL_SHORT, 8, nstart);
   
-  switch(mode) {
-  case POINTS:
+  switch(contest.mode) {
+  case DrawContest::POINTS:
     glDrawArrays(GL_POINTS, 0, patch.nv); break;
-  case PATCHES:
+  case DrawContest::PATCHES:
     glColor3ub((cell * 27)%255, (cell * 37)%255, (cell * 87)%255);
-  case SMOOTH:
+  case DrawContest::SMOOTH:
     if(signature & NXS_FACES)
       glDrawElements(GL_TRIANGLES, patch.nf * 3, 
 		     GL_UNSIGNED_SHORT, fstart);
@@ -343,7 +320,7 @@ void NexusMt::Draw(unsigned int cell, QueuePServer::Data &data) {
       glDrawElements(GL_TRIANGLE_STRIP, patch.nf, 
 		     GL_UNSIGNED_SHORT, fstart);
     break;
-  case FLAT:
+  case DrawContest::FLAT:
     if(signature & NXS_FACES) {
       glBegin(GL_TRIANGLES);
       for(int i = 0; i < patch.nf; i++) {
@@ -370,139 +347,122 @@ void NexusMt::Draw(unsigned int cell, QueuePServer::Data &data) {
   }
 }
 
-void NexusMt::SetExtractionSize(unsigned int r_size) {    
-  extraction_max = r_size/patches.chunk_size;
+void NexusMt::FlushPatch(unsigned int id) {
+  Entry &entry = operator[](id);
+  if(entry.vbo_element)
+    FlushVbo(entry);
+
+  if(entry.patch->start)
+    delete [](entry.patch->start);
+  delete entry.patch;  
+  entry.patch = NULL;    
+  ram_used -= entry.ram_size;      
 }
 
-void NexusMt::SetMetric(NexusMt::MetricKind kind) {
+void NexusMt::LoadVbo(Entry &entry) { 
+  if(entry.vbo_element) return;
+  glGenBuffersARB(1, &entry.vbo_element);
+  assert(entry.vbo_element);
+  glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, entry.vbo_element);
+
+  Patch &patch  = *entry.patch;    
+  unsigned int size = patch.nf * sizeof(unsigned short);
+  if((signature & NXS_FACES) != 0) size *= 3;
+  
+  glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, size, patch.FaceBegin(),
+		  GL_STATIC_DRAW_ARB);
+  vbo_used += size;
+  
+  //TODO fix this when we allow data :p
+  size = sizeof(float) * patch.dstart;
+    
+  glGenBuffersARB(1, &entry.vbo_array);
+  assert(entry.vbo_array);
+  glBindBufferARB(GL_ARRAY_BUFFER_ARB, entry.vbo_array);
+    
+  glBufferDataARB(GL_ARRAY_BUFFER_ARB, size, patch.VertBegin(), 
+		  GL_STATIC_DRAW_ARB);
+    
+  vbo_used += size;
+  delete [](entry.patch->start);
+  entry.patch->start = NULL;
+}
+
+void NexusMt::FlushVbo(Entry &entry) {
+  if(!entry.vbo_element) return;
+  glDeleteBuffersARB(1, &entry.vbo_element);
+  glDeleteBuffersARB(1, &entry.vbo_array);
+  entry.vbo_element = 0;
+  entry.vbo_array = 0;
+
+  Patch &patch  = *entry.patch; 
+  vbo_used -= patch.nf * sizeof(unsigned short);
+  vbo_used -= sizeof(float) * patch.dstart;
+}
+
+/*void NexusMt::SetExtractionSize(unsigned int r_size) {    
+  extract_cnt.extraction_max = r_size/patches.chunk_size;
+}
+
+//void NexusMt::SetMetric(NexusMt::MetricKind kind) {
   //do nothing at the moment.
  
-}
+//}
 
 void NexusMt::SetError(float error) {
-   target_error = error;
+   extract_cnt.target_error = error;
 }
 
-void NexusMt::SetVboSize(unsigned int _vbo_max) {
+//void NexusMt::SetVboSize(unsigned int _vbo_max) {
 //WORKING  patches.vbo_max = _vbo_max;
-}
+//}
 
 void NexusMt::SetPrefetchSize(unsigned int size) {
   //TODO do something reasonable with this.
 }
 
-bool NexusMt::SetMode(Mode _mode) {
-  mode = _mode;
+bool NexusMt::SetMode(DrawContest::Mode _mode) {
+  draw_cnt.mode = _mode;
   return true;
 }
 
-bool NexusMt::SetComponent(Component c, bool on) {
-  if(c == COLOR && (signature & NXS_COLORS)) 
-    use_colors = on;
-  if(c == NORMAL && (signature & NXS_NORMALS_SHORT)) 
-    use_normals = on;
-  if(c == TEXTURE && (signature & NXS_TEXTURES_SHORT)) 
-    use_textures = on;
-  if(c == DATA && (signature & NXS_DATA32)) 
-    use_data = on;
+bool NexusMt::SetComponent(DrawContest::Component c, bool on) {
+  if(c == DrawContest::COLOR && (signature & NXS_COLORS)) 
+    draw_cnt.use_colors = on;
+  if(c == DrawContest::NORMAL && (signature & NXS_NORMALS_SHORT)) 
+    draw_cnt.use_normals = on;
+  if(c == DrawContest::TEXTURE && (signature & NXS_TEXTURES_SHORT)) 
+    draw_cnt.use_textures = on;
+  if(c == DrawContest::DATA && (signature & NXS_DATA32)) 
+    draw_cnt.use_data = on;
   
-  components = COLOR * use_colors + NORMAL * use_normals +
-               TEXTURE * use_textures + DATA * use_data;
+  //  unsigned int components = DrawContest::COLOR * use_colors + 
+  //    DrawContest::NORMAL * use_normals +
+  //    DrawContest::TEXTURE * use_textures + 
+  //    DrawContest::DATA * use_data;
   return true;
 }
 
 bool NexusMt::SetComponents(unsigned int mask) {
-  SetComponent(COLOR, (mask & COLOR) != 0);
-  SetComponent(NORMAL, (mask & NORMAL) != 0);
-  SetComponent(TEXTURE, (mask & TEXTURE) != 0);
-  SetComponent(DATA, (mask & DATA) != 0);
+  SetComponent(DrawContest::COLOR, (mask & DrawContest::COLOR) != 0);
+  SetComponent(DrawContest::NORMAL, (mask & DrawContest::NORMAL) != 0);
+  SetComponent(DrawContest::TEXTURE, (mask & DrawContest::TEXTURE) != 0);
+  SetComponent(DrawContest::DATA, (mask & DrawContest::DATA) != 0);
   
-  components = mask;
+  //  unsigned int components = mask;
   
-  if( ((mask & COLOR) && !(signature & NXS_COLORS)) ||
-      ((mask & NORMAL) && !(signature & NXS_NORMALS_SHORT)) ||
-      ((mask & TEXTURE) && !(signature & NXS_TEXTURES_SHORT)) ||
-      ((mask & DATA) && !(signature & NXS_DATA32)) )
+  if( ((mask & DrawContest::COLOR) && !(signature & NXS_COLORS)) ||
+      ((mask & DrawContest::NORMAL) && !(signature & NXS_NORMALS_SHORT)) ||
+      ((mask & DrawContest::TEXTURE) && !(signature & NXS_TEXTURES_SHORT)) ||
+      ((mask & DrawContest::DATA) && !(signature & NXS_DATA32)) )
     return false;
   return true;
-}
+  }*/
 
 //TODO: nodes and fragment sholuld be kept in another way,
 // so we can save that structure instead of the history!
 
-void NexusMt::LoadHistory() {
-  //The last update erases everything.
-  assert(history[0].erased.size() == 0);
-  
-  //maps cell -> node containing it
-  map<unsigned int, unsigned int> cell_node;   
-  nodes.resize(history.size());
 
-  //building fragments and nodes.
-  unsigned int current_node = 0;
-  vector<Update>::iterator u;
-  for(u = history.begin(); u != history.end(); u++) {      
-    
-    Node &node = nodes[current_node];
-    node.error = 0;
-    
-    //cerr << "Created: ";
-    //created cells belong to this node, we look also for max error.      
-    for(unsigned int i = 0; i < (*u).created.size(); i++) {      
-      unsigned int cell = (*u).created[i];
-      //cerr << cell << " ";
-      if(index[cell].error > node.error)
-	      node.error = index[cell].error;	
-      cell_node[cell] = current_node;        
-    }
-    //cerr << endl;
-    
-    //Every erased cell already belonged to a node.
-    //we record for each node its cells.
-    map<unsigned int, vector<unsigned int> > node_erased;      
-    
-    for(unsigned int i = 0; i < (*u).erased.size(); i++) {
-      unsigned int cell = (*u).erased[i];
-      assert(cell_node.count(cell));
-      node_erased[cell_node[cell]].push_back(cell);               
-    }      
-    
-    //for every node with erased cells we build a frag and 
-    //put the corresponding cells in it.      
-    map<unsigned int, vector<unsigned int> >::iterator e;
-    for(e = node_erased.begin(); e != node_erased.end(); e++) {
-      //Build a new Frag.
-      Frag fr;
-      float max_err = -1;
-      
-      //Fill it with erased cells.
-      vector<unsigned int> &cells = (*e).second;
-      vector<unsigned int>::iterator k;
-      for(k = cells.begin(); k != cells.end(); k++) {
-	unsigned int cell = (*k);
-        assert(cell < index.size());
-	fr.push_back(cell);
-	if(index[cell].error > max_err)
-	  max_err = index[cell].error;
-      }         
-      //Add the new Frag to the node.
-      unsigned int floor_node = (*e).first;
-      Node &oldnode = nodes[floor_node];
-      oldnode.frags.push_back(fr);
-      if(node.error < max_err)
-	      node.error = max_err;
-      
-      //Update in and out of the nodes.
-      node.in.push_back(&oldnode);
-      oldnode.out.push_back(&node);
-    }
-    current_node++;
-  }
-}
-
-void NexusMt::ClearHistory() {
-  nodes.clear();
-}
 
 /*void NexusMt::ExtractFixed(vector<unsigned int>  &selected, float error) {
   std::vector<Node>::iterator n;
@@ -528,79 +488,301 @@ void NexusMt::ClearHistory() {
 	      (*on)->visited = 1;
       } else {
 	      vector<unsigned int>::iterator cell;
-	      for(cell=(*fragment).begin(); cell != (*fragment).end(); ++cell) 
-	        selected.push_back(*cell);                   
+	      for(cell=(*fragment).begin(); cell != (*fragment).end(); ++cell) 	        selected.push_back(*cell);                   
       }
     }
   }  
 } */   
 
-void NexusMt::Extract(std::vector<unsigned int> &selected) {
-  extraction_used = 0;
-  draw_used = 0;
-  disk_used = 0;
-  visited.clear();
+/*void NexusMt::Expand(Node &node, vector<HeapNode> &expand) {
+  if(node.visited) return;
+  cerr << "Expanding\n";
+  for(unsigned int i = 0; i < node.in_size; i++) {
+    Link &link = innodes[node.in + i];
+    Node &parent = nodes[link.node];
+    if(!parent.visited)
+      Expand(parent, expand);
+  }
 
-  float bestcost = -1;
-  int best = -1;
-  float cost = 0;
+  for(unsigned int o = 0; o < node.out_size; o++) {
+    Link &link = outnodes[node.out + o];
+    Node &outnode = nodes[link.node];
+    if(outnode.visited) continue;
+    assert(link.error != -1);
+    if(link.error > extract_cnt.target_error) {
+      HeapNode hnode(&outnode, node.error - extract_cnt.target_error);
+      expand.push_back(hnode);
+      push_heap(expand.begin(), expand.end());
+    }
+  }
 
-  std::vector<Node>::iterator n;
-  for(n = nodes.begin(); n != nodes.end(); n++) 
-    (*n).visited = false;    
-    
-  std::vector<TNode> heap;
-  Node *root = &nodes[0];  
-  VisitNode(root, heap);
+  unsigned int d_extr = 0;
+  unsigned int d_draw = 0;
+  unsigned int d_disk = 0;
+  Diff(node, d_extr, d_draw, d_disk);
+  extract_cnt.extraction_used += d_extr;
+  extract_cnt.draw_used += d_draw;
+  extract_cnt.disk_used += d_disk;
+  node.visited = true;
+}
 
-  sequence.clear();
-  //vector<Node *> sequence;
-  while(heap.size()) {
-    pop_heap(heap.begin(), heap.end());
-    TNode tnode = heap.back();
-    heap.pop_back();
+void NexusMt::Contract(Node &node) {
+  if(!node.visited) return;
+  cerr << "Contracting...\n";
+  for(unsigned int i = 0; i < node.out_size; i++) {
+    Link &link = outnodes[node.out + i];
+    Node &child = nodes[link.node];
+    if(child.visited)
+      Contract(child);
+  }
 
-    Node *node = tnode.node;
-    if(node->visited) continue;
+  unsigned int d_extr = 0;
+  unsigned int d_draw = 0;
+  unsigned int d_disk = 0;
+  Diff(node, d_extr, d_draw, d_disk);
+  extract_cnt.extraction_used -= d_extr;
+  extract_cnt.draw_used -= d_draw;
+  extract_cnt.disk_used -= d_disk;
+  node.visited = false;
+}
 
-    bool expand = Expand(tnode);
+void NexusMt::GetErrorLink(Node &node, Link &link) {
+  if(link.error != -1) return;
+  for(unsigned int c = link.frag; frags[c].patch != 0xffffffff; c++) {
+    Cell &cell = frags[c];
+    if(cell.error != -1) continue;
+    PatchInfo &info = index[cell.patch];
+    cell.error = extract_cnt.GetError(info);
+    cerr << "Cell.error: " << cell.error << endl;
+    if(link.error < cell.error) link.error = cell.error;
+  }
+}
 
-    if(expand) //{
-      VisitNode(node, heap);   
-          
-    /*  float cost = disk_used * 100;
-      if(draw_used > draw_max)
-        cost += 1 * (draw_used - draw_max);      
-      if(tnode.error > target_error)
-        cost += 1000 * (tnode.error - target_error) * (tnode.error - target_error);
-      if(best == -1 || cost < bestcost) {
-        bestcost = cost;
-        best = sequence.size();
+void NexusMt::GetErrorNode(Node &node) {
+  if(node.error != -1) return;
+  for(unsigned int o = 0; o < node.out_size; o++) {
+    Link &link = outnodes[node.out + o];
+    GetErrorLink(node, link);
+    if(node.error < link.error) node.error = link.error;
+  }
+}
+
+void NexusMt::NodeExplore(Node &node, 
+			  vector<HeapNode> &expand,
+			  vector<HeapNode> &contract) {
+  assert(node.visited);
+  GetErrorNode(node);
+  
+  cerr << "node.error: " << node.error <<
+    " target: " << extract_cnt.target_error << endl;
+  if(node.error > extract_cnt.target_error) {
+    cerr << "Expandible node...\n";
+    for(unsigned int o = 0; o < node.out_size; o++) {
+      Link &link = outnodes[node.out + o];
+      assert(link.error != -1);
+      Node &outnode = nodes[link.node];
+      if(outnode.visited) continue;
+
+      if(link.error > extract_cnt.target_error) {
+	HeapNode hnode(&outnode, node.error - extract_cnt.target_error);
+	expand.push_back(hnode);
+	push_heap(expand.begin(), expand.end());
       }
-    } */
+    }
   }
   
-  //cerr << "best: " << best << " tot: " << sequence.size() << endl;
-  /*for(n = nodes.begin(); n != nodes.end(); n++) 
-    (*n).visited = false;    
-
-  for(unsigned int i = 0; i < best; i++) {
-    Node *node = sequence[i];
-    node->visited = true;
-    for(unsigned int n = 0; n < node->out.size(); n++) {
-      Node *outnode = node->out[n];
-      for(unsigned int k = 0; k < outnode->frags.size(); k++) {      
-        for(unsigned int j = 0; j < outnode->frags[k].size(); j++) {
-          unsigned int patch = outnode->frags[k][j];
-          float error = metric->GetError(patch);      
-          visited.push_back(PServer::Item(patch, fabs(error - target_error)));      
-        }
-      }
-    }    
-  } */
-
-  Select(selected);   
+  float max_err = -1;
+  
+  bool can_contract = true;
+  for(unsigned int o = 0; o < node.out_size; o++) {
+    Link &link = outnodes[node.out + o];
+    Node &outnode = nodes[link.node];
+    if(node.visited) {
+      can_contract = false;
+      break;
+    }
+  }
+  if(can_contract) {
+    for(unsigned int o = 0; o < node.in_size; o++) {
+      Link &link = innodes[node.in + o];
+      GetErrorLink(node, link);
+      if(max_err < link.error) max_err = link.error;
+    }
+    HeapNode hnode(&node, extract_cnt.target_error - max_err);
+    contract.push_back(hnode);
+    push_heap(contract.begin(), contract.end());
+  }
 }
+
+void NexusMt::FrontExplore(vector<HeapNode> &expand,
+			   vector<HeapNode> &contract) {
+
+
+  extract_cnt.extraction_used = 0;
+  extract_cnt.draw_used = 0;
+  extract_cnt.disk_used = 0;
+    
+  std::vector<Node>::iterator i;
+  for(i = nodes.begin(); i != nodes.end(); i++) {
+    Node &node = *i;
+    if(!node.visited)       
+      continue;                  
+
+    for(int k = 0; k < node.out_size; k++) {
+      Link &link = outnodes[node.out + k];
+      assert(link.node < nodes.size());
+      Node &children = nodes[link.node];
+      if(!children.visited) {
+	cerr << "Exploting child...\n";
+	NodeExplore(node, expand, contract);
+
+	for(unsigned int c = link.frag; frags[c].patch != 0xffffffff; c++) {
+	  PServer::Entry &entry = patches.entries[c];
+	  if(!entry.patch) extract_cnt.disk_used += entry.disk_size;
+	  extract_cnt.extraction_used += entry.ram_size;
+	  vcg::Sphere3f &sphere = index[c].sphere;
+	  if(!extract_cnt.frustum.IsOutside(sphere.Center(), sphere.Radius()))
+	    extract_cnt.draw_used += entry.ram_size;
+	}
+      }
+    }
+  }
+}
+ 
+void NexusMt::Diff(Node &node, 
+		   unsigned int &d_extr, 
+		   unsigned int &d_draw,
+		   unsigned int &d_disk) {
+  d_extr = 0;
+  d_draw = 0;
+  d_disk = 0;
+  for(unsigned int o = 0; o < node.out_size; o++) {
+    Link &link = outnodes[node.out + o];
+    for(unsigned int c = link.frag; frags[c].patch != 0xffffffff; c++) {
+      PServer::Entry &entry = patches.entries[c];
+      if(!entry.patch) d_disk += entry.disk_size;
+      d_extr += entry.ram_size;
+      Sphere3f &sphere = index[c].sphere;
+      if(!extract_cnt.frustum.IsOutside(sphere.Center(), sphere.Radius()))
+	d_draw += entry.ram_size;
+    }
+  }
+  for(unsigned int o = 0; o < node.in_size; o++) {
+    Link &link = innodes[node.in + o];
+    for(unsigned int c = link.frag; frags[c].patch != 0xffffffff; c++) {
+      PServer::Entry &entry = patches.entries[c];
+      if(!entry.patch) d_disk -= entry.disk_size;
+      d_extr -= entry.ram_size;
+      if(!extract_cnt.frustum.IsOutside(sphere.Center(), sphere.Radius()))
+	d_draw -= entry.ram_size;
+    }
+  }
+  }*/
+
+/*void NexusMt::Extract(std::vector<unsigned int> &selected) {
+  extract_cnt.frustum.GetView();
+
+
+  //clear error (no more valid...)
+  for(unsigned int i = 0; i < nodes.size(); i++) 
+    nodes[i].error = -1;
+  for(unsigned int i = 0; i < outnodes.size(); i++) 
+    outnodes[i].error = -1;
+  for(unsigned int i = 0; i < innodes.size(); i++) 
+    innodes[i].error = -1;
+  for(unsigned int i = 0; i < frags.size(); i++)
+    frags[i].error = -1;
+
+
+  std::vector<HeapNode> expand;
+  std::vector<HeapNode> contract;
+
+  if(!nodes[0].visited)
+    nodes[0].visited = true;
+  //explore front
+  FrontExplore(expand, contract);
+
+  bool can_expand = true;
+  bool can_contract = true;
+  float current_error = 1e30;
+  while(can_expand || can_contract) {
+    if(can_expand) {
+      if(!expand.size()) {
+	can_expand = false;
+	continue;
+      }
+      cerr << "trying to expand..\n";
+      pop_heap(expand.begin(), expand.end());
+      HeapNode hnode = expand.back();
+      
+      Node *node = hnode.node;
+      //      if(node->visited) {
+	//cerr << "Failed cause already visited\n";
+//	expand.pop_back();
+	//continue; //already expanded...
+//	}
+      unsigned int d_extr = 0;
+      unsigned int d_draw = 0;
+      unsigned int d_disk = 0;
+      Diff(*node, d_extr, d_draw, d_disk);
+      
+      if(extract_cnt.disk_used + d_disk > extract_cnt.disk_max) {
+	cerr << "Failed cause disk...\n";
+	cerr << "d_disl: " << d_disk << " extract_cnt.disk_max "
+	     << extract_cnt.disk_max << endl;
+	expand.pop_back();
+	continue;
+      }
+      if(extract_cnt.extraction_used + d_extr > extract_cnt.extraction_max ||
+	 extract_cnt.draw_used + d_draw > extract_cnt.draw_max) {
+	cerr << "Failed...\n";
+	can_expand = false;
+	push_heap(expand.begin(), expand.end());
+	continue;
+      } else {
+	cerr << "Expanding...\n";
+	current_error = hnode.error;
+	expand.pop_back();
+	Expand(*node, expand);
+      }
+    } else if(can_contract) {
+      if(!contract.size()) {
+	can_contract = false;
+	continue;
+      }
+      pop_heap(contract.begin(), contract.end());
+      HeapNode hnode = contract.back();
+
+      if(hnode.error < extract_cnt.target_error - current_error) {
+	can_contract = false;
+	continue;
+      }
+      Node *node = hnode.node;
+      if(!node->visited) {
+	contract.pop_back();
+	continue;//already contracted
+      }
+      
+      unsigned int d_extr = 0;
+      unsigned int d_draw = 0;
+      unsigned int d_disk = 0;
+      Diff(*node, d_extr, d_draw, d_disk);
+
+      if(extract_cnt.disk_used - d_disk > extract_cnt.disk_max) {
+	expand.pop_back();
+	continue;
+      }
+      if(extract_cnt.extraction_used - d_extr < extract_cnt.extraction_max &&
+	 extract_cnt.draw_used - d_draw < extract_cnt.draw_max) {
+	can_expand = true;
+      }
+      current_error = hnode.error;
+      contract.pop_back();
+      Contract(*node);
+    }
+  }
+  Select(selected);   
+}*/
 
 /*void NexusMt::Extract(std::vector<unsigned int> &selected, Policy *policy) {
   std::vector<Node>::iterator n;
@@ -630,7 +812,7 @@ void NexusMt::Extract(std::vector<unsigned int> &selected) {
   Select(selected);
 }  */
 
-void NexusMt::Select(vector<unsigned int> &selected) {
+/*void NexusMt::Select(vector<unsigned int> &selected) {
   selected.clear();
   std::vector<Node>::iterator i;
   for(i = nodes.begin(); i != nodes.end(); i++) {
@@ -638,8 +820,20 @@ void NexusMt::Select(vector<unsigned int> &selected) {
     if(!node.visited)       
       continue;                  
     
-    std::vector<Node *>::iterator n;
-    std::vector<Frag>::iterator f;        
+    for(unsigned int o = 0; o < node.out_size; o++) {
+      Link &link = outnodes[node.out + o];
+      for(unsigned int c = link.frag; frags[c].patch != 0xffffffff; c++) {
+	Cell &cell = frags[c];
+	selected.push_back(cell.patch);
+      }
+    }
+    }*/
+  //  for(unsigned int i = 0; i < selected.size(); i++) {
+  //    cerr << "Sel: " << selected[i] << endl;
+  //  }
+    
+    /*    std::vector<Node *>::iterator n;
+    std::vector<>::iterator f;        
     for(n = node.out.begin(), f = node.frags.begin(); 
 	    n != node.out.end(); n++, f++) {
       if(!(*n)->visited || (*n)->error == 0) {
@@ -649,8 +843,8 @@ void NexusMt::Select(vector<unsigned int> &selected) {
 	        selected.push_back(*c);        
       }      
     } 
-  }
-}
+    }*/
+//}
 /*bool NexusMt::TestCurrent(Node *node) {
   if(!visited) return;
   for(unsigned int i = 0; i < node->out.size(); i++)
@@ -662,7 +856,7 @@ void NexusMt::Select(vector<unsigned int> &selected) {
   return false;
 } */
 
-void NexusMt::VisitNode(Node *node, vector<TNode> &heap) {
+/*void NexusMt::VisitNode(Node *node, vector<TNode> &heap) {
   //TestCurrent(*i);  
 
   if(node->visited) return;  
@@ -677,13 +871,6 @@ void NexusMt::VisitNode(Node *node, vector<TNode> &heap) {
   for(unsigned int k = 0; k < node->out.size(); k++) {
     Node *outnode = node->out[k];
     float max_error = metric->GetError(outnode);
-  /*  for(unsigned int j = 0; j < node->frags[k].size(); j++) {
-      unsigned int patch = node->frags[k][j];
-      PServer::Entry &entry = patches.entries[patch];
-      if(!entry.patch) 
-        max_error /= 2;
-    }*/
-
     for(unsigned int j = 0; j < node->frags[k].size(); j++) {
       unsigned int patch = node->frags[k][j];
       float error = metric->GetError(patch);
@@ -698,7 +885,7 @@ void NexusMt::VisitNode(Node *node, vector<TNode> &heap) {
   
   sequence.push_back(node);  
   NodeVisited(node);
-}
+  }*/
 
 /*void NexusMt::UnvisitNode(Node *node, vector<TNode> &heap) {
   node->current = false;
@@ -710,3 +897,121 @@ void NexusMt::VisitNode(Node *node, vector<TNode> &heap) {
       push_heap(heap.begin(), heap.end());      
     }
 } */
+
+
+/*void NexusMt::LoadHistory() {
+  //The last update erases everything.
+  assert(history[0].erased.size() == 0);
+  
+  //maps cell -> node containing it
+  map<unsigned int, unsigned int> cell_node;   
+  //maps node -> Links
+  map<unsigned int, vector<Link> > node_inlinks;
+  map<unsigned int, vector<Link> > node_outlinks;
+  nodes.resize(history.size());
+
+  //building fragments and nodes.
+  unsigned int current_node = 0;
+  vector<Update>::iterator u;
+  for(u = history.begin(); u != history.end(); u++) {      
+    
+    Node &node = nodes[current_node];
+    node.error = 0;
+    
+    //created cells belong to this node, we look also for max error.      
+    for(unsigned int i = 0; i < (*u).created.size(); i++) {      
+      unsigned int cell = (*u).created[i];
+      if(index[cell].error > node.error)
+	node.error = index[cell].error;	
+      cell_node[cell] = current_node;        
+    }
+
+    //Every erased cell already belonged to a node.
+    //we record for each node its cells.
+    map<unsigned int, vector<unsigned int> > node_erased;      
+    
+    for(unsigned int i = 0; i < (*u).erased.size(); i++) {
+      unsigned int cell = (*u).erased[i];
+      assert(cell_node.count(cell));
+      node_erased[cell_node[cell]].push_back(cell);               
+    }      
+    
+    //for every node with erased cells we build a frag and 
+    //put the corresponding cells in it.      
+    map<unsigned int, vector<unsigned int> >::iterator e;
+    for(e = node_erased.begin(); e != node_erased.end(); e++) {
+
+      //node.in.push_back(innodes.size());
+
+      unsigned int floor_node = (*e).first;
+      Node &oldnode = nodes[floor_node];
+
+      Link inlink;
+      inlink.node = floor_node;
+      inlink.frag = frags.size();
+
+      Link outlink;
+      outlink.node = current_node;
+      outlink.frag = frags.size();
+
+      float max_err = -1;
+      
+      //Fill it with erased cells.
+      vector<unsigned int> &cells = (*e).second;
+      vector<unsigned int>::iterator k;
+      for(k = cells.begin(); k != cells.end(); k++) {
+	Cell cell;
+	cell.patch = (*k);
+        assert(cell.patch < index.size());
+	frags.push_back(cell);
+	if(index[cell.patch].error > max_err)
+	  max_err = index[cell.patch].error;
+      }         
+      Cell cell;
+      cell.patch = 0xffffffff;
+      cell.error = -1;
+      frags.push_back(cell);
+
+      inlink.error = max_err;
+      outlink.error = max_err;
+
+      //Add the new Frag to the node.
+
+      node_outlinks[floor_node].push_back(outlink);
+      node_outlinks[current_node].push_back(inlink);
+      if(node.error < max_err)
+	      node.error = max_err;
+      
+      //Update in and out of the nodes.
+    }
+    current_node++;
+  }
+
+  map<unsigned int, vector<Link> >::iterator k;
+  for(k = node_outlinks.begin(); k != node_outlinks.end(); k++) {
+    unsigned int inode = (*k).first;
+    vector<Link> &links = (*k).second;
+    nodes[inode].out = outnodes.size();
+    nodes[inode].out_size = links.size();
+
+    for(unsigned int i = 0; i < links.size(); i++) 
+      outnodes.push_back(links[i]);
+  }
+
+  for(k = node_inlinks.begin(); k != node_inlinks.end(); k++) {
+    unsigned int inode = (*k).first;
+    vector<Link> &links = (*k).second;
+    nodes[inode].in = innodes.size();
+    nodes[inode].in_size = links.size();
+
+    for(unsigned int i = 0; i < links.size(); i++) 
+      innodes.push_back(links[i]);
+  }
+}
+
+void NexusMt::ClearHistory() {
+  nodes.clear();
+  innodes.clear();
+  outnodes.clear();
+  frags.clear();
+  }*/

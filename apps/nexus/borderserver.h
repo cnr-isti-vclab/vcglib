@@ -1,40 +1,58 @@
 #ifndef NXS_BORDERSERVER_H
 #define NXS_BORDERSERVER_H
 
-#include "vfile.h"
+#include <list>
+#include <map>
+
+#include "index_file.h"
 #include "border.h"
-#include <vector>
+
+
+/*nell'header ci sta scritto solo:
+  spazio riservato: 2 * sizeof(Link);
+   magic: nxb0 (4 bytes)
+   offset: (int64) */
 
 namespace nxs {
 
 struct BorderEntry {
-  unsigned int border_start; //granuralita' Link
-  unsigned short border_size; //in Links
-  unsigned short border_used; //in Links
+  unsigned int start; //granuralita' Link
+  unsigned short size; //in Links
+  unsigned short used; //in Links
+  Link *links;
 };
 
-class BorderServer: public VFile<Link> {
+class BorderServer: public IndexFile<BorderEntry> {
  public:
+  BorderServer(): ram_max(1000000), ram_used(0) {}
+  ~BorderServer() { Close(); }
+  bool Create(const std::string &file);
+  bool Load(const std::string &file, bool readonly = true);
+  void Close();
+  void Flush();
+
   void AddBorder(unsigned short nbord, unsigned int used = 0);
   Border GetBorder(unsigned int border, bool flush = true);
   //return true if you need to reread border as it changed location
   bool ResizeBorder(unsigned int border, unsigned int nbord);
 
-  bool ReadEntries(FILE *fp);
-  bool WriteEntries(FILE *fp);
-
   unsigned int BorderSize(unsigned int i) { 
-    return borders[i].border_used; 
+    return operator[](i).used; 
   }
   unsigned int BorderCapacity(unsigned int i) { 
-    return borders[i].border_size; 
+    return operator[](i).size; 
   }
-  
-  
+ protected:
+  unsigned int ram_max;
+  unsigned int ram_used;		
+  std::list<unsigned int> pqueue;
+  std::map<unsigned int, std::list<unsigned int>::iterator> index;
 
+  bool LoadHeader();
+  void SaveHeader();
   
-  std::vector<BorderEntry> borders;
-
+  void FlushBorder(unsigned int border);
+  Link *GetRegion(unsigned int start, unsigned int size); //size in links.
 };
 
 }

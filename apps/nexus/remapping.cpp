@@ -245,9 +245,9 @@ void nxs::BuildLevel(VChain &chain,
 
   unsigned int totface = 0;
   unsigned int totvert = 0;
-  for(unsigned int idx = offset; idx < nexus.index.size(); idx++) {
-    totface += nexus.index[idx].nface;
-    totvert += nexus.index[idx].nvert;
+  for(unsigned int idx = offset; idx < nexus.size(); idx++) {
+    totface += nexus[idx].nface;
+    totvert += nexus[idx].nvert;
   }
 
   VPartition *fine = chain[chain.size()-1];  
@@ -260,9 +260,9 @@ void nxs::BuildLevel(VChain &chain,
   unsigned int ncells = (unsigned int)(scaling * totface/target_size);
   
   //TODO this method for selecting the seeds is ugly!
-  float ratio = ncells/(float)(nexus.index.size() - offset);
+  float ratio = ncells/(float)(nexus.size() - offset);
   float cratio = 0;
-  for(unsigned int idx = offset; idx < nexus.index.size(); idx++) {
+  for(unsigned int idx = offset; idx < nexus.size(); idx++) {
     cratio += ratio;
     if(cratio > 1) {
       Patch patch = nexus.GetPatch(idx);
@@ -296,8 +296,8 @@ void nxs::BuildLevel(VChain &chain,
     centroids.resize(coarse->size(), Point3f(0, 0, 0));
     counts.resize(coarse->size(), 0);
 
-    Report report(nexus.index.size());
-    for(unsigned int idx = offset; idx < nexus.index.size(); idx++) {
+    Report report(nexus.size());
+    for(unsigned int idx = offset; idx < nexus.size(); idx++) {
       report.Step(idx);
       Patch patch = nexus.GetPatch(idx);
       for(unsigned int i = 0; i < patch.nf; i++) {

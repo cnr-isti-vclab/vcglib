@@ -8,7 +8,7 @@ using namespace nxs;
 bool MFile::Create(const string &fname, unsigned int mxs) {
   Close();
   filename = fname;
-  size = 0;
+  _size = 0;
   readonly = false;
   assert(mxs <= MFILE_MAX_SIZE);
   max_size = mxs;
@@ -20,7 +20,7 @@ bool MFile::Load(const string &fname, bool ronly) {
   filename = fname;
   readonly = ronly;
   max_size = MFILE_MAX_SIZE;
-  size = 0;
+  _size = 0;
   
   while(1) {
     string name = Name(files.size());
@@ -30,11 +30,11 @@ bool MFile::Load(const string &fname, bool ronly) {
       files.pop_back();
       break;
     }
-    size += file->Length();
+    _size += file->Length();
   }
   if(files.size() == 0) return false;
   if(files.size() == 1) { 
-    assert(size <= max_size);
+    assert(_size <= max_size);
   } else {
     //SANITY TEST
     for(unsigned int i = 0; i < files.size() -2; i++) {
@@ -61,28 +61,29 @@ void MFile::Delete() {
 
 void MFile::Redim(int64 sz) {
   assert(!readonly);
-  if(sz > size) {
+  if(sz > _size) {
     unsigned int totfile = (unsigned int)(sz/max_size);
     //TODO test rhis!!!!
     while(files.size() <= totfile) {
       RedimLast(max_size);
-      assert(size == (int64)max_size * (int64)(files.size()));
+      assert(_size == (int64)max_size * (int64)(files.size()));
       AddFile();
     }
-    assert(size <= sz);
-    assert(sz - size < max_size);
-    assert(files.back()->Length() + (unsigned int)(sz - size) < max_size);
-    RedimLast(files.back()->Length() + (unsigned int)(sz - size));
+    assert(_size <= sz);
+    assert(sz - _size < max_size);
+    assert(files.back()->Length() + (unsigned int)(sz - _size) < max_size);
+    RedimLast(files.back()->Length() + (unsigned int)(sz - _size));
   } else {
-    while(size - files.back()->Length() > sz)
+    while(_size - files.back()->Length() > sz)
       RemoveFile();
-    assert(sz <= size);
-    RedimLast(files.back()->Length() - (unsigned int)(size - sz));
+    assert(sz <= _size);
+    RedimLast(files.back()->Length() - (unsigned int)(_size - sz));
   }    
+  assert(sz == _size);
 }
 
 void MFile::SetPosition(int64 pos) {
-  assert(pos < size);
+  assert(pos <= _size);
   curr_fp = (unsigned int)(pos/(int64)max_size);
   curr_pos = (unsigned int)(pos - (int64)max_size * (int64)curr_fp);  
   assert(curr_pos < max_size);
@@ -134,7 +135,7 @@ void MFile::WriteBuffer(void *data, unsigned int sz) {
    unsigned int last_size = file->Length();
    delete file;
    files.pop_back();
-   size -= last_size;
+   _size -= last_size;
    cerr << "Removing file: " << name << endl;
 #ifdef WIN32
    DeleteFile(name.c_str());
@@ -148,7 +149,7 @@ void MFile::RedimLast(unsigned int sz) {
   File &file = *files.back();
   unsigned int last_size = (int64)file.Length();
   file.Redim(sz);
-  size += sz - (int64)last_size;
+  _size += sz - (int64)last_size;
 }
 
 std::string MFile::Name(unsigned int n) {
