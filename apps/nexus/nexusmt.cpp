@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.34  2005/02/20 18:07:01  ponchio
+cleaning.
+
 Revision 1.33  2005/02/20 00:43:23  ponchio
 Less memory x extraction.  (removed frags)
 
@@ -257,8 +260,11 @@ void NexusMt::Draw(unsigned int cell, DrawContest &contest) {
 
 
   if(signature.vnorm && contest.attrs & DrawContest::NORMAL) {
-    assert(signature.vnorm == Encodings::SHORT4);
-    glNormalPointer(GL_SHORT, 8, nstart);  
+    //    assert(signature.vnorm == Encodings::SHORT4);
+    if(signature.vnorm == Encodings::SHORT4)
+      glNormalPointer(GL_SHORT, 8, nstart);  
+    else
+      glNormalPointer(GL_FLOAT, 0, nstart);
   }
   
 

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/02/20 00:43:23  ponchio
+Less memory x extraction.  (removed frags)
+
 Revision 1.5  2005/02/19 16:22:45  ponchio
 Minor changes (visited and Cell)
 
@@ -57,49 +60,26 @@ namespace nxs {
       std::vector<unsigned int> created;
     };
 
-    //    struct Cell {
-    //      unsigned int patch;
-    //      float error;
-    //    };
-
     struct Node;
 
     struct Link {
       Node *node;
+      unsigned int begin; //begin patch of the fragment
+      unsigned int end;   //end patch of the fragment
 
-      //TODO move to frag_begin frag_end (instead of frag_size)
-      //and test speed... before so maybe also for node 
       typedef unsigned int iterator;
-      iterator begin() { return frag_begin; }
-      iterator end() { return frag_begin + frag_size; }
-      unsigned int size() { return frag_size; }
-
-      unsigned int frag_begin;
-      unsigned int frag_size;
+      unsigned int size() { return end - begin; }
     };
 
     struct Node {
       typedef Link *iterator;
-    
-      iterator in_begin() { return in_link_begin; }
-      iterator in_end() { return in_link_begin + in_link_size; }
-      unsigned int size() { return in_link_size; }
-
-      iterator out_begin() { return out_link_begin; }
-      iterator out_end() { return out_link_begin + out_link_size; }
-      unsigned int out_size() { return out_link_size; }
-
-      Link *in_link_begin;
-      unsigned int in_link_size;
-      Link *out_link_begin;
-      unsigned int out_link_size;
+      Link *in_begin, *in_end;
+      Link *out_begin, *out_end;
     };
 
     Node *nodes;
     Link *in_links;
     Link *out_links;
-    //TODO this list is really not necessary if we order our cells
-    //    unsigned int *frags;
 
     std::vector<Update> updates;
 
@@ -132,11 +112,10 @@ namespace nxs {
     int &n_nodes() { return ((int *)buffer)[1]; }
     int &n_in_links() { return ((int *)buffer)[2]; }
     int &n_out_links() { return ((int *)buffer)[3]; }
-    //    int &n_frags() { return ((int *)buffer)[4]; }
 
-    typedef Node *iterator;
-    iterator begin() { return nodes; }
-    iterator end() { return nodes + n_nodes(); }
+    //    typedef Node *iterator;
+    //    iterator begin() { return nodes; }
+    //    iterator end() { return nodes + n_nodes(); }
   protected:
     unsigned int size;
     char *buffer;

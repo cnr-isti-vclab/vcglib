@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/02/20 18:07:01  ponchio
+cleaning.
+
 Revision 1.5  2005/02/19 16:22:45  ponchio
 Minor changes (visited and Cell)
 
@@ -76,7 +79,10 @@ namespace nxs {
       if(culling) {
 	float remote = frustum.Remoteness(sph.Center(), sph.Radius());      
 	if(remote > 0) {
-	  visible = false;
+	  //TODO remoteness is bugged when the sphere is really close
+	  //FIX it!
+	  if(frustum.IsOutside(sph.Center(), sph.Radius()))
+	    visible = false;
 	  error /= remote;
 	} else if(entry.cone.Backface(sph, frustum.ViewPoint())) {
 	  visible = false;

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/02/20 00:43:23  ponchio
+Less memory x extraction.  (removed frags)
+
 Revision 1.8  2005/02/19 17:14:02  ponchio
 History quick by default.
 
@@ -125,10 +128,12 @@ bool History::LoadPointers() {
   //now convert integer to pointers
   for(unsigned int i = 0; i < n_nodes(); i++) {
     Node &node = nodes[i];
-    assert(((unsigned int)node.in_link_begin) <= n_in_links());
-    assert(((unsigned int)node.out_link_begin) <= n_out_links());
-    node.in_link_begin = in_links + (unsigned int)(node.in_link_begin);
-    node.out_link_begin = out_links + (unsigned int)(node.out_link_begin);
+    assert(((unsigned int)node.in_begin) <= n_in_links());
+    assert(((unsigned int)node.out_begin) <= n_out_links());
+    node.in_begin = in_links + (unsigned int)(node.in_begin);
+    node.in_end = in_links + (unsigned int)(node.in_end);
+    node.out_begin = out_links + (unsigned int)(node.out_begin);
+    node.out_end = out_links + (unsigned int)(node.out_end);
   }
   
   for(unsigned int i = 0; i < n_in_links(); i++) {
@@ -156,8 +161,10 @@ char *History::SaveQuick(unsigned int &_size) {
   assert(buffer);
   for(unsigned int i = 0; i < n_nodes(); i++) {
     Node &node = nodes[i];
-    node.in_link_begin = (Link *)(node.in_link_begin - in_links);
-    node.out_link_begin = (Link *)(node.out_link_begin - out_links);
+    node.in_begin = (Link *)(node.in_begin - in_links);
+    node.in_end   = (Link *)(node.in_end   - in_links);
+    node.out_begin = (Link *)(node.out_begin - out_links);
+    node.out_end   = (Link *)(node.out_end   - out_links);
   }
   
   for(unsigned int i = 0; i < n_in_links(); i++) {
@@ -247,13 +254,13 @@ bool History::UpdatesToQuick(Nexus &nexus) {
 
       Link inlink;
       inlink.node = (Node *)floor_node;
-      inlink.frag_begin = tmp_frags.size();
-      inlink.frag_size = cells.size();
+      inlink.begin = tmp_frags.size();
+      inlink.end = inlink.begin + cells.size();
 
       Link outlink;
       outlink.node = (Node *)current_node;
-      outlink.frag_begin = tmp_frags.size();
-      outlink.frag_size = cells.size();
+      outlink.begin = tmp_frags.size();
+      outlink.end = outlink.begin + cells.size();
 
       //Fill it with erased cells.
       vector<unsigned int>::iterator k;
@@ -271,8 +278,10 @@ bool History::UpdatesToQuick(Nexus &nexus) {
   for(k = node_outlinks.begin(); k != node_outlinks.end(); k++) {
     unsigned int inode = (*k).first;
     vector<Link> &links = (*k).second;
-    tmp_nodes[inode].out_link_begin = (Link *)(tmp_out_links.size());
-    tmp_nodes[inode].out_link_size = links.size();
+    tmp_nodes[inode].out_begin = (Link *)(tmp_out_links.size());
+    tmp_nodes[inode].out_end = (Link *)(tmp_out_links.size() + links.size());
+    //    tmp_nodes[inode].out_link_begin = (Link *)(tmp_out_links.size());
+    //    tmp_nodes[inode].out_link_size = links.size();
     
     for(unsigned int i = 0; i < links.size(); i++) 
       tmp_out_links.push_back(links[i]);
@@ -281,8 +290,10 @@ bool History::UpdatesToQuick(Nexus &nexus) {
   for(k = node_inlinks.begin(); k != node_inlinks.end(); k++) {
     unsigned int inode = (*k).first;
     vector<Link> &links = (*k).second;
-    tmp_nodes[inode].in_link_begin = (Link *)(tmp_in_links.size());
-    tmp_nodes[inode].in_link_size = links.size();
+    //    tmp_nodes[inode].in_link_begin = (Link *)(tmp_in_links.size());
+    //    tmp_nodes[inode].in_link_size = links.size();
+    tmp_nodes[inode].in_begin = (Link *)(tmp_in_links.size());
+    tmp_nodes[inode].in_end = (Link *)(tmp_in_links.size() + links.size());
     
     for(unsigned int i = 0; i < links.size(); i++) 
       tmp_in_links.push_back(links[i]);
@@ -358,17 +369,15 @@ void History::BuildLevels(vector<int> &levels) {
       Node::iterator l;
       unsigned int current = 0;
       if(node != nodes) { //not root
-	Link *inlink = node->in_begin();
-	unsigned int p = (inlink->begin());
+	Link *inlink = node->in_begin;
+	unsigned int p = inlink->begin;
 	assert(p < levels.size());
 	assert(p >= 0);
 	current = levels[p]+1;
       }
-      for(l = node->out_begin(); l != node->out_end(); l++) {
+      for(l = node->out_begin; l != node->out_end; l++) {
 	Link &link = *l;
-	Link::iterator c;
-	for(c = link.begin(); c != link.end(); c++) {
-	  unsigned int p = c;
+	for(unsigned int p = link.begin; p != link.end; p++) {
 	  while(p >= levels.size()) levels.push_back(-1);
 	  levels[p] = current;
 	}

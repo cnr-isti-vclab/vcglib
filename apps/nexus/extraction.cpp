@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2005/02/20 18:07:00  ponchio
+cleaning.
+
 Revision 1.9  2005/02/20 00:43:23  ponchio
 Less memory x extraction.  (removed frags)
 
@@ -106,13 +109,12 @@ void Extraction::Init() {
     bool cancoarse = true;
 
     Node::iterator n;
-    for(n = node.out_begin(); n != node.out_end(); n++) {
+    for(n = node.out_begin; n != node.out_end; n++) {
       if(!Visited((*n).node)) {
 	float maxerror = -1;
 	
 	Link &link = *n;
-	for(Link::iterator k = link.begin(); k != link.end(); k++) {
-	  unsigned int patch = k;
+	for(unsigned int patch = link.begin; patch != link.end; patch++) {
 	  Entry &entry = (*mt)[patch];
 	  
 	  bool visible;
@@ -232,7 +234,7 @@ void Extraction::Update(NexusMt *_mt) {
     if(Visited(hnode.node)) {
       bool recursive = false;
       Node::iterator i;
-      for(i = hnode.node->out_begin(); i != hnode.node->out_end(); i++) {
+      for(i = hnode.node->out_begin; i != hnode.node->out_end; i++) {
          Node *child = (*i).node;
          if(Visited(child)) recursive = true;
       }
@@ -258,9 +260,9 @@ void Extraction::Update(NexusMt *_mt) {
       Node *node = hnode.node;
       front.pop_back();
       Node::iterator l;
-      for(l = node->out_begin(); l != node->out_end(); l++) {
+      for(l = node->out_begin; l != node->out_end; l++) {
 	Link &link = (*l);
-	for(Link::iterator k = link.begin(); k != link.end(); k++) {
+	for(unsigned int k = link.begin; k != link.end; k++) {
 	  selected.push_back(Item(k, i));
 	  errors[k] = i;
 	}
@@ -270,10 +272,10 @@ void Extraction::Update(NexusMt *_mt) {
       HeapNode hnode = back.back();
       Node *node = hnode.node;
       back.pop_back();
-      Node::iterator l;
-      for(l = node->in_begin(); l != node->in_end(); l++) {
+
+      for(Node::iterator l = node->in_begin; l != node->in_end; l++) {
 	Link &link = (*l);
-	for(Link::iterator k = link.begin(); k != link.end(); k++) {
+	for(unsigned int k = link.begin; k != link.end; k++) {
 	  selected.push_back(Item(k, i));
 	  errors[k] = i;
 	}
@@ -284,10 +286,9 @@ void Extraction::Update(NexusMt *_mt) {
 
 float Extraction::GetRefineError(Node *node) {
   float maxerror = -1;
-  Node::iterator i;
-  for(i = node->in_begin(); i != node->in_end(); i++) {
+  for(Node::iterator i = node->in_begin; i != node->in_end; i++) {
     Link &link = *i;
-    for(Link::iterator p = link.begin(); p != link.end(); p++) {
+    for(unsigned int p = link.begin; p != link.end; p++) {
       Entry &entry = (*mt)[p];
       bool visible;
       float error =  metric->GetError(entry, visible);
@@ -303,8 +304,7 @@ bool Extraction::Refine(HeapNode hnode) {
   Node *node = hnode.node;
 
   //recursively refine parent if applicable.
-  Node::iterator i;
-  for(i = node->in_begin(); i != node->in_end(); i++) {
+  for(Node::iterator i = node->in_begin; i != node->in_end; i++) {
     Node *parent = (*i).node;
     if(!Visited(parent)) {      
       //Here i use parent refine error!!!
@@ -343,7 +343,7 @@ bool Extraction::Refine(HeapNode hnode) {
 
   //now add to the front children (unless sink node)
 
-  for(i = node->out_begin(); i != node->out_end(); i++) {
+  for(Node::iterator i = node->out_begin; i != node->out_end; i++) {
     Link &link = *i;
     if(link.node == sink) continue; 
     float maxerror = GetRefineError(link.node);
@@ -363,8 +363,7 @@ bool Extraction::Coarse(HeapNode hnode) {
   Node *node = hnode.node;
   
   //recursively coarse children if applicable.
-  Node::iterator i;
-  for(i = node->out_begin(); i != node->out_end(); i++) {
+  for(Node::iterator i = node->out_begin; i != node->out_end; i++) {
     Node *child = (*i).node;
     float error = GetRefineError(child);
     HeapNode hchild(child, error);
@@ -385,7 +384,7 @@ bool Extraction::Coarse(HeapNode hnode) {
   SetVisited(node, false);
 
   //now add to the back parents (unless root node)
-  for(i = node->in_begin(); i != node->in_end(); i++) {
+  for(Node::iterator i = node->in_begin; i != node->in_end; i++) {
     Link &link = *i;
     if(link.node == root) continue;
     float maxerror = GetRefineError(link.node);
@@ -409,11 +408,11 @@ void Extraction::Select() {
     Node &node = nodes[i];
 
     Node::iterator n;
-    for(n = node.out_begin(); n != node.out_end(); n++) {
+    for(n = node.out_begin; n != node.out_end; n++) {
       unsigned int n_out = (*n).node - root;
       if(!visited[n_out]) {
 	Link &link = *n;
-	for(Link::iterator p= link.begin(); p != link.end(); p++) {
+	for(unsigned int p = link.begin; p != link.end; p++) {
 	  selected.push_back(Item(p, 0));
 	  errors[p] = 0.0f;
 	}
@@ -427,8 +426,7 @@ void Extraction::Visit(Node *node) {
 
   SetVisited(node, true);
 
-  Node::iterator i;
-  for(i = node->in_begin(); i != node->in_end(); i++) {
+  for(Node::iterator i = node->in_begin; i != node->in_end; i++) {
     if(Visited((*i).node)) continue;
     Visit((*i).node);
   }
@@ -439,10 +437,10 @@ void Extraction::Visit(Node *node) {
   draw_used += cost.draw;
   disk_used += cost.disk;
   
-  for(i = node->out_begin(); i != node->out_end(); i++) {
+  for(Node::iterator i = node->out_begin; i != node->out_end; i++) {
     float maxerror = -1;
     Link &link = *i;
-    for(Link::iterator p = link.begin(); p != link.end(); p++) {
+    for(unsigned int p = link.begin; p != link.end; p++) {
       Entry &entry = (*mt)[p];
       bool visible;
       float error =  metric->GetError(entry, visible);
@@ -467,9 +465,9 @@ bool Extraction::Expand(HeapNode &node) {
 
 void Extraction::Diff(Node *node, Cost &cost) {
   Node::iterator i;
-  for(i = node->in_begin(); i != node->in_end(); i++) {
+  for(i = node->in_begin; i != node->in_end; i++) {
     Link &link = *i;
-    for(Link::iterator p = link.begin(); p != link.end(); p++) {
+    for(unsigned int p = link.begin; p != link.end; p++) {
       Entry &entry = (*mt)[p];
       cost.extr -= entry.ram_size;
       if(Visible(p)) cost.draw -= entry.ram_size;
@@ -479,9 +477,9 @@ void Extraction::Diff(Node *node, Cost &cost) {
     }
   }
   
-  for(i = node->out_begin(); i != node->out_end(); i++) {
+  for(i = node->out_begin; i != node->out_end; i++) {
     Link &link = *i;
-    for(Link::iterator p = link.begin(); p != link.end(); p++) {
+    for(unsigned int p = link.begin; p != link.end; p++) {
       Entry &entry = (*mt)[p];
       cost.extr += entry.ram_size;
       if(Visible(p)) cost.draw += entry.ram_size;

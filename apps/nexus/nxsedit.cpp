@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2005/02/20 18:07:01  ponchio
+cleaning.
+
 Revision 1.22  2005/02/20 00:43:24  ponchio
 Less memory x extraction.  (removed frags)
 
@@ -582,16 +585,16 @@ void printInfo(Nexus &nexus, bool verbose, bool dump_history) {
   }
   meandist /= nexus.size() -1;
   cout << "\n\tCompressed: " << nexus.IsCompressed() 
-       << "\n\tStripped: " 
+       << "\n\tStripped  : " 
        << (int)(nexus.signature.face == Signature::STRIPS)
-       << "\n\tColor   : " << (int)(nexus.signature.vcolor !=0)
-       << "\n\tNormal  : " << (int)((nexus.signature.vnorm) !=0)
-       << "\n\tTexture : " << (int)((nexus.signature.vtext) !=0)
-       << "\n\tData    : " << (int)((nexus.signature.vdata) !=0)
+       << "\n\tColor     : " << (int)(nexus.signature.vcolor)
+       << "\n\tNormal    : " << (int)(nexus.signature.vnorm)
+       << "\n\tTexture   : " << (int)(nexus.signature.vtext)
+       << "\n\tData      : " << (int)(nexus.signature.vdata)
        << "\n\n\tVertices: " << nexus.totvert 
-       << "\tFaces: " << nexus.totface
-       << "\tPatches: " << nexus.size() 
-       << "\n\tSphere: " 
+       << "\tFaces       : " << nexus.totface
+       << "\tPatches     : " << nexus.size() 
+       << "\n\tSphere    : " 
        << nexus.sphere.Center()[0] << " "
        << nexus.sphere.Center()[1] << " "
        << nexus.sphere.Center()[2] << " R: "
@@ -604,21 +607,17 @@ void printInfo(Nexus &nexus, bool verbose, bool dump_history) {
       cout << "Quick format\n";
       for(unsigned int i = 0; i < nexus.history.n_nodes(); i++) {
 	cout << "Node: " << i << " out: ";
-	History::History::Node node = nexus.history.nodes[i];
-	for(History::Node::iterator l = node.out_begin(); 
-	    l != node.out_end(); l++) {
+	History::Node node = nexus.history.nodes[i];
+	for(History::Link *l = node.out_begin; l != node.out_end; l++) {
 	  cout << ".";
-	  History::Link &link = *l;
-	  for(History::Link::iterator p = link.begin(); p != link.end(); p++) {
+	  for(unsigned int p = l->begin; p != l->end; p++) {
 	    cout << p << " ";
 	  }
 	}
 	cout << " in: ";
-	for(History::Node::iterator j = node.in_begin(); 
-	    j != node.in_end(); j++) {
+	for(History::Link *j = node.in_begin; j != node.in_end; j++) {
 	  cout << ".";
-	  History::Link &link = *j;
-	  for(History::Link::iterator p = link.begin(); p != link.end(); p++) {
+	  for(unsigned int p = j->begin; p != j->end; p++) {
 	    cout << p << " ";
 	  }
 	}
