@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2005/02/08 17:28:22  tarini
+changed 120 "const static" to "static const", and added missing "format" fields to all PropDescriptor literals,  to keep Mingw compiler happy
+
 Revision 1.11  2005/01/03 10:35:47  cignoni
 Improved the compatibility for ply format for faces having the list size (e.g. number of vertexes of a face) as a char instead of a uchar.
 Added a couple of new face descriptors, corrected a bug in error reporting function (and restructured) and translated a few comments.
@@ -69,6 +72,7 @@ Initial commit
 #include<wrap/ply/io_mask.h>
 #include<wrap/io_trimesh/io_ply.h>
 #include<vcg/complex/trimesh/allocate.h>
+#include<vcg/space/color4.h>
 #include <vector>
 
 namespace vcg {

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2005/03/15 11:40:56  cignoni
+Added operator*=( std::vector<PointType> ...) to apply a matrix to a vector of vertexes (replacement of the old style mesh.Apply(tr).
+
 Revision 1.22  2004/12/15 18:45:50  tommyfranken
 *** empty log message ***
 
@@ -386,7 +389,7 @@ template <class T> void Matrix44<T>::operator*=( const Matrix44 & m ) {
 }
 
 template < class PointType , class T > void operator*=( std::vector<PointType> &vert, const Matrix44<T> & m ) {
-  std::vector<PointType>::iterator ii;
+  typename std::vector<PointType>::iterator ii;
   for(ii=vert.begin();ii!=vert.end();++ii)
     (*ii).P()=m * (*ii).P();
 }

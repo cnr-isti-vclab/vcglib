@@ -31,6 +31,9 @@ of Greg Turk and on the work of Claudio Rocchini
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/03/15 11:46:52  cignoni
+Cleaning of the automatic bbox caching support for ply files. First working version.
+
 
 */
 
@@ -43,22 +46,24 @@ $Log: not supported by cvs2svn $
 #include <sys/stat.h>
 #include <fcntl.h> 
 #include <io.h>
-#include <direct.h>
 
 #include <vcg/space/box3.h>
 #include <wrap/ply/plylib.h>
 using namespace vcg;
 
 #ifdef WIN32
+#include <direct.h>
 #define pb_mkdir(n)  _mkdir(n)
 #define pb_access _access
 #define pb_stat   _stat
+#define pb_fstat   _fstat
 #define pb_open   _open
 #define pb_close  _close
 #else
 #define pb_mkdir(n)  mkdir(n,0)
 #define pb_access access
 #define pb_stat   stat
+#define pb_fstat   fstat
 #define pb_open   open
 #define pb_close  close
 #endif
@@ -118,14 +123,14 @@ bool CheckCacheTime( const char * fname, const char * cname )
 
 	h = pb_open(fname,_O_BINARY|_O_RDONLY);
 	if(h==0) return false;
-	r = _fstat(h,&st);
+	r = pb_fstat(h,&st);
 	pb_close(h);
 	if(r==-1) return false;
 	ft = st.st_mtime;
 
 	h = pb_open(cname,_O_BINARY|_O_RDONLY);
 	if(h==0) return false;
-	r = _fstat(h,&st);
+	r = pb_fstat(h,&st);
 	//_read(h,&box,sizeof(box));
 	pb_close(h);
 	if(r==-1) return false;
