@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/07/12 23:46:03  cignoni
+Initial Commit
+
 
 ****************************************************************************/
 
@@ -31,10 +34,10 @@ $Log: not supported by cvs2svn $
 #define __VCGLIB_QUADRIC
 
 #ifndef __VCGLIB_POINT3
-#include <vcg/Point3.h>
+#include <vcg/space/point3.h>
 #endif
 #ifndef __VCGLIB_PLANE3
-#include <vcg/Plane3.h>
+#include <vcg/space/plane3.h>
 #endif
 
 namespace vcg {

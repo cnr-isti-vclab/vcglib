@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/05/28 13:09:05  ganovelli
+created
+
 Revision 1.1  2004/05/28 13:00:39  ganovelli
 created
 
@@ -35,7 +38,7 @@ created
 #define __VCGLIB_MATRIX33_H
 
 #include <stdio.h>
-#include <vcg/space/Point3.h>
+#include <vcg/space/point3.h>
 #include <vector>
 
 namespace vcg {
