@@ -6,6 +6,7 @@
 
 #include "nxsalgo.h"
 #include "nexus.h"
+#include "watch.h"
 
 using namespace std;
 using namespace nxs;
@@ -36,13 +37,17 @@ void nxs::ComputeNormals(Nexus &nexus) {
   }
 
   Point3f zero(0.0f, 0.0f, 0.0f);
+
   tmpb.Resize(tmpb_offset);
   for(unsigned int i = 0; i < tmpb.Size(); i++)
     tmpb[i] = zero;
   tmpb.Flush();
   
   //first step normals in the same patch.
+  cerr << "First Step\n";
+  Report report(nexus.index.size(), 5);
   for(unsigned int p = 0; p < nexus.index.size(); p++) {
+    report.Step(p);
     Patch &patch = nexus.GetPatch(p);
     
     vector<Point3f> normals;
@@ -90,9 +95,37 @@ void nxs::ComputeNormals(Nexus &nexus) {
       memcpy(patch.Norm16Begin(), &*normals.begin(), 
 	     normals.size() * sizeof(Point3f));
     }
+
+
     Border border = nexus.GetBorder(p);
 
-    set<unsigned int> close;
+    
+    map<unsigned int, map<unsigned short, Point3f> > bnorm;
+
+
+    for(unsigned int i = 0; i < border.Size(); i++) {
+      Link &link = border[i];
+      if(link.IsNull()) continue;
+      Point3f pt = normals[link.start_vert];
+      bnorm[p][link.start_vert] = pt;
+      bnorm[link.end_patch][link.end_vert] = pt;
+    }
+
+    map<unsigned int, map<unsigned short, Point3f> >::iterator k;
+    for(k = bnorm.begin(); k != bnorm.end(); k++) {
+      unsigned int patch = (*k).first;
+      Border border = nexus.GetBorder(patch);
+      unsigned int offset = tmpb_start[patch];
+      for(unsigned int i = 0; i < border.Size(); i++) {
+	Link &link = border[i];
+	assert(!link.IsNull());
+	//TODO not accurate
+	if((*k).second.count(link.start_vert))
+	  tmpb[offset + i] = (*k).second[link.start_vert];
+      }
+    }
+
+    /*    set<unsigned int> close;
     for(unsigned int i = 0; i < border.Size(); i++) {
       Link &link = border[i];
       if(link.IsNull()) continue;
@@ -118,11 +151,14 @@ void nxs::ComputeNormals(Nexus &nexus) {
 	tmpb.write(off + i, p);
 	//	tmpb[off + i] += normals[link.end_vert];
       }
-    }
+      }*/
   }
 
   //Second step unify normals across borders
+  cerr << "Second step\n";
+  report.Init(nexus.index.size());
   for(unsigned int p = 0; p < nexus.index.size(); p++) {
+    report.Step(p);
     Patch &patch = nexus.GetPatch(p);
     Border border = nexus.GetBorder(p);
 
@@ -131,7 +167,7 @@ void nxs::ComputeNormals(Nexus &nexus) {
       if(link.IsNull()) continue;
       unsigned int off = tmpb_start[p];
       //      Point3f &n = tmpb[off + i];
-      Point3f n = tmpb.read(off + i);
+      Point3f n = tmpb[off + i];
       n.Normalize();
       if(use_short) {
 	n *= 32766;
@@ -145,6 +181,8 @@ void nxs::ComputeNormals(Nexus &nexus) {
       }
     }
   }
+  tmpb.Close();
+  tmpb.Delete();
   //TODO remove temporary file.
 }
 
