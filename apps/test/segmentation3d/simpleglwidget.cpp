@@ -291,6 +291,7 @@ void SimpleGLWidget::OpenDirectory()
               "Choose a Directory" );
 	if (filename!=NULL)
 	{
+		filename+="/";
 		const char *path=filename.ascii();
 		char *p=(char*)path;
 		s->LoadFromDir(p,"prova.txt");
@@ -334,11 +335,12 @@ void SimpleGLWidget::mousePressEvent ( QMouseEvent * e )
 		//LoadMatrix();
 		glReadPixels(e->x(),_H-e->y(),1,1,GL_DEPTH_COMPONENT,GL_FLOAT,&winz);
 		gluUnProject(e->x(),_H-e->y(),winz,modelMatrix,projection,viewport,&x,&y,&z);
-		s->SetInitialBarycenter(Point3f(x,y,_numslide));
 		QString color="";
 		color.sprintf("%i",s->gray_init);
 		//w->Color->text()=color;
 		SetExtractionParameters();
+		//s->SetInitialBarycenter(Point3f(x,y,_numslide));
+		s->InitSegmentation(Point3f(x,y,_numslide));
 		repaint();
 	}
 	//vcg::tri::UpdateBounding<Segmentator::MyTriMesh>::Box(s->m);
@@ -385,9 +387,11 @@ void SimpleGLWidget::SetExtractionParameters()
 		float timestep=atof(w->T_step->text());
 		float edge=atof(w->E_size->text());
 		float tolerance=atof(w->Tolerance->text());
+		float dinstance=atof(w->S_dist->text());
 		//int color =atoi(w->Color->text());
 		///to modify
-		s->InitSegmentation(s->gray_init,tolerance,mass,k_elanst,dihedral,timestep,edge);
+
+		s->SetSegmentParameters(s->gray_init,tolerance,mass,k_elanst,dihedral,timestep,edge,Point3f(1.f,1.f,dinstance));
 	}
 
 void SimpleGLWidget::mouseMoveEvent ( QMouseEvent * e )

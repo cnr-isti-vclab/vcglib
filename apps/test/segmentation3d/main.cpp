@@ -12,11 +12,11 @@ QTimer *timer;
 
 int main( int argc, char ** argv )
 {
-	//s=new Segmentator();
+	s=new Segmentator();
 
 	//s->LoadFromDir("./venacava/","prova.txt");//to chANGE
 
-	////s->InitSegmentation(0.5,0.2,20,10.f);
+	//s->InitSegmentation(0.5,0.2,20,10.f);
 	//
     QApplication a( argc, argv );
 
@@ -26,7 +26,7 @@ int main( int argc, char ** argv )
 	//assign pointer to pricipal form
 	w.simpleGLWidget1->w=&w;
 	
-	s=new Segmentator();
+	/*s=new Segmentator();*/
 
 	//s->LoadFromDir("./venacava/","prova.txt");//to chANGE
 

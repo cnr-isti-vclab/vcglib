@@ -1,8 +1,8 @@
 /****************************************************************************
 ** SimpleGLWidget meta object code from reading C++ file 'simpleglwidget.h'
 **
-** Created: Fri Dec 17 12:16:05 2004
-**      by: The Qt MOC ($Id: moc_simpleglwidget.cpp,v 1.1 2004-12-17 11:17:36 pietroni Exp $)
+** Created: Sat Dec 18 11:09:46 2004
+**      by: The Qt MOC ($Id: moc_simpleglwidget.cpp,v 1.2 2004-12-20 17:56:01 pietroni Exp $)
 **
 ** WARNING! All changes made in this file will be lost!
 *****************************************************************************/

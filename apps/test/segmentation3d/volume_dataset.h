@@ -216,9 +216,6 @@ public:
 		Qd.setSorting(QDir::Name);
 		QString PathFile=Path;
 
-		if (PathFile.right(1)!="/")
-			PathFile.append("/");
-
 		PathFile.append(Qd[0]);
 		bool b=qI.load(PathFile,qformat);
 
@@ -421,9 +418,6 @@ public:
 		Qd.setSorting(QDir::Name);
 		QString PathFile=Path;
 
-		if (PathFile.right(1)!="/")
-			PathFile.append("/");
-
 		PathFile.append(Qd[0]);
 		bool b=qI.load(PathFile,qformat);
 
@@ -453,7 +447,7 @@ public:
 	}
 
 	
-	inline Point3i Min()//to change in case of difefrent space between sections
+	inline Point3i Min()//to change in case of different space between sections
 	{return Point3i(0,0,0);}
 
 	inline Point3i Max()//to change in case of different space between sections

@@ -238,9 +238,12 @@ private:
 	float getColor(MyTriMesh::CoordType p)
 	{
 		
-		float lx=p.V(0)-(int)p.V(0);//da rivedere bene per lo scale
-		float ly=p.V(1)-(int)p.V(1);//da rivedere bene per lo scale
-		float lz=p.V(2)-(int)p.V(2);//da rivedere bene per lo scale
+
+		float lx=(p.V(0)-(int)p.V(0))*scale.V(0);//da rivedere bene per lo scale
+		float ly=(p.V(1)-(int)p.V(1))*scale.V(1);//da rivedere bene per lo scale
+		float lz=(p.V(2)-(int)p.V(2))*scale.V(2);//da rivedere bene per lo scale
+
+		p=Scale(p);
 
 		Point3i base=Point3i((int)p.V(0),(int)p.V(1),(int)p.V(2));
 				
@@ -284,6 +287,15 @@ private:
 	}
 
 	///scale the coordinates of a point
+	MyTriMesh::CoordType UnScale(MyTriMesh::CoordType p)
+	{
+		MyTriMesh::ScalarType x=(p.V(0))*scale.V(0);
+		MyTriMesh::ScalarType y=(p.V(1))*scale.V(1);
+		MyTriMesh::ScalarType z=(p.V(2))*scale.V(2);
+		return (MyTriMesh::CoordType(x,y,z));
+	}
+
+	///scale the coordinates of a point
 	MyTriMesh::CoordType Scale(MyTriMesh::CoordType p)
 	{
 		MyTriMesh::ScalarType x=(p.V(0))/scale.V(0);
@@ -295,9 +307,12 @@ private:
 	///return true if a coordinate is out of limits
 	bool OutOfLimits(MyTriMesh::CoordType p)
 	{
-		Point3f max=Scale(MapToSpace(V.Max()));
+		/*Point3f max=Scale(MapToSpace(V.Max()));
 		Point3f min=Scale(MapToSpace(V.Min()));
-		Point3f test=(Scale(p));
+		Point3f test=(Scale(p));*/
+		Point3f test=p;
+		Point3f max=UnScale(MapToSpace(V.Max()));
+		Point3f min=UnScale(MapToSpace(V.Min()));
 		
 		for (int i=0;i<3;i++)
 		{
@@ -376,11 +391,13 @@ void InitMesh(MyTriMesh &m)
 		for (unsigned int i=0;i<m.vert.size();i++)
 		{
 			m.vert[i].P()+=InitialBarycenter;
+			m.vert[i].P()=UnScale(m.vert[i].P());
 		//	P_Vertex.push_back(&m.vert[i]);
 		}
 		
 		
 		vcg::tri::UpdateNormals<MyTriMesh>::PerVertexNormalized(m);
+
 	}
 
 
@@ -439,7 +456,10 @@ void AddExtForces()
 					MyTriMesh::CoordType Inflating=(*vi).N();
 					MyTriMesh::CoordType Containing0=ContainingForce(&*vi);	
 					//MyTriMesh::CoordType Containing1=GradientFactor(&*vi);
-					(*vi).ExtForce()=Inflating+Containing0*0.75;/*+Containing1+Containing0*/;
+					Containing0*=0.75;
+					if (Containing0.Norm()>1)
+						Containing0.Normalize();
+					(*vi).ExtForce()=Inflating+Containing0;/*+Containing1+Containing0*/;
 				}
 			}
 			else
@@ -625,12 +645,12 @@ void CollisionDetection()
 public:
 
 ///set the initial barycenter where the triangle mesh start to expand
-void SetInitialBarycenter(MyTriMesh::CoordType b)
-{
-	InitialBarycenter=b;
-	gray_init=getColor(b);
-	InitMesh(m);
-}
+//void SetInitialBarycenter(MyTriMesh::CoordType b)
+//{
+//	InitialBarycenter=b;
+//	gray_init=getColor(b);
+//	/*InitMesh(m);*/
+//}
 
 ///set the input output directory of images
 void LoadFromDir(char *in, char *out)
@@ -642,14 +662,13 @@ void LoadFromDir(char *in, char *out)
 
 	V.Init(1000,outDir);*/
 	V.Load(inDir);
-	bbox=vcg::Box3<float>(MapToSpace(V.Min()),MapToSpace(V.Max()));
+	bbox=vcg::Box3<float>(MapToSpace((V.Min())),(MapToSpace(V.Max())));
 }
 
-
-///init the segmentation of the mesh
-void InitSegmentation(int color,int tol,float Mass=0.5f,float K_elanst=0.2f,float Dihedral=0.2f,float Time_stamp=0.2f,
-					  float Edge_precision=4.f,clock_t _interval=1000,clock_t _interval2=250,
-					  MyTriMesh::CoordType ScaleFactor=MyTriMesh::CoordType(1.f,1.f,1.f) )
+///set parameters for segmentation
+void SetSegmentParameters(int color,int tol,float Mass=0.5f,float K_elanst=0.2f,float Dihedral=0.2f,float Time_stamp=0.2f,
+					  float Edge_precision=4.f,Point3f ScaleFactor=Point3f(1.f,1.f,1.f),
+					  clock_t _interval=1000,clock_t _interval2=250)
 {
 	mass=Mass;
 	k_elanst=K_elanst;
@@ -663,9 +682,14 @@ void InitSegmentation(int color,int tol,float Mass=0.5f,float K_elanst=0.2f,floa
 	time_stamp=Time_stamp;
 	k_dihedral=Dihedral;
 	scale=ScaleFactor;
+}
 
-	
-	
+///init the segmentation of the mesh
+void InitSegmentation(MyTriMesh::CoordType b)
+{
+	InitialBarycenter=b;
+	gray_init=getColor(b);
+
 	TrINT= new myIntegrator(P_Faces,P_Vertex);
 	
 	TrINT->SetPDESolver(PDESolvers::EULER_METHOD);
@@ -677,7 +701,8 @@ void InitSegmentation(int color,int tol,float Mass=0.5f,float K_elanst=0.2f,floa
 	//V.Load(inDir);
 	//
 	/*bbox=vcg::Box3<float>(MapToSpace(V.Min()),MapToSpace(V.Max()));*/
-
+	
+	InitMesh(m);
 	//init the mesh with new 
 	Reinit_PVectors();
 	ReinitPhysicMesh();
