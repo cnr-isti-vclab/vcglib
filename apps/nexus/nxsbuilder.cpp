@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2005/02/22 14:20:44  ponchio
+debug and mostly vertex unifying across borders
+(still not perfect... :P)
+
 Revision 1.21  2005/02/22 10:38:11  ponchio
 Debug, cleaning and optimization.
 
@@ -390,10 +394,12 @@ void ThirdStep(const string &crudefile, const string &output,
 	continue;
       }
       norm /= len;
+#ifndef WIN32
       if(isnan(norm[0]) || isnan(norm[1]) || isnan(norm[2])) {
 	cerr << "Invalid normal computation. Strange.\n";
 	continue;
       }
+#endif
       normals.push_back(norm);
     }
     ANCone3f cone;
@@ -681,7 +687,7 @@ int main(int argc, char *argv[]) {
 
   unsigned int ram_buffer = 128000000; //step 2, 3, 4
   unsigned int chunk_size = 1024;      //step 2, 3, 4
-  int step = -1; //means all of them.
+  int step = -1; //means all of them.  
   
   int option;
   while((option = getopt(argc, argv, "f:t:l:s:d:o:b:c:p:")) != EOF) {
@@ -744,7 +750,7 @@ int main(int argc, char *argv[]) {
     return -1;
   }
   string crudefile = argv[optind];
-  string output = argv[optind+1];
+  string output = argv[optind+1];  
 
   if(step < 0 || step == 0)
     FirstStep(crudefile, output, patch_size, patch_threshold,

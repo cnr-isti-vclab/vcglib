@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.45  2005/03/02 10:40:17  ponchio
+Extraction rewrittten (to fix recusive problems).
+
 Revision 1.44  2005/03/01 11:20:22  ponchio
 nothing really
 
@@ -296,6 +299,7 @@ int main(int argc, char *argv[]) {
   bool extract = true;
   bool realtime = true;
   bool preload = true;
+  Point4f light(1, -1, 1, 0);
 
   bool output_stats = false;
   char output_filename[100];
@@ -335,7 +339,8 @@ int main(int argc, char *argv[]) {
     " page down  : increase disk space\n"
     " 0          : decrease extraction size\n"
     " 1          : increase extraction size\n"
-    " s: toggle preload\n"
+    " s          : toggle preload\n"
+    " l          : change light\n"
     
 
     " d: debug mode (show patches colored)\n"
@@ -427,6 +432,12 @@ int main(int argc, char *argv[]) {
                   contest.attrs |=DrawContest::SPHERES;
                 break;
 	    
+  case SDLK_l: 
+    light[0] = rand();
+    light[1] = rand();
+    light[2] = rand();
+    light.Normalize();
+    break;
 	case SDLK_o: realtime = !realtime; break;
 	case SDLK_s: preload = !preload; nexus.SetPreload(preload); break;
 	case SDLK_t: show_statistics = !show_statistics; break;
@@ -504,7 +515,7 @@ int main(int argc, char *argv[]) {
     track.GetView();
     track.Apply();
 
-    Point4f light(1, -1, 1, 0);
+  
     glLightfv(GL_LIGHT0, GL_POSITION, &light[0]);
 
 

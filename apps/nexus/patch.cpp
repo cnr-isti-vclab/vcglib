@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2005/02/22 10:38:15  ponchio
+Debug, cleaning and optimization.
+
 Revision 1.12  2005/02/21 19:05:58  ponchio
 i already fixed this bug. I hate you cvs.
 
@@ -59,7 +62,7 @@ static double wrkmem[LZO1X_999_MEM_COMPRESS/sizeof(double) +1];
 Encodings Patch::encodings;
 
 Encodings::Encodings() {
-  for(unsigned int i = 0; i < 256; i++) {
+  for(unsigned int i = 0; i < 17; i++) {
     e[i].bytes = 0;
     e[i].comps = 0;
     e[i].pack = NULL;
