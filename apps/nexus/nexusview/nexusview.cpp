@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/07/02 17:41:57  ponchio
+Created.
+
 Revision 1.3  2004/07/02 13:03:34  ponchio
 *** empty log message ***
 
@@ -115,6 +118,7 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
+  bool rotate = true;
   glClearColor(0, 0, 0, 0); 
   int quit = 0;
   SDL_Event         event;
@@ -126,7 +130,8 @@ int main(int argc, char *argv[]) {
         case SDL_QUIT:  quit = 1; break;      
         case SDL_KEYDOWN:                                        
           switch(event.key.keysym.sym) {
-            case SDLK_q: exit(0); break;
+	  case SDLK_q: exit(0); break;
+	  case SDLK_SPACE: rotate = !rotate;
           }
           //quit = 1;           
           //error++;
@@ -161,31 +166,43 @@ int main(int argc, char *argv[]) {
     gluLookAt(0,0,3,   0,0,0,   0,1,0);    
 
 
-    float scale = 3/sphere.Radius();
+    float scale = 2/sphere.Radius();
     glRotatef(alpha, 0, 1, 0);
-    alpha++;
+    if(rotate)
+      alpha++;
     if(alpha > 360) alpha = 0;
     glScalef(scale, scale, scale);       
     Point3f center = sphere.Center();
     glTranslatef(-center[0], -center[1], -center[2]);
    
-    glBegin(GL_TRIANGLES);
 
-    for(unsigned int i = 0; i < nexus.index.size(); i++) {
+
+    for(unsigned int i = 7; i < nexus.index.size(); i++) {
       Patch patch = nexus.GetPatch(i);
       
       unsigned int val = i + 1;
       glColor3ub((val * 27)%255, (val * 37)%255, (val * 87)%255);
 
+      glBegin(GL_TRIANGLES);
       unsigned short *f = patch.FaceBegin();      
-      for(unsigned int j = 0; j < patch.FaceSize() * 3 - 3; j++) {
+      for(unsigned int j = 0; j < patch.FaceSize() * 3; j++) {
 	Point3f &p = patch.Vert(f[j]);
-	//	cerr << "f[j]: " << f[j] << endl;
-	//	cout << "p: " << p[0] << " " << p[1] << " " << p[2] << endl;
 	glVertex3f(p[0], p[1], p[2]);
       }
+      glEnd();
+      //      glColor3ub(((val * 27)%255)/2, ((val * 37)%255)/2, ((val * 87)%255)/2);
+      glColor3f(1, 1, 1);
+      //drawing borders
+      Border border = nexus.GetBorder(i);
+      glPointSize(4);
+      glBegin(GL_POINTS);
+      for(unsigned int k = 0; k < border.Size(); k++) {
+	Point3f &p = patch.Vert(border[k].start_vert);
+	glVertex3f(p[0], p[1], p[2]);
+      }
+      glEnd();
     }
-    glEnd();
+
     
     SDL_GL_SwapBuffers();
   }
