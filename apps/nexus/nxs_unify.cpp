@@ -24,11 +24,15 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/07/04 15:24:50  ponchio
+Created
+
 
 ****************************************************************************/
 
 #include <iostream>
 #include <map>
+#include <set>
 
 #include "nexus.h"
 
@@ -56,13 +60,16 @@ int main(int argc, char *argv[]) {
     map<Point3f, unsigned short> vertices; 
     vector<unsigned short> remap;
     remap.resize(patch.VertSize());
-    map<unsigned short, unsigned short> remap;
+    //    map<unsigned short, unsigned short> remap;
     for(unsigned int i = 0; i < patch.VertSize(); i++) {
       Point3f &point = patch.Vert(i);
-      if(vertices.count(point)) {
-      } else {
+
+      if(!vertices.count(point)) {
 	vertices[point] = vcount++;
+      } else {
+	cerr << "Duplicated point\n";
       }
+
       remap[i] = vertices[point];
     }
     if(vertices.size() == patch.VertSize()) //no need to unify
@@ -72,15 +79,17 @@ int main(int argc, char *argv[]) {
     newvert.resize(vertices.size());
     map<Point3f, unsigned short>::iterator k;
     for(k = vertices.begin(); k != vertices.end(); k++) {
-      newvert[(*i).first] = (*i).second;
+      newvert[remap[(*k).second]] = (*k).first;
     }
+
+
     vector<unsigned short> newface;
     newface.resize(patch.FaceSize() * 3);
-    for(unsigned int f = 0; f < patch.FaceSize() *3; f++) {
+    for(unsigned int f = 0; f < (unsigned int)(patch.FaceSize() *3); f++) {
       newface[f] = remap[f];
     }
     //rewrite patch now.
-    patch.resize(newvert.size(), newface.size());
+    patch.Resize(newvert.size(), newface.size());
     entry.nvert = newvert.size();
     entry.nface = newface.size();
     memcpy(patch.VertBegin(), &(newvert[0]), 
@@ -108,10 +117,11 @@ int main(int argc, char *argv[]) {
       }
     }
   }
+
   //finally: there may be duplicated borders
   for(unsigned int p = 0; p < nexus.index.size(); p++) {
     Border border = nexus.GetBorder(p);
-    Nexus::Entry &entry = nexus.index[p];
+    //Nexus::Entry &entry = nexus.index[p];
     
     set<Link> links;
     for(unsigned int b = 0; b < border.Size(); b++) {
