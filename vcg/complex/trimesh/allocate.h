@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2004/09/07 07:36:32  fasano
+Replaced some typename definitions
+
 Revision 1.12  2004/08/25 15:15:26  ganovelli
 minor changes to comply gcc compiler (typename's and stuff)
 
@@ -69,6 +72,8 @@ Initial commit
 
 #ifndef __VCGLIB_TRIALLOCATOR
 #define __VCGLIB_TRIALLOCATOR
+
+#include <vector>
 
 namespace vcg {
 namespace tri {
