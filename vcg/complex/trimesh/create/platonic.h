@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2004/10/28 00:54:34  cignoni
+Better Doxygen documentation
+
 Revision 1.9  2004/09/24 10:14:38  fiorin
 Corrected bug in cone
 
