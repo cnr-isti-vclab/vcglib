@@ -203,9 +203,47 @@ class EdgeCollapse
 
 	int DoCollapse(PosType & c, Point3<ScalarType> p)
 	{
-    FindSets(c);
+		FindSets(c);
 		VFIVec::iterator i;
 		int n_face_del =0 ;
+		
+		//set Face Face topology
+		if (TriMeshType::HasFFTopology())
+		{
+			int e0=c.z;
+			int e1=c.f->FFi(c.z);	//opposite edge
+
+			FaceType *f0=c.f;
+			FaceType *f1=f0->FFp(c.z);
+			
+			//take right indexes
+			FaceType *f00=f0->FFp((e0+1)%3);
+			FaceType *f01=f0->FFp((e0+2)%3);
+			int If00=f0->FFi((e0+1)%3);
+			int If01=f0->FFi((e0+2)%3);
+			
+			//then attach faces
+			f00->FFp(If00)=f01;
+			f00->FFi(If00)=If01;
+			f01->FFp(If01)=f00;
+			f01->FFi(If01)=If00;
+
+			//and the ones of face f1
+
+			f00=f1->FFp((e1+1)%3);
+			f01=f1->FFp((e1+2)%3);
+			If00=f1->FFi((e1+1)%3);
+			If01=f1->FFi((e1+2)%3);
+			
+			//and attach faces
+			f00->FFp(If00)=f01;
+			f00->FFi(If00)=If01;
+			f01->FFp(If01)=f00;
+			f01->FFi(If01)=If00;
+
+
+		}
+
 
 		for(i=AV01().begin();i!=AV01().end();++i)
 		{	
@@ -218,6 +256,7 @@ class EdgeCollapse
 			n_face_del++;
 		}
 
+		//set Vertex Face topology
 		for(i=AV0().begin();i!=AV0().end();++i)
 		{
 			(*i).f->V((*i).z) = c.V(1);									 // In tutte le facce incidenti in v0, si sostituisce v0 con v1
@@ -226,11 +265,12 @@ class EdgeCollapse
 			(*i).f->V((*i).z)->VFp() = (*i).f;
 			(*i).f->V((*i).z)->VFi() = (*i).z;
 		}
-
-
-		TriMeshType::VertexType nv;
+		
+		
+		/*TriMeshType::VertexType nv;*/
 //*		c.v[1]->Merge(*c.v[0]);
 		c.V(0)->SetD();
+		c.V(1)->P()=p;
 		return n_face_del;
 	}
 
