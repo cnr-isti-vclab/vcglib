@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.26  2005/03/11 14:14:14  ganovelli
+_ffi was a 4 for positions vector (only 3  used)
+
 Revision 1.25  2005/01/28 17:53:13  pietroni
 added HasEdgePlane function
 
@@ -165,7 +168,7 @@ public:
 	/** Return the pointer to the j-th vertex of the face.
 		@param j Index of the face vertex.
 	 */
-	inline FVTYPE * & V( const int j )
+	inline VertexType * & V( const int j )
 	{	
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 ); 
@@ -175,7 +178,7 @@ public:
 		return v[j];
 	}
 
-	inline  FVTYPE * const &  V( const int j ) const
+	inline  VertexType * const &  V( const int j ) const
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
@@ -183,7 +186,7 @@ public:
 		assert(j<3);
 		return v[j];
 	}
-	inline  FVTYPE * const  cV( const int j ) const
+	inline  VertexType * const  cV( const int j ) const
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
@@ -223,15 +226,15 @@ public:
 	/** Return the pointer to the ((j+1)%3)-th vertex of the face.
 		@param j Index of the face vertex.
 	 */
-	inline FVTYPE * & V0( const int j ) { return V(j);}
-	inline FVTYPE * & V1( const int j ) { return V((j+1)%3);}
-	inline FVTYPE * & V2( const int j ) { return V((j+2)%3);}
-	inline const FVTYPE * const &  V0( const int j ) const { return V(j);}
-	inline const FVTYPE * const &  V1( const int j ) const { return V((j+1)%3);}
-	inline const FVTYPE * const &  V2( const int j ) const { return V((j+2)%3);}
-	inline const FVTYPE * const & cV0( const int j ) const { return cV(j);}
-	inline const FVTYPE * const & cV1( const int j ) const { return cV((j+1)%3);}
-	inline const FVTYPE * const & cV2( const int j ) const { return cV((j+2)%3);}
+	inline VertexType * & V0( const int j ) { return V(j);}
+	inline VertexType * & V1( const int j ) { return V((j+1)%3);}
+	inline VertexType * & V2( const int j ) { return V((j+2)%3);}
+	inline const VertexType * const &  V0( const int j ) const { return V(j);}
+	inline const VertexType * const &  V1( const int j ) const { return V((j+1)%3);}
+	inline const VertexType * const &  V2( const int j ) const { return V((j+2)%3);}
+	inline const VertexType * const & cV0( const int j ) const { return cV(j);}
+	inline const VertexType * const & cV1( const int j ) const { return cV((j+1)%3);}
+	inline const VertexType * const & cV2( const int j ) const { return cV((j+2)%3);}
 
 	/// Shortcut per accedere ai punti delle facce
 	inline CoordType & P0( const int j ) { return V(j)->P();}
@@ -244,14 +247,14 @@ public:
 	inline const CoordType & cP1( const int j ) const { return cV((j+1)%3)->P();}
 	inline const CoordType & cP2( const int j ) const { return cV((j+2)%3)->P();}
 
-	inline FVTYPE * & UberV( const int j )
+	inline VertexType * & UberV( const int j )
 	{	
 		assert(j>=0);
 		assert(j<3);
 		return v[j];
 	}
 
-	inline const FVTYPE * const & UberV( const int j ) const
+	inline const VertexType * const & UberV( const int j ) const
 	{
 		assert(j>=0);
 		assert(j<3);
@@ -1198,40 +1201,6 @@ inline void Nexts( BaseFaceType *&f,int &z )
     f = (*f).F(t);
 }
 
-/** This function change the orientation of the face. Inverting the index of two vertex 
-@param z Index of the edge
-*/
-void Swap ( const int z )
-{
-
-  int i;
-  BaseFaceType *tmp, *prec;
-  int t, precz;
-
-  swap ( V((z  )%3),V((z+1)%3));
-
-  if( OBJ_TYPE & (OBJ_TYPE_A|OBJ_TYPE_S ) )
-  {
-	swap ( F((z+1)%3),F((z+2)%3));
-	swap ( Z((z+1)%3),Z((z+2)%3));
-
-	for(i = 1; i < 3; i++)
-	{
-
-      tmp = this;
-      t = (z+i)%3;
-      do {
-					prec = tmp;
-					precz = t;
-					Nexts(tmp,t);
-      }
-      while (tmp != this);
-  
-      (*prec).Z(precz) = (z+i)%3;
-    }
-  }
-}
-
 	// Sezione dist e ray
 #ifdef __VCGLIB_FACE_RT
 	CoordType edge[3];
@@ -1239,7 +1208,7 @@ void Swap ( const int z )
 #endif
 
 	/// return the index [0..2] of a vertex in a face
-	inline int VertexIndex( const FVTYPE * w ) const
+	inline int VertexIndex( const VertexType * w ) const
 	{
 			 if( v[0]==w ) return  0;
 		else if( v[1]==w ) return  1;

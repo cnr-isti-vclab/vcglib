@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2004/10/22 13:41:06  fiorin
+Added CheckFlipEdge and FlipEdge
+
 Revision 1.14  2004/10/18 17:15:45  ganovelli
 minor change
 
@@ -137,13 +140,13 @@ if(FaceType::HasFFAdjacency())
 template <class FaceType>
 void Detach(FaceType & f, const int e)
 {
-	assert(!IsBorder(e));
+	assert(!IsBorder<FaceType>(e));
 	Pos< FaceType > EPB(&f,e);  // la faccia dall'altra parte
 	EPB.NextF();
 	int cnt=0;
 	while ( EPB.f->FFp(EPB.z) != &f)
 	{ 
-		assert(!IsManifold(e));   // Si entra in questo loop solo se siamo in una situazione non manifold.
+		assert(!IsManifold<FaceType>(e));   // Si entra in questo loop solo se siamo in una situazione non manifold.
 		assert(!EPB.f->IsBorder(EPB.z));
 		EPB.NextF();
 		cnt++;
@@ -366,7 +369,7 @@ void VFDetach(FaceType & f, int z)
 template <class FaceType>
 void VFAppend(FaceType* & f, int z)
 {
-	FaceType::VertexType *v=f->V(z);
+	typename FaceType::VerteType *v = f->V(z);
 	if (v->VFp()!=0)
 	{
 		FaceType *f0=v->VFp();	

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/10/09 13:48:02  ponchio
+Fixed bug in init.
+
 Revision 1.5  2004/05/10 13:15:54  cignoni
 missing ending newline
 
@@ -154,7 +157,7 @@ template<class T> T Distance(const Plane3<T> &plane, const Point3<T> &point) {
 }
 
 	///Distance point-plane (Move this function to somewhere else)
-template<class T> T Distance(const Point3<T> &po, const Plane3<T> &plane) {
+template<class T> T Distance(const Point3<T> &point, const Plane3<T> &plane) {
   return plane.Direction() * point - plane.Offset;      
 }
 

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/05/10 13:22:25  cignoni
+small syntax error Math -> math in Angle
+
 Revision 1.4  2004/04/05 11:57:32  cignoni
 Add V() access function
 
@@ -274,7 +277,7 @@ public:
 	template <class T>
 	inline void Import( const Point2<T> & b )
 	{
-		_v[0] = p.X(); _v[1] = p.Y();
+		_v[0] = b.X(); _v[1] = b.Y();
 	}
 		/// constructs a 2D points from an existing one of different type
 	template <class T>
@@ -288,7 +291,7 @@ public:
 
 
 template <class T>
-inline T Angle( Point2<T> const & p1, Point2<T> const & p2 )
+inline T Angle( Point2<T> const & p0, Point2<T> const & p1 )
 {
 	return p1.Angle() - p0.Angle();
 }

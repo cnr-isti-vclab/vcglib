@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/01/21 18:02:11  ponchio
+Removed dependence from matrix44 and changed VectProd
+
 Revision 1.8  2005/01/12 11:25:02  ganovelli
 added Dimension
 
@@ -60,7 +63,7 @@ namespace vcg {
 
 template <class T> class Point4
 {
-protected:
+public:
   /// The only data member. Hidden to user.
 	T _v[4];
 
