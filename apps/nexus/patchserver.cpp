@@ -263,6 +263,7 @@ void PatchServer::Flush(unsigned int patch) {
 bool PatchServer::FlushVbo(unsigned int patch) {
   //TODO  
   //cerr << "Flushing vbo: " << patch << endl;
+  if(!vbos.size()) return false;
   VboBuffer &buffer = vbos[patch];
   if(!buffer.index) return false;
   glDeleteBuffersARB(1, &buffer.index);
