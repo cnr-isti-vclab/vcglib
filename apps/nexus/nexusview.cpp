@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.44  2005/03/01 11:20:22  ponchio
+nothing really
+
 Revision 1.43  2005/02/20 18:07:01  ponchio
 cleaning.
 
@@ -202,7 +205,7 @@ using namespace vcg;
 using namespace nxs;
 
 bool fullscreen = false;
-int width = 1024
+int width = 1024;
 int height = 768;
 
 Point3f view(0, 0, 5);
@@ -534,7 +537,9 @@ int main(int argc, char *argv[]) {
       // extraction.frustum->GetView();
       extraction.metric->GetView();
       if(!realtime) {
+	extraction.visited.clear();
 	extraction.Extract(&nexus);
+	extraction.Update(&nexus);
       } else {
 	extraction.Update(&nexus);
       }

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2005/03/01 11:21:20  ponchio
+Added line intersection
+
 Revision 1.10  2005/02/22 14:20:44  ponchio
 debug and mostly vertex unifying across borders
 (still not perfect... :P)
@@ -56,14 +59,14 @@ Added copyright
 #include <vector>
 #include "patch.h"
 #include <vcg/space/sphere3.h>
-
-class vcg::Line3f;
+#include <vcg/space/line3.h>
 
 namespace nxs {
   
 
   class Nexus;
   class Patch;
+  class Extraction;
 
 
   struct ZEntry {
@@ -72,8 +75,7 @@ namespace nxs {
     bool operator<(const ZEntry &e) const { return pos < e.pos; }
   };
 
-  //for every patch return close by (sphere intersecting)
-  //threshold is added to the distance to make sure we do not miss anything
+  //for every patch return close by (sphere intersecting)  //threshold is added to the distance to make sure we do not miss anything
   void Connect(Nexus &nexus, std::vector< std::set<unsigned int> > &close,
 	       float threshold);
 

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2005/02/20 19:49:44  ponchio
+cleaning (a bit more).
+
 Revision 1.10  2005/02/20 18:07:00  ponchio
 cleaning.
 
@@ -74,14 +77,14 @@ void Extraction::Extract(NexusMt *_mt) {
   visible.clear();
   visible.resize(mt->size(), true);
 
-  heap.clear();
+  front.clear();
 
   Visit(root); 
 
-  while(heap.size()) {
-    pop_heap(heap.begin(), heap.end());
-    HeapNode hnode = heap.back();
-    heap.pop_back();
+  while(front.size()) {
+    pop_heap(front.begin(), front.end());
+    HeapNode hnode = front.back();
+    front.pop_back();
 
     Node *node = hnode.node;
     if(Visited(node)) continue;
@@ -97,50 +100,51 @@ void Extraction::Init() {
   max_error = -1;
   front.clear();
   back.clear();
-  errors.clear();
+  node_errors.clear();
+  node_errors.resize(mt->history.n_nodes(), -1);
   
-  Cost cost;
+  //I want to add all coarsable nodes
+  //and all refinable node (being careful about recursive dependencies)
+  for(Node *node = root; node != sink; node++) {
+    if(!Visited(node)) continue;
+    if(node != root && CanCoarse(node)) 
+      back.push_back(HeapNode(node, GetNodeError(node)));
 
-  Node *nodes = mt->history.nodes;
-  for(unsigned int i = 0; i < visited.size(); i++) {
-    if(!visited[i]) continue;
-    Node &node = nodes[i];
+    for(Node::iterator n = node->out_begin; n != node->out_end; n++) {
+      Node *child = n->node;
+      if(Visited(child)) continue;
+      if(node_errors[child - root] != -1) continue; //already visited
 
-    bool cancoarse = true;
+      float *error = GetNodeError(child);
+      if(CanRefine(node)) // TODO? && error > target_error
+	front.push_back(HeapNode(child, error));
 
-    Node::iterator n;
-    for(n = node.out_begin; n != node.out_end; n++) {
-      if(!Visited((*n).node)) {
-	float maxerror = -1;
-	
-	Link &link = *n;
-	for(unsigned int patch = link.begin; patch != link.end; patch++) {
-	  Entry &entry = (*mt)[patch];
-	  
-	  bool visible;
-	  float error = metric->GetError(entry, visible);
-	  if(error > maxerror) maxerror = error;
-	  
-	  cost.extr += entry.ram_size;
-	  
-	  SetVisible(patch, visible);
-	  if(visible)
-	    cost.draw += entry.ram_size;
-			
-	  if(!entry.patch)
-	    cost.disk += entry.disk_size;
-	}
-	if((*n).node != sink && maxerror > target_error)
-	  front.push_back(HeapNode((*n).node, maxerror));
-	if(maxerror > max_error) max_error = maxerror;
-      } else
-	cancoarse = false;
-    }
-    if(cancoarse && (&node != root)) {
-      float error = GetRefineError(&node);
-      back.push_back(HeapNode(&node, error));
+      if(*error > max_error) max_error = *error;
     }
   }
+
+  //recursively fix error 
+  for(Node *node = root; node != sink; node++) 
+    if(node_errors[node - root] != -1)
+      SetError(node, node_errors[node-root]);       
+
+  //estimate cost of all the cut arcs (i need the visible info)
+  Cost cost;
+  for(Node *node =  root; node != sink; node++) {
+    if(!Visited(node)) continue;
+
+    for(Node::iterator n = node->out_begin; n != node->out_end; n++) {
+      Link &link = *n;
+      if(Visited((*n).node)) continue;
+      for(unsigned int patch = link.begin; patch != link.end; patch++) {
+	Entry &entry = (*mt)[patch];
+	                   cost.extr += entry.ram_size;
+	if(Visible(patch)) cost.draw += entry.ram_size;
+	if(!entry.patch)   cost.disk += entry.disk_size;
+      }
+    }
+  }
+
   make_heap(front.begin(), front.end());
   make_heap(back.begin(), back.end(), greater<HeapNode>());
 
@@ -152,8 +156,7 @@ void Extraction::Init() {
 void Extraction::Update(NexusMt *_mt) {
   mt = _mt;
   root = mt->history.Root();
-  sink = root + (mt->history.n_nodes()-1);
-  //clear statistics
+  sink = mt->history.Sink();
 
   if(!visited.size()) {
     visited.resize(mt->history.n_nodes(), false);
@@ -164,88 +167,70 @@ void Extraction::Update(NexusMt *_mt) {
   
   Init();
   
-  bool no_draw = false;  
-
-  //TODO big problem: nodes a (error 10) with parent b (error -1) 
-  //i try to refine a, refine b (recursive) but fail to refine a
-  //next step i coarse b whis cause a cycle.
 
   /* Updateing strategy:
-     if i can refine (not at leaves, have draw and extr buffer, not past target_error)
+     if i can refine (not at leaves, 
+                      have draw and extr buffer, 
+                      not past target_error)
         i try to refine BUT
-             i can fail because i finish some buffer (exp. while recursively refine)
-             (then i put the operation back on the stack)
+             i can fail because i finish some buffer 
+                  (then i put the operation back on the stack)
 	     if i have finished disk i should just quit
      if i cannot refine i consider coarsening:
          i need 1) not be at root (eheh)
-                2) have finished draw and extr buffer
-                3) do not make global error worse (unless it is < target_error...)
-                4) check it is not a recursive coarsening (drop it otherwise)
+                2) have finished draw and extr buffer 
+                        (unless i am at error < target so i want to coarse
+                3) do not make global error worse 
+		   (unless it is error < target_error...)
+		   a stability term is added (1.1) so that we do not flip
+		   nodes in and out quickly
 	 i try to coarse BUT
               i can fail because i need disk
 	      (then i put the operation back on the stack)
-      if i cannot coarse i just quit
+      if i cannt coarse i just quit
   */
 
-  while(1) {        
-    if(!no_draw &&                       //we have buffer
-       front.size() &&                   //we are not at max level
-       front[0].error > target_error) {  //we are not already at target_error            
+  bool can_refine = true;
 
-      max_error = front[0].error;
+  while(1) {     
+    while(can_refine) {                          //we have available budget
+      if(!front.size()) break;                   //we are at max level
+      if(*front[0].error < target_error) break;  //already at target_error
+
+      max_error = *front[0].error;
       pop_heap(front.begin(), front.end());
       HeapNode hnode = front.back();            
       front.pop_back();
 
-      if(!Visited(hnode.node) && !Refine(hnode))
-          no_draw = true;
-
-      continue;           
+      if(!Visited(hnode.node) && CanRefine(hnode.node)) {
+	if(!Refine(hnode)) {
+	  can_refine = false;
+	  front.push_back(hnode);
+	  push_heap(front.begin(), front.end());
+	}
+      }
     }
  
-    if(!back.size()) {
-      //cerr << "nothing to coarse!\n";        
-      break; //nothing to coarse (happen only on extr_max < root.extr
-    }
-
-    if(no_draw) { //suppose i have no more buffer      
-      //TODO see point 3
-      //if i do error damages coarsening better get out   
-      if(front.size() && ((back.front().error + 0.001) >= front.front().error)) {
-        //cerr << "Balanced cut\n";
-        break;
-      }
-      if(!front.size() && back.front().error >= target_error) {
-        //cerr << "Maxed out\n";
-        break;
-      }
-    }
-
-    //nothing to refine, coarse only if error <= target_error    
-    if(!no_draw && back.front().error >= target_error) {
-      //cerr << "error dominating\n";
-      break;
-    }    
+    if(!back.size()) //nothing to coarse (happen only on extr_max < root.extr)
+      break; 
     
+    if(*back.front().error >= target_error &&
+       (!front.size() ||
+	(*back.front().error * 1.4) >= *front.front().error))
+      break;
     
     pop_heap(back.begin(), back.end(), greater<HeapNode>());
     HeapNode hnode = back.back();
     back.pop_back();
-    if(Visited(hnode.node)) {
-      bool recursive = false;
-      Node::iterator i;
-      for(i = hnode.node->out_begin; i != hnode.node->out_end; i++) {
-         Node *child = (*i).node;
-         if(Visited(child)) recursive = true;
-      }
-      if(!recursive && !Coarse(hnode)) { //no more disk so. push back on heap the heapnode 
-	back.push_back(hnode);
-	push_heap(back.begin(), back.end(), greater<HeapNode>());          
-	break;          
-      }
+
+    if(Visited(hnode.node) &&    //not already coarsed
+       CanCoarse(hnode.node) &&  //all children !visited
+       !Coarse(hnode)) {         //no more disk
+      back.push_back(hnode);
+      push_heap(back.begin(), back.end(), greater<HeapNode>());          
+      break;          
     }
-    
-    no_draw = false;          
+    can_refine = true;
   }
   
   Select();
@@ -264,7 +249,6 @@ void Extraction::Update(NexusMt *_mt) {
 	Link &link = (*l);
 	for(unsigned int k = link.begin; k != link.end; k++) {
 	  selected.push_back(Item(k, i));
-	  errors[k] = i;
 	}
       }
     } else if(back.size()) {
@@ -277,81 +261,63 @@ void Extraction::Update(NexusMt *_mt) {
 	Link &link = (*l);
 	for(unsigned int k = link.begin; k != link.end; k++) {
 	  selected.push_back(Item(k, i));
-	  errors[k] = i;
 	}
       }
     }
   }
 }
 
-float Extraction::GetRefineError(Node *node) {
-  float maxerror = -1;
+
+float *Extraction::GetNodeError(Node *node) {
+  float &maxerror = node_errors[node-root];
   for(Node::iterator i = node->in_begin; i != node->in_end; i++) {
     Link &link = *i;
     for(unsigned int p = link.begin; p != link.end; p++) {
       Entry &entry = (*mt)[p];
       bool visible;
       float error =  metric->GetError(entry, visible);
+      //      cerr << "Error for patch: " << p << " -> " << error << endl;
       if(error > maxerror) maxerror = error;
       SetVisible(p, visible);
     }
   }
-  return maxerror;
+  return &maxerror;
 }
 
 bool Extraction::Refine(HeapNode hnode) {
   
   Node *node = hnode.node;
-
-  //recursively refine parent if applicable.
-  for(Node::iterator i = node->in_begin; i != node->in_end; i++) {
-    Node *parent = (*i).node;
-    if(!Visited(parent)) {      
-      //Here i use parent refine error!!!
-      if(!Refine(HeapNode(parent, hnode.error))) return false;      
-    }
-  }
-
+  
   Cost cost;
   Diff(node, cost);
-
-  bool failed = false;  
-  if(disk_used  + cost.disk > disk_max) {
-    //cerr << "Disk failed\n";
-    failed = true;    
-  }
-  if(extr_used  + cost.extr > extr_max) {
-    //cerr << "Extr failed\n";
-    failed = true;        
-  }
-  if(draw_used  + cost.draw > draw_max) {
-    //cerr << "Draw failed\n";
-    failed = true;        
-  }
-
-  if(failed) {
-    front.push_back(hnode);
-    push_heap(front.begin(), front.end());
+  
+  if(disk_used  + cost.disk > disk_max ||
+     extr_used  + cost.extr > extr_max ||
+     draw_used  + cost.draw > draw_max)
     return false;
-  }
+
   extr_used += cost.extr;
   draw_used += cost.draw;
   disk_used += cost.disk;
 
   SetVisited(node, true);
 
-
   //now add to the front children (unless sink node)
 
   for(Node::iterator i = node->out_begin; i != node->out_end; i++) {
     Link &link = *i;
     if(link.node == sink) continue; 
-    float maxerror = GetRefineError(link.node);
 
-    if(maxerror > target_error) 
-      front.push_back(HeapNode((*i).node, maxerror));
+    float *error = &node_errors[link.node - root];
+    if(*error == -1)
+      error = GetNodeError(link.node);
+    if(*hnode.error < *error) *hnode.error = *error;
+    //TODO    if(maxerror > target_error) 
+    if(CanRefine((*i).node)) {
+      front.push_back(HeapNode((*i).node, error));
+      push_heap(front.begin(), front.end());
+    }
   }
-  push_heap(front.begin(), front.end());
 
   back.push_back(hnode);
   push_heap(back.begin(), back.end(), greater<HeapNode>());
@@ -362,19 +328,9 @@ bool Extraction::Coarse(HeapNode hnode) {
   //cerr << "Coarse node: " << (void *)hnode.node << " err: " << hnode.error << endl;    
   Node *node = hnode.node;
   
-  //recursively coarse children if applicable.
-  for(Node::iterator i = node->out_begin; i != node->out_end; i++) {
-    Node *child = (*i).node;
-    float error = GetRefineError(child);
-    HeapNode hchild(child, error);
-    if(Visited(child)) {
-      if(!Coarse(hchild)) return false;
-    }
-  }
-
-
   Cost cost;
   Diff(node, cost);
+
   extr_used -= cost.extr;
   draw_used -= cost.draw;
   disk_used -= cost.disk;
@@ -387,10 +343,16 @@ bool Extraction::Coarse(HeapNode hnode) {
   for(Node::iterator i = node->in_begin; i != node->in_end; i++) {
     Link &link = *i;
     if(link.node == root) continue;
-    float maxerror = GetRefineError(link.node);
 
-    back.push_back(HeapNode(link.node, maxerror));
-    push_heap(back.begin(), back.end(), greater<HeapNode>());
+    float *error = &node_errors[link.node - root];
+    if(*error == -1)
+      error = GetNodeError(link.node);
+    if(*error < *hnode.error) *error = *hnode.error;
+
+    if(CanCoarse(link.node)) {
+      back.push_back(HeapNode(link.node, error));
+      push_heap(back.begin(), back.end(), greater<HeapNode>());
+    }
   }
 
   front.push_back(hnode);
@@ -414,7 +376,6 @@ void Extraction::Select() {
 	Link &link = *n;
 	for(unsigned int p = link.begin; p != link.end; p++) {
 	  selected.push_back(Item(p, 0));
-	  errors[p] = 0.0f;
 	}
       }
     }
@@ -449,9 +410,10 @@ void Extraction::Visit(Node *node) {
     }
     //TODO this check may be dangerous for non saturating things...
     if(maxerror > target_error) {
-      HeapNode hnode((*i).node, maxerror);
-      heap.push_back(hnode);
-      push_heap(heap.begin(), heap.end());
+      node_errors[(*i).node - root] = maxerror;
+      HeapNode hnode((*i).node, &node_errors[(*i).node - root]);
+      front.push_back(hnode);
+      push_heap(front.begin(), front.end());
     }
   }
 }
@@ -460,7 +422,7 @@ bool Extraction::Expand(HeapNode &node) {
   if(extr_used >= extr_max) return false; 
   if(draw_used >= draw_max) return false;
   //  if(disk_used >= disk_max) return false;
-  return node.error > target_error; 
+  return *node.error > target_error; 
 }
 
 void Extraction::Diff(Node *node, Cost &cost) {
@@ -469,11 +431,9 @@ void Extraction::Diff(Node *node, Cost &cost) {
     Link &link = *i;
     for(unsigned int p = link.begin; p != link.end; p++) {
       Entry &entry = (*mt)[p];
-      cost.extr -= entry.ram_size;
-      if(Visible(p)) cost.draw -= entry.ram_size;
-
-      if(!entry.patch)
-	cost.disk -= entry.disk_size;
+                       cost.extr -= entry.ram_size;
+      if(Visible(p))   cost.draw -= entry.ram_size;
+      if(!entry.patch) cost.disk -= entry.disk_size;
     }
   }
   
@@ -481,12 +441,32 @@ void Extraction::Diff(Node *node, Cost &cost) {
     Link &link = *i;
     for(unsigned int p = link.begin; p != link.end; p++) {
       Entry &entry = (*mt)[p];
-      cost.extr += entry.ram_size;
-      if(Visible(p)) cost.draw += entry.ram_size;
-
-      if(!entry.patch)
-	cost.disk += entry.disk_size;
+                       cost.extr += entry.ram_size;
+      if(Visible(p))   cost.draw += entry.ram_size;
+      if(!entry.patch) cost.disk += entry.disk_size;
     }
   }
 }
 
+ void Extraction::SetError(Node *node, float error) {
+   for(Node::iterator i = node->in_begin; i != node->in_end; i++)
+     if(node_errors[(*i).node - root] != -1 &&
+	node_errors[(*i).node - root] < error) {
+       node_errors[(*i).node - root] = error;
+       SetError((*i).node, error);
+     }
+ }
+
+ bool Extraction::CanRefine(Node *node) {
+   for(Node::iterator i = node->in_begin; i != node->in_end; i++)
+     if(!Visited((*i).node))
+       return false;
+   return true;
+ }
+
+ bool Extraction::CanCoarse(Node *node) {
+   for(Node::iterator i = node->out_begin; i != node->out_end; i++)
+     if(Visited((*i).node))
+       return false;
+   return true;
+ }

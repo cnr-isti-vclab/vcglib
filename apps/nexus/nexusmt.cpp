@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.36  2005/02/22 10:38:06  ponchio
+Debug, cleaning and optimization.
+
 Revision 1.35  2005/02/20 19:49:44  ponchio
 cleaning (a bit more).
 
@@ -148,14 +151,23 @@ void NexusMt::Render(Extraction &extraction, DrawContest &contest,
 		     Stats *stats) {
   static ::GLUquadricObj *  spr = gluNewQuadric();
 
+
+  //Updating heap errors
+  map<unsigned int, float> errors;
+  for(unsigned int i = 0; i < extraction.selected.size(); i++) {
+    Item &item = extraction.selected[i];
+    errors[item.id] = item.error;
+  }
   for(unsigned int i = 0; i < heap.size(); i++) {
     Item &item = heap[i];
-    if(!extraction.errors.count(item.id)) {
+    if(!errors.count(item.id)) {
       item.error = 1e20;
     } else
-      item.error = extraction.errors[item.id];
+      item.error = errors[item.id];
   }
   make_heap(heap.begin(), heap.end());
+
+
 
   preload.post(extraction.selected);
 

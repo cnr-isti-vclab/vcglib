@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/02/20 19:49:44  ponchio
+cleaning (a bit more).
+
 Revision 1.6  2005/02/20 00:43:23  ponchio
 Less memory x extraction.  (removed frags)
 
@@ -88,7 +91,7 @@ namespace nxs {
     ~History();
    
     Node *Root() { return &nodes[0]; }
-
+    Node *Sink() { return  Root() + n_nodes() -1; }
     void Clear();
     void ClearQuick();
     void ClearUpdates();

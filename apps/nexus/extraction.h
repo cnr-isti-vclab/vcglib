@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/02/20 18:07:01  ponchio
+cleaning.
+
 Revision 1.8  2005/02/19 16:22:45  ponchio
 Minor changes (visited and Cell)
 
@@ -74,13 +77,13 @@ class Extraction {
   
   struct HeapNode {
     Node *node;
-    float error;
+    float *error;
 
-    HeapNode(Node *_node, float _error): node(_node), error(_error) {}
+    HeapNode(Node *_node, float *_error): node(_node), error(_error) {}
     bool operator<(const HeapNode &node) const {
-      return error < node.error; }
+      return *error < *node.error; }
     bool operator>(const HeapNode &node) const {
-      return error > node.error; }
+      return *error > *node.error; }
   };
 
   Metric *metric;
@@ -93,19 +96,17 @@ class Extraction {
 
   std::vector<bool> visited;
   std::vector<bool> visible;
-  std::map<unsigned int, float> errors;
+  std::vector<float> node_errors;
 
   std::vector<Item> selected;
   unsigned int draw_size; //first in selected should be drawn
 
   std::vector<HeapNode> heap; //no realtime extraxtion TODO (use front)
 
-  //nodes that i can expand to
-  std::vector<HeapNode> front;
-  //nodes that i can contract
-  std::vector<HeapNode> back;
 
-  unsigned int tot_budget;
+  std::vector<HeapNode> front;  //nodes that i can expand to
+  std::vector<HeapNode> back;   //nodes that i can contract
+
 
   Extraction();
   ~Extraction();
@@ -113,9 +114,9 @@ class Extraction {
   void Extract(NexusMt *mt);
   void Update(NexusMt *mt);
 
-
   bool Visible(unsigned int p)            { return visible[p]; }
   void SetVisible(unsigned int p, bool v) { visible[p] = v; }
+
  protected:         
 
   void Select();
@@ -124,10 +125,9 @@ class Extraction {
   bool Expand(HeapNode &node);
   void Diff(Node *node, Cost &cost);
 
+  void Init();
   bool Refine(HeapNode node);
   bool Coarse(HeapNode node);
-
-  void Init();
 
   bool Visited(Node *node)            { return visited[node - root]; }
   void SetVisited(Node *node, bool v) { visited[node - root] = v; }
@@ -137,10 +137,14 @@ class Extraction {
   Node *root;
   Node *sink;
 
-  float GetRefineError(Node *node);
+  //return inbound links max error. remember to update patch visibility
+  float *GetNodeError(Node *node);
+  //this look for parent nodes with error and fix it should be <
+  void SetError(Node *node, float error);
+  bool CanCoarse(Node *node);
+  bool CanRefine(Node *node);
 };
 
 
 }//namespace
-
 #endif

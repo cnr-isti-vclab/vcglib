@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.26  2005/02/22 10:38:14  ponchio
+Debug, cleaning and optimization.
+
 Revision 1.25  2005/02/21 17:55:47  ponchio
 debug debug debug
 
@@ -369,18 +372,18 @@ int main(int argc, char *argv[]) {
   if(add_colors) {
     if(!plysource.size()) {
       cerr << "No plysource specified when adding color (-p option)\n";
-      return -1;
+    } else {
+      if(!tri::io::ImporterPLY<CMesh>::Open(mesh, plysource.c_str())) {
+	cerr << "Could not load ply: " << plysource << endl;
+	return -1;
+      }
+      //calcoliamo il box:
+      Box3f box;
+      for(unsigned int i = 0; i < mesh.vert.size(); i++)
+	box.Add(mesh.vert[i].P());
+      grid.SetBBox(box);
+      grid.Set(mesh.face);
     }
-    if(!tri::io::ImporterPLY<CMesh>::Open(mesh, plysource.c_str())) {
-      cerr << "Could not load ply: " << plysource << endl;
-      return -1;
-    }
-    //calcoliamo il box:
-    Box3f box;
-    for(unsigned int i = 0; i < mesh.vert.size(); i++)
-      box.Add(mesh.vert[i].P());
-    grid.SetBBox(box);
-    grid.Set(mesh.face);
   }
   
   Signature signature = nexus.signature;
@@ -466,7 +469,7 @@ int main(int argc, char *argv[]) {
     vector<unsigned short> strip;
     if(add_strips) {
       ComputeTriStrip(src_patch.nf, src_patch.FaceBegin(), strip);
-      assert(strip.size() < 32767);
+      assert(strip.size() < 65000);
       out.AddPatch(src_entry.nvert, strip.size(), src_border.Capacity());
       if(verbose) {
 	cerr << "tri: " << src_patch.nf << " strip: " << strip.size() 
@@ -553,9 +556,10 @@ int main(int argc, char *argv[]) {
   }
 
   if(add_colors) {
+    //    if(!plysource.size()) 
     //source of color:
-    cerr << "Unsupported color\n";
-    return -1;
+    //    cerr << "Unsupported color\n";
+    //    return -1;
   }
 
   if(qvertex && add_normals) { 

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.25  2005/03/01 11:21:20  ponchio
+Added line intersection
+
 Revision 1.24  2005/02/22 14:20:44  ponchio
 debug and mostly vertex unifying across borders
 (still not perfect... :P)
@@ -61,6 +64,7 @@ Added copyright
 //#include <wrap/strip/tristrip.h>
 
 #include "nxsalgo.h"
+#include "extraction.h"
 #include "vpartition.h"
 #include "vfile.h"
 #include "nexus.h"
@@ -68,6 +72,7 @@ Added copyright
 #include "watch.h"
 
 #include <vcg/space/line3.h>
+#include <vcg/space/intersection3.h>
 
 using namespace std;
 using namespace nxs;
@@ -731,10 +736,10 @@ bool nxs::LineIntersect(Nexus &nexus, Extraction &extraction,
     return false;
 
   bool found = false;
-  bool min_dist = -1;
+  float min_dist = -1;
   float bar1, bar2, dist;
   for(unsigned int i = 0; i < extraction.draw_size; i++) {
-    unsigned int p = extraction.selected[i];
+    unsigned int p = extraction.selected[i].id;
     if(!Intersection(nexus[p].sphere, line, hit, tmp))
       continue;
     Patch &patch = nexus.GetPatch(p);
@@ -747,7 +752,7 @@ bool nxs::LineIntersect(Nexus &nexus, Extraction &extraction,
 	if(Intersection(line, v0, v1, v2, bar1, bar2, dist) &&
 	   dist > 0 && 
 	   (min_dist == -1 || min_dist > dist)) {
-	  hit = v0*(1-bar1-bar2)+v1*bar1+b2*bar2;
+	  hit = v0*(1-bar1-bar2) + v1*bar1 + v2*bar2;
 	  min_dist = dist;
 	  found = true;
 	}
@@ -761,7 +766,7 @@ bool nxs::LineIntersect(Nexus &nexus, Extraction &extraction,
 	if(Intersection(line, v0, v1, v2, bar1, bar2, dist) &&
 	   dist > 0 && 
 	   (min_dist == -1 || min_dist > dist)) {
-	  hit = v0*(1-bar1-bar2)+v1*bar1+b2*bar2;
+	  hit = v0*(1-bar1-bar2) + v1*bar1 + v2*bar2;
 	  min_dist = dist;
 	  found = true;
 	}

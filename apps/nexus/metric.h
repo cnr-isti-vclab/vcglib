@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/02/22 10:37:55  ponchio
+Debug, cleaning and optimization.
+
 Revision 1.8  2005/02/21 20:49:30  ponchio
 some culling bug.
 
@@ -84,14 +87,16 @@ namespace nxs {
       float error = entry.error/frustum.Resolution(dist);
       if(culling) {
 	float remote = frustum.Remoteness(sph.Center(), sph.Radius());      
-	if(remote > 0) {
+	if(frustum.IsOutside(sph.Center(), sph.Radius())) {
+	  visible = false;
+
+
 	  // TODO FIXME remoteness is bugged... (not much only bit
 	  //if we are close to the surface, the projection of
 	  //the bounding sphere in screen space comes out too small
 	  //just using resolution and radius. Im too lazy to fix it.
-	  if(frustum.IsOutside(sph.Center(), sph.Radius()))
-	    visible = false;
-	  error /= remote;
+	  if(remote > 0) 
+	    error /= remote;
 	} else if(entry.cone.Backface(sph, frustum.ViewPoint())) {
 	  visible = false;
 	}
