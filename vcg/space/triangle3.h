@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/07/15 10:17:42  pietroni
+correct access to point funtions call in usage of triangle3 (ex. t.P(0)  in t.P0(0))
+
 Revision 1.1  2004/03/08 01:13:31  cignoni
 Initial commit
 
@@ -61,9 +64,11 @@ protected:
 public:
 
 	/// Shortcut per accedere ai punti delle facce
+	inline CoordType & P( const int j ) { return _v[j];}
 	inline CoordType & P0( const int j ) { return _v[j];}
 	inline CoordType & P1( const int j ) { return _v[(j+1)%3];}
 	inline CoordType & P2( const int j ) { return _v[(j+2)%3];}
+	inline const CoordType &  P( const int j ) const { return _v[j];}
 	inline const CoordType &  P0( const int j ) const { return _v[j];}
 	inline const CoordType &  P1( const int j ) const { return _v[(j+1)%3];}
 	inline const CoordType &  P2( const int j ) const { return _v[(j+2)%3];}
@@ -231,35 +236,35 @@ P3ScalarType Quality( Point3<P3ScalarType> const &p0, Point3<P3ScalarType> const
 template<class TriangleType>
 Point3<typename TriangleType::ScalarType> Normal(const TriangleType &t)
 {
-	return (( t.P0(1) - t.P0(0)) ^ (t.P0(2) - t.P0(0)));
+	return (( t.P(1) - t.P(0)) ^ (t.P(2) - t.P(0)));
 }
 
 /// Like the above, it returns the normal to the plane passing through p0,p1,p2, but normalized.
 template<class TriangleType>
 Point3<typename TriangleType::ScalarType> NormalizedNormal(const TriangleType &t)
 {
-	return (( t.P0(1) - t.P0(0)) ^ (t.P0(2) - t.P0(0))).Normalize();
+	return (( t.P(1) - t.P(0)) ^ (t.P(2) - t.P(0))).Normalize();
 }
 
 /// Return the area of the triangle
 template<class TriangleType>
 typename TriangleType::ScalarType Area(const TriangleType &t) 
 {
-	return Norm( (t.P0(1) - t.P0(0)) ^ (t.P0(2) - t.P0(0)) );
+	return Norm( (t.P(1) - t.P(0)) ^ (t.P(2) - t.P(0)) );
 }
 
 template<class TriangleType>
 Point3<typename TriangleType::ScalarType> Barycenter(const TriangleType &t) 
 {
-	return ((t.P0(0)+t.P0(1)+t.P0(2))/(typename TriangleType::ScalarType) 3.0);
+	return ((t.P(0)+t.P(1)+t.P(2))/(typename TriangleType::ScalarType) 3.0);
 }
 
 template<class TriangleType>
 typename TriangleType::ScalarType Perimeter(const TriangleType &t) 
 {
-	return Distance(t.P0(0),t.P0(1))+
-		     Distance(t.P0(1),t.P0(2))+
-				 Distance(t.P0(2),t.P0(0));
+	return Distance(t.P(0),t.P(1))+
+		     Distance(t.P(1),t.P(2))+
+				 Distance(t.P(2),t.P(0));
 }
 
 
