@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/05/12 13:52:11  pietroni
+*** empty log message ***
+
 Revision 1.2  2004/03/12 15:22:19  pietroni
 Written some documentation and added to the trimes doxygen module
 
@@ -32,10 +35,10 @@ Written some documentation and added to the trimes doxygen module
 #ifndef __VCG_TETRA_UPDATE_NORMALS
 #define __VCG_TETRA_UPDATE_NORMALS
 
-#include<complex\tetramesh\update\triconvert.h>
-#include<simplex\face\face.h>
-#include<complex\trimesh\base.h>
-#include<complex\trimesh\update\normal.h>
+#include<vcg\complex\tetramesh\update\triconvert.h>
+#include<vcg\simplex\face\face.h>
+#include<vcg\complex\trimesh\base.h>
+#include<vcg\complex\trimesh\update\normal.h>
 #include<vector>
 
 namespace vcg {
