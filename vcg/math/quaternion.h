@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2004/10/22 14:35:42  ponchio
+m.element(x, y) -> m[x][y]
+
 Revision 1.8  2004/10/07 13:54:03  ganovelli
 added SetIdentity
 
@@ -32,6 +35,9 @@ updated access to matrix44 elements through V() instead simple []
 
 Revision 1.6  2004/03/25 14:57:49  ponchio
 Microerror. ($LOG$ -> $Log: not supported by cvs2svn $
+Microerror. ($LOG$ -> Revision 1.9  2004/10/22 14:35:42  ponchio
+Microerror. ($LOG$ -> m.element(x, y) -> m[x][y]
+Microerror. ($LOG$ ->
 Microerror. ($LOG$ -> Revision 1.8  2004/10/07 13:54:03  ganovelli
 Microerror. ($LOG$ -> added SetIdentity
 Microerror. ($LOG$ ->
@@ -191,6 +197,27 @@ template <class S> void Quaternion<S>::ToMatrix(Matrix44<S> &m) const	{
 	S q22 = V(3)*V(3);
 	S q23 = V(3)*V(0);
 
+/*	<<<<<<< quaternion.h
+  m[0][ 0] = (S)(1.0-(q11 + q22)*2.0);
+  m[1][ 0] = (S)((q01 - q23)*2.0);
+  m[2][ 0] = (S)((q02 + q13)*2.0);
+  m[3][ 0] = (S)0.0;
+
+  m[0][ 1] = (S)((q01 + q23)*2.0);
+  m[1][ 1] = (S)(1.0-(q22 + q00)*2.0);
+  m[2][ 1] = (S)((q12 - q03)*2.0);
+  m[3][ 1] = (S)0.0;
+
+  m[0][ 2] = (S)((q02 - q13)*2.0);
+  m[1][ 2] = (S)((q12 + q03)*2.0);
+  m[2][ 2] = (S)(1.0-(q11 + q00)*2.0);
+  m[3][ 2] = (S)0.0;
+
+  m[0][ 3] = (S)0.0;
+  m[1][ 3] = (S)0.0;
+  m[2][ 3] = (S)0.0;
+  m[3][ 3] = (S)1.0;
+=======*/
   m[0][0] = (S)(1.0-(q11 + q22)*2.0);
   m[1][0] = (S)((q01 - q23)*2.0);
   m[2][0] = (S)((q02 + q13)*2.0);
@@ -210,6 +237,7 @@ template <class S> void Quaternion<S>::ToMatrix(Matrix44<S> &m) const	{
   m[1][3] = (S)0.0;
   m[2][3] = (S)0.0;
   m[3][3] = (S)1.0;
+//>>>>>>> 1.9
 }
 	
 

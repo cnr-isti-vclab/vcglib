@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2004/10/22 14:41:30  ponchio
+return in operator+ added.
+
 Revision 1.20  2004/10/18 15:03:14  fiorin
 Updated interface: all Matrix classes have now the same interface
 
@@ -192,9 +195,11 @@ public:
   void operator-=(const Matrix44 &m);	
   void operator*=( const Matrix44 & m );	
   void operator*=( const T k );
-
-	void ToMatrix(Matrix44 & m) const {for(int i = 0; i < 16; i++) m.V()[i]=V()[i];}
-	void FromMatrix(const Matrix44 & m){for(int i = 0; i < 16; i++) V()[i]=m.V()[i];}
+	
+  template <class Matrix44Type>
+	void ToMatrix(Matrix44Type & m) const {for(int i = 0; i < 16; i++) m.V()[i]=V()[i];}
+	template <class Matrix44Type>
+	void FromMatrix(const Matrix44Type & m){for(int i = 0; i < 16; i++) V()[i]=m.V()[i];}
 	void SetZero();
   void SetIdentity();
   void SetDiagonal(const T k);

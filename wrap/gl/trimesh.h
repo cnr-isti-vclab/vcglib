@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/09/30 01:40:39  ponchio
+<gl/glew.h>  --> <GL/glew.h>
+
 Revision 1.3  2004/07/13 11:25:57  pietroni
 changed order of initial include ( it had problems with extension of openGL)
 
@@ -365,7 +368,7 @@ void DrawFill()
 	else
 
  	if(h&HNUseTriStrip) 
- 	{
+	{
 		//if( (nm==NMPerVert) && ((cm==CMNone) || (cm==CMPerMesh)))
 		//	if(h&HNUseVArray){
 		//		glEnableClientState (GL_NORMAL_ARRAY  );

@@ -23,15 +23,6 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
-Revision 1.7  2004/11/23 10:15:38  cignoni
-removed comment in comment gcc warning
-
-Revision 1.6  2004/11/03 09:25:52  ganovelli
-replaced Matrix44f to Matrix44<S>, added LookAt
-
-Revision 1.5  2004/10/22 14:29:40  ponchio
-#include <...Point --> #include <...point
-
 Revision 1.4  2004/10/07 14:41:31  fasano
 Little fix on ViewPoint() method
 
@@ -50,14 +41,17 @@ Revision 1.2  2004/09/06 21:41:30  ganovelli
 Revision 1.1  2004/09/03 13:01:51  ganovelli
 creation
 
-****************************************************************************/
+/****************************************************************************/
 
 
 #ifndef __VCGLIB_SHOT
 #define __VCGLIB_SHOT
 
-#include <vcg/space/point2.h>
-#include <vcg/space/point3.h>
+// #include <vector>
+// #include <vcg/Matrix44.h>
+// #include <vcg/Box3.h>
+#include <vcg/space/Point2.h>
+#include <vcg/space/Point3.h>
 #include <vcg/math/similarity.h>
 #include <vcg/math/camera.h>
 
@@ -105,8 +99,13 @@ public:
 	/// convert a 3d point in camera coordinates
 	vcg::Point3<S>  ConvertToCameraCoordinates(const vcg::Point3<S> & p) const;
 
+	/// convert a 3d point in camera coordinates
+	vcg::Point3<S>  ConvertToWorldCoordinates(const vcg::Point3<S> & p) const;
+
 	/// project onto the camera plane
 	vcg::Point2<S> Project(const vcg::Point3<S> & p) const;
+
+	vcg::Point3<S> UnProject(const vcg::Point2<S> & p) const;
 
 	/// take the distance from the point p and the plane parallel to the camera plane and passing through the view
 	/// point. The would be z depth 
@@ -125,7 +124,7 @@ template <class S>
 	vcg::Point3<S>  Shot<S>::Axis(const int & i) const {	
 			vcg::Matrix44<S> m; 
 			similarity.rot.ToMatrix(m); 
-			vcg::Point3f aa = m.Row3(i);
+			vcg::Point3<S> aa = m.Row3(i);
 			return aa;
 	}
 
@@ -142,23 +141,23 @@ void Shot<S>::LookAt(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up){
 template <class S>
 void Shot<S>::LookAt(const S & eye_x,const S & eye_y,const S & eye_z,const S & at_x,const S & at_y,const S & at_z,
 										 const S & up_x,const S & up_y,const S & up_z){
-											 SetViewPoint(Point3<S>(eye_x,eye_y,eye_z));
-											 LookAt(Point3<S>(at_x,at_y,at_z),Point3<S>(up_x,up_y,up_z));
-										 }
+	SetViewPoint(Point3<S>(eye_x,eye_y,eye_z));
+	LookAt(Point3<S>(at_x,at_y,at_z),Point3<S>(up_x,up_y,up_z));
+}
 
 
 template <class S>
 void Shot<S>::LookTowards(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up){
-		vcg::Point3<S> x_dir = up ^-z_dir ;
-		vcg::Point3<S> y_dir = -z_dir ^x_dir ;
-		
-		Matrix44<S> m;
-		m.SetIdentity();
-		*(vcg::Point3<S> *)&m[0][0] = x_dir/x_dir.Norm();
-		*(vcg::Point3<S> *)&m[1][0] = y_dir/y_dir.Norm();
-		*(vcg::Point3<S> *)&m[2][0] = -z_dir/z_dir.Norm();
+	vcg::Point3<S> x_dir = up ^-z_dir ;
+	vcg::Point3<S> y_dir = -z_dir ^x_dir ;
+	
+	Matrix44<S> m;
+	m.SetIdentity();
+	*(vcg::Point3<S> *)&m[0][0] = x_dir/x_dir.Norm();
+	*(vcg::Point3<S> *)&m[1][0] = y_dir/y_dir.Norm();
+	*(vcg::Point3<S> *)&m[2][0] = -z_dir/z_dir.Norm();
 
-		similarity.rot.FromMatrix(m);
+	similarity.rot.FromMatrix(m);
 }
 
 template <class S>
@@ -168,18 +167,28 @@ vcg::Point3<S> Shot<S>::ConvertToCameraCoordinates(const vcg::Point3<S> & p) con
 	cp[2]=-cp[2];
 	return cp;
 	}
-
+template <class S>
+vcg::Point3<S> Shot<S>::ConvertToWorldCoordinates(const vcg::Point3<S> & p) const{
+	vcg::Point3<S> cp = Inverse(similarity.Matrix())*p;
+	// note: the World reference system is left handed
+	cp[2]=-cp[2];
+	return cp;
+}
 template <class S>
 vcg::Point2<S> Shot<S>::Project(const vcg::Point3<S> & p) const{
 		return camera.Project(ConvertToCameraCoordinates(p));
 	}
-
+template <class S>
+vcg::Point3<S> Shot<S>::UnProject(const vcg::Point2<S> & p) const{
+	vcg::Point3<S> q = camera.UnProject(p);
+	return ConvertToWorldCoordinates(q);
+}
 template <class S>
 S Shot<S>::Depth(const vcg::Point3<S> & p)const {
 	return ConvertToCameraCoordinates(p).Z();
 }
 
-}
+};
 #endif
 
 

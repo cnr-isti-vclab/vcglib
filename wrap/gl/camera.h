@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/11/03 09:38:21  ganovelli
+added SetSubView, some comment and put the class back(!)
+
 Revision 1.2  2004/10/05 19:04:44  ganovelli
 changed from classes to functions
 
@@ -40,6 +43,7 @@ creation
 // opengl
 #include <GL/glew.h>
 
+//<<<<<<< camera.h
 
 template <class CameraType>
 struct GlCamera{
@@ -47,9 +51,20 @@ struct GlCamera{
 	typedef typename CameraType::ScalarType ScalarType;
 	typedef typename CameraType::ScalarType S;
 
-	/// returns the opengl matrix corresponding to the camera
 static vcg::Matrix44<ScalarType>
-MatrixGL(const vcg::Camera<ScalarType> & cam, vcg::Matrix44<ScalarType> &m){
+MatrixGL(const vcg::Camera<S> & cam, vcg::Matrix44<S> &m){
+//=======
+//
+//template <class CameraType>
+//struct GlCamera{
+//
+//	typedef typename CameraType::ScalarType ScalarType;
+//	typedef typename CameraType::ScalarType S;
+//
+//	/// returns the opengl matrix corresponding to the camera
+//static vcg::Matrix44<ScalarType>
+//MatrixGL(const vcg::Camera<ScalarType> & cam, vcg::Matrix44<ScalarType> &m){
+//>>>>>>> 1.3
 	glPushAttrib(GL_TRANSFORM_BIT);
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
@@ -61,18 +76,16 @@ MatrixGL(const vcg::Camera<ScalarType> & cam, vcg::Matrix44<ScalarType> &m){
 	return m;
 }
 
-	/// computes the parametrs as to call the glFrustum(..)
-static void 
-GetFrustum(const CameraType & camera,
-					typename CameraType::ScalarType & sx,
-					typename CameraType::ScalarType & dx,
-					typename CameraType::ScalarType & bt,
-					typename CameraType::ScalarType & tp,
-					typename CameraType::ScalarType & f ,
-					typename CameraType::ScalarType & fr
-					)
-{
-	dx = camera.c.X()*camera.s.X();
+//<<<<<<< camera.h
+static void GetFrustum(const CameraType & camera,
+								typename S & sx,
+								typename S & dx,
+								typename S & bt,
+								typename S & tp,
+								typename S & f ,
+								typename S & fr
+								){
+	dx = camera.c.X()*camera.s.X();			//scaled center
 	sx = -( camera.viewport.X() - camera.c.X() ) * camera.s.X();
 
 	bt = -camera.c.Y()*camera.s.Y();
@@ -82,29 +95,89 @@ GetFrustum(const CameraType & camera,
 	fr = camera.farend; 
 }
 
-/// perform the opengl trasformatino correponding to the camera
-static void TransformGL(const vcg::Camera<ScalarType> & camera,typename ScalarType farDist = -1 ) {
-	ScalarType sx,dx,bt,tp,nr,fr;
+//=======
+//	/// computes the parametrs as to call the glFrustum(..)
+//static void 
+//GetFrustum(const CameraType & camera,
+//					typename CameraType::ScalarType & sx,
+//					typename CameraType::ScalarType & dx,
+//					typename CameraType::ScalarType & bt,
+//					typename CameraType::ScalarType & tp,
+//					typename CameraType::ScalarType & f ,
+//					typename CameraType::ScalarType & fr
+//					)
+//{
+//	dx = camera.c.X()*camera.s.X();
+//	sx = -( camera.viewport.X() - camera.c.X() ) * camera.s.X();
+//>>>>>>> 1.3
+
+//<<<<<<< camera.h
+static void TransformGL(const vcg::Camera<S> & camera,typename S farDist = -1 ) {
+	S sx,dx,bt,tp,nr,fr;
 	GetFrustum(camera,sx,dx,bt,tp,nr,fr);	
 	assert(glGetError()==0);
 	glFrustum(sx,dx,bt,tp,nr,(farDist == -1)?fr:farDist);
 	assert(glGetError()==0);
-}
+};
+//=======
+//	bt = -camera.c.Y()*camera.s.Y();
+//	tp = ( camera.viewport.Y() - camera.c.Y() ) * camera.s.Y();
+//>>>>>>> 1.3
 
-/// set the view as from the camera but only in a portion of the view (c0,c1 in [0,1]x[0,1]
-static void SetSubView(const CameraType & camera,vcg::Point2<S> c0,vcg::Point2<S> c1){
-	typedef typename CameraType::ScalarType S;
+//<<<<<<< camera.h
+static void GetViewSize(const vcg::Camera<S> & camera, typename S &width, typename S &height) {
 	S sx,dx,bt,tp,nr,fr;
 	GetFrustum(camera,sx,dx,bt,tp,nr,fr);	
+	width = dx-sx;	//right - left = width
+	height = tp-bt;  //top - bottom = height
+};
+//=======
+//	f  = camera.f;
+//	fr = camera.farend; 
+//}
+//>>>>>>> 1.3
+
+//<<<<<<< camera.h
+static void SetSubView(const CameraType & camera,vcg::Point2<S> p0,vcg::Point2<S> p1){
+	//typedef typename CameraType::ScalarType S;
+	S sx,dx,bt,tp,nr,fr;
+	GetFrustum(camera,sx,dx,bt,tp,nr,fr);	
+//=======
+///// perform the opengl trasformatino correponding to the camera
+//static void TransformGL(const vcg::Camera<ScalarType> & camera,typename ScalarType farDist = -1 ) {
+//	ScalarType sx,dx,bt,tp,nr,fr;
+//	GetFrustum(camera,sx,dx,bt,tp,nr,fr);	
+//	assert(glGetError()==0);
+//	glFrustum(sx,dx,bt,tp,nr,(farDist == -1)?fr:farDist);
+//	assert(glGetError()==0);
+//}
+//
+///// set the view as from the camera but only in a portion of the view (c0,c1 in [0,1]x[0,1]
+//static void SetSubView(const CameraType & camera,vcg::Point2<S> c0,vcg::Point2<S> c1){
+//	typedef typename CameraType::ScalarType S;
+//	S sx,dx,bt,tp,nr,fr;
+//	GetFrustum(camera,sx,dx,bt,tp,nr,fr);	
+//>>>>>>> 1.3
 	
-	S cv[2];
-	cv[0] = dx-sx;
-	cv[1] = tp-bt;
-	glFrustum(sx + cv[0]* c0[0],sx + cv[0] * c1[0],
-						bt + cv[1]* c0[1],bt + cv[1] * c1[1],
-						nr,fr);
+//<<<<<<< camera.h
+	S width = dx-sx;	//right - left = width
+	S height = tp-bt;  //top - bottom = height
+	glFrustum(
+				width* p0[0]+ sx, width* p1[0]+ sx,	
+				height* p0[1]+ bt, height* p1[1]+ bt,
+				nr,fr);
 	assert(glGetError()==0);
-}
+};
+//=======
+//	S cv[2];
+//	cv[0] = dx-sx;
+//	cv[1] = tp-bt;
+//	glFrustum(sx + cv[0]* c0[0],sx + cv[0] * c1[0],
+//						bt + cv[1]* c0[1],bt + cv[1] * c1[1],
+//						nr,fr);
+//	assert(glGetError()==0);
+//}
+//>>>>>>> 1.3
 
 };
 #endif

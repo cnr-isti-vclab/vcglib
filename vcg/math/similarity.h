@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2004/10/07 13:55:47  ganovelli
+templated on the kind of class used to implement rotation
+(default is QUternion but it can be Matrix44 as well)
+
 Revision 1.9  2004/06/04 13:35:07  cignoni
 added InverseMatrix,
 
@@ -35,6 +39,10 @@ unified to the gl stlyle matix*vector. removed vector*matrix operator
 
 Revision 1.6  2004/03/25 14:57:49  ponchio
 Microerror. ($LOG$ -> $Log: not supported by cvs2svn $
+Microerror. ($LOG$ -> Revision 1.10  2004/10/07 13:55:47  ganovelli
+Microerror. ($LOG$ -> templated on the kind of class used to implement rotation
+Microerror. ($LOG$ -> (default is QUternion but it can be Matrix44 as well)
+Microerror. ($LOG$ ->
 Microerror. ($LOG$ -> Revision 1.9  2004/06/04 13:35:07  cignoni
 Microerror. ($LOG$ -> added InverseMatrix,
 Microerror. ($LOG$ ->
@@ -154,9 +162,9 @@ template <class S,class RotationType> void Similarity<S,RotationType>::FromMatri
   assert(sca != 0);
   Matrix44<S> t = m * Matrix44<S>().SetScale(1/sca, 1/sca, 1/sca);
   rot.FromMatrix(t);
-  tra[0] = t.element(3, 0);
-  tra[1] = t.element(3, 1);
-  tra[2] = t.element(3, 2);
+  tra[0] = t.ElementAt(3, 0);
+  tra[1] = t.ElementAt(3, 1);
+  tra[2] = t.ElementAt(3, 2);
 }
 
 template <class S,class RotationType> Similarity<S,RotationType> &Invert(Similarity<S,RotationType> &a) {  

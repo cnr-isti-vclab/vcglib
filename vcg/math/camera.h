@@ -23,6 +23,8 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+<<<<<<< camera.h
+=======
 Revision 1.8  2004/11/23 10:15:38  cignoni
 removed comment in comment gcc warning
 
@@ -32,6 +34,7 @@ Point?.h to point?.h
 Revision 1.6  2004/11/03 09:32:50  ganovelli
 SetPerspective and SetFrustum added (same parameters as in opengl)
 
+>>>>>>> 1.8
 Revision 1.4  2004/10/07 14:39:57  fasano
 Remove glew.h include
 
@@ -57,8 +60,8 @@ creation
 #define __VCGLIB_CAMERA
 
 // VCG
-#include <vcg/space/point3.h>
-#include <vcg/space/point2.h>
+#include <vcg/space/Point3.h>
+#include <vcg/space/Point2.h>
 #include <vcg/math/similarity.h>
 
 namespace vcg{
@@ -75,15 +78,16 @@ public:
 		_flags(0),viewportM(1)
 		{}
 
-	S    f;													// Focal Distance (cioe' la distanza del piano immagine dal centro di proiezione
-	S    farend;										// farend end of frustum (it doesn influence the projection )
-	vcg::Point2<S> s;								// Scale factor of the image (nei casi in cui a senso)
-	vcg::Point2<S> c;								// pin-hole position
-	vcg::Point2<int>	 viewport;		// Size viewport (in pixels)
-	S  k[4];												// 1st & 2nd order radial lens distortion coefficient
+	S    f;								// Focal Distance (cioe' la distanza del piano immagine dal centro di proiezione
+	S    farend;						// farend end of frustum (it doesn influence the projection )
+	vcg::Point2<S> s;					// Scale factor of the image (nei casi in cui a senso)
+	vcg::Point2<S> c;					// pin-hole position
 
-	S viewportM;								// ratio between viewport in pixel and size (useful to avoid chancing s or viewport when
-															// zooming a ortho camera (for a perspective camera it is 1)
+	vcg::Point2<int>	 viewport;		// Size viewport (in pixels)
+	S  k[4];							// 1st & 2nd order radial lens distortion coefficient
+
+	S viewportM;						// ratio between viewport in pixel and size (useful to avoid chancing s or viewport when
+										// zooming a ortho camera (for a perspective camera it is 1)
 
 	enum{
 		ORTHO_BIT = 0x01 		// true if the camera is orthogonal
@@ -95,14 +99,15 @@ public:
 	char & UberFlags() {return _flags;}
 
 	/// set the camera specifying the perspecive view
-	inline void SetPerspective(S angle, S ratio, S nearend, S farend,vcg::Point2<S> viewport=vcg::Point2<S>(500,-1) );
+	inline void SetPerspective(S angle, S ratio, S near, S farend,vcg::Point2<S> viewport=vcg::Point2<S>(500,-1) );
 
 	/// set the camera specifying the frustum view
-	inline void SetFrustum(S dx, S sx, S bt, S tp, S nearend, S farend,vcg::Point2<S> viewport=vcg::Point2<S>(500,-1));
+	inline void SetFrustum(S dx, S sx, S bt, S tp, S near, S farend,vcg::Point2<S> viewport=vcg::Point2<S>(500,-1));
 
 	/// project a point from space 3d (in the reference system of the camera) to the camera's plane
 	/// the result is in absolute coordinates
 	inline vcg::Point2<S> Project(const vcg::Point3<S> & p);
+	inline vcg::Point3<S> UnProject(const vcg::Point2<S> & p);
 };
 
 /// project a point in the camera plane
@@ -132,38 +137,57 @@ vcg::Point2<S> Camera<S>::Project(const vcg::Point3<S> & p){
 		}	
 	return q;
 }
+/// unproject a point from the camera plane
+template<class S>
+vcg::Point3<S> Camera<S>::UnProject(const vcg::Point2<S> & p){
+	S  tx = p.X();
+	S  ty = p.Y();
 
-		/// set the camera specifying the perspecive view
-		template<class S>
-			void Camera<S>::SetPerspective(S angle, S ratio, S nr, S _farend,vcg::Point2<S> vp){
-				S halfsize[2];
-				halfsize[1] = tan(math::ToRad(angle/2)) * nr;
-				halfsize[0] = halfsize[1]*ratio;
-				SetFrustum(-halfsize[0],halfsize[0],-halfsize[1],halfsize[1],nr,_farend,vp);
-		}
+	vcg::Point3<S> q(0,0,0);
 
-		/// set the camera specifying the frustum view
-		template<class S>
-			void Camera<S>::SetFrustum(S sx, S dx, S bt, S tp, S nr, S _farend,vcg::Point2<S> vp){
-				S vpt[2];
-				vpt[0] = dx-sx;
-				vpt[1] = tp-bt;
+	if(!IsOrtho())
+	{
+		tx = (tx-c.X())*s.X();
+		ty = (tx-c.Y())*s.Y();
 
-				viewport[0] = vp[0];
-				if(vp[1] != -1)
-					viewport[1] = vp[1];// the user specified the viewport
-				else
-					viewport[1] = viewport[0];// default viewport
+		q[0] = tx/f;
+		q[1] = ty/f;
+		q[2] = f;
+	}
 
-				s[0] = vpt[0]/(S) viewport[0];
-				s[1] = vpt[1]/(S) viewport[1];
+	return q;
+}
+/// set the camera specifying the perspective view
+template<class S>
+	void Camera<S>::SetPerspective(S angle, S ratio, S nr, S _far,vcg::Point2<S> vp){
+		S halfsize[2];
+		halfsize[1] = tan(math::ToRad(angle/2)) * nr;
+		halfsize[0] = halfsize[1]*ratio;
+		SetFrustum(-halfsize[0],halfsize[0],-halfsize[1],halfsize[1],nr,_far,vp);
+}
 
-				c[0] = -sx/vpt[0] * viewport[0];
-				c[1] = -bt/vpt[1] * viewport[1];
+/// set the camera specifying the frustum view
+template<class S>
+	void Camera<S>::SetFrustum(S sx, S dx, S bt, S tp, S nr, S _far,vcg::Point2<S> vp){
+		S vpt[2];
+		vpt[0] = dx-sx;
+		vpt[1] = tp-bt;
 
-				f =nr;
-				farend = _farend;
-			}
+		viewport[0] = vp[0];
+		if(vp[1] != -1)
+			viewport[1] = vp[1];// the user specified the viewport
+		else
+			viewport[1] = viewport[0];// default viewport
+
+		s[0] = vpt[0]/(S) viewport[0];
+		s[1] = vpt[1]/(S) viewport[1];
+
+		c[0] = -sx/vpt[0] * viewport[0];
+		c[1] = -bt/vpt[1] * viewport[1];
+
+		f =nr;
+		farend = _far;
+	}
 
 
 }
