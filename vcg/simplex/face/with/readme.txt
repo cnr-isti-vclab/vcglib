@@ -28,15 +28,16 @@ The possible admitted letters pairs are
 
 FA - face-face adjacency
 FC - Per-Face Color
+FM - Per-Face Incremental Mark
 FN - Per-Face Normal
 FQ - Per-Face Quality
+RT - Data for Optimized Point-Face Distance and Ray-Tracing Stuff
+SA - Shared Vertex-Face and Face-Face Adjacency
 VA - Vertex-face adjacency
 WC - Per-Wedge Color
 WN - Per-Wedge Normal
 WQ - Per-Wedge Quality
 WT - Per-Wedge Texture Coords
-SA - Shared Vertex-Face and Face-Face Adjacency
-RT - Data for Optimized Point-Face Distance and Ray-Tracing Stuff
 
 E.g. 
 
