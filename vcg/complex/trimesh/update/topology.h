@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2004/07/15 11:35:08  ganovelli
+Vfb to VFp
+
 Revision 1.9  2004/07/15 00:13:39  cignoni
 Better doxigen documentation
 
@@ -56,6 +59,7 @@ Initial commit
 #ifndef __VCG_TRI_UPDATE_TOPOLOGY
 #define __VCG_TRI_UPDATE_TOPOLOGY
 #include <algorithm>
+#include <vcg\simplex\face\pos.h>
 namespace vcg {
 namespace tri {
 /** \addtogroup trimesh */
@@ -225,7 +229,58 @@ static void VertexFace(MeshType &m)
 		}
 	}
 }
+
+///test correctness of VFtopology
+static void TestVertexFace(MeshType &m)
+{
+	if(!m.HasVFTopology()) return;		
+
+	VertexIterator vi;
+	vcg::face::VFIterator<FaceType> VFi;
+
+	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+	{
+		if (!vi->IsD())
+		{
+			//the vertex must be linked to one face
+			assert(vi->VFp()!=0);
+			VFi.f=vi->VFp();
+			VFi.z=vi->VFi();
+			while (!VFi.End())
+			{
+				assert(!VFi.F()->IsD());
+				assert((VFi.F()->V(VFi.I()))==&(*vi));
+				VFi++;
+			}
+		}
+	}
+}
+
+///test correctness of FFtopology
+static void TestFaceFace(MeshType &m)
+{
+	if(!m.HasFFTopology()) return;		
+
+	FaceIterator Fi;
 	
+	for(Fi=m.face.begin();Fi!=m.face.end();++Fi)
+	{
+		if (!Fi->IsD())
+		{
+			for (int i=0;i<3;i++)
+			{
+				FaceType *f=Fi->FFp(i);
+				int e=Fi->FFi(i);
+				//invariant property of fftopology
+				assert(f->FFp(e)=&(*Fi));
+				//control if the vertex are the same
+				assert(((f->V(e)==Fi->V(i))&&(f->V((e+1)%3)==Fi->V((i+1)%3)))||
+					   ((f->V(e)==Fi->V((i+1)%3))&&(f->V((e+1)%3)==Fi->V(i))));
+			}
+			
+		}
+	}
+}
 
 }; // end class
 
