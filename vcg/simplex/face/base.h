@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2004/07/12 12:17:09  pietroni
+added function NormalizedNormal
+
 Revision 1.14  2004/05/13 11:01:06  turini
 Changed ComputeMormalizedNormal() using Triangle3
 
@@ -96,6 +99,8 @@ template <class FVTYPE, class FETYPE, class FFTYPE, class TCTYPE = TCoord2<float
 public:
 	///	The base type of the face
 	typedef FACE_TYPE BaseFaceType;
+	///	The base type of the face itself
+	typedef FACE_TYPE FaceType;
 	/// The vertex type
 	typedef FVTYPE VertexType;
 	/// The type of the scalar field of the vertex coordinate
