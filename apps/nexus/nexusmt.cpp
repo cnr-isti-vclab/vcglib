@@ -215,9 +215,9 @@ bool NexusMt::InitGL(Vbo mode, unsigned int vbosize) {
     cerr << "No vbo available!" << endl;
     vbo_mode = VBO_OFF;
   }
-  patches.vbo_max = vbosize / chunk_size;
+/*WORKING?  patches.vbo_max = vbosize / chunk_size;
   if(vbo_mode == VBO_OFF)
-    patches.vbo_max = 0;
+    patches.vbo_max = 0;*/
 
   prefetch.start();
   return true;
@@ -381,7 +381,7 @@ void NexusMt::SetError(float error) {
 }
 
 void NexusMt::SetVboSize(unsigned int _vbo_max) {
-  patches.vbo_max = _vbo_max;
+//WORKING  patches.vbo_max = _vbo_max;
 }
 
 void NexusMt::SetPrefetchSize(unsigned int size) {
@@ -443,14 +443,16 @@ void NexusMt::LoadHistory() {
     Node &node = nodes[current_node];
     node.error = 0;
     
+    //cerr << "Created: ";
     //created cells belong to this node, we look also for max error.      
-    for(unsigned int i = 0; i < (*u).created.size(); i++) {
+    for(unsigned int i = 0; i < (*u).created.size(); i++) {      
       unsigned int cell = (*u).created[i];
+      //cerr << cell << " ";
       if(index[cell].error > node.error)
-	node.error = index[cell].error;
-	
+	      node.error = index[cell].error;	
       cell_node[cell] = current_node;        
     }
+    //cerr << endl;
     
     //Every erased cell already belonged to a node.
     //we record for each node its cells.

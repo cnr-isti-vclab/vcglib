@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/12/01 16:00:35  ponchio
+Level 3
+
 Revision 1.4  2004/11/28 04:10:59  ponchio
 winsockapi include problem
 
@@ -65,10 +68,10 @@ class Watch {
 public:
   Watch();
   void Start();
-  float Pause();
+  double Pause();
   void Continue();
   void Reset();
-  float Time();
+  double Time();
   int Usec();
 private:
   double Diff();
@@ -85,13 +88,13 @@ private:
 
 class Report {
  public:
-  Report(unsigned int tot = 1, float inter = 30.0f) { Init(tot, inter); }
-  void Init(unsigned int tot, float inter = 30.0f);
+  Report(unsigned int tot = 1, double inter = 30.0f) { Init(tot, inter); }
+  void Init(unsigned int tot, double inter = 30.0f);
   void Step(unsigned int count);
   void Finish();
  private:
   Watch watch;
   int tot;
-  float last;
-  float interval;
+  double last;
+  double interval;
 };

@@ -66,6 +66,7 @@ void PServer::AddPatch(unsigned short nvert, unsigned short nface) {
   entry.patch_start = 0xffffffff;
   entry.ram_size = Patch::ChunkSize(signature, nvert, nface, chunk_size);
   entry.disk_size = 0xffff;
+  entry.patch = NULL;
   entries.push_back(entry);
 }
 
@@ -79,7 +80,7 @@ Patch *PServer::LoadPatch(unsigned int idx,
   if(entry.patch) return entry.patch;
   
   char *ram = new char[entry.ram_size * chunk_size];
-#ifdef CONTROLS
+#ifndef NDEBUG
   if(!ram) {
     cerr << "COuld not allocate ram!\n";
     exit(0);

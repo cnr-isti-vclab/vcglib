@@ -29,9 +29,9 @@ class LruPServer: public PServer {
       return *((*i).second);
     } else {
       while(ram_used > ram_max) {
-	index.erase(items.back().first);
-	FlushPatch(patch, items.back().second);
-	items.pop_back();
+	      index.erase(items.back().first);
+	      FlushPatch(patch, items.back().second);
+	      items.pop_back();
       }
       Item item;
       item.first = patch;
@@ -46,13 +46,14 @@ class LruPServer: public PServer {
   bool IsLoaded(unsigned int patch) {
     return index.count(patch);
   }
-  void Flush() {
-    std::cerr << "Lru flulshing\n";
+  void Flush() {    
     std::map<unsigned int, Items::iterator>::iterator i;
     for(i = index.begin(); i != index.end(); i++) {
       Item &item = *((*i).second);
       FlushPatch((*i).first, item.second);
-    }
+    }             
+    for(int k = 0; k < entries.size(); k++)
+      entries[k].patch = NULL;
         
     items.clear();
     index.clear();

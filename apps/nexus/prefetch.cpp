@@ -31,11 +31,17 @@ void Prefetch::init(NexusMt *m, std::vector<unsigned int> &selected,
       notloaded++;  
     } else {
        PatchInfo &info = mt->index[patch];             
-       QueuePServer::Data &data = mt->patches.Lookup(patch, info.nvert, info.nface, 0.0f, flush);
-       if(flush.size() != 0) {
+       //WORKING QueuePServer::Data &data = mt->patches.Lookup(patch, info.nvert, info.nface, 0.0f, flush);
+       QueuePServer::Data &data = mt->patches.Lookup(patch, info.nvert, info.nface, flush);
+       for(unsigned int i = 0; i < flush.size(); i++) {
+          QueuePServer::Data  *data = new QueuePServer::Data;
+          *data = flush[i];
+          draw.post(QueuePServer::FLUSH, (unsigned int)data);
+       }
+       /* WORKING if(flush.size() != 0) {
          cerr << "Flushing!\n";
           exit(0);
-       }
+       } */
        mt->todraw.push_back(&data);      
     }    
     //missing.push_back(PServer::Item(patch, 0.0f));
@@ -52,7 +58,7 @@ void Prefetch::init(NexusMt *m, std::vector<unsigned int> &selected,
       missing.push_back(item);
   }
 
-  QueuePServer &ps = mt->patches;
+/*  WORKING QueuePServer &ps = mt->patches;
   for(unsigned int i = 0; i < ps.heap.size(); i++) {
     PServer::Item &item = ps.heap[i];
     if(tmp.count(item.patch)) 
@@ -61,14 +67,9 @@ void Prefetch::init(NexusMt *m, std::vector<unsigned int> &selected,
       if(item.priority == 0)
         item.priority = 1;
       item.priority *= 1.1;
-    }
-
-    /*if(tmp.count(item.patch)) 
-      item.priority = tmp[item.patch];
-    else
-      item.priority = 1e30;*/
+    }    
   }
-  make_heap(ps.heap.begin(), ps.heap.end());
+  make_heap(ps.heap.begin(), ps.heap.end());*/
 
   sort(missing.begin(), missing.end()); //CRITICAL reverse pero'!
   reverse(missing.begin(), missing.end());    
@@ -77,19 +78,25 @@ void Prefetch::init(NexusMt *m, std::vector<unsigned int> &selected,
   safety.unlock();
 }
 
-void Prefetch::execute() {      
+void Prefetch::execute() {  
+    unsigned int prefetched = 0;
     while(1) {
       if(get_signaled()) return;               
       vector<QueuePServer::Data> flush;      
       
       if(load.get_count() || missing.size() == 0) {
+        if(prefetched)        
+          cerr << "Prefetched: " << prefetched << endl;
+        prefetched = 0;
+
         pt::message *msg = load.getmessage();
         if(msg->id != 0xffffffff) {          
           safety.lock();
           PatchInfo &info = mt->index[msg->id];                   
 
           //posting draw message
-          QueuePServer::Data &data = mt->patches.Lookup(msg->id, info.nvert, info.nface, 0.0f, flush);
+          //WORKING QueuePServer::Data &data = mt->patches.Lookup(msg->id, info.nvert, info.nface, 0.0f, flush);
+          QueuePServer::Data &data = mt->patches.Lookup(msg->id, info.nvert, info.nface, flush);
           pt::message *msg = new pt::message(QueuePServer::DRAW, (unsigned int)&data);
           msg->result = msg->id;
           draw.post(msg);
@@ -109,19 +116,23 @@ void Prefetch::execute() {
           PServer::Item item = missing.back();
           missing.pop_back();
 
-          if(item.priority > mt->patches.MaxPriority()) {	        
+/*Working          if(item.priority > mt->patches.MaxPriority()) {	        
             missing.clear();
             
-          } else {        
+          } else {        */
             PatchInfo &info = mt->index[item.patch];      
             //cerr << "prefetching: " << item.patch << endl;
-            mt->patches.Lookup(item.patch, info.nvert, info.nface, item.priority, flush);
-            for(unsigned int i = 0; i < flush.size(); i++) {
-              QueuePServer::Data  *data = new QueuePServer::Data;
-              *data = flush[i];
-              draw.post(QueuePServer::FLUSH, (unsigned int)data);
+            //WORKING mt->patches.Lookup(item.patch, info.nvert, info.nface, item.priority, flush);
+            if(!mt->patches.entries[item.patch].patch) {
+              mt->patches.Lookup(item.patch, info.nvert, info.nface, flush);
+              prefetched++;
+              for(unsigned int i = 0; i < flush.size(); i++) {
+                QueuePServer::Data  *data = new QueuePServer::Data;
+                *data = flush[i];
+                draw.post(QueuePServer::FLUSH, (unsigned int)data);
+              }
             }
-          }
+        //  }
         }
         safety.unlock();
       }      

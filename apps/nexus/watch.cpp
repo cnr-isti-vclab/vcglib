@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/10/21 13:40:16  ponchio
+Debugging.
+
 Revision 1.2  2004/10/21 12:14:02  ponchio
 Support for mfile (>4Gb)
 
@@ -61,19 +64,19 @@ void Watch::Start(void) {
   elapsed = 0;
 }
 
-float Watch::Pause() {
+double Watch::Pause() {
   QueryPerformanceCounter(&tend);         
   elapsed += Diff();
-  return (float)elapsed;
+  return (double)elapsed;
 }               
 
 void Watch::Continue() {
   QueryPerformanceCounter(&tstart);
 }
 
-float Watch::Time() {
+double Watch::Time() {
   QueryPerformanceCounter(&tend);         
-  return (float)(elapsed + Diff());
+  return (double)(elapsed + Diff());
 }
 
 double Watch::Diff() {  
@@ -91,19 +94,19 @@ void Watch::Start() {
    elapsed = 0;
 }
 
-float Watch::Pause() {
+double Watch::Pause() {
   gettimeofday(&tend, &tz); 
   elapsed += Diff();
-  return (float)elapsed;
+  return (double)elapsed;
 }
 
 void Watch::Continue() {
   gettimeofday(&tstart, &tz); 
 }
 
-float Watch::Time() {
+double Watch::Time() {
   gettimeofday(&tend, &tz); 
-  return (float)(elapsed + Diff());
+  return (double)(elapsed + Diff());
 }
  
 double Watch::Diff() {
@@ -127,7 +130,7 @@ int Watch::Usec() {
 #endif
 }
 
-void Report::Init(unsigned int t, float inter) {
+void Report::Init(unsigned int t, double inter) {
   watch.Start();
   tot = t;
   last = 0;
@@ -136,17 +139,17 @@ void Report::Init(unsigned int t, float inter) {
 
 void Report::Step(unsigned int count) {
   if(count == 0) return;
-  float now = watch.Time();
+  double now = watch.Time();
   if(now - last < interval) return;
   //estimate final time
-  float tot_time = now * tot/(float)count;
+  double tot_time = now * tot/(double)count;
   printf("%d/%d\telapsed: %.1f\tremaining: %.1f\ttotal: %.1f\n",
 	 count, tot, now, tot_time - now, tot_time);
   last = now;
 }
 
 void Report::Finish() {
-  float now = watch.Time();
+  double now = watch.Time();
   printf("Tot: %.1f\tN: %d\tN/sec: %.1f\n",
 	 now, tot, tot/now);
 }

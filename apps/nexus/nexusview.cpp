@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.25  2004/12/15 08:46:16  ponchio
+Optimizing realtime vis.
+
 Revision 1.24  2004/12/13 00:44:48  ponchio
 Lotsa changes...
 
@@ -259,9 +262,14 @@ int main(int argc, char *argv[]) {
   float alpha = 0;
   bool redraw = false;
   float fps = 0;
-  float tframe = 0;
+  unsigned int nave = 5;
+  unsigned int offset = 0;
+  vector<float> tframe;
+  for(int i = 0; i < 5; i++) tframe.push_back(0);
+
   bool keepdrawing = true;
   
+  watch.Start();
   while( !quit ) {           
       unsigned int anything = SDL_PollEvent(&event);      
       if(!anything && !keepdrawing) {
@@ -281,12 +289,12 @@ int main(int argc, char *argv[]) {
 	          case SDLK_c: show_colors = !show_colors; break;
 	          case SDLK_n: show_normals = !show_normals; break;
         	        
-            case SDLK_LEFT: nexus.extraction_max *= 0.7; break;
-            case SDLK_RIGHT: nexus.extraction_max *= 1.5; break;
-            case SDLK_UP: nexus.draw_max *= 1.5; break;
-            case SDLK_DOWN: nexus.draw_max *= 0.7; break;
-            case SDLK_PAGEUP: nexus.disk_max *= 1.5; break;
-            case SDLK_PAGEDOWN: nexus.disk_max *= 0.7; break;
+            case SDLK_LEFT: nexus.patches.ram_max *= 0.8; break;
+            case SDLK_RIGHT: nexus.patches.ram_max *= 1.3; break;
+            case SDLK_UP: nexus.draw_max *= 1.3; break;
+            case SDLK_DOWN: nexus.draw_max *= 0.8; break;
+            case SDLK_PAGEUP: nexus.disk_max *= 1.3; break;
+            case SDLK_PAGEDOWN: nexus.disk_max *= 0.8; break;
   
 	          case SDLK_s: metric = NexusMt::FRUSTUM; break;
 	          case SDLK_p: mode = NexusMt::POINTS; nexus.SetMode(mode); break;
@@ -394,7 +402,7 @@ int main(int argc, char *argv[]) {
     nexus.SetComponent(NexusMt::NORMAL, show_normals);
 
     static vector<unsigned int> cells;    
-    watch.Start();
+    //watch.Start();
     if(extract) {
       //      nexus.patches.Flush();
       
@@ -439,18 +447,19 @@ int main(int argc, char *argv[]) {
       char buffer[1024];
       glColor3f(1.0f, 1.0f, 1.0f);
 
+      double ftime = (tframe[(offset+4)%5] - tframe[(offset)%5])/5.0f;
+
       /*      sprintf(buffer, "Ram size : %.3fMb (max)   %.3fMb (cur)", 
 	      nexus.patches->ram_size * nexus.chunk_size/(float)(1<<20), 
 	      nexus.patches->ram_used * nexus.chunk_size/(float)(1<<20));
 	      gl_print(0.03, 0.12, buffer);*/
 
-      sprintf(buffer, "Extr size: %.3fMb(max)   %.3fMb(cur)",
+      sprintf(buffer, "Ram size: %.3fMb(max)   %.3fMb(cur)",
 	      nexus.patches.ram_max * nexus.chunk_size/(float)(1<<20), 
 	      nexus.patches.ram_used * nexus.chunk_size/(float)(1<<20));
       gl_print(0.03, 0.09, buffer);
       
-      sprintf(buffer, "Vbo size : %.3fMb(max)   %.3fMb(cur)",
-	      nexus.patches.vbo_max * nexus.chunk_size/(float)(1<<20), 
+      sprintf(buffer, "Vbo size : %.3fMb(cur)",	      
 	      nexus.patches.vbo_used * nexus.chunk_size/(float)(1<<20));
       gl_print(0.03, 0.06, buffer);
 
@@ -458,7 +467,7 @@ int main(int argc, char *argv[]) {
                       "%.3f time    %.2f FPS",
 	      nexus.tri_total/(float)(1<<10),
 	      nexus.tri_rendered/(float)(1<<10),
-	      tframe, 1/tframe);
+	      ftime, 1/ftime);
       gl_print(0.03, 0.03, buffer);
       
       glEnable(GL_DEPTH_TEST);
@@ -469,7 +478,7 @@ int main(int argc, char *argv[]) {
     }
     
     SDL_GL_SwapBuffers();
-    tframe = watch.Time();
+    tframe[offset++%5] = watch.Time();
     
   }
 
