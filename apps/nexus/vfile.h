@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/07/01 21:36:54  ponchio
+*** empty log message ***
+
 Revision 1.2  2004/06/25 16:47:13  ponchio
 Various debug
 
@@ -170,7 +173,7 @@ template <class T> class VFile {
    */
   T &operator[](unsigned int n) { 
 
-    assert(n <= n_elements);
+    assert(n < n_elements);
 
     unsigned int chunk = n/chunk_size;
     unsigned int offset = n - chunk*chunk_size;
@@ -211,10 +214,89 @@ template <class T> class VFile {
     index[chunk] = buffers.begin();   
     return *(buffer.data + offset);
   }
+  
+  /** you can get a region instead of an element but:
+      1)region must be Chunk aligned.
+      2)you get impredictable results if regions overlap or mix with operator[]
+  */
+  T *GetRegion(unsigned int start, unsigned int size) {
+    assert(start + size <= n_elements);
 
-  /**use this for directly writing on the file... 
-   * be careful to flush (unless you never readed or flushed)
-   */
+    unsigned int chunk = start/chunk_size;
+    unsigned int offset = start - chunk*chunk_size;
+    assert(offset == 0);
+
+    if(index.count(chunk)) 
+      return ((*(index[chunk])).data);
+    
+    if(buffers.size() > queue_size) {
+      Buffer &buffer= buffers.back();
+      FlushBuffer(buffer);      
+      index.erase(buffer.key);  
+      buffers.pop_back();
+    }
+    
+    Buffer buffer;
+    buffer.key = chunk;
+    buffer.data = new T[chunk_size * sizeof(T)*size];  
+    if(fseek(fp, chunk * chunk_size * sizeof(T), SEEK_SET)) {
+      assert(0 && "failed to fseek");
+      return buffer.data;
+    }
+    
+    unsigned int data_size = chunk_size*size;
+    if(data_size + chunk * chunk_size > n_elements)
+      data_size = -chunk * chunk_size + n_elements;
+    
+    if(data_size != fread(buffer.data, sizeof(T), data_size, fp)) {    
+      if(feof(fp)) {
+	assert(0 && "end of file");
+      } else {     
+	assert(0 && "failed reading!");
+      }
+      return buffer.data;
+    }
+
+    buffers.push_front(buffer);    
+    index[chunk] = buffers.begin();   
+    return buffer.data;
+  }
+
+  /** Allocate copy and return (remember to delete it) memory.
+      size is number of elements. **/
+  T *Read(unsigned int begin, unsigned int size) {
+    //to make its simple we flush and read.
+    Flush();
+    T *buf = new T[size];
+    if(fseek(fp, begin * sizeof(T), SEEK_SET)) {
+      assert(0 && "failed to fseek");
+      return buf;
+    }
+    if(size != fread(buf, sizeof(T), size, fp)) {
+      if(feof(fp)) {
+	assert(0 && "end of file");
+      } else {     
+	assert(0 && "failed reading!");
+      }
+    }
+    return buf;
+  }
+  
+  void Write(T *buf, unsigned int begin, unsigned int size) {
+    //to make its simple we flush and read.
+    Flush();
+   if(fseek(fp, begin * sizeof(T), SEEK_SET)) {
+      assert(0 && "failed to fseek");
+   }
+   if(size != fwrite(buf, sizeof(T), size, fp)) {
+     if(feof(fp)) {
+       assert(0 && "end of file");
+     } else {     
+       assert(0 && "failed reading!");
+     }
+   }
+  }
+
   unsigned int Size() { return n_elements; }
   unsigned int ChunkSize() { return chunk_size; }
   unsigned int QueueSize() { return queue_size; }
