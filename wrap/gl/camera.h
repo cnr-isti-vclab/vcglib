@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/02/21 18:11:47  ganovelli
+GetFrustum moved from gl/camera to math/camera.h
+
 Revision 1.6  2004/12/16 14:41:36  ricciodimare
 *** empty log message ***
 
@@ -59,7 +62,7 @@ struct GlCamera{
 	typedef typename CameraType::ScalarType S;
 
 static vcg::Matrix44<ScalarType>
-MatrixGL(const vcg::Camera<S> & cam, vcg::Matrix44<S> &m){
+MatrixGL(vcg::Camera<S> & cam, vcg::Matrix44<S> &m){
 	glPushAttrib(GL_TRANSFORM_BIT);
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
@@ -71,12 +74,12 @@ MatrixGL(const vcg::Camera<S> & cam, vcg::Matrix44<S> &m){
 	return m;
 }
 
-static void GetFrustum(const CameraType & camera,typename S & sx,typename S & dx,typename S & bt,	typename S & tp,typename S & f ,typename S & fr)
+static void GetFrustum(vcg::Camera<S> & camera, S & sx,S & dx,S & bt,S & tp,S & f ,S & fr)
 {
 	camera.GetFrustum(sx,dx,bt,tp,f,fr);
 }
 
-static void TransformGL(vcg::Camera<S> & camera,typename S farDist = -1 ) {
+static void TransformGL(vcg::Camera<S> & camera, S farDist = -1 ) {
 	S sx,dx,bt,tp,nr,fr;
 	GetFrustum(camera,sx,dx,bt,tp,nr,fr);	
 	assert(glGetError()==0);
@@ -87,14 +90,14 @@ static void TransformGL(vcg::Camera<S> & camera,typename S farDist = -1 ) {
 	assert(glGetError()==0);
 };
 
-static void GetViewSize(const vcg::Camera<S> & camera, typename S &width, typename S &height) {
+static void GetViewSize(vcg::Camera<S> & camera, S &width, S &height) {
 	S sx,dx,bt,tp,nr,fr;
 	GetFrustum(camera,sx,dx,bt,tp,nr,fr);	
 	width = dx-sx;	//right - left = width
 	height = tp-bt;  //top - bottom = height
 };
 
-static void SetSubView(const CameraType & camera,vcg::Point2<S> p0,vcg::Point2<S> p1){
+static void SetSubView(vcg::Camera<S> & camera,vcg::Point2<S> p0,vcg::Point2<S> p1){
 	//typedef typename CameraType::ScalarType S;
 	S sx,dx,bt,tp,nr,fr;
 	GetFrustum(camera,sx,dx,bt,tp,nr,fr);	
