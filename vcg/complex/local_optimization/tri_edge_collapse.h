@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.10  2004/09/09 13:01:12  ponchio
+  Linux compatible path in #include
+
   Revision 1.9  2004/09/08 15:13:29  ganovelli
   changes for gc
 
@@ -32,7 +35,7 @@
 ****************************************************************************/
 
 #ifndef __VCG_DECIMATION_TRICOLLAPSE
-#define __VCG_DECIMATION_CTRIOLLAPSE
+#define __VCG_DECIMATION_TRICOLLAPSE
 
 #include<vcg/complex/trimesh/edge_collapse.h>
 #include<vcg/simplex/face/pos.h>
