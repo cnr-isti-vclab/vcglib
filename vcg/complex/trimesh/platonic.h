@@ -1,4 +1,4 @@
-/***************************************************************************
+/****************************************************************************
 * VCGLib                                                            o o     *
 * Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
@@ -37,26 +37,23 @@ First working version (tetrahedron!)
 #include<vcg/complex/trimesh/allocate.h>
 namespace vcg {
 namespace tri {
-
+cacca
 template <class MESH_TYPE>
 void Tetrahedron(MESH_TYPE &in)
 {
-  typedef typename MESH_TYPE::VertexPointer VertexPointer;
-  typedef typename MESH_TYPE::VertexIterator VertexIterator;
-  typedef typename MESH_TYPE::FaceIterator FaceIterator;
-
   in.Clear();
   Allocator<MESH_TYPE>::AddVertices(in,4);
   Allocator<MESH_TYPE>::AddFaces(in,4);
 
-  VertexPointer ivp[4];
-  VertexIterator vi=in.vert.begin();
+  MESH_TYPE::VertexPointer ivp[4];
+
+  MESH_TYPE::VertexIterator vi=in.vert.begin();
 	ivp[0]=&*vi;(*vi).P()=MESH_TYPE::CoordType ( 1, 1, 1); ++vi;
 	ivp[1]=&*vi;(*vi).P()=MESH_TYPE::CoordType (-1, 1,-1); ++vi;
 	ivp[2]=&*vi;(*vi).P()=MESH_TYPE::CoordType (-1,-1, 1); ++vi;
 	ivp[3]=&*vi;(*vi).P()=MESH_TYPE::CoordType ( 1,-1,-1); 
 	
-  FaceIterator fi=in.face.begin();
+  MESH_TYPE::FaceIterator fi=in.face.begin();
 	(*fi).V(0)=ivp[0];  (*fi).V(1)=ivp[1]; (*fi).V(2)=ivp[2]; ++fi;
 	(*fi).V(0)=ivp[0];  (*fi).V(1)=ivp[2]; (*fi).V(2)=ivp[3]; ++fi;
 	(*fi).V(0)=ivp[0];  (*fi).V(1)=ivp[3]; (*fi).V(2)=ivp[1]; ++fi;
@@ -66,34 +63,35 @@ void Tetrahedron(MESH_TYPE &in)
 template <class MESH_TYPE>
 void Octahedron(MESH_TYPE &in)
 {
-	typedef typename MESH_TYPE::VertexPointer  VertexPointer;
-  typedef typename MESH_TYPE::VertexIterator VertexIterator;
-  typedef typename MESH_TYPE::FaceIterator   FaceIterator;
-
-  in.Clear();
-  Allocator<MESH_TYPE>::AddVertices(in,6);
-  Allocator<MESH_TYPE>::AddFaces(in,8);
-
-  MESH_TYPE::VertexType tv;tv.Supervisor_Flags()=0;
+	in.vn=6;
+	in.fn=8;
+	in.vert.clear();
+	in.face.clear();
+	MESH_TYPE::VertexType tv;tv.Supervisor_Flags()=0;
 	MESH_TYPE::CoordType tp;
-	VertexPointer ivp[4];
-  VertexIterator vi=in.vert.begin();
-  ivp[0]=&*vi;(*vi).P()=MESH_TYPE::CoordType ( 1, 0, 0); ++vi;
-	ivp[1]=&*vi;(*vi).P()=MESH_TYPE::CoordType ( 0, 1, 0); ++vi;
-	ivp[2]=&*vi;(*vi).P()=MESH_TYPE::CoordType ( 0, 0, 1); ++vi;
-	ivp[3]=&*vi;(*vi).P()=MESH_TYPE::CoordType (-1, 0, 0); ++vi;
-	ivp[4]=&*vi;(*vi).P()=MESH_TYPE::CoordType ( 0,-1, 0); ++vi;
-	ivp[5]=&*vi;(*vi).P()=MESH_TYPE::CoordType ( 0, 0,-1); 
+	tp=MESH_TYPE::CoordType ( 1, 0, 0); tv.P()=tp; in.vert.push_back(tv);
+	tp=MESH_TYPE::CoordType ( 0, 1, 0); tv.P()=tp; in.vert.push_back(tv);
+	tp=MESH_TYPE::CoordType ( 0, 0, 1); tv.P()=tp; in.vert.push_back(tv);
+	tp=MESH_TYPE::CoordType (-1, 0, 0); tv.P()=tp; in.vert.push_back(tv);
+	tp=MESH_TYPE::CoordType ( 0,-1, 0); tv.P()=tp; in.vert.push_back(tv);
+	tp=MESH_TYPE::CoordType ( 0, 0,-1); tv.P()=tp; in.vert.push_back(tv);
 
-  FaceIterator fi=in.face.begin();
-	(*fi).V(0)=ivp[0];  (*fi).V(1)=ivp[1]; (*fi).V(2)=ivp[2]; ++fi;
-	(*fi).V(0)=ivp[0];  (*fi).V(1)=ivp[2]; (*fi).V(2)=ivp[4]; ++fi;
-	(*fi).V(0)=ivp[0];  (*fi).V(1)=ivp[4]; (*fi).V(2)=ivp[5]; ++fi;
-	(*fi).V(0)=ivp[0];  (*fi).V(1)=ivp[5]; (*fi).V(2)=ivp[1]; ++fi;
-	(*fi).V(0)=ivp[3];  (*fi).V(1)=ivp[1]; (*fi).V(2)=ivp[5]; ++fi;
-	(*fi).V(0)=ivp[3];  (*fi).V(1)=ivp[5]; (*fi).V(2)=ivp[4]; ++fi;
-	(*fi).V(0)=ivp[3];  (*fi).V(1)=ivp[4]; (*fi).V(2)=ivp[2]; ++fi;
-	(*fi).V(0)=ivp[3];  (*fi).V(1)=ivp[2]; (*fi).V(2)=ivp[1]; 
+	vector<MESH_TYPE::vertex_pointer> index(in.vn);
+	
+	MESH_TYPE::face_type f;f.Supervisor_Flags()=0;
+	
+	MESH_TYPE::vertex_iterator vi;
+	int j;
+	for(j=0,vi=in.vert.begin();j<in.vn;++j,++vi)	index[j] = &*vi;
+
+	f.V(0)=index[0];  f.V(1)=index[1];f.V(2)=index[2];  in.face.push_back(f);
+	f.V(0)=index[0];  f.V(1)=index[2];f.V(2)=index[4];  in.face.push_back(f);
+	f.V(0)=index[0];  f.V(1)=index[4];f.V(2)=index[5];  in.face.push_back(f);
+	f.V(0)=index[0];  f.V(1)=index[5];f.V(2)=index[1];  in.face.push_back(f);
+	f.V(0)=index[3];  f.V(1)=index[1];f.V(2)=index[5];  in.face.push_back(f);
+	f.V(0)=index[3];  f.V(1)=index[5];f.V(2)=index[4];  in.face.push_back(f);
+	f.V(0)=index[3];  f.V(1)=index[4];f.V(2)=index[2];  in.face.push_back(f);
+	f.V(0)=index[3];  f.V(1)=index[2];f.V(2)=index[1];  in.face.push_back(f);
 }
 
 template <class MESH_TYPE>
