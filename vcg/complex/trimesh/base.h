@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/03/04 00:08:15  cignoni
+First working version!
+
 Revision 1.1  2004/02/19 13:11:06  cignoni
 Initial commit
 
@@ -130,8 +133,7 @@ void Clear()
 	fn = 0;
 }
 
-/* Funzioni di info sulle caratteristiche della mesh */ 
-
+/// Reflection functions that speak about vertex and face properties.
 static bool HasPerVertexNormal()  { return VertexType::HasNormal() ; }
 static bool HasPerVertexColor()   { return VertexType::HasColor()  ; }
 static bool HasPerVertexMark()    { return VertexType::HasMark()   ; }
@@ -143,13 +145,13 @@ static bool HasPerFaceNormal()    { return FaceType::HasFaceColor()  ; }
 static bool HasPerFaceMark()      { return FaceType::HasFaceMark()   ; }
 static bool HasPerFaceQuality()   { return FaceType::HasFaceQuality(); }
 
-static bool HasPerWedgeColor()    { return bool(FaceType::OBJ_TYPE & (FaceType::OBJ_TYPE_WC)); }
-static bool HasPerWedgeNormal()   { return bool(FaceType::OBJ_TYPE & (FaceType::OBJ_TYPE_WN)); }
-static bool HasPerWedgeTexture()  { return bool(FaceType::OBJ_TYPE & (FaceType::OBJ_TYPE_WT)); }
+static bool HasPerWedgeColor()     { return FaceType::HasWedgeNormal() ; }
+static bool HasPerWedgeNormal()    { return FaceType::HasWedgeColor()  ; }
+static bool HasPerWedgeMark()      { return FaceType::HasWedgeMark()   ; }
+static bool HasPerWedgeQuality()   { return FaceType::HasWedgeQuality(); }
 
-static bool HasFFTopology()       { return bool(FaceType::OBJ_TYPE & (FaceType::OBJ_TYPE_A)) || HasSTopology();  }
-static bool HasVFTopology()       { return bool(FaceType::OBJ_TYPE & (FaceType::OBJ_TYPE_V)) || HasSTopology(); }
-static bool HasSTopology()        { return bool(FaceType::OBJ_TYPE & (FaceType::OBJ_TYPE_S)); }
+static bool HasFFTopology()       { return FaceType::HasFFAdjacency();  }
+static bool HasVFTopology()       { return FaceType::HasVFAdjacency(); }
 static bool HasTopology()         { return HasFFTopology() || HasVFTopology(); }
 
 
