@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/04/05 11:53:06  cignoni
+addend constant access funcs
+
 Revision 1.5  2004/04/03 13:35:51  cignoni
 minor changes
 
@@ -184,15 +187,15 @@ template <class T> class Qualityd: public Quality<double, T> {};
 
 template <class T> class EmptyVFAdj: public T {
 public:
-  typename T::FacePointer &Fp() { static typename T::FacePointer fp=0; return fp; }
-  int &Zp(){static int z=0; return z;};
+  typename T::FacePointer &VFb() { static typename T::FacePointer fp=0; return fp; }
+  int &VFi(){static int z=0; return z;};
   static bool HasVFAdjacency()   {   return false; }
 };
 
 template <class T> class VFAdj: public T {
 public:
-  typename T::FacePointer &Fp() {return _fp; }
-  int &Zp() {return _zp; }
+  typename T::FacePointer &VFb() {return _fp; }
+  int &VFi() {return _zp; }
   static bool HasVFAdjacency()   {   return true; }
 private:
   typename T::FacePointer _fp ;    
