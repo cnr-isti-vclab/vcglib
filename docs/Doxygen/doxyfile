@@ -62,9 +62,11 @@ WARN_LOGFILE           =
 #---------------------------------------------------------------------------
 # configuration options related to the input files
 #---------------------------------------------------------------------------
-INPUT                  = C:/Documenti/sf/vcg/
+INPUT                  = C:/Documenti/sf/vcg/ \
+                         C:/Documenti/sf/docs/Doxygen/
 FILE_PATTERNS          = *.cpp \
-                         *.h
+                         *.h \
+                         *.dxy
 RECURSIVE              = YES
 EXCLUDE                = 
 EXCLUDE_SYMLINKS       = NO
