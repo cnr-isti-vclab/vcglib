@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2004/03/31 10:09:19  cignoni
+int64 -> long long for GCC compatibility
+
 Revision 1.12  2004/03/16 00:23:50  tarini
 - added VoidType    - added "static_assert"
 
@@ -101,37 +104,38 @@ namespace math {
   inline double Atan2(const double v0,const double v1)   { return atan2(v0,v1); }
   
 
-	/// max and min values for each scala type 
+	/// max and min values for each scalar type 
 	/// syntax: Max<float>::Value  
 
   template <class SCALAR> class Value {
-		public: static const SCALAR Min; static const SCALAR Max;
+		public: const SCALAR Min; const SCALAR Max;
 	};  
 
-  const char            Value<char           >::Min = -128; 
-  const char            Value<char           >::Max = +127; 
-  const unsigned char 	Value<unsigned char  >::Min = 0; 
-  const unsigned char  	Value<unsigned char  >::Max = 255; 
-  const short	          Value<short	         >::Min = (-32767 -1); 
-  const short	          Value<short	         >::Max =  +32767; 
-  const unsigned short	Value<unsigned short >::Min = 0; 
-  const unsigned short	Value<unsigned short >::Max = 65535; 
-  const int             Value<int            >::Min = (-2147483647 - 1); 
-  const int             Value<int            >::Max =  +2147483647; 
-  const unsigned int    Value<unsigned int   >::Min = 0; 
-  const unsigned int    Value<unsigned int   >::Max = 4294967295ul; 
-  const long long       Value<long long      >::Min = (-9223372036854775807ll - 1); 
-  const long long       Value<long long      >::Max =  +9223372036854775807ll; 
-  const long            Value<long           >::Min = (-2147483647L -1L); 
-  const long            Value<long           >::Max = 2147483647L; 
-  const unsigned long   Value<unsigned long  >::Min = 0; 
-  const unsigned long   Value<unsigned long  >::Max = +4294967295ul; 
-  const float	          Value<float	         >::Min = -3.4E38F; 
-  const float	          Value<float	         >::Max = +3.4E38F; 
-  const long double     Value<long double    >::Min = -1.2E308; //E4931?
-  const long double     Value<long double    >::Max = +1.2E308; 
-  const double          Value<double         >::Min = -1.7E308; 
-  const double          Value<double         >::Max = +1.7E308; 
+	class Value<char          > { public: const char           Min=-128;
+	                                      const char           Max=+127;};
+	class Value<unsigned char > { public: const unsigned char  Min=0;
+	                                      const unsigned char  Max=255;};
+	class Value<short         > { public: const short          Min=(-32767 -1);
+	                                      const short          Max=+32767;};
+	class Value<unsigned short> { public: const unsigned short Min=0;
+	                                      const unsigned short Max=65535;};
+	class Value<int           > { public: const int            Min=(-2147483647 - 1);
+	                                      const int            Max= +2147483647;};
+	class Value<unsigned int  > { public: const unsigned int   Min=0;
+	                                      const unsigned int   Max=4294967295;};
+	class Value<__int64       > { public: const __int64        Min=(-9223372036854775807i64 - 1);
+	                                      const __int64        Max= +9223372036854775807i64;};
+	class Value<long          > { public: const long           Min=(-2147483647L -1L);
+	                                      const long           Max= +2147483647L;};
+	class Value<unsigned long > { public: const unsigned long  Min=0;
+	                                      const unsigned long  Max=4294967295;};
+	class Value<float         > { public: const float          Min=-3.4E38F;
+	                                      const float          Max=+3.4E38F;};
+	class Value<double        > { public: const double         Min=-1.7E308;;
+	                                      const double         Max=+1.7E308;};
+	class Value<long double   > { public: const long double    Min=-1.7E308;  //-1.2E4931 ?
+	                                      const long double    Max=+1.7E308;};//+1.2E4931 ?
+
 
 	template<class T> inline const T & Min(const T &a, const T &b){
 		if (a<b) return a; else return b;
