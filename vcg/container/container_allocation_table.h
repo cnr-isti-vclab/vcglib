@@ -29,7 +29,7 @@
 #include <list>
 #include <algorithm>
 #include <assert.h>
-#include <vcg/entries_allocation_table.h>
+#include <vcg/container/entries_allocation_table.h>
 
 namespace vcg {
 
@@ -69,9 +69,10 @@ CATEntry(){if(Id()==0){
 static unsigned int Ord(VALUE_TYPE *);
 static ENTRY_TYPE & GetEntry(STL_CONT::value_type*pt);
 
-static	void  Insert( STL_CONT & c );							// insert a vector to trace
-virtual void	Remove(  const STL_CONT  &	c);			// remove the container c
-static  void	Remove(  VALUE_TYPE  *	v);					// remove the container that contains v
+static	void  Insert( STL_CONT & c,bool cond=false );				// insert a vector to trace
+virtual void	Remove(  const STL_CONT  &	c);								// remove the container c
+static  void	RemoveIfEmpty(  const STL_CONT  &	c);								// remove the container c
+static  void	Remove(  VALUE_TYPE  *	v);										// remove the container that contains v
 
 virtual void Resort(	VALUE_TYPE* old_start,			// resort the allocation table
 											VALUE_TYPE* new_start);			// after a container was moved
@@ -133,10 +134,10 @@ std::list<ENTRY_TYPE>::iterator CATEntry<STL_CONT,ENTRY_TYPE>::
 
 FindBase(const VALUE_TYPE * pt)
 {
-std::list<ENTRY_TYPE>::iterator 
-ite = AT().begin(),curr_base;
+std::list<ENTRY_TYPE>::iterator ite,curr_base,_;
+ite = AT().begin();
+curr_base = AT().end();
 
-std::list<ENTRY_TYPE> tmp = AT();
 for(;ite != AT().end();ite++)
 	if( pt < (*ite).Start())
 		return curr_base;
@@ -195,11 +196,24 @@ Remove( const STL_CONT & c )
 {
 std::list<ENTRY_TYPE>::iterator ite;
 for(ite = AT().begin(); ite != AT().end();  ++ite)
-if((*ite).C() == &c)
-	{
-		AT().erase(ite);
-		break;
-	}
+	if((*ite).C() == &c)
+		{
+			AT().erase(ite);
+			break;
+		}
+UTD() = false;
+}
+
+template <class STL_CONT, class ENTRY_TYPE>
+void CATEntry<STL_CONT, ENTRY_TYPE>::
+
+RemoveIfEmpty( const STL_CONT & c )
+{
+std::list<ENTRY_TYPE>::iterator ite;
+for(ite = AT().begin(); ite != AT().end();  ++ite)
+	if((*ite).C() == &c)
+			if(!(*ite).Empty())
+				AT().erase(ite);
 UTD() = false;
 }
 
@@ -212,21 +226,30 @@ Remove(VALUE_TYPE  *	pt)
 	lower_ite = FindBase(pt);
 	AT().erase(lower_ite);
 	UTD() = false;
+		
 }
 
 template <class STL_CONT, class ENTRY_TYPE>
 void CATEntry<STL_CONT, ENTRY_TYPE>::
 
-Insert( STL_CONT & c )
+Insert( STL_CONT & c,bool cond )
 {
 ENTRY_TYPE entry(c);
 std::list<ENTRY_TYPE>::iterator lower_ite,upper_ite;
-upper_ite = std::lower_bound(AT().begin(),	AT().end(), entry);
+upper_ite = FindBase(&*c.begin());
+bool isIn = (upper_ite != AT().end());
+if(isIn){
+	if((*upper_ite).C() != &c )
+				++upper_ite; 
+	else
+		return;
+	}
 lower_ite = AT().insert(upper_ite,entry);
 lower_ite->Reserve(c.capacity());
 lower_ite->Resize(c.size());
 UTD() = false;
 }
+
 template <class STL_CONT, class ENTRY_TYPE>
 ENTRY_TYPE & CATEntry<STL_CONT, ENTRY_TYPE>::
 GetEntry(STL_CONT::value_type*pt){
@@ -250,7 +273,6 @@ Curr()->Push_back(n);
 template <class STL_CONT,class ATTR_TYPE>
 class CAT:public CATEntry<STL_CONT, EntryCAT<STL_CONT,ATTR_TYPE> >{
 public:
-typedef typename EntryCAT<STL_CONT,ATTR_TYPE> EntryType;
 static ATTR_TYPE & Get(STL_CONT::value_type * pt);
 }; 
 //---------------------- CAT: implementation---------------------------------------------------

@@ -34,6 +34,7 @@ struct EntryCATBase{
 
 EntryCATBase(STL_CONT & _c):c(_c){};
 STL_CONT::value_type * Start() const;
+virtual bool Empty(){};
 const STL_CONT *  C();
 virtual void Push_back(const int &){};
 
@@ -108,6 +109,8 @@ void push_back(const int & n ){
 	for(ite = data.begin(); ite != data.end(); ++ite)
 		(*ite)->Push_back(n);
 	}
+virtual bool Empty(){return data.empty();};
+
 virtual void Reserve(const int & n){
 																			std::list<WrapBase * >::iterator ite;
 																			for(ite = data.begin(); ite != data.end(); ++ite)

@@ -26,7 +26,7 @@
 #define __VCGLIB_TRACED_VECTOR__
 
 
-#include <vcg/container_allocation_table.h>
+#include <vcg/container/container_allocation_table.h>
 #include <assert.h>
 
 namespace vcg {
@@ -34,6 +34,7 @@ namespace vcg {
 template <class VALUE_TYPE>
 class TVector: public std::vector<VALUE_TYPE>{
 	typedef TVector<VALUE_TYPE> THIS_TYPE;
+	typedef typename CATEntry<THIS_TYPE,EntryCATMulti<THIS_TYPE> >::EntryType EntryTypeMulti;
 public:
 	TVector():std::vector<VALUE_TYPE>(){reserve(1);}
 	~TVector();
@@ -69,9 +70,8 @@ public:
 
 	template <class ATTR_TYPE>
 		TempData<THIS_TYPE,ATTR_TYPE> NewTempData(){
-			//CAT<THIS_TYPE,EntryCATMulti>::Insert(*this)
-			CATEntry<THIS_TYPE,EntryCATMulti<THIS_TYPE> >::EntryType 
-				entry = CATEntry<THIS_TYPE,EntryCATMulti<THIS_TYPE> >::GetEntry(&*begin());
+			CATEntry<THIS_TYPE,EntryTypeMulti>::Insert(*this);
+			EntryTypeMulti	entry = CATEntry<THIS_TYPE,EntryTypeMulti >::GetEntry(&*begin());
 			entry.Data().push_back(new Wrap< ATTR_TYPE>);
 
 			((Wrap<ATTR_TYPE>*)entry.Data().back())->reserve(capacity());
@@ -82,8 +82,8 @@ public:
 			
 	template <class ATTR_TYPE>
 		void DeleteTempData(TempData<THIS_TYPE,ATTR_TYPE> & td){
-			//CAT<THIS_TYPE,EntryCATMulti>::Insert(*this)
-			CATEntry<THIS_TYPE,EntryCATMulti<THIS_TYPE> >::EntryType 
+			CATEntry<THIS_TYPE,EntryTypeMulti >::RemoveIfEmpty(*this);
+			EntryTypeMulti
 				entry = CATEntry<THIS_TYPE,EntryCATMulti<THIS_TYPE> >::GetEntry(&*begin());
 
 			entry.Data().remove((Wrap<ATTR_TYPE>*)td.Item());
@@ -99,10 +99,11 @@ private:
 template <class VALUE_TYPE>
 void TVector<VALUE_TYPE>::push_back(const VALUE_TYPE & v){
 	std::vector<VALUE_TYPE>::push_back(v);
+	Update();	
 	std::list < CATBase<THIS_TYPE> * >::iterator ia; 
 	for(ia = attributes.begin(); ia != attributes.end(); ++ia)
 		(*ia)->AddDataElem(&(*(this->begin())),1);
-	Update();
+
 }
 template <class VALUE_TYPE>
 void TVector<VALUE_TYPE>::pop_back(){
