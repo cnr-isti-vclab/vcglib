@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/01/17 18:19:00  rita_borgo
+Added new routines.
+Self-intersection first release
+
 Revision 1.2  2005/01/03 16:13:09  rita_borgo
 Added Standard comments
 
@@ -110,19 +114,9 @@ void main(int argc,char ** argv){
       exit(-1);
   }
 
-  // load mesh M1.
-  if(!(fmt = GetExtension(argv[1])))
-  {
-      printf(MSG_ERR_UNKNOWN_FORMAT, fmt);
-      exit(-1);
-  }
-  if(!_stricmp(FILE_EXT_PLY, fmt))
-	{
-		printf("reading the mesh `%s'...", argv[1]);
-    OpenMesh(argv[1],m);
-	}
-	else
-		printf("done\n");
+
+	printf("reading the mesh `%s'...", argv[1]);
+  OpenMesh(argv[1],m);
 
 
 
@@ -181,7 +175,7 @@ void main(int argc,char ** argv){
 	else
 	{
 		fprintf(index, "<p> Manifold from lib gives: YES </p>"); 
-	  printf( "Manifold from lib gives: YES "); 
+	  printf( "Manifold from lib gives: YES\n "); 
 	}
 
 	// COUNT EDGES
@@ -376,7 +370,7 @@ void main(int argc,char ** argv){
 		{
 			int genus = (2-eulero)>>1;
 			fprintf(index, "<p> Genus: %d </p> \n ", genus); 
-		  printf( "Genus: %d \n ", genus); 
+		  printf( "Genus: %d \n", genus); 
 		}
 	}
 // REGULARITY
