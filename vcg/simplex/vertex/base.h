@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.13  2004/05/13 22:40:02  ganovelli
+default template parameters
+
 Revision 1.12  2004/05/13 12:49:22  pietroni
 no default template parameters... each one must be specified
 
@@ -30,6 +33,9 @@ Revision 1.12  2004/05/10 13:31:13  ganovelli
 function for edge adjacency added
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2004/05/13 22:40:02  ganovelli
+default template parameters
+
 Revision 1.12  2004/05/13 12:49:22  pietroni
 no default template parameters... each one must be specified
 
@@ -562,7 +568,7 @@ public:
 #ifdef __VCGLIB_VERTEX_VM
 	/// This function return the vertex incremental mark
 	inline int & IMark()
-	{xx
+	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
 		assert( (_flags & NOTWRITE) == 0 );
