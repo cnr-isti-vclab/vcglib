@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2004/09/14 19:46:10  ganovelli
+constructor added
+
 Revision 1.11  2004/08/25 15:15:27  ganovelli
 minor changes to comply gcc compiler (typename's and stuff)
 
@@ -237,7 +240,7 @@ public:
 	void NextB( )
 	{
 		assert(f->V((z+2)%3)!=v && (f->V((z+1)%3)==v || f->V((z+0)%3)==v));
-		assert(f->FFP(z)==f); // f is border along j
+		assert(f->FFp(z)==f); // f is border along j
 	// Si deve cambiare faccia intorno allo stesso vertice v
 	//finche' non si trova una faccia di bordo.
 		do
