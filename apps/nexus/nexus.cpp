@@ -32,7 +32,7 @@ bool Nexus::Create(const string &file, Signature sig, unsigned int c_size) {
     return false;
   }
   //Important: chunk_size must be 1 so that i can use Region in VFile.
-  if(!borders.Create(file + ".nxb", 1)) {
+  if(!borders.Create(file + ".nxb", 1, 100)) {
     cerr << "Could not create file: " << file << ".nxb" << endl;
     return false;
   }
@@ -91,7 +91,7 @@ bool Nexus::Load(const string &file, bool readonly) {
   //TODO support readonly
   if(!patches.Load(file + ".nxp", signature, chunk_size, readonly)) 
     return false;
-  if(!borders.Load(file + ".nxb", readonly, 1)) return false;
+  if(!borders.Load(file + ".nxb", readonly, 1, 100)) return false;
   return true;
 }
 
@@ -373,18 +373,22 @@ void Nexus::Unify(float threshold) {
       }
     }
   }
-  //TODO: better to compact directly borders than setting them null.
+  //better to compact directly borders than setting them null.
   //finally: there may be duplicated borders
   for(unsigned int p = 0; p < index.size(); p++) {
     Border border = GetBorder(p);
     set<Link> links;
     for(unsigned int b = 0; b < border.Size(); b++) {
-      if(border[b].IsNull()) continue;
-      if(links.count(border[b]))
-        border[b] = Link();
-      else
-        links.insert(border[b]);
+      Link &link = border[b];
+      assert(!link.IsNull());
+      //if(border[b].IsNull()) continue;
+      links.insert(link);
     }
+    int count = 0;
+    for(set<Link>::iterator k = links.begin(); k != links.end(); k++)
+      border[count++] = *k;      
+    
+    borders.borders[p].border_used = links.size();
   }
   
   totvert -= duplicated;

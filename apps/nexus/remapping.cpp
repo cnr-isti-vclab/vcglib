@@ -158,6 +158,7 @@ void nxs::Remap(VChain &chain,
   //Fixing offset
   int64 offset = 0;
   for(unsigned int i = 0; i < index.size(); i++) {
+    assert(index[i].size < 65000);
     index[i].offset = offset;
     offset += index[i].size;
   }
@@ -244,7 +245,8 @@ void nxs::BuildLevel(VChain &chain,
   VPartition &fine = chain[chain.size()-2];
   fine.Init();
   
-  unsigned int ncells = (unsigned int)(fine.size() * scaling);
+  //unsigned int ncells = (unsigned int)(fine.size() * scaling);
+  unsigned int ncells = (unsigned int)(scaling * totface/target_size);
   
   //TODO this method for selecting the seeds is ugly!
   float ratio = ncells/(float)(nexus.index.size() - offset);
@@ -382,6 +384,8 @@ bool nxs::Optimize(VPartition &part,
 	mark[i];
       }
     }
+    if(failed > 0) 
+      cerr << "Found " << failed << " patches too big.\n";
     
     if(join) {
       for(unsigned int i = 0; i < part.size(); i++) {

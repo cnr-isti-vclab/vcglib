@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2004/12/01 03:24:32  ponchio
+Level 2.
+
 Revision 1.17  2004/11/30 22:49:39  ponchio
 Level 0.
 
@@ -100,6 +103,8 @@ Created
 /**Vector structure on file with simulated mmapping.
  * a priority queue of buffers is used 
  * TODO: port to over 4Gb usable space
+ *       add interface for readonly reads even when file is readwrite...
+ *       instead of queue size use ramsize!!!!
  *       some mechanism to report errors?
  *       use an Iterator?
  */
@@ -194,6 +199,7 @@ template <class T> class VFile: public MFile {
   }
 
   void Resize(unsigned int elem) {
+    //TODO do i really need to flush?
     Flush();
     MFile::Redim((int64)elem * (int64)sizeof(T));
     n_elements = elem;
@@ -259,8 +265,8 @@ template <class T> class VFile: public MFile {
 
     if(index.count(chunk)) 
       return ((*(index[chunk])).data);
-    
-    while(flush && buffers.size() > queue_size) {
+        
+    while(flush && buffers.size() > queue_size) {    
       Buffer &buffer= buffers.back();
       FlushBuffer(buffer);      
       index.erase(buffer.key);  

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/12/02 20:22:42  ponchio
+Level 5;
+
 Revision 1.5  2004/12/02 19:10:18  ponchio
 Bounding sphere fix.
 
@@ -306,17 +309,15 @@ void ThirdStep(const string &crudefile, const string &output,
     assert(vcount == vertices.size());
     assert(fcount == faces.size());
 
-    if(vcount > 65000) {
-      cerr << "Too many vertices in this patch: " 
-	   << vcount << endl;
+    //TODO deal with this case adding another patch at the end... its not that difficult!
+    
+    //This can happen on degenerate cases when we have a lot of detached faces....
+    if(vcount > 65000 && fcount > 65000) {
+      cerr << "Too many vertices or faces in patch: " << patch << " v: " << vcount 
+        << " f: " << fcount << endl;
       exit(0);
     }
-
-    if(fcount > 65000) {
-      cerr << "Too many faces in this patch: " 
-	   << fcount << endl;
-      exit(0);
-    }
+  
     unsigned int patch_idx = nexus.AddPatch(vertices.size(),
 					    faces.size()/3,
 					    0); //no borders!
@@ -328,6 +329,12 @@ void ThirdStep(const string &crudefile, const string &output,
     for(int i = 0; i < vertices.size(); i++)
       sphere.Add(vertices[i]);
     sphere.Radius() *= 1.01;
+
+#ifndef NDEBUG
+    for(int i = 0; i < vertices.size(); i++) {
+      assert(sphere.IsIn(vertices[i]));
+    }
+#endif
    
 
     //saving vert_remap
@@ -368,13 +375,12 @@ void ThirdStep(const string &crudefile, const string &output,
 
 void FourthStep(const string &crudefile, const string &output, 
 		unsigned int ram_buffer) {
-  Nexus nexus;
-
-  nexus.patches.SetRamBufferSize(ram_buffer);
+  Nexus nexus;  
   if(!nexus.Load(output)) {
     cerr << "Could not load nexus " << output << endl;
     exit(0);
   }
+  nexus.patches.SetRamBufferSize(ram_buffer);
   //TODO Clear borders in case of failure!
 
   VFile<unsigned int> vert_remap;
@@ -390,35 +396,52 @@ void FourthStep(const string &crudefile, const string &output,
   }
   Report report(nexus.index.size());
 
+#ifndef NDEBUG
+  map<unsigned int, set<unsigned int> > reciprocal;
+#endif
+
   for(int start = 0; start < nexus.index.size(); start++) {
     report.Step(start);
     Nexus::PatchInfo &s_entry = nexus.index[start];
 
-    vector<Link> links;
+    vector<Link> links;   
     
     map<unsigned int, unsigned short> vremap;
     for(unsigned int i = 0; i < vert_index[start].size; i++) {
-      unsigned int global = vert_remap[vert_index[start].offset + i];
+      unsigned int global = vert_remap[vert_index[start].offset + i];      
       vremap[global] = i;
     }
-
+      
     for(int end = 0; end < nexus.index.size(); end++) {
-      if(start == end) continue;
+      if(start == end) continue;      
 
       Nexus::PatchInfo &e_entry = nexus.index[end];
       float dist = Distance(s_entry.sphere, e_entry.sphere);
-      if(dist > 0.1) continue;
+      
+      if(dist > (s_entry.sphere.Radius() + e_entry.sphere.Radius()) * 0.01) {
+#ifndef NDEBUG
+        if(start > end)
+          assert(!reciprocal[end].count(start));
+#endif
+        continue;
+      }
+ #ifndef NDEBUG
+      if(start > end)
+        assert(reciprocal[end].count(start));
+      else
+        reciprocal[start].insert(end);
+#endif
       
       for(unsigned int i = 0; i < vert_index[end].size; i++) {
-	unsigned int global = vert_remap[vert_index[end].offset + i];
-	if(vremap.count(global)) {
-	  Link link;
-	  link.start_vert = vremap[global];
-	  link.end_vert = i;
-	  link.end_patch = end;
-	  links.push_back(link);
-	}
-      }
+	      unsigned int global = vert_remap[vert_index[end].offset + i];
+	      if(vremap.count(global)) {       
+	        Link link;
+	        link.start_vert = vremap[global];
+	        link.end_vert = i;
+	        link.end_patch = end;
+	        links.push_back(link);
+	      }
+      }      
     }
     //TODO Horribili visu (interfaccia di cacca!)
     nexus.borders.ResizeBorder(start, 3 * links.size());
@@ -437,13 +460,12 @@ void FifthStep(const string &crudefile, const string &output,
 	       float scaling, 
 	       unsigned int max_level) {
 
-  Nexus nexus;
-
-  nexus.patches.SetRamBufferSize(ram_buffer);
+  Nexus nexus;  
   if(!nexus.Load(output)) {
     cerr << "Could not load nexus " << output << endl;
     exit(0);
   }
+  nexus.patches.SetRamBufferSize(ram_buffer);
 
   VChain vchain;
   if(!vchain.Load(output + ".vchain")) {
@@ -678,9 +700,9 @@ void BuildFragment(Nexus &nexus, VPartition &part,
     for(unsigned int i = 0; i < border.Size(); i++) {
       Link &link = border[i];
       if(!link.IsNull() && 
-	 patch_levels[link.end_patch] == current_level-1) {
-	assert(link.end_patch != *f);
-	nxs.bord.push_back(link);
+	       patch_levels[link.end_patch] == current_level-1) {
+	      assert(link.end_patch != *f);
+	      nxs.bord.push_back(link);
       }
     }
   }
@@ -752,23 +774,24 @@ void SaveFragment(Nexus &nexus, VChain &chain,
     
     Patch &patch = nexus.GetPatch(patch_idx);
     memcpy(patch.FaceBegin(), &outpatch.face[0], 
-	   outpatch.face.size() * sizeof(unsigned short));
+	          outpatch.face.size() * sizeof(unsigned short));
     memcpy(patch.VertBegin(), &outpatch.vert[0], 
-	   outpatch.vert.size() * sizeof(Point3f));
+	          outpatch.vert.size() * sizeof(Point3f));
     
     Nexus::PatchInfo &entry = nexus.index[patch_idx];
     for(unsigned int v = 0; v < outpatch.vert.size(); v++) {
       entry.sphere.Add(outpatch.vert[v]);
       nexus.sphere.Add(outpatch.vert[v]);
     } 
+    entry.sphere.Radius() *= 1.01;
 
     //remap internal borders
     for(unsigned int k = 0; k < outpatch.bord.size(); k++) {
       Link &link = outpatch.bord[k];
       if(link.end_patch >= (1<<31)) { //internal
-	link.end_patch = patch_remap[link.end_patch - (1<<31)];
-	assert(link.end_patch != patch_remap[i]);
-	newlinks[patch_idx].insert(link);
+	      link.end_patch = patch_remap[link.end_patch - (1<<31)];
+	      assert(link.end_patch != patch_remap[i]);
+	      newlinks[patch_idx].insert(link);
       } 
     } 
     //TODO not efficient!
@@ -785,38 +808,40 @@ void SaveFragment(Nexus &nexus, VChain &chain,
 
       Link up(link.end_vert, link.start_vert, patch_idx);
       newlinks[link.end_patch].insert(up);
-
+      
+      assert(link.end_patch != patch_idx);
       Border cborder = nexus.GetBorder(link.end_patch);
       for(unsigned int k = 0; k < cborder.Size(); k++) {
+        //cerr << "Cborder.size: " << cborder.Size() << endl;
+        //cerr << "K: " << k << endl;
+	      Link &clink = cborder[k];
+	      assert(!clink.IsNull());
 
-	Link &clink = cborder[k];
-	assert(!clink.IsNull());
+	      if(clink.start_vert != link.end_vert) continue;
+	      if(patch_levels[clink.end_patch] < current_level-1) continue;
+	      //boy i want only the external links!
+	      if(orig_patches.count(clink.end_patch)) continue;
 
-	if(clink.start_vert != link.end_vert) continue;
-	if(patch_levels[clink.end_patch] < current_level-1) continue;
-	//boy i want only the external links!
-	if(orig_patches.count(clink.end_patch)) continue;
+    	  unsigned short &end_vert = clink.end_vert;
+	      unsigned int &end_patch = clink.end_patch;
+	    
+	      //TODO FIX THIS!!!!
+	      assert(clink.end_patch != start_patch);
+	      assert(clink.end_patch != link.end_patch);
 
-	unsigned short &end_vert = clink.end_vert;
-	unsigned int &end_patch = clink.end_patch;
+	      Link newlink;
+
+	      newlink.start_vert = start_vert;
+	      newlink.end_vert = end_vert;
+	      newlink.end_patch = end_patch;
 	
-	//TODO FIX THIS!!!!
-	assert(clink.end_patch != start_patch);
-	assert(clink.end_patch != link.end_patch);
+	      newlinks[patch_idx].insert(newlink);
 
-	Link newlink;
-
-	newlink.start_vert = start_vert;
-	newlink.end_vert = end_vert;
-	newlink.end_patch = end_patch;
+	      newlink.start_vert = end_vert;
+	      newlink.end_vert = start_vert;
+	      newlink.end_patch = start_patch;
 	
-	newlinks[patch_idx].insert(newlink);
-
-	newlink.start_vert = end_vert;
-	newlink.end_vert = start_vert;
-	newlink.end_patch = start_patch;
-	
-	newlinks[end_patch].insert(newlink);
+	      newlinks[end_patch].insert(newlink);
       }
     }
   }
@@ -839,7 +864,11 @@ void SaveFragment(Nexus &nexus, VChain &chain,
 }
 
 void ReverseHistory(vector<Nexus::Update> &history) {
-  std::reverse(history.begin(), history.end());
+  vector<Nexus::Update> revert = history;
+  history.clear();
+  for(int i = revert.size()-1; i >= 0; i--)
+    history.push_back(revert[i]);    
+  //std::reverse(history.begin(), history.end());
   vector<Nexus::Update>::iterator i;
   for(i = history.begin(); i != history.end(); i++)
     swap((*i).erased, (*i).created);

@@ -172,7 +172,11 @@ float Cluster(MyMesh &mesh, unsigned int target_faces) {
   unsigned int starting = mesh.vn;
   
   unsigned int nseeds = target_faces/2;
-  assert(nseeds < mesh.vert.size());
+#ifndef NDEBUG
+  if(nseeds >= mesh.vert.size()) {
+    cerr << "Strange! nseeds > vert.size(): " << nseeds  << " >= "<< mesh.vert.size() << endl;
+  }
+#endif
   
   vector<unsigned int> remap;
   

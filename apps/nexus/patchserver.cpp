@@ -203,9 +203,8 @@ void PatchServer::GetVbo(unsigned int p,
 
 
 void PatchServer::Flush() {
-
-  if(ram_used < ram_size * 1.1) return;
-
+  
+  if(ram_used < ram_size * 1.1) return;  
   //  ramlock.wrlock();
 
   make_heap(lru.begin(), lru.end());
@@ -299,6 +298,5 @@ bool PatchServer::FlushVbo(PTime &ptime) {
 }
 
 void PatchServer::SetRamBufferSize(unsigned int r_buffer) {
-  cerr << "Chunk_size: " << chunk_size << endl;
   ram_size = (unsigned int)(r_buffer/chunk_size) + 1;
 }
