@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/09/21 00:53:23  ponchio
+Lotsa changes.
+
 Revision 1.3  2004/09/17 15:25:09  ponchio
 First working (hopefully) release.
 
@@ -46,10 +49,6 @@ using namespace nxs;
 
 
 void VoronoiChain::Init(Crude &crude, float scaling, int steps) {
-  box = crude.GetBox();
-  box.Offset(box.max - box.min);
-  //how many cells do i need?
-  cerr << "scaling: " << scaling << endl;
   unsigned int f_cells = crude.Faces() / mean_size;
   unsigned int c_cells = (unsigned int)(scaling * f_cells);
 
@@ -61,15 +60,11 @@ void VoronoiChain::Init(Crude &crude, float scaling, int steps) {
   levels.push_back(VoronoiPartition());
   VoronoiPartition &fine = levels[0];
   VoronoiPartition &coarse = levels[1];
-
-  fine.Init(box);
-  coarse.Init(box);
+  fine.SetBox(crude.GetBox());
+  coarse.SetBox(crude.GetBox());
 
   srand(0);
   
-  vector<Seed> fine_seeds;
-  vector<Seed> coarse_seeds;
-
   float fine_vmean = mean_size/2;
   float coarse_vmean = (mean_size/scaling)/2;
   for(unsigned int i = 0; i < crude.Vertices(); i++) {
@@ -77,22 +72,27 @@ void VoronoiChain::Init(Crude &crude, float scaling, int steps) {
     int c = (int)(coarse_vmean *rand()/(RAND_MAX + 1.0));
     if(f == 1) {
       Point3f &point = crude.GetVertex(i);
-      fine_seeds.push_back(Seed(point, 1));
+      fine.push_back(Seed(point, 1));
     }
     if(c == 1) {
       Point3f &point = crude.GetVertex(i);
-      coarse_seeds.push_back(Seed(point, 1));
+      coarse.push_back(Seed(point, 1));
     }
   }
-  cerr << "fine_seeds.size: " << fine_seeds.size() << endl;
-  cerr << "coarse_seeds.size: " << coarse_seeds.size() << endl;
-  fine.all_seeds = fine_seeds;
-  coarse.all_seeds =  coarse_seeds;
-  fine.reload();
-  coarse.reload();
+  //TODO! Check for duplicates (use the closest :P)
+  cerr << "fine_seeds.size: " << fine.size() << endl;
+  cerr << "coarse_seeds.size: " << coarse.size() << endl;
+  fine.Init();
+  coarse.Init();
 
-  //here goes some optimization pass.
-  //Fine optimization.
+  for(int i = 0; i < fine.size(); i ++) {
+    unsigned int target = 0xffffffff;
+    fine.Closest(fine[i].p, target);
+    assert(target == i);
+
+  }
+//here goes some optimization pass.
+   //Fine optimization.
   vector<Point3f> fcentroids;
   vector<unsigned int> fcount;
   for(unsigned int i = 0; i < steps; i++) {
@@ -110,19 +110,62 @@ void VoronoiChain::Init(Crude &crude, float scaling, int steps) {
       fcount[ftarget]++;
     }
     for(unsigned int v = 0; v < fine.size(); v++) {
+      if(fcount[v] == 0) {
+	unsigned int target;
+	float dist = fine.Closest(fine[v].p, target);
+      }
       assert(fcount[v] != 0);
+
        
       fine[v].p = fcentroids[v]/fcount[v];
       //0.3 is related to the fact is doubled the box size.
-      fine[v].weight = pow(fcount[v]/fine_vmean, 0.3f);
+      fine[v].weight = pow(fcount[v]/(float)fine_vmean, 0.3f);
       //      fine.bbox.Add(fine[v].p);
     }
     //    fine.Init(fine.bbox);
-    fine.reload();
+    fine.Init();
+  }     
+
+  //here goes some optimization pass.
+  //Coarse optimization.
+  vector<Point3f> ccentroids;
+  vector<unsigned int> ccount;
+  for(unsigned int i = 0; i < steps; i++) {
+    cerr << "Optimization step 0: " << i << "/" << steps << endl;
+    ccentroids.clear();
+    ccount.clear();
+    ccentroids.resize(fine.size(), Point3f(0, 0, 0));
+    ccount.resize(fine.size(), 0);
+    
+    for(unsigned int v = 0; v < crude.Vertices(); v++) {
+      unsigned int ctarget = 0xffffffff;
+      float dist = coarse.Closest(crude.vert[v], ctarget);
+      assert(ctarget != 0xffffffff);
+      ccentroids[ctarget] += crude.vert[v];
+      ccount[ctarget]++;
+    }
+    for(unsigned int v = 0; v < coarse.size(); v++) {
+      if(ccount[v] == 0) {
+	unsigned int target;
+	float dist = coarse.Closest(fine[v].p, target);
+	assert(target == v);
+      }
+      assert(ccount[v] != 0);
+
+       
+      coarse[v].p = ccentroids[v]/ccount[v];
+      //0.3 is related to the fact is doubled the box size.
+      coarse[v].weight = pow(ccount[v]/(float)coarse_vmean, 0.3f);
+      //      fine.bbox.Add(fine[v].p);
+    }
+    //    fine.Init(fine.bbox);
+    coarse.Init();
   }    
 
+
+
   //Coarse optimization
-  vector< map<unsigned int, Point3f> > ccentroids;
+  /*  vector< map<unsigned int, Point3f> > ccentroids;
   vector< map<unsigned int, unsigned int> > ccount;
 
   for(unsigned int i = 0; i < steps; i++) {
@@ -180,8 +223,8 @@ void VoronoiChain::Init(Crude &crude, float scaling, int steps) {
       //      coarse[v].weight = pow(tot_size/coarse_vmean, 0.25f);
 
     }
-    coarse.reload();
-  }
+    coarse.Init();
+    }*/
 }
 
 unsigned int VoronoiChain::Locate(unsigned int level, 
@@ -286,35 +329,71 @@ void VoronoiChain::BuildLevel(Nexus &nexus, unsigned int offset,
   levels.push_back(VoronoiPartition());
   VoronoiPartition &coarse = levels[levels.size()-1];
   VoronoiPartition &fine = levels[levels.size()-2];
-
-  coarse.Init(box);
-  
-  fine.reload();
+  coarse.SetBox(fine.box);
 
   srand(0);
   float coarse_vmean = (totface/2)/(fine.size() * scaling);
   
   cerr << "initing random seeds\n";
 
-  vector<Seed> coarse_seeds;
-  
   for(unsigned int idx = offset; idx < nexus.index.size(); idx++) {
     Patch patch = nexus.GetPatch(idx);
     for(unsigned int i = 0; i < patch.nv; i++) {
       int c = (int)(coarse_vmean*rand()/(RAND_MAX + 1.0));
       if(c == 1) {
 	Point3f &v = patch.Vert(i);
-	coarse_seeds.push_back(v);
+	coarse.push_back(v);
       }
     }
   }
-  if(coarse_seeds.size() == 0)
-    coarse_seeds.push_back(Point3f(0, 0, 0));
-  coarse.all_seeds =  coarse_seeds;
-  coarse.reload();
+  if(coarse.size() == 0) {
+    Patch patch = nexus.GetPatch(0);
+    coarse.push_back(patch.Vert(0));
+  }
+  coarse.Init();
+  cerr << "Coarse size: " << coarse.size() << endl;
+//here goes some optimization pass.
+  //Coarse optimization.
+  vector<Point3f> ccentroids;
+  vector<unsigned int> ccount;
+  for(unsigned int i = 0; i < steps; i++) {
+    cerr << "Optimization step 0: " << i << "/" << steps << endl;
+    ccentroids.clear();
+    ccount.clear();
+    ccentroids.resize(fine.size(), Point3f(0, 0, 0));
+    ccount.resize(fine.size(), 0);
+    
+    for(unsigned int idx = offset; idx < nexus.index.size(); idx++) {
+      Patch patch = nexus.GetPatch(idx);
+      for(unsigned int i = 0; i < patch.nv; i++) {
+
+	unsigned int ctarget = 0xffffffff;
+	float dist = coarse.Closest(patch.Vert(i), ctarget);
+	assert(ctarget != 0xffffffff);
+	ccentroids[ctarget] += patch.Vert(i);
+	ccount[ctarget]++;
+      }
+    }
+    for(unsigned int v = 0; v < coarse.size(); v++) {
+      if(ccount[v] == 0) {
+	unsigned int target = 0xffffffff;
+	float dist = coarse.Closest(fine[v].p, target);
+	assert(target == v);
+      }
+      assert(ccount[v] != 0);
+       
+      coarse[v].p = ccentroids[v]/ccount[v];
+      //0.3 is related to the fact is doubled the box size.
+      coarse[v].weight = pow(ccount[v]/(float)coarse_vmean, 0.3f);
+      //      fine.bbox.Add(fine[v].p);
+    }
+    //    fine.Init(fine.bbox);
+    coarse.Init();
+  }    
+
 
 //Coarse optimization
-  vector< map<unsigned int, Point3f> > ccentroids;
+/*  vector< map<unsigned int, Point3f> > ccentroids;
   vector< map<unsigned int, unsigned int> > ccount;
 
   for(unsigned int step = 0; step < steps; step++) {
@@ -331,7 +410,7 @@ void VoronoiChain::BuildLevel(Nexus &nexus, unsigned int offset,
       for(unsigned int i = 0; i < patch.nv; i++) {
 	Point3f &v = patch.Vert(i);
 	unsigned int ftarget;
-	float dist = fine.Closest(Point3f(1,1,1), ftarget);
+	float dist = fine.Closest(v, ftarget);
 
 	dist = fine.Closest(v, ftarget);
 	assert(ftarget != -1);
@@ -343,7 +422,7 @@ void VoronoiChain::BuildLevel(Nexus &nexus, unsigned int offset,
 	map<unsigned int, Point3f> &centroids = ccentroids[ctarget];
 	map<unsigned int, unsigned int> &count = ccount[ctarget];
 
-	if(!centroids.count(ftarget))
+	if(!centroids.count(ftarget)) 
 	  centroids[ftarget]= Point3f(0, 0, 0);
 	
 	if(!count.count(ftarget))
@@ -375,8 +454,8 @@ void VoronoiChain::BuildLevel(Nexus &nexus, unsigned int offset,
       //TODO find a solution!
       //      coarse[v].weight = pow(tot_size/coarse_vmean, 0.25f);
     }
-    coarse.reload();
-  }
+    coarse.Init();
+    }*/
   newfragments.clear();
   //TODO add some optimization
 }
