@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/02/03 11:22:34  spinelli
+ricorretti i metodi save per rendere compatibile il formato dxf con il formato di autocad specificato nel dxf reference 2005
+
 Revision 1.3  2004/07/02 17:08:12  ganovelli
 created
 
@@ -48,7 +51,7 @@ class ExporterDXF
 {
 public:
 
-	ExporterDXF_AUTOCAD(void){}
+	ExporterDXF(void){}
 
 	
 
