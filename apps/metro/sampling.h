@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2005/01/24 15:37:14  cignoni
+updated from MinDistPoint to Closest (and removed some warnings)
+
 Revision 1.13  2004/09/20 16:17:46  ponchio
 Floating except fixed (happened on meshes with less than 100 faces :P)
 
@@ -69,7 +72,8 @@ instantiate GridStaticPtr on the simplexClass template.
 #include <vcg/simplex/face/distance.h>
 #include <vcg/complex/trimesh/update/color.h>
 #include <vcg/space/index/grid_static_ptr.h>
-using namespace vcg;
+namespace vcg
+{
 
 struct SamplingFlags{	
 			 enum{
@@ -615,5 +619,5 @@ void Sampling<MetroMesh>::Hausdorff()
     mean_dist /= n_total_samples;
     RMS_dist   = sqrt(RMS_dist / n_total_samples);
 }
-
+}
 #endif

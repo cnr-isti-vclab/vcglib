@@ -24,6 +24,11 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2005/01/24 15:46:48  cignoni
+Release 4.04
+Moved to the library core the code for computing min distance froma a point to a mesh using a uniform grid.
+Slightly faster.
+
 Revision 1.12  2005/01/03 11:28:52  cignoni
 Release 4.03
 Better ply compatibility, and improved error reporting
@@ -75,6 +80,8 @@ GPL  added
 
 
 // -----------------------------------------------------------------------------------------------
+using namespace std;
+using namespace vcg;
 
 
 ////////////////// Command line Flags and parameters 
@@ -111,10 +118,10 @@ void Usage()
 
 
 // simple aux function that compute the name for the file containing the stored computations
-string SaveFileName(const string &filename)
+std::string SaveFileName(const std::string &filename)
 {
  int pos=filename.find_last_of('.',filename.length());
- string fileout=filename.substr(0,pos)+"_metro.ply";
+ std::string fileout=filename.substr(0,pos)+"_metro.ply";
  return fileout;
 }
 

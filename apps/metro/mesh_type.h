@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/05/14 00:32:36  ganovelli
+just color and quality on the vertex
+
 
 
 ****************************************************************************/
@@ -38,16 +41,11 @@ $Log: not supported by cvs2svn $
 #include <vcg/space/index/grid_static_ptr.h>
 #include <vcg/complex/trimesh/base.h>
 
-
-
-using namespace vcg;
-using namespace std;
-
 // Vertex, Face, Mesh and Grid definitions.
 class MyEdge;
 class CFace;
-class CVertex   : public VertexVCVQ< double,MyEdge,CFace > {};
-class CFace     : public FaceRTFCFMFN< CVertex,MyEdge,CFace > {};
-class CMesh     : public tri::TriMesh< vector<CVertex>, vector<CFace> > {};
+class CVertex   : public vcg::VertexVCVQ< double,MyEdge,CFace > {};
+class CFace     : public vcg::FaceRTFCFMFN< CVertex,MyEdge,CFace > {};
+class CMesh     : public vcg::tri::TriMesh< std::vector<CVertex>, std::vector<CFace> > {};
 
 #endif
