@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/02/13 02:16:22  cignoni
+First working release.
+
 
 ****************************************************************************/
 
@@ -31,14 +34,16 @@ $Log: not supported by cvs2svn $
 #ifndef __VCGLIB_BOX3
 #define __VCGLIB_BOX3
 
-#include <vcg/space/point3>
+#include <vcg/space/point3.h>
 
 namespace vcg {
 
-/** @name Box3
-	Class Box3.
-    This is the class for definition of a bounding box in 3D space.	
-	@param BoxScalarType (Templete Parameter) Specifies the scalar field.
+/** \addtogroup space */
+/*@{*/
+/** 
+Templated class for 3D boxes.
+  This is the class for definition of a axis aligned bounding box in 3D space. It is stored just as two Point3
+	@param BoxScalarType (template parameter) Specifies the type of scalar used to represent coords.
 */
 template <class BoxScalarType>
 class Box3
@@ -294,16 +299,13 @@ public:
 
 
 #endif
-	/// Specificazione di box of short
 typedef Box3<short>  Box3s;
-	/// Specificazione di box of int
 typedef Box3<int>	 Box3i;
-	/// Specificazione di box of float
 typedef Box3<float>  Box3f;
-	/// Specificazione di box of double
 typedef Box3<double> Box3d;
 
 
+/*@}*/
 
 } // end namespace
 #endif
