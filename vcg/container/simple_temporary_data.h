@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/03/31 22:36:44  ganovelli
+First Working Release (with this comment)
+
 
 /****************************************************************************/
 
@@ -45,11 +48,19 @@ std::vector<ATTR_TYPE> data;
 SimpleTempData(STL_CONT  &_c):c(_c){};
 
 // access to data
-ATTR_TYPE & operator[](const STL_CONT::value_type *v){return data[v-&*c.begin()];}
+ATTR_TYPE & operator[](const typename STL_CONT::value_type & v){return data[&v-&*c.begin()];}
+ATTR_TYPE & operator[](const typename STL_CONT::value_type * v){return data[v-&*c.begin()];}
 ATTR_TYPE & operator[](const int & i){return data[i];}
 
 // start temporary attribute
 void Start(){data.reserve(c.capacity());data.resize(c.size());}
+
+// start and initialize temporary attribute
+void Start(ATTR_TYPE val){data.reserve(c.capacity());data.resize(c.size());
+	std::vector<ATTR_TYPE>::iterator i;
+	for(i = data.begin(); i!= data.end(); ++i)
+	*i = val;
+}
 
 // stop temporary attribute
 void Stop(){data.clear();}
