@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/03/11 18:14:19  tarini
+prova
+
 Revision 1.2  2004/03/03 16:11:46  cignoni
 First working version (tetrahedron!)
 
@@ -37,82 +40,76 @@ First working version (tetrahedron!)
 #include<vcg/complex/trimesh/allocate.h>
 namespace vcg {
 namespace tri {
-cacca
-template <class MESH_TYPE>
-void Tetrahedron(MESH_TYPE &in)
+
+template <class TetraMeshType>
+void Tetrahedron(TetraMeshType &in)
 {
   in.Clear();
-  Allocator<MESH_TYPE>::AddVertices(in,4);
-  Allocator<MESH_TYPE>::AddFaces(in,4);
+  Allocator<TetraMeshType>::AddVertices(in,4);
+  Allocator<TetraMeshType>::AddFaces(in,4);
 
-  MESH_TYPE::VertexPointer ivp[4];
+  TetraMeshType::VertexPointer ivp[4];
 
-  MESH_TYPE::VertexIterator vi=in.vert.begin();
-	ivp[0]=&*vi;(*vi).P()=MESH_TYPE::CoordType ( 1, 1, 1); ++vi;
-	ivp[1]=&*vi;(*vi).P()=MESH_TYPE::CoordType (-1, 1,-1); ++vi;
-	ivp[2]=&*vi;(*vi).P()=MESH_TYPE::CoordType (-1,-1, 1); ++vi;
-	ivp[3]=&*vi;(*vi).P()=MESH_TYPE::CoordType ( 1,-1,-1); 
+  TetraMeshType::VertexIterator vi=in.vert.begin();
+	ivp[0]=&*vi;(*vi).P()=TetraMeshType::CoordType ( 1, 1, 1); ++vi;
+	ivp[1]=&*vi;(*vi).P()=TetraMeshType::CoordType (-1, 1,-1); ++vi;
+	ivp[2]=&*vi;(*vi).P()=TetraMeshType::CoordType (-1,-1, 1); ++vi;
+	ivp[3]=&*vi;(*vi).P()=TetraMeshType::CoordType ( 1,-1,-1); 
 	
-  MESH_TYPE::FaceIterator fi=in.face.begin();
+  TetraMeshType::FaceIterator fi=in.face.begin();
 	(*fi).V(0)=ivp[0];  (*fi).V(1)=ivp[1]; (*fi).V(2)=ivp[2]; ++fi;
 	(*fi).V(0)=ivp[0];  (*fi).V(1)=ivp[2]; (*fi).V(2)=ivp[3]; ++fi;
 	(*fi).V(0)=ivp[0];  (*fi).V(1)=ivp[3]; (*fi).V(2)=ivp[1]; ++fi;
 	(*fi).V(0)=ivp[3];  (*fi).V(1)=ivp[2]; (*fi).V(2)=ivp[1]; 
 }
 
-template <class MESH_TYPE>
-void Octahedron(MESH_TYPE &in)
+template <class OctMeshType>
+void Octahedron(OctMeshType &in)
 {
-	in.vn=6;
-	in.fn=8;
-	in.vert.clear();
-	in.face.clear();
-	MESH_TYPE::VertexType tv;tv.Supervisor_Flags()=0;
-	MESH_TYPE::CoordType tp;
-	tp=MESH_TYPE::CoordType ( 1, 0, 0); tv.P()=tp; in.vert.push_back(tv);
-	tp=MESH_TYPE::CoordType ( 0, 1, 0); tv.P()=tp; in.vert.push_back(tv);
-	tp=MESH_TYPE::CoordType ( 0, 0, 1); tv.P()=tp; in.vert.push_back(tv);
-	tp=MESH_TYPE::CoordType (-1, 0, 0); tv.P()=tp; in.vert.push_back(tv);
-	tp=MESH_TYPE::CoordType ( 0,-1, 0); tv.P()=tp; in.vert.push_back(tv);
-	tp=MESH_TYPE::CoordType ( 0, 0,-1); tv.P()=tp; in.vert.push_back(tv);
+  in.Clear();
+  Allocator<OctMeshType>::AddVertices(in,6);
+  Allocator<OctMeshType>::AddFaces(in,8);
 
-	vector<MESH_TYPE::vertex_pointer> index(in.vn);
-	
-	MESH_TYPE::face_type f;f.Supervisor_Flags()=0;
-	
-	MESH_TYPE::vertex_iterator vi;
-	int j;
-	for(j=0,vi=in.vert.begin();j<in.vn;++j,++vi)	index[j] = &*vi;
+  OctMeshType::VertexPointer ivp[6];
 
-	f.V(0)=index[0];  f.V(1)=index[1];f.V(2)=index[2];  in.face.push_back(f);
-	f.V(0)=index[0];  f.V(1)=index[2];f.V(2)=index[4];  in.face.push_back(f);
-	f.V(0)=index[0];  f.V(1)=index[4];f.V(2)=index[5];  in.face.push_back(f);
-	f.V(0)=index[0];  f.V(1)=index[5];f.V(2)=index[1];  in.face.push_back(f);
-	f.V(0)=index[3];  f.V(1)=index[1];f.V(2)=index[5];  in.face.push_back(f);
-	f.V(0)=index[3];  f.V(1)=index[5];f.V(2)=index[4];  in.face.push_back(f);
-	f.V(0)=index[3];  f.V(1)=index[4];f.V(2)=index[2];  in.face.push_back(f);
-	f.V(0)=index[3];  f.V(1)=index[2];f.V(2)=index[1];  in.face.push_back(f);
+  OctMeshType::VertexIterator vi=in.vert.begin();
+	ivp[0]=&*vi;(*vi).P()=OctMeshType::CoordType ( 1, 0, 0); ++vi;
+	ivp[1]=&*vi;(*vi).P()=OctMeshType::CoordType ( 0, 1, 0); ++vi;
+	ivp[2]=&*vi;(*vi).P()=OctMeshType::CoordType ( 0, 0, 1); ++vi;
+	ivp[3]=&*vi;(*vi).P()=OctMeshType::CoordType (-1, 0, 0); ++vi;
+	ivp[4]=&*vi;(*vi).P()=OctMeshType::CoordType ( 0,-1, 0); ++vi;
+	ivp[5]=&*vi;(*vi).P()=OctMeshType::CoordType ( 0, 0,-1); 
+	
+  OctMeshType::FaceIterator fi=in.face.begin();
+	(*fi).V(0)=ivp[0];  (*fi).V(1)=ivp[1]; (*fi).V(2)=ivp[2]; ++fi;
+	(*fi).V(0)=ivp[0];  (*fi).V(1)=ivp[2]; (*fi).V(2)=ivp[4]; ++fi;
+	(*fi).V(0)=ivp[0];  (*fi).V(1)=ivp[4]; (*fi).V(2)=ivp[5]; ++fi;
+	(*fi).V(0)=ivp[0];  (*fi).V(1)=ivp[5]; (*fi).V(2)=ivp[1]; ++fi;
+	(*fi).V(0)=ivp[3];  (*fi).V(1)=ivp[1]; (*fi).V(2)=ivp[5]; ++fi;
+	(*fi).V(0)=ivp[3];  (*fi).V(1)=ivp[5]; (*fi).V(2)=ivp[4]; ++fi;
+	(*fi).V(0)=ivp[3];  (*fi).V(1)=ivp[4]; (*fi).V(2)=ivp[2]; ++fi;
+	(*fi).V(0)=ivp[3];  (*fi).V(1)=ivp[2]; (*fi).V(2)=ivp[1]; 
 }
 
-template <class MESH_TYPE>
-void Icosahedron(MESH_TYPE &in)
+template <class IcoMeshType>
+void Icosahedron(IcoMeshType &in)
 {
-	MESH_TYPE::ScalarType L=(Sqrt(5.0)+1.0)/2.0;
-	MESH_TYPE::CoordType vv[12]={
-	MESH_TYPE::CoordType ( 0, L, 1),
-	MESH_TYPE::CoordType ( 0, L,-1),
-	MESH_TYPE::CoordType ( 0,-L, 1),
-	MESH_TYPE::CoordType ( 0,-L,-1),
+  IcoMeshType::ScalarType L=IcoMeshType::ScalarType((math::Sqrt(5.0)+1.0)/2.0);
+	IcoMeshType::CoordType vv[12]={
+	IcoMeshType::CoordType ( 0, L, 1),
+	IcoMeshType::CoordType ( 0, L,-1),
+	IcoMeshType::CoordType ( 0,-L, 1),
+	IcoMeshType::CoordType ( 0,-L,-1),
 
-	MESH_TYPE::CoordType ( L, 1, 0),
-	MESH_TYPE::CoordType ( L,-1, 0),
-	MESH_TYPE::CoordType (-L, 1, 0),
-	MESH_TYPE::CoordType (-L,-1, 0),
+	IcoMeshType::CoordType ( L, 1, 0),
+	IcoMeshType::CoordType ( L,-1, 0),
+	IcoMeshType::CoordType (-L, 1, 0),
+	IcoMeshType::CoordType (-L,-1, 0),
 
-	MESH_TYPE::CoordType ( 1, 0, L),
-	MESH_TYPE::CoordType (-1, 0, L),
-	MESH_TYPE::CoordType ( 1, 0,-L),
-	MESH_TYPE::CoordType (-1, 0,-L)
+	IcoMeshType::CoordType ( 1, 0, L),
+	IcoMeshType::CoordType (-1, 0, L),
+	IcoMeshType::CoordType ( 1, 0,-L),
+	IcoMeshType::CoordType (-1, 0,-L)
 	};
 
 	int ff[20][3]={
@@ -123,31 +120,24 @@ void Icosahedron(MESH_TYPE &in)
 		{2,5,8},{2,9,7},{3,10,5},{3,7,11}
 	};
 
-	in.vn=12;
-	in.fn=20;
-	in.vert.clear();
-	in.face.clear();
-	MESH_TYPE::VertexType tv;tv.Supervisor_Flags()=0;
-	MESH_TYPE::CoordType tp;
-	for(int i=0;i<in.vn;i++)
-		{
-			tv.P()=vv[i];
-			in.vert.push_back(tv);
-		}
-	
-	vector<MESH_TYPE::vertex_pointer> index(in.vn);
-	
-	MESH_TYPE::face_type f;f.Supervisor_Flags()=0;
-	
-	MESH_TYPE::vertex_iterator vi;
-	int j;
-	for(j=0,vi=in.vert.begin();j<in.vn;++j,++vi)	index[j] = &*vi;
-	for(j=0;j<in.fn;++j)
-	{	
-		f.V(0)=index[ff[j][0]];
-		f.V(1)=index[ff[j][1]];
-		f.V(2)=index[ff[j][2]];
-		in.face.push_back(f);
+
+  in.Clear();
+  Allocator<IcoMeshType>::AddVertices(in,12);
+  Allocator<IcoMeshType>::AddFaces(in,20);
+  IcoMeshType::VertexPointer ivp[12];
+
+  IcoMeshType::VertexIterator vi;
+  int i;
+  for(i=0,vi=in.vert.begin();vi!=in.vert.end();++i,++vi){
+    (*vi).P()=vv[i];
+	  ivp[i]=&*vi;
+  }
+
+ IcoMeshType::FaceIterator fi;
+ for(i=0,fi=in.face.begin();fi!=in.face.end();++i,++fi){	
+		(*fi).V(0)=ivp[ff[i][0]];
+		(*fi).V(1)=ivp[ff[i][1]];
+		(*fi).V(2)=ivp[ff[i][2]];
 	}
 }
 
