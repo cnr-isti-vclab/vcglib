@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2004/04/15 09:36:59  ganovelli
+ Min and Max changed from const members to static class function
+Use: Value<float>::Min()
+
 Revision 1.14  2004/03/31 12:41:55  tarini
 debugged Max and Min const values (to make them linkable)
 
@@ -113,40 +117,52 @@ namespace math {
   template <class SCALAR> class Value {
 		public: const SCALAR Min; const SCALAR Max;
 	};  
-
+	template <>
 	class Value<char          > { public: static const char						Min(){static char						v=-128;								return v;}
 	                                      static const char           Max(){static char						v=+127;								return v;} 
 		};
+
+	template <>
 	class Value<unsigned char > { public: static const unsigned char  Min(){static unsigned char	v=0;							 	  return v;}
 	                                      static const unsigned char  Max(){static unsigned char	v=255;								return v;}
 		};
+	template <>
 	class Value<short         > { public: static const short          Min(){static short					v=(-32767 -1);				return v;}
 	                                      static const short          Max(){static short					v=+32767;								return v;}
 		};
+	template <>
 	class Value<unsigned short> { public: static const unsigned short Min(){static unsigned short v=0;								return v;}
 	                                      static const unsigned short Max(){static unsigned short v=65535;								return v;}
 		};
+	template <>
 	class Value<int           > { public: static const int            Min(){static int						v=(-2147483647 - 1);								return v;}
 	                                      static const int            Max(){static int						v= +2147483647;								return v;}
 		};
+	template <>
 	class Value<unsigned int  > { public: static const unsigned int   Min(){static unsigned int		v=0;								return v;}
 	                                      static const unsigned int   Max(){static unsigned int		v=4294967295;								return v;}
 		};
+	template <>
 	class Value<__int64       > { public: static const __int64        Min(){static __int64				v=(-9223372036854775807i64 - 1);								return v;}
 	                                      static const __int64        Max(){static __int64				v= +9223372036854775807i64;								return v;}
 		};
+	template <>
 	class Value<long          > { public: static const long           Min(){static long						v=(-2147483647L -1L);								return v;}
 	                                      static const long           Max(){static long						v= +2147483647L;								return v;}
 		};
+	template <>
 	class Value<unsigned long > { public: static const unsigned long  Min(){static unsigned long	v=0;								return v;}
 	                                      static const unsigned long  Max(){static unsigned long	v=4294967295;								return v;}
 		};
+	template <>
 	class Value<float         > { public: static const float          Min(){static float					v=-3.4E38F;								return v;}
 	                                      static const float          Max(){static float					v=+3.4E38F;								return v;}
 		};
+	template <>
 	class Value<double        > { public: static const double         Min(){static double					v=-1.7E308;								return v;}
 	                                      static const double         Max(){static double					v=+1.7E308;								return v;}
 		};
+	template <>
 	class Value<long double   > { public: static const long double    Min(){static long double		v=-1.7E308; 								return v;} //-1.2E4931 ?
 	                                      static const long double    Max(){static long double		v=+1.7E308;								return v;}//+1.2E4931 ?
 		};
