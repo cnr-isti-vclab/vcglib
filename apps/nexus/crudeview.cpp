@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/12/01 03:24:30  ponchio
+Level 2.
+
 Revision 1.5  2004/10/19 17:04:32  ponchio
 #include <trackball> on the top
 
@@ -66,7 +69,6 @@ using namespace std;
 #include <GL/glu.h>
 
 #include <apps/nexus/crude.h>
-#include <apps/nexus/vert_remap.h>
 
 using namespace vcg;
 using namespace nxs;
@@ -143,13 +145,6 @@ int main(int argc, char *argv[]) {
     cerr << "Face remap not found.\n";
   }
   
-  /*  VertRemap vert_remap;
-  if(vert_remap.Load(argv[1])) {
-    cerr << "Found vert remap.\n";
-    vremap = true;
-    }*/
-  
-
   if(!init()) {
     cerr << "Could not init SDL window\n";
     return -1;
