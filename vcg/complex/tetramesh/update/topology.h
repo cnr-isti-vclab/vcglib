@@ -31,6 +31,7 @@ Initial commit
 #ifndef __VCG_TETRA_UPDATE_TOPOLOGY
 #define __VCG_TETRA_UPDATE_TOPOLOGY
 #include <algorithm>
+#include <map>
 #include <vcg\simplex\tetrahedron\pos.h>
 
 namespace vcg {
@@ -427,6 +428,61 @@ void TestTTTopology(VertexContainer &vert,TetraContainer &tetra)
  		
 	}
 
+///test if all and only the exernal vertex are set of border
+void TestExternalVertex(VertexContainer &vert,TetraContainer &tetra)
+{
+  TetraIterator ti;
+  VertexIterator vi;
+
+ typedef pair <VertexType*, bool> VertBoolPair;
+  map<VertexType*, bool> Inserted;
+  map<VertexType*, bool>:: const_iterator MapIte;
+
+  for (ti=tetra.begin();ti<tetra.end();ti++)
+  {
+    int i;
+    if (!ti->IsD())
+    {
+    for (i=0;i<4;i++)
+      if (ti->IsBorderF(i))
+      {
+        VertexType *v0=ti->V(Tetra::VofF(i,0));
+        VertexType *v1=ti->V(Tetra::VofF(i,1));
+        VertexType *v2=ti->V(Tetra::VofF(i,2));
+
+        MapIte = Inserted.find(v0);
+        if ( MapIte == Inserted.end( ) )
+          Inserted.insert (VertBoolPair(v0,true));
+
+        MapIte = Inserted.find(v1);
+        if ( MapIte == Inserted.end( ) )
+          Inserted.insert (VertBoolPair(v1,true));
+
+        MapIte = Inserted.find(v2);
+        if ( MapIte == Inserted.end( ) )
+          Inserted.insert (VertBoolPair(v2,true));
+
+        assert(!((v0->IsD())||(v1->IsD())||(v2->IsD())));
+        assert ((v0->IsB())&&(v1->IsB())&&(v2->IsB()));
+      }
+    }
+  }
+
+  for (vi=vert.begin();vi<vert.end();vi++)
+  {
+    if (!vi->IsD())
+    {
+      if (vi->IsB())
+      {
+        MapIte = Inserted.find(&(*vi));
+        //control if the extrenal vertex appartain to an external face
+        assert ( MapIte != Inserted.end( ) );
+      } 
+    }
+  }
+}
+
+///set the external vertex according to Tetra-Tetra topology
 void setExternalVertices(VertexContainer &vert,TetraContainer &tetra)
 {	
     
