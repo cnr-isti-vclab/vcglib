@@ -47,14 +47,15 @@ public:
 	
 
 	template <DrawMode dm,NormalMode nm,ColorMode cm >
+
     void	Draw(){
-			switch (dm){
-				case DMNone: break;
-        case DMSmallTetra:	_DrawSmallTetra<cm>();break;
+	switch (dm){
+	    case DMNone: break;
+        case DMSmallTetra:_DrawSmallTetra<cm>();break;
         case DMFlat:_DrawSurface<dm,nm,cm>();break;	
         case DMWire:_DrawSurface<dm,nm,cm>();break;
-				case DMHidden:_DrawSurface<dm,nm,cm>();break;
-				case DMFlatWire:_DrawFlatWire<nm,cm>(); break;
+		case DMHidden:_DrawSurface<dm,nm,cm>();break;
+		case DMFlatWire:_DrawFlatWire<nm,cm>(); break;
         case DMTransparent:break;
 				}
 			}
@@ -64,22 +65,25 @@ template <ColorMode cm >
  void _DrawSmallTetra(){
 		Point3x p[4],br;
 		CONT_TETRA::iterator it;
-    glPushAttrib(0xffffffff);
-    glEnable(GL_LIGHTING);
-    glEnable(GL_NORMALIZE);
-    glPolygonMode(GL_FRONT,GL_FILL);
+		glPushAttrib(0xffffffff);
+		glEnable(GL_COLOR_MATERIAL);
+		glEnable(GL_LIGHT0);
+		glEnable(GL_LIGHTING);
+		glEnable(GL_NORMALIZE);
+		glPolygonMode(GL_FRONT,GL_FILL);
 		glBegin(GL_TRIANGLES);
 		for( it = tetra.begin(); it != tetra.end(); ++it)
 			if(!(*it).IsD()){
 					_DrawSmallTetra<cm>(*it);
 			}
 		glEnd();
-    glPopAttrib();
+		glPopAttrib();
 		}
 
 template <NormalMode nm,ColorMode cm >
 void 	_DrawFlatWire(){
 		glPushAttrib(0xffff);
+		glEnable(GL_COLOR_MATERIAL);
 		glEnable(GL_DEPTH);
 		glDepthRange(0.001,1.0);
 		Draw<DMFlat,nm,cm>();
@@ -95,24 +99,23 @@ template <DrawMode dm,NormalMode nm,ColorMode cm >
 void _DrawSurface(){
 		CONT_TETRA::iterator it;
 
-		glPushAttrib(0xffffffff);
-		
+		glPushAttrib(0xffff);
+		glEnable(GL_COLOR_MATERIAL);
 		if((dm == DMWire)||(dm ==DMHidden))
-    {
-      glDisable(GL_LIGHTING);
-      glDisable(GL_NORMALIZE);
+		{
+			glDisable(GL_LIGHTING);
+			glDisable(GL_NORMALIZE);
 			glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
-    }
+		}
 		else
-    {
-      glEnable(GL_LIGHTING);
-      glEnable(GL_NORMALIZE);
+		{
+			glEnable(GL_LIGHTING);
+			glEnable(GL_NORMALIZE);
 			glPolygonMode(GL_FRONT,GL_FILL);
-    }
-
+		}
 		glBegin(GL_TRIANGLES);
 		for( it = tetra.begin(); it != tetra.end(); ++it)
-        _DrawTetra<dm,nm,cm>((*it));
+			_DrawTetra<dm,nm,cm>((*it));
 	  glEnd();
 	  glPopAttrib();
 }
@@ -121,7 +124,7 @@ template <DrawMode dm,NormalMode nm,ColorMode cm >
 void _DrawTetra(TetraType &t)
 {
   if(!(t.IsD()))
-      {
+  {
        if ((dm!=DMWire)&&(dm!=DMHidden))
           _ChooseColorTetra<cm>(t);
        for(int i = 0; i < 4; ++i){
@@ -130,12 +133,13 @@ void _DrawTetra(TetraType &t)
          else
          {
            if (t.IsBorderF(i))
+		   //if (t.IsS())
            {
               if(nm==NMSmooth)
-					      _DrawFaceSmooth<cm>(t,i);
+			     _DrawFaceSmooth<cm>(t,i);
               else
-					    if(nm==NMFlat)
-						    _DrawFace<cm>(t,i);
+			  if(nm==NMFlat)
+			     _DrawFace<cm>(t,i);
            }
          }
        }
@@ -146,7 +150,12 @@ template <ColorMode cm >
 void _ChooseColorTetra(TetraType &t)
 {
   if (cm==CMNone)
-      glColor3d(0.8,0.8,0.8);
+  {
+	  if (t.IsS())
+		glColor3d(1,0,0);
+	  else
+		glColor3d(0.8f,0.8f,0.8f);
+  }
   else
   if(cm == CMPerTetraF)
       {
@@ -154,7 +163,7 @@ void _ChooseColorTetra(TetraType &t)
 				 c = color_tetra(t);
 				 GLint ic[4]; ic[0] = c[0];ic[1] = c[1];ic[2] = c[2];ic[3] = c[3];
 				 glMaterialiv(GL_FRONT,GL_DIFFUSE ,ic);
-			}
+	  }
 }
 
 template <ColorMode cm >
@@ -168,7 +177,7 @@ void _ChooseColorVertex(VertexType &v)
 				 c = color_vertex(v);
 				 GLint ic[4]; ic[0] = c[0];ic[1] = c[1];ic[2] = c[2];ic[3] = c[3];
 				 glMaterialiv(GL_FRONT,GL_DIFFUSE ,ic);
-			}
+	 }
   else
   if(cm == CMPerVertex)
 						glColor3f(v.C()[0],v.C()[1],v.C()[2]);
@@ -188,7 +197,7 @@ void _DrawFaceSmooth(TetraType &t,int face)
   _ChooseColorVertex<cm>(*v1);
   glNormal(v1->N());
   glVertex(v1->P());
-   _ChooseColorVertex<cm>(*v2);
+  _ChooseColorVertex<cm>(*v2);
   glNormal(v2->N());
   glVertex(v2->P());
 }
@@ -218,22 +227,22 @@ void _DrawSmallTetra(TetraType &t)
   T.P3(0)=t.V(3)->cP();
   Point3x p[4], br;
   br=T.ComputeBarycenter();
-	for(int i = 0; i < 4; ++i)
-						p[i] = t.V(i)->P()* shrink_factor + br *(1- shrink_factor);
+  for(int i = 0; i < 4; ++i)
+					p[i] = t.V(i)->P()* shrink_factor + br *(1- shrink_factor);
   _ChooseColorTetra<cm>(t);
   for(int i = 0; i < 4; ++i)
     {
-				glNormal(t.N(i));
+		glNormal(t.N(i));
         VertexType *v0=t.V(Tetra::VofF(i,0));
         VertexType *v1=t.V(Tetra::VofF(i,1));
         VertexType *v2=t.V(Tetra::VofF(i,2));
         _ChooseColorVertex<cm>(*v0);
         glVertex(p[Tetra::VofF(i,0)]);
         _ChooseColorVertex<cm>(*v1);
-				glVertex(p[Tetra::VofF(i,1)]);
+		glVertex(p[Tetra::VofF(i,1)]);
         _ChooseColorVertex<cm>(*v2);
-				glVertex(p[Tetra::VofF(i,2)]);
-			}
+		glVertex(p[Tetra::VofF(i,2)]);
+	}
 }
 
 
