@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.13  2005/01/05 13:25:29  ganovelli
+aggiunte conversione di coordinate
+
 Revision 1.12  2004/12/16 11:22:30  ricciodimare
 *** empty log message ***
 
@@ -69,8 +72,8 @@ creation
 #define __VCGLIB_CAMERA
 
 // VCG
-#include <vcg/space/Point3.h>
-#include <vcg/space/Point2.h>
+#include <vcg/space/point3.h>
+#include <vcg/space/point2.h>
 #include <vcg/math/similarity.h>
 
 namespace vcg{
