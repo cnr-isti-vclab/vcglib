@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/02/13 00:44:53  cignoni
+First commit...
+
 
 ****************************************************************************/
 
@@ -41,137 +44,137 @@ template <class FLTYPE> class Point2
 protected:
 
 	FLTYPE _v[2];
-
+public:
 	typedef FLTYPE scalar;
 
-	inline const FLTYPE &X() const {return v[0];} 
-	inline const FLTYPE &Y() const {return v[1];}
-	inline FLTYPE &X() {return v[0];}
-	inline FLTYPE &Y() {return v[1];}
+	inline const FLTYPE &X() const {return _v[0];} 
+	inline const FLTYPE &Y() const {return _v[1];}
+	inline FLTYPE &X() {return _v[0];}
+	inline FLTYPE &Y() {return _v[1];}
 	inline const FLTYPE & operator [] ( const int i ) const
 	{
 		assert(i>=0 && i<2);
-		return v[i];
+		return _v[i];
 	}
 	inline FLTYPE & operator [] ( const int i )
 	{
 		assert(i>=0 && i<2);
-		return v[i];
+		return _v[i];
 	}
 	
 
 	inline Point2 () { }
 	inline Point2 ( const FLTYPE nx, const FLTYPE ny )
 	{
-			v[0] = nx; v[1] = ny;
+			_v[0] = nx; _v[1] = ny;
 	}
 	inline Point2 ( Point2 const & p)
 	{   
-			v[0]= p.v[0];    v[1]= p.v[1];
+			_v[0]= p._v[0];    _v[1]= p._v[1];
 	}
 	inline Point2 & operator =( Point2 const & p)
 	{
-			v[0]= p.v[0]; v[1]= p.v[1];
+			_v[0]= p._v[0]; _v[1]= p._v[1];
 			return *this;
 	}
 
 	inline void Zero()
 	{
-		v[0] = 0;
-		v[1] = 0;
+		_v[0] = 0;
+		_v[1] = 0;
 	}
 
 	inline Point2 operator + ( Point2 const & p) const
 	{ 
-			return Point2<FLTYPE>( v[0]+p.v[0], v[1]+p.v[1] );
+			return Point2<FLTYPE>( _v[0]+p._v[0], _v[1]+p._v[1] );
 	}
 	inline Point2 operator - ( Point2 const & p) const
 	{
-			return Point2<FLTYPE>( v[0]-p.v[0], v[1]-p.v[1] );
+			return Point2<FLTYPE>( _v[0]-p._v[0], _v[1]-p._v[1] );
 	}
 	inline Point2 operator * ( const FLTYPE s ) const
 	{
-			return Point2<FLTYPE>( v[0] * s, v[1] * s );
+			return Point2<FLTYPE>( _v[0] * s, _v[1] * s );
 	}
 	inline Point2 operator / ( const FLTYPE s ) const
 	{
-			return Point2<FLTYPE>( v[0] / s, v[1] / s );
+			return Point2<FLTYPE>( _v[0] / s, _v[1] / s );
 	}
 	inline FLTYPE operator * ( Point2 const & p ) const
 	{
-			return ( v[0]*p.v[0] + v[1]*p.v[1] );
+			return ( _v[0]*p._v[0] + _v[1]*p._v[1] );
 	}
 
 	inline FLTYPE operator ^ ( Point2 const & p ) const
 	{
-			return v[1]*p.v[0] - v[0]*p.v[1];
+			return _v[1]*p._v[0] - _v[0]*p._v[1];
 	} 
 
 	inline Point2 & operator += ( Point2 const & p)
 	{
-			v[0] += p.v[0];    v[1] += p.v[1];
+			_v[0] += p._v[0];    _v[1] += p._v[1];
 			return *this;
 	}
 	inline Point2 & operator -= ( Point2 const & p)
 	{
-			v[0] -= p.v[0];    v[1] -= p.v[1];
+			_v[0] -= p._v[0];    _v[1] -= p._v[1];
 			return *this;
 	}
 	inline Point2 & operator *= ( const FLTYPE s )
 	{
-			v[0] *= s;    v[1] *= s;
+			_v[0] *= s;    _v[1] *= s;
 			return *this;
 	}
 	inline Point2 & operator /= ( const FLTYPE s )
 	{
-			v[0] /= s;    v[1] /= s;
+			_v[0] /= s;    _v[1] /= s;
 			return *this;
 	}
 	inline FLTYPE Norm( void ) const
 	{
-			return Sqrt( v[0]*v[0] + v[1]*v[1] );
+			return Sqrt( _v[0]*_v[0] + _v[1]*_v[1] );
 	}
 	inline FLTYPE SquaredNorm( void ) const
 	{
-			return ( v[0]*v[0] + v[1]*v[1] );
+			return ( _v[0]*_v[0] + _v[1]*_v[1] );
 	}
 	inline Point2 & Scale( const FLTYPE sx, const FLTYPE sy );
 
 	inline Point2 & Normalize( void )
 	{
-			FLTYPE n = Sqrt(v[0]*v[0] + v[1]*v[1]);
-			if(n>0.0) {	v[0] /= n;	v[1] /= n; }
+			FLTYPE n = Sqrt(_v[0]*_v[0] + _v[1]*_v[1]);
+			if(n>0.0) {	_v[0] /= n;	_v[1] /= n; }
 			return *this;
 	}
 	inline bool operator == ( Point2 const & p ) const
 	{
-			return (v[0]==p.v[0] && v[1]==p.v[1]);
+			return (_v[0]==p._v[0] && _v[1]==p._v[1]);
 	} 
 	inline bool operator != ( Point2 const & p ) const
 	{
-			return ( (v[0]!=p.v[0]) || (v[1]!=p.v[1]) );
+			return ( (_v[0]!=p._v[0]) || (_v[1]!=p._v[1]) );
 	}
 	inline bool operator <  ( Point2 const & p ) const
 	{
-			return	(v[1]!=p.v[1])?(v[1]<p.v[1]):
-							(v[0]<p.v[0]);
+			return	(_v[1]!=p._v[1])?(_v[1]<p._v[1]):
+							(_v[0]<p._v[0]);
 	}
 	inline bool operator >  ( Point2 const & p ) const
 	{
-			return	(v[1]!=p.v[1])?(v[1]>p.v[1]):
-							(v[0]>p.v[0]);
+			return	(_v[1]!=p._v[1])?(_v[1]>p._v[1]):
+							(_v[0]>p._v[0]);
 	}
 
 	inline bool operator <= ( Point2 const & p ) const
 	{
-			return	(v[1]!=p.v[1])?(v[1]< p.v[1]):
-							(v[0]<=p.v[0]);
+			return	(_v[1]!=p._v[1])?(_v[1]< p._v[1]):
+							(_v[0]<=p._v[0]);
 	}
 
 	inline bool operator >= ( Point2 const & p ) const
 	{
-			return	(v[1]!=p.v[1])?(v[1]> p.v[1]):
-							(v[0]>=p.v[0]);
+			return	(_v[1]!=p._v[1])?(_v[1]> p._v[1]):
+							(_v[0]>=p._v[0]);
 	}
 	inline FLTYPE Distance( Point2 const & p ) const
 	{
@@ -185,29 +188,29 @@ protected:
 
 	inline Point2 & Cartesian2Polar()
 	{
-		FLTYPE t = (FLTYPE)atan2(v[1],v[0]);
-		v[0] = Sqrt(v[0]*v[0]+v[1]*v[1]);
-		v[1] = t;
+		FLTYPE t = (FLTYPE)atan2(_v[1],_v[0]);
+		_v[0] = Sqrt(_v[0]*_v[0]+_v[1]*_v[1]);
+		_v[1] = t;
 		return *this;
 	}
 
 	inline Point2 & Polar2Cartesian()
 	{
-		FLTYPE l = v[0];
-		v[0] = (FLTYPE)(l*cos(v[1]));
-		v[1] = (FLTYPE)(l*sin(v[1]));
+		FLTYPE l = _v[0];
+		_v[0] = (FLTYPE)(l*cos(_v[1]));
+		_v[1] = (FLTYPE)(l*sin(_v[1]));
 		return *this;
 	}
 
 
 	inline Point2 & rotate( const FLTYPE a )
 	{
-		FLTYPE t = v[0];
+		FLTYPE t = _v[0];
 		FLTYPE s = sin(a);
 		FLTYPE c = cos(a);
 
-		v[0] = v[0]*c - v[1]*s;
-		v[1] =   t *s + v[1]*c;
+		_v[0] = _v[0]*c - _v[1]*s;
+		_v[1] =   t *s + _v[1]*c;
 
 		return *this;
 	}
@@ -216,7 +219,7 @@ protected:
 	/// paddando gli elementi estesi con zeri
 	inline FLTYPE Ext( const int i ) const
 	{
-		if(i>=0 && i<2) return v[i];
+		if(i>=0 && i<2) return _v[i];
 		else            return 0;
 	}
 
@@ -232,27 +235,27 @@ inline FLTYPE Angle( Point2<FLTYPE> const & p1, Point2<FLTYPE> const & p2 )
 
 template <class FLTYPE>
 inline Point2<FLTYPE> operator - ( Point2<FLTYPE> const & p ){
-    return Point2<FLTYPE>( -p.v[0], -p.v[1] );
+    return Point2<FLTYPE>( -p._v[0], -p._v[1] );
 }
 
 template <class FLTYPE>
 inline Point2<FLTYPE> operator * ( const FLTYPE s, Point2<FLTYPE> const & p ){
-    return Point2<FLTYPE>( p.v[0] * s, p.v[1] * s  );
+    return Point2<FLTYPE>( p._v[0] * s, p._v[1] * s  );
 }
 
 template <class FLTYPE>
 inline FLTYPE Norm( Point2<FLTYPE> const & p ){
-		return Sqrt( p.v[0]*p.v[0] + p.v[1]*p.v[1] );
+		return Sqrt( p._v[0]*p._v[0] + p._v[1]*p._v[1] );
 }
 
 template <class FLTYPE>
 inline FLTYPE Norm2( Point2<FLTYPE> const & p ){
-    return ( p.v[0]*p.v[0] + p.v[1]*p.v[1] );
+    return ( p._v[0]*p._v[0] + p._v[1]*p._v[1] );
 }
 
 template <class FLTYPE>
 inline Point2<FLTYPE> & Normalize( Point2<FLTYPE> & p ){
-		FLTYPE n = Sqrt( p.v[0]*p.v[0] + p.v[1]*p.v[1] );
+		FLTYPE n = Sqrt( p._v[0]*p._v[0] + p._v[1]*p._v[1] );
     if(n>0.0) p/=n;
     return p;
 }
