@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/03/25 17:25:46  ponchio
+#include sbagliato.
+
 Revision 1.1  2004/03/21 17:51:57  ponchio
 First version.
 
@@ -46,7 +49,7 @@ Templated class for 3D sphere.
   Various policy could be added to improve efficience (keeping square of radius for instance).
 */
 
-template <class T> class Sphere {
+template <class T> class Sphere3 {
 protected:
   Point3<T> _center;
 	T _radius;
@@ -64,9 +67,12 @@ public:
   bool IsIn(const Point3<T> &p) const;
 
   void Add(Point3<T> &p);
-	void Add(const Sphere &sphere);
+	void Add(const Sphere3 &sphere);
   	
 };
+
+typedef Sphere3<float> Sphere3f;
+typedef Sphere3<double> Sphere3d;
 
 template <class T> void Sphere<T>::Add(const Sphere<T> &sphere) {
   if(IsEmpty()) {
