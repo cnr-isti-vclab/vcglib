@@ -91,7 +91,7 @@ public:
   T &element(const int row, const int col);
   T element(const int row, const int col) const;
   T &operator[](const int i);
-  T operator[](const int i) const;
+  const T &operator[](const int i) const;
 
   Matrix44 operator+(const Matrix44 &m) const;
   Matrix44 operator-(const Matrix44 &m) const;
@@ -155,9 +155,10 @@ template <class T> Point3<T> operator*(const Matrix44<T> &m, const Point3<T> &p)
 template <class T> Matrix44<T> &Transpose(Matrix44<T> &m);
 //return NULL matrix if not invertible
 template <class T> Matrix44<T> &Invert(Matrix44<T> &m);   
+template <class T> Matrix44<T> Inverse(const Matrix44<T> &m);   
 
 typedef Matrix44<short>  Matrix44s;
-typedef Matrix44<int>	 Matrix44i;
+typedef Matrix44<int>    Matrix44i;
 typedef Matrix44<float>  Matrix44f;
 typedef Matrix44<double> Matrix44d;
 
@@ -184,7 +185,7 @@ template <class T> T &Matrix44<T>::operator[](const int i) {
   return ((T *)_a)[i];
 }
 
-template <class T> T Matrix44<T>::operator[](const int i) const {
+template <class T> const T &Matrix44<T>::operator[](const int i) const {
   assert(i >= 0 && i < 16);
   return ((T *)_a)[i];
 }
@@ -398,6 +399,19 @@ template <class T> Matrix44<T> &Invert(Matrix44<T> &m) {
   return m;
 }
 
+template <class T> Matrix44<T> Inverse(const Matrix44<T> &m) {        
+  LinearSolve<T> solve(m);
+  Matrix44<T> res;
+  for(int j = 0; j < 4; j++) { //Find inverse by columns.
+    Point4<T> col(0, 0, 0, 0);
+    col[j] = 1.0;
+    col = solve.Solve(col);
+    for(int i = 0; i < 4; i++) 
+      res.element(i, j) = col[i];
+  }  
+  return res;
+}
+
 
 
 /* LINEAR SOLVE IMPLEMENTATION */
@@ -423,7 +437,60 @@ template <class T> T LinearSolve<T>::Determinant() const {
 d is +or -1 depeneing of row permutation even or odd.*/
 #define TINY 1e-100
 
-template <class T> bool LinearSolve<T>::Decompose() {
+template <class T> bool LinearSolve<T>::Decompose() {  
+  
+ /* Matrix44<T> A;
+  for(int i = 0; i < 16; i++)
+    A[i] = operator[](i);  
+  SetIdentity();    
+  Point4<T> scale;
+  //* Set scale factor, scale(i) = max( |a(i,j)| ), for each row
+  for(int i = 0; i < 4; i++ ) {
+    index[i] = i;			  // Initialize row index list
+    T scalemax = (T)0.0;
+    for(int j = 0; j < 4; j++) 
+      scalemax = (scalemax > math::Abs(A.element(i,j))) ? scalemax : math::Abs(A.element(i,j));
+    scale[i] = scalemax;
+  }
+
+  //* Loop over rows k = 1, ..., (N-1)
+  int signDet = 1;
+  for(int k = 0; k < 3; k++ ) {
+	  //* Select pivot row from max( |a(j,k)/s(j)| )
+    T ratiomax = (T)0.0;
+	  int jPivot = k;
+    for(int i = k; i < 4; i++ ) {
+      T ratio = math::Abs(A.element(index[i], k))/scale[index[i]];
+      if(ratio > ratiomax) {
+        jPivot = i;
+        ratiomax = ratio;
+      }
+    }
+	  //* Perform pivoting using row index list
+	  int indexJ = index[k];
+	  if( jPivot != k ) {	          // Pivot
+      indexJ = index[jPivot];
+      index[jPivot] = index[k];   // Swap index jPivot and k
+      index[k] = indexJ;
+	    signDet *= -1;			  // Flip sign of determinant
+	  }
+	  //* Perform forward elimination
+    for(int i=k+1; i < 4; i++ ) {
+      T coeff = A.element(index[i],k)/A.element(indexJ,k);
+      for(int j=k+1; j < 4; j++ )
+        A.element(index[i],j) -= coeff*A.element(indexJ,j);
+      A.element(index[i],k) = coeff;
+      //for( j=1; j< 4; j++ ) 
+      //  element(index[i],j) -= A.element(index[i], k)*element(indexJ, j);
+    }
+  }
+  for(int i = 0; i < 16; i++)
+    operator[](i) = A[i];
+
+  d = signDet; 
+  //*this = A;
+  return true;  */
+
   d = 1; //no permutation still
     
   T scaling[4];
@@ -479,22 +546,23 @@ template <class T> bool LinearSolve<T>::Decompose() {
         element(i,j) *= dum;
     }
   }
-  return true;
+  return true; 
 }
 
 
 template <class T> Point4<T> LinearSolve<T>::Solve(const Point4<T> &b) { 
   Point4<T> x(b);
-  int first = 0, ip;  
+  int first = -1, ip;  
   for(int i = 0; i < 4; i++) { 
     ip = index[i];
     T sum = x[ip];
     x[ip] = x[i];
-    if(first)
+    if(first!= -1)
       for(int j = first; j <= i-1; j++) 
         sum -= element(i,j) * x[j];
     else 
-      if (sum) first = i; 
+      if(sum) first = i; 
+    x[i] = sum;
   }
   for (int i = 3; i >= 0; i--) { 
     T sum = x[i];

@@ -48,14 +48,20 @@ public:
   Similarity &SetScale(const S s);
 	Similarity &SetTranslate(const Point3<S> &t);	
   ///use radiants for angle.
-  void SetRotate(S angle, const Point3<S> & axis); 
+  Similarity &SetRotate(S angle, const Point3<S> & axis); 
+  Similarity &SetRotate(const Quaternion<S> &q);
 
   Matrix44<S> Matrix() const;
+  void FromMatrix(const Matrix44<S> &m);
 
   Quaternion<S> rot;
   Point3<S> tra;
   S sca;  
 };
+
+template <class S> Similarity<S> &Invert(Similarity<S> &m);
+template <class S> Similarity<S> Inverse(const Similarity<S> &m);
+
 
 template <class S> Similarity<S> Similarity<S>::operator*(const Similarity &a) const {
   Similarity<S> r;
@@ -98,10 +104,18 @@ template <class S> Similarity<S> &Similarity<S>::SetTranslate(const Point3<S> &t
   return *this;
 }
 
-template <class S> void Similarity<S>::SetRotate(S angle, const Point3<S> &axis) {
+template <class S> Similarity<S> &Similarity<S>::SetRotate(S angle, const Point3<S> &axis) {
   SetIdentity();
   rot.FromAxis(angle, axis);
+  return *this;
 }
+
+template <class S> Similarity<S> &Similarity<S>::SetRotate(const Quaternion<S> &q) {
+  SetIdentity();
+  rot = q;  
+  return *this;
+}
+
 
 template <class S> Matrix44<S> Similarity<S>::Matrix() const {
   Matrix44<S> r;
@@ -112,15 +126,30 @@ template <class S> Matrix44<S> Similarity<S>::Matrix() const {
   return r;
 }
 
-template <class S> Similarity<S> &invert(Similarity<S> &a) {
-  //WARNING:: TEST THIS!!!
+template <class S> void Similarity<S>::FromMatrix(const Matrix44<S> &m) {
+  sca = pow(m.Determinant(), 1/3);  
+  assert(sca != 0);
+  Matrix44<S> t = m * Matrix44<S>().SetScale(1/sca, 1/sca, 1/sca);
+  rot.FromMatrix(t);
+  tra[0] = t.element(3, 0);
+  tra[1] = t.element(3, 1);
+  tra[2] = t.element(3, 2);
+}
+
+template <class S> Similarity<S> &Invert(Similarity<S> &a) {  
   a.rot.Invert();
   a.sca = 1/a.sca;
   a.tra = a.rot.Rotate(-a.tra)*a.sca;
   return a;
 }
 
-template <class S> Similarity<S> interpolate(const Similarity<S> &a, const Similarity<S> &b, const S t) {
+template <class S> Similarity<S> Inverse(const Similarity<S> &m) {
+  Similarity<S> a = m;
+  return Invert(a);
+}
+
+
+template <class S> Similarity<S> Interpolate(const Similarity<S> &a, const Similarity<S> &b, const S t) {
   Similarity<S> r;
   r.rot = interpolate(a.rot, b.rot, t);
   r.tra = t * a.tra + (1-t) * b.tra;

@@ -38,7 +38,9 @@ public:
   Point3<S> Rotate(const Point3<S> vec) const;  
 };
 
-template <class S> Quaternion<S> interpolate(const Quaternion<S> a, const Quaternion<S> b, double t);
+template <class S> Quaternion<S> Interpolate(const Quaternion<S> a, const Quaternion<S> b, double t);
+template <class S> Quaternion<S> &Invert(Quaternion<S> &q);
+template <class S> Quaternion<S> Inverse(const Quaternion<S> &q);
 
 
 //Implementation
@@ -192,7 +194,18 @@ template <class S> void Quaternion<S>::FromMatrix(Matrix44<S> &m) {
 		}
 	}
 }
-template <class S> Quaternion<S> interpolate(const Quaternion<S> a, const Quaternion<S> b, double t) {
+template <class S> Quaternion<S> &Invert(Quaternion<S> &m) {
+  m.Invert();
+  return m;
+}
+
+template <class S> Quaternion<S> Inverse(const Quaternion<S> &m) {
+  Quaternion<S> a = m;
+  a.Invert();
+  return a;
+}
+
+template <class S> Quaternion<S> Interpolate(const Quaternion<S> a, const Quaternion<S> b, double t) {
 		double v = a.V(0) * b.V(0) + a.V(1) * b.V(1) + a.V(2) * b.V(2) + a.V(3) * b.V(3);
 		double phi = Acos(v);
 		if(phi > 0.01) {
