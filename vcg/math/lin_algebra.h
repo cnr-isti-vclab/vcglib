@@ -377,29 +377,30 @@ namespace vcg
 	*/
 	template <typename MATRIX_TYPE>
 		static void SingularValueBacksubstitution(const MATRIX_TYPE												&U,
-		const typename MATRIX_TYPE::ScalarType	*W,
-		const MATRIX_TYPE												&V,
-		typename MATRIX_TYPE::ScalarType	*x,
-		const typename MATRIX_TYPE::ScalarType *b)
+																							const typename MATRIX_TYPE::ScalarType	*W,
+																							const MATRIX_TYPE												&V,
+																										typename MATRIX_TYPE::ScalarType	*x,
+																							const typename MATRIX_TYPE::ScalarType	*b)
 	{
+		typedef typename MATRIX_TYPE::ScalarType ScalarType;
 		unsigned int jj, j, i;
 		ScalarType s;
-		ScalarType tmp	=	new ScalarType[U._columns];
-		for (j=0; j<U._columns; j++) //Calculate U^T * B.
+		ScalarType *tmp	=	new ScalarType[U.ColumnsNumber()];
+		for (j=0; j<U.ColumnsNumber(); j++) //Calculate U^T * B.
 		{			
 			s = 0;
 			if (W[j]!=0)							//Nonzero result only if wj is nonzero.
 			{ 
-				for (i=0; i<U._rows; i++) 
+				for (i=0; i<U.RowsNumber(); i++) 
 					s += U[i][j]*b[i];
-				s /= w[j];							//This is the divide by wj .
+				s /= W[j];							//This is the divide by wj .
 			}
 			tmp[j]=s;
 		}
-		for (j=0;j<U._columns;j++)	//Matrix multiply by V to get answer.
+		for (j=0;j<U.ColumnsNumber();j++)	//Matrix multiply by V to get answer.
 		{			
 			s = 0;
-			for (jj=0; jj<U._columns; jj++) 
+			for (jj=0; jj<U.ColumnsNumber(); jj++) 
 				s += V[j][jj]*tmp[jj];
 			x[j]=s;
 		}
