@@ -23,10 +23,16 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.12  2004/05/13 12:49:22  pietroni
+no default template parameters... each one must be specified
+
 Revision 1.12  2004/05/10 13:31:13  ganovelli
 function for edge adjacency added
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2004/05/13 12:49:22  pietroni
+no default template parameters... each one must be specified
+
 Revision 1.11  2004/05/10 13:31:13  ganovelli
 function for edge adjacency added
 
@@ -87,7 +93,7 @@ namespace vcg {
 	@param FLTYPE (Template Parameter) Specifies the scalar field of the vertex coordinate type.
 	@param VFTYPE (Template Parameter) Specifies the type for the face, needed only for VF adjacency.
  */
-template <class FLTYPE, class VETYPE, class VFTYPE, class VTTYPE,class TCTYPE = TCoord2<float,1> > class VERTEX_TYPE
+template <class FLTYPE, class VETYPE = DUMMYEDGETYPE, class VFTYPE = DUMMYFACETYPE, class VTTYPE = DUMMYTETRATYPE,class TCTYPE = TCoord2<float,1> > class VERTEX_TYPE
 {
 public:
 
@@ -556,7 +562,7 @@ public:
 #ifdef __VCGLIB_VERTEX_VM
 	/// This function return the vertex incremental mark
 	inline int & IMark()
-	{
+	{xx
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
 		assert( (_flags & NOTWRITE) == 0 );
