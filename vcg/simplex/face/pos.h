@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2004/08/25 15:15:27  ganovelli
+minor changes to comply gcc compiler (typename's and stuff)
+
 Revision 1.10  2004/07/27 09:47:49  cignoni
 Added V() access function instead of V(0)
 
@@ -352,10 +355,13 @@ public:
 	/// Default constructor
 	VFIterator(){}
 	/// Constructor which associates the half-edge elementet with a face and its vertex
-	VFIterator(FaceType * _f, const int &  _z){f = _f; z = _z;}
+	VFIterator(FaceType * _f,  const int &  _z){f = _f; z = _z;}
 
-	VFIFaceType *	F() const { return f;}
-	const int	&				I() const { return z;}
+	/// Constructor which takes a pointer to vertex 
+	VFIterator(VertexType * _v){f = _v->VFp(); z = _v->VFi();}
+
+	VFIFaceType *&	F() { return f;}
+	int	&					I() { return z;}
 
   bool End() const {return f==0;}
   VFIFaceType *operator++() {
