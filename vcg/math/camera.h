@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.11  2004/12/16 11:21:03  ricciodimare
+*** empty log message ***
+
 Revision 1.10  2004/12/15 18:45:50  tommyfranken
 *** empty log message ***
 
@@ -100,13 +103,13 @@ public:
 	bool IsOrtho(){ return (_flags & ORTHO_BIT);}
 	void SetOrtho(bool v, S dist )
 	{ 
-		if(v) _flags |= ORTHO_BIT; 
-		else
+		if(v) 
 		{
-			_flags &= ~ORTHO_BIT; 
-			 viewportM = ( ((viewport[0] * s[0]) * (viewport[1] * s[1])) / f ) * dist;
-
+			_flags |= ORTHO_BIT; 
+		    viewportM = ( ((viewport[0] * s[0]) * (viewport[1] * s[1])) / f ) * dist;
 		}
+		else _flags &= ~ORTHO_BIT; 
+		
 	};
 	char & UberFlags() {return _flags;}
 
