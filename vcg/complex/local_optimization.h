@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.10  2004/11/23 10:37:17  cignoni
+  Added a member with a cached copy of the floating Priority() value inside the HeapElem to optimize operator< in heap updating operator
+
   Revision 1.9  2004/11/05 10:03:47  fiorin
   Added ModifierType::TriEdgeFlipOp
 
@@ -222,7 +225,11 @@ public:
 
 
   /// Default distructor
-  ~LocalOptimization(){};
+  ~LocalOptimization(){ 
+    typename HeapType::iterator i;
+    for(i = h.begin(); i != h.end(); i++)
+      delete (*i).locModPtr;
+  };
 	
 	double e;
 
