@@ -15,18 +15,18 @@ void SaveFragment(Nexus &nexus, VChain &chain,
 
 
 void Opener::execute() {
-  cerr << "Trying to connect to: " << server->get_host() << endl;
+  //  cerr << "Trying to connect to: " << server->get_host() << endl;
   server->reading.lock();      
   server->writing.lock();
   while(1) {
     if(get_signaled())
       return;
-    cerr << "Trying to connect to: " << server->get_host() << endl;
+    //    cerr << "Trying to connect to: " << server->get_host() << endl;
     try {
       server->open();
       server->connected = true;
       server->queue = 0;
-      cerr << "Connected to: " << server->get_host() << endl;
+      //      cerr << "Connected to: " << server->get_host() << endl;
       break;
     } catch(...) {
     }

@@ -6,6 +6,11 @@ using namespace std;
 using namespace vcg;
 using namespace nxs;
 
+VChain::~VChain() {
+  for(iterator i = begin(); i != end(); i++)
+    delete *i;
+}
+
 bool VChain::Save(const string &file) {
   FILE *fp = fopen(file.c_str(), "wb+");
   if(!fp) {
@@ -16,7 +21,7 @@ bool VChain::Save(const string &file) {
   unsigned int nlevels = size();
   fwrite(&nlevels, sizeof(unsigned int), 1, fp);
   for(unsigned int i = 0; i < nlevels; i++) {
-    VPartition &level = operator[](i);
+    VPartition &level = *operator[](i);
     unsigned int npoints = level.size();
     fwrite(&npoints, sizeof(unsigned int), 1, fp);
     fwrite(&(level[0]), sizeof(Point3f), npoints, fp);
@@ -59,8 +64,8 @@ bool VChain::Load(const string &file) {
   unsigned int nlevels;
   fread(&nlevels, sizeof(unsigned int), 1, fp);
   for(unsigned int i = 0; i < nlevels; i++) {
-    push_back(VPartition());
-    VPartition &level = back();
+    push_back(new VPartition());
+    VPartition &level = *back();
 
     unsigned int npoints;
     fread(&npoints, sizeof(unsigned int), 1, fp);

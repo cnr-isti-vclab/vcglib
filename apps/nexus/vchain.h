@@ -8,8 +8,9 @@
 
 namespace nxs {
 
-class VChain: public std::vector<VPartition> {
+class VChain: public std::vector<VPartition *> {
  public:
+  ~VChain();
   bool Save(const std::string &file);
   bool Load(const std::string &file);
 

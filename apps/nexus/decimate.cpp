@@ -97,10 +97,10 @@ float nxs::Decimate(Decimation mode,
 
   float error;
   switch(mode) {
-    case CLUSTER: error = Cluster(mesh, target_faces); break;
-    case QUADRIC: error = Quadric(mesh, target_faces); break;
-    default: cerr << "Unknown simplification mode: " << mode << endl;
-             exit(0);
+  case CLUSTER: error = Cluster(mesh, target_faces); break;
+  case QUADRIC: error = Quadric(mesh, target_faces); break;
+  default: cerr << "Unknown simplification mode: " << mode << endl;
+    exit(0);
   }
 
   newvert.clear();
@@ -174,7 +174,8 @@ float Cluster(MyMesh &mesh, unsigned int target_faces) {
   unsigned int nseeds = target_faces/2;
 #ifndef NDEBUG
   if(nseeds >= mesh.vert.size()) {
-    cerr << "Strange! nseeds > vert.size(): " << nseeds  << " >= "<< mesh.vert.size() << endl;
+    cerr << "Strange! nseeds > vert.size(): " << nseeds  
+	 << " >= "<< mesh.vert.size() << endl;
   }
 #endif
   

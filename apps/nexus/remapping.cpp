@@ -45,24 +45,24 @@ void nxs::Remap(VChain &chain,
 		float scaling,
 		int steps) {
 
-  chain.push_back(VPartition());
-  BuildPartition(chain.back(), points, target_size, min_size, max_size, steps);
+  VPartition *finepart = new VPartition;
+  //  finepart.Init();  
+  chain.push_back(finepart);
+  BuildPartition(*finepart, points, target_size, min_size, max_size, steps);
 
 
-
-  chain.push_back(VPartition());
-  BuildPartition(chain.back(), points, 
+  VPartition *coarsepart = new VPartition;
+  //  coarsepart.Init();
+  chain.push_back(coarsepart);
+  BuildPartition(*coarsepart, points, 
 		 (int)(target_size/scaling), min_size, max_size, steps);
 
 
 
-  VPartition &finepart = chain[0];
-  finepart.Init();
-  cerr << "Fine size: " << finepart.size() << endl;
 
-  VPartition &coarsepart = chain[1];
-  coarsepart.Init();
-  cerr << "Coarse size: " << coarsepart.size() << endl;
+
+  cerr << "Fine size: " << finepart->size() << endl;
+  cerr << "Coarse size: " << coarsepart->size() << endl;
 
   typedef  map<pair<unsigned int, unsigned int>, unsigned int> FragIndex;
 
@@ -75,8 +75,8 @@ void nxs::Remap(VChain &chain,
   for(unsigned int i = 0; i < points.Size(); i++) {
     bari = points[i];
     
-    unsigned int fine = finepart.Locate(bari);
-    unsigned int coarse = coarsepart.Locate(bari);
+    unsigned int fine = finepart->Locate(bari);
+    unsigned int coarse = coarsepart->Locate(bari);
 
     unsigned int patch;
     
@@ -239,11 +239,12 @@ void nxs::BuildLevel(VChain &chain,
     totface += nexus.index[idx].nface;
     totvert += nexus.index[idx].nvert;
   }
-  
-  chain.push_back(VPartition());
-  VPartition &coarse = chain[chain.size()-1];
-  VPartition &fine = chain[chain.size()-2];
-  fine.Init();
+
+  VPartition *fine = chain[chain.size()-1];  
+  fine->Init();
+
+  VPartition *coarse = new VPartition;
+  chain.push_back(coarse);
   
   //unsigned int ncells = (unsigned int)(fine.size() * scaling);
   unsigned int ncells = (unsigned int)(scaling * totface/target_size);
@@ -256,21 +257,21 @@ void nxs::BuildLevel(VChain &chain,
     if(cratio > 1) {
       Patch patch = nexus.GetPatch(idx);
       Point3f &v = patch.Vert(0);
-      coarse.push_back(v);
+      coarse->push_back(v);
       cratio -= 1;
     }
   }
   
-  if(coarse.size() == 0) {
+  if(coarse->size() == 0) {
     Patch patch = nexus.GetPatch(0);
-    coarse.push_back(patch.Vert(0));
+    coarse->push_back(patch.Vert(0));
   }
   
-  float coarse_vmean = totface/(float)coarse.size();
+  float coarse_vmean = totface/(float)coarse->size();
   
-  coarse.Init();
+  coarse->Init();
   cerr << "Ncells: " << ncells << endl;
-  cerr << "Coarse size: " << coarse.size() << endl;
+  cerr << "Coarse size: " << coarse->size() << endl;
   cerr << "Coarse mean: " << coarse_vmean << " mean_size: " << target_size << endl;
 
   //here goes some optimization pass.
@@ -282,8 +283,8 @@ void nxs::BuildLevel(VChain &chain,
     cerr << "Optimization step: " << step+1 << "/" << steps << endl;
     centroids.clear();
     counts.clear();
-    centroids.resize(coarse.size(), Point3f(0, 0, 0));
-    counts.resize(coarse.size(), 0);
+    centroids.resize(coarse->size(), Point3f(0, 0, 0));
+    counts.resize(coarse->size(), 0);
 
     Report report(nexus.index.size());
     for(unsigned int idx = offset; idx < nexus.index.size(); idx++) {
@@ -295,8 +296,8 @@ void nxs::BuildLevel(VChain &chain,
 			patch.Vert(face[1]) + 
 			patch.Vert(face[2]))/3;
 
-	unsigned int target = coarse.Locate(bari);
-	assert(target < coarse.size());
+	unsigned int target = coarse->Locate(bari);
+	assert(target < coarse->size());
 	centroids[target] += bari;
 	counts[target]++;
       }
@@ -307,11 +308,11 @@ void nxs::BuildLevel(VChain &chain,
 	centroids[v]/= counts[v];
     
     if(step == steps-1) {
-      if(!Optimize(coarse, (int)coarse_vmean, min_size, max_size, 
+      if(!Optimize(*coarse, (int)coarse_vmean, min_size, max_size, 
 		   centroids, counts, false))
 	      step--;
     } else 
-      Optimize(coarse, (int)coarse_vmean, min_size, max_size, 
+      Optimize(*coarse, (int)coarse_vmean, min_size, max_size, 
 	       centroids, counts, true);
   }    
   chain.newfragments.clear();

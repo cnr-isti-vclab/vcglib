@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/12/03 01:20:56  ponchio
+Debug
+
 Revision 1.6  2004/12/02 20:22:42  ponchio
 Level 5;
 
@@ -396,10 +399,6 @@ void FourthStep(const string &crudefile, const string &output,
   }
   Report report(nexus.index.size());
 
-#ifndef NDEBUG
-  map<unsigned int, set<unsigned int> > reciprocal;
-#endif
-
   for(int start = 0; start < nexus.index.size(); start++) {
     report.Step(start);
     Nexus::PatchInfo &s_entry = nexus.index[start];
@@ -418,29 +417,19 @@ void FourthStep(const string &crudefile, const string &output,
       Nexus::PatchInfo &e_entry = nexus.index[end];
       float dist = Distance(s_entry.sphere, e_entry.sphere);
       
-      if(dist > (s_entry.sphere.Radius() + e_entry.sphere.Radius()) * 0.01) {
-#ifndef NDEBUG
-        if(start > end)
-          assert(!reciprocal[end].count(start));
-#endif
+      if(dist > s_entry.sphere.Radius() + e_entry.sphere.Radius()) {
         continue;
       }
- #ifndef NDEBUG
-      if(start > end)
-        assert(reciprocal[end].count(start));
-      else
-        reciprocal[start].insert(end);
-#endif
       
       for(unsigned int i = 0; i < vert_index[end].size; i++) {
-	      unsigned int global = vert_remap[vert_index[end].offset + i];
-	      if(vremap.count(global)) {       
-	        Link link;
-	        link.start_vert = vremap[global];
-	        link.end_vert = i;
-	        link.end_patch = end;
-	        links.push_back(link);
-	      }
+	unsigned int global = vert_remap[vert_index[end].offset + i];
+	if(vremap.count(global)) {       
+	  Link link;
+	  link.start_vert = vremap[global];
+	  link.end_vert = i;
+	  link.end_patch = end;
+	  links.push_back(link);
+	}
       }      
     }
     //TODO Horribili visu (interfaccia di cacca!)
@@ -510,7 +499,7 @@ void FifthStep(const string &crudefile, const string &output,
       report.Step(fcount++);
 
       Fragment *fragin = new Fragment;
-      BuildFragment(nexus, vchain[level+1], 
+      BuildFragment(nexus, *vchain[level+1], 
 		    (*fragment).second, *fragin);
 
       dispatcher.SendFragment(fragin);

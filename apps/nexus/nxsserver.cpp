@@ -59,8 +59,8 @@ public:
     Join(fragin, newvert, newface, newbord);
     
     float error = Decimate(QUADRIC,
-			   (unsigned int)((newface.size()/3) * 0.5),
-			   newvert, newface, newbord);
+    			   (unsigned int)((newface.size()/3) * 0.5),
+    			   newvert, newface, newbord);
     
     message *outmsg = new message(MSG_USER);
     outmsg->param = (int)(new Fragment);
