@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/02/10 01:11:28  cignoni
+Edited Comments and GPL license
+
 ****************************************************************************/
 
 #ifndef __VCGLIB_COLOR4
@@ -63,11 +66,10 @@ public:
 	};
 	
   inline Color4 ( const T nx, const T ny, const T nz , const T nw ) :Point4<T>(nx,ny,nz,nw) {};
-  inline Color4 ( Color4 &c) :Point4<T>(c) {};
+ // inline Color4 ( Color4 &c) :Point4<T>(c) {};
   inline Color4 (){};
   inline Color4 (ColorConstant cc);
-  
-  template <class Q>
+  template <class Q>  
 	inline void Import(const Color4<Q> & b )
   {
 	  _v[0] = T(b[0]);
