@@ -24,6 +24,12 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/04/28 11:19:52  turini
+Changed :
+in Init(p0, norm)   _dist = p0 * _dir;   in   _offset = p0 * _dir;
+Changed :
+in Init(p0, p1, p2)   _offset = p0 * _dist;   in   _offset = p0 * _dir;
+
 Revision 1.1  2004/03/31 22:19:24  ponchio
 Untested first draft.
 
@@ -128,8 +134,8 @@ typedef Plane3<float>  Plane3f;
 typedef Plane3<double> Plane3d;
 
 ///Distance plane - point (Move this function to somewhere else)
-template<class T> T Distance(const Plane3<T> &plane, const Point3<T> &point) {
-  return plane.Direction() * point - plane.Offset;      
+template<class T> T Distance(const Plane3<T> &plane, const Point3<T> &point) {   
+	return plane.Direction() * point - plane.Offset();      
 }
 
 	///Distance point-plane (Move this function to somewhere else)
