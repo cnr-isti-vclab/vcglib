@@ -65,6 +65,13 @@ namespace vcg {
     static const T  MaxVal;
     static T ToDeg(const T &a);
     static T ToRad(const T &a);
+    // Unspecialized members
+    SCALAR Clamp( const SCALAR & val, const SCALAR& minval, const SCALAR& maxval);
+    class MagnitudoComparer
+    {
+      public:
+	    inline bool operator() ( const T a, const T b ) { return fabs(a)>fabs(b);  }
+    };
   };
 
   float Math<float>::Sqrt(const float v) 
@@ -93,7 +100,7 @@ namespace vcg {
 #endif
 
 template <class SCALAR> 
-inline SCALAR Clamp( const SCALAR & val, const SCALAR& minval, const SCALAR& maxval)
+inline SCALAR  Math<SCALAR>::Clamp( const SCALAR & val, const SCALAR& minval, const SCALAR& maxval)
 {
 	if(val < minval) return minval;
 	if(val > maxval) return maxval;
