@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/06/24 15:15:12  cignoni
+Better Doxygen documentation
+
 Revision 1.2  2004/05/10 13:43:00  cignoni
 Added use of VFIterator in VertexGeodesicFromBorder
 
@@ -38,6 +41,7 @@ First working version!
 #ifndef __VCG_TRI_UPDATE_QUALITY
 #define __VCG_TRI_UPDATE_QUALITY
 #include <vcg/simplex/face/pos.h>
+#include <algorithm>
 
 namespace vcg {
 namespace tri {
@@ -87,8 +91,9 @@ public:
 // che per approx numeriche ben strane pw->Q() > pv->Q()+d ma durante la memorizzazione 
 // della nuova distanza essa rimanesse uguale a prima. Patchato rimettendo i vertici nello 
 // heap solo se migliorano la distanza di un epsilon == 1/100000 della mesh diag.
+
 /** Compute, for each vertex of the mesh the geodesic distance from the border of the mesh itself;
-Requirements: VF topology, Per Vertex Quality;
+Requirements: VF topology, Per Vertex Quality and border flags already computed (see UpdateFlags::FaceBorderFromVF );
 it uses the classical dijkstra Shortest Path Tree algorithm. 
 The geodesic distance is approximated by allowing to walk only along edges of the mesh.
 */
@@ -125,7 +130,7 @@ static void VertexGeodesicFromBorder(MeshType &m)	// R1
  while( heap.size()!=0 )							// Shortest path tree
 	{
 		VertexPointer pv;
-		pop_heap(heap.begin(),heap.end());
+    std::pop_heap(heap.begin(),heap.end());
 		if( ! heap.back().is_valid() )
 		{
 			heap.pop_back();
@@ -147,7 +152,7 @@ static void VertexGeodesicFromBorder(MeshType &m)	// R1
 				{
 					pw->Q() = pv->Q()+d;
 					heap.push_back(VQualityHeap(pw));
-					push_heap(heap.begin(),heap.end());
+          std::push_heap(heap.begin(),heap.end());
 				}
 			}
 		}
