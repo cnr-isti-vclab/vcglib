@@ -24,6 +24,11 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/04/26 12:34:50  ganovelli
+plane line
+plane segment
+triangle triangle added
+
 Revision 1.1  2004/04/21 14:22:27  cignoni
 Initial Commit
 
@@ -99,14 +104,38 @@ inline bool Intersection( const Plane3<T> & pl, const Line3<T> & li, Point3<T> &
 template<class T>
 inline bool Intersection( const Plane3<T> & pl, const Segment3<T> & sg, Point3<T> & po){
 	const T epsilon = T(1e-8);
-	T k = pl.d - pl.n * (sg.P1()-sg.P0());
+
+	T k = pl.Direction() * (sg.P1()-sg.P0());
 	if( (k > -epsilon) && (k < epsilon))
 			return false;
-	T r = (pl.d - pl.n*sg.P0())/k;	// Compute ray distance
+	T r = (pl.Offset() - pl.Direction()*sg.P0())/k;	// Compute ray distance
 	if( (r<0) || (r > 1.0))
 		return false;
 	po = sg.P0()*(1-r)+sg.P1() * r;
 	return true;
+	}
+
+/// intersection between plane and triangle 
+// not optimal: uses plane-segment intersection (and the fact the two or none edges can be intersected)
+template<class T, class TRIANGLE >
+inline bool Intersection( const Plane3<T> & pl, const  TRIANGLE & tr, Segment3<T> & sg){
+	if(Intersection(pl,Segment3<T>(tr.P(0),tr.P(1)),sg.P0())){
+		if(Intersection(pl,Segment3<T>(tr.P(0),tr.P(2)),sg.P1()))
+			return true;
+		else
+			{
+				Intersection(pl,Segment3<T>(tr.P(1),tr.P(2)),sg.P1());
+				return true;
+			}
+		}else
+		{
+			if(Intersection(pl,Segment3<T>(tr.P(1),tr.P(2)),sg.P0()))
+				{
+					Intersection(pl,Segment3<T>(tr.P(0),tr.P(2)),sg.P1());
+					return true;
+				}
+		}
+	return false;
 	}
 
 /// intersection between two triangles
@@ -138,6 +167,8 @@ inline bool Intersection(		Triangle3<T> t0,Triangle3<T> t1,bool &coplanar,
 																																			coplanar,sg.P0(),sg.P1()
 																																			);														
 															}
+
+
 
 } // end namespace
 #endif
