@@ -24,9 +24,14 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/05/12 10:39:45  ganovelli
+created
+
 ****************************************************************************/
 #ifndef __VCG_TRI_UPDATE_EDGES
 #define __VCG_TRI_UPDATE_EDGES
+
+#include <vcg/space/plane3.h>
 
 namespace vcg {
 namespace tri {
@@ -48,6 +53,7 @@ typedef typename MeshType::VertexIterator VertexIterator;
 typedef typename MeshType::FaceType       FaceType;
 typedef typename MeshType::FacePointer    FacePointer;
 typedef typename MeshType::FaceIterator   FaceIterator;
+typedef typename MeshType::FaceType::ScalarType     ScalarType;
 
 /// Calculates the vertex normal (if stored in the current face type)
 static void Box(ComputeMeshType &m)
@@ -65,10 +71,32 @@ static void Set(ComputeMeshType &m)
  
 	for(f = m.face.begin(); f!=m.face.end(); ++f)
 		if(!(*f).IsD())
-			(*f).ComputeRT();
-}
+				{
+						// Primo calcolo degli edges
+					(*f).edge[0] = (*f).V(1)->P(); (*f).edge[0] -= (*f).V(0)->P();
+					(*f).edge[1] = (*f).V(2)->P(); (*f).edge[1] -= (*f).V(1)->P();
+					(*f).edge[2] = (*f).V(0)->P(); (*f).edge[2] -= (*f).V(2)->P();
+						// Calcolo di plane
+					(*f).plane.SetDirection((*f).edge[0]^(*f).edge[1]);
+					(*f).plane.SetOffset((*f).plane.Direction() * (*f).V(0)->P());
+					(*f).plane.Normalize();
+						// Calcolo migliore proiezione
+					ScalarType nx = math::Abs((*f).plane.Direction()[0]);
+					ScalarType ny = math::Abs((*f).plane.Direction()[1]);
+					ScalarType nz = math::Abs((*f).plane.Direction()[2]);
+					ScalarType d;
+					if(nx>ny && nx>nz) { (*f).Flags() |= FaceType::NORMX; d = 1/(*f).plane.Direction()[0]; }
+					else if(ny>nz)     { (*f).Flags() |= FaceType::NORMY; d = 1/(*f).plane.Direction()[1]; }
+					else               { (*f).Flags() |= FaceType::NORMZ; d = 1/(*f).plane.Direction()[2]; }
 
-}; // end class
+						// Scalatura spigoli
+					(*f).edge[0] *= d;
+					(*f).edge[1] *= d;
+					(*f).edge[2] *= d;
+				}
+
+}
+	}; // end class
 
 }	// End namespace
 }	// End namespace
