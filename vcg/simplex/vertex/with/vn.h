@@ -14,8 +14,12 @@
 
 
 namespace vcg {
-typedef VertexVN<float>  VertexVNf;
-typedef VertexVN<double> VertexVNd;
+template < class VETYPE, class VFTYPE, class VTTYPE>
+class VertexVNf : public VertexVN<float,VETYPE,VFTYPE,VTTYPE> {};
+
+template < class VETYPE, class VFTYPE, class VTTYPE>
+class VertexVNd : public VertexVN<double,VETYPE,VFTYPE,VTTYPE> {};
+
 }
 
 #endif

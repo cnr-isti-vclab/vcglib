@@ -12,11 +12,11 @@
 
 namespace vcg {
 
-template <class VFTYPE> 
-class VertexEAf : public VertexEA<float,VFTYPE> {};
+template < class VETYPE, class VFTYPE, class VTTYPE>
+class VertexEAf : public VertexEA<float,VETYPE,VFTYPE,VTTYPE> {};
 
-template <class VFTYPE> 
-class VertexEAd : public VertexEA<double,VFTYPE> {};
+template < class VETYPE, class VFTYPE, class VTTYPE>
+class VertexEAd : public VertexEA<double,VETYPE,VFTYPE,VTTYPE> {};
 
 }
 

@@ -18,11 +18,11 @@
 
 namespace vcg {
 
-template <class VFTYPE> 
-class VertexAFVNf : public VertexAFVN<float,VFTYPE> {};
+template < class VETYPE, class VFTYPE, class VTTYPE>
+class VertexAFVNf : public VertexAFVN<float,VETYPE,VFTYPE,VTTYPE> {};
 
-template <class VFTYPE> 
-class VertexAFVNd : public VertexAFVN<double,VFTYPE> {};
+template < class VETYPE, class VFTYPE, class VTTYPE>
+class VertexAFVNd : public VertexAFVN<double,VETYPE,VFTYPE,VTTYPE> {};
 
 }
 

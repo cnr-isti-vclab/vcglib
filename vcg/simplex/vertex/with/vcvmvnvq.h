@@ -20,8 +20,13 @@
 
 
 namespace vcg {
-typedef VertexVCVMVNVQ<float>  VertexVCVNVMVQf;
-typedef VertexVCVMVNVQ<double> VertexVCVNVMVQd;
+
+template < class VETYPE, class VFTYPE, class VTTYPE>
+class VertexVCVMVNVQf : public VertexVCVMVNVQ<float,VETYPE,VFTYPE,VTTYPE> {};
+
+template < class VETYPE, class VFTYPE, class VTTYPE>
+class VertexVCVMVNVQd : public VertexVCVMVNVQ<double,VETYPE,VFTYPE,VTTYPE> {};
+
 }
 
 #endif

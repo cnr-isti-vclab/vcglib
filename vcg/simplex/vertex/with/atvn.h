@@ -14,11 +14,11 @@
 
 namespace vcg {
 
-template <class VTTYPE> 
-class VertexATVNf : public VertexATVN<float,DUMMYFACETYPE,VTTYPE> {};
+template < class VETYPE, class VFTYPE, class VTTYPE>
+class VertexATVNf : public VertexATVN<float,VETYPE,VFTYPE,VTTYPE> {};
 
-template <class VTTYPE> 
-class VertexATVNd : public VertexATVN<double,DUMMYFACETYPE,VTTYPE> {};
+template < class VETYPE, class VFTYPE, class VTTYPE>
+class VertexATVNd : public VertexATVN<double,VETYPE,VFTYPE,VTTYPE> {};
 
 }
 
