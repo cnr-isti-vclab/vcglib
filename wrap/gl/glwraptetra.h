@@ -205,8 +205,14 @@ template <ColorMode cm >
 		}
 		glBegin(GL_TRIANGLES);
 		for( it = tetra.begin(); it != tetra.end(); ++it)
-			if(!(*it).IsD()){
+			if((!it->IsD())&&(!(it->IsS()))) //draw as normal
+			{
 					_DrawSmallTetra<cm>(*it);
+			}
+			else 
+			if((!it->IsD())&&(!(it->IsS())))//draw in selection mode
+			{
+					_DrawSelectedTetra(*it);
 			}
 		glEnd();
 		glPopAttrib();
@@ -252,10 +258,34 @@ void _DrawSurface(){
 	  glPopAttrib();
 }
 
+
+void _DrawSelectedTetra(TetraType &t)
+{
+	glPushMatrix();
+	glPushAttrib(0xffff);
+		glDisable(GL_CLIP_PLANE0);
+		glDisable(GL_BLEND);
+		glDisable(GL_LIGHTING);
+		glDisable(GL_NORMALIZE);
+		glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+
+		glBegin(GL_LINE_LOOP);
+		glColor3d(1,0,0);
+		for (int face=0;face<4;face++)
+		{
+			glVertex(t.V(Tetra::VofF(face,0))->P());
+			glVertex(t.V(Tetra::VofF(face,1))->P());
+			glVertex(t.V(Tetra::VofF(face,2))->P());
+		}
+		//end drawing
+	glPopAttrib();
+	glPopMatrix();
+}
+
 template <DrawMode dm,NormalMode nm,ColorMode cm >
 void _DrawTetra(TetraType &t)
 {
-  if(!(t.IsD()))
+  if((!t.IsD())&&(!t.IsS()))
   {
        if ((dm!=DMWire)&&(dm!=DMHidden))
           _ChooseColorTetra<cm>(t);
@@ -265,7 +295,6 @@ void _DrawTetra(TetraType &t)
          else
          {
            if (t.IsBorderF(i))
-		   //if (t.IsS())
            {
               if(nm==NMSmooth)
 			     _DrawFaceSmooth<cm>(t,i);
@@ -276,6 +305,9 @@ void _DrawTetra(TetraType &t)
          }
        }
       }
+  else 
+	if((!t.IsD())&&(t.IsS()))
+		_DrawSelectedTetra(t);			
 }
 
 template <ColorMode cm >
