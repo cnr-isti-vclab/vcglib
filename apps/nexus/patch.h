@@ -12,35 +12,32 @@ struct Chunk {
 class Patch {
  public:
   
-  Patch(Chunk *s = NULL): start(s) {}
-
-  unsigned short &VertSize() { return *(unsigned short *)start; }
-
-  vcg::Point3f *VertBegin() { 
-    return (vcg::Point3f *)(((char *)start) + 2*sizeof(short)); }
-
-  unsigned short &FaceSize() { return *(((unsigned short *)start) + 1); }
-
-  unsigned short *FaceBegin() {
-    return (unsigned short *)(((char *)start) + 2*sizeof(short) + 
-			      VertSize() * sizeof(vcg::Point3f)); }
-
-  vcg::Point3f &Vert(unsigned int v) {
-    return VertBegin()[v];
+  Patch(Chunk *s = NULL, unsigned short nv = 0, unsigned short nf = 0): 
+    start(s) {
+    Resize(nv, nf);
   }
+
+  void Resize(unsigned short nv, unsigned short nf) {
+    nvert = nv;
+    nface = nf;
+    fstart = (unsigned short *)(((char *)start) + 
+				VertSize() * sizeof(vcg::Point3f));
+  }
+  unsigned short VertSize()    { return nvert; }
+
+  vcg::Point3f *VertBegin()     { return (vcg::Point3f *)(start); }
+
+  unsigned short FaceSize()    { return nface; }
+
+  unsigned short *FaceBegin()   { return fstart; }
+
+  vcg::Point3f &Vert(unsigned int v)   { return VertBegin()[v]; }
   
-  unsigned short *Face(unsigned int f) {
-    return FaceBegin() + f * 3;
-  }
+  unsigned short *Face(unsigned int f) { return FaceBegin() + f * 3; }
  
+  unsigned int ChunkSize() { return ChunkSize(VertSize(), FaceSize()); }
 
-  unsigned int ChunkSize() {
-    return ChunkSize(VertSize(), FaceSize());
-  }
-
-  unsigned int ByteSize() {
-    return ByteSize(VertSize(), FaceSize());
-  }
+  unsigned int ByteSize() { return ByteSize(VertSize(), FaceSize()); }
 
   static unsigned int ChunkSize(unsigned short nvert, unsigned short nface) {
     unsigned int size = ByteSize(nvert, nface);
@@ -57,11 +54,13 @@ class Patch {
     if(size < nface * 3 * sizeof(unsigned int))
       size = nface * 3 * sizeof(unsigned int);
     
-    size += 2 * sizeof(unsigned short);    
     return size;
   }
   // private:
   Chunk *start;
+  unsigned short *fstart;
+  unsigned short nvert;
+  unsigned short nface;
 };
 
 };
