@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2004/10/14 13:41:34  ponchio
+Added statistics.
+
 Revision 1.12  2004/10/09 14:46:47  ponchio
 Windows porting small changes.
 
@@ -197,8 +200,15 @@ int main(int argc, char *argv[]) {
   bool show_colors = true;
   bool show_normals = true;
   bool show_statistics = true;
+  
+  NexusMt::MetricKind metric;
   NexusMt::Mode mode = NexusMt::SMOOTH;
-  NexusMt::PolicyKind policy = NexusMt::FRUSTUM;
+  unsigned int ram_size = 640000;
+
+  nexus.SetError(error);
+  nexus.SetRamSize(ram_size);   
+  nexus.SetMetric(NexusMt::FRUSTUM);    
+
   
   glClearColor(0, 0, 0, 0); 
   glEnable(GL_LIGHTING);
@@ -230,18 +240,33 @@ int main(int argc, char *argv[]) {
 	case SDLK_9: nexus.patches.ram_size *= 0.8; break;
 	case SDLK_0: nexus.patches.ram_size *= 1.2; break;
 
-	case SDLK_s: policy = NexusMt::FRUSTUM; break;
-	case SDLK_p: mode = NexusMt::POINTS; break;
-	case SDLK_d: mode = NexusMt::DEBUG; break;
-	case SDLK_m: mode = NexusMt::SMOOTH; break;
+  case SDLK_LEFT: 
+    ram_size *= 0.7; 
+    nexus.SetRamSize(ram_size);   
+    cerr << "Max extraction ram size: " << ram_size << endl; break;
+  case SDLK_RIGHT: 
+    ram_size *= 1.5; 
+    nexus.SetRamSize(ram_size);   
+    cerr << "Max extraction ram size: " << ram_size << endl; break;
+
+	case SDLK_s: metric = NexusMt::FRUSTUM; break;
+	case SDLK_p: mode = NexusMt::POINTS; nexus.SetMode(mode); break;
+	case SDLK_d: mode = NexusMt::DEBUG; nexus.SetMode(mode); break;
+	case SDLK_m: mode = NexusMt::SMOOTH; nexus.SetMode(mode); break;
 
 	case SDLK_r:
 	case SDLK_SPACE: rotate = !rotate; break;
 	  
-	case SDLK_MINUS: error *= 0.9f; break;
+	case SDLK_MINUS: 
+    error *= 0.9f;
+    nexus.SetError(error);
+	  cerr << "Error: " << error << endl; break;
 	  
 	case SDLK_EQUALS:
-	case SDLK_PLUS: error *= 1.1f; break;
+	case SDLK_PLUS: 
+    error *= 1.1f; 
+    nexus.SetError(error);
+	  cerr << "Error: " << error << endl; break;
 	}
 	break;
       case SDL_KEYUP: 
@@ -319,8 +344,9 @@ int main(int argc, char *argv[]) {
     float r = nexus.sphere.Radius();
 
     glColor3f(0.8f, 0.8f, 0.8f);
-    nexus.SetMode(mode);
-    nexus.SetPolicy(policy, error);
+        
+     
+    //nexus.SetPolicy(policy, error);
     nexus.SetComponent(NexusMt::COLOR, show_colors);
     nexus.SetComponent(NexusMt::NORMAL, show_normals);
     
@@ -328,16 +354,15 @@ int main(int argc, char *argv[]) {
 
     nexus.Render();
 
+    //cerr Do some reporting:
     if(show_statistics) {
-      cerr << "Error: " << error << endl;
-      cerr << "Ram used: " << nexus.patches.ram_used << endl;
-      cerr << "Ram size: " << nexus.patches.ram_size << endl;
-      cerr << "Ram flushed: " << nexus.patches.ram_flushed << endl;
-      cerr << "Ram readed: " << nexus.patches.ram_readed << endl;
-      nexus.patches.ram_flushed = 0;
-      nexus.patches.ram_readed = 0;
-      cerr << "Time for frame: " << watch.Elapsed() << endl;
-	
+    	cerr << "Ram used : " << nexus.policy.ram_used << endl;
+    	cerr << "Tri drawn: " << nexus.tri_rendered << endl;    
+    	cerr << "Tri tot  : " << nexus.tri_total << endl;   
+		cerr << "Ram flushed: " << nexus.patches.ram_flushed << endl;
+      	cerr << "Ram readed: " << nexus.patches.ram_readed << endl;
+      	nexus.patches.ram_flushed = 0;
+      	nexus.patches.ram_readed = 0;
     }
     
     SDL_GL_SwapBuffers();
