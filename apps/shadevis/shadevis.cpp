@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/09/30 00:57:42  ponchio
+Reference to temporary fixed and indented.
+
 Revision 1.7  2004/09/28 09:46:51  cignoni
 Added MapFalseColor
 
@@ -48,6 +51,10 @@ Added GPL comments
 #include <stdio.h>
 #include <stdarg.h>
 #include <time.h>
+// this define is mandatory to avoid the conflicts due to the silly definition of 
+// min and max macros in windows.h (included by glut...)
+#define NOMINMAX 
+
 #include <GL/glew.h>
 #include <GL/glut.h>
 #include <wrap/gl/space.h>
@@ -535,7 +542,7 @@ int main(int argc, char** argv)
   
   // loading original mesh
   int ret=tri::io::ImporterPLY<AMesh>::Open(m,argv[i]);
-  if(ret) {printf("Error unable to open mesh %s\n",argv[i]);exit(-1);}
+  if(ret) {printf("Error unable to open mesh %s : '%s' \n",argv[i],tri::io::ImporterPLY<AMesh>::ErrorMsg(ret));exit(-1);}
   tri::UpdateNormals<AMesh>::PerVertexNormalized(m);
   tri::UpdateBounding<AMesh>::Box(m);
   tri::UpdateColor<AMesh>::VertexConstant(m,Color4b::White);
