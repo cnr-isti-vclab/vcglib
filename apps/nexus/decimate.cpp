@@ -2,6 +2,7 @@
 
 // stuff to define the mesh
 #include <vcg/simplex/vertex/with/afvmvn.h>
+#include <vcg/simplex/edge/edge.h>
 #include <vcg/math/quadric.h>
 #include <vcg/complex/trimesh/base.h>
 #include <vcg/simplex/face/with/av.h>
@@ -27,14 +28,19 @@ using namespace std;
 class MyEdge;
 class MyFace;
 class MyVertex: 
-  public vcg::VertexAFVMVNf<DUMMYEDGETYPE, MyFace,DUMMYTETRATYPE> {
+  public vcg::VertexAFVMVNf<MyEdge, MyFace,DUMMYTETRATYPE> {
 public: 
   ScalarType w;
-  vcg::math::Quadric<vcg::Plane3<ScalarType, false> > q;
+  vcg::math::Quadric<double> q;
   ScalarType & W() { return w; }
 };
 
-class MyFace : public vcg::FaceAV<MyVertex,DUMMYEDGETYPE , MyFace> {};
+struct MyEdge: public Edge<double,MyEdge,MyVertex> {
+  inline MyEdge():Edge<double,MyEdge,MyVertex>(){UberFlags()=0;}
+  inline MyEdge(MyVertex* a,MyVertex* b):Edge<double,MyEdge,MyVertex>(a,b){
+    UberFlags()=0;}
+};
+class MyFace : public vcg::FaceAV<MyVertex, MyEdge, MyFace> {};
 
 class MyMesh: 
   public vcg::tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace > > {};
@@ -43,8 +49,8 @@ class MyTriEdgeCollapse:
   public vcg::tri::TriEdgeCollapseQuadric< MyMesh, MyTriEdgeCollapse > {
 public:
   typedef  vcg::tri::TriEdgeCollapseQuadric<MyMesh, MyTriEdgeCollapse > TECQ;
-  typedef  TECQ::PosType PosType;
-  MyTriEdgeCollapse(PosType p, int i): TECQ(p, i) {}
+  typedef  TECQ::EdgeType EdgeType;
+  MyTriEdgeCollapse(EdgeType p, int i): TECQ(p, i) {}
   ~MyTriEdgeCollapse() {}
 };
 
