@@ -226,7 +226,7 @@ float Extraction::GetRefineError(Node *node) {
   return maxerror;
 }
 
-bool Extraction::Refine(HeapNode &hnode) {
+bool Extraction::Refine(HeapNode hnode) {
   
   Node *node = hnode.node;
   //cerr << "Refine node: " << (void *)hnode.node << " err: " << hnode.error << endl;      
@@ -287,7 +287,7 @@ bool Extraction::Refine(HeapNode &hnode) {
   return true;
 }
 
-bool Extraction::Coarse(HeapNode &hnode) {
+bool Extraction::Coarse(HeapNode hnode) {
   //cerr << "Coarse node: " << (void *)hnode.node << " err: " << hnode.error << endl;    
   Node *node = hnode.node;
   

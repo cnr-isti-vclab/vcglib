@@ -72,8 +72,8 @@ class Extraction {
   bool Expand(HeapNode &node);
   void Diff(Node *node, Cost &cost);
 
-  bool Refine(HeapNode &node);
-  bool Coarse(HeapNode &node);
+  bool Refine(HeapNode node);
+  bool Coarse(HeapNode node);
 
   void Init();
  private:
