@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2005/02/22 10:38:10  ponchio
+Debug, cleaning and optimization.
+
 Revision 1.22  2005/02/21 17:55:36  ponchio
 debug debug debug
 
@@ -422,8 +425,7 @@ void nxs::ComputeNormals(Nexus &nexus) {
 
 
 /*
-  //TODO why i created this function? wonder...
-void nxs::Reorder(Signature &signature, Patch &patch) {
+  //TODO why i created this function? wonder...void nxs::Reorder(Signature &signature, Patch &patch) {
   vector<unsigned> remap;
   remap.resize(patch.nv, 0xffff);
   
@@ -461,8 +463,56 @@ void nxs::Reorder(Signature &signature, Patch &patch) {
 
 //TODO actually use threshold
 
-void nxs::Unify(Nexus &nexus, float threshold) {
-  /*  threshold = 0.00001;
+void nxs::Unify(vector<Point3f> &points, vector<unsigned short> &faces,
+		vector<unsigned int> &remap, float threshold) {
+  vector<unsigned short> newfaces = faces;
+
+  VPartition grid;
+  for(unsigned int i = 0; i < points.size(); i++)
+    grid.push_back(points[i]);
+  grid.Init();
+
+  remap.resize(points.size());
+  vector<int> targets;
+  vector<double> dists;
+
+  points.clear();
+  unsigned int count = 0;
+  for(unsigned int i = 0; i < grid.size(); i++) {
+
+    grid.Closest(grid[i], targets, dists, threshold);
+    
+    if(targets.size() > 1) {
+      unsigned int p;
+      for(p = 0; p < targets.size(); p++) {
+	if(targets[p] < i) {
+	  remap[i] = remap[targets[p]];
+	  break;
+	}
+      }
+      if(p < targets.size()) continue;
+    }
+    remap[i] = count++;
+    points.push_back(grid[i]);
+  }
+  
+  //fixing faces now
+  faces.clear();
+  for(unsigned int i = 0; i < newfaces.size(); i += 3) {
+    unsigned short f[3];
+    f[0] = remap[newfaces[i]];
+    f[1] = remap[newfaces[i+1]];
+    f[2] = remap[newfaces[i+2]];
+    if(f[0] == f[1] || f[0] == f[2] || f[1] == f[2])
+      continue;
+
+    for(int k = 0; k < 3; k++)
+      faces.push_back(f[k]);
+  }
+}
+
+/*void nxs::Unify(Nexus &nexus, float threshold) {
+    threshold = 0.00001;
   unsigned int duplicated = 0;
   unsigned int degenerate = 0;
 
@@ -485,8 +535,8 @@ void nxs::Unify(Nexus &nexus, float threshold) {
       for(k = normals.begin(); k != normals.end(); k++) {
 	Patch &patch = nexus.GetPatch((*k).first);
       }
+      }
       }*/
-}
 
 /*
 void nxs::Unify(Nexus &nexus, float threshold) {

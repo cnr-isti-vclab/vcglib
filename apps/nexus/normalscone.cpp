@@ -62,14 +62,14 @@ void ANCone3f::AddNormals(vector<Point3f> &normal, vector<float> &area, float th
       break;
   }
   double alpha = M_PI * (best + 1) / 50;
-  if(alpha > M_PI/ 2 - 0.1) 
+  if(alpha >= M_PI/ 2 - 0.1) 
     scaledNormal = Point3f(0,0,0);
   else 
     scaledNormal /= cos(M_PI/2 - alpha);
 }
 
 void ANCone3f::AddNormals(vector<Point3f> &normal, float threshold) {
-  //assert(normal.size() > 0);
+  assert(normal.size() > 0);
   scaledNormal = Point3f(0,0,0);
   int count = 0;
   vector<Point3f>::iterator i;
@@ -81,7 +81,9 @@ void ANCone3f::AddNormals(vector<Point3f> &normal, float threshold) {
     count++;
   }
   scaledNormal /= count;
-  scaledNormal.Normalize();
+  float len = scaledNormal.Norm();
+  if(len == 0) return;
+  scaledNormal /= len;
 
   int distr[50];
   for(int k = 0; k < 50; k++)
@@ -93,16 +95,13 @@ void ANCone3f::AddNormals(vector<Point3f> &normal, float threshold) {
   }
   int tot = 0;
   int best;
-  //  cerr << "Distr: ";
   for(best = 0; best < 50; best++) {
-    //    cerr << distr[best] << " ";
     tot += distr[best];
     if(tot >= threshold * normal.size())
       break;
   }
   double alpha = M_PI * (best +1) / 50;
-  //  cerr << "best: " << best << " alpha: " << alpha << endl;
-  if(alpha > M_PI/ 2) {
+  if(alpha >= M_PI/ 2 - 0.1) {
     scaledNormal = Point3f(0,0,0);
   } else {
     scaledNormal /= cos(M_PI/2 - alpha);
@@ -138,8 +137,12 @@ void NCone3s::Import(const ANCone3f &c) {
   if(len != 0) 
     normal /= len;
 
-  assert(normal[0] <= 1 && normal[1] <= 1 && normal[2] <= 1);
-  assert(normal[0] >= -1 && normal[1] >= -1 && normal[2] >= -1);
+  for(int i = 0; i < 3; i++) {
+    assert(normal[i] < 1.01 && normal[i] > -1.01);
+    
+    if(normal[i] > 1.0f) normal[i] = 1;
+    if(normal[i] < -1.0f) normal[i] = -1;
+  }
   n[0] = (short)(normal[0] * 32766);
   n[1] = (short)(normal[1] * 32766);
   n[2] = (short)(normal[2] * 32766);

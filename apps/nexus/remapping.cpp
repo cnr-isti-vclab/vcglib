@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2005/02/19 14:00:43  ponchio
+Small opt.
+
 Revision 1.10  2005/02/19 10:45:05  ponchio
 Patch generalized and small fixes.
 
@@ -390,7 +393,7 @@ void nxs::BuildLevel(VChain &chain,
         Point3f bari = (patch.Vert3f(face[0]) + 
 			patch.Vert3f(face[1]) + 
 			patch.Vert3f(face[2]))/3;
-
+	assert(coarse->size() > 0);
 	unsigned int target = coarse->Locate(bari);
 	assert(target < coarse->size());
 	centroids[target] += bari;

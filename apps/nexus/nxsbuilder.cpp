@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2005/02/22 10:38:11  ponchio
+Debug, cleaning and optimization.
+
 Revision 1.20  2005/02/21 17:55:47  ponchio
 debug debug debug
 
@@ -111,6 +114,7 @@ Level 0.
 #include "nxsalgo.h"
 #include "nxsdispatcher.h"
 #include "watch.h"
+#include "nexus.h"
 
 
 using namespace std;
@@ -236,7 +240,6 @@ void SecondStep(const string &crudefile, const string &output) {
     cerr << "Could not load index\n";
     exit(0);
   }
-  //  cerr << "Face index size: " << face_index.size() << endl;
 
   //Sorting now.
   vector<unsigned int> done;
@@ -248,11 +251,6 @@ void SecondStep(const string &crudefile, const string &output) {
     int64 offset = face_index[patch].offset + done[patch]++;
     sorted[offset] = crude.GetFace(i);
   }
-
-#ifndef NDEBUG
-  for(int i = 0; i < done.size(); i++)
-    assert(done[i] == face_index[i].size);
-#endif
 
   //once sorted
   crude.Close();
@@ -329,31 +327,37 @@ void ThirdStep(const string &crudefile, const string &output,
     unsigned int size = face_index[patch].size;
     for(unsigned int i = offset; i < offset + size; i++) {
       //TODO fix this after debug
-      //      Crude::Face face = crude.GetFace(i);
       Crude::Face face = sorted[i];
       if(face[0] == face[1] || face[1] == face[2] || face[0] == face[2]) 
-	      continue; //degenerate
+	continue; //degenerate
       for(int j = 0; j < 3; j++) {
-	      assert(face[j] < crude.Vertices());
-	      if(!vremap.count(face[j])) {          
-	        Point3f &v = crude.vert[face[j]];
-	        vertices.push_back(v);
-	        vremap[face[j]] = vcount++;
-	      }
-	      faces.push_back(vremap[face[j]]);
-	      fcount++;
+	assert(face[j] < crude.Vertices());
+	if(!vremap.count(face[j])) {          
+	  Point3f &v = crude.vert[face[j]];
+	  vertices.push_back(v);
+	  vremap[face[j]] = vcount++;
+	}
+	faces.push_back(vremap[face[j]]);
+	fcount++;
       }
     }
-    assert(vcount == vertices.size());
-    assert(fcount == faces.size());
+    vector<unsigned int> remap;
+    nxs::Unify(vertices, faces, remap, 0.0001); 
+    //fixing vremap
+    map<unsigned int, unsigned short>::iterator q;
+    for(q = vremap.begin(); q != vremap.end(); q++) 
+      (*q).second = remap[(*q).second];
 
+    vcount = vertices.size();
+    fcount = faces.size();
+    
     //TODO deal with this case adding another patch at the end... 
     //its not that difficult!
     
-    //This can happen on degenerate cases when we have a lot of detached faces....
+    //This can happen on degenerate cases when we have a lot of detached faces.
     if(vcount > 65000 && fcount > 65000) {
-      cerr << "Too many vertices or faces in patch: " << patch << " v: " << vcount 
-        << " f: " << fcount << endl;
+      cerr << "Too many vertices or faces in patch: " << patch 
+	   << " v: " << vcount << " f: " << fcount << endl;
       exit(0);
     }
   
@@ -364,10 +368,15 @@ void ThirdStep(const string &crudefile, const string &output,
     memcpy(patch.FaceBegin(), &*faces.begin(), fcount * sizeof(short));
     memcpy(patch.Vert3fBegin(), &*vertices.begin(), vcount * sizeof(Point3f));
 
+
+    //Fixing sphere
     Sphere3f &sphere = nexus[patch_idx].sphere;
     sphere.CreateTight(vertices.size(), &*vertices.begin());
 
+
+    //Fixing normalscone
     vector<Point3f> normals; 
+    normals.reserve(patch.nf);
     for(unsigned int i = 0; i < patch.nf; i++) {
       unsigned short *f = patch.Face(i);
       Point3f &v0 = patch.Vert3f(f[0]);
@@ -375,17 +384,22 @@ void ThirdStep(const string &crudefile, const string &output,
       Point3f &v2 = patch.Vert3f(f[2]);
       
       Point3f norm = (v1 - v0) ^ (v2 - v0); 
-      normals.push_back(norm.Normalize());
+      float len = norm.Norm();
+      if(len == 0) {
+	cerr << "Degenerate face... should not be here.\n";
+	continue;
+      }
+      norm /= len;
+      if(isnan(norm[0]) || isnan(norm[1]) || isnan(norm[2])) {
+	cerr << "Invalid normal computation. Strange.\n";
+	continue;
+      }
+      normals.push_back(norm);
     }
     ANCone3f cone;
     cone.AddNormals(normals, 0.99f);
     nexus[patch_idx].cone.Import(cone);
 
-#ifndef NDEBUG
-    for(int i = 0; i < vertices.size(); i++) {
-      assert(sphere.IsIn(vertices[i]));
-    }
-#endif
 
     //saving vert_remap
     int64 vroffset = vert_remap.Size();
@@ -408,16 +422,14 @@ void ThirdStep(const string &crudefile, const string &output,
     nexus.sphere.Add(nexus[i].sphere);
   
   History::Update update;
-  for(unsigned int i = 1; i < nexus.size(); i++) {
+  for(unsigned int i = 1; i < nexus.size(); i++) 
     update.created.push_back(i);
-  }
   nexus.history.updates.push_back(update);
   
   update.created.clear();
   update.created.push_back(0);
-  for(unsigned int i = 1; i < nexus.size(); i++) {
+  for(unsigned int i = 1; i < nexus.size(); i++) 
     update.erased.push_back(i);
-  }
   nexus.history.updates.push_back(update);
 
   if(!vert_index.Save(output + ".rvi")) {
@@ -429,6 +441,8 @@ void ThirdStep(const string &crudefile, const string &output,
 
 void FourthStep(const string &crudefile, const string &output, 
 		unsigned int ram_buffer) {
+  float threshold = 0.0001;
+  cerr << "Creating borders\n";
   Nexus nexus;  
   if(!nexus.Load(output)) {
     cerr << "Could not load nexus " << output << endl;
@@ -453,11 +467,50 @@ void FourthStep(const string &crudefile, const string &output,
 
   Report report(nexus.size());
 
+  //WARNING this is not robust at all!!!!
+  //TO make all this work we should neeed to quantize
+  //vertex position with 2 * threshold step (at least)
   for(int start = 0; start < nexus.size(); start++) {    
     report.Step(start);
-    //        Entry &s_entry = nexus[start];
-    //        Sphere3f &sphere = s_entry.sphere;
 
+    vector<Link> links;   
+    set<unsigned int>::iterator t;
+    for(t = close[start].begin(); t != close[start].end(); t++) {
+      unsigned int end = (*t);
+      Patch &pend = nexus.GetPatch(end);
+      VPartition grid;
+      for(int i = 0; i < pend.nv; i++) {
+	grid.push_back(pend.Vert3f(i));
+      }
+      grid.Init();
+      
+      vector<int> targets;
+      vector<double> dists;
+      Patch &patch = nexus.GetPatch(start);
+      for(int i = 0; i < patch.nv; i++) {
+	grid.Closest(patch.Vert3f(i), targets, dists, threshold);
+	for(unsigned int k = 0; k < targets.size(); k++) {
+	  Link link;
+	  link.start_vert = i;
+	  link.end_vert = targets[k];
+	  link.end_patch = end;
+	  links.push_back(link);
+	  patch.Vert3f(i) = grid[targets[k]];
+	}
+      }
+
+    }
+    
+    Border &border = nexus.GetBorder(start);
+    nexus.borders.ResizeBorder(start, 3 * links.size());
+    border.used = links.size();        
+    memcpy(&(border[0]), &*links.begin(), links.size() * sizeof(Link));
+  }
+
+  /*old way..
+    for(int start = 0; start < nexus.size(); start++) {    
+    report.Step(start);
+    
     vector<Link> links;   
     map<unsigned int, unsigned short> vremap;
     for(unsigned int i = 0; i < vert_index[start].size; i++) {
@@ -465,19 +518,9 @@ void FourthStep(const string &crudefile, const string &output,
       vremap[global] = i;
     }    
     
-    //    for(int end = 0; end < nexus.size(); end++) {
-    //      if(start == end) continue;      
     set<unsigned int>::iterator t;
     for(t = close[start].begin(); t != close[start].end(); t++) {
       unsigned int end = (*t);
-      
-      //      Entry &e_entry = nexus[end];
-      //      float dist = Distance(s_entry.sphere.Center(), e_entry.sphere.Center());
-      
-      //      if(dist > s_entry.sphere.Radius() + e_entry.sphere.Radius()) {
-      //	continue;
-      //      }
-      //      assert(close[start].count(end));
       
       for(unsigned int i = 0; i < vert_index[end].size; i++) {           
 	unsigned int global = vert_remap[vert_index[end].offset + i];
@@ -489,12 +532,14 @@ void FourthStep(const string &crudefile, const string &output,
 	  links.push_back(link);
 	}
       }      
-    }
+      }
+  
+  
     Border &border = nexus.GetBorder(start);
     nexus.borders.ResizeBorder(start, 3 * links.size());
     border.used = links.size();        
     memcpy(&(border[0]), &*links.begin(), links.size() * sizeof(Link));
-  }
+  }*/
 }
 
 void FifthStep(const string &crudefile, const string &output, 
@@ -525,7 +570,7 @@ void FifthStep(const string &crudefile, const string &output,
     patch_levels.push_back(0);
   }
   nexus.history.updates.push_back(update); 
-  Unify(nexus, 0.0f);
+  //  Unify(nexus, 0.0f);
   //  nexus.Unify();
   nexus.Flush();
 
@@ -757,6 +802,7 @@ void BuildFragment(Nexus &nexus, VPartition &part,
     }
   }
 
+  //TODO Use the closest with threshold here instead of a cracnut number??
   set<unsigned int> seeds;
   vector<int> nears;
   vector<float> dists;

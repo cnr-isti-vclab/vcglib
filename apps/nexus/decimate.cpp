@@ -193,7 +193,12 @@ float Cluster(MyMesh &mesh, unsigned int target_faces) {
       nseeds--;
     }
   }
+  if(part.size() == 0) {
+    cerr << "WARNING: could not simplyfiy... everything was border.\n";
+    return 0; //everything is locked...
+  }
   part.Init();
+
 
   vector<Point3f> centroid;
   vector<unsigned int> count;

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/02/22 10:38:11  ponchio
+Debug, cleaning and optimization.
+
 Revision 1.8  2005/02/21 17:55:36  ponchio
 debug debug debug
 
@@ -69,7 +72,10 @@ namespace nxs {
 
   void ComputeNormals(Nexus &nexus);
 
-  void Unify(Nexus &nexus, float threshold);
+  void Unify(std::vector<vcg::Point3f> &points, 
+	     std::vector<unsigned short> &faces,
+	     std::vector<unsigned int> &vremap, float threshold);
+//  void Unify(Nexus &nexus, float threshold);
   void ZSort(Nexus &nexus, std::vector<unsigned int> &forward,
 	     std::vector<unsigned int> &backward);
   //  void TightSphere(vcg::Sphere3f &sphere, std::vector<vcg::Point3f> &points);

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/02/22 10:38:17  ponchio
+Debug, cleaning and optimization.
+
 Revision 1.4  2005/02/21 17:55:48  ponchio
 debug debug debug
 
@@ -158,7 +161,6 @@ float VPartition::Radius(unsigned int seed) {
   point[0] = p[0];
   point[1] = p[1];
   point[2] = p[2];
-
   bd->annkSearch(&point[0], 2, nears, dists);
 
   if(dists[1] == 0) return 0.0f;
