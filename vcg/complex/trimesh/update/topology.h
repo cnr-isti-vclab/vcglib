@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/06/02 16:42:44  ganovelli
+typename for gcc compilation
+
 Revision 1.7  2004/06/02 16:28:22  ganovelli
 minor changes (swap =>> math::Swap)
 
@@ -54,6 +57,8 @@ namespace vcg {
 namespace tri {
 /** \addtogroup trimesh */
 /*@{*/
+/** Generation of per-vertex and per-face topological information.
+**/
 
 template <class UpdateMeshType>
 class UpdateTopology
@@ -137,7 +142,8 @@ inline bool operator != ( const PEdge & pe ) const
 };
 
 
-
+/** Update the Face-Face topological relation by allowing to retrieve for each face what other faces shares their edges.
+*/
 static void FaceFace(MeshType &m)
 {
   if(!m.HasFFTopology()) return;		
@@ -189,6 +195,8 @@ static void FaceFace(MeshType &m)
 	}
 }
 
+/** Update the Vertex-Face topological relation by allowing to retrieve for each vertex the list of faces sharing this vertex..
+*/
 static void VertexFace(MeshType &m)
 {
   if(!m.HasVFTopology()) return;		

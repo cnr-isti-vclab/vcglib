@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/07/09 10:18:49  ganovelli
+added access functions to vn and tn
+
 Revision 1.7  2004/06/25 11:27:21  pietroni
 added function to access temporary mark for decimation
 
@@ -63,7 +66,7 @@ Revision 1.1  2004/04/15 08:54:20  pietroni
 
 namespace vcg {
 namespace tetra {
- /** \addtogroup trimesh */
+ /** \addtogroup tetramesh */
 /*@{*/
 
   /**  Class TetraMesh.

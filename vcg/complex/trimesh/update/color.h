@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/06/24 07:56:54  cignoni
+now use std::numeric_limits instead of old max val()
+
 Revision 1.3  2004/03/12 15:22:19  cignoni
 Written some documentation and added to the trimes doxygen module
 
@@ -57,6 +60,9 @@ typedef typename MeshType::FaceType       FaceType;
 typedef typename MeshType::FacePointer    FacePointer;
 typedef typename MeshType::FaceIterator   FaceIterator;
 
+/** Color the vertex of the mesh that are on the border
+It uses the information in the flags, and not any topology. So it just require that you have correctly computed (or loaded) the flags; See the 
+**/
 static void VertexBorderFlag(MeshType &m, Color4b vb=Color4b::Blue)
 {
 	MeshType::VertexIterator vi;
@@ -142,6 +148,20 @@ static int VertexSelected(MeshType &m, Color4b vs=Color4b::LightBlue)
 			else (*vi).C() = Color4b::White;
 	
 	return cnt;
+}
+
+static void VertexConstant(MeshType &m, Color4b c=Color4b::White)
+{
+	MeshType::VertexIterator vi;
+	for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD()) 
+		(*vi).C()=c;
+}
+
+static void FaceConstant(MeshType &m, Color4b c=Color4b::White)
+{
+	MeshType::FaceIterator fi;
+	for(fi=m.face.begin();fi!=m.face.end();++fi)		
+		(*fi).C()=c;
 }
 
 static void VertexBorderManifoldFlag(MeshType &m, Color4b vn=Color4b::White, Color4b vb=Color4b::Blue, Color4b vc=Color4b::Red)

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/07/06 06:27:02  cignoni
+Added  FaceBorderFromVF
+
 Revision 1.4  2004/05/13 15:58:55  ganovelli
 function Clear added
 
@@ -64,6 +67,8 @@ typedef typename MeshType::FaceType       FaceType;
 typedef typename MeshType::FacePointer    FacePointer;
 typedef typename MeshType::FaceIterator   FaceIterator;
 
+/** Reset all the mesh flags (both vertexes and faces) setting everithing to zero (the default value for flags)
+**/
 static void Clear(MeshType &m)
 {
 	FaceIterator fi;
@@ -74,6 +79,9 @@ static void Clear(MeshType &m)
 		(*vi).Flags() = 0;
 }
 
+/** Compute the border flags for the faces using the Face-Face Topology. 
+Obviously it assumes that the topology has been correctly computed (see: UpdateTopology::FaceFace )
+**/
 static void FaceBorderFromFF(MeshType &m)
 {
 	const int BORDERFLAG[3]={FaceType::BORDER0,FaceType::BORDER1,FaceType::BORDER2};

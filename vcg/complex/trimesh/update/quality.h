@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/07/06 06:29:53  cignoni
+removed assumption of a using namespace std and added a missing include
+
 Revision 1.3  2004/06/24 15:15:12  cignoni
 Better Doxygen documentation
 
@@ -47,7 +50,13 @@ namespace vcg {
 namespace tri {
 /** \addtogroup trimesh */
 /*@{*/
-/// Generation of per-vertex and per-face Qualities according to various strategy, like geodesic distance from the border (UpdateQuality::VertexGeodesicFromBorder) or curvature ecc.
+/** Generation of per-vertex and per-face Qualities according to various strategy, like geodesic distance from the border (UpdateQuality::VertexGeodesicFromBorder) or curvature ecc.
+This class is templated over the mesh and (like all other Update* classes) has only static members; Typical usage:
+\code
+MyMeshType m;
+UpdateQuality<MyMeshType>::VertexGeodesicFromBorder(m);
+\endcode
+**/
 
 template <class UpdateMeshType>
 class UpdateQuality
@@ -93,7 +102,7 @@ public:
 // heap solo se migliorano la distanza di un epsilon == 1/100000 della mesh diag.
 
 /** Compute, for each vertex of the mesh the geodesic distance from the border of the mesh itself;
-Requirements: VF topology, Per Vertex Quality and border flags already computed (see UpdateFlags::FaceBorderFromVF );
+Requirements: VF topology, Per Vertex Quality and border flags already computed (see UpdateFlags::FaceBorderFromVF and UpdateTopology::VertexFace);
 it uses the classical dijkstra Shortest Path Tree algorithm. 
 The geodesic distance is approximated by allowing to walk only along edges of the mesh.
 */
@@ -161,6 +170,25 @@ static void VertexGeodesicFromBorder(MeshType &m)	// R1
 	for(v=m.vert.begin();v!=m.vert.end();++v)
 		if(v->Q()==-1)
 			v->Q() = 0;
+}
+
+
+/** Assign to each vertex of the mesh a constant quality value. Useful for initialization.
+*/
+static void VertexConstant(MeshType &m, float q)
+{
+	MeshType::VertexIterator vi;
+	for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD()) 
+		(*vi).Q()=q;
+}
+
+/** Assign to each face of the mesh a constant quality value. Useful for initialization.
+*/
+static void FaceConstant(MeshType &m, float q)
+{
+	MeshType::FaceIterator fi;
+	for(fi=m.face.begin();fi!=m.face.end();++fi)		
+		(*fi).Q()=q;
 }
 
 }; //end class
