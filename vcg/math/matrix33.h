@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/07/13 06:48:26  cignoni
+removed uppercase references in include
+
 Revision 1.1  2004/05/28 13:09:05  ganovelli
 created
 
@@ -52,6 +55,7 @@ template<class S>
 class Matrix33
 {
 public:
+	typedef S ScalarType;
 	
 	/// Default constructor
 	inline Matrix33() {}
@@ -68,6 +72,18 @@ public:
 	{
 		for(int i=0;i<9;++i) a[i] = v[i];
 	}
+
+	///	Number of columns
+	inline unsigned int ColumnsNumber() const
+	{
+		return 3;
+	};
+
+	/// Number of rows
+	inline unsigned int RowsNumber() const
+	{
+		return 3;
+	};
 
 	/// Assignment operator
 	Matrix33 & operator = ( const Matrix33 & m )
@@ -181,10 +197,10 @@ public:
 		a[6] = row[0];a[7] = row[1];a[8] = row[2];
 	}
 
-	void Zero()	{
+	void SetZero()	{
 		for(int i=0;i<9;++i) a[i] =0;
 	}
-	void Identity()	{
+	void SetIdentity()	{
 		for(int i=0;i<9;++i) a[i] =0;
 		a[0]=a[4]=a[8]=1.0;
 	}
@@ -208,7 +224,7 @@ public:
 		a[8] = t[2]*t[2]*q +c;
 	}
 	/// Funzione per eseguire la trasposta della matrice
-	Matrix33 & Trasp()
+	Matrix33 & Transpose()
 	{
 		swap(a[1],a[3]);
 		swap(a[2],a[6]);
@@ -217,7 +233,7 @@ public:
 	}
 
 	/// Funzione per costruire una matrice diagonale dati i tre elem.
-	Matrix33 & SetDiag(S *v)
+	Matrix33 & SetDiagonal(S *v)
 	{int i,j;
 		for(i=0;i<3;i++)
       for(j=0;j<3;j++)
@@ -228,7 +244,7 @@ public:
 
 
 	/// Assegna l'n-simo vettore colonna
-	void SetCol(const int n, S* v){
+	void SetColumn(const int n, S* v){
 		assert( (n>=0) && (n<3) );
 		a[n]=v[0]; a[n+3]=v[1]; a[n+6]=v[2];
 	};
@@ -241,7 +257,7 @@ public:
 	};
 
 	/// Assegna l'n-simo vettore colonna
-	void SetCol(const int n, const Point3<S> v){
+	void SetColumn(const int n, const Point3<S> v){
 		assert( (n>=0) && (n<3) );
 		a[n]=v[0]; a[n+3]=v[1]; a[n+6]=v[2];
 	};
@@ -254,7 +270,7 @@ public:
 	};
 
 	/// Restituisce l'n-simo vettore colonna
-	Point3<S> GetCol(const int n) const {
+	Point3<S> GetColumn(const int n) const {
 		assert( (n>=0) && (n<3) );
 		Point3<S> t;
 		t[0]=a[n]; t[1]=a[n+3]; t[2]=a[n+6];
@@ -273,14 +289,14 @@ public:
 
 
 	/// Funzione per il calcolo del determinante
-	S Det() const
+	S Determinant() const
 	{
 		return a[0]*(a[4]*a[8]-a[5]*a[7]) -
 			     a[1]*(a[3]*a[8]-a[5]*a[6]) +
 					 a[2]*(a[3]*a[7]-a[4]*a[6]) ;
 	}
 
-	Matrix33 & invert()
+	Matrix33 & Invert()
 	{
 			// Maple produsse:
 		S t4  = a[0]*a[4];

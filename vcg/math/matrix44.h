@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2004/10/07 14:23:57  ganovelli
+added function to take rows and comlumns. Added toMatrix and fromMatrix to comply
+RotationTYpe prototype in Similarity.h
+
 Revision 1.18  2004/05/28 13:01:50  ganovelli
 changed scalar to ScalarType
 
@@ -111,8 +115,20 @@ public:
   Matrix44(const Matrix44 &m);
   Matrix44(const T v[]);
 
-  T &element(const int row, const int col);
-  T element(const int row, const int col) const;
+	///	Number of columns
+	inline unsigned int ColumnsNumber() const
+	{
+		return 4;
+	};
+
+	/// Number of rows
+	inline unsigned int RowsNumber() const
+	{
+		return 4;
+	};
+
+  T &ElementAt(const int row, const int col);
+  T ElementAt(const int row, const int col) const;
   //T &operator[](const int i);
   //const T &operator[](const int i) const;
   T *V();
@@ -122,7 +138,7 @@ public:
   const T *operator[](const int i) const;
 
 	// return a copy of the i-th column
-	Point4<T> Column(const int& i)const{
+	Point4<T> GetColumn(const int& i)const{
 		assert(i >=0);
 		assert(i<4);
 		int first = i<<2;
@@ -130,7 +146,7 @@ public:
 	}
 
 	// return the i-th row
-	Point4<T> & Column4(const int& i)const{
+	Point4<T> & GetColumn4(const int& i)const{
 		assert(i >=0);
 		assert(i<4);
 		int first = i<<2;
@@ -144,7 +160,7 @@ public:
 		return *((Point4<T>*)(&_a[i<<2]));
 	}
 
-	Point3<T> Column3(const int& i)const{
+	Point3<T> GetColumn3(const int& i)const{
 		assert(i >=0);
 		assert(i<4);
 		int first  = i <<2;
@@ -235,13 +251,13 @@ template <class T> Matrix44<T>::Matrix44(const T v[]) {
   memcpy((T *)_a, v, 16 * sizeof(T));   
 }
 
-template <class T> T &Matrix44<T>::element(const int row, const int col) {
+template <class T> T &Matrix44<T>::ElementAt(const int row, const int col) {
   assert(row >= 0 && row < 4);
   assert(col >= 0 && col < 4);
   return _a[(row<<2) + col];
 }
 
-template <class T> T Matrix44<T>::element(const int row, const int col) const {
+template <class T> T Matrix44<T>::ElementAt(const int row, const int col) const {
   assert(row >= 0 && row < 4);
   assert(col >= 0 && col < 4);
   return _a[(row<<2) + col];
@@ -287,8 +303,8 @@ template <class T> Matrix44<T> Matrix44<T>::operator*(const Matrix44 &m) const {
     for(int j = 0; j < 4; j++) {
       T t = 0.0;
       for(int k = 0; k < 4; k++)
-        t += element(i, k) * m.element(k, j);
-      ret.element(i, j) = t;
+        t += ElementAt(i, k) * m.ElementAt(k, j);
+      ret.ElementAt(i, j) = t;
     }
   return ret;
 }
@@ -298,7 +314,7 @@ template <class T> Point4<T> Matrix44<T>::operator*(const Point4<T> &v) const {
   for(int i = 0; i < 4; i++){
     T t = 0.0;
     for(int k = 0; k < 4; k++)
-      t += element(i,k) * v[k];
+      t += ElementAt(i,k) * v[k];
     ret[i] = t;
    }
    return ret;
@@ -347,11 +363,11 @@ template <class T> void Matrix44<T>::operator*=( const Matrix44 & m ) {
     Point4<T> t(0, 0, 0, 0);
     for(int k = 0; k < 4; k++) {
       for(int j = 0; j < 4; j++) {
-        t[k] += element(i, k) * m.element(k, j);
+        t[k] += ElementAt(i, k) * m.ElementAt(k, j);
       }
     }
     for(int l = 0; l < 4; l++)
-      element(i, l) = t[l];
+      ElementAt(i, l) = t[l];
   } */
 }
 
@@ -371,18 +387,18 @@ template <class T> void Matrix44<T>::SetIdentity() {
 
 template <class T> void Matrix44<T>::SetDiagonal(const T k) {
   SetZero();
-  element(0, 0) = k;
-  element(1, 1) = k;
-  element(2, 2) = k;
-  element(3, 3) = 1;    
+  ElementAt(0, 0) = k;
+  ElementAt(1, 1) = k;
+  ElementAt(2, 2) = k;
+  ElementAt(3, 3) = 1;    
 }
 
 template <class T> Matrix44<T> &Matrix44<T>::SetScale(const T sx, const T sy, const T sz) {
   SetZero();
-  element(0, 0) = sx;
-  element(1, 1) = sy;
-  element(2, 2) = sz;
-  element(3, 3) = 1;
+  ElementAt(0, 0) = sx;
+  ElementAt(1, 1) = sy;
+  ElementAt(2, 2) = sz;
+  ElementAt(3, 3) = 1;
   return *this;
 }
 
@@ -392,9 +408,9 @@ template <class T> Matrix44<T> &Matrix44<T>::SetTranslate(const Point3<T> &t) {
 }
 template <class T> Matrix44<T> &Matrix44<T>::SetTranslate(const T sx, const T sy, const T sz) {
   SetIdentity();
-	element(0, 3) = sx;
-  element(1, 3) = sy;
-  element(2, 3) = sz;
+	ElementAt(0, 3) = sx;
+  ElementAt(1, 3) = sy;
+  ElementAt(2, 3) = sz;
   return *this;
 }
 template <class T> Matrix44<T> &Matrix44<T>::SetRotate(T AngleRad, const Point3<T> & axis) {  
@@ -404,22 +420,22 @@ template <class T> Matrix44<T> &Matrix44<T>::SetRotate(T AngleRad, const Point3<
 	T q = 1-c;  
 	Point3<T> t = axis;
 	t.Normalize();
-	element(0,0) = t[0]*t[0]*q + c;
-	element(0,1) = t[0]*t[1]*q - t[2]*s;
-	element(0,2) = t[0]*t[2]*q + t[1]*s;
-	element(0,3) = 0;
-	element(1,0) = t[1]*t[0]*q + t[2]*s;
-	element(1,1) = t[1]*t[1]*q + c;
-	element(1,2) = t[1]*t[2]*q - t[0]*s;
-	element(1,3) = 0;
-	element(2,0) = t[2]*t[0]*q -t[1]*s;
-	element(2,1) = t[2]*t[1]*q +t[0]*s;
-	element(2,2) = t[2]*t[2]*q +c;
-	element(2,3) = 0;
-	element(3,0) = 0;
-	element(3,1) = 0;									
-	element(3,2) = 0;
-	element(3,3) = 1;	
+	ElementAt(0,0) = t[0]*t[0]*q + c;
+	ElementAt(0,1) = t[0]*t[1]*q - t[2]*s;
+	ElementAt(0,2) = t[0]*t[2]*q + t[1]*s;
+	ElementAt(0,3) = 0;
+	ElementAt(1,0) = t[1]*t[0]*q + t[2]*s;
+	ElementAt(1,1) = t[1]*t[1]*q + c;
+	ElementAt(1,2) = t[1]*t[2]*q - t[0]*s;
+	ElementAt(1,3) = 0;
+	ElementAt(2,0) = t[2]*t[0]*q -t[1]*s;
+	ElementAt(2,1) = t[2]*t[1]*q +t[0]*s;
+	ElementAt(2,2) = t[2]*t[2]*q +c;
+	ElementAt(2,3) = 0;
+	ElementAt(3,0) = 0;
+	ElementAt(3,1) = 0;									
+	ElementAt(3,2) = 0;
+	ElementAt(3,3) = 1;	
   return *this;
 }
 
@@ -433,10 +449,10 @@ template <class T> T Matrix44<T>::Determinant() const {
 template <class T> Point3<T> operator*(const Matrix44<T> &m, const Point3<T> &p) {
   T w;
   Point3<T> s;
-  s[0] = m.element(0, 0)*p[0] + m.element(0, 1)*p[1] + m.element(0, 2)*p[2] + m.element(0, 3);
-  s[1] = m.element(1, 0)*p[0] + m.element(1, 1)*p[1] + m.element(1, 2)*p[2] + m.element(1, 3);
-  s[2] = m.element(2, 0)*p[0] + m.element(2, 1)*p[1] + m.element(2, 2)*p[2] + m.element(2, 3);
-     w = m.element(3, 0)*p[0] + m.element(3, 1)*p[1] + m.element(3, 2)*p[2] + m.element(3, 3);
+  s[0] = m.ElementAt(0, 0)*p[0] + m.ElementAt(0, 1)*p[1] + m.ElementAt(0, 2)*p[2] + m.ElementAt(0, 3);
+  s[1] = m.ElementAt(1, 0)*p[0] + m.ElementAt(1, 1)*p[1] + m.ElementAt(1, 2)*p[2] + m.ElementAt(1, 3);
+  s[2] = m.ElementAt(2, 0)*p[0] + m.ElementAt(2, 1)*p[1] + m.ElementAt(2, 2)*p[2] + m.ElementAt(2, 3);
+     w = m.ElementAt(3, 0)*p[0] + m.ElementAt(3, 1)*p[1] + m.ElementAt(3, 2)*p[2] + m.ElementAt(3, 3);
 	if(w!= 0) s /= w;
   return s;
 }
@@ -444,10 +460,10 @@ template <class T> Point3<T> operator*(const Matrix44<T> &m, const Point3<T> &p)
 //template <class T> Point3<T> operator*(const Point3<T> &p, const Matrix44<T> &m) {
 //  T w;
 //  Point3<T> s;
-//  s[0] = m.element(0, 0)*p[0] + m.element(1, 0)*p[1] + m.element(2, 0)*p[2] + m.element(3, 0);
-//  s[1] = m.element(0, 1)*p[0] + m.element(1, 1)*p[1] + m.element(2, 1)*p[2] + m.element(3, 1);
-//  s[2] = m.element(0, 2)*p[0] + m.element(1, 2)*p[1] + m.element(2, 2)*p[2] + m.element(3, 2);
-//  w    = m.element(0, 3)*p[0] + m.element(1, 3)*p[1] + m.element(2, 3)*p[2] + m.element(3, 3);
+//  s[0] = m.ElementAt(0, 0)*p[0] + m.ElementAt(1, 0)*p[1] + m.ElementAt(2, 0)*p[2] + m.ElementAt(3, 0);
+//  s[1] = m.ElementAt(0, 1)*p[0] + m.ElementAt(1, 1)*p[1] + m.ElementAt(2, 1)*p[2] + m.ElementAt(3, 1);
+//  s[2] = m.ElementAt(0, 2)*p[0] + m.ElementAt(1, 2)*p[1] + m.ElementAt(2, 2)*p[2] + m.ElementAt(3, 2);
+//  w    = m.ElementAt(0, 3)*p[0] + m.ElementAt(1, 3)*p[1] + m.ElementAt(2, 3)*p[2] + m.ElementAt(3, 3);
 //	if(w != 0) s /= w;
 //  return s;
 //}
@@ -455,9 +471,9 @@ template <class T> Point3<T> operator*(const Matrix44<T> &m, const Point3<T> &p)
 template <class T> Matrix44<T> &Transpose(Matrix44<T> &m) {
   for(int i = 1; i < 4; i++)
     for(int j = 0; j < i; j++) {
-      T t = m.element(i, j); 
-      m.element(i, j) = m.element(j, i);
-      m.element(j, i) = t;
+      T t = m.ElementAt(i, j); 
+      m.ElementAt(i, j) = m.ElementAt(j, i);
+      m.ElementAt(j, i) = t;
     }
   return m;
 }
@@ -473,7 +489,7 @@ template <class T> Matrix44<T> &Invert(Matrix44<T> &m) {
     col[j] = 1.0;
     col = solve.Solve(col);
     for(int i = 0; i < 4; i++) 
-      m.element(i, j) = col[i];
+      m.ElementAt(i, j) = col[i];
   }  
   return m;
 }
@@ -486,7 +502,7 @@ template <class T> Matrix44<T> Inverse(const Matrix44<T> &m) {
     col[j] = 1.0;
     col = solve.Solve(col);
     for(int i = 0; i < 4; i++) 
-      res.element(i, j) = col[i];
+      res.ElementAt(i, j) = col[i];
   }  
   return res;
 }
@@ -507,7 +523,7 @@ template <class T> LinearSolve<T>::LinearSolve(const Matrix44<T> &m): Matrix44<T
 template <class T> T LinearSolve<T>::Determinant() const {
   T det = d;
   for(int j = 0; j < 4; j++) 
-    det *= element(j, j);   
+    det *= ElementAt(j, j);   
   return det;
 }
 
@@ -528,7 +544,7 @@ template <class T> bool LinearSolve<T>::Decompose() {
     index[i] = i;			  // Initialize row index list
     T scalemax = (T)0.0;
     for(int j = 0; j < 4; j++) 
-      scalemax = (scalemax > math::Abs(A.element(i,j))) ? scalemax : math::Abs(A.element(i,j));
+      scalemax = (scalemax > math::Abs(A.ElementAt(i,j))) ? scalemax : math::Abs(A.ElementAt(i,j));
     scale[i] = scalemax;
   }
 
@@ -539,7 +555,7 @@ template <class T> bool LinearSolve<T>::Decompose() {
     T ratiomax = (T)0.0;
 	  int jPivot = k;
     for(int i = k; i < 4; i++ ) {
-      T ratio = math::Abs(A.element(index[i], k))/scale[index[i]];
+      T ratio = math::Abs(A.ElementAt(index[i], k))/scale[index[i]];
       if(ratio > ratiomax) {
         jPivot = i;
         ratiomax = ratio;
@@ -555,12 +571,12 @@ template <class T> bool LinearSolve<T>::Decompose() {
 	  }
 	  // Perform forward elimination
     for(int i=k+1; i < 4; i++ ) {
-      T coeff = A.element(index[i],k)/A.element(indexJ,k);
+      T coeff = A.ElementAt(index[i],k)/A.ElementAt(indexJ,k);
       for(int j=k+1; j < 4; j++ )
-        A.element(index[i],j) -= coeff*A.element(indexJ,j);
-      A.element(index[i],k) = coeff;
+        A.ElementAt(index[i],j) -= coeff*A.ElementAt(indexJ,j);
+      A.ElementAt(index[i],k) = coeff;
       //for( j=1; j< 4; j++ ) 
-      //  element(index[i],j) -= A.element(index[i], k)*element(indexJ, j);
+      //  ElementAt(index[i],j) -= A.ElementAt(index[i], k)*ElementAt(indexJ, j);
     }
   }
   for(int i = 0; i < 16; i++)
@@ -578,7 +594,7 @@ template <class T> bool LinearSolve<T>::Decompose() {
   for(i = 0; i < 4; i++) { 
     T largest = 0.0;
     for(j = 0; j < 4; j++) {
-      T t = math::Abs(element(i, j));
+      T t = math::Abs(ElementAt(i, j));
       if (t > largest) largest = t;
     }
 
@@ -591,17 +607,17 @@ template <class T> bool LinearSolve<T>::Decompose() {
   int imax;
   for(j = 0; j < 4; j++) { 
     for(i = 0; i < j; i++) {
-      T sum = element(i,j);
+      T sum = ElementAt(i,j);
       for(int k = 0; k < i; k++) 
-        sum -= element(i,k)*element(k,j);
-      element(i,j) = sum;
+        sum -= ElementAt(i,k)*ElementAt(k,j);
+      ElementAt(i,j) = sum;
     }
     T largest = 0.0; 
     for(i = j; i < 4; i++) { 
-      T sum = element(i,j);
+      T sum = ElementAt(i,j);
       for(k = 0; k < j; k++)
-        sum -= element(i,k)*element(k,j);
-      element(i,j) = sum;
+        sum -= ElementAt(i,k)*ElementAt(k,j);
+      ElementAt(i,j) = sum;
       T t = scaling[i] * math::Abs(sum);
       if(t >= largest) { 
         largest = t;
@@ -610,19 +626,19 @@ template <class T> bool LinearSolve<T>::Decompose() {
     }
     if (j != imax) { 
       for (int k = 0; k < 4; k++) { 
-        T dum = element(imax,k);
-        element(imax,k) = element(j,k);
-        element(j,k) = dum;
+        T dum = ElementAt(imax,k);
+        ElementAt(imax,k) = ElementAt(j,k);
+        ElementAt(j,k) = dum;
       }
       d = -(d);
       scaling[imax] = scaling[j]; 
     }
     index[j]=imax;
-    if (element(j,j) == 0.0) element(j,j) = (T)TINY;
+    if (ElementAt(j,j) == 0.0) ElementAt(j,j) = (T)TINY;
     if (j != 3) { 
-      T dum = (T)1.0 / (element(j,j));
+      T dum = (T)1.0 / (ElementAt(j,j));
       for (i = j+1; i < 4; i++) 
-        element(i,j) *= dum;
+        ElementAt(i,j) *= dum;
     }
   }
   return true; 
@@ -638,7 +654,7 @@ template <class T> Point4<T> LinearSolve<T>::Solve(const Point4<T> &b) {
     x[ip] = x[i];
     if(first!= -1)
       for(int j = first; j <= i-1; j++) 
-        sum -= element(i,j) * x[j];
+        sum -= ElementAt(i,j) * x[j];
     else 
       if(sum) first = i; 
     x[i] = sum;
@@ -646,8 +662,8 @@ template <class T> Point4<T> LinearSolve<T>::Solve(const Point4<T> &b) {
   for (int i = 3; i >= 0; i--) { 
     T sum = x[i];
     for (int j = i+1; j < 4; j++) 
-      sum -= element(i, j) * x[j];
-    x[i] = sum / element(i, i); 
+      sum -= ElementAt(i, j) * x[j];
+    x[i] = sum / ElementAt(i, i); 
   }
   return x;
 }
