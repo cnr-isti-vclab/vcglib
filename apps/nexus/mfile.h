@@ -1,18 +1,19 @@
 #ifndef NXS_MFILE_H
 #define NXS_MFILE_H
 
-
-#include "file.h"
 #include <string>
 #include <vector>
 
+#include "file.h"
+#include "nxstypes.h"
+
 namespace nxs {
 
-#ifdef WIN32
+  /*#ifdef WIN32
 typedef __int64 int64;
 #else
 typedef unsigned long long int64;
-#endif
+#endif*/
 
 #define MFILE_MAX_SIZE (1<<30)
 

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/07/02 13:08:11  ponchio
+Changed extension to .cri, crv, crf
+
 Revision 1.1  2004/06/24 14:32:45  ponchio
 Moved from wrap/nexus
 
@@ -54,9 +57,10 @@ bool Crude::Create(const std::string &file, unsigned int nv, unsigned int nf) {
   Resize(nv, nf);
   return true;
 }
-bool Crude::Load(const std::string &file) {
-  if(!vert.Load(file + ".crv")) return false;
-  if(!face.Load(file + ".crf")) return false;
+
+bool Crude::Load(const std::string &file, bool rdonly) {
+  if(!vert.Load(file + ".crv", rdonly)) return false;
+  if(!face.Load(file + ".crf", rdonly)) return false;
 
   fp = fopen((file + ".cri").c_str(), "rb+");
   if(!fp) return false;
@@ -90,6 +94,13 @@ unsigned int Crude::Faces() {
   return nface;
 }
 
+void Crude::SetVertex(unsigned int i, Point3f &f) {
+  Point3f &p = vert[i];
+  p[0] = f[0];
+  p[1] = f[1];
+  p[2] = f[2];
+}
+
 void Crude::SetVertex(unsigned int i, float *f) {
   Point3f &p = vert[i];
   p[0] = f[0];
@@ -97,19 +108,25 @@ void Crude::SetVertex(unsigned int i, float *f) {
   p[2] = f[2];
 }
 
-Point3f &Crude::GetVertex(unsigned int i) {
+Point3f Crude::GetVertex(unsigned int i) {
   return vert[i];
 }
-Crude::Face &Crude::GetFace(unsigned int i) {
+Crude::Face Crude::GetFace(unsigned int i) {
   return face[i];
 }
- void Crude::SetFace(unsigned int i, unsigned int *f) { 
-   Face &ff = face[i];
-   ff[0] = f[0];
-   ff[1] = f[1];
-   ff[2] = f[2];
- }
-  
+void Crude::SetFace(unsigned int i, Face &f) {
+  Face &ff = face[i];
+  ff[0] = f[0];
+  ff[1] = f[1];
+  ff[2] = f[2];
+}
+void Crude::SetFace(unsigned int i, unsigned int *f) { 
+  Face &ff = face[i];
+  ff[0] = f[0];
+  ff[1] = f[1];
+  ff[2] = f[2];
+}
+
 vcg::Point3f Crude::GetBari(unsigned int i) {
   Point3f bari(0, 0, 0);
   Face &f = face[i];

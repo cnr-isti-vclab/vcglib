@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2004/11/28 04:12:04  ponchio
+winsockapi include problem
+
 Revision 1.15  2004/11/18 18:30:14  ponchio
 Using baricenters... lotsa changes.
 
@@ -147,7 +150,7 @@ template <class T> class VFile: public MFile {
     return MFile::Create(filename);
   }
 
-  bool Load(const std:: string &filename, 
+  bool Load(const std:: string &filename, bool rdonly = false,
 	    unsigned int _chunk_size = 4096/sizeof(T), 
 	    unsigned int _queue_size = 1000) {
 
@@ -156,7 +159,7 @@ template <class T> class VFile: public MFile {
     chunk_size = _chunk_size;
     queue_size = _queue_size;
 
-    if(!MFile::Load(filename)) return false;
+    if(!MFile::Load(filename, rdonly)) return false;
     n_elements = size/sizeof(T);
     return true;
   }
