@@ -1,6 +1,5 @@
 #include <vector>
 #include <map>
-#include <hash_map>
 #include <iostream>
 
 //#include <wrap/strip/tristrip.h>
@@ -22,7 +21,7 @@ void nxs::ComputeNormals(Nexus &nexus) {
 
   //setting borders readonly:
 
-  assert(!nexus.borders.IsReadonly());
+  assert(!nexus.borders.IsReadOnly());
   nexus.borders.SetReadOnly(true);
   
   bool use_short = (nexus.signature & NXS_NORMALS_SHORT) != 0;

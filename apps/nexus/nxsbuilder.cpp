@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2004/12/04 13:22:55  ponchio
+*** empty log message ***
+
 Revision 1.8  2004/12/03 21:19:00  ponchio
 Fixed a couple of memory leak...
 
@@ -59,7 +62,11 @@ Level 0.
 #else
 #include <unistd.h>
 #endif
+
+#ifdef WIN32
 #include <hash_map>
+#endif
+
 #include <iostream>
 
 #include "nxstypes.h"
@@ -407,8 +414,11 @@ void FourthStep(const string &crudefile, const string &output,
     Nexus::PatchInfo &s_entry = nexus.index[start];
 
     vector<Link> links;   
-    
+#ifdef WIN32
     hash_map<unsigned int, unsigned short> vremap;
+#else
+    map<unsigned int, unsigned short> vremap;
+#endif
     for(unsigned int i = 0; i < vert_index[start].size; i++) {
       unsigned int global = vert_remap[vert_index[start].offset + i];      
       vremap[global] = i;

@@ -175,6 +175,8 @@ void nxs::BuildPartition(VPartition &part,
 
   //TODO: improve quality of patches and implement threshold.
   unsigned int ncells = points.Size()/target_size;
+  cerr << "Target partition size: " << ncells 
+       << " mean: " << points.Size()/ncells << endl;
   srand(0);
 
   for(unsigned int i = 0; i < points.Size(); i++) {
@@ -214,14 +216,22 @@ void nxs::BuildPartition(VPartition &part,
       if(counts[v] != 0)
 	centroids[v]/= counts[v];
     
+    double quality = 0;
+    for(int i = 0; i < part.size(); i++)
+      quality += (counts[i] - target_size) * (counts[i] - target_size);
+    
+    cerr << "Quality: " << quality << endl;
+
     if(step == steps-1) {
-      if(!Optimize(part, target_size, min_size, max_size, 
+      if(!Optimize(part, ncells, target_size, min_size, max_size, 
 		   centroids, counts, false))
 	step--;
     } else 
-      Optimize(part, target_size, min_size, max_size, 
+      Optimize(part, ncells, target_size, min_size, max_size, 
 	       centroids, counts, true);
   }
+  cerr << "Partition size: " << part.size() 
+       << " mean: " << (float)(points.Size()/part.size()) << endl << endl;
 }
 
 void nxs::BuildLevel(VChain &chain,
@@ -308,11 +318,11 @@ void nxs::BuildLevel(VChain &chain,
 	centroids[v]/= counts[v];
     
     if(step == steps-1) {
-      if(!Optimize(*coarse, (int)coarse_vmean, min_size, max_size, 
+      if(!Optimize(*coarse, ncells, (int)coarse_vmean, min_size, max_size, 
 		   centroids, counts, false))
 	      step--;
     } else 
-      Optimize(*coarse, (int)coarse_vmean, min_size, max_size, 
+      Optimize(*coarse, ncells, (int)coarse_vmean, min_size, max_size, 
 	       centroids, counts, true);
   }    
   chain.newfragments.clear();
@@ -350,82 +360,161 @@ int nxs::GetBest(VPartition &part, unsigned int seed,
 }
 
 bool nxs::Optimize(VPartition &part, 
+		   unsigned int target_cells,
 		   unsigned int target_size,
 		   unsigned int min_size,
 		   unsigned int max_size,
 		   vector<Point3f> &centroids,
 		   vector<unsigned int> &counts, 
 		   bool join) {
+
+  if(max_size > target_size *3)
+    max_size = target_size * 3;
+  min_size = target_size * 0.3;
+
+  unsigned int toobig = 0;
+  unsigned int toosmall = 0;
+  for(unsigned int i = 0; i < part.size(); i++) {
+    if(counts[i] > max_size) toobig++;
+    if(counts[i] < min_size) toosmall--;
+  }
   
-    unsigned int failed = 0;
-    vector<Point3f> seeds;
-    vector<bool> mark;
-    mark.resize(part.size(), false);
+  unsigned int close = part.size()/2;
+  if(close < 1) close = 1;
+  if(close > 10) close = 10;
 
-    //first pass we check only big ones
-    for(unsigned int i = 0; i < part.size(); i++) {
-      if(counts[i] > max_size || counts[i] > 2 * target_size) {
-	failed++;
-	float radius;
-
-	if(part.size() == 1) 
-	  radius = 0.00001;
-	else
-	  radius = part.Radius(i);
-	
-        if(radius == 0) {
-          cerr << "Radius zero???\n";
-          exit(0);
-        }
-	radius /= 4;
-	seeds.push_back(centroids[i] + Point3f(1, -1, 1) * radius);
-	seeds.push_back(centroids[i] + Point3f(-1, 1, 1) * radius);
-	seeds.push_back(centroids[i] + Point3f(-1, -1, -1) * radius);
-        seeds.push_back(centroids[i] + Point3f(1, 1, -1) * radius);
-	mark[i];
-      }
+  unsigned int failed = 0;
+  vector<Point3f> seeds;
+  vector<bool> mark;
+  mark.resize(part.size(), false);
+  
+  vector<int> nears;
+  vector<float> dists;
+  //removing small ones.
+  for(unsigned int i = 0; i < part.size(); i++) {
+    if(counts[i] > max_size) {
+      float radius;
+      if(part.size() == 1) 
+	radius = 0.00001;
+      else
+	radius = part.Radius(i)/4;
+      seeds.push_back(centroids[i] + Point3f(1, -1, 1) * radius);
+      seeds.push_back(centroids[i] + Point3f(-1, 1, 1) * radius);
+      seeds.push_back(centroids[i] + Point3f(-1, -1, -1) * radius);
+      seeds.push_back(centroids[i] + Point3f(1, 1, -1) * radius);
+      continue;
     }
-    if(failed > 0) 
-      cerr << "Found " << failed << " patches too big.\n";
+    if(counts[i] < min_size) 
+      continue;
+
+    part.Closest(part[i], close, nears, dists);
+    Point3f dir(0,0,0);
     
-    if(join) {
-      for(unsigned int i = 0; i < part.size(); i++) {
-	if(mark[i] || counts[i] >= min_size) continue;
+    for(unsigned int k = 0; k < close; k++) {
+      unsigned int n = nears[k];
+      float c = (target_size - (float)counts[n])/
+	((float)target_size * close);
 
-	failed++;
-	int best = GetBest(part, i, mark, counts);
-	if(best < 0) {
-	  cerr << "Best not found! while looking for: " << i << "\n";
-	  continue;
-	}
-	assert(mark[best] == false);
-	mark[best] = true;
-	mark[i] = true;
-	seeds.push_back((part[i] + part[best])/2);
-      }
+      dir += (centroids[i] - part[n]) * c;
     }
+    seeds.push_back(centroids[i] + dir);
+  }
+  part.clear();
+  for(unsigned int i = 0; i < seeds.size(); i++)
+    part.push_back(seeds[i]);
+  
+  if(part.size() == 0) {
+    cerr << "OOOPS i accidentally deleted all seeds... backup :P\n";
+    part.push_back(Point3f(0,0,0));
+  }
+  part.Init();    
+  return true;
+  //  for(unsigned int i = 0; i < part.size(); i++) {
+  //    if(counts[i] > max_size || counts[i] > max_size) {
+  //      failed++;
+  //    } else {
+  //    }
+  //  }
+  //PREPHASE:
+  /*  if(join) {
 
+  
+  //  float bigthresh = 1.2f;
+  //  float smallthresh = 0.5f;
+
+  float bigthresh = 10.0f;
+  float smallthresh = 0.1f;
+  
+  unsigned int failed = 0;
+  vector<Point3f> seeds;
+  vector<bool> mark;
+  mark.resize(part.size(), false);
+  
+  //first pass we check only big ones
+  for(unsigned int i = 0; i < part.size(); i++) {
+    if(counts[i] > max_size || counts[i] > bigthresh * target_size) {
+      failed++;
+      float radius;
+      
+      if(part.size() == 1) 
+	radius = 0.00001;
+      else
+	radius = part.Radius(i);
+      
+      if(radius == 0) {
+	cerr << "Radius zero???\n";
+	exit(0);
+      }
+      radius /= 4;
+      seeds.push_back(centroids[i] + Point3f(1, -1, 1) * radius);
+      seeds.push_back(centroids[i] + Point3f(-1, 1, 1) * radius);
+      seeds.push_back(centroids[i] + Point3f(-1, -1, -1) * radius);
+      seeds.push_back(centroids[i] + Point3f(1, 1, -1) * radius);
+      mark[i] = true;
+    }
+  }
+  if(failed > 0) 
+    cerr << "Found " << failed << " patches too big.\n";
+  
+  if(join) {
     for(unsigned int i = 0; i < part.size(); i++) {
       if(mark[i]) continue;
-      if(counts[i] == 0) continue;
-      if(join) {
-	//        if(counts[i] < min_size) {
-	//          cerr << "Could not fix: " << i << endl;
-	//        } else {
-	part[i] = centroids[i];
-	//        }
+      if(counts[i] >= min_size && counts[i] >= smallthresh * target_size) continue;
+      
+      failed++;
+      int best = GetBest(part, i, mark, counts);
+      if(best < 0) {
+	cerr << "Best not found! while looking for: " << i << "\n";
+	continue;
       }
-      seeds.push_back(part[i]);      
+      assert(mark[best] == false);
+      mark[best] = true;
+      mark[i] = true;
+      seeds.push_back((part[i] + part[best])/2);
     }
-    
-    part.clear();
-    for(unsigned int i = 0; i < seeds.size(); i++)
-      part.push_back(seeds[i]);
-    
-    if(part.size() == 0) {
-      cerr << "OOOPS i accidentally deleted all seeds... backup :P\n";
-      part.push_back(Point3f(0,0,0));
+  }
+  
+  for(unsigned int i = 0; i < part.size(); i++) {
+    if(mark[i]) continue;
+    if(counts[i] == 0) continue;
+    if(join) {
+      //        if(counts[i] < min_size) {
+      //          cerr << "Could not fix: " << i << endl;
+      //        } else {
+      part[i] = centroids[i];
+      //        }
     }
-    part.Init();    
-    return failed == 0;
+    seeds.push_back(part[i]);      
+  }
+  
+  part.clear();
+  for(unsigned int i = 0; i < seeds.size(); i++)
+    part.push_back(seeds[i]);
+  
+  if(part.size() == 0) {
+    cerr << "OOOPS i accidentally deleted all seeds... backup :P\n";
+    part.push_back(Point3f(0,0,0));
+  }
+  part.Init();    
+  return failed == 0;*/
 }

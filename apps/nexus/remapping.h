@@ -50,6 +50,7 @@ namespace nxs {
 
   //removes small or really big patches.
   bool Optimize(VPartition &part, 
+		unsigned int target_cells,
 		unsigned int target_size,
 		unsigned int min_size,
 		unsigned int max_size,
