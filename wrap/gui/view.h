@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2005/01/19 10:29:45  cignoni
+Removed the inclusion of a glext.h
+
 Revision 1.10  2005/01/18 16:47:42  ricciodimare
 *** empty log message ***
 
@@ -113,10 +116,27 @@ public:
 
 template <class T> void View<T>::GetView() {
   double m[16];
+
+  // Don't use GL_TRANSPOSE_*_MATRIX_ARB
+  // they are veeeery evil! 
+  // On many OpenGL implementation they just don't work, causing endless hours of debugging!
+
+  /*  
   glGetDoublev(GL_TRANSPOSE_PROJECTION_MATRIX_ARB, m);
   proj.Import(Matrix44d(m));
-	glGetDoublev(GL_TRANSPOSE_MODELVIEW_MATRIX_ARB, m);
+  glGetDoublev(GL_TRANSPOSE_MODELVIEW_MATRIX_ARB, m);
   model.Import(Matrix44d(m));
+  */
+  
+  // Use standard routines, and transpose manually.
+  // some 10^-20 seconds slower, but a lot safer
+  
+  glGetDoublev(GL_PROJECTION_MATRIX, m);
+  proj.Import(Matrix44d(m));
+  Transpose(proj);
+	glGetDoublev(GL_MODELVIEW_MATRIX, m);
+  model.Import(Matrix44d(m));
+  Transpose(model);
 	
 	glGetIntegerv(GL_VIEWPORT, viewport);
   
