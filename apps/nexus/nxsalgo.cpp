@@ -51,12 +51,17 @@ void nxs::ComputeNormals(Nexus &nexus) {
     tmpb[i] = zero;  
   tmpb.Flush();
   
+
+  map<unsigned int, unsigned int> levels;
+  nexus.history.BuildLevels(levels);
+
   //first step normals in the same patch.
   cerr << "First Step\n";
   Report report(nexus.size(), 5);
   vector<Point3f> normals;
 
   for(unsigned int p = 0; p < nexus.size(); p++) {
+    unsigned int current_level = levels[p];
     report.Step(p);
     Patch &patch = nexus.GetPatch(p);
     
@@ -108,27 +113,29 @@ void nxs::ComputeNormals(Nexus &nexus) {
 
     Border &border = nexus.GetBorder(p);
 
-    
     map<unsigned int, map<unsigned short, Point3f> > bnorm;
+    map<unsigned int, Link> bcopy;
 
     unsigned int poff = tmpb_start[p];
     for(unsigned int i = 0; i < border.Size(); i++) {
       Link &link = border[i];
       if(link.IsNull()) continue;  //this should never happen now.
       Point3f pt = normals[link.start_vert];
-      //bnorm[p][link.start_vert] = pt;
-      bnorm[link.end_patch][link.end_vert] = pt;
-      tmpb[poff + i] += pt;                          
-
+      if(levels[link.end_patch] == current_level) {
+	bnorm[link.end_patch][link.end_vert] = pt;
+	tmpb[poff + i] += pt;                          
+      } else if(levels[link.end_patch] > current_level) {
+       	bcopy[i] = link;
+      }
     }
 
     map<unsigned int, map<unsigned short, Point3f> >::iterator k;
     for(k = bnorm.begin(); k != bnorm.end(); k++) {
       unsigned int patch = (*k).first;
-      Border &border = nexus.GetBorder(patch);
+      Border &rborder = nexus.GetBorder(patch);
       unsigned int offset = tmpb_start[patch];
-      for(unsigned int i = 0; i < border.Size(); i++) {
-	      Link &link = border[i];
+      for(unsigned int i = 0; i < rborder.Size(); i++) {
+	      Link &link = rborder[i];
 	      //assert(!link.IsNull());
 	      //TODO not accurate
         if(link.end_patch != p) continue;
@@ -136,6 +143,24 @@ void nxs::ComputeNormals(Nexus &nexus) {
 	        tmpb[offset + i] += (*k).second[link.start_vert];
       }
     }
+
+    //Uncomment this only when links are ok!
+    map<unsigned int, Link>::iterator j;
+    for(j = bcopy.begin(); j != bcopy.end(); j++) {
+      unsigned int b = (*j).first;
+      Link link = (*j).second;
+      Border &rborder = nexus.GetBorder(link.end_patch, false);
+      unsigned int offset = tmpb_start[link.end_patch];
+      for(unsigned int i = 0; i < rborder.Size(); i++) {
+	Link &rlink = rborder[i];
+	if(rlink.end_patch == p && rlink.start_vert == link.end_vert) {
+	  assert(rlink.end_vert == link.start_vert);
+	  tmpb[poff + b] = tmpb[offset + i];
+	}
+      }
+    }
+    
+
 
     /*    set<unsigned int> close;
     for(unsigned int i = 0; i < border.Size(); i++) {
@@ -163,7 +188,7 @@ void nxs::ComputeNormals(Nexus &nexus) {
 	tmpb.write(off + i, p);
 	//	tmpb[off + i] += normals[link.end_vert];
       }
-      }*/
+    }*/
   }
 
   //Second step unify normals across borders
@@ -180,6 +205,7 @@ void nxs::ComputeNormals(Nexus &nexus) {
       unsigned int off = tmpb_start[p];
       //      Point3f &n = tmpb[off + i];
       Point3f n = tmpb[off + i];
+      if(n == Point3f(0.0f,0.0f,0.0f)) continue;
       n.Normalize();
       if(use_short) {
 	n *= 32766;

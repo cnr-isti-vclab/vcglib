@@ -2,6 +2,7 @@
 #define NXS_HISTORY_H
 
 #include <vector>
+#include <map>
 
 //TODO fix a bit better the quick <-> updates duality
 
@@ -82,6 +83,8 @@ namespace nxs {
     bool QuickToUpdates();
     bool UpdatesToQuick();
     bool IsQuick() { return buffer != NULL; }
+
+    void BuildLevels(std::map<unsigned int, unsigned int> &levels);
 
     int &quick() { return ((int *)buffer)[0]; }
     int &n_nodes() { return ((int *)buffer)[1]; }

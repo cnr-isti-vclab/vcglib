@@ -189,7 +189,7 @@ bool History::UpdatesToQuick() {
     
     Node &node = tmp_nodes[current_node];
     
-    //created cells belong to this node, we look also for max error.      
+    //created cells belong to this node, 
     for(unsigned int i = 0; i < (*u).created.size(); i++) {      
       unsigned int cell = (*u).created[i];
       cell_node[cell] = current_node;        
@@ -294,4 +294,42 @@ bool History::UpdatesToQuick() {
   memcpy(frags, &*tmp_frags.begin(), tmp_frags.size() * sizeof(Cell));
 
   return LoadPointers();
+}
+
+void History::BuildLevels(map<unsigned int, unsigned int> &levels) {
+  levels.clear();
+  if(buffer) {
+    //Saved in quick mode:
+    for(unsigned int n = 0; n < n_nodes(); n++) {
+      Node *node = nodes+n;
+      Node::iterator l;
+      unsigned int current = 0;
+      if(node != nodes) { //not root
+	Link *inlink = node->in_begin();
+	unsigned int p = inlink->begin()->patch;
+	assert(levels.count(p));
+	current = levels[p]+1;
+      }
+      for(l = node->out_begin(); l != node->out_end(); l++) {
+	Link &link = *l;
+	Link::iterator c;
+	for(c = link.begin(); c != link.end(); c++) {
+	  unsigned int p = (*c).patch;
+	  levels[p] = current;
+	}
+      }
+    }
+  } else {
+    cerr << "updates.size: " << updates.size() << endl;
+    //Saved in updates mode:
+    for(unsigned int i = 0; i < updates.size(); i++) {
+      Update &u = updates[i];
+      unsigned int current = 0;
+      if(!u.erased.size()) current = 0;
+      else current = levels[u.erased[0]] + 1;
+      for(unsigned int i = 0; i < u.created.size(); i++) {
+	levels[u.created[i]] = current;
+      }
+    }
+  }
 }

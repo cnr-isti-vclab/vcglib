@@ -336,6 +336,11 @@ int main(int argc, char *argv[]) {
 
   //TODO set rambuffer low (or even direct access!)
 
+  //Fixing history
+  unsigned int h_size;
+  char *buffer = nexus.history.Save(h_size);
+  out.history.Load(h_size, buffer);
+
   Report report(nexus.size());
   cout << "Copying and allocating...\n";
   for(unsigned int patch = 0; patch < nexus.size(); patch++) {
@@ -441,12 +446,6 @@ int main(int argc, char *argv[]) {
   }
 
   out.sphere = nexus.sphere;
-  
-  //Fixing history
-  unsigned int h_size;
-  char *buffer = nexus.history.Save(h_size);
-  out.history.Load(h_size, buffer);
-  //  out.history = nexus.history;
   
   out.Close();
   nexus.Close();
