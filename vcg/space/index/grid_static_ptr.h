@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/09/09 08:39:29  ganovelli
+minor changes for gcc
+
 Revision 1.5  2004/06/25 18:34:23  ganovelli
 added Grid to return all the cells sharing a specified edge
 
@@ -49,6 +52,8 @@ Initial commit
 
 #include <vector>
 #include <algorithm>
+#include <stdio.h>
+
 #include <vcg/space/box3.h>
 #include <vcg/space/line3.h>
 
