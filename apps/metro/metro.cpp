@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/06/24 09:08:31  cignoni
+Official Release of Metro 4.00
+
 Revision 1.4  2004/05/14 13:53:12  ganovelli
 GPL  added
 
@@ -216,7 +219,7 @@ int main(int argc, char**argv)
     Box3d    bbox, tmp_bbox_M1=S1.bbox, tmp_bbox_M2=S2.bbox;
     bbox.Add(S1.bbox);
     bbox.Add(S2.bbox);
-		bbox.InflateFix(0.02);
+		bbox.Offset(bbox.Diag()*0.02);
 	  S1.bbox = bbox;
 	  S2.bbox = bbox;
     
