@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/07/06 06:25:44  cignoni
+changed the VFIterator ++ to return a facepointer instead of a bool
+
 Revision 1.5  2004/06/02 16:25:45  ganovelli
 changed F(.. to FFp
 changed Z(   to FFi(
@@ -61,23 +64,22 @@ namespace face {
 	It contain a pointer to the current face, 
 	the index of one edge and a edge's incident vertex.
  */
-template <typename FaceType> 
+template <class FaceType> 
 class Pos
 {
 public:
 
 	/// The vertex type
 	typedef typename FaceType::VertexType VertexType;
-	typedef typename FaceType::BaseFaceType BaseFaceType;
 	///The HEdgePos type
-	typedef Pos<FaceType> BasePosType;
+	typedef Pos<FaceType> PosType;
 	/// The vector type
 	typedef typename VertexType::CoordType CoordType;
 	/// The scalar type
 	typedef typename VertexType::ScalarType ScalarType;
-
+	
 	/// Pointer to the face of the half-edge
-	typename FaceType::BaseFaceType *f;
+	typename FaceType::FaceType *f;
 	/// Index of the edge
 	int z;
 	/// Pointer to the vertex
@@ -86,27 +88,30 @@ public:
 	/// Default constructor
 	Pos(){}
 	/// Constructor which associates the half-edge elementet with a face, its edge and its vertex
-	Pos(BaseFaceType  * const fp, int const zp,	VertexType  * const vp){f=fp; z=zp; v=vp;}
-	Pos(BaseFaceType  * const fp, int const zp){f=fp; z=zp; v=f.V[zp];}
+	Pos(FaceType  * const fp, int const zp,	VertexType  * const vp){f=fp; z=zp; v=vp;}
+	Pos(FaceType  * const fp, int const zp){f=fp; z=zp; v=f->V(zp);}
+
+	// access functions
+	VertexType *& V(const int & i){assert( (i>=0) && (i<2)); return f->UberV( (z +i) %3);}
 
 	/// Operator to compare two half-edge
-	inline bool operator == ( BasePosType const & p ) const {
+	inline bool operator == ( FaceType const & p ) const {
 			return (f==p.f && z==p.z && v==p.v);
 	} 
 
 	/// Operator to compare two half-edge
-	inline bool operator != ( BasePosType const & p ) const {
+	inline bool operator != ( FaceType const & p ) const {
 			return (f!=p.f || z!=p.z || v!=p.v);
 	} 
 	/// Operator to order half-edge; it's compare at the first the face pointers, then the index of the edge and finally the vertex pointers
-	inline bool operator <= ( BasePosType const & p) const {
+	inline bool operator <= ( FaceType const & p) const {
 		return	(f!=p.f)?(f<f.p):
 						(z!=p.z)?(z<p.z):
 						(v<=p.v);
 	}	
 
 	/// Assignment operator
-	inline BasePosType & operator = ( const BasePosType & h ){
+	inline FaceType & operator = ( const FaceType & h ){
 		f=h.f;
 		z=h.z;
 		v=h.v;
@@ -241,7 +246,7 @@ public:
 	int StarSize()
 	{
 		int n=0;
-		BasePosType ht=*this;
+		FaceType ht=*this;
 		bool bf=false;
 		do
 		{
@@ -259,7 +264,7 @@ public:
 		@param zp Indice dell'edge
 		@param vp Puntatore al vertice
 	*/
-	void Set(BaseFaceType  * const fp, int const zp,  VertexType  * const vp)
+	void Set(FaceType  * const fp, int const zp,  VertexType  * const vp)
 	{
 		f=fp;z=zp;v=vp;
 		assert(f->V((z+2)%3)!=v && (f->V((z+1)%3)==v || f->V((z+0)%3)==v));
@@ -268,7 +273,7 @@ public:
 	void Assert()
 	#ifdef _DEBUG
 	{
-		BasePosType ht=*this;
+		FaceType ht=*this;
 		ht.FlipF();
 		ht.FlipF();
 		assert(ht==*this);
@@ -312,7 +317,7 @@ public:
 	This class is used as an iterator over the VF adjacency. 
  */ 
 
-template <typename FaceType> 
+template <class FaceType> 
 class VFIterator
 {
 public:
@@ -320,25 +325,25 @@ public:
 	/// The vertex type
 	typedef typename FaceType::VertexType VertexType;
 	/// The Base face type
-	typedef typename FaceType::BaseFaceType  BaseFaceType;
+	typedef typename FaceType::FaceType  FaceType;
 	/// The vector type
 	typedef typename VertexType::CoordType CoordType;
 	/// The scalar type
 	typedef typename VertexType::ScalarType ScalarType;
 
 	/// Pointer to the face of the half-edge
-	typename FaceType::BaseFaceType *f;
-	/// Index of the edge
+	typename FaceType::FaceType *f;
+	/// Index of the vertex
 	int z;
 	
 	/// Default constructor
 	VFIterator(){}
-	/// Constructor which associates the half-edge elementet with a face, its edge and its vertex
-	VFIterator(VertexType  * const vp){f=vp->VFb();z=vp->VFi();}
+	/// Constructor which associates the half-edge elementet with a face and its vertex
+	VFIterator(FaceType * _f, const int &  _z){f = _f; z = _z;}
 
   bool End() const {return f==0;}
-  BaseFaceType *operator++() {
-    BaseFaceType* t = f;
+  FaceType *operator++() {
+    FaceType* t = f;
 		f = t->VFp(z);
 		z = t->VFi(z);
     return f;
