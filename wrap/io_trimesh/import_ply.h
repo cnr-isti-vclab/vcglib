@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/05/12 10:19:30  ganovelli
+new line added at the end of file
+
 Revision 1.4  2004/05/04 02:36:07  ganovelli
 #ifndef __VCGLIB_IMPORTERPLY added
 
@@ -42,7 +45,7 @@ Initial commit
 
 #include<wrap/callback.h>
 #include<wrap/ply/plylib.h>
-#include<wrap/io_trimesh/io_mask.h>
+#include<wrap/ply/io_mask.h>
 #include<wrap/io_trimesh/io_ply.h>
 #include<vcg/complex/trimesh/allocate.h>
 
@@ -296,7 +299,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				break;
 			}
 		}
-		if(found) pi.mask |= PLYMask::PM_CAMERA;
+		if(found) pi.mask |= ply::PLYMask::PM_CAMERA;
 	}
 
   // Descrittori dati standard (vertex coord e faces)
@@ -310,13 +313,13 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 
 		// Descrittori facoltativi dei flags
 	if( pf.AddToRead(VertDesc(3))!=-1 )
-		pi.mask |= PLYMask::PM_VERTFLAGS;
+		pi.mask |= ply::PLYMask::PM_VERTFLAGS;
 
   if( VertexType::HasQuality() )
 	{
 		if( pf.AddToRead(VertDesc(4))!=-1 ||
 		    pf.AddToRead(VertDesc(8))!=-1 )
-			pi.mask |= PLYMask::PM_VERTQUALITY;
+			pi.mask |= ply::PLYMask::PM_VERTQUALITY;
 	}
 
 	if( VertexType::HasColor() )
@@ -325,18 +328,18 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 		{
 			pf.AddToRead(VertDesc(6));
 			pf.AddToRead(VertDesc(7));
-			pi.mask |= PLYMask::PM_VERTCOLOR;
+			pi.mask |= ply::PLYMask::PM_VERTCOLOR;
 		}
 	}
 
 			// se ci sono i flag per vertice ci devono essere anche i flag per faccia
 	if( pf.AddToRead(FaceDesc(1))!=-1 )
-		pi.mask |= PLYMask::PM_FACEFLAGS;
+		pi.mask |= ply::PLYMask::PM_FACEFLAGS;
 
   if( FaceType::HasFaceQuality())
 	{
 		if( pf.AddToRead(FaceDesc(2))!=-1 )
-			pi.mask |= PLYMask::PM_FACEQUALITY;
+			pi.mask |= ply::PLYMask::PM_FACEQUALITY;
 	}
 
 	if( FaceType::HasFaceColor() )
@@ -345,7 +348,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 		{
 			pf.AddToRead(FaceDesc(7));
 			pf.AddToRead(FaceDesc(8));
-			pi.mask |= PLYMask::PM_FACECOLOR;
+			pi.mask |= ply::PLYMask::PM_FACECOLOR;
 		}
 	}
 
@@ -356,9 +359,9 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 		{
 			if(pf.AddToRead(FaceDesc(5))==0) {
 				multit=true; // try to read also the multi texture indicies
-				pi.mask |= PLYMask::PM_WEDGTEXMULTI;
+				pi.mask |= ply::PLYMask::PM_WEDGTEXMULTI;
 			}
-			pi.mask |= PLYMask::PM_WEDGTEXCOORD;
+			pi.mask |= ply::PLYMask::PM_WEDGTEXCOORD;
 		}
 	}
 
@@ -366,7 +369,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 	{
 		if( pf.AddToRead(FaceDesc(4))!=-1 )
 		{
-			pi.mask |= PLYMask::PM_WEDGCOLOR;
+			pi.mask |= ply::PLYMask::PM_WEDGCOLOR;
 		}
 	}
 
@@ -471,13 +474,13 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				(*vi).P()[1] = va.p[1];
 				(*vi).P()[2] = va.p[2];
 
-				if( pi.mask & PLYMask::PM_VERTFLAGS )
+				if( pi.mask & ply::PLYMask::PM_VERTFLAGS )
 					(*vi).UberFlags() = va.flags;
 
-				if( pi.mask & PLYMask::PM_VERTQUALITY )
+				if( pi.mask & ply::PLYMask::PM_VERTQUALITY )
 					(*vi).Q() = va.q;
 
-				if( pi.mask & PLYMask::PM_VERTCOLOR )
+				if( pi.mask & ply::PLYMask::PM_VERTCOLOR )
 				{
 					(*vi).C()[0] = va.r;
 					(*vi).C()[1] = va.g;
@@ -530,17 +533,17 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 					(*fi).V(k) = index[ fa.v[k] ];
 				}
 
-				if( pi.mask & PLYMask::PM_FACEFLAGS )
+				if( pi.mask & ply::PLYMask::PM_FACEFLAGS )
 				{
 					(*fi).UberFlags() = fa.flags;
 				}
 
-				if( pi.mask & PLYMask::PM_FACEQUALITY )
+				if( pi.mask & ply::PLYMask::PM_FACEQUALITY )
 				{
 					(*fi).Q() = fa.q;
 				}
 
-				if( pi.mask & PLYMask::PM_FACECOLOR )
+				if( pi.mask & ply::PLYMask::PM_FACECOLOR )
 				{
 					(*fi).C()[0] = fa.r;
 					(*fi).C()[1] = fa.g;
@@ -548,7 +551,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 					(*fi).C()[3] = 255;
 				}
 
-				if( pi.mask & PLYMask::PM_WEDGTEXCOORD )
+				if( pi.mask & ply::PLYMask::PM_WEDGTEXCOORD )
 				{
 					for(int k=0;k<3;++k)
 					{
@@ -558,7 +561,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 					}
 				}
 
-				if( pi.mask & PLYMask::PM_WEDGCOLOR )
+				if( pi.mask & ply::PLYMask::PM_WEDGCOLOR )
 				{
 					if(FaceType::HasWedgeColor()){
 						for(int k=0;k<3;++k)
@@ -780,25 +783,25 @@ bool LoadMask(const char * filename, int &mask)
 
 	if( pf.AddToRead(VertDesc(0))!=-1 && 
 	    pf.AddToRead(VertDesc(1))!=-1 && 
-	    pf.AddToRead(VertDesc(2))!=-1 )   mask |= PLYMask::PM_VERTCOORD;
+	    pf.AddToRead(VertDesc(2))!=-1 )   mask |= ply::PLYMask::PM_VERTCOORD;
 
-	if( pf.AddToRead(VertDesc(3))!=-1 )		mask |= PLYMask::PM_VERTFLAGS;
-	if( pf.AddToRead(VertDesc(4))!=-1 )		mask |= PLYMask::PM_VERTQUALITY;
-	if( pf.AddToRead(VertDesc(8))!=-1 )		mask |= PLYMask::PM_VERTQUALITY;
+	if( pf.AddToRead(VertDesc(3))!=-1 )		mask |= ply::PLYMask::PM_VERTFLAGS;
+	if( pf.AddToRead(VertDesc(4))!=-1 )		mask |= ply::PLYMask::PM_VERTQUALITY;
+	if( pf.AddToRead(VertDesc(8))!=-1 )		mask |= ply::PLYMask::PM_VERTQUALITY;
 	if( ( pf.AddToRead(VertDesc(5))!=-1 ) && 
 		  ( pf.AddToRead(VertDesc(6))!=-1 ) &&
-			( pf.AddToRead(VertDesc(7))!=-1 )  )  mask |= PLYMask::PM_VERTCOLOR;
+			( pf.AddToRead(VertDesc(7))!=-1 )  )  mask |= ply::PLYMask::PM_VERTCOLOR;
 	
-	if( pf.AddToRead(FaceDesc(0))!=-1 ) mask |= PLYMask::PM_FACEINDEX;
-	if( pf.AddToRead(FaceDesc(1))!=-1 ) mask |= PLYMask::PM_FACEFLAGS;
+	if( pf.AddToRead(FaceDesc(0))!=-1 ) mask |= ply::PLYMask::PM_FACEINDEX;
+	if( pf.AddToRead(FaceDesc(1))!=-1 ) mask |= ply::PLYMask::PM_FACEFLAGS;
 
-	if( pf.AddToRead(FaceDesc(2))!=-1 ) mask |= PLYMask::PM_FACEQUALITY;
-	if( pf.AddToRead(FaceDesc(3))!=-1 ) mask |= PLYMask::PM_WEDGTEXCOORD;
-	if( pf.AddToRead(FaceDesc(5))!=-1 ) mask |= PLYMask::PM_WEDGTEXMULTI;
-	if( pf.AddToRead(FaceDesc(4))!=-1 ) mask |= PLYMask::PM_WEDGCOLOR;
+	if( pf.AddToRead(FaceDesc(2))!=-1 ) mask |= ply::PLYMask::PM_FACEQUALITY;
+	if( pf.AddToRead(FaceDesc(3))!=-1 ) mask |= ply::PLYMask::PM_WEDGTEXCOORD;
+	if( pf.AddToRead(FaceDesc(5))!=-1 ) mask |= ply::PLYMask::PM_WEDGTEXMULTI;
+	if( pf.AddToRead(FaceDesc(4))!=-1 ) mask |= ply::PLYMask::PM_WEDGCOLOR;
 	if( ( pf.AddToRead(FaceDesc(6))!=-1 ) && 
 		  ( pf.AddToRead(FaceDesc(7))!=-1 ) &&
-			( pf.AddToRead(FaceDesc(8))!=-1 )  )  mask |= PLYMask::PM_FACECOLOR;
+			( pf.AddToRead(FaceDesc(8))!=-1 )  )  mask |= ply::PLYMask::PM_FACECOLOR;
 
 
  return true;
