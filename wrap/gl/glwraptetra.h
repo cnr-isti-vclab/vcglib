@@ -14,6 +14,7 @@ public:
 	enum ColorMode {CMNone, CMPerMesh,CMUser,CMPerTetraF,CMPerVertexF,CMPerVertex};
 	enum Hint {HShrinkFactor};
 };
+
 template <typename CONT_TETRA>
 class GLWrapTetra:public GLW{
 public:
@@ -46,7 +47,7 @@ public:
 	
 
 	template <DrawMode dm,NormalMode nm,ColorMode cm >
-	void	Draw(){
+    void	Draw(){
 			switch (dm){
 				case DMNone: break;
         case DMSmallTetra:	_DrawSmallTetra<cm>();break;
@@ -57,6 +58,7 @@ public:
         case DMTransparent:break;
 				}
 			}
+
 private:
 template <ColorMode cm >
  void _DrawSmallTetra(){
