@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/07/09 10:18:19  ganovelli
+added access functions to vn and fn
+
 Revision 1.6  2004/05/04 02:29:54  ganovelli
 removed  Const from ConstFacePointer and ConstVertexPointer in the arguement function Mark, which are meant to be changed
 
@@ -178,7 +181,7 @@ void InitFaceIMark()
 	FaceIterator f;
 	
 	for(f=face.begin();f!=face.end();++f)
-		if( !(*f).IsDeleted() && (*f).IsR() && (*f).IsW() )
+		if( !(*f).IsD() && (*f).IsR() && (*f).IsW() )
 			(*f).InitIMark();
 }
 
@@ -188,7 +191,7 @@ void InitVertexIMark()
 	VertexIterator vi;
 
 	for(vi=vert.begin();vi!=vert.end();++vi)
-		if( !(*vi).IsDeleted() && (*vi).IsRW() )
+		if( !(*vi).IsD() && (*vi).IsRW() )
 			(*vi).InitIMark();
 }
 
