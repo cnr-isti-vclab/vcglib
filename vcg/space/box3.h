@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/02/23 23:44:21  cignoni
+cr lf mismatch
+
 Revision 1.2  2004/02/19 15:40:56  cignoni
 Added doxygen groups
 
@@ -61,7 +64,7 @@ public:
 	/// max coordinate point
 	Point3<BoxScalarType> max;
 		/// The bounding box constructor
-	inline  Box3() { min.x()= 1;max.x()= -1;min.y()= 1;max.y()= -1;min.z()= 1;max.z()= -1;}
+	inline  Box3() { min.X()= 1;max.X()= -1;min.Y()= 1;max.Y()= -1;min.Z()= 1;max.Z()= -1;}
 		/// Copy constructor
 	inline  Box3( const Box3 & b ) { min=b.min; max=b.max; }
 		/// Min Max constructor
@@ -108,9 +111,9 @@ public:
 		/// Set the bounding box to a null value
 	void SetNull()
 	{
-		min.x()= 1; max.x()= -1;
-		min.y()= 1; max.y()= -1;
-		min.z()= 1; max.z()= -1;
+		min.X()= 1; max.X()= -1;
+		min.Y()= 1; max.Y()= -1;
+		min.Z()= 1; max.Z()= -1;
 	}
 		/** Function to add two bounding box
 			@param b Il bounding box che si vuole aggiungere
@@ -120,13 +123,13 @@ public:
 		if(IsNull()) *this=b;
 		else
 		{
-			if(min.x() > b.min.x()) min.x() = b.min.x();
-			if(min.y() > b.min.y()) min.y() = b.min.y();
-			if(min.z() > b.min.z()) min.z() = b.min.z();
+			if(min.X() > b.min.X()) min.X() = b.min.X();
+			if(min.Y() > b.min.Y()) min.Y() = b.min.Y();
+			if(min.Z() > b.min.Z()) min.Z() = b.min.Z();
 
-			if(max.x() < b.max.x()) max.x() = b.max.x();
-			if(max.y() < b.max.y()) max.y() = b.max.y();
-			if(max.z() < b.max.z()) max.z() = b.max.z();
+			if(max.X() < b.max.X()) max.X() = b.max.X();
+			if(max.Y() < b.max.Y()) max.Y() = b.max.Y();
+			if(max.Z() < b.max.Z()) max.Z() = b.max.Z();
 		}
 	}
 		/** Funzione per aggiungere un punto al bounding box. Il bounding box viene modificato se il punto
@@ -138,13 +141,13 @@ public:
 		if(IsNull()) Set(p);
 		else 
 		{
-			if(min.x() > p.x()) min.x() = p.x();
-			if(min.y() > p.y()) min.y() = p.y();
-			if(min.z() > p.z()) min.z() = p.z();
+			if(min.X() > p.X()) min.X() = p.X();
+			if(min.Y() > p.Y()) min.Y() = p.Y();
+			if(min.Z() > p.Z()) min.Z() = p.Z();
 
-			if(max.x() < p.x()) max.x() = p.x();
-			if(max.y() < p.y()) max.y() = p.y();
-			if(max.z() < p.z()) max.z() = p.z();
+			if(max.X() < p.X()) max.X() = p.X();
+			if(max.Y() < p.Y()) max.Y() = p.Y();
+			if(max.Z() < p.Z()) max.Z() = p.Z();
 		}
 	}
 	//
@@ -167,15 +170,15 @@ public:
 		*/
 	void Intersect( const Box3<BoxScalarType> & b )
 	{
-		if(min.x() < b.min.x()) min.x() = b.min.x();
-		if(min.y() < b.min.y()) min.y() = b.min.y();
-		if(min.z() < b.min.z()) min.z() = b.min.z();
+		if(min.X() < b.min.X()) min.X() = b.min.X();
+		if(min.Y() < b.min.Y()) min.Y() = b.min.Y();
+		if(min.Z() < b.min.Z()) min.Z() = b.min.Z();
 
-		if(max.x() > b.max.x()) max.x() = b.max.x();
-		if(max.y() > b.max.y()) max.y() = b.max.y();
-		if(max.z() > b.max.z()) max.z() = b.max.z();
+		if(max.X() > b.max.X()) max.X() = b.max.X();
+		if(max.Y() > b.max.Y()) max.Y() = b.max.Y();
+		if(max.Z() > b.max.Z()) max.Z() = b.max.Z();
 
-		if(min.x()>max.x() || min.y()>max.y() || min.z()>max.z()) SetNull();
+		if(min.X()>max.X() || min.Y()>max.Y() || min.Z()>max.Z()) SetNull();
 	}
 		/** Trasla il bounding box di un valore definito dal parametro.
 			@param p Il bounding box trasla sulla x e sulla y in base alle coordinate del parametro
@@ -192,9 +195,9 @@ public:
 	bool IsIn( Point3<BoxScalarType> const & p ) const
 	{
 		return (
-			min.x() <= p.x() && p.x() <= max.x() &&
-			min.y() <= p.y() && p.y() <= max.y() &&
-			min.z() <= p.z() && p.z() <= max.z()
+			min.X() <= p.X() && p.X() <= max.X() &&
+			min.Y() <= p.Y() && p.Y() <= max.Y() &&
+			min.Z() <= p.Z() && p.Z() <= max.Z()
 		);
 	}
 		/** Verifica se un punto appartiene ad un bounding box aperto sul max.
@@ -204,9 +207,9 @@ public:
 	bool IsInEx( Point3<BoxScalarType> const & p ) const
 	{
 		return (
-			min.x() <= p.x() && p.x() < max.x() &&
-			min.y() <= p.y() && p.y() < max.y() &&
-			min.z() <= p.z() && p.z() < max.z()
+			min.X() <= p.X() && p.X() < max.X() &&
+			min.Y() <= p.Y() && p.Y() < max.Y() &&
+			min.Z() <= p.Z() && p.Z() < max.Z()
 		);
 	}
 		/** Verifica se due bounding box collidono cioe' se hanno una intersezione non vuota. Per esempio
@@ -224,14 +227,14 @@ public:
 	*/
 	bool Collide(Box3<BoxScalarType> const &b)
 	{
-		return b.min.x()<max.x() && b.max.x()>min.x() &&
-			   b.min.y()<max.y() && b.max.y()>min.y() &&
-			   b.min.z()<max.z() && b.max.z()>min.z() ;
+		return b.min.X()<max.X() && b.max.X()>min.X() &&
+			   b.min.Y()<max.Y() && b.max.Y()>min.Y() &&
+			   b.min.Z()<max.Z() && b.max.Z()>min.Z() ;
 	}
 		/** Controlla se il bounding box e' nullo.
 			@return True se il bounding box e' nullo, false altrimenti
 		*/
-	bool IsNull() const { return min.x()>max.x() || min.y()>max.y() || min.z()>max.z(); }
+	bool IsNull() const { return min.X()>max.X() || min.Y()>max.Y() || min.Z()>max.Z(); }
 		/** Controlla se il bounding box e' vuoto.
 			@return True se il bounding box e' vuoto, false altrimenti
 		*/
@@ -274,14 +277,14 @@ public:
 		/// Calcola il volume del bounding box.
 	BoxScalarType Volume() const
 	{
-		return (max.x()-min.x())*(max.y()-min.y())*(max.z()-min.z());
+		return (max.X()-min.X())*(max.Y()-min.Y())*(max.Z()-min.Z());
 	}
 		/// Calcola la dimensione del bounding box sulla x.
-	inline BoxScalarType DimX() const { return max.x()-min.x();}
+	inline BoxScalarType DimX() const { return max.X()-min.X();}
 		/// Calcola la dimensione del bounding box sulla y.
-	inline BoxScalarType DimY() const { return max.y()-min.y();}
+	inline BoxScalarType DimY() const { return max.Y()-min.Y();}
 		/// Calcola la dimensione del bounding box sulla z.
-	inline BoxScalarType DimZ() const { return max.z()-min.z();}
+	inline BoxScalarType DimZ() const { return max.Z()-min.Z();}
 
 	template <class Q>
 	inline void Import( const Box3<Q> & b )
