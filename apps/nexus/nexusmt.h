@@ -33,21 +33,23 @@ namespace nxs {
  public:
    vector<Nexus::PatchInfo> *index;
 
-   virtual float GetError(Node *node) = 0;   
+   float GetError(Node *node);   
+   float GetError(Frag &frag);
+   virtual float GetError(unsigned int cell) = 0;
    virtual void GetView() {}   
  };
 
  class FlatMetric: public Metric {
  public:
    void GetView() {}
-   float GetError(Node *node);   
+   float GetError(unsigned int cell);   
  };
 
  class DeltaMetric: public Metric {
  public:
    vcg::Point3f delta;
    void GetView() {}
-   float GetError(Node *node);   
+   float GetError(unsigned int cell);   
  };
 
  class FrustumMetric: public Metric {
@@ -55,7 +57,7 @@ namespace nxs {
    vcg::Frustumf frustum;      
 
    void GetView() { frustum.GetView(); }
-   float GetError(Node *node);   
+   float GetError(unsigned int cell);   
  };
 
  class Policy {
@@ -139,7 +141,6 @@ class NexusMt: public Nexus {
  protected:
   void LoadHistory();
   void ClearHistory();
-  void PushNode(Node *node, std::vector<TNode> &heap);
   void VisitNode(Node *node, std::vector<TNode> &heap);
   void Select(std::vector<unsigned int> &selected);
   Patch &LoadPatch(unsigned int p);

@@ -85,7 +85,10 @@ void nxs::NexusFill(Crude &crude,
 		    VertRemap &vert_remap,
 		    VFile<RemapLink> &border_remap) {
   
-  
+
+  //TODO: is it faster to collect faces and vertices
+  //from all around or better to pass linearly all the dataset
+  //and write where needed? i wonder.
   //finally for every patch we collect the vertices
   //and fill the patch.
   //we need to remember start and size in border_remap;
@@ -93,8 +96,6 @@ void nxs::NexusFill(Crude &crude,
   for(unsigned int i = 0; i < nexus.index.size(); i++) {
     Patch patch = nexus.GetPatch(i);
     Nexus::PatchInfo &entry = nexus.index[i];
-    //    cerr << "entryf: " << entry.nface << endl;
-    //    cerr << "nf: " << patch.nf << endl;
     
     //make a copy of faces (we need to write there :P)
     Crude::Face *faces = new Crude::Face[patch.nf];
@@ -113,11 +114,11 @@ void nxs::NexusFill(Crude &crude,
       for(int j = 0; j < 3; j++) {
         if(!remap.count(face[j])) {          
 	  Point3f &v = crude.vert[face[j]];
-          patch.VertBegin()[remap.size()] = v;
+          patch.Vert(remap.size()) = v;
 	  entry.sphere.Add(v);
           remap[face[j]] = count++;
         }
-	patch.FaceBegin()[k*3 + j] = remap[face[j]];
+	patch.Face(k)[j] = remap[face[j]];
       }
     }
     assert(count == remap.size());
@@ -156,7 +157,7 @@ void nxs::NexusFill(Crude &crude,
 
   //and last convert RemapLinks into Links
 
-
+  //TODO probably this part is really slow
   for(unsigned int i = 0; i < nexus.borders.borders.size(); i++) {
     BorderEntry &local = nexus.borders.borders[i];
     //* 2 is to accomodate future borders

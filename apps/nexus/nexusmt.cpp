@@ -26,23 +26,36 @@ bool FrustumPolicy::Expand(unsigned int patch, Nexus::PatchInfo &entry) {
   return entry.error > error * frustum.Resolution(dist);
 } */
 
-float FrustumMetric::GetError(Node *node) {
+float Metric::GetError(Node *node) {
   float max_error = 0;
-  std::vector<Frag>::iterator frag;
-  for(frag = node->frags.begin(); frag != node->frags.end(); frag++) {                
-    vector<unsigned int>::iterator cell;
-    for(cell = (*frag).begin(); cell != (*frag).end(); cell++) {              
-      Nexus::PatchInfo &entry = (*index)[*cell];    
-      Sphere3f &sphere = entry.sphere;
-      float dist = Distance(sphere, frustum.ViewPoint());
-      if(dist < 0) break;
-      float error = entry.error/frustum.Resolution(dist);
-      if(frustum.IsOutside(sphere.Center(), sphere.Radius()))
-        error *= 4;
-      if(max_error < error) max_error = error;
-    }	   
+  vector<Frag>::iterator frag;
+  for(frag = node->frags.begin(); frag != node->frags.end(); frag++) {
+    float error = GetError(*frag);
+    if(max_error < error) max_error = error;
   }
-  return max_error; 
+  return max_error;
+}
+
+float Metric::GetError(Frag &frag) {
+  float max_error = 0;
+  vector<unsigned int>::iterator cell;
+  for(cell = frag.begin(); cell != frag.end(); cell++) {              
+    float error = GetError(*cell);
+    if(max_error < error) max_error = error;
+  }
+  return max_error;
+}
+
+float FrustumMetric::GetError(unsigned int cell) {
+  float max_error = 0;
+  Nexus::PatchInfo &entry = (*index)[cell];    
+  Sphere3f &sphere = entry.sphere;
+  float dist = Distance(sphere, frustum.ViewPoint());
+  if(dist < 0) return 1e40;
+  float error = entry.error/frustum.Resolution(dist);
+  if(frustum.IsOutside(sphere.Center(), sphere.Radius()))
+    error /= 4;
+  return error;
 }
 
 void Policy::Init() {
@@ -472,24 +485,21 @@ void NexusMt::Select(vector<unsigned int> &selected) {
   }
 }
 
-void NexusMt::PushNode(Node *node, vector<TNode> &heap) {
-  if(node->pushed) return; 
-
-  float error = metric->GetError(node);
-  heap.push_back(TNode(node, error));
-  push_heap(heap.begin(), heap.end());    
-}
-
 void NexusMt::VisitNode(Node *node, vector<TNode> &heap) {
   if(node->visited) return;
   
   vector<Node *>::iterator i;
   for(i = node->in.begin(); i != node->in.end(); i++)     
-      VisitNode(*i, heap);
+    VisitNode(*i, heap);
   
-  for(i = node->out.begin(); i != node->out.end(); i++)
-    PushNode(*i, heap);  
-
+  for(unsigned int k = 0; k < node->out.size(); k++) {
+    Node *outnode = node->out[k];
+    float error = metric->GetError(node->frags[k]);
+    //  if(node->pushed) continue
+    heap.push_back(TNode(outnode, error));
+    push_heap(heap.begin(), heap.end());    
+  }
+  
   node->visited = true;
   policy.NodeVisited(node);
 }
