@@ -320,7 +320,7 @@ namespace vcg
 				return *this;
 			};
 
-			/*!
+				/*!
 			*	(Modifier) Add to each element of this matrix the scalar constant <I>k</I>. 
 			* \param k	the scalar constant
 			*	\return		the modified matrix
@@ -372,7 +372,7 @@ namespace vcg
 			/*!
 			*	Matrix multiplication: calculates the cross product.
 			*	\param	reference to the matrix to multiply by 
-			*	\result the matrix product
+			*	\return the matrix product
 			*/
 			Matrix<TYPE> operator*(const Matrix<TYPE> &m)
 			{
@@ -390,6 +390,23 @@ namespace vcg
 				
 				return result;
 			};
+
+
+			/*!
+			*	Matrix-vector multiplication.
+			*	\param	reference to the 3-dimensional vector to multiply by
+			*	\return the resulting vector
+			*/
+			vcg::Point3<TYPE> operator*(const vcg::Point3<TYPE> &p)
+			{
+				assert(_columns==3 && _rows==3);
+				vcg::Point3<TYPE> result;
+				result[0] = _data[0]*p[0]+_data[1]*p[1]+_data[2]*p[2];
+				result[1] = _data[3]*p[0]+_data[4]*p[1]+_data[5]*p[2];
+				result[2] = _data[6]*p[0]+_data[7]*p[1]+_data[8]*p[2];
+				return result;
+			};
+
 
 			/*!
 			*	Scalar sum.  
@@ -535,7 +552,8 @@ namespace vcg
 				std::swap(_data, temp);
 				delete []temp;
 			};
-		
+
+
 			/*!
 			*	Print all matrix elements
 			*/
