@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/11/03 09:25:52  ganovelli
+replaced Matrix44f to Matrix44<S>, added LookAt
+
 Revision 1.5  2004/10/22 14:29:40  ponchio
 #include <...Point --> #include <...point
 
@@ -44,7 +47,7 @@ Revision 1.2  2004/09/06 21:41:30  ganovelli
 Revision 1.1  2004/09/03 13:01:51  ganovelli
 creation
 
-/****************************************************************************/
+****************************************************************************/
 
 
 #ifndef __VCGLIB_SHOT

@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/11/03 09:40:53  ganovelli
+Point?.h to point?.h
+
 Revision 1.6  2004/11/03 09:32:50  ganovelli
 SetPerspective and SetFrustum added (same parameters as in opengl)
 
@@ -44,7 +47,7 @@ Revision 1.2  2004/09/06 21:41:30  ganovelli
 Revision 1.1  2004/09/03 13:01:51  ganovelli
 creation
 
-/****************************************************************************/
+****************************************************************************/
 
 
 #ifndef __VCGLIB_CAMERA
