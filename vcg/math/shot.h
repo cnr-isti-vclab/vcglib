@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/10/22 14:29:40  ponchio
+#include <...Point --> #include <...point
+
 Revision 1.4  2004/10/07 14:41:31  fasano
 Little fix on ViewPoint() method
 
@@ -47,11 +50,8 @@ creation
 #ifndef __VCGLIB_SHOT
 #define __VCGLIB_SHOT
 
-// #include <vector>
-// #include <vcg/Matrix44.h>
-// #include <vcg/Box3.h>
-#include <vcg/space/point2.h>
-#include <vcg/space/point3.h>
+#include <vcg/space/Point2.h>
+#include <vcg/space/Point3.h>
 #include <vcg/math/similarity.h>
 #include <vcg/math/camera.h>
 
@@ -71,9 +71,9 @@ public:
 	void SetValid(bool v){ if(!v) flags|=NOTVALID_BIT; else flags&=~NOTVALID_BIT;}
 
 	Camera<S> & camera;								// the camera that shot
-	vcg::Similarity<S,vcg::Matrix44f> similarity;		// the position from where it did it
+	vcg::Similarity<S,vcg::Matrix44<S> > similarity;		// the position from where it did it
 
-	Shot( Camera<S> & c):camera(c){}
+	Shot( Camera<S> & c):camera(c){similarity.SetIdentity();}
 
 	Camera<S> & Camera(){return camera;};
 
@@ -81,7 +81,7 @@ public:
 	vcg::Point3<S> Axis(const int & i)const;
 
 	/// take the viewpoint
-	 const vcg::Point3<S> ViewPoint();
+	 const vcg::Point3<S> ViewPoint()const;
 
 	/// set the viewpoint
 	void SetViewPoint(const vcg::Point3<S> & viewpoint);
@@ -89,7 +89,11 @@ public:
 	/// look at
 	void LookAt(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up);
 
-	/// look at
+	/// look at (same as opengl)
+	void LookAt(const S & eye_x,const S & eye_y,const S & eye_z,const S & at_x,const S & at_y,const S & at_z,
+							const S & up_x,const S & up_y,const S & up_z);
+
+	/// look towards
 	void LookTowards(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up);
 
 	/// convert a 3d point in camera coordinates
@@ -101,10 +105,11 @@ public:
 	/// take the distance from the point p and the plane parallel to the camera plane and passing through the view
 	/// point. The would be z depth 
 	S Depth(const vcg::Point3<S> & p)const;
+
 }; // end class definition
 
 template <class S>
-const vcg::Point3<S> Shot<S>::ViewPoint(){
+const vcg::Point3<S> Shot<S>::ViewPoint() const {
 	//Matrix44<S> m = similarity.Matrix();
 	//return Point3<S>(m[0][3],m[1][3],m[2][3]);
 	return -similarity.tra;
@@ -129,15 +134,23 @@ void Shot<S>::LookAt(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up){
 }
 
 template <class S>
+void Shot<S>::LookAt(const S & eye_x,const S & eye_y,const S & eye_z,const S & at_x,const S & at_y,const S & at_z,
+										 const S & up_x,const S & up_y,const S & up_z){
+											 SetViewPoint(Point3<S>(eye_x,eye_y,eye_z));
+											 LookAt(Point3<S>(at_x,at_y,at_z),Point3<S>(up_x,up_y,up_z));
+										 }
+
+
+template <class S>
 void Shot<S>::LookTowards(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up){
 		vcg::Point3<S> x_dir = up ^-z_dir ;
 		vcg::Point3<S> y_dir = -z_dir ^x_dir ;
 		
 		Matrix44<S> m;
 		m.SetIdentity();
-		*(vcg::Point3<S> *)&m[0][0] = x_dir/x_dir.SquaredNorm();
-		*(vcg::Point3<S> *)&m[1][0] = y_dir/y_dir.SquaredNorm();
-		*(vcg::Point3<S> *)&m[2][0] = -z_dir/z_dir.SquaredNorm();
+		*(vcg::Point3<S> *)&m[0][0] = x_dir/x_dir.Norm();
+		*(vcg::Point3<S> *)&m[1][0] = y_dir/y_dir.Norm();
+		*(vcg::Point3<S> *)&m[2][0] = -z_dir/z_dir.Norm();
 
 		similarity.rot.FromMatrix(m);
 }
