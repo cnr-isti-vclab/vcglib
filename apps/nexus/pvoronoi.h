@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/07/01 21:34:59  ponchio
+int -> Key
+
 Revision 1.2  2004/06/25 16:47:13  ponchio
 Various debug
 
@@ -50,6 +53,8 @@ Created
 #include <vcg/space/point3.h>
 #include <vcg/space/box3.h>
 #include <vcg/space/index/grid_static_ptr.h>
+
+//TODO provide a Sort function, to sort spatially the seeds.
 
 namespace nxs {
 
