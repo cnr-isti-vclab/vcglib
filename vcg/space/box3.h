@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/03/05 17:51:28  tarini
+Errorino "ScalarType" -> "BoxScalarType"
+
 Revision 1.4  2004/03/03 14:32:13  cignoni
 Yet another cr lf mismatch
 
@@ -87,21 +90,14 @@ public:
 		/** Varia le dimensioni del bounding box scalandole rispetto al parametro scalare.
 			@param s Valore scalare che indica di quanto deve variare il bounding box
 		*/
-	void Inflate( const BoxScalarType s )
+	void Offset( const BoxScalarType s )
 	{
-		Inflate( (max-min)*s );
-	}
-		/** Varia le dimensioni del bounding box di (k,k,k) con k = bbox.diag*s
-		*/
-	void InflateFix( const BoxScalarType s )
-	{
-		BoxScalarType k = Diag()*s;
-		Inflate( Point3<BoxScalarType> (k,k,k));
+		Offset( Point3<BoxScalarType> (s,s,s));
 	}
 		/** Varia le dimensioni del bounding box del valore fornito attraverso il parametro.
 			@param delta Point in 3D space
 		*/
-	void Inflate( const Point3<BoxScalarType> & delta )
+	void Offset( const Point3<BoxScalarType> & delta )
 	{
 		min -= delta;
 		max += delta;
