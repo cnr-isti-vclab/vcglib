@@ -59,7 +59,7 @@ class EdgeCollapse
   ///the container of tetrahedron type
   typedef typename TriMeshType::FaceContainer FaceContainer;
   ///the container of vertex type
-  typedef typename TriMeshType::VertexContainer VertexContainer;
+  typedef typename TriMeshType::VertContainer VertContainer;
  
   /// Default Constructor
 	EdgeCollapse()
@@ -73,7 +73,7 @@ class EdgeCollapse
 
   struct Edge{
 			VertexType* v0,v1;
-      EdgeMark(	const VertexType*& a,const VertexType*& b){
+      Edge(	const VertexType*& a,const VertexType*& b){
 						assert(a!=b);
 						if(a<b) 
 							{v0=a;v1=b;}
@@ -81,11 +81,11 @@ class EdgeCollapse
 						{v1=a;v0=b;}
       }
 			
-			const bool operator <(const EdgeMark & e) const {
+			const bool operator <(const Edge & e) const {
 				return (v0==e.v0)?(v1<e.v1):(v0<e.v0);
 			}
 
-			const bool operator ==(const EdgeMark & e) const {
+			const bool operator ==(const Edge & e) const {
 			return (v0==e.v0)&&(v1==e.v1);
 			}
 
@@ -113,7 +113,7 @@ bool isMarked(Edge E,char M)
 }
 
 ///control link conditions for the collapse
-bool LinkCondition(Pos<FaceType> pos) 
+bool LinkCondition(vcg::face::Pos<FaceType> pos) 
 { 	
     const int LINK_V0 = VertexType::NewBitFlag();
 		const int LINK_V1 = VertexType::NewBitFlag();
@@ -230,3 +230,4 @@ bool LinkCondition(Pos<FaceType> pos)
 
 }
 }
+#endif 
