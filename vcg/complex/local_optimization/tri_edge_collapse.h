@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.8  2004/09/08 14:33:31  ganovelli
+  *** empty log message ***
+
 
 ****************************************************************************/
 
@@ -182,7 +185,7 @@ public:
 
 	static void Init(TriMeshType&m,typename LocalOptimization<TriMeshType>::HeapType&h_ret){
 		h_ret.clear();
-		TriMeshType::FaceIterator fi;
+		typename TriMeshType::FaceIterator fi;
 		for(fi = m.face.begin(); fi != m.face.end();++fi)
 		if(!(*fi).IsD()){
 		   for (int j=0;j<3;j++)
