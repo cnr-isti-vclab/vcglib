@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioProject
+	ProjectType="Visual C++"
+	Version="7.10"
+	Name="TetraView"
+	ProjectGUID="{DB6314D9-2BA2-3836-86EA-428968D86636}">
+	<Platforms>
+		<Platform
+			Name="Win32"/>
+	</Platforms>
+	<Configurations>
+		<Configuration
+			Name="Release|Win32"
+			OutputDirectory="."
+			ConfigurationType="1"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="FALSE">
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalOptions="-Zm200 -w34100 -w34189"
+				Optimization="1"
+				AdditionalIncludeDirectories="$(QTDIR)\include,d:\TetraView,d:/TetraView\,.,C:\Qt\3.3.2\mkspecs\win32-msvc.net"
+				PreprocessorDefinitions="QT_NO_DEBUG,NDEBUG,_WINDOWS,UNICODE,WIN32,QT_DLL,QT_THREAD_SUPPORT,NDEBUG"
+				GeneratePreprocessedFile="0"
+				ExceptionHandling="FALSE"
+				RuntimeLibrary="2"
+				BufferSecurityCheck="FALSE"
+				AssemblerListingLocation=".\"
+				ObjectFile=".\"
+				ProgramDataBaseFileName=".\"
+				WarningLevel="3"
+				SuppressStartupBanner="TRUE"
+				DebugInformationFormat="0"/>
+			<Tool
+				Name="VCCustomBuildTool"/>
+			<Tool
+				Name="VCLinkerTool"
+				IgnoreImportLibrary="TRUE"
+				AdditionalDependencies="qt-mt332.lib qtmain.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib imm32.lib winmm.lib wsock32.lib winspool.lib delayimp.lib"
+				OutputFile=".\TetraView.exe"
+				SuppressStartupBanner="TRUE"
+				AdditionalLibraryDirectories="$(QTDIR)\lib"
+				DelayLoadDLLs="comdlg32.dll,oleaut32.dll,winmm.dll,wsock32.dll,winspool.dll"
+				GenerateDebugInformation="FALSE"
+				ProgramDatabaseFile=""
+				SubSystem="2"/>
+			<Tool
+				Name="VCMIDLTool"
+				WarningLevel="0"
+				DefaultCharType="0"
+				EnableErrorChecks="1"/>
+			<Tool
+				Name="VCPostBuildEventTool"/>
+			<Tool
+				Name="VCPreBuildEventTool"/>
+			<Tool
+				Name="VCPreLinkEventTool"/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="NDEBUG"/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
+				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
+		</Configuration>
+		<Configuration
+			Name="Debug|Win32"
+			OutputDirectory="."
+			IntermediateDirectory="Debug\"
+			ConfigurationType="1"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="FALSE">
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalOptions="-Zm200 -w34100 -w34189"
+				Optimization="1"
+				AdditionalIncludeDirectories="&quot;$(QTDIR)\include&quot;;d:\TetraView;d:/TetraView\;.;&quot;C:\Qt\3.3.2\mkspecs\win32-msvc.net&quot;;D:\glew\include;D:\sf"
+				PreprocessorDefinitions="QT_NO_DEBUG,_WINDOWS,UNICODE,WIN32,QT_DLL,QT_THREAD_SUPPORT"
+				GeneratePreprocessedFile="0"
+				MinimalRebuild="TRUE"
+				ExceptionHandling="FALSE"
+				RuntimeLibrary="2"
+				BufferSecurityCheck="FALSE"
+				AssemblerListingLocation="Debug\"
+				ObjectFile="Debug\"
+				ProgramDataBaseFileName=".\"
+				WarningLevel="3"
+				SuppressStartupBanner="TRUE"
+				DebugInformationFormat="3"/>
+			<Tool
+				Name="VCCustomBuildTool"/>
+			<Tool
+				Name="VCLinkerTool"
+				IgnoreImportLibrary="TRUE"
+				AdditionalDependencies="qt-mt332.lib qtmain.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib imm32.lib winmm.lib wsock32.lib winspool.lib delayimp.lib opengl32.lib glu32.lib glew32.lib"
+				OutputFile="Debug\\TetraView.exe"
+				SuppressStartupBanner="TRUE"
+				AdditionalLibraryDirectories="&quot;$(QTDIR)\lib&quot;;D:\glew\lib"
+				GenerateDebugInformation="TRUE"
+				ProgramDatabaseFile=""
+				SubSystem="2"/>
+			<Tool
+				Name="VCMIDLTool"
+				WarningLevel="0"
+				DefaultCharType="0"
+				EnableErrorChecks="1"/>
+			<Tool
+				Name="VCPostBuildEventTool"/>
+			<Tool
+				Name="VCPreBuildEventTool"/>
+			<Tool
+				Name="VCPreLinkEventTool"/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="NDEBUG"/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
+				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
+		</Configuration>
+	</Configurations>
+	<References>
+	</References>
+	<Files>
+		<Filter
+			Name="Source Files"
+			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat">
+			<File
+				RelativePath="main.cpp">
+			</File>
+			<File
+				RelativePath="MainFrame.ui.h">
+			</File>
+			<File
+				RelativePath="d:\TetraView\MainFrame.ui.h">
+			</File>
+			<File
+				RelativePath=".\MyGLWidget.cpp">
+			</File>
+			<File
+				RelativePath="..\..\wrap\ply\plylib.cpp">
+			</File>
+			<File
+				RelativePath="..\..\wrap\gui\trackball.cpp">
+			</File>
+			<File
+				RelativePath="..\..\wrap\gui\trackmode.cpp">
+			</File>
+		</Filter>
+		<Filter
+			Name="Header Files"
+			Filter="h;hpp;hxx;hm;inl">
+			<File
+				RelativePath="MyGLWidget.h">
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Moc&apos;ing MyGLWidget.h..."
+						CommandLine="$(QTDIR)\bin\moc.exe MyGLWidget.h -o moc_MyGLWidget.cpp
+"
+						AdditionalDependencies="$(QTDIR)\bin\moc.exe"
+						Outputs="moc_MyGLWidget.cpp"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Moc&apos;ing MyGLWidget.h..."
+						CommandLine="$(QTDIR)\bin\moc.exe MyGLWidget.h -o moc_MyGLWidget.cpp
+"
+						AdditionalDependencies="$(QTDIR)\bin\moc.exe"
+						Outputs="moc_MyGLWidget.cpp"/>
+				</FileConfiguration>
+			</File>
+		</Filter>
+		<Filter
+			Name="Generated MOC Files"
+			Filter="cpp;c;cxx;moc">
+			<File
+				RelativePath="moc_MainFrame.cpp">
+			</File>
+			<File
+				RelativePath="d:\TetraView\moc_MainFrame.cpp">
+			</File>
+			<File
+				RelativePath="moc_MyGLWidget.cpp">
+			</File>
+		</Filter>
+		<Filter
+			Name="Generated Form Files"
+			Filter="cpp;c;cxx;h;hpp;hxx;">
+			<File
+				RelativePath="MainFrame.cpp">
+			</File>
+			<File
+				RelativePath="d:\TetraView\MainFrame.cpp">
+			</File>
+			<File
+				RelativePath="MainFrame.h">
+			</File>
+			<File
+				RelativePath="d:\TetraView\MainFrame.h">
+			</File>
+		</Filter>
+		<Filter
+			Name="Forms"
+			Filter="ui"
+			ParseFiles="FALSE">
+			<File
+				RelativePath="MainFrame.ui">
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Uic&apos;ing MainFrame.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe MainFrame.ui -o .\MainFrame.h
+$(QTDIR)\bin\uic.exe MainFrame.ui -i MainFrame.h -o .\MainFrame.cpp
+$(QTDIR)\bin\moc.exe .\MainFrame.h -o .\moc_MainFrame.cpp
+"
+						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
+						Outputs=".\MainFrame.h;.\MainFrame.cpp;.\moc_MainFrame.cpp"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Uic&apos;ing MainFrame.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe MainFrame.ui -o .\MainFrame.h
+$(QTDIR)\bin\uic.exe MainFrame.ui -i MainFrame.h -o .\MainFrame.cpp
+$(QTDIR)\bin\moc.exe .\MainFrame.h -o .\moc_MainFrame.cpp
+"
+						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
+						Outputs=".\MainFrame.h;.\MainFrame.cpp;.\moc_MainFrame.cpp"/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="d:\TetraView\MainFrame.ui">
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Uic&apos;ing d:\TetraView\MainFrame.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe d:\TetraView\MainFrame.ui -o d:\TetraView\MainFrame.h
+$(QTDIR)\bin\uic.exe d:\TetraView\MainFrame.ui -i MainFrame.h -o d:\TetraView\MainFrame.cpp
+$(QTDIR)\bin\moc.exe d:\TetraView\MainFrame.h -o d:\TetraView\moc_MainFrame.cpp
+"
+						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
+						Outputs="d:\TetraView\MainFrame.h;d:\TetraView\MainFrame.cpp;d:\TetraView\moc_MainFrame.cpp"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Uic&apos;ing d:\TetraView\MainFrame.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe d:\TetraView\MainFrame.ui -o d:\TetraView\MainFrame.h
+$(QTDIR)\bin\uic.exe d:\TetraView\MainFrame.ui -i MainFrame.h -o d:\TetraView\MainFrame.cpp
+$(QTDIR)\bin\moc.exe d:\TetraView\MainFrame.h -o d:\TetraView\moc_MainFrame.cpp
+"
+						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
+						Outputs="d:\TetraView\MainFrame.h;d:\TetraView\MainFrame.cpp;d:\TetraView\moc_MainFrame.cpp"/>
+				</FileConfiguration>
+			</File>
+		</Filter>
+		<Filter
+			Name="Resources"
+			Filter="cpp;ico;png;jpg;jpeg;gif;xpm;bmp;rc;ts"
+			ParseFiles="FALSE">
+			<File
+				RelativePath="images/editcopy">
+			</File>
+			<File
+				RelativePath="images/editcut">
+			</File>
+			<File
+				RelativePath="images/editpaste">
+			</File>
+			<File
+				RelativePath="images/filenew">
+			</File>
+			<File
+				RelativePath="images/fileopen">
+			</File>
+			<File
+				RelativePath="images/filesave">
+			</File>
+			<File
+				RelativePath="images/Open64.png">
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Generate imagecollection"
+						CommandLine="echo images/editcopy images/editcut images/editpaste images/filenew images/fileopen images/filesave images/print images/redo images/searchfind images/undo images/Open64.png &gt; .imgcol
+$(QTDIR)\bin\uic.exe -embed TetraView -f .imgcol -o qmake_image_collection.cpp
+"
+						AdditionalDependencies="$(QTDIR)\bin\uic.exe;images/editcopy;images/editcut;images/editpaste;images/filenew;images/fileopen;images/filesave;images/print;images/redo;images/searchfind;images/undo;images/Open64.png"
+						Outputs="qmake_image_collection.cpp;.imgcol"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Generate imagecollection"
+						CommandLine="echo images/editcopy images/editcut images/editpaste images/filenew images/fileopen images/filesave images/print images/redo images/searchfind images/undo images/Open64.png &gt; .imgcol
+$(QTDIR)\bin\uic.exe -embed TetraView -f .imgcol -o qmake_image_collection.cpp
+"
+						AdditionalDependencies="$(QTDIR)\bin\uic.exe;images/editcopy;images/editcut;images/editpaste;images/filenew;images/fileopen;images/filesave;images/print;images/redo;images/searchfind;images/undo;images/Open64.png"
+						Outputs="qmake_image_collection.cpp;.imgcol"/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="images/print">
+			</File>
+			<File
+				RelativePath="images/redo">
+			</File>
+			<File
+				RelativePath="images/searchfind">
+			</File>
+			<File
+				RelativePath="images/undo">
+			</File>
+			<File
+				RelativePath="qmake_image_collection.cpp">
+			</File>
+		</Filter>
+	</Files>
+	<Globals>
+	</Globals>
+</VisualStudioProject>

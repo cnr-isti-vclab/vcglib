@@ -38,7 +38,7 @@ class GLPickTetra
 	typedef typename TETRA_MESH_TYPE::VertexType  VertexType;
 
 public:
-static bool PickNearestTetra(int x, int y,TETRA_MESH_TYPE &m, TetraIterator &ti, int width=4, int height=4)
+static bool PickNearestTetra(int x, int y,TETRA_MESH_TYPE &m, TetraIterator &ti,int width=4, int height=4)
 {
  std::vector<TetraPointer> result;
  int val=PickTetra(x,y,m,result,width,height);
@@ -88,12 +88,14 @@ static int PickTetra(int x, int y, TETRA_MESH_TYPE &m, std::vector<TetraPointer>
 			glBegin(GL_TRIANGLES);
 			for (int face=0;face<4;face++)
 			{
+				//glLoadName(tetracnt);
 				VertexType *v0=ti->V(Tetra::VofF(face,0));
 				VertexType *v1=ti->V(Tetra::VofF(face,1));
 				VertexType *v2=ti->V(Tetra::VofF(face,2));
 				glVertex(v0->P());
 				glVertex(v1->P());
 				glVertex(v2->P());
+				
 			}
 			glEnd();
 			tetracnt++;
