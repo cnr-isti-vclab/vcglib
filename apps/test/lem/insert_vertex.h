@@ -37,15 +37,25 @@
 namespace vcg{
   namespace tri{	
 	
-  
+  template <class FACE_TYPE>
+  void FFAttach(FACE_TYPE *f0,int z0,FACE_TYPE *f1,int z1)
+  {
+	f0->FFp(z0)=f1;
+	f0->FFi(z0)=z1;
+	f1->FFp(z1)=f0;
+	f1->FFi(z1)=z0;
+  }
+
   template <class MESH_TYPE> 
   ///insert a vertex iside a face and re-triangolarize v will be pointer to inserted vertex
-  void InsertVert(MESH_TYPE &m,typename MESH_TYPE::FaceType* &f,typename MESH_TYPE::VertexType* &v)
+  void InsertVert(MESH_TYPE &m,typename MESH_TYPE::FaceType* f,typename MESH_TYPE::CoordType pos)
   {
 	std::vector<MESH_TYPE::FaceType **> local_var;
     local_var.push_back(&f);
-	MESH_TYPE::FaceIterator Finit=vcg::tri::Allocator<MESH_TYPE>::AddFaces(m,3,local_var);
 	MESH_TYPE::VertexIterator Vi=vcg::tri::Allocator<MESH_TYPE>::AddVertices(m,1);
+	MESH_TYPE::FaceIterator Finit=vcg::tri::Allocator<MESH_TYPE>::AddFaces(m,3,local_var);
+	
+	Vi->P()=pos;
 
 	if (MESH_TYPE::HasVFTopology())
 		Vi->VFp()=0;
@@ -55,53 +65,59 @@ namespace vcg{
 	//set vertex pointer of new face
 	for (int i=0;i<3;i++)
 	{
-		Fi->V(0)=f->V(i);
-		Fi->V(1)=f->V((i+1)%3);
-		Fi->V(2)=&(*Vi);
-
 		F=&(*Fi);
 
+		F->V(0)=f->V(i);
+		F->V(1)=f->V((i+1)%3);
+		F->V(2)=&(*Vi);
+
+		
+
 		//assign topology in substitution of the old one
-		if (MESH_TYPE::HasFFTopology())
+		/*if (MESH_TYPE::HasFFTopology())
 		{
-			vcg::face::FFAttach<MESH_TYPE::FaceType>(F,0,f->FFp(i),f->FFi(i));
-		}
+			FFAttach(F,0,f->FFp(i),f->FFi(i));
+		}*/
 		if (MESH_TYPE::HasVFTopology())
 		{
-			vcg::face::VFDetach(f,i);
+			
 
 			//put new faces on list of the old vertex and new one
 			vcg::face::VFAppend<MESH_TYPE::FaceType>(F,0);
 			vcg::face::VFAppend<MESH_TYPE::FaceType>(F,1);
 			vcg::face::VFAppend<MESH_TYPE::FaceType>(F,2);
+
+			vcg::face::VFDetach<MESH_TYPE::FaceType>((*f),i);
 		}
 		Fi++;
 	}
 	//then attach the faces between themselfes
-	Fi=Finit;	
+	/*Fi=Finit;	
 	MESH_TYPE::FaceIterator Fsucc=Fi;
 	Fsucc++;
 
 	MESH_TYPE::FaceType *F0=&(*Fi);
 	MESH_TYPE::FaceType *F1=&(*Fsucc);
 
-	vcg::face::FFAttach<MESH_TYPE::FaceType>(F0,1,F1,2);
+	FFAttach<MESH_TYPE::FaceType>(F0,1,F1,2);
 
 	Fi++;
 	Fsucc++;
 	F0=&(*Fi);
 	F1=&(*Fsucc);
 
-	vcg::face::FFAttach<MESH_TYPE::FaceType>(F0,1,F1,2);
+	FFAttach<MESH_TYPE::FaceType>(F0,1,F1,2);
+
 	Fsucc=Finit;
 	Fi++;
 	F0=&(*Fi);
 	F1=&(*Fsucc);
 
-	vcg::face::FFAttach<MESH_TYPE::FaceType>(F0,1,F1,2);
+	FFAttach<MESH_TYPE::FaceType>(F0,1,F1,2);*/
+
 	//at the end set as deleted the old face that was substituted
 	f->SetD();
-	v=&(*Vi);
+//	v=&(*Vi);
 
   }
 
