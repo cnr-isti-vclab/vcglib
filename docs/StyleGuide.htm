@@ -6,7 +6,7 @@
 	<META NAME="GENERATOR" CONTENT="OpenOffice.org 1.1.0  (Win32)">
 	<META NAME="CREATED" CONTENT="20040209;363169">
 	<META NAME="CHANGEDBY" CONTENT="Paolo Cignoni">
-	<META NAME="CHANGED" CONTENT="20040212;18575966">
+	<META NAME="CHANGED" CONTENT="20040213;2134025">
 	<STYLE>
 	<!--
 		@page { size: 21.59cm 27.94cm; margin: 2cm }
@@ -69,7 +69,8 @@ all the files that it requires.</P>
 <P STYLE="margin-bottom: 0cm">Header filenames and folders are always
 fully lower case. Compound names are separated by '_'.</P>
 <P STYLE="margin-bottom: 0cm">In Class definitions place prototypes
-all togheter before the inline or templated implemetations.</P>
+all <SPAN LANG="en-US">together</SPAN> before the inline or templated
+<SPAN LANG="en-US">implementations.</SPAN></P>
 <P STYLE="margin-bottom: 0cm">Example:</P>
 <P CLASS="code-western"><FONT SIZE=2><FONT FACE="Courier New, sans-serif">#include&lt;vcg/space/point3.h&gt;</FONT></FONT>
 </P>
@@ -77,8 +78,22 @@ all togheter before the inline or templated implemetations.</P>
 <P STYLE="margin-bottom: 0cm">Tabs are equivalent to two spaces. 
 </P>
 <P STYLE="margin-bottom: 0cm">There are no strict rules for the
-plaement of '{' or indenting.</P>
+<SPAN LANG="en-US">placement</SPAN> of '{' or indenting.</P>
+<H2 CLASS="western">Constructors and casting</H2>
+<P STYLE="margin-bottom: 0cm">All basic classes (point3, box3 ecc)
+must have null constructors. Non null constructors can be added in
+debug versions.</P>
+<P STYLE="margin-bottom: 0cm">Implicit casting is disallowed. Write a
+member Import function for casting from different integral types and
+a static Construct to build an object from different a integral type.</P>
 <P STYLE="margin-bottom: 0cm"><BR>
+</P>
+<P STYLE="margin-bottom: 0cm">Example:</P>
+<P CLASS="code-western">Point3f pf(1.0f,0.0f,0.0f); 
+</P>
+<P CLASS="code-western">Point3d pd=Point3f::Construct(pf);</P>
+<P CLASS="code-western">pf.Import(pd);</P>
+<P STYLE="margin-bottom: 0cm"> 
 </P>
 </BODY>
 </HTML>
