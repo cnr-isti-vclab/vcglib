@@ -21,8 +21,35 @@
 *                                                                           *
 ****************************************************************************/
 
-bool Save_STL(const char * filename , bool binary =true, const char *objectname=0)
+/****************************************************************************
+  History
+
+$Log: not supported by cvs2svn $
+Revision 1.3  2004/02/19 15:28:01  ponchio
+*** empty log message ***
+
+Revision 1.2  2004/02/13 02:18:57  cignoni
+Edited Comments and GPL license
+
+
+****************************************************************************/
+
+#ifndef __VCGLIB_EXPORT_STL
+#define __VCGLIB_EXPORT_STL
+
+#include <stdio.h>
+
+namespace vcg {
+namespace tri {
+namespace io {
+
+template <class SaveMeshType>
+class ExporterSTL
 {
+public:
+static bool Save(SaveMeshType &m, const char * filename , bool binary =true, const char *objectname=0)
+{
+  typedef typename SaveMeshType::FaceIterator FaceIterator;
 	FILE *fp;
 
 	fp = fopen(filename,"wb");
@@ -36,12 +63,12 @@ bool Save_STL(const char * filename , bool binary =true, const char *objectname=
 		if(objectname)	strncpy(header,objectname,80);
 		fwrite(header,80,1,fp);
 		// write number of facets
-		fwrite(&fn,1,sizeof(int),fp); 
-		face_iterator fi;
+		fwrite(&m.fn,1,sizeof(int),fp); 
 		Point3f p;
 		unsigned short attributes=0;
-
-		for(fi=face.begin(); fi!=face.end(); ++fi) if( !(*fi).IsD() )
+    
+    FaceIterator fi;		
+		for(fi=m.face.begin(); fi!=m.face.end(); ++fi) if( !(*fi).IsD() )
 		{
 			// For each triangle write the normal, the three coords and a short set to zero
 			p.Import(vcg::NormalizedNormal((*fi).V(0)->P(), (*fi).V(1)->P(), (*fi).V(2)->P()));
@@ -60,8 +87,8 @@ bool Save_STL(const char * filename , bool binary =true, const char *objectname=
 		else fprintf(fp,"solid vcg\n");
 
 		Point3f p;
-		face_iterator fi;	
-		for(fi=face.begin(); fi!=face.end(); ++fi) if( !(*fi).IsD() )
+		FaceIterator fi;	
+		for(fi=m.face.begin(); fi!=m.face.end(); ++fi) if( !(*fi).IsD() )
 		{
 	  	// For each triangle write the normal, the three coords and a short set to zero
 			p.Import(vcg::NormalizedNormal((*fi).V(0)->P(), (*fi).V(1)->P(), (*fi).V(2)->P()));
@@ -79,5 +106,13 @@ bool Save_STL(const char * filename , bool binary =true, const char *objectname=
 	fclose(fp);
 	return true;
 }
+}; // end class
+
+} // end Namespace tri
+} // end Namespace io
+} // end Namespace vcg
+
 
 //@}
+
+#endif

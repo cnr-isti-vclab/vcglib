@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/02/24 21:36:42  cignoni
+grouped documentation, changed typenames and reflection mechanism
+
 Revision 1.1  2004/02/19 13:11:06  cignoni
 Initial commit
 
@@ -39,22 +42,34 @@ class Allocator
  
 public:
 typedef AllocateMeshType MeshType; 
-typedef typename MeshType::VertexPointer VertexPointer;
+typedef typename MeshType::VertexType     VertexType;
+typedef typename MeshType::VertexPointer  VertexPointer;
 typedef typename MeshType::VertexIterator VertexIterator;
-typedef typename MeshType::FacePointer FacePointer;
-typedef typename MeshType::FaceIterator FaceIterator;
+typedef typename MeshType::FaceType       FaceType;
+typedef typename MeshType::FacePointer    FacePointer;
+typedef typename MeshType::FaceIterator   FaceIterator;
 
-/* This class is used to */ 
+/* This class is used when allocating new vertex and faces to update 
+   the pointer that can be changed when resizing the vector of vertex or faces.
+   It can also be used to prevent any update of the various mesh fields
+   (e.g. in case you are building all the connections by hand as in a importer);
+*/ 
 template<class SimplexPointerType>
 class PointerUpdater
 {
 public:
-  void Clear();
-  void Update(SimplexPointerType &vp);
-  bool NeedUpdate();
+  void Clear(){newBase=oldBase=newEnd=oldEnd=0;preventUpdateFlag=false;};
+  void Update(SimplexPointerType &vp)
+  {
+    vp=newBase+(vp-oldBase);
+  }
+  bool NeedUpdate() {if(newBase!=oldBase && !preventUpdateFlag) return true; else return false;}
   
   SimplexPointerType oldBase;
   SimplexPointerType newBase;
+  SimplexPointerType newEnd;
+  SimplexPointerType oldEnd;
+  bool preventUpdateFlag; // when true no update is considered necessary.
 };
 
 
@@ -96,7 +111,7 @@ static VertexIterator AddVertices(MeshType &m,int n, PointerUpdater<VertexPointe
 		if(last!=0)  
 			{ 
 				last = m.vert.begin(); 
-				advance(last,siz+1);
+				advance(last,n);
 			}
 			else last=m.vert.begin(); 
 		}
@@ -120,17 +135,10 @@ static FaceIterator AddFaces(MeshType &m, int n)
 }
 /** Function to add n faces to the mesh. 
   NOTA: Aggiorna fn;
-	The second parameter hold a vector of 
-	pointers to pointer to elements of the mesh that should be updated after a 
-	possible vector realloc.
-	@param n Facce da aggiungere
-	@param local_var Vettore di variabili locali che rappresentano puntatori a facce, occorre, 
-	perche' questi valori siano consistenti, aggiornarli ogni qual volta venga eseguito un resize
-	del contenitore delle facce.
 */
 static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu)
 {
-  FaceIterator last=m.vert.end();
+  FaceIterator last=m.face.end();
   pu.Clear();
 	if(m.face.empty()) pu.oldBase=0;  // if the vector is empty we cannot find the last valid element
 	else               pu.oldBase=&*m.face.begin(); 
@@ -145,50 +153,40 @@ static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu
 	
   pu.newBase = &*m.face.begin();
 
-	FaceIterator oldbegin, newbegin;
-	oldbegin = face.begin();
-	FaceIterator last=face.end();
-	if(face.empty()) last=0;
-	            else last--;
-
-	unsigned int siz=0;
-	MFTYPE dum;
-	dum.Supervisor_Flags()=0;
-	for(int i=0; i<n; ++i)
-		face.push_back(dum);
-	
-	fn+=n;
-	newbegin = face.begin();
-	if(newbegin != oldbegin)// se e' cambiato lo spazio (vector abbastanza grande o lista)
-	{
-		if(MFTYPE::OBJ_TYPE & MFTYPE::OBJ_TYPE_A) 
+  if(pu.NeedUpdate())
 		{
-			FaceIterator f;
-			for (f=face.begin(); f!=face.end(); ++f)
-				for(int k=0; k<(*f).size(); ++k)if(!(*f).IsD())
-					(*f).F(k) = (*f).F(k)-&*oldbegin+&*newbegin;
+			FaceIterator fi;
+			for (fi=m.face.begin(); fi!=m.face.end(); ++fi)
+        if(!(*fi).IsD())
+        {
+          if(FaceType::HasFFAdjacency())
+          {
+            pu.Update((*fi).F(0));
+            pu.Update((*fi).F(1));
+            pu.Update((*fi).F(2));
+          }
+        }
+      VertexIterator vi;
+			for (vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
+        if(!(*vi).IsD())
+        {
+          if(VertexType::HasVFAdjacency())
+          {
+            pu.Update((*fi).F(0));
+            pu.Update((*fi).F(1));
+            pu.Update((*fi).F(2));
+          }
+        }
+        		// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
+		if(last!=0)  
+			{ 
+				last = m.face.begin(); 
+				advance(last,n);
+			}
+			else last=m.face.begin(); 
 		}
-		vector<face_base **>::iterator jit;
-		for(jit=local_var.begin(); jit!=local_var.end(); ++jit)
-			if((**jit) !=0 ) **jit = **jit-&*oldbegin+&*newbegin;
-		
-		// deve restituire l'iteratore alla prima faccia aggiunta;
-		if(last!=0) 
-		{ 
-			last = face.begin(); 
-			advance(last,siz+1);
-		}
-		else last=face.begin(); 
-	}
-	else // 
-	{ assert(newbegin == oldbegin);
-		// se non e'cambiato lo spazio (vector abbastanza grande o lista)
-		if(last==0) last = face.begin(); // se il vettore era vuoto si restituisce begin
-		           else advance(last,1); // altrimenti il primo dopo quello che era in precedenza l'ultimo valido.
-	}
 
 	return last;
-
 }
 
 }; // end class
