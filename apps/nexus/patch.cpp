@@ -1,10 +1,18 @@
 #include "patch.h"
+#ifdef WIN32
+#include "minilzo.108/minilzo.h"
+#else
 #include <lzo1x.h>
+#endif
 #include <iostream>
 using namespace std;
 using namespace nxs;
 
+#ifdef WIN32
+static double wrkmem[LZO1X_1_MEM_COMPRESS/sizeof(double) +1];
+#else
 static double wrkmem[LZO1X_999_MEM_COMPRESS/sizeof(double) +1];
+#endif
 
 void pad(unsigned int &size) {
   while(size&0x3) size++;
@@ -112,18 +120,25 @@ unsigned int Patch::ByteSize(Signature signature,
 
 
 char *Patch::Compress(unsigned int ram_size, unsigned int &size) {
+
+
   //TODO use OVERLAP and test speed
   //TODO fill chunk padding with zeroes?
   //TODO compress only used memory!
   size = ram_size + ram_size/64 + 23;
   char *buffer = new char[size];
-  lzo1x_1_compress(((unsigned char *)start), ram_size,
+#ifdef WIN32
+    lzo1x_1_compress(((unsigned char *)start), ram_size,
 		     (unsigned char *)buffer + sizeof(int), &size,
 		   (char *)wrkmem);
-  
+#else
+  lzo1x_999_compress(((unsigned char *)start), ram_size,
+		     (unsigned char *)buffer + sizeof(int), &size,
+		   (char *)wrkmem);
+#endif
+
   *(int *)buffer = size;
   size += sizeof(int);
-  
 
   //  memcpy(buffer, start, ram_size);
   //  size = ram_size;
@@ -131,18 +146,16 @@ char *Patch::Compress(unsigned int ram_size, unsigned int &size) {
   //      lzo1x_optimize((unsigned char *)entry.patch->start,
   //			 entry.ram_size * chunk_size,
   //			 compressed, &compressed_size, NULL);
-
-
   return buffer;
+
 }
 
 void Patch::Decompress(unsigned int ram_size, void *src, unsigned int src_sz) {
-		     
+  
   unsigned int size = *(int *)src;
   assert(size < src_sz + sizeof(int));
   unsigned int dst_size = ram_size;
-  
-  //  memcpy(start, src, ram_size);
+    
   int ret = lzo1x_decompress_safe(((unsigned char *)src) + sizeof(int), size,
 				  (unsigned char *)start, &dst_size, 0);
   if(ret != 0) {
