@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/06/02 16:28:22  ganovelli
+minor changes (swap =>> math::Swap)
+
 Revision 1.6  2004/05/10 15:23:43  cignoni
 Changed a FV -> VF in VertexFace topology computation
 
@@ -141,7 +144,7 @@ static void FaceFace(MeshType &m)
 
   std::vector<PEdge> e;
 	FaceIterator pf;
-	std::vector<PEdge>::iterator p;
+	typename std::vector<PEdge>::iterator p;
 
 	if( m.fn == 0 ) return;
 
@@ -159,12 +162,12 @@ static void FaceFace(MeshType &m)
 
 	int ne = 0;											// Numero di edge reali
 
-	std::vector<PEdge>::iterator pe,ps;
+	typename std::vector<PEdge>::iterator pe,ps;
 	for(ps = e.begin(),pe=e.begin();pe<=e.end();++pe)	// Scansione vettore ausiliario
 	{
 		if( pe==e.end() || *pe != *ps )					// Trovo blocco di edge uguali
 		{
-			std::vector<PEdge>::iterator q,q_next;
+			typename std::vector<PEdge>::iterator q,q_next;
 			for (q=ps;q<pe-1;++q)						// Scansione facce associate
 			{
 				assert((*q).z>=0);
