@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/03/10 21:38:40  cignoni
+Written some documentation and added to the space module
+
 Revision 1.2  2004/03/10 00:35:01  cignoni
 Removed a wrong (?) copy constructor
 
@@ -73,7 +76,7 @@ public:
 		DarkGray		=0xff404040,
 		DarkRed		  =0xff000040,
 		DarkGreen   =0xff004000,
-		DarkBlue		=0xff400000,
+		DarkBlue		=0xff400000
 	};
 	
   inline Color4 ( const T nx, const T ny, const T nz , const T nw ) :Point4<T>(nx,ny,nz,nw) {};
@@ -89,8 +92,8 @@ public:
 	  _v[3] = T(b[3]);
   }
 
-  inline void Import(const Color4<float> &b);
-  inline void Import(const Color4<unsigned char> &b);
+  //inline void Import(const Color4<float> &b);
+  //inline void Import(const Color4<unsigned char> &b);
 	
   inline void lerp(const Color4 &c0, const Color4 &c1, const float x);
 	inline void lerp(const Color4 &c0, const Color4 &c1, const Color4 &c2, const Point3f &ip);
@@ -200,23 +203,23 @@ inline void Color4<T>::lerp(const Color4<T> &c0, const Color4<T> &c1, const Colo
 template <class T>
 inline void Color4<T>::ColorRamp(const float &minf,const float  &maxf ,float v )
 {
-	if(v <  minf ) { *this=Color4(Color4::Red); return; }
+	if(v <  minf ) { *this=Color4(Color4<T>::Red); return; }
 	
 	float step=(maxf-minf)/4;
 	v-=minf;
-	if(v<step) {lerp(Color4(Color4::Red),  Color4(Color4::Yellow),v/step); return;}
+	if(v<step) {lerp(Color4(Color4<T>::Red),  Color4(Color4<T>::Yellow),v/step); return;}
 	v-=step;
-	if(v<step) {lerp(Color4(Color4::Yellow),Color4(Color4::Green),v/step);return;}
+	if(v<step) {lerp(Color4(Color4<T>::Yellow),Color4(Color4<T>::Green),v/step);return;}
 	v-=step;
-	if(v<step) {lerp(Color4(Color4::Green),Color4(Color4::Cyan),v/step);  return;}
+	if(v<step) {lerp(Color4(Color4<T>::Green),Color4(Color4<T>::Cyan),v/step);  return;}
 	v-=step;
-	if(v<step) {lerp(Color4(Color4::Cyan),Color4(Color4::Blue),v/step);   return;}
+	if(v<step) {lerp(Color4(Color4<T>::Cyan),Color4(Color4<T>::Blue),v/step);   return;}
 
-	*this= Color4(Color4::Blue);
+	*this= Color4(Color4<T>::Blue);
 
 }
 
-
+template <>
 inline void Color4<float>::Import(const Color4<unsigned char> &b)
 {
   _v[0]=b[0]/255.0f;
@@ -224,7 +227,7 @@ inline void Color4<float>::Import(const Color4<unsigned char> &b)
   _v[2]=b[2]/255.0f;
   _v[3]=b[3]/255.0f;
 }
-
+template <>
 inline void Color4<unsigned char>::Import(const Color4<float> &b)
 {
   _v[0]=(unsigned char)(b[0]*255.0f);
