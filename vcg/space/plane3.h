@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/03/31 22:19:24  ponchio
+Untested first draft.
+
 
 ****************************************************************************/
 
@@ -110,14 +113,14 @@ public:
 	/// Calculates the plane passing through three points (Rename this method)
   void Init(const PointType &p0, const PointType &p1, const PointType &p2) {
 	  _dir = (p2 - p0) ^ (p1 - p0);
-	  _offset = p0 * _dist;
+	  _offset = p0 * _dir;
     if(NORM) Normalize();
   }
 
   /// Calculates the plane passing through a point and the normal (Rename this method
   inline void Init(const PointType &p0, const PointType &norm) {
 	  _dir = norm;
-	  _dist = p0 * _dir;
+	  _offset = p0 * _dir;
   }
 };	// end class Plane3
 
