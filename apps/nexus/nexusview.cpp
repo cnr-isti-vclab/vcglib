@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.34  2005/02/14 14:21:24  ponchio
+Preload disabled at startap (-p)
+
 Revision 1.33  2005/02/10 09:18:20  ponchio
 Statistics.
 
@@ -151,6 +154,9 @@ using namespace std;
 
 #include <SDL/SDL.h>
 
+//this include MUST precede GL includes.
+#include <apps/nexus/nexusmt.h>
+
 #ifdef WIN32
 #include <windows.h>
 #endif
@@ -162,7 +168,6 @@ using namespace std;
 #include <wrap/gui/trackball.h>
 #include "watch.h"
 
-#include <apps/nexus/nexusmt.h>
 
 using namespace vcg;
 using namespace nxs;
