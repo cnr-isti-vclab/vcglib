@@ -232,9 +232,9 @@ bool History::UpdatesToQuick() {
 
       vector<unsigned int>::iterator k;
       for(k = cells.begin(); k != cells.end(); k++) {
-	Cell cell;
-	cell.patch = (*k);
-	tmp_frags.push_back(cell);
+	      Cell cell;
+	      cell.patch = (*k);
+	      tmp_frags.push_back(cell);
       }         
 
       //Add the new Frag to the node.

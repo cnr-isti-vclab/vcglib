@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
 
   for(unsigned int patchid = 0; patchid < nexus.index.size(); patchid++) {
     PatchInfo &info = nexus.index[patchid];
-    Border border = nexus.GetBorder(patchid);
+    Border &border = nexus.GetBorder(patchid);
     for(unsigned int i = 0; i < border.Size(); i++) {
       Link &link = border[i];
       if(link.start_vert == 0 && link.end_vert == 0 && link.end_patch == 0) {
@@ -81,13 +81,13 @@ int main(int argc, char *argv[]) {
   cerr << "Reciprocity borders test\n";
   for(unsigned int patchid = 0; patchid < nexus.index.size(); patchid++) {
     PatchInfo &info = nexus.index[patchid];
-    Border border = nexus.GetBorder(patchid);
+    Border &border = nexus.GetBorder(patchid);
     vector<Link> links;
     links.resize(border.Size());
     memcpy(&*links.begin(),&(border[0]),links.size() * sizeof(Link));    
     for(unsigned int i = 0; i < links.size(); i++) {      
       Link &link = links[i];      
-      Border rborder = nexus.GetBorder(link.end_patch);          
+      Border &rborder = nexus.GetBorder(link.end_patch, false);          
 
       bool found = false;
       for(unsigned int k = 0; k < rborder.Size(); k++) {

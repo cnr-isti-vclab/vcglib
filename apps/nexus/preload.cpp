@@ -9,9 +9,10 @@ using namespace nxs;
     while(!get_signaled()) {
       lock.enter();
       while(!queue.size()) {
-	lock.leave();
-	pt::psleep(10);
-	lock.enter();
+        //cerr << "Acc nothing to preload!\n";
+	      lock.leave();
+	      pt::psleep(10);
+	      lock.enter();
       }
       //TODO check we are not loading too much memory!
       assert(queue.size());

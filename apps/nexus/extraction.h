@@ -64,7 +64,7 @@ class Extraction {
   void Update(NexusMt *mt);
 
 
- protected:    
+ protected:         
 
   void Select();
   void Visit(Node *node);
@@ -72,7 +72,7 @@ class Extraction {
   bool Expand(HeapNode &node);
   void Diff(Node *node, Cost &cost);
 
-  bool Refine(Node *node);
+  bool Refine(HeapNode &node);
   bool Coarse(HeapNode &node);
 
   void Init();

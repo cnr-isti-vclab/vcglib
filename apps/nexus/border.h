@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/10/08 14:46:26  ponchio
+Working version.
+
 Revision 1.4  2004/09/30 00:27:08  ponchio
 Added used counter.
 
@@ -71,18 +74,18 @@ struct Link {
 class Border {
  public:
   Border(Link *l = NULL, unsigned short _used = 0, unsigned short _size = 0): 
-    start(l), used(_used), size(_size) {}
+    links(l), used(_used), size(_size), start(0) {}
   unsigned int Size() { return used; }
   //TODO rename available to capacity.
   unsigned int Available() { return size; }
-  Link &operator[](unsigned int i) { return start[i]; }
-  Link *Start() { return start; }
+  Link &operator[](unsigned int i) { return links[i]; }
+  Link *Start() { return links; }
 
-  //TODO implement an iterator! 
- private:
-  Link *start;
-  unsigned short used;
-  unsigned short size;
+  //TODO implement an iterator!  
+  Link *links;
+  unsigned int used;
+  unsigned int size;
+  unsigned int start;
 };
 
 }

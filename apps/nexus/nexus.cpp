@@ -161,26 +161,9 @@ Patch &Nexus::GetPatch(unsigned int patch, bool flush) {
   return *(entry.patch);
 }
 
-Border Nexus::GetBorder(unsigned int patch, bool flush) {
+Border &Nexus::GetBorder(unsigned int patch, bool flush) {
   return borders.GetBorder(patch);
 }
-
-/*void Nexus::AddBorder(unsigned int patch, Link &link) {
-  Border border = GetBorder(patch);
-	
-  unsigned int pos = border.Size();
-  if(pos > 65500) {
-    cerr << "Exceding border size!!!\n";
-    exit(0);
-  }
-  if(borders.ResizeBorder(patch, pos+1)) {
-    border = GetBorder(patch);
-  }
-  
-  assert(border.Available() > pos);
-
-  border[pos] = link;  
-  }*/
 
 unsigned int Nexus::AddPatch(unsigned int nvert, unsigned int nface,
 			     unsigned int nbord) {
@@ -205,121 +188,6 @@ unsigned int Nexus::AddPatch(unsigned int nvert, unsigned int nface,
   totface += nface;
   return size() - 1;
 }
-
-/*void Nexus::Unify(float threshold) {
-  //TODO what if colors or normals or strips?
-  unsigned int duplicated = 0;
-  unsigned int degenerate = 0;
-
-  for(unsigned int p = 0; p < size(); p++) {
-    Entry &entry = operator[](p);
-    Patch &patch = GetPatch(p);
-
-    unsigned int vcount = 0;
-    map<Point3f, unsigned short> vertices;
-
-    vector<unsigned short> remap;
-    remap.resize(patch.nv);
-
-    for(unsigned int i = 0; i < patch.nv; i++) {
-      Point3f &point = patch.Vert(i);
-
-      if(!vertices.count(point)) 
-        vertices[point] = vcount++;
-      else 
-        duplicated++;
-
-      remap[i] = vertices[point];
-    }
-    assert(vertices.size() <= patch.nv);
-    if(vertices.size() == patch.nv) //no need to unify
-      continue;
-
-    vector<Point3f> newvert;
-    newvert.resize(vertices.size());
-    map<Point3f, unsigned short>::iterator k;
-    for(k = vertices.begin(); k != vertices.end(); k++) {
-      newvert[(*k).second] = (*k).first;
-    }
-
-
-    vector<unsigned short> newface;
-    //check no degenerate faces get created.
-    for(unsigned int f = 0; f < entry.nface; f++) {
-      unsigned short *face = patch.Face(f);
-      if(face[0] != face[1] && face[1] != face[2] && face[0] != face[2] &&
-	      newvert[remap[face[0]]] != newvert[remap[face[1]]] &&
-	      newvert[remap[face[0]]] != newvert[remap[face[2]]] &&
-	      newvert[remap[face[1]]] != newvert[remap[face[2]]]) {
-	      newface.push_back(remap[face[0]]);
-	      newface.push_back(remap[face[1]]);
-	      newface.push_back(remap[face[2]]);
-      } else {
-	      degenerate++;
-      }
-    }
-
-    //rewrite patch now.
-    entry.nvert = newvert.size();
-    entry.nface = newface.size()/3;
-    patch.Init(signature, entry.nvert, entry.nface);
-
-    memcpy(patch.VertBegin(), &(newvert[0]), entry.nvert*sizeof(Point3f));
-    memcpy(patch.FaceBegin(), &(newface[0]), entry.nface*3*sizeof(short));
-
-    //testiamo il tutto...  TODO remove this of course
-    for(unsigned int i =0; i < patch.nf; i++) {
-      for(int k =0 ; k < 3; k++)
-        if(patch.Face(i)[k] >= patch.nv) {
-          cerr <<" Unify has problems\n";
-          exit(0);
-        }
-    }
-    
-    //fix patch borders now
-    set<unsigned int> close; //bordering pathes
-    Border border = GetBorder(p);
-    for(unsigned int b = 0; b < border.Size(); b++) {
-      if(border[b].IsNull()) continue;
-      close.insert(border[b].end_patch);
-      border[b].start_vert = remap[border[b].start_vert];
-    }
-
-    set<unsigned int>::iterator c;
-    for(c = close.begin(); c != close.end(); c++) {
-      Border bord = GetBorder(*c);
-      for(unsigned int b = 0; b < bord.Size(); b++) {
-        if(bord[b].IsNull()) continue;
-        if(bord[b].end_patch == p) {
-          bord[b].end_vert = remap[bord[b].end_vert];
-        }
-      }
-    }
-  }
-  //better to compact directly borders than setting them null.
-  //finally: there may be duplicated borders
-  for(unsigned int p = 0; p < size(); p++) {
-    Border border = GetBorder(p);
-    set<Link> links;
-    for(unsigned int b = 0; b < border.Size(); b++) {
-      Link &link = border[b];
-      assert(!link.IsNull());
-      //if(border[b].IsNull()) continue;
-      links.insert(link);
-    }
-    int count = 0;
-    for(set<Link>::iterator k = links.begin(); k != links.end(); k++)
-      border[count++] = *k;      
-    
-    borders[p].used = links.size();
-  }
-  
-  totvert -= duplicated;
-  if(duplicated)
-    cerr << "Found " << duplicated << " duplicated vertices" << endl;
-  if(degenerate)
-    cerr << "Found " << degenerate << " degenerate face while unmifying\n";
-    }*/
 
 Patch *Nexus::LoadPatch(unsigned int idx) {
   assert(idx < size());

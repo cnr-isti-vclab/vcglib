@@ -39,7 +39,7 @@ void nxs::ComputeNormals(Nexus &nexus) {
 
   //TODO optimize! it is not necessary to read all the borders.
   for(unsigned int p = 0; p < nexus.size(); p++) {
-    Border border = nexus.GetBorder(p);
+    Border &border = nexus.GetBorder(p);
     tmpb_start.push_back(tmpb_offset);
     tmpb_offset += border.Size();
   }
@@ -106,7 +106,7 @@ void nxs::ComputeNormals(Nexus &nexus) {
     }
 
 
-    Border border = nexus.GetBorder(p);
+    Border &border = nexus.GetBorder(p);
 
     
     map<unsigned int, map<unsigned short, Point3f> > bnorm;
@@ -125,7 +125,7 @@ void nxs::ComputeNormals(Nexus &nexus) {
     map<unsigned int, map<unsigned short, Point3f> >::iterator k;
     for(k = bnorm.begin(); k != bnorm.end(); k++) {
       unsigned int patch = (*k).first;
-      Border border = nexus.GetBorder(patch);
+      Border &border = nexus.GetBorder(patch);
       unsigned int offset = tmpb_start[patch];
       for(unsigned int i = 0; i < border.Size(); i++) {
 	      Link &link = border[i];
@@ -151,7 +151,7 @@ void nxs::ComputeNormals(Nexus &nexus) {
 
     set<unsigned int>::iterator k;
     for(k = close.begin(); k != close.end(); k++) {
-      Border remote = nexus.GetBorder(*k);
+      Border &remote = nexus.GetBorder(*k);
       unsigned int off = tmpb_start[*k];
 
       for(unsigned int i = 0; i < remote.Size(); i++) {
@@ -172,7 +172,7 @@ void nxs::ComputeNormals(Nexus &nexus) {
   for(unsigned int p = 0; p < nexus.size(); p++) {
     report.Step(p);
     Patch &patch = nexus.GetPatch(p);
-    Border border = nexus.GetBorder(p);
+    Border &border = nexus.GetBorder(p);
 
     for(unsigned int i = 0; i < border.Size(); i++) {
       Link &link = border[i];
@@ -357,7 +357,7 @@ void nxs::Unify(Nexus &nexus, float threshold) {
     
     //fix patch borders now
     set<unsigned int> close; //bordering pathes
-    Border border = nexus.GetBorder(p);
+    Border &border = nexus.GetBorder(p);
     for(unsigned int b = 0; b < border.Size(); b++) {
       if(border[b].IsNull()) continue;
       close.insert(border[b].end_patch);
@@ -366,7 +366,7 @@ void nxs::Unify(Nexus &nexus, float threshold) {
 
     set<unsigned int>::iterator c;
     for(c = close.begin(); c != close.end(); c++) {
-      Border bord = nexus.GetBorder(*c);
+      Border &bord = nexus.GetBorder(*c);
       for(unsigned int b = 0; b < bord.Size(); b++) {
         if(bord[b].IsNull()) continue;
         if(bord[b].end_patch == p) {
@@ -378,7 +378,7 @@ void nxs::Unify(Nexus &nexus, float threshold) {
   //better to compact directly borders than setting them null.
   //finally: there may be duplicated borders
   for(unsigned int p = 0; p < nexus.size(); p++) {
-    Border border = nexus.GetBorder(p);
+    Border &border = nexus.GetBorder(p);
     set<Link> links;
     for(unsigned int b = 0; b < border.Size(); b++) {
       Link &link = border[b];

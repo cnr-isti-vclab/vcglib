@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.29  2005/01/17 17:35:47  ponchio
+Small changes and adding realtime extr.
+
 Revision 1.28  2005/01/14 15:25:29  ponchio
 Revolution.
 
@@ -425,7 +428,7 @@ int main(int argc, char *argv[]) {
 
     /*    if(show_borders) {
 	  for(unsigned int i = 0; i < cells.size(); i++) {
-	  Border border = nexus.GetBorder(cells[i]);
+	  Border &border = nexus.GetBorder(cells[i]);
 	  Patch &patch = nexus.GetPatch(cells[i]);
 	  glPointSize(4);
 	  glColor3f(1.0f, 1.0f, 1.0f);

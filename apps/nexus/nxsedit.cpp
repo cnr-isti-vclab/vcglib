@@ -51,6 +51,7 @@ int main(int argc, char *argv[]) {
   string output;
   string plysource;
   bool info = false;
+  bool verbose = false;
   unsigned int ram_size = 128000000;
   unsigned int chunk_size = 0;
 
@@ -76,9 +77,10 @@ int main(int argc, char *argv[]) {
   float qtexture = 0;
 
   int option;
-  while((option = getopt(argc, argv, "io:a:r:zxv:n:k:t:b:c:")) != EOF) {
+  while((option = getopt(argc, argv, "ilo:a:r:zxv:n:k:t:b:c:")) != EOF) {
     switch(option) {
     case 'i': info = true; break;
+    case 'l': verbose = true; break;
     case 'o': output = optarg; break;
     case 'a': {
       if(strstr(optarg, "strip")) {
@@ -195,6 +197,7 @@ int main(int argc, char *argv[]) {
   if(optind != argc - 1) {
     cerr << "Usage: " << argv[0] << " <nexus file> [options]\n"
 	 << " -i       : display some info about nexus file\n"
+   << " -l       : list nodes\n"
          << " -o <file>: output filename (default is adding 00 to nexus)\n"
 	 << " -a <what>: Add [colors|normals|strip|textures|data|borders]\n"
          << " -r <what>: As add...\n"
@@ -254,7 +257,7 @@ int main(int argc, char *argv[]) {
 
 
   if(info) {
-    cerr << "Nexus file: " << input << "\n\n"
+    cout << "Nexus file: " << input << "\n\n"
 	 << "\n\tCompressed: " << nexus.IsCompressed() 
 	 << "\n\tStripped: " << (int)((nexus.signature&NXS_STRIP) !=0)
 	 << "\n\tColor   : " << (int)((nexus.signature&NXS_COLORS) !=0)
@@ -270,7 +273,15 @@ int main(int argc, char *argv[]) {
 	 << nexus.sphere.Center()[2] << " R: "
 	 << nexus.sphere.Radius()
 	 << "\n\tChunk size " << nexus.chunk_size << endl;
-    
+   
+    if(verbose) {
+      for(unsigned int i = 0; i < nexus.size(); i++) {
+        Entry &entry = nexus[i];
+        cout << i << " -> nv: " << entry.nvert << " nf: " << entry.nface 
+             << " error: " << entry.error << " disk_size: " << entry.disk_size << endl;
+      }
+      cout << endl;
+    }
   }
   
   //determine if we must proceed:
@@ -331,7 +342,7 @@ int main(int argc, char *argv[]) {
     report.Step(patch);
     Entry &src_entry = nexus[patch];
     Patch &src_patch = nexus.GetPatch(patch);
-    Border src_border = nexus.GetBorder(patch);
+    Border &src_border = nexus.GetBorder(patch);
 
 
     vector<unsigned short> strip;
@@ -397,7 +408,7 @@ int main(int argc, char *argv[]) {
       assert(link.end_patch < nexus.index.size());
     }*/
     out.borders.ResizeBorder(patch, src_border.Size());
-    Border dst_border = out.GetBorder(patch);
+    Border &dst_border = out.GetBorder(patch);
     memcpy(dst_border.Start(), src_border.Start(), 
 	   src_border.Size() * sizeof(Link));    
   }

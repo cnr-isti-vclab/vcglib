@@ -45,27 +45,22 @@ void nxs::Remap(VChain &chain,
 		float scaling,
 		int steps) {
 
-  VPartition *finepart = new VPartition;
-  //  finepart.Init();  
+  VPartition *finepart = new VPartition;  
   chain.push_back(finepart);
   BuildPartition(*finepart, points, target_size, min_size, max_size, steps);
 
-
-  VPartition *coarsepart = new VPartition;
-  //  coarsepart.Init();
+  VPartition *coarsepart = new VPartition;  
   chain.push_back(coarsepart);
   BuildPartition(*coarsepart, points, 
 		 (int)(target_size/scaling), min_size, max_size, steps);
 
 
-
-
-
   cerr << "Fine size: " << finepart->size() << endl;
   cerr << "Coarse size: " << coarsepart->size() << endl;
 
-  typedef  map<pair<unsigned int, unsigned int>, unsigned int> FragIndex;
 
+//  typedef  map<pair<unsigned int, unsigned int>, unsigned int> FragIndex;
+  typedef map<unsigned int, map<unsigned int, unsigned int> > FragIndex;
   FragIndex patches;
 
   unsigned int totpatches = 0;
@@ -79,12 +74,11 @@ void nxs::Remap(VChain &chain,
     unsigned int coarse = coarsepart->Locate(bari);
 
     unsigned int patch;
-    
-    if(!patches.count(make_pair(coarse, fine))) {
+    if(!patches.count(coarse) || !patches[coarse].count(fine)) {    
       patch = totpatches;
-      patches[make_pair(coarse, fine)] = totpatches++;
+      patches[coarse][fine] = totpatches++;
     } else
-      patch = patches[make_pair(coarse, fine)];
+      patch = patches[coarse][fine];
 
     remap[i] = patch;
 
@@ -93,40 +87,96 @@ void nxs::Remap(VChain &chain,
     count[patch]++;
   }
 
-  cerr << "Prune faces...\n";
-
-  //prune faces (now only 0 faces);
-  unsigned int new_totpatches = 0;
-  vector<int> patch_remap;
   for(unsigned int i = 0; i < totpatches; i++) {
-    //if below threshold (and can join faces)
-    //    if(count[i] < min_size)
-    if(count[i] == 0)
-      patch_remap.push_back(-1);
-    else
-      patch_remap.push_back(new_totpatches++);
-    
     if(count[i] > 32000) {
       //TODO do something to reduce patch size... :P
       cerr << "Found a patch too big... sorry\n";
       exit(0);
     }
   }
-  
 
-  cerr << "BUilding fragmenbts\n";
+  unsigned int mean = 0;
+  for(unsigned int i = 0; i < count.size(); i++)
+    mean += count[i];
+  mean /= count.size();
+  
+  min_size /= 4;  
+  cerr << "Pruning small patches... < " << min_size << " mean: " << mean << endl;
+
+
+  //prune small patches
+  
+  vector<int> patch_map;
+  patch_map.resize(totpatches);
+  for(unsigned int i = 0; i < totpatches; i++)
+    patch_map[i] = i;
+
+  for(FragIndex::iterator s = patches.begin(); s != patches.end(); s++) {
+    map<unsigned int, unsigned int> &fines = (*s).second;
+        
+    while(1) {
+      if(fines.size() <= 1) break;
+      unsigned int inf_fine = 0xffffffff;
+      unsigned int inf_count, min_count;
+      unsigned int min_fine = 0xffffffff;
+      unsigned int min_patch, inf_patch;
+      map<unsigned int, unsigned int>::iterator t;
+      for(t = fines.begin(); t != fines.end(); t++) {
+        unsigned int c = count[(*t).second];        
+        if(inf_fine == 0xffffffff || c < inf_count) {
+          if(inf_fine != 0xffffffff) {
+            min_fine = inf_fine;
+            min_count = inf_count;
+            min_patch = inf_patch;
+          }
+            inf_fine = (*t).first;
+            inf_count = c;
+            inf_patch = (*t).second;
+        } else if(min_fine == 0xffffffff || c < min_count) {
+            min_fine = (*t).first;
+            min_count = c;
+            min_patch = (*t).second;
+        }
+      }
+      if(inf_count >= min_size || 
+         inf_count + min_count > max_size) break;      
+      
+      count[min_patch] += count[inf_patch];
+      patch_map[inf_patch] = min_patch;
+      fines.erase(inf_fine);      
+    }   
+  }
+  for(unsigned int i = 0; i < totpatches; i++) 
+    while(patch_map[patch_map[i]] != patch_map[i])
+      patch_map[i] = patch_map[patch_map[i]];
+  
+  //now we remap remaining patches into 0 - n.
+  unsigned int new_totpatches = 0;
+  vector<int> patch_remap;
+  patch_remap.resize(totpatches, -1);
+  for(unsigned int i = 0; i < totpatches; i++) {    
+    unsigned int p = patch_map[i];
+    if(patch_remap[p] == -1) 
+      patch_remap[p] = new_totpatches++;
+    patch_remap[i] = patch_remap[p];
+  }  
+  
+  cerr << "Building fragments\n";
 
   //building fragments
-  FragIndex::iterator f;
-  for(f = patches.begin(); f != patches.end(); f++) {
-    unsigned int coarse = (*f).first.first;
-    unsigned int fine = (*f).first.second;
-    unsigned int oldpatch = (*f).second;
-    assert(oldpatch < patch_remap.size());
-    unsigned int patch = patch_remap[oldpatch];
-    if(patch != -1) //not deleted...
-      chain.oldfragments[coarse].insert(patch);
-  }  
+  for(FragIndex::iterator s = patches.begin(); s != patches.end(); s++) {
+    unsigned int coarse = (*s).first;
+    map<unsigned int, unsigned int> &fines = (*s).second;
+    map<unsigned int, unsigned int>::iterator t;
+    for(t = fines.begin(); t != fines.end(); t++) {
+      unsigned int fine = (*t).first;
+      unsigned int oldpatch = (*t).second;
+      assert(oldpatch < patch_remap.size());    
+      unsigned int patch = patch_remap[oldpatch];
+      if(patch != -1) //not deleted...
+        chain.oldfragments[coarse].insert(patch);
+    }  
+  }
 
   cerr << "remapping faces again\n";
   //remapping faces
@@ -428,92 +478,4 @@ bool nxs::Optimize(VPartition &part,
   }
   part.Init();    
   return true;
-  //  for(unsigned int i = 0; i < part.size(); i++) {
-  //    if(counts[i] > max_size || counts[i] > max_size) {
-  //      failed++;
-  //    } else {
-  //    }
-  //  }
-  //PREPHASE:
-  /*  if(join) {
-
-  
-  //  float bigthresh = 1.2f;
-  //  float smallthresh = 0.5f;
-
-  float bigthresh = 10.0f;
-  float smallthresh = 0.1f;
-  
-  unsigned int failed = 0;
-  vector<Point3f> seeds;
-  vector<bool> mark;
-  mark.resize(part.size(), false);
-  
-  //first pass we check only big ones
-  for(unsigned int i = 0; i < part.size(); i++) {
-    if(counts[i] > max_size || counts[i] > bigthresh * target_size) {
-      failed++;
-      float radius;
-      
-      if(part.size() == 1) 
-	radius = 0.00001;
-      else
-	radius = part.Radius(i);
-      
-      if(radius == 0) {
-	cerr << "Radius zero???\n";
-	exit(0);
-      }
-      radius /= 4;
-      seeds.push_back(centroids[i] + Point3f(1, -1, 1) * radius);
-      seeds.push_back(centroids[i] + Point3f(-1, 1, 1) * radius);
-      seeds.push_back(centroids[i] + Point3f(-1, -1, -1) * radius);
-      seeds.push_back(centroids[i] + Point3f(1, 1, -1) * radius);
-      mark[i] = true;
-    }
-  }
-  if(failed > 0) 
-    cerr << "Found " << failed << " patches too big.\n";
-  
-  if(join) {
-    for(unsigned int i = 0; i < part.size(); i++) {
-      if(mark[i]) continue;
-      if(counts[i] >= min_size && counts[i] >= smallthresh * target_size) continue;
-      
-      failed++;
-      int best = GetBest(part, i, mark, counts);
-      if(best < 0) {
-	cerr << "Best not found! while looking for: " << i << "\n";
-	continue;
-      }
-      assert(mark[best] == false);
-      mark[best] = true;
-      mark[i] = true;
-      seeds.push_back((part[i] + part[best])/2);
-    }
-  }
-  
-  for(unsigned int i = 0; i < part.size(); i++) {
-    if(mark[i]) continue;
-    if(counts[i] == 0) continue;
-    if(join) {
-      //        if(counts[i] < min_size) {
-      //          cerr << "Could not fix: " << i << endl;
-      //        } else {
-      part[i] = centroids[i];
-      //        }
-    }
-    seeds.push_back(part[i]);      
-  }
-  
-  part.clear();
-  for(unsigned int i = 0; i < seeds.size(); i++)
-    part.push_back(seeds[i]);
-  
-  if(part.size() == 0) {
-    cerr << "OOOPS i accidentally deleted all seeds... backup :P\n";
-    part.push_back(Point3f(0,0,0));
-  }
-  part.Init();    
-  return failed == 0;*/
 }

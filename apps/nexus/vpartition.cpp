@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/12/04 13:24:27  ponchio
+Fixed a couple of memory leak...
+
 Revision 1.1  2004/11/30 22:50:30  ponchio
 Level 0.
 
@@ -64,6 +67,7 @@ void VPartition::Closest(const vcg::Point3f &p, unsigned int nsize,
   point[0] = p[0];
   point[1] = p[1];
   point[2] = p[2];
+  if(nsize > size()) nsize = size();
 
   nears.resize(nsize);
   dist.resize(nsize);

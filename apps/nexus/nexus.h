@@ -74,7 +74,7 @@ class Nexus: public IndexFile<Entry> {
   
   unsigned int AddPatch(unsigned int nv, unsigned int nf, unsigned int nb);
   Patch &GetPatch(unsigned int patch, bool flush = true);
-  Border GetBorder(unsigned int patch, bool flush = true);
+  Border &GetBorder(unsigned int patch, bool flush = true);
 
   unsigned int &MaxRam() { return ram_max; }
   //  void AddBorder(unsigned int patch, Link &link);

@@ -30,9 +30,15 @@ namespace nxs {
       float dist = (sphere.Center() - frustum.ViewPoint()).Norm() - sphere.Radius();
       //float dist = Distance(sphere, frustum.ViewPoint());
       if(dist < 0) 
-	return 1e20f;
-      if(frustum.IsOutside(sphere.Center(), sphere.Radius()))
-	return -1;
+	      return 1e20f;
+
+      float remote = frustum.Remoteness(sphere.Center(), sphere.Radius());      
+      if(remote > 0)
+        return (entry.error/remote)/frustum.Resolution(dist);
+
+      //if(frustum.IsOutside(sphere.Center(), sphere.Radius()))
+	      //return -1;
+     
       return entry.error/frustum.Resolution(dist);
     }
   };

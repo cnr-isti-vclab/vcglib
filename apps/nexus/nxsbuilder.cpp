@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2005/01/17 17:35:48  ponchio
+Small changes and adding realtime extr.
+
 Revision 1.12  2005/01/14 15:25:29  ponchio
 Revolution.
 
@@ -170,8 +173,8 @@ void FirstStep(const string &crudefile, const string &output,
   BlockIndex face_index;
 
   Remap(vchain, baricenters, face_remap, face_index, 
-	patch_size, patch_threshold, 65000, scaling,
-	optimization_steps);
+	      patch_size, patch_threshold, 65000, scaling,
+	      optimization_steps);
 
   if(!vchain.Save(output + ".vchain")) {
     cerr << "Could not save file: " << output << ".vchain\n";
@@ -221,7 +224,6 @@ void SecondStep(const string &crudefile, const string &output) {
   for(unsigned int i = 0; i < face_remap.Size(); i++) {
     unsigned int patch = face_remap[i];
     assert(patch < face_index.size());
-    assert(patch >= 0);
     int64 offset = face_index[patch].offset + done[patch]++;
     sorted[offset] = crude.GetFace(i);
   }
@@ -230,16 +232,6 @@ void SecondStep(const string &crudefile, const string &output) {
   for(int i = 0; i < done.size(); i++)
     assert(done[i] == face_index[i].size);
 #endif
-
-  /*#ifndef NDEBUG
-  //test:
-  for(unsigned int i = 0; i < sorted.Size(); i++) {
-  Crude::Face face = sorted[i];
-  assert(face[0] < crude.Vertices());
-  assert(face[1] < crude.Vertices());
-  assert(face[2] < crude.Vertices());
-  }
-  #endif*/
 
   //once sorted
   crude.Close();
@@ -318,16 +310,16 @@ void ThirdStep(const string &crudefile, const string &output,
       //      Crude::Face face = crude.GetFace(i);
       Crude::Face face = sorted[i];
       if(face[0] == face[1] || face[1] == face[2] || face[0] == face[2]) 
-	continue; //degenerate
+	      continue; //degenerate
       for(int j = 0; j < 3; j++) {
-	assert(face[j] < crude.Vertices());
-	if(!vremap.count(face[j])) {          
-	  Point3f &v = crude.vert[face[j]];
-	  vertices.push_back(v);
-	  vremap[face[j]] = vcount++;
-	}
-	faces.push_back(vremap[face[j]]);
-	fcount++;
+	      assert(face[j] < crude.Vertices());
+	      if(!vremap.count(face[j])) {          
+	        Point3f &v = crude.vert[face[j]];
+	        vertices.push_back(v);
+	        vremap[face[j]] = vcount++;
+	      }
+	      faces.push_back(vremap[face[j]]);
+	      fcount++;
       }
     }
     assert(vcount == vertices.size());
@@ -364,7 +356,7 @@ void ThirdStep(const string &crudefile, const string &output,
     //saving vert_remap
     int64 vroffset = vert_remap.Size();
     vert_index.push_back(BlockEntry(vroffset, vcount));
-    vert_remap.Resize(vroffset + vcount);
+    vert_remap.Resize(vroffset + vcount);    
 
     map<unsigned int, unsigned short>::iterator r;
     for(r = vremap.begin(); r != vremap.end(); r++) {
@@ -372,7 +364,10 @@ void ThirdStep(const string &crudefile, const string &output,
       assert(vroffset + (*r).second < vert_remap.Size());
       vert_remap[vroffset + (*r).second] = (*r).first;
     }
-  }
+    if(vcount < 100) {
+      cerr << "Small patch: " << vcount << "\n";
+    }
+  }  
 
   //we can now update bounding sphere.
   for(unsigned int i = 0; i < nexus.size(); i++) 
@@ -409,10 +404,11 @@ void FourthStep(const string &crudefile, const string &output,
   //TODO Clear borders in case of failure!
 
   VFile<unsigned int> vert_remap;
-  if(!vert_remap.Load(crudefile + ".rvm", true)) {
+  if(!vert_remap.Load(output + ".rvm", true)) {
     cerr << "Could not load: " << crudefile << ".rvm\n";
     exit(0);
   }
+  cerr << "Vert_remap.size: " << vert_remap.Size() << endl;
 
   BlockIndex vert_index;
   if(!vert_index.Load(output + ".rvi")) {
@@ -421,7 +417,7 @@ void FourthStep(const string &crudefile, const string &output,
   }
   Report report(nexus.size());
 
-  for(int start = 0; start < nexus.size(); start++) {
+  for(int start = 0; start < nexus.size(); start++) {    
     report.Step(start);
     Entry &s_entry = nexus[start];
 
@@ -432,6 +428,14 @@ void FourthStep(const string &crudefile, const string &output,
     map<unsigned int, unsigned short> vremap;
 #endif
     for(unsigned int i = 0; i < vert_index[start].size; i++) {
+//#ifndef NDEBUG
+      if(vert_index[start].offset + i >= vert_remap.Size()) {
+        cerr << "Ahi Ahi start: " << start << endl;
+        cerr << "offset: " << vert_index[start].offset << endl;
+        cerr << "size: " << vert_index[start].size << endl;
+        exit(0);
+      }
+//#endif
       unsigned int global = vert_remap[vert_index[start].offset + i];      
       vremap[global] = i;
     }
@@ -446,21 +450,30 @@ void FourthStep(const string &crudefile, const string &output,
         continue;
       }
       
-      for(unsigned int i = 0; i < vert_index[end].size; i++) {
-	unsigned int global = vert_remap[vert_index[end].offset + i];
-	if(vremap.count(global)) {       
-	  Link link;
-	  link.start_vert = vremap[global];
-	  link.end_vert = i;
-	  link.end_patch = end;
-	  links.push_back(link);
-	}
+      for(unsigned int i = 0; i < vert_index[end].size; i++) {   
+        
+//#ifndef NDEBUG
+      if(vert_index[end].offset + i >= vert_remap.Size()) {
+        cerr << "aaa Ahi Ahi start: " << end << endl;
+        cerr << "offset: " << vert_index[end].offset << endl;
+        cerr << "size: " << vert_index[end].size << endl;
+        exit(0);
+      }
+//#endif
+	      unsigned int global = vert_remap[vert_index[end].offset + i];
+	      if(vremap.count(global)) {       
+	        Link link;
+	        link.start_vert = vremap[global];
+	        link.end_vert = i;
+	        link.end_patch = end;
+	        links.push_back(link);
+	      }
       }      
     }
-    //TODO Horribili visu (interfaccia di cacca!)
+
+    Border &border = nexus.GetBorder(start);
     nexus.borders.ResizeBorder(start, 3 * links.size());
-    nexus.borders[start].used = links.size();
-    Border border = nexus.GetBorder(start);
+    border.used = links.size();        
     memcpy(&(border[0]), &*links.begin(), links.size() * sizeof(Link));
   }
 }
@@ -699,7 +712,7 @@ void BuildFragment(Nexus &nexus, VPartition &part,
     nxs.patch = *f;
 
     Patch &patch = nexus.GetPatch(*f);
-    Border border = nexus.GetBorder(*f);
+    Border &border = nexus.GetBorder(*f);
 
     for(unsigned int k = 0; k < patch.nf; k++) {
       assert(patch.Face(k)[0] != patch.Face(k)[1]);
@@ -825,7 +838,7 @@ void SaveFragment(Nexus &nexus, VChain &chain,
       newlinks[link.end_patch].insert(up);
       
       assert(link.end_patch != patch_idx);
-      Border cborder = nexus.GetBorder(link.end_patch);
+      Border &cborder = nexus.GetBorder(link.end_patch);
       for(unsigned int k = 0; k < cborder.Size(); k++) {
         //cerr << "Cborder.size: " << cborder.Size() << endl;
         //cerr << "K: " << k << endl;
@@ -865,11 +878,9 @@ void SaveFragment(Nexus &nexus, VChain &chain,
     set<Link>::iterator l;
     unsigned int patch = (*n).first;
     set<Link> &links = (*n).second;
-    Border border = nexus.GetBorder(patch);
+    Border &border = nexus.GetBorder(patch);    
     unsigned int bstart = border.Size();
-    
-    if(nexus.borders.ResizeBorder(patch, border.Size() + links.size()))
-      border = nexus.GetBorder(patch);
+    nexus.borders.ResizeBorder(patch, border.Size() + links.size());                
     for(l = links.begin(); l != links.end(); l++) {
       Link link = *l;
       border[bstart++] = link;
