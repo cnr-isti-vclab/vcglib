@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/02/19 15:13:40  cignoni
+corrected sqrt and added doxygen groups
+
 Revision 1.7  2004/02/17 02:08:47  cignoni
 Di prova...
 
@@ -236,7 +239,7 @@ public:
 		// Norme
 	inline P3ScalarType Norm() const
 	{
-		return Sqrt( _v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2] );
+    return Math<P3ScalarType>::Sqrt( _v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2] );
 	}
 	inline P3ScalarType SquaredNorm() const
 	{
@@ -261,7 +264,7 @@ public:
 	// Normalizzazione
 	inline Point3 & Normalize()
 	{
-		P3ScalarType n = Sqrt(_v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2]);
+    P3ScalarType n = Math<P3ScalarType>::Sqrt(_v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2]);
 		if(n>0.0) {	_v[0] /= n;	_v[1] /= n;	_v[2] /= n;  }
 		return *this;
 	}
