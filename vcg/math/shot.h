@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/11/23 10:15:38  cignoni
+removed comment in comment gcc warning
+
 Revision 1.6  2004/11/03 09:25:52  ganovelli
 replaced Matrix44f to Matrix44<S>, added LookAt
 
@@ -53,8 +56,8 @@ creation
 #ifndef __VCGLIB_SHOT
 #define __VCGLIB_SHOT
 
-#include <vcg/space/Point2.h>
-#include <vcg/space/Point3.h>
+#include <vcg/space/point2.h>
+#include <vcg/space/point3.h>
 #include <vcg/math/similarity.h>
 #include <vcg/math/camera.h>
 
