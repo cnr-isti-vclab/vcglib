@@ -24,6 +24,11 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2004/03/10 16:54:57  tarini
+Added Atan2.
+Added common utilities: Max, Min, Swap, Sort(a,b), Sort(a,b,c).
+Changed Max values syntax. example:  Value<float>::Max
+
 Revision 1.7  2004/03/08 19:38:29  tarini
 aggiunti Min e Max, si usano cosi: Min<float>::Value (tarini)
 
@@ -86,7 +91,7 @@ namespace math {
 	/// syntax: Max<float>::Value  
 
   template <class SCALAR> class Value {
-		public: static const SCALAR Min; static const SCALAR Min;
+		public: static const SCALAR Min; static const SCALAR Max;
 	};  
 
   const char            Value<char           >::Min = -128; 
@@ -114,19 +119,19 @@ namespace math {
   const double          Value<double         >::Min = -1.7E308; 
   const double          Value<double         >::Max = +1.7E308; 
 
-	inline template<class T> Min(const T &a, const T &b){
+	template<class T> inline Min(const T &a, const T &b){
 		if (a<b) return a; else return b;
 	};
-	inline template<class T> Max(const T &a, const T &b){
+	template<class T> inline Max(const T &a, const T &b){
 		if (a<b) return b; else return a;
 	};
-	inline template<class T> Swap(T &a, T &b){
+	template<class T> inline Swap(T &a, T &b){
 		T tmp=a; a=b; b=tmp;
 	};
-	inline template<class T> Sort(T &a, T &b){
+	template<class T> inline Sort(T &a, T &b){
 		if (a>b) Swap(a,b);
 	};
-	inline template<class T> Sort(T &a, T &b, T &c){
+	template<class T> inline Sort(T &a, T &b, T &c){
 		if (a>b) Swap(a,b);
 		if (b>c) {Swap(b,c); if (a>b) Swap(a,b);}
 	};
