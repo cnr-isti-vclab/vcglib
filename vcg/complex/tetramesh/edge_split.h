@@ -30,7 +30,7 @@
 #include <vcg/simplex/tetrahedron/pos.h>
 #include <vcg/complex/tetramesh/allocate.h>
 #include <vcg/complex/tetramesh/update/topology.h>
-#include <vcg/space/tetra3.h>
+#include <vcg/space/tetra.h>
 namespace vcg{
 namespace tetra{
 
