@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/11/28 04:10:59  ponchio
+winsockapi include problem
+
 Revision 1.3  2004/10/21 13:40:16  ponchio
 Debugging.
 
@@ -82,8 +85,8 @@ private:
 
 class Report {
  public:
-  Report(unsigned int tot = 1, float inter = 5.0f) { Init(tot, inter); }
-  void Init(unsigned int tot, float inter = 5.0f);
+  Report(unsigned int tot = 1, float inter = 30.0f) { Init(tot, inter); }
+  void Init(unsigned int tot, float inter = 30.0f);
   void Step(unsigned int count);
   void Finish();
  private:

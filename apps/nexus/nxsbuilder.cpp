@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/12/01 03:32:46  ponchio
+Level 2 (debug).
+
 Revision 1.2  2004/12/01 03:24:32  ponchio
 Level 2.
 
@@ -202,6 +205,7 @@ void SecondStep(const string &crudefile, const string &output) {
   sorted.Close();
 
   /*  TODO fix this (after debug!)
+      WARNING what if multiple files?
 
   if(0 != unlink((crudefile + ".crf").c_str())) {
     cerr << "Could not remove " << crudefile << ".crf\n";
@@ -228,7 +232,7 @@ void ThirdStep(const string &crudefile, const string &output,
   }
   
   VFile<Crude::Face> sorted;
-  if(!sorted.Load(output + ".faces", true)) {
+  if(!sorted.Load(crudefile + ".faces", true)) {
     cerr << "Could not load sorted faces\n";
     exit(0);
   }
@@ -239,8 +243,8 @@ void ThirdStep(const string &crudefile, const string &output,
   }
   
   VFile<unsigned int> vert_remap;
-  if(!vert_remap.Create(crudefile + ".rvm")) {
-    cerr << "Could not create: " << crudefile << ".rvm\n";
+  if(!vert_remap.Create(output + ".rvm")) {
+    cerr << "Could not create: " << output << ".rvm\n";
     exit(0);
   }
   
@@ -255,8 +259,7 @@ void ThirdStep(const string &crudefile, const string &output,
     exit(0);
   }
 
-  Report report;
-  report.Init(face_index.size());
+  Report report(face_index.size());
   for(unsigned int patch = 0; patch < face_index.size(); patch++) {
     report.Step(patch);
 
@@ -326,7 +329,7 @@ void ThirdStep(const string &crudefile, const string &output,
   for(unsigned int i = 0; i < nexus.index.size(); i++) 
     nexus.sphere.Add(nexus.index[i].sphere);
   
-   Nexus::Update update;
+  Nexus::Update update;
   for(unsigned int i = 1; i < nexus.index.size(); i++) {
     update.created.push_back(i);
   }
@@ -338,6 +341,76 @@ void ThirdStep(const string &crudefile, const string &output,
     update.erased.push_back(i);
   }
   nexus.history.push_back(update);
+
+  if(!vert_index.Save(output + ".rvi")) {
+    cerr << "Could not save: " << output << ".rvi\n";
+    exit(0);
+  }
+}
+
+void FourthStep(const string &crudefile, const string &output, 
+		unsigned int ram_buffer) {
+  Nexus nexus;
+
+  nexus.patches.SetRamBufferSize(ram_buffer);
+  if(!nexus.Load(output)) {
+    cerr << "Could not load nexus " << output << endl;
+    exit(0);
+  }
+  //TODO Clear borders in case of failure!
+
+  VFile<unsigned int> vert_remap;
+  if(!vert_remap.Load(crudefile + ".rvm", true)) {
+    cerr << "Could not load: " << crudefile << ".rvm\n";
+    exit(0);
+  }
+
+  BlockIndex vert_index;
+  if(!vert_index.Load(output + ".rvi")) {
+    cerr << "Could not load index\n";
+    exit(0);
+  }
+  Report report(nexus.index.size());
+
+  for(int start = 0; start < nexus.index.size(); start++) {
+    report.Step(start);
+    Nexus::PatchInfo &s_entry = nexus.index[start];
+
+    vector<Link> links;
+    
+    map<unsigned int, unsigned short> vremap;
+    for(unsigned int i = 0; i < vert_index[start].size; i++) {
+      unsigned int global = vert_remap[vert_index[start].offset + i];
+      vremap[global] = i;
+    }
+
+    for(int end = 0; end < nexus.index.size(); end++) {
+      if(start == end) continue;
+
+      Nexus::PatchInfo &e_entry = nexus.index[end];
+      float dist = Distance(s_entry.sphere, e_entry.sphere);
+      if(dist > 0.1) continue;
+      
+      for(unsigned int i = 0; i < vert_index[end].size; i++) {
+	unsigned int global = vert_remap[vert_index[end].offset + i];
+	if(vremap.count(global)) {
+	  Link link;
+	  link.start_vert = vremap[global];
+	  link.end_vert = i;
+	  link.end_patch = end;
+	  links.push_back(link);
+	}
+      }
+    }
+    //TODO Horribili visu (interfaccia di cacca!)
+    nexus.borders.ResizeBorder(start, 3 * links.size());
+    nexus.borders.borders[start].border_used = links.size();
+    Border border = nexus.GetBorder(start);
+    memcpy(&(border[0]), &*links.begin(), links.size() * sizeof(Link));
+  }
+}
+
+void FifthStep() {
 }
 
 int main(int argc, char *argv[]) {
@@ -426,6 +499,9 @@ int main(int argc, char *argv[]) {
 
   if(step < 0 || step == 2)
     ThirdStep(crudefile, output, chunk_size);
+
+  if(step < 0 || step == 3)
+    FourthStep(crudefile, output, ram_buffer);
   return 0;
 }
 

@@ -91,7 +91,7 @@ bool Nexus::Load(const string &file, bool readonly) {
   //TODO support readonly
   if(!patches.Load(file + ".nxp", signature, chunk_size, readonly)) 
     return false;
-  if(!borders.Load(file + ".nxb", 1)) return false;
+  if(!borders.Load(file + ".nxb", readonly, 1)) return false;
   return true;
 }
 

@@ -32,10 +32,11 @@ bool BorderServer::ResizeBorder(unsigned int border, unsigned int nbord) {
       capacity = 65500;
     unsigned int newstart = Size(); 
     Resize(newstart + capacity);
-
-    Link *src = GetRegion(entry.border_start, entry.border_size);
-    Link *dst = GetRegion(newstart, capacity, false);
-    memcpy(dst, src, entry.border_used * sizeof(Link));
+    if(entry.border_used > 0) {
+      Link *src = GetRegion(entry.border_start, entry.border_size);
+      Link *dst = GetRegion(newstart, capacity, false);
+      memcpy(dst, src, entry.border_used * sizeof(Link));
+    }
     entry.border_start = newstart;
     entry.border_size = capacity;
     entry.border_used = nbord;
