@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/03/11 17:17:49  tarini
+added commets (doxy), uniformed with new style, now using math::, ...
+added HomoNormalize(), Zero()... remade StableDot() (hand made sort).
+
 Revision 1.1  2004/02/10 01:11:28  cignoni
 Edited Comments and GPL license
 
@@ -69,7 +73,7 @@ public:
 	{   
 		_v[0]= p._v[0]; _v[1]= p._v[1]; _v[2]= p._v[2]; _v[3]= p._v[3];
 	}
-	inline Zero()
+	inline Point4 &Zero()
 	{   
 		_v[0] = _v[1] = _v[2] = _v[3]= 0;
 	}
