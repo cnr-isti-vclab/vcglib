@@ -1,12 +1,16 @@
 #ifndef __GLWRAPTETRA__
 #define __GLWRAPTETRA__
-
-#include<GL/GL.h>
+#include <GL/glew.h>
+#include <GL/GL.h>
 #include <vcg/space/color4.h>
 #include <vcg/space/Tetra3.h>
+#include <wrap/gui/view.h>
 #include <wrap/gl/space.h>
+#include <wrap/gl/math.h>
 
 namespace vcg {
+
+
 class GLW {
 public:
   enum DrawMode  {DMNone, DMSmallTetra,DMFlat,DMWire, DMHidden,DMTransparent,DMFlatWire} ;
@@ -17,6 +21,8 @@ public:
 
 template <typename CONT_TETRA>
 class GLWrapTetra:public GLW{
+
+
 public:
   
 	typedef typename CONT_TETRA::value_type TetraType; 
@@ -24,20 +30,141 @@ public:
   typedef typename VertexType::ScalarType ScalarType;
   typedef typename VertexType::CoordType Point3x;
 
-	GLWrapTetra(CONT_TETRA & _t):tetra(_t){}
+  //subclass for clipping planes
+		class ClipPlane
+		{
+			private:
+			
+			Point3x D;
+			Point3x D0;
+			GLdouble eqn[4];
+			vcg::Matrix44<float> TR;
+
+			Point3x pp0;
+			Point3x pp1;
+			Point3x pp2;
+			Point3x	pp3;
+
+			public:
+			
+			Point3x P;
+
+			ClipPlane (){}
+
+			~ClipPlane (){}
+
+			ClipPlane(Point3x p0, Point3x p1,Point3x p2)
+			{
+				Point3x N=((p1-p0)^(p2-p0)).Normalize();
+				N.Normalize();
+				D=N;
+				D0=D;
+				P=(p0+p1+p2)/3.f;
+
+				Point3x v0=N;
+				Point3x v1=(P-p0);
+				v1.Normalize();
+				Point3x v2=(v0^v1);
+				v2.Normalize();
+
+				v0=v0*2;
+				v1=v1*2;
+				v2=v2*2;
+
+				pp0=-v1-v2;
+				pp1=-v1+v2;
+				pp2=v1+v2;
+				pp3=v1-v2;
+
+			}
+			//set normal of the clipping plane
+			void SetD(Point3x d)
+			{
+				D=d;
+			}
+			//set the point of the clipping plane
+			void SetP(Point3x p)
+			{
+				P=p;
+			}
+
+			void GlClip()
+			{
+				GLdouble d=-(D.V(0)*P.V(0)+D.V(1)*P.V(1)+D.V(2)*P.V(2));
+				eqn[0]=-D.V(0);
+				eqn[1]=-D.V(1);
+				eqn[2]=-D.V(2);
+				eqn[3]=-d;
+				glClipPlane(GL_CLIP_PLANE0, eqn); 
+				glEnable(GL_CLIP_PLANE0);
+			}
+
+			void GlDraw()
+			{
+				glPushMatrix();
+				glPushAttrib(0xffffffff);
+				glDisable(GL_CLIP_PLANE0);
+				
+				glEnable(GL_LIGHTING);
+				glEnable(GL_NORMALIZE);
+
+				glTranslate(P);
+				glMultMatrix(TR);
+				glLineWidth(0.5);
+				glColor3d(0.7,0,0.7);
+				glBegin(GL_LINE_LOOP);
+					glVertex(pp0);
+					glVertex(pp1);
+					glVertex(pp2);
+					glVertex(pp3);
+				glEnd();
+
+				glPopAttrib();
+				glPopMatrix();
+				
+			}
+
+			void Transform(vcg::Matrix44<float> Tr)
+			{
+				//thath's for casting in case of trackball using
+				//float to double and vice-versa
+				Point3f p=Point3f((float)D0.V(0),(float)D0.V(1),(float)D0.V(2));
+				TR=Tr;
+				p=TR*p;
+				D=Point3x((ScalarType) p.V(0),(ScalarType) p.V(1),(ScalarType) p.V(2));
+			}
+
+			void Translate(float L)
+			{
+				Point3x D1=D*L;
+				P+=D1;
+			}
+
+			
+		};
+
+	GLWrapTetra(CONT_TETRA & _t):tetra(_t){nsection=0;}
 
 	CONT_TETRA	& tetra;	
+	ClipPlane section;
 
 	private:
 	double shrink_factor;
+	int nsection;
 
 	public:
-
+		
 		void SetHint(Hint h, double value){
 			switch(h){
 				case HShrinkFactor: shrink_factor = value; break;
 				}
 			}
+
+		void AddClipSection(Point3x p0,Point3x p1,Point3x p2)
+		{
+			section=ClipPlane(p0,p1,p2);
+			nsection++;
+		}
 
   typedef Color4b (*color_func_vertex)(VertexType&v);
 	color_func_vertex  color_vertex;
@@ -71,6 +198,11 @@ template <ColorMode cm >
 		glEnable(GL_LIGHTING);
 		glEnable(GL_NORMALIZE);
 		glPolygonMode(GL_FRONT,GL_FILL);
+		if (nsection!=0)
+		{
+			section.GlClip();
+			section.GlDraw();	
+		}
 		glBegin(GL_TRIANGLES);
 		for( it = tetra.begin(); it != tetra.end(); ++it)
 			if(!(*it).IsD()){
