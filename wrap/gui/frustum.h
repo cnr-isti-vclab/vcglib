@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/02/22 14:33:04  ponchio
+small bugs
+
 Revision 1.7  2005/01/21 18:06:05  ponchio
 Added remoteness ("distance" from frustum)
 
@@ -98,7 +101,7 @@ template <class T> bool Frustum<T>::IsOutside(Point3<T> &point) {
 template <class T> float Frustum<T>::Remoteness(Point3<T> &point, T radius) {
   Point3<T> r = Project(point);
   T dist = (point - view_point).Norm();
-  if(dist == 0) return 0;
+  if(dist < radius) return 0;
   T rad =  1 + radius / (resolution * dist);
   T mindist = 0;
   T tmp;
