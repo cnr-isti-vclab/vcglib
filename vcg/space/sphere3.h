@@ -24,13 +24,16 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/03/21 17:51:57  ponchio
+First version.
+
 
 ****************************************************************************/
 
 #ifndef VCG_SPHERE_H
 #define VCG_SPHERE_H
 
-#include <vcg/point3.h>
+#include <vcg/space/point3.h>
 
 namespace vcg {
 
