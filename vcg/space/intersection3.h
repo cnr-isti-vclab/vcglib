@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/07/11 22:08:04  cignoni
+Added a cast to remove a warning
+
 Revision 1.7  2004/05/14 03:14:29  ponchio
 Fixed some minor bugs
 
@@ -180,6 +183,7 @@ namespace vcg {
     return tri_tri_intersect_with_isectline(V0,V1,V2,U0,U1,U2,
 					    coplanar,isectpt1,isectpt2);
   }
+
   template<typename TRIANGLETYPE,typename SEGMENTTYPE >
     inline bool Intersection(const TRIANGLETYPE & t0,const TRIANGLETYPE & t1,bool &coplanar,
 			     SEGMENTTYPE  & sg){
@@ -190,7 +194,103 @@ namespace vcg {
 					     );              
   }
 
+	
+  // ray-triangle, gives barycentric coords of intersection and distance along ray
+template<class T>
+bool Intersection( const Line3<T> & ray, const Point3<T> & vert0, 
+				  const Point3<T> & vert1, const Point3<T> & vert2,
+				  T & a ,T & b, T & dist)
+{
+	// small (hum) borders around triangle
+	const T EPSILON2= T(1e-8); 
+	
+	const T EPSILON = T(1e-8);
+	
+	Point3<T> edge1 = vert1 - vert0;
+	Point3<T> edge2 = vert2 - vert0;
 
+	// determinant 
+	Point3<T> pvec  = ray.dire ^ edge2;
+
+	T det = edge1*pvec;
+
+	// if determinant is near zero, ray lies in plane of triangle
+  if (fabs(det) < EPSILON) return false;
+
+  // calculate distance from vert0 to ray origin 
+  Point3<T> tvec = ray.orig - vert0;
+
+  // calculate A parameter and test bounds 
+  a = tvec * pvec;
+  if (a < -EPSILON2*det || a > det+det*EPSILON2) return false;
+
+  // prepare to test V parameter 
+  Point3<T> qvec = tvec ^ edge1;
+
+  // calculate B parameter and test bounds 
+  b = ray.dire * qvec ;
+  if (b < -EPSILON2*det || b + a > det+det*EPSILON2) return false;
+
+  // calculate t, scale parameters, ray intersects triangle 
+  dist = edge2 * qvec;
+	if (dist<0) return false;
+  T inv_det = 1.0 / det;
+  dist *= inv_det;
+  a *= inv_det;
+  b *= inv_det;
+
+  return true;
+}
+
+
+// ray-triangle, gives intersection 3d point and distance along ray
+template<class T>
+bool Intersection( const Line3<T> & ray, const Point3<T> & vert0, 
+				  const Point3<T> & vert1, const Point3<T> & vert2,
+			   Point3<T> & inte)
+{
+
+	// small (hum) borders around triangle
+	const T EPSILON2= T(1e-8); 
+
+	const T EPSILON = T(1e-8);
+	
+	Point3<T> edge1 = vert1 - vert0;
+	Point3<T> edge2 = vert2 - vert0;
+
+	// determinant 
+	Point3<T> pvec  = ray.Direction() ^ edge2;
+
+	T det = edge1*pvec;
+
+	// if determinant is near zero, ray lies in plane of triangle
+  if (fabs(det) < EPSILON) return false;
+
+  // calculate distance from vert0 to ray origin 
+  Point3<T> tvec = ray.Origin() - vert0;
+
+  // calculate A parameter and test bounds 
+  T a = tvec * pvec;
+  if (a < -EPSILON2*det || a > det+det*EPSILON2) return false;
+
+  // prepare to test V parameter 
+  Point3<T> qvec = tvec ^ edge1;
+
+  // calculate B parameter and test bounds 
+  T b = ray.Direction() * qvec ;
+  if (b < -EPSILON2*det || b + a > det+det*EPSILON2) return false;
+
+  // calculate t, scale parameters, ray intersects triangle 
+  double dist = edge2 * qvec;
+	//if (dist<0) return false;
+  T inv_det = 1.0 / det;
+  dist *= inv_det;
+  a *= inv_det;
+  b *= inv_det;
+
+	inte = vert0 + edge1*a + edge2*b;
+  return true;
+}
 
 } // end namespace
 #endif
