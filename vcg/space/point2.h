@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/03/10 17:42:40  tarini
+Added comments (Dox) !
+Added Import(). Costruct(), ScalarType...  Corrected cross prod (sign). Added Angle. Now using Math:: stuff for trigon. etc.
+
 Revision 1.2  2004/03/03 15:07:40  cignoni
 renamed protected member v -> _v
 
@@ -66,6 +70,20 @@ public:
 	inline const ScalarType &Y() const {return _v[1];}
 	inline ScalarType &X() {return _v[0];}
 	inline ScalarType &Y() {return _v[1];}
+  inline const ScalarType * V() const
+	{
+		return _v;
+	}
+	inline ScalarType & V( const int i )
+	{
+		assert(i>=0 && i<2);
+		return _v[i];
+	}
+	inline const ScalarType & V( const int i ) const
+	{
+		assert(i>=0 && i<2);
+		return _v[i];
+	}
 	inline const ScalarType & operator [] ( const int i ) const
 	{
 		assert(i>=0 && i<2);
