@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/07/15 00:13:39  cignoni
+Better doxigen documentation
+
 Revision 1.5  2004/07/06 06:27:02  cignoni
 Added  FaceBorderFromVF
 
@@ -47,6 +50,8 @@ First working version!
 #ifndef __VCG_TRI_UPDATE_FLAGS
 #define __VCG_TRI_UPDATE_FLAGS
 
+#include <vcg/simplex/face/pos.h>
+
 namespace vcg {
 namespace tri {
 /** \addtogroup trimesh */
@@ -60,6 +65,7 @@ class UpdateFlags
 
 public:
 typedef UpdateMeshType MeshType; 
+typedef vcg::face::Pos<typename UpdateMeshType::FaceType> PosType;
 typedef typename MeshType::VertexType     VertexType;
 typedef typename MeshType::VertexPointer  VertexPointer;
 typedef typename MeshType::VertexIterator VertexIterator;
@@ -84,7 +90,7 @@ Obviously it assumes that the topology has been correctly computed (see: UpdateT
 **/
 static void FaceBorderFromFF(MeshType &m)
 {
-	const int BORDERFLAG[3]={FaceType::BORDER0,FaceType::BORDER1,FaceType::BORDER2};
+//	const int BORDERFLAG[3]={FaceType::BORDER0,FaceType::BORDER1,FaceType::BORDER2};
 	FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi)if(!(*fi).IsD())
 		for(int j=0;j<3;++j)
@@ -102,7 +108,7 @@ static void FaceBorderFromVF(MeshType &m)
 	VertexIterator vi;
   assert(m.HasVFTopology());
 
-  int visitedBit=VertexType::NewUserBit();
+  int visitedBit=VertexType::NewBitFlag();
 
 	// Calcolo dei bordi
   // per ogni vertice vi si cercano i vertici adiacenti che sono toccati da una faccia sola
@@ -113,12 +119,12 @@ static void FaceBorderFromVF(MeshType &m)
 		for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 			if(!(*vi).IsD())
 				{
-          for(face::VFIterator<FaceType> vfi(&*vi) ; !vfi.End(); ++vfi )
+					for(face::VFIterator<FaceType> vfi(&*vi) ; !vfi.End(); ++vfi )
           {
 			          vfi.f->V1(vfi.z)->ClearUserBit(visitedBit);
 								vfi.f->V2(vfi.z)->ClearUserBit(visitedBit);
           }
-          for(face::VFIterator<FaceType> vfi(&*vi) ; !vfi.End(); ++vfi )
+					for(face::VFIterator<FaceType> vfi(&*vi) ; !vfi.End(); ++vfi )
           {
             if(vfi.f->V1(vfi.z)->IsUserBit(visitedBit))  vfi.f->V1(vfi.z)->ClearUserBit(visitedBit);
 																                    else vfi.f->V1(vfi.z)->SetUserBit(visitedBit);
@@ -133,23 +139,23 @@ static void FaceBorderFromVF(MeshType &m)
 					        vfi.f->Flags() |= BORDERFLAG[(vfi.z+2)%3];
           }
 			}	
+		VertexType::DeleteBitFlag(VertexType::LastBitFlag());
 }
 
 
 
 // versione minimale che non calcola i complex flag.
-void FaceBorderFromNone()
+void FaceBorderFromNone(MeshType &m)
 {
-	typedef PEdge<MCTYPE, MVTYPE, MFTYPE > MPEDGE;
-	vector<MPEDGE> e;
-	face_iterator pf;
-	vector<MPEDGE>::iterator p;
+	std::vector<PosType> e;
+	typename UpdateMeshType::FaceIterator pf;
+	typename std::vector<PosType>::iterator p;
 
 	if( fn == 0 ) return;
 
 	e.resize(fn*3);								// Alloco il vettore ausiliario
 	p = e.begin();
-	for(pf=face.begin();pf!=face.end();++pf)			// Lo riempio con i dati delle facce
+	for(pf=m.face.begin();pf!=m.face.end();++pf)			// Lo riempio con i dati delle facce
 		if( ! (*pf).IsDeleted() )
 			for(int j=0;j<3;++j)
 			{
@@ -160,7 +166,7 @@ void FaceBorderFromNone()
 	assert(p==e.end());
 	sort(e.begin(), e.end());							// Lo ordino per vertici
 	
-	vector<MPEDGE>::iterator pe,ps;
+	typename std::vector<PosType>::iterator pe,ps;
 	for(ps = e.begin(), pe=e.begin(); pe<=e.end(); ++pe)	// Scansione vettore ausiliario
 	{
 		if( pe==e.end() || *pe != *ps )					// Trovo blocco di edge uguali
@@ -182,15 +188,15 @@ void FaceBorderFromNone()
 }
 
 	/// Bisogna carlcolare il border flag delle facce
-void VertexBorderFromFace()
+void VertexBorderFromFace(MeshType &m)
 {
-	vertex_iterator v;
-	face_iterator f;
+	typename MeshType::VertexIterator v;
+	typename MeshType::FaceIterator f;
 
 	for(v=vert.begin();v!=vert.end();++v)
 		(*v).ClearB();
 
-	for(f=face.begin();f!=face.end();++f)
+	for(f=m.face.begin();f!=m.face.end();++f)
 	{
 		for(int z=0;z<3;++z)
 			if( (*f).IsB(z) )
