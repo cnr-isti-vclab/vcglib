@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/04/07 10:47:03  cignoni
+inlined functions for avoid multiple linking errors
+
 Revision 1.1  2004/03/31 15:27:17  ponchio
 *** empty log message ***
 
@@ -35,17 +38,18 @@ Revision 1.1  2004/03/31 15:27:17  ponchio
 
 #include <vcg/math/matrix44.h>
 #include <vcg/math/similarity.h>
-#include <windows.h>
-#include <GL/GL.h>
-
+/// Note that this file assume that you have already included your 
+/// GLextesnion managing system
 namespace vcg {
 
 inline void glMultMatrix(const Matrix44f &matrix) {
-  glMultMatrixf((const GLfloat *)(matrix[0]));  
+  //glMultMatrixf((const GLfloat *)(matrix[0]));  
+  glMultTransposeMatrixf((const GLfloat *)(matrix[0])); 
 }
 
 inline void glMultMatrix(const Matrix44d &matrix) {
-  glMultMatrixd((const GLdouble *)(matrix[0]));
+//  glMultMatrixd((const GLdouble *)(matrix[0]));
+  glMultTransposeMatrixd((const GLdouble *)(matrix[0])); 
 }
 
 inline void glMultMatrix(const Similarityf &s) {
