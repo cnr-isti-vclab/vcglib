@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2005/01/21 17:09:13  ponchio
+Porting and debug.
+
 Revision 1.13  2005/01/17 17:35:48  ponchio
 Small changes and adding realtime extr.
 
@@ -400,26 +403,41 @@ void FourthStep(const string &crudefile, const string &output,
     cerr << "Could not load nexus " << output << endl;
     exit(0);
   }
-  nexus.MaxRam() = ram_buffer / nexus.chunk_size;
+  nexus.MaxRam() = ram_buffer / nexus.chunk_size;  
   //TODO Clear borders in case of failure!
 
   VFile<unsigned int> vert_remap;
   if(!vert_remap.Load(output + ".rvm", true)) {
     cerr << "Could not load: " << crudefile << ".rvm\n";
     exit(0);
-  }
-  cerr << "Vert_remap.size: " << vert_remap.Size() << endl;
+  }  
 
   BlockIndex vert_index;
   if(!vert_index.Load(output + ".rvi")) {
     cerr << "Could not load index\n";
     exit(0);
   }
+
+  /*float max_radius = 0;
+  VPartition grid;
+  for(int start = 0; start < nexus.size(); start++) {    
+    Entry &entry = nexus[start];
+    Sphere3f &sphere = entry.sphere;
+    if(sphere.Radius() > max_radius) max_radius = sphere.Radius();
+    grid.push_back(sphere.Center());
+  }
+  grid.Init();
+  max_radius *= max_radius * 4;
+  vector<int> nears;
+  vector<float> dists;   */
+    
+
   Report report(nexus.size());
 
   for(int start = 0; start < nexus.size(); start++) {    
     report.Step(start);
     Entry &s_entry = nexus[start];
+    Sphere3f &sphere = s_entry.sphere;
 
     vector<Link> links;   
 #ifdef WIN32
@@ -428,18 +446,21 @@ void FourthStep(const string &crudefile, const string &output,
     map<unsigned int, unsigned short> vremap;
 #endif
     for(unsigned int i = 0; i < vert_index[start].size; i++) {
-//#ifndef NDEBUG
-      if(vert_index[start].offset + i >= vert_remap.Size()) {
-        cerr << "Ahi Ahi start: " << start << endl;
-        cerr << "offset: " << vert_index[start].offset << endl;
-        cerr << "size: " << vert_index[start].size << endl;
-        exit(0);
-      }
-//#endif
       unsigned int global = vert_remap[vert_index[start].offset + i];      
       vremap[global] = i;
+    }    
+
+    /*unsigned int n_nears = 10;    
+    while(1) {
+      if(n_nears > grid.size()) n_nears = grid.size();  
+      grid.Closest(sphere.Center(), n_nears, nears, dists);
+      if(dists.back() > max_radius) break;
+      if(n_nears == grid.size()) break;
+      n_nears *= 2;      
     }
       
+    for(int n = 0; n < nears.size(); n++) {
+      unsigned int end = nears[n]; */
     for(int end = 0; end < nexus.size(); end++) {
       if(start == end) continue;      
 
@@ -450,16 +471,7 @@ void FourthStep(const string &crudefile, const string &output,
         continue;
       }
       
-      for(unsigned int i = 0; i < vert_index[end].size; i++) {   
-        
-//#ifndef NDEBUG
-      if(vert_index[end].offset + i >= vert_remap.Size()) {
-        cerr << "aaa Ahi Ahi start: " << end << endl;
-        cerr << "offset: " << vert_index[end].offset << endl;
-        cerr << "size: " << vert_index[end].size << endl;
-        exit(0);
-      }
-//#endif
+      for(unsigned int i = 0; i < vert_index[end].size; i++) {           
 	      unsigned int global = vert_remap[vert_index[end].offset + i];
 	      if(vremap.count(global)) {       
 	        Link link;
