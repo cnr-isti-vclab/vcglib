@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/08/25 15:15:26  ganovelli
+minor changes to comply gcc compiler (typename's and stuff)
+
 Revision 1.3  2004/07/18 06:55:37  cignoni
 NewUserBit -> NewBitFlag
 
@@ -46,11 +49,9 @@ Initial Release
 namespace vcg {
 namespace tri {
 /// 
-
-/** This function removes all duplicate vertices of the mesh by looking only at their spatial positions. 
- Note that it does not update any topology relation that could be affected by this like the VT or TT relation.
- the reason this function is usually performed BEFORE building any topology information.
-*/
+/** \addtogroup trimesh */
+/*@{*/
+/// Class of static functions to clean/correct/restore meshs. 
 template <class CleanMeshType>
 class Clean
 {
@@ -72,6 +73,10 @@ public:
 		}
 };
 
+/** This function removes all duplicate vertices of the mesh by looking only at their spatial positions. 
+ Note that it does not update any topology relation that could be affected by this like the VT or TT relation.
+ the reason this function is usually performed BEFORE building any topology information.
+*/
 static int RemoveDuplicateVertex( MeshType & m )    // V1.0
 {
 	if(m.vert.size()==0 || m.vn==0) return 0;
@@ -125,8 +130,7 @@ static int RemoveDuplicateVertex( MeshType & m )    // V1.0
 }
 
 
-/** This function removes all vertices not pertaining to nobody face. La funzione aggiorna 
-	la variabile vn della classe mesh che contiene il numero di vertici.
+/** This function removes that are not referenced by any face. The function updates the vn counter.
 		@param m The mesh
 		@return The number of removed vertices
 */
@@ -160,7 +164,7 @@ static int RemoveUnreferencedVertex( CleanMeshType& m )   // V1.0
 
 
 }; // end class
-
+/*@}*/
 } // End Namespace TriMesh
 } // End Namespace vcg
 #endif

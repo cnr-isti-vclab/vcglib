@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/05/10 14:41:25  ganovelli
+name of adhacency function updated
+
 
 
 ****************************************************************************/
@@ -33,10 +36,10 @@ $Log: not supported by cvs2svn $
 
 namespace vcg {
 namespace edge {
-/** \addtogroup trimesh */
+/** \addtogroup edgemesh */
 /*@{*/
 /// Class to safely add vertexes and faces to a mesh updating all the involved pointers.
-/// It provides static memeber to add either vertex or faces to a trimesh.
+/// It provides static memeber to add either vertex or faces to a edgemesh.
 template <class AllocateMeshType>
 class Allocator
 {
