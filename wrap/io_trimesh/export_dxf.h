@@ -53,29 +53,29 @@ public:
 		SaveMeshType::FaceIterator fi;
 		for(fi=m.face.begin(); fi!=m.face.end(); ++fi)
 		{
-			SaveMeshType::CoordType v0 = (*fi).V(0)->P();
-			SaveMeshType::CoordType v1 = (*fi).V(1)->P();
-			SaveMeshType::CoordType v2 = (*fi).V(2)->P();
-			fprintf(o,"0\n");  fprintf(o,"3DFACE\n");  fprintf(o,"8\n");     fprintf(o,"0\n");       
-			fprintf(o,"10\n"); fprintf(o,"%f\n", v0[0]);     //X
-			fprintf(o,"20\n"); fprintf(o,"%f\n", v0[1]);     //Y
-			fprintf(o,"30\n"); fprintf(o,"%f\n", v0[2]);     //Z
+			if (!fi->IsD())
+			{
+				SaveMeshType::CoordType v0 = (*fi).V(0)->P();
+				SaveMeshType::CoordType v1 = (*fi).V(1)->P();
+				SaveMeshType::CoordType v2 = (*fi).V(2)->P();
+				fprintf(o,"0\n");  fprintf(o,"3DFACE\n");  fprintf(o,"8\n");     fprintf(o,"0\n");       
+				fprintf(o,"10\n"); fprintf(o,"%f\n", v0[0]);     //X
+				fprintf(o,"20\n"); fprintf(o,"%f\n", v0[1]);     //Y
+				fprintf(o,"30\n"); fprintf(o,"%f\n", v0[2]);     //Z
 
-			fprintf(o,"11\n"); fprintf(o,"%f\n", v1[0]);     //X
-			fprintf(o,"21\n"); fprintf(o,"%f\n", v1[1]);     //Y
-			fprintf(o,"31\n"); fprintf(o,"%f\n", v1[2]);     //Z
+				fprintf(o,"11\n"); fprintf(o,"%f\n", v1[0]);     //X
+				fprintf(o,"21\n"); fprintf(o,"%f\n", v1[1]);     //Y
+				fprintf(o,"31\n"); fprintf(o,"%f\n", v1[2]);     //Z
 
-			fprintf(o,"12\n"); fprintf(o,"%f\n", v2[0]);     //X
-			fprintf(o,"22\n"); fprintf(o,"%f\n", v2[1]);     //Y
-			fprintf(o,"32\n"); fprintf(o,"%f\n", v2[2]);     //Z
+				fprintf(o,"12\n"); fprintf(o,"%f\n", v2[0]);     //X
+				fprintf(o,"22\n"); fprintf(o,"%f\n", v2[1]);     //Y
+				fprintf(o,"32\n"); fprintf(o,"%f\n", v2[2]);     //Z
 
-			fprintf(o,"13\n"); fprintf(o,"%f\n", v2[0]);     //X
-			fprintf(o,"23\n"); fprintf(o,"%f\n", v2[1]);     //Y
-			fprintf(o,"33\n"); fprintf(o,"%f\n", v2[2]);     //Z
-
-
+				fprintf(o,"13\n"); fprintf(o,"%f\n", v2[0]);     //X
+				fprintf(o,"23\n"); fprintf(o,"%f\n", v2[1]);     //Y
+				fprintf(o,"33\n"); fprintf(o,"%f\n", v2[2]);     //Z
+			}
 		}
-
 
 		fprintf(o,"0\n");
 		fprintf(o,"ENDSEC\n");
