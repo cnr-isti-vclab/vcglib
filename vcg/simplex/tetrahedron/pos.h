@@ -31,7 +31,7 @@
 #define __VCG_TETRA_POS
 
 namespace vcg {
-namespace tetra {
+  namespace tetra {
 
  /** \addtogroup tetra */
 /*@{*/
@@ -54,50 +54,53 @@ private:
 	int _vi;
 	/// Default Constructor
 public:
-	VTIterator() {}
+	VTIterator(){}
 	/// Constructor which associates the EdgePos elementet with a face and its edge
 	VTIterator(TetraType  * const tp, int const zp)
 	{	
 		_vt=tp;
 		_vi=zp;
-	}
+  }
 
 	~VTIterator(){};
 
-  	/// Return the tetrahedron stored in the half edge
-	inline TetraType & Vt()
-	{
-		return _vt;
-	} 
+  /// Return the tetrahedron stored in the half edge
+inline TetraType & Vt()
+{
+	return _vt;
+} 
 
-  	/// Return the tetrahedron stored in the half edge
-	inline const TetraType & Vt() const
-	{
-		return _vt;
-	}
-
-  	/// Return the index of vertex as seen from the tetrahedron
-	inline int & Vi()
-	{
-		return _vi;
-	}
+  /// Return the tetrahedron stored in the half edge
+inline const TetraType & Vt() const
+{
+  return _vt;
+}
 
   	/// Return the index of vertex as seen from the tetrahedron
-	inline const int & Vi() const
-	{
+inline int & Vi()
+{
+	return _vi;
+}
+
+/// Return the index of vertex as seen from the tetrahedron
+inline const int & Vi() const
+{
 		return _vi;
-	}
+}
+
+bool End() const {return Vt()==0;}
 
 	/// move on the next tetrahedron that share the vertex
-	bool NextT()
-	{	
+bool operator++() 
+{
 		int vi=Vi();
 		TetraType * tw = Vt();
 		Vt() = tw->TVp[vi];
 		Vi() = tw->TVi[vi];
 		assert(((tw->V(vi))==(Vt()->V(Vi())))||(t==NULL));
     return (Vt()!=NULL);
-  }
+}
+
 };
 
 /** \addtogroup tetra */
@@ -142,7 +145,7 @@ public:
   
   	/// Return the tetrahedron stored in the half edge
 	inline TetraType & T()
-	{
+  {
 		return _t;
 	} 
 
@@ -277,8 +280,8 @@ public:
 	{
 		
 		//save the two vertices of the old edge
-		char *v0=vcg::Tetra::VofE(z,0);
-		char *v1=vcg::Tetra::VofE(z,1);
+		VertexType *v0=T()->V(vcg::Tetra::VofE(E(),0));
+		VertexType *v1=T()->V(vcg::Tetra::VofE(E(),1));
 
 		//get new tetrahedron according to faceto face topology
 		TetraType *nt=T()->TTp(F());
@@ -289,87 +292,43 @@ public:
       char ne0=vcg::Tetra::EofF(nfa,0);
 			char ne1=vcg::Tetra::EofF(nfa,1);
 			char ne2=vcg::Tetra::EofF(nfa,2);
-
+      
+      //the vertices of new edges
+      VertexType *vn0=nt->V(vcg::Tetra::VofE(ne0,0));
+      VertexType *vn1=nt->V(vcg::Tetra::VofE(ne0,1));
 			//verify that the two vertices of tetrahedron are identical
-			if (((nt->VE(ne0,0)==v0)&&(nt->VE(ne0,1)==v1))||
-				((nt->VE(ne0,1)==v0)&&(nt->VE(ne0,0)==v1)))
-			z=ne0;
+			if (((vn0==v0)&&(vn1==v1))||((vn1==v0)&&(vn0==v1)))
+			  E()=ne0;
 			else
-			if (((nt->VE(ne1,0)==v0)&&(nt->VE(ne1,1)==v1))||
-				((nt->VE(ne1,1)==v0)&&(nt->VE(ne1,0)==v1)))	
-			z=ne1;
-			else
-			z=ne2;
-			t=nt;
-			fa=nfa;
-		}
-			}
+      {
+        vn0=nt->V(vcg::Tetra::VofE(ne1,0));
+        vn1=nt->V(vcg::Tetra::VofE(ne1,1));
+			  if (((vn0==v0)&&(vn1==v1))||((vn1==v0)&&(vn0==v1)))
+			    E()=ne1;
+        else
+          E()=ne2;
+      }
+      T()=nt;
+			F()=nfa;
+    }
+  }
 
-	
-	
-	
-	void NextE( )
+	///returns the next half edge on the same edge
+	void NextT( )
 	{
-		//assert(t->V((z+2)%4)!=v && (t->V((z+1)%4)==v || t->V((z+0)%4)==v));
 		#ifdef _DEBUG
-		vertex_type *v0old=t->VE(z,0);
-		vertex_type *v1old=t->VE(z,1);
+		VertexType *v0old=T()->V(vcg::Tetra::VofE(E(),0));
+		VertexType *v1old=T()->V(vcg::Tetra::VofE(E(),1));
+    assert(v0old!=v1old);
 		#endif
 		FlipT();
 		FlipF();
 		#ifdef _DEBUG
-		vertex_type *v0=t->VE(z,0);
-		vertex_type *v1=t->VE(z,1);
+		VertexType *v0=T()->V(vcg::Tetra::VofE(E(),0));
+		VertexType *v1=T()->V(vcg::Tetra::VofE(E(),1));
 		assert(v1!=v0);
 		assert(((v0==v0old)&&(v1==v1old))||((v1==v0old)&&(v0==v1old)));
-		#endif
-		
-	}
-	
-	void NextV( )
-	{
-		//assert(t->V((z+2)%4)!=v && (t->V((z+1)%4)==v || t->V((z+0)%4)==v));
-		int j;
-		int indexv;
-
-		// find the index of the current vertex
-		for (j=0;j<4;j++)
-			{
-			if (v==t->V(j))
-					indexv=j;
-			}
-		//increase the iterator
-		EdgePosT <MTTYPE> e(t,indexv);
-		e.NextT();
-		t=e.t;
-
-		//assert(t->V((z+2)%4)!=v && (t->V((z+1)%4)==v || t->V((z+0)%4)==v));
-	}
-
-	void NextF( )
-	{
-		assert(t->V((z+2)%4)!=v && (t->V((z+1)%4)==v || t->V((z+0)%4)==v));
-		FlipT();
-		assert(t->V((z+2)%4)!=v && (t->V((z+1)%4)==v || t->V((z+0)%4)==v));
-	}
-
-	void NextT( )
-	{
-		assert(t->V((z+2)%4)!=v && (t->V((z+1)%4)==v || t->V((z+0)%4)==v));
-		/*fa=(fa+1)%4;
-		t=T(*/
-		assert(t->V((z+2)%4)!=v && (t->V((z+1)%4)==v || t->V((z+0)%4)==v));
-	}
-
-	
-	/** Function to inizialize an half-edge.
-		@param fp Puntatore alla faccia
-		@param zp Indice dell'edge
-		@param vp Puntatore al vertice
-	*/
-	void Set(MTTYPE * const tp, int const fap,int const zp,vertex_type  * const vp)
-	{	t=tp;fa=fap;z=zp;v=vp;
-		assert(t->V((z+2)%4)!=v && (t->V((z+1)%4)==v || t->V((z+0)%4)==v));
+		#endif	
 	}
 
 	void Assert()
@@ -398,86 +357,75 @@ public:
 	#else
 	{}
 	#endif
-
-	/*// Controlla la coerenza di orientamento di un hpos con la relativa faccia
-	/// Checks the orientation coherence of a half-edge with the face
-	inline bool Coerent() const
-	{
-		return v == t->V(z);	// e^(ip)+1=0 ovvero E=mc^2
-	}*/
-
 };
 
+///this pos structure jump on  next tetrahedron if find an external face
 template < class MTTYPE> 
-class HEdgePosTEdge:public HEdgePosT<MTTYPE>
+class PosJump:public Pos<MTTYPE>
 {
-	public :
-	MTTYPE *t_initial;
-	short int fa_initial;
-	short int back;
+private:
+	MTTYPE *_t_initial;
+	short int _back;
+public :
+  PosJump(const TetraType*  tp,const int  fap,const int  ep,
+		VertexType  *  vp){T()=tp;F()=fap;E()=ep;V()=vp;_t_initial=tp;_back=0;}
 
-	/// Constructor which associates the half-edge elementet with a face, its edge and its vertex
-	HEdgePosTEdge(){}
-
-	HEdgePosTEdge(MTTYPE * const tp,const int  fap,const int  zp,
-		vertex_type  *  vp){t=tp;fa=fap;fa_initial=fap;z=zp;v=vp;t_initial=tp;back=0;}
-
-	void NextE()
-	{	
+	void NextT()
+  {
 #ifdef _DEBUG
 		int cont=0;
 #endif
-		MTTYPE *tpred=t;
-		HEdgePosT<MTTYPE>::NextE();
-		//rimbalzo
-		if (tpred==t)
+		MTTYPE *tpred=T();
+		Pos<MTTYPE>::NextT();
+		//external face
+		if (tpred==T())
 		{
-			while (t!=t_initial)
+			while (T()!=_t_initial)
 			{
-				HEdgePosT<MTTYPE>::NextE();
+				Pos<MTTYPE>::NextT();
 				#ifdef _DEBUG
 				 cont++;
 				 assert (cont<500);
 				#endif
 			}
-			back++;
-			if (back==1)
+			_back++;
+			if (_back==1)
 			{
-				HEdgePosT<MTTYPE>::NextE();
-			}
-			
-		}
-		
-	}
-
-//change tetrahedron endreturn the number of the face to put on the fan
-int NextFaceOnFan()
-	{
-	HEdgePosTEdge::NextE();
-	//get the faces that are not on the edge 
-	int fa0=t->FE(z,0);
-	int fa1=t->FE(z,1);
-	//they are the 2 faces that remain
-	int fa2=(fa0+1)%4;
-	while ((fa2==fa0)||(fa2==fa1))
-	{
-		fa2=(fa2+1)%4;
-	}
-	int fa3=(fa2+1)%4;
-	while ((fa3==fa0)||(fa3==fa1)||(fa3==fa2))
-	{
-		fa3=(fa3+1)%4;
-	}
-	bool first=false;
-	for (int i=0;i<3;i++)
-		if (t->FV(fa2,i)==v)
-			first=true;
-	if (first)
-		return fa2;
-	else 
-		return fa3;
+			  Pos<MTTYPE>::NextT();
+			}	
+    }
 	}
 };
 
+///this pos structure jump on  next tetrahedron in rotational sense if find an external face
+template < class MTTYPE> 
+class PosLoop:public Pos<MTTYPE>
+{
+public :
+	
+	void NextT()
+  {	
+		MTTYPE *tpred=T();
+		Pos<MTTYPE>::NextT();
+		//external face
+		if (tpred==T())
+		{
+      tpred=T();
+      //jump on the other side
+      Pos<MTTYPE>::NextT();
+      //find the next external face
+			while (tpred!=T())
+			{
+        tpred=T();
+				Pos<MTTYPE>::NextT();
+			}
+			//reset right rotation sense
+			  Pos<MTTYPE>::NextT();
+    }	
+  }
+};
+
+  }//end namespace tetra
+}//end namespace vcg
 
 #endif
