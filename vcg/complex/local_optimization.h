@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.6  2004/09/28 09:57:08  cignoni
+  Better Doxygen docs
+
   Revision 1.5  2004/09/15 10:40:20  ponchio
   typedef LocalOptimization HeapType -> public:
 
@@ -108,7 +111,7 @@ template<class MeshType>
 class LocalOptimization
 {
 public:
-  LocalOptimization(MeshType &mm): m(mm){ ClearTermination();}
+  LocalOptimization(MeshType &mm): m(mm){ ClearTermination();e=0.0;}
 
 	struct  HeapElem;
 	// scalar type
@@ -124,11 +127,11 @@ public:
 
 	/// termination conditions	
 	 enum LOTermination {	
-      LOnSimplices	= 0x00,	// test number of simplicies	
-			LOnVertices		= 0x01, // test number of verticies
-			LOnOps			= 0x02, // test number of operations
-			LOMetric		= 0x04, // test Metric (error, quality...instance dependent)
-			LOTime			= 0x08  // test how much time is passed since the start
+      LOnSimplices	= 0x01,	// test number of simplicies	
+			LOnVertices		= 0x02, // test number of verticies
+			LOnOps			= 0x04, // test number of operations
+			LOMetric		= 0x08, // test Metric (error, quality...instance dependent)
+			LOTime			= 0x10  // test how much time is passed since the start
 		} ;
 
 	int tf;
@@ -194,7 +197,7 @@ public:
     /// usually we mean priority as an error so we should invert the comparison
     const bool operator <(const HeapElem & h) const 
     { 
-		  return (locModPtr->Priority() > h.locModPtr->Priority());
+		  return (locModPtr->Priority() < h.locModPtr->Priority());
 	  }
 
     bool IsUpToDate()
@@ -209,13 +212,15 @@ public:
 	LocalOptimization(MeshType *_m):m(_m){};
   /// Default distructor
   ~LocalOptimization(){};
+	
+	double e;
 
   /// main cycle of optimization
   bool DoOptimization()
   {
     start=clock();
 		nPerfmormedOps =0;
-
+	FILE * fo=fopen("log.txt","w");
     
 		while( !GoalReached() && !h.empty())
 			{
@@ -229,6 +234,10 @@ public:
          	// check if it is feasible
 					if (locMod->IsFeasible())
 					{
+							//assert(e>locMod->Priority());
+							//e = locMod->Priority();
+						fprintf(fo,"%.22f\n",locMod->Priority());
+		//				printf("ops: %d heap: %d \n",nPerfmormedOps,h.size());
 						nPerfmormedOps++;
 						locMod->Execute(m);
 						locMod->UpdateHeap(h);
@@ -237,6 +246,7 @@ public:
         //else printf("popped out unfeasible\n");
 				delete locMod;
 			}
+			fclose(fo);
 		return !(h.empty());
   }
  
