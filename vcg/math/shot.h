@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.10  2005/01/05 13:26:15  ganovelli
+corretto cambiamento di sistema di rif.
+
 Revision 1.9  2004/12/15 18:45:50  tommyfranken
 *** empty log message ***
 
@@ -53,8 +56,8 @@ creation
 // #include <vector>
 // #include <vcg/Matrix44.h>
 // #include <vcg/Box3.h>
-#include <vcg/space/Point2.h>
-#include <vcg/space/Point3.h>
+#include <vcg/space/point2.h>
+#include <vcg/space/point3.h>
 #include <vcg/math/similarity.h>
 #include <vcg/math/camera.h>
 
