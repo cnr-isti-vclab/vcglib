@@ -34,8 +34,9 @@
 
 /** \addtogroup trimesh */
 /*@{*/
-/// This Class is used for the edge collapse
-
+/** This a static utlity class for the edge collapse. 
+    It provides a common set of useful function for actually making an edge collapse over a trimesh. See also 
+**/
 namespace vcg{
   namespace tri{	
 
@@ -240,8 +241,6 @@ class EdgeCollapse
 			f00->FFi(If00)=If01;
 			f01->FFp(If01)=f00;
 			f01->FFi(If01)=If00;
-
-
 		}
 
 

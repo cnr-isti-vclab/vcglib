@@ -133,7 +133,13 @@
 				RelativePath="..\..\..\vcg\simplex\face\pos.h">
 			</File>
 			<File
+				RelativePath="..\..\..\vcg\math\quadric.h">
+			</File>
+			<File
 				RelativePath="..\..\..\vcg\complex\local_optimization\tri_edge_collapse.h">
+			</File>
+			<File
+				RelativePath="..\..\..\vcg\complex\local_optimization\tri_edge_collapse_quadric.h">
 			</File>
 		</Filter>
 		<Filter

@@ -6,7 +6,7 @@
    Visual Computing Lab  http://vcg.isti.cnr.it                    /\/|
    ISTI - Italian National Research Council                           |
                                                                       \
-   Metro, All rights reserved.
+   ShadeVis, All rights reserved.
 
 
 
@@ -23,13 +23,37 @@ for more details.
 
 --- Synopsis ---
 
-'shadevis' is a tool designed to compute a per vertex, ambient occlusion term
+'shadevis' is a tool designed to compute a per vertex, ambient occlusion term; 
+This term can be used for a shading effect, commonly known as ambient occlusion 
+shading, that is aimed to provide more faithful simple realtime rendering of rather complex meshes.
 
-Please, when using this tool cite the following reference:
+In practice tather than considering the ambient lighting to exist uniformally throughout a scene,
+this approach determines the ambient brightness of each part of a surface to be proportional to the extent
+to which the surface has "its outward view of its environment" free i.e. occluded, by other surfaces of the object. For example, the upper part of the David forehead is less exposed to its local environment than the nose and as a consequence it will be proportionally darker.
+
+The most common techniques to compute ambient occlusion is based on shooting rays from each surface element to evaluate the quantity of light that reach it. Shadevis tools use OpenGL to accellerate this process by simply rendering the scene ortographically from a set of uniformely distributed directions and checking against the zbuffer if each vertex is occluded or not.
+
+The Shadevis tool is oriented to handle rather large meshes, we have successfully used on a 8M triangle mesh of the David on a 512Mb machine. 
+
+
+We have used this tool also for computing the exposition of falling agent over the Michelangelo's David.
+
+Please, when using this tool cite the following references:
+
+R. Borgo, P. Cignoni, R. Scopigno
+An easy to use visualization system for huge cultural heritage meshes
+VAST’01 Conference, Greece, Nov. 28-30, 2001. s	
+
+
+
+
+
 
 For any question about this software please contact:
 Paolo Cignoni ( p.cignoni@isti.cnr.it )
 
+
+---- Notes on the Color mapping ----
 
 This value is mapped into a gray shade according to this formula
 
@@ -38,21 +62,23 @@ v=(v-LowPass)/(HighPass-LowPass)  /// Normalized 0..1
 graylevel=GammaCorrection(v,GammaLev) 
 
 This graylevel is used in the Opengl lighting equation as follow.
-Let assume that there is just a single directional light and no emissive and no specular component in the material, the gl lighting equation is:
+Let assume that there is just a single directional light and no emissive and no specular component in the material, the OpenGL lighting equation is:
 
 C = Acm *Acs + Acm*Acli + (n*L)*Dcm*Dcli
 
 where
-Acm is the ambient color of the material (glMaterial or glColor if glColorMaterial is enabled)
-Acs is ambient color of the scene        (glLightModel)
-Acli is the ambient intensity of the light (glLight) 
+  Acm    ambient color of the material  (glMaterial or glColor if glColorMaterial is enabled)
+  Acs    ambient color of the scene     (glLightModel)
+  Acli   ambient intensity of the light (glLight) 
+  Dcm    diffuse color of the material  (we assume constant over the object).
 
 We simply substitute the constant ambient that is usually constant, with a per vertex color, using a constant diffuse color.
 
+
+
 Simple one line tutorial:
 
--- load a ply mesh, press 'enter', wait, press keys from 1 to 4.
-
+-- load a ply mesh, press 'enter', wait, press preset keys from 1 to 4.
 
 
 Some useful hints:
@@ -72,8 +98,14 @@ Some useful hints:
 'h'-'H' Increase/Decrease  HighPass
 'p'-'p' Increase/Decrease  GammaLev
 
+'r'-'R' Increase/Decrease  red   component of diffuse color
+'g'-'G' Increase/Decrease  green component of diffuse color
+'b'-'B' Increase/Decrease  blue  component of diffuse color
+
 'C' Toggle Lighting
 'c' Toggle per vertex coloring
+'f' Toggle false color visualization 
+
 
 'a'-'A' Increase/Decrease  Ambient Coefficient
 'd'-'D' Increase/Decrease  Diffuse Coefficient

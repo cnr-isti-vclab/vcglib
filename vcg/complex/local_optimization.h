@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.5  2004/09/15 10:40:20  ponchio
+  typedef LocalOptimization HeapType -> public:
+
   Revision 1.4  2004/09/08 15:10:59  ganovelli
   *** empty log message ***
 
@@ -96,10 +99,10 @@ class LocalModification
 
 /// LocalOptimization:
 /// This class implements the algorihms running on 0-1-2-3-simplicial complex that are based on local modification
-/// THe local modification can be and edge_collpase, or an edge_swap, a vertex plit...as far as they implement
+/// The local modification can be and edge_collpase, or an edge_swap, a vertex plit...as far as they implement
 /// the interface defined in LocalModification.
-/// Implementation note: i norder to keep the local modification itself indepented by its use in this class, they are not
-/// really derived by LocalModification. INstead, a wrapper is done to this purpose (see vcg/complex/tetramesh/decimation/collapse.h)
+/// Implementation note: in order to keep the local modification itself indepented by its use in this class, they are not
+/// really derived by LocalModification. Instead, a wrapper is done to this purpose (see vcg/complex/tetramesh/decimation/collapse.h)
 
 template<class MeshType>
 class LocalOptimization
