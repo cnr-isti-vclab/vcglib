@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/02/21 17:03:03  ponchio
+Added Tight creation.
+
 Revision 1.6  2004/12/01 16:06:59  ponchio
 Distance
 
@@ -48,6 +51,7 @@ First version.
 #ifndef VCG_SPHERE_H
 #define VCG_SPHERE_H
 
+#include <assert.h>
 #include <vcg/space/point3.h>
 
 namespace vcg {
@@ -203,6 +207,11 @@ template <class T> void Sphere3<T>::Intersect(const Sphere3<T> &s) {
        break;
    }
    Radius() *= 1.01;
+   
+   //Test we did it correctly.
+   for(int i = 0; i < n; i++) 
+     assert(IsIn(points[i]));
+   
    return count;
  }
 
