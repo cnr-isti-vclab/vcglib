@@ -6,7 +6,7 @@
 	<META NAME="GENERATOR" CONTENT="OpenOffice.org 1.1.0  (Win32)">
 	<META NAME="CREATED" CONTENT="20040209;363169">
 	<META NAME="CHANGEDBY" CONTENT="Paolo Cignoni">
-	<META NAME="CHANGED" CONTENT="20040209;1022370">
+	<META NAME="CHANGED" CONTENT="20040212;18575966">
 	<STYLE>
 	<!--
 		@page { size: 21.59cm 27.94cm; margin: 2cm }
@@ -18,7 +18,10 @@
 		H2 { margin-bottom: 0.21cm }
 		H2.western { font-family: "Arial", sans-serif; font-size: 14pt; font-style: italic }
 		H2.cjk { font-family: "MS Mincho"; font-size: 14pt; font-style: italic }
-		H2.ctl { font-size: 14pt; font-style: italic }
+		H2.ctl { font-family: "Arial Unicode MS"; font-size: 14pt; font-style: italic }
+		P.code-western { text-indent: 1.01cm; margin-bottom: 0cm; font-family: "Courier New", monospace; font-size: 9pt }
+		P.code-cjk { text-indent: 1.01cm; margin-bottom: 0cm }
+		P.code-ctl { text-indent: 1.01cm; margin-bottom: 0cm }
 	-->
 	</STYLE>
 </HEAD>
@@ -29,15 +32,37 @@
 letter Uppercase and internal uppercase to separate compound words.</P>
 <P STYLE="margin-bottom: 0cm"><B><I>Function members</I></B> of
 classes follow the same rule.</P>
+<P STYLE="margin-bottom: 0cm">Example:</P>
+<P CLASS="code-western">Point3f 
+</P>
+<P CLASS="code-western">{</P>
+<P CLASS="code-western">  public:</P>
+<P CLASS="code-western">  ScalarType &amp;V(const int i);</P>
+<P CLASS="code-western">}</P>
 <P STYLE="margin-bottom: 0cm"><B><I>Public Variable members</I></B>
 has the first letter lowercase and internal uppercase to separate
 compound words.</P>
+<P STYLE="margin-bottom: 0cm">Example:</P>
+<P STYLE="margin-bottom: 0cm"><BR>
+</P>
 <P STYLE="margin-bottom: 0cm"><B><I>Private Variable members</I></B>
 has an underscore as first char and the first letter lowercase and
 internal uppercase to separate compound words.</P>
+<P STYLE="margin-bottom: 0cm">Example:</P>
+<P CLASS="code-western">Point3f 
+</P>
+<P CLASS="code-western">{</P>
+<P CLASS="code-western">  private:</P>
+<P CLASS="code-western">  ScalarType _v[3];</P>
+<P CLASS="code-western">}</P>
 <P STYLE="margin-bottom: 0cm"><B><I>Class Template Arguments</I></B>
 all capitalized and with names remembering where they have been
 defined.</P>
+<P STYLE="margin-bottom: 0cm">TypeDefs  used for templated Class
+arguments just like Class Names, but ending with &ldquo;Type&rdquo;</P>
+<P STYLE="margin-bottom: 0cm">Example:</P>
+<P CLASS="code-western"><FONT SIZE=2><FONT FACE="Courier New, sans-serif">Point3f::ScalarType</FONT></FONT>
+</P>
 <H2 CLASS="western">Header Files</H2>
 <P STYLE="margin-bottom: 0cm">Each file of the library has to include
 all the files that it requires.</P>
@@ -45,11 +70,14 @@ all the files that it requires.</P>
 fully lower case. Compound names are separated by '_'.</P>
 <P STYLE="margin-bottom: 0cm">In Class definitions place prototypes
 all togheter before the inline or templated implemetations.</P>
+<P STYLE="margin-bottom: 0cm">Example:</P>
+<P CLASS="code-western"><FONT SIZE=2><FONT FACE="Courier New, sans-serif">#include&lt;vcg/space/point3.h&gt;</FONT></FONT>
+</P>
 <H2 CLASS="western">Editing Rules</H2>
 <P STYLE="margin-bottom: 0cm">Tabs are equivalent to two spaces. 
 </P>
 <P STYLE="margin-bottom: 0cm">There are no strict rules for the
-plaement of  '{' or indenting.</P>
+plaement of '{' or indenting.</P>
 <P STYLE="margin-bottom: 0cm"><BR>
 </P>
 </BODY>
