@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/03/12 15:22:19  cignoni
+Written some documentation and added to the trimes doxygen module
+
 Revision 1.2  2004/03/10 00:48:06  cignoni
 changed to the face::IsBorder() style
 
@@ -34,7 +37,7 @@ Changed name from plural to singular (normals->normal)
 ****************************************************************************/
 #ifndef __VCG_TRI_UPDATE_COLOR
 #define __VCG_TRI_UPDATE_COLOR
-
+#include <limits>
 namespace vcg {
 namespace tri {
 /** \addtogroup trimesh */
@@ -203,8 +206,8 @@ static void VertexQuality(MeshType &m)
 {
 	// step 1: find the range
 	MeshType::VertexIterator vi;
-	float minq=MaxVal(0.0f),
-				maxq=-MaxVal(0.0f);
+  float minq=std::numeric_limits<float>::max(),
+				maxq=std::numeric_limits<float>::min();
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)		
 		if(!(*vi).IsD()) 
 		{
