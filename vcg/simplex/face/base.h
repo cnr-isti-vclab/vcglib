@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2004/09/14 19:47:02  ganovelli
+removed "&" in FFp
+
 Revision 1.18  2004/08/25 15:15:27  ganovelli
 minor changes to comply gcc compiler (typename's and stuff)
 
@@ -1117,7 +1120,7 @@ ScalarType Perimeter() const
 ScalarType QualityFace( ) const
 {
 	
-	return Quality(V(0)->P(), V(1)->P(), V(2)->P());
+	return Quality(V(0)->cP(), V(1)->cP(), V(2)->cP());
 	/*
 	CoordType d10 = V(1)->P() - V(0)->P();
 	CoordType d20 = V(2)->P() - V(0)->P();

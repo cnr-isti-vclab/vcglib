@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.11  2004/09/09 13:23:01  ponchio
+  Header  guards typo
+
   Revision 1.10  2004/09/09 13:01:12  ponchio
   Linux compatible path in #include
 
@@ -74,16 +77,16 @@ public:
    Border()           =0;
   }
 };
-
+protected:
   typedef	typename TriMeshType::FaceType FaceType;
   typedef	typename FaceType::VertexType VertexType;
   typedef	typename FaceType::VertexType::CoordType CoordType;
   typedef	typename TriMeshType::VertexType::ScalarType ScalarType;
   typedef vcg::face::Pos<FaceType> PosType;
   typedef typename LocalOptimization<TriMeshType>::HeapElem HeapElem;
-	
+	typedef typename LocalOptimization<TriMeshType>::HeapType HeapType;
 
-protected:
+
 	///the pos of collapse 
 	PosType pos;
 
@@ -116,7 +119,7 @@ public:
 
   ScalarType ComputePriority()
   { 
-		_priority = Distance(pos.V()->P(),pos.VFlip()->P()); 
+		_priority = Distance(pos.V()->cP(),pos.VFlip()->cP()); 
     return _priority;
   }
 
@@ -135,23 +138,24 @@ public:
   }
   
   
-  void UpdateHeap(typename LocalOptimization<TriMeshType>::HeapType & h_ret)
+  void UpdateHeap(HeapType & h_ret)
   {
 		_Imark()++;
-		vcg::face::VFIterator<FaceType> VFi(pos.V(1)->VFp(),pos.V(1)->VFi());
-    while (!VFi.End())
+		vcg::face::VFIterator<FaceType> vfi(pos.V(1)->VFp(),pos.V(1)->VFi());
+    while (!vfi.End())
     {
       for (int j=0;j<3;j++)
+				if( (vfi.F()->V(vfi.I())->IsRW()) && (vfi.F()->V1(vfi.I())->IsRW()))
       {
 				PosType p;
-				p.Set(VFi.F(),VFi.I(),VFi.f->V(VFi.z));
+				p.Set(vfi.F(),vfi.I(),vfi.f->V(vfi.z));
 				h_ret.push_back(HeapElem(new MYTYPE(p,_Imark())));
 				std::push_heap(h_ret.begin(),h_ret.end());
 				//// update the mark of the vertices
-				VFi.f->V(VFi.z)->IMark() = _Imark();
-				VFi.f->V( (VFi.z+1) % 3 )->IMark() = _Imark();
+				vfi.f->V(vfi.z)->IMark() = _Imark();
+				vfi.f->V( (vfi.z+1) % 3 )->IMark() = _Imark();
       }
-      ++VFi;
+      ++vfi;
     }
   }
 
@@ -189,7 +193,7 @@ public:
 	return _priority;
   }
 
-	static void Init(TriMeshType&m,typename LocalOptimization<TriMeshType>::HeapType&h_ret){
+	static void Init(TriMeshType&m,HeapType&h_ret){
 		h_ret.clear();
 		typename TriMeshType::FaceIterator fi;
 		for(fi = m.face.begin(); fi != m.face.end();++fi)

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/04/05 11:56:13  cignoni
+First working version!
+
 Revision 1.2  2004/03/12 15:22:19  cignoni
 Written some documentation and added to the trimes doxygen module
 
@@ -68,7 +71,7 @@ static void Box(ComputeMeshType &m)
   m.bbox.SetNull();
 	VertexIterator vi;
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-			if( !(*vi).IsD() )	m.bbox.Add((*vi).P());
+			if( !(*vi).IsD() )	m.bbox.Add((*vi).cP());
 
 }
 
