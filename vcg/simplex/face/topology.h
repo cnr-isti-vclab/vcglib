@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2004/08/05 22:27:00  pietroni
+added VFAppend funtion
+
 Revision 1.10  2004/07/27 09:49:23  cignoni
 Removed warning about postfix incremnet of VFIterator
 
@@ -261,12 +264,16 @@ template <class FaceType>
 void VFAppend(FaceType* & f, int z)
 {
 	FaceType::VertexType *v=f->V(z);
-	FaceType *f0=v->VFp();
-	int z0=v->VFi();
+	if (v->VFp()!=0)
+	{
+		FaceType *f0=v->VFp();	
+		int z0=v->VFi();
+		//append
+		f->VFp(z)=f0;
+		f->VFi(z)=z0;
+	}
 	v->VFp()=f;
 	v->VFi()=z;
-	f->VFp(z)=f0;
-	f->VFi(z)=z0;
 }
 
 /*@}*/
