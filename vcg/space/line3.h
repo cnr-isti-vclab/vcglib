@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/03/11 11:47:20  tarini
+minor updates, corrections, added documentations, etc.
+
 Revision 1.5  2004/03/10 15:27:48  tarini
 added Normalized flag
 
@@ -171,7 +174,7 @@ public:
 	 "Line3dN r0 = r1.Normalize()" if r1 is a Line3d
 	**/
 		/// copy constructor that takes opposite beaviour
-	LineType (const Line3<ScalarType,!NORM > &r) 
+	Line3 (const Line3<ScalarType,!NORM > &r) 
 	{ Import(r); };
 		/// assignment
 	inline LineType & operator = ( Line3<ScalarType,!NORM> const &r) 
