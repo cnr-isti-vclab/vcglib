@@ -31,9 +31,11 @@ void MainFrame::fileOpen()
               this,
               "open file dialog"
               "Choose a TS Tetrahedral mesh file" );
-
-	const char *path=filename.ascii();
-	openTetraMesh(path);
+	if (filename!=NULL)
+	{
+		const char *path=filename.ascii();
+		openTetraMesh(path);
+	}
 }
 
 
@@ -52,7 +54,7 @@ void MainFrame::fileSaveAs()
 
 void MainFrame::fileExit()
 {
-
+	
 }
 
 

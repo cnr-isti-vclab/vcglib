@@ -1,0 +1,619 @@
+<!DOCTYPE UI><UI version="3.3" stdsetdef="1">
+<class>MainFrame</class>
+<widget class="QMainWindow">
+    <property name="name">
+        <cstring>MainFrame</cstring>
+    </property>
+    <property name="geometry">
+        <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>908</width>
+            <height>846</height>
+        </rect>
+    </property>
+    <property name="caption">
+        <string>TetraView</string>
+    </property>
+    <widget class="QGroupBox">
+        <property name="name">
+            <cstring>file</cstring>
+        </property>
+        <property name="geometry">
+            <rect>
+                <x>70</x>
+                <y>0</y>
+                <width>90</width>
+                <height>80</height>
+            </rect>
+        </property>
+        <property name="title">
+            <string></string>
+        </property>
+        <widget class="QPushButton">
+            <property name="name">
+                <cstring>OpenButton</cstring>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>10</x>
+                    <y>10</y>
+                    <width>70</width>
+                    <height>60</height>
+                </rect>
+            </property>
+            <property name="text">
+                <string></string>
+            </property>
+        </widget>
+    </widget>
+    <widget class="QButtonGroup">
+        <property name="name">
+            <cstring>buttonGroup1</cstring>
+        </property>
+        <property name="geometry">
+            <rect>
+                <x>160</x>
+                <y>0</y>
+                <width>470</width>
+                <height>80</height>
+            </rect>
+        </property>
+        <property name="title">
+            <string></string>
+        </property>
+        <property name="exclusive">
+            <bool>true</bool>
+        </property>
+        <widget class="QPushButton">
+            <property name="name">
+                <cstring>BoxButton</cstring>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>10</x>
+                    <y>30</y>
+                    <width>51</width>
+                    <height>31</height>
+                </rect>
+            </property>
+            <property name="text">
+                <string>box</string>
+            </property>
+            <property name="toggleButton">
+                <bool>true</bool>
+            </property>
+        </widget>
+        <widget class="QPushButton">
+            <property name="name">
+                <cstring>WireButton</cstring>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>80</x>
+                    <y>30</y>
+                    <width>40</width>
+                    <height>30</height>
+                </rect>
+            </property>
+            <property name="text">
+                <string>Wire</string>
+            </property>
+            <property name="toggleButton">
+                <bool>true</bool>
+            </property>
+        </widget>
+        <widget class="QPushButton">
+            <property name="name">
+                <cstring>HiddenButton</cstring>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>130</x>
+                    <y>30</y>
+                    <width>60</width>
+                    <height>31</height>
+                </rect>
+            </property>
+            <property name="text">
+                <string>Hidden</string>
+            </property>
+            <property name="toggleButton">
+                <bool>true</bool>
+            </property>
+        </widget>
+        <widget class="QPushButton">
+            <property name="name">
+                <cstring>FlatWireButton</cstring>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>260</x>
+                    <y>30</y>
+                    <width>61</width>
+                    <height>31</height>
+                </rect>
+            </property>
+            <property name="text">
+                <string>FlatWire</string>
+            </property>
+            <property name="toggleButton">
+                <bool>true</bool>
+            </property>
+        </widget>
+        <widget class="QPushButton">
+            <property name="name">
+                <cstring>SmoothButton</cstring>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>330</x>
+                    <y>30</y>
+                    <width>50</width>
+                    <height>30</height>
+                </rect>
+            </property>
+            <property name="text">
+                <string>Smooth</string>
+            </property>
+            <property name="toggleButton">
+                <bool>true</bool>
+            </property>
+        </widget>
+        <widget class="QPushButton">
+            <property name="name">
+                <cstring>SmallTetraButton</cstring>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>390</x>
+                    <y>30</y>
+                    <width>60</width>
+                    <height>30</height>
+                </rect>
+            </property>
+            <property name="text">
+                <string>SmallTetra</string>
+            </property>
+            <property name="toggleButton">
+                <bool>true</bool>
+            </property>
+        </widget>
+        <widget class="QPushButton">
+            <property name="name">
+                <cstring>FlatButton</cstring>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>200</x>
+                    <y>30</y>
+                    <width>50</width>
+                    <height>30</height>
+                </rect>
+            </property>
+            <property name="text">
+                <string>Flat</string>
+            </property>
+            <property name="toggleButton">
+                <bool>true</bool>
+            </property>
+            <property name="on">
+                <bool>true</bool>
+            </property>
+            <property name="autoDefault">
+                <bool>false</bool>
+            </property>
+            <property name="default">
+                <bool>false</bool>
+            </property>
+        </widget>
+    </widget>
+    <widget class="QButtonGroup">
+        <property name="name">
+            <cstring>buttonGroup2</cstring>
+        </property>
+        <property name="geometry">
+            <rect>
+                <x>630</x>
+                <y>0</y>
+                <width>230</width>
+                <height>80</height>
+            </rect>
+        </property>
+        <property name="title">
+            <string></string>
+        </property>
+        <property name="exclusive">
+            <bool>true</bool>
+        </property>
+        <widget class="QPushButton">
+            <property name="name">
+                <cstring>TrackButton</cstring>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>140</x>
+                    <y>20</y>
+                    <width>61</width>
+                    <height>31</height>
+                </rect>
+            </property>
+            <property name="text">
+                <string>Trackball</string>
+            </property>
+            <property name="toggleButton">
+                <bool>true</bool>
+            </property>
+            <property name="on">
+                <bool>true</bool>
+            </property>
+            <property name="default">
+                <bool>false</bool>
+            </property>
+        </widget>
+        <widget class="QPushButton">
+            <property name="name">
+                <cstring>SectionButton</cstring>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>40</x>
+                    <y>20</y>
+                    <width>71</width>
+                    <height>31</height>
+                </rect>
+            </property>
+            <property name="text">
+                <string>Section</string>
+            </property>
+            <property name="toggleButton">
+                <bool>true</bool>
+            </property>
+        </widget>
+    </widget>
+    <widget class="MyGLWidget">
+        <property name="name">
+            <cstring>myGLWidget</cstring>
+        </property>
+        <property name="geometry">
+            <rect>
+                <x>70</x>
+                <y>70</y>
+                <width>790</width>
+                <height>720</height>
+            </rect>
+        </property>
+    </widget>
+</widget>
+<menubar>
+    <property name="name">
+        <cstring>MenuBar</cstring>
+    </property>
+    <item text="&amp;File" name="File">
+        <action name="fileOpenAction"/>
+        <separator/>
+        <separator/>
+        <action name="fileExitAction"/>
+    </item>
+    <item text="&amp;Help" name="Help">
+        <action name="helpContentsAction"/>
+        <action name="helpIndexAction"/>
+        <separator/>
+        <action name="helpAboutAction"/>
+    </item>
+    <item text="Info" name="Info_2">
+        <action name="new_menunew_itemAction"/>
+        <action name="infoSimplexAction"/>
+        <action name="infoQualityAction"/>
+        <action name="infoPhysicsAction"/>
+    </item>
+</menubar>
+<toolbars>
+</toolbars>
+<customwidgets>
+    <customwidget>
+        <class>MyGLWidget</class>
+        <header location="global">D:/sf/apps/tetraviewer/myglwidget.h</header>
+        <sizehint>
+            <width>-1</width>
+            <height>-1</height>
+        </sizehint>
+        <container>0</container>
+        <sizepolicy>
+            <hordata>5</hordata>
+            <verdata>5</verdata>
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+        </sizepolicy>
+        <pixmap>image0</pixmap>
+        <signal>signal()</signal>
+        <slot access="public" specifier="">setBox()</slot>
+        <slot access="public" specifier="">setWire()</slot>
+        <slot access="public" specifier="">setHidden()</slot>
+        <slot access="public" specifier="">setFlat()</slot>
+        <slot access="public" specifier="">setFlatWire()</slot>
+        <slot access="public" specifier="">setSmallTetra()</slot>
+        <slot access="public" specifier="">setSmooth()</slot>
+        <slot access="public" specifier="">TrackMouseModality()</slot>
+        <slot access="public" specifier="">SectionMouseModality()</slot>
+        <slot access="public" specifier="">slot()</slot>
+        <slot access="public" specifier="">slot()</slot>
+        <slot access="public" specifier="">SwitchTextSimplex()</slot>
+        <slot access="public" specifier="">slot()</slot>
+        <slot access="public" specifier="">SwitchTextPhysics()</slot>
+        <slot access="public" specifier="">slot()</slot>
+        <slot access="public" specifier="">SwitchTextQuality()</slot>
+    </customwidget>
+</customwidgets>
+<actions>
+    <action>
+        <property name="name">
+            <cstring>fileOpenAction</cstring>
+        </property>
+        <property name="toggleAction">
+            <bool>false</bool>
+        </property>
+        <property name="on">
+            <bool>false</bool>
+        </property>
+        <property name="iconSet">
+            <iconset></iconset>
+        </property>
+        <property name="text">
+            <string>Open</string>
+        </property>
+        <property name="menuText">
+            <string>&amp;Open...</string>
+        </property>
+        <property name="accel">
+            <string>Ctrl+O</string>
+        </property>
+    </action>
+    <action>
+        <property name="name">
+            <cstring>fileExitAction</cstring>
+        </property>
+        <property name="text">
+            <string>Exit</string>
+        </property>
+        <property name="menuText">
+            <string>E&amp;xit</string>
+        </property>
+        <property name="accel">
+            <string></string>
+        </property>
+    </action>
+    <action>
+        <property name="name">
+            <cstring>helpContentsAction</cstring>
+        </property>
+        <property name="text">
+            <string>Contents</string>
+        </property>
+        <property name="menuText">
+            <string>&amp;Contents...</string>
+        </property>
+        <property name="accel">
+            <string></string>
+        </property>
+    </action>
+    <action>
+        <property name="name">
+            <cstring>helpIndexAction</cstring>
+        </property>
+        <property name="text">
+            <string>Index</string>
+        </property>
+        <property name="menuText">
+            <string>&amp;Index...</string>
+        </property>
+        <property name="accel">
+            <string></string>
+        </property>
+    </action>
+    <action>
+        <property name="name">
+            <cstring>helpAboutAction</cstring>
+        </property>
+        <property name="text">
+            <string>About</string>
+        </property>
+        <property name="menuText">
+            <string>&amp;About</string>
+        </property>
+        <property name="accel">
+            <string></string>
+        </property>
+    </action>
+    <action>
+        <property name="name">
+            <cstring>new_menunew_itemAction</cstring>
+        </property>
+        <property name="text">
+            <string></string>
+        </property>
+        <property name="menuText">
+            <string></string>
+        </property>
+    </action>
+    <action>
+        <property name="name">
+            <cstring>infoSimplexAction</cstring>
+        </property>
+        <property name="toggleAction">
+            <bool>true</bool>
+        </property>
+        <property name="on">
+            <bool>true</bool>
+        </property>
+        <property name="text">
+            <string>Simplex</string>
+        </property>
+        <property name="menuText">
+            <string>Simplex</string>
+        </property>
+    </action>
+    <action>
+        <property name="name">
+            <cstring>infoQualityAction</cstring>
+        </property>
+        <property name="toggleAction">
+            <bool>true</bool>
+        </property>
+        <property name="text">
+            <string>Quality</string>
+        </property>
+        <property name="menuText">
+            <string>Quality</string>
+        </property>
+    </action>
+    <action>
+        <property name="name">
+            <cstring>infoPhysicsAction</cstring>
+        </property>
+        <property name="toggleAction">
+            <bool>true</bool>
+        </property>
+        <property name="text">
+            <string>Physics</string>
+        </property>
+        <property name="menuText">
+            <string>Physics</string>
+        </property>
+    </action>
+</actions>
+<images>
+    <image name="image0">
+        <data format="PNG" length="1002">89504e470d0a1a0a0000000d4948445200000016000000160806000000c4b46c3b000003b149444154789cad94514c5b5518c77fe7dc4b7b4b6150bb96324418ca32358bee6192609c51d883892ce083f1718b3ebb185f8dc91e972cf39d2d6a78d0b027b3cd07d9e68c81c625a6c139408a4384f416100aed6d4b7bdb7b8e0fc0921a70c6ed7b3ae7e43bbff3fffedfc927e2f138bbd1dbdbab7902118fc785d8058f8d8de9aeae2e72b91cb66de338ce7f82e47239666767492412b8aefbf0dcdc553a323242f4501d918e2d3a8f15a9784584100809a609526eafd1a0f54e6142e029c5c21f3ef41583bb77a805efbe1ce9d86279e32619678eaab7853fa0f02a16abb64166ad0cdac75307eb3874b84cb0a14aa5a24108cc0688c48c9a4a1e826ddbe6f0b12219678e8ace610502ccdfafe3f68d3c33bf6c01c59dcc209d472c4e0d35d2f3ba81d205d06005e4de60c77170bd2255af80150870f70e8c0eaf009260a349577714e913a4175d16925b5cbe50607931cc3b677c68ca28a5f7066f5b26f00760febec9e8f032a0e81b68a17fc0201415989647a9d8c4c498cbe8f05f5cff3a4d4bac8bfe210b290b35e01afd428257b1b875cd01aaf4bd1de5dd0fea688e1530ad1c1bab16b7af17393558cf997311c0e49bafd670d6258621f6576c9ab09a3248fe5ae6c08103f49f36517213d33070369bf8e2529ee9c90ceb2b2eef7f14617c2c48722a4b7226845143fa87622905ebeb6514253a9eb5084504a66950c88618bee0303d99217cb09e9ed71a09369538fa523d00e9a50a42eed3bc6d8f41281fa0903e8561796cac86f8f2b33c33930ea0f0fb4d5adbeb30ad22866ffbbad226d2a805d7ee0484220208925aaa50deaa67e27b97e9c90ccdcdf5c462cdd8a94d2e7e62f3603244ea410989a4ed191f52a8fd156b056d9d553a9e0bf0e7ef45c6bf7339fd5e90ec7a88575e6d20d6e6e7e2a755ec854dce7fb8885b2cd014f6f3c2714d3a550bae55ac35c1068fb7061b00b87a7995899b25ce9e0b73e24d8fae97b37c7cbe9370b499fce6066eb54adf6098f6ee2a9a7ff9c70841a5023d270deca510d746537c7e29cdf8ad20475fb4307c82d4fc324ec6859d66fdfc6381e44014b36e9fe6e572393ca54068aa22cfd0598b686b3737aeae90bc9725796f0350802414b6e81b7c9a9f7e70708a2e6e5991cfeee3f1ecec2c0b0b3e8c068142a2a8d23728397132c6dc6f2e2b8b0a8da4b5ddc7f3c735ed47146f0cb4502983693a4c25ca7b83138904fa8a412466e00f48b4271086c2901263676c4a6990b615b6ade15b85694af239984a94585bf6f606bbae5b334f1f37e4a3531e031c8fc7c5a312ff17f849c3e3f1b8f81b8be6900aca9b61c90000000049454e44ae426082</data>
+    </image>
+</images>
+<connections>
+    <connection>
+        <sender>fileOpenAction</sender>
+        <signal>activated()</signal>
+        <receiver>MainFrame</receiver>
+        <slot>fileOpen()</slot>
+    </connection>
+    <connection>
+        <sender>helpAboutAction</sender>
+        <signal>activated()</signal>
+        <receiver>MainFrame</receiver>
+        <slot>helpAbout()</slot>
+    </connection>
+    <connection>
+        <sender>helpContentsAction</sender>
+        <signal>activated()</signal>
+        <receiver>MainFrame</receiver>
+        <slot>helpContents()</slot>
+    </connection>
+    <connection>
+        <sender>helpIndexAction</sender>
+        <signal>activated()</signal>
+        <receiver>MainFrame</receiver>
+        <slot>helpIndex()</slot>
+    </connection>
+    <connection>
+        <sender>BoxButton</sender>
+        <signal>pressed()</signal>
+        <receiver>myGLWidget</receiver>
+        <slot>setBox()</slot>
+    </connection>
+    <connection>
+        <sender>WireButton</sender>
+        <signal>pressed()</signal>
+        <receiver>myGLWidget</receiver>
+        <slot>setWire()</slot>
+    </connection>
+    <connection>
+        <sender>HiddenButton</sender>
+        <signal>pressed()</signal>
+        <receiver>myGLWidget</receiver>
+        <slot>setHidden()</slot>
+    </connection>
+    <connection>
+        <sender>FlatButton</sender>
+        <signal>pressed()</signal>
+        <receiver>myGLWidget</receiver>
+        <slot>setFlat()</slot>
+    </connection>
+    <connection>
+        <sender>FlatWireButton</sender>
+        <signal>pressed()</signal>
+        <receiver>myGLWidget</receiver>
+        <slot>setFlatWire()</slot>
+    </connection>
+    <connection>
+        <sender>SmoothButton</sender>
+        <signal>pressed()</signal>
+        <receiver>myGLWidget</receiver>
+        <slot>setSmooth()</slot>
+    </connection>
+    <connection>
+        <sender>SmallTetraButton</sender>
+        <signal>pressed()</signal>
+        <receiver>myGLWidget</receiver>
+        <slot>setSmallTetra()</slot>
+    </connection>
+    <connection>
+        <sender>OpenButton</sender>
+        <signal>clicked()</signal>
+        <receiver>MainFrame</receiver>
+        <slot>fileOpen()</slot>
+    </connection>
+    <connection>
+        <sender>SectionButton</sender>
+        <signal>pressed()</signal>
+        <receiver>myGLWidget</receiver>
+        <slot>SectionMouseModality()</slot>
+    </connection>
+    <connection>
+        <sender>TrackButton</sender>
+        <signal>pressed()</signal>
+        <receiver>myGLWidget</receiver>
+        <slot>TrackMouseModality()</slot>
+    </connection>
+    <connection>
+        <sender>infoPhysicsAction</sender>
+        <signal>activated()</signal>
+        <receiver>myGLWidget</receiver>
+        <slot>SwitchTextPhysics()</slot>
+    </connection>
+    <connection>
+        <sender>infoQualityAction</sender>
+        <signal>activated()</signal>
+        <receiver>myGLWidget</receiver>
+        <slot>SwitchTextQuality()</slot>
+    </connection>
+    <connection>
+        <sender>infoSimplexAction</sender>
+        <signal>activated()</signal>
+        <receiver>myGLWidget</receiver>
+        <slot>SwitchTextSimplex()</slot>
+    </connection>
+    <connection>
+        <sender>fileExitAction</sender>
+        <signal>activated()</signal>
+        <receiver>MainFrame</receiver>
+        <slot>close()</slot>
+    </connection>
+</connections>
+<includes>
+    <include location="local" impldecl="in implementation">MainFrame.ui.h</include>
+</includes>
+<slots>
+    <slot>fileNew()</slot>
+    <slot>fileOpen()</slot>
+    <slot>fileSave()</slot>
+    <slot>fileSaveAs()</slot>
+    <slot>fileExit()</slot>
+    <slot>helpIndex()</slot>
+    <slot>helpContents()</slot>
+    <slot>helpAbout()</slot>
+    <slot specifier="non virtual">setWire()</slot>
+</slots>
+<pixmapinproject/>
+<layoutdefaults spacing="6" margin="11"/>
+<includehints>
+    <includehint>myglwidget.h</includehint>
+</includehints>
+</UI>

@@ -1,8 +1,11 @@
 #include "myglwidget.h"
 #include <vcg\space\tetra3.h>
 #include <vcg\space\point3.h>
+#include "mainframe.h"
+
 extern MyTetraMesh *tm;
 extern TetraStats<MyTetraMesh> Stats;
+//extern MainFrame *wp;
 
 bool MyGLWidget::ShowTextSimplex()
 {
@@ -29,6 +32,7 @@ QGLWidget(parent, name)
 	modality=3;
 	mouse_modality=MMTrackball;
 	_ShowBar=SIMPLEX;
+	grabKeyboard();
 }
 
 
@@ -66,7 +70,7 @@ void MyGLWidget::DrawTextInfo()
 
 		renderText( (width() - 10) / 2, 15, "a" );
 
-		QFont f( "arial", 8 );
+		QFont f( "arial", 12 );
 		QFontMetrics fmc( f );
 		glColor3d(1,1,1);
 		
@@ -109,8 +113,6 @@ void MyGLWidget::DrawTextInfo()
 		
 		glDisable(GL_BLEND);
 		//write values of the tetrahedron
-		glLineWidth(0.5);
-		glColor3d(1,0,0);
 		for (int i=0;i<4;i++)
 		{
 			double x=Stats.TCurrent()->V(i)->P().V(0);//x value of vertex
@@ -119,23 +121,23 @@ void MyGLWidget::DrawTextInfo()
 			str.sprintf("%i",i);
 			renderText(x,y,z,str,f);
 		}
-
-		//show the tetrahedron
-		glBegin(GL_LINE_LOOP);
-		for (int i=0;i<4;i++)
-		{
-			glVertex(Stats.TCurrent()->V(i)->P());
-		}
-		glEnd();
-		glBegin(GL_LINE_LOOP);
-			glVertex(Stats.TCurrent()->V(0)->P());
-			glVertex(Stats.TCurrent()->V(2)->P());
-		glEnd();
-		glBegin(GL_LINE_LOOP);
-			glVertex(Stats.TCurrent()->V(1)->P());
-			glVertex(Stats.TCurrent()->V(3)->P());
-		glEnd();
-		//end drawing
+		Stats.TCurrent()->SetS();
+		////show the tetrahedron
+		//glBegin(GL_LINE_LOOP);
+		//for (int i=0;i<4;i++)
+		//{
+		//	glVertex(Stats.TCurrent()->V(i)->P());
+		//}
+		//glEnd();
+		//glBegin(GL_LINE_LOOP);
+		//	glVertex(Stats.TCurrent()->V(0)->P());
+		//	glVertex(Stats.TCurrent()->V(2)->P());
+		//glEnd();
+		//glBegin(GL_LINE_LOOP);
+		//	glVertex(Stats.TCurrent()->V(1)->P());
+		//	glVertex(Stats.TCurrent()->V(3)->P());
+		//glEnd();
+		////end drawing
 		}
 		glPopAttrib();
 	}
@@ -271,28 +273,29 @@ void MyGLWidget::mousePressEvent ( QMouseEvent * e )
 {
 if (e->button()==Qt::LeftButton)
 {
-	if (mouse_modality==MMTrackball)
-	{
+	MyTetraMesh::TetraIterator ti;
+	int face;
+	switch(mouse_modality)
+	{				
+	case MMTrackball:
 		Track.MouseDown(e->x(),_H-e->y(),vcg::Trackball::BUTTON_LEFT);
-		repaint();
-	}
-  else
-	if (mouse_modality==MMSection)
-	{
+		break;
+
+	case MMSection:
 		LoadMatrix();
-		MyTetraMesh::TetraIterator ti;
-		vcg::GLPickTetra<MyTetraMesh>::PickNearestTetra(e->x(),_H-e->y(),*tm,ti);
+		vcg::GLPickTetra<MyTetraMesh>::PickNearestTetraFace(e->x(),_H-e->y(),*tm,ti,face);
 		if (ti!=0)
 		{
-			///find exterbnal face
-			int face=0;
-			while (!ti->IsBorderF(face))
-			face++;
-
+			///find external face
+			
+			/*while (!ti->IsBorderF(face))
+			face++;*/
+			/*ti->SetS();*/
 			vcg::Point3d p0=ti->V(vcg::Tetra::VofF(face,0))->P();
 			vcg::Point3d p1=ti->V(vcg::Tetra::VofF(face,1))->P();
 			vcg::Point3d p2=ti->V(vcg::Tetra::VofF(face,2))->P();
-			
+
+			//put the trackball on the barycenter of the face
 			MyTetraMesh::VertexType::CoordType b=(p0+p1+p2)/3.f;
 
 			WT->AddClipSection(p0,p1,p2);
@@ -304,19 +307,28 @@ if (e->button()==Qt::LeftButton)
 			mouse_modality=MMNavigateSection;
 			TrackClip.MouseDown(e->x(),_H-e->y(),vcg::Trackball::BUTTON_LEFT);
 		}
-	}
+	break;
+
+	case MMNavigateSection:
+		TrackClip.MouseDown(e->x(),_H-e->y(),vcg::Trackball::BUTTON_LEFT);
+	break;
+	
+	}	
 }
+
 else if (e->button()==Qt::RightButton)
 {
 	MyTetraMesh::TetraIterator ti;
 	LoadMatrix();
-	//WT->section.GlClip();
+	WT->section.GlClip();
 	vcg::GLPickTetra<MyTetraMesh>::PickNearestTetra(e->x(),_H-e->y(),*tm,ti);
 	if (ti!=0)
 	{
 		Stats.TetraInfo(&*ti);
 	}
 }
+
+repaint();
 }
 
 void MyGLWidget::mouseReleaseEvent(QMouseEvent * e )
@@ -333,7 +345,7 @@ void MyGLWidget::mouseMoveEvent ( QMouseEvent * e )
 			repaint();
 		}
 		else
-		if (mouse_modality==MMNavigateSection)
+		if ((mouse_modality==MMNavigateSection)&&(e->state() & Qt::LeftButton))
 		{
 			LoadMatrix();
 			TrackClip.MouseMove(e->x(),_H-e->y());
@@ -367,12 +379,16 @@ void MyGLWidget::wheelEvent ( QWheelEvent * e ){
 		}
 	}
 
+
 void MyGLWidget::keyPressEvent(QKeyEvent *k)
 {
 	mouse_modality=MMTrackball;
 	if ((k->key()==Qt::Key_Escape)&&((mouse_modality==MMNavigateSection)||(mouse_modality==MMSection)))
+	{
 		mouse_modality=MMTrackball;
-
+		/*wp->SectionButton->setOn(false);
+		QString p=wp->TrackButton->text();*/
+	}
 }
 
 void MyGLWidget::initializeGL(){

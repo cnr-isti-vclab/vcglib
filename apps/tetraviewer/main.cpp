@@ -21,6 +21,8 @@ typedef vcg::tetra::UpdateNormals<MyTetraMesh> UN;
 typedef vcg::tetra::UpdateBounding<MyTetraMesh> UB;
 
 
+//MainFrame *wp;
+
 void openTetraMesh(const char* filename)
 {
 //opening the tetrahedral mesh
@@ -52,10 +54,11 @@ int main( int argc, char ** argv )
 
     QApplication a( argc, argv );
     MainFrame w;
+//	wp=&w;
+    w.show();	
 
-    w.show();
-	
     a.connect( &a, SIGNAL( lastWindowClosed() ), &a, SLOT( quit() ) );
+
     return a.exec();
 }
 
