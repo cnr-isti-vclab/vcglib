@@ -7,4 +7,4 @@ This module contains the documentation for the type and the functions used for r
 /** \defgroup face Faces 
 */
 /** \defgroup trimesh Triangular Meshes
-*/
+*/

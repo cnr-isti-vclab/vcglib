@@ -1,0 +1,1 @@
+/**Main namespace*/namespace vcg {}/**Everything about meshes lie in this namespace*/namespace vcg::tri {}/**Wrapper for symbols and structs defind in the old ply library*/namespace vcg::ply {} /**For all the functions and classes used to read and write meshes*/namespace vcg::tri::io {}
