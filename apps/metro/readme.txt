@@ -6,7 +6,7 @@
    Visual Computing Lab  http://vcg.isti.cnr.it                    /\/|      
    ISTI - Italian National Research Council                           |      
                                                                       \      
-   Metro 4.04 25/01/2005
+   Metro 4.05 04/05/2005
    All rights reserved.                                                      
    
 
@@ -79,3 +79,4 @@ where "file1" and "file2" are the input meshes in PLY, OFF or STL format, and op
    -c       save computed error as vertex colour and quality in two ply files
    -C # #   Set the min/max values used for color mapping (useful for taking snapshot with coherent color ramp)
    -L       Remove duplicated and unreferenced vertices before processing to avoid 
+   -H       write files with histograms of error distribution

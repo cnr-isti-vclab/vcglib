@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2005/01/26 22:45:34  cignoni
+Release 4.04
+final updates for gcc compiling issues
+
 Revision 1.14  2005/01/24 15:37:14  cignoni
 updated from MinDistPoint to Closest (and removed some warnings)
 
@@ -68,6 +72,7 @@ instantiate GridStaticPtr on the simplexClass template.
 //#include "min_dist_point.h"
 #include <vcg/complex/trimesh/closest.h>
 #include <vcg/space/box3.h>
+#include <vcg/math/histogram.h>
 #include <vcg/space/color4.h>
 #include <vcg/simplex/face/distance.h>
 #include <vcg/complex/trimesh/update/color.h>
@@ -131,7 +136,7 @@ private:
     int             Flags;
     
     // results
-//    Hist            hist;
+    Histogram<double>            hist;
     unsigned long   n_total_samples;
     unsigned long   n_total_area_samples;
     unsigned long   n_total_edge_samples;
@@ -174,7 +179,7 @@ public :
     unsigned long   GetNVertexSamples()         {return n_total_vertex_samples;}
     double					GetNSamplesPerAreaUnit()    {return n_samples_per_area_unit;}
     unsigned long   GetNSamplesTarget()         {return n_samples_target;}
-//    Hist            &GetHist()                  {return hist;}
+    Histogram<double> &GetHist()                  {return hist;}
     void            SetFlags(int flags)         {Flags = flags;}
     void            ClearFlag(int flag)         {Flags &= (flag ^ -1);}
     void            SetParam(double _n_samp)    {n_samples_target = _n_samp;}
@@ -268,8 +273,8 @@ float Sampling<MetroMesh>::AddSample(const Point3x &p )
     RMS_dist  += dist*dist;     // L_2
     n_total_samples++;
 
-    //if(Flags & HIST)
-    //    hist.Add((float)fabs(dist));
+    if(Flags &  SamplingFlags::HIST)
+        hist.Add((float)fabs(dist));
 
     return (float)dist;    
 }
@@ -577,8 +582,8 @@ void Sampling<MetroMesh>::Hausdorff()
     // set bounding box
     bbox = S2.bbox;
     dist_upper_bound = /*bbox_factor * */bbox.Diag();
-    //if(Flags & HIST)
-    //	hist.SetRange(0.0, dist_upper_bound, n_hist_bins);
+    if(Flags &  SamplingFlags::HIST)
+    	hist.SetRange(0.0, dist_upper_bound/100.0, n_hist_bins);
 
     // initialize sampling statistics.
     n_total_area_samples = n_total_edge_samples = n_total_vertex_samples = n_total_samples = n_samples = 0;
