@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2004/08/26 13:15:23  pietroni
+added IsS() function
+
 Revision 1.10  2004/07/09 10:13:00  ganovelli
 C() ,Q() ,hastetracolor(),hasqualityt()....
 plus some misuse of tetra3 corrected
@@ -82,7 +85,7 @@ public:
   ///	The base type of the face
 	typedef TETRA_TYPE BaseTetraType;
 	/// The vertex type 
-	typedef typename VTYPE VertexType;
+	typedef  VTYPE VertexType;
   /// The coordinate type used to represent the point (i.e. Point3f, Point3d, ...)
   typedef typename VertexType::CoordType CoordType;
   /// The scalar type used to represent coords (i.e. float, double, ...)

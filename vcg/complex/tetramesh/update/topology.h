@@ -259,7 +259,7 @@ static void DetachVTTopology(VertexType *v,TetraType *t)
 			{	
 				lastz=Et.Vi();
 				lastt=Et.Vt();
-				Et++;
+				++Et;
 			}
 			//in the list of the vertex v must be present the 
 			//tetrahedron that you want to detach
@@ -270,7 +270,7 @@ static void DetachVTTopology(VertexType *v,TetraType *t)
 	}
 
 ///insert the tetrahedron t in VT topology for vertex v of index z
-static void InsertVTTopology(VertexType *v,int z,TetraType *t)
+static void InsertVTTopology(VertexType *v,int z, TetraType *t)
 	{
 		if( ! (*t).IsD())
 				{
@@ -283,7 +283,7 @@ static void InsertVTTopology(VertexType *v,int z,TetraType *t)
 
 
 ///insert the tetrahedron t in VT topology for all his vertices
-static void InsertVTTopology(TetraType *t)
+static void InsertVTTopology( TetraType *t)
 	{	
 		assert(!t->IsD());
 		int k=0;
@@ -339,27 +339,27 @@ static void TTTopology(VertexContainer &vert,TetraContainer &tetra)
 			(*ti).TTp(2)=(&(*ti));
 			(*ti).TTp(3)=(&(*ti));
 			
-      v0=(*ti).V(Tetra3<double>::VofF(0,0));
-      v1=(*ti).V(Tetra3<double>::VofF(0,1));
-      v2=(*ti).V(Tetra3<double>::VofF(0,2));
+      v0=(*ti).V(Tetra::VofF(0,0));
+      v1=(*ti).V(Tetra::VofF(0,1));
+      v2=(*ti).V(Tetra::VofF(0,2));
 		
 			VF.push_back(Facet<VertexType,TetraType>(v0,v1,v2,&(*ti),0));
 
-      v0=(*ti).V(Tetra3<double>::VofF(1,0));
-      v1=(*ti).V(Tetra3<double>::VofF(1,1));
-      v2=(*ti).V(Tetra3<double>::VofF(1,2));
+      v0=(*ti).V(Tetra::VofF(1,0));
+      v1=(*ti).V(Tetra::VofF(1,1));
+      v2=(*ti).V(Tetra::VofF(1,2));
 
 			VF.push_back(Facet<VertexType,TetraType>(v0,v1,v2,&(*ti),1));
 
-      v0=(*ti).V(Tetra3<double>::VofF(2,0));
-      v1=(*ti).V(Tetra3<double>::VofF(2,1));
-      v2=(*ti).V(Tetra3<double>::VofF(2,2));
+      v0=(*ti).V(Tetra::VofF(2,0));
+      v1=(*ti).V(Tetra::VofF(2,1));
+      v2=(*ti).V(Tetra::VofF(2,2));
 			
 			VF.push_back(Facet<VertexType,TetraType>(v0,v1,v2,&(*ti),2));
 
-      v0=(*ti).V(Tetra3<double>::VofF(3,0));
-      v1=(*ti).V(Tetra3<double>::VofF(3,1));
-      v2=(*ti).V(Tetra3<double>::VofF(3,2));
+      v0=(*ti).V(Tetra::VofF(3,0));
+      v1=(*ti).V(Tetra::VofF(3,1));
+      v2=(*ti).V(Tetra::VofF(3,2));
 
 			VF.push_back(Facet<VertexType,TetraType>(v0,v1,v2,&(*ti),3));
   	}
@@ -415,17 +415,17 @@ static void TestTTTopology(VertexContainer &vert,TetraContainer &tetra)
 					{	
 					  assert( ((((*ti).TTp(i))->TTp((*ti).TTi(i)))==&(*ti)));
             
-            VertexType	*v0=(*ti).V(Tetra3<double>::VofF(i,0));
-            VertexType	*v1=(*ti).V(Tetra3<double>::VofF(i,1));
-            VertexType	*v2=(*ti).V(Tetra3<double>::VofF(i,2));
+            VertexType	*v0=(*ti).V(Tetra::VofF(i,0));
+            VertexType	*v1=(*ti).V(Tetra::VofF(i,1));
+            VertexType	*v2=(*ti).V(Tetra::VofF(i,2));
 						
 						TetraType *t1=(TetraType*)(*ti).TTp(i);
             assert (!t1->IsD());
 						int z1=(*ti).TTi(i);
             
-            VertexType	*vo0=(*t1).V(Tetra3<double>::VofF(z1,0));
-            VertexType	*vo1=(*t1).V(Tetra3<double>::VofF(z1,1));
-            VertexType	*vo2=(*t1).V(Tetra3<double>::VofF(z1,2));
+            VertexType	*vo0=(*t1).V(Tetra::VofF(z1,0));
+            VertexType	*vo1=(*t1).V(Tetra::VofF(z1,1));
+            VertexType	*vo2=(*t1).V(Tetra::VofF(z1,2));
 
 						assert((v0!=v1)&&(v0!=v2)&&(v1!=v2));
 						assert((vo0!=vo1)&&(vo0!=vo2)&&(vo1!=vo2));

@@ -44,17 +44,17 @@ class EdgeCollapse
 {
 	public:
   /// The tetrahedral mesh type
-  typedef	typename TETRA_MESH_TYPE TetraMeshType;
+  typedef	TETRA_MESH_TYPE TetraMeshType;
   /// The tetrahedron type
   typedef	typename TetraMeshType::TetraType TetraType;
-	/// The vertex type
-	typedef	typename TetraType::VertexType VertexType;
+  /// The vertex type
+  typedef	typename TetraType::VertexType VertexType;
   /// The vertex iterator type
   typedef	typename TetraMeshType::VertexIterator VertexIterator;
   /// The tetra iterator type
   typedef	typename TetraMeshType::TetraIterator TetraIterator;
   /// The coordinate type
-	typedef	typename TetraType::VertexType::CoordType CoordType;
+  typedef	typename TetraType::VertexType::CoordType CoordType;
   /// The scalar type
   typedef	typename TetraMeshType::VertexType::ScalarType ScalarType;
   ///the container of tetrahedron type
@@ -66,9 +66,9 @@ class EdgeCollapse
   /// The HEdgePos Loop type
   typedef PosLoop<TetraType> PosLType;
   /// The topology updater type
-  typedef vcg::tetra::UpdateTetraTopology<VertexContainer,TetraContainer> Topology;
+  typedef typename vcg::tetra::UpdateTetraTopology<VertexContainer,TetraContainer> Topology;
   ///the normal updater type
-  typedef  vcg::tetra::UpdateNormals<TetraMeshType> UpdateNormals;
+  typedef  typename vcg::tetra::UpdateNormals<TetraMeshType> UpdateNormals;
 
 
   /// Default Constructor
@@ -81,6 +81,7 @@ class EdgeCollapse
 		};
 
   private:
+
 	typedef pair <int,int> FacePair;
 	struct Face
 	{
@@ -277,7 +278,7 @@ static int _Collapse(PosType p,CoordType NewP)
 			//now I cycle on the tetrahedron that had the old vertex
 			//reassegning the new one.
 
-      VTIterator< TetraType> VTi(Vdel->VTb(),Vdel->VTi());
+			VTIterator<TetraType> VTi(Vdel->VTb(),Vdel->VTi());
 			while (!VTi.End())
 			{	
 				TetraType *T_Change=VTi.Vt();
@@ -307,7 +308,7 @@ static int _Collapse(PosType p,CoordType NewP)
 
 static void orMarkE(Edge E,char M)
 {
- map<Edge,char>::iterator EI;
+ typename map<Edge,char>::iterator EI;
  EI=_EdgeMark().find(E);
  if (EI==_EdgeMark().end())
   _EdgeMark().insert (pair<Edge,char>(E,M));
@@ -317,7 +318,7 @@ static void orMarkE(Edge E,char M)
 
 static bool isMarkedE(Edge E,char M)
 {
- map<Edge,char>::iterator EI;
+ typename map<Edge,char>::iterator EI;
  EI=_EdgeMark().find(E);
  if (EI==_EdgeMark().end())
     return false;
@@ -326,7 +327,7 @@ static bool isMarkedE(Edge E,char M)
 
 static void orMarkF(Face F,char M)
 {
- map<Face,char>::iterator FI;
+ typename map< Face,char>::iterator FI;
  FI=_FaceMark().find(F);
  if (FI==_FaceMark().end())
   _FaceMark().insert (pair<Face,char>(F,M));
@@ -336,7 +337,7 @@ static void orMarkF(Face F,char M)
 
 static bool isMarkedF(Face F,char M)
 {
- map<Face,char>::iterator FI;
+ typename map<Face,char>::iterator FI;
  FI=_FaceMark().find(F);
  if (FI==_FaceMark().end())
     return false;
@@ -740,7 +741,7 @@ static bool _FlipCondition(PosType pos,CoordType NewP)
 static void _InitTetrahedronValues(VertexType* v)
 {
  
-  VTIterator<TetraType> VTi=VTIterator<TetraType>(v->VTb(),v->VTi());
+  VTIterator<TetraType> VTi= VTIterator<TetraType>(v->VTb(),v->VTi());
   while (!VTi.End())
   {
     if (TetraType::HasTetraQuality())
@@ -753,7 +754,7 @@ static void _InitTetrahedronValues(VertexType* v)
       VTi.Vt()->ComputeNormal();
     }
 
-    VTi++;
+    ++VTi;
   }
 
   VTi.Vt()=v->VTb();
@@ -787,7 +788,8 @@ static void Reset(){
 ///that share the adge to collapse
 static ScalarType AspectRatioCollapsed(PosType p)
 {
-  PosL pos=PosL(p.T(),p.F(),p.E(),p.V());
+  //PosL pos=PosL(p.T(),p.F(),p.E(),p.V());
+   PosLoop<TetraType> pos=PosLoop<TetraType>(p.T(),p.F(),p.E(),p.V());
   pos.Reset();
   int num=0;
   ScalarType ratio_media=0.f;
@@ -805,8 +807,8 @@ static ScalarType AspectRatioCollapsed(PosType p)
 ///check the topologycal preserving  conditions for the collapse indicated by pos
 static bool  CheckPreconditions(PosType pos,CoordType NewP)
 {	
-  VertexType *v0=pos.T()->V(Tetra::VofE(pos.E(),0));
-	VertexType *v1=pos.T()->V(Tetra::VofE(pos.E(),1));
+   VertexType *v0=pos.T()->V(Tetra::VofE(pos.E(),0));
+   VertexType *v1=pos.T()->V(Tetra::VofE(pos.E(),1));
   //if the two vertices are of border and the edge is not a border edge
   //we can do it.
   bool border0=v0->IsB();
@@ -851,7 +853,7 @@ static ScalarType VolumeOriginal()
 }
 
 ///Calculate the volume on the vertex resulting after collapse...
-static ScalarType VolumeSimulateCollapse(PosType Pos,CoordType newP)
+static ScalarType VolumeSimulateCollapse(PosType Pos,CoordType &newP)
 {
   VertexType *Vrem=(Pos.T()->V(Tetra::VofE(Pos.E(),0)));
   VertexType *Vdel=(Pos.T()->V(Tetra::VofE(Pos.E(),1)));
@@ -875,10 +877,10 @@ static ScalarType VolumeSimulateCollapse(PosType Pos,CoordType newP)
         T.P2(0)=(*ti)->V(2)->cP();
         T.P3(0)=(*ti)->V(3)->cP();
        
-				vol+=T.ComputeVolume(); */
-//				vol+= vcg::ComputeVolume<TetraType>(*((Tetra3<ScalarType>*)&*ti));
+		vol+=T.ComputeVolume(); */
+//		vol+= vcg::ComputeVolume<TetraType>(*((Tetra3<ScalarType>*)&*ti));
 					
-  				vol+= vcg::ComputeVolume(**ti);
+  		vol+= vcg::ComputeVolume(**ti);
         ti++;
   }
   Vrem->P()=oldpos;
@@ -917,7 +919,7 @@ static void FindSets(vcg::tetra::Pos<TetraType> pos)
     //set of union minus intersection
     if ((vf0.Vt()->V(0)!=ve1)&&(vf0.Vt()->V(1)!=ve1)&&(vf0.Vt()->V(2)!=ve1)&&(vf0.Vt()->V(3)!=ve1))
 		  _Sets().no_E.push_back(vf0.Vt());
-    vf0++;
+    ++vf0;
 	}
 
   //second vertex iteration
@@ -934,7 +936,7 @@ static void FindSets(vcg::tetra::Pos<TetraType> pos)
     //set of union minus intersection 
     if ((vf0.Vt()->V(0)!=ve0)&&(vf0.Vt()->V(1)!=ve0)&&(vf0.Vt()->V(2)!=ve0)&&(vf0.Vt()->V(3)!=ve0))
 		  _Sets().no_E.push_back(vf0.Vt());
-    vf0++;
+    ++vf0;
 	}
 
   //erase duplicated tetrahedrons from the union set
@@ -959,9 +961,9 @@ static int DoCollapse(PosType p,CoordType newP)
 {
   VertexType *v=p.T()->V(p.V());
   assert(p.T()->HasVTAdjacency());
-  int n_deleted = _Collapse(p,newP);
+  int n_del=_Collapse(p,newP);
   _InitTetrahedronValues(v);
-  return n_deleted;
+  return n_del;
 }
 
 

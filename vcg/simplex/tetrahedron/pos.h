@@ -46,7 +46,7 @@ class VTIterator
 {
 public:
 	/// The tetrahedron type 
-	typedef typename MTTYPE TetraType;
+	typedef  MTTYPE TetraType;
 private:
 	/// Pointer to a tetrahedron
 	TetraType *_vt;
@@ -110,7 +110,7 @@ class Pos
 public:
 
   /// The tetrahedron type
-	typedef	typename MTTYPE TetraType;
+	typedef MTTYPE TetraType;
 	/// The vertex type
 	typedef	typename TetraType::VertexType VertexType;
   /// The coordinate type

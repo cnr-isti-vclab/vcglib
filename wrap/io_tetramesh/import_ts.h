@@ -9,7 +9,7 @@ namespace io {
 
 template <typename  MESHTYPE>
 class ImporterTS{
-  typedef typename MESHTYPE Tetramesh;
+	typedef MESHTYPE Tetramesh;
 	typedef typename Tetramesh::VertexPointer VertexPointer;
 	typedef typename Tetramesh::VertexType VertexType;
 	typedef typename Tetramesh::TetraType FaceType;
@@ -31,7 +31,7 @@ static int Open( Tetramesh & m, const char * filename ){
 	int tp3;
 	float mass;
 	FILE *f;
-	Tetramesh::VertexType p1;
+	typename Tetramesh::VertexType p1;
 	f = fopen(filename,"r");
 	if(f == NULL ) 
 		{
@@ -62,7 +62,7 @@ static int Open( Tetramesh & m, const char * filename ){
 			fscanf(f, "%i", &tp2 );
 			fscanf(f, "%i", &tp3 );
 			
-			Tetramesh::TetraType  newTetra;
+			typename Tetramesh::TetraType  newTetra;
 			m.tetra.push_back(newTetra);
 			m.tetra.back().Init(&m.vert[tp0],&m.vert[tp1],&m.vert[tp2],&m.vert[tp3]); 
 		}

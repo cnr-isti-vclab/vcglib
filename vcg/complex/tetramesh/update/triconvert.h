@@ -48,9 +48,9 @@ class TriConverter
 public:
 
 	/// The tetrahedral mesh type
-	typedef typename TETRA_MESH TetraMeshType;
+	typedef TETRA_MESH TetraMeshType;
 	/// The triangle mesh type
-	typedef typename TRI_MESH TriangleMeshType;
+	typedef TRI_MESH TriangleMeshType;
 
   /// The tetrahedron type
   typedef typename TetraMeshType::TetraType TetraType;

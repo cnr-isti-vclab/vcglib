@@ -31,12 +31,12 @@
 #include<vcg\complex\local_optimization.h>
 
 struct FAIL{
-	static VOL(){static int vol=0; return vol++;}
-	static LKF(){static int lkf=0; return lkf++;}
-	static LKE(){static int lke=0; return lke++;}
-	static LKV(){static int lkv=0; return lkv++;}
-	static OFD(){static int ofd=0; return ofd++;}
-	static BOR(){static int bor=0; return bor++;}
+	static int VOL(){static int vol=0; return vol++;}
+	static int LKF(){static int lkf=0; return lkf++;}
+	static int LKE(){static int lke=0; return lke++;}
+	static int LKV(){static int lkv=0; return lkv++;}
+	static int OFD(){static int ofd=0; return ofd++;}
+	static int BOR(){static int bor=0; return bor++;}
 
 };
 
@@ -55,15 +55,15 @@ class TetraEdgeCollapse: public LocalOptimization<TETRA_MESH_TYPE>::LocModType
 {
  
   /// The tetrahedral mesh type
-  typedef	typename TETRA_MESH_TYPE TetraMeshType;
+  //typedef	typename TETRA_MESH_TYPE TETRA_MESH_TYPE;
   /// The tetrahedron type
-  typedef	typename TetraMeshType::TetraType TetraType;
-	/// The vertex type
-	typedef	typename TetraType::VertexType VertexType;
+  typedef	typename TETRA_MESH_TYPE::TetraType TetraType;
+  /// The vertex type
+  typedef	typename TetraType::VertexType VertexType;
   /// The coordinate type
-	typedef	typename TetraType::VertexType::CoordType CoordType;
+  typedef	typename TetraType::VertexType::CoordType CoordType;
   /// The scalar type
-  typedef	typename TetraMeshType::VertexType::ScalarType ScalarType;
+  typedef	typename TETRA_MESH_TYPE::VertexType::ScalarType ScalarType;
   /////the base type class
   //typedef typename vcg::tri::LocalModification LocalMod;
   /// The HEdgePos type
@@ -77,7 +77,7 @@ private:
 ///the new point that substitute the edge
 Point3<ScalarType> _NewPoint;
 ///the pointer to edge collapser method
-vcg::tetra::EdgeCollapse<TetraMeshType> _EC;
+vcg::tetra::EdgeCollapse<TETRA_MESH_TYPE> _EC;
 ///mark for up_dating
 static int& _Imark(){ static int im=0; return im;}
 ///the pos of collapse 
@@ -96,7 +96,7 @@ public:
 	TetraEdgeCollapse(PosType p,int mark)
 		{    
 			_Imark() = mark;
-      pos=p;
+			pos=p;
 			_priority = _AspectRatioMedia(p);
 		}
 
@@ -129,7 +129,6 @@ ScalarType _VolumePreservingError(PosType &pos,CoordType &new_point,int nsteps)
 {
   VertexType *ve0=(pos.T()->V(Tetra::VofE(pos.E(),0)));
   VertexType *ve1=(pos.T()->V(Tetra::VofE(pos.E(),1)));
-  vrem =ve0;
   bool ext_v0=ve0->IsB();
   bool ext_v1=ve1->IsB();
 
@@ -167,11 +166,10 @@ ScalarType _VolumePreservingError(PosType &pos,CoordType &new_point,int nsteps)
 
 
 public:
-
-
-  virtual const char *Info(TetraMeshType &m) {
+  
+  virtual const char *Info(TETRA_MESH_TYPE &m) {
     static char buf[60];
-    sprintf(buf,"collapse %i -> %i %f\n", pos.V()-&m.vert[0], pos.VFlip()-&m.vert[0],_priority);
+    //sprintf(buf,"collapse %i -> %i %f\n", pos.()-&m.vert[0], pos.VFlip()-&m.vert[0],_priority);
     return buf;
   }
 
@@ -182,52 +180,59 @@ public:
 
   ScalarType ComputeError()
   {
-      _EC.FindSets(pos);
+	  vrem=(pos.T()->V(Tetra::VofE(pos.E(),0)));
       return (_VolumePreservingError(pos,_NewPoint,5));// magic number....parametrize!
   }
 
-  int Execute()
+  void Execute(TETRA_MESH_TYPE &tm)
   {
-    _EC.FindSets(pos);
-    return -_EC.DoCollapse(pos,_NewPoint);
+   // _EC.FindSets(pos);
+	assert(!vrem->IsD());
+    int del=_EC.DoCollapse(pos,_NewPoint);
+	tm.tn-=del;
+	tm.vn-=1;
   }
   
-  
-  void UpdateHeap(typename LocalOptimization<TetraMeshType>::HeapType & h_ret)
+  void UpdateHeap(typename LocalOptimization<TETRA_MESH_TYPE>::HeapType & h_ret)
   {
     assert(!vrem->IsD());
 		_Imark()++;
-    VTIterator<FaceType> VTi(vrem->VTb(),vrem->VTi());
+    VTIterator<TetraType> VTi(vrem->VTb(),vrem->VTi());
     while (!VTi.End())
     {
-				VTi.Vt()->ComputeVolume();
-
+	  VTi.Vt()->ComputeVolume();
       for (int j=0;j<6;j++)
       {
-        vcg::tri::Pos<FaceType> p=Pos<FaceType>(VTi.Vt(),Tetra::FofE(j,0),j,Tetra::VofE(j,0));
-        h_ret.push_back(HeapElem(new TriEdgeCollapser<TriMeshType>(p,_Imark())));
-				std::push_heap(h_ret.begin(),h_ret.end());
-				// update the mark of the vertices
-				VTi.Vt()->V(Tetra::VofE(j,0))->IMark() = _Imark();
+		vcg::tetra::Pos<TetraType> p=Pos<TetraType>(VTi.Vt(),Tetra::FofE(j,0),j,Tetra::VofE(j,0));
+		assert(!p.T()->V(p.V())->IsD());
+		assert(!p.T()->IsD());
+        h_ret.push_back(HeapElem(new TetraEdgeCollapse<TETRA_MESH_TYPE>(p,_Imark())));
+		std::push_heap(h_ret.begin(),h_ret.end());
+		// update the mark of the vertices
+		VTi.Vt()->V(Tetra::VofE(j,0))->IMark() = _Imark();
       }
-      VTi++;
+      ++VTi;
     }
   }
 
-  ModifierType IsOfType(){ return TetraEdgeCollapser;}
+  /// return the type of operation
+
+  ModifierType IsOfType(){ return TetraEdgeCollapseOp;}
 
   bool IsFeasible(){
-										vcg::tri::EdgeCollapse<TriMeshType>::Reset();	
-										_EC.FindSets(pos);
-										return(_EC.CheckPreconditions(pos,_NewPoint));
-										}
+				vcg::tetra::EdgeCollapse<TETRA_MESH_TYPE>::Reset();	
+				_EC.FindSets(pos);
+				ComputeError();
+				return(_EC.CheckPreconditions(pos,_NewPoint));
+				}
 
   bool IsUpToDate(){
 	   	if (!pos.T()->IsD())
-			{
+		{
         VertexType *v0=pos.T()->V(Tetra::VofE(pos.E(),0));
-			  VertexType *v1=pos.T()->V(Tetra::VofE(pos.E(),1));
-			
+		VertexType *v1=pos.T()->V(Tetra::VofE(pos.E(),1));
+		assert(!v0->IsD());
+		assert(!v1->IsD());
 			if(! (( (!v0->IsD()) && (!v1->IsD())) &&
 							 _Imark()>=v0->IMark() &&
 							 _Imark()>=v1->IMark()))
@@ -242,13 +247,14 @@ public:
 			return false;
 	}
 
-	virtual ScalarType Priority(){
+	virtual ScalarType Priority() const {
 		return _priority;
 	}
 
-	virtual void Init(TetraMeshType &m,typename LocalOptimization<TetraMeshType>::HeapType& h_ret){
+	/// perform initialization
+	static void Init(TETRA_MESH_TYPE &m,typename LocalOptimization<TETRA_MESH_TYPE>::HeapType& h_ret){
 		h_ret.clear();
-		TetraMeshType::TetraIterator ti;
+		typename TETRA_MESH_TYPE::TetraIterator ti;
 		int j;
 		for(ti = m.tetra.begin(); ti != m.tetra.end();++ti)
 		if(!(*ti).IsD()){
@@ -256,7 +262,9 @@ public:
 	   for (int j=0;j<6;j++)
 		{
 			PosType p=PosType(&*ti,Tetra::FofE(j,0),j,Tetra::VofE(j,0));
-			h_ret.push_back(HeapElem(new TriEdgeCollapser<TetraMeshType>(p,m.IMark)));
+			assert(!p.T()->V(p.V())->IsD());
+			assert(!p.T()->IsD());
+			h_ret.push_back(HeapElem(new TetraEdgeCollapse<TETRA_MESH_TYPE>(p,m.IMark)));
 		}
 		}
 	}

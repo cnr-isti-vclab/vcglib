@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/06/25 11:25:07  pietroni
+changrd update for a vertex normal functions void PerVertex(VertexType *v)
+
 Revision 1.5  2004/06/15 16:01:26  pietroni
 added functions to update local vertices normal
 
@@ -74,6 +77,7 @@ typedef typename TetraMeshType::VertexIterator VertexIterator;
 typedef typename TetraMeshType::TetraType      TetraType;
 typedef typename TetraMeshType::TetraPointer   TetraPointer;
 typedef typename TetraMeshType::TetraIterator  TetraIterator;
+typedef typename VertexType::NormalType		   NormalType;
 
 typedef vcg::Face<VertexType,vcg::DUMMYEDGETYPE,vcg::DUMMYFACETYPE> FaceTemp;
 typedef vcg::tri::TriMesh< std::vector<VertexType>,std::vector<FaceTemp> > TriMeshTemp;
@@ -91,10 +95,10 @@ static void PerTetraFace(TetraMeshType &m)
 static void PerVertex(VertexType *v)
 {
  
-  if( !VertexType::HasNormal()) return;
+ if( !VertexType::HasNormal()) return;
 
  VTIterator<TetraType> VTi=VTIterator<TetraType>(v->VTb(),v->VTi());
- VertexType::NormalType Norm=VertexType::NormalType(0,0,0);
+ NormalType  Norm=NormalType(0,0,0);
  int iter=0;
  while (!VTi.End())
  {
@@ -109,7 +113,7 @@ static void PerVertex(VertexType *v)
         Norm+=VTi.Vt()->N(f);
       }
    }
-  VTi++;
+  ++VTi;
  }
  Norm/=iter;
  v->N()=Norm.Normalize();

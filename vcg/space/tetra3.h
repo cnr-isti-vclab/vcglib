@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/07/09 10:08:21  ganovelli
+ComputeVOlume moved outside the class and other
+ minor corrections
+
 Revision 1.6  2004/06/25 18:17:03  ganovelli
 minor changes
 
@@ -278,8 +282,8 @@ static int FofEE(const int &indexE0,const int &indexE1)
  class Tetra3:public Tetra
 {
 public:
-	typedef Point3< ScalarType > CoordType;
-  typedef ScalarType ScalarType;
+  typedef  Point3< ScalarType > CoordType;
+  //typedef typename ScalarType ScalarType;
 
 /*********************************************
   
