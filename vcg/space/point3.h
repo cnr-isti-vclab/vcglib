@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2004/03/03 14:22:48  cignoni
+Yet against cr lf mismatch
+
 Revision 1.12  2004/02/23 23:42:26  cignoni
 Translated comments, removed unusued stuff. corrected linefeed/cr
 
@@ -105,7 +108,7 @@ public:
 			_v[0]= p._v[0]; _v[1]= p._v[1]; _v[2]= p._v[2];
 			return *this;
 	}
-	inline void zero()
+	inline void Zero()
 	{
 		_v[0] = 0;
 		_v[1] = 0;
