@@ -1,22 +1,6 @@
 #include <iostream>
 using namespace std;
 
-template <class A, class B> class pippo {
-public:
-  int a() { return 1; }
-};
-
-template <> class pippo<int, int> {
-public:
-  int a() { return 2; }
-};
-
-int main() {
-  pippo<int, int> p;
-  cerr << p.a() << endl;
-  return 0;
-}
-/*
 #include<windows.h>
 #include <SDL/SDL.h>
 
@@ -75,9 +59,9 @@ bool init() {
 
 
 
-int wmain(int argc, unsigned short **argv) {
+int wmain(int argc, unsigned short **argv) {  
   if(!init()) return -1;
-
+  
   Trackball trackball;
 
   int quit = 0;
@@ -152,7 +136,7 @@ int wmain(int argc, unsigned short **argv) {
     gluPerspective(60, 1, 0.1, 100);
 	  glMatrixMode(GL_MODELVIEW);
 	  glLoadIdentity();
-	  gluLookAt(0,0,4,   0,0,0,   0,1,0);        
+	  gluLookAt(0,0,8,   0,0,0,   0,1,0);        
     glRotatef(130, 1, 1, 0);
     glTranslatef(0, 0.7, 1);
     
@@ -176,4 +160,4 @@ int wmain(int argc, unsigned short **argv) {
 
   return -1;
 }
-  */
+  

@@ -1,5 +1,5 @@
 Microsoft Visual Studio Solution File, Format Version 7.00
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "trackball", "trackball.vcproj", "{68C30FC8-1096-4ED9-ACC3-BA7B720F56C8}"
+Project("{EAF909A5-FA59-4C3D-9431-0FCC20D5BCF9}") = "trackball", "trackball.icproj", "{BFD1CCD1-E974-402C-9A01-4289A1A420D5}"
 EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
@@ -9,10 +9,10 @@ Global
 	GlobalSection(ProjectDependencies) = postSolution
 	EndGlobalSection
 	GlobalSection(ProjectConfiguration) = postSolution
-		{68C30FC8-1096-4ED9-ACC3-BA7B720F56C8}.Debug.ActiveCfg = Debug|Win32
-		{68C30FC8-1096-4ED9-ACC3-BA7B720F56C8}.Debug.Build.0 = Debug|Win32
-		{68C30FC8-1096-4ED9-ACC3-BA7B720F56C8}.Release.ActiveCfg = Release|Win32
-		{68C30FC8-1096-4ED9-ACC3-BA7B720F56C8}.Release.Build.0 = Release|Win32
+		{BFD1CCD1-E974-402C-9A01-4289A1A420D5}.Debug.ActiveCfg = Debug|Win32
+		{BFD1CCD1-E974-402C-9A01-4289A1A420D5}.Debug.Build.0 = Debug|Win32
+		{BFD1CCD1-E974-402C-9A01-4289A1A420D5}.Release.ActiveCfg = Release|Win32
+		{BFD1CCD1-E974-402C-9A01-4289A1A420D5}.Release.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection
