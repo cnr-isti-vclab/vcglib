@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/07/02 13:00:02  ponchio
+Created.
+
 
 ****************************************************************************/
 #ifndef NXS_BORDER_H
@@ -32,21 +35,40 @@ $Log: not supported by cvs2svn $
 namespace nxs {
 
 struct Link {
-  Link(): start_vertex(0xffff), end_vertex(0xffff), end_patch(0xffffffff) {}
-
-  unsigned short start_vertex;
-  unsigned short end_vertex;
+  Link(): start_vert(0xffff), end_vert(0xffff), end_patch(0xffffffff) {}
+  Link(unsigned short sv, unsigned short ev, unsigned int ep):
+    start_vert(sv), end_vert(ev), end_patch(ep) {}
+  unsigned short start_vert;
+  unsigned short end_vert;
   unsigned int end_patch;
-  bool IsNull() { return start_vertex == 0xffff; }
+  bool IsNull() { return end_patch == 0xffffffff; }
+
+  bool operator==(const Link &l) {
+    return end_patch == l.end_patch && 
+      end_vert == l.end_vert &&
+      start_vert == l.start_vert;
+  }
+  bool operator<(const Link &l) {
+    if(end_patch == l.end_patch) {
+      if(start_vert == l.start_vert) {
+	return end_vert < l.end_vert;
+      } else
+	return start_vert < l.start_vert;
+    } else
+      return end_patch < l.end_patch;
+  }
 };
 
 class Border {
  public:
+  Border(Link *l = NULL, unsigned short s = 0): start(l), size(s) {}
   unsigned int Size() { return size; }
   Link &operator[](unsigned int i) { return start[i]; }
+
+  //TODO implement an iterator! 
  private:
-  unsigned short size;
   Link *start;
+  unsigned short size;
 };
 
 }
