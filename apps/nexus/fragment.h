@@ -47,7 +47,7 @@ class Fragment {
 
   float error;
 
-  std::vector<Seed> seeds;
+  std::vector<vcg::Point3f> seeds;
   std::vector<unsigned int> seeds_id;
 
   std::vector<NxsPatch> pieces;

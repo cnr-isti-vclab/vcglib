@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/09/30 00:27:42  ponchio
+Lot of changes. Backup.
+
 Revision 1.3  2004/09/21 00:53:23  ponchio
 Lotsa changes.
 
@@ -81,6 +84,10 @@ class VoronoiChain: public PChain {
 
   float radius;
   vcg::Box3f box;
+
+  bool Optimize(int mean, VoronoiPartition &part, 
+		std::vector<vcg::Point3f> &centroids,
+		std::vector<unsigned int> &counts, bool join);
 };
 }
 

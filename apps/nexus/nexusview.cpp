@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2004/10/21 13:40:16  ponchio
+Debugging.
+
 Revision 1.17  2004/10/21 12:22:21  ponchio
 Small changes.
 
@@ -212,6 +215,7 @@ int main(int argc, char *argv[]) {
   bool show_colors = true;
   bool show_normals = true;
   bool show_statistics = true;
+  bool extract = true;
   
   NexusMt::MetricKind metric;
   NexusMt::Mode mode = NexusMt::SMOOTH;
@@ -251,10 +255,11 @@ int main(int argc, char *argv[]) {
 	  track.ButtonDown(Trackball::KEY_CTRL); break;
 	case SDLK_q: exit(0); break;
 	case SDLK_b: show_borders = !show_borders; break;
+	case SDLK_e: extract = !extract; break;
 	case SDLK_c: show_colors = !show_colors; break;
 	case SDLK_n: show_normals = !show_normals; break;
-	case SDLK_9: nexus.patches.ram_size *= 0.8; break;
-	case SDLK_0: nexus.patches.ram_size *= 1.2; break;
+	case SDLK_9: nexus.patches.ram_size *= 0.8f; break;
+	case SDLK_0: nexus.patches.ram_size *= 1.2f; break;
 
   case SDLK_LEFT: 
     ram_size *= 0.7; 
@@ -366,10 +371,20 @@ int main(int argc, char *argv[]) {
     //nexus.SetPolicy(policy, error);
     nexus.SetComponent(NexusMt::COLOR, show_colors);
     nexus.SetComponent(NexusMt::NORMAL, show_normals);
-    
-    watch.Start();
 
-    nexus.Render();
+    static vector<unsigned int> cells;    
+    watch.Start();
+    if(extract) {
+      nexus.patches.Flush();
+      
+      nexus.metric->GetView();
+      nexus.policy.Init();
+      nexus.tri_total = 0;
+      nexus.tri_rendered = 0;
+      nexus.Extract(cells);
+      nexus.Draw(cells);
+    } else
+      nexus.Draw(cells);
 
     //cerr Do some reporting:
     if(show_statistics) {

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/10/15 11:41:03  ponchio
+Tests and small changes.
+
 Revision 1.7  2004/09/28 10:26:21  ponchio
 Rewrote.
 
@@ -63,16 +66,33 @@ Created
 #include <stdio.h>
 
 #include <vcg/space/point3.h>
-#include <vcg/space/box3.h>
-#include <vcg/space/index/grid_static_ptr.h>
 
-#include "crude.h"
 
 //TODO provide a Sort function, to sort spatially the seeds.
 
+class ANNkd_tree;
+
 namespace nxs {
 
-  class Seed {
+  
+
+  class VoronoiPartition: public std::vector<vcg::Point3f> {
+  public:
+    VoronoiPartition(): bd(NULL) {}
+    void Init();
+    void Closest(const vcg::Point3f &p, unsigned int nsize, 
+		 std::vector<int> &near, 
+		 std::vector<float> &dist);
+    void Closest(const vcg::Point3f &p, 
+		  int &target, float &dist);
+    
+    int Locate(const vcg::Point3f &p);
+
+    ANNkd_tree *bd;
+    std::vector<double> buffer;
+    std::vector<double *> points;
+  };
+  /*  class Seed {
   public:
     vcg::Point3f p;  
     float weight;
@@ -112,7 +132,7 @@ namespace nxs {
       return target;
     } 
     vcg::Box3f box;
-  };
+    };*/
 
 }
 #endif

@@ -169,19 +169,17 @@ float Quadric(MyMesh &mesh, unsigned int target_faces) {
 
 float Cluster(MyMesh &mesh, unsigned int target_faces) {
   unsigned int starting = mesh.vn;
-
+  
   unsigned int nseeds = target_faces/2;
   assert(nseeds < mesh.vert.size());
-
+  
   vector<unsigned int> remap;
-
+  
   VoronoiPartition part;
-  Box3f box;
   for(unsigned int i = 0; i < mesh.vert.size(); i++) {
     const Point3f &p = mesh.vert[i].cP();
-    box.Add(p);
     if(!mesh.vert[i].IsW()) {
-      part.push_back(Seed(p, 1));
+      part.push_back(p);
       remap.push_back(i);
       nseeds--;
     }
@@ -192,13 +190,12 @@ float Cluster(MyMesh &mesh, unsigned int target_faces) {
     unsigned int i = rand() % mesh.vert.size();
     if(mesh.vert[i].IsW() && !mesh.vert[i].IsV()) {
       const Point3f &p = mesh.vert[i].cP();
-      part.push_back(Seed(p, 1));
+      part.push_back(p);
       mesh.vert[i].SetV();
       remap.push_back(i);
       nseeds--;
     }
   }
-  part.SetBox(box);
   part.Init();
 
   vector<Point3f> centroid;
@@ -215,13 +212,13 @@ float Cluster(MyMesh &mesh, unsigned int target_faces) {
     }
     for(unsigned int i = nborder; i < part.size(); i++) {
       if(count[i] > 0)
-	part[i].p = centroid[i]/count[i];
+	part[i] = centroid[i]/count[i];
     }
   }
 
   for(unsigned int i = nborder; i < part.size(); i++) {
     assert(mesh.vert[remap[i]].IsV());
-    mesh.vert[remap[i]].P() = part[i].p;
+    mesh.vert[remap[i]].P() = part[i];
   }
 
   float error = 0;
@@ -261,5 +258,6 @@ float Cluster(MyMesh &mesh, unsigned int target_faces) {
       mesh.vn--;
     }
   return error;
+
 }
 

@@ -47,7 +47,7 @@ void Fragment::Write(outstm *out) {
   unsigned int ssize = seeds.size();
   out->write(&ssize, sizeof(unsigned int));
   
-  out->write(&*seeds.begin(), ssize * sizeof(Seed));
+  out->write(&*seeds.begin(), ssize * sizeof(Point3f));
   out->write(&*seeds_id.begin(), ssize * sizeof(unsigned int));
 
   unsigned int psize = pieces.size();
@@ -66,7 +66,7 @@ void Fragment::Read(instm *in) {
   in->read(&ssize, sizeof(unsigned int));
   seeds.resize(ssize);
   seeds_id.resize(ssize);
-  in->read(&*seeds.begin(), ssize * sizeof(Seed));
+  in->read(&*seeds.begin(), ssize * sizeof(Point3f));
   in->read(&*seeds_id.begin(), ssize * sizeof(unsigned int));
 
   unsigned int psize;
@@ -206,7 +206,7 @@ void nxs::Split(Fragment &out,
 		VoronoiPartition &part) {
 
   unsigned int nseeds = out.seeds.size();
-  vector<Seed> &seeds = out.seeds;
+  vector<Point3f> &seeds = out.seeds;
   vector<unsigned int> &seeds_id = out.seeds_id;
   //preliminary count
   vector<unsigned int> count;
@@ -222,7 +222,7 @@ void nxs::Split(Fragment &out,
 
   //pruning small patches
   float min_size = (newface.size()/3) / 20.0f;
-  vector<Seed> newseeds;
+  vector<Point3f> newseeds;
   vector<unsigned int> newseeds_id;
 
   for(unsigned int seed = 0; seed < nseeds; seed++) {
@@ -346,7 +346,7 @@ unsigned int Fragment::Locate(const Point3f &p) {
   float max_dist = 1e20;
   unsigned int id = 0xffffffff;
   for(unsigned int i = 0; i < seeds.size(); i++) {
-    float dist = seeds[i].Dist(p);
+    float dist = Distance(seeds[i], p);
     if(dist < max_dist) {
       max_dist = dist;
       id = i;

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/10/15 11:41:03  ponchio
+Tests and small changes.
+
 Revision 1.5  2004/09/28 10:26:21  ponchio
 Rewrote.
 
@@ -48,16 +51,68 @@ Created
 
 ****************************************************************************/
 
-#pragma warning(disable:4786 4804 4244 4018 4267 4311)
 #include <stdio.h>
 #include <iostream>
 #include "pvoronoi.h"
+#include <ANN/ANN.h>
 
 using namespace std;
 using namespace vcg;
 using namespace nxs;
 
-bool Seed::Dist(const Point3f &point, float &mindist, 
+void VoronoiPartition::Init() {
+  if(bd) delete bd;
+  buffer.resize(size() * 3);
+  for(unsigned int i = 0; i < size(); i++) {
+    for(int k = 0; k < 3; k++)
+      buffer[i*3+k] = operator[](i)[k];
+  }
+  points.resize(size());
+  for(unsigned int i = 0; i < size(); i++) {
+    points[i] = &buffer[i*3];
+  }
+  bd = new ANNkd_tree(&*points.begin(), size(), 3);
+  
+}
+void VoronoiPartition::Closest(const vcg::Point3f &p, unsigned int nsize, 
+			       vector<int> &near, 
+			       vector<float> &dist) {
+  double point[3];
+  point[0] = p[0];
+  point[1] = p[1];
+  point[2] = p[2];
+
+  near.resize(nsize);
+  dist.resize(nsize);
+  vector<double> dists;
+  dists.resize(nsize);
+  bd->annkSearch(&point[0], nsize, &*near.begin(), &*dists.begin());
+  for(unsigned int i = 0; i < nsize; i++)
+    dist[i] = (float)dists[i];
+}
+
+void VoronoiPartition::Closest(const vcg::Point3f &p, 
+			       int &target, float &dist) {
+   double point[3];
+  point[0] = p[0];
+  point[1] = p[1];
+  point[2] = p[2];
+  double dists;
+  bd->annkSearch(&point[0], 1, &target, &dists, 1);
+  assert(target >= 0);
+  assert(target < size());
+
+  dist = (float)dists;
+}
+
+int VoronoiPartition::Locate(const vcg::Point3f &p) {
+  int target = -2;
+  float dist;
+  Closest(p, target, dist);
+  return target;
+} 
+
+/*bool Seed::Dist(const Point3f &point, float &mindist, 
 		   Point3f &res) {
   float newdist = Distance(p, point) * weight; 
   if(newdist < mindist) {
@@ -115,3 +170,4 @@ Point3f VoronoiPartition::FindBorder(vcg::Point3f &p, float radius) {
   }
   return m;
 }
+*/

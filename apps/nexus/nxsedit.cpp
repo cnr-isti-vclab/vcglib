@@ -1,13 +1,3 @@
-#include <iostream>
-using namespace std;
-
-#include "nxsalgo.h"
-#include "nexus.h"
-#include "watch.h"
-
-using namespace nxs;
-using namespace vcg;
-
 #ifdef WIN32
 #include <wrap/system/getopt.h>
 #else
@@ -16,6 +6,33 @@ using namespace vcg;
 
 #include <assert.h>
 
+
+#include <iostream>
+
+
+#include <vcg/simplex/vertex/with/vc.h>
+#include <vcg/simplex/face/face.h>
+#include <vcg/complex/trimesh/base.h>
+//WARNING WARNING this must be included AFTER mesh includes....
+#include <wrap/io_trimesh/import_ply.h>
+#include <vcg/space/index/grid_static_ptr.h>
+
+#include "nxsalgo.h"
+#include "nexus.h"
+#include "watch.h"
+
+using namespace nxs;
+using namespace vcg;
+using namespace std;
+using namespace tri;
+
+class CFace;
+
+class CVertex: public VertexVCf<DUMMYEDGETYPE,CFace ,DUMMYTETRATYPE> {};
+
+class CFace: public Face<CVertex, DUMMYEDGETYPE , CFace>{};
+
+class CMesh: public tri::TriMesh<vector<CVertex>, vector<CFace> > {};
 
 string getSuffix(unsigned int signature) {
   string suff;
@@ -261,7 +278,25 @@ int main(int argc, char *argv[]) {
     nexus.Close();
     return 0;
   }
-
+  CMesh mesh;
+  GridStaticPtr<CMesh::FaceContainer> grid;
+  if(add_colors) {
+    if(!plysource.size()) {
+      cerr << "No plysource specified when adding color (-p option)\n";
+      return -1;
+    }
+    if(!tri::io::ImporterPLY<CMesh>::Open(mesh, plysource.c_str())) {
+      cerr << "Could not load ply: " << plysource << endl;
+      return -1;
+    }
+    //calcoliamo il box:
+    Box3f box;
+    for(unsigned int i = 0; i < mesh.vert.size(); i++)
+      box.Add(mesh.vert[i].P());
+    grid.SetBBox(box);
+    grid.Set(mesh.face);
+  }
+  
   if((add & NXS_NORMALS_SHORT) && compress) {
     cerr << "Its not possible to add normals and compress in the same step\n";
     return -1;
@@ -377,6 +412,7 @@ int main(int argc, char *argv[]) {
     cerr << "Unsupported color\n";
     return -1;
   }
+
   if(qvertex && add_normals) { 
     report.Init(nexus.index.size());
     cout << "Quantizing vertices\n";
@@ -391,9 +427,7 @@ int main(int argc, char *argv[]) {
     report.Finish();
   }
 
-  //fixing sphere.
   out.sphere = nexus.sphere;
-  //copying history:
   out.history = nexus.history;
 
   out.Close();

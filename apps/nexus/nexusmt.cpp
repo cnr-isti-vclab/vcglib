@@ -146,8 +146,6 @@ bool NexusMt::InitGL(Vbo mode, unsigned int vbosize) {
 
 void NexusMt::Render() {
   patches.Flush();
-  Frustumf frustum;
-  frustum.GetView();
 
   vector<unsigned int> cells;
   metric->GetView();
@@ -155,9 +153,14 @@ void NexusMt::Render() {
   tri_total = 0;
   tri_rendered = 0;
 
-
   Extract(cells);
-  
+  Draw(cells);
+}
+
+void NexusMt::Draw(vector<unsigned int> &cells) {
+  Frustumf frustum;
+  frustum.GetView();
+
   glEnableClientState(GL_VERTEX_ARRAY);
   if(use_colors)
     glEnableClientState(GL_COLOR_ARRAY);

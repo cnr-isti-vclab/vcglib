@@ -135,7 +135,7 @@ class NexusMt: public Nexus {
   bool SetComponents(unsigned int mask);
   
   
-  //void ExtractFixed(std::vector<unsigned int> &selected, float error);
+  void Draw(std::vector<unsigned int> &selected);
   void Extract(std::vector<unsigned int> &selected);
 
  protected:
