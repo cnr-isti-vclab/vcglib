@@ -24,11 +24,11 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/05/13 21:08:00  cignoni
+Conformed C++ syntax to GCC requirements
+
 Revision 1.5  2004/03/18 15:29:07  cignoni
 Completed Octahedron and Icosahedron
-
-Revision 1.4  2004/03/11 18:14:19  tarini
-prova
 
 Revision 1.2  2004/03/03 16:11:46  cignoni
 First working version (tetrahedron!)
@@ -39,11 +39,19 @@ First working version (tetrahedron!)
 #ifndef __VCGLIB_PLATONIC
 #define __VCGLIB_PLATONIC
 
-//#include <vcg/Mesh/Refine.h>
 #include<vcg/complex/trimesh/allocate.h>
+#include<vcg/math/base.h>
 namespace vcg {
 namespace tri {
+/*@{*/
+    /**
+        A set of functions that builds meshes 
+        that represent surfaces of platonic solids,
+				and other simple shapes.
 
+				 The 1st parameter is the mesh that will
+				be filled with the solid.
+		*/
 template <class TetraMeshType>
 void Tetrahedron(TetraMeshType &in)
 {
@@ -71,6 +79,111 @@ void Tetrahedron(TetraMeshType &in)
  (*fi).V(0)=ivp[0];  (*fi).V(1)=ivp[3]; (*fi).V(2)=ivp[1]; ++fi;
  (*fi).V(0)=ivp[3];  (*fi).V(1)=ivp[2]; (*fi).V(2)=ivp[1]; 
 }
+
+
+/// builds a Dodecahedron, 
+/// (each pentagon is composed of 5 triangles)
+template <class DodMeshType>
+void Dodecahedron(DodMeshType & in)
+{
+ typedef DodMeshType MeshType; 
+ typedef typename MeshType::CoordType CoordType;
+ typedef typename MeshType::VertexPointer  VertexPointer;
+ typedef typename MeshType::VertexIterator VertexIterator;
+ typedef typename MeshType::FaceIterator   FaceIterator;
+ typedef typename MeshType::ScalarType     ScalarType;
+ const N_penta=12;
+ const N_points=62;
+
+ int penta[N_penta*3*3]=
+	{20,11, 18,  18, 11,  8,  8, 11,  4,   
+		13,23,  4,  4, 23,  8,  8, 23, 16, 
+    13, 4, 30, 30,  4, 28, 28, 4,  11, 
+    16,34,  8,  8, 34, 18, 18, 34, 36, 
+    11,20, 28, 28, 20, 45, 45, 20, 38, 
+    13,30, 23, 23, 30, 41, 41, 30, 47,
+    16,23, 34, 34, 23, 50, 50, 23, 41, 
+    20,18, 38, 38, 18, 52, 52, 18, 36,  
+    30,28, 47, 47, 28, 56, 56, 28, 45,  
+    50,60, 34, 34, 60, 36, 36, 60, 52, 
+    45,38, 56, 56, 38, 60, 60, 38, 52, 
+    50,41, 60, 60, 41, 56, 56, 41, 47 };
+   //A B   E                D       C
+  const ScalarType p=(1.0 + math::Sqrt(5.0)) / 2.0;
+  const ScalarType p2=p*p;
+  const ScalarType p3=p*p*p;
+	ScalarType vv[N_points*3]=
+	{
+   0, 0, 2*p2,     p2, 0, p3,      p, p2, p3, 
+   0, p, p3,       -p, p2, p3,     -p2, 0, p3, 
+   -p, -p2, p3,    0,   -p, p3,    p,  -p2, p3,
+   p3,  p, p2,     p2,  p2, p2,    0,   p3, p2, 
+   -p2, p2, p2,    -p3, p, p2,     -p3, -p, p2, 
+   -p2, -p2, p2,   0, -p3, p2,     p2, -p2, p2, 
+   p3, -p, p2,     p3, 0, p,       p2, p3, p, 
+   -p2, p3, p,     -p3, 0, p,      -p2, -p3, p, 
+   p2, -p3, p,     2*p2, 0, 0,     p3, p2, 0, 
+   p, p3, 0,       0, 2*p2, 0,     -p, p3, 0, 
+   -p3, p2, 0,     -2*p2, 0, 0,    -p3, -p2, 0, 
+   -p, -p3, 0,     0, -2*p2, 0,    p, -p3, 0, 
+   p3, -p2, 0,     p3, 0, -p,      p2, p3, -p, 
+   -p2, p3, -p,    -p3, 0, -p,     -p2, -p3, -p, 
+   p2, -p3, -p,    p3, p, -p2,     p2, p2, -p2, 
+   0, p3, -p2,     -p2, p2, -p2,   -p3, p, -p2, 
+   -p3, -p, -p2,   -p2, -p2, -p2,  0, -p3, -p2, 
+   p2, -p2, -p2,   p3, -p, -p2,    p2, 0, -p3, 
+   p, p2, -p3,     0, p, -p3,      -p, p2, -p3, 
+   -p2, 0, -p3,    -p, -p2, -p3,   0, -p, -p3, 
+   p, -p2, -p3,    0, 0, -2*p2
+	};
+	in.Clear();
+	//in.face.clear();
+  Allocator<DodMeshType>::AddVertices(in,20+12); 
+  Allocator<DodMeshType>::AddFaces(in, 5*12); // five pentagons, each made by 5 tri
+
+	int h,i,j,k=0,m=0;
+
+	bool used[N_points];
+	for (i=0; i<N_points; i++) used[i]=false;
+
+	int reindex[20+12 *10];
+	double xx,yy,zz, sx,sy,sz;
+
+	int order[5]={0,1,8,6,2};
+	int added[12];
+
+	VertexIterator vi=in.vert.begin();
+
+	for (i=0; i<12; i++) {
+		sx=sy=sz=0;
+		for (int j=0; j<5; j++) {
+			h= penta[ i*9 + order[j]  ]-1;
+		  xx=vv[h*3];yy=vv[h*3+1];zz=vv[h*3+2]; sx+=xx; sy+=yy; sz+=zz;
+			if (!used[h]) {
+				(*vi).P()=CoordType( xx, yy, zz ); vi++;
+				used[h]=true;
+				reindex[ h ] = m++;
+			}
+		};
+		(*vi).P()=CoordType( sx/5.0, sy/5.0, sz/5.0 ); 	vi++;
+		added[ i ] = m++;
+	}
+
+	vector<VertexPointer> index(in.vn);
+	
+	for(j=0,vi=in.vert.begin();j<in.vn;++j,++vi)	index[j] = &(*vi);
+
+  FaceIterator fi=in.face.begin();
+
+	for (i=0; i<12; i++) {
+		for (j=0; j<5; j++){
+	    (*fi).V(0)=index[reindex[penta[i*9 + order[j      ] ] -1 ] ]; 
+	    (*fi).V(1)=index[reindex[penta[i*9 + order[(j+1)%5] ] -1 ] ];  
+		  (*fi).V(2)=index[added[i] ];
+		  fi++;
+		}
+	};
+};
 
 template <class OctMeshType>
 void Octahedron(OctMeshType &in)
@@ -172,7 +285,7 @@ void Hexahedron(MeshType &in)
  typedef typename MeshType::VertexIterator VertexIterator;
  typedef typename MeshType::FaceIterator   FaceIterator;
 
-in.Clear();
+ in.Clear();
  Allocator<MeshType>::AddVertices(in,8);
  Allocator<MeshType>::AddFaces(in,12);
 
@@ -212,7 +325,7 @@ void Square(MeshType &in)
  typedef typename MeshType::VertexIterator VertexIterator;
  typedef typename MeshType::FaceIterator   FaceIterator;
 
-in.Clear();
+ in.Clear();
  Allocator<MeshType>::AddVertices(in,4);
  Allocator<MeshType>::AddFaces(in,2);
 
