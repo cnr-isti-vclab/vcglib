@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/03/10 00:57:44  cignoni
+minor changes
+
 Revision 1.3  2004/03/07 21:54:56  cignoni
 some more reflection functions
 
@@ -47,6 +50,8 @@ People should subclass his vertex class from these one...
 
 namespace vcg {
 namespace tri {
+/** \addtogroup trimesh */
+/*@{*/
 
 /** Class Mesh.
     This is class for definition of a mesh.
@@ -238,7 +243,7 @@ ScalarType Volume()
 
 };	// end class Mesh
 
-
+/*@}*/
 }	 // end namespace
 }	 // end namespace
 

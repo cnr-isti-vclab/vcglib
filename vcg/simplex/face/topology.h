@@ -23,7 +23,7 @@
 /****************************************************************************
   History
 
-$LOG$
+$Log: not supported by cvs2svn $
 
 ****************************************************************************/
 
@@ -62,7 +62,7 @@ inline bool IsBorder(FaceType const & f,  const int j )
 }
 
 
-/// This function counts the boreders of the face
+/// Count border edges of the face
 template <class FaceType>
 inline int BorderCount(FaceType const & f) 
 {
@@ -78,7 +78,7 @@ inline int BorderCount(FaceType const & f)
 }
 
 
-/// This function counts the number of incident faces in a complex edge
+/// Counts the number of incident faces in a complex edge
 template <class FaceType>
 inline int ComplexSize(FaceType const & f, const int e)
 {
