@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2004/10/18 15:03:14  fiorin
+Updated interface: all Matrix classes have now the same interface
+
 Revision 1.19  2004/10/07 14:23:57  ganovelli
 added function to take rows and comlumns. Added toMatrix and fromMatrix to comply
 RotationTYpe prototype in Similarity.h
@@ -288,13 +291,15 @@ template <class T> const T *Matrix44<T>::V() const { return _a;}
 template <class T> Matrix44<T> Matrix44<T>::operator+(const Matrix44 &m) const {
   Matrix44<T> ret;
   for(int i = 0; i < 16; i++) 
-    ret[i] = V()[i] + m.V()[i];  
+    ret.V()[i] = V()[i] + m.V()[i];  
+  return ret;
 }
 
 template <class T> Matrix44<T> Matrix44<T>::operator-(const Matrix44 &m) const {
   Matrix44<T> ret;
   for(int i = 0; i < 16; i++) 
-    ret[i] = V()[i] - m.V()[i];  
+    ret.V()[i] = V()[i] - m.V()[i];  
+  return ret;
 }
 
 template <class T> Matrix44<T> Matrix44<T>::operator*(const Matrix44 &m) const {
