@@ -53,9 +53,9 @@ public:
 		SaveMeshType::FaceIterator fi;
 		for(fi=m.face.begin(); fi!=m.face.end(); ++fi)
 		{
-			Point3f v0 = (*fi).V(0)->P();
-			Point3f v1 = (*fi).V(1)->P();
-			Point3f v2 = (*fi).V(2)->P();
+			SaveMeshType::CoordType v0 = (*fi).V(0)->P();
+			SaveMeshType::CoordType v1 = (*fi).V(1)->P();
+			SaveMeshType::CoordType v2 = (*fi).V(2)->P();
 			fprintf(o,"0\n");  fprintf(o,"3DFACE\n");  fprintf(o,"8\n");     fprintf(o,"0\n");       
 			fprintf(o,"10\n"); fprintf(o,"%f\n", v0[0]);     //X
 			fprintf(o,"20\n"); fprintf(o,"%f\n", v0[1]);     //Y
