@@ -67,9 +67,9 @@ class PatchServer: public File {
 
   void GetVbo(unsigned int patch, unsigned int &element, unsigned int &array);
 
-  void Flush(unsigned int patch);
+  void Flush(PTime &ptime);
   //return false if was not allocated.
-  bool FlushVbo(unsigned int patch);
+  bool FlushVbo(PTime &ptime);
   void Flush();
   void FlushAll();
   

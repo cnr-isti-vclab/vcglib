@@ -192,7 +192,7 @@ void PatchServer::Flush() {
   while(ram_used > ram_size) {
     pop_heap(lru.begin(), lru.end());
     PTime &ptime = lru.back();
-    Flush(ptime.npatch);
+    Flush(ptime);        
     lru.pop_back();
   }
   for(unsigned int i = 0; i < lru.size(); i++)
@@ -202,15 +202,15 @@ void PatchServer::Flush() {
 void PatchServer::FlushAll() {
   for(unsigned int i = 0; i < lru.size(); i++) {
     PTime &ptime = lru[i];
-    Flush(ptime.npatch);
+    Flush(ptime);
   }
   assert(ram_used == 0);
   lru.clear();
 }
 
-void PatchServer::Flush(unsigned int patch) {
-  PatchEntry &entry = patches[patch];
-  PTime &ptime = lru[entry.lru_pos];
+void PatchServer::Flush(PTime &ptime) {
+  PatchEntry &entry = patches[ptime.npatch];  
+  assert(ptime.patch);
   if(!readonly) { //write back patch
 
 
@@ -245,29 +245,29 @@ void PatchServer::Flush(unsigned int patch) {
     exit(0);*/
   }
 
+  if(FlushVbo(ptime))
+    vbo_used -= entry.ram_size;
+
   delete [](ptime.patch->start);
   delete ptime.patch;
   ptime.patch = NULL;
 
-  if(FlushVbo(patch))
-    vbo_used -= entry.ram_size;
+  
 
   entry.lru_pos = 0xffffffff;
   ram_used -= entry.ram_size;
   ram_flushed += entry.ram_size;
 }
 
-bool PatchServer::FlushVbo(unsigned int patch) {
+bool PatchServer::FlushVbo(PTime &ptime) {
   //TODO  
   //cerr << "Flushing vbo: " << patch << endl;
-  PatchEntry &entry = patches[patch];
-  assert(entry.lru_pos != 0xffffffff);
-  PTime &ptime = lru[entry.lru_pos];
   if(!ptime.vbo_element) return false;
 
   glDeleteBuffersARB(1, &ptime.vbo_element);
   glDeleteBuffersARB(1, &ptime.vbo_array);
-  assert(!ptime.vbo_element);
+  ptime.vbo_element = 0;
+  ptime.vbo_array = 0;
   return true;
 }
 
