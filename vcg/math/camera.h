@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/10/07 14:22:38  ganovelli
+y axis reverse in projecting (!)
+
 Revision 1.2  2004/10/05 19:04:25  ganovelli
 version 5-10-2004 in progress
 
@@ -45,9 +48,6 @@ creation
 #include <vcg/space/Point3.h>
 #include <vcg/space/Point2.h>
 #include <vcg/math/similarity.h>
-
-// opengl
-#include <GL/glew.h>
 
 namespace vcg{
 
