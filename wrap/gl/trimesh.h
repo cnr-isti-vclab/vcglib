@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/01/12 14:39:41  tommyfranken
+constructor name was wrong (old class name)
+
 Revision 1.5  2004/12/15 18:45:07  tommyfranken
 *** empty log message ***
 
@@ -622,7 +625,7 @@ void DrawWire()
 void DrawBBox(ColorMode cm)
 {
 	if(cm==CMPerMesh) glColor(m->C());
-//	glBoxWire(m->bbox);
+	glBoxWire(m->bbox);
 }
 
 
