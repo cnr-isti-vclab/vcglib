@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/07/13 11:25:57  pietroni
+changed order of initial include ( it had problems with extension of openGL)
+
 Revision 1.2  2004/07/12 15:57:33  ganovelli
 first draft: it includes glew !
 
@@ -38,7 +41,7 @@ first draft: it includes glew !
 #include <queue>
 #include <vector>
 
-#include <gl/glew.h>
+#include <GL/glew.h>
 #include <wrap/gl/space.h>
 #include <vcg/space/Color4.h>
 
