@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/12/15 18:45:06  tommyfranken
+*** empty log message ***
+
 Revision 1.3  2004/11/03 09:41:57  ganovelli
 added FromTrackball and fixed include names (Poiint to point)
 
@@ -116,23 +119,25 @@ static void		UnsetView()
 	glPopAttrib();
 }
 	
-// takes a shot and a trackball and retursn the shot corresponding to the transformation
-// applied by the trackball
+/**********************************
+DEFINE SHOT FROM TRACKBALL
+Adds to a given shot the trackball transformations.
+After this operation the trackball should be resetted, to avoid
+multiple apply of the same transformation.
+***********************************/
 static void FromTrackball(const vcg::Trackball & tr, 
 						  const vcg::Shot<ScalarType> & sShot, 
 						  vcg::Shot<ScalarType> & shot )
 {
-	vcg::Point3<ScalarType>		vp		=	sShot.ViewPoint();
-	vcg::Point3<float>			vpf		=	vcg::Point3<float>(vp[0],vp[1],vp[2]);
-	vcg::Matrix44<float>		trInvM	=	tr.track.InverseMatrix();
+	Point3<ScalarType>		cen; cen.Import(tr.center);
+	Point3<ScalarType>		tra; tra.Import(tr.track.tra);
+	Matrix44<ScalarType>	trM; trM.FromMatrix(tr.track.Matrix());
 
-	vcg::Matrix44<ScalarType>	trM;  /*=*/ trM.FromMatrix(tr.track.Matrix());
+	Point3<ScalarType>		vp = Inverse(trM)*(sShot.ViewPoint()-cen) +cen +tra;
 
-	vcg::Point3<float>			nvp		=	trInvM*vpf;//	nvp = shInvM*nvp;
-
-	shot.SetViewPoint(vcg::Point3<ScalarType>(nvp[0],nvp[1],nvp[2]));
+	shot.SetViewPoint(vp);
 	shot.similarity.rot =   sShot.similarity.rot*trM;
-	shot.similarity.sca	=	sShot.similarity.sca*tr.track.sca;
+	shot.similarity.sca	=	sShot.similarity.sca*(ScalarType)tr.track.sca;
 }
 };
 #endif
