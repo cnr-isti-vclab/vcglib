@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2004/10/08 15:12:04  ponchio
+Working version (maybe)
+
 Revision 1.8  2004/10/06 16:40:47  ponchio
 Fixed degenerate faces.
 
@@ -52,7 +55,7 @@ First draft.
 ****************************************************************************/
 
 #ifdef WIN32
-#include "getopt.h"
+#include <wrap/system/getopt.h>
 #else
 #include <unistd.h>
 #endif
@@ -64,7 +67,6 @@ using namespace std;
 #include "nexus.h"
 
 #include "voronoichain.h"
-#include "pintersect.h"
 #include "vert_remap.h"
 
 #include "decimate.h"
@@ -108,6 +110,7 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
 void ReverseHistory(vector<Nexus::Update> &history);
 
 void TestBorders(Nexus &nexus);
+void TestPatches(Nexus &nexus);
 
 int main(int argc, char *argv[]) {
 
@@ -140,7 +143,7 @@ int main(int argc, char *argv[]) {
 	return -1;
       }
       break;
-    case 's': scaling = atof(optarg);
+    case 's': scaling = (float)atof(optarg);
       if(scaling <= 0 || scaling >= 1) {
 	cerr << "Invalid scaling: " << optarg << endl;
 	cerr << "Must be 0 < scaling < 1" << endl;
@@ -249,10 +252,12 @@ int main(int argc, char *argv[]) {
   Nexus::Update update;
   for(unsigned int i = 0; i < nexus.index.size(); i++) 
     update.created.push_back(i);
-  nexus.history.push_back(update);
-
+  nexus.history.push_back(update); 
+ 
   //unify vertices otherwise you may get cracks.
   nexus.Unify();
+  nexus.patches.FlushAll();
+  TestPatches(nexus);
 
   /* BUILDING OTHER LEVELS */
   unsigned int oldoffset = 0;
@@ -301,7 +306,7 @@ int main(int argc, char *argv[]) {
       level_history.push_back(update);
     }
 
-    for(int i = 0; i < level_history.size(); i++)
+    for(unsigned int i = 0; i < level_history.size(); i++)
       nexus.history.push_back(level_history[i]);
     //if(vchain.levels.back().size() == 1) break;
     if(vchain.oldfragments.size() == 1) break;
@@ -513,7 +518,7 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
     memcpy(patch.VertBegin(), &verts[0], verts.size() * sizeof(Point3f));
     
     
-    for(int v = 0; v < verts.size(); v++) {
+    for(unsigned int v = 0; v < verts.size(); v++) {
       entry.sphere.Add(verts[v]);
       nexus.sphere.Add(verts[v]);
     } 
@@ -536,6 +541,21 @@ void ReverseHistory(vector<Nexus::Update> &history) {
     swap((*i).erased, (*i).created);
 }
 
+void TestPatches(Nexus &nexus) {
+  cerr << "TESTING PATCHES!!!!" << endl;
+  for(unsigned int p = 0; p  < nexus.index.size(); p++) {
+    Patch &patch = nexus.GetPatch(p);
+    for(unsigned int i = 0; i < patch.nf; i++)
+      for(int k = 0; k < 3; k++)
+        if(patch.Face(i)[k] >= patch.nv) {
+          cerr << "Totface: " << patch.nf << endl;
+          cerr << "Totvert: " << patch.nv << endl;
+          cerr << "Face: " << i << endl;
+          cerr << "Val:  " << patch.Face(i)[k] << endl;
+          exit(0);
+        }
+  }
+}
 void TestBorders(Nexus &nexus) {
   //check border correctnes
   nexus.borders.Flush();
