@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/07/15 11:01:43  ganovelli
+added inclusion of  point3.h
+
 Revision 1.7  2004/06/24 07:55:50  cignoni
 Now color ramp can do reverse color ramp
 
@@ -269,12 +272,12 @@ inline void Color4<unsigned char>::Import(const Color4<float> &b)
 //	_v[3] = T(b[3]);
 //}
 //
-inline Color4<unsigned char>::Color4<unsigned char>(Color4<unsigned char>::ColorConstant cc)
+inline Color4<unsigned char>::Color4(Color4<unsigned char>::ColorConstant cc)
 {
   *((int *)this )= cc; 
 }
 
-inline Color4<float>::Color4<float>(Color4<float>::ColorConstant cc)
+inline Color4<float>::Color4(Color4<float>::ColorConstant cc)
 {
   Import(Color4<unsigned char>((Color4<unsigned char>::ColorConstant)cc)); 
 }
