@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/07/05 15:49:39  ponchio
+Windows (DevCpp, mingw) port.
+
 Revision 1.1  2004/07/01 21:38:30  ponchio
 First draft created.
 
@@ -40,8 +43,9 @@ First draft created.
 class StopWatch {
 public:
   StopWatch();
-  void Start();
-  void Stop();
+  double Start();
+  double Pause();
+  void Restart();
   void Reset();
   double Elapsed();
   int Usec();

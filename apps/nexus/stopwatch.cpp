@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/07/05 15:49:39  ponchio
+Windows (DevCpp, mingw) port.
+
 Revision 1.1  2004/07/01 21:38:30  ponchio
 First draft created.
 
@@ -31,22 +34,26 @@ First draft created.
 ****************************************************************************/
 #include "stopwatch.h"
 
-StopWatch::StopWatch(): elapsed(0) {}
-
-#ifdef WIN32
-void StopWatch::Start(void) {
-  static int first = 1;
-  if(first) {
+StopWatch::StopWatch(): elapsed(0) {
     QueryPerformanceFrequency(&freq);
-    first = 0;
-  }
-  QueryPerformanceCounter(&tstart);
 }
 
-void StopWatch::Stop() {
+#ifdef WIN32
+double StopWatch::Start(void) {
+  QueryPerformanceCounter(&tstart);
+  return elapsed;
+}
+
+double StopWatch::Pause() {
   QueryPerformanceCounter(&tend);         
   elapsed += Diff();
+  return elapsed;
 }               
+
+double StopWatch::Elapsed() {
+  QueryPerformanceCounter(&tend);         
+  return elapsed + Diff();
+}
 
 double StopWatch::Diff() {  
   return ((double)tend.QuadPart -
@@ -56,13 +63,20 @@ double StopWatch::Diff() {
 
 #else
 
-void StopWatch::Start() {
+double StopWatch::Start() {
    gettimeofday(&tstart, &tz); 
+   return elapsed;
 }
 
-void StopWatch::Stop() {
+double StopWatch::Pause() {
   gettimeofday(&tend, &tz); 
   elapsed += Diff();
+  return elapsed;
+}
+
+double StopWatch::Elapsed() {
+  gettimeofday(&tend, &tz); 
+  return elapsed + Diff();
 }
  
 double StopWatch::Diff() {
@@ -72,12 +86,13 @@ double StopWatch::Diff() {
 }
 #endif
 
-void StopWatch::Reset() {
-  elapsed = 0;
+void StopWatch::Restart(void) {
+    elapsed = 0;
+    Start();
 }
 
-double StopWatch::Elapsed() {
-  return elapsed;
+void StopWatch::Reset() {
+  elapsed = 0;
 }
 
 int StopWatch::Usec() {
