@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/11/23 10:15:38  cignoni
+removed comment in comment gcc warning
+
 Revision 1.7  2004/11/03 09:40:53  ganovelli
 Point?.h to point?.h
 
@@ -92,10 +95,10 @@ public:
 	char & UberFlags() {return _flags;}
 
 	/// set the camera specifying the perspecive view
-	inline void SetPerspective(S angle, S ratio, S near, S farend,vcg::Point2<S> viewport=vcg::Point2<S>(500,-1) );
+	inline void SetPerspective(S angle, S ratio, S nearend, S farend,vcg::Point2<S> viewport=vcg::Point2<S>(500,-1) );
 
 	/// set the camera specifying the frustum view
-	inline void SetFrustum(S dx, S sx, S bt, S tp, S near, S farend,vcg::Point2<S> viewport=vcg::Point2<S>(500,-1));
+	inline void SetFrustum(S dx, S sx, S bt, S tp, S nearend, S farend,vcg::Point2<S> viewport=vcg::Point2<S>(500,-1));
 
 	/// project a point from space 3d (in the reference system of the camera) to the camera's plane
 	/// the result is in absolute coordinates
@@ -132,16 +135,16 @@ vcg::Point2<S> Camera<S>::Project(const vcg::Point3<S> & p){
 
 		/// set the camera specifying the perspecive view
 		template<class S>
-			void Camera<S>::SetPerspective(S angle, S ratio, S nr, S _far,vcg::Point2<S> vp){
+			void Camera<S>::SetPerspective(S angle, S ratio, S nr, S _farend,vcg::Point2<S> vp){
 				S halfsize[2];
 				halfsize[1] = tan(math::ToRad(angle/2)) * nr;
 				halfsize[0] = halfsize[1]*ratio;
-				SetFrustum(-halfsize[0],halfsize[0],-halfsize[1],halfsize[1],nr,_far,vp);
+				SetFrustum(-halfsize[0],halfsize[0],-halfsize[1],halfsize[1],nr,_farend,vp);
 		}
 
 		/// set the camera specifying the frustum view
 		template<class S>
-			void Camera<S>::SetFrustum(S sx, S dx, S bt, S tp, S nr, S _far,vcg::Point2<S> vp){
+			void Camera<S>::SetFrustum(S sx, S dx, S bt, S tp, S nr, S _farend,vcg::Point2<S> vp){
 				S vpt[2];
 				vpt[0] = dx-sx;
 				vpt[1] = tp-bt;
@@ -159,7 +162,7 @@ vcg::Point2<S> Camera<S>::Project(const vcg::Point3<S> & p){
 				c[1] = -bt/vpt[1] * viewport[1];
 
 				f =nr;
-				farend = _far;
+				farend = _farend;
 			}
 
 
