@@ -5,10 +5,12 @@
 
 #define __VCGLIB_VERTEX_AT
 #define __VCGLIB_VERTEX_VN
+#define __VCGLIB_VERTEX_VM
 
 #include <vcg/simplex/vertex/base.h> 
 
 #undef VERTEX_TYPE 
+#undef __VCGLIB_VERTEX_VM
 #undef __VCGLIB_VERTEX_AT
 #undef __VCGLIB_VERTEX_VN
 
