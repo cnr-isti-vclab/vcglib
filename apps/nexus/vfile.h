@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2004/09/30 23:56:33  ponchio
+Backup (added strips and normals)
+
 Revision 1.9  2004/07/20 14:04:32  ponchio
 Improved efficience in operator[]
 
@@ -72,6 +75,7 @@ Created
 #include <windows.h>
 #endif
 
+#include <assert.h>
 #include <errno.h>
 //#include <hash_map>
 #include <map>

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/07/02 17:41:37  ponchio
+Debug.
+
 Revision 1.2  2004/07/02 13:02:00  ponchio
 Backup.
 
@@ -37,6 +40,8 @@ Created
 ****************************************************************************/
 #ifndef NXS_VERTEX_REMAP_H
 #define NXS_VERTEX_REMAP_H
+
+#include <assert.h>
 
 #include <string>
 #include "vfile.h"
