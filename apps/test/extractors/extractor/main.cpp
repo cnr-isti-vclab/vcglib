@@ -21,13 +21,17 @@ int main(int argc, char *argv[])
 	
 	// MARCHING CUBES
 	Mesh		mc_mesh;
+	printf("[MARCHING CUBES] Building mesh...");
 	MarchingCubes					mc(mc_mesh, walker);
 	walker.BuildMesh<MarchingCubes>(mc_mesh, volume, mc);
 	vcg::tri::io::ExporterPLY<Mesh>::Save( mc_mesh, "marching_cubes.ply");
+	printf("OK!\n");
 
 	// EXTENDED MARCHING CUBES
 	Mesh		emc_mesh;
+	printf("[EXTENDED MARCHING CUBES] Building mesh...");
 	ExtendedMarchingCubes emc(emc_mesh, walker, 30);
 	walker.BuildMesh<ExtendedMarchingCubes>(emc_mesh, volume, emc);
 	vcg::tri::io::ExporterPLY<Mesh>::Save( emc_mesh, "extended_marching_cubes.ply");
+	printf("OK!\n");
 };

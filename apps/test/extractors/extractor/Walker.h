@@ -79,12 +79,15 @@ public:
 		int i_idx = p1.X()-_bbox.min.X();
 		int k_idx = p2.Z()-_bbox.min.Z();
 		int index = i_idx+k_idx*_resolution.X();
-		if (p1.X()!=p2.X()) //intersezione della superficie con un Xedge
+		if (p1.X()!=p2.X())					//intersezione della superficie con un Xedge
 			return (p1.Y()==_current_slice)? _x_cs[index]!=-1 : _x_ns[index]!=-1;
-		else if (p1.Y()!=p2.Y()) //intersezione della superficie con un Yedge
+		else if (p1.Y()!=p2.Y())		//intersezione della superficie con un Yedge
 			return _y_cs[index]!=-1;
-		else if (p1.Z()!=p2.Z()) //intersezione della superficie con un Zedge
+		else if (p1.Z()!=p2.Z())		//intersezione della superficie con un Zedge
 			return (p1.Y()==_current_slice)? _z_cs[index]!=-1 : _z_ns[index]!=-1;
+
+		assert(false); // impossibile: i due punti non erano allineati rispetto a nessuna direzione
+		return false;
 	}
 
 	void GetXIntercept(const vcg::Point3i &p1, const vcg::Point3i &p2, VertexPointer &v) 
