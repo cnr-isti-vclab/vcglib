@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/01/18 12:35:18  rita_borgo
+Added #include<vcg/complex/trimesh/allocate.h>
+it was giving problems with Allocator::
+
 Revision 1.4  2005/01/03 11:18:24  cignoni
 changed a .. rfind('OFF') .. in rfind("OFF") and added some casts
 
@@ -103,7 +107,7 @@ namespace vcg
 
 					std::ifstream stream(filename);
 					if (stream.fail())
-						return OFFCodes::CantOpen;
+						return CantOpen;
 
 					std::vector< std::string > tokens;
 					TokenizeNextLine(stream, tokens);
@@ -151,7 +155,7 @@ namespace vcg
 					for (unsigned int i=0; i<nVertices; i++, v_iter++)
 					{
 						if (stream.fail())
-							return OFFCodes::UnexpectedEOF;
+							return UnexpectedEOF;
 
 						TokenizeNextLine(stream, tokens);
 						for (unsigned int j=0; j<3; j++)
@@ -172,7 +176,7 @@ namespace vcg
 					{
 						f0 = f;
 						if (stream.fail())
-							return OFFCodes::UnexpectedEOF;
+							return UnexpectedEOF;
 
 						
 						TokenizeNextLine(stream, tokens);
@@ -271,7 +275,7 @@ namespace vcg
 						} // end if (isColorDefined)
 					}
 
-					return OFFCodes::NoError;
+					return NoError;
 				} // end Open
 
 
