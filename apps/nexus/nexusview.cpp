@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.36  2005/02/14 17:11:08  ponchio
+aggiunta delle sphere
+
 Revision 1.35  2005/02/14 14:49:09  ponchio
 *** empty log message ***
 
@@ -260,6 +263,7 @@ int main(int argc, char *argv[]) {
   bool rotate = false;
   bool show_borders = false;
   bool show_colors = true;
+  bool do_render = true;
   bool show_normals = true;
   bool show_statistics = true;
   bool extract = true;
@@ -285,17 +289,23 @@ int main(int argc, char *argv[]) {
   //  FrustumPolicy frustum_policy;
 
   cerr << "Commands: \n"
-    " q: quit\n"
-    " t: toggle statistics\n"
-    " b: increase memory buffer\n"
-    " B: decrease memory buffer\n"
+    " q          : quit\n"
+    " t          : toggle statistics\n"
+    " right arrow: increase memory buffer\n"
+    " left arrow : decrease memory buffer\n"
+    " page up    : increase disk space\n"
+    " page down  : increase disk space\n"
+    " 0          : decrease extraction size\n"
+    " 1          : increase extraction size\n"
     " s: toggle preload\n"
+    
 
     " d: debug mode (show patches colored)\n"
     " f: flat shading mode\n"
     " m: smooth mode\n"
     " p: draw points\n"
     " h: draw bounding spheres\n"
+    " w: disable glcalls\n"
 
     " c: show colors\n"
     " n: show normals\n"
@@ -348,6 +358,7 @@ int main(int argc, char *argv[]) {
 	case SDLK_e: extract = !extract; break;
 	case SDLK_c: show_colors = !show_colors; break;
 	case SDLK_n: show_normals = !show_normals; break;
+	case SDLK_w: do_render = !do_render; break;
 	    
 	case SDLK_LEFT:     nexus.MaxRam() *= 0.8; break;
 	case SDLK_RIGHT:    nexus.MaxRam() *= 1.3; break;
@@ -427,16 +438,17 @@ int main(int argc, char *argv[]) {
       default: break;
       }
     }
-    
+                                                                               
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(40, 1, 0.1, 100);
+    gluPerspective(40, 1024/768.f, 0.1, 100);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     gluLookAt(0,0,5,   0,0,0,   0,1,0);    
     
+    glViewport(0,0,width,height);
     glRotatef(alpha, 0, 1, 0);
     if(rotate) {
       alpha++;
@@ -472,7 +484,10 @@ int main(int argc, char *argv[]) {
 	extraction.Update(&nexus);
       }
     }
+   if(do_render)
     nexus.Render(extraction, contest, &stats);
+   else
+    stats.Init();
 
     /*    if(show_borders) {
 	  for(unsigned int i = 0; i < cells.size(); i++) {
