@@ -22,7 +22,10 @@
 ****************************************************************************/
 /****************************************************************************
   Histoy
+
 ****************************************************************************/
+#ifndef __VCG_GLADDONS
+#define __VCG_GLADDONS
 
 #include <glut.h>
 #include <wrap/gl/math.h>
@@ -75,25 +78,29 @@ namespace vcg
 		}
 
 		///draw a cylinder
-		static void Cylinder(int slices,double lenght,double width)
+		static void Cylinder(int slices,double lenght,double width,bool useDisplList)
 		{
 			static std::map<int,GLint> Disp_listMap;
 			GLint cyl_List=-1;
 			std::map<int,GLint>::const_iterator it=Disp_listMap.find(slices);
 			///if the diplay list is createdtake the Glint that identify it
 			bool to_insert=false;
-
+			if (useDisplList)
+			{
 			if (it!=Disp_listMap.end())///the list exist
-			{cyl_List=it->second;}
+				cyl_List=it->second;
 			else to_insert=true;
+			}
 
 			glScaled(lenght,width,width);
 
-			if (!glIsList(cyl_List))
+			if (((!glIsList(cyl_List))&&(useDisplList))||(!useDisplList))
 			{
-				cyl_List = glGenLists(1);
-				glNewList(cyl_List, GL_COMPILE);
-
+				if (useDisplList)
+				{
+					cyl_List = glGenLists(1);
+					glNewList(cyl_List, GL_COMPILE);
+				}
 				int b;
 				vcg::Point3d p0;
 				vcg::Point3d p1;
@@ -101,10 +108,10 @@ namespace vcg
 				double step=6.28/(double)slices;
 				double angle=0;
 				glBegin(GL_TRIANGLE_STRIP);
-				for(b = 0; b <= slices; ++b){
+				for(b = 0; b <= slices-1; ++b){
 					//double angle = 6.28*b/(double)lenght;
 					//double angle = 6.28*(double)b;
-					angle+=step;
+					//angle+=step;
 					//p0 = Point3d( 0, width * sin(angle),width * cos(angle));
 					p0 = Point3d( 0, sin(angle),cos(angle));
 					//p1 = p0; p1[0] = lenght;
@@ -112,25 +119,69 @@ namespace vcg
 					glNormal3f(p0[0],p0[1],p0[2]);
 					glVertex3d(p0[0],p0[1],p0[2]);
 					glVertex3d(p1[0],p1[1],p1[2]);
+					angle+=step;
 				}
+				///re-conjunction with first point of cylinder
+				glNormal3f(0,0,1);
+				glVertex3d(0,0,1);
+				glVertex3d(1,0,1);
+
 				glEnd();
-				glEndList();
+
+				///fill the cylinder down
+				angle=0;
+				p0=vcg::Point3d(0,0,0);
+				glBegin(GL_TRIANGLE_FAN);
+				glNormal3f(-1,0,0);
+				glVertex3d(p0[0],p0[1],p0[2]);
+				for(b = 0; b <= slices-1; ++b){
+					glNormal3f(-1,0,0);
+					p1 = Point3d( 0, sin(angle),cos(angle));
+					glVertex3d(p1[0],p1[1],p1[2]);
+					angle+=step;
+				}
+				glNormal3f(-1,0,0);
+				glVertex3d(0,0,1);
+				glEnd();
+
+				angle=0;
+				p0=vcg::Point3d(1,0,0);
+				glBegin(GL_TRIANGLE_FAN);
+				glNormal3f(1,0,0);
+				glVertex3d(p0[0],p0[1],p0[2]);
+				for(b = 0; b <= slices-1; ++b){
+					glNormal3f(1,0,0);
+					p1 = Point3d( 1, sin(angle),cos(angle));
+					glVertex3d(p1[0],p1[1],p1[2]);
+					angle+=step;
+				}
+				glNormal3f(1,0,0);
+				glVertex3d(1,0,1);
+				glEnd();
+				if (useDisplList)
+					glEndList();
 			}
-			glCallList(cyl_List);
+			if (useDisplList)
+			{
+				glCallList(cyl_List);
 			///I insert key and value in the map if I need
-			if (to_insert)
-				Disp_listMap.insert(std::pair<int,GLint>(slices,cyl_List));
+				if (to_insert)
+					Disp_listMap.insert(std::pair<int,GLint>(slices,cyl_List));
+			}
 		}
 
-		static void Diamond (double radius)
+		static void Diamond (double radius,bool useDisplList)
 		{ 
 			static GLint diam_List=-1;
 			
 			glScaled(radius,radius,radius);
-			if (!glIsList(diam_List))
+			if (((!glIsList(diam_List))&&(useDisplList))||(!useDisplList))
+			{
+			if (useDisplList)
 			{
 			diam_List = glGenLists(1);
 			glNewList(diam_List, GL_COMPILE);
+			}
 
 			glBegin(GL_TRIANGLE_FAN);
 			glNormal3f( 0.0, 1,  0.0);
@@ -172,33 +223,41 @@ namespace vcg
 			glNormal3f( 1, 0.0,  0.0);
 			glVertex3f( 1, 0.0, 0.0);
 			glEnd();
-			glEndList();
+			if (useDisplList)
+				glEndList();
 			}
-			glCallList(diam_List);
+			if (useDisplList)
+				glCallList(diam_List);
 		}
 
 		///draw a cone
-		static void Cone(int slices,double lenght,double width)
+		static void Cone(int slices,double lenght,double width,bool useDisplList)
 		{
 			static std::map<int,GLint> Disp_listMap;
 			GLint cone_List=-1;
 			std::map<int,GLint>::const_iterator it=Disp_listMap.find(slices);
 			///if the diplay list is createdtake the Glint that identify it
 			bool to_insert=false;
-
-			if (it!=Disp_listMap.end())///the list exist
-			{cone_List=it->second;}
-			else to_insert=true;
+			
+			if (useDisplList)
+			{
+				if (it!=Disp_listMap.end())///the list exist
+					cone_List=it->second;
+				else to_insert=true;
+			}
 
 			glScaled(lenght,width,width);
 
-			if (!glIsList(cone_List))
+			if (((!glIsList(cone_List))&&(useDisplList))||(!useDisplList))
 			{
 				int h;
 				vcg::Point3d p0;
 				glScaled(lenght,width,width);
-				cone_List = glGenLists(1);
-				glNewList(cone_List, GL_COMPILE);
+				if (useDisplList)
+				{
+					cone_List = glGenLists(1);
+					glNewList(cone_List, GL_COMPILE);
+				}
 				for(h=0; h < 2; ++h){
 					glBegin(GL_TRIANGLE_FAN);
 					p0 = Point3d(0,0,0);
@@ -220,12 +279,16 @@ namespace vcg
 					}
 					glEnd();
 				}
-				glEndList();
+				if (useDisplList)
+					glEndList();
 			}
-			glCallList(cone_List);
-			///I insert key and value in the map if I need
-			if (to_insert)
-				Disp_listMap.insert(std::pair<int,GLint>(slices,cone_List));
+			if (useDisplList)
+			{
+				glCallList(cone_List);
+				///I insert key and value in the map if I need
+				if (to_insert)
+					Disp_listMap.insert(std::pair<int,GLint>(slices,cone_List));
+			}
 		}
 
 	public:
@@ -238,9 +301,9 @@ namespace vcg
 		/// head_slice = number of slices on the head
 		template <DrawMode dm>
 			static void glArrow(Point3d tail, Point3d head,double body_width,double head_lenght,
-			double head_width,int body_slice=10,int head_slice=10)
+			double head_width,int body_slice=10,int head_slice=10,bool useDisplList=true)
 		{
-			assert(!glGetError());
+			//assert(!glGetError());
 			Matrix44d tr;
 			XAxis(tail,head,tr);
 			glPushAttrib(GL_ALL_ATTRIB_BITS);
@@ -251,31 +314,32 @@ namespace vcg
 			double l_body=Direct.Norm()-head_lenght;
 			glPushMatrix();
 			glTranslate(vcg::Point3d(tail.Norm(),0,0));
-			Cylinder(body_slice,l_body,body_width);
+			Cylinder(body_slice,l_body,body_width,useDisplList);
 			glPopMatrix();
 			glTranslate(vcg::Point3d(l_body,0,0));
-			Cone(head_slice,head_lenght,head_width);
+			Cone(head_slice,head_lenght,head_width,useDisplList);
 			glPopMatrix();
-			assert(!glGetError());
+			//assert(!glGetError());
 			glPopAttrib();
-			assert(!glGetError());
+			//assert(!glGetError());
 		}
 
 		/// draw a cone from tail to head
 		/// width = width of the base of the cone
 		/// slice = number of slices on the cone
 		template <DrawMode dm>
-			static void glCone(Point3d tail, Point3d head,double width,int slice=10)
+			static void glCone(Point3d tail, Point3d head,double width,int slice=10,bool useDisplList=true)
 		{
 			Matrix44d tr;								   
 			XAxis(tail,head,tr);
 			glPushAttrib(GL_ALL_ATTRIB_BITS);
 			SetGLParameters(dm);
 			glPushMatrix();
+			glMultMatrixd(&tr[0][0]);
 			vcg::Point3d Direct=(head-tail);
 			double l_body=Direct.Norm();
 			glTranslate(vcg::Point3d(tail.Norm(),0,0));
-			Cone(slice,l_body,width);	
+			Cone(slice,l_body,width,useDisplList);	
 			glPopMatrix();
 			glPopAttrib();
 		}
@@ -284,17 +348,18 @@ namespace vcg
 		/// width = width of the base of the cylinder
 		/// slice = number of slices on the cylinder
 		template <DrawMode dm>
-			static void glCylinder(Point3d tail, Point3d head,double width,int slice=10)
+			static void glCylinder(Point3d tail, Point3d head,double width,int slice=10,bool useDisplList=true)
 		{
 			Matrix44d tr;								   
 			XAxis(tail,head,tr);						   
 			glPushAttrib(GL_ALL_ATTRIB_BITS);
 			SetGLParameters(dm);
 			glPushMatrix();
+			glMultMatrixd(&tr[0][0]);
 			vcg::Point3d Direct=(head-tail);
 			double l_body=Direct.Norm();
 			glTranslate(vcg::Point3d(tail.Norm(),0,0));
-			Cylinder(slice,l_body,width);
+			Cylinder(slice,l_body,width,useDisplList);
 			glPopMatrix();
 			glPopAttrib();
 			
@@ -325,15 +390,16 @@ namespace vcg
 		/// slices = The number of subdivisions around the Z axis (similar to lines of longitude). 
 		/// stacks = The number of subdivisions along the Z axis (similar to lines of latitude). 
 		template <DrawMode dm>
-		static void glDiamond (Point3f Center, double size)
+		static void glDiamond (Point3f Center, double size,bool useDisplList=true)
 		{
 			glPushAttrib(GL_ALL_ATTRIB_BITS);
 			SetGLParameters(dm);
 			glPushMatrix();
 			glTranslated(Center[0],Center[1],Center[2]);
-			Diamond(size);
+			Diamond(size,useDisplList);
 			glPopMatrix();
 			glPopAttrib();
 		}
 	};
 }
+#endif
