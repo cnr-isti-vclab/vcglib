@@ -48,51 +48,50 @@ namespace vcg{
 
   template <class MESH_TYPE> 
   ///insert a vertex iside a face and re-triangolarize v will be pointer to inserted vertex
-  void InsertVert(MESH_TYPE &m,typename MESH_TYPE::FaceType* f,typename MESH_TYPE::CoordType pos)
+  void InsertVert(MESH_TYPE &m,typename MESH_TYPE::FaceType** f,typename MESH_TYPE::VertexType *&v)
   {
 	std::vector<MESH_TYPE::FaceType **> local_var;
-    local_var.push_back(&f);
+    local_var.push_back(f);
 	MESH_TYPE::VertexIterator Vi=vcg::tri::Allocator<MESH_TYPE>::AddVertices(m,1);
 	MESH_TYPE::FaceIterator Finit=vcg::tri::Allocator<MESH_TYPE>::AddFaces(m,3,local_var);
 	
-	Vi->P()=pos;
-
-	if (MESH_TYPE::HasVFTopology())
-		Vi->VFp()=0;
 	
 	MESH_TYPE::FaceIterator Fi=Finit;
 	MESH_TYPE::FaceType *F;
+	MESH_TYPE::FaceType *fd=(*f);
 	//set vertex pointer of new face
 	for (int i=0;i<3;i++)
 	{
 		F=&(*Fi);
 
-		F->V(0)=f->V(i);
-		F->V(1)=f->V((i+1)%3);
+		assert(!fd->V(i)->IsD());
+		assert(!Vi->IsD());
+
+		F->V(0)=fd->V(i);
+		F->V(1)=fd->V((i+1)%3);
 		F->V(2)=&(*Vi);
 
 		
 
 		//assign topology in substitution of the old one
-		/*if (MESH_TYPE::HasFFTopology())
+		if (MESH_TYPE::HasFFTopology())
 		{
-			FFAttach(F,0,f->FFp(i),f->FFi(i));
-		}*/
+			FFAttach(F,0,fd->FFp(i),fd->FFi(i));
+		}
+
 		if (MESH_TYPE::HasVFTopology())
 		{
-			
-
 			//put new faces on list of the old vertex and new one
 			vcg::face::VFAppend<MESH_TYPE::FaceType>(F,0);
 			vcg::face::VFAppend<MESH_TYPE::FaceType>(F,1);
 			vcg::face::VFAppend<MESH_TYPE::FaceType>(F,2);
 
-			vcg::face::VFDetach<MESH_TYPE::FaceType>((*f),i);
+			vcg::face::VFDetach<MESH_TYPE::FaceType>((*fd),i);
 		}
 		Fi++;
 	}
 	//then attach the faces between themselfes
-	/*Fi=Finit;	
+	Fi=Finit;	
 	MESH_TYPE::FaceIterator Fsucc=Fi;
 	Fsucc++;
 
@@ -113,11 +112,11 @@ namespace vcg{
 	F0=&(*Fi);
 	F1=&(*Fsucc);
 
-	FFAttach<MESH_TYPE::FaceType>(F0,1,F1,2);*/
+	FFAttach<MESH_TYPE::FaceType>(F0,1,F1,2);
 
 	//at the end set as deleted the old face that was substituted
-	f->SetD();
-//	v=&(*Vi);
+	fd->SetD();
+    v=&(*Vi);
 
   }
 
