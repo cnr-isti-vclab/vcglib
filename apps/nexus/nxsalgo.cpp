@@ -39,6 +39,7 @@ void nxs::ComputeNormals(Nexus &nexus) {
   tmpb.Resize(tmpb_offset);
   for(unsigned int i = 0; i < tmpb.Size(); i++)
     tmpb[i] = zero;
+  tmpb.Flush();
   
   //first step normals in the same patch.
   for(unsigned int p = 0; p < nexus.index.size(); p++) {
@@ -96,7 +97,10 @@ void nxs::ComputeNormals(Nexus &nexus) {
       Link &link = border[i];
       if(link.IsNull()) continue;
       unsigned int off = tmpb_start[p];
-      tmpb[off + i] += normals[link.start_vert];
+      Point3f p = tmpb.read(off + i);
+      p += normals[link.start_vert];
+      tmpb.write(off + i, p);
+      //      tmpb[off + i] += normals[link.start_vert];
       close.insert(link.end_patch);
     }
 
@@ -109,7 +113,10 @@ void nxs::ComputeNormals(Nexus &nexus) {
 	Link &link = remote[i];
 	if(link.IsNull()) continue;
 	if(link.end_patch != p) continue;
-	tmpb[off + i] += normals[link.end_vert];
+	Point3f p = tmpb.read(off + i);
+	p += normals[link.end_vert];
+	tmpb.write(off + i, p);
+	//	tmpb[off + i] += normals[link.end_vert];
       }
     }
   }
@@ -123,7 +130,8 @@ void nxs::ComputeNormals(Nexus &nexus) {
       Link &link = border[i];
       if(link.IsNull()) continue;
       unsigned int off = tmpb_start[p];
-      Point3f &n = tmpb[off + i];
+      //      Point3f &n = tmpb[off + i];
+      Point3f n = tmpb.read(off + i);
       n.Normalize();
       if(use_short) {
 	n *= 32766;

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2004/10/08 15:12:04  ponchio
+Working version (maybe)
+
 Revision 1.12  2004/10/04 16:49:54  ponchio
 Daily backup. Preparing for compression.
 
@@ -256,7 +259,18 @@ template <class T> class VFile: public File {
     SetPosition(chunk * chunk_size * sizeof(T));
     ReadBuffer((char *)(buffer.data), buffer.size * sizeof(T));
     return buffer.data;
-  } 
+  }
+  //non buffered read only acces.
+  T read(unsigned int element) {
+    SetPosition(element * sizeof(T));
+    T t;
+    ReadBuffer(&t, sizeof(T));
+    return t;
+  }
+  void write(unsigned int element, T &t) {
+    SetPosition(element * sizeof(T));
+    WriteBuffer(&t, sizeof(T));
+  }
 
   void PushBack(const T &t) {
     Resize(n_elements+1);
