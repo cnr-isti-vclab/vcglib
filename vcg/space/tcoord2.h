@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/03/11 08:54:12  cignoni
+Written some documentation and added to the space module
+
 Revision 1.2  2004/03/10 21:38:40  cignoni
 Written some documentation and added to the space module
 
