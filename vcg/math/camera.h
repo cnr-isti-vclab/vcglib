@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.16  2005/01/18 16:40:50  ricciodimare
+*** empty log message ***
+
 Revision 1.15  2005/01/18 15:14:22  ponchio
 Far and end are reserved.
 
@@ -102,6 +105,7 @@ public:
 	vcg::Point2<S> c;					// pin-hole position
 
 	vcg::Point2<int>	 viewport;		// Size viewport (in pixels)
+	vcg::Point2<double> p;				// principal point (between -1 and 1) for distortion
 	S  k[4];							// 1st & 2nd order radial lens distortion coefficient
 
 	S viewportM;						// ratio between viewport in pixel and size (useful to avoid chancing s or viewport when
@@ -137,7 +141,6 @@ public:
 	inline vcg::Point2<S> LocalToViewport(const vcg::Point2<S> & p);
 	inline vcg::Point2<S> LocalTo_0_1(const vcg::Point2<S> & p);
 	inline vcg::Point2<S> LocalTo_neg1_1(const vcg::Point2<S> & p);
-	inline vcg::Point3<S> UnProject(const vcg::Point2<S> & p);
 };
 
 /// project a point in the camera plane (in space [-1,-1]x[1,1] )
@@ -149,15 +152,7 @@ vcg::Point2<S> Camera<S>::Project(const vcg::Point3<S> & p){
 		{
 			q[0] *= f/p.Z();
 			q[1] *= f/p.Z();
-
-			//q[0] = 2*q[0]/( s.X() * viewport[0]);
-			//q[1] = 2*q[1]/( s.Y() * viewport[1]);
 		}
-		//else
-		//{
-		//	q[0] = tx/(s.X()*viewportM)+c.X();
-		//	q[1] = ty/(s.Y()*viewportM)+c.Y();
-		//}	
 	return q;
 }
 
@@ -185,26 +180,6 @@ vcg::Point2<S> Camera<S>::LocalTo_neg1_1(const vcg::Point2<S> & p){
 	return ps;
 }
 
-/// unproject a point from the camera plane
-template<class S>
-vcg::Point3<S> Camera<S>::UnProject(const vcg::Point2<S> & p){
-	S  tx = p.X();
-	S  ty = p.Y();
-
-	vcg::Point3<S> q(0,0,0);
-
-	if(!IsOrtho())
-	{
-		tx = (tx-c.X())*s.X();
-		ty = (tx-c.Y())*s.Y();
-
-		q[0] = tx/f;
-		q[1] = ty/f;
-		q[2] = f;
-	}
-
-	return q;
-}
 /// set the camera specifying the perspective view
 template<class S>
 	void Camera<S>::SetPerspective(S angle, S ratio, S near_thr, S far_thr, vcg::Point2<S> vp){
