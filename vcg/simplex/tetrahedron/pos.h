@@ -65,16 +65,10 @@ public:
 	~VTIterator(){};
 
   /// Return the tetrahedron stored in the half edge
-inline TetraType & Vt()
+inline TetraType* & Vt()
 {
 	return _vt;
 } 
-
-  /// Return the tetrahedron stored in the half edge
-inline const TetraType & Vt() const
-{
-  return _vt;
-}
 
   	/// Return the index of vertex as seen from the tetrahedron
 inline int & Vi()
@@ -88,16 +82,16 @@ inline const int & Vi() const
 		return _vi;
 }
 
-bool End() const {return Vt()==0;}
+inline bool End(){return (Vt()==NULL);}
 
 	/// move on the next tetrahedron that share the vertex
 bool operator++() 
 {
 		int vi=Vi();
 		TetraType * tw = Vt();
-		Vt() = tw->TVp[vi];
-		Vi() = tw->TVi[vi];
-		assert(((tw->V(vi))==(Vt()->V(Vi())))||(t==NULL));
+		Vt() = tw->TVp(vi);
+		Vi() = tw->TVi(vi);
+		assert(((tw->V(vi))==(Vt()->V(Vi())))||(Vt()==NULL));
     return (Vt()!=NULL);
 }
 
@@ -118,9 +112,9 @@ public:
   /// The tetrahedron type
 	typedef	typename MTTYPE TetraType;
 	/// The vertex type
-	typedef	typename TetraType::MVTYPE VertexType;
+	typedef	typename TetraType::VertexType VertexType;
   /// The coordinate type
-	typedef	typename TetraType::MVTYPE::CoordType CoordType;
+	typedef	typename TetraType::VertexType::CoordType CoordType;
   ///The HEdgePos type
 	typedef Pos<TetraType> BasePosType;
 
@@ -144,13 +138,13 @@ public:
 	~Pos(){};
   
   	/// Return the tetrahedron stored in the half edge
-	inline TetraType & T()
+	inline TetraType* & T()
   {
 		return _t;
 	} 
 
   	/// Return the tetrahedron stored in the half edge
-	inline const TetraType & T() const
+	inline const TetraType* & T() const
 	{
 		return _t;
 	}
@@ -267,8 +261,8 @@ public:
 	/// Changes face maintaining the same vertex and the same edge
 	void FlipF()
 	{
-    char f0=vcg::Tetra::FofE(z,0);
-		char f1=vcg::Tetra::FofE(z,1);
+    char f0=vcg::Tetra::FofE(E(),0);
+		char f1=vcg::Tetra::FofE(E(),1);
 		if (f0!=F())
 			F()=f0;
 		else
@@ -282,6 +276,9 @@ public:
 		//save the two vertices of the old edge
 		VertexType *v0=T()->V(vcg::Tetra::VofE(E(),0));
 		VertexType *v1=T()->V(vcg::Tetra::VofE(E(),1));
+
+    //get the current vertex
+    VertexType *vcurr=T()->V(V());
 
 		//get new tetrahedron according to faceto face topology
 		TetraType *nt=T()->TTp(F());
@@ -306,9 +303,29 @@ public:
 			  if (((vn0==v0)&&(vn1==v1))||((vn1==v0)&&(vn0==v1)))
 			    E()=ne1;
         else
+        {
+#ifdef _DEBUG
+          vn0=nt->V(vcg::Tetra::VofE(ne2,0));
+          vn1=nt->V(vcg::Tetra::VofE(ne2,1));
+          assert(((vn0==v0)&&(vn1==v1))||((vn1==v0)&&(vn0==v1)));
+#endif
           E()=ne2;
+        }
       }
+
+      //find the right vertex
+      vn0=nt->V(vcg::Tetra::VofE(E(),0));
+#ifdef _DEBUG
+      vn1=nt->V(vcg::Tetra::VofE(E(),1));
+      assert((vn0==vcurr)||(vn1==vcurr));
+#endif
+      if (vn0==vcurr)
+        V()=vcg::Tetra::VofE(E(),0);
+      else
+        V()=vcg::Tetra::VofE(E(),1);
+
       T()=nt;
+      assert(T()->V(V())==vcurr);
 			F()=nfa;
     }
   }
@@ -317,17 +334,13 @@ public:
 	void NextT( )
 	{
 		#ifdef _DEBUG
-		VertexType *v0old=T()->V(vcg::Tetra::VofE(E(),0));
-		VertexType *v1old=T()->V(vcg::Tetra::VofE(E(),1));
-    assert(v0old!=v1old);
+		VertexType *vold=T()->V(V());
 		#endif
 		FlipT();
 		FlipF();
 		#ifdef _DEBUG
-		VertexType *v0=T()->V(vcg::Tetra::VofE(E(),0));
-		VertexType *v1=T()->V(vcg::Tetra::VofE(E(),1));
-		assert(v1!=v0);
-		assert(((v0==v0old)&&(v1==v1old))||((v1==v0old)&&(v0==v1old)));
+		VertexType *vnew=T()->V(V());
+		assert(vold==vnew);
 		#endif	
 	}
 
@@ -368,7 +381,7 @@ private:
 	short int _back;
 public :
   PosJump(const TetraType*  tp,const int  fap,const int  ep,
-		VertexType  *  vp){T()=tp;F()=fap;E()=ep;V()=vp;_t_initial=tp;_back=0;}
+		int  vp){T()=tp;F()=fap;E()=ep;V()=vp;_t_initial=tp;_back=0;}
 
 	void NextT()
   {
@@ -401,28 +414,65 @@ public :
 template < class MTTYPE> 
 class PosLoop:public Pos<MTTYPE>
 {
+private:
+	MTTYPE *_t_initial;
+	bool _jump;
+  bool _loop;
 public :
-	
+
+PosLoop(TetraType*  tp,const int  fap,const int  ep,
+		int vp){T()=tp;F()=fap;E()=ep;V()=vp;_t_initial=tp;_jump=false;_loop=false;}
+
+  bool LoopEnd()
+  {
+    return (_loop);
+  }
+  
+  bool Jump()
+  {
+    return(_jump);
+  }
+  
+  void Reset()
+  {
+    _loop=false;
+    _jump=false;
+  }
+
 	void NextT()
   {	
-		MTTYPE *tpred=T();
-		Pos<MTTYPE>::NextT();
+#ifdef _DEBUG
+    TetraType *t_old=T();
+#endif
+		TetraType *tpred=T();
+		Pos<TetraType>::NextT();
+    _loop=false;
+    _jump=false;
+
 		//external face
 		if (tpred==T())
 		{
       tpred=T();
-      //jump on the other side
-      Pos<MTTYPE>::NextT();
+      //jump next one
+      Pos<TetraType>::NextT();
       //find the next external face
 			while (tpred!=T())
 			{
         tpred=T();
-				Pos<MTTYPE>::NextT();
+				Pos<TetraType>::NextT();
 			}
-			//reset right rotation sense
-			  Pos<MTTYPE>::NextT();
+			////reset right rotation sense
+			//  Pos<TetraType>::NextT();
+        _jump=true;
     }	
+    if (T()==_t_initial)
+      _loop=true;
+#ifdef _DEBUG
+    if (_loop==false)
+      assert(t_old!=T());
+#endif
   }
+
 };
 
   }//end namespace tetra
