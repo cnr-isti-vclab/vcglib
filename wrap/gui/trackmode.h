@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/05/07 12:46:08  cignoni
+Restructured and adapted in a better way to opengl
+
 Revision 1.3  2004/04/07 10:54:11  cignoni
 Commented out unused parameter names and other minor warning related issues
 
@@ -36,61 +39,65 @@ Adding copyright.
 #ifndef TRACKMODE_H
 #define TRACKMODE_H
 
-#include <vcg/space/point3.h>
-#include <vcg/math/similarity.h>
-#include <wrap/gui/trackball.h>
+#include <vcg/space/line3.h>
+#include <vcg/space/plane3.h>
+#include <wrap/gui/view.h>
 
 namespace vcg {
+  
 class Trackball;
+
 class TrackMode {
 public:
   virtual ~TrackMode() {}
+  virtual void Apply(Trackball *trackball, Point3f new_point) = 0;
+  virtual void Draw() {}
   //virtual void Draw() {}
-  virtual Similarityf ComputeFromWindow(const Point3f &/* oldp */, const Point3f &/* newp */) { return Similarityf().SetIdentity(); }
-  Point3f Hit(const Point3f &p);
-  Trackball *tb;
-  
+  //  virtual Similarityf ComputeFromWindow(const Point3f &old_point, 
+  //const Point3f &new_point) = 0;
+  //  Point3f Hit(const Point3f &p);
+ protected:
+  Plane3f GetViewPlane(const View<float> &view, Point3f center);
+  Point3f HitViewPlane(Trackball *trackball, const Point3f &p);
 };
-
+ 
+/* View space modes */
+ 
 class SphereMode: public TrackMode {
-public:  
-  Similarityf ComputeFromWindow(const Point3f &oldP, const Point3f &newP);
-  //Plane3f SetViewPlane();
-  Point3f Hit(const Point3f &p);
-  Plane3f GetViewPlane();
-//  Line3f GetViewLine(const Point3f &p);
-
-};
-
-class GravityMode: public TrackMode {
-public:
+ public:  
+  void Apply(Trackball *trackball, Point3f new_point);
+ protected:
+  Point3f Hit(Trackball *trackball, const Point3f &p);
 };
 
 class CylinderMode: public TrackMode {
 public:
-  CylinderMode(const Point3f _axis): axis(_axis) { axis.Normalize(); }
+  CylinderMode(const Line3f &line, float radius = 1) {}
+  void Apply(Trackball *trackball, Point3f new_point) {}
 protected:
-  Point3f axis;
+  Line3f line;
+  float radius;
 };
 
 class PlaneMode: public TrackMode {
 public:
-  PlaneMode(const Point3f _x, const Point3f _y): x(_x), y(_y) { x.Normalize(); y.Normalize(); }
-  Similarityf ComputeFromWindow(const Point3f &oldP, const Point3f &newP);
+  PlaneMode(const Plane3f &pl): plane(pl) {}
+  void Apply(Trackball *trackball, Point3f new_point);
 protected:
-  Point3f x;
-  Point3f y;
+  Plane3f plane;
 };
 
 class LineMode: public TrackMode {
 public:
-  LineMode(const Point3f _axis): axis(_axis) { axis.Normalize();}
+  LineMode(const Line3f &line) {}
+  void Apply(Trackball *trackball, Point3f new_point) {}
 protected:
-  Point3f axis;
+  Line3f line;
 };
 
 class ScaleMode: public TrackMode {
 public:
+  void Apply(Trackball *trackball, Point3f new_point) {}
 };
 
 }//namespace 

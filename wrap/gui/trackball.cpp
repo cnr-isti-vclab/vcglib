@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/05/12 20:55:18  ponchio
+*** empty log message ***
+
 Revision 1.5  2004/05/07 12:46:08  cignoni
 Restructured and adapted in a better way to opengl
 
@@ -54,15 +57,22 @@ Transform::Transform() {
   center=Point3f(0,0,0);
 }
 
-Trackball::Trackball(): current_button(0), last_x(-1), last_y(-1), dragging(false), 
-                        spinnable(true), spinning(false), history_size(10) {
-  //qui si aggiungono tutte le actions
-  actions[0] = Action(LOCAL, NONE);       
-  actions[BUTTON_LEFT] = Action(VIEW, ROTATE);
-  actions[BUTTON_LEFT | KEY_CTRL] = Action(VIEW, DRAG_XY);
-  actions[BUTTON_LEFT | KEY_SHIFT] = Action(VIEW, SCALE);
-  actions[WHEEL] = Action(SCREEN, SCALE);  
+Trackball::Trackball(): current_button(0), current_mode(NULL),
+			dragging(false), spinnable(true), spinning(false), 
+			history_size(10) {
+  //here we add mode
+  modes[0]                       = NULL;
+  modes[BUTTON_LEFT]             = new SphereMode();
+  modes[BUTTON_LEFT | KEY_CTRL]  = new PlaneMode(Plane3f(0, Point3f(1, 0, 0)));
+  modes[BUTTON_LEFT | KEY_SHIFT] = new ScaleMode();
+  modes[WHEEL]                   = new ScaleMode();
   SetCurrentAction();
+}
+
+Trackball::~Trackball() {
+  map<int, TrackMode *>::iterator i;
+  for(i = modes.begin(); i != modes.end(); i++)
+    delete (*i).second;
 }
 
 void Trackball::SetIdentity() {
@@ -73,153 +83,163 @@ void Trackball::SetPosition(const Point3f &c, int /* millisec */) {
   center = c;
 }
 
-//operating
 void Trackball::GetView() {
   camera.GetView();
     
-  //lets get view matrix  
+  /*  //lets get view matrix  
   Similarityf m = last_track;
-	Point3f c_obj = m*center;   //coordinate of the center of the trackball in obj coords
-	ScreenCenter = camera.Project(c_obj); //center of the trackball in screen coords.	
-	ScreenRadius = 10.0f/Distance(center, camera.UnProject(Point3f(ScreenCenter[0] + 10, ScreenCenter[1],     ScreenCenter[2])));
-
+  Point3f c_obj = m*center;   //coordinate of the center of the trackball in obj coords
+  Point3f ScreenCenter = camera.Project(c_obj); //center of the trackball in screen coords.	
+  Point3f ScreenRadius = 10.0f/Distance(center, camera.UnProject(Point3f(ScreenCenter[0] + 10, ScreenCenter[1],     ScreenCenter[2])));
+  
   Point3f X, Y, Z, C;
-	X = camera.UnProject(Point3f(ScreenCenter[0] + 100, ScreenCenter[1],     ScreenCenter[2]));
-	Y = camera.UnProject(Point3f(ScreenCenter[0],     ScreenCenter[1] - 100, ScreenCenter[2]));
-	Z = camera.UnProject(Point3f(ScreenCenter[0],     ScreenCenter[1],     ScreenCenter[2] + 0.1f));	
+  X = camera.UnProject(Point3f(ScreenCenter[0] + 100, ScreenCenter[1],     ScreenCenter[2]));
+  Y = camera.UnProject(Point3f(ScreenCenter[0],     ScreenCenter[1] - 100, ScreenCenter[2]));
+  Z = camera.UnProject(Point3f(ScreenCenter[0],     ScreenCenter[1],     ScreenCenter[2] + 0.1f));	
   C = c_obj;
-	X = X - C; X.Normalize();
-	Y = Y - C; Y.Normalize();
-	Z = X ^ Y;	
-	
-	Matrix44f view_axis; //this is before applying last (or track...)
+  X = X - C; X.Normalize();
+  Y = Y - C; Y.Normalize();
+  Z = X ^ Y;	
+  
+  Matrix44f view_axis; //this is before applying last (or track...)
   view_axis.SetIdentity();
-	view_axis.element(0, 0) = X[0]; view_axis.element(0, 1) = X[1]; view_axis.element(0, 2) = X[2];
-	view_axis.element(1, 0) = Y[0]; view_axis.element(1, 1) = Y[1]; view_axis.element(1, 2) = Y[2];
-	view_axis.element(2, 0) = Z[0]; view_axis.element(2, 1) = Z[1]; view_axis.element(2, 2) = Z[2];
-	view.SetIdentity();
-  view.FromMatrix(view_axis);	
-  //view = view * Inverse(Similarityf(track.rot));   	  
-  //spinning ignored
+  view_axis.element(0, 0) = X[0]; view_axis.element(0, 1) = X[1]; view_axis.element(0, 2) = X[2];
+  view_axis.element(1, 0) = Y[0]; view_axis.element(1, 1) = Y[1]; view_axis.element(1, 2) = Y[2];
+  view_axis.element(2, 0) = Z[0]; view_axis.element(2, 1) = Z[1]; view_axis.element(2, 2) = Z[2];
+  view.SetIdentity();
+  view.FromMatrix(view_axis);	*/
 }
+
 void Trackball::Apply() { 
   glMultMatrix(track.Matrix());
 }
 
 /***************************************************************/
 
-void Trackball::DrawCircle()
-{
-	const int nside=18;
-	const double pi2=3.14159265*2.0;
-	glBegin(GL_LINE_STRIP);
-		for(double i=0;i<=nside;i++){
-			glNormal3d(cos(i*pi2/nside), sin(i*pi2/nside),  0.0);
-			glVertex3d(cos(i*pi2/nside), sin(i*pi2/nside),  0.0);
-		}
-	glEnd();
-	DrawPlaneHandle();
+void Trackball::DrawCircle() {
+  const int nside=18;
+  const double pi2=3.14159265*2.0;
+  glBegin(GL_LINE_STRIP);
+  for(double i=0;i<=nside;i++){
+    glNormal3d(cos(i*pi2/nside), sin(i*pi2/nside),  0.0);
+    glVertex3d(cos(i*pi2/nside), sin(i*pi2/nside),  0.0);
+  }
+  glEnd();
+  DrawPlaneHandle();
 }
 
-void Trackball::DrawPlane()
-{
-	const int nl=10;
-	float w=5.0f/3.0f;
-	float u;
-	glBegin(GL_LINES);
-		glNormal3f(0.0,0.0,1.0);
-		for( u=-w; u<=w+0.01f; u+=2*w/nl){
-			glVertex3f(-w,	+u,	0);
-			glVertex3f(+w,	+u,	0);
-			glVertex3f(+u,	-w, 0);
-			glVertex3f(+u,	+w, 0);
-			}
-	glEnd();
-	}
+void Trackball::DrawPlane() {
+  const int nl=10;
+  float w=5.0f/3.0f;
+  float u;
+  glBegin(GL_LINES);
+  glNormal3f(0.0,0.0,1.0);
+  for( u=-w; u<=w+0.01f; u+=2*w/nl){
+    glVertex3f(-w,	+u,	0);
+    glVertex3f(+w,	+u,	0);
+    glVertex3f(+u,	-w, 0);
+    glVertex3f(+u,	+w, 0);
+  }
+  glEnd();
+}
 
-void Trackball::DrawPlaneHandle()
-{
-	float r=1.0;
-	float dr=r/10.0f;
-	glBegin(GL_LINE_STRIP);
-			glVertex3f(+r+dr,   +r,   0.0);
-			glVertex3f(+r   ,   +r+dr,0.0);
-			glVertex3f(+r-dr,   +r,   0.0);
-			glVertex3f(+r   ,   +r-dr,0.0);
-			glVertex3f(+r+dr,   +r,   0.0);
-	glEnd();
-	glBegin(GL_LINE_STRIP);
-			glVertex3f(-r+dr,   -r,   0.0);
-			glVertex3f(-r   ,   -r+dr,0.0);
-			glVertex3f(-r-dr,   -r,   0.0);
-			glVertex3f(-r   ,   -r-dr,0.0);
-			glVertex3f(-r+dr,   -r,   0.0);
-	glEnd();
+void Trackball::DrawPlaneHandle() {
+  float r=1.0;
+  float dr=r/10.0f;
+  glBegin(GL_LINE_STRIP);
+  glVertex3f(+r+dr,   +r,   0.0);
+  glVertex3f(+r   ,   +r+dr,0.0);
+  glVertex3f(+r-dr,   +r,   0.0);
+  glVertex3f(+r   ,   +r-dr,0.0);
+  glVertex3f(+r+dr,   +r,   0.0);
+  glEnd();
+  glBegin(GL_LINE_STRIP);
+  glVertex3f(-r+dr,   -r,   0.0);
+  glVertex3f(-r   ,   -r+dr,0.0);
+  glVertex3f(-r-dr,   -r,   0.0);
+  glVertex3f(-r   ,   -r-dr,0.0);
+  glVertex3f(-r+dr,   -r,   0.0);
+  glEnd();
 }
 
 void Trackball::Draw() {
   glPushMatrix();
+  
   glTranslate(center);
   glScalef(radius,radius,radius);
 
   /// Here start the real drawing stuff
   
-    float amb[4] ={.3f,.3f,.3f,1.0f};
-		float col[4] ={.5f,.5f,.8f,1.0f};
-		float col2[4]={.9f,.9f,1.0f,1.0f};
-		glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_CURRENT_BIT | GL_LIGHTING_BIT);
-		glLineWidth(2.0);
-		glEnable(GL_LIGHTING);
-		glEnable(GL_LINE_SMOOTH);
-		glEnable(GL_BLEND);
+  float amb[4] ={.3f,.3f,.3f,1.0f};
+  float col[4] ={.5f,.5f,.8f,1.0f};
+  float col2[4]={.9f,.9f,1.0f,1.0f};
+  glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_CURRENT_BIT | GL_LIGHTING_BIT);
+  glLineWidth(2.0);
+  glEnable(GL_LIGHTING);
+  glEnable(GL_LIGHT0);
+  glEnable(GL_LINE_SMOOTH);
+  glEnable(GL_BLEND);
 
-		glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,amb);
-		glMaterialfv(GL_FRONT_AND_BACK,GL_DIFFUSE,col);
-		glPushMatrix();
-		  DrawCircle();
-		  glPushMatrix();
-	 	    glRotatef(90,1,0,0);
-		    DrawCircle();
-		    glRotatef(90,0,1,0);
-		    DrawCircle();
-		  glPopMatrix();
-		glPopMatrix();
+  glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,amb);
+  glMaterialfv(GL_FRONT_AND_BACK,GL_DIFFUSE,col);
+  glPushMatrix();
+  
+  DrawCircle();
+  glPushMatrix();
+  
+  glRotatef(90,1,0,0);
+  DrawCircle();
+  glRotatef(90,0,1,0);
+  DrawCircle();
+  
+  glPopMatrix();
+  
+  glPopMatrix();
 		
-    
-		glColor4f(1.0,.8f,.8f,1.0f);
-		if(current_action.motion==ROTATE_X || current_action.motion==ROTATE_Y || current_action.motion==ROTATE_Z ){
-			//Point3d raxt(0,0,0),rax;// compute the rotation axis
-			//raxt[current_action.motion-ROTATE_X]=1;
-			//RotM.Apply(rax,raxt);
-			//
-			//glDisable(GL_LIGHTING);
-			//glBegin(GL_LINE_STRIP);
-			//		glVertex(Manip.c-raxt*TrackballRadius*1.3);
-			//		glVertex(Manip.c+raxt*TrackballRadius*1.3);
-			//glEnd();
-		}
-		glPopAttrib();
-	
-	if(current_action.motion==DRAG_XY)	{
-		glPushMatrix();
-		//glTranslate(Manip.c);
-		DrawPlane();
-		glPopMatrix();
-		}
-	if(current_action.motion==DRAG_XZ)	{	
-		glPushMatrix();
-		//glTranslate(Manip.c);
-		glRotatef(90,1,0,0);
-		DrawPlane();
-		glPopMatrix();
-	}
-	if(current_action.motion==DRAG_YZ)	{	
-		glPushMatrix();
-		//glTranslate(Manip.c);
-		glRotatef(90,0,1,0);
-		DrawPlane();
-		glPopMatrix();
-	}
+  glColor4f(1.0,.8f,.8f,1.0f);
+
+  /*  switch(current_action) {
+  case TRACK_ROTATE_X:
+  case TRACK_ROTATE_Y:
+  case TRACK_ROTATE_Z:
+    //Point3d raxt(0,0,0),rax;// compute the rotation axis
+    //raxt[current_action.motion-ROTATE_X]=1;
+    //RotM.Apply(rax,raxt);
+    //
+    //glDisable(GL_LIGHTING);
+    //glBegin(GL_LINE_STRIP);
+    //		glVertex(Manip.c-raxt*TrackballRadius*1.3);
+    //		glVertex(Manip.c+raxt*TrackballRadius*1.3);
+    //glEnd();
+    break;
+
+  case DRAG_XY:
+    glPushMatrix();
+    //glTranslate(Manip.c);
+    DrawPlane();
+    glPopMatrix();
+    break;
+
+  case DRAG_XY:
+    glPushMatrix();
+    //glTranslate(Manip.c);
+    glRotatef(90,1,0,0);
+    DrawPlane();
+    glPopMatrix();
+    break;
+
+  case DRAG_XY:
+    glPushMatrix();
+    //glTranslate(Manip.c);
+    glRotatef(90,0,1,0);
+    DrawPlane();
+    glPopMatrix();
+    break;
+  default:
+    break;
+    }*/
+
+  glPopAttrib();
 
   glPopMatrix();
 }
@@ -232,26 +252,16 @@ void Trackball::Reset() {
 void Trackball::MouseDown(int x, int y, Trackball::Button button) {
   current_button |= button;  
   SetCurrentAction();
-  last_x = x;
-	last_y = y;	     
+  last_point = Point3f((float)x, (float)y, 0);
 }
 
 void Trackball::MouseMove(int x, int y) {  
-  if(current_action.motion == NONE) return;  
-  if(last_x == -1 && last_y == -1) { //changed mode in the middle of moving
-    last_x = x;
-    last_y = y;
+  if(current_mode == NULL) return;  
+  if(last_point[2] == -1) { //changed mode in the middle of moving
+    last_point = Point3f((float)x, (float)y, 0);
     return;
   }
-
-  TrackMode *mode = CurrentMode();
-  mode->tb=this;
-
-  Point3f new_point = Point3f(float(x), float(y), 0);
-  Point3f old_point = Point3f(float(last_x), float(last_y), 0);
-  Similarityf diff=mode->ComputeFromWindow(old_point,new_point);
-
-  track = last_track*diff;  
+  current_mode->Apply(this, Point3f(float(x), float(y), 0));
 } 
 
 void Trackball::MouseUp(int /* x */, int /* y */, Trackball::Button button) { 
@@ -293,39 +303,17 @@ void Trackball::HistorySize(int /* lenght */){}
 
 void Trackball::SetCurrentAction() {  
   //I use strict matching.
-  assert(actions.count(0));
-  if(!actions.count(current_button))
-    current_action = actions[0];
+  assert(modes.count(0));
+  if(!modes.count(current_button))
+    current_mode = NULL;
   else
-    current_action = actions[current_button];
+    current_mode = modes[current_button];
 
-  last_x = -1;
-  last_y = -1;
+  last_point = Point3f(0, 0, -1);
   last_track = track;
-  last_view = view;
+  //  last_view = view;
 }
 
-TrackMode *Trackball::CurrentMode() {
-  Point3f x(1, 0, 0), y(0, 1, 0), z(0, 0, 1);
-  TrackMode *mode = NULL;
-  switch(current_action.motion) {
-    case NONE: mode = new TrackMode(); break;
-    case ROTATE: mode = new SphereMode(); break;
-    case ROTATE_DUMMY: mode = new GravityMode(); break;
-    case ROTATE_X: mode = new CylinderMode(x); break;
-    case ROTATE_Y: mode = new CylinderMode(y); break;
-    case ROTATE_Z: mode = new CylinderMode(z); break;
-    case DRAG_X: mode = new LineMode(x); break;
-    case DRAG_Y: mode = new LineMode(y); break;
-    case DRAG_Z: mode = new LineMode(z); break;
-    case DRAG_XY: mode = new PlaneMode(x, y); break; 
-    case DRAG_YZ: mode = new PlaneMode(y, z); break;
-    case DRAG_XZ: mode = new PlaneMode(z, x); break;
-    case SCALE: mode = new ScaleMode(); break;
-    default: break;
-  }
-  return mode;
-}
 ////return center of trackball in Window coordinates.
 //Point3f Trackball::ScreenOrigin() { 
 //  return camera.Project(ModelOrigin());	
@@ -333,9 +321,9 @@ TrackMode *Trackball::CurrentMode() {
 
 
 //return center of trackball in Model coordinates
-Point3f Trackball::ModelOrigin() {
-  return center;     
-}
+//Point3f Trackball::ModelOrigin() {
+//  return center;     
+//}
 
 //Matrix44f Trackball::ScreenToModel() {
 //  return camera.inverse;
