@@ -60,11 +60,13 @@ namespace vcg
 			case DMUser		  :
 				break;
 			case DMWire		  :	
+				glDisable(GL_CULL_FACE);
 				glDisable(GL_LIGHTING);
 				glDisable(GL_NORMALIZE);
 				glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 				break;
 			case DMSolid	  :
+				glDisable(GL_CULL_FACE);
 				glPolygonMode(GL_FRONT,GL_FILL);
 				break;
 			default : 
