@@ -11,31 +11,64 @@
 
 namespace nxs {
 
- class Frag:public std::vector<unsigned int> {};
+ typedef std::vector<unsigned int> Frag; 
   
  struct Node {  
    std::vector<Node *> in;
    std::vector<Node *> out;
    std::vector<Frag> frags;    
    float error;
-   bool visited;        
+   bool visited;
+   bool pushed;
+ };
+
+ struct TNode {
+   float error;
+   Node *node;
+   TNode(Node *n, float e): node(n), error(e) {}
+   bool operator<(const TNode &n) { return error < n.error; }
  };
  
- class Policy {
+ class Metric {
  public:
-   virtual bool Expand(unsigned int patch, Nexus::PatchInfo &entry) = 0;
-   virtual void GetView() {}
-   virtual void Visit(Node *node, std::queue<Node *> &qnode);
+   vector<Nexus::PatchInfo> *index;
+
+   virtual float GetError(Node *node) = 0;   
+   virtual void GetView() {}   
  };
 
- class FrustumPolicy: public Policy {
+ class FlatMetric: public Metric {
  public:
-   vcg::Frustumf frustum;
-   float error;
+   void GetView() {}
+   float GetError(Node *node);   
+ };
 
-   FrustumPolicy(float _err = 4): error(_err) {}
+ class DeltaMetric: public Metric {
+ public:
+   vcg::Point3f delta;
+   void GetView() {}
+   float GetError(Node *node);   
+ };
+
+ class FrustumMetric: public Metric {
+ public:
+   vcg::Frustumf frustum;      
+
    void GetView() { frustum.GetView(); }
-   bool Expand(unsigned int patch, Nexus::PatchInfo &entry);
+   float GetError(Node *node);   
+ };
+
+ class Policy {
+ public:
+   float error;
+   int ram_used;
+   int ram_size;  
+
+   vector<PatchEntry> *entries;
+
+   void Init();
+   bool Expand(TNode &node);
+   void NodeVisited(Node *node); 
  };
 
 class NexusMt: public Nexus {
@@ -49,9 +82,10 @@ class NexusMt: public Nexus {
 	     VBO_OFF,     //no vertex buffer object
 	     VBO_FIXED }; //user supplied size
  
-  enum PolicyKind { FRUSTUM,    //screen error extraction
-		    GEOMETRY }; //geometry error extraction
-
+  enum MetricKind { FRUSTUM,    //screen error extraction                
+		                GEOMETRY,    //geometry error extraction
+                    DELTA };    //delta error
+  
   enum Mode { POINTS, 
 	      SMOOTH,
 	      XRAY,
@@ -68,10 +102,9 @@ class NexusMt: public Nexus {
   Vbo vbo;
   unsigned int vbo_size;
 
-  Policy *policy;
-  float error;
-  bool realtime;
-
+  Metric *metric;
+  Policy policy;
+  
   Mode mode;
 
   unsigned int components;
@@ -79,6 +112,10 @@ class NexusMt: public Nexus {
   bool use_colors;
   bool use_textures;
   bool use_data;
+
+  //statistics:
+  unsigned int tri_rendered;
+  unsigned int tri_total;
   
   NexusMt();
   ~NexusMt();
@@ -87,20 +124,26 @@ class NexusMt: public Nexus {
   bool InitGL();
   
   void Render();
-  void SetPolicy(Policy *policy, bool realtime = true);
-  void SetPolicy(PolicyKind kind, float error, bool realtime = true);
+
+  void SetMetric(MetricKind kind);
+  void SetError(float error);
+  void SetRamSize(unsigned int ram_size);
   void SetVbo(Vbo mode, unsigned int vbo_size = 0, 
-	      unsigned int ram_size = 128000000);
+              unsigned int ram_size = 128000000);
+
   bool SetMode(Mode mode);
   bool SetComponent(Component c, bool on);
   bool SetComponents(unsigned int mask);
   
-  void ExtractFixed(std::vector<unsigned int> &selected, float error);
-  void Extract(std::vector<unsigned int> &selected, Policy *policy);
+  
+  //void ExtractFixed(std::vector<unsigned int> &selected, float error);
+  void Extract(std::vector<unsigned int> &selected);
 
  protected:
   void LoadHistory();
   void ClearHistory();
+  void PushNode(Node *node, std::vector<TNode> &heap);
+  void VisitNode(Node *node, std::vector<TNode> &heap);
   void Select(std::vector<unsigned int> &selected);
   Patch &LoadPatch(unsigned int p);
 };

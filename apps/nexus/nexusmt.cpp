@@ -8,7 +8,7 @@ using namespace nxs;
 using namespace vcg;
 using namespace std;
 
-void Policy::Visit(Node *node, std::queue<Node *> &qnode) {    
+/*void Policy::Visit(Node *node, std::queue<Node *> &qnode) {    
   std::vector<Node *>::iterator n;
   for(n = node->in.begin(); n != node->in.end(); n++) 
     if(!(*n)->visited) 
@@ -21,22 +21,80 @@ void Policy::Visit(Node *node, std::queue<Node *> &qnode) {
 bool FrustumPolicy::Expand(unsigned int patch, Nexus::PatchInfo &entry) {
   if(entry.error == 0) return false;
   float dist = Distance(entry.sphere, frustum.ViewPoint());
-  /*Point3f line = frustum.viewPoint() - cell->sphere.center;
-    float dist = line.Norm() - cell->sphere.radius;  */
   if(dist < 0) return true;
   //  dist = pow(dist, 1.2);
-  /*  cerr << "Dist: " << dist << endl;
-  cerr << "Entry error: " << entry.error << endl;
-  cerr << "error: " << error << endl;
-  cerr << "resolution at dist: " << frustum.Resolution(dist) << endl;*/
   return entry.error > error * frustum.Resolution(dist);
+} */
+
+float FrustumMetric::GetError(Node *node) {
+  float max_error = 0;
+  std::vector<Frag>::iterator frag;
+  for(frag = node->frags.begin(); frag != node->frags.end(); frag++) {                
+    vector<unsigned int>::iterator cell;
+    for(cell = (*frag).begin(); cell != (*frag).end(); cell++) {              
+      Nexus::PatchInfo &entry = (*index)[*cell];    
+      Sphere3f &sphere = entry.sphere;
+      float dist = Distance(sphere, frustum.ViewPoint());
+      if(dist < 0) break;
+      float error = entry.error/frustum.Resolution(dist);
+      if(frustum.IsOutside(sphere.Center(), sphere.Radius()))
+        error *= 4;
+      if(max_error < error) max_error = error;
+    }	   
+  }
+  return max_error; 
 }
 
+void Policy::Init() {
+  ram_used = 0;
+}
+
+bool Policy::Expand(TNode &node) {
+  //expand if node error > target error
+  if(ram_used >= ram_size) return false;
+  //cerr << "Error: " << error << " node.error: " << node.error << endl;
+  return node.error > error; 
+}
+
+void Policy::NodeVisited(Node *node) {  
+  //TODO write this a bit more elegant.
+  //first we process arcs removed:
+  
+  for(unsigned int i = 0; i < node->out.size(); i++) {
+    assert(!(node->out[i]->visited));
+    Frag &frag = node->frags[i];
+    for(unsigned int k = 0; k < frag.size(); k++) {
+      unsigned int rr = frag.size();
+      unsigned int tmp = frag[k];
+      unsigned int sz = entries->size();
+      assert(tmp < sz);      
+      PatchEntry &entry = (*entries)[frag[k]];
+      ram_used += entry.ram_size;      
+    }
+  }
+
+  vector<Node *>::iterator from;
+  for(from = node->in.begin(); from != node->in.end(); from++) {
+    assert((*from)->visited);
+    vector<Frag> &frags = (*from)->frags;
+    for(unsigned int i = 0; i < frags.size(); i++) {
+      if((*from)->out[i] == node) {
+        vector<unsigned int> &frag = frags[i];
+        for(unsigned int k = 0; k < frag.size(); k++) {
+          PatchEntry &entry = (*entries)[frag[k]];          
+          ram_used -= entry.ram_size;          
+        }
+      }
+    }
+  }  
+}
 
 NexusMt::NexusMt(): vbo(VBO_AUTO), vbo_size(0), 
-		    policy(NULL), error(4), realtime(true),
-		    mode(SMOOTH) {
-  policy = new FrustumPolicy();
+                    metric(NULL), mode(SMOOTH) {    
+  metric = new FrustumMetric();
+  metric->index = &index;
+  policy.error = 4;
+  policy.ram_size = 64000000;
 }
 
 NexusMt::~NexusMt() {}
@@ -44,6 +102,8 @@ NexusMt::~NexusMt() {}
 bool NexusMt::Load(const string &filename, bool readonly) {
   if(!Nexus::Load(filename, readonly)) return false;
   LoadHistory();
+
+  policy.entries = &patches.patches;    
 
   use_colors = false;
   use_normals = false;
@@ -71,13 +131,14 @@ void NexusMt::Render() {
   frustum.GetView();
 
   vector<unsigned int> cells;
-  if(policy) {
-    policy->GetView();
-    Extract(cells, policy);
-  } else {
-    ExtractFixed(cells, error);
-  }
+  metric->GetView();
+  policy.Init();
+  tri_total = 0;
+  tri_rendered = 0;
 
+
+  Extract(cells);
+  
   glEnableClientState(GL_VERTEX_ARRAY);
   if(use_colors)
     glEnableClientState(GL_COLOR_ARRAY);
@@ -87,12 +148,14 @@ void NexusMt::Render() {
 
   for(unsigned int i = 0; i < cells.size(); i++) {    
     unsigned int cell = cells[i];
-    Nexus::PatchInfo &entry = index[cell];
-
+    Nexus::PatchInfo &entry = index[cell];    
+    tri_total += entry.nface;
     //frustum culling
     if(frustum.IsOutside(entry.sphere.Center(), entry.sphere.Radius()))
       continue;
 
+    tri_rendered += entry.nface;
+    
     Patch &patch = GetPatch(cell);
 
     assert(patch.start);
@@ -127,20 +190,17 @@ void NexusMt::Render() {
   glDisableClientState(GL_NORMAL_ARRAY);
 }
 
-void NexusMt::SetPolicy(Policy *_policy, bool _realtime) {
-  policy = _policy;
-  realtime = _realtime;
+void NexusMt::SetRamSize(unsigned int r_size) {    
+  policy.ram_size = r_size/patches.chunk_size;
 }
 
-void NexusMt::SetPolicy(PolicyKind kind, float _error, bool _realtime) {
-  if(policy) delete policy;
-  switch(kind) {
-  case FRUSTUM:  policy = new FrustumPolicy(error); break;
-  case GEOMETRY: policy = NULL; break;
-  default:       policy = NULL; break;
-  }
-  error = _error;
-  realtime = _realtime;
+void NexusMt::SetMetric(NexusMt::MetricKind kind) {
+  //do nothing at the moment.
+ 
+}
+
+void NexusMt::SetError(float error) {
+   policy.error = error;
 }
 
 void NexusMt::SetVbo(Vbo _vbo, unsigned int _vbo_size, 
@@ -235,18 +295,18 @@ void NexusMt::LoadHistory() {
       vector<unsigned int> &cells = (*e).second;
       vector<unsigned int>::iterator k;
       for(k = cells.begin(); k != cells.end(); k++) {
-	unsigned int cell = (*k);
-	fr.push_back(cell);
-	if(index[cell].error > max_err)
-	  max_err = index[cell].error;
-      }
-      
+	      unsigned int cell = (*k);
+        assert(cell < index.size());
+	      fr.push_back(cell);
+	      if(index[cell].error > max_err)
+	        max_err = index[cell].error;
+      }         
       //Add the new Frag to the node.
       unsigned int floor_node = (*e).first;
       Node &oldnode = nodes[floor_node];
       oldnode.frags.push_back(fr);
       if(node.error < max_err)
-	node.error = max_err;
+	      node.error = max_err;
       
       //Update in and out of the nodes.
       node.in.push_back(&oldnode);
@@ -260,7 +320,7 @@ void NexusMt::ClearHistory() {
   nodes.clear();
 }
 
-void NexusMt::ExtractFixed(vector<unsigned int>  &selected, float error) {
+/*void NexusMt::ExtractFixed(vector<unsigned int>  &selected, float error) {
   std::vector<Node>::iterator n;
   for(n = nodes.begin(); n != nodes.end(); n++)
     (*n).visited = false;
@@ -275,23 +335,50 @@ void NexusMt::ExtractFixed(vector<unsigned int>  &selected, float error) {
     std::vector<Frag>::iterator fragment;
     std::vector<Node *>::iterator on;
     for(on = node.out.begin(), fragment = node.frags.begin(); 
-	on != node.out.end(); ++on, ++fragment) {
+	    on != node.out.end(); ++on, ++fragment) {
 
       if((*on)->visited) continue;
 	
       if(error < (*on)->error) { //need to expand this node.
-	qnodo.push(*on);
-	(*on)->visited = 1;
+	      qnodo.push(*on);
+	      (*on)->visited = 1;
       } else {
-	vector<unsigned int>::iterator cell;
-	for(cell=(*fragment).begin(); cell != (*fragment).end(); ++cell) 
-	  selected.push_back(*cell);                   
+	      vector<unsigned int>::iterator cell;
+	      for(cell=(*fragment).begin(); cell != (*fragment).end(); ++cell) 
+	        selected.push_back(*cell);                   
       }
     }
   }  
-}    
+} */   
 
-void NexusMt::Extract(std::vector<unsigned int> &selected, Policy *policy) {
+void NexusMt::Extract(std::vector<unsigned int> &selected) {
+  std::vector<Node>::iterator n;
+  for(n = nodes.begin(); n != nodes.end(); n++) {
+    (*n).visited = false;
+    (*n).pushed = false;
+  }
+  
+  std::vector<TNode> heap;
+  Node *root = &nodes[0];  
+  VisitNode(root, heap);
+  
+  while(heap.size()) {
+    pop_heap(heap.begin(), heap.end());
+    TNode tnode = heap.back();
+    heap.pop_back();
+
+    Node *node = tnode.node;
+    if(node->visited) continue;
+
+    bool expand = policy.Expand(tnode);
+
+    if(expand)  
+      VisitNode(node, heap);                
+  }
+  Select(selected);   
+}
+
+/*void NexusMt::Extract(std::vector<unsigned int> &selected, Policy *policy) {
   std::vector<Node>::iterator n;
   for(n = nodes.begin(); n != nodes.end(); n++)
     (*n).visited = false;
@@ -306,18 +393,18 @@ void NexusMt::Extract(std::vector<unsigned int> &selected, Policy *policy) {
     std::vector<Frag>::iterator i;
     std::vector<Node *>::iterator on;
     for(i = node.frags.begin(), on = node.out.begin(); 
-	i != node.frags.end(); i++, on++) {
+	    i != node.frags.end(); i++, on++) {
       if((*on)->visited) continue;
       Frag &frag = (*i);
       std::vector<unsigned int>::iterator cell;
       for(cell = frag.begin(); cell != frag.end(); cell++) {              
-	if(policy->Expand(*cell, index[*cell]))
-	  policy->Visit(*on, qnodo);          
+	      if(policy->Expand(*cell, index[*cell]))
+	        policy->Visit(*on, qnodo);          
       }
     }
   }
   Select(selected);
-}
+}*/
 
 void NexusMt::Select(vector<unsigned int> &selected) {
   selected.clear();
@@ -330,14 +417,35 @@ void NexusMt::Select(vector<unsigned int> &selected) {
     std::vector<Node *>::iterator n;
     std::vector<Frag>::iterator f;        
     for(n = node.out.begin(), f = node.frags.begin(); 
-	n != node.out.end(); n++, f++) {
+	    n != node.out.end(); n++, f++) {
       if(!(*n)->visited || (*n)->error == 0) {
-	vector<unsigned int>::iterator c;
-	Frag &frag = (*f);
-	for(c = frag.begin(); c != frag.end(); c++)            
-	  selected.push_back(*c);        
+	      vector<unsigned int>::iterator c;
+	      Frag &frag = (*f);
+	      for(c = frag.begin(); c != frag.end(); c++)            
+	        selected.push_back(*c);        
       }      
     } 
   }
 }
 
+void NexusMt::PushNode(Node *node, vector<TNode> &heap) {
+  if(node->pushed) return; 
+
+  float error = metric->GetError(node);
+  heap.push_back(TNode(node, error));
+  push_heap(heap.begin(), heap.end());    
+}
+
+void NexusMt::VisitNode(Node *node, vector<TNode> &heap) {
+  if(node->visited) return;
+  
+  vector<Node *>::iterator i;
+  for(i = node->in.begin(); i != node->in.end(); i++)     
+      VisitNode(*i, heap);
+  
+  for(i = node->out.begin(); i != node->out.end(); i++)
+    PushNode(*i, heap);  
+
+  node->visited = true;
+  policy.NodeVisited(node);
+}
