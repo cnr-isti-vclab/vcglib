@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/11/23 11:56:50  cignoni
+Corrected small bug in the tokenizer (it would add a fake token for lines ending with a space before /n)
+
 
 ****************************************************************************/
 
@@ -100,7 +103,7 @@ namespace vcg
 
 					std::vector< std::string > tokens;
 					TokenizeNextLine(stream, tokens);
-					if (tokens[tokens.size()-1].rfind('OFF')!= std::basic_string<char>::npos)
+					if (tokens[tokens.size()-1].rfind("OFF")!= std::basic_string<char>::npos)
 					{
 						for (int u=tokens.size()-2; u>=0; u--)
 						{
@@ -251,10 +254,10 @@ namespace vcg
 									else
 									{
 										float color[4];
-										color[0] = (ScalarType) atof(tokens[vert_per_face+1].c_str());
-										color[1] = (ScalarType) atof(tokens[vert_per_face+2].c_str());
-										color[2] = (ScalarType) atof(tokens[vert_per_face+3].c_str());
-										color[3] = (ScalarType) atof(tokens[vert_per_face+4].c_str());
+										color[0] = float( atof(tokens[vert_per_face+1].c_str()) );
+										color[1] = float( atof(tokens[vert_per_face+2].c_str()) );
+										color[2] = float( atof(tokens[vert_per_face+3].c_str()) );
+										color[3] = float( atof(tokens[vert_per_face+4].c_str()) );
 										for ( ; f0<=f; f0++)
 											mesh.face[f0].C().Import(vcg::Color4f(color[0], color[1], color[2], color[3]));
 									}
