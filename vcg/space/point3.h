@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/02/17 02:08:47  cignoni
+Di prova...
+
 Revision 1.6  2004/02/15 23:35:47  cignoni
 Cambiato nome type template in accordo alla styleguide
 
@@ -49,8 +52,10 @@ First commit...
 #include <vcg/math/base.h>
 
 namespace vcg {
-
-    /** The templated class for representing a point in 3D space.
+/** \addtogroup space */
+/*@{*/
+    /**
+        The templated class for representing a point in 3D space.
      *  The class is templated over the ScalarType class representing coordinates.
      */
 
@@ -458,7 +463,7 @@ Point3<P3ScalarType> Jitter(Point3<P3ScalarType> &n, P3ScalarType RadAngle)
 
 
 
-	// Point(p) Edge(v1-v2) dist, q is the point in v1-v2 with min dist
+/// Point(p) Edge(v1-v2) dist, q is the point in v1-v2 with min dist
 template<class P3ScalarType>
 P3ScalarType PSDist( const Point3<P3ScalarType> & p,
 			         const Point3<P3ScalarType> & v1,
@@ -479,7 +484,7 @@ typedef Point3<int>	   Point3i;
 typedef Point3<float>  Point3f;
 typedef Point3<double> Point3d;
 
-
+/*@}*/
 } // end namespace
 #endif
 
