@@ -61,7 +61,7 @@ public:
 	bool TestRealIntersection(SimplexType *f0,SimplexType *f1)
 	{
 		
-		if ((!f0->IsActive())&&(!f1->IsActive()))
+		if (((!f0->IsActive())&&(!f1->IsActive()))||(f0->IsD())||(f1->IsD()))
 			return false;
 		//no adiacent faces
 		if ((f0!=f1)&& (!ShareEdge(f0,f1))
@@ -70,25 +70,51 @@ public:
 		return false;
 	}
 
-	///refresh the elemnt of spatial hashing table 
+	///refresh all the elements of spatial hashing table 
+	///this function must called sometimes
 	void RefreshElements()
 	{
 		HTable->Clear();
-
+		vactive.clear();///new
 		for (SimplexIterator si=_simplex.begin();si<_simplex.end();++si)
 		{
 			if ((!(*si).IsD())&&(!(*si).IsActive()))
 					HTable->addSimplex(&*si);
+			///new now
+			else
+			{
+				std::vector<Point3i> cells=HTable->addSimplex(&*si);
+				for(std::vector<Point3i>::iterator it=cells.begin();it<cells.end();it++)
+					vactive.insert(*it);
+			}
+			///end new now
 		}
 
-		UpdateStep();
+		//UpdateStep();	commented  now
 	}
 	
+	/////put active cells on apposite structure
+	//void UpdateStep()
+	//{
+	//	vactive.clear();
+	//	for (SimplexIterator si=_simplex.begin();si<_simplex.end();++si)
+	//	{
+	//		if ((((!(*si).IsD()))&&(*si).IsActive()))
+	//		{
+	//			std::vector<Point3i> cells=HTable->addSimplex(&*si);
+	//			for(std::vector<Point3i>::iterator it=cells.begin();it<cells.end();it++)
+	//				vactive.insert(*it);
+	//		}
+	//	}
+	//}
+
+
 	///put active cells on apposite structure
-	void UpdateStep()
+	template <class Container_Type>
+	void UpdateStep(Container_Type &simplex)
 	{
 		vactive.clear();
-		for (SimplexIterator si=_simplex.begin();si<_simplex.end();++si)
+		for (Container_Type::iterator si=simplex.begin();si<simplex.end();++si)
 		{
 			if ((((!(*si).IsD()))&&(*si).IsActive()))
 			{
@@ -98,6 +124,7 @@ public:
 			}
 		}
 	}
+
 
 	///control the real self intersection in the mesh and returns the elements that intersect with someone
 	std::vector<SimplexType*> computeSelfIntersection()

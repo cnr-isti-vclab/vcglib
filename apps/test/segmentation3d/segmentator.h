@@ -1,11 +1,15 @@
-#ifndef SEGMENTATOR
-#define SEGMENTATOR
+#ifndef __SEGMENTATOR
+#define __SEGMENTATOR
 
-//#include <vcg/simplex/vertex/with/afvn.h>
-//#include <vcg/simplex/face/with/afav.h>
 
-#include <vcg/simplex/vertex/with/vn.h>
-#include <vcg/simplex/face/with/af.h>
+///need vertex-face topology in case of extended marching cubes
+#ifdef _EXTENDED_MARCH
+	#include <vcg/simplex/vertex/with/afvn.h>
+	#include <vcg/simplex/face/with/afavfnfmrt.h>
+#else
+	#include <vcg/simplex/vertex/with/vn.h>
+	#include <vcg/simplex/face/with/afavfnfmrt.h>
+#endif
 
 #include <sim/particle/with/basic_physics.h>
 #include <sim/methods/mass_spring/triangle.h>
@@ -15,12 +19,25 @@
 #include <vcg/complex/trimesh/allocate.h>
 #include <vcg/complex/trimesh/update/topology.h>
 #include <vcg/complex/trimesh/update/normal.h>
+#include <vcg/complex/trimesh/update/bounding.h>
+#include <vcg/complex/trimesh/update/edges.h>
 
 #include <vcg/complex/trimesh/refine.h>
-#include <vcg/complex/trimesh/platonic.h>
+#include <vcg/complex/trimesh/create/platonic.h>
 #include <volume_dataset.h>
 
 //#include <vcg/simplex/face/pos.h>
+
+///marching cubes
+
+//#include <segmentation_wolker.h>
+#include <vcg/complex/trimesh/create/resampler.h>
+
+//#ifdef _EXTENDED_MARCH
+//	#include <vcg/complex/trimesh/create/extended_marching_cubes.h>
+//#else
+//	#include <vcg/complex/trimesh/create/marching_cubes.h>
+//#endif
 
 
 #include <vcg/space/point3.h>
@@ -34,6 +51,10 @@
 #include <collision_detection.h>
 #include <vcg/complex/trimesh/smooth.h>
 
+///debugghe
+#include <wrap/io_trimesh/export_ply.h>
+///debugghe
+
 class Segmentator{
 	
 public:
@@ -42,7 +63,11 @@ struct DummyEdge;
 struct DummyTetra;
 struct MyFace;
 
-struct MyVertex: public ParticleBasic<vcg::VertexVNf<DummyEdge,MyFace,DummyTetra> >
+#ifdef _EXTENDED_MARCH
+	struct MyVertex: public ParticleBasic<vcg::VertexAFVNf<DummyEdge,MyFace,DummyTetra> >
+#else
+	struct MyVertex: public ParticleBasic<vcg::VertexVNf<DummyEdge,MyFace,DummyTetra> >
+#endif
 {
 public:
 
@@ -55,6 +80,7 @@ public:
 		stopped=false;
 		Acc()=Point3f(0,0,0);
 		Vel()=Point3f(0,0,0);
+		ClearFlags();
 		//neeed call of the super class
 	}
 
@@ -82,7 +108,7 @@ public:
 };
 
 ///this class implements the deformable triangle in a mass spring system
-struct MyFace : public TriangleMassSpring< vcg::FaceAF<MyVertex,DummyEdge,MyFace> >
+struct MyFace : public TriangleMassSpring< vcg::FaceAFAVFNFMRT<MyVertex,DummyEdge,MyFace> >
 {
 public:
 	bool intersected;
@@ -163,11 +189,25 @@ typedef  PDEIntegrator<Part_FaceContainer,Part_VertexContainer,float> myIntegrat
 typedef	 Collision_Detector<std::vector<MyFace> > Collision;
 
 
+////typedef Walker<MyTriMesh,MyTriMesh> MyWalk;
+//
+//#ifdef _EXTENDED_MARCH
+//	typedef vcg::tri::ExtendedMarchingCubes<MyTriMesh, MyWalk> MarchingCubes;
+//#else
+//	typedef vcg::tri::MarchingCubes<MyTriMesh, MyWalk> MarchingCubes;
+//#endif
+
+
 public:
 	Point3f scale;
 	
 	//VolumetricDataset<int> d;
-	MyTriMesh m;
+	/*MyTriMesh m;
+	MyTriMesh new_m;*/
+
+	MyTriMesh *m;
+	MyTriMesh *new_m;
+
 	Part_FaceContainer P_Faces;
 	Part_VertexContainer P_Vertex;
 	Part_VertexContainer V_Stopped;
@@ -206,7 +246,29 @@ public:
 
 	Segmentator()
 	{
-		CollDet=new Collision(m.face);
+		m=new MyTriMesh();
+		CollDet=new Collision(m->face);
+		//m=NULL;
+
+		//scale=Point3f(5.f,5.f,5.f);
+		//InitialBarycenter=Point3f(20.f,20.f,20.f);
+		//InitMesh(m);
+		//vcg::tri::UpdateNormals<MyTriMesh>::PerFaceNormalized(m);
+		//vcg::tri::UpdateBounding<MyTriMesh>::Box(m);
+		//vcg::tri::UpdateEdges<MyTriMesh>::Set(m);
+		///////debugghe
+		//edge_precision=4.f;
+		////edge_precision=1.f;
+		//float rx=this->m.bbox.DimX()/edge_precision;
+		//float ry=this->m.bbox.DimY()/edge_precision;
+		//float rz=this->m.bbox.DimZ()/edge_precision;
+		//Point3i res=Point3i((int)ceil(rx),(int)ceil(ry),(int)ceil(rz));
+		//// EXTENDED MARCHING CUBES
+		//MyWalk	walker(m.bbox,res);
+		//MarchingCubes emc(new_m, walker);
+		//walker.BuildMesh<MarchingCubes>(m,new_m,emc);
+
+		//vcg::tri::io::ExporterPLY<Segmentator::MyTriMesh>::Save(new_m,"D:/lillo.ply");
 	}
 
 	~Segmentator()
@@ -384,33 +446,34 @@ private:
 ///re-set physical pararmeters on the mesh
 void InitPhysParam(float k_elanst,float mass,float k_dihedral)
 {
-	for (unsigned int i=0;i<m.face.size();i++)
+	for (unsigned int i=0;i<m->face.size();i++)
 		{
-			m.face[i].Init(k_elanst,mass,k_dihedral);
+			m->face[i].Init(k_elanst,mass,k_dihedral);
 		}
 }
 
 ///set the initial mesh of deformable object
-void InitMesh(MyTriMesh &m)
+void InitMesh(MyTriMesh *m)
 	{
-		m.Clear();
+		m->Clear();
 		
-		vcg::tri::Icosahedron<MyTriMesh>(m);
+		vcg::tri::Icosahedron<MyTriMesh>(*m);
 
-		vcg::tri::UpdateTopology<MyTriMesh>::FaceFace(m);
+		vcg::tri::UpdateTopology<MyTriMesh>::FaceFace(*m);
 		
 	/*	P_Vertex.clear();
 		P_Faces.clear();*/
 		
-		for (unsigned int i=0;i<m.vert.size();i++)
+		for (unsigned int i=0;i<m->vert.size();i++)
 		{
-			m.vert[i].P()+=InitialBarycenter;
-			m.vert[i].P()=UnScale(m.vert[i].P());
+			m->vert[i].P()=UnScale(m->vert[i].P());///last change
+			m->vert[i].P()+=InitialBarycenter;
+//			m.vert[i].P()=UnScale(m.vert[i].P());
 		//	P_Vertex.push_back(&m.vert[i]);
 		}
 		
 		
-		vcg::tri::UpdateNormals<MyTriMesh>::PerVertexNormalized(m);
+		vcg::tri::UpdateNormals<MyTriMesh>::PerVertexNormalized(*m);
 
 	}
 
@@ -490,7 +553,7 @@ void Reinit_PVectors()
     P_Vertex.clear();
 	MyTriMesh::VertexIterator vi;
 
-	for (vi=m.vert.begin();vi<m.vert.end();vi++)
+	for (vi=m->vert.begin();vi<m->vert.end();vi++)
 	{
 		if ((!vi->IsD())&&(!vi->blocked))
 			P_Vertex.push_back(&(*vi));	
@@ -500,7 +563,7 @@ void Reinit_PVectors()
 
 	P_Faces.clear();
 	MyTriMesh::FaceIterator fi;
-	for (fi=m.face.begin();fi<m.face.end();fi++)
+	for (fi=m->face.begin();fi<m->face.end();fi++)
 	{
 		//if ((!fi->IsBlocked()))
 		if ((!fi->IsD())&&(!fi->IsBlocked()))
@@ -516,7 +579,7 @@ void Refresh_PVectors()
 	P_FacesAux.clear();
 	P_VertexAux.clear();
 	
-	int i=0;
+	unsigned int i=0;
 	for (i=0;i<P_Vertex.size();i++)
 	{
 		if (!P_Vertex[i]->blocked)
@@ -539,13 +602,13 @@ void Refresh_PVectors()
 ///add the new elements on partial vectors when allocate space for new vertices
 void AddNewElements(MyTriMesh::VertexIterator vi,MyTriMesh::FaceIterator fi)
 {
-	while (vi!=m.vert.end())
+	while (vi!=m->vert.end())
 	{
 		if (!(*vi).IsD())
 			P_Vertex.push_back(&(*vi));
 		vi++;
 	}
-	while (fi!=m.face.end())
+	while (fi!=m->face.end())
 	{
 		if (!(*fi).IsD())
 			P_Faces.push_back(&(*fi));
@@ -597,24 +660,24 @@ bool TimeSelfIntersection()
 ///refine the mesh and re-update eventually 
 void RefineStep(float _edge_size)
 {
-	MyTriMesh::VertexIterator vinit=m.vert.begin();
-	MyTriMesh::FaceIterator finit=m.face.begin();
-	MyTriMesh::VertexIterator vend=m.vert.end();
-	MyTriMesh::FaceIterator fend=m.face.end();
+	MyTriMesh::VertexIterator vinit=m->vert.begin();
+	MyTriMesh::FaceIterator finit=m->face.begin();
+	MyTriMesh::VertexIterator vend=m->vert.end();
+	MyTriMesh::FaceIterator fend=m->face.end();
 
-	refined=vcg::Refine(m,MidPoint<MyTriMesh>(),_edge_size);
+	refined=vcg::Refine(*m,MidPoint<MyTriMesh>(),_edge_size);
 	
 	if (refined)
 	{
-		MyTriMesh::VertexIterator vinit2=m.vert.begin();
-		MyTriMesh::FaceIterator finit2=m.face.begin();
+		MyTriMesh::VertexIterator vinit2=m->vert.begin();
+		MyTriMesh::FaceIterator finit2=m->face.begin();
 
 		if ((vinit2!=vinit)||(finit2!=finit))
 			Reinit_PVectors();
 		else
 			AddNewElements(vend,fend);
 
-		vcg::tri::UpdateNormals<MyTriMesh>::PerVertexNormalized(m);
+		vcg::tri::UpdateNormals<MyTriMesh>::PerVertexNormalized(*m);
 		CollDet->RefreshElements();
 	}
 }
@@ -648,7 +711,8 @@ void ClearStopped()
 ///do one step of controls for self collision detetction
 void CollisionDetection()
 {
-	CollDet->UpdateStep();
+	//CollDet->UpdateStep();
+	CollDet->UpdateStep<Part_FaceContainer>(P_Faces);
 	std::vector<MyFace*> coll=CollDet->computeSelfIntersection();
 	for (std::vector<MyFace*>::iterator it=coll.begin();it<coll.end();it++)
 	{
@@ -736,7 +800,7 @@ vcg::Box3<float> BBox()
 ///one step of moving for the deformable object
 void Step(float t,float _edge_size)
 {	
-	if (m.face.size()!=0)
+	if (m->face.size()!=0)
 	{
 		AddExtForces();
 		TrINT->Step(t);
@@ -755,7 +819,7 @@ void Step(float t,float _edge_size)
 
 void Smooth()
 {
-	ScaleLaplacianSmooth<MyTriMesh>(m,1,0.5);
+	ScaleLaplacianSmooth<MyTriMesh>(*m,1,0.5);
 }
 
 void AutoStep()
@@ -763,13 +827,29 @@ void AutoStep()
 	refined=false;
 	Step(time_stamp,edge_size);
 	//test on 80% of the vertex blocked
-	if ((((float)P_Vertex.size()/(float)m.vn)<0.2)&&(end_loop)&&(!refined)&&(edge_size>edge_precision))
+	if ((((float)P_Vertex.size()/(float)m->vn)<0.2)&&(end_loop)&&(!refined)&&(edge_size>edge_precision))
 	{
 				edge_size/=2.f;
 				if (edge_size<edge_precision)
 					edge_size=edge_precision;
 				time_stamp/=2.f;
 	}
+}
+
+///first version
+void Resample()
+{
+	new_m=new MyTriMesh();
+	vcg::trimesh::Resampler<MyTriMesh,MyTriMesh>::Resample<vcg::trimesh::RES::MMarchingCubes>(*m,*new_m,
+		Point3i((int) edge_precision,(int) edge_precision,(int) edge_precision));
+
+	delete(m);
+
+	m=new_m;
+	Reinit_PVectors();
+	ReinitPhysicMesh();
+	
+	CollDet->Init(bbox.min,bbox.max,5.f);
 }
 
 };

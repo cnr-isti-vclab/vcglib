@@ -1,14 +1,16 @@
 #include <qapplication.h>
 #include <qimage.h>
 #include <segmentform.h>
-#include <segmentator.h>
+//#include <segmentator.h>
 #include <qdir.h>
 #include <qcolor.h>
 #include <SimpleGLWidget.h>
 #include <qtimer.h>
 
+
 Segmentator *s;
 QTimer *timer;
+
 
 int main( int argc, char ** argv )
 {
@@ -25,6 +27,7 @@ int main( int argc, char ** argv )
 
 	//assign pointer to pricipal form
 	w.simpleGLWidget1->w=&w;
+
 	
 	#ifdef _TORUS
 		w.simpleGLWidget1->SetExtractionParameters();
@@ -32,7 +35,8 @@ int main( int argc, char ** argv )
 		s->BBox().max=Point3f(300.f,300.f,300.f);
 		s->InitSegmentation(Point3f(0.f,100.f,0.f));
 	#endif
-
+	
+	
 	/*s=new Segmentator();*/
 
 	//s->LoadFromDir("./venacava/","prova.txt");//to chANGE

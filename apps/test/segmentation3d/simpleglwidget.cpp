@@ -20,11 +20,22 @@ QGLWidget(parent, name)
 	resultForces=false;
 	continue_int=false;
 	_numslide=0;
-	Track.center=Point3f(0,0,0);
-	Track.Reset();
-	Track.radius= 100;
+
+	TrackM.center=Point3f(0,0,0);
+	TrackM.Reset();
+	TrackM.radius= 100.f;
+
+	TrackS.center=Point3f(0,0,0);
+	TrackS.Reset();
+	TrackS.radius= 100.f;
+	
 	zoom=1;
 	path="";
+	/*s=new Segmentator();*/
+	//timer = new QTimer(this );
+	//QTimer::connect( timer, SIGNAL(timeout()), this, SLOT(Update()) );
+ //   timer->start(0); // 2 seconds single-shot timer
+	
 }
 
 void SimpleGLWidget::SaveMatrix()
@@ -185,7 +196,7 @@ void SimpleGLWidget::Save()
 	if (filename!=NULL)
 	{
 		const char *path_save=filename.ascii();
-		vcg::tri::io::ExporterPLY<Segmentator::MyTriMesh>::Save(s->m,path_save);	
+		vcg::tri::io::ExporterPLY<Segmentator::MyTriMesh>::Save((*s->m),path_save);	
 	}
 	
 }
@@ -267,27 +278,29 @@ void SimpleGLWidget::glDraw(){
 		if (_showslides)
 		{
 			vcg::Point3f p=Point3f((float)s->BBox().Center().V(0),(float)s->BBox().Center().V(1),(float)s->BBox().Center().V(2));
-			Track.radius=s->BBox().Diag();
-			Track.GetView();
-			Track.Apply();
-			Track.Draw();
+			TrackS.radius=s->BBox().Diag();
+			TrackS.GetView();
+			TrackS.Apply();
+			TrackS.Draw();
 			glScalef(1.f/s->BBox().Diag(),1.f/s->BBox().Diag(),1.f/s->BBox().Diag());
-			glScalef(GLfloat(zoom),GLfloat(zoom),GLfloat(zoom));
+			//glScalef(GLfloat(zoom),GLfloat(zoom),GLfloat(zoom));
 			glTranslate(-p);
 			//save transformation matrixes
 			SaveMatrix();
 		}
 		else
 		{
-			vcg::tri::UpdateBounding<Segmentator::MyTriMesh>::Box(s->m);
-			vcg::Point3f p=s->m.bbox.Center();
-			Track.radius=s->m.bbox.Diag();
-			Track.GetView();
-			Track.Apply();
-			Track.Draw();
-			glScalef(1/s->m.bbox.Diag(),1/s->m.bbox.Diag(),1/s->m.bbox.Diag());
-			glScalef(GLfloat(zoom),GLfloat(zoom),GLfloat(zoom));
-			glTranslate(-p);
+			if (s->m!=NULL)
+			{
+				//vcg::tri::UpdateBounding<Segmentator::MyTriMesh>::Box(*(s->m));
+				vcg::Point3f p=s->m->bbox.Center();
+				TrackM.GetView();
+				TrackM.Apply();
+				TrackM.Draw();
+				glScalef(1.f/s->m->bbox.Diag(),1.f/s->m->bbox.Diag(),1.f/s->m->bbox.Diag());
+				glTranslate(-p);
+				//glScalef(1.f/s->m->bbox.Diag(),1.f/s->m->bbox.Diag(),1.f/s->m->bbox.Diag());
+			}
 		}
 		
 		glEnable(GL_NORMALIZE);
@@ -324,9 +337,11 @@ void SimpleGLWidget::glDraw(){
 			glPolygonMode(GL_FRONT,GL_FILL);
 
 		int i=0;
-		glBegin(GL_TRIANGLES);
-		for (fi=s->m.face.begin();fi<s->m.face.end();fi++)
+		if (s->m!=NULL)
 		{
+			glBegin(GL_TRIANGLES);
+			for (fi=s->m->face.begin();fi<s->m->face.end();fi++)
+			{
 				glColor3d(0.4,0.8,0.8);
 			if (fi->intersected)
 				glColor3d(1.f,0,0);
@@ -343,7 +358,7 @@ void SimpleGLWidget::glDraw(){
 			}
 		}
 		glEnd();
-	
+		}
 		glPopMatrix();
 		//WriteInfo();
 		
@@ -390,15 +405,32 @@ void SimpleGLWidget::resizeGL( int w, int h )
 
 void SimpleGLWidget::ClearMesh()
 {
-	s->m.Clear();	
+	s->m->Clear();	
 	repaint();
 }
 
+void SimpleGLWidget::UpdateBBMesh()
+{
+	vcg::tri::UpdateBounding<Segmentator::MyTriMesh>::Box(*(s->m));
+}
 
 void SimpleGLWidget::mousePressEvent ( QMouseEvent * e )
 {
 	if (e->button()==Qt::LeftButton )
-		Track.MouseDown(e->x(),_H-e->y(),vcg::Trackball::BUTTON_LEFT);
+	{
+
+		if ((!_showslides)&&(s->m!=NULL))
+		{
+			/*vcg::tri::UpdateBounding<Segmentator::MyTriMesh>::Box(*(s->m));
+			TrackM.radius=s->m->bbox.Diag();
+			TrackM.center=s->m->bbox.Center();
+			*/
+			UpdateBBMesh();
+			TrackM.MouseDown(e->x(),_H-e->y(),vcg::Trackball::BUTTON_LEFT);
+		}
+		else if (_showslides)
+			TrackS.MouseDown(e->x(),_H-e->y(),vcg::Trackball::BUTTON_LEFT);
+	}
 	else
 	//test mass spring model
 	if ((e->button()==Qt::RightButton)&&(_showslides))
@@ -417,6 +449,8 @@ void SimpleGLWidget::mousePressEvent ( QMouseEvent * e )
 		//s->SetInitialBarycenter(Point3f(x,y,_numslide));
 		//s->InitSegmentation(Point3f(x,y,_numslide));
 		s->InitSegmentation(Point3f(x,y,z));
+		UpdateBBMesh();
+		//vcg::tri::UpdateBounding<Segmentator::MyTriMesh>::Box(*(s->m));
 		repaint();
 	}
 	//vcg::tri::UpdateBounding<Segmentator::MyTriMesh>::Box(s->m);
@@ -426,7 +460,9 @@ void SimpleGLWidget::wheelEvent(QWheelEvent *e)
 {
 	if (!_showslides)
 	{
-		zoom+=e->delta()/120.f;
+	/*	zoom+=e->delta()/120.f;
+		repaint();*/
+		TrackM.MouseWheel(e->delta()/120.f);
 		repaint();
 	}
 	else
@@ -446,7 +482,11 @@ void SimpleGLWidget::wheelEvent(QWheelEvent *e)
 
 void SimpleGLWidget::mouseReleaseEvent(QMouseEvent * e )
   {
-	  Track.MouseUp(e->x(),_H-e->y(),vcg::Trackball::BUTTON_LEFT);
+	  if (!_showslides)
+		TrackM.MouseUp(e->x(),_H-e->y(),vcg::Trackball::BUTTON_LEFT);
+	  else
+		TrackS.MouseUp(e->x(),_H-e->y(),vcg::Trackball::BUTTON_LEFT);
+
 	  repaint();
   }
 
@@ -458,6 +498,15 @@ void SimpleGLWidget::Step()
 				repaint();
 			}
 	}
+
+void SimpleGLWidget::MarchingCube()
+{
+	if (s->m->fn>0)
+		s->Resample();
+
+	//vcg::tri::io::ExporterPLY<Segmentator::MyTriMesh>::Save((*s->new_m),"d:/march.ply");	
+	//vcg::tri::io::ExporterPLY<Segmentator::MyTriMesh>::Save((*s->m),"d:/march.ply");	
+}
 
 void SimpleGLWidget::SetExtractionParameters()
 	{
@@ -476,7 +525,11 @@ void SimpleGLWidget::SetExtractionParameters()
 
 void SimpleGLWidget::mouseMoveEvent ( QMouseEvent * e )
 	{
-		Track.MouseMove(e->x(),_H-e->y());
+		if (_showslides)
+			TrackS.MouseMove(e->x(),_H-e->y());
+		else
+			TrackM.MouseMove(e->x(),_H-e->y());
+
 		repaint();
 	}
 

@@ -1,14 +1,14 @@
-#include <GL\glew.h>
+#include <GL/glew.h>
 #include <qgl.h>
-#include <wrap\gl\trimesh.h>
-#include <wrap\gui\trackball.h>
+#include <wrap/gl/trimesh.h>
+#include <wrap/gui/trackball.h>
 #include <segmentator.h>
 #include <sim/tri_pde_integrator.h>
-#include <vcg/complex/trimesh/update/bounding.h>
 #include <vcg/complex/trimesh/update/bounding.h>
 #include <wrap/io_trimesh/export_ply.h>
 #include <segmentform.h>
 #include <qpushbutton.h>
+#include <qtimer.h>
 
 class SimpleGLWidget: public QGLWidget{
 
@@ -17,7 +17,8 @@ Q_OBJECT
 private :
 	int _H;
 	int _W;
-	vcg::Trackball Track;
+	vcg::Trackball TrackM;
+	vcg::Trackball TrackS;
 	double zoom;
 	GLdouble projection[16];
 	GLdouble modelMatrix[16];
@@ -31,7 +32,8 @@ private :
 	bool resultForces;
 	bool continue_int;
 	GLuint texName;
-	
+	//Segmentator *s;
+	//QTimer *timer;
 	//vcg::GlTrimesh<Segmentator::MyTriMesh> *Wrap;
 	
 public:
@@ -59,7 +61,8 @@ public:
 	void WriteInfo();
 	void ClearMesh();
 	void OpenDirectory();
-
+	void MarchingCube();
+	void UpdateBBMesh();
 	
 	//virtual void keyPressEvent(QKeyEvent *qk);
 
@@ -73,6 +76,7 @@ public:
 	void ShowSlides()
 	{
 		_showslides=!_showslides;
+		UpdateBBMesh();
 		repaint();
 	}
 
@@ -124,17 +128,21 @@ public:
 
 	void Extract()
 	{
+		UpdateBBMesh();
 		continue_int=!continue_int;
 		if (continue_int)
 		{
 			_showslides=false;
 			w->SlidesButton->setOn(false);
+			//((SegmentForm *)this->parent())->SlidesButton->setOn(false);
 		}
 		else
 		{
 			_showslides=true;
 			w->SlidesButton->setOn(true);
+			//((SegmentForm *)this->parent())->SlidesButton->setOn(true);
 		}
+		repaint();
 	}
 
 	void Update()
@@ -142,8 +150,18 @@ public:
 		Step();
 	}
 	
+
 	void Clear()
 	{
 		ClearMesh();
+		repaint();
 	}
+
+	void CleanMesh()
+	{
+		MarchingCube();
+		UpdateBBMesh();
+		repaint();
+	}
+
 };

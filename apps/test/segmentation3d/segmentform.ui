@@ -234,6 +234,12 @@
                     <pointsize>10</pointsize>
                 </font>
             </property>
+            <property name="frameShape">
+                <enum>LineEditPanel</enum>
+            </property>
+            <property name="frameShadow">
+                <enum>Sunken</enum>
+            </property>
             <property name="text">
                 <string>0.2</string>
             </property>
@@ -359,117 +365,6 @@
             </property>
             <property name="text">
                 <string>mass of particles</string>
-            </property>
-        </widget>
-        <widget class="QPushButton">
-            <property name="name">
-                <cstring>ClearButton</cstring>
-            </property>
-            <property name="geometry">
-                <rect>
-                    <x>30</x>
-                    <y>700</y>
-                    <width>141</width>
-                    <height>31</height>
-                </rect>
-            </property>
-            <property name="font">
-                <font>
-                    <pointsize>10</pointsize>
-                </font>
-            </property>
-            <property name="text">
-                <string>Clear</string>
-            </property>
-        </widget>
-        <widget class="QPushButton">
-            <property name="name">
-                <cstring>SaveButton</cstring>
-            </property>
-            <property name="geometry">
-                <rect>
-                    <x>30</x>
-                    <y>660</y>
-                    <width>140</width>
-                    <height>31</height>
-                </rect>
-            </property>
-            <property name="font">
-                <font>
-                    <pointsize>10</pointsize>
-                </font>
-            </property>
-            <property name="text">
-                <string>SavePly</string>
-            </property>
-        </widget>
-        <widget class="QPushButton">
-            <property name="name">
-                <cstring>SmoothButton</cstring>
-            </property>
-            <property name="geometry">
-                <rect>
-                    <x>30</x>
-                    <y>620</y>
-                    <width>140</width>
-                    <height>30</height>
-                </rect>
-            </property>
-            <property name="font">
-                <font>
-                    <pointsize>10</pointsize>
-                </font>
-            </property>
-            <property name="cursor">
-                <cursor>1</cursor>
-            </property>
-            <property name="text">
-                <string>Smooth</string>
-            </property>
-        </widget>
-        <widget class="QPushButton">
-            <property name="name">
-                <cstring>SegmentButton</cstring>
-            </property>
-            <property name="geometry">
-                <rect>
-                    <x>30</x>
-                    <y>580</y>
-                    <width>141</width>
-                    <height>31</height>
-                </rect>
-            </property>
-            <property name="font">
-                <font>
-                    <pointsize>10</pointsize>
-                </font>
-            </property>
-            <property name="text">
-                <string>Extract</string>
-            </property>
-            <property name="toggleButton">
-                <bool>true</bool>
-            </property>
-        </widget>
-        <widget class="QPushButton">
-            <property name="name">
-                <cstring>ApplyButton</cstring>
-            </property>
-            <property name="geometry">
-                <rect>
-                    <x>30</x>
-                    <y>540</y>
-                    <width>141</width>
-                    <height>31</height>
-                </rect>
-            </property>
-            <property name="font">
-                <font>
-                    <pointsize>10</pointsize>
-                </font>
-            </property>
-            <property name="text">
-                <string>Apply</string>
             </property>
         </widget>
         <widget class="QLabel">
@@ -691,6 +586,141 @@
                 <number>3</number>
             </property>
         </widget>
+        <widget class="QPushButton">
+            <property name="name">
+                <cstring>SmoothButton</cstring>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>30</x>
+                    <y>660</y>
+                    <width>140</width>
+                    <height>30</height>
+                </rect>
+            </property>
+            <property name="font">
+                <font>
+                    <pointsize>10</pointsize>
+                </font>
+            </property>
+            <property name="cursor">
+                <cursor>0</cursor>
+            </property>
+            <property name="text">
+                <string>Smooth</string>
+            </property>
+        </widget>
+        <widget class="QPushButton">
+            <property name="name">
+                <cstring>SaveButton</cstring>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>30</x>
+                    <y>700</y>
+                    <width>140</width>
+                    <height>31</height>
+                </rect>
+            </property>
+            <property name="font">
+                <font>
+                    <pointsize>10</pointsize>
+                </font>
+            </property>
+            <property name="text">
+                <string>SavePly</string>
+            </property>
+        </widget>
+        <widget class="QPushButton">
+            <property name="name">
+                <cstring>SegmentButton</cstring>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>30</x>
+                    <y>580</y>
+                    <width>141</width>
+                    <height>31</height>
+                </rect>
+            </property>
+            <property name="font">
+                <font>
+                    <pointsize>10</pointsize>
+                </font>
+            </property>
+            <property name="text">
+                <string>Extract</string>
+            </property>
+            <property name="toggleButton">
+                <bool>true</bool>
+            </property>
+        </widget>
+        <widget class="QPushButton">
+            <property name="name">
+                <cstring>ClearButton</cstring>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>30</x>
+                    <y>740</y>
+                    <width>140</width>
+                    <height>30</height>
+                </rect>
+            </property>
+            <property name="font">
+                <font>
+                    <pointsize>10</pointsize>
+                </font>
+            </property>
+            <property name="cursor">
+                <cursor>0</cursor>
+            </property>
+            <property name="text">
+                <string>ClearMesh</string>
+            </property>
+        </widget>
+        <widget class="QPushButton">
+            <property name="name">
+                <cstring>Marching_Cubes</cstring>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>30</x>
+                    <y>619</y>
+                    <width>141</width>
+                    <height>31</height>
+                </rect>
+            </property>
+            <property name="font">
+                <font>
+                    <pointsize>10</pointsize>
+                </font>
+            </property>
+            <property name="text">
+                <string>Marching Cube</string>
+            </property>
+        </widget>
+        <widget class="QPushButton">
+            <property name="name">
+                <cstring>ApplyButton</cstring>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>30</x>
+                    <y>540</y>
+                    <width>141</width>
+                    <height>31</height>
+                </rect>
+            </property>
+            <property name="font">
+                <font>
+                    <pointsize>10</pointsize>
+                </font>
+            </property>
+            <property name="text">
+                <string>Apply</string>
+            </property>
+        </widget>
     </widget>
     <widget class="SimpleGLWidget">
         <property name="name">
@@ -746,9 +776,9 @@
         <slot access="public" specifier="">SavePly()</slot>
         <slot access="public" specifier="">Extract()</slot>
         <slot access="public" specifier="">Apply()</slot>
-        <slot access="public" specifier="">Clear()</slot>
-        <slot access="public" specifier="">slot()</slot>
         <slot access="public" specifier="">Open()</slot>
+        <slot access="public" specifier="">CleanMesh()</slot>
+        <slot access="public" specifier="">Clear()</slot>
     </customwidget>
 </customwidgets>
 <actions>
@@ -896,12 +926,6 @@
         <slot>Apply()</slot>
     </connection>
     <connection>
-        <sender>ClearButton</sender>
-        <signal>pressed()</signal>
-        <receiver>simpleGLWidget1</receiver>
-        <slot>Clear()</slot>
-    </connection>
-    <connection>
         <sender>fileOpenAction</sender>
         <signal>activated()</signal>
         <receiver>simpleGLWidget1</receiver>
@@ -913,7 +937,22 @@
         <receiver>simpleGLWidget1</receiver>
         <slot>SavePly()</slot>
     </connection>
+    <connection>
+        <sender>Marching_Cubes</sender>
+        <signal>pressed()</signal>
+        <receiver>simpleGLWidget1</receiver>
+        <slot>CleanMesh()</slot>
+    </connection>
+    <connection>
+        <sender>ClearButton</sender>
+        <signal>pressed()</signal>
+        <receiver>simpleGLWidget1</receiver>
+        <slot>Clear()</slot>
+    </connection>
 </connections>
+<includes>
+    <include location="local" impldecl="in declaration">simpleglwidget.h</include>
+</includes>
 <pixmapinproject/>
 <layoutdefaults spacing="6" margin="11"/>
 <includehints>
