@@ -18,59 +18,9 @@
  *****************************************************************************/
 /*#**************************************************************************
   History
+$Id: point3.h,v 1.2 2004-02-06 02:17:09 cignoni Exp $
+$Log: not supported by cvs2svn $
 
- 1999 Feb 02 First Draft.
-			Mar 15 First Working release 
-			Jul 10 Reindented and reformatted
-						 Fixed != bug
-						 Fixed Eq bug
-	    Dec 21 Added Quality and Normal
-							
-							Tolti ;
-							Corretto Distance
-							corretta inclusione utility
-
- 2000	Jan 26 inserito include condizionale
-						 corretto Distance() e init()
-			Jan 28 tolti vcg_ dalle funzioni di utility
-			Jan 30 Aggiunti funzioni di accesso x,y,z const.
-			Feb 15 Corretta SquaredDistance(Point3,Point3)
-			Mar	29 Corretta Scale
-			May 09 Aggiunto operatore cast
-			Jun  9 Corretto Normal(p0,p1,p2) (forniva la normale opposta!)
-			Jun 26 Corretto il nome del costrutture da Point3_FT -> Point3
-						 (syntax error per il gcc)
-						 Aggiunta compilazione condizionale per l'operatore cast
-					30 Corretto Quality nel caso degenere tre punti coincidenti;
-			Jul 04 Aggiunto ^=
-					19 Aggiunta funzione PSDist (distanza segmento punto)
-      Sep  7 Modificata Quality, ora e' piu' veloce.
-  	  Nov 13 Corretto angle
-					20 Spostato Point3nt in un file a parte 
-      Dec 12 Aggiunto AngleN (pc)
-			    19 Ricorretto Angle (not a number per normali opposte);
- 2001 Jan 15 Corretto Angle, c'era un errore di sintassi...
-      Feb 16 Aggiunto Scale (cr,pc)
-			       Aggiunto temporaneo print di punti (cr)
-						 Cambiato per uniformita Norm2 -> SquaredNorm;
-						 messo le print di punti sotto if defined FILE
-      May 21 Aggiunto polar
-						 Aggiunto Zero
-			Jun 22 Aggiunta funzione import
-			Jul 09 Aggiunta Ext
-			Sep 19 Import diventa un membro
-			Nov 15 Aggiunta funzione stable_dot: prodotto scalare corretto num. (CR)
-			Dec 10 Deprecate alcune funzioni (CR)
-						 - unario membro (CR)
-						 v privato!!! (CR) aggiunta funzione V()
-			Dec 12 Aggiunta sotto ifdef l'inclusione della versione assembler p4 (inusabile!)(pc)
-					19 Reso v protected invece che private; (pc);  
- 2002 Mar  6 CORRETTA NORMAL(). faceva sempre la normalizzazione. ora non la fa piu' e 
-             aggiunta la NormalizedNormal();
-					 7 Aggiunta Jitter
- 2003 Sep 10 [BCB] Aggiunti gli specificatori di template (<T>)
-			Sep 30 Spostata la definizione delle funioni di mapping vcg->opengl (glVertex()..)
-						 cosiche' Point3d non debba essere incluso la prima volta dopo opengl 	
 ****************************************************************************/
 
 #pragma once
@@ -85,6 +35,9 @@
 
 namespace vcg {
 
+    /** The class for representing a 3D point
+     *  More details about this class.
+     */
 
 template <class T> class Point3
 {
@@ -120,7 +73,7 @@ public:
 			_v[0]= p._v[0]; _v[1]= p._v[1]; _v[2]= p._v[2];
 			return *this;
 	}
-	inline void Zero()
+	inline void zero()
 	{
 		_v[0] = 0;
 		_v[1] = 0;
@@ -189,19 +142,6 @@ public:
 			_v[0]*p._v[1] - _v[1]*p._v[0]
 		);
 	}
-
-	/* Deprecato ???
-		// Operatori di modifica
-	inline Point3 & operator ^= ( Point3 const & p )
-	{
-		T t0 = _v[0];
-		T t1 = _v[1];
-		_v[0] = _v[1]*p._v[2] - _v[2]*p._v[1];
-		_v[1] = _v[2]*p._v[0] - t0  *p._v[2];
-		_v[2] = t0  *p._v[1] - t1  *p._v[0];
-		return *this;
-	}
-	*/
 
 	inline Point3 & operator += ( Point3 const & p)
 	{
@@ -519,26 +459,3 @@ typedef Point3<double> Point3d;
 } // end namespace
 #endif
 
-#ifdef __GL_H__
-	#ifndef __VCG_GL__
-	#define __VCG_GL__
-	namespace vcg{
-	inline void glVertex(Point3<int> const & p)   { glVertex3iv(p.V());}
-	inline void glVertex(Point3<short> const & p) { glVertex3sv(p.V());}
-	inline void glVertex(Point3<float> const & p) { glVertex3fv(p.V());}
-	inline void glVertex(Point3<double> const & p){ glVertex3dv(p.V());}
-	inline void glNormal(Point3<int> const & p)   { glNormal3iv(p.V());}
-	inline void glNormal(Point3<short> const & p) { glNormal3sv(p.V());}
-	inline void glNormal(Point3<float> const & p) { glNormal3fv(p.V());}
-	inline void glNormal(Point3<double> const & p){ glNormal3dv(p.V());}
-	inline void glTexCoord(Point3<int> const & p)   { glTexCoord3iv(p.V());}
-	inline void glTexCoord(Point3<short> const & p) { glTexCoord3sv(p.V());}
-	inline void glTexCoord(Point3<float> const & p) { glTexCoord3fv(p.V());}
-	inline void glTexCoord(Point3<double> const & p){ glTexCoord3dv(p.V());}
-	inline void glTranslate(Point3<float> const & p) { glTranslatef(p.x(),p.y(),p.z());}
-	inline void glTranslate(Point3<double> const & p){ glTranslated(p.x(),p.y(),p.z());}
-	inline void glScale(Point3<float> const & p) { glScalef(p.x(),p.y(),p.z());}
-	inline void glScale(Point3<double> const & p){ glScaled(p.x(),p.y(),p.z());}
-		}
-	#endif
-#endif
