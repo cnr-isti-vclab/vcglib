@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2004/05/10 14:01:09  ganovelli
+assert(i*0) for using "i" and preventing the compiler warning for unreferenced variable
+
 Revision 1.9  2004/05/10 13:19:38  cignoni
 Added mandatory template params for edge and face class names to the face class
 Changed type of return face pointer to the one passed by templ params
@@ -60,6 +63,7 @@ First commit...
 #include <vcg/space/box3.h>
 #include <vcg/space/tcoord2.h>
 #include <vcg/space/triangle3.h>
+#include <vcg/space/color4.h>
 #include <vcg/space/plane3.h>
 #include <vcg/simplex/face/topology.h>
 
