@@ -111,10 +111,25 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc">
 			<File
+				RelativePath="..\..\..\..\vcg\complex\tetramesh\update\allocate.h">
+			</File>
+			<File
 				RelativePath="..\..\..\..\vcg\simplex\tetrahedron\base.h">
 			</File>
 			<File
+				RelativePath="..\..\..\..\vcg\complex\tetramesh\base.h">
+			</File>
+			<File
+				RelativePath="myclasses.h">
+			</File>
+			<File
 				RelativePath="..\..\..\..\vcg\space\tetra4.h">
+			</File>
+			<File
+				RelativePath="..\..\..\..\vcg\complex\tetramesh\update\topology.h">
+			</File>
+			<File
+				RelativePath="..\..\..\..\vcg\complex\tetramesh\update\triconvert.h">
 			</File>
 		</Filter>
 		<Filter

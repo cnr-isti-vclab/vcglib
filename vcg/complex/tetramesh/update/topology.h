@@ -181,36 +181,27 @@ public:
 	/// The type of constant face iterator
 	typedef typename STL_TETRA_CONT::const_iterator const_TetraIterator;
 
-private: 
-  VertexContainer* _vert;
-  TetraContainer* _tetra;
-
 public:
-  ///defaul constructor
-  UpdateTopology(VertexContainer *v,TetraContainer *t)
-	{
-		_vert=v;
-		_tetra=t;
-	}
+  
 /***********************************************/
 /** @Vertex-Tetrahedron Topology Funtions
 **/
 //@{
 
   ///create the VT topology for tetrahedrons that are into containers
-void VTTopology()
+void VTTopology(VertexContainer &vert,TetraContainer &tetra)
 	{
-			vertex_iterator v;
-			tetra_iterator  t;
+			VertexIterator v;
+			TetraIterator  t;
 
-			ClearVTTopology();
+			ClearVTTopology(vert,tetra);
 
-			for(t=_tetra.begin();t!=_tetra.end();++t)
+			for(t=tetra.begin();t!=tetra.end();++t)
 			if( ! (*t).IsD())
 				for(int j=0;j<4;++j)
 				{
-					(*t).tv[j] = (*t).V(j)->Fp();
-					(*t).zv[j] = (*t).V(j)->Zp();
+					(*t).TV(j) = (*t).V(j)->Fp();
+					(*t).ZV(j) = (*t).V(j)->Zp();
 					(*t).V(j)->Fp() = &(*t);
 					(*t).V(j)->Zp() = j;
 				}
@@ -218,17 +209,17 @@ void VTTopology()
 	}
 
   /// clear the Vertex-Tetra topology
- void ClearVTTopology()
+ void ClearVTTopology(VertexContainer &vert,TetraContainer &tetra)
 	{
-		vertex_iterator v;
-		for(v=_vert->begin();v!=_vert->end();++v)
+		VertexIterator v;
+		for(v=vert.begin();v!=vert.end();++v)
 			{
 				v->Fp() = 0;
 				v->Zp() = 0;
 			}
 
-		tetra_iterator   t;
-		for(t=_tetra->begin();t!=_tetra->end();++t)	
+		TetraIterator   t;
+		for(t=tetra.begin();t!=tetra.end();++t)	
 			for(int j=0;j<4;++j)
 				{
 					(*t).TV(j) = 0;
@@ -303,14 +294,14 @@ void InsertVTTopology(TetraType *t)
 **/
 //@{
 ///Build the Tetrahedron-Tetrahedron Topology (by Face)
-void TTTopology()
+void TTTopology(VertexContainer &vert,TetraContainer &tetra)
 	{
 		vector <Facet<VertexType,TetraType> > VF;
 		VertexType* v0;
 		VertexType* v1;
 		VertexType* v2;
 		
-		for (TetraIterator ti=_tetra->begin();ti!=_tetra->end();ti++)
+		for (TetraIterator ti=tetra.begin();ti!=tetra.end();ti++)
     {	
 		 if (!(*ti).IsD())
      {
@@ -376,14 +367,14 @@ void TTTopology()
   }
 
 ///Test the Tetrahedron-Tetrahedron Topology (by Face)
-void TestTTTopology()
+void TestTTTopology(VertexContainer &vert,TetraContainer &tetra)
 	{
     int i;
-		for (TetraIterator ti=_tetra->begin();ti!=_tetra->end();ti++)
+		for (TetraIterator ti=tetra.begin();ti!=tetra.end();ti++)
     {	
 			for (i=0;i<4;i++)
 			{
-				if ((!(*ti).IsD())&& ((*ti).T(i)!=&(*ti)))
+				if ((!(*ti).IsD())&&((*ti).T(i)!=&(*ti)))
 					{	
 					  assert( ((((*ti).T(i))->T((*ti).Z(i)))==&(*ti)));
             
@@ -394,9 +385,9 @@ void TestTTTopology()
 						TetraType *t1=(TetraType*)(*ti).T(i);
 						int z1=(*ti).Z(i);
             
-            VertexType	*vo0=(*ti).V(Tetra4<double>::VofF(z1,0));
-            VertexType	*vo1=(*ti).V(Tetra4<double>::VofF(z1,1));
-            VertexType	*vo2=(*ti).V(Tetra4<double>::VofF(z1,2));
+            VertexType	*vo0=(*t1).V(Tetra4<double>::VofF(z1,0));
+            VertexType	*vo1=(*t1).V(Tetra4<double>::VofF(z1,1));
+            VertexType	*vo2=(*t1).V(Tetra4<double>::VofF(z1,2));
 
 						assert((v0!=v1)&&(v0!=v2)&&(v1!=v2));
 						assert((vo0!=vo1)&&(vo0!=vo2)&&(vo1!=vo2));

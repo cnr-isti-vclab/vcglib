@@ -39,51 +39,40 @@ namespace tetra {
 
  /**  Class Allocate.
  This is class for Allocate new vertices or tetrahedron on the mesh.
-		@param STL_VERT_CONT (Template Parameter) Specifies the type of the vertices container any the vertex type.
-		@param STL_TETRA_CONT (Template Parameter) Specifies the type of the tetrahedrons container any the tetrahedrons type.
+		@param TM_TYPE (Template Parameter) Specifies the type of the tetrahedral mesh.
  */
-template  < class STL_VERT_CONT ,class STL_TETRA_CONT >
-class Allocate
+
+template  < class TM_TYPE >
+class Allocator
 {
 
 public:
 
-	/// The vertex container
-	typedef STL_VERT_CONT VertexContainer;
+	/// The tetramesh type
+	typedef TM_TYPE TetraMeshType;
 
-	/// The tethaedhron container
-	typedef STL_TETRA_CONT TetraContainer;
-
+	
 	/// The vertex type 
-	typedef typename STL_VERT_CONT::value_type VertexType;
+	typedef typename TM_TYPE::VertexType VertexType;
 	
 	/// The tetrahedron type 
-	typedef typename STL_TETRA_CONT::value_type TetraType;
+	typedef typename TM_TYPE::TetraType TetraType;
 
 	/// The type of vertex iterator
-	typedef typename STL_VERT_CONT::iterator VertexIterator;
+	typedef typename TM_TYPE::VertexIterator VertexIterator;
 
 	/// The type of tetra iterator
-	typedef typename STL_TETRA_CONT::iterator TetraIterator;
+	typedef typename TM_TYPE::TetraIterator TetraIterator;
 
 	/// The type of constant vertex iterator
-	typedef typename STL_VERT_CONT::const_iterator const_VertexIterator;
+	typedef typename TM_TYPE::const_VertexIterator const_VertexIterator;
 
 	/// The type of constant face iterator
-	typedef typename STL_TETRA_CONT::const_iterator const_TetraIterator;
+	typedef typename TM_TYPE::const_TetraIterator const_TetraIterator;
 
-private: 
-  VertexContainer* _vert;
-  TetraContainer* _tetra;
 
 public:
-  ///defaul constructor
-  Allocate(VertexContainer *v,TetraContainer *t)
-	{
-		_vert=v;
-		_tetra=t;
-	}
-
+ 
   /** Function to add n vertices to the mesh. The second parameter hold a vector of 
 pointers to pointer to elements of the mesh that should be updated after a 
 possible vector realloc. 
@@ -92,30 +81,30 @@ possible vector realloc.
 restituisce l'iteratore al primo elemento aggiunto.
 */
 
-VertexIterator AddVertices(int n, vector<VertexType **> &local_var)
+VertexIterator AddVertices(TetraMeshType &m,int n, vector<VertexType **> &local_var)
 {
 	VertexIterator oldbegin, newbegin;
-	oldbegin = _vert->begin();
-  VertexIterator last=_vert->end();
-	if(_vert->empty()) last=0;  // if the vector is empty we cannot find the last valid element
+	oldbegin = m.vert.begin();
+  VertexIterator last=m.vert.end();
+	if(m.vert.empty()) last=0;  // if the vector is empty we cannot find the last valid element
 	else --last;
 	unsigned int siz=0;
 #ifdef __STL_CONFIG_H	
-if(last!=0) distance(_vert->begin(),last,siz);
+if(last!=0) distance(m.vert.begin(),last,siz);
 #else
-if(last!=0) siz=distance(_vert->begin(),last);
+if(last!=0) siz=distance(m.vert.begin(),last);
 #endif
 	for(unsigned int i=0; i<n; ++i)
 	{
-		_vert->push_back(VertexType());
-		_vert->back().Supervisor_Flags() = 0;
+		m.vert.push_back(VertexType());
+		m.vert.back().ClearFlags();
 	}
-	vn+=n;
-	newbegin = _vert->begin();
+	m.vn+=n;
+	newbegin = m.vert.begin();
 	if(newbegin != oldbegin)
 		{
 			TetraIterator f;
-			for (f=_tetra->begin(); f!=_tetra->end(); ++f)
+			for (f=m.tetra.begin(); f!=m.tetra.end(); ++f)
 				if(!(*f).IsD())
 				for(unsigned int k=0; k<4; ++k)
 					(*f).V(k)= (*f).V(k)-&*oldbegin+&*newbegin;
@@ -126,15 +115,64 @@ if(last!=0) siz=distance(_vert->begin(),last);
 			// e poiche' lo spazio e' cambiato si ricalcola last da zero  
 			if(last!=0) 
 			{ 
-				last = _vert->begin(); 
+				last = m.vert.begin(); 
 				advance(last,siz+1);
 			}
-			else last=_vert->begin(); 
+			else last=m.vert.begin(); 
 		}
 	else 
 	{ 
 		// se non e'cambiato lo spazio (vector abbastanza grande o lista)
-		if(last==0) last = _vert->begin(); // se il vettore era vuoto si restituisce begin
+		if(last==0) last = m.vert.begin(); // se il vettore era vuoto si restituisce begin
+		           else advance(last,1); // altrimenti il primo dopo quello che era in precedenza l'ultimo valido.
+	}
+	return last;
+}
+
+ /** Function to add n vertices to the mesh. 
+@param n Il numero di vertici che si vuole aggiungere alla mesh.
+*/
+VertexIterator AddVertices(TetraMeshType &m,int n)
+{
+	VertexIterator oldbegin, newbegin;
+	oldbegin = m.vert.begin();
+  VertexIterator last=m.vert.end();
+	if(m.vert.empty()) last=0;  // if the vector is empty we cannot find the last valid element
+	else --last;
+	unsigned int siz=0;
+#ifdef __STL_CONFIG_H	
+if(last!=0) distance(m.vert.begin(),last,siz);
+#else
+if(last!=0) siz=distance(m.vert.begin(),last);
+#endif
+	for(unsigned int i=0; i<n; ++i)
+	{
+		m.vert.push_back(VertexType());
+		m.vert.back().ClearFlags();
+	}
+	m.vn+=n;
+	newbegin = m.vert.begin();
+	if(newbegin != oldbegin)
+		{
+			TetraIterator f;
+			for (f=m.tetra.begin(); f!=m.tetra.end(); ++f)
+				if(!(*f).IsD())
+				for(unsigned int k=0; k<4; ++k)
+					(*f).V(k)= (*f).V(k)-&*oldbegin+&*newbegin;
+			
+			// deve restituire l'iteratore alla prima faccia aggiunta;
+			// e poiche' lo spazio e' cambiato si ricalcola last da zero  
+			if(last!=0) 
+			{ 
+				last = m.vert.begin(); 
+				advance(last,siz+1);
+			}
+			else last=m.vert.begin(); 
+		}
+	else 
+	{ 
+		// se non e'cambiato lo spazio (vector abbastanza grande o lista)
+		if(last==0) last = m.vert.begin(); // se il vettore era vuoto si restituisce begin
 		           else advance(last,1); // altrimenti il primo dopo quello che era in precedenza l'ultimo valido.
 	}
 	return last;

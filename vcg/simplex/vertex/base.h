@@ -24,6 +24,12 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/04/23 14:55:06  pietroni
+conversion funtion
+
+Revision 1.5  2004/03/10 00:59:06  cignoni
+minor changes
+
 Revision 1.4  2004/03/03 16:07:57  cignoni
 Yet another cr lf mismatch
 
@@ -561,8 +567,29 @@ static bool HasVFAdjacency()   {
 }
  //@}
 
+/***********************************************/
+ /** @Conversion to other vertex
+ **/
+ //@{
 
+template <class VERT_TYPE>
+inline Convert( const VERT_TYPE &v )
+{
+  this->P()=v->P();
+  this._flags=v._flags;
+	if (this->HasNormal())&&(v.HasNormal())
+    this->N()=v->N();
+  if (this->HasColor())&&(v.HasColor())
+    this->C()=v->C();
+  if (this->HasMark())&&(v.HasMark())
+    this.IMark()=v.IMark();
+  if (this->HasQuality())&&(v.HasQuality())
+    this->Q()=v->Q();
+  if (this->HasTexture())&&(v.HasTexture())
+    this->T()=v->T();
+}
 	
+ //@}
 
 	enum { 
 		// This bit indicate that the vertex is deleted from the mesh

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/04/20 12:42:37  pietroni
+*** empty log message ***
+
 Revision 1.1  2004/04/15 08:54:20  pietroni
 *** empty log message ***
 
@@ -140,20 +143,7 @@ bool HaveBorderF() {return ((_flags & (BORDERF0 | BORDERF1 | BORDERF2 | BORDERF3
 /// This function return true if the face is extern.
 bool IsBorderF(int face) {
   assert ((face<4)&&(face>-1));
-  switch (face) {
-  case 0:
-   {return ((_flags & BORDERF0) != 0);}
-    break;
-  case 1:
-    {return ((_flags & BORDERF1) != 0);}
-    break;
-  case 2:
-    {return ((_flags & BORDERF2) != 0);}
-    break;
-   case 3:
-    {return ((_flags & BORDERF3) != 0);}
-    break;
-  }
+  return (this->T(face) == this);
 }
  //@}
 
@@ -166,18 +156,33 @@ For each Tetrahedron we store 4 pointers to vertex
 protected:
 	VertexType *_v[4];
 public:
-  /// The Functions to access a vertex
-  	inline  VertexType * &V(int index) 
-	{
-		return _v[index];
+ 
+/** Return the pointer to the j-th vertex of the terahedron.
+		@param j Index of the tetrahedron's vertex.
+	 */
+	inline VertexType * & V( const int j )
+	{	
+		assert( (_flags & DELETED) == 0 );
+		assert(j >= 0);
+		assert(j <  4);
+		return _v[j];
 	}
-  /// The Functions to access a vertex
-	inline  const VertexType * &V(int index) const
-	{
-		return _v[index];
-	}
- //@}
 
+	inline const VertexType * const & V( const int j ) const
+	{
+		assert( (_flags & DELETED) == 0 );
+		assert(j>=0);
+		assert(j<4);
+		return _v[j];
+	}
+  
+	inline const VertexType * const & cV( const int j ) const
+	{
+		assert( (_flags & DELETED) == 0 );
+		assert(j>=0);
+		assert(j<4);
+		return _v[j];
+	}
 
 /***********************************************/
 /** @name Topology Structures
@@ -216,12 +221,12 @@ public:
   ///Function to access the Next Tetrahedron of the list that share the index-face (end of list is Null)
   	TETRA_TYPE *&TV(const int &index)
 	{
-		return t[index];
+		return _tv[index];
 	}
   ///Function to see the index of the Vertex as seen from the next tetrahedron of the list ( end of list is -1)
-	int &ZV(const int &index)
+	short int &ZV(const int &index)
 	{
-		return z[index];
+		return _zv[index];
 	}
 #endif
 //@}
