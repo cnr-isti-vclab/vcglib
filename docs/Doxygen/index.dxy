@@ -1,0 +1,81 @@
+/** \mainpage 
+The Visualization and Computer Graphics Library (VCG for short) is 
+a open source portable C++ templated library for manipulation, processing 
+and displaying with OpenGL of triangle and tetrahedral meshes. 
+
+The library, composed by more than 50k lines of code, 
+is released under the GPL license, and it is the base of most of the 
+software tools of the <b>Visual Computing Lab</b> of the Italian National Research Council Institute ISTI 
+(http://vcg.isti.cnr.it), like metro and shadevis. 
+
+
+The VCG library was built to manage triangular meshes, so most of the classes
+and algorithms it contains are related to such object. This is especially true
+for the things that are in the "mesh" folder of the tree. This document
+basically explains how the concept of mesh is implemented, i.e. what the "type"
+of a mesh is and how it can be obtained, how the connectivity  of the mesh is
+stored and how it is used to visit the mesh. This part of the library is self
+contained, only standard libraries are included, as STL (which are intensively
+used all over the code).
+
+\section Intro Point3 as an example of the style
+We won't going through all of the files and classes of the library to show how
+it is built. You will find most of the information in the code as comments, and
+when understood the implementation flavor, you won't even need the comments.
+
+The definition of class Point3 looks like this:
+
+\code
+
+ template <class T> class Point3  {
+    public:
+        Point3() { }
+        ~Point3()   { }
+
+    private:
+       T _v[3];
+//    ....
+//    ....
+    public:
+      T & X(){return v[0];}
+      T & Y(){return v[1];}
+      T & Z(){return v[2];}
+
+//     ...... operators
+   };
+\endcode
+
+
+You  will find that most of (if not all of) the classes have some template
+parameters. In this case it is used to say which type is used as coordinate
+(most of the times it will be float or double, but it can be any type
+implementing the operator used in the bodies of Point3 operators). Another
+common characteristic is the access method to the data (in this case v[3]),
+which are always defined as private member.
+
+\subsection ind Indexing and numbering conventions
+Vertex edges, and wedges are ordered according the following convention: face should be seen their vertexes counterclockwise, edge \c i is the one formed by vertex \c i and \c i+1.
+
+\image html img/triord.png "Naming conventions for vertexes and edges"
+
+For a tetrahedrdon we assume that it is \i well-oriented when the vertex \c 0 sees the other vertexes \c 1 2 3 in a counter-clockwise manner
+
+\subsection fft Face-face Topology
+
+With the face-face topology every face has three pointers to Face and three
+integers. Given a face with FF topology the pointer \c f.F(i) points to the face that shares the edge \c i  with
+\c f , and the integer \c f.Z(i)  tells the number of edge \c f.i  as seen from face
+\c f.F(i) (see Figure ).
+
+If the edge \c f.i  is on the mesh border, \c f.F(i)==f. The following
+proposition holds: \n
+
+\code 
+(f.F(i)== &f) || (f.F(i))->F(f.Z(i))== &f
+\endcode
+
+some text
+
+
+\image html img/ff.png "Example of face-face topology"
+*/
