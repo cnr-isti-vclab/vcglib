@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.26  2005/03/02 10:40:18  ponchio
+Extraction rewrittten (to fix recusive problems).
+
 Revision 1.25  2005/03/01 11:21:20  ponchio
 Added line intersection
 
@@ -143,7 +146,7 @@ void nxs::ComputeNormals(Nexus &nexus) {
   nexus.history.BuildLevels(levels); 
   Report report(nexus.size(), 15);
 
-  //TODO check level 0 is the finer onr
+  //TODO check level 0 is the finer one
 
   int current_level = 0;
   while(1) {
@@ -176,8 +179,15 @@ void nxs::ComputeNormals(Nexus &nexus) {
 	    Point3f &v0 = patch.Vert3f(f[0]);
 	    Point3f &v1 = patch.Vert3f(f[1]);
 	    Point3f &v2 = patch.Vert3f(f[2]);
-	    Point3f norm = (v1 - v0) ^ (v2 - v0);
-	    norm.Normalize();
+
+	    Point3f a = (v1 - v0);
+	    Point3f b = (v2 - v0);
+	    float n = a.Norm() * b.Norm();
+	    if(n == 0) continue;
+	    Point3f norm = a^b;
+	    float rn = norm.Norm();
+	    norm *= asin(rn/n)/n;
+
 	    normal[f[0]] += norm;
 	    normal[f[1]] += norm;
 	    normal[f[2]] += norm;
@@ -188,8 +198,16 @@ void nxs::ComputeNormals(Nexus &nexus) {
 	    Point3f &v0 = patch.Vert3f(f[0]);
 	    Point3f &v1 = patch.Vert3f(f[1]);
 	    Point3f &v2 = patch.Vert3f(f[2]);
-	    Point3f norm = (v1 - v0) ^ (v2 - v0); 
-	    norm.Normalize();
+	    
+	    Point3f a = (v1 - v0);
+	    Point3f b = (v2 - v0);
+	    float n = a.Norm() * b.Norm();
+	    if(n == 0) continue;
+	    Point3f norm = a^b;
+	    float rn = norm.Norm();
+	    norm *= asin(rn/n)/n;
+
+
 	    if(i%2) norm = -norm;
 	    normal[f[0]] += norm;
 	    normal[f[1]] += norm;
