@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/07/07 23:26:25  cignoni
+removed the infamous Inflate. Now only Offset exists
+
 Revision 1.5  2004/03/05 17:51:28  tarini
 Errorino "ScalarType" -> "BoxScalarType"
 
@@ -297,7 +300,14 @@ public:
 	{
     return Box3(Point3<BoxScalarType>::Construct(b.min),Point3<BoxScalarType>::Construct(b.max));
 	}
-
+		
+		/// gives the ith box vertex in order: (x,y,z),(X,y,z),(x,Y,z),(X,Y,z),(x,y,Z),(X,y,Z),(x,Y,Z),(X,Y,Z)
+	Point3<BoxScalarType> P(const int & i){
+			return Point3<BoxScalarType>(
+				min[0]+ (i%2) * DimX(),
+				min[1]+ ((i / 2)%2) * DimY(),
+				min[2]+ (i>3)* DimZ());
+	}
 }; // end class definition
 
 
