@@ -24,11 +24,17 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/05/07 10:09:13  cignoni
+missing final newline
+
 Revision 1.7  2004/05/04 23:23:45  cignoni
 unified to the gl stlyle matix*vector. removed vector*matrix operator
 
 Revision 1.6  2004/03/25 14:57:49  ponchio
 Microerror. ($LOG$ -> $Log: not supported by cvs2svn $
+Microerror. ($LOG$ -> Revision 1.8  2004/05/07 10:09:13  cignoni
+Microerror. ($LOG$ -> missing final newline
+Microerror. ($LOG$ ->
 Microerror. ($LOG$ -> Revision 1.7  2004/05/04 23:23:45  cignoni
 Microerror. ($LOG$ -> unified to the gl stlyle matix*vector. removed vector*matrix operator
 Microerror. ($LOG$ ->
@@ -64,6 +70,7 @@ public:
   Similarity &SetRotate(const Quaternion<S> &q);
 
   Matrix44<S> Matrix() const;
+  Matrix44<S> InverseMatrix() const;
   void FromMatrix(const Matrix44<S> &m);
 
   Quaternion<S> rot;
@@ -131,6 +138,9 @@ template <class S> Matrix44<S> Similarity<S>::Matrix() const {
   return s*r*t;  // scale * rot * trans
 }
 
+template <class S> Matrix44<S> Similarity<S>::InverseMatrix() const {
+  return Inverse(Matrix());
+}
 
 
 template <class S> void Similarity<S>::FromMatrix(const Matrix44<S> &m) {
