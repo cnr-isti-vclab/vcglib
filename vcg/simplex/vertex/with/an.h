@@ -17,8 +17,13 @@
 
 
 namespace vcg {
-typedef VertexAN<float>  VertexANf;
-typedef VertexAN<double> VertexANd;
+
+template <class VFTYPE> 
+class VertexANf : public VertexAN<float,VFTYPE> {};
+
+template <class VFTYPE> 
+class VertexANd : public VertexAN<double,VFTYPE> {};
+
 }
 
 #endif
