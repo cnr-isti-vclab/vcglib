@@ -20,10 +20,14 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
+/****************************************************************************
+  History
 
+$Log: not supported by cvs2svn $
+/****************************************************************************/
 
 #ifndef __VCGLIB_TRACED_VECTOR__
-#define __VCGLIB_TRACED_VECTOR__
+#define __VCGLIB_TRACED_VECTOR__ 
 
 
 #include <vcg/container/container_allocation_table.h>

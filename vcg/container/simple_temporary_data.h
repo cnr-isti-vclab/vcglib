@@ -20,13 +20,18 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
+/****************************************************************************
+  History
 
+$Log: not supported by cvs2svn $
+
+/****************************************************************************/
 
 #ifndef __VCGLIB_SIMPLE__
 #define __VCGLIB_SIMPLE__
 
 #include <vector>
-
+ 
 namespace vcg {
 
 template <class STL_CONT, class ATTR_TYPE>
