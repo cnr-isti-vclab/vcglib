@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/08/25 15:15:26  ganovelli
+minor changes to comply gcc compiler (typename's and stuff)
+
 Revision 1.1  2004/06/24 09:12:28  cignoni
 Initial Release
 
@@ -32,7 +35,9 @@ Initial Release
 
 #ifndef __VCG_HISTOGRAM
 #define __VCG_HISTOGRAM
-//#include <vcg/Box2.h>
+
+#include <vector>
+
 namespace vcg {
 
 /**
