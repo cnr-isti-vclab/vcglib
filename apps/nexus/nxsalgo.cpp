@@ -1,5 +1,6 @@
 #include <vector>
 #include <map>
+#include <hash_map>
 #include <iostream>
 
 //#include <wrap/strip/tristrip.h>
@@ -18,6 +19,11 @@ using namespace triangle_stripper;
 void nxs::ComputeNormals(Nexus &nexus) {
   assert(nexus.signature & NXS_NORMALS_SHORT ||
 	 nexus.signature & NXS_NORMALS_FLOAT);
+
+  //setting borders readonly:
+
+  assert(!nexus.borders.IsReadonly());
+  nexus.borders.SetReadOnly(true);
   
   bool use_short = (nexus.signature & NXS_NORMALS_SHORT) != 0;
 
@@ -46,50 +52,52 @@ void nxs::ComputeNormals(Nexus &nexus) {
   //first step normals in the same patch.
   cerr << "First Step\n";
   Report report(nexus.index.size(), 5);
+  vector<Point3f> normals;
+
   for(unsigned int p = 0; p < nexus.index.size(); p++) {
     report.Step(p);
     Patch &patch = nexus.GetPatch(p);
     
-    vector<Point3f> normals;
+    normals.clear();  
     normals.resize(patch.nv, Point3f(0, 0, 0));
     
 
     if(nexus.signature & NXS_FACES) 
       for(unsigned int i = 0; i < patch.nf; i++) {
-	unsigned short *f = patch.Face(i);
-	Point3f &v0 = patch.Vert(f[0]);
-	Point3f &v1 = patch.Vert(f[1]);
-	Point3f &v2 = patch.Vert(f[2]);
+	      unsigned short *f = patch.Face(i);
+	      Point3f &v0 = patch.Vert(f[0]);
+	      Point3f &v1 = patch.Vert(f[1]);
+	      Point3f &v2 = patch.Vert(f[2]);
 	
-	Point3f norm = (v1 - v0) ^ (v2 - v0); 
-	normals[f[0]] += norm;
-	normals[f[1]] += norm;
-	normals[f[2]] += norm;
+	      Point3f norm = (v1 - v0) ^ (v2 - v0); 
+	      normals[f[0]] += norm;
+	      normals[f[1]] += norm;
+	      normals[f[2]] += norm;
       }
 
     if(nexus.signature & NXS_STRIP) 
       for(int i = 0; i < patch.nf - 2; i++) {
-	unsigned short *f = patch.FaceBegin() + i;
-	Point3f &v0 = patch.Vert(f[0]);
-	Point3f &v1 = patch.Vert(f[1]);
-	Point3f &v2 = patch.Vert(f[2]);
+	      unsigned short *f = patch.FaceBegin() + i;
+	      Point3f &v0 = patch.Vert(f[0]);
+	      Point3f &v1 = patch.Vert(f[1]);
+	      Point3f &v2 = patch.Vert(f[2]);
 	
-	Point3f norm = (v1 - v0) ^ (v2 - v0); 
-	if(i%2) norm = -norm;
-	normals[f[0]] += norm;
-	normals[f[1]] += norm;
-	normals[f[2]] += norm;
+	      Point3f norm = (v1 - v0) ^ (v2 - v0); 
+	      if(i%2) norm = -norm;
+	      normals[f[0]] += norm;
+	      normals[f[1]] += norm;
+	      normals[f[2]] += norm;
       }
     
     if(use_short) {
       for(unsigned int i = 0; i < patch.nv; i++) {
-	Point3f &norm = normals[i];
-	norm.Normalize();
-	short *n = patch.Norm16(i);
-	for(int k = 0; k < 3; k++) {
-	  n[k] = (short)(norm[k] * 32766);
-	}
-	n[3] = 0;
+	      Point3f &norm = normals[i];
+	      norm.Normalize();
+	      short *n = patch.Norm16(i);
+	      for(int k = 0; k < 3; k++) {
+	        n[k] = (short)(norm[k] * 32766);
+	      }
+	      n[3] = 0;
       }
     } else {
       memcpy(patch.Norm16Begin(), &*normals.begin(), 
@@ -103,12 +111,14 @@ void nxs::ComputeNormals(Nexus &nexus) {
     map<unsigned int, map<unsigned short, Point3f> > bnorm;
 
 
+    unsigned int poff = tmpb_start[p];
     for(unsigned int i = 0; i < border.Size(); i++) {
       Link &link = border[i];
       if(link.IsNull()) continue;
       Point3f pt = normals[link.start_vert];
-      bnorm[p][link.start_vert] = pt;
+      //bnorm[p][link.start_vert] = pt;
       bnorm[link.end_patch][link.end_vert] = pt;
+      tmpb[poff + i] += pt;                          
     }
 
     map<unsigned int, map<unsigned short, Point3f> >::iterator k;
@@ -117,11 +127,12 @@ void nxs::ComputeNormals(Nexus &nexus) {
       Border border = nexus.GetBorder(patch);
       unsigned int offset = tmpb_start[patch];
       for(unsigned int i = 0; i < border.Size(); i++) {
-	Link &link = border[i];
-	assert(!link.IsNull());
-	//TODO not accurate
-	if((*k).second.count(link.start_vert))
-	  tmpb[offset + i] = (*k).second[link.start_vert];
+	      Link &link = border[i];
+	      //assert(!link.IsNull());
+	      //TODO not accurate
+        if(link.end_patch != p) continue;
+	      if((*k).second.count(link.start_vert))
+	        tmpb[offset + i] += (*k).second[link.start_vert];
       }
     }
 
@@ -184,6 +195,7 @@ void nxs::ComputeNormals(Nexus &nexus) {
   tmpb.Close();
   tmpb.Delete();
   //TODO remove temporary file.
+  nexus.borders.SetReadOnly(false);
 }
 
 /*void nxs::ComputeTriStrip(unsigned short nfaces, unsigned short *faces, 

@@ -389,11 +389,11 @@ int main(int argc, char *argv[]) {
     dst_entry.error = src_entry.error;
 
     //adding borders.
-    for(unsigned int i = 0; i < src_border.Size(); i++) {
+    /*for(unsigned int i = 0; i < src_border.Size(); i++) {
       Link &link = src_border[i];
       if(link.IsNull()) continue;
       assert(link.end_patch < nexus.index.size());
-    }
+    }*/
     Border dst_border = out.GetBorder(patch);
     out.borders.ResizeBorder(patch, src_border.Size());
     memcpy(dst_border.Start(), src_border.Start(), 
