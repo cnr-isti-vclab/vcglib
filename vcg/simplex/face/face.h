@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/07/15 11:31:06  ganovelli
+overwritten previous version (it was a copy of base.h)
+
 First commit...
 
 ****************************************************************************/
@@ -34,5 +37,5 @@ First commit...
 #define FACE_TYPE Face
 #include <vcg/simplex/face/base.h>
 
-#undef FAce_TYPE
+#undef FACE_TYPE
 #endif
