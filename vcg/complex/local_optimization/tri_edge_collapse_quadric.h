@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/09/29 17:08:16  ganovelli
+corrected error in -error (see localoptimization)
+
 
 ****************************************************************************/
 
@@ -101,12 +104,12 @@ class TriEdgeCollapseQuadric: public TriEdgeCollapse< TriMeshType,MYTYPE>
 {
 public:
 		typedef typename vcg::tri::TriEdgeCollapse< TriMeshType, MYTYPE > TEC;
-		typedef typename TEC::PosType PosType;
+		typedef typename TEC::EdgeType EdgeType;
 		typedef typename TriEdgeCollapse<TriMeshType, MYTYPE>::HeapType HeapType;
 		typedef typename TriEdgeCollapse<TriMeshType, MYTYPE>::HeapElem HeapElem;
 		typedef typename TriMeshType::CoordType CoordType;
 		typedef typename TriMeshType::ScalarType ScalarType;
-		typedef  math::Quadric< Plane3<ScalarType, false> > QuadricType;
+		typedef  math::Quadric< double > QuadricType;
 		typedef typename TriMeshType::FaceType FaceType;
 
 		static QCollapseParameter & Params(){static QCollapseParameter p; return p;}
@@ -125,23 +128,26 @@ public:
 		// puntatori ai vertici che sono stati messi non-w per preservare il boundary
 		static std::vector<typename TriMeshType::VertexPointer>  & WV(){static std::vector<typename TriMeshType::VertexPointer> _WV; return _WV;}; 
 
-		TriEdgeCollapseQuadric(PosType p, int i)
+		inline TriEdgeCollapseQuadric(EdgeType p, int i)
 			//:TEC(p,i){}
 		{
-				_Imark() = i;
+				localMark = i;
 				pos=p;
 				_priority = ComputePriority();
 		}
 
 
-		bool IsFeasible(){
-			return LinkConditions(pos);
+		inline bool IsFeasible(){
+			bool res = (!Params().PreserveTopology || LinkConditions(pos) );
+			if(!res) 
+				++FailStat::LinkConditionEdge();
+			return res;
 		}
 
 		void Execute(TriMeshType &m)
   {	
 		CoordType newPos = ComputeMinimal();
-		pos.V(1)->q+=pos.V()->q;
+		pos.V(1)->q+=pos.V(0)->q;
 		int FaceDel=DoCollapse(pos, newPos);
 		m.fn-=FaceDel;
 		--m.vn;
@@ -152,7 +158,8 @@ public:
 	typename 	TriMeshType::VertexIterator  vi;
 	typename 	TriMeshType::FaceIterator  pf;
 
-	PosType av0,av1,av01;
+	EdgeType av0,av1,av01;
+	Params().CosineThr=cos(Params().NormalThr);
 
 	if(!IsSetHint(HNHasVFTopology) ) vcg::tri::UpdateTopology<TriMeshType>::VertexFace(m);
 
@@ -205,11 +212,12 @@ public:
 									assert(x.F()->V(x.I())==&(*vi));
 									if((x.F()->V(x.I())<x.F()->V1(x.I())) && x.F()->V1(x.I())->IsRW() && !x.F()->V1(x.I())->IsV()){
 												x.F()->V1(x.I())->SetV();
-												h_ret.push_back(HeapElem(new MYTYPE(PosType(x.F(),x.I()),_Imark())));
+
+												h_ret.push_back(HeapElem(new MYTYPE(EdgeType(x.F()->V(x.I()),x.F()->V1(x.I())),GlobalMark())));
 												}
 									if((x.F()->V(x.I())<x.F()->V2(x.I())) && x.F()->V2(x.I())->IsRW()&& !x.F()->V2(x.I())->IsV()){
 												x.F()->V2(x.I())->SetV();
-												h_ret.push_back(HeapElem(new MYTYPE(PosType(x.F(),(x.I()+2)%3),_Imark())));
+												h_ret.push_back(HeapElem(new MYTYPE(EdgeType(x.F()->V(x.I()),x.F()->V2(x.I())),GlobalMark() )));
 											}
 								}
 		}	
@@ -223,23 +231,16 @@ public:
 				assert(x.F()->V(x.I())==&(*vi));
 				if(x.F()->V(x.I())->IsRW() && x.F()->V1(x.I())->IsRW() && !m.IsMarked(x.F()->V1(x.I()))){
 							m.Mark( x.F()->V1(x.I()) );
-							h_ret.push_back( HeapElem( new MYTYPE( PosType (x.F(),x.I()), m.imark)));
+							h_ret.push_back( HeapElem( new MYTYPE( EdgeType (x.F()->V(x.I()),x.F()->V1(x.I())), m.imark)));
 							}
 				if(x.F()->V(x.I())->IsRW() && x.F()->V2(x.I())->IsRW()&& !m.IsMarked(x.F()->V2(x.I()))){
 							m.Mark( x.F()->V2(x.I()) );
-							h_ret.push_back( HeapElem( new MYTYPE( PosType (x.F(),(x.I()+2)%3), m.imark)));
+							h_ret.push_back( HeapElem( new MYTYPE( EdgeType (x.F()->V(x.I()),x.F()->V2(x.I())), m.imark)));
 						}
 			}
 		}	
 	}
-
-	typename std::vector<HeapElem>::iterator ph;
-	for(ph=h_ret.begin();ph!=h_ret.end();++ph)		
-		(*ph).locModPtr->ComputePriority();
-
 	make_heap(h_ret.begin(),h_ret.end());
-	m.InitVertexIMark();
-
 }
 
 	static bool IsSymmetric() {return Params().OptimalPlacement;} 
@@ -247,8 +248,8 @@ public:
 	static void SetDefaultParams(){
 		Params().UseArea=true;
 		Params().UseVertexWeight=false;
-		Params().NormalCheck=true;
-		Params().CosineThr=M_PI/2;
+		Params().NormalCheck=false;
+		Params().NormalThr=M_PI/2;
 		Params().QualityCheck=true;
 		Params().QualityThr=.1;
 		Params().BoundaryWeight=.5;
@@ -257,6 +258,8 @@ public:
 		Params().ComplexCheck=false;
 		Params().QuadricEpsilon =1e-15;
 		Params().ScaleFactor=1.0;
+
+		Params().PreserveTopology = false;
 	}
 	
 ///*
@@ -270,7 +273,7 @@ public:
 		typename vcg::face::VFIterator<FaceType> x;
 		std::vector<CoordType> on; // original normals
 		typename TriMeshType::VertexType * v[2];
-		v[0] = pos.V();
+		v[0] = pos.V(0);
 		v[1] = pos.V(1);
 
 		if(Params().NormalCheck){ // Compute maximal normal variation 
@@ -458,9 +461,8 @@ static void InitQuadric(TriMeshType &m)
  CoordType ComputeMinimal()
 {	
 		typename TriMeshType::VertexType * v[2];
-		v[0] = pos.V();
+		v[0] = pos.V(0);
 		v[1] = pos.V(1);
-
 		QuadricType q=v[0]->q;
 		q+=v[1]->q;
 		
@@ -475,9 +477,6 @@ static void InitQuadric(TriMeshType &m)
 			if(qv1<qvx && qv1<qv0) x=v[1]->P();
 		}
 		
-//		TRACE("-- %lf %lf %lf ---\n ",q.Apply(v[0]->P()),q.Apply(v[1]->P()),q.Apply(x));
-//		assert(q.Apply(v[1]->P())>=q.Apply(x));
-//		assert(q.Apply(v[0]->P())>=q.Apply(x));
 		return x;
 }
 //

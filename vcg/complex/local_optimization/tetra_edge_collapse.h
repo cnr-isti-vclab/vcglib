@@ -27,7 +27,6 @@
 #ifndef __VCG_DECIMATION_COLLAPSE
 #define __VCG_DECIMATION_COLLAPSE
 
-#include<vcg\complex\tetramesh\edge_collapse.h>
 #include<vcg\complex\local_optimization.h>
 
 struct FAIL{
@@ -75,7 +74,7 @@ class TetraEdgeCollapse: public LocalOptimization<TETRA_MESH_TYPE>::LocModType
 private:
 
 ///the new point that substitute the edge
-Point3<ScalarType> _NewPoint;
+Point<3,ScalarType> _NewPoint;
 ///the pointer to edge collapser method
 vcg::tetra::EdgeCollapse<TETRA_MESH_TYPE> _EC;
 ///mark for up_dating
@@ -140,7 +139,13 @@ ScalarType _VolumePreservingError(PosType &pos,CoordType &new_point,int nsteps)
       new_point=ve1->P();
    else
    if ((!ext_v0)&&(!ext_v1))
-     new_point=(ve0->P()+ve1->P())/2.f;
+	 {/*CoordType g;
+	 g.Zero();
+	 g+=ve0->cP();
+	 g+=ve1->cP();
+	 g/=2;*/
+     new_point=(ve0->cP()+ve1->cP())/2.f;
+	 }
    else
    if ((ext_v0)&&(ext_v1))//both are external vertex
    {
@@ -150,7 +155,12 @@ ScalarType _VolumePreservingError(PosType &pos,CoordType &new_point,int nsteps)
     {
       best_error=1000000.f;
       ScalarType alfatemp=step*((double)i);
-      CoordType newPTemp=(ve0->P()*alfatemp) +(ve1->P()*(1.f-alfatemp));
+			//CoordType g;
+			// g.Zero();
+		 //g+=ve0->cP()*alfatemp;
+		 //g+=ve1->cP()*(1-alfatemp);
+	  //CoordType newPTemp=g;
+      CoordType newPTemp=(ve0->cP()*alfatemp) +(ve1->cP()*(1.f-alfatemp));
       //the error is the absolute value of difference of volumes
       ScalarType error=fabs(Vol_Original-_EC.VolumeSimulateCollapse(pos,newPTemp));
       if(error<best_error)
