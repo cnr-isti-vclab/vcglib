@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2004/10/14 15:08:04  pietroni
+added #include <vector>
+
 Revision 1.13  2004/09/07 07:36:32  fasano
 Replaced some typename definitions
 
@@ -322,7 +325,7 @@ static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu
         {
           if(VertexType::HasVFAdjacency())
 			if ((*vi).VFp()!=0)
-				pu.Update((*vi).VFp());
+				pu.Update((FaceType*)(*vi).VFp());
         }
         		// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
 		unsigned int siz=m.face.size()-n;	
