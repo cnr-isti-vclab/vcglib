@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/03/25 14:57:49  ponchio
+Microerror. ($LOG$ -> $Log: not supported by cvs2svn $
+
 
 ****************************************************************************/
 
@@ -192,32 +195,32 @@ template <class S> void Quaternion<S>::ToMatrix(Matrix44<S> &m) const	{
 ///warning m deve essere una matrice di rotazione pena il disastro.
 template <class S> void Quaternion<S>::FromMatrix(Matrix44<S> &m) {		
 	S Sc;
-	S t = (m[0] + m[5] + m[10] + (S)1.0);	
+	S t = (m.V()[0] + m.V()[5] + m.V()[10] + (S)1.0);	
 	if(t > 0) {
       Sc = (S)0.5 / math::Sqrt(t);
       V(0) = (S)0.25 / Sc;
-      V(1) = ( m[9] - m[6] ) * Sc;
-      V(2) = ( m[2] - m[8] ) * Sc;
-      V(3) = ( m[4] - m[1] ) * Sc;
+      V(1) = ( m.V()[9] - m.V()[6] ) * Sc;
+      V(2) = ( m.V()[2] - m.V()[8] ) * Sc;
+      V(3) = ( m.V()[4] - m.V()[1] ) * Sc;
 	}	else {	
-		if(m[0] > m[5] && m[0] > m[10]) {
-      Sc  = math::Sqrt( (S)1.0 + m[0] - m[5] - m[10] ) * (S)2.0;
+		if(m.V()[0] > m.V()[5] && m.V()[0] > m.V()[10]) {
+      Sc  = math::Sqrt( (S)1.0 + m.V()[0] - m.V()[5] - m.V()[10] ) * (S)2.0;
 			V(1) = (S)0.5 / Sc;
-			V(2) = (m[1] + m[4] ) / Sc;
-			V(3) = (m[2] + m[8] ) / Sc;
-			V(0) = (m[6] + m[9] ) / Sc;	
-		}	else if( m[5] > m[10]) {
-      Sc  = math::Sqrt( (S)1.0 + m[5] - m[0] - m[10] ) * (S)2.0;
-			V(1) = (m[1] + m[4] ) / Sc;
+			V(2) = (m.V()[1] + m.V()[4] ) / Sc;
+			V(3) = (m.V()[2] + m.V()[8] ) / Sc;
+			V(0) = (m.V()[6] + m.V()[9] ) / Sc;	
+		}	else if( m.V()[5] > m.V()[10]) {
+      Sc  = math::Sqrt( (S)1.0 + m.V()[5] - m.V()[0] - m.V()[10] ) * (S)2.0;
+			V(1) = (m.V()[1] + m.V()[4] ) / Sc;
 			V(2) = (S)0.5 / Sc;
-			V(3) = (m[6] + m[9] ) / Sc;
-			V(0) = (m[2] + m[8] ) / Sc;
+			V(3) = (m.V()[6] + m.V()[9] ) / Sc;
+			V(0) = (m.V()[2] + m.V()[8] ) / Sc;
 		}	else {
-      Sc  = math::Sqrt( (S)1.0 + m[10] - m[0] - m[5] ) * (S)2.0;
-			V(1) = (m[2] + m[8] ) / Sc;
-			V(2) = (m[6] + m[9] ) / Sc;
+      Sc  = math::Sqrt( (S)1.0 + m.V()[10] - m.V()[0] - m.V()[5] ) * (S)2.0;
+			V(1) = (m.V()[2] + m.V()[8] ) / Sc;
+			V(2) = (m.V()[6] + m.V()[9] ) / Sc;
 			V(3) = (S)0.5 / Sc;
-			V(0) = (m[1] + m[4] ) / Sc;
+			V(0) = (m.V()[1] + m.V()[4] ) / Sc;
 		}
 	}
 }
