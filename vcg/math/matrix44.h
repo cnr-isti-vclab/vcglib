@@ -96,7 +96,7 @@ public:
   Matrix44 operator+(const Matrix44 &m) const;
   Matrix44 operator-(const Matrix44 &m) const;
   Matrix44 operator*(const Matrix44 &m) const;
-  Point4<T> operator*(const Point4<T> &v) const;
+  Point4<T> operator*(const Point4<T> &v) const;  
 
   bool operator==(const  Matrix44 &m) const;
   bool operator!= (const  Matrix44 &m) const;
@@ -352,10 +352,10 @@ template <class T> Point4<T> operator*(const Matrix44<T> &m, const Point4<T> &p)
 template <class T> Point4<T> operator*(const Point4<T> &p, const Matrix44<T> &m) {
   T w;
   Point4<T> s;
-  s.x() = a[0][0]*p.x() + a[0][1]*p.y() + a[0][2]*p.z() + a[0][3];
-  s.y() = a[1][0]*p.x() + a[1][1]*p.y() + a[1][2]*p.z() + a[1][3];
-  s.z() = a[2][0]*p.x() + a[2][1]*p.y() + a[2][2]*p.z() + a[2][3];
-  s.w() = a[3][0]*p.x() + a[3][1]*p.y() + a[3][2]*p.z() + a[3][3];
+  s.x() = a[0][0]*p.x() + a[1][0]*p.y() + a[2][0]*p.z() + a[3][0];
+  s.y() = a[0][1]*p.x() + a[1][1]*p.y() + a[2][1]*p.z() + a[3][1];
+  s.z() = a[0][2]*p.x() + a[1][2]*p.y() + a[2][2]*p.z() + a[3][2];
+  s.w() = a[0][3]*p.x() + a[1][3]*p.y() + a[2][3]*p.z() + a[3][3];
 	if(s.w() != 0) s /= s.w();
   return s;
 }
