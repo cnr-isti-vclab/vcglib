@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -21,31 +21,32 @@
 *                                                                           *
 ****************************************************************************/
 
-This folders contains most common FACE configuration files
-The name of the file specify the members that are added to the vertex class
-The name is a sequence of letters, in strict alphabetical order.
-The possible admitted letters pairs are
+This folders contains most common FACE configuration files.
 
-FA - face-face adjacency
+The name of the file specifies the members that are added to the vertex
+class. The name is a sequence of letter pairs, in strict alphabetical order. The
+possible admitted letters pairs are:
+
+AF - Face-Face adjacency
+AS - Shared Vertex-Face and Face-Face Adjacency
+AV - Vertex-face adjacency
+
 FC - Per-Face Color
 FM - Per-Face Incremental Mark
 FN - Per-Face Normal
 FQ - Per-Face Quality
 RT - Data for Optimized Point-Face Distance and Ray-Tracing Stuff
-SA - Shared Vertex-Face and Face-Face Adjacency
-VA - Vertex-face adjacency
 WC - Per-Wedge Color
 WN - Per-Wedge Normal
 WQ - Per-Wedge Quality
 WT - Per-Wedge Texture Coords
 
-E.g. 
+E.g.
 
-#include<vcg/simplex/vertex/with/fafnwc.h> 
+#include<vcg/simplex/vertex/with/affnwt.h>
 
-generate a type 
-VertexFAFNWC<VertexType> 
+generate a type
 
-that can store F-F adjacency, Per face normal color and per wedge color.
-  
+VertexAFFNWT<VertexType>
 
+that can store F-F adjacency, Per-face normal and color and per-wedge texture coords.
