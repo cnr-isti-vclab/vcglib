@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/12/01 16:06:59  ponchio
+Distance
+
 Revision 1.5  2004/09/29 13:55:33  ponchio
 Added Distance shpere - point.
 
@@ -61,11 +64,11 @@ Templated class for 3D sphere.
 template <class T> class Sphere3 {
 protected:
   Point3<T> _center;
-	T _radius;
-public:
-	Sphere3(): _radius(-1) {}
+  T _radius;
+ public:
+  Sphere3(): _radius(-1) {}
   Sphere3(const Point3<T> &center, T radius): _center(center), _radius(radius) {}
-
+  
   T &Radius() { return _radius; }
   const T &Radius() const { return _radius; }
   Point3<T> &Center() { return _center; }
@@ -75,9 +78,13 @@ public:
   ///return true if @param p - Center() <= Radius() 
   bool IsIn(const Point3<T> &p) const;
 
-  void Add(Point3<T> &p);
-	void Add(const Sphere3 &sphere);
+  void Add(const Point3<T> &p);
+  void Add(const Sphere3 &sphere);
+  void Intersect(const Sphere3 &sphere);
   	
+  //makes 36 iterations over the data... but get good results.
+  int CreateTight(int n, const Point3<T> *points, 
+		  T threshold = 1.01, T speed = 0.6);
 };
 
 template <class T> T Distance(const Sphere3<T> &sphere, 
@@ -117,7 +124,7 @@ template <class T> void Sphere3<T>::Add(const Sphere3<T> &sphere) {
     }
 }
 
-template <class T> void Sphere3<T>::Add(Point3<T> &p) {
+template <class T> void Sphere3<T>::Add(const Point3<T> &p) {
 	if(IsEmpty()) {
 		_center = p;
 		_radius = 0;
@@ -130,9 +137,74 @@ template <class T> void Sphere3<T>::Add(Point3<T> &p) {
 }  
 
 template <class T> bool Sphere3<T>::IsIn(const Point3<T> &p) const {
-	Point3<T> dist = p - _center;
-	return dist.Norm() <= _radius;
+  if(IsEmpty()) return false;
+  Point3<T> dist = p - _center;
+  return dist.SquaredNorm() <= _radius*_radius;
 }
+
+template <class T> void Sphere3<T>::Intersect(const Sphere3<T> &s) {
+  float dist = Distance(_center, s.Center());
+  float r = 0.5 * (_radius + s.Radius() - dist);
+  if(r < 0) {
+    _radius = -1;
+    return;
+  }
+  _center = (s.Center()*(_radius - r) + _center*(s.Radius() - r))/dist;
+  _radius = r;
+}
+
+ template <class T> int Sphere3<T>::CreateTight(int n, const Point3<T> *points, 
+						T threshold, T speed) { 
+   //This is quantized gradient descent... really ugly. But simple :P
+   //TODO step should adapt to terrain...
+   for(int i = 0; i < n; i++)
+     Add(points[i]);
+   Radius() *= 1.0001;
+
+   Point3<T> center;
+   T radius;
+   //Test with 6 directions
+
+   Point3f pert[6];
+   T step = Radius()/8;
+   int count = 0;
+   while(1) {
+     count++;
+     T radius = Radius();
+     pert[0] = Point3f(step, 0, 0);
+     pert[1] = -pert[0];
+     pert[2] = Point3f(0, step, 0);
+     pert[3] = -pert[2];
+     pert[4] = Point3f(0, 0, step);
+     pert[5] = -pert[4];
+
+     unsigned int best = 6;
+     T best_radius = Radius()/threshold;
+
+     for(unsigned int k = 0; k < 6; k++) {
+       center = Center() + pert[k];
+       radius = 0;
+       for(unsigned int i = 0; i < n; i++) {
+	 float r = Distance(center, points[i]);
+	 if(r > radius)
+	   radius = r;
+       }
+       if(radius < best_radius) {
+	 best = k;
+	 best_radius = radius;
+       }
+     }
+     if(best != 6) {
+       Center() = Center() + pert[best];
+       Radius() = best_radius;
+     }
+     step *= speed; 
+     if(step < Radius() * (threshold - 1))
+       break;
+   }
+   Radius() *= 1.01;
+   return count;
+ }
 
 } //namespace
 
