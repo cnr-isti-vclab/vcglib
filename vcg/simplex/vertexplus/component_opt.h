@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/03/31 13:15:28  cignoni
+Added optional cpmponent
+
 Revision 1.1  2004/03/31 12:46:53  cignoni
 First working version!
 
@@ -32,8 +35,8 @@ First working version!
 #ifndef __VCG_VERTEX_PLUS_COMPONENT_OPT
 #define __VCG_VERTEX_PLUS_COMPONENT_OPT
 
-#include <vcg/component.h>
-#include <vcg/traced_vector.h>
+#include <vcg/simplex/vertexplus/component.h>
+#include <vcg/container/traced_vector.h>
 
 
 namespace vcg {
