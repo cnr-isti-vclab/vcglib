@@ -8,12 +8,41 @@ DEFINES	+= QT_NO_DEBUG _WINDOWS UNICODE WIN32 QT_DLL QT_THREAD_SUPPORT _TORUS01 
 win32:DEFINES	+= QT_NO_DEBUG _WINDOWS UNICODE WIN32 QT_DLL QT_THREAD_SUPPORT _TORUS01 _EXTENDED_MARCH1
 win32:INCLUDEPATH	+= "$(QTDIR)\include" . "C:\Qt\3.3.2\mkspecs\win32-msvc.net" D:\sf\apps\test\segmentation3d D:\sf
 
+HEADERS	+= simpleglwidget.h
 SOURCES	+= D:/sf/wrap/gui/trackmode.cpp \
 	D:/sf/wrap/gui/trackball.cpp \
 	D:/sf/wrap/ply/plylib.cpp \
 	simpleglwidget.cpp \
 	main.cpp
 FORMS	= segmentform.ui
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
