@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/07/11 22:06:56  cignoni
+Added scaling by wheel
+
 Revision 1.6  2004/06/09 14:01:13  cignoni
 Heavily restructured. To be completed only rotation works...
 
@@ -48,14 +51,20 @@ Adding copyright.
 #include <vcg/space/intersection3.h>
 #include <vcg/math/similarity.h>
 #include <iostream>
-using namespace std;
 
+using namespace std;
 using namespace vcg;
 
 
 void TrackMode::Apply(Trackball *trackball, float WheelNotch) {
     trackball->track.sca*=pow(1.2f,WheelNotch);
- };
+ }
+
+void ScaleMode::Apply(Trackball *tb, Point3f new_point) {
+  float ScreenHeight= tb->camera.viewport[3]-tb->camera.viewport[1];
+  float dist=(new_point[1]-tb->last_point[1])/ScreenHeight;
+  tb->track.sca= tb->last_track.sca*pow(3.0f,-dist);
+}
 
 /// Compute the plane plane perpedicular to view dir and passing through manip center
 Plane3f TrackMode::GetViewPlane(const View<float> &camera, const Point3f &center) {

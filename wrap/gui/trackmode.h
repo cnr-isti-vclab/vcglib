@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/07/11 22:06:56  cignoni
+Added scaling by wheel
+
 Revision 1.6  2004/06/09 14:01:13  cignoni
 Heavily restructured. To be completed only rotation works...
 
@@ -103,7 +106,7 @@ protected:
 
 class ScaleMode: public TrackMode {
 public:
-  void Apply(Trackball * /*trackball*/, Point3f /*new_point*/) {}
+  void Apply(Trackball *trackball, Point3f new_point);
 };
 
 }//namespace 
