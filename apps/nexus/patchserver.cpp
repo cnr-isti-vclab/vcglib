@@ -116,7 +116,7 @@ Patch &PatchServer::GetPatch(unsigned int idx,
       if(entry.patch_start != 0xffffffff) { //was allocated.
 	assert(entry.disk_size != 0xffff);
 	
-	SetPosition(entry.patch_start * chunk_size);
+	SetPosition((int64)entry.patch_start * (int64)chunk_size);
 	
 	if((signature & NXS_COMPRESSED) == 0) { //not compressed
 	  ReadBuffer(ram, entry.disk_size * chunk_size);
@@ -254,7 +254,7 @@ void PatchServer::Flush(PTime &ptime) {
 	      cerr << "OOOOPSPPPS not supported!" << endl;
 	      exit(-1);
       }
-      SetPosition(entry.patch_start * chunk_size);
+      SetPosition((int64)entry.patch_start * (int64)chunk_size);
       WriteBuffer(compressed, entry.disk_size * chunk_size);
       delete []compressed;
     } else {
@@ -263,7 +263,7 @@ void PatchServer::Flush(PTime &ptime) {
 	      entry.patch_start = (unsigned int)(Length()/chunk_size);
 	      Redim(Length() + entry.disk_size * chunk_size);
       }
-      SetPosition(entry.patch_start * chunk_size);
+      SetPosition((int64)entry.patch_start * (int64)chunk_size);
       WriteBuffer(ptime.patch->start, entry.disk_size * chunk_size);
     }
     /*    FILE *fo = fopen("tmp", "wb+");

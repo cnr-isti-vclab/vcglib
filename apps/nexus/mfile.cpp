@@ -97,6 +97,7 @@ void MFile::ReadBuffer(void *data, unsigned int sz) {
     data = ((char *)data) + n;
     sz -= n;
     curr_fp++;
+    assert(curr_fp < files.size());
     curr_pos = 0;
     files[curr_fp]->SetPosition(curr_pos);
   }
@@ -111,6 +112,7 @@ void MFile::WriteBuffer(void *data, unsigned int sz) {
     data = ((char *)data) + n;
     sz -= n;
     curr_fp++;
+    assert(curr_fp < files.size());
     curr_pos = 0;
     files[curr_fp]->SetPosition(curr_pos);
   }
@@ -144,9 +146,9 @@ void MFile::WriteBuffer(void *data, unsigned int sz) {
 void MFile::RedimLast(unsigned int sz) {  
   assert(sz <= max_size);
   File &file = *files.back();
-  unsigned int last_size = file.Length();
+  unsigned int last_size = (int64)file.Length();
   file.Redim(sz);
-  size += sz - last_size;
+  size += sz - (int64)last_size;
 }
 
 std::string MFile::Name(unsigned int n) {
