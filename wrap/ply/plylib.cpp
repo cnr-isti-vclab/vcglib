@@ -31,6 +31,9 @@ of Greg Turk and on the work of Claudio Rocchini
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/05/12 17:21:08  ganovelli
+inclusion of io.h removed (unnecessary)
+
 Revision 1.3  2004/05/12 10:13:29  ganovelli
 direct.h was included also without WIN32 definition
 
@@ -43,8 +46,9 @@ Initial commit
 ****************************************************************************/
 
 
-#ifdef WIN32
 #define LITTLE_MACHINE
+
+#ifdef WIN32
 #define assert ASSERT
 #pragma warning( disable : 4267 )
 #else
