@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/06/23 15:36:43  cignoni
+Restructured management of error, now the standard open for any mesh type return the error code, the default success value is zero
+Any import class has a method ErrorMsg that give a verbal description of an error code.
+
 Revision 1.7  2004/06/11 17:09:41  ganovelli
 inclusion of vector..minorchanges
 
@@ -463,29 +467,40 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 					return pi.status;
 				}	
 				//camera.valid     = true;
-				//camera.view_p[0] = ca.view_px;
-				//camera.view_p[1] = ca.view_py;
-				//camera.view_p[2] = ca.view_pz;
-				//camera.x_axis[0] = ca.x_axisx;
-				//camera.x_axis[1] = ca.x_axisy;
-				//camera.x_axis[2] = ca.x_axisz;
-				//camera.y_axis[0] = ca.y_axisx;
-				//camera.y_axis[1] = ca.y_axisy;
-				//camera.y_axis[2] = ca.y_axisz;
-				//camera.z_axis[0] = ca.z_axisx;
-				//camera.z_axis[1] = ca.z_axisy;
-				//camera.z_axis[2] = ca.z_axisz;
-				//camera.f         = ca.focal;
-				//camera.s[0]      = ca.scalex;
-				//camera.s[1]      = ca.scaley;
-				//camera.c[0]      = ca.centerx;
-				//camera.c[1]      = ca.centery;
-				//camera.viewport[0] = ca.viewportx;
-				//camera.viewport[1] = ca.viewporty;
-				//camera.k[0]      = ca.k1;
-				//camera.k[1]      = ca.k2;
-				//camera.k[2]      = ca.k3;
-				//camera.k[3]      = ca.k4;
+
+				// extrinsic
+				// view point
+				m.shot.similarity.tra[0] = -ca.view_px;
+				m.shot.similarity.tra[1] = -ca.view_py;
+				m.shot.similarity.tra[2] = -ca.view_pz;
+	
+				// axis (i.e. rotation). 
+				m.shot.similarity.rot.SetIdentity();
+				m.shot.similarity.rot[0][0] = ca.x_axisx;
+				m.shot.similarity.rot[0][1] = ca.x_axisy;
+				m.shot.similarity.rot[0][2] = ca.x_axisz;
+
+				m.shot.similarity.rot[1][0] = ca.y_axisx;
+				m.shot.similarity.rot[1][1] = ca.y_axisy;
+				m.shot.similarity.rot[1][2] = ca.y_axisz;
+
+				m.shot.similarity.rot[2][0] = ca.z_axisx;
+				m.shot.similarity.rot[2][1] = ca.z_axisy;
+				m.shot.similarity.rot[2][2] = ca.z_axisz;
+
+				//intrinsic
+				m.shot.camera.f         = ca.focal;
+				m.shot.camera.s[0]      = ca.scalex;
+				m.shot.camera.s[1]      = ca.scaley;
+				m.shot.camera.c[0]      = ca.centerx;
+				m.shot.camera.c[1]      = ca.centery;
+				m.shot.camera.viewport[0] = ca.viewportx;
+				m.shot.camera.viewport[1] = ca.viewporty;
+				m.shot.camera.k[0]      = ca.k1;
+				m.shot.camera.k[1]      = ca.k2;
+				m.shot.camera.k[2]      = ca.k3;
+				m.shot.camera.k[3]      = ca.k4;
+
 			}
 		}
 		else if( !strcmp( pf.ElemName(i),"vertex" ) )

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/07/15 10:54:48  ganovelli
+std added
+
 Revision 1.6  2004/05/28 14:11:13  ganovelli
 changes to comply io_mask moving in vcg::ply namesp
 
@@ -147,8 +150,8 @@ static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &
 		//if(textures.size()>1 && (HasPerWedgeTexture() || HasPerVertexTexture())) multit = true;
 	}
 
-	//if( (pi.mask & PLYMask::PM_CAMERA) && camera.IsValid() )
-	/*{
+	if( (pi.mask & ply::PLYMask::PM_CAMERA) && m.shot.IsValid())
+	 {
 		fprintf(fpout,
 			"element camera 1\n"
 			"property float view_px\n"
@@ -175,7 +178,7 @@ static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &
 			"property float k3\n"
 			"property float k4\n"
 		);
-	}*/
+	} 
 
 	fprintf(fpout,
 		"element vertex %d\n"
@@ -268,68 +271,68 @@ static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &
 	fprintf(fpout, "end_header\n"	);
 
 		// Salvataggio camera
-	//if( (pi.mask & ply::PLYMask::PM_CAMERA) && camera.IsValid() )
-	//{
-		//if(binary)
-		//{
-		//	float t[17];
+	 if( (pi.mask & ply::PLYMask::PM_CAMERA) && m.shot.IsValid() )
+	 {
+		 if(binary)
+		 {
+				float t[17];
 
-		//	t[ 0] = camera.view_p[0];
-		//	t[ 1] = camera.view_p[1];
-		//	t[ 2] = camera.view_p[2];
-		//	t[ 3] = camera.x_axis[0];
-		//	t[ 4] = camera.x_axis[1];
-		//	t[ 5] = camera.x_axis[2];
-		//	t[ 6] = camera.y_axis[0];
-		//	t[ 7] = camera.y_axis[1];
-		//	t[ 8] = camera.y_axis[2];
-		//	t[ 9] = camera.z_axis[0];
-		//	t[10] = camera.z_axis[1];
-		//	t[11] = camera.z_axis[2];
-		//	t[12] = camera.f;
-		//	t[13] = camera.s[0];
-		//	t[14] = camera.s[1];
-		//	t[15] = camera.c[0];
-		//	t[16] = camera.c[1];
-		//	fwrite(t,sizeof(float),17,fpout);
+				t[ 0] = -m.shot.similarity.tra[0];
+				t[ 1] = -m.shot.similarity.tra[1];
+				t[ 2] = -m.shot.similarity.tra[2];
+				t[ 3] = m.shot.similarity.rot[0][0];
+				t[ 4] = m.shot.similarity.rot[0][1];
+				t[ 5] = m.shot.similarity.rot[0][2];
+				t[ 6] = m.shot.similarity.rot[1][0];
+				t[ 7] = m.shot.similarity.rot[1][1];
+				t[ 8] = m.shot.similarity.rot[1][2];
+				t[ 9] = m.shot.similarity.rot[2][0];
+				t[10] = m.shot.similarity.rot[2][1];
+				t[11] = m.shot.similarity.rot[2][2];
+				t[12] = m.shot.camera.f;
+				t[13] = m.shot.camera.s[0];
+				t[14] = m.shot.camera.s[1];
+				t[15] = m.shot.camera.c[0];
+				t[16] = m.shot.camera.c[1];
+				fwrite(t,sizeof(float),17,fpout);
 
-		//	fwrite( camera.viewport,sizeof(int),2,fpout );
+				fwrite( &m.shot.camera.viewport[0],sizeof(int),2,fpout );
 
-		//	t[ 0] = camera.k[0];
-		//	t[ 1] = camera.k[1];
-		//	t[ 2] = camera.k[2];
-		//	t[ 3] = camera.k[3];
-		//	fwrite(t,sizeof(float),4,fpout);
-		//}
-		//else
-		//{
-		//	fprintf(fpout,"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %d %d %g %g %g %g\n"
-		//		,camera.view_p[0]
-		//		,camera.view_p[1]
-		//		,camera.view_p[2]
-		//		,camera.x_axis[0]
-		//		,camera.x_axis[1]
-		//		,camera.x_axis[2]
-		//		,camera.y_axis[0]
-		//		,camera.y_axis[1]
-		//		,camera.y_axis[2]
-		//		,camera.z_axis[0]
-		//		,camera.z_axis[1]
-		//		,camera.z_axis[2]
-		//		,camera.f
-		//		,camera.s[0]
-		//		,camera.s[1]
-		//		,camera.c[0]
-		//		,camera.c[1]
-		//		,camera.viewport[0]
-		//		,camera.viewport[1]
-		//		,camera.k[0]
-		//		,camera.k[1]
-		//		,camera.k[2]
-		//		,camera.k[3]
-		//	);
-		//}		
-	//}
+				t[ 0] = m.shot.camera.k[0];
+				t[ 1] = m.shot.camera.k[1];
+				t[ 2] = m.shot.camera.k[2];
+				t[ 3] = m.shot.camera.k[3];
+				fwrite(t,sizeof(float),4,fpout);
+		}
+		else
+		{
+			fprintf(fpout,"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %d %d %g %g %g %g\n"
+				,-m.shot.similarity.tra[0]
+				,-m.shot.similarity.tra[1]
+				,-m.shot.similarity.tra[2]
+				,m.shot.similarity.rot[0][0]
+				,m.shot.similarity.rot[0][1]
+				,m.shot.similarity.rot[0][2]
+				,m.shot.similarity.rot[1][0]
+				,m.shot.similarity.rot[1][1]
+				,m.shot.similarity.rot[1][2]
+				,m.shot.similarity.rot[2][0]
+				,m.shot.similarity.rot[2][1]
+				,m.shot.similarity.rot[2][2]
+				,m.shot.camera.f
+				,m.shot.camera.s[0]
+				,m.shot.camera.s[1]
+				,m.shot.camera.c[0]
+				,m.shot.camera.c[1]
+				,m.shot.camera.viewport[0]
+				,m.shot.camera.viewport[1]
+				,m.shot.camera.k[0]
+				,m.shot.camera.k[1]
+				,m.shot.camera.k[2]
+				,m.shot.camera.k[3]
+			);
+		}		
+	}
 
 
 	int j;
