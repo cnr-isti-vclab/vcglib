@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/10/25 08:21:17  ganovelli
+added: constructor,Set and some minor changes.
+
 Revision 1.3  2004/05/10 14:40:28  ganovelli
 name of adhacency function updated
 
@@ -70,7 +73,7 @@ public:
 
 
 	/// Costructor
-  inline Set(VertexType* v0,VertexType* v1){v[0]=v0;v[1]=v1;}
+  inline void Set(VertexType* v0,VertexType* v1){v[0]=v0;v[1]=v1;}
 
 	/// This are the _flags of face, the default value is 0
 	int  _flags;		
