@@ -24,30 +24,15 @@
   History
 
 $Log: not supported by cvs2svn $
-Revision 1.1  2004/04/05 11:56:13  cignoni
-First working version!
-
-Revision 1.2  2004/03/12 15:22:19  cignoni
-Written some documentation and added to the trimes doxygen module
-
-Revision 1.1  2004/03/05 10:59:24  cignoni
-Changed name from plural to singular (normals->normal)
-
-Revision 1.1  2004/03/04 00:05:50  cignoni
-First working version!
-
-Revision 1.1  2004/02/19 13:11:06  cignoni
-Initial commit
-
 
 ****************************************************************************/
-#ifndef __VCG_TRI_UPDATE_BOUNDING
-#define __VCG_TRI_UPDATE_BOUNDING
+#ifndef __VCG_EDGE_UPDATE_BOUNDING
+#define __VCG_EDGE_UPDATE_BOUNDING
 
 namespace vcg {
-namespace tri {
+namespace edge {
 
-/** \addtogroup trimesh */
+/** \addtogroup edgemesh */
 /*@{*/
 
 /// Management, updating and computation of per-vertex and per-face normals.
@@ -61,9 +46,9 @@ typedef ComputeMeshType MeshType;
 typedef typename MeshType::VertexType     VertexType;
 typedef typename MeshType::VertexPointer  VertexPointer;
 typedef typename MeshType::VertexIterator VertexIterator;
-typedef typename MeshType::FaceType       FaceType;
-typedef typename MeshType::FacePointer    FacePointer;
-typedef typename MeshType::FaceIterator   FaceIterator;
+typedef typename MeshType::EdgeType       EdgeType;
+typedef typename MeshType::EdgePointer    EdgePointer;
+typedef typename MeshType::EdgeIterator   EdgeIterator;
 
 /// Calculates the vertex normal (if stored in the current face type)
 static void Box(ComputeMeshType &m)
