@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2004/05/04 23:19:41  cignoni
+Clarified initial comment, removed vector*matrix operator (confusing!)
+Corrected translate and Rotate, removed gl stuff.
+
 Revision 1.14  2004/05/04 02:34:03  ganovelli
 wrong use of operator [] corrected
 
@@ -32,6 +36,10 @@ Added: [i][j] access, V() for the raw float values, constructor from T[16]
 
 Revision 1.12  2004/03/25 14:57:49  ponchio
 Microerror. ($LOG$ -> $Log: not supported by cvs2svn $
+Microerror. ($LOG$ -> Revision 1.15  2004/05/04 23:19:41  cignoni
+Microerror. ($LOG$ -> Clarified initial comment, removed vector*matrix operator (confusing!)
+Microerror. ($LOG$ -> Corrected translate and Rotate, removed gl stuff.
+Microerror. ($LOG$ ->
 Microerror. ($LOG$ -> Revision 1.14  2004/05/04 02:34:03  ganovelli
 Microerror. ($LOG$ -> wrong use of operator [] corrected
 Microerror. ($LOG$ ->
@@ -528,11 +536,11 @@ template <class T> bool LinearSolve<T>::Decompose() {
   d = 1; //no permutation still
     
   T scaling[4];
-  
+  int i,j,k;
   //Saving the scvaling information per row
-  for(int i = 0; i < 4; i++) { 
+  for(i = 0; i < 4; i++) { 
     T largest = 0.0;
-    for(int j = 0; j < 4; j++) {
+    for(j = 0; j < 4; j++) {
       T t = math::Abs(element(i, j));
       if (t > largest) largest = t;
     }
@@ -544,17 +552,17 @@ template <class T> bool LinearSolve<T>::Decompose() {
   }
 
   int imax;
-  for(int j = 0; j < 4; j++) { 
-    for(int i = 0; i < j; i++) {
+  for(j = 0; j < 4; j++) { 
+    for(i = 0; i < j; i++) {
       T sum = element(i,j);
       for(int k = 0; k < i; k++) 
         sum -= element(i,k)*element(k,j);
       element(i,j) = sum;
     }
     T largest = 0.0; 
-    for(int i = j; i < 4; i++) { 
+    for(i = j; i < 4; i++) { 
       T sum = element(i,j);
-      for(int k = 0; k < j; k++)
+      for(k = 0; k < j; k++)
         sum -= element(i,k)*element(k,j);
       element(i,j) = sum;
       T t = scaling[i] * math::Abs(sum);
