@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/07/01 21:33:46  ponchio
+Added remap reading.
+
 Revision 1.1  2004/06/23 00:10:38  ponchio
 Created
 
@@ -107,12 +110,12 @@ int main(int argc, char *argv[]) {
   bool vremap = false;
   bool fremap = false;
   VertRemap vert_remap;
-  if(vert_remap.Load(argv[1] + string(".vrm"))) {
+  if(vert_remap.Load(argv[1])) {
     cerr << "Found vert remap.\n";
     vremap = true;
   }
   VFile<unsigned int> face_remap;
-  if(face_remap.Load(argv[1] + string(".frm"))) {
+  if(face_remap.Load(argv[1] + string(".rmf"))) {
     cerr << "Found face remap.\n";
     fremap = true;
   }
