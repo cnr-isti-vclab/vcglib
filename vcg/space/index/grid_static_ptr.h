@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/05/10 14:44:13  ganovelli
+created
+
 Revision 1.1  2004/03/08 09:21:31  cignoni
 Initial commit
 
@@ -376,7 +379,7 @@ public:
 				}
 		}
 		// Push della sentinella
-		links.push_back( Link(NULL,grid.size()-1) );
+		links.push_back( Link((typename ContainerType::iterator)NULL,(grid.size()-1)));
 
 		// Ordinamento dei links
 		sort( links.begin(), links.end() );
