@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/05/14 03:15:09  ponchio
+Redesigned partial version.
+
 Revision 1.5  2004/05/12 20:55:18  ponchio
 *** empty log message ***
 
@@ -47,17 +50,13 @@ Adding copyright.
 #include <wrap/gui/view.h>
 #include <wrap/gui/trackmode.h>
 #include <list>
+#include <vector>
 #include <map>
 
 namespace vcg {
-  /* A trackball stores two transformations
-     the first one, local, is the one 'placing' the trackball somewhere, 
-     the second one, track, is the one that effectively rotate the object.
-
-     The 'local' transformation is the one that contains information about
-     the rotation center, the size and the orientation of the trackball.
-     the 'track' is the one implementing the effective transformation.
-
+  /* A trackball stores a transformation called 'track' that effectively rotate the object.
+     the rotation center, and size are kept in center and radius.
+   
   */
 
   class Transform {
@@ -97,6 +96,7 @@ namespace vcg {
     //operating
     void GetView();
     void Apply();
+    void ApplyInverse();
     void Draw();
     void ApplynDraw() { Apply(); Draw(); }
     void Reset();
@@ -107,9 +107,9 @@ namespace vcg {
     static void DrawPlaneHandle();
 
     //interface
-    void MouseDown(int x, int y, Button button);
+    void MouseDown(int x, int y, /*Button*/ int button);
     void MouseMove(int x, int y); 
-    void MouseUp(int x, int y, Button button); 
+    void MouseUp(int x, int y, /*Button */ int button); 
     void MouseWheel(Button notch);
     void ButtonUp(Button button);
     void ButtonDown(Button button);
@@ -147,14 +147,8 @@ namespace vcg {
     };
 
 	
-    ///Find the current action ussing the current button
-
-
     //protected:
     View<float> camera;
-
-    /*    float ScreenRadius;
-	  Point3f ScreenCenter;*/
 
     void SetCurrentAction();
   
@@ -166,6 +160,7 @@ namespace vcg {
     Similarityf last_track;
     Similarityf last_view;
     Point3f last_point;
+    std::vector<Point3f> Hits;
     bool dragging;
     int button_mask;
 
@@ -176,14 +171,6 @@ namespace vcg {
     std::list<Transform> history;
     int history_size;
 
-    //Point3f ScreenOrigin();      //center of trackball in Screen coord   
-    //Point3f ModelOrigin();       //center of trackball in Model coord
-  
-    //    Matrix44f ScreenToModel();  //forse non serve.....
-    //    Similarityf ModelToLocal();
-  
-    //Point3f ScreenToLocal(const Point3f &p);
-    //Point3f LocalToScreen(const Point3f &p);  
     friend class TrackMode;
   };
 

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/05/14 03:15:09  ponchio
+Redesigned partial version.
+
 Revision 1.6  2004/05/12 20:55:18  ponchio
 *** empty log message ***
 
@@ -41,7 +44,7 @@ Adding copyright.
 
 
 ****************************************************************************/
-
+#include<gl/glew.h>
 #include "trackball.h"
 
 #include <wrap/gl/math.h>
@@ -111,7 +114,15 @@ void Trackball::GetView() {
 }
 
 void Trackball::Apply() { 
+  glTranslate(center);
   glMultMatrix(track.Matrix());
+  glTranslate(-center);
+}
+
+void Trackball::ApplyInverse() { 
+  glTranslate(center);
+  glMultMatrix(track.InverseMatrix());
+  glTranslate(-center);
 }
 
 /***************************************************************/
@@ -163,6 +174,15 @@ void Trackball::DrawPlaneHandle() {
 }
 
 void Trackball::Draw() {
+  
+  glPushMatrix();
+  ApplyInverse();
+  glBegin(GL_POINTS);
+    for(int i=0;i<Hits.size();++i)
+    glVertex(Hits[i]);
+  glEnd();
+  glPopMatrix();
+
   glPushMatrix();
   
   glTranslate(center);
@@ -183,17 +203,15 @@ void Trackball::Draw() {
   glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,amb);
   glMaterialfv(GL_FRONT_AND_BACK,GL_DIFFUSE,col);
   glPushMatrix();
+    DrawCircle();
+    glPushMatrix();
   
-  DrawCircle();
-  glPushMatrix();
-  
-  glRotatef(90,1,0,0);
-  DrawCircle();
-  glRotatef(90,0,1,0);
-  DrawCircle();
-  
-  glPopMatrix();
-  
+      glRotatef(90,1,0,0);
+      DrawCircle();
+      glRotatef(90,0,1,0);
+      DrawCircle();
+      
+    glPopMatrix();
   glPopMatrix();
 		
   glColor4f(1.0,.8f,.8f,1.0f);
@@ -249,10 +267,11 @@ void Trackball::Reset() {
 }
 
 //interface
-void Trackball::MouseDown(int x, int y, Trackball::Button button) {
+void Trackball::MouseDown(int x, int y, int button) {
   current_button |= button;  
   SetCurrentAction();
   last_point = Point3f((float)x, (float)y, 0);
+  Hits.clear();
 }
 
 void Trackball::MouseMove(int x, int y) {  
@@ -264,7 +283,7 @@ void Trackball::MouseMove(int x, int y) {
   current_mode->Apply(this, Point3f(float(x), float(y), 0));
 } 
 
-void Trackball::MouseUp(int /* x */, int /* y */, Trackball::Button button) { 
+void Trackball::MouseUp(int /* x */, int /* y */, int button) { 
   current_button &= (~button);
   SetCurrentAction();
 } 

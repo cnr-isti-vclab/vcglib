@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/05/14 03:15:09  ponchio
+Redesigned partial version.
+
 Revision 1.4  2004/05/07 12:46:08  cignoni
 Restructured and adapted in a better way to opengl
 
@@ -52,12 +55,8 @@ public:
   virtual ~TrackMode() {}
   virtual void Apply(Trackball *trackball, Point3f new_point) = 0;
   virtual void Draw() {}
-  //virtual void Draw() {}
-  //  virtual Similarityf ComputeFromWindow(const Point3f &old_point, 
-  //const Point3f &new_point) = 0;
-  //  Point3f Hit(const Point3f &p);
  protected:
-  Plane3f GetViewPlane(const View<float> &view, Point3f center);
+  Plane3f GetViewPlane(const View<float> &view, const Point3f &center);
   Point3f HitViewPlane(Trackball *trackball, const Point3f &p);
 };
  
@@ -68,12 +67,14 @@ class SphereMode: public TrackMode {
   void Apply(Trackball *trackball, Point3f new_point);
  protected:
   Point3f Hit(Trackball *trackball, const Point3f &p);
+  bool HitHyper(Point3f center,  float radius, Point3f viewpoint, Plane3f vp, Point3f hitplane, Point3f &hit) ;
+
 };
 
 class CylinderMode: public TrackMode {
 public:
-  CylinderMode(const Line3f &line, float radius = 1) {}
-  void Apply(Trackball *trackball, Point3f new_point) {}
+  CylinderMode(const Line3f &/*line*/, float /*radius = 1*/) {}
+  void Apply(Trackball * /*trackball*/, Point3f /*new_point*/) {}
 protected:
   Line3f line;
   float radius;
@@ -89,15 +90,15 @@ protected:
 
 class LineMode: public TrackMode {
 public:
-  LineMode(const Line3f &line) {}
-  void Apply(Trackball *trackball, Point3f new_point) {}
+  LineMode(const Line3f &/*line*/) {}
+  void Apply(Trackball * /*trackball*/, Point3f /*new_point*/) {}
 protected:
   Line3f line;
 };
 
 class ScaleMode: public TrackMode {
 public:
-  void Apply(Trackball *trackball, Point3f new_point) {}
+  void Apply(Trackball * /*trackball*/, Point3f /*new_point*/) {}
 };
 
 }//namespace 
