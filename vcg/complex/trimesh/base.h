@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/07/15 11:39:24  ganovelli
+IsDeleted to IsD
+
 Revision 1.7  2004/07/09 10:18:19  ganovelli
 added access functions to vn and fn
 
@@ -49,6 +52,7 @@ Initial commit
 ****************************************************************************/
 
 #pragma warning( disable : 4804 )
+#include <vcg/space/box3.h>
 
 /*
 People should subclass his vertex class from these one...
@@ -197,7 +201,9 @@ void InitVertexIMark()
 
 /// The incremental mark
 int imark;
-
+/** Access function to the incremental mark. 
+*/
+inline int & IMark(){return imark;}
 /** Check if the vertex incremental mark matches the one of the mesh. 
 	@param v Vertex pointer
 */
