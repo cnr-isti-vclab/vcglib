@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2004/05/10 13:00:14  ganovelli
+limits function cancelled
+
 Revision 1.16  2004/05/03 08:38:08  ganovelli
 correction on templates
 
@@ -83,7 +86,12 @@ Edited Comments and GPL license
   #ifdef __BORLANDC__
     float sqrtf (float v) {return sqrt(v);}
     float fabsf (float v) {return fabs(v);}
-  #endif     
+    float cosf  (float v) {return cos(v);}
+    float sinf  (float v) {return sin(v);}
+    float acosf  (float v) {return acos(v);}
+    float asinf  (float v) {return asin(v);}
+    float atan2f (float v0, float v1) {return atan2(v0,v1);}
+  #endif
 
 namespace vcg {
 
