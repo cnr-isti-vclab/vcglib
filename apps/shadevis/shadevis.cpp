@@ -1,29 +1,32 @@
 /****************************************************************************
-* VCGLib                                                            o o     *
-* Visual and Computer Graphics Library                            o     o   *
-*                                                                _   O  _   *
-* Copyright(C) 2004                                                \/)\/    *
-* Visual Computing Lab                                            /\/|      *
-* ISTI - Italian National Research Council                           |      *
-*                                                                    \      *
-* All rights reserved.                                                      *
-*                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
-* it under the terms of the GNU General Public License as published by      *
-* the Free Software Foundation; either version 2 of the License, or         *
-* (at your option) any later version.                                       *
-*                                                                           *
-* This program is distributed in the hope that it will be useful,           *
-* but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
-* GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
-* for more details.                                                         *
-*                                                                           *
-****************************************************************************/
+ * VCGLib                                                            o o     *
+ * Visual and Computer Graphics Library                            o     o   *
+ *                                                                _   O  _   *
+ * Copyright(C) 2004                                                \/)\/    *
+ * Visual Computing Lab                                            /\/|      *
+ * ISTI - Italian National Research Council                           |      *
+ *                                                                    \      *
+ * All rights reserved.                                                      *
+ *                                                                           *
+ * This program is free software; you can redistribute it and/or modify      *   
+ * it under the terms of the GNU General Public License as published by      *
+ * the Free Software Foundation; either version 2 of the License, or         *
+ * (at your option) any later version.                                       *
+ *                                                                           *
+ * This program is distributed in the hope that it will be useful,           *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of            *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
+ * GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
+ * for more details.                                                         *
+ *                                                                           *
+ ****************************************************************************/
 /****************************************************************************
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/09/28 09:46:51  cignoni
+Added MapFalseColor
+
 Revision 1.6  2004/09/16 14:08:35  ponchio
 gamma is a math function.
 
@@ -110,8 +113,8 @@ vector<Point3f> ViewVector;
 
 bool cb(const char *buf)
 {
-	printf(buf);
-	return true;
+  printf(buf);
+  return true;
 }
 
 void BuildOnePixelTexture(Color4b c, unsigned int &TexInd)
@@ -163,9 +166,9 @@ void DrawViewVector()
   glColor3f(0,0,1);
   glBegin(GL_LINES);
   for(unsigned int i=0;i<ViewVector.size();++i)
-  {
-    glVertex3f(0,0,0);glVertex(ViewVector[i]);
-  }
+    {
+      glVertex3f(0,0,0);glVertex(ViewVector[i]);
+    }
   glEnd();
 }
 void DrawLightVector()
@@ -192,11 +195,11 @@ void Draw(AMesh &mm)
   AMesh::FaceIterator fi;
   glBegin(GL_TRIANGLES);
   for(fi=mm.face.begin();fi!=mm.face.end();++fi)
-  {
-    glNormal((*fi).V(0)->N()); if(ColorFlag) glColor((*fi).V(0)->C());  glVertex((*fi).V(0)->P());
-    glNormal((*fi).V(1)->N()); if(ColorFlag) glColor((*fi).V(1)->C());  glVertex((*fi).V(1)->P());
-    glNormal((*fi).V(2)->N()); if(ColorFlag) glColor((*fi).V(2)->C());  glVertex((*fi).V(2)->P());
-  }
+    {
+      glNormal((*fi).V(0)->N()); if(ColorFlag) glColor((*fi).V(0)->C());  glVertex((*fi).V(0)->P());
+      glNormal((*fi).V(1)->N()); if(ColorFlag) glColor((*fi).V(1)->C());  glVertex((*fi).V(1)->P());
+      glNormal((*fi).V(2)->N()); if(ColorFlag) glColor((*fi).V(2)->C());  glVertex((*fi).V(2)->P());
+    }
   glEnd();
 }
 
@@ -211,7 +214,7 @@ string OutNameMsh;
  */
 void  ViewReshape(GLsizei w, GLsizei h)
 {
-	ScreenW=w; ScreenH=h;
+  ScreenW=w; ScreenH=h;
   glViewport(0,0,w,h);
 }
 
@@ -225,9 +228,12 @@ void  ViewDisplay (void)
   glLoadIdentity ();  
   glPushMatrix();
   QL.Apply();
-  glutPrintf(5,5,"Diffuse %04.2f   Ambient %04.2f    LowPass %04.2f    HiPass %04.2f    Gamma %04.2f ",diff,ambi,lopass,hipass,gamma_correction);
+  glutPrintf(5,5,"Diffuse %04.2f   Ambient %04.2f "
+	     "   LowPass %04.2f    HiPass %04.2f    Gamma %04.2f ",
+	     diff,ambi,lopass,hipass,gamma_correction);
+
   GLfloat light_position0[] = {0.0, 10.0, 300.0, 0.0};
-	glLightfv(GL_LIGHT0, GL_POSITION, light_position0);
+  glLightfv(GL_LIGHT0, GL_POSITION, light_position0);
   glPopMatrix();
   glTranslatef(0,0,-4);
   if(Q==&QL) DrawLightVector();	
@@ -241,11 +247,12 @@ void  ViewDisplay (void)
   glColor3f(diff,diff,diff); 
   glTranslate(-m.bbox.Center());
   if(LightFlag) glEnable(GL_LIGHTING);
-          else glDisable(GL_LIGHTING);
+  else glDisable(GL_LIGHTING);
   if(ColorFlag) glEnable(GL_COLOR_MATERIAL);
-          else glDisable(GL_COLOR_MATERIAL);
+  else glDisable(GL_COLOR_MATERIAL);
   if(FalseColorFlag) glColorMaterial(GL_FRONT,GL_DIFFUSE);
-               else  glColorMaterial(GL_FRONT,GL_AMBIENT);
+  else  glColorMaterial(GL_FRONT,GL_AMBIENT);
+  
   glMateriali(GL_FRONT,GL_SHININESS,0);
   float spec[4]={0,0,0,1};
   float ambientV[4]={ambi,ambi,ambi,1};
@@ -270,50 +277,62 @@ void ViewSpecialKey(int , int , int )
 void Toggle(bool &flag) {flag = !flag;}
 void UpdateVis()
 {
-  if( LightFlag && !FalseColorFlag) Vis.MapVisibility(gamma_correction,lopass,hipass,ambi);
-  if(!LightFlag && !FalseColorFlag) Vis.MapVisibility(gamma_correction,lopass,hipass,1.0);
-  if(FalseColorFlag)  Vis.MapFalseColor();
+  if( LightFlag && !FalseColorFlag) 
+    Vis.MapVisibility(gamma_correction,lopass,hipass,ambi);
+  if(!LightFlag && !FalseColorFlag) 
+    Vis.MapVisibility(gamma_correction,lopass,hipass,1.0);
+  if(FalseColorFlag)  
+    Vis.MapFalseColor();
 }
 /*********************************************************************/
 /*********************************************************************/
 /*********************************************************************/
+
 void ViewKey(unsigned char key, int , int )
 {
-	Point3f dir;
+  Point3f dir;
   switch (key) {
   case 27: exit(0);   	break;
   case 9: if(Q==&QV) Q=&QL;else Q=&QV;   	break;
-	case 'l' :
-		lopass=lopass+.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma_correction); 
-		UpdateVis();
-		break;
-	case 'L' :
-		lopass=lopass-.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma_correction); 
-		UpdateVis(); break;
-	case 'h' :
-		hipass=hipass-.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma_correction); 
-		UpdateVis(); break;
-	case 'H' :
-		hipass=hipass+.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma_correction); 
-		UpdateVis(); break;
+  case 'l' :
+    lopass=lopass+.05; 
+    printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma_correction); 
+    UpdateVis(); break;
+  case 'L' :
+    lopass=lopass-.05; 
+    printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma_correction); 
+    UpdateVis(); break;
+  case 'h' :
+    hipass=hipass-.05; 
+    printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma_correction); 
+    UpdateVis(); break;
+  case 'H' :
+    hipass=hipass+.05; 
+    printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma_correction); 
+    UpdateVis(); break;
   case 'd' :  diff+=.05; printf("Ambient %f Diffuse %f, \n",ambi,diff); 		UpdateVis(); break;
   case 'D' :  diff-=.05; printf("Ambient %f Diffuse %f, \n",ambi,diff); 		UpdateVis(); break;
   case 'a' :  ambi+=.05; printf("Ambient %f Diffuse %f, \n",ambi,diff); 		UpdateVis(); break;
   case 'A' :  ambi-=.05; printf("Ambient %f Diffuse %f, \n",ambi,diff); 		UpdateVis(); break;
-
-  case 'e' :  ambi+=.05; diff-=.05; printf("Ambient %f Diffuse %f, \n",ambi,diff); 		UpdateVis(); break;
-  case 'E' :  ambi-=.05; diff+=.05; printf("Ambient %f Diffuse %f, \n",ambi,diff); 		UpdateVis(); break;
-
-	case 'p' :
-		gamma_correction=gamma_correction-.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma_correction); 
-		UpdateVis(); break;
-	case 'P' :
-		gamma_correction=gamma_correction+.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma_correction); 
-		UpdateVis(); break;
-	case 13 : 
-		//Vis.ComputeUniform(SampleNum,ViewVector,cb); 
+    
+  case 'e' :  ambi+=.05; diff-=.05; 
+    printf("Ambient %f Diffuse %f, \n",ambi,diff); 
+    UpdateVis(); break;
+  case 'E' :  ambi-=.05; diff+=.05; 
+    printf("Ambient %f Diffuse %f, \n",ambi,diff); 
+    UpdateVis(); break;
+  case 'p' :
+    gamma_correction=gamma_correction-.05; 
+    printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma_correction); 
+    UpdateVis(); break;
+  case 'P' :
+    gamma_correction=gamma_correction+.05; 
+    printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma_correction); 
+    UpdateVis(); break;
+  case 13 : 
+    //Vis.ComputeUniform(SampleNum,ViewVector,cb); 
     Vis.ComputeUniformCone(SampleNum,ViewVector, ConeAngleRad,ConeDir,cb); 
-		UpdateVis(); break;
+    UpdateVis(); break;
   case ' ' : {
     Point3f dir = Q->camera.ViewPoint();
     printf("ViewPoint %f %f %f\n",dir[0],dir[1],dir[2]);
@@ -321,16 +340,28 @@ void ViewKey(unsigned char key, int , int )
     dir=Inverse(Q->track.Matrix())*dir;
     printf("ViewPoint %f %f %f\n",dir[0],dir[1],dir[2]);
     dir.Normalize();
-		Vis.ComputeSingle(dir,ViewVector,cb); 
-		UpdateVis(); 
-             } break;
-  case 'r' : BaseColor[0]=min(255,BaseColor[0]+2); printf("BaseColor %3i %3i %3i \n",BaseColor[0],BaseColor[1],BaseColor[2]); break;
-  case 'R' : BaseColor[0]=max(  0,BaseColor[0]-2); printf("BaseColor %3i %3i %3i \n",BaseColor[0],BaseColor[1],BaseColor[2]); break;
-  case 'g' : BaseColor[1]=min(255,BaseColor[1]+2); printf("BaseColor %3i %3i %3i \n",BaseColor[0],BaseColor[1],BaseColor[2]); break;
-  case 'G' : BaseColor[1]=max(  0,BaseColor[1]-2); printf("BaseColor %3i %3i %3i \n",BaseColor[0],BaseColor[1],BaseColor[2]); break;
-  case 'b' : BaseColor[2]=min(255,BaseColor[2]+2); printf("BaseColor %3i %3i %3i \n",BaseColor[0],BaseColor[1],BaseColor[2]); break;
-  case 'B' : BaseColor[2]=max(  0,BaseColor[2]-2); printf("BaseColor %3i %3i %3i \n",BaseColor[0],BaseColor[1],BaseColor[2]); break;
-
+    Vis.ComputeSingle(dir,ViewVector,cb); 
+    UpdateVis(); 
+  } break;
+  case 'r' : BaseColor[0]=min(255,BaseColor[0]+2); 
+    printf("BaseColor %3i %3i %3i \n",BaseColor[0],BaseColor[1],BaseColor[2]); 
+    break;
+  case 'R' : BaseColor[0]=max(  0,BaseColor[0]-2); 
+    printf("BaseColor %3i %3i %3i \n",BaseColor[0],BaseColor[1],BaseColor[2]); 
+    break;
+  case 'g' : BaseColor[1]=min(255,BaseColor[1]+2); 
+    printf("BaseColor %3i %3i %3i \n",BaseColor[0],BaseColor[1],BaseColor[2]); 
+    break;
+  case 'G' : BaseColor[1]=max(  0,BaseColor[1]-2); 
+    printf("BaseColor %3i %3i %3i \n",BaseColor[0],BaseColor[1],BaseColor[2]); 
+    break;
+  case 'b' : BaseColor[2]=min(255,BaseColor[2]+2); 
+    printf("BaseColor %3i %3i %3i \n",BaseColor[0],BaseColor[1],BaseColor[2]); 
+    break;
+  case 'B' : BaseColor[2]=max(  0,BaseColor[2]-2); 
+    printf("BaseColor %3i %3i %3i \n",BaseColor[0],BaseColor[1],BaseColor[2]); 
+    break;
+    
   case 'v' : Toggle(ShowDirFlag); break;
   case 'V' : 
     {
@@ -340,30 +371,35 @@ void ViewKey(unsigned char key, int , int )
       sprintf(buf,"Snap%03i.ppm",imgcnt++);
       snapC.SavePPM(buf);
     }
-	case 's' :
-		Vis.SmoothVisibility();
-		UpdateVis(); break;
+  case 's' :
+    Vis.SmoothVisibility();
+    UpdateVis(); break;
   case 'S' :
     { 
       vcg::tri::io::PlyInfo p; 
       p.mask|=vcg::ply::PLYMask::PM_VERTCOLOR /* | vcg::ply::PLYMask::PM_VERTQUALITY*/ ;
       tri::io::ExporterPLY<AMesh>::Save(m,OutNameMsh.c_str(),false,p);
     }
-		break;
-  case 'C' : LightFlag = !LightFlag; printf("Toggled Light %s\n",LightFlag?"on":"off"); 		UpdateVis(); break;
-  case 'c' : ColorFlag = !ColorFlag; printf("Toggled Color %s\n",ColorFlag?"on":"off"); break;
-  case 'f' : FalseColorFlag = !FalseColorFlag; printf("Toggled FalseColor %s\n",ColorFlag?"on":"off"); UpdateVis(); break;
-  
+    break;
+  case 'C' : LightFlag = !LightFlag; 
+    printf("Toggled Light %s\n",LightFlag?"on":"off"); 		
+    UpdateVis(); break;
+  case 'c' : ColorFlag = !ColorFlag; 
+    printf("Toggled Color %s\n",ColorFlag?"on":"off"); break;
+  case 'f' : FalseColorFlag = !FalseColorFlag; 
+    printf("Toggled FalseColor %s\n",ColorFlag?"on":"off"); 
+    UpdateVis(); break;
+    
   case '1' : diff=0.80f; ambi=0.10f; gamma_correction=1.0; lopass=0.00f; hipass=1.00f; ColorFlag=false; UpdateVis(); break;
   case '2' : diff=0.65f; ambi=0.30f; gamma_correction=1.0; lopass=0.15f; hipass=0.80f; ColorFlag=true;  UpdateVis(); break;
   case '3' : diff=0.45f; ambi=0.50f; gamma_correction=1.0; lopass=0.20f; hipass=0.75f; ColorFlag=true;  UpdateVis(); break;
   case '4' : diff=0.35f; ambi=0.60f; gamma_correction=1.0; lopass=0.25f; hipass=0.70f; ColorFlag=true;  UpdateVis(); break;
-	}
-	glutPostRedisplay(); ;
+  }
+  glutPostRedisplay(); ;
 } 
 void ViewMenu(int val)
 {
- 	 ViewKey(val, 0, 0); 
+  ViewKey(val, 0, 0); 
 }
 /*********************************************************************/
 // TrackBall Functions
@@ -396,8 +432,8 @@ void ViewMouse(int button, int state, int x, int y)
 
 void ViewMouseMotion(int x, int y)
 {
- 	Q->MouseMove(x,ScreenH-y);
-	glutPostRedisplay();
+  Q->MouseMove(x,ScreenH-y);
+  glutPostRedisplay();
 }
 
 void SetLight()
@@ -405,87 +441,101 @@ void SetLight()
   GLfloat light_ambient0[] = {0.0, 0.0, 0.0, 1.0};  
   GLfloat light_diffuse0[] = {1.0, 1.0, 1.0, 1.0};  
   GLfloat light_position0[] = {0.0, 10.0, 300.0, 0.0};
-	glLightfv(GL_LIGHT0, GL_POSITION, light_position0);
-	glLightfv(GL_LIGHT0, GL_AMBIENT, light_diffuse0);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse0);
-	glEnable(GL_LIGHT0);
+  glLightfv(GL_LIGHT0, GL_POSITION, light_position0);
+  glLightfv(GL_LIGHT0, GL_AMBIENT, light_diffuse0);
+  glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse0);
+  glEnable(GL_LIGHT0);
   glLightModelfv(GL_LIGHT_MODEL_AMBIENT,light_ambient0);
   
 }
  
 void  ViewInit (void) {
   SetLight();
-	Q->Reset();
+  Q->Reset();
   Q->radius= 1;
   glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
-	glClearColor (0.8, 0.8, 0.8, 0.0);
-	glEnable(GL_NORMALIZE);
-	glEnable(GL_LIGHTING);
-	
-//	glEnable(GL_BLEND);
-	glShadeModel(GL_SMOOTH);
-//  glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+  glDepthFunc(GL_LEQUAL);
+  glClearColor (0.8, 0.8, 0.8, 0.0);
+  glEnable(GL_NORMALIZE);
+  glEnable(GL_LIGHTING);
+  
+  //	glEnable(GL_BLEND);
+  glShadeModel(GL_SMOOTH);
+  //  glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);     
   glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);	
+  glCullFace(GL_BACK);	
 }
 
 
 
 int main(int argc, char** argv)
 {
-	if(argc<2) {
-		printf(
-			"shadevis 1.0 \n"__DATE__"\n"
-			"Copyright 2003-2004 Visual Computing Lab I.S.T.I. C.N.R.\n"
-			"Paolo Cignoni (cignoni@isti.cnr.it)\n\n"
-			"Usage: shadevis file.ply [options]\n"
-			"Options:\n"
-			"     -w#      WindowResolution (default 600)\n"
-			"     -n#      Sample Directions (default 64)\n"
-			"     -z#      z offset (default 1e-3)\n"
-			"     -c       assume that the mesh is closed (slightly faster, default false)\n"
-			"     -f       Flip normal of the model\n"
-			"     -da #    Cone Direction Angle in degree (default 180)\n"
-			"     -dv # # # Cone Direction vector (default 0 0 1)\n"			
-      		 );
-
-		return 1;
-	}
-
-	srand(time(0));
+  if(argc<2) {
+    printf(
+	   "shadevis 1.0 \n"__DATE__"\n"
+	   "Copyright 2003-2004 Visual Computing Lab I.S.T.I. C.N.R.\n"
+	   "Paolo Cignoni (cignoni@isti.cnr.it)\n\n"
+	   "Usage: shadevis file.ply [options]\n"
+	   "Options:\n"
+	   "     -w#      WindowResolution (default 600)\n"
+	   "     -n#      Sample Directions (default 64)\n"
+	   "     -z#      z offset (default 1e-3)\n"
+	   "     -c       assume that the mesh is closed (slightly faster, default false)\n"
+	   "     -f       Flip normal of the model\n"
+	   "     -da #    Cone Direction Angle in degree (default 180)\n"
+	   "     -dv # # # Cone Direction vector (default 0 0 1)\n"			
+	   );
+    
+    return 1;
+  }
+  
+  srand(time(0));
   int i=1;  
-	while(i<argc 	&& (argv[i][0]=='-'))
-		{
-				switch(argv[i][1])
-			{
-        case 'd'  : if(argv[i][2] == 'a') { ConeAngleRad = math::ToRad(atof(argv[i+1])); ++i; break; }
-                    if(argv[i][2] == 'v') { ConeDir = Normalize(Point3f(atof(argv[i+1]),atof(argv[i+2]),atof(argv[i+3]))); i+=3; break; }
-                    printf("Error unable to parse option '%s'\n",argv[i]); exit(0);
-                    break;
-				case 'n'  : SampleNum = atoi(argv[i]+2); break;
-				case 'f'  : SwapFlag=false; break;
-				case 'c'  : ClosedFlag=true; break;
-        case 'w'  : WindowRes= atoi(argv[i]+2); printf("Set WindowRes to %i\n",WindowRes ); break;
-        case 's'  : Vis.SplitNum= atoi(argv[i]+2); printf("Set SplitNum to %i\n",Vis.SplitNum ); break;
-        case 'z'  : Vis.ZTWIST = atof(argv[i]+2); printf("Set ZTWIST to %f\n",Vis.ZTWIST ); break;
-        default: {printf("Error unable to parse option '%s'\n",argv[i]); exit(0);}
-			}
-
-			++i;
-		}
-	
+  while(i<argc 	&& (argv[i][0]=='-'))
+    {
+      switch(argv[i][1])
+	{
+	case 'd'  : 
+	  if(argv[i][2] == 'a') { 
+	    ConeAngleRad = math::ToRad(atof(argv[i+1])); ++i; break; 
+	  }
+	  if(argv[i][2] == 'v') { 
+	    Point3f p(atof(argv[i+1]),atof(argv[i+2]),atof(argv[i+3]));
+	    ConeDir = Normalize(p); 
+	    i+=3; break; 
+	  }
+	  printf("Error unable to parse option '%s'\n",argv[i]); 
+	  exit(0);
+	  break;
+	case 'n'  : SampleNum = atoi(argv[i]+2); break;
+	case 'f'  : SwapFlag=false; break;
+	case 'c'  : ClosedFlag=true; break;
+        case 'w'  : WindowRes= atoi(argv[i]+2); 
+	  printf("Set WindowRes to %i\n",WindowRes ); break;
+        case 's'  : Vis.SplitNum= atoi(argv[i]+2); 
+	  printf("Set SplitNum to %i\n",Vis.SplitNum ); break;
+        case 'z'  : Vis.ZTWIST = atof(argv[i]+2); 
+	  printf("Set ZTWIST to %f\n",Vis.ZTWIST ); break;
+        default: {
+	  printf("Error unable to parse option '%s'\n",argv[i]); 
+	  exit(0);
+	}
+	}
+      
+      ++i;
+    }
+  
   
   string basename = argv[i];
-	if(!(basename.substr(basename.length()-4)==".ply"))	{
-				printf("Error: Unknown file extension %s\n",basename.c_str());
-				return 1;
-	}
-	
+  if(!(basename.substr(basename.length()-4)==".ply"))	{
+    printf("Error: Unknown file extension %s\n",basename.c_str());
+    return 1;
+  }
+  
   // loading original mesh
   int ret=tri::io::ImporterPLY<AMesh>::Open(m,argv[i]);
-	if(ret) {printf("Error unable to open mesh %s\n",argv[i]);exit(-1);}
+  if(ret) {printf("Error unable to open mesh %s\n",argv[i]);exit(-1);}
   tri::UpdateNormals<AMesh>::PerVertexNormalized(m);
   tri::UpdateBounding<AMesh>::Box(m);
   tri::UpdateColor<AMesh>::VertexConstant(m,Color4b::White);
@@ -493,30 +543,33 @@ int main(int argc, char** argv)
   Vis.Init();
   UpdateVis();
 
-  printf("Mesh bbox (%f %f %f)-(%f %f %f)\n\n",m.bbox.min[0],m.bbox.min[1],m.bbox.min[2],m.bbox.max[0],m.bbox.max[1],m.bbox.max[2]);
+  printf("Mesh bbox (%f %f %f)-(%f %f %f)\n\n",
+	 m.bbox.min[0],m.bbox.min[1],m.bbox.min[2],
+	 m.bbox.max[0],m.bbox.max[1],m.bbox.max[2]);
+
   OutNameMsh=(string(argv[i]).substr(0,strlen(argv[i])-4));
-	OutNameMsh+="_vis.ply";
-	
-	printf("Mesh       Output filename %s\n",OutNameMsh.c_str());
-
-	printf("Mesh %iv %if bbox Diag %g\n",m.vn,m.fn,m.bbox.Diag());
-	
-	glutInit(&argc, argv);
-
+  OutNameMsh+="_vis.ply";
+  
+  printf("Mesh       Output filename %s\n",OutNameMsh.c_str());
+  
+  printf("Mesh %iv %if bbox Diag %g\n",m.vn,m.fn,m.bbox.Diag());
+  
+  glutInit(&argc, argv);
+  
   glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
   glutInitWindowSize(WindowRes, WindowRes);
   glutInitWindowPosition (10,10);
   glutCreateWindow ("shadevis - Visual Computing Lab - vcg.isti.cnr.it ");
   glutDisplayFunc(ViewDisplay);
-	glutReshapeFunc(ViewReshape); 
-	glutKeyboardFunc(ViewKey);	
-	glutSpecialFunc(ViewSpecialKey);	
-	glutMouseFunc(ViewMouse);
-	glutMotionFunc(ViewMouseMotion);
-
-	ViewInit();	
+  glutReshapeFunc(ViewReshape); 
+  glutKeyboardFunc(ViewKey);	
+  glutSpecialFunc(ViewSpecialKey);	
+  glutMouseFunc(ViewMouse);
+  glutMotionFunc(ViewMouseMotion);
+  
+  ViewInit();	
   glewInit();	
-	glutMainLoop();
-
-	return(0);
+  glutMainLoop();
+  
+  return(0);
 }
