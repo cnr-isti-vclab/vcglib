@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/09/14 19:49:43  ganovelli
+first compilation version
+
 Revision 1.6  2004/07/15 00:13:39  cignoni
 Better doxigen documentation
 
@@ -151,9 +154,10 @@ void FaceBorderFromNone(MeshType &m)
 	typename UpdateMeshType::FaceIterator pf;
 	typename std::vector<PosType>::iterator p;
 
-	if( fn == 0 ) return;
+	if( m.fn == 0 ) 
+		return;
 
-	e.resize(fn*3);								// Alloco il vettore ausiliario
+	e.resize(m.fn*3);								// Alloco il vettore ausiliario
 	p = e.begin();
 	for(pf=m.face.begin();pf!=m.face.end();++pf)			// Lo riempio con i dati delle facce
 		if( ! (*pf).IsDeleted() )
@@ -193,7 +197,7 @@ void VertexBorderFromFace(MeshType &m)
 	typename MeshType::VertexIterator v;
 	typename MeshType::FaceIterator f;
 
-	for(v=vert.begin();v!=vert.end();++v)
+	for(v=m.vert.begin();v!=m.vert.end();++v)
 		(*v).ClearB();
 
 	for(f=m.face.begin();f!=m.face.end();++f)

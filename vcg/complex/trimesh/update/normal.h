@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/09/09 14:35:14  ponchio
+Typename changes for linux
+
 Revision 1.3  2004/08/31 15:18:54  pietroni
 minor changes to comply gcc compiler (typename's )
 
@@ -176,17 +179,6 @@ static void PerVertexNormalized(ComputeMeshType &m)
   for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
    if( !(*vi).IsD() && (*vi).IsRW() )
      (*vi).N().Normalize();
-}
-
-
-
-
-void ComputeE()
-{
-	FaceIterator f;
- 
-	for(f = m.face.begin(); f!=m.face.end(); ++f)
-		(*f).ComputeE();
 }
 
 }; // end class
