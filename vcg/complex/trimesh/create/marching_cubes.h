@@ -44,8 +44,8 @@ namespace vcg
 		*         /|       /|         / |       /|    
 		*       /  |     /  |      11/  3   10/  |    
 		*   7 /_______ /    |      /__6_|__ /    |1   
-		*    |     |  |6    |     |     |     |    
-		*    |    0|__|_____|1    |     |__|_0|__|    
+		*    |     |  |6    |     |     |  |     |
+		*    |    0|__|_____|1    |     |__|__0__|    
 		*    |    /   |    /      7   8/   5    /     
 		*    |  /     |  /        |  /     |  /9      
 		*    |/_______|/          |/___4___|/         
@@ -608,7 +608,7 @@ namespace vcg
 					v12->P() += v->P();
 					v12->N() += v->N();
 				}
-				if (_walker->Exist(_corners[2], _corners[1], v) )
+				if (_walker->Exist(_corners[1], _corners[2], v) )
 				{
 					count++;
 					v12->P() += v->P();
@@ -620,7 +620,7 @@ namespace vcg
 					v12->P() += v->P();
 					v12->N() += v->N();
 				}
-				if (_walker->Exist(_corners[3], _corners[0], v) )
+				if (_walker->Exist(_corners[0], _corners[3], v) )
 				{
 					count++;
 					v12->P() += v->P();
@@ -632,7 +632,7 @@ namespace vcg
 					v12->P() += v->P();
 					v12->N() += v->N();
 				}
-				if (_walker->Exist(_corners[6], _corners[5], v) )
+				if (_walker->Exist(_corners[5], _corners[6], v) )
 				{
 					count++;
 					v12->P() += v->P();
@@ -644,7 +644,7 @@ namespace vcg
 					v12->P() += v->P();
 					v12->N() += v->N();
 				}
-				if (_walker->Exist(_corners[7], _corners[4], v) )
+				if (_walker->Exist(_corners[4], _corners[7], v) )
 				{
 					count++;
 					v12->P() += v->P();
