@@ -59,8 +59,9 @@ void File::Redim(unsigned int elem) {
   if(elem > size) {
     
 #ifdef WIN32
+    LONG zero = 0;
     if(INVALID_SET_FILE_POINTER == 
-       SetFilePointer(fp, elem - 1, 0, FILE_BEGIN))
+       SetFilePointer(fp, elem - 1, &zero, FILE_BEGIN))
 #else
     if(-1 == fseek(fp, elem - 1, SEEK_SET)) 
 #endif
@@ -79,7 +80,8 @@ void File::Redim(unsigned int elem) {
     int fd = fileno(fp);
     ftruncate(fd, elem);
 #else
-    SetFilePointer(fp, elem, 0, FILE_BEGIN);
+    LONG zero = 0;
+    SetFilePointer(fp, elem, &zero, FILE_BEGIN);
     SetEndOfFile(fp);
 #endif
   }    
@@ -88,7 +90,8 @@ void File::Redim(unsigned int elem) {
 
 void File::SetPosition(unsigned int pos) {
 #ifdef WIN32
-  SetFilePointer(fp, pos, 0, FILE_BEGIN);
+  LONG zero = 0;
+  SetFilePointer(fp, pos, &zero, FILE_BEGIN);
 #else
   fseek(fp, pos, SEEK_SET);
 #endif
