@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2004/09/23 14:29:42  ponchio
+Small bugs fixed.
+
 Revision 1.8  2004/09/23 13:44:25  ponchio
 Removed SetSafeBBox. SetBBox is now safe enough.
 
@@ -241,7 +244,7 @@ class GridStaticPtr
     {
       bbox = b;
       float t = bbox.Diag()/100.0;
-      if(t == 0) t = 0.0000001;
+      if(t == 0) t = 1e20;
       bbox.Offset(t);
       dim  = bbox.max - bbox.min;
     }
