@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/03/31 10:09:58  cignoni
+missing return value in zero()
+
 Revision 1.4  2004/03/11 17:17:49  tarini
 added commets (doxy), uniformed with new style, now using math::, ...
 added HomoNormalize(), Zero()... remade StableDot() (hand made sort).
@@ -35,6 +38,7 @@ Edited Comments and GPL license
 
 #ifndef __VCGLIB_POINT4
 #define __VCGLIB_POINT4
+#include <assert.h>
 
 namespace vcg {
 /** \addtogroup space */
