@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/12/01 01:15:03  ponchio
+Level 0.
+
 Revision 1.26  2004/11/30 22:49:39  ponchio
 Level 0.
 
@@ -42,6 +45,7 @@ Level 0.
 #include "crude.h"
 #include "remapping.h"
 #include "decimate.h"
+#include "watch.h"
 
 
 using namespace std;
@@ -76,6 +80,7 @@ void usage() {
 
 }
 
+
 void FirstStep(const string &crudefile, const string &output,
 	       unsigned int patch_size, unsigned int patch_threshold,
 	       float scaling, unsigned int optimization_steps) {
@@ -99,14 +104,14 @@ void FirstStep(const string &crudefile, const string &output,
   VChain vchain;
 
   VFile<unsigned int> face_remap;
-  if(!face_remap.Create(output + ".rmf")) {
+  if(!face_remap.Create(output + ".rfm")) {
     cerr << "Could not create remap files: " << output << ".rmf\n";
     exit(0);
   }
   face_remap.Resize(crude.Faces());
 
   VFile<Point3f> baricenters;
-  if(!baricenters.Create(output + string(".bvr"))) {
+  if(!baricenters.Create(output + ".bvr")) {
     cerr << "Could not create temporary baricenters file\n";
     exit(0);
   } 
@@ -125,12 +130,202 @@ void FirstStep(const string &crudefile, const string &output,
     cerr << "Could not save file: " << output << ".vchain\n";
     exit(0);
   }
-  if(!face_index.Save(output + ".rmi")) {
+  if(!face_index.Save(output + ".rfi")) {
     cerr << "Could not save file: " << output << ".rmi\n";
     exit(0);
   }
 
   baricenters.Delete();
+}
+
+
+void SecondStep(const string &crudefile, const string &output) {
+  Crude crude;
+  
+  if(!crude.Load(crudefile, true)) {
+    cerr << "Could not open crude input: " << crudefile << endl;
+    exit(0);
+  }
+  VFile<unsigned int> face_remap;
+  if(!face_remap.Load(output + ".rfm", true)) {
+    cerr << "Could not load: " << output << ".rmf\n;";
+    exit(0);
+  }
+  assert(face_remap.Size() == crude.Faces());
+
+  VFile<Crude::Face> sorted;
+  if(!sorted.Create(output + ".faces")) {
+    cerr << "Could not create sorted faces\n";
+    exit(0);
+  }
+  sorted.Resize(face_remap.Size());
+
+  BlockIndex face_index;
+  if(!face_index.Load(output + ".rfi")) {
+    cerr << "Could not load index\n";
+    exit(0);
+  }
+  //  cerr << "Face index size: " << face_index.size() << endl;
+
+  //Sorting now.
+  vector<unsigned int> done;
+  done.resize(face_index.size(), 0);
+
+  for(unsigned int i = 0; i < face_remap.Size(); i++) {
+    unsigned int patch = face_remap[i];
+    assert(patch < face_index.size());
+    assert(patch >= 0);
+    int64 offset = face_index[patch].offset + done[patch]++;
+    sorted[offset] = crude.GetFace(i);
+  }
+
+#ifndef NDEBUG
+  for(int i = 0; i < done.size(); i++)
+    assert(done[i] == face_index[i].size);
+#endif
+
+  /*#ifndef NDEBUG
+  //test:
+  for(unsigned int i = 0; i < sorted.Size(); i++) {
+  Crude::Face face = sorted[i];
+  assert(face[0] < crude.Vertices());
+  assert(face[1] < crude.Vertices());
+  assert(face[2] < crude.Vertices());
+  }
+  #endif*/
+
+  //once sorted
+  crude.Close();
+  sorted.Close();
+
+  if(0 != unlink((crudefile + ".crf").c_str())) {
+    cerr << "Could not remove " << crudefile << ".crf\n";
+    exit(0);
+  }
+  if(0 != rename((output + ".faces").c_str(), (crudefile + ".crf").c_str())) {
+    cerr << "Could not rename to: " << crudefile + ".crf\n";
+    exit(0);
+  }
+  face_remap.Close();
+  //TODO remove the file... (after finishing debug!)
+  //  face_remap.Delete();
+}
+
+void ThirdStep(const string &crudefile, const string &output,
+	       unsigned int chunk_size) {
+
+  cerr << "Third step!\n";
+  Crude crude;
+  
+  if(!crude.Load(crudefile, true)) {
+    cerr << "Could not open crude input: " << crudefile << endl;
+    exit(0);
+  }
+
+  BlockIndex face_index;
+  if(!face_index.Load(output + ".rfi")) {
+    cerr << "Could not load index\n";
+    exit(0);
+  }
+  
+  VFile<unsigned int> vert_remap;
+  if(!vert_remap.Create(crudefile + ".rvm")) {
+    cerr << "Could not create: " << crudefile << ".rvm\n";
+    exit(0);
+  }
+  
+  BlockIndex vert_index;
+
+  Nexus nexus;
+  //TODO here i really need no ram_buffer.....
+  nexus.patches.SetRamBufferSize(0);
+  if(!nexus.Create(output, NXS_FACES, chunk_size)) {
+    cerr << "Could not create nexus output: " << output << endl;
+    getchar();
+    exit(0);
+  }
+
+  Report report;
+  report.Init(face_index.size());
+  for(unsigned int patch = 0; patch < face_index.size(); patch++) {
+    report.Step(patch);
+
+    unsigned int vcount = 0;
+    unsigned int fcount = 0;
+    map<unsigned int, unsigned short> vremap;
+
+    vector<Point3f> vertices;
+    vector<unsigned short> faces;
+
+    int64 &offset = face_index[patch].offset;
+    unsigned int size = face_index[patch].size;
+    for(unsigned int i = offset; i < offset + size; i++) {
+      Crude::Face face = crude.GetFace(i);
+      if(face[0] == face[1] || face[1] == face[2] || face[0] == face[2]) 
+	continue; //degenerate
+      for(int j = 0; j < 3; j++) {
+	assert(face[j] < crude.Vertices());
+	if(!vremap.count(face[j])) {          
+	  Point3f &v = crude.vert[face[j]];
+	  vertices.push_back(v);
+	  vremap[face[j]] = vcount++;
+	}
+	faces.push_back(vremap[face[j]]);
+	fcount++;
+      }
+    }
+    assert(vcount == vertices.size());
+    assert(fcount == faces.size());
+
+    if(vcount > 65000) {
+      cerr << "Too many vertices in this patch: " 
+	   << vcount << endl;
+      exit(0);
+    }
+
+    if(fcount > 65000) {
+      cerr << "Too many faces in this patch: " 
+	   << fcount << endl;
+      exit(0);
+    }
+    unsigned int patch_idx = nexus.AddPatch(vertices.size(),
+					    faces.size()/3,
+					    0); //no borders!
+    Patch &patch = nexus.GetPatch(patch_idx);
+    memcpy(patch.FaceBegin(), &*faces.begin(), fcount * sizeof(short));
+    memcpy(patch.VertBegin(), &*vertices.begin(), vcount * sizeof(Point3f));
+    for(int i = 0; i < vertices.size(); i++)
+      nexus.index[patch_idx].sphere.Add(vertices[i]);
+
+    //saving vert_remap
+    int64 vroffset = vert_remap.Size();
+    vert_index.push_back(BlockEntry(vroffset, vcount));
+    vert_remap.Resize(vroffset + vcount);
+
+    map<unsigned int, unsigned short>::iterator r;
+    for(r = vremap.begin(); r != vremap.end(); r++) {
+      assert((*r).second < vcount);
+      assert(vroffset + (*r).second < vert_remap.Size());
+      vert_remap[vroffset + (*r).second] = (*r).first;
+    }
+  }
+
+  //we can now update bounding sphere.
+  for(unsigned int i = 0; i < nexus.index.size(); i++) 
+    nexus.sphere.Add(nexus.index[i].sphere);
+  
+  /* Nexus::Update update;
+  for(unsigned int i = 1; i < nexus.index.size(); i++) {
+    update.created.push_back(i);
+  }
+  nexus.history.push_back(update);
+  
+  update.created.clear();
+  update.created.push_back(0);
+  for(unsigned int i = 1; i < nexus.index.size(); i++) {
+    update.erased.push_back(i);
+  }
+  nexus.history.push_back(update);*/
 }
 
 int main(int argc, char *argv[]) {
@@ -214,7 +409,11 @@ int main(int argc, char *argv[]) {
   if(step < 0 || step == 0)
     FirstStep(crudefile, output, patch_size, patch_threshold,
 	      scaling, optimization_steps);
+  if(step < 0 || step == 1)
+    SecondStep(crudefile, output);
 
+  if(step < 0 || step == 2)
+    ThirdStep(crudefile, output, chunk_size);
   return 0;
 }
 

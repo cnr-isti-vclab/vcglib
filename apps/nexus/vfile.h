@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2004/11/30 22:49:39  ponchio
+Level 0.
+
 Revision 1.16  2004/11/28 04:12:04  ponchio
 winsockapi include problem
 
@@ -183,8 +186,10 @@ template <class T> class VFile: public MFile {
   }
 
   void FlushBuffer(Buffer buffer) {
-    SetPosition((int64)buffer.key * (int64)chunk_size * (int64)sizeof(T));
-    WriteBuffer((char *)(buffer.data), buffer.size * sizeof(T));
+    if(!readonly) {
+      SetPosition((int64)buffer.key * (int64)chunk_size * (int64)sizeof(T));
+      WriteBuffer((char *)(buffer.data), buffer.size * sizeof(T));
+    }
     delete []buffer.data;
   }
 

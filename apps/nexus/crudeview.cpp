@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/10/19 17:04:32  ponchio
+#include <trackball> on the top
+
 Revision 1.4  2004/10/19 04:23:57  ponchio
 Added trackball.
 
@@ -133,18 +136,18 @@ int main(int argc, char *argv[]) {
   bool fremap = false;
   
   VFile<unsigned int> face_remap;
-  if(face_remap.Load(argv[1] + string(".rmf"))) {
+  if(face_remap.Load(argv[1] + string(".rfm"), true)) {
     cerr << "Found face remap.\n";
     fremap = true;
   } else {
     cerr << "Face remap not found.\n";
   }
   
-  VertRemap vert_remap;
+  /*  VertRemap vert_remap;
   if(vert_remap.Load(argv[1])) {
     cerr << "Found vert remap.\n";
     vremap = true;
-  }
+    }*/
   
 
   if(!init()) {
@@ -239,14 +242,14 @@ int main(int argc, char *argv[]) {
     glBegin(GL_TRIANGLES);
 
     for(unsigned int i = 0;i < crude.Faces(); i++) {
-      Crude::Face &face = crude.GetFace(i);
+      Crude::Face face = crude.GetFace(i);
       if(fremap) {
 	unsigned int val = face_remap[i];
 	glColor3ub((val * 27)%255, (val * 37)%255, (val * 87)%255);
       }
-      Point3f &p0 = crude.GetVertex(face[0]);
-      Point3f &p1 = crude.GetVertex(face[1]);
-      Point3f &p2 = crude.GetVertex(face[2]);
+      Point3f p0 = crude.GetVertex(face[0]);
+      Point3f p1 = crude.GetVertex(face[1]);
+      Point3f p2 = crude.GetVertex(face[2]);
 	
       if(show_normals) {
 	Point3f n = ((p1 - p0) ^ (p2 - p0));
