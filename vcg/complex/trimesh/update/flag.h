@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/03/05 10:59:24  cignoni
+Changed name from plural to singular (normals->normal)
+
 Revision 1.1  2004/03/04 00:37:56  cignoni
 First working version!
 
@@ -58,7 +61,7 @@ static void FaceBorderFromFF(MeshType &m)
 		{
 			//if(!(*fi).IsManifold(j)) (*fi).SetCF(j);
 			//else 
-        if((*fi).IsBorder(j)) (*fi).SetB(j);
+      if(face::IsBorder(*fi,j)) (*fi).SetB(j);
 					 else (*fi).ClearB(j);
 		}
 }

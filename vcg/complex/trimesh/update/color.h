@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/03/05 10:59:24  cignoni
+Changed name from plural to singular (normals->normal)
+
 
 ****************************************************************************/
 #ifndef __VCG_TRI_UPDATE_COLOR
@@ -77,7 +80,7 @@ static void FaceBF(MeshType &m, Color4b vn=Color4b::White, Color4b vb=Color4b::B
 			else
 			{
 				for(int j=0;j<3;++j)
-					if((*fi).IsManifold(j)){
+          if(face::IsManifold(*fi,j)){
 						if((*fi).IsB(j)){
 							(*fi).C() = vb;
 							(*fi).C() = vb;
