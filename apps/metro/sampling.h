@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2004/08/25 15:28:15  ponchio
+Comma at end of enum.
+
 Revision 1.10  2004/08/25 15:15:22  ganovelli
 minor changes to comply gcc compiler (typename's and stuff)
 
@@ -178,9 +181,9 @@ Sampling<MetroMesh>::Sampling(MetroMesh &_s1, MetroMesh &_s2):S1(_s1),S2(_s2)
     area_S1 = ComputeMeshArea(_s1);
 		// set default numbers
 		n_samples_per_face             =	10;
-		n_samples_edge_to_face_ratio   = 0.1;
-		bbox_factor                    = 0.1;
-		inflate_percentage			       = 0.02;
+		n_samples_edge_to_face_ratio   = 0.1f;
+		bbox_factor                    = 0.1f;
+		inflate_percentage			       = 0.02f;
 		min_size					             = 125;		/* 125 = 5^3 */
 		n_hist_bins                    = 256;
 		print_every_n_elements         = S1.fn/100;

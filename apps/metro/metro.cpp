@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/07/15 00:15:16  cignoni
+inflate -> offset
+
 Revision 1.5  2004/06/24 09:08:31  cignoni
 Official Release of Metro 4.00
 
@@ -143,7 +146,7 @@ void OpenMesh(const char *filename, CMesh &m)
 int main(int argc, char**argv)
 {
     CMesh                 S1, S2;
-    double                ColorMin=0, ColorMax=0;
+    float                ColorMin=0, ColorMax=0;
     double                dist1_max, dist2_max;
     unsigned long         n_samples_target, elapsed_time;
     double								n_samples_per_area_unit;
@@ -291,7 +294,7 @@ int main(int argc, char**argv)
     // compute time info.
     elapsed_time = clock() - t0;
     int n_total_sample=ForwardSampling.GetNSamples()+BackwardSampling.GetNSamples();
-    float mesh_dist_max  = max(dist1_max , dist2_max);
+    double mesh_dist_max  = max(dist1_max , dist2_max);
     
     printf("\nHausdorff distance: %f (%f  with respect to bounding box diagonal)\n",(float)mesh_dist_max,(float)mesh_dist_max/bbox.Diag());
     printf("  Computation time  : %d ms\n", (int)elapsed_time);

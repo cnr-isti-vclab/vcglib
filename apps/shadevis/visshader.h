@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/09/09 22:37:48  cignoni
+Integrated lost modifications...
+
 Revision 1.3  2004/09/09 14:35:54  ponchio
 Various changes for gcc compatibility
 
@@ -45,25 +48,6 @@ Added GPL comments
 #include "gen_normal.h"
 
 namespace vcg {
-
-template <class ScalarType>
-void GenNormal(int vn, std::vector<Point3<ScalarType > > &NN)
-{
-  typedef Point3<ScalarType> Point3x;
-    NN.clear();
-    while(NN.size()<vn)
-    {
-      Point3x pp(((float)rand())/RAND_MAX,
-		 ((float)rand())/RAND_MAX,
-		 ((float)rand())/RAND_MAX);
-      pp=pp*2.0-Point3x(1,1,1);
-      if(pp.SquaredNorm()<1)
-      {
-        Normalize(pp);
-        NN.push_back(pp);
-      }
-    }
-  }
   // Base Class che definisce le varie interfaccie;
 template <class MESH_TYPE, int MAXVIS=2048> class VisShader 
 {
