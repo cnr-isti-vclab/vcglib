@@ -48,14 +48,14 @@ class TriConverter
 public:
 
 	/// The tetrahedral mesh type
-	typedef TETRA_MESH TetraMeshType;
+	typedef typename TETRA_MESH TetraMeshType;
 	/// The triangle mesh type
-	typedef TRI_MESH TriangleMeshType;
+	typedef typename TRI_MESH TriangleMeshType;
 
   /// The tetrahedron type
-  typedef TetraMeshType::TetraType TetraType;
+  typedef typename TetraMeshType::TetraType TetraType;
   /// The triangle type
-  typedef TriangleMeshType::FaceType FaceType;
+  typedef typename TriangleMeshType::FaceType FaceType;
 
 	/// The vertex type of tetrahedreal Mesh
 	typedef typename TetraMeshType::VertexType TetraVertexType;
@@ -73,12 +73,12 @@ public:
 	typedef typename TriangleMeshType::FaceIterator FaceIterator;
   
   /// The type of const tetra iterator
-  typedef TetraMeshType::const_TetraIterator const_TetraIterator;
+  typedef typename TetraMeshType::const_TetraIterator const_TetraIterator;
   /// The type of const face iterator
-  typedef TriangleMeshType::ConstFaceIterator ConstFaceIterator;
+  typedef typename TriangleMeshType::ConstFaceIterator ConstFaceIterator;
 
    /// The type of const vertex pointer of tetrahedral mesh
-  typedef TetraMeshType::const_VertexPointer const_VertexPointer;
+  typedef typename TetraMeshType::const_VertexPointer const_VertexPointer;
 
 
 public:
@@ -121,14 +121,13 @@ void Convert(TetraMeshType &tetram,TriangleMeshType &trim)
 
 }
 
-template <class I_MESH_TYPE>
 struct InsertedV{
-	InsertedV(	I_MESH_TYPE::VertexType *_v,
-				I_MESH_TYPE::FacePointer _f,	
+	InsertedV(	TriVertexType *_v,
+				FaceType* _f,	
 				int _z):v(_v),f(_f),z(_z){}
 
-	I_MESH_TYPE::VertexType *v;
-	I_MESH_TYPE::FacePointer f;
+	TriVertexType *v;
+	FaceType* f;
 	int z;	
 
 	const bool operator <(const InsertedV & o){
@@ -147,7 +146,7 @@ struct InsertedV{
 
 void ConvertCopy(TetraMeshType &tetram,TriangleMeshType &trim)
 {
-	vector<InsertedV<TriangleMeshType > > newVertices;
+	vector<InsertedV > newVertices;
 
 	TriVertexIterator vi;
 	vector<TriVertexType*> redirect;
@@ -157,14 +156,14 @@ void ConvertCopy(TetraMeshType &tetram,TriangleMeshType &trim)
 	FaceIterator fi;
 
 	 for(fi = trim.face.begin(); fi != trim.face.end(); ++fi){
-		newVertices.push_back(InsertedV<TriangleMeshType >( (*fi).V(0),&(*fi),0));
-		newVertices.push_back(InsertedV<TriangleMeshType >( (*fi).V(1),&(*fi),1));
-		newVertices.push_back(InsertedV<TriangleMeshType >( (*fi).V(2),&(*fi),2));
+		newVertices.push_back(InsertedV( (*fi).V(0),&(*fi),0));
+		newVertices.push_back(InsertedV( (*fi).V(1),&(*fi),1));
+		newVertices.push_back(InsertedV( (*fi).V(2),&(*fi),2));
 		}
 
 	sort(newVertices.begin(),newVertices.end());
 
-	vector<InsertedV<TriangleMeshType > >::iterator curr,next;
+	vector<InsertedV>::iterator curr,next;
 	int pos = 0;
 	curr = next = newVertices.begin();
 	while( next != newVertices.end()){
@@ -175,7 +174,7 @@ void ConvertCopy(TetraMeshType &tetram,TriangleMeshType &trim)
 		next++;
 		}
 
-	vector<InsertedV<TriangleMeshType > >::iterator newE = unique(newVertices.begin(),newVertices.end());
+	vector<InsertedV>::iterator newE = unique(newVertices.begin(),newVertices.end());
 	for(curr = newVertices.begin();curr!= newE;++curr)
 		trim.vert.push_back(*((*curr).v));
 
