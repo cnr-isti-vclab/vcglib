@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/12/16 11:08:35  ricciodimare
+Cambiato il nome del costruttore era rimasto quello vecchio... e tolti alcune righe di codice commentate
+
 Revision 1.4  2004/12/15 18:45:06  tommyfranken
 *** empty log message ***
 
@@ -45,6 +48,7 @@ creation
 
 // opengl
 #include <GL/glew.h>
+
 
 //<<<<<<< camera.h
 
@@ -115,13 +119,13 @@ static void GetFrustum(const CameraType & camera,
 //>>>>>>> 1.3
 
 //<<<<<<< camera.h
-static void TransformGL(const vcg::Camera<S> & camera,typename S farDist = -1 ) {
+static void TransformGL(vcg::Camera<S> & camera,typename S farDist = -1 ) {
 	S sx,dx,bt,tp,nr,fr;
 	GetFrustum(camera,sx,dx,bt,tp,nr,fr);	
 	assert(glGetError()==0);
-	if(!IsOrtho())
+	if(!camera.IsOrtho())
 		glFrustum(sx,dx,bt,tp,nr,(farDist == -1)?fr:farDist);
-	else glOrtho(sx*viewportM,dx*viewportM,bt*viewportM,tp*viewportM,nr,(farDist == -1)?fr:farDist);
+	else glOrtho(sx*camera.viewportM,dx*camera.viewportM,bt*camera.viewportM,tp*camera.viewportM,nr,(farDist == -1)?fr:farDist);
 	
 	assert(glGetError()==0);
 };
