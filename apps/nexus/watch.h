@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/10/19 17:20:24  ponchio
+renamed
+
 Revision 1.4  2004/10/19 17:16:53  ponchio
 Changed interface
 
@@ -66,4 +69,17 @@ private:
   struct timezone tz;   
 #endif
   double elapsed;
+};
+
+class Report {
+ public:
+  Report(unsigned int tot = 1, float inter = 5.0f) { Init(tot, inter); }
+  void Init(unsigned int tot, float inter = 5.0f);
+  void Step(unsigned int count);
+  void Finish();
+ private:
+  Watch watch;
+  int tot;
+  float last;
+  float interval;
 };

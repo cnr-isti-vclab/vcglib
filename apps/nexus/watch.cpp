@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/10/19 17:20:24  ponchio
+renamed
+
 Revision 1.5  2004/10/19 17:16:52  ponchio
 Changed interface
 
@@ -41,7 +44,8 @@ First draft created.
 
 
 ****************************************************************************/
-#include "stopwatch.h"
+#include "watch.h"
+#include <stdio.h>
 
 #ifdef WIN32
 Watch::Watch(): elapsed(0) {
@@ -91,7 +95,7 @@ double Watch::Pause() {
 }
 
 void Watch::Continue() {
-  QueryPerformanceCounter(&tstart);
+  gettimeofday(&tstart, &tz); 
 }
 
 double Watch::Time() {
@@ -118,4 +122,28 @@ int Watch::Usec() {
   gettimeofday(&ttime, &tz);
   return ttime.tv_usec;
 #endif
+}
+
+void Report::Init(unsigned int t, float inter) {
+  watch.Start();
+  tot = t;
+  last = 0;
+  interval = inter;
+}
+
+void Report::Step(unsigned int count) {
+  if(count == 0) return;
+  float now = watch.Time();
+  if(now - last < interval) return;
+  //estimate final time
+  float tot_time = now * tot/(float)count;
+  printf("%d/%d\telapsed: %.1f\tremaining: %.1f\ttotal: %.1f\n",
+	 count, tot, now, tot_time - now, tot_time);
+  last = now;
+}
+
+void Report::Finish() {
+  float now = watch.Time();
+  printf("Tot: %.1f\tN: %d\tN/sec: %.1f\n",
+	 now, tot, tot/now);
 }

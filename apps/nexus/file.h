@@ -20,6 +20,18 @@ class File {
   File(): fp(NULL) {}
   ~File() { Close(); }   
 
+  File(const File &file) { 
+    fp = file.fp;
+    size = file.size;
+    readonly = file.readonly;
+    ((File &)file).fp = NULL;
+  }
+  bool operator=(const File &file) {
+    fp = file.fp;
+    size = file.size;
+    readonly = file.readonly;
+    ((File &)file).fp = NULL;
+  }
   bool Create(const std::string &filename);
   bool Load(const std::string &filename, bool readonly = false);
   void Close();
