@@ -11,7 +11,7 @@ public:
 double volume;
 double ratio;
 
-TetraStats(){}
+TetraStats(){T=0;}
 
 ~TetraStats(){}
 
@@ -55,9 +55,16 @@ void Update()
 	volume=ComputeVolume(Tetra);
 }
 
-void TetraInfo(TetraType *Te)
+void SetTetraInfo(TetraType *Te)
 {
+	if (T!=0)
+		T->ClearS();
 	T=Te;
+}
+
+void ClearTetraInfo(TetraType *Te)
+{
+	T=0;
 }
 
 TetraType * TCurrent()

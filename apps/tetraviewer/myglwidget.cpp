@@ -122,22 +122,6 @@ void MyGLWidget::DrawTextInfo()
 			renderText(x,y,z,str,f);
 		}
 		Stats.TCurrent()->SetS();
-		////show the tetrahedron
-		//glBegin(GL_LINE_LOOP);
-		//for (int i=0;i<4;i++)
-		//{
-		//	glVertex(Stats.TCurrent()->V(i)->P());
-		//}
-		//glEnd();
-		//glBegin(GL_LINE_LOOP);
-		//	glVertex(Stats.TCurrent()->V(0)->P());
-		//	glVertex(Stats.TCurrent()->V(2)->P());
-		//glEnd();
-		//glBegin(GL_LINE_LOOP);
-		//	glVertex(Stats.TCurrent()->V(1)->P());
-		//	glVertex(Stats.TCurrent()->V(3)->P());
-		//glEnd();
-		////end drawing
 		}
 		glPopAttrib();
 	}
@@ -324,7 +308,7 @@ else if (e->button()==Qt::RightButton)
 	vcg::GLPickTetra<MyTetraMesh>::PickNearestTetra(e->x(),_H-e->y(),*tm,ti);
 	if (ti!=0)
 	{
-		Stats.TetraInfo(&*ti);
+		Stats.SetTetraInfo(&*ti);
 	}
 }
 
@@ -382,12 +366,10 @@ void MyGLWidget::wheelEvent ( QWheelEvent * e ){
 
 void MyGLWidget::keyPressEvent(QKeyEvent *k)
 {
-	mouse_modality=MMTrackball;
-	if ((k->key()==Qt::Key_Escape)&&((mouse_modality==MMNavigateSection)||(mouse_modality==MMSection)))
+	if (k->key()==Qt::Key_Escape)//&&((mouse_modality==MMNavigateSection)||(mouse_modality==MMSection)))
 	{
 		mouse_modality=MMTrackball;
-		/*wp->SectionButton->setOn(false);
-		QString p=wp->TrackButton->text();*/
+		WT->ClearClipSection();
 	}
 }
 

@@ -34,7 +34,6 @@ public:
 		class ClipPlane
 		{
 			private:
-			
 			Point3x D;
 			Point3x D0;
 			GLdouble eqn[4];
@@ -46,10 +45,12 @@ public:
 			Point3x	pp3;
 
 			public:
-			
+
+			bool active;
+
 			Point3x P;
 
-			ClipPlane (){}
+			ClipPlane (){active=false;}
 
 			~ClipPlane (){}
 
@@ -90,13 +91,15 @@ public:
 
 			void GlClip()
 			{
-				GLdouble d=-(D.V(0)*P.V(0)+D.V(1)*P.V(1)+D.V(2)*P.V(2));
-				eqn[0]=-D.V(0);
-				eqn[1]=-D.V(1);
-				eqn[2]=-D.V(2);
-				eqn[3]=-d;
-				glClipPlane(GL_CLIP_PLANE0, eqn); 
-				glEnable(GL_CLIP_PLANE0);
+				if (active){
+					GLdouble d=-(D.V(0)*P.V(0)+D.V(1)*P.V(1)+D.V(2)*P.V(2));
+					eqn[0]=-D.V(0);
+					eqn[1]=-D.V(1);
+					eqn[2]=-D.V(2);
+					eqn[3]=-d;
+					glClipPlane(GL_CLIP_PLANE0, eqn); 
+					glEnable(GL_CLIP_PLANE0);
+				}
 			}
 
 			void GlDraw()
@@ -143,14 +146,14 @@ public:
 			
 		};
 
-	GLWrapTetra(CONT_TETRA & _t):tetra(_t){nsection=0;}
+	GLWrapTetra(CONT_TETRA & _t):tetra(_t){}
 
 	CONT_TETRA	& tetra;	
 	ClipPlane section;
 
 	private:
 	double shrink_factor;
-	int nsection;
+	
 
 	public:
 		
@@ -163,7 +166,12 @@ public:
 		void AddClipSection(Point3x p0,Point3x p1,Point3x p2)
 		{
 			section=ClipPlane(p0,p1,p2);
-			nsection++;
+			section.active=true;
+		}
+
+		void ClearClipSection()
+		{
+			section.active=false;
 		}
 
   typedef Color4b (*color_func_vertex)(VertexType&v);
@@ -198,23 +206,23 @@ template <ColorMode cm >
 		glEnable(GL_LIGHTING);
 		glEnable(GL_NORMALIZE);
 		glPolygonMode(GL_FRONT,GL_FILL);
-		if (nsection!=0)
+		if (section.active)
 		{
 			section.GlClip();
 			section.GlDraw();	
 		}
-		glBegin(GL_TRIANGLES);
+		/*glBegin(GL_TRIANGLES);*/
 		for( it = tetra.begin(); it != tetra.end(); ++it)
 			if((!it->IsD())&&(!(it->IsS()))) //draw as normal
 			{
 					_DrawSmallTetra<cm>(*it);
 			}
 			else 
-			if((!it->IsD())&&(!(it->IsS())))//draw in selection mode
+			if((!it->IsD())&&((it->IsS())))//draw in selection mode
 			{
 					_DrawSelectedTetra(*it);
 			}
-		glEnd();
+		//glEnd();
 		glPopAttrib();
 		}
 
@@ -251,10 +259,10 @@ void _DrawSurface(){
 			glEnable(GL_NORMALIZE);
 			glPolygonMode(GL_FRONT,GL_FILL);
 		}
-		glBegin(GL_TRIANGLES);
+		//glBegin(GL_TRIANGLES);
 		for( it = tetra.begin(); it != tetra.end(); ++it)
 			_DrawTetra<dm,nm,cm>((*it));
-	  glEnd();
+	  //glEnd();
 	  glPopAttrib();
 }
 
@@ -263,21 +271,24 @@ void _DrawSelectedTetra(TetraType &t)
 {
 	glPushMatrix();
 	glPushAttrib(0xffff);
-		glDisable(GL_CLIP_PLANE0);
-		glDisable(GL_BLEND);
-		glDisable(GL_LIGHTING);
-		glDisable(GL_NORMALIZE);
-		glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+	glDisable(GL_CLIP_PLANE0);
+	glDisable(GL_BLEND);
+	glDisable(GL_LIGHTING);
+	glDisable(GL_NORMALIZE);
+	glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 
-		glBegin(GL_LINE_LOOP);
-		glColor3d(1,0,0);
-		for (int face=0;face<4;face++)
-		{
-			glVertex(t.V(Tetra::VofF(face,0))->P());
-			glVertex(t.V(Tetra::VofF(face,1))->P());
-			glVertex(t.V(Tetra::VofF(face,2))->P());
-		}
-		//end drawing
+	glColor3d(1,0,0);
+
+	glBegin(GL_TRIANGLES);
+	for (int face=0;face<4;face++)
+	{
+		glVertex(t.V(Tetra::VofF(face,0))->P());
+		glVertex(t.V(Tetra::VofF(face,1))->P());
+		glVertex(t.V(Tetra::VofF(face,2))->P());
+	}
+	glEnd();
+
+	//end drawing
 	glPopAttrib();
 	glPopMatrix();
 }
@@ -355,20 +366,24 @@ void _DrawFaceSmooth(TetraType &t,int face)
   VertexType *v0=t.V(Tetra::VofF(face,0));
   VertexType *v1=t.V(Tetra::VofF(face,1));
   VertexType *v2=t.V(Tetra::VofF(face,2));
-  _ChooseColorVertex<cm>(*v0);
-  glNormal(v0->N());
-  glVertex(v0->P());
-  _ChooseColorVertex<cm>(*v1);
-  glNormal(v1->N());
-  glVertex(v1->P());
-  _ChooseColorVertex<cm>(*v2);
-  glNormal(v2->N());
-  glVertex(v2->P());
+
+  glBegin(GL_TRIANGLES);
+	_ChooseColorVertex<cm>(*v0);
+	glNormal(v0->N());
+	glVertex(v0->P());
+	_ChooseColorVertex<cm>(*v1);
+	glNormal(v1->N());
+	glVertex(v1->P());
+	_ChooseColorVertex<cm>(*v2);
+	glNormal(v2->N());
+	glVertex(v2->P());
+  glEnd();
 }
 
 template <ColorMode cm >
 void _DrawFace(TetraType &t,int face)
 {
+glBegin(GL_TRIANGLES);
   glNormal(t.N(face));
   VertexType *v0=t.V(Tetra::VofF(face,0));
   VertexType *v1=t.V(Tetra::VofF(face,1));
@@ -379,6 +394,7 @@ void _DrawFace(TetraType &t,int face)
   glVertex(v1->P());
   _ChooseColorVertex<cm>(*v2);
   glVertex(v2->P());
+  glEnd();
 }
 
 template <ColorMode cm >
@@ -394,6 +410,8 @@ void _DrawSmallTetra(TetraType &t)
   for(int i = 0; i < 4; ++i)
 					p[i] = t.V(i)->P()* shrink_factor + br *(1- shrink_factor);
   _ChooseColorTetra<cm>(t);
+
+  glBegin(GL_TRIANGLES);
   for(int i = 0; i < 4; ++i)
     {
 		glNormal(t.N(i));
@@ -407,6 +425,7 @@ void _DrawSmallTetra(TetraType &t)
         _ChooseColorVertex<cm>(*v2);
 		glVertex(p[Tetra::VofF(i,2)]);
 	}
+	glEnd();
 }
 
 
