@@ -66,11 +66,12 @@ public:
 };
 
   typedef	typename TriMeshType::FaceType FaceType;
-	typedef	typename FaceType::VertexType VertexType;
+  typedef	typename FaceType::VertexType VertexType;
   typedef	typename FaceType::VertexType::CoordType CoordType;
   typedef	typename TriMeshType::VertexType::ScalarType ScalarType;
   typedef vcg::face::Pos<FaceType> PosType;
   typedef typename LocalOptimization<TriMeshType>::HeapElem HeapElem;
+  typedef  typename TriEdgeCollapse<TriMeshType> MyType;
 	
 
 protected:
@@ -136,7 +137,7 @@ public:
       {
 				PosType p;
 				p.Set(VFi.F(),VFi.I(),VFi.f->V(VFi.z));
-				h_ret.push_back(HeapElem(new TriEdgeCollapse<TriMeshType>(p,_Imark())));
+				h_ret.push_back(HeapElem(new MyType(p,_Imark())));
 				std::push_heap(h_ret.begin(),h_ret.end());
 				//// update the mark of the vertices
 				VFi.f->V(VFi.z)->IMark() = _Imark();
@@ -188,7 +189,7 @@ public:
 		   for (int j=0;j<3;j++)
       {
         PosType p=PosType(&*fi,j,(*fi).V(j));
-        h_ret.push_back(HeapElem(new TriEdgeCollapse<TriMeshType>(p,m.IMark())));
+        h_ret.push_back(HeapElem(new MyType(p,m.IMark())));
         //printf("Inserting in heap coll %3i ->%3i %f\n",p.V()-&m.vert[0],p.VFlip()-&m.vert[0],h_ret.back().locModPtr->Priority());
       }
 		}
