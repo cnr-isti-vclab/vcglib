@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.12  2004/12/16 11:22:30  ricciodimare
+*** empty log message ***
+
 Revision 1.11  2004/12/16 11:21:03  ricciodimare
 *** empty log message ***
 
@@ -122,36 +125,57 @@ public:
 	/// project a point from space 3d (in the reference system of the camera) to the camera's plane
 	/// the result is in absolute coordinates
 	inline vcg::Point2<S> Project(const vcg::Point3<S> & p);
+	inline vcg::Point2<S> LocalToViewport(const vcg::Point2<S> & p);
+	inline vcg::Point2<S> LocalTo_0_1(const vcg::Point2<S> & p);
+	inline vcg::Point2<S> LocalTo_neg1_1(const vcg::Point2<S> & p);
 	inline vcg::Point3<S> UnProject(const vcg::Point2<S> & p);
 };
 
-/// project a point in the camera plane
+/// project a point in the camera plane (in space [-1,-1]x[1,1] )
 template<class S>
 vcg::Point2<S> Camera<S>::Project(const vcg::Point3<S> & p){
-		S  tx = p.X();
-		S  ty = p.Y();
-		S  qx,qy;
-		vcg::Point2<S> q;
+		vcg::Point2<S> q =  Point2<S>( p[0],p[1]);
 		// nota: per le camere ortogonali viewportM vale 1
 		if(!IsOrtho())
 		{
-			tx *= f/p.Z();
-			ty *= f/p.Z();
+			q[0] *= f/p.Z();
+			q[1] *= f/p.Z();
 
-			qx = tx;
-			qy = ty;
-			//undistorted_to_distorted_sensor_coord(tx,ty,qx,qy);
-
-			q[0] = qx/s.X()+c.X();
-			q[1] = qy/s.Y()+c.Y();
+			//q[0] = 2*q[0]/( s.X() * viewport[0]);
+			//q[1] = 2*q[1]/( s.Y() * viewport[1]);
 		}
-		else
-		{
-			q[0] = tx/(s.X()*viewportM)+c.X();
-			q[1] = ty/(s.Y()*viewportM)+c.Y();
-		}	
+		//else
+		//{
+		//	q[0] = tx/(s.X()*viewportM)+c.X();
+		//	q[1] = ty/(s.Y()*viewportM)+c.Y();
+		//}	
 	return q;
 }
+
+template<class S>
+vcg::Point2<S> Camera<S>::LocalToViewport(const vcg::Point2<S> & p){
+	vcg::Point2<S>  ps;
+	ps[0] = p[0]/s.X()+c.X();
+	ps[1] = p[1]/s.Y()+c.Y();
+	return ps;
+}
+
+template<class S>
+vcg::Point2<S> Camera<S>::LocalTo_0_1(const vcg::Point2<S> & p){
+	vcg::Point2<S>  ps;
+	ps[0] = ( p[0]/s.X() + c.X() ) / (ScalarType) viewport[0];
+	ps[1] = ( p[1]/s.Y() + c.Y() ) / (ScalarType) viewport[1];
+	return ps;
+}
+
+template<class S>
+vcg::Point2<S> Camera<S>::LocalTo_neg1_1(const vcg::Point2<S> & p){
+	vcg::Point2<S>  ps;
+	ps[0] = 2 * p[0] / ( s.X() * viewport[0] );
+	ps[1] = 2 * p[1] / ( s.Y() * viewport[1] );
+	return ps;
+}
+
 /// unproject a point from the camera plane
 template<class S>
 vcg::Point3<S> Camera<S>::UnProject(const vcg::Point2<S> & p){
