@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2004/08/06 01:47:57  pietroni
+corrected errors on vfappend
+
 Revision 1.12  2004/08/05 22:27:00  pietroni
 added VFAppend funtion
 
@@ -80,7 +83,7 @@ template <class FaceType>
 inline bool IsBorder(FaceType const & f,  const int j ) 
 {
   if(FaceType::HasFFAdjacency())
-	  return f.FFp(j) == &f ;
+	  return f.IsBorder(j);
   else 
     return true;
 }
