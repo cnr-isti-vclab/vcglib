@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/02/10 01:11:28  cignoni
+Edited Comments and GPL license
+
 ****************************************************************************/
 
 #ifndef __VCGLIB_POINT4
@@ -209,7 +212,7 @@ public:
 		k[1] = _v[1]*p._v[1];
 		k[2] = _v[2]*p._v[2];
 		k[3] = _v[3]*p._v[3];
-		sort(k+0,k+4, MagnitudoComparer<T>() );
+    sort(k+0,k+4, math::MagnitudoComparer<T>() );
 		T q = k[0];
 		q += k[1];
 		q += k[2];
