@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.15  2005/01/18 15:14:22  ponchio
+Far and end are reserved.
+
 Revision 1.14  2005/01/14 15:28:33  ponchio
 vcg/Point.h -> vcg/point.h   (again!)
 
@@ -206,7 +209,7 @@ vcg::Point3<S> Camera<S>::UnProject(const vcg::Point2<S> & p){
 template<class S>
 	void Camera<S>::SetPerspective(S angle, S ratio, S near_thr, S far_thr, vcg::Point2<S> vp){
 		S halfsize[2];
-		halfsize[1] = tan(math::ToRad(angle/2)) * nr;
+		halfsize[1] = tan(math::ToRad(angle/2)) * near_thr;
 		halfsize[0] = halfsize[1]*ratio;
 		SetFrustum(-halfsize[0],halfsize[0],-halfsize[1],halfsize[1],near_thr,far_thr,vp);
 }
