@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/05/14 15:14:34  turini
+Added  $Log: not supported by cvs2svn $  for CVS History Log
+
 Revision 1.1  2004/19/04 13:05  pietroni
 Initial commit
 
@@ -198,6 +201,18 @@ struct InsertedVT{
 		return (v!=o.v);
 		}
 	};
+
+
+  /** Function to add n tetrafedron to the mesh.
+@param n number of vertices we want to add.
+*/
+TetraIterator AddTetra(TetraMeshType &m,int n)
+{
+  TetraIterator last=m.tetra.end();
+  for (int i=0;i<n;i++)
+    m.tetra.push_back(TetraType());
+  return (last);
+}
 
 /** Crate a copy of the mesh with tetrahedron that are into the templated container
 @param ST_CONT (Template Parameter) Specifies the type of the container of tetrahedron.
