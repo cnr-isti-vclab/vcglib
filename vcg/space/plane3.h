@@ -24,6 +24,13 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/04/28 16:36:55  turini
+Changed :
+in Distance(plane, point) :
+return plane.Direction() * point - plane.Offset;
+in
+return plane.Direction() * point - plane.Offset();
+
 Revision 1.2  2004/04/28 11:19:52  turini
 Changed :
 in Init(p0, norm)   _dist = p0 * _dir;   in   _offset = p0 * _dir;
@@ -77,7 +84,8 @@ public:
 //@{
 	 /** @name Members to access the distance or direction
 	   Direction() cannot be assigned directly.
-		 Use SetDirection() or Set() instead.
+		 Use SetDirection() or Set() instead. This is mandatory to make possible the automatic autonormalization template mechanism.
+     Note that if you have to set both direction and offset it can be more efficient to set them toghether 
 	**/		
   const ScalarType &Offset() const { return _offset; } 
   ScalarType &Offset() { return _offset; } 
@@ -92,10 +100,11 @@ public:
   }
 		/// sets origin and direction.
 	void Set( const ScalarType & off, const PointType & dir ) {
-    SetOrigin(off); 
+    SetOffset(off); 
     SetDirection(dir); 
   }
-
+  void Set( const PointType & dir, const ScalarType & off) {Set(off,dir);}
+	
     /// Operator to compare two lines
 	bool operator==(Plane3 const &p) const	{	
     return _offset == p._offset && _dir == p._dir; 
