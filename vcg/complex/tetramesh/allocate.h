@@ -24,8 +24,14 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/05/31 16:01:56  pietroni
+added function addtetra
+
 Revision 1.2  2004/05/14 15:14:34  turini
-Added  $Log: not supported by cvs2svn $  for CVS History Log
+Added  $Log: not supported by cvs2svn $
+Added  Revision 1.3  2004/05/31 16:01:56  pietroni
+Added  added function addtetra
+Added  for CVS History Log
 
 Revision 1.1  2004/19/04 13:05  pietroni
 Initial commit
@@ -85,18 +91,18 @@ possible vector realloc.
 restituisce l'iteratore al primo elemento aggiunto.
 */
 
-VertexIterator AddVertices(TetraMeshType &m,int n, vector<VertexType **> &local_var)
+static VertexIterator AddVertices(TetraMeshType &m,int n, vector<VertexType **> &local_var)
 {
 	VertexIterator oldbegin, newbegin;
 	oldbegin = m.vert.begin();
   VertexIterator last=m.vert.end();
-	if(m.vert.empty()) last=0;  // if the vector is empty we cannot find the last valid element
+	if(m.vert.empty()) last=(VertexIterator)0;  // if the vector is empty we cannot find the last valid element
 	else --last;
 	unsigned int siz=0;
 #ifdef __STL_CONFIG_H	
-if(last!=0) distance(m.vert.begin(),last,siz);
+if(last!=(VertexIterator)0) distance(m.vert.begin(),last,siz);
 #else
-if(last!=0) siz=distance(m.vert.begin(),last);
+if(last!=(VertexIterator)0) siz=distance(m.vert.begin(),last);
 #endif
 	for(unsigned int i=0; i<n; ++i)
 	{
@@ -117,7 +123,7 @@ if(last!=0) siz=distance(m.vert.begin(),last);
 
 			// deve restituire l'iteratore alla prima faccia aggiunta;
 			// e poiche' lo spazio e' cambiato si ricalcola last da zero  
-			if(last!=0) 
+			if(last!=(VertexIterator)0) 
 			{ 
 				last = m.vert.begin(); 
 				advance(last,siz+1);
@@ -127,7 +133,7 @@ if(last!=0) siz=distance(m.vert.begin(),last);
 	else 
 	{ 
 		// se non e'cambiato lo spazio (vector abbastanza grande o lista)
-		if(last==0) last = m.vert.begin(); // se il vettore era vuoto si restituisce begin
+		if(last==(VertexIterator)0) last = m.vert.begin(); // se il vettore era vuoto si restituisce begin
 		           else advance(last,1); // altrimenti il primo dopo quello che era in precedenza l'ultimo valido.
 	}
 	return last;
@@ -136,51 +142,11 @@ if(last!=0) siz=distance(m.vert.begin(),last);
  /** Function to add n vertices to the mesh. 
 @param n Il numero di vertici che si vuole aggiungere alla mesh.
 */
-VertexIterator AddVertices(TetraMeshType &m,int n)
+static VertexIterator AddVertices(TetraMeshType &m,int n)
 {
-	VertexIterator oldbegin, newbegin;
-	oldbegin = m.vert.begin();
-  VertexIterator last=m.vert.end();
-	if(m.vert.empty()) last=0;  // if the vector is empty we cannot find the last valid element
-	else --last;
-	unsigned int siz=0;
-#ifdef __STL_CONFIG_H	
-if(last!=0) distance(m.vert.begin(),last,siz);
-#else
-if(last!=0) siz=distance(m.vert.begin(),last);
-#endif
-	for(unsigned int i=0; i<n; ++i)
-	{
-		m.vert.push_back(VertexType());
-		m.vert.back().ClearFlags();
-	}
-	m.vn+=n;
-	newbegin = m.vert.begin();
-	if(newbegin != oldbegin)
-		{
-			TetraIterator f;
-			for (f=m.tetra.begin(); f!=m.tetra.end(); ++f)
-				if(!(*f).IsD())
-				for(unsigned int k=0; k<4; ++k)
-					(*f).V(k)= (*f).V(k)-&*oldbegin+&*newbegin;
-			
-			// deve restituire l'iteratore alla prima faccia aggiunta;
-			// e poiche' lo spazio e' cambiato si ricalcola last da zero  
-			if(last!=0) 
-			{ 
-				last = m.vert.begin(); 
-				advance(last,siz+1);
-			}
-			else last=m.vert.begin(); 
-		}
-	else 
-	{ 
-		// se non e'cambiato lo spazio (vector abbastanza grande o lista)
-		if(last==0) last = m.vert.begin(); // se il vettore era vuoto si restituisce begin
-		           else advance(last,1); // altrimenti il primo dopo quello che era in precedenza l'ultimo valido.
-	}
-	return last;
-}
+	vector<VertexType **> empty_var;
+	return AddVertices(m,n,empty_var);
+}	
 
 struct InsertedVT{
 	InsertedVT(VertexType *_v,
@@ -206,7 +172,7 @@ struct InsertedVT{
   /** Function to add n tetrafedron to the mesh.
 @param n number of vertices we want to add.
 */
-TetraIterator AddTetra(TetraMeshType &m,int n)
+static TetraIterator AddTetra(TetraMeshType &m,int n)
 {
   TetraIterator last=m.tetra.end();
   for (int i=0;i<n;i++)
@@ -220,10 +186,10 @@ TetraIterator AddTetra(TetraMeshType &m,int n)
 @param m destination mesh.
 */
 template <class STL_CONT >
-void SubSetT(STL_CONT & subSet, TetraMeshType & m)
+static void SubSetT(STL_CONT & subSet, TetraMeshType & m)
 {	
 	vector< InsertedVT > newVertices;
-	STL_CONT :: iterator pfi;
+	typename STL_CONT :: iterator pfi;
 	newVertices.clear();
 
 	for(pfi = subSet.begin(); pfi != subSet.end(); ++pfi) 
@@ -240,7 +206,7 @@ void SubSetT(STL_CONT & subSet, TetraMeshType & m)
 
 	sort(newVertices.begin(),newVertices.end());
 
-	vector< InsertedVT >::iterator curr,next;
+	typename std::vector< InsertedVT >::iterator curr,next;
 	int pos = 0;
 	curr = next = newVertices.begin();
 	while( next != newVertices.end())
@@ -252,7 +218,7 @@ void SubSetT(STL_CONT & subSet, TetraMeshType & m)
 		next++;
 	}
 
-	vector<InsertedVT >::iterator newE = unique(newVertices.begin(),newVertices.end());
+	typename std::vector<InsertedVT >::iterator newE = unique(newVertices.begin(),newVertices.end());
 
 	for(curr = newVertices.begin();curr!= newE;++curr)
 		m.vert.push_back(*((*curr).v));
