@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2004/10/09 16:51:36  ponchio
+Windows porting small changes.
+
 Revision 1.9  2004/10/08 15:12:04  ponchio
 Working version (maybe)
 
@@ -121,6 +124,7 @@ int main(int argc, char *argv[]) {
   bool stop_after_remap = false;
   unsigned int max_level = 0xffffffff;
   float scaling = 0.5;
+  unsigned int ram_buffer = 128000000;
 
   int option;
   while((option = getopt(argc, argv, "f:t:l:s:d:ro:")) != EOF) {
@@ -161,6 +165,7 @@ int main(int argc, char *argv[]) {
       break;
     case 'r': stop_after_remap = true; break;
     case 'o': optimization_steps = atoi(optarg); break;
+    case 'b': ram_buffer = atoi(optarg); break;
     default: cerr << "Unknown option: " << (char)option << endl;
       return -1;
     }
@@ -176,6 +181,7 @@ int main(int argc, char *argv[]) {
     cerr << " -s F: scaling factor (0 < F < 1, default 0.5)\n";
     cerr << " -o N: nomber of optimization steps\n";
     cerr << " -d <method>: decimation method: quadric, cluster. (default quadric)\n";
+    cerr << " -b N: ram buffer size (in bytes)\n";
     return -1;
   }
 
@@ -198,6 +204,7 @@ int main(int argc, char *argv[]) {
     cerr << "Could not create nexus output: " << output << endl;
     return -1;
   }
+  nexus.patches.ram_size = ram_buffer;
 
   if(patch_threshold == 0xffffffff)
     patch_threshold = patch_size/4;
@@ -230,19 +237,22 @@ int main(int argc, char *argv[]) {
   /* BUILDING FIRST LEVEL */
 
   //Remapping faces and vertices using level 0 and 1 of the chain
-
+  cerr << "Remapping faces.\n";
   vector<unsigned int> patch_faces;
   vchain.RemapFaces(crude, face_remap, patch_faces, scaling, optimization_steps);
   
+  cerr << "Remapping vertices.\n";
   vector<unsigned int> patch_verts;
   patch_verts.resize(patch_faces.size(), 0);
   RemapVertices(crude, vert_remap, face_remap, patch_verts);
   
   if(stop_after_remap) return 0;
 
+  cerr << "Allocating space\n";
   //allocate chunks for patches and copy faces (absoklute indexing) into them.
   NexusAllocate(crude, nexus, face_remap, patch_faces, patch_verts);
 
+  cerr << "Filling first level\n";
   //insert vertices and remap faces, prepare borders
   NexusFill(crude, nexus, vert_remap, border_remap);
 
