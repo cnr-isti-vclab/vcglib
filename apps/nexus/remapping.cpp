@@ -148,7 +148,6 @@ void nxs::Remap(VChain &chain,
 
     unsigned int newpatch = patch_remap[patch];
     assert(newpatch < index.size());
-    assert(newpatch >= 0);
     remap[i] = newpatch;
     BlockEntry &entry = index[newpatch];
     entry.size++;

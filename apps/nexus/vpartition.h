@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/12/04 13:24:28  ponchio
+Fixed a couple of memory leak...
+
 Revision 1.1  2004/11/30 22:50:30  ponchio
 Level 0.
 
@@ -56,6 +59,7 @@ class VPartition: public std::vector<vcg::Point3f> {
     for(unsigned int i = 0; i < part.size(); i++)
       push_back(part[i]);
     Init();
+    return *this;
   }
  public:
   void Init();
