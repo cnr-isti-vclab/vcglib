@@ -393,6 +393,20 @@ void TTTopology(VertexContainer &vert,TetraContainer &tetra)
 		}
   }
 
+///Connect trought Tetrahedron-Tetrahedron Topology t0 and t1 with faces i0 and i1
+void _AttachTTTopology(TetraType *t0,int i0,TetraType *t1,int i1) 
+{
+  assert((i0>=0)&&(i0<4));
+  assert((i1>=0)&&(i1<4));
+  assert((!t0->IsD())&&(!t1->IsD()));
+  t0->TTp(i0)=t1;
+  t0->TTi(i0)=i1;
+  t1->TTp(i1)=t0;
+  t1->TTi(i1)=i0;
+  assert( (((t0->TTp(i0))->TTp(t0->TTi(i0)))==t0));
+  assert( (((t1->TTp(i1))->TTp(t1->TTi(i1)))==t1));
+}
+
 ///Test the Tetrahedron-Tetrahedron Topology (by Face)
 void TestTTTopology(VertexContainer &vert,TetraContainer &tetra)
 	{

@@ -31,23 +31,12 @@
 #include <vcg/complex/tetramesh/update/topology.h>
 #include <vcg/complex/tetramesh/update/normal.h>
 
-//#include <vcg/complex/trimesh/edge_collapse.h>
-//
-////used to verify the edge collapse on the surface of the mesh
-//#include <vcg/simplex/face/with/afav.h>
-//#include <vcg/complex/trimesh/base.h>
-//#include <vcg/complex/trimesh/update/topology.h>
-
-#include <vcg/complex/tetramesh/update/triconvert.h>
-
-
 namespace vcg{
 namespace tetra{
 
 /** \addtogroup tetramesh */
 /*@{*/
 /// This Class is used for the edge collapse
-
 template <class TETRA_MESH_TYPE> 
 class EdgeCollapse
 {
@@ -83,11 +72,6 @@ class EdgeCollapse
   /// Default Constructor
 	EdgeCollapse()
 		{
-      c0=0;
-      flip=0;
-      lkv=0;
-      lke=0;
-
 		};
 
   ~EdgeCollapse()
@@ -98,16 +82,9 @@ class EdgeCollapse
   vector<TetraType*> To_Del;
   Topology _Topo;
   UpdateNormals _UN;
-  typedef pair <VertexType*,VertexType*> VertPair;
+  //typedef pair <VertexType*,VertexType*> VertPair;
   typedef pair <int,int> FacePair;
 
-public:
-  int c0;
-  int flip;
-  int lkv;
-  int lke;
-
-private:
 ///select the 2 faces that does not share the edge
 FacePair _FindNoEdgeFace(TetraType *t,int edge)
 {	
@@ -129,23 +106,7 @@ FacePair _FindNoEdgeFace(TetraType *t,int edge)
         return FacePair(fa2,fa3);
 }
 
-
-///Connect trought Tetrahedron-Tetrahedron Topology t0 and t1 with faces i0 and i1
-void _ConnectTTTopology(TetraType *t0,int i0,TetraType *t1,int i1) 
-{
-  assert((i0>=0)&&(i0<4));
-  assert((i1>=0)&&(i1<4));
-  assert((!t0->IsD())&&(!t1->IsD()));
-  t0->TTp(i0)=t1;
-  t0->TTi(i0)=i1;
-  t1->TTp(i1)=t0;
-  t1->TTi(i1)=i0;
-  assert( (((t0->TTp(i0))->TTp(t0->TTi(i0)))==t0));
-  assert( (((t1->TTp(i1))->TTp(t1->TTi(i1)))==t1));
-}
-
 ///Calculate the volume on the vertex resulting after collapse...
-
 ScalarType _VolumeSimulateCollapse(PosType Pos,ScalarType alfa)
 {
   VertexType *Vrem=(Pos.T()->V(Tetra::VofE(Pos.E(),0)));
@@ -197,8 +158,8 @@ void _AssertingVolume(TetraType *t)
 }
 #endif
 
-///collpse de edge specified by pos (the first vertex on edge remain)
 
+///collpse de edge specified by pos (the first vertex on edge remain)
 void _Collapse(PosType p,ScalarType alfa)
 {
       VertexType *Vrem=(p.T()->V(Tetra::VofE(p.E(),0)));
@@ -227,7 +188,7 @@ void _Collapse(PosType p,ScalarType alfa)
         //case no one is extern face
 				if ((!pos.T()->IsBorderF(fa0))&&(!pos.T()->IsBorderF(fa1)))
           //connect the 2 tetrahedrons
-          _ConnectTTTopology(tleft,ileft,tright,iright);	
+          _Topo._AttachTTTopology(tleft,ileft,tright,iright);	
 				else
 				  //case f2 is an extern face
 				if (pos.T()->IsBorderF(fa0))
@@ -395,114 +356,7 @@ struct TetraSets
 
 TetraSets _Sets;
 
-/////verify if the collapse can done looking to the edges 
-//bool _LinkConditionsE(PosType pos) 
-//{ 	
-//    const int LINK_V0 = 0x00000001;
-//    const int LINK_EE = 0x00000002;
-//   
-//    EdgeMark.clear();
-//
-//		// Mark edges of ve0 
-//    vector< TetraType *>::iterator ti=_Sets.v0.begin(); 
-//    vector< char >::iterator en=_Sets.indexv0.begin();
-//    while (ti!=_Sets.v0.end())
-//    {
-//      for(int i=0;i<6;i++)
-//        //put the edge of each tetrahedron on the map
-//        orMarkE(Edge((*ti)->V(Tetra::VofE(i,0)),(*ti)->V(Tetra::VofE(i,1))),LINK_V0);
-//
-//     
-//      //put dummy edge
-//      for (int f=0;f<3;f++)
-//      {
-//       int f_test=Tetra::FofV((*en),f);
-//        if  ((*ti)->IsBorderF(f_test))
-//        {
-//          orMarkE(Edge((*ti)->V(Tetra::VofF(f_test,0)),&_dummyV),LINK_V0);
-//          orMarkE(Edge((*ti)->V(Tetra::VofF(f_test,1)),&_dummyV),LINK_V0);
-//          orMarkE(Edge((*ti)->V(Tetra::VofF(f_test,2)),&_dummyV),LINK_V0);
-//        }
-//      }
-//     ti++;
-//     en++;
-//    }
-//    
-//    ti=_Sets.E.begin(); 
-//    en=_Sets.indexE.begin();
-//    //mark them as intersection
-//    while (ti!=_Sets.E.end())
-//    {
-//      for(int i=0;i<6;i++)
-//        //put the edge of each tetrahedron on the map
-//        orMarkE(Edge((*ti)->V(Tetra::VofE(i,0)),(*ti)->V(Tetra::VofE(i,1))),LINK_EE);
-//      //  //edges with dummy vertex
-//
-//      //faces on the edge
-//      int f0=Tetra::FofE((*en),0);
-//      int f1=Tetra::FofE((*en),1);
-//
-//      if  ((*ti)->IsBorderF(f0))
-//      {
-//          orMarkE(Edge((*ti)->V(Tetra::VofF(f0,0)),&_dummyV),LINK_EE);
-//          orMarkE(Edge((*ti)->V(Tetra::VofF(f0,1)),&_dummyV),LINK_EE);
-//          orMarkE(Edge((*ti)->V(Tetra::VofF(f0,2)),&_dummyV),LINK_EE);
-//      }
-//
-//      if  ((*ti)->IsBorderF(f1))
-//      {
-//          orMarkE(Edge((*ti)->V(Tetra::VofF(f1,0)),&_dummyV),LINK_EE);
-//          orMarkE(Edge((*ti)->V(Tetra::VofF(f1,1)),&_dummyV),LINK_EE);
-//          orMarkE(Edge((*ti)->V(Tetra::VofF(f1,2)),&_dummyV),LINK_EE);
-//      }
-//
-//      ti++;
-//      en++;
-//    }
-//   
-//    //and at the end I verify if the intersection is equal to the star of the edge
-//    ti=_Sets.v1.begin(); 
-//    en=_Sets.indexv1.begin();
-//    while (ti!=_Sets.v1.end())
-//    {
-//      for(int i=0;i<6;i++)
-//      {
-//        Edge e_test=Edge((*ti)->V(Tetra::VofE(i,0)),(*ti)->V(Tetra::VofE(i,1)));
-//        if ((isMarkedE(e_test,LINK_V0))&&(!isMarkedE(e_test,LINK_EE)))
-//        {        
-//          lke++;
-//          return false;
-//        }
-//      }
-//
-//      //dummy edges control
-//      //put dummy edge
-//      for (int f=0;f<3;f++)
-//      {
-//       int f_test=Tetra::FofV((*en),f);
-//        if  ((*ti)->IsBorderF(f_test))
-//        {
-//          //control all the 3 edges
-//          Edge e_test0=Edge((*ti)->V(Tetra::VofF(f_test,0)),&_dummyV);
-//          Edge e_test1=Edge((*ti)->V(Tetra::VofF(f_test,1)),&_dummyV);
-//          Edge e_test2=Edge((*ti)->V(Tetra::VofF(f_test,2)),&_dummyV);
-//          if (((isMarkedE(e_test0,LINK_V0))&&(!isMarkedE(e_test0,LINK_EE)))||
-//            ((isMarkedE(e_test1,LINK_V0))&&(!isMarkedE(e_test1,LINK_EE)))||
-//            ((isMarkedE(e_test2,LINK_V0))&&(!isMarkedE(e_test2,LINK_EE))))
-//          {        
-//            lke++;
-//            return false;
-//          }
-//        }
-//      }
-//      ti++;
-//      en++;
-//    }
-//    return true;
-//}
-
-
-///verify if the collapse can done looking to the edges 
+///verify the link conditions on faces
 bool _LinkConditionsF(PosType pos) 
 { 	
     const int LINK_V0 = 0x00000001;
@@ -576,10 +430,7 @@ bool _LinkConditionsF(PosType pos)
           if (((isMarkedF(f_test0,LINK_V0))&&(!isMarkedF(f_test0,LINK_EE)))||
             ((isMarkedF(f_test1,LINK_V0))&&(!isMarkedF(f_test1,LINK_EE)))||
             ((isMarkedF(f_test2,LINK_V0))&&(!isMarkedF(f_test2,LINK_EE))))
-          {        
-            lke++;
             return false;
-          }
         }
       }
       ti++;
@@ -588,7 +439,7 @@ bool _LinkConditionsF(PosType pos)
     return true;
 }
 
-///verify if the collapse can done looking to the edges 
+///verify the link conditions on edges
 bool _LinkConditionsE(PosType pos) 
 { 	
     const int LINK_V0 = 0x00000001;
@@ -662,10 +513,7 @@ bool _LinkConditionsE(PosType pos)
           if (((isMarkedE(e_test0,LINK_V0))&&(!isMarkedE(e_test0,LINK_EE)))||
             ((isMarkedE(e_test1,LINK_V0))&&(!isMarkedE(e_test1,LINK_EE)))||
             ((isMarkedE(e_test2,LINK_V0))&&(!isMarkedE(e_test2,LINK_EE))))
-          {        
-            lke++;
             return false;
-          }
         }
       }
       ti++;
@@ -674,8 +522,8 @@ bool _LinkConditionsE(PosType pos)
     return true;
 }
 
-///verify the link conditions for a collapse using vertices
 
+///verify the link conditions on vertices
 bool _LinkConditionsV() 
 { 	
     const int LINK_V0 = VertexType::NewUserBit();
@@ -789,7 +637,6 @@ bool _LinkConditionsV()
         VertexType::DeleteUserBit(LINK_EE);
         VertexType::DeleteUserBit(LINK_V1);
         VertexType::DeleteUserBit(LINK_V0);  
-        lkv++;
         return (false);
       }
       en++;
@@ -801,7 +648,7 @@ bool _LinkConditionsV()
     return true;
 }
 
-///verify the flip conditions for a collapse
+///verify the flip condition
 bool _FlipCondition(PosType pos,ScalarType alfa)
 {	
   int edge=pos.E();
@@ -837,7 +684,6 @@ bool _FlipCondition(PosType pos,ScalarType alfa)
 			{	
         ve0->P()=oldpos0;
 				ve1->P()=oldpos1;
-        flip++;
   			return false;
 			}
 			ti++;	
@@ -887,7 +733,7 @@ ScalarType AspectRatioCollapsed(PosType p)
 }
 
 
-///check the link conditions for the collapse indicated by pos
+///check the topologycal preserving  conditions for the collapse indicated by pos
 bool  CheckPreconditions(PosType pos,ScalarType alfa)
 {	
   VertexType *v0=pos.T()->V(Tetra::VofE(pos.E(),0));
@@ -900,11 +746,8 @@ bool  CheckPreconditions(PosType pos,ScalarType alfa)
 
   //first case vertex external and edge internal
 	if ((border0 && border1)&&(!bordere))
-  {
-    c0++;
 			return false;
-  }
-	else
+ 	else
   //if both vertex are internal so is enougth to verify flip conditions
 	if ((!border0) && (!border1))
 			return (_FlipCondition(pos,alfa));
