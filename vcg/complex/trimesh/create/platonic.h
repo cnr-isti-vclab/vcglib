@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/01/19 15:43:15  fiorin
+Moved from vcg/complex/trimesh to vcg/complex/trimesh/create
+
 Revision 1.10  2004/10/28 00:54:34  cignoni
 Better Doxygen documentation
 
@@ -348,7 +351,7 @@ void Square(MeshType &in)
  ivp[0]=&*vi;(*vi).P()=CoordType ( 1, 0, 0); ++vi;
  ivp[1]=&*vi;(*vi).P()=CoordType ( 0, 1, 0); ++vi;
  ivp[2]=&*vi;(*vi).P()=CoordType (-1, 0, 0); ++vi;
- ivp[5]=&*vi;(*vi).P()=CoordType ( 0,-1, 0); 
+ ivp[3]=&*vi;(*vi).P()=CoordType ( 0,-1, 0); 
 
  FaceIterator fi=in.face.begin();
  (*fi).V(0)=ivp[0];  (*fi).V(1)=ivp[1]; (*fi).V(2)=ivp[2]; ++fi;
