@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/03/08 19:40:48  tarini
+*** empty log message ***
+
 Revision 1.7  2004/03/08 19:38:29  tarini
 aggiunti Min e Max, si usano cosi: Min<float>::Value (tarini)
 
@@ -83,8 +86,8 @@ namespace math {
   inline double Asin(const double v)   { return asin(v); }
   
 
-	// max and min values for each scala type 
-	// syntax: Max<float>::Value 
+	/// max and min values for each scala type 
+	/// syntax: Max<float>::Value  
 
   template <class SCALAR> class Min {
 		public: static const SCALAR Value;
