@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/05/10 15:20:49  cignoni
+Updated names of POS and adj functions to the new standards for many functions
+
 Revision 1.4  2004/03/18 16:00:10  cignoni
 minor changes
 
@@ -212,7 +215,7 @@ void Swap (SwapFaceType &f, const int z )
 template <class FaceType>
 void VFDetach(FaceType & f, int z)
 {
-	if(f.V(z)->Fp()==this )
+	if(f.V(z)->Fp()==&f )
 	{
 		int fz = f.V(z)->Zp();
 		f.V(z)->Fp() = (face_from_vert_type *) f.F(fz);
@@ -230,7 +233,7 @@ void VFDetach(FaceType & f, int z)
 			y = x;
 			x.NextF();
 			assert(x.f!=0);
-			if(x.f==this)
+			if(x.f==&f)
 			{
 				y.f->F(y.z) = f.F(z);
 				y.f->Z(y.z) = f.Z(z);
