@@ -24,8 +24,8 @@
   History
 
 $Log: not supported by cvs2svn $
-Revision 1.4  2004/07/30 12:44:14  ponchio
-#ifdef corrected
+Revision 1.4  2004/10/19 17:16:53  ponchio
+Changed interface
 
 Revision 1.3  2004/07/20 14:03:47  ponchio
 Changed interface.
@@ -38,81 +38,32 @@ First draft created.
 
 
 ****************************************************************************/
-#include "stopwatch.h"
 
 #ifdef WIN32
-Watch::Watch(): elapsed(0) {
-    QueryPerformanceFrequency(&freq);
-}
-
-
-void Watch::Start(void) {
-  QueryPerformanceCounter(&tstart);
-  elapsed = 0;
-}
-
-double Watch::Pause() {
-  QueryPerformanceCounter(&tend);         
-  elapsed += Diff();
-  return elapsed;
-}               
-
-void Watch::Continue() {
-  QueryPerformanceCounter(&tstart);
-}
-
-double Watch::Time() {
-  QueryPerformanceCounter(&tend);         
-  return elapsed + Diff();
-}
-
-double Watch::Diff() {  
-  return ((double)tend.QuadPart -
-	  (double)tstart.QuadPart)/
-    ((double)freq.QuadPart);
-}         
-
+#include <windows.h>
 #else
-
-Watch::Watch(): elapsed() {}
-
-void Watch::Start() {
-   gettimeofday(&tstart, &tz); 
-   elapsed = 0;
-}
-
-double Watch::Pause() {
-  gettimeofday(&tend, &tz); 
-  elapsed += Diff();
-  return elapsed;
-}
-
-void Watch::Continue() {
-  QueryPerformanceCounter(&tstart);
-}
-
-double Watch::Time() {
-  gettimeofday(&tend, &tz); 
-  return elapsed + Diff();
-}
- 
-double Watch::Diff() {
-  double t1 =  (double)tstart.tv_sec + (double)tstart.tv_usec/(1000*1000);
-  double t2 =  (double)tend.tv_sec + (double)tend.tv_usec/(1000*1000);
-  return t2 - t1;   
-}
+#include <sys/time.h>
+#include <unistd.h>     
 #endif
 
-void Watch::Reset() {
-  elapsed = 0;
-}
+class Watch {
+public:
+  Watch();
+  void Start();
+  double Pause();
+  void Continue();
+  void Reset();
+  double Time();
+  int Usec();
+private:
+  double Diff();
 
-int Watch::Usec() {
 #ifdef WIN32
-  return 0;
+  LARGE_INTEGER tstart, tend;
+  LARGE_INTEGER freq;
 #else  
-  struct timeval ttime;
-  gettimeofday(&ttime, &tz);
-  return ttime.tv_usec;
+  struct timeval tstart, tend;  
+  struct timezone tz;   
 #endif
-}
+  double elapsed;
+};
