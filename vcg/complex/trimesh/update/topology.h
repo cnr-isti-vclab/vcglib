@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2004/10/01 15:58:00  ponchio
+Added include <vector>
+
 Revision 1.12  2004/09/09 13:02:12  ponchio
 Linux compatible path in #include
 
@@ -207,6 +210,19 @@ static void FaceFace(MeshType &m)
 			++ne;										// Aggiorno il numero di edge
 		}
 	}
+}
+
+/** Update the Faces' border flag (it assumes Face-Face Topology has been computed.
+*/
+static void FaceBorderFlags(MeshType &m)
+{
+		FaceIterator pf;
+		for(pf=m.face.begin();pf!=m.face.end();++pf)			// Lo riempio con i dati delle facce
+			if( ! (*pf).IsD() )
+				for(int j=0;j<3;++j)
+					if((*pf).IsBorder(j))
+						(*pf).SetB(j);
+
 }
 
 /** Update the Vertex-Face topological relation by allowing to retrieve for each vertex the list of faces sharing this vertex..
