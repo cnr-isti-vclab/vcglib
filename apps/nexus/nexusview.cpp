@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/09/17 15:25:09  ponchio
+First working (hopefully) release.
+
 Revision 1.5  2004/09/16 14:25:16  ponchio
 Backup. (lot of changes).
 
@@ -72,6 +75,8 @@ using namespace std;
 #include <GL/glu.h>
 
 #include <apps/nexus/nexusmt.h>
+#include <wrap/gui/trackball.h>
+
 
 using namespace vcg;
 using namespace nxs;
@@ -124,18 +129,21 @@ bool init() {
 
 
 int main(int argc, char *argv[]) {
+  enum Mode { SCREEN, GEO };
   int level = 0;
   int apatch = -1;
-  float geo_error = -1;
-  float screen_error = -1;
+  float error = 1;
+  Mode mode = SCREEN;
+
+  Trackball track;
   int option;
 
   while((option = getopt(argc, argv, "l:p:g:s:")) != EOF) {
     switch(option) {
     case 'l': level = atoi(optarg); break;
     case 'p': apatch = atoi(optarg); break;
-    case 'g': geo_error = (float)atof(optarg); break;
-    case 's': screen_error = (float)atof(optarg); break;
+    case 'g': mode = GEO; error = (float)atof(optarg); break;
+    case 's': mode = SCREEN; error = (float)atof(optarg); break;
     default: cerr << "Unknown option: " << (char)option << endl;
       return -1;
     }
@@ -162,7 +170,10 @@ int main(int argc, char *argv[]) {
     cerr << "Could not init SDL window\n";
     return -1;
   }
-
+  
+  FrustumPolicy frustum_policy;
+  
+  
   bool rotate = true;
   bool show_borders = true;
   glClearColor(0, 0, 0, 0); 
@@ -174,61 +185,90 @@ int main(int argc, char *argv[]) {
   SDL_Event         event;
   int x, y;
   float alpha = 0;
-  while( !quit ) {                    while( SDL_PollEvent( &event ) ){                        
+  while( !quit ) {                    
+    while( SDL_PollEvent( &event ) ){                        
       switch( event.type ) {
-        case SDL_QUIT:  quit = 1; break;      
-        case SDL_KEYDOWN:                                        
-          switch(event.key.keysym.sym) {
-	  case SDLK_q: exit(0); break;
-	  case SDLK_SPACE: rotate = !rotate;
-          }
-          //quit = 1;           
-          //error++;
-          //if(error == 5) error = 0;
-          //render.setMaxError(error/10.0);
-          break;
-        case SDL_MOUSEBUTTONDOWN:       
-          x = event.button.x;
-          y = event.button.y;          
-	  //          hand.buttonDown(x, y, 1);
+      case SDL_QUIT:  quit = 1; break;      
+      case SDL_KEYDOWN:                                        
+	switch(event.key.keysym.sym) {
+	case SDLK_q: exit(0); break;
+	case SDLK_b: show_borders = !show_borders;break;
+	case SDLK_r:
+	case SDLK_SPACE: rotate = !rotate; break;
+	  
+	case SDLK_MINUS: error *= 0.9; 
+	  cerr << "error: " << error << endl; break;
+	  
+	case SDLK_EQUALS:
+	case SDLK_PLUS: error *= 1.1; 
+	  cerr << "error: " << error << endl; break;
+	}
+	//quit = 1;           
+	//error++;
+	//if(error == 5) error = 0;
+	//render.setMaxError(error/10.0);
+	break;
+      case SDL_MOUSEBUTTONDOWN:       
+	x = event.button.x;
+	y = height - event.button.y;          
+	if(event.button.button == SDL_BUTTON_WHEELUP) {
+	  track.MouseWheel(1);
+	} else if(event.button.button == SDL_BUTTON_WHEELDOWN) {
+	  track.MouseWheel(-1);
+	} else 
+	  track.MouseDown(x, y, 1);
+	//          hand.buttonDown(x, y, 1);
         break;
-        case SDL_MOUSEBUTTONUP:          
-          x = event.button.x;
-          y = event.button.y;          
-	  //          hand.buttonUp(x, y);
-          break;
-        case SDL_MOUSEMOTION: 
-          while(SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_MOUSEMOTIONMASK));
-          x = event.motion.x;
-          y = event.motion.y;
-	  //          hand.mouseMove(x, y);        
-          break;  
+      case SDL_MOUSEBUTTONUP:          
+	x = event.button.x;
+	y = height - event.button.y;      
+	track.MouseUp(x, y, 1);    
+	//          hand.buttonUp(x, y);
+	break;
+      case SDL_MOUSEMOTION: 
+	while(SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_MOUSEMOTIONMASK));
+	x = event.motion.x;
+	y = height - event.motion.y;
+	track.MouseMove(x, y);
+	//          hand.mouseMove(x, y);        
+	break;  
       default: break;
       }
     }
+
+  
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(40, 1, 0.1, 100);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(0,0,6,   0,0,0,   0,1,0);    
+    gluLookAt(0,0,5,   0,0,0,   0,1,0);    
 
+
+    track.GetView();
+    track.Apply();
 
     float scale = 2/sphere.Radius();
-    glRotatef(alpha, 0, 1, 0);
-    if(rotate)
-      alpha++;
-    if(alpha > 360) alpha = 0;
+    //    glRotatef(alpha, 0, 1, 0);
+    //    if(rotate)
+    //      alpha++;
+    //    if(alpha > 360) alpha = 0;
     glScalef(scale, scale, scale);       
     Point3f center = sphere.Center();
     glTranslatef(-center[0], -center[1], -center[2]);
+
+
    
     vector<unsigned int> cells;
     if(apatch != -1) {
       cells.push_back(apatch);
-    } else if(geo_error != -1) {
-      nexus.ExtractFixed(cells, geo_error);
+    } else if(mode == GEO) {
+      nexus.ExtractFixed(cells, error);
+    } else if(mode == SCREEN) {
+      frustum_policy.error = error;
+      frustum_policy.GetView();
+      nexus.Extract(cells, &frustum_policy);
     } else {
       for(int i = 0; i < nexus.index.size(); i++) {
 	if(nexus.index[i].error == 0)
@@ -245,6 +285,11 @@ int main(int argc, char *argv[]) {
       glColor3ub(((val * 27)%128) + 128, 
 		 ((val * 37)%128) + 128, 
 		 ((val * 87)%128) + 128);
+      
+      /*      Nexus::Entry &entry = nexus.index[cell];
+      float error = entry.error;
+      if(error < 1) error = 0;
+      glColor3ub(log(error) * 50, 128, 128);*/
 
       glBegin(GL_TRIANGLES);
       unsigned short *f = patch.FaceBegin();      

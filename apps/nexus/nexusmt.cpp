@@ -5,6 +5,31 @@
 using namespace nxs;
 using namespace std;
 
+void Policy::Visit(Node *node, std::queue<Node *> &qnode) {    
+  std::vector<Node *>::iterator n;
+  for(n = node->in.begin(); n != node->in.end(); n++) 
+    if(!(*n)->visited) 
+      Visit(*n, qnode);  
+  
+  node->visited = true;
+  qnode.push(node);
+}
+
+bool FrustumPolicy::Expand(unsigned int patch, Nexus::Entry &entry) {
+  if(entry.error == 0) return false;
+  float dist = Distance(entry.sphere, frustum.ViewPoint());
+  /*Point3f line = frustum.viewPoint() - cell->sphere.center;
+    float dist = line.Norm() - cell->sphere.radius;  */
+  if(dist < 0) return true;
+  //  dist = pow(dist, 1.2);
+  /*  cerr << "Dist: " << dist << endl;
+  cerr << "Entry error: " << entry.error << endl;
+  cerr << "error: " << error << endl;
+  cerr << "resolution at dist: " << frustum.Resolution(dist) << endl;*/
+  return entry.error > error * frustum.Resolution(dist);
+}
+
+
 void NexusMt::LoadHistory() {
   //The last update erases everything.
   assert(history[0].erased.size() == 0);
@@ -107,3 +132,53 @@ void NexusMt::ExtractFixed(vector<unsigned int>  &selected, float error) {
     }
   }  
 }    
+
+void NexusMt::Extract(std::vector<unsigned int> &selected, Policy *policy) {
+  std::vector<Node>::iterator n;
+  for(n = nodes.begin(); n != nodes.end(); n++)
+    (*n).visited = false;
+  
+  std::queue<Node *> qnodo;
+  qnodo.push(&nodes[0]);
+  nodes[0].visited = true;
+  
+  for( ; !qnodo.empty(); qnodo.pop()) {
+    Node &node = *qnodo.front();   
+    
+    std::vector<Frag>::iterator i;
+    std::vector<Node *>::iterator on;
+    for(i = node.frags.begin(), on = node.out.begin(); 
+	i != node.frags.end(); i++, on++) {
+      if((*on)->visited) continue;
+      Frag &frag = (*i);
+      std::vector<unsigned int>::iterator cell;
+      for(cell = frag.begin(); cell != frag.end(); cell++) {              
+	if(policy->Expand(*cell, index[*cell]))
+	  policy->Visit(*on, qnodo);          
+      }
+    }
+  }
+  Select(selected);
+}
+
+void NexusMt::Select(vector<unsigned int> &selected) {
+  selected.clear();
+  std::vector<Node>::iterator i;
+  for(i = nodes.begin(); i != nodes.end(); i++) {
+    Node &node = *i;
+    if(!node.visited)       
+      continue;                  
+    
+    std::vector<Node *>::iterator n;
+    std::vector<Frag>::iterator f;        
+    for(n = node.out.begin(), f = node.frags.begin(); 
+	n != node.out.end(); n++, f++) {
+      if(!(*n)->visited || (*n)->error == 0) {
+	vector<unsigned int>::iterator c;
+	Frag &frag = (*f);
+	for(c = frag.begin(); c != frag.end(); c++)            
+	  selected.push_back(*c);        
+      }      
+    } 
+  }
+}
