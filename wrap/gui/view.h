@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2005/02/10 20:09:11  tarini
+dispelled the mega-evil of GL_TRANSPOSE_*_MATRIX_ARB
+
 Revision 1.11  2005/01/19 10:29:45  cignoni
 Removed the inclusion of a glext.h
 
@@ -177,14 +180,12 @@ template <class T> Line3<T> View<T>::ViewLineFromModel(const Point3<T> &p)
 // Note that p it is assumed to be in window coordinate.
 template <class T> Line3<T> View<T>::ViewLineFromWindow(const Point3<T> &p)
 {
-  Point3<T> vp=ViewPoint();
 	Line3<T> ln;  // plane perpedicular to view direction and passing through manip center
-  /*Matrix44<T> mi=model;
-  Invert(mi);
-  */Point3f pp=UnProject(p);
+	Point3<T> vp=ViewPoint();
+	Point3<T> pp=UnProject(p);
 	ln.SetOrigin(vp);
 	ln.SetDirection(pp-vp);
-  return ln;
+	return ln;
 }
 
 template <class T> Point3<T> View<T>::Project(const Point3<T> &p) const {
