@@ -24,6 +24,12 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2004/11/29 09:07:04  cignoni
+Release 4.02
+removed bug in printing Hausdorf distance,
+removed bug in command line parsing,
+upgraded import mesh library to support off format
+
 Revision 1.10  2004/09/21 23:52:50  cignoni
 Release 4.01
 
@@ -137,7 +143,7 @@ int main(int argc, char**argv)
  
     // print program info
     printf("-------------------------------\n"
-           "         Metro V.4.02 \n"
+           "         Metro V.4.03 \n"
            "     http://vcg.isti.cnr.it\n"
            "   release date: "__DATE__"\n"
            "-------------------------------\n\n");
@@ -173,7 +179,7 @@ int main(int argc, char**argv)
         case 'a':  SamplesPerAreaUnit    = true;     n_samples_per_area_unit = (unsigned long) atoi(&(argv[i][2])); break;
         case 'c':  flags |= SamplingFlags::SAVE_ERROR;   break;
         case 'L':  CleaningFlag=true; break;
-        case 'C':  ColorMin=atof(argv[i+1]); ColorMax=atof(argv[i+2]); i+=2; break;
+        case 'C':  ColorMin=float(atof(argv[i+1])); ColorMax=float(atof(argv[i+2])); i+=2; break;
         default  :  printf(MSG_ERR_INVALID_OPTION, argv[i]);
           exit(0);
       }
