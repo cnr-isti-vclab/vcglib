@@ -43,34 +43,37 @@ void BorderServer::AddBorder(unsigned short nbord, unsigned int used) {
   Redim(entry.start * sizeof(Link) + nbord * sizeof(Link));
 }
 
-Border BorderServer::GetBorder(unsigned int border, bool flush) {
+Border BorderServer::GetBorder(unsigned int border, bool flush) { 
   BorderEntry &entry = operator[](border);
+   //assert(entry.size != 0);
   if(index.count(border)) {
-    assert(entry.links);
-    list<unsigned int>::iterator &i = index[border];
+    //assert(entry.links);
+    list<unsigned int>::iterator i = index[border];
     pqueue.erase(i);
     pqueue.push_front(border);
-
+    index[border] = pqueue.begin();
   } else {
-    while(flush && ram_used > ram_max) {    
+    while(flush && ram_used > ram_max) { 
+      assert(pqueue.size());
       unsigned int to_flush = pqueue.back();
       pqueue.pop_back();
       index.erase(to_flush);        
       FlushBorder(to_flush);
     }
     assert(!entry.links);
-    entry.links = GetRegion(entry.start, entry.size);
-    pqueue.push_front(border);
-    list<unsigned int>::iterator i = pqueue.begin();
-    index[border] = i;      
+    if(entry.size != 0)
+      entry.links = GetRegion(entry.start, entry.size);        
+    pqueue.push_front(border);    
+    index[border] = pqueue.begin();   
     ram_used += entry.size;
   }                        
   return Border(entry.links, entry.used, entry.size);
 }
-
+//TODO Change when remving borderentry class.
 bool BorderServer::ResizeBorder(unsigned int border, unsigned int nbord) {
   assert(nbord < 65500);
-  assert(border < size());
+  assert(border < size());    
+  GetBorder(border);
   BorderEntry &entry = operator[](border);
   if(nbord > entry.size) {
     int capacity = nbord;
@@ -80,11 +83,12 @@ bool BorderServer::ResizeBorder(unsigned int border, unsigned int nbord) {
       capacity = 65500;
     unsigned int newstart = Length()/sizeof(Link);
     Redim((newstart + capacity) * sizeof(Link));
+    Link *dst = GetRegion(newstart, capacity);
     if(entry.used > 0) {
-      Link *src = GetRegion(entry.start, entry.size);
-      Link *dst = GetRegion(newstart, capacity);
+      Link *src = GetRegion(entry.start, entry.size);      
       memcpy(dst, src, entry.used * sizeof(Link));
     }
+    entry.links = dst;
     entry.start = newstart;
     entry.size = capacity;
     entry.used = nbord;
@@ -96,18 +100,19 @@ bool BorderServer::ResizeBorder(unsigned int border, unsigned int nbord) {
 
 void BorderServer::FlushBorder(unsigned int border) {
   BorderEntry &entry = operator[](border);
-  assert(entry.links);
-  if(!MFile::IsReadOnly()) { //write back patch
+  //assert(entry.links);
+  if(entry.size && !MFile::IsReadOnly()) { //write back patch
     MFile::SetPosition((int64)entry.start * sizeof(Link));
     MFile::WriteBuffer(entry.links, entry.used * sizeof(Link));
   }
-
-  delete [](entry.links);
+  if(entry.size)
+    delete [](entry.links);
   entry.links = NULL;    
   ram_used -= entry.size;
 }
 
 Link *BorderServer::GetRegion(unsigned int start, unsigned int size) {
+  assert(size > 0);
   SetPosition(start * sizeof(Link));
   Link *buf = new Link[size];
   assert(buf);

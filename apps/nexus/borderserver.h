@@ -15,9 +15,10 @@
 
 namespace nxs {
 
+  //This should be Border class!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 struct BorderEntry {
   unsigned int start; //granuralita' Link
-  unsigned short size; //in Links
+  unsigned short size; //in Links             //TODO what are this? be clear!
   unsigned short used; //in Links
   Link *links;
 };
