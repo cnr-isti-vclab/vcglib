@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2004/12/15 18:45:50  tommyfranken
+*** empty log message ***
+
 Revision 1.21  2004/10/22 14:41:30  ponchio
 return in operator+ added.
 
@@ -64,6 +67,7 @@ Revision 1.12  2004/03/25 14:57:49  ponchio
 #include <vcg/math/base.h>
 #include <vcg/space/point3.h>
 #include <vcg/space/point4.h>
+#include <vector>
 
 
 namespace vcg {
@@ -379,6 +383,12 @@ template <class T> void Matrix44<T>::operator*=( const Matrix44 & m ) {
     for(int l = 0; l < 4; l++)
       ElementAt(i, l) = t[l];
   } */
+}
+
+template < class PointType , class T > void operator*=( std::vector<PointType> &vert, const Matrix44<T> & m ) {
+  std::vector<PointType>::iterator ii;
+  for(ii=vert.begin();ii!=vert.end();++ii)
+    (*ii).P()=m * (*ii).P();
 }
 
 template <class T> void Matrix44<T>::operator*=( const T k ) {
