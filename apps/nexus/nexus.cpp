@@ -95,8 +95,7 @@ bool Nexus::Load(const string &file, bool readonly) {
   return true;
 }
 
-void Nexus::Close() {
-  cerr << "Closing!" << endl;
+void Nexus::Close() {  
   if(!index_file) return;
   rewind(index_file);
 
@@ -174,29 +173,29 @@ void Nexus::Join(const std::set<unsigned int> &patches,
   map<unsigned int, vector<unsigned int> > remap;
   set<Link> newborders;
   set<unsigned int> erased;
-  for(int u = 0; u < history.size(); u++) 
-    for(int e = 0; e < history[u].erased.size(); e++)
+  for(unsigned int u = 0; u < history.size(); u++) 
+    for(unsigned int e = 0; e < history[u].erased.size(); e++)
       erased.insert(history[u].erased[e]);
 
-  set<unsigned int>::const_iterator i;
-  for(i = patches.begin(); i != patches.end(); i++) {
-    unsigned int patch = *i;
+  set<unsigned int>::const_iterator patch_idx;
+  for(patch_idx = patches.begin(); patch_idx != patches.end(); patch_idx++) {
+    unsigned int patch = *patch_idx;
     PatchInfo &entry = index[patch];
-    remap[*i].resize(entry.nvert, 0xffffffff);
+    remap[patch].resize(entry.nvert, 0xffffffff);
   }
 
   unsigned int vcount = 0;
   unsigned int fcount = 0;
   unsigned int bcount = 0;
-  for(i = patches.begin(); i != patches.end(); i++) {
-    unsigned int patch = *i;
-    vector<unsigned int> &vmap = remap[*i];
+  for(patch_idx = patches.begin(); patch_idx != patches.end(); patch_idx++) {
+    unsigned int patch = *patch_idx;
+    vector<unsigned int> &vmap = remap[patch];
 
     PatchInfo &entry = index[patch];
     fcount += entry.nface;
     for(unsigned int k = 0; k < entry.nvert; k++) {
       if(vmap[k] == 0xffffffff) { //first time
-	vmap[k] = vcount++;
+	      vmap[k] = vcount++;
       }
     }
 
@@ -209,16 +208,17 @@ void Nexus::Join(const std::set<unsigned int> &patches,
       assert(vmap[link.start_vert] != 0xffffffff);
 
       if(!remap.count(link.end_patch)) { //external
-	//test if erased in history... in wich case we do not add border
-	if(!erased.count(link.end_patch)) {
-	  link.start_vert = vmap[link.start_vert];
-	  newborders.insert(link);
-	}
-	continue; 
+	      //test if erased in history... in wich case we do not add border
+	      if(!erased.count(link.end_patch)) {
+	        link.start_vert = vmap[link.start_vert];
+	        newborders.insert(link);
+	      }
+	      continue; 
       } 
       //internal
+      //TODO unsigned int &rmpv = remap[link.end_patch][link.end_vert];
       if(remap[link.end_patch][link.end_vert] == 0xffffffff) { //first time
-	remap[link.end_patch][link.end_vert] = vmap[link.start_vert];
+	      remap[link.end_patch][link.end_vert] = vmap[link.start_vert];
       }
     }
   }
@@ -230,41 +230,29 @@ void Nexus::Join(const std::set<unsigned int> &patches,
   newbord.resize(0);
 
   fcount = 0;
-  for(i = patches.begin(); i != patches.end(); i++) {
-    Patch patch = GetPatch(*i);
-    
-    vector<unsigned int> &vmap = remap[*i];
-    
-    for(unsigned int i = 0; i < patch.nv; i++) {
+  for(patch_idx = patches.begin(); patch_idx != patches.end(); patch_idx++) {
+    Patch patch = GetPatch(*patch_idx);    
+
+    vector<unsigned int> &vmap = remap[*patch_idx];
+    assert(vmap.size() == patch.nv);
+
+    for(unsigned int i = 0; i < vmap.size(); i++) {            
       assert(vmap[i] < vcount);
       newvert[vmap[i]] = patch.Vert(i);
     }
-    
-    /*    for(unsigned int i = 0; i < patch.nf; i++) {
-      unsigned short *face = patch.Face(i);
-      if(patch.Vert(face[0]) == patch.Vert(face[1]) ||
-	 patch.Vert(face[0]) == patch.Vert(face[2]) ||
-	 patch.Vert(face[1]) == patch.Vert(face[2])) {
-	cerr << "MALEDETTO!" << endl;
-	Point3f &v0 = patch.Vert(face[0]);
-	Point3f &v1 = patch.Vert(face[1]);
-	Point3f &v2 = patch.Vert(face[2]);
-	cerr << "V0: " << v0[0] << " " << v0[1] << " " << v0[2] << endl;
-	cerr << "V1: " << v1[0] << " " << v1[1] << " " << v1[2] << endl;
-	cerr << "V2: " << v2[0] << " " << v2[1] << " " << v2[2] << endl;
-      }
-      if(patch.Face(i)[0] == patch.Face(i)[1] ||
-	 patch.Face(i)[0] == patch.Face(i)[2] ||
-	 patch.Face(i)[1] == patch.Face(i)[2]) {
-	cerr << "Damn: " << i << endl;
-	cerr << patch.Face(i)[0] << " " << patch.Face(i)[1] 
-	     << patch.Face(i)[2] << endl;
-      }
-      }*/
+        
     for(unsigned int i = 0; i < patch.nf; i++) 
-      for(int k = 0; k < 3; k++) 
-	newface[fcount++] = vmap[patch.Face(i)[k]];
+      for(int k = 0; k < 3; k++) {
+        //TODO remove this check.
+        if(patch.Face(i)[k] >= vmap.size()) {
+          cerr << "Face overflow: " << patch.Face(i)[k] << endl;
+          exit(0);
+        }
+        assert(patch.Face(i)[k] < vmap.size());        
+	      newface[fcount++] = vmap[patch.Face(i)[k]];
+      }
   }  
+  
   assert(fcount == newface.size());
 
   set<Link>::iterator b;
@@ -318,14 +306,14 @@ void Nexus::Unify(float threshold) {
     for(unsigned int f = 0; f < entry.nface; f++) {
       unsigned short *face = patch.Face(f);
       if(face[0] != face[1] && face[1] != face[2] && face[0] != face[2] &&
-	 newvert[remap[face[0]]] != newvert[remap[face[1]]] &&
-	 newvert[remap[face[0]]] != newvert[remap[face[2]]] &&
-	 newvert[remap[face[1]]] != newvert[remap[face[2]]]) {
-	newface.push_back(remap[face[0]]);
-	newface.push_back(remap[face[1]]);
-	newface.push_back(remap[face[2]]);
+	      newvert[remap[face[0]]] != newvert[remap[face[1]]] &&
+	      newvert[remap[face[0]]] != newvert[remap[face[2]]] &&
+	      newvert[remap[face[1]]] != newvert[remap[face[2]]]) {
+	      newface.push_back(remap[face[0]]);
+	      newface.push_back(remap[face[1]]);
+	      newface.push_back(remap[face[2]]);
       } else {
-	degenerate++;
+	      degenerate++;
       }
     }
 
@@ -336,6 +324,15 @@ void Nexus::Unify(float threshold) {
 
     memcpy(patch.VertBegin(), &(newvert[0]), entry.nvert*sizeof(Point3f));
     memcpy(patch.FaceBegin(), &(newface[0]), entry.nface*3*sizeof(short));
+
+    //testiamo il tutto...  TODO remove this of course
+    for(unsigned int i =0; i < patch.nf; i++) {
+      for(int k =0 ; k < 3; k++)
+        if(patch.Face(i)[k] >= patch.nv) {
+          cerr <<" Unify has problems\n";
+          exit(0);
+        }
+    }
     
     //fix patch borders now
     set<unsigned int> close; //bordering pathes
