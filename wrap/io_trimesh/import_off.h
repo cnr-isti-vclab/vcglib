@@ -20,6 +20,12 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
+/****************************************************************************
+  History
+
+$Log: not supported by cvs2svn $
+
+****************************************************************************/
 
 #ifndef __VCGLIB_IMPORT_OFF
 #define __VCGLIB_IMPORT_OFF
@@ -285,11 +291,14 @@ namespace vcg
 					{
 						while (line[from]==' ' && from!=length)
 							from++;
-						to = from+1;
-						while (line[to]!=' ' && to!=length)
-							to++;
-						tokens.push_back(line.substr(from, to-from).c_str());
-						from = to;
+            if(from!=length)
+            {
+						  to = from+1;
+						  while (line[to]!=' ' && to!=length)
+							  to++;
+						  tokens.push_back(line.substr(from, to-from).c_str());
+						  from = to;
+            }
 					}
 					while (from<length);
 				} // end Tokenize
