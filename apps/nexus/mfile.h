@@ -38,7 +38,7 @@ class MFile {
   void WriteBuffer(void *data, unsigned int size);
 
   bool IsReadOnly() { return readonly; }
-
+  void SetReadOnly(bool rd) { readonly = rd; } //USE WITH CARE!!!!
  protected:
   std::string filename;
   std::vector<File *> files;
