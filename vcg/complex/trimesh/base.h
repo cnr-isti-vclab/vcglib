@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/03/18 16:00:10  cignoni
+minor changes
+
 Revision 1.4  2004/03/10 00:57:44  cignoni
 minor changes
 
@@ -198,11 +201,11 @@ inline bool IsMarked( ConstFacePointer f ) const { return f->IMark() == imark; }
 /** Set the vertex incremental mark of the vertex to the one of the mesh.
 	@param v Vertex pointer
 */
-inline void Mark( ConstVertexPointer v ) const { v->IMark() = imark; }
+inline void Mark( VertexPointer v ) const { v->IMark() = imark; }
 /** Set the face incremental mark of the vertex to the one of the mesh.
 	@param v Vertex pointer
 */
-inline void Mark( ConstFacePointer f ) const { f->IMark() = imark; }
+inline void Mark( FacePointer f ) const { f->IMark() = imark; }
 /// Unmark the mesh
 inline void UnMarkAll() { ++imark; }
 
