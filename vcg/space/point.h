@@ -24,38 +24,11 @@
   History
 
 $Log: not supported by cvs2svn $
+
+
 Revision 1.1  2004/03/16 03:07:38  tarini
 "dimensionally unified" version: first commit
 
-Revision 1.14  2004/03/05 17:55:01  tarini
-errorino: upper case in Zero()
-
-Revision 1.13  2004/03/03 14:22:48  cignoni
-Yet against cr lf mismatch
-
-Revision 1.12  2004/02/23 23:42:26  cignoni
-Translated comments, removed unusued stuff. corrected linefeed/cr
-
-Revision 1.11  2004/02/19 16:12:28  cignoni
-cr lf mismatch 2
-
-Revision 1.10  2004/02/19 16:06:24  cignoni
-cr lf mismatch
-
-Revision 1.8  2004/02/19 15:13:40  cignoni
-corrected sqrt and added doxygen groups
-
-Revision 1.7  2004/02/17 02:08:47  cignoni
-Di prova...
-
-Revision 1.6  2004/02/15 23:35:47  cignoni
-Cambiato nome type template in accordo alla styleguide
-
-Revision 1.5  2004/02/10 01:07:15  cignoni
-Edited Comments and GPL license
-
-Revision 1.4  2004/02/09 13:48:02  cignoni
-Edited doxygen comments
 ****************************************************************************/
 
 #ifndef __VCGLIB_POINT
