@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2004/10/13 12:45:51  cignoni
+Better Doxygen documentation
+
 Revision 1.11  2004/09/09 14:41:32  ponchio
 forgotten typename SEGMENTTYPE::...
 
@@ -300,6 +303,85 @@ bool Intersection( const Line3<T> & ray, const Point3<T> & vert0,
 	inte = vert0 + edge1*a + edge2*b;
   return true;
 }
+
+
+// ray-box
+template<class T>
+bool Intersection( const Box3<T> & box, const Line3<T> & r, Point3<T> & coord )
+{
+	const int NUMDIM = 3;
+	const int RIGHT  = 0;
+	const int LEFT	 = 1;
+	const int MIDDLE = 2;
+
+	int inside = 1;
+	char quadrant[NUMDIM];
+    int i;
+    int whichPlane;
+    Point3<T> maxT,candidatePlane;
+    
+	// Find candidate planes; this loop can be avoided if
+   	// rays cast all from the eye(assume perpsective view)
+    for (i=0; i<NUMDIM; i++)
+    {
+        if(r.Origin()[i] < box.min[i])
+		{
+			quadrant[i] = LEFT;
+			candidatePlane[i] = box.min[i];
+			inside = 0;
+		}
+		else if (r.Origin()[i] > box.max[i])
+		{
+			quadrant[i] = RIGHT;
+			candidatePlane[i] = box.max[i];
+			inside = 0;
+		}
+		else
+		{
+			quadrant[i] = MIDDLE;
+		}
+    }
+
+		// Ray origin inside bounding box
+	if(inside){
+	    coord = r.Origin();
+	    return true;
+	}
+
+	// Calculate T distances to candidate planes 
+    for (i = 0; i < NUMDIM; i++)
+    {
+		if (quadrant[i] != MIDDLE && r.Direction()[i] !=0.)
+			maxT[i] = (candidatePlane[i]-r.Origin()[i]) / r.Direction()[i];
+		else
+			maxT[i] = -1.;
+    }
+
+	// Get largest of the maxT's for final choice of intersection
+    whichPlane = 0;
+    for (i = 1; i < NUMDIM; i++)
+	    if (maxT[whichPlane] < maxT[i])
+			whichPlane = i;
+
+	// Check final candidate actually inside box 
+    if (maxT[whichPlane] < 0.) return false;
+    for (i = 0; i < NUMDIM; i++)
+		if (whichPlane != i)
+		{
+			coord[i] = r.Origin()[i] + maxT[whichPlane] *r.Direction()[i];
+			if (coord[i] < box.min[i] || coord[i] > box.max[i])
+				return false;
+		}
+		else
+		{
+			coord[i] = candidatePlane[i];
+		}
+    return true;			// ray hits box
+}	
+
+
+
+
 /*@}*/
 
 } // end namespace
