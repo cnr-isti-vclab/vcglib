@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2004/05/06 15:28:10  pietroni
+changed names to VF topology function (was missed)
+
 Revision 1.8  2004/05/05 17:03:25  pietroni
 changed name to topology functions
 
@@ -371,7 +374,8 @@ inline VFTYPE * & VFb()
 		  return _vfb;
 #else
     assert(0);// you are probably trying to use VF topology in a vertex without it
-		return *((VFTYPE **)(_flags));  
+    static VFTYPE *dum;
+    return dum;
 #endif
 	}
 
@@ -649,7 +653,7 @@ static bool HasVTAdjacency()   {
  //@{
 
 template <class VERT_TYPE>
-inline Convert( VERT_TYPE &v )
+inline void Convert( VERT_TYPE &v )
 {
   P()=v.P();
   Flags()=v.Flags();
