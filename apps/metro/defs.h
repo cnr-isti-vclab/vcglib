@@ -16,7 +16,7 @@
 #define CMD_LINE_ARG_SAMPLES_PER_AREA_UNIT          'A'
 #define CMD_LINE_ARG_SAVE_DISPLACEMENT              'O'
 #define CMD_LINE_ARG_SAVE_ERROR_AS_COLOUR           'C'
-#define CMR_LINE_ARG_IGNORE_UNREF										'U'
+#define CMR_LINE_ARG_INCLUDE_UNREF										'U'
 
 // error messages
 #define MSG_ERR_N_ARGS                  "\nUsage:  "\
