@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2004/03/16 00:23:50  tarini
+- added VoidType    - added "static_assert"
+
 Revision 1.11  2004/03/10 17:37:54  tarini
 Added Atan2.
 Added common utilities: Max, Min, Swap, Sort(a,b), Sort(a,b,c).
@@ -116,13 +119,13 @@ namespace math {
   const int             Value<int            >::Min = (-2147483647 - 1); 
   const int             Value<int            >::Max =  +2147483647; 
   const unsigned int    Value<unsigned int   >::Min = 0; 
-  const unsigned int    Value<unsigned int   >::Max = 4294967295; 
-  const __int64         Value<__int64        >::Min = (-9223372036854775807i64 - 1); 
-  const __int64         Value<__int64        >::Max =  +9223372036854775807i64; 
+  const unsigned int    Value<unsigned int   >::Max = 4294967295ul; 
+  const long long       Value<long long      >::Min = (-9223372036854775807ll - 1); 
+  const long long       Value<long long      >::Max =  +9223372036854775807ll; 
   const long            Value<long           >::Min = (-2147483647L -1L); 
   const long            Value<long           >::Max = 2147483647L; 
   const unsigned long   Value<unsigned long  >::Min = 0; 
-  const unsigned long   Value<unsigned long  >::Max = +4294967295; 
+  const unsigned long   Value<unsigned long  >::Max = +4294967295ul; 
   const float	          Value<float	         >::Min = -3.4E38F; 
   const float	          Value<float	         >::Max = +3.4E38F; 
   const long double     Value<long double    >::Min = -1.2E308; //E4931?
@@ -130,19 +133,19 @@ namespace math {
   const double          Value<double         >::Min = -1.7E308; 
   const double          Value<double         >::Max = +1.7E308; 
 
-	template<class T> inline Min(const T &a, const T &b){
+	template<class T> inline const T & Min(const T &a, const T &b){
 		if (a<b) return a; else return b;
 	};
-	template<class T> inline Max(const T &a, const T &b){
+	template<class T> inline const T & Max(const T &a, const T &b){
 		if (a<b) return b; else return a;
 	};
-	template<class T> inline Swap(T &a, T &b){
+	template<class T> inline void Swap(T &a, T &b){
 		T tmp=a; a=b; b=tmp;
 	};
-	template<class T> inline Sort(T &a, T &b){
+	template<class T> inline void Sort(T &a, T &b){
 		if (a>b) Swap(a,b);
 	};
-	template<class T> inline Sort(T &a, T &b, T &c){
+	template<class T> inline void Sort(T &a, T &b, T &c){
 		if (a>b) Swap(a,b);
 		if (b>c) {Swap(b,c); if (a>b) Swap(a,b);}
 	};
