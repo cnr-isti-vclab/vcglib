@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/07/01 21:32:18  ponchio
+Created
+
 
 ****************************************************************************/
 
@@ -127,7 +130,7 @@ int main(int argc, char *argv[]) {
   
 
   VFile<unsigned int> face_remap;
-  if(!face_remap.Create(output + ".frm")) {
+  if(!face_remap.Create(output + ".rmf")) {
     cerr << "Could not create remap files: " << output << ".frm\n";
     return -1;
   }
@@ -142,6 +145,8 @@ int main(int argc, char *argv[]) {
   for(unsigned int i = 0; i < crude.face.Size(); i++) {
     bari = crude.GetBari(i);
     unsigned int patch = inter.Locate(bari);
+    if(patch > 1000)
+      cerr << "Patch: " << patch << endl;
     face_remap[i] = patch;
   }
 
@@ -154,7 +159,7 @@ int main(int argc, char *argv[]) {
 
   VertRemap vert_remap;
   if(!vert_remap.Create(output)) {
-    cerr << "Could not create remap files: " << output << ".vrm and .brm\n";
+    cerr << "Could not create remap files: " << output << ".rmv and .rmb\n";
     return -1;
   }
   vert_remap.Resize(crude.vert.Size());
@@ -172,5 +177,7 @@ int main(int argc, char *argv[]) {
   }
   watch.Stop();
   cerr << "done in " << watch.Elapsed() << " secs\n";
+  chain.Save(output + ".chn");
+
   return 0;						 
 }
