@@ -24,8 +24,14 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/04/07 10:48:37  cignoni
+updated access to matrix44 elements through V() instead simple []
+
 Revision 1.6  2004/03/25 14:57:49  ponchio
 Microerror. ($LOG$ -> $Log: not supported by cvs2svn $
+Microerror. ($LOG$ -> Revision 1.7  2004/04/07 10:48:37  cignoni
+Microerror. ($LOG$ -> updated access to matrix44 elements through V() instead simple []
+Microerror. ($LOG$ ->
 
 
 ****************************************************************************/
@@ -59,6 +65,10 @@ public:
   Quaternion &operator*=(const Quaternion &q);
   void Invert();
 
+	
+	void SetIdentity();
+	
+
   void FromAxis(const S phi, const Point3<S> &a);
   void ToAxis(S &phi, Point3<S> &a ) const;
 
@@ -74,7 +84,12 @@ template <class S> Quaternion<S> Inverse(const Quaternion<S> &q);
 
 
 //Implementation
+template <class S> 
+void Quaternion<S>::SetIdentity(){
+	FromAxis(0, Point3<S>(1, 0, 0));
+}
 	
+
 template <class S> Quaternion<S>::Quaternion(const S phi, const Point3<S> &a) {
   FromAxis(phi, a);
 }
