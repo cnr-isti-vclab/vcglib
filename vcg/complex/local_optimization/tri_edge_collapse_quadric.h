@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/12/10 01:07:15  cignoni
+Moved param classes inside; added support for optimal placement and symmetric; added update heap also here (not only in the base class)
+
 Revision 1.4  2004/11/23 10:34:23  cignoni
 passed parameters by reference in many funcs and gcc cleaning
 
@@ -209,45 +212,48 @@ public:
 		InitQuadric(m);
 
 	// Initialize the heap with all the possible collapses 
-		if(IsSymmetric()) { // if the collapse is symmetric (e.g. u->v == v->u)
-		for(vi=m.vert.begin();vi!=m.vert.end();++vi) 
+		if(IsSymmetric()) 
+    { // if the collapse is symmetric (e.g. u->v == v->u)
+		  for(vi=m.vert.begin();vi!=m.vert.end();++vi) 
 				if((*vi).IsRW())
 						{
 								vcg::face::VFIterator<FaceType> x;
 								for( x.F() = (*vi).VFp(), x.I() = (*vi).VFi(); x.F()!=0; ++ x){
-									x.F()->V1(x.I())->ClearV();
-									x.F()->V2(x.I())->ClearV();
-							}
-								for( x.F() = (*vi).VFp(), x.I() = (*vi).VFi(); x.F()!=0; ++x ){
+									x.V1()->ClearV();
+									x.V2()->ClearV();
+							  }
+								for( x.F() = (*vi).VFp(), x.I() = (*vi).VFi(); x.F()!=0; ++x )
+                {
 									assert(x.F()->V(x.I())==&(*vi));
-									if((x.F()->V(x.I())<x.F()->V1(x.I())) && x.F()->V1(x.I())->IsRW() && !x.F()->V1(x.I())->IsV()){
-												x.F()->V1(x.I())->SetV();
-
-												h_ret.push_back(HeapElem(new MYTYPE(EdgeType(x.F()->V(x.I()),x.F()->V1(x.I())),GlobalMark())));
+									if((x.V0()<x.V1()) && x.V1()->IsRW() && !x.V1()->IsV()){
+												x.V1()->SetV();
+												h_ret.push_back(HeapElem(new MYTYPE(EdgeType(x.V0(),x.V1()),GlobalMark() )));
 												}
-									if((x.F()->V(x.I())<x.F()->V2(x.I())) && x.F()->V2(x.I())->IsRW()&& !x.F()->V2(x.I())->IsV()){
-												x.F()->V2(x.I())->SetV();
-												h_ret.push_back(HeapElem(new MYTYPE(EdgeType(x.F()->V(x.I()),x.F()->V2(x.I())),GlobalMark() )));
+									if((x.V0()<x.V2()) && x.V2()->IsRW()&& !x.V2()->IsV()){
+												x.V2()->SetV();
+												h_ret.push_back(HeapElem(new MYTYPE(EdgeType(x.V0(),x.V2()),GlobalMark() )));
 											}
 								}
-		}	
-	}	
-		else { // if the collapse is A-symmetric (e.g. u->v != v->u) 
+		        }	
+	  }	
+		else 
+    { // if the collapse is A-symmetric (e.g. u->v != v->u) 
 			for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-		{
-			vcg::face::VFIterator<FaceType> x;
-			m.UnMarkAll();
-			for( x.F() = (*vi).VFp(), x.I() = (*vi).VFi(); x.F()!=0; ++ x){
-				assert(x.F()->V(x.I())==&(*vi));
-				if(x.F()->V(x.I())->IsRW() && x.F()->V1(x.I())->IsRW() && !m.IsMarked(x.F()->V1(x.I()))){
-							h_ret.push_back( HeapElem( new MYTYPE( EdgeType (x.F()->V(x.I()),x.F()->V1(x.I())),GlobalMark())));
-							}
-				if(x.F()->V(x.I())->IsRW() && x.F()->V2(x.I())->IsRW()&& !m.IsMarked(x.F()->V2(x.I()))){
-							h_ret.push_back( HeapElem( new MYTYPE( EdgeType (x.F()->V(x.I()),x.F()->V2(x.I())),GlobalMark())));
-						}
-			}
-		}	
-	}
+		  {
+			  vcg::face::VFIterator<FaceType> x;
+			  m.UnMarkAll();
+			  for( x.F() = (*vi).VFp(), x.I() = (*vi).VFi(); x.F()!=0; ++ x)
+        {
+				  assert(x.F()->V(x.I())==&(*vi));
+				  if(x.V()->IsRW() && x.V1()->IsRW() && !m.IsMarked(x.F()->V1(x.I()))){
+							  h_ret.push_back( HeapElem( new MYTYPE( EdgeType (x.V(),x.V1()),GlobalMark())));
+							  }
+				  if(x.V()->IsRW() && x.V2()->IsRW() && !m.IsMarked(x.F()->V2(x.I()))){
+							  h_ret.push_back( HeapElem( new MYTYPE( EdgeType (x.V(),x.V2()),GlobalMark())));
+						  }
+			  }
+		  }	
+	  }
 	make_heap(h_ret.begin(),h_ret.end());
 }
 
@@ -370,53 +376,59 @@ public:
 //
   inline  void UpdateHeap(HeapType & h_ret)
   {
-		GlobalMark()++; int nn=0;
+		GlobalMark()++;
 		VertexType *v[2];
 		v[0]= pos.V(0);v[1]=pos.V(1);	
 		v[1]->IMark() = GlobalMark();
 
 		// First loop around the remaining vertex to unmark visited flags
-    vcg::face::VFIterator<FaceType> vfi(v[1]->VFp(),v[1]->VFi());	
+    vcg::face::VFIterator<FaceType> vfi(v[1]);	
 		while (!vfi.End()){
-			vfi.F()->V1(vfi.I())->ClearV();
-			vfi.F()->V2(vfi.I())->ClearV();
+			vfi.V1()->ClearV();
+			vfi.V2()->ClearV();
 			++vfi;
 		}
 
     // Second Loop 
-		vfi.F() = v[1]->VFp();
-		vfi.I() = v[1]->VFi();	
-    while (!vfi.End())
+		vfi = face::VFIterator<FaceType>(v[1]);	
+		while (!vfi.End())
     {
 			assert(!vfi.F()->IsD());
       for (int j=0;j<3;j++)
 			{
-				if( !(vfi.F()->V1(vfi.I())->IsV()) && (vfi.F()->V1(vfi.I())->IsRW()))
+				if( !(vfi.V1()->IsV()) && vfi.V1()->IsRW())
 				{
-				vfi.F()->V1(vfi.I())->SetV();
-				h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.F()->V(vfi.I()),vfi.F()->V1(vfi.I())),GlobalMark())));
-				std::push_heap(h_ret.begin(),h_ret.end());
-				if(!IsSymmetric()){				
-					h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.F()->V1(vfi.I()),vfi.F()->V(vfi.I())),GlobalMark())));
-					std::push_heap(h_ret.begin(),h_ret.end());
-				}
-      }
-				if(  !(vfi.F()->V2(vfi.I())->IsV()) && (vfi.F()->V2(vfi.I())->IsRW()))
+				  vfi.V1()->SetV();
+				  h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.V0(),vfi.V1()), GlobalMark())));
+				  std::push_heap(h_ret.begin(),h_ret.end());
+				  if(!IsSymmetric()){				
+					  h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.V1(),vfi.V0()), GlobalMark())));
+					  std::push_heap(h_ret.begin(),h_ret.end());
+				  }
+        }
+				if(  !(vfi.V2()->IsV()) && vfi.V2()->IsRW())
 				{
-					vfi.F()->V2(vfi.I())->SetV();
-				h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.F()->V(vfi.I()),vfi.F()->V2(vfi.I())),GlobalMark())));
-				std::push_heap(h_ret.begin(),h_ret.end());
-				if(!IsSymmetric()){				
-					h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.F()->V2(vfi.I()),vfi.F()->V(vfi.I())),GlobalMark())));
-					std::push_heap(h_ret.begin(),h_ret.end());
-				}
-      }
-
-
+					vfi.V2()->SetV();
+				  h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.V0(),vfi.V2()),GlobalMark())));
+				  std::push_heap(h_ret.begin(),h_ret.end());
+				  if(!IsSymmetric()){				
+					  h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.V2(),vfi.V0()), GlobalMark())));
+					  std::push_heap(h_ret.begin(),h_ret.end());
+				  }
+        }
+        if(Params().SafeHeapUpdate && vfi.V1()->IsRW() && vfi.V2()->IsRW() )
+        {
+          h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.V1(),vfi.V2()),GlobalMark())));
+				  std::push_heap(h_ret.begin(),h_ret.end());
+				  if(!IsSymmetric()){				
+					  h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.V2(),vfi.V1()), GlobalMark())));
+					  std::push_heap(h_ret.begin(),h_ret.end());
+				  }
+        }
 			}
-      ++vfi;nn++;
+      ++vfi;
     }
-//		printf("ADDED %d\n",nn);
+
   }
 
 static void InitQuadric(TriMeshType &m)

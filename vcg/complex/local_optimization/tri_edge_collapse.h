@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.15  2004/12/10 01:03:53  cignoni
+  better comments and removed logging
+
   Revision 1.14  2004/11/23 10:34:23  cignoni
   passed parameters by reference in many funcs and gcc cleaning
 
@@ -226,9 +229,12 @@ public:
 		  VertexType *v0=pos.V(0);
 			VertexType *v1=pos.V(1);
 			
-			if(! (( (!v0->IsD()) && (!v1->IsD())) &&
-							 localMark>=v0->IMark() &&
-							 localMark>=v1->IMark()))
+			//if(! (( (!v0->IsD()) && (!v1->IsD())) &&
+			//				 localMark>=v0->IMark() &&
+			//				 localMark>=v1->IMark()))
+			if( v0->IsD() || v1->IsD() ||
+				 localMark < v0->IMark()  ||
+		  	 localMark < v1->IMark()   )
 			{
 				++FailStat::OutOfDate();
 				return false;
