@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/05/26 11:59:09  turini
+Changed : Use Of vector In Use Of std::vector.
+
 Revision 1.3  2004/05/26 11:53:17  pietroni
 modified face declaration
 
@@ -45,6 +48,7 @@ Written some documentation and added to the trimes doxygen module
 #include<vcg\simplex\face\face.h>
 #include<vcg\complex\trimesh\base.h>
 #include<vcg\complex\trimesh\update\normal.h>
+#include<vcg\simplex\tetrahedron\pos.h>
 #include<vector>
 
 namespace vcg {
@@ -80,6 +84,29 @@ static void PerTetraFace(TetraMeshType &m)
 			if( !(*t).IsD() )	(*t).ComputeNormal();
 }
 
+/// Calculates the vertex normal of a vertex.
+static void PerVertex(VertexType *v)
+{
+ 
+  if( !VertexType::HasNormal()) return;
+
+ VTIterator<TetraType> VTi=VTIterator<TetraType>(v->VTb(),v->VTi());
+ VertexType::NormalType Norm=VertexType::NormalType(0,0,0);
+ int iter=0;
+ while (!VTi.End())
+ {
+   //take the tree faces on the vertex's tetrahedron
+   int f0=Tetra::FofV(VTi.Vi(),0);
+   int f1=Tetra::FofV(VTi.Vi(),1);
+   int f2=Tetra::FofV(VTi.Vi(),2);
+   iter++; 
+  if (VTi.Vt()->IsBorderF(f0))
+    Norm+=VTi.Vt()->N(f0);
+  VTi++;
+ }
+ Norm/=iter;
+ v->N()=Norm.Normalize();
+}
 
 /// Calculates the vertex normal. Without exploiting or touching face normals
 /// The normal of a vertex v is the weigthed average of the normals of the faces incident on v.
@@ -90,7 +117,7 @@ static void PerVertex(TetraMeshType &m)
  _ClearNormal(m);
  TriMeshTemp tri_mesh=TriMeshTemp();
  TriConverter <TetraMeshType,TriMeshTemp>tric=TriConverter<TetraMeshType,TriMeshTemp>();
- tric.Convert(m,tri_mesh);
+ tric.Convert(m.tetra,tri_mesh);
  vcg::tri::UpdateNormals<TriMeshTemp> UNT=vcg::tri::UpdateNormals<TriMeshTemp>();
  UNT.PerVertexNormalized(tri_mesh);
 }
