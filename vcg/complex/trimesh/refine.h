@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/02/02 16:01:13  pietroni
+1 warning corrected
+
 Revision 1.1  2004/10/12 15:42:29  ganovelli
 first working version
 
@@ -41,6 +44,7 @@ first working version
 #include <vcg/space/tcoord2.h>
 #include <vcg/space/color4.h>
 #include <vcg/simplex/face/pos.h>
+#include<vcg/complex/trimesh/update/topology.h>
 
 namespace vcg{
 /* Tabella che codifica le modalita' di split a seconda di quali dei tre edge sono da splittare 
