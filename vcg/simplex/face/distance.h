@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/01/21 17:11:03  pietroni
+changed Dist Function to PointDistance... the function is on vcg::face::PointDistance this file will contain all distance functions between a face and othe entities
+
 Revision 1.1  2004/05/12 18:50:25  ganovelli
 created
 
@@ -36,7 +39,6 @@ created
 
 #include <vcg/space/point3.h>
 
-using namespace std;
 
 namespace vcg {
 	namespace face{
