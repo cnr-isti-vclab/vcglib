@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2004/09/21 23:52:50  cignoni
+Release 4.01
+
 Revision 1.9  2004/09/20 16:29:08  ponchio
 Minimal changes.
 
@@ -48,7 +51,6 @@ GPL  added
 
 // standard libraries
 #include <time.h>
-#include <locale>
 
 // project definitions.
 #include "defs.h"
@@ -58,9 +60,7 @@ GPL  added
 #include <vcg/complex/trimesh/update/bounding.h>
 #include <vcg/math/histogram.h>
 #include <vcg/complex/trimesh/clean.h>
-//#include <wrap/io_trimesh/import_smf.h>
-#include <wrap/io_trimesh/import_ply.h>
-#include <wrap/io_trimesh/import_stl.h>
+#include <wrap/io_trimesh/import.h>
 #include <wrap/io_trimesh/export_ply.h>
 
 
@@ -82,11 +82,11 @@ void Usage()
                                         "  -e         disable edge sampling\n"\
                                         "  -f         disable face sampling\n"\
                                         "  -u         ignore unreferred vertices\n"\
-                                        "  -Sx        set the face sampling mode\n"\
+                                        "  -sx        set the face sampling mode\n"\
                                         "             where x can be:\n"\
-                                        "              -S0  montecarlo sampling\n"\
-                                        "              -S1  subdivision sampling\n"\
-                                        "              -S2  similar triangles sampling (Default)\n"\
+                                        "              -s0  montecarlo sampling\n"\
+                                        "              -s1  subdivision sampling\n"\
+                                        "              -s2  similar triangles sampling (Default)\n"\
                                         "  -n#        set the required number of samples (overrides -A)\n"\
                                         "  -a#        set the required number of samples per area unit (overrides -N)\n"\
                                         "  -c         save a mesh with error as per-vertex colour and quality\n"\
@@ -109,46 +109,19 @@ string SaveFileName(const string &filename)
 }
 
 
-// simple aux function that returns true if a given file has a given extesnion
-bool FileExtension(string filename,  string extension)
-{
-  locale loc1 ;
-  use_facet<ctype<char> > ( loc1 ).tolower(&*filename.begin(),&*filename.end());
-  use_facet<ctype<char> > ( loc1 ).tolower(&*extension.begin(),&*extension.end());
-  string end=filename.substr(filename.length()-extension.length(),extension.length());
-  return end==extension;
-}
-
 // Open Mesh
 void OpenMesh(const char *filename, CMesh &m)
 {
-  int err;
-  if(FileExtension(filename,"ply"))
-  {
-    err = tri::io::ImporterPLY<CMesh>::Open(m,filename);
-    if(err) {
-      printf("Error in reading %s: '%s'\n",filename,tri::io::ImporterPLY<CMesh>::ErrorMsg(err));
+  int err = tri::io::Importer<CMesh>::Open(m,filename);
+  if(err) {
+      printf("Error in reading %s: '%s'\n",filename,tri::io::Importer<CMesh>::ErrorMsg(err));
       exit(-1);
     }
-    printf("read mesh `%s'\n", filename);		  
-  }
-  else if(FileExtension(filename,"stl"))
-  {
-    err = tri::io::ImporterSTL<CMesh>::Open(m,filename);
-    if(err) {
-      printf("Error in reading %s: '%s'\n",filename,tri::io::ImporterSTL<CMesh>::ErrorMsg(err));
-      exit(-1);
-    }
-    printf("read mesh `%s'\n", filename);		  
-  }
-  else {
-    printf("Unknown file format for mesh '%s'\n",filename);
-    exit(-1);
-  }
+  printf("read mesh `%s'\n", filename);		  
   if(CleaningFlag){
-  int dup = tri::Clean<CMesh>::RemoveDuplicateVertex(m);
-  int unref =  tri::Clean<CMesh>::RemoveUnreferencedVertex(m);
-  printf("Removed %i duplicate and %i unreferenced vertices from mesh %s\n",dup,unref,filename);
+      int dup = tri::Clean<CMesh>::RemoveDuplicateVertex(m);
+      int unref =  tri::Clean<CMesh>::RemoveUnreferencedVertex(m);
+      printf("Removed %i duplicate and %i unreferenced vertices from mesh %s\n",dup,unref,filename);
   }
 }
 
@@ -164,7 +137,7 @@ int main(int argc, char**argv)
  
     // print program info
     printf("-------------------------------\n"
-           "         Metro V.4.01 \n"
+           "         Metro V.4.02 \n"
            "     http://vcg.isti.cnr.it\n"
            "   release date: "__DATE__"\n"
            "-------------------------------\n\n");
@@ -189,9 +162,9 @@ int main(int argc, char**argv)
         case 's'   :
           switch(argv[i][2])
           {
-            case 0:  flags = (flags | SamplingFlags::MONTECARLO_SAMPLING  ) & (~ SamplingFlags::NO_SAMPLING );break;
-            case 1:  flags = (flags | SamplingFlags::SUBDIVISION_SAMPLING ) & (~ SamplingFlags::NO_SAMPLING );break;
-            case 2:  flags = (flags | SamplingFlags::SIMILAR_SAMPLING     ) & (~ SamplingFlags::NO_SAMPLING );break;
+            case '0':  flags = (flags | SamplingFlags::MONTECARLO_SAMPLING  ) & (~ SamplingFlags::NO_SAMPLING );break;
+            case '1':  flags = (flags | SamplingFlags::SUBDIVISION_SAMPLING ) & (~ SamplingFlags::NO_SAMPLING );break;
+            case '2':  flags = (flags | SamplingFlags::SIMILAR_SAMPLING     ) & (~ SamplingFlags::NO_SAMPLING );break;
             default  :  printf(MSG_ERR_INVALID_OPTION, argv[i]);
               exit(0);
           }
@@ -210,9 +183,9 @@ int main(int argc, char**argv)
     // load input meshes.
     OpenMesh(argv[1],S1);
     OpenMesh(argv[2],S2);
+
     string S1NewName=SaveFileName(argv[1]);
     string S2NewName=SaveFileName(argv[2]);
-
    
     if(!NumberOfSamples && !SamplesPerAreaUnit)
     {
@@ -267,7 +240,7 @@ int main(int argc, char**argv)
     printf("target # samples      : %u\ntarget # samples/area : %f\n", n_samples_target, n_samples_per_area_unit);
     ForwardSampling.Hausdorff();
     dist1_max  = ForwardSampling.GetDistMax();
-    printf("\ndistances:\n  max  : %f (%f  with respect to bounding box diagonal)\n", (float)dist1_max, (float)dist1_max/bbox.Diag());
+    printf("\ndistances:\n  max  : %f (%f  wrt bounding box diagonal)\n", (float)dist1_max, (float)dist1_max/bbox.Diag());
     printf("  mean : %f\n", ForwardSampling.GetDistMean());
     printf("  RMS  : %f\n", ForwardSampling.GetDistRMS());
     printf("# vertex samples %9d\n", ForwardSampling.GetNVertexSamples());
@@ -292,7 +265,7 @@ int main(int argc, char**argv)
     printf("target # samples      : %u\ntarget # samples/area : %f\n", n_samples_target, n_samples_per_area_unit);
     BackwardSampling.Hausdorff();
     dist2_max  = BackwardSampling.GetDistMax();
-    printf("\ndistances:\n  max  : %f (%f  with respect to bounding box diagonal)\n", (float)dist1_max, (float)dist1_max/bbox.Diag());
+    printf("\ndistances:\n  max  : %f (%f  wrt bounding box diagonal)\n", (float)dist2_max, (float)dist2_max/bbox.Diag());
     printf("  mean : %f\n", BackwardSampling.GetDistMean());
     printf("  RMS  : %f\n", BackwardSampling.GetDistRMS());
     printf("# vertex samples %9d\n", BackwardSampling.GetNVertexSamples());
@@ -306,7 +279,7 @@ int main(int argc, char**argv)
     int n_total_sample=ForwardSampling.GetNSamples()+BackwardSampling.GetNSamples();
     double mesh_dist_max  = max(dist1_max , dist2_max);
     
-    printf("\nHausdorff distance: %f (%f  with respect to bounding box diagonal)\n",(float)mesh_dist_max,(float)mesh_dist_max/bbox.Diag());
+    printf("\nHausdorff distance: %f (%f  wrt bounding box diagonal)\n",(float)mesh_dist_max,(float)mesh_dist_max/bbox.Diag());
     printf("  Computation time  : %d ms\n",(int)(1000.0*elapsed_time/CLOCKS_PER_SEC));
     printf("  # samples/second  : %f\n\n", (float)n_total_sample/((float)elapsed_time/CLOCKS_PER_SEC));
 
