@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/07/01 21:34:29  ponchio
+*** empty log message ***
+
 Revision 1.1  2004/06/24 14:32:45  ponchio
 Moved from wrap/nexus
 
@@ -75,7 +78,7 @@ class MFHash {
   void Clear();
   unsigned int Size();
   void Close();
- private:
+
   VFile<Bucket> buffer;
   unsigned int space;
     };

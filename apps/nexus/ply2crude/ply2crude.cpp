@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/06/23 00:08:05  ponchio
+Created
+
 
 ****************************************************************************/
 
@@ -32,7 +35,8 @@ $Log: not supported by cvs2svn $
 #include <string>
 #include <iostream>
 #include <wrap/ply/plylib.h>
-#include <wrap/nexus/crude.h>
+#include "../crude.h"
+
 using namespace std;
 using namespace vcg;
 using namespace vcg::ply;
