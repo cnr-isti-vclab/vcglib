@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/05/12 12:23:23  cignoni
+Conformed C++ syntax to GCC requirements
+
 Revision 1.6  2004/05/11 16:03:18  ganovelli
 changed from "thi" to "&f" in Vfdetach
 
@@ -218,27 +221,27 @@ void Swap (SwapFaceType &f, const int z )
 template <class FaceType>
 void VFDetach(FaceType & f, int z)
 {
+	printf("detach %d \n",&f);
 	if(f.V(z)->VFp()==&f )  //if it is the first face detach from the begin
 	{
-		int fz = f.V(z)->VFb();
-		f.V(z)->VFb() = f.VFp(fz);
+		int fz = f.V(z)->VFi();
+		f.V(z)->VFp() = f.VFp(fz);
 		f.V(z)->VFi() = f.VFi(fz);
 	}
 	else  // scan the list of faces in order to finde the current face f to be detached
 	{
-			VEdgePosB<FACE_TYPE> x,y;
-    Pos< FaceType > x(V(z)->VFb(),V(z)->VFi());
-    Pos< FaceType > y;
+    VFIterator<FaceType> x(f.V(z)->VFp(),f.V(z)->VFi());
+    VFIterator<FaceType> y;
 
 		for(;;)
 		{
 			y = x;
-			x.NextF();
+			x++;
 			assert(x.f!=0);
 			if(x.f==&f) // found!
 			{
-				y.f->FFp(y.z) = f.FFp(z);
-				y.f->FFi(y.z) = f.FFi(z);
+				y.f->VFp(y.z) = f.VFp(z);
+				y.f->VFi(y.z) = f.VFi(z);
 				break;
 			}
 		}
