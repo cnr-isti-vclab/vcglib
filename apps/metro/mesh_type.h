@@ -45,7 +45,7 @@ using namespace std;
 // Vertex, Face, Mesh and Grid definitions.
 class MyEdge;
 class CFace;
-class CVertex   : public VertexCMNQ< double,MyEdge,CFace > {};
+class CVertex   : public VertexVCVMVNVQ< double,MyEdge,CFace > {};
 class CFace     : public FaceRTFMFN< CVertex,MyEdge,CFace > {};
 class CMesh     : public tri::TriMesh< vector<CVertex>, vector<CFace> > {};
 

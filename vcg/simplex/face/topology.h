@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/05/11 16:03:18  ganovelli
+changed from "thi" to "&f" in Vfdetach
+
 Revision 1.5  2004/05/10 15:20:49  cignoni
 Updated names of POS and adj functions to the new standards for many functions
 
@@ -215,28 +218,27 @@ void Swap (SwapFaceType &f, const int z )
 template <class FaceType>
 void VFDetach(FaceType & f, int z)
 {
-	if(f.V(z)->Fp()==&f )
+	if(f.V(z)->VFp()==&f )  //if it is the first face detach from the begin
 	{
-		int fz = f.V(z)->Zp();
-		f.V(z)->Fp() = (face_from_vert_type *) f.F(fz);
-		f.V(z)->Zp() = f.Z(fz);
+		int fz = f.V(z)->VFb();
+		f.V(z)->VFb() = f.VFp(fz);
+		f.V(z)->VFi() = f.VFi(fz);
 	}
-	else
+	else  // scan the list of faces in order to finde the current face f to be detached
 	{
 			VEdgePosB<FACE_TYPE> x,y;
-
-		x.f = V(z)->Fp();
-		x.z = V(z)->Zp();
+    Pos< FaceType > x(V(z)->VFb(),V(z)->VFi());
+    Pos< FaceType > y;
 
 		for(;;)
 		{
 			y = x;
 			x.NextF();
 			assert(x.f!=0);
-			if(x.f==&f)
+			if(x.f==&f) // found!
 			{
-				y.f->F(y.z) = f.F(z);
-				y.f->Z(y.z) = f.Z(z);
+				y.f->FFp(y.z) = f.FFp(z);
+				y.f->FFi(y.z) = f.FFi(z);
 				break;
 			}
 		}
