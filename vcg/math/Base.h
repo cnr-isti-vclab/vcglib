@@ -66,7 +66,7 @@ namespace vcg {
     static T ToDeg(const T &a);
     static T ToRad(const T &a);
     // Unspecialized members
-    SCALAR Clamp( const SCALAR & val, const SCALAR& minval, const SCALAR& maxval);
+    T Clamp( const T & val, const T& minval, const T& maxval);
     class MagnitudoComparer
     {
       public:
