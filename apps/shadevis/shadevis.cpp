@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/09/10 14:02:20  cignoni
+Added Cone directions
+
 Revision 1.4  2004/09/09 22:34:38  cignoni
 Integrated lost modifications...
 
@@ -83,7 +86,7 @@ bool ClosedFlag=false;
 Point3f ConeDir(0,1,0);
 float ConeAngleRad = math::ToRad(180.0f);
 
-float lopass=0,hipass=1,gamma=1;
+float lopass=0,hipass=1,gamma_correction=1;
 float diff=.8;
 float ambi=.2;
 
@@ -218,7 +221,7 @@ void  ViewDisplay (void)
   glLoadIdentity ();  
   glPushMatrix();
   QL.Apply();
-  glutPrintf(5,5,"Diffuse %04.2f   Ambient %04.2f    LowPass %04.2f    HiPass %04.2f    Gamma %04.2f ",diff,ambi,lopass,hipass,gamma);
+  glutPrintf(5,5,"Diffuse %04.2f   Ambient %04.2f    LowPass %04.2f    HiPass %04.2f    Gamma %04.2f ",diff,ambi,lopass,hipass,gamma_correction);
   GLfloat light_position0[] = {0.0, 10.0, 300.0, 0.0};
 	glLightfv(GL_LIGHT0, GL_POSITION, light_position0);
   glPopMatrix();
@@ -262,8 +265,8 @@ void ViewSpecialKey(int , int , int )
 void Toggle(bool &flag) {flag = !flag;}
 void UpdateVis()
 {
-  if(LightFlag) Vis.MapVisibility(gamma,lopass,hipass,ambi);
-  if(!LightFlag) Vis.MapVisibility(gamma,lopass,hipass,1.0);
+  if(LightFlag) Vis.MapVisibility(gamma_correction,lopass,hipass,ambi);
+  if(!LightFlag) Vis.MapVisibility(gamma_correction,lopass,hipass,1.0);
 }
 /*********************************************************************/
 /*********************************************************************/
@@ -275,17 +278,17 @@ void ViewKey(unsigned char key, int , int )
   case 27: exit(0);   	break;
   case 9: if(Q==&QV) Q=&QL;else Q=&QV;   	break;
 	case 'l' :
-		lopass=lopass+.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma); 
+		lopass=lopass+.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma_correction); 
 		UpdateVis();
 		break;
 	case 'L' :
-		lopass=lopass-.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma); 
+		lopass=lopass-.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma_correction); 
 		UpdateVis(); break;
 	case 'h' :
-		hipass=hipass-.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma); 
+		hipass=hipass-.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma_correction); 
 		UpdateVis(); break;
 	case 'H' :
-		hipass=hipass+.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma); 
+		hipass=hipass+.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma_correction); 
 		UpdateVis(); break;
   case 'd' :  diff+=.05; printf("Ambient %f Diffuse %f, \n",ambi,diff); 		UpdateVis(); break;
   case 'D' :  diff-=.05; printf("Ambient %f Diffuse %f, \n",ambi,diff); 		UpdateVis(); break;
@@ -296,10 +299,10 @@ void ViewKey(unsigned char key, int , int )
   case 'E' :  ambi-=.05; diff+=.05; printf("Ambient %f Diffuse %f, \n",ambi,diff); 		UpdateVis(); break;
 
 	case 'p' :
-		gamma=gamma-.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma); 
+		gamma_correction=gamma_correction-.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma_correction); 
 		UpdateVis(); break;
 	case 'P' :
-		gamma=gamma+.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma); 
+		gamma_correction=gamma_correction+.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma_correction); 
 		UpdateVis(); break;
 	case 13 : 
 		//Vis.ComputeUniform(SampleNum,ViewVector,cb); 
@@ -343,10 +346,10 @@ void ViewKey(unsigned char key, int , int )
 		break;
   case 'C' : LightFlag = !LightFlag; printf("Toggled Light %s\n",LightFlag?"on":"off"); 		UpdateVis(); break;
   case 'c' : ColorFlag = !ColorFlag; printf("Toggled Color %s\n",ColorFlag?"on":"off"); break;
-  case '1' : diff=0.80f; ambi=0.10f; gamma=1.0; lopass=0.00f; hipass=1.00f; ColorFlag=false; UpdateVis(); break;
-  case '2' : diff=0.65f; ambi=0.30f; gamma=1.0; lopass=0.15f; hipass=0.80f; ColorFlag=true;  UpdateVis(); break;
-  case '3' : diff=0.45f; ambi=0.50f; gamma=1.0; lopass=0.20f; hipass=0.75f; ColorFlag=true;  UpdateVis(); break;
-  case '4' : diff=0.35f; ambi=0.60f; gamma=1.0; lopass=0.25f; hipass=0.70f; ColorFlag=true;  UpdateVis(); break;
+  case '1' : diff=0.80f; ambi=0.10f; gamma_correction=1.0; lopass=0.00f; hipass=1.00f; ColorFlag=false; UpdateVis(); break;
+  case '2' : diff=0.65f; ambi=0.30f; gamma_correction=1.0; lopass=0.15f; hipass=0.80f; ColorFlag=true;  UpdateVis(); break;
+  case '3' : diff=0.45f; ambi=0.50f; gamma_correction=1.0; lopass=0.20f; hipass=0.75f; ColorFlag=true;  UpdateVis(); break;
+  case '4' : diff=0.35f; ambi=0.60f; gamma_correction=1.0; lopass=0.25f; hipass=0.70f; ColorFlag=true;  UpdateVis(); break;
 	}
 	glutPostRedisplay(); ;
 } 
