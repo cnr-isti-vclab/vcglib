@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/06/15 16:01:26  pietroni
+added functions to update local vertices normal
+
 Revision 1.4  2004/05/26 11:59:09  turini
 Changed : Use Of vector In Use Of std::vector.
 
@@ -96,12 +99,16 @@ static void PerVertex(VertexType *v)
  while (!VTi.End())
  {
    //take the tree faces on the vertex's tetrahedron
-   int f0=Tetra::FofV(VTi.Vi(),0);
-   int f1=Tetra::FofV(VTi.Vi(),1);
-   int f2=Tetra::FofV(VTi.Vi(),2);
-   iter++; 
-  if (VTi.Vt()->IsBorderF(f0))
-    Norm+=VTi.Vt()->N(f0);
+   int f;
+   for (int j=0;j<3;j++)
+   {
+    int f=Tetra::FofV(VTi.Vi(),j);
+    if (VTi.Vt()->IsBorderF(f))
+      {
+        iter++; 
+        Norm+=VTi.Vt()->N(f);
+      }
+   }
   VTi++;
  }
  Norm/=iter;
