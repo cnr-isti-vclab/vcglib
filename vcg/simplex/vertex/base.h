@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/03/03 16:07:57  cignoni
+Yet another cr lf mismatch
+
 Revision 1.3  2004/02/24 21:36:39  cignoni
 grouped documentation, changed typenames and reflection mechanism
 
@@ -64,6 +67,7 @@ public:
 	typedef FLTYPE         ScalarType;
 	/// The coordinate type used to represent the point (i.e. Point3f, Point3d, ...)
 	typedef Point3<ScalarType> CoordType;
+	typedef Point3<ScalarType> NormalType;
 	/// The type base of the vertex, useful for recovering the original typename after user subclassing
 	typedef VERTEX_TYPE    BaseVertexType;
 	/// The type base of the vertex, useful for recovering the original typename after user subclassing

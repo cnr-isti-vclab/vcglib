@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/03/07 21:54:56  cignoni
+some more reflection functions
+
 Revision 1.2  2004/03/04 00:08:15  cignoni
 First working version!
 
@@ -50,11 +53,11 @@ namespace tri {
 		@param VertContainer (Template Parameter) Specifies the type of the vertices container any the vertex type.
 		@param STL_FACE_CONT (Template Parameter) Specifies the type of the faces container any the face type.
  */
-template < class STL_VERT_CONT, class STL_FACE_CONT >
+template < class VertContainerType, class FaceContainerType >
 class TriMesh{
 	public:
-	typedef STL_FACE_CONT FaceContainer;
-	typedef STL_VERT_CONT VertContainer;
+	typedef FaceContainerType FaceContainer;
+	typedef VertContainerType VertContainer;
 	typedef typename VertContainer::value_type VertexType;
 	typedef typename FaceContainer::value_type FaceType;
 	typedef typename VertexType::ScalarType ScalarType;
@@ -140,15 +143,16 @@ static bool HasPerVertexMark()    { return VertexType::HasMark()   ; }
 static bool HasPerVertexQuality() { return VertexType::HasQuality(); }
 static bool HasPerVertexTexture() { return VertexType::HasTexture(); }
 
-static bool HasPerFaceColor()     { return FaceType::HasFaceNormal() ; }
-static bool HasPerFaceNormal()    { return FaceType::HasFaceColor()  ; }
+static bool HasPerFaceColor()     { return FaceType::HasFaceColor() ; }
+static bool HasPerFaceNormal()    { return FaceType::HasFaceNormal()  ; }
 static bool HasPerFaceMark()      { return FaceType::HasFaceMark()   ; }
 static bool HasPerFaceQuality()   { return FaceType::HasFaceQuality(); }
 
-static bool HasPerWedgeColor()     { return FaceType::HasWedgeNormal() ; }
-static bool HasPerWedgeNormal()    { return FaceType::HasWedgeColor()  ; }
+static bool HasPerWedgeColor()     { return FaceType::HasWedgeColor()  ; }
+static bool HasPerWedgeNormal()    { return FaceType::HasWedgeNormal()  ; }
 static bool HasPerWedgeMark()      { return FaceType::HasWedgeMark()   ; }
 static bool HasPerWedgeQuality()   { return FaceType::HasWedgeQuality(); }
+static bool HasPerWedgeTexture()   { return FaceType::HasWedgeTexture(); }
 
 static bool HasFFTopology()       { return FaceType::HasFFAdjacency();  }
 static bool HasVFTopology()       { return FaceType::HasVFAdjacency(); }
@@ -158,7 +162,7 @@ static bool HasTopology()         { return HasFFTopology() || HasVFTopology(); }
 /// Initialize the imark-system of the faces
 void InitFaceIMark()
 {
-	face_iterator f;
+	FaceIterator f;
 	
 	for(f=face.begin();f!=face.end();++f)
 		if( !(*f).IsDeleted() && (*f).IsR() && (*f).IsW() )
@@ -168,7 +172,7 @@ void InitFaceIMark()
 /// Initialize the imark-system of the vertices
 void InitVertexIMark()
 {
-	vertex_iterator vi;
+	VertexIterator vi;
 
 	for(vi=vert.begin();vi!=vert.end();++vi)
 		if( !(*vi).IsDeleted() && (*vi).IsRW() )
@@ -202,34 +206,33 @@ inline void UnMarkAll() { ++imark; }
 /// Calcolo del volume di una mesh chiusa
 ScalarType Volume()
 {
- 
-  face_iterator f;
+  FaceIterator fi;
   int j,k;
   ScalarType V = 0;
-  vectorial_type T,N,B;
+  CoordType T,N,B;
  
-  for(f = face.begin(); f!=face.end(); ++f)
+  for(fi = face.begin(); fi!=face.end(); ++fi)
   {
-	for(j = 0; j < 3; ++j)
-	{
-	  /*calcolo tangente, normale e binormale (6 volte)*/
-	  k = (j+1)%3;
-	  T = (*f).V(k)->P() - (*f).V(j)->P();
-	  T.Normalize();
-	  T = ( (*f).V( k     )->P() - (*f).V(j)->P() ) ^
-	   ( (*f).V((k+1)%3)->P() - (*f).V(j)->P() ) ;
-	  B.Normalize();
-	  N = T ^ B;
+	  for(j = 0; j < 3; ++j)
+	  {
+	    /*calcolo tangente, normale e binormale (6 volte)*/
+	    k = (j+1)%3;
+	    T = (*fi).P(k) - (*fi).P(j);
+	    T.Normalize();
+	    T = ( (*fi).P( k     ) - (*fi).P(j) ) ^
+	        ( (*fi).P((k+1)%3) - (*fi).P(j) ) ;
+	    B.Normalize();
+	    N = T ^ B;
+     
+	    CoordType pj = (*fi).P(j);
+	    CoordType pk = (*fi).P(k);
    
-	  vectorial_type pj = (*f).V(j)->P();
-	  vectorial_type pk = (*f).V(k)->P();
- 
 
-	  V +=  (pj*  T )*(pj*N)*(pj*B);
-	  V +=  (pk*(-T))*(pk*N)*(pk*B);
-    }
+	    V +=  (pj*  T )*(pj*N)*(pj*B);
+	    V +=  (pk*(-T))*(pk*N)*(pk*B);
+     }
   }
-	return V/6;
+	return V/6.0;
 }
 
 
