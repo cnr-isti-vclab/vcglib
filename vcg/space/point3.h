@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2004/03/07 22:45:32  cignoni
+Moved quality and normal functions to the triangle class.
+
 Revision 1.14  2004/03/05 17:55:01  tarini
 errorino: upper case in Zero()
 
@@ -247,7 +250,7 @@ public:
 		// Norme
 	inline P3ScalarType Norm() const
 	{
-		return Sqrt( _v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2] );
+    return math::Sqrt( _v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2] );
 	}
 	inline P3ScalarType SquaredNorm() const
 	{
