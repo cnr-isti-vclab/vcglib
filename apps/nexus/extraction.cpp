@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/02/08 12:43:03  ponchio
+Added copyright
+
 
 ****************************************************************************/
 
@@ -77,6 +80,7 @@ void Extraction::Extract(NexusMt *_mt) {
 }
 
 void Extraction::Init() { 
+  max_error = -1;
   front.clear();
   back.clear();
   errors.clear();
@@ -112,6 +116,7 @@ void Extraction::Init() {
 	      }
 	      if((*n).node != sink && maxerror > target_error)
 	        front.push_back(HeapNode((*n).node, maxerror));
+	      if(maxerror > max_error) max_error = maxerror;
       } else
 	      cancoarse = false;
     }
@@ -152,7 +157,8 @@ void Extraction::Update(NexusMt *_mt) {
     if(!no_draw &&                       //we have buffer
        front.size() &&                   //we are not at max level
        front[0].error > target_error) {  //we are not already target_error            
-              
+
+      max_error = front[0].error;
       pop_heap(front.begin(), front.end());
       HeapNode hnode = front.back();            
       front.pop_back();
@@ -210,7 +216,6 @@ void Extraction::Update(NexusMt *_mt) {
   
   Select();
   draw_size = selected.size();
-
 
   //Preloading now
   for(unsigned int i = 0; i < 1000; i++) {

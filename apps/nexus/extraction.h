@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/02/08 12:43:03  ponchio
+Added copyright
+
 
 ****************************************************************************/
 
@@ -79,6 +82,7 @@ class Extraction {
   vcg::Frustumf frustum;
 
   float target_error;
+  float max_error;
   unsigned int extr_used, extr_max;
   unsigned int draw_used, draw_max;
   unsigned int disk_used, disk_max;

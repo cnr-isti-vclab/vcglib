@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2005/02/08 12:43:03  ponchio
+Added copyright
+
 
 ****************************************************************************/
 
@@ -63,6 +66,7 @@ namespace nxs {
     float fps;
     float fps_peak;   //low fps peaks
 
+    float error;      //max error in extraction
     //double last_time;
     unsigned int count;
 

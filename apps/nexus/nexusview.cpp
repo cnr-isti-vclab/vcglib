@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.32  2005/02/03 12:35:01  ponchio
+Patch cache -> heap
+
 Revision 1.31  2005/02/01 16:42:30  ponchio
 Trigger
 
@@ -139,6 +142,7 @@ Created
 #include <unistd.h>
 #endif
 
+#include <deque>
 #include <iostream>
 using namespace std;
 
@@ -288,6 +292,7 @@ int main(int argc, char *argv[]) {
   
   if(!nexus.InitGL()) {
     cerr << "Could not init glew.\n";
+    return -1;
   }
   
   glClearColor(0, 0, 0, 0); 
@@ -303,8 +308,9 @@ int main(int argc, char *argv[]) {
   float fps = 0;
   unsigned int nave = 5;
   unsigned int offset = 0;
-  vector<float> tframe;
-  for(int i = 0; i < 5; i++) tframe.push_back(0);
+  deque<float> tframe;
+  deque<float> terror;
+  unsigned int tlen = 256;
 
   bool keepdrawing = true;
   
@@ -465,6 +471,12 @@ int main(int argc, char *argv[]) {
 	  }
 	  }*/
 
+    tframe.push_front(watch.Time());
+    if(tframe.size() > tlen) tframe.pop_back();
+
+    terror.push_front(extraction.max_error);
+    if(terror.size() > tlen) terror.pop_back();
+
     if(show_statistics) {
       glMatrixMode(GL_MODELVIEW);
       glPushMatrix();
@@ -478,9 +490,26 @@ int main(int argc, char *argv[]) {
       glDisable(GL_DEPTH_TEST);
       glDisable(GL_LIGHTING);
       char buffer[1024];
-      glColor3f(1.0f, 1.0f, 1.0f);
+      glColor4f(0.0f, 0.0f, 0.6f, 0.5f);
 
-      double ftime = (tframe[(offset+4)%5] - tframe[(offset)%5])/5.0f;
+      glBegin(GL_LINES);
+      for(unsigned int i = 0; i < tframe.size() -1; i++) {
+	double diff = (tframe[i] - tframe[i+1]);
+	glVertex2f(i/1024.0f,0);
+	glVertex2f(i/1024.0f,2*diff);
+      }
+      glEnd();
+
+      glColor4f(0.0f, 0.6f, 0.2f, 0.5f);
+
+      glBegin(GL_LINES);
+      for(unsigned int i = 0; i < terror.size() -1; i++) {
+	glVertex2f(i/1024.0f,0);
+	glVertex2f(i/1024.0f,terror[i]/300);
+      }
+      glEnd();
+
+      glColor3f(1.0f, 1.0f, 1.0f);
 
       sprintf(buffer, "Ram size : %.2f / %.2f Mb", 
 	      nexus.ram_used * nexus.chunk_size/(float)(1<<20),
@@ -506,6 +535,7 @@ int main(int argc, char *argv[]) {
       	      stats.ktri/(float)(1<<10),
       	      stats.fps, stats.fps * stats.ktri/(float)(1<<20));
       gl_print(0.03, 0.03, buffer);
+
       
       glEnable(GL_DEPTH_TEST);
       glEnable(GL_LIGHTING);
@@ -515,8 +545,6 @@ int main(int argc, char *argv[]) {
     }
     
     SDL_GL_SwapBuffers();
-    tframe[offset++%5] = watch.Time();
-    
   }
 
   SDL_Quit();
