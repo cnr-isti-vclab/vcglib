@@ -24,25 +24,13 @@
   History
 
 $Log: not supported by cvs2svn $
-Revision 1.4  2004/03/31 14:44:43  cignoni
-Added Vertex-Face Topology
-
-Revision 1.3  2004/03/12 15:22:19  cignoni
-Written some documentation and added to the trimes doxygen module
-
-Revision 1.2  2004/03/05 21:49:21  cignoni
-First working version for face face
-
-Revision 1.1  2004/03/04 00:53:24  cignoni
-Initial commit
-
 
 ****************************************************************************/
-#ifndef __VCG_TRI_UPDATE_TOPOLOGY
-#define __VCG_TRI_UPDATE_TOPOLOGY
+#ifndef __VCG_EDGE_UPDATE_TOPOLOGY
+#define __VCG_EDGE_UPDATE_TOPOLOGY
 #include <algorithm>
 namespace vcg {
-namespace tri {
+namespace edge {
 /** \addtogroup trimesh */
 /*@{*/
 
@@ -55,153 +43,141 @@ typedef UpdateMeshType MeshType;
 typedef typename MeshType::VertexType     VertexType;
 typedef typename MeshType::VertexPointer  VertexPointer;
 typedef typename MeshType::VertexIterator VertexIterator;
-typedef typename MeshType::FaceType       FaceType;
-typedef typename MeshType::FacePointer    FacePointer;
-typedef typename MeshType::FaceIterator   FaceIterator;
+typedef typename MeshType::EdgeType       EdgeType;
+typedef typename MeshType::EdgePointer    EdgePointer;
+typedef typename MeshType::EdgeIterator   EdgeIterator;
 
 
 
 /// Auxiliairy data structure for computing face face adjacency information. 
 // It identifies and edge storing two vertex pointer and a face pointer where it belong.
-class PEdge
+class PVertex
 {
 public:
 	
-	VertexPointer  v[2];		// the two Vertex pointer are ordered!
-	FacePointer    f;		  // the face where this edge belong
+	VertexPointer  v;		// the two Vertex pointer are ordered!
+	EdgePointer    e;		  // the edge where this vertex belong
 	int      z;				      // index in [0..2] of the edge of the face
 
-  PEdge() {}
+  PVertex() {}
 
-void Set( FacePointer  pf, const int nz )
+void Set( EdgePointer  pe, const int nz )
 {
-	assert(pf!=0);
+	assert(pe!=0);
 	assert(nz>=0);
-	assert(nz<3);
+	assert(nz<2);
 	
-	v[0] = pf->V(nz);
-	v[1] = pf->V((nz+1)%3);
-	assert(v[0] != v[1]);
-
-	if( v[0] > v[1] ) swap(v[0],v[1]);
-	f    = pf;
+	v= pe->V(nz);
+	e    = pe;
 	z    = nz;
 }
 
-inline bool operator <  ( const PEdge & pe ) const
+inline bool operator <  ( const PVertex & pe ) const
 {
-	if( v[0]<pe.v[0] ) return true;
-	else if( v[0]>pe.v[0] ) return false;
-	else return v[1] < pe.v[1];
+	return ( v<pe.v );
 }
 
-inline bool operator <=  ( const PEdge & pe ) const
+inline bool operator <=  ( const PVertex & pe ) const
 {
-	if( v[0]<pe.v[0] ) return true;
-	else if( v[0]>pe.v[0] ) return false;
-	else return v[1] <= pe.v[1];
+	return ( v<=pe.v );
 }
 
-inline bool operator >  ( const PEdge & pe ) const
+inline bool operator >  ( const PVertex & pe ) const
 {
-	if( v[0]>pe.v[0] ) return true;
-	else if( v[0]<pe.v[0] ) return false;
-	else return v[1] > pe.v[1];
+	return ( v>pe.v );
 }
 
-inline bool operator >=  ( const PEdge & pe ) const
+inline bool operator >=  ( const PVertex & pe ) const
 {
-	if( v[0]>pe.v[0] ) return true;
-	else if( v[0]<pe.v[0] ) return false;
-	else return v[1] >= pe.v[1];
+	return( v>pe.v );
 }
 
-inline bool operator == ( const PEdge & pe ) const
+inline bool operator == ( const PVertex & pe ) const
 {
-	return v[0]==pe.v[0] && v[1]==pe.v[1];
+	return (v==pe.v);
 }
 
-inline bool operator != ( const PEdge & pe ) const
+inline bool operator != ( const PVertex & pe ) const
 {
-	return v[0]!=pe.v[0] || v[1]!=pe.v[1];
+	return (v!=pe.v || v!=pe.v);
 }
 };
 
 
 
-static void FaceFace(MeshType &m)
+static void EdgeEdge(MeshType &m)
 {
-  if(!m.HasFFTopology()) return;		
+  if(!m.HasEETopology()) return;		
 
-  vector<PEdge> e;
-	FaceIterator pf;
-	vector<PEdge>::iterator p;
+  vector<PVertex> v;
+	EdgeIterator pf;
+	vector<PVertex>::iterator p;
 
-	if( m.fn == 0 ) return;
+	if( m.en == 0 ) return;
 
-	e.resize(m.fn*3);								// Alloco il vettore ausiliario
-	p = e.begin();
-	for(pf=m.face.begin();pf!=m.face.end();++pf)			// Lo riempio con i dati delle facce
+	v.resize(m.en*2);								// Alloco il vettore ausiliario
+	p = v.begin();
+	for(pf=m.edges.begin();pf!=m.edges.end();++pf)			// Lo riempio con i dati delle facce
 		if( ! (*pf).IsD() )
-			for(int j=0;j<3;++j)
+			for(int j=0;j<2;++j)
 			{
 				(*p).Set(&(*pf),j);
 				++p;
 			}
-	assert(p==e.end());
-	sort(e.begin(), e.end());							// Lo ordino per vertici
+	assert(p==v.end());
+	sort(v.begin(), v.end());							// Lo ordino per vertici
 
 	int ne = 0;											// Numero di edge reali
 
-	vector<PEdge>::iterator pe,ps;
-	for(ps = e.begin(),pe=e.begin();pe<=e.end();++pe)	// Scansione vettore ausiliario
+	vector<PVertex>::iterator pe,ps;
+	for(ps = v.begin(),pe=v.begin();pe<=v.end();++pe)	// Scansione vettore ausiliario
 	{
-		if( pe==e.end() || *pe != *ps )					// Trovo blocco di edge uguali
+		if( pe==v.end() || *pe != *ps )					// Trovo blocco di edge uguali
 		{
-			vector<PEdge>::iterator q,q_next;
-			for (q=ps;q<pe-1;++q)						// Scansione facce associate
+			vector<PVertex>::iterator q,q_next;
+			for (q=ps;q<pe-1;++q)						// Scansione edge associati
 			{
 				assert((*q).z>=0);
-				assert((*q).z< 3);
+				assert((*q).z< 2);
 				q_next = q;
 				++q_next;
 				assert((*q_next).z>=0);
-				assert((*q_next).z< 3);
-				(*q).f->F(q->z) = (*q_next).f;				// Collegamento in lista delle facce
-				(*q).f->Z(q->z) = (*q_next).z;
+				assert((*q_next).z< 2);
+				(*q).e->EEp(q->z) = (*q_next).e;				// Collegamento in lista delle facce
+				(*q).e->EEi(q->z) = (*q_next).z;
 			}
 			assert((*q).z>=0);
 			assert((*q).z< 3);
-			(*q).f->F((*q).z) = ps->f;
-			(*q).f->Z((*q).z) = ps->z;
+			(*q).e->EEp((*q).z) = ps->e;
+			(*q).e->EEi((*q).z) = ps->z;
 			ps = pe;
 			++ne;										// Aggiorno il numero di edge
 		}
 	}
 }
 
-static void VertexFace(MeshType &m)
+static void VertexEdge(MeshType &m)
 {
-  if(!m.HasVFTopology()) return;		
+  if(!m.HasVETopology()) return;		
 
 	VertexIterator vi;
-	FaceIterator fi;
+	EdgeIterator ei;
 
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 	{
-		(*vi).Fp() = 0;
-		(*vi).Zp() = 0;
+		(*vi).Ep() = 0;
+		(*vi).Ei() = 0;
 	}
 
-	for(fi=m.face.begin();fi!=m.face.end();++fi)
-	if( ! (*fi).IsD() )
+	for(ei=m.edges.begin();ei!=m.edges.end();++ei)
+	if( ! (*ei).IsD() )
 	{
-		for(int j=0;j<3;++j)
+		for(int j=0;j<2;++j)
 		{
-			(*fi).Fv(j) = (*fi).V(j)->Fp();
-			(*fi).Zv(j) = (*fi).V(j)->Zp();
-			(*fi).V(j)->Fp() = &(*fi);
-			(*fi).V(j)->Zp() = j;
+			(*ei).Ev(j) = (*ei).V(j)->Ep();
+			(*ei).Zv(j) = (*ei).V(j)->Ei();
+			(*ei).V(j)->Ep() = &(*fi);
+			(*ei).V(j)->Ei() = j;
 		}
 	}
 }
