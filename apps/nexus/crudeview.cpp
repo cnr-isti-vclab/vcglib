@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/01/14 15:49:42  ponchio
+VertRemap removed.
+
 Revision 1.6  2004/12/01 03:24:30  ponchio
 Level 2.
 
@@ -77,8 +80,6 @@ bool fullscreen = false;
 int width =1024;
 int height = 768;
 
-//TrackHand hand;
-
 SDL_Surface *screen = NULL;
 
 bool init() {
@@ -102,8 +103,7 @@ bool init() {
     return false;
   }
   
-  SDL_WM_SetIcon(SDL_LoadBMP("inspector.bmp"), NULL);
-  SDL_WM_SetCaption(" Inspector", "Inspector");
+  SDL_WM_SetCaption("Crudeview", "Crudeview");
 
 
   glDisable(GL_DITHER);
@@ -225,13 +225,10 @@ int main(int argc, char *argv[]) {
 
     float scale = 3/box.Diag();
     glScalef(0.4, 0.4, 0.4);       
-    //    glRotatef(alpha, 0, 1, 0);
-    //    alpha++;
-    //    if(alpha > 360) alpha = 0;
     glScalef(scale, scale, scale);       
     Point3f center = box.Center();
     glTranslatef(-center[0], -center[1], -center[2]);
-//    render.render();
+
     glColor3f(0, 1, 0);
    
     glBegin(GL_TRIANGLES);
@@ -259,8 +256,6 @@ int main(int argc, char *argv[]) {
     
     SDL_GL_SwapBuffers();
   }
-
-        // Clean up
 
   SDL_Quit();
   return -1;

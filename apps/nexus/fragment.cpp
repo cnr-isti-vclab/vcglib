@@ -1,7 +1,10 @@
+#include <set>
+#include <iostream>
+
 #include "fragment.h"
 #include "border.h"
-#include "pvoronoi.h"
-#include <iostream>
+//#include "pvoronoi.h"
+
 
 using namespace std;
 using namespace vcg;
@@ -211,76 +214,6 @@ void nxs::Join(Fragment &in,
       exit(0);
     }
   }
-  /* old code (more general.. but not parallelizable)
-
-
-  //L(a, b): Exist link between a, b
-  //An external link L(e, v) where v belongs to the patches (and e not)
-  //is valid only if: for every x in patches L(v, x) => L(e, x)
-  //this means the number of internal links for the same shared
-  //vertex is E = (n * (n-1)) where n is the number of duplicated vertices
-  //and n must be the number of externa links.
-  vector<unsigned int> internal_links;
-  internal_links.resize(vcount, 0);
-  
-  map<BigLink, unsigned int> newborders;
-  for(unsigned int i = 0; i < in.pieces.size(); i++) {
-    unsigned int offset = offsets[i];
-    vector<Link> &bord = in.pieces[i].bord;
-    for(unsigned int k = 0; k < bord.size(); k++) {
-      Link llink = bord[k];
-      if(llink.IsNull()) continue;
-      if(!patch_remap.count(llink.end_patch)) {//external...may be erased 
-	BigLink link;
-	link.orig_vert = llink.start_vert;
-	link.orig_patch = in.pieces[i].patch;
-	link.start_vert = remap[offset + llink.start_vert];
-	link.end_patch = llink.end_patch;
-	link.end_vert = llink.end_vert;
-	if(!newborders.count(link))
-	  newborders[link] = 1;
-	else
-	  newborders[link]++;
-      } else { //internal
-	internal_links[remap[offset + llink.start_vert]]++;
-      }
-    }
-  }
-
-  newvert.resize(vcount);
-  newface.resize(fcount*3);
-  newbord.resize(0);
-  
-  fcount = 0;
-  for(unsigned int i = 0; i < in.pieces.size(); i++) {
-    unsigned int offset = offsets[i];
-    vector<Point3f> &vert = in.pieces[i].vert;
-    vector<unsigned short> &face = in.pieces[i].face;
-    vector<Link> &bord = in.pieces[i].bord;
-    
-    for(unsigned int i = 0; i < vert.size(); i++) {            
-      assert(offset + i < remap.size());
-      assert(remap[offset + i] < vcount);
-      newvert[remap[offset + i]] = vert[i];
-    }
-    
-    for(unsigned int i = 0; i < face.size(); i++) {
-      assert(offset + face[i] < remap.size());
-      assert(remap[offset + face[i]] < newvert.size());
-      assert(fcount < newface.size());
-      newface[fcount++] = remap[offset + face[i]];
-    }
-  }  
-  
-  map<BigLink, unsigned int>::iterator b;
-  for(b = newborders.begin(); b != newborders.end(); b++) {
-    //test that number of links on this vertex is equal to
-    //number of internal links of the internal vertex 
-    const BigLink &link = (*b).first;
-    unsigned int n = (*b).second;
-    if(n * (n-1) == internal_links[link.start_vert])
-      newbord.push_back(link);
-      }*/
 }
 
 void nxs::Split(Fragment &out, 
@@ -422,12 +355,6 @@ void nxs::Split(Fragment &out,
 	}
       }
     }
-    /*    cerr << "patch seed: " << patch.patch << endl;
-    for(unsigned int i = 0; i < bords.size(); i++) {
-      Link &link = bords[i];
-      cerr << "link: " << link.start_vert << " "
-	   << link.end_patch << " " << link.end_vert << endl;
-	   }*/
   }
 }
 

@@ -93,8 +93,6 @@ float nxs::Decimate(Decimation mode,
   for(unsigned int i = 0; i < newbord.size(); i++) 
     mesh.vert[newbord[i].start_vert].ClearW();
 
-  //    vcg::tri::io::ExporterPLY<MyMesh>::Save(mesh, "ribum.ply");
-
   float error;
   switch(mode) {
   case CLUSTER: error = Cluster(mesh, target_faces); break;
@@ -129,13 +127,6 @@ float nxs::Decimate(Decimation mode,
     v = vert_remap[v];
   }
 
-  //Temporary test again:
-  /*  for(unsigned int i = 0; i < newface.size(); i+= 3) {
-    assert(newface[i] != newface[i+1]);
-    assert(newface[i] != newface[i+2]);
-    assert(newface[i+1] != newface[i+2]);
-    }*/
-  
   return error;
 }
 
@@ -191,7 +182,7 @@ float Cluster(MyMesh &mesh, unsigned int target_faces) {
     }
   }
   unsigned int nborder = part.size();
-  //Dovrei supersamplare prima....
+  //Todo I should supersample before
   while(nseeds > 0 && part.size() < mesh.vn) {
     unsigned int i = rand() % mesh.vert.size();
     if(mesh.vert[i].IsW() && !mesh.vert[i].IsV()) {

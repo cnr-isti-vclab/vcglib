@@ -205,7 +205,7 @@ unsigned int Nexus::AddPatch(unsigned int nvert, unsigned int nface,
   return size() - 1;
 }
 
-void Nexus::Unify(float threshold) {
+/*void Nexus::Unify(float threshold) {
   //TODO what if colors or normals or strips?
   unsigned int duplicated = 0;
   unsigned int degenerate = 0;
@@ -318,7 +318,7 @@ void Nexus::Unify(float threshold) {
     cerr << "Found " << duplicated << " duplicated vertices" << endl;
   if(degenerate)
     cerr << "Found " << degenerate << " degenerate face while unmifying\n";
-}
+    }*/
 
 Patch *Nexus::LoadPatch(unsigned int idx) {
   assert(idx < size());

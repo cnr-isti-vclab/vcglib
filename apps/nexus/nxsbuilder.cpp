@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2005/01/14 15:25:29  ponchio
+Revolution.
+
 Revision 1.11  2004/12/13 00:44:48  ponchio
 Lotsa changes...
 
@@ -75,11 +78,13 @@ Level 0.
 
 #include <iostream>
 
+
 #include "nxstypes.h"
 #include "crude.h"
 #include "remapping.h"
 #include "decimate.h"
 #include "fragment.h"
+#include "nxsalgo.h"
 #include "nxsdispatcher.h"
 #include "watch.h"
 
@@ -488,7 +493,8 @@ void FifthStep(const string &crudefile, const string &output,
     patch_levels.push_back(0);
   }
   nexus.history.updates.push_back(update); 
-  nexus.Unify();
+  Unify(nexus, 0.0f);
+  //  nexus.Unify();
   nexus.Flush();
 
 

@@ -1,5 +1,6 @@
 #include <vector>
 #include <map>
+#include <set>
 #include <iostream>
 
 //#include <wrap/strip/tristrip.h>
@@ -198,36 +199,6 @@ void nxs::ComputeNormals(Nexus &nexus) {
   nexus.borders.SetReadOnly(false);
 }
 
-/*void nxs::ComputeTriStrip(unsigned short nfaces, unsigned short *faces, 
-		  vector<unsigned short> &strip) {
-  
-
-  vector<unsigned int> indices;
-  indices.resize(nfaces*3);
-  for(unsigned int i = 0; i < nfaces*3; i++) {
-    indices[i] = faces[i];
-  }
-  vector<unsigned int> restrip;
-  ComputeStrip(indices, restrip);
-
-  unsigned int len = 0;
-  for(unsigned int i = 0; i < restrip.size(); i++) {
-    if(restrip[i] != 0xffffffff) {
-      strip.push_back(restrip[i]);
-      len++;
-    } else {
-      if(i < restrip.size()-1) { //not the last primitive.
-	strip.push_back(restrip[i-1]);
-	//TODO optimize this!
-	if((len%2) == 1) 	//do not change orientation....
-	  strip.push_back(restrip[i-1]);
-	strip.push_back(restrip[i+1]);
-      }			
-      len = 0;
-    }
-  }
-}*/
-
 void nxs::ComputeTriStrip(unsigned short nfaces, unsigned short *faces, 
 		  vector<unsigned short> &strip) {
 
@@ -313,3 +284,119 @@ void nxs::Reorder(unsigned int signature, Patch &patch) {
   for(int i = 0; i < patch.nv; i++)
     patch.Vert(remap[i]) = vert[i];
 }
+
+//TODO actually use threshold
+void nxs::Unify(Nexus &nexus, float threshold) {
+  //TODO what if colors or normals or strips?
+  unsigned int duplicated = 0;
+  unsigned int degenerate = 0;
+
+  for(unsigned int p = 0; p < nexus.size(); p++) {
+    Entry &entry = nexus[p];
+    Patch &patch = nexus.GetPatch(p);
+
+    unsigned int vcount = 0;
+    map<Point3f, unsigned short> vertices;
+
+    vector<unsigned short> remap;
+    remap.resize(patch.nv);
+
+    for(unsigned int i = 0; i < patch.nv; i++) {
+      Point3f &point = patch.Vert(i);
+
+      if(!vertices.count(point)) 
+        vertices[point] = vcount++;
+      else 
+        duplicated++;
+
+      remap[i] = vertices[point];
+    }
+    assert(vertices.size() <= patch.nv);
+    if(vertices.size() == patch.nv) //no need to unify
+      continue;
+
+    vector<Point3f> newvert;
+    newvert.resize(vertices.size());
+    map<Point3f, unsigned short>::iterator k;
+    for(k = vertices.begin(); k != vertices.end(); k++) {
+      newvert[(*k).second] = (*k).first;
+    }
+
+    vector<unsigned short> newface;
+    //check no degenerate faces get created.
+    for(unsigned int f = 0; f < entry.nface; f++) {
+      unsigned short *face = patch.Face(f);
+      if(face[0] != face[1] && face[1] != face[2] && face[0] != face[2] &&
+	      newvert[remap[face[0]]] != newvert[remap[face[1]]] &&
+	      newvert[remap[face[0]]] != newvert[remap[face[2]]] &&
+	      newvert[remap[face[1]]] != newvert[remap[face[2]]]) {
+	      newface.push_back(remap[face[0]]);
+	      newface.push_back(remap[face[1]]);
+	      newface.push_back(remap[face[2]]);
+      } else {
+	degenerate++;
+      }
+    }
+
+    //rewrite patch now.
+    entry.nvert = newvert.size();
+    entry.nface = newface.size()/3;
+    patch.Init(nexus.signature, entry.nvert, entry.nface);
+
+    memcpy(patch.VertBegin(), &(newvert[0]), entry.nvert*sizeof(Point3f));
+    memcpy(patch.FaceBegin(), &(newface[0]), entry.nface*3*sizeof(short));
+
+    //testiamo il tutto...  TODO remove this of course
+    for(unsigned int i =0; i < patch.nf; i++) {
+      for(int k =0 ; k < 3; k++)
+        if(patch.Face(i)[k] >= patch.nv) {
+          cerr <<" Unify has problems\n";
+          exit(0);
+        }
+    }
+    
+    //fix patch borders now
+    set<unsigned int> close; //bordering pathes
+    Border border = nexus.GetBorder(p);
+    for(unsigned int b = 0; b < border.Size(); b++) {
+      if(border[b].IsNull()) continue;
+      close.insert(border[b].end_patch);
+      border[b].start_vert = remap[border[b].start_vert];
+    }
+
+    set<unsigned int>::iterator c;
+    for(c = close.begin(); c != close.end(); c++) {
+      Border bord = nexus.GetBorder(*c);
+      for(unsigned int b = 0; b < bord.Size(); b++) {
+        if(bord[b].IsNull()) continue;
+        if(bord[b].end_patch == p) {
+          bord[b].end_vert = remap[bord[b].end_vert];
+        }
+      }
+    }
+  }
+  //better to compact directly borders than setting them null.
+  //finally: there may be duplicated borders
+  for(unsigned int p = 0; p < nexus.size(); p++) {
+    Border border = nexus.GetBorder(p);
+    set<Link> links;
+    for(unsigned int b = 0; b < border.Size(); b++) {
+      Link &link = border[b];
+      assert(!link.IsNull());
+      //if(border[b].IsNull()) continue;
+      links.insert(link);
+    }
+    int count = 0;
+    for(set<Link>::iterator k = links.begin(); k != links.end(); k++)
+      border[count++] = *k;      
+    
+    nexus.borders[p].used = links.size();
+  }
+  
+  nexus.totvert -= duplicated;
+  if(duplicated)
+    cerr << "Found " << duplicated << " duplicated vertices" << endl;
+  if(degenerate)
+    cerr << "Found " << degenerate << " degenerate face while unmifying\n";
+}
+

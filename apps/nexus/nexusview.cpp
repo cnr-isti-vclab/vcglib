@@ -1,29 +1,32 @@
 /****************************************************************************
-* VCGLib                                                            o o     *
-* Visual and Computer Graphics Library                            o     o   *
-*                                                                _   O  _   *
-* Copyright(C) 2004                                                \/)\/    *
-* Visual Computing Lab                                            /\/|      *
-* ISTI - Italian National Research Council                           |      *
-*                                                                    \      *
-* All rights reserved.                                                      *
-*                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
-* it under the terms of the GNU General Public License as published by      *
-* the Free Software Foundation; either version 2 of the License, or         *
-* (at your option) any later version.                                       *
-*                                                                           *
-* This program is distributed in the hope that it will be useful,           *
-* but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
-* GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
-* for more details.                                                         *
-*                                                                           *
-****************************************************************************/
+ * VCGLib                                                            o o     *
+ * Visual and Computer Graphics Library                            o     o   *
+ *                                                                _   O  _   *
+ * Copyright(C) 2004                                                \/)\/    *
+ * Visual Computing Lab                                            /\/|      *
+ * ISTI - Italian National Research Council                           |      *
+ *                                                                    \      *
+ * All rights reserved.                                                      *
+ *                                                                           *
+ * This program is free software; you can redistribute it and/or modify      *   
+ * it under the terms of the GNU General Public License as published by      *
+ * the Free Software Foundation; either version 2 of the License, or         *
+ * (at your option) any later version.                                       *
+ *                                                                           *
+ * This program is distributed in the hope that it will be useful,           *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of            *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
+ * GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
+ * for more details.                                                         *
+ *                                                                           *
+ ****************************************************************************/
 /****************************************************************************
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.28  2005/01/14 15:25:29  ponchio
+Revolution.
+
 Revision 1.27  2004/12/15 16:37:55  ponchio
 Optimizing realtime vis.
 
@@ -197,7 +200,7 @@ int main(int argc, char *argv[]) {
   float error = 4;
 
   Trackball track;
-//  int option;
+  //  int option;
 
   if(argc != 2) {
     cerr << "Usage: " << argv[0] << " <nexus file>\n";    return -1;
@@ -250,12 +253,10 @@ int main(int argc, char *argv[]) {
   bool show_normals = true;
   bool show_statistics = true;
   bool extract = true;
+  bool realtime = true;
+  bool stepping = true;
+  bool step = true;
   
-  //  NexusMt::MetricKind metric;
-  //DrawContest::Mode mode = DrawContest::SMOOTH;  
-
-  //nexus.SetError(error);  
-  //  nexus.SetMetric(NexusMt::FRUSTUM);    
   if(!nexus.InitGL()) {
     cerr << "Could not init glew.\n";
   }
@@ -288,88 +289,91 @@ int main(int argc, char *argv[]) {
     }
     if(anything) {        
       switch( event.type ) {
-	case SDL_QUIT:  quit = 1; break;      
-	case SDL_KEYDOWN:                                        
-	  switch(event.key.keysym.sym) {
-	  case SDLK_RCTRL:
-	  case SDLK_LCTRL: track.ButtonDown(Trackball::KEY_CTRL); break;
-	  case SDLK_q: exit(0); break;	
-	  case SDLK_k: keepdrawing = !keepdrawing; break;
-	  case SDLK_e: extract = !extract; break;
-	  case SDLK_c: show_colors = !show_colors; break;
-	  case SDLK_n: show_normals = !show_normals; break;
+      case SDL_QUIT:  quit = 1; break;      
+      case SDL_KEYDOWN:                                        
+	switch(event.key.keysym.sym) {
+	case SDLK_RCTRL:
+	case SDLK_LCTRL: track.ButtonDown(Trackball::KEY_CTRL); break;
+	case SDLK_q: exit(0); break;	
+	case SDLK_k: keepdrawing = !keepdrawing; break;
+	case SDLK_e: extract = !extract; break;
+	case SDLK_c: show_colors = !show_colors; break;
+	case SDLK_n: show_normals = !show_normals; break;
 	    
-	  case SDLK_LEFT:     nexus.MaxRam() *= 0.8; break;
-	  case SDLK_RIGHT:    nexus.MaxRam() *= 1.3; break;
-	  case SDLK_UP:       extraction.draw_max *= 1.3; break;
-	  case SDLK_DOWN:     extraction.draw_max *= 0.8; break;
-	  case SDLK_PAGEUP:   extraction.disk_max *= 1.3; break;
-	  case SDLK_PAGEDOWN: extraction.disk_max *= 0.8; break;
-	  case SDLK_0:        extraction.extr_max *= 1.3; break;
-	  case SDLK_9:        extraction.extr_max *= 0.8; break;
+	case SDLK_LEFT:     nexus.MaxRam() *= 0.8; break;
+	case SDLK_RIGHT:    nexus.MaxRam() *= 1.3; break;
+	case SDLK_UP:       extraction.draw_max *= 1.3; break;
+	case SDLK_DOWN:     extraction.draw_max *= 0.8; break;
+	case SDLK_PAGEUP:   extraction.disk_max *= 1.3; break;
+	case SDLK_PAGEDOWN: extraction.disk_max *= 0.8; break;
+	case SDLK_0:        extraction.extr_max *= 1.3; break;
+	case SDLK_9:        extraction.extr_max *= 0.8; break;
   
-		  //  case SDLK_s: metric = NexusMt::FRUSTUM; break;
-		case SDLK_p: contest.mode = DrawContest::POINTS; break;
-	        case SDLK_d: contest.mode = DrawContest::PATCHES; break;
-	        case SDLK_f: contest.mode = DrawContest::FLAT; break;
-	        case SDLK_m: contest.mode = DrawContest::SMOOTH; break;
-
-	          case SDLK_r:
-	          case SDLK_SPACE: rotate = !rotate; break;
-	  
-	          case SDLK_MINUS: 
-		    extraction.target_error *= 0.9f;
-		    cerr << "Error: " << extraction.target_error << endl; 
-		    break;
-	  
-	          case SDLK_EQUALS:
-	          case SDLK_PLUS: 
-		    extraction.target_error *= 1.1f; 
-		    cerr << "Error: " << extraction.target_error << endl; 
-		    break;
-	        }
-	        break;
-          case SDL_KEYUP: 
-	          switch(event.key.keysym.sym) {
-	            case SDLK_RCTRL:
-	            case SDLK_LCTRL:
-	              track.ButtonUp(Trackball::KEY_CTRL); break;
-	          }
-	          break;
-          case SDL_MOUSEBUTTONDOWN:   
-	          x = event.button.x;
-	          y = height - event.button.y;          
-          #ifdef SDL_BUTTON_WHEELUP
-	          if(event.button.button == SDL_BUTTON_WHEELUP) 
-	            track.MouseWheel(1);
-	          else if(event.button.button == SDL_BUTTON_WHEELDOWN) 
-	            track.MouseWheel(-1);
-	          else 
-          #endif
-            if(event.button.button == SDL_BUTTON_LEFT)
-	            track.MouseDown(x, y, Trackball::BUTTON_LEFT);
-	          else if(event.button.button == SDL_BUTTON_RIGHT)
-	            track.MouseDown(x, y, Trackball::BUTTON_RIGHT);
-            break;
-          case SDL_MOUSEBUTTONUP:          
-	          x = event.button.x;
-	          y = height - event.button.y; 
-	          if(event.button.button == SDL_BUTTON_LEFT)
-	            track.MouseUp(x, y, Trackball::BUTTON_LEFT);
-	          else if(event.button.button == SDL_BUTTON_RIGHT)
-	            track.MouseUp(x, y, Trackball::BUTTON_RIGHT);     
-	          break;
-          case SDL_MOUSEMOTION: 
-	          while(SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_MOUSEMOTIONMASK));
-	            x = event.motion.x;
-	            y = height - event.motion.y;
-	            track.MouseMove(x, y);
-	          break;  
-          case SDL_VIDEOEXPOSE:
-          default: break;
-        }
+	  //  case SDLK_s: metric = NexusMt::FRUSTUM; break;
+	case SDLK_p: contest.mode = DrawContest::POINTS; break;
+	case SDLK_d: contest.mode = DrawContest::PATCHES; break;
+	case SDLK_f: contest.mode = DrawContest::FLAT; break;
+	case SDLK_m: contest.mode = DrawContest::SMOOTH; break;
+	    
+	case SDLK_o: realtime = !realtime; break;
+	case SDLK_s: step = true; break;
+	    
+	case SDLK_r:
+	case SDLK_SPACE: rotate = !rotate; break;
+	    
+	case SDLK_MINUS: 
+	  extraction.target_error *= 0.9f;
+	  cerr << "Error: " << extraction.target_error << endl; 
+	  break;
+	    
+	case SDLK_EQUALS:
+	case SDLK_PLUS: 
+	  extraction.target_error *= 1.1f; 
+	  cerr << "Error: " << extraction.target_error << endl; 
+	  break;
+	}
+	break;
+      case SDL_KEYUP: 
+	switch(event.key.keysym.sym) {
+	case SDLK_RCTRL:
+	case SDLK_LCTRL:
+	  track.ButtonUp(Trackball::KEY_CTRL); break;
+	}
+	break;
+      case SDL_MOUSEBUTTONDOWN:   
+	x = event.button.x;
+	y = height - event.button.y;          
+#ifdef SDL_BUTTON_WHEELUP
+	if(event.button.button == SDL_BUTTON_WHEELUP) 
+	  track.MouseWheel(1);
+	else if(event.button.button == SDL_BUTTON_WHEELDOWN) 
+	  track.MouseWheel(-1);
+	else 
+#endif
+	  if(event.button.button == SDL_BUTTON_LEFT)
+	    track.MouseDown(x, y, Trackball::BUTTON_LEFT);
+	  else if(event.button.button == SDL_BUTTON_RIGHT)
+	    track.MouseDown(x, y, Trackball::BUTTON_RIGHT);
+	break;
+      case SDL_MOUSEBUTTONUP:          
+	x = event.button.x;
+	y = height - event.button.y; 
+	if(event.button.button == SDL_BUTTON_LEFT)
+	  track.MouseUp(x, y, Trackball::BUTTON_LEFT);
+	else if(event.button.button == SDL_BUTTON_RIGHT)
+	  track.MouseUp(x, y, Trackball::BUTTON_RIGHT);     
+	break;
+      case SDL_MOUSEMOTION: 
+	while(SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_MOUSEMOTIONMASK));
+	x = event.motion.x;
+	y = height - event.motion.y;
+	track.MouseMove(x, y);
+	break;  
+      case SDL_VIDEOEXPOSE:
+      default: break;
       }
-      redraw = true;
+    }
+    redraw = true;
     
 
     //if(!redraw && !keepdrawing) continue;
@@ -411,26 +415,30 @@ int main(int argc, char *argv[]) {
     if(extract) {
       extraction.frustum.GetView();
       extraction.metric->GetView();
-      extraction.Extract(&nexus);
+      if(!realtime) {
+	extraction.Extract(&nexus);
+      } else {
+	  extraction.Update(&nexus);
+      }
     }
     nexus.Render(extraction, contest, &stats);
 
     /*    if(show_borders) {
-      for(unsigned int i = 0; i < cells.size(); i++) {
-	Border border = nexus.GetBorder(cells[i]);
-	Patch &patch = nexus.GetPatch(cells[i]);
-	glPointSize(4);
-	glColor3f(1.0f, 1.0f, 1.0f);
-	glBegin(GL_POINTS);
-	for(unsigned int b = 0; b < border.Size(); b++) {
+	  for(unsigned int i = 0; i < cells.size(); i++) {
+	  Border border = nexus.GetBorder(cells[i]);
+	  Patch &patch = nexus.GetPatch(cells[i]);
+	  glPointSize(4);
+	  glColor3f(1.0f, 1.0f, 1.0f);
+	  glBegin(GL_POINTS);
+	  for(unsigned int b = 0; b < border.Size(); b++) {
 	  Link &link = border[b];
 	  Point3f &p = patch.Vert(link.start_vert);
 	  glVertex3f(p[0], p[1], p[2]);
-	}
-	glEnd();
-	glPointSize(1);
-      }
-      }*/
+	  }
+	  glEnd();
+	  glPointSize(1);
+	  }
+	  }*/
 
     //cerr Do some reporting:
     if(show_statistics) {
@@ -493,8 +501,6 @@ int main(int argc, char *argv[]) {
     tframe[offset++%5] = watch.Time();
     
   }
-
-  // Clean up
 
   SDL_Quit();
   return -1;

@@ -1,9 +1,12 @@
 #ifndef NXS_EXTRACTION_H
 #define NXS_EXTRACTION_H
 
-#include "history.h"		
+#include <set>
 #include <vector>
+
 #include <wrap/gui/frustum.h>
+
+#include "history.h"		
 
 namespace nxs {
 
@@ -12,16 +15,25 @@ class NexusMt;
 
 class Extraction {
  public:
-  struct HeapNode {
-    History::Node *node;
-    float error;
+  typedef History::Node Node;
+  typedef History::Link Link;
+
+  struct Cost {
     unsigned int extr;
     unsigned int draw;
     unsigned int disk;
-    HeapNode(History::Node *_node, float _error): node(_node), error(_error),
-	 extr(0), draw(0), disk(0) {}
+    Cost(): extr(0), draw(0), disk(0) {}
+  };
+  
+  struct HeapNode {
+    Node *node;
+    float error;
+
+    HeapNode(Node *_node, float _error): node(_node), error(_error) {}
     bool operator<(const HeapNode &node) const {
       return error < node.error; }
+    bool operator>(const HeapNode &node) const {
+      return error > node.error; }
   };
 
   Metric *metric;
@@ -36,23 +48,44 @@ class Extraction {
   std::vector<bool> visited;
   std::vector<HeapNode> heap;
   std::vector<unsigned int> selected;
+  unsigned int draw_size; //first in selected should be drawn
+
+  //nodes that i can expand to
+  std::vector<HeapNode> front;
+  //nodes that i can contract
+  std::vector<HeapNode> back;
+
+  unsigned int tot_budget;
 
   Extraction();
   ~Extraction();
 
   void Extract(NexusMt *mt);
-  //  void Update(std::vector<unsigned int> &selected);
+  void Update(NexusMt *mt);
 
 
- protected:
+ protected:    
+
   void Select();
-  void Visit(History::Node *node);
+  void Visit(Node *node);
 
   bool Expand(HeapNode &node);
-  void Diff(HeapNode &node);
+  void Diff(Node *node, Cost &cost);
 
+  bool Refine(Node *node);
+  bool Coarse(HeapNode &node);
+
+  void Init();
  private:
   NexusMt *mt;
+  Node *root;
+  Node *sink;
+
+  bool Visited(Node *node) {
+    return visited[node - root];
+  }
+
+  float GetRefineError(Node *node);
 };
 
 

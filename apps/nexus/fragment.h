@@ -5,15 +5,12 @@
 
 #include <ptypes/pstreams.h>
 #include "nexus.h"
-#include "pvoronoi.h"
 
 namespace nxs {
 
 class VoronoiPartition;
 
 struct BigLink {
-  //  unsigned int orig_vert;
-  //  unsigned int orig_patch;
   unsigned int start_vert;
   unsigned int end_patch;
   unsigned int end_vert;
