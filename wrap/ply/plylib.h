@@ -30,6 +30,9 @@ of Greg Turk and on the work of Claudio Rocchini
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/04/27 13:29:19  turini
+*** empty log message ***
+
 Revision 1.1  2004/03/03 15:00:51  cignoni
 Initial commit
 
@@ -45,9 +48,8 @@ Initial commit
 
 namespace vcg {
 namespace ply {
-// Temporaneo
 
-	// Tipi di dato Supportati dal formato ply
+	// Data types supported by the ply format
 enum PlyTypes {
 	T_NOTYPE,
 	T_CHAR,
@@ -61,10 +63,10 @@ enum PlyTypes {
 	T_MAXTYPE
 };
 
-	// Codici di errore riportati da GetError
+	// Error codes reported by GetError
 enum PlyError {
 	E_NOERROR,				// 0
-		// Errori di open
+		// Errors of  open(..)
 	E_CANTOPEN,				// 1
 	E_NOTHEADER,			// 2
 	E_UNESPECTEDEOF,		// 3
@@ -72,7 +74,7 @@ enum PlyError {
 	E_SYNTAX,				// 5
 	E_PROPOUTOFELEMENT,		// 6
 	E_BADTYPENAME,			// 7
-		// Errori di addtoread
+		// Errors of addtoread(..)
 	E_ELEMNOTFOUND,			// 8
 	E_PROPNOTFOUND,			// 9
 	E_BADTYPE,				// 10
@@ -81,7 +83,7 @@ enum PlyError {
 	E_MAXPLYERRORS
 };
 
-		// Tipi di formato di file
+		// file formats supported by the ply format
 enum PlyFormat {
 	F_UNSPECIFIED,
 	F_ASCII,
@@ -98,12 +100,12 @@ typedef FILE * GZFILE;
 
 
 	// Messaggio di errore
-extern const char * ply_error_msg[];
+//extern const char * ply_error_msg[];
 
 	// TIPO FILE
 
 
-	// Descrittore esterno di propieta'
+// Descrittore esterno di propieta'
 class PropDescriptor
 {
 public:
@@ -126,7 +128,7 @@ public:
 	const char *stotypename() const;
 };
 
-	// Callback di lettura
+// Reading Callback (used to copy a data prop)
 typedef bool (* readelemcb) ( GZFILE fp, void * mem, PropDescriptor * p );
 
 class PlyProperty
@@ -135,7 +137,7 @@ public:
 	inline PlyProperty()
 	{
 		tipo		= 0;
-		islista		= 0;
+		islist		= 0;
 		tipoindex	= 0;
 		bestored	= 0;
 	}
@@ -150,14 +152,14 @@ public:
 
 		name		= std::string(na);
 		tipo		= ti;
-		islista		= isl;
+		islist		= isl;
 		tipoindex	= t2;
 		bestored	= 0;
 	}
 
 	std::string name;				// Nome della propieta'
 	int    tipo;				// Tipo di dato
-	int    islista;				// Vero se e' una lista
+	int    islist;				// Vero se e' una lista
 	int    tipoindex;			// Tipo del contatore della lista
 
 	int	   bestored;			// 1 se va storata

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2004/10/07 14:51:10  ganovelli
+added setidentity della camera
+
 Revision 1.9  2004/10/07 14:19:06  ganovelli
 shot/camera io added
 
@@ -183,7 +186,7 @@ static const  PropDescriptor &VertDesc(int i)
 
 static const  PropDescriptor &FaceDesc(int i)  
 {		
-	const static 	PropDescriptor qf[10]=
+	const static 	PropDescriptor qf[12]=
 	{
 		{"face", "vertex_indices", ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_UCHAR,ply::T_UCHAR,offsetof(LoadPly_FaceAux,size) },
 		{"face", "flags",          ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,flags),     0,0,0,0,0},
@@ -195,6 +198,8 @@ static const  PropDescriptor &FaceDesc(int i)
 		{"face", "green",          ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_FaceAux,g),         0,0,0,0,0},
 		{"face", "blue" ,          ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_FaceAux,b),         0,0,0,0,0},
 		{"face", "vertex_index",   ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_UCHAR,ply::T_CHAR,offsetof(LoadPly_FaceAux,size) },
+		{"face", "vertex_indices", ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_CHAR,ply::T_CHAR,offsetof(LoadPly_FaceAux,size) },
+		{"face", "vertex_index",   ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_CHAR,ply::T_CHAR,offsetof(LoadPly_FaceAux,size) },
 	};
 	return qf[i];
 }
@@ -241,32 +246,35 @@ static const  PropDescriptor &CameraDesc(int i)
 /// Standard call for knowing the meaning of an error code
 static const char *ErrorMsg(int error)
 {
-  const char * ply_error_msg[] =
-{
-	"No errors",
-	"Can't open file",
-	"Header not found",
-	"Eof in header",
-	"Format not found",
-	"Syntax error on header",
-	"Property without element",
-	"Bad type name",
-	"Element not found",
-	"Property not found",
-	"Bad type on addtoread",
-	"Incompatible type",
-	"Bad cast",
-	"No vertex field found",
-	"No face field found",
-	"Unespected eof",
-	"Face with more than 3 vertices",
-	"Bad vertex index in face",
-	"Face with no 6 texture coordinates",
-	"Number of color differ from vertices"
-};
+  static std::vector<std::string> ply_error_msg;
+  if(ply_error_msg.empty())
+  {
+    ply_error_msg.resize(PlyInfo::E_MAXPLYINFOERRORS );
+    ply_error_msg[ply::E_NOERROR				]="No errors";
+	  ply_error_msg[ply::E_CANTOPEN				]="Can't open file";
+    ply_error_msg[ply::E_NOTHEADER ]="Header not found";
+	  ply_error_msg[ply::E_UNESPECTEDEOF	]="Eof in header";
+	  ply_error_msg[ply::E_NOFORMAT				]="Format not found";
+	  ply_error_msg[ply::E_SYNTAX				]="Syntax error on header";
+	  ply_error_msg[ply::E_PROPOUTOFELEMENT]="Property without element";
+	  ply_error_msg[ply::E_BADTYPENAME		]="Bad type name";
+	  ply_error_msg[ply::E_ELEMNOTFOUND		]="Element not found";
+	  ply_error_msg[ply::E_PROPNOTFOUND		]="Property not found";
+	  ply_error_msg[ply::E_BADTYPE				]="Bad type on addtoread";
+	  ply_error_msg[ply::E_INCOMPATIBLETYPE]="Incompatible type";
+	  ply_error_msg[ply::E_BADCAST				]="Bad cast";
+
+    ply_error_msg[PlyInfo::E_NO_VERTEX      ]="No vertex field found";
+    ply_error_msg[PlyInfo::E_NO_FACE        ]="No face field found";
+	  ply_error_msg[PlyInfo::E_SHORTFILE      ]="Unespected eof";
+	  ply_error_msg[PlyInfo::E_NO_3VERTINFACE ]="Face with more than 3 vertices";
+	  ply_error_msg[PlyInfo::E_BAD_VERT_INDEX ]="Bad vertex index in face";
+	  ply_error_msg[PlyInfo::E_NO_6TCOORD     ]="Face with no 6 texture coordinates";
+	  ply_error_msg[PlyInfo::E_DIFFER_COLORS  ]="Number of color differ from vertices";
+  }
 
   if(error>PlyInfo::E_MAXPLYINFOERRORS || error<0) return "Unknown error";
-  else return ply_error_msg[error];
+  else return ply_error_msg[error].c_str();
 };
 
 
@@ -350,6 +358,8 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 	if( pf.AddToRead(VertDesc(2))==-1 ) { pi.status = PlyInfo::E_NO_VERTEX; return pi.status; }
 	if( pf.AddToRead(FaceDesc(0))==-1 ) // Se fallisce si prova anche la sintassi di rapidform con index al posto di indices
 		if( pf.AddToRead(FaceDesc(9))==-1 ) 
+		if( pf.AddToRead(FaceDesc(10))==-1 ) 
+		if( pf.AddToRead(FaceDesc(11))==-1 ) 
 			if(pf.AddToRead(TristripDesc(0))==-1) // Se fallisce tutto si prova a vedere se ci sono tristrip alla levoy.
 						{ pi.status = PlyInfo::E_NO_FACE;   return pi.status; }
 

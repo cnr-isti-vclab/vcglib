@@ -31,6 +31,10 @@ of Greg Turk and on the work of Claudio Rocchini
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/06/23 15:36:57  cignoni
+Restructured management of error, now the standard open for any mesh type return the error code, the default success value is zero
+Any import class has a method ErrorMsg that give a verbal description of an error code.
+
 Revision 1.5  2004/06/23 00:06:45  ponchio
 Moved #define LITTLE_MACHINE outside of #ifdef WIN32 (linux on PC is little too).
 
@@ -928,7 +932,7 @@ int PlyElement::AddToRead(
 		return E_BADTYPE;
 	}
 
-	if( islist!= p->islista || stotype1 != p->tipo ||
+	if( islist!= p->islist || stotype1 != p->tipo ||
 		( islist && stotype2!=p->tipoindex) )
 	{
 		return E_INCOMPATIBLETYPE;
@@ -3144,7 +3148,7 @@ void PlyFile::compile( PlyProperty * p )
 
 	if(format==F_ASCII)
 	{
-		if(p->islista)
+		if(p->islist)
 		{
 			if(p->bestored)
 				p->cb = cb_read_list_ascii;
@@ -3180,7 +3184,7 @@ void PlyFile::compile( PlyProperty * p )
 	}
 	else
 	{
-		if(p->islista)
+		if(p->islist)
 		{
 			if(p->bestored)
 			{
@@ -3443,7 +3447,7 @@ int ReadBin  ( XFILE * fp, const PlyProperty * pr, void * mem, int fmt )
 	assert(pr);
 
 		// Lettura di una lista
-	if(pr->islista)
+	if(pr->islist)
 	{
 		int i,n;
 
@@ -3517,7 +3521,7 @@ int ReadAscii( XFILE * fp, const PlyProperty * pr, void * mem, int /*fmt*/ )
 
 
 		// Lettura di una lista
-	if(pr->islista)
+	if(pr->islist)
 	{
 		int i,n;
 
