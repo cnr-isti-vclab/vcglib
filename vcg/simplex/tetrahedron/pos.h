@@ -133,7 +133,7 @@ public:
 	Pos(){SetNull();};
 	/// Constructor which associates the half-edge elementet with a face, its edge and its vertex
 	Pos(TetraType * const tp, char const fap,char const ep,
-		char const const vp){_t=tp;_f=fap;_e=ep;_v=vp;}
+		char const vp){_t=tp;_f=fap;_e=ep;_v=vp;}
 
 	~Pos(){};
   
@@ -194,16 +194,7 @@ public:
 	inline bool operator != ( BasePosType const & p ) const {
 			return (!((*this)==p));
 	} 
-
-	/// Assignment operator
-	inline BasePosType & operator = ( const BasePosType & h ){
-		T()=h.T();
-		F()=h.F();
-		E()=h.E();
-		V()=h.V();
-		return *this;
-		}
-
+   
 	/// Set to null the half-edge
 	void SetNull(){
 		T()=0;
