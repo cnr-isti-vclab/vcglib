@@ -57,7 +57,8 @@ class NexusMt: public Nexus {
 	      XRAY,
 	      HIDDEN_LINE,
 	      FLAT_WIRE,
-	      FLAT};
+	      FLAT,
+              DEBUG };
 
   enum Component { COLOR   = 0x1, 
 		   NORMAL  = 0x2, 
@@ -79,7 +80,6 @@ class NexusMt: public Nexus {
   bool use_textures;
   bool use_data;
   
-
   NexusMt();
   
   bool Load(const std::string &filename);

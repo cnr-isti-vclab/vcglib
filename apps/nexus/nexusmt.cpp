@@ -84,11 +84,12 @@ void NexusMt::Render() {
   //TODO textures and data.
 
   for(unsigned int i = 0; i < cells.size(); i++) {
-    Nexus::Entry &entry = index[cells[i]];
+    unsigned int cell = cells[i];
+    Nexus::Entry &entry = index[cell];
     //frustum culling
     //    if(frustum.Outside(entry.sphere.center, entry.sphere.radius))
     //      continue;
-    Patch patch = GetPatch(cells[i]);
+    Patch patch = GetPatch(cell);
     glVertexPointer(3, GL_FLOAT, 0, patch.VertBegin());
     if(use_colors)
       glColorPointer(4, GL_UNSIGNED_BYTE, 0, patch.ColorBegin());
@@ -97,6 +98,8 @@ void NexusMt::Render() {
     switch(mode) {
     case POINTS:
       glDrawArrays(GL_POINTS, 0, patch.nv); break;
+    case DEBUG:
+      glColor3ub((cell * 27)%255, (cell * 37)%255, (cell * 87)%255);
     case SMOOTH:
       if(signature & NXS_FACES)
 	glDrawElements(GL_TRIANGLES, patch.nf * 3, 

@@ -1,6 +1,7 @@
 #include <iostream>
 using namespace std;
 
+#include "nxsalgo.h"
 #include "nexus.h"
 
 using namespace nxs;
@@ -238,55 +239,42 @@ int main(int argc, char *argv[]) {
     Patch src_patch = nexus.GetPatch(patch);
     Border src_border = nexus.GetBorder(patch);
 
-    out.AddPatch(src_entry.nvert, src_entry.nface, src_entry.border_size);
+
+    vector<unsigned short> strip;
+    if(add_strip) {
+      ComputeTriStrip(src_patch.nf, src_patch.FaceBegin(), strip);
+      out.AddPatch(src_entry.nvert, strip.size(), src_entry.border_size);
+    } else
+      out.AddPatch(src_entry.nvert, src_entry.nface, src_entry.border_size);
+
 
     Nexus::Entry &dst_entry = out.index[patch];
     Patch dst_patch = out.GetPatch(patch);
     Border dst_border = out.GetBorder(patch);
 
+    
     //copy vertices: //no clustering
     memcpy(dst_patch.VertBegin(), src_patch.VertBegin(), 
 	   src_patch.nv * sizeof(Point3f));
 
     //now faces.
     if(add_strip) {
-      cerr << "Unsupported strips\n";
-      return -1;
+      memcpy(dst_patch.FaceBegin(), &*strip.begin(), 
+	     strip.size() * sizeof(short));
     } else {
       memcpy(dst_patch.FaceBegin(), src_patch.FaceBegin(), 
 	     src_patch.nf * sizeof(unsigned short) *3);
     }
 
-    if(add_colors) {
-      //source of color:
-      cerr << "Unsupported color\n";
-      return -1;
-    }
-    if(add_normals) {
-      vector<Point3f> normals;
-      normals.resize(dst_patch.nv, Point3f(0, 0, 0));
+    if((nexus.signature & NXS_COLORS) && (out.signature & NXS_COLORS))
+      memcpy(dst_patch.ColorBegin(), src_patch.ColorBegin(), 
+	     src_patch.nv * sizeof(unsigned int));
 
-      for(unsigned int i = 0; i < dst_patch.nf; i++) {
-	unsigned short *f = dst_patch.Face(i);
-	Point3f &v0 = dst_patch.Vert(f[0]);
-	Point3f &v1 = dst_patch.Vert(f[1]);
-	Point3f &v2 = dst_patch.Vert(f[2]);
-	
-	Point3f norm = (v1 - v0) ^ (v2 - v0); 
-	normals[f[0]] += norm;
-	normals[f[1]] += norm;
-	normals[f[2]] += norm;
-      }
-      for(unsigned int i = 0; i < dst_patch.nv; i++) {
-	Point3f &norm = normals[i];
-	norm.Normalize();
-	short *n = dst_patch.Norm16(i);
-	for(int k = 0; k < 3; k++) {
-	  n[k] = (short)(norm[k] * 32766);
-	}
-	n[3] = 0;
-      }
-    }
+    if((nexus.signature & NXS_NORMALS_SHORT) && 
+       (out.signature & NXS_NORMALS_SHORT))
+      memcpy(dst_patch.Norm16Begin(), src_patch.Norm16Begin(), 
+	     src_patch.nv * sizeof(short)*4);
+    
 
     //copying entry information;
     dst_entry.sphere = src_entry.sphere;
@@ -297,17 +285,18 @@ int main(int argc, char *argv[]) {
     memcpy(dst_border.Start(), src_border.Start(), 
 	   src_border.Size() * sizeof(Link));
   }
-  
-  //TODO !!! FIX NORMALS ACROSS BORDERS
-  /*  
-      for(unsigned int patch = 0; patch < nexus.index.size(); patch++) {
-      for(unsigned int i = 0; i < dst_border.Size(); i++) {
-      Link &link = dst_border[i];
-      //we just make the mean...
-      }
-      }
-  */
 
+  //TODO this is ok only if we have faces still!
+  if(add_normals) {
+    cerr << "Computing normals" << endl;
+    ComputeNormals(out);
+  }
+
+  if(add_colors) {
+    //source of color:
+    cerr << "Unsupported color\n";
+    return -1;
+  }
 
   //fixing sphere.
   out.sphere = nexus.sphere;

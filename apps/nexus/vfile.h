@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2004/07/20 14:04:32  ponchio
+Improved efficience in operator[]
+
 Revision 1.8  2004/07/15 14:32:49  ponchio
 Debug.
 
@@ -294,7 +297,7 @@ template <class T> class VFile {
       1)region must be Chunk aligned.
       2)you get impredictable results if regions overlap or mix with operator[]
   */
-  T *GetRegion(unsigned int start, unsigned int size) {
+  T *GetRegion(unsigned int start, unsigned int size, bool flush = true) {
     assert(start + size <= n_elements);
     assert((size % chunk_size) == 0);
     assert((start % chunk_size) == 0);
@@ -305,7 +308,7 @@ template <class T> class VFile {
     if(index.count(chunk)) 
       return ((*(index[chunk])).data);
     
-    if(buffers.size() > queue_size) {
+    while(flush && buffers.size() > queue_size) {
       Buffer &buffer= buffers.back();
       FlushBuffer(buffer);      
       index.erase(buffer.key);  

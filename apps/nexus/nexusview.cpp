@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/09/30 00:27:42  ponchio
+Lot of changes. Backup.
+
 Revision 1.7  2004/09/28 10:26:35  ponchio
 Backup
 
@@ -185,6 +188,7 @@ int main(int argc, char *argv[]) {
   glEnable(GL_LIGHT0);
   glEnable(GL_NORMALIZE);
   glEnable(GL_COLOR_MATERIAL);
+  glEnable(GL_CULL_FACE);
   int quit = 0;
   SDL_Event         event;
   int x, y;
@@ -268,6 +272,7 @@ int main(int argc, char *argv[]) {
       Point3f center = sphere.Center();
       glTranslatef(-center[0], -center[1], -center[2]);
 
+      nexus.SetMode(NexusMt::DEBUG);
       nexus.SetPolicy(NexusMt::FRUSTUM, error);
       nexus.SetComponent(NexusMt::COLOR, show_colors);
       nexus.SetComponent(NexusMt::NORMAL, show_normals);

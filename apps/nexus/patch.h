@@ -5,8 +5,7 @@
 #include <iostream>
 namespace nxs {
 
-enum Signature { NXS_DEFAULT            = 0x00000000,
-		 NXS_FACES          = 0x00000001,
+enum Signature { NXS_FACES          = 0x00000001,
 		 NXS_STRIP          = 0x00000002, 
 		 NXS_COLORS         = 0x00000010, 
 		 NXS_NORMALS_SHORT  = 0x00000100, 
@@ -41,6 +40,8 @@ class Patch {
   inline unsigned int *ColorBegin();
   inline short *Norm16Begin();
   inline short *Norm16(unsigned short v);
+  inline vcg::Point3f *Norm32Begin();
+  inline vcg::Point3f &Norm32(unsigned short v);
  
   static unsigned int ChunkSize(Signature signature, 
 				unsigned short nvert, 
@@ -89,6 +90,13 @@ inline short *Patch::Norm16Begin() {
 inline short *Patch::Norm16(unsigned short v) { 
   return Norm16Begin() + 4 * v;
 }
+
+ inline vcg::Point3f *Patch::Norm32Begin() {
+   return (vcg::Point3f *)(((char *)vstart) + nstart); 
+ }
+ inline vcg::Point3f &Patch::Norm32(unsigned short v) {
+   return Norm32Begin()[v];
+ }
 
 } //namespace
 
