@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.37  2005/02/15 15:55:36  ponchio
+aggiunta delle sphere
+
 Revision 1.36  2005/02/14 17:11:08  ponchio
 aggiunta delle sphere
 
@@ -156,6 +159,8 @@ Created
 
 #include <deque>
 #include <iostream>
+#include <fstream>
+
 using namespace std;
 
 #include <SDL/SDL.h>
@@ -239,7 +244,8 @@ int main(int argc, char *argv[]) {
          << "-x <ram>: max extraction size\n"
 	 << "-r <ram>: max draw size\n"
 	 << "-d <ram>: max disk read per frame\n"
-	 << "-p      : no preload\n";
+	 << "-p      : no preload\n"
+    << "-o namefile: ouput stats";
     return -1;
   }      
 
@@ -254,11 +260,7 @@ int main(int argc, char *argv[]) {
   DrawContest contest;
   Stats stats;
 
-  if(!init(argv[1])) {
-    cerr << "Could not init SDL window\n";
-    return -1;
-  }
-
+ 
 
   bool rotate = false;
   bool show_borders = false;
@@ -270,19 +272,30 @@ int main(int argc, char *argv[]) {
   bool realtime = true;
   bool preload = true;
   bool step = true;
-  
+  bool output_stats = false;
+  char output_filename[100];
+  char window_name [100];
+  sprintf(window_name,"%s", argv[1]);
   int option;
-  while((option = getopt(argc, argv, "e:m:x:r:d:p")) != EOF) {
+  while((option = getopt(argc, argv, "e:m:x:r:d:o:w:h:p:f")) != EOF) {
     switch(option) {
     case 'e': extraction.target_error = atof(optarg); break;
     case 'm': nexus.MaxRam() = atoi(optarg); break;
     case 'x': extraction.extr_max = atoi(optarg); break;
     case 'r': extraction.draw_max = atoi(optarg); break;
     case 'd': extraction.disk_max = atoi(optarg); break;
+    case 'o': output_stats = true; sprintf(output_filename,"%s",optarg); break;
+    case 'w': width =  atoi(optarg); break;
+    case 'h': height =  atoi(optarg); break;
     case 'p': preload = false; nexus.SetPreload(preload); break;
     default:
       cerr << "Unknow option.\n"; break;
     }
+  }
+
+   if(!init(window_name)) {
+    cerr << "Could not init SDL window\n";
+    return -1;
   }
 
 
@@ -443,7 +456,7 @@ int main(int argc, char *argv[]) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(40, 1024/768.f, 0.1, 100);
+    gluPerspective(40, width/(float)height, 0.1, 100);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     gluLookAt(0,0,5,   0,0,0,   0,1,0);    
@@ -521,29 +534,30 @@ int main(int argc, char *argv[]) {
       glLoadIdentity();
       gluOrtho2D(0, 1, 0, 1);
 
-
+     
       glDisable(GL_DEPTH_TEST);
       glDisable(GL_LIGHTING);
-      char buffer[1024];
-      glColor4f(0.0f, 0.0f, 0.6f, 0.5f);
+      char buffer[1024];  
+      if(false){
+      glColor4f(0.6f, 0.6f, 0.6f, 0.5f);
 
-      glBegin(GL_LINES);
+      glBegin(GL_LINE_STRIP);
       for(unsigned int i = 0; i < tframe.size() -1; i++) {
 	double diff = (tframe[i] - tframe[i+1]);
-	glVertex2f(i/1024.0f,0);
+	//glVertex2f(i/1024.0f,0);
 	glVertex2f(i/1024.0f,2*diff);
       }
       glEnd();
 
       glColor4f(0.0f, 0.6f, 0.2f, 0.5f);
 
-      glBegin(GL_LINES);
+      glBegin(GL_LINE_STRIP);
       for(unsigned int i = 0; i < terror.size() -1; i++) {
-	glVertex2f(i/1024.0f,0);
+//	glVertex2f(i/1024.0f,0);
 	glVertex2f(i/1024.0f,terror[i]/300);
       }
       glEnd();
-
+              }
       glColor3f(1.0f, 1.0f, 1.0f);
 
       sprintf(buffer, "Ram size : %.2f / %.2f Mb", 
@@ -577,6 +591,50 @@ int main(int argc, char *argv[]) {
       glPopMatrix();
       glMatrixMode(GL_MODELVIEW);
       glPopMatrix();
+    
+      if(output_stats){
+      // statistics: output on file
+
+      static Stats statsAcc;
+      static      float ram_used ,float extr_used, float draw_used  ,float disk_used;
+       static  std::ofstream outf(output_filename);
+       static bool first=true;
+       if(first) {
+              outf<< "ktri\t fps\t ram \t extr \t draw \t disk \n"
+              << "       \t        \t" << nexus.ram_max * nexus.chunk_size/(float)(1<<20) << "\t"
+              << extraction.extr_max * nexus.chunk_size/(float)(1<<20) << "\t"
+              <<  extraction.draw_max * nexus.chunk_size/(float)(1<<20)<<"\t"
+              <<  extraction.disk_max * nexus.chunk_size/(float)(1<<20)<< "\n";
+              first = false;
+       }
+       statsAcc.count++ ;
+      if((statsAcc.count%30)==0) {
+        outf
+          <<       (statsAcc.ktri/(float)statsAcc.count)/(float)(1<<10)      << "\t" 
+          <<       (statsAcc.fps/(float)statsAcc.count)           << "\t" 
+         // <<       (statsAcc.kdisk/(float)statsAcc.count)       << "\t" 
+          <<        ram_used  /(float)statsAcc.count  * nexus.chunk_size/(float)(1<<20) << "\t" 
+          <<        extr_used/(float)statsAcc.count     * nexus.chunk_size/(float)(1<<20) << "\t" 
+          <<        draw_used/(float)statsAcc.count   * nexus.chunk_size/(float)(1<<20) << "\t" 
+          <<        disk_used/(float)statsAcc.count   * nexus.chunk_size/(float)(1<<20) << "\t" 
+          <<        "\n";
+        statsAcc.Init();
+        statsAcc.count=0;
+        statsAcc.fps=0;
+        ram_used = extr_used= draw_used  = disk_used=0.0;
+      }
+      else{
+        statsAcc.fps+=stats.fps;
+        statsAcc.kdisk+=stats.kdisk;
+        statsAcc.ktri+=stats.ktri;
+
+        ram_used +=nexus.ram_used;
+        extr_used+=extraction.extr_used;
+        draw_used+=extraction.draw_used;
+        disk_used+=extraction.disk_used;
+      }
+        
+      }
     }
     
     SDL_GL_SwapBuffers();
