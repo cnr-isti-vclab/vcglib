@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/12/01 03:24:32  ponchio
+Level 2.
+
 Revision 1.1  2004/12/01 01:15:03  ponchio
 Level 0.
 
@@ -198,6 +201,8 @@ void SecondStep(const string &crudefile, const string &output) {
   crude.Close();
   sorted.Close();
 
+  /*  TODO fix this (after debug!)
+
   if(0 != unlink((crudefile + ".crf").c_str())) {
     cerr << "Could not remove " << crudefile << ".crf\n";
     exit(0);
@@ -206,7 +211,7 @@ void SecondStep(const string &crudefile, const string &output) {
     cerr << "Could not rename to: " << crudefile + ".crf\n";
     exit(0);
   }
-  face_remap.Close();
+  face_remap.Close();  */
   //TODO remove the file... (after finishing debug!)
   //  face_remap.Delete();
 }
@@ -221,7 +226,12 @@ void ThirdStep(const string &crudefile, const string &output,
     cerr << "Could not open crude input: " << crudefile << endl;
     exit(0);
   }
-
+  
+  VFile<Crude::Face> sorted;
+  if(!sorted.Load(output + ".faces", true)) {
+    cerr << "Could not load sorted faces\n";
+    exit(0);
+  }
   BlockIndex face_index;
   if(!face_index.Load(output + ".rfi")) {
     cerr << "Could not load index\n";
@@ -260,7 +270,9 @@ void ThirdStep(const string &crudefile, const string &output,
     int64 &offset = face_index[patch].offset;
     unsigned int size = face_index[patch].size;
     for(unsigned int i = offset; i < offset + size; i++) {
-      Crude::Face face = crude.GetFace(i);
+      //TODO fix this after debug
+      //      Crude::Face face = crude.GetFace(i);
+      Crude::Face face = sorted[i];
       if(face[0] == face[1] || face[1] == face[2] || face[0] == face[2]) 
 	continue; //degenerate
       for(int j = 0; j < 3; j++) {
@@ -314,7 +326,7 @@ void ThirdStep(const string &crudefile, const string &output,
   for(unsigned int i = 0; i < nexus.index.size(); i++) 
     nexus.sphere.Add(nexus.index[i].sphere);
   
-  /* Nexus::Update update;
+   Nexus::Update update;
   for(unsigned int i = 1; i < nexus.index.size(); i++) {
     update.created.push_back(i);
   }
@@ -325,7 +337,7 @@ void ThirdStep(const string &crudefile, const string &output,
   for(unsigned int i = 1; i < nexus.index.size(); i++) {
     update.erased.push_back(i);
   }
-  nexus.history.push_back(update);*/
+  nexus.history.push_back(update);
 }
 
 int main(int argc, char *argv[]) {
