@@ -55,7 +55,7 @@ namespace vcg
 				_rows = m;
 				_columns = n;
 				_data = new ScalarType[m*n];
-				memset(_data, ScalarType(0.0), m*n*sizeof(ScalarType));
+				memset(_data, 0, m*n*sizeof(ScalarType));
 			};
 
 			/*!
@@ -100,7 +100,7 @@ namespace vcg
 			/*!
 			*	Number of columns
 			*/
-			inline unsigned int ColumnsNumber()
+			inline unsigned int ColumnsNumber() const
 			{
 				return _columns;
 			};
@@ -109,12 +109,12 @@ namespace vcg
 			/*!
 			*	Number of rows
 			*/
-			inline unsigned int RowsNumber()
+			inline unsigned int RowsNumber() const 
 			{
 				return _rows;
 			};
 
-						/*!
+			/*!
 			*	Equality operator.
 			*	\param m
 			*	\return true iff the matrices have same size and its elements have same values.
@@ -231,7 +231,7 @@ namespace vcg
 			*/
 			inline TYPE* operator[](const unsigned int i)
 			{
-				assert(i>=0 && i<_columns);
+				assert(i>=0 && i<_rows);
 				return _data + i*_columns;
 			};
 
@@ -242,7 +242,7 @@ namespace vcg
 			*/
 			inline const TYPE* operator[](const unsigned int i) const 
 			{
-				assert(i>=0 && i<_columns);
+				assert(i>=0 && i<_rows);
 				return _data + i*_columns;
 			};
 
@@ -419,7 +419,7 @@ namespace vcg
 
 			/*!
 			*	Negate all matrix elements
-			*	\return ...
+			*	\return	the modified matrix
 			*/
 			Matrix<TYPE> operator-() const
 			{
@@ -489,6 +489,17 @@ namespace vcg
 				unsigned int j, p;
 				for (j=0, p=i*_rows; j<_columns; j++, p++)
 					_data[p] = v[j];
+			};
+
+			/*!
+			*	Set the diagonal elements <I>v<SUB>i,i</SUB></I> to v[i]
+			*	\param v
+			*/
+			void SetDiagonal(TYPE *v)
+			{
+				assert(_rows == _columns);
+				for (unsigned int i=0, p=0; i<_rows; i++, p+=_rows)
+					_data[p+i] = v[i];
 			};
 
 			/*!
