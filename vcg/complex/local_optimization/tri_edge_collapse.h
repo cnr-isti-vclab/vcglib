@@ -72,12 +72,14 @@ public:
   typedef vcg::face::Pos<FaceType> PosType;
   typedef typename LocalOptimization<TriMeshType>::HeapElem HeapElem;
 	
-private:
+
+protected:
+	///the pos of collapse 
+	PosType pos;
 
 	///mark for up_dating
 	static int& _Imark(){ static int im=0; return im;}
-	///the pos of collapse 
-	PosType pos;
+	
 	/// priority in the heap
 	ScalarType _priority;
 
