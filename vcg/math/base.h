@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/03/04 00:21:00  ponchio
+added Acos e Asin
+
 Revision 1.4  2004/03/03 22:51:49  cignoni
 changed math from class to template
 
@@ -58,19 +61,19 @@ namespace math {
     };
   
 
-  float Sqrt(const float v)   { return sqrtf(v); }
-  float Abs(const float v)   { return fabsf(v); }
-  float Cos(const float v)   { return cosf(v); }
-  float Sin(const float v)   { return sinf(v); }
-  float Acos(const float v)   { return acosf(v); }
-  float Asin(const float v)   { return asinf(v); }
+  inline float Sqrt(const float v)   { return sqrtf(v); }
+  inline float Abs(const float v)   { return fabsf(v); }
+  inline float Cos(const float v)   { return cosf(v); }
+  inline float Sin(const float v)   { return sinf(v); }
+  inline float Acos(const float v)   { return acosf(v); }
+  inline float Asin(const float v)   { return asinf(v); }
 
-  double Sqrt(const double v)   { return sqrt(v); }
-  double Abs(const double v)   { return fabs(v); }
-  double Cos(const double v)   { return cos(v); }
-  double Sin(const double v)   { return sin(v); }
-  double Acos(const double v)   { return acos(v); }
-  double Asin(const double v)   { return asin(v); }
+  inline double Sqrt(const double v)   { return sqrt(v); }
+  inline double Abs(const double v)   { return fabs(v); }
+  inline double Cos(const double v)   { return cos(v); }
+  inline double Sin(const double v)   { return sin(v); }
+  inline double Acos(const double v)   { return acos(v); }
+  inline double Asin(const double v)   { return asin(v); }
   
     
     
