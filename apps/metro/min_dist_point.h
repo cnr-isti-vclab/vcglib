@@ -1,42 +1,31 @@
-/*#***************************************************************************
- * MinDistPoint.h                                                     o o    *
- *                                                                  o     o  *
- * Visual Computing Group                                           _  O  _  *
- * IEI Institute, CNUCE Institute, CNR Pisa                          \/)\/   *
- *                                                                  /\/|     *
- * Copyright(C) 1999 by Paolo Cignoni, Paolo Pingi, Claudio Rocchini   |     *
- * All rights reserved.                                                \     *
- *                                                                           *
- * Permission  to use, copy, modify, distribute  and sell this  software and *
- * its documentation for any purpose is hereby granted without fee, provided *
- * that  the above copyright notice appear  in all copies and that both that *
- * copyright   notice  and  this  permission  notice  appear  in  supporting *
- * documentation. the author makes  no representations about the suitability *
- * of this software for any purpose. It is provided  "as is" without express *
- * or implied warranty.                                                      *
- *                                                                           *
- * NOTE THAT THIS FILE SHOULD NOT DIRECTL BE INCLUDED                        *
- * It is automatically included by Mesh.h                                    *
- *                                                                           *
- ***************************************************************************#*/
-/*#**************************************************************************
+/****************************************************************************
+* VCGLib                                                            o o     *
+* Visual and Computer Graphics Library                            o     o   *
+*                                                                _   O  _   *
+* Copyright(C) 2004                                                \/)\/    *
+* Visual Computing Lab                                            /\/|      *
+* ISTI - Italian National Research Council                           |      *
+*                                                                    \      *
+* All rights reserved.                                                      *
+*                                                                           *
+* This program is free software; you can redistribute it and/or modify      *   
+* it under the terms of the GNU General Public License as published by      *
+* the Free Software Foundation; either version 2 of the License, or         *
+* (at your option) any later version.                                       *
+*                                                                           *
+* This program is distributed in the hope that it will be useful,           *
+* but WITHOUT ANY WARRANTY; without even the implied warranty of            *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
+* GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
+* for more details.                                                         *
+*                                                                           *
+****************************************************************************/
+/****************************************************************************
   History
 
- 2000	Nov 06 First Working release (pc)
-          08 Aggiunto if(gr.bbox.IsIn(p)) per evitare piantamenti se si chiede
-						 un punto fuori.
-						 Tolto un Normalize inutile
- 2001 May 17 Aggiunta versione della Mindistpoint che da anche le coord 
-						 baricentriche del punto trovato (pc); aggiunto wrapper per la vecchia 
-						 versione.
-			Dec 10 Corretto prodotto scalare vettore nell'ordine giusto in un paio di posti
- 2002 Mar 29 Templatata anche in funzione del tipo scalare. (pc)
-      Oct 24 Corretti warning (unsigned mismatch) del vc7, 
- 2003 Apr 15 Corretti mismatch iterator / pointer 
-      Jun 08 Aggiornato UGridLink -> UGrid::Link
- 2004 Gen 09 Aggiunte le inclusioni a Point3[4].h
- 2004 Gen 19 Corretto qualche ->Normal() in ->cN()
+$Log: not supported by cvs2svn $
 ****************************************************************************/
+
 #ifndef __VCG_MINDISTPOINT
 #define __VCG_MINDISTPOINT
 #include <math.h>
@@ -140,7 +129,8 @@ void MinDistPoint( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & md
 					/*normf = (1-(alfa+beta))*(bestf->V(0)->Normal())+
 							(alfa*(bestf->V(1)->Normal()))+
 							(beta*(bestf->V(2)->Normal()));*/
-					bestf->InterpolationParameters(q, alfa, beta, gamma);
+					bool ret=bestf->InterpolationParameters(q, alfa, beta, gamma);
+					//assert(ret);
 					normf =       (bestf->V(0)->cN())*alfa+
 							          (bestf->V(1)->cN())*beta+
 							          (bestf->V(2)->cN())*gamma;
