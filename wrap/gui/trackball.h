@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/06/09 14:01:13  cignoni
+Heavily restructured. To be completed only rotation works...
+
 Revision 1.6  2004/05/14 03:15:09  ponchio
 Redesigned partial version.
 
@@ -73,9 +76,20 @@ namespace vcg {
   Transform interpolate(const Transform &a, const Transform &b, float t);
 
   class TrackMode;
-
-  class Trackball: public Transform {
+   class Trackball: public Transform {
   public:
+ class DrawingHint
+    {
+    public:
+      DrawingHint() {  CircleStep=32;   }
+
+      int CircleStep;
+    };
+
+
+ DrawingHint DH;
+
+  
     enum Button { BUTTON_NONE   = 0x0000, 
 		  BUTTON_LEFT   = 0x0001, 
 		  BUTTON_MIDDLE = 0x0002, 
@@ -94,7 +108,7 @@ namespace vcg {
     void SetTransform(const Transform &transform, int miilisec = 0);
 
     //operating
-    void GetView();
+    void GetView();\
     void Apply();
     void ApplyInverse();
     void Draw();
@@ -102,15 +116,15 @@ namespace vcg {
     void Reset();
 
     // Internal Drawing stuff
-    static void DrawCircle ();
-    static void DrawPlane();
-    static void DrawPlaneHandle();
+    void DrawCircle ();
+    void DrawPlane();
+    void DrawPlaneHandle();
 
     //interface
     void MouseDown(int x, int y, /*Button*/ int button);
     void MouseMove(int x, int y); 
     void MouseUp(int x, int y, /*Button */ int button); 
-    void MouseWheel(Button notch);
+    void MouseWheel(float notch);  // it assumes that a notch of 1.0 is a single step of the wheel
     void ButtonUp(Button button);
     void ButtonDown(Button button);
 
@@ -154,7 +168,7 @@ namespace vcg {
   
     int current_button;
     TrackMode *current_mode;
-
+   
     std::map<int, TrackMode *> modes;
 
     Similarityf last_track;

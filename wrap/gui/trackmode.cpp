@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/06/09 14:01:13  cignoni
+Heavily restructured. To be completed only rotation works...
+
 Revision 1.5  2004/05/14 03:15:09  ponchio
 Redesigned partial version.
 
@@ -48,6 +51,12 @@ Adding copyright.
 using namespace std;
 
 using namespace vcg;
+
+
+void TrackMode::Apply(Trackball *trackball, float WheelNotch) {
+    trackball->track.sca*=pow(1.2f,WheelNotch);
+ };
+
 /// Compute the plane plane perpedicular to view dir and passing through manip center
 Plane3f TrackMode::GetViewPlane(const View<float> &camera, const Point3f &center) {
   Point3f vp = camera.ViewPoint();
@@ -143,8 +152,8 @@ bool SphereMode::HitHyper(Point3f center,  float radius, Point3f viewpoint, Plan
   float x1,x2,xval,yval;
   if(delta>0)
   {
-    x1= (- b - sqrt(delta))/(2.0*a);
-    x2= (- b + sqrt(delta))/(2.0*a);
+    x1= (- b - sqrt(delta))/(2.0f*a);
+    x2= (- b + sqrt(delta))/(2.0f*a);
     
     xval=x1; // always take the minimum value solution
     yval=c/xval;     //  alternatively it also oould be the other part of the equation yval=-(hitplaney/viewpointx)*xval+hitplaney;

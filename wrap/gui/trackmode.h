@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/06/09 14:01:13  cignoni
+Heavily restructured. To be completed only rotation works...
+
 Revision 1.5  2004/05/14 03:15:09  ponchio
 Redesigned partial version.
 
@@ -54,6 +57,8 @@ class TrackMode {
 public:
   virtual ~TrackMode() {}
   virtual void Apply(Trackball *trackball, Point3f new_point) = 0;
+  virtual void Apply(Trackball *trackball, float WheelNotch);
+
   virtual void Draw() {}
  protected:
   Plane3f GetViewPlane(const View<float> &view, const Point3f &center);

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/06/09 14:01:13  cignoni
+Heavily restructured. To be completed only rotation works...
+
 Revision 1.7  2004/05/14 03:15:09  ponchio
 Redesigned partial version.
 
@@ -128,7 +131,7 @@ void Trackball::ApplyInverse() {
 /***************************************************************/
 
 void Trackball::DrawCircle() {
-  const int nside=18;
+  int nside=DH.CircleStep;
   const double pi2=3.14159265*2.0;
   glBegin(GL_LINE_STRIP);
   for(double i=0;i<=nside;i++){
@@ -178,8 +181,8 @@ void Trackball::Draw() {
   glPushMatrix();
   ApplyInverse();
   glBegin(GL_POINTS);
-    for(int i=0;i<Hits.size();++i)
-    glVertex(Hits[i]);
+  for(vector<Point3f>::iterator vi=Hits.begin();vi!=Hits.end();++vi)
+    glVertex(*vi);
   glEnd();
   glPopMatrix();
 
@@ -187,12 +190,14 @@ void Trackball::Draw() {
   
   glTranslate(center);
   glScalef(radius,radius,radius);
+  glScalef(1.0f/track.sca,1.0f/track.sca,1.0f/track.sca);
+
 
   /// Here start the real drawing stuff
   
   float amb[4] ={.3f,.3f,.3f,1.0f};
   float col[4] ={.5f,.5f,.8f,1.0f};
-  float col2[4]={.9f,.9f,1.0f,1.0f};
+  //float col2[4]={.9f,.9f,1.0f,1.0f};
   glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_CURRENT_BIT | GL_LIGHTING_BIT);
   glLineWidth(2.0);
   glEnable(GL_LIGHTING);
@@ -287,8 +292,14 @@ void Trackball::MouseUp(int /* x */, int /* y */, int button) {
   current_button &= (~button);
   SetCurrentAction();
 } 
-
-void Trackball::MouseWheel(Trackball::Button /* notch */ ) {
+ // it assumes that a notch of 1.0 is a single step of the wheel
+void Trackball::MouseWheel(float notch  ) {
+  if(current_mode == NULL)
+  {
+    SphereMode tm;
+    tm.TrackMode::Apply(this, notch);
+  }
+  current_mode->Apply(this, notch);
 }
 
 void Trackball::ButtonDown(Trackball::Button button) {
