@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2005/02/19 10:45:04  ponchio
+Patch generalized and small fixes.
+
 Revision 1.15  2005/02/14 15:17:36  ponchio
 Cleaning up.
 
@@ -611,6 +614,8 @@ void FifthStep(const string &crudefile, const string &output,
   nexus.history.updates.push_back(update);
   ReverseHistory(nexus.history.updates);
 
+  if(!nexus.history.IsQuick())
+    nexus.history.UpdatesToQuick();
   //  TestBorders(nexus);
   nexus.Close();
 

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2005/02/19 10:45:04  ponchio
+Patch generalized and small fixes.
+
 Revision 1.19  2005/02/18 13:04:13  ponchio
 Added patch reordering.
 
@@ -87,6 +90,7 @@ int main(int argc, char *argv[]) {
   string plysource;
   bool info = false;
   bool verbose = false;
+  bool dump_history = false;
   unsigned int ram_size = 128000000;
   unsigned int chunk_size = 0;
 
@@ -113,10 +117,11 @@ int main(int argc, char *argv[]) {
   bool zsort = false;
 
   int option;
-  while((option = getopt(argc, argv, "ilo:a:r:zxsv:n:k:t:b:c:")) != EOF) {
+  while((option = getopt(argc, argv, "ilho:a:r:zxsv:n:k:t:b:c:")) != EOF) {
     switch(option) {
     case 'i': info = true; break;
     case 'l': verbose = true; break;
+    case 'h': dump_history = true; break;
     case 'o': output = optarg; break;
     case 'a': {
       if(strstr(optarg, "strips")) {
@@ -244,7 +249,8 @@ int main(int argc, char *argv[]) {
   if(optind != argc - 1) {
     cerr << "Usage: " << argv[0] << " <nexus file> [options]\n"
 	 << " -i       : display some info about nexus file\n"
-   << " -l       : list nodes\n"
+	 << " -l       : list nodes\n"
+         << " -h       : list history\n"
          << " -o <file>: output filename (default is adding 00 to nexus)\n"
 	 << " -a <what>: Add [colors|normals|strips|textures|data|borders]\n"
          << " -r <what>: As add...\n"
@@ -334,6 +340,47 @@ int main(int argc, char *argv[]) {
 	 << "\n\tAverage distance: " << meandist
 	 << "\n\tChunk size " << nexus.chunk_size << endl;
    
+    if(dump_history) {
+      if(nexus.history.IsQuick()) {
+	cerr << "Quick format\n";
+	for(unsigned int i = 0; i < nexus.history.n_nodes(); i++) {
+	  cerr << "Node: " << i << " out: ";
+	  History::History::Node node = nexus.history.nodes[i];
+	  for(History::Node::iterator l = node.out_begin(); l != node.out_end(); l++) {
+	    cerr << ".";
+	    History::Link &link = *l;
+	    for(History::Link::iterator p = link.begin(); p != link.end(); p++) {
+	      cerr << *p << " ";
+	    }
+	  }
+	  cerr << " in: ";
+	  for(History::Node::iterator j = node.in_begin(); j != node.in_end(); j++) {
+	    cerr << ".";
+	    History::Link &link = *j;
+	    for(History::Link::iterator p = link.begin(); p != link.end(); p++) {
+	      cerr << *p << " ";
+	    }
+	  }
+	  cerr << endl;
+	}
+
+      } else {
+	cerr << "Update format\n";
+	for(unsigned int i = 0; i < nexus.history.updates.size(); i++) {
+	  History::Update &update = nexus.history.updates[i];
+	  cerr << "Created: ";
+	  for(unsigned int k = 0; k < update.created.size(); k++) {
+	    cerr << update.created[k] << " ";
+	  }
+	  cerr << "\nErased: ";
+	  for(unsigned int k = 0; k < update.erased.size(); k++) {
+	    cerr << update.erased[k] << " ";
+	  }
+	  cerr << "\n\n";
+	}
+      }
+    }
+
     if(verbose) {
       for(unsigned int i = 0; i < nexus.size(); i++) {
         Entry &entry = nexus[i];
@@ -417,14 +464,19 @@ int main(int argc, char *argv[]) {
     ZSort(nexus, forward, backward);
 
   //Fixing history
-  unsigned int h_size;
-  char *buffer = nexus.history.Save(h_size);
-  out.history.Load(h_size, buffer);
+  if(!nexus.history.IsQuick())
+    nexus.history.UpdatesToQuick();
+
+  unsigned int hsize;
+  char *buffer = nexus.history.Save(hsize);
+  out.history.Load(hsize, buffer);
+
+
 
   if(zsort) {
     if(out.history.IsQuick()) {
       for(unsigned int i = 0; i < out.history.n_frags(); i++)
-	out.history.frags[i].patch = backward[out.history.frags[i].patch];
+	out.history.frags[i] = backward[out.history.frags[i]];
     } else {
       for(unsigned int i = 0; i < out.history.updates.size(); i++) {
 	History::Update &update = out.history.updates[i];

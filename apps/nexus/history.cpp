@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/02/19 16:22:45  ponchio
+Minor changes (visited and Cell)
+
 Revision 1.6  2005/02/17 16:40:35  ponchio
 Optimized BuildLevels.
 
@@ -94,7 +97,7 @@ bool History::LoadQuick(unsigned int _size, char *mem) {
   assert(n_nodes() * sizeof(Node) +
 	 (n_in_links() + n_out_links()) * sizeof(Link) +
 	 n_frags() * sizeof(unsigned int) + 
-	 5 * sizeof(int) == size);
+	 5 * sizeof(int) == _size);
   size = _size;
   return LoadPointers();
 }
@@ -176,6 +179,11 @@ char *History::SaveQuick(unsigned int &_size) {
     link.node = (Node *)(link.node - nodes);
     link.frag_begin = (unsigned int *)(link.frag_begin - frags);
   }
+
+  assert(n_nodes() * sizeof(Node) +
+	 (n_in_links() + n_out_links()) * sizeof(Link) +
+	 n_frags() * sizeof(unsigned int) + 
+	 5 * sizeof(int) == size);
 
   _size = size;
   char *tmp = buffer;
