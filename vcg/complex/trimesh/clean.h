@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/09/20 08:37:57  cignoni
+Better Doxygen docs
+
 Revision 1.4  2004/08/25 15:15:26  ganovelli
 minor changes to comply gcc compiler (typename's and stuff)
 
@@ -87,7 +90,7 @@ static int RemoveDuplicateVertex( MeshType & m )    // V1.0
 	int deleted=0;
 	int k=0;
 	int num_vert = m.vert.size();
-	vector<VertexPointer> perm(num_vert);
+	std::vector<VertexPointer> perm(num_vert);
 	for(vi=m.vert.begin(); vi!=m.vert.end(); ++vi, ++k)
 		perm[k] = &(*vi);
 
