@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2005/02/08 17:14:28  tarini
+aggiunto un typecast a (FaceType*) per farlo compilare under Mingw comp
+
 Revision 1.14  2004/10/14 15:08:04  pietroni
 added #include <vector>
 
@@ -325,7 +328,9 @@ static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu
         {
           if(VertexType::HasVFAdjacency())
 			if ((*vi).VFp()!=0)
-				pu.Update((FaceType*)(*vi).VFp());
+			  pu.Update((*vi).VFp());
+	  // was (for mingw) pu.Update((FaceType*)(*vi).VFp());
+
         }
         		// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
 		unsigned int siz=m.face.size()-n;	
