@@ -2,8 +2,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="7.10"
-	Name="tri_decimator"
-	ProjectGUID="{9B107969-442C-4365-B868-C27B5B462501}"
+	Name="trimeshinfo"
+	ProjectGUID="{6EDEA61E-9059-44D4-87B0-27B14A195BE0}"
 	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
@@ -26,15 +26,16 @@
 				RuntimeLibrary="5"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
+				Detect64BitPortabilityProblems="TRUE"
 				DebugInformationFormat="4"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(OutDir)/tri_decimator.exe"
+				OutputFile="$(OutDir)/trimeshinfo.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
-				ProgramDatabaseFile="$(OutDir)/tri_decimator.pdb"
+				ProgramDatabaseFile="$(OutDir)/trimeshinfo.pdb"
 				SubSystem="1"
 				TargetMachine="1"/>
 			<Tool
@@ -66,24 +67,19 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="3"
-				GlobalOptimizations="TRUE"
-				InlineFunctionExpansion="2"
-				EnableIntrinsicFunctions="TRUE"
-				FavorSizeOrSpeed="1"
-				OptimizeForProcessor="3"
 				AdditionalIncludeDirectories="../../.."
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="4"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
+				Detect64BitPortabilityProblems="TRUE"
 				DebugInformationFormat="3"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(OutDir)/tri_decimator.exe"
-				LinkIncremental="2"
+				OutputFile="$(OutDir)/trimeshinfo.exe"
+				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -119,7 +115,7 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
-				RelativePath="..\..\tri_decimator\main.cpp">
+				RelativePath="..\..\trimeshinfo\main.cpp">
 			</File>
 			<File
 				RelativePath="..\..\..\wrap\ply\plylib.cpp">
@@ -129,24 +125,6 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
-			<File
-				RelativePath="..\..\..\vcg\complex\trimesh\edge_collapse.h">
-			</File>
-			<File
-				RelativePath="..\..\..\vcg\complex\local_optimization.h">
-			</File>
-			<File
-				RelativePath="..\..\..\vcg\simplex\face\pos.h">
-			</File>
-			<File
-				RelativePath="..\..\..\vcg\math\quadric.h">
-			</File>
-			<File
-				RelativePath="..\..\..\vcg\complex\local_optimization\tri_edge_collapse.h">
-			</File>
-			<File
-				RelativePath="..\..\..\vcg\complex\local_optimization\tri_edge_collapse_quadric.h">
-			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
