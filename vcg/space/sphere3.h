@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/09/29 13:55:33  ponchio
+Added Distance shpere - point.
+
 Revision 1.4  2004/04/02 09:49:01  ponchio
 Ehm... a couople of small errors.
 
@@ -80,6 +83,14 @@ public:
 template <class T> T Distance(const Sphere3<T> &sphere, 
 			      const Point3<T> &point) {
   T dist = Distance(point, sphere.Center()) - sphere.Radius();
+  if(dist < 0) dist = 0;
+  return dist;
+}
+
+template <class T> T Distance(const Sphere3<T> &sphere, 
+			      const Sphere3<T> &s) {
+  T dist = Distance(s.Center(), sphere.Center()) 
+                    - sphere.Radius() - s.Radius();
   if(dist < 0) dist = 0;
   return dist;
 }
