@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/05/17 07:58:16  turini
+Minor Changes To Compile Even Without using namespace std.
+
 Revision 1.6  2004/05/14 11:43:17  turini
 Changed mesh ClearFlag call.
 
@@ -85,7 +88,7 @@ struct InsertedV
 //             m,  output mesh mesh.
 //	  It assumes FF topology has been computed.
 template <class S_MESH_TYPE, class STL_CONT>
-void SubSet(STL_CONT & subSet, S_MESH_TYPE & m)
+void SubSet(S_MESH_TYPE & m, STL_CONT & subSet)
 {
   std::vector< InsertedV<S_MESH_TYPE> > newVertices;
   STL_CONT::iterator pfi;
