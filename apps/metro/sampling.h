@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/06/24 09:08:31  cignoni
+Official Release of Metro 4.00
+
 Revision 1.7  2004/05/14 13:49:07  ganovelli
 created
 
@@ -176,7 +179,7 @@ Sampling<MetroMesh>::Sampling(MetroMesh &_s1, MetroMesh &_s2):S1(_s1),S2(_s2)
 		n_hist_bins                    = 256;
 		print_every_n_elements         = S1.fn/100;
 
-			referredBit = VertexType::NewUserBit();
+			referredBit = VertexType::NewBitFlag();
 			// store the unreferred vertices
 			FaceIterator fi; VertexIterator vi; int i;
 			for(fi = _s1.face.begin(); fi!= _s1.face.end(); ++fi)
@@ -186,7 +189,7 @@ Sampling<MetroMesh>::Sampling(MetroMesh &_s1, MetroMesh &_s2):S1(_s1),S2(_s2)
 template <class MetroMesh>
 Sampling<MetroMesh>::~Sampling()
 {
-	VertexType::DeleteUserBit(referredBit);
+	VertexType::DeleteBitFlag(referredBit);
 }
 
 
