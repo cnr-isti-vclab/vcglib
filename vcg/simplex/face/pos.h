@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/06/02 16:25:45  ganovelli
+changed F(.. to FFp
+changed Z(   to FFi(
+
 Revision 1.4  2004/05/10 15:21:47  cignoni
 Added a constructor without vertex pointer
 
@@ -315,6 +319,8 @@ public:
 
 	/// The vertex type
 	typedef typename FaceType::VertexType VertexType;
+	/// The Base face type
+	typedef typename FaceType::BaseFaceType  BaseFaceType;
 	/// The vector type
 	typedef typename VertexType::CoordType CoordType;
 	/// The scalar type
@@ -331,10 +337,11 @@ public:
 	VFIterator(VertexType  * const vp){f=vp->VFb();z=vp->VFi();}
 
   bool End() const {return f==0;}
-  bool operator++() {
-		FaceType* t = f;
+  BaseFaceType *operator++() {
+    BaseFaceType* t = f;
 		f = t->VFp(z);
 		z = t->VFi(z);
+    return f;
   }
 		
 };
