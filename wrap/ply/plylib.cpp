@@ -31,6 +31,9 @@ of Greg Turk and on the work of Claudio Rocchini
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/05/12 10:13:29  ganovelli
+direct.h was included also without WIN32 definition
+
 Revision 1.2  2004/04/06 21:48:50  cignoni
 Commented out unused parameter names
 
@@ -52,7 +55,6 @@ Initial commit
 #include <direct.h>
 #endif
 
-#include <io.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
