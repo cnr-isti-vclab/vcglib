@@ -24,11 +24,19 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/06/01 17:12:46  ganovelli
+addVertices corrected (two copies instead of specializing te call)
+and put static (also addTetra) * g++  compliant *
+
 Revision 1.3  2004/05/31 16:01:56  pietroni
 added function addtetra
 
 Revision 1.2  2004/05/14 15:14:34  turini
 Added  $Log: not supported by cvs2svn $
+Added  Revision 1.4  2004/06/01 17:12:46  ganovelli
+Added  addVertices corrected (two copies instead of specializing te call)
+Added  and put static (also addTetra) * g++  compliant *
+Added
 Added  Revision 1.3  2004/05/31 16:01:56  pietroni
 Added  added function addtetra
 Added  for CVS History Log
@@ -174,10 +182,14 @@ struct InsertedVT{
 */
 static TetraIterator AddTetra(TetraMeshType &m,int n)
 {
-  TetraIterator last=m.tetra.end();
-  for (int i=0;i<n;i++)
-    m.tetra.push_back(TetraType());
-  return (last);
+	unsigned int sz = m.tetra.size();
+	m.tetra.resize(sz+n);
+	
+	TetraIterator ti =m.tetra.begin();
+	advance(ti,sz);
+	
+	m.tn+=n;
+  return ti;
 }
 
 /** Crate a copy of the mesh with tetrahedron that are into the templated container
