@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2005/01/26 22:45:34  cignoni
+Release 4.04
+final updates for gcc compiling issues
+
 Revision 1.13  2005/01/24 15:46:48  cignoni
 Release 4.04
 Moved to the library core the code for computing min distance froma a point to a mesh using a uniform grid.
@@ -109,6 +113,8 @@ void Usage()
                                         "  -c         save a mesh with error as per-vertex colour and quality\n"\
                                         "  -C # #     Set the min/max values used for color mapping\n"\
                                         "  -L         Remove duplicated and unreferenced vertices before processing\n"\
+                                        "  -H         write files with histograms of error distribution\n"\
+
                                         "\n"
                                         "Default options are to sample vertexes, edge and faces by taking \n"
                                         "a number of samples that is approx. 10x the face number.\n"
@@ -154,7 +160,7 @@ int main(int argc, char**argv)
  
     // print program info
     printf("-------------------------------\n"
-           "         Metro V.4.04 \n"
+           "         Metro V.4.05 \n"
            "     http://vcg.isti.cnr.it\n"
            "   release date: "__DATE__"\n"
            "-------------------------------\n\n");
@@ -172,6 +178,7 @@ int main(int argc, char**argv)
       if(argv[i][0]=='-')
         switch(argv[i][1])
       { 
+        case 'H' : flags |= SamplingFlags::HIST; break;
         case 'v' : flags &= ~SamplingFlags::VERTEX_SAMPLING; break;
         case 'e' : flags &= ~SamplingFlags::EDGE_SAMPLING; break;
         case 'f' : flags &= ~SamplingFlags::FACE_SAMPLING; break;
@@ -313,6 +320,12 @@ int main(int argc, char**argv)
       tri::io::ExporterPLY<CMesh>::Save( S2,S2NewName.c_str(),true,p);
     }
 
+    // save error files.
+    if(flags & SamplingFlags::HIST)
+    {
+      ForwardSampling.GetHist().FileWrite("forward_result.csv");
+      BackwardSampling.GetHist().FileWrite("backward_result.csv");
+    }
    return 0;
 }
 
