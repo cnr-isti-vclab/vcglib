@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/05/13 15:58:55  ganovelli
+function Clear added
+
 Revision 1.3  2004/03/12 15:22:19  cignoni
 Written some documentation and added to the trimes doxygen module
 
@@ -84,6 +87,47 @@ static void FaceBorderFromFF(MeshType &m)
 					 else (*fi).ClearB(j);
 		}
 }
+
+
+static void FaceBorderFromVF(MeshType &m)
+{
+	VertexIterator vi;
+  assert(m.HasVFTopology());
+
+  int visitedBit=VertexType::NewUserBit();
+
+	// Calcolo dei bordi
+  // per ogni vertice vi si cercano i vertici adiacenti che sono toccati da una faccia sola
+	// (o meglio da un numero dispari di facce)
+
+		const int BORDERFLAG[3]={FaceType::BORDER0, FaceType::BORDER1, FaceType::BORDER2};
+		
+		for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+			if(!(*vi).IsD())
+				{
+          for(face::VFIterator<FaceType> vfi(&*vi) ; !vfi.End(); ++vfi )
+          {
+			          vfi.f->V1(vfi.z)->ClearUserBit(visitedBit);
+								vfi.f->V2(vfi.z)->ClearUserBit(visitedBit);
+          }
+          for(face::VFIterator<FaceType> vfi(&*vi) ; !vfi.End(); ++vfi )
+          {
+            if(vfi.f->V1(vfi.z)->IsUserBit(visitedBit))  vfi.f->V1(vfi.z)->ClearUserBit(visitedBit);
+																                    else vfi.f->V1(vfi.z)->SetUserBit(visitedBit);
+						if(vfi.f->V2(vfi.z)->IsUserBit(visitedBit))  vfi.f->V2(vfi.z)->ClearUserBit(visitedBit);
+																                    else vfi.f->V2(vfi.z)->SetUserBit(visitedBit);
+					}
+          for(face::VFIterator<FaceType> vfi(&*vi) ; !vfi.End(); ++vfi )
+          {
+	        		if(vfi.f->V(vfi.z)< vfi.f->V1(vfi.z)  &&  vfi.f->V1(vfi.z)->IsUserBit(visitedBit)) 
+					        vfi.f->Flags() |= BORDERFLAG[vfi.z];
+	        		if(vfi.f->V(vfi.z)< vfi.f->V2(vfi.z)  &&  vfi.f->V2(vfi.z)->IsUserBit(visitedBit)) 
+					        vfi.f->Flags() |= BORDERFLAG[(vfi.z+2)%3];
+          }
+			}	
+}
+
+
 
 // versione minimale che non calcola i complex flag.
 void FaceBorderFromNone()
