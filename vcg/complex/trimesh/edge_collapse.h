@@ -28,8 +28,8 @@
 #define __VCG_TETRA_TRI_COLLAPSE
 
 
-#include<vcg\simplex\face\pos.h>
-#include<vcg\simplex\face\topology.h>
+#include<vcg/simplex/face/pos.h>
+#include<vcg/simplex/face/topology.h>
 #include<map>
 
 /** \addtogroup trimesh */

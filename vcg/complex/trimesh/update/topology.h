@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2004/08/07 16:18:20  pietroni
+addet testFFTopology and testVFTopology functions used to test the rispective topology....
+
 Revision 1.10  2004/07/15 11:35:08  ganovelli
 Vfb to VFp
 
@@ -59,7 +62,7 @@ Initial commit
 #ifndef __VCG_TRI_UPDATE_TOPOLOGY
 #define __VCG_TRI_UPDATE_TOPOLOGY
 #include <algorithm>
-#include <vcg\simplex\face\pos.h>
+#include <vcg/simplex/face/pos.h>
 namespace vcg {
 namespace tri {
 /** \addtogroup trimesh */

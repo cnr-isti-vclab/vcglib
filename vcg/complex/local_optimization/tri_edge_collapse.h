@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.9  2004/09/08 15:13:29  ganovelli
+  changes for gc
+
   Revision 1.8  2004/09/08 14:33:31  ganovelli
   *** empty log message ***
 
@@ -31,9 +34,9 @@
 #ifndef __VCG_DECIMATION_TRICOLLAPSE
 #define __VCG_DECIMATION_CTRIOLLAPSE
 
-#include<vcg\complex\trimesh\edge_collapse.h>
-#include<vcg\simplex\face\pos.h>
-#include<vcg\complex\local_optimization.h>
+#include<vcg/complex/trimesh/edge_collapse.h>
+#include<vcg/simplex/face/pos.h>
+#include<vcg/complex/local_optimization.h>
 
 
 namespace vcg{
