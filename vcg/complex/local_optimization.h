@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.11  2004/12/03 21:14:39  ponchio
+  Fixed memory leak...
+
   Revision 1.10  2004/11/23 10:37:17  cignoni
   Added a member with a cached copy of the floating Priority() value inside the HeapElem to optimize operator< in heap updating operator
 
@@ -210,7 +213,7 @@ public:
 
     /// STL heap has the largest element as the first one.
     /// usually we mean priority as an error so we should invert the comparison
-    const bool operator <(const HeapElem & h) const 
+    inline const bool operator <(const HeapElem & h) const 
     { 
 		  return (pri < h.pri);
 		  //return (locModPtr->Priority() < h.locModPtr->Priority());
@@ -238,9 +241,6 @@ public:
   {
     start=clock();
 		nPerfmormedOps =0;
-#ifdef __SAVE__LOG__
- 		FILE * fo=fopen("log.txt","w");
-#endif // __SAVE__LOG__    
 		while( !GoalReached() && !h.empty())
 			{
 				std::pop_heap(h.begin(),h.end());
@@ -253,10 +253,6 @@ public:
          	// check if it is feasible
 					if (locMod->IsFeasible())
 					{
-#ifdef __SAVE__LOG__
-						fprintf(fo,"%s",locMod->Info(m));
-#endif // __SAVE__LOG__
-	
 						nPerfmormedOps++;
 						locMod->Execute(m);
 						locMod->UpdateHeap(h);
@@ -265,9 +261,6 @@ public:
         //else printf("popped out unfeasible\n");
 				delete locMod;
 			}
-#ifdef __SAVE__LOG__
-			fclose(fo);
-#endif // __SAVE__LOG__
 		return !(h.empty());
   }
  

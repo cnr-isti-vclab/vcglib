@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/10/25 16:23:51  ponchio
+typedef ScalarType ScalarType; was a problem on g++
+
 Revision 1.2  2004/10/25 16:15:59  ganovelli
 template changed
 
@@ -224,6 +227,26 @@ bool Minimum(Point3<ReturnScalarType> &x)
 		return Gauss33(&(x[0]),C);
 }
 
+
+bool Minimum(Point3<ScalarType> &x) const
+{	
+  ScalarType c0=-b[0]/2;
+  ScalarType c1=-b[1]/2;
+  ScalarType c2=-b[2]/2;
+
+  ScalarType t125 = a[4]*a[1];
+  ScalarType t124 = a[4]*a[4]-a[3]*a[5];
+  ScalarType t123 = -a[1]*a[5]+a[4]*a[2];
+  ScalarType t122 = a[2]*a[3]-t125;
+  ScalarType t121 = -a[2]*a[1]+a[0]*a[4];
+  ScalarType t120 = a[2]*a[2];
+  ScalarType t119 = a[1]*a[1];
+  ScalarType t117 = 1.0/(-a[3]*t120+2*a[2]*t125-t119*a[5]-t124*a[0]);
+  x[0] = -(t124*c0+t122*c2-t123*c1)*t117;
+  x[1] = (t123*c0-t121*c2+(-t120+a[0]*a[5])*c1)*t117;
+  x[2] = -(t122*c0+(t119-a[0]*a[3])*c2+t121*c1)*t117;
+  return true;
+}
 // determina il punto di errore minimo vincolato nel segmento (a,b)
 bool Minimum(Point3<ScalarType> &x,Point3<ScalarType> &pa,Point3<ScalarType> &pb){
 ScalarType	t1,t2, t4, t5, t8, t9, 
