@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/06/25 16:47:13  ponchio
+Various debug
+
 Revision 1.1  2004/06/24 14:32:45  ponchio
 Moved from wrap/nexus
 
@@ -67,7 +70,7 @@ template <class Partition> class PChain {
     return levels[level].Priority(level, p, key);
   }
   bool Save(const std::string &file) {
-    FILE *fp = fopen(file.c_str(), "wb+");
+    FILE *fp = fopen((file + ".chn").c_str(), "wb+");
     if(!fp) return false;
     int n = Levels();
     fwrite(&n, sizeof(int), 1, fp);
@@ -78,7 +81,7 @@ template <class Partition> class PChain {
   }
   bool Load(const std::string &file) {
     levels.clear(); 
-    FILE *fp = fopen(file.c_str(), "rb");
+    FILE *fp = fopen((file + ".chn").c_str(), "rb");
     if(!fp) return false;
     int n;
     fread(&n, sizeof(int), 1, fp);
