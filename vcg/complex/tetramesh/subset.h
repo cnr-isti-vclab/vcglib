@@ -26,6 +26,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/05/14 15:51:47  turini
+Adjusted VCG Style
+
 Revision 1.1  2004/05/14 15:43:41  turini
 Initial Commit
 
@@ -48,12 +51,16 @@ namespace tetra {
 template <class I_TETRAMESH_TYPE>
 struct InsertedVT
 {
-  InsertedVT(I_TETRAMESH_TYPE::VertexType *_v, I_TETRAMESH_TYPE::TetraType *_t,	int _z)
+  typedef I_TETRAMESH_TYPE ITetraMeshType; 
+  typedef typename ITetraMeshType::VertexPointer  VertexPointer;
+  typedef typename ITetraMeshType::TetraPointer  TetraPointer;
+
+  InsertedVT(VertexPointer _v, TetraPointer _t,	int _z)
     : v(_v), t(_t), z(_z)
   {}
 
-  I_TETRAMESH_TYPE::VertexType *v;
-  I_TETRAMESH_TYPE::TetraType *t;
+  VertexPointer v;
+  TetraPointer t;
   int z;
   
   const bool operator <(const InsertedVT & o)
@@ -75,43 +82,43 @@ struct InsertedVT
 
 /** Create a copy of the mesh with tetrahedron that are into the templated container
 @param ST_CONT (Template Parameter) Specifies the type of the container of tetrahedron.
-@param subSet Container of tetrahedron.
+@param subSet Container of tetrahedron pointers !!!
 @param m destination mesh.
 */
 template <class S_TETRAMESH_TYPE, class STL_CONT >
-void SubSet(TM_TYPE & m, STL_CONT & subSet, )
+void SubSet(S_TETRAMESH_TYPE & m, STL_CONT & subSet)
 {
-  std::vector<InsertedVT> newVertices;
+  std::vector< InsertedVT<S_TETRAMESH_TYPE> > newVertices;
   STL_CONT::iterator pfi;
   newVertices.clear();
   
   for(pfi=subSet.begin(); pfi!=subSet.end(); ++pfi) 
-    m.tetra.push_back((*pfi));
+    m.tetra.push_back(*(*pfi));
   
   S_TETRAMESH_TYPE::TetraIterator fi;
   for(fi=m.tetra.begin(); fi!=m.tetra.end(); ++fi)
   {
-    newVertices.push_back(InsertedVT((*fi).V(0), &(*fi), 0));
-	newVertices.push_back(InsertedVT((*fi).V(1), &(*fi), 1));
-	newVertices.push_back(InsertedVT((*fi).V(2), &(*fi), 2));
-	newVertices.push_back(InsertedVT((*fi).V(3), &(*fi), 3));
+    newVertices.push_back(InsertedVT<S_TETRAMESH_TYPE>((*fi).V(0), &(*fi), 0));
+	newVertices.push_back(InsertedVT<S_TETRAMESH_TYPE>((*fi).V(1), &(*fi), 1));
+	newVertices.push_back(InsertedVT<S_TETRAMESH_TYPE>((*fi).V(2), &(*fi), 2));
+	newVertices.push_back(InsertedVT<S_TETRAMESH_TYPE>((*fi).V(3), &(*fi), 3));
   }
   
   std::sort(newVertices.begin(), newVertices.end());
   
-  std::vector<InsertedVT>::iterator curr,next;
+  std::vector< InsertedVT<S_TETRAMESH_TYPE> >::iterator curr,next;
   int pos=0;
   curr=next=newVertices.begin();
   while(next!=newVertices.end())
   {
     if((*curr)!=(*next))
 	  pos++;
-	(*next).t->V((*next).z)=(VertexType*)pos;
+	(*next).t->V((*next).z)=(S_TETRAMESH_TYPE::VertexPointer)pos;
 	curr=next;
 	next++;
   }
   
-  std::vector<InsertedVT >::iterator newE=std::unique(newVertices.begin(), newVertices.end());
+  std::vector< InsertedVT<S_TETRAMESH_TYPE> >::iterator newE=std::unique(newVertices.begin(), newVertices.end());
   
   for(curr=newVertices.begin(); curr!=newE; ++curr)
     m.vert.push_back(*((*curr).v));
