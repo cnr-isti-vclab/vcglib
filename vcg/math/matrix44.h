@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2004/03/25 14:57:49  ponchio
+Microerror. ($LOG$ -> $Log: not supported by cvs2svn $
+
 
 ****************************************************************************/
 
@@ -90,8 +93,13 @@ public:
 
   T &element(const int row, const int col);
   T element(const int row, const int col) const;
-  T &operator[](const int i);
-  const T &operator[](const int i) const;
+  //T &operator[](const int i);
+  //const T &operator[](const int i) const;
+  T *V();
+  const T *V() const ;
+  
+  T *operator[](const int i);
+  const T *operator[](const int i) const;
 
   Matrix44 operator+(const Matrix44 &m) const;
   Matrix44 operator-(const Matrix44 &m) const;
@@ -121,7 +129,7 @@ public:
 
   template <class Q> void Import(const Matrix44<Q> &m) {
     for(int i = 0; i < 16; i++) 
-      _a[i] = (T)m._a[i];
+      _a[i] = (T)(m.V()[i]);
   }
 };
 
@@ -168,6 +176,10 @@ template <class T> Matrix44<T>::Matrix44(const Matrix44<T> &m) {
   memcpy((T *)_a, (T *)m._a, 16 * sizeof(T));   
 }
 
+template <class T> Matrix44<T>::Matrix44(const T v[]) {
+  memcpy((T *)_a, v, 16 * sizeof(T));   
+}
+
 template <class T> T &Matrix44<T>::element(const int row, const int col) {
   assert(row >= 0 && row < 4);
   assert(col >= 0 && col < 4);
@@ -180,15 +192,27 @@ template <class T> T Matrix44<T>::element(const int row, const int col) const {
   return _a[(row<<2) + col];
 }
 
-template <class T> T &Matrix44<T>::operator[](const int i) {
+//template <class T> T &Matrix44<T>::operator[](const int i) {
+//  assert(i >= 0 && i < 16);
+//  return ((T *)_a)[i];
+//}
+//
+//template <class T> const T &Matrix44<T>::operator[](const int i) const {
+//  assert(i >= 0 && i < 16);
+//  return ((T *)_a)[i];
+//}
+template <class T> T *Matrix44<T>::operator[](const int i) {
   assert(i >= 0 && i < 16);
-  return ((T *)_a)[i];
+  return _a+i*4;
 }
 
-template <class T> const T &Matrix44<T>::operator[](const int i) const {
-  assert(i >= 0 && i < 16);
-  return ((T *)_a)[i];
+template <class T> const T *Matrix44<T>::operator[](const int i) const {
+  assert(i >= 0 && i < 4);
+  return _a+i*4;
 }
+template <class T>  T *Matrix44<T>::V()  { return _a;} 
+template <class T> const T *Matrix44<T>::V() const { return _a;} 
+
 
 template <class T> Matrix44<T> Matrix44<T>::operator+(const Matrix44 &m) const {
   Matrix44<T> ret;
