@@ -2,11 +2,12 @@
    VCGLib  http://vcg.sf.net                                         o o     
    Visual and Computer Graphics Library                            o     o   
                                                                   _   O  _   
-   Copyright(C) 2004                                                \/)\/    
+   Copyright(C) 2004-2005                                                \/)\/    
    Visual Computing Lab  http://vcg.isti.cnr.it                    /\/|      
    ISTI - Italian National Research Council                           |      
                                                                       \      
-   Metro, All rights reserved.                                                      
+   Metro 4.01 21/09/2004
+   All rights reserved.                                                      
    
 
                                                                        
@@ -25,12 +26,13 @@ for more details.
 
 Metro is a tool designed to evaluate the difference between two triangular meshes. 
 Metro adopts an approximated approach based on surface sampling and point-to-surface distance computation. 
-Please, when using this tool cite the following reference:
+Please, when using this tool, cite the following reference:
 
 P. Cignoni, C. Rocchini and R. Scopigno
 "Metro: measuring error on simplified surfaces"
 Computer Graphics Forum, Blackwell Publishers, vol. 17(2), June 1998, pp 167-174
 
+You can find some sample mesh to test in the 'Metro Sample dataset' package downloadable from sourceforge.
 
 For any question about this software please contact:
 Paolo Cignoni ( p.cignoni@isti.cnr.it )
@@ -68,8 +70,8 @@ where "file1" and "file2" are the input meshes in PLY or STL format, and opts ca
              -S0  montecarlo sampling
              -S1  subdivision sampling
              -S2  similar triangles sampling (Default)
-   -n#      set the required number of samples (overrides -A)
-   -a#      set the required number of samples per area unit (overrides -N)
+   -n#      set the required number of samples (overrides -a)
+   -a#      set the required number of samples per area unit (overrides -n)
    -c       save computed error as vertex colour and quality in two ply files
    -C # #   Set the min/max values used for color mapping (useful for taking snapshot with coherent color ramp)
    -L       Remove duplicated and unreferenced vertices before processing to avoid 

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2004/09/20 16:29:08  ponchio
+Minimal changes.
+
 Revision 1.8  2004/09/20 15:17:28  cignoni
 Removed bug in displays msec and better usage messages
 
@@ -90,7 +93,7 @@ void Usage()
                                         "  -C # #     Set the min/max values used for color mapping\n"\
                                         "  -L         Remove duplicated and unreferenced vertices before processing\n"\
                                         "\n"
-                                        "Default options are to sample vertexes, edge and faces taking \n"
+                                        "Default options are to sample vertexes, edge and faces by taking \n"
                                         "a number of samples that is approx. 10x the face number.\n"
                                         );
   exit(-1);
@@ -264,7 +267,7 @@ int main(int argc, char**argv)
     printf("target # samples      : %u\ntarget # samples/area : %f\n", n_samples_target, n_samples_per_area_unit);
     ForwardSampling.Hausdorff();
     dist1_max  = ForwardSampling.GetDistMax();
-    printf("\ndistance:\n  max  : %f (%f  with respect to bounding box diagonal)\n", (float)dist1_max, (float)dist1_max/bbox.Diag());
+    printf("\ndistances:\n  max  : %f (%f  with respect to bounding box diagonal)\n", (float)dist1_max, (float)dist1_max/bbox.Diag());
     printf("  mean : %f\n", ForwardSampling.GetDistMean());
     printf("  RMS  : %f\n", ForwardSampling.GetDistRMS());
     printf("# vertex samples %9d\n", ForwardSampling.GetNVertexSamples());
@@ -289,9 +292,9 @@ int main(int argc, char**argv)
     printf("target # samples      : %u\ntarget # samples/area : %f\n", n_samples_target, n_samples_per_area_unit);
     BackwardSampling.Hausdorff();
     dist2_max  = BackwardSampling.GetDistMax();
-    printf("\ndistance:\n  max  : %f (%f  with respect to bounding box diagonal)\n", (float)dist1_max, (float)dist1_max/bbox.Diag());
-    printf("mean : %f\n", BackwardSampling.GetDistMean());
-    printf("RMS  : %f\n", BackwardSampling.GetDistRMS());
+    printf("\ndistances:\n  max  : %f (%f  with respect to bounding box diagonal)\n", (float)dist1_max, (float)dist1_max/bbox.Diag());
+    printf("  mean : %f\n", BackwardSampling.GetDistMean());
+    printf("  RMS  : %f\n", BackwardSampling.GetDistRMS());
     printf("# vertex samples %9d\n", BackwardSampling.GetNVertexSamples());
     printf("# edge samples   %9d\n", BackwardSampling.GetNEdgeSamples());
     printf("# area samples   %9d\n", BackwardSampling.GetNAreaSamples());
