@@ -30,6 +30,9 @@ of Greg Turk and on the work of Claudio Rocchini
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/03/03 15:00:51  cignoni
+Initial commit
+
 ****************************************************************************/
 
 #ifndef __VCG_PLYLIB 
@@ -38,6 +41,7 @@ $Log: not supported by cvs2svn $
 #include <memory.h>
 #include <vector>
 #include <string>
+#include <assert.h>
 
 namespace vcg {
 namespace ply {
