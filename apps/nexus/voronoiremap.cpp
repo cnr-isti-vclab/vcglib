@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/07/04 15:30:00  ponchio
+Changed directory structure.
+
 Revision 1.3  2004/07/02 17:42:43  ponchio
 Debug.
 
@@ -37,12 +40,12 @@ Created
 ****************************************************************************/
 
 #include <iostream>
-#include "../pchain.h"
-#include "../pvoronoi.h"
-#include "../vert_remap.h"
-#include "../crude.h"
-#include "../stopwatch.h"
-#include "../pintersect.h"
+#include "pchain.h"
+#include "pvoronoi.h"
+#include "vert_remap.h"
+#include "crude.h"
+#include "stopwatch.h"
+#include "pintersect.h"
 
 using namespace std;
 using namespace nxs;

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/07/02 17:41:37  ponchio
+Debug.
+
 Revision 1.3  2004/07/02 13:01:28  ponchio
 Changed file extensions to .rmv, .rmb
 
@@ -39,6 +42,7 @@ Created
 
 ****************************************************************************/
 
+#include <assert.h>
 #include <iostream>
 #include "vert_remap.h"
 

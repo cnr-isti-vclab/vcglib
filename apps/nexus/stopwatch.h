@@ -24,10 +24,18 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/07/01 21:38:30  ponchio
+First draft created.
+
 
 ****************************************************************************/
+
+#ifdef WIN32
+#include <windows.h>
+#else
 #include <sys/time.h>
 #include <unistd.h>     
+#endif
 
 class StopWatch {
 public:
@@ -40,9 +48,9 @@ public:
 private:
   double Diff();
 
-#ifdef _WIN32
-  static LARGE_INTEGER _tstart, _tend;
-  static LARGE_INTEGER freq;
+#ifdef WIN32
+  LARGE_INTEGER tstart, tend;
+  LARGE_INTEGER freq;
 #else  
   struct timeval tstart, tend;  
   struct timezone tz;   

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/07/04 15:30:00  ponchio
+Changed directory structure.
+
 Revision 1.3  2004/07/04 14:28:05  ponchio
 Finito e debuggato
 
@@ -40,10 +43,10 @@ Created
 #include <set> //DEBUG
 #include <map>
 
-#include "../nexus.h"
-#include "../crude.h"
-#include "../vert_remap.h"
-#include "../vfile.h"
+#include "nexus.h"
+#include "crude.h"
+#include "vert_remap.h"
+#include "vfile.h"
 
 using namespace std;
 using namespace vcg;

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/07/04 15:30:00  ponchio
+Changed directory structure.
+
 Revision 1.2  2004/07/02 13:09:57  ponchio
 *** empty log message ***
 
@@ -38,7 +41,7 @@ Created
 #include <string>
 #include <iostream>
 #include <wrap/ply/plylib.h>
-#include "../crude.h"
+#include "crude.h"
 
 using namespace std;
 using namespace vcg;
@@ -65,7 +68,7 @@ PropDescriptor plyprop2[1]=	{
    1,0,T_UCHAR,T_UCHAR,offsetof(PlyFace,flags) }
 };
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {  
   if(argc <= 2) {
     cerr << "Usage: " << argv[0] << " <input1.ply> <...> <inputN.ply> <output>\n";
     return 0;

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/07/04 14:23:14  ponchio
+*** empty log message ***
+
 Revision 1.3  2004/07/02 17:40:30  ponchio
 Debug.
 
@@ -39,8 +42,10 @@ Created
 
 ****************************************************************************/
 
-#include "mfhash.h"
+#include <assert.h>
 #include <iostream>
+#include "mfhash.h"
+
 
 using namespace std;
 using namespace nxs;

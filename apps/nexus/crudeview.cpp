@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/07/04 15:30:00  ponchio
+Changed directory structure.
+
 Revision 1.3  2004/07/02 13:03:34  ponchio
 *** empty log message ***
 
@@ -40,6 +43,10 @@ Created
 using namespace std;
 
 #include <SDL/SDL.h>
+
+#ifdef WIN32
+#include <windows.h>
+#endif
 
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -96,8 +103,8 @@ bool init() {
 
 
 
-int main(int argc, char *argv[]) {
-  char file[64];
+int main(int argc, char *argv[]) {  
+
   if(argc < 2) {
     cerr << "Usage: " << argv[0] << " <crude file>\n";
     return -1;
@@ -112,16 +119,21 @@ int main(int argc, char *argv[]) {
 
   bool vremap = false;
   bool fremap = false;
+  
+  VFile<unsigned int> face_remap;
+  if(face_remap.Load(argv[1] + string(".rmf"))) {
+    cerr << "Found face remap.\n";
+    fremap = true;
+  } else {
+    cerr << "Face remap not found.\n";
+  }
+  
   VertRemap vert_remap;
   if(vert_remap.Load(argv[1])) {
     cerr << "Found vert remap.\n";
     vremap = true;
   }
-  VFile<unsigned int> face_remap;
-  if(face_remap.Load(argv[1] + string(".rmf"))) {
-    cerr << "Found face remap.\n";
-    fremap = true;
-  }
+  
 
   if(!init()) {
     cerr << "Could not init SDL window\n";

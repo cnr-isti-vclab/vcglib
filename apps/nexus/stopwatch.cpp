@@ -24,13 +24,16 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/07/01 21:38:30  ponchio
+First draft created.
+
 
 ****************************************************************************/
 #include "stopwatch.h"
 
 StopWatch::StopWatch(): elapsed(0) {}
 
-#ifdef _WIN32
+#ifdef WIN32
 void StopWatch::Start(void) {
   static int first = 1;
   if(first) {
@@ -78,7 +81,7 @@ double StopWatch::Elapsed() {
 }
 
 int StopWatch::Usec() {
-#ifdef _WIN32
+#ifdef WIN32
   return 0;
 #else  
   struct timeval ttime;

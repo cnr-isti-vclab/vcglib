@@ -112,9 +112,9 @@ unsigned int Nexus::AddPatch(unsigned int nvert, unsigned int nface,
 }
 
 void Nexus::Join(std::vector<unsigned int> &patches,
-		 std::vector<Point3f &newvert,
+		 std::vector<Point3f> &newvert,
 		 std::vector<unsigned int> &newface,
-		 std::vector<Link> &newlinks) {
+		 std::vector<Link> &newbord) {
 
   map<unsigned int, vector<unsigned int> > remap;
 
@@ -181,7 +181,7 @@ void Nexus::Join(std::vector<unsigned int> &patches,
       newbord[bcount++] = newlink;
     }
   }  
-  unsigned int newentry = AddPatch(vcount, fcount, bcount);
+ /* unsigned int newentry = AddPatch(vcount, fcount, bcount);
   Patch newpatch = GetPatch(newentry);
   Border newborder = GetBorder(newentry);
 
@@ -192,6 +192,6 @@ void Nexus::Join(std::vector<unsigned int> &patches,
 	 newface.size() * sizeof(unsigned short));
 
   memcpy(&(newborder[0]), &(newbord[0]),
-	 newbord.size() * sizeof(Link));
-  return newentry;
+	 newbord.size() * sizeof(Link));*/
+  return;
 }

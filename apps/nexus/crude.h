@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/07/04 15:25:33  ponchio
+Backup (work in progress)
+
 Revision 1.2  2004/06/25 16:47:13  ponchio
 Various debug
 
@@ -86,7 +89,7 @@ public:
 
   vcg::Box3f &GetBox();
 
-  template <class MESH> void Export(MESH &mesh) {
+  /*template <class MESH> void Export(MESH &mesh) {
     MESH::VertexType v;
     v.ClearFlags();
     for(unsigned int i = 0; i < <Vertices(); i++) {
@@ -102,7 +105,7 @@ public:
 	mesh.vert.push_back(GetVertex(i));
       }
     }
-  }
+  }*/
 
 
  protected:

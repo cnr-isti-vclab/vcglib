@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/07/04 15:30:00  ponchio
+Changed directory structure.
+
 Revision 1.2  2004/07/04 15:16:01  ponchio
 *** empty log message ***
 
@@ -180,7 +183,7 @@ int main(int argc, char *argv[]) {
    
 
 
-    for(unsigned int i = 7; i < nexus.index.size(); i++) {
+    for(unsigned int i = 0; i < nexus.index.size(); i++) {
       Patch patch = nexus.GetPatch(i);
       
       unsigned int val = i + 1;

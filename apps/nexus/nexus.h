@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <vcg/space/point3.h>
 #include <vcg/space/sphere3.h>
 #include "vfile.h"
 #include "patch.h"
@@ -44,7 +45,7 @@ class Nexus {
 
   //  unsigned int Join(std::vector<unsigned int> &patches);
   void Join(std::vector<unsigned int> &patches,
-	    std::vector<Point3f &vert,
+	    std::vector<vcg::Point3f> &vert,
 	    std::vector<unsigned int> &faces,
 	    std::vector<Link> &links);
 
