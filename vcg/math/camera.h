@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/10/05 19:04:25  ganovelli
+version 5-10-2004 in progress
+
 Revision 1.1  2004/09/15 22:58:05  ganovelli
 re-creation
 
@@ -45,9 +48,6 @@ creation
 
 // opengl
 #include <GL/glew.h>
-
-// TMP
-#include <qmessagebox.h>
 
 namespace vcg{
 
@@ -84,25 +84,13 @@ public:
 	/// project a point from space 3d (in the reference system of the camera) to the camera's plane
 	/// the result is in absolute coordinates
 	inline vcg::Point2<S> Project(const vcg::Point3<S> & p);
-
-	/// return the projection matrix for opengl
-///	inline vcg::Matrix44<S> MatrixGL(S,vcg::Matrix44<S> &);
-
-	/// apply opengl transformation
-///	inline void TransformGL(S far) const;
 };
 
 template<class S>
 
 vcg::Point2<S> Camera<S>::Project(const vcg::Point3<S> & p){
-	::QMessageBox mb;
-	char t[200];
-	sprintf(t,"%f %f %f",p[0],p[1],p[2]);
-	mb.setText(t);
-	mb.exec();
-
 		S  tx = p.X();
-		S  ty = -p.Y();
+		S  ty = p.Y();
 		S  qx,qy;
 		vcg::Point2<S> q;
 		// nota: per le camere ortogonali viewportM vale 1
@@ -111,6 +99,8 @@ vcg::Point2<S> Camera<S>::Project(const vcg::Point3<S> & p){
 			tx *= f/p.Z();
 			ty *= f/p.Z();
 
+			qx = tx;
+			qy = ty;
 			//undistorted_to_distorted_sensor_coord(tx,ty,qx,qy);
 
 			q[0] = qx/s.X()+c.X();
@@ -121,10 +111,6 @@ vcg::Point2<S> Camera<S>::Project(const vcg::Point3<S> & p){
 			q[0] = tx/(s.X()*viewportM)+c.X();
 			q[1] = ty/(s.Y()*viewportM)+c.Y();
 		}	
-	
-		sprintf(t,"%f %f",q[0],q[1]);
-		mb.setText(t);
-		mb.exec();
 	return q;
 }
 
