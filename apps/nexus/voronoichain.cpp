@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2004/10/15 16:45:27  ponchio
+Vbo added.
+
 Revision 1.12  2004/10/15 11:41:03  ponchio
 Tests and small changes.
 
@@ -301,6 +304,8 @@ void VoronoiChain::RemapFaces(Crude &crude, 			      VFile<unsigned int> &face_r
       patch = patches[make_pair(coarse, fine)];
 
     face_remap[i] = patch;
+    //face_remap[i] = fine;
+
     if(patch_faces.size() <= patch) 
       patch_faces.resize(patch+1, 0);
     patch_faces[patch]++;
