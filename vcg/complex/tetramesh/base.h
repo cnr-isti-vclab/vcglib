@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/05/13 07:41:47  turini
+Chenged #include <space\\box3.h> in #include <vcg\\space\\box3.h>
+
 Revision 1.3  2004/05/06 10:57:49  pietroni
 changed names to topology functions
 
@@ -99,7 +102,7 @@ class Tetramesh{
 	typedef VertexType * VertexPointer;
 
 	/// The tetra pointer type
-	typedef VertexType * TetraPointer;
+	typedef TetraType * TetraPointer;
 
 	/// The type of the constant vertex pointer
 	typedef const VertexType * const_VertexPointer;
