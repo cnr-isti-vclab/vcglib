@@ -45,15 +45,12 @@ class MyFace : public vcg::FaceAV<MyVertex, MyEdge, MyFace> {};
 class MyMesh: 
   public vcg::tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace > > {};
 
-class MyTriEdgeCollapse: 
-  public vcg::tri::TriEdgeCollapseQuadric< MyMesh, MyTriEdgeCollapse > {
-public:
-  typedef  vcg::tri::TriEdgeCollapseQuadric<MyMesh, MyTriEdgeCollapse > TECQ;
-  typedef  TECQ::EdgeType EdgeType;
-  MyTriEdgeCollapse(EdgeType p, int i): TECQ(p, i) {}
-  ~MyTriEdgeCollapse() {}
+class MyTriEdgeCollapse: public vcg::tri::TriEdgeCollapseQuadric< MyMesh, MyTriEdgeCollapse > {
+						public:
+						typedef  vcg::tri::TriEdgeCollapseQuadric< MyMesh,  MyTriEdgeCollapse > TECQ;
+						typedef  TECQ::EdgeType EdgeType;
+						inline MyTriEdgeCollapse(  EdgeType p, int i) :TECQ(p,i){}
 };
-
 
 float Cluster(MyMesh &mesh, unsigned int target_faces);
 float Quadric(MyMesh &mesh, unsigned int target_faces);
@@ -62,8 +59,7 @@ float nxs::Decimate(Decimation mode,
 		    unsigned int target_faces, 
 		    vector<Point3f> &newvert, 
 		    vector<unsigned int> &newface,
-		    vector<BigLink> &newbord) {
-
+		    vector<BigLink> &newbord) {          
 
   for(unsigned int i = 0; i < newface.size(); i+= 3) {
     assert(newface[i] != newface[i+1]);
@@ -100,10 +96,12 @@ float nxs::Decimate(Decimation mode,
   //    vcg::tri::io::ExporterPLY<MyMesh>::Save(mesh, "ribum.ply");
 
   float error;
-  if(mode == CLUSTER)
-    error = Cluster(mesh, target_faces);
-  else
-    error = Quadric(mesh, target_faces);
+  switch(mode) {
+    case CLUSTER: error = Cluster(mesh, target_faces); break;
+    case QUADRIC: error = Quadric(mesh, target_faces); break;
+    default: cerr << "Unknown simplification mode: " << mode << endl;
+             exit(0);
+  }
 
   newvert.clear();
   newface.clear();
@@ -144,6 +142,8 @@ float nxs::Decimate(Decimation mode,
 
 float Quadric(MyMesh &mesh, unsigned int target_faces) {
   vcg::tri::UpdateTopology<MyMesh>::VertexFace(mesh);
+  vcg::tri::UpdateBounding<MyMesh>::Box(mesh);
+
   vcg::LocalOptimization<MyMesh> DeciSession(mesh);
   
   MyTriEdgeCollapse::SetDefaultParams();
@@ -164,7 +164,8 @@ float Quadric(MyMesh &mesh, unsigned int target_faces) {
     }
   }
   error /= count;
-  return error;
+  return error;     
+  return 0;
 }
 
 float Cluster(MyMesh &mesh, unsigned int target_faces) {
@@ -212,7 +213,7 @@ float Cluster(MyMesh &mesh, unsigned int target_faces) {
     }
     for(unsigned int i = nborder; i < part.size(); i++) {
       if(count[i] > 0)
-	part[i] = centroid[i]/count[i];
+      	part[i] = centroid[i]/count[i];
     }
   }
 
