@@ -1,0 +1,31 @@
+This value is mapped into a gray shade according to this formula
+
+v=clamp(v,LowPass,HighPass)
+v=(v-LowPass)/(HighPass-LowPass)
+graylevel=GammaCorrection(v,GammaLev)
+
+Some useful hints:
+
+ keys
+
+'c' compute the sampling (sample are added so pressing c twice is the same of using 2n sampling directions)
+'S' save a ply with the currently computed color.
+'s' smooth (average) the computed visibility
+' ' add the current view to the sampling direction
+
+'l' Increase LowPass
+'L' Decrease LowPass
+'h' Increase HighPass
+'H' Decrease HighPass
+'g' Increase GammaLev
+'G' Decrease GammaLev
+
+'a' Toggle Lighting
+'A' Toggle per vertex coloring
+
+ options
+
+-n <number> set the number of sampling direction (default 32, but 100~1000 should be better)
+-f flip normal of the surface
+-z <float> specify the z tolerance used to decide if a vertex is visible against the zbuffer or not (default 1e-4, useful range 1e-3 .. 1e-6)
+
