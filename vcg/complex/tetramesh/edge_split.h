@@ -22,10 +22,14 @@
 ****************************************************************************/
 /****************************************************************************
   History
+
 ****************************************************************************/
+#ifndef __VCG_TETRA_EDGE_SPLIT
+#define __VCG_TETRA_EDGE_SPLIT
 
 #include <vcg/simplex/tetrahedron/pos.h>
 #include <vcg/complex/tetramesh/allocate.h>
+#include <vcg/complex/tetramesh/update/topology.h>
 #include <vcg/space/tetra3.h>
 namespace vcg{
 namespace tetra{
@@ -471,3 +475,4 @@ VertexType* DoSplit(TetraMeshType &tm,TetraType *t,int edge,double alfa)
 
 }//end namespace tetra
 }//end namespace vcg
+#endif
