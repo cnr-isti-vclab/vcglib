@@ -1,13 +1,15 @@
 
-VCGLib  http://vcg.sf.net                                         o o     
-Visual and Computer Graphics Library                            o     o   
-                                                               _   O  _   
-Copyright(C) 2004                                                \/)\/    
-Visual Computing Lab  http://vcg.isti.cnr.it                    /\/|      
-ISTI - Italian National Research Council                           |      
-                                                                   \      
-All rights reserved.                                                      
-                                                                          
+   VCGLib  http://vcg.sf.net                                         o o     
+   Visual and Computer Graphics Library                            o     o   
+                                                                  _   O  _   
+   Copyright(C) 2004                                                \/)\/    
+   Visual Computing Lab  http://vcg.isti.cnr.it                    /\/|      
+   ISTI - Italian National Research Council                           |      
+                                                                      \      
+   Metro, All rights reserved.                                                      
+   
+
+                                                                       
 This program is free software; you can redistribute it and/or modify      
 it under the terms of the GNU General Public License as published by      
 the Free Software Foundation; either version 2 of the License, or         
@@ -19,11 +21,12 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          
 for more details.                                                 
 
+--- Synopsis ---
+
 Metro is a tool designed to evaluate the difference between two triangular meshes. 
 Metro adopts an approximated approach based on surface sampling and point-to-surface distance computation. 
 Please, when using this tool cite the following reference:
 
-Papers
 P. Cignoni, C. Rocchini and R. Scopigno
 "Metro: measuring error on simplified surfaces"
 Computer Graphics Forum, Blackwell Publishers, vol. 17(2), June 1998, pp 167-174
@@ -32,7 +35,10 @@ Computer Graphics Forum, Blackwell Publishers, vol. 17(2), June 1998, pp 167-174
 For any question about this software please contact:
 Paolo Cignoni ( p.cignoni@isti.cnr.it )
 
+--- General Info ---
 
+Metro is a tool designed to evaluate the difference between two triangular meshes. 
+Metro adopts an approximated approach based on surface sampling and point-to-surface distance computation. 
 Three different surface sampling methods are implemented:
 
     *   Montecarlo sampling (pick k random samples in the interior of each face)
@@ -43,7 +49,7 @@ Note that the three methods described above are used to sample only the interior
 A different scheme is used to sample vertices and edges: vertices are sampled in the straightforward manner, 
 while edges are sampled by uniformly interleaving samples along each edge.
 
-Basic usage
+--- Basic usage ---
 
 Metro is a command-line tool which allows the user to select among different sampling schemes. 
 A list of the command-line parameters accepted by the tool is shown in the following.
