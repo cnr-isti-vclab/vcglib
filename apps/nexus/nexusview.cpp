@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2004/11/28 01:23:26  ponchio
+Fixing borders... let's hope.
+
 Revision 1.20  2004/11/18 18:30:14  ponchio
 Using baricenters... lotsa changes.
 
@@ -399,7 +402,7 @@ int main(int argc, char *argv[]) {
 	glPointSize(4);
 	glColor3f(1.0f, 1.0f, 1.0f);
 	glBegin(GL_POINTS);
-	for(int b = 0; b < border.Size(); b++) {
+	for(unsigned int b = 0; b < border.Size(); b++) {
 	  Link &link = border[b];
 	  Point3f &p = patch.Vert(link.start_vert);
 	  glVertex3f(p[0], p[1], p[2]);

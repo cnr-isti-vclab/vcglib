@@ -27,7 +27,7 @@ void Opener::execute() {
       break;
     } catch(...) {
     }
-    sleep(4);
+    psleep(4000);
   }
   server->reading.unlock();
   server->writing.unlock();

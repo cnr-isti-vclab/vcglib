@@ -432,7 +432,7 @@ void nxs::Split(Fragment &out,
 }
 
 unsigned int Fragment::Locate(const Point3f &p) {
-  float max_dist = 1e20;
+  float max_dist = 1e20f;
   unsigned int id = 0xffffffff;
   for(unsigned int i = 0; i < seeds.size(); i++) {
     float dist = Distance(seeds[i], p);

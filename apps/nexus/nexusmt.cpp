@@ -51,7 +51,7 @@ float FrustumMetric::GetError(unsigned int cell) {
   Nexus::PatchInfo &entry = (*index)[cell];    
   Sphere3f &sphere = entry.sphere;
   float dist = Distance(sphere, frustum.ViewPoint());
-  if(dist < 0) return 1e40;
+  if(dist < 0) return 1e20f;
   float error = entry.error/frustum.Resolution(dist);
   if(frustum.IsOutside(sphere.Center(), sphere.Radius()))
     error /= 4;

@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "border.h"
+#include "fragment.h"
 #include <vcg/space/point3.h>
 namespace nxs {
 

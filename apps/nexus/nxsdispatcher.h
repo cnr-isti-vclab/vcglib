@@ -1,3 +1,6 @@
+#ifndef NXS_DISPATCHER_H
+#define NXS_DISPATCHER_H
+
 #include <ptypes/pinet.h>
 #include <ptypes/pasync.h>
 #include <vector>
@@ -80,3 +83,5 @@ namespace nxs {
 
 
 }
+
+#endif
