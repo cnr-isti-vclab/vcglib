@@ -30,7 +30,7 @@ bool NumberOfSamples                = false;
 bool SamplesPerAreaUnit             = false;
 bool SaveErrorDisplacement          = false;
 bool SaveErrorAsColour              = false;
-
+bool IgnoreUnreferred							= true;
 // -----------------------------------------------------------------------------------------------
 
 
@@ -79,13 +79,13 @@ int main(int argc, char**argv)
         printf(MSG_ERR_UNKNOWN_FORMAT, fmt);
         exit(-1);
     }
-    if(!strcmp(FILE_EXT_PLY, fmt))
+    if(!strcmp("ply", fmt))
 			{
 		printf("reading the mesh `%s'...", argv[1]);		  
 		err = tri::io::ImporterPLY<CMesh>::Open(S1,argv[1]);
 	}
  /*   else
-        if(!strcmp(FILE_EXT_SMF, fmt))
+        if(!strcmp(file_ext_smf, fmt))
 		{
 			printf("reading the mesh `%s'...", argv[1]);
 			err = tri::io::ImporterSMF::Open(S1,argv[1]);
@@ -99,6 +99,7 @@ int main(int argc, char**argv)
     {
 		printf("\n");
         printf(MSG_ERR_MESH_LOAD);
+        printf(" error number %d",err);
         exit(-1);
     }
 	else
@@ -110,13 +111,13 @@ int main(int argc, char**argv)
         printf(MSG_ERR_UNKNOWN_FORMAT, fmt);
         exit(-1);
     }
-    if(!strcmp(FILE_EXT_PLY, fmt))
+    if(!strcmp("ply", fmt))
 	{
 		printf("reading the mesh `%s'...", argv[2]);
        err = tri::io::ImporterPLY<CMesh>::Open(S2,argv[2]);
 	}
     /*else
-        if(!strcmp(FILE_EXT_SMF, fmt))
+        if(!strcmp(file_ext_smf, fmt))
      	{
 			printf("reading the mesh `%s'...", argv[2]);
 		    err = S2.Load_Smf(argv[2]);
@@ -145,6 +146,7 @@ int main(int argc, char**argv)
                                                         strcpy(hist_filename, STR_HIST_FILENAME_DEFAULT);
                                                     break;
 				case CMD_LINE_ARG_VERTEX_SAMPLE :	VertexSampleFlag    = false;    break;
+				case CMR_LINE_ARG_IGNORE_UNREF  : IgnoreUnreferred    = true;     break;
 				case CMD_LINE_ARG_EDGE_SAMPLE   :	EdgeSampleFlag      = false;    break;
 				case CMD_LINE_ARG_FACE_SAMPLE   :	FaceSampleFlag      = false;    break;
                 case CMD_LINE_ARG_SAMPLE_TYPE   :
@@ -188,7 +190,7 @@ int main(int argc, char**argv)
     if(!NumberOfSamples && !SamplesPerAreaUnit)
     {
         NumberOfSamples = true;
-        n_samples_target = NO_SAMPLES_PER_FACE * max(S1.fn,S2.fn);
+        n_samples_target = 10 * max(S1.fn,S2.fn);// take 10 samples per face
     }
 
     // compute face information
@@ -203,42 +205,44 @@ int main(int argc, char**argv)
     Box3d    bbox, tmp_bbox_M1=S1.bbox, tmp_bbox_M2=S2.bbox;
     bbox.Add(S1.bbox);
     bbox.Add(S2.bbox);
-	bbox.InflateFix(INFLATE_PERCENTAGE);
+		bbox.InflateFix(0.02);
 	S1.bbox = bbox;
 	S2.bbox = bbox;
 
     // set flags.
-    flags = 0;
+	flags = 0;
+   if(IgnoreUnreferred)
+        flags |= SamplingFlags::INCLUDE_UNREFERENCED_VERTICES;
     if(ComputeHistFlag)
-        flags |= FLAG_HIST;
+        flags |= SamplingFlags::HIST;
     if(VertexSampleFlag)
-        flags |= FLAG_VERTEX_SAMPLING;
+        flags |= SamplingFlags::VERTEX_SAMPLING;
     if(EdgeSampleFlag)
-        flags |= FLAG_EDGE_SAMPLING;
+        flags |= SamplingFlags::EDGE_SAMPLING;
     if(FaceSampleFlag)
-        flags |= FLAG_FACE_SAMPLING;
+        flags |= SamplingFlags::FACE_SAMPLING;
     if(MontecarloSamplingFlag)
-        flags |= FLAG_MONTECARLO_SAMPLING;
+        flags |= SamplingFlags::MONTECARLO_SAMPLING;
     if(SubdivisionSamplingFlag)
-        flags |= FLAG_SUBDIVISION_SAMPLING;
+        flags |= SamplingFlags::SUBDIVISION_SAMPLING;
     if(SimilarTrianglesSamplingFlag)
-        flags |= FLAG_SIMILAR_TRIANGLES_SAMPLING;
+        flags |= SamplingFlags::SIMILAR_TRIANGLES_SAMPLING;
     flags_fwd  = flags;
     flags_back = flags;
     if(SaveErrorDisplacement)
     {
         if(S1.vn >= S2.vn)
-            flags_fwd  |= FLAG_SAVE_ERROR_DISPLACEMENT;
+            flags_fwd  |= SamplingFlags::SAVE_ERROR_DISPLACEMENT;
         else
-            flags_back |= FLAG_SAVE_ERROR_DISPLACEMENT;
+            flags_back |= SamplingFlags::SAVE_ERROR_DISPLACEMENT;
     }
 
     if(SaveErrorAsColour)
     {
         if(S1.vn >= S2.vn)
-            flags_fwd  |= FLAG_SAVE_ERROR_AS_COLOUR;
+            flags_fwd  |= SamplingFlags::SAVE_ERROR_AS_COLOUR;
         else
-            flags_back |= FLAG_SAVE_ERROR_AS_COLOUR;
+            flags_back |= SamplingFlags::SAVE_ERROR_AS_COLOUR;
     }
     
     // initialize time info.
@@ -348,28 +352,33 @@ int main(int argc, char**argv)
     printf("\nHausdorff distance: %f (%f  with respect to bounding box diagonal)\nComputation time  : %d ms\n# samples/second  : %f\n\n", (float)mesh_dist_max, (float)mesh_dist_max/bbox.Diag(), (int)elapsed_time, (float)n_samples_output/(float)elapsed_time*2000.0F);
 
     // save error files.
-    if((flags_fwd & FLAG_SAVE_ERROR_DISPLACEMENT) && (flags_fwd & FLAG_SAVE_ERROR_AS_COLOUR))
-        if(!strcmp(new_mesh_filename, new_mesh_filename_2))
+    if((flags_fwd & SamplingFlags::SAVE_ERROR_DISPLACEMENT) && (flags_fwd & SamplingFlags::SAVE_ERROR_AS_COLOUR))
+ //       if(strcmp(new_mesh_filename, new_mesh_filename_2))
         {
-						tri::io::ExporterPLY<CMesh>::Save( S1,new_mesh_filename);
-            exit(0);
+				vcg::tri::io::PlyInfo p; 
+				p.mask|=vcg::tri::io::PLYMask::PM_VERTCOLOR|vcg::tri::io::PLYMask::PM_VERTQUALITY;
+
+						tri::io::ExporterPLY<CMesh>::Save( S1,new_mesh_filename,true,p);
+	          exit(0);
         }
-    if((flags_back & FLAG_SAVE_ERROR_DISPLACEMENT) && (flags_back & FLAG_SAVE_ERROR_AS_COLOUR))
-        if(!strcmp(new_mesh_filename, new_mesh_filename_2))
+    if((flags_back & SamplingFlags::SAVE_ERROR_DISPLACEMENT) && (flags_back & SamplingFlags::SAVE_ERROR_AS_COLOUR))
+ //       if(strcmp(new_mesh_filename, new_mesh_filename_2))
         {
-						tri::io::ExporterPLY<CMesh>::Save( S2,new_mesh_filename_2);
-            exit(0);
+						vcg::tri::io::PlyInfo p;
+					p.mask|=vcg::tri::io::PLYMask::PM_VERTCOLOR|vcg::tri::io::PLYMask::PM_VERTQUALITY;
+						tri::io::ExporterPLY<CMesh>::Save( S2,new_mesh_filename,true,p);
+						exit(0);
         }
 
-    //if(flags_fwd & FLAG_SAVE_ERROR_DISPLACEMENT)
+    //if(flags_fwd & SamplingFlags::SAVE_ERROR_DISPLACEMENT)
     //    S1.SavePly(new_mesh_filename, CMesh::SM_ALL & (CMesh::SM_ALL ^ CMesh::SM_VERTCOLOR));
     //else
-    //    if(flags_back & FLAG_SAVE_ERROR_DISPLACEMENT)
+    //    if(flags_back & SamplingFlags::SAVE_ERROR_DISPLACEMENT)
     //        S2.SavePly(new_mesh_filename, CMesh::SM_ALL & (CMesh::SM_ALL ^ CMesh::SM_VERTCOLOR));
-    //if(flags_fwd & FLAG_SAVE_ERROR_AS_COLOUR)
+    //if(flags_fwd & SamplingFlags::SAVE_ERROR_AS_COLOUR)
     //    S1.SavePly(new_mesh_filename_2, CMesh::SM_ALL & (CMesh::SM_ALL ^ CMesh::SM_VERTQUALITY));
     //else
-    //    if(flags_back & FLAG_SAVE_ERROR_AS_COLOUR)
+    //    if(flags_back & SamplingFlags::SAVE_ERROR_AS_COLOUR)
     //        S2.SavePly(new_mesh_filename_2, CMesh::SM_ALL & (CMesh::SM_ALL ^ CMesh::SM_VERTQUALITY));
 return 0;
 }
