@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2005/01/18 16:47:42  ricciodimare
+*** empty log message ***
+
 Revision 1.9  2004/09/28 10:22:00  ponchio
 Added #include <GL/gl.h>
 
@@ -71,7 +74,6 @@ y is upward!
 #endif
 
 #include <GL/gl.h>
-#include <GL\glext.h>
 namespace vcg {
 /**
 This class represent the viewing parameters under opengl. 
