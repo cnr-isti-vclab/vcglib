@@ -22,8 +22,14 @@
 ****************************************************************************/
 /****************************************************************************
   History
+$Log: not supported by cvs2svn $
+Revision 1.12  2004/05/10 13:31:13  ganovelli
+function for edge adjacency added
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2004/05/10 13:31:13  ganovelli
+function for edge adjacency added
+
 Revision 1.10  2004/05/10 13:13:17  cignoni
 added void to Convert, corrected return object in VFb
 
@@ -81,7 +87,7 @@ namespace vcg {
 	@param FLTYPE (Template Parameter) Specifies the scalar field of the vertex coordinate type.
 	@param VFTYPE (Template Parameter) Specifies the type for the face, needed only for VF adjacency.
  */
-template <class FLTYPE, class VETYPE = DUMMYEDGETYPE, class VFTYPE = DUMMYFACETYPE, class VTTYPE = DUMMYTETRATYPE,class TCTYPE = TCoord2<float,1> > class VERTEX_TYPE
+template <class FLTYPE, class VETYPE, class VFTYPE, class VTTYPE,class TCTYPE = TCoord2<float,1> > class VERTEX_TYPE
 {
 public:
 
@@ -783,7 +789,7 @@ inline void Convert( VERT_TYPE &v )
 #ifdef _DEBUG 
 		_flags=0;
 #endif
-	};
+  };
 
 };
 
