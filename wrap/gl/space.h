@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/05/13 23:44:47  ponchio
+<GL/GL.h>  -->   <GL/gl.h>
+
 Revision 1.1  2004/04/05 11:56:14  cignoni
 First working version!
 
@@ -33,12 +36,12 @@ First working version!
 #ifndef VCG_GL_SPACE_H
 #define VCG_GL_SPACE_H
 
+// Please note that this file assume that you have already included your 
+// gl-extension wrapping utility, and that therefore all the extension symbol are already defined.
+
 #include <vcg/space/point2.h>
 #include <vcg/space/point3.h>
-#ifdef WIN32
-#include <windows.h>
-#endif
-#include <GL/gl.h>
+#include <vcg/space/color4.h>
 
 namespace vcg {
 
@@ -71,6 +74,14 @@ namespace vcg {
 	inline void glTranslate(Point3<double> const & p){ glTranslated(p.X(),p.Y(),p.Z());}
 	inline void glScale(Point3<float> const & p) { glScalef(p.X(),p.Y(),p.Z());}
 	inline void glScale(Point3<double> const & p){ glScaled(p.X(),p.Y(),p.Z());}
+
+  inline void glColor(Color4b const & c)   { glColor4ubv(c.V());}
+  inline void glClearColor(Color4b const &c) {	::glClearColor(float(c[0])/255.0f,float(c[1])/255.0f,float(c[2])/255.0f,1.0f);}
+  inline void glLight(GLenum light, GLenum pname,  Color4b const & c)   { 
+    static float cf[4]; 
+    cf[0]=float(cf[0]/255.0); cf[1]=float(c[1]/255.0); cf[2]=float(c[2]/255.0); cf[3]=float(c[3]/255.0); 
+    glLightfv(light,pname,cf);
+  }
 
 }//namespace
 #endif
