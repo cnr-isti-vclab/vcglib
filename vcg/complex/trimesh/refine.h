@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/10/12 15:42:29  ganovelli
+first working version
+
 
 ****************************************************************************/
 
@@ -368,8 +371,7 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false)
 																										 else vv[5]=Edge2Vert[ vvpair((*fi).V(0),(*fi).V(2)) ];
 				else vv[5]=0;
 				int ind=((&*vv[3])?1:0)+((&*vv[4])?2:0)+((&*vv[5])?4:0);
-				int offset=0;
-
+				
 				nf[0]=fi;
 				static int iii=0;
 				for(int i=1;i<SplitTab[ind].TriNum;++i){
