@@ -15,7 +15,7 @@ bool VChain::Save(const string &file) {
 
   unsigned int nlevels = size();
   fwrite(&nlevels, sizeof(unsigned int), 1, fp);
-  for(int i = 0; i < nlevels; i++) {
+  for(unsigned int i = 0; i < nlevels; i++) {
     VPartition &level = operator[](i);
     unsigned int npoints = level.size();
     fwrite(&npoints, sizeof(unsigned int), 1, fp);
@@ -26,24 +26,24 @@ bool VChain::Save(const string &file) {
   unsigned int nfrag = newfragments.size();
   fwrite(&nfrag, sizeof(unsigned int), 1, fp);
 
-  std::map<unsigned int, std::set<unsigned int> >::iterator i;
-  for(i = newfragments.begin(); i != newfragments.end(); i++) {
-    unsigned int n = (*i).second.size();
-    fwrite(&((*i).first), sizeof(unsigned int), 1, fp);
+  std::map<unsigned int, std::set<unsigned int> >::iterator j;
+  for(j = newfragments.begin(); j != newfragments.end(); j++) {
+    unsigned int n = (*j).second.size();
+    fwrite(&((*j).first), sizeof(unsigned int), 1, fp);
     fwrite(&n, sizeof(unsigned int), 1, fp);
     set<unsigned int>::iterator k;
-      for(k = (*i).second.begin(); k != (*i).second.end(); k++)
+      for(k = (*j).second.begin(); k != (*j).second.end(); k++)
         fwrite(&*k, sizeof(unsigned int), 1, fp);
   }
   nfrag = oldfragments.size();
   fwrite(&nfrag, sizeof(unsigned int), 1, fp);    
 
-  for(i = oldfragments.begin(); i != oldfragments.end(); i++) {
-    unsigned int n = (*i).second.size();
-    fwrite(&((*i).first), sizeof(unsigned int), 1, fp);
+  for(j = oldfragments.begin(); j != oldfragments.end(); j++) {
+    unsigned int n = (*j).second.size();
+    fwrite(&((*j).first), sizeof(unsigned int), 1, fp);
     fwrite(&n, sizeof(unsigned int), 1, fp);
     set<unsigned int>::iterator k;
-    for(k = (*i).second.begin(); k != (*i).second.end(); k++)
+    for(k = (*j).second.begin(); k != (*j).second.end(); k++)
       fwrite(&*k, sizeof(unsigned int), 1, fp);
   }
   fclose(fp);
@@ -58,7 +58,7 @@ bool VChain::Load(const string &file) {
   }
   unsigned int nlevels;
   fread(&nlevels, sizeof(unsigned int), 1, fp);
-  for(int i = 0; i < nlevels; i++) {
+  for(unsigned int i = 0; i < nlevels; i++) {
     push_back(VPartition());
     VPartition &level = back();
 
