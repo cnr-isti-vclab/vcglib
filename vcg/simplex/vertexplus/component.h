@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/03/31 13:15:28  cignoni
+Added optional cpmponent
+
 Revision 1.3  2004/03/31 12:28:37  ganovelli
 *** empty log message ***
 
@@ -74,11 +77,13 @@ template <class T> class EmptyNormal: public T {
 public:
   typedef vcg::Point3s NormalType;
   NormalType &N() { static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
+  static bool HasNormal()   { return false; }
 };
 template <class A, class T> class Normal: public T {
 public:
   typedef A NormalType;
   NormalType &N() { return _norm; }
+  static bool HasNormal()   { return true; }
 private:
   NormalType _norm;    
 };
@@ -130,8 +135,8 @@ private:
 
 template <class T> class EmptyColor: public T {
 public:
-  typedef vcg::Point3f ColorType;
-  ColorType &C() { static ColorType color(0, 0, 0); return color; }
+  typedef vcg::Color4b ColorType;
+  ColorType &C() { static ColorType dumcolor(vcg::Color4b::White); return dumcolor; }
   static bool HasColor()   { return false; }
 };
 template <class A, class T> class Color: public T {
