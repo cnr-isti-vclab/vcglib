@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/05/10 15:21:47  cignoni
+Added a constructor without vertex pointer
+
 Revision 1.3  2004/05/10 13:41:57  cignoni
 Added VFIterator
 
@@ -121,9 +124,9 @@ public:
 	/// Change face via z
 	void NextF()
 	{
-		FaceType::BaseFaceType * t = f;
-		f = t->F(z);
-		z = t->Z(z);
+		FaceType * t = f;
+		f = t->FFp(z);
+		z = t->FFi(z);
 	}
   
 		// Paolo Cignoni 19/6/99
@@ -162,10 +165,10 @@ public:
 	/// Changes face maintaining the same vertex and the same edge
 	void FlipF()
 	{
-		assert( f->IsManifold(z) );
+		assert( f->FFp(z)->FFp(f->FFi(z))==f );
 		assert(f->V((z+2)%3)!=v && (f->V((z+1)%3)==v || f->V((z+0)%3)==v));
-		FaceType::BaseFaceType *nf=f->F(z);
-		int nz=f->Z(z);
+		FaceType *nf=f->FFp(z);
+		int nz=f->FFi(z);
 		assert(nf->V((nz+2)%3)!=v && (nf->V((nz+1)%3)==v || nf->V((nz+0)%3)==v));
 		f=nf;
 		z=nz;
@@ -209,7 +212,7 @@ public:
 	void NextB( )
 	{
 		assert(f->V((z+2)%3)!=v && (f->V((z+1)%3)==v || f->V((z+0)%3)==v));
-		assert(f->F(z)==f); // f is border along j
+		assert(f->FFP(z)==f); // f is border along j
 	// Si deve cambiare faccia intorno allo stesso vertice v
 	//finche' non si trova una faccia di bordo.
 		do
@@ -221,7 +224,7 @@ public:
 		
 		FlipV();
 		assert(f->V((z+2)%3)!=v && (f->V((z+1)%3)==v || f->V((z+0)%3)==v));
-		assert(f->F(z)==f); // f is border along j
+		assert(f->FFp(z)==f); // f is border along j
 	}
 
 	/// Checks if the half-edge is of border
