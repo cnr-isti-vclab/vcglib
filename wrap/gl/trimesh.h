@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/07/12 15:57:33  ganovelli
+first draft: it includes glew !
+
 
 
 
@@ -35,9 +38,9 @@ $Log: not supported by cvs2svn $
 #include <queue>
 #include <vector>
 
-#include <vcg/space/Color4.h>
-#include <wrap/gl/space.h>
 #include <gl/glew.h>
+#include <wrap/gl/space.h>
+#include <vcg/space/Color4.h>
 
 namespace vcg {
 
