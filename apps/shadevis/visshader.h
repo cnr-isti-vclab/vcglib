@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/09/09 22:59:21  cignoni
+Removed many small warnings
+
 Revision 1.4  2004/09/09 22:37:48  cignoni
 Integrated lost modifications...
 
@@ -186,26 +189,6 @@ void Compute( CallBack *cb)
   RestoreGL();
 }
 
-void ComputeCone(int nn, Point3x &dir, ScalarType ConeAngleDeg, CallBack *cb)
-{
-	std::string buf;
-	ScalarType ConeAngleRad=ToRad(ConeAngleDeg);
-	ScalarType SolidAngleSter = (1.0 - Cos(ConeAngleRad))*2*M_PI;
-	int Frac=(4.0*M_PI)/SolidAngleSter;
-	printf("ComputeCone for an angle of %f , solidAngle =%f pi asked %i normals, forecasted we need to ask %i normals\n",
-				ConeAngleDeg,SolidAngleSter/M_PI,nn,nn*Frac);
-
-	VN.clear();
-	std::vector<Point3x> nvt;
-	GenNormal(nn*Frac,nvt);
-	ScalarType CosConeAngle=Cos(ConeAngleRad);
-	for(int i=0;i<nvt.size();++i)
-		if(dir*nvt[i]>=CosConeAngle) VN.push_back(nvt[i]);
- 
-	printf("Asked %i normal, got %i normals\n",nn,VN.size());
-  Compute(cb); 
-}
-
 void ComputeHalf(int nn, Point3x &dir, CallBack *cb)
 {
 	std::string buf;
@@ -220,6 +203,18 @@ void ComputeHalf(int nn, Point3x &dir, CallBack *cb)
   Compute(cb); 
 }
 
+void ComputeUniformCone(int nn, std::vector<Point3x> &vv, ScalarType AngleRad, Point3x &ConeDir, CallBack *cb)
+{
+	VN.clear();
+  GenNormal<ScalarType>::UniformCone(nn,VN,AngleRad,ConeDir);
+  for(vector<Point3x>::iterator vi=VN.begin();vi!=VN.end();++vi) 
+    vv.push_back(*vi); 
+  
+	char buf[256];
+	sprintf(buf,"Asked %i normal, got %i normals\n",nn,VN.size());
+  cb(buf);
+  Compute(cb); 
+}
 void ComputeUniform(int nn, std::vector<Point3x> &vv, CallBack *cb)
 {
 	VN.clear();

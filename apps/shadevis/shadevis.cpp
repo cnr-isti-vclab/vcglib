@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/09/09 22:34:38  cignoni
+Integrated lost modifications...
+
 Revision 1.3  2004/09/09 14:35:54  ponchio
 Various changes for gcc compatibility
 
@@ -42,6 +45,7 @@ Added GPL comments
 
 
 #include <wrap/callback.h>
+#include <vcg/math/base.h>
 #include <wrap/gui/trackball.h>
 #include <vcg/simplex/vertex/with/vcvn.h>
 #include <vcg/simplex/vertex/with/vcvn.h>
@@ -76,6 +80,8 @@ unsigned int TexInd=0;
 bool SwapFlag=false;
 bool CullFlag=false;
 bool ClosedFlag=false;
+Point3f ConeDir(0,1,0);
+float ConeAngleRad = math::ToRad(180.0f);
 
 float lopass=0,hipass=1,gamma=1;
 float diff=.8;
@@ -296,7 +302,8 @@ void ViewKey(unsigned char key, int , int )
 		gamma=gamma+.05; printf("Lo %f, Hi %f Gamma %f\n",lopass,hipass,gamma); 
 		UpdateVis(); break;
 	case 13 : 
-		Vis.ComputeUniform(SampleNum,ViewVector,cb); 
+		//Vis.ComputeUniform(SampleNum,ViewVector,cb); 
+    Vis.ComputeUniformCone(SampleNum,ViewVector, ConeAngleRad,ConeDir,cb); 
 		UpdateVis(); break;
   case ' ' : {
     Point3f dir = Q->camera.ViewPoint();
@@ -429,8 +436,8 @@ int main(int argc, char** argv)
 			"     -z#      z offset (default 1e-3)\n"
 			"     -c       assume that the mesh is closed (slightly faster, default false)\n"
 			"     -f       Flip normal of the model\n"
-			//"     -da #    Cone Direction Angle in degree (default 45)\n"
-			//"     -dv # # # Cone Direction vector (default 0 0 1)\n"			
+			"     -da #    Cone Direction Angle in degree (default 180)\n"
+			"     -dv # # # Cone Direction vector (default 0 0 1)\n"			
       		 );
 
 		return 1;
@@ -442,6 +449,9 @@ int main(int argc, char** argv)
 		{
 				switch(argv[i][1])
 			{
+        case 'd'  : if(argv[i][2] == 'a') { ConeAngleRad = math::ToRad(atof(argv[i+1])); ++i; break; }
+                    if(argv[i][2] == 'v') { ConeDir = Point3f(atof(argv[i+1]),atof(argv[i+2]),atof(argv[i+3])); i+=3; break; }
+                    break;
 				case 'n'  : SampleNum = atoi(argv[i]+2); break;
 				case 'f'  : SwapFlag=false; break;
 				case 'c'  : ClosedFlag=true; break;

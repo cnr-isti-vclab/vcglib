@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/09/09 22:38:57  cignoni
+Initial Update
+
 ****************************************************************************/
 
 #ifndef __VCG_GEN_NORMAL
@@ -52,6 +55,26 @@ static void  Random(int vn, std::vector<Point3<ScalarType > > &NN)
     }
   }
 }
+static void UniformCone(int vn, std::vector<Point3<ScalarType > > &NN, ScalarType AngleRad, Point3x dir=Point3x(0,1,0))
+{
+  std::vector<Point3<ScalarType > > NNT;
+  NN.clear();
+  // per prima cosa si calcola il volume della spherical cap di angolo AngleRad
+  ScalarType Height= 1.0 - cos(AngleRad); // height is measured from top...
+  // Surface is the one of the tangent cylinder
+  ScalarType CapArea = 2.0*M_PI*Height;
+  ScalarType Ratio = CapArea / (4.0*M_PI );
+
+  printf("----------AngleRad %f Angledeg %f ratio %f vn %i vn2 %i \n",AngleRad,math::ToDeg(AngleRad),Ratio,vn,int(vn/Ratio));
+  Uniform(vn/Ratio,NNT);
+  std::vector<Point3x>::iterator vi;
+  
+  ScalarType DotProd = cos(AngleRad);
+  for(vi=NNT.begin();vi!=NNT.end();++vi)
+  {
+    if(dir*(*vi) >= DotProd) NN.push_back(*vi);
+  }
+ }
 
 
 static void Uniform(int vn, std::vector<Point3<ScalarType > > &NN)
