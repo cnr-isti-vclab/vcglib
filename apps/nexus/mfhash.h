@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/06/24 14:32:45  ponchio
+Moved from wrap/nexus
+
 Revision 1.1  2004/06/24 14:18:58  ponchio
 Created
 
@@ -35,7 +38,6 @@ Created
 
 #include "vfile.h"
 #include <stdio.h>
-#include <iostream>
 
 namespace nxs {
 

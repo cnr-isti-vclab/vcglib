@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/06/25 16:47:13  ponchio
+Various debug
+
 Revision 1.1  2004/06/24 14:32:45  ponchio
 Moved from wrap/nexus
 
@@ -146,6 +149,7 @@ template <class T> class VFile {
   }
 
   void Resize(unsigned int elem) {
+    assert(fp);
     if(elem > n_elements) {
       if(-1 == fseek(fp, elem*sizeof(T) -1, SEEK_SET)) {
 	assert(0 && "Could not resize");
