@@ -91,10 +91,6 @@ float nxs::Decimate(Decimation mode,
   for(unsigned int i = 0; i < newbord.size(); i++) 
     mesh.vert[newbord[i].start_vert].ClearW();
 
-  printf("mesh loaded %d %d \n",mesh.vn,mesh.fn);
-  printf("reducing it to %i\n", target_faces);
-
-  //  if(target_faces == 1446)
   //    vcg::tri::io::ExporterPLY<MyMesh>::Save(mesh, "ribum.ply");
 
   float error;
@@ -161,9 +157,6 @@ float Quadric(MyMesh &mesh, unsigned int target_faces) {
     }
   }
   error /= count;
-  //  cerr << "Error: " << error << endl;
-  cerr << "faces: " << mesh.fn << endl;
-  //  cerr << "verts: " << mesh.vn << endl;
   return error;
 }
 
@@ -260,10 +253,6 @@ float Cluster(MyMesh &mesh, unsigned int target_faces) {
       mesh.vert[i].SetD();
       mesh.vn--;
     }
-
-  //  cerr << "Error: " << error << endl;
-  //  cerr << "faces: " << mesh.fn << endl;
-  //  cerr << "verts: " << mesh.vn << endl;
   return error;
 }
 

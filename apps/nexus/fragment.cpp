@@ -99,7 +99,6 @@ void nxs::join(Fragment &in,
   remap.resize(totvert, 0xffffffff);
 
   //TODO what if totvert > 32768?
-  cerr << "Totvert " << totvert << endl;
   //todo we really need a set?
   //  set<Link> newborders;
   unsigned int vcount = 0;
