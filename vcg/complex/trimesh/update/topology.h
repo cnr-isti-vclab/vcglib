@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/05/06 15:24:38  pietroni
+changed names to topology functions
+
 Revision 1.4  2004/03/31 14:44:43  cignoni
 Added Vertex-Face Topology
 
@@ -198,8 +201,8 @@ static void VertexFace(MeshType &m)
 	{
 		for(int j=0;j<3;++j)
 		{
-			(*fi).FVp(j) = (*fi).V(j)->VFb();
-			(*fi).FVi(j) = (*fi).V(j)->VFi();
+			(*fi).VFp(j) = (*fi).V(j)->VFb();
+			(*fi).VFi(j) = (*fi).V(j)->VFi();
 			(*fi).V(j)->VFb() = &(*fi);
 			(*fi).V(j)->VFi() = j;
 		}
