@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/03/03 15:00:51  cignoni
+Initial commit
+
 ****************************************************************************/
 
 #ifndef __VCGLIB_CALLBACK
@@ -38,7 +41,7 @@ typedef bool CallBack( const char * str );
 typedef bool CallBackPos(const int pos, const char * str );
 
 inline bool DummyCallBack( const char * ) {return true;}
-inline bool DummyCallBackPos(const int pos,  const char * ) {return true;}
+inline bool DummyCallBackPos(const int ,  const char * ) {return true;}
 	
 }	// End namespace
 
