@@ -129,7 +129,7 @@ void MinDistPoint( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & md
 
 				if( ! mesh.IsMarked( &*(l->Elem())) )
 			{
-				if( (*(l->Elem())).Dist( p, error, q) )
+				if( Dist((*(l->Elem())), p, error, q) )
 				{
 					bestq = q;
 					bestf = l->Elem();
@@ -170,7 +170,7 @@ void MinDistPoint( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & md
 									for(l=first;l!=last;++l)
 									if( ! mesh.IsMarked( &*(l->Elem())) )
 									{
-										if( (*(l->Elem())).Dist(  p, error, q) )
+										if( Dist((*(l->Elem())),  p, error, q) )
 										{
 											bestq = q;
 											bestf = l->Elem();
