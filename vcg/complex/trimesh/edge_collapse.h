@@ -22,6 +22,8 @@
 ****************************************************************************/
 /****************************************************************************
   History
+    $Log: not supported by cvs2svn $
+
 ****************************************************************************/
 
 #ifndef __VCG_TETRA_TRI_COLLAPSE
@@ -109,7 +111,7 @@ class EdgeCollapse
 	static VFIVec & AV01(){static VFIVec av01; return av01;}
 
 
-	void FindSets(EdgeType p)
+	void FindSets(EdgeType &p)
 	{
 		VertexType * v0 = p.V(0);
 		VertexType * v1 = p.V(1);
@@ -202,7 +204,7 @@ class EdgeCollapse
 
 
 
-	int DoCollapse(EdgeType & c, Point3<ScalarType> p)
+	int DoCollapse(EdgeType & c, const Point3<ScalarType> &p)
 	{
 		FindSets(c);
 		typename VFIVec::iterator i;

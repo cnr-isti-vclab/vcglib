@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/10/25 07:07:56  ganovelli
+A vcg.::Pos was used to implement the collapse type. CHanged
+to vcg::Edge
+
 Revision 1.2  2004/09/29 17:08:16  ganovelli
 corrected error in -error (see localoptimization)
 
@@ -128,7 +132,7 @@ public:
 		// puntatori ai vertici che sono stati messi non-w per preservare il boundary
 		static std::vector<typename TriMeshType::VertexPointer>  & WV(){static std::vector<typename TriMeshType::VertexPointer> _WV; return _WV;}; 
 
-		inline TriEdgeCollapseQuadric(EdgeType p, int i)
+		inline TriEdgeCollapseQuadric(const EdgeType &p, int i)
 			//:TEC(p,i){}
 		{
 				localMark = i;
@@ -138,11 +142,10 @@ public:
 
 
 		inline bool IsFeasible(){
-			bool res = (!Params().PreserveTopology || LinkConditions(pos) );
-			if(!res) 
-				++FailStat::LinkConditionEdge();
-			return res;
-		}
+      bool res = ( !Params().PreserveTopology || LinkConditions(pos) );
+      if(!res) ++( TriEdgeCollapse< TriMeshType,MYTYPE>::FailStat::LinkConditionEdge() );
+      return res;
+    }
 
 		void Execute(TriMeshType &m)
   {	

@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.13  2004/10/25 16:28:32  ganovelli
+  pos to edge
+
   Revision 1.12  2004/09/15 11:16:02  ganovelli
   changed P() to cP()
 
@@ -63,7 +66,8 @@ class TriEdgeCollapse: public LocalOptimization<TriMeshType>::LocModType , publi
 {
 public:
  /// static data to gather statistical information about the reasons of collapse failures
- struct FailStat {
+  class FailStat { 
+  public:
 	static int &Volume()           {static int vol=0; return vol;}
 	static int &LinkConditionFace(){static int lkf=0; return lkf;}
 	static int &LinkConditionEdge(){static int lke=0; return lke;}
@@ -107,7 +111,7 @@ TriMeshType *mt;
 	inline	TriEdgeCollapse()
 			{}
 	///Constructor with postype
-	 inline TriEdgeCollapse(EdgeType p, int mark)
+	 inline TriEdgeCollapse(const EdgeType &p, int mark)
 			{    
 				localMark = mark;
 				pos=p;
@@ -149,18 +153,21 @@ public:
   {
 #ifdef __SAVE__LOG__
 static FILE * co = fopen("col.txt","w");
-#endif __SAVE__LOG__
+#endif //SAVE__LOG__
 		GlobalMark()++;int nn=0;
 		VertexType *v[2];
 		v[0]= pos.V(0);v[1]=pos.V(1);	
 		v[1]->IMark() = GlobalMark();
 
-		vcg::face::VFIterator<FaceType> vfi(v[1]->VFp(),v[1]->VFi());	
+		// First loop around the remaining vertex to unmark visited flags
+    vcg::face::VFIterator<FaceType> vfi(v[1]->VFp(),v[1]->VFi());	
 		while (!vfi.End()){
 			vfi.F()->V1(vfi.I())->ClearV();
 			vfi.F()->V2(vfi.I())->ClearV();
 			++vfi;
 		}
+
+    // Second Loop 
 		vfi.F() = v[1]->VFp();
 		vfi.I() = v[1]->VFi();	
     while (!vfi.End())
@@ -173,7 +180,7 @@ static FILE * co = fopen("col.txt","w");
 #ifdef __SAVE__LOG__
 					fprintf(co,"%i %i \n",vfi.F()->V(vfi.I())-&*mt->vert.begin(),
 					vfi.F()->V1(vfi.I())-&*mt->vert.begin());
-#endif __SAVE__LOG__
+#endif //SAVE__LOG__
 
 				vfi.F()->V1(vfi.I())->SetV();
 				h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.F()->V(vfi.I()),vfi.F()->V1(vfi.I())),GlobalMark())));
@@ -188,7 +195,7 @@ static FILE * co = fopen("col.txt","w");
 #ifdef __SAVE__LOG__
 			fprintf(co,"%i %i \n",vfi.F()->V(vfi.I())-&*mt->vert.begin(),
 			vfi.F()->V2(vfi.I())-&*mt->vert.begin());
-#endif __SAVE__LOG__
+#endif //SAVE__LOG__
 
 					vfi.F()->V2(vfi.I())->SetV();
 				h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.F()->V(vfi.I()),vfi.F()->V2(vfi.I())),GlobalMark())));
