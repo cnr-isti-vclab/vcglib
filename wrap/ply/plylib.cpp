@@ -31,11 +31,13 @@ of Greg Turk and on the work of Claudio Rocchini
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/04/06 21:48:50  cignoni
+Commented out unused parameter names
+
 Revision 1.1  2004/03/03 15:00:51  cignoni
 Initial commit
 
 ****************************************************************************/
-
 
 
 #ifdef WIN32
@@ -52,7 +54,6 @@ Initial commit
 
 #include <io.h>
 #include <fcntl.h>
-#include <direct.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <time.h>
