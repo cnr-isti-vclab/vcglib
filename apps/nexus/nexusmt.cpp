@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.28  2005/02/08 12:43:03  ponchio
+Added copyright
+
 
 ****************************************************************************/
 
@@ -110,8 +113,10 @@ void NexusMt::Render(DrawContest contest) {
   Render(extraction, contest);
 }
 
+
 void NexusMt::Render(Extraction &extraction, DrawContest &contest,
 		     Stats *stats) {
+  static ::GLUquadricObj *  spr = gluNewQuadric();
   if(stats) stats->Init();
 
   for(unsigned int i = 0; i < heap.size(); i++) {
@@ -139,6 +144,16 @@ void NexusMt::Render(Extraction &extraction, DrawContest &contest,
     vcg::Sphere3f &sphere = entry.sphere;
     if(extraction.frustum.IsOutside(sphere.Center(), sphere.Radius())) 
       continue;
+
+    if(contest.attrs & DrawContest::SPHERES){
+    glPushAttrib(GL_POLYGON_BIT);
+    glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+    glPushMatrix();
+     glTranslatef(sphere.Center().X(),sphere.Center().Y(),sphere.Center().Z());
+     gluSphere(spr,sphere.Radius(),15,15);
+    glPopMatrix();
+    glPopAttrib();
+    }
 
     if(stats) stats->ktri += entry.nface;
 
@@ -206,7 +221,7 @@ void NexusMt::Draw(unsigned int cell, DrawContest &contest) {
   case DrawContest::POINTS:
     glDrawArrays(GL_POINTS, 0, patch.nv); break;
   case DrawContest::PATCHES:
-    glColor3ub((cell * 27)%255, (cell * 37)%255, (cell * 87)%255);
+    glColor3ub((cell * 27)%225 + 30, (cell * 37)%225 + 30, (cell * 87)%225 + 30);
   case DrawContest::SMOOTH:
     if(signature & NXS_FACES)
       glDrawElements(GL_TRIANGLES, patch.nf * 3, 

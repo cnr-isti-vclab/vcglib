@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2005/02/10 09:18:20  ponchio
+Statistics.
+
 Revision 1.21  2005/02/08 12:43:03  ponchio
 Added copyright
 
@@ -49,7 +52,7 @@ namespace nxs {
   struct DrawContest {
 
     enum Mode { POINTS, SMOOTH,	XRAY, HIDDEN_LINE, FLAT_WIRE, FLAT, PATCHES };
-    enum Attr { COLOR = 0x1, NORMAL = 0x2, TEXTURE = 0x4, DATA = 0x8 };
+    enum Attr { COLOR = 0x1, NORMAL = 0x2, TEXTURE = 0x4, DATA = 0x8, SPHERES = 0x10 };
 
     Mode mode;
     unsigned int attrs;

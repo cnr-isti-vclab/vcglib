@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.35  2005/02/14 14:49:09  ponchio
+*** empty log message ***
+
 Revision 1.34  2005/02/14 14:21:24  ponchio
 Preload disabled at startap (-p)
 
@@ -292,6 +295,7 @@ int main(int argc, char *argv[]) {
     " f: flat shading mode\n"
     " m: smooth mode\n"
     " p: draw points\n"
+    " h: draw bounding spheres\n"
 
     " c: show colors\n"
     " n: show normals\n"
@@ -359,6 +363,11 @@ int main(int argc, char *argv[]) {
 	case SDLK_d: contest.mode = DrawContest::PATCHES; break;
 	case SDLK_f: contest.mode = DrawContest::FLAT; break;
 	case SDLK_m: contest.mode = DrawContest::SMOOTH; break;
+	case SDLK_h: if(contest.attrs&DrawContest::SPHERES)
+                  contest.attrs &=~DrawContest::SPHERES;  
+                else
+                  contest.attrs |=DrawContest::SPHERES;
+                break;
 	    
 	case SDLK_o: realtime = !realtime; break;
 	case SDLK_s: preload = !preload; nexus.SetPreload(preload); break;
