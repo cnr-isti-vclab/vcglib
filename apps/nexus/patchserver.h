@@ -2,7 +2,7 @@
 #define NXS_PATCH_SERVER_H
 
 #include "patch.h"
-#include "file.h"
+#include "mfile.h"
 
 #include <vector>
 
@@ -15,7 +15,7 @@ struct PatchEntry {
   unsigned int lru_pos;
 };
 
-class PatchServer: public File {
+class PatchServer: public MFile {
  public:
 
   struct PTime {
@@ -51,10 +51,10 @@ class PatchServer: public File {
 
   PatchServer(): chunk_size(1024), ram_size(128000000), vbo_size(32000000) {}
   bool Create(const std::string &filename, Signature signature, 
-	      unsigned int chunk_size, unsigned int ram_size = 0);
+	      unsigned int chunk_size, unsigned int ram_size = 128000000);
   bool Load(const std::string &filename, Signature sig, 
 	    unsigned int chunk_size, bool readonly, 
-	    unsigned int ram_size = 0);
+	    unsigned int ram_size = 128000000);
 
   void Close();
 

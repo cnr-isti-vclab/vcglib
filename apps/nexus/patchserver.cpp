@@ -15,8 +15,7 @@ bool PatchServer::Create(const std::string &filename,
   signature = sig;
   chunk_size = csize;
 
-  if(ram_size == 0) ram_size = 128000000;
-  ram_size = rsize/chunk_size;
+  ram_size = rsize/chunk_size + 1;
   ram_used = 0;
   vbo_size = 0;
   vbo_used = 0;
@@ -26,7 +25,7 @@ bool PatchServer::Create(const std::string &filename,
   ram_flushed = 0;
 
   lru.clear();
-  return File::Create(filename);
+  return MFile::Create(filename);
 }
 
 bool PatchServer::Load(const std::string &filename, Signature sig, 
@@ -34,11 +33,9 @@ bool PatchServer::Load(const std::string &filename, Signature sig,
 		       unsigned int rsize) {
 
   signature = sig;
-  chunk_size = csize;
+  chunk_size = csize/chunk_size + 1;
 
-  if(ram_size == 0) ram_size = 128000000;
-  ram_size = rsize/chunk_size;
-    
+  ram_size = rsize/chunk_size + 1;
   ram_used = 0;
   vbo_size = 0;
   vbo_used = 0;
@@ -48,12 +45,12 @@ bool PatchServer::Load(const std::string &filename, Signature sig,
   ram_flushed = 0;
 
   lru.clear();
-  return File::Load(filename, readonly);
+  return MFile::Load(filename, readonly);
 }
 
 void PatchServer::Close() {  
   FlushAll();
-  File::Close();
+  MFile::Close();
 }
 
 //TODO add error checking.
