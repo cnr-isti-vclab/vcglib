@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/06/24 07:55:50  cignoni
+Now color ramp can do reverse color ramp
+
 Revision 1.6  2004/05/26 15:10:29  cignoni
 Corrected bug in setgrayshade
 
@@ -47,6 +50,7 @@ Edited Comments and GPL license
 #ifndef __VCGLIB_COLOR4
 #define __VCGLIB_COLOR4
 
+#include <vcg/space/point3.h>
 #include <vcg/space/point4.h>
 
 namespace vcg {
