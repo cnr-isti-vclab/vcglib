@@ -23,6 +23,9 @@
 /****************************************************************************
   History
     $Log: not supported by cvs2svn $
+    Revision 1.13  2004/11/23 10:34:45  cignoni
+    passed parameters by reference in many funcs and gcc cleaning
+
 
 ****************************************************************************/
 
@@ -39,8 +42,9 @@ namespace tri{
 
 /** \addtogroup trimesh */
 /*@{*/
-/** This a static utlity class for the edge collapse. 
-    It provides a common set of useful function for actually making an edge collapse over a trimesh. See also 
+/** This a static utility class for the edge collapse. 
+    It provides a common set of useful function for actually making an edge collapse over a trimesh. 
+    See also the corresponding class in the local optimization framework called TriEdgeCollapse
 **/
 
 template <class TRI_MESH_TYPE> 
