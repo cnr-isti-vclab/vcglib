@@ -164,32 +164,32 @@ template <class S> void Quaternion<S>::ToMatrix(Matrix44<S> &m) const	{
 
 ///warning m deve essere una matrice di rotazione pena il disastro.
 template <class S> void Quaternion<S>::FromMatrix(Matrix44<S> &m) {		
-	double Sc;
-	double t = (m[0] + m[5] + m[10] + 1);	
+	S Sc;
+	S t = (m[0] + m[5] + m[10] + (S)1.0);	
 	if(t > 0) {
-      Sc = 0.5 / sqrt(t);
-      V(0) = 0.25 / Sc;
+      Sc = (S)0.5 / math::Sqrt(t);
+      V(0) = (S)0.25 / Sc;
       V(1) = ( m[9] - m[6] ) * Sc;
       V(2) = ( m[2] - m[8] ) * Sc;
       V(3) = ( m[4] - m[1] ) * Sc;
 	}	else {	
 		if(m[0] > m[5] && m[0] > m[10]) {
-			Sc  = sqrt( 1.0 + m[0] - m[5] - m[10] ) * 2;
-			V(1) = 0.5 / Sc;
+      Sc  = math::Sqrt( (S)1.0 + m[0] - m[5] - m[10] ) * (S)2.0;
+			V(1) = (S)0.5 / Sc;
 			V(2) = (m[1] + m[4] ) / Sc;
 			V(3) = (m[2] + m[8] ) / Sc;
 			V(0) = (m[6] + m[9] ) / Sc;	
 		}	else if( m[5] > m[10]) {
-			Sc  = sqrt( 1.0 + m[5] - m[0] - m[10] ) * 2;
+      Sc  = math::Sqrt( (S)1.0 + m[5] - m[0] - m[10] ) * (S)2.0;
 			V(1) = (m[1] + m[4] ) / Sc;
-			V(2) = 0.5 / Sc;
+			V(2) = (S)0.5 / Sc;
 			V(3) = (m[6] + m[9] ) / Sc;
 			V(0) = (m[2] + m[8] ) / Sc;
 		}	else {
-			Sc  = sqrt( 1.0 + m[10] - m[0] - m[5] ) * 2;
+      Sc  = math::Sqrt( (S)1.0 + m[10] - m[0] - m[5] ) * (S)2.0;
 			V(1) = (m[2] + m[8] ) / Sc;
 			V(2) = (m[6] + m[9] ) / Sc;
-			V(3) = 0.5 / Sc;
+			V(3) = (S)0.5 / Sc;
 			V(0) = (m[1] + m[4] ) / Sc;
 		}
 	}
