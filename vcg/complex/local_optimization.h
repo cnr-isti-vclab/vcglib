@@ -22,6 +22,12 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.1  2004/07/15 12:04:14  ganovelli
+  minor changes
+
+  Revision 1.2  2004/07/09 10:22:56  ganovelli
+  working draft
+
   Revision 1.1  2004/07/08 08:25:15  ganovelli
   first draft
 
@@ -35,14 +41,20 @@
 #include<math.h>
 
 namespace vcg{
-enum ModifierType{	TriEdgeCollapse, TriEdgeSwap, TriVertexSplit,
-				TetraEdgeCollapse,TetraEdgeSplit,TetraEdgeSwap};
 
+template<class MeshType> 
+class LocalOptimization;
+
+enum ModifierType{	TetraEdgeCollapseOp, TriEdgeSwapOp, TriVertexSplitOp,
+				TriEdgeCollapseOp,TetraEdgeSpliOpt,TetraEdgeSwapOp};
+/** \addtogroup tetramesh */
 /*@{*/
-/// This is an abstract class to define the interface of a local modification
-template <class ScalarType, class HeapType,class MESH_TYPE>
+/// This abstract class define which functions  a local modification to be used in the LocalOptimization.
+template <class MeshType>
 class LocalModification
 {
+  typedef typename LocalOptimization<MeshType>::HeapType HeapType;
+  typedef typename MeshType::ScalarType ScalarType;
 
  public:
 	LocalModification(){};
@@ -61,30 +73,32 @@ class LocalModification
 	virtual ScalarType ComputePriority()=0;
 
 	/// Return the priority to be used in the heap (implement static priority)
-	virtual ScalarType Priority()=0;
-
-	/// Compute the error caused by this modification (can be the same as priority)
-	virtual ScalarType ComputeError()=0;
-
+	virtual ScalarType Priority() const =0;
 
 	/// Perform the operation and return the variation in the number of simplicies (>0 is refinement, <0 is simplification)
-	virtual int Execute()=0;
+	virtual void Execute(MeshType &m)=0;
 
 	/// perform initialization
-	virtual void Init(MESH_TYPE&m,HeapType&)=0;
+	static void Init(MeshType &m, HeapType&);
 
-
+  virtual const char *Info(MeshType &) {return 0;}
 	/// Update the heap as a consequence of this operation
 	virtual void UpdateHeap(HeapType&)=0;
 };	//end class local modification
 
 
+/// LocalOptimization:
+/// This class implements the algorihms running on 0-1-2-3-simplicial complex that are based on local modification
+/// THe local modification can be and edge_collpase, or an edge_swap, a vertex plit...as far as they implement
+/// the interface defined in LocalModification.
+/// Implementation note: i norder to keep the local modification itself indepented by its use in this class, they are not
+/// really derived by LocalModification. INstead, a wrapper is done to this purpose (see vcg/complex/tetramesh/decimation/collapse.h)
 
 template<class MeshType>
 class LocalOptimization
 {
 public:
-	LocalOptimization(){}
+  LocalOptimization(MeshType &mm): m(mm){ ClearTermination();}
 
 	struct  HeapElem;
 	// scalar type
@@ -92,22 +106,24 @@ public:
 	// type of the heap
 	typedef typename std::vector<HeapElem> HeapType;	
 	// modification type	
-	typedef  LocalModification <ScalarType, HeapType,MeshType>  LocModType;
+	typedef  LocalModification <MeshType>  LocModType;
 	// modification Pointer type	
-	typedef  LocalModification <ScalarType, HeapType,MeshType> * LocModPtrType;
+	typedef  LocalModification <MeshType> * LocModPtrType;
 	
 
 
 	/// termination conditions	
-	 enum {	LOnSimplices	= 0x00,	// test number of simplicies	
+	 enum LOTermination {	
+      LOnSimplices	= 0x00,	// test number of simplicies	
 			LOnVertices		= 0x01, // test number of verticies
 			LOnOps			= 0x02, // test number of operations
 			LOMetric		= 0x04, // test Metric (error, quality...instance dependent)
 			LOTime			= 0x08  // test how much time is passed since the start
 		} ;
 
-	 int tf;
-	int nPerfmormedOps,
+	int tf;
+	
+  int nPerfmormedOps,
 		nTargetOps,
 		nTargetSimplices,
 		nTargetVertices;
@@ -122,14 +138,23 @@ public:
 	bool IsTerminationFlag		(int v){return (tf & v);}
 
 	void SetTargetSimplices	(int ts			){nTargetSimplices	= ts;	SetTerminationFlag(LOnSimplices);	}	 	
-	void SetTargetVertices	(int tv			){nTargetSimplices	= tv;	SetTerminationFlag(LOnVertices);	} 
+	void SetTargetVertices	(int tv			){nTargetVertices	= tv;	SetTerminationFlag(LOnVertices);	} 
 	void SetTargetOperations(int to			){nTargetOps		= to;	SetTerminationFlag(LOnOps);			} 
+
 	void SetTargetMetric	(ScalarType tm	){targetMetric		= tm;	SetTerminationFlag(LOMetric);		} 
 	void SetTimeBudget		(float tb		){timeBudget		= tb;	SetTerminationFlag(LOTime);			} 
 
-
+  void ClearTermination()
+  {
+    tf=0;
+    nTargetSimplices=0;
+    nTargetOps=0;
+    targetMetric=0;
+    timeBudget=0;
+    nTargetVertices=0;
+  }
 	/// the mesh to optimize
-	MeshType * m;
+	MeshType & m;
 
 
 
@@ -137,6 +162,10 @@ public:
 	HeapType h;
 
   ///the element of the heap
+  // it is just a wrapper of the pointer to the localMod. 
+  // std heap does not work for
+  // pointers and we want pointers to have heterogenous heaps. 
+
   struct HeapElem
   {
 		HeapElem(){locModPtr = NULL;}
@@ -151,10 +180,12 @@ public:
 		locModPtr = _locModPtr;
     };
 
+    /// STL heap has the largest element as the first one.
+    /// usually we mean priority as an error so we should invert the comparison
     const bool operator <(const HeapElem & h) const 
     { 
-		return (locModPtr->Priority()<h.locModPtr->Priority());
-	}
+		  return (locModPtr->Priority() > h.locModPtr->Priority());
+	  }
 
     bool IsUpToDate()
     {
@@ -170,47 +201,43 @@ public:
   ~LocalOptimization(){};
 
   /// main cycle of optimization
-  void DoOptimization()
+  bool DoOptimization()
   {
+    start=clock();
 		nPerfmormedOps =0;
-	int i=0;
-	while( !GoalReached())
-    {int size = h.size();
-			LocModPtrType  locMod   = h.back().locModPtr;
-      if( ! h.back().IsUpToDate())	
-			{
-				h.pop_back(); // if it is out of date simply discard it
-			}
-	    else  
-      {	
-        locMod->ComputeError();
-        h.pop_back();
 
-				// check if it is feasible
-			if (locMod->IsFeasible())
-			{
-				nPerfmormedOps++;
-				int tmp = locMod->Execute();
-				m->SimplexNumber()+= tmp;
-				locMod->UpdateHeap(h);
-				m->VertexNumber()--;
+    int i=0;
+		while( !GoalReached() && !h.empty())
+			{int size = h.size();
+				std::pop_heap(h.begin(),h.end());
+        LocModPtrType  locMod   = h.back().locModPtr;
+				h.pop_back();
+        				
+				if( locMod->IsUpToDate() )	
+				{	
+          //printf("popped out: %s\n",locMod->Info(m));
+         	// check if it is feasible
+					if (locMod->IsFeasible())
+					{
+						nPerfmormedOps++;
+						locMod->Execute(m);
+						locMod->UpdateHeap(h);
+						}
 				}
-
+        //else printf("popped out unfeasible\n");
+				delete locMod;
 			}
-			delete locMod;
-		}
+		return !(h.empty());
   }
  
 	///initialize for all vertex the temporary mark must call only at the start of decimation
 	///by default it takes the first element in the heap and calls Init (static funcion) of that type
 	///of local modification. 
-	void Init()
+	template <class LocalModificationType> void Init()
 	{
-		m->InitIMark();
-		if(!h.empty())
-		{
-			(*h.begin()).locModPtr->Init(*m,h);
-		}
+		m.InitVertexIMark();
+		LocalModificationType::Init(m,h);
+		std::make_heap(h.begin(),h.end());
 	}
 
 
@@ -225,13 +252,11 @@ public:
 		assert ( ( ( tf & LOMetric		)==0) ||  ( targetMetric	!= -1));
 		assert ( ( ( tf & LOTime		)==0) ||  ( timeBudget		!= -1));
 
-		if(h.empty()) return true;
-
-		if ( ( tf & LOnSimplices)	&&	( m->SimplexNumber()< nTargetSimplices)) return true;
-		if ( ( tf & LOnVertices)	&&  ( m->VertexNumber() < nTargetVertices)) return true;
-		if ( ( tf & LOnOps)			&&  ( nPerfmormedOps	== nTargetOps)) return true;
-		if ( ( tf & LOMetric)		&&  ( currMetric		> targetMetric)) return true;
-		if ( ( tf & LOTime)			&&	( (clock()-start)/(float)CLOCKS_PER_SEC > timeBudget)) return true;
+		if ( IsTerminationFlag(LOnSimplices) &&	( m.SimplexNumber()< nTargetSimplices)) return true;
+		if ( IsTerminationFlag(LOnVertices)  &&  ( m.VertexNumber() < nTargetVertices)) return true;
+		if ( IsTerminationFlag(LOnOps)		   && (nPerfmormedOps	== nTargetOps)) return true;
+		if ( IsTerminationFlag(LOMetric)		 &&  ( currMetric		> targetMetric)) return true;
+		if ( IsTerminationFlag(LOTime)			 &&	( (clock()-start)/(float)CLOCKS_PER_SEC > timeBudget)) return true;
 		return false;
 	}
 

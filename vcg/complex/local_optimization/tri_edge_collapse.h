@@ -29,17 +29,8 @@
 
 #include<vcg\complex\trimesh\edge_collapse.h>
 #include<vcg\simplex\face\pos.h>
-#include<vcg\complex\local_optimization\base.h>
+#include<vcg\complex\local_optimization.h>
 
-struct FAIL{
-	static VOL(){static int vol=0; return vol++;}
-	static LKF(){static int lkf=0; return lkf++;}
-	static LKE(){static int lke=0; return lke++;}
-	static LKV(){static int lkv=0; return lkv++;}
-	static OFD(){static int ofd=0; return ofd++;}
-	static BOR(){static int bor=0; return bor++;}
-
-};
 
 namespace vcg{
 namespace tri{
@@ -51,40 +42,42 @@ namespace tri{
 /// Note that it has knowledge of the heap of the class LocalOptimization because
 /// it is responsible of updating it after a collapse has been performed
 
-template<class TRI_MESH_TYPE>
-class TriEdgeCollapse: public LocalOptimization<TRI_MESH_TYPE>::LocModType
+template<class TriMeshType>
+class TriEdgeCollapse: public LocalOptimization<TriMeshType>::LocModType , public EdgeCollapse<TriMeshType> 
 {
- 
-  /// The tetrahedral mesh type
-  typedef	typename TRI_MESH_TYPE TriMeshType;
-  /// The tetrahedron type
-  typedef	typename TriMeshType::FaceType FaceType;
-	/// The vertex type
-	typedef	typename FaceType::VertexType VertexType;
-  /// The coordinate type
-	typedef	typename FaceType::VertexType::CoordType CoordType;
-  /// The scalar type
-  typedef	typename TriMeshType::VertexType::ScalarType ScalarType;
-  /////the base type class
-  //typedef typename vcg::tri::LocalModification LocalMod;
-  /// The HEdgePos type
-	typedef vcg::face::Pos<FaceType> PosType;
-  /// The HEdgePos Loop type
-//  typedef PosLoop<FaceType> PosLType;
-  /// definition of the heap element
-	typedef typename LocalOptimization<TRI_MESH_TYPE>::HeapElem HeapElem;
-	private:
+public:
+ /// static data to gather statistical information about the reasons of collapse failures
+ struct FailStat {
+	static int &Volume()           {static int vol=0; return vol;}
+	static int &LinkConditionFace(){static int lkf=0; return lkf;}
+	static int &LinkConditionEdge(){static int lke=0; return lke;}
+	static int &LinkConditionVert(){static int lkv=0; return lkv;}
+	static int &OutOfDate()        {static int ofd=0; return ofd;}
+	static int &Border()           {static int bor=0; return bor;}
+  static Init() 
+  {
+   Volume()           =0;
+   LinkConditionFace()=0;
+   LinkConditionEdge()=0;
+   LinkConditionVert()=0;
+   OutOfDate()        =0;
+   Border()           =0;
+  }
+};
 
-	///the new point that substitute the edge
-	Point3<ScalarType> _NewPoint;
-	///the pointer to edge collapser method
-	EdgeCollapse<TriMeshType> _EC;
+  typedef	typename TriMeshType::FaceType FaceType;
+	typedef	typename FaceType::VertexType VertexType;
+  typedef	typename FaceType::VertexType::CoordType CoordType;
+  typedef	typename TriMeshType::VertexType::ScalarType ScalarType;
+  typedef vcg::face::Pos<FaceType> PosType;
+  typedef typename LocalOptimization<TriMeshType>::HeapElem HeapElem;
+	
+private:
+
 	///mark for up_dating
 	static int& _Imark(){ static int im=0; return im;}
 	///the pos of collapse 
 	PosType pos;
-	///pointer to vertex that remain
-	VertexType *vrem;
 	/// priority in the heap
 	ScalarType _priority;
 
@@ -94,11 +87,11 @@ class TriEdgeCollapse: public LocalOptimization<TRI_MESH_TYPE>::LocModType
 			{}
 
 	///Constructor with postype
-		TriEdgeCollapse(PosType p,int mark)
+		TriEdgeCollapse(PosType p, int mark)
 			{    
 				_Imark() = mark;
 				pos=p;
-				_priority = _AspectRatioMedia(p);
+				_priority = ComputePriority();
 			}
 
 		~TriEdgeCollapse()
@@ -106,90 +99,32 @@ class TriEdgeCollapse: public LocalOptimization<TRI_MESH_TYPE>::LocModType
 
 private:
 
-///Return the aspect Ratio media of the tetrahedrons
-///that share the adge to collapse
-ScalarType _AspectRatioMedia(PosType p)
-{
- /* PosLType posl=PosLType(p.T(),p.F(),p.E(),p.V());
-  posl.Reset();
-  int num=0;
-  ScalarType ratio_media=0.f;
-  while(!posl.LoopEnd())
-  {
-    ratio_media+=posl.T()->AspectRatio();
-    posl.NextT();
-    num++;
-  }
-  ratio_media=ratio_media/num;
-  return (ratio_media);*/
-}
-
-
-///Modify pos and alfa to obtain the collapse that minimize the error
-ScalarType _VolumePreservingError(PosType &pos,CoordType &new_point,int nsteps)
-{
-  //VertexType *ve0=(pos.T()->V(Tetra::VofE(pos.E(),0)));
-  //VertexType *ve1=(pos.T()->V(Tetra::VofE(pos.E(),1)));
-  //vrem =ve0;
-  //bool ext_v0=ve0->IsB();
-  //bool ext_v1=ve1->IsB();
-
-  //ScalarType best_error=0.f;
-  // if ((ext_v0)&&(!ext_v1))
-  //    new_point=ve0->P();
-  // else
-  // if ((!ext_v0)&&(ext_v1))
-  //    new_point=ve1->P();
-  // else
-  // if ((!ext_v0)&&(!ext_v1))
-  //   new_point=(ve0->P()+ve1->P())/2.f;
-  // else
-  // if ((ext_v0)&&(ext_v1))//both are external vertex
-  // {
-  //  ScalarType step=1.f/(nsteps-1);
-  //  ScalarType Vol_Original=_EC.VolumeOriginal();
-  //  for (int i=0;i<nsteps;i++)
-  //  {
-  //    best_error=1000000.f;
-  //    ScalarType alfatemp=step*((double)i);
-  //    CoordType newPTemp=(ve0->P()*alfatemp) +(ve1->P()*(1.f-alfatemp));
-  //    //the error is the absolute value of difference of volumes
-  //    ScalarType error=fabs(Vol_Original-_EC.VolumeSimulateCollapse(pos,newPTemp));
-  //    if(error<best_error)
-  //    {
-  //     new_point=newPTemp;
-  //     best_error=error;
-  //    }
-  //  }
-  // }
-  // return (best_error);
-}
-
-
 
 public:
 
 
   ScalarType ComputePriority()
   { 
-		return (_priority = 0);
+		_priority = Distance(pos.V()->P(),pos.VFlip()->P()); 
+    return _priority;
   }
 
-  ScalarType ComputeError()
-  {
-		return 0;
+  virtual const char *Info(TriMeshType &m) {
+    static char buf[60];
+    sprintf(buf,"collapse %i -> %i %f\n", pos.V()-&m.vert[0], pos.VFlip()-&m.vert[0],_priority);
+    return buf;
   }
-
-  int Execute()
-  {
-		_EC.FindSets(pos);
-		return -_EC.DoCollapse(pos,_NewPoint);
-  //  _EC.FindSets(pos);
-  //  return -_EC.DoCollapse(pos,_NewPoint);
+ 
+  void Execute(TriMeshType &m)
+  {	
+    CoordType MidPoint=(pos.V()->P()+pos.VFlip()->P())/2.0;
+	  int FaceDel=DoCollapse(pos, MidPoint);
+    m.fn-=FaceDel;
+    --m.vn;
   }
   
   
-  void UpdateHeap(typename LocalOptimization<TRI_MESH_TYPE>::HeapType & h_ret)
+  void UpdateHeap(typename LocalOptimization<TriMeshType>::HeapType & h_ret)
   {
 		_Imark()++;
 		vcg::face::VFIterator<FaceType> VFi(pos.V(1)->VFp(),pos.V(1)->VFi());
@@ -212,40 +147,47 @@ public:
   ModifierType IsOfType(){ return TriEdgeCollapseOp;}
 
   bool IsFeasible(){
-		return (!pos.V(0)->IsS() // bruttino qui...non toccare i vertici selezionati (pro-ponchio)
-			&& _EC.LinkConditions(pos));
+		return LinkConditions(pos);
 	}
 
   bool IsUpToDate(){
-        VertexType *v0=pos.V(0);
-			  VertexType *v1=pos.V(1);
+    if(pos.f->IsD()) {
+				++FailStat::OutOfDate();
+				return false;
+			}
+			
+    if(pos.v->IsD()) {
+				++FailStat::OutOfDate();
+				return false;
+			}
+
+		  VertexType *v0=pos.V();
+			VertexType *v1=pos.VFlip();
 			
 			if(! (( (!v0->IsD()) && (!v1->IsD())) &&
 							 _Imark()>=v0->IMark() &&
 							 _Imark()>=v1->IMark()))
 			{
-				FAIL::OFD();
+				++FailStat::OutOfDate();
 				return false;
 			}
-			else 
 				return true;
 	}
 
-	virtual ScalarType Priority(){
-//		return _priority;
-return 0;
+	virtual ScalarType Priority() const {
+	return _priority;
   }
 
-	virtual void Init(TriMeshType&m,typename LocalOptimization<TRI_MESH_TYPE>::HeapType&h_ret){
+	static void Init(TriMeshType&m,typename LocalOptimization<TriMeshType>::HeapType&h_ret){
 		h_ret.clear();
 		TriMeshType::FaceIterator fi;
-		int j;
 		for(fi = m.face.begin(); fi != m.face.end();++fi)
 		if(!(*fi).IsD()){
 		   for (int j=0;j<3;j++)
       {
         PosType p=PosType(&*fi,j,(*fi).V(j));
         h_ret.push_back(HeapElem(new TriEdgeCollapse<TriMeshType>(p,m.IMark())));
+        //printf("Inserting in heap coll %3i ->%3i %f\n",p.V()-&m.vert[0],p.VFlip()-&m.vert[0],h_ret.back().locModPtr->Priority());
       }
 		}
 	}
@@ -253,33 +195,5 @@ return 0;
 };
 }//end namespace tri
 }//end namespace vcg
-/// return the type of operation
-	//virtual ModifierType IsOfType() = 0 ;
-
-	///// return true if the data have not changed since it was created
-	//virtual bool IsUpToDate() = 0 ;
-
-	///// return true if no constraint disallow this operation to be performed (ex: change of topology in edge collapses)
-	//virtual bool IsFeasible() = 0;
-
-	///// Compute the priority to be used in the heap
-	//virtual ScalarType ComputePriority()=0;
-
-	///// Return the priority to be used in the heap (implement static priority)
-	//virtual ScalarType Priority()=0;
-
-	///// Compute the error caused by this modification (can be the same as priority)
-	//virtual ScalarType ComputeError()=0;
-
-
-	///// Perform the operation and return the variation in the number of simplicies (>0 is refinement, <0 is simplification)
-	//virtual int Execute()=0;
-
-	///// perform initialization
-	//virtual void Init(MESH_TYPE&m,HeapType&)=0;
-
-
-	///// Update the heap as a consequence of this operation
-	//virtual void UpdateHeap(HeapType&)=0;
 
 #endif

@@ -102,140 +102,6 @@ class EdgeCollapse
 
 };
 
-std::map<Edge,char> EdgeMark;
-
-void orMark(Edge E,char M)
-{
- map<Edge,char>::Iterator EI;
- EdgeMark.find(E);
- if (EI==EdgeMArk.end())
-  EdgeMark.insert (Pair<Edge,char>(E,M));
- else
-   (*EI).second()|=M;
-}
-
-bool isMarked(Edge E,char M)
-{
- map<Edge,char>::Iterator EI;
- EdgeMark.find(E);
- if (EI==EdgeMArk.end())
-    return false;
- else return ((*EI).second()&M);
-}
-
-///control link conditions for the collapse
-//bool LinkCondition(vcg::face::Pos<FaceType> pos) 
-//{ 	
-//    const int LINK_V0 = VertexType::NewBitFlag();
-//		const int LINK_V1 = VertexType::NewBitFlag();
-//    const int LINK_EE = VertexType::NewBitFlag();
-//    
-//		const int NOT_LINKED = ~(LINK_V0 | LINK_V1 | LINK_EE);
-//    
-//    VertexType *ve0=pos.f->V(pos.z);
-//    VertexType *ve1=pos.f->V((pos.z+1)%3);
-//    int edge =pos.z;
-//
-//		VFIterator<FaceType> vf0(ve0->VFb(),ve0->VFi());
-//		// Clear visited and adj flag for all vertices adj to v0;
-//    while (!vf0.End())
-//    {
-//			vf0.f->V(0)->Flags() &= NOT_LINKED;
-//			vf0.f->V(1)->Flags() &= NOT_LINKED;
-//      vf0.f->V(2)->Flags() &= NOT_LINKED;
-//      vf0++;
-//		}
-//
-//		VFIterator<FaceType> vf1(ve1->VFb(),ve1->VFi());
-//		// Clear visited and adj flag for all vertices adj to v0;
-//    while (!vf1.End())
-//    {
-//			vf1.f->V(0)->Flags() &= NOT_LINKED;
-//			vf1.f->V(1)->Flags() &= NOT_LINKED;
-//      vf1.f->V(2)->Flags() &= NOT_LINKED;
-//      vf1++;
-//		}
-//
-//    vf0.f=ve0->VFb();
-//    vf0.f=ve0->VFi();
-//		// Mark vertices of v0 
-//		while (!vf0.End())
-//    {
-//      vf0.f->V(0)->Flags() |= (LINK_V0);
-//      vf0.f->V(1)->Flags() |= (LINK_V0);
-//      vf0.f->V(2)->Flags() |= (LINK_V0);
-//      orMark(Edge(vf0.f->V(0),vf0.f->V(1)),LINK_V0);
-//      orMark(Edge(vf0.f->V(1),vf0.f->V(2)),LINK_V0);
-//      orMark(Edge(vf0.f->V(2),vf0.f->V(0)),LINK_V0);
-//      vf0++;
-//    }
-//		
-//    //mark the entities on the edge
-//    VertexType* vt0=pos.f->V(edge);
-//    VertexType* vt1=pos.f->V((edge+1)%3);
-//    VertexType* vt2=pos.f->V((edge+2)%3);
-//
-//    vt0->Flags() |= (LINK_EE);
-//    vt1->Flags() |= (LINK_EE);
-//    vt2->Flags() |= (LINK_EE);
-//    
-//    
-//    FaceType *opp=pos.f()->FFp(edge);
-//    int eopp=pos.f()->FFi(edge);
-//    
-//    VertexType* vt3=opp.f->V((eopp+2)%3);
-//    vt3->Flags() |= LINK_EE;
-//
-//    //mark the edges
-//    orMark(Edge(vt0,vt1),LINK_EE);
-//    orMark(Edge(vt0,vt2),LINK_EE);
-//    orMark(Edge(vt1,vt2),LINK_EE);
-//    orMark(Edge(vt0,vt3),LINK_EE);
-//    orMark(Edge(vt1,vt3),LINK_EE);
-//
-//    //and at the end I verify if the intersection is equal to the star of the edge
-//    vf1.f=ve1->VFb();
-//    vf1.f=ve1->VFi();
-//    bool correct=true;
-//    while (!vf1.End())
-//    {
-//      vt0=vf1.f->V(0);
-//      vt1=vf1.f->V(1);
-//      vt2=vf1.f->V(2);
-//
-//      if ((vt0->Flags()& LINK_V0)&&(!(vt0->Flags()& LINK_EE)))
-//        correct=false;
-//      else
-//      if ((vt1->Flags()& LINK_V0)&&(!(vt1->Flags()& LINK_EE)))
-//        correct=false;
-//      else
-//      if ((vt2->Flags()& LINK_V0)&&(!(vt2->Flags()& LINK_EE)))
-//        correct=false;
-//      else
-//			if ((isMarked(Edge(v0,v1),LINK_V0))&&(!isMarked(Edge(v0,v1),LINK_EE)))
-//        correct=false;
-//      else
-//      if ((isMarked(Edge(v1,v2),LINK_V0))&&(!isMarked(Edge(v1,v2),LINK_EE)))
-//        correct=false;
-//      else
-//      if ((isMarked(Edge(v2,v0),LINK_V0))&&(!isMarked(Edge(v2,v0),LINK_EE)))
-//        correct=false;
-//
-//      if (!correct)
-//      {
-//        VertexType::DeleteBitFlag(LINK_V0);
-//        VertexType::DeleteBitFlag(LINK_V1);
-//        VertexType::DeleteBitFlag(LINK_EE);
-//        return (false)
-//      }
-//      vf1++;
-//    }
-//    return true;
-//    VertexType::DeleteBitFlag(LINK_V0);
-//    VertexType::DeleteBitFlag(LINK_V1);
-//    VertexType::DeleteBitFlag(LINK_EE);
-//	}
-
 	static VFIVec & AV0(){static VFIVec av0; return av0;}
 	static VFIVec & AV1(){static VFIVec av1; return av1;}
 	static VFIVec & AV01(){static VFIVec av01; return av01;}
@@ -252,7 +118,7 @@ bool isMarked(Edge E,char M)
 		
 		VFI x;
 
-		for( x.f = v0->VFp(), x.z = v0->VFi(); x.f!=0; x++)
+		for( x.f = v0->VFp(), x.z = v0->VFi(); x.f!=0; ++x)
 		{
 			
 			int zv1 = -1;
@@ -266,7 +132,7 @@ bool isMarked(Edge E,char M)
 			else    			AV01().push_back( x );
 		}
 
-		for( x.f = v1->VFp(), x.z = v1->VFi(); x.f!=0; x++ )
+		for( x.f = v1->VFp(), x.z = v1->VFi(); x.f!=0; ++x )
 		{
 			int zv0 = -1;
 
@@ -292,17 +158,17 @@ bool isMarked(Edge E,char M)
 		//EdgePosB<MeshType::face_type::face_base> x;
 		vcg::face::VFIterator<FaceType> x;
 		// Clear visited and adj flag for all vertices adj to v0;
-		for(x.f = pos.V(0)->VFp(), x.z = pos.V(0)->VFi(); x.f!=0; x++ )	 	{
+		for(x.f = pos.V(0)->VFp(), x.z = pos.V(0)->VFi(); x.f!=0; ++x )	 	{
 			x.f->V1(x.z)->Flags() &= NOTALLADJ;
 			x.f->V2(x.z)->Flags() &= NOTALLADJ;
 		}
 		// Clear visited flag for all vertices adj to v1 and set them adj1 to v1;
-		for(x.f = pos.V(1)->VFp(), x.z = pos.V(1)->VFi(); x.f!=0; x++ )	 	{
+		for(x.f = pos.V(1)->VFp(), x.z = pos.V(1)->VFi(); x.f!=0; ++x )	 	{
 			x.f->V1(x.z)->Flags() &= NOTALLADJ1;
 			x.f->V2(x.z)->Flags() &= NOTALLADJ1;
 		}
 		// Mark vertices adj to v1 as  ADJ_1 and  adj1 to v1;
-		for(x.f = pos.V(1)->VFp(), x.z = pos.V(1)->VFi(); x.f!=0; x++ )	 	{
+		for(x.f = pos.V(1)->VFp(), x.z = pos.V(1)->VFi(); x.f!=0; ++x )	 	{
 			if(x.f->V1(x.z)==pos.V(0)) x.f->V2(x.z)->Flags() |= ADJ_E | ADJ_1;
 			else x.f->V2(x.z)->Flags() |= ADJ_1;
 			if(x.f->V2(x.z)==pos.V(0)) x.f->V1(x.z)->Flags() |= ADJ_E | ADJ_1;
@@ -312,7 +178,7 @@ bool isMarked(Edge E,char M)
 		// compute the number of:
 		int adj01=0;  // vertices adjacents to both v0 and v1 
 		int adje=0;   // vertices adjacents to an egde (usually 2)
-		for(x.f = pos.V(0)->VFp(), x.z = pos.V(0)->VFi(); x.f!=0; x++ )	 	{
+		for(x.f = pos.V(0)->VFp(), x.z = pos.V(0)->VFi(); x.f!=0; ++x )	 	{
 			if(!x.f->V1(x.z)->IsV()) {
 				x.f->V1(x.z)->SetV();
 				if(x.f->V1(x.z)->Flags()&ADJ_1) ++adj01;
@@ -337,6 +203,7 @@ bool isMarked(Edge E,char M)
 
 	int DoCollapse(PosType & c, Point3<ScalarType> p)
 	{
+    FindSets(c);
 		VFIVec::iterator i;
 		int n_face_del =0 ;
 
