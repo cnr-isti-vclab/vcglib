@@ -5,14 +5,6 @@
 using namespace std;
 using namespace nxs;
 
-//TODO support compression!
-
-void outbuffer(unsigned char *b, unsigned int s) {
-  for(unsigned int i = 0; i < s; i++)
-    cerr << (unsigned int)b[i];
-  cerr << endl;
-}
-
 
 bool PatchServer::Create(const std::string &filename, 
 			 Signature sig, 
@@ -194,8 +186,6 @@ void PatchServer::Flush(unsigned int patch) {
 	cerr << "OOOOPSPPPS not supported!" << endl;
 	exit(-1);
       }
-      cerr << "Ram size: " << entry.ram_size << endl;
-      cerr << "Disk size: " << entry.disk_size << endl;
       SetPosition(entry.patch_start * chunk_size);
       WriteBuffer(compressed, entry.disk_size * chunk_size);
       delete []compressed;
