@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/05/06 10:57:49  pietroni
+changed names to topology functions
+
 Revision 1.2  2004/04/28 11:37:14  pietroni
 *** empty log message ***
 
@@ -42,7 +45,7 @@ Revision 1.1  2004/04/15 08:54:20  pietroni
 
 #ifndef __VCG_TETRAMESH
 #define __VCG_TETRAMESH
-#include <space\box3.h>
+#include <vcg\space\box3.h>
 
 
 namespace vcg {
