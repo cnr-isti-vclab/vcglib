@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2004/07/11 22:06:55  cignoni
+Added scaling by wheel
+
 Revision 1.8  2004/06/09 14:01:13  cignoni
 Heavily restructured. To be completed only rotation works...
 
@@ -47,7 +50,7 @@ Adding copyright.
 
 
 ****************************************************************************/
-#include<gl/glew.h>
+#include <GL/glew.h>
 #include "trackball.h"
 
 #include <wrap/gl/math.h>
