@@ -24,6 +24,18 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2004/07/27 09:49:23  cignoni
+Removed warning about postfix incremnet of VFIterator
+
+Revision 1.9  2004/07/15 12:03:07  ganovelli
+minor changes
+
+Revision 1.8  2004/07/15 11:26:48  ganovelli
+VFDetach corrected
+
+Revision 1.7  2004/05/12 12:23:23  cignoni
+Conformed C++ syntax to GCC requirements
+
 Revision 1.6  2004/05/11 16:03:18  ganovelli
 changed from "thi" to "&f" in Vfdetach
 
@@ -160,8 +172,8 @@ void Attach(FaceType * &f, int z1, FaceType *&f2, int z2)
 		EPB.NextF();
 	}
 	//Salvo i dati di f1 prima di sovrascrivere
-	FaceType *f1prec = f->FFp(z1);  
-	int z1prec = f->FFi(z1);
+	FaceType *f1prec = f.FFp(z1);  
+	int z1prec = f.FFi(z1);
 	//Aggiorno f1
 	f->FFp(z1) = TEPB.f->FFp(TEPB.z);  
 	f->FFi(z1) = TEPB.f->FFi(TEPB.z);
@@ -216,38 +228,33 @@ void Swap (SwapFaceType &f, const int z )
 // NOTA funziona SOLO per la topologia VF!!!
 // usata nelle classi di collapse
 template <class FaceType>
-void VFDetach(FaceType* &f, int z)
+void VFDetach(FaceType & f, int z)
 {
-	if(f->V(z)->VFp()==f )
+	if(f.V(z)->VFp()==&f )  //if it is the first face detach from the begin
 	{
-		int fz = f->V(z)->VFi();
-		f->V(z)->VFp() = (FaceType*) f->VFp(fz);
-		f->V(z)->VFi() = f->VFi(fz);
+		int fz = f.V(z)->VFi();
+		f.V(z)->VFp() = f.VFp(fz);
+		f.V(z)->VFi() = f.VFi(fz);
 	}
-	else
+	else  // scan the list of faces in order to finde the current face f to be detached
 	{
-		
-		vcg::face::VFIterator<FaceType> x,y;
+    VFIterator<FaceType> x(f.V(z)->VFp(),f.V(z)->VFi());
+    VFIterator<FaceType> y;
 
-		x.f = f->V(z)->VFp();
-		x.z = f->V(z)->VFi();
-		y = x;
-		y++;
-		while (!y.End())
+		for(;;)
 		{
-			assert(y.f!=0);
-			if(y.f==f)
+			y = x;
+			++x;
+			assert(x.f!=0);
+			if(x.f==&f) // found!
 			{
-				x.f->VFp(x.z) = y.f->VFp(y.z);
-				x.f->VFi(x.z) = y.f->VFi(y.z);
+				y.f->VFp(y.z) = f.VFp(z);
+				y.f->VFi(y.z) = f.VFi(z);
 				break;
 			}
-			x++;
-			y++;
 		}
 	}
 }
-
 
 /// Append a face in VF list of vertex f->V(z) 
 template <class FaceType>
