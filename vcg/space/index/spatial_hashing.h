@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/03/14 15:11:18  ganovelli
+ClosestK added and other minor changes
+
 Revision 1.3  2005/03/11 15:25:29  ganovelli
 added ClosersIterator and other minor changes. Not compatible with the previous version.
 Still other modifications to do (temporary commit)
@@ -205,7 +208,6 @@ public:
 				}
 			}
 			 ElemType * operator *(){
-				 vcg::Point3d __ = (*curr_i).first->P();
 						return (*curr_i).first;
 			}
 
