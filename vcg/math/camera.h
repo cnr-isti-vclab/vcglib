@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/11/03 09:32:50  ganovelli
+SetPerspective and SetFrustum added (same parameters as in opengl)
+
 Revision 1.4  2004/10/07 14:39:57  fasano
 Remove glew.h include
 
@@ -48,8 +51,8 @@ creation
 #define __VCGLIB_CAMERA
 
 // VCG
-#include <vcg/space/Point3.h>
-#include <vcg/space/Point2.h>
+#include <vcg/space/point3.h>
+#include <vcg/space/point2.h>
 #include <vcg/math/similarity.h>
 
 namespace vcg{
