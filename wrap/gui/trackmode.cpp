@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2004/09/09 22:59:21  cignoni
+Removed many small warnings
+
 Revision 1.8  2004/07/18 06:54:08  cignoni
 Added Scaling
 
@@ -99,7 +102,7 @@ Point3f TrackMode::HitViewPlane(Trackball *tb, const Point3f &p) {
 void SphereMode::Apply(Trackball *tb, Point3f new_point) {
   Point3f hitOld=Hit(tb, tb->last_point);
   Point3f hitNew=Hit(tb, new_point);
-  tb->Hits.push_back(hitNew);
+ // tb->Hits.push_back(hitNew);
 
   Point3f axis = (hitNew- tb->center)^(hitOld- tb->center); 
 
@@ -270,5 +273,7 @@ Point3f SphereMode::Hit(Trackball *tb, const Point3f &p) {
 void PlaneMode::Apply(Trackball *tb, Point3f new_point) {
   Point3f hitOld=HitViewPlane(tb, tb->last_point);
   Point3f hitNew=HitViewPlane(tb, new_point);
-
+	tb->track.tra = tb->last_track.tra + Point3f(hitNew- hitOld);
 }
+
+
