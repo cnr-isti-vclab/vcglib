@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/06/11 17:09:41  ganovelli
+inclusion of vector..minorchanges
+
 Revision 1.6  2004/05/28 14:11:13  ganovelli
 changes to comply io_mask moving in vcg::ply namesp
 
@@ -228,6 +231,36 @@ static const  PropDescriptor &CameraDesc(int i)
 	};
 	return cad[i];
 }
+/// Standard call for knowing the meaning of an error code
+static const char *ErrorMsg(int error)
+{
+  const char * ply_error_msg[] =
+{
+	"No errors",
+	"Can't open file",
+	"Header not found",
+	"Eof in header",
+	"Format not found",
+	"Syntax error on header",
+	"Property without element",
+	"Bad type name",
+	"Element not found",
+	"Property not found",
+	"Bad type on addtoread",
+	"Incompatible type",
+	"Bad cast",
+	"No vertex field found",
+	"No face field found",
+	"Unespected eof",
+	"Face with more than 3 vertices",
+	"Bad vertex index in face",
+	"Face with no 6 texture coordinates",
+	"Number of color differ from vertices"
+};
+
+  if(error>PlyInfo::E_MAXPLYINFOERRORS || error<0) return "Unknown error";
+  else return ply_error_msg[error];
+};
 
 
 /// Standard call for reading a mesh
@@ -287,7 +320,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
   if( pf.Open(filename,vcg::ply::PlyFile::MODE_READ)==-1 )
 	{
 		pi.status = pf.GetError();
-		return -1;
+		return pi.status;
 	}
   pi.header = pf.GetHeader();
 
@@ -305,13 +338,13 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 	}
 
   // Descrittori dati standard (vertex coord e faces)
-  if( pf.AddToRead(VertDesc(0))==-1 ) { pi.status = PlyInfo::E_NO_VERTEX; return -1; }
-	if( pf.AddToRead(VertDesc(1))==-1 ) { pi.status = PlyInfo::E_NO_VERTEX; return -1; }
-	if( pf.AddToRead(VertDesc(2))==-1 ) { pi.status = PlyInfo::E_NO_VERTEX; return -1; }
+  if( pf.AddToRead(VertDesc(0))==-1 ) { pi.status = PlyInfo::E_NO_VERTEX; return pi.status; }
+	if( pf.AddToRead(VertDesc(1))==-1 ) { pi.status = PlyInfo::E_NO_VERTEX; return pi.status; }
+	if( pf.AddToRead(VertDesc(2))==-1 ) { pi.status = PlyInfo::E_NO_VERTEX; return pi.status; }
 	if( pf.AddToRead(FaceDesc(0))==-1 ) // Se fallisce si prova anche la sintassi di rapidform con index al posto di indices
 		if( pf.AddToRead(FaceDesc(9))==-1 ) 
 			if(pf.AddToRead(TristripDesc(0))==-1) // Se fallisce tutto si prova a vedere se ci sono tristrip alla levoy.
-						{ pi.status = PlyInfo::E_NO_FACE;   return -1; }
+						{ pi.status = PlyInfo::E_NO_FACE;   return pi.status; }
 
 		// Descrittori facoltativi dei flags
 	if( pf.AddToRead(VertDesc(3))!=-1 )
@@ -385,12 +418,12 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 			VPV[i] = pi.VertexData[i];
 			VPV[i].offset1=offsetof(LoadPly_VertAux<ScalarType>,data)+totsz;
 			totsz+=pi.VertexData[i].memtypesize();
-			if( pf.AddToRead(VPV[i])==-1 ) { pi.status = pf.GetError(); return -1; }
+			if( pf.AddToRead(VPV[i])==-1 ) { pi.status = pf.GetError(); return pi.status; }
 		}
 		if(totsz > MAX_USER_DATA) 
 		{ 
 			pi.status = vcg::ply::E_BADTYPE; 
-			return -1; 
+			return pi.status; 
 		}
 	}
 	if(pi.fdn>0){
@@ -399,12 +432,12 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 			FPV[i] = pi.FaceData[i];
 			FPV[i].offset1=offsetof(LoadPly_FaceAux,data)+totsz;
 			totsz+=pi.FaceData[i].memtypesize();
-			if( pf.AddToRead(FPV[i])==-1 ) { pi.status = pf.GetError(); return -1; }
+			if( pf.AddToRead(FPV[i])==-1 ) { pi.status = pf.GetError(); return pi.status; }
 		}
 		if(totsz > MAX_USER_DATA) 
 		{ 
       pi.status = vcg::ply::E_BADTYPE; 
-			return -1; 
+			return pi.status; 
 		}
 	}
 
@@ -427,7 +460,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				if( pf.Read( (void *)&(ca) )==-1 )
 				{
 					pi.status = PlyInfo::E_SHORTFILE;
-					return -1;
+					return pi.status;
 				}	
 				//camera.valid     = true;
 				//camera.view_p[0] = ca.view_px;
@@ -469,7 +502,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 			  if( pf.Read( (void *)&(va) )==-1 )
 				{
 					pi.status = PlyInfo::E_SHORTFILE;
-					return -1;
+					return pi.status;
 				}
 				
 				(*vi).P()[0] = va.p[0];
@@ -517,12 +550,12 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				if( pf.Read(&fa)==-1 )
 				{
 					pi.status = PlyInfo::E_SHORTFILE;
-					return -1;
+					return pi.status;
 				}
 				if(fa.size!=3)
 				{
 					pi.status = PlyInfo::E_NO_3VERTINFACE;
-					return -1;
+					return pi.status;
 				}
 
 				for(k=0;k<3;++k)
@@ -530,7 +563,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 					if( fa.v[k]<0 || fa.v[k]>=m.vn )
 					{
 						pi.status = PlyInfo::E_BAD_VERT_INDEX;
-						return -1;
+						return pi.status;
 					}
 					(*fi).V(k) = index[ fa.v[k] ];
 				}
@@ -600,7 +633,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				if( pf.Read(&tsa)==-1 )
 				{
 					pi.status = PlyInfo::E_SHORTFILE;
-					return -1;
+					return pi.status;
 				}
 				int remainder=0;
 				//int startface=m.face.size();
@@ -609,7 +642,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 					if(pi.cb && (k%1000)==0) pi.cb(50+k*50/tsa.size,"Tristrip Face Loading");				
           if(tsa.v[k]<0 || tsa.v[k]>=numvert_tmp )	{
 						pi.status = PlyInfo::E_BAD_VERT_INDEX;
-						return -1;
+						return pi.status;
 					}
 				  if(tsa.v[k+2]==-1)
 					{
@@ -637,7 +670,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				if( pf.Read(0)==-1)
 				{
 					pi.status = PlyInfo::E_SHORTFILE;
-					return -1;
+					return pi.status;
 				}
 			}
 		}
@@ -705,7 +738,7 @@ int LoadCamera(const char * filename)
 	if( pf.Open(filename,vcg::ply::PlyFile::MODE_READ)==-1 )
 	{
 		pi.status = pf.GetError();
-		return -1;
+		return pi.status;
 	}
 
 
@@ -721,7 +754,7 @@ int LoadCamera(const char * filename)
 	}
 
 	if(!found)
-		return -1;
+		return pi.status;
 
 	for(i=0;i<int(pf.elements.size());i++)
 	{
@@ -738,7 +771,7 @@ int LoadCamera(const char * filename)
 				if( pf.Read( (void *)&(ca) )==-1 )
 				{
 					pi.status = PlyInfo::E_SHORTFILE;
-					return -1;
+					return pi.status;
 				}	
 				camera.valid     = true;
 				camera.view_p[0] = ca.view_px;

@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/03/18 15:30:57  cignoni
+Removed float/double warning
+
 Revision 1.3  2004/03/12 21:42:52  cignoni
 First working version!
 
@@ -42,7 +45,7 @@ namespace io {
 /** 
 This class encapsulate a filter for importing stl (stereolitograpy) meshes.
 The stl format is quite simple and rather un-flexible. It just stores, in ascii or binary the, unindexed, geometry of the faces.
-warning this code assume little endian (PC) architecture!!!
+Warning: this code assume little endian (PC) architecture!!!
 */
 template <class OpenMeshType>
 class ImporterSTL
@@ -68,6 +71,26 @@ public:
 //  short attr;
 };
 
+enum STLError {
+	E_NOERROR,				// 0
+		// Errori di open
+	E_CANTOPEN,				// 1
+	E_UNESPECTEDEOF,		// 2
+};
+
+static const char *ErrorMsg(int error)
+{
+  static const char * stl_error_msg[] =
+  {
+	"No errors",
+	"Can't open file",
+	"Premature End of file",
+	};
+
+  if(error>2 || error<0) return "Unknown error";
+  else return stl_error_msg[error];
+};
+
 static int Open( OpenMeshType &m, const char * filename, CallBackPos *cb=0)
 {
   FILE *fp;
@@ -75,7 +98,7 @@ static int Open( OpenMeshType &m, const char * filename, CallBackPos *cb=0)
   fp = fopen(filename, "r");
   if(fp == NULL)
     {
-      return 0;
+      return E_CANTOPEN;
     }
 
   /* Find size of file */
@@ -109,7 +132,7 @@ static int OpenBinary( OpenMeshType &m, const char * filename, CallBackPos *cb=0
   fp = fopen(filename, "rb");
   if(fp == NULL)
   {
-    return 0;
+    return E_CANTOPEN;
   }
    
   int facenum;
@@ -137,7 +160,7 @@ static int OpenBinary( OpenMeshType &m, const char * filename, CallBackPos *cb=0
       ++fi;
     }
     fclose(fp);
-    return 1;
+    return E_NOERROR;
   }
 
 
@@ -147,7 +170,7 @@ static int OpenBinary( OpenMeshType &m, const char * filename, CallBackPos *cb=0
     fp = fopen(filename, "r");
     if(fp == NULL)
     {
-      return 0;
+      return E_CANTOPEN;
     }
 
     m.Clear();
@@ -177,7 +200,7 @@ static int OpenBinary( OpenMeshType &m, const char * filename, CallBackPos *cb=0
       }    
     }
     fclose(fp);
-    return 1;
+    return E_NOERROR;
   }
 }; // end class
 } // end Namespace tri

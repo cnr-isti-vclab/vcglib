@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/05/12 10:19:30  ganovelli
+new line added at the end of file
+
 Revision 1.2  2004/03/09 21:26:47  cignoni
 cr lf mismatch
 
@@ -94,13 +97,14 @@ public:
 enum Error
 {
 		// Funzioni superiori
-	E_NO_VERTEX,			// 14
-	E_NO_FACE,				// 15
-	E_SHORTFILE,			// 16
-	E_NO_3VERTINFACE,		// 17
-	E_BAD_VERT_INDEX,		// 18
-	E_NO_6TCOORD,			// 19
-	E_DIFFER_COLORS,		// 20
+  E_NO_VERTEX       = ply::E_MAXPLYERRORS+1,			// 14
+	E_NO_FACE         = ply::E_MAXPLYERRORS+2,				// 15
+	E_SHORTFILE       = ply::E_MAXPLYERRORS+3,			// 16
+	E_NO_3VERTINFACE  = ply::E_MAXPLYERRORS+4,		// 17
+	E_BAD_VERT_INDEX  = ply::E_MAXPLYERRORS+5,		// 18
+	E_NO_6TCOORD      = ply::E_MAXPLYERRORS+6,			// 19
+	E_DIFFER_COLORS   = ply::E_MAXPLYERRORS+7,	
+  E_MAXPLYINFOERRORS= ply::E_MAXPLYERRORS+8// 20
 };
 
 }; // end class

@@ -31,6 +31,9 @@ of Greg Turk and on the work of Claudio Rocchini
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/06/23 00:06:45  ponchio
+Moved #define LITTLE_MACHINE outside of #ifdef WIN32 (linux on PC is little too).
+
 Revision 1.4  2004/05/12 17:21:08  ganovelli
 inclusion of io.h removed (unnecessary)
 
@@ -120,29 +123,6 @@ const char * cachedir = "vcg_cache";
 const char * bboxcacheext = ".bbox_cache";
 const char * bboxheader = "BBOXCACH";
 
-const char * ply_error_msg[] =
-{
-	"No errors",
-	"Can't open file",
-	"Header not found",
-	"Eof in header",
-	"Format not found",
-	"Syntax error on header",
-	"Property without element",
-	"Bad type name",
-	"Element not found",
-	"Property not found",
-	"Bad type on addtoread",
-	"Incompatible type",
-	"Bad cast",
-	"No vertex field found",
-	"No face field found",
-	"Unespected eof",
-	"Face with more than 3 vertices",
-	"Bad vertex index in face",
-	"Face with no 6 texture coordinates",
-	"Number of color differ from vertices"
-};
 
 
 
