@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/05/12 20:54:55  ponchio
+*** empty log message ***
+
 Revision 1.4  2004/05/12 13:07:47  ponchio
 Added #include <glew.h>
 
@@ -42,9 +45,11 @@ Revision 1.1  2004/03/31 15:27:17  ponchio
 #ifndef VCG_GL_MATH_H
 #define VCG_GL_MATH_H
 
+// Please note that this file assume that you have already included your 
+// gl-extension wrapping utility, and that therefore all the extension symbol are already defined.
+
 #include <vcg/math/matrix44.h>
 #include <vcg/math/similarity.h>
-#include <GL/glew.h>
 
 namespace vcg {
 

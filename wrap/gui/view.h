@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/05/14 03:15:40  ponchio
+Added ViewLineFromModel
+
 Revision 1.6  2004/05/12 20:55:18  ponchio
 *** empty log message ***
 
@@ -56,7 +59,6 @@ y is upward!
 #include <vcg/space/plane3.h>
 #include <vcg/space/line3.h>
 #include <vcg/math/matrix44.h>
-#include <GL/glew.h>
 
 namespace vcg {
 /**
