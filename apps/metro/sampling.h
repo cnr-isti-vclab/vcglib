@@ -36,6 +36,7 @@
 //#include <vcg/tools/Align/Hist.h>
 #include <vcg/space/box3.h>
 #include <vcg/space/color4.h>
+#include <vcg/simplex/face/distance.h>
 #include <vcg/space/index/grid_static_ptr.h>
 using namespace vcg;
 // -----------------------------------------------------------------------------------------------
@@ -194,6 +195,12 @@ float Sampling<MetroMesh>::AddSample(const Point3x &p)
 
     // compute distance between p_i and the mesh S2
     MinDistPoint(S2, p, gS2, dist, normf, bestq, f, ip);
+
+		if(dist >0.001)
+			{
+			printf("%f %f %f\n",p[0],p[1],p[2]); 
+			MinDistPoint(S2, p, gS2, dist, normf, bestq, f, ip);
+			}
 
     // update distance measures
     if(dist == dist_upper_bound)
