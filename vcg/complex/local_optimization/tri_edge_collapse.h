@@ -42,7 +42,7 @@ namespace tri{
 /// Note that it has knowledge of the heap of the class LocalOptimization because
 /// it is responsible of updating it after a collapse has been performed
 
-template<class TriMeshType>
+template<class TriMeshType,class MYTYPE>
 class TriEdgeCollapse: public LocalOptimization<TriMeshType>::LocModType , public EdgeCollapse<TriMeshType> 
 {
 public:
@@ -71,7 +71,6 @@ public:
   typedef	typename TriMeshType::VertexType::ScalarType ScalarType;
   typedef vcg::face::Pos<FaceType> PosType;
   typedef typename LocalOptimization<TriMeshType>::HeapElem HeapElem;
-  typedef  typename TriEdgeCollapse<TriMeshType> MyType;
 	
 
 protected:
@@ -121,7 +120,7 @@ public:
   void Execute(TriMeshType &m)
   {	
     CoordType MidPoint=(pos.V()->P()+pos.VFlip()->P())/2.0;
-	  int FaceDel=DoCollapse(pos, MidPoint);
+	int FaceDel=DoCollapse(pos, MidPoint);
     m.fn-=FaceDel;
     --m.vn;
   }
@@ -137,7 +136,7 @@ public:
       {
 				PosType p;
 				p.Set(VFi.F(),VFi.I(),VFi.f->V(VFi.z));
-				h_ret.push_back(HeapElem(new MyType(p,_Imark())));
+				h_ret.push_back(HeapElem(new MYTYPE(p,_Imark())));
 				std::push_heap(h_ret.begin(),h_ret.end());
 				//// update the mark of the vertices
 				VFi.f->V(VFi.z)->IMark() = _Imark();
@@ -189,7 +188,7 @@ public:
 		   for (int j=0;j<3;j++)
       {
         PosType p=PosType(&*fi,j,(*fi).V(j));
-        h_ret.push_back(HeapElem(new MyType(p,m.IMark())));
+        h_ret.push_back(HeapElem(new MYTYPE(p,m.IMark())));
         //printf("Inserting in heap coll %3i ->%3i %f\n",p.V()-&m.vert[0],p.VFlip()-&m.vert[0],h_ret.back().locModPtr->Priority());
       }
 		}
