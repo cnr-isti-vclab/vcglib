@@ -14,7 +14,7 @@
 #include <vcg/space/point3.h>
 
 #include "pvoronoi.h"
-//#include "border.h"
+#include "fragment.h"
 
 #include "decimate.h"
 #include <wrap/io_trimesh/export_ply.h>
@@ -56,8 +56,8 @@ float nxs::Decimate(Decimation mode,
 		    unsigned int target_faces, 
 		    vector<Point3f> &newvert, 
 		    vector<unsigned int> &newface,
-		    vector<Link> &newbord,
-		    vector<int> &vert_remap) {
+		    vector<BigLink> &newbord) {
+
 
   for(unsigned int i = 0; i < newface.size(); i+= 3) {
     assert(newface[i] != newface[i+1]);
@@ -103,6 +103,7 @@ float nxs::Decimate(Decimation mode,
   newface.clear();
 
   unsigned int totvert = 0;
+  vector<int> vert_remap;
   vert_remap.resize(mesh.vert.size(), -1);
   for(unsigned int i = 0; i < mesh.vert.size(); i++) {
     if(mesh.vert[i].IsD()) continue;
@@ -119,17 +120,17 @@ float nxs::Decimate(Decimation mode,
   }
 
   for(unsigned int i = 0; i < newbord.size(); i++) {
-    unsigned short &v = newbord[i].start_vert;
+    unsigned int &v = newbord[i].start_vert;
     assert(vert_remap[v] != -1);
     v = vert_remap[v];
   }
 
   //Temporary test again:
-  for(unsigned int i = 0; i < newface.size(); i+= 3) {
+  /*  for(unsigned int i = 0; i < newface.size(); i+= 3) {
     assert(newface[i] != newface[i+1]);
     assert(newface[i] != newface[i+2]);
     assert(newface[i+1] != newface[i+2]);
-  }
+    }*/
   
   return error;
 }
