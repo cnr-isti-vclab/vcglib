@@ -76,8 +76,10 @@ void Nexus::Close() {
   
   unsigned int size = index.size(); //size of index
   fwrite(&size, sizeof(unsigned int), 1, index_file);
-  fwrite(&index[0], sizeof(Entry), size, index_file);
+  fwrite(&(index[0]), sizeof(Entry), size, index_file);
   fclose(index_file);
+  index_file = NULL;
+
   patches.Close();
   borders.Close();
 }
