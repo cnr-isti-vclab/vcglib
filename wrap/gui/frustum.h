@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/05/12 20:55:18  ponchio
+*** empty log message ***
+
 Revision 1.3  2004/03/31 15:06:41  ponchio
 #include <camera> -> #include <view>
 
@@ -43,11 +46,11 @@ Adding copyright.
 
 namespace vcg {
 
-  template <class T> class Frustum: public View<T> {
+template <class T> class Frustum: public View<T> {
 public:                                            
   void GetView();  
   Point3<T> ViewPoint();
-  T Resolution();
+  T Resolution(float dist = 1);
   bool IsOutside(Point3<T> &point);
   bool IsOutside(Point3<T> &point, T radius);
   T Distance(Point3<T> &point, int plane);  
@@ -58,6 +61,7 @@ protected:
   Point3<T> view_point;  
 };
 
+
 typedef Frustum<float> Frustumf;
 typedef Frustum<double> Frustumd;
 
@@ -67,8 +71,8 @@ template <class T> Point3<T> Frustum<T>::ViewPoint() {
   return view_point;  
 }
 
-template <class T> T Frustum<T>::Resolution() {
-  return resolution;  
+template <class T> T Frustum<T>::Resolution(float dist) {
+  return resolution * dist;  
 }
 
 template <class T> bool Frustum<T>::IsOutside(Point3<T> &point) {
@@ -89,42 +93,50 @@ template <class T> bool Frustum<T>::IsOutside(Point3<T> &point, T radius) {
 }
 
 template <class T> T Frustum<T>::Distance(Point3<T> &point, int plane) {    
-  return Distance<T>(point, planes[plane]);  
+  return Distance(point, planes[plane]);  
 }
 
 template <class T> void Frustum<T>::GetView() {
-  Camera::GetView();
+  View<T>::GetView();
   
-  Point3d NE, SE, SW, NW, ne, se, sw, nw;
+  //  Point3d NE, SE, SW, NW, ne, se, sw, nw;
   int t = viewport[1] + viewport[3];
   int b = viewport[1];
   int r = viewport[0] + viewport[2];
   int l = viewport[0];
 	
-  Point3d NE, SE, SW, NW, ne, se, sw, nw;
-	gluUnProject(l, b, 0, model_matrix, proj_matrix, viewport, &nw[0], &nw[1], &nw[2]);
-	gluUnProject(l, t, 0, model_matrix, proj_matrix, viewport, &sw[0], &sw[1], &sw[2]);
-	gluUnProject(r, b, 0, model_matrix, proj_matrix, viewport, &ne[0], &ne[1], &ne[2]);
-	gluUnProject(r, t, 0, model_matrix, proj_matrix, viewport, &se[0], &se[1], &se[2]);
-	gluUnProject(l, b, 1, model_matrix, proj_matrix, viewport, &NW[0], &NW[1], &NW[2]);
-	gluUnProject(l, t, 1, model_matrix, proj_matrix, viewport, &SW[0], &SW[1], &SW[2]);
-	gluUnProject(r, b, 1, model_matrix, proj_matrix, viewport, &NE[0], &NE[1], &NE[2]);
-	gluUnProject(r, t, 1, model_matrix, proj_matrix, viewport, &SE[0], &SE[1], &SE[2]);
+  Point3<T> nw = UnProject(Point3<T>(l, b, 0));
+  Point3<T> sw = UnProject(Point3<T>(l, t, 0));
+  Point3<T> ne = UnProject(Point3<T>(r, b, 0));
+  Point3<T> se = UnProject(Point3<T>(r, t, 0));
+  Point3<T> NW = UnProject(Point3<T>(l, b, 1));
+  Point3<T> SW = UnProject(Point3<T>(l, t, 1));
+  Point3<T> NE = UnProject(Point3<T>(r, b, 1));
+  Point3<T> SE = UnProject(Point3<T>(r, t, 1));
 
-  view_point = Camera::ViewPoint();  	
+  /*  gluUnProject(l,b,0,model,proj,viewport,&nw[0], &nw[1], &nw[2]);
+  gluUnProject(l,t,0,model,proj,viewport,&sw[0], &sw[1], &sw[2]);
+  gluUnProject(r,b,0,model,proj,viewport,&ne[0], &ne[1], &ne[2]);
+  gluUnProject(r,t,0,model,proj,viewport,&se[0], &se[1], &se[2]);
+  gluUnProject(l,b,1,model,proj,viewport,&NW[0], &NW[1], &NW[2]);
+  gluUnProject(l,t,1,model,proj,viewport,&SW[0], &SW[1], &SW[2]);
+  gluUnProject(r,b,1,model,proj,viewport,&NE[0], &NE[1], &NE[2]);
+  gluUnProject(r,t,1,model,proj,viewport,&SE[0], &SE[1], &SE[2]);*/
   
-  planes[0].init(view_point,             Point3<T>().Import(nw), Point3<T>().Import(ne));  
-  planes[1].init(view_point,             Point3<T>().Import(ne), Point3<T>().Import(se));
-  planes[2].init(view_point,             Point3<T>().Import(se), Point3<T>().Import(sw));
-  planes[3].init(view_point,             Point3<T>().Import(sw), Point3<T>().Import(nw));
-  planes[4].init(Point3<T>().Import(se), Point3<T>().Import(sw), Point3<T>().Import(nw));
-  planes[5].init(Point3<T>().Import(SW), Point3<T>().Import(SE), Point3<T>().Import(NE));   
+  view_point = View<T>::ViewPoint();  	
+  
+  planes[0].Init(view_point, nw, ne);  
+  planes[1].Init(view_point, ne, se);
+  planes[2].Init(view_point, se, sw);
+  planes[3].Init(view_point, sw, nw);
+  planes[4].Init(se, sw, nw);
+  planes[5].Init(SW, SE, NE);   
 
   for(int i = 0; i < 6; i++)
     planes[i].Normalize();
 
   //calcoliamo la risoluzione: dimenzione di un pixel a distanza 1 dal view_point
-  resolution =  (T)((ne + NE) - (nw + NW)).Norm() /( viewport[2] * ((ne + NE) - (nw + NW)).Norm());
+  resolution = ((ne + NE) - (nw + NW)).Norm() /( viewport[2] * ((ne + NE) - view_point).Norm());
 }
 
 }//namespace
