@@ -2,6 +2,7 @@
 #define __VCGLIB_IMPORTERTS
 #define NULL 0
 #include <vcg/space/point3.h>
+#include <vcg/space/point4.h>
 
 namespace vcg {
 namespace tetra {
