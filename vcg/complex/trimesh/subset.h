@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/05/07 10:06:46  turini
+include Plane3 removed.
+
 Revision 1.3  2004/05/07 09:35:09  turini
 Added History Info
 
@@ -41,13 +44,16 @@ namespace tri {
 template <class I_MESH_TYPE>
 struct InsertedV
 {
-  InsertedV(I_MESH_TYPE::vertex_type *_v,
-	        I_MESH_TYPE::face_pointer _f,	
-			int _z):v(_v),f(_f),z(_z)
+  typedef I_MESH_TYPE IMeshType; 
+  typedef typename IMeshType::VertexPointer  VertexPointer;
+  typedef typename IMeshType::FacePointer  FacePointer;
+
+  InsertedV(VertexPointer _v, FacePointer _f, int _z)
+	: v(_v), f(_f), z(_z)
   {}
   
-  I_MESH_TYPE::vertex_type *v;
-  I_MESH_TYPE::face_pointer f;
+  VertexPointer v;
+  FacePointer f;
   int z;
   
   const bool operator <(const InsertedV & o)
@@ -76,13 +82,13 @@ void SubSet(STL_CONT & subSet, S_MESH_TYPE & m)
 {
   vector< InsertedV<S_MESH_TYPE> > newVertices;
   STL_CONT::iterator pfi;
-  S_MESH_TYPE::vertex_iterator vi;
-  vector<S_MESH_TYPE::vertex_pointer> redirect;
+  S_MESH_TYPE::VertexIterator vi;
+  vector<S_MESH_TYPE::VertexPointer> redirect;
   
   for(pfi=subSet.begin(); pfi!=subSet.end(); ++pfi)
     m.face.push_back(*(*pfi));
   
-  S_MESH_TYPE::face_iterator fi;
+  S_MESH_TYPE::FaceIterator fi;
   for(fi=m.face.begin(); fi!=m.face.end(); ++fi)
   {
     newVertices.push_back(InsertedV<S_MESH_TYPE>((*fi).V(0), &(*fi),0));
@@ -99,7 +105,7 @@ void SubSet(STL_CONT & subSet, S_MESH_TYPE & m)
   {
     if((*curr)!=(*next))
 	  pos++;
-	(*next).f->V((*next).z)=(S_MESH_TYPE::vertex_pointer)pos;
+	(*next).f->V((*next).z)=(S_MESH_TYPE::VertexPointer)pos;
 	curr=next;
 	next++;
   }
