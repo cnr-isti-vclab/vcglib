@@ -33,7 +33,7 @@ bool PatchServer::Load(const std::string &filename, Signature sig,
 		       unsigned int rsize) {
 
   signature = sig;
-  chunk_size = csize/chunk_size + 1;
+  chunk_size = csize;
 
   ram_size = rsize/chunk_size + 1;
   ram_used = 0;
