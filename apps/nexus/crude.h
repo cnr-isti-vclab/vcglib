@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/06/25 16:47:13  ponchio
+Various debug
+
 Revision 1.1  2004/06/24 14:32:45  ponchio
 Moved from wrap/nexus
 
@@ -58,6 +61,9 @@ public:
     unsigned int *ptr() { return v; }
   };
 
+  VFile<vcg::Point3f> vert;
+  VFile<Face> face;
+
   Crude(): fp(NULL), nvert(0), nface(0) {}
   ~Crude();
   
@@ -80,8 +86,24 @@ public:
 
   vcg::Box3f &GetBox();
 
-  VFile<vcg::Point3f> vert;
-  VFile<Face> face;
+  template <class MESH> void Export(MESH &mesh) {
+    MESH::VertexType v;
+    v.ClearFlags();
+    for(unsigned int i = 0; i < <Vertices(); i++) {
+      v.P().Import(GetVertex(i));
+      mesh.vert.push_back(v);
+    }
+    
+    MESH::FaceType f;
+    f.ClearFlags();
+    for(unsigned int i = 0; i < Faces(); i++) {
+      for(int k = 0; k < 3; k++) {
+	f.
+	mesh.vert.push_back(GetVertex(i));
+      }
+    }
+  }
+
 
  protected:
 
