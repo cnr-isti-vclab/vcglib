@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/05/12 20:55:18  ponchio
+*** empty log message ***
+
 Revision 1.5  2004/05/07 12:46:08  cignoni
 Restructured and adapted in a better way to opengl
 
@@ -53,7 +56,7 @@ y is upward!
 #include <vcg/space/plane3.h>
 #include <vcg/space/line3.h>
 #include <vcg/math/matrix44.h>
-#include <gl/glew.h>
+#include <GL/glew.h>
 
 namespace vcg {
 /**
@@ -68,10 +71,13 @@ public:
   void SetView();                      
   Point3<T> Project(const Point3<T> &p) const;
   Point3<T> UnProject(const Point3<T> &p) const;
-  Point3<T> ViewPoint();
+  Point3<T> ViewPoint() const;
 
   /// Return the plane perpendicular to the view axis and passing through point P.
   Plane3<T> ViewPlaneFromModel(const Point3<T> &p);
+
+  /// Return the line of view passing through point P.
+  Line3<T> ViewLineFromModel(const Point3<T> &p);
   
   /// Return the line passing through the point p and the observer.
   Line3<T> ViewLineFromWindow(const Point3<T> &p);
@@ -107,7 +113,7 @@ template <class T> void View<T>::SetView() {
   
 }
 
-template <class T> Point3<T> View<T>::ViewPoint() {
+template <class T> Point3<T> View<T>::ViewPoint() const {
   Matrix44<T> mi=model;
   Invert(mi);
   return mi* Point3<T>(0, 0, 0);
@@ -116,11 +122,22 @@ template <class T> Point3<T> View<T>::ViewPoint() {
 template <class T> Plane3<T> View<T>::ViewPlaneFromModel(const Point3<T> &p)
 {
   Point3<T> vp=ViewPoint();
-	Plane3<T> pl;  // plane perpedicular to view direction and passing through manip center
-	pl.n=(vp-p);
-	pl.d=pl.n*p;
+  Plane3<T> pl;  // plane perpedicular to view direction and passing through manip center
+  pl.n=(vp-p);
+  pl.d=pl.n*p;
   return pl;
 }
+
+// Note that p it is assumed to be in model coordinate.
+template <class T> Line3<T> View<T>::ViewLineFromModel(const Point3<T> &p)
+{
+  Point3<T> vp=ViewPoint();
+  Line3<T> line;
+  line.SetOrigin(vp);
+  line.SetDirection(p - vp);
+  return line;
+}
+
 // Note that p it is assumed to be in window coordinate.
 template <class T> Line3<T> View<T>::ViewLineFromWindow(const Point3<T> &p)
 {
