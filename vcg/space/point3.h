@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2004/03/21 17:14:56  ponchio
+Added a math::
+
 Revision 1.15  2004/03/07 22:45:32  cignoni
 Moved quality and normal functions to the triangle class.
 
@@ -280,11 +283,18 @@ public:
 		return *this;
 	}
 		// Convert to polar coordinates
-	void ToPolar( P3ScalarType & ro, P3ScalarType & tetha, P3ScalarType & fi ) const
+	void ToPolar( P3ScalarType & ro, P3ScalarType & theta, P3ScalarType & fi ) const
 	{
 		ro = Norm();
-		tetha = (P3ScalarType)atan2( _v[1], _v[0] );
+		theta = (P3ScalarType)atan2( _v[1], _v[0] );
 		fi    = (P3ScalarType)acos( _v[2]/ro );
+	}
+
+  void FromPolar( const P3ScalarType & ro, const P3ScalarType & theta, const P3ScalarType & phi )
+	{
+    _v[0]= ro*cos(theta)*sin(phi);
+    _v[1]= ro*sin(theta)*sin(phi);
+    _v[2]= ro*cos(phi);
 	}
 
 //@}
