@@ -113,15 +113,14 @@ class EdgeCollapse
 		VertexType * v0 = p.V(0);
 		VertexType * v1 = p.V(1);
 
-		AV0().clear(); // Facce incidenti in v0 
-		AV1().clear(); // Facce incidenti in v1 
+		AV0().clear();  // Facce incidenti in v0 
+		AV1().clear();  // Facce incidenti in v1 
 		AV01().clear(); // Facce incidenti in v0 e v1
 		
 		VFI x;
 
 		for( x.f = v0->VFp(), x.z = v0->VFi(); x.f!=0; ++x)
 		{
-			
 			int zv1 = -1;
 
 			for(int j=0;j<3;++j) 
@@ -243,15 +242,15 @@ class EdgeCollapse
 			f01->FFi(If01)=If00;
 		}
 
-
 		for(i=AV01().begin();i!=AV01().end();++i)
 		{	
-			FaceType  * f = ((*i).f);
-			assert(f->V((*i).z) == c.V(0));
+			FaceType  & f = *((*i).f);
+			assert(f.V((*i).z) == c.V(0));
 
-			vcg::face::VFDetach(*f,((*i).z+1)%3);
-			vcg::face::VFDetach(*((*i).f),((*i).z+2)%3);
-			((*i).f)->SetD();
+			vcg::face::VFDetach(f,(*i).z);
+			vcg::face::VFDetach(f,((*i).z+1)%3);
+			vcg::face::VFDetach(f,((*i).z+2)%3);
+			f.SetD();
 			n_face_del++;
 		}
 
@@ -263,8 +262,8 @@ class EdgeCollapse
 			(*i).f->VFi((*i).z) = (*i).f->V((*i).z)->VFi();
 			(*i).f->V((*i).z)->VFp() = (*i).f;
 			(*i).f->V((*i).z)->VFi() = (*i).z;
+			vcg::Quality((*i).f->P(0),(*i).f->P(1),(*i).f->P(2));
 		}
-		
 		
 		/*TriMeshType::VertexType nv;*/
 //*		c.v[1]->Merge(*c.v[0]);
