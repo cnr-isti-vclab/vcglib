@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/05/12 10:18:55  ganovelli
+new line added at the end of file
+
 Revision 1.2  2004/05/10 14:26:33  ganovelli
 argument name removed to avoid "unreference variable"warning
 
@@ -45,6 +48,9 @@ typedef bool CallBackPos(const int pos, const char * str );
 
 inline bool DummyCallBack( const char * ) {return true;}
 inline bool DummyCallBackPos(const int ,  const char * ) {return true;}
+
+/// interruptible function 
+typedef void TaskFunc(int t,void * contest); 
 	
 }	// End namespace
 
