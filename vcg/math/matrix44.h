@@ -30,12 +30,9 @@ $LOG$
 #ifndef __VCGLIB_MATRIX44
 #define __VCGLIB_MATRIX44
 
-
-
-#include <math.h>
 #include <string.h>
-#include "../space/Point3.h"
-#include "../space/Point4.h"
+#include <vcg/space/point3.h>
+#include <vcg/space/point4.h>
 
 
 namespace vcg {
@@ -311,8 +308,8 @@ template <class T> void Matrix44<T>::SetTranslate(const T sx, const T sy, const 
 }
 template <class T> void Matrix44<T>::SetRotate(T angle, const Point3<T> & axis) {  
   //angle = angle*(T)3.14159265358979323846/180; e' in radianti!
-	T c = Cos(angle);
-	T s = Sin(angle);
+  T c = Math<T>::Cos(angle);
+  T s = Math<T>::Sin(angle);
 	T q = 1-c;  
 	Point3<T> t = axis;
 	t.Normalize();

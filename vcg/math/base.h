@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/02/13 02:18:57  cignoni
+Edited Comments and GPL license
+
 
 ****************************************************************************/
 
@@ -45,6 +48,9 @@ namespace vcg {
   public:
     static T inline Sqrt(const T v);
     static T inline Abs(const T v);
+    static T inline Cos(const T v);
+    static T inline Sin(const T v);
+    
     
     static const T  MaxVal;
     static T ToDeg(const T &a);
@@ -62,10 +68,20 @@ namespace vcg {
   { return sqrtf(v); }
   float Math<float>::Abs(const float v) 
   { return fabsf(v); }
+  float Math<float>::Cos(const float v) 
+  { return cosf(v); }
+  float Math<float>::Sin(const float v) 
+  { return sinf(v); }
+
   double Math<double>::Sqrt(const double v) 
   { return sqrt(v); }
   double Math<double>::Abs(const double v) 
   { return fabs(v); }
+  double Math<double>::Cos(const double v) 
+  { return cos(v); }
+  double Math<double>::Sin(const double v) 
+  { return sin(v); }
+  
     
     
   const unsigned char   Math<unsigned char  >::MaxVal = 255;
