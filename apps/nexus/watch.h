@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/10/21 13:40:16  ponchio
+Debugging.
+
 Revision 1.2  2004/10/21 12:14:02  ponchio
 Support for mfile (>4Gb)
 
@@ -46,7 +49,10 @@ First draft created.
 ****************************************************************************/
 
 #ifdef WIN32
+#ifndef _WINDOWS_
+#define _WINSOCKAPI_
 #include <windows.h>
+#endif
 #else
 #include <sys/time.h>
 #include <unistd.h>     

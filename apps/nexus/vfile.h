@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2004/11/18 18:30:14  ponchio
+Using baricenters... lotsa changes.
+
 Revision 1.14  2004/10/19 16:50:27  ponchio
 Added row file access ....
 
@@ -177,14 +180,14 @@ template <class T> class VFile: public MFile {
   }
 
   void FlushBuffer(Buffer buffer) {
-    SetPosition(buffer.key * chunk_size * sizeof(T));
+    SetPosition((int64)buffer.key * (int64)chunk_size * (int64)sizeof(T));
     WriteBuffer((char *)(buffer.data), buffer.size * sizeof(T));
     delete []buffer.data;
   }
 
   void Resize(unsigned int elem) {
     Flush();
-    MFile::Redim(elem * sizeof(T));
+    MFile::Redim((int64)elem * (int64)sizeof(T));
     n_elements = elem;
   }
 
@@ -228,7 +231,7 @@ template <class T> class VFile: public MFile {
     index[buffer.key] = buffers.begin();   
     last_buffer = &*buffers.begin();
     
-    SetPosition(chunk * chunk_size * sizeof(T));
+    SetPosition((int64)chunk * (int64)chunk_size * (int64)sizeof(T));
     ReadBuffer((char *)(buffer.data), buffer.size * sizeof(T));    
 
     return *(buffer.data + offset);
@@ -264,19 +267,19 @@ template <class T> class VFile: public MFile {
     buffers.push_front(buffer);    
     index[chunk] = buffers.begin();   
 
-    SetPosition(chunk * chunk_size * sizeof(T));
+    SetPosition((int64)chunk * (int64)chunk_size * (int64)sizeof(T));
     ReadBuffer((char *)(buffer.data), buffer.size * sizeof(T));
     return buffer.data;
   }
   //non buffered read only acces.
   T read(unsigned int element) {
-    SetPosition(element * sizeof(T));
+    SetPosition((int64)element * (int64)sizeof(T));
     T t;
     ReadBuffer(&t, sizeof(T));
     return t;
   }
   void write(unsigned int element, T &t) {
-    SetPosition(element * sizeof(T));
+    SetPosition((int64)element * (int64)sizeof(T));
     WriteBuffer(&t, sizeof(T));
   }
 

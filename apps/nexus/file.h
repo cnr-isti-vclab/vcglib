@@ -4,7 +4,10 @@
 //TODO move includes in cpp
 
 #ifdef WIN32
+#ifndef _WINDOWS_
+#define _WINSOCKAPI_
 #include <windows.h>
+#endif
 #else
 #include <unistd.h>
 #endif
