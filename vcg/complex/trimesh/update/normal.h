@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/03/12 15:22:19  cignoni
+Written some documentation and added to the trimes doxygen module
+
 Revision 1.1  2004/03/05 10:59:24  cignoni
 Changed name from plural to singular (normals->normal)
 
@@ -85,7 +88,7 @@ static void PerVertex(ComputeMeshType &m)
  for(f=m.face.begin();f!=m.face.end();++f)
    if( !(*f).IsD() && (*f).IsR() )
    {
-    FaceType::NormalType t = (*f).Normal();
+    typename FaceType::NormalType t = (*f).Normal();
 
     for(int j=0; j<3; ++j)
      if( !(*f).V(j)->IsD() && (*f).V(j)->IsRW() )  
@@ -129,7 +132,7 @@ static void PerFaceRW(ComputeMeshType &m, bool normalize=false)
 		for(f=m.m.face.begin();f!=m.m.face.end();++f)
 		if( !(*f).IsD() && (*f).IsRW() )
 		{
-			for(int j=0; j<3); ++j)
+			for(int j=0; j<3; ++j)
 				if( !(*f).V(j)->IsR()) 	cn = false;
 			if( cn ) (*f).ComputeNormalizedNormal();
 			cn = true;
