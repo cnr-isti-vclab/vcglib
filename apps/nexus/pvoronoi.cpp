@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/10/30 20:17:03  ponchio
+Fixed big patches problem.
+
 Revision 1.6  2004/10/15 11:41:03  ponchio
 Tests and small changes.
 
@@ -52,15 +55,17 @@ Created
 ****************************************************************************/
 
 #include <stdio.h>
-#include <iostream>
+
 #include "pvoronoi.h"
 #include <ANN/ANN.h>
+
+#include <iostream>
 
 using namespace std;
 using namespace vcg;
 using namespace nxs;
 
-void VoronoiPartition::Init() {
+void VoronoiPartition::Init() {  
   if(bd) delete bd;
   buffer.resize(size() * 3);
   for(unsigned int i = 0; i < size(); i++) {
@@ -71,29 +76,39 @@ void VoronoiPartition::Init() {
   for(unsigned int i = 0; i < size(); i++) {
     points[i] = &buffer[i*3];
   }
+  /*FILE *ft = fopen("points.txt", "wb+");
+  if(!ft) {
+    std::cerr <<" AHOI!" << endl;
+    exit(0);
+  }
+  for(unsigned int i = 0; i < size(); i++) {
+    fprintf(ft, "%f\t%f\t%f\n", operator[](i)[0], operator[](i)[1], operator[](i)[2]);
+  }
+  fclose(ft);*/
+  std::cerr << "Building kd!\n";
   bd = new ANNkd_tree(&*points.begin(), size(), 3);
-  
+  std::cerr << "Done!\n";
 }
 void VoronoiPartition::Closest(const vcg::Point3f &p, unsigned int nsize, 
-			       vector<int> &near, 
+			       vector<int> &nears, 
 			       vector<float> &dist) {
   double point[3];
   point[0] = p[0];
   point[1] = p[1];
   point[2] = p[2];
 
-  near.resize(nsize);
+  nears.resize(nsize);
   dist.resize(nsize);
   vector<double> dists;
   dists.resize(nsize);
-  bd->annkSearch(&point[0], nsize, &*near.begin(), &*dists.begin());
+  bd->annkSearch(&point[0], nsize, &*nears.begin(), &*dists.begin());
   for(unsigned int i = 0; i < nsize; i++)
     dist[i] = (float)dists[i];
 }
 
 void VoronoiPartition::Closest(const vcg::Point3f &p, 
 			       int &target, float &dist) {
-   double point[3];
+  double point[3];
   point[0] = p[0];
   point[1] = p[1];
   point[2] = p[2];

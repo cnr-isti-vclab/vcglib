@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2004/10/30 20:17:03  ponchio
+Fixed big patches problem.
+
 Revision 1.8  2004/10/15 11:41:03  ponchio
 Tests and small changes.
 
@@ -71,7 +74,8 @@ Created
 //TODO provide a Sort function, to sort spatially the seeds.
 
 class ANNkd_tree;
-
+class ANNbd_tree;
+class ANNbruteForce;
 namespace nxs {
 
   
@@ -81,7 +85,7 @@ namespace nxs {
     VoronoiPartition(): bd(NULL) {}
     void Init();
     void Closest(const vcg::Point3f &p, unsigned int nsize, 
-		 std::vector<int> &near, 
+		 std::vector<int> &nears, 
 		 std::vector<float> &dist);
     void Closest(const vcg::Point3f &p, 
 		  int &target, float &dist);

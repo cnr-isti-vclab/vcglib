@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2004/10/30 20:17:03  ponchio
+Fixed big patches problem.
+
 Revision 1.19  2004/10/22 10:37:32  ponchio
 Split is now in fragment.
 
@@ -91,6 +94,7 @@ First draft.
 #endif
 
 #include <iostream>
+#include <algorithm>
 using namespace std;
 
 #include "crude.h"
@@ -485,7 +489,7 @@ void SaveFragment(Nexus &nexus, VoronoiChain &chain,
 }
 
 void ReverseHistory(vector<Nexus::Update> &history) {
-  reverse(history.begin(), history.end());
+  std::reverse(history.begin(), history.end());
   vector<Nexus::Update>::iterator i;
   for(i = history.begin(); i != history.end(); i++)
     swap((*i).erased, (*i).created);

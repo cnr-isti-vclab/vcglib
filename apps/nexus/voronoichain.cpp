@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2004/10/30 20:17:03  ponchio
+Fixed big patches problem.
+
 Revision 1.17  2004/10/29 16:33:29  ponchio
 Trying to fix big patches.
 
@@ -92,36 +95,47 @@ void print(Point3f p) {
   cerr << p[0] << " " << p[1] << " " << p[2] << endl;
 }
 
+//return first non zero distance point.
 float getClosest(const Point3f &seed, VoronoiPartition &part) {
-  vector<int> near;
-  vector<float> dist;
-  part.Closest(seed, 2, near, dist);
-  for(int k = 0; k < 2; k++) {
-    int c = near[k];
-    assert(c >= 0);
-    assert(c < part.size());
-    if(part[c] == seed) continue;
-    return Distance(seed, part[c]);
+  vector<int> nears;
+  vector<float> dists;
+  float dist = 0;
+  int count = 1;
+  while(dist == 0) {
+    if(count > part.size()) {
+      cerr << "This should never happen!!!!\n";
+      exit(0);
+    }
+    part.Closest(seed, count, nears, dists);
+    for(int k = 0; k < count; k++) {
+      int c = nears[k];
+      assert(c >= 0);
+      assert(c < part.size());      
+      if(dists[k] > 0 && (dist == 0 || dists[k] < dist)) {
+        dist = dists[k];                              
+      }
+    }
+    count++;
   }
-  return -1;
+  return sqrt(dist);
 }
 
 int getBest(const Point3f &seed, VoronoiPartition &part, 
 	    vector<bool> &mark,
 	    vector<unsigned int> &counts) {
 
-  vector<int> near;
+  vector<int> nears;
   vector<float> dist;
   int nnear = 7;
   if(part.size() < 7) nnear = part.size()/2;
   if(!nnear) return -1;
   
-  part.Closest(seed, nnear, near, dist);
+  part.Closest(seed, nnear, nears, dist);
   int best = -1;
   int bestcount = -1;
   int bestdist = -1;
   for(int k = 0; k < nnear; k++) {
-    int c = near[k];
+    int c = nears[k];
     assert(c >= 0);
     assert(c < part.size());    if(mark[c]) continue;
     if(part[c] == seed) continue;
@@ -154,38 +168,57 @@ bool VoronoiChain::Optimize(int mean, VoronoiPartition &part,
     //first pass we check only big ones
     for(unsigned int i = 0; i < part.size(); i++) {
       if(counts[i] > max_size || counts[i] > 2 * mean) {
-	failed++;
-	cerr << "Failed> " << counts[i] << endl;
-	float radius= getClosest(part[i], part);
-	radius /= 3;
-	if(radius < 0) continue;
-	seeds.push_back(part[i] + Point3f(1, 0, 0) * radius);
-	seeds.push_back(part[i] + Point3f(0, 1, 0) * radius);
-	seeds.push_back(part[i] + Point3f(0, 0, 1) * radius);
-
-	seeds.push_back(part[i] - Point3f(1, 0, 0) * radius);
-	seeds.push_back(part[i] - Point3f(0, 1, 0) * radius);
-	seeds.push_back(part[i] - Point3f(0, 0, 1) * radius);
-	mark[i];
+	      failed++;
+	      cerr << "Failed> " << counts[i] << endl;
+	      float radius= getClosest(part[i], part);
+        cerr << "RADIUS: " << radius << endl;
+        if(radius == 0) {
+          cerr << "Radius zero???\n";
+          exit(0);
+        }
+	      radius /= 3;
+	      if(radius < 0) continue;
+	      seeds.push_back(part[i] + Point3f(1, 0, 0) * radius);
+	      seeds.push_back(part[i] + Point3f(0, 1, 0) * radius);
+	      seeds.push_back(part[i] + Point3f(0, 0, 1) * radius);
+      
+	      seeds.push_back(part[i] - Point3f(1, 0, 0) * radius);
+	      seeds.push_back(part[i] - Point3f(0, 1, 0) * radius);
+	      seeds.push_back(part[i] - Point3f(0, 0, 1) * radius);
+	      mark[i];
       }
     }
 
+    cerr << "Join now!" << endl;
     for(unsigned int i = 0; i < part.size(); i++) {
       if(mark[i]) continue;
       if(join && counts[i] < min_size) {
         failed++;
-	int best = getBest(part[i], part, mark, counts);
-	if(best < 0) continue;
-	assert(mark[best] == false);
-	mark[best] = true;
-	mark[i] = true;
-	seeds.push_back((part[i] + part[best])/2);
+	      int best = getBest(part[i], part, mark, counts);
+        if(best < 0) {
+          cerr << "Best not found! how strange!\n";
+          continue;
+        }
+        if(best >= part.size()) {
+          cerr << "Invalid best!!!\n";
+          exit(0);
+        }
+	      assert(mark[best] == false);
+	      mark[best] = true;
+	      mark[i] = true;
+	      seeds.push_back((part[i] + part[best])/2);
       }
     }
 
     for(unsigned int i = 0; i < part.size(); i++) {
       if(mark[i]) continue;
-      if(join) part[i] = centroids[i]/(float)counts[i];      
+      if(join) {
+        if(counts[i] < min_size) {
+          cerr << "Qualche problema serio!\n";          
+        } else {
+          part[i] = centroids[i]/(float)counts[i];      
+        }
+      }
       seeds.push_back(part[i]);      
     }
 
@@ -194,7 +227,9 @@ bool VoronoiChain::Optimize(int mean, VoronoiPartition &part,
       part.push_back(seeds[i]);
 
     if(part.size() == 0) part.push_back(Point3f(0,0,0));
+    cerr << "Initing!\n";
     part.Init();    
+    cerr << "Inited!\n";
     return failed == 0;
 }
 
@@ -255,6 +290,7 @@ void VoronoiChain::Init(Crude &crude, float scaling, int steps) {
     } else 
       Optimize(fine_vmean, fine, centroids, counts, true);
   }
+  cerr << "Optimized (fine)!\n";
 //here goes some optimization pass.
 //Coarse optimization.
 //vector<float> radius;
@@ -280,10 +316,11 @@ void VoronoiChain::Init(Crude &crude, float scaling, int steps) {
     }
     if(step == steps-1) {
       if(!Optimize(coarse_vmean, coarse, centroids, counts, false))
-	step --;
+	      step --;
     } else 
       Optimize(coarse_vmean, coarse, centroids, counts, true);
   }    
+  cerr << "Optimized coarse!\n";
 }
 
 unsigned int VoronoiChain::Locate(unsigned int level, 
