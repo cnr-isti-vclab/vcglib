@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.24  2004/10/28 00:50:48  cignoni
+Better Doxygen documentation
+
 Revision 1.23  2004/10/25 08:22:40  ganovelli
 IsBOrder (typecast on return type)
 
@@ -966,6 +969,13 @@ static bool HasFaceQuality()  {
 }
 static bool HasFaceColor()  { 
 #ifdef __VCGLIB_FACE_FC 
+  return true;
+#else
+  return false;
+#endif
+}
+static bool HasEdgePlane()  { 
+#ifdef __VCGLIB_FACE_RT 
   return true;
 #else
   return false;
