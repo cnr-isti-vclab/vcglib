@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/05/10 13:15:54  cignoni
+missing ending newline
+
 Revision 1.4  2004/05/05 08:20:47  cignoni
 syntax error in set and better comment
 
@@ -130,9 +133,9 @@ public:
 
 	/// Calculates the plane passing through three points (Rename this method)
   void Init(const PointType &p0, const PointType &p1, const PointType &p2) {
-	  _dir = (p2 - p0) ^ (p1 - p0);
-	  _offset = p0 * _dir;
+    _dir = (p2 - p0) ^ (p1 - p0);
     if(NORM) Normalize();
+    _offset = p0 * _dir;
   }
 
   /// Calculates the plane passing through a point and the normal (Rename this method
