@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2004/07/15 00:13:39  cignoni
+Better doxigen documentation
+
 Revision 1.8  2004/06/02 16:42:44  ganovelli
 typename for gcc compilation
 
@@ -206,7 +209,7 @@ static void VertexFace(MeshType &m)
 
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 	{
-		(*vi).VFb() = 0;
+		(*vi).VFp() = 0;
 		(*vi).VFi() = 0;
 	}
 
@@ -215,9 +218,9 @@ static void VertexFace(MeshType &m)
 	{
 		for(int j=0;j<3;++j)
 		{
-			(*fi).VFp(j) = (*fi).V(j)->VFb();
+			(*fi).VFp(j) = (*fi).V(j)->VFp();
 			(*fi).VFi(j) = (*fi).V(j)->VFi();
-			(*fi).V(j)->VFb() = &(*fi);
+			(*fi).V(j)->VFp() = &(*fi);
 			(*fi).V(j)->VFi() = j;
 		}
 	}
