@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/06/25 18:34:23  ganovelli
+added Grid to return all the cells sharing a specified edge
+
 Revision 1.4  2004/06/23 15:49:03  ponchio
 Added some help and inndentation
 
@@ -429,7 +432,7 @@ class GridStaticPtr
 	  assert(pl!=links.end());
 	  
 	  grid[pg] = &*pl;
-	  while( pg == pl->Index() )	// Trovato inizio
+	  while( (int)pg == pl->Index() )	// Trovato inizio
 	    {
 	      ++pl;		// Ricerca prossimo blocco
 	      if(pl==links.end())
