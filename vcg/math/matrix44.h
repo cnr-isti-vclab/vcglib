@@ -30,7 +30,17 @@ $LOG$
 #ifndef __VCGLIB_MATRIX44
 #define __VCGLIB_MATRIX44
 
-/*
+
+
+#include <math.h>
+#include <string.h>
+#include "../space/Point3.h"
+#include "../space/Point4.h"
+
+
+namespace vcg {
+
+  /*
 	Annotations:
 Opengl stores matrix in  column-major order. That is, the matrix is stored as:
 
@@ -60,19 +70,10 @@ and the Translate Function generate:
 	0  0  1  0
 	tx ty tz 1
 
-Le funzioni Translate e Rotate vanno usate con la Apply, 
-che moltiplica vettore (inteso come riga) per la matrice
-
 */
 
-#include <math.h>
-#include <string.h>
-#include "../space/Point3.h"
-#include "../space/Point4.h"
-
-
-namespace vcg {
-
+  /** This class represent a 4x4 matrix. T is the kind of element in the matrix.
+    */
 template <class T> class Matrix44 {  
 protected:
   T _a[16];
@@ -80,6 +81,11 @@ protected:
 public:	
   typedef T scalar;
 
+///@{
+
+  /** $name Contrutors
+    *  No automatic casting and default constructor is empty
+    */
 	Matrix44() {};	
 	~Matrix44() {};
   Matrix44(const Matrix44 &m);
@@ -111,26 +117,38 @@ public:
   void SetScale(const T sx, const T sy, const T sz);	
 	void SetTranslate(const Point3<T> &t);
 	void SetTranslate(const T sx, const T sy, const T sz);
-  void SetRotate(T angle, const Point3<T> & axis); //use radiants for angle.
+  ///use radiants for angle.
+  void SetRotate(T angle, const Point3<T> & axis); 
 
   T Determinant() const;
 };
 
 
+/** Class for solving A * x = b. */
 template <class T> class LinearSolve: public Matrix44<T> {
 public:
   LinearSolve(const Matrix44<T> &m);
-  Point4<T> Solve(Point4<T> &b); // solve A · x = b 
+  Point4<T> Solve(const Point4<T> &b); // solve A · x = b 
+  ///If you need to solve some equation you can use this function instead of Matrix44 one for speed.
   T Determinant() const;
 protected:
+  ///Holds row permutation.
   int index[4]; //hold permutation
-  T d;          //hold sign of permutation
+  ///Hold sign of row permutation (used for determinant sign)
+  T d;
   void Decompose();
 };
 
+///	Apply   POST moltiplica la matrice al vettore (e.g. la traslazione deve stare nell'ultima riga)
+///	Project PRE  moltiplica la matrice al vettore (e.g. la traslazione deve stare nell'ultima colonna)
 
-template <class T> Point4<T> operator*(const Matrix44<T> &m, const Point4<T> &p);
+/*** Postmultiply (old Apply in the old interface). 
+  * SetTranslate, SetScale, SetRotate prepare the matrix for this.
+  */
 template <class T> Point4<T> operator*(const Point4<T> &p, const Matrix44<T> &m);
+
+///Premultiply  (old Project in the old interface)
+template <class T> Point4<T> operator*(const Matrix44<T> &m, const Point4<T> &p);
 
 template <class T> Matrix44<T> &Transpose(Matrix44<T> &m);
 template <class T> Matrix44<T> &Invert(Matrix44<T> &m);
@@ -140,7 +158,7 @@ typedef Matrix44<int>	 Matrix44i;
 typedef Matrix44<float>  Matrix44f;
 typedef Matrix44<double> Matrix44d;
 
-//Implementazione
+
 
 template <class T> Matrix44<T>::Matrix44(const Matrix44<T> &m) {
   memcpy((T *)_a, (T *)m._a, 16 * sizeof(T));   
@@ -450,7 +468,7 @@ template <class T> void LinearSolve<T>::Decompose() {
 }
 
 
-template <class T> Point4<T> LinearSolve<T>::Solve(Point4<T> &b) { 
+template <class T> Point4<T> LinearSolve<T>::Solve(const Point4<T> &b) { 
   Point4<T> x(b);
   int first = 0, ip;  
   for(int i = 0; i < 4; i++) { 
