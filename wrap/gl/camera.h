@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/09/15 22:59:13  ganovelli
+creation
+
 Revision 1.2  2004/09/06 21:41:30  ganovelli
 *** empty log message ***
 
@@ -34,39 +37,21 @@ creation
 
 #ifndef __GL_CAMERA
 #define __GL_CAMERA
-
+#include <QMessageBox.h>
 // VCG
 #include <vcg/math/camera.h>
 
 // opengl
 #include <GL/glew.h>
 
-
 template<class CameraType>
-class GlCamera
-{
-public:
-	typedef CameraType::ScalarType ScalarType;
-
-	GlCamera(CameraType & c):camera(c){}
-	CameraType & camera;
-
-public:
-	/// return the projection matrix for opengl
-	inline vcg::Matrix44<ScalarType> MatrixGL(ScalarType,vcg::Matrix44<ScalarType> &);
-
-	/// return the projection matrix for opengl
-	inline void TransformGL(CameraType::ScalarType far) const;
-};
-
-
-template<class CameraType>
-vcg::Matrix44<CameraType::ScalarType> GlCamera<CameraType>::MatrixGL(CameraType::ScalarType far,vcg::Matrix44<CameraType::ScalarType> &m){
+vcg::Matrix44<typename CameraType::ScalarType>
+MatrixGL(const CameraType & cam, typename CameraType::ScalarType far,vcg::Matrix44<typename CameraType::ScalarType> &m){
 	glPushAttrib(GL_TRANSFORM_BIT);
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadIdentity();
-	camera.TransformGL(far);
+	cam.TransformGL(far);
 	glGetv(GL_PROJECTION_MATRIX,&m[0][0]);
 	glPopMatrix();
 	glPopAttrib();
@@ -74,12 +59,26 @@ vcg::Matrix44<CameraType::ScalarType> GlCamera<CameraType>::MatrixGL(CameraType:
 }
 
 template<class CameraType>
-void GlCamera<CameraType>::TransformGL(CameraType::ScalarType farDist) const{
+void TransformGL(const CameraType & camera,typename CameraType::ScalarType farDist) {
 
 /////////////////// METTERE IL FRUSTUM GIUSTO //////////////////////
 	//glFrustum(1,10,2,20,1,20);
+	
+	typedef typename CameraType::ScalarType S;
+	S sx,dx,bt,tp,nr,fr;
 
+	dx = -camera.c.X()*camera.s.X();
+	sx = ( camera.viewport.X() - camera.c.X() ) * camera.s.X();
 
+	bt = -camera.c.Y()*camera.s.Y();
+	tp = ( camera.viewport.Y() - camera.c.Y() ) * camera.s.Y();
+
+	nr = camera.f;
+	fr = farDist; // tmp
+	
+	assert(glGetError()==0);
+	glFrustum(dx,sx,bt,tp,nr,fr);
+	assert(glGetError()==0);
 }
 
 #endif

@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/09/15 22:59:13  ganovelli
+creation
+
 Revision 1.2  2004/09/06 21:41:30  ganovelli
 *** empty log message ***
 
@@ -47,70 +50,59 @@ creation
 #include <wrap/gl/camera.h>
 
 #include <dbgUti.h>
-template <class ShotType>
-class GlShot {
-public:	
-	typedef typename ShotType::ScalarType ScalarType;
-
-	GlCamera<ShotType::CameraType> & glCamera;					// the camera that shot
-	ShotType &shot;
-	GlShot(ShotType &s):shot(s),glCamera(GlCamera<ShotType::CameraType> (s.camera) ){}
-
-	void MatrixGL(vcg::Matrix44<ScalarType> & m) const;
-
-	vcg::Point3<ScalarType>const & GlShot<ShotType>::ViewPoint();
-
-	/// apply the modelview transformation
-	void TransformGL() const;
-
-	/// Set opengl projection and model matrix pushing them onto the stack (to use with PopView()
-	void SetView();
-	void UnsetView();
-
-}; // end class definition
-
 
 
 template<class ShotType>
-void GlShot<ShotType>::MatrixGL(vcg::Matrix44<ScalarType> & m) const{
+void MatrixGL(const ShotType & shot,vcg::Matrix44<typename ShotType::ScalarType> & m) {
 	m = shot.similarity.Matrix();
 }
 
 
 template<class ShotType>
-void GlShot<ShotType>::TransformGL()const{
-		vcg::Matrix44<ScalarType> m;
-		MatrixGL(m);
+void TransformGL(const ShotType & shot){
+		vcg::Matrix44<typename ShotType::ScalarType> m;
+		MatrixGL(shot,m);
 		glMultMatrix(m);
 	}
 
 template <class ShotType>
-void GlShot<ShotType>::SetView(){
+void SetView(const ShotType & shot){
+		assert(glGetError() == 0);
 		glPushAttrib(GL_TRANSFORM_BIT);
 		glMatrixMode(GL_PROJECTION);
 		glPushMatrix();
 		glLoadIdentity();
+		assert(glGetError() == 0);
 
 		OutMatrix("mat.txt","a+");
-		glCamera.TransformGL(1.f);
+		assert(glGetError() == 0);
+
+		TransformGL(shot.camera,1.f);
+		assert(glGetError() == 0);
+
 		OutMatrix("mat.txt","a+");
+		assert(glGetError() == 0);
 
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
 		glLoadIdentity();
 
-		vcg::Matrix44<ScalarType> m;
-		TransformGL();
+		vcg::Matrix44<typename ShotType::ScalarType> m;
+		TransformGL(shot);
+
+		glPopAttrib();
+		
+		assert(glGetError() == 0);
 }
 
-template <class ShotType>
-	void GlShot<ShotType>::UnsetView(){
-		glMatrixMode(GL_MODELVIEW);
-		glPopMatrix();
-		glMatrixMode(GL_PROJECTION);
-		glPopMatrix();
-		glPopAttrib();
-		}
+#define UnsetView()\
+		glPushAttrib(GL_TRANSFORM_BIT);\
+		glMatrixMode(GL_MODELVIEW);\
+		glPopMatrix();\
+		glMatrixMode(GL_PROJECTION);\
+		glPopMatrix();\
+		glPopAttrib();\
+		
 
 
 #endif
