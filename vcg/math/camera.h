@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.10  2004/12/15 18:45:50  tommyfranken
+*** empty log message ***
+
 <<<<<<< camera.h
 =======
 Revision 1.8  2004/11/23 10:15:38  cignoni
@@ -95,7 +98,16 @@ public:
 
 	char _flags;
 	bool IsOrtho(){ return (_flags & ORTHO_BIT);}
-	void SetOrtho(bool v ){ if(v) _flags |= ORTHO_BIT; else _flags &= ~ORTHO_BIT; };
+	void SetOrtho(bool v, S dist )
+	{ 
+		if(v) _flags |= ORTHO_BIT; 
+		else
+		{
+			_flags &= ~ORTHO_BIT; 
+			 viewportM = ( ((viewport[0] * s[0]) * (viewport[1] * s[1])) / f ) * dist;
+
+		}
+	};
 	char & UberFlags() {return _flags;}
 
 	/// set the camera specifying the perspecive view
