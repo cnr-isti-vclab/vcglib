@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/02/07 15:44:31  rita_borgo
+Fixed Color and Volume
+
 Revision 1.6  2005/02/01 17:37:53  rita_borgo
 Fixed Volume and Color
 
@@ -158,7 +161,7 @@ void main(int argc,char ** argv){
 
 	char                 *fmt;
 	MyMesh m;
-	bool DEBUG = true;
+	bool DEBUG = false;
 	//load the mesh
 	//argv[1]=(char*)"c:\\checkup\\debug\\column1m.ply";
 	//argv[1] = "C:\\sf\\apps\\msvc\\trimeshinfo\\Release\\prism.off";
@@ -627,38 +630,6 @@ void main(int argc,char ** argv){
 			fprintf(index, "<p> Oriented Mesh: NO</p>"); 
 		  printf( "\t Oriented Mesh: NO\n"); 
 	}
-// SELF INTERSECTION
-
-	if (m.fn<300000)
-	{
-	bool SelfInt=false;
-	for(f=m.face.begin();f!=m.face.end();++f)
-		{
-			for(g=++f , f--;g!=m.face.end();++g)
-				{
-					if ((*f).FFp(0)!=&(*g) && (*f).FFp(1)!=&(*g) && (*f).FFp(2)!=&(*g) &&
-						f->V(0)!=g->V(0) && f->V(0)!=g->V(1) && f->V(0)!=g->V(2) &&
-						f->V(1)!=g->V(0) && f->V(1)!=g->V(1) && f->V(1)!=g->V(2) &&
-						f->V(2)!=g->V(0) && f->V(2)!=g->V(1) && f->V(2)!=g->V(2))
-					{
-						if (NoDivTriTriIsect(f->V(0)->P(), f->V(1)->P(), f->V(2)->P(),g->V(0)->P(), g->V(1)->P(), g->V(2)->P()) )
-							SelfInt=true;
-					}
-				}
-			if (SelfInt)
-				break;			
-		}
-	if (SelfInt)
-	{
-		fprintf(index, "<p> Self Intersection: YES</p>"); 
-		printf( "\t Self Intersection: YES\n");
-	}
-	else
-	{
-			fprintf(index, "<p> Self Intersection: NO</p>"); 
-		 printf( "\t Self Intersection: NO\n"); 
-	}
-	}
 	int dv = DuplicateVertex(m);
 	if(dv>0)
 	{
@@ -670,7 +641,40 @@ void main(int argc,char ** argv){
 		fprintf(index, "<p> Duplicated vertices: NO</p>"); 
 		printf( "\t Duplicated vertices: NO\n");
 	}
+	// SELF INTERSECTION
+
+	if (m.fn<300000)
+	{
+		bool SelfInt=false;
+		for(f=m.face.begin();f!=m.face.end();++f)
+		{
+			for(g=++f , f--;g!=m.face.end();++g)
+			{
+				if ((*f).FFp(0)!=&(*g) && (*f).FFp(1)!=&(*g) && (*f).FFp(2)!=&(*g) &&
+					f->V(0)!=g->V(0) && f->V(0)!=g->V(1) && f->V(0)!=g->V(2) &&
+					f->V(1)!=g->V(0) && f->V(1)!=g->V(1) && f->V(1)!=g->V(2) &&
+					f->V(2)!=g->V(0) && f->V(2)!=g->V(1) && f->V(2)!=g->V(2))
+				{
+					if (NoDivTriTriIsect(f->V(0)->P(), f->V(1)->P(), f->V(2)->P(),g->V(0)->P(), g->V(1)->P(), g->V(2)->P()) )
+						SelfInt=true;
+				}
+			}
+			if (SelfInt)
+				break;			
+		}
+		if (SelfInt)
+		{
+			fprintf(index, "<p> Self Intersection: YES</p>"); 
+			printf( "\t Self Intersection: YES\n");
+		}
+		else
+		{
+			fprintf(index, "<p> Self Intersection: NO</p>"); 
+			 printf( "\t Self Intersection: NO\n"); 
+		}
+	}
+
+
 	fclose(index);
 }
-
 
