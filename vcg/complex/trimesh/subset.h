@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/05/14 11:43:17  turini
+Changed mesh ClearFlag call.
+
 Revision 1.5  2004/05/13 09:59:20  turini
 Added typedef typename in InsertedV
 
@@ -84,10 +87,10 @@ struct InsertedV
 template <class S_MESH_TYPE, class STL_CONT>
 void SubSet(STL_CONT & subSet, S_MESH_TYPE & m)
 {
-  vector< InsertedV<S_MESH_TYPE> > newVertices;
+  std::vector< InsertedV<S_MESH_TYPE> > newVertices;
   STL_CONT::iterator pfi;
   S_MESH_TYPE::VertexIterator vi;
-  vector<S_MESH_TYPE::VertexPointer> redirect;
+  std::vector<S_MESH_TYPE::VertexPointer> redirect;
   
   for(pfi=subSet.begin(); pfi!=subSet.end(); ++pfi)
     m.face.push_back(*(*pfi));
@@ -102,7 +105,7 @@ void SubSet(STL_CONT & subSet, S_MESH_TYPE & m)
   
   sort(newVertices.begin(), newVertices.end());
   
-  vector< InsertedV<S_MESH_TYPE> >::iterator curr, next;
+  std::vector< InsertedV<S_MESH_TYPE> >::iterator curr, next;
   int pos=0;
   curr=next=newVertices.begin();
   while(next!=newVertices.end())
@@ -114,7 +117,7 @@ void SubSet(STL_CONT & subSet, S_MESH_TYPE & m)
 	next++;
   }
   
-  vector< InsertedV<S_MESH_TYPE> >::iterator newE=unique(newVertices.begin(), newVertices.end());
+  std::vector< InsertedV<S_MESH_TYPE> >::iterator newE=unique(newVertices.begin(), newVertices.end());
   for(curr=newVertices.begin(); curr!=newE; ++curr)
     m.vert.push_back(*((*curr).v));
   
