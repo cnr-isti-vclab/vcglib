@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.38  2005/02/16 15:52:09  ponchio
+qualche opzione in piu' , tolti i grafici
+
 Revision 1.37  2005/02/15 15:55:36  ponchio
 aggiunta delle sphere
 
@@ -288,6 +291,7 @@ int main(int argc, char *argv[]) {
     case 'w': width =  atoi(optarg); break;
     case 'h': height =  atoi(optarg); break;
     case 'p': preload = false; nexus.SetPreload(preload); break;
+    case 'f': fullscreen = true; break;
     default:
       cerr << "Unknow option.\n"; break;
     }
