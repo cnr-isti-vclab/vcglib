@@ -3,7 +3,6 @@
 	ProjectType="Visual C++"
 	Version="7.00"
 	Name="nxsview"
-	OwnerKey="{EAF909A5-FA59-4C3D-9431-0FCC20D5BCF9}"
 	ProjectGUID="{87FA44C0-5EFB-4E12-8C97-98E676E9B9D3}"
 	Keyword="Win32Proj">
 	<Platforms>
@@ -24,7 +23,7 @@
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="TRUE"
@@ -33,7 +32,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="SDL.lib SDLmain.lib opengl32.lib glu32.lib glew32.lib"
+				AdditionalDependencies="SDL.lib SDLmain.lib opengl32.lib glu32.lib glew32.lib ptypes.lib"
 				OutputFile="$(OutDir)/nxsview.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
@@ -79,7 +78,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="SDL.lib SDLmain.lib opengl32.lib glu32.lib glew32.lib"
+				AdditionalDependencies="SDL.lib SDLmain.lib opengl32.lib glu32.lib glew32.lib ptypes.lib"
 				OutputFile="$(OutDir)/nxsview.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
@@ -117,6 +116,9 @@
 				RelativePath="..\..\..\..\wrap\system\getopt.cpp">
 			</File>
 			<File
+				RelativePath="..\..\..\nexus\mfile.cpp">
+			</File>
+			<File
 				RelativePath="..\..\..\nexus\minilzo.108\minilzo.c">
 			</File>
 			<File
@@ -135,13 +137,13 @@
 				RelativePath="..\..\..\nexus\patchserver.cpp">
 			</File>
 			<File
-				RelativePath="..\..\..\nexus\stopwatch.cpp">
-			</File>
-			<File
 				RelativePath="..\..\..\..\wrap\gui\trackball.cpp">
 			</File>
 			<File
 				RelativePath="..\..\..\..\wrap\gui\trackmode.cpp">
+			</File>
+			<File
+				RelativePath="..\..\..\nexus\watch.cpp">
 			</File>
 		</Filter>
 		<Filter
@@ -163,6 +165,9 @@
 				RelativePath="..\..\..\..\wrap\system\getopt.h">
 			</File>
 			<File
+				RelativePath="..\..\..\nexus\mfile.h">
+			</File>
+			<File
 				RelativePath="..\..\..\nexus\minilzo.108\minilzo.h">
 			</File>
 			<File
@@ -178,9 +183,6 @@
 				RelativePath="..\..\..\nexus\patchserver.h">
 			</File>
 			<File
-				RelativePath="..\..\..\nexus\stopwatch.h">
-			</File>
-			<File
 				RelativePath="..\..\..\..\wrap\gui\trackball.h">
 			</File>
 			<File
@@ -188,6 +190,9 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\wrap\gui\view.h">
+			</File>
+			<File
+				RelativePath="..\..\..\nexus\watch.h">
 			</File>
 		</Filter>
 		<Filter
