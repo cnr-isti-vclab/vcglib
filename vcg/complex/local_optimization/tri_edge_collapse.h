@@ -233,7 +233,8 @@ public:
 
 	virtual ScalarType Priority(){
 //		return _priority;
-	}
+return 0;
+  }
 
 	virtual void Init(TriMeshType&m,typename LocalOptimization<TRI_MESH_TYPE>::HeapType&h_ret){
 		h_ret.clear();
