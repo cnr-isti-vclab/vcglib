@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2005/02/17 16:40:35  ponchio
+Optimized BuildLevels.
+
 Revision 1.17  2005/02/08 12:43:03  ponchio
 Added copyright
 
@@ -33,6 +36,7 @@ Added copyright
 #include <vector>
 #include <map>
 #include <set>
+#include <algorithm>
 #include <iostream>
 
 //#include <wrap/strip/tristrip.h>
@@ -40,6 +44,7 @@ Added copyright
 #include "nxsalgo.h"
 #include "vfile.h"
 #include "nexus.h"
+#include "zcurve.h"
 #include "watch.h"
 
 using namespace std;
@@ -458,3 +463,41 @@ void nxs::Unify(Nexus &nexus, float threshold) {
     cerr << "Found " << degenerate << " degenerate face while unmifying\n";
 }
 
+void nxs::ZSort(Nexus &nexus, vector<unsigned int> &forward,
+		vector<unsigned int> &backward) {
+  //lets get a bounding box from the sphere:
+  ZCurve zcurve;
+  float r = nexus.sphere.Radius();
+  Point3f radius(r, r, r);
+  zcurve.Set(nexus.sphere.Center());
+  zcurve.Add(nexus.sphere.Center() - radius);
+  zcurve.Add(nexus.sphere.Center() + radius);
+
+  vector<int> levels;
+  nexus.history.BuildLevels(levels);
+
+  forward.clear();
+
+  vector< vector<ZEntry> > entries;
+
+  for(unsigned int i = 0; i < nexus.size(); i++) {
+    int level = levels[i];
+    while(level >= entries.size()) entries.push_back(vector<ZEntry>());
+
+    ZEntry e;
+    e.id = i;
+    e.pos = zcurve.Pos(nexus[i].sphere.Center());
+    entries[level].push_back(e);
+  }
+
+  for(unsigned int i = 0; i < entries.size(); i++) {
+    vector<ZEntry> &lev = entries[i];
+    std::sort(lev.begin(), lev.end());
+    for(unsigned int k = 0; k < lev.size(); k++) 
+      forward.push_back(lev[k].id);
+  }
+
+  backward.resize(forward.size());
+  for(unsigned int i = 0; i < backward.size(); i++) 
+    backward[forward[i]] = i;
+}

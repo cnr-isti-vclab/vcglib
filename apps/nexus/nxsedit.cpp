@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2005/02/08 12:43:03  ponchio
+Added copyright
+
 
 ****************************************************************************/
 
@@ -104,9 +107,10 @@ int main(int argc, char *argv[]) {
   float qnormal = 0;
   float qcolor = 0;
   float qtexture = 0;
+  bool zsort = false;
 
   int option;
-  while((option = getopt(argc, argv, "ilo:a:r:zxv:n:k:t:b:c:")) != EOF) {
+  while((option = getopt(argc, argv, "ilo:a:r:zxsv:n:k:t:b:c:")) != EOF) {
     switch(option) {
     case 'i': info = true; break;
     case 'l': verbose = true; break;
@@ -176,6 +180,7 @@ int main(int argc, char *argv[]) {
     case 'p': plysource = optarg; break;
     case 'z': compress = true; break;
     case 'x': uncompress = true; break;
+    case 's': zsort = true; break;
 
     case 'v': qvertex = (float)atof(optarg); 
       if(qvertex == 0) {
@@ -233,6 +238,7 @@ int main(int argc, char *argv[]) {
 	 << " -p <ply> : Ply source for colors or textures or data\n"
 	 << " -z       : compress\n"
 	 << " -x       : uncompress\n"
+	 << " -s       : sort using zcurve\n"
 	 << " -v<float>: Vertex quantization (float is the 0 level amount)\n"
 	 << " -n<float>: Normal quantization\n"
          << " -c<float>: Color quantization\n"
@@ -286,7 +292,17 @@ int main(int argc, char *argv[]) {
 
 
   if(info) {
-    cout << "Nexus file: " << input << "\n\n"
+    //perform locality statistics
+    double meandist = 0;
+    vcg::Sphere3f last = nexus[0].sphere;
+    for(unsigned int i = 1; i < nexus.size(); i++) {
+      vcg::Sphere3f &sphere = nexus[i].sphere;
+      double dist = vcg::Distance(last.Center(), sphere.Center());
+      meandist += dist;
+      last = sphere;
+    }
+    meandist /= nexus.size() -1;
+    cout << "Nexus file: " << input << "\n"
 	 << "\n\tCompressed: " << nexus.IsCompressed() 
 	 << "\n\tStripped: " << (int)((nexus.signature&NXS_STRIP) !=0)
 	 << "\n\tColor   : " << (int)((nexus.signature&NXS_COLORS) !=0)
@@ -301,24 +317,27 @@ int main(int argc, char *argv[]) {
 	 << nexus.sphere.Center()[1] << " "
 	 << nexus.sphere.Center()[2] << " R: "
 	 << nexus.sphere.Radius()
+	 << "\n\tAverage distance: " << meandist
 	 << "\n\tChunk size " << nexus.chunk_size << endl;
    
     if(verbose) {
       for(unsigned int i = 0; i < nexus.size(); i++) {
         Entry &entry = nexus[i];
         cout << i << " -> nv: " << entry.nvert << " nf: " << entry.nface 
-             << " error: " << entry.error << " disk_size: " << entry.disk_size << endl;
+             << " error: " << entry.error 
+	     << " disk_size: " << entry.disk_size << endl;
       }
       cout << endl;
     }
   }
   
   //determine if we must proceed:
-  if(add == 0 && remove == 0 && !compress && !uncompress &&
+  if(add == 0 && remove == 0 && !compress && !uncompress && !zsort &&
      qvertex == 0 && qnormal == 0 && qcolor == 0 && qtexture == 0) {
     nexus.Close();
     return 0;
   }
+
   CMesh mesh;
   GridStaticPtr<CMesh::FaceContainer> grid;
   if(add_colors) {
@@ -361,19 +380,44 @@ int main(int argc, char *argv[]) {
     cerr << "Could not open output: " << output << endl;
     return -1;
   }
+  
   out.MaxRam() = ram_size / out.chunk_size;
-
   //TODO set rambuffer low (or even direct access!)
+
+  vector<unsigned int> forward;
+  vector<unsigned int> backward;
+  if(zsort) 
+    ZSort(nexus, forward, backward);
 
   //Fixing history
   unsigned int h_size;
   char *buffer = nexus.history.Save(h_size);
   out.history.Load(h_size, buffer);
 
+  if(zsort) {
+    if(out.history.IsQuick()) {
+      for(unsigned int i = 0; i < out.history.n_frags(); i++)
+	out.history.frags[i].patch = backward[out.history.frags[i].patch];
+    } else {
+      for(unsigned int i = 0; i < out.history.updates.size(); i++) {
+	History::Update &update = out.history.updates[i];
+	for(unsigned int k = 0; k < update.created.size(); k++)
+	  update.created[k] = backward[update.created[k]];
+
+	for(unsigned int k = 0; k < update.erased.size(); k++)
+	  update.erased[k] = backward[update.erased[k]];
+      }
+    }
+  }
+
   Report report(nexus.size());
   cout << "Copying and allocating...\n";
-  for(unsigned int patch = 0; patch < nexus.size(); patch++) {
+  for(unsigned int p = 0; p < nexus.size(); p++) {
+    unsigned int patch = p;
     report.Step(patch);
+
+    if(zsort) patch = forward[patch];
+
     Entry &src_entry = nexus[patch];
     Patch &src_patch = nexus.GetPatch(patch);
     Border &src_border = nexus.GetBorder(patch);
@@ -388,9 +432,8 @@ int main(int argc, char *argv[]) {
       out.AddPatch(src_entry.nvert, src_entry.nface, src_border.Available());
 
 
-    Entry &dst_entry = out[patch];
-
-    Patch &dst_patch = out.GetPatch(patch);
+    Entry &dst_entry = out[p];
+    Patch &dst_patch = out.GetPatch(p);
 
     //copy vertices: 
     memcpy(dst_patch.VertBegin(), src_patch.VertBegin(), 
@@ -441,8 +484,8 @@ int main(int argc, char *argv[]) {
       if(link.IsNull()) continue;
       assert(link.end_patch < nexus.index.size());
     }*/
-    out.borders.ResizeBorder(patch, src_border.Size());
-    Border &dst_border = out.GetBorder(patch);
+    out.borders.ResizeBorder(p, src_border.Size());
+    Border &dst_border = out.GetBorder(p);
     memcpy(dst_border.Start(), src_border.Start(), 
 	   src_border.Size() * sizeof(Link));    
   }
