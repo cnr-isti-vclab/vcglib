@@ -24,11 +24,14 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/03/04 00:53:24  cignoni
+Initial commit
+
 
 ****************************************************************************/
 #ifndef __VCG_TRI_UPDATE_TOPOLOGY
 #define __VCG_TRI_UPDATE_TOPOLOGY
-
+#include <algorithm>
 namespace vcg {
 namespace tri {
 
@@ -53,13 +56,13 @@ class PEdge
 {
 public:
 	
-	VertexPointer * v[2];		// the two Vertex pointer are ordered!
-	FacePointer   * f;		  // the face where this edge belong
+	VertexPointer  v[2];		// the two Vertex pointer are ordered!
+	FacePointer    f;		  // the face where this edge belong
 	int      z;				      // index in [0..2] of the edge of the face
 
   PEdge() {}
 
-void Set( FacePointer * const pf, const int nz )
+void Set( FacePointer  pf, const int nz )
 {
 	assert(pf!=0);
 	assert(nz>=0);
@@ -115,20 +118,20 @@ inline bool operator != ( const PEdge & pe ) const
 
 
 
-void FaceFace(MeshType &m)
+static void FaceFace(MeshType &m)
 {
-  if(!m.HasTopologyFF())		
+  if(!m.HasFFTopology()) return;		
 	{
 		vector<PEdge> e;
 		FaceIterator pf;
 		vector<PEdge>::iterator p;
 
-		if( fn == 0 ) return;
+		if( m.fn == 0 ) return;
 
-		e.resize(fn*3);								// Alloco il vettore ausiliario
+		e.resize(m.fn*3);								// Alloco il vettore ausiliario
 		p = e.begin();
-		for(pf=face.begin();pf!=face.end();++pf)			// Lo riempio con i dati delle facce
-			if( ! (*pf).IsDeleted() )
+		for(pf=m.face.begin();pf!=m.face.end();++pf)			// Lo riempio con i dati delle facce
+			if( ! (*pf).IsD() )
 				for(int j=0;j<3;++j)
 				{
 					(*p).Set(&(*pf),j);
@@ -139,12 +142,12 @@ void FaceFace(MeshType &m)
 	
 		int ne = 0;											// Numero di edge reali
 
-		vector<MPEDGE>::iterator pe,ps;
+		vector<PEdge>::iterator pe,ps;
 		for(ps = e.begin(),pe=e.begin();pe<=e.end();++pe)	// Scansione vettore ausiliario
 		{
 			if( pe==e.end() || *pe != *ps )					// Trovo blocco di edge uguali
 			{
-				vector<MPEDGE>::iterator q,q_next;
+				vector<PEdge>::iterator q,q_next;
 				for (q=ps;q<pe-1;++q)						// Scansione facce associate
 				{
 					assert((*q).z>=0);
