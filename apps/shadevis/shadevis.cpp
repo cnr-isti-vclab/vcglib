@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/09/16 14:08:35  ponchio
+gamma is a math function.
+
 Revision 1.5  2004/09/10 14:02:20  cignoni
 Added Cone directions
 
@@ -52,7 +55,7 @@ Added GPL comments
 #include <wrap/gui/trackball.h>
 #include <vcg/simplex/vertex/with/vcvn.h>
 #include <vcg/simplex/vertex/with/vcvn.h>
-#include <vcg/simplex/face/with/fcfn.h>
+#include <vcg/simplex/face/with/fn.h>
 #include <vcg/space/index/grid_static_ptr.h>
 #include <vcg/complex/trimesh/base.h>
 #include<wrap/io_trimesh/export_ply.h>
@@ -72,7 +75,7 @@ using namespace std;
 class MyEdge;
 class AFace;
 class AVertex   : public VertexVCVN< float ,MyEdge,AFace > {};
-class AFace     : public FaceFCFN< AVertex,MyEdge,AFace > {};
+class AFace     : public FaceFN< AVertex,MyEdge,AFace > {};
 class AMesh     : public tri::TriMesh< vector<AVertex>, vector<AFace> > {};
 
 ///////// Global ////////
@@ -92,6 +95,7 @@ float ambi=.2;
 
 bool LightFlag=true;
 bool ColorFlag=true;
+bool FalseColorFlag=false;
 bool ShowDirFlag=false;
 int imgcnt=0;
 
@@ -240,7 +244,8 @@ void  ViewDisplay (void)
           else glDisable(GL_LIGHTING);
   if(ColorFlag) glEnable(GL_COLOR_MATERIAL);
           else glDisable(GL_COLOR_MATERIAL);
-  glColorMaterial(GL_FRONT,GL_AMBIENT);
+  if(FalseColorFlag) glColorMaterial(GL_FRONT,GL_DIFFUSE);
+               else  glColorMaterial(GL_FRONT,GL_AMBIENT);
   glMateriali(GL_FRONT,GL_SHININESS,0);
   float spec[4]={0,0,0,1};
   float ambientV[4]={ambi,ambi,ambi,1};
@@ -265,8 +270,9 @@ void ViewSpecialKey(int , int , int )
 void Toggle(bool &flag) {flag = !flag;}
 void UpdateVis()
 {
-  if(LightFlag) Vis.MapVisibility(gamma_correction,lopass,hipass,ambi);
-  if(!LightFlag) Vis.MapVisibility(gamma_correction,lopass,hipass,1.0);
+  if( LightFlag && !FalseColorFlag) Vis.MapVisibility(gamma_correction,lopass,hipass,ambi);
+  if(!LightFlag && !FalseColorFlag) Vis.MapVisibility(gamma_correction,lopass,hipass,1.0);
+  if(FalseColorFlag)  Vis.MapFalseColor();
 }
 /*********************************************************************/
 /*********************************************************************/
@@ -346,6 +352,8 @@ void ViewKey(unsigned char key, int , int )
 		break;
   case 'C' : LightFlag = !LightFlag; printf("Toggled Light %s\n",LightFlag?"on":"off"); 		UpdateVis(); break;
   case 'c' : ColorFlag = !ColorFlag; printf("Toggled Color %s\n",ColorFlag?"on":"off"); break;
+  case 'f' : FalseColorFlag = !FalseColorFlag; printf("Toggled FalseColor %s\n",ColorFlag?"on":"off"); UpdateVis(); break;
+  
   case '1' : diff=0.80f; ambi=0.10f; gamma_correction=1.0; lopass=0.00f; hipass=1.00f; ColorFlag=false; UpdateVis(); break;
   case '2' : diff=0.65f; ambi=0.30f; gamma_correction=1.0; lopass=0.15f; hipass=0.80f; ColorFlag=true;  UpdateVis(); break;
   case '3' : diff=0.45f; ambi=0.50f; gamma_correction=1.0; lopass=0.20f; hipass=0.75f; ColorFlag=true;  UpdateVis(); break;
@@ -453,7 +461,8 @@ int main(int argc, char** argv)
 				switch(argv[i][1])
 			{
         case 'd'  : if(argv[i][2] == 'a') { ConeAngleRad = math::ToRad(atof(argv[i+1])); ++i; break; }
-                    if(argv[i][2] == 'v') { ConeDir = Point3f(atof(argv[i+1]),atof(argv[i+2]),atof(argv[i+3])); i+=3; break; }
+                    if(argv[i][2] == 'v') { ConeDir = Normalize(Point3f(atof(argv[i+1]),atof(argv[i+2]),atof(argv[i+3]))); i+=3; break; }
+                    printf("Error unable to parse option '%s'\n",argv[i]); exit(0);
                     break;
 				case 'n'  : SampleNum = atoi(argv[i]+2); break;
 				case 'f'  : SwapFlag=false; break;

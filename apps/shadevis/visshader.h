@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/09/16 14:23:57  ponchio
+fixed gcc template compatibility issues.
+
 Revision 1.6  2004/09/10 14:02:20  cignoni
 Added Cone directions
 
@@ -482,13 +485,33 @@ void SmoothVisibility()
 	for(unsigned int i=0;i<VV2.size();++i)
 		VV[i]=VV2[i]/VC[i];
 }
+
+void MapFalseColor()
+{
+  float minv=*min_element(VV.begin(),VV.end());
+	float maxv=*max_element(VV.begin(),VV.end());
+	printf("Visibility Range %f %f\n", minv,maxv);
+  MapFalseColor(minv, maxv);
+
+}
+
+void MapFalseColor(float minv, float maxv)
+{
+	VertexIterator vi;
+	for(vi=m.vert.begin();vi!=m.vert.end();++vi){
+			    float gval=(VV[vi-m.vert.begin()]-minv)/(maxv-minv);
+          math::Clamp(gval,0.0f,1.0f);
+				  (*vi).C().ColorRamp(1.0,0.0,gval);
+    	}
+}
+
 /*
 The visibility is mapped in [0..1]
 then clamped to [low,high]
 this value is mapped again in [0.1] and gamma corrected;
 and at the end is scaled for 'Scale'
-
 */
+
 void MapVisibility(float Gamma=1, float LowPass=0, float HighPass=1, float Scale= 1.0)
 {
 	float minv=*min_element(VV.begin(),VV.end());
