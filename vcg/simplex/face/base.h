@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2004/10/20 08:28:31  fiorin
+Added constant access function FFp and renamed F1 F2 to FFp1 FFp2
+
 Revision 1.21  2004/10/18 17:13:50  ganovelli
 added  ::IsBorder
 
@@ -121,6 +124,8 @@ public:
 	typedef FFTYPE FaceType;
 	/// The vertex type
 	typedef FVTYPE VertexType;
+	/// The vertex type
+	typedef FETYPE EdgeType;
 	/// The type of the scalar field of the vertex coordinate
   typedef typename VertexType::ScalarType ScalarType;
 	/// The type of the the vertex coordinate
@@ -575,7 +580,7 @@ public:
 		return (fs[j]==this);
 #else
 		assert(0);
-		return (FFTYPE *)this;
+		return ((FFTYPE *)this==0);
 #endif
 	}
 
