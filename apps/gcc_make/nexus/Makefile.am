@@ -1,4 +1,5 @@
-bin_PROGRAMS = 	nxspatcher ply2crd crdview voronoinxs nxsview nxsedit nxsserver exploder
+bin_PROGRAMS = 	nxspatcher ply2crd crdview nxsbuilder nxsview \
+                nxsedit nxsserver nxstest
 
 LIBS=
 SDL_FLAGS = -lSDL -lpthread -lGL -lGLU
@@ -18,8 +19,6 @@ ply2crd_SOURCES = 	../../nexus/ply2crude.cpp    	\
 
 crdview_SOURCES = 	../../nexus/crudeview.cpp       \
 			../../nexus/crude.cpp           \
-			../../nexus/vert_remap.cpp      \
-			../../nexus/mfhash.cpp 		\
 			../../../wrap/gui/trackball.cpp	\
 			../../../wrap/gui/trackmode.cpp \
 			../../nexus/mfile.cpp         	\
@@ -28,38 +27,45 @@ crdview_SOURCES = 	../../nexus/crudeview.cpp       \
 crdview_LDADD = $(SDL_FLAGS) -lGLEW
 
 
-#test_SOURCES = 		../../nexus/file.cpp		\
-#			../../nexus/nexus.cpp		\
-#			../../nexus/patch.cpp 		\
-#		    	../../nexus/patchserver.cpp	\
-#			../../nexus/borderserver.cpp	\
-#			../../nexus/test.cpp		
-#test_LDADD = -llzo
+nxstest_SOURCES = 	../../nexus/file.cpp		\
+			../../nexus/nexus.cpp		\
+			../../nexus/patch.cpp 		\
+		     	../../nexus/mfile.cpp		\
+			../../nexus/history.cpp 	\
+			../../nexus/normalscone.cpp	\
+			../../nexus/borderserver.cpp	\
+			../../nexus/watch.cpp		\
+			../../nexus/nxstest.cpp		
+nxstest_LDADD = -llzo
 
-voronoinxs_SOURCES = 	../../nexus/voronoinxs.cpp 	\
+nxsbuilder_SOURCES = 	../../nexus/nxsbuilder.cpp 	\
 			../../nexus/crude.cpp 		\
 		     	../../nexus/file.cpp		\
 		     	../../nexus/mfile.cpp		\
-			../../nexus/vert_remap.cpp	\
-			../../nexus/mfhash.cpp 		\
 			../../nexus/nexus.cpp		\
 			../../nexus/patch.cpp 		\
-		    	../../nexus/patchserver.cpp	\
+			../../nexus/history.cpp 	\
 			../../nexus/borderserver.cpp	\
+			../../nexus/normalscone.cpp	\
 		     	../../nexus/decimate.cpp	\
-			../../nexus/nxsbuild.cpp 	\
-			../../nexus/voronoichain.cpp	\
-			../../nexus/pvoronoi.cpp 	\
+		     	../../nexus/nxsalgo.cpp		\
+			../../../wrap/strip/tristrip.cpp\
+			../../nexus/tristripper/tri_stripper.cpp \
+			../../nexus/vchain.cpp		\
+			../../nexus/vpartition.cpp 	\
+			../../nexus/remapping.cpp 	\
 			../../nexus/fragment.cpp	\
 			../../nexus/watch.cpp		\
 			../../nexus/nxsdispatcher.cpp   \
 			../../../wrap/ply/plylib.cpp 	
 
-voronoinxs_LDADD = -llzo -lptypes -lGLEW /usr/local/lib/libANN.a
+nxsbuilder_LDADD = -llzo -lptypes -lGLEW /usr/local/lib/libANN.a
+
 
 nxsserver_SOURCES =     ../../nexus/nxsserver.cpp	\
 			../../nexus/fragment.cpp	\
-			../../nexus/pvoronoi.cpp 	\
+			../../nexus/vpartition.cpp 	\
+		     	../../nexus/normalscone.cpp	\
 		     	../../nexus/decimate.cpp	
 
 nxsserver_LDADD = -lptypes /usr/local/lib/libANN.a
@@ -67,41 +73,45 @@ nxsserver_LDADD = -lptypes /usr/local/lib/libANN.a
 
 nxsview_SOURCES = 	../../nexus/nexusview.cpp 	\
 			../../nexus/nexus.cpp 		\
-		    	../../nexus/patchserver.cpp	\
+			../../nexus/history.cpp		\
+			../../nexus/extraction.cpp 	\
+			../../nexus/preload.cpp 	\
 			../../nexus/borderserver.cpp	\
+			../../nexus/normalscone.cpp	\
 			../../nexus/file.cpp 		\
 		     	../../nexus/mfile.cpp		\
 			../../nexus/nexusmt.cpp 	\
 			../../nexus/patch.cpp 		\
+		  	../../nexus/watch.cpp		\
 		  	../../../wrap/gui/trackball.cpp	\
-		  	../../nexus/watch.cpp	\
 			../../../wrap/gui/trackmode.cpp 	
 
-nxsview_LDADD = $(SDL_FLAGS) -lGLEW -lglut -llzo
+nxsview_LDADD = $(SDL_FLAGS) -lGLEW -lglut -llzo -lptypes
 
 
 
 nxsedit_SOURCES = 	../../nexus/nxsedit.cpp 	\
 			../../nexus/watch.cpp		\
 			../../nexus/nexus.cpp 		\
+			../../nexus/history.cpp		\
 			../../nexus/patch.cpp 		\
+			../../nexus/normalscone.cpp	\
 			../../nexus/nxsalgo.cpp 	\
+			../../nexus/vpartition.cpp      \
 			../../../wrap/strip/tristrip.cpp\
 			../../nexus/tristripper/tri_stripper.cpp \
 		 	../../nexus/file.cpp 		\
 		     	../../nexus/mfile.cpp		\
 		  	../../../wrap/ply/plylib.cpp 	\
-			../../nexus/patchserver.cpp 	\
 			../../nexus/borderserver.cpp
 
-nxsedit_LDADD = -llzo -lGLEW
+nxsedit_LDADD = -llzo -lGLEW /usr/local/lib/libANN.a
 
 exploder_SOURCES = 	../../nexus/exploder.cpp 	\
 			../../nexus/nexus.cpp 		\
 			../../nexus/patch.cpp 		\
 		 	../../nexus/file.cpp 		\
 		     	../../nexus/mfile.cpp		\
-			../../nexus/patchserver.cpp 	\
 			../../nexus/borderserver.cpp
 
 exploder_LDADD = -llzo -lGLEW
