@@ -42,7 +42,7 @@ static bool PickNearestTetra(int x, int y,TETRA_MESH_TYPE &m, TetraIterator &ti,
 {
  std::vector<TetraPointer> result;
  int val=PickTetra(x,y,m,result,width,height);
- if(val)
+ if(val!=0)
  {
   ti=result[0];
 	return true;
@@ -122,6 +122,98 @@ static int PickTetra(int x, int y, TETRA_MESH_TYPE &m, std::vector<TetraPointer>
 		TetraIterator ti=m.tetra.begin();
 		advance(ti ,H[ii].second);
 		result[ii]=&*ti;
+	}
+	
+	delete [] selectBuf;
+  return result.size();
+}
+
+static bool PickNearestTetraFace(int x, int y,TETRA_MESH_TYPE &m, TetraIterator &ti,int &face,int width=4, int height=4)
+{
+ std::vector<std::pair<TetraPointer,int> > result;
+ int val=PickTetraFace(x,y,m,result,width,height);
+ if(val!=0)
+ {
+  ti=result[0].first;
+  face=result[0].second;
+  return true;
+ }
+ ti=0;
+ face=-1;
+ return false; 
+}
+
+static int PickTetraFace(int x, int y, TETRA_MESH_TYPE &m, std::vector<std::pair<TetraPointer,int> > &result, int width=4, int height=4)
+{
+	result.clear();
+	long hits;	
+  int sz=(m.tetra.size()*4)*5;
+	unsigned int *selectBuf =new unsigned int[sz];
+	//  static unsigned int selectBuf[16384];
+  glSelectBuffer(sz, selectBuf);
+  glRenderMode(GL_SELECT);
+  glInitNames();
+
+  /* Because LoadName() won't work with no names on the stack */
+  glPushName(-1);
+	double mp[16];
+	
+  int viewport[4];
+  glGetIntegerv(GL_VIEWPORT,viewport);
+	glMatrixMode(GL_PROJECTION);
+	glGetDoublev(GL_PROJECTION_MATRIX ,mp);
+	glPushMatrix();
+  glLoadIdentity();
+  //gluPickMatrix(x, viewport[3]-y, 4, 4, viewport);
+  gluPickMatrix(x, y, width, height, viewport);
+	glMultMatrixd(mp);
+	glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  int tetracnt=0; 
+	TetraIterator ti;
+	VertexType *v0;
+	VertexType *v1;
+	VertexType *v2;
+	int face;
+	for(ti=m.tetra.begin();ti!=m.tetra.end();++ti)
+	{
+		if(!(*ti).IsD())
+		{
+			for (face=0;face<4;face++){
+				v0=ti->V(Tetra::VofF(face,0));
+				v1=ti->V(Tetra::VofF(face,1));
+				v2=ti->V(Tetra::VofF(face,2));
+				glLoadName(tetracnt);
+				glBegin(GL_TRIANGLES);
+					glVertex(v0->P());
+					glVertex(v1->P());
+					glVertex(v2->P());
+				glEnd();
+				tetracnt++;
+			}
+		}
+	}
+
+  glPopMatrix();
+  glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+  glMatrixMode(GL_MODELVIEW);
+  hits = glRenderMode(GL_RENDER);
+	//xstring buf;
+	//if (hits <= 0)     return 0;
+	std::vector< std::pair<double,unsigned int> > H;
+	for(int ii=0;ii<hits;ii++){
+		//TRACE("%ui %ui %ui %ui\n",selectBuf[ii*4],selectBuf[ii*4+1],selectBuf[ii*4+2],selectBuf[ii*4+3]);
+		H.push_back( std::pair<double,unsigned int>(selectBuf[ii*4+1]/4294967295.0,selectBuf[ii*4+3]));
+	}
+	std::sort(H.begin(),H.end());
+//  if(H.size()>0) TRACE("\n Closest is %i\n",H[0].second);
+  result.resize(H.size());
+	for(ii=0;ii<hits;ii++){
+		TetraIterator ti=m.tetra.begin();
+		int index=H[ii].second;
+		advance(ti ,(int)(index/4));
+		result[ii]=std::pair<TetraPointer,int>(&*ti,index%4);
 	}
 	
 	delete [] selectBuf;
