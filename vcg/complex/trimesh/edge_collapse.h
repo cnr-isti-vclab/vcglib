@@ -210,36 +210,36 @@ class EdgeCollapse
 		//set Face Face topology
 		if (TriMeshType::HasFFTopology())
 		{
-			int e0=c.z;
-			int e1=c.f->FFi(c.z);	//opposite edge
+			//int e0=c.z;
+			//int e1=c.f->FFi(c.z);	//opposite edge
 
-			FaceType *f0=c.f;
-			FaceType *f1=f0->FFp(c.z);
-			
-			//take right indexes
-			FaceType *f00=f0->FFp((e0+1)%3);
-			FaceType *f01=f0->FFp((e0+2)%3);
-			int If00=f0->FFi((e0+1)%3);
-			int If01=f0->FFi((e0+2)%3);
-			
-			//then attach faces
-			f00->FFp(If00)=f01;
-			f00->FFi(If00)=If01;
-			f01->FFp(If01)=f00;
-			f01->FFi(If01)=If00;
+			//FaceType *f0=c.f;
+			//FaceType *f1=f0->FFp(c.z);
+			//
+			////take right indexes
+			//FaceType *f00=f0->FFp((e0+1)%3);
+			//FaceType *f01=f0->FFp((e0+2)%3);
+			//int If00=f0->FFi((e0+1)%3);
+			//int If01=f0->FFi((e0+2)%3);
+			//
+			////then attach faces
+			//f00->FFp(If00)=f01;
+			//f00->FFi(If00)=If01;
+			//f01->FFp(If01)=f00;
+			//f01->FFi(If01)=If00;
 
-			//and the ones of face f1
+			////and the ones of face f1
 
-			f00=f1->FFp((e1+1)%3);
-			f01=f1->FFp((e1+2)%3);
-			If00=f1->FFi((e1+1)%3);
-			If01=f1->FFi((e1+2)%3);
-			
-			//and attach faces
-			f00->FFp(If00)=f01;
-			f00->FFi(If00)=If01;
-			f01->FFp(If01)=f00;
-			f01->FFi(If01)=If00;
+			//f00=f1->FFp((e1+1)%3);
+			//f01=f1->FFp((e1+2)%3);
+			//If00=f1->FFi((e1+1)%3);
+			//If01=f1->FFi((e1+2)%3);
+			//
+			////and attach faces
+			//f00->FFp(If00)=f01;
+			//f00->FFi(If00)=If01;
+			//f01->FFp(If01)=f00;
+			//f01->FFi(If01)=If00;
 		}
 
 		for(i=AV01().begin();i!=AV01().end();++i)
