@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2004/10/19 16:50:27  ponchio
+Added row file access ....
+
 Revision 1.13  2004/10/08 15:12:04  ponchio
 Working version (maybe)
 
@@ -78,7 +81,7 @@ Created
 #ifndef VFILE_H
 #define VFILE_H
 
-#include "file.h"
+#include "mfile.h"
 
 #include <assert.h>
 #include <map>
@@ -94,7 +97,7 @@ Created
 
 namespace nxs {
 
-template <class T> class VFile: public File {
+template <class T> class VFile: public MFile {
  public:
   
   struct Buffer {
@@ -138,7 +141,7 @@ template <class T> class VFile: public File {
     chunk_size = _chunk_size;
     queue_size = _queue_size;
 
-    return File::Create(filename);
+    return MFile::Create(filename);
   }
 
   bool Load(const std:: string &filename, 
@@ -150,13 +153,18 @@ template <class T> class VFile: public File {
     chunk_size = _chunk_size;
     queue_size = _queue_size;
 
-    if(!File::Load(filename)) return false;
+    if(!MFile::Load(filename)) return false;
     n_elements = size/sizeof(T);
     return true;
   }
 
   void Close() {
       Flush();
+  }
+
+  void Delete() {
+    Flush();
+    MFile::Delete();
   }
 
   void Flush() {
@@ -176,7 +184,7 @@ template <class T> class VFile: public File {
 
   void Resize(unsigned int elem) {
     Flush();
-    File::Redim(elem * sizeof(T));
+    MFile::Redim(elem * sizeof(T));
     n_elements = elem;
   }
 

@@ -27,6 +27,7 @@ class MFile {
 	      unsigned int max_file_size = MFILE_MAX_SIZE);
   bool Load(const std::string &filename, bool readonly = false);
   void Close();
+  void Delete();
   
   int64 Length() { return size; }
   void Redim(int64 size);

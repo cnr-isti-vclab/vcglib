@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/10/01 15:59:52  ponchio
+Added include <assert.h>
+
 Revision 1.3  2004/07/02 17:41:37  ponchio
 Debug.
 
@@ -55,6 +58,7 @@ class VertRemap {
   bool Create(const std::string &file);
   bool Load(const std::string &file);
   void Close();
+  void Delete();
   void Resize(unsigned int n_vert);
 
   unsigned int Size();

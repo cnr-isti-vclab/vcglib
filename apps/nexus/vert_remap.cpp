@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/07/05 15:49:39  ponchio
+Windows (DevCpp, mingw) port.
+
 Revision 1.4  2004/07/02 17:41:37  ponchio
 Debug.
 
@@ -64,6 +67,12 @@ bool VertRemap::Load(const std::string &file) {
 void VertRemap::Close() {
   all.Close();
   borders.Close();
+}
+
+void VertRemap::Delete() {
+  all.Flush();
+  all.Delete();
+  borders.Delete();
 }
 
 void VertRemap::Resize(unsigned int n_vert) {

@@ -52,6 +52,11 @@ void MFile::Close() {
   files.clear();
 }
 
+void MFile::Delete() {
+  while(files.size())
+    RemoveFile();
+}
+
 void MFile::Redim(int64 sz) {
   assert(!readonly);
   if(sz > size) {
@@ -120,11 +125,12 @@ void MFile::WriteBuffer(void *data, unsigned int sz) {
  void MFile::RemoveFile() {
    assert(files.size());
 
-   string name = Name(files.size()); 
+   string name = Name(files.size()-1); 
    File &file = files.back();
    unsigned int last_size = file.Length();
    files.pop_back();
    size -= last_size;
+   cerr << "Removing file: " << name << endl;
 #ifdef WIN32
    DeleteFile(name.c_str());
 #else

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/09/21 00:53:23  ponchio
+Lotsa changes.
+
 Revision 1.4  2004/08/27 00:39:28  ponchio
 Rewrote.
 
@@ -62,7 +65,8 @@ class PChain {
   virtual unsigned int Locate(unsigned int level, const vcg::Point3f &p) = 0;
 
 
-  virtual void RemapFaces(Crude &crude, VFile<unsigned int> &face_remap,
+  virtual void RemapFaces(VFile<vcg::Point3f> &baricenters,
+			  VFile<unsigned int> &face_remap,
 			  std::vector<unsigned int> &patch_faces, 
 			  float scaling, int steps) = 0;
 

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/07/02 17:40:30  ponchio
+Debug.
+
 Revision 1.3  2004/07/02 13:08:43  ponchio
 *** empty log message ***
 
@@ -62,6 +65,7 @@ class MFHash {
   MFHash() {}
   bool Create(const std::string &file, unsigned int reserved = 32);
   bool Load(const std::string &file, unsigned int used = 0xffffffff);
+  void Delete();
 
   void Resize(unsigned int n);
   void Insert(unsigned int key, unsigned int value, bool rehash = true);

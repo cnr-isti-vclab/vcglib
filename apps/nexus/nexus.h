@@ -59,6 +59,8 @@ class Nexus {
   Patch &GetPatch(unsigned int patch, bool flush = true);
   Border GetBorder(unsigned int patch, bool flush = true);
 
+  void AddBorder(unsigned int patch, Link &link);
+
   bool IsCompressed()    { return (signature & NXS_COMPRESSED) != 0; }
   bool HasStrips()       { return (signature & NXS_STRIP) != 0; }
   bool HasColors()       { return (signature & NXS_COLORS) != 0; }

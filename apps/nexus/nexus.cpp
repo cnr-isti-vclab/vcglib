@@ -147,6 +147,19 @@ Border Nexus::GetBorder(unsigned int patch, bool flush) {
   return borders.GetBorder(patch);
 }
 
+void Nexus::AddBorder(unsigned int patch, Link &link) {
+  Border border = GetBorder(patch);
+	
+  unsigned int pos = border.Size();
+  if(borders.ResizeBorder(patch, pos+1)) {
+    border = GetBorder(patch);
+  }
+  
+  assert(border.Size() < border.Available());
+  assert(border.Available() > pos);
+
+  border[pos] = link;  
+}
 
 unsigned int Nexus::AddPatch(unsigned int nvert, unsigned int nface,
 			     unsigned int nbord) {

@@ -120,3 +120,11 @@ void File::WriteBuffer(void *data, unsigned int sz) {
     assert(0 && "Could not write");    
 #endif
 }
+
+void File::Delete(const string &filename) {
+#ifdef WIN32
+   DeleteFile(filename.c_str());
+#else
+   unlink(filename.c_str());
+#endif
+}

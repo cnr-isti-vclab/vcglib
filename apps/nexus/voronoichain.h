@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/10/30 20:17:03  ponchio
+Fixed big patches problem.
+
 Revision 1.4  2004/09/30 00:27:42  ponchio
 Lot of changes. Backup.
 
@@ -49,7 +52,6 @@ First draft.
 
 #include "pchain.h"
 #include "pvoronoi.h"
-#include "crude.h"
 #include "nexus.h"
 #include "vfile.h"
 
@@ -67,9 +69,10 @@ class VoronoiChain: public PChain {
     mean_size(mean_s), min_size(min_s), max_size(max_s) {}
   virtual ~VoronoiChain() {}
 
-  void Init(Crude &crude, float scaling, int steps);
+  void Init(VFile<vcg::Point3f> &baricenters, float scaling, int steps);
   virtual unsigned int Locate(unsigned int level, const vcg::Point3f &p);
-  void RemapFaces(Crude &crude, VFile<unsigned int> &face_remap,
+  void RemapFaces(VFile<vcg::Point3f> &baricenters, 
+		  VFile<unsigned int> &face_remap,
 		  std::vector<unsigned int> &patch_faces, float scaling, 
 		  int steps);
 

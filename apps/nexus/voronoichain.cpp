@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2004/11/03 16:31:38  ponchio
+Trying to fix big patches.
+
 Revision 1.18  2004/10/30 20:17:03  ponchio
 Fixed big patches problem.
 
@@ -159,6 +162,8 @@ bool VoronoiChain::Optimize(int mean, VoronoiPartition &part,
 			    vector<unsigned int> &counts, 
 			    bool join) {
 
+
+
     //remove small or really big patches.
     unsigned int failed = 0;
     vector<Point3f> seeds;
@@ -233,8 +238,10 @@ bool VoronoiChain::Optimize(int mean, VoronoiPartition &part,
     return failed == 0;
 }
 
-void VoronoiChain::Init(Crude &crude, float scaling, int steps) {
-  unsigned int f_cells = crude.Faces() / mean_size;
+void VoronoiChain::Init(VFile<Point3f> &baricenters, 
+			float scaling, int steps) {
+  
+  unsigned int f_cells = baricenters.Size() / mean_size;
   unsigned int c_cells = (unsigned int)(scaling * f_cells);
 
   levels.push_back(VoronoiPartition());
@@ -244,23 +251,22 @@ void VoronoiChain::Init(Crude &crude, float scaling, int steps) {
 
   srand(0);
   
-  float fine_vmean = mean_size/2.0f;
-  float coarse_vmean = (mean_size/scaling)/2.0f;
+  float coarse_vmean = mean_size/scaling;
 
-  for(unsigned int i = 0; i < crude.Vertices(); i++) {
-    int f = (int)(fine_vmean * rand()/(RAND_MAX + 1.0));
-    int c = (int)(coarse_vmean * rand()/(RAND_MAX + 1.0));
+  for(unsigned int i = 0; i < baricenters.Size(); i++) {
+    int f = (int)(mean_size * (float)rand()/(RAND_MAX + 1.0));
+    int c = (int)(coarse_vmean * (float)rand()/(RAND_MAX + 1.0));
     if(f == 2) {
-      Point3f &point = crude.GetVertex(i);
+      Point3f &point = baricenters[i];
       fine.push_back(point);
     }
     if(c == 2) {
-      Point3f &point = crude.GetVertex(i);
+      Point3f &point = baricenters[i];
       coarse.push_back(point);
     }
   }
   //TODO! Check for duplicates (use the closest :P)
-  //cerr << "fine_seeds.size: " << fine.size() << endl;
+  //  cerr << "fine_seeds.size: " << fine.size() << endl;
   //cerr << "coarse_seeds.size: " << coarse.size() << endl;
   fine.Init();
   coarse.Init();
@@ -277,18 +283,18 @@ void VoronoiChain::Init(Crude &crude, float scaling, int steps) {
     centroids.resize(fine.size(), Point3f(0, 0, 0));
     counts.resize(fine.size(), 0);
     
-    report.Init(crude.Vertices());
-    for(unsigned int v = 0; v < crude.Vertices(); v++) {
+    report.Init(baricenters.Size());
+    for(unsigned int v = 0; v < baricenters.Size(); v++) {
       report.Step(v);
-      unsigned int target = fine.Locate(crude.vert[v]);
-      centroids[target] += crude.vert[v];
+      unsigned int target = fine.Locate(baricenters[v]);
+      centroids[target] += baricenters[v];
       counts[target]++;
     }    
     if(step == steps-1) {
-      if(!Optimize(fine_vmean, fine, centroids, counts, false))
+      if(!Optimize(mean_size, fine, centroids, counts, false))
 	step--;
     } else 
-      Optimize(fine_vmean, fine, centroids, counts, true);
+      Optimize(mean_size, fine, centroids, counts, true);
   }
   cerr << "Optimized (fine)!\n";
 //here goes some optimization pass.
@@ -302,23 +308,23 @@ void VoronoiChain::Init(Crude &crude, float scaling, int steps) {
     counts.resize(coarse.size(), 0);
     //radius.resize(coarse.size(), 0);
     
-    report.Init(crude.Vertices());
-    for(unsigned int v = 0; v < crude.Vertices(); v++) {
+    report.Init(baricenters.Size());
+    for(unsigned int v = 0; v < baricenters.Size(); v++) {
       if(v & 0xffff) report.Step(v);
       unsigned int ctarget = 0xffffffff;
-      ctarget = coarse.Locate(crude.vert[v]);
+      ctarget = coarse.Locate(baricenters[v]);
       //      float dist;
       //      coarse.Closest(crude.vert[v], ctarget, dist);
       assert(ctarget != 0xffffffff);
-      centroids[ctarget] += crude.vert[v];
+      centroids[ctarget] += baricenters[v];
       counts[ctarget]++;
       //if(dist > radius[ctarget]) radius[ctarget] = dist;
     }
     if(step == steps-1) {
-      if(!Optimize(coarse_vmean, coarse, centroids, counts, false))
+      if(!Optimize((int)coarse_vmean, coarse, centroids, counts, false))
 	      step --;
     } else 
-      Optimize(coarse_vmean, coarse, centroids, counts, true);
+      Optimize((int)coarse_vmean, coarse, centroids, counts, true);
   }    
   cerr << "Optimized coarse!\n";
 }
@@ -329,12 +335,12 @@ unsigned int VoronoiChain::Locate(unsigned int level,
 }
 
 //TODO move this to nxsbuild
-void VoronoiChain::RemapFaces(Crude &crude, 
+void VoronoiChain::RemapFaces(VFile<Point3f> &baricenters,
                               VFile<unsigned int> &face_remap,
 			                        vector<unsigned int> &patch_faces,
 			                        float scaling, int steps) {
   
-  Init(crude, scaling, steps);
+  Init(baricenters, scaling, steps);
 
   //TODO: improve quality of patches and implement threshold.
   typedef  map<pair<unsigned int, unsigned int>, unsigned int> FragIndex;
@@ -345,8 +351,8 @@ void VoronoiChain::RemapFaces(Crude &crude,
   unsigned int totpatches = 0;
 
   Point3f bari;
-  for(unsigned int i = 0; i < crude.Faces(); i++) {
-    bari = crude.GetBari(i);
+  for(unsigned int i = 0; i < baricenters.Size(); i++) {
+    bari = baricenters[i];
     
     unsigned int fine = Locate(0, bari);
     unsigned int coarse = Locate(1, bari);
@@ -485,10 +491,10 @@ void VoronoiChain::BuildLevel(Nexus &nexus, unsigned int offset,
       }
     }
     if(step == steps-1) {
-      if(!Optimize(coarse_vmean, coarse, centroids, counts, false))
+      if(!Optimize((int)coarse_vmean, coarse, centroids, counts, false))
 	step--;
     } else 
-      Optimize(coarse_vmean, coarse, centroids, counts, true);
+      Optimize((int)coarse_vmean, coarse, centroids, counts, true);
   }    
   
   newfragments.clear();

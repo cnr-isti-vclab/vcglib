@@ -40,41 +40,54 @@ void NxsPatch::Read(instm *in) {
   in->read(&*bord.begin(), bord.size() * sizeof(Link));
 }
 
-void Fragment::Write(outstm *out) {
-  out->write(&id, sizeof(unsigned int));
-  out->write(&error, sizeof(float));
-  
-  unsigned int ssize = seeds.size();
-  out->write(&ssize, sizeof(unsigned int));
-  
-  out->write(&*seeds.begin(), ssize * sizeof(Point3f));
-  out->write(&*seeds_id.begin(), ssize * sizeof(unsigned int));
+bool Fragment::Write(outstm *out) {
+  try {
+    out->write(&id, sizeof(unsigned int));
+    out->write(&error, sizeof(float));
+    unsigned int ssize = seeds.size();
+    out->write(&ssize, sizeof(unsigned int));
+    out->write(&*seeds.begin(), ssize * sizeof(Point3f));
+    out->write(&*seeds_id.begin(), ssize * sizeof(unsigned int));
+    unsigned int psize = pieces.size();
+    out->write(&psize, sizeof(unsigned int));
 
-  unsigned int psize = pieces.size();
-  out->write(&psize, sizeof(unsigned int));
-  
-  for(unsigned int i = 0; i < pieces.size(); i++)
-    pieces[i].Write(out);
+    for(unsigned int i = 0; i < pieces.size(); i++) 
+      pieces[i].Write(out);
+    return true;
+  } catch (estream *e) {
+    perr.putf("Error: %s\n", pconst(e->get_message()));
+    delete e;
+    return false;
+  }
 }
 
-void Fragment::Read(instm *in) {
-
-  in->read(&id, sizeof(unsigned int));
-  in->read(&error, sizeof(float));
-
-  unsigned int ssize;
-  in->read(&ssize, sizeof(unsigned int));
-  seeds.resize(ssize);
-  seeds_id.resize(ssize);
-  in->read(&*seeds.begin(), ssize * sizeof(Point3f));
-  in->read(&*seeds_id.begin(), ssize * sizeof(unsigned int));
-
-  unsigned int psize;
-  in->read(&psize, sizeof(unsigned int));
-  pieces.resize(psize);
-
-  for(unsigned int i = 0; i < psize; i++)
-    pieces[i].Read(in);
+bool Fragment::Read(instm *in) {
+  try {
+    in->read(&id, sizeof(unsigned int));
+    in->read(&error, sizeof(float));
+    
+    //TODO move this control to all read!
+    unsigned int ssize;
+    if(sizeof(int) != in->read(&ssize, sizeof(unsigned int)))
+      return false;
+    seeds.resize(ssize);
+    seeds_id.resize(ssize);
+    in->read(&*seeds.begin(), ssize * sizeof(Point3f));
+    in->read(&*seeds_id.begin(), ssize * sizeof(unsigned int));
+    
+    unsigned int psize;
+    in->read(&psize, sizeof(unsigned int));
+    pieces.resize(psize);
+    
+    for(unsigned int i = 0; i < psize; i++) {
+      pieces[i].Read(in);
+    }
+    return true;
+  } catch (estream *e) {
+    perr.putf("Error: %s\n", pconst(e->get_message()));
+    delete e;
+    return false;
+  }
 }
 
 void nxs::Join(Fragment &in, 
@@ -132,6 +145,54 @@ void nxs::Join(Fragment &in,
   }
   assert(vcount < (1<<16));
 
+  set<BigLink> newborders;
+  for(unsigned int i = 0; i < in.pieces.size(); i++) {
+    unsigned int offset = offsets[i];
+    vector<Link> &bord = in.pieces[i].bord;
+    for(unsigned int k = 0; k < bord.size(); k++) {
+      Link llink = bord[k];
+      if(llink.IsNull()) continue;
+      if(!patch_remap.count(llink.end_patch)) {//external
+	BigLink link;
+	link.start_vert = remap[offset + llink.start_vert];
+	link.end_patch = in.pieces[i].patch;
+	link.end_vert = llink.start_vert;
+	newborders.insert(link);
+      }
+    }
+  }
+  
+  newvert.resize(vcount);
+  newface.resize(fcount*3);
+  newbord.resize(newborders.size());
+  
+  fcount = 0;
+  for(unsigned int i = 0; i < in.pieces.size(); i++) {
+    unsigned int offset = offsets[i];
+    vector<Point3f> &vert = in.pieces[i].vert;
+    vector<unsigned short> &face = in.pieces[i].face;
+    vector<Link> &bord = in.pieces[i].bord;
+    
+    for(unsigned int i = 0; i < vert.size(); i++) {            
+      assert(offset + i < remap.size());
+      assert(remap[offset + i] < vcount);
+      newvert[remap[offset + i]] = vert[i];
+    }
+    
+    for(unsigned int i = 0; i < face.size(); i++) {
+      assert(offset + face[i] < remap.size());
+      assert(remap[offset + face[i]] < newvert.size());
+      assert(fcount < newface.size());
+      newface[fcount++] = remap[offset + face[i]];
+    }
+  }  
+  set<BigLink>::iterator b;
+  for(b = newborders.begin(); b != newborders.end(); b++) 
+    newbord.push_back(*b);
+
+  /* old code (more general.. but not parallelizable)
+
+
   //L(a, b): Exist link between a, b
   //An external link L(e, v) where v belongs to the patches (and e not)
   //is valid only if: for every x in patches L(v, x) => L(e, x)
@@ -148,8 +209,10 @@ void nxs::Join(Fragment &in,
     for(unsigned int k = 0; k < bord.size(); k++) {
       Link llink = bord[k];
       if(llink.IsNull()) continue;
-      if(!patch_remap.count(llink.end_patch)) {//external...may be erased though
+      if(!patch_remap.count(llink.end_patch)) {//external...may be erased 
 	BigLink link;
+	link.orig_vert = llink.start_vert;
+	link.orig_patch = in.pieces[i].patch;
 	link.start_vert = remap[offset + llink.start_vert];
 	link.end_patch = llink.end_patch;
 	link.end_vert = llink.end_vert;
@@ -196,14 +259,13 @@ void nxs::Join(Fragment &in,
     unsigned int n = (*b).second;
     if(n * (n-1) == internal_links[link.start_vert])
       newbord.push_back(link);
-  }
+      }*/
 }
 
 void nxs::Split(Fragment &out, 
 		vector<Point3f> &newvert,
 		vector<unsigned int> &newface,
-		vector<BigLink> &newbord, 
-		VoronoiPartition &part) {
+		vector<BigLink> &newbord) {
 
   unsigned int nseeds = out.seeds.size();
   vector<Point3f> &seeds = out.seeds;
@@ -219,12 +281,12 @@ void nxs::Split(Fragment &out,
     assert(seed < nseeds);
     count[seed]++;
   }
-
+  
   //pruning small patches
   float min_size = (newface.size()/3) / 20.0f;
   vector<Point3f> newseeds;
   vector<unsigned int> newseeds_id;
-
+  
   for(unsigned int seed = 0; seed < nseeds; seed++) {
     if(count[seed] > min_size) {
       newseeds.push_back(seeds[seed]);
@@ -313,17 +375,15 @@ void nxs::Split(Fragment &out,
     //for every esternal link we must update external patches!
     for(unsigned int i = 0; i < newbord.size(); i++) {
       BigLink link = newbord[i];
-      if(v_remap[link.start_vert] == -1) continue;
-      link.start_vert = v_remap[link.start_vert];
-      assert(link.start_vert < (1<<16));
+      if(v_remap[link.start_vert] == -1) continue; 
       Link llink;
-      llink.start_vert = link.start_vert;
+      llink.start_vert = v_remap[link.start_vert];
       llink.end_patch = link.end_patch;
       llink.end_vert = link.end_vert;
       bords.push_back(llink);
     }
 			   
-			   //process internal borders;
+    //process internal borders;
     //TODO higly inefficient!!!
     for(unsigned int rseed = 0; rseed < nseeds; rseed++) {
       if(seed == rseed) continue;

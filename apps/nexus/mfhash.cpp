@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/07/05 15:49:39  ponchio
+Windows (DevCpp, mingw) port.
+
 Revision 1.4  2004/07/04 14:23:14  ponchio
 *** empty log message ***
 
@@ -71,6 +74,11 @@ bool MFHash::Load(const string &file, unsigned int used) {
       if(buffer[i].Empty()) space++;
   }
   return true;
+}
+
+void MFHash::Delete() {
+  buffer.Flush();
+  buffer.Delete();
 }
 
 void MFHash::Resize(unsigned int n) {

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2004/11/03 16:31:38  ponchio
+Trying to fix big patches.
+
 Revision 1.20  2004/10/30 20:17:03  ponchio
 Fixed big patches problem.
 
@@ -107,24 +110,26 @@ using namespace std;
 #include "fragment.h"
 #include "nxsbuild.h"
 #include "watch.h"
+#include "nxsdispatcher.h"
 using namespace vcg;
 using namespace nxs;
 
 
 void BuildFragment(Nexus &nexus, VoronoiPartition &part,
 		   set<unsigned int> &patches, 
-		   Nexus::Update &update,
 		   Fragment &fragment);
 
 void SaveFragment(Nexus &nexus, VoronoiChain &chain,
-		  unsigned int level,
-		  Nexus::Update &update,
+		  Fragment &fragin,
 		  Fragment &fragout);
 
 void ReverseHistory(vector<Nexus::Update> &history);
 
 void TestBorders(Nexus &nexus);
 void TestPatches(Nexus &nexus);
+
+unsigned int current_level;
+vector<unsigned int> patch_levels;
 
 int main(int argc, char *argv[]) {
 
@@ -258,13 +263,24 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
+  VFile<Point3f> baricenters;
+  if(!baricenters.Create(output + string(".bvr"))) {
+    cerr << "Could not create temporary baricenters file\n";
+    return -1;
+  } 
+  baricenters.Resize(crude.Faces());
+
+  //TODO use some smarter rule :P
+  for(unsigned int i = 0; i < crude.Faces(); i++) {
+    baricenters[i] = crude.GetBari(i);
+  }
   /* BUILDING FIRST LEVEL */
 
   //Remapping faces and vertices using level 0 and 1 of the chain
   cerr << "Remapping faces.\n";
   vector<unsigned int> patch_faces;
   
-  vchain.RemapFaces(crude, face_remap, patch_faces, 
+  vchain.RemapFaces(baricenters, face_remap, patch_faces, 
 		    scaling, optimization_steps);
 
   cerr << "Remapping vertices.\n";
@@ -274,6 +290,8 @@ int main(int argc, char *argv[]) {
 
   if(stop_after_remap) return 0;
 
+
+
   cerr << "Allocating space\n";
   //allocate chunks for patches and copy faces (absoklute indexing) into them.
   NexusAllocate(crude, nexus, face_remap, patch_faces, patch_verts);
@@ -282,12 +300,20 @@ int main(int argc, char *argv[]) {
   //insert vertices and remap faces, prepare borders
   NexusFill(crude, nexus, vert_remap, border_remap);
 
-  //  NexusFixBorder(nexus, border_remap);
+  //Now face_remap, vert_remap, border_remap can be deleted!
+  face_remap.Delete();
+  vert_remap.Delete();
+  border_remap.Delete();
+  baricenters.Delete();
+
+
 
   //filling history
   Nexus::Update update;
-  for(unsigned int i = 0; i < nexus.index.size(); i++) 
+  for(unsigned int i = 0; i < nexus.index.size(); i++) {
     update.created.push_back(i);
+    patch_levels.push_back(0);
+  }
   nexus.history.push_back(update); 
  
   //unify vertices otherwise you may get cracks.
@@ -297,9 +323,15 @@ int main(int argc, char *argv[]) {
   /* BUILDING OTHER LEVELS */
 
   Report report;
+  Dispatcher dispatcher(&nexus, &vchain);
+  if(!dispatcher.Init("servers.txt")) {
+    cerr << "Could not parse server file: " << "servers.txt"
+	 << " proceding locally\n";
+  }
 
   unsigned int oldoffset = 0;
   for(unsigned int level = 1; level < max_level; level++) {
+    current_level = level;
     cerr << "Level: " << level << endl;
 
     unsigned int newoffset = nexus.index.size();
@@ -307,20 +339,20 @@ int main(int argc, char *argv[]) {
     
     report.Init(vchain.oldfragments.size(), 1);
     unsigned int fcount = 0;
-    vector<Nexus::Update> level_history;
     map<unsigned int, set<unsigned int> >::iterator fragment;
     for(fragment = vchain.oldfragments.begin(); 
 	fragment != vchain.oldfragments.end(); fragment++) {
       report.Step(fcount++);
 
-      
+      Fragment *fragin = new Fragment;
+      BuildFragment(nexus, vchain.levels[level+1], 
+		    (*fragment).second, *fragin);
 
-      Fragment fragin;
-      BuildFragment(nexus, vchain.levels[level+1], (*fragment).second, 
-		    update, fragin);
+      dispatcher.SendFragment(fragin);
 
 
-
+      /*
+      //this can be executed on a remote host
 
       //TODO move this part to remote....
       vector<Point3f> newvert;
@@ -336,19 +368,19 @@ int main(int argc, char *argv[]) {
       fragout.id = fragin.id;
       fragout.seeds = fragin.seeds;
       fragout.seeds_id = fragin.seeds_id;
-      Split(fragout, newvert, newface, newbord, vchain.levels[level+1]); 
+      Split(fragout, newvert, newface, newbord);//, vchain.levels[level+1]); 
 
-
-
-
-
-      SaveFragment(nexus, vchain, level, update, fragout);
-      level_history.push_back(update);
+      
+      SaveFragment(nexus, vchain, fragin, fragout);
+      */
+      dispatcher.processmsgs();
     }
-    report.Finish();
+    //TODO porcata!!!!
+    while(dispatcher.frags.size()) {
+      dispatcher.processmsgs();
+    }
 
-    for(unsigned int i = 0; i < level_history.size(); i++)
-      nexus.history.push_back(level_history[i]);
+    report.Finish();
 
     if(vchain.oldfragments.size() == 1) break;
 
@@ -379,8 +411,8 @@ int main(int argc, char *argv[]) {
 
 void BuildFragment(Nexus &nexus, VoronoiPartition &part,
 		   set<unsigned int> &patches, 
-		   Nexus::Update &update,
 		   Fragment &fragment) {
+
   set<unsigned int>::iterator f;
   for(f = patches.begin(); f != patches.end(); f++) {
     fragment.pieces.push_back(NxsPatch());
@@ -396,42 +428,54 @@ void BuildFragment(Nexus &nexus, VoronoiPartition &part,
     memcpy(&*nxs.face.begin(), patch.FaceBegin(), patch.nf * 3*sizeof(short));
     for(unsigned int i = 0; i < border.Size(); i++) {
       Link &link = border[i];
-      if(!link.IsNull())
+      if(!link.IsNull() && patch_levels[link.end_patch] == current_level-1)
 	nxs.bord.push_back(link);
     }
   }
 
-  update.created.clear();
-  update.erased.clear();
-  
-  set<unsigned int> &fcells = patches;
-  set<unsigned int>::iterator s;
-  for(s = fcells.begin(); s != fcells.end(); s++) {
-    update.erased.push_back(*s);
+  set<unsigned int> seeds;
+  vector<int> nears;
+  vector<float> dists;
+  int nnears = 10;
+  if(part.size() < 10) nnears = part.size();
+  for(f = patches.begin(); f != patches.end(); f++) {
+    Point3f &center = nexus.index[*f].sphere.Center();
+    part.Closest(center, nnears, nears, dists);
+    for(int i = 0; i < nnears; i++) 
+      seeds.insert(nears[i]);
   }
-
-  //copy all seeds! //TODO copy only closest ones
-  for(unsigned int i = 0; i < part.size(); i++) {
-    fragment.seeds.push_back(part[i]);
-    fragment.seeds_id.push_back(i);
+  for(f = seeds.begin(); f != seeds.end(); f++) {
+    Point3f &p = part[*f];
+    fragment.seeds.push_back(p);
+    fragment.seeds_id.push_back(*f);
   }
 }
 
 
 void SaveFragment(Nexus &nexus, VoronoiChain &chain,
-		  unsigned int level,
-		  Nexus::Update &update, 
+		  Fragment &fragin,
 		  Fragment &fragout) {
+
+
+  set<unsigned int> orig_patches;
+
+  Nexus::Update update;  
+  for(unsigned int i = 0; i < fragin.pieces.size(); i++) {
+    NxsPatch &patch = fragin.pieces[i];
+    update.erased.push_back(patch.patch);
+    orig_patches.insert(patch.patch);
+  }
   
   vector<unsigned int> patch_remap;
   patch_remap.resize(fragout.pieces.size());
-
+  
   for(unsigned int i = 0; i < fragout.pieces.size(); i++) {
     NxsPatch &patch = fragout.pieces[i];
     //TODO detect best parameter below for bordersize...
     unsigned int patch_idx = nexus.AddPatch(patch.vert.size(),
 					    patch.face.size()/3,
 					    6 * patch.bord.size());
+    patch_levels.push_back(current_level);
     Nexus::PatchInfo &entry = nexus.index[patch_idx];
     entry.error = fragout.error;
 
@@ -455,19 +499,59 @@ void SaveFragment(Nexus &nexus, VoronoiChain &chain,
       entry.sphere.Add(outpatch.vert[v]);
       nexus.sphere.Add(outpatch.vert[v]);
     } 
-    //remap borders
+
+
+    vector<Link> actual;
+    //remap internal borders
     for(unsigned int i = 0; i < outpatch.bord.size(); i++) {
       Link &link = outpatch.bord[i];
-      if(link.end_patch >= (1<<31)) //internal
+      if(link.end_patch >= (1<<31)) { //internal
 	link.end_patch = patch_remap[link.end_patch - (1<<31)];
-      else { //if external add the reverse border
-	Border rborder = nexus.GetBorder(link.end_patch);
+	actual.push_back(link);
+      } 
+    } 
+    //TODO not efficient!
+    //processing external borders
+    for(unsigned int i = 0; i < outpatch.bord.size(); i++) {
+      Link &link = outpatch.bord[i];
+      if(link.end_patch >= (1<<31)) continue;
 
+      unsigned short &start_vert = link.start_vert;
+      unsigned int &start_patch = patch_idx;
+
+      Border cborder = nexus.GetBorder(link.end_patch);
+      for(unsigned int k = 0; k < cborder.Size(); k++) {
+	Link &clink = cborder[k];
+	if(clink.start_vert != link.end_vert) continue;
+	if(patch_levels[clink.end_patch] < current_level-1) continue;
+
+	unsigned short &end_vert = clink.end_vert;
+	unsigned int &end_patch = clink.end_patch;
+
+	Link newlink;
+
+	newlink.start_vert = start_vert;
+	newlink.end_vert = end_vert;
+	newlink.end_patch = end_patch;
+	
+	actual.push_back(newlink);
+	//	nexus.AddBorder(start_patch, newlink);
+
+	newlink.start_vert = end_vert;
+	newlink.end_vert = start_vert;
+	newlink.end_patch = start_patch;
+	
+	nexus.AddBorder(end_patch, newlink);
+	
+
+
+	/*	Border rborder = nexus.GetBorder(clink.end_patch);
+	
 	unsigned int pos = rborder.Size();
 	if(nexus.borders.ResizeBorder(link.end_patch, pos+1)) {
 	  rborder = nexus.GetBorder(link.end_patch);
 	}
-      
+	
 	assert(rborder.Size() < rborder.Available());
 	assert(rborder.Available() > pos);
 
@@ -475,17 +559,23 @@ void SaveFragment(Nexus &nexus, VoronoiChain &chain,
 	newlink.start_vert = link.end_vert;
 	newlink.end_vert = link.start_vert;
 	newlink.end_patch = patch_idx;
-	rborder[pos] = newlink;
+	rborder[pos] = newlink;*/
       }
     }
     Border border = nexus.GetBorder(patch_idx);
-    assert(border.Available() >= outpatch.bord.size());
+    if(nexus.borders.ResizeBorder(patch_idx, actual.size())) {
+      border = nexus.GetBorder(patch_idx);
+    }
+    memcpy(&(border[0]), &(actual[0]), 
+	   actual.size() * sizeof(Link));
+    /*    assert(border.Available() >= outpatch.bord.size());
     if(nexus.borders.ResizeBorder(patch_idx, outpatch.bord.size())) {
       border = nexus.GetBorder(patch_idx);
     }
     memcpy(&(border[0]), &(outpatch.bord[0]), 
-	   outpatch.bord.size() * sizeof(Link)); 
+    outpatch.bord.size() * sizeof(Link)); */
   }
+  nexus.history.push_back(update);
 }
 
 void ReverseHistory(vector<Nexus::Update> &history) {

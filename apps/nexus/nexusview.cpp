@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2004/10/30 20:17:03  ponchio
+Fixed big patches problem.
+
 Revision 1.18  2004/10/21 13:40:16  ponchio
 Debugging.
 
@@ -385,6 +388,23 @@ int main(int argc, char *argv[]) {
       nexus.Draw(cells);
     } else
       nexus.Draw(cells);
+
+    if(show_borders) {
+      for(unsigned int i = 0; i < cells.size(); i++) {
+	Border border = nexus.GetBorder(cells[i]);
+	Patch &patch = nexus.GetPatch(cells[i]);
+	glPointSize(4);
+	glColor3f(1.0f, 1.0f, 1.0f);
+	glBegin(GL_POINTS);
+	for(int b = 0; b < border.Size(); b++) {
+	  Link &link = border[b];
+	  Point3f &p = patch.Vert(link.start_vert);
+	  glVertex3f(p[0], p[1], p[2]);
+	}
+	glEnd();
+	glPointSize(1);
+      }
+    }
 
     //cerr Do some reporting:
     if(show_statistics) {
