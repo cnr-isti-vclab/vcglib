@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.43  2005/02/20 18:07:01  ponchio
+cleaning.
+
 Revision 1.42  2005/02/20 00:43:24  ponchio
 Less memory x extraction.  (removed frags)
 
@@ -199,8 +202,11 @@ using namespace vcg;
 using namespace nxs;
 
 bool fullscreen = false;
-int width =1024;
+int width = 1024
 int height = 768;
+
+Point3f view(0, 0, 5);
+Point3f target(0, 0, 0);
 
 void gl_print(float x, float y, char *str);
 
@@ -227,7 +233,7 @@ bool init(const string &str) {
     return false;
   }
   
-  SDL_WM_SetIcon(SDL_LoadBMP("inspector.bmp"), NULL);
+  //  SDL_WM_SetIcon(SDL_LoadBMP("icon.bmp"), NULL);
   SDL_WM_SetCaption(str.c_str(), str.c_str());
 
 
@@ -450,8 +456,8 @@ int main(int argc, char *argv[]) {
 	if(event.button.button == SDL_BUTTON_WHEELUP) 
 	  track.MouseWheel(1);
 	else if(event.button.button == SDL_BUTTON_WHEELDOWN) 
-	  track.MouseWheel(-1);
-	else 
+	track.MouseWheel(-1);
+	else
 #endif
 	  if(event.button.button == SDL_BUTTON_LEFT)
 	    track.MouseDown(x, y, Trackball::BUTTON_LEFT);
@@ -486,8 +492,19 @@ int main(int argc, char *argv[]) {
     gluPerspective(40, width/(float)height, 0.1, 100);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(0,0,5,   0,0,0,   0,1,0);    
-    
+
+    //    gluLookAt(0,0,5,   0,0,0,   0,1,0);    
+    gluLookAt(view[0],view[1], view[2], 
+	      target[0],target[1],target[2],   0,1,0);    
+
+
+    track.GetView();
+    track.Apply();
+
+    Point4f light(1, -1, 1, 0);
+    glLightfv(GL_LIGHT0, GL_POSITION, &light[0]);
+
+
     glViewport(0,0,width,height);
     glRotatef(alpha, 0, 1, 0);
     if(rotate) {
@@ -500,18 +517,15 @@ int main(int argc, char *argv[]) {
       }
     }
     
-    
-    track.GetView();
-    track.Apply();
-    
     float scale = 2/sphere.Radius();
     
     glScalef(scale, scale, scale);       
     Point3f center = sphere.Center();
     glTranslatef(-center[0], -center[1], -center[2]);
     
-    Point3f &p = nexus.sphere.Center();
-    float r = nexus.sphere.Radius();
+    //    Point3f &p = nexus.sphere.Center();
+    //    float r = nexus.sphere.Radius();
+
 
     glColor3f(0.8f, 0.8f, 0.8f);
     
