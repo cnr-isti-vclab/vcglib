@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/05/05 08:20:47  cignoni
+syntax error in set and better comment
+
 Revision 1.3  2004/04/28 16:36:55  turini
 Changed :
 in Distance(plane, point) :
