@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/07/02 17:41:37  ponchio
+Debug.
+
 Revision 1.4  2004/07/02 13:02:39  ponchio
 Added GetRegion, Read and Write
 
@@ -221,6 +224,11 @@ template <class T> class VFile {
     }
 
     return *(buffer.data + offset);
+  }
+
+  void PushBack(const T &t) {
+    Resize(n_elements+1);
+    operator[](n_elements-1) = t;
   }
   
   /** you can get a region instead of an element but:
