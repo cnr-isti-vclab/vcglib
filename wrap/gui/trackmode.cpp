@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2005/02/02 16:46:41  pietroni
+some warning corrected
+
 Revision 1.10  2005/01/14 15:44:03  ganovelli
 PlaneMode completed
 
@@ -107,7 +110,8 @@ void SphereMode::Apply(Trackball *tb, Point3f new_point) {
   Point3f hitNew=Hit(tb, new_point);
  // tb->Hits.push_back(hitNew);
 
-  Point3f axis = (hitNew- tb->center)^(hitOld- tb->center); 
+  Point3f center = tb->track.tra+tb->center;
+  Point3f axis = (hitNew- center)^(hitOld- center); 
 
   //  Figure out how much to rotate around that axis.
   //float phi=Angle((hitNew- tb->center),(hitOld- tb->center));
@@ -274,9 +278,11 @@ Point3f SphereMode::Hit(Trackball *tb, const Point3f &p) {
 }
 
 void PlaneMode::Apply(Trackball *tb, Point3f new_point) {
-  Point3f hitOld=HitViewPlane(tb, tb->last_point);
-  Point3f hitNew=HitViewPlane(tb, new_point);
-	tb->track.tra = tb->last_track.tra + Point3f(hitNew- hitOld);
+	Point3f hitOld = HitViewPlane(tb, tb->last_point);
+	Point3f hitNew = HitViewPlane(tb, new_point);
+	Matrix44f m;     tb->track.rot.ToMatrix(m);
+
+	tb->track.tra = tb->last_track.tra + Inverse(m)*Point3f(hitNew- hitOld);
 }
 
 
