@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/04/03 13:30:01  cignoni
+missing include allocate.h
+
 Revision 1.2  2004/03/09 21:26:47  cignoni
 cr lf mismatch
 
@@ -31,6 +34,8 @@ Revision 1.1  2004/03/03 15:00:51  cignoni
 Initial commit
 
 ****************************************************************************/
+#ifndef __VCGLIB_IMPORTERPLY
+#define __VCGLIB_IMPORTERPLY
 
 #include<wrap/callback.h>
 #include<wrap/ply/plylib.h>
@@ -804,3 +809,5 @@ bool LoadMask(const char * filename, int &mask)
 } // end namespace tri
 } // end namespace io
 } // end namespace vcg
+
+#endif
