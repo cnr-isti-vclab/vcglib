@@ -49,8 +49,6 @@ nxsbuilder_SOURCES = 	../../nexus/nxsbuilder.cpp 	\
 			../../nexus/normalscone.cpp	\
 		     	../../nexus/decimate.cpp	\
 		     	../../nexus/nxsalgo.cpp		\
-			../../../wrap/strip/tristrip.cpp\
-			../../nexus/tristripper/tri_stripper.cpp \
 			../../nexus/vchain.cpp		\
 			../../nexus/vpartition.cpp 	\
 			../../nexus/remapping.cpp 	\
@@ -98,6 +96,7 @@ nxsedit_SOURCES = 	../../nexus/nxsedit.cpp 	\
 			../../nexus/normalscone.cpp	\
 			../../nexus/nxsalgo.cpp 	\
 			../../nexus/vpartition.cpp      \
+			../../nexus/strip.cpp	\
 			../../../wrap/strip/tristrip.cpp\
 			../../nexus/tristripper/tri_stripper.cpp \
 		 	../../nexus/file.cpp 		\
