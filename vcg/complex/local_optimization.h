@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.12  2004/12/10 01:02:48  cignoni
+  added an inline and removed loggng
+
   Revision 1.11  2004/12/03 21:14:39  ponchio
   Fixed memory leak...
 
@@ -243,6 +246,7 @@ public:
 		nPerfmormedOps =0;
 		while( !GoalReached() && !h.empty())
 			{
+        if(h.size()> m.fn*5 )  ClearHeap();
 				std::pop_heap(h.begin(),h.end());
         LocModPtrType  locMod   = h.back().locModPtr;
 				h.pop_back();
@@ -264,6 +268,27 @@ public:
 		return !(h.empty());
   }
  
+  // Toglie dallo heap tutti i collassi non up to date
+// Chiamata dalla do decimate ogni tanto quando lo heap diventa troppo grande (>fn*3)
+void ClearHeap()
+{
+	HeapType::iterator hi;
+	int sz=h.size();
+	for(hi=h.begin();hi!=h.end();++hi)
+  {
+    if(!(*hi).locModPtr->IsUpToDate())
+		{
+     	delete (*hi).locModPtr;
+			*hi=h.back();
+      h.pop_back();
+      if(hi==h.end()) break;
+      --hi;
+		}
+  }
+  printf("\nReduced heap from %7i to %7i (fn %7i) ",sz,h.size(),m.fn);
+	make_heap(h.begin(),h.end());
+}
+
 	///initialize for all vertex the temporary mark must call only at the start of decimation
 	///by default it takes the first element in the heap and calls Init (static funcion) of that type
 	///of local modification. 
@@ -297,7 +322,7 @@ public:
 
 
 ///erase from the heap the operations that are out of date
-  void ClearHeap()
+  void ClearHeapOld()
   {
 		typename HeapType::iterator hi;
 		for(hi=h.begin();hi!=h.end();++hi)
