@@ -13,6 +13,9 @@ using namespace vcg;
 #include <unistd.h>
 #endif
 
+#include <assert.h>
+
+
 string getSuffix(unsigned int signature) {
   string suff;
   if(signature&NXS_COMPRESSED)     suff += "Z";
@@ -242,7 +245,12 @@ int main(int argc, char *argv[]) {
 	 << "\n\n\tVertices: " << nexus.totvert 
 	 << "\tFaces: " << nexus.totface
 	 << "\tPatches: " << nexus.index.size() 
-	 << "\nChunk size " << nexus.chunk_size << endl;
+	 << "\n\tSphere: " 
+	 << nexus.sphere.Center()[0] << " "
+	 << nexus.sphere.Center()[1] << " "
+	 << nexus.sphere.Center()[2] << " R: "
+	 << nexus.sphere.Radius()
+	 << "\n\tChunk size " << nexus.chunk_size << endl;
     
   }
   
@@ -294,17 +302,31 @@ int main(int argc, char *argv[]) {
 
 
     
-    //copy vertices: //no clustering
+    //copy vertices: 
     memcpy(dst_patch.VertBegin(), src_patch.VertBegin(), 
 	   src_patch.nv * sizeof(Point3f));
+
+    if(qvertex) {
+      float *ptr = (float *)dst_patch.VertBegin();
+      for(unsigned int i = 0; i < dst_patch.nv*3; i++) {
+	ptr[i] =  qvertex * nearbyintf(ptr[i]/qvertex);
+	//ptr[i] = 0;
+      }
+    } 
+
 
     //now faces.
     if(add_strip) {
       memcpy(dst_patch.FaceBegin(), &*strip.begin(), 
 	     strip.size() * sizeof(short));
     } else {
-      memcpy(dst_patch.FaceBegin(), src_patch.FaceBegin(), 
-	     src_patch.nf * sizeof(unsigned short) *3);
+      if(nexus.signature & NXS_STRIP) {
+	memcpy(dst_patch.FaceBegin(), src_patch.FaceBegin(), 
+	       src_patch.nf * sizeof(unsigned short));
+      } else {
+	memcpy(dst_patch.FaceBegin(), src_patch.FaceBegin(), 
+	       src_patch.nf * sizeof(unsigned short) * 3);
+      }
     }
 
     if((nexus.signature & NXS_COLORS) && (out.signature & NXS_COLORS))
@@ -315,7 +337,6 @@ int main(int argc, char *argv[]) {
        (out.signature & NXS_NORMALS_SHORT))
       memcpy(dst_patch.Norm16Begin(), src_patch.Norm16Begin(), 
 	     src_patch.nv * sizeof(short)*4);
-    
 
     //copying entry information;
     dst_entry.sphere = src_entry.sphere;
