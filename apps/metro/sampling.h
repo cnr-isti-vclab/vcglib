@@ -1,78 +1,71 @@
-/*****************************************************************************
- * VCGLib                                                                    *
- *																																					 *
- * Visual Computing Group                                                o>  *
- * IEI Institute, CNUCE Institute, CNR Pisa                             <|   *
- *                                                                      / \  *
- * Copyright(C) 1999 by Paolo Cignoni, Claudio Rocchini                      *
- * All rights reserved.                                                      *
- *																																					 *
- * Permission  to use, copy, modify, distribute  and sell this  software and *
- * its documentation for any purpose is hereby granted without fee, provided *
- * that  the above copyright notice appear  in all copies and that both that *
- * copyright   notice  and  this  permission  notice  appear  in  supporting *
- * documentation. the author makes  no representations about the suitability *
- * of this software for any purpose. It is provided  "as is" without express *
- * or implied warranty.                                                      *
- *					                                                         *
- *****************************************************************************/
+/****************************************************************************
+* VCGLib                                                            o o     *
+* Visual and Computer Graphics Library                            o     o   *
+*                                                                _   O  _   *
+* Copyright(C) 2004                                                \/)\/    *
+* Visual Computing Lab                                            /\/|      *
+* ISTI - Italian National Research Council                           |      *
+*                                                                    \      *
+* All rights reserved.                                                      *
+*                                                                           *
+* This program is free software; you can redistribute it and/or modify      *   
+* it under the terms of the GNU General Public License as published by      *
+* the Free Software Foundation; either version 2 of the License, or         *
+* (at your option) any later version.                                       *
+*                                                                           *
+* This program is distributed in the hope that it will be useful,           *
+* but WITHOUT ANY WARRANTY; without even the implied warranty of            *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
+* GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
+* for more details.                                                         *
+*                                                                           *
+****************************************************************************/
 /****************************************************************************
   History
-	2003 Dic 17 modifiche per conversione alla versione template	(gano)
-	2004 Jan 19 qualche ->P() in ->cP() (Snarf)
+
+$Log: not supported by cvs2svn $
+
+
 ****************************************************************************/
+#ifndef __VCGLIB__SAMPLING
+#define __VCGLIB__SAMPLING
 
-// -----------------------------------------------------------------------------------------------
-#ifndef _SAMPLING_H
-#define _SAMPLING_H
-// -----------------------------------------------------------------------------------------------
-
-// standard libraries.
 #include <time.h>
-
-// VCG library.
-//#include <vcg/tools/xml/xml.h>
 #include "min_dist_point.h"
-//#include <vcg/tools/Align/Hist.h>
 #include <vcg/space/box3.h>
 #include <vcg/space/color4.h>
 #include <vcg/simplex/face/distance.h>
 #include <vcg/space/index/grid_static_ptr.h>
 using namespace vcg;
-// -----------------------------------------------------------------------------------------------
 
-// flags.
-#define FLAG_HIST                           0x0001
-#define FLAG_VERTEX_SAMPLING                0x0002
-#define FLAG_EDGE_SAMPLING                  0x0004
-#define FLAG_FACE_SAMPLING                  0x0008
-#define FLAG_MONTECARLO_SAMPLING            0x0010
-#define FLAG_SUBDIVISION_SAMPLING           0x0020
-#define FLAG_SIMILAR_TRIANGLES_SAMPLING     0x0040
-#define FLAG_SAVE_ERROR_DISPLACEMENT        0x0080 
-#define FLAG_SAVE_ERROR_AS_COLOUR           0x0100
-
-// global constants
-#define NO_SAMPLES_PER_FACE             10
-#define N_SAMPLES_EDGE_TO_FACE_RATIO    0.1
-#define BBOX_FACTOR                     0.1
-#define INFLATE_PERCENTAGE			    0.02
-#define MIN_SIZE					    125		/* 125 = 5^3 */
-#define N_HIST_BINS                     256
-#define PRINT_EVERY_N_ELEMENTS          1000
-#define FILE_EXT_SMF                    "smf"
-#define FILE_EXT_PLY                    "ply"
-
+struct SamplingFlags{	
+			 enum{
+						HIST														= 0x0001,
+						VERTEX_SAMPLING									= 0x0002,
+						EDGE_SAMPLING										= 0x0004,
+						FACE_SAMPLING										= 0x0008,
+						MONTECARLO_SAMPLING							= 0x0010,
+						SUBDIVISION_SAMPLING						= 0x0020,
+						SIMILAR_TRIANGLES_SAMPLING			= 0x0040,
+						SAVE_ERROR_DISPLACEMENT					= 0x0080,
+						SAVE_ERROR_AS_COLOUR						= 0x0100,
+						INCLUDE_UNREFERENCED_VERTICES		= 0x0200
+				};
+	};
 // -----------------------------------------------------------------------------------------------
 template <class MetroMesh>
 class Sampling 
 {
+public:
+
 private:
-    typedef GridStaticPtr< typename MetroMesh::FaceContainer > MetroMeshGrid;
+	  typedef typename  MetroMesh::FaceContainer FaceContainer;
+	  typedef GridStaticPtr<FaceContainer > MetroMeshGrid;
 		typedef Point3<typename MetroMesh::ScalarType> Point3x;
 
     typedef typename MetroMesh::CoordType CoordType;
     typedef typename MetroMesh::ScalarType ScalarType;
+		typedef typename MetroMesh::VertexType  VertexType;
     typedef typename MetroMesh::VertexPointer  VertexPointer;
     typedef typename MetroMesh::VertexIterator VertexIterator;
     typedef typename MetroMesh::FaceIterator   FaceIterator;
@@ -85,7 +78,16 @@ private:
     MetroMesh       &S2;
     MetroMeshGrid   gS2;
 
+		std::vector<VertexPointer>  unrefVert2; //unreferred vertices
 
+		int n_samples_per_face             ;
+		float n_samples_edge_to_face_ratio ;
+		float bbox_factor                  ;
+		float inflate_percentage			     ;
+		int min_size					             ;
+		float n_hist_bins                  ;
+		int print_every_n_elements         ;
+		int referredBit;
     // parameters
     double          dist_upper_bound; 
     double					n_samples_per_area_unit;
@@ -109,7 +111,7 @@ private:
 
     // private methods
     inline double   ComputeMeshArea(MetroMesh & mesh);
-    float           AddSample(const Point3x &p);
+    float           AddSample(const Point3x &p,ScalarType upper_bound);
     inline void     AddRandomSample(FaceIterator &T);
     inline void     SampleEdge(const Point3x & v0, const Point3x & v1, int n_samples_per_edge);
     void            VertexSampling();
@@ -151,6 +153,25 @@ Sampling<MetroMesh>::Sampling(MetroMesh &_s1, MetroMesh &_s2):S1(_s1),S2(_s2)
 {
     Flags = 0;
     area_S1 = ComputeMeshArea(_s1);
+		// set default numbers
+		n_samples_per_face             =	10;
+		n_samples_edge_to_face_ratio   = 0.1;
+		bbox_factor                    = 0.1;
+		inflate_percentage			       = 0.02;
+		min_size					             = 125;		/* 125 = 5^3 */
+		n_hist_bins                    = 256;
+		print_every_n_elements         = 1000;
+
+			referredBit = VertexType::NewUserBit();
+			// store the unreferred vertices
+			FaceIterator fi; VertexIterator vi; int i;
+			for(fi = _s1.face.begin(); fi!= _s1.face.end(); ++fi)
+				for(i=0;i<3;++i) (*fi).V(i)->SetUserBit(referredBit);
+			for(fi = _s2.face.begin(); fi!= _s2.face.end(); ++fi)
+				for(i=0;i<3;++i) (*fi).V(i)->SetUserBit(referredBit);
+
+
+	
 }
 
 
@@ -185,22 +206,16 @@ inline double Sampling<MetroMesh>::ComputeMeshArea(MetroMesh & mesh)
 }
 
 template <class MetroMesh>
-float Sampling<MetroMesh>::AddSample(const Point3x &p)
+float Sampling<MetroMesh>::AddSample(const Point3x &p, ScalarType upper_bound )
 {
     FaceType   *f=0;
     Point3x             normf, bestq, ip;
 		ScalarType              dist;
 
-    dist = dist_upper_bound;
+    dist = upper_bound;
 
     // compute distance between p_i and the mesh S2
     MinDistPoint(S2, p, gS2, dist, normf, bestq, f, ip);
-
-		if(dist >0.001)
-			{
-			printf("%f %f %f\n",p[0],p[1],p[2]); 
-			MinDistPoint(S2, p, gS2, dist, normf, bestq, f, ip);
-			}
 
     // update distance measures
     if(dist == dist_upper_bound)
@@ -212,7 +227,7 @@ float Sampling<MetroMesh>::AddSample(const Point3x &p)
     RMS_dist  += dist*dist;     // L_2
     n_total_samples++;
 
-    //if(Flags & FLAG_HIST)
+    //if(Flags & HIST)
     //    hist.Add((float)fabs(dist));
 
     return (float)dist;    
@@ -231,19 +246,33 @@ void Sampling<MetroMesh>::VertexSampling()
     
     printf("Vertex sampling\n");
     VertexIterator vi;
+		std::vector<VertexPointer>::iterator vif;
     for(vi=S1.vert.begin();vi!=S1.vert.end();++vi)
+			if(  (*vi).IsUserBit(referredBit) || // it is referred
+					((Flags&SamplingFlags::INCLUDE_UNREFERENCED_VERTICES) != 0) ) //include also unreferred
     {
-        error = AddSample((*vi).cP());
+				error = dist_upper_bound;
+				if( !(*vi).IsUserBit(referredBit) && 
+						((Flags&SamplingFlags::INCLUDE_UNREFERENCED_VERTICES) != 0) )
+						for(vif = unrefVert2.begin(); vif != unrefVert2.end(); ++vif)
+							{
+							ScalarType d = Distance((*vif)->cP(),(*vi).cP());
+							if(d < error)
+								error = d;
+							}
+
+        error = AddSample((*vi).cP(),error);
+
         n_total_vertex_samples++;
 
         // save vertex quality
-        if(Flags & (FLAG_SAVE_ERROR_DISPLACEMENT | FLAG_SAVE_ERROR_AS_COLOUR))
+        if(Flags & (SamplingFlags::SAVE_ERROR_DISPLACEMENT | SamplingFlags::SAVE_ERROR_AS_COLOUR))
             (*vi).Q() = error;
 
-/*
-        if(Flags & FLAG_SAVE_ERROR_AS_COLOUR)
+
+				if(Flags & SamplingFlags::SAVE_ERROR_AS_COLOUR)
         {
-            ColorUB  col = ColorUB(ColorUB::White);
+            Color4b  col = Color4b(Color4b::White);
 
             if(error < dist_upper_bound)
                 // colour mapped distance
@@ -253,10 +282,10 @@ void Sampling<MetroMesh>::VertexSampling()
 
             (*vi).C() = col;
         }
-*/
+
 
         // print progress information
-        if(!(++cnt % PRINT_EVERY_N_ELEMENTS))
+        if(!(++cnt % print_every_n_elements))
             printf("Sampling vertices %d%%\r", (100 * cnt/S1.vn));
     }
     printf("                       \r");
@@ -275,7 +304,7 @@ inline void Sampling<MetroMesh>::SampleEdge(const Point3x & v0, const Point3x & 
     
     for(i=1; i <= n_samples_per_edge; i++)
     {
-        AddSample(v0 + e*i);
+        AddSample(v0 + e*i,dist_upper_bound);
         n_total_edge_samples++;
     }
 }
@@ -308,7 +337,7 @@ void Sampling<MetroMesh>::EdgeSampling()
     double                  n_samples_per_length_unit;
     double                  n_samples_decimal = 0.0;
     int                     cnt=0;
-    if(Flags & FLAG_FACE_SAMPLING)
+    if(Flags & SamplingFlags::FACE_SAMPLING)
         n_samples_per_length_unit = sqrt((double)n_samples_per_area_unit);
     else
         n_samples_per_length_unit = n_samples_per_area_unit;
@@ -320,7 +349,7 @@ void Sampling<MetroMesh>::EdgeSampling()
         n_samples_decimal -= (double) n_samples;
 
         // print progress information
-        if(!(++cnt % PRINT_EVERY_N_ELEMENTS))
+        if(!(++cnt % print_every_n_elements))
             printf("Sampling edge %d%%\r", (100 * cnt/Edges.size()));
     }
     printf("                     \r");
@@ -355,7 +384,7 @@ inline void Sampling<MetroMesh>::AddRandomSample(FaceIterator &T)
     }
 
     // add a random point on the face T.
-    AddSample (p0 + (v1 * rnd_1 + v2 * rnd_2));
+    AddSample (p0 + (v1 * rnd_1 + v2 * rnd_2),dist_upper_bound);
     n_total_area_samples++;
 }
 
@@ -363,7 +392,7 @@ template <class MetroMesh>
 void Sampling<MetroMesh>::MontecarloFaceSampling()
 {
     // Montecarlo sampling.
-//    int     cnt = 0;
+    int     cnt = 0;
     double  n_samples_decimal = 0.0;
     FaceIterator fi;
 
@@ -383,7 +412,7 @@ void Sampling<MetroMesh>::MontecarloFaceSampling()
         n_samples_decimal -= (double) n_samples;
 
         // print progress information
-//        if(!(++cnt % PRINT_EVERY_N_ELEMENTS))
+//        if(!(++cnt % print_every_n_elements))
  //           printf("Sampling face %d%%\r", (100 * cnt/S1.fn));
     }
  //   printf("                     \r");
@@ -398,7 +427,7 @@ void Sampling<MetroMesh>::FaceSubdiv(const Point3x & v0, const Point3x & v1, con
     if(maxdepth == 0) 
     {
         // ground case.
-        AddSample((v0+v1+v2)/3.0f);
+        AddSample((v0+v1+v2)/3.0f,dist_upper_bound);
         n_total_area_samples++;
         n_samples++;
         return;
@@ -459,7 +488,7 @@ void Sampling<MetroMesh>::SubdivFaceSampling()
         n_samples_decimal -= (double) n_samples;
 
         // print progress information
-        if(!(++cnt % PRINT_EVERY_N_ELEMENTS))
+        if(!(++cnt % print_every_n_elements))
             printf("Sampling face %d%%\r", (100 * cnt/S1.fn));
     }
     printf("                     \r");
@@ -478,7 +507,7 @@ void Sampling<MetroMesh>::SimilarTriangles(const Point3x & v0, const Point3x & v
     for(i=1; i < n_samples_per_edge-1; i++)
         for(j=1; j < n_samples_per_edge-1-i; j++)
         {
-            AddSample( v0 + (V1*(double)i + V2*(double)j) );
+            AddSample( v0 + (V1*(double)i + V2*(double)j) ,dist_upper_bound);
             n_total_area_samples++;
             n_samples++;
         }
@@ -508,7 +537,7 @@ void Sampling<MetroMesh>::SimilarFaceSampling()
         n_samples_decimal -= (double) n_samples;
 
         // print progress information
-        if(!(++cnt % PRINT_EVERY_N_ELEMENTS))
+        if(!(++cnt % print_every_n_elements))
             printf("Sampling face %d%%\r", (100 * cnt/S1.fn));
     }
     printf("                     \r");
@@ -523,18 +552,24 @@ void Sampling<MetroMesh>::Hausdorff()
 {
 		Box3< ScalarType> bbox;
 
+		FaceIterator fi; VertexIterator vi; 
+		if( (Flags & SamplingFlags::INCLUDE_UNREFERENCED_VERTICES) != 0){
+				for(vi = S2.vert.begin(); vi!= S2.vert.end(); ++vi)
+					if(!(*vi).IsUserBit(referredBit)) unrefVert2.push_back(&(*vi));
+			}
+
     // set grid meshes.
     gS2.SetBBox(S2.bbox);
-	if(S2.face.size() < MIN_SIZE)
-		gS2.Set(S2.face, MIN_SIZE);
+	if(S2.face.size() < min_size)
+		gS2.Set(S2.face, min_size);
     else
 		gS2.Set(S2.face);
 
     // set bounding box
     bbox = S2.bbox;
-    dist_upper_bound = /*BBOX_FACTOR * */bbox.Diag();
-    //if(Flags & FLAG_HIST)
-    //	hist.SetRange(0.0, dist_upper_bound, N_HIST_BINS);
+    dist_upper_bound = /*bbox_factor * */bbox.Diag();
+    //if(Flags & HIST)
+    //	hist.SetRange(0.0, dist_upper_bound, n_hist_bins);
 
     // initialize sampling statistics.
     n_total_area_samples = n_total_edge_samples = n_total_vertex_samples = n_total_samples = n_samples = 0;
@@ -542,30 +577,30 @@ void Sampling<MetroMesh>::Hausdorff()
 		mean_dist = RMS_dist = 0;
 
     // Vertex sampling.
-    if(Flags & FLAG_VERTEX_SAMPLING)
+    if(Flags & SamplingFlags::VERTEX_SAMPLING)
         VertexSampling();
     // Edge sammpling.
     n_samples_target -= (int) n_total_samples;
     if(n_samples_target > 0)
     {
         n_samples_per_area_unit  = n_samples_target / area_S1;
-        if(Flags & FLAG_EDGE_SAMPLING)
+				if(Flags & SamplingFlags::EDGE_SAMPLING)
         {
             EdgeSampling();
             n_samples_target -= (int) n_total_samples;
         }
         // Face sampling.
-        if((Flags & FLAG_FACE_SAMPLING) && (n_samples_target > 0))
+        if((Flags & SamplingFlags::FACE_SAMPLING) && (n_samples_target > 0))
         {
             n_samples_per_area_unit  = n_samples_target / area_S1;
-            if(Flags & FLAG_MONTECARLO_SAMPLING)        MontecarloFaceSampling();
-            if(Flags & FLAG_SUBDIVISION_SAMPLING)       SubdivFaceSampling();
-            if(Flags & FLAG_SIMILAR_TRIANGLES_SAMPLING) SimilarFaceSampling();
+            if(Flags & SamplingFlags::MONTECARLO_SAMPLING)        MontecarloFaceSampling();
+            if(Flags & SamplingFlags::SUBDIVISION_SAMPLING)       SubdivFaceSampling();
+            if(Flags & SamplingFlags::SIMILAR_TRIANGLES_SAMPLING) SimilarFaceSampling();
         }
     }
 
     // compute vertex colour
-    if(Flags & FLAG_SAVE_ERROR_AS_COLOUR)
+    if(Flags & SamplingFlags::SAVE_ERROR_AS_COLOUR)
     {
         VertexIterator vi;
         float   error;
@@ -584,7 +619,7 @@ void Sampling<MetroMesh>::Hausdorff()
             (*vi).C() = col;
 
             // print progress information
-            if(!(++cnt % PRINT_EVERY_N_ELEMENTS))
+            if(!(++cnt % print_every_n_elements))
                 printf("Computing vertex colour %d%%\r", (100 * cnt/S1.vn));
         }
         printf("                       \r");
@@ -596,28 +631,5 @@ void Sampling<MetroMesh>::Hausdorff()
     mean_dist /= n_total_samples;
     RMS_dist   = sqrt(RMS_dist / n_total_samples);
 }
-// -----------------------------------------------------------------------------------------------
-//#undef FLAG_HIST                           
-//#undef FLAG_VERTEX_SAMPLING                
-//#undef FLAG_EDGE_SAMPLING                  
-//#undef FLAG_FACE_SAMPLING                  
-//#undef FLAG_MONTECARLO_SAMPLING            
-//#undef FLAG_SUBDIVISION_SAMPLING           
-//#undef FLAG_SIMILAR_TRIANGLES_SAMPLING     
-//#undef FLAG_SAVE_ERROR_DISPLACEMENT        
-//#undef FLAG_SAVE_ERROR_AS_COLOUR           
-//
-//// global constants
-//#undef NO_SAMPLES_PER_FACE           
-//#undef N_SAMPLES_EDGE_TO_FACE_RATIO  
-//#undef BBOX_FACTOR                   
-//#undef INFLATE_PERCENTAGE						
-//#undef MIN_SIZE											 
-//#undef N_HIST_BINS                   
-//#undef PRINT_EVERY_N_ELEMENTS        
-//#undef FILE_EXT_SMF                  
-//#undef FILE_EXT_PLY                  
-//
 
 #endif
-// -----------------------------------------------------------------------------------------------
