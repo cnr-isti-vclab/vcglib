@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/04/21 14:06:10  ganovelli
+#ifndef added
+
 Revision 1.4  2004/03/31 14:43:56  cignoni
 bug in update of VF adj
 
@@ -181,9 +184,9 @@ static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu
         {
           if(FaceType::HasFFAdjacency())
           {
-            pu.Update((*fi).F(0));
-            pu.Update((*fi).F(1));
-            pu.Update((*fi).F(2));
+            pu.Update((*fi).FFp(0));
+            pu.Update((*fi).FFp(1));
+            pu.Update((*fi).FFp(2));
           }
         }
       VertexIterator vi;
@@ -191,7 +194,7 @@ static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu
         if(!(*vi).IsD())
         {
           if(VertexType::HasVFAdjacency())
-            pu.Update((*vi).Fp());
+            pu.Update((*vi).VFb());
         }
         		// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
 		unsigned int siz=m.face.size()-n;	
