@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/05/04 02:46:23  ganovelli
+added function Dist
+
 Revision 1.5  2004/04/05 11:51:22  cignoni
 wrong define FACE_N instead of FACE_FN
 
@@ -426,29 +429,29 @@ const Color4b WC(const int i) const
 **/
   //@{
 
-#if (defined(__VCGLIB_FACE_FA) && defined(__VCGLIB_FACE_SA))
+#if (defined(__VCGLIB_FACE_AF) && defined(__VCGLIB_FACE_AS))
 	#error Error: You cannot specify face-to-face and shared topology together
 #endif
 
-#if (defined(__VCGLIB_FACE_VA) && defined(__VCGLIB_FACE_SA))
+#if (defined(__VCGLIB_FACE_AV) && defined(__VCGLIB_FACE_AS))
 	#error Error: You cannot specify vertex-face and shared topology together
 #endif
 
 protected:
-#if defined(__VCGLIB_FACE_FA)
+#if defined(__VCGLIB_FACE_AF)
   /// Vector of face pointer, it's used to indicate the adjacency relations (defines if FACE_A is defined)
-	FACE_TYPE   *ff[3];				// Facce adiacenti
+	FACE_TYPE   *_ffp[3];				// Facce adiacenti
 	/// Index of the face in the arrival face 
-	char zf[4];									
+	char _ffi[4];									
 #endif
 
-#ifdef __VCGLIB_FACE_VA
+#ifdef __VCGLIB_FACE_AV
 	///Vettore di puntatori a faccia, utilizzato per indicare le adiacenze vertice faccia
-	FACE_TYPE *fv[3];
-	char zv[3];
+	FACE_TYPE *_fvp[3];
+	char _fvi[3];
 #endif
 
-#ifdef __VCGLIB_FACE_SA
+#ifdef __VCGLIB_FACE_AS
 	///Vettore di puntatori a faccia, utilizzato per indicare le adiacenze vertice faccia
 	FACE_TYPE *fs[3];
 	char zs[3];
@@ -461,16 +464,16 @@ public:
 	/** Return the pointer to the j-th adjacent face.
 	    @param j Index of the edge.
 	 */
-	inline FACE_TYPE * & F( const int j )
+	inline FACE_TYPE * & FFp( const int j )
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
 		assert( (_flags & NOTWRITE) == 0 );
 		assert(j>=0);
 	    assert(j<3);
-#if defined(__VCGLIB_FACE_FA)
-		  return ff[j];
-#elif defined(__VCGLIB_FACE_SA)
+#if defined(__VCGLIB_FACE_AF)
+		  return _ffp[j];
+#elif defined(__VCGLIB_FACE_AS)
 			return fs[j];
 #else 
 		assert(0);
@@ -479,15 +482,15 @@ public:
 #endif
 	}
 
-	inline const FACE_TYPE * const & F( const int j ) const
+	inline const FACE_TYPE * const & FFp( const int j ) const
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
 		assert(j>=0);
 	    assert(j<3);
-#if defined(__VCGLIB_FACE_FA)
-		  return ff[j];
-#elif defined(__VCGLIB_FACE_SA)
+#if defined(__VCGLIB_FACE_AF)
+		  return _ffp[j];
+#elif defined(__VCGLIB_FACE_AS)
 			return fs[j];
 #else
 		  assert(0);
@@ -507,9 +510,9 @@ public:
 	{
 		assert(j>=0);
 	  assert(j<3);
-#if defined(__VCGLIB_FACE_FA)
-		  return ff[j];
-#elif defined(__VCGLIB_FACE_SA)
+#if defined(__VCGLIB_FACE_AF)
+		  return _ffp[j];
+#elif defined(__VCGLIB_FACE_AS)
 			return fs[j];
 #else 
 		assert(0); // if you stop here you are probably trying to use FF topology in a face without it
@@ -521,9 +524,9 @@ public:
 	{
 		assert(j>=0);
 	  assert(j<3);
-#if defined(__VCGLIB_FACE_FA)
-		  return ff[j];
-#elif defined(__VCGLIB_FACE_SA)
+#if defined(__VCGLIB_FACE_AF)
+		  return _ffp[j];
+#elif defined(__VCGLIB_FACE_AS)
 			return fs[j];
 #else
 		assert(0); // if you stop here you are probably trying to use FF topology in a face without it
@@ -532,16 +535,16 @@ public:
 	}
 	
 
-	inline FACE_TYPE * & Fv( const int j )
+	inline FACE_TYPE * & FVp( const int j )
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
 		assert( (_flags & NOTWRITE) == 0 );
 		assert(j>=0);
 		assert(j<3);
-#ifdef __VCGLIB_FACE_VA
-		return fv[j];
-#elif defined(__VCGLIB_FACE_SA)
+#ifdef __VCGLIB_FACE_AV
+		return _fvp[j];
+#elif defined(__VCGLIB_FACE_AS)
 		return fs[j];
 #else
 		assert(0); // you are probably trying to use VF topology in a vertex without it
@@ -549,15 +552,15 @@ public:
 #endif
 	}
 
-	inline const FACE_TYPE * const & Fv( const int j ) const
+	inline const FACE_TYPE * const & FVp( const int j ) const
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
 		assert(j>=0);
 		assert(j<3);
-#ifdef __VCGLIB_FACE_VA
-		return fv[j];
-#elif defined(__VCGLIB_FACE_SA)
+#ifdef __VCGLIB_FACE_AV
+		return _fvp[j];
+#elif defined(__VCGLIB_FACE_AS)
 		return fs[j];
 #else
 		assert(0);
@@ -569,16 +572,16 @@ public:
 	/** Return the index that the face have in the j-th adjacent face.
 	    @param j Index of the edge.
 	 */
-	inline char & Z( const int j )
+	inline char & FFi( const int j )
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
 		assert( (_flags & NOTWRITE) == 0 );
 		assert(j>=0);
 		assert(j<3);
-#if defined(__VCGLIB_FACE_FA) 
-		return zf[j];
-#elif defined(__VCGLIB_FACE_SA) 
+#if defined(__VCGLIB_FACE_AF) 
+		return _ffi[j];
+#elif defined(__VCGLIB_FACE_AS) 
 		return zs[j];
 #else
 		assert(0);
@@ -586,15 +589,15 @@ public:
 #endif
 	}
 
-	inline const char & Z( const int j ) const
+	inline const char & FFi( const int j ) const
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
 		assert(j>=0);
 		assert(j<3);
-#if defined(__VCGLIB_FACE_FA) 
-		return zf[j];
-#elif defined(__VCGLIB_FACE_SA) 
+#if defined(__VCGLIB_FACE_AF) 
+		return _ffi[j];
+#elif defined(__VCGLIB_FACE_AS) 
 		return zs[j];
 #else
 		assert(0);
@@ -609,9 +612,9 @@ public:
 	{
 		assert(j>=0);
 		assert(j<3);
-#if defined(__VCGLIB_FACE_FA) 
-		return zf[j];
-#elif defined(__VCGLIB_FACE_SA) 
+#if defined(__VCGLIB_FACE_AF) 
+		return _ffi[j];
+#elif defined(__VCGLIB_FACE_AS) 
 		return zs[j];
 #else
 		assert(0);
@@ -623,9 +626,9 @@ public:
 	{
 		assert(j>=0);
 		assert(j<3);
-#if defined(__VCGLIB_FACE_FA) 
-		return zf[j];
-#elif defined(__VCGLIB_FACE_SA) 
+#if defined(__VCGLIB_FACE_AF) 
+		return _ffi[j];
+#elif defined(__VCGLIB_FACE_AS) 
 		return zs[j];
 #else
 		assert(0);
@@ -634,16 +637,16 @@ public:
 	}
 
 
-	inline char & Zv( const int j )
+	inline char & FVi( const int j )
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
 		assert( (_flags & NOTWRITE) == 0 );
 		assert(j>=0);
 		assert(j<3);
-#ifdef __VCGLIB_FACE_VA
-		return zv[j];
-#elif defined(__VCGLIB_FACE_SA)
+#ifdef __VCGLIB_FACE_AV
+		return _fvi[j];
+#elif defined(__VCGLIB_FACE_AS)
 		return zs[j];
 #else
 		assert(0);
@@ -651,15 +654,15 @@ public:
 #endif
 	}
 
-	inline const char & Zv( const int j ) const
+	inline const char & FVi( const int j ) const
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
 		assert(j>=0);
 		assert(j<3);
-#ifdef __VCGLIB_FACE_VA
-		return zv[j];
-#elif defined(__VCGLIB_FACE_SA)
+#ifdef __VCGLIB_FACE_AV
+		return _fvi[j];
+#elif defined(__VCGLIB_FACE_AS)
 		return zs[j];
 #else
 		assert(0);
@@ -883,21 +886,21 @@ static bool HasFaceColor()  {
 #endif
 }
 static bool HasFFAdjacency()  { 
-#if (defined(__VCGLIB_FACE_FA) || defined(__VCGLIB_FACE_SA))
+#if (defined(__VCGLIB_FACE_AF) || defined(__VCGLIB_FACE_AS))
   return true;
 #else
   return false;
 #endif
 }
 static bool HasVFAdjacency()  { 
-#if (defined(__VCGLIB_FACE_VA) || defined(__VCGLIB_FACE_SA))
+#if (defined(__VCGLIB_FACE_AV) || defined(__VCGLIB_FACE_AS))
   return true;
 #else
   return false;
 #endif
 }
 static bool HasSharedAdjacency()  { 
-#if defined(__VCGLIB_FACE_SA)
+#if defined(__VCGLIB_FACE_AS)
   return true;
 #else
   return false;
