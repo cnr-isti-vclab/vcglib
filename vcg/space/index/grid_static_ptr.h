@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/05/11 14:33:46  ganovelli
+changed to grid_static_obj to grid_static_ptr
+
 Revision 1.1  2004/05/10 14:44:13  ganovelli
 created
 
@@ -470,9 +473,9 @@ public:
 					else if(size[2]>eps)
 						dim[2] = int(ncell);
 				}
-			dim[0] = math::Max(dim[0],0);
+			dim[0] = math::Max(dim[0],1);
 			dim[1] = math::Max(dim[1],1);
-			dim[2] = math::Max(dim[2],2);
+			dim[2] = math::Max(dim[2],1);
 		}
 
 
