@@ -1,7 +1,7 @@
 #ifndef __VCGLIB_FACE_AFAVFN_TYPE
 #define __VCGLIB_FACE_AFAVFN_TYPE
 
-#define FACE_TYPE FaceFAFNVA 
+#define FACE_TYPE FaceAFAVFN
 
 #define __VCGLIB_FACE_AF
 #define __VCGLIB_FACE_FN
