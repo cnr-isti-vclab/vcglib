@@ -185,7 +185,7 @@ float Cluster(MyMesh &mesh, unsigned int target_faces) {
   }
   unsigned int nborder = part.size();
   //Dovrei supersamplare prima....
-  while(nseeds > 0) {
+  while(nseeds > 0 && part.size() < mesh.vn) {
     unsigned int i = rand() % mesh.vert.size();
     if(mesh.vert[i].IsW() && !mesh.vert[i].IsV()) {
       const Point3f &p = mesh.vert[i].cP();
@@ -197,7 +197,6 @@ float Cluster(MyMesh &mesh, unsigned int target_faces) {
   }
   part.SetBox(box);
   part.Init();
-
 
   vector<Point3f> centroid;
   vector<unsigned int> count;

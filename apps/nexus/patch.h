@@ -5,18 +5,19 @@
 #include <iostream>
 namespace nxs {
 
-enum Signature { 
-		 HAS_FACES          = 0x00000001,
-		 HAS_STRIP          = 0x00000002, 
-		 HAS_COLORS         = 0x00000010, 
-		 HAS_NORMALS_SHORT  = 0x00000100, 
-		 HAS_NORMALS_FLOAT  = 0x00000200, 
-		 HAS_TEXTURES_SHORT = 0x00001000,  
-		 HAS_TEXTURES_FLOAT = 0x00002000, 
-		 HAS_DATA8          = 0x00010000,  
-		 HAS_DATA16         = 0x00020000, 
-		 HAS_DATA32         = 0x00040000, 
-		 HAS_DATA64         = 0x00080000 };
+enum Signature { NXS_DEFAULT            = 0x00000000,
+		 NXS_FACES          = 0x00000001,
+		 NXS_STRIP          = 0x00000002, 
+		 NXS_COLORS         = 0x00000010, 
+		 NXS_NORMALS_SHORT  = 0x00000100, 
+		 NXS_NORMALS_FLOAT  = 0x00000200, 
+		 NXS_TEXTURES_SHORT = 0x00001000,  
+		 NXS_TEXTURES_FLOAT = 0x00002000, 
+		 NXS_DATA8          = 0x00010000,  
+		 NXS_DATA16         = 0x00020000, 
+		 NXS_DATA32         = 0x00040000, 
+		 NXS_DATA64         = 0x00080000,
+                 NXS_COMPRESSED      = 0x10000000};
 
 struct Chunk {
   unsigned char p[4096];
@@ -36,6 +37,10 @@ class Patch {
 
   inline vcg::Point3f &Vert(unsigned short v);
   inline unsigned short *Face(unsigned short f);
+
+  inline unsigned int *ColorBegin();
+  inline short *Norm16Begin();
+  inline short *Norm16(unsigned short v);
  
   static unsigned int ChunkSize(Signature signature, 
 				unsigned short nvert, 
@@ -52,6 +57,7 @@ class Patch {
   unsigned short nf;
 
   float *vstart;
+  //these offset are from vstart!
   unsigned short cstart;
   unsigned short nstart;
   unsigned short tstart;
@@ -70,6 +76,18 @@ inline vcg::Point3f &Patch::Vert(unsigned short v) {
 }
 inline unsigned short *Patch::Face(unsigned short f) {
   return FaceBegin() + f * 3; 
+}
+
+inline unsigned int *Patch::ColorBegin() { 
+  return (unsigned int *)(((char *)vstart) + cstart); 
+}
+
+inline short *Patch::Norm16Begin() { 
+  return (short *)(((char *)vstart) + nstart); 
+}
+
+inline short *Patch::Norm16(unsigned short v) { 
+  return Norm16Begin() + 4 * v;
 }
 
 } //namespace

@@ -24,6 +24,7 @@ namespace nxs {
  class Policy {
  public:
    virtual bool Expand(unsigned int patch, Nexus::Entry &entry) = 0;
+   virtual void GetView() {}
    virtual void Visit(Node *node, std::queue<Node *> &qnode);
  };
 
@@ -31,6 +32,8 @@ namespace nxs {
  public:
    vcg::Frustumf frustum;
    float error;
+
+   FrustumPolicy(float _err = 4): error(_err) {}
    void GetView() { frustum.GetView(); }
    bool Expand(unsigned int patch, Nexus::Entry &entry);
  };
@@ -40,13 +43,62 @@ class NexusMt: public Nexus {
   std::vector<Node> nodes;
 
  public:
-  void LoadHistory();
-  void ClearHistory();
+  //Vertex buffer object mode
+  enum Vbo { VBO_AUTO,    //autodetect best size (fallback if not VBO)
+	     VBO_AUTO_ON, //autodetect best size must use VBO
+	     VBO_OFF,     //no vertex buffer object
+	     VBO_FIXED }; //user supplied size
+ 
+  enum PolicyKind { FRUSTUM,    //screen error extraction
+		    GEOMETRY }; //geometry error extraction
 
+  enum Mode { POINTS, 
+	      SMOOTH,
+	      XRAY,
+	      HIDDEN_LINE,
+	      FLAT_WIRE,
+	      FLAT};
+
+  enum Component { COLOR   = 0x1, 
+		   NORMAL  = 0x2, 
+		   TEXTURE = 0x4, 
+		   DATA    = 0x8};
+
+  Vbo vbo;
+  unsigned int vbo_size;
+
+  Policy *policy;
+  float error;
+  bool realtime;
+
+  Mode mode;
+
+  unsigned int components;
+  bool use_normals;
+  bool use_colors;
+  bool use_textures;
+  bool use_data;
+  
+
+  NexusMt();
+  
+  bool Load(const std::string &filename);
+  bool InitGL();
+  
+  void Render();
+  void SetPolicy(Policy *policy, bool realtime = true);
+  void SetPolicy(PolicyKind kind, float error, bool realtime = true);
+  void SetVbo(Vbo mode, unsigned int vbo_size = 0);
+  bool SetMode(Mode mode);
+  bool SetComponent(Component c, bool on);
+  bool SetComponents(unsigned int mask);
+  
   void ExtractFixed(std::vector<unsigned int> &selected, float error);
   void Extract(std::vector<unsigned int> &selected, Policy *policy);
 
  protected:
+  void LoadHistory();
+  void ClearHistory();
   void Select(std::vector<unsigned int> &selected);
 };
 

@@ -44,14 +44,15 @@ class Nexus {
 
 
   Nexus();
-  ~Nexus();
+  virtual ~Nexus();
   bool Create(const std::string &filename, Signature signature);
-  bool Load(const std::string &filename);
-  void Close();
+  virtual bool Load(const std::string &filename);
+  virtual void Close();
 
   Patch GetPatch(unsigned int patch);
   Border GetBorder(unsigned int patch);
 
+  bool IsCompressed() { return signature & NXS_COMPRESSED; }
 
   //MOVE to nexus_build.cpp
 

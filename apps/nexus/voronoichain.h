@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/09/21 00:53:23  ponchio
+Lotsa changes.
+
 Revision 1.2  2004/09/16 14:25:16  ponchio
 Backup. (lot of changes).
 
@@ -55,8 +58,8 @@ class VoronoiChain: public PChain {
   unsigned int min_size;  //minimum number of faces per patch (soft)
   unsigned int max_size;  //max number of faces per patch (hard);
 
-  VoronoiChain(unsigned int mean_s = 1000,
-	       unsigned int min_s = 300,
+  VoronoiChain(unsigned int mean_s,
+	       unsigned int min_s,
 	       unsigned int max_s = 32000):
     mean_size(mean_s), min_size(min_s), max_size(max_s) {}
   virtual ~VoronoiChain() {}

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/09/21 00:53:23  ponchio
+Lotsa changes.
+
 Revision 1.3  2004/09/17 15:25:09  ponchio
 First working (hopefully) release.
 
@@ -106,7 +109,7 @@ int main(int argc, char *argv[]) {
 
   Decimation decimation = QUADRIC;
   unsigned int patch_size = 1000;
-  unsigned int patch_threshold = 200;
+  unsigned int patch_threshold = 0xffffffff;
   unsigned int optimization_steps = 5;
   bool stop_after_remap = false;
   unsigned int max_level = 0xffffffff;
@@ -183,11 +186,13 @@ int main(int argc, char *argv[]) {
   string output = argv[optind+1];
 
   Nexus nexus;
-  if(!nexus.Create(output, HAS_FACES)) {
+  if(!nexus.Create(output, NXS_FACES)) {
     cerr << "Could not create nexus output: " << output << endl;
     return -1;
   }
 
+  if(patch_threshold == 0xffffffff)
+    patch_threshold = patch_size/4;
   VoronoiChain vchain(patch_size, patch_threshold);
   //  vchain.scaling = scaling;
 

@@ -133,7 +133,7 @@ Patch Nexus::GetPatch(unsigned int patch) {
 Border Nexus::GetBorder(unsigned int patch) {
   Entry &entry = index[patch];
   Link *start = borders.GetRegion(entry.border_start, entry.border_size);
-  return Border(start, entry.border_used);
+  return Border(start, entry.border_used, entry.border_size);
 }
 
 

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/09/28 10:26:35  ponchio
+Backup
+
 Revision 1.6  2004/09/17 15:25:09  ponchio
 First working (hopefully) release.
 
@@ -163,7 +166,6 @@ int main(int argc, char *argv[]) {
     cerr << "Could not load nexus file: " << argv[1] << endl;
     return -1;
   }
-  nexus.LoadHistory();
   Sphere3f sphere = nexus.sphere;
 
   if(!init()) {
@@ -171,11 +173,13 @@ int main(int argc, char *argv[]) {
     return -1;
   }
   
-  FrustumPolicy frustum_policy;
+  //  FrustumPolicy frustum_policy;
   
   
   bool rotate = true;
   bool show_borders = true;
+  bool show_colors = true;
+  bool show_normals = true;
   glClearColor(0, 0, 0, 0); 
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
@@ -186,13 +190,21 @@ int main(int argc, char *argv[]) {
   int x, y;
   float alpha = 0;
   while( !quit ) {                    
-    while( SDL_PollEvent( &event ) ){                        
+    while( SDL_WaitEvent( &event ) ){                        
       switch( event.type ) {
       case SDL_QUIT:  quit = 1; break;      
       case SDL_KEYDOWN:                                        
 	switch(event.key.keysym.sym) {
 	case SDLK_q: exit(0); break;
 	case SDLK_b: show_borders = !show_borders;break;
+	case SDLK_c: 
+	  show_colors = !show_colors;
+
+	  break;
+	case SDLK_n: 
+	  show_normals = !show_normals;
+	  break;
+
 	case SDLK_r:
 	case SDLK_SPACE: rotate = !rotate; break;
 	  
@@ -234,106 +246,120 @@ int main(int argc, char *argv[]) {
 	break;  
       default: break;
       }
-    }
-
   
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(40, 1, 0.1, 100);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    gluLookAt(0,0,5,   0,0,0,   0,1,0);    
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      glMatrixMode(GL_PROJECTION);
+      glLoadIdentity();
+      gluPerspective(40, 1, 0.1, 100);
+      glMatrixMode(GL_MODELVIEW);
+      glLoadIdentity();
+      gluLookAt(0,0,5,   0,0,0,   0,1,0);    
 
 
-    track.GetView();
-    track.Apply();
+      track.GetView();
+      track.Apply();
 
-    float scale = 2/sphere.Radius();
-    //    glRotatef(alpha, 0, 1, 0);
-    //    if(rotate)
-    //      alpha++;
-    //    if(alpha > 360) alpha = 0;
-    glScalef(scale, scale, scale);       
-    Point3f center = sphere.Center();
-    glTranslatef(-center[0], -center[1], -center[2]);
+      float scale = 2/sphere.Radius();
+      //    glRotatef(alpha, 0, 1, 0);
+      //    if(rotate)
+      //      alpha++;
+      //    if(alpha > 360) alpha = 0;
+      glScalef(scale, scale, scale);       
+      Point3f center = sphere.Center();
+      glTranslatef(-center[0], -center[1], -center[2]);
 
-
+      nexus.SetPolicy(NexusMt::FRUSTUM, error);
+      nexus.SetComponent(NexusMt::COLOR, show_colors);
+      nexus.SetComponent(NexusMt::NORMAL, show_normals);
    
-    vector<unsigned int> cells;
-    if(apatch != -1) {
-      cells.push_back(apatch);
-    } else if(mode == GEO) {
-      nexus.ExtractFixed(cells, error);
-    } else if(mode == SCREEN) {
-      frustum_policy.error = error;
-      frustum_policy.GetView();
-      nexus.Extract(cells, &frustum_policy);
-    } else {
-      for(int i = 0; i < nexus.index.size(); i++) {
-	if(nexus.index[i].error == 0)
-	  cells.push_back(i);
+      nexus.Render();
+
+      /*      vector<unsigned int> cells;
+      if(apatch != -1) {
+	cells.push_back(apatch);
+      } else if(mode == GEO) {
+	nexus.ExtractFixed(cells, error);
+      } else if(mode == SCREEN) {
+	frustum_policy.error = error;
+	frustum_policy.GetView();
+	nexus.Extract(cells, &frustum_policy);
+      } else {
+	for(int i = 0; i < nexus.index.size(); i++) {
+	  if(nexus.index[i].error == 0)
+	    cells.push_back(i);
+	}
       }
-    }
     
+      glColor3f(1, 1, 1);
 
-    for(unsigned int i = 0; i < cells.size(); i++) {
-      unsigned int cell = cells[i];
-      Patch patch = nexus.GetPatch(cell);
-      
-      unsigned int val = cell + 1;
-      glColor3ub(((val * 27)%128) + 128, 
-		 ((val * 37)%128) + 128, 
-		 ((val * 87)%128) + 128);
-      
-      /*      Nexus::Entry &entry = nexus.index[cell];
-      float error = entry.error;
-      if(error < 1) error = 0;
-      glColor3ub(log(error) * 50, 128, 128);*/
-
-      glBegin(GL_TRIANGLES);
-      unsigned short *f = patch.FaceBegin();      
-      for(unsigned int j = 0; j < patch.nf*3; j+= 3) {
-	Point3f &p1 = patch.Vert(f[j]);
-	Point3f &p2 = patch.Vert(f[j+1]);
-	Point3f &p3 = patch.Vert(f[j+2]);
-	Point3f n = ((p2 - p1) ^ (p3 - p1));
-	
-	glNormal3f(n[0], n[1], n[2]);
-	glVertex3f(p1[0], p1[1], p1[2]);
-	glVertex3f(p2[0], p2[1], p2[2]);
-	glVertex3f(p3[0], p3[1], p3[2]);
-      }
-      glEnd();
-    }
-    if(show_borders) {
       for(unsigned int i = 0; i < cells.size(); i++) {
 	unsigned int cell = cells[i];
 	Patch patch = nexus.GetPatch(cell);
-	//drawing borders
-	glColor3f(1, 1, 1);
+
+	if(show_color) {
+	  unsigned int val = cell + 1;
+	  glColor3ub(((val * 27)%128) + 128, 
+		     ((val * 37)%128) + 128, 
+		     ((val * 87)%128) + 128);
+	}
+      
+	glBegin(GL_TRIANGLES);
+	unsigned short *f = patch.FaceBegin();      
+	for(unsigned int j = 0; j < patch.nf*3; j+= 3) {
+	  Point3f &p1 = patch.Vert(f[j]);
+	  Point3f &p2 = patch.Vert(f[j+1]);
+	  Point3f &p3 = patch.Vert(f[j+2]);
+	  Point3f n = ((p2 - p1) ^ (p3 - p1));
 	
-	Border border = nexus.GetBorder(cell);
-	glPointSize(4);
-	glDisable(GL_LIGHTING);
-	glDisable(GL_DEPTH_TEST);
-	glBegin(GL_POINTS);
-	for(unsigned int k = 0; k < border.Size(); k++) {
-	  if(border[k].IsNull()) continue;
-	  Point3f &p = patch.Vert(border[k].start_vert);
-	  glVertex3f(p[0], p[1], p[2]);
+	  if(!show_normals) {
+	    glNormal3f(n[0], n[1], n[2]);
+	    glVertex3f(p1[0], p1[1], p1[2]);
+	    glVertex3f(p2[0], p2[1], p2[2]);
+	    glVertex3f(p3[0], p3[1], p3[2]);
+	  } else {
+	    short *n1 = patch.Norm16(f[j]);
+	    short *n2 = patch.Norm16(f[j+1]);
+	    short *n3 = patch.Norm16(f[j+2]);
+	    glNormal3s(n1[0], n1[1], n1[2]);
+	    glVertex3f(p1[0], p1[1], p1[2]);
+	    glNormal3s(n2[0], n2[1], n2[2]);
+	    glVertex3f(p2[0], p2[1], p2[2]);
+	    glNormal3s(n3[0], n3[1], n3[2]);
+	    glVertex3f(p3[0], p3[1], p3[2]);
+	  }
+
 	}
 	glEnd();
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_LIGHTING);
       }
-    }
-
+      if(show_borders) {
+	for(unsigned int i = 0; i < cells.size(); i++) {
+	  unsigned int cell = cells[i];
+	  Patch patch = nexus.GetPatch(cell);
+	  //drawing borders
+	  glColor3f(1, 1, 1);
+	
+	  Border border = nexus.GetBorder(cell);
+	  glPointSize(4);
+	  glDisable(GL_LIGHTING);
+	  glDisable(GL_DEPTH_TEST);
+	  glBegin(GL_POINTS);
+	  for(unsigned int k = 0; k < border.Size(); k++) {
+	    if(border[k].IsNull()) continue;
+	    Point3f &p = patch.Vert(border[k].start_vert);
+	    glVertex3f(p[0], p[1], p[2]);
+	  }
+	  glEnd();
+	  glEnable(GL_DEPTH_TEST);
+	  glEnable(GL_LIGHTING);
+	}
+      }
+*/
     
-    SDL_GL_SwapBuffers();
+      SDL_GL_SwapBuffers();
+    }
   }
 
-        // Clean up
+  // Clean up
 
   SDL_Quit();
   return -1;

@@ -1,8 +1,11 @@
+#include <GL/glew.h>
 #include "nexusmt.h"
 #include <map>
 #include <queue>
 
+
 using namespace nxs;
+using namespace vcg;
 using namespace std;
 
 void Policy::Visit(Node *node, std::queue<Node *> &qnode) {    
@@ -29,6 +32,146 @@ bool FrustumPolicy::Expand(unsigned int patch, Nexus::Entry &entry) {
   return entry.error > error * frustum.Resolution(dist);
 }
 
+
+NexusMt::NexusMt(): vbo(VBO_AUTO), vbo_size(0),
+		    policy(NULL), error(4), realtime(true),
+		    mode(SMOOTH) {
+  policy = new FrustumPolicy();
+}
+
+bool NexusMt::Load(const string &filename) {
+  if(!Nexus::Load(filename)) return false;
+  LoadHistory();
+
+  use_colors = false;
+  use_normals = false;
+  use_textures = false;
+  use_data = false;
+
+  SetComponent(COLOR, true);
+  SetComponent(NORMAL, true);
+  SetComponent(TEXTURE, true);
+  SetComponent(DATA, true);
+
+  return true;
+}
+
+bool NexusMt::InitGL() {
+  GLenum ret = glewInit();
+  if(ret != GLEW_OK) return false;
+  if(!GLEW_ARB_vertex_buffer_object)
+    vbo = VBO_OFF;
+  return true;
+}
+
+void NexusMt::Render() {
+  Frustumf frustum;
+  frustum.GetView();
+
+  vector<unsigned int> cells;
+  if(policy) {
+    policy->GetView();
+    Extract(cells, policy);
+  } else {
+    ExtractFixed(cells, error);
+  }
+
+  glEnableClientState(GL_VERTEX_ARRAY);
+  if(use_colors)
+    glEnableClientState(GL_COLOR_ARRAY);
+  if(use_normals)
+    glEnableClientState(GL_NORMAL_ARRAY);
+  //TODO textures and data.
+
+  for(unsigned int i = 0; i < cells.size(); i++) {
+    Nexus::Entry &entry = index[cells[i]];
+    //frustum culling
+    //    if(frustum.Outside(entry.sphere.center, entry.sphere.radius))
+    //      continue;
+    Patch patch = GetPatch(cells[i]);
+    glVertexPointer(3, GL_FLOAT, 0, patch.VertBegin());
+    if(use_colors)
+      glColorPointer(4, GL_UNSIGNED_BYTE, 0, patch.ColorBegin());
+    if(use_normals)
+      glNormalPointer(GL_SHORT, 8, patch.Norm16Begin());
+    switch(mode) {
+    case POINTS:
+      glDrawArrays(GL_POINTS, 0, patch.nv); break;
+    case SMOOTH:
+      if(signature & NXS_FACES)
+	glDrawElements(GL_TRIANGLES, patch.nf * 3, 
+		      GL_UNSIGNED_SHORT, patch.FaceBegin());
+      else if(signature & NXS_STRIP)
+	glDrawElements(GL_TRIANGLE_STRIP, patch.nf, 
+		      GL_UNSIGNED_SHORT, patch.FaceBegin());
+      break;
+    default: 
+      cerr << "Unsupported rendering mode sorry\n";
+      exit(0);
+      break;
+    }
+  }
+  glDisableClientState(GL_VERTEX_ARRAY);
+  glDisableClientState(GL_COLOR_ARRAY);
+  glDisableClientState(GL_NORMAL_ARRAY);
+}
+
+void NexusMt::SetPolicy(Policy *_policy, bool _realtime) {
+  policy = _policy;
+  realtime = _realtime;
+}
+
+void NexusMt::SetPolicy(PolicyKind kind, float _error, bool _realtime) {
+  if(policy) delete policy;
+  switch(kind) {
+  case FRUSTUM:  policy = new FrustumPolicy(error); break;
+  case GEOMETRY: policy = NULL; break;
+  default:       policy = NULL; break;
+  }
+  error = _error;
+  realtime = _realtime;
+}
+
+void NexusMt::SetVbo(Vbo _vbo, unsigned int _vbo_size) {
+  vbo = _vbo;
+  if(!GLEW_ARB_vertex_buffer_object)
+    vbo = VBO_OFF;
+  vbo_size = _vbo_size;
+}
+
+bool NexusMt::SetMode(Mode _mode) {
+  mode = _mode;
+}
+
+bool NexusMt::SetComponent(Component c, bool on) {
+  if(c == COLOR && (signature & NXS_COLORS)) 
+    use_colors = on;
+  if(c == NORMAL && (signature & NXS_NORMALS_SHORT)) 
+    use_normals = on;
+  if(c == TEXTURE && (signature & NXS_TEXTURES_SHORT)) 
+    use_textures = on;
+  if(c == DATA && (signature & NXS_DATA32)) 
+    use_data = on;
+  
+  components = COLOR * use_colors + NORMAL * use_normals +
+               TEXTURE * use_textures + DATA * use_data;
+}
+
+bool NexusMt::SetComponents(unsigned int mask) {
+  SetComponent(COLOR, mask & COLOR);
+  SetComponent(NORMAL, mask & NORMAL);
+  SetComponent(TEXTURE, mask & TEXTURE);
+  SetComponent(DATA, mask & DATA);
+  
+  components = mask;
+  
+  if( ((mask & COLOR) && !(signature & NXS_COLORS)) ||
+      ((mask & NORMAL) && !(signature & NXS_NORMALS_SHORT)) ||
+      ((mask & TEXTURE) && !(signature & NXS_TEXTURES_SHORT)) ||
+      ((mask & DATA) && !(signature & NXS_DATA32)) )
+    return false;
+  return true;
+}
 
 void NexusMt::LoadHistory() {
   //The last update erases everything.
