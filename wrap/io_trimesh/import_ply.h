@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/05/28 14:11:13  ganovelli
+changes to comply io_mask moving in vcg::ply namesp
+
 Revision 1.5  2004/05/12 10:19:30  ganovelli
 new line added at the end of file
 
@@ -48,8 +51,7 @@ Initial commit
 #include<wrap/ply/io_mask.h>
 #include<wrap/io_trimesh/io_ply.h>
 #include<vcg/complex/trimesh/allocate.h>
-
-
+#include <vector>
 
 namespace vcg {
 namespace tri {
@@ -250,7 +252,7 @@ static int Open( OpenMeshType &m, const char * filename, int & loadmask, CallBac
 static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 {
   assert(filename!=0);
-	vector<VertexPointer> index;
+	std::vector<VertexPointer> index;
 	LoadPly_FaceAux fa;
 	LoadPly_TristripAux tsa;
 	LoadPly_VertAux<ScalarType> va;
@@ -374,8 +376,8 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 	}
 
 	// Descrittori definiti dall'utente, 
-	vector<PropDescriptor> VPV(pi.vdn); // property descriptor relative al tipo LoadPly_VertexAux
-  vector<PropDescriptor> FPV(pi.fdn); // property descriptor relative al tipo LoadPly_FaceAux
+	std::vector<PropDescriptor> VPV(pi.vdn); // property descriptor relative al tipo LoadPly_VertexAux
+  std::vector<PropDescriptor> FPV(pi.fdn); // property descriptor relative al tipo LoadPly_FaceAux
 	if(pi.vdn>0){
 	// Compute the total size needed to load additional per vertex data.
 		size_t totsz=0;
@@ -619,7 +621,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 					tf.V(0) = index[ tsa.v[k+0] ];
 					tf.V(1) = index[ tsa.v[k+1] ];
 					tf.V(2) = index[ tsa.v[k+2] ];
-					if((k+remainder)%2) swap (tf.V(0), tf.V(1) );
+					if((k+remainder)%2) math::Swap (tf.V(0), tf.V(1) );
 					m.face.push_back( tf );
 				}
 			}
