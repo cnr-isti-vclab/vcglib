@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/04/26 19:04:23  ganovelli
+created
+
 ****************************************************************************/
 
 #include <vcg/space/box3.h>
@@ -38,7 +41,7 @@ namespace vcg {
     This is the base class for definition of a face of the mesh.
 		@param SVTYPE (Templete Parameter) Specifies the vertex class type.
  */
-template <class SVTYPE, class TCTYPE = TCoord2<float,1> > class EDGE_TYPE
+template <typename EDGENAME,class SVTYPE, class TCTYPE = TCoord2<float,1> > class EDGE_TYPE
 {
 public:
 	///	The base type of the segment
@@ -347,31 +350,31 @@ const Color4b WC(const int i) const
 **/
   //@{
 
-#if (defined(__VCGLIB_EDGE_EA) && defined(__VCGLIB_EDGE_EA))
+#if (defined(__VCGLIB_EDGE_EA) && defined(__VCGLIB_EDGE_SA))
 	#error Error: You cannot specify face-to-face and shared topology together
 #endif
 
-#if (defined(__VCGLIB_EDGE_VA) && defined(__VCGLIB_EDGE_EA))
+#if (defined(__VCGLIB_EDGE_VA) && defined(__VCGLIB_EDGE_SA))
 	#error Error: You cannot specify vertex-face and shared topology together
 #endif
 
 protected:
 #if defined(__VCGLIB_EDGE_EA)
   /// Vector of face pointer, it's used to indicate the adjacency relations (defines if FACE_A is defined)
-	EDGE_TYPE   *ss[3];				// Facce adiacenti
+	EDGENAME   *ee[3];				// Facce adiacenti
 	/// Index of the face in the arrival face 
 	char zs[4];									
 #endif
 
 #ifdef __VCGLIB_EDGE_VA
 	///Vettore di puntatori a faccia, utilizzato per indicare le adiacenze vertice faccia
-	EDGE_TYPE *sv[3];
+	EDGENAME *ev[3];
 	char zv[3];
 #endif
 
-#ifdef __VCGLIB_EDGE_EA
+#ifdef __VCGLIB_EDGE_SA
 	///Vettore di puntatori a faccia, utilizzato per indicare le adiacenze vertice faccia
-	EDGE_TYPE *ses[3];
+	EDGENAME *es[3];
 	char zs[3];
 #endif
 public:
@@ -382,7 +385,7 @@ public:
 	/** Return the pointer to the j-th adjacent face.
 	    @param j Index of the edge.
 	 */
-	inline EDGE_TYPE * & S( const int j )
+	inline EDGENAME * & E( const int j )
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
@@ -390,67 +393,67 @@ public:
 		assert(j>=0);
 	    assert(j<2);
 #if defined(__VCGLIB_EDGE_EA)
-		  return ss[j];
-#elif defined(__VCGLIB_EDGE_EA)
-			return ses[j];
+		  return ee[j];
+#elif defined(__VCGLIB_EDGE_SA)
+			return es[j];
 #else 
 		assert(0);
-        static EDGE_TYPE *dum=0;
+        static EDGENAME *dum=0;
 		return dum;
 #endif
 	}
 
-	inline const EDGE_TYPE * const & S( const int j ) const
+	inline const EDGENAME * const & E( const int j ) const
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
 		assert(j>=0);
 	    assert(j<2);
 #if defined(__VCGLIB_EDGE_EA)
-		  return ss[j];
-#elif defined(__VCGLIB_EDGE_EA)
-			return ses[j];
+		  return ee[j];
+#elif defined(__VCGLIB_EDGE_SA)
+			return es[j];
 #else
 		  assert(0);
-		  return (EDGE_TYPE *)this;
+		  return (EDGENAME *)this;
 #endif
 	}
-	inline EDGE_TYPE * & S1( const int j ) { return F((j+1)%2);}
-	inline const EDGE_TYPE * const&  S1( const int j ) const { return F((j+1)%2);}
+	inline EDGENAME * & E1( const int j ) { return F((j+1)%2);}
+	inline const EDGENAME * const&  E1( const int j ) const { return F((j+1)%2);}
 
 /** Return the pointer to the j-th adjacent face.
 	    @param j Index of the edge.
 	 */
-	inline EDGE_TYPE * & UberF( const int j )
+	inline EDGENAME * & UberE( const int j )
 	{
 		assert(j>=0);
 	  assert(j<2);
 #if defined(__VCGLIB_EDGE_EA)
-		  return ss[j];
-#elif defined(__VCGLIB_EDGE_EA)
-			return ses[j];
+		  return ee[j];
+#elif defined(__VCGLIB_EDGE_SA)
+			return es[j];
 #else 
 		assert(0); // if you stop here you are probably trying to use FF topology in a face without it
-		return *((EDGE_TYPE **)(_flags));
+		return *((EDGENAME **)(_flags));
 #endif
 	}
 
-	inline const EDGE_TYPE * const & UberF( const int j ) const
+	inline const EDGENAME * const & UberE( const int j ) const
 	{
 		assert(j>=0);
 	  assert(j<2);
 #if defined(__VCGLIB_EDGE_EA)
-		  return ss[j];
-#elif defined(__VCGLIB_EDGE_EA)
-			return ses[j];
+		  return ee[j];
+#elif defined(__VCGLIB_EDGE_SA)
+			return es[j];
 #else
 		assert(0); // if you stop here you are probably trying to use FF topology in a face without it
-		return *((EDGE_TYPE **)(_flags));
+		return *((EDGENAME **)(_flags));
 #endif
 	}
 	
 
-	inline EDGE_TYPE * & Fv( const int j )
+	inline EDGENAME * & Ev( const int j )
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
@@ -458,28 +461,28 @@ public:
 		assert(j>=0);
 		assert(j<2);
 #ifdef __VCGLIB_EDGE_VA
-		return sv[j];
-#elif defined(__VCGLIB_EDGE_EA)
-		return ses[j];
+		return ev[j];
+#elif defined(__VCGLIB_EDGE_SA)
+		return es[j];
 #else
 		assert(0); // you are probably trying to use VF topology in a vertex without it
-		return *((EDGE_TYPE **)(_flags));
+		return *((EDGENAME **)(_flags));
 #endif
 	}
 
-	inline const EDGE_TYPE * const & Fv( const int j ) const
+	inline const EDGENAME * const & Ev( const int j ) const
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
 		assert(j>=0);
 		assert(j<2);
 #ifdef __VCGLIB_EDGE_VA
-		return sv[j];
-#elif defined(__VCGLIB_EDGE_EA)
-		return ses[j];
+		return ev[j];
+#elif defined(__VCGLIB_EDGE_SA)
+		return es[j];
 #else
 		assert(0);
-		return (EDGE_TYPE *)this;
+		return (EDGENAME *)this;
 #endif
 	}
 
@@ -496,7 +499,7 @@ public:
 		assert(j<2);
 #if defined(__VCGLIB_EDGE_EA) 
 		return zs[j];
-#elif defined(__VCGLIB_EDGE_EA) 
+#elif defined(__VCGLIB_EDGE_SA) 
 		return zs[j];
 #else
 		assert(0);
@@ -512,7 +515,7 @@ public:
 		assert(j<2);
 #if defined(__VCGLIB_EDGE_EA) 
 		return zs[j];
-#elif defined(__VCGLIB_EDGE_EA) 
+#elif defined(__VCGLIB_EDGE_SA) 
 		return zs[j];
 #else
 		assert(0);
@@ -529,7 +532,7 @@ public:
 		assert(j<2);
 #if defined(__VCGLIB_EDGE_EA) 
 		return zs[j];
-#elif defined(__VCGLIB_EDGE_EA) 
+#elif defined(__VCGLIB_EDGE_SA) 
 		return zs[j];
 #else
 		assert(0);
@@ -543,7 +546,7 @@ public:
 		assert(j<2);
 #if defined(__VCGLIB_EDGE_EA) 
 		return zs[j];
-#elif defined(__VCGLIB_EDGE_EA) 
+#elif defined(__VCGLIB_EDGE_SA) 
 		return zs[j];
 #else
 		assert(0);
@@ -561,7 +564,7 @@ public:
 		assert(j<2);
 #ifdef __VCGLIB_EDGE_VA
 		return zv[j];
-#elif defined(__VCGLIB_EDGE_EA)
+#elif defined(__VCGLIB_EDGE_SA)
 		return zs[j];
 #else
 		assert(0);
@@ -577,7 +580,7 @@ public:
 		assert(j<2);
 #ifdef __VCGLIB_EDGE_VA
 		return zv[j];
-#elif defined(__VCGLIB_EDGE_EA)
+#elif defined(__VCGLIB_EDGE_SA)
 		return zs[j];
 #else
 		assert(0);
@@ -799,7 +802,7 @@ static bool HasEEAdjacency()  {
   return false;
 #endif
 }
-static bool HasVSAdjacency()  { 
+static bool HasVEAdjacency()  { 
 #if (defined(__VCGLIB_EDGE_VA) || defined(__VCGLIB_EDGE_EA))
   return true;
 #else
@@ -824,7 +827,7 @@ static bool HasEdgeMark()  {
 //@}
 
   /// operator to compare two faces
-	inline bool operator == ( const EDGE_TYPE & f ) const {
+	inline bool operator == ( const EDGENAME & f ) const {
 		for(int i=0; i<3; ++i)
 			if( (V(i) != f.V(0)) && (V(i) != f.V(1)) )
 				return false;
