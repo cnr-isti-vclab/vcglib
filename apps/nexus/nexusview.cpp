@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/07/15 14:32:49  ponchio
+Debug.
+
 Revision 1.2  2004/07/05 15:49:39  ponchio
 Windows (DevCpp, mingw) port.
 
@@ -110,11 +113,20 @@ bool init() {
 
 int main(int argc, char *argv[]) {
   char file[64];
-  if(argc < 2) {
-    cerr << "Usage: " << argv[0] << " <nexus file>\n";
+  if(argc < 2 || argc > 4) {
+    cerr << "Usage: " << argv[0] << " <nexus file> [start] [end]\n";
     return -1;
   }
   
+  unsigned int start = 0;
+  unsigned int end = 0xffffffff;
+
+  if(argc >= 3)
+    start = atoi(argv[2]);
+
+  if(argc >= 4)
+    end = atoi(argv[3]);
+
   Nexus nexus;
   if(!nexus.Load(argv[1])) {
     cerr << "Could not load nexus file: " << argv[1] << endl;
@@ -190,6 +202,8 @@ int main(int argc, char *argv[]) {
    
 
     for(unsigned int i = 0; i < nexus.index.size(); i++) {
+      if(i < start) continue;
+      if(i >= end) continue;
       Patch patch = nexus.GetPatch(i);
       
       unsigned int val = i + 1;

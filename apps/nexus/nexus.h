@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <set>
 #include <vcg/space/point3.h>
 #include <vcg/space/sphere3.h>
 #include "vfile.h"
@@ -44,7 +45,7 @@ class Nexus {
 			unsigned int nbord);
 
   //  unsigned int Join(std::vector<unsigned int> &patches);
-  void Join(const std::vector<unsigned int> &patches,
+  void Join(const std::set<unsigned int> &patches,
 	    std::vector<vcg::Point3f> &vert,
 	    std::vector<unsigned int> &faces,
 	    std::vector<Link> &links);
@@ -56,8 +57,6 @@ class Nexus {
   
   unsigned int totvert;
   unsigned int totface;
-  unsigned int totchunks; //number of chunks.
-  unsigned int totlinks;
   vcg::Sphere3f sphere;
     
   std::vector<Entry> index;

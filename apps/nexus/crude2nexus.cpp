@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/07/15 14:32:49  ponchio
+Debug.
+
 Revision 1.2  2004/07/05 15:49:39  ponchio
 Windows (DevCpp, mingw) port.
 
@@ -101,6 +104,8 @@ int main(int argc, char *argv[]) {
 
   //lets count faces, 
   vector<unsigned int> patch_faces;
+  unsigned int totface = 0;
+  unsigned int totvert = 0;
 
   for(unsigned int i = 0; i < face_remap.Size(); i++) {
     unsigned int patch = face_remap[i];
@@ -108,7 +113,7 @@ int main(int argc, char *argv[]) {
     if(patch >= patch_faces.size())
       patch_faces.resize(patch+1, 0);
     patch_faces[patch]++;
-    nexus.totface++;
+    totface++;
   }
 
   cerr << "Vertremap size: " << vert_remap.Size() << endl;
@@ -128,7 +133,7 @@ int main(int argc, char *argv[]) {
     }
     assert(patch < patch_verts.size());
     patch_verts[patch]++;
-    nexus.totvert++;
+    totvert++;
   }
 
   unsigned int totbord = 0;
@@ -146,12 +151,14 @@ int main(int argc, char *argv[]) {
   if(unreferenced)
     cerr << "Warning: found " << unreferenced << " unreferenced vertices.\n";
 
-  cerr << "Triangles found: " << nexus.totface << endl;
-  cerr << "Vertex found: " << nexus.totvert << endl;
+  cerr << "Triangles found: " << totface << endl;
+  cerr << "Vertex found: " << totvert << endl;
   cerr << "Borders found: " << totbord <<  endl;
 
 
   nexus.index.resize(patch_verts.size());
+
+  unsigned int totchunks = 0;
   //now that we know various sizes, lets allocate space
   for(unsigned int i = 0; i < nexus.index.size(); i++) {
     Nexus::Entry &entry = nexus.index[i];
@@ -159,14 +166,14 @@ int main(int argc, char *argv[]) {
     if(patch_faces[i] == 0 || patch_verts[i] == 0) 
       cerr << "Warning! Empty patch.\n";
 
-    entry.patch_start = nexus.totchunks;
+    entry.patch_start = totchunks;
     entry.patch_size = Patch::ChunkSize(patch_verts[i], patch_faces[i]);
     
-    nexus.totchunks += entry.patch_size;
+    totchunks += entry.patch_size;
     entry.border_start = 0;
   }
 
-  nexus.patches.Resize(nexus.totchunks);
+  nexus.patches.Resize(totchunks);
 
   //now we sort the faces into the patches (but still using absolute indexing
   //instead of relative indexing

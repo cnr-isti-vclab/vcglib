@@ -19,8 +19,6 @@ bool Nexus::Create(const string &file) {
 
   totvert = 0;
   totface = 0;
-  totchunks = 0;
-  totlinks = 0;
   sphere = Sphere3f();
 
   //Important: chunk_size must be 1 so that i can use Region in VFile.
@@ -44,10 +42,6 @@ bool Nexus::Load(const string &file) {
   if(!readed) return false;
   readed = fread(&totface, sizeof(unsigned int), 1, index_file);
   if(!readed) return false;
-  readed = fread(&totchunks, sizeof(unsigned int), 1, index_file);
-  if(!readed) return false;
-  readed = fread(&totlinks, sizeof(unsigned int), 1, index_file);
-  if(!readed) return false;
   readed = fread(&sphere, sizeof(Sphere3f), 1, index_file);
   if(!readed) return false;
   
@@ -70,8 +64,6 @@ void Nexus::Close() {
   
   fwrite(&totvert, sizeof(unsigned int), 1, index_file);
   fwrite(&totface, sizeof(unsigned int), 1, index_file);
-  fwrite(&totchunks, sizeof(unsigned int), 1, index_file);
-  fwrite(&totlinks, sizeof(unsigned int), 1, index_file);
   fwrite(&sphere, sizeof(Sphere3f), 1, index_file);
   
   unsigned int size = index.size(); //size of index
@@ -110,17 +102,19 @@ unsigned int Nexus::AddPatch(unsigned int nvert, unsigned int nface,
   patches.Resize(patches.Size() + entry.patch_size);
   borders.Resize(borders.Size() + nbord);
   index.push_back(entry);
+  totvert += nvert;
+  totface += nface;
   return index.size() -1;
 }
 
-void Nexus::Join(const std::vector<unsigned int> &patches,
+void Nexus::Join(const std::set<unsigned int> &patches,
 		 std::vector<Point3f> &newvert,
 		 std::vector<unsigned int> &newface,
 		 std::vector<Link> &newbord) {
 
   map<unsigned int, vector<unsigned int> > remap;
 
-  vector<unsigned int>::const_iterator i;
+  set<unsigned int>::const_iterator i;
   for(i = patches.begin(); i != patches.end(); i++) {
     unsigned int patch = *i;
     Nexus::Entry &entry = index[patch];
