@@ -374,11 +374,11 @@ template <class T> Point3<T> operator*(const Point3<T> &p, const Matrix44<T> &m)
 template <class T> Matrix44<T> &Transpose(Matrix44<T> &m) {
   for(int i = 1; i < 4; i++)
     for(int j = 0; j < i; j++) {
-      T t = element(i, j); 
-      element(i, j) = element(j, i);
-      element(j, i) = t;
+      T t = m.element(i, j); 
+      m.element(i, j) = m.element(j, i);
+      m.element(j, i) = t;
     }
-  return *this;
+  return m;
 }
 
 
