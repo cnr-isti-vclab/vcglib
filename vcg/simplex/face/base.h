@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/03/29 08:37:09  cignoni
+missing include
+
 Revision 1.3  2004/03/10 00:52:38  cignoni
 Moved geometric stuff to the space/triangle  class
 
@@ -199,29 +202,29 @@ protected:
 public:
 #endif
 
-  /// Return the reference of the normal to the face (if __VCGLIB_FACE_N is defined).
+  /// Return the reference of the normal to the face (if __VCGLIB_FACE_FN is defined).
 	inline CoordType & N()
 	{
-#ifdef __VCGLIB_FACE_N
+#ifdef __VCGLIB_FACE_FN
 	return _n;
 #else
 	assert(0);
 	return *(CoordType *)0;
 #endif
 	}
-		/// Return the reference of the normal to the face (if __VCGLIB_FACE_N is defined).
+		/// Return the reference of the normal to the face (if __VCGLIB_FACE_FN is defined).
 	inline const CoordType & N() const
 	{
-#ifdef __VCGLIB_FACE_N
+#ifdef __VCGLIB_FACE_FN
 		return _n;
 #else
 	return *(CoordType *)0;
 #endif
 	}
-	/// Return the reference of the normal to the face (if __VCGLIB_FACE_N is defined).
+	/// Return the reference of the normal to the face (if __VCGLIB_FACE_FN is defined).
 	inline const CoordType cN() const
 	{
-#ifdef __VCGLIB_FACE_N
+#ifdef __VCGLIB_FACE_FN
 		return _n;
 #else
 	return *(CoordType *)0;
@@ -231,15 +234,15 @@ public:
   /// Calculate the normal to the face, the value is store in the field _n of the face
 void ComputeNormal() 
 {
-#ifdef __VCGLIB_FACE_N
-	_n = vcg::Normal(V(0)->cP(), V(1)->cP(), V(2)->cP());
+#ifdef __VCGLIB_FACE_FN
+	_n = vcg::Normal(*this);
 #else
 	assert(0);
 #endif
 }
 void ComputeNormalizedNormal() 
 {
-#ifdef __VCGLIB_FACE_N
+#ifdef __VCGLIB_FACE_FN
 	_n = vcg::NormalizedNormal(V(0)->cP(), V(1)->cP(), V(2)->cP());
 #else
 	assert(0);
