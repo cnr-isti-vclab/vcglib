@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/07/20 14:03:47  ponchio
+Changed interface.
+
 Revision 1.2  2004/07/05 15:49:39  ponchio
 Windows (DevCpp, mingw) port.
 
@@ -40,14 +43,14 @@ First draft created.
 #include <unistd.h>     
 #endif
 
-class StopWatch {
+class Watch {
 public:
-  StopWatch();
-  double Start();
+  Watch();
+  void Start();
   double Pause();
-  void Restart();
+  void Continue();
   void Reset();
-  double Elapsed();
+  double Time();
   int Usec();
 private:
   double Diff();

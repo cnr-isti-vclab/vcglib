@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/07/30 12:44:14  ponchio
+#ifdef corrected
+
 Revision 1.3  2004/07/20 14:03:47  ponchio
 Changed interface.
 
@@ -38,28 +41,32 @@ First draft created.
 #include "stopwatch.h"
 
 #ifdef WIN32
-StopWatch::StopWatch(): elapsed(0) {
+Watch::Watch(): elapsed(0) {
     QueryPerformanceFrequency(&freq);
 }
 
 
-double StopWatch::Start(void) {
+void Watch::Start(void) {
   QueryPerformanceCounter(&tstart);
-  return elapsed;
+  elapsed = 0;
 }
 
-double StopWatch::Pause() {
+double Watch::Pause() {
   QueryPerformanceCounter(&tend);         
   elapsed += Diff();
   return elapsed;
 }               
 
-double StopWatch::Elapsed() {
+void Watch::Continue() {
+  QueryPerformanceCounter(&tstart);
+}
+
+double Watch::Time() {
   QueryPerformanceCounter(&tend);         
   return elapsed + Diff();
 }
 
-double StopWatch::Diff() {  
+double Watch::Diff() {  
   return ((double)tend.QuadPart -
 	  (double)tstart.QuadPart)/
     ((double)freq.QuadPart);
@@ -67,41 +74,40 @@ double StopWatch::Diff() {
 
 #else
 
-StopWatch::StopWatch(): elapsed() {}
+Watch::Watch(): elapsed() {}
 
-double StopWatch::Start() {
+void Watch::Start() {
    gettimeofday(&tstart, &tz); 
-   return elapsed;
+   elapsed = 0;
 }
 
-double StopWatch::Pause() {
+double Watch::Pause() {
   gettimeofday(&tend, &tz); 
   elapsed += Diff();
   return elapsed;
 }
 
-double StopWatch::Elapsed() {
+void Watch::Continue() {
+  QueryPerformanceCounter(&tstart);
+}
+
+double Watch::Time() {
   gettimeofday(&tend, &tz); 
   return elapsed + Diff();
 }
  
-double StopWatch::Diff() {
+double Watch::Diff() {
   double t1 =  (double)tstart.tv_sec + (double)tstart.tv_usec/(1000*1000);
   double t2 =  (double)tend.tv_sec + (double)tend.tv_usec/(1000*1000);
   return t2 - t1;   
 }
 #endif
 
-void StopWatch::Restart(void) {
-    elapsed = 0;
-    Start();
-}
-
-void StopWatch::Reset() {
+void Watch::Reset() {
   elapsed = 0;
 }
 
-int StopWatch::Usec() {
+int Watch::Usec() {
 #ifdef WIN32
   return 0;
 #else  
