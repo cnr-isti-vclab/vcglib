@@ -24,9 +24,6 @@
   History
 
 $Log: not supported by cvs2svn $
-Revision 1.8  2004/03/08 19:40:48  tarini
-*** empty log message ***
-
 Revision 1.7  2004/03/08 19:38:29  tarini
 aggiunti Min e Max, si usano cosi: Min<float>::Value (tarini)
 
@@ -38,9 +35,6 @@ added Acos e Asin
 
 Revision 1.4  2004/03/03 22:51:49  cignoni
 changed math from class to template
-
-Revision 1.3  2004/02/19 15:28:01  ponchio
-*** empty log message ***
 
 Revision 1.2  2004/02/13 02:18:57  cignoni
 Edited Comments and GPL license
@@ -77,6 +71,7 @@ namespace math {
   inline float Sin(const float v)   { return sinf(v); }
   inline float Acos(const float v)   { return acosf(v); }
   inline float Asin(const float v)   { return asinf(v); }
+  inline float Atan2(const float v0,const float v1)   { return atan2f(v0,v1); }
 
   inline double Sqrt(const double v)   { return sqrt(v); }
   inline double Abs(const double v)   { return fabs(v); }
@@ -84,43 +79,57 @@ namespace math {
   inline double Sin(const double v)   { return sin(v); }
   inline double Acos(const double v)   { return acos(v); }
   inline double Asin(const double v)   { return asin(v); }
+  inline double Atan2(const double v0,const double v1)   { return atan2(v0,v1); }
   
 
 	/// max and min values for each scala type 
 	/// syntax: Max<float>::Value  
 
-  template <class SCALAR> class Min {
-		public: static const SCALAR Value;
+  template <class SCALAR> class Value {
+		public: static const SCALAR Min; static const SCALAR Min;
 	};  
-	template <class SCALAR> class Max {
-		public: static const SCALAR Value;
+
+  const char            Value<char           >::Min = -128; 
+  const char            Value<char           >::Max = +127; 
+  const unsigned char 	Value<unsigned char  >::Min = 0; 
+  const unsigned char  	Value<unsigned char  >::Max = 255; 
+  const short	          Value<short	         >::Min = (-32767 -1); 
+  const short	          Value<short	         >::Max =  +32767; 
+  const unsigned short	Value<unsigned short >::Min = 0; 
+  const unsigned short	Value<unsigned short >::Max = 65535; 
+  const int             Value<int            >::Min = (-2147483647 - 1); 
+  const int             Value<int            >::Max =  +2147483647; 
+  const unsigned int    Value<unsigned int   >::Min = 0; 
+  const unsigned int    Value<unsigned int   >::Max = 4294967295; 
+  const __int64         Value<__int64        >::Min = (-9223372036854775807i64 - 1); 
+  const __int64         Value<__int64        >::Max =  +9223372036854775807i64; 
+  const long            Value<long           >::Min = (-2147483647L -1L); 
+  const long            Value<long           >::Max = 2147483647L; 
+  const unsigned long   Value<unsigned long  >::Min = 0; 
+  const unsigned long   Value<unsigned long  >::Max = +4294967295; 
+  const float	          Value<float	         >::Min = -3.4E38F; 
+  const float	          Value<float	         >::Max = +3.4E38F; 
+  const long double     Value<long double    >::Min = -1.2E308; //E4931?
+  const long double     Value<long double    >::Max = +1.2E308; 
+  const double          Value<double         >::Min = -1.7E308; 
+  const double          Value<double         >::Max = +1.7E308; 
+
+	inline template<class T> Min(const T &a, const T &b){
+		if (a<b) return a; else return b;
 	};
-
-  const char            Min<char           >::Value = -128; 
-  const char            Max<char           >::Value = +127; 
-  const unsigned char 	Min<unsigned char  >::Value = 0; 
-  const unsigned char  	Max<unsigned char  >::Value = 255; 
-  const short	          Min<short	         >::Value = (-32767 -1); 
-  const short	          Max<short	         >::Value =  +32767; 
-  const unsigned short	Min<unsigned short >::Value = 0; 
-  const unsigned short	Max<unsigned short >::Value = 65535; 
-  const int             Min<int            >::Value = (-2147483647 - 1); 
-  const int             Max<int            >::Value =  +2147483647; 
-  const unsigned int    Min<unsigned int   >::Value = 0; 
-  const unsigned int    Max<unsigned int   >::Value = 4294967295; 
-  const __int64         Min<__int64        >::Value = (-9223372036854775807i64 - 1); 
-  const __int64         Max<__int64        >::Value =  +9223372036854775807i64; 
-  const long            Min<long           >::Value = (-2147483647L -1L); 
-  const long            Max<long           >::Value = 2147483647L; 
-  const unsigned long   Min<unsigned long  >::Value = 0; 
-  const unsigned long   Max<unsigned long  >::Value = +4294967295; 
-  const float	          Min<float	         >::Value = -3.4E38F; 
-  const float	          Max<float	         >::Value = +3.4E38F; 
-  const long double     Min<long double    >::Value = -1.2E308; //E4931?
-  const long double     Max<long double    >::Value = +1.2E308; 
-  const double          Min<double         >::Value = -1.7E308; 
-  const double          Max<double         >::Value = +1.7E308; 
-
+	inline template<class T> Max(const T &a, const T &b){
+		if (a<b) return b; else return a;
+	};
+	inline template<class T> Swap(T &a, T &b){
+		T tmp=a; a=b; b=tmp;
+	};
+	inline template<class T> Sort(T &a, T &b){
+		if (a>b) Swap(a,b);
+	};
+	inline template<class T> Sort(T &a, T &b, T &c){
+		if (a>b) Swap(a,b);
+		if (b>c) {Swap(b,c); if (a>b) Swap(a,b);}
+	};
 
 /* Some <math.h> files do not define M_PI... */
 #ifndef M_PI
