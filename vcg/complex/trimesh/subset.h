@@ -24,8 +24,8 @@
   History
 
 $Log: not supported by cvs2svn $
-
-
+Revision 1.3  2004/05/07 09:35:09  turini
+Added History Info
 
 ****************************************************************************/
 
@@ -34,14 +34,8 @@ $Log: not supported by cvs2svn $
 #define __VCGLIB_TRISUBSET
 
 
-#include <vcg/Plane3.h>
-
-
 namespace vcg {
 namespace tri {
-
-
-template < class STL_VERT_CONT, class STL_FACE_CONT > class Mesh;
 
 
 template <class I_MESH_TYPE>
