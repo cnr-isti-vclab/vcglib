@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/05/08 14:07:50  ganovelli
+return type of length and squaredlength corrected
+
 Revision 1.3  2004/03/11 11:47:20  tarini
 minor updates, corrections, added documentations, etc.
 
@@ -79,7 +82,7 @@ public:
 		/// The empty constructor
 	Segment3() {};
 		/// The (a,b) constructor
-	SegmentType(const PointType &a, const PointType &b) { _p0=a; _p1=b; };
+	Segment3(const PointType &a, const PointType &b) { _p0=a; _p1=b; };
 		/// Operator to compare segments
 	inline bool operator == ( SegmentType const & p ) const
 	{	return _p0==p._p0 && _p1==p._p1; }
