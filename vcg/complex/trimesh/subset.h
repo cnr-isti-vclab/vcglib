@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/05/13 09:59:20  turini
+Added typedef typename in InsertedV
+
 Revision 1.4  2004/05/07 10:06:46  turini
 include Plane3 removed.
 
@@ -36,6 +39,7 @@ Added History Info
 #ifndef __VCGLIB_TRISUBSET
 #define __VCGLIB_TRISUBSET
 
+#include <vcg/complex/trimesh/update/flag.h>
 
 namespace vcg {
 namespace tri {
@@ -125,7 +129,7 @@ void SubSet(STL_CONT & subSet, S_MESH_TYPE & m)
   }
   m.vn = m.vert.size();
   m.fn = m.face.size();
-  m.ClearFlags();
+  vcg::tri::UpdateFlags<S_MESH_TYPE>::Clear(m);
 }
 
 
