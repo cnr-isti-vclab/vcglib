@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/05/10 14:02:29  ganovelli
+created
+
 Revision 1.1  2004/04/26 19:04:23  ganovelli
 created
 
@@ -350,7 +353,7 @@ const Color4b WC(const int i) const
 **/
   //@{
 
-#if (defined(__VCGLIB_EDGE_EA) && defined(__VCGLIB_EDGE_SA))
+#if (defined(__VCGLIB_EDGE_AE) && defined(__VCGLIB_EDGE_SA))
 	#error Error: You cannot specify face-to-face and shared topology together
 #endif
 
@@ -359,7 +362,7 @@ const Color4b WC(const int i) const
 #endif
 
 protected:
-#if defined(__VCGLIB_EDGE_EA)
+#if defined(__VCGLIB_EDGE_AE)
   /// Vector of face pointer, it's used to indicate the adjacency relations (defines if FACE_A is defined)
 	EDGENAME   *ee[3];				// Facce adiacenti
 	/// Index of the face in the arrival face 
@@ -382,17 +385,17 @@ public:
 
 
 
-	/** Return the pointer to the j-th adjacent face.
+	/** Return the pointer to the j-th adjacent edge.
 	    @param j Index of the edge.
 	 */
-	inline EDGENAME * & E( const int j )
+	inline EDGENAME * & EEp( const int j )
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
 		assert( (_flags & NOTWRITE) == 0 );
 		assert(j>=0);
 	    assert(j<2);
-#if defined(__VCGLIB_EDGE_EA)
+#if defined(__VCGLIB_EDGE_AE)
 		  return ee[j];
 #elif defined(__VCGLIB_EDGE_SA)
 			return es[j];
@@ -403,13 +406,13 @@ public:
 #endif
 	}
 
-	inline const EDGENAME * const & E( const int j ) const
+	inline const EDGENAME * const & EEp( const int j ) const
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
 		assert(j>=0);
 	    assert(j<2);
-#if defined(__VCGLIB_EDGE_EA)
+#if defined(__VCGLIB_EDGE_AE)
 		  return ee[j];
 #elif defined(__VCGLIB_EDGE_SA)
 			return es[j];
@@ -418,17 +421,17 @@ public:
 		  return (EDGENAME *)this;
 #endif
 	}
-	inline EDGENAME * & E1( const int j ) { return F((j+1)%2);}
-	inline const EDGENAME * const&  E1( const int j ) const { return F((j+1)%2);}
+	inline EDGENAME * & EEp1( const int j ) { return EEp((j+1)%2);}
+	inline const EDGENAME * const&  EEp1( const int j ) const { return EEp((j+1)%2);}
 
 /** Return the pointer to the j-th adjacent face.
 	    @param j Index of the edge.
 	 */
-	inline EDGENAME * & UberE( const int j )
+	inline EDGENAME * & UberEEp( const int j )
 	{
 		assert(j>=0);
 	  assert(j<2);
-#if defined(__VCGLIB_EDGE_EA)
+#if defined(__VCGLIB_EDGE_AE)
 		  return ee[j];
 #elif defined(__VCGLIB_EDGE_SA)
 			return es[j];
@@ -438,11 +441,11 @@ public:
 #endif
 	}
 
-	inline const EDGENAME * const & UberE( const int j ) const
+	inline const EDGENAME * const & UberEEp( const int j ) const
 	{
 		assert(j>=0);
 	  assert(j<2);
-#if defined(__VCGLIB_EDGE_EA)
+#if defined(__VCGLIB_EDGE_AE)
 		  return ee[j];
 #elif defined(__VCGLIB_EDGE_SA)
 			return es[j];
@@ -453,7 +456,7 @@ public:
 	}
 	
 
-	inline EDGENAME * & Ev( const int j )
+	inline EDGENAME * & VEp( const int j )
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
@@ -470,7 +473,7 @@ public:
 #endif
 	}
 
-	inline const EDGENAME * const & Ev( const int j ) const
+	inline const EDGENAME * const & VEp( const int j ) const
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
@@ -490,14 +493,14 @@ public:
 	/** Return the index that the face have in the j-th adjacent face.
 	    @param j Index of the edge.
 	 */
-	inline char & Z( const int j )
+	inline char & EEi( const int j )
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
 		assert( (_flags & NOTWRITE) == 0 );
 		assert(j>=0);
 		assert(j<2);
-#if defined(__VCGLIB_EDGE_EA) 
+#if defined(__VCGLIB_EDGE_AE) 
 		return zs[j];
 #elif defined(__VCGLIB_EDGE_SA) 
 		return zs[j];
@@ -507,13 +510,13 @@ public:
 #endif
 	}
 
-	inline const char & Z( const int j ) const
+	inline const char & EEi( const int j ) const
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
 		assert(j>=0);
 		assert(j<2);
-#if defined(__VCGLIB_EDGE_EA) 
+#if defined(__VCGLIB_EDGE_AE) 
 		return zs[j];
 #elif defined(__VCGLIB_EDGE_SA) 
 		return zs[j];
@@ -530,7 +533,7 @@ public:
 	{
 		assert(j>=0);
 		assert(j<2);
-#if defined(__VCGLIB_EDGE_EA) 
+#if defined(__VCGLIB_EDGE_AE) 
 		return zs[j];
 #elif defined(__VCGLIB_EDGE_SA) 
 		return zs[j];
@@ -544,7 +547,7 @@ public:
 	{
 		assert(j>=0);
 		assert(j<2);
-#if defined(__VCGLIB_EDGE_EA) 
+#if defined(__VCGLIB_EDGE_AE) 
 		return zs[j];
 #elif defined(__VCGLIB_EDGE_SA) 
 		return zs[j];
@@ -555,7 +558,7 @@ public:
 	}
 
 
-	inline char & Zv( const int j )
+	inline char & VEi( const int j )
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
@@ -572,7 +575,7 @@ public:
 #endif
 	}
 
-	inline const char & Zv( const int j ) const
+	inline const char & VEi( const int j ) const
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
@@ -796,21 +799,21 @@ static bool HasEdgeColor()  {
 #endif
 }
 static bool HasEEAdjacency()  { 
-#if (defined(__VCGLIB_EDGE_EA) || defined(__VCGLIB_EDGE_EA))
+#if (defined(__VCGLIB_EDGE_AE) || defined(__VCGLIB_EDGE_AE))
   return true;
 #else
   return false;
 #endif
 }
 static bool HasVEAdjacency()  { 
-#if (defined(__VCGLIB_EDGE_VA) || defined(__VCGLIB_EDGE_EA))
+#if (defined(__VCGLIB_EDGE_VA) || defined(__VCGLIB_EDGE_AE))
   return true;
 #else
   return false;
 #endif
 }
 static bool HasSharedAdjacency()  { 
-#if defined(__VCGLIB_EDGE_EA)
+#if defined(__VCGLIB_EDGE_AE)
   return true;
 #else
   return false;

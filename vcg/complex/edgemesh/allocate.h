@@ -154,7 +154,7 @@ static EdgeIterator AddEdges(MeshType &m, int n, PointerUpdater<EdgePointer> &pu
 		m.edges.back().ClearFlags();
 	}
 
-	m.fn+=n;
+	m.en+=n;
 	
   pu.newBase = &*m.edges.begin();
 
@@ -166,16 +166,16 @@ static EdgeIterator AddEdges(MeshType &m, int n, PointerUpdater<EdgePointer> &pu
         {
           if(EdgeType::HasEEAdjacency())
           {
-						pu.Update((*ei).E(0));
-            pu.Update((*ei).E(1));
+						pu.Update((*ei).EEp(0));
+            pu.Update((*ei).EEp(1));
           }
         }
-      VertexIterator ei;
-			for (ei=m.vert.begin(); ei!=m.vert.end(); ++ei)
-        if(!(*ei).IsD())
+      VertexIterator vi;
+			for (vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
+        if(!(*vi).IsD())
         {
           if(VertexType::HasVEAdjacency())
-            pu.Update((*ei).Ep());
+            pu.Update((*vi).Ep());
         }
         		// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
 		unsigned int siz=m.edges.size()-n;	

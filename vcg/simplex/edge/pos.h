@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/05/10 14:01:56  ganovelli
+created
+
 ****************************************************************************/
 
 
@@ -60,8 +63,8 @@ public:
 	void NextF()
 	{
 		EDGETYPE * t = e;
-		e = (EDGETYPE *)t->Ev(z);
-		z = t->Zv(z);
+		e = (EDGETYPE *)t->VEp(z);
+		z = t->VEi(z);
 	}
 };
 
@@ -156,7 +159,7 @@ public:
 	void FlipE()
 	{
 		assert( (e->V(0)==v) ||(e->V(1)==v));
-		e = (e->V(0)==v)?e->E(0):e->E(1);
+		e = (e->V(0)==v)?e->EEp(0):e->EEp(1);
 	}
 	int Z(){
 		return (e->V(0)==v)?0:1;

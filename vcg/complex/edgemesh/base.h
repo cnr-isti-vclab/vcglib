@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/04/26 19:10:04  ganovelli
+created
+
 
 ****************************************************************************/
 
@@ -33,8 +36,8 @@ $Log: not supported by cvs2svn $
 People should subclass his vertex class from these one...
 */
 
-#ifndef __VCGLIB_POLYLINE
-#define __VCGLIB_POLYLINE
+#ifndef __VCGLIB_EDGEMESH
+#define __VCGLIB_EDGEMESH
 
 namespace vcg {
 namespace edge {
@@ -47,7 +50,7 @@ namespace edge {
 		@param STL_FACE_CONT (Template Parameter) Specifies the type of the faces container any the face type.
  */
 template < class VertContainerType, class EdgeContainerType >
-class Polyline{
+class EdgeMesh{
 	public:
 	typedef EdgeContainerType EdgeContainer;
 	typedef VertContainerType VertContainer;
@@ -61,7 +64,7 @@ class Polyline{
 	typedef typename EdgeContainerType::const_iterator ConstEdgeIterator;
 	typedef VertexType * VertexPointer;
 	typedef const VertexType * ConstVertexPointer;
-	typedef EdgeType * SrgmentPointer;
+	typedef EdgeType * EdgePointer;
 	typedef const EdgeType * ConstEdgePointer;
 	typedef Box3<ScalarType> BoxType;
 
@@ -70,7 +73,7 @@ class Polyline{
 	/// Real number of vertices
 	int vn;
 	/// Set of faces
-	EdgeContainer segment;
+	EdgeContainer edges;
 	/// Real number of faces
 	int en;
 	/// Bounding box of the mesh
@@ -100,7 +103,7 @@ public:
 
 
 	/// Default constructor
-	Polyline()
+	EdgeMesh()
 	{
 		en = vn = 0;
 		imark = 0;
@@ -108,7 +111,7 @@ public:
 
 	inline int MemUsed() const
 	{
-		return sizeof(Polyline)+sizeof(VertexType)*vert.size()+sizeof(EdgeType)*segment.size();
+		return sizeof(Polyline)+sizeof(VertexType)*vert.size()+sizeof(EdgeType)*edges.size();
 	}
 
 	inline int MemNeeded() const
@@ -122,7 +125,7 @@ public:
 void Clear()
 {
 	vert.clear();
-	segment.clear();
+	edges.clear();
 //	textures.clear();
 //	normalmaps.clear();
 	vn = 0;
@@ -141,9 +144,9 @@ static bool HasPerEdgeNormal()    { return EdgeType::HasEdgeNormal()  ; }
 static bool HasPerEdgeMark()      { return EdgeType::HasEdgeMark()   ; }
 static bool HasPerEdgeQuality()   { return EdgeType::HasEdgeQuality(); }
 
-static bool HasSSTopology()       { return EdgeType::HasSSAdjacency();  }
-static bool HasVSTopology()       { return FaceType::HasVSAdjacency(); }
-static bool HasTopology()         { return HasSSTopology() || HasVSTopology(); }
+static bool HasEETopology()       { return EdgeType::HasEEAdjacency();  }
+static bool HasVETopology()       { return FaceType::HasVEAdjacency(); }
+static bool HasTopology()         { return HasEETopology() || HasVETopology(); }
 
 
 /// Initialize the imark-system of the faces
@@ -151,7 +154,7 @@ void InitEdgeIMark()
 {
 	EdgeIterator f;
 	
-	for(f=segment.begin();f!=segment.end();++f)
+	for(f=edges.begin();f!=edges.end();++f)
 		if( !(*f).IsDeleted() && (*f).IsR() && (*f).IsW() )
 			(*f).InitIMark();
 }
