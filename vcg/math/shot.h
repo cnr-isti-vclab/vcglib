@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/09/15 22:58:05  ganovelli
+re-creation
+
 Revision 1.2  2004/09/06 21:41:30  ganovelli
 *** empty log message ***
 
@@ -54,7 +57,7 @@ public:
 	Camera<S> & camera;								// the camera that shot
 	vcg::Similarity<S> similarity;		// the position from where it did it
 
-	Shot(const Camera<S> & c):camera(c){}
+	Shot( Camera<S> & c):camera(c){}
 
 	Camera<S> & Camera(){return camera;};
 
@@ -68,7 +71,7 @@ public:
 	vcg::Point3<S>  ConvertToCameraCoordinates(const vcg::Point3<S> & p) const;
 
 	/// project onto the camera plane
-	vcg::Point2<S> Shot<S>::Project(const vcg::Point3<S> & p) const;
+	vcg::Point2<S> Project(const vcg::Point3<S> & p) const;
 
 	/// take the distance from the point p and the plane parallel to the camera plane and passing through the view
 	/// point. The would be z depth 
@@ -83,17 +86,28 @@ vcg::Point3<S>const & Shot<S>::ViewPoint(){
 
 template <class S>
 vcg::Point3<S> Shot<S>::ConvertToCameraCoordinates(const vcg::Point3<S> & p) const{
-		vcg::Point3 tmp = similarity.Matrix()*p;
+	::QMessageBox mb;
+	char t[200];
+	sprintf(t,"shot in %f %f %f",p[0],p[1],p[2]);
+	mb.setText(t);
+	mb.exec();
+
+		vcg::Point3<S> tmp = similarity.Matrix()*p;
+
+	sprintf(t,"shot out %f %f %f",tmp[0],tmp[1],tmp[2]);
+	mb.setText(t);
+	mb.exec();
+	return tmp;
 	}
 
 template <class S>
 vcg::Point2<S> Shot<S>::Project(const vcg::Point3<S> & p) const{
-		return cam->Project(ConvertToCameraCoordinates(p));
+		return camera.Project(ConvertToCameraCoordinates(p));
 	}
 
 template <class S>
 S Shot<S>::Depth(const vcg::Point3<S> & p)const {
-	return (cam->Project(ConvertToCameraCoordinates(p))).
+	return (camera.Project(ConvertToCameraCoordinates(p))).
 }
 
 }

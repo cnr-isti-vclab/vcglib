@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/09/15 22:58:05  ganovelli
+re-creation
+
 Revision 1.2  2004/09/06 21:41:30  ganovelli
 *** empty log message ***
 
@@ -43,6 +46,9 @@ creation
 // opengl
 #include <GL/glew.h>
 
+// TMP
+#include <qmessagebox.h>
+
 namespace vcg{
 
 template<class S>
@@ -54,40 +60,51 @@ public:
 		f(0.f),s(vcg::Point2<S>(0.0,0.0)),
 		c(vcg::Point2<S>(0.0,0.0)),
 		viewport(vcg::Point2<int>(0.0,0.0)),
-		ortho(false),viewportM(1)
+		_flags(0),viewportM(1)
 		{}
 
-	S    f;											// Focal Distance (cioe' la distanza del piano immagine dal centro di proiezione
-	vcg::Point2<S> s;								// Fattore di scala dell'immagine (nei casi in cui a senso)
-	vcg::Point2<S> c;								// Posizione del pin-hole sull'immagine
-	vcg::Point2<int>	 viewport;			// Dimensione viewport
-	S  k[4];										// 1st & 2nd order radial lens distortion coefficient
+	S    f;													// Focal Distance (cioe' la distanza del piano immagine dal centro di proiezione
+	vcg::Point2<S> s;								// Scale factor of the image (nei casi in cui a senso)
+	vcg::Point2<S> c;								// pin-hole position
+	vcg::Point2<int>	 viewport;		// Size viewport (in pixels)
+	S  k[4];												// 1st & 2nd order radial lens distortion coefficient
 
-	bool  ortho;								// Se true la camera e' ortogonale (f non conta)
-	S viewportM;								// rapporto tra la dimensione reale e la viewport in pixel: serve nelv
-															// caso la camera sia ortogonale per non cambiare s o viewport quando si
-															// zoomma
+	S viewportM;								// ratio between viewport in pixel and size (useful to avoid chancing s or viewport when
+															// zooming a ortho camera (for a perspective camera it is 1)
 
+	enum{
+		ORTHO_BIT = 0x01 		// true if the camera is orthogonal
+	};						
+
+	char _flags;
+	bool IsOrtho(){ return (_flags & ORTHO_BIT);}
+	void SetOrtho(bool v ){ if(v) _flags |= ORTHO_BIT; else _flags &= ~ORTHO_BIT; };
+	char & UberFlags() {return _flags;}
 public:
 	/// project a point from space 3d (in the reference system of the camera) to the camera's plane
 	/// the result is in absolute coordinates
 	inline vcg::Point2<S> Project(const vcg::Point3<S> & p);
 
 	/// return the projection matrix for opengl
-	inline vcg::Matrix44<S> MatrixGL(S,vcg::Matrix44<S> &);
+///	inline vcg::Matrix44<S> MatrixGL(S,vcg::Matrix44<S> &);
 
-	/// return the projection matrix for opengl
-	inline void TransformGL(S far) const;
+	/// apply opengl transformation
+///	inline void TransformGL(S far) const;
 };
 
 template<class S>
 
 vcg::Point2<S> Camera<S>::Project(const vcg::Point3<S> & p){
-		
+	::QMessageBox mb;
+	char t[200];
+	sprintf(t,"%f %f %f",p[0],p[1],p[2]);
+	mb.setText(t);
+	mb.exec();
+
 		S  tx = p.X();
 		S  ty = -p.Y();
 		S  qx,qy;
-
+		vcg::Point2<S> q;
 		// nota: per le camere ortogonali viewportM vale 1
 		if(!IsOrtho())
 		{
@@ -97,13 +114,18 @@ vcg::Point2<S> Camera<S>::Project(const vcg::Point3<S> & p){
 			//undistorted_to_distorted_sensor_coord(tx,ty,qx,qy);
 
 			q[0] = qx/s.X()+c.X();
-			q[1] = qy/s.Y()+C.Y();
+			q[1] = qy/s.Y()+c.Y();
 		}
 		else
 		{
 			q[0] = tx/(s.X()*viewportM)+c.X();
 			q[1] = ty/(s.Y()*viewportM)+c.Y();
 		}	
+	
+		sprintf(t,"%f %f",q[0],q[1]);
+		mb.setText(t);
+		mb.exec();
+	return q;
 }
 
 
