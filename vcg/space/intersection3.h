@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/04/29 10:48:44  ganovelli
+error in plane segment corrected
+
 Revision 1.2  2004/04/26 12:34:50  ganovelli
 plane line
 plane segment
@@ -101,8 +104,11 @@ inline bool Intersection( const Plane3<T> & pl, const Line3<T> & li, Point3<T> &
 	}
 
 /// intersection between segment and plane
-template<class T>
-inline bool Intersection( const Plane3<T> & pl, const Segment3<T> & sg, Point3<T> & po){
+template<typename SEGMENTTYPE>
+inline bool Intersection( const Plane3<typename SEGMENTTYPE::ScalarType> & pl, 
+												  const SEGMENTTYPE & sg, 
+													Point3<typename SEGMENTTYPE::ScalarType> & po){
+	typedef typename SEGMENTTYPE::ScalarType T;
 	const T epsilon = T(1e-8);
 
 	T k = pl.Direction() * (sg.P1()-sg.P0());
@@ -117,8 +123,11 @@ inline bool Intersection( const Plane3<T> & pl, const Segment3<T> & sg, Point3<T
 
 /// intersection between plane and triangle 
 // not optimal: uses plane-segment intersection (and the fact the two or none edges can be intersected)
-template<class T, class TRIANGLE >
-inline bool Intersection( const Plane3<T> & pl, const  TRIANGLE & tr, Segment3<T> & sg){
+template<typename TRIANGLETYPE> 
+inline bool Intersection( const Plane3<typename TRIANGLETYPE::ScalarType> & pl, 
+												  const  TRIANGLETYPE & tr, 
+													Segment3<typename TRIANGLETYPE::ScalarType> & sg){
+	typedef typename TRIANGLETYPE::ScalarType T;
 	if(Intersection(pl,Segment3<T>(tr.P(0),tr.P(1)),sg.P0())){
 		if(Intersection(pl,Segment3<T>(tr.P(0),tr.P(2)),sg.P1()))
 			return true;
@@ -139,8 +148,8 @@ inline bool Intersection( const Plane3<T> & pl, const  TRIANGLE & tr, Segment3<T
 	}
 
 /// intersection between two triangles
-template<class T>
-inline bool Intersection(		Triangle3<T> t0,Triangle3<T> t1){
+template<typename TRIANGLETYPE> 
+inline bool Intersection(		const TRIANGLETYPE & t0,const TRIANGLETYPE & t1){
 														return NoDivTriTriIsect(t0.P0(0),t0.P0(1),t0.P0(2),
 																										t1.P0(0),t1.P0(1),t1.P0(2));
 	}
@@ -158,9 +167,9 @@ inline bool Intersection(		Point3<T> V0,Point3<T> V1,Point3<T> V2,
 														return tri_tri_intersect_with_isectline(V0,V1,V2,U0,U1,U2,
 																															coplanar,isectpt1,isectpt2);
 											}
-template<class T>
-inline bool Intersection(		Triangle3<T> t0,Triangle3<T> t1,bool &coplanar,
-														Segment3<T>  & sg){
+template<typename TRIANGLETYPE,typename SEGMENTTYPE >
+inline bool Intersection(		const TRIANGLETYPE & t0,const TRIANGLETYPE & t1,bool &coplanar,
+														SEGMENTTYPE  & sg){
 														Point3<T> ip0,ip1;	
 														return  tri_tri_intersect_with_isectline(t0.P0(0),t0.P0(1),t0.P0(2),
 																																		 t1.P0(0),t1.P0(1),t1.P0(2),
