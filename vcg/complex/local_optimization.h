@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.7  2004/09/29 17:08:39  ganovelli
+  changed > to < in heapelem comparison
+
   Revision 1.6  2004/09/28 09:57:08  cignoni
   Better Doxygen docs
 
@@ -70,7 +73,7 @@ class LocalModification
         typedef typename MeshType::ScalarType ScalarType;
 
 
-	LocalModification(){};
+	inline LocalModification(){};
 	virtual ~LocalModification(){};
   
 	/// return the type of operation
@@ -141,14 +144,15 @@ public:
 		nTargetSimplices,
 		nTargetVertices;
 
-	float	timeBudget,
-			start, 
+	int	timeBudget,
+			start;
+	float
 			currMetric,
 			targetMetric;
 
 	void SetTerminationFlag		(int v){tf |= v;}
 	void ClearTerminationFlag	(int v){tf &= ~v;}
-	bool IsTerminationFlag		(int v){return (tf & v);}
+	bool IsTerminationFlag		(int v){return ((tf & v)!=0);}
 
 	void SetTargetSimplices	(int ts			){nTargetSimplices	= ts;	SetTerminationFlag(LOnSimplices);	}	 	
 	void SetTargetVertices	(int tv			){nTargetVertices	= tv;	SetTerminationFlag(LOnVertices);	} 
@@ -181,14 +185,14 @@ public:
 
   struct HeapElem
   {
-		HeapElem(){locModPtr = NULL;}
+		inline HeapElem(){locModPtr = NULL;}
 	  ~HeapElem(){}
 
     ///pointer to instance of local modifier
     LocModPtrType locModPtr;
 
    
-    HeapElem( LocModPtrType _locModPtr)
+    inline HeapElem( LocModPtrType _locModPtr)
     {
 		locModPtr = _locModPtr;
     };
@@ -208,8 +212,6 @@ public:
 
 
 
-  /// Default Constructor
-	LocalOptimization(MeshType *_m):m(_m){};
   /// Default distructor
   ~LocalOptimization(){};
 	
@@ -220,8 +222,9 @@ public:
   {
     start=clock();
 		nPerfmormedOps =0;
-	FILE * fo=fopen("log.txt","w");
-    
+#ifdef __SAVE__LOG__
+ 		FILE * fo=fopen("log.txt","w");
+#endif __SAVE__LOG__    
 		while( !GoalReached() && !h.empty())
 			{
 				std::pop_heap(h.begin(),h.end());
@@ -234,10 +237,10 @@ public:
          	// check if it is feasible
 					if (locMod->IsFeasible())
 					{
-							//assert(e>locMod->Priority());
-							//e = locMod->Priority();
-						fprintf(fo,"%.22f\n",locMod->Priority());
-		//				printf("ops: %d heap: %d \n",nPerfmormedOps,h.size());
+#ifdef __SAVE__LOG__
+						fprintf(fo,"%s",locMod->Info(m));
+#endif __SAVE__LOG__
+	
 						nPerfmormedOps++;
 						locMod->Execute(m);
 						locMod->UpdateHeap(h);
@@ -246,7 +249,9 @@ public:
         //else printf("popped out unfeasible\n");
 				delete locMod;
 			}
+#ifdef __SAVE__LOG__
 			fclose(fo);
+#endif __SAVE__LOG__
 		return !(h.empty());
   }
  
@@ -272,8 +277,8 @@ public:
 		assert ( ( ( tf & LOMetric		)==0) ||  ( targetMetric	!= -1));
 		assert ( ( ( tf & LOTime		)==0) ||  ( timeBudget		!= -1));
 
-		if ( IsTerminationFlag(LOnSimplices) &&	( m.SimplexNumber()< nTargetSimplices)) return true;
-		if ( IsTerminationFlag(LOnVertices)  &&  ( m.VertexNumber() < nTargetVertices)) return true;
+		if ( IsTerminationFlag(LOnSimplices) &&	( m.SimplexNumber()<= nTargetSimplices)) return true;
+		if ( IsTerminationFlag(LOnVertices)  &&  ( m.VertexNumber() <= nTargetVertices)) return true;
 		if ( IsTerminationFlag(LOnOps)		   && (nPerfmormedOps	== nTargetOps)) return true;
 		if ( IsTerminationFlag(LOMetric)		 &&  ( currMetric		> targetMetric)) return true;
 		if ( IsTerminationFlag(LOTime)			 &&	( (clock()-start)/(float)CLOCKS_PER_SEC > timeBudget)) return true;
