@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/04/28 11:37:14  pietroni
+*** empty log message ***
+
 Revision 1.3  2004/04/26 09:38:54  pietroni
 *** empty log message ***
 
@@ -146,7 +149,7 @@ bool HaveBorderF() {return ((_flags & (BORDERF0 | BORDERF1 | BORDERF2 | BORDERF3
 /// This function return true if the face is extern.
 bool IsBorderF(int face) {
   assert ((face<4)&&(face>-1));
-  return (this->T(face) == this);
+  return (this->TTp(face) == this);
 }
  //@}
 
@@ -195,41 +198,41 @@ and 2 array to implement the list of Vertex - Tetrahedron Topology (List of Tetr
 //@{
 
 
-#ifdef __VCGLIB_TETRA_A
+#ifdef __VCGLIB_TETRA_AT
 protected:
   ///pointers to tetrahedron for tetrahedron-tetrahedron topology (sharing same face)
-	TETRA_TYPE *_t[4];
+	TETRA_TYPE *_ttp[4];
   ///index of face for tetrahedron-tetrahedron topology (sharing same face)
-	int _z[4]; 
+	int _tti[4]; 
 public:
   ///Function to access the Tetrahedron that share the index-face (extern face returns a pointer to himself)
-  	TETRA_TYPE *&T(const int &index)
+  	TETRA_TYPE *&TTp(const int &index)
 	{
-		return _t[index];
+		return _ttp[index];
 	}
   ///Function to see the index of the face as seen from the other tetrahedron (extern face returns -1)
-	int &Z(const int &index)
+	int &TTi(const int &index)
 	{
-		return _z[index];
+		return _tti[index];
 	}
 #endif 
 
-#ifdef __VCGLIB_TETRA_V
+#ifdef __VCGLIB_TETRA_AV
 protected:
 	///pointers to tetrahedron for vertex-tetrahedron topology (sharing same vertex)
-	TETRA_TYPE *_tv[4];
+	TETRA_TYPE *_tvp[4];
   ///index of vertex for vertex-tetrahedron topology (sharing same vertex)
-	short int _zv[4];
+	short int _tvi[4];
 public:
   ///Function to access the Next Tetrahedron of the list that share the index-face (end of list is Null)
-  	TETRA_TYPE *&TV(const int &index)
+  	TETRA_TYPE *&TVp(const int &index)
 	{
-		return _tv[index];
+		return _tvp[index];
 	}
   ///Function to see the index of the Vertex as seen from the next tetrahedron of the list ( end of list is -1)
-	short int &ZV(const int &index)
+	short int &TVi(const int &index)
 	{
-		return _zv[index];
+		return _tvi[index];
 	}
 #endif
 //@}
@@ -256,17 +259,17 @@ public:
 					if(ComputeVolume()<0 )
 						swap(_v[1],_v[2]);
 
-#ifdef		__VCGLIB_TETRA_A
+#ifdef		__VCGLIB_TETRA_TA
 					_z[0]=_z[1]=_z[2]=_z[3]=-1;
 					_t[0]=_t[1]=_t[2]=_t[3]=NULL;
 #endif
-#ifdef		__VCGLIB_TETRA_V
+#ifdef		__VCGLIB_TETRA_TV
 					_zv[0]=_zv[1]=_zv[2]=_zv[3]=-1;
 					_tv[0]=_tv[1]=_tv[2]=_tv[3]=NULL;
 #endif					
 			}
  ///set border vertices using TT-topology
-#ifdef __VCGLIB_TETRA_A
+#ifdef __VCGLIB_TETRA_AT
 	void setBorderV()
 	{	
 		int i;
@@ -284,16 +287,61 @@ public:
 /***********************************************/
 /** @Generic geometric and quality funtions of a tetrahedron**/
 //@{
+#ifdef __VCGLIB_TETRA_TN
+private:
+  CoordType _n[4];
+public:
+#endif
+///return the normal of a face of the tetrahedron
+	const CoordType & N(const int &i){
+    assert((i>=0)&&(i<4));
+#ifdef __VCGLIB_TETRA_TN		
+    return _n[i];
+#else	  
+    Tetra3<ScalarType> T=Tetra3<ScalarType>();
+    T.P0(0)=V(0)->P();
+    T.P1(0)=V(1)->P();
+    T.P2(0)=V(2)->P();
+    T.P3(0)=V(3)->P();
+    return (Normal<Tetra3<ScalarType> >(T,i));
+#endif
+		}	
 
-#ifdef __VCGLIB_TETRA_Q
+ /// Calculate the normal to all the faces of a tetrahedron, the value is store in a position of vecton _n for each face
+void ComputeNormal() 
+{
+#ifdef __VCGLIB_TETRA_TN
+   Tetra3<ScalarType> T=Tetra3<ScalarType>();
+   T.P0(0)=V(0)->P();
+   T.P1(0)=V(1)->P();
+   T.P2(0)=V(2)->P();
+   T.P3(0)=V(3)->P();
+   
+	for (int i=0;i<4;i++)
+      _n[i]=(Normal<Tetra3<ScalarType> >(T,i));
+#else
+	assert(0);
+#endif
+}
+//@}
+
+/***********************************************/
+/** @Generic geometric and quality funtions of a tetrahedron**/
+//@{
+
+#ifdef __VCGLIB_TETRA_TQ
 		ScalarType _volume;	
 		ScalarType _aspect_ratio; 
 #endif
 
 
  	ScalarType ComputeVolume(){
-      Tetra3<ScalarType> T(V(0)->cP(),V(1)->cP(),V(2)->cP(),V(3)->cP());
-      #ifdef __VCGLIB_TETRA_Q
+      Tetra3<ScalarType> T=Tetra3<ScalarType>();
+       T.P0(0)=V(0)->cP();
+       T.P1(0)=V(1)->cP();
+       T.P2(0)=V(2)->cP();
+       T.P3(0)=V(3)->cP();
+      #ifdef __VCGLIB_TETRA_TQ
 			_volume = T.ComputeVolume();
       return _volume;
       #else
@@ -301,10 +349,9 @@ public:
       #endif
 		}
 
-
 	///return the volume of the tetrahedron
 	const double & Volume(){
-#ifdef __VCGLIB_TETRA_Q
+#ifdef __VCGLIB_TETRA_TQ
 		return _volume;
 #else
 		return (( V(2)->cP()-V(0)->cP())^(V(1)->cP()-V(0)->cP() ))*(V(3)->cP()-V(0)->cP())/6.0;
@@ -312,7 +359,7 @@ public:
 		}	
   ///return aspect ratio of the tetrahedron
 	double AspectRatio(){
-#ifdef __VCGLIB_TETRA_Q
+#ifdef __VCGLIB_TETRA_TQ
 		return _aspect_ratio;
 #else
 		return ComputeAspectRatio();
@@ -321,6 +368,51 @@ public:
 //@}
 
 
+ /***********************************************/
+ /** @name Reflection Functions 
+ Static functions  that give information about the current tetra type.
+Reflection is a mechanism making it possible to investigate yourself. Reflection is used to investigate format of objects at runtime, invoke methods and access fields of these objects. Here we provide static const functions that are resolved at compile time and they give information about the data supported by the current tetra type.
+ **/
+ //@{
+
+static bool HasTetraNormal()  { 
+#ifdef __VCGLIB_TETRA_TN 
+  return true;
+#else
+  return false;
+#endif
+}
+static bool HasTetraMark()  { 
+#ifdef __VCGLIB_TETRA_TM
+  return true;
+#else
+  return false;
+#endif
+}
+static bool HasTetraQuality()  { 
+#ifdef __VCGLIB_TETRA_TQ 
+  return true;
+#else
+  return false;
+#endif
+}
+
+static bool HasTTAdjacency()  { 
+#if (defined(__VCGLIB_TETRA_AT) || defined(__VCGLIB_TETRA_SAT))
+  return true;
+#else
+  return false;
+#endif
+}
+static bool HasVTAdjacency()  { 
+#if (defined(__VCGLIB_TETRA_AV) || defined(__VCGLIB_TETRA_SAT))
+  return true;
+#else
+  return false;
+#endif
+}
+
+//@}
 };//end class
 
 }//end namespace
