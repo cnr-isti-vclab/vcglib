@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/10/07 14:19:06  ganovelli
+shot/camera io added
+
 Revision 1.7  2004/07/15 10:54:48  ganovelli
 std added
 
@@ -277,31 +280,31 @@ static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &
 		 {
 				float t[17];
 
-				t[ 0] = -m.shot.similarity.tra[0];
-				t[ 1] = -m.shot.similarity.tra[1];
-				t[ 2] = -m.shot.similarity.tra[2];
-				t[ 3] = m.shot.similarity.rot[0][0];
-				t[ 4] = m.shot.similarity.rot[0][1];
-				t[ 5] = m.shot.similarity.rot[0][2];
-				t[ 6] = m.shot.similarity.rot[1][0];
-				t[ 7] = m.shot.similarity.rot[1][1];
-				t[ 8] = m.shot.similarity.rot[1][2];
-				t[ 9] = m.shot.similarity.rot[2][0];
-				t[10] = m.shot.similarity.rot[2][1];
-				t[11] = m.shot.similarity.rot[2][2];
-				t[12] = m.shot.camera.f;
-				t[13] = m.shot.camera.s[0];
-				t[14] = m.shot.camera.s[1];
-				t[15] = m.shot.camera.c[0];
-				t[16] = m.shot.camera.c[1];
+				t[ 0] = (float) -m.shot.similarity.tra[0];
+				t[ 1] = (float)-m.shot.similarity.tra[1];
+				t[ 2] = (float)-m.shot.similarity.tra[2];
+				t[ 3] = (float)m.shot.similarity.rot[0][0];
+				t[ 4] = (float)m.shot.similarity.rot[0][1];
+				t[ 5] = (float)m.shot.similarity.rot[0][2];
+				t[ 6] = (float)m.shot.similarity.rot[1][0];
+				t[ 7] = (float)m.shot.similarity.rot[1][1];
+				t[ 8] = (float)m.shot.similarity.rot[1][2];
+				t[ 9] = (float)m.shot.similarity.rot[2][0];
+				t[10] = (float)m.shot.similarity.rot[2][1];
+				t[11] = (float)m.shot.similarity.rot[2][2];
+				t[12] = (float)m.shot.camera.f;
+				t[13] = (float)m.shot.camera.s[0];
+				t[14] = (float) m.shot.camera.s[1];
+				t[15] = (float)m.shot.camera.c[0];
+				t[16] = (float)m.shot.camera.c[1];
 				fwrite(t,sizeof(float),17,fpout);
 
 				fwrite( &m.shot.camera.viewport[0],sizeof(int),2,fpout );
 
-				t[ 0] = m.shot.camera.k[0];
-				t[ 1] = m.shot.camera.k[1];
-				t[ 2] = m.shot.camera.k[2];
-				t[ 3] = m.shot.camera.k[3];
+				t[ 0] = (float)m.shot.camera.k[0];
+				t[ 1] = (float)m.shot.camera.k[1];
+				t[ 2] = (float)m.shot.camera.k[2];
+				t[ 3] = (float)m.shot.camera.k[3];
 				fwrite(t,sizeof(float),4,fpout);
 		}
 		else
@@ -365,7 +368,7 @@ std::vector<int> FlagV;
 
 				for(i=0;i<pi.vdn;i++)
 				{
-					double td; float tf;int ti;short ts; char tc; unsigned char tuc;
+					double td(0); float tf(0);int ti;short ts; char tc; unsigned char tuc;
 					switch (pi.VertexData[i].stotype1)
 					{
           case ply::T_FLOAT	 :		PlyConv(pi.VertexData[i].memtype1,  ((char *)vp)+pi.VertexData[i].offset1, tf );	fwrite(&tf, sizeof(float),1,fpout); break;
@@ -393,7 +396,7 @@ std::vector<int> FlagV;
 
 				for(i=0;i<pi.vdn;i++)
 				{
-					float tf; double td;
+					float tf(0); double td(0);
 					int ti;
 					switch (pi.VertexData[i].memtype1)
 					{
@@ -491,7 +494,7 @@ std::vector<int> FlagV;
 
 					for(i=0;i<pi.fdn;i++)
 						{
-						double td; float tf;int ti;short ts; char tc; unsigned char tuc;
+						double td(0); float tf(0);int ti;short ts; char tc; unsigned char tuc;
 						switch (pi.FaceData[i].stotype1){
 								case ply::T_FLOAT	 :		PlyConv(pi.FaceData[i].memtype1,  ((char *)fp)+pi.FaceData[i].offset1, tf );	fwrite(&tf, sizeof(float),1,fpout); break;
 								case ply::T_DOUBLE :		PlyConv(pi.FaceData[i].memtype1,  ((char *)fp)+pi.FaceData[i].offset1, td );	fwrite(&td, sizeof(double),1,fpout); break;
@@ -562,7 +565,7 @@ std::vector<int> FlagV;
 
 					for(i=0;i<pi.fdn;i++)
 					{
-						float tf; double td;
+						float tf(0); double td(0);
 						int ti;
 						switch (pi.FaceData[i].memtype1)
 						{
