@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/03/03 14:32:13  cignoni
+Yet another cr lf mismatch
+
 Revision 1.3  2004/02/23 23:44:21  cignoni
 cr lf mismatch
 
@@ -296,7 +299,7 @@ public:
 	template <class Q>
 	inline Box3 Construct( const Box3<Q> & b )
 	{
-    return Box3(Point3<ScalarType>::Construct(b.min),Point3<ScalarType>::Construct(b.max));
+    return Box3(Point3<BoxScalarType>::Construct(b.min),Point3<BoxScalarType>::Construct(b.max));
 	}
 
 }; // end class definition
