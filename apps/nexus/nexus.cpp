@@ -1,12 +1,16 @@
-#include <iostream>
 #include <assert.h>
+
+#include <iostream>
+#include <set>
+
 #include "nexus.h"
+#include "lrupserver.h"
+#include "queuepserver.h"
 
 using namespace std;
 using namespace vcg;
 using namespace nxs;
 
-Nexus::Nexus(): index_file(NULL) {}
 Nexus::~Nexus() {
   Close();
 }
@@ -17,7 +21,7 @@ bool Nexus::Create(const string &file, Signature sig, unsigned int c_size) {
     cerr << "Could not create file: " << file << ".nxs\n";
     return false;
   }
-
+  
   signature = sig;
   totvert = 0;
   totface = 0;
@@ -26,6 +30,8 @@ bool Nexus::Create(const string &file, Signature sig, unsigned int c_size) {
   index.clear();
 
   chunk_size = c_size;
+
+  history.clear();
 
   if(!patches.Create(file + ".nxp", signature, chunk_size)) {
     cerr << "Could not create file: " << file << ".nxp" << endl;
@@ -40,7 +46,10 @@ bool Nexus::Create(const string &file, Signature sig, unsigned int c_size) {
   return true;
 }
 
-bool Nexus::Load(const string &file, bool readonly) {
+
+bool Nexus::Load(const string &file, bool rdonly) {
+  readonly = rdonly;
+
   index_file = fopen((file + ".nxs").c_str(), "rb+");
   if(!index_file) return false;
   
@@ -63,6 +72,7 @@ bool Nexus::Load(const string &file, bool readonly) {
   index.resize(size);
   readed = fread(&index[0], sizeof(PatchInfo), size, index_file);
   if(readed != size) return false;
+
   patches.ReadEntries(index_file);
   borders.ReadEntries(index_file);
   
@@ -88,20 +98,26 @@ bool Nexus::Load(const string &file, bool readonly) {
       history[i].created[e] = buffer[pos++];
   }
   
+  if(readonly) {
+    fclose(index_file);
+    index_file = NULL;
+  }
+
   //TODO support readonly
   if(!patches.Load(file + ".nxp", signature, chunk_size, readonly)) 
     return false;
-  if(!borders.Load(file + ".nxb", readonly, 1, 500)) return false;
+  if(!borders.Load(file + ".nxb", readonly, 1, 500)) 
+    return false;
   return true;
 }
 
 void Nexus::Close() {  
   patches.Close();
   borders.Close();
-
   if(!index_file) return;
+  
   rewind(index_file);
-
+  
   fwrite(&signature, sizeof(unsigned int), 1, index_file);  
   fwrite(&totvert, sizeof(unsigned int), 1, index_file);
   fwrite(&totface, sizeof(unsigned int), 1, index_file);
@@ -112,9 +128,11 @@ void Nexus::Close() {
   fwrite(&size, sizeof(unsigned int), 1, index_file);
   fwrite(&(index[0]), sizeof(PatchInfo), size, index_file);
 
+  //TODO this should be moved to the end... 
+  //BUT it will break compatibility with existing models.
   patches.WriteEntries(index_file);
   borders.WriteEntries(index_file);
-
+  
   vector<unsigned int> buffer;
   buffer.push_back(history.size());
   for(unsigned int i = 0; i < history.size(); i++) {
@@ -126,12 +144,11 @@ void Nexus::Close() {
     for(unsigned int e = 0; e < update.created.size(); e++)
       buffer.push_back(update.created[e]);
   }
-
+  
   size = buffer.size();
   fwrite(&size, sizeof(unsigned int), 1, index_file);
   fwrite(&(buffer[0]), sizeof(unsigned int), size, index_file);
-
-
+  
   fclose(index_file);
   index_file = NULL;
 }
@@ -139,7 +156,7 @@ void Nexus::Close() {
 Patch &Nexus::GetPatch(unsigned int patch, bool flush) {
   assert(patch < index.size());
   PatchInfo &info = index[patch];
-  return patches.GetPatch(patch, info.nvert, info.nface, flush);
+  return patches.Lookup(patch, info.nvert, info.nface);
 }
 
 Border Nexus::GetBorder(unsigned int patch, bool flush) {
@@ -180,111 +197,13 @@ unsigned int Nexus::AddPatch(unsigned int nvert, unsigned int nface,
   return index.size() -1;
 }
 
-void Nexus::SetRamBufferSize(unsigned int r_size) {    
-  patches.SetRamBufferSize(r_size);
+void Nexus::MaxRamBuffer(unsigned int r_size) {    
+  patches.MaxRamBuffer(r_size);
+  //TODO do the same with borders
 }
-
-/*void Nexus::Join(const std::set<unsigned int> &patches,
-		 std::vector<Point3f> &newvert,
-		 std::vector<unsigned int> &newface,
-		 std::vector<Link> &newbord) {
-
-  map<unsigned int, vector<unsigned int> > remap;
-  set<Link> newborders;
-  set<unsigned int> erased;
-  for(unsigned int u = 0; u < history.size(); u++) 
-    for(unsigned int e = 0; e < history[u].erased.size(); e++)
-      erased.insert(history[u].erased[e]);
-
-  set<unsigned int>::const_iterator patch_idx;
-  for(patch_idx = patches.begin(); patch_idx != patches.end(); patch_idx++) {
-    unsigned int patch = *patch_idx;
-    PatchInfo &entry = index[patch];
-    remap[patch].resize(entry.nvert, 0xffffffff);
-  }
-
-  unsigned int vcount = 0;
-  unsigned int fcount = 0;
-  unsigned int bcount = 0;
-  for(patch_idx = patches.begin(); patch_idx != patches.end(); patch_idx++) {
-    unsigned int patch = *patch_idx;
-    vector<unsigned int> &vmap = remap[patch];
-
-    PatchInfo &entry = index[patch];
-    fcount += entry.nface;
-    for(unsigned int k = 0; k < entry.nvert; k++) {
-      if(vmap[k] == 0xffffffff) { //first time
-	      vmap[k] = vcount++;
-      }
-    }
-
-    Border border = GetBorder(patch);
-    for(unsigned int k = 0; k < border.Size(); k++) {
-      Link link = border[k];
-      if(link.IsNull()) continue;
-
-      assert(link.start_vert < entry.nvert);
-      assert(vmap[link.start_vert] != 0xffffffff);
-
-      if(!remap.count(link.end_patch)) { //external
-	      //test if erased in history... in wich case we do not add border
-	      if(!erased.count(link.end_patch)) {
-	        link.start_vert = vmap[link.start_vert];
-	        newborders.insert(link);
-	      }
-	      continue; 
-      } 
-      //internal
-      //TODO unsigned int &rmpv = remap[link.end_patch][link.end_vert];
-      if(remap[link.end_patch][link.end_vert] == 0xffffffff) { //first time
-	      remap[link.end_patch][link.end_vert] = vmap[link.start_vert];
-      }
-    }
-  }
-
-
-
-  newvert.resize(vcount);
-  newface.resize(fcount*3);
-  newbord.resize(0);
-
-  fcount = 0;
-  for(patch_idx = patches.begin(); patch_idx != patches.end(); patch_idx++) {
-    Patch patch = GetPatch(*patch_idx);    
-
-    vector<unsigned int> &vmap = remap[*patch_idx];
-    assert(vmap.size() == patch.nv);
-
-    for(unsigned int i = 0; i < vmap.size(); i++) {            
-      assert(vmap[i] < vcount);
-      newvert[vmap[i]] = patch.Vert(i);
-    }
-        
-    for(unsigned int i = 0; i < patch.nf; i++) 
-      for(int k = 0; k < 3; k++) {
-        //TODO remove this check.
-        if(patch.Face(i)[k] >= vmap.size()) {
-          cerr << "Face overflow: " << patch.Face(i)[k] << endl;
-          exit(0);
-        }
-        assert(patch.Face(i)[k] < vmap.size());        
-	      newface[fcount++] = vmap[patch.Face(i)[k]];
-      }
-  }  
-  
-  assert(fcount == newface.size());
-
-  set<Link>::iterator b;
-  for(b = newborders.begin(); b != newborders.end(); b++)
-    newbord.push_back(*b);
-
-  return;
-  }*/
-
 
 void Nexus::Unify(float threshold) {
   //TODO what if colors or normals or strips?
-  //TODO update totvert
   unsigned int duplicated = 0;
   unsigned int degenerate = 0;
 

@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
   Report report(nexus.index.size());
   for(unsigned int patchid = 0; patchid < nexus.index.size(); patchid++) {    
     report.Step(patchid);
-    Nexus::PatchInfo &info = nexus.index[patchid];
+    PatchInfo &info = nexus.index[patchid];
     Patch &patch = nexus.GetPatch(patchid);
     for(int f = 0; f < patch.nf; f++) {
       unsigned short *face = patch.Face(f);
@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
   cerr << "Testing borders\n";
 
   for(unsigned int patchid = 0; patchid < nexus.index.size(); patchid++) {
-    Nexus::PatchInfo &info = nexus.index[patchid];
+    PatchInfo &info = nexus.index[patchid];
     Border border = nexus.GetBorder(patchid);
     for(unsigned int i = 0; i < border.Size(); i++) {
       Link &link = border[i];
@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
 
   cerr << "Reciprocity borders test\n";
   for(unsigned int patchid = 0; patchid < nexus.index.size(); patchid++) {
-    Nexus::PatchInfo &info = nexus.index[patchid];
+    PatchInfo &info = nexus.index[patchid];
     Border border = nexus.GetBorder(patchid);
     vector<Link> links;
     links.resize(border.Size());

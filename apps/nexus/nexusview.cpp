@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2004/12/01 18:46:21  ponchio
+Microchanges.
+
 Revision 1.22  2004/11/28 04:16:19  ponchio
 *** empty log message ***
 
@@ -234,7 +237,7 @@ int main(int argc, char *argv[]) {
   unsigned int ram_size = 640000;
 
   nexus.SetError(error);
-  nexus.SetRamExtractionSize(ram_size);   
+  nexus.SetExtractionSize(ram_size);   
   nexus.SetMetric(NexusMt::FRUSTUM);    
   if(!nexus.InitGL()) {
     cerr << "Could not init glew.\n";
@@ -271,16 +274,16 @@ int main(int argc, char *argv[]) {
 	case SDLK_e: extract = !extract; break;
 	case SDLK_c: show_colors = !show_colors; break;
 	case SDLK_n: show_normals = !show_normals; break;
-	case SDLK_9: nexus.patches.ram_size *= 0.8f; break;
-	case SDLK_0: nexus.patches.ram_size *= 1.2f; break;
+	  //	case SDLK_9: nexus.patches->ram_size *= 0.8f; break;
+	  //	case SDLK_0: nexus.patches->ram_size *= 1.2f; break;
 
   case SDLK_LEFT: 
     ram_size *= 0.7; 
-    nexus.SetRamExtractionSize(ram_size);   
+    nexus.SetExtractionSize(ram_size);   
     cerr << "Max extraction ram size: " << ram_size << endl; break;
   case SDLK_RIGHT: 
     ram_size *= 1.5; 
-    nexus.SetRamExtractionSize(ram_size);   
+    nexus.SetExtractionSize(ram_size);   
     cerr << "Max extraction ram size: " << ram_size << endl; break;
   
 	case SDLK_s: metric = NexusMt::FRUSTUM; break;
@@ -388,17 +391,17 @@ int main(int argc, char *argv[]) {
     static vector<unsigned int> cells;    
     watch.Start();
     if(extract) {
-      nexus.patches.Flush();
+      //      nexus.patches.Flush();
       
       nexus.metric->GetView();
-      nexus.policy.Init();
+      //      nexus.policy.Init();
       nexus.tri_total = 0;
       nexus.tri_rendered = 0;
       nexus.Extract(cells);      
     } 
     nexus.Draw(cells);
 
-    if(show_borders) {
+    /*    if(show_borders) {
       for(unsigned int i = 0; i < cells.size(); i++) {
 	Border border = nexus.GetBorder(cells[i]);
 	Patch &patch = nexus.GetPatch(cells[i]);
@@ -413,7 +416,7 @@ int main(int argc, char *argv[]) {
 	glEnd();
 	glPointSize(1);
       }
-    }
+      }*/
 
     //cerr Do some reporting:
     if(show_statistics) {
@@ -431,19 +434,19 @@ int main(int argc, char *argv[]) {
       char buffer[1024];
       glColor3f(1.0f, 1.0f, 1.0f);
 
-      sprintf(buffer, "Ram size : %.3fMb (max)   %.3fMb (cur)", 
-	      nexus.patches.ram_size * nexus.chunk_size/(float)(1<<20), 
-	      nexus.patches.ram_used * nexus.chunk_size/(float)(1<<20));
-      gl_print(0.03, 0.12, buffer);
+      /*      sprintf(buffer, "Ram size : %.3fMb (max)   %.3fMb (cur)", 
+	      nexus.patches->ram_size * nexus.chunk_size/(float)(1<<20), 
+	      nexus.patches->ram_used * nexus.chunk_size/(float)(1<<20));
+	      gl_print(0.03, 0.12, buffer);*/
 
       sprintf(buffer, "Extr size: %.3fMb(max)   %.3fMb(cur)",
-	     nexus.policy.ram_size * nexus.chunk_size/(float)(1<<20), 
-	     nexus.policy.ram_used * nexus.chunk_size/(float)(1<<20));
+	      nexus.extraction_max * nexus.chunk_size/(float)(1<<20), 
+	      nexus.extraction_used * nexus.chunk_size/(float)(1<<20));
       gl_print(0.03, 0.09, buffer);
-
+      
       sprintf(buffer, "Vbo size : %.3fMb(max)   %.3fMb(cur)",
-	     nexus.patches.vbo_size * nexus.chunk_size/(float)(1<<20), 
-	     nexus.patches.vbo_used * nexus.chunk_size/(float)(1<<20));
+	      nexus.patches.vbo_max * nexus.chunk_size/(float)(1<<20), 
+	      nexus.patches.vbo_used * nexus.chunk_size/(float)(1<<20));
       gl_print(0.03, 0.06, buffer);
 
       sprintf(buffer, "Triangles: %.2fK (tot)   %.2fK (vis)    "

@@ -48,28 +48,23 @@ float Metric::GetError(Frag &frag) {
 
 float FrustumMetric::GetError(unsigned int cell) {
   float max_error = 0;
-  Nexus::PatchInfo &entry = (*index)[cell];    
+  PatchInfo &entry = (*index)[cell];    
   Sphere3f &sphere = entry.sphere;
   float dist = Distance(sphere, frustum.ViewPoint());
   if(dist < 0) return 1e20f;
   float error = entry.error/frustum.Resolution(dist);
   if(frustum.IsOutside(sphere.Center(), sphere.Radius()))
-    error /= 4;
+    error /= 256;
   return error;
 }
 
-void Policy::Init() {
-  ram_used = 0;
-}
-
-bool Policy::Expand(TNode &node) {
+bool NexusMt::Expand(TNode &node) {
   //expand if node error > target error
-  if(ram_used >= ram_size) return false;
-  //cerr << "Error: " << error << " node.error: " << node.error << endl;
-  return node.error > error; 
+  if(extraction_used >= extraction_max) return false;
+  return node.error > target_error; 
 }
 
-void Policy::NodeVisited(Node *node) {  
+void NexusMt::NodeVisited(Node *node) {  
   //TODO write this a bit more elegant.
   //first we process arcs removed:
   
@@ -77,11 +72,11 @@ void Policy::NodeVisited(Node *node) {
     assert(!(node->out[i]->visited));
     Frag &frag = node->frags[i];
     for(unsigned int k = 0; k < frag.size(); k++) {
-      PatchEntry &entry = (*entries)[frag[k]];
-      ram_used += entry.ram_size;      
+      PServer::Entry &entry = patches.entries[frag[k]];
+      extraction_used += entry.ram_size;      
     }
   }
-
+  
   vector<Node *>::iterator from;
   for(from = node->in.begin(); from != node->in.end(); from++) {
     assert((*from)->visited);
@@ -90,59 +85,84 @@ void Policy::NodeVisited(Node *node) {
       if((*from)->out[i] == node) {
         vector<unsigned int> &frag = frags[i];
         for(unsigned int k = 0; k < frag.size(); k++) {
-          PatchEntry &entry = (*entries)[frag[k]];          
-          ram_used -= entry.ram_size;          
+          PServer::Entry &entry = patches.entries[frag[k]];          
+          extraction_used -= entry.ram_size;          
         }
       }
     }
   }  
 }
 
-Prefetch::Prefetch(): thread(true), nexus(NULL) {}
-
-Prefetch::~Prefetch() { signal(); waitfor(); }
-
-void Prefetch::execute() {
-  assert(nexus != NULL);
-  while(1) {
-    if(get_signaled()) return;
-    if(cells.size() == 0 || 
-       nexus->patches.ram_used > nexus->patches.ram_size) {
-      relax(100);
-      continue;
-    }
-    cells_mx.lock();
-
-    pop_heap(cells.begin(), cells.end());
-    unsigned int cell = cells.back();
-    cells.pop_back();
-
-    patch_mx.lock();
-    Patch &patch = nexus->GetPatch(cell, false);
-    patch_mx.unlock();
-    
-    cells_mx.unlock();
-  }
-}
-
 NexusMt::NexusMt(): vbo_mode(VBO_AUTO), 
-                    metric(NULL), mode(SMOOTH), prefetching(true) {    
+                    metric(NULL), mode(SMOOTH) {
   metric = new FrustumMetric();
   metric->index = &index;
-  policy.error = 4;
-  policy.ram_size = 64000000;
-
-  prefetch.nexus = this;
+  target_error = 4.0f;
+  extraction_max = 640000000;
 }
 
-NexusMt::~NexusMt() {}
+NexusMt::~NexusMt() {
+  if(metric)
+    delete metric;
+}
 
-bool NexusMt::Load(const string &filename, bool readonly) {
-  if(!Nexus::Load(filename, readonly)) return false;
+bool NexusMt::Load(const string &filename) {
+  index_file = fopen((filename + ".nxs").c_str(), "rb+");
+  if(!index_file) return false;
+  
+  unsigned int readed;
+  readed = fread(&signature, sizeof(unsigned int), 1, index_file);
+  if(!readed) return false;
+  readed = fread(&totvert, sizeof(unsigned int), 1, index_file);
+  if(!readed) return false;
+  readed = fread(&totface, sizeof(unsigned int), 1, index_file);
+  if(!readed) return false;
+  readed = fread(&sphere, sizeof(Sphere3f), 1, index_file);
+  if(!readed) return false;
+  readed = fread(&chunk_size, sizeof(unsigned int), 1, index_file);
+    if(!readed) return false;
+
+  unsigned int size; //size of index
+  readed = fread(&size, sizeof(unsigned int), 1, index_file);
+  if(!readed) return false;
+
+  index.resize(size);
+  readed = fread(&index[0], sizeof(PatchInfo), size, index_file);
+  if(readed != size) return false;
+
+  patches.ReadEntries(index_file);
+  borders.ReadEntries(index_file);
+  
+  //history size;
+  fread(&size, sizeof(unsigned int), 1, index_file);
+  vector<unsigned int> buffer;
+  buffer.resize(size);
+  fread(&(buffer[0]), sizeof(unsigned int), size, index_file);
+
+  //number of history updates
+  size = buffer[0];
+  history.resize(size);
+
+  unsigned int pos = 1;
+  for(unsigned int i = 0; i < size; i++) {
+    unsigned int erased = buffer[pos++];
+    unsigned int created = buffer[pos++];
+    history[i].erased.resize(erased);
+    history[i].created.resize(created);
+    for(unsigned int e = 0; e < erased; e++) 
+      history[i].erased[e] = buffer[pos++];
+    for(unsigned int e = 0; e < created; e++) 
+      history[i].created[e] = buffer[pos++];
+  }
+  
+  fclose(index_file);
+  index_file = NULL;
+
+  if(!patches.Load(filename + ".nxp", signature, chunk_size, true)) 
+    return false;
+  
   LoadHistory();
-
-  policy.entries = &patches.patches;    
-
+  
   use_colors = false;
   use_normals = false;
   use_textures = false;
@@ -153,8 +173,12 @@ bool NexusMt::Load(const string &filename, bool readonly) {
   SetComponent(TEXTURE, true);
   SetComponent(DATA, true);
   
-  SetPrefetching(prefetching);
+  SetPrefetchSize(patches.ram_max/2);
   return true;
+}
+
+void NexusMt::Close() {
+  patches.Close();
 }
 
 bool NexusMt::InitGL(Vbo mode, unsigned int vbosize) {
@@ -164,26 +188,26 @@ bool NexusMt::InitGL(Vbo mode, unsigned int vbosize) {
     cerr << "No vbo available!" << endl;
     vbo_mode = VBO_OFF;
   }
-  patches.vbo_size = vbosize / patches.chunk_size;
-  if(vbo_mode == VBO_OFF) 
-    patches.vbo_size = 0;
+  patches.vbo_max = vbosize / chunk_size;
+  if(vbo_mode == VBO_OFF)
+    patches.vbo_max = 0;
   return true;
 }
 
 void NexusMt::Render() {
-  patches.Flush();
 
   vector<unsigned int> cells;
   metric->GetView();
-  policy.Init();
-  tri_total = 0;
-  tri_rendered = 0;
-
+  
   Extract(cells);
   Draw(cells);
 }
 
 void NexusMt::Draw(vector<unsigned int> &cells) {
+
+  tri_total = 0;
+  tri_rendered = 0;
+
   Frustumf frustum;
   frustum.GetView();
 
@@ -196,7 +220,7 @@ void NexusMt::Draw(vector<unsigned int> &cells) {
 
   for(unsigned int i = 0; i < cells.size(); i++) {    
     unsigned int cell = cells[i];
-    Nexus::PatchInfo &entry = index[cell];    
+    PatchInfo &entry = index[cell];    
     tri_total += entry.nface;
     //frustum culling
     if(frustum.IsOutside(entry.sphere.Center(), entry.sphere.Radius()))
@@ -204,21 +228,22 @@ void NexusMt::Draw(vector<unsigned int> &cells) {
 
     tri_rendered += entry.nface;
     
-    Patch &patch = GetPatch(cell, false);
+    QueuePServer::Data &data = patches.Lookup(cell,entry.nvert,entry.nface, 0);
+    Patch &patch = *data.patch;
     char *fstart;
     char *vstart;
     char *cstart;
     char *nstart;
 
     if(vbo_mode != VBO_OFF) {
-      unsigned int vbo_array;
-      unsigned int vbo_element;
-      patches.GetVbo(cell, vbo_element, vbo_array);
-      assert(vbo_element);
-      assert(vbo_array);
+      //      unsigned int vbo_array;
+      //      unsigned int vbo_element;
+      //      patches.GetVbo(cell, vbo_element, vbo_array);
+      assert(data.vbo_element);
+      assert(data.vbo_array);
 
-      glBindBufferARB(GL_ARRAY_BUFFER_ARB, vbo_array);
-      glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, vbo_element);
+      glBindBufferARB(GL_ARRAY_BUFFER_ARB, data.vbo_array);
+      glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, data.vbo_element);
 
       fstart = NULL;
       vstart = NULL;
@@ -281,8 +306,8 @@ void NexusMt::Draw(vector<unsigned int> &cells) {
   glDisableClientState(GL_NORMAL_ARRAY);
 }
 
-void NexusMt::SetRamExtractionSize(unsigned int r_size) {    
-  policy.ram_size = r_size/patches.chunk_size;
+void NexusMt::SetExtractionSize(unsigned int r_size) {    
+  extraction_max = r_size/patches.chunk_size;
 }
 
 void NexusMt::SetMetric(NexusMt::MetricKind kind) {
@@ -291,24 +316,15 @@ void NexusMt::SetMetric(NexusMt::MetricKind kind) {
 }
 
 void NexusMt::SetError(float error) {
-   policy.error = error;
+   target_error = error;
 }
 
-void NexusMt::SetVboSize(unsigned int _vbo_size) {
-  patches.vbo_size = _vbo_size;
+void NexusMt::SetVboSize(unsigned int _vbo_max) {
+  patches.vbo_max = _vbo_max;
 }
 
-void NexusMt::SetPrefetching(bool on) {
-  if(on && prefetch.Running()) return;
-  if(!on && !prefetch.Running()) return;
-  if(on) {
-    prefetch.cells.clear();
-    prefetch.start();
-  } else {
-    prefetch.signal();
-    prefetch.waitfor();
-  }
-  prefetching = on;
+void NexusMt::SetPrefetchSize(unsigned int size) {
+  //TODO do something reasonable with this.
 }
 
 bool NexusMt::SetMode(Mode _mode) {
@@ -370,8 +386,8 @@ void NexusMt::LoadHistory() {
     for(unsigned int i = 0; i < (*u).created.size(); i++) {
       unsigned int cell = (*u).created[i];
       if(index[cell].error > node.error)
-      node.error = index[cell].error;
-      
+	node.error = index[cell].error;
+	
       cell_node[cell] = current_node;        
     }
     
@@ -397,18 +413,18 @@ void NexusMt::LoadHistory() {
       vector<unsigned int> &cells = (*e).second;
       vector<unsigned int>::iterator k;
       for(k = cells.begin(); k != cells.end(); k++) {
-	      unsigned int cell = (*k);
+	unsigned int cell = (*k);
         assert(cell < index.size());
-	      fr.push_back(cell);
-	      if(index[cell].error > max_err)
-	        max_err = index[cell].error;
+	fr.push_back(cell);
+	if(index[cell].error > max_err)
+	  max_err = index[cell].error;
       }         
       //Add the new Frag to the node.
       unsigned int floor_node = (*e).first;
       Node &oldnode = nodes[floor_node];
       oldnode.frags.push_back(fr);
       if(node.error < max_err)
-	      node.error = max_err;
+	node.error = max_err;
       
       //Update in and out of the nodes.
       node.in.push_back(&oldnode);
@@ -454,10 +470,12 @@ void NexusMt::ClearHistory() {
 } */   
 
 void NexusMt::Extract(std::vector<unsigned int> &selected) {
+  extraction_used = 0;
+
   std::vector<Node>::iterator n;
   for(n = nodes.begin(); n != nodes.end(); n++) {
     (*n).visited = false;
-    (*n).pushed = false;
+    //    (*n).pushed = false;
   }
   
   std::vector<TNode> heap;
@@ -472,7 +490,7 @@ void NexusMt::Extract(std::vector<unsigned int> &selected) {
     Node *node = tnode.node;
     if(node->visited) continue;
 
-    bool expand = policy.Expand(tnode);
+    bool expand = Expand(tnode);
 
     if(expand)  
       VisitNode(node, heap);                
@@ -539,13 +557,22 @@ void NexusMt::VisitNode(Node *node, vector<TNode> &heap) {
   
   for(unsigned int k = 0; k < node->out.size(); k++) {
     Node *outnode = node->out[k];
-    float error = metric->GetError(node->frags[k]);
-    //  if(node->pushed) continue
-    heap.push_back(TNode(outnode, error));
+    float max_error = 0;
+
+
+    for(unsigned int j = 0; j < node->frags[k].size(); j++) {
+      unsigned int patch = node->frags[k][j];
+      float error = metric->GetError(patch);
+      if(max_error < error) max_error = error;
+      visited.push_back(PServer::Item(patch, fabs(error - target_error)));
+      //      push_heap(visited.begin(), visited.end());
+    }
+    
+    heap.push_back(TNode(outnode, max_error));
     push_heap(heap.begin(), heap.end());    
   }
   
   node->visited = true;
-  policy.NodeVisited(node);
+  NodeVisited(node);
 }
 

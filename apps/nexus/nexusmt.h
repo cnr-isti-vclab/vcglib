@@ -1,13 +1,15 @@
 #ifndef NXS_NEXUS_MT_H
 #define NXS_NEXUS_MT_H
 
-
-#include "nexus.h"
 #include <vector>
 #include <queue>
 #include <ptypes/pasync.h>
 #include <wrap/gui/frustum.h>
 
+#include "nexusbase.h"
+#include "queuepserver.h"
+#include "borderserver.h"
+#include "prefetch.h"
 
 namespace nxs {
 
@@ -19,7 +21,7 @@ namespace nxs {
    std::vector<Frag> frags;    
    float error;
    bool visited;
-   bool pushed;
+   //   bool pushed;
  };
 
  struct TNode {
@@ -31,7 +33,7 @@ namespace nxs {
 
  class Metric {
  public:
-   vector<Nexus::PatchInfo> *index;
+   std::vector<PatchInfo> *index;
 
    float GetError(Node *node);   
    float GetError(Frag &frag);
@@ -60,7 +62,7 @@ namespace nxs {
    float GetError(unsigned int cell);   
  };
 
- class Policy {
+ /* class Policy {
  public:
    float error;
    int ram_used;
@@ -71,27 +73,9 @@ namespace nxs {
    void Init();
    bool Expand(TNode &node);
    void NodeVisited(Node *node); 
- };
+   };*/
 
-class Prefetch: public pt::thread {
- public:
-  Prefetch();
-  ~Prefetch();
-  void execute();
-  void cleanup() {}
-
-  bool Running() { return get_running(); }
-
-  std::vector<unsigned int> cells;
-  pt::mutex cells_mx;
-  pt::mutex patch_mx;
-  Nexus *nexus;
-};
-
-class NexusMt: public Nexus {
- private:
-  std::vector<Node> nodes;
-  Prefetch prefetch;
+class NexusMt: public NexusBase {
  public:
   //Vertex buffer object mode
   enum Vbo { VBO_AUTO,    //autodetect best size 
@@ -118,10 +102,13 @@ class NexusMt: public Nexus {
   Vbo vbo_mode;
 
   Metric *metric;
-  Policy policy;
+  float target_error;
   
+  int extraction_max;
+  int extraction_used;
+
+
   Mode mode;
-  bool prefetching;
 
   unsigned int components;
   bool use_normals;
@@ -132,31 +119,41 @@ class NexusMt: public Nexus {
   //statistics:
   unsigned int tri_rendered;
   unsigned int tri_total;
-  
+
+  std::vector<PServer::Item> visited;
+  QueuePServer patches;
+  BorderServer borders; 
+
   NexusMt();
   ~NexusMt();
   
-  bool Load(const std::string &filename, bool readonly = true);
-  bool InitGL(Vbo mode = VBO_AUTO, unsigned int vbo_size = 0);
+  bool Load(const std::string &filename);
+  void Close();
+
+  bool InitGL(Vbo mode = VBO_AUTO, unsigned int vbo_size = 64000000);
   
   void Render();
   
   void SetMetric(MetricKind kind);
   void SetError(float error);
-  void SetRamExtractionSize(unsigned int ram_size);
+  void SetExtractionSize(unsigned int ram_size);
+  void SetPrefetchSize(unsigned int size);
   void SetVboSize(unsigned int vbo_size);
 
-  void SetPrefetching(bool on);
 
   bool SetMode(Mode mode);
   bool SetComponent(Component c, bool on);
   bool SetComponents(unsigned int mask);
   
-  
   void Draw(std::vector<unsigned int> &selected);
   void Extract(std::vector<unsigned int> &selected);
 
  protected:
+  std::vector<Node> nodes;
+
+  bool Expand(TNode &node);
+  void NodeVisited(Node *node); 
+
   void LoadHistory();
   void ClearHistory();
   void VisitNode(Node *node, std::vector<TNode> &heap);

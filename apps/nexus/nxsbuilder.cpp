@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2004/12/09 22:33:28  ponchio
+Different splitting optimization.
+
 Revision 1.9  2004/12/04 13:22:55  ponchio
 *** empty log message ***
 
@@ -282,7 +285,7 @@ void ThirdStep(const string &crudefile, const string &output,
 
   Nexus nexus;
   //TODO here i really need no ram_buffer.....
-  nexus.patches.SetRamBufferSize(0);
+  nexus.MaxRamBuffer(0);
   if(!nexus.Create(output, NXS_FACES, chunk_size)) {
     cerr << "Could not create nexus output: " << output << endl;
     getchar();
@@ -384,6 +387,7 @@ void ThirdStep(const string &crudefile, const string &output,
     cerr << "Could not save: " << output << ".rvi\n";
     exit(0);
   }
+  nexus.Close();
 }
 
 void FourthStep(const string &crudefile, const string &output, 
@@ -393,7 +397,7 @@ void FourthStep(const string &crudefile, const string &output,
     cerr << "Could not load nexus " << output << endl;
     exit(0);
   }
-  nexus.patches.SetRamBufferSize(ram_buffer);
+  nexus.MaxRamBuffer(ram_buffer);
   //TODO Clear borders in case of failure!
 
   VFile<unsigned int> vert_remap;
@@ -411,7 +415,7 @@ void FourthStep(const string &crudefile, const string &output,
 
   for(int start = 0; start < nexus.index.size(); start++) {
     report.Step(start);
-    Nexus::PatchInfo &s_entry = nexus.index[start];
+    PatchInfo &s_entry = nexus.index[start];
 
     vector<Link> links;   
 #ifdef WIN32
@@ -427,7 +431,7 @@ void FourthStep(const string &crudefile, const string &output,
     for(int end = 0; end < nexus.index.size(); end++) {
       if(start == end) continue;      
 
-      Nexus::PatchInfo &e_entry = nexus.index[end];
+      PatchInfo &e_entry = nexus.index[end];
       float dist = Distance(s_entry.sphere, e_entry.sphere);
       
       if(dist > s_entry.sphere.Radius() + e_entry.sphere.Radius()) {
@@ -467,7 +471,7 @@ void FifthStep(const string &crudefile, const string &output,
     cerr << "Could not load nexus " << output << endl;
     exit(0);
   }
-  nexus.patches.SetRamBufferSize(ram_buffer);
+  nexus.MaxRamBuffer(ram_buffer);
 
   VChain vchain;
   if(!vchain.Load(output + ".vchain")) {
@@ -482,7 +486,7 @@ void FifthStep(const string &crudefile, const string &output,
   }
   nexus.history.push_back(update); 
   nexus.Unify();
-  nexus.patches.FlushAll();
+  nexus.patches.Flush();
 
 
   Dispatcher dispatcher(&nexus, &vchain);
@@ -752,7 +756,7 @@ void SaveFragment(Nexus &nexus, VChain &chain,
 					    patch.face.size()/3,
 					    bordsize);
     patch_levels.push_back(current_level);
-    Nexus::PatchInfo &entry = nexus.index[patch_idx];
+    PatchInfo &entry = nexus.index[patch_idx];
     entry.error = fragout.error;
 
     patch_remap[i] = patch_idx;
@@ -780,7 +784,7 @@ void SaveFragment(Nexus &nexus, VChain &chain,
     memcpy(patch.VertBegin(), &outpatch.vert[0], 
 	          outpatch.vert.size() * sizeof(Point3f));
     
-    Nexus::PatchInfo &entry = nexus.index[patch_idx];
+    PatchInfo &entry = nexus.index[patch_idx];
     for(unsigned int v = 0; v < outpatch.vert.size(); v++) {
       entry.sphere.Add(outpatch.vert[v]);
       nexus.sphere.Add(outpatch.vert[v]);

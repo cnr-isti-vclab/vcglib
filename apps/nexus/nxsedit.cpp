@@ -211,7 +211,7 @@ int main(int argc, char *argv[]) {
 
 
   Nexus nexus;
-  nexus.patches.SetRamBufferSize(ram_size);
+  nexus.MaxRamBuffer(ram_size);
   if(!nexus.Load(input, true)) {
     cerr << "Could not open nexus file: " << input << "\n";
     return -1;
@@ -312,7 +312,7 @@ int main(int argc, char *argv[]) {
   cout << "Writing to nexus: " << output << endl;
 
   Nexus out;
-  out.patches.SetRamBufferSize(ram_size);
+  out.MaxRamBuffer(ram_size);
   if(!chunk_size)
     chunk_size = nexus.patches.chunk_size;
 
@@ -327,7 +327,7 @@ int main(int argc, char *argv[]) {
   cout << "Copying and allocating...\n";
   for(unsigned int patch = 0; patch < nexus.index.size(); patch++) {
     report.Step(patch);
-    Nexus::PatchInfo &src_entry = nexus.index[patch];
+    PatchInfo &src_entry = nexus.index[patch];
     Patch src_patch = nexus.GetPatch(patch);
     Border src_border = nexus.GetBorder(patch);
 
@@ -341,7 +341,7 @@ int main(int argc, char *argv[]) {
       out.AddPatch(src_entry.nvert, src_entry.nface, src_border.Available());
 
 
-    Nexus::PatchInfo &dst_entry = out.index[patch];
+    PatchInfo &dst_entry = out.index[patch];
 
     Patch dst_patch = out.GetPatch(patch);
 
