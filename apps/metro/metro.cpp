@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/09/20 15:17:28  cignoni
+Removed bug in displays msec and better usage messages
+
 Revision 1.7  2004/09/09 22:59:15  cignoni
 Removed many small warnings
 
@@ -301,7 +304,7 @@ int main(int argc, char**argv)
     double mesh_dist_max  = max(dist1_max , dist2_max);
     
     printf("\nHausdorff distance: %f (%f  with respect to bounding box diagonal)\n",(float)mesh_dist_max,(float)mesh_dist_max/bbox.Diag());
-    printf("  Computation time  : %d ms\n", (int)elapsed_time);
+    printf("  Computation time  : %d ms\n",(int)(1000.0*elapsed_time/CLOCKS_PER_SEC));
     printf("  # samples/second  : %f\n\n", (float)n_total_sample/((float)elapsed_time/CLOCKS_PER_SEC));
 
     // save error files.
