@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/02/01 17:37:53  rita_borgo
+Fixed Volume and Color
+
 Revision 1.5  2005/01/18 16:33:12  rita_borgo
 Added OFF file Option
 
@@ -155,7 +158,7 @@ void main(int argc,char ** argv){
 
 	char                 *fmt;
 	MyMesh m;
-	bool DEBUG = false;
+	bool DEBUG = true;
 	//load the mesh
 	//argv[1]=(char*)"c:\\checkup\\debug\\column1m.ply";
 	//argv[1] = "C:\\sf\\apps\\msvc\\trimeshinfo\\Release\\prism.off";
@@ -170,7 +173,7 @@ void main(int argc,char ** argv){
 
 
  if(DEBUG)
-	argv[1] = "C:\\sf\\apps\\msvc\\trimeshinfo\\Release\\twirl.off";
+	argv[1] = "C:\\sf\\apps\\msvc\\trimeshinfo\\Release\\cube1.stl";
  
  else
  {
