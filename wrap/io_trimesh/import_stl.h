@@ -21,30 +21,168 @@
 *                                                                           *
 ****************************************************************************/
 
-This folders contains most common FACE configuration files
-The name of the file specify the members that are added to the vertex class
-The name is a sequence of letters, in strict alphabetical order.
-The possible admitted letters pairs are
+/****************************************************************************
+  History
 
-FA - face-face adjacency
-FC - Per-Face Color
-FN - Per-Face Normal
-FQ - Per-Face Quality
-VA - Vertex-face adjacency
-WC - Per-Wedge Color
-WN - Per-Wedge Normal
-WQ - Per-Wedge Quality
-WT - Per-Wedge Texture Coords
-SA - Shared Vertex-Face and Face-Face Adjacency
-RT - Data for Optimized Point-Face Distance and Ray-Tracing Stuff
+$Log: not supported by cvs2svn $
+****************************************************************************/
 
-E.g. 
+#ifndef __VCGLIB_IMPORT_STL
+#define __VCGLIB_IMPORT_STL
 
-#include<vcg/simplex/vertex/with/fafnwc.h> 
+#include <stdio.h>
 
-generate a type 
-VertexFAFNWC<VertexType> 
+namespace vcg {
+namespace tri {
+namespace io {
 
-that can store F-F adjacency, Per face normal color and per wedge color.
+/** 
+This class encapsulate a filter for importing stl (stereolitograpy) meshes.
+The stl format is quite simple and rather un-flexible. It just stores, in ascii or binary the, unindexed, geometry of the faces.
+warning this code assume little endian (PC) architecture!!!
+*/
+template <class OpenMeshType>
+class ImporterSTL
+{
+public:
+
+typedef typename OpenMeshType::VertexPointer VertexPointer;
+typedef typename OpenMeshType::ScalarType ScalarType;
+typedef typename OpenMeshType::VertexType VertexType;
+typedef typename OpenMeshType::FaceType FaceType;
+typedef typename OpenMeshType::VertexIterator VertexIterator;
+typedef typename OpenMeshType::FaceIterator FaceIterator;
+
+// if it is binary there are 80 char of comment, the number fn of faces and then exactly fn*4*3 bytes.
+
+enum {STL_LABEL_SIZE=80};
+
+class STLFacet
+{
+public:
+  Point3f n;
+  Point3f v[3];
+//  short attr;
+};
+
+static int Open( OpenMeshType &m, const char * filename, CallBackPos *cb=0)
+{
+  FILE *fp;
+  bool binary=false;
+  fp = fopen(filename, "r");
+  if(fp == NULL)
+    {
+      return 0;
+    }
+
+  /* Find size of file */
+  fseek(fp, 0, SEEK_END);
+  int file_size = ftell(fp);
+  int facenum;
+  /* Check for binary or ASCII file */
+  fseek(fp, STL_LABEL_SIZE, SEEK_SET);
+  fread(&facenum, sizeof(int), 1, fp);
+  int expected_file_size=STL_LABEL_SIZE + 4 + (sizeof(short)+sizeof(STLFacet) )*facenum ;
+  if(file_size ==  expected_file_size) binary = true;
+  unsigned char tmpbuf[128];
+  fread(tmpbuf,sizeof(tmpbuf),1,fp);
+  for(int i = 0; i < sizeof(tmpbuf); i++)
+    {
+      if(tmpbuf[i] > 127)
+ 	      {
+	        binary=true;
+	        break;
+	      }
+    }
+  // Now we know if the stl file is ascii or binary.
+  fclose(fp);
+  if(binary) return OpenBinary(m,filename,cb);
+  else return OpenAscii(m,filename,cb);
+}
+
+static int OpenBinary( OpenMeshType &m, const char * filename, CallBackPos *cb=0)
+{
+  FILE *fp;
+  fp = fopen(filename, "rb");
+  if(fp == NULL)
+  {
+    return 0;
+  }
+   
+  int facenum;
+  fseek(fp, STL_LABEL_SIZE, SEEK_SET);
+  fread(&facenum, sizeof(int), 1, fp);
   
+  m.Clear();
+  FaceIterator fi=Allocator<OpenMeshType>::AddFaces(m,facenum);
+  VertexIterator vi=Allocator<OpenMeshType>::AddVertices(m,facenum*3);
+  // For each triangle read the normal, the three coords and a short set to zero
+	for(int i=0;i<facenum;++i)
+    {
+      short attr;
+      Point3f norm;
+      Point3f tri[3];
+      fread(&norm,sizeof(Point3f),1,fp);
+      fread(&tri,sizeof(Point3f),3,fp);
+      fread(&attr,sizeof(short),1,fp);
+      for(int k=0;k<3;++k)
+      {
+        (*vi).P().Import(tri[k]); 
+        (*fi).V(k)=&*vi; 
+        ++vi;
+      }
+      ++fi;
+    }
+    fclose(fp);
+    return 1;
+  }
 
+
+  static int OpenAscii( OpenMeshType &m, const char * filename, CallBackPos *cb=0)
+  {
+    FILE *fp;
+    bool binary;
+    fp = fopen(filename, "r");
+    if(fp == NULL)
+    {
+      return 0;
+    }
+
+    m.Clear();
+  
+    /* Skip the first line of the file */
+    while(getc(fp) != '\n');
+
+    STLFacet f;
+    /* Read a single facet from an ASCII .STL file */
+    while(!feof(fp))
+    {
+      fscanf(fp, "%*s %*s %f %f %f\n", &f.n.X(), &f.n.Y(), &f.n.Z());
+      fscanf(fp, "%*s %*s");
+      fscanf(fp, "%*s %f %f %f\n", &f.v[0].X(),  &f.v[0].Y(),  &f.v[0].Z());
+      fscanf(fp, "%*s %f %f %f\n", &f.v[1].X(),  &f.v[1].Y(),  &f.v[1].Z());
+      fscanf(fp, "%*s %f %f %f\n", &f.v[2].X(),  &f.v[2].Y(),  &f.v[2].Z());
+      fscanf(fp, "%*s"); // end loop
+      fscanf(fp, "%*s"); // end facet
+      if(feof(fp)) break;
+      FaceIterator fi=Allocator<OpenMeshType>::AddFaces(m,1);
+      VertexIterator vi=Allocator<OpenMeshType>::AddVertices(m,3);
+      for(int k=0;k<3;++k)
+      {
+        (*vi).P().Import(f.v[k]); 
+        (*fi).V(k)=&*vi; 
+        ++vi;
+      }    
+    }
+    fclose(fp);
+    return 1;
+  }
+}; // end class
+} // end Namespace tri
+} // end Namespace io
+} // end Namespace vcg
+
+
+//@}
+
+#endif
