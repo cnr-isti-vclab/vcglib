@@ -67,18 +67,18 @@ namespace vcg {
     static T ToRad(const T a);
   };
 
-  T Math<float>::Sqrt(const float v) 
+  float Math<float>::Sqrt(const float v) 
   { return sqrtf(v); }
-  T Math<float>::Abs(const float v) 
+  float Math<float>::Abs(const float v) 
   { return fabsf(v); }
-  T Math<double>::Sqrt(const double v) 
+  double Math<double>::Sqrt(const double v) 
   { return sqrt(v); }
-  T Math<double>::Abs(const double v) 
+  double Math<double>::Abs(const double v) 
   { return fabs(v); }
     
     
   const unsigned char   Math<unsigned char  >::MaxVal = 255;
-  const short	          Math<short	        >::MaxVal = 127; 
+  const char	          Math<char 	        >::MaxVal = 127; 
   const unsigned short	Math<unsigned short	>::MaxVal = 0xFFFFu; 
   const short	          Math<short	        >::MaxVal = 0x7FFF; 
   const float	          Math<float	        >::MaxVal = 3.4E38F; 
