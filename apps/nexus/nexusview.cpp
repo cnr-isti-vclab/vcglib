@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2004/11/28 04:16:19  ponchio
+*** empty log message ***
+
 Revision 1.21  2004/11/28 01:23:26  ponchio
 Fixing borders... let's hope.
 
@@ -250,6 +253,7 @@ int main(int argc, char *argv[]) {
   bool redraw = false;
   float fps = 0;
   float tframe = 0;
+  
   while( !quit ) {   
     bool first = true;
     SDL_WaitEvent(&event);
@@ -278,10 +282,10 @@ int main(int argc, char *argv[]) {
     ram_size *= 1.5; 
     nexus.SetRamExtractionSize(ram_size);   
     cerr << "Max extraction ram size: " << ram_size << endl; break;
-
+  
 	case SDLK_s: metric = NexusMt::FRUSTUM; break;
 	case SDLK_p: mode = NexusMt::POINTS; nexus.SetMode(mode); break;
-	case SDLK_d: mode = NexusMt::DEBUG; nexus.SetMode(mode); break;
+	case SDLK_d: mode = NexusMt::PATCHES; nexus.SetMode(mode); break;
 	case SDLK_f: mode = NexusMt::FLAT; nexus.SetMode(mode); break;
 	case SDLK_m: mode = NexusMt::SMOOTH; nexus.SetMode(mode); break;
 
@@ -390,10 +394,9 @@ int main(int argc, char *argv[]) {
       nexus.policy.Init();
       nexus.tri_total = 0;
       nexus.tri_rendered = 0;
-      nexus.Extract(cells);
-      nexus.Draw(cells);
-    } else
-      nexus.Draw(cells);
+      nexus.Extract(cells);      
+    } 
+    nexus.Draw(cells);
 
     if(show_borders) {
       for(unsigned int i = 0; i < cells.size(); i++) {

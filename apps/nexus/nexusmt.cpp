@@ -240,7 +240,7 @@ void NexusMt::Draw(vector<unsigned int> &cells) {
     switch(mode) {
     case POINTS:
       glDrawArrays(GL_POINTS, 0, patch.nv); break;
-    case DEBUG:
+    case PATCHES:
       glColor3ub((cell * 27)%255, (cell * 37)%255, (cell * 87)%255);
     case SMOOTH:
       if(signature & NXS_FACES)

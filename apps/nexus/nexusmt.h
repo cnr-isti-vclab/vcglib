@@ -108,7 +108,7 @@ class NexusMt: public Nexus {
 	      HIDDEN_LINE,
 	      FLAT_WIRE,
 	      FLAT,
-              DEBUG };
+              PATCHES };
 
   enum Component { COLOR   = 0x1, 
 		   NORMAL  = 0x2, 
