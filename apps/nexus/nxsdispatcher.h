@@ -7,6 +7,8 @@
 #include <map>
 #include <string>
 
+#include "decimate.h"
+
 namespace nxs {
 
 #define MSG_SEND     MSG_USER + 1
@@ -63,6 +65,8 @@ namespace nxs {
     int maxqueue;
     Nexus *nexus;
     VoronoiChain *chain;
+    Decimation mode;
+    float scaling;
     std::vector<Server *> servers;
     std::map<int, FragIO *> frags;
   };

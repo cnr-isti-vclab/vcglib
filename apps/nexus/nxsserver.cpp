@@ -1,10 +1,12 @@
 #include <ptypes/ptime.h>
 #include <ptypes/pinet.h>
 #include <ptypes/pasync.h>
-using namespace pt;
+
 
 #include "fragment.h"
 #include "decimate.h"
+
+using namespace pt;
 using namespace nxs;
 using namespace vcg;
 using namespace std;

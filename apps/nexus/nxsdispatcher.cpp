@@ -158,10 +158,10 @@ void Dispatcher::msghandler(message &msg) {
       vector<BigLink> newbord;
       Join(*fragin, newvert, newface, newbord);
       
-      float error = Decimate(QUADRIC,
-			     (unsigned int)((newface.size()/3) * 0.5),
+      float error = Decimate(mode,
+			     (unsigned int)((newface.size()/3) * scaling),
 			     newvert, newface, newbord);
-      
+            
       Fragment *fragout = new Fragment;
       
       fragout->error = error;

@@ -141,7 +141,8 @@ Patch &PatchServer::GetPatch(unsigned int idx,
   }
 
   PTime &ptime = lru[entry.lru_pos];
-  pexchange(&(ptime.frame), frame++);
+  //pexchange(&(ptime.frame), frame++);
+  ptime.frame = frame++;
 
   //  ramlock.unlock();
 

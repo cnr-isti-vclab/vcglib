@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2004/11/28 01:23:26  ponchio
+Fixing borders... let's hope.
+
 Revision 1.22  2004/11/18 18:30:15  ponchio
 Using baricenters... lotsa changes.
 
@@ -330,6 +333,8 @@ int main(int argc, char *argv[]) {
 
   Report report;
   Dispatcher dispatcher(&nexus, &vchain);
+  dispatcher.mode = decimation;
+  dispatcher.scaling = scaling;
   if(!dispatcher.Init("servers.txt")) {
     cerr << "Could not parse server file: " << "servers.txt"
 	 << " proceding locally\n";

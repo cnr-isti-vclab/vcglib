@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2004/11/28 04:14:12  ponchio
+*** empty log message ***
+
 Revision 1.21  2004/11/28 01:23:26  ponchio
 Fixing borders... let's hope.
 
@@ -180,22 +183,19 @@ bool VoronoiChain::Optimize(int mean, VoronoiPartition &part,
     for(unsigned int i = 0; i < part.size(); i++) {
       if(counts[i] > max_size || counts[i] > 2 * mean) {
 	      failed++;
-	      cerr << "Failed> " << counts[i] << endl;
+	      //cerr << "Failed> " << counts[i] << endl;
 	      float radius= getClosest(part[i], part);
-        cerr << "RADIUS: " << radius << endl;
+        //cerr << "RADIUS: " << radius << endl;
         if(radius == 0) {
           cerr << "Radius zero???\n";
           exit(0);
         }
 	      radius /= 3;
 	      if(radius < 0) continue;
-	      seeds.push_back(part[i] + Point3f(1, 0, 0) * radius);
-	      seeds.push_back(part[i] + Point3f(0, 1, 0) * radius);
-	      seeds.push_back(part[i] + Point3f(0, 0, 1) * radius);
-      
-	      seeds.push_back(part[i] - Point3f(1, 0, 0) * radius);
-	      seeds.push_back(part[i] - Point3f(0, 1, 0) * radius);
-	      seeds.push_back(part[i] - Point3f(0, 0, 1) * radius);
+	      seeds.push_back(part[i] + Point3f(1, -1, 1) * radius);
+	      seeds.push_back(part[i] + Point3f(-1, 1, 1) * radius);
+	      seeds.push_back(part[i] + Point3f(-1, -1, -1) * radius);
+        seeds.push_back(part[i] + Point3f(1, 1, -1) * radius);      	      
 	      mark[i];
       }
     }
@@ -462,7 +462,7 @@ void VoronoiChain::BuildLevel(Nexus &nexus, unsigned int offset,
     coarse.push_back(patch.Vert(0));
   }
 
-  float coarse_vmean = totvert/(float)coarse.size();
+  float coarse_vmean = totface/(float)coarse.size();
 
   coarse.Init();
   cerr << "Coarse size: " << coarse.size() << endl;
@@ -485,17 +485,18 @@ void VoronoiChain::BuildLevel(Nexus &nexus, unsigned int offset,
     for(unsigned int idx = offset; idx < nexus.index.size(); idx++) {
       report.Step(idx);
       Patch patch = nexus.GetPatch(idx);
-      for(unsigned int i = 0; i < patch.nv; i++) {
-	
-	unsigned int ctarget = coarse.Locate(patch.Vert(i));
-	assert(ctarget < coarse.size());
-	centroids[ctarget] += patch.Vert(i);
-	counts[ctarget]++;
+      for(unsigned int i = 0; i < patch.nf; i++) {
+        unsigned short *face = patch.Face(i);	                                          
+        Point3f bari = (patch.Vert(face[0]) + patch.Vert(face[1]) + patch.Vert(face[2]))/3;
+	      unsigned int ctarget = coarse.Locate(bari);
+	      assert(ctarget < coarse.size());
+	      centroids[ctarget] += bari;
+	      counts[ctarget]++;
       }
     }
     if(step == steps-1) {
       if(!Optimize((int)coarse_vmean, coarse, centroids, counts, false))
-	step--;
+	      step--;
     } else 
       Optimize((int)coarse_vmean, coarse, centroids, counts, true);
   }    

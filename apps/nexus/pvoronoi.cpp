@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/11/03 16:31:38  ponchio
+Trying to fix big patches.
+
 Revision 1.7  2004/10/30 20:17:03  ponchio
 Fixed big patches problem.
 
@@ -85,9 +88,9 @@ void VoronoiPartition::Init() {
     fprintf(ft, "%f\t%f\t%f\n", operator[](i)[0], operator[](i)[1], operator[](i)[2]);
   }
   fclose(ft);*/
-  std::cerr << "Building kd!\n";
+  //std::cerr << "Building kd!\n";
   bd = new ANNkd_tree(&*points.begin(), size(), 3);
-  std::cerr << "Done!\n";
+  //std::cerr << "Done!\n";
 }
 void VoronoiPartition::Closest(const vcg::Point3f &p, unsigned int nsize, 
 			       vector<int> &nears, 
