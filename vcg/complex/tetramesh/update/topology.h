@@ -192,7 +192,7 @@ public:
 //@{
 
   ///create the VT topology for tetrahedrons that are into containers
-void VTTopology(VertexContainer &vert,TetraContainer &tetra)
+static void VTTopology(VertexContainer &vert,TetraContainer &tetra)
 	{
 			VertexIterator v;
 			TetraIterator  t;
@@ -212,7 +212,7 @@ void VTTopology(VertexContainer &vert,TetraContainer &tetra)
 	}
 
   /// clear the Vertex-Tetra topology
- void ClearVTTopology(VertexContainer &vert,TetraContainer &tetra)
+static void ClearVTTopology(VertexContainer &vert,TetraContainer &tetra)
 	{
 		VertexIterator v;
 		for(v=vert.begin();v!=vert.end();++v)
@@ -232,7 +232,7 @@ void VTTopology(VertexContainer &vert,TetraContainer &tetra)
 
 ///erase one tetrahedron from VTTopology of all his vertices
 
-void DetachVTTopology(TetraType *t)
+static void DetachVTTopology(TetraType *t)
 	{	
 		int i;
 		for(i=0;i<4;i++)
@@ -240,7 +240,7 @@ void DetachVTTopology(TetraType *t)
 	}
 
 ///erase one tetrahedron from VTTopology of one specified vertex
-void DetachVTTopology(VertexType *v,TetraType *t)
+static void DetachVTTopology(VertexType *v,TetraType *t)
 	{	
 		TetraType *lastt;
 		int lastz;
@@ -268,7 +268,7 @@ void DetachVTTopology(VertexType *v,TetraType *t)
 	}
 
 ///insert the tetrahedron t in VT topology for vertex v of index z
-void InsertVTTopology(VertexType *v,int z,TetraType *t)
+static void InsertVTTopology(VertexType *v,int z,TetraType *t)
 	{
 		if( ! (*t).IsD())
 				{
@@ -281,7 +281,7 @@ void InsertVTTopology(VertexType *v,int z,TetraType *t)
 
 
 ///insert the tetrahedron t in VT topology for all his vertices
-void InsertVTTopology(TetraType *t)
+static void InsertVTTopology(TetraType *t)
 	{	
 		assert(!t->IsD());
 		int k=0;
@@ -293,7 +293,7 @@ void InsertVTTopology(TetraType *t)
 }
 
   ///Test the Tetrahedron-Tetrahedron Topology (by Face)
-void TestVTTopology(VertexContainer &vert,TetraContainer &tetra)
+static void TestVTTopology(VertexContainer &vert,TetraContainer &tetra)
 	{
     int i;
 		for (VertexIterator vi=vert.begin();vi!=vert.end();vi++)
@@ -321,7 +321,7 @@ void TestVTTopology(VertexContainer &vert,TetraContainer &tetra)
 **/
 //@{
 ///Build the Tetrahedron-Tetrahedron Topology (by Face)
-void TTTopology(VertexContainer &vert,TetraContainer &tetra)
+static void TTTopology(VertexContainer &vert,TetraContainer &tetra)
 	{
 		vector <Facet<VertexType,TetraType> > VF;
 		VertexType* v0;
@@ -394,7 +394,7 @@ void TTTopology(VertexContainer &vert,TetraContainer &tetra)
   }
 
 ///Connect trought Tetrahedron-Tetrahedron Topology t0 and t1 with faces i0 and i1
-void _AttachTTTopology(TetraType *t0,int i0,TetraType *t1,int i1) 
+static void _AttachTTTopology(TetraType *t0,int i0,TetraType *t1,int i1) 
 {
   assert((i0>=0)&&(i0<4));
   assert((i1>=0)&&(i1<4));
@@ -408,7 +408,7 @@ void _AttachTTTopology(TetraType *t0,int i0,TetraType *t1,int i1)
 }
 
 ///Test the Tetrahedron-Tetrahedron Topology (by Face)
-void TestTTTopology(VertexContainer &vert,TetraContainer &tetra)
+static void TestTTTopology(VertexContainer &vert,TetraContainer &tetra)
 	{
     int i;
 		for (TetraIterator ti=tetra.begin();ti!=tetra.end();ti++)
@@ -444,7 +444,7 @@ void TestTTTopology(VertexContainer &vert,TetraContainer &tetra)
 	}
 
 ///test if all and only the exernal vertex are set of border
-void TestExternalVertex(VertexContainer &vert,TetraContainer &tetra)
+static void TestExternalVertex(VertexContainer &vert,TetraContainer &tetra)
 {
   TetraIterator ti;
   VertexIterator vi;
@@ -498,7 +498,7 @@ void TestExternalVertex(VertexContainer &vert,TetraContainer &tetra)
 }
 
 ///set the external vertex according to Tetra-Tetra topology
-void setExternalVertices(VertexContainer &vert,TetraContainer &tetra)
+static void setExternalVertices(VertexContainer &vert,TetraContainer &tetra)
 {	
     
 		TetraIterator tt;
@@ -527,7 +527,7 @@ void setExternalVertices(VertexContainer &vert,TetraContainer &tetra)
 
 private:
 
-typedef struct _triV
+struct _triV
 {
 VertexType *v[3];
 
@@ -600,12 +600,13 @@ VertexType *v[3];
 	}
 };
 
-std::vector < _triV > Faces;
 
 public:
 ///this function is used to test if an edge is extern
-bool IsExternEdge(TetraType *t,int edge)
+static bool IsExternEdge(TetraType *t,int edge)
 {
+	std::vector < _triV > Faces;
+
   assert((t->HasTTAdjacency())||(t->HasVTAdjacency()));
   if ((!t->V(Tetra::VofE(edge,0))->IsB())||(!t->V(Tetra::VofE(edge,1))->IsB()))
     return (false);
