@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/03/03 15:07:40  cignoni
+renamed protected member v -> _v
+
 Revision 1.1  2004/02/13 00:44:53  cignoni
 First commit...
 
@@ -33,83 +36,96 @@ First commit...
 #ifndef __VCGLIB_POINT2
 #define __VCGLIB_POINT2
 
-//#include <limits>
 #include <assert.h>
 #include <vcg/math/base.h>
 
 namespace vcg {
 
-template <class FLTYPE> class Point2
+/** \addtogroup space */
+/*@{*/
+    /**
+        The templated class for representing a point in 2D space.
+        The class is templated over the ScalarType class that is used to represent coordinates. 
+				All the usual operator overloading (* + - ...) is present. 
+     */
+template <class P2ScalarType> class Point2
 {
 protected:
-
-	FLTYPE _v[2];
+  /// The only data member. Hidden to user.
+	P2ScalarType _v[2];
 public:
-	typedef FLTYPE scalar;
+	  /// the scalar type 
+	typedef P2ScalarType ScalarType;
 
-	inline const FLTYPE &X() const {return _v[0];} 
-	inline const FLTYPE &Y() const {return _v[1];}
-	inline FLTYPE &X() {return _v[0];}
-	inline FLTYPE &Y() {return _v[1];}
-	inline const FLTYPE & operator [] ( const int i ) const
+//@{
+
+  /** @name Access to Coords. 
+   access to coords is done by overloading of [] or explicit naming of coords (X,Y,)
+	 ("p[0]" or "p.X()" are equivalent) **/
+	inline const ScalarType &X() const {return _v[0];} 
+	inline const ScalarType &Y() const {return _v[1];}
+	inline ScalarType &X() {return _v[0];}
+	inline ScalarType &Y() {return _v[1];}
+	inline const ScalarType & operator [] ( const int i ) const
 	{
 		assert(i>=0 && i<2);
 		return _v[i];
 	}
-	inline FLTYPE & operator [] ( const int i )
+	inline ScalarType & operator [] ( const int i )
 	{
 		assert(i>=0 && i<2);
 		return _v[i];
 	}
-	
-
+//@}
+	  /// empty constructor (does nothing)
 	inline Point2 () { }
-	inline Point2 ( const FLTYPE nx, const FLTYPE ny )
+	  /// x,y constructor
+	inline Point2 ( const ScalarType nx, const ScalarType ny )
 	{
 			_v[0] = nx; _v[1] = ny;
 	}
+	  /// copy constructor
 	inline Point2 ( Point2 const & p)
 	{   
 			_v[0]= p._v[0];    _v[1]= p._v[1];
 	}
+	  /// copy
 	inline Point2 & operator =( Point2 const & p)
 	{
 			_v[0]= p._v[0]; _v[1]= p._v[1];
 			return *this;
 	}
-
+	  /// sets the point to (0,0)
 	inline void Zero()
-	{
-		_v[0] = 0;
-		_v[1] = 0;
-	}
-
-	inline Point2 operator + ( Point2 const & p) const
-	{ 
-			return Point2<FLTYPE>( _v[0]+p._v[0], _v[1]+p._v[1] );
-	}
-	inline Point2 operator - ( Point2 const & p) const
-	{
-			return Point2<FLTYPE>( _v[0]-p._v[0], _v[1]-p._v[1] );
-	}
-	inline Point2 operator * ( const FLTYPE s ) const
-	{
-			return Point2<FLTYPE>( _v[0] * s, _v[1] * s );
-	}
-	inline Point2 operator / ( const FLTYPE s ) const
-	{
-			return Point2<FLTYPE>( _v[0] / s, _v[1] / s );
-	}
-	inline FLTYPE operator * ( Point2 const & p ) const
+	{ _v[0] = 0;_v[1] = 0;}
+	  /// dot product
+	inline ScalarType operator * ( Point2 const & p ) const
 	{
 			return ( _v[0]*p._v[0] + _v[1]*p._v[1] );
 	}
-
-	inline FLTYPE operator ^ ( Point2 const & p ) const
+	  /// cross product
+	inline ScalarType operator ^ ( Point2 const & p ) const
 	{
-			return _v[1]*p._v[0] - _v[0]*p._v[1];
+			return _v[0]*p._v[1] - _v[1]*p._v[0];
 	} 
-
+//@{
+	 /** @name Linearity for 2d points (operators +, -, *, /, *= ...) **/
+	inline Point2 operator + ( Point2 const & p) const
+	{ 
+			return Point2<ScalarType>( _v[0]+p._v[0], _v[1]+p._v[1] );
+	}
+	inline Point2 operator - ( Point2 const & p) const
+	{
+			return Point2<ScalarType>( _v[0]-p._v[0], _v[1]-p._v[1] );
+	}
+	inline Point2 operator * ( const ScalarType s ) const
+	{
+			return Point2<ScalarType>( _v[0] * s, _v[1] * s );
+	}
+	inline Point2 operator / ( const ScalarType s ) const
+	{
+			return Point2<ScalarType>( _v[0] / s, _v[1] / s );
+	}
 	inline Point2 & operator += ( Point2 const & p)
 	{
 			_v[0] += p._v[0];    _v[1] += p._v[1];
@@ -120,94 +136,105 @@ public:
 			_v[0] -= p._v[0];    _v[1] -= p._v[1];
 			return *this;
 	}
-	inline Point2 & operator *= ( const FLTYPE s )
+	inline Point2 & operator *= ( const ScalarType s )
 	{
 			_v[0] *= s;    _v[1] *= s;
 			return *this;
 	}
-	inline Point2 & operator /= ( const FLTYPE s )
+	inline Point2 & operator /= ( const ScalarType s )
 	{
 			_v[0] /= s;    _v[1] /= s;
 			return *this;
 	}
-	inline FLTYPE Norm( void ) const
+ //@}
+	  /// returns the norm (Euclidian)
+	inline ScalarType Norm( void ) const
 	{
-			return Sqrt( _v[0]*_v[0] + _v[1]*_v[1] );
+		return math::Sqrt( _v[0]*_v[0] + _v[1]*_v[1] );
 	}
-	inline FLTYPE SquaredNorm( void ) const
+	  /// returns the squared norm (Euclidian)
+	inline ScalarType SquaredNorm( void ) const
 	{
 			return ( _v[0]*_v[0] + _v[1]*_v[1] );
 	}
-	inline Point2 & Scale( const FLTYPE sx, const FLTYPE sy );
-
+	inline Point2 & Scale( const ScalarType sx, const ScalarType sy );
+	  /// normalizes, and returns itself as result
 	inline Point2 & Normalize( void )
 	{
-			FLTYPE n = Sqrt(_v[0]*_v[0] + _v[1]*_v[1]);
+			ScalarType n = math::Sqrt(_v[0]*_v[0] + _v[1]*_v[1]);
 			if(n>0.0) {	_v[0] /= n;	_v[1] /= n; }
 			return *this;
 	}
+	  /// points equality
 	inline bool operator == ( Point2 const & p ) const
 	{
 			return (_v[0]==p._v[0] && _v[1]==p._v[1]);
 	} 
+	  /// disparity between points
 	inline bool operator != ( Point2 const & p ) const
 	{
 			return ( (_v[0]!=p._v[0]) || (_v[1]!=p._v[1]) );
 	}
+	  /// lexical ordering
 	inline bool operator <  ( Point2 const & p ) const
 	{
 			return	(_v[1]!=p._v[1])?(_v[1]<p._v[1]):
 							(_v[0]<p._v[0]);
 	}
+	  /// lexical ordering
 	inline bool operator >  ( Point2 const & p ) const
 	{
 			return	(_v[1]!=p._v[1])?(_v[1]>p._v[1]):
 							(_v[0]>p._v[0]);
 	}
-
+	  /// lexical ordering
 	inline bool operator <= ( Point2 const & p ) const
 	{
 			return	(_v[1]!=p._v[1])?(_v[1]< p._v[1]):
 							(_v[0]<=p._v[0]);
 	}
-
+	  /// lexical ordering
 	inline bool operator >= ( Point2 const & p ) const
 	{
 			return	(_v[1]!=p._v[1])?(_v[1]> p._v[1]):
 							(_v[0]>=p._v[0]);
 	}
-	inline FLTYPE Distance( Point2 const & p ) const
+	  /// returns the distance to another point p
+	inline ScalarType Distance( Point2 const & p ) const
 	{
 			return Norm(*this-p);
 	}
-
-	inline FLTYPE SquaredDistance( Point2 const & p ) const
+	  /// returns the suqared distance to another point p
+	inline ScalarType SquaredDistance( Point2 const & p ) const
 	{
 			return Norm2(*this-p);
 	}	
-
+	  /// returns the angle with X axis (radiants, in [-PI, +PI] )
+	inline Point2 &Angle(){
+		return Math::Atan2(_v[1],_v[0]);
+	};
+		/// transform the point in cartesian coords into polar coords
 	inline Point2 & Cartesian2Polar()
 	{
-		FLTYPE t = (FLTYPE)atan2(_v[1],_v[0]);
-		_v[0] = Sqrt(_v[0]*_v[0]+_v[1]*_v[1]);
+		ScalarType t = Angle();
+		_v[0] = Norm();
 		_v[1] = t;
 		return *this;
 	}
-
+		/// transform the point in polar coords into cartesian coords
 	inline Point2 & Polar2Cartesian()
 	{
-		FLTYPE l = _v[0];
-		_v[0] = (FLTYPE)(l*cos(_v[1]));
-		_v[1] = (FLTYPE)(l*sin(_v[1]));
+		ScalarType l = _v[0];
+		_v[0] = (ScalarType)(l*math::Cos(_v[1]));
+		_v[1] = (ScalarType)(l*math::Sin(_v[1]));
 		return *this;
 	}
-
-
-	inline Point2 & rotate( const FLTYPE a )
+		/// rotates the point of an angle (radiants, counterclockwise)
+	inline Point2 & Rotate( const ScalarType rad )
 	{
-		FLTYPE t = _v[0];
-		FLTYPE s = sin(a);
-		FLTYPE c = cos(a);
+		ScalarType t = _v[0];
+		ScalarType s = math::Sin(rad);
+		ScalarType c = math::Cos(rad);
 
 		_v[0] = _v[0]*c - _v[1]*s;
 		_v[1] =   t *s + _v[1]*c;
@@ -217,56 +244,66 @@ public:
 
 	/// Questa funzione estende il vettore ad un qualsiasi numero di dimensioni
 	/// paddando gli elementi estesi con zeri
-	inline FLTYPE Ext( const int i ) const
+	inline ScalarType Ext( const int i ) const
 	{
 		if(i>=0 && i<2) return _v[i];
 		else            return 0;
+	}
+		/// imports from 2D points of different types
+	template <class T>
+	inline void Import( const Point2<T> & b )
+	{
+		_v[0] = p.X(); _v[1] = p.Y();
+	}
+		/// constructs a 2D points from an existing one of different type
+	template <class T>
+	static Point2 Construct( const Point2<T> & b )
+	{
+    return Point2(b.X(),b.Y());
 	}
 
 
 }; // end class definition
 
 
-template <class FLTYPE>
-inline FLTYPE Angle( Point2<FLTYPE> const & p1, Point2<FLTYPE> const & p2 )
+template <class T>
+inline T Angle( Point2<T> const & p1, Point2<T> const & p2 )
 {
-	return atan2(p2[1],p2[0]) - atan2(p1[1],p1[0]);
+	return p1.Angle() - p0.Angle();
 }
 
-template <class FLTYPE>
-inline Point2<FLTYPE> operator - ( Point2<FLTYPE> const & p ){
-    return Point2<FLTYPE>( -p._v[0], -p._v[1] );
+template <class T>
+inline Point2<T> operator - ( Point2<T> const & p ){
+    return Point2<T>( -p._v[0], -p._v[1] );
 }
 
-template <class FLTYPE>
-inline Point2<FLTYPE> operator * ( const FLTYPE s, Point2<FLTYPE> const & p ){
-    return Point2<FLTYPE>( p._v[0] * s, p._v[1] * s  );
+template <class T>
+inline Point2<T> operator * ( const T s, Point2<T> const & p ){
+    return Point2<T>( p._v[0] * s, p._v[1] * s  );
 }
 
-template <class FLTYPE>
-inline FLTYPE Norm( Point2<FLTYPE> const & p ){
-		return Sqrt( p._v[0]*p._v[0] + p._v[1]*p._v[1] );
+template <class T>
+inline T Norm( Point2<T> const & p ){
+		return p.Norm();
 }
 
-template <class FLTYPE>
-inline FLTYPE Norm2( Point2<FLTYPE> const & p ){
-    return ( p._v[0]*p._v[0] + p._v[1]*p._v[1] );
+template <class T>
+inline T SquaredNorm( Point2<T> const & p ){
+    return p.SquaredNorm();
 }
 
-template <class FLTYPE>
-inline Point2<FLTYPE> & Normalize( Point2<FLTYPE> & p ){
-		FLTYPE n = Sqrt( p._v[0]*p._v[0] + p._v[1]*p._v[1] );
-    if(n>0.0) p/=n;
-    return p;
+template <class T>
+inline Point2<T> & Normalize( Point2<T> & p ){
+    return p.Normalize();
 }
 
-template <class FLTYPE>
-inline FLTYPE Distance( Point2<FLTYPE> const & p1,Point2<FLTYPE> const & p2 ){
+template <class T>
+inline T Distance( Point2<T> const & p1,Point2<T> const & p2 ){
     return Norm(p1-p2);
 }
 
-template <class FLTYPE>
-inline FLTYPE SquaredDistance( Point2<FLTYPE> const & p1,Point2<FLTYPE> const & p2 ){
+template <class T>
+inline T SquaredDistance( Point2<T> const & p1,Point2<T> const & p2 ){
     return Norm2(p1-p2);
 }
 
@@ -275,6 +312,6 @@ typedef Point2<int>	   Point2i;
 typedef Point2<float>  Point2f;
 typedef Point2<double> Point2d;
 
-
+/*@}*/
 } // end namespace
 #endif
