@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/03/03 22:51:49  cignoni
+changed math from class to template
+
 Revision 1.3  2004/02/19 15:28:01  ponchio
 *** empty log message ***
 
@@ -59,11 +62,15 @@ namespace math {
   float Abs(const float v)   { return fabsf(v); }
   float Cos(const float v)   { return cosf(v); }
   float Sin(const float v)   { return sinf(v); }
+  float Acos(const float v)   { return acosf(v); }
+  float Asin(const float v)   { return asinf(v); }
 
   double Sqrt(const double v)   { return sqrt(v); }
   double Abs(const double v)   { return fabs(v); }
   double Cos(const double v)   { return cos(v); }
   double Sin(const double v)   { return sin(v); }
+  double Acos(const double v)   { return acos(v); }
+  double Asin(const double v)   { return asin(v); }
   
     
     
