@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/07/20 14:17:51  ponchio
+*** empty log message ***
+
 Revision 1.3  2004/07/01 21:34:59  ponchio
 int -> Key
 
@@ -53,6 +56,8 @@ Created
 #include <vcg/space/point3.h>
 #include <vcg/space/box3.h>
 #include <vcg/space/index/grid_static_ptr.h>
+
+#include "crude.h"
 
 //TODO provide a Sort function, to sort spatially the seeds.
 
@@ -84,32 +89,32 @@ namespace nxs {
   class VoronoiPartition {
   public:
     enum { MAX_BUF=25 };
-    typedef int Key;
 
     VoronoiPartition() {}  
 
     void Init(vcg::Box3f &bb) { bbox=bb; ug.SetBBox(bb); }
-    Key Add(const vcg::Point3f &p, float weight = 1);
-    float Closest(const vcg::Point3f &p, Key &target, float radius = 0);
+    unsigned int Add(const vcg::Point3f &p, float weight = 1);
+    float Closest(const vcg::Point3f &p, 
+		  unsigned int &target, float radius = 0);
     
     class iterator {
     public:
       void operator++();
-      const Key operator*();
+      const unsigned int operator*();
       bool operator==(const iterator &key);
       bool operator!=(const iterator &key);
     private:
-      int seed;
+      unsigned int seed;
       friend class VoronoiPartition;
     };
     iterator begin();
     iterator end();
     int size();
-    unsigned int count(Key key);
-    Seed &operator[](Key key);
+    unsigned int count(unsigned int key);
+    Seed &operator[](unsigned int key);
     void clear();
-    Key Locate(const vcg::Point3f &p);
-    float Priority(const vcg::Point3f &p, Key key);
+    unsigned int Locate(const vcg::Point3f &p);
+    float Priority(const vcg::Point3f &p, unsigned int key);
     
     bool Save(const std::string &file);
     bool Load(const std::string &file);
@@ -120,6 +125,8 @@ namespace nxs {
 	to estimate optimal radius.
 	At the moment strategy is to campion randomly the file.
     */
+
+    static float OptimalRadius(Crude &crude, unsigned int target);
     template <class T> 
       static std::vector<float> OptimalRadii(unsigned int total, 
 				 T begin, T end, 

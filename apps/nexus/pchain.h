@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/07/20 14:06:02  ponchio
+Changed filename saving.
+
 Revision 1.2  2004/06/25 16:47:13  ponchio
 Various debug
 
@@ -42,56 +45,30 @@ Created
 #ifndef NXS_PCHAIN_H
 #define NXS_PCHAIN_H
 
-#include <stdio.h>
-#include <vector>
 #include <vcg/space/point3.h>
+#include "crude.h"
 
-/** Partition must be a class with a Key type, with 
-    Levels, Locate, Priority, Save(FILE *), Load(FILE *)
-    as in pvoronoi.h */
 namespace nxs {
 
-template <class Partition> class PChain {
+class PChain {
  public:
-  typedef typename Partition::Key Key;
-  std::vector<Partition> levels;
 
-  unsigned int Levels() {
-    return levels.size();
-  }
+  //  virtual void Init(Crude &crude, unsigned int max_level) = 0;
 
-  Key Locate(unsigned int level, const vcg::Point3f &p) {
-    assert(level < levels.size());
-    return levels[level].Locate(p);
-  }
+  /* Return an unique uint for couple of patch level, level+1 */
+  virtual unsigned int Locate(unsigned int level, const vcg::Point3f &p) = 0;
 
-  float Priority(unsigned int level, const vcg::Point3f &p, Key key) {
-    assert(level < levels.size());
-    return levels[level].Priority(level, p, key);
-  }
-  bool Save(const std::string &file) {
-    FILE *fp = fopen((file + ".chn").c_str(), "wb+");
-    if(!fp) return false;
-    int n = Levels();
-    fwrite(&n, sizeof(int), 1, fp);
-    for(int i = 0; i < n; i++)
-      levels[i].Save(fp);
-    fclose(fp);
-    return true;
-  }
-  bool Load(const std::string &file) {
-    levels.clear(); 
-    FILE *fp = fopen((file + ".chn").c_str(), "rb");
-    if(!fp) return false;
-    int n;
-    fread(&n, sizeof(int), 1, fp);
-    levels.resize(n);
-    for(int i = 0; i < n; i++) 
-      levels[i].Load(fp);
 
-    fclose(fp);
-    return true;
-  }
+  virtual void RemapFaces(Crude &crude, VFile<unsigned int> &face_remap,
+			  std::vector<unsigned int> &patch_faces) = 0;
+
+  /* virtual unsigned int Levels() = 0;
+  
+  virtual unsigned int Locate(unsigned int level, 
+			      const vcg::Point3f &p) = 0;
+
+  virtual float Priority(unsigned int level, 
+  const vcg::Point3f &p, unsigned int key) = 0;*/
 };
 
 }//namespace

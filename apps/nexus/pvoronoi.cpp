@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/07/01 21:35:34  ponchio
+int -> Key
+
 Revision 1.1  2004/06/24 14:32:45  ponchio
 Moved from wrap/nexus
 
@@ -56,7 +59,7 @@ bool Seed::Dist(const Point3f &point, float &mindist,
     return false;
 }
 
-VoronoiPartition::Key VoronoiPartition::Add(const vcg::Point3f &p, 
+unsigned int VoronoiPartition::Add(const vcg::Point3f &p, 
 					    float weight) {
   Seed ns(p,weight);	
   all_seeds.push_back(ns); 
@@ -68,14 +71,14 @@ VoronoiPartition::Key VoronoiPartition::Add(const vcg::Point3f &p,
     seedBuf.clear();
     ug.Set(ug_seeds);
   }
-  return (Key)(size());
+  return size();
 }
 
 float VoronoiPartition::Closest(const vcg::Point3f &p, 
-				VoronoiPartition::Key &target, float radius) {
+				unsigned int &target, float radius) {
   Point3f res;
   float mindist = 1e20;
-  target = -1;
+  target = 0xffffffff;
   
   if(ug_seeds.size()) {
     Seed *nsp = ug.GetClosest(p, mindist, res);
@@ -101,7 +104,7 @@ float VoronoiPartition::Closest(const vcg::Point3f &p,
 void VoronoiPartition::iterator::operator++() {
   ++seed;
 }
-const VoronoiPartition::Key VoronoiPartition::iterator::operator*() {
+const unsigned int VoronoiPartition::iterator::operator*() {
   return seed;
 }
 bool VoronoiPartition::iterator::operator==(const VoronoiPartition::iterator &key) {
@@ -129,23 +132,23 @@ void VoronoiPartition::clear() {
   ug_seeds.clear();
   seedBuf.clear();
 }
-unsigned int VoronoiPartition::count(Key key) {
-  return key > 0 && key < size();
+unsigned int VoronoiPartition::count(unsigned int key) {
+  return key > 0 && key < (unsigned int)size();
 }
 
-Seed &VoronoiPartition::operator[](Key key) {
-  assert((unsigned int)key < all_seeds.size());
+Seed &VoronoiPartition::operator[](unsigned int key) {
+  assert(key < all_seeds.size());
   return all_seeds[key];
 }
 
-VoronoiPartition::Key VoronoiPartition::Locate(const vcg::Point3f &p) {
-  int target;
+unsigned int VoronoiPartition::Locate(const vcg::Point3f &p) {
+  unsigned int target;
   Closest(p, target);
-  assert(target != -1);
+  assert(target != 0xffffffff);
   return target;
 }
 
-float VoronoiPartition::Priority(const vcg::Point3f &p, Key key) {
+float VoronoiPartition::Priority(const vcg::Point3f &p, unsigned int key) {
   Seed &seed = all_seeds[key];
   return seed.Dist(p);
 }
@@ -187,4 +190,50 @@ unsigned int VoronoiPartition::Load(FILE *fp) {
   ug.SetBBox(bbox);
   ug.Set(ug_seeds);
   return sizeof(Box3f) + sizeof(int) + sizeof(Seed) * all_seeds.size();
+}
+
+float VoronoiPartition::OptimalRadius(Crude &crude, unsigned int target) {
+  
+  //TODO this goes into voronoichain.cpp!
+
+  //number of samples
+  unsigned int samplerate = crude.Vertices()/20;
+  std::vector<vcg::Point3f> samples;
+      
+  for(unsigned int i = 0; i < crude.Vertices(); i+= samplerate)
+    samples.push_back(crude.GetVertex(i));
+      
+  cerr << "sample.size(): " << samples.size() << endl;
+  float step = crude.GetBox().Diag()/10000;
+
+  cerr << "step: " << step << endl;
+      
+  //for every sample i need to record function distance -> number of points
+  vector<unsigned int> scale;
+  scale.resize(10001, 0);
+      
+  //for every point we check distance from samples
+  for(unsigned int i = 0; i < crude.Vertices(); i++) {
+    vcg::Point3f &vp = crude.GetVertex(i);;
+    for(unsigned int k = 0; k < samples.size(); k++) {
+      float dist = (vp - samples[k]).Norm();  
+      unsigned int pos = (int)(dist/step);
+      if(pos < 10000)
+	scale[pos]++;
+    }
+  }
+      
+      
+  float count =0;
+  int counting;
+  for(int  j = 0; j < 10000; j++) {
+    count += scale[j];    
+    if(count > samples.size() * target) {
+      counting = j;
+      break;
+    }
+  } 
+  cerr << "Counting: " << counting << endl;
+  cerr << "radius: " << 2 * step * counting << endl;
+  return 2 * step * counting;
 }
