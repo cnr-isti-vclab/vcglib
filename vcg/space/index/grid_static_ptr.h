@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2004/09/28 10:25:05  ponchio
+SetBox minimal change.
+
 Revision 1.9  2004/09/23 14:29:42  ponchio
 Small bugs fixed.
 
@@ -243,8 +246,8 @@ class GridStaticPtr
   void SetBBox( const Box3x & b )
     {
       bbox = b;
-      float t = bbox.Diag()/100.0;
-      if(t == 0) t = 1e20;
+      ScalarType t = bbox.Diag()/100.0;
+      if(t == 0) t = ScalarType(1e20);  // <--- Some doubts on this (Cigno 5/1/04)
       bbox.Offset(t);
       dim  = bbox.max - bbox.min;
     }
