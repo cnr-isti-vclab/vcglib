@@ -28,7 +28,7 @@ namespace nxs {
    TNode(Node *n, float e): node(n), error(e) {}
    bool operator<(const TNode &n) { return error < n.error; }
  };
- 
+
  class Metric {
  public:
    vector<Nexus::PatchInfo> *index;
@@ -74,11 +74,11 @@ namespace nxs {
 class NexusMt: public Nexus {
  private:
   std::vector<Node> nodes;
+  std::vector<VboBuffer> vbos;
 
  public:
   //Vertex buffer object mode
-  enum Vbo { VBO_AUTO,    //autodetect best size (fallback if not VBO)
-	     VBO_AUTO_ON, //autodetect best size must use VBO
+  enum Vbo { VBO_AUTO,    //autodetect best size 
 	     VBO_OFF,     //no vertex buffer object
 	     VBO_FIXED }; //user supplied size
  
@@ -99,8 +99,7 @@ class NexusMt: public Nexus {
 		   TEXTURE = 0x4, 
 		   DATA    = 0x8};
 
-  Vbo vbo;
-  unsigned int vbo_size;
+  Vbo vbo_mode;
 
   Metric *metric;
   Policy policy;
@@ -121,15 +120,14 @@ class NexusMt: public Nexus {
   ~NexusMt();
   
   bool Load(const std::string &filename, bool readonly = true);
-  bool InitGL();
+  bool InitGL(Vbo mode = VBO_AUTO, unsigned int vbo_size = 0);
   
   void Render();
-
+  
   void SetMetric(MetricKind kind);
   void SetError(float error);
-  void SetRamSize(unsigned int ram_size);
-  void SetVbo(Vbo mode, unsigned int vbo_size = 0, 
-              unsigned int ram_size = 128000000);
+  void SetRamExtractionSize(unsigned int ram_size);
+  void SetVboSize(unsigned int vbo_size);
 
   bool SetMode(Mode mode);
   bool SetComponent(Component c, bool on);

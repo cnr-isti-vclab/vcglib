@@ -64,7 +64,9 @@ class Nexus {
   bool HasColors()       { return (signature & NXS_COLORS) != 0; }
   bool HasNormalsShort() { return (signature & NXS_NORMALS_SHORT) != 0; }
   bool HasNormalsFloat() { return (signature & NXS_NORMALS_FLOAT) != 0; }
-  
+
+  void SetRamBufferSize(unsigned int ram_size);
+
   //MOVE to nexus_build.cpp
   void Join(const std::set<unsigned int> &patches,
 	    std::vector<vcg::Point3f> &vert,

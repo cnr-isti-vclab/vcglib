@@ -89,7 +89,7 @@ void Policy::NodeVisited(Node *node) {
   }  
 }
 
-NexusMt::NexusMt(): vbo(VBO_AUTO), vbo_size(0), 
+NexusMt::NexusMt(): vbo_mode(VBO_AUTO), 
                     metric(NULL), mode(SMOOTH) {    
   metric = new FrustumMetric();
   metric->index = &index;
@@ -115,18 +115,26 @@ bool NexusMt::Load(const string &filename, bool readonly) {
   SetComponent(TEXTURE, true);
   SetComponent(DATA, true);
 
+  patches.vbos.resize(index.size());
   return true;
 }
 
-bool NexusMt::InitGL() {
+bool NexusMt::InitGL(Vbo mode, unsigned int vbosize) {
   GLenum ret = glewInit();
   if(ret != GLEW_OK) return false;
-  if(!GLEW_ARB_vertex_buffer_object)
-    vbo = VBO_OFF;
+  if(!GLEW_ARB_vertex_buffer_object) {
+    cerr << "No vbo available!" << endl;
+    vbo_mode = VBO_OFF;
+  }
+  if(vbo_mode == VBO_OFF) {
+    patches.vbo_size = vbosize / patches.chunk_size;
+    patches.vbos.resize(0);
+  }
   return true;
 }
 
 void NexusMt::Render() {
+  patches.Flush();
   Frustumf frustum;
   frustum.GetView();
 
@@ -156,15 +164,36 @@ void NexusMt::Render() {
 
     tri_rendered += entry.nface;
     
-    Patch &patch = GetPatch(cell);
+    Patch &patch = GetPatch(cell, false);
+    char *fstart;
+    char *vstart;
+    char *cstart;
+    char *nstart;
 
-    assert(patch.start);
+    if(vbo_mode != VBO_OFF) {
+      VboBuffer &vbo = patches.GetVbo(cell);
+      assert(vbo.index);
+      assert(vbo.vertex);
 
-    glVertexPointer(3, GL_FLOAT, 0, patch.VertBegin());
+      glBindBufferARB(GL_ARRAY_BUFFER_ARB, vbo.vertex);
+      glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, vbo.index);
+
+      fstart = NULL;
+      vstart = NULL;
+      cstart = (char *)(sizeof(float) * patch.cstart);
+      nstart = (char *)(sizeof(float) * patch.nstart);
+    } else {
+      fstart = (char *)patch.FaceBegin();
+      vstart = (char *)patch.VertBegin();
+      cstart = (char *)patch.ColorBegin();
+      nstart = (char *)patch.Norm16Begin();
+    }
+
+    glVertexPointer(3, GL_FLOAT, 0, vstart);
     if(use_colors)
-      glColorPointer(4, GL_UNSIGNED_BYTE, 0, patch.ColorBegin());
+      glColorPointer(4, GL_UNSIGNED_BYTE, 0, cstart);
     if(use_normals)
-      glNormalPointer(GL_SHORT, 8, patch.Norm16Begin());
+      glNormalPointer(GL_SHORT, 8, nstart);
 
     switch(mode) {
     case POINTS:
@@ -174,10 +203,10 @@ void NexusMt::Render() {
     case SMOOTH:
       if(signature & NXS_FACES)
 	glDrawElements(GL_TRIANGLES, patch.nf * 3, 
-		      GL_UNSIGNED_SHORT, patch.FaceBegin());
+		       GL_UNSIGNED_SHORT, fstart);
       else if(signature & NXS_STRIP)
 	glDrawElements(GL_TRIANGLE_STRIP, patch.nf, 
-		      GL_UNSIGNED_SHORT, patch.FaceBegin());
+		       GL_UNSIGNED_SHORT, fstart);
       break;
     default: 
       cerr << "Unsupported rendering mode sorry\n";
@@ -190,7 +219,7 @@ void NexusMt::Render() {
   glDisableClientState(GL_NORMAL_ARRAY);
 }
 
-void NexusMt::SetRamSize(unsigned int r_size) {    
+void NexusMt::SetRamExtractionSize(unsigned int r_size) {    
   policy.ram_size = r_size/patches.chunk_size;
 }
 
@@ -203,13 +232,8 @@ void NexusMt::SetError(float error) {
    policy.error = error;
 }
 
-void NexusMt::SetVbo(Vbo _vbo, unsigned int _vbo_size, 
-		     unsigned int _ram_size) {
-  vbo = _vbo;
-  if(!GLEW_ARB_vertex_buffer_object)
-    vbo = VBO_OFF;
-  vbo_size = _vbo_size;
-  patches.ram_size = _ram_size/chunk_size;
+void NexusMt::SetVboSize(unsigned int _vbo_size) {
+  patches.vbo_size = _vbo_size;
 }
 
 bool NexusMt::SetMode(Mode _mode) {
@@ -449,3 +473,4 @@ void NexusMt::VisitNode(Node *node, vector<TNode> &heap) {
   node->visited = true;
   policy.NodeVisited(node);
 }
+

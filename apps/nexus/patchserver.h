@@ -16,6 +16,14 @@ struct PatchEntry {
   unsigned int lru_pos;
 };
 
+ struct VboBuffer {
+   VboBuffer(unsigned int v = 0, unsigned int i = 0):
+     vertex(v), index(i) {}
+   unsigned int vertex;
+   unsigned int index;
+ };
+ 
+
 class PatchServer: public File {
  public:
   struct PTime {
@@ -34,6 +42,8 @@ class PatchServer: public File {
 
   unsigned int ram_size;
   unsigned int ram_used;
+  unsigned int vbo_size;
+  unsigned int vbo_used;
   unsigned int frame;
 
   //statistics:
@@ -53,15 +63,22 @@ class PatchServer: public File {
   bool WriteEntries(FILE *fp);
 
   void AddPatch(unsigned short nvert, unsigned short nface);
-  Patch &GetPatch(unsigned int patch, unsigned short nvert, unsigned short nface,
+  Patch &GetPatch(unsigned int patch, 
+		  unsigned short nvert, unsigned short nface,
 		  bool flush = true);
 
+  VboBuffer &GetVbo(unsigned int patch);
+
+  void Flush(unsigned int patch);
+  //return false if was not allocated.
+  bool FlushVbo(unsigned int patch);
   void Flush();
   void FlushAll();
-  void Flush(unsigned int patch);
+  
   void SetRamBufferSize(unsigned int ram_buffer);
 
   std::vector<PatchEntry> patches;
+  std::vector<VboBuffer> vbos;
   std::vector<PTime> lru;
 };
 

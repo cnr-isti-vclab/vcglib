@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2004/10/14 13:52:02  ponchio
+Small changes.
+
 Revision 1.13  2004/10/14 13:41:34  ponchio
 Added statistics.
 
@@ -47,7 +50,6 @@ Backup
 
 Revision 1.6  2004/09/17 15:25:09  ponchio
 First working (hopefully) release.
-
 Revision 1.5  2004/09/16 14:25:16  ponchio
 Backup. (lot of changes).
 
@@ -94,7 +96,7 @@ using namespace std;
 
 #include <GL/gl.h>
 #include <GL/glu.h>
-
+#include <GL/glut.h>
 
 #include <wrap/gui/trackball.h>
 #include "stopwatch.h"
@@ -107,7 +109,7 @@ bool fullscreen = false;
 int width =1024;
 int height = 768;
 
-//TrackHand hand;
+void gl_print(float x, float y, char *str);
 
 SDL_Surface *screen = NULL;
 
@@ -206,9 +208,11 @@ int main(int argc, char *argv[]) {
   unsigned int ram_size = 640000;
 
   nexus.SetError(error);
-  nexus.SetRamSize(ram_size);   
+  nexus.SetRamExtractionSize(ram_size);   
   nexus.SetMetric(NexusMt::FRUSTUM);    
-
+  if(!nexus.InitGL()) {
+    cerr << "Could not init glew.\n";
+  }
   
   glClearColor(0, 0, 0, 0); 
   glEnable(GL_LIGHTING);
@@ -242,11 +246,11 @@ int main(int argc, char *argv[]) {
 
   case SDLK_LEFT: 
     ram_size *= 0.7; 
-    nexus.SetRamSize(ram_size);   
+    nexus.SetRamExtractionSize(ram_size);   
     cerr << "Max extraction ram size: " << ram_size << endl; break;
   case SDLK_RIGHT: 
     ram_size *= 1.5; 
-    nexus.SetRamSize(ram_size);   
+    nexus.SetRamExtractionSize(ram_size);   
     cerr << "Max extraction ram size: " << ram_size << endl; break;
 
 	case SDLK_s: metric = NexusMt::FRUSTUM; break;
@@ -356,13 +360,50 @@ int main(int argc, char *argv[]) {
 
     //cerr Do some reporting:
     if(show_statistics) {
-    	cerr << "Ram used : " << nexus.policy.ram_used << endl;
-    	cerr << "Tri drawn: " << nexus.tri_rendered << endl;    
-    	cerr << "Tri tot  : " << nexus.tri_total << endl;   
-		cerr << "Ram flushed: " << nexus.patches.ram_flushed << endl;
-      	cerr << "Ram readed: " << nexus.patches.ram_readed << endl;
-      	nexus.patches.ram_flushed = 0;
-      	nexus.patches.ram_readed = 0;
+      glMatrixMode(GL_MODELVIEW);
+      glPushMatrix();
+      glLoadIdentity();
+      glMatrixMode(GL_PROJECTION);
+      glPushMatrix();
+      glLoadIdentity();
+      gluOrtho2D(0, 1, 0, 1);
+
+
+      glDisable(GL_DEPTH_TEST);
+      glDisable(GL_LIGHTING);
+      char buffer[1024];
+      glColor3f(1.0f, 1.0f, 1.0f);
+
+      sprintf(buffer, "Ram size : %.3fMb (max)   %.3fMb (cur)", 
+	      nexus.patches.ram_size * nexus.chunk_size/(float)(1<<20), 
+	      nexus.patches.ram_used * nexus.chunk_size/(float)(1<<20));
+      gl_print(0.03, 0.12, buffer);
+
+      sprintf(buffer, "Extr size: %.3fMb(max)   %.3fMb(cur)",
+	     nexus.policy.ram_size * nexus.chunk_size/(float)(1<<20), 
+	     nexus.policy.ram_used * nexus.chunk_size/(float)(1<<20));
+      gl_print(0.03, 0.09, buffer);
+
+      sprintf(buffer, "Vbo size : %.3fMb(max)   %.3fMb(cur)",
+	     nexus.patches.vbo_size * nexus.chunk_size/(float)(1<<20), 
+	     nexus.patches.vbo_used * nexus.chunk_size/(float)(1<<20));
+      gl_print(0.03, 0.06, buffer);
+
+      sprintf(buffer, "Triangles: %.2fK (tot)   %.2fK (vis)",
+	      nexus.tri_total/(float)(1<<10),
+	      nexus.tri_rendered/(float)(1<<10));
+      gl_print(0.03, 0.03, buffer);
+
+
+      /* cerr << "Ram flushed: " << nexus.patches.ram_flushed << endl;
+      	cerr << "Ram readed: " << nexus.patches.ram_readed << endl;*/
+      nexus.patches.ram_flushed = 0;
+      nexus.patches.ram_readed = 0;
+      glEnable(GL_DEPTH_TEST);
+      glEnable(GL_LIGHTING);
+      glPopMatrix();
+      glMatrixMode(GL_MODELVIEW);
+      glPopMatrix();
     }
     
     SDL_GL_SwapBuffers();
@@ -372,6 +413,13 @@ int main(int argc, char *argv[]) {
 
   SDL_Quit();
   return -1;
+}
+
+void gl_print(float x, float y, char *str) {
+  glRasterPos2f(x, y);
+  int len = strlen(str);
+  for(int i = 0; i < len; i++) 
+    glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, str[i]);
 }
 
 

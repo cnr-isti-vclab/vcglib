@@ -164,6 +164,9 @@ unsigned int Nexus::AddPatch(unsigned int nvert, unsigned int nface,
   return index.size() -1;
 }
 
+void Nexus::SetRamBufferSize(unsigned int r_size) {    
+  patches.SetRamBufferSize(r_size);
+}
 
 void Nexus::Join(const std::set<unsigned int> &patches,
 		 std::vector<Point3f> &newvert,

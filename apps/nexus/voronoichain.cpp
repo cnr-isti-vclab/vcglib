@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2004/10/15 11:41:03  ponchio
+Tests and small changes.
+
 Revision 1.11  2004/10/10 17:19:42  ponchio
 Added compression and debugged.
 
@@ -127,7 +130,7 @@ void VoronoiChain::Init(Crude &crude, float scaling, int steps) {
     for(unsigned int v = 0; v < fine.size(); v++) {
       if(fcount[v] == 0) continue;
       fine[v].p = fcentroids[v]/(float)fcount[v];
-      fine[v].weight = (float)pow(fcount[v]/(float)fine_vmean, 0.3f);
+      fine[v].weight = (float)pow(fcount[v]/(float)fine_vmean, 0.2f);
     }
     fine.Init();
   }     
@@ -138,7 +141,10 @@ void VoronoiChain::Init(Crude &crude, float scaling, int steps) {
     if(fcount[i] > min_size)
       seeds.push_back(fine[i]);
   }
-  swap(fine, seeds);
+  fine.clear();
+  for(unsigned int i = 0; i < seeds.size(); i++)
+    fine.push_back(seeds[i]);
+
   if(fine.size() == 0) fine.push_back(Point3f(0,0,0));
   fine.Init();
 
@@ -167,31 +173,12 @@ void VoronoiChain::Init(Crude &crude, float scaling, int steps) {
       if(ccount[v] == 0) continue;
       
       coarse[v].p = ccentroids[v]/(float)ccount[v];
-      coarse[v].weight = (float)pow(ccount[v]/(float)coarse_vmean, 0.3f);
+      coarse[v].weight = (float)pow(ccount[v]/(float)coarse_vmean, 0.2f);
 
       if(radius[v] == 0) continue;
 
       //repel from fine seeds
-      unsigned int atarget;
-      float closest = fine.Closest(coarse[v].p, atarget);
-      Point3f dir = (coarse[v].p - fine[atarget].p).Normalize();
-      Point3f a = coarse[v].p;
-      Point3f b = fine[atarget].p + dir*radius[v]*1.1;
-      unsigned int btarget;
-      closest = fine.Closest(b, btarget);
-      if(atarget == btarget) {
-	continue;
-      }
-      Point3f m;
-      for(unsigned int i = 0; i < 10; i++) {
-	m = (a + b)/2;
-	unsigned int mtarget;
-	fine.Closest(m, mtarget);
-	if(mtarget == atarget) a = m;
-	else if(mtarget == btarget) b = m;
-	else break;
-      }
-      coarse[v].p = m;
+      //      coarse[v].p = fine.FindBorder(coarse[v].p, radius[v]);
     }
     coarse.Init();
   }    
@@ -203,7 +190,10 @@ void VoronoiChain::Init(Crude &crude, float scaling, int steps) {
     if(ccount[i] > (int)min_size)
       seeds.push_back(coarse[i]);
   }
-  swap(coarse, seeds);
+  coarse.clear();
+  for(unsigned int i = 0; i < seeds.size(); i++)
+    coarse.push_back(seeds[i]);
+
   if(coarse.size() == 0) coarse.push_back(Point3f(0,0,0));
   coarse.Init();
 
@@ -429,14 +419,11 @@ void VoronoiChain::BuildLevel(Nexus &nexus, unsigned int offset,
        
       coarse[v].p = ccentroids[v]/(float)ccount[v];
       //0.3 is related to the fact is doubled the box size.
-      coarse[v].weight = (float)pow(ccount[v]/(float)coarse_vmean, 0.3f);
+      coarse[v].weight = (float)pow(ccount[v]/(float)coarse_vmean, 0.2f);
 
       if(radius[v] == 0) continue;
-
-      //repel from fine seeds
-
+      //coarse[v].p = fine.FindBorder(coarse[v].p, radius[v]);
     }
-    //    fine.Init(fine.bbox);
     coarse.Init();
   }    
   vector<Seed> seeds;
@@ -444,7 +431,11 @@ void VoronoiChain::BuildLevel(Nexus &nexus, unsigned int offset,
     if(ccount[i] > (int)min_size)
       seeds.push_back(coarse[i]);
   }
-  swap(coarse, seeds);
+
+  coarse.clear();
+  for(unsigned int i = 0; i < seeds.size(); i++)
+    coarse.push_back(seeds[i]);
+
   if(coarse.size() == 0) coarse.push_back(Point3f(0,0,0));
   coarse.Init();
 

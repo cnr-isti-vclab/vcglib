@@ -2,6 +2,8 @@
 #include <iostream>
 #include <algorithm>
 
+#include <GL/glew.h>
+
 using namespace std;
 using namespace nxs;
 
@@ -15,6 +17,9 @@ bool PatchServer::Create(const std::string &filename,
   frame = 0;
   ram_size = rsize;
   ram_used = 0;
+
+  vbo_size = 0;
+  vbo_used = 0;
 
   ram_readed = 0;
   ram_flushed = 0;
@@ -33,6 +38,8 @@ bool PatchServer::Load(const std::string &filename, Signature sig,
 
   ram_readed = 0;
   ram_flushed = 0;
+  vbo_size = 0;
+  vbo_used = 0;
   lru.clear();
   return File::Load(filename, readonly);
 }
@@ -146,6 +153,38 @@ Patch &PatchServer::GetPatch(unsigned int idx,
   return *(entry.patch); 
 }
 
+VboBuffer &PatchServer::GetVbo(unsigned int p) {
+  VboBuffer &buffer = vbos[p];
+  if(buffer.index) return buffer;
+
+  //TODO  cerr << "Adding vbo: " << p << endl;
+  assert(patches[p].patch);
+  Patch &patch = *patches[p].patch;
+
+  glGenBuffersARB(1, &buffer.index);
+  assert(buffer.index);
+  glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, buffer.index);
+
+  unsigned int size = patch.nf * sizeof(unsigned short);
+  if((signature & NXS_FACES) != 0) size *= 3;
+
+  glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, size, patch.FaceBegin(),
+  GL_STATIC_DRAW_ARB);
+
+  //TODO fix this when we allow data :p
+  size = sizeof(float) * patch.dstart;
+  
+  glGenBuffersARB(1, &buffer.vertex);
+  glBindBufferARB(GL_ARRAY_BUFFER_ARB, buffer.vertex);
+
+  glBufferDataARB(GL_ARRAY_BUFFER_ARB, size, patch.VertBegin(), 
+		  GL_STATIC_DRAW_ARB);
+
+  vbo_used += patches[p].ram_size;
+  return buffer;
+}
+
+
 void PatchServer::Flush() {
 
   if(ram_used < ram_size * 1.1) return;
@@ -215,8 +254,20 @@ void PatchServer::Flush(unsigned int patch) {
   delete entry.patch;
   entry.patch = NULL;
   entry.lru_pos = 0xffffffff;
+  if(FlushVbo(patch))
+    vbo_used -= entry.ram_size;
   ram_used -= entry.ram_size;
   ram_flushed += entry.ram_size;
+}
+
+bool PatchServer::FlushVbo(unsigned int patch) {
+  //TODO  
+  //cerr << "Flushing vbo: " << patch << endl;
+  VboBuffer &buffer = vbos[patch];
+  if(!buffer.index) return false;
+  glDeleteBuffersARB(1, &buffer.index);
+  glDeleteBuffersARB(1, &buffer.vertex);
+  return true;
 }
 
 void PatchServer::SetRamBufferSize(unsigned int r_buffer) {
