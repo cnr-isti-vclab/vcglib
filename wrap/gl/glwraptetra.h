@@ -53,7 +53,7 @@ public:
         case DMSmallTetra:	_DrawSmallTetra<cm>();break;
         case DMFlat:_DrawSurface<dm,nm,cm>();break;	
         case DMWire:_DrawSurface<dm,nm,cm>();break;
-				case DMHidden:break;//DrawSurface<dm,nm,cm>();break;
+				case DMHidden:_DrawSurface<dm,nm,cm>();break;
 				case DMFlatWire:_DrawFlatWire<nm,cm>(); break;
         case DMTransparent:break;
 				}
@@ -96,36 +96,48 @@ void _DrawSurface(){
 		CONT_TETRA::iterator it;
 
 		glPushAttrib(0xffffffff);
-		glEnable(GL_LIGHTING);
-    glEnable(GL_NORMALIZE);
-		if(dm == DMWire)
+		
+		if((dm == DMWire)||(dm ==DMHidden))
+    {
+      glDisable(GL_LIGHTING);
+      glDisable(GL_NORMALIZE);
 			glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+    }
 		else
+    {
+      glEnable(GL_LIGHTING);
+      glEnable(GL_NORMALIZE);
 			glPolygonMode(GL_FRONT,GL_FILL);
+    }
 
 		glBegin(GL_TRIANGLES);
 		for( it = tetra.begin(); it != tetra.end(); ++it)
-			_DrawTetra<nm,cm>((*it));
+        _DrawTetra<dm,nm,cm>((*it));
 	  glEnd();
 	  glPopAttrib();
 }
 
-template <NormalMode nm,ColorMode cm >
+template <DrawMode dm,NormalMode nm,ColorMode cm >
 void _DrawTetra(TetraType &t)
 {
   if(!(t.IsD()))
       {
        _ChooseColorTetra<cm>(t);
-		  for(int i = 0; i < 4; ++i){
-        if(t.IsBorderF(i))
-        {
-          if(nm==NMSmooth)
-					 _DrawFaceSmooth<cm>(t,i);
-          else
-					if(nm==NMFlat)
-						_DrawFace<cm>(t,i);
-        }
-      }
+       for(int i = 0; i < 4; ++i){
+         if (dm == DMWire)
+           _DrawFace<cm>(t,i);
+         else
+         {
+           if (t.IsBorderF(i))
+           {
+              if(nm==NMSmooth)
+					      _DrawFaceSmooth<cm>(t,i);
+              else
+					    if(nm==NMFlat)
+						    _DrawFace<cm>(t,i);
+           }
+         }
+       }
       }
 }
 
