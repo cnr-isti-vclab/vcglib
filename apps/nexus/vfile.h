@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/07/15 14:32:49  ponchio
+Debug.
+
 Revision 1.7  2004/07/05 15:49:39  ponchio
 Windows (DevCpp, mingw) port.
 
@@ -101,6 +104,7 @@ template <class T> class VFile {
   typedef typename std::list<Buffer>::iterator list_iterator;
 
   std::map<unsigned int, list_iterator> index;   //TODO move to hash_map 
+  Buffer *last_buffer;
 
   unsigned int chunk_size; //default buffer size (expressed in number of T)
   unsigned int queue_size;
@@ -118,13 +122,14 @@ template <class T> class VFile {
     VFile *buffer;
   };
   
-  VFile(): fp(NULL) {}
+  VFile(): fp(NULL), last_buffer(NULL) {}
   ~VFile() { Close(); }                    
   bool Create(const std::string &filename, 
 	      unsigned int _chunk_size = 4096/sizeof(T), 
 	      unsigned int _queue_size = 1000) {
 
     assert(_chunk_size > 0);
+    last_buffer = NULL;
     chunk_size = _chunk_size;
     queue_size = _queue_size;
     n_elements = 0;    
@@ -147,6 +152,7 @@ template <class T> class VFile {
 	    unsigned int _queue_size = 1000) {
 
     assert(_chunk_size > 0);
+    last_buffer = NULL;
     chunk_size = _chunk_size;
     queue_size = _queue_size;
 #ifdef WIN32
@@ -186,6 +192,7 @@ template <class T> class VFile {
       FlushBuffer(*i);
     buffers.clear();
     index.clear();
+    last_buffer = NULL;
   }
 
   void FlushBuffer(Buffer buffer) {
@@ -248,8 +255,13 @@ template <class T> class VFile {
     unsigned int offset = n - chunk*chunk_size;
     assert(offset < chunk_size * sizeof(T));
 
-    if(index.count(chunk)) 
+    if(last_buffer && last_buffer->key == chunk) 
+        return *(last_buffer->data + offset);
+        
+    if(index.count(chunk)) {
+      last_buffer = &*index[chunk];
       return *((*(index[chunk])).data + offset);
+    }
     
     if(buffers.size() > queue_size) {
       Buffer &buffer= buffers.back();
@@ -270,9 +282,10 @@ template <class T> class VFile {
 
     buffers.push_front(buffer);   
     index[buffer.key] = buffers.begin();   
-
+    last_buffer = &*buffers.begin();
+    
     SetPosition(chunk);
-    ReadBuffer(buffer.data, buffer.size);
+    ReadBuffer(buffer.data, buffer.size);    
 
     return *(buffer.data + offset);
   }
