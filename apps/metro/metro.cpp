@@ -1,3 +1,31 @@
+/****************************************************************************
+* VCGLib                                                            o o     *
+* Visual and Computer Graphics Library                            o     o   *
+*                                                                _   O  _   *
+* Copyright(C) 2004                                                \/)\/    *
+* Visual Computing Lab                                            /\/|      *
+* ISTI - Italian National Research Council                           |      *
+*                                                                    \      *
+* All rights reserved.                                                      *
+*                                                                           *
+* This program is free software; you can redistribute it and/or modify      *   
+* it under the terms of the GNU General Public License as published by      *
+* the Free Software Foundation; either version 2 of the License, or         *
+* (at your option) any later version.                                       *
+*                                                                           *
+* This program is distributed in the hope that it will be useful,           *
+* but WITHOUT ANY WARRANTY; without even the implied warranty of            *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
+* GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
+* for more details.                                                         *
+*                                                                           *
+****************************************************************************/
+/****************************************************************************
+  History
+
+$Log: not supported by cvs2svn $
+****************************************************************************/
+
 // -----------------------------------------------------------------------------------------------
 
 // standard libraries
@@ -30,7 +58,7 @@ bool NumberOfSamples                = false;
 bool SamplesPerAreaUnit             = false;
 bool SaveErrorDisplacement          = false;
 bool SaveErrorAsColour              = false;
-bool IgnoreUnreferred							= true;
+bool IncludeUnreferred							= false;
 // -----------------------------------------------------------------------------------------------
 
 
@@ -146,7 +174,7 @@ int main(int argc, char**argv)
                                                         strcpy(hist_filename, STR_HIST_FILENAME_DEFAULT);
                                                     break;
 				case CMD_LINE_ARG_VERTEX_SAMPLE :	VertexSampleFlag    = false;    break;
-				case CMR_LINE_ARG_IGNORE_UNREF  : IgnoreUnreferred    = true;     break;
+				case CMR_LINE_ARG_INCLUDE_UNREF  : IncludeUnreferred    = true;     break;
 				case CMD_LINE_ARG_EDGE_SAMPLE   :	EdgeSampleFlag      = false;    break;
 				case CMD_LINE_ARG_FACE_SAMPLE   :	FaceSampleFlag      = false;    break;
                 case CMD_LINE_ARG_SAMPLE_TYPE   :
@@ -211,7 +239,7 @@ int main(int argc, char**argv)
 
     // set flags.
 	flags = 0;
-   if(IgnoreUnreferred)
+   if(IncludeUnreferred)
         flags |= SamplingFlags::INCLUDE_UNREFERENCED_VERTICES;
     if(ComputeHistFlag)
         flags |= SamplingFlags::HIST;
