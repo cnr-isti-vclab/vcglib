@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2004/05/12 18:49:05  ganovelli
+dist and coputeRT removed (see distance.h and updateEdges)
+
 Revision 1.12  2004/05/12 14:43:36  cignoni
 removed warning of unused variables
 
@@ -272,7 +275,7 @@ void ComputeNormal()
 void ComputeNormalizedNormal() 
 {
 #ifdef __VCGLIB_FACE_FN
-	_n = vcg::NormalizedNormal(V(0)->cP(), V(1)->cP(), V(2)->cP());
+	_n = vcg::NormalizedNormal(*this);
 #else
 	assert(0);
 #endif
