@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/09/28 10:23:28  ponchio
+Various generic changes.
+
 Revision 1.4  2004/05/12 20:55:18  ponchio
 *** empty log message ***
 
@@ -43,6 +46,8 @@ Adding copyright.
 #include <vcg/space/plane3.h>
 #include <vcg/space/line3.h>
 
+#include <iostream>
+using namespace std;
 
 namespace vcg {
 
@@ -85,7 +90,7 @@ template <class T> bool Frustum<T>::IsOutside(Point3<T> &point) {
 
 template <class T> bool Frustum<T>::IsOutside(Point3<T> &point, T radius) {
   for(int i = 0; i < 4; i++) {
-    T dist = Distance(point, i);    
+    T dist = Distance(point, i);   
     if(dist < -radius) 
       return true;  
   }
@@ -93,18 +98,17 @@ template <class T> bool Frustum<T>::IsOutside(Point3<T> &point, T radius) {
 }
 
 template <class T> T Frustum<T>::Distance(Point3<T> &point, int plane) {    
-  return Distance(point, planes[plane]);  
+  return vcg::Distance(planes[plane], point);  
 }
 
 template <class T> void Frustum<T>::GetView() {
   View<T>::GetView();
   
-  //  Point3d NE, SE, SW, NW, ne, se, sw, nw;
   int t = viewport[1] + viewport[3];
   int b = viewport[1];
   int r = viewport[0] + viewport[2];
   int l = viewport[0];
-	
+  
   Point3<T> nw = UnProject(Point3<T>(l, b, 0));
   Point3<T> sw = UnProject(Point3<T>(l, t, 0));
   Point3<T> ne = UnProject(Point3<T>(r, b, 0));
@@ -114,29 +118,18 @@ template <class T> void Frustum<T>::GetView() {
   Point3<T> NE = UnProject(Point3<T>(r, b, 1));
   Point3<T> SE = UnProject(Point3<T>(r, t, 1));
 
-  /*  gluUnProject(l,b,0,model,proj,viewport,&nw[0], &nw[1], &nw[2]);
-  gluUnProject(l,t,0,model,proj,viewport,&sw[0], &sw[1], &sw[2]);
-  gluUnProject(r,b,0,model,proj,viewport,&ne[0], &ne[1], &ne[2]);
-  gluUnProject(r,t,0,model,proj,viewport,&se[0], &se[1], &se[2]);
-  gluUnProject(l,b,1,model,proj,viewport,&NW[0], &NW[1], &NW[2]);
-  gluUnProject(l,t,1,model,proj,viewport,&SW[0], &SW[1], &SW[2]);
-  gluUnProject(r,b,1,model,proj,viewport,&NE[0], &NE[1], &NE[2]);
-  gluUnProject(r,t,1,model,proj,viewport,&SE[0], &SE[1], &SE[2]);*/
-  
   view_point = View<T>::ViewPoint();  	
-  
-  planes[0].Init(view_point, nw, ne);  
-  planes[1].Init(view_point, ne, se);
-  planes[2].Init(view_point, se, sw);
-  planes[3].Init(view_point, sw, nw);
+
+  planes[0].Init(nw, NW, NE);  
+  planes[1].Init(ne, NE, SE);
+  planes[2].Init(se, SE, SW);
+  planes[3].Init(sw, SW, NW);
   planes[4].Init(se, sw, nw);
   planes[5].Init(SW, SE, NE);   
 
-  for(int i = 0; i < 6; i++)
-    planes[i].Normalize();
-
-  //calcoliamo la risoluzione: dimenzione di un pixel a distanza 1 dal view_point
-  resolution = ((ne + NE) - (nw + NW)).Norm() /( viewport[2] * ((ne + NE) - view_point).Norm());
+  //compute resolution: sizeo of a pixel unitary distance from view_point
+  resolution = ((ne + NE) - (nw + NW)).Norm() /
+               (viewport[2] * ((ne + NE) - view_point).Norm());
 }
 
 }//namespace
