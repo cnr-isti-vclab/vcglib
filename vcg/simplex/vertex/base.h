@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.18  2004/08/25 15:15:27  ganovelli
+minor changes to comply gcc compiler (typename's and stuff)
+
 Revision 1.17  2004/07/20 15:24:53  pietroni
 corrected NormalizedNormalV function...
 
@@ -45,6 +48,9 @@ Revision 1.12  2004/05/10 13:31:13  ganovelli
 function for edge adjacency added
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2004/08/25 15:15:27  ganovelli
+minor changes to comply gcc compiler (typename's and stuff)
+
 Revision 1.17  2004/07/20 15:24:53  pietroni
 corrected NormalizedNormalV function...
 
@@ -111,11 +117,12 @@ Edited Comments and GPL license
 #include<vcg/space/tcoord2.h>
 #include<vcg/simplex/face/pos.h>
 
-class DUMMYFACETYPE;
-class DUMMYEDGETYPE;
-class DUMMYTETRATYPE;
+
 namespace vcg {
 
+	class DUMMYFACETYPE;
+	class DUMMYEDGETYPE;
+	class DUMMYTETRATYPE;
 /**
     \ingroup vertex
     @name Vertex
