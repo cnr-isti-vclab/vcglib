@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.12  2004/09/15 11:16:02  ganovelli
+  changed P() to cP()
+
   Revision 1.11  2004/09/09 13:23:01  ponchio
   Header  guards typo
 
@@ -79,31 +82,34 @@ public:
 };
 protected:
   typedef	typename TriMeshType::FaceType FaceType;
-  typedef	typename FaceType::VertexType VertexType;
+  typedef	typename TriMeshType::FaceType::VertexType VertexType;
+	typedef	typename FaceType::EdgeType EdgeType;
   typedef	typename FaceType::VertexType::CoordType CoordType;
   typedef	typename TriMeshType::VertexType::ScalarType ScalarType;
-  typedef vcg::face::Pos<FaceType> PosType;
   typedef typename LocalOptimization<TriMeshType>::HeapElem HeapElem;
 	typedef typename LocalOptimization<TriMeshType>::HeapType HeapType;
 
-
-	///the pos of collapse 
-	PosType pos;
+TriMeshType *mt;
+	///the pair to collapse 
+	EdgeType pos;
 
 	///mark for up_dating
-	static int& _Imark(){ static int im=0; return im;}
+	static int& GlobalMark(){ static int im=0; return im;}
+
+	///mark for up_dating
+	int localMark;
 	
 	/// priority in the heap
 	ScalarType _priority;
 
 	public:
 	/// Default Constructor
-		TriEdgeCollapse()
+	inline	TriEdgeCollapse()
 			{}
 	///Constructor with postype
-	 TriEdgeCollapse(PosType p, int mark)
+	 inline TriEdgeCollapse(EdgeType p, int mark)
 			{    
-				_Imark() = mark;
+				localMark = mark;
 				pos=p;
 				_priority = ComputePriority();
 			}
@@ -117,71 +123,112 @@ private:
 public:
 
 
-  ScalarType ComputePriority()
+  inline ScalarType ComputePriority()
   { 
-		_priority = Distance(pos.V()->cP(),pos.VFlip()->cP()); 
+		_priority = Distance(pos.V(0)->cP(),pos.V(1)->cP()); 
     return _priority;
   }
 
   virtual const char *Info(TriMeshType &m) {
+		mt = &m;
     static char buf[60];
-    sprintf(buf,"collapse %i -> %i %f\n", pos.V()-&m.vert[0], pos.VFlip()-&m.vert[0],_priority);
-    return buf;
+      sprintf(buf,"%i -> %i %g\n", pos.V(0)-&m.vert[0], pos.V(1)-&m.vert[0],-_priority);
+   return buf;
   }
  
-  void Execute(TriMeshType &m)
+  inline void Execute(TriMeshType &m)
   {	
-    CoordType MidPoint=(pos.V()->P()+pos.VFlip()->P())/2.0;
+    CoordType MidPoint=(pos.V(0)->P()+pos.V(1)->P())/2.0;
 	int FaceDel=DoCollapse(pos, MidPoint);
     m.fn-=FaceDel;
     --m.vn;
   }
   
   
-  void UpdateHeap(HeapType & h_ret)
+ inline  void UpdateHeap(HeapType & h_ret)
   {
-		_Imark()++;
-		vcg::face::VFIterator<FaceType> vfi(pos.V(1)->VFp(),pos.V(1)->VFi());
+#ifdef __SAVE__LOG__
+static FILE * co = fopen("col.txt","w");
+#endif __SAVE__LOG__
+		GlobalMark()++;int nn=0;
+		VertexType *v[2];
+		v[0]= pos.V(0);v[1]=pos.V(1);	
+		v[1]->IMark() = GlobalMark();
+
+		vcg::face::VFIterator<FaceType> vfi(v[1]->VFp(),v[1]->VFi());	
+		while (!vfi.End()){
+			vfi.F()->V1(vfi.I())->ClearV();
+			vfi.F()->V2(vfi.I())->ClearV();
+			++vfi;
+		}
+		vfi.F() = v[1]->VFp();
+		vfi.I() = v[1]->VFi();	
     while (!vfi.End())
     {
+			assert(!vfi.F()->IsD());
       for (int j=0;j<3;j++)
-				if( (vfi.F()->V(vfi.I())->IsRW()) && (vfi.F()->V1(vfi.I())->IsRW()))
-      {
-				PosType p;
-				p.Set(vfi.F(),vfi.I(),vfi.f->V(vfi.z));
-				h_ret.push_back(HeapElem(new MYTYPE(p,_Imark())));
+			{
+				if( !(vfi.F()->V1(vfi.I())->IsV()) && (vfi.F()->V1(vfi.I())->IsRW()))
+				{
+#ifdef __SAVE__LOG__
+					fprintf(co,"%i %i \n",vfi.F()->V(vfi.I())-&*mt->vert.begin(),
+					vfi.F()->V1(vfi.I())-&*mt->vert.begin());
+#endif __SAVE__LOG__
+
+				vfi.F()->V1(vfi.I())->SetV();
+				h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.F()->V(vfi.I()),vfi.F()->V1(vfi.I())),GlobalMark())));
 				std::push_heap(h_ret.begin(),h_ret.end());
-				//// update the mark of the vertices
-				vfi.f->V(vfi.z)->IMark() = _Imark();
-				vfi.f->V( (vfi.z+1) % 3 )->IMark() = _Imark();
+				//if(false){				
+				//	h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.F()->V1(vfi.I()),vfi.F()->V(vfi.I())),GlobalMark())));
+				//	std::push_heap(h_ret.begin(),h_ret.end());
+				//	}
       }
-      ++vfi;
+				if(  !(vfi.F()->V2(vfi.I())->IsV()) && (vfi.F()->V2(vfi.I())->IsRW()))
+				{
+#ifdef __SAVE__LOG__
+			fprintf(co,"%i %i \n",vfi.F()->V(vfi.I())-&*mt->vert.begin(),
+			vfi.F()->V2(vfi.I())-&*mt->vert.begin());
+#endif __SAVE__LOG__
+
+					vfi.F()->V2(vfi.I())->SetV();
+				h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.F()->V(vfi.I()),vfi.F()->V2(vfi.I())),GlobalMark())));
+				std::push_heap(h_ret.begin(),h_ret.end());
+				//if(false){				
+				//	h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.F()->V1(vfi.I()),vfi.F()->V(vfi.I())),GlobalMark())));
+				//	std::push_heap(h_ret.begin(),h_ret.end());
+				//	}
+      }
+
+
+			}
+      ++vfi;nn++;
     }
+//		printf("ADDED %d\n",nn);
   }
 
   ModifierType IsOfType(){ return TriEdgeCollapseOp;}
 
-  bool IsFeasible(){
+  inline bool IsFeasible(){
 		return LinkConditions(pos);
 	}
 
-  bool IsUpToDate(){
-    if(pos.f->IsD()) {
-				++FailStat::OutOfDate();
-				return false;
-			}
-			
-    if(pos.v->IsD()) {
-				++FailStat::OutOfDate();
-				return false;
-			}
+  inline bool IsUpToDate(){
+   // if(pos.V(1)->IsD()) {
+			//	++FailStat::OutOfDate();
+			//	return false;
+			//}
+			//
+   // if(pos.V(1)->IsD()) {
+			//	++FailStat::OutOfDate();
+			//	return false;
+			//}
 
-		  VertexType *v0=pos.V();
-			VertexType *v1=pos.VFlip();
+		  VertexType *v0=pos.V(0);
+			VertexType *v1=pos.V(1);
 			
 			if(! (( (!v0->IsD()) && (!v1->IsD())) &&
-							 _Imark()>=v0->IMark() &&
-							 _Imark()>=v1->IMark()))
+							 localMark>=v0->IMark() &&
+							 localMark>=v1->IMark()))
 			{
 				++FailStat::OutOfDate();
 				return false;
@@ -200,7 +247,7 @@ public:
 		if(!(*fi).IsD()){
 		   for (int j=0;j<3;j++)
       {
-        PosType p=PosType(&*fi,j,(*fi).V(j));
+        EdgeType p=EdgeType(&*fi,j,(*fi).V(j));
         h_ret.push_back(HeapElem(new MYTYPE(p,m.IMark())));
         //printf("Inserting in heap coll %3i ->%3i %f\n",p.V()-&m.vert[0],p.VFlip()-&m.vert[0],h_ret.back().locModPtr->Priority());
       }
