@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/03/08 14:49:37  ponchio
+Aggiunti un po di inline davanti alle funzioni
+
 Revision 1.5  2004/03/04 00:21:00  ponchio
 added Acos e Asin
 
@@ -44,6 +47,7 @@ Edited Comments and GPL license
 
 #include <math.h>
 #include <assert.h>
+#include <limits.h>
 
   #ifdef __BORLANDC__
     float sqrtf (float v) {return sqrt(v);}
@@ -75,22 +79,43 @@ namespace math {
   inline double Acos(const double v)   { return acos(v); }
   inline double Asin(const double v)   { return asin(v); }
   
-    
-    
-  template <class SCALAR> 
-  class MaxVal
-  {
-  public:
-  //const unsigned char   Math<unsigned char  >::MaxVal = 255;
-  //const char	          Math<char 	        >::MaxVal = 127; 
-  //const unsigned short	Math<unsigned short	>::MaxVal = 0xFFFFu; 
-  //const short	          Math<short	        >::MaxVal = 0x7FFF; 
-  //const float	          Math<float	        >::MaxVal = 3.4E38F; 
-  //const int             Math<int            >::MaxVal = 2147483647; 
-  //const long double     Math<long double    >::MaxVal = 1.2E308; 
-  //const double          Math<double         >::MaxVal = 1.7E308; 
-  //const __int64         Math<__int64        >::MaxVal = 9223372036854775807; 
-  };
+
+	// max and min values for each scala type 
+	// syntax: Max<float>::Value 
+
+  template <class SCALAR> class Min {
+		public: static const SCALAR Value;
+	};  
+	template <class SCALAR> class Max {
+		public: static const SCALAR Value;
+	};
+
+  const char            Min<char           >::Value = -128; 
+  const char            Max<char           >::Value = +127; 
+  const unsigned char 	Min<unsigned char  >::Value = 0; 
+  const unsigned char  	Max<unsigned char  >::Value = 255; 
+  const short	          Min<short	         >::Value = (-32767 -1); 
+  const short	          Max<short	         >::Value =  +32767; 
+  const unsigned short	Min<unsigned short >::Value = 0; 
+  const unsigned short	Max<unsigned short >::Value = 65535; 
+  const int             Min<int            >::Value = (-2147483647 - 1); 
+  const int             Max<int            >::Value =  +2147483647; 
+  const unsigned int    Min<unsigned int   >::Value = 0; 
+  const unsigned int    Max<unsigned int   >::Value = 4294967295; 
+  const __int64         Min<__int64        >::Value = (-9223372036854775807i64 - 1); 
+  const __int64         Max<__int64        >::Value =  +9223372036854775807i64; 
+  const long            Min<long           >::Value = (-2147483647L -1L); 
+  const long            Max<long           >::Value = 2147483647L; 
+  const unsigned long   Min<unsigned long  >::Value = 0; 
+  const unsigned long   Max<unsigned long  >::Value = +4294967295; 
+  const float	          Min<float	         >::Value = -3.4E38F; 
+  const float	          Max<float	         >::Value = +3.4E38F; 
+  const long double     Min<long double    >::Value = -1.2E308; //E4931?
+  const long double     Max<long double    >::Value = +1.2E308; 
+  const double          Min<double         >::Value = -1.7E308; 
+  const double          Max<double         >::Value = +1.7E308; 
+
+
 /* Some <math.h> files do not define M_PI... */
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
