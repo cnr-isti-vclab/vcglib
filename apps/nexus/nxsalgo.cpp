@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.24  2005/02/22 14:20:44  ponchio
+debug and mostly vertex unifying across borders
+(still not perfect... :P)
+
 Revision 1.23  2005/02/22 10:38:10  ponchio
 Debug, cleaning and optimization.
 
@@ -62,6 +66,8 @@ Added copyright
 #include "nexus.h"
 #include "zcurve.h"
 #include "watch.h"
+
+#include <vcg/space/line3.h>
 
 using namespace std;
 using namespace nxs;
@@ -165,7 +171,8 @@ void nxs::ComputeNormals(Nexus &nexus) {
 	    Point3f &v0 = patch.Vert3f(f[0]);
 	    Point3f &v1 = patch.Vert3f(f[1]);
 	    Point3f &v2 = patch.Vert3f(f[2]);
-	    Point3f norm = (v1 - v0) ^ (v2 - v0); 
+	    Point3f norm = (v1 - v0) ^ (v2 - v0);
+	    norm.Normalize();
 	    normal[f[0]] += norm;
 	    normal[f[1]] += norm;
 	    normal[f[2]] += norm;
@@ -177,6 +184,7 @@ void nxs::ComputeNormals(Nexus &nexus) {
 	    Point3f &v1 = patch.Vert3f(f[1]);
 	    Point3f &v2 = patch.Vert3f(f[2]);
 	    Point3f norm = (v1 - v0) ^ (v2 - v0); 
+	    norm.Normalize();
 	    if(i%2) norm = -norm;
 	    normal[f[0]] += norm;
 	    normal[f[1]] += norm;
@@ -715,3 +723,51 @@ void nxs::ZSort(Nexus &nexus, vector<unsigned int> &forward,
     backward[forward[i]] = i;
 }
 
+bool nxs::LineIntersect(Nexus &nexus, Extraction &extraction,
+			Line3f line, Point3f &hit) {
+  //seguiamo la history;
+  Point3f tmp;
+  if(!Intersection(nexus.sphere, line, hit, tmp))
+    return false;
+
+  bool found = false;
+  bool min_dist = -1;
+  float bar1, bar2, dist;
+  for(unsigned int i = 0; i < extraction.draw_size; i++) {
+    unsigned int p = extraction.selected[i];
+    if(!Intersection(nexus[p].sphere, line, hit, tmp))
+      continue;
+    Patch &patch = nexus.GetPatch(p);
+    if(nexus.signature.face == Signature::TRIANGLES) {
+      for(unsigned int i = 0; i < patch.nf; i++) {
+	unsigned short *f = patch.Face(i);
+	Point3f &v0 = patch.Vert3f(f[0]);
+	Point3f &v1 = patch.Vert3f(f[1]);
+	Point3f &v2 = patch.Vert3f(f[2]);
+	if(Intersection(line, v0, v1, v2, bar1, bar2, dist) &&
+	   dist > 0 && 
+	   (min_dist == -1 || min_dist > dist)) {
+	  hit = v0*(1-bar1-bar2)+v1*bar1+b2*bar2;
+	  min_dist = dist;
+	  found = true;
+	}
+      }
+    } else if(nexus.signature.face == Signature::STRIPS) {
+      for(int i = 0; i < patch.nf - 2; i++) {
+	unsigned short *f = patch.FaceBegin() + i;
+	Point3f &v0 = patch.Vert3f(f[0]);
+	Point3f &v1 = patch.Vert3f(f[1]);
+	Point3f &v2 = patch.Vert3f(f[2]);
+	if(Intersection(line, v0, v1, v2, bar1, bar2, dist) &&
+	   dist > 0 && 
+	   (min_dist == -1 || min_dist > dist)) {
+	  hit = v0*(1-bar1-bar2)+v1*bar1+b2*bar2;
+	  min_dist = dist;
+	  found = true;
+	}
+      }
+    } else
+      assert(0);
+  }
+  return found;
+}

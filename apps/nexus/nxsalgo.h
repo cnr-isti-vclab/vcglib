@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2005/02/22 14:20:44  ponchio
+debug and mostly vertex unifying across borders
+(still not perfect... :P)
+
 Revision 1.9  2005/02/22 10:38:11  ponchio
 Debug, cleaning and optimization.
 
@@ -53,8 +57,11 @@ Added copyright
 #include "patch.h"
 #include <vcg/space/sphere3.h>
 
+class vcg::Line3f;
+
 namespace nxs {
   
+
   class Nexus;
   class Patch;
 
@@ -75,10 +82,10 @@ namespace nxs {
   void Unify(std::vector<vcg::Point3f> &points, 
 	     std::vector<unsigned short> &faces,
 	     std::vector<unsigned int> &vremap, float threshold);
-//  void Unify(Nexus &nexus, float threshold);
   void ZSort(Nexus &nexus, std::vector<unsigned int> &forward,
 	     std::vector<unsigned int> &backward);
-  //  void TightSphere(vcg::Sphere3f &sphere, std::vector<vcg::Point3f> &points);
+  bool LineIntersect(Nexus &nexus, Extraction &extraction, 
+		     vcg::Line3f line, vcg::Point3f &hit);
 }
 
 #endif
