@@ -9,6 +9,7 @@ AC_CONFIG_SRCDIR([../tetra_decimator/main.cpp])
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
+AC_PROG_RANLIB
 
 # Checks for libraries.
 # FIXME: Replace `main' with a function in `-lGL':
