@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2004/09/15 11:20:15  ganovelli
+changed P() to cP()
+
 Revision 1.19  2004/09/14 19:47:02  ganovelli
 removed "&" in FFp
 
@@ -534,21 +537,22 @@ public:
 #endif
 	}
 
-	inline const FFTYPE * const  FFp( const int j ) const
+	inline bool const  IsBorder( const int & j ) const
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
 		assert(j>=0);
 	    assert(j<3);
 #if defined(__VCGLIB_FACE_AF)
-		  return _ffp[j];
+		  return (_ffp[j]==this);
 #elif defined(__VCGLIB_FACE_AS)
-			return fs[j];
+			return (fs[j]==this);
 #else
 		  assert(0);
 		  return (FFTYPE *)this;
 #endif
 	}
+
 	inline FFTYPE * & F1( const int j ) { return F((j+1)%3);}
 	inline FFTYPE * & F2( const int j ) { return F((j+2)%3);}
 	inline const FFTYPE * const&  F1( const int j ) const { return F((j+1)%3);}
