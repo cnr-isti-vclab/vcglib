@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/02/19 16:22:45  ponchio
+Minor changes (visited and Cell)
+
 Revision 1.7  2005/02/10 09:18:20  ponchio
 Statistics.
 
@@ -105,7 +108,8 @@ void Extraction::Init() {
 	
 	Link &link = *n;
 	for(Link::iterator k = link.begin(); k != link.end(); k++) {
-	  unsigned int patch = *k;
+	  //	  unsigned int patch = *k;
+	  unsigned int patch = k;
 	  Entry &entry = (*mt)[patch];
 	  
 	  bool visible;
@@ -240,8 +244,10 @@ void Extraction::Update(NexusMt *_mt) {
       for(l = node->out_begin(); l != node->out_end(); l++) {
 	Link &link = (*l);
 	for(Link::iterator k = link.begin(); k != link.end(); k++) {
-	  selected.push_back(Item(*k, i));
-	  errors[*k] = i;
+	  //	  selected.push_back(Item(*k, i));
+	  //	  errors[*k] = i;
+	  selected.push_back(Item(k, i));
+	  errors[k] = i;
 	}
       }
     } else if(back.size()) {
@@ -253,8 +259,10 @@ void Extraction::Update(NexusMt *_mt) {
       for(l = node->in_begin(); l != node->in_end(); l++) {
 	Link &link = (*l);
 	for(Link::iterator k = link.begin(); k != link.end(); k++) {
-	  selected.push_back(Item(*k, i));
-	  errors[*k] = i;
+	  //	  selected.push_back(Item(*k, i));
+	  //	  errors[*k] = i;
+	  selected.push_back(Item(k, i));
+	  errors[k] = i;
 	}
       }
     }
@@ -266,8 +274,8 @@ float Extraction::GetRefineError(Node *node) {
   Node::iterator i;
   for(i = node->in_begin(); i != node->in_end(); i++) {
     Link &link = *i;
-    for(Link::iterator k = link.begin(); k != link.end(); k++) {
-      Entry &entry = (*mt)[*k];
+    for(Link::iterator p = link.begin(); p != link.end(); p++) {
+      Entry &entry = (*mt)[p];
       bool visible;
       float error =  metric->GetError(entry, visible);
       if(error > maxerror) maxerror = error;
@@ -391,10 +399,14 @@ void Extraction::Select() {
       unsigned int n_out = (*n).node - root;
       if(!visited[n_out]) {
 	Link &link = *n;
-	for(Link::iterator k = link.begin(); k != link.end(); k++) {
+	/*	for(Link::iterator k = link.begin(); k != link.end(); k++) {
 	  unsigned int patch = *k;
 	  selected.push_back(Item(patch,0));
 	  errors[patch] = 0.0f;
+	  }*/
+	for(Link::iterator p= link.begin(); p != link.end(); p++) {
+	  selected.push_back(Item(p, 0));
+	  errors[p] = 0.0f;
 	}
       }
     }
@@ -421,8 +433,8 @@ void Extraction::Visit(Node *node) {
   for(i = node->out_begin(); i != node->out_end(); i++) {
     float maxerror = -1;
     Link &link = *i;
-    for(Link::iterator k = link.begin(); k != link.end(); k++) {
-      Entry &entry = (*mt)[*k];
+    for(Link::iterator p = link.begin(); p != link.end(); p++) {
+      Entry &entry = (*mt)[p];
       bool visible;
       float error =  metric->GetError(entry, visible);
       if(error > maxerror) maxerror = error;
@@ -447,9 +459,8 @@ void Extraction::Diff(Node *node, Cost &cost) {
   Node::iterator i;
   for(i = node->in_begin(); i != node->in_end(); i++) {
     Link &link = *i;
-    for(Link::iterator k = link.begin(); k != link.end(); k++) {
-      unsigned int patch = *k;
-      Entry &entry = (*mt)[patch];
+    for(Link::iterator p = link.begin(); p != link.end(); p++) {
+      Entry &entry = (*mt)[p];
       cost.extr -= entry.ram_size;
       vcg::Sphere3f &sphere = entry.sphere;
       if(!frustum.IsOutside(sphere.Center(), sphere.Radius()))
@@ -461,9 +472,8 @@ void Extraction::Diff(Node *node, Cost &cost) {
   
   for(i = node->out_begin(); i != node->out_end(); i++) {
     Link &link = *i;
-    for(Link::iterator k = link.begin(); k != link.end(); k++) {
-      unsigned int patch = *k;
-      Entry &entry = (*mt)[patch];
+    for(Link::iterator p = link.begin(); p != link.end(); p++) {
+      Entry &entry = (*mt)[p];
       cost.extr += entry.ram_size;
       vcg::Sphere3f &sphere = entry.sphere;
       if(!frustum.IsOutside(sphere.Center(), sphere.Radius()))

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2005/02/19 17:14:02  ponchio
+History quick by default.
+
 Revision 1.20  2005/02/19 10:45:04  ponchio
 Patch generalized and small fixes.
 
@@ -342,41 +345,41 @@ int main(int argc, char *argv[]) {
    
     if(dump_history) {
       if(nexus.history.IsQuick()) {
-	cerr << "Quick format\n";
+	cout << "Quick format\n";
 	for(unsigned int i = 0; i < nexus.history.n_nodes(); i++) {
-	  cerr << "Node: " << i << " out: ";
+	  cout << "Node: " << i << " out: ";
 	  History::History::Node node = nexus.history.nodes[i];
 	  for(History::Node::iterator l = node.out_begin(); l != node.out_end(); l++) {
-	    cerr << ".";
+	    cout << ".";
 	    History::Link &link = *l;
 	    for(History::Link::iterator p = link.begin(); p != link.end(); p++) {
-	      cerr << *p << " ";
+	      cout << p << " ";
 	    }
 	  }
-	  cerr << " in: ";
+	  cout << " in: ";
 	  for(History::Node::iterator j = node.in_begin(); j != node.in_end(); j++) {
-	    cerr << ".";
+	    cout << ".";
 	    History::Link &link = *j;
 	    for(History::Link::iterator p = link.begin(); p != link.end(); p++) {
-	      cerr << *p << " ";
+	      cout << p << " ";
 	    }
 	  }
-	  cerr << endl;
+	  cout << endl;
 	}
 
       } else {
-	cerr << "Update format\n";
+	cout << "Update format\n";
 	for(unsigned int i = 0; i < nexus.history.updates.size(); i++) {
 	  History::Update &update = nexus.history.updates[i];
-	  cerr << "Created: ";
+	  cout << "Created: ";
 	  for(unsigned int k = 0; k < update.created.size(); k++) {
-	    cerr << update.created[k] << " ";
+	    cout << update.created[k] << " ";
 	  }
-	  cerr << "\nErased: ";
+	  cout << "\nErased: ";
 	  for(unsigned int k = 0; k < update.erased.size(); k++) {
-	    cerr << update.erased[k] << " ";
+	    cout << update.erased[k] << " ";
 	  }
-	  cerr << "\n\n";
+	  cout << "\n\n";
 	}
       }
     }
@@ -386,7 +389,8 @@ int main(int argc, char *argv[]) {
         Entry &entry = nexus[i];
         cout << i << " -> nv: " << entry.nvert << " nf: " << entry.nface 
              << " error: " << entry.error 
-	     << " disk_size: " << entry.disk_size << endl;
+	     << " disk_size: " << entry.disk_size 
+	     << " start: " << entry.patch_start << endl;
       }
       cout << endl;
     }
@@ -464,8 +468,7 @@ int main(int argc, char *argv[]) {
     ZSort(nexus, forward, backward);
 
   //Fixing history
-  if(!nexus.history.IsQuick())
-    nexus.history.UpdatesToQuick();
+  assert(nexus.history.IsQuick());
 
   unsigned int hsize;
   char *buffer = nexus.history.Save(hsize);
@@ -474,7 +477,9 @@ int main(int argc, char *argv[]) {
 
 
   if(zsort) {
-    if(out.history.IsQuick()) {
+    assert(0);
+    //TODO FIX THIS...
+    /*    if(out.history.IsQuick()) {
       for(unsigned int i = 0; i < out.history.n_frags(); i++)
 	out.history.frags[i] = backward[out.history.frags[i]];
     } else {
@@ -486,7 +491,7 @@ int main(int argc, char *argv[]) {
 	for(unsigned int k = 0; k < update.erased.size(); k++)
 	  update.erased[k] = backward[update.erased[k]];
       }
-    }
+      }*/
   }
 
   Report report(nexus.size());

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.32  2005/02/19 12:06:53  ponchio
+Debug...
+
 Revision 1.31  2005/02/19 10:45:04  ponchio
 Patch generalized and small fixes.
 
@@ -98,7 +101,7 @@ void NexusMt::SetPreload(bool on) {
 
 bool NexusMt::Load(const string &filename) {
   if(!Nexus::Load(filename, true)) return false;
-  if(!history.IsQuick() && !history.UpdatesToQuick())
+  if(!history.IsQuick() && !history.UpdatesToQuick(*this))
     return false;
 
 #ifndef WIN32

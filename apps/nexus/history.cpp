@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/02/19 17:14:02  ponchio
+History quick by default.
+
 Revision 1.7  2005/02/19 16:22:45  ponchio
 Minor changes (visited and Cell)
 
@@ -41,6 +44,7 @@ Added copyright
 #include <iostream>
 
 #include "history.h"
+#include "nexus.h"
 
 
 using namespace std;
@@ -51,7 +55,6 @@ History::~History() {
   nodes = NULL;
   in_links= NULL;
   out_links = NULL;
-  frags = NULL;
 }
 
 void History::Clear() {
@@ -74,10 +77,8 @@ bool History::Load(unsigned int _size, char *mem) {
   unsigned int is_quick = *(unsigned int *)mem;
   bool success;
   if(is_quick == 53) {
-    //    cerr << "Load quick!\n";
     success = LoadQuick(_size, mem);
   } else if(is_quick == 32) {
-    //    cerr << "Load updates\n";
     success = LoadUpdates(_size, mem);
   } else {
     cerr << "Invalid history: " << is_quick << "\n";
@@ -88,16 +89,14 @@ bool History::Load(unsigned int _size, char *mem) {
 
 bool History::LoadQuick(unsigned int _size, char *mem) {
   buffer = mem;
-  nodes = (Node *)(buffer + 5 * sizeof(int));
+  nodes = (Node *)(buffer + 4 * sizeof(int));
   in_links = (Link *)(nodes + n_nodes());
   out_links = in_links + n_in_links();
-  frags = (unsigned int *)(out_links + n_out_links());
 
   //check size is ok;
   assert(n_nodes() * sizeof(Node) +
 	 (n_in_links() + n_out_links()) * sizeof(Link) +
-	 n_frags() * sizeof(unsigned int) + 
-	 5 * sizeof(int) == _size);
+	 4 * sizeof(int) == _size);
   size = _size;
   return LoadPointers();
 }
@@ -135,29 +134,22 @@ bool History::LoadPointers() {
   for(unsigned int i = 0; i < n_in_links(); i++) {
     Link &link = in_links[i];
     assert(((unsigned int)link.node) <= n_nodes());
-    assert(((unsigned int)link.frag_begin) <= n_frags());
     link.node = nodes + (unsigned int)(link.node);
-    link.frag_begin = frags + (unsigned int)(link.frag_begin);
   } 
 
   for(unsigned int i = 0; i < n_out_links(); i++) {
     Link &link = out_links[i];
     assert(((unsigned int)link.node) <= n_nodes());
-    assert(((unsigned int)link.frag_begin) <= n_frags());
     link.node = nodes + (unsigned int)(link.node);
-    link.frag_begin = frags + (unsigned int)(link.frag_begin);
   }
   return true;
 }
 
 char *History::Save(unsigned int &_size) {
-  if(buffer) {
-    //    cerr << "SaveQuick!\n";
+  if(buffer) 
     return SaveQuick(_size);
-  } else {
-    //    cerr << "Save updates\n";
+  else 
     return SaveUpdates(_size);
-  }
 }
 
 char *History::SaveQuick(unsigned int &_size) {
@@ -171,19 +163,16 @@ char *History::SaveQuick(unsigned int &_size) {
   for(unsigned int i = 0; i < n_in_links(); i++) {
     Link &link = in_links[i];
     link.node = (Node *)(link.node - nodes);
-    link.frag_begin = (unsigned int *)(link.frag_begin - frags);
   }
 
   for(unsigned int i = 0; i < n_out_links(); i++) {
     Link &link = out_links[i];
     link.node = (Node *)(link.node - nodes);
-    link.frag_begin = (unsigned int *)(link.frag_begin - frags);
   }
 
   assert(n_nodes() * sizeof(Node) +
 	 (n_in_links() + n_out_links()) * sizeof(Link) +
-	 n_frags() * sizeof(unsigned int) + 
-	 5 * sizeof(int) == size);
+	 4 * sizeof(int) == size);
 
   _size = size;
   char *tmp = buffer;
@@ -211,7 +200,7 @@ char *History::SaveUpdates(unsigned int &_size) {
   return mem;
 }
 
-bool History::UpdatesToQuick() {
+bool History::UpdatesToQuick(Nexus &nexus) {
   //maps cell -> node containing it
   map<unsigned int, unsigned int> cell_node;   
   //maps node -> Links
@@ -229,7 +218,6 @@ bool History::UpdatesToQuick() {
 
   vector<Update>::iterator u;
   for(u = updates.begin(); u != updates.end(); u++) {      
-    
     Node &node = tmp_nodes[current_node];
     
     //created cells belong to this node, 
@@ -238,8 +226,7 @@ bool History::UpdatesToQuick() {
       cell_node[cell] = current_node;        
     }
 
-    //Every erased cell already belonged to a node.
-    //node -> its cells
+    //Every erased cell already belonged to a node   //node -> its cells
     map<unsigned int, vector<unsigned int> > node_erased;      
     
     for(unsigned int i = 0; i < (*u).erased.size(); i++) {
@@ -248,13 +235,10 @@ bool History::UpdatesToQuick() {
       node_erased[cell_node[cell]].push_back(cell);               
     }      
     
-    
     //for every node with erased cells we build a fragment and 
     //put the corresponding cells in it.      
     map<unsigned int, vector<unsigned int> >::iterator e;
     for(e = node_erased.begin(); e != node_erased.end(); e++) {
-
-      //node.in.push_back(innodes.size());
 
       unsigned int floor_node = (*e).first;
       vector<unsigned int> &cells = (*e).second;
@@ -263,27 +247,22 @@ bool History::UpdatesToQuick() {
 
       Link inlink;
       inlink.node = (Node *)floor_node;
-      inlink.frag_begin = (unsigned int *)(tmp_frags.size());
+      inlink.frag_begin = tmp_frags.size();
       inlink.frag_size = cells.size();
 
       Link outlink;
       outlink.node = (Node *)current_node;
-      outlink.frag_begin = (unsigned int *)(tmp_frags.size());
+      outlink.frag_begin = tmp_frags.size();
       outlink.frag_size = cells.size();
 
       //Fill it with erased cells.
-
       vector<unsigned int>::iterator k;
-      for(k = cells.begin(); k != cells.end(); k++) {
+      for(k = cells.begin(); k != cells.end(); k++) 
 	tmp_frags.push_back(*k);
-      }         
 
-      //Add the new Frag to the node.
-
+      //Add the new Frag to the nodes (in and out)
       node_outlinks[floor_node].push_back(outlink);
       node_inlinks[current_node].push_back(inlink);
-      
-      //Update in and out of the nodes.
     }
     current_node++; 
   }
@@ -308,11 +287,47 @@ bool History::UpdatesToQuick() {
     for(unsigned int i = 0; i < links.size(); i++) 
       tmp_in_links.push_back(links[i]);
   }
+  
+  //Here we reorder entries in nexus...
+  nexus.Flush();
+
+  vector<Entry> entries;
+  entries.resize(nexus.size());
+  for(unsigned int i = 0; i < nexus.size(); i++) {
+    assert(!nexus[i].patch);
+    entries[i] = nexus[i];
+  }
+  assert(tmp_frags.size() == nexus.size());
+  for(unsigned int i = 0; i < tmp_frags.size(); i++) {
+    nexus[i] = entries[tmp_frags[i]];
+  }
+  //WARNING CRITICAL TODOHey we should do the same on the borders!
+  vector<unsigned int> backward;
+  backward.resize(tmp_frags.size());
+  for(unsigned int i = 0; i < backward.size(); i++) 
+    backward[tmp_frags[i]] = i;
+
+  for(unsigned int i = 0; i < nexus.borders.size(); i++) {
+    Border &border = nexus.borders.GetBorder(i);
+    for(unsigned int k = 0; k < border.Size(); k++)
+      border[k].end_patch = backward[border[k].end_patch];
+  }
+  nexus.borders.Flush();
+  vector<Border> borders;
+  borders.resize(nexus.borders.size());
+  for(unsigned int i = 0; i < nexus.borders.size(); i++) {
+    borders[i] = nexus.borders[i];
+  }
+  assert(tmp_frags.size() == nexus.borders.size());
+  for(unsigned int i = 0; i < tmp_frags.size(); i++) {
+    nexus.borders[i] = borders[tmp_frags[i]];
+  }
+
+  
   size = tmp_nodes.size() * sizeof(Node) +
     tmp_in_links.size() * sizeof(Link) + 
     tmp_out_links.size() * sizeof(Link) + 
-    tmp_frags.size() * sizeof(unsigned int) +
-    5 * sizeof(int);
+    4 * sizeof(int);
   
   if(buffer) delete []buffer;
   buffer = new char[size];
@@ -321,18 +336,15 @@ bool History::UpdatesToQuick() {
   n_nodes() = tmp_nodes.size();
   n_in_links() = tmp_in_links.size();
   n_out_links() = tmp_out_links.size();
-  n_frags() = tmp_frags.size();
 
-  nodes = (Node *)(buffer + 5 * sizeof(int));
+  nodes = (Node *)(buffer + 4 * sizeof(int));
   in_links = (Link *)(nodes + n_nodes());
   out_links = in_links + n_in_links();
-  frags = (unsigned int *)(out_links + n_out_links());
   
   memcpy(nodes, &*tmp_nodes.begin(), tmp_nodes.size()*sizeof(Node));
   memcpy(in_links, &*tmp_in_links.begin(), tmp_in_links.size()*sizeof(Link));
   memcpy(out_links, &*tmp_out_links.begin(), 
 	 tmp_out_links.size()*sizeof(Link));
-  memcpy(frags, &*tmp_frags.begin(), tmp_frags.size() * sizeof(unsigned int));
 
   return LoadPointers();
 }
@@ -347,7 +359,7 @@ void History::BuildLevels(vector<int> &levels) {
       unsigned int current = 0;
       if(node != nodes) { //not root
 	Link *inlink = node->in_begin();
-	unsigned int p = *(inlink->begin());
+	unsigned int p = (inlink->begin());
 	assert(p < levels.size());
 	assert(p >= 0);
 	current = levels[p]+1;
@@ -356,7 +368,7 @@ void History::BuildLevels(vector<int> &levels) {
 	Link &link = *l;
 	Link::iterator c;
 	for(c = link.begin(); c != link.end(); c++) {
-	  unsigned int p = *c;
+	  unsigned int p = c;
 	  while(p >= levels.size()) levels.push_back(-1);
 	  levels[p] = current;
 	}

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/02/19 16:22:45  ponchio
+Minor changes (visited and Cell)
+
 Revision 1.4  2005/02/17 16:40:35  ponchio
 Optimized BuildLevels.
 
@@ -43,6 +46,7 @@ Added copyright
 
 namespace nxs {
   
+  class Nexus;
   class History {
   public:
 
@@ -63,12 +67,14 @@ namespace nxs {
     struct Link {
       Node *node;
 
-      typedef unsigned int *iterator;
+      //TODO move to frag_begin frag_end (instead of frag_size)
+      //and test speed... before so maybe also for node 
+      typedef unsigned int iterator;
       iterator begin() { return frag_begin; }
       iterator end() { return frag_begin + frag_size; }
       unsigned int size() { return frag_size; }
 
-      unsigned int *frag_begin;
+      unsigned int frag_begin;
       unsigned int frag_size;
     };
 
@@ -93,11 +99,11 @@ namespace nxs {
     Link *in_links;
     Link *out_links;
     //TODO this list is really not necessary if we order our cells
-    unsigned int *frags;
+    //    unsigned int *frags;
 
     std::vector<Update> updates;
 
-    History(): nodes(NULL), in_links(NULL), out_links(NULL), frags(NULL), 
+    History(): nodes(NULL), in_links(NULL), out_links(NULL),// frags(NULL), 
       buffer(NULL) {}
     ~History();
    
@@ -117,7 +123,7 @@ namespace nxs {
     char *SaveUpdates(unsigned int &size);
 
     bool QuickToUpdates();
-    bool UpdatesToQuick();
+    bool UpdatesToQuick(Nexus &nexus);
     bool IsQuick() { return buffer != NULL; }
 
     void BuildLevels(std::vector<int> &levels);
@@ -126,7 +132,7 @@ namespace nxs {
     int &n_nodes() { return ((int *)buffer)[1]; }
     int &n_in_links() { return ((int *)buffer)[2]; }
     int &n_out_links() { return ((int *)buffer)[3]; }
-    int &n_frags() { return ((int *)buffer)[4]; }
+    //    int &n_frags() { return ((int *)buffer)[4]; }
 
     typedef Node *iterator;
     iterator begin() { return nodes; }

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.29  2005/02/19 10:45:04  ponchio
+Patch generalized and small fixes.
+
 Revision 1.28  2005/02/08 12:43:03  ponchio
 Added copyright
 
@@ -102,11 +105,18 @@ void Nexus::Close() {
 
   if(!IsReadOnly()) {
     //set history_offset
-    if(!size()) history_offset = 0;
-    else 
-      history_offset = (back().patch_start + back().disk_size);
+    history_offset = 0;
+    if(size()) {
+      //we need to discover where is the last patch
+      for(unsigned int i = 0; i < size(); i++) {
+	Entry &e = operator[](i);
+	if(e.patch_start + e.disk_size > history_offset)
+	  history_offset = e.patch_start + e.disk_size;
+      }
+      //      history_offset = (back().patch_start + back().disk_size);
+    }
     history_offset *= chunk_size;
-
+    
     unsigned int history_size;
     char *mem = history.Save(history_size);
     Redim(history_offset + history_size + sizeof(unsigned int));

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/02/08 12:43:03  ponchio
+Added copyright
+
 
 ****************************************************************************/
 
@@ -55,15 +58,18 @@ int main(int argc, char *argv[]) {
       unsigned short *face = patch.Face(f);
       for(int k = 0; k < 3; k++) {
         if(face[k] > patch.nv) {
-          cerr << "Invalid face number: " << face[k] << " > " << patch.nv << endl;
+          cerr << "Invalid face number: " << face[k] << " > " 
+	       << patch.nv << endl;
           cerr << "At patch: " << patchid << endl;
+	  cerr << "start: " << info.patch_start << endl;
+	  cerr << "nf: " << info.nface << " nv: " << info.nvert << endl;
           //exit(0);
         }
       }      
     }
     Sphere3f &sphere = info.sphere;
     for(int v = 0; v < patch.nv; v++) {
-      Point3f &p = patch.Vert(v);
+      Point3f &p = patch.Vert3f(v);
       float dist = Distance(sphere, p);
       if(dist > 0.001) {
       //if(!info.sphere.IsIn(p)) {

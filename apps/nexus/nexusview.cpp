@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.41  2005/02/19 12:06:55  ponchio
+Debug...
+
 Revision 1.40  2005/02/17 15:39:44  ponchio
 Reorderes statistics a bit.
 
@@ -276,9 +279,7 @@ int main(int argc, char *argv[]) {
 
   bool rotate = false;
   bool show_borders = false;
-  bool show_colors = true;
   bool do_render = true;
-  bool show_normals = true;
   bool show_statistics = true;
   bool extract = true;
   bool realtime = true;
@@ -384,8 +385,18 @@ int main(int argc, char *argv[]) {
 	case SDLK_q: exit(0); break;	
 	case SDLK_k: keepdrawing = !keepdrawing; break;
 	case SDLK_e: extract = !extract; break;
-	case SDLK_c: show_colors = !show_colors; break;
-	case SDLK_n: show_normals = !show_normals; break;
+	case SDLK_c:
+	  if(contest.attrs & DrawContest::COLOR)
+	    contest.attrs &= ~DrawContest::COLOR;
+	  else
+	    contest.attrs |= DrawContest::COLOR; break;
+	  
+	case SDLK_n:
+	  if(contest.attrs & DrawContest::NORMAL)
+	    contest.attrs &= ~DrawContest::NORMAL;
+	  else
+	    contest.attrs |= DrawContest::NORMAL; break;
+
 	case SDLK_w: do_render = !do_render; break;
 	    
 	case SDLK_LEFT:     nexus.MaxRam() *= 0.8; break;
