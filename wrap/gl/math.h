@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/07/13 15:55:57  cignoni
+Added test on presence of glTranspose extension (for old hw support)
+
 Revision 1.6  2004/05/26 15:12:39  cignoni
 Removed inclusion of gl extension stuff
 
@@ -53,6 +56,7 @@ Revision 1.1  2004/03/31 15:27:17  ponchio
 
 #include <vcg/math/matrix44.h>
 #include <vcg/math/similarity.h>
+#include <gl/glew.h>
 
 namespace vcg {
 
@@ -94,6 +98,15 @@ inline void glMultMatrix(const Similarityd &s) {
   glRotated(math::ToDeg(alpha), axis[0], axis[1], axis[2]);
   glScaled(s.sca, s.sca, s.sca);
 }
+
+inline void glGetv(const GLenum  pname, Matrix44f  & m){
+	glGetFloatv(pname,&m[0][0]);
+}
+
+inline void glGetv(const GLenum  pname, Matrix44d  & m){
+	glGetDoublev(pname,&m[0][0]);
+}
+
 
 }//namespace
 #endif
