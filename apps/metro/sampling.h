@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/05/14 13:49:07  ganovelli
+created
+
 Revision 1.6  2004/05/14 00:38:01  ganovelli
 a bit of cleaning:
 SamplingFlags struct added
@@ -45,6 +48,7 @@ instantiate GridStaticPtr on the simplexClass template.
 #include <vcg/space/box3.h>
 #include <vcg/space/color4.h>
 #include <vcg/simplex/face/distance.h>
+#include <vcg/complex/trimesh/update/color.h>
 #include <vcg/space/index/grid_static_ptr.h>
 using namespace vcg;
 
@@ -56,10 +60,10 @@ struct SamplingFlags{
 						FACE_SAMPLING										= 0x0008,
 						MONTECARLO_SAMPLING							= 0x0010,
 						SUBDIVISION_SAMPLING						= 0x0020,
-						SIMILAR_TRIANGLES_SAMPLING			= 0x0040,
-						SAVE_ERROR_DISPLACEMENT					= 0x0080,
-						SAVE_ERROR_AS_COLOUR						= 0x0100,
-						INCLUDE_UNREFERENCED_VERTICES		= 0x0200
+						SIMILAR_SAMPLING			          = 0x0040,
+						NO_SAMPLING     			          = 0x0070,
+						SAVE_ERROR                      = 0x0100,
+						INCLUDE_UNREFERENCED_VERTICES		= 0x0200,
 				};
 	};
 // -----------------------------------------------------------------------------------------------
@@ -170,7 +174,7 @@ Sampling<MetroMesh>::Sampling(MetroMesh &_s1, MetroMesh &_s2):S1(_s1),S2(_s2)
 		inflate_percentage			       = 0.02;
 		min_size					             = 125;		/* 125 = 5^3 */
 		n_hist_bins                    = 256;
-		print_every_n_elements         = 1000;
+		print_every_n_elements         = S1.fn/100;
 
 			referredBit = VertexType::NewUserBit();
 			// store the unreferred vertices
@@ -267,23 +271,7 @@ void Sampling<MetroMesh>::VertexSampling()
         n_total_vertex_samples++;
 
         // save vertex quality
-        if(Flags & (SamplingFlags::SAVE_ERROR_DISPLACEMENT | SamplingFlags::SAVE_ERROR_AS_COLOUR))
-            (*vi).Q() = error;
-
-
-				if(Flags & SamplingFlags::SAVE_ERROR_AS_COLOUR)
-        {
-            Color4b  col = Color4b(Color4b::White);
-
-            if(error < dist_upper_bound)
-                // colour mapped distance
-                col.ColorRamp(0, dist_upper_bound, dist_upper_bound-error);
-            //else
-                // no matching mesh patches -> white
-
-            (*vi).C() = col;
-        }
-
+        if(Flags & SamplingFlags::SAVE_ERROR)  (*vi).Q() = error;
 
         // print progress information
         if(!(++cnt % print_every_n_elements))
@@ -582,7 +570,8 @@ void Sampling<MetroMesh>::Hausdorff()
 				if(Flags & SamplingFlags::EDGE_SAMPLING)
         {
             EdgeSampling();
-            n_samples_target -= (int) n_total_samples;
+           if(n_samples_target > n_total_samples) n_samples_target -= (int) n_total_samples;
+           else n_samples_target=0;
         }
         // Face sampling.
         if((Flags & SamplingFlags::FACE_SAMPLING) && (n_samples_target > 0))
@@ -590,36 +579,14 @@ void Sampling<MetroMesh>::Hausdorff()
             n_samples_per_area_unit  = n_samples_target / area_S1;
             if(Flags & SamplingFlags::MONTECARLO_SAMPLING)        MontecarloFaceSampling();
             if(Flags & SamplingFlags::SUBDIVISION_SAMPLING)       SubdivFaceSampling();
-            if(Flags & SamplingFlags::SIMILAR_TRIANGLES_SAMPLING) SimilarFaceSampling();
+            if(Flags & SamplingFlags::SIMILAR_SAMPLING) SimilarFaceSampling();
         }
     }
 
     // compute vertex colour
-    if(Flags & SamplingFlags::SAVE_ERROR_AS_COLOUR)
-    {
-        VertexIterator vi;
-        float   error;
-        int     cnt = 0;
-        for(vi=S1.vert.begin();vi!=S1.vert.end();++vi)
-        {
-            Color4b  col = Color4b(Color4b::White);
-            error = (*vi).Q();
-       
-            if(error < dist_upper_bound)
-                // colour mapped distance
-                col.ColorRamp(0, (float)max_dist, (float)max_dist-error);
-            //else
-            // no matching mesh patches -> white
-        
-            (*vi).C() = col;
-
-            // print progress information
-            if(!(++cnt % print_every_n_elements))
-                printf("Computing vertex colour %d%%\r", (100 * cnt/S1.vn));
-        }
-        printf("                       \r");
-    }
-
+    if(Flags & SamplingFlags::SAVE_ERROR)
+      vcg::tri::UpdateColor<MetroMesh>::VertexQuality(S1);
+  
     // compute statistics
     n_samples_per_area_unit = (double) n_total_samples / area_S1;
     volume     = mean_dist / n_samples_per_area_unit / 2.0;
