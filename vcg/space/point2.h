@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/04/05 11:57:32  cignoni
+Add V() access function
+
 Revision 1.3  2004/03/10 17:42:40  tarini
 Added comments (Dox) !
 Added Import(). Costruct(), ScalarType...  Corrected cross prod (sign). Added Angle. Now using Math:: stuff for trigon. etc.
@@ -229,8 +232,8 @@ public:
 	}	
 	  /// returns the angle with X axis (radiants, in [-PI, +PI] )
 	inline Point2 &Angle(){
-		return Math::Atan2(_v[1],_v[0]);
-	};
+		return math::Atan2(_v[1],_v[0]);
+	}
 		/// transform the point in cartesian coords into polar coords
 	inline Point2 & Cartesian2Polar()
 	{
