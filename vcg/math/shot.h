@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/10/07 14:24:53  ganovelli
+added LookAt,LookToward
+
 Revision 1.2  2004/10/05 19:04:25  ganovelli
 version 5-10-2004 in progress
 
@@ -75,7 +78,7 @@ public:
 	vcg::Point3<S> Axis(const int & i)const;
 
 	/// take the viewpoint
-	vcg::Point3<S> const &ViewPoint();
+	 const vcg::Point3<S> ViewPoint();
 
 	/// set the viewpoint
 	void SetViewPoint(const vcg::Point3<S> & viewpoint);
@@ -98,7 +101,7 @@ public:
 }; // end class definition
 
 template <class S>
-vcg::Point3<S>const & Shot<S>::ViewPoint(){
+const vcg::Point3<S> Shot<S>::ViewPoint(){
 	//Matrix44<S> m = similarity.Matrix();
 	//return Point3<S>(m[0][3],m[1][3],m[2][3]);
 	return -similarity.tra;
