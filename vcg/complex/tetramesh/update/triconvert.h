@@ -106,9 +106,9 @@ void Convert(TetraMeshType &tetram,TriangleMeshType &trim)
     for (int i=0;i<4;i++)
        if (ti->IsBorderF(i))
        {
-        v0=ti->V(Tetra4<double>::VofF(i,0));
-        v1=ti->V(Tetra4<double>::VofF(i,1));
-        v2=ti->V(Tetra4<double>::VofF(i,2));
+        v0=ti->V(Tetra3<double>::VofF(i,0));
+        v1=ti->V(Tetra3<double>::VofF(i,1));
+        v2=ti->V(Tetra3<double>::VofF(i,2));
         FaceType f=FaceType();
         f.ClearFlags();
         f.V(0)=v0;

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/04/26 09:40:15  pietroni
+*** empty log message ***
+
 Revision 1.6  2004/04/23 14:55:06  pietroni
 conversion funtion
 
@@ -573,20 +576,22 @@ static bool HasVFAdjacency()   {
  //@{
 
 template <class VERT_TYPE>
-inline Convert( const VERT_TYPE &v )
+inline Convert( VERT_TYPE &v )
 {
-  this->P()=v->P();
-  this._flags=v._flags;
-	if (this->HasNormal())&&(v.HasNormal())
-    this->N()=v->N();
-  if (this->HasColor())&&(v.HasColor())
-    this->C()=v->C();
-  if (this->HasMark())&&(v.HasMark())
-    this.IMark()=v.IMark();
-  if (this->HasQuality())&&(v.HasQuality())
-    this->Q()=v->Q();
-  if (this->HasTexture())&&(v.HasTexture())
-    this->T()=v->T();
+  P()=v.P();
+  Flags()=v.Flags();
+	if ((HasNormal())&&(v.HasNormal()))
+    N()=v.N();
+  if ((HasColor())&&(v.HasColor()))
+    C()=v.C();
+#ifdef __VCGLIB_VERTEX_M
+  if ((HasMark())&&(v.HasMark()))
+    IMark()=v.IMark();
+#endif
+  if ((HasQuality())&&(v.HasQuality()))
+    Q()=v.Q();
+  if ((HasTexture())&&(v.HasTexture()))
+    T()=v.T();
 }
 	
  //@}

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/04/26 09:38:54  pietroni
+*** empty log message ***
+
 Revision 1.2  2004/04/20 12:42:37  pietroni
 *** empty log message ***
 
@@ -38,7 +41,7 @@ Revision 1.1  2004/04/15 08:54:20  pietroni
 #else
 #define NULL 0
 #include<vcg/space/point3.h>
-#include<vcg/space/tetra4.h>
+#include<vcg/space/tetra3.h>
 
 namespace vcg {
 /**
@@ -289,7 +292,7 @@ public:
 
 
  	ScalarType ComputeVolume(){
-      Tetra4<ScalarType> T(V(0)->cP(),V(1)->cP(),V(2)->cP(),V(3)->cP());
+      Tetra3<ScalarType> T(V(0)->cP(),V(1)->cP(),V(2)->cP(),V(3)->cP());
       #ifdef __VCGLIB_TETRA_Q
 			_volume = T.ComputeVolume();
       return _volume;

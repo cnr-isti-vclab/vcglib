@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/04/22 13:19:12  ganovelli
+first version
+
 Revision 1.2  2004/04/20 16:26:48  pietroni
 *** empty log message ***
 
@@ -46,7 +49,7 @@ namespace vcg {
 		Templated class for storing a generic tetrahedron in a 3D space.
     Note the relation with the Face class of TetraMesh complex, both classes provide the P(i) access functions to their points and therefore they share the algorithms on it (e.g. area, normal etc...)
  */
-template <class SCALAR_TETRA_TYPE> class Tetra4
+template <class SCALAR_TETRA_TYPE> class Tetra3
 {
 public:
   typedef SCALAR_TETRA_TYPE ScalarType;
@@ -62,7 +65,7 @@ protected:
 
 public:
 ///constructor with 4 points
-  Tetra4(CoordType p0,CoordType p1,CoordType p2,CoordType p3)
+  Tetra3(CoordType p0,CoordType p1,CoordType p2,CoordType p3)
   {
     _v[0]=p0;
     _v[1]=p1;
@@ -165,8 +168,8 @@ ScalarType ComputeAspectRatio()
 		return vertface[indexV][indexF];
 	}
   
-  static int FofE(const int &indexE,const int &indexF) 
-	{	assert ((indexE<6)&&(indexF<2));
+  static int FofE(const int &indexE,const int &indexSide) 
+	{	assert ((indexE<6)&&(indexSide<2));
     static int edgeface[6][2]={{0,1},
 					{0,2},
 					{1,2},

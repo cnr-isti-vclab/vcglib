@@ -314,27 +314,27 @@ void TTTopology(VertexContainer &vert,TetraContainer &tetra)
 			(*ti).T(2)=(&(*ti));
 			(*ti).T(3)=(&(*ti));
 			
-      v0=(*ti).V(Tetra4<double>::VofF(0,0));
-      v1=(*ti).V(Tetra4<double>::VofF(0,1));
-      v2=(*ti).V(Tetra4<double>::VofF(0,2));
+      v0=(*ti).V(Tetra3<double>::VofF(0,0));
+      v1=(*ti).V(Tetra3<double>::VofF(0,1));
+      v2=(*ti).V(Tetra3<double>::VofF(0,2));
 		
 			VF.push_back(Facet<VertexType,TetraType>(v0,v1,v2,&(*ti),0));
 
-      v0=(*ti).V(Tetra4<double>::VofF(1,0));
-      v1=(*ti).V(Tetra4<double>::VofF(1,1));
-      v2=(*ti).V(Tetra4<double>::VofF(1,2));
+      v0=(*ti).V(Tetra3<double>::VofF(1,0));
+      v1=(*ti).V(Tetra3<double>::VofF(1,1));
+      v2=(*ti).V(Tetra3<double>::VofF(1,2));
 
 			VF.push_back(Facet<VertexType,TetraType>(v0,v1,v2,&(*ti),1));
 
-      v0=(*ti).V(Tetra4<double>::VofF(2,0));
-      v1=(*ti).V(Tetra4<double>::VofF(2,1));
-      v2=(*ti).V(Tetra4<double>::VofF(2,2));
+      v0=(*ti).V(Tetra3<double>::VofF(2,0));
+      v1=(*ti).V(Tetra3<double>::VofF(2,1));
+      v2=(*ti).V(Tetra3<double>::VofF(2,2));
 			
 			VF.push_back(Facet<VertexType,TetraType>(v0,v1,v2,&(*ti),2));
 
-      v0=(*ti).V(Tetra4<double>::VofF(3,0));
-      v1=(*ti).V(Tetra4<double>::VofF(3,1));
-      v2=(*ti).V(Tetra4<double>::VofF(3,2));
+      v0=(*ti).V(Tetra3<double>::VofF(3,0));
+      v1=(*ti).V(Tetra3<double>::VofF(3,1));
+      v2=(*ti).V(Tetra3<double>::VofF(3,2));
 
 			VF.push_back(Facet<VertexType,TetraType>(v0,v1,v2,&(*ti),3));
      }
@@ -378,16 +378,16 @@ void TestTTTopology(VertexContainer &vert,TetraContainer &tetra)
 					{	
 					  assert( ((((*ti).T(i))->T((*ti).Z(i)))==&(*ti)));
             
-            VertexType	*v0=(*ti).V(Tetra4<double>::VofF(i,0));
-            VertexType	*v1=(*ti).V(Tetra4<double>::VofF(i,1));
-            VertexType	*v2=(*ti).V(Tetra4<double>::VofF(i,2));
+            VertexType	*v0=(*ti).V(Tetra3<double>::VofF(i,0));
+            VertexType	*v1=(*ti).V(Tetra3<double>::VofF(i,1));
+            VertexType	*v2=(*ti).V(Tetra3<double>::VofF(i,2));
 						
 						TetraType *t1=(TetraType*)(*ti).T(i);
 						int z1=(*ti).Z(i);
             
-            VertexType	*vo0=(*t1).V(Tetra4<double>::VofF(z1,0));
-            VertexType	*vo1=(*t1).V(Tetra4<double>::VofF(z1,1));
-            VertexType	*vo2=(*t1).V(Tetra4<double>::VofF(z1,2));
+            VertexType	*vo0=(*t1).V(Tetra3<double>::VofF(z1,0));
+            VertexType	*vo1=(*t1).V(Tetra3<double>::VofF(z1,1));
+            VertexType	*vo2=(*t1).V(Tetra3<double>::VofF(z1,2));
 
 						assert((v0!=v1)&&(v0!=v2)&&(v1!=v2));
 						assert((vo0!=vo1)&&(vo0!=vo2)&&(vo1!=vo2));
