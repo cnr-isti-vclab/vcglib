@@ -2,7 +2,7 @@
 ** Form implementation generated from reading ui file 'MainFrame.ui'
 **
 ** Created: Mon Oct 4 19:00:57 2004
-**      by: The User Interface Compiler ($Id: mainframe.cpp,v 1.1 2004-10-04 18:01:36 ganovelli Exp $)
+**      by: The User Interface Compiler ($Id: mainframe.cpp,v 1.2 2004-10-04 18:45:48 ganovelli Exp $)
 **
 ** WARNING! All changes made in this file will be lost!
 ****************************************************************************/
@@ -10,7 +10,7 @@
 #include "mainframe.h"
 
 #include <qvariant.h>
-#include <D:/TetraView/myglwidget.h>
+#include "myglwidget.h"
 #include <qgroupbox.h>
 #include <qpushbutton.h>
 #include <qbuttongroup.h>

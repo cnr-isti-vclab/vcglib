@@ -1,10 +1,10 @@
-#include <GL\glew.h>
+#include <GL/glew.h>
 #include <qgl.h>
-#include <wrap\gl\glwraptetra.h>
-#include <wrap\gl\pick.h>
-#include <wrap\gui\trackball.h>
-#include <myclasses.h>
-#include <tetrastats.h>
+#include <wrap/gl/glwraptetra.h>
+#include <wrap/gl/pick.h>
+#include <wrap/gui/trackball.h>
+#include "myclasses.h"
+#include "tetrastats.h"
 
 
 

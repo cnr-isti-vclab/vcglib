@@ -1,4 +1,4 @@
-#include <myglwidget.h>
+#include "myglwidget.h"
 #include <vcg\space\tetra3.h>
 #include <vcg\space\point3.h>
 extern MyTetraMesh *tm;

@@ -9,16 +9,16 @@
 
 
 //#include <tetrastats.h>
-#include <myglwidget.h>
+#include "myglwidget.h"
 
 
 MyTetraMesh TM;
 MyTetraMesh *tm;
 TetraStats<MyTetraMesh> Stats;
-vcg::tetra::io::ImporterTS<MyTetraMesh> ImpTS;
-vcg::tetra::UpdateTetraTopology<MyTetraMesh::VertexContainer ,MyTetraMesh::TetraContainer > UT;
-vcg::tetra::UpdateNormals<MyTetraMesh> UN;
-vcg::tetra::UpdateBounding<MyTetraMesh> UB;
+typedef vcg::tetra::io::ImporterTS<MyTetraMesh> ImpTS;
+typedef vcg::tetra::UpdateTetraTopology<MyTetraMesh::VertexContainer ,MyTetraMesh::TetraContainer > UT;
+typedef vcg::tetra::UpdateNormals<MyTetraMesh> UN;
+typedef vcg::tetra::UpdateBounding<MyTetraMesh> UB;
 
 
 void openTetraMesh(const char* filename)
@@ -29,14 +29,15 @@ void openTetraMesh(const char* filename)
 	TM=MyTetraMesh();
 
 	if (ext==".ts")
-		ImpTS.Open(TM,filename);
+		ImpTS::Open(TM,filename);
 	else
 		vcg::tetra::io::ImporterPLY<MyTetraMesh> ::Open(TM,filename);
 	
-	UT.TTTopology(TM.vert,TM.tetra);
-	UT.VTTopology(TM.vert,TM.tetra);
-	UN.PerVertex(TM);
-	UB.Box(TM);
+	UT::TTTopology(TM.vert,TM.tetra);
+	UT::ClearVTTopology(TM.vert,TM.tetra);
+	UT::VTTopology(TM.vert,TM.tetra);
+	UN::PerVertex(TM);
+	UB::Box(TM);
 	tm=&TM;
 	Stats.SetTetraMesh(tm);
 	Stats.Update();
