@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2005/02/19 12:06:55  ponchio
+Debug...
+
 Revision 1.10  2005/02/19 10:45:05  ponchio
 Patch generalized and small fixes.
 
@@ -241,7 +244,7 @@ unsigned int Patch::ByteSize(Signature &signature,
   if(signature.face == Signature::TRIANGLES)
     size += nface * 3 * sizeof(unsigned short);
   else if (signature.face == Signature::STRIPS)
-    size += nface + sizeof(unsigned short);
+    size += nface * sizeof(unsigned short);
   else if (signature.face == Signature::TETRAS)
     size += nface * 4 * sizeof(unsigned short);
   else if (signature.face == Signature::SLICE) {
