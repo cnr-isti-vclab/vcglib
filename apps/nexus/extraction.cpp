@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/02/10 09:18:20  ponchio
+Statistics.
+
 Revision 1.6  2005/02/08 12:43:03  ponchio
 Added copyright
 
@@ -58,7 +61,7 @@ void Extraction::Extract(NexusMt *_mt) {
   
   //first we clear the visited flags
   visited.clear();
-  visited.resize(mt->history.n_nodes(), false);
+  visited.resize(mt->history.n_nodes(), 0);
 
   heap.clear();
 
@@ -70,7 +73,7 @@ void Extraction::Extract(NexusMt *_mt) {
     heap.pop_back();
 
     Node *node = hnode.node;
-    if(visited[node - root]) continue;
+    if(Visited(node)) continue;
 
     if(Expand(hnode)) 
       Visit(node);
@@ -90,35 +93,43 @@ void Extraction::Init() {
   Node *nodes = mt->history.nodes;
   for(unsigned int i = 0; i < visited.size(); i++) {
     if(!visited[i]) continue;
+    //    if(!visited[i]) continue;
     Node &node = nodes[i];
 
     bool cancoarse = true;
     Node::iterator n;
     for(n = node.out_begin(); n != node.out_end(); n++) {
+      if(!Visited((*n).node)) {
+	//      if(!visited[(*n).node - root]) {
+	float maxerror = -1;
+	
+	Link &link = *n;
+	for(Link::iterator k = link.begin(); k != link.end(); k++) {
+	  unsigned int patch = *k;
+	  Entry &entry = (*mt)[patch];
+	  
+	  bool visible;
+	  float error = metric->GetError(entry, visible);
 
-      if(!visited[(*n).node - root]) {
-	      float maxerror = -1;
-
-	      Link &link = *n;
-	      for(Link::iterator k = link.begin(); k != link.end(); k++) {
-	        unsigned int patch = (*k).patch;
-	        Entry &entry = (*mt)[patch];
-
-	        float error = metric->GetError(entry);
-	        if(error > maxerror) maxerror = error;
-
-	        cost.extr += entry.ram_size;
-	        vcg::Sphere3f &sphere = entry.sphere;
-	        if(!frustum.IsOutside(sphere.Center(), sphere.Radius()))
-	          cost.draw += entry.ram_size;
-	        if(!entry.patch)
-	          cost.disk += entry.disk_size;
-	      }
-	      if((*n).node != sink && maxerror > target_error)
-	        front.push_back(HeapNode((*n).node, maxerror));
-	      if(maxerror > max_error) max_error = maxerror;
+	  if(error > maxerror) maxerror = error;
+	  
+	  cost.extr += entry.ram_size;
+	  //TODO if(frustum) else
+	  //if(visible)
+	  //	    cost.draw += entry.ram_size;
+	  
+	  vcg::Sphere3f &sphere = entry.sphere;
+	  if(!frustum.IsOutside(sphere.Center(), sphere.Radius())) 
+	    cost.draw += entry.ram_size;
+			
+	  if(!entry.patch)
+	    cost.disk += entry.disk_size;
+	}
+	if((*n).node != sink && maxerror > target_error)
+	  front.push_back(HeapNode((*n).node, maxerror));
+	if(maxerror > max_error) max_error = maxerror;
       } else
-	      cancoarse = false;
+	cancoarse = false;
     }
     if(cancoarse && &node != root) {
       float error = GetRefineError(&node);
@@ -141,7 +152,7 @@ void Extraction::Update(NexusMt *_mt) {
 
   if(!visited.size()) {
     visited.resize(mt->history.n_nodes(), false);
-    visited[0] = true;
+    SetVisited(root, true);
   }
   
   Init();
@@ -202,7 +213,7 @@ void Extraction::Update(NexusMt *_mt) {
       Node::iterator i;
       for(i = hnode.node->out_begin(); i != hnode.node->out_end(); i++) {
          Node *child = (*i).node;
-         if(visited[child-root]) recursive = true;
+         if(Visited(child)) recursive = true;
       }
       if(!recursive && !Coarse(hnode)) { //no more disk so.. push back on heap the heapnode          
          back.push_back(hnode);
@@ -227,11 +238,11 @@ void Extraction::Update(NexusMt *_mt) {
       front.pop_back();
       Node::iterator l;
       for(l = node->out_begin(); l != node->out_end(); l++) {
-	      Link &link = (*l);
-	      for(Link::iterator k = link.begin(); k != link.end(); k++) {
-	        selected.push_back(Item((*k).patch, i));
-		errors[(*k).patch] = i;
-	      }
+	Link &link = (*l);
+	for(Link::iterator k = link.begin(); k != link.end(); k++) {
+	  selected.push_back(Item(*k, i));
+	  errors[*k] = i;
+	}
       }
     } else if(back.size()) {
       pop_heap(back.begin(), back.end(), greater<HeapNode>());
@@ -240,11 +251,11 @@ void Extraction::Update(NexusMt *_mt) {
       back.pop_back();
       Node::iterator l;
       for(l = node->in_begin(); l != node->in_end(); l++) {
-	      Link &link = (*l);
-	      for(Link::iterator k = link.begin(); k != link.end(); k++) {
-	        selected.push_back(Item((*k).patch, i));
-		errors[(*k).patch] = i;
-	      }
+	Link &link = (*l);
+	for(Link::iterator k = link.begin(); k != link.end(); k++) {
+	  selected.push_back(Item(*k, i));
+	  errors[*k] = i;
+	}
       }
     }
   }
@@ -256,8 +267,9 @@ float Extraction::GetRefineError(Node *node) {
   for(i = node->in_begin(); i != node->in_end(); i++) {
     Link &link = *i;
     for(Link::iterator k = link.begin(); k != link.end(); k++) {
-      Entry &entry = (*mt)[(*k).patch];
-      float error =  metric->GetError(entry);
+      Entry &entry = (*mt)[*k];
+      bool visible;
+      float error =  metric->GetError(entry, visible);
       if(error > maxerror) maxerror = error;
     }
   }
@@ -267,7 +279,6 @@ float Extraction::GetRefineError(Node *node) {
 bool Extraction::Refine(HeapNode hnode) {
   
   Node *node = hnode.node;
-  //cerr << "Refine node: " << (void *)hnode.node << " err: " << hnode.error << endl;      
 
   //recursively refine parent if applicable.
   Node::iterator i;
@@ -305,7 +316,7 @@ bool Extraction::Refine(HeapNode hnode) {
   draw_used += cost.draw;
   disk_used += cost.disk;
 
-  visited[node - root] = true;
+  SetVisited(node, true);
 
 
   //now add to the front children (unless sink node)
@@ -349,7 +360,7 @@ bool Extraction::Coarse(HeapNode hnode) {
 
   if(disk_used > disk_max) return false;
 
-  visited[node - root] = false;
+  SetVisited(node, false);
 
   //now add to the back parents (unless root node)
   for(i = node->in_begin(); i != node->in_end(); i++) {
@@ -381,7 +392,7 @@ void Extraction::Select() {
       if(!visited[n_out]) {
 	Link &link = *n;
 	for(Link::iterator k = link.begin(); k != link.end(); k++) {
-	  unsigned int patch = (*k).patch;
+	  unsigned int patch = *k;
 	  selected.push_back(Item(patch,0));
 	  errors[patch] = 0.0f;
 	}
@@ -391,14 +402,13 @@ void Extraction::Select() {
 }
 
 void Extraction::Visit(Node *node) {
-  if(visited[node - root]) return;
+  assert(!Visited(node));
 
-  visited[node - root] = true;
+  SetVisited(node, true);
 
   Node::iterator i;
   for(i = node->in_begin(); i != node->in_end(); i++) {
-    unsigned int n_in = (*i).node - root;
-    if(visited[n_in]) continue;
+    if(Visited((*i).node)) continue;
     Visit((*i).node);
   }
 
@@ -412,8 +422,9 @@ void Extraction::Visit(Node *node) {
     float maxerror = -1;
     Link &link = *i;
     for(Link::iterator k = link.begin(); k != link.end(); k++) {
-      Entry &entry = (*mt)[(*k).patch];
-      float error =  metric->GetError(entry);
+      Entry &entry = (*mt)[*k];
+      bool visible;
+      float error =  metric->GetError(entry, visible);
       if(error > maxerror) maxerror = error;
     }
     //TODO this check may be dangerous for non saturating things...
@@ -437,7 +448,7 @@ void Extraction::Diff(Node *node, Cost &cost) {
   for(i = node->in_begin(); i != node->in_end(); i++) {
     Link &link = *i;
     for(Link::iterator k = link.begin(); k != link.end(); k++) {
-      unsigned int patch = (*k).patch;
+      unsigned int patch = *k;
       Entry &entry = (*mt)[patch];
       cost.extr -= entry.ram_size;
       vcg::Sphere3f &sphere = entry.sphere;
@@ -451,7 +462,7 @@ void Extraction::Diff(Node *node, Cost &cost) {
   for(i = node->out_begin(); i != node->out_end(); i++) {
     Link &link = *i;
     for(Link::iterator k = link.begin(); k != link.end(); k++) {
-      unsigned int patch = (*k).patch;
+      unsigned int patch = *k;
       Entry &entry = (*mt)[patch];
       cost.extr += entry.ram_size;
       vcg::Sphere3f &sphere = entry.sphere;

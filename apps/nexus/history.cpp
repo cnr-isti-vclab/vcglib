@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/02/17 16:40:35  ponchio
+Optimized BuildLevels.
+
 Revision 1.5  2005/02/08 12:43:03  ponchio
 Added copyright
 
@@ -85,12 +88,12 @@ bool History::LoadQuick(unsigned int _size, char *mem) {
   nodes = (Node *)(buffer + 5 * sizeof(int));
   in_links = (Link *)(nodes + n_nodes());
   out_links = in_links + n_in_links();
-  frags = (Cell *)(out_links + n_out_links());
+  frags = (unsigned int *)(out_links + n_out_links());
 
   //check size is ok;
   assert(n_nodes() * sizeof(Node) +
 	 (n_in_links() + n_out_links()) * sizeof(Link) +
-	 n_frags() * sizeof(Cell) + 
+	 n_frags() * sizeof(unsigned int) + 
 	 5 * sizeof(int) == size);
   size = _size;
   return LoadPointers();
@@ -165,13 +168,13 @@ char *History::SaveQuick(unsigned int &_size) {
   for(unsigned int i = 0; i < n_in_links(); i++) {
     Link &link = in_links[i];
     link.node = (Node *)(link.node - nodes);
-    link.frag_begin = (Cell *)(link.frag_begin - frags);
+    link.frag_begin = (unsigned int *)(link.frag_begin - frags);
   }
 
   for(unsigned int i = 0; i < n_out_links(); i++) {
     Link &link = out_links[i];
     link.node = (Node *)(link.node - nodes);
-    link.frag_begin = (Cell *)(link.frag_begin - frags);
+    link.frag_begin = (unsigned int *)(link.frag_begin - frags);
   }
 
   _size = size;
@@ -212,7 +215,7 @@ bool History::UpdatesToQuick() {
 
   vector<Link> tmp_in_links;
   vector<Link> tmp_out_links;
-  vector<Cell> tmp_frags;
+  vector<unsigned int> tmp_frags;
 
   unsigned int current_node = 0;
 
@@ -252,21 +255,19 @@ bool History::UpdatesToQuick() {
 
       Link inlink;
       inlink.node = (Node *)floor_node;
-      inlink.frag_begin = (Cell *)(tmp_frags.size());
+      inlink.frag_begin = (unsigned int *)(tmp_frags.size());
       inlink.frag_size = cells.size();
 
       Link outlink;
       outlink.node = (Node *)current_node;
-      outlink.frag_begin = (Cell *)(tmp_frags.size());
+      outlink.frag_begin = (unsigned int *)(tmp_frags.size());
       outlink.frag_size = cells.size();
 
       //Fill it with erased cells.
 
       vector<unsigned int>::iterator k;
       for(k = cells.begin(); k != cells.end(); k++) {
-	      Cell cell;
-	      cell.patch = (*k);
-	      tmp_frags.push_back(cell);
+	tmp_frags.push_back(*k);
       }         
 
       //Add the new Frag to the node.
@@ -302,7 +303,7 @@ bool History::UpdatesToQuick() {
   size = tmp_nodes.size() * sizeof(Node) +
     tmp_in_links.size() * sizeof(Link) + 
     tmp_out_links.size() * sizeof(Link) + 
-    tmp_frags.size() * sizeof(Cell) +
+    tmp_frags.size() * sizeof(unsigned int) +
     5 * sizeof(int);
   
   if(buffer) delete []buffer;
@@ -317,13 +318,13 @@ bool History::UpdatesToQuick() {
   nodes = (Node *)(buffer + 5 * sizeof(int));
   in_links = (Link *)(nodes + n_nodes());
   out_links = in_links + n_in_links();
-  frags = (Cell *)(out_links + n_out_links());
+  frags = (unsigned int *)(out_links + n_out_links());
   
   memcpy(nodes, &*tmp_nodes.begin(), tmp_nodes.size()*sizeof(Node));
   memcpy(in_links, &*tmp_in_links.begin(), tmp_in_links.size()*sizeof(Link));
   memcpy(out_links, &*tmp_out_links.begin(), 
 	 tmp_out_links.size()*sizeof(Link));
-  memcpy(frags, &*tmp_frags.begin(), tmp_frags.size() * sizeof(Cell));
+  memcpy(frags, &*tmp_frags.begin(), tmp_frags.size() * sizeof(unsigned int));
 
   return LoadPointers();
 }
@@ -338,7 +339,7 @@ void History::BuildLevels(vector<int> &levels) {
       unsigned int current = 0;
       if(node != nodes) { //not root
 	Link *inlink = node->in_begin();
-	unsigned int p = inlink->begin()->patch;
+	unsigned int p = *(inlink->begin());
 	assert(p < levels.size());
 	assert(p >= 0);
 	current = levels[p]+1;
@@ -347,7 +348,7 @@ void History::BuildLevels(vector<int> &levels) {
 	Link &link = *l;
 	Link::iterator c;
 	for(c = link.begin(); c != link.end(); c++) {
-	  unsigned int p = (*c).patch;
+	  unsigned int p = *c;
 	  while(p >= levels.size()) levels.push_back(-1);
 	  levels[p] = current;
 	}

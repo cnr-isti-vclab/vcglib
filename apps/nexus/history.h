@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/02/17 16:40:35  ponchio
+Optimized BuildLevels.
+
 Revision 1.3  2005/02/08 12:43:03  ponchio
 Added copyright
 
@@ -50,22 +53,22 @@ namespace nxs {
       std::vector<unsigned int> created;
     };
 
-    struct Cell {
-      unsigned int patch;
-      //      float error;
-    };
+    //    struct Cell {
+    //      unsigned int patch;
+    //      float error;
+    //    };
 
     struct Node;
 
     struct Link {
       Node *node;
 
-      typedef Cell *iterator;
+      typedef unsigned int *iterator;
       iterator begin() { return frag_begin; }
       iterator end() { return frag_begin + frag_size; }
       unsigned int size() { return frag_size; }
 
-      Cell *frag_begin;
+      unsigned int *frag_begin;
       unsigned int frag_size;
     };
 
@@ -89,7 +92,8 @@ namespace nxs {
     Node *nodes;
     Link *in_links;
     Link *out_links;
-    Cell *frags;
+    //TODO this list is really not necessary if we order our cells
+    unsigned int *frags;
 
     std::vector<Update> updates;
 

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/02/10 09:18:20  ponchio
+Statistics.
+
 Revision 1.6  2005/02/08 12:43:03  ponchio
 Added copyright
 
@@ -79,6 +82,7 @@ class Extraction {
 
   Metric *metric;
 
+  //TODO make a pointer so no need to doubl check visibility...!
   vcg::Frustumf frustum;
 
   float target_error;
@@ -88,6 +92,7 @@ class Extraction {
   unsigned int disk_used, disk_max;
 
   std::vector<bool> visited;
+  std::vector<bool> visible;
   std::map<unsigned int, float> errors;
 
   std::vector<Item> selected;
@@ -126,9 +131,10 @@ class Extraction {
   Node *root;
   Node *sink;
 
-  bool Visited(Node *node) {
-    return visited[node - root];
-  }
+  bool Visited(Node *node)            { return visited[node - root]; }
+  void SetVisited(Node *node, bool v) { visited[node - root] = v; }
+  bool Visible(Node *node)            { return visible[node - root]; }
+  void SetVisible(Node *node, bool v) { visible[node - root] = v; }
 
   float GetRefineError(Node *node);
 };

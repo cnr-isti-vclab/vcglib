@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2005/02/19 10:45:04  ponchio
+Patch generalized and small fixes.
+
 Revision 1.20  2005/02/08 12:43:03  ponchio
 Added copyright
 
@@ -40,6 +43,7 @@ Added copyright
 
 #include <vcg/space/sphere3.h>
 
+#include "normalscone.h"
 #include "patch.h"
 #include "index_file.h"
 #include "history.h"
@@ -72,6 +76,7 @@ struct Entry {
   
   vcg::Sphere3f sphere;
   float error;
+  NCone3s cone;
 
   Patch *patch;
   unsigned int vbo_array;

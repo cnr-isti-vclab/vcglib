@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/02/08 12:43:03  ponchio
+Added copyright
+
 
 ****************************************************************************/
 
@@ -41,12 +44,14 @@ namespace nxs {
   class Metric {
   public:
     virtual void GetView() {}
-    virtual float GetError(Entry &entry) = 0;
+    virtual float GetError(Entry &entry, bool &visible) = 0;
   };
   
   class FlatMetric: public Metric {
   public:
-    float GetError(Entry &entry) { return entry.error; }
+    float GetError(Entry &entry, bool &visible) { 
+      visible = true;
+      return entry.error; }
   };
 
   class FrustumMetric: public Metric {
@@ -54,21 +59,20 @@ namespace nxs {
     vcg::Frustumf frustum;
 
     virtual void GetView() { frustum.GetView(); }
-    float GetError(Entry &entry) {
-      vcg::Sphere3f &sphere = entry.sphere;
-      float dist = (sphere.Center() - frustum.ViewPoint()).Norm() - sphere.Radius();
-      //float dist = Distance(sphere, frustum.ViewPoint());
-      if(dist < 0) 
-	      return 1e20f;
+    float GetError(Entry &entry, bool &visible) {
+      visible = true;
+      vcg::Sphere3f &sph = entry.sphere;
+      float dist = (sph.Center() - frustum.ViewPoint()).Norm() - sph.Radius();
 
-      float remote = frustum.Remoteness(sphere.Center(), sphere.Radius());      
-      if(remote > 0)
-        return (entry.error/remote)/frustum.Resolution(dist);
+      if(dist < 0) return 1e20f;
 
-      //if(frustum.IsOutside(sphere.Center(), sphere.Radius()))
-	      //return -1;
-     
-      return entry.error/frustum.Resolution(dist);
+      float remote = frustum.Remoteness(sph.Center(), sph.Radius());      
+      float error = entry.error/frustum.Resolution(dist);
+      if(remote > 0) {
+	visible = false;
+	error /= remote;
+      } 
+      return error;
     }
   };
 }
