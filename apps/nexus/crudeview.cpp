@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/10/19 04:23:57  ponchio
+Added trackball.
+
 Revision 1.3  2004/09/17 15:25:09  ponchio
 First working (hopefully) release.
 
@@ -48,6 +51,8 @@ Created
 #include <iostream>
 using namespace std;
 
+#include <wrap/gui/trackball.h>
+
 #include <SDL/SDL.h>
 
 #ifdef WIN32
@@ -59,7 +64,7 @@ using namespace std;
 
 #include <apps/nexus/crude.h>
 #include <apps/nexus/vert_remap.h>
-#include <wrap/gui/trackball.h>
+
 using namespace vcg;
 using namespace nxs;
 
