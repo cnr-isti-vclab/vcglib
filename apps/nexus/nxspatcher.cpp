@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
     for(unsigned int y = 0; y < side; y++) {
       Point3f p(x*x*x/((float)side), 
 		y*y*y/((float)side), x*y/((float)side));
-      crude.GetVertex(x + side * y) = p;
+      crude.SetVertex(x + side * y, p);
       crude.GetBox().Add(p);
     }
 
@@ -36,10 +36,10 @@ int main(int argc, char *argv[]) {
     for(unsigned int y = 0; y < side-1; y++) {
       unsigned int pos = x + side*y;
       Crude::Face face(pos, pos + 1, pos + side);
-      crude.GetFace(0 + 2*x + (side-1)*y*2) = face;
+      crude.SetFace(0 + 2*x + (side-1)*y*2, face);
 
       face = Crude::Face(pos + 1, pos + 1 + side, pos +side);
-      crude.GetFace(1 + 2*x + (side-1)*y*2) = face;
+      crude.SetFace(1 + 2*x + (side-1)*y*2,  face);
     }
   
   crude.Close();

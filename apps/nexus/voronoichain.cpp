@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2004/11/28 07:58:49  ponchio
+*** empty log message ***
+
 Revision 1.22  2004/11/28 04:14:12  ponchio
 *** empty log message ***
 
@@ -46,8 +49,7 @@ Revision 1.16  2004/10/22 14:31:56  ponchio
 Some controls added.
 
 Revision 1.15  2004/10/21 12:22:21  ponchio
-Small changes.
-
+Small change
 Revision 1.14  2004/10/19 04:23:29  ponchio
 *** empty log message ***
 
@@ -502,4 +504,92 @@ void VoronoiChain::BuildLevel(Nexus &nexus, unsigned int offset,
   }    
   
   newfragments.clear();
+}
+bool VoronoiChain::Save(const string &file) {
+  FILE *fp = fopen((output + ".remap").c_str(), "wb+");
+  if(!fp) {
+    cerr << "Could not create remapping info\n";
+    return -1;
+  }
+
+  unsigned int nlevels = levels.size();
+  fwrite(&nlevels, sizeof(unsigned int), 1, fp);
+  for(int i = 0; i < nlevels; i++) {
+    VoronoiPartition &level = levels[i];
+    unsigned int npoints = level.size();
+    fwrite(&npoints, sizeof(unsigned int), 1, fp);
+    fwrite(&(level[0]), sizeof(Point3f), npoints, fp);
+  }
+  //writing fragments
+
+  unsigned int nfrag = newfragments.size();
+  fwrite(&nfrag, sizeof(unsigned int), 1, fp);
+  std::map<unsigned int, std::set<unsigned int> >::iterator i;
+  for(i = newfragments.begin(); i != newfragments.end(); i++) {
+    unsigned int n = (*i).second.size();
+    fwrite(&((*i).first), sizeof(unsigned int), 1, fp);
+    fwrite(&n, sizeof(unsigned int), 1, fp);
+    set<unsigned int>::iterator k;
+      for(k = (*i).second.begin(); k != (*i).second.end(); k++)
+        fwrite(&*k, sizeof(unsigned int), 1, fp);
+  }
+  nfrag = oldfragments.size();
+  fwrite(&nfrag, sizeof(unsigned int), 1, fp);    
+  for(i = oldfragments.begin(); i != oldfragments.end(); i++) {
+    unsigned int n = (*i).second.size();
+    fwrite(&((*i).first), sizeof(unsigned int), 1, fp);
+    fwrite(&n, sizeof(unsigned int), 1, fp);
+    set<unsigned int>::iterator k;
+    for(k = (*i).second.begin(); k != (*i).second.end(); k++)
+      fwrite(&*k, sizeof(unsigned int), 1, fp);
+  }
+  fclose(fp);
+}
+
+bool VoronoiChain::Load(const string &file) {
+  FILE *fp = fopen(file.c_str(), "rb");
+  if(!fp) {
+    cerr << "Could not open remapping info\n";
+    return -1;
+  }
+  unsigned int nlevels;
+  fread(&nlevels, sizeof(unsigned int), 1, fp);
+  for(int i = 0; i < nlevels; i++) {
+    levels.push_back(VoronoiPartition());
+    VoronoiPartition &level = levels.back();
+
+    unsigned int npoints;
+    fread(&npoints, sizeof(unsigned int), 1, fp);
+    level.resize(npoints);
+    fread(&(level[0]), sizeof(Point3f), npoints, fp);
+    level.Init();
+  }
+  //reading fragments
+  unsigned int nfrag;
+  fread(&nfrag, sizeof(unsigned int), 1, fp);
+  for(unsigned int i = 0; i < nfrag; i++) {
+    unsigned int p, n;
+    fread(&p, sizeof(unsigned int), 1, fp);
+    set<unsigned int> &s = newfragments[p];
+    fread(&n, sizeof(unsigned int), 1, fp);
+    for(unsigned int k = 0; k < n; k++) {
+      unsigned int j;
+      fread(&j, sizeof(unsigned int), 1, fp);        
+      s.insert(j);
+    }
+  }
+  
+  fread(&nfrag, sizeof(unsigned int), 1, fp);
+  for(unsigned int i = 0; i < nfrag; i++) {
+    unsigned int p, n;
+    fread(&p, sizeof(unsigned int), 1, fp);
+    set<unsigned int> &s = oldfragments[p];
+    fread(&n, sizeof(unsigned int), 1, fp);
+    for(unsigned int k = 0; k < n; k++) {
+      unsigned int j;
+      fread(&j, sizeof(unsigned int), 1, fp);        
+      s.insert(j);
+    }
+  }
+  fclose(fp);
 }

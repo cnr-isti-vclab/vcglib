@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/11/18 18:30:15  ponchio
+Using baricenters... lotsa changes.
+
 Revision 1.5  2004/10/30 20:17:03  ponchio
 Fixed big patches problem.
 
@@ -47,6 +50,7 @@ First draft.
 
 #include <vector>
 #include <map>
+#include <string>
 
 #include <vcg/space/box3.h>
 
@@ -77,6 +81,10 @@ class VoronoiChain: public PChain {
 		  int steps);
 
   void BuildLevel(Nexus &nexus, unsigned int offset, float scaling, int steps);
+  bool Save(const std::string &file);
+  bool Load(const std::string &file);
+
+
 
   std::vector<VoronoiPartition> levels;
 
