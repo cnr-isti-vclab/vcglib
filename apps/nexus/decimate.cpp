@@ -17,6 +17,8 @@
 #include <vcg/complex/local_optimization/tri_edge_collapse_quadric.h>
 
 #include <vcg/space/point3.h>
+
+#include "pvoronoi.h"
 #include "border.h"
 
 class MyEdge;
@@ -90,55 +92,32 @@ float Decimate(unsigned int target_faces,
   //  int FinalSize = mesh.face.size()/2;
   //  if(FinalSize > target_faces) FinalSize = target_faces;
   int FinalSize = target_faces;
+  
 
-  int t0=clock();	
 
   printf("mesh loaded %d %d \n",mesh.vn,mesh.fn);
   printf("reducing it to %i\n",FinalSize);
-  vcg::tri::UpdateTopology<MyMesh>::VertexFace(mesh);
 
-  //  cerr << "topology ok" << endl;
-  int t1=clock();	
-  
-  //micro random semplificatore
 
-  /*  for(unsigned int i = 0; i < mesh.face.size(); i+= 2) {
-    MyFace &face = mesh.face[i];
-    if(face.V(0)->IsW() && face.V(1)->IsW() && face.V(1)->IsW())
-      mesh.face[i].SetD();
-  }
-
-  for(unsigned int i = 0; i < mesh.vert.size(); i++) {
-    if(mesh.vert[i].IsW())
-      mesh.vert[i].SetD();
-  }
-
-  for(unsigned int i = 0; i < mesh.face.size(); i++) {
-    MyFace &face = mesh.face[i];
-    if(face.IsD()) continue;
-    face.V(0)->ClearD();
-    face.V(1)->ClearD();
-    face.V(2)->ClearD();
-    }*/
-
-  //  Cluster(mesh, target_faces);
-  //  cerr << "simplified" << endl;
-
-  vcg::LocalOptimization<MyMesh> DeciSession(mesh);
-  MyTriEdgeCollapse::SetDefaultParams();
-
-  DeciSession.Init<MyTriEdgeCollapse>();
-
-  int t2=clock();	
-  //  printf("Initial Heap Size %i\n",DeciSession.h.size());
-  
-  FinalSize = mesh.fn - FinalSize; //number of faces to remove
-  FinalSize/=2; //Number of vertices to remove
-  DeciSession.SetTargetOperations(FinalSize);
-  //  DeciSession.DoOptimization(); 
+  /*  
+      int t0=clock();	
+      vcg::tri::UpdateTopology<MyMesh>::VertexFace(mesh);
+      int t1=clock();	
+      vcg::LocalOptimization<MyMesh> DeciSession(mesh);
+      MyTriEdgeCollapse::SetDefaultParams();
+      
+      DeciSession.Init<MyTriEdgeCollapse>();
+      
+      FinalSize = mesh.fn - FinalSize; //number of faces to remove
+      FinalSize/=2; //Number of vertices to remove
+      DeciSession.SetTargetOperations(FinalSize);
+      DeciSession.DoOptimization(); 
+      float error = DeciSession.currMetric/4;//1; //get error; 
+      int t3=clock();	
+  */
   float error = Cluster(mesh, target_faces);
-  //  float error = DeciSession.currMetric/4;//1; //get error;
-  int t3=clock();	
+
+
   
   /*  printf(" vol %d \n lkv %d \n lke %d \n lkf %d \n ood %d\n bor %d\n ",
 	 MyTriEdgeCollapse::FailStat::Volume()           ,
@@ -184,69 +163,103 @@ float Decimate(unsigned int target_faces,
   return error;
 }
 
+
 float Cluster(MyMesh &mesh, unsigned int target_faces) {
   unsigned int starting = mesh.vn;
-  cerr << "starting face: " << mesh.fn << endl;
-  //veramente brutale
-  vector<int> remap;
-  remap.resize(mesh.vert.size());
-  for(int i = 0; i < mesh.vert.size(); i++)
-    remap[i] = -1;
 
-  int toremove = mesh.fn - target_faces;
+  unsigned int nseeds = target_faces/2;
+  assert(nseeds < mesh.vert.size());
 
-  cerr << "counting" << endl;
-  map<float, pair<int, int> > dist;
-  for(int i = 0; i < mesh.vert.size(); i++) {
-    if(mesh.vert[i].IsD()) continue;
-    if(!mesh.vert[i].IsW()) continue;
-    for(int k = i+1; k < mesh.vert.size(); k++) {
-      if(mesh.vert[k].IsD()) continue;
-      if(!mesh.vert[k].IsW()) continue;
-      float d = (mesh.vert[i].P() - mesh.vert[k].P()).SquaredNorm();
-      dist[d] = make_pair(i, k);
+  vector<unsigned int> remap;
+
+  VoronoiPartition part;
+  Box3f box;
+  for(unsigned int i = 0; i < mesh.vert.size(); i++) {
+    const Point3f &p = mesh.vert[i].cP();
+    box.Add(p);
+    if(!mesh.vert[i].IsW()) {
+      part.push_back(Seed(p, 1));
+      remap.push_back(i);
+      nseeds--;
+    }
+  }
+  unsigned int nborder = part.size();
+  //Dovrei supersamplare prima....
+  while(nseeds > 0) {
+    unsigned int i = rand() % mesh.vert.size();
+    if(mesh.vert[i].IsW() && !mesh.vert[i].IsV()) {
+      const Point3f &p = mesh.vert[i].cP();
+      part.push_back(Seed(p, 1));
+      mesh.vert[i].SetV();
+      remap.push_back(i);
+      nseeds--;
+    }
+  }
+  part.SetBox(box);
+  part.Init();
+
+
+  vector<Point3f> centroid;
+  vector<unsigned int> count;
+  for(unsigned int i = 0; i < 3; i++) {
+    centroid.clear();
+    centroid.resize(mesh.vert.size(), Point3f(0, 0, 0));
+    count.clear();
+    count.resize(mesh.vert.size(), 0);
+    for(unsigned int i = 0; i < mesh.vert.size(); i++) {
+      unsigned int target = part.Locate(mesh.vert[i].cP());
+      centroid[target] += mesh.vert[i].cP();
+      count[target]++;
+    }
+    for(unsigned int i = nborder; i < part.size(); i++) {
+      if(count[i] > 0)
+	part[i].p = centroid[i]/count[i];
+    }
+  }
+
+  for(unsigned int i = nborder; i < part.size(); i++) {
+    assert(mesh.vert[remap[i]].IsV());
+    mesh.vert[remap[i]].P() = part[i].p;
+  }
+
+  float error = 0;
+  //rimappiamo le facce.....
+  for(unsigned int i = 0; i < mesh.face.size(); i++) {
+    MyFace &face = mesh.face[i];
+    for(int k = 0; k < 3; k++) {
+      unsigned int target = part.Locate(face.V(k)->cP());
+      MyVertex &vert = mesh.vert[remap[target]];
+
+      float dist = Distance(vert.cP(), face.V(k)->cP());
+      if(dist > error) error = dist;
+
+      face.V(k) = &vert;
     }
   }
   
-  float error = 0;
-  cerr << "done" << endl;
-  map<float, pair<int, int> >::iterator s;
-  for(s = dist.begin(); s != dist.end(); s++) {
-    if(toremove < 0) break;
-    int target = (*s).second.first;
-    int source = (*s).second.second;
-
-    if(remap[target] != -1) continue;
-    if(remap[source] != -1) continue;
-
-    assert(!mesh.vert[target].IsD());
-    assert(!mesh.vert[source].IsD());
-
-    mesh.vert[source].SetD();
-    error = (*s).first;
-    remap[source] = target;
-    remap[target] = target;
-    toremove -= 2;
-    mesh.vn--;
-    //    if(mesh.vn < starting/2) break;
-  }
-
-  //PULIAMO LE FACCE
-  for(int i = 0; i < mesh.face.size(); i++) {
+  for(unsigned int i = 0; i < mesh.face.size(); i++) {
     MyFace &face = mesh.face[i];
-    if(face.IsD()) continue;
+    assert(!face.IsD());
     for(int k = 0; k < 3; k++) {
-      if(face.V(k)->IsD()) {
-	face.V(k) = &mesh.vert[remap[face.V(k) - &mesh.vert[0]]];
-      }
-      assert(!face.V(k)->IsD());
+      assert(face.cV(k)->IsV() || !face.cV(k)->IsW());
     }
-    if(face.V(0) == face.V(1) || face.V(0) == face.V(2) || 
-       face.V(1) == face.V(2)) {
+    if(face.cV(0) == face.cV(1) ||
+       face.cV(0) == face.cV(2) ||
+       face.cV(1) == face.cV(2)) {
       face.SetD();
       mesh.fn--;
     }
   }
-  cerr << "Ending faces: " << mesh.fn << endl;
+
+  for(unsigned int i = 0; i < mesh.vert.size(); i++)
+    if(!mesh.vert[i].IsV() && mesh.vert[i].IsW()) {
+      mesh.vert[i].SetD();
+      mesh.vn--;
+    }
+
+  cerr << "Error: " << error << endl;
+  cerr << "faces: " << mesh.fn << endl;
+  cerr << "verts: " << mesh.vn << endl;
   return error;
 }
+
