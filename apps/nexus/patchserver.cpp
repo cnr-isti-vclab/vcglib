@@ -1,6 +1,7 @@
 #include "patchserver.h"
 
 #include <iostream>
+#include <algorithm>
 
 using namespace std;
 using namespace nxs;
@@ -14,6 +15,7 @@ bool PatchServer::Create(const std::string &filename,
 			 unsigned int rsize) {
   signature = sig;
   chunk_size = csize;
+  frame = 0;
   ram_size = rsize;
   ram_used = 0;
   lru.clear();
@@ -26,13 +28,13 @@ bool PatchServer::Load(const std::string &filename, Signature sig,
   signature = sig;
   chunk_size = csize;
   ram_size = rsize;
+  frame = 0;
   ram_used = 0;
   lru.clear();
   return File::Load(filename, readonly);
 }
 
-void PatchServer::Close() {
-  cerr << "Closing!" << endl;
+void PatchServer::Close() {  
   FlushAll();
   File::Close();
 }
@@ -98,10 +100,10 @@ Patch &PatchServer::GetPatch(unsigned int idx,
     lru.push_back(PTime(idx, frame++));
     ram_used += entry.ram_used;
   }
-
+  
   //avoid frame overflow!
   if(frame > (1<<30)) {
-    cerr << "oVERFLOW!" << endl;;
+    cerr << "oVERFLOW! (nothing dangerous... just warning." << endl;;
     for(unsigned int i = 0; i < lru.size(); i++) {
       if(lru[i].frame < (1<<29)) lru[i].frame = 0;
       else lru[i].frame -= (1<<29);

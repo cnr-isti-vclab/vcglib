@@ -45,7 +45,7 @@ void nxs::ComputeNormals(Nexus &nexus) {
       }
 
     if(nexus.signature & NXS_STRIP) 
-      for(unsigned int i = 0; i < patch.nf-2; i++) {
+      for(int i = 0; i < patch.nf - 2; i++) {
 	unsigned short *f = patch.FaceBegin() + i;
 	Point3f &v0 = patch.Vert(f[0]);
 	Point3f &v1 = patch.Vert(f[1]);
@@ -166,7 +166,7 @@ void nxs::ComputeTriStrip(unsigned short nfaces, unsigned short *faces,
   
   vector<unsigned int> index;
   index.resize(nfaces*3);
-  for(unsigned int i = 0; i < nfaces*3; i++) {
+  for(int i = 0; i < nfaces*3; i++) {
     index[i] = faces[i];
   }
   int cache_size = 0;
@@ -185,7 +185,7 @@ void nxs::ComputeTriStrip(unsigned short nfaces, unsigned short *faces,
     tri_stripper::primitives p;
     p = primitives.back();
     primitives.pop_back();		
-    for(int i = 0; i < p.m_Indices.size(); i += 3) {
+    for(unsigned int i = 0; i < p.m_Indices.size(); i += 3) {
       tri_stripper::primitives s;
       s.m_Type = tri_stripper::PT_Triangle_Strip;
       s.m_Indices.push_back(p.m_Indices[i]);
@@ -198,7 +198,7 @@ void nxs::ComputeTriStrip(unsigned short nfaces, unsigned short *faces,
   for(unsigned int i = 0; i < primitives.size(); i++) {
     tri_stripper::primitives &primitive = primitives[i];
     assert(primitive.m_Indices.size() != 0);
-    unsigned int len = primitive.m_Indices.size();
+    int len = primitive.m_Indices.size();
     for(int l = 0; l < len; l++)  		
       strip.push_back(primitive.m_Indices[l]);
     

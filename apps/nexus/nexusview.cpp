@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2004/10/04 16:49:54  ponchio
+Daily backup. Preparing for compression.
+
 Revision 1.10  2004/10/01 16:54:57  ponchio
 Daily backup.
 
@@ -72,15 +75,21 @@ Created
 
 ****************************************************************************/
 
+#include <apps/nexus/nexusmt.h>
+
 #include <iostream>
 using namespace std;
 
 #include <SDL/SDL.h>
 
+#ifdef WIN32
+#include <windows.h>
+#endif
+
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-#include <apps/nexus/nexusmt.h>
+
 #include <wrap/gui/trackball.h>
 
 
@@ -140,7 +149,7 @@ int main(int argc, char *argv[]) {
   float error = 4;
 
   Trackball track;
-  int option;
+//  int option;
 
   if(argc != 2) {
     cerr << "Usage: " << argv[0] << " <nexus file>\n";
@@ -218,11 +227,11 @@ int main(int argc, char *argv[]) {
 	case SDLK_r:
 	case SDLK_SPACE: rotate = !rotate; break;
 	  
-	case SDLK_MINUS: error *= 0.9; 
+	case SDLK_MINUS: error *= 0.9f; 
 	  cerr << "error: " << error << endl; break;
 	  
 	case SDLK_EQUALS:
-	case SDLK_PLUS: error *= 1.1; 
+	case SDLK_PLUS: error *= 1.1f; 
 	  cerr << "error: " << error << endl; break;
 	}
 	break;
@@ -236,11 +245,14 @@ int main(int argc, char *argv[]) {
       case SDL_MOUSEBUTTONDOWN:   
 	x = event.button.x;
 	y = height - event.button.y;          
+#ifdef SDL_BUTTON_WHEELUP
 	if(event.button.button == SDL_BUTTON_WHEELUP) 
 	  track.MouseWheel(1);
 	else if(event.button.button == SDL_BUTTON_WHEELDOWN) 
 	  track.MouseWheel(-1);
-	else if(event.button.button == SDL_BUTTON_LEFT)
+	else 
+ #endif
+    if(event.button.button == SDL_BUTTON_LEFT)
 	  track.MouseDown(x, y, Trackball::BUTTON_LEFT);
 	else if(event.button.button == SDL_BUTTON_RIGHT)
 	  track.MouseDown(x, y, Trackball::BUTTON_RIGHT);
@@ -297,7 +309,7 @@ int main(int argc, char *argv[]) {
     Point3f &p = nexus.sphere.Center();
     float r = nexus.sphere.Radius();
 
-    glColor3f(0.8, 0.8, 0.8);
+    glColor3f(0.8f, 0.8f, 0.8f);
     nexus.SetMode(mode);
     nexus.SetPolicy(policy, error);
     nexus.SetComponent(NexusMt::COLOR, show_colors);

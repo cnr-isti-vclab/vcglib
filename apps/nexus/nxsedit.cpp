@@ -8,7 +8,7 @@ using namespace nxs;
 using namespace vcg;
 
 #ifdef WIN32
-#include "getopt.h"
+#include <wrap/system/getopt.h>
 #else
 #include <unistd.h>
 #endif

@@ -58,11 +58,11 @@ class Nexus {
   Patch &GetPatch(unsigned int patch, bool flush = true);
   Border GetBorder(unsigned int patch, bool flush = true);
 
-  bool IsCompressed()    { return signature & NXS_COMPRESSED; }
-  bool HasStrips()       { return signature & NXS_STRIP; }
-  bool HasColors()       { return signature & NXS_COLORS; }
-  bool HasNormalsShort() { return signature & NXS_NORMALS_SHORT; }
-  bool HasNormalsFloat() { return signature & NXS_NORMALS_FLOAT; }
+  bool IsCompressed()    { return (signature & NXS_COMPRESSED) != 0; }
+  bool HasStrips()       { return (signature & NXS_STRIP) != 0; }
+  bool HasColors()       { return (signature & NXS_COLORS) != 0; }
+  bool HasNormalsShort() { return (signature & NXS_NORMALS_SHORT) != 0; }
+  bool HasNormalsFloat() { return (signature & NXS_NORMALS_FLOAT) != 0; }
   
   //MOVE to nexus_build.cpp
   void Join(const std::set<unsigned int> &patches,

@@ -85,7 +85,7 @@ void NexusMt::Render() {
     glEnableClientState(GL_NORMAL_ARRAY);
   //TODO textures and data.
 
-  for(unsigned int i = 0; i < cells.size(); i++) {
+  for(unsigned int i = 0; i < cells.size(); i++) {    
     unsigned int cell = cells[i];
     Nexus::PatchInfo &entry = index[cell];
 
@@ -154,6 +154,7 @@ void NexusMt::SetVbo(Vbo _vbo, unsigned int _vbo_size,
 
 bool NexusMt::SetMode(Mode _mode) {
   mode = _mode;
+  return true;
 }
 
 bool NexusMt::SetComponent(Component c, bool on) {
@@ -168,13 +169,14 @@ bool NexusMt::SetComponent(Component c, bool on) {
   
   components = COLOR * use_colors + NORMAL * use_normals +
                TEXTURE * use_textures + DATA * use_data;
+  return true;
 }
 
 bool NexusMt::SetComponents(unsigned int mask) {
-  SetComponent(COLOR, mask & COLOR);
-  SetComponent(NORMAL, mask & NORMAL);
-  SetComponent(TEXTURE, mask & TEXTURE);
-  SetComponent(DATA, mask & DATA);
+  SetComponent(COLOR, (mask & COLOR) != 0);
+  SetComponent(NORMAL, (mask & NORMAL) != 0);
+  SetComponent(TEXTURE, (mask & TEXTURE) != 0);
+  SetComponent(DATA, (mask & DATA) != 0);
   
   components = mask;
   
@@ -206,7 +208,7 @@ void NexusMt::LoadHistory() {
     for(unsigned int i = 0; i < (*u).created.size(); i++) {
       unsigned int cell = (*u).created[i];
       if(index[cell].error > node.error)
-	node.error = index[cell].error;
+      node.error = index[cell].error;
       
       cell_node[cell] = current_node;        
     }

@@ -25,7 +25,7 @@ bool BorderServer::ResizeBorder(unsigned int border, unsigned int nbord) {
   assert(border < borders.size());
   BorderEntry &entry = borders[border];
   if(nbord > entry.border_size) {
-    unsigned int capacity = nbord;
+    int capacity = nbord;
     if(capacity < entry.border_size*2) 
       capacity = entry.border_size * 2;
     unsigned int newstart = Size(); 
