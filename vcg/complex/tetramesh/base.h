@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/05/13 12:16:12  pietroni
+first version... add vertex to mesh
+
 Revision 1.4  2004/05/13 07:41:47  turini
 Chenged #include <space\\box3.h> in #include <vcg\\space\\box3.h>
 
@@ -44,7 +47,6 @@ Revision 1.1  2004/04/15 08:54:20  pietroni
 
 
 #pragma warning( disable : 4804 )
-#pragma once
 
 #ifndef __VCG_TETRAMESH
 #define __VCG_TETRAMESH
@@ -161,6 +163,13 @@ class Tetramesh{
 	{
 		return sizeof(TMTYPE)+sizeof(VertexType)*vert.size()+sizeof(tetrahedron)*tetra.size()+sizeof(edge)*edges.size();
 	}
+
+	void Clear(){
+		vert.clear();
+		tetra.clear();
+		tn = 0;
+		vn = 0;
+		}
 //@}
 
 /***********************************************/
@@ -210,56 +219,6 @@ static bool HasTopology()         { return HasTTTopology() || HasVTTopology(); }
 	}
 
 //@}
-
-
-void LoadTs(char * filename, double meshscale )
-{	
-	int nvertex;
-	int ntetra;
-	float x;
-	float y;
-	float z;
-	int tp0;
-	int tp1;
-	int tp2;
-	int tp3;
-	float mass;
-	FILE *f;
-	Tetramesh::VertexType p1;
-	f = fopen(filename,"r");
-	if(f == NULL ) 
-     printf( "The file was not opened\n" );
-   else
-   {
-		fscanf(f, "%i", &nvertex );
-		fscanf(f, "%i", &ntetra );
-		int j;
-		for (j=0;j<nvertex;j++)
-		{
-			fscanf(f, "%f", &x );
-			fscanf(f, "%f", &y );
-			fscanf(f, "%f", &z );
-		  //fscanf(f, "%f", &mass );
-      p1.ClearFlags();
-      p1.P()=Point3d(x*meshscale, y*meshscale ,z*meshscale );
-			vert.push_back(p1);
-		}
-		tetra.reserve(ntetra*10);
-    vert.reserve(nvertex*10);
-		for (j=0;j<ntetra;j++)
-		{
-			fscanf(f, "%i", &tp0 );
-			fscanf(f, "%i", &tp1 );
-			fscanf(f, "%i", &tp2 );
-			fscanf(f, "%i", &tp3 );
-			
-			Tetramesh::TetraType  newTetra;
-			tetra.push_back(newTetra);
-			tetra.back().Init(&vert[tp0],&vert[tp1],&vert[tp2],&vert[tp3]); 
-		}
-   }
-}
-
 };//End class
 
 /*@}*/
