@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/06/24 14:32:45  ponchio
+Moved from wrap/nexus
+
 Revision 1.2  2004/06/24 14:19:20  ponchio
 Debugged
 
@@ -104,13 +107,76 @@ namespace nxs {
     bool Load(const std::string &file);
     unsigned int Save(FILE *fp);
     unsigned int Load(FILE *fp);
-  private:    
-    vcg::Box3f bbox;
+
+    /** Pass iterators to Point3f container and size 
+	to estimate optimal radius.
+	At the moment strategy is to campion randomly the file.
+    */
+    template <class T> 
+      static std::vector<float> OptimalRadii(unsigned int total, 
+				 T begin, T end, 
+				 vcg::Box3f &box, 
+				 std::vector<unsigned int> target) {
+      
+      //number of samples
+      unsigned int n_points = 20;
+      std::vector<vcg::Point3f> samples;
+      
+      T i;
+      unsigned int h;
+      for(i = begin, h =0; i != end; ++i, h++) 
+	if(!((h+1)%(total/n_points)))                  
+	  samples.push_back(*i);
+      
+      
+      float step = box.Diag()/10000;
+      
+      //for every sample i need to record function distance -> number of points
+      std::vector< std::vector<int> > scale;
+      scale.resize(samples.size());
+      for(unsigned int i = 0; i < samples.size(); i++)
+	scale[i].resize(10001, 0);
+      
+      
+      //for every point we check distance from samples
+      for(i = begin; i != end; ++i) {
+	vcg::Point3f &vp = *i;
+	for(unsigned int k = 0; k < samples.size(); k++) {
+	  float dist = (vp - samples[k]).Norm();  
+	  unsigned int pos = (int)(dist/step);
+	  if(pos < 10000)
+	    scale[k][pos]++;
+	}
+      }
+      
+      
+      float count =0;
+      unsigned int tcount = 0;
+      std::vector<int> counting;
+      for(int  j = 0; j < 10000; j++) {
+	for(unsigned int k = 0; k < samples.size(); k++) 
+	  count += scale[k][j];    
+	if(count > samples.size() * target[tcount]) {
+	  counting.push_back(j);
+	  tcount ++;
+	  if(tcount >= target.size())
+	    j = 10000;
+	}
+      } 
+      std::vector<float> radius;
+      for(unsigned int i = 0; i < counting.size(); i++) 
+	radius.push_back(2 * step * (counting[i]));
+      return radius;
+    }
+  
+ private:    
+  vcg::Box3f bbox;
     vcg::GridStaticPtr< std::vector<Seed> > ug;
     std::vector<Seed> all_seeds;
     std::vector<Seed> ug_seeds;
     std::vector<Seed> seedBuf;
   };
+
 
 }
 #endif

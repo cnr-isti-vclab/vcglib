@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/06/24 14:32:45  ponchio
+Moved from wrap/nexus
+
 Revision 1.1  2004/06/22 15:31:40  ponchio
 Created
 
@@ -77,9 +80,10 @@ public:
 
   vcg::Box3f &GetBox();
 
- protected:
   VFile<vcg::Point3f> vert;
   VFile<Face> face;
+
+ protected:
 
   FILE *fp;
   unsigned int nvert;

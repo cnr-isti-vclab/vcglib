@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/06/24 14:32:45  ponchio
+Moved from wrap/nexus
+
 Revision 1.2  2004/06/24 14:19:20  ponchio
 Debugged
 
@@ -37,12 +40,13 @@ Created
 #define NXS_PCHAIN_H
 
 #include <stdio.h>
+#include <vector>
 #include <vcg/space/point3.h>
 
 /** Partition must be a class with a Key type, with 
     Levels, Locate, Priority, Save(FILE *), Load(FILE *)
     as in pvoronoi.h */
-namespace {
+namespace nxs {
 
 template <class Partition> class PChain {
  public:

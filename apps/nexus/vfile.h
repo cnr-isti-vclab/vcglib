@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/06/24 14:32:45  ponchio
+Moved from wrap/nexus
+
 Revision 1.3  2004/06/22 15:32:09  ponchio
 Tested
 
@@ -67,15 +70,25 @@ template <class T> class VFile {
 
   FILE *fp;  
   std::list<Buffer> buffers;
-  typedef typename std::list<Buffer>::iterator iterator;
+  typedef typename std::list<Buffer>::iterator list_iterator;
 
-  std::map<unsigned int, iterator> index;   //TODO move to hash_map 
+  std::map<unsigned int, list_iterator> index;   //TODO move to hash_map 
 
   unsigned int chunk_size; //default buffer size (expressed in number of T)
   unsigned int queue_size;
   unsigned int n_elements; //size of the vector
 
  public:
+  class iterator {
+  public:
+    iterator(unsigned int p = 0, VFile *b = 0): n(p), buffer(b) {}
+    T &operator*() { return (*buffer)[n]; }
+    void operator++() { n++; }
+    bool operator!=(const iterator &i) { return i.n != n; }
+  private:
+    unsigned int n;
+    VFile *buffer;
+  };
   
   VFile(): fp(NULL) {}
   ~VFile() { if(fp) Close(); }                    
@@ -117,7 +130,7 @@ template <class T> class VFile {
   }
 
   void Flush() {
-    iterator i;
+    list_iterator i;
     for(i = buffers.begin(); i != buffers.end(); i++)       
       FlushBuffer(*i);
     buffers.clear();
@@ -201,6 +214,8 @@ template <class T> class VFile {
   unsigned int Size() { return n_elements; }
   unsigned int ChunkSize() { return chunk_size; }
   unsigned int QueueSize() { return queue_size; }
+  iterator Begin() { return iterator(0, this); }
+  iterator End() { return iterator(Size(), this); }
 
  protected:
   void SetPosition(unsigned int chunk) {
