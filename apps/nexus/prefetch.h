@@ -7,7 +7,6 @@
 
 #include <ptypes/pasync.h>
 
-#include "nexusmt.h"
 #include "queuepserver.h"
 
 namespace nxs {
@@ -20,7 +19,7 @@ class Prefetch: public pt::thread{
   pt::mutex safety;
   unsigned int ram_max;
   unsigned int ram_used;
-
+  
   NexusMt *mt;
   std::vector<PServer::Item> missing;
 

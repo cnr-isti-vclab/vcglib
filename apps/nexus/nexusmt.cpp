@@ -1,8 +1,11 @@
-#include <GL/glew.h>
-#include "nexusmt.h"
 #include <map>
 #include <queue>
 
+#include <GL/glew.h>
+
+#include <ptypes/pasync.h>
+
+#include "nexusmt.h"
 
 using namespace nxs;
 using namespace vcg;
@@ -104,6 +107,8 @@ NexusMt::NexusMt(): vbo_mode(VBO_AUTO),
 NexusMt::~NexusMt() {
   if(metric)
     delete metric;
+  prefetch.signal();
+  prefetch.waitfor();
 }
 
 bool NexusMt::Load(const string &filename) {
@@ -174,6 +179,9 @@ bool NexusMt::Load(const string &filename) {
   SetComponent(DATA, true);
   
   SetPrefetchSize(patches.ram_max/2);
+  cerr << "Start!\n";
+  prefetch.start();
+  cerr << "Started\n";
   return true;
 }
 
@@ -204,7 +212,7 @@ void NexusMt::Render() {
 }
 
 void NexusMt::Draw(vector<unsigned int> &cells) {
-
+  prefetch.init(this, cells, visited);
   tri_total = 0;
   tri_rendered = 0;
 
@@ -218,92 +226,115 @@ void NexusMt::Draw(vector<unsigned int> &cells) {
     glEnableClientState(GL_NORMAL_ARRAY);
   //TODO textures and data.
 
-  for(unsigned int i = 0; i < cells.size(); i++) {    
-    unsigned int cell = cells[i];
+  unsigned int count = cells.size();
+  while(count) {
+    //    cerr << "Getting message: " << count << endl;
+    pt::message *msg = patches.queue.getmessage();
+    QueuePServer::Data *data = (QueuePServer::Data *)(msg->param);
+    if(msg->id == QueuePServer::FLUSH) {
+      //      cerr << "Flush...\n";
+      if(data->vbo_element) {
+	glDeleteBuffersARB(1, &(data->vbo_element));
+	glDeleteBuffersARB(1, &(data->vbo_array));
+      }
+      delete data;
+      delete msg;
+      continue;
+    }
+
+    if(msg->id != QueuePServer::DRAW) {
+      cerr << "Unknown message!\n";
+      continue;
+    }
+
+    unsigned int cell = msg->result;
     PatchInfo &entry = index[cell];    
     tri_total += entry.nface;
     //frustum culling
-    if(frustum.IsOutside(entry.sphere.Center(), entry.sphere.Radius()))
-      continue;
-
-    tri_rendered += entry.nface;
-    
-    QueuePServer::Data &data = patches.Lookup(cell,entry.nvert,entry.nface, 0);
-    Patch &patch = *data.patch;
-    char *fstart;
-    char *vstart;
-    char *cstart;
-    char *nstart;
-
-    if(vbo_mode != VBO_OFF) {
-      //      unsigned int vbo_array;
-      //      unsigned int vbo_element;
-      //      patches.GetVbo(cell, vbo_element, vbo_array);
-      assert(data.vbo_element);
-      assert(data.vbo_array);
-
-      glBindBufferARB(GL_ARRAY_BUFFER_ARB, data.vbo_array);
-      glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, data.vbo_element);
-
-      fstart = NULL;
-      vstart = NULL;
-      cstart = (char *)(sizeof(float) * patch.cstart);
-      nstart = (char *)(sizeof(float) * patch.nstart);
-    } else {
-      fstart = (char *)patch.FaceBegin();
-      vstart = (char *)patch.VertBegin();
-      cstart = (char *)patch.ColorBegin();
-      nstart = (char *)patch.Norm16Begin();
+    if(!frustum.IsOutside(entry.sphere.Center(), entry.sphere.Radius())) {
+      tri_rendered += entry.nface;
+      Draw(cell, *data);
     }
 
-    glVertexPointer(3, GL_FLOAT, 0, vstart);
-    if(use_colors)
-      glColorPointer(4, GL_UNSIGNED_BYTE, 0, cstart);
-    if(use_normals)
-      glNormalPointer(GL_SHORT, 8, nstart);
-
-    switch(mode) {
-    case POINTS:
-      glDrawArrays(GL_POINTS, 0, patch.nv); break;
-    case PATCHES:
-      glColor3ub((cell * 27)%255, (cell * 37)%255, (cell * 87)%255);
-    case SMOOTH:
-      if(signature & NXS_FACES)
-	glDrawElements(GL_TRIANGLES, patch.nf * 3, 
-		       GL_UNSIGNED_SHORT, fstart);
-      else if(signature & NXS_STRIP)
-	glDrawElements(GL_TRIANGLE_STRIP, patch.nf, 
-		       GL_UNSIGNED_SHORT, fstart);
-      break;
-    case FLAT:
-      if(signature & NXS_FACES) {
-	glBegin(GL_TRIANGLES);
-	for(int i = 0; i < patch.nf; i++) {
-	  unsigned short *f = patch.Face(i);
-	  Point3f &p0 = patch.Vert(f[0]);
-	  Point3f &p1 = patch.Vert(f[1]);
-	  Point3f &p2 = patch.Vert(f[2]);
-	  Point3f n = ((p1 - p0) ^ (p2 - p0));
-	  glNormal3f(n[0], n[1], n[2]);
-	  glVertex3f(p0[0], p0[1], p0[2]);
-	  glVertex3f(p1[0], p1[1], p1[2]);
-	  glVertex3f(p2[0], p2[1], p2[2]);
-	}
-	glEnd();
-      } else if(signature & NXS_STRIP) {
-	cerr << "Unsupported rendering mode sorry\n";
-	exit(0);
-      }
-      break;
-    default: 
-      cerr << "Unsupported rendering mode sorry\n";
-      exit(0);
-      break;
-    }
+    delete msg;
+    count--;
   }
   glDisableClientState(GL_VERTEX_ARRAY);
   glDisableClientState(GL_COLOR_ARRAY);
   glDisableClientState(GL_NORMAL_ARRAY);
+}
+
+void NexusMt::Draw(unsigned int cell, QueuePServer::Data &data) {
+
+  Patch &patch = *(data.patch);
+  char *fstart;
+  char *vstart;
+  char *cstart;
+  char *nstart;
+  
+  if(vbo_mode != VBO_OFF) {
+    if(!data.vbo_element) {
+      patches.LoadVbo(data);
+    }
+    
+    glBindBufferARB(GL_ARRAY_BUFFER_ARB, data.vbo_array);
+    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, data.vbo_element);
+    
+    fstart = NULL;
+    vstart = NULL;
+    cstart = (char *)(sizeof(float) * patch.cstart);
+    nstart = (char *)(sizeof(float) * patch.nstart);
+  } else {
+    fstart = (char *)patch.FaceBegin();
+    vstart = (char *)patch.VertBegin();
+    cstart = (char *)patch.ColorBegin();
+    nstart = (char *)patch.Norm16Begin();
+  }
+  
+  glVertexPointer(3, GL_FLOAT, 0, vstart);
+  if(use_colors)
+    glColorPointer(4, GL_UNSIGNED_BYTE, 0, cstart);
+  if(use_normals)
+    glNormalPointer(GL_SHORT, 8, nstart);
+  
+  switch(mode) {
+  case POINTS:
+    glDrawArrays(GL_POINTS, 0, patch.nv); break;
+  case PATCHES:
+    glColor3ub((cell * 27)%255, (cell * 37)%255, (cell * 87)%255);
+  case SMOOTH:
+    if(signature & NXS_FACES)
+      glDrawElements(GL_TRIANGLES, patch.nf * 3, 
+		     GL_UNSIGNED_SHORT, fstart);
+    else if(signature & NXS_STRIP)
+      glDrawElements(GL_TRIANGLE_STRIP, patch.nf, 
+		     GL_UNSIGNED_SHORT, fstart);
+    break;
+  case FLAT:
+    if(signature & NXS_FACES) {
+      glBegin(GL_TRIANGLES);
+      for(int i = 0; i < patch.nf; i++) {
+	unsigned short *f = patch.Face(i);
+	Point3f &p0 = patch.Vert(f[0]);
+	Point3f &p1 = patch.Vert(f[1]);
+	Point3f &p2 = patch.Vert(f[2]);
+	Point3f n = ((p1 - p0) ^ (p2 - p0));
+	glNormal3f(n[0], n[1], n[2]);
+	glVertex3f(p0[0], p0[1], p0[2]);
+	glVertex3f(p1[0], p1[1], p1[2]);
+	glVertex3f(p2[0], p2[1], p2[2]);
+      }
+      glEnd();
+    } else if(signature & NXS_STRIP) {
+      cerr << "Unsupported rendering mode sorry\n";
+      exit(0);
+    }
+    break;
+  default: 
+    cerr << "Unsupported rendering mode sorry\n";
+    exit(0);
+    break;
+  }
 }
 
 void NexusMt::SetExtractionSize(unsigned int r_size) {    
@@ -471,6 +502,7 @@ void NexusMt::ClearHistory() {
 
 void NexusMt::Extract(std::vector<unsigned int> &selected) {
   extraction_used = 0;
+  visited.clear();
 
   std::vector<Node>::iterator n;
   for(n = nodes.begin(); n != nodes.end(); n++) {

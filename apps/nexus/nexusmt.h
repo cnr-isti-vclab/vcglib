@@ -3,7 +3,6 @@
 
 #include <vector>
 #include <queue>
-#include <ptypes/pasync.h>
 #include <wrap/gui/frustum.h>
 
 #include "nexusbase.h"
@@ -121,8 +120,11 @@ class NexusMt: public NexusBase {
   unsigned int tri_total;
 
   std::vector<PServer::Item> visited;
+
   QueuePServer patches;
   BorderServer borders; 
+
+  Prefetch prefetch;
 
   NexusMt();
   ~NexusMt();
@@ -146,6 +148,7 @@ class NexusMt: public NexusBase {
   bool SetComponents(unsigned int mask);
   
   void Draw(std::vector<unsigned int> &selected);
+  void Draw(unsigned int cell, QueuePServer::Data &data);
   void Extract(std::vector<unsigned int> &selected);
 
  protected:
