@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/05/10 13:24:21  cignoni
+Updated names of adj functions and added ending newline
+
 Revision 1.5  2004/04/21 14:06:10  ganovelli
 #ifndef added
 
@@ -107,7 +110,7 @@ static VertexIterator AddVertices(MeshType &m,int n, PointerUpdater<VertexPointe
     
 	for(int i=0; i<n; ++i)
 	{
-    m.vert.push_back(MeshType::VertexType());
+    m.vert.push_back(typename MeshType::VertexType());
 		m.vert.back().ClearFlags();
 	}
 
@@ -127,7 +130,7 @@ static VertexIterator AddVertices(MeshType &m,int n, PointerUpdater<VertexPointe
 		
 		// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
 			unsigned int siz=m.vert.size()-n;	
-		  if(last!=0)  
+		  if(last!=(VertexIterator)0)  
 			{ 
 				last = m.vert.begin(); 
 				advance(last,siz);
@@ -157,18 +160,17 @@ static FaceIterator AddFaces(MeshType &m, int n)
 */
 static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu)
 {
-  FaceIterator last=0;
+  FaceIterator  last = (FaceIterator)0;
   pu.Clear();
   if(m.face.empty()) {
     pu.oldBase=0;  // if the vector is empty we cannot find the last valid element
-    last=0;
   }	else  {
     pu.oldBase=&*m.face.begin(); 
     last=m.face.end();
   } 
 	for(int i=0; i<n; ++i)
 	{
-    m.face.push_back(MeshType::FaceType());
+    m.face.push_back(typename MeshType::FaceType());
 		m.face.back().ClearFlags();
 	}
 
@@ -198,7 +200,7 @@ static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu
         }
         		// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
 		unsigned int siz=m.face.size()-n;	
-		if(last!=0)  
+		if(last!=(FaceIterator)0)  
 			{ 
 				last = m.face.begin(); 
 				advance(last,siz);
