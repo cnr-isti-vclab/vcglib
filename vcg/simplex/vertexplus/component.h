@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/03/29 08:36:26  cignoni
+First working version!
+
 
 ****************************************************************************/
 #ifndef __VCG_VERTEX_PLUS_COMPONENT
@@ -134,7 +137,7 @@ private:
   ColorType _color;    
 };
 
-template <class T> class Color3c: public Color<vcg::Point3<char>, T> {};
+template <class T> class Color4b: public Color<vcg::Color4b, T> {};
 
 /*-------------------------- Quality  ----------------------------------*/ 
 
