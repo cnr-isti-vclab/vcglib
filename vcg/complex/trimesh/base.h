@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2005/01/28 17:56:57  pietroni
+changed HasVFTopology function... control if both vertex and face define the vf topology
+
 Revision 1.12  2004/10/28 00:54:34  cignoni
 Better Doxygen documentation
 
@@ -88,6 +91,7 @@ namespace tri {
 template < class VertContainerType, class FaceContainerType >
 class TriMesh{
 	public:
+	typedef TriMesh<VertContainerType, FaceContainerType> MeshType;
 	typedef FaceContainerType FaceContainer;
 	typedef VertContainerType VertContainer;
 	typedef typename VertContainer::value_type VertexType;
@@ -148,12 +152,12 @@ public:
 
 	inline int MemUsed() const
 	{
-		return sizeof(MMTYPE)+sizeof(MVTYPE)*vert.size()+sizeof(MFTYPE)*face.size();
+		return sizeof(MeshType)+sizeof(VertexType)*vert.size()+sizeof(FaceType)*face.size();
 	}
 
 	inline int MemNeeded() const
 	{
-		return sizeof(MMTYPE)+sizeof(MVTYPE)*vn+sizeof(MFTYPE)*fn;
+		return sizeof(MeshType)+sizeof(VertexType)*vn+sizeof(FaceType)*fn;
 	}
 
 

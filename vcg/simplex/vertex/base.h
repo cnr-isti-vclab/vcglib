@@ -23,6 +23,10 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.22  2005/03/18 00:13:45  cignoni
+Removed NormalizedNormalV  (out of standard and wrong) and
+added the member functions Normal and NormalizedNormal() (just like for faces)
+
 Revision 1.21  2004/10/28 00:50:49  cignoni
 Better Doxygen documentation
 
@@ -57,6 +61,10 @@ Revision 1.12  2004/05/10 13:31:13  ganovelli
 function for edge adjacency added
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2005/03/18 00:13:45  cignoni
+Removed NormalizedNormalV  (out of standard and wrong) and
+added the member functions Normal and NormalizedNormal() (just like for faces)
+
 Revision 1.21  2004/10/28 00:50:49  cignoni
 Better Doxygen documentation
 
@@ -727,7 +735,7 @@ public:
 template <bool NormalizeFlag> 
 const CoordType GenericNormal()
 {
-  if (!v->HasVFAdjacency())
+  if (!HasVFAdjacency())
   {
     assert(0);
 		return (VERTEX_TYPE::CoordType (0,0,0));
@@ -735,8 +743,8 @@ const CoordType GenericNormal()
   else
   {
     vcg::face::VFIterator<typename VERTEX_TYPE::FaceType> VFi=vcg::face::VFIterator<typename VERTEX_TYPE::FaceType>();
-    VFi.f=v->VFp();
-    VFi.z=v->VFi();
+    VFi.f=VFp();
+    VFi.z=VFi();
     typename VERTEX_TYPE::CoordType N= typename VERTEX_TYPE::CoordType(0,0,0);
     while (!VFi.End())
     {
