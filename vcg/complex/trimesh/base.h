@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2004/07/15 12:03:50  ganovelli
+access to imark added
+
 Revision 1.8  2004/07/15 11:39:24  ganovelli
 IsDeleted to IsD
 
@@ -50,8 +53,9 @@ Initial commit
 
 
 ****************************************************************************/
-
+#ifndef __GNUC
 #pragma warning( disable : 4804 )
+#endif
 #include <vcg/space/box3.h>
 
 /*
