@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/04/20 12:41:39  pietroni
+*** empty log message ***
+
 Revision 1.1  2004/04/15 08:54:20  pietroni
 *** empty log message ***
 
@@ -218,7 +221,7 @@ void LoadTs(char * filename, double meshscale )
 			fscanf(f, "%f", &x );
 			fscanf(f, "%f", &y );
 			fscanf(f, "%f", &z );
-		  fscanf(f, "%f", &mass );
+		  //fscanf(f, "%f", &mass );
       p1.P()=Point3d(x*meshscale, y*meshscale ,z*meshscale );
 			vert.push_back(p1);
 		}
