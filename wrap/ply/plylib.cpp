@@ -31,6 +31,9 @@ of Greg Turk and on the work of Claudio Rocchini
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/03/03 15:00:51  cignoni
+Initial commit
+
 ****************************************************************************/
 
 
@@ -1832,7 +1835,7 @@ static bool cb_read_ascii( GZFILE fp, void * mem, PropDescriptor * d )
 const int SKIP_MAX_BUF = 512;
 static char skip_buf[SKIP_MAX_BUF];
 
-static bool cb_skip_list_bin1( GZFILE fp, void * /*mem*/, PropDescriptor * d )
+static bool cb_skip_list_bin1( GZFILE fp, void * /*mem*/, PropDescriptor * /*d*/ )
 {
 	uchar n;
 		// Solo indici uchar
@@ -1842,7 +1845,7 @@ static bool cb_skip_list_bin1( GZFILE fp, void * /*mem*/, PropDescriptor * d )
 	return true;
 }
 
-static bool cb_skip_list_bin2( GZFILE fp, void * /*mem*/, PropDescriptor * d )
+static bool cb_skip_list_bin2( GZFILE fp, void * /*mem*/, PropDescriptor * /*d*/ )
 {
 	uchar n;
 		// Solo indici uchar
@@ -1852,7 +1855,7 @@ static bool cb_skip_list_bin2( GZFILE fp, void * /*mem*/, PropDescriptor * d )
 	return true;
 }
 
-static bool cb_skip_list_bin4( GZFILE fp, void * /*mem*/, PropDescriptor * d )
+static bool cb_skip_list_bin4( GZFILE fp, void * /*mem*/, PropDescriptor * /*d*/ )
 {
 	uchar n;
 		// Solo indici uchar
@@ -1862,7 +1865,7 @@ static bool cb_skip_list_bin4( GZFILE fp, void * /*mem*/, PropDescriptor * d )
 	return true;
 }
 
-static bool cb_skip_list_bin8( GZFILE fp, void * /*mem*/, PropDescriptor * d )
+static bool cb_skip_list_bin8( GZFILE fp, void * /*mem*/, PropDescriptor * /*d*/ )
 {
 	uchar n;
 		// Solo indici uchar
@@ -1872,7 +1875,7 @@ static bool cb_skip_list_bin8( GZFILE fp, void * /*mem*/, PropDescriptor * d )
 	return true;
 }
 
-static bool cb_skip_list_ascii ( GZFILE fp, void * /*mem*/, PropDescriptor * d )
+static bool cb_skip_list_ascii ( GZFILE fp, void * /*mem*/, PropDescriptor * /*d*/ )
 {
 	int i,n;
 
