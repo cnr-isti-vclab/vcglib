@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2005/03/02 10:40:17  ponchio
+Extraction rewrittten (to fix recusive problems).
+
 Revision 1.9  2005/02/20 18:07:01  ponchio
 cleaning.
 
@@ -52,7 +55,7 @@ Added copyright
 namespace nxs {
 
 class Metric;
-class NexusMt; 
+class Nexus; 
 
 struct Item {
   float error;
@@ -101,7 +104,7 @@ class Extraction {
   std::vector<Item> selected;
   unsigned int draw_size; //first in selected should be drawn
 
-  std::vector<HeapNode> heap; //no realtime extraxtion TODO (use front)
+  //  std::vector<HeapNode> heap; //no realtime extraxtion TODO (use front)
 
 
   std::vector<HeapNode> front;  //nodes that i can expand to
@@ -111,11 +114,13 @@ class Extraction {
   Extraction();
   ~Extraction();
 
-  void Extract(NexusMt *mt);
-  void Update(NexusMt *mt);
+  void Extract(Nexus *mt);
+  void Update(Nexus *mt);
 
   bool Visible(unsigned int p)            { return visible[p]; }
   void SetVisible(unsigned int p, bool v) { visible[p] = v; }
+
+  void SetMetric(Metric *m);
 
  protected:         
 
@@ -133,7 +138,7 @@ class Extraction {
   void SetVisited(Node *node, bool v) { visited[node - root] = v; }
 
  private:
-  NexusMt *mt;
+  Nexus *mt;
   Node *root;
   Node *sink;
 

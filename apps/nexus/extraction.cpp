@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2005/03/02 10:40:17  ponchio
+Extraction rewrittten (to fix recusive problems).
+
 Revision 1.11  2005/02/20 19:49:44  ponchio
 cleaning (a bit more).
 
@@ -47,12 +50,36 @@ Added copyright
 
 #include "extraction.h"
 #include "metric.h"
-#include "nexusmt.h"
+#include "nexus.h"
 
 #include <algorithm>
 
 using namespace std;
 using namespace nxs;
+
+  /* Updateing strategy:
+     if i can refine (not at leaves, 
+                      have draw and extr buffer, 
+                      not past target_error)
+        i try to refine BUT
+             i can fail because i finish some buffer 
+                  (then i put the operation back on the stack)
+	     if i have finished disk i should just quit
+     if i cannot refine i consider coarsening:
+         i need 1) not be at root (eheh)
+                2) have finished draw and extr buffer 
+                        (unless i am at error < target so i want to coarse
+                3) do not make global error worse 
+		   (unless it is error < target_error...)
+		   a stability term is added (1.1) so that we do not flip
+		   nodes in and out quickly
+	 i try to coarse BUT
+              i can fail because i need disk
+	      (then i put the operation back on the stack)
+      if i cannt coarse i just quit
+  */
+
+
 
 Extraction::Extraction(): target_error(4.0f), extr_max(10000),
 			  draw_max(10000), disk_max(100) {
@@ -63,7 +90,13 @@ Extraction::~Extraction() {
   if(metric) delete metric;
 }
 
-void Extraction::Extract(NexusMt *_mt) {
+void Extraction::SetMetric(Metric *m) {
+  if(metric) 
+    delete metric;
+  metric = m;
+}
+
+void Extraction::Extract(Nexus *_mt) {
   mt = _mt;
   root = mt->history.Root();
   sink = root + (mt->history.n_nodes()-1);
@@ -76,6 +109,8 @@ void Extraction::Extract(NexusMt *_mt) {
   visited.resize(mt->history.n_nodes(), false);
   visible.clear();
   visible.resize(mt->size(), true);
+  node_errors.clear();
+  node_errors.resize(mt->history.n_nodes(), -1);
 
   front.clear();
 
@@ -97,12 +132,6 @@ void Extraction::Extract(NexusMt *_mt) {
 }
 
 void Extraction::Init() { 
-  max_error = -1;
-  front.clear();
-  back.clear();
-  node_errors.clear();
-  node_errors.resize(mt->history.n_nodes(), -1);
-  
   //I want to add all coarsable nodes
   //and all refinable node (being careful about recursive dependencies)
   for(Node *node = root; node != sink; node++) {
@@ -127,6 +156,7 @@ void Extraction::Init() {
   for(Node *node = root; node != sink; node++) 
     if(node_errors[node - root] != -1)
       SetError(node, node_errors[node-root]);       
+
 
   //estimate cost of all the cut arcs (i need the visible info)
   Cost cost;
@@ -153,7 +183,7 @@ void Extraction::Init() {
   disk_used = cost.disk;
 }
 
-void Extraction::Update(NexusMt *_mt) {
+void Extraction::Update(Nexus *_mt) {
   mt = _mt;
   root = mt->history.Root();
   sink = mt->history.Sink();
@@ -164,32 +194,16 @@ void Extraction::Update(NexusMt *_mt) {
   } 
   visible.clear();
   visible.resize(mt->size(), true);
+  node_errors.clear();
+  node_errors.resize(mt->history.n_nodes(), -1);
+  
+  front.clear();
+  back.clear();
+
+  max_error = -1;
   
   Init();
   
-
-  /* Updateing strategy:
-     if i can refine (not at leaves, 
-                      have draw and extr buffer, 
-                      not past target_error)
-        i try to refine BUT
-             i can fail because i finish some buffer 
-                  (then i put the operation back on the stack)
-	     if i have finished disk i should just quit
-     if i cannot refine i consider coarsening:
-         i need 1) not be at root (eheh)
-                2) have finished draw and extr buffer 
-                        (unless i am at error < target so i want to coarse
-                3) do not make global error worse 
-		   (unless it is error < target_error...)
-		   a stability term is added (1.1) so that we do not flip
-		   nodes in and out quickly
-	 i try to coarse BUT
-              i can fail because i need disk
-	      (then i put the operation back on the stack)
-      if i cannt coarse i just quit
-  */
-
   bool can_refine = true;
 
   while(1) {     
@@ -325,7 +339,6 @@ bool Extraction::Refine(HeapNode hnode) {
 }
 
 bool Extraction::Coarse(HeapNode hnode) {
-  //cerr << "Coarse node: " << (void *)hnode.node << " err: " << hnode.error << endl;    
   Node *node = hnode.node;
   
   Cost cost;
