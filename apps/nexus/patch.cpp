@@ -14,6 +14,7 @@ static double wrkmem[LZO1X_1_MEM_COMPRESS/sizeof(double) +1];
 static double wrkmem[LZO1X_999_MEM_COMPRESS/sizeof(double) +1];
 #endif
 
+
 void pad(unsigned int &size) {
   while(size&0x3) size++;
 }
@@ -183,9 +184,13 @@ char *Patch::Compress(unsigned int ram_size, unsigned int &size) {
 		     (unsigned char *)buffer + sizeof(int), &size,
 		   (char *)wrkmem);
 #else
-  lzo1x_999_compress(((unsigned char *)start), ram_size,
-		     (unsigned char *)buffer + sizeof(int), &size,
+    lzo1x_999_compress(((unsigned char *)start), ram_size,
+		       (unsigned char *)buffer + sizeof(int), &size,
 		   (char *)wrkmem);
+
+  lzo1x_optimize((unsigned char *)buffer + sizeof(int), size,
+		 ((unsigned char *)start), &ram_size,		 
+		 NULL);
 #endif
 
   *(int *)buffer = size;
@@ -193,10 +198,7 @@ char *Patch::Compress(unsigned int ram_size, unsigned int &size) {
 
   //  memcpy(buffer, start, ram_size);
   //  size = ram_size;
-  //TODO optimize!
-  //      lzo1x_optimize((unsigned char *)entry.patch->start,
-  //			 entry.ram_size * chunk_size,
-  //			 compressed, &compressed_size, NULL);
+
   return buffer;
 
 }

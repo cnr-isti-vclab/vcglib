@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/09/28 10:26:21  ponchio
+Rewrote.
+
 Revision 1.4  2004/09/21 00:53:23  ponchio
 Lotsa changes.
 
@@ -87,3 +90,28 @@ float VoronoiPartition::Closest(const vcg::Point3f &p,
   return mindist;
 }
 
+Point3f VoronoiPartition::FindBorder(vcg::Point3f &p, float radius) {
+  Point3f a = p;
+  unsigned int atarget = Locate(a);
+  Point3f &seed = operator[](atarget).p;
+
+  if((a - seed).Norm() < radius/100) return p; //Bad luck.
+
+  Point3f dir = (a - seed).Normalize();
+  Point3f b = seed + dir*radius*1.1;
+  unsigned int btarget = Locate(b);
+
+  if(atarget == btarget) {
+    //probably nothing on the side we are looking gor;
+    return p;
+  }
+  Point3f m;
+  for(unsigned int i = 0; i < 10; i++) {
+    m = (a + b)/2;
+    unsigned int mtarget = Locate(m);
+    if(mtarget == atarget) a = m;
+    else if(mtarget == btarget) b = m;
+    else break; //something in the middle
+  }
+  return m;
+}

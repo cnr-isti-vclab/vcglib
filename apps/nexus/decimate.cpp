@@ -161,9 +161,9 @@ float Quadric(MyMesh &mesh, unsigned int target_faces) {
     }
   }
   error /= count;
-  cerr << "Error: " << error << endl;
+  //  cerr << "Error: " << error << endl;
   cerr << "faces: " << mesh.fn << endl;
-  cerr << "verts: " << mesh.vn << endl;
+  //  cerr << "verts: " << mesh.vn << endl;
   return error;
 }
 
@@ -201,8 +201,6 @@ float Cluster(MyMesh &mesh, unsigned int target_faces) {
   part.SetBox(box);
   part.Init();
 
-  cerr << "inited points\n";
-
   vector<Point3f> centroid;
   vector<unsigned int> count;
   for(unsigned int i = 0; i < 3; i++) {
@@ -226,8 +224,6 @@ float Cluster(MyMesh &mesh, unsigned int target_faces) {
     mesh.vert[remap[i]].P() = part[i].p;
   }
 
-  cerr << "remapping faces\n";
-
   float error = 0;
   //rimappiamo le facce.....
   for(unsigned int i = 0; i < mesh.face.size(); i++) {
@@ -245,7 +241,6 @@ float Cluster(MyMesh &mesh, unsigned int target_faces) {
     }
   }
   
-  cerr << "Deleting faces\n";
   for(unsigned int i = 0; i < mesh.face.size(); i++) {
     MyFace &face = mesh.face[i];
     assert(!face.IsD());
@@ -260,17 +255,15 @@ float Cluster(MyMesh &mesh, unsigned int target_faces) {
     }
   }
   
-  cerr << "deleting vertices\n";
-
   for(unsigned int i = 0; i < mesh.vert.size(); i++)
     if(!mesh.vert[i].IsV() && mesh.vert[i].IsW()) {
       mesh.vert[i].SetD();
       mesh.vn--;
     }
 
-  cerr << "Error: " << error << endl;
-  cerr << "faces: " << mesh.fn << endl;
-  cerr << "verts: " << mesh.vn << endl;
+  //  cerr << "Error: " << error << endl;
+  //  cerr << "faces: " << mesh.fn << endl;
+  //  cerr << "verts: " << mesh.vn << endl;
   return error;
 }
 

@@ -15,18 +15,35 @@ using namespace vcg;
 using namespace triangle_stripper;
 
 void nxs::ComputeNormals(Nexus &nexus) {
-  /* WARNING pathological cases may require a lot of memory
-     expecially if one patch borders with many many other patches */
-  
   assert(nexus.signature & NXS_NORMALS_SHORT ||
 	 nexus.signature & NXS_NORMALS_FLOAT);
   
   bool use_short = (nexus.signature & NXS_NORMALS_SHORT) != 0;
 
+  //TODO use a temporary file to store border normals
+  unsigned int tmpb_offset = 0;
+  vector<unsigned int> tmpb_start;
+  VFile<Point3f> tmpb;
+  if(!tmpb.Create("tmpb.tmp")) {
+    cerr << "Could not create temporary border file\n";
+    exit(0);
+  }
+
+  for(unsigned int p = 0; p < nexus.index.size(); p++) {
+    Border border = nexus.GetBorder(p);
+    tmpb_start.push_back(tmpb_offset);
+    tmpb_offset += border.Size();
+  }
+
+  Point3f zero(0.0f, 0.0f, 0.0f);
+  tmpb.Resize(tmpb_offset);
+  for(unsigned int i = 0; i < tmpb.Size(); i++)
+    tmpb[i] = zero;
+  
   //first step normals in the same patch.
   for(unsigned int p = 0; p < nexus.index.size(); p++) {
     Patch &patch = nexus.GetPatch(p);
-
+    
     vector<Point3f> normals;
     normals.resize(patch.nv, Point3f(0, 0, 0));
     
@@ -72,62 +89,54 @@ void nxs::ComputeNormals(Nexus &nexus) {
       memcpy(patch.Norm16Begin(), &*normals.begin(), 
 	     normals.size() * sizeof(Point3f));
     }
+    Border border = nexus.GetBorder(p);
+
+    set<unsigned int> close;
+    for(unsigned int i = 0; i < border.Size(); i++) {
+      Link &link = border[i];
+      if(link.IsNull()) continue;
+      unsigned int off = tmpb_start[p];
+      tmpb[off + i] += normals[link.start_vert];
+      close.insert(link.end_patch);
+    }
+
+    set<unsigned int>::iterator k;
+    for(k = close.begin(); k != close.end(); k++) {
+      Border remote = nexus.GetBorder(*k);
+      unsigned int off = tmpb_start[*k];
+
+      for(unsigned int i = 0; i < remote.Size(); i++) {
+	Link &link = remote[i];
+	if(link.IsNull()) continue;
+	if(link.end_patch != p) continue;
+	tmpb[off + i] += normals[link.end_vert];
+      }
+    }
   }
+
   //Second step unify normals across borders
   for(unsigned int p = 0; p < nexus.index.size(); p++) {
-    //notice now ew allow flushing of old patches
-
     Patch &patch = nexus.GetPatch(p);
     Border border = nexus.GetBorder(p);
 
-    //first pass we collect all normals
-    map<unsigned short, Point3f> normals;
     for(unsigned int i = 0; i < border.Size(); i++) {
       Link &link = border[i];
       if(link.IsNull()) continue;
-
-      if(!normals.count(link.start_vert)) {
-	assert(link.start_vert < patch.nv);
-	if(use_short) {
-	  short *n = patch.Norm16(link.start_vert);
-	  normals[link.start_vert] = Point3f(n[0], n[1], n[2]);
-	} else
-	  normals[link.start_vert] = patch.Norm32(link.start_vert);
-      }
-
-      //no flushing now!
-      Patch &remote = nexus.GetPatch(link.end_patch, false);
-      assert(link.end_vert < remote.nv);
-
-      if(use_short) {
-	short *n = remote.Norm16(link.end_vert);
-	normals[link.start_vert] += Point3f(n[0], n[1], n[2]);
-      } else
-	normals[link.start_vert] += remote.Norm32(link.end_vert);
-    }
-    
-    //second pass we update values in all the patches involved
-    for(unsigned int i = 0; i < border.Size(); i++) {
-      Link &link = border[i];
-      if(link.IsNull()) continue;
-
-      Patch &remote = nexus.GetPatch(link.end_patch, false);
-      Point3f &n = normals[link.start_vert];
-      n.Normalize();      
-
+      unsigned int off = tmpb_start[p];
+      Point3f &n = tmpb[off + i];
+      n.Normalize();
       if(use_short) {
 	n *= 32767;
-	short *nr = remote.Norm16(link.end_vert);
 	short *np = patch.Norm16(link.start_vert);
-	nr[0] = np[0] = (short)n[0];
-	nr[1] = np[1] = (short)n[1];
-	nr[2] = np[2] = (short)n[2];
+	np[0] = (short)n[0];
+	np[1] = (short)n[1];
+	np[2] = (short)n[2];
       } else {
-	remote.Norm32(link.end_vert) = n;
-	patch.Norm32(link.end_vert) = n;
+	patch.Norm32(link.start_vert) = n;
       }
     }
   }
+  //TODO remove temporary file.
 }
 
 /*void nxs::ComputeTriStrip(unsigned short nfaces, unsigned short *faces, 

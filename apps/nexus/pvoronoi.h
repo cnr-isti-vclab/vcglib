@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/09/28 10:26:21  ponchio
+Rewrote.
+
 Revision 1.6  2004/09/21 00:53:23  ponchio
 Lotsa changes.
 
@@ -101,7 +104,8 @@ namespace nxs {
     void Init();
     float Closest(const vcg::Point3f &p, 
 		  unsigned int &target, float radius = 0);
-    
+
+    vcg::Point3f FindBorder(vcg::Point3f &p, float radius);
     unsigned int Locate(const vcg::Point3f &p) {
       unsigned int target;
       Closest(p, target);

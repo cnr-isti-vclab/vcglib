@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2004/10/10 17:19:42  ponchio
+Added compression and debugged.
+
 Revision 1.13  2004/10/09 17:32:25  ponchio
 Ram buffer option added (last)
 
@@ -289,7 +292,6 @@ int main(int argc, char *argv[]) {
   //unify vertices otherwise you may get cracks.
   nexus.Unify();
   nexus.patches.FlushAll();
-  TestPatches(nexus);
 
   /* BUILDING OTHER LEVELS */
   unsigned int oldoffset = 0;
@@ -377,6 +379,46 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
 		Nexus::Update &update,
 		float error) {
 
+  cerr << "Counting nearby cells" << endl;
+
+  map<unsigned int, Point3f> centroids;
+  map<unsigned int, unsigned int> counts;
+  
+  Point3f centroid(0, 0, 0);
+  Box3f box;
+  for(unsigned int f = 0; f < newface.size(); f += 3) {
+    Point3f bari = (newvert[newface[f]] + 
+		    newvert[newface[f+1]] + 
+		    newvert[newface[f+2]])/3;
+    centroid += bari;
+    box.Add(bari);
+    unsigned int cell = vchain.Locate(level+1, bari);
+    if(!centroids.count(cell)) centroids[cell] = Point3f(0, 0, 0);
+    if(!counts.count(cell)) counts[cell] = 0;
+    centroids[cell] += bari;
+    counts[cell]++;
+  }
+  centroid /= newface.size()/3;
+  //prune small cells:
+  float min_size = (newface.size()/3) / 20;
+
+  vector<unsigned int> cellremap;
+  VoronoiPartition local;
+  local.SetBox(vchain.levels[level].box);
+  map<unsigned int, Point3f>::iterator r;
+  for(r = centroids.begin(); r != centroids.end(); r++) {
+    unsigned int cell = (*r).first;
+    if(counts[cell] < min_size) continue;
+
+    Point3f seed = (*r).second/counts[cell];
+    Point3f orig = vchain.levels[level+1][cell].p;
+    //    seed = (seed + orig*2)/3;
+    seed = orig;
+    local.push_back(seed);
+    cellremap.push_back(cell);
+  }
+  local.Init();
+
   //if != -1 remap global index to cell index (first arg)
   map<unsigned int, vector<int> > vert_remap;
   map<unsigned int, unsigned int> vert_count;
@@ -390,7 +432,9 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
 		    newvert[newface[f+1]] + 
 		    newvert[newface[f+2]])/3;
     
-    unsigned int cell = vchain.Locate(level+1, bari);
+    //    unsigned int cell = vchain.Locate(level+1, bari);
+    unsigned int cell = cellremap[local.Locate(bari)];
+
     vector<int> &f_remap = face_remap[cell];
     f_remap.push_back(newface[f]);
     f_remap.push_back(newface[f+1]);
@@ -409,7 +453,7 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
 	v_remap[newface[f+i]] = vert_count[cell]++;
   }
 
-  //TODO prune small count cells 
+  //TODO prune small count cells and assure no big ones.
   
   //lets count borders
   map<unsigned int, unsigned int> bord_count;
