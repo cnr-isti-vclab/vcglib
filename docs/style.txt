@@ -1,0 +1,27 @@
+Lo stile della lib
+
+FileSystem 
+nomi dei file sempre tutti minuscoli, se parole composte separato da _
+
+Coding
+
+Nomi delle classi con la maiuscola
+
+nomi dei metodi con la prima Maiuscola e maiuscole interne per separare parole composte
+gli enum tutti maiuscoli
+
+nomi degli arg template tutto maiuscolo significativo e che possibilimente ricordi la funzione di cui e' argomento e.g. SM_MESH per Smooth<SM_MESH>!)
+
+nomi dei membri con la prima minuscola 
+
+Il tabbing o con spazi o con un tab == 2 spazi 
+
+nei .h prima tutti i prototipi delle funzioni e poi le implementazioni inline (soprattutto per i membri delle classi)
+
+ogni file.h deve includere tutto quello che gli serve.
+
+a capo e parentesi a piacere.
+
+non si DEVE assumere alcun path assoluto.
+nemmeno nelle app (l'albero di cvs e' quello vero!)
+
