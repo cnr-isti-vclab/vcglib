@@ -6,7 +6,7 @@
 	<META NAME="GENERATOR" CONTENT="OpenOffice.org 1.1.0  (Win32)">
 	<META NAME="CREATED" CONTENT="20040209;363169">
 	<META NAME="CHANGEDBY" CONTENT="Paolo Cignoni">
-	<META NAME="CHANGED" CONTENT="20040213;2134025">
+	<META NAME="CHANGED" CONTENT="20040213;3190945">
 	<STYLE>
 	<!--
 		@page { size: 21.59cm 27.94cm; margin: 2cm }
@@ -64,15 +64,26 @@ arguments just like Class Names, but ending with &ldquo;Type&rdquo;</P>
 <P CLASS="code-western"><FONT SIZE=2><FONT FACE="Courier New, sans-serif">Point3f::ScalarType</FONT></FONT>
 </P>
 <H2 CLASS="western">Header Files</H2>
-<P STYLE="margin-bottom: 0cm">Each file of the library has to include
-all the files that it requires.</P>
 <P STYLE="margin-bottom: 0cm">Header filenames and folders are always
 fully lower case. Compound names are separated by '_'.</P>
+<P STYLE="margin-bottom: 0cm">Example:</P>
+<P STYLE="margin-bottom: 0cm"><FONT SIZE=2><FONT FACE="Courier New, sans-serif">#include&lt;vcg/space/point3.h&gt;</FONT></FONT>
+</P>
+<P STYLE="margin-bottom: 0cm">Each file of the library has to include
+all the files that it requires. A include file should relies on the
+files included by its include files. Example: in vcg/space/box3.h:</P>
+<P STYLE="margin-bottom: 0cm"><BR>
+</P>
+<P CLASS="code-western"><FONT SIZE=2><FONT FACE="Courier New, sans-serif">#include&lt;vcg/math/base.h&gt;
+ // not necessary becouse included by point3.h</FONT></FONT></P>
+<P CLASS="code-western"><FONT SIZE=2><FONT FACE="Courier New, sans-serif">#include&lt;vcg/space/point3.h&gt;</FONT></FONT>
+</P>
+<H2 CLASS="western" STYLE="margin-top: 0cm; margin-bottom: 0cm"><BR>
+</H2>
 <P STYLE="margin-bottom: 0cm">In Class definitions place prototypes
 all <SPAN LANG="en-US">together</SPAN> before the inline or templated
 <SPAN LANG="en-US">implementations.</SPAN></P>
-<P STYLE="margin-bottom: 0cm">Example:</P>
-<P CLASS="code-western"><FONT SIZE=2><FONT FACE="Courier New, sans-serif">#include&lt;vcg/space/point3.h&gt;</FONT></FONT>
+<P STYLE="margin-bottom: 0cm"><BR>
 </P>
 <H2 CLASS="western">Editing Rules</H2>
 <P STYLE="margin-bottom: 0cm">Tabs are equivalent to two spaces. 
