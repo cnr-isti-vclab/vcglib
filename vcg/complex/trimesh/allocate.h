@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/03/31 14:43:56  cignoni
+bug in update of VF adj
+
 Revision 1.3  2004/03/12 15:25:29  cignoni
 Corrected bug on the return of a wrong iterator
 
@@ -38,6 +41,9 @@ Initial commit
 
 
 ****************************************************************************/
+
+#ifndef __VCGLIB_TRIALLOCATOR
+#define __VCGLIB_TRIALLOCATOR
 
 namespace vcg {
 namespace tri {
@@ -204,3 +210,5 @@ static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu
 /*@}*/
 } // End Namespace TriMesh
 } // End Namespace vcg
+
+#endif
