@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/06/24 08:03:59  cignoni
+Initial Release
+
 
 ****************************************************************************/
 
@@ -31,6 +34,8 @@ $Log: not supported by cvs2svn $
 #define __VCGLIB_CLEAN
 
 #include <map>
+#include <algorithm>
+
 #include<vcg/complex/trimesh/allocate.h>
 namespace vcg {
 namespace tri {
@@ -77,7 +82,7 @@ static int RemoveDuplicateVertex( MeshType & m )    // V1.0
 
 	RemoveDuplicateVert_Compare<VertexIterator> c_obj;
 
-	sort(perm.begin(),perm.end(),c_obj);
+	std::sort(perm.begin(),perm.end(),c_obj);
 
   j = 0;
   i = j;
