@@ -88,6 +88,22 @@ int main(int argc, char *argv[]) {
       cerr << endl;
 
       nexus.Join((*k).second, newvert, newface, newbord);
+
+
+
+
+      /*      unsigned int patch_idx = test.AddPatch(newvert.size(),
+					     newface.size()/3,0);
+      Patch patch = test.GetPatch(patch_idx);
+      for(unsigned int v = 0; v < newface.size(); v++)
+	patch.FaceBegin()[v] = (unsigned short)newface[v];
+      memcpy(patch.VertBegin(), &newvert[0], newvert.size() * sizeof(Point3f));
+      
+      Nexus::Entry &entry = test.index[patch_idx];
+      for(int v = 0; v < newvert.size(); v++) {
+	entry.sphere.Add(newvert[v]);
+	test.sphere.Add(newvert[v]);
+	}*/
       
       //simplify(mesh);
       
@@ -140,9 +156,11 @@ int main(int argc, char *argv[]) {
 	vector<int> &v_remap = vert_remap[cell];
 	vector<int> &f_remap = face_remap[cell];
 
+	verts.resize(vert_count[cell]);
 	for(unsigned int i = 0; i < newvert.size(); i++) {
 	  if(v_remap[i] != -1)
-	    verts.push_back(newvert[v_remap[i]]);
+	    verts[v_remap[i]] = newvert[i];
+	    //	    verts.push_back(newvert[v_remap[i]]);
 	}
 
 	assert(verts.size() == vert_count[cell]);
@@ -181,25 +199,32 @@ int main(int argc, char *argv[]) {
 	    }
 	  }
 	}
-	unsigned int patch_idx = test.AddPatch(verts.size(),faces.size()/3,0);
-	Patch patch = test.GetPatch(patch_idx);
+	//create new nexus patch
+	unsigned int patch_idx = nexus.AddPatch(verts.size(),
+						faces.size()/3,
+						bords.size());
+
+	Nexus::Entry &entry = nexus.index[patch_idx];
+
+	Patch patch = nexus.GetPatch(patch_idx);
 	memcpy(patch.FaceBegin(), &faces[0], 
 	       faces.size() * sizeof(unsigned short));
 	memcpy(patch.VertBegin(), &verts[0], verts.size() * sizeof(Point3f));
 	
-	Nexus::Entry &entry = test.index[patch_idx];
+
 	for(int v = 0; v < verts.size(); v++) {
 	  entry.sphere.Add(verts[v]);
-	  test.sphere.Add(verts[v]);
-	}
+	  nexus.sphere.Add(verts[v]);
+	} 
+	
+	Border border = nexus.GetBorder(patch_idx);
+	memcpy(&border[0], &bords[0], bords.size());
 
-	//create new nexus patch
-	//collect external borders
       }
       
 
 
-      //fix borders
+      //fix external borders?
 
       
       cell_offset += vert_remap.size();

@@ -24,11 +24,16 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/08/26 18:03:48  ponchio
+First draft.
+
 
 ****************************************************************************/
 
 #ifdef WIN32
 #include "getopt.h"
+#else
+#include <unistd.h>
 #endif
 
 #include <iostream>
@@ -77,16 +82,27 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
 		unsigned int level,
 		vector<Point3f> &newvert, 
 		vector<unsigned int> &newface,
-		vector<Link> &newbord);
+		vector<Link> &newbord,
+		Nexus::Update &update, 
+		float error);
+
+float Decimate(unsigned int target_faces, 
+	       vector<Point3f> &newvert, 
+	       vector<unsigned int> &newface,
+	       vector<Link> &newbord,
+	       vector<int> &vert_remap);
+
+void ReverseHistory(vector<Nexus::Update> &history);
 
 int main(int argc, char *argv[]) {
 
   unsigned int patch_size = 1000;
   unsigned int patch_threshold = 200;
   unsigned int max_level = 0xffffffff;
+  float scaling = 0.5;
 
   int option;
-  while((option = getopt(argc, argv, "f:t:l:")) != EOF) {
+  while((option = getopt(argc, argv, "f:t:l:s:")) != EOF) {
     switch(option) {
     case 'f': patch_size = atoi(optarg);
       if(patch_size == 0 || patch_size > 32000) {
@@ -106,6 +122,12 @@ int main(int argc, char *argv[]) {
 	return -1;
       }
       break;
+    case 's': scaling = atof(optarg);
+      if(scaling <= 0 || scaling >= 1) {
+	cerr << "Invalid scaling: " << optarg << endl;
+	cerr << "Must be 0 < scaling < 1" << endl;
+      }
+      break;
     default: cerr << "Unknown option: " << (char)option << endl;
       return -1;
     }
@@ -117,7 +139,8 @@ int main(int argc, char *argv[]) {
     cerr << "  Options:\n";
     cerr << " -f N: use N faces per patch (default 1000, max 32000)\n";
     cerr << " -t N: mini faces per patch (default 200)\n";
-    cerr << " -l N: number of levels\n\n";
+    cerr << " -l N: number of levels\n";
+    cerr << " -s F: scaling factor (0 < F < 1, default 0.5)\n\n";
     return -1;
   }
 
@@ -134,14 +157,17 @@ int main(int argc, char *argv[]) {
   }
 
   string output = argv[optind+1];
+
+  Patch::Signature signature = Patch::DEFAULT;
   Nexus nexus;
-  if(!nexus.Create(output)) {
+  if(!nexus.Create(output, signature)) {
     cerr << "Could not create nexus output: " << output << endl;
     return -1;
   }
 
   VoronoiChain vchain;
   vchain.Initialize(patch_size, patch_threshold);
+  vchain.scaling = scaling;
 
   //Now building level 0 of the Nexus
 
@@ -186,6 +212,11 @@ int main(int argc, char *argv[]) {
 
   NexusFixBorder(nexus, border_remap);
 
+  //filling history
+  Nexus::Update update;
+  for(unsigned int i = 0; i < nexus.index.size(); i++) 
+    update.created.push_back(i);
+  nexus.history.push_back(update);
 
   /* BUILDING OTHER LEVELS */
   unsigned int oldoffset = 0;
@@ -195,34 +226,73 @@ int main(int argc, char *argv[]) {
 
     unsigned int newoffset = nexus.index.size();
     vchain.BuildLevel(nexus, oldoffset);
-
     
     map<unsigned int, set<unsigned int> >::iterator fragment;
     for(fragment = vchain.oldfragments.begin(); 
 	fragment != vchain.oldfragments.end(); fragment++) {
 
+
+      update.created.clear();
+      update.erased.clear();
+
       cerr << "Joining: ";
       set<unsigned int> &fcells = (*fragment).second;
       set<unsigned int>::iterator s;
-      for(s = fcells.begin(); s != fcells.end(); s++)
+      for(s = fcells.begin(); s != fcells.end(); s++) {
+	update.erased.push_back(*s);
 	cerr << " " << (*s) << endl;
+      }
       cerr << endl;
       
       vector<Point3f> newvert;
       vector<unsigned int> newface;
       vector<Link> newbord;
-
+      
       nexus.Join((*fragment).second, newvert, newface, newbord);
 
+
       //simplyfy mesh
+      vector<int> vert_remap;
+      float error = Decimate(newface.size() * scaling/3, newvert, 
+			     newface, newbord, vert_remap);
 
-      NexusSplit(nexus, vchain, level, newvert, newface, newbord);
 
+      NexusSplit(nexus, vchain, level, newvert, newface, newbord, 
+		 update, error);
+
+
+      nexus.history.push_back(update);
     }
 
-    
+    //if(vchain.levels.back().size() == 1) break;
+    if(vchain.oldfragments.size() == 1) break;
+
     vchain.oldfragments = vchain.newfragments;
     oldoffset = newoffset;
+  }
+  //last level clean history:
+  update.created.clear();
+  update.erased.clear();
+  map<unsigned int, set<unsigned int> >::iterator fragment;
+  for(fragment = vchain.newfragments.begin(); 
+      fragment != vchain.newfragments.end(); fragment++) {
+    set<unsigned int> &fcells = (*fragment).second;
+    set<unsigned int>::iterator s;
+    for(s = fcells.begin(); s != fcells.end(); s++)
+      update.erased.push_back(*s);
+  }
+  nexus.history.push_back(update);
+  ReverseHistory(nexus.history);
+  //debug:
+  for(unsigned int i = 0; i < nexus.history.size(); i++) {
+    Nexus::Update &update = nexus.history[i];
+    cerr << "created:";
+    for(unsigned int c = 0; c < update.created.size(); c++)
+      cerr << " " << update.created[c];
+    cerr << "\nerased:";
+    for(unsigned int c = 0; c < update.erased.size(); c++)
+      cerr << " " << update.erased[c];
+    cerr << "\n\n";
   }
 
   //Clean up:
@@ -269,12 +339,14 @@ void NexusAllocate(Crude &crude,
       cerr << "Warning! Empty patch.\n";
 
     entry.patch_start = totchunks;
-    entry.patch_size = Patch::ChunkSize(patch_verts[i], patch_faces[i]);
+    entry.patch_size = Patch::ChunkSize(nexus.signature,
+					patch_verts[i], patch_faces[i]);
     
     totchunks += entry.patch_size;
     entry.border_start = 0xffffffff;
     entry.nvert = patch_verts[i];
     entry.nface = 0;
+    entry.error = 0;
   }
 
   nexus.patches.Resize(totchunks);
@@ -436,7 +508,9 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
 		unsigned int level,
 		vector<Point3f> &newvert, 
 		vector<unsigned int> &newface,
-		vector<Link> &newbord) {
+		vector<Link> &newbord, 
+		Nexus::Update &update,
+		float error) {
 
   //if != -1 remap global index to cell index
   map<unsigned int, vector<int> > vert_remap;
@@ -452,7 +526,6 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
 		    newvert[newface[f+2]])/3;
     
     unsigned int cell = vchain.Locate(level+1, bari);
-    
     vector<int> &f_remap = face_remap[cell];
     f_remap.push_back(newface[f]);
     f_remap.push_back(newface[f+1]);
@@ -500,9 +573,6 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
     faces.resize(face_count[cell]*3);
     
     for(unsigned int i = 0; i < f_remap.size(); i++) {
-      if(v_remap[f_remap[i]] == -1) {
-	cerr << "i: " << i << " f_remap[i]: " << f_remap[i] << endl;
-      }
       assert(v_remap[f_remap[i]] != -1);
       faces[i] = v_remap[f_remap[i]];
     }
@@ -534,8 +604,12 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
     unsigned int patch_idx = nexus.AddPatch(verts.size(),
 					    faces.size()/3,
 					    bords.size());
-    
+    vchain.newfragments[cell].insert(patch_idx);
+    update.created.push_back(patch_idx);
+
     Nexus::Entry &entry = nexus.index[patch_idx];
+    //    entry.error = error;
+    entry.error = level;
     
     Patch patch = nexus.GetPatch(patch_idx);
     memcpy(patch.FaceBegin(), &faces[0], 
@@ -550,7 +624,13 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
     
     Border border = nexus.GetBorder(patch_idx);
     memcpy(&border[0], &bords[0], bords.size());
-    
   }  
+  cerr << "newfrag: " << vchain.newfragments.size() << endl;
 }
  
+void ReverseHistory(vector<Nexus::Update> &history) {
+  reverse(history.begin(), history.end());
+  vector<Nexus::Update>::iterator i;
+  for(i = history.begin(); i != history.end(); i++)
+    swap((*i).erased, (*i).created);
+}

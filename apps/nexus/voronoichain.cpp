@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/08/26 18:03:47  ponchio
+First draft.
+
 
 ****************************************************************************/
 
@@ -162,7 +165,7 @@ void VoronoiChain::BuildLevel(Nexus &nexus, unsigned int offset) {
   unsigned int target_faces =  (int)(patch_size * 
 				     pow(scaling, (float)levels.size()));
 
-  float rad = radius * pow(1.4f, (float)levels.size());
+  float rad = radius * pow(sqrt(1/scaling), (float)levels.size());
 
   levels.push_back(VoronoiPartition());
   VoronoiPartition &part = levels[levels.size()-1];
@@ -179,6 +182,7 @@ void VoronoiChain::BuildLevel(Nexus &nexus, unsigned int offset) {
 	part.Add(v, rad);
     }
   }
-  cerr << "radius: " << rad << endl;
+  cerr << "radius: " << rad << " ... cells: " << part.size() << endl;
+  newfragments.clear();
   //TODO add some optimization
 }

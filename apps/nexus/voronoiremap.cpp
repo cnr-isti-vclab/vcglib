@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/07/20 14:05:45  ponchio
+Inserted report on progress.
+
 Revision 1.3  2004/07/15 14:32:49  ponchio
 Debug.
 
@@ -153,7 +156,7 @@ int main(int argc, char *argv[]) {
   face_remap.Resize(crude.Faces());
 
 
-  PIntersect<VoronoiPartition> inter(chain.levels[0], chain.levels[1]);
+  PIntersect<VoronoiPartition> inter(&(chain.levels[0]), &(chain.levels[1]));
 
   report.Start(crude.Faces(), 100000);
   cerr << "Splitting faces... ";
@@ -169,6 +172,8 @@ int main(int argc, char *argv[]) {
   cerr << "done in " << report.Elapsed() << " secs\n";
 
   //TODO Prune inter to threshold and relocate faces
+
+  inter.Save(output);
 
   VertRemap vert_remap;
   if(!vert_remap.Create(output)) {
@@ -195,7 +200,7 @@ int main(int argc, char *argv[]) {
   }
   cerr << "done in " << report.Elapsed() << " secs\n";
   cerr << "Tot vertices: " << totvert << endl;
-  chain.Save(output + ".chn");
+  chain.Save(output);
 
   for(unsigned int i = 0; i < vert_remap.all.Size(); i++) {
     unsigned int patch = vert_remap.all[i];

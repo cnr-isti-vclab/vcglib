@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/08/26 18:03:48  ponchio
+First draft.
+
 
 ****************************************************************************/
 
@@ -61,7 +64,7 @@ class VoronoiChain: public PChain {
   //  coarse partition -> associated patches
   std::map<unsigned int, std::set<unsigned int> > newfragments;
   std::map<unsigned int, std::set<unsigned int> > oldfragments;
- private:
+  // private:
   float scaling;
   unsigned int patch_size;
   unsigned int patch_threshold;

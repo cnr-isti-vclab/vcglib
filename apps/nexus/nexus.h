@@ -17,8 +17,7 @@ namespace nxs {
 class Nexus {
  public:
 
-  class Entry {
-  public:
+  struct Entry {
     Entry(): patch_start(0xffffffff), border_start(0xffffffff),
       patch_size(0), border_size(0), 
       nvert(0), nface(0), sphere(vcg::Sphere3f()) {}
@@ -30,11 +29,21 @@ class Nexus {
     unsigned short nvert;
     unsigned short nface;
     vcg::Sphere3f sphere;
+
+    float error;
+    unsigned short ram;
+    unsigned short agp;
   };
+
+  struct Update {
+    std::vector<unsigned int> erased;
+    std::vector<unsigned int> created;
+  };
+
 
   Nexus();
   ~Nexus();
-  bool Create(const std::string &filename);
+  bool Create(const std::string &filename, Patch::Signature signature);
   bool Load(const std::string &filename);
   void Close();
 
@@ -54,6 +63,8 @@ class Nexus {
   void CompactBorder(unsigned int patch);
   void CompactBorders();
   void CompactPatches();
+
+  Patch::Signature signature;
   
   unsigned int totvert;
   unsigned int totface;
@@ -63,6 +74,8 @@ class Nexus {
 
   VFile<Chunk> patches;
   VFile<Link> borders; 
+  
+  std::vector<Update> history;
  private:
   FILE *index_file;
 };

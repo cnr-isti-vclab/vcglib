@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/08/27 00:38:34  ponchio
+Minor changes.
+
 Revision 1.3  2004/07/15 14:32:49  ponchio
 Debug.
 
@@ -51,6 +54,12 @@ Created
 
 ****************************************************************************/
 
+#ifdef WIN32
+#include "getopt.h"
+#else
+#include <unistd.h>
+#endif
+
 #include <iostream>
 using namespace std;
 
@@ -59,7 +68,7 @@ using namespace std;
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-#include <apps/nexus/nexus.h>
+#include <apps/nexus/nexusmt.h>
 
 using namespace vcg;
 using namespace nxs;
@@ -112,26 +121,38 @@ bool init() {
 
 
 int main(int argc, char *argv[]) {
-  char file[64];
-  if(argc < 2 || argc > 4) {
-    cerr << "Usage: " << argv[0] << " <nexus file> [start] [end]\n";
-    return -1;
+  int level = 0;
+  int apatch = -1;
+  float geo_error = -1;
+  float screen_error = -1;
+  int option;
+
+  while((option = getopt(argc, argv, "l:p:g:s:")) != EOF) {
+    switch(option) {
+    case 'l': level = atoi(optarg); break;
+    case 'p': apatch = atoi(optarg); break;
+    case 'g': geo_error = (float)atof(optarg); break;
+    case 's': screen_error = (float)atof(optarg); break;
+    default: cerr << "Unknown option: " << (char)option << endl;
+      return -1;
+    }
   }
-  
-  unsigned int start = 0;
-  unsigned int end = 0xffffffff;
 
-  if(argc >= 3)
-    start = atoi(argv[2]);
+  if(optind != argc - 1) {
+    cerr << "Usage: " << argv[0] << " <nexus file> [options]\n"
+	 << " -l <n>: show level n\n"
+	 << " -p <n>: show patch n\n"
+	 << " -g <e>: extract at geometry error e\n"
+	 << " -s <e>: extract at screen error e\n\n";
+    return -1;
+  }      
 
-  if(argc >= 4)
-    end = atoi(argv[3]);
-
-  Nexus nexus;
-  if(!nexus.Load(argv[1])) {
+  NexusMt nexus;
+  if(!nexus.Load(argv[optind])) {
     cerr << "Could not load nexus file: " << argv[1] << endl;
     return -1;
   }
+  nexus.LoadHistory();
   Sphere3f sphere = nexus.sphere;
 
   if(!init()) {
@@ -200,13 +221,24 @@ int main(int argc, char *argv[]) {
     Point3f center = sphere.Center();
     glTranslatef(-center[0], -center[1], -center[2]);
    
+    vector<unsigned int> cells;
+    if(apatch != -1) {
+      cells.push_back(apatch);
+    } else if(geo_error != -1) {
+      nexus.ExtractFixed(cells, geo_error);
+    } else {
+      for(int i = 0; i < nexus.index.size(); i++) {
+	if(nexus.index[i].error == 0)
+	  cells.push_back(i);
+      }
+    }
+    
 
-    for(unsigned int i = 0; i < nexus.index.size(); i++) {
-      if(i < start) continue;
-      if(i >= end) continue;
-      Patch patch = nexus.GetPatch(i);
+    for(unsigned int i = 0; i < cells.size(); i++) {
+      unsigned int cell = cells[i];
+      Patch patch = nexus.GetPatch(cell);
       
-      unsigned int val = i + 1;
+      unsigned int val = cell + 1;
       glColor3ub(((val * 27)%128) + 128, 
 		 ((val * 37)%128) + 128, 
 		 ((val * 87)%128) + 128);
@@ -229,8 +261,9 @@ int main(int argc, char *argv[]) {
       //drawing borders
       glColor3f(1, 1, 1);
 
-      Border border = nexus.GetBorder(i);
-      glPointSize(1);
+      Border border = nexus.GetBorder(cell);
+      glPointSize(2);
+      glDisable(GL_LIGHTING);
       glBegin(GL_POINTS);
       for(unsigned int k = 0; k < border.Size(); k++) {
 	if(border[k].IsNull()) continue;
@@ -238,6 +271,7 @@ int main(int argc, char *argv[]) {
 	glVertex3f(p[0], p[1], p[2]);
       }
       glEnd();
+      glEnable(GL_LIGHTING);
     }
 
     
