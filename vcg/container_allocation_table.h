@@ -42,8 +42,6 @@ typedef STL_CONT::value_type VALUE_TYPE;
 virtual void Resort(VALUE_TYPE*,VALUE_TYPE*) =0;
 virtual void Remove(const STL_CONT&) = 0;
 virtual void AddDataElem(VALUE_TYPE*,int)=0;
-//virtual void Reserve(STL_CONT::value_type * pt,const int & rs)=0;
-//virtual void Resize(STL_CONT::value_type * pt,const int & rs)=0;	
 
 public:
 // ID serves as a type trait. 

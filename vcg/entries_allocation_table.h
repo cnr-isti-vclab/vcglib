@@ -79,13 +79,14 @@ template <class STL_CONT>
 
 
 
-
+// -----------------------------------------------------------------------------------------
+// WrapBase: used to implement a list of pointers to std::vector of different types
+// Wrap: derived from WrapBase (to take the function and from std::vector)
 struct WrapBase{
 virtual void Push_back(const int & n)=0;
 virtual void Reserve(const int & n)=0;
 virtual void Resize(const int & n)=0;	
 	};
-
 // (note) double hineritance is not necessary, just handy
 template <class ATTR_TYPE>
 struct Wrap: public WrapBase,std::vector<ATTR_TYPE>{
@@ -93,9 +94,9 @@ struct Wrap: public WrapBase,std::vector<ATTR_TYPE>{
 	virtual void Reserve(const int & n){reserve(n);}
 	virtual void Resize(const int & n){resize(n);}	
 	};
+//-------------------------------------------------------------------------------------------
 
-
-
+// -----------------------------------------------------------------------------------------
 // EntryCATMulti: entry type for multiple user data
 template <class STL_CONT>
 struct EntryCATMulti: public EntryCATBase<STL_CONT>{
@@ -121,10 +122,11 @@ virtual void Resize(const int & n){
 private:
 	std::list< WrapBase * > data;
 };
+//----------------------------------------------------------------------------------
 
 
-
-
+//----------------------------------------------------------------------------------
+// TempData implements a handle to one of the vector od data stored in EntryCATMulti
 template <class STL_CONT, class ATTR_TYPE>
 class TempData{
 public:
@@ -139,6 +141,8 @@ public:
 				return (*item)[pos];
 			}
 	};
+//----------------------------------------------------------------------------------
+
 
 }; // end namespace vcg
 
