@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/05/17 08:26:28  turini
+Changed : Parameters Order As In  vcg::tetra::SubSet.
+
 Revision 1.7  2004/05/17 07:58:16  turini
 Minor Changes To Compile Even Without using namespace std.
 
@@ -133,8 +136,8 @@ void SubSet(S_MESH_TYPE & m, STL_CONT & subSet)
 	(*fi).V(1)=redirect[(int)(*fi).V(1)];
 	(*fi).V(2)=redirect[(int)(*fi).V(2)];
   }
-  m.vn = m.vert.size();
-  m.fn = m.face.size();
+  m.vn=(int)m.vert.size();
+  m.fn=(int)m.face.size();
   vcg::tri::UpdateFlags<S_MESH_TYPE>::Clear(m);
 }
 

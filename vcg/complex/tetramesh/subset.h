@@ -26,6 +26,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/05/17 08:22:45  turini
+Minor Changes and Now Use STLContainer of Tetrahedron Pointers.
+
 Revision 1.2  2004/05/14 15:51:47  turini
 Adjusted VCG Style
 
@@ -130,8 +133,8 @@ void SubSet(S_TETRAMESH_TYPE & m, STL_CONT & subSet)
 	(*fi).V(2)=&(m.vert[(int)(*fi).V(2)]);
 	(*fi).V(3)=&(m.vert[(int)(*fi).V(3)]);
   }
-  m.vn=m.vert.size();
-  m.tn=m.tetra.size();
+  m.vn=(int)m.vert.size();
+  m.tn=(int)m.tetra.size();
 }
 
 
