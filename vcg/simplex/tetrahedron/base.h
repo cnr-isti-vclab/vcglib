@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/05/20 13:04:23  pietroni
+modified setBorderV function
+
 Revision 1.7  2004/05/14 11:48:43  pietroni
 templated with also tetratype...
 
@@ -276,6 +279,11 @@ public:
 					_zv[0]=_zv[1]=_zv[2]=_zv[3]=-1;
 					_tv[0]=_tv[1]=_tv[2]=_tv[3]=NULL;
 #endif					
+
+#ifdef __VCGLIB_TETRA_TQ
+          ComputeAspectRatio();
+#endif
+
 			}
  ///set border vertices using TT-topology
 #ifdef __VCGLIB_TETRA_AT
@@ -301,19 +309,20 @@ private:
   CoordType _n[4];
 public:
 #endif
+
 ///return the normal of a face of the tetrahedron
 	const CoordType & N(const int &i){
     assert((i>=0)&&(i<4));
-#ifdef __VCGLIB_TETRA_TN		
-    return _n[i];
-#else	  
-    Tetra3<ScalarType> T=Tetra3<ScalarType>();
-    T.P0(0)=V(0)->P();
-    T.P1(0)=V(1)->P();
-    T.P2(0)=V(2)->P();
-    T.P3(0)=V(3)->P();
-    return (Normal<Tetra3<ScalarType> >(T,i));
-#endif
+  #ifdef __VCGLIB_TETRA_TN		
+      return _n[i];
+    #else	  
+  Tetra3<ScalarType> T=Tetra3<ScalarType>();
+   T.P0(0)=V(0)->P();
+   T.P1(0)=V(1)->P();
+   T.P2(0)=V(2)->P();
+   T.P3(0)=V(3)->P();
+  return (Normal<Tetra3<ScalarType> >(T,i));
+  #endif
 		}	
 
  /// Calculate the normal to all the faces of a tetrahedron, the value is store in a position of vecton _n for each face
@@ -359,7 +368,7 @@ void ComputeNormal()
 		}
 
 	///return the volume of the tetrahedron
-	const double & Volume(){
+	const ScalarType & Volume(){
 #ifdef __VCGLIB_TETRA_TQ
 		return _volume;
 #else
@@ -367,11 +376,28 @@ void ComputeNormal()
 #endif
 		}	
   ///return aspect ratio of the tetrahedron
-	double AspectRatio(){
+	ScalarType AspectRatio(){
 #ifdef __VCGLIB_TETRA_TQ
 		return _aspect_ratio;
 #else
 		return ComputeAspectRatio();
+#endif
+		}
+
+///set if exist local value of aspect ratio
+ScalarType ComputeAspectRatio(){
+
+    Tetra3<ScalarType> T=Tetra3<ScalarType>();
+    T.P0(0)=V(0)->cP();
+    T.P1(0)=V(1)->cP();
+    T.P2(0)=V(2)->cP();
+    T.P3(0)=V(3)->cP();
+
+#ifdef __VCGLIB_TETRA_TQ
+		 _aspect_ratio= T.ComputeAspectRatio();
+     return(_aspect_ratio);
+#else
+		return (T.ComputeAspectRatio());
 #endif
 		}
 //@}
