@@ -28,17 +28,14 @@ class ImporterTS{
 		fscanf(F(),"%g %g %g %g\n",&p[0],&p[1],&p[2],&p[3]);
 	}
 public:
-static int Open( Tetramesh & m, const char * filename ){	
+static int Open( Tetramesh & m, const char * filename )
+{	
 	int nvertex;
 	int ntetra;
-	float x;
-	float y;
-	float z;
 	int tp0;
 	int tp1;
 	int tp2;
 	int tp3;
-	float mass;
 	typename Tetramesh::VertexType p1;
 	F() = fopen(filename,"r");
 	if(F() == NULL ) 
