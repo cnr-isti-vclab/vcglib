@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/12/01 16:00:35  ponchio
+Level 3
+
 Revision 1.3  2004/12/01 03:32:46  ponchio
 Level 2 (debug).
 
@@ -309,8 +312,12 @@ void ThirdStep(const string &crudefile, const string &output,
     Patch &patch = nexus.GetPatch(patch_idx);
     memcpy(patch.FaceBegin(), &*faces.begin(), fcount * sizeof(short));
     memcpy(patch.VertBegin(), &*vertices.begin(), vcount * sizeof(Point3f));
+
+    Sphere3f &sphere = nexus.index[patch_idx].sphere;
     for(int i = 0; i < vertices.size(); i++)
-      nexus.index[patch_idx].sphere.Add(vertices[i]);
+      sphere.Add(vertices[i]);
+    sphere.Radius() *= 1.01;
+   
 
     //saving vert_remap
     int64 vroffset = vert_remap.Size();
