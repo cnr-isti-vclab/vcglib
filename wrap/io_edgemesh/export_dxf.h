@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/05/27 13:24:08  ganovelli
+export_dxf created
+
 ****************************************************************************/
 #ifndef __VCG_LIB_EXPORTER_DXF
 #define __VCG_LIB_EXPORTER_DXF
@@ -49,7 +52,7 @@ public:
 			return false;
 
 		// print header
-		fprintf(o,"999\nVCGLibraryDXF\n0\nSECTION\n2\nENTITIES\n");
+		fprintf(o,"999\nVCGLibraryDXF\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n70\n153\n0\nLAYER\n2\nthelayer\n70\n0\n62\n15\n0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n");
 
 		vcg::edge::Pos<typename EdgeMeshType::EdgeType> et;
 		typename typename EdgeMeshType::EdgePointer ep = &*em.edges.begin(),start;
@@ -73,7 +76,7 @@ public:
 							break;
 						et.NextE();
 						}while (et.e != start);
-					fprintf(o,"0\nPOLYLINE\n10\n0\n70\n0\n");
+					fprintf(o,"0\nPOLYLINE\n10\n0\n70\n0\n8\nthelayer\n");
 					start = et.e;
 					i=0;
 										do{
@@ -84,6 +87,7 @@ public:
 								OutVertex(et.e->V(et.Z()), o);
 								et.NextE();
 						}while((et.e != ep)&&(et.e !=start)&&(i<em.en));
+					fprintf(o,"0\nSEQEND\n");
 					}
 			}	
 				
