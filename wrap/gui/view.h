@@ -24,11 +24,14 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/03/25 14:55:25  ponchio
+Adding copyright.
+
 
 ****************************************************************************/
 
-#ifndef CAMERA_H
-#define CAMERA_H
+#ifndef VCG_CAMERA_H
+#define VCG_CAMERA_H
 
 #include <vcg/space/point3.h>
 #include <vcg/math/Matrix44.h>
