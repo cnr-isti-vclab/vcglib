@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2004/07/15 12:03:07  ganovelli
+minor changes
+
 Revision 1.8  2004/07/15 11:26:48  ganovelli
 VFDetach corrected
 
@@ -238,7 +241,7 @@ void VFDetach(FaceType & f, int z)
 		for(;;)
 		{
 			y = x;
-			x++;
+			++x;
 			assert(x.f!=0);
 			if(x.f==&f) // found!
 			{
