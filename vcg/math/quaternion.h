@@ -27,7 +27,7 @@ public:
   //Quaternion &operator*=(S d);
   Quaternion operator*(const Quaternion &q) const;
   Quaternion &operator*=(const Quaternion &q);
-  void Conjugate();
+  void Invert();
 
   void FromAxis(const S phi, const Point3<S> &a);
   void ToAxis(S &phi, Point3<S> &a ) const;
@@ -84,7 +84,7 @@ template <class S> Quaternion<S> &Quaternion<S>::operator*=(const Quaternion &q)
 	return *this;
 }	 
 
-template <class S> void Quaternion<S>::Conjugate() {
+template <class S> void Quaternion<S>::Invert() {
 	V(1)*=-1;
 	V(2)*=-1;
 	V(3)*=-1;
@@ -92,12 +92,14 @@ template <class S> void Quaternion<S>::Conjugate() {
 
 
 template <class S> void Quaternion<S>::FromAxis(const S phi, const Point3<S> &a) {
+  Point3<S> b = a;
+  b.Normalize();
   S s = math::Sin(phi/(S(2.0)));
 
   V(0) = math::Cos(phi/(S(2.0)));
-	V(1) = a[0]*s;
-	V(2) = a[1]*s;
-	V(3) = a[2]*s;
+	V(1) = b[0]*s;
+	V(2) = b[1]*s;
+	V(3) = b[2]*s;
 }
 
 template <class S> void Quaternion<S>::ToAxis(S &phi, Point3<S> &a) const {
@@ -116,7 +118,7 @@ template <class S> void Quaternion<S>::ToAxis(S &phi, Point3<S> &a) const {
 
 template <class S> Point3<S> Quaternion<S>::Rotate(const Point3<S> p) const {
 		Quaternion<S> co = *this;
-		co.Conjugate();
+		co.Invert();
 
     Quaternion<S> tmp(0, p.V(0), p.V(1), p.V(2));		
 
