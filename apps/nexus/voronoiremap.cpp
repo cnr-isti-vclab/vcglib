@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/07/15 14:32:49  ponchio
+Debug.
+
 Revision 1.2  2004/07/05 15:49:39  ponchio
 Windows (DevCpp, mingw) port.
 
@@ -47,14 +50,13 @@ Created
 #include "pvoronoi.h"
 #include "vert_remap.h"
 #include "crude.h"
-#include "stopwatch.h"
 #include "pintersect.h"
+#include "report.h"
 
 using namespace std;
 using namespace nxs;
 using namespace vcg;
 
-StopWatch watch;
 
 int main(int argc, char *argv[]) {
   if(argc < 3) {
@@ -95,9 +97,9 @@ int main(int argc, char *argv[]) {
   cerr << "Verts: " << crude.Vertices() << endl;
   cerr << "Faces: " << crude.Faces() << endl;
   cerr << "Getting optimal radius...\n";
-  watch.Start();
-  
 
+  Report report;
+  report.Start((unsigned int)0, 0);
 
   vector<unsigned int> target;
   unsigned int patch_size = target_size;
@@ -112,10 +114,7 @@ int main(int argc, char *argv[]) {
   //  for(unsigned int i = 0; i < radius.size(); i++) 
   //  cerr << "Radius: " << radius[i] << endl;
 
-  watch.Stop();
-  cerr << " ...done in " << watch.Elapsed() << " secs\n";
-  watch.Reset();
-  watch.Start();
+  cerr << " ...done in " << report.Elapsed() << " secs\n";
   
   assert(radius.size() > 1);
   //TODO cosa succede se c'e' una sola patch?
@@ -127,6 +126,8 @@ int main(int argc, char *argv[]) {
     part.Init(crude.GetBox());
     chain.levels.push_back(part);
   }
+  report.Start(0, 0);
+  cerr << "Building voronoi partitions...";  
   
   //TODO move this part to pvoronoi (and create Crude::vert_iterator
   VFile<Point3f>::iterator iter;
@@ -142,6 +143,7 @@ int main(int argc, char *argv[]) {
     }
   }
   
+  cerr << "...done in " << report.Elapsed() << " secs\n";
 
   VFile<unsigned int> face_remap;
   if(!face_remap.Create(output + ".rmf")) {
@@ -153,6 +155,7 @@ int main(int argc, char *argv[]) {
 
   PIntersect<VoronoiPartition> inter(chain.levels[0], chain.levels[1]);
 
+  report.Start(crude.Faces(), 100000);
   cerr << "Splitting faces... ";
   
   Point3f bari;
@@ -160,12 +163,10 @@ int main(int argc, char *argv[]) {
     bari = crude.GetBari(i);
     unsigned int patch = inter.Locate(bari);
     face_remap[i] = patch;
+    report.Output(i);
   }
 
-  watch.Stop();
-  cerr << "done in " << watch.Elapsed() << " secs\n";
-  watch.Reset();
-  watch.Start();
+  cerr << "done in " << report.Elapsed() << " secs\n";
 
   //TODO Prune inter to threshold and relocate faces
 
@@ -177,27 +178,22 @@ int main(int argc, char *argv[]) {
   vert_remap.Resize(crude.vert.Size());
 
   cerr << "Splitting vertices... ";
-
+  report.Start(crude.Faces(), 100000);
+  
   unsigned int totvert = 0;
   for(unsigned int i = 0; i < crude.Faces(); i++) {
+    report.Output(i);
     Crude::Face &face = crude.GetFace(i);
     unsigned int patch = face_remap[i];
-    if((i % 10000) == 0)
-      cerr << "inserting: " << i << endl;
     for(int k = 0; k < 3; k++) {
-      //DEBUG:
       set<unsigned int> pp;
       vert_remap.GetValues(face[k], pp);
       if(!pp.count(patch))
-	totvert++;
-      vert_remap.Insert(face[k], patch);
-      //      if(i > 240000 && (i%100)==0) {
-      //	cerr << "inserted " << i << " face:  " << face[k] << " \n";
-      //      }
+      	totvert++;
+      vert_remap.Insert(face[k], patch);      
     }
   }
-  watch.Stop();
-  cerr << "done in " << watch.Elapsed() << " secs\n";
+  cerr << "done in " << report.Elapsed() << " secs\n";
   cerr << "Tot vertices: " << totvert << endl;
   chain.Save(output + ".chn");
 
