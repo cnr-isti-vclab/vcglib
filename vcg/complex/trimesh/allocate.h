@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2004/08/07 16:16:32  pietroni
+corrected errors in AddFaces ( must be updated pointers to chain of faces of VFTopology)
+
 Revision 1.9  2004/08/05 16:44:06  pietroni
 added addafaces funtion with local values
 
@@ -217,9 +220,12 @@ static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu
           }
 		  if(FaceType::HasVFAdjacency())
           {
-			pu.Update((*fi).VFp(0));
-            pu.Update((*fi).VFp(1));
-            pu.Update((*fi).VFp(2));
+			if ((*fi).VFp(0)!=0)
+				pu.Update((*fi).VFp(0));
+			if ((*fi).VFp(1)!=0)
+				pu.Update((*fi).VFp(1));
+			if ((*fi).VFp(2)!=0)
+				pu.Update((*fi).VFp(2));
 		  }
 		}
       VertexIterator vi;
@@ -227,7 +233,8 @@ static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu
         if(!(*vi).IsD())
         {
           if(VertexType::HasVFAdjacency())
-            pu.Update((*vi).VFp());
+			if ((*vi).VFp()!=0)
+				pu.Update((*vi).VFp());
         }
         		// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
 		unsigned int siz=m.face.size()-n;	
