@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2005/02/19 10:43:11  ponchio
+reverted tarini mod
+
 Revision 1.15  2005/02/08 17:14:28  tarini
 aggiunto un typecast a (FaceType*) per farlo compilare under Mingw comp
 
@@ -160,13 +163,10 @@ static VertexIterator AddVertices(MeshType &m,int n, PointerUpdater<VertexPointe
 
 		// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
 			unsigned int siz=m.vert.size()-n;	
-		  if(last!=(VertexIterator)0)  
-			{ 
-				last = m.vert.begin(); 
-				advance(last,siz);
-			}
-			else last=m.vert.begin(); 
-		}
+
+			last = m.vert.begin(); 
+			advance(last,siz);
+}
  
 	return last;// deve restituire l'iteratore alla prima faccia aggiunta;
 }
@@ -191,7 +191,7 @@ static FaceIterator AddFaces(MeshType &m, int n,std::vector<FacePointer *> &loca
 */
 static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu,std::vector<FacePointer *> &local_var)
 {
-  FaceIterator  last = (FaceIterator)0;
+  FaceIterator  last = (m.face.end();
   pu.Clear();
   if(m.face.empty()) {
     pu.oldBase=0;  // if the vector is empty we cannot find the last valid element
@@ -255,13 +255,10 @@ static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu
         }
         		// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
 		unsigned int siz=m.face.size()-n;	
-		if(last!=(FaceIterator)0)  
-			{ 
-				last = m.face.begin(); 
-				advance(last,siz);
-			}
- 		else last=m.face.begin(); 
-		}
+
+		last = m.face.begin(); 
+		advance(last,siz);
+}
 
 	return last;
 }
@@ -280,7 +277,7 @@ static FaceIterator AddFaces(MeshType &m, int n)
 */
 static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu)
 {
-  FaceIterator  last = (FaceIterator)0;
+  FaceIterator  last = m.face.end();
   pu.Clear();
   if(m.face.empty()) {
     pu.oldBase=0;  // if the vector is empty we cannot find the last valid element
@@ -334,12 +331,8 @@ static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu
         }
         		// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
 		unsigned int siz=m.face.size()-n;	
-		if(last!=(FaceIterator)0)  
-			{ 
-				last = m.face.begin(); 
-				advance(last,siz);
-			}
- 		else last=m.face.begin(); 
+		last = m.face.begin(); 
+		advance(last,siz);
 		}
 
 	return last;
