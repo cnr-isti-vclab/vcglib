@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/09/16 14:25:16  ponchio
+Backup. (lot of changes).
+
 Revision 1.4  2004/08/27 00:38:34  ponchio
 Minor changes.
 
@@ -161,6 +164,7 @@ int main(int argc, char *argv[]) {
   }
 
   bool rotate = true;
+  bool show_borders = true;
   glClearColor(0, 0, 0, 0); 
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
@@ -170,8 +174,7 @@ int main(int argc, char *argv[]) {
   SDL_Event         event;
   int x, y;
   float alpha = 0;
-  while( !quit ) {                
-    while( SDL_PollEvent( &event ) ){                        
+  while( !quit ) {                    while( SDL_PollEvent( &event ) ){                        
       switch( event.type ) {
         case SDL_QUIT:  quit = 1; break;      
         case SDL_KEYDOWN:                                        
@@ -245,7 +248,7 @@ int main(int argc, char *argv[]) {
 
       glBegin(GL_TRIANGLES);
       unsigned short *f = patch.FaceBegin();      
-      for(unsigned int j = 0; j < patch.FaceSize()*3; j+= 3) {
+      for(unsigned int j = 0; j < patch.nf*3; j+= 3) {
 	Point3f &p1 = patch.Vert(f[j]);
 	Point3f &p2 = patch.Vert(f[j+1]);
 	Point3f &p3 = patch.Vert(f[j+2]);
@@ -257,21 +260,28 @@ int main(int argc, char *argv[]) {
 	glVertex3f(p3[0], p3[1], p3[2]);
       }
       glEnd();
-
-      //drawing borders
-      glColor3f(1, 1, 1);
-
-      Border border = nexus.GetBorder(cell);
-      glPointSize(2);
-      glDisable(GL_LIGHTING);
-      glBegin(GL_POINTS);
-      for(unsigned int k = 0; k < border.Size(); k++) {
-	if(border[k].IsNull()) continue;
-	Point3f &p = patch.Vert(border[k].start_vert);
-	glVertex3f(p[0], p[1], p[2]);
+    }
+    if(show_borders) {
+      for(unsigned int i = 0; i < cells.size(); i++) {
+	unsigned int cell = cells[i];
+	Patch patch = nexus.GetPatch(cell);
+	//drawing borders
+	glColor3f(1, 1, 1);
+	
+	Border border = nexus.GetBorder(cell);
+	glPointSize(4);
+	glDisable(GL_LIGHTING);
+	glDisable(GL_DEPTH_TEST);
+	glBegin(GL_POINTS);
+	for(unsigned int k = 0; k < border.Size(); k++) {
+	  if(border[k].IsNull()) continue;
+	  Point3f &p = patch.Vert(border[k].start_vert);
+	  glVertex3f(p[0], p[1], p[2]);
+	}
+	glEnd();
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_LIGHTING);
       }
-      glEnd();
-      glEnable(GL_LIGHTING);
     }
 
     

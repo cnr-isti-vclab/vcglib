@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/09/16 14:25:16  ponchio
+Backup. (lot of changes).
+
 Revision 1.1  2004/08/26 18:03:47  ponchio
 First draft.
 
@@ -173,7 +176,7 @@ void VoronoiChain::BuildLevel(Nexus &nexus, unsigned int offset) {
 
   for(unsigned int idx = offset; idx < nexus.index.size(); idx++) {
     Patch patch = nexus.GetPatch(idx);
-    for(unsigned int i = 0; i < patch.VertSize(); i++) {
+    for(unsigned int i = 0; i < patch.nv; i++) {
       Point3f &v = patch.Vert(i);
       unsigned int target_patch;
 

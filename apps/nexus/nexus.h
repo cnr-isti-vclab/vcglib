@@ -19,17 +19,19 @@ class Nexus {
 
   struct Entry {
     Entry(): patch_start(0xffffffff), border_start(0xffffffff),
-      patch_size(0), border_size(0), 
+	 patch_size(0), border_size(0), border_used(0),
       nvert(0), nface(0), sphere(vcg::Sphere3f()) {}
+
     unsigned int patch_start;  //granularita' Chunk
     unsigned int border_start; //granuralita' Link
     unsigned short patch_size;  //in cuhnks
     unsigned short border_size; //in Links
+    unsigned short border_used; //in Links
 
+    //Data used for extraction
     unsigned short nvert;
     unsigned short nface;
     vcg::Sphere3f sphere;
-
     float error;
     unsigned short ram;
     unsigned short agp;
@@ -43,12 +45,15 @@ class Nexus {
 
   Nexus();
   ~Nexus();
-  bool Create(const std::string &filename, Patch::Signature signature);
+  bool Create(const std::string &filename, Signature signature);
   bool Load(const std::string &filename);
   void Close();
 
   Patch GetPatch(unsigned int patch);
   Border GetBorder(unsigned int patch);
+
+
+  //MOVE to nexus_build.cpp
 
   unsigned int AddPatch(unsigned int nvert, unsigned int nface, 
 			unsigned int nbord);
@@ -59,12 +64,15 @@ class Nexus {
 	    std::vector<unsigned int> &faces,
 	    std::vector<Link> &links);
 
+  void Unify(float threshold = 0.0f);
+
   //TODO implement theese
   void CompactBorder(unsigned int patch);
   void CompactBorders();
   void CompactPatches();
-
-  Patch::Signature signature;
+  
+  
+  Signature signature;
   
   unsigned int totvert;
   unsigned int totface;

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/07/05 15:49:39  ponchio
+Windows (DevCpp, mingw) port.
+
 Revision 1.1  2004/07/04 15:30:00  ponchio
 Changed directory structure.
 
@@ -140,9 +143,16 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-  glClearColor(0, 0, 0, 0); 
+  glClearColor(0, 0, 0, 0);
+  glEnable(GL_LIGHTING);
+  glEnable(GL_LIGHT0);
+  glEnable(GL_NORMALIZE);
+  glEnable(GL_COLOR_MATERIAL);
+ 
+
+  bool show_normals = true;
   int quit = 0;
-  SDL_Event         event;
+  SDL_Event event;
   int x, y;
   float alpha = 0;
   while( !quit ) {                
@@ -206,10 +216,18 @@ int main(int argc, char *argv[]) {
 	unsigned int val = face_remap[i];
 	glColor3ub((val * 27)%255, (val * 37)%255, (val * 87)%255);
       }
-      for(int k = 0; k < 3; k++) {
-	Point3f &p = crude.GetVertex(face[k]);
-	glVertex3f(p[0], p[1], p[2]);
+      Point3f &p0 = crude.GetVertex(face[0]);
+      Point3f &p1 = crude.GetVertex(face[1]);
+      Point3f &p2 = crude.GetVertex(face[2]);
+	
+      if(show_normals) {
+	Point3f n = ((p1 - p0) ^ (p2 - p0));
+	glNormal3f(n[0], n[1], n[2]);
       }
+      glVertex3f(p0[0], p0[1], p0[2]);      
+      glVertex3f(p1[0], p1[1], p1[2]);
+      glVertex3f(p2[0], p2[1], p2[2]);
+
     }
     glEnd();
     

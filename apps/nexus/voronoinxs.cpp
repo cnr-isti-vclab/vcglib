@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/09/16 14:25:16  ponchio
+Backup. (lot of changes).
+
 Revision 1.1  2004/08/26 18:03:48  ponchio
 First draft.
 
@@ -158,7 +161,7 @@ int main(int argc, char *argv[]) {
 
   string output = argv[optind+1];
 
-  Patch::Signature signature = Patch::DEFAULT;
+  Signature signature = HAS_FACES;
   Nexus nexus;
   if(!nexus.Create(output, signature)) {
     cerr << "Could not create nexus output: " << output << endl;
@@ -218,6 +221,9 @@ int main(int argc, char *argv[]) {
     update.created.push_back(i);
   nexus.history.push_back(update);
 
+  //unify vertices otherwise you may get cracks.
+  nexus.Unify();
+
   /* BUILDING OTHER LEVELS */
   unsigned int oldoffset = 0;
 
@@ -227,6 +233,7 @@ int main(int argc, char *argv[]) {
     unsigned int newoffset = nexus.index.size();
     vchain.BuildLevel(nexus, oldoffset);
     
+    vector<Nexus::Update> level_history;
     map<unsigned int, set<unsigned int> >::iterator fragment;
     for(fragment = vchain.oldfragments.begin(); 
 	fragment != vchain.oldfragments.end(); fragment++) {
@@ -235,12 +242,12 @@ int main(int argc, char *argv[]) {
       update.created.clear();
       update.erased.clear();
 
-      cerr << "Joining: ";
+      cerr << "Join ";
       set<unsigned int> &fcells = (*fragment).second;
       set<unsigned int>::iterator s;
       for(s = fcells.begin(); s != fcells.end(); s++) {
 	update.erased.push_back(*s);
-	cerr << " " << (*s) << endl;
+	cerr << *s << " ";
       }
       cerr << endl;
       
@@ -253,23 +260,26 @@ int main(int argc, char *argv[]) {
 
       //simplyfy mesh
       vector<int> vert_remap;
-      float error = Decimate(newface.size() * scaling/3, newvert, 
-			     newface, newbord, vert_remap);
+      float error = Decimate((unsigned int)(newface.size() * scaling/3), 
+			     newvert, newface, newbord, vert_remap);
 
 
       NexusSplit(nexus, vchain, level, newvert, newface, newbord, 
 		 update, error);
 
 
-      nexus.history.push_back(update);
+      level_history.push_back(update);
     }
 
+    for(int i = 0; i < level_history.size(); i++)
+      nexus.history.push_back(level_history[i]);
     //if(vchain.levels.back().size() == 1) break;
     if(vchain.oldfragments.size() == 1) break;
 
     vchain.oldfragments = vchain.newfragments;
     oldoffset = newoffset;
   }
+
   //last level clean history:
   update.created.clear();
   update.erased.clear();
@@ -284,7 +294,7 @@ int main(int argc, char *argv[]) {
   nexus.history.push_back(update);
   ReverseHistory(nexus.history);
   //debug:
-  for(unsigned int i = 0; i < nexus.history.size(); i++) {
+  /*  for(unsigned int i = 0; i < nexus.history.size(); i++) {
     Nexus::Update &update = nexus.history[i];
     cerr << "created:";
     for(unsigned int c = 0; c < update.created.size(); c++)
@@ -293,7 +303,7 @@ int main(int argc, char *argv[]) {
     for(unsigned int c = 0; c < update.erased.size(); c++)
       cerr << " " << update.erased[c];
     cerr << "\n\n";
-  }
+    }*/
 
   //Clean up:
   nexus.Close();
@@ -359,9 +369,12 @@ void NexusAllocate(Crude &crude,
     unsigned int npatch = face_remap[i];
     
     Nexus::Entry &entry = nexus.index[npatch];
+
+    //TODO this is slow because we have to initialize patch.
+    //just get patch.start.
     Patch patch = nexus.GetPatch(npatch);
     
-    Crude::Face *faces = (Crude::Face *)patch.VertBegin();
+    Crude::Face *faces = (Crude::Face *)patch.start;
     faces[entry.nface] = face;
     entry.nface++;
   }
@@ -385,20 +398,20 @@ void NexusFill(Crude &crude,
     Nexus::Entry &entry = nexus.index[i];
 
     //make a copy of faces (we need to write there :P)
-    Crude::Face *faces = new Crude::Face[patch.FaceSize()];
-    memcpy(faces, (Crude::Face *)patch.VertBegin(), 
-	   patch.FaceSize() * sizeof(Crude::Face));
-
+    Crude::Face *faces = new Crude::Face[patch.nf];
+    memcpy(faces, (Crude::Face *)patch.start,
+	   patch.nf * sizeof(Crude::Face));
+    
     //collect all vertices we need.
     //TODO an hash_map would be faster?
     unsigned int count = 0;
     map<unsigned int, unsigned short> remap;
-    for(unsigned int k = 0; k < patch.FaceSize(); k++) {
+    for(unsigned int k = 0; k < patch.nf; k++) {
       Crude::Face &face = faces[k];
       
       for(int j = 0; j < 3; j++) {
         if(!remap.count(face[j])) {          
-	  assert(count < patch.VertSize());
+	  assert(count < patch.nv);
 	  Point3f &v = crude.vert[face[j]];
           patch.VertBegin()[remap.size()] = v;
 	  entry.sphere.Add(v);
@@ -433,7 +446,7 @@ void NexusFill(Crude &crude,
       }
     }
     //and number of borders:
-    entry.border_size = border_remap.Size() - entry.border_start;
+    entry.border_used = border_remap.Size() - entry.border_start;
     delete []faces;
   }
 
@@ -446,36 +459,49 @@ void NexusFixBorder(Nexus &nexus,
 		    VFile<RemapLink> &border_remap) {
 
   //and last convert RemapLinks into Links
-  nexus.borders.Resize(border_remap.Size());
+  nexus.borders.Resize(border_remap.Size() * 2);
+  //* 2 is to accomodate future borders
+
+  for(unsigned int i = 0; i < nexus.index.size(); i++) {
+    Nexus::Entry &local = nexus.index[i];
+    local.border_start *= 2;
+    local.border_size = local.border_used * 2;
+  }
 
   for(unsigned int i = 0; i < nexus.index.size(); i++) {
     Nexus::Entry &local = nexus.index[i];
 
+    unsigned int remap_start = local.border_start/2;
+    //* 2 is to accomodate future borders
+
+
     // K is the main iterator (where we write to in nexus.borders)
-    for(unsigned int k = local.border_start;
-	k < local.border_start + local.border_size; k++) {
+    for(unsigned int k = 0;  k < local.border_used; k++) {
+
       
-      RemapLink start_link = border_remap[k];
+      RemapLink start_link = border_remap[k + remap_start];
       assert(start_link.rel_vert < local.nvert);
 
       Nexus::Entry &remote = nexus.index[start_link.patch];
 
       bool found = false;
-      for(unsigned int j = remote.border_start;
-	  j < remote.border_start + remote.border_size; j++) {
+
+      unsigned int remote_remap_start = remote.border_start/2;
+      for(unsigned int j = 0; j < remote.border_used; j++) {
 	
-	RemapLink end_link = border_remap[j];
+	RemapLink end_link = border_remap[j + remote_remap_start];
 	assert(end_link.rel_vert < remote.nvert);
 
 	if(start_link.abs_vert == end_link.abs_vert &&
 	   end_link.patch == i) { //found the match
 	  assert(!found);
-	  nexus.borders[k] = Link(start_link.rel_vert, 
-				  end_link.rel_vert, start_link.patch);
+	  nexus.borders[k + local.border_start] = Link(start_link.rel_vert, 
+						      end_link.rel_vert, 
+						      start_link.patch);
 	  found = true;
 	}
       }
-      assert(nexus.borders[k].start_vert < local.nvert);
+      assert(nexus.borders[k + local.border_start].start_vert < local.nvert);
       assert(found);
     }
   }
@@ -512,7 +538,7 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
 		Nexus::Update &update,
 		float error) {
 
-  //if != -1 remap global index to cell index
+  //if != -1 remap global index to cell index (first arg)
   map<unsigned int, vector<int> > vert_remap;
   map<unsigned int, unsigned int> vert_count;
   
@@ -543,47 +569,113 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
       if(v_remap[newface[f+i]] == -1)
 	v_remap[newface[f+i]] = vert_count[cell]++;
   }
-  
-  
+
   //TODO prune small count cells 
   
-  //for every new cell
+  //lets count borders
+  map<unsigned int, unsigned int> bord_count;
+
   map<unsigned int, unsigned int >::iterator c;
   for(c = vert_count.begin(); c != vert_count.end(); c++) {
     unsigned int cell = (*c).first;
-    cerr << "Processing cell: " << cell << endl;
-    
-    vector<unsigned short> faces;
-    vector<Point3f> verts;
-    vector<Link> bords;
-    
+    unsigned int &count = bord_count[cell];
+    count = 0;
+
     vector<int> &v_remap = vert_remap[cell];
-    vector<int> &f_remap = face_remap[cell];
+
+    //external borders
+    for(unsigned int i = 0; i < newbord.size(); i++) {
+      Link link = newbord[i];
+      if(v_remap[link.start_vert] == -1) continue;
+      count++;
+    }
+
+    //process internal borders;
+    //TODO higly inefficient!!!
+    map<unsigned int, unsigned int >::iterator t;  
+    for(t = vert_count.begin(); t != vert_count.end(); t++) {
+      if(cell == (*t).first) continue;
+      vector<int> &vremapclose = vert_remap[(*t).first];
+      for(unsigned int i = 0; i < newvert.size(); i++) {
+	if(v_remap[i] != -1 && vremapclose[i] != -1) {
+	  count++;
+	}
+      }
+    }
+  }
+
+  map<unsigned int, unsigned int> cells2patches;
+
+  //lets allocate space
+  for(c = vert_count.begin(); c != vert_count.end(); c++) {
+    unsigned int cell = (*c).first;
+    unsigned int patch_idx = nexus.AddPatch(vert_count[cell],
+					    face_count[cell],
+					    3 * bord_count[cell]);
     
+    //why double border space? because at next level
+    //we will need to add those borders... 
+    cells2patches[cell] = patch_idx;
+    vchain.newfragments[cell].insert(patch_idx);
+    update.created.push_back(patch_idx);
+  }
+
+  
+  //fill it now.
+  for(c = vert_count.begin(); c != vert_count.end(); c++) {
+    unsigned int cell = (*c).first;
+    unsigned int patch_idx = cells2patches[cell];
+    
+    //vertices first
+    vector<int> &v_remap = vert_remap[cell];
+
+    vector<Point3f> verts;
     verts.resize(vert_count[cell]);
     for(unsigned int i = 0; i < newvert.size(); i++) {
       if(v_remap[i] != -1)
 	verts[v_remap[i]] = newvert[i];
-      //	    verts.push_back(newvert[v_remap[i]]);
     }
-    
-    assert(verts.size() == vert_count[cell]);
-    assert(f_remap.size()/3 == face_count[cell]);
-    
+
+    //faces now
+    vector<int> &f_remap = face_remap[cell];
+
+    vector<unsigned short> faces;
     faces.resize(face_count[cell]*3);
-    
+
     for(unsigned int i = 0; i < f_remap.size(); i++) {
       assert(v_remap[f_remap[i]] != -1);
       faces[i] = v_remap[f_remap[i]];
     }
-    //process external borders
+
+    if(patch_idx == 68)
+      cerr << "68 bord: " << bord_count[cell] << endl;
+    //borders last
+    vector<Link> bords;
+
+    //process external borders 
+    //for every esternal link we must update external patches!
     for(unsigned int i = 0; i < newbord.size(); i++) {
       Link link = newbord[i];
       if(v_remap[link.start_vert] == -1) continue;
       link.start_vert = v_remap[link.start_vert];
       bords.push_back(link);
+
+      Nexus::Entry &rentry = nexus.index[link.end_patch];
+      //TODO if !true reallocate borders.
+      if(rentry.border_used >= rentry.border_size) {
+	cerr << "patch: " << link.end_patch << endl;
+	cerr << "used: " << rentry.border_used << endl;
+	cerr << "size: " << rentry.border_size << endl;
+      }
+      assert(rentry.border_used < rentry.border_size);
+      Border rborder = nexus.GetBorder(link.end_patch);
+
+      Link &newlink = rborder[rentry.border_used++];
+      newlink.start_vert = link.end_vert;
+      newlink.end_vert = link.start_vert;
+      newlink.end_patch = patch_idx;
     }
-    
+
     //process internal borders;
     //TODO higly inefficient!!!
     map<unsigned int, unsigned int >::iterator t;  
@@ -593,19 +685,14 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
       for(unsigned int i = 0; i < newvert.size(); i++) {
 	if(v_remap[i] != -1 && vremapclose[i] != -1) {
 	  Link link;
-	  link.end_patch = (*t).first;
+	  link.end_patch = cells2patches[(*t).first];
 	  link.start_vert = v_remap[i];
 	  link.end_vert = vremapclose[i];
 	  bords.push_back(link);
 	}
       }
     }
-    //create new nexus patch
-    unsigned int patch_idx = nexus.AddPatch(verts.size(),
-					    faces.size()/3,
-					    bords.size());
-    vchain.newfragments[cell].insert(patch_idx);
-    update.created.push_back(patch_idx);
+
 
     Nexus::Entry &entry = nexus.index[patch_idx];
     //    entry.error = error;
@@ -623,9 +710,9 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
     } 
     
     Border border = nexus.GetBorder(patch_idx);
-    memcpy(&border[0], &bords[0], bords.size());
+    memcpy(&(border[0]), &(bords[0]), bords.size() * sizeof(Link));
+    entry.border_used = bords.size();
   }  
-  cerr << "newfrag: " << vchain.newfragments.size() << endl;
 }
  
 void ReverseHistory(vector<Nexus::Update> &history) {
