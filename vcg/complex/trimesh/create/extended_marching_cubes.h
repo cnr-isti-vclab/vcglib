@@ -74,11 +74,15 @@ namespace vcg
 		class ExtendedMarchingCubes
 		{
 		public:
-#ifdef  _WIN64
+#if defined(__GNUC__)
+			typedef unsigned int				size_t;
+#else
+#ifdef			_WIN64
 			typedef unsigned __int64    size_t;
 #else
 			typedef _W64 unsigned int   size_t;
 #endif
+#endif 
 			typedef typename vcg::tri::Allocator< TRIMESH_TYPE > AllocatorType;
 			typedef typename TRIMESH_TYPE::ScalarType			ScalarType;
 			typedef typename TRIMESH_TYPE::VertexType			VertexType;

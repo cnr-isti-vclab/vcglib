@@ -6,6 +6,18 @@ namespace vcg
 	/* @{ */
 
 	/*!
+	*
+	*/
+	template< typename TYPE >
+	static void JacobiRotate(Matrix44<TYPE> &A, TYPE s, TYPE tau, int i,int j,int k,int l)
+	{
+		TYPE g=A[i][j];
+		TYPE h=A[k][l];
+		A[i][j]=g-s*(h+g*tau);
+		A[k][l]=h+s*(g-h*tau); 
+	};
+
+	/*!
 	*	Computes all eigenvalues and eigenvectors of a real symmetric matrix .
 	*	On output, elements of the input matrix above the diagonal are destroyed. 
 	* \param d  returns the eigenvalues of a. 
@@ -97,17 +109,32 @@ namespace vcg
 		} 
 	};
 
-	/*!
-	*
-	*/
-	template< typename TYPE >
-		void JacobiRotate(Matrix44<TYPE> &A, TYPE s, TYPE tau, int i,int j,int k,int l)
+	
+	// Computes (a^2 + b^2)^(1/2) without destructive underflow or overflow.
+	template <typename TYPE>
+	inline static TYPE pythagora(TYPE a, TYPE b)
 	{
-		TYPE g=A[i][j];
-		TYPE h=A[k][l];
-		A[i][j]=g-s*(h+g*tau);
-		A[k][l]=h+s*(g-h*tau); 
+		TYPE abs_a = fabs(a);
+		TYPE abs_b = fabs(b);
+		if (abs_a > abs_b) 
+			return abs_a*sqrt(1.0+sqr(abs_b/abs_a));
+		else 
+			return (abs_b == 0.0 ? 0.0 : abs_b*sqrt(1.0+sqr(abs_a/abs_b)));
 	};
+
+	template <typename TYPE>
+	inline static TYPE sign(TYPE a, TYPE b)
+	{
+		return (b >= 0.0 ? fabs(a) : -fabs(a));
+	};
+
+	template <typename TYPE>
+	inline static TYPE sqr(TYPE a)
+	{
+		TYPE sqr_arg = a;
+		return (sqr_arg == 0 ? 0 : sqr_arg*sqr_arg);
+	}
+
 
 	/*!
 	*	Given a matrix <I>A<SUB>m×n</SUB></I>, this routine computes its singular value decomposition,
@@ -149,7 +176,7 @@ namespace vcg
 						s += A[k][i]*A[k][i];
 					}
 					f=A[i][i];
-					g = -vcg::sign<double>( sqrt(s), f );
+					g = -sign<double>( sqrt(s), f );
 					h = f*g - s;
 					A[i][i]=f-g;
 					for (j=l; j<n; j++) 
@@ -178,7 +205,7 @@ namespace vcg
 						s += A[i][k]*A[i][k];
 					}
 					f = A[i][l];
-					g = -vcg::sign<double>(sqrt(s),f);
+					g = -sign<double>(sqrt(s),f);
 					h = f*g - s;
 					A[i][l] = f-g;
 					for (k=l; k<n; k++) 
@@ -278,7 +305,7 @@ namespace vcg
 						if ((double)(fabs(f)+anorm) == anorm) 
 							break;
 						g = W[i];
-						h = pythagora< double >(f,g);
+						h = pythagora<double>(f,g);
 						W[i] = h;
 						h = 1.0/h;
 						c = g*h;
@@ -406,31 +433,6 @@ namespace vcg
 		}
 		delete []tmp;
 	};
-
-	// Computes (a^2 + b^2)^(1/2) without destructive underflow or overflow.
-	template <typename TYPE>
-		inline TYPE pythagora(TYPE a, TYPE b)
-	{
-		TYPE abs_a = fabs(a);
-		TYPE abs_b = fabs(b);
-		if (abs_a > abs_b) 
-			return abs_a*sqrt(1.0+sqr(abs_b/abs_a));
-		else 
-			return (abs_b == 0.0 ? 0.0 : abs_b*sqrt(1.0+sqr(abs_a/abs_b)));
-	};
-
-	template <typename TYPE>
-		inline TYPE sign(TYPE a, TYPE b)
-	{
-		return (b >= 0.0 ? fabs(a) : -fabs(a));
-	};
-
-	template <typename TYPE>
-		inline TYPE sqr(TYPE a)
-	{
-		TYPE sqr_arg = a;
-		return (sqr_arg == 0 ? 0 : sqr_arg*sqr_arg);
-	}
 
 	/*! @} */
 }; // end of namespace
