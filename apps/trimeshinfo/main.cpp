@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/01/18 16:33:12  rita_borgo
+Added OFF file Option
+
 Revision 1.4  2005/01/17 18:19:00  rita_borgo
 Added new routines.
 Self-intersection first release
@@ -62,6 +65,7 @@ using namespace std;
 #include "defs.h"
 
 using namespace vcg;
+using namespace tri;
 using namespace face;
 
 class MyFace;
@@ -92,52 +96,114 @@ inline char* GetExtension(char* filename)
         return NULL;
 }
 
+
+typedef MyMesh::VertexPointer  VertexPointer;
+typedef MyMesh::VertexIterator  VertexIterator;
+
+/* classe di confronto per l'algoritmo di individuazione vertici duplicati*/
+template <class VertexIterator>
+class DuplicateVert_Compare{
+public:
+	inline bool operator() (VertexIterator a, VertexIterator b)
+		{
+			return *a < *b;
+		}
+};
+
+static int DuplicateVertex( MyMesh & m )    // V1.0
+{
+	if(m.vert.size()==0 || m.vn==0)
+		return 0;
+	std::map<VertexPointer, VertexPointer> mp;
+	int i,j;
+	VertexIterator vi; 
+	int deleted=0;
+	int k=0;
+	int num_vert = m.vert.size();
+	vector<VertexPointer> perm(num_vert);
+	for(vi=m.vert.begin(); vi!=m.vert.end(); ++vi, ++k)
+		perm[k] = &(*vi);
+
+	DuplicateVert_Compare<VertexPointer> c_obj;
+
+	std::sort(perm.begin(),perm.end(),c_obj);
+	j = 0;
+  i = j;
+  mp[perm[i]] = perm[j];
+  ++i;
+  for(;i!=num_vert;)
+	{
+		if( (! (*perm[i]).IsD()) && 
+        (! (*perm[j]).IsD()) && 
+				(*perm[i]).P() == (*perm[j]).cP() )
+		{
+			VertexPointer t = perm[i];
+	    mp[perm[i]] = perm[j];
+	    ++i;
+			(*t).SetD();
+			deleted++;
+		}
+		else
+		{
+			j = i;
+	    ++i;
+		}
+	}
+	return deleted;
+}
 void main(int argc,char ** argv){
 
 	char                 *fmt;
 	MyMesh m;
+	bool DEBUG = false;
 	//load the mesh
 	//argv[1]=(char*)"c:\\checkup\\debug\\column1m.ply";
-	//argv[1] = "C:\\Documents and Settings\\Rita\\Desktop\\MeshReader\\trimeshinfo\\Debug\\prova0.ply";
+	//argv[1] = "C:\\sf\\apps\\msvc\\trimeshinfo\\Release\\prism.off";
+//argv[1] = "C:\\sf\\apps\\msvc\\trimeshinfo\\Release\\prova1.ply";
+
+    // print program info
+    printf("-------------------------------\n"
+           "         TriMeshInfo V.1.01 \n"
+           "     http://vcg.isti.cnr.it\n"
+           "   release date: "__DATE__"\n"
+           "-------------------------------\n\n");
 
 
- // print program info
-  printf("-------------------------------\n"
-         "             TriMeshInfo\n"
-         "   release date: "__DATE__"\n"
-         "-------------------------------\n\n");
-
+ if(DEBUG)
+	argv[1] = "C:\\sf\\apps\\msvc\\trimeshinfo\\Release\\twirl.off";
+ 
+ else
+ {
  // load input meshes.
   if(argc <= 1)
   {
-      printf(MSG_ERR_N_ARGS);
-      exit(-1);
+     printf(MSG_ERR_N_ARGS);
+     exit(-1);
   }
+ }
 
 
-	printf("reading the mesh `%s'...", argv[1]);
   OpenMesh(argv[1],m);
 
 
 
   FILE * index;
 	index = fopen((string(argv[1])+string("2.html")).c_str(),"w");
-	fprintf(index,"<p>TriMeshInfo: This is the result for %s </p>\n\n\n", argv[1]);
+	fprintf(index,"<p>Mesh info: %s </p>\n\n\n", argv[1]);
 	
 	fprintf(index,"<p>GENERAL INFO </p>\n\n");
 	fprintf(index,"<p>Number of vertices: %d </p>\n", m.vn);
 	fprintf(index,"<p>Number of faces: %d </p>\n", m.fn);
-	printf("Number of vertices: %d \n", m.vn);
-	printf("Number of faces: %d \n", m.fn);
-	if (m.Volume()!=0)
-	{
-        fprintf(index,"<p>Volume: %d </p>\n", m.Volume());
-        printf("Volume: %d \n", m.Volume());
-	}
-	Color4b Color=m.C();
-	fprintf(index, "<p>Object color(4b): %f %f %f </p>\n\n", Color[0], Color[1], Color[2]);
-  printf( "Object color(4b): %f %f %f \n\n", Color[0], Color[1], Color[2]);
+	printf("Mesh info:\n");
+	printf("	M: '%s'\n\t Number of vertices: %d \n", argv[1], m.vn);
+	printf("\t Number of faces: %d \n", m.fn);
 
+	if(m.HasPerFaceColor()||m.HasPerVertexColor())
+	{
+		Color4b Color=m.C();
+		fprintf(index, "<p>Object color(4b): %f %f %f </p>\n\n", Color[0], Color[1], Color[2]);
+		printf( "\t Object color(4b): %f %f %f \n", Color[0], Color[1], Color[2]);
+	}
 	
 	
 		vcg::tri::UpdateTopology<MyMesh>::FaceFace(m);
@@ -169,13 +235,13 @@ void main(int argc,char ** argv){
 	}
 	if (!Manifold)
 	{
-		fprintf(index, "<p> Manifold from lib gives: NO </p>"); 
-	  printf( "Manifold from lib gives: NO\n"); 
+		fprintf(index, "<p> Manifold: NO </p>"); 
+	  printf( "\t Manifold: NO\n"); 
 	}
 	else
 	{
-		fprintf(index, "<p> Manifold from lib gives: YES </p>"); 
-	  printf( "Manifold from lib gives: YES\n "); 
+		fprintf(index, "<p> Manifold: YES </p>"); 
+	  printf( "\t Manifold: YES\n "); 
 	}
 
 	// COUNT EDGES
@@ -223,7 +289,7 @@ void main(int argc,char ** argv){
 			}
 		}
 	fprintf(index, "<p>Number of edges: %d </p>\n", count_e);
-  printf("Number of edges: %d \n", count_e);
+  printf("\t Number of edges: %d \n", count_e);
 
 
 	// DA QUI IN POI!!!
@@ -235,14 +301,14 @@ void main(int argc,char ** argv){
 		if((*fi).Area() == 0)
 			count_fd++;
 	fprintf(index, "<p>Number of degenerated faces: %d </p>\n", count_fd);
-  printf("Number of degenerated faces: %d \n", count_fd);
+  printf("\t Number of degenerated faces: %d \n", count_fd);
 
 	// UNREFERENCED VERTEX
 
 	int count_uv = 0;
 	MyMesh::VertexIterator v;
 	
-	int deleted = 0;
+	
 	
 	for(v=m.vert.begin();v!=m.vert.end();++v)
 		(*v).ClearV();
@@ -255,7 +321,7 @@ void main(int argc,char ** argv){
 		if( !(*v).IsV() )
 			++count_uv;
 	fprintf(index,"<p>Number of unreferenced vertices: %d</p>\n",count_uv);
-  printf("Number of unreferenced vertices: %d\n",count_uv);
+  printf("\t Number of unreferenced vertices: %d\n",count_uv);
 
 
 // HOLES COUNT	
@@ -315,15 +381,24 @@ void main(int argc,char ** argv){
 	if (Manifold)
 	{
         fprintf(index, "<p> Number of holes: %d </p> \n <p> Number of border edges: %d </p>", numholes, BEdges); 
-        printf("Number of holes: %d \n", numholes, BEdges); 
-        printf("Number of border edges: %d\n", numholes, BEdges); 
+        printf("\t Number of holes: %d \n", numholes, BEdges); 
+        printf("\t Number of border edges: %d\n", numholes, BEdges); 
 	}
 	else
 	{
         fprintf(index, "<p> Number of border edges: %d </p>", BEdges); 
-        printf("Number of border edges: %d\n", BEdges); 
+        printf("\t Number of border edges: %d\n", BEdges); 
 	}
-	
+
+	// Mesh Volume
+	float vol = m.Volume();
+	int nuh = numholes;
+	if((m.Volume()>0.)&&(Manifold)&&(numholes==0))
+	{
+        fprintf(index,"<p>Volume: %d </p>\n", m.Volume());
+        printf("\t Volume: %f \n", m.Volume());
+	}
+
 
 	// CONNECTED COMPONENTS
 
@@ -360,7 +435,7 @@ void main(int argc,char ** argv){
 		}
 	}
 	fprintf(index, "<p> Number of connected components: %d </p>", CountComp); 
-  printf("Number of connected components: %d\n", CountComp); 
+  printf("\t Number of connected components: %d\n", CountComp); 
 	
 	if(CountComp ==1)
 	{
@@ -370,7 +445,7 @@ void main(int argc,char ** argv){
 		{
 			int genus = (2-eulero)>>1;
 			fprintf(index, "<p> Genus: %d </p> \n ", genus); 
-		  printf( "Genus: %d \n", genus); 
+		  printf( "\t Genus: %d \n", genus); 
 		}
 	}
 // REGULARITY
@@ -420,17 +495,17 @@ void main(int argc,char ** argv){
 	if (Regular)
 	{
 			fprintf(index, "<p> Type of Mesh: REGULAR</p>"); 
-		  printf("Type of Mesh: REGULAR\n"); 
+		  printf("\t Type of Mesh: REGULAR\n"); 
 	}
 	else if (Semiregular)
 	{
 			fprintf(index, "<p> Type of Mesh: SEMIREGULAR</p>");
-		  printf("Type of Mesh: SEMIREGULAR\n");
+		  printf("\t Type of Mesh: SEMIREGULAR\n");
 	}
 	else 
 	{
 		fprintf(index, "<p> Type of Mesh: IRREGULAR</p>"); 
-	  printf("Type of Mesh: IRREGULAR\n"); 
+	  printf("\t Type of Mesh: IRREGULAR\n"); 
 	}
 // ORIENTABLE E ORIENTED MESH
 
@@ -439,7 +514,7 @@ void main(int argc,char ** argv){
 	if (!Manifold)
 	{
 		fprintf(index, "<p> Orientable Mesh: NO</p>"); 
-	  printf( "Orientable Mesh: NO\n"); 
+	  printf( "\t Orientable Mesh: NO\n"); 
 	}
 	else
 	{
@@ -531,23 +606,23 @@ void main(int argc,char ** argv){
 		if (Orientable)
 		{
 				fprintf(index, "<p> Orientable Mesh: YES</p>"); 
-			  printf( "Orientable Mesh: YES\n"); 
+			  printf( "\t Orientable Mesh: YES\n"); 
 		}
 		else
 		{
 				fprintf(index, "<p> Orientable Mesh: NO</p>"); 
-			  printf( "Orientable Mesh: NO\n"); 
+			  printf( "\t Orientable Mesh: NO\n"); 
 		}
 	}
 	if (Oriented && Manifold)
 	{
 			fprintf(index, "<p> Oriented Mesh: YES</p>"); 
-		  printf( "Oriented Mesh: YES\n"); 
+		  printf( "\t Oriented Mesh: YES\n"); 
 	}
 	else
 	{
 			fprintf(index, "<p> Oriented Mesh: NO</p>"); 
-		  printf( "Oriented Mesh: NO\n"); 
+		  printf( "\t Oriented Mesh: NO\n"); 
 	}
 // SELF INTERSECTION
 
@@ -572,15 +647,27 @@ void main(int argc,char ** argv){
 		}
 	if (SelfInt)
 	{
-			fprintf(index, "<p> Self Intersection: YES</p>"); 
-		 printf( "Self Intersection: YES\n");
+		fprintf(index, "<p> Self Intersection: YES</p>"); 
+		printf( "\t Self Intersection: YES\n");
 	}
 	else
 	{
 			fprintf(index, "<p> Self Intersection: NO</p>"); 
-		 printf( "Self Intersection: NO\n"); 
+		 printf( "\t Self Intersection: NO\n"); 
 	}
+	}
+	int dv = DuplicateVertex(m);
+	if(dv>0)
+	{
+		fprintf(index, "<p> Duplicated vertices: %d</p>", dv); 
+		printf( "\t Duplicated vertices: %d\n",dv);
+	}
+	else
+	{
+		fprintf(index, "<p> Duplicated vertices: NO</p>"); 
+		printf( "\t Duplicated vertices: NO\n");
 	}
 	fclose(index);
 }
+
 
