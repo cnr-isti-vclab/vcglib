@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/07/09 15:34:29  tarini
+Dodecahedron added! (and doxigened a little bit)
+
 Revision 1.6  2004/05/13 21:08:00  cignoni
 Conformed C++ syntax to GCC requirements
 
@@ -296,10 +299,10 @@ void Hexahedron(MeshType &in)
  ivp[1]=&*vi;(*vi).P()=CoordType ( 1,-1,-1); ++vi;
  ivp[2]=&*vi;(*vi).P()=CoordType (-1, 1,-1); ++vi;
  ivp[3]=&*vi;(*vi).P()=CoordType ( 1, 1,-1); ++vi;
- ivp[3]=&*vi;(*vi).P()=CoordType (-1,-1, 1); ++vi;
- ivp[3]=&*vi;(*vi).P()=CoordType ( 1,-1, 1); ++vi;
- ivp[4]=&*vi;(*vi).P()=CoordType (-1, 1, 1); ++vi;
- ivp[5]=&*vi;(*vi).P()=CoordType ( 1, 1, 1); 
+ ivp[4]=&*vi;(*vi).P()=CoordType (-1,-1, 1); ++vi;
+ ivp[5]=&*vi;(*vi).P()=CoordType ( 1,-1, 1); ++vi;
+ ivp[6]=&*vi;(*vi).P()=CoordType (-1, 1, 1); ++vi;
+ ivp[7]=&*vi;(*vi).P()=CoordType ( 1, 1, 1); 
 
  FaceIterator fi=in.face.begin();
  (*fi).V(0)=ivp[0];  (*fi).V(1)=ivp[1]; (*fi).V(2)=ivp[2]; ++fi;
