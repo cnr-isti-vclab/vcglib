@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2004/05/10 13:13:17  cignoni
+added void to Convert, corrected return object in VFb
+
 Revision 1.9  2004/05/06 15:28:10  pietroni
 changed names to VF topology function (was missed)
 
@@ -66,6 +69,7 @@ Edited Comments and GPL license
 #include<vcg/space/tcoord2.h>
 
 class DUMMYFACETYPE;
+class DUMMYEDGETYPE;
 class DUMMYTETRATYPE;
 namespace vcg {
 
@@ -77,7 +81,7 @@ namespace vcg {
 	@param FLTYPE (Template Parameter) Specifies the scalar field of the vertex coordinate type.
 	@param VFTYPE (Template Parameter) Specifies the type for the face, needed only for VF adjacency.
  */
-template <class FLTYPE, class VFTYPE = DUMMYFACETYPE, class VTTYPE = DUMMYTETRATYPE,class TCTYPE = TCoord2<float,1> > class VERTEX_TYPE
+template <class FLTYPE, class VETYPE = DUMMYEDGETYPE, class VFTYPE = DUMMYFACETYPE, class VTTYPE = DUMMYTETRATYPE,class TCTYPE = TCoord2<float,1> > class VERTEX_TYPE
 {
 public:
 
@@ -88,6 +92,8 @@ public:
 	typedef Point3<ScalarType> NormalType;
 	/// The type base of the vertex, useful for recovering the original typename after user subclassing
 	typedef VERTEX_TYPE    BaseVertexType;
+	/// The type of the face pointed by the vertex if vertex edge topology is present
+  typedef VETYPE         EdgeType;
 	/// The type base of the vertex, useful for recovering the original typename after user subclassing
   typedef VFTYPE         FaceType;
 
@@ -352,7 +358,61 @@ public:
 #endif
 	}
  //@}
+/** @name Vertex-Edge Adjacency
+   blah
+   blah
+ **/
+ //@{
 
+#if ((defined __VCGLIB_VERTEX_EA) || (defined __VCGLIB_VERTEX_EAS)) 
+	// Puntatore ad un edge appartenente alla stella del vertice, implementa l'adiacenza vertice-edge
+protected:
+	EdgeType *_ep;
+	int _ei;
+#endif
+
+public:
+inline EdgeType * & Ep()
+	{
+#if ((defined __VCGLIB_VERTEX_EA) || (defined __VCGLIB_VERTEX_EAS))
+		  return _ep;
+#else
+    assert(0);// you are probably trying to use VF topology in a vertex without it
+		return *((EdgeType **)(_flags));  
+#endif
+	}
+
+inline const EdgeType * & Ep() const
+	{
+#if ((defined __VCGLIB_VERTEX_EA) || (defined __VCGLIB_VERTEX_EAS))
+		  return _ep;
+#else
+		assert(0);// you are probably trying to use VF topology in a vertex without it
+		return (EdgeType *)this;
+#endif
+	}
+
+inline int & Ei()
+	{
+#if ((defined __VCGLIB_VERTEX_EA) || (defined __VCGLIB_VERTEX_EAS))
+
+		  return _ei;
+#else
+    assert(0);// you are probably trying to use VF topology in a vertex without it
+		return _flags;
+#endif
+	}
+
+inline const int & Ei() const
+	{
+#if ((defined __VCGLIB_VERTEX_EA) || (defined __VCGLIB_VERTEX_EAS))
+		  return _ei;
+#else
+		assert(0);// you are probably trying to use VF topology in a vertex without it
+		return (void *)this;
+#endif
+	}
+ //@}
 /***********************************************/
 /** @name Vertex-Face Adjacency
    blah
@@ -640,6 +700,14 @@ static bool HasVFAdjacency()   {
 }
 static bool HasVTAdjacency()   { 
 #ifdef  __VCGLIB_VERTEX_AT
+  return true;
+#else
+  return false;
+#endif
+}
+
+static bool HasVEAdjacency()   { 
+#ifdef __VCGLIB_VERTEX_EA 
   return true;
 #else
   return false;
