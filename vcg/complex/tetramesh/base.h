@@ -24,6 +24,11 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/06/01 17:17:29  ganovelli
+pragma once removed ,
+load ts removed to be put in io_tetramesh
+CLear() added
+
 Revision 1.5  2004/05/13 12:16:12  pietroni
 first version... add vertex to mesh
 
@@ -205,6 +210,12 @@ static bool HasTopology()         { return HasTTTopology() || HasVTTopology(); }
 	void Mark(VertexType *v)
 	{
 		 v->IMark()=IMark;
+	}
+
+  ///return the current mark
+	int GetMark()
+	{
+		return (IMark);
 	}
 
 ///Initialize the mark of all vertices
