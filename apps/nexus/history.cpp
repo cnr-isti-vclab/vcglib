@@ -288,9 +288,9 @@ bool History::UpdatesToQuick() {
   frags = (Cell *)(out_links + n_out_links());
   
   memcpy(nodes, &*tmp_nodes.begin(), tmp_nodes.size()*sizeof(Node));
-  memcpy(in_links, &*tmp_in_links.begin(), tmp_in_links.size()*sizeof(Node));
+  memcpy(in_links, &*tmp_in_links.begin(), tmp_in_links.size()*sizeof(Link));
   memcpy(out_links, &*tmp_out_links.begin(), 
-	 tmp_out_links.size()*sizeof(Node));
+	 tmp_out_links.size()*sizeof(Link));
   memcpy(frags, &*tmp_frags.begin(), tmp_frags.size() * sizeof(Cell));
 
   return LoadPointers();

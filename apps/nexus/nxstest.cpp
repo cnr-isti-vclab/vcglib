@@ -17,10 +17,10 @@ int main(int argc, char *argv[]) {
     cerr << "Could not open file: " << argv[1] << endl;
     return -1;
   }
-  Report report(nexus.index.size());
-  for(unsigned int patchid = 0; patchid < nexus.index.size(); patchid++) {    
+  Report report(nexus.size());
+  for(unsigned int patchid = 0; patchid < nexus.size(); patchid++) {    
     report.Step(patchid);
-    PatchInfo &info = nexus.index[patchid];
+    Entry &info = nexus[patchid];
     Patch &patch = nexus.GetPatch(patchid);
     for(int f = 0; f < patch.nf; f++) {
       unsigned short *face = patch.Face(f);
@@ -51,8 +51,8 @@ int main(int argc, char *argv[]) {
 
   cerr << "Testing borders\n";
 
-  for(unsigned int patchid = 0; patchid < nexus.index.size(); patchid++) {
-    PatchInfo &info = nexus.index[patchid];
+  for(unsigned int patchid = 0; patchid < nexus.size(); patchid++) {
+    Entry &info = nexus[patchid];
     Border &border = nexus.GetBorder(patchid);
     for(unsigned int i = 0; i < border.Size(); i++) {
       Link &link = border[i];
@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
         cerr << "Null link: " << i << " at patch: " << patchid << endl;
         exit(0);
       }
-      if(link.end_patch < 0 || link.end_patch >= nexus.index.size()) {
+      if(link.end_patch < 0 || link.end_patch >= nexus.size()) {
         cerr << "Invalid link end patch: " << link.end_patch << " at patch: " << patchid << endl;
         exit(0);
       }
@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
         cerr << "Invalid link start_vert: " << link.start_vert << " at patch: " << patchid << endl;
         exit(0);
       }
-      if(link.end_vert > nexus.index[link.end_patch].nvert) {
+      if(link.end_vert > nexus[link.end_patch].nvert) {
         cerr << "Invalid link end vert: " << link.end_vert << " at patch: " << patchid << endl;
         exit(0);
       }        
@@ -79,8 +79,8 @@ int main(int argc, char *argv[]) {
   }
 
   cerr << "Reciprocity borders test\n";
-  for(unsigned int patchid = 0; patchid < nexus.index.size(); patchid++) {
-    PatchInfo &info = nexus.index[patchid];
+  for(unsigned int patchid = 0; patchid < nexus.size(); patchid++) {
+    Entry &info = nexus[patchid];
     Border &border = nexus.GetBorder(patchid);
     vector<Link> links;
     links.resize(border.Size());

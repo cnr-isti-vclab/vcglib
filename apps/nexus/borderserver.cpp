@@ -128,8 +128,7 @@ bool BorderServer::LoadHeader() {
     cerr << "Invalid magic. Not a nxs file\n";
     return false;
   } 
-  ReadBuffer(&offset, sizeof(int64));
-  cerr << "Offset: " << offset << endl;
+  ReadBuffer(&offset, sizeof(int64));  
   return true;
 }
 
