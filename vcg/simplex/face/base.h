@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/03/10 00:52:38  cignoni
+Moved geometric stuff to the space/triangle  class
+
 Revision 1.2  2004/03/03 16:08:38  cignoni
 First working version
 
@@ -37,6 +40,7 @@ First commit...
 #else
 
 #include <vcg/space/box3.h>
+#include <vcg/space/tcoord2.h>
 #include <vcg/space/triangle3.h>
 #include <vcg/simplex/face/topology.h>
 
