@@ -217,8 +217,8 @@ namespace vcg
 						glVertex3d(p0[0],p0[1],p0[2]);
 					}
 					glEnd();
-					glEndList();
 				}
+				glEndList();
 			}
 			glCallList(cone_List);
 			///I insert key and value in the map if I need
@@ -238,13 +238,13 @@ namespace vcg
 			static void glArrow(Point3d tail, Point3d head,double body_width,double head_lenght,
 			double head_width,int body_slice=10,int head_slice=10)
 		{
-			Matrix44d tr;								   
+			assert(!glGetError());
+			Matrix44d tr;
 			XAxis(tail,head,tr);
 			glPushAttrib(GL_ALL_ATTRIB_BITS);
 			SetGLParameters(dm);
-			glPushMatrix();								   
+			glPushMatrix();		
 			glMultMatrixd(&tr[0][0]);
-			//Arrow( (head-tail).Norm(),body_width,head_lenght,head_width,body_size,head_size);
 			vcg::Point3d Direct=(head-tail);
 			double l_body=Direct.Norm()-head_lenght;
 			glPushMatrix();
@@ -254,7 +254,9 @@ namespace vcg
 			glTranslate(vcg::Point3d(l_body,0,0));
 			Cone(head_slice,head_lenght,head_width);
 			glPopMatrix();
+			assert(!glGetError());
 			glPopAttrib();
+			assert(!glGetError());
 		}
 
 		/// draw a cone from tail to head
@@ -291,8 +293,9 @@ namespace vcg
 			double l_body=Direct.Norm();
 			glTranslate(vcg::Point3d(tail.Norm(),0,0));
 			Cylinder(slice,l_body,width);
-			glPopAttrib();
 			glPopMatrix();
+			glPopAttrib();
+			
 			
 		}
 
