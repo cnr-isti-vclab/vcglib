@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/03/10 00:48:06  cignoni
+changed to the face::IsBorder() style
+
 Revision 1.1  2004/03/05 10:59:24  cignoni
 Changed name from plural to singular (normals->normal)
 
@@ -34,6 +37,10 @@ Changed name from plural to singular (normals->normal)
 
 namespace vcg {
 namespace tri {
+/** \addtogroup trimesh */
+/*@{*/
+/// Generation of per-vertex and per-face colors according to various strategy.
+/// This class is used to compute per face or per vertex color with respect to for example Border (UpdateColor::VertexBorderFlag), Selection (UpdateColor::FaceSelected), Quality .
 
 template <class UpdateMeshType>
 class UpdateColor
@@ -229,7 +236,7 @@ static void VertexQualityHistEq(MeshType &m)
 }
 
 };
-
+/*@}*/
 }// end namespace
 }// end namespace
 #endif

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/03/05 10:59:24  cignoni
+Changed name from plural to singular (normals->normal)
+
 Revision 1.1  2004/03/04 00:05:50  cignoni
 First working version!
 
@@ -37,7 +40,12 @@ Initial commit
 
 namespace vcg {
 namespace tri {
-/// Management of updating and computation of per vertex and per face normals
+
+/** \addtogroup trimesh */
+/*@{*/
+
+/// Management, updating and computation of per-vertex and per-face normals.
+/// This class is used to compute or update the normals that can be stored in the vertex or face component of a mesh.
 template <class ComputeMeshType>
 class UpdateNormals
 {

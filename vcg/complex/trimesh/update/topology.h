@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/03/05 21:49:21  cignoni
+First working version for face face
+
 Revision 1.1  2004/03/04 00:53:24  cignoni
 Initial commit
 
@@ -34,6 +37,8 @@ Initial commit
 #include <algorithm>
 namespace vcg {
 namespace tri {
+/** \addtogroup trimesh */
+/*@{*/
 
 template <class UpdateMeshType>
 class UpdateTopology
@@ -174,6 +179,7 @@ static void FaceFace(MeshType &m)
 
 }; // end class
 
+/*@}*/
 }	// End namespace
 }	// End namespace
 

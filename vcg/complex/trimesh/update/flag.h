@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/03/10 00:46:10  cignoni
+changed to the face::IsBorder() style
+
 Revision 1.1  2004/03/05 10:59:24  cignoni
 Changed name from plural to singular (normals->normal)
 
@@ -37,6 +40,10 @@ First working version!
 
 namespace vcg {
 namespace tri {
+/** \addtogroup trimesh */
+/*@{*/
+/// Management, updating and computation of per-vertex and per-face flags (like border flags).
+/// This class is used to compute or update some of the flags that can be stored in the mesh components. For now just Border flags (e.g. the flag that tells if a given edge of a face belong to a border of the mesh or not).
 
 template <class UpdateMeshType>
 class UpdateFlags
@@ -133,6 +140,7 @@ void VertexBorderFromFace()
 
 }; // end class
 
+/*@}*/
 }	// End namespace
 }	// End namespace
 

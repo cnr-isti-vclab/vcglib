@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/03/10 08:32:30  cignoni
+Initial commit
+
 
 ****************************************************************************/
 
@@ -37,6 +40,10 @@ $Log: not supported by cvs2svn $
 
 namespace vcg {
 namespace face {
+
+/** \addtogroup face */
+/*@{*/
+
 /**  Templated over the class face, it stores a \em position over a face in a mesh.
 	It contain a pointer to the current face, 
 	the index of one edge and a edge's incident vertex.
@@ -287,7 +294,7 @@ public:
 	CoordType normal;
 };
 
+/*@}*/
 }	 // end namespace
-
 }	 // end namespace
 #endif
