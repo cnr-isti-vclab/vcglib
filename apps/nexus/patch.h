@@ -80,11 +80,11 @@ inline unsigned short *Patch::Face(unsigned short f) {
 }
 
 inline unsigned int *Patch::ColorBegin() { 
-  return (unsigned int *)(((char *)vstart) + cstart); 
+  return (unsigned int *)(vstart + cstart); 
 }
 
 inline short *Patch::Norm16Begin() { 
-  return (short *)(((char *)vstart) + nstart); 
+  return (short *)(vstart + nstart); 
 }
 
 inline short *Patch::Norm16(unsigned short v) { 
@@ -92,7 +92,7 @@ inline short *Patch::Norm16(unsigned short v) {
 }
 
  inline vcg::Point3f *Patch::Norm32Begin() {
-   return (vcg::Point3f *)(((char *)vstart) + nstart); 
+   return (vcg::Point3f *)(vstart + nstart); 
  }
  inline vcg::Point3f &Patch::Norm32(unsigned short v) {
    return Norm32Begin()[v];

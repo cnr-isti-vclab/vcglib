@@ -86,15 +86,18 @@ void NexusMt::Render() {
   for(unsigned int i = 0; i < cells.size(); i++) {
     unsigned int cell = cells[i];
     Nexus::Entry &entry = index[cell];
+
     //frustum culling
     //    if(frustum.Outside(entry.sphere.center, entry.sphere.radius))
     //      continue;
+
     Patch patch = GetPatch(cell);
     glVertexPointer(3, GL_FLOAT, 0, patch.VertBegin());
     if(use_colors)
       glColorPointer(4, GL_UNSIGNED_BYTE, 0, patch.ColorBegin());
     if(use_normals)
       glNormalPointer(GL_SHORT, 8, patch.Norm16Begin());
+
     switch(mode) {
     case POINTS:
       glDrawArrays(GL_POINTS, 0, patch.nv); break;

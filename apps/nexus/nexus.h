@@ -49,8 +49,8 @@ class Nexus {
   virtual bool Load(const std::string &filename);
   virtual void Close();
 
-  Patch GetPatch(unsigned int patch);
-  Border GetBorder(unsigned int patch);
+  Patch GetPatch(unsigned int patch, bool flush = true);
+  Border GetBorder(unsigned int patch, bool flush = true);
 
   bool IsCompressed() { return signature & NXS_COMPRESSED; }
 

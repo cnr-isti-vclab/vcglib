@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2004/09/30 23:56:33  ponchio
+Backup (added strips and normals)
+
 Revision 1.8  2004/09/30 00:27:42  ponchio
 Lot of changes. Backup.
 
@@ -66,12 +69,6 @@ Created
 
 ****************************************************************************/
 
-#ifdef WIN32
-#include "getopt.h"
-#else
-#include <unistd.h>
-#endif
-
 #include <iostream>
 using namespace std;
 
@@ -95,7 +92,7 @@ int height = 768;
 
 SDL_Surface *screen = NULL;
 
-bool init() {
+bool init(const string &str) {
   
   if(SDL_Init(SDL_INIT_VIDEO) != 0) {
     return false;
@@ -117,7 +114,7 @@ bool init() {
   }
   
   SDL_WM_SetIcon(SDL_LoadBMP("inspector.bmp"), NULL);
-  SDL_WM_SetCaption(" Inspector", "Inspector");
+  SDL_WM_SetCaption(str.c_str(), str.c_str());
 
 
   glDisable(GL_DITHER);
@@ -135,54 +132,53 @@ bool init() {
 
 
 int main(int argc, char *argv[]) {
-  enum Mode { SCREEN, GEO };
   int level = 0;
   int apatch = -1;
-  float error = 1;
-  Mode mode = SCREEN;
+  float error = 4;
 
   Trackball track;
   int option;
 
-  while((option = getopt(argc, argv, "l:p:g:s:")) != EOF) {
-    switch(option) {
-    case 'l': level = atoi(optarg); break;
-    case 'p': apatch = atoi(optarg); break;
-    case 'g': mode = GEO; error = (float)atof(optarg); break;
-    case 's': mode = SCREEN; error = (float)atof(optarg); break;
-    default: cerr << "Unknown option: " << (char)option << endl;
-      return -1;
-    }
-  }
-
-  if(optind != argc - 1) {
-    cerr << "Usage: " << argv[0] << " <nexus file> [options]\n"
-	 << " -l <n>: show level n\n"
-	 << " -p <n>: show patch n\n"
-	 << " -g <e>: extract at geometry error e\n"
-	 << " -s <e>: extract at screen error e\n\n";
+  if(argc != 2) {
+    cerr << "Usage: " << argv[0] << " <nexus file>\n";
     return -1;
   }      
 
   NexusMt nexus;
-  if(!nexus.Load(argv[optind])) {
+  if(!nexus.Load(argv[1])) {
     cerr << "Could not load nexus file: " << argv[1] << endl;
     return -1;
   }
   Sphere3f sphere = nexus.sphere;
 
-  if(!init()) {
+  if(!init(argv[1])) {
     cerr << "Could not init SDL window\n";
     return -1;
   }
   
   //  FrustumPolicy frustum_policy;
+
+  cerr << "Commands: \n"
+    " q: quit\n"
+    " s: screen error extraction\n"
+    " g: geometry error extraction\n"
+    " p: draw points\n"
+    " d: debug mode (show patches colored)\n"
+    " m: smooth mode\n"
+    " c: show colors\n"
+    " n: show normals\n"
+    " r: rotate model\n"
+    " -: decrease error\n"
+    " +: increase error (= too)\n";
   
   
-  bool rotate = true;
+  bool rotate = false;
   bool show_borders = true;
   bool show_colors = true;
   bool show_normals = true;
+  NexusMt::Mode mode = NexusMt::SMOOTH;
+  NexusMt::PolicyKind policy = NexusMt::FRUSTUM;
+  
   glClearColor(0, 0, 0, 0); 
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
@@ -190,24 +186,28 @@ int main(int argc, char *argv[]) {
   glEnable(GL_COLOR_MATERIAL);
   glEnable(GL_CULL_FACE);
   int quit = 0;
-  SDL_Event         event;
+  SDL_Event event;
   int x, y;
   float alpha = 0;
-  while( !quit ) {                    
-    while( SDL_WaitEvent( &event ) ){                        
+  bool redraw = false;
+  while( !quit ) {   
+    bool first = true;
+    SDL_WaitEvent(&event);
+    while( first || SDL_PollEvent( &event ) ){                        
+      first = false;
       switch( event.type ) {
       case SDL_QUIT:  quit = 1; break;      
       case SDL_KEYDOWN:                                        
 	switch(event.key.keysym.sym) {
 	case SDLK_q: exit(0); break;
-	case SDLK_b: show_borders = !show_borders;break;
-	case SDLK_c: 
-	  show_colors = !show_colors;
+	case SDLK_b: show_borders = !show_borders; break;
+	case SDLK_c: show_colors = !show_colors; break;
+	case SDLK_n: show_normals = !show_normals; break;
 
-	  break;
-	case SDLK_n: 
-	  show_normals = !show_normals;
-	  break;
+	case SDLK_s: policy = NexusMt::FRUSTUM; break;
+	case SDLK_p: mode = NexusMt::POINTS; break;
+	case SDLK_d: mode = NexusMt::DEBUG; break;
+	case SDLK_m: mode = NexusMt::SMOOTH; break;
 
 	case SDLK_r:
 	case SDLK_SPACE: rotate = !rotate; break;
@@ -219,10 +219,6 @@ int main(int argc, char *argv[]) {
 	case SDLK_PLUS: error *= 1.1; 
 	  cerr << "error: " << error << endl; break;
 	}
-	//quit = 1;           
-	//error++;
-	//if(error == 5) error = 0;
-	//render.setMaxError(error/10.0);
 	break;
       case SDL_MOUSEBUTTONDOWN:       
 	x = event.button.x;
@@ -233,135 +229,62 @@ int main(int argc, char *argv[]) {
 	  track.MouseWheel(-1);
 	} else 
 	  track.MouseDown(x, y, 1);
-	//          hand.buttonDown(x, y, 1);
         break;
       case SDL_MOUSEBUTTONUP:          
 	x = event.button.x;
 	y = height - event.button.y;      
 	track.MouseUp(x, y, 1);    
-	//          hand.buttonUp(x, y);
 	break;
       case SDL_MOUSEMOTION: 
 	while(SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_MOUSEMOTIONMASK));
 	x = event.motion.x;
 	y = height - event.motion.y;
 	track.MouseMove(x, y);
-	//          hand.mouseMove(x, y);        
 	break;  
+      case SDL_VIDEOEXPOSE:
       default: break;
       }
-  
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      glMatrixMode(GL_PROJECTION);
-      glLoadIdentity();
-      gluPerspective(40, 1, 0.1, 100);
-      glMatrixMode(GL_MODELVIEW);
-      glLoadIdentity();
-      gluLookAt(0,0,5,   0,0,0,   0,1,0);    
-
-
-      track.GetView();
-      track.Apply();
-
-      float scale = 2/sphere.Radius();
-      //    glRotatef(alpha, 0, 1, 0);
-      //    if(rotate)
-      //      alpha++;
-      //    if(alpha > 360) alpha = 0;
-      glScalef(scale, scale, scale);       
-      Point3f center = sphere.Center();
-      glTranslatef(-center[0], -center[1], -center[2]);
-
-      nexus.SetMode(NexusMt::DEBUG);
-      nexus.SetPolicy(NexusMt::FRUSTUM, error);
-      nexus.SetComponent(NexusMt::COLOR, show_colors);
-      nexus.SetComponent(NexusMt::NORMAL, show_normals);
-   
-      nexus.Render();
-
-      /*      vector<unsigned int> cells;
-      if(apatch != -1) {
-	cells.push_back(apatch);
-      } else if(mode == GEO) {
-	nexus.ExtractFixed(cells, error);
-      } else if(mode == SCREEN) {
-	frustum_policy.error = error;
-	frustum_policy.GetView();
-	nexus.Extract(cells, &frustum_policy);
-      } else {
-	for(int i = 0; i < nexus.index.size(); i++) {
-	  if(nexus.index[i].error == 0)
-	    cells.push_back(i);
-	}
-      }
-    
-      glColor3f(1, 1, 1);
-
-      for(unsigned int i = 0; i < cells.size(); i++) {
-	unsigned int cell = cells[i];
-	Patch patch = nexus.GetPatch(cell);
-
-	if(show_color) {
-	  unsigned int val = cell + 1;
-	  glColor3ub(((val * 27)%128) + 128, 
-		     ((val * 37)%128) + 128, 
-		     ((val * 87)%128) + 128);
-	}
-      
-	glBegin(GL_TRIANGLES);
-	unsigned short *f = patch.FaceBegin();      
-	for(unsigned int j = 0; j < patch.nf*3; j+= 3) {
-	  Point3f &p1 = patch.Vert(f[j]);
-	  Point3f &p2 = patch.Vert(f[j+1]);
-	  Point3f &p3 = patch.Vert(f[j+2]);
-	  Point3f n = ((p2 - p1) ^ (p3 - p1));
-	
-	  if(!show_normals) {
-	    glNormal3f(n[0], n[1], n[2]);
-	    glVertex3f(p1[0], p1[1], p1[2]);
-	    glVertex3f(p2[0], p2[1], p2[2]);
-	    glVertex3f(p3[0], p3[1], p3[2]);
-	  } else {
-	    short *n1 = patch.Norm16(f[j]);
-	    short *n2 = patch.Norm16(f[j+1]);
-	    short *n3 = patch.Norm16(f[j+2]);
-	    glNormal3s(n1[0], n1[1], n1[2]);
-	    glVertex3f(p1[0], p1[1], p1[2]);
-	    glNormal3s(n2[0], n2[1], n2[2]);
-	    glVertex3f(p2[0], p2[1], p2[2]);
-	    glNormal3s(n3[0], n3[1], n3[2]);
-	    glVertex3f(p3[0], p3[1], p3[2]);
-	  }
-
-	}
-	glEnd();
-      }
-      if(show_borders) {
-	for(unsigned int i = 0; i < cells.size(); i++) {
-	  unsigned int cell = cells[i];
-	  Patch patch = nexus.GetPatch(cell);
-	  //drawing borders
-	  glColor3f(1, 1, 1);
-	
-	  Border border = nexus.GetBorder(cell);
-	  glPointSize(4);
-	  glDisable(GL_LIGHTING);
-	  glDisable(GL_DEPTH_TEST);
-	  glBegin(GL_POINTS);
-	  for(unsigned int k = 0; k < border.Size(); k++) {
-	    if(border[k].IsNull()) continue;
-	    Point3f &p = patch.Vert(border[k].start_vert);
-	    glVertex3f(p[0], p[1], p[2]);
-	  }
-	  glEnd();
-	  glEnable(GL_DEPTH_TEST);
-	  glEnable(GL_LIGHTING);
-	}
-      }
-*/
-    
-      SDL_GL_SwapBuffers();
+      redraw = true;
     }
+
+    if(!redraw) continue;
+    redraw = false;
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(40, 1, 0.1, 100);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(0,0,5,   0,0,0,   0,1,0);    
+    
+    glRotatef(alpha, 0, 1, 0);
+    if(rotate) {
+      alpha++;
+      if(alpha > 360) alpha = 0;
+      SDL_Event redraw;
+      redraw.type = SDL_VIDEOEXPOSE;
+      SDL_PushEvent(&redraw);
+    }
+    
+    
+    track.GetView();
+    track.Apply();
+    
+    float scale = 2/sphere.Radius();
+    
+    glScalef(scale, scale, scale);       
+    Point3f center = sphere.Center();
+    glTranslatef(-center[0], -center[1], -center[2]);
+    
+    glColor3f(0.9, 0.9, 0.9);
+    nexus.SetMode(mode);
+    nexus.SetPolicy(policy, error);
+    nexus.SetComponent(NexusMt::COLOR, show_colors);
+    nexus.SetComponent(NexusMt::NORMAL, show_normals);
+    
+    nexus.Render();
+    
+    SDL_GL_SwapBuffers();
   }
 
   // Clean up

@@ -13,6 +13,17 @@ using namespace vcg;
 #include <unistd.h>
 #endif
 
+string getSuffix(unsigned int signature) {
+  string suff;
+  if(signature&NXS_COMPRESSED)     suff += "Z";
+  if(signature&NXS_STRIP)          suff += "S"; 
+  if(signature&NXS_COLORS)         suff += "C";
+  if(signature&NXS_NORMALS_SHORT)  suff += "N";
+  if(signature&NXS_TEXTURES_SHORT) suff += "T";
+  if(signature&NXS_DATA32)         suff += "D";
+  return suff;
+}
+
 int main(int argc, char *argv[]) {
   
   string input;
@@ -160,9 +171,10 @@ int main(int argc, char *argv[]) {
 	 << " -n<float>: Normal quantization\n"
          << " -c<float>: Color quantization\n"
 	 << " -t<float>: Texture quantization\n\n";
+    return -1;
   }
   input = argv[optind];
-  if(!output.size()) output = input + "00";
+
 
   Nexus nexus;
   if(!nexus.Load(input)) {
@@ -228,6 +240,8 @@ int main(int argc, char *argv[]) {
   signature |= add;
   signature &= ~remove;
 
+  if(!output.size()) output = input + getSuffix(signature);
+
   Nexus out;
   if(!out.Create(output, (Signature)signature)) {
     cerr << "Could not open output: " << output << endl;
@@ -243,6 +257,7 @@ int main(int argc, char *argv[]) {
     vector<unsigned short> strip;
     if(add_strip) {
       ComputeTriStrip(src_patch.nf, src_patch.FaceBegin(), strip);
+      assert(strip.size() < 32767);
       out.AddPatch(src_entry.nvert, strip.size(), src_entry.border_size);
     } else
       out.AddPatch(src_entry.nvert, src_entry.nface, src_entry.border_size);

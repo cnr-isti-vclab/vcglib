@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/09/30 00:27:42  ponchio
+Lot of changes. Backup.
+
 Revision 1.5  2004/09/28 10:26:07  ponchio
 Voronoi partition changes.
 
@@ -121,6 +124,7 @@ void VoronoiChain::Init(Crude &crude, float scaling, int steps) {
       seeds.push_back(fine[i]);
   }
   swap(fine, seeds);
+  if(fine.size() == 0) fine.push_back(Point3f(0,0,0));
   fine.Init();
 
   //here goes some optimization pass.
@@ -158,6 +162,7 @@ void VoronoiChain::Init(Crude &crude, float scaling, int steps) {
       seeds.push_back(coarse[i]);
   }
   swap(coarse, seeds);
+  if(coarse.size() == 0) coarse.push_back(Point3f(0,0,0));
   coarse.Init();
 
 
@@ -395,6 +400,7 @@ void VoronoiChain::BuildLevel(Nexus &nexus, unsigned int offset,
       seeds.push_back(coarse[i]);
   }
   swap(coarse, seeds);
+  if(coarse.size() == 0) coarse.push_back(Point3f(0,0,0));
   coarse.Init();
 
 //Coarse optimization

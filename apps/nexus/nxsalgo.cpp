@@ -23,10 +23,9 @@ void nxs::ComputeNormals(Nexus &nexus) {
   bool use_short = (nexus.signature & NXS_NORMALS_SHORT) != 0;
 
   //first step normals in the same patch.
-  cerr << "First step" << endl;
   for(unsigned int p = 0; p < nexus.index.size(); p++) {
     Patch patch = nexus.GetPatch(p);
-    
+
     vector<Point3f> normals;
     normals.resize(patch.nv, Point3f(0, 0, 0));
     
@@ -43,6 +42,7 @@ void nxs::ComputeNormals(Nexus &nexus) {
 	normals[f[1]] += norm;
 	normals[f[2]] += norm;
       }
+
     if(nexus.signature & NXS_STRIP) 
       for(unsigned int i = 0; i < patch.nf-2; i++) {
 	unsigned short *f = patch.FaceBegin() + i;
@@ -72,16 +72,13 @@ void nxs::ComputeNormals(Nexus &nexus) {
 	     normals.size() * sizeof(Point3f));
     }
   }
-  cerr << "Second step" << endl;
   //Second step unify normals across borders
   for(unsigned int p = 0; p < nexus.index.size(); p++) {
     //notice now ew allow flushing of old patches
-    cerr << "Colleting" << endl;
 
     Patch patch = nexus.GetPatch(p);
     Border border = nexus.GetBorder(p);
 
-    cerr << "nv: " << patch.nv << " nf: " << patch.nf << endl;
     //first pass we collect all normals
     map<unsigned short, Point3f> normals;
     for(unsigned int i = 0; i < border.Size(); i++) {
@@ -108,7 +105,6 @@ void nxs::ComputeNormals(Nexus &nexus) {
 	normals[link.start_vert] += remote.Norm32(link.end_vert);
     }
     
-    cerr << "Adding" << endl;
     //second pass we update values in all the patches involved
     for(unsigned int i = 0; i < border.Size(); i++) {
       Link &link = border[i];

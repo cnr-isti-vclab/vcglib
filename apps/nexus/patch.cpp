@@ -2,6 +2,9 @@
 
 using namespace nxs;
 
+void pad(unsigned int &size) {
+  while(size&0x3) size++;
+}
 
 Patch::Patch(Signature signature, Chunk *s, 
 	     unsigned short nvert, unsigned short nface):
@@ -24,7 +27,27 @@ void Patch::Init(Signature signature,
   //align memory
   if(((int)vstart) & 0x2) vstart = (float *)(((char *)vstart) + 2);
 
-  cstart = nv * sizeof(float) * 3;
+  cstart = nv * 3;
+  if(signature & NXS_COLORS)
+    nstart = cstart + nv;
+  else 
+    nstart = cstart;
+
+  if(signature & NXS_NORMALS_SHORT)
+    tstart = nstart + nv * 2;
+  else if(signature & NXS_NORMALS_FLOAT)
+    tstart = nstart + nv * 3;
+  else 
+    tstart = nstart;
+
+  if(signature & NXS_TEXTURES_SHORT)
+    dstart = tstart + nv;
+  else if(signature & NXS_TEXTURES_FLOAT)
+    dstart = tstart + nv;
+  else 
+    dstart = tstart;
+
+  /*  cstart = nv * sizeof(float) * 3;
   if(signature & NXS_COLORS)
     nstart = cstart + nv * sizeof(unsigned int);
   else 
@@ -42,7 +65,8 @@ void Patch::Init(Signature signature,
   else if(signature & NXS_TEXTURES_FLOAT)
     dstart = tstart + nv * sizeof(float) * 2;
   else 
-    dstart = tstart;
+  dstart = tstart;*/
+
 }
 
 unsigned int Patch::ChunkSize(Signature signature, 
@@ -63,7 +87,7 @@ unsigned int Patch::ByteSize(Signature signature,
     size += nface * 3 * sizeof(unsigned short);
   
   //memory alignment
-  if(size & 0x2) size += 2;
+  pad(size);
   
   size += nvert * sizeof(vcg::Point3f);
   
@@ -84,8 +108,10 @@ unsigned int Patch::ByteSize(Signature signature,
   
   if(signature & NXS_DATA8)
     size += nvert * sizeof(char);
+  pad(size);
   if(signature & NXS_DATA16)
     size += nvert * 2 * sizeof(char);
+  pad(size);
   if(signature & NXS_DATA32)
     size += nvert * 4 * sizeof(char);
   if(signature & NXS_DATA64)

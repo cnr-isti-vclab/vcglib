@@ -1,4 +1,3 @@
-#include <vector>
 #include <iostream>
 
 // stuff to define the mesh
@@ -7,10 +6,6 @@
 #include <vcg/complex/trimesh/base.h>
 #include <vcg/simplex/face/with/av.h>
 
-// io
-//#include <wrap/io_trimesh/import_ply.h>
-//#include <wrap/io_trimesh/export_ply.h>
-// update
 #include <vcg/complex/trimesh/update/topology.h>
 
 #include <vcg/complex/local_optimization.h>
@@ -19,53 +14,53 @@
 #include <vcg/space/point3.h>
 
 #include "pvoronoi.h"
-#include "border.h"
+//#include "border.h"
 
-class MyEdge;
-class MyFace;
-class MyVertex:public vcg::VertexAFVMVNf<DUMMYEDGETYPE , MyFace,DUMMYTETRATYPE>{public: 
-ScalarType w;
-vcg::math::Quadric<vcg::Plane3<ScalarType,false> >q;
-ScalarType & W(){return w;}
-} ;
-class MyFace : public vcg::FaceAV<MyVertex,DUMMYEDGETYPE , MyFace>{};
-
-class MyMesh: 
-  public vcg::tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace > >{};
-
-class MyTriEdgeCollapse: 
-  public vcg::tri::TriEdgeCollapseQuadric< MyMesh, MyTriEdgeCollapse >{
-public:
-  typedef  vcg::tri::TriEdgeCollapseQuadric<MyMesh, MyTriEdgeCollapse > TECQ;
-  typedef  TECQ::PosType PosType;
-  MyTriEdgeCollapse(PosType p, int i):TECQ(p,i){}
-  ~MyTriEdgeCollapse(){}
-};
+#include "decimate.h"
 
 using namespace vcg;
 using namespace tri;
 using namespace nxs;
 using namespace std;
 
-float Clustering(unsigned int target_faces, 
-	       vector<Point3f> &newvert, 
-	       vector<unsigned int> &newface,
-	       vector<Link> &newbord,
-	       vector<int> &vert_remap) {
-}
+class MyEdge;
+class MyFace;
+class MyVertex: 
+  public vcg::VertexAFVMVNf<DUMMYEDGETYPE, MyFace,DUMMYTETRATYPE> {
+public: 
+  ScalarType w;
+  vcg::math::Quadric<vcg::Plane3<ScalarType, false> > q;
+  ScalarType & W() { return w; }
+};
+
+class MyFace : public vcg::FaceAV<MyVertex,DUMMYEDGETYPE , MyFace> {};
+
+class MyMesh: 
+  public vcg::tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace > > {};
+
+class MyTriEdgeCollapse: 
+  public vcg::tri::TriEdgeCollapseQuadric< MyMesh, MyTriEdgeCollapse > {
+public:
+  typedef  vcg::tri::TriEdgeCollapseQuadric<MyMesh, MyTriEdgeCollapse > TECQ;
+  typedef  TECQ::PosType PosType;
+  MyTriEdgeCollapse(PosType p, int i): TECQ(p, i) {}
+  ~MyTriEdgeCollapse() {}
+};
+
 
 float Cluster(MyMesh &mesh, unsigned int target_faces);
+float Quadric(MyMesh &mesh, unsigned int target_faces);
 
-float Decimate(unsigned int target_faces, 
-	       vector<Point3f> &newvert, 
-	       vector<unsigned int> &newface,
-	       vector<Link> &newbord,
-	       vector<int> &vert_remap) {
+float nxs::Decimate(Decimation mode,
+		    unsigned int target_faces, 
+		    vector<Point3f> &newvert, 
+		    vector<unsigned int> &newface,
+		    vector<Link> &newbord,
+		    vector<int> &vert_remap) {
   
   MyMesh mesh;
   
   //build mesh
-  
   for(unsigned int i = 0; i < newvert.size(); i++) {
     MyVertex vertex;
     vertex.ClearFlags();
@@ -85,18 +80,17 @@ float Decimate(unsigned int target_faces,
   }
   mesh.fn = mesh.face.size();
 
-  //emark borders 
+  //mark borders 
   for(unsigned int i = 0; i < newbord.size(); i++) 
     mesh.vert[newbord[i].start_vert].ClearW();
 
+  
   //  int FinalSize = mesh.face.size()/2;
   //  if(FinalSize > target_faces) FinalSize = target_faces;
-  int FinalSize = target_faces;
-  
 
 
   printf("mesh loaded %d %d \n",mesh.vn,mesh.fn);
-  printf("reducing it to %i\n",FinalSize);
+  printf("reducing it to %i\n", target_faces);
 
 
   /*  
@@ -115,7 +109,11 @@ float Decimate(unsigned int target_faces,
       float error = DeciSession.currMetric/4;//1; //get error; 
       int t3=clock();	
   */
-  float error = Cluster(mesh, target_faces);
+  float error;
+  if(mode == CLUSTER)
+    error = Cluster(mesh, target_faces);
+  else
+    error = Quadric(mesh, target_faces);
 
 
   
@@ -163,6 +161,34 @@ float Decimate(unsigned int target_faces,
   return error;
 }
 
+
+float Quadric(MyMesh &mesh, unsigned int target_faces) {
+  vcg::tri::UpdateTopology<MyMesh>::VertexFace(mesh);
+  vcg::LocalOptimization<MyMesh> DeciSession(mesh);
+  
+  MyTriEdgeCollapse::SetDefaultParams();
+      
+  DeciSession.Init<MyTriEdgeCollapse>();
+      
+  DeciSession.SetTargetSimplices(target_faces);
+  DeciSession.DoOptimization(); 
+  
+  float error = 0;
+  int count = 0;
+  for(unsigned int i = 0; i < mesh.face.size(); i++) {
+    MyFace &face = mesh.face[i];
+    if(face.IsD()) continue;
+    for(int k = 0; k < 3; k++) {
+      error += (face.cV(k)->cP() - face.cV((k+1)%3)->cP()).Norm();
+      count++;
+    }
+  }
+  error /= count;
+  cerr << "Error: " << error << endl;
+  cerr << "faces: " << mesh.fn << endl;
+  cerr << "verts: " << mesh.vn << endl;
+  return error;
+}
 
 float Cluster(MyMesh &mesh, unsigned int target_faces) {
   unsigned int starting = mesh.vn;

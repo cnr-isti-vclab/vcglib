@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/09/30 00:27:42  ponchio
+Lot of changes. Backup.
+
 Revision 1.4  2004/09/21 00:53:23  ponchio
 Lotsa changes.
 
@@ -54,21 +57,13 @@ using namespace std;
 #include "voronoichain.h"
 #include "pintersect.h"
 #include "vert_remap.h"
+
+#include "decimate.h"
+#include "nxsbuild.h"
 using namespace vcg;
 using namespace nxs;
 
-struct RemapLink {
-  unsigned int rel_vert;
-  unsigned int patch;
-  unsigned int abs_vert;
-};
-
-/*void RemapFaces(Crude &crude, 
-		VoronoiChain &vchain,
-                VFile<unsigned int> &face_remap,
-		vector<unsigned int> &patch_faces);*/
-
-void RemapVertices(Crude &crude,
+/*void RemapVertices(Crude &crude,
 		   VertRemap &vert_remap,
 		   VFile<unsigned int> &face_remap,	 
 		   vector<unsigned int> &patch_verts);
@@ -85,7 +80,7 @@ void NexusFill(Crude &crude,
 	       VFile<RemapLink> &border_remap);
 
 void NexusFixBorder(Nexus &nexus, 
-		    VFile<RemapLink> &border_remap);
+VFile<RemapLink> &border_remap);*/
 
 void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
 		unsigned int level,
@@ -95,19 +90,19 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
 		Nexus::Update &update, 
 		float error);
 
-float Decimate(unsigned int target_faces, 
+/*float Decimate(unsigned int target_faces, 
 	       vector<Point3f> &newvert, 
 	       vector<unsigned int> &newface,
 	       vector<Link> &newbord,
-	       vector<int> &vert_remap);
+	       vector<int> &vert_remap);*/
 
 void ReverseHistory(vector<Nexus::Update> &history);
 
-enum Decimation { QUADRIC, CLUSTER };
+
 
 int main(int argc, char *argv[]) {
 
-  Decimation decimation = QUADRIC;
+  Decimation decimation = CLUSTER;
   unsigned int patch_size = 1000;
   unsigned int patch_threshold = 0xffffffff;
   unsigned int optimization_steps = 5;
@@ -286,7 +281,8 @@ int main(int argc, char *argv[]) {
 
       //simplyfy mesh
       vector<int> vert_remap;
-      float error = Decimate((unsigned int)(newface.size() * scaling/3), 
+      float error = Decimate(decimation,
+			     (unsigned int)((newface.size()/3) * scaling), 
 			     newvert, newface, newbord, vert_remap);
 
 
@@ -338,7 +334,7 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
-void RemapVertices(Crude &crude,
+/*void RemapVertices(Crude &crude,
 		   VertRemap &vert_remap,
 		   VFile<unsigned int> &face_remap,	 
 		   vector<unsigned int> &patch_verts) {
@@ -355,9 +351,9 @@ void RemapVertices(Crude &crude,
       }
     }
   }
-}
+  }*/
 
-void NexusAllocate(Crude &crude,
+/*void NexusAllocate(Crude &crude,
 		   Nexus &nexus,
 		   VFile<unsigned int> &face_remap,
 		   vector<unsigned int> &patch_faces,
@@ -404,10 +400,10 @@ void NexusAllocate(Crude &crude,
     faces[entry.nface] = face;
     entry.nface++;
   }
-}
+  }*/
 
 
-void NexusFill(Crude &crude,
+/*void NexusFill(Crude &crude,
 	       Nexus &nexus,
 	       VertRemap &vert_remap,
 	       VFile<RemapLink> &border_remap) {
@@ -479,9 +475,9 @@ void NexusFill(Crude &crude,
   //we can now update bounding sphere.
   for(unsigned int i = 0; i < nexus.index.size(); i++) 
     nexus.sphere.Add(nexus.index[i].sphere);
-}
+    }*/
 
-void NexusFixBorder(Nexus &nexus, 
+/*void NexusFixBorder(Nexus &nexus, 
 		    VFile<RemapLink> &border_remap) {
 
   //and last convert RemapLinks into Links
@@ -532,28 +528,7 @@ void NexusFixBorder(Nexus &nexus,
     }
   }
   nexus.borders.Flush();
-
-  //Checking border consistency:
-  /*  for(unsigned int i = 0; i < nexus.index.size(); i++) {
-    Border border = nexus.GetBorder(i);
-    Nexus::Entry &entry = nexus.index[i];
-    for(unsigned int k = 0; k < border.Size(); k++) {
-      Link &link = border[k];
-      if(link.start_vert >= entry.nvert) {
-	cerr << "K: " << k << endl;
-	cerr << "patch: " << i << " nvert: " << entry.nvert << " startv: " 
-	     << link.start_vert << endl;
-	cerr << "bstart: " << entry.border_start 
-	     << "bsize: " << entry.border_size << endl;
-      }
-      assert(link.end_patch < nexus.index.size());
-      assert(link.start_vert < entry.nvert);
-      Nexus::Entry &remote = nexus.index[link.end_patch];
-      assert(link.end_vert < remote.nvert);
-    }
-    
-    }*/
-}
+} */
 
 
 void NexusSplit(Nexus &nexus, VoronoiChain &vchain,

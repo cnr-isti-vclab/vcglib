@@ -124,15 +124,15 @@ void Nexus::Close() {
   borders.Close();
 }
 
-Patch Nexus::GetPatch(unsigned int patch) {
+Patch Nexus::GetPatch(unsigned int patch, bool flush) {
   Entry &entry = index[patch];
-  Chunk *start = patches.GetRegion(entry.patch_start, entry.patch_size);
+  Chunk *start = patches.GetRegion(entry.patch_start, entry.patch_size,flush);
   return Patch(signature, start, entry.nvert, entry.nface);
 }
 
-Border Nexus::GetBorder(unsigned int patch) {
+Border Nexus::GetBorder(unsigned int patch, bool flush) {
   Entry &entry = index[patch];
-  Link *start = borders.GetRegion(entry.border_start, entry.border_size);
+  Link *start = borders.GetRegion(entry.border_start, entry.border_size,flush);
   return Border(start, entry.border_used, entry.border_size);
 }
 
