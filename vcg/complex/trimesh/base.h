@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2004/10/28 00:54:34  cignoni
+Better Doxygen documentation
+
 Revision 1.11  2004/10/07 14:25:38  ganovelli
 added camera and shot
 
@@ -185,7 +188,7 @@ static bool HasPerWedgeQuality()   { return FaceType::HasWedgeQuality(); }
 static bool HasPerWedgeTexture()   { return FaceType::HasWedgeTexture(); }
 
 static bool HasFFTopology()       { return FaceType::HasFFAdjacency();  }
-static bool HasVFTopology()       { return FaceType::HasVFAdjacency(); }
+static bool HasVFTopology()       { return ((FaceType::HasVFAdjacency())&&(VertexType::HasVFAdjacency())); }
 static bool HasTopology()         { return HasFFTopology() || HasVFTopology(); }
 
 int & SimplexNumber(){ return fn;}
