@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/05/14 11:07:36  turini
+Changed swap in std::swap.
+
 Revision 1.5  2004/05/06 15:29:42  pietroni
 changed names to topology functions
 
@@ -58,7 +61,7 @@ namespace vcg {
 	@param VTYPE (Template Parameter) Specifies the type for the vertex.
  */
 
-template < class VTYPE >
+template < class VTYPE, class TTYPE >
 class TETRA_TYPE{
 
 public:
@@ -204,12 +207,12 @@ and 2 array to implement the list of Vertex - Tetrahedron Topology (List of Tetr
 #ifdef __VCGLIB_TETRA_AT
 protected:
   ///pointers to tetrahedron for tetrahedron-tetrahedron topology (sharing same face)
-	TETRA_TYPE *_ttp[4];
+	TTYPE *_ttp[4];
   ///index of face for tetrahedron-tetrahedron topology (sharing same face)
 	int _tti[4]; 
 public:
   ///Function to access the Tetrahedron that share the index-face (extern face returns a pointer to himself)
-  	TETRA_TYPE *&TTp(const int &index)
+  	TTYPE *&TTp(const int &index)
 	{
 		return _ttp[index];
 	}
@@ -223,12 +226,12 @@ public:
 #ifdef __VCGLIB_TETRA_AV
 protected:
 	///pointers to tetrahedron for vertex-tetrahedron topology (sharing same vertex)
-	TETRA_TYPE *_tvp[4];
+	TTYPE *_tvp[4];
   ///index of vertex for vertex-tetrahedron topology (sharing same vertex)
 	short int _tvi[4];
 public:
   ///Function to access the Next Tetrahedron of the list that share the index-face (end of list is Null)
-  	TETRA_TYPE *&TVp(const int &index)
+  	TTYPE *&TVp(const int &index)
 	{
 		return _tvp[index];
 	}
