@@ -20,6 +20,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="c:\sf\vcg"
 				PreprocessorDefinitions="WIN32;_DEBUG"
 				MinimalRebuild="FALSE"
 				BasicRuntimeChecks="0"
@@ -30,6 +31,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="opengl32.lib glu32.lib glut32.lib SDL.lib"
 				OutputFile="$(OutDir)/trackball.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"/>
@@ -59,6 +61,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
+				AdditionalIncludeDirectories="c:\sf\vcg"
 				PreprocessorDefinitions="WIN32;NDEBUG"
 				MinimalRebuild="FALSE"
 				WarningLevel="3"/>
@@ -66,6 +69,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="opengl32.lib glu32.lib glut32.lib SDL.lib"
 				OutputFile="$(OutDir)/trackball.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"/>
@@ -89,10 +93,46 @@
 		<Filter
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm">
+			<File
+				RelativePath="main.cpp">
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc">
+			<File
+				RelativePath="..\..\..\vcg\math\base.h">
+			</File>
+			<File
+				RelativePath="..\..\..\vcg\space\box3.h">
+			</File>
+			<File
+				RelativePath="..\..\..\wrap\GUI\frustum.h">
+			</File>
+			<File
+				RelativePath="..\..\..\vcg\math\matrix44.h">
+			</File>
+			<File
+				RelativePath="..\..\..\vcg\space\point3.h">
+			</File>
+			<File
+				RelativePath="..\..\..\vcg\math\quaternion.h">
+			</File>
+			<File
+				RelativePath="..\..\..\vcg\math\similarity.h">
+			</File>
+			<File
+				RelativePath="..\..\..\wrap\GUI\trackball.h">
+			</File>
+			<File
+				RelativePath="..\..\..\wrap\GUI\trackmode.h">
+			</File>
+			<File
+				RelativePath="..\..\..\wrap\GUI\view.h">
+			</File>
+			<File
+				RelativePath="..\..\..\wrap\gl\wrap.h">
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"

@@ -38,10 +38,13 @@ namespace vcg {
 template <class S> class Similarity {
 public:
   Similarity() {}
+  Similarity(const Quaternion<S> &q) { SetRotate(q); }
+  Similarity(const Point3<S> &p) { SetTranslate(p); }
+  Similarity(S s) { SetScale(s); }
   
   Similarity operator*(const Similarity &affine) const;
   Similarity &operator*=(const Similarity &affine);
-  Point3<S> operator*(const Point3<S> &p) const;
+  //Point3<S> operator*(const Point3<S> &p) const;
   
   
   Similarity &SetIdentity();
@@ -61,6 +64,7 @@ public:
 
 template <class S> Similarity<S> &Invert(Similarity<S> &m);
 template <class S> Similarity<S> Inverse(const Similarity<S> &m);
+template <class S> Point3<S> operator*(const Point3<S> &p, const Similarity<S> &m);
 
 
 template <class S> Similarity<S> Similarity<S>::operator*(const Similarity &a) const {
@@ -76,13 +80,6 @@ template <class S> Similarity<S> &Similarity<S>::operator*=(const Similarity &a)
   sca = sca * a.sca;
   tra = (rot.Rotate(a.tra)) * sca + tra;
   return *this;
-}
-
-template <class S> Point3<S> Similarity<S>::operator*(const Point3<S> &p) const {
-  Point3<S> r = rot.Rotate(p);
-  r *= sca;
-  r += tra;
-  return r;
 }
   
 template <class S> Similarity<S> &Similarity<S>::SetIdentity() {
@@ -127,7 +124,7 @@ template <class S> Matrix44<S> Similarity<S>::Matrix() const {
 }
 
 template <class S> void Similarity<S>::FromMatrix(const Matrix44<S> &m) {
-  sca = pow(m.Determinant(), 1/3);  
+  sca = (S)pow(m.Determinant(), 1/3);  
   assert(sca != 0);
   Matrix44<S> t = m * Matrix44<S>().SetScale(1/sca, 1/sca, 1/sca);
   rot.FromMatrix(t);
@@ -154,6 +151,13 @@ template <class S> Similarity<S> Interpolate(const Similarity<S> &a, const Simil
   r.rot = interpolate(a.rot, b.rot, t);
   r.tra = t * a.tra + (1-t) * b.tra;
   r.sca = t * a.sca + (1-t) * b.sca;
+  return r;
+}
+
+template <class S> Point3<S> operator*(const Point3<S> &p, const Similarity<S> &m) {
+  Point3<S> r = m.rot.Rotate(p);
+  r *= m.sca;
+  r += m.tra;
   return r;
 }
 
