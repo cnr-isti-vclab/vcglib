@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/02/10 01:07:15  cignoni
+Edited Comments and GPL license
+
 Revision 1.4  2004/02/09 13:48:02  cignoni
 Edited doxygen comments
 
@@ -45,17 +48,17 @@ First commit...
 namespace vcg {
 
     /** The templated class for representing a point in 3D space.
-     *  The class is templated over the scalar value representing coordinates.
+     *  The class is templated over the ScalarType value representing coordinates.
      */
 
-template <class T> class Point3
+template <class P3ScalarType> class Point3
 {
 protected:
   /// The only data member. Hidden to user.
-	T _v[3];
+	P3ScalarType _v[3];
 
 public:
-	typedef T scalar;
+	typedef P3ScalarType ScalarType;
 
 	
 	
@@ -66,7 +69,7 @@ public:
    **/
 
   inline Point3 () { }
-	inline Point3 ( const T nx, const T ny, const T nz )
+	inline Point3 ( const P3ScalarType nx, const P3ScalarType ny, const P3ScalarType nz )
 	{
 		_v[0] = nx;
 		_v[1] = ny;
@@ -78,7 +81,7 @@ public:
 		_v[1]= p._v[1];
 		_v[2]= p._v[2];
 	}
-	inline Point3 ( const T nv[3] )
+	inline Point3 ( const P3ScalarType nv[3] )
 	{
 		_v[0] = nv[0];
 		_v[1] = nv[1];
@@ -98,7 +101,7 @@ public:
   
   /// Questa funzione estende il vettore ad un qualsiasi numero di dimensioni
 	/// paddando gli elementi estesi con zeri
-	inline T Ext( const int i ) const
+	inline P3ScalarType Ext( const int i ) const
 	{
 		if(i>=0 && i<=2) return _v[i];
 		else             return 0;
@@ -107,15 +110,15 @@ public:
 	template <class Q>
 	inline void Import( const Point3<Q> & b )
 	{
-		_v[0] = T(b[0]);
-		_v[1] = T(b[1]);
-		_v[2] = T(b[2]);
+		_v[0] = P3ScalarType(b[0]);
+		_v[1] = P3ScalarType(b[1]);
+		_v[2] = P3ScalarType(b[2]);
 	}
 
   template <class Q> 
   static inline Point3 Construct( const Point3<Q> & b )
   {
-    return Point3(T(b[0]),T(b[1]),T(b[2]));
+    return Point3(P3ScalarType(b[0]),P3ScalarType(b[1]),P3ScalarType(b[2]));
   }
 
 //@}
@@ -125,32 +128,32 @@ public:
   /** @name Data Access. 
    access to data is done by overloading of [] or explicit naming of coords (x,y,z)**/
 
-	inline T & operator [] ( const int i )
+	inline P3ScalarType & operator [] ( const int i )
 	{
 		assert(i>=0 && i<3);
 		return _v[i];
 	}
-	inline const T & operator [] ( const int i ) const
+	inline const P3ScalarType & operator [] ( const int i ) const
 	{
 		assert(i>=0 && i<3);
 		return _v[i];
 	}
-  inline const T &X() const { return _v[0]; } 
-	inline const T &Y() const { return _v[1]; }
-	inline const T &Z() const { return _v[2]; }
-	inline T &X() { return _v[0]; }
-	inline T &Y() { return _v[1]; }
-	inline T &Z() { return _v[2]; }
-	inline const T * V() const
+  inline const P3ScalarType &X() const { return _v[0]; } 
+	inline const P3ScalarType &Y() const { return _v[1]; }
+	inline const P3ScalarType &Z() const { return _v[2]; }
+	inline P3ScalarType &X() { return _v[0]; }
+	inline P3ScalarType &Y() { return _v[1]; }
+	inline P3ScalarType &Z() { return _v[2]; }
+	inline const P3ScalarType * V() const
 	{
 		return _v;
 	}
-	inline T & V( const int i )
+	inline P3ScalarType & V( const int i )
 	{
 		assert(i>=0 && i<3);
 		return _v[i];
 	}
-	inline const T & V( const int i ) const
+	inline const P3ScalarType & V( const int i ) const
 	{
 		assert(i>=0 && i<3);
 		return _v[i];
@@ -164,29 +167,29 @@ public:
 
 	inline Point3 operator + ( Point3 const & p) const
 	{
-		return Point3<T>( _v[0]+p._v[0], _v[1]+p._v[1], _v[2]+p._v[2] );
+		return Point3<P3ScalarType>( _v[0]+p._v[0], _v[1]+p._v[1], _v[2]+p._v[2] );
 	}
 	inline Point3 operator - ( Point3 const & p) const
 	{
-		return Point3<T>( _v[0]-p._v[0], _v[1]-p._v[1], _v[2]-p._v[2] );
+		return Point3<P3ScalarType>( _v[0]-p._v[0], _v[1]-p._v[1], _v[2]-p._v[2] );
 	}
-	inline Point3 operator * ( const T s ) const
+	inline Point3 operator * ( const P3ScalarType s ) const
 	{
-		return Point3<T>( _v[0]*s, _v[1]*s, _v[2]*s );
+		return Point3<P3ScalarType>( _v[0]*s, _v[1]*s, _v[2]*s );
 	}
-	inline Point3 operator / ( const T s ) const
+	inline Point3 operator / ( const P3ScalarType s ) const
 	{
-		return Point3<T>( _v[0]/s, _v[1]/s, _v[2]/s );
+		return Point3<P3ScalarType>( _v[0]/s, _v[1]/s, _v[2]/s );
 	}
 		/// Dot product
-	inline T operator * ( Point3 const & p ) const
+	inline P3ScalarType operator * ( Point3 const & p ) const
 	{
 		return ( _v[0]*p._v[0] + _v[1]*p._v[1] + _v[2]*p._v[2] );
 	}
 		/// Cross product
 	inline Point3 operator ^ ( Point3 const & p ) const
 	{
-		return Point3 <T>
+		return Point3 <P3ScalarType>
 		(
 			_v[1]*p._v[2] - _v[2]*p._v[1],
 			_v[2]*p._v[0] - _v[0]*p._v[2],
@@ -208,14 +211,14 @@ public:
 		_v[2] -= p._v[2];
 		return *this;
 	}
-	inline Point3 & operator *= ( const T s )
+	inline Point3 & operator *= ( const P3ScalarType s )
 	{
 		_v[0] *= s;
 		_v[1] *= s;
 		_v[2] *= s;
 		return *this;
 	}
-	inline Point3 & operator /= ( const T s )
+	inline Point3 & operator /= ( const P3ScalarType s )
 	{
 		_v[0] /= s;
 		_v[1] /= s;
@@ -223,16 +226,16 @@ public:
 		return *this;
 	}
 		// Norme
-	inline T Norm() const
+	inline P3ScalarType Norm() const
 	{
 		return Sqrt( _v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2] );
 	}
-	inline T SquaredNorm() const
+	inline P3ScalarType SquaredNorm() const
 	{
 		return ( _v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2] );
 	}
 		// Scalatura differenziata
-	inline Point3 & Scale( const T sx, const T sy, const T sz )
+	inline Point3 & Scale( const P3ScalarType sx, const P3ScalarType sy, const P3ScalarType sz )
 	{
 		_v[0] *= sx;
 		_v[1] *= sy;
@@ -250,16 +253,16 @@ public:
 	// Normalizzazione
 	inline Point3 & Normalize()
 	{
-		T n = Sqrt(_v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2]);
+		P3ScalarType n = Sqrt(_v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2]);
 		if(n>0.0) {	_v[0] /= n;	_v[1] /= n;	_v[2] /= n;  }
 		return *this;
 	}
 		// Polarizzazione
-	void Polar( T & ro, T & tetha, T & fi ) const
+	void Polar( P3ScalarType & ro, P3ScalarType & tetha, P3ScalarType & fi ) const
 	{
 		ro = Norm();
-		tetha = (T)atan2( _v[1], _v[0] );
-		fi    = (T)acos( _v[2]/ro );
+		tetha = (P3ScalarType)atan2( _v[1], _v[0] );
+		fi    = (P3ScalarType)acos( _v[2]/ro );
 	}
 
 //@}
@@ -305,7 +308,7 @@ inline bool operator == ( Point3 const & p ) const
 	
 	inline Point3 operator - () const
 	{
-		return Point3<T> ( -_v[0], -_v[1], -_v[2] );
+		return Point3<P3ScalarType> ( -_v[0], -_v[1], -_v[2] );
 	}
  //@}
 		// Casts
@@ -320,57 +323,57 @@ inline operator Point3<short>		 (){ return Point3<short>		(_v[0],_v[1],_v[2]); }
 }; // end class definition
 
 
-template <class T>
-inline T Angle( Point3<T> const & p1, Point3<T> const & p2 )
+template <class P3ScalarType>
+inline P3ScalarType Angle( Point3<P3ScalarType> const & p1, Point3<P3ScalarType> const & p2 )
 {
-	T w = p1.Norm()*p2.Norm();
+	P3ScalarType w = p1.Norm()*p2.Norm();
 	if(w==0) return -1;
-	T t = (p1*p2)/w;
+	P3ScalarType t = (p1*p2)/w;
 	if(t>1) t = 1;
 	else if(t<-1) t = -1;
-    return (T) acos(t);
+    return (P3ScalarType) acos(t);
 }
 
 // versione uguale alla precedente ma che assume che i due vettori sono unitari
-template <class T>
-inline T AngleN( Point3<T> const & p1, Point3<T> const & p2 )
+template <class P3ScalarType>
+inline P3ScalarType AngleN( Point3<P3ScalarType> const & p1, Point3<P3ScalarType> const & p2 )
 {
-	T w = p1*p2;
+	P3ScalarType w = p1*p2;
 	if(w>1) 
 		w = 1;
 	else if(w<-1) 
 		w=-1;
-  return (T) acos(w);
+  return (P3ScalarType) acos(w);
 }
 
 
-template <class T>
-inline T Norm( Point3<T> const & p )
+template <class P3ScalarType>
+inline P3ScalarType Norm( Point3<P3ScalarType> const & p )
 {
 	return p.Norm();
 }
 
-template <class T>
-inline T SquaredNorm( Point3<T> const & p )
+template <class P3ScalarType>
+inline P3ScalarType SquaredNorm( Point3<P3ScalarType> const & p )
 {
     return p.SquaredNorm();
 }
 
-template <class T>
-inline Point3<T> & Normalize( Point3<T> & p )
+template <class P3ScalarType>
+inline Point3<P3ScalarType> & Normalize( Point3<P3ScalarType> & p )
 {
     p.Normalize();
     return p;
 }
 
-template <class T>
-inline T Distance( Point3<T> const & p1,Point3<T> const & p2 )
+template <class P3ScalarType>
+inline P3ScalarType Distance( Point3<P3ScalarType> const & p1,Point3<P3ScalarType> const & p2 )
 {
     return (p1-p2).Norm();
 }
 
-template <class T>
-inline T SquaredDistance( Point3<T> const & p1,Point3<T> const & p2 )
+template <class P3ScalarType>
+inline P3ScalarType SquaredDistance( Point3<P3ScalarType> const & p1,Point3<P3ScalarType> const & p2 )
 {
     return (p1-p2).SquaredNorm();
 }
@@ -378,12 +381,12 @@ inline T SquaredDistance( Point3<T> const & p1,Point3<T> const & p2 )
 	// Dot product preciso numericamente (solo double!!)
 	// Implementazione: si sommano i prodotti per ordine di esponente
 	// (prima le piu' grandi)
-template<class T>
-double stable_dot ( Point3<T> const & p0, Point3<T> const & p1 )
+template<class P3ScalarType>
+double stable_dot ( Point3<P3ScalarType> const & p0, Point3<P3ScalarType> const & p1 )
 {
-	T k0 = p0._v[0]*p1._v[0];
-	T k1 = p0._v[1]*p1._v[1];
-	T k2 = p0._v[2]*p1._v[2];
+	P3ScalarType k0 = p0._v[0]*p1._v[0];
+	P3ScalarType k1 = p0._v[1]*p1._v[1];
+	P3ScalarType k2 = p0._v[2]*p1._v[2];
 
 	int exp0,exp1,exp2;
 
@@ -410,18 +413,18 @@ double stable_dot ( Point3<T> const & p0, Point3<T> const & p1 )
 	// Returns 2*AreaTri/(MaxEdge^2), range [0.0, 0.866] 
 	// e.g. halfsquare: 1/2, Equitri sqrt(3)/2, ecc
 	// Modificata il 7/sep/00 per evitare l'allocazione temporanea di variabili
-template<class T>
-T Quality( Point3<T> const &p0, Point3<T> const & p1,  Point3<T> const & p2)
+template<class P3ScalarType>
+P3ScalarType Quality( Point3<P3ScalarType> const &p0, Point3<P3ScalarType> const & p1,  Point3<P3ScalarType> const & p2)
 {
-	Point3<T> d10=p1-p0;
-	Point3<T> d20=p2-p0;
-	Point3<T> d12=p1-p2;
-	Point3<T> x = d10^d20;
+	Point3<P3ScalarType> d10=p1-p0;
+	Point3<P3ScalarType> d20=p2-p0;
+	Point3<P3ScalarType> d12=p1-p2;
+	Point3<P3ScalarType> x = d10^d20;
 
-	T a = Norm( x );
+	P3ScalarType a = Norm( x );
 	if(a==0) return 0; // Area zero triangles have surely quality==0;
-	T b = SquaredNorm( d10 );
-	T t = b;
+	P3ScalarType b = SquaredNorm( d10 );
+	P3ScalarType t = b;
 	t = SquaredNorm( d20 ); if ( b<t ) b = t;
 	t = SquaredNorm( d12 ); if ( b<t ) b = t;
 	assert(b!=0.0);
@@ -429,23 +432,23 @@ T Quality( Point3<T> const &p0, Point3<T> const & p1,  Point3<T> const & p2)
 }
 
 		// Return the value of the face normal (internal use only)
-template<class T>
-Point3<T> Normal(const Point3<T> & p0, const Point3<T> & p1, const Point3<T> & p2)
+template<class P3ScalarType>
+Point3<P3ScalarType> Normal(const Point3<P3ScalarType> & p0, const Point3<P3ScalarType> & p1, const Point3<P3ScalarType> & p2)
 {
 	return ((p1 - p0) ^ (p2 - p0));
 }
 
 		// Return the value of the face normal (internal use only)
-template<class T>
-Point3<T> NormalizedNormal(const Point3<T> & p0, const Point3<T> & p1, const Point3<T> & p2)
+template<class P3ScalarType>
+Point3<P3ScalarType> NormalizedNormal(const Point3<P3ScalarType> & p0, const Point3<P3ScalarType> & p1, const Point3<P3ScalarType> & p2)
 {
 	return ((p1 - p0) ^ (p2 - p0)).Normalize();
 }
 
-template<class T>
-Point3<T> Jitter(Point3<T> &n, T RadAngle)
+template<class P3ScalarType>
+Point3<P3ScalarType> Jitter(Point3<P3ScalarType> &n, P3ScalarType RadAngle)
 {
-	Point3<T> rnd(1.0 - 2.0*T(rand())/RAND_MAX, 1.0 - 2.0*T(rand())/RAND_MAX, 1.0 - 2.0*T(rand())/RAND_MAX);
+	Point3<P3ScalarType> rnd(1.0 - 2.0*P3ScalarType(rand())/RAND_MAX, 1.0 - 2.0*P3ScalarType(rand())/RAND_MAX, 1.0 - 2.0*P3ScalarType(rand())/RAND_MAX);
 	rnd*=Sin(RadAngle);
 	return (n+rnd).Normalize();
 }
@@ -453,14 +456,14 @@ Point3<T> Jitter(Point3<T> &n, T RadAngle)
 
 
 	// Point(p) Edge(v1-v2) dist, q is the point in v1-v2 with min dist
-template<class T>
-T PSDist( const Point3<T> & p,
-			         const Point3<T> & v1,
-					 const Point3<T> & v2,
-			         Point3<T> & q )
+template<class P3ScalarType>
+P3ScalarType PSDist( const Point3<P3ScalarType> & p,
+			         const Point3<P3ScalarType> & v1,
+					 const Point3<P3ScalarType> & v2,
+			         Point3<P3ScalarType> & q )
 {
-    Point3<T> e = v2-v1;
-    T  t = ((p-v1)*e)/e.SquaredNorm();
+    Point3<P3ScalarType> e = v2-v1;
+    P3ScalarType  t = ((p-v1)*e)/e.SquaredNorm();
     if(t<0)      t = 0;
 	else if(t>1) t = 1;
 	q = v1+e*t;
