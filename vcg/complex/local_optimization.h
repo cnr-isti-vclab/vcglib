@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.1  2004/07/08 08:25:15  ganovelli
+  first draft
+
 ****************************************************************************/
 
 #ifndef __VCGLIB_LOCALOPTIMIZATION
@@ -37,7 +40,7 @@ enum ModifierType{	TriEdgeCollapse, TriEdgeSwap, TriVertexSplit,
 
 /*@{*/
 /// This is an abstract class to define the interface of a local modification
-template <class ScalarType, class HeapType>
+template <class ScalarType, class HeapType,class MESH_TYPE>
 class LocalModification
 {
 
@@ -57,14 +60,22 @@ class LocalModification
 	/// Compute the priority to be used in the heap
 	virtual ScalarType ComputePriority()=0;
 
+	/// Return the priority to be used in the heap (implement static priority)
+	virtual ScalarType Priority()=0;
+
 	/// Compute the error caused by this modification (can be the same as priority)
 	virtual ScalarType ComputeError()=0;
 
+
+	/// Perform the operation and return the variation in the number of simplicies (>0 is refinement, <0 is simplification)
+	virtual int Execute()=0;
+
+	/// perform initialization
+	virtual void Init(MESH_TYPE&m,HeapType&)=0;
+
+
 	/// Update the heap as a consequence of this operation
 	virtual void UpdateHeap(HeapType&)=0;
-
-	/// Perform the operation
-	virtual void Execute()=0;
 };	//end class local modification
 
 
@@ -81,19 +92,21 @@ public:
 	// type of the heap
 	typedef typename std::vector<HeapElem> HeapType;	
 	// modification type	
-	typedef  LocalModification <ScalarType, HeapType>  LocModType;
+	typedef  LocalModification <ScalarType, HeapType,MeshType>  LocModType;
 	// modification Pointer type	
-	typedef  LocalModification <ScalarType, HeapType> * LocModPtrType;
+	typedef  LocalModification <ScalarType, HeapType,MeshType> * LocModPtrType;
 	
 
 
 	/// termination conditions	
-	enum {	LOnSimplices	= 0x00,	// test number of simplicies	
+	 enum {	LOnSimplices	= 0x00,	// test number of simplicies	
 			LOnVertices		= 0x01, // test number of verticies
 			LOnOps			= 0x02, // test number of operations
 			LOMetric		= 0x04, // test Metric (error, quality...instance dependent)
 			LOTime			= 0x08  // test how much time is passed since the start
-		} terminateFlags;
+		} ;
+
+	 int tf;
 	int nPerfmormedOps,
 		nTargetOps,
 		nTargetSimplices,
@@ -126,20 +139,16 @@ public:
   ///the element of the heap
   struct HeapElem
   {
-	  ~HeapElem(){
-		  delete locModPtr;
-	  }
+		HeapElem(){locModPtr = NULL;}
+	  ~HeapElem(){}
 
     ///pointer to instance of local modifier
     LocModPtrType locModPtr;
 
-    ///temporary mark for the opration
-    int imark;
    
-    HeapElem(const LocModPtrType _locModPtr, int _imark)
+    HeapElem( LocModPtrType _locModPtr)
     {
 		locModPtr = _locModPtr;
-		imark = _imark;
     };
 
     const bool operator <(const HeapElem & h) const 
@@ -149,61 +158,59 @@ public:
 
     bool IsUpToDate()
     {
-		return locModPtr->IsUpToDate(imark);
-
-	}
-/*
-    	if (!pos.T()->IsD())
-		  {
-        VertexType *v0=pos.T()->V(Tetra::VofE(pos.E(),0));
-			  VertexType *v1=pos.T()->V(Tetra::VofE(pos.E(),1));
-			  
-			return (( (!v0->IsD()) && (!v1->IsD())) &&
-							 Imark>=v0->IMark() &&
-							 Imark>=v1->IMark());
-		  }
-		else
-		return false;
-    }
-*/
-
+			return locModPtr->IsUpToDate();
+		}
   };
 
 
 
   /// Default Constructor
-	LocalOptimization(MeshType &_m):m(_m){};
+	LocalOptimization(MeshType *_m):m(_m){};
   /// Default distructor
   ~LocalOptimization(){};
 
   /// main cycle of optimization
   void DoOptimization()
   {
+		nPerfmormedOps =0;
 	int i=0;
 	while( !GoalReached())
-    {
+    {int size = h.size();
+			LocModPtrType  locMod   = h.back().locModPtr;
       if( ! h.back().IsUpToDate())	
-		    h.pop_back(); // if it is out of date simply discard it
+			{
+				h.pop_back(); // if it is out of date simply discard it
+			}
 	    else  
       {	
-        h.back().locModPtr->ComputeError();
-        LocModPtrType LastMod= h.back().locModPtr;
+        locMod->ComputeError();
         h.pop_back();
 
-		// check if it is feasible
-		if (LastMod->IsFeasible())
-		{
-			LastMod->Execute();
-			LastMod->UpdateHeap(h);
-		 }
-	  }
-	}
+				// check if it is feasible
+			if (locMod->IsFeasible())
+			{
+				nPerfmormedOps++;
+				int tmp = locMod->Execute();
+				m->SimplexNumber()+= tmp;
+				locMod->UpdateHeap(h);
+				m->VertexNumber()--;
+				}
+
+			}
+			delete locMod;
+		}
   }
  
 	///initialize for all vertex the temporary mark must call only at the start of decimation
+	///by default it takes the first element in the heap and calls Init (static funcion) of that type
+	///of local modification. 
 	void Init()
 	{
-		m.InitIMark();
+		m->InitIMark();
+		if(!h.empty())
+		{
+			(*h.begin()).locModPtr->Init(*m,h);
+		}
 	}
 
 
@@ -212,17 +219,20 @@ public:
 	/// say if the process is to end or not: the process ends when any of the termination conditions is verified
 	/// override this function to implemetn other tests
 	bool GoalReached(){
-		assert ( ( ( terminateFlags & LOnSimplices	)==0) ||  ( nTargetSimplices!= -1));
-		assert ( ( ( terminateFlags & LOnVertices	)==0) ||  ( nTargetVertices	!= -1));
-		assert ( ( ( terminateFlags & LOnOps		)==0) ||  ( nTargetOps		!= -1));
-		assert ( ( ( terminateFlags & LOMetric		)==0) ||  ( targetMetric	!= -1));
-		assert ( ( ( terminateFlags & LOTime		)==0) ||  ( timeBudget		!= -1));
+		assert ( ( ( tf & LOnSimplices	)==0) ||  ( nTargetSimplices!= -1));
+		assert ( ( ( tf & LOnVertices	)==0) ||  ( nTargetVertices	!= -1));
+		assert ( ( ( tf & LOnOps		)==0) ||  ( nTargetOps		!= -1));
+		assert ( ( ( tf & LOMetric		)==0) ||  ( targetMetric	!= -1));
+		assert ( ( ( tf & LOTime		)==0) ||  ( timeBudget		!= -1));
 
-		if ( ( terminateFlags & LOnSimplices)	&&	( m->SimplexNumber()< nTargetSimplices)) return true;
-		if ( ( terminateFlags & LOnVertices)	&&  ( m->VertexNumber() < nTargetVertices)) return true;
-		if ( ( terminateFlags & LOnOps)			&&  ( nPerfmormedOps	== nTargetOps)) return true;
-		if ( ( terminateFlags & LOMetric)		&&  ( currMetric		> targetMetric)) return true;
-		if ( ( terminateFlags & LOTime)			&&	( (clock()-start)/(float)CLOCKS_PER_SEC > timeBudget)) return true;
+		if(h.empty()) return true;
+
+		if ( ( tf & LOnSimplices)	&&	( m->SimplexNumber()< nTargetSimplices)) return true;
+		if ( ( tf & LOnVertices)	&&  ( m->VertexNumber() < nTargetVertices)) return true;
+		if ( ( tf & LOnOps)			&&  ( nPerfmormedOps	== nTargetOps)) return true;
+		if ( ( tf & LOMetric)		&&  ( currMetric		> targetMetric)) return true;
+		if ( ( tf & LOTime)			&&	( (clock()-start)/(float)CLOCKS_PER_SEC > timeBudget)) return true;
+		return false;
 	}
 
 
@@ -232,7 +242,7 @@ public:
   {
 		typename HeapType::iterator hi;
 		for(hi=h.begin();hi!=h.end();++hi)
-			if(!(*hi)->LM->IsUpToDate())
+			if(!(*hi).locModPtr->IsUpToDate())
 			{
 				*hi=h.back();
 				h.pop_back();
