@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2004/10/28 00:50:48  cignoni
+Better Doxygen documentation
+
 Revision 1.13  2004/10/18 17:14:42  ganovelli
 error FFP -> FFp
 
@@ -337,6 +340,14 @@ public:
 
 /** Class VFIterator.
 	This class is used as an iterator over the VF adjacency. 
+  It allow to easily traverse all the faces around a given vertex;
+  typical example:
+
+    vcg::face::VFIterator<FaceType> vfi(v[1]);	
+		while (!vfi.End()){
+			vfi.V1()->ClearV();
+			++vfi;
+		}
  */ 
 
 template <typename FaceType> 
@@ -367,8 +378,13 @@ public:
 	VFIterator(VertexType * _v){f = _v->VFp(); z = _v->VFi();}
 
 	VFIFaceType *&	F() { return f;}
-	int	&					I() { return z;}
+	int	&					  I() { return z;}
+  inline VertexType *V() const { return f->V(z);}
 
+  inline VertexType * const & V0() const { return f->V0(z);} 
+  inline VertexType * const & V1() const { return f->V1(z);}
+  inline VertexType * const & V2() const { return f->V2(z);}
+	
   bool End() const {return f==0;}
   VFIFaceType *operator++() {
     FaceType* t = f;
