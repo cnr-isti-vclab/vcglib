@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/05/14 03:14:04  ponchio
+Added Distance
+
 Revision 1.7  2004/05/10 10:58:35  ganovelli
 name of the constructor changed from LineType to Line3
 
@@ -206,7 +209,7 @@ Point3<ScalarType> ClosestPoint( Line3<ScalarType,NORM> l, const Point3<ScalarTy
 template <class ScalarType, bool NORM> 
 ScalarType Distance(const Line3<ScalarType, NORM> &l, 
 		    const Point3<ScalarType> &p) {
-  Point3f o = l.ClosestPoint(p);
+  Point3<ScalarType> o = l.ClosestPoint(p);
   return (o - p).Norm();
 }
 
