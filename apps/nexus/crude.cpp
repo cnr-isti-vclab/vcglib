@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/06/24 14:32:45  ponchio
+Moved from wrap/nexus
+
 Revision 1.1  2004/06/22 15:31:54  ponchio
 Created
 
@@ -43,19 +46,19 @@ Crude::~Crude() {
 }
 
 bool Crude::Create(const std::string &file, unsigned int nv, unsigned int nf) {
-  if(!vert.Create(file + ".vrt")) return false;
-  if(!face.Create(file + ".frt")) return false;
+  if(!vert.Create(file + ".crv")) return false;
+  if(!face.Create(file + ".crf")) return false;
 
-  fp = fopen(file.c_str(), "wb+");
+  fp = fopen((file + ".cri").c_str(), "wb+");
   if(!fp) return false;
   Resize(nv, nf);
   return true;
 }
 bool Crude::Load(const std::string &file) {
-  if(!vert.Load(file + ".vrt")) return false;
-  if(!face.Load(file + ".frt")) return false;
+  if(!vert.Load(file + ".crv")) return false;
+  if(!face.Load(file + ".crf")) return false;
 
-  fp = fopen(file.c_str(), "rb+");
+  fp = fopen((file + ".cri").c_str(), "rb+");
   if(!fp) return false;
   fread(&nvert, sizeof(unsigned int), 1, fp);
   fread(&nface, sizeof(unsigned int), 1, fp);
