@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2004/10/09 14:46:47  ponchio
+Windows porting small changes.
+
 Revision 1.9  2004/10/08 15:12:04  ponchio
 Working version (maybe)
 
@@ -132,7 +135,7 @@ void VoronoiChain::Init(Crude &crude, float scaling, int steps) {
     if(fcount[i] > min_size)
       seeds.push_back(fine[i]);
   }
-  swap((std::vector<Seed>)fine, seeds);
+  swap(fine, seeds);
   if(fine.size() == 0) fine.push_back(Point3f(0,0,0));
   fine.Init();
 
@@ -170,7 +173,7 @@ void VoronoiChain::Init(Crude &crude, float scaling, int steps) {
     if(ccount[i] > (int)min_size)
       seeds.push_back(coarse[i]);
   }
-  swap((std::vector<Seed>)coarse, seeds);
+  swap(coarse, seeds);
   if(coarse.size() == 0) coarse.push_back(Point3f(0,0,0));
   coarse.Init();
 
@@ -404,7 +407,7 @@ void VoronoiChain::BuildLevel(Nexus &nexus, unsigned int offset,
     if(ccount[i] > (int)min_size)
       seeds.push_back(coarse[i]);
   }
-  swap((vector<Seed>)coarse, seeds);
+  swap(coarse, seeds);
   if(coarse.size() == 0) coarse.push_back(Point3f(0,0,0));
   coarse.Init();
 

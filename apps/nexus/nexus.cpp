@@ -11,7 +11,7 @@ Nexus::~Nexus() {
   Close();
 }
 
-bool Nexus::Create(const string &file, Signature sig) {
+bool Nexus::Create(const string &file, Signature sig, unsigned int c_size) {
   index_file = fopen((file + ".nxs").c_str(), "wb+");
   if(!index_file) {
     cerr << "Could not create file: " << file << ".nxs\n";
@@ -25,7 +25,7 @@ bool Nexus::Create(const string &file, Signature sig) {
   
   index.clear();
 
-  chunk_size = 1024;
+  chunk_size = c_size;
 
   if(!patches.Create(file + ".nxp", signature, chunk_size)) {
     cerr << "Could not create file: " << file << ".nxp" << endl;
@@ -96,6 +96,9 @@ bool Nexus::Load(const string &file, bool readonly) {
 }
 
 void Nexus::Close() {  
+  patches.Close();
+  borders.Close();
+
   if(!index_file) return;
   rewind(index_file);
 
@@ -131,9 +134,6 @@ void Nexus::Close() {
 
   fclose(index_file);
   index_file = NULL;
-
-  patches.Close();
-  borders.Close();
 }
 
 Patch &Nexus::GetPatch(unsigned int patch, bool flush) {

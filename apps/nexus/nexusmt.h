@@ -83,7 +83,7 @@ class NexusMt: public Nexus {
   NexusMt();
   ~NexusMt();
   
-  bool Load(const std::string &filename);
+  bool Load(const std::string &filename, bool readonly = true);
   bool InitGL();
   
   void Render();

@@ -50,7 +50,8 @@ class Nexus {
   Nexus();
   virtual ~Nexus();
 
-  bool Create(const std::string &filename, Signature signature);
+  bool Create(const std::string &filename, Signature signature,
+	      unsigned int chunk_size = 1024);
   virtual bool Load(const std::string &filename, bool readonly = false);
   virtual void Close();
 
@@ -77,6 +78,7 @@ class Nexus {
   /* Nexus data */
   
   //BE CAREFUL: this 2 members get replicated into patchserver
+  //TODO fix this nasty thing it is dangerous as it is.
   Signature signature;
   unsigned int chunk_size;
   

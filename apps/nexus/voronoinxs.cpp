@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2004/10/09 17:32:25  ponchio
+Ram buffer option added (last)
+
 Revision 1.12  2004/10/09 17:29:04  ponchio
 Ram buffer option added (again)
 
@@ -131,9 +134,10 @@ int main(int argc, char *argv[]) {
   unsigned int max_level = 0xffffffff;
   float scaling = 0.5;
   unsigned int ram_buffer = 128000000;
+  unsigned int chunk_size = 1024;
 
   int option;
-  while((option = getopt(argc, argv, "f:t:l:s:d:ro:b:")) != EOF) {
+  while((option = getopt(argc, argv, "f:t:l:s:d:ro:b:c:")) != EOF) {
     switch(option) {
     case 'f': patch_size = atoi(optarg);
       if(patch_size == 0 || patch_size > 32000) {
@@ -171,7 +175,18 @@ int main(int argc, char *argv[]) {
       break;
     case 'r': stop_after_remap = true; break;
     case 'o': optimization_steps = atoi(optarg); break;
-    case 'b': ram_buffer = atoi(optarg); break;
+    case 'b': ram_buffer = atoi(optarg); 
+      if(ram_buffer == 0) {
+	cerr << "Invalid ram buffer: " << optarg << endl;
+	return -1;
+      }
+      break;
+    case 'c': chunk_size = atoi(optarg);
+      if(chunk_size == 0) {
+	cerr << "Invalid chunk size: " << optarg << endl;
+	return -1;
+      }
+      break;
     default: cerr << "Unknown option: " << (char)option << endl;
       return -1;
     }
@@ -206,11 +221,12 @@ int main(int argc, char *argv[]) {
   string output = argv[optind+1];
 
   Nexus nexus;
-  if(!nexus.Create(output, NXS_FACES)) {
+  nexus.patches.SetRamBufferSize(ram_buffer);
+  if(!nexus.Create(output, NXS_FACES, chunk_size)) {
     cerr << "Could not create nexus output: " << output << endl;
     return -1;
   }
-  nexus.patches.ram_size = ram_buffer;
+
 
   if(patch_threshold == 0xffffffff)
     patch_threshold = patch_size/4;

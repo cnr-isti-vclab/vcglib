@@ -49,13 +49,15 @@ class Patch {
   static unsigned int ByteSize(Signature signature, 
 			       unsigned short nvert, 
 			       unsigned short nface);
-
-
-  char *start;
+  
+  char *Compress(unsigned int ram_size, unsigned int &size);
+  void Decompress(unsigned int ram_size, void *src, unsigned int src_sz);
+		  
 
   unsigned short nv;
   unsigned short nf;
 
+  char *start;
   float *vstart;
   //these offset are from vstart!
   unsigned short cstart;

@@ -11,8 +11,8 @@ namespace nxs {
 struct PatchEntry { 
   Patch *patch;
   unsigned int patch_start;  //granularita' Chunk
-  unsigned short patch_size;  //in chunks
-  unsigned short ram_used;  // in chunks (used when compressed)
+  unsigned short ram_size;  //in chunks 
+  unsigned short disk_size;  // in chunks (used when compressed)
   unsigned int lru_pos;
 };
 
@@ -25,7 +25,7 @@ class PatchServer: public File {
     PTime(unsigned int p = 0xffffffff, unsigned int f = 0xffffffff):
 	 patch(p), frame(f) {}
 
-    bool operator<(const PTime &p) const { return frame < p.frame; }
+    bool operator<(const PTime &p) const { return frame > p.frame; }
   };
 
 
@@ -54,6 +54,7 @@ class PatchServer: public File {
   void Flush();
   void FlushAll();
   void Flush(unsigned int patch);
+  void SetRamBufferSize(unsigned int ram_buffer);
 
   std::vector<PatchEntry> patches;
   std::vector<PTime> lru;

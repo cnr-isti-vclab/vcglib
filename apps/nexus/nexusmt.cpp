@@ -41,8 +41,8 @@ NexusMt::NexusMt(): vbo(VBO_AUTO), vbo_size(0),
 
 NexusMt::~NexusMt() {}
 
-bool NexusMt::Load(const string &filename) {
-  if(!Nexus::Load(filename)) return false;
+bool NexusMt::Load(const string &filename, bool readonly) {
+  if(!Nexus::Load(filename, readonly)) return false;
   LoadHistory();
 
   use_colors = false;

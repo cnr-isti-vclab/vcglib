@@ -30,6 +30,8 @@ int main(int argc, char *argv[]) {
   string output;
   string plysource;
   bool info = false;
+  unsigned int ram_size = 128000000;
+  unsigned int chunk_size = 0;
 
   unsigned int add = 0;
   bool add_strip = false;
@@ -53,7 +55,7 @@ int main(int argc, char *argv[]) {
   float qtexture = 0;
 
   int option;
-  while((option = getopt(argc, argv, "io:a:r:zxv:n:c:t:")) != EOF) {
+  while((option = getopt(argc, argv, "io:a:r:zxv:n:k:t:b:c:")) != EOF) {
     switch(option) {
     case 'i': info = true; break;
     case 'o': output = optarg; break;
@@ -135,7 +137,7 @@ int main(int argc, char *argv[]) {
 	return -1;
       }
       break;
-    case 'c': qcolor = atof(optarg); 
+    case 'k': qcolor = atof(optarg); 
       if(qcolor == 0) {
 	cerr << "Invalid value for quantization: " << optarg << endl;
 	return -1;
@@ -147,7 +149,18 @@ int main(int argc, char *argv[]) {
 	return -1;
       }
       break;
-
+    case 'b': ram_size = atoi(optarg); 
+      if(ram_size == 0) {
+	cerr << "Invalid ram_size: " << optarg << endl;
+	return -1;
+      }
+      break;
+    case 'c': chunk_size = atoi(optarg); 
+      if(chunk_size == 0) {
+	cerr << "Invalid chunk_size: " << optarg << endl;
+	return -1;
+      }
+      break;
     default: cerr << "Unknown option: " << (char)option << endl;
       return -1;
     }
@@ -177,10 +190,12 @@ int main(int argc, char *argv[]) {
 
 
   Nexus nexus;
-  if(!nexus.Load(input)) {
+  nexus.patches.SetRamBufferSize(ram_size);
+  if(!nexus.Load(input, true)) {
     cerr << "Could not open nexus file: " << input << ".mt\n";
     return -1;
   }
+
 
   //Sanity tests
   if(remove_strip && !(nexus.signature & NXS_STRIP)) {
@@ -226,7 +241,9 @@ int main(int argc, char *argv[]) {
 	 << "\n\tData    : " << (int)((nexus.signature&NXS_DATA32) !=0)
 	 << "\n\n\tVertices: " << nexus.totvert 
 	 << "\tFaces: " << nexus.totface
-	 << "\tPatches: " << nexus.index.size() << "\n\n";
+	 << "\tPatches: " << nexus.index.size() 
+	 << "\nChunk size " << nexus.chunk_size << endl;
+    
   }
   
   //determine if we must proceed:
@@ -239,15 +256,24 @@ int main(int argc, char *argv[]) {
   unsigned int signature = nexus.signature;
   signature |= add;
   signature &= ~remove;
+  if(compress) signature |= NXS_COMPRESSED;
+  if(uncompress) signature &= ~NXS_COMPRESSED;
 
   if(!output.size()) output = input + getSuffix(signature);
 
+  cerr << "Writing to nexus: " << output << endl;
+
   Nexus out;
-  if(!out.Create(output, (Signature)signature)) {
+  out.patches.SetRamBufferSize(ram_size);
+  if(!chunk_size)
+    chunk_size = nexus.patches.chunk_size;
+
+  if(!out.Create(output, (Signature)signature, chunk_size)) {
     cerr << "Could not open output: " << output << endl;
     return -1;
   }
 
+  
   for(unsigned int patch = 0; patch < nexus.index.size(); patch++) {
     Nexus::PatchInfo &src_entry = nexus.index[patch];
     Patch src_patch = nexus.GetPatch(patch);

@@ -1,6 +1,10 @@
 #include "patch.h"
-
+#include <lzo1x.h>
+#include <iostream>
+using namespace std;
 using namespace nxs;
+
+static double wrkmem[LZO1X_999_MEM_COMPRESS/sizeof(double) +1];
 
 void pad(unsigned int &size) {
   while(size&0x3) size++;
@@ -46,27 +50,6 @@ void Patch::Init(Signature signature,
     dstart = tstart + nv;
   else 
     dstart = tstart;
-
-  /*  cstart = nv * sizeof(float) * 3;
-  if(signature & NXS_COLORS)
-    nstart = cstart + nv * sizeof(unsigned int);
-  else 
-    nstart = cstart;
-
-  if(signature & NXS_NORMALS_SHORT)
-    tstart = nstart + nv * sizeof(short) * 4;
-  else if(signature & NXS_NORMALS_FLOAT)
-    tstart = nstart + nv * sizeof(float) * 3;
-  else 
-    tstart = nstart;
-
-  if(signature & NXS_TEXTURES_SHORT)
-    dstart = tstart + nv * sizeof(short) * 2;
-  else if(signature & NXS_TEXTURES_FLOAT)
-    dstart = tstart + nv * sizeof(float) * 2;
-  else 
-  dstart = tstart;*/
-
 }
 
 unsigned int Patch::ChunkSize(Signature signature, 
@@ -126,3 +109,47 @@ unsigned int Patch::ByteSize(Signature signature,
   
   return size;
 }
+
+
+char *Patch::Compress(unsigned int ram_size, unsigned int &size) {
+  //TODO use OVERLAP and test speed
+  //TODO fill chunk padding with zeroes?
+  //TODO compress only used memory!
+  size = ram_size + ram_size/64 + 23;
+  char *buffer = new char[size];
+  lzo1x_1_compress(((unsigned char *)start), ram_size,
+		     (unsigned char *)buffer + sizeof(int), &size,
+		   (char *)wrkmem);
+  
+  *(int *)buffer = size;
+  size += sizeof(int);
+  
+
+  //  memcpy(buffer, start, ram_size);
+  //  size = ram_size;
+  //TODO optimize!
+  //      lzo1x_optimize((unsigned char *)entry.patch->start,
+  //			 entry.ram_size * chunk_size,
+  //			 compressed, &compressed_size, NULL);
+
+
+  return buffer;
+}
+
+void Patch::Decompress(unsigned int ram_size, void *src, unsigned int src_sz) {
+		     
+  unsigned int size = *(int *)src;
+  assert(size < src_sz + sizeof(int));
+  unsigned int dst_size = ram_size;
+  
+  //  memcpy(start, src, ram_size);
+  int ret = lzo1x_decompress_safe(((unsigned char *)src) + sizeof(int), size,
+				  (unsigned char *)start, &dst_size, 0);
+  if(ret != 0) {
+    cerr << "Ret from decompress: " << ret << endl;
+    exit(-1);
+  }
+  assert(dst_size == ram_size);
+  //TODO add 3 to start... so we can use asm_fast decompressor  
+}
+
