@@ -24,10 +24,13 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/03/31 12:46:53  cignoni
+First working version!
+
 
 ****************************************************************************/
-#ifndef __VCG_VERTEX_PLUS_COMPONENT
-#define __VCG_VERTEX_PLUS_COMPONENT
+#ifndef __VCG_VERTEX_PLUS_COMPONENT_OPT
+#define __VCG_VERTEX_PLUS_COMPONENT_OPT
 
 #include <vcg/component.h>
 #include <vcg/traced_vector.h>

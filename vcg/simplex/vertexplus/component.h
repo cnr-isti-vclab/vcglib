@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/03/31 12:28:37  ganovelli
+*** empty log message ***
+
 Revision 1.2  2004/03/29 14:26:38  cignoni
 Error in color
 
@@ -34,9 +37,6 @@ First working version!
 ****************************************************************************/
 #ifndef __VCG_VERTEX_PLUS_COMPONENT
 #define __VCG_VERTEX_PLUS_COMPONENT
-
-#include <vcg/traced_vector.h>
-
 
 namespace vcg {
   namespace vert {
@@ -67,17 +67,6 @@ private:
 };
 template <class T> class Coord3f: public Coord<vcg::Point3f, T> {};
 template <class T> class Coord3d: public Coord<vcg::Point3d, T> {};
-
-template <class A, class T> class CoordOpt: public T {
-public:
-  typedef A CoordType;
-  typedef typename CoordType::ScalarType      ScalarType;
-	CoordType &P() { return CAT< TVector<VertType>,CoordType>::Get((VertType*)this); }
-  CoordType &UberP() { return CAT< TVector<VertType>,CoordType>::Get((VertType*)this); }
-};
-template <class T> class Coord3fOpt: public CoordOpt<vcg::Point3f, T> {};
-template <class T> class Coord3dOpt: public CoordOpt<vcg::Point3d, T> {};
-
 
 /*-------------------------- NORMAL ----------------------------------------*/ 
 
@@ -190,13 +179,12 @@ public:
 
 template <class T> class VFAdj: public T {
 public:
-  //typedef A ColorType;
-  typename T::FacePointer &Fp() {return fp; }
-  typename T::FacePointer &Zp() {return Zp; }
+  typename T::FacePointer &Fp() {return _fp; }
+  int &Zp() {return _zp; }
   static bool HasVFAdjacency()   {   return true; }
 private:
-  typename T::FacePointer fp ;    
-  int zp ;    
+  typename T::FacePointer _fp ;    
+  int _zp ;    
 };
 
   } // end namespace vert
