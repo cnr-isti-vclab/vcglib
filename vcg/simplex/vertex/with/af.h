@@ -1,22 +1,22 @@
-#ifndef __VCGLIB_VERTEX__A__TYPE
-#define __VCGLIB_VERTEX__A__TYPE
+#ifndef __VCGLIB_VERTEX__AF__TYPE
+#define __VCGLIB_VERTEX__AF__TYPE
 
-#define VERTEX_TYPE VertexA 
+#define VERTEX_TYPE VertexAF
 
-#define __VCGLIB_VERTEX_A 
+#define __VCGLIB_VERTEX_AF
 
 #include <vcg/simplex/vertex/base.h> 
 
 #undef VERTEX_TYPE 
-#undef __VCGLIB_VERTEX_A 
+#undef __VCGLIB_VERTEX_AF
 
 namespace vcg {
 
 template <class VFTYPE> 
-class VertexAf : public VertexA<float,VFTYPE> {};
+class VertexAFf : public VertexAF<float,VFTYPE> {};
 
 template <class VFTYPE> 
-class VertexAd : public VertexA<double,VFTYPE> {};
+class VertexAFd : public VertexAF<double,VFTYPE> {};
 
 }
 
