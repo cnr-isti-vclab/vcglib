@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/04/28 11:37:15  pietroni
+*** empty log message ***
+
 Revision 1.1  2004/04/22 13:19:12  ganovelli
 first version
 
@@ -79,31 +82,30 @@ public:
 		}
 
 /// compute and return the solid angle on a vertex
-double SolidAngle(int vind)
+	double SolidAngle(int vind)
 	{	
-		double da0=DiedralAngle(EV(vind,0));
-		double da1=DiedralAngle(EV(vind,1));
-		double da2=DiedralAngle(EV(vind,2));
-
-			return((da0 + da1 + da2)- M_PI);
+		double da0=DiedralAngle(EofV(vind,0));
+		double da1=DiedralAngle(EofV(vind,1));
+		double da2=DiedralAngle(EofV(vind,2));
+		return((da0 + da1 + da2)- M_PI);
 	}
 
 /// compute and return the diadedral angle on an edge
 	double DiedralAngle(int edgeind)
-  {
-		int f1=FE(edgeind,0);
-		int f2=FE(edgeind,1);
-		Point3d p0=FV(f1,0)->P();
-		Point3d p1=FV(f1,1)->P();
-		Point3d p2=FV(f1,2)->P();
+	{
+		int f1=FofE(edgeind,0);
+		int f2=FofE(edgeind,1);
+		Point3d p0=_v[FofV(f1,0)];
+		Point3d p1=_v[FofV(f1,1)];
+		Point3d p2=_v[FofV(f1,2)];
 		Point3d norm1=((p1-p0)^(p2-p0));
-		p0=FV(f2,0)->P();
-		p1=FV(f2,1)->P();
-		p2=FV(f2,2)->P();
+		p0=_v[FofV(f2,0)];
+		p1=_v[FofV(f2,1)];
+		p2=_v[FofV(f2,2)];
 		Point3d norm2=((p1-p0)^(p2-p0));
 		norm1.Normalize();
 		norm2.Normalize();
-	 return (M_PI-acos(double(norm1*norm2)));
+		return (M_PI-acos(double(norm1*norm2)));
 	}
 
 /// compute and return the aspect ratio of the tetrahedron 
