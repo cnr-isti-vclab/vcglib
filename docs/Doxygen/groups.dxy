@@ -8,4 +8,6 @@ This module contains all the basic types for representing spatial entities like 
 */
 /** \defgroup trimesh Triangular MeshesThis module contains the documentation for the types and the functions used for representing and managing generic \b triangular \b meshes.
 *//** \defgroup tetramesh Tetrahedral MeshesThis module contains the documentation for the types and the functions used for representing and managing generic tetrahedral of meshes.
-*/
+*//** \defgroup math MathThis module contains the documentation for the types and the functions used for representing and managing mathematical entities.
+
+*/
