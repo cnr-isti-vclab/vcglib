@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2005/02/20 18:07:01  ponchio
+cleaning.
+
 Revision 1.18  2005/02/20 00:43:24  ponchio
 Less memory x extraction.  (removed frags)
 
@@ -359,11 +362,7 @@ void ThirdStep(const string &crudefile, const string &output,
     memcpy(patch.Vert3fBegin(), &*vertices.begin(), vcount * sizeof(Point3f));
 
     Sphere3f &sphere = nexus[patch_idx].sphere;
-    for(int i = 0; i < vertices.size(); i++)
-      sphere.Add(vertices[i]);
-    sphere.Radius() *= 1.01;
-
-    TightSphere(sphere, vertices);
+    sphere.CreateTight(vertices.size(), &*vertices.begin());
 
     vector<Point3f> normals; 
     for(unsigned int i = 0; i < patch.nf; i++) {
@@ -378,7 +377,6 @@ void ThirdStep(const string &crudefile, const string &output,
     ANCone3f cone;
     cone.AddNormals(normals, 0.99f);
     nexus[patch_idx].cone.Import(cone);
-    
 
 #ifndef NDEBUG
     for(int i = 0; i < vertices.size(); i++) {
@@ -825,6 +823,8 @@ void SaveFragment(Nexus &nexus, VChain &chain,
     patch_levels.push_back(current_level);
     Entry &entry = nexus[patch_idx];
     entry.error = fragout.error;
+    entry.sphere = patch.sphere;
+    entry.cone.Import(patch.cone);
 
     patch_remap[i] = patch_idx;
     chain.newfragments[patch.patch].insert(patch_idx);
@@ -852,12 +852,6 @@ void SaveFragment(Nexus &nexus, VChain &chain,
 	          outpatch.vert.size() * sizeof(Point3f));
     
     Entry &entry = nexus[patch_idx];
-    for(unsigned int v = 0; v < outpatch.vert.size(); v++) {
-      entry.sphere.Add(outpatch.vert[v]);
-      nexus.sphere.Add(outpatch.vert[v]);
-    } 
-    entry.sphere.Radius() *= 1.01;
-    TightSphere(entry.sphere, outpatch.vert);
 
     //remap internal borders
     for(unsigned int k = 0; k < outpatch.bord.size(); k++) {

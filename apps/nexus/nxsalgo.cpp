@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2005/02/20 18:07:01  ponchio
+cleaning.
+
 Revision 1.20  2005/02/19 10:45:04  ponchio
 Patch generalized and small fixes.
 
@@ -48,6 +51,7 @@ Added copyright
 //#include <wrap/strip/tristrip.h>
 
 #include "nxsalgo.h"
+#include "vpartition.h"
 #include "vfile.h"
 #include "nexus.h"
 #include "zcurve.h"
@@ -61,7 +65,7 @@ using namespace vcg;
 using namespace triangle_stripper;
 
 
-void nxs::TightSphere(vcg::Sphere3f &sphere, 
+/*void nxs::TightSphere(vcg::Sphere3f &sphere, 
 		      std::vector<vcg::Point3f> &points) {
   //test:
   //assumes radius is ok.... and try to optimize moving center.
@@ -107,7 +111,7 @@ void nxs::TightSphere(vcg::Sphere3f &sphere,
     sphere.Center() = sphere.Center() + pert[best];
     sphere.Radius() = best_radius;
   }
-}
+  }*/
 
 
 
@@ -184,10 +188,6 @@ void nxs::ComputeNormals(Nexus &nexus) {
 	      normals[f[2]] += norm;
       }
     
-    //compute normalscone (done in building...
-    //    ANCone3f cone;
-    //    cone.AddNormals(normals, cone_threshold);
-    //    nexus[p].cone.Import(cone);
     if(nexus.signature.vnorm == Encodings::SHORT4) {
       short *n = (short *)patch.VNormBegin();
       for(unsigned int i = 0; i < patch.nv; i++, n += 4) {
@@ -198,8 +198,11 @@ void nxs::ComputeNormals(Nexus &nexus) {
 	n[3] = 0;
       }
     } else if(nexus.signature.vnorm == Encodings::FLOAT3) {
-      memcpy(patch.VNormBegin(), &*normals.begin(), 
-	     normals.size() * sizeof(Point3f));
+      Point3f *n = (Point3f *)patch.VNormBegin();
+      for(unsigned int i = 0; i < patch.nv; i++) {
+	n[i] = normals[i];
+	n[i].Normalize();
+      }
     }
 
 
@@ -373,6 +376,8 @@ void nxs::ComputeTriStrip(unsigned short nfaces, unsigned short *faces,
   }
 }
 
+/*
+  //TODO why i created this function? wonder...
 void nxs::Reorder(Signature &signature, Patch &patch) {
   vector<unsigned> remap;
   remap.resize(patch.nv, 0xffff);
@@ -407,10 +412,11 @@ void nxs::Reorder(Signature &signature, Patch &patch) {
   memcpy(&*vert.begin(), patch.Vert3fBegin(), patch.nv * sizeof(Point3f));
   for(int i = 0; i < patch.nv; i++)
     patch.Vert3f(remap[i]) = vert[i];
-}
+    }*/
 
 //TODO actually use threshold
 void nxs::Unify(Nexus &nexus, float threshold) {
+  threshold = 0.001;
   //TODO what if colors or normals or strips?
   unsigned int duplicated = 0;
   unsigned int degenerate = 0;
@@ -419,44 +425,62 @@ void nxs::Unify(Nexus &nexus, float threshold) {
     Entry &entry = nexus[p];
     Patch &patch = nexus.GetPatch(p);
 
-    unsigned int vcount = 0;
-    map<Point3f, unsigned short> vertices;
 
+     
+    VPartition part;
+    for(unsigned int i = 0; i < patch.nv; i++) {
+      Point3f &point = patch.Vert3f(i);
+      part.push_back(point);
+    }
+    part.Init();
+
+    unsigned int vcount = 0;
     vector<unsigned short> remap;
     remap.resize(patch.nv);
 
+    int targets[8];
+    double dists[8];
+
+    //TODO CRITICAL FIX this unifying routine.
     for(unsigned int i = 0; i < patch.nv; i++) {
       Point3f &point = patch.Vert3f(i);
+      part.Closest(point, 8, targets, dists);
+      int k = 0;
+      for(k = 0; k < 8; k++) {
+	if(dists[k] > threshold) {
+	  remap[i] = vcount++;
+	  break;
+	}
+	if(targets[k] < i) {
+	  remap[i] = remap[targets[k]];
+	  duplicated++;
+	  break;
+	}
+      } 
+      if(k == 8)
+	remap[i] = vcount++;
 
-      if(!vertices.count(point)) 
-        vertices[point] = vcount++;
-      else 
-        duplicated++;
-
-      remap[i] = vertices[point];
     }
-    assert(vertices.size() <= patch.nv);
-    if(vertices.size() == patch.nv) //no need to unify
+
+    if(vcount == patch.nv) //no need to unify
       continue;
 
     vector<Point3f> newvert;
-    newvert.resize(vertices.size());
-    map<Point3f, unsigned short>::iterator k;
-    for(k = vertices.begin(); k != vertices.end(); k++) {
-      newvert[(*k).second] = (*k).first;
-    }
+    newvert.resize(vcount);
+    for(unsigned int i = 0; i < patch.nv; i++)
+      newvert[remap[i]] = patch.Vert3f(i);
 
     vector<unsigned short> newface;
     //check no degenerate faces get created.
     for(unsigned int f = 0; f < entry.nface; f++) {
       unsigned short *face = patch.Face(f);
       if(face[0] != face[1] && face[1] != face[2] && face[0] != face[2] &&
-	      newvert[remap[face[0]]] != newvert[remap[face[1]]] &&
-	      newvert[remap[face[0]]] != newvert[remap[face[2]]] &&
-	      newvert[remap[face[1]]] != newvert[remap[face[2]]]) {
-	      newface.push_back(remap[face[0]]);
-	      newface.push_back(remap[face[1]]);
-	      newface.push_back(remap[face[2]]);
+	 newvert[remap[face[0]]] != newvert[remap[face[1]]] &&
+	 newvert[remap[face[0]]] != newvert[remap[face[2]]] &&
+	 newvert[remap[face[1]]] != newvert[remap[face[2]]]) {
+	newface.push_back(remap[face[0]]);
+	newface.push_back(remap[face[1]]);
+	newface.push_back(remap[face[2]]);
       } else {
 	degenerate++;
       }
@@ -471,6 +495,7 @@ void nxs::Unify(Nexus &nexus, float threshold) {
     memcpy(patch.FaceBegin(), &(newface[0]), entry.nface*3*sizeof(short));
 
     //testiamo il tutto...  TODO remove this of course
+#ifdef NDEBUG
     for(unsigned int i =0; i < patch.nf; i++) {
       for(int k =0 ; k < 3; k++)
         if(patch.Face(i)[k] >= patch.nv) {
@@ -478,6 +503,8 @@ void nxs::Unify(Nexus &nexus, float threshold) {
           exit(0);
         }
     }
+#endif
+    //TODO CRITICAL FIX unify vertices across borders..... HOW??????
     
     //fix patch borders now
     set<unsigned int> close; //bordering pathes
@@ -500,6 +527,7 @@ void nxs::Unify(Nexus &nexus, float threshold) {
     }
   }
   //better to compact directly borders than setting them null.
+
   //finally: there may be duplicated borders
   for(unsigned int p = 0; p < nexus.size(); p++) {
     Border &border = nexus.GetBorder(p);

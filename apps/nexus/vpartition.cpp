@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/01/21 17:09:13  ponchio
+Porting and debug.
+
 Revision 1.2  2004/12/04 13:24:27  ponchio
 Fixed a couple of memory leak...
 
@@ -85,11 +88,21 @@ void VPartition::Closest(const vcg::Point3f &p,
   point[1] = p[1];
   point[2] = p[2];
   double dists;
-  bd->annkSearch(&point[0], 1, &target, &dists, 1);
+  bd->annkSearch(&point[0], 1, &target, &dists);
   assert(target >= 0);
   assert(target < size());
 
   dist = (float)dists;
+}
+
+void VPartition::Closest(const vcg::Point3f &p, unsigned int nsize,
+			 int *targets, 
+			 double *dists) {
+  double point[3];
+  point[0] = p[0];
+  point[1] = p[1];
+  point[2] = p[2];
+  bd->annkSearch(&point[0], nsize, targets, dists);
 }
 
 int VPartition::Locate(const vcg::Point3f &p) {
@@ -101,7 +114,7 @@ int VPartition::Locate(const vcg::Point3f &p) {
 
   int target = -1;
   double dists;
-  bd->annkSearch(&point[0], 1, &target, &dists, 1);
+  bd->annkSearch(&point[0], 1, &target, &dists);
 
   return target;
 } 

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.24  2005/02/20 19:49:44  ponchio
+cleaning (a bit more).
+
 Revision 1.23  2005/02/20 18:07:01  ponchio
 cleaning.
 
@@ -648,6 +651,11 @@ void printInfo(Nexus &nexus, bool verbose, bool dump_history) {
 	   << " error: " << entry.error 
 	   << " disk_size: " << entry.disk_size 
 	   << " start: " << entry.patch_start << endl;
+      cout << " Cone: " << entry.cone.n[0] << " "
+	   << entry.cone.n[1] << " "
+	   << entry.cone.n[2] << " "
+	   << entry.cone.n[3] << "\n";
+	   
     }
     cout << endl;
   }

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/01/18 22:46:58  ponchio
+Small changes.
+
 Revision 1.2  2004/12/04 13:24:28  ponchio
 Fixed a couple of memory leak...
 
@@ -72,7 +75,10 @@ class VPartition: public std::vector<vcg::Point3f> {
 	       std::vector<float> &dist);
   void Closest(const vcg::Point3f &p, 
 	       int &target, float &dist);
-  
+  //most efficient!
+  void Closest(const vcg::Point3f &p, unsigned int nsize,
+	       int *targets, 
+	       double *dists);
 
   
   ANNkd_tree *bd;

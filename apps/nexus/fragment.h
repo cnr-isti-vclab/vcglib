@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/02/08 12:43:03  ponchio
+Added copyright
+
 
 ****************************************************************************/
 
@@ -59,15 +62,18 @@ class NxsPatch {
   //this fields is the patch number in the infragment
   //and the seeds id in the outfragment
   unsigned int patch;
+  vcg::Sphere3f sphere;
+  ANCone3f cone;
+  
   std::vector<vcg::Point3f> vert; 
   std::vector<unsigned short> face;
-
+  
   std::vector<Link> bord;
-
+  
   void Write(pt::outstm *out);
   void Read(pt::instm *in);
 };
-
+ 
 class Fragment {
  public:
   unsigned int id;

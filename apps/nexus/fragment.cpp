@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/02/08 12:43:03  ponchio
+Added copyright
+
 
 ****************************************************************************/
 
@@ -32,6 +35,7 @@ $Log: not supported by cvs2svn $
 
 #include "fragment.h"
 #include "border.h"
+#include "nxsalgo.h"
 //#include "pvoronoi.h"
 
 
@@ -40,7 +44,11 @@ using namespace vcg;
 using namespace nxs;
 using namespace pt;
 
+
+
 void NxsPatch::Write(outstm *out) {
+  out->write(&sphere, sizeof(Sphere3f));
+  out->write(&cone, sizeof(ANCone3f));
   int vsize = vert.size();
   int fsize = face.size();
   int bsize = bord.size();
@@ -56,6 +64,8 @@ void NxsPatch::Write(outstm *out) {
 }
 
 void NxsPatch::Read(instm *in) {
+  in->read(&sphere, sizeof(Sphere3f));
+  in->read(&cone, sizeof(ANCone3f));
   int vsize;
   int fsize;
   int bsize;
@@ -384,6 +394,25 @@ void nxs::Split(Fragment &out,
 	}
       }
     }
+  }
+  //process Cone and sphere
+  for(unsigned int seed = 0; seed != nseeds; seed++) { 
+    NxsPatch &patch = out.pieces[seed];
+    Sphere3f &sphere = patch.sphere;
+    sphere.CreateTight(patch.vert.size(), &*patch.vert.begin());
+
+    //NORMALS CONE
+    vector<Point3f> normals; 
+    for(unsigned int i = 0; i < patch.face.size(); i += 3) {
+      unsigned short *f = &(patch.face[i]);
+      Point3f &v0 = patch.vert[f[0]];
+      Point3f &v1 = patch.vert[f[1]];
+      Point3f &v2 = patch.vert[f[2]];
+      
+      Point3f norm = (v1 - v0) ^ (v2 - v0); 
+      normals.push_back(norm.Normalize());
+    }
+    patch.cone.AddNormals(normals, 0.99f);
   }
 }
 
