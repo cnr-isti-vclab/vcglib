@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/08/25 15:15:27  ganovelli
+minor changes to comply gcc compiler (typename's and stuff)
+
 Revision 1.5  2004/06/23 15:36:44  cignoni
 Restructured management of error, now the standard open for any mesh type return the error code, the default success value is zero
 Any import class has a method ErrorMsg that give a verbal description of an error code.
@@ -79,7 +82,7 @@ enum STLError {
 	E_NOERROR,				// 0
 		// Errori di open
 	E_CANTOPEN,				// 1
-	E_UNESPECTEDEOF,		// 2
+	E_UNESPECTEDEOF       		        // 2
 };
 
 static const char *ErrorMsg(int error)

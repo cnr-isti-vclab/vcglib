@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2004/08/25 15:15:22  ganovelli
+minor changes to comply gcc compiler (typename's and stuff)
+
 Revision 1.9  2004/07/18 10:13:34  cignoni
 NewUserBit -> NewBitFlag
 
@@ -69,7 +72,7 @@ struct SamplingFlags{
 						SIMILAR_SAMPLING			          = 0x0040,
 						NO_SAMPLING     			          = 0x0070,
 						SAVE_ERROR                      = 0x0100,
-						INCLUDE_UNREFERENCED_VERTICES		= 0x0200,
+						INCLUDE_UNREFERENCED_VERTICES		= 0x0200
 				};
 	};
 // -----------------------------------------------------------------------------------------------
