@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/07/05 15:49:39  ponchio
+Windows (DevCpp, mingw) port.
+
 Revision 1.1  2004/07/04 15:30:00  ponchio
 Changed directory structure.
 
@@ -111,6 +114,7 @@ int main(int argc, char *argv[]) {
       return false;
     }
 
+    unsigned int vertex_offset = crude.Vertices();
     for(unsigned int i = 0; i < pf.elements.size(); i++) {
       if(!strcmp( pf.ElemName(i),"vertex")) {
 	unsigned int n_vertices = pf.ElemNumber(i);
@@ -140,6 +144,9 @@ int main(int argc, char *argv[]) {
 	PlyFace face;
 	for(unsigned v = offset; v < offset + n_faces; v++) {
 	  pf.Read((void *) &face);
+	  face.f[0] += vertex_offset;
+	  face.f[1] += vertex_offset;
+	  face.f[2] += vertex_offset;
 	  assert(face.f[0] < crude.Vertices() && 
 		 face.f[1] < crude.Vertices() && 
 		 face.f[2] < crude.Vertices());

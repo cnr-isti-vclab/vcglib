@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/07/05 17:07:14  ponchio
+Tested a bit.
+
 Revision 1.1  2004/07/04 15:24:50  ponchio
 Created
 
@@ -52,6 +55,7 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
+  unsigned int duplicated = 0;
   for(unsigned int p = 0; p < nexus.index.size(); p++) {
     Nexus::Entry &entry = nexus.index[p];
     Patch patch = nexus.GetPatch(p);
@@ -67,11 +71,12 @@ int main(int argc, char *argv[]) {
       if(!vertices.count(point)) {
 	vertices[point] = vcount++;
       } else {
-	cerr << "Duplicated point\n";
+	duplicated++;
       }
 
       remap[i] = vertices[point];
     }
+    assert(vertices.size() <= patch.VertSize());
     if(vertices.size() == patch.VertSize()) //no need to unify
       continue;
 
@@ -79,23 +84,21 @@ int main(int argc, char *argv[]) {
     newvert.resize(vertices.size());
     map<Point3f, unsigned short>::iterator k;
     for(k = vertices.begin(); k != vertices.end(); k++) {
-      newvert[remap[(*k).second]] = (*k).first;
+      newvert[(*k).second] = (*k).first;
     }
 
 
     vector<unsigned short> newface;
     newface.resize(patch.FaceSize() * 3);
-    for(unsigned int f = 0; f < (unsigned int)(patch.FaceSize() *3); f++) {
-      newface[f] = remap[f];
-    }
+    for(unsigned int f = 0; f < newface.size(); f++) 
+      newface[f] = remap[patch.FaceBegin()[f]];
+
     //rewrite patch now.
-    patch.Resize(newvert.size(), newface.size());
     entry.nvert = newvert.size();
-    entry.nface = newface.size();
-    memcpy(patch.VertBegin(), &(newvert[0]), 
-	   patch.VertSize() * sizeof(Point3f));
-    memcpy(patch.FaceBegin(), &(newface[0]), 
-	   patch.FaceSize() * 3 * sizeof(unsigned short));
+    patch.Resize(entry.nvert, entry.nface);
+
+    memcpy(patch.VertBegin(), &(newvert[0]), entry.nvert*sizeof(Point3f));
+    memcpy(patch.FaceBegin(), &(newface[0]), entry.nface*3*sizeof(unsigned short));
     
     //fix patch borders now
     set<unsigned int> close; //bordering pathes
@@ -110,9 +113,9 @@ int main(int argc, char *argv[]) {
     for(c = close.begin(); c != close.end(); c++) {
       Border bord = nexus.GetBorder(*c);
       for(unsigned int b = 0; b < bord.Size(); b++) {
-	if(border[b].IsNull()) continue;
+	if(bord[b].IsNull()) continue;
 	if(bord[b].end_patch == p) {
-	  bord[b].end_vert = remap[border[b].end_vert];
+	  bord[b].end_vert = remap[bord[b].end_vert];
 	}
       }
     }
@@ -132,5 +135,6 @@ int main(int argc, char *argv[]) {
 	links.insert(border[b]);
     }
   }
+  cerr << "Found " << duplicated << " duplicated vertices" << endl;
   return 0;
 }

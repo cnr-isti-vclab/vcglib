@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/07/05 15:49:39  ponchio
+Windows (DevCpp, mingw) port.
+
 Revision 1.6  2004/07/04 15:23:48  ponchio
 Debug
 
@@ -258,59 +261,33 @@ template <class T> class VFile {
     
     Buffer buffer;
     buffer.key = chunk;
-    buffer.data = new T[chunk_size];  
     buffer.size = chunk_size;
+
     if(buffer.size + chunk * chunk_size > n_elements)
-      buffer.size = n_elements -chunk * chunk_size;
+      buffer.size = n_elements - chunk * chunk_size;
+
+    buffer.data = new T[buffer.size];  
 
     buffers.push_front(buffer);   
     index[buffer.key] = buffers.begin();   
+
     SetPosition(chunk);
     ReadBuffer(buffer.data, buffer.size);
-/*#ifdef WIN32
-    if(INVALID_SET_FILE_POINTER == SetFilePointer(fp, chunk * chunk_size * sizeof(T), 0, FILE_BEGIN)) {
-#else
-    if(fseek(fp, chunk * chunk_size * sizeof(T), SEEK_SET)) {
-#endif
-      assert(0 && "failed to fseek");
-      return *(buffer.data);
-    }
-#ifdef WIN32
-    unsigned int tmp;
-    tmp = ReadFile(fp, buffer.data, sizeof(T) * buffer.size, &tmp, NULL);
-    if(tmp !=  sizeof(T) * buffer.size)
-      assert(0 && "failed reading.");
-    return (*buffer.data);
-#else
-    if(buffer.size != fread(buffer.data, sizeof(T), buffer.size, fp)) {    
-      if(feof(fp)) {
-	      assert(0 && "end of file");
-      } else {     
-	      assert(0 && "failed reading!");
-      }
-      return (*buffer.data);
-    }
-#endif
-    */
 
     return *(buffer.data + offset);
   }
 
-  void PushBack(const T &t) {
-    Resize(n_elements+1);
-    operator[](n_elements-1) = t;
-  }
-  
   /** you can get a region instead of an element but:
       1)region must be Chunk aligned.
       2)you get impredictable results if regions overlap or mix with operator[]
   */
   T *GetRegion(unsigned int start, unsigned int size) {
     assert(start + size <= n_elements);
-
+    assert((size % chunk_size) == 0);
+    assert((start % chunk_size) == 0);
+    if(size == 0) return NULL;
+    
     unsigned int chunk = start/chunk_size;
-    unsigned int offset = start - chunk*chunk_size;
-    assert(offset == 0);
 
     if(index.count(chunk)) 
       return ((*(index[chunk])).data);
@@ -324,32 +301,22 @@ template <class T> class VFile {
     
     Buffer buffer;
     buffer.key = chunk;
-    buffer.data = new T[chunk_size * size];  
-    buffer.size = chunk_size * size;
-    if(buffer.size + chunk * chunk_size > n_elements)
-      buffer.size = -chunk * chunk_size + n_elements;
+    buffer.size = size;
+    buffer.data = new T[buffer.size];  
 
     buffers.push_front(buffer);    
     index[chunk] = buffers.begin();   
 
     SetPosition(chunk);
     ReadBuffer(buffer.data, buffer.size);
-    /*if(fseek(fp, chunk * chunk_size * sizeof(T), SEEK_SET)) {
-      assert(0 && "failed to fseek");
-      return buffer.data;
-    }
-    
-    if(buffer.size != fread(buffer.data, sizeof(T), buffer.size, fp)) {    
-      if(feof(fp)) {
-	assert(0 && "end of file");
-      } else {     
-	assert(0 && "failed reading!");
-      }
-      return buffer.data;
-    } */
     return buffer.data;
   } 
 
+  void PushBack(const T &t) {
+    Resize(n_elements+1);
+    operator[](n_elements-1) = t;
+  }
+  
   unsigned int Size() { return n_elements; }
   unsigned int ChunkSize() { return chunk_size; }
   unsigned int QueueSize() { return queue_size; }

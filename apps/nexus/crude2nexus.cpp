@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/07/05 15:49:39  ponchio
+Windows (DevCpp, mingw) port.
+
 Revision 1.1  2004/07/04 15:30:00  ponchio
 Changed directory structure.
 
@@ -224,10 +227,12 @@ int main(int argc, char *argv[]) {
 	patch.FaceBegin()[k*3 + j] = remap[face[j]];
       }
     }
+    assert(count == remap.size());
+    assert(entry.nvert == remap.size());
 
     //record start of border:
     entry.border_start = border_remap.Size();
-    //    border_start.push_back(border_remap.Size());
+
     //TODO hash_set?
     set<unsigned int> border_patches;
     map<unsigned int, unsigned short>::iterator m;
@@ -249,27 +254,67 @@ int main(int argc, char *argv[]) {
     }
     //and number of borders:
     entry.border_size = border_remap.Size() - entry.border_start;
-    //border_size.push_back(border_remap.Size() - border_start.back());
     delete []faces;
   }
   //we can now update bounding sphere.
-  for(unsigned int i = 0; i < nexus.index.size(); i++) {
+  for(unsigned int i = 0; i < nexus.index.size(); i++) 
     nexus.sphere.Add(nexus.index[i].sphere);
-  }
 
   //and last convert RemapLinks into Links
   nexus.borders.Resize(border_remap.Size());
-  for(unsigned int i = 0; i < border_remap.Size(); i++) {
-    RemapLink start_link = border_remap[i];
-    Nexus::Entry &entry = nexus.index[start_link.patch];
-    for(unsigned int k = entry.border_start;
-	k < entry.border_start + entry.border_size; k++) {
-      RemapLink end_link = border_remap[k];
-      if(start_link.abs_vert == end_link.abs_vert) { //found the match
-	nexus.borders[i] = Link(start_link.rel_vert, 
-				end_link.rel_vert, start_link.patch);
+
+  for(unsigned int i = 0; i < nexus.index.size(); i++) {
+    Nexus::Entry &local = nexus.index[i];
+
+    // K is the main iterator (where we write to in nexus.borders)
+    for(unsigned int k = local.border_start;
+	k < local.border_start + local.border_size; k++) {
+      
+      RemapLink start_link = border_remap[k];
+      assert(start_link.rel_vert < local.nvert);
+
+      Nexus::Entry &remote = nexus.index[start_link.patch];
+
+      bool found = false;
+      for(unsigned int j = remote.border_start;
+	  j < remote.border_start + remote.border_size; j++) {
+	
+	RemapLink end_link = border_remap[j];
+	assert(end_link.rel_vert < remote.nvert);
+
+	if(start_link.abs_vert == end_link.abs_vert &&
+	   end_link.patch == i) { //found the match
+	  assert(!found);
+	  nexus.borders[k] = Link(start_link.rel_vert, 
+				  end_link.rel_vert, start_link.patch);
+	  found = true;
+	}
       }
+      assert(nexus.borders[k].start_vert < local.nvert);
+      assert(found);
     }
+  }
+  nexus.borders.Flush();
+
+  //Checking border consistency:
+  for(unsigned int i = 0; i < nexus.index.size(); i++) {
+    Border border = nexus.GetBorder(i);
+    Nexus::Entry &entry = nexus.index[i];
+    for(unsigned int k = 0; k < border.Size(); k++) {
+      Link &link = border[k];
+      if(link.start_vert >= entry.nvert) {
+	cerr << "K: " << k << endl;
+	cerr << "patch: " << i << " nvert: " << entry.nvert << " startv: " 
+	     << link.start_vert << endl;
+	cerr << "bstart: " << entry.border_start 
+	     << "bsize: " << entry.border_size << endl;
+      }
+      assert(link.end_patch < nexus.index.size());
+      assert(link.start_vert < entry.nvert);
+      Nexus::Entry &remote = nexus.index[link.end_patch];
+      assert(link.end_vert < remote.nvert);
+    }
+    
   }
 
   nexus.Close();

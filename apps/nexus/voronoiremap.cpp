@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/07/05 15:49:39  ponchio
+Windows (DevCpp, mingw) port.
+
 Revision 1.1  2004/07/04 15:30:00  ponchio
 Changed directory structure.
 
@@ -188,6 +191,9 @@ int main(int argc, char *argv[]) {
       if(!pp.count(patch))
 	totvert++;
       vert_remap.Insert(face[k], patch);
+      //      if(i > 240000 && (i%100)==0) {
+      //	cerr << "inserted " << i << " face:  " << face[k] << " \n";
+      //      }
     }
   }
   watch.Stop();
