@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/07/02 17:40:30  ponchio
+Debug.
+
 Revision 1.2  2004/07/01 21:34:04  ponchio
 Rehash bug.
 
@@ -110,7 +113,6 @@ void MFHash::Insert(unsigned int key, unsigned int value, bool rehash) {
   if(rehash) {
     float ratio = space / (float)buffer.Size();
     if(ratio < 0.4) { //need to resize 
-      cerr << "rehash" << endl;
       Resize(buffer.Size() * 2 + 3);
     }
   }
