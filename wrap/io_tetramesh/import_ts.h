@@ -19,7 +19,7 @@ class ImporterTS{
 	typedef Point3<ScalarType> Point3x;
 
 public:
-int Load( Tetramesh & m, const char * filename ){	
+static int Open( Tetramesh & m, const char * filename ){	
 	int nvertex;
 	int ntetra;
 	float x;
@@ -53,8 +53,8 @@ int Load( Tetramesh & m, const char * filename ){
       p1.P()=Point3x(x, y,z );
 			m.vert.push_back(p1);
 		}
-		m.tetra.reserve(ntetra*10);
-    m.vert.reserve(nvertex*10);
+		m.tetra.reserve(ntetra);
+    m.vert.reserve(nvertex);
 		for (j=0;j<ntetra;j++)
 		{
 			fscanf(f, "%i", &tp0 );
@@ -67,6 +67,9 @@ int Load( Tetramesh & m, const char * filename ){
 			m.tetra.back().Init(&m.vert[tp0],&m.vert[tp1],&m.vert[tp2],&m.vert[tp3]); 
 		}
 	 }
+	 m.vn = nvertex;
+	 m.tn = ntetra;
+
 		return 0;
 	 }
 	};// end class
