@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/05/10 14:40:28  ganovelli
+name of adhacency function updated
+
 Revision 1.2  2004/05/10 14:02:29  ganovelli
 created
 
@@ -31,6 +34,8 @@ Revision 1.1  2004/04/26 19:04:23  ganovelli
 created
 
 ****************************************************************************/
+#ifndef __VCGLIB__EDGE_TYPE_BASE
+#define __VCGLIB__EDGE_TYPE_BASE
 
 #include <vcg/space/box3.h>
 #include <vcg/space/tcoord2.h>
@@ -44,25 +49,28 @@ namespace vcg {
     This is the base class for definition of a face of the mesh.
 		@param SVTYPE (Templete Parameter) Specifies the vertex class type.
  */
-template <typename EDGENAME,class SVTYPE, class TCTYPE = TCoord2<float,1> > class EDGE_TYPE
+template <class ScalarType,typename EDGENAME,class SVTYPE, class TCTYPE = TCoord2<float,1> > class EDGE_TYPE
 {
 public:
 	///	The base type of the segment
 	typedef EDGE_TYPE BaseEdgeType;
 	/// The vertex type
 	typedef SVTYPE VertexType;
-	/// The type of the scalar field of the vertex coordinate
-  typedef typename VertexType::ScalarType ScalarType;
 	/// The type of the the vertex coordinate
 	typedef Point3< ScalarType > CoordType;
 	typedef Point3< ScalarType > NormalType;
 	
-  typedef typename SVTYPE::EdgeType EdgeFromVertType;
 	/// The bounding box type
 	typedef Box3<ScalarType> BoxType;
 	
   /// Default Empty Costructor
   inline EDGE_TYPE(){}
+
+  inline EDGE_TYPE(VertexType* v0,VertexType* v1){v[0]=v0;v[1]=v1;}
+
+
+	/// Costructor
+  inline Set(VertexType* v0,VertexType* v1){v[0]=v0;v[1]=v1;}
 
 	/// This are the _flags of face, the default value is 0
 	int  _flags;		
@@ -901,6 +909,7 @@ CoordType Barycenter() const
 
 }	 // end namespace
 
+#endif
 
 
 
