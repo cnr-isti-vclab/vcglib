@@ -63,8 +63,8 @@ namespace vcg {
     static T inline Abs(const T v);
     
     static const T  MaxVal;
-    static T ToDeg(const T a);
-    static T ToRad(const T a);
+    static T ToDeg(const T &a);
+    static T ToRad(const T &a);
   };
 
   float Math<float>::Sqrt(const float v) 
@@ -102,10 +102,10 @@ inline SCALAR Clamp( const SCALAR & val, const SCALAR& minval, const SCALAR& max
 
 
 
-inline float ToDeg(const float &a){return a*180.0f/float(M_PI);}
-inline float ToRad(const float &a){return float(M_PI)*a/180.0f;}
-inline double ToDeg(const double &a){return a*180.0/M_PI;}
-inline double ToRad(const double &a){return M_PI*a/180.0;}
+inline float  Math<float>::ToDeg(const float &a){return a*180.0f/float(M_PI);}
+inline float  Math<float>::ToRad(const float &a){return float(M_PI)*a/180.0f;}
+inline double  Math<double>::ToDeg(const double &a){return a*180.0/M_PI;}
+inline double  Math<double>::ToRad(const double &a){return M_PI*a/180.0;}
 
 }	// End namespace
 
