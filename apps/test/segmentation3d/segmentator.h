@@ -234,6 +234,21 @@ private:
 		return (MyTriMesh::CoordType(x,y,z));
 	}
 
+#ifdef _TORUS
+	///torus version
+	float getColor(MyTriMesh::CoordType p)
+	{
+		static float ray=100.f;
+		static float diameter=20.f;
+		Point3f center=BBox().Center();
+		float dist=(p-center).Norm();
+		float difference=abs(ray-dist);
+		if(difference<diameter)
+			return 100.f;
+		else
+			return (100.f+difference*5.f);
+	}
+#else
 	///return integer coordinete in volumetric dataset
 	float getColor(MyTriMesh::CoordType p)
 	{
@@ -262,6 +277,7 @@ private:
 
 		return color;
 	}
+#endif
 	
 	///maximixe the gradient of the movement
 	MyTriMesh::CoordType Gradient(MyTriMesh::CoordType p,float h=0.01f)
@@ -307,13 +323,11 @@ private:
 	///return true if a coordinate is out of limits
 	bool OutOfLimits(MyTriMesh::CoordType p)
 	{
-		/*Point3f max=Scale(MapToSpace(V.Max()));
-		Point3f min=Scale(MapToSpace(V.Min()));
-		Point3f test=(Scale(p));*/
 		Point3f test=p;
-		Point3f max=UnScale(MapToSpace(V.Max()));
-		Point3f min=UnScale(MapToSpace(V.Min()));
-		
+		/*Point3f max=UnScale(MapToSpace(V.Max()));
+		Point3f min=UnScale(MapToSpace(V.Min()));*/
+		Point3f max=BBox().max;//last change
+		Point3f min=BBox().min;//last change
 		for (int i=0;i<3;i++)
 		{
 			if(((test.V(i)>=max.V(i))||(test.V(i)<=min.V(i))))
@@ -430,6 +444,7 @@ MyTriMesh::CoordType GradientFactor(MyTriMesh::VertexType *v)
 }
 
 ///add the external forces to the deformable mesh
+
 void AddExtForces()
 {
 	Part_VertexContainer::iterator vi;
@@ -682,7 +697,9 @@ void SetSegmentParameters(int color,int tol,float Mass=0.5f,float K_elanst=0.2f,
 	time_stamp=Time_stamp;
 	k_dihedral=Dihedral;
 	scale=ScaleFactor;
+	bbox=vcg::Box3<float>(UnScale(MapToSpace(V.Min())),(UnScale(MapToSpace(V.Max()))));//last change!
 }
+
 
 ///init the segmentation of the mesh
 void InitSegmentation(MyTriMesh::CoordType b)
@@ -708,8 +725,6 @@ void InitSegmentation(MyTriMesh::CoordType b)
 	ReinitPhysicMesh();
 	
 	CollDet->Init(bbox.min,bbox.max,5.f);
-
-
 }
 
 ///return the bounding box of the mesh
@@ -740,7 +755,7 @@ void Step(float t,float _edge_size)
 
 void Smooth()
 {
-	ScaleLaplacianSmooth<MyTriMesh>(m,2,0.5);
+	ScaleLaplacianSmooth<MyTriMesh>(m,1,0.5);
 }
 
 void AutoStep()

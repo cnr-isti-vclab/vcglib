@@ -8,6 +8,7 @@
 #include <vcg/complex/trimesh/update/bounding.h>
 #include <wrap/io_trimesh/export_ply.h>
 #include <segmentform.h>
+#include <qpushbutton.h>
 
 class SimpleGLWidget: public QGLWidget{
 
@@ -29,10 +30,12 @@ private :
 	bool intForces;
 	bool resultForces;
 	bool continue_int;
+	GLuint texName;
 	
 	//vcg::GlTrimesh<Segmentator::MyTriMesh> *Wrap;
 	
 public:
+	QString path;
 	SegmentForm *w;
 	SimpleGLWidget( QWidget * parent = 0, const char * name = 0, const QGLWidget * shareWidget = 0, WFlags f = 0 );
 
@@ -48,6 +51,7 @@ public:
 	virtual void SaveMatrix();
 	virtual void Save();
 	void LoadMatrix();
+	void LoadTexture(QString path,int level);
 	void drawSlide();
 	void SmoothMesh();
 	void Step();
@@ -121,6 +125,16 @@ public:
 	void Extract()
 	{
 		continue_int=!continue_int;
+		if (continue_int)
+		{
+			_showslides=false;
+			w->SlidesButton->setOn(false);
+		}
+		else
+		{
+			_showslides=true;
+			w->SlidesButton->setOn(true);
+		}
 	}
 
 	void Update()

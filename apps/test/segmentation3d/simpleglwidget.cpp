@@ -1,6 +1,7 @@
 #include <SimpleGLWidget.h>
 #include <qlineedit.h> 
 #include <qfiledialog.h> 
+#include <qimage.h>
 #include <qdir.h> 
 #include <qmessagebox.h> 
 
@@ -23,6 +24,7 @@ QGLWidget(parent, name)
 	Track.Reset();
 	Track.radius= 100;
 	zoom=1;
+	path="";
 }
 
 void SimpleGLWidget::SaveMatrix()
@@ -40,35 +42,102 @@ void SimpleGLWidget::LoadMatrix()
 	glLoadMatrixd(modelMatrix);
 }
 
+//load as texture the i jpg of the directory
+void SimpleGLWidget::LoadTexture(QString p,int level)
+{
+	QImage qI=QImage();
+	QDir Qd=QDir(p);
+	QString qformat;
+	QString Path=QString(p);
+	Qd.setNameFilter("*.jpg");
+
+	Qd.setSorting(QDir::Name);
+	QString PathFile=Path;
+	PathFile.append(Qd[level]);
+
+	bool b=qI.load(PathFile,qformat);
+	QImage tx = QGLWidget::convertToGLFormat (qI);
+
+	
+	glGenTextures(1, &texName);
+	glBindTexture(GL_TEXTURE_2D, texName);
+	glTexImage2D( GL_TEXTURE_2D, 0, 3, tx.width(), tx.height(), 0,GL_RGBA, GL_UNSIGNED_BYTE, tx.bits() );
+	glEnable(GL_TEXTURE_2D);
+	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	
+}
 
 void SimpleGLWidget::drawSlide()
 {	
-glBegin(GL_QUADS);
-for (int x=0;x<((s->V.dimX())-1);x++)
-	for (int y=0;y<((s->V.dimY())-1);y++)
-	{
+	glPushAttrib(GL_ALL_ATTRIB_BITS);
+	glPolygonMode(GL_FRONT,GL_FILL);
+	glMatrixMode (GL_TEXTURE);
+	glLoadIdentity();
+	glEnable(GL_TEXTURE_2D);
+	glEnable(GL_NORMALIZE);
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+	glEnable(GL_COLOR_MATERIAL);
+
+	float dx=s->BBox().DimX();
+	float dy=s->BBox().DimY();
+
+	//to change take scale from segmentator.. better!
+	float n=atof(w->S_dist->text());
+	float level=((float)_numslide)*n;
+
+	Point3f p0=s->BBox().min;
+	p0+=Point3f(0.f,0.f,level);
+
+	Point3f p1=p0+Point3f(dx,0.f,0.f);
+	Point3f p2=p0+Point3f(dx,dy,0.f);
+	Point3f p3=p0+Point3f(0.f,dy,0.f);
+
+	glColor3d(1,1,1);
+
+	///texture
+	//_numslide
+	glBegin(GL_QUADS);
 		glNormal(Point3d(0,0,1));
-		Point3<int> p0=Point3<int>(x,y,_numslide);
-		double color=((double)s->V.getAt(p0))/256.f;
-		glColor3d(color,color,color);
+		glTexCoord(Point3f(0,1,0));
 		glVertex(p0);
-
-		Point3<int> p1=Point3<int>(x+1,y,_numslide);
-		color=((double)s->V.getAt(p1))/256.f;
-		glColor3d(color,color,color);
+		glTexCoord(Point3f(1,1,0));
 		glVertex(p1);
-
-		Point3<int> p2=Point3<int>(x+1,y+1,_numslide);
-		color=((double)s->V.getAt(p2))/256.f;
-		glColor3d(color,color,color);
+		glTexCoord(Point3f(1,0,0));
 		glVertex(p2);
-
-		Point3<int> p3=Point3<int>(x,y+1,_numslide);
-		color=((double)s->V.getAt(p3))/256.f;
-		glColor3d(color,color,color);
+		glTexCoord(Point3f(0,0,0));
 		glVertex(p3);
-	}
-glEnd();		
+	glEnd();
+	glPopAttrib();
+
+//glBegin(GL_QUADS);
+//for (int x=0;x<((s->V.dimX())-1);x++)
+//	for (int y=0;y<((s->V.dimY())-1);y++)
+//	{
+//		glNormal(Point3d(0,0,1));
+//		Point3<int> p0=Point3<int>(x,y,_numslide);
+//		double color=((double)s->V.getAt(p0))/256.f;
+//		glColor3d(color,color,color);
+//		glVertex(p0);
+//
+//		Point3<int> p1=Point3<int>(x+1,y,_numslide);
+//		color=((double)s->V.getAt(p1))/256.f;
+//		glColor3d(color,color,color);
+//		glVertex(p1);
+//
+//		Point3<int> p2=Point3<int>(x+1,y+1,_numslide);
+//		color=((double)s->V.getAt(p2))/256.f;
+//		glColor3d(color,color,color);
+//		glVertex(p2);
+//
+//		Point3<int> p3=Point3<int>(x,y+1,_numslide);
+//		color=((double)s->V.getAt(p3))/256.f;
+//		glColor3d(color,color,color);
+//		glVertex(p3);
+//	}
+//glEnd();		
 }
 
 void drawForces(Segmentator::Part_VertexContainer *pv,int typeForce)
@@ -115,8 +184,8 @@ void SimpleGLWidget::Save()
 													"Choose a filename to save under" );
 	if (filename!=NULL)
 	{
-		const char *path=filename.ascii();
-		vcg::tri::io::ExporterPLY<Segmentator::MyTriMesh>::Save(s->m,path);	
+		const char *path_save=filename.ascii();
+		vcg::tri::io::ExporterPLY<Segmentator::MyTriMesh>::Save(s->m,path_save);	
 	}
 	
 }
@@ -202,7 +271,7 @@ void SimpleGLWidget::glDraw(){
 			Track.GetView();
 			Track.Apply();
 			Track.Draw();
-			glScalef(1/s->BBox().Diag(),1/s->BBox().Diag(),1/s->BBox().Diag());
+			glScalef(1.f/s->BBox().Diag(),1.f/s->BBox().Diag(),1.f/s->BBox().Diag());
 			glScalef(GLfloat(zoom),GLfloat(zoom),GLfloat(zoom));
 			glTranslate(-p);
 			//save transformation matrixes
@@ -240,6 +309,7 @@ void SimpleGLWidget::glDraw(){
 		glEnable(GL_LIGHTING);
 		glEnable(GL_LIGHT0);
 		glEnable(GL_COLOR_MATERIAL);
+		glDisable(GL_TEXTURE_2D);
 
 		Segmentator::MyTriMesh::FaceIterator fi;
 		
@@ -292,9 +362,14 @@ void SimpleGLWidget::OpenDirectory()
 	if (filename!=NULL)
 	{
 		filename+="/";
-		const char *path=filename.ascii();
-		char *p=(char*)path;
+		path=filename;
+		const char *pa=filename.ascii();
+		char *p=(char*)pa;
 		s->LoadFromDir(p,"prova.txt");
+		LoadTexture(p,0);
+		_showslides=true;
+		w->SlidesButton->setOn(true);
+		repaint();
 	}
 }
 
@@ -340,7 +415,8 @@ void SimpleGLWidget::mousePressEvent ( QMouseEvent * e )
 		//w->Color->text()=color;
 		SetExtractionParameters();
 		//s->SetInitialBarycenter(Point3f(x,y,_numslide));
-		s->InitSegmentation(Point3f(x,y,_numslide));
+		//s->InitSegmentation(Point3f(x,y,_numslide));
+		s->InitSegmentation(Point3f(x,y,z));
 		repaint();
 	}
 	//vcg::tri::UpdateBounding<Segmentator::MyTriMesh>::Box(s->m);
@@ -359,6 +435,10 @@ void SimpleGLWidget::wheelEvent(QWheelEvent *e)
 		_numslide+=e->delta()/120.f;
 		if ((_numslide<0)||(_numslide>=s->V.dimZ()))
 				_numslide=oldnum;
+		if (s!=0)
+		{
+			LoadTexture(path,_numslide);
+		}
 	}
 
 	repaint();

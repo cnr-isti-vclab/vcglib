@@ -32,30 +32,6 @@
         </property>
         <widget class="QPushButton">
             <property name="name">
-                <cstring>SlidesButton</cstring>
-            </property>
-            <property name="geometry">
-                <rect>
-                    <x>10</x>
-                    <y>10</y>
-                    <width>80</width>
-                    <height>31</height>
-                </rect>
-            </property>
-            <property name="font">
-                <font>
-                    <pointsize>10</pointsize>
-                </font>
-            </property>
-            <property name="text">
-                <string>Slides</string>
-            </property>
-            <property name="toggleButton">
-                <bool>true</bool>
-            </property>
-        </widget>
-        <widget class="QPushButton">
-            <property name="name">
                 <cstring>ResultButton</cstring>
             </property>
             <property name="geometry">
@@ -152,6 +128,30 @@
         </widget>
         <widget class="QPushButton">
             <property name="name">
+                <cstring>SlidesButton</cstring>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>10</x>
+                    <y>10</y>
+                    <width>80</width>
+                    <height>31</height>
+                </rect>
+            </property>
+            <property name="font">
+                <font>
+                    <pointsize>10</pointsize>
+                </font>
+            </property>
+            <property name="text">
+                <string>Slides</string>
+            </property>
+            <property name="toggleButton">
+                <bool>true</bool>
+            </property>
+        </widget>
+        <widget class="QPushButton">
+            <property name="name">
                 <cstring>WireButton</cstring>
             </property>
             <property name="geometry">
@@ -196,243 +196,6 @@
         <property name="title">
             <string></string>
         </property>
-        <widget class="QPushButton">
-            <property name="name">
-                <cstring>SaveButton</cstring>
-            </property>
-            <property name="geometry">
-                <rect>
-                    <x>30</x>
-                    <y>560</y>
-                    <width>140</width>
-                    <height>31</height>
-                </rect>
-            </property>
-            <property name="font">
-                <font>
-                    <pointsize>10</pointsize>
-                </font>
-            </property>
-            <property name="text">
-                <string>SavePly</string>
-            </property>
-        </widget>
-        <widget class="QPushButton">
-            <property name="name">
-                <cstring>SmoothButton</cstring>
-            </property>
-            <property name="geometry">
-                <rect>
-                    <x>30</x>
-                    <y>520</y>
-                    <width>140</width>
-                    <height>30</height>
-                </rect>
-            </property>
-            <property name="font">
-                <font>
-                    <pointsize>10</pointsize>
-                </font>
-            </property>
-            <property name="cursor">
-                <cursor>1</cursor>
-            </property>
-            <property name="text">
-                <string>Smooth</string>
-            </property>
-        </widget>
-        <widget class="QPushButton">
-            <property name="name">
-                <cstring>SegmentButton</cstring>
-            </property>
-            <property name="geometry">
-                <rect>
-                    <x>30</x>
-                    <y>480</y>
-                    <width>141</width>
-                    <height>31</height>
-                </rect>
-            </property>
-            <property name="font">
-                <font>
-                    <pointsize>10</pointsize>
-                </font>
-            </property>
-            <property name="text">
-                <string>Extract</string>
-            </property>
-            <property name="toggleButton">
-                <bool>true</bool>
-            </property>
-        </widget>
-        <widget class="QLineEdit">
-            <property name="name">
-                <cstring>Color</cstring>
-            </property>
-            <property name="enabled">
-                <bool>false</bool>
-            </property>
-            <property name="geometry">
-                <rect>
-                    <x>30</x>
-                    <y>390</y>
-                    <width>70</width>
-                    <height>30</height>
-                </rect>
-            </property>
-            <property name="font">
-                <font>
-                    <pointsize>10</pointsize>
-                </font>
-            </property>
-            <property name="frameShape">
-                <enum>LineEditPanel</enum>
-            </property>
-            <property name="frameShadow">
-                <enum>Sunken</enum>
-            </property>
-            <property name="text">
-                <string></string>
-            </property>
-            <property name="cursorPosition">
-                <number>0</number>
-            </property>
-        </widget>
-        <widget class="QLabel">
-            <property name="name">
-                <cstring>textLabel1_2_2_2_2</cstring>
-            </property>
-            <property name="geometry">
-                <rect>
-                    <x>30</x>
-                    <y>370</y>
-                    <width>116</width>
-                    <height>21</height>
-                </rect>
-            </property>
-            <property name="font">
-                <font>
-                    <pointsize>10</pointsize>
-                </font>
-            </property>
-            <property name="text">
-                <string>color</string>
-            </property>
-        </widget>
-        <widget class="QLineEdit">
-            <property name="name">
-                <cstring>Tolerance</cstring>
-            </property>
-            <property name="geometry">
-                <rect>
-                    <x>30</x>
-                    <y>330</y>
-                    <width>70</width>
-                    <height>31</height>
-                </rect>
-            </property>
-            <property name="font">
-                <font>
-                    <pointsize>10</pointsize>
-                </font>
-            </property>
-            <property name="text">
-                <string>10</string>
-            </property>
-            <property name="cursorPosition">
-                <number>2</number>
-            </property>
-        </widget>
-        <widget class="QLabel">
-            <property name="name">
-                <cstring>textLabel1_2_2_2</cstring>
-            </property>
-            <property name="geometry">
-                <rect>
-                    <x>30</x>
-                    <y>310</y>
-                    <width>116</width>
-                    <height>21</height>
-                </rect>
-            </property>
-            <property name="font">
-                <font>
-                    <pointsize>10</pointsize>
-                </font>
-            </property>
-            <property name="text">
-                <string>tolerance</string>
-            </property>
-        </widget>
-        <widget class="QLineEdit">
-            <property name="name">
-                <cstring>E_size</cstring>
-            </property>
-            <property name="geometry">
-                <rect>
-                    <x>30</x>
-                    <y>270</y>
-                    <width>70</width>
-                    <height>31</height>
-                </rect>
-            </property>
-            <property name="font">
-                <font>
-                    <pointsize>10</pointsize>
-                </font>
-            </property>
-            <property name="text">
-                <string>4</string>
-            </property>
-            <property name="cursorPosition">
-                <number>1</number>
-            </property>
-        </widget>
-        <widget class="QLabel">
-            <property name="name">
-                <cstring>textLabel1_2_2</cstring>
-            </property>
-            <property name="geometry">
-                <rect>
-                    <x>30</x>
-                    <y>250</y>
-                    <width>116</width>
-                    <height>21</height>
-                </rect>
-            </property>
-            <property name="font">
-                <font>
-                    <pointsize>10</pointsize>
-                </font>
-            </property>
-            <property name="text">
-                <string>minimum edge size</string>
-            </property>
-        </widget>
-        <widget class="QLineEdit">
-            <property name="name">
-                <cstring>T_step</cstring>
-            </property>
-            <property name="geometry">
-                <rect>
-                    <x>30</x>
-                    <y>210</y>
-                    <width>70</width>
-                    <height>31</height>
-                </rect>
-            </property>
-            <property name="font">
-                <font>
-                    <pointsize>10</pointsize>
-                </font>
-            </property>
-            <property name="text">
-                <string>0.2</string>
-            </property>
-            <property name="cursorPosition">
-                <number>3</number>
-            </property>
-        </widget>
         <widget class="QLabel">
             <property name="name">
                 <cstring>textLabel1_2</cstring>
@@ -600,33 +363,12 @@
         </widget>
         <widget class="QPushButton">
             <property name="name">
-                <cstring>ApplyButton</cstring>
-            </property>
-            <property name="geometry">
-                <rect>
-                    <x>30</x>
-                    <y>440</y>
-                    <width>141</width>
-                    <height>31</height>
-                </rect>
-            </property>
-            <property name="font">
-                <font>
-                    <pointsize>10</pointsize>
-                </font>
-            </property>
-            <property name="text">
-                <string>Apply</string>
-            </property>
-        </widget>
-        <widget class="QPushButton">
-            <property name="name">
                 <cstring>ClearButton</cstring>
             </property>
             <property name="geometry">
                 <rect>
                     <x>30</x>
-                    <y>600</y>
+                    <y>700</y>
                     <width>141</width>
                     <height>31</height>
                 </rect>
@@ -640,6 +382,315 @@
                 <string>Clear</string>
             </property>
         </widget>
+        <widget class="QPushButton">
+            <property name="name">
+                <cstring>SaveButton</cstring>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>30</x>
+                    <y>660</y>
+                    <width>140</width>
+                    <height>31</height>
+                </rect>
+            </property>
+            <property name="font">
+                <font>
+                    <pointsize>10</pointsize>
+                </font>
+            </property>
+            <property name="text">
+                <string>SavePly</string>
+            </property>
+        </widget>
+        <widget class="QPushButton">
+            <property name="name">
+                <cstring>SmoothButton</cstring>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>30</x>
+                    <y>620</y>
+                    <width>140</width>
+                    <height>30</height>
+                </rect>
+            </property>
+            <property name="font">
+                <font>
+                    <pointsize>10</pointsize>
+                </font>
+            </property>
+            <property name="cursor">
+                <cursor>1</cursor>
+            </property>
+            <property name="text">
+                <string>Smooth</string>
+            </property>
+        </widget>
+        <widget class="QPushButton">
+            <property name="name">
+                <cstring>SegmentButton</cstring>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>30</x>
+                    <y>580</y>
+                    <width>141</width>
+                    <height>31</height>
+                </rect>
+            </property>
+            <property name="font">
+                <font>
+                    <pointsize>10</pointsize>
+                </font>
+            </property>
+            <property name="text">
+                <string>Extract</string>
+            </property>
+            <property name="toggleButton">
+                <bool>true</bool>
+            </property>
+        </widget>
+        <widget class="QPushButton">
+            <property name="name">
+                <cstring>ApplyButton</cstring>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>30</x>
+                    <y>540</y>
+                    <width>141</width>
+                    <height>31</height>
+                </rect>
+            </property>
+            <property name="font">
+                <font>
+                    <pointsize>10</pointsize>
+                </font>
+            </property>
+            <property name="text">
+                <string>Apply</string>
+            </property>
+        </widget>
+        <widget class="QLabel">
+            <property name="name">
+                <cstring>textLabel1_2_2_2_3</cstring>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>30</x>
+                    <y>300</y>
+                    <width>140</width>
+                    <height>50</height>
+                </rect>
+            </property>
+            <property name="font">
+                <font>
+                    <pointsize>10</pointsize>
+                </font>
+            </property>
+            <property name="text">
+                <string>Slide dinstance (pixel)</string>
+            </property>
+        </widget>
+        <widget class="QLabel">
+            <property name="name">
+                <cstring>textLabel1_2_2</cstring>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>30</x>
+                    <y>250</y>
+                    <width>116</width>
+                    <height>21</height>
+                </rect>
+            </property>
+            <property name="font">
+                <font>
+                    <pointsize>10</pointsize>
+                </font>
+            </property>
+            <property name="text">
+                <string>minimum edge size</string>
+            </property>
+        </widget>
+        <widget class="QLineEdit">
+            <property name="name">
+                <cstring>S_dist</cstring>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>30</x>
+                    <y>340</y>
+                    <width>70</width>
+                    <height>31</height>
+                </rect>
+            </property>
+            <property name="font">
+                <font>
+                    <pointsize>10</pointsize>
+                </font>
+            </property>
+            <property name="text">
+                <string>1</string>
+            </property>
+            <property name="cursorPosition">
+                <number>1</number>
+            </property>
+        </widget>
+        <widget class="QLabel">
+            <property name="name">
+                <cstring>textLabel1_2_2_2</cstring>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>30</x>
+                    <y>380</y>
+                    <width>116</width>
+                    <height>21</height>
+                </rect>
+            </property>
+            <property name="font">
+                <font>
+                    <pointsize>10</pointsize>
+                </font>
+            </property>
+            <property name="text">
+                <string>tolerance</string>
+            </property>
+        </widget>
+        <widget class="QLineEdit">
+            <property name="name">
+                <cstring>Tolerance</cstring>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>30</x>
+                    <y>400</y>
+                    <width>70</width>
+                    <height>31</height>
+                </rect>
+            </property>
+            <property name="font">
+                <font>
+                    <pointsize>10</pointsize>
+                </font>
+            </property>
+            <property name="text">
+                <string>10</string>
+            </property>
+            <property name="cursorPosition">
+                <number>2</number>
+            </property>
+        </widget>
+        <widget class="QLabel">
+            <property name="name">
+                <cstring>textLabel1_2_2_2_2</cstring>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>30</x>
+                    <y>440</y>
+                    <width>116</width>
+                    <height>21</height>
+                </rect>
+            </property>
+            <property name="font">
+                <font>
+                    <pointsize>10</pointsize>
+                </font>
+            </property>
+            <property name="text">
+                <string>color</string>
+            </property>
+        </widget>
+        <widget class="QLineEdit">
+            <property name="name">
+                <cstring>Color</cstring>
+            </property>
+            <property name="enabled">
+                <bool>false</bool>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>30</x>
+                    <y>460</y>
+                    <width>70</width>
+                    <height>30</height>
+                </rect>
+            </property>
+            <property name="font">
+                <font>
+                    <pointsize>10</pointsize>
+                </font>
+            </property>
+            <property name="frameShape">
+                <enum>LineEditPanel</enum>
+            </property>
+            <property name="frameShadow">
+                <enum>Sunken</enum>
+            </property>
+            <property name="text">
+                <string></string>
+            </property>
+            <property name="cursorPosition">
+                <number>0</number>
+            </property>
+        </widget>
+        <widget class="QLineEdit">
+            <property name="name">
+                <cstring>E_size</cstring>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>30</x>
+                    <y>270</y>
+                    <width>70</width>
+                    <height>31</height>
+                </rect>
+            </property>
+            <property name="font">
+                <font>
+                    <pointsize>10</pointsize>
+                </font>
+            </property>
+            <property name="text">
+                <string>4</string>
+            </property>
+            <property name="cursorPosition">
+                <number>1</number>
+            </property>
+        </widget>
+        <widget class="QLineEdit">
+            <property name="name">
+                <cstring>T_step</cstring>
+            </property>
+            <property name="geometry">
+                <rect>
+                    <x>30</x>
+                    <y>210</y>
+                    <width>70</width>
+                    <height>31</height>
+                </rect>
+            </property>
+            <property name="font">
+                <font>
+                    <pointsize>10</pointsize>
+                </font>
+            </property>
+            <property name="frameShape">
+                <enum>LineEditPanel</enum>
+            </property>
+            <property name="frameShadow">
+                <enum>Sunken</enum>
+            </property>
+            <property name="text">
+                <string>0.2</string>
+            </property>
+            <property name="cursorPosition">
+                <number>3</number>
+            </property>
+        </widget>
     </widget>
     <widget class="SimpleGLWidget">
         <property name="name">
@@ -648,7 +699,7 @@
         <property name="geometry">
             <rect>
                 <x>10</x>
-                <y>70</y>
+                <y>50</y>
                 <width>1030</width>
                 <height>880</height>
             </rect>
