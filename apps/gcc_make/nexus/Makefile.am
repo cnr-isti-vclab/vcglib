@@ -1,15 +1,17 @@
-bin_PROGRAMS = 	nxspatcher ply2crd crdview voronoinxs nxsview nxsedit 
+bin_PROGRAMS = 	nxspatcher ply2crd crdview voronoinxs nxsview nxsedit nxsserver exploder
 
 LIBS=
 SDL_FLAGS = -lSDL -lpthread -lGL -lGLU
 
 nxspatcher_SOURCES =    ../../nexus/crude.cpp        	\
 			../../nexus/file.cpp         	\
+			../../nexus/mfile.cpp         	\
 			../../nexus/nxspatcher.cpp
 
 ply2crd_SOURCES = 	../../nexus/ply2crude.cpp    	\
 			../../nexus/crude.cpp        	\
 			../../nexus/file.cpp         	\
+			../../nexus/mfile.cpp         	\
 		  	../../../wrap/ply/plylib.cpp 	
 
 
@@ -20,6 +22,7 @@ crdview_SOURCES = 	../../nexus/crudeview.cpp       \
 			../../nexus/mfhash.cpp 		\
 			../../../wrap/gui/trackball.cpp	\
 			../../../wrap/gui/trackmode.cpp \
+			../../nexus/mfile.cpp         	\
 		 	../../nexus/file.cpp
 
 crdview_LDADD = $(SDL_FLAGS) -lGLEW
@@ -49,9 +52,17 @@ voronoinxs_SOURCES = 	../../nexus/voronoinxs.cpp 	\
 			../../nexus/pvoronoi.cpp 	\
 			../../nexus/fragment.cpp	\
 			../../nexus/watch.cpp		\
+			../../nexus/nxsdispatcher.cpp   \
 			../../../wrap/ply/plylib.cpp 	
 
-voronoinxs_LDADD = -llzo -lptypes -lGLEW
+voronoinxs_LDADD = -llzo -lptypes -lGLEW /usr/local/lib/libANN.a
+
+nxsserver_SOURCES =     ../../nexus/nxsserver.cpp	\
+			../../nexus/fragment.cpp	\
+			../../nexus/pvoronoi.cpp 	\
+		     	../../nexus/decimate.cpp	
+
+nxsserver_LDADD = -lptypes /usr/local/lib/libANN.a
 
 
 nxsview_SOURCES = 	../../nexus/nexusview.cpp 	\
@@ -84,6 +95,16 @@ nxsedit_SOURCES = 	../../nexus/nxsedit.cpp 	\
 			../../nexus/borderserver.cpp
 
 nxsedit_LDADD = -llzo -lGLEW
+
+exploder_SOURCES = 	../../nexus/exploder.cpp 	\
+			../../nexus/nexus.cpp 		\
+			../../nexus/patch.cpp 		\
+		 	../../nexus/file.cpp 		\
+		     	../../nexus/mfile.cpp		\
+			../../nexus/patchserver.cpp 	\
+			../../nexus/borderserver.cpp
+
+exploder_LDADD = -llzo -lGLEW
 
 
 INCLUDES = -I../../../
