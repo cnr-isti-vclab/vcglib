@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2004/05/07 10:05:50  cignoni
+Corrected abuse of for index variable scope
+
 Revision 1.15  2004/05/04 23:19:41  cignoni
 Clarified initial comment, removed vector*matrix operator (confusing!)
 Corrected translate and Rotate, removed gl stuff.
@@ -35,18 +38,6 @@ Revision 1.13  2004/04/07 10:45:54  cignoni
 Added: [i][j] access, V() for the raw float values, constructor from T[16]
 
 Revision 1.12  2004/03/25 14:57:49  ponchio
-Microerror. ($LOG$ -> $Log: not supported by cvs2svn $
-Microerror. ($LOG$ -> Revision 1.15  2004/05/04 23:19:41  cignoni
-Microerror. ($LOG$ -> Clarified initial comment, removed vector*matrix operator (confusing!)
-Microerror. ($LOG$ -> Corrected translate and Rotate, removed gl stuff.
-Microerror. ($LOG$ ->
-Microerror. ($LOG$ -> Revision 1.14  2004/05/04 02:34:03  ganovelli
-Microerror. ($LOG$ -> wrong use of operator [] corrected
-Microerror. ($LOG$ ->
-Microerror. ($LOG$ -> Revision 1.13  2004/04/07 10:45:54  cignoni
-Microerror. ($LOG$ -> Added: [i][j] access, V() for the raw float values, constructor from T[16]
-Microerror. ($LOG$ ->
-
 
 ****************************************************************************/
 
@@ -146,7 +137,7 @@ public:
 	Matrix44 &SetTranslate(const Point3<T> &t);
 	Matrix44 &SetTranslate(const T sx, const T sy, const T sz);
   ///use radiants for angle.
-  Matrix44 &SetRotate(T angle, const Point3<T> & axis); 
+  Matrix44 &SetRotate(T AngleRad, const Point3<T> & axis); 
 
   T Determinant() const;
 
@@ -360,10 +351,10 @@ template <class T> Matrix44<T> &Matrix44<T>::SetTranslate(const T sx, const T sy
   element(2, 3) = sz;
   return *this;
 }
-template <class T> Matrix44<T> &Matrix44<T>::SetRotate(T angle, const Point3<T> & axis) {  
+template <class T> Matrix44<T> &Matrix44<T>::SetRotate(T AngleRad, const Point3<T> & axis) {  
   //angle = angle*(T)3.14159265358979323846/180; e' in radianti!
-  T c = math::Cos(angle);
-  T s = math::Sin(angle);
+  T c = math::Cos(AngleRad);
+  T s = math::Sin(AngleRad);
 	T q = 1-c;  
 	Point3<T> t = axis;
 	t.Normalize();
