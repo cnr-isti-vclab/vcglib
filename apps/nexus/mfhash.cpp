@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/06/24 14:32:45  ponchio
+Moved from wrap/nexus
+
 Revision 1.1  2004/06/24 14:18:58  ponchio
 Created
 
@@ -31,12 +34,14 @@ Created
 ****************************************************************************/
 
 #include "mfhash.h"
+#include <iostream>
 
 using namespace std;
 using namespace nxs;
 
 bool MFHash::Create(const string &file, unsigned int reserved) {
   if(!buffer.Create(file)) return false;
+  
   buffer.Resize(reserved);
   Bucket empty;
   for(unsigned int i = 0; i < buffer.Size(); i++)
@@ -98,8 +103,10 @@ void MFHash::Insert(unsigned int key, unsigned int value, bool rehash) {
 
   if(rehash) {
     float ratio = space / (float)buffer.Size();
-    if(ratio < 0.4) //need to resize
-      Resize(buffer.Size() * 2 - 1);
+    if(ratio < 0.4) { //need to resize 
+      cerr << "rehash" << endl;
+      Resize(buffer.Size() * 2 + 3);
+    }
   }
 }
 
