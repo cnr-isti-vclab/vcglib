@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/04/07 10:54:11  cignoni
+Commented out unused parameter names and other minor warning related issues
+
 Revision 1.2  2004/03/25 14:55:25  ponchio
 Adding copyright.
 
@@ -35,19 +38,28 @@ Adding copyright.
 
 #include <vcg/space/point3.h>
 #include <vcg/math/similarity.h>
+#include <wrap/gui/trackball.h>
 
 namespace vcg {
-
+class Trackball;
 class TrackMode {
 public:
   virtual ~TrackMode() {}
-  virtual void Draw() {}
-  virtual Similarityf Apply(const Point3f &/* p */, const Similarityf &/*a*/) { return Similarityf().SetIdentity(); }
+  //virtual void Draw() {}
+  virtual Similarityf ComputeFromWindow(const Point3f &/* oldp */, const Point3f &/* newp */) { return Similarityf().SetIdentity(); }
+  Point3f Hit(const Point3f &p);
+  Trackball *tb;
+  
 };
 
 class SphereMode: public TrackMode {
 public:  
-  Similarityf Apply(const Point3f &p, const Similarityf &/*a*/);
+  Similarityf ComputeFromWindow(const Point3f &oldP, const Point3f &newP);
+  //Plane3f SetViewPlane();
+  Point3f Hit(const Point3f &p);
+  Plane3f GetViewPlane();
+//  Line3f GetViewLine(const Point3f &p);
+
 };
 
 class GravityMode: public TrackMode {
@@ -64,7 +76,7 @@ protected:
 class PlaneMode: public TrackMode {
 public:
   PlaneMode(const Point3f _x, const Point3f _y): x(_x), y(_y) { x.Normalize(); y.Normalize(); }
-  Similarityf Apply(const Point3f &p, const Similarityf &a);
+  Similarityf ComputeFromWindow(const Point3f &oldP, const Point3f &newP);
 protected:
   Point3f x;
   Point3f y;

@@ -24,81 +24,116 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/04/07 10:54:11  cignoni
+Commented out unused parameter names and other minor warning related issues
+
 Revision 1.2  2004/03/25 14:55:25  ponchio
 Adding copyright.
 
 
 ****************************************************************************/
 
-#include "trackmode.h"
+#include <vcg/space/point2.h>
 #include <vcg/space/point3.h>
+#include <vcg/space/plane3.h>
+#include <vcg/space/intersection3.h>
+#include "trackmode.h"
 #include <vcg/math/similarity.h>
 
 using namespace vcg;
 
-Similarityf SphereMode::Apply(const Point3f &p, const Similarityf & /* m */) {
-  float u = p[0];
-	float w = p[1];
-  float thr = 1/math::Sqrt(2.0f);       //in the plane x-y distance from origin, above this use hyperboloid
-	
-  float dist = math::Sqrt(u * u + w * w);
-	Point3f result;
-	if(dist < thr) 	{                    // First case: The ray is nearer to the sphere than r/sqrt(2) 
-    float z = math::Sqrt(1 - u * u - w* w);
-		result = Point3f(u, w, z);
-	} else {                             // Second case: The ray should hit the 1/d hyperboloid
-		float a = thr;
-		result = Point3f(u, w, -a*(u*u + w * w) + 3*a/2);
-		result.Normalize();
-	}
-	if(result == Point3f(0, 0, 1))
-		return Similarityf().SetIdentity();
 
-	Point3f axis = Point3f(0, 0, 1)^result; /* Axis of rotation */
-	axis.Normalize();
-	Point3f d = result - Point3f(0, 0, 1);
-	float t = d.Norm() / 2.0f;
-	if(t > thr)
-		t += (t - thr) * 0.7f;
-	if (t > 1.0f) t = 1.0f;
-	if (t < -1.0f) t = -1.0f;
-  float phi = 2 * math::Asin(t);
-	//return Similarityf().SetRotate(phi * 180/(float)M_PI, axis);
-  return Similarityf().SetRotate(phi, axis);
+
+
+/* 
+Le varie Apply prendono una coppia di punti in screen space e restituiscono una trasformazione
+*/
+
+Plane3f SphereMode::GetViewPlane()
+{
+  Point3f mo=tb->ModelOrigin();
+  Point3f vp; vp.Import(tb->camera.ViewPoint());
+	Plane3f pl;  // plane perpedicular to view direction and passing through manip center
+	pl.Set(vp-tb->center, (vp-tb->center)*tb->center);
+  return pl;
 }
 
-Similarityf PlaneMode::Apply(const Point3f &p, const Similarityf &a) {
-  return Similarityf(Point3f(p[0], p[1], 0));
-  Point3f r = x * a;
-	Point3f u = y * a;
-	int leading = 0; //leadiing x.
-	if(fabs(u[2]) < fabs(r[2])) //sceglie l'asse principale: quello che piu' e' parallelo al piano di vista.
-		leading = 1;
-	r[2] = 0;
-	u[2] = 0;
-	if(r == Point3f(0,0,0)) //casi degeneri: un asse e' perpendicolare al piano di vista.
-		r = Point3f(0, 1, 0);
-	if(u == Point3f(0,0,0))
-		u = Point3f(0, 1, 0);
-	r.Normalize();
-	u.Normalize();
-	float cu, cr;
-	if(leading == 0) { //leading x
-		if(u == r || u == -r) { //caso degenere: i due assi si proiettano sullo stesso
-			u[0] = -r[1];
-			u[1] = r[0];
-		}
-		u = u - r * (r * u);
-		u.Normalize();
-	} else {
-		if(r == u || r == -u) { //caso degenere: i due assi si proiettano sullo stesso
-			r[0] = -u[1];
-			r[1] = u[0];
-		}
-		r = r - u * (u * r);
-		r.Normalize();
-	}
-	cr = r * p;
-	cu = u * p;
-	return Similarityf(x * cr + y * cu);
+
+
+/* dato un punto in coordinate di schermo e.g. in pixel stile opengl 
+   restituisce un punto in coordinate di mondo sulla superficie della trackball 
+   La superficie della trackball e' data da una sfera + una porzione di iperboloide di rotazione
+   assumiamo la sfera di raggio unitario e centrata sull'origine e di guardare lungo la y negativa.
+                                       X   0   sqrt(1/2)  1  
+   eq sfera:              y=sqrt(1-x*x);   1   sqrt(1/2)  0   
+   eq iperboloide :       y=1/2x;         inf  sqrt(1/2)  1/2
+
+   */
+
+Point3f SphereMode::Hit(const Point3f &p)
+{
+  printf("Hit in screen space at %5.3f %5.3f %5.3f\n",p[0],p[1],p[2]); 
+
+  Plane3f vp=GetViewPlane(); // plane perpedicular to view direction and passing through manip center
+  Line3fN ln= tb->camera.ViewLineFromWindow(Point3f(p[0],p[1],0));
+  //Point3f P0,P1;
+  Point3f PonVP;
+  bool res=Intersection<float>(vp,ln,PonVP);
+  const float Thr=tb->radius/math::Sqrt(2.0f);
+
+  Point3f HitPoint;
+  float dd=Distance(tb->center,PonVP);
+  if(dd<Thr)
+  { // First case: We hit the sphere so, we must set the z accordingly 
+    float hh=math::Sqrt(tb->radius*tb->radius - dd*dd);
+    HitPoint=PonVP+ln.Direction()*hh;
+    printf("Hit the sphere point on plane is %5.3f %5.3f %5.3f\n",PonVP[0],PonVP[1],PonVP[2]);
+    printf(" Distance from center is %5.3f \n",dd);
+    printf(" Heigth for view plane should be %5.3f \n",hh );
+  }
+  else
+  { // Second Case we hit the hyperboloid
+    float hh=tb->radius/(2.0f*(dd/tb->radius));
+    HitPoint=PonVP+ln.Direction()*hh;
+
+    printf("Hit the hiperboloid at %5.3f %5.3f %5.3f\n",PonVP[0],PonVP[1],PonVP[2]); 
+    printf(" Distance from center is %5.3f \n",dd);
+    printf(" Heigth for view plane should be %5.3f \n",hh );
+    
+  }
+ return HitPoint;
+}
+
+/* 
+  Nella trackball classica si considera 
+
+*/
+Similarityf PlaneMode::ComputeFromWindow(const Point3f &oldP, const Point3f &newP) 
+{ 
+  return Similarityf().SetIdentity();
+}
+/*
+Restituisce la trasformazione originata dal drag in window coord da oldp a newp.
+*/
+Similarityf SphereMode::ComputeFromWindow(const Point3f &oldP, const Point3f &newP)
+{
+ Point3f hitOld=Hit(oldP);
+ Point3f hitNew=Hit(newP);
+ // Now compute the rotation defined on the sphere...
+
+ Point3f norm;
+
+ return Similarityf().SetIdentity();
+
+	//Point3f axis = Point3f(0, 0, 1)^result; /* Axis of rotation */
+	//axis.Normalize();
+	//Point3f d = result - Point3f(0, 0, 1);
+	//float t = d.Norm() / 2.0f;
+	//if(t > thr)
+	//	t += (t - thr) * 0.7f;
+	//if (t > 1.0f) t = 1.0f;
+	//if (t < -1.0f) t = -1.0f;
+ // float phi = 2 * math::Asin(t);
+	////return Similarityf().SetRotate(phi * 180/(float)M_PI, axis);
+ // return Similarityf().SetRotate(phi, axis);
 }

@@ -2,7 +2,8 @@
 * VCGLib                                                            o o     *
 * Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
-* Copyright(C) 2004                                                \/)\/    *
+* Copyright(C) 2004                      
+\/)\/    *
 * Visual Computing Lab                                            /\/|      *
 * ISTI - Italian National Research Council                           |      *
 *                                                                    \      *
@@ -24,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/04/07 10:54:10  cignoni
+Commented out unused parameter names and other minor warning related issues
+
 Revision 1.2  2004/03/25 14:55:25  ponchio
 Adding copyright.
 
@@ -40,16 +44,27 @@ Adding copyright.
 #include <map>
 
 namespace vcg {
+/* A trackball stores two transformations
+the first one, local, is the one 'placing' the trackball somewhere, 
+the second one, track, is the one that effectively rotate the object.
 
+The 'local' transformation is the one that contains information about
+the rotation center, the size and the orientation of the trackball.
+the 'track' is the one implementing the effective transformation.
+
+*/
 class Transform {
 public: 
   Transform();
   Similarityf track;
-  Similarityf local;
+
+  Point3f center;  // la posizione della trackball nello spazio di modello. il defgault e' 000
+  float   radius; /// size of the widget in spazio di modello.
+  //Quaternion orientation;
 };
 
 Transform interpolate(const Transform &a, const Transform &b, float t);
-
+class TrackMode;
 class Trackball: public Transform {
 public:
   enum Button { BUTTON_NONE   = 0x0000, 
@@ -64,14 +79,22 @@ public:
 
   Trackball();
   void SetIdentity();
-  void SetPosition(const Similarityf &local, int millisec = 0);
+  void SetPosition(const Point3f &c, int millisec = 0);
+  void SetScale(const float s) {radius=s;};
   void SetTransform(const Transform &transform, int miilisec = 0);
+//  float ScreenScale();
 
   //operating
   void GetView();
   void Apply();
   void Draw();
   void Reset();
+
+  // Internal Drawing stuff
+  void DrawCircle ();
+  void DrawPlane();
+  void DrawPlaneHandle();
+
 
   //interface
   void MouseDown(int x, int y, Button button);
@@ -120,10 +143,13 @@ public:
   ///Find the current action ussing the current button
   void SetCurrentAction();
 
-protected:
+//protected:
   View<float> camera;
   Similarityf view;            //Rotate LOCAL coordinate into VIEW coordinates
 
+  float ScreenRadius;
+  Point3f ScreenCenter;
+  
   int current_button;
   Action current_action;
 
@@ -144,7 +170,7 @@ protected:
   int history_size;
 
    
-  Point3f ScreenOrigin();      //center of trackball in Screen coord   
+  //Point3f ScreenOrigin();      //center of trackball in Screen coord   
   Point3f ModelOrigin();       //center of trackball in Model coord
   
   Matrix44f ScreenToModel();  //forse non serve.....
