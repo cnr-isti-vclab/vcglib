@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.21  2004/10/28 00:50:49  cignoni
+Better Doxygen documentation
+
 Revision 1.20  2004/10/11 17:45:05  ganovelli
 added template on corrdinate type (default Point3)
 
@@ -54,6 +57,9 @@ Revision 1.12  2004/05/10 13:31:13  ganovelli
 function for edge adjacency added
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2004/10/28 00:50:49  cignoni
+Better Doxygen documentation
+
 Revision 1.20  2004/10/11 17:45:05  ganovelli
 added template on corrdinate type (default Point3)
 
@@ -717,6 +723,42 @@ public:
 		return *(CoordType *)this;
 #endif
 	}
+  
+template <bool NormalizeFlag> 
+const CoordType GenericNormal()
+{
+  if (!v->HasVFAdjacency())
+  {
+    assert(0);
+		return (VERTEX_TYPE::CoordType (0,0,0));
+  }
+  else
+  {
+    vcg::face::VFIterator<typename VERTEX_TYPE::FaceType> VFi=vcg::face::VFIterator<typename VERTEX_TYPE::FaceType>();
+    VFi.f=v->VFp();
+    VFi.z=v->VFi();
+    typename VERTEX_TYPE::CoordType N= typename VERTEX_TYPE::CoordType(0,0,0);
+    while (!VFi.End())
+    {
+      N+=VFi.f->Normal();
+      VFi++;
+    }
+    if(NormalizeFlag) N.Normalize();
+    return N;
+  }
+}
+
+/// Return the un-normalized value of the vertex normal as it correspond to the current geometry.
+/// It is always computed and never use any stored value. 
+/// REQUIRES vertex-face topology
+const CoordType Normal()           { return GenericNormal<false>(); }
+
+/// Return the normalized value of the vertex normal as it correspond to the current geometry.
+/// It is always computed and never use any stored value. 
+/// REQUIRES vertex-face topology
+const CoordType NormalizedNormal() { return GenericNormal<true>(); }
+
+
  //@}
 
  /***********************************************/
@@ -857,29 +899,6 @@ inline void Convert( VERT_TYPE &v )
 
 };
 
-template <class VERTEX_TYPE> typename VERTEX_TYPE::CoordType NormalizedNormalV(VERTEX_TYPE *v)
-{
-  if (!v->HasVFAdjacency())
-  {
-    assert(0);
-		return (VERTEX_TYPE::CoordType (0,0,0));
-  }
-  else
-  {
-    vcg::face::VFIterator<typename VERTEX_TYPE::FaceType> VFi=vcg::face::VFIterator<typename VERTEX_TYPE::FaceType>();
-    VFi.f=v->VFp();
-    VFi.z=v->VFi();
-    typename VERTEX_TYPE::CoordType N= typename VERTEX_TYPE::CoordType(0,0,0);
-    int i=0;
-    while (!VFi.End())
-    {
-      N+=VFi.f->NormalizedNormal();
-      i++;
-      VFi++;
-    }
-    return ((typename VERTEX_TYPE::CoordType) N/(typename VERTEX_TYPE::CoordType::ScalarType)i);
-  }
-}
 //@}
 }	 // end namespace
 #endif
