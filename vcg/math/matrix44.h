@@ -24,8 +24,14 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2004/04/07 10:45:54  cignoni
+Added: [i][j] access, V() for the raw float values, constructor from T[16]
+
 Revision 1.12  2004/03/25 14:57:49  ponchio
 Microerror. ($LOG$ -> $Log: not supported by cvs2svn $
+Microerror. ($LOG$ -> Revision 1.13  2004/04/07 10:45:54  cignoni
+Microerror. ($LOG$ -> Added: [i][j] access, V() for the raw float values, constructor from T[16]
+Microerror. ($LOG$ ->
 
 
 ****************************************************************************/
@@ -217,13 +223,13 @@ template <class T> const T *Matrix44<T>::V() const { return _a;}
 template <class T> Matrix44<T> Matrix44<T>::operator+(const Matrix44 &m) const {
   Matrix44<T> ret;
   for(int i = 0; i < 16; i++) 
-    ret[i] = operator[](i) + m[i];  
+    ret[i] = V()[i] + m.V()[i];  
 }
 
 template <class T> Matrix44<T> Matrix44<T>::operator-(const Matrix44 &m) const {
   Matrix44<T> ret;
   for(int i = 0; i < 16; i++) 
-    ret[i] = operator[](i) - m[i];  
+    ret[i] = V()[i] - m.V()[i];  
 }
 
 template <class T> Matrix44<T> Matrix44<T>::operator*(const Matrix44 &m) const {
@@ -266,24 +272,24 @@ template <class T> bool Matrix44<T>::operator!=(const  Matrix44 &m) const {
 template <class T> Matrix44<T> Matrix44<T>::operator-() const {
   Matrix44<T> res;
   for(int i = 0; i < 16; i++)
-    res[i] = -operator[](i);
+    res.V()[i] = -V()[i];
   return res;
 }
 
 template <class T> Matrix44<T> Matrix44<T>::operator*(const T k) const {
   Matrix44<T> res;
   for(int i = 0; i < 16; i++)
-    res[i] = operator[](i) * k;
+    res.V()[i] =V()[i] * k;
   return res;
 }
 
 template <class T> void Matrix44<T>::operator+=(const Matrix44 &m) {
   for(int i = 0; i < 16; i++)
-    operator[](i) += m[i];  
+    V()[i] += m.V()[i];  
 }
 template <class T> void Matrix44<T>::operator-=(const Matrix44 &m) {
   for(int i = 0; i < 16; i++)
-    operator[](i) -= m[i];
+    V()[i] -= m.V()[i];
 }
 template <class T> void Matrix44<T>::operator*=( const Matrix44 & m ) {
   *this = *this *m;
