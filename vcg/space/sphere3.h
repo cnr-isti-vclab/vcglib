@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/04/02 09:44:13  ponchio
+Sphere ->Sphere3
+
 Revision 1.2  2004/03/25 17:25:46  ponchio
 #include sbagliato.
 
@@ -54,8 +57,8 @@ protected:
   Point3<T> _center;
 	T _radius;
 public:
-	Sphere(): radius(-1) {}
-  Sphere(const Point3<T> &center, T radius): _center(center), _radius(radius) {}
+	Sphere3(): _radius(-1) {}
+  Sphere3(const Point3<T> &center, T radius): _center(center), _radius(radius) {}
 
   T &Radius() { return _radius; }
   const T &Radius() const { return _radius; }
@@ -74,12 +77,12 @@ public:
 typedef Sphere3<float> Sphere3f;
 typedef Sphere3<double> Sphere3d;
 
-template <class T> void Sphere<T>::Add(const Sphere<T> &sphere) {
+template <class T> void Sphere3<T>::Add(const Sphere3<T> &sphere) {
   if(IsEmpty()) {
 			*this = sphere;
 			return;
 		}
-		Point3<T> dist = sphere.center - _center;
+		Point3<T> dist = sphere.Center() - _center;
     float distance = dist.Norm();
 		float fartest = distance + sphere.Radius();
 
@@ -93,7 +96,7 @@ template <class T> void Sphere<T>::Add(const Sphere<T> &sphere) {
     }
 }
 
-template <class T> void Sphere<T>::Add(Point3<T> &p) {
+template <class T> void Sphere3<T>::Add(Point3<T> &p) {
 	if(IsEmpty()) {
 		_center = p;
 		_radius = 0;
@@ -105,7 +108,7 @@ template <class T> void Sphere<T>::Add(Point3<T> &p) {
 	_radius = (_radius + fartest)/2;
 }  
 
-template <class T> bool Sphere<T>::IsIn(const Point3<T> &p) const {
+template <class T> bool Sphere3<T>::IsIn(const Point3<T> &p) const {
 	Point3<T> dist = p - _center;
 	return dist.Norm() <= _radius;
 }
