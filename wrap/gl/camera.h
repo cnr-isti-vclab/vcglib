@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/12/15 18:45:06  tommyfranken
+*** empty log message ***
+
 Revision 1.3  2004/11/03 09:38:21  ganovelli
 added SetSubView, some comment and put the class back(!)
 
@@ -116,7 +119,10 @@ static void TransformGL(const vcg::Camera<S> & camera,typename S farDist = -1 ) 
 	S sx,dx,bt,tp,nr,fr;
 	GetFrustum(camera,sx,dx,bt,tp,nr,fr);	
 	assert(glGetError()==0);
-	glFrustum(sx,dx,bt,tp,nr,(farDist == -1)?fr:farDist);
+	if(!IsOrtho())
+		glFrustum(sx,dx,bt,tp,nr,(farDist == -1)?fr:farDist);
+	else glOrtho(sx*viewportM,dx*viewportM,bt*viewportM,tp*viewportM,nr,(farDist == -1)?fr:farDist);
+	
 	assert(glGetError()==0);
 };
 //=======
