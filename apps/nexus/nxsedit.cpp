@@ -249,7 +249,7 @@ int main(int argc, char *argv[]) {
   }
 
   for(unsigned int patch = 0; patch < nexus.index.size(); patch++) {
-    Nexus::Entry &src_entry = nexus.index[patch];
+    Nexus::PatchInfo &src_entry = nexus.index[patch];
     Patch src_patch = nexus.GetPatch(patch);
     Border src_border = nexus.GetBorder(patch);
 
@@ -258,14 +258,14 @@ int main(int argc, char *argv[]) {
     if(add_strip) {
       ComputeTriStrip(src_patch.nf, src_patch.FaceBegin(), strip);
       assert(strip.size() < 32767);
-      out.AddPatch(src_entry.nvert, strip.size(), src_entry.border_size);
+      out.AddPatch(src_entry.nvert, strip.size(), src_border.Available());
     } else
-      out.AddPatch(src_entry.nvert, src_entry.nface, src_entry.border_size);
+      out.AddPatch(src_entry.nvert, src_entry.nface, src_border.Available());
 
 
-    Nexus::Entry &dst_entry = out.index[patch];
+    Nexus::PatchInfo &dst_entry = out.index[patch];
     Patch dst_patch = out.GetPatch(patch);
-    Border dst_border = out.GetBorder(patch);
+
 
     
     //copy vertices: //no clustering
@@ -296,7 +296,17 @@ int main(int argc, char *argv[]) {
     dst_entry.error = src_entry.error;
 
     //adding borders.
-    dst_entry.border_used = src_entry.border_used;
+    //Check border is ok:
+    for(unsigned int i = 0; i < src_border.Size(); i++) {
+      Link &link = src_border[i];
+      if(link.IsNull()) continue;
+      if(link.end_patch > nexus.index.size()) {
+	cerr << "Link endp: " << link.end_patch << endl;
+      }
+    }
+    Border dst_border = out.GetBorder(patch);
+    out.borders.ResizeBorder(patch, src_border.Size());
+    //    dst_entry.border_used = src_entry.border_used;
     memcpy(dst_border.Start(), src_border.Start(), 
 	   src_border.Size() * sizeof(Link));
   }

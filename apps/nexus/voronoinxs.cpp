@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/10/06 16:40:47  ponchio
+Fixed degenerate faces.
+
 Revision 1.7  2004/10/04 16:49:54  ponchio
 Daily backup. Preparing for compression.
 
@@ -104,7 +107,7 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
 
 void ReverseHistory(vector<Nexus::Update> &history);
 
-
+void TestBorders(Nexus &nexus);
 
 int main(int argc, char *argv[]) {
 
@@ -240,7 +243,7 @@ int main(int argc, char *argv[]) {
   //insert vertices and remap faces, prepare borders
   NexusFill(crude, nexus, vert_remap, border_remap);
 
-  NexusFixBorder(nexus, border_remap);
+  //  NexusFixBorder(nexus, border_remap);
 
   //filling history
   Nexus::Update update;
@@ -295,7 +298,6 @@ int main(int argc, char *argv[]) {
       NexusSplit(nexus, vchain, level, newvert, newface, newbord, 
 		 update, error);
 
-
       level_history.push_back(update);
     }
 
@@ -322,6 +324,7 @@ int main(int argc, char *argv[]) {
   nexus.history.push_back(update);
   ReverseHistory(nexus.history);
 
+  TestBorders(nexus);
   //Clean up:
   nexus.Close();
 
@@ -408,9 +411,10 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
   //lets allocate space
   for(c = vert_count.begin(); c != vert_count.end(); c++) {
     unsigned int cell = (*c).first;
+    //TODO detect best parameter below.
     unsigned int patch_idx = nexus.AddPatch(vert_count[cell],
 					    face_count[cell],
-					    3 * bord_count[cell]);
+					    6 * bord_count[cell]);
     
     //why double border space? because at next level
     //we will need to add those borders... 
@@ -446,8 +450,6 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
       faces[i] = v_remap[f_remap[i]];
     }
 
-    if(patch_idx == 68)
-      cerr << "68 bord: " << bord_count[cell] << endl;
     //borders last
     vector<Link> bords;
 
@@ -455,47 +457,45 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
     //for every esternal link we must update external patches!
     for(unsigned int i = 0; i < newbord.size(); i++) {
       Link link = newbord[i];
+      assert(!link.IsNull());
       if(v_remap[link.start_vert] == -1) continue;
       link.start_vert = v_remap[link.start_vert];
       bords.push_back(link);
 
-      Nexus::Entry &rentry = nexus.index[link.end_patch];
-      //TODO if !true reallocate borders.
 
       Border rborder = nexus.GetBorder(link.end_patch);
-      if(rentry.border_used >= rentry.border_size) {
-	cerr << "patch: " << link.end_patch << endl;
-	cerr << "used: " << rentry.border_used << endl;
-	cerr << "size: " << rentry.border_size << endl;
-	unsigned int start = nexus.borders.Size();
-	nexus.borders.Resize(nexus.borders.Size() + 2 * rentry.border_size);
-	Link *tmp = new Link[rentry.border_size];
-	memcpy(tmp, &rborder[0], sizeof(Link) * rentry.border_size);
-	rentry.border_start = start;
-	rentry.border_size *= 2;
+
+      unsigned int pos = rborder.Size();
+      if(nexus.borders.ResizeBorder(link.end_patch, pos+1)) {
 	rborder = nexus.GetBorder(link.end_patch);
-	memcpy(&rborder[0], tmp, sizeof(Link) * rentry.border_used);
-	delete []tmp;
       }
-      assert(rentry.border_used < rentry.border_size);
+      
+      assert(rborder.Size() < rborder.Available());
+      assert(rborder.Available() > pos);
 
-
-      Link &newlink = rborder[rentry.border_used++];
+      Link newlink; 
       newlink.start_vert = link.end_vert;
       newlink.end_vert = link.start_vert;
       newlink.end_patch = patch_idx;
+      rborder[pos] = newlink;
     }
 
     //process internal borders;
     //TODO higly inefficient!!!
     map<unsigned int, unsigned int >::iterator t;  
     for(t = vert_count.begin(); t != vert_count.end(); t++) {
-      if(cell == (*t).first) continue;
-      vector<int> &vremapclose = vert_remap[(*t).first];
+      unsigned int rcell = (*t).first;
+      if(cell == rcell) continue;
+
+      assert(cells2patches.count(rcell));
+      unsigned int rpatch = cells2patches[rcell];
+      assert(rpatch < nexus.index.size());
+
+      vector<int> &vremapclose = vert_remap[rcell];
       for(unsigned int i = 0; i < newvert.size(); i++) {
 	if(v_remap[i] != -1 && vremapclose[i] != -1) {
 	  Link link;
-	  link.end_patch = cells2patches[(*t).first];
+	  link.end_patch = rpatch;
 	  link.start_vert = v_remap[i];
 	  link.end_vert = vremapclose[i];
 	  bords.push_back(link);
@@ -504,7 +504,7 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
     }
 
 
-    Nexus::Entry &entry = nexus.index[patch_idx];
+    Nexus::PatchInfo &entry = nexus.index[patch_idx];
     entry.error = error;
     
     Patch patch = nexus.GetPatch(patch_idx);
@@ -519,8 +519,13 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
     } 
     
     Border border = nexus.GetBorder(patch_idx);
+    assert(border.Available() >= bords.size());
+    if(nexus.borders.ResizeBorder(patch_idx, bords.size())) {
+      border = nexus.GetBorder(patch_idx);
+    }
     memcpy(&(border[0]), &(bords[0]), bords.size() * sizeof(Link));
-    entry.border_used = bords.size();
+
+    //    TestBorders(nexus);
   }  
 }
  
@@ -529,4 +534,24 @@ void ReverseHistory(vector<Nexus::Update> &history) {
   vector<Nexus::Update>::iterator i;
   for(i = history.begin(); i != history.end(); i++)
     swap((*i).erased, (*i).created);
+}
+
+void TestBorders(Nexus &nexus) {
+  //check border correctnes
+  nexus.borders.Flush();
+  for(unsigned int i = 0; i < nexus.index.size(); i++) {
+    Border border = nexus.GetBorder(i);
+    for(unsigned int k = 0; k < border.Size(); k++) {
+      Link &link = border[k];
+      if(link.IsNull()) continue;
+      if(link.end_patch >= nexus.index.size()) {
+	cerr << "Patch: " << i << endl;
+	cerr << "Bsize: " << border.Size() << endl;
+	cerr << "Bava: " << border.Available() << endl;
+	cerr << "K: " << k << endl;
+	cerr << "end: " << link.end_patch << endl;
+      }
+      assert(link.end_patch < nexus.index.size());
+    }
+  }
 }

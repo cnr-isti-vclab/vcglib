@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/10/04 16:49:54  ponchio
+Daily backup. Preparing for compression.
+
 Revision 1.7  2004/10/01 16:54:57  ponchio
 Daily backup.
 
@@ -324,11 +327,9 @@ void VoronoiChain::BuildLevel(Nexus &nexus, unsigned int offset,
 			      float scaling, int steps) {
   unsigned int totface = 0;
   unsigned int totvert = 0;
-  unsigned int totbord = 0;
   for(unsigned int idx = offset; idx < nexus.index.size(); idx++) {
     totface += nexus.index[idx].nface;
     totvert += nexus.index[idx].nvert;
-    totbord += nexus.index[idx].border_size;
   }
 
   

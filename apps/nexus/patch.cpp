@@ -6,7 +6,7 @@ void pad(unsigned int &size) {
   while(size&0x3) size++;
 }
 
-Patch::Patch(Signature signature, Chunk *s, 
+Patch::Patch(Signature signature, char *s, 
 	     unsigned short nvert, unsigned short nface):
              start(s) {
   Init(signature, nvert, nface);
@@ -71,9 +71,10 @@ void Patch::Init(Signature signature,
 
 unsigned int Patch::ChunkSize(Signature signature, 
 			      unsigned short nvert, 
-			      unsigned short nface) {
+			      unsigned short nface,
+			      unsigned int chunk_size) {
   unsigned int size = ByteSize(signature, nvert, nface);
-  size = (size/sizeof(Chunk) + 1);
+  size = (size/chunk_size + 1);
   return size;
 }
 

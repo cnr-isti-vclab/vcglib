@@ -2,7 +2,8 @@
 #define NXS_PATCH_H
 
 #include <vcg/space/point3.h>
-#include <iostream>
+#include <vcg/space/sphere3.h>
+
 namespace nxs {
 
 enum Signature { NXS_FACES          = 0x00000001,
@@ -18,15 +19,12 @@ enum Signature { NXS_FACES          = 0x00000001,
 		 NXS_DATA64         = 0x00080000,
                  NXS_COMPRESSED      = 0x10000000};
 
-struct Chunk {
-  unsigned char p[4096];
-};
 
 
 class Patch {
  public:
  
-  Patch(Signature signature, Chunk *s, 
+  Patch(Signature signature, char *s, 
 	unsigned short nv, unsigned short nf);
 
   void Init(Signature signature, unsigned short nv, unsigned short nf);
@@ -45,14 +43,15 @@ class Patch {
  
   static unsigned int ChunkSize(Signature signature, 
 				unsigned short nvert, 
-				unsigned short nface);
+				unsigned short nface,
+				unsigned int chunk_size);
 
   static unsigned int ByteSize(Signature signature, 
 			       unsigned short nvert, 
 			       unsigned short nface);
 
 
-  Chunk *start;
+  char *start;
 
   unsigned short nv;
   unsigned short nf;

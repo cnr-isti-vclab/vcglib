@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2004/10/04 16:49:54  ponchio
+Daily backup. Preparing for compression.
+
 Revision 1.11  2004/10/01 16:00:12  ponchio
 Added include <assert.h>
 
@@ -170,7 +173,7 @@ template <class T> class VFile: public File {
 
   void Resize(unsigned int elem) {
     Flush();
-    File::Resize(elem * sizeof(T));
+    File::Redim(elem * sizeof(T));
     n_elements = elem;
   }
 
