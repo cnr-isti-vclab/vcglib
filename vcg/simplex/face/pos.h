@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/07/15 12:03:07  ganovelli
+minor changes
+
 Revision 1.7  2004/07/15 11:28:44  ganovelli
 basefacetype to facetype
 
@@ -342,9 +345,9 @@ public:
 	/// Default constructor
 	VFIterator(){}
 	/// Constructor which associates the half-edge elementet with a face and its vertex
-	VFIterator(FaceType const * _f, const int &  _z){f = _f; z = _z;}
+	VFIterator(FaceType * _f, const int &  _z){f = _f; z = _z;}
 
-	const VFIFaceType *	F() const { return f;}
+	VFIFaceType *	F() const { return f;}
 	const int					I() const { return z;}
 
   bool End() const {return f==0;}
