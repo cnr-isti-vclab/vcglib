@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2004/03/05 17:55:01  tarini
+errorino: upper case in Zero()
+
 Revision 1.13  2004/03/03 14:22:48  cignoni
 Yet against cr lf mismatch
 
@@ -418,41 +421,6 @@ double stable_dot ( Point3<P3ScalarType> const & p0, Point3<P3ScalarType> const 
 	}
 }  
 
-/// Compute a shape quality measure of the triangle composed by points p0,p1,p2
-/// It Returns 2*AreaTri/(MaxEdge^2), 
-/// the range is range [0.0, 0.866] 
-/// e.g. Equilateral triangle sqrt(3)/2, halfsquare: 1/2, ... up to a line that has zero quality.
-template<class P3ScalarType>
-P3ScalarType Quality( Point3<P3ScalarType> const &p0, Point3<P3ScalarType> const & p1,  Point3<P3ScalarType> const & p2)
-{
-	Point3<P3ScalarType> d10=p1-p0;
-	Point3<P3ScalarType> d20=p2-p0;
-	Point3<P3ScalarType> d12=p1-p2;
-	Point3<P3ScalarType> x = d10^d20;
-
-	P3ScalarType a = Norm( x );
-	if(a==0) return 0; // Area zero triangles have surely quality==0;
-	P3ScalarType b = SquaredNorm( d10 );
-	P3ScalarType t = b;
-	t = SquaredNorm( d20 ); if ( b<t ) b = t;
-	t = SquaredNorm( d12 ); if ( b<t ) b = t;
-	assert(b!=0.0);
-	return a/b;
-}
-
-/// Returns the normal to the plane passing through p0,p1,p2
-template<class P3ScalarType>
-Point3<P3ScalarType> Normal(const Point3<P3ScalarType> & p0, const Point3<P3ScalarType> & p1, const Point3<P3ScalarType> & p2)
-{
-	return ((p1 - p0) ^ (p2 - p0));
-}
-
-/// Like the above, it returns the normal to the plane passing through p0,p1,p2, but normalized.
-template<class P3ScalarType>
-Point3<P3ScalarType> NormalizedNormal(const Point3<P3ScalarType> & p0, const Point3<P3ScalarType> & p1, const Point3<P3ScalarType> & p2)
-{
-	return ((p1 - p0) ^ (p2 - p0)).Normalize();
-}
 
 
 /// Point(p) Edge(v1-v2) dist, q is the point in v1-v2 with min dist
