@@ -24,11 +24,14 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/03/25 14:55:25  ponchio
+Adding copyright.
+
 
 ****************************************************************************/
 
 #include "trackball.h"
-#include <wrap/gl/wrap.h>
+#include <wrap/gl/math.h>
 using namespace vcg;
 
 #include <iostream>  //debug!
@@ -46,8 +49,8 @@ Trackball::Trackball(): current_button(0), last_x(-1), last_y(-1), dragging(fals
   actions[BUTTON_LEFT] = Action(VIEW, ROTATE);
   actions[BUTTON_LEFT | KEY_CTRL] = Action(VIEW, DRAG_XY);
   actions[BUTTON_LEFT | KEY_SHIFT] = Action(VIEW, SCALE);
-  actions[WHEEL] = Action(SCREEN, SCALE);
-  current_action = Action(LOCAL, NONE);
+  actions[WHEEL] = Action(SCREEN, SCALE);  
+  SetCurrentAction();
 }
 
 void Trackball::SetIdentity() {
@@ -86,8 +89,12 @@ void Trackball::GetView() {
   //view = view * Inverse(Similarityf(track.rot));   	  
   //spinning ignored
 }
-void Trackball::Apply() {  
-  glMultMatrix(track.Matrix());  
+void Trackball::Apply() { 
+  Matrix44f a = track.Matrix();
+  //Transpose(a);
+  glMultMatrix(a);
+  //glMultMatrix(track.Matrix());  
+  //glMultMatrix(track);
 }
 
 void Trackball::Draw() {
