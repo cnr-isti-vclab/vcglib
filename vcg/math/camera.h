@@ -48,8 +48,8 @@ creation
 #define __VCGLIB_CAMERA
 
 // VCG
-#include <vcg/space/point3.h>
-#include <vcg/space/point2.h>
+#include <vcg/space/Point3.h>
+#include <vcg/space/Point2.h>
 #include <vcg/math/similarity.h>
 
 namespace vcg{
@@ -62,11 +62,12 @@ public:
 	Camera():
 		f(0.f),s(vcg::Point2<S>(0.0,0.0)),
 		c(vcg::Point2<S>(0.0,0.0)),
-		viewport(vcg::Point2<int>(0.0,0.0)),
+		viewport(vcg::Point2<int>(0,0)),
 		_flags(0),viewportM(1)
 		{}
 
 	S    f;													// Focal Distance (cioe' la distanza del piano immagine dal centro di proiezione
+	S    farend;										// farend end of frustum (it doesn influence the projection )
 	vcg::Point2<S> s;								// Scale factor of the image (nei casi in cui a senso)
 	vcg::Point2<S> c;								// pin-hole position
 	vcg::Point2<int>	 viewport;		// Size viewport (in pixels)
@@ -83,14 +84,20 @@ public:
 	bool IsOrtho(){ return (_flags & ORTHO_BIT);}
 	void SetOrtho(bool v ){ if(v) _flags |= ORTHO_BIT; else _flags &= ~ORTHO_BIT; };
 	char & UberFlags() {return _flags;}
-public:
+
+	/// set the camera specifying the perspecive view
+	inline void SetPerspective(S angle, S ratio, S near, S farend,vcg::Point2<S> viewport=vcg::Point2<S>(500,-1) );
+
+	/// set the camera specifying the frustum view
+	inline void SetFrustum(S dx, S sx, S bt, S tp, S near, S farend,vcg::Point2<S> viewport=vcg::Point2<S>(500,-1));
+
 	/// project a point from space 3d (in the reference system of the camera) to the camera's plane
 	/// the result is in absolute coordinates
 	inline vcg::Point2<S> Project(const vcg::Point3<S> & p);
 };
 
+/// project a point in the camera plane
 template<class S>
-
 vcg::Point2<S> Camera<S>::Project(const vcg::Point3<S> & p){
 		S  tx = p.X();
 		S  ty = p.Y();
@@ -117,6 +124,37 @@ vcg::Point2<S> Camera<S>::Project(const vcg::Point3<S> & p){
 	return q;
 }
 
+		/// set the camera specifying the perspecive view
+		template<class S>
+			void Camera<S>::SetPerspective(S angle, S ratio, S nr, S _far,vcg::Point2<S> vp){
+				S halfsize[2];
+				halfsize[1] = tan(math::ToRad(angle/2)) * nr;
+				halfsize[0] = halfsize[1]*ratio;
+				SetFrustum(-halfsize[0],halfsize[0],-halfsize[1],halfsize[1],nr,_far,vp);
+		}
+
+		/// set the camera specifying the frustum view
+		template<class S>
+			void Camera<S>::SetFrustum(S sx, S dx, S bt, S tp, S nr, S _far,vcg::Point2<S> vp){
+				S vpt[2];
+				vpt[0] = dx-sx;
+				vpt[1] = tp-bt;
+
+				viewport[0] = vp[0];
+				if(vp[1] != -1)
+					viewport[1] = vp[1];// the user specified the viewport
+				else
+					viewport[1] = viewport[0];// default viewport
+
+				s[0] = vpt[0]/(S) viewport[0];
+				s[1] = vpt[1]/(S) viewport[1];
+
+				c[0] = -sx/vpt[0] * viewport[0];
+				c[1] = -bt/vpt[1] * viewport[1];
+
+				f =nr;
+				farend = _far;
+			}
 
 
 }
@@ -773,7 +811,7 @@ vcg::Point2<S> Camera<S>::Project(const vcg::Point3<S> & p){
 //
 //// Prende in ingresso il bounding box dell'oggetto da inquadrare e setta projection e modelmatrix
 //// in modo da matchare il piu' possibile quelle della camera. Ovviamente (?) si ignora le distorsioni radiali.
-//// Nota che bb viene utilizzato solo per settare i near e far plane in maniera sensata.
+//// Nota che bb viene utilizzato solo per settare i near e farend plane in maniera sensata.
 //void SetGL(const Box3<scalar> &bb,scalar subx0=0, scalar subx1=1,scalar suby0=0,scalar suby1=1)
 //{
 //	scalar _,__;
