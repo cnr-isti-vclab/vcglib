@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2004/10/01 16:54:57  ponchio
+Daily backup.
+
 Revision 1.9  2004/09/30 23:56:33  ponchio
 Backup (added strips and normals)
 
@@ -199,6 +202,9 @@ int main(int argc, char *argv[]) {
       case SDL_QUIT:  quit = 1; break;      
       case SDL_KEYDOWN:                                        
 	switch(event.key.keysym.sym) {
+	case SDLK_RCTRL:
+	case SDLK_LCTRL: 
+	  track.ButtonDown(Trackball::KEY_CTRL); break;
 	case SDLK_q: exit(0); break;
 	case SDLK_b: show_borders = !show_borders; break;
 	case SDLK_c: show_colors = !show_colors; break;
@@ -220,20 +226,32 @@ int main(int argc, char *argv[]) {
 	  cerr << "error: " << error << endl; break;
 	}
 	break;
-      case SDL_MOUSEBUTTONDOWN:       
+      case SDL_KEYUP: 
+	switch(event.key.keysym.sym) {
+	case SDLK_RCTRL:
+	case SDLK_LCTRL:
+	  track.ButtonUp(Trackball::KEY_CTRL); break;
+	}
+	break;
+      case SDL_MOUSEBUTTONDOWN:   
 	x = event.button.x;
 	y = height - event.button.y;          
-	if(event.button.button == SDL_BUTTON_WHEELUP) {
+	if(event.button.button == SDL_BUTTON_WHEELUP) 
 	  track.MouseWheel(1);
-	} else if(event.button.button == SDL_BUTTON_WHEELDOWN) {
+	else if(event.button.button == SDL_BUTTON_WHEELDOWN) 
 	  track.MouseWheel(-1);
-	} else 
-	  track.MouseDown(x, y, 1);
+	else if(event.button.button == SDL_BUTTON_LEFT)
+	  track.MouseDown(x, y, Trackball::BUTTON_LEFT);
+	else if(event.button.button == SDL_BUTTON_RIGHT)
+	  track.MouseDown(x, y, Trackball::BUTTON_RIGHT);
         break;
       case SDL_MOUSEBUTTONUP:          
 	x = event.button.x;
-	y = height - event.button.y;      
-	track.MouseUp(x, y, 1);    
+	y = height - event.button.y; 
+	if(event.button.button == SDL_BUTTON_LEFT)
+	  track.MouseUp(x, y, Trackball::BUTTON_LEFT);
+	else if(event.button.button == SDL_BUTTON_RIGHT)
+	  track.MouseUp(x, y, Trackball::BUTTON_RIGHT);     
 	break;
       case SDL_MOUSEMOTION: 
 	while(SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_MOUSEMOTIONMASK));
@@ -276,7 +294,10 @@ int main(int argc, char *argv[]) {
     Point3f center = sphere.Center();
     glTranslatef(-center[0], -center[1], -center[2]);
     
-    glColor3f(0.9, 0.9, 0.9);
+    Point3f &p = nexus.sphere.Center();
+    float r = nexus.sphere.Radius();
+
+    glColor3f(0.8, 0.8, 0.8);
     nexus.SetMode(mode);
     nexus.SetPolicy(policy, error);
     nexus.SetComponent(NexusMt::COLOR, show_colors);

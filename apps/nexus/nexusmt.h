@@ -67,6 +67,7 @@ class NexusMt: public Nexus {
 
   Vbo vbo;
   unsigned int vbo_size;
+  unsigned int ram_size;
 
   Policy *policy;
   float error;
@@ -81,6 +82,7 @@ class NexusMt: public Nexus {
   bool use_data;
   
   NexusMt();
+  ~NexusMt();
   
   bool Load(const std::string &filename);
   bool InitGL();
@@ -88,7 +90,8 @@ class NexusMt: public Nexus {
   void Render();
   void SetPolicy(Policy *policy, bool realtime = true);
   void SetPolicy(PolicyKind kind, float error, bool realtime = true);
-  void SetVbo(Vbo mode, unsigned int vbo_size = 0);
+  void SetVbo(Vbo mode, unsigned int vbo_size = 0, 
+	      unsigned int ram_size = 128000000);
   bool SetMode(Mode mode);
   bool SetComponent(Component c, bool on);
   bool SetComponents(unsigned int mask);
@@ -100,6 +103,23 @@ class NexusMt: public Nexus {
   void LoadHistory();
   void ClearHistory();
   void Select(std::vector<unsigned int> &selected);
+  Patch &LoadPatch(unsigned int p);
+  void FlushRam();
+
+  unsigned int frame;
+  unsigned int ram_used;
+
+  struct Sgurz {
+    Sgurz(Patch *_patch = NULL, unsigned int _vbo = 0,
+	  unsigned int _vio = 0, unsigned int _last_frame = 0):
+      patch(_patch), vbo(_vbo), vio(_vio), last_frame(_last_frame) {}
+    Patch *patch;
+    unsigned int vbo; //vertex buffer
+    unsigned int vio; //index buffer
+    unsigned int last_frame;
+  };
+
+  std::vector<Sgurz> ram_buffer;
 };
 
 }

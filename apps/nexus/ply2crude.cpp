@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/07/15 14:32:49  ponchio
+Debug.
+
 Revision 1.2  2004/07/05 15:49:39  ponchio
 Windows (DevCpp, mingw) port.
 
@@ -78,7 +81,8 @@ int main(int argc, char *argv[]) {
   }
   string output = argv[argc-1];
   //test last one is not a ply
-  if(output.substr(output.size()-4, output.size()) == ".ply") {
+  if(output.size() > 4 && 
+     output.substr(output.size()-4, output.size()) == ".ply") {
     cerr << "Last argument is output (so not a .ply)\n";
     return -1;
   }

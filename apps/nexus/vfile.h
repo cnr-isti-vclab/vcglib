@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2004/10/01 16:00:12  ponchio
+Added include <assert.h>
+
 Revision 1.10  2004/09/30 23:56:33  ponchio
 Backup (added strips and normals)
 
@@ -69,15 +72,9 @@ Created
 #ifndef VFILE_H
 #define VFILE_H
 
-#ifndef WIN32
-#include <unistd.h>
-#else
-#include <windows.h>
-#endif
+#include "file.h"
 
 #include <assert.h>
-#include <errno.h>
-//#include <hash_map>
 #include <map>
 #include <list>
 #include <string>
@@ -91,7 +88,7 @@ Created
 
 namespace nxs {
 
-template <class T> class VFile {
+template <class T> class VFile: public File {
  public:
   
   struct Buffer {
@@ -100,13 +97,8 @@ template <class T> class VFile {
     T *data;
   };
 
- private:
-#ifdef WIN32
-   HANDLE fp;
-#else
-  FILE *fp;  
-#endif
-
+ protected:
+  unsigned int n_elements;
   std::list<Buffer> buffers;
   typedef typename std::list<Buffer>::iterator list_iterator;
 
@@ -115,7 +107,6 @@ template <class T> class VFile {
 
   unsigned int chunk_size; //default buffer size (expressed in number of T)
   unsigned int queue_size;
-  unsigned int n_elements; //size of the vector
 
  public:
   class iterator {
@@ -129,29 +120,19 @@ template <class T> class VFile {
     VFile *buffer;
   };
   
-  VFile(): fp(NULL), last_buffer(NULL) {}
-  ~VFile() { Close(); }                    
+  VFile(): last_buffer(NULL) {}
+  ~VFile() { Close(); }
   bool Create(const std::string &filename, 
 	      unsigned int _chunk_size = 4096/sizeof(T), 
 	      unsigned int _queue_size = 1000) {
 
     assert(_chunk_size > 0);
+    n_elements = 0;
     last_buffer = NULL;
     chunk_size = _chunk_size;
     queue_size = _queue_size;
-    n_elements = 0;    
 
-#ifdef WIN32
-    fp = CreateFile(filename.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
-                    0, NULL);
-    if(fp == INVALID_HANDLE_VALUE) return false;
-#else
-    fp = fopen(filename.c_str(), "wb+");
-    if(!fp) return false;        
-#endif
-
-
-    return true;
+    return File::Create(filename);
   }
 
   bool Load(const std:: string &filename, 
@@ -162,35 +143,14 @@ template <class T> class VFile {
     last_buffer = NULL;
     chunk_size = _chunk_size;
     queue_size = _queue_size;
-#ifdef WIN32
-    fp = CreateFile(filename.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING,
-                    0, NULL); 
-    if(fp == INVALID_HANDLE_VALUE) return false;
-#else
-    fp = fopen(filename.c_str(), "rb+");
-    if(!fp) return false;
-#endif
 
-
-#ifdef WIN32    
-    n_elements = GetFileSize(fp, NULL)/ sizeof(T);
-#else
-    fseek(fp, 0, SEEK_END);
-    n_elements = ftell(fp)/ sizeof(T);   
-#endif
+    if(!File::Load(filename)) return false;
+    n_elements = size/sizeof(T);
     return true;
   }
 
   void Close() {
-    if(fp) {
       Flush();
-#ifdef WIN32
-      CloseHandle(fp);
-#else
-      fclose(fp);
-#endif
-      fp = NULL;
-    }
   }
 
   void Flush() {
@@ -203,51 +163,14 @@ template <class T> class VFile {
   }
 
   void FlushBuffer(Buffer buffer) {
-    SetPosition(buffer.key);
-    WriteBuffer(buffer.data, buffer.size);
-/*#ifdef WIN32
-    SetFilePointer(fp, buffer.key * chunk_size * sizeof(T), FILE_BEGIN);
-    unsigned int tmp;
-    WriteFile(fp, buffer.data, sizeof(T) * buffer.size, &tmp, NULL);
-    if(tmp != sizeof(T) * buffer.size)
-      assert(0 && "Could not write");        
-#else
-    fseek(fp, buffer.key * chunk_size * sizeof(T), SEEK_SET);
-    if(buffer.size != fwrite(buffer.data, sizeof(T), buffer.size, fp)) 
-      assert(0 && "Could not write");    
-#endif*/
+    SetPosition(buffer.key * chunk_size * sizeof(T));
+    WriteBuffer((char *)(buffer.data), buffer.size * sizeof(T));
     delete []buffer.data;
   }
 
   void Resize(unsigned int elem) {
-    assert(fp);
     Flush();
-    if(elem > n_elements) {
-#ifdef WIN32
-      if(INVALID_SET_FILE_POINTER == SetFilePointer(fp, elem*sizeof(T)-1, 0, FILE_BEGIN))
-#else
-      if(-1 == fseek(fp, elem*sizeof(T) -1, SEEK_SET)) 
-#endif
-	      assert(0 && "Could not resize");
-      
-      unsigned char a;
-#ifdef WIN32
-      DWORD tmp;
-      WriteFile(fp, &a, 1, &tmp, NULL);
-#else
-      fwrite(&a, sizeof(unsigned char), 1, fp);
-#endif
-    } else {
-      //TODO optimize: we do not need flush for buffers over elem.
-      
-#ifndef WIN32
-      int fd = fileno(fp);
-      ftruncate(fd, elem*sizeof(T));
-#else
-      SetFilePointer(fp, elem*sizeof(T), 0, FILE_BEGIN);
-      SetEndOfFile(fp);
-#endif
-    }    
+    File::Resize(elem * sizeof(T));
     n_elements = elem;
   }
 
@@ -291,8 +214,8 @@ template <class T> class VFile {
     index[buffer.key] = buffers.begin();   
     last_buffer = &*buffers.begin();
     
-    SetPosition(chunk);
-    ReadBuffer(buffer.data, buffer.size);    
+    SetPosition(chunk * chunk_size * sizeof(T));
+    ReadBuffer((char *)(buffer.data), buffer.size * sizeof(T));    
 
     return *(buffer.data + offset);
   }
@@ -327,8 +250,8 @@ template <class T> class VFile {
     buffers.push_front(buffer);    
     index[chunk] = buffers.begin();   
 
-    SetPosition(chunk);
-    ReadBuffer(buffer.data, buffer.size);
+    SetPosition(chunk * chunk_size * sizeof(T));
+    ReadBuffer((char *)(buffer.data), buffer.size * sizeof(T));
     return buffer.data;
   } 
 
@@ -342,37 +265,6 @@ template <class T> class VFile {
   unsigned int QueueSize() { return queue_size; }
   iterator Begin() { return iterator(0, this); }
   iterator End() { return iterator(Size(), this); }
-
- protected:
-  void SetPosition(unsigned int chunk) {
-#ifdef WIN32
-    SetFilePointer(fp, chunk * chunk_size * sizeof(T), 0, FILE_BEGIN);
-#else
-    fseek(fp, chunk * chunk_size * sizeof(T), SEEK_SET);
-#endif
-  }
-  void ReadBuffer(T *data, unsigned int size) {
-#ifdef WIN32
-    DWORD tmp;
-    ReadFile(fp, data, sizeof(T) * size, &tmp, NULL);
-    if(tmp != sizeof(T) * size)
-      assert(0 && "Could not read");        
-#else    
-    if(size != fread(data, sizeof(T), size, fp)) 
-      assert(0 && "Could not read");    
-#endif
-  }
-  void WriteBuffer(T *data, unsigned int size) {
-#ifdef WIN32
-    DWORD tmp;
-    WriteFile(fp, data, sizeof(T) * size, &tmp, NULL);
-    if(tmp != sizeof(T) * size)
-      assert(0 && "Could not write");        
-#else    
-    if(size != fwrite(data, sizeof(T), size, fp)) 
-      assert(0 && "Could not write");    
-#endif
-  }
 };
 
 }//namespace

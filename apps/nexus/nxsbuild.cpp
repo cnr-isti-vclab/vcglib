@@ -45,7 +45,7 @@ void nxs::NexusAllocate(Crude &crude,
     entry.patch_start = totchunks;
     entry.patch_size = Patch::ChunkSize(nexus.signature,
 					patch_verts[i], patch_faces[i]);
-    
+    entry.patch_used = entry.patch_size;
     totchunks += entry.patch_size;
     entry.border_start = 0xffffffff;
     entry.nvert = patch_verts[i];
@@ -69,6 +69,12 @@ void nxs::NexusAllocate(Crude &crude,
     Patch patch = nexus.GetPatch(npatch);
     
     Crude::Face *faces = (Crude::Face *)patch.start;
+
+    //REMOVING degenerate faces
+    if(face[0] == face[1] || face[1] == face[2] || face[0] == face[2]) {
+      cerr << "Found degenerate.\n";
+      continue;
+    }
     faces[entry.nface] = face;
     entry.nface++;
   }
@@ -92,6 +98,7 @@ void nxs::NexusFill(Crude &crude,
     
     //make a copy of faces (we need to write there :P)
     Crude::Face *faces = new Crude::Face[patch.nf];
+    //Test for degenerate faces?
     memcpy(faces, (Crude::Face *)patch.start,
 	   patch.nf * sizeof(Crude::Face));
     
@@ -112,6 +119,10 @@ void nxs::NexusFill(Crude &crude,
         }
 	patch.FaceBegin()[k*3 + j] = remap[face[j]];
       }
+      //test for degenerate faces.
+      assert(patch.FaceBegin()[k*3] != patch.FaceBegin()[k*3+1]);
+      assert(patch.FaceBegin()[k*3] != patch.FaceBegin()[k*3+2]);
+      assert(patch.FaceBegin()[k*3+1] != patch.FaceBegin()[k*3+2]);
     }
     assert(count == remap.size());
     assert(entry.nvert == remap.size());

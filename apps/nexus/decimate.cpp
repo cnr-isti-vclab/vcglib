@@ -17,6 +17,7 @@
 //#include "border.h"
 
 #include "decimate.h"
+//#include <wrap/io_trimesh/export_ply.h>
 
 using namespace vcg;
 using namespace tri;
@@ -57,6 +58,13 @@ float nxs::Decimate(Decimation mode,
 		    vector<unsigned int> &newface,
 		    vector<Link> &newbord,
 		    vector<int> &vert_remap) {
+
+  //Temporary test:
+  for(unsigned int i = 0; i < newface.size(); i+= 3) {
+    assert(newface[i*3] != newface[i*3+1]);
+    assert(newface[i*3] != newface[i*3+2]);
+    assert(newface[i*3+1] != newface[i*3+2]);
+  }
   
   MyMesh mesh;
   
@@ -89,6 +97,9 @@ float nxs::Decimate(Decimation mode,
   //  if(FinalSize > target_faces) FinalSize = target_faces;
 
 
+  /*  if(target_faces == 2404) {
+    vcg::tri::io::ExporterPLY<MyMesh>::Save(mesh, "bum");
+    }*/
   printf("mesh loaded %d %d \n",mesh.vn,mesh.fn);
   printf("reducing it to %i\n", target_faces);
 
@@ -158,6 +169,14 @@ float nxs::Decimate(Decimation mode,
     assert(vert_remap[v] != -1);
     v = vert_remap[v];
   }
+
+  //Temporary test again:
+  for(unsigned int i = 0; i < newface.size(); i+= 3) {
+    assert(newface[i*3] != newface[i*3+1]);
+    assert(newface[i*3] != newface[i*3+2]);
+    assert(newface[i*3+1] != newface[i*3+2]);
+  }
+  
   return error;
 }
 

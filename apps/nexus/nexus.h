@@ -24,7 +24,8 @@ class Nexus {
 
     unsigned int patch_start;  //granularita' Chunk
     unsigned int border_start; //granuralita' Link
-    unsigned short patch_size;  //in cuhnks
+    unsigned short patch_size;  //in chunks
+    unsigned short patch_used;  // in chunks (if compressed is < patch_size)
     unsigned short border_size; //in Links
     unsigned short border_used; //in Links
 

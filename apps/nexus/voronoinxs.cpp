@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/10/01 16:54:57  ponchio
+Daily backup.
+
 Revision 1.5  2004/09/30 00:27:42  ponchio
 Lot of changes. Backup.
 
@@ -161,7 +164,8 @@ int main(int argc, char *argv[]) {
     cerr << " -f N: use N faces per patch (default 1000, max 32000)\n";
     cerr << " -t N: mini faces per patch (default 200)\n";
     cerr << " -l N: number of levels\n";
-    cerr << " -s F: scaling factor (0 < F < 1, default 0.5)\n\n";
+    cerr << " -s F: scaling factor (0 < F < 1, default 0.5)\n";
+    cerr << " -o N: nomber of optimization steps\n";
     cerr << " -d <method>: decimation method: quadric, cluster. (default quadric)\n";
     return -1;
   }

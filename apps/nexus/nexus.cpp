@@ -126,7 +126,7 @@ void Nexus::Close() {
 
 Patch Nexus::GetPatch(unsigned int patch, bool flush) {
   Entry &entry = index[patch];
-  Chunk *start = patches.GetRegion(entry.patch_start, entry.patch_size,flush);
+  Chunk *start = patches.GetRegion(entry.patch_start, entry.patch_used,flush);
   return Patch(signature, start, entry.nvert, entry.nface);
 }
 
@@ -142,6 +142,7 @@ unsigned int Nexus::AddPatch(unsigned int nvert, unsigned int nface,
   Entry entry;
   entry.patch_start = patches.Size();
   entry.patch_size = Patch::ChunkSize(signature, nvert, nface);
+  entry.patch_used = entry.patch_size;
   entry.border_start = borders.Size();
   entry.border_size = nbord;
   entry.border_used = 0;
@@ -236,6 +237,13 @@ void Nexus::Join(const std::set<unsigned int> &patches,
       for(int k = 0; k < 3; k++) {
 	newface[3*fcount + k] = vmap[patch.Face(i)[k]];
       }
+      assert(patch.Face(i)[0] != patch.Face(i)[1]);
+      assert(patch.Face(i)[0] != patch.Face(i)[2]);
+      assert(patch.Face(i)[1] != patch.Face(i)[2]);
+      assert(newface[3*fcount + 0] != newface[3*fcount + 1]);
+      assert(newface[3*fcount + 0] != newface[3*fcount + 2]);
+      assert(newface[3*fcount + 1] != newface[3*fcount + 2]);
+      
       fcount++;
       assert(fcount *3 <= newface.size());
     }

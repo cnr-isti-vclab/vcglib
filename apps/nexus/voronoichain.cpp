@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/10/01 16:54:57  ponchio
+Daily backup.
+
 Revision 1.6  2004/09/30 00:27:42  ponchio
 Lot of changes. Backup.
 
@@ -238,6 +241,7 @@ unsigned int VoronoiChain::Locate(unsigned int level,
   return fine + coarse * levels[level].size();*/
 }
 
+//TODO move this to nxsbuild
 void VoronoiChain::RemapFaces(Crude &crude, 			      VFile<unsigned int> &face_remap,
 			      vector<unsigned int> &patch_faces,
 			      float scaling, int steps) {
@@ -267,10 +271,7 @@ void VoronoiChain::RemapFaces(Crude &crude, 			      VFile<unsigned int> &face_r
     } else
       patch = patches[make_pair(coarse, fine)];
 
-    //BEWARE unkomment this!
     face_remap[i] = patch;
-    //face_remap[i] = fine;
-    //    face_remap[i] = coarse;
     if(patch_faces.size() <= patch) 
       patch_faces.resize(patch+1, 0);
     patch_faces[patch]++;
