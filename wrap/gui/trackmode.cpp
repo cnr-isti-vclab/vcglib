@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2005/01/14 15:44:03  ganovelli
+PlaneMode completed
+
 Revision 1.9  2004/09/09 22:59:21  cignoni
 Removed many small warnings
 
@@ -93,7 +96,7 @@ Point3f TrackMode::HitViewPlane(Trackball *tb, const Point3f &p) {
   Line3fN ln= tb->camera.ViewLineFromWindow(Point3f(p[0],p[1],0));
 
   Point3f PonVP;
-  bool res = Intersection<float>(vp,ln,PonVP);
+  /*bool res = */Intersection<float>(vp,ln,PonVP);
   return PonVP;
 }
 
@@ -204,7 +207,7 @@ bool SphereMode::HitHyper(Point3f center,  float radius, Point3f viewpoint, Plan
    */
 
 Point3f SphereMode::Hit(Trackball *tb, const Point3f &p) {
-  const float Thr = tb->radius/math::Sqrt(2.0f);
+ // const float Thr = tb->radius/math::Sqrt(2.0f);
 
   Line3fN vn = tb->camera.ViewLineFromModel(tb->center);
   Line3fN ln = tb->camera.ViewLineFromWindow(Point3f(p[0],p[1],0));
@@ -218,7 +221,7 @@ Point3f SphereMode::Hit(Trackball *tb, const Point3f &p) {
         hitSphere=hitSphere1;
   else  hitSphere=hitSphere2;
 
-  float dl=Distance(ln,tb->center);
+  /*float dl=*/Distance(ln,tb->center);
   bool resHp = HitHyper(tb->center, tb->radius, viewpoint, vp, hitPlane, hitHyper) ;
 
   // four cases 
