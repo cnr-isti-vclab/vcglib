@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/05/05 17:03:25  pietroni
+changed name to topology functions
+
 Revision 1.7  2004/04/28 11:37:14  pietroni
 *** empty log message ***
 
@@ -382,7 +385,7 @@ inline const VFTYPE * & VFb() const
 #endif
 	}
 
-inline int & _VFi()
+inline int & VFi()
 	{
 #if ((defined __VCGLIB_VERTEX_AF) || (defined __VCGLIB_VERTEX_AFS))
 
@@ -393,7 +396,7 @@ inline int & _VFi()
 #endif
 	}
 
-inline const int & _VFi() const
+inline const int & VFi() const
 	{
 #if ((defined __VCGLIB_VERTEX_AF) || (defined __VCGLIB_VERTEX_AFS))
 		  return _vfi;
