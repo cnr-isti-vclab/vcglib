@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2004/02/19 16:12:28  cignoni
+cr lf mismatch 2
+
 Revision 1.10  2004/02/19 16:06:24  cignoni
 cr lf mismatch
 
@@ -54,7 +57,8 @@ namespace vcg {
 /*@{*/
     /**
         The templated class for representing a point in 3D space.
-     *  The class is templated over the ScalarType class representing coordinates.
+        The class is templated over the ScalarType class that is used to represent coordinates. All the usual
+        operator overloading (* + - ...) is present. 
      */
 
 template <class P3ScalarType> class Point3
@@ -105,8 +109,8 @@ public:
 		_v[2] = 0;
 	}
   
-  /// Questa funzione estende il vettore ad un qualsiasi numero di dimensioni
-	/// paddando gli elementi estesi con zeri
+  /// Padding function: give a default 0 value to all the elements that are not in the [0..2] range. 
+  /// Useful for managing in a consistent way object that could have point2 / point3 / point4
 	inline P3ScalarType Ext( const int i ) const
 	{
 		if(i>=0 && i<=2) return _v[i];
@@ -263,8 +267,8 @@ public:
 		if(n>0.0) {	_v[0] /= n;	_v[1] /= n;	_v[2] /= n;  }
 		return *this;
 	}
-		// Polarizzazione
-	void Polar( P3ScalarType & ro, P3ScalarType & tetha, P3ScalarType & fi ) const
+		// Convert to polar coordinates
+	void ToPolar( P3ScalarType & ro, P3ScalarType & tetha, P3ScalarType & fi ) const
 	{
 		ro = Norm();
 		tetha = (P3ScalarType)atan2( _v[1], _v[0] );
@@ -317,14 +321,6 @@ inline bool operator == ( Point3 const & p ) const
 		return Point3<P3ScalarType> ( -_v[0], -_v[1], -_v[2] );
 	}
  //@}
-		// Casts
-#ifdef __VCG_USE_CAST
-inline operator Point3<int>			 (){ return Point3<int>			(_v[0],_v[1],_v[2]); }
-inline operator Point3<unsigned int> (){ return Point3<unsigned int>(_v[0],_v[1],_v[2]); }
-inline operator Point3<double>		 (){ return Point3<double>		(_v[0],_v[1],_v[2]); }
-inline operator Point3<float>		 (){ return Point3<float>		(_v[0],_v[1],_v[2]); }
-inline operator Point3<short>		 (){ return Point3<short>		(_v[0],_v[1],_v[2]); }
-#endif
 
 }; // end class definition
 
@@ -416,9 +412,10 @@ double stable_dot ( Point3<P3ScalarType> const & p0, Point3<P3ScalarType> const 
 	}
 }  
 
-	// Returns 2*AreaTri/(MaxEdge^2), range [0.0, 0.866] 
-	// e.g. halfsquare: 1/2, Equitri sqrt(3)/2, ecc
-	// Modificata il 7/sep/00 per evitare l'allocazione temporanea di variabili
+/// Compute a shape quality measure of the triangle composed by points p0,p1,p2
+/// It Returns 2*AreaTri/(MaxEdge^2), 
+/// the range is range [0.0, 0.866] 
+/// e.g. Equilateral triangle sqrt(3)/2, halfsquare: 1/2, ... up to a line that has zero quality.
 template<class P3ScalarType>
 P3ScalarType Quality( Point3<P3ScalarType> const &p0, Point3<P3ScalarType> const & p1,  Point3<P3ScalarType> const & p2)
 {
@@ -437,28 +434,19 @@ P3ScalarType Quality( Point3<P3ScalarType> const &p0, Point3<P3ScalarType> const
 	return a/b;
 }
 
-		// Return the value of the face normal (internal use only)
+/// Returns the normal to the plane passing through p0,p1,p2
 template<class P3ScalarType>
 Point3<P3ScalarType> Normal(const Point3<P3ScalarType> & p0, const Point3<P3ScalarType> & p1, const Point3<P3ScalarType> & p2)
 {
 	return ((p1 - p0) ^ (p2 - p0));
 }
 
-		// Return the value of the face normal (internal use only)
+/// Like the above, it returns the normal to the plane passing through p0,p1,p2, but normalized.
 template<class P3ScalarType>
 Point3<P3ScalarType> NormalizedNormal(const Point3<P3ScalarType> & p0, const Point3<P3ScalarType> & p1, const Point3<P3ScalarType> & p2)
 {
 	return ((p1 - p0) ^ (p2 - p0)).Normalize();
 }
-
-template<class P3ScalarType>
-Point3<P3ScalarType> Jitter(Point3<P3ScalarType> &n, P3ScalarType RadAngle)
-{
-	Point3<P3ScalarType> rnd(1.0 - 2.0*P3ScalarType(rand())/RAND_MAX, 1.0 - 2.0*P3ScalarType(rand())/RAND_MAX, 1.0 - 2.0*P3ScalarType(rand())/RAND_MAX);
-	rnd*=Sin(RadAngle);
-	return (n+rnd).Normalize();
-}
-
 
 
 /// Point(p) Edge(v1-v2) dist, q is the point in v1-v2 with min dist
