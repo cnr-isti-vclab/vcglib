@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/03/11 15:25:29  ganovelli
+added ClosersIterator and other minor changes. Not compatible with the previous version.
+Still other modifications to do (temporary commit)
+
 Revision 1.2  2005/02/21 12:13:25  ganovelli
 added vcg header
 
@@ -40,7 +44,7 @@ added vcg header
 
 #include <map>
 #include <vector>
-
+#include <algorithm>
 #ifdef WIN32
 	#include <hash_map>
 	#define STDEXT stdext
@@ -60,7 +64,6 @@ class SpatialHashTable{
 
 public:
 	
-	typedef ElemType* SimplexPointer;
 	typedef typename ElemType::CoordType CoordType;
 	typedef typename CoordType::ScalarType ScalarType;
 		
@@ -100,7 +103,7 @@ public:
 			
 			int Size()
 			{
-				return (elem.size());
+				return (int)(elem.size());
 			}
 			
 			///update or insert an element into a cell
@@ -117,18 +120,16 @@ public:
 			}
 			
 			//return an array of all simplexes of the map that have a right timestamp or are not deleted
-			std::vector<ElemType*> Simplexes(const int & _tempMark)
+			void  Elems(const int & _tempMark,std::vector<ElemType*> & res)
 			{
-				std::vector<ElemType*> result;
-				result.clear();
+
 				for (IteMap ite=elem.begin();ite!=elem.end();ite++)
 				{
 					ElemType* sim=(*ite).first;
 					int t=(*ite).second;
 					if ((!sim->IsD())&&(t>=_tempMark))
-						result.push_back(sim);
+						res.push_back(sim);
 				}
-				return (result);
 			}
 		}; // end struct HElement
 	
@@ -301,8 +302,85 @@ public:
 				}
 		return ret;
 	}
+	
+//*********************************************************************
+	template <class A> 
+		bool usefirst(const A & a,const A & b)const {return a.first < b.first;}
 
-	// tanto per prova
+	int ClosestK(const int& k,	
+		ElemType* e, 
+	std::vector<ElemType*>& res) {
+
+		typedef std::pair<ScalarType,ElemType*> ElemDist;
+		std::vector<ElemDist > neigh_dist;
+		std::vector<ElemDist >::iterator ite_nd;
+		std::vector<ElemType* > neigh;
+		std::vector<ElemType*>::iterator i_neigh;
+		typename ElemType::CoordType p = e->P();
+		ScalarType radius,tmp,d;
+
+		// set the radius as the distance to the closest face
+		radius =	p[2]-floor(p[2]/l)*l;
+		if(radius > l*0.5) radius = l -radius;
+		tmp =	p[1]-floor(p[1]/l)*l;
+		if(tmp > l*0.5) tmp = l -tmp;
+		if(radius > tmp) tmp = radius;
+		tmp =	p[0]-floor(p[0]/l)*l;
+		if(tmp > l*0.5) tmp = l -tmp;
+		if(radius > tmp) radius = tmp;
+
+		int x,y,z;
+		vcg::Point3i mincorner,maxcorner,c;
+		c = Cell(p);
+		mincorner = maxcorner = c;	
+		neigh_dist.push_back(ElemDist(-1,e));
+		ite_nd = neigh_dist.begin();
+		
+		while((int)res.size() < k)
+		{
+
+		 //run on the border
+			for( z = mincorner[2]; z <= maxcorner[2]; ++z)
+				for(	y = mincorner[1]; y <= maxcorner[1];  ++y)
+					for(	x = mincorner[0]; x <= maxcorner[0];)
+					{
+
+						neigh.clear();
+						getAtCell(vcg::Point3i(x,y,z),neigh);
+								for(i_neigh = 	neigh.begin(); i_neigh != neigh.end(); ++i_neigh)
+								{
+										d = Distance(p,(*i_neigh)->P());
+										if( (*i_neigh) != e) 
+											neigh_dist.push_back(ElemDist(d,*i_neigh));
+									}
+						if(
+						( ( y == mincorner[1]) || ( y == maxcorner[1])) ||
+						( ( z == mincorner[2]) || ( z == maxcorner[2])) ||
+						( x == maxcorner[0])
+						)++x; else x=maxcorner[0];
+				}
+//		,usefirst<ElemDist> ---<std::vector<ElemDist >::iterator >
+			ite_nd =neigh_dist.begin();
+			std::advance(ite_nd,res.size());
+			std::sort(ite_nd,neigh_dist.end());
+			while ( ( (int)res.size() < k ) && (ite_nd != neigh_dist.end()))
+			{
+				if((*ite_nd).first < radius)
+					res.push_back( (*ite_nd).second );
+				++ite_nd;
+			}
+
+			mincorner -= vcg::Point3i(1,1,1);
+			maxcorner += vcg::Point3i(1,1,1);
+			radius+=l;
+
+		}
+				return 0;	
+	}
+//**********************************************************************
+
+
+	// return the elem closer than radius
 	int CloserThan(	typename ElemType::CoordType p, 
 									typename ElemType::ScalarType radius, 
 									std::vector<ElemType*> & closers){
@@ -314,8 +392,8 @@ public:
 				closers.push_back(*cli);
 				++cli;
 			}
-			return closers.size();
-	}
+	return (int)closers.size();
+									}
 
 	std::vector<Point3i> Cells(ElemType *s)
 	{
@@ -359,25 +437,20 @@ public:
 		hash_table.clear();
 	}
 
-		std::vector<SimplexPointer> getAt(CoordType _p)
-	{
-		std::vector<SimplexPointer> result;
-		Point3i c=Cell(_p);
-		return (getAtCell(c));
-	}
+	//void	std::vector<ElemType> getAt(CoordType _p,std::vector<ElemType> & res)
+	//{
+	//	std::vector<ElemType> result;
+	//	Point3i c=Cell(_p);
+	//	return (getAtCell(c,res));
+	//}
 
-	std::vector<SimplexPointer> getAtCell(Point3i _c)
+	void getAtCell(Point3i _c,std::vector<ElemType*> & res)
 	{
-		std::vector<SimplexPointer> result;
+		std::vector<ElemType> result;
 		int h=Hash(_c);
-		if (numElemCell(_c)==0)
-		{
-			return result;
-		}
-		else
-		{
-			IteHtable res=hash_table.find(h);
-			return ((*res).second.Simplexes(tempMark));
+		if (numElemCell(_c)!=0){
+			IteHtable h_res=hash_table.find(h);
+			((*h_res).second.Elems(tempMark,res));
 		}
 	}
 
