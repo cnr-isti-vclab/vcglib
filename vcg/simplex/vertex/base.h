@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.15  2004/07/15 10:13:48  pietroni
+adde NormalizedNormalV funtion to compute the normal on a vertex
+
 Revision 1.14  2004/05/13 22:44:40  ganovelli
 syntax error (typo)
 
@@ -36,6 +39,9 @@ Revision 1.12  2004/05/10 13:31:13  ganovelli
 function for edge adjacency added
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2004/07/15 10:13:48  pietroni
+adde NormalizedNormalV funtion to compute the normal on a vertex
+
 Revision 1.14  2004/05/13 22:44:40  ganovelli
 syntax error (typo)
 
@@ -49,7 +55,7 @@ Revision 1.11  2004/05/10 13:31:13  ganovelli
 function for edge adjacency added
 
 Revision 1.10  2004/05/10 13:13:17  cignoni
-added void to Convert, corrected return object in VFb
+added void to Convert, corrected return object in VFp
 
 Revision 1.9  2004/05/06 15:28:10  pietroni
 changed names to VF topology function (was missed)
@@ -219,6 +225,9 @@ public:
 	bool IsS() const {return (_flags & SELECTED) != 0;}
 	///  checks if the vertex is readable
 	bool IsB() const {return (_flags & BORDER) != 0;}
+	///  checks if the vertex is visited
+	bool IsV() const {return (_flags & VISITED) != 0;}
+
 
 	/** Set the flag value
 		@param flagp Valore da inserire nel flag
@@ -246,10 +255,14 @@ public:
 	void SetS()		{_flags |=SELECTED;}
 	/// Un-select a vertex
 	void ClearS()	{_flags &= ~SELECTED;}
+	/// Set vertex as ob border
 	void SetB()		{_flags |=BORDER;}
 	void ClearB()	{_flags &=~BORDER;}
-	
-///  Return the first bit that is not still used
+	///  checks if the vertex is visited
+	void ClearV()	{_flags &= ~VISITED;}
+	///  checks if the vertex is visited
+	void SetV()		{_flags |=VISITED;}
+	///  Return the first bit that is not still used
 static int &LastBitFlag()
 		{
 			static int b =USER0;
@@ -257,13 +270,13 @@ static int &LastBitFlag()
 		}
 
 /// allocate a bit among the flags that can be used by user.
-static inline int NewUserBit()
+static inline int NewBitFlag()
 		{
 			LastBitFlag()=LastBitFlag()<<1;
 			return LastBitFlag();
 		}
 // de-allocate a bit among the flags that can be used by user.
-static inline bool DeleteUserBit(int bitval)
+static inline bool DeleteBitFlag(int bitval)
 		{	
 			if(LastBitFlag()==bitval) {
 					LastBitFlag()= LastBitFlag()>>1;
@@ -453,7 +466,7 @@ protected:
 #endif
 
 public:
-inline VFTYPE * & VFb()
+inline VFTYPE * & VFp()
 	{
 #if ((defined __VCGLIB_VERTEX_AF) || (defined __VCGLIB_VERTEX_AFS))
 		  return _vfb;
@@ -464,7 +477,7 @@ inline VFTYPE * & VFb()
 #endif
 	}
 
-inline const VFTYPE * & VFb() const
+inline const VFTYPE * & VFp() const
 	{
 #if ((defined __VCGLIB_VERTEX_AF) || (defined __VCGLIB_VERTEX_AFS))
 		  return _vfb;
