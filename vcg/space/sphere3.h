@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/04/02 09:49:01  ponchio
+Ehm... a couople of small errors.
+
 Revision 1.3  2004/04/02 09:44:13  ponchio
 Sphere ->Sphere3
 
@@ -73,6 +76,13 @@ public:
 	void Add(const Sphere3 &sphere);
   	
 };
+
+template <class T> T Distance(const Sphere3<T> &sphere, 
+			      const Point3<T> &point) {
+  T dist = Distance(point, sphere.Center()) - sphere.Radius();
+  if(dist < 0) dist = 0;
+  return dist;
+}
 
 typedef Sphere3<float> Sphere3f;
 typedef Sphere3<double> Sphere3d;
