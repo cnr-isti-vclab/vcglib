@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/01/21 17:13:09  pietroni
+included distance.h changed Dist to  vcg::face::PointDistance
+
 Revision 1.1  2004/10/04 15:32:16  ganovelli
 moved from metro core
 
@@ -32,8 +35,8 @@ header added
 
 ****************************************************************************/
 
-#ifndef __VCG_CLOSEST
-#define __VCG_CLOSEST
+#ifndef __VCG_TRIMESH_CLOSEST
+#define __VCG_TRIMESH_CLOSEST
 #include <math.h>
 
 #include <vcg/space/point3.h>
@@ -43,18 +46,16 @@ header added
 #include <vcg/simplex/face/distance.h>
 #include <vcg/space/index/grid_static_ptr.h>
 
-
-using namespace vcg;
-
-
+namespace vcg {
+  namespace trimesh {
 /*
 aka MetroCore
 data una mesh m e una ug sulle sue facce trova il punto di m piu' vicino ad
 un punto dato.
 */
 
-// input: mesh, punto, griglia, distanza limite
-// output: normale alla faccia e punto piu' vicino su di essa
+// input: mesh, punto, griglia (gr), distanza limite (mdist)
+// output: normale (interpolata) alla faccia e punto piu' vicino su di essa, e coord baricentriche del punto trovato
 
 // Nota che il parametro template GRID non ci dovrebbe essere, visto che deve essere 
 // UGrid<MESH::FaceContainer >, ma non sono riuscito a definirlo implicitamente 
@@ -118,7 +119,6 @@ void Closest( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & mdist,
 	{
 		if(s==0)
 		{
-
 			A2UGridLink *first, *last, *l;
 			gr.Grid( gx, gy, gz, first, last );
 			for(l=first;l!=last;++l)
@@ -129,21 +129,6 @@ void Closest( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & mdist,
 				{
 					bestq = q;
 					bestf = l->Elem();
-					typename MESH::ScalarType alfa=1, beta=1, gamma=1;
-					
-					//bestf->InterpolationParameters(q, alfa, beta);
-					//calcolo normale con interpolazione trilineare
-					/*normf = (1-(alfa+beta))*(bestf->V(0)->Normal())+
-							(alfa*(bestf->V(1)->Normal()))+
-							(beta*(bestf->V(2)->Normal()));*/
-					bestf->InterpolationParameters(q, alfa, beta, gamma);
-					//assert(ret);
-					normf =       (bestf->V(0)->cN())*alfa+
-							          (bestf->V(1)->cN())*beta+
-							          (bestf->V(2)->cN())*gamma;
-					normf.Normalize();
-					ip[0]=alfa;ip[1]=beta;ip[2]=gamma;
-
 				}
 
 				mesh.Mark( &*(l->Elem()) );
@@ -171,16 +156,7 @@ void Closest( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & mdist,
 										{
 											bestq = q;
 											bestf = l->Elem();
-											typename MESH::ScalarType alfa, beta, gamma;
-											//bestf->InterpolationParameters(q, alfa, beta);
-											//calcolo normale con interpolazione trilineare
-											bestf->InterpolationParameters(q, alfa, beta, gamma);
-											normf =  (bestf->V(0)->cN())*alfa+
-											         (bestf->V(1)->cN())*beta+
-													     (bestf->V(2)->cN())*gamma ;
-											ip[0]=alfa;ip[1]=beta;ip[2]=gamma;
-											//normf.Normalize(); inutile si assume le normali ai vertici benfatte
-										}
+											}
 										mesh.Mark(&*l->Elem());
 									}
 								}
@@ -192,15 +168,30 @@ void Closest( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & mdist,
 			break;
 		vdist += vstep;
 	}
-	f=&*bestf;
-	mdist = scalar(fabs(error));
+  if(mdist > scalar(fabs(error)))
+  {
+	  f=&*bestf;
+	  typename MESH::ScalarType alfa, beta, gamma;
+	  //calcolo normale con interpolazione trilineare
+	  bestf->InterpolationParameters(bestq, alfa, beta, gamma);
+	  normf =  (bestf->V(0)->cN())*alfa+
+						 (bestf->V(1)->cN())*beta+
+						 (bestf->V(2)->cN())*gamma ;
+	  ip=Point3x(alfa,beta,gamma);
+	  //normf.Normalize(); inutile si assume le normali ai vertici benfatte										
+    
+    mdist = scalar(fabs(error));
+  }
 }
 
 template <class MESH, class GRID, class SCALAR>
-void MinDistPoint( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & mdist, 
+void Closest( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & mdist, 
 									Point3<SCALAR> & normf, Point3<SCALAR> & bestq, typename MESH::face_type * &f)
 {
 	Point3<SCALAR> ip;
-	MinDistPoint(mesh,p,gr,mdist,normf,bestq,f,ip);
+	Closest(mesh,p,gr,mdist,normf,bestq,f,ip);
 }
+}	 // end namespace trimesh
+}	 // end namespace vcg
+
 #endif
