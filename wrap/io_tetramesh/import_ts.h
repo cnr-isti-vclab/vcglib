@@ -18,6 +18,14 @@ class ImporterTS{
 	typedef typename Tetramesh::ScalarType ScalarType;
 	typedef Point3<ScalarType> Point3x;
 
+	static FILE *& F(){static FILE * f; return f;}
+
+	inline static ReadPos( Point3<ScalarType> &p){
+		fscanf(F(),"%g %g %g\n",&p[0],&p[1],&p[2]);
+	}
+	inline static ReadPos( Point4<ScalarType> &p){
+		fscanf(F(),"%g %g %g %g\n",&p[0],&p[1],&p[2],&p[3]);
+	}
 public:
 static int Open( Tetramesh & m, const char * filename ){	
 	int nvertex;
@@ -30,41 +38,39 @@ static int Open( Tetramesh & m, const char * filename ){
 	int tp2;
 	int tp3;
 	float mass;
-	FILE *f;
 	typename Tetramesh::VertexType p1;
-	f = fopen(filename,"r");
-	if(f == NULL ) 
+	F() = fopen(filename,"r");
+	if(F() == NULL ) 
 		{
 			printf( "The file was not opened\n" );
 			return -1;
 		}
    else
    {
-		fscanf(f, "%i", &nvertex );
-		fscanf(f, "%i", &ntetra );
+		fscanf(F(), "%i", &nvertex );
+		fscanf(F(), "%i", &ntetra );
 		int j;
 		for (j=0;j<nvertex;j++)
 		{
-			fscanf(f, "%f", &x );
-			fscanf(f, "%f", &y );
-			fscanf(f, "%f", &z );
-		  //fscanf(f, "%f", &mass );
-      p1.ClearFlags();
-      p1.P()=Point3x(x, y,z );
-			m.vert.push_back(p1);
+			m.vert.push_back(VertexType());
+			ReadPos(m.vert.back().P());
+      m.vert.back().ClearFlags();
 		}
 		m.tetra.reserve(ntetra);
     m.vert.reserve(nvertex);
 		for (j=0;j<ntetra;j++)
 		{
-			fscanf(f, "%i", &tp0 );
-			fscanf(f, "%i", &tp1 );
-			fscanf(f, "%i", &tp2 );
-			fscanf(f, "%i", &tp3 );
+			fscanf(F(), "%i", &tp0 );
+			fscanf(F(), "%i", &tp1 );
+			fscanf(F(), "%i", &tp2 );
+			fscanf(F(), "%i", &tp3 );
 			
-			typename Tetramesh::TetraType  newTetra;
-			m.tetra.push_back(newTetra);
-			m.tetra.back().Init(&m.vert[tp0],&m.vert[tp1],&m.vert[tp2],&m.vert[tp3]); 
+			m.tetra.push_back(typename Tetramesh::TetraType());
+			m.tetra.back().V(0) = &m.vert[tp0];
+			m.tetra.back().V(1) = &m.vert[tp1];
+			m.tetra.back().V(2) = &m.vert[tp2];
+			m.tetra.back().V(3) = &m.vert[tp3];
+			m.tetra.back().UberFlags() = 0;			
 		}
 	 }
 	 m.vn = nvertex;
