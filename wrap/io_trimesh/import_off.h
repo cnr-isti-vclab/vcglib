@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/01/03 11:18:24  cignoni
+changed a .. rfind('OFF') .. in rfind("OFF") and added some casts
+
 Revision 1.3  2004/11/23 11:56:50  cignoni
 Corrected small bug in the tokenizer (it would add a fake token for lines ending with a space before /n)
 
@@ -38,6 +41,7 @@ Corrected small bug in the tokenizer (it would add a fake token for lines ending
 #include <vector>
 #include <assert.h>
 #include <vcg/space/color4.h>
+#include<vcg/complex/trimesh/allocate.h>
 
 namespace vcg
 {
