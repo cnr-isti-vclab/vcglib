@@ -36,10 +36,10 @@ bool Intersect(   GridType & grid,Plane3<ScalarType> plane, vector<typename Grid
 				for(i = 0 ; i <= grid.siz[axis0]; ++i){
 					for(j = 0 ; j <= grid.siz[axis1]; ++j)
 						{
-							seg.P0()[axis0] = grid.bbox.min[axis0]+ (i+0.1) * grid.voxel[axis0] ;
-							seg.P1()[axis0] = grid.bbox.min[axis0]+ (i+0.1) * grid.voxel[axis0];
-							seg.P0()[axis1] = grid.bbox.min[axis1]+ (j+0.1) * grid.voxel[axis1];
-							seg.P1()[axis1] = grid.bbox.min[axis1]+ (j+0.1) * grid.voxel[axis1];
+							seg.P0()[axis0] = grid.bbox.min[axis0]+ (i+0.01) * grid.voxel[axis0] ;
+							seg.P1()[axis0] = grid.bbox.min[axis0]+ (i+0.01) * grid.voxel[axis0];
+							seg.P0()[axis1] = grid.bbox.min[axis1]+ (j+0.01) * grid.voxel[axis1];
+							seg.P1()[axis1] = grid.bbox.min[axis1]+ (j+0.01) * grid.voxel[axis1];
 							if ( Intersection(pl,seg,p))
 								{
 									pi[axis] =	min(max(0,floor((p[axis ]-grid.bbox.min[axis])/grid.voxel[axis])),grid.siz[axis]);
@@ -76,7 +76,8 @@ bool Intersection( TriMeshType & m, Plane3<ScalarType>  pl,EdgeMeshType & em,dou
 		typedef GridStaticPtr<FaceContainer> GridType;
 		EdgeMeshType::VertexIterator vi;
 		TriMeshType::FaceIterator fi;
-
+        vector<TriMeshType::FaceType*> v;
+		v.clear();
 		Intersect(*grid,pl,cells);
 		Segment3<ScalarType> seg;
 		ave_length = 0.0;
@@ -91,8 +92,10 @@ bool Intersection( TriMeshType & m, Plane3<ScalarType>  pl,EdgeMeshType & em,dou
 						if(!face.IsS())
 						{
 							face.SetS();
+							v.push_back(&face);
 							if(vcg::Intersection(pl,face,seg))// intersezione piano triangolo
 								{
+									face.SetS();
 									// add to em
 									ave_length+=seg.Length();
 									vcg::edge::Allocator<EdgeMeshType>::AddEdges(em,1);
@@ -108,6 +111,8 @@ bool Intersection( TriMeshType & m, Plane3<ScalarType>  pl,EdgeMeshType & em,dou
 					}//end while
 			}
 		ave_length/=em.en;
+		vector<TriMeshType::FaceType*>::iterator v_i;
+        for(v_i=v.begin(); v_i!=v.end(); ++v_i) (*v_i)->ClearS();
 
 		return true;
 	}
