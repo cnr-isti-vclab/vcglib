@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2004/09/01 12:18:39  pietroni
+minor changes to comply gcc compiler (typename's )
+
 Revision 1.11  2004/08/26 13:15:23  pietroni
 added IsS() function
 
@@ -381,7 +384,7 @@ void ComputeNormal()
           return _q;
 #else
 			assert(0);
-			return 0;
+			return *(ScalarType*)(&_flags);
 #endif
 		}
 
@@ -390,7 +393,7 @@ const 		ScalarType & Q()const{
           return _q;
 #else
 			assert(0);
-			return 0;
+			return *(ScalarType*)(&_flags);
 #endif
 		}
 
