@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2005/02/08 12:43:03  ponchio
+Added copyright
+
 
 ****************************************************************************/
 
@@ -35,47 +38,102 @@ $Log: not supported by cvs2svn $
 
 namespace nxs {
 
-enum Signature { NXS_FACES          = 0x00000001,
-		 NXS_STRIP          = 0x00000002, 
-		 NXS_COLORS         = 0x00000010, 
-		 NXS_NORMALS_SHORT  = 0x00000100, 
-		 NXS_NORMALS_FLOAT  = 0x00000200, 
-		 NXS_TEXTURES_SHORT = 0x00001000,  
-		 NXS_TEXTURES_FLOAT = 0x00002000, 
-		 NXS_DATA8          = 0x00010000,  
-		 NXS_DATA16         = 0x00020000, 
-		 NXS_DATA32         = 0x00040000, 
-		 NXS_DATA64         = 0x00080000,
-                 NXS_COMPRESSED      = 0x10000000};
+ struct Signature {
+
+   enum Face { TRIANGLES = 1, STRIPS = 2, TETRAS = 3, SLICE = 4 };
+
+   enum Vert { POINT2F = 1, POINT2D = 2, 
+	       POINT3F = 2, POINT3D = 3,
+	       POINT4F = 4, POINT4D = 5 };
+
+   enum Compr { LZO = 1 };
+
+   unsigned char face;   
+   unsigned char vert;   
+   unsigned char compr;  
+   unsigned char future; //who knows...
+
+   unsigned char fcolor;
+   unsigned char fnorm;
+   unsigned char ftext;
+   unsigned char fdata;
+
+   unsigned char vcolor;
+   unsigned char vnorm;
+   unsigned char vtext;
+   unsigned char vdata;
+
+   Signature(): face(1), vert(2), compr(0), future(0),
+	fcolor(0),  fnorm(0), ftext(0), fdata(0),
+	vcolor(0),  vnorm(0), vtext(0), vdata(0) {}
+ };
 
 
+ struct Encoding {
+   
+   unsigned char bytes; //size per element
+   unsigned char comps; //number of components
+   void (*pack)(char *start, unsigned int nelem);
+   void (*unpack)(char *start, unsigned int nelem);
+   
+   unsigned int size(unsigned short n) { 
+     unsigned int s = (int)n * (int)bytes * (int)comps; 
+     //padding a 64 bytes
+     if((s & 0x0000003f) != 0) {
+       s>>=6; s++; s<<=6;
+     }
+     return s;
+   }
+ };
+ 
+ struct Encodings {
+   enum Name { EMPTY = 0, 
+	       BYTE1 = 1,  SHORT1 = 2,  FLOAT1 = 3,  DOUBLE1 = 4, 
+	       BYTE2 = 5,  SHORT2 = 6,  FLOAT2 = 7,  DOUBLE2 = 8, 
+	       BYTE3 = 9,  SHORT3 = 10, FLOAT3 = 11, DOUBLE3 = 12, 
+	       BYTE4 = 13, SHORT4 = 14, FLOAT4 = 15, DOUBLE4 = 16 };
+   Encodings();
+   Encoding &operator[](int n) { return e[n]; }
+ protected:
+   Encoding e[17];
+   
+   
+ };
 
 class Patch {
  public:
  
-  Patch(Signature signature, char *s, 
+  static Encodings encodings;
+
+  Patch(Signature &signature, char *s, 
 	unsigned short nv, unsigned short nf);
 
-  void Init(Signature signature, unsigned short nv, unsigned short nf);
+  void Init(Signature &signature, unsigned short nv, unsigned short nf);
 
-  inline vcg::Point3f *VertBegin();
-  inline unsigned short *FaceBegin();
+  vcg::Point3f *Vert3fBegin() { return (vcg::Point3f *)vstart; }
+  vcg::Point3f &Vert3f(int n) { return Vert3fBegin()[n]; }
+  unsigned short *FaceBegin() { return (unsigned short *)fstart; }
+  unsigned short *Face(int n) { return FaceBegin() + 3 * n; }
 
-  inline vcg::Point3f &Vert(unsigned short v);
-  inline unsigned short *Face(unsigned short f);
+  //vcg::Point3f &Vert(unsigned short v)   { return VertBegin()[v]; }
+  //  unsigned short *Face(unsigned short f) { return FaceBegin() + f * 3; }
 
-  inline unsigned int *ColorBegin();
-  inline short *Norm16Begin();
-  inline short *Norm16(unsigned short v);
-  inline vcg::Point3f *Norm32Begin();
-  inline vcg::Point3f &Norm32(unsigned short v);
- 
-  static unsigned int ChunkSize(Signature signature, 
+  char *VColorBegin() { return vstart + 64*vstartc; }
+  char *VNormBegin()  { return vstart + 64*vstartn; }
+  char *VTextBegin()  { return vstart + 64*vstartt; }
+  char *VDataBegin()  { return vstart + 64*vstartd; }
+
+  char *FColorBegin() { return fstart + 64*fstartc; }
+  char *FNormBegin()  { return fstart + 64*fstartn; }
+  char *FTextBegin()  { return fstart + 64*fstartt; }
+  char *FDataBegin()  { return fstart + 64*fstartd; }
+
+  static unsigned int ChunkSize(Signature &signature, 
 				unsigned short nvert, 
 				unsigned short nface,
 				unsigned int chunk_size);
 
-  static unsigned int ByteSize(Signature signature, 
+  static unsigned int ByteSize(Signature &signature, 
 			       unsigned short nvert, 
 			       unsigned short nface);
   
@@ -83,50 +141,24 @@ class Patch {
   void Decompress(unsigned int ram_size, void *src, unsigned int src_sz);
 		  
 
-  unsigned short nv;
+  char *fstart;
+  char *vstart;
+
   unsigned short nf;
+  unsigned short nv;
 
-  char *start;
-  float *vstart;
-  //these offset are from vstart!
-  unsigned short cstart;
-  unsigned short nstart;
-  unsigned short tstart;
-  unsigned short dstart;
+  //these offset are from fstart in 64 bytes
+  unsigned short fstartc;
+  unsigned short fstartn;
+  unsigned short fstartt;
+  unsigned short fstartd;
+
+  //these offset are from vstart in 64 bytes
+  unsigned short vstartc;
+  unsigned short vstartn;
+  unsigned short vstartt;
+  unsigned short vstartd;
 };
-
-inline vcg::Point3f *Patch::VertBegin() { 
-  return (vcg::Point3f *)vstart; 
-}
-inline unsigned short *Patch::FaceBegin() {
-  return (unsigned short *)start; 
-}
-
-inline vcg::Point3f &Patch::Vert(unsigned short v) {
-  return VertBegin()[v]; 
-}
-inline unsigned short *Patch::Face(unsigned short f) {
-  return FaceBegin() + f * 3; 
-}
-
-inline unsigned int *Patch::ColorBegin() { 
-  return (unsigned int *)(vstart + cstart); 
-}
-
-inline short *Patch::Norm16Begin() { 
-  return (short *)(vstart + nstart); 
-}
-
-inline short *Patch::Norm16(unsigned short v) { 
-  return Norm16Begin() + 4 * v;
-}
-
- inline vcg::Point3f *Patch::Norm32Begin() {
-   return (vcg::Point3f *)(vstart + nstart); 
- }
- inline vcg::Point3f &Patch::Norm32(unsigned short v) {
-   return Norm32Begin()[v];
- }
 
 } //namespace
 

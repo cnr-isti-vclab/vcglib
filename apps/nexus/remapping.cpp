@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/02/08 12:43:03  ponchio
+Added copyright
+
 
 ****************************************************************************/
 
@@ -344,7 +347,7 @@ void nxs::BuildLevel(VChain &chain,
     cratio += ratio;
     if(cratio > 1) {
       Patch patch = nexus.GetPatch(idx);
-      Point3f &v = patch.Vert(0);
+      Point3f &v = patch.Vert3f(0);
       coarse->push_back(v);
       cratio -= 1;
     }
@@ -352,7 +355,7 @@ void nxs::BuildLevel(VChain &chain,
   
   if(coarse->size() == 0) {
     Patch patch = nexus.GetPatch(0);
-    coarse->push_back(patch.Vert(0));
+    coarse->push_back(patch.Vert3f(0));
   }
   
   float coarse_vmean = totface/(float)coarse->size();
@@ -380,9 +383,9 @@ void nxs::BuildLevel(VChain &chain,
       Patch patch = nexus.GetPatch(idx);
       for(unsigned int i = 0; i < patch.nf; i++) {
         unsigned short *face = patch.Face(i);	                                          
-        Point3f bari = (patch.Vert(face[0]) + 
-			patch.Vert(face[1]) + 
-			patch.Vert(face[2]))/3;
+        Point3f bari = (patch.Vert3f(face[0]) + 
+			patch.Vert3f(face[1]) + 
+			patch.Vert3f(face[2]))/3;
 
 	unsigned int target = coarse->Locate(bari);
 	assert(target < coarse->size());
@@ -448,7 +451,7 @@ bool nxs::Optimize(VPartition &part,
 
   if(max_size > target_size *3)
     max_size = target_size * 3;
-  min_size = target_size * 0.3;
+  min_size = (unsigned int)(target_size * 0.3f);
 
   unsigned int toobig = 0;
   unsigned int toosmall = 0;

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2005/02/18 13:04:13  ponchio
+Added patch reordering.
+
 Revision 1.18  2005/02/08 12:43:03  ponchio
 Added copyright
 
@@ -66,14 +69,14 @@ class CFace: public Face<CVertex, DUMMYEDGETYPE , CFace>{};
 
 class CMesh: public tri::TriMesh<vector<CVertex>, vector<CFace> > {};
 
-string getSuffix(unsigned int signature) {
+string getSuffix(Signature &signature) {
   string suff;
-  if(signature&NXS_COMPRESSED)     suff += "Z";
-  if(signature&NXS_STRIP)          suff += "S"; 
-  if(signature&NXS_COLORS)         suff += "C";
-  if(signature&NXS_NORMALS_SHORT)  suff += "N";
-  if(signature&NXS_TEXTURES_SHORT) suff += "T";
-  if(signature&NXS_DATA32)         suff += "D";
+  if(signature.compr)                     suff += "Z";
+  if(signature.face == Signature::STRIPS) suff += "S"; 
+  if(signature.vcolor)                    suff += "C";
+  if(signature.vnorm)                     suff += "N";
+  if(signature.vtext)                     suff += "T";
+  if(signature.vdata)                     suff += "D";
   return suff;
 }
 
@@ -87,15 +90,15 @@ int main(int argc, char *argv[]) {
   unsigned int ram_size = 128000000;
   unsigned int chunk_size = 0;
 
-  unsigned int add = 0;
-  bool add_strip = false;
+  bool add = false;
+  bool add_strips = false;
   bool add_colors = false;
   bool add_normals = false;
   bool add_textures = false;
   bool add_data = false;
 
-  unsigned int remove = 0;
-  bool remove_strip = false;
+  bool remove = false;
+  bool remove_strips = false;
   bool remove_colors = false;
   bool remove_normals = false;
   bool remove_textures = false;
@@ -116,60 +119,70 @@ int main(int argc, char *argv[]) {
     case 'l': verbose = true; break;
     case 'o': output = optarg; break;
     case 'a': {
-      if(strstr(optarg, "strip")) {
-	add_strip = true;
-	add |= NXS_STRIP;
-	remove |= NXS_FACES;
+      if(strstr(optarg, "strips")) {
+	add_strips = true;
+	add = true;
+	//	add |= NXS_STRIP;
+	//	remove |= NXS_FACES;
       }
       if(strstr(optarg, "colors")) {
 	add_colors = true;
-	add |= NXS_COLORS;
+	add = true;
+	//	add |= NXS_COLORS;
       }
       if(strstr(optarg, "normals")) {
 	add_normals = true;
-	add |= NXS_NORMALS_SHORT;
+	add = true;
+	//	add |= NXS_NORMALS_SHORT;
       }
       if(strstr(optarg, "textures")) {
 	add_textures = true;
-	add |= NXS_TEXTURES_SHORT;
+	add = true;
+	//	add |= NXS_TEXTURES_SHORT;
       }
       if(strstr(optarg, "data")) {
 	add_data = true;
-	add |= NXS_DATA32;
+	//	add |= NXS_DATA32;
       }
-      if(add == 0) {
+      if(add == false) {
 	cerr << "Invalid -a argument: " << optarg << "\n"
-	     << "Valid options are: strip, colors, normals, textures, data\n";
+	     << "Valid options are: strips, colors, normals, textures, data\n";
 	return -1;
       }
       break;
     }
       
     case 'r': {
-      if(strstr(optarg, "strip")) {
-	cerr << "Strip reming not supported!\n";
+      if(strstr(optarg, "strips")) {
+	cerr << "Strips removing not supported!\n";
 	return -1;
-	remove_strip = true;
-	add |= NXS_FACES;
-	remove |= NXS_STRIP;
+	remove_strips = true;
+	remove = true;
+	add = true;
+	//	add |= NXS_FACES;
+	//	remove |= NXS_STRIP;
       }
       if(strstr(optarg, "colors")) {
 	remove_colors = true;
-	remove |= NXS_COLORS;
+	remove = true;	
+	//	remove |= NXS_COLORS;
       }
       if(strstr(optarg, "normals")) {
 	remove_normals = true;
-	remove |= NXS_NORMALS_SHORT;
+	remove = true;
+	//	remove |= NXS_NORMALS_SHORT;
       }
       if(strstr(optarg, "textures")) {
 	remove_textures = true;
-	remove |= NXS_TEXTURES_SHORT;
+	remove = true;
+	//	remove |= NXS_TEXTURES_SHORT;
       }
       if(strstr(optarg, "data")) {
 	remove_data = true;
-	remove |= NXS_DATA32;
+	remove = true;
+	//	remove |= NXS_DATA32;
       }
-      if(remove == 0) {
+      if(remove == false) {
 	cerr << "Invalid -a argument: " << optarg << "\n"
 	     << "Valid options are: strip, colors, normals, textures, data\n";
 	return -1;
@@ -233,7 +246,7 @@ int main(int argc, char *argv[]) {
 	 << " -i       : display some info about nexus file\n"
    << " -l       : list nodes\n"
          << " -o <file>: output filename (default is adding 00 to nexus)\n"
-	 << " -a <what>: Add [colors|normals|strip|textures|data|borders]\n"
+	 << " -a <what>: Add [colors|normals|strips|textures|data|borders]\n"
          << " -r <what>: As add...\n"
 	 << " -p <ply> : Ply source for colors or textures or data\n"
 	 << " -z       : compress\n"
@@ -258,23 +271,23 @@ int main(int argc, char *argv[]) {
 
 
   //Sanity tests
-  if(remove_strip && !(nexus.signature & NXS_STRIP)) {
+  if(remove_strips && !(nexus.signature.face != Signature::STRIPS)) {
     cerr << "Nexus file does not have strips\n";
     return -1;
   }
-  if(remove_colors && !(nexus.signature & NXS_COLORS)) {
+  if(remove_colors && !nexus.signature.vcolor) {
     cerr << "Nexus file does not have colors\n";
     return -1;
   }
-  if(remove_normals && !(nexus.signature & NXS_NORMALS_SHORT)) {
+  if(remove_normals && !nexus.signature.vnorm) {
     cerr << "Nexus file does not have normals\n";
     return -1;
   }
-  if(remove_textures && !(nexus.signature & NXS_TEXTURES_SHORT)) {
+  if(remove_textures && !nexus.signature.vtext) {
     cerr << "Nexus file does not have textures\n";
     return -1;
   }
-  if(remove_data && !(nexus.signature & NXS_DATA32)) {
+  if(remove_data && !nexus.signature.vdata) {
     cerr << "Nexus file does not have data\n";
     return -1;
   }
@@ -304,11 +317,12 @@ int main(int argc, char *argv[]) {
     meandist /= nexus.size() -1;
     cout << "Nexus file: " << input << "\n"
 	 << "\n\tCompressed: " << nexus.IsCompressed() 
-	 << "\n\tStripped: " << (int)((nexus.signature&NXS_STRIP) !=0)
-	 << "\n\tColor   : " << (int)((nexus.signature&NXS_COLORS) !=0)
-	 << "\n\tNormal  : " << (int)((nexus.signature&NXS_NORMALS_SHORT) !=0)
-	 << "\n\tTexture : " << (int)((nexus.signature&NXS_TEXTURES_SHORT) !=0)
-	 << "\n\tData    : " << (int)((nexus.signature&NXS_DATA32) !=0)
+	 << "\n\tStripped: " 
+	 << (int)(nexus.signature.face == Signature::STRIPS)
+	 << "\n\tColor   : " << (int)(nexus.signature.vcolor !=0)
+	 << "\n\tNormal  : " << (int)((nexus.signature.vnorm) !=0)
+	 << "\n\tTexture : " << (int)((nexus.signature.vtext) !=0)
+	 << "\n\tData    : " << (int)((nexus.signature.vdata) !=0)
 	 << "\n\n\tVertices: " << nexus.totvert 
 	 << "\tFaces: " << nexus.totface
 	 << "\tPatches: " << nexus.size() 
@@ -332,12 +346,12 @@ int main(int argc, char *argv[]) {
   }
   
   //determine if we must proceed:
-  if(add == 0 && remove == 0 && !compress && !uncompress && !zsort &&
+  if(!add && !remove && !compress && !uncompress && !zsort &&
      qvertex == 0 && qnormal == 0 && qcolor == 0 && qtexture == 0) {
     nexus.Close();
     return 0;
   }
-
+  
   CMesh mesh;
   GridStaticPtr<CMesh::FaceContainer> grid;
   if(add_colors) {
@@ -357,17 +371,29 @@ int main(int argc, char *argv[]) {
     grid.Set(mesh.face);
   }
   
-  if((add & NXS_NORMALS_SHORT) && compress) {
-    cerr << "Its not possible to add normals and compress in the same step\n";
+  if(add_normals && compress) {
+    cerr << "Its not possible to add normals and compress in the same step\n"
+	 << "Because normals requires 2 passes to be calculated\n\n";
     return -1;
   }
-  unsigned int signature = nexus.signature;
-  signature |= add;
-  signature &= ~remove;
-  if(compress) signature |= NXS_COMPRESSED;
-  if(uncompress) signature &= ~NXS_COMPRESSED;
+  
+  Signature signature = nexus.signature;
+  if(add_strips) signature.face = Signature::STRIPS;
+  if(add_normals) signature.vnorm = Encodings::SHORT4;   
+  if(add_colors) signature.vcolor = Encodings::BYTE4;   
+
+  if(remove_normals) signature.vnorm = 0;
+  if(remove_colors) signature.vcolor = 0;
+
+  if(compress) signature.compr = Signature::LZO;
+  if(uncompress) signature.compr = 0;
 
   if(!output.size()) output = input + getSuffix(signature);
+  if(output == input) {
+    cerr << "Output and input files are the same.\n"
+	 << "You do not want to overwrite your data. Trust me.\n";
+    return -1;
+  }
 
   cout << "Writing to nexus: " << output << endl;
 
@@ -376,11 +402,12 @@ int main(int argc, char *argv[]) {
   if(!chunk_size)
     chunk_size = nexus.chunk_size;
 
-  if(!out.Create(output, (Signature)signature, chunk_size)) {
+  if(!out.Create(output, signature, chunk_size)) {
     cerr << "Could not open output: " << output << endl;
     return -1;
   }
-  
+
+  //TODO fix this broken interface (you should not care abou chunk_size
   out.MaxRam() = ram_size / out.chunk_size;
   //TODO set rambuffer low (or even direct access!)
 
@@ -424,10 +451,15 @@ int main(int argc, char *argv[]) {
 
 
     vector<unsigned short> strip;
-    if(add_strip) {
+    if(add_strips) {
       ComputeTriStrip(src_patch.nf, src_patch.FaceBegin(), strip);
       assert(strip.size() < 32767);
       out.AddPatch(src_entry.nvert, strip.size(), src_border.Available());
+      if(verbose) {
+	cerr << "tri: " << src_patch.nf << " strip: " << strip.size() 
+	     << " ratio: " << (float)strip.size()/(float)src_patch.nf  
+	     << endl;
+      }
     } else
       out.AddPatch(src_entry.nvert, src_entry.nface, src_border.Available());
 
@@ -436,58 +468,68 @@ int main(int argc, char *argv[]) {
     Patch &dst_patch = out.GetPatch(p);
 
     //copy vertices: 
-    memcpy(dst_patch.VertBegin(), src_patch.VertBegin(), 
+    assert(out.signature.vert == Signature::POINT3F);
+    assert(out.signature.vert = nexus.signature.vert);
+    memcpy(dst_patch.Vert3fBegin(), src_patch.Vert3fBegin(), 
 	   src_patch.nv * sizeof(Point3f));
 
     if(qvertex && !add_normals) {
-      float *ptr = (float *)dst_patch.VertBegin();
-      for(int i = 0; i < dst_patch.nv*3; i++) {
-	      ptr[i] =  qvertex * (int)(ptr[i]/qvertex);
-	//ptr[i] = 0;
-      }
+      float *ptr = (float *)dst_patch.Vert3fBegin();
+      for(int i = 0; i < dst_patch.nv*3; i++) 
+	ptr[i] =  qvertex * (int)(ptr[i]/qvertex);
     } 
 
-
+    
     //now faces.
-    if(add_strip) {
+    if(add_strips) {
+      assert(out.signature.face == Signature::STRIPS);
       memcpy(dst_patch.FaceBegin(), &*strip.begin(), 
 	     strip.size() * sizeof(short));
     } else {
-      if(nexus.signature & NXS_STRIP) {
-	      memcpy(dst_patch.FaceBegin(), src_patch.FaceBegin(), 
-	      src_patch.nf * sizeof(unsigned short));
+      assert(nexus.signature.face == out.signature.face);
+      if(nexus.signature.face == Signature::STRIPS) {
+	memcpy(dst_patch.FaceBegin(), src_patch.FaceBegin(), 
+	       src_patch.nf * sizeof(unsigned short));
+      } else if(nexus.signature.face == Signature::TRIANGLES) {
+	memcpy(dst_patch.FaceBegin(), src_patch.FaceBegin(), 
+	       src_patch.nf * sizeof(unsigned short) * 3);
       } else {
-	      memcpy(dst_patch.FaceBegin(), src_patch.FaceBegin(), 
-	      src_patch.nf * sizeof(unsigned short) * 3);
+	assert(0);
       }
     }
 
-    if((nexus.signature & NXS_COLORS) && (out.signature & NXS_COLORS))
-      memcpy(dst_patch.ColorBegin(), src_patch.ColorBegin(), 
-	    src_patch.nv * sizeof(unsigned int));
+    if(nexus.signature.vcolor) {
+      if(nexus.signature.vcolor == out.signature.vcolor) {
+	memcpy(dst_patch.VColorBegin(), src_patch.VColorBegin(), 
+	       Patch::encodings[out.signature.vcolor].size(dst_patch.nv));
+      } else {
+	assert(0);
+      }
+    }
 
-    if((nexus.signature & NXS_NORMALS_SHORT) && 
-       (out.signature & NXS_NORMALS_SHORT))
-      memcpy(dst_patch.Norm16Begin(), src_patch.Norm16Begin(), 
-	    src_patch.nv * sizeof(short)*4);
+    if(nexus.signature.vnorm) {
+      if(nexus.signature.vnorm == out.signature.vnorm) {
+	memcpy(dst_patch.VNormBegin(), src_patch.VNormBegin(), 
+	       Patch::encodings[out.signature.vnorm].size(dst_patch.nv));
+      } else {
+	assert(0);
+      }
+    }
 
-    //reordering
-    //WATCH OUT BORDERS!
-    //    Reorder(out.signature, dst_patch);
     //copying entry information;
     dst_entry.sphere = src_entry.sphere;
     dst_entry.error = src_entry.error;
+    //WARNING copy also normals cone
 
-    //adding borders.
-    /*for(unsigned int i = 0; i < src_border.Size(); i++) {
-      Link &link = src_border[i];
-      if(link.IsNull()) continue;
-      assert(link.end_patch < nexus.index.size());
-    }*/
     out.borders.ResizeBorder(p, src_border.Size());
     Border &dst_border = out.GetBorder(p);
     memcpy(dst_border.Start(), src_border.Start(), 
 	   src_border.Size() * sizeof(Link));    
+    //TODO test this
+    if(zsort)
+      for(unsigned i = 0; i < dst_border.Size(); i++)
+	dst_border[i].end_patch = backward[dst_border[i].end_patch];
+
   }
   report.Finish();  
 
@@ -510,7 +552,7 @@ int main(int argc, char *argv[]) {
       report.Step(patch);
       Patch src_patch = nexus.GetPatch(patch);
 
-      float *ptr = (float *)src_patch.VertBegin();
+      float *ptr = (float *)src_patch.Vert3fBegin();
       for(int i = 0; i < src_patch.nv*3; i++) 
 	      ptr[i] =  qvertex * (int)(ptr[i]/qvertex);
     }

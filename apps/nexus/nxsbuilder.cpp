@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2005/02/14 15:17:36  ponchio
+Cleaning up.
+
 Revision 1.14  2005/01/21 17:09:13  ponchio
 Porting and debug.
 
@@ -289,7 +292,8 @@ void ThirdStep(const string &crudefile, const string &output,
   Nexus nexus;
   //TODO here i really need no ram_buffer.....
   nexus.MaxRam() = 0;
-  if(!nexus.Create(output, NXS_FACES, chunk_size)) {
+  Signature signature; //default triangles and vertices3f
+  if(!nexus.Create(output, signature, chunk_size)) {
     cerr << "Could not create nexus output: " << output << endl;
     getchar();
     exit(0);
@@ -342,7 +346,7 @@ void ThirdStep(const string &crudefile, const string &output,
 					    0); //no borders!
     Patch &patch = nexus.GetPatch(patch_idx);
     memcpy(patch.FaceBegin(), &*faces.begin(), fcount * sizeof(short));
-    memcpy(patch.VertBegin(), &*vertices.begin(), vcount * sizeof(Point3f));
+    memcpy(patch.Vert3fBegin(), &*vertices.begin(), vcount * sizeof(Point3f));
 
     Sphere3f &sphere = nexus[patch_idx].sphere;
     for(int i = 0; i < vertices.size(); i++)
@@ -354,7 +358,6 @@ void ThirdStep(const string &crudefile, const string &output,
       assert(sphere.IsIn(vertices[i]));
     }
 #endif
-   
 
     //saving vert_remap
     int64 vroffset = vert_remap.Size();
@@ -727,15 +730,15 @@ void BuildFragment(Nexus &nexus, VPartition &part,
     Border &border = nexus.GetBorder(*f);
 
     for(unsigned int k = 0; k < patch.nf; k++) {
-      assert(patch.Face(k)[0] != patch.Face(k)[1]);
-      assert(patch.Face(k)[0] != patch.Face(k)[2]);
-      assert(patch.Face(k)[1] != patch.Face(k)[2]);
+      assert(patch.FaceBegin()[3*k + 0] != patch.FaceBegin()[3*k + 1]);
+      assert(patch.FaceBegin()[3*k + 0] != patch.FaceBegin()[3*k + 2]);
+      assert(patch.FaceBegin()[3*k + 1] != patch.FaceBegin()[3*k + 2]);
     }
 
 
     nxs.vert.resize(patch.nv);
     nxs.face.resize(patch.nf * 3);
-    memcpy(&*nxs.vert.begin(), patch.VertBegin(), patch.nv * sizeof(Point3f));
+    memcpy(&*nxs.vert.begin(), patch.Vert3fBegin(), patch.nv * sizeof(Point3f));
     memcpy(&*nxs.face.begin(), patch.FaceBegin(), patch.nf * 3*sizeof(short));
     for(unsigned int i = 0; i < border.Size(); i++) {
       Link &link = border[i];
@@ -815,7 +818,7 @@ void SaveFragment(Nexus &nexus, VChain &chain,
     Patch &patch = nexus.GetPatch(patch_idx);
     memcpy(patch.FaceBegin(), &outpatch.face[0], 
 	          outpatch.face.size() * sizeof(unsigned short));
-    memcpy(patch.VertBegin(), &outpatch.vert[0], 
+    memcpy(patch.Vert3fBegin(), &outpatch.vert[0], 
 	          outpatch.vert.size() * sizeof(Point3f));
     
     Entry &entry = nexus[patch_idx];

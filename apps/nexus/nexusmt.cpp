@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.30  2005/02/17 15:39:44  ponchio
+Reorderes statistics a bit.
+
 Revision 1.29  2005/02/14 17:11:07  ponchio
 aggiunta delle sphere
 
@@ -143,9 +146,9 @@ void NexusMt::Render(Extraction &extraction, DrawContest &contest,
   preload.post(extraction.selected);
 
   glEnableClientState(GL_VERTEX_ARRAY);
-  if((signature & NXS_COLORS) && (contest.attrs & DrawContest::COLOR))
+  if(signature.vcolor && (contest.attrs & DrawContest::COLOR))
     glEnableClientState(GL_COLOR_ARRAY);
-  if((signature & NXS_NORMALS_SHORT) && (contest.attrs & DrawContest::NORMAL))
+  if(signature.vnorm && (contest.attrs & DrawContest::NORMAL))
     glEnableClientState(GL_NORMAL_ARRAY);
 
   vector<Item> skipped;
@@ -155,12 +158,12 @@ void NexusMt::Render(Extraction &extraction, DrawContest &contest,
     Entry &entry = operator[](patch);
     vcg::Sphere3f &sphere = entry.sphere;
 
-    if(stats) stats->extr += entry.nface;
+    if(stats) stats->extr += 2*entry.nvert;
 
     if(extraction.frustum.IsOutside(sphere.Center(), sphere.Radius())) 
       continue;
 
-    if(stats) stats->tri += entry.nface;
+    if(stats) stats->tri += 2*entry.nvert;
 
     if(!entry.patch) {
       skipped.push_back(extraction.selected[i]);
@@ -229,20 +232,28 @@ void NexusMt::Draw(unsigned int cell, DrawContest &contest) {
     
     fstart = NULL;
     vstart = NULL;
-    cstart = (char *)(sizeof(float) * patch.cstart);
-    nstart = (char *)(sizeof(float) * patch.nstart);
+    cstart = (char *)(64 * patch.vstartc);
+    nstart = (char *)(64 * patch.vstartn);
   } else {
     fstart = (char *)patch.FaceBegin();
-    vstart = (char *)patch.VertBegin();
-    cstart = (char *)patch.ColorBegin();
-    nstart = (char *)patch.Norm16Begin();
+    vstart = (char *)patch.Vert3fBegin();
+    cstart = (char *)patch.VColorBegin();
+    nstart = (char *)patch.VNormBegin();
   }
-  
+  assert(signature.vert == Signature::POINT3F);
   glVertexPointer(3, GL_FLOAT, 0, vstart);
-  if(contest.attrs & DrawContest::COLOR)
+  
+
+  if(signature.vcolor && contest.attrs & DrawContest::COLOR) {
+    assert(signature.vcolor == Encodings::BYTE4);
     glColorPointer(4, GL_UNSIGNED_BYTE, 0, cstart);
-  if(contest.attrs & DrawContest::NORMAL)
+  }
+
+
+  if(signature.vnorm && contest.attrs & DrawContest::NORMAL) {
+    assert(signature.vnorm == Encodings::SHORT4);
     glNormalPointer(GL_SHORT, 8, nstart);  
+  }
   
 
   
@@ -252,37 +263,36 @@ void NexusMt::Draw(unsigned int cell, DrawContest &contest) {
   case DrawContest::PATCHES:
     glColor3ub((cell * 27)%225 + 30, (cell * 37)%225 + 30, (cell * 87)%225 + 30);
   case DrawContest::SMOOTH:
-    if(signature & NXS_FACES)
+    if(signature.face == Signature::TRIANGLES)
       glDrawElements(GL_TRIANGLES, patch.nf * 3, 
 		     GL_UNSIGNED_SHORT, fstart);
-    else if(signature & NXS_STRIP)
+    else if(signature.face == Signature::STRIPS)
       glDrawElements(GL_TRIANGLE_STRIP, patch.nf, 
 		     GL_UNSIGNED_SHORT, fstart);
     break;
   case DrawContest::FLAT:
     if(use_vbo) {
-      cerr << "Mode incompatible with VBO\n";
-      exit(0);
-    }
-    if(signature & NXS_FACES) {
-      glBegin(GL_TRIANGLES);
-      unsigned short *f = patch.Face(0);
-      for(int i = 0; i < patch.nf; i++) {
-
-	Point3f &p0 = patch.Vert(f[0]);
-	Point3f &p1 = patch.Vert(f[1]);
-	Point3f &p2 = patch.Vert(f[2]);
-	Point3f n = ((p1 - p0) ^ (p2 - p0));
-	glNormal3f(n[0], n[1], n[2]);
-	glVertex3f(p0[0], p0[1], p0[2]);
-	glVertex3f(p1[0], p1[1], p1[2]);
-	glVertex3f(p2[0], p2[1], p2[2]);
-	f += 3;
-      }
-      glEnd();
-    } else if(signature & NXS_STRIP) {
       cerr << "Unsupported rendering mode sorry\n";
-      exit(0);
+    } else {
+      if(signature.face == Signature::TRIANGLES) {
+	glBegin(GL_TRIANGLES);
+	unsigned short *f = patch.Face(0);
+	for(int i = 0; i < patch.nf; i++) {
+	  
+	  Point3f &p0 = patch.Vert3f(f[0]);
+	  Point3f &p1 = patch.Vert3f(f[1]);
+	  Point3f &p2 = patch.Vert3f(f[2]);
+	  Point3f n = ((p1 - p0) ^ (p2 - p0));
+	  glNormal3f(n[0], n[1], n[2]);
+	  glVertex3f(p0[0], p0[1], p0[2]);
+	  glVertex3f(p1[0], p1[1], p1[2]);
+	  glVertex3f(p2[0], p2[1], p2[2]);
+	  f += 3;
+	}
+	glEnd();
+      } else if(signature.face = Signature::STRIPS) {
+	cerr << "Unsupported rendering mode sorry\n";
+      }
     }
     break;
   default: 
@@ -340,8 +350,8 @@ void NexusMt::FlushPatch(unsigned int id) {
   if(entry.vbo_element)
     FlushVbo(entry);
 
-  if(entry.patch->start)
-    delete [](entry.patch->start);
+  if(entry.patch->fstart)
+    delete [](entry.patch->fstart);
   delete entry.patch;  
   entry.patch = NULL;    
   ram_used -= entry.ram_size;      
@@ -353,8 +363,11 @@ void NexusMt::LoadVbo(Entry &entry) {
 
   Patch &patch  = *entry.patch;    
   unsigned int size = patch.nf * sizeof(unsigned short);
-  if((signature & NXS_FACES) != 0) size *= 3;
-  
+  if(signature.face == Signature::TRIANGLES) 
+    size *= 3;
+  else if(signature.face != Signature::STRIPS)
+    assert(0);
+
   glGenBuffersARB(1, &entry.vbo_element);
   assert(entry.vbo_element);
   glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, entry.vbo_element);
@@ -363,17 +376,17 @@ void NexusMt::LoadVbo(Entry &entry) {
   vbo_used += size;
   
   //TODO fix this when we allow data :p
-  size = sizeof(float) * patch.dstart;
+  size = 64 * patch.vstartd;
     
   glGenBuffersARB(1, &entry.vbo_array);
   assert(entry.vbo_array);
   glBindBufferARB(GL_ARRAY_BUFFER_ARB, entry.vbo_array);
-  glBufferDataARB(GL_ARRAY_BUFFER_ARB, size, patch.VertBegin(), 
+  glBufferDataARB(GL_ARRAY_BUFFER_ARB, size, patch.Vert3fBegin(), 
 		  GL_STATIC_DRAW_ARB);
     
   vbo_used += size;
-  delete [](entry.patch->start);
-  entry.patch->start = NULL;
+  delete [](entry.patch->fstart);
+  entry.patch->fstart = NULL;
 }
 
 void NexusMt::FlushVbo(Entry &entry) {
@@ -385,7 +398,7 @@ void NexusMt::FlushVbo(Entry &entry) {
 
   Patch &patch  = *entry.patch; 
   vbo_used -= patch.nf * sizeof(unsigned short);
-  vbo_used -= sizeof(float) * patch.dstart;
+  vbo_used -= sizeof(float) * patch.vstartd;
 }
 
 //Kept for historical reasons.

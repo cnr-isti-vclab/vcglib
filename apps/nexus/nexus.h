@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2005/02/08 12:43:03  ponchio
+Added copyright
+
 
 ****************************************************************************/
 
@@ -77,6 +80,8 @@ struct Entry {
 
 class Nexus: public IndexFile<Entry> {
  public:
+  enum Version { NXS_CURRENT_VERSION = 1 };
+  
   //HEader data:
   Signature signature;
   unsigned int chunk_size;
@@ -95,7 +100,7 @@ class Nexus: public IndexFile<Entry> {
   Nexus() {}
   ~Nexus();
   
-  bool Create(const std::string &filename, Signature signature,
+  bool Create(const std::string &filename, Signature &signature,
 	      unsigned int chunk_size = 1024);
   bool Load(const std::string &filename, bool readonly = false);
   void Close();
@@ -111,11 +116,11 @@ class Nexus: public IndexFile<Entry> {
   //move to nxsalgo!
   void Unify(float threshold = 0.0f);
 
-  bool IsCompressed()    { return (signature & NXS_COMPRESSED) != 0; }
-  bool HasStrips()       { return (signature & NXS_STRIP) != 0; }
-  bool HasColors()       { return (signature & NXS_COLORS) != 0; }
-  bool HasNormalsShort() { return (signature & NXS_NORMALS_SHORT) != 0; }
-  bool HasNormalsFloat() { return (signature & NXS_NORMALS_FLOAT) != 0; }
+  bool IsCompressed()    { return signature.compr != 0; }
+  bool HasStrips()       { return signature.face == Signature::STRIPS; }
+  bool HasColors()       { return signature.vcolor != 0; }
+  bool HasNormals()      { return signature.vnorm != 0; }
+  bool HasTextures()     { return signature.vtext != 0; }
 
   unsigned int ram_max;
   unsigned int ram_used;		

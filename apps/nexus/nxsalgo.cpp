@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2005/02/18 13:04:12  ponchio
+Added patch reordering.
+
 Revision 1.18  2005/02/17 16:40:35  ponchio
 Optimized BuildLevels.
 
@@ -55,16 +58,13 @@ using namespace vcg;
 using namespace triangle_stripper;
 
 void nxs::ComputeNormals(Nexus &nexus) {
-  assert(nexus.signature & NXS_NORMALS_SHORT ||
-	 nexus.signature & NXS_NORMALS_FLOAT);
+  assert(nexus.signature.vnorm);
 
   //setting borders readonly:
 
   assert(!nexus.borders.IsReadOnly());
   nexus.borders.SetReadOnly(true);
   
-  bool use_short = (nexus.signature & NXS_NORMALS_SHORT) != 0;
-
   //TODO use a temporary file to store border normals
   unsigned int tmpb_offset = 0;
   vector<unsigned int> tmpb_start;
@@ -105,25 +105,24 @@ void nxs::ComputeNormals(Nexus &nexus) {
     normals.clear();  
     normals.resize(patch.nv, Point3f(0, 0, 0));    
 
-    if(nexus.signature & NXS_FACES) 
+    if(nexus.signature.face == Signature::TRIANGLES)
       for(unsigned int i = 0; i < patch.nf; i++) {
 	      unsigned short *f = patch.Face(i);
-	      Point3f &v0 = patch.Vert(f[0]);
-	      Point3f &v1 = patch.Vert(f[1]);
-	      Point3f &v2 = patch.Vert(f[2]);
+	      Point3f &v0 = patch.Vert3f(f[0]);
+	      Point3f &v1 = patch.Vert3f(f[1]);
+	      Point3f &v2 = patch.Vert3f(f[2]);
 	
 	      Point3f norm = (v1 - v0) ^ (v2 - v0); 
 	      normals[f[0]] += norm;
 	      normals[f[1]] += norm;
 	      normals[f[2]] += norm;
       }
-
-    if(nexus.signature & NXS_STRIP) 
+    if(nexus.signature.face == Signature::STRIPS)
       for(int i = 0; i < patch.nf - 2; i++) {
 	      unsigned short *f = patch.FaceBegin() + i;
-	      Point3f &v0 = patch.Vert(f[0]);
-	      Point3f &v1 = patch.Vert(f[1]);
-	      Point3f &v2 = patch.Vert(f[2]);
+	      Point3f &v0 = patch.Vert3f(f[0]);
+	      Point3f &v1 = patch.Vert3f(f[1]);
+	      Point3f &v2 = patch.Vert3f(f[2]);
 	
 	      Point3f norm = (v1 - v0) ^ (v2 - v0); 
 	      if(i%2) norm = -norm;
@@ -132,18 +131,17 @@ void nxs::ComputeNormals(Nexus &nexus) {
 	      normals[f[2]] += norm;
       }
     
-    if(use_short) {
-      for(unsigned int i = 0; i < patch.nv; i++) {
-	      Point3f &norm = normals[i];
-	      norm.Normalize();
-	      short *n = patch.Norm16(i);
-	      for(int k = 0; k < 3; k++) 
-	        n[k] = (short)(norm[k] * 32766);
-	      
-	      n[3] = 0;
+    if(nexus.signature.vnorm == Encodings::SHORT4) {
+      short *n = (short *)patch.VNormBegin();
+      for(unsigned int i = 0; i < patch.nv; i++, n += 4) {
+	Point3f &norm = normals[i];
+	norm.Normalize();
+	for(int k = 0; k < 3; k++) 
+	  n[k] = (short)(norm[k] * 32766);
+	n[3] = 0;
       }
-    } else {
-      memcpy(patch.Norm16Begin(), &*normals.begin(), 
+    } else if(nexus.signature.vnorm == Encodings::FLOAT3) {
+      memcpy(patch.VNormBegin(), &*normals.begin(), 
 	     normals.size() * sizeof(Point3f));
     }
 
@@ -236,6 +234,9 @@ void nxs::ComputeNormals(Nexus &nexus) {
     Patch &patch = nexus.GetPatch(p);
     Border &border = nexus.GetBorder(p);
 
+    Point3f *normf = (Point3f *)patch.VNormBegin();
+    short *norms = (short *)patch.VNormBegin();
+
     for(unsigned int i = 0; i < border.Size(); i++) {
       Link &link = border[i];
       if(link.IsNull()) continue;
@@ -244,15 +245,15 @@ void nxs::ComputeNormals(Nexus &nexus) {
       Point3f n = tmpb[off + i];
       if(n == Point3f(0.0f,0.0f,0.0f)) continue;
       n.Normalize();
-      if(use_short) {
+      if(nexus.signature.vnorm == Encodings::SHORT4) {
 	n *= 32766;
-	short *np = patch.Norm16(link.start_vert);
+	short *np = norms + 4 * link.start_vert;
 	np[0] = (short)n[0];
 	np[1] = (short)n[1];
 	np[2] = (short)n[2];
 	np[3] = 0;
-      } else {
-	patch.Norm32(link.start_vert) = n;
+      } else if(nexus.signature.vnorm == Encodings::FLOAT3) {
+	normf[link.start_vert] = n;
       }
     }
   }
@@ -315,13 +316,16 @@ void nxs::ComputeTriStrip(unsigned short nfaces, unsigned short *faces,
   }
 }
 
-void nxs::Reorder(unsigned int signature, Patch &patch) {
+void nxs::Reorder(Signature &signature, Patch &patch) {
   vector<unsigned> remap;
   remap.resize(patch.nv, 0xffff);
   
   int nf = patch.nf;
-  if(signature & NXS_FACES)
+  if(signature.face == Signature::TRIANGLES)
     nf *= 3;
+  else if(signature.face != Signature::STRIPS) {
+    assert(0); //mah...
+  }
   
   //building remap
   unsigned short *f = patch.FaceBegin();
@@ -343,9 +347,9 @@ void nxs::Reorder(unsigned int signature, Patch &patch) {
   
   vector<Point3f> vert;
   vert.resize(patch.nv);
-  memcpy(&*vert.begin(), patch.VertBegin(), patch.nv * sizeof(Point3f));
+  memcpy(&*vert.begin(), patch.Vert3fBegin(), patch.nv * sizeof(Point3f));
   for(int i = 0; i < patch.nv; i++)
-    patch.Vert(remap[i]) = vert[i];
+    patch.Vert3f(remap[i]) = vert[i];
 }
 
 //TODO actually use threshold
@@ -365,7 +369,7 @@ void nxs::Unify(Nexus &nexus, float threshold) {
     remap.resize(patch.nv);
 
     for(unsigned int i = 0; i < patch.nv; i++) {
-      Point3f &point = patch.Vert(i);
+      Point3f &point = patch.Vert3f(i);
 
       if(!vertices.count(point)) 
         vertices[point] = vcount++;
@@ -406,7 +410,7 @@ void nxs::Unify(Nexus &nexus, float threshold) {
     entry.nface = newface.size()/3;
     patch.Init(nexus.signature, entry.nvert, entry.nface);
 
-    memcpy(patch.VertBegin(), &(newvert[0]), entry.nvert*sizeof(Point3f));
+    memcpy(patch.Vert3fBegin(), &(newvert[0]), entry.nvert*sizeof(Point3f));
     memcpy(patch.FaceBegin(), &(newface[0]), entry.nface*3*sizeof(short));
 
     //testiamo il tutto...  TODO remove this of course

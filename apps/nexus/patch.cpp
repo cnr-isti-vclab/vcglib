@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/02/08 12:43:03  ponchio
+Added copyright
+
 
 ****************************************************************************/
 
@@ -44,6 +47,43 @@ static double wrkmem[LZO1X_999_MEM_COMPRESS/sizeof(double) +1];
 #endif
 
 
+Encodings Patch::encodings;
+
+Encodings::Encodings() {
+  for(unsigned int i = 0; i < 256; i++) {
+    e[i].bytes = 0;
+    e[i].comps = 0;
+    e[i].pack = NULL;
+    e[i].unpack = NULL;
+  }
+  e[1].bytes = 1;
+  e[2].bytes = 2;
+  e[3].bytes = 4;
+  e[4].bytes = 8;
+  e[1].comps = e[2].comps = e[3].comps = e[4].comps = 1;
+  e[5].bytes = 1;
+  e[6].bytes = 2;
+  e[7].bytes = 4;
+  e[8].bytes = 8;
+  e[5].comps = e[6].comps = e[7].comps = e[8].comps = 2;
+  e[9].bytes = 1;
+  e[10].bytes = 2;
+  e[11].bytes = 4;
+  e[12].bytes = 8;
+  e[9].comps = e[10].comps = e[11].comps = e[12].comps = 3;
+  e[13].bytes = 1;
+  e[14].bytes = 2;
+  e[15].bytes = 4;
+  e[16].bytes = 8;
+  e[13].comps = e[14].comps = e[15].comps = e[16].comps = 4;
+}
+
+
+void pad64(unsigned int &s) {
+  if((s & 0x0000003f) != 0) {
+    s>>=6; s++; s<<=6;
+  }
+}
 void pad(unsigned int &size) {
   while(size&0x3) size++;
 }
@@ -96,18 +136,61 @@ void unsubtract(float *buffer, unsigned int size) {
 }
 
 
-Patch::Patch(Signature signature, char *s, 
+Patch::Patch(Signature &signature, char *s, 
 	     unsigned short nvert, unsigned short nface):
-             start(s) {
+  fstart(s) {
   Init(signature, nvert, nface);
 }
 
-void Patch::Init(Signature signature, 
+void Patch::Init(Signature &signature, 
 		 unsigned short nvert, unsigned short nface) {
   nv = nvert;
   nf = nface;
   
-  if(signature & NXS_FACES)
+  unsigned int offset = 0;
+
+  if(signature.face == Signature::TRIANGLES)
+    offset += nf * 3 * sizeof(unsigned short);
+  else if (signature.face == Signature::STRIPS)
+    offset += nf * sizeof(unsigned short);
+  else if (signature.face == Signature::TETRAS)
+    offset += nf * 4 * sizeof(unsigned short);
+  else if (signature.face == Signature::SLICE) {
+    assert(0);
+    //non lo so...
+  }
+  pad64(offset);
+
+  fstartc = (unsigned short)offset/64;
+  offset += encodings[signature.fcolor].size(nf);
+  fstartn = (unsigned short)offset/64;
+  offset += encodings[signature.fnorm].size(nf);
+  fstartt = (unsigned short)offset/64;
+  offset += encodings[signature.ftext].size(nf);
+  fstartd = (unsigned short)offset/64;
+  offset += encodings[signature.fdata].size(nf);
+
+  vstart = fstart + offset;
+  offset = 0;
+  if(signature.vert == Signature::POINT3F)
+    offset += nv * sizeof(float) * 3;
+  else if(signature.vert == Signature::POINT4F)
+    offset += nv * sizeof(float) * 4;
+  else 
+    assert(0);
+  pad64(offset);
+
+  vstartc = (unsigned short)offset/64;
+  offset += encodings[signature.vcolor].size(nv);
+  vstartn = (unsigned short)offset/64;
+  offset += encodings[signature.vnorm].size(nv);
+  vstartt = (unsigned short)offset/64;
+  offset += encodings[signature.vtext].size(nv);
+  vstartd = (unsigned short)offset/64;
+  offset += encodings[signature.vdata].size(nv);
+  
+
+  /*  if(signature & NXS_FACES)
     vstart = (float *)(((char *)start) + nf * sizeof(unsigned short) * 3);
   else if(signature & NXS_STRIP)
     vstart = (float *)(((char *)start) + nf * sizeof(unsigned short));
@@ -135,10 +218,10 @@ void Patch::Init(Signature signature,
   else if(signature & NXS_TEXTURES_FLOAT)
     dstart = tstart + nv;
   else 
-    dstart = tstart;
+  dstart = tstart;*/
 }
 
-unsigned int Patch::ChunkSize(Signature signature, 
+unsigned int Patch::ChunkSize(Signature &signature, 
 			      unsigned short nvert, 
 			      unsigned short nface,
 			      unsigned int chunk_size) {
@@ -147,10 +230,50 @@ unsigned int Patch::ChunkSize(Signature signature,
   return size;
 }
 
-unsigned int Patch::ByteSize(Signature signature, 
+unsigned int Patch::ByteSize(Signature &signature, 
 			     unsigned short nvert, 
 			     unsigned short nface) {
+
   unsigned int size = 0;
+  if(signature.face == Signature::TRIANGLES)
+    size += nface * 3 * sizeof(unsigned short);
+  else if (signature.face == Signature::STRIPS)
+    size += nface + sizeof(unsigned short);
+  else if (signature.face == Signature::TETRAS)
+    size += nface * 4 * sizeof(unsigned short);
+  else if (signature.face == Signature::SLICE) {
+    assert(0);
+    //non lo so...
+  }
+  pad64(size);
+
+  size += encodings[signature.fcolor].size(nface);
+  size += encodings[signature.fnorm].size(nface);
+  size += encodings[signature.ftext].size(nface);
+  size += encodings[signature.fdata].size(nface);
+
+  if(signature.vert == Signature::POINT3F)
+    size += nvert * sizeof(float) * 3;
+  else if(signature.vert == Signature::POINT4F)
+    size += nvert * sizeof(float) * 4;
+  else 
+    assert(0);
+  pad64(size);
+
+  size += encodings[signature.vcolor].size(nvert);
+  size += encodings[signature.vnorm].size(nvert);
+  size += encodings[signature.vtext].size(nvert);
+  size += encodings[signature.vdata].size(nvert);
+
+  //this condition should really rarely happen but helps save space
+  //during construction
+  if(size < nface * 3 * sizeof(unsigned int))
+    size = nface * 3 * sizeof(unsigned int);
+  
+    return size;
+
+
+  /*  unsigned int size = 0;
   if(signature & NXS_STRIP)
     size += nface * sizeof(unsigned short);
   else if(signature & NXS_FACES)
@@ -193,7 +316,7 @@ unsigned int Patch::ByteSize(Signature signature,
   if(size < nface * 3 * sizeof(unsigned int))
     size = nface * 3 * sizeof(unsigned int);
   
-  return size;
+    return size;*/
 }
 
 
@@ -205,20 +328,19 @@ char *Patch::Compress(unsigned int ram_size, unsigned int &size) {
 
   //TODO use OVERLAP and test speed
   //TODO fill chunk padding with zeroes?
-  //TODO compress only used memory!
   size = ram_size + ram_size/64 + 23;
   char *buffer = new char[size];
 #ifdef WIN32
-    lzo1x_1_compress(((unsigned char *)start), ram_size,
+    lzo1x_1_compress(((unsigned char *)fstart), ram_size,
 		     (unsigned char *)buffer + sizeof(int), &size,
 		   (char *)wrkmem);
 #else
-    lzo1x_999_compress(((unsigned char *)start), ram_size,
+    lzo1x_999_compress(((unsigned char *)fstart), ram_size,
 		       (unsigned char *)buffer + sizeof(int), &size,
 		   (char *)wrkmem);
 
   lzo1x_optimize((unsigned char *)buffer + sizeof(int), size,
-		 ((unsigned char *)start), &ram_size,		 
+		 ((unsigned char *)fstart), &ram_size,		 
 		 NULL);
 #endif
 
@@ -239,7 +361,7 @@ void Patch::Decompress(unsigned int ram_size, void *src, unsigned int src_sz) {
   unsigned int dst_size = ram_size;
     
   int ret = lzo1x_decompress_safe(((unsigned char *)src) + sizeof(int), size,
-				  (unsigned char *)start, &dst_size, 0);
+				  (unsigned char *)fstart, &dst_size, 0);
   if(ret != 0) {
     cerr << "Ret from decompress: " << ret << endl;
     exit(-1);

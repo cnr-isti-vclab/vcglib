@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.28  2005/02/08 12:43:03  ponchio
+Added copyright
+
 
 ****************************************************************************/
 
@@ -42,13 +45,13 @@ Nexus::~Nexus() {
   Close();
 }
 
-bool Nexus::Create(const string &file, Signature sig, unsigned int c_size) {
+bool Nexus::Create(const string &file, Signature &sig, unsigned int c_size) {
   signature = sig;
   totvert = 0;
   totface = 0;
   sphere = Sphere3f();
   chunk_size = c_size;
-  unsigned int header_size = 256;
+  unsigned int header_size = 256; //a bit more than 64 needed
   if(chunk_size > header_size) header_size = chunk_size;
   
   history.Clear();
@@ -119,7 +122,10 @@ void Nexus::Close() {
 void Nexus::SaveHeader() {
   unsigned int magic = 0x3053584e; // nxs0
   WriteBuffer(&magic, sizeof(unsigned int));
-  WriteBuffer(&signature, sizeof(unsigned int));
+  unsigned int version = 1;
+  WriteBuffer(&version, sizeof(unsigned int));
+
+  WriteBuffer(&signature, sizeof(Signature));
   WriteBuffer(&chunk_size, sizeof(unsigned int));
   WriteBuffer(&offset, sizeof(int64));
   WriteBuffer(&history_offset, sizeof(int64));
@@ -135,7 +141,14 @@ bool Nexus::LoadHeader() {
     cerr << "Invalid magic. Not a nxs file\n";
     return false;
   }
-  ReadBuffer(&signature, sizeof(unsigned int));
+  //Current version is 1
+  unsigned int version;
+  ReadBuffer(&version, sizeof(unsigned int));
+  if(version != NXS_CURRENT_VERSION) {
+    cerr << "Old version. Sorry.\n";
+    return false;
+  }
+  ReadBuffer(&signature, sizeof(Signature));
   ReadBuffer(&chunk_size, sizeof(unsigned int));
   ReadBuffer(&offset, sizeof(int64));
   ReadBuffer(&history_offset, sizeof(int64));
@@ -238,7 +251,7 @@ Patch *Nexus::LoadPatch(unsigned int idx) {
     
     MFile::SetPosition((int64)entry.patch_start * (int64)chunk_size);
     
-    if((signature & NXS_COMPRESSED) == 0) { //not compressed
+    if(signature.compr == 0) { //not compressed
       MFile::ReadBuffer(ram, entry.disk_size * chunk_size);
     } else {
       unsigned char *disk = new unsigned char[entry.disk_size * chunk_size];
@@ -248,6 +261,9 @@ Patch *Nexus::LoadPatch(unsigned int idx) {
 			disk, entry.disk_size * chunk_size);
       delete []disk;
     } 
+  } else {
+    //zero all bytes... so compressio gets better with padding.
+    memset(ram, 0, entry.ram_size * chunk_size);
   }
   ram_used += entry.ram_size;  
   entry.patch = patch;  
@@ -259,7 +275,7 @@ void Nexus::FlushPatch(unsigned int id) {
   assert(entry.patch);
 
   if(!MFile::IsReadOnly()) { //write back patch
-    if((signature & NXS_COMPRESSED)) {
+    if(signature.compr) {
       unsigned int compressed_size;
       char *compressed = entry.patch->Compress(entry.ram_size * chunk_size,
 					       compressed_size);
@@ -282,11 +298,11 @@ void Nexus::FlushPatch(unsigned int id) {
 	Redim(Length() + entry.disk_size * chunk_size);
       }
       MFile::SetPosition((int64)entry.patch_start * (int64)chunk_size);
-      MFile::WriteBuffer(entry.patch->start, entry.disk_size * chunk_size);
+      MFile::WriteBuffer(entry.patch->fstart, entry.disk_size * chunk_size);
     }
   }
 
-  delete [](entry.patch->start);
+  delete [](entry.patch->fstart);
   delete entry.patch;  
   entry.patch = NULL;    
   ram_used -= entry.ram_size;      

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/02/18 13:04:13  ponchio
+Added patch reordering.
+
 Revision 1.4  2005/02/08 12:43:03  ponchio
 Added copyright
 
@@ -34,6 +37,7 @@ Added copyright
 #define NXS_ALGO_H
 
 #include <vector>
+#include "patch.h"
 
 namespace nxs {
   
@@ -49,7 +53,7 @@ namespace nxs {
   void ComputeNormals(Nexus &nexus);
   void ComputeTriStrip(unsigned short nfaces, unsigned short *faces, 
 		    std::vector<unsigned short> &strip);
-  void Reorder(unsigned int signature, nxs::Patch &patch);
+  void Reorder(Signature &signature, nxs::Patch &patch);
   void Unify(Nexus &nexus, float threshold);
   void ZSort(Nexus &nexus, std::vector<unsigned int> &forward,
 	     std::vector<unsigned int> &backward);
