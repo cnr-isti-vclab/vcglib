@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/05/07 12:46:55  cignoni
+added ifdef for gcc [Bug c++/14479]
+
 Revision 1.4  2004/05/07 10:06:55  cignoni
 Corrected template specialization syntax for gcc compiling
 
@@ -142,12 +145,12 @@ public:
 
 inline static Color4 GrayShade(float f)
 {
- return ColorF(f,f,f,1);
+ return Color4(f,f,f,1);
 }
 
 inline void SetGrayShade(float f)
 {
- *this = ColorF(f,f,f,1);
+ Import(Color4<float>(f,f,f,1));
 }
 
 
