@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2004/09/20 16:17:46  ponchio
+Floating except fixed (happened on meshes with less than 100 faces :P)
+
 Revision 1.12  2004/09/09 22:59:15  cignoni
 Removed many small warnings
 
@@ -59,7 +62,8 @@ instantiate GridStaticPtr on the simplexClass template.
 #define __VCGLIB__SAMPLING
 
 #include <time.h>
-#include "min_dist_point.h"
+//#include "min_dist_point.h"
+#include <vcg/complex/trimesh/closest.h>
 #include <vcg/space/box3.h>
 #include <vcg/space/color4.h>
 #include <vcg/simplex/face/distance.h>
@@ -108,11 +112,11 @@ private:
     MetroMeshGrid   gS2;
 
 
-		int n_samples_per_face             ;
+		unsigned int n_samples_per_face             ;
 		float n_samples_edge_to_face_ratio ;
 		float bbox_factor                  ;
 		float inflate_percentage			     ;
-		int min_size					             ;
+		unsigned int min_size					             ;
 		float n_hist_bins                  ;
 		int print_every_n_elements         ;
 		int referredBit;
@@ -248,7 +252,7 @@ float Sampling<MetroMesh>::AddSample(const Point3x &p )
     dist = dist_upper_bound;
 
     // compute distance between p_i and the mesh S2
-    MinDistPoint(S2, p, gS2, dist, normf, bestq, f, ip);
+    trimesh::Closest(S2, p, gS2, dist, normf, bestq, f, ip);
 
     // update distance measures
     if(dist == dist_upper_bound)
@@ -561,7 +565,7 @@ void Sampling<MetroMesh>::Hausdorff()
 
     // set grid meshes.
     gS2.SetBBox(S2.bbox);
-	if(S2.face.size() < min_size)
+  	if(S2.face.size() < min_size)
 		gS2.Set(S2.face, min_size);
     else
 		gS2.Set(S2.face);
