@@ -38,6 +38,10 @@ namespace vcg
 		{
 			// /** \addtogroup  */
 			// /* @{ */
+			/** 
+			This class encapsulate a filter for importing OFF meshes.
+			A basic description of the OFF file format can be found at http://www.geomview.org/docs/html/geomview_41.html
+			*/
 			template<class MESH_TYPE>
 			class ImporterOFF
 			{
