@@ -31,6 +31,11 @@ of Greg Turk and on the work of Claudio Rocchini
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/01/03 10:35:59  cignoni
+Improved the compatibility for ply format for faces having the list size (e.g. number of vertexes of a face) as a char instead of a uchar.
+Added a couple of new face descriptors, corrected a bug in error reporting function (and restructured) and translated a few comments.
+Thanks to Patrick Min for the careful bug reporting
+
 Revision 1.6  2004/06/23 15:36:57  cignoni
 Restructured management of error, now the standard open for any mesh type return the error code, the default success value is zero
 Any import class has a method ErrorMsg that give a verbal description of an error code.
@@ -122,12 +127,6 @@ typedef unsigned int uint;
 
 #endif
 */
-	// Stringhe per la cache
-const char * cachedir = "vcg_cache";
-const char * bboxcacheext = ".bbox_cache";
-const char * bboxheader = "BBOXCACH";
-
-
 
 
 	// Funzioni statiche per la lettura di un elemento

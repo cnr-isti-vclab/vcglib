@@ -1,6 +1,78 @@
+/****************************************************************************
+* VCGLib                                                            o o     *
+* Visual and Computer Graphics Library                            o     o   *
+*                                                                _   O  _   *
+* Copyright(C) 2004                                                \/)\/    *
+* Visual Computing Lab                                            /\/|      *
+* ISTI - Italian National Research Council                           |      *
+*                                                                    \      *
+* All rights reserved.                                                      *
+*                                                                           *
+* This program is free software; you can redistribute it and/or modify      *   
+* it under the terms of the GNU General Public License as published by      *
+* the Free Software Foundation; either version 2 of the License, or         *
+* (at your option) any later version.                                       *
+*                                                                           *
+* This program is distributed in the hope that it will be useful,           *
+* but WITHOUT ANY WARRANTY; without even the implied warranty of            *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
+* GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
+* for more details.                                                         *
+*                                                                           *
+****************************************************************************/
+/****************************************************************************
+Acknowlegments
+Portions of this file were based on the original code of the Ply library 
+of Greg Turk and on the work of Claudio Rocchini
+
+****************************************************************************/
+
+/****************************************************************************
+  History
+
+$Log: not supported by cvs2svn $
+
+*/
+
 //****************** Gestione cache *****************
 
+#ifndef __VCG_PLYLIB_STUFF
+#define __VCG_PLYLIB_STUFF 
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h> 
+#include <io.h>
+#include <direct.h>
+
+#include <vcg/space/box3.h>
+#include <wrap/ply/plylib.h>
+using namespace vcg;
+
+#ifdef WIN32
+#define pb_mkdir(n)  _mkdir(n)
+#define pb_access _access
+#define pb_stat   _stat
+#define pb_open   _open
+#define pb_close  _close
+#else
+#define pb_mkdir(n)  mkdir(n,0)
+#define pb_access access
+#define pb_stat   stat
+#define pb_open   open
+#define pb_close  close
+#endif
+
+
+namespace vcg {
+namespace ply {
+
 const int MAXBPATH = 256;
+
+	// Stringhe per la cache
+const char * cachedir = "vcg_cache";
+const char * bboxcacheext = ".bbox_cache";
+const char * bboxheader = "BBOXCACH";
 
 static bool GetDirFromPath( const char * path, char * dir, char * name )
 {
@@ -65,7 +137,7 @@ bool CheckCacheTime( const char * fname, const char * cname )
 
 // restituisce true se il file con la cache del bbox della mesh e' piu' recente del file ply
 // se fname2 != 0, allora deve essere piu recente anche di fname2.
-static bool CheckBBoxCache( const char * fname, Box3d & box, char *fname2=0 )
+static bool CheckBBoxCache( const char * fname, Box3d & box, const char *fname2=0 )
 {
 	char d[MAXBPATH];
 	char n[MAXBPATH];
@@ -165,7 +237,7 @@ struct PlyPoint3d
 
 	// Calcola il bbox di un file ply
 
-bool ScanBBox( const char * fname, Box3d & box, bool use_cache )
+bool ScanBBox( const char * fname, Box3d & box, bool use_cache=true )
 {
 
 	if(use_cache)
@@ -231,7 +303,7 @@ bool ScanBBox( const char * fname, Box3d & box, bool use_cache )
 // Come la precedente ma applica la matrice m ai punti prima di calcolare il bbox.
 // Visto che la matrice di solito e' tenuta in un qualche file, se si vuole usare la cache 
 // si puo' passare anche un'altro filename da controllare
-bool ScanBBox( const char * fname, Box3d & box, const Matrix44d & m, bool use_cache, char *matrixfname)
+bool ScanBBox( const char * fname, Box3d & box, const Matrix44d & m, bool use_cache, const char *matrixfname)
 {
 
 	if(use_cache)
@@ -274,7 +346,7 @@ bool ScanBBox( const char * fname, Box3d & box, const Matrix44d & m, bool use_ca
 				PlyPoint3d t;
 
 				pf.Read( (void *)(&t) );
-				box.Add( m.Apply( Point3d(t.x,t.y,t.z) ) );
+				box.Add( m*Point3d(t.x,t.y,t.z) );
 			}
 		}
 		else
@@ -337,4 +409,7 @@ void __interpret_texture_name(const char*a, const char*fn, char*output){
 	output[io]=0;
 };
 
+}
+}
+#endif
 
