@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/12/11 14:53:19  ganovelli
+first partial porting: compiled gcc,intel and msvc
+
 
 /****************************************************************************/
 
@@ -493,6 +496,221 @@ void DepthSmooth(MESH_TYPE &m,
 	 	
 	TD.Stop();
 }
+
+
+
+/****************************************************************************************************************/
+/****************************************************************************************************************/
+// Paso Double Smoothing
+/****************************************************************************************************************/
+/****************************************************************************************************************/
+// Classi di info
+template<class FLT> 
+class PDVertInfo 
+{
+public:
+	Point3<FLT> np;
+};
+
+template<class FLT> 
+class PDFaceInfo 
+{
+public:
+	Point3<FLT> m;
+};
+/***************************************************************************/
+// Paso Doble Step 1 compute the smoothed normals
+/***************************************************************************/
+// Calcola la normale media per ogni  faccia come area weighted mean con tutte
+// le facce adiacenti anche per vertice 
+//
+template<class MESH_TYPE>
+void NormalSmooth(MESH_TYPE &m, 	
+				  SimpleTempData<typename MESH_TYPE::FaceContainer,PDFaceInfo< typename MESH_TYPE::ScalarType > > &TD,
+				  float sigma)
+{
+	int i;
+	//vcg::face::Pos<typename MESH_TYPE::FaceType> ep;
+	vcg::face::VFIterator<typename MESH_TYPE::FaceType> ep;
+
+
+	MESH_TYPE::FaceIterator fi;
+	for(fi=m.face.begin();fi!=m.face.end();++fi)
+	{
+
+		Point3f bc=(*fi).Barycenter();
+		for(i=0;i<3;++i)
+		{
+
+			ep.f=(*fi).V(i)->VFp();
+			ep.z=(*fi).V(i)->VFi();
+
+			while (!ep.End())
+			{
+				ep.f->ClearS();
+				ep++;
+			}
+
+		}
+
+
+
+		//TD[*fi]->SetV();
+		(*fi).SetS();
+		Point3f mm=Point3f(0,0,0);
+		for(i=0;i<3;++i)
+		{
+			ep.f=(*fi).V(i)->VFp();
+			ep.z=(*fi).V(i)->VFi();
+			while (!ep.End())
+			{
+				//if(!TD[*(ep.f)]->IsV())
+				if(! (*ep.f).IsS() )
+				{
+					if(sigma>0) 
+					{
+						float dd=SquaredDistance(ep.f->Barycenter(),bc);
+						float ang=Angle(ep.f->N(),(*fi).N());
+						mm+=ep.f->N()*exp(-sigma*ang*ang/dd);
+					}
+					else mm+=ep.f->N();
+					//TD[*(ep.f)]->SetV();
+					(*ep.f).SetS();
+				}
+				ep++;
+			}
+		}
+		mm.Normalize();
+		TD[*fi].m=mm;
+
+	}
+}
+
+/****************************************************************************************************************/
+// Restituisce il gradiente dell'area del triangolo nel punto p.
+// Nota che dovrebbe essere sempre un vettore che giace nel piano del triangolo e perpendicolare al lato opposto al vertice p.
+// Ottimizzato con Maple e poi pesantemente a mano.
+template <class FLT>
+Point3<FLT> TriAreaGradient(Point3<FLT> &p,Point3<FLT> &p0,Point3<FLT> &p1)
+{
+	Point3<FLT> dd = p1-p0;
+	Point3<FLT> d0 = p-p0;
+	Point3<FLT> d1 = p-p1;
+	Point3<FLT> grad;
+
+	FLT t16 =  d0[1]* d1[2] - d0[2]* d1[1];
+	FLT t5  = -d0[2]* d1[0] + d0[0]* d1[2];
+	FLT t4  = -d0[0]* d1[1] + d0[1]* d1[0];
+
+	FLT delta= sqrtf(t4*t4 + t5*t5 +t16*t16);
+
+	grad[0]= (t5  * (-dd[2]) + t4 * ( dd[1]))/delta;
+	grad[1]= (t16 * (-dd[2]) + t4 * (-dd[0]))/delta;
+	grad[2]= (t16 * ( dd[1]) + t5 * ( dd[0]))/delta;
+
+	return grad;
+}
+
+template <class FLT>
+Point3<FLT> CrossProdGradient(Point3<FLT> &p,Point3<FLT> &p0,Point3<FLT> &p1, Point3<FLT> &m)
+{
+	Point3<FLT> grad;
+
+	grad[0] = (-p0[2] + p1[2])*m[1] + (-p1[1] + p0[1])*m[2];
+	grad[1] = (-p1[2] + p0[2])*m[0] + (-p0[0] + p1[0])*m[2];
+	grad[2] = (-p0[1] + p1[1])*m[0] + (-p1[0] + p0[0])*m[1];
+
+	return grad;
+}
+
+/*
+Deve Calcolare il gradiente di 
+E(p) = A(p,p0,p1) (n - m)^2 =
+A(...) (2-2nm)   = 
+(p0-p)^(p1-p) 
+2A - 2A * ------------- m  =
+2A
+
+2A  -  2 (p0-p)^(p1-p) * m
+*/
+template <class FLT>
+Point3<FLT> FaceErrorGrad(Point3<FLT> &p,Point3<FLT> &p0,Point3<FLT> &p1, Point3<FLT> &m)
+{
+	return     TriAreaGradient(p,p0,p1) *2.0f
+		- CrossProdGradient(p,p0,p1,m) *2.0f ;
+}
+/***************************************************************************/
+// Paso Doble Step 2 Fitta la mesh a un dato insieme di normali
+/***************************************************************************/
+
+template<class MESH_TYPE>
+void FitMesh(MESH_TYPE &m, 
+			 SimpleTempData<typename MESH_TYPE::VertContainer, PDVertInfo<typename typename MESH_TYPE::ScalarType> > &TDV,
+			 SimpleTempData<typename MESH_TYPE::FaceContainer,   PDFaceInfo<typename typename MESH_TYPE::ScalarType> > &TDF,
+			 float lambda)
+{
+	//vcg::face::Pos<typename MESH_TYPE::FaceType> ep;
+	vcg::face::VFIterator<typename MESH_TYPE::FaceType> ep;
+	MESH_TYPE::VertexIterator vi;
+	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+	{
+		Point3f ErrGrad=Point3f(0,0,0);
+
+		ep.f=(*vi).VFp();
+		ep.z=(*vi).VFi();
+		while (!ep.End())
+		{
+			ErrGrad+=FaceErrorGrad(ep.f->V(ep.z)->P(),ep.f->V1(ep.z)->P(),ep.f->V2(ep.z)->P(),TDF[ep.f].m);
+			ep++;
+		}
+		TDV[*vi].np=(*vi).P()-ErrGrad*lambda;					
+	}
+
+	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+		(*vi).P()=TDV[*vi].np;
+
+}
+/****************************************************************************************************************/
+
+
+
+
+
+
+
+
+
+template<class MESH_TYPE>
+void PasoDobleSmooth(MESH_TYPE &m, int step, typename MESH_TYPE::ScalarType Sigma=0, int FitStep=10, typename MESH_TYPE::ScalarType FitLambda=0.05)
+{
+
+
+	SimpleTempData< typedef MESH_TYPE::VertContainer, PDVertInfo<MESH_TYPE::ScalarType> > TDV(m.vert);
+	SimpleTempData< typedef MESH_TYPE::FaceContainer, PDFaceInfo<MESH_TYPE::ScalarType> > TDF(m.face);
+	PDVertInfo<MESH_TYPE::ScalarType> lpzv;
+	lpzv.np=typename MESH_TYPE::CoordType(0,0,0);
+	PDFaceInfo<MESH_TYPE::ScalarType> lpzf;
+	lpzf.m=typename MESH_TYPE::CoordType(0,0,0);
+
+	assert(m.HasVFTopology());
+	m.HasVFTopology();
+	TDV.Start(lpzv);
+	TDF.Start(lpzf);
+	for(int j=0;j<step;++j)
+	{
+
+		vcg::tri::UpdateNormals<MyMesh>::PerFace(m);
+		NormalSmooth<MESH_TYPE>(m,TDF,Sigma);
+		for(int k=0;k<FitStep;k++)
+			FitMesh<MESH_TYPE>(m,TDV,TDF,FitLambda);
+	}
+
+	TDF.Stop();
+	TDV.Stop();
+
+}
+
+
 
 }		// End namespace vcg
 
