@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/03/10 21:38:40  cignoni
+Written some documentation and added to the space module
+
 Revision 1.1  2004/02/13 00:44:53  cignoni
 First commit...
 
@@ -84,7 +87,7 @@ public:
 };
 
 /**
-	Templated class for a set of 2D texture coord. It for each is templated over two 
+	Templated class for a single 2D texture coord.
 */
 template<class T = float>
 class TCoord2Simple
@@ -109,7 +112,7 @@ public:
 	inline const T & u(const int i) const { assert(i==0); return _t[0]; }
 	inline const T & v(const int i) const { assert(i==0); return _t[1]; }
 
-	inline bool operator == ( TCoordSimple const & p ) const
+	inline bool operator == ( TCoord2Simple const & p ) const
 		{
 			return _t==p._t;
 		}
