@@ -26,8 +26,9 @@
 
 #ifndef __VCG_DECIMATION_COLLAPSE
 #define __VCG_DECIMATION_COLLAPSE
-#include<vcg\complex\tetramesh\decimation\decimation.h>
+
 #include<vcg\complex\tetramesh\modify\edge_collapse.h>
+#include<vcg\complex\local_optimization.h>
 
 
 namespace vcg{
@@ -35,10 +36,13 @@ namespace tetra{
 
 /** \addtogroup tetramesh */
 /*@{*/
-/// This Class is specialization for the edge collapse
+/// This Class is specialization of LocalModification for the edge collapse
+/// It wraps the atomic operation EdgeCollapse to be used in a optimizatin routine.
+/// Note that it has knowledge of the heap of the class LocalOptimization because
+/// it is responsible of updating it after a collapse has been performed
 
 template<class TETRA_MESH_TYPE>
-class Collapse: public vcg::tetra::LocalModification<TETRA_MESH_TYPE>
+class Collapse: public LocalOptimization<TETRA_MESH_TYPE>::LocModType
 {
  
   /// The tetrahedral mesh type
@@ -57,40 +61,37 @@ class Collapse: public vcg::tetra::LocalModification<TETRA_MESH_TYPE>
   typedef Pos<TetraType> PosType;
   /// The HEdgePos Loop type
   typedef PosLoop<TetraType> PosLType;
-
-
+  /// definition of the heap element
+	typedef typename LocalOptimization<TETRA_MESH_TYPE>::HeapElem HeapElem;
 private:
 
 ///the new point that substitute the edge
 Point3<ScalarType> _NewPoint;
 ///the pointer to edge collapser method
-vcg::tetra::EdgeCollapse<TetraMeshType> *_EC;
+vcg::tetra::EdgeCollapse<TetraMeshType> _EC;
 ///mark for up_dating
-char _Imark;
+int _Imark;
 ///the pos of collapse 
 PosType pos;
 ///pointer to vertex that remain
 VertexType *vrem;
+/// priority in the heap
+ScalarType _priority;
+
 public:
 /// Default Constructor
 	Collapse()
-		{
-      _EC=NULL;
-		}
+		{}
 
 ///Constructor with postype
-	Collapse(PosType p)
-		{
-     /* Imark=mark;*/
+	Collapse(PosType p,int mark)
+		{    
+			_Imark = mark;
       pos=p;
-      _EC=NULL;
 		}
 
   ~Collapse()
-		{
-      if (_EC!=NULL)
-        delete(_EC);
-		}
+		{}
 
 private:
 
@@ -135,14 +136,14 @@ ScalarType _VolumePreservingError(PosType &pos,CoordType &new_point,int nsteps)
    if ((ext_v0)&&(ext_v1))//both are external vertex
    {
     ScalarType step=1.f/(nsteps-1);
-    ScalarType Vol_Original=_EC->VolumeOriginal();
+    ScalarType Vol_Original=_EC.VolumeOriginal();
     for (int i=0;i<nsteps;i++)
     {
       best_error=1000000.f;
       ScalarType alfatemp=step*((double)i);
       CoordType newPTemp=(ve0->P()*alfatemp) +(ve1->P()*(1.f-alfatemp));
       //the error is the absolute value of difference of volumes
-      ScalarType error=fabs(Vol_Original-_EC->VolumeSimulateCollapse(pos,newPTemp));
+      ScalarType error=fabs(Vol_Original-_EC.VolumeSimulateCollapse(pos,newPTemp));
       if(error<best_error)
       {
        new_point=newPTemp;
@@ -160,42 +161,24 @@ public:
 
   ScalarType ComputePriority()
   { 
-    return (_AspectRatioMedia(this->pos));
+		return (_priority = _AspectRatioMedia(this->pos));
   }
 
   ScalarType ComputeError()
   {
-     if (_EC==NULL)
-    {
-      _EC=new vcg::tetra::EdgeCollapse<TetraMeshType>();
-      _EC->FindSets(pos);
-    }
+      _EC.FindSets(pos);
       return (_VolumePreservingError(pos,_NewPoint,5));
   }
 
-  void Execute()
+  int Execute()
   {
-    if (_EC==NULL)
-    {
-      _EC=new vcg::tetra::EdgeCollapse<TetraMeshType>();
-      _EC->FindSets(pos);
-    }
-    _EC->DoCollapse(pos,_NewPoint);
+    _EC.FindSets(pos);
+    return -_EC.DoCollapse(pos,_NewPoint);
   }
   
-  bool PreserveTopology()
-  {
-    if (_EC==NULL)
-    {
-      _EC=new vcg::tetra::EdgeCollapse<TetraMeshType>();
-      _EC->FindSets(pos);
-    }
-    return(_EC->CheckPreconditions(pos,_NewPoint));
-  }
   
- HeapRetType UpdateHeap()
+  void UpdateHeap(LocalOptimization<TETRA_MESH_TYPE>::HeapType & h_ret)
   {
-    HeapRetType h_ret;
     assert(!vrem->IsD());
     VTIterator<TetraType> VTi(vrem->VTb(),vrem->VTi());
     while (!VTi.End())
@@ -203,12 +186,49 @@ public:
       for (int j=0;j<6;j++)
       {
         vcg::tetra::Pos<TetraType> p=Pos<TetraType>(VTi.Vt(),Tetra::FofE(j,0),j,Tetra::VofE(j,0));
-        h_ret.push_back(HeapRetElem(vcg::tetra::MTEdgeCollapse,p));
+        h_ret.push_back(HeapElem(new Collapse<TetraMeshType>(p,_Imark)));
       }
       VTi++;
     }
-    return (h_ret);
   }
+
+  ModifierType IsOfType(){ return TetraEdgeCollapse;}
+
+  bool IsFeasible(){
+										_EC.FindSets(pos);
+										return(_EC.CheckPreconditions(pos,_NewPoint));
+										}
+
+  bool IsUpToDate(){
+	   	if (!pos.T()->IsD())
+			{
+        VertexType *v0=pos.T()->V(Tetra::VofE(pos.E(),0));
+			  VertexType *v1=pos.T()->V(Tetra::VofE(pos.E(),1));
+			  
+			return (( (!v0->IsD()) && (!v1->IsD())) &&
+							 _Imark>=v0->IMark() &&
+							 _Imark>=v1->IMark());
+		  }
+			else
+			return false;
+	}
+
+	virtual ScalarType Priority(){
+		return _priority;
+	}
+
+	virtual void Init(TetraMeshType&m,LocalOptimization<TETRA_MESH_TYPE>::HeapType&h_ret){
+		h_ret.clear();
+		TetraMeshType::TetraIterator ti;
+		int j;
+		for(ti = m.tetra.begin(); ti != m.tetra.end();++ti)
+	   for (int j=0;j<6;j++)
+      {
+        PosType p=PosType(&*ti,Tetra::FofE(j,0),j,Tetra::VofE(j,0));
+        h_ret.push_back(HeapElem(new Collapse<TetraMeshType>(p,m.IMark)));
+      }
+ 
+	}
 
 };
 }//end namespace tetra
