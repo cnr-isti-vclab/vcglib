@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/05/10 13:41:57  cignoni
+Added VFIterator
+
 Revision 1.2  2004/03/12 15:22:28  cignoni
 Written some documentation and added to the trimes doxygen module
 
@@ -76,8 +79,8 @@ public:
 	/// Default constructor
 	Pos(){}
 	/// Constructor which associates the half-edge elementet with a face, its edge and its vertex
-	Pos(BaseFaceType  * const fp, int const zp,
-		VertexType  * const vp){f=fp;z=zp;v=vp;}
+	Pos(BaseFaceType  * const fp, int const zp,	VertexType  * const vp){f=fp; z=zp; v=vp;}
+	Pos(BaseFaceType  * const fp, int const zp){f=fp; z=zp; v=f.V[zp];}
 
 	/// Operator to compare two half-edge
 	inline bool operator == ( BasePosType const & p ) const {
