@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/10/07 14:41:31  fasano
+Little fix on ViewPoint() method
+
 Revision 1.3  2004/10/07 14:24:53  ganovelli
 added LookAt,LookToward
 
@@ -47,8 +50,8 @@ creation
 // #include <vector>
 // #include <vcg/Matrix44.h>
 // #include <vcg/Box3.h>
-#include <vcg/space/Point2.h>
-#include <vcg/space/Point3.h>
+#include <vcg/space/point2.h>
+#include <vcg/space/point3.h>
 #include <vcg/math/similarity.h>
 #include <vcg/math/camera.h>
 

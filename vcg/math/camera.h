@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/10/07 14:39:57  fasano
+Remove glew.h include
+
 Revision 1.3  2004/10/07 14:22:38  ganovelli
 y axis reverse in projecting (!)
 
@@ -45,8 +48,8 @@ creation
 #define __VCGLIB_CAMERA
 
 // VCG
-#include <vcg/space/Point3.h>
-#include <vcg/space/Point2.h>
+#include <vcg/space/point3.h>
+#include <vcg/space/point2.h>
 #include <vcg/math/similarity.h>
 
 namespace vcg{
