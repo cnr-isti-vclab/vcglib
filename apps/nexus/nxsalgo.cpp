@@ -2,7 +2,7 @@
 #include <map>
 #include <iostream>
 
-#include <wrap/strip/tristrip.h>
+//#include <wrap/strip/tristrip.h>
 
 #include "nxsalgo.h"
 #include "nexus.h"
