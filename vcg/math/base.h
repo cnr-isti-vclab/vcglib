@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2004/03/31 12:41:55  tarini
+debugged Max and Min const values (to make them linkable)
+
 Revision 1.13  2004/03/31 10:09:19  cignoni
 int64 -> long long for GCC compatibility
 
@@ -111,30 +114,42 @@ namespace math {
 		public: const SCALAR Min; const SCALAR Max;
 	};  
 
-	class Value<char          > { public: const char           Min=-128;
-	                                      const char           Max=+127;};
-	class Value<unsigned char > { public: const unsigned char  Min=0;
-	                                      const unsigned char  Max=255;};
-	class Value<short         > { public: const short          Min=(-32767 -1);
-	                                      const short          Max=+32767;};
-	class Value<unsigned short> { public: const unsigned short Min=0;
-	                                      const unsigned short Max=65535;};
-	class Value<int           > { public: const int            Min=(-2147483647 - 1);
-	                                      const int            Max= +2147483647;};
-	class Value<unsigned int  > { public: const unsigned int   Min=0;
-	                                      const unsigned int   Max=4294967295;};
-	class Value<__int64       > { public: const __int64        Min=(-9223372036854775807i64 - 1);
-	                                      const __int64        Max= +9223372036854775807i64;};
-	class Value<long          > { public: const long           Min=(-2147483647L -1L);
-	                                      const long           Max= +2147483647L;};
-	class Value<unsigned long > { public: const unsigned long  Min=0;
-	                                      const unsigned long  Max=4294967295;};
-	class Value<float         > { public: const float          Min=-3.4E38F;
-	                                      const float          Max=+3.4E38F;};
-	class Value<double        > { public: const double         Min=-1.7E308;;
-	                                      const double         Max=+1.7E308;};
-	class Value<long double   > { public: const long double    Min=-1.7E308;  //-1.2E4931 ?
-	                                      const long double    Max=+1.7E308;};//+1.2E4931 ?
+	class Value<char          > { public: static const char						Min(){static char						v=-128;								return v;}
+	                                      static const char           Max(){static char						v=+127;								return v;} 
+		};
+	class Value<unsigned char > { public: static const unsigned char  Min(){static unsigned char	v=0;							 	  return v;}
+	                                      static const unsigned char  Max(){static unsigned char	v=255;								return v;}
+		};
+	class Value<short         > { public: static const short          Min(){static short					v=(-32767 -1);				return v;}
+	                                      static const short          Max(){static short					v=+32767;								return v;}
+		};
+	class Value<unsigned short> { public: static const unsigned short Min(){static unsigned short v=0;								return v;}
+	                                      static const unsigned short Max(){static unsigned short v=65535;								return v;}
+		};
+	class Value<int           > { public: static const int            Min(){static int						v=(-2147483647 - 1);								return v;}
+	                                      static const int            Max(){static int						v= +2147483647;								return v;}
+		};
+	class Value<unsigned int  > { public: static const unsigned int   Min(){static unsigned int		v=0;								return v;}
+	                                      static const unsigned int   Max(){static unsigned int		v=4294967295;								return v;}
+		};
+	class Value<__int64       > { public: static const __int64        Min(){static __int64				v=(-9223372036854775807i64 - 1);								return v;}
+	                                      static const __int64        Max(){static __int64				v= +9223372036854775807i64;								return v;}
+		};
+	class Value<long          > { public: static const long           Min(){static long						v=(-2147483647L -1L);								return v;}
+	                                      static const long           Max(){static long						v= +2147483647L;								return v;}
+		};
+	class Value<unsigned long > { public: static const unsigned long  Min(){static unsigned long	v=0;								return v;}
+	                                      static const unsigned long  Max(){static unsigned long	v=4294967295;								return v;}
+		};
+	class Value<float         > { public: static const float          Min(){static float					v=-3.4E38F;								return v;}
+	                                      static const float          Max(){static float					v=+3.4E38F;								return v;}
+		};
+	class Value<double        > { public: static const double         Min(){static double					v=-1.7E308;								return v;}
+	                                      static const double         Max(){static double					v=+1.7E308;								return v;}
+		};
+	class Value<long double   > { public: static const long double    Min(){static long double		v=-1.7E308; 								return v;} //-1.2E4931 ?
+	                                      static const long double    Max(){static long double		v=+1.7E308;								return v;}//+1.2E4931 ?
+		};
 
 
 	template<class T> inline const T & Min(const T &a, const T &b){
