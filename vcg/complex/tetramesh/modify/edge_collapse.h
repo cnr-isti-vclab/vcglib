@@ -749,42 +749,6 @@ bool  CheckPreconditions(PosType pos,CoordType NewP)
    //return false;
 }
 
-
-/////Modify pos and alfa to obtain the collapse that minimize the error in terms of volume loss
-//void MinVolume(PosType &pos,ScalarType &alfa,int nsteps)
-//{
-//  bool ext_v0=(pos.T()->V(Tetra::VofE(pos.E(),0)))->IsB();
-//  bool ext_v1=(pos.T()->V(Tetra::VofE(pos.E(),1)))->IsB();
-//
-//   if ((ext_v0)&&(!ext_v1))
-//      alfa=1.f;
-//   else
-//   if ((!ext_v0)&&(ext_v1))
-//      alfa=0.f;
-//   else
-//   if ((!ext_v0)&&(!ext_v1))
-//     alfa=0.5f;
-//   else
-//   if ((ext_v0)&&(ext_v1))//both are external vertex
-//   {
-//    /*alfa=1.f;*/
-//    ScalarType step=1.f/(nsteps-1);
-//    ScalarType best_error=1000000.f;
-//    ScalarType Vol_Original=_VolumeUnion();
-//    for (int i=0;i<nsteps;i++)
-//    {
-//      ScalarType alfatemp=step*((double)i);
-//      //the error is the absolute value of difference of volumes
-//      ScalarType error=fabs(Vol_Original-_VolumeSimulateCollapse(pos,alfa));
-//      if(error<best_error)
-//      {
-//       alfa=alfatemp;
-//       best_error=error;
-//      }
-//    }
-//   }
-//}
-
 ///return the sum of volumes of the union of  stars on vertices (the original volume of tetrahedrons)
 ScalarType VolumeOriginal()
 {
