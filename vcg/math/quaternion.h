@@ -138,25 +138,25 @@ template <class S> void Quaternion<S>::ToMatrix(Matrix44<S> &m) const	{
 	S q22 = V(3)*V(3);
 	S q23 = V(3)*V(0);
 
-  m.element(0, 0) = 1.0-(q11 + q22)*2.0;
-  m.element(1, 0) =     (q01 - q23)*2.0;
-  m.element(2, 0) =     (q02 + q13)*2.0;
-  m.element(3, 0) = 0.0;
+  m.element(0, 0) = (S)(1.0-(q11 + q22)*2.0);
+  m.element(1, 0) = (S)((q01 - q23)*2.0);
+  m.element(2, 0) = (S)((q02 + q13)*2.0);
+  m.element(3, 0) = (S)0.0;
 
-  m.element(0, 1) =     (q01 + q23)*2.0;
-  m.element(1, 1) = 1.0-(q22 + q00)*2.0;
-  m.element(2, 1) =     (q12 - q03)*2.0;
-  m.element(3, 1) = 0.0;
+  m.element(0, 1) = (S)((q01 + q23)*2.0);
+  m.element(1, 1) = (S)(1.0-(q22 + q00)*2.0);
+  m.element(2, 1) = (S)((q12 - q03)*2.0);
+  m.element(3, 1) = (S)0.0;
 
-  m.element(0, 2) =     (q02 - q13)*2.0;
-  m.element(1, 2) =     (q12 + q03)*2.0;
-  m.element(2, 2) = 1.0-(q11 + q00)*2.0;
-  m.element(3, 2) = 0.0;
+  m.element(0, 2) = (S)((q02 - q13)*2.0);
+  m.element(1, 2) = (S)((q12 + q03)*2.0);
+  m.element(2, 2) = (S)(1.0-(q11 + q00)*2.0);
+  m.element(3, 2) = (S)0.0;
 
-  m.element(0, 3) = 0.0;
-  m.element(1, 3) = 0.0;
-  m.element(2, 3) = 0.0;
-  m.element(3, 3) = 1.0;
+  m.element(0, 3) = (S)0.0;
+  m.element(1, 3) = (S)0.0;
+  m.element(2, 3) = (S)0.0;
+  m.element(3, 3) = (S)1.0;
 }
 	
 

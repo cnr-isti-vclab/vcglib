@@ -30,7 +30,7 @@ $LOG$
 #ifndef __VCGLIB_MATRIX44
 #define __VCGLIB_MATRIX44
 
-#include <string.h>
+#include <vcg/math/base.h>
 #include <vcg/space/point3.h>
 #include <vcg/space/point4.h>
 
@@ -138,7 +138,7 @@ protected:
   int index[4]; //hold permutation
   ///Hold sign of row permutation (used for determinant sign)
   T d;
-  void Decompose();
+  bool Decompose();
 };
 
 ///	Apply   POST moltiplica la matrice al vettore (e.g. la traslazione deve stare nell'ultima riga)
@@ -153,7 +153,8 @@ template <class T> Point3<T> operator*(const Point3<T> &p, const Matrix44<T> &m)
 template <class T> Point3<T> operator*(const Matrix44<T> &m, const Point3<T> &p);
 
 template <class T> Matrix44<T> &Transpose(Matrix44<T> &m);
-template <class T> Matrix44<T> &Invert(Matrix44<T> &m);
+//return NULL matrix if not invertible
+template <class T> Matrix44<T> &Invert(Matrix44<T> &m);   
 
 typedef Matrix44<short>  Matrix44s;
 typedef Matrix44<int>	 Matrix44i;
@@ -402,7 +403,11 @@ template <class T> Matrix44<T> &Invert(Matrix44<T> &m) {
 /* LINEAR SOLVE IMPLEMENTATION */
 
 template <class T> LinearSolve<T>::LinearSolve(const Matrix44<T> &m): Matrix44<T>(m) {
-  Decompose();  
+  if(!Decompose()) {
+    for(int i = 0; i < 4; i++)
+      index[i] = i;
+    SetZero();
+  }
 }
 
 
@@ -418,7 +423,7 @@ template <class T> T LinearSolve<T>::Determinant() const {
 d is +or -1 depeneing of row permutation even or odd.*/
 #define TINY 1e-100
 
-template <class T> void LinearSolve<T>::Decompose() {
+template <class T> bool LinearSolve<T>::Decompose() {
   d = 1; //no permutation still
     
   T scaling[4];
@@ -427,14 +432,14 @@ template <class T> void LinearSolve<T>::Decompose() {
   for(int i = 0; i < 4; i++) { 
     T largest = 0.0;
     for(int j = 0; j < 4; j++) {
-      T t = fabs(element(i, j));
+      T t = math::Abs(element(i, j));
       if (t > largest) largest = t;
     }
 
     if (largest == 0.0) { //oooppps there is a zero row!
-      return;
+      return false;
     }    
-    scaling[i] = 1.0 / largest; 
+    scaling[i] = (T)1.0 / largest; 
   }
 
   int imax;
@@ -451,7 +456,7 @@ template <class T> void LinearSolve<T>::Decompose() {
       for(int k = 0; k < j; k++)
         sum -= element(i,k)*element(k,j);
       element(i,j) = sum;
-      T t = scaling[i] * fabs(sum);
+      T t = scaling[i] * math::Abs(sum);
       if(t >= largest) { 
         largest = t;
         imax = i;
@@ -467,13 +472,14 @@ template <class T> void LinearSolve<T>::Decompose() {
       scaling[imax] = scaling[j]; 
     }
     index[j]=imax;
-    if (element(j,j) == 0.0) element(j,j) = TINY;
+    if (element(j,j) == 0.0) element(j,j) = (T)TINY;
     if (j != 3) { 
-      T dum = 1.0 / (element(j,j));
+      T dum = (T)1.0 / (element(j,j));
       for (i = j+1; i < 4; i++) 
         element(i,j) *= dum;
     }
   }
+  return true;
 }
 
 
