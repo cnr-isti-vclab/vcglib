@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/03/25 14:55:25  ponchio
+Adding copyright.
+
 
 ****************************************************************************/
 
@@ -33,7 +36,7 @@ $Log: not supported by cvs2svn $
 
 using namespace vcg;
 
-Similarityf SphereMode::Apply(const Point3f &p, const Similarityf &m) {
+Similarityf SphereMode::Apply(const Point3f &p, const Similarityf & /* m */) {
   float u = p[0];
 	float w = p[1];
   float thr = 1/math::Sqrt(2.0f);       //in the plane x-y distance from origin, above this use hyperboloid

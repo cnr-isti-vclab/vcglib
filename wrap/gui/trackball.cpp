@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/03/31 15:08:03  ponchio
+Fixed current_action initialization.
+
 Revision 1.2  2004/03/25 14:55:25  ponchio
 Adding copyright.
 
@@ -57,7 +60,7 @@ void Trackball::SetIdentity() {
   local.SetIdentity();
   Reset();
 }
-void Trackball::SetPosition(const Similarityf &m, int millisec) {
+void Trackball::SetPosition(const Similarityf &m, int /* millisec */) {
   local = m;
   //millisec ignored at the moment. 
 }
@@ -73,7 +76,7 @@ void Trackball::GetView() {
 	Point3f X, Y, Z, C;
 	X = camera.UnProject(Point3f(c_view[0] + 100, c_view[1],     c_view[2]));
 	Y = camera.UnProject(Point3f(c_view[0],     c_view[1] - 100, c_view[2]));
-	Z = camera.UnProject(Point3f(c_view[0],     c_view[1],     c_view[2] + 0.1));	
+	Z = camera.UnProject(Point3f(c_view[0],     c_view[1],     c_view[2] + 0.1f));	
   C = c_obj;
 	X = X - C; X.Normalize();
 	Y = Y - C; Y.Normalize();
@@ -138,8 +141,8 @@ void Trackball::MouseMove(int x, int y) {
   }
 
   Point3f origin = camera.ViewportToScreen(ScreenOrigin());
-  Point3f new_point = camera.ViewportToScreen(Point3f(x, y, 0)) - origin;
-  Point3f old_point = camera.ViewportToScreen(Point3f(last_x, last_y, 0)) - origin;
+  Point3f new_point = camera.ViewportToScreen(Point3f(float(x), float(y), 0)) - origin;
+  Point3f old_point = camera.ViewportToScreen(Point3f(float(last_x), float(last_y), 0)) - origin;
   new_point *= 2;
   old_point *= 2;    
 
@@ -165,12 +168,12 @@ void Trackball::MouseMove(int x, int y) {
 
 } 
 
-void Trackball::MouseUp(int x, int y, Trackball::Button button) { 
+void Trackball::MouseUp(int /* x */, int /* y */, Trackball::Button button) { 
   current_button &= (~button);
   SetCurrentAction();
 } 
 
-void Trackball::MouseWheel(Trackball::Button notch) {
+void Trackball::MouseWheel(Trackball::Button /* notch */ ) {
 }
 
 void Trackball::ButtonDown(Trackball::Button button) {
@@ -186,11 +189,11 @@ void Trackball::ButtonUp(Trackball::Button button) {
 
 
 //spinning interface
-void Trackball::SetSpinnable(bool on){}
+void Trackball::SetSpinnable(bool /* on*/ ){}
 bool Trackball::IsSpinnable() {
   return spinnable;
 }  
-void Trackball::SetSpinning(Quaternionf &spin){}
+void Trackball::SetSpinning(Quaternionf &/* spin*/){}
 void Trackball::StopSpinning(){}
 bool Trackball::IsSpinning() {
   return spinning;
@@ -200,7 +203,7 @@ bool Trackball::IsSpinning() {
 void Trackball::Back(){}
 void Trackball::Forward(){}
 void Trackball::Home(){}
-void Trackball::HistorySize(int lenght){}
+void Trackball::HistorySize(int /* lenght */){}
 
 void Trackball::SetCurrentAction() {  
   //I use strict matching.

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/03/25 14:55:25  ponchio
+Adding copyright.
+
 
 ****************************************************************************/
 
@@ -49,8 +52,15 @@ Transform interpolate(const Transform &a, const Transform &b, float t);
 
 class Trackball: public Transform {
 public:
-  enum Button { BUTTON_LEFT = 1, BUTTON_MIDDLE = 2, BUTTON_RIGHT = 4, WHEEL = 8,
-		            KEY_SHIFT = 16, KEY_CTRL = 32, KEY_ALT = 64, HANDLE = 128 };
+  enum Button { BUTTON_NONE   = 0x0000, 
+                BUTTON_LEFT   = 0x0001, 
+                BUTTON_MIDDLE = 0x0002, 
+                BUTTON_RIGHT  = 0x0004, 
+                WHEEL         = 0x0008,
+		            KEY_SHIFT     = 0x0010, 
+                KEY_CTRL      = 0x0020, 
+                KEY_ALT       = 0x0040, 
+                HANDLE        = 0x0080 };
 
   Trackball();
   void SetIdentity();

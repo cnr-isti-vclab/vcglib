@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/03/31 15:07:37  ponchio
+CAMERA_H -> VCG_CAMERA_H
+
 Revision 1.2  2004/03/25 14:55:25  ponchio
 Adding copyright.
 
@@ -63,11 +66,9 @@ public:
 template <class T> void View<T>::GetView() {
   double m[16];
   glGetDoublev(GL_PROJECTION_MATRIX, m);
-  for(int i = 0; i < 16; i++)
-    proj[i] = (T)m[i];
+  proj.Import(Matrix44d(m));
 	glGetDoublev(GL_MODELVIEW_MATRIX, m);
-  for(int i = 0; i < 16; i++)
-    model[i] = (T)m[i];
+  model.Import(Matrix44d(m));
 	
 	glGetIntegerv(GL_VIEWPORT, viewport);
   

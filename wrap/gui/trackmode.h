@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/03/25 14:55:25  ponchio
+Adding copyright.
+
 
 ****************************************************************************/
 
@@ -39,12 +42,12 @@ class TrackMode {
 public:
   virtual ~TrackMode() {}
   virtual void Draw() {}
-  virtual Similarityf Apply(const Point3f &p, const Similarityf &a) { return Similarityf().SetIdentity(); }
+  virtual Similarityf Apply(const Point3f &/* p */, const Similarityf &/*a*/) { return Similarityf().SetIdentity(); }
 };
 
 class SphereMode: public TrackMode {
 public:  
-  Similarityf Apply(const Point3f &p, const Similarityf &a);
+  Similarityf Apply(const Point3f &p, const Similarityf &/*a*/);
 };
 
 class GravityMode: public TrackMode {
