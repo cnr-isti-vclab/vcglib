@@ -1,112 +1,123 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<HTML>
-<HEAD>
-	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=windows-1252">
-	<TITLE></TITLE>
-	<META NAME="GENERATOR" CONTENT="OpenOffice.org 1.1.0  (Win32)">
-	<META NAME="CREATED" CONTENT="20040209;363100">
-	<META NAME="CHANGEDBY" CONTENT="Paolo Cignoni">
-	<META NAME="CHANGED" CONTENT="20040218;284695">
-	<STYLE>
-	<!--
-		@page { size: 21.59cm 27.94cm; margin: 2cm }
-		P { margin-bottom: 0.21cm }
-		H1 { margin-bottom: 0.21cm }
-		H1.western { font-family: "Arial", sans-serif; font-size: 16pt }
-		H1.cjk { font-family: "MS Mincho"; font-size: 16pt }
-		H1.ctl { font-family: "Tahoma"; font-size: 16pt }
-		H2 { margin-bottom: 0.21cm }
-		H2.western { font-family: "Arial", sans-serif; font-size: 14pt; font-style: italic }
-		H2.cjk { font-family: "MS Mincho"; font-size: 14pt; font-style: italic }
-		H2.ctl { font-family: "Arial Unicode MS"; font-size: 14pt; font-style: italic }
-		P.code-western { text-indent: 1.01cm; margin-bottom: 0cm; font-family: "Courier New", monospace; font-size: 9pt }
-		P.code-cjk { text-indent: 1.01cm; margin-bottom: 0cm }
-		P.code-ctl { text-indent: 1.01cm; margin-bottom: 0cm }
-		P.code-western { margin-left: 1cm; margin-bottom: 0cm; font-family: "Courier New", monospace; font-size: 10pt }
-		P.code-cjk { margin-left: 1cm; margin-bottom: 0cm }
-		P.code-ctl { margin-left: 1cm; margin-bottom: 0cm }
-	-->
-	</STYLE>
-</HEAD>
-<BODY LANG="en-US" DIR="LTR">
-<H1 CLASS="western">VCG Library Coding Guide</H1>
-<H2 CLASS="western">Naming Rules</H2>
-<P STYLE="margin-bottom: 0cm"><B><I>Class</I></B> names with first
-letter Uppercase and internal uppercase to separate compound words.</P>
-<P STYLE="margin-bottom: 0cm"><B><I>Function members</I></B> of
-classes follow the same rule.</P>
-<P STYLE="margin-bottom: 0cm">Example:</P>
-<P CLASS="code-western"><BR>Point3f <BR>{<BR>public:<BR>ScalarType
-&amp;V(const int i);<BR>}</P>
-<P CLASS="code-western"><BR>
-</P>
-<P STYLE="margin-bottom: 0cm"><B><I>Public Variable members</I></B>
-has the first letter lowercase and internal uppercase to separate
-compound words.</P>
-<P STYLE="margin-bottom: 0cm">Example:</P>
-<P STYLE="margin-bottom: 0cm"><BR>
-</P>
-<P STYLE="margin-bottom: 0cm"><B><I>Private Variable members</I></B>
-has an underscore as first char and the first letter lowercase and
-internal uppercase to separate compound words.</P>
-<P STYLE="margin-bottom: 0cm">Example:</P>
-<P CLASS="code-western"><BR>Point3f <BR>{<BR>  private:<BR> 
-ScalarType _v[3];<BR>}</P>
-<P CLASS="code-western"><BR>
-</P>
-<P><B><I>Class Template Arguments</I></B> all capitalized and with
-names remembering where they have been defined.</P>
-<P STYLE="margin-bottom: 0cm">TypeDefs used for templated Class
-arguments just like Class Names, but ending with &ldquo;Type&rdquo;</P>
-<P STYLE="margin-bottom: 0cm">Example:</P>
-<P CLASS="code-western" STYLE="margin-bottom: 0.5cm"><FONT SIZE=2><FONT FACE="Courier New, sans-serif"><BR>Point3f::ScalarType</FONT></FONT>
-</P>
-<H2 CLASS="western">Header Files</H2>
-<P STYLE="margin-bottom: 0cm">Header filenames and folders are always
-fully lower case. Compound names are separated by '_'.</P>
-<P STYLE="margin-bottom: 0cm">Example:</P>
-<P STYLE="margin-bottom: 0cm"><FONT FACE="Courier New, sans-serif"><FONT SIZE=2>#include&lt;vcg/space/point3.h&gt;</FONT></FONT></P>
-<P><FONT FACE="Times New Roman, serif"><FONT SIZE=3>Each include file
-must begin with the standard legal disclamier/license intestation and
-report in the first line of history the $LOG$ cvs string. </FONT></FONT>
-</P>
-<P><FONT FACE="Times New Roman, serif"><FONT SIZE=3>The following
-automatically ge\nerated history can be, from time to time,
-compressed/shortened. </FONT></FONT>
-</P>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"> 
+<HTML> <HEAD> 	
+<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=windows-1252">
+<TITLE></TITLE> 	
+	
+<STYLE> 	<!-- 		
+       	@page { size: 21.59cm 27.94cm; margin: 2cm } 	
+        body { background-color: #FFFFFF }
+        body { margin-left:8%; margin-right:8%; }
+        pre { font-family: monospace; }
+      	P { text-indent: 0em; margin-bottom: 0.21cm } 		
+       	H1.old { margin-bottom: 0.21cm } 		
+        H1.old { font-family: "Arial", sans-serif; font-size: 16pt }
+
+	H2.old { margin-bottom: 0.21cm } 		
+	H2.old { font-family: "Arial", sans-serif; font-size: 14pt; font-style: italic } 
+	P.old { text-indent: 1.01cm; margin-bottom: 0cm; } 		
+--> 	</STYLE> 
+</HEAD> 
+<BODY LANG="en-US" DIR="LTR"> 
+<H1 >VCG Library Coding Guide</H1>
+<H2 >Naming Rules</H2> 
+<P><B><I>Class</I></B> names with first letter Uppercase and internal
+uppercase to separate compound words.</P>  
+
+<P><B><I>Function members</I></B> of classes follow the same rule.</P> 
+
+<P>Example:</P> 
+
+<pre>
+   Point3f
+   {
+   public: 
+   ScalarType &amp;V(const int i);
+   }
+</pre>
+
+<P><B><I>Public Variable members</I></B> has the first letter
+lowercase and internal uppercase to separate compound words.</P> 
+
+<P>Example:</P> 
+
+<pre></pre>
+
+<P><B><I>Private Variable members</I></B> has an underscore as first char and
+the first letter lowercase and internal uppercase to separate compound
+words.</P> 
+
+<P>Example:</P> 
+
+<pre>
+   Point3f
+   {
+   private:
+   ScalarType _v[3];
+   }
+</pre>
+
+<P><B><I>Class Template	Arguments</I></B> all capitalized and with names
+remembering where they have been defined.<br>
+TypeDefs used for templated Class arguments just like Class Names,
+but ending with &ldquo;Type&rdquo;</P> 
+
+<P>Example:</P>
+<pre>
+   Point3f::ScalarType 
+</pre>
+
+<H2 >Header Files</H2> 
+<P>Header filenames and	folders always fully lower case. Compound names
+are separated by '_'.</P> 
+
+<P>Example:</P> 
+
+<pre>
+   #include&lt;vcg/space/point3.h&gt;
+</pre>
+
+<P>Each include file must begin with the standard legal
+disclamier/license intestation and report in the first line of history
+the $LOG$ cvs string.</P> 
+
+<P>The following automatically ge\nerated history can be, from time to
+time, compressed/shortened.</P> 
+
 <P>Each file of the library has to include all the files that it
 requires. A include file should relies on the files included by its
 include files. Example: in vcg/space/box3.h:</P>
-<P STYLE="margin-bottom: 0cm"><BR>
-</P>
-<P CLASS="code-western">#include&lt;vcg/math/base.h&gt; // not
-necessary because included by point3.h</P>
-<P CLASS="code-western">#include&lt;vcg/space/point3.h&gt; 
-</P>
-<P CLASS="code-western"><BR>
-</P>
-<P STYLE="margin-bottom: 0cm">In Class definitions place all the
-prototypes all together before the inline or templated
-implementations.</P>
-<P STYLE="margin-bottom: 0cm"><BR>
-</P>
-<H2 CLASS="western">Editing Rules</H2>
-<P STYLE="margin-bottom: 0cm">Tabs are equivalent to two spaces. 
-</P>
-<P STYLE="margin-bottom: 0cm">There are no strict rules for the
-placement of '{' or indenting.</P>
-<H2 CLASS="western">Constructors and casting</H2>
-<P STYLE="margin-bottom: 0cm">All basic classes (point3, box3 ecc)
-must have null constructors. Non null constructors can be added in
-debug versions.</P>
-<P STYLE="margin-bottom: 0cm">Implicit casting is disallowed. Write a
-member Import function for casting from different integral types and
-a static Construct to build an object from different a integral type.</P>
-<P STYLE="margin-bottom: 0cm"><BR>
-</P>
-<P STYLE="margin-bottom: 0cm">Example:</P>
-<P CLASS="code-western" STYLE="margin-bottom: 0.5cm"><BR>Point3f
-pf(1.0f,0.0f,0.0f); <BR>Point3d
-pd=Point3f::Construct(pf);<BR>pf.Import(pd);</P>
+
+<pre>
+   #include&lt;vcg/math/base.h&gt; // not necessary because included by point3.h
+
+   #include&lt;vcg/space/point3.h&gt;  
+</pre>
+
+<P>In Class definitions place all the prototypes all together before
+the inline or templated implementations.</P> 
+
+<H2 >Editing Rules</H2> 
+
+<P>Tabs are equivalent to two spaces.</P> 
+
+<P>There are no strict rules for the placement of '{' or indenting.</P> 
+
+<H2 >Constructors and casting</H2> 
+
+<P>All basic classes (point3, box3 ecc) must have null
+constructors. Non null constructors can be added in debug
+versions.</P> 
+
+<P>Implicit casting is disallowed. Write a member Import function for
+casting from different integral types and a static.<br>
+Construct to build an object from different a integral type.</P>
+
+<P>Example:</P> 
+
+<pre>
+   Point3f pf(1.0f,0.0f,0.0f);
+   Point3d pd=Point3f::Construct(pf);
+   pf.Import(pd);
+</pre>
 </BODY>
-</HTML>
+</HTML> 
