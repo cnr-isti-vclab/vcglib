@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/03/16 03:07:38  tarini
+"dimensionally unified" version: first commit
+
 Revision 1.5  2004/03/05 17:51:28  tarini
 Errorino "ScalarType" -> "S"
 
@@ -73,9 +76,9 @@ public:
 		/// The scalar type
 protected:
 	/// _min coordinate point
-  Point<3,S> _min;
+  Point3<S> _min;
 	/// _max coordinate point
-	Point<3,S> _max;
+	Point3<S> _max;
 
 public:
 
