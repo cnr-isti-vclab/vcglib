@@ -106,12 +106,11 @@ void nxs::NexusFill(Crude &crude,
     //TODO an hash_map would be faster?
     unsigned int count = 0;
     map<unsigned int, unsigned short> remap;
+
     for(unsigned int k = 0; k < patch.nf; k++) {
       Crude::Face &face = faces[k];
-      
       for(int j = 0; j < 3; j++) {
         if(!remap.count(face[j])) {          
-	  assert(count < patch.nv);
 	  Point3f &v = crude.vert[face[j]];
           patch.VertBegin()[remap.size()] = v;
 	  entry.sphere.Add(v);
@@ -119,10 +118,6 @@ void nxs::NexusFill(Crude &crude,
         }
 	patch.FaceBegin()[k*3 + j] = remap[face[j]];
       }
-      //test for degenerate faces.
-      assert(patch.FaceBegin()[k*3] != patch.FaceBegin()[k*3+1]);
-      assert(patch.FaceBegin()[k*3] != patch.FaceBegin()[k*3+2]);
-      assert(patch.FaceBegin()[k*3+1] != patch.FaceBegin()[k*3+2]);
     }
     assert(count == remap.size());
     assert(entry.nvert == remap.size());
@@ -157,6 +152,16 @@ void nxs::NexusFill(Crude &crude,
   //we can now update bounding sphere.
   for(unsigned int i = 0; i < nexus.index.size(); i++) 
     nexus.sphere.Add(nexus.index[i].sphere);
+
+  //test no duplicated faces:
+  /*  for(unsigned int i = 0; i < nexus.index.size(); i++) {
+    Patch patch = nexus.GetPatch(i);
+    for(unsigned int k = 0; k < patch.nf; k++) {
+      assert(patch.Face(k)[0] != patch.Face(k)[1]);
+      assert(patch.Face(k)[0] != patch.Face(k)[2]);
+      assert(patch.Face(k)[1] != patch.Face(k)[2]);
+    }
+    }*/
 }
 
 void nxs::NexusFixBorder(Nexus &nexus, 
@@ -194,19 +199,19 @@ void nxs::NexusFixBorder(Nexus &nexus,
       for(unsigned int j = 0; j < remote.border_used; j++) {
 	
 	RemapLink end_link = border_remap[j + remote_remap_start];
-	assert(end_link.rel_vert < remote.nvert);
+	//	assert(end_link.rel_vert < remote.nvert);
 
 	if(start_link.abs_vert == end_link.abs_vert &&
 	   end_link.patch == i) { //found the match
-	  assert(!found);
+	  //	  assert(!found);
 	  nexus.borders[k + local.border_start] = Link(start_link.rel_vert, 
 						      end_link.rel_vert, 
 						      start_link.patch);
 	  found = true;
 	}
       }
-      assert(nexus.borders[k + local.border_start].start_vert < local.nvert);
-      assert(found);
+      //      assert(nexus.borders[k + local.border_start].start_vert < local.nvert);
+      //      assert(found);
     }
   }
   nexus.borders.Flush();

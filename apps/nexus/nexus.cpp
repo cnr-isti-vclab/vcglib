@@ -185,7 +185,6 @@ void Nexus::Join(const std::set<unsigned int> &patches,
 
     Nexus::Entry &entry = index[patch];
     fcount += entry.nface;
-    //    assert(fcount < 0xffff);
     for(unsigned int k = 0; k < entry.nvert; k++) {
       if(vmap[k] == 0xffffffff) { //first time
 	vmap[k] = vcount++;
@@ -224,57 +223,45 @@ void Nexus::Join(const std::set<unsigned int> &patches,
   fcount = 0;
   for(i = patches.begin(); i != patches.end(); i++) {
     Patch patch = GetPatch(*i);
-    //    Border border = GetBorder(*i);
     
     vector<unsigned int> &vmap = remap[*i];
-
+    
     for(unsigned int i = 0; i < patch.nv; i++) {
       assert(vmap[i] < vcount);
       newvert[vmap[i]] = patch.Vert(i);
     }
-
+    
     for(unsigned int i = 0; i < patch.nf; i++) {
-      for(int k = 0; k < 3; k++) {
-	newface[3*fcount + k] = vmap[patch.Face(i)[k]];
+      unsigned short *face = patch.Face(i);
+      if(patch.Vert(face[0]) == patch.Vert(face[1]) ||
+	 patch.Vert(face[0]) == patch.Vert(face[2]) ||
+	 patch.Vert(face[1]) == patch.Vert(face[2])) {
+	cerr << "MALEDETTO!" << endl;
+	Point3f &v0 = patch.Vert(face[0]);
+	Point3f &v1 = patch.Vert(face[1]);
+	Point3f &v2 = patch.Vert(face[2]);
+	cerr << "V0: " << v0[0] << " " << v0[1] << " " << v0[2] << endl;
+	cerr << "V1: " << v1[0] << " " << v1[1] << " " << v1[2] << endl;
+	cerr << "V2: " << v2[0] << " " << v2[1] << " " << v2[2] << endl;
       }
-      assert(patch.Face(i)[0] != patch.Face(i)[1]);
-      assert(patch.Face(i)[0] != patch.Face(i)[2]);
-      assert(patch.Face(i)[1] != patch.Face(i)[2]);
-      assert(newface[3*fcount + 0] != newface[3*fcount + 1]);
-      assert(newface[3*fcount + 0] != newface[3*fcount + 2]);
-      assert(newface[3*fcount + 1] != newface[3*fcount + 2]);
-      
-      fcount++;
-      assert(fcount *3 <= newface.size());
+      if(patch.Face(i)[0] == patch.Face(i)[1] ||
+	 patch.Face(i)[0] == patch.Face(i)[2] ||
+	 patch.Face(i)[1] == patch.Face(i)[2]) {
+	cerr << "Damn: " << i << endl;
+	cerr << patch.Face(i)[0] << " " << patch.Face(i)[1] 
+	     << patch.Face(i)[2] << endl;
+      }
     }
-    /*    for(unsigned int i = 0; i < border.Size(); i++) {
-      Link link = border[i];
-      if(patches.count(link.end_patch)) continue; 
-      link.start_vert = vmap[link.start_vert];
-      newbord.push_back(link);*/
-
-      /*      if(remap.count(link.end_patch)) continue;
-      Link newlink = link;
-      newlink.start_vert = vmap[link.start_vert];
-      newbord[bcount++] = newlink;*/
-    //    }
+    for(unsigned int i = 0; i < patch.nf; i++) 
+      for(int k = 0; k < 3; k++) 
+	newface[fcount++] = vmap[patch.Face(i)[k]];
   }  
+  assert(fcount == newface.size());
+
   set<Link>::iterator b;
   for(b = newborders.begin(); b != newborders.end(); b++)
     newbord.push_back(*b);
 
- /* unsigned int newentry = AddPatch(vcount, fcount, bcount);
-  Patch newpatch = GetPatch(newentry);
-  Border newborder = GetBorder(newentry);
-
-  memcpy(newpatch.VertBegin(), &(newvert)[0],
-	 newvert.size() * sizeof(Point3f));
-
-  memcpy(newpatch.FaceBegin(), &(newface)[0],
-	 newface.size() * sizeof(unsigned short));
-
-  memcpy(&(newborder[0]), &(newbord[0]),
-	 newbord.size() * sizeof(Link));*/
   return;
 }
 
@@ -283,23 +270,25 @@ void Nexus::Unify(float threshold) {
   //TODO what if colors or normals or strips?
   //TODO update totvert
   unsigned int duplicated = 0;
+  unsigned int degenerate = 0;
+
   for(unsigned int p = 0; p < index.size(); p++) {
     Nexus::Entry &entry = index[p];
     Patch patch = GetPatch(p);
 
     unsigned int vcount = 0;
     map<Point3f, unsigned short> vertices;
+
     vector<unsigned short> remap;
     remap.resize(patch.nv);
-    //    map<unsigned short, unsigned short> remap;
+
     for(unsigned int i = 0; i < patch.nv; i++) {
       Point3f &point = patch.Vert(i);
 
-      if(!vertices.count(point)) {
+      if(!vertices.count(point)) 
         vertices[point] = vcount++;
-      } else {
+      else 
         duplicated++;
-      }
 
       remap[i] = vertices[point];
     }
@@ -316,17 +305,29 @@ void Nexus::Unify(float threshold) {
 
 
     vector<unsigned short> newface;
-    newface.resize(patch.nf * 3);
-    for(unsigned int f = 0; f < newface.size(); f++)
-      newface[f] = remap[patch.FaceBegin()[f]];
+    //check no degenerate faces get created.
+    for(unsigned int f = 0; f < entry.nface; f++) {
+      unsigned short *face = patch.Face(f);
+      if(face[0] != face[1] && face[1] != face[2] && face[0] != face[2] &&
+	 newvert[remap[face[0]]] != newvert[remap[face[1]]] &&
+	 newvert[remap[face[0]]] != newvert[remap[face[2]]] &&
+	 newvert[remap[face[1]]] != newvert[remap[face[2]]]) {
+	newface.push_back(remap[face[0]]);
+	newface.push_back(remap[face[1]]);
+	newface.push_back(remap[face[2]]);
+      } else {
+	degenerate++;
+      }
+    }
 
     //rewrite patch now.
     entry.nvert = newvert.size();
+    entry.nface = newface.size()/3;
     patch.Init(signature, entry.nvert, entry.nface);
 
     memcpy(patch.VertBegin(), &(newvert[0]), entry.nvert*sizeof(Point3f));
-    memcpy(patch.FaceBegin(), &(newface[0]), entry.nface*3*sizeof(unsigned short));
-
+    memcpy(patch.FaceBegin(), &(newface[0]), entry.nface*3*sizeof(short));
+    
     //fix patch borders now
     set<unsigned int> close; //bordering pathes
     Border border = GetBorder(p);
@@ -350,8 +351,6 @@ void Nexus::Unify(float threshold) {
   //finally: there may be duplicated borders
   for(unsigned int p = 0; p < index.size(); p++) {
     Border border = GetBorder(p);
-    //Nexus::Entry &entry = index[p];
-
     set<Link> links;
     for(unsigned int b = 0; b < border.Size(); b++) {
       if(border[b].IsNull()) continue;
@@ -361,7 +360,10 @@ void Nexus::Unify(float threshold) {
         links.insert(border[b]);
     }
   }
+  
   totvert -= duplicated;
-  //  cout << "Found " << duplicated << " duplicated vertices" << endl;
-
+  if(duplicated)
+    cerr << "Found " << duplicated << " duplicated vertices" << endl;
+  if(degenerate)
+    cerr << "Found " << degenerate << " degenerate face while unmifying\n";
 }

@@ -17,7 +17,7 @@
 //#include "border.h"
 
 #include "decimate.h"
-//#include <wrap/io_trimesh/export_ply.h>
+#include <wrap/io_trimesh/export_ply.h>
 
 using namespace vcg;
 using namespace tri;
@@ -59,11 +59,10 @@ float nxs::Decimate(Decimation mode,
 		    vector<Link> &newbord,
 		    vector<int> &vert_remap) {
 
-  //Temporary test:
   for(unsigned int i = 0; i < newface.size(); i+= 3) {
-    assert(newface[i*3] != newface[i*3+1]);
-    assert(newface[i*3] != newface[i*3+2]);
-    assert(newface[i*3+1] != newface[i*3+2]);
+    assert(newface[i] != newface[i+1]);
+    assert(newface[i] != newface[i+2]);
+    assert(newface[i+1] != newface[i+2]);
   }
   
   MyMesh mesh;
@@ -81,7 +80,7 @@ float nxs::Decimate(Decimation mode,
     MyFace face;
     face.ClearFlags();
     for(int k = 0; k < 3; k++) {
-      assert(newface[i+k] < mesh.vn);
+      assert(newface[i+k] < mesh.vert.size());
       face.V(k) = &mesh.vert[newface[i+k]];
     }
     mesh.face.push_back(face);
@@ -92,57 +91,18 @@ float nxs::Decimate(Decimation mode,
   for(unsigned int i = 0; i < newbord.size(); i++) 
     mesh.vert[newbord[i].start_vert].ClearW();
 
-  
-  //  int FinalSize = mesh.face.size()/2;
-  //  if(FinalSize > target_faces) FinalSize = target_faces;
-
-
-  /*  if(target_faces == 2404) {
-    vcg::tri::io::ExporterPLY<MyMesh>::Save(mesh, "bum");
-    }*/
   printf("mesh loaded %d %d \n",mesh.vn,mesh.fn);
   printf("reducing it to %i\n", target_faces);
 
+  //  if(target_faces == 1446)
+  //    vcg::tri::io::ExporterPLY<MyMesh>::Save(mesh, "ribum.ply");
 
-  /*  
-      int t0=clock();	
-      vcg::tri::UpdateTopology<MyMesh>::VertexFace(mesh);
-      int t1=clock();	
-      vcg::LocalOptimization<MyMesh> DeciSession(mesh);
-      MyTriEdgeCollapse::SetDefaultParams();
-      
-      DeciSession.Init<MyTriEdgeCollapse>();
-      
-      FinalSize = mesh.fn - FinalSize; //number of faces to remove
-      FinalSize/=2; //Number of vertices to remove
-      DeciSession.SetTargetOperations(FinalSize);
-      DeciSession.DoOptimization(); 
-      float error = DeciSession.currMetric/4;//1; //get error; 
-      int t3=clock();	
-  */
   float error;
   if(mode == CLUSTER)
     error = Cluster(mesh, target_faces);
   else
     error = Quadric(mesh, target_faces);
 
-
-  
-  /*  printf(" vol %d \n lkv %d \n lke %d \n lkf %d \n ood %d\n bor %d\n ",
-	 MyTriEdgeCollapse::FailStat::Volume()           ,
-	 MyTriEdgeCollapse::FailStat::LinkConditionFace(),
-	 MyTriEdgeCollapse::FailStat::LinkConditionEdge(),
-	 MyTriEdgeCollapse::FailStat::LinkConditionVert(),
-	 MyTriEdgeCollapse::FailStat::OutOfDate()        ,
-	 MyTriEdgeCollapse::FailStat::Border()           
-	 );*/
- 
-  //  printf("Completed in %i+%i+%i msec\n",t1-t0,t2-t1,t3-t2);
-  //  printf("mesh  %d %d \n",mesh.vn,mesh.fn);
-
-  //recort vert start.
-
-  
   newvert.clear();
   newface.clear();
 
@@ -158,10 +118,8 @@ float nxs::Decimate(Decimation mode,
   for(unsigned int i = 0; i < mesh.face.size(); i++) {
     MyFace &face = mesh.face[i];
     if(face.IsD()) continue;
-    for(int k = 0; k < 3; k++) {
-      assert(vert_remap[face.V(k) - vert_start] != -1);
+    for(int k = 0; k < 3; k++) 
       newface.push_back(vert_remap[face.V(k) - vert_start]);
-    }
   }
 
   for(unsigned int i = 0; i < newbord.size(); i++) {
@@ -172,9 +130,9 @@ float nxs::Decimate(Decimation mode,
 
   //Temporary test again:
   for(unsigned int i = 0; i < newface.size(); i+= 3) {
-    assert(newface[i*3] != newface[i*3+1]);
-    assert(newface[i*3] != newface[i*3+2]);
-    assert(newface[i*3+1] != newface[i*3+2]);
+    assert(newface[i] != newface[i+1]);
+    assert(newface[i] != newface[i+2]);
+    assert(newface[i+1] != newface[i+2]);
   }
   
   return error;
@@ -243,6 +201,8 @@ float Cluster(MyMesh &mesh, unsigned int target_faces) {
   part.SetBox(box);
   part.Init();
 
+  cerr << "inited points\n";
+
   vector<Point3f> centroid;
   vector<unsigned int> count;
   for(unsigned int i = 0; i < 3; i++) {
@@ -266,12 +226,16 @@ float Cluster(MyMesh &mesh, unsigned int target_faces) {
     mesh.vert[remap[i]].P() = part[i].p;
   }
 
+  cerr << "remapping faces\n";
+
   float error = 0;
   //rimappiamo le facce.....
   for(unsigned int i = 0; i < mesh.face.size(); i++) {
     MyFace &face = mesh.face[i];
     for(int k = 0; k < 3; k++) {
       unsigned int target = part.Locate(face.V(k)->cP());
+      assert(target < remap.size());
+      assert(remap[target] < mesh.vert.size());
       MyVertex &vert = mesh.vert[remap[target]];
 
       float dist = Distance(vert.cP(), face.V(k)->cP());
@@ -281,6 +245,7 @@ float Cluster(MyMesh &mesh, unsigned int target_faces) {
     }
   }
   
+  cerr << "Deleting faces\n";
   for(unsigned int i = 0; i < mesh.face.size(); i++) {
     MyFace &face = mesh.face[i];
     assert(!face.IsD());
@@ -294,6 +259,8 @@ float Cluster(MyMesh &mesh, unsigned int target_faces) {
       mesh.fn--;
     }
   }
+  
+  cerr << "deleting vertices\n";
 
   for(unsigned int i = 0; i < mesh.vert.size(); i++)
     if(!mesh.vert[i].IsV() && mesh.vert[i].IsW()) {

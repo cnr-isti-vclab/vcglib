@@ -362,7 +362,6 @@ Patch &NexusMt::LoadPatch(unsigned int p) {
   if(ram_used > ram_size * 1.5) 
     FlushRam();
 
-  cerr << "Ram: " << ram_used << endl;
   return *(sgurz.patch);
 }
 
