@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/04/15 08:54:20  pietroni
+*** empty log message ***
+
 Revision 1.1  2004/04/08 01:13:31  pietroni
 Initial commit
 
@@ -55,14 +58,18 @@ protected:
 	Point3<ScalarType> _v[4];
 
 public:
+///constructor with 4 points
+  Tetra4(CoordType p0,CoordType p1,CoordType p2,CoordType p3)
+  {
+    _v[0]=p0;
+    _v[1]=p1;
+    _v[2]=p2;
+    _v[3]=p3;
+  }
+
 /// compute and return the volume of a tetrahedron
-  	scalar_type ComputeVolume(){
-#ifdef __VCGLIB_TETRA_Q
-			_volume = (( V(2)->cP()-V(0)->cP())^(V(1)->cP()-V(0)->cP() ))*(V(3)->cP()-V(0)->cP())/6.0;
-#else
-				scalar_type _volume = (( V(2)->cP()-V(0)->cP())^(V(1)->cP()-V(0)->cP() ))*(V(3)->cP()-V(0)->cP())/6.0;
-#endif
-		return _volume;
+  	ScalarType ComputeVolume(){
+				return (( _v[2]-_v[0])^(_v[1]-_v[0] ))*(_v[3]-_v[0])/6.0;
 		}
 
 /// compute and return the solid angle on a vertex
@@ -77,7 +84,7 @@ double SolidAngle(int vind)
 
 /// compute and return the diadedral angle on an edge
 	double DiedralAngle(int edgeind)
-	{
+  {
 		int f1=FE(edgeind,0);
 		int f2=FE(edgeind,1);
 		Point3d p0=FV(f1,0)->P();
@@ -94,7 +101,7 @@ double SolidAngle(int vind)
 	}
 
 /// compute and return the aspect ratio of the tetrahedron 
-scalar_type ComputeAspectRatio()
+ScalarType ComputeAspectRatio()
 	{	
 		double a0=SolidAngle(0);
 		double a1=SolidAngle(1);
@@ -105,7 +112,7 @@ scalar_type ComputeAspectRatio()
 
 //Tatrahedron Functions to retrieve information about relation between faces of tetrahedron(faces,adges,vertices).
 
-  static int VofE[6][2](const int &indexE,const int &indexV)
+  static int VofE(const int &indexE,const int &indexV)
   {	assert ((indexE<6)&&(indexV<2));
    static int edgevert[4][3] ={{0,1},
 					{0,2},
@@ -166,7 +173,7 @@ scalar_type ComputeAspectRatio()
 		return edgeface [indexE][indexSide];
 	}
 
-static int VofEE(const int &indexE0;const int &indexE1)
+static int VofEE(const int &indexE0,const int &indexE1)
 {
   assert ((indexE0<6)&&(indexE0>=0));
   assert ((indexE1<6)&&(indexE1>=0));
@@ -179,7 +186,7 @@ static int VofEE(const int &indexE0;const int &indexE1)
 return (edgesvert[indexE0][indexE1]);
 }
 
-static int VofFFF(const int &indexF0;const int &indexF1;const int &indexF2)
+static int VofFFF(const int &indexF0,const int &indexF1,const int &indexF2)
 {
   assert ((indexF0<4)&&(indexF0>=0));
   assert ((indexF1<4)&&(indexF1>=0));
@@ -201,7 +208,7 @@ static int VofFFF(const int &indexF0;const int &indexF1;const int &indexF2)
   return facesvert[indexF0][indexF1][indexF2];
 }
 
-static int EofFF(const int &indexF0;const int &indexF1)
+static int EofFF(const int &indexF0,const int &indexF1)
 {
   assert ((indexF0<4)&&(indexF0>=0));
   assert ((indexF1<4)&&(indexF1>=0));
@@ -248,7 +255,7 @@ static int verticesface[4][4][4]={
 return verticesface[indexV0][indexV1][indexV2];
 }
 
-static int FofEE(const int &indexE0;const int &indexE1)
+static int FofEE(const int &indexE0,const int &indexE1)
 {
   assert ((indexE0<6)&&(indexE0>=0));
   assert ((indexE1<6)&&(indexE1>=0));
