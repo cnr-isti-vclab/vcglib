@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/10/04 12:33:02  ponchio
+Cleaning up and planes init more stable.
+
 Revision 1.5  2004/09/28 10:23:28  ponchio
 Various generic changes.
 
@@ -57,6 +60,7 @@ public:
   Point3<T> ViewPoint();
   T Resolution(float dist = 1);
   bool IsOutside(Point3<T> &point);
+  float Remoteness(Point3<T> &point, T radius);
   bool IsOutside(Point3<T> &point, T radius);
   T Distance(Point3<T> &point, int plane);  
   
@@ -88,6 +92,26 @@ template <class T> bool Frustum<T>::IsOutside(Point3<T> &point) {
   return false;
 }
 
+template <class T> float Frustum<T>::Remoteness(Point3<T> &point, T radius) {
+  Point3<T> r = Project(point);
+  T dist = (point - view_point).Norm();
+  if(dist == 0) return 0;
+  T rad = resolution * radius / dist;
+  T mindist = 0;
+  T tmp;
+  tmp = viewport[0] - r[0] - rad;
+  if(tmp > mindist) mindist = tmp;
+  tmp = r[0] - rad - (viewport[0] + viewport[2]);
+  if(tmp > mindist) mindist = tmp;
+  
+  tmp = viewport[1] - r[1] - rad;
+  if(tmp > mindist) mindist = tmp;
+  tmp = r[1] - rad - (viewport[1] + viewport[3]);
+  if(tmp > mindist) mindist = tmp;
+  
+  return 1 + (mindist / (viewport[0] + viewport[2]));
+}
+
 template <class T> bool Frustum<T>::IsOutside(Point3<T> &point, T radius) {
   for(int i = 0; i < 4; i++) {
     T dist = Distance(point, i);   
@@ -104,19 +128,19 @@ template <class T> T Frustum<T>::Distance(Point3<T> &point, int plane) {
 template <class T> void Frustum<T>::GetView() {
   View<T>::GetView();
   
-  int t = viewport[1] + viewport[3];
-  int b = viewport[1];
-  int r = viewport[0] + viewport[2];
-  int l = viewport[0];
+  float t = (float)(viewport[1] + viewport[3]);
+  float b = (float)viewport[1];
+  float r = (float)(viewport[0] + viewport[2]);
+  float l = (float)viewport[0];
   
-  Point3<T> nw = UnProject(Point3<T>(l, b, 0));
-  Point3<T> sw = UnProject(Point3<T>(l, t, 0));
-  Point3<T> ne = UnProject(Point3<T>(r, b, 0));
-  Point3<T> se = UnProject(Point3<T>(r, t, 0));
-  Point3<T> NW = UnProject(Point3<T>(l, b, 1));
-  Point3<T> SW = UnProject(Point3<T>(l, t, 1));
-  Point3<T> NE = UnProject(Point3<T>(r, b, 1));
-  Point3<T> SE = UnProject(Point3<T>(r, t, 1));
+  Point3<T> nw = UnProject(Point3<T>(l, b, 0.0f));
+  Point3<T> sw = UnProject(Point3<T>(l, t, 0.0f));
+  Point3<T> ne = UnProject(Point3<T>(r, b, 0.0f));
+  Point3<T> se = UnProject(Point3<T>(r, t, 0.0f));
+  Point3<T> NW = UnProject(Point3<T>(l, b, 1.0f));
+  Point3<T> SW = UnProject(Point3<T>(l, t, 1.0f));
+  Point3<T> NE = UnProject(Point3<T>(r, b, 1.0f));
+  Point3<T> SE = UnProject(Point3<T>(r, t, 1.0f));
 
   view_point = View<T>::ViewPoint();  	
 
