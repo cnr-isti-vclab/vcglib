@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/06/23 00:10:38  ponchio
+Created
+
 
 ****************************************************************************/
 
@@ -35,7 +38,8 @@ using namespace std;
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-#include <wrap/nexus/crude.h>
+#include <apps/nexus/crude.h>
+#include <apps/nexus/vert_remap.h>
 using namespace vcg;
 using namespace nxs;
 
@@ -99,6 +103,19 @@ int main(int argc, char *argv[]) {
     return -1;
   }
   Box3f box = crude.GetBox();
+
+  bool vremap = false;
+  bool fremap = false;
+  VertRemap vert_remap;
+  if(vert_remap.Load(argv[1] + string(".vrm"))) {
+    cerr << "Found vert remap.\n";
+    vremap = true;
+  }
+  VFile<unsigned int> face_remap;
+  if(face_remap.Load(argv[1] + string(".frm"))) {
+    cerr << "Found face remap.\n";
+    fremap = true;
+  }
 
   if(!init()) {
     cerr << "Could not init SDL window\n";
@@ -167,6 +184,10 @@ int main(int argc, char *argv[]) {
 
     for(unsigned int i = 0;i < crude.Faces(); i++) {
       Crude::Face &face = crude.GetFace(i);
+      if(fremap) {
+	unsigned int val = face_remap[i];
+	glColor3ub((val * 27)%255, (val * 37)%255, (val * 87)%255);
+      }
       for(int k = 0; k < 3; k++) {
 	Point3f &p = crude.GetVertex(face[k]);
 	glVertex3f(p[0], p[1], p[2]);
