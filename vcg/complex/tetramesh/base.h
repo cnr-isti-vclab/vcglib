@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2004/10/11 17:44:07  ganovelli
+added include of color4
+
 Revision 1.9  2004/07/15 00:16:37  cignoni
 Better doxigen documentation
 
@@ -185,6 +188,16 @@ class Tetramesh{
 		tn = 0;
 		vn = 0;
 		}
+
+	/// Initialize the imark-system of the vertices
+	void InitVertexIMark()	
+	{
+		VertexIterator vi;
+
+		for(vi=vert.begin();vi!=vert.end();++vi)
+			if( !(*vi).IsD() && (*vi).IsRW() )
+				(*vi).InitIMark();
+}
 //@}
 
 /***********************************************/
