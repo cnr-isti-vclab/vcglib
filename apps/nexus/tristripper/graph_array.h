@@ -49,8 +49,6 @@
 
 #pragma once
 
-
-
 // namespace common_structures
 namespace common_structures {
 
