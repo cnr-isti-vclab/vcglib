@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.25  2005/01/28 17:53:13  pietroni
+added HasEdgePlane function
+
 Revision 1.24  2004/10/28 00:50:48  cignoni
 Better Doxygen documentation
 
@@ -511,7 +514,7 @@ protected:
   /// Vector of face pointer, it's used to indicate the adjacency relations (defines if FACE_A is defined)
 	FFTYPE   *_ffp[3];				// Facce adiacenti
 	/// Index of the face in the arrival face 
-	char _ffi[4];									
+	char _ffi[3];									
 #endif
 
 #ifdef __VCGLIB_FACE_AV
