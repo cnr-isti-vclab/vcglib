@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2004/05/12 12:50:20  turini
+include color4
+
 Revision 1.10  2004/05/10 14:01:09  ganovelli
 assert(i*0) for using "i" and preventing the compiler warning for unreferenced variable
 
@@ -358,8 +361,8 @@ public:
 #ifdef __VCGLIB_FACE_WT
 		return _wt[i];
 #else
-		assert(i*0);
-		return *(TCTYPE*)(&_flags);
+		assert(0);
+		return *(TCTYPE*)(&_flags +i) ;
 #endif
 	}
 
@@ -417,8 +420,8 @@ public:
 #ifdef __VCGLIB_FACE_WC
 		return _wc[i];
 #else
-		assert(i*0);
-		return *(Color4b*)(&_flags);
+		assert(0);
+		return *(Color4b*)(&_flags + i);
 #endif
 	}
 
@@ -492,8 +495,9 @@ public:
 			return fs[j];
 #else 
 		assert(0);
-        static FFTYPE *dum=0;
+    static FFTYPE *dum=0; dum+=j;
 		return dum;
+
 #endif
 	}
 

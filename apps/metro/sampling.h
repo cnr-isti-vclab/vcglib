@@ -356,7 +356,7 @@ template <class MetroMesh>
 void Sampling<MetroMesh>::MontecarloFaceSampling()
 {
     // Montecarlo sampling.
-    int     cnt = 0;
+//    int     cnt = 0;
     double  n_samples_decimal = 0.0;
     FaceIterator fi;
 

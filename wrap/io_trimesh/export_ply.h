@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/05/12 10:19:30  ganovelli
+new line added at the end of file
+
 Revision 1.3  2004/03/18 15:30:46  cignoni
 Removed float/double warning
 
@@ -405,7 +408,6 @@ static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &
 	assert(j==m.vn);
 
 	char c = 3;
-	char k = 9;
 	unsigned char b9 = 9;
 	unsigned char b6 = 6;
 	FacePointer fp;

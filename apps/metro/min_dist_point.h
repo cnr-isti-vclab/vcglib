@@ -140,8 +140,7 @@ void MinDistPoint( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & md
 					/*normf = (1-(alfa+beta))*(bestf->V(0)->Normal())+
 							(alfa*(bestf->V(1)->Normal()))+
 							(beta*(bestf->V(2)->Normal()));*/
-					bool ret=bestf->InterpolationParameters(q, alfa, beta, gamma);
-					//assert(ret);
+					bestf->InterpolationParameters(q, alfa, beta, gamma);
 					normf =       (bestf->V(0)->cN())*alfa+
 							          (bestf->V(1)->cN())*beta+
 							          (bestf->V(2)->cN())*gamma;
