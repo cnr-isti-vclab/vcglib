@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/06/25 16:47:13  ponchio
+Various debug
+
 Revision 1.1  2004/06/24 14:32:45  ponchio
 Moved from wrap/nexus
 
@@ -81,7 +84,7 @@ namespace nxs {
     VoronoiPartition() {}  
 
     void Init(vcg::Box3f &bb) { bbox=bb; ug.SetBBox(bb); }
-    int Add(vcg::Point3f p, float weight = 1);
+    Key Add(const vcg::Point3f &p, float weight = 1);
     float Closest(const vcg::Point3f &p, Key &target, float radius = 0);
     
     class iterator {

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/06/24 14:32:45  ponchio
+Moved from wrap/nexus
+
 Revision 1.2  2004/06/24 14:19:20  ponchio
 Debugged
 
@@ -53,7 +56,8 @@ bool Seed::Dist(const Point3f &point, float &mindist,
     return false;
 }
 
-int VoronoiPartition::Add(vcg::Point3f p, float weight) {
+VoronoiPartition::Key VoronoiPartition::Add(const vcg::Point3f &p, 
+					    float weight) {
   Seed ns(p,weight);	
   all_seeds.push_back(ns); 
   seedBuf.push_back(p);
@@ -64,10 +68,11 @@ int VoronoiPartition::Add(vcg::Point3f p, float weight) {
     seedBuf.clear();
     ug.Set(ug_seeds);
   }
-  return size();
+  return (Key)(size());
 }
 
-float VoronoiPartition::Closest(const vcg::Point3f &p, int &target, float radius) {
+float VoronoiPartition::Closest(const vcg::Point3f &p, 
+				VoronoiPartition::Key &target, float radius) {
   Point3f res;
   float mindist = 1e20;
   target = -1;
@@ -129,7 +134,7 @@ unsigned int VoronoiPartition::count(Key key) {
 }
 
 Seed &VoronoiPartition::operator[](Key key) {
-  assert(key < all_seeds.size());
+  assert((unsigned int)key < all_seeds.size());
   return all_seeds[key];
 }
 
