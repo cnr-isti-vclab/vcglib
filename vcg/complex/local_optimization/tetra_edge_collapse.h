@@ -28,7 +28,7 @@
 #define __VCG_DECIMATION_COLLAPSE
 
 #include<vcg\complex\tetramesh\edge_collapse.h>
-#include<vcg\complex\local_optimization\base.h>
+#include<vcg\complex\local_optimization.h>
 
 struct FAIL{
 	static VOL(){static int vol=0; return vol++;}
@@ -50,34 +50,34 @@ namespace tetra{
 /// Note that it has knowledge of the heap of the class LocalOptimization because
 /// it is responsible of updating it after a collapse has been performed
 
-template<class TRI_MESH_TYPE>
-class TriEdgeCollapser: public LocalOptimization<TRI_MESH_TYPE>::LocModType
+template<class TETRA_MESH_TYPE>
+class TetraEdgeCollapse: public LocalOptimization<TETRA_MESH_TYPE>::LocModType
 {
  
   /// The tetrahedral mesh type
-  typedef	typename TRI_MESH_TYPE TriMeshType;
+  typedef	typename TETRA_MESH_TYPE TetraMeshType;
   /// The tetrahedron type
-  typedef	typename TriMeshType::FaceType FaceType;
+  typedef	typename TetraMeshType::TetraType TetraType;
 	/// The vertex type
-	typedef	typename FaceType::VertexType VertexType;
+	typedef	typename TetraType::VertexType VertexType;
   /// The coordinate type
-	typedef	typename FaceType::VertexType::CoordType CoordType;
+	typedef	typename TetraType::VertexType::CoordType CoordType;
   /// The scalar type
-  typedef	typename TriMeshType::VertexType::ScalarType ScalarType;
+  typedef	typename TetraMeshType::VertexType::ScalarType ScalarType;
   /////the base type class
   //typedef typename vcg::tri::LocalModification LocalMod;
   /// The HEdgePos type
-  typedef Pos<FaceType> PosType;
+  typedef Pos<TetraType> PosType;
   /// The HEdgePos Loop type
-  typedef PosLoop<FaceType> PosLType;
+  typedef PosLoop<TetraType> PosLType;
   /// definition of the heap element
-	typedef typename LocalOptimization<TRI_MESH_TYPE>::HeapElem HeapElem;
+	typedef typename LocalOptimization<TETRA_MESH_TYPE>::HeapElem HeapElem;
 private:
 
 ///the new point that substitute the edge
 Point3<ScalarType> _NewPoint;
 ///the pointer to edge collapser method
-vcg::tetra::EdgeCollapse<TriMeshType> _EC;
+vcg::tetra::EdgeCollapse<TetraMeshType> _EC;
 ///mark for up_dating
 static int& _Imark(){ static int im=0; return im;}
 ///the pos of collapse 
@@ -89,18 +89,18 @@ ScalarType _priority;
 
 public:
 /// Default Constructor
-	TriEdgeCollapser()
+	TetraEdgeCollapse()
 		{}
 
 ///Constructor with postype
-	TriEdgeCollapser(PosType p,int mark)
+	TetraEdgeCollapse(PosType p,int mark)
 		{    
 			_Imark() = mark;
       pos=p;
 			_priority = _AspectRatioMedia(p);
 		}
 
-  ~TriEdgeCollapser()
+  ~TetraEdgeCollapse()
 		{}
 
 private:
@@ -169,6 +169,12 @@ ScalarType _VolumePreservingError(PosType &pos,CoordType &new_point,int nsteps)
 public:
 
 
+  virtual const char *Info(TetraMeshType &m) {
+    static char buf[60];
+    sprintf(buf,"collapse %i -> %i %f\n", pos.V()-&m.vert[0], pos.VFlip()-&m.vert[0],_priority);
+    return buf;
+  }
+
   ScalarType ComputePriority()
   { 
 		return (_priority = _AspectRatioMedia(this->pos));
@@ -187,7 +193,7 @@ public:
   }
   
   
-  void UpdateHeap(LocalOptimization<TRI_MESH_TYPE>::HeapType & h_ret)
+  void UpdateHeap(typename LocalOptimization<TetraMeshType>::HeapType & h_ret)
   {
     assert(!vrem->IsD());
 		_Imark()++;
@@ -208,7 +214,7 @@ public:
     }
   }
 
-  ModifierType IsOfType(){ return TriEdgeCollapser;}
+  ModifierType IsOfType(){ return TetraEdgeCollapser;}
 
   bool IsFeasible(){
 										vcg::tri::EdgeCollapse<TriMeshType>::Reset();	
@@ -240,18 +246,18 @@ public:
 		return _priority;
 	}
 
-	virtual void Init(TriMeshType&m,LocalOptimization<TRI_MESH_TYPE>::HeapType&h_ret){
+	virtual void Init(TetraMeshType &m,typename LocalOptimization<TetraMeshType>::HeapType& h_ret){
 		h_ret.clear();
-		TriMeshType::TetraIterator ti;
+		TetraMeshType::TetraIterator ti;
 		int j;
 		for(ti = m.tetra.begin(); ti != m.tetra.end();++ti)
 		if(!(*ti).IsD()){
 			(*ti).ComputeVolume();
 	   for (int j=0;j<6;j++)
-      {
-        PosType p=PosType(&*ti,Tetra::FofE(j,0),j,Tetra::VofE(j,0));
-        h_ret.push_back(HeapElem(new TriEdgeCollapser<TriMeshType>(p,m.IMark)));
-      }
+		{
+			PosType p=PosType(&*ti,Tetra::FofE(j,0),j,Tetra::VofE(j,0));
+			h_ret.push_back(HeapElem(new TriEdgeCollapser<TetraMeshType>(p,m.IMark)));
+		}
 		}
 	}
 
