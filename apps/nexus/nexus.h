@@ -17,12 +17,16 @@ class Nexus {
 
   class Entry {
   public:
-    Entry(): patch_offset(0xffffffff), border_offset(0xffffffff),
-      patch_size(0), border_size(0), sphere(vcg::Sphere3f()) {}
-    unsigned int patch_offset;  //granularita' Chunk
-    unsigned int border_offset; //granuralita' Link
+    Entry(): patch_start(0xffffffff), border_start(0xffffffff),
+      patch_size(0), border_size(0), 
+      nvert(0), nface(0), sphere(vcg::Sphere3f()) {}
+    unsigned int patch_start;  //granularita' Chunk
+    unsigned int border_start; //granuralita' Link
     unsigned short patch_size;  //in cuhnks
     unsigned short border_size; //in Links
+
+    unsigned short nvert;
+    unsigned short nface;
     vcg::Sphere3f sphere;
   };
 
@@ -33,10 +37,21 @@ class Nexus {
   void Close();
 
   Patch GetPatch(unsigned int patch);
-  void GetBorder(unsigned int border, Border &border);
+  Border GetBorder(unsigned int patch);
 
-  //  unsigned int addPatch(Patch *builder);
-  void AddBorder(unsigned int patch, std::vector<Link> &links);
+  unsigned int AddPatch(unsigned int nvert, unsigned int nface, 
+			unsigned int nbord);
+
+  //  unsigned int Join(std::vector<unsigned int> &patches);
+  void Join(std::vector<unsigned int> &patches,
+	    std::vector<Point3f &vert,
+	    std::vector<unsigned int> &faces,
+	    std::vector<Link> &links);
+
+  //TODO implement theese
+  void CompactBorder(unsigned int patch);
+  void CompactBorders();
+  void CompactPatches();
   
   unsigned int totvert;
   unsigned int totface;
@@ -46,9 +61,10 @@ class Nexus {
     
   std::vector<Entry> index;
 
-  FILE *index_file;
   VFile<Chunk> patches;
   VFile<Link> borders; 
+ private:
+  FILE *index_file;
 };
 
 }
