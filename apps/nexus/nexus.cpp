@@ -151,11 +151,14 @@ void Nexus::AddBorder(unsigned int patch, Link &link) {
   Border border = GetBorder(patch);
 	
   unsigned int pos = border.Size();
+  if(pos > 65500) {
+    cerr << "Exceding border size!!!\n";
+    exit(0);
+  }
   if(borders.ResizeBorder(patch, pos+1)) {
     border = GetBorder(patch);
   }
   
-  assert(border.Size() < border.Available());
   assert(border.Available() > pos);
 
   border[pos] = link;  

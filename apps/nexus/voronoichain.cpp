@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2004/11/18 18:30:14  ponchio
+Using baricenters... lotsa changes.
+
 Revision 1.19  2004/11/03 16:31:38  ponchio
 Trying to fix big patches.
 
@@ -194,7 +197,6 @@ bool VoronoiChain::Optimize(int mean, VoronoiPartition &part,
       }
     }
 
-    cerr << "Join now!" << endl;
     for(unsigned int i = 0; i < part.size(); i++) {
       if(mark[i]) continue;
       if(join && counts[i] < min_size) {
@@ -232,9 +234,7 @@ bool VoronoiChain::Optimize(int mean, VoronoiPartition &part,
       part.push_back(seeds[i]);
 
     if(part.size() == 0) part.push_back(Point3f(0,0,0));
-    cerr << "Initing!\n";
     part.Init();    
-    cerr << "Inited!\n";
     return failed == 0;
 }
 

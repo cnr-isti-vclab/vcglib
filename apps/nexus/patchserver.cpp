@@ -6,6 +6,7 @@
 
 using namespace std;
 using namespace nxs;
+using namespace pt;
 
 
 bool PatchServer::Create(const std::string &filename, 
@@ -91,60 +92,73 @@ void PatchServer::AddPatch(unsigned short nvert, unsigned short nface) {
 Patch &PatchServer::GetPatch(unsigned int idx, 
 			     unsigned short nvert, unsigned short nface,
 			     bool flush) {
+  //  ramlock.rdlock();
+
   assert(idx < patches.size());
   PatchEntry &entry = patches[idx];
 
   if(entry.lru_pos == 0xffffffff) {  //not on buffer
-    if(flush) Flush();
-    PTime nptime(idx);
+    //    scopewrite dlock(disklock);
 
-    char *ram = new char[entry.ram_size * chunk_size];
+    if(entry.lru_pos == 0xffffffff) { //still not read!
+      if(flush) Flush();
+      PTime nptime(idx);
+      
+      char *ram = new char[entry.ram_size * chunk_size];
 #ifdef CONTROLS
-    if(!ram) {
-      cerr << "COuld not allocate ram!\n";
-      exit(0);
-    }
+      if(!ram) {
+	cerr << "COuld not allocate ram!\n";
+	exit(0);
+      }
 #endif
-    nptime.patch = new Patch(signature, ram, nvert, nface);
-    
-    if(entry.patch_start != 0xffffffff) { //was allocated.
-      assert(entry.disk_size != 0xffff);
-
-      SetPosition(entry.patch_start * chunk_size);
-    
-      if((signature & NXS_COMPRESSED) == 0) { //not compressed
-	      ReadBuffer(ram, entry.disk_size * chunk_size);
-      } else {
-
-	      unsigned char *disk = new unsigned char[entry.disk_size * chunk_size];
-	      ReadBuffer(disk, entry.disk_size * chunk_size);
-
-      	nptime.patch->Decompress(entry.ram_size * chunk_size, 
-			                        	 disk, entry.disk_size * chunk_size);
-	      delete []disk;
-      } 
+      nptime.patch = new Patch(signature, ram, nvert, nface);
+      
+      if(entry.patch_start != 0xffffffff) { //was allocated.
+	assert(entry.disk_size != 0xffff);
+	
+	SetPosition(entry.patch_start * chunk_size);
+	
+	if((signature & NXS_COMPRESSED) == 0) { //not compressed
+	  ReadBuffer(ram, entry.disk_size * chunk_size);
+	} else {
+	  unsigned char *disk = new unsigned char[entry.disk_size * chunk_size];
+	  ReadBuffer(disk, entry.disk_size * chunk_size);
+	  
+	  nptime.patch->Decompress(entry.ram_size * chunk_size, 
+				   disk, entry.disk_size * chunk_size);
+	  delete []disk;
+	} 
+      }
+      //      ramlock.unlock();
+      //      ramlock.wrlock();
+      entry.lru_pos = lru.size();
+      lru.push_back(nptime);
+      ram_used += entry.ram_size;
+      ram_readed += entry.ram_size;
+      //      ramlock.unlock();
+      //      ramlock.rdlock();
     }
-    
-    entry.lru_pos = lru.size();
-    lru.push_back(nptime);
-    ram_used += entry.ram_size;
-    ram_readed += entry.ram_size;
   }
 
   PTime &ptime = lru[entry.lru_pos];
-  ptime.frame = frame++;
-  
+  pexchange(&(ptime.frame), frame++);
+
+  //  ramlock.unlock();
+
   //avoid frame overflow!
-  if(frame > (1<<30)) {
+  if(frame > (1<<29)) {
+    //    ramlock.wrlock();
     cerr << "oVERFLOW! (nothing dangerous... just warning." << endl;;
     for(unsigned int i = 0; i < lru.size(); i++) {
-      if(lru[i].frame < (1<<29)) lru[i].frame = 0;
-      else lru[i].frame -= (1<<29);
+      if(lru[i].frame < (1<<28)) lru[i].frame = 0;
+      else lru[i].frame -= (1<<28);
     }
     make_heap(lru.begin(), lru.end());
     for(unsigned int i = 0; i < lru.size(); i++)
       patches[lru[i].npatch].lru_pos = i;
+    //    ramlock.unlock();
   }
+
   return *(ptime.patch); 
 }
 
@@ -191,6 +205,8 @@ void PatchServer::Flush() {
 
   if(ram_used < ram_size * 1.1) return;
 
+  //  ramlock.wrlock();
+
   make_heap(lru.begin(), lru.end());
   for(unsigned int i = 0; i < lru.size(); i++)
     patches[lru[i].npatch].lru_pos = i;
@@ -203,6 +219,8 @@ void PatchServer::Flush() {
   }
   for(unsigned int i = 0; i < lru.size(); i++)
     patches[lru[i].npatch].lru_pos = i;
+
+  //  ramlock.unlock();
 }
 
 void PatchServer::FlushAll() {
@@ -215,6 +233,8 @@ void PatchServer::FlushAll() {
 }
 
 void PatchServer::Flush(PTime &ptime) {
+
+
   PatchEntry &entry = patches[ptime.npatch];  
   assert(ptime.patch);
   if(!readonly) { //write back patch

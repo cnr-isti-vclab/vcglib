@@ -121,6 +121,12 @@ void nxs::Join(Fragment &in,
     vector<unsigned short> &face = in.pieces[i].face;
     vector<Link> &bord = in.pieces[i].bord;
 
+    for(unsigned int k = 0; k < face.size(); k+=3) {
+      assert(face[k] != face[k+1]);
+      assert(face[k] != face[k+2]);
+      assert(face[k+1] != face[k+2]);
+    }
+
     fcount += face.size()/3;
 
     for(unsigned int k = 0; k < vert.size(); k++) {
@@ -135,6 +141,7 @@ void nxs::Join(Fragment &in,
       
       if(patch_remap.count(link.end_patch)) {//internal
 	unsigned int idx = patch_remap[link.end_patch];
+	assert(link.end_patch != in.pieces[i].patch);
 	unsigned int extoffset = offsets[idx];
 
 	assert(extoffset + link.end_vert < remap.size());
@@ -187,9 +194,23 @@ void nxs::Join(Fragment &in,
     }
   }  
   set<BigLink>::iterator b;
-  for(b = newborders.begin(); b != newborders.end(); b++) 
-    newbord.push_back(*b);
+  for(b = newborders.begin(); b != newborders.end(); b++) {
+    newbord[bcount++] = *b;
+  }
 
+  for(unsigned int i = 0; i < newface.size(); i+= 3) {
+    if(newface[i] == newface[i+1] ||
+       newface[i] == newface[i+2] ||
+       newface[i+1] == newface[i+2]) {
+      cerr << "i: " << i << endl;
+      for(unsigned int k = 0; k < newface.size(); k+=3) {
+	cerr << k << ": " << newface[k] << " "
+	     << newface[k+1] << " "
+	     << newface[k+2] << endl;
+      }
+      exit(0);
+    }
+  }
   /* old code (more general.. but not parallelizable)
 
 
@@ -371,10 +392,12 @@ void nxs::Split(Fragment &out,
     //borders last
     vector<Link> &bords = patch.bord;
 
-    //process external borders 
-    //for every esternal link we must update external patches!
+    //process downward borders 
     for(unsigned int i = 0; i < newbord.size(); i++) {
       BigLink link = newbord[i];
+      /*      cerr << "Newbord: " << link.start_vert << " "
+	   << link.end_patch << " " 
+	   << link.end_vert << endl;*/
       if(v_remap[link.start_vert] == -1) continue; 
       Link llink;
       llink.start_vert = v_remap[link.start_vert];
@@ -399,6 +422,12 @@ void nxs::Split(Fragment &out,
 	}
       }
     }
+    /*    cerr << "patch seed: " << patch.patch << endl;
+    for(unsigned int i = 0; i < bords.size(); i++) {
+      Link &link = bords[i];
+      cerr << "link: " << link.start_vert << " "
+	   << link.end_patch << " " << link.end_vert << endl;
+	   }*/
   }
 }
 

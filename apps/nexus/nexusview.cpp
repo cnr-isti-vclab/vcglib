@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2004/11/18 18:30:14  ponchio
+Using baricenters... lotsa changes.
+
 Revision 1.19  2004/10/30 20:17:03  ponchio
 Fixed big patches problem.
 
@@ -214,7 +217,7 @@ int main(int argc, char *argv[]) {
   Watch watch;
   
   bool rotate = false;
-  bool show_borders = true;
+  bool show_borders = false;
   bool show_colors = true;
   bool show_normals = true;
   bool show_statistics = true;

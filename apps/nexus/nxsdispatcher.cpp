@@ -23,6 +23,7 @@ void Opener::execute() {
     try {
       server->open();
       server->connected = true;
+      server->queue = 0;
       break;
     } catch(...) {
     }
@@ -33,7 +34,7 @@ void Opener::execute() {
 }
 
 void FragIO::execute() {  
-
+  pincrement(&(server->queue));
   server->writing.lock();
   //  cerr << "Writing frag...: " << fragin->id << "\n";
 
@@ -45,12 +46,13 @@ void FragIO::execute() {
     server->write((const char *)a, length(a));
     server->flush();
   } catch (estream *e) {
-    perr.putf("Error: %s\n", pconst(e->get_message()));
+    perr.putf("Error reading: %s\n", pconst(e->get_message()));
     delete e;
-
+    server->close();
+    server->connected = false;
+    server->writing.unlock();
     message *msg = new message(MSG_FAIL, (int)fragin);
     dispatcher->post(msg);
-
     //TODO restart Server!
     return;
   }
@@ -59,19 +61,22 @@ void FragIO::execute() {
   server->writing.unlock();
 
   Fragment *out = new Fragment;
-  if(!out->Read(server)) {
+  if(!server->waitfor(10000) || (!out->Read(server))) {
+    perr.putf("Error reading!!\n");
+    server->close();
+    server->connected = false;
+    server->reading.unlock();
     message *msg = new message(MSG_FAIL, (int)fragin);
     dispatcher->post(msg);
     return;
   }
   server->reading.unlock();
-
+  pdecrement(&(server->queue));
   //  cerr << "Received frag: " << out->id << endl;
 
   message *msg = new message(MSG_RECEIVE, (int)fragin);
   msg->result = (int)out;
   dispatcher->post(msg);
-  //  dispatcher->ReceiveFragment(fragin, out);
 }
 
 bool Dispatcher::Init(const std::string &file) {
@@ -113,8 +118,11 @@ Server *Dispatcher::BestServer() {
   Server *best = NULL;
   for(unsigned int i = 0; i < servers.size(); i++){
     if(servers[i]->connected) {
-      if(!best || servers[i]->queue < best->queue) {
+      if((servers[i]->queue <= maxqueue) && 
+	 (!best || servers[i]->queue < best->queue)) {
+
 	best = servers[i];
+	//	cerr << "best: " << i << " queue: " << best->queue << endl;
       }
     }
   }
@@ -137,14 +145,14 @@ void Dispatcher::ReceiveFragment(Fragment *in, Fragment *out) {
 
 void Dispatcher::msghandler(message &msg) {
   switch(msg.id) {
-  case MSG_FAIL: break;
+  case MSG_FAIL: 
   case MSG_SEND: {
     //get server!
     Server *best = BestServer();
     Fragment *fragin = (Fragment *)(msg.param);
 
     if(!best) { //no server process locally....
-      //      cerr << "No best!" << endl;
+      //      cerr << "Local: " << fragin->id << endl;
       vector<Point3f> newvert;
       vector<unsigned int> newface;
       vector<BigLink> newbord;
@@ -163,8 +171,10 @@ void Dispatcher::msghandler(message &msg) {
       Split(*fragout, newvert, newface, newbord); 
       ReceiveFragment(fragin, fragout);
     } else {
+      //      cerr << "Server: " << fragin->id << endl;
       FragIO *frag = new FragIO(best, this, fragin);
-      assert(!frags.count(fragin->id));
+      if(msg.id == MSG_SEND)
+	assert(!frags.count(fragin->id));
       frags[fragin->id] = frag;
       frag->start();
     }

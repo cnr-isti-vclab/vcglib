@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2004/11/18 18:30:15  ponchio
+Using baricenters... lotsa changes.
+
 Revision 1.21  2004/11/03 16:31:38  ponchio
 Trying to fix big patches.
 
@@ -111,6 +114,9 @@ using namespace std;
 #include "nxsbuild.h"
 #include "watch.h"
 #include "nxsdispatcher.h"
+
+#include <ptypes/pasync.h>
+
 using namespace vcg;
 using namespace nxs;
 
@@ -377,6 +383,7 @@ int main(int argc, char *argv[]) {
     }
     //TODO porcata!!!!
     while(dispatcher.frags.size()) {
+      //      cerr << "frags: " << dispatcher.frags.size() << endl;
       dispatcher.processmsgs();
     }
 
@@ -409,6 +416,8 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
+pt::mutex nlock;
+
 void BuildFragment(Nexus &nexus, VoronoiPartition &part,
 		   set<unsigned int> &patches, 
 		   Fragment &fragment) {
@@ -422,14 +431,24 @@ void BuildFragment(Nexus &nexus, VoronoiPartition &part,
     Patch &patch = nexus.GetPatch(*f);
     Border border = nexus.GetBorder(*f);
 
+    for(unsigned int k = 0; k < patch.nf; k++) {
+      assert(patch.Face(k)[0] != patch.Face(k)[1]);
+      assert(patch.Face(k)[0] != patch.Face(k)[2]);
+      assert(patch.Face(k)[1] != patch.Face(k)[2]);
+    }
+
+
     nxs.vert.resize(patch.nv);
     nxs.face.resize(patch.nf * 3);
     memcpy(&*nxs.vert.begin(), patch.VertBegin(), patch.nv * sizeof(Point3f));
     memcpy(&*nxs.face.begin(), patch.FaceBegin(), patch.nf * 3*sizeof(short));
     for(unsigned int i = 0; i < border.Size(); i++) {
       Link &link = border[i];
-      if(!link.IsNull() && patch_levels[link.end_patch] == current_level-1)
+      if(!link.IsNull() && 
+	 patch_levels[link.end_patch] == current_level-1) {
+	assert(link.end_patch != *f);
 	nxs.bord.push_back(link);
+      }
     }
   }
 
@@ -452,10 +471,10 @@ void BuildFragment(Nexus &nexus, VoronoiPartition &part,
 }
 
 
+
 void SaveFragment(Nexus &nexus, VoronoiChain &chain,
 		  Fragment &fragin,
 		  Fragment &fragout) {
-
 
   set<unsigned int> orig_patches;
 
@@ -472,9 +491,11 @@ void SaveFragment(Nexus &nexus, VoronoiChain &chain,
   for(unsigned int i = 0; i < fragout.pieces.size(); i++) {
     NxsPatch &patch = fragout.pieces[i];
     //TODO detect best parameter below for bordersize...
+    unsigned int bordsize = 6 * patch.bord.size();
+    if(bordsize > 65500) bordsize = 65499;
     unsigned int patch_idx = nexus.AddPatch(patch.vert.size(),
 					    patch.face.size()/3,
-					    6 * patch.bord.size());
+					    bordsize);
     patch_levels.push_back(current_level);
     Nexus::PatchInfo &entry = nexus.index[patch_idx];
     entry.error = fragout.error;
@@ -483,10 +504,20 @@ void SaveFragment(Nexus &nexus, VoronoiChain &chain,
     chain.newfragments[patch.patch].insert(patch_idx);
     update.created.push_back(patch_idx);
   }
+  
+  //here i put for every patch all its new links.
+  map<unsigned int, set<Link> > newlinks;
 
   for(unsigned int i = 0; i < fragout.pieces.size(); i++) {
     NxsPatch &outpatch = fragout.pieces[i];
     unsigned int patch_idx = patch_remap[i];
+    
+    for(unsigned int k = 0; k < outpatch.face.size(); k += 3) {
+      assert(k+2 < outpatch.face.size());
+      assert(outpatch.face[k]   != outpatch.face[k+1]);
+      assert(outpatch.face[k]   != outpatch.face[k+2]);
+      assert(outpatch.face[k+1] != outpatch.face[k+2]);
+    }
     
     Patch &patch = nexus.GetPatch(patch_idx);
     memcpy(patch.FaceBegin(), &outpatch.face[0], 
@@ -500,33 +531,47 @@ void SaveFragment(Nexus &nexus, VoronoiChain &chain,
       nexus.sphere.Add(outpatch.vert[v]);
     } 
 
-
-    vector<Link> actual;
     //remap internal borders
-    for(unsigned int i = 0; i < outpatch.bord.size(); i++) {
-      Link &link = outpatch.bord[i];
+    for(unsigned int k = 0; k < outpatch.bord.size(); k++) {
+      Link &link = outpatch.bord[k];
       if(link.end_patch >= (1<<31)) { //internal
 	link.end_patch = patch_remap[link.end_patch - (1<<31)];
-	actual.push_back(link);
+	assert(link.end_patch != patch_remap[i]);
+	newlinks[patch_idx].insert(link);
       } 
     } 
     //TODO not efficient!
     //processing external borders
-    for(unsigned int i = 0; i < outpatch.bord.size(); i++) {
-      Link &link = outpatch.bord[i];
+    for(unsigned int l = 0; l < outpatch.bord.size(); l++) {
+      Link &link = outpatch.bord[l];
       if(link.end_patch >= (1<<31)) continue;
 
       unsigned short &start_vert = link.start_vert;
       unsigned int &start_patch = patch_idx;
 
+      //Adding vertical connection
+      newlinks[patch_idx].insert(link);
+
+      Link up(link.end_vert, link.start_vert, patch_idx);
+      newlinks[link.end_patch].insert(up);
+
       Border cborder = nexus.GetBorder(link.end_patch);
       for(unsigned int k = 0; k < cborder.Size(); k++) {
+
 	Link &clink = cborder[k];
+	assert(!clink.IsNull());
+
 	if(clink.start_vert != link.end_vert) continue;
 	if(patch_levels[clink.end_patch] < current_level-1) continue;
+	//boy i want only the external links!
+	if(orig_patches.count(clink.end_patch)) continue;
 
 	unsigned short &end_vert = clink.end_vert;
 	unsigned int &end_patch = clink.end_patch;
+	
+	//TODO FIX THIS!!!!
+	assert(clink.end_patch != start_patch);
+	assert(clink.end_patch != link.end_patch);
 
 	Link newlink;
 
@@ -534,46 +579,30 @@ void SaveFragment(Nexus &nexus, VoronoiChain &chain,
 	newlink.end_vert = end_vert;
 	newlink.end_patch = end_patch;
 	
-	actual.push_back(newlink);
-	//	nexus.AddBorder(start_patch, newlink);
+	newlinks[patch_idx].insert(newlink);
 
 	newlink.start_vert = end_vert;
 	newlink.end_vert = start_vert;
 	newlink.end_patch = start_patch;
 	
-	nexus.AddBorder(end_patch, newlink);
-	
-
-
-	/*	Border rborder = nexus.GetBorder(clink.end_patch);
-	
-	unsigned int pos = rborder.Size();
-	if(nexus.borders.ResizeBorder(link.end_patch, pos+1)) {
-	  rborder = nexus.GetBorder(link.end_patch);
-	}
-	
-	assert(rborder.Size() < rborder.Available());
-	assert(rborder.Available() > pos);
-
-	Link newlink; 
-	newlink.start_vert = link.end_vert;
-	newlink.end_vert = link.start_vert;
-	newlink.end_patch = patch_idx;
-	rborder[pos] = newlink;*/
+	newlinks[end_patch].insert(newlink);
       }
     }
-    Border border = nexus.GetBorder(patch_idx);
-    if(nexus.borders.ResizeBorder(patch_idx, actual.size())) {
-      border = nexus.GetBorder(patch_idx);
+  }
+  map<unsigned int, set<Link> >::iterator n;
+  for(n = newlinks.begin(); n != newlinks.end(); n++) {
+    set<Link>::iterator l;
+    unsigned int patch = (*n).first;
+    set<Link> &links = (*n).second;
+    Border border = nexus.GetBorder(patch);
+    unsigned int bstart = border.Size();
+    
+    if(nexus.borders.ResizeBorder(patch, border.Size() + links.size()))
+      border = nexus.GetBorder(patch);
+    for(l = links.begin(); l != links.end(); l++) {
+      Link link = *l;
+      border[bstart++] = link;
     }
-    memcpy(&(border[0]), &(actual[0]), 
-	   actual.size() * sizeof(Link));
-    /*    assert(border.Available() >= outpatch.bord.size());
-    if(nexus.borders.ResizeBorder(patch_idx, outpatch.bord.size())) {
-      border = nexus.GetBorder(patch_idx);
-    }
-    memcpy(&(border[0]), &(outpatch.bord[0]), 
-    outpatch.bord.size() * sizeof(Link)); */
   }
   nexus.history.push_back(update);
 }

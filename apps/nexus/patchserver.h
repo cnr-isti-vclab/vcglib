@@ -3,6 +3,7 @@
 
 #include "patch.h"
 #include "mfile.h"
+#include <ptypes/pasync.h>
 
 #include <vector>
 
@@ -20,7 +21,7 @@ class PatchServer: public MFile {
 
   struct PTime {
     unsigned int npatch;
-    unsigned int frame;
+    int frame;
     
     Patch *patch;
     unsigned int vbo_array;
@@ -44,12 +45,16 @@ class PatchServer: public MFile {
   unsigned int vbo_used;
   unsigned int frame;
 
+  pt::rwlock ramlock; //read only thread safety...
+  pt::rwlock disklock; //read only thread safety...
+
   //statistics:
   unsigned int ram_readed;
   unsigned int ram_flushed;
     
 
-  PatchServer(): chunk_size(1024), ram_size(128000000), vbo_size(32000000) {}
+  PatchServer(): chunk_size(1024), ram_size(128000000), 
+                 ram_used(0), vbo_size(32000000) {}
   bool Create(const std::string &filename, Signature signature, 
 	      unsigned int chunk_size, unsigned int ram_size = 128000000);
   bool Load(const std::string &filename, Signature sig, 

@@ -5,7 +5,7 @@
 #include "nexus.h"
 #include <vector>
 #include <queue>
-
+#include <ptypes/pasync.h>
 #include <wrap/gui/frustum.h>
 
 
@@ -73,10 +73,25 @@ namespace nxs {
    void NodeVisited(Node *node); 
  };
 
+class Prefetch: public pt::thread {
+ public:
+  Prefetch();
+  ~Prefetch();
+  void execute();
+  void cleanup() {}
+
+  bool Running() { return get_running(); }
+
+  std::vector<unsigned int> cells;
+  pt::mutex cells_mx;
+  pt::mutex patch_mx;
+  Nexus *nexus;
+};
+
 class NexusMt: public Nexus {
  private:
   std::vector<Node> nodes;
-
+  Prefetch prefetch;
  public:
   //Vertex buffer object mode
   enum Vbo { VBO_AUTO,    //autodetect best size 
@@ -84,7 +99,7 @@ class NexusMt: public Nexus {
 	     VBO_FIXED }; //user supplied size
  
   enum MetricKind { FRUSTUM,    //screen error extraction                
-		                GEOMETRY,    //geometry error extraction
+		    GEOMETRY,    //geometry error extraction
                     DELTA };    //delta error
   
   enum Mode { POINTS, 
@@ -106,6 +121,7 @@ class NexusMt: public Nexus {
   Policy policy;
   
   Mode mode;
+  bool prefetching;
 
   unsigned int components;
   bool use_normals;
@@ -129,6 +145,8 @@ class NexusMt: public Nexus {
   void SetError(float error);
   void SetRamExtractionSize(unsigned int ram_size);
   void SetVboSize(unsigned int vbo_size);
+
+  void SetPrefetching(bool on);
 
   bool SetMode(Mode mode);
   bool SetComponent(Component c, bool on);

@@ -77,10 +77,6 @@ void Policy::NodeVisited(Node *node) {
     assert(!(node->out[i]->visited));
     Frag &frag = node->frags[i];
     for(unsigned int k = 0; k < frag.size(); k++) {
-      unsigned int rr = frag.size();
-      unsigned int tmp = frag[k];
-      unsigned int sz = entries->size();
-      assert(tmp < sz);      
       PatchEntry &entry = (*entries)[frag[k]];
       ram_used += entry.ram_size;      
     }
@@ -102,12 +98,41 @@ void Policy::NodeVisited(Node *node) {
   }  
 }
 
+Prefetch::Prefetch(): thread(true), nexus(NULL) {}
+
+Prefetch::~Prefetch() { signal(); waitfor(); }
+
+void Prefetch::execute() {
+  assert(nexus != NULL);
+  while(1) {
+    if(get_signaled()) return;
+    if(cells.size() == 0 || 
+       nexus->patches.ram_used > nexus->patches.ram_size) {
+      relax(100);
+      continue;
+    }
+    cells_mx.lock();
+
+    pop_heap(cells.begin(), cells.end());
+    unsigned int cell = cells.back();
+    cells.pop_back();
+
+    patch_mx.lock();
+    Patch &patch = nexus->GetPatch(cell, false);
+    patch_mx.unlock();
+    
+    cells_mx.unlock();
+  }
+}
+
 NexusMt::NexusMt(): vbo_mode(VBO_AUTO), 
-                    metric(NULL), mode(SMOOTH) {    
+                    metric(NULL), mode(SMOOTH), prefetching(true) {    
   metric = new FrustumMetric();
   metric->index = &index;
   policy.error = 4;
   policy.ram_size = 64000000;
+
+  prefetch.nexus = this;
 }
 
 NexusMt::~NexusMt() {}
@@ -127,7 +152,8 @@ bool NexusMt::Load(const string &filename, bool readonly) {
   SetComponent(NORMAL, true);
   SetComponent(TEXTURE, true);
   SetComponent(DATA, true);
-
+  
+  SetPrefetching(prefetching);
   return true;
 }
 
@@ -272,6 +298,19 @@ void NexusMt::SetVboSize(unsigned int _vbo_size) {
   patches.vbo_size = _vbo_size;
 }
 
+void NexusMt::SetPrefetching(bool on) {
+  if(on && prefetch.Running()) return;
+  if(!on && !prefetch.Running()) return;
+  if(on) {
+    prefetch.cells.clear();
+    prefetch.start();
+  } else {
+    prefetch.signal();
+    prefetch.waitfor();
+  }
+  prefetching = on;
+}
+
 bool NexusMt::SetMode(Mode _mode) {
   mode = _mode;
   return true;
@@ -307,6 +346,9 @@ bool NexusMt::SetComponents(unsigned int mask) {
     return false;
   return true;
 }
+
+//TODO: nodes and fragment sholuld be kept in another way,
+// so we can save that structure instead of the history!
 
 void NexusMt::LoadHistory() {
   //The last update erases everything.

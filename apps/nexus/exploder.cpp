@@ -32,6 +32,7 @@ int main(int argc, char *argv[]) {
     cerr << "Could not load nexus: " << input << endl;
     return -1;
   }
+
   Nexus out;
   if(!out.Create(output, in.signature, in.chunk_size)) {
     cerr << "Could not create nexus: " << output << endl;

@@ -32,7 +32,7 @@ namespace nxs {
   
   class Server: public pt::ipstream {
   public:
-    Server(pt::string host, int port): ipstream(host, port), 
+    Server(pt::string host, int port): ipstream(host, port), queue(0), 
       connected(false), opener(this) {}
     
     int queue;
@@ -46,7 +46,7 @@ namespace nxs {
   class Dispatcher: public pt::msgqueue {
   public:
     Dispatcher(Nexus *nx, VoronoiChain *ch):
-      count(0), nexus(nx), chain(ch) {}
+      count(0), maxqueue(3), nexus(nx), chain(ch) {}
     ~Dispatcher();
     
     bool Init(const std::string &file);
@@ -57,6 +57,7 @@ namespace nxs {
     void msghandler(pt::message &msg);  
     
     int count;
+    int maxqueue;
     Nexus *nexus;
     VoronoiChain *chain;
     std::vector<Server *> servers;

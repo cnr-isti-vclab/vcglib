@@ -9,7 +9,6 @@ using namespace nxs;
 using namespace vcg;
 using namespace std;
 
-const int port = 10102;
 
 class FragOutQueue: public msgqueue {
 public:
@@ -33,6 +32,7 @@ public:
     } catch (estream *e) {
       perr.putf("Error: %s\n", pconst(e->get_message()));
       delete e;
+      posturgent(MSG_QUIT);
     }
     delete (Fragment *)(msg.param);
   }
@@ -44,6 +44,8 @@ public:
   FragInQueue(FragOutQueue &o): out(o) {}
   void msghandler(message &msg) {
     if(msg.id != MSG_USER) {
+      if(msg.id == MSG_QUIT)
+	out.posturgent(MSG_QUIT);
       defhandler(msg);
       return;
     }
@@ -90,6 +92,7 @@ public:
       Fragment &fragment = *(Fragment *)(msg->param);
       if(!fragment.Read(&client)) {
 	pout.putf("Could not read!\n");
+	queue.posturgent(MSG_QUIT);
 	return;
       }
       queue.post(msg);
@@ -128,13 +131,12 @@ public:
 
 void servermain(ipstmserver& svr) {
   ipstream client;
-  pout.putf("Ready to answer queries on port %d\n", port);
   
   while(true) {
     // serve() will wait for a connection request and will prepare
     // the supplied ipstream object for talking to the peer.
     svr.serve(client);
-    
+    perr.putf("Serving clients!\n");
     if (client.get_active()) {
       try {
 	pout.putf("Incoming connection\n");
@@ -159,15 +161,27 @@ void servermain(ipstmserver& svr) {
 	delete e;
       }
     }
+    perr.putf("Restarting\n");
   }    
 }
 
-int main() {
+int main(int argc, char *argv[]) {
   ipstmserver svr;
-  
+
+  int port = 10102;
+  if(argc == 2) {
+    port = atoi(argv[1]);
+    if(port < 1024) {
+      perr.putf("Error: invalid port: %s\n", argv[1]);
+      return -1;
+    }
+  }
+
   try {
     // bind to all local addresses on port 8085
     svr.bindall(port);
+
+    pout.putf("Ready to answer queries on port %d\n", port);
     
     // enter an infinite loop of serving requests
     servermain(svr);

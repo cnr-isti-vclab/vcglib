@@ -21,13 +21,15 @@ Border BorderServer::GetBorder(unsigned int border, bool flush) {
 }
 
 bool BorderServer::ResizeBorder(unsigned int border, unsigned int nbord) {
-
+  assert(nbord < 65500);
   assert(border < borders.size());
   BorderEntry &entry = borders[border];
   if(nbord > entry.border_size) {
     int capacity = nbord;
     if(capacity < entry.border_size*2) 
       capacity = entry.border_size * 2;
+    if(capacity > 65500) 
+      capacity = 65500;
     unsigned int newstart = Size(); 
     Resize(newstart + capacity);
 

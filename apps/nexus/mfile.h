@@ -40,7 +40,7 @@ class MFile {
 
  protected:
   std::string filename;
-  std::vector<File> files;
+  std::vector<File *> files;
   unsigned int curr_pos;
   unsigned int curr_fp;
   int64 size;
