@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/04/29 10:47:06  ganovelli
+some siyntax error corrected
+
 Revision 1.3  2004/04/05 12:36:43  tarini
 unified version: PointBase version, with no guards "(N==3)"
 
@@ -80,7 +83,7 @@ public:
    **/
 
   inline PointBase () { };
-	inline PointBase ( const S nv[N] );
+//	inline PointBase ( const S nv[N] );
 	
   /// Padding function: give a default 0 value to all the elements that are not in the [0..2] range. 
   /// Useful for managing in a consistent way object that could have point2 / point3 / point4
@@ -96,8 +99,8 @@ public:
 	{
 		_v[0] = ScalarType(b[0]);
 		_v[1] = ScalarType(b[1]);
-		if (N>2) { if (N2>2) _v[2] = ScalarType(b[2]); else _v[2] = 0};
-		if (N>3) { if (N2>3) _v[3] = ScalarType(b[3]); else _v[3] = 0};
+		if (N>2) { if (N2>2) _v[2] = ScalarType(b[2]); else _v[2] = 0;};
+		if (N>3) { if (N2>3) _v[3] = ScalarType(b[3]); else _v[3] = 0;};
 	}
 
 	/// constructor for points with different scalar type and-or dimensionality
@@ -293,32 +296,38 @@ public:
 template <class S> 
 class Point<2, S> : public PointBase<2,S> {
 public:	
+	typedef S ScalarType;
+	typedef Point<2,S> PointType;
+
 	//@{
   /** @name Special members for 2D points. **/
 
+	/// default
+	inline Point (){}
+
 	  /// yx constructor
-	inline Point ( const S a, const S b,  const S c){
+	inline Point ( const S a, const S b){
 		_v[0]=a; _v[1]=b;  };
 
 	  /// unary orthogonal operator (2D equivalent of cross product)
 	  /// returns orthogonal vector (90 deg left)
-	inline PointType operator ~ () const {
+	inline Point operator ~ () const {
 		return Point ( -_v[2], _v[1] );
 	}
 
 	  /// returns the angle with X axis (radiants, in [-PI, +PI] )
-	inline S &Angle(){
-		return Math::Atan2(_v[1],_v[0]);};
+	inline ScalarType &Angle(){
+		return math::Atan2(_v[1],_v[0]);}
 
 		/// transform the point in cartesian coords into polar coords
-	inline PointType & ToPolar(){
+	inline Point & ToPolar(){
 		ScalarType t = Angle();
 		_v[0] = Norm();
 		_v[1] = t;
 		return *this;}
 
 		/// transform the point in polar coords into cartesian coords
-	inline PointType & ToCartesian() {
+	inline Point & ToCartesian() {
 		ScalarType l = _v[0];
 		_v[0] = (ScalarType)(l*math::Cos(_v[1]));
 		_v[1] = (ScalarType)(l*math::Sin(_v[1]));
@@ -384,35 +393,35 @@ public:
 	template <class PT> static S SquaredNorm(const PT &p ) {
 		return ( p.V(0)*p.V(0) + p.V(1)*p.V(1) );}
 
-	inline S operator * ( PointType const & p ) const {
+	inline S operator * ( Point const & p ) const {
     return ( _v[0]*p._v[0] + _v[1]*p._v[1]) ; }
 
-	inline bool operator == ( PointType const & p ) const {
+	inline bool operator == ( Point const & p ) const {
 		return _v[0]==p._v[0] && _v[1]==p._v[1] ;}
 
-	inline bool operator != ( PointType const & p ) const {
+	inline bool operator != ( Point const & p ) const {
 		return _v[0]!=p._v[0] || _v[1]!=p._v[1] ;}
 
-	inline bool operator <  ( PointType const & p ) const{
+	inline bool operator <  ( Point const & p ) const{
 		return (_v[1]!=p._v[1])?(_v[1]< p._v[1]) : (_v[0]<p._v[0]); }
 
-	inline bool operator >  ( PointType const & p ) const	{
+	inline bool operator >  ( Point const & p ) const	{
 		return (_v[1]!=p._v[1])?(_v[1]> p._v[1]) : (_v[0]>p._v[0]); }
 
-	inline bool operator <= ( PointType const & p ) {
+	inline bool operator <= ( Point const & p ) {
 		return (_v[1]!=p._v[1])?(_v[1]< p._v[1]) : (_v[0]<=p._v[0]); }
 
-	inline bool operator >= ( PointType const & p ) const {
+	inline bool operator >= ( Point const & p ) const {
 		return (_v[1]!=p._v[1])?(_v[1]> p._v[1]) : (_v[0]>=p._v[0]); }
 
-	inline PointType & Normalize() {
-		T n = Norm(); if(n!=0.0) { n=1.0/n;	_v[0]*=n;	_v[1]*=n;} return *this;};
+	inline Point & Normalize() {
+		PointType n = Norm(); if(n!=0.0) { n=1.0/n;	_v[0]*=n;	_v[1]*=n;} return *this;};
 
-	template <class PT> static PointType & Normalize(const PT &p){		
-		T n = Norm(); if(n!=0.0) { n=1.0/n;	V(0)*=n;	V(1)*=n; }
+	template <class PT>  Point & Normalize(const PT &p){		
+		PointType n = Norm(); if(n!=0.0) { n=1.0/n;	V(0)*=n;	V(1)*=n; }
 		return *this;};
 
-	inline PointType & HomoNormalize(){
+	inline Point & HomoNormalize(){
 		if (_v[2]!=0.0) {	_v[0] /= W(); W()=1.0; } return *this;};
 
 	inline S NormInfinity() const {
@@ -421,8 +430,8 @@ public:
 	inline S NormOne() const {
 		return math::Abs(_v[0])+ math::Abs(_v[1]);}  
 
-	inline S operator % ( PointType const & p ) const {
-		return _v[0] * p._v[1] - _v[1] * p._v[0] };
+	inline S operator % ( Point const & p ) const {
+		return _v[0] * p._v[1] - _v[1] * p._v[0]; }
 
 	inline S Sum() const {
 		return _v[0]+_v[1];}
@@ -449,11 +458,16 @@ public:
 };
 
 template <class S> 
-class Point<3, S> : public PointBase<3,S> {
+class Point<3,S> : public PointBase<3,S> {
 public:	
+	typedef S ScalarType;
+	typedef Point<3,S>  PointType;
+
 	//@{
   /** @name Special members for 3D points. **/
 
+	/// default
+	inline Point ():PointBase<3,S>(){}
 	  /// yxz constructor
 	inline Point ( const S a, const S b,  const S c){
 		_v[0]=a; _v[1]=b; _v[2]=c; };
@@ -476,7 +490,7 @@ public:
 	inline Point ( const S nv[3] ){
 		_v[0]=nv[0]; _v[1]=nv[1]; _v[2]=nv[2];  };
 
-	inline Point operator + ( Point const & p) const { 
+	inline Point operator + ( Point const & p)  const{ 
 		return Point( _v[0]+p._v[0], _v[1]+p._v[1], _v[2]+p._v[2]); }
 
 	inline Point operator - ( Point const & p) const { 
@@ -542,11 +556,14 @@ public:
 				    (_v[1]!=p._v[1])?(_v[1]> p._v[1]) : (_v[0]>=p._v[0]); }
 
 	inline PointType & Normalize() {
-		T n = Norm(); if(n!=0.0) { n=1.0/n;	_v[0]*=n;	_v[1]*=n;	_v[2]*=n; }
+		S n = Norm(); 
+		if(n!=0.0) {
+			n=S(1.0)/n;
+		_v[0]*=n;	_v[1]*=n;	_v[2]*=n; }
 		return *this;};
 
-	template <class PT> static PointType & Normalize(const PT &p){		
-		T n = Norm(); if(n!=0.0) { n=1.0/n;	V(0)*=n;	V(1)*=n;	V(2)*=n;  }
+	template <class PT>  PointType & Normalize(const PT &p){		
+		S n = Norm(); if(n!=0.0) { n=1.0/n;	V(0)*=n;	V(1)*=n;	V(2)*=n;  }
 		return *this;};
 
 	inline PointType & HomoNormalize(){
@@ -562,7 +579,7 @@ public:
 
 	inline S operator % ( PointType const & p ) const {
 		S t = (*this)*p; /* Area, general formula */
-		return math::Sqrt( SquaredNorm() * p.SquaredNorm() - (t*t) ) };
+		return math::Sqrt( SquaredNorm() * p.SquaredNorm() - (t*t) );};
 
 	inline S Sum() const {
 		return _v[0]+_v[1]+_v[2];}
@@ -583,7 +600,7 @@ public:
 		_v[0] *= p._v[0]; _v[1] *= p._v[1]; _v[2] *= p._v[2]; return *this; }
 
 	inline S StableDot ( const PointType & p ) const {
-		T k0=_v[0]*p._v[0],	k1=_v[1]*p._v[1], k2=_v[2]*p._v[2];
+		PointType k0(_v[0]*p._v[0],	k1=_v[1]*p._v[1], k2=_v[2]*p._v[2]);
 		int exp0,exp1,exp2;
 		frexp( double(k0), &exp0 );
 		frexp( double(k1), &exp1 );
@@ -600,8 +617,13 @@ public:
 template <class S> 
 class Point<4, S> : public PointBase<4,S> {
 public:
+	typedef S ScalarType;
+	typedef Point<4,S> PointType;
 	//@{
   /** @name Special members for 4D points. **/
+		/// default
+		inline Point (){}
+
 	  /// xyzw constructor
 	//@}
 	inline Point ( const S a, const S b,  const S c, const S d){
@@ -623,6 +645,11 @@ public:
 
 	inline Point operator * ( const S s ) const { 
 		return Point( _v[0]*s, _v[1]*s , _v[2]*s , _v[3]*s ); }
+
+	inline PointType operator ^ ( PointType const & p ) const {
+		assert(0);
+		return *this;
+	}
 
 	inline Point operator / ( const S s ) const {
 		S t=1.0/s;
@@ -681,11 +708,11 @@ public:
 				    (_v[1]!=p._v[1])?(_v[1]> p._v[1]) : (_v[0]>=p._v[0]); }
 
 	inline PointType & Normalize() {
-		T n = Norm(); if(n!=0.0) { n=1.0/n;	_v[0]*=n;	_v[1]*=n;	_v[2]*=n; _v[3]*=n; }
+		PointType n = Norm(); if(n!=0.0) { n=1.0/n;	_v[0]*=n;	_v[1]*=n;	_v[2]*=n; _v[3]*=n; }
 		return *this;};
 
-	template <class PT> static PointType & Normalize(const PT &p){		
-		T n = Norm(); if(n!=0.0) { n=1.0/n;	V(0)*=n;	V(1)*=n;	V(2)*=n; V(3)*=n; }
+	template <class PT>  PointType & Normalize(const PT &p){		
+		PointType n = Norm(); if(n!=0.0) { n=1.0/n;	V(0)*=n;	V(1)*=n;	V(2)*=n; V(3)*=n; }
 		return *this;};
 
 	inline PointType & HomoNormalize(){
@@ -701,7 +728,7 @@ public:
 
 	inline S operator % ( PointType const & p ) const {
 		S t = (*this)*p; /* Area, general formula */
-		return math::Sqrt( SquaredNorm() * p.SquaredNorm() - (t*t) ) };
+		return math::Sqrt( SquaredNorm() * p.SquaredNorm() - (t*t) );};
 
 	inline S Sum() const {
 		return _v[0]+_v[1]+_v[2]+_v[3];}
@@ -740,7 +767,7 @@ public:
 
 
 template <class S>
-inline S Angle( Point<3,S> const & p1, Point<3,S> const & p2 )
+inline S Angle( Point<3,S>  const & p1, Point<3,S>  const & p2 )
 {
 	S w = p1.Norm()*p2.Norm();
 	if(w==0) return -1;
@@ -752,7 +779,7 @@ inline S Angle( Point<3,S> const & p1, Point<3,S> const & p2 )
 
 // versione uguale alla precedente ma che assume che i due vettori siano unitari
 template <class S>
-inline S AngleN( Point<3,S> const & p1, Point<3,S> const & p2 )
+inline S AngleN( Point<3,S>  const & p1, Point<3,S>  const & p2 )
 {
 	S w = p1*p2;
 	if(w>1) 
@@ -794,32 +821,56 @@ inline S SquaredDistance( Point<N,S> const & p1,Point<N,S> const & p2 )
     return (p1-p2).SquaredNorm();
 }
 
-typedef Point<2,short>  Point2s;
-typedef Point<2,int>	  Point2i;
-typedef Point<2,float>  Point2f;
-typedef Point<2,double> Point2d;
-typedef Point<2,short>  Vector2s;
-typedef Point<2,int>	  Vector2i;
-typedef Point<2,float>  Vector2f;
-typedef Point<2,double> Vector2d;
 
-typedef Point<3,short>  Point3s;
-typedef Point<3,int>	  Point3i;
-typedef Point<3,float>  Point3f;
-typedef Point<3,double> Point3d;
-typedef Point<3,short>  Vector3s;
-typedef Point<3,int>	  Vector3i;
-typedef Point<3,float>  Vector3f;
-typedef Point<3,double> Vector3d;
+template <typename S>
+struct Point2:public Point<2,S>{
+	inline Point2(){}; 
+	inline Point2(Point<2,S> const & p):Point<2,S>(p){} ;
+	inline Point2( const S a, const S b):Point<2,S>(a,b){};
+};
 
-typedef Point<4,short>  Point4s;
-typedef Point<4,int>	  Point4i;
-typedef Point<4,float>  Point4f;
-typedef Point<4,double> Point4d;
-typedef Point<4,short>  Vector4s;
-typedef Point<4,int>	  Vector4i;
-typedef Point<4,float>  Vector4f;
-typedef Point<4,double> Vector4d;
+template <typename S>
+struct Point3:public Point<3,S> {
+	inline Point3(){}; 
+	inline Point3(Point<3,S>  const & p):Point<3,S> (p){}
+	inline Point3( const S a, const S b,  const S c):Point<3,S> (a,b,c){};
+};
+
+
+template <typename S>
+struct Point4:public Point<4,S>{
+	inline Point4(){}; 
+	inline Point4(Point<4,S> const & p):Point<4,S>(p){}
+	inline Point4( const S a, const S b,  const S c, const S d):Point<4,S>(a,b,c,d){};
+};
+
+typedef Point2<short>  Point2s;
+typedef Point2<int>	  Point2i;
+typedef Point2<float>  Point2f;
+typedef Point2<double> Point2d;
+typedef Point2<short>  Vector2s;
+typedef Point2<int>	  Vector2i;
+typedef Point2<float>  Vector2f;
+typedef Point2<double> Vector2d;
+							
+typedef Point3<short>  Point3s;
+typedef Point3<int>	  Point3i;
+typedef Point3<float>  Point3f;
+typedef Point3<double> Point3d;
+typedef Point3<short>  Vector3s;
+typedef Point3<int>	  Vector3i;
+typedef Point3<float>  Vector3f;
+typedef Point3<double> Vector3d;
+							
+							
+typedef Point4<short>  Point4s;
+typedef Point4<int>	  Point4i;
+typedef Point4<float>  Point4f;
+typedef Point4<double> Point4d;
+typedef Point4<short>  Vector4s;
+typedef Point4<int>	  Vector4i;
+typedef Point4<float>  Vector4f;
+typedef Point4<double> Vector4d;
 
 /*@}*/
 
