@@ -31,9 +31,14 @@ class PatchServer: public File {
 
   Signature signature;
   unsigned int chunk_size;
+
   unsigned int ram_size;
   unsigned int ram_used;
   unsigned int frame;
+
+  //statistics:
+  unsigned int ram_readed;
+  unsigned int ram_flushed;
     
 
   bool Create(const std::string &filename, Signature signature, 

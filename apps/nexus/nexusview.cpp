@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2004/10/09 14:46:47  ponchio
+Windows porting small changes.
+
 Revision 1.11  2004/10/04 16:49:54  ponchio
 Daily backup. Preparing for compression.
 
@@ -91,6 +94,7 @@ using namespace std;
 
 
 #include <wrap/gui/trackball.h>
+#include "stopwatch.h"
 
 
 using namespace vcg;
@@ -152,8 +156,7 @@ int main(int argc, char *argv[]) {
 //  int option;
 
   if(argc != 2) {
-    cerr << "Usage: " << argv[0] << " <nexus file>\n";
-    return -1;
+    cerr << "Usage: " << argv[0] << " <nexus file>\n";    return -1;
   }      
 
   NexusMt nexus;
@@ -175,19 +178,25 @@ int main(int argc, char *argv[]) {
     " s: screen error extraction\n"
     " g: geometry error extraction\n"
     " p: draw points\n"
+    " t: show statistics\n"
+    " r: toggle realtime mode (TODO)\n"
+    " b: increase memory buffer\n"
+    " B: decrease memory buffer\n"
     " d: debug mode (show patches colored)\n"
     " m: smooth mode\n"
     " c: show colors\n"
     " n: show normals\n"
-    " r: rotate model\n"
+    " u: rotate model\n"
     " -: decrease error\n"
     " +: increase error (= too)\n";
   
+  StopWatch watch;
   
   bool rotate = false;
   bool show_borders = true;
   bool show_colors = true;
   bool show_normals = true;
+  bool show_statistics = true;
   NexusMt::Mode mode = NexusMt::SMOOTH;
   NexusMt::PolicyKind policy = NexusMt::FRUSTUM;
   
@@ -218,6 +227,8 @@ int main(int argc, char *argv[]) {
 	case SDLK_b: show_borders = !show_borders; break;
 	case SDLK_c: show_colors = !show_colors; break;
 	case SDLK_n: show_normals = !show_normals; break;
+	case SDLK_9: nexus.patches.ram_size *= 0.8; break;
+	case SDLK_0: nexus.patches.ram_size *= 1.2; break;
 
 	case SDLK_s: policy = NexusMt::FRUSTUM; break;
 	case SDLK_p: mode = NexusMt::POINTS; break;
@@ -227,12 +238,10 @@ int main(int argc, char *argv[]) {
 	case SDLK_r:
 	case SDLK_SPACE: rotate = !rotate; break;
 	  
-	case SDLK_MINUS: error *= 0.9f; 
-	  cerr << "error: " << error << endl; break;
+	case SDLK_MINUS: error *= 0.9f; break;
 	  
 	case SDLK_EQUALS:
-	case SDLK_PLUS: error *= 1.1f; 
-	  cerr << "error: " << error << endl; break;
+	case SDLK_PLUS: error *= 1.1f; break;
 	}
 	break;
       case SDL_KEYUP: 
@@ -315,7 +324,21 @@ int main(int argc, char *argv[]) {
     nexus.SetComponent(NexusMt::COLOR, show_colors);
     nexus.SetComponent(NexusMt::NORMAL, show_normals);
     
+    watch.Restart();
+
     nexus.Render();
+
+    if(show_statistics) {
+      cerr << "Error: " << error << endl;
+      cerr << "Ram used: " << nexus.patches.ram_used << endl;
+      cerr << "Ram size: " << nexus.patches.ram_size << endl;
+      cerr << "Ram flushed: " << nexus.patches.ram_flushed << endl;
+      cerr << "Ram readed: " << nexus.patches.ram_readed << endl;
+      nexus.patches.ram_flushed = 0;
+      nexus.patches.ram_readed = 0;
+      cerr << "Time for frame: " << watch.Elapsed() << endl;
+	
+    }
     
     SDL_GL_SwapBuffers();
   }

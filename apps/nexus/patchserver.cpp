@@ -15,6 +15,9 @@ bool PatchServer::Create(const std::string &filename,
   frame = 0;
   ram_size = rsize;
   ram_used = 0;
+
+  ram_readed = 0;
+  ram_flushed = 0;
   lru.clear();
   return File::Create(filename);
 }
@@ -27,6 +30,9 @@ bool PatchServer::Load(const std::string &filename, Signature sig,
   ram_size = rsize;
   frame = 0;
   ram_used = 0;
+
+  ram_readed = 0;
+  ram_flushed = 0;
   lru.clear();
   return File::Load(filename, readonly);
 }
@@ -123,6 +129,7 @@ Patch &PatchServer::GetPatch(unsigned int idx,
     entry.lru_pos = lru.size();
     lru.push_back(PTime(idx, frame++));
     ram_used += entry.ram_size;
+    ram_readed += entry.ram_size;
   }
   
   //avoid frame overflow!
@@ -141,7 +148,7 @@ Patch &PatchServer::GetPatch(unsigned int idx,
 
 void PatchServer::Flush() {
 
-  if(ram_used < ram_size * 1.5) return;
+  if(ram_used < ram_size * 1.1) return;
 
   make_heap(lru.begin(), lru.end());
   for(unsigned int i = 0; i < lru.size(); i++)
@@ -209,6 +216,7 @@ void PatchServer::Flush(unsigned int patch) {
   entry.patch = NULL;
   entry.lru_pos = 0xffffffff;
   ram_used -= entry.ram_size;
+  ram_flushed += entry.ram_size;
 }
 
 void PatchServer::SetRamBufferSize(unsigned int r_buffer) {
