@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2004/02/23 23:42:26  cignoni
+Translated comments, removed unusued stuff. corrected linefeed/cr
+
 Revision 1.11  2004/02/19 16:12:28  cignoni
 cr lf mismatch 2
 
@@ -263,7 +266,7 @@ public:
 	// Normalizzazione
 	inline Point3 & Normalize()
 	{
-		P3ScalarType n = Sqrt(_v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2]);
+    P3ScalarType n = math::Sqrt(_v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2]);
 		if(n>0.0) {	_v[0] /= n;	_v[1] /= n;	_v[2] /= n;  }
 		return *this;
 	}
