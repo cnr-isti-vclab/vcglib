@@ -43,7 +43,7 @@
 
 #include <vcg/space/point3.h>
 #include <vcg/space/box3.h>
-#include <vcg/space/Point4.h>
+#include <vcg/space/point4.h>
 #include <vcg/math/base.h>
 #include <vcg/space/index/grid_static_ptr.h>
 
