@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2004/08/05 16:44:06  pietroni
+added addafaces funtion with local values
+
 Revision 1.8  2004/07/15 11:40:34  ganovelli
 VFb to VFp
 
@@ -212,7 +215,13 @@ static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu
             pu.Update((*fi).FFp(1));
             pu.Update((*fi).FFp(2));
           }
-        }
+		  if(FaceType::HasVFAdjacency())
+          {
+			pu.Update((*fi).VFp(0));
+            pu.Update((*fi).VFp(1));
+            pu.Update((*fi).VFp(2));
+		  }
+		}
       VertexIterator vi;
 		for (vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
         if(!(*vi).IsD())
@@ -268,22 +277,34 @@ static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu
   if(pu.NeedUpdate())
 		{
       FaceIterator fi;
-			for (fi=m.face.begin(); fi!=m.face.end(); ++fi)
+		for (fi=m.face.begin(); fi!=m.face.end(); ++fi)
         if(!(*fi).IsD())
-        {
+		{
           if(FaceType::HasFFAdjacency())
           {
             pu.Update((*fi).FFp(0));
             pu.Update((*fi).FFp(1));
             pu.Update((*fi).FFp(2));
           }
-        }
+		   if(FaceType::HasVFAdjacency())
+          {
+		    //update pointers to chain of face incident in a vertex
+			//update them only if they are different from zero
+			if ((*fi).VFp(0)!=0)
+				pu.Update((*fi).VFp(0));
+			if ((*fi).VFp(1)!=0)
+				pu.Update((*fi).VFp(1));
+			if ((*fi).VFp(2)!=0)
+				pu.Update((*fi).VFp(2));
+		  }
+		}
       VertexIterator vi;
-			for (vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
+		for (vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
         if(!(*vi).IsD())
         {
           if(VertexType::HasVFAdjacency())
-            pu.Update((*vi).VFp());
+			if ((*vi).VFp()!=0)
+				pu.Update((*vi).VFp());
         }
         		// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
 		unsigned int siz=m.face.size()-n;	
