@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2004/10/21 13:40:16  ponchio
+Debugging.
+
 Revision 1.17  2004/10/21 12:22:21  ponchio
 Small changes.
 
@@ -100,17 +103,23 @@ using namespace std;
 using namespace vcg;
 using namespace nxs;
 
-void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
+/*void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
 		unsigned int level,
 		vector<Point3f> &newvert, 
 		vector<unsigned int> &newface,
 		vector<Link> &newbord,
 		Nexus::Update &update, 
-		float error);
+		float error);*/
 
 void BuildFragment(Nexus &nexus, VoronoiPartition &part,
 		   set<unsigned int> &patches, 
+		   Nexus::Update &update,
 		   Fragment &fragment);
+
+void SaveFragment(Nexus &nexus, VoronoiChain &chain,
+		  unsigned int level,
+		  Nexus::Update &update,
+		  Fragment &fragout);
 
 void ReverseHistory(vector<Nexus::Update> &history);
 
@@ -304,40 +313,43 @@ int main(int argc, char *argv[]) {
 	fragment != vchain.oldfragments.end(); fragment++) {
       report.Step(fcount++);
 
-      update.created.clear();
-      update.erased.clear();
-
-      set<unsigned int> &fcells = (*fragment).second;
-      set<unsigned int>::iterator s;
-      for(s = fcells.begin(); s != fcells.end(); s++) {
-	update.erased.push_back(*s);
-      }
       
+
+      Fragment fragin;
+      BuildFragment(nexus, vchain.levels[level+1], (*fragment).second, 
+		    update, fragin);
+
+
+
+
+      //TODO move this part to remote....
       vector<Point3f> newvert;
       vector<unsigned int> newface;
-      vector<Link> newbord;
-      Fragment frag;
+      vector<BigLink> newbord;
+      Join(fragin, newvert, newface, newbord);
 
-      BuildFragment(nexus, vchain.levels[level+1], (*fragment).second, frag);
-      //      nexus.Join((*fragment).second, newvert, newface, newbord);
-      join(frag, newvert, newface, newbord);
-      //simplyfy mesh
-      vector<int> vert_remap;
       float error = Decimate(decimation,
 			     (unsigned int)((newface.size()/3) * scaling), 
-			     newvert, newface, newbord, vert_remap);
+			     newvert, newface, newbord);
+      Fragment fragout;
+      fragout.error = error;
+      fragout.id = fragin.id;
+      fragout.seeds = fragin.seeds;
+      fragout.seeds_id = fragin.seeds_id;
+      Split(fragout, newvert, newface, newbord, vchain.levels[level+1]); 
 
 
-      NexusSplit(nexus, vchain, level, newvert, newface, newbord, 
-		 update, error);
 
+
+
+      SaveFragment(nexus, vchain, level, update, fragout);
       level_history.push_back(update);
     }
     report.Finish();
 
     for(unsigned int i = 0; i < level_history.size(); i++)
       nexus.history.push_back(level_history[i]);
-    //if(vchain.levels.back().size() == 1) break;
+
     if(vchain.oldfragments.size() == 1) break;
 
     vchain.oldfragments = vchain.newfragments;
@@ -358,15 +370,14 @@ int main(int argc, char *argv[]) {
   nexus.history.push_back(update);
   ReverseHistory(nexus.history);
 
-  TestBorders(nexus);
-  //Clean up:
+  //  TestBorders(nexus);
   nexus.Close();
 
   //TODO remove vert_remap, face_remap, border_remap
   return 0;
 }
 
-void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
+/*void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
 		unsigned int level,
 		vector<Point3f> &newvert, 
 		vector<unsigned int> &newface,
@@ -598,13 +609,12 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
       border = nexus.GetBorder(patch_idx);
     }
     memcpy(&(border[0]), &(bords[0]), bords.size() * sizeof(Link));
-
-    //    TestBorders(nexus);
   }  
-}
+  }*/
  
 void BuildFragment(Nexus &nexus, VoronoiPartition &part,
 		   set<unsigned int> &patches, 
+		   Nexus::Update &update,
 		   Fragment &fragment) {
   set<unsigned int>::iterator f;
   for(f = patches.begin(); f != patches.end(); f++) {
@@ -624,7 +634,92 @@ void BuildFragment(Nexus &nexus, VoronoiPartition &part,
       if(!link.IsNull())
 	nxs.bord.push_back(link);
     }
-    fragment.update.erased.push_back(*f);
+  }
+
+  update.created.clear();
+  update.erased.clear();
+  
+  set<unsigned int> &fcells = patches;
+  set<unsigned int>::iterator s;
+  for(s = fcells.begin(); s != fcells.end(); s++) {
+    update.erased.push_back(*s);
+  }
+
+  //copy all seeds! //TODO copy only closest ones
+  for(unsigned int i = 0; i < part.size(); i++) {
+    fragment.seeds.push_back(part[i]);
+    fragment.seeds_id.push_back(i);
+  }
+}
+
+
+void SaveFragment(Nexus &nexus, VoronoiChain &chain,
+		  unsigned int level,
+		  Nexus::Update &update, 
+		  Fragment &fragout) {
+  
+  vector<unsigned int> patch_remap;
+  patch_remap.resize(fragout.pieces.size());
+
+  for(unsigned int i = 0; i < fragout.pieces.size(); i++) {
+    NxsPatch &patch = fragout.pieces[i];
+    //TODO detect best parameter below for bordersize...
+    unsigned int patch_idx = nexus.AddPatch(patch.vert.size(),
+					    patch.face.size()/3,
+					    6 * patch.bord.size());
+    Nexus::PatchInfo &entry = nexus.index[patch_idx];
+    entry.error = fragout.error;
+
+    patch_remap[i] = patch_idx;
+    chain.newfragments[patch.patch].insert(patch_idx);
+    update.created.push_back(patch_idx);
+  }
+
+  for(unsigned int i = 0; i < fragout.pieces.size(); i++) {
+    NxsPatch &outpatch = fragout.pieces[i];
+    unsigned int patch_idx = patch_remap[i];
+    
+    Patch &patch = nexus.GetPatch(patch_idx);
+    memcpy(patch.FaceBegin(), &outpatch.face[0], 
+	   outpatch.face.size() * sizeof(unsigned short));
+    memcpy(patch.VertBegin(), &outpatch.vert[0], 
+	   outpatch.vert.size() * sizeof(Point3f));
+    
+    Nexus::PatchInfo &entry = nexus.index[patch_idx];
+    for(unsigned int v = 0; v < outpatch.vert.size(); v++) {
+      entry.sphere.Add(outpatch.vert[v]);
+      nexus.sphere.Add(outpatch.vert[v]);
+    } 
+    //remap borders
+    for(unsigned int i = 0; i < outpatch.bord.size(); i++) {
+      Link &link = outpatch.bord[i];
+      if(link.end_patch >= (1<<31)) //internal
+	link.end_patch = patch_remap[link.end_patch - (1<<31)];
+      else { //if external add the reverse border
+	Border rborder = nexus.GetBorder(link.end_patch);
+
+	unsigned int pos = rborder.Size();
+	if(nexus.borders.ResizeBorder(link.end_patch, pos+1)) {
+	  rborder = nexus.GetBorder(link.end_patch);
+	}
+      
+	assert(rborder.Size() < rborder.Available());
+	assert(rborder.Available() > pos);
+
+	Link newlink; 
+	newlink.start_vert = link.end_vert;
+	newlink.end_vert = link.start_vert;
+	newlink.end_patch = patch_idx;
+	rborder[pos] = newlink;
+      }
+    }
+    Border border = nexus.GetBorder(patch_idx);
+    assert(border.Available() >= outpatch.bord.size());
+    if(nexus.borders.ResizeBorder(patch_idx, outpatch.bord.size())) {
+      border = nexus.GetBorder(patch_idx);
+    }
+    memcpy(&(border[0]), &(outpatch.bord[0]), 
+	   outpatch.bord.size() * sizeof(Link)); 
   }
 }
 
