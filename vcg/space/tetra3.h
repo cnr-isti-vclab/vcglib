@@ -24,6 +24,45 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/04/28 16:31:17  turini
+Changed :
+in SolidAngle(vind) :
+double da0=DiedralAngle(EV(vind,0));
+double da1=DiedralAngle(EV(vind,1));
+double da2=DiedralAngle(EV(vind,2));
+in
+double da0=DiedralAngle(EofV(vind,0));
+double da1=DiedralAngle(EofV(vind,1));
+double da2=DiedralAngle(EofV(vind,2));
+
+Changed :
+in DiedralAngle(edgeind) :
+int f1=FE(edgeind,0);
+int f2=FE(edgeind,1);
+in
+int f1=FofE(edgeind,0);
+int f2=FofE(edgeind,1);
+
+Changed :
+in DiedralAngle(edgeind) :
+Point3d p0=FV(f1,0)->P();
+Point3d p1=FV(f1,1)->P();
+Point3d p2=FV(f1,2)->P();
+in
+Point3d p0=_v[FofV(f1,0)];
+Point3d p1=_v[FofV(f1,1)];
+Point3d p2=_v[FofV(f1,2)];
+
+Changed :
+in DiedralAngle(edgeind) :
+p0=FV(f2,0)->P();
+p1=FV(f2,1)->P();
+p2=FV(f2,2)->P();
+in
+p0=_v[FofV(f2,0)];
+p1=_v[FofV(f2,1)];
+p2=_v[FofV(f2,2)];
+
 Revision 1.2  2004/04/28 11:37:15  pietroni
 *** empty log message ***
 
@@ -45,84 +84,23 @@ Initial commit
 #define __VCG_TETRA3
 
 namespace vcg {
-
 /** \addtogroup space */
 /*@{*/
 /** 
-		Templated class for storing a generic tetrahedron in a 3D space.
-    Note the relation with the Face class of TetraMesh complex, both classes provide the P(i) access functions to their points and therefore they share the algorithms on it (e.g. area, normal etc...)
+		Templated class for storing a generic tetrahedron
+
+
  */
-template <class SCALAR_TETRA_TYPE> class Tetra3
+class Tetra
 {
 public:
-  typedef SCALAR_TETRA_TYPE ScalarType;
-	typedef Point3< ScalarType > CoordType;
 
-/*********************************************
-  
-**/
-
-protected:
-	/// Vector of the 4 points that defines the tetrahedron
-	Point3<ScalarType> _v[4];
-
-public:
-///constructor with 4 points
-  Tetra3(CoordType p0,CoordType p1,CoordType p2,CoordType p3)
-  {
-    _v[0]=p0;
-    _v[1]=p1;
-    _v[2]=p2;
-    _v[3]=p3;
-  }
-
-/// compute and return the volume of a tetrahedron
-  	ScalarType ComputeVolume(){
-				return (( _v[2]-_v[0])^(_v[1]-_v[0] ))*(_v[3]-_v[0])/6.0;
-		}
-
-/// compute and return the solid angle on a vertex
-	double SolidAngle(int vind)
-	{	
-		double da0=DiedralAngle(EofV(vind,0));
-		double da1=DiedralAngle(EofV(vind,1));
-		double da2=DiedralAngle(EofV(vind,2));
-		return((da0 + da1 + da2)- M_PI);
-	}
-
-/// compute and return the diadedral angle on an edge
-	double DiedralAngle(int edgeind)
-	{
-		int f1=FofE(edgeind,0);
-		int f2=FofE(edgeind,1);
-		Point3d p0=_v[FofV(f1,0)];
-		Point3d p1=_v[FofV(f1,1)];
-		Point3d p2=_v[FofV(f1,2)];
-		Point3d norm1=((p1-p0)^(p2-p0));
-		p0=_v[FofV(f2,0)];
-		p1=_v[FofV(f2,1)];
-		p2=_v[FofV(f2,2)];
-		Point3d norm2=((p1-p0)^(p2-p0));
-		norm1.Normalize();
-		norm2.Normalize();
-		return (M_PI-acos(double(norm1*norm2)));
-	}
-
-/// compute and return the aspect ratio of the tetrahedron 
-ScalarType ComputeAspectRatio()
-	{	
-		double a0=SolidAngle(0);
-		double a1=SolidAngle(1);
-		double a2=SolidAngle(2);
-		double a3=SolidAngle(3);
-		return (min(a0,min(a1,min(a2,a3))));
-	}
-
+ 
 //Tatrahedron Functions to retrieve information about relation between faces of tetrahedron(faces,adges,vertices).
 
   static int VofE(const int &indexE,const int &indexV)
   {	assert ((indexE<6)&&(indexV<2));
-   static int edgevert[4][3] ={{0,1},
+   static int edgevert[6][2] ={{0,1},
 					{0,2},
 					{0,3},
 					{1,2},
@@ -151,13 +129,13 @@ ScalarType ComputeAspectRatio()
 	}
 
  static int EofF(const int &indexF,const int &indexE) 
-	{	assert ((indexF<4)&&(faceindexEdge<3));
+	{	assert ((indexF<4)&&(indexE<3));
     static int faceedge[4][3]={{0,3,1},
 					{2,4,0},
 					{1,5,2},
 					{4,5,3}
 					};
-		return faceedge [indexF][faceindexEdge];
+		return faceedge [indexF][indexE];
 	}
 
 	static int FofV(const int &indexV,const int &indexF)
@@ -276,9 +254,103 @@ static int FofEE(const int &indexE0,const int &indexE1)
 						  
 			return edgesface[indexE0][indexE1];
 }
+};
+
+/** \addtogroup space */
+/*@{*/
+/** 
+		Templated class for storing a generic tetrahedron in a 3D space.
+    Note the relation with the Face class of TetraMesh complex, both classes provide the P(i) access functions to their points and therefore they share the algorithms on it (e.g. area, normal etc...)
+ */
+ template <class SCALAR_TETRA_TYPE> class Tetra3: public Tetra
+{
+public:
+  typedef typename SCALAR_TETRA_TYPE ScalarType;
+	typedef typename Point3< ScalarType > CoordType;
+
+/*********************************************
+  
+**/
+
+private:
+	/// Vector of the 4 points that defines the tetrahedron
+	CoordType _v[4];
+
+public:
+
+/// Shortcut per accedere ai punti delle facce
+	inline CoordType & P0( const int j ) { return _v[j];}
+	inline CoordType & P1( const int j ) { return _v[(j+1)%4];}
+	inline CoordType & P2( const int j ) { return _v[(j+2)%4];}
+  inline CoordType & P3( const int j ) { return _v[(j+3)%4];}
+
+	inline const CoordType &  P0( const int j ) const { return _v[j];}
+	inline const CoordType &  P1( const int j ) const { return _v[(j+1)%4];}
+	inline const CoordType &  P2( const int j ) const { return _v[(j+2)%4];}
+  inline const CoordType &  P3( const int j ) const { return _v[(j+3)%4];}
+
+	inline const CoordType & cP0( const int j ) const { return _v[j];}
+	inline const CoordType & cP1( const int j ) const { return _v[(j+1)%4];}
+	inline const CoordType & cP2( const int j ) const { return _v[(j+2)%4];}
+  inline const CoordType & cP3( const int j ) const { return _v[(j+3)%4];}
+
+/// compute and return the volume of a tetrahedron
+  	ScalarType ComputeVolume(){
+				return (( _v[2]-_v[0])^(_v[1]-_v[0] ))*(_v[3]-_v[0])/6.0;
+		}
+/// compute and return the barycenter of a tetrahedron
+ CoordType ComputeBarycenter()
+	{	
+			return((_v[0] + _v[1] + _v[2]+ _v[3])/4);
+	}
+
+/// compute and return the solid angle on a vertex
+double SolidAngle(int vind)
+	{	
+		double da0=DiedralAngle(EV(vind,0));
+		double da1=DiedralAngle(EV(vind,1));
+		double da2=DiedralAngle(EV(vind,2));
+
+			return((da0 + da1 + da2)- M_PI);
+	}
+
+/// compute and return the diadedral angle on an edge
+	double DiedralAngle(int edgeind)
+  {
+		int f1=FE(edgeind,0);
+		int f2=FE(edgeind,1);
+		Point3d p0=FV(f1,0)->P();
+		Point3d p1=FV(f1,1)->P();
+		Point3d p2=FV(f1,2)->P();
+		Point3d norm1=((p1-p0)^(p2-p0));
+		p0=FV(f2,0)->P();
+		p1=FV(f2,1)->P();
+		p2=FV(f2,2)->P();
+		Point3d norm2=((p1-p0)^(p2-p0));
+		norm1.Normalize();
+		norm2.Normalize();
+	 return (M_PI-acos(double(norm1*norm2)));
+	}
+
+/// compute and return the aspect ratio of the tetrahedron 
+ScalarType ComputeAspectRatio()
+	{	
+		double a0=SolidAngle(0);
+		double a1=SolidAngle(1);
+		double a2=SolidAngle(2);
+		double a3=SolidAngle(3);
+		return (min(a0,min(a1,min(a2,a3))));
+	}
+
 
 }; //end Class
 
+// Returns the normal to the plane passing through p0,p1,p2
+template<class TetraType>
+Point3<typename TetraType::ScalarType> Normal(const TetraType &t,int face)
+{
+  return(((t.P0(Tetra::VofF(face,1))-t.P0(Tetra::VofF(face,0)))^(t.P0(Tetra::VofF(face,2))-t.P0(Tetra::VofF(face,0)))).Normalize());
+}
 
 }	 // end namespace
 
