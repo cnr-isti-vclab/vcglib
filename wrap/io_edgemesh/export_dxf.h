@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/07/02 17:08:12  ganovelli
+created
+
 Revision 1.2  2004/06/10 15:15:16  ganovelli
 changes to comply dxf specs
 
@@ -34,83 +37,80 @@ export_dxf created
 #ifndef __VCG_LIB_EXPORTER_DXF
 #define __VCG_LIB_EXPORTER_DXF
 
-#include <stdio.h>
-/**
-This class encapsulate a filter for saving edge meshes ad polyline in DXF format.
-*/
+
 namespace vcg {
-namespace edge {
-namespace io {
+	namespace edge {
+		namespace io {
 
 
-
-    template <class EdgeMeshType>
-class ExporterDXF{
+template <class EdgeMeshType>
+class ExporterDXF
+{
 public:
-    typedef typename EdgeMeshType::VertexPointer VertexPointer;
 
-    static bool Save( EdgeMeshType  &em, const char * filename){
-        FILE * o = fopen(filename,"w");
-        if(o==NULL)
-            return false;
+	ExporterDXF_AUTOCAD(void){}
 
-        // print header
-        fprintf(o,"999\nVCGLibraryDXF\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n70\n153\n0\nLAYER\n2\nthelayer\n70\n0\n62\n15\n0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n");
+	
 
-        vcg::edge::Pos<typename EdgeMeshType::EdgeType> et;
+	static bool Save(EdgeMeshType  *mp, const char * filename)
+	{
+		FILE * o = fopen(filename,"w");
+		if(o==NULL)	return false;
+		fprintf(o,"0\n");
+		fprintf(o,"SECTION\n");
+		fprintf(o,"2\n");
+		fprintf(o,"ENTITIES\n");
 
-        typename EdgeMeshType::EdgePointer ep = &*em.edges.begin(),start;
-        typename EdgeMeshType::EdgeIterator ei;
+		Save(mp,o);
 
-        int i=0,maxc=0,n_=0;
+		fprintf(o,"0\n");
+		fprintf(o,"ENDSEC\n");
+		fprintf(o,"0\n");
+		fprintf(o,"EOF\n");
+		fclose(o);
+		return true;
+	}
 
-        for(ei = em.edges.begin(); ei != em.edges.end();++ei){(*ei).ClearS();}
 
-        for(ei = em.edges.begin(); ei != em.edges.end();++ei)
-            {i=1;
 
-                start = &*ei;
-                et.Set(&*ei,(*ei).V(0));
-                if(!et.e->IsS())
-                    {// nuovo contorno: trova il bordo se c'e' e posiziona li' l'hal edge
-                    n_++;
-                    do{
-                        ep = et.e;
-                        if(et.e->EEp(et.Z()) == et.e)
-                            break;
-                        et.NextE();
-                        }while (et.e != start);
-                    fprintf(o,"0\nPOLYLINE\n10\n0\n70\n0\n8\nthelayer\n");
-                    start = et.e;
-                    i=0;
-                                        do{
-                            if(i++>maxc)
-                                maxc=i;
-                                et.e->SetS();
-                                ep = et.e;
-                                OutVertex(et.e->V(et.Z()), o);
-                                et.NextE();
-                        }while((et.e != ep)&&(et.e !=start)&&(i<em.en));
-                    fprintf(o,"0\nSEQEND\n");
-                    }
-            }
+	static void Save(EdgeMeshType *mp, FILE* o )
+	{
+		EdgeMeshType::EdgeIterator i;
+		for(i=mp->edges.begin(); i!=mp->edges.end();++i)
+		{
+			Point3f p1 = (*i).V(0)->P();
+			Point3f p2 = (*i).V(1)->P();
 
-        fprintf(o,"0\nENDSEC\n0\nEOF\n");
-        fclose(o);
-        return 0;
-        }
 
-private:
-    static void OutVertex(const VertexPointer & v, FILE* o){
-                    fprintf(o,"0\nVERTEX\n100\nAcDb3dPolylineVertex\n70\n32\n");
-                    int i;
-                    for(i = 0 ; i < 3; ++i)
-                    fprintf(o,"%d\n%f\n",(i+1)*10,v->P()[i]);
-        }
-    };
+			fprintf(o,"0\n");  
+			fprintf(o,"LINE\n");
+			fprintf(o,"8\n");  
+			fprintf(o,"0\n");       
+			fprintf(o,"10\n"); 
 
-    };//vcg
-    };//edge
-    };//io
+			fprintf(o,"%f\n", p1[0]);     //X
+			fprintf(o,"20\n"); 
+			fprintf(o,"%f\n", p1[1]);     //Y
+			fprintf(o,"30\n");  
+			fprintf(o,"%f\n", p1[2]);     //Z
 
+			fprintf(o,"11\n");
+			fprintf(o,"%f\n", p2[0]);     //X
+			fprintf(o,"21\n"); 
+			fprintf(o,"%f\n", p2[1]);     //Y
+			fprintf(o,"31\n"); 
+			fprintf(o,"%f\n", p2[2]);     //Z
+
+		}
+
+
+
+	}
+
+
+};
+
+		};
+	};
+};
 #endif
