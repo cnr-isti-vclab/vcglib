@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/09/22 15:12:38  fiorin
+Corrected bug in hexahedron
+
 Revision 1.7  2004/07/09 15:34:29  tarini
 Dodecahedron added! (and doxigened a little bit)
 
@@ -391,7 +394,7 @@ void Cone( MeshType& in,
 
   Allocator<MeshType>::AddVertices(in,VN);
   Allocator<MeshType>::AddFaces(in,FN);
-  VertexPointer ivp[VN];
+	VertexPointer  *ivp = new VertexPointer[VN];
 
   VertexIterator vi=in.vert.begin();
   ivp[0]=&*vi;(*vi).P()=CoordType ( 0,-h/2,0 ); ++vi;
@@ -442,8 +445,8 @@ void Cone( MeshType& in,
 
 	if(r2!=0) for(i=0;i<D;++i,++fi) {
       (*fi).V(0)=ivp[1];
-      (*fi).V(1)=ivp[b2+i]; 
-      (*fi).V(2)=ivp[b2+(i+1)%D]; 
+      (*fi).V(2)=ivp[b2+i]; 
+      (*fi).V(1)=ivp[b2+(i+1)%D]; 
 		}
 
 	if(r1==0) for(i=0;i<D;++i,++fi)
@@ -451,12 +454,12 @@ void Cone( MeshType& in,
       (*fi).V(0)=ivp[0];
       (*fi).V(1)=ivp[b2+i]; 
       (*fi).V(2)=ivp[b2+(i+1)%D]; 
-			in.face.push_back(f);
+			//in.face.push_back(*fi);
 		}
   if(r2==0)	for(i=0;i<D;++i,++fi){
       (*fi).V(0)=ivp[1];
-      (*fi).V(1)=ivp[b1+i]; 
-      (*fi).V(2)=ivp[b1+(i+1)%D]; 
+      (*fi).V(2)=ivp[b1+i]; 
+      (*fi).V(1)=ivp[b1+(i+1)%D];
 		}
 	
 	if(r1!=0 && r2!=0)for(i=0;i<D;++i)
@@ -465,11 +468,11 @@ void Cone( MeshType& in,
       (*fi).V(1)=ivp[b2+i]; 
       (*fi).V(2)=ivp[b2+(i+1)%D]; 
       ++fi;
-      (*fi).V(0)=ivp[b1+1]; 
-      (*fi).V(2)=ivp[b2+(i+1)%D]; 
+      (*fi).V(0)=ivp[b1+i]; 
+      (*fi).V(1)=ivp[b2+(i+1)%D]; 
       (*fi).V(2)=ivp[b1+(i+1)%D]; 
       ++fi;
-		}
+		}		
 }
 
 
