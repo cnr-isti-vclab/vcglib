@@ -155,7 +155,7 @@ void NCone3s::Import(const ANCone3f &c) {
 bool NCone3s::Backface(const vcg::Sphere3f &sphere, 
 		       const vcg::Point3f &view) const {
   vcg::Point3f norm(n[0]/32766.0f, n[1]/32766.0f, n[2]/32766.0f);
-  vcg::Point3f d = (sphere.Center() + norm * sphere.Radius()) - view;
+  vcg::Point3f d = (sphere.Center() - norm * sphere.Radius()) - view;
   norm *= n[3]/3276.0f;
 
   float f = d * norm;
@@ -167,7 +167,7 @@ bool NCone3s::Backface(const vcg::Sphere3f &sphere,
 bool NCone3s::Frontface(const vcg::Sphere3f &sphere, 
 			const vcg::Point3f &view) const {
   vcg::Point3f norm(n[0]/32766.0f, n[1]/32766.0f, n[2]/32766.0f);
-  vcg::Point3f d = (sphere.Center() - norm * sphere.Radius()) - view;
+  vcg::Point3f d = (sphere.Center() + norm * sphere.Radius()) - view;
   norm *= n[3]/3276.0f;
   
   float f = -d * norm;

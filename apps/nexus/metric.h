@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/02/20 19:49:44  ponchio
+cleaning (a bit more).
+
 Revision 1.6  2005/02/20 18:07:01  ponchio
 cleaning.
 
@@ -79,13 +82,15 @@ namespace nxs {
       if(culling) {
 	float remote = frustum.Remoteness(sph.Center(), sph.Radius());      
 	if(remote > 0) {
-	  //TODO remoteness is bugged when the sphere is really close
-	  //FIX it!
+	  // TODO FIXME remoteness is bugged... (not much only bit
+	  //if we are close to the surface, the projection of
+	  //the bounding sphere in screen space comes out too small
+	  //just using resolution and radius. Im too lazy to fix it.
 	  if(frustum.IsOutside(sph.Center(), sph.Radius()))
 	    visible = false;
 	  error /= remote;
 	} else if(entry.cone.Backface(sph, frustum.ViewPoint())) {
-	  visible = false;
+	  //visible = false;
 	}
       }
       return error;
