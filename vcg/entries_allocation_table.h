@@ -35,7 +35,11 @@ struct EntryCATBase{
 EntryCATBase(STL_CONT & _c):c(_c){};
 STL_CONT::value_type * Start() const;
 const STL_CONT *  C();
-virtual void push_back(){}
+virtual void Push_back(const int &){};
+
+virtual void Reserve(const int & s){};
+virtual void Resize(const int & s){};
+
 const bool operator < (const EntryCATBase<STL_CONT> & other) const;
 
 private:
@@ -48,7 +52,11 @@ struct EntryCAT: public EntryCATBase<STL_CONT>{
 typedef ATTR_TYPE attr_type;
 EntryCAT(STL_CONT & _c) : EntryCATBase<STL_CONT>(_c){};
 std::vector<ATTR_TYPE> & Data(){return data;}
-void push_back(){ data.push_back(ATTR_TYPE());}
+void Push_back(const int & n){ for(int i = 0; i < n ; ++i) data.push_back(ATTR_TYPE());}
+virtual void Reserve(const int & s){data.reserve(s);};
+virtual void Resize(const int & s){data.resize(s);};
+
+
 private:
 std::vector<ATTR_TYPE> data;
 };
@@ -70,15 +78,52 @@ template <class STL_CONT>
 	}
 
 
-// EntryCATMulti: entry type for generic data (matches with CATMulti)
+
+
+struct WrapBase{
+virtual void Push_back(const int & n)=0;
+virtual void Reserve(const int & n)=0;
+virtual void Resize(const int & n)=0;	
+	};
+
+// (note) double hineritance is not necessary, just handy
+template <class ATTR_TYPE>
+struct Wrap: public WrapBase,std::vector<ATTR_TYPE>{
+	virtual void Push_back(const int & n){for (int i = 0 ; i < n;	++i) push_back(		ATTR_TYPE());}	
+	virtual void Reserve(const int & n){reserve(n);}
+	virtual void Resize(const int & n){resize(n);}	
+	};
+
+
+
+// EntryCATMulti: entry type for multiple user data
 template <class STL_CONT>
 struct EntryCATMulti: public EntryCATBase<STL_CONT>{
+
 EntryCATMulti(STL_CONT & _c) : EntryCATBase<STL_CONT>(_c){};
-std::list< void * > & Data(){return data;}
-void push_back(){}
+std::list<WrapBase * > & Data(){return data;}
+void push_back(const int & n ){
+	std::list< void * >::iterator ite;
+	for(ite = data.begin(); ite != data.end(); ++ite)
+		(*ite)->Push_back(n);
+	}
+virtual void Reserve(const int & n){
+																			std::list<WrapBase * >::iterator ite;
+																			for(ite = data.begin(); ite != data.end(); ++ite)
+																				(*ite)->Reserve(n);
+																		};
+virtual void Resize(const int & n){		
+																			std::list<WrapBase * >::iterator ite;
+																			for(ite = data.begin(); ite != data.end(); ++ite)
+																				(*ite)->Resize(n);
+																	};
+
 private:
-	std::list< void * > data;
+	std::list< WrapBase * > data;
 };
+
+
+
 
 template <class STL_CONT, class ATTR_TYPE>
 class TempData{
@@ -90,7 +135,7 @@ public:
 		std::vector<ATTR_TYPE>  * item;
 		ATTR_TYPE & operator [](STL_CONT::value_type * v)
 			{
-				int pos = CATMulti<STL_CONT, EntryCATMulti<STL_CONT> >::Ord(v);
+				int pos = CATEntry<STL_CONT, EntryCATMulti<STL_CONT> >::Ord(v);
 				return (*item)[pos];
 			}
 	};

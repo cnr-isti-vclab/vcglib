@@ -70,24 +70,24 @@ public:
 	template <class ATTR_TYPE>
 		TempData<THIS_TYPE,ATTR_TYPE> NewTempData(){
 			//CAT<THIS_TYPE,EntryCATMulti>::Insert(*this)
-			CATMulti<THIS_TYPE,EntryCATMulti<THIS_TYPE> >::EntryType 
-				entry = CATMulti<THIS_TYPE,EntryCATMulti<THIS_TYPE> >::GetEntry(&*begin());
-			entry.Data().push_back(new std::vector<ATTR_TYPE>);
+			CATEntry<THIS_TYPE,EntryCATMulti<THIS_TYPE> >::EntryType 
+				entry = CATEntry<THIS_TYPE,EntryCATMulti<THIS_TYPE> >::GetEntry(&*begin());
+			entry.Data().push_back(new Wrap< ATTR_TYPE>);
 
-			((std::vector<ATTR_TYPE>*)entry.Data().back())->reserve(capacity());
-			((std::vector<ATTR_TYPE>*)entry.Data().back())->resize(size());
+			((Wrap<ATTR_TYPE>*)entry.Data().back())->reserve(capacity());
+			((Wrap<ATTR_TYPE>*)entry.Data().back())->resize(size());
 
-			return TempData<THIS_TYPE,ATTR_TYPE>((std::vector<ATTR_TYPE>*) entry.Data().back());
+			return TempData<THIS_TYPE,ATTR_TYPE>((Wrap<ATTR_TYPE>*) entry.Data().back());
 			}
 			
 	template <class ATTR_TYPE>
 		void DeleteTempData(TempData<THIS_TYPE,ATTR_TYPE> & td){
 			//CAT<THIS_TYPE,EntryCATMulti>::Insert(*this)
-			CATMulti<THIS_TYPE,EntryCATMulti<THIS_TYPE> >::EntryType 
-				entry = CATMulti<THIS_TYPE,EntryCATMulti<THIS_TYPE> >::GetEntry(&*begin());
+			CATEntry<THIS_TYPE,EntryCATMulti<THIS_TYPE> >::EntryType 
+				entry = CATEntry<THIS_TYPE,EntryCATMulti<THIS_TYPE> >::GetEntry(&*begin());
 
-			entry.Data().remove(td.Item());
-			delete td.Item();
+			entry.Data().remove((Wrap<ATTR_TYPE>*)td.Item());
+			delete ((Wrap<ATTR_TYPE>*)td.Item());
 			}
 
 

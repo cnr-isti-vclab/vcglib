@@ -42,11 +42,11 @@ typedef STL_CONT::value_type VALUE_TYPE;
 virtual void Resort(VALUE_TYPE*,VALUE_TYPE*) =0;
 virtual void Remove(const STL_CONT&) = 0;
 virtual void AddDataElem(VALUE_TYPE*,int)=0;
-virtual void Reserve(STL_CONT::value_type * pt,const int & rs)=0;
-virtual void Resize(STL_CONT::value_type * pt,const int & rs)=0;	
+//virtual void Reserve(STL_CONT::value_type * pt,const int & rs)=0;
+//virtual void Resize(STL_CONT::value_type * pt,const int & rs)=0;	
 
 public:
-// ID serve as a type trait. 
+// ID serves as a type trait. 
 static int & Id(){
 			static int id=0;
 			return id;
@@ -59,6 +59,7 @@ template <class STL_CONT, class ENTRY_TYPE>
 class CATEntry: public CATBase<STL_CONT>{
 public:
 typedef STL_CONT::value_type VALUE_TYPE;
+typedef ENTRY_TYPE EntryType;
 
 CATEntry(){if(Id()==0){
 							Id() = CATBase<STL_CONT>::Id()+1;
@@ -68,8 +69,11 @@ CATEntry(){if(Id()==0){
 
 
 static unsigned int Ord(VALUE_TYPE *);
+static ENTRY_TYPE & GetEntry(STL_CONT::value_type*pt);
+
+static	void  Insert( STL_CONT & c );							// insert a vector to trace
 virtual void	Remove(  const STL_CONT  &	c);			// remove the container c
-static void		Remove(  VALUE_TYPE  *	v);					// remove the container that contains v
+static  void	Remove(  VALUE_TYPE  *	v);					// remove the container that contains v
 
 virtual void Resort(	VALUE_TYPE* old_start,			// resort the allocation table
 											VALUE_TYPE* new_start);			// after a container was moved
@@ -105,6 +109,7 @@ static bool IsTheSameAsLast(VALUE_TYPE *pt);	// true if pt is in the  container
 static void Update(VALUE_TYPE*);							// set Upper() e Lower() 
 static std::list<ENTRY_TYPE>::iterator FindBase(const VALUE_TYPE * pt);	
 																							// find the container that contains pt (naive)
+virtual  void  AddDataElem(STL_CONT::value_type * pt,int n);// add n element to the auxiliary data
 
 public:
 static int & Id(){															// unique identifier of the istance
@@ -191,8 +196,12 @@ void CATEntry<STL_CONT, ENTRY_TYPE>::
 Remove( const STL_CONT & c )
 {
 std::list<ENTRY_TYPE>::iterator ite;
-for(ite = AT().begin(); (*ite).C() != &c;++ite)
-	AT().erase(ite);
+for(ite = AT().begin(); ite != AT().end();  ++ite)
+if((*ite).C() == &c)
+	{
+		AT().erase(ite);
+		break;
+	}
 UTD() = false;
 }
 
@@ -207,35 +216,46 @@ Remove(VALUE_TYPE  *	pt)
 	UTD() = false;
 }
 
+template <class STL_CONT, class ENTRY_TYPE>
+void CATEntry<STL_CONT, ENTRY_TYPE>::
 
+Insert( STL_CONT & c )
+{
+ENTRY_TYPE entry(c);
+std::list<ENTRY_TYPE>::iterator lower_ite,upper_ite;
+upper_ite = std::lower_bound(AT().begin(),	AT().end(), entry);
+lower_ite = AT().insert(upper_ite,entry);
+lower_ite->Reserve(c.capacity());
+lower_ite->Resize(c.size());
+UTD() = false;
+}
+template <class STL_CONT, class ENTRY_TYPE>
+ENTRY_TYPE & CATEntry<STL_CONT, ENTRY_TYPE>::
+GetEntry(STL_CONT::value_type*pt){
+Update(pt);
+return *Curr();
+}
+
+template <class STL_CONT, class ENTRY_TYPE>
+void CATEntry<STL_CONT, ENTRY_TYPE>::
+
+AddDataElem(STL_CONT::value_type * pt,int n)
+{
+Update(pt);
+Curr()->Push_back(n);
+}
+
+//--------------------------------------------------------------------------------------------
 // CAT: derivation of CATEntry for the case where the temporary data is unique for each type.
 // VERY IMPORTANT: there cannot be two vector of value with the same type of temporary datya
 // This class is used to implement optional core data (NormalOpt, CoordOpt etc...)
-// For generic user-defined data see CATMulti
 template <class STL_CONT,class ATTR_TYPE>
 class CAT:public CATEntry<STL_CONT, EntryCAT<STL_CONT,ATTR_TYPE> >{
 public:
 typedef typename EntryCAT<STL_CONT,ATTR_TYPE> EntryType;
 static ATTR_TYPE & Get(STL_CONT::value_type * pt);
-static std::vector<ATTR_TYPE> &	Data(STL_CONT::value_type * pt);
-static void Insert( STL_CONT  &	c);
-virtual void Reserve(STL_CONT::value_type * pt,const int & rs);
-virtual void Resize(STL_CONT::value_type * pt,const int & rs);
-virtual  void  AddDataElem(STL_CONT::value_type * pt,int n);// add n element to the auxiliary data
-	}; 
-
-
+}; 
 //---------------------- CAT: implementation---------------------------------------------------
-template <class STL_CONT, class ATTR_TYPE>
-void  CAT<STL_CONT,ATTR_TYPE>::
-
-AddDataElem(STL_CONT::value_type * pt,int n)
-{
-Update(pt);
-for(int i = 0 ; i < n; ++i)
-	Curr()->push_back();
-}
-
 template <class STL_CONT, class ATTR_TYPE>
 ATTR_TYPE & CAT<STL_CONT,ATTR_TYPE>::
 
@@ -244,73 +264,7 @@ Get(STL_CONT::value_type * pt)
 int ord = Ord(pt);
 return Curr()->Data()[ord];
 }
-
-template <class STL_CONT, class ATTR_TYPE>
-std::vector<ATTR_TYPE> &	CAT<STL_CONT,ATTR_TYPE>::
-Data(STL_CONT::value_type * pt)
-{
-Update(pt);
-return Curr()->Data();
-}
-
-template <class STL_CONT, class ATTR_TYPE>
-void CAT<STL_CONT, ATTR_TYPE>::
-
-Insert( STL_CONT & c )
-{
-EntryType entry(c);
-std::list<EntryType>::iterator lower_ite,upper_ite;
-upper_ite = std::lower_bound(AT().begin(),	AT().end(), entry);
-lower_ite = AT().insert(upper_ite,entry);
-lower_ite->Data().reserve(c.capacity());
-lower_ite->Data().resize(c.size());
-UTD() = false;
-}
-
-template <class STL_CONT, class ATTR_TYPE>
-void CAT<STL_CONT, ATTR_TYPE>::
-Reserve(STL_CONT::value_type * pt,const int & rs)
-{
-Update(pt);
-Curr()->Data().reserve(rs);	
-}
-
-template <class STL_CONT, class ATTR_TYPE>
-void CAT<STL_CONT, ATTR_TYPE>::
-Resize(STL_CONT::value_type * pt,const int & rs)
-{
-Update(pt);
-Curr()->Data().resize(rs);	
-}
-
-template <class STL_CONT,class ENTRY_TYPE>
-class CATMulti:public CATEntry<STL_CONT, ENTRY_TYPE >{
-public:
-typedef typename ENTRY_TYPE EntryType;
-static void Insert( STL_CONT  &	c);
-static ENTRY_TYPE  & GetEntry(STL_CONT::value_type *);
-virtual void Reserve(const int & rs){};
-virtual void Resize(const int & rs){};
-}; 
-
-// --------------------------- CATMulti: implementation ------------------
-template <class STL_CONT,class ENTRY_TYPE>
-void CATMulti<STL_CONT, ENTRY_TYPE>::
-Insert( STL_CONT & c )
-{
-ENTRY_TYPE entry(c);
-std::list<EntryType>::iterator lower_ite,upper_ite;
-upper_ite = std::lower_bound(AT().begin(),	AT().end(), entry);
-lower_ite = AT().insert(upper_ite,entry);
-UTD() = false;
-}
-
-template <class STL_CONT,class ENTRY_TYPE>
-ENTRY_TYPE & CATMulti<STL_CONT, ENTRY_TYPE>::
-GetEntry(STL_CONT::value_type*pt){
-Update(pt);
-return *Curr();
-}
+//---------------------------------------------------------------------------------------------
 
 };//end namespace vcg
 
