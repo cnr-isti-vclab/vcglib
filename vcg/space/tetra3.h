@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/05/13 12:51:00  turini
+Changed SolidAngle : table EV in table EofV
+Changed DiedralAngle : tables FE and FV in tables FofE and FofV
+
 Revision 1.4  2004/05/13 08:42:36  pietroni
 the relation between entities functions are in tetra class (don't neeed template argoument)
 
@@ -85,6 +89,8 @@ Initial commit
 ****************************************************************************/
 #ifndef __VCG_TETRA3
 #define __VCG_TETRA3
+
+#include <vcg/space/point3.h>
 
 namespace vcg {
 /** \addtogroup space */
@@ -220,7 +226,7 @@ static int EofVV(const int &indexV0,const int &indexV1)
 			return verticesedge[indexV0][indexV1];
 }
 
-static FofVVV(const int &indexV0,const int &indexV1,const int &indexV2)
+static int FofVVV(const int &indexV0,const int &indexV1,const int &indexV2)
 {
 
 assert ((indexV0<4)&&(indexV0>=0));
@@ -265,11 +271,12 @@ static int FofEE(const int &indexE0,const int &indexE1)
 		Templated class for storing a generic tetrahedron in a 3D space.
     Note the relation with the Face class of TetraMesh complex, both classes provide the P(i) access functions to their points and therefore they share the algorithms on it (e.g. area, normal etc...)
  */
- template <class SCALAR_TETRA_TYPE> class Tetra3: public Tetra
+ template <class ScalarTetraType> 
+ class Tetra3
 {
 public:
-  typedef typename SCALAR_TETRA_TYPE ScalarType;
-	typedef typename Point3< ScalarType > CoordType;
+	typedef Point3< ScalarTetraType > CoordType;
+  typedef ScalarTetraType ScalarType;
 
 /*********************************************
   
@@ -298,7 +305,7 @@ public:
   inline const CoordType & cP3( const int j ) const { return _v[(j+3)%4];}
 
 /// compute and return the volume of a tetrahedron
-  	ScalarType ComputeVolume(){
+  	ScalarTetraType ComputeVolume(){
 				return (( _v[2]-_v[0])^(_v[1]-_v[0] ))*(_v[3]-_v[0])/6.0;
 		}
 /// compute and return the barycenter of a tetrahedron
@@ -336,7 +343,7 @@ double SolidAngle(int vind)
 	}
 
 /// compute and return the aspect ratio of the tetrahedron 
-ScalarType ComputeAspectRatio()
+ScalarTetraType ComputeAspectRatio()
 	{	
 		double a0=SolidAngle(0);
 		double a1=SolidAngle(1);
@@ -350,7 +357,7 @@ ScalarType ComputeAspectRatio()
 
 // Returns the normal to the plane passing through p0,p1,p2
 template<class TetraType>
-Point3<typename TetraType::ScalarType> Normal(const TetraType &t,int face)
+Point3<typename TetraType::ScalarTetraType> Normal(const TetraType &t,int face)
 {
   return(((t.P0(Tetra::VofF(face,1))-t.P0(Tetra::VofF(face,0)))^(t.P0(Tetra::VofF(face,2))-t.P0(Tetra::VofF(face,0)))).Normalize());
 }
