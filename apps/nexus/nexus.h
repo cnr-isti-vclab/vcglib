@@ -67,11 +67,10 @@ class Nexus {
 
   void SetRamBufferSize(unsigned int ram_size);
 
-  //MOVE to nexus_build.cpp
-  void Join(const std::set<unsigned int> &patches,
+  /*  void Join(const std::set<unsigned int> &patches,
 	    std::vector<vcg::Point3f> &vert,
 	    std::vector<unsigned int> &faces,
-	    std::vector<Link> &links);
+	    std::vector<Link> &links);*/
 
   //move to nxsalgo!
   void Unify(float threshold = 0.0f);

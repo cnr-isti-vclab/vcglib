@@ -168,7 +168,7 @@ void Nexus::SetRamBufferSize(unsigned int r_size) {
   patches.SetRamBufferSize(r_size);
 }
 
-void Nexus::Join(const std::set<unsigned int> &patches,
+/*void Nexus::Join(const std::set<unsigned int> &patches,
 		 std::vector<Point3f> &newvert,
 		 std::vector<unsigned int> &newface,
 		 std::vector<Link> &newbord) {
@@ -263,7 +263,7 @@ void Nexus::Join(const std::set<unsigned int> &patches,
     newbord.push_back(*b);
 
   return;
-}
+  }*/
 
 
 void Nexus::Unify(float threshold) {
