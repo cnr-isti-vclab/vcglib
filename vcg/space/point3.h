@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2004/10/13 12:45:51  cignoni
+Better Doxygen documentation
+
 Revision 1.17  2004/09/10 14:01:40  cignoni
 Added polar to cartesian
 
@@ -88,7 +91,7 @@ protected:
 
 public:
 	typedef P3ScalarType ScalarType;
-
+	enum {Dimension = 3};
 	
 	
 //@{
@@ -453,6 +456,31 @@ P3ScalarType PSDist( const Point3<P3ScalarType> & p,
 	else if(t>1) t = 1;
 	q = v1+e*t;
     return Distance(p,q);
+}
+
+
+template <class P3ScalarType>
+void GetUV( Point3<P3ScalarType> &n,Point3<P3ScalarType> &u, Point3<P3ScalarType> &v, Point3<P3ScalarType> up=Point3<P3ScalarType>(0,1,0))
+{
+	n.Normalize();
+	const double LocEps=double(1e-7);
+	u=n^up;
+  double len = u.Norm();
+ 	if(len < LocEps)
+	{
+		if(fabs(n[0])<fabs(n[1])){
+			if(fabs(n[0])<fabs(n[2])) up=Point3<P3ScalarType>(1,0,0); // x is the min 
+			                         else up=Point3<P3ScalarType>(0,0,1); // z is the min 
+		}else {
+			if(fabs(n[1])<fabs(n[2])) up=Point3<P3ScalarType>(0,1,0); // y is the min 
+			                         else up=Point3<P3ScalarType>(0,0,1); // z is the min 
+		}
+		u=n^up;
+	}
+	u.Normalize();
+	v=n^u;
+	v.Normalize();
+	Point3<P3ScalarType> uv=u^v;
 }
 
 
