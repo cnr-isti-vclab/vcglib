@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/02/15 23:35:47  cignoni
+Cambiato nome type template in accordo alla styleguide
+
 Revision 1.5  2004/02/10 01:07:15  cignoni
 Edited Comments and GPL license
 
@@ -48,7 +51,7 @@ First commit...
 namespace vcg {
 
     /** The templated class for representing a point in 3D space.
-     *  The class is templated over the ScalarType value representing coordinates.
+     *  The class is templated over the ScalarType class representing coordinates.
      */
 
 template <class P3ScalarType> class Point3
