@@ -21,7 +21,8 @@
 *                                                                           *
 ****************************************************************************/
 /****************************************************************************
-  History
+  $Log: not supported by cvs2svn $
+
 ****************************************************************************/
 
 #ifndef __VCG_DECIMATION_TRICOLLAPSE
@@ -54,7 +55,7 @@ public:
 	static int &LinkConditionVert(){static int lkv=0; return lkv;}
 	static int &OutOfDate()        {static int ofd=0; return ofd;}
 	static int &Border()           {static int bor=0; return bor;}
-  static Init() 
+  static void Init() 
   {
    Volume()           =0;
    LinkConditionFace()=0;
@@ -87,9 +88,8 @@ protected:
 	/// Default Constructor
 		TriEdgeCollapse()
 			{}
-
 	///Constructor with postype
-		TriEdgeCollapse(PosType p, int mark)
+	 TriEdgeCollapse(PosType p, int mark)
 			{    
 				_Imark() = mark;
 				pos=p;
