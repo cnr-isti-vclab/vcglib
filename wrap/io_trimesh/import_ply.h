@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2004/10/07 14:19:06  ganovelli
+shot/camera io added
+
 Revision 1.8  2004/06/23 15:36:43  cignoni
 Restructured management of error, now the standard open for any mesh type return the error code, the default success value is zero
 Any import class has a method ErrorMsg that give a verbal description of an error code.
@@ -469,13 +472,13 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				//camera.valid     = true;
 
 				// extrinsic
-				// view point
+				m.shot.similarity.SetIdentity();
+			// view point
 				m.shot.similarity.tra[0] = -ca.view_px;
 				m.shot.similarity.tra[1] = -ca.view_py;
 				m.shot.similarity.tra[2] = -ca.view_pz;
 	
 				// axis (i.e. rotation). 
-				m.shot.similarity.rot.SetIdentity();
 				m.shot.similarity.rot[0][0] = ca.x_axisx;
 				m.shot.similarity.rot[0][1] = ca.x_axisy;
 				m.shot.similarity.rot[0][2] = ca.x_axisz;
