@@ -13,6 +13,15 @@ namespace nxs {
 class Metric;
 class NexusMt; 
 
+struct Item {
+  float error;
+  unsigned int id;
+  Item(unsigned int i = 0, float e = 0): id(i), error(e) {}
+  bool operator<(const Item &item) const {
+    return error < item.error;
+  }
+};
+
 class Extraction {
  public:
   typedef History::Node Node;
@@ -46,9 +55,12 @@ class Extraction {
   unsigned int disk_used, disk_max;
 
   std::vector<bool> visited;
-  std::vector<HeapNode> heap;
-  std::vector<unsigned int> selected;
+  std::map<unsigned int, float> errors;
+
+  std::vector<Item> selected;
   unsigned int draw_size; //first in selected should be drawn
+
+  std::vector<HeapNode> heap; //no realtime extraxtion
 
   //nodes that i can expand to
   std::vector<HeapNode> front;

@@ -50,6 +50,7 @@ void Extraction::Extract(NexusMt *_mt) {
 void Extraction::Init() { 
   front.clear();
   back.clear();
+  errors.clear();
   
   Cost cost;
 
@@ -69,6 +70,7 @@ void Extraction::Init() {
 	      for(Link::iterator k = link.begin(); k != link.end(); k++) {
 	        unsigned int patch = (*k).patch;
 	        Entry &entry = (*mt)[patch];
+
 	        float error = metric->GetError(entry);
 	        if(error > maxerror) maxerror = error;
 
@@ -189,11 +191,12 @@ void Extraction::Update(NexusMt *_mt) {
       HeapNode hnode = front.back();
       Node *node = hnode.node;
       front.pop_back();
-      Node::iterator i;
-      for(i = node->out_begin(); i != node->out_end(); i++) {
-	      Link &link = (*i);
+      Node::iterator l;
+      for(l = node->out_begin(); l != node->out_end(); l++) {
+	      Link &link = (*l);
 	      for(Link::iterator k = link.begin(); k != link.end(); k++) {
-	        selected.push_back((*k).patch);
+	        selected.push_back(Item((*k).patch, i));
+		errors[(*k).patch] = i;
 	      }
       }
     } else if(back.size()) {
@@ -201,11 +204,12 @@ void Extraction::Update(NexusMt *_mt) {
       HeapNode hnode = back.back();
       Node *node = hnode.node;
       back.pop_back();
-      Node::iterator i;
-      for(i = node->in_begin(); i != node->in_end(); i++) {
-	      Link &link = (*i);
+      Node::iterator l;
+      for(l = node->in_begin(); l != node->in_end(); l++) {
+	      Link &link = (*l);
 	      for(Link::iterator k = link.begin(); k != link.end(); k++) {
-	        selected.push_back((*k).patch);
+	        selected.push_back(Item((*k).patch, i));
+		errors[(*k).patch] = i;
 	      }
       }
     }
@@ -344,7 +348,8 @@ void Extraction::Select() {
 	Link &link = *n;
 	for(Link::iterator k = link.begin(); k != link.end(); k++) {
 	  unsigned int patch = (*k).patch;
-	  selected.push_back(patch);
+	  selected.push_back(Item(patch,0));
+	  errors[patch] = 0.0f;
 	}
       }
     }

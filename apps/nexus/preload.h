@@ -7,6 +7,8 @@
 
 #include <ptypes/pasync.h>
 
+#include "extraction.h"
+
 namespace nxs {
 
 class NexusMt;
@@ -19,19 +21,24 @@ class Preload: public pt::thread{
   pt::mutex lock;
   pt::trigger trigger;
   
-  std::vector<unsigned int> queue;
+  std::vector<Item> queue;
 
-  Preload(): thread(false), trigger(true, false) {}
+  Preload(): thread(false), trigger(false, false) {}
   ~Preload() {
     waitfor();
   }
   
   void execute();
   
-  void post(std::vector<unsigned int> &patches) {
+  void post(std::vector<Item> &patches) {
+    trigger.reset();
     lock.enter();
+
+    queue.reserve(patches.size());
+    for(int i = patches.size() -1; i >= 0; i--)
+      queue.push_back(patches[i]);
+
     trigger.post();
-    queue = patches;
     lock.leave();
   }
 

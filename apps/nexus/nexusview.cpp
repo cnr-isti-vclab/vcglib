@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.31  2005/02/01 16:42:30  ponchio
+Trigger
+
 Revision 1.30  2005/01/21 17:09:13  ponchio
 Porting and debug.
 
@@ -130,8 +133,11 @@ Created
 
 
 ****************************************************************************/
-
-#include <apps/nexus/nexusmt.h>
+#ifdef WIN32
+#include <wrap/system/getopt.h>
+#else
+#include <unistd.h>
+#endif
 
 #include <iostream>
 using namespace std;
@@ -149,6 +155,7 @@ using namespace std;
 #include <wrap/gui/trackball.h>
 #include "watch.h"
 
+#include <apps/nexus/nexusmt.h>
 
 using namespace vcg;
 using namespace nxs;
@@ -207,8 +214,13 @@ int main(int argc, char *argv[]) {
 
   Trackball track;
 
-  if(argc != 2) {
-    cerr << "Usage: " << argv[0] << " <nexus file>\n";    
+  if(argc < 2) {
+    cerr << "Usage: " << argv[0] << " <nexus file> [options]\n";    
+    cerr << "-e <error>: set initial target error\n"
+	 << "-m <ram>: max ram used\n"
+         << "-x <ram>: max extraction size\n"
+	 << "-r <ram>: max draw size\n"
+	 << "-d <ram>: max disk read per frame\n";
     return -1;
   }      
 
@@ -227,32 +239,8 @@ int main(int argc, char *argv[]) {
     cerr << "Could not init SDL window\n";
     return -1;
   }
-  
-  //  FrustumPolicy frustum_policy;
 
-  cerr << "Commands: \n"
-    " q: quit\n"
-    " s: screen error extraction\n"
-    " g: geometry error extraction\n"
-    
-    " t: show statistics\n"
 
-    " b: increase memory buffer\n"
-    " B: decrease memory buffer\n"
-
-    " d: debug mode (show patches colored)\n"
-    " f: flas shading mode\n"
-    " m: smooth mode\n"
-    " p: draw points\n"
-
-    " c: show colors\n"
-    " n: show normals\n"
-    " u: rotate model\n"
-    " -: decrease error\n"
-    " +: increase error (= too)\n";
-  
-  Watch watch;
-  
   bool rotate = false;
   bool show_borders = false;
   bool show_colors = true;
@@ -262,6 +250,41 @@ int main(int argc, char *argv[]) {
   bool realtime = true;
   bool preload = true;
   bool step = true;
+  
+  int option;
+  while((option = getopt(argc, argv, "e:m:x:r:d:")) != EOF) {
+    switch(option) {
+    case 'e': extraction.target_error = atof(optarg); break;
+    case 'm': nexus.MaxRam() = atoi(optarg); break;
+    case 'x': extraction.extr_max = atoi(optarg); break;
+    case 'r': extraction.draw_max = atoi(optarg); break;
+    case 'd': extraction.disk_max = atoi(optarg); break;
+    default:
+      cerr << "Unknow option.\n"; break;
+    }
+  }
+
+
+  //  FrustumPolicy frustum_policy;
+
+  cerr << "Commands: \n"
+    " q: quit\n"
+    " t: toggle statistics\n"
+    " b: increase memory buffer\n"
+    " B: decrease memory buffer\n"
+
+    " d: debug mode (show patches colored)\n"
+    " f: flat shading mode\n"
+    " m: smooth mode\n"
+    " p: draw points\n"
+
+    " c: show colors\n"
+    " n: show normals\n"
+    " r: rotate model\n"
+    " -: decrease error\n"
+    " +: increase error (= too)\n";
+  
+  Watch watch;
   
   if(!nexus.InitGL()) {
     cerr << "Could not init glew.\n";

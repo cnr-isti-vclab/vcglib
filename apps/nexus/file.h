@@ -43,7 +43,6 @@ class File {
   bool IsReadOnly() { return readonly; }
 
   static void Delete(const std::string &filename);
- protected:
 
 #ifdef WIN32
    HANDLE fp;

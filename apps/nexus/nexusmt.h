@@ -42,7 +42,7 @@ namespace nxs {
     Stats(): count(0) {}
     void Init();
   };
-  
+
   class NexusMt: public Nexus {
   public:
     bool use_vbo;
@@ -67,7 +67,12 @@ namespace nxs {
 
     void SetPreload(bool on);
 
+    void Flush(bool all = true);
+    Patch &GetPatch(unsigned int patch, float error, bool flush = true);
+    bool CanAdd(Item &item);
   protected:
+    std::vector<Item> heap;
+
     void FlushPatch(unsigned int id);
     void LoadVbo(Entry &entry);
     void FlushVbo(Entry &entry);

@@ -1,3 +1,7 @@
+#ifndef WIN32
+#include <fcntl.h>
+#endif
+
 #include <map>
 #include <queue>
 
@@ -45,6 +49,15 @@ bool NexusMt::Load(const string &filename) {
   if(!Nexus::Load(filename, true)) return false;
   if(!history.IsQuick() && !history.UpdatesToQuick())
     return false;
+
+#ifndef WIN32
+  //i will read data only once usually.
+  //  for(unsigned int i = 0; i < files.size(); i++) {
+  //  int fd = fileno(files[i]->fp);
+  //  posix_fadvise(fd, 0, 0, POSIX_FADV_NOREUSE);
+  // }
+  
+#endif
   return true;
 }
 
@@ -72,6 +85,15 @@ void NexusMt::Render(Extraction &extraction, DrawContest &contest,
 		     Stats *stats) {
   if(stats) stats->Init();
 
+  for(unsigned int i = 0; i < heap.size(); i++) {
+    Item &item = heap[i];
+    if(!extraction.errors.count(item.id)) {
+      item.error = 1e20;
+    } else
+      item.error = extraction.errors[item.id];
+  }
+  make_heap(heap.begin(), heap.end());
+
   preload.post(extraction.selected);
 
   glEnableClientState(GL_VERTEX_ARRAY);
@@ -80,10 +102,10 @@ void NexusMt::Render(Extraction &extraction, DrawContest &contest,
   if((signature & NXS_NORMALS_SHORT) && (contest.attrs & DrawContest::NORMAL))
     glEnableClientState(GL_NORMAL_ARRAY);
 
-  vector<unsigned int> skipped;
+  vector<Item> skipped;
   
   for(unsigned int i = 0; i < extraction.draw_size; i++) {
-    unsigned int patch = extraction.selected[i];
+    unsigned int patch = extraction.selected[i].id;
     Entry &entry = operator[](patch);
     vcg::Sphere3f &sphere = entry.sphere;
     if(extraction.frustum.IsOutside(sphere.Center(), sphere.Radius())) 
@@ -92,22 +114,27 @@ void NexusMt::Render(Extraction &extraction, DrawContest &contest,
     if(stats) stats->ktri += entry.nface;
 
     if(!entry.patch) {
-      skipped.push_back(patch);
+      skipped.push_back(extraction.selected[i]);
       continue;
     }
-
     Draw(patch, contest);
   }
 
+
+  preload.trigger.reset();
   preload.lock.enter();  
+
   if(skipped.size()) cerr << "Skipped: " << skipped.size() << endl;
-  for(vector<unsigned int>::iterator i = skipped.begin(); 
-      i != skipped.end(); i++) {
-    GetPatch(*i);
-    Draw(*i, contest);
+  for(vector<Item>::iterator i = skipped.begin(); i != skipped.end(); i++) {
+    GetPatch((*i).id, (*i).error);
+    Draw((*i).id, contest);
   }
   Flush(false); //in case there are no skipped... :P
+
+  preload.trigger.post();
   preload.lock.leave();
+
+
 
   glDisableClientState(GL_VERTEX_ARRAY);
   glDisableClientState(GL_COLOR_ARRAY);
@@ -190,6 +217,49 @@ void NexusMt::Draw(unsigned int cell, DrawContest &contest) {
     exit(0);
     break;
   }
+}
+
+Patch &NexusMt::GetPatch(unsigned int patch, float error, bool flush) { 
+  Entry &entry = operator[](patch);
+  if(entry.patch) return *(entry.patch);
+
+  while(flush && ram_used > ram_max) {
+    if(heap[0].error == 0) break;
+    unsigned int to_flush = heap[0].id;
+    pop_heap(heap.begin(), heap.end());
+    heap.pop_back();
+    FlushPatch(to_flush);
+  }
+  entry.patch = LoadPatch(patch);
+  heap.push_back(Item(patch, error));
+  push_heap(heap.begin(), heap.end());
+  return *(entry.patch);
+}
+
+void NexusMt::Flush(bool all) {
+  if(all) {
+    for(unsigned int i = 0; i < heap.size(); i++) {
+      unsigned int patch = heap[i].id;
+      FlushPatch(patch);
+    }
+    heap.clear();
+  } else {
+    while(heap.size() && ram_used > ram_max) {    
+      if(heap[0].error == 0) break;
+      unsigned int to_flush = heap[0].id;
+      pop_heap(heap.begin(), heap.end());
+      heap.pop_back();
+      FlushPatch(to_flush);
+    }
+  }
+}
+
+bool NexusMt::CanAdd(Item &item) {
+  if(!heap.size()) return true;
+  Entry &entry = operator[](item.id);
+  if(ram_used + entry.ram_size < ram_max)
+    return true;
+  return heap[0].error > item.error;
 }
 
 void NexusMt::FlushPatch(unsigned int id) {
