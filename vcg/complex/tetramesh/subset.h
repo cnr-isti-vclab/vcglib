@@ -26,6 +26,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/05/14 15:43:41  turini
+Initial Commit
+
 
 
 ****************************************************************************/
@@ -74,10 +77,6 @@ struct InsertedVT
 @param ST_CONT (Template Parameter) Specifies the type of the container of tetrahedron.
 @param subSet Container of tetrahedron.
 @param m destination mesh.
-*/
-/*
-template <class S_MESH_TYPE, class STL_CONT>
-void SubSet(STL_CONT & subSet, S_MESH_TYPE & m)
 */
 template <class S_TETRAMESH_TYPE, class STL_CONT >
 void SubSet(TM_TYPE & m, STL_CONT & subSet, )
