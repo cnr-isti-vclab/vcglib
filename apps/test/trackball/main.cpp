@@ -1,13 +1,15 @@
 #include <iostream>
 using namespace std;
 
+#ifdef _WIN32
 #include<windows.h>
+#endif
+
 #include <SDL/SDL.h>
 
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glut.h>
+//#include <GL/glew.h>
 #include <wrap/gui/trackball.h>
+#include <GL/glut.h>
 
 using namespace vcg;
 
@@ -59,8 +61,9 @@ bool init() {
 
 
 
-int wmain(int argc, unsigned short **argv) {  
+int main(int argc, unsigned short **argv) {  
   if(!init()) return -1;
+  glewInit();
   
   Trackball trackball;
 
@@ -113,18 +116,18 @@ int wmain(int argc, unsigned short **argv) {
           break;
         case SDL_MOUSEBUTTONDOWN:       
           x = event.button.x;
-          y = event.button.y;          
+          y = height - event.button.y;          
           trackball.MouseDown(x, y, Trackball::BUTTON_LEFT);
         break;
         case SDL_MOUSEBUTTONUP:          
           x = event.button.x;
-          y = event.button.y;          
+          y = height - event.button.y;          
           trackball.MouseUp(x, y, Trackball::BUTTON_LEFT);
           break;
         case SDL_MOUSEMOTION: 
           while(SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_MOUSEMOTIONMASK));
           x = event.motion.x;
-          y = event.motion.y;
+          y = height - event.motion.y;
           trackball.MouseMove(x, y);        
           break;  
       }
@@ -134,15 +137,15 @@ int wmain(int argc, unsigned short **argv) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(60, 1, 0.1, 100);
-	  glMatrixMode(GL_MODELVIEW);
-	  glLoadIdentity();
-	  gluLookAt(0,0,8,   0,0,0,   0,1,0);        
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(0,0,6,   0,0,0,   0,1,0);        
     glRotatef(130, 1, 1, 0);
-    glTranslatef(0, 0.7, 1);
+    glTranslatef(0, 1, 1);
     
     
-    trackball.SetPosition(Similarityf(Point3f(1, 0, 0)));
-    trackball.local.sca = 0.5;
+    //    trackball.SetPosition(Similarityf(Point3f(1, 0, 0)));
+    //    trackball.local.sca = 0.5;
     trackball.GetView();
     trackball.Apply();
     trackball.Draw();
