@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/03/12 15:25:29  cignoni
+Corrected bug on the return of a wrong iterator
+
 Revision 1.2  2004/03/03 15:35:52  cignoni
 Yet another cr lf mismatch
 
@@ -182,11 +185,7 @@ static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu
         if(!(*vi).IsD())
         {
           if(VertexType::HasVFAdjacency())
-          {
-            pu.Update((*fi).F(0));
-            pu.Update((*fi).F(1));
-            pu.Update((*fi).F(2));
-          }
+            pu.Update((*vi).Fp());
         }
         		// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
 		unsigned int siz=m.face.size()-n;	
