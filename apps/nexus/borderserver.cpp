@@ -43,7 +43,7 @@ void BorderServer::AddBorder(unsigned short _size, unsigned int used) {
   entry.used = used;
   entry.links = NULL;
   push_back(entry);
-  Redim(entry.start * sizeof(Link) + _size * sizeof(Link));
+  Redim((int64)entry.start * (int64)sizeof(Link) + (int64)_size * (int64)sizeof(Link));
 }
 
 Border &BorderServer::GetBorder(unsigned int border, bool flush) { 
@@ -84,7 +84,7 @@ void BorderServer::ResizeBorder(unsigned int border, unsigned int used) {
     capacity = entry.size * 2;
   
   unsigned int newstart = Length()/sizeof(Link);  
-  Redim((newstart + capacity) * sizeof(Link));
+  Redim((int64)(newstart + capacity) * (int64)sizeof(Link));
   Link *newlinks = new Link[capacity];
   if(entry.used > 0) {
     assert(entry.links);
@@ -103,8 +103,8 @@ void BorderServer::FlushBorder(unsigned int border) {
   Border &entry = operator[](border);
   //assert(entry.links);
   if(entry.size && !MFile::IsReadOnly()) { //write back patch
-    MFile::SetPosition((int64)entry.start * sizeof(Link));
-    MFile::WriteBuffer(entry.links, entry.used * sizeof(Link));
+    MFile::SetPosition((int64)entry.start * (int64)sizeof(Link));
+    MFile::WriteBuffer(entry.links, entry.used * (int64)sizeof(Link));
   }
   if(entry.links)
     delete [](entry.links);
@@ -114,10 +114,10 @@ void BorderServer::FlushBorder(unsigned int border) {
 
 Link *BorderServer::GetRegion(unsigned int start, unsigned int size) {
   if(size == 0) return NULL;  
-  SetPosition((int64)start * sizeof(Link));
+  SetPosition((int64)start * (int64)sizeof(Link));
   Link *buf = new Link[size];
   assert(buf);
-  ReadBuffer(buf, size * sizeof(Link));
+  ReadBuffer(buf, (int64)size * (int64)sizeof(Link));
   return buf;
 }
 
