@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/08/27 00:39:28  ponchio
+Rewrote.
+
 Revision 1.3  2004/07/20 14:06:02  ponchio
 Changed filename saving.
 
@@ -60,7 +63,8 @@ class PChain {
 
 
   virtual void RemapFaces(Crude &crude, VFile<unsigned int> &face_remap,
-			  std::vector<unsigned int> &patch_faces) = 0;
+			  std::vector<unsigned int> &patch_faces, 
+			  float scaling, int steps) = 0;
 
   /* virtual unsigned int Levels() = 0;
   

@@ -45,7 +45,14 @@ using namespace tri;
 using namespace nxs;
 using namespace std;
 
-void Cluster(MyMesh &mesh, unsigned int target_faces);
+float Clustering(unsigned int target_faces, 
+	       vector<Point3f> &newvert, 
+	       vector<unsigned int> &newface,
+	       vector<Link> &newbord,
+	       vector<int> &vert_remap) {
+}
+
+float Cluster(MyMesh &mesh, unsigned int target_faces);
 
 float Decimate(unsigned int target_faces, 
 	       vector<Point3f> &newvert, 
@@ -128,8 +135,9 @@ float Decimate(unsigned int target_faces,
   FinalSize = mesh.fn - FinalSize; //number of faces to remove
   FinalSize/=2; //Number of vertices to remove
   DeciSession.SetTargetOperations(FinalSize);
-  DeciSession.DoOptimization(); 
-  float error = 1; //get error;
+  //  DeciSession.DoOptimization(); 
+  float error = Cluster(mesh, target_faces);
+  //  float error = DeciSession.currMetric/4;//1; //get error;
   int t3=clock();	
   
   /*  printf(" vol %d \n lkv %d \n lke %d \n lkf %d \n ood %d\n bor %d\n ",
@@ -176,7 +184,7 @@ float Decimate(unsigned int target_faces,
   return error;
 }
 
-void Cluster(MyMesh &mesh, unsigned int target_faces) {
+float Cluster(MyMesh &mesh, unsigned int target_faces) {
   unsigned int starting = mesh.vn;
   cerr << "starting face: " << mesh.fn << endl;
   //veramente brutale
@@ -200,6 +208,7 @@ void Cluster(MyMesh &mesh, unsigned int target_faces) {
     }
   }
   
+  float error = 0;
   cerr << "done" << endl;
   map<float, pair<int, int> >::iterator s;
   for(s = dist.begin(); s != dist.end(); s++) {
@@ -214,6 +223,7 @@ void Cluster(MyMesh &mesh, unsigned int target_faces) {
     assert(!mesh.vert[source].IsD());
 
     mesh.vert[source].SetD();
+    error = (*s).first;
     remap[source] = target;
     remap[target] = target;
     toremove -= 2;
@@ -238,5 +248,5 @@ void Cluster(MyMesh &mesh, unsigned int target_faces) {
     }
   }
   cerr << "Ending faces: " << mesh.fn << endl;
-  
+  return error;
 }

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/09/17 15:25:09  ponchio
+First working (hopefully) release.
+
 Revision 1.2  2004/09/16 14:25:16  ponchio
 Backup. (lot of changes).
 
@@ -97,15 +100,20 @@ float Decimate(unsigned int target_faces,
 
 void ReverseHistory(vector<Nexus::Update> &history);
 
+enum Decimation { QUADRIC, CLUSTER };
+
 int main(int argc, char *argv[]) {
 
+  Decimation decimation = QUADRIC;
   unsigned int patch_size = 1000;
   unsigned int patch_threshold = 200;
+  unsigned int optimization_steps = 5;
+  bool stop_after_remap = false;
   unsigned int max_level = 0xffffffff;
   float scaling = 0.5;
 
   int option;
-  while((option = getopt(argc, argv, "f:t:l:s:")) != EOF) {
+  while((option = getopt(argc, argv, "f:t:l:s:d:ro:")) != EOF) {
     switch(option) {
     case 'f': patch_size = atoi(optarg);
       if(patch_size == 0 || patch_size > 32000) {
@@ -131,12 +139,24 @@ int main(int argc, char *argv[]) {
 	cerr << "Must be 0 < scaling < 1" << endl;
       }
       break;
+    case 'd': 
+      if(!strcmp("quadric", optarg)) 
+	decimation = QUADRIC;
+      else if(!strcmp("cluster", optarg)) 
+	decimation = CLUSTER;
+      else {
+	cerr << "Unknown decimation method: " << optarg << endl;
+	return -1;
+      }
+      break;
+    case 'r': stop_after_remap = true; break;
+    case 'o': optimization_steps = atoi(optarg); break;
     default: cerr << "Unknown option: " << (char)option << endl;
       return -1;
     }
   }
 
-  //Test there are still 2 arguments
+  //Test that there are still 2 arguments
   if(optind != argc - 2) {
     cerr << "Usage: " << argv[0] << " <crude> <output> [options]\n";
     cerr << "  Options:\n";
@@ -144,6 +164,7 @@ int main(int argc, char *argv[]) {
     cerr << " -t N: mini faces per patch (default 200)\n";
     cerr << " -l N: number of levels\n";
     cerr << " -s F: scaling factor (0 < F < 1, default 0.5)\n\n";
+    cerr << " -d <method>: decimation method: quadric, cluster. (default quadric)\n";
     return -1;
   }
 
@@ -154,23 +175,21 @@ int main(int argc, char *argv[]) {
   }
   
   if(patch_size > crude.vert.Size()/2) {
-    cerr << "Patch size too big: " << patch_size << " ~ " << crude.vert.Size()
+    cerr << "Patch size too big: " << patch_size << " * 2 > " << crude.vert.Size()
 	 << endl;
     return -1;
   }
 
   string output = argv[optind+1];
 
-  Signature signature = HAS_FACES;
   Nexus nexus;
-  if(!nexus.Create(output, signature)) {
+  if(!nexus.Create(output, HAS_FACES)) {
     cerr << "Could not create nexus output: " << output << endl;
     return -1;
   }
 
-  VoronoiChain vchain;
-  vchain.Initialize(patch_size, patch_threshold);
-  vchain.scaling = scaling;
+  VoronoiChain vchain(patch_size, patch_threshold);
+  //  vchain.scaling = scaling;
 
   //Now building level 0 of the Nexus
 
@@ -200,12 +219,13 @@ int main(int argc, char *argv[]) {
   //Remapping faces and vertices using level 0 and 1 of the chain
 
   vector<unsigned int> patch_faces;
-  vchain.RemapFaces(crude, face_remap, patch_faces);
+  vchain.RemapFaces(crude, face_remap, patch_faces, scaling, optimization_steps);
   
   vector<unsigned int> patch_verts;
   patch_verts.resize(patch_faces.size(), 0);
   RemapVertices(crude, vert_remap, face_remap, patch_verts);
   
+  if(stop_after_remap) return 0;
 
   //allocate chunks for patches and copy faces (absoklute indexing) into them.
   NexusAllocate(crude, nexus, face_remap, patch_faces, patch_verts);
@@ -231,8 +251,9 @@ int main(int argc, char *argv[]) {
     cerr << "Level: " << level << endl;
 
     unsigned int newoffset = nexus.index.size();
-    vchain.BuildLevel(nexus, oldoffset);
+    vchain.BuildLevel(nexus, oldoffset, scaling, optimization_steps);
     
+    cerr << "Level built\n";
     vector<Nexus::Update> level_history;
     map<unsigned int, set<unsigned int> >::iterator fragment;
     for(fragment = vchain.oldfragments.begin(); 
@@ -662,13 +683,24 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
 
       Nexus::Entry &rentry = nexus.index[link.end_patch];
       //TODO if !true reallocate borders.
+
+      Border rborder = nexus.GetBorder(link.end_patch);
       if(rentry.border_used >= rentry.border_size) {
 	cerr << "patch: " << link.end_patch << endl;
 	cerr << "used: " << rentry.border_used << endl;
 	cerr << "size: " << rentry.border_size << endl;
+	unsigned int start = nexus.borders.Size();
+	nexus.borders.Resize(nexus.borders.Size() + 2 * rentry.border_size);
+	Link *tmp = new Link[rentry.border_size];
+	memcpy(tmp, &rborder[0], sizeof(Link) * rentry.border_size);
+	rentry.border_start = start;
+	rentry.border_size *= 2;
+	rborder = nexus.GetBorder(link.end_patch);
+	memcpy(&rborder[0], tmp, sizeof(Link) * rentry.border_used);
+	delete []tmp;
       }
       assert(rentry.border_used < rentry.border_size);
-      Border rborder = nexus.GetBorder(link.end_patch);
+
 
       Link &newlink = rborder[rentry.border_used++];
       newlink.start_vert = link.end_vert;
@@ -695,8 +727,7 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
 
 
     Nexus::Entry &entry = nexus.index[patch_idx];
-    //    entry.error = error;
-    entry.error = level;
+    entry.error = error;
     
     Patch patch = nexus.GetPatch(patch_idx);
     memcpy(patch.FaceBegin(), &faces[0], 

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/08/27 00:39:28  ponchio
+Rewrote.
+
 Revision 1.2  2004/07/01 21:35:34  ponchio
 int -> Key
 
@@ -50,7 +53,7 @@ using namespace nxs;
 
 bool Seed::Dist(const Point3f &point, float &mindist, 
 		   Point3f &res) {
-  float newdist = Distance(p, point); 
+  float newdist = Distance(p, point) * weight; 
   if(newdist < mindist) {
     mindist = newdist;
     res = p;

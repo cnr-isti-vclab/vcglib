@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/09/16 14:25:16  ponchio
+Backup. (lot of changes).
+
 Revision 1.1  2004/08/26 18:03:48  ponchio
 First draft.
 
@@ -48,16 +51,23 @@ namespace nxs {
 
 class VoronoiChain: public PChain {
  public:
-  VoronoiChain():scaling(0.5), patch_size(1000), patch_threshold(300) {}
-  virtual ~VoronoiChain() {}
-  void Initialize(unsigned int psize, unsigned int pthreshold);
-  void Init(Crude &crude);
+  unsigned int mean_size; //mean number of faces per patch
+  unsigned int min_size;  //minimum number of faces per patch (soft)
+  unsigned int max_size;  //max number of faces per patch (hard);
 
+  VoronoiChain(unsigned int mean_s = 1000,
+	       unsigned int min_s = 300,
+	       unsigned int max_s = 32000):
+    mean_size(mean_s), min_size(min_s), max_size(max_s) {}
+  virtual ~VoronoiChain() {}
+
+  void Init(Crude &crude, float scaling, int steps);
   virtual unsigned int Locate(unsigned int level, const vcg::Point3f &p);
   void RemapFaces(Crude &crude, VFile<unsigned int> &face_remap,
-		  std::vector<unsigned int> &patch_faces);
+		  std::vector<unsigned int> &patch_faces, float scaling, 
+		  int steps);
 
-  void BuildLevel(Nexus &nexus, unsigned int offset);
+  void BuildLevel(Nexus &nexus, unsigned int offset, float scaling, int steps);
 
   std::vector<VoronoiPartition> levels;
 
@@ -65,9 +75,6 @@ class VoronoiChain: public PChain {
   std::map<unsigned int, std::set<unsigned int> > newfragments;
   std::map<unsigned int, std::set<unsigned int> > oldfragments;
   // private:
-  float scaling;
-  unsigned int patch_size;
-  unsigned int patch_threshold;
 
   float radius;
   vcg::Box3f box;

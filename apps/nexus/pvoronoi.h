@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/08/27 00:39:28  ponchio
+Rewrote.
+
 Revision 1.4  2004/07/20 14:17:51  ponchio
 *** empty log message ***
 
@@ -113,6 +116,7 @@ namespace nxs {
     unsigned int count(unsigned int key);
     Seed &operator[](unsigned int key);
     void clear();
+    void reload() { ug_seeds = all_seeds; ug.Set(ug_seeds); }
     unsigned int Locate(const vcg::Point3f &p);
     float Priority(const vcg::Point3f &p, unsigned int key);
     
@@ -184,7 +188,7 @@ namespace nxs {
       return radius;
     }
   
- private:    
+    // private:    
   vcg::Box3f bbox;
     vcg::GridStaticPtr< std::vector<Seed> > ug;
     std::vector<Seed> all_seeds;
