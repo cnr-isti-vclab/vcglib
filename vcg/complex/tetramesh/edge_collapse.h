@@ -144,6 +144,9 @@ struct TetraSets
     v0_U_v1.clear();
     no_E.clear();
     E.clear();
+	indexE.clear();
+	indexv0.clear();
+	indexv1.clear();
   }
 };
 
@@ -197,7 +200,8 @@ static FacePair _FindNoEdgeFace(TetraType *t,int edge)
 #ifdef _DEBUG
 static void _AssertingVolume(TetraType *t)
 {
-		assert(t->ComputeVolume() >0);
+		//assert(t->ComputeVolume() >0);
+		assert(vcg::ComputeVolume<TetraType>(*t)>0);
 }
 #endif
 
@@ -205,8 +209,8 @@ static void _AssertingVolume(TetraType *t)
 ///collpse de edge specified by pos (the first vertex on edge remain)
 static int _Collapse(PosType p,CoordType NewP)
 {
-			int n_deleted=0;
-			vector<TetraType*> To_Del;
+	  int n_deleted=0;
+	  vector<TetraType*> To_Del;
       VertexType *Vrem=(p.T()->V(Tetra::VofE(p.E(),0)));
       VertexType *Vdel=(p.T()->V(Tetra::VofE(p.E(),1)));
       //Vrem->P()=(Vrem->P()*alfa)+(Vdel->P()*(1.f-alfa));
@@ -218,9 +222,9 @@ static int _Collapse(PosType p,CoordType NewP)
 			while (!pos.LoopEnd())
 			{
 				//get the two faces that doesn't share the edge
-        FacePair fp=_FindNoEdgeFace(pos.T(),pos.E());
-        int fa0=fp.first;
-        int fa1=fp.second;
+				FacePair fp=_FindNoEdgeFace(pos.T(),pos.E());
+				int fa0=fp.first;
+				int fa1=fp.second;
 
 				//now set the T-T topology on that faces
 				TetraType *tleft=pos.T()->TTp(fa0);
@@ -228,13 +232,13 @@ static int _Collapse(PosType p,CoordType NewP)
 				int ileft=pos.T()->TTi(fa0);
 				int iright=pos.T()->TTi(fa1);
 				
-        //in this case I cannot do the collapse
+				 //in this case I cannot do the collapse
 				assert (!((pos.T()==tleft)&&(pos.T()==tright)));
 				
-        //case no one is extern face
+				//case no one is extern face
 				if ((!pos.T()->IsBorderF(fa0))&&(!pos.T()->IsBorderF(fa1)))
-          //connect the 2 tetrahedrons
-          Topology::_AttachTTTopology(tleft,ileft,tright,iright);	
+				//connect the 2 tetrahedrons
+				Topology::_AttachTTTopology(tleft,ileft,tright,iright);	
 				else
 				  //case f2 is an extern face
 				if (pos.T()->IsBorderF(fa0))
@@ -257,10 +261,10 @@ static int _Collapse(PosType p,CoordType NewP)
 				//i remove the tetrahedrons that have the edge
 				// to collapse
 				Topology::DetachVTTopology(pos.T());
+
 				//end setting the V-T topology	
-        To_Del.push_back(pos.T());
+				To_Del.push_back(pos.T());
 				pos.NextT();
-			  
 				n_deleted++;
 //        tm.tn--;
       }
@@ -276,22 +280,23 @@ static int _Collapse(PosType p,CoordType NewP)
       VTIterator< TetraType> VTi(Vdel->VTb(),Vdel->VTi());
 			while (!VTi.End())
 			{	
-        TetraType *T_Change=VTi.Vt();
-        int index=VTi.Vi();
-        //VTi++;
+				TetraType *T_Change=VTi.Vt();
+				int index=VTi.Vi();
+				//VTi++;
 				//assegning the vertex that remain
 				T_Change->V(index)=Vrem;
-        Topology::DetachVTTopology(Vdel,T_Change);
+				Topology::DetachVTTopology(Vdel,T_Change);
 				Topology::InsertVTTopology(Vrem,index,T_Change);
 				//that's cause i restart everytime in the chain 
 				//from the vertex
-        VTi.Vt()=Vdel->VTb();
+			    VTi.Vt()=Vdel->VTb();
 				VTi.Vi()=Vdel->VTi();
 #ifdef _DEBUG
        _AssertingVolume(T_Change);
 #endif
        
-			}	
+			}
+
       if (Vdel->IsB())
         Vrem->SetB();
       //set as deleted the vertex
@@ -338,7 +343,6 @@ static bool isMarkedF(Face F,char M)
  else return ((*FI).second & M);
 }
 
-///this structure is used to find the sets that are used in link conditions and more
 
 ///verify the link conditions on faces
 static bool _LinkConditionsF(PosType pos) 
@@ -351,8 +355,10 @@ static bool _LinkConditionsF(PosType pos)
 		// Mark edges of ve0 
     vector< TetraType *>::iterator ti=_Sets().v0.begin(); 
     vector< char >::iterator en=_Sets().indexv0.begin();
+	VertexType *v0=(*ti)->V(*en);
     while (ti!=_Sets().v0.end())
     {
+	  assert(v0==(*ti)->V(*en));
       //put dummy face
       for (int f=0;f<3;f++)
       {
@@ -398,9 +404,10 @@ static bool _LinkConditionsF(PosType pos)
     //and at the end I verify if the intersection is equal to the star of the edge
     ti=_Sets().v1.begin(); 
     en=_Sets().indexv1.begin();
+	VertexType *v1=(*ti)->V(*en);
     while (ti!=_Sets().v1.end())
     {
-
+	  assert(v1==(*ti)->V(*en));
       //dummy edges control
       for (int f=0;f<3;f++)
       {
@@ -415,7 +422,7 @@ static bool _LinkConditionsF(PosType pos)
             ((isMarkedF(f_test1,LINK_V0))&&(!isMarkedF(f_test1,LINK_EE)))||
             ((isMarkedF(f_test2,LINK_V0))&&(!isMarkedF(f_test2,LINK_EE))))
 					{
-						FAIL::LKF();
+//						FAIL::LKF();
             return false;
 					}
         }
@@ -425,6 +432,7 @@ static bool _LinkConditionsF(PosType pos)
     }
     return true;
 }
+
 
 ///verify the link conditions on edges
 static bool _LinkConditionsE(PosType pos) 
@@ -501,7 +509,7 @@ static bool _LinkConditionsE(PosType pos)
             ((isMarkedE(e_test1,LINK_V0))&&(!isMarkedE(e_test1,LINK_EE)))||
             ((isMarkedE(e_test2,LINK_V0))&&(!isMarkedE(e_test2,LINK_EE))))
 					{
-						FAIL::LKE();
+//						FAIL::LKE();
             return false;
 					}
         }
@@ -512,15 +520,63 @@ static bool _LinkConditionsE(PosType pos)
     return true;
 }
 
+static bool _QuickConditions(PosType pos)
+{	
+  VertexType *v0=pos.T()->V(Tetra::VofE(pos.E(),0));
+  VertexType *v1=pos.T()->V(Tetra::VofE(pos.E(),1));
+
+  //if the two vertices are of border and the edge is not a border edge
+  //we can do it.
+
+  bool border0=v0->IsB();
+  bool border1=v1->IsB();
+  bool bordere=Topology::IsExternEdge(pos.T(),pos.E());
+
+  //first case vertex external and edge internal
+	if ((border0 && border1)&&(!bordere))
+	{
+		return false;
+	}
+ 	else /// look if the 2 other faces that don't share the vertex are external on not
+	{
+	
+	vector< TetraType *>::iterator ti=_Sets().E.begin(); 
+	vector< char >::iterator en=_Sets().indexE.begin();
+		//mark them as intersection
+    while (ti!=_Sets().E.end())
+    {
+		//get the two faces that doesn't share the edge
+		FacePair fp=_FindNoEdgeFace(pos.T(),pos.E());
+		int fa0=fp.first;
+		int fa1=fp.second;
+
+		//now set the T-T topology on that faces
+		TetraType *tleft=pos.T()->TTp(fa0);
+		TetraType *tright=pos.T()->TTp(fa1);
+		int ileft=pos.T()->TTi(fa0);
+		int iright=pos.T()->TTi(fa1);
+				
+		 //in this case I cannot do the collapse
+		if (((pos.T()==tleft)&&(pos.T()==tright)))
+		{
+			return false;
+		}
+		ti++;
+		en++;
+	}		
+	
+	}
+		return true;
+}
 
 ///verify the link conditions on vertices
 static bool _LinkConditionsV() 
 { 	
-    const int LINK_V0 = VertexType::NewUserBit();
-		const int LINK_V1 = VertexType::NewUserBit();
-    const int LINK_EE = VertexType::NewUserBit();
+    const int LINK_V0 = VertexType::NewBitFlag();
+	const int LINK_V1 = VertexType::NewBitFlag();
+    const int LINK_EE = VertexType::NewBitFlag();
     
-		const int NOT_LINKED = ~(LINK_V0 | LINK_V1 | LINK_EE);
+	const int NOT_LINKED = ~(LINK_V0 | LINK_V1 | LINK_EE);
     _DummyV().Flags() &= NOT_LINKED;
 
     VertexType *vt0;
@@ -624,18 +680,18 @@ static bool _LinkConditionsV()
 
       if (!correct)
       {
-        VertexType::DeleteUserBit(LINK_EE);
-        VertexType::DeleteUserBit(LINK_V1);
-        VertexType::DeleteUserBit(LINK_V0); 
-				FAIL::LKV();
+        VertexType::DeleteBitFlag(LINK_EE);
+        VertexType::DeleteBitFlag(LINK_V1);
+        VertexType::DeleteBitFlag(LINK_V0); 
+//				FAIL::LKV();
         return (false);
       }
       en++;
       ti++;
     }
-    VertexType::DeleteUserBit(LINK_EE);
-    VertexType::DeleteUserBit(LINK_V1);
-    VertexType::DeleteUserBit(LINK_V0);
+    VertexType::DeleteBitFlag(LINK_EE);
+    VertexType::DeleteBitFlag(LINK_V1);
+    VertexType::DeleteBitFlag(LINK_V0);
     return true;
 }
 
@@ -644,36 +700,34 @@ static bool _FlipCondition(PosType pos,CoordType NewP)
 {	
   int edge=pos.E();
   VertexType *ve0=pos.T()->V(Tetra::VofE(edge,0));
-	VertexType *ve1=pos.T()->V(Tetra::VofE(edge,1));
-	CoordType oldpos0;
+  VertexType *ve1=pos.T()->V(Tetra::VofE(edge,1));
+  CoordType oldpos0;
   CoordType oldpos1;
-  //CoordType newpos=((ve0->P()*alfa)+(ve1->P()*(1.f-alfa)));
 
   vector< TetraType *>::iterator ti=_Sets().no_E.begin();
 
-  //verification
+  //saving old position
   oldpos0 = ve0->P();
-	oldpos1 = ve1->P();
+  oldpos1 = ve1->P();
 
   //assegning new position
   ve0->P() =NewP;
-	ve1->P() =NewP;
+  ve1->P() =NewP;
 
 	while (ti!=_Sets().no_E.end())
     {
 			assert(!(*ti)->IsD());
-      assert((((*ti)->V(0)==ve0)||((*ti)->V(1)==ve0)||((*ti)->V(2)==ve0)||((*ti)->V(3)==ve0))^
+			assert((((*ti)->V(0)==ve0)||((*ti)->V(1)==ve0)||((*ti)->V(2)==ve0)||((*ti)->V(3)==ve0))^
             (((*ti)->V(0)==ve1)||((*ti)->V(1)==ve1)||((*ti)->V(2)==ve1)||((*ti)->V(3)==ve1)));
-
 			if (vcg::ComputeVolume<TetraType>(**ti)<=0)
 			{	
-				FAIL::VOL();
-        ve0->P()=oldpos0;
+//				FAIL::VOL();
+				ve0->P()=oldpos0;
 				ve1->P()=oldpos1;
-  			return false;
+  			    return false;
 			}
 			ti++;	
-		  }
+	}
 
   //reset initial value
 	ve0->P()=oldpos0;
@@ -758,24 +812,28 @@ static bool  CheckPreconditions(PosType pos,CoordType NewP)
   bool border0=v0->IsB();
   bool border1=v1->IsB();
   bool bordere=Topology::IsExternEdge(pos.T(),pos.E());
-
-  //first case vertex external and edge internal
-	if ((border0 && border1)&&(!bordere))
+	if (!_QuickConditions(pos))
 	{
-		FAIL::BOR();
+		//FAIL::BOR();
 		return false;
 	}
+ // //first case vertex external and edge internal
+	//if ((border0 && border1)&&(!bordere))
+	//{
+	//	//FAIL::BOR();
+	//	return false;
+	//}
  	else
   //if both vertex are internal so is enougth to verify flip conditions
 	if ((!border0) && (!border1))
-			return (_FlipCondition(pos,NewP));
-  else
-  //if the edge is internal is enougth to verify link condition on vertex
-  if (!bordere)
+	   return (_FlipCondition(pos,NewP));
+	else
+	//if the edge is internal is enougth to verify link condition on vertex
+	if (!bordere)
       return((_FlipCondition(pos,NewP))&&(_LinkConditionsV()));
-  else
-  //at the end if trh edge is on the border we must verify also with the complete test
-		return ((_FlipCondition(pos,NewP))&&(_LinkConditionsV())&&(_LinkConditionsE(pos))&&(_LinkConditionsF(pos)));
+	else
+	//at the end if trh edge is on the border we must verify also with the complete test
+	  return ((_FlipCondition(pos,NewP))&&(_LinkConditionsV())&&(_LinkConditionsE(pos))&&(_LinkConditionsF(pos)));
    //return false;
 }
 
