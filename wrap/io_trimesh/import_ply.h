@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/03/09 21:26:47  cignoni
+cr lf mismatch
+
 Revision 1.1  2004/03/03 15:00:51  cignoni
 Initial commit
 
@@ -33,6 +36,8 @@ Initial commit
 #include<wrap/ply/plylib.h>
 #include<wrap/io_trimesh/io_mask.h>
 #include<wrap/io_trimesh/io_ply.h>
+#include<vcg/complex/trimesh/allocate.h>
+
 
 
 namespace vcg {
@@ -585,7 +590,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 					return -1;
 				}
 				int remainder=0;
-				int startface=m.face.size();
+				//int startface=m.face.size();
 				for(k=0;k<tsa.size-2;++k)
 				{
 					if(pi.cb && (k%1000)==0) pi.cb(50+k*50/tsa.size,"Tristrip Face Loading");				
