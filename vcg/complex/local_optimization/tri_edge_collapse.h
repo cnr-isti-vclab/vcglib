@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.14  2004/11/23 10:34:23  cignoni
+  passed parameters by reference in many funcs and gcc cleaning
+
   Revision 1.13  2004/10/25 16:28:32  ganovelli
   pos to edge
 
@@ -56,10 +59,12 @@ namespace tri{
 
 /** \addtogroup trimesh */
 /*@{*/
-/// This Class is specialization of LocalModification for the edge collapse
+/// This Class is specialization of LocalModification for the edge collapse.
 /// It wraps the atomic operation EdgeCollapse to be used in a optimizatin routine.
 /// Note that it has knowledge of the heap of the class LocalOptimization because
-/// it is responsible of updating it after a collapse has been performed
+/// it is responsible of updating it after a collapse has been performed; 
+/// This is the base class of all the specialized collapse classes like for example Quadric Edge Collapse. 
+/// Each derived class 
 
 template<class TriMeshType,class MYTYPE>
 class TriEdgeCollapse: public LocalOptimization<TriMeshType>::LocModType , public EdgeCollapse<TriMeshType> 
@@ -143,18 +148,16 @@ public:
   inline void Execute(TriMeshType &m)
   {	
     CoordType MidPoint=(pos.V(0)->P()+pos.V(1)->P())/2.0;
-	int FaceDel=DoCollapse(pos, MidPoint);
+	  int FaceDel=DoCollapse(pos, MidPoint);
     m.fn-=FaceDel;
     --m.vn;
   }
   
+  static bool IsSymmetric() { return true;}
   
- inline  void UpdateHeap(HeapType & h_ret)
+  inline  void UpdateHeap(HeapType & h_ret)
   {
-#ifdef __SAVE__LOG__
-static FILE * co = fopen("col.txt","w");
-#endif //SAVE__LOG__
-		GlobalMark()++;int nn=0;
+		GlobalMark()++; int nn=0;
 		VertexType *v[2];
 		v[0]= pos.V(0);v[1]=pos.V(1);	
 		v[1]->IMark() = GlobalMark();
@@ -177,26 +180,16 @@ static FILE * co = fopen("col.txt","w");
 			{
 				if( !(vfi.F()->V1(vfi.I())->IsV()) && (vfi.F()->V1(vfi.I())->IsRW()))
 				{
-#ifdef __SAVE__LOG__
-					fprintf(co,"%i %i \n",vfi.F()->V(vfi.I())-&*mt->vert.begin(),
-					vfi.F()->V1(vfi.I())-&*mt->vert.begin());
-#endif //SAVE__LOG__
-
 				vfi.F()->V1(vfi.I())->SetV();
 				h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.F()->V(vfi.I()),vfi.F()->V1(vfi.I())),GlobalMark())));
 				std::push_heap(h_ret.begin(),h_ret.end());
-				//if(false){				
-				//	h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.F()->V1(vfi.I()),vfi.F()->V(vfi.I())),GlobalMark())));
-				//	std::push_heap(h_ret.begin(),h_ret.end());
-				//	}
+				if(this->IsSymmetric()){				
+					h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.F()->V1(vfi.I()),vfi.F()->V(vfi.I())),GlobalMark())));
+					std::push_heap(h_ret.begin(),h_ret.end());
+				}
       }
 				if(  !(vfi.F()->V2(vfi.I())->IsV()) && (vfi.F()->V2(vfi.I())->IsRW()))
 				{
-#ifdef __SAVE__LOG__
-			fprintf(co,"%i %i \n",vfi.F()->V(vfi.I())-&*mt->vert.begin(),
-			vfi.F()->V2(vfi.I())-&*mt->vert.begin());
-#endif //SAVE__LOG__
-
 					vfi.F()->V2(vfi.I())->SetV();
 				h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.F()->V(vfi.I()),vfi.F()->V2(vfi.I())),GlobalMark())));
 				std::push_heap(h_ret.begin(),h_ret.end());
