@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/03/11 11:47:20  tarini
+minor updates, corrections, added documentations, etc.
+
 
 Revision 1.1  2004/03/08 19:46:47  tarini
 First Version (tarini)
@@ -101,10 +104,10 @@ public:
 	  if (_p0[2]<_p1[2]) { t.min[2]=_p0[2];t.max[2]=_p1[2];} else { t.min[2]=_p1[2];t.max[2]=_p0[2];}
 	  return t; }
 		/// returns segment length
-	SegmentType &Length()
+	ScalarType Length()
 	{ return (_p0 - _p1).Norm(); }
 		/// return segment squared lenght
-	SegmentType &SquaredLength()
+	ScalarType SquaredLength()
 	{ return (_p0 - _p1).SquaredNorm(); }
 	  /// flips: a-b becomes b-a
 	void Flip()
