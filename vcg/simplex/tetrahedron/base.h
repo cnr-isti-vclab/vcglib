@@ -24,13 +24,16 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/04/15 08:54:20  pietroni
+*** empty log message ***
+
 
 ****************************************************************************/
 
 #ifndef TETRA_TYPE 
 #pragma message("\nYou should never directly include this file\_n")
 #else
-#define TETRA_TYPE
+#define NULL 0
 #include<vcg/space/point3.h>
 #include<vcg/space/tetra4.h>
 
@@ -72,7 +75,7 @@ vcg::TetrahedronFull::SetUserBit() vcg::TetrahedronFull::ClearUserBit() and vcg:
 /// This are the flags of tetrahedron, the default value is 0
 	int  _flags;
  
-enum {
+  enum {
 	DELETED     = 0x00000001,	 // deleted tetrahedron flag
 	SELECTED		= 0x00000002,	 // Selection flag
 	BORDERF0    = 0x00000004,  // Border flag, Face 0
@@ -133,10 +136,7 @@ void SetS() {_flags |=SELECTED;}
 /// This function mark the tetrahedron as not selected.
 void ClearS() {_flags &=~SELECTED;}
 /// This function return true if one face is extern.
-bool HaveBorderF() 
-{
-  {return ((_flags & (BORDERF0 | BORDERF1 | BORDERF2 | BORDERF3)) != 0);}
-{
+bool HaveBorderF() {return ((_flags & (BORDERF0 | BORDERF1 | BORDERF2 | BORDERF3)) != 0);}
 /// This function return true if the face is extern.
 bool IsBorderF(int face) {
   assert ((face<4)&&(face>-1));
@@ -167,12 +167,12 @@ protected:
 	VertexType *_v[4];
 public:
   /// The Functions to access a vertex
-  	inline  MVTYPE * &V(int index) 
+  	inline  VertexType * &V(int index) 
 	{
 		return _v[index];
 	}
   /// The Functions to access a vertex
-	inline  const MVTYPE * &V(int index) const
+	inline  const VertexType * &V(int index) const
 	{
 		return _v[index];
 	}
@@ -197,12 +197,12 @@ public:
   ///Function to access the Tetrahedron that share the index-face (extern face returns a pointer to himself)
   	TETRA_TYPE *&T(const int &index)
 	{
-		return t[index];
+		return _t[index];
 	}
   ///Function to see the index of the face as seen from the other tetrahedron (extern face returns -1)
 	int &Z(const int &index)
 	{
-		return z[index];
+		return _z[index];
 	}
 #endif 
 
@@ -237,7 +237,7 @@ public:
 		_flags=0;
 	}
   ///initialize default parameters of tetrahedron
-	virtual 	void Init(MVTYPE * p0,MVTYPE * p1,MVTYPE * p2,MVTYPE * p3)
+	virtual 	void Init(VertexType * p0,VertexType * p1,VertexType * p2,VertexType * p3)
 				{
 					_flags = 0;
 					_v[0]=p0;
@@ -249,12 +249,12 @@ public:
 						swap(_v[1],_v[2]);
 
 #ifdef		__VCGLIB_TETRA_A
-					z[0]=z[1]=z[2]=z[3]=-1;
-					t[0]=t[1]=t[2]=t[3]=NULL;
+					_z[0]=_z[1]=_z[2]=_z[3]=-1;
+					_t[0]=_t[1]=_t[2]=_t[3]=NULL;
 #endif
 #ifdef		__VCGLIB_TETRA_V
-					zv[0]=zv[1]=zv[2]=zv[3]=-1;
-					tv[0]=tv[1]=tv[2]=tv[3]=NULL;
+					_zv[0]=_zv[1]=_zv[2]=_zv[3]=-1;
+					_tv[0]=_tv[1]=_tv[2]=_tv[3]=NULL;
 #endif					
 			}
  ///set border vertices using TT-topology
@@ -278,16 +278,21 @@ public:
 //@{
 
 #ifdef __VCGLIB_TETRA_Q
-		scalar_type _volume;	
-		scalar_type _aspect_ratio; 
+		ScalarType _volume;	
+		ScalarType _aspect_ratio; 
 #endif
 
-#ifdef __VCGLIB_TETRA_Q
- 	scalar_type ComputeVolume(){
-      Tetra4<scalar_type> T(V(0)->cP(),V(1)->cP(),V(2)->cP(),V(3)->cP());
+
+ 	ScalarType ComputeVolume(){
+      Tetra4<ScalarType> T(V(0)->cP(),V(1)->cP(),V(2)->cP(),V(3)->cP());
+      #ifdef __VCGLIB_TETRA_Q
 			_volume = T.ComputeVolume();
+      return _volume;
+      #else
+       return (T.ComputeVolume());
+      #endif
 		}
-#endif
+
 
 	///return the volume of the tetrahedron
 	const double & Volume(){
@@ -307,123 +312,6 @@ public:
 		}
 //@}
 
-/***********************************************/
-/** @Tatrahedron Functions to retrieve information about relation between faces of tetrahedron
-(faces,adges,vertices).**/
-//@{
-
-	MVTYPE *FV(const int &indexF,const int &indexV)
-	{	int facevert[4][3]={{0,1,2},
-					{0,3,1},
-					{0,2,3},
-					{1,3,2}};
-		assert ((indexF<4)&&(indexV<3));
-		return _v[facevert[indexF][indexV]];
-	}
-
-	int iFV(const int &indexF,const int &indexV)
-	{	int facevert[4][3]={{0,1,2},
-					{0,3,1},
-					{0,2,3},
-					{1,3,2}};
-
-		assert ((indexF<4)&&(indexV<3));
-		return facevert[indexF][indexV];
-	}
-
-	int VF(const int &indexV,const int &indexF)
-	{	int vertface[4][3]={{0,1,2},
-					{0,3,1},
-					{0,2,3},
-					{1,3,2}};
-
-		assert ((indexV<4)&&(indexF<3));
-		return vertface[indexV][indexF];
-	}
-
-	int FVE(const int &indexF,const int &indexV)
-	{	
-	
-		int facevertedge[4][4]={{1,0,3,-1},
-						{2,0,-1,4},
-						{-1,3,5,4},
-						{1,-1,5,2}
-						};
-		assert ((indexF<4)&&(indexV<4));
-		return facevertedge[indexF][indexV];
-	}
-
-	inline  MVTYPE * VE(const int &indexE,const int &indexV) 
-	{	int edgevert[6][2]={{0,1},
-					{0,2},
-					{0,3},
-					{1,2},
-					{1,3},
-					{2,3}};
-		assert ((indexE<6)&&(indexV<2));
-		return _v[edgevert[indexE][indexV]];
-	}
-// Tetrahedron Vertex (Couple) To Edge Conversion Function
-	inline int VEC(const int &indexV1,const int &indexV2) 
-		{	int ve[4][4]={{-1,  0,  1,  2},
-						  { 0, -1,  3,  4},
-						  { 1,  3, -1,  5},
-						  { 2,  4,  5, -1}};
-
-			assert ((indexV1<4)&&(indexV2<4));
-			return ve[indexV1][indexV2];
-		}
-
-	inline int EV(const int &indexV,const int &indexE) 
-	{	
-		int vertedge[4][3]={{0,1,2},
-											{0,3,4},
-											{5,1,3},
-											{4,5,2}};
-		assert ((indexE<3)&&(indexV<4));
-		return vertedge[indexV][indexE];
-	}
-	
-	inline int iVE(const int &indexE,const int &indexV) 
-	{	int edgevert[6][2]={{0,1},
-					{0,2},
-					{0,3},
-					{1,2},
-					{1,3},
-					{2,3}};
-		assert ((indexE<6)&&(indexV<2));
-		return edgevert[indexE][indexV];
-	}
-
-	inline  int FE(const int &indexE,const int &indexSide) 
-	{	int edgeface[6][2]={{0,1},
-					{0,2},
-					{1,2},
-					{0,3},
-					{1,3},
-					{2,3}};
-
-		assert ((indexE<6)&&(indexSide<2));
-		return edgeface [indexE][indexSide];
-	}
-
-	inline  int EF(const int &indexF,const int &faceindexEdge) 
-	{	int faceedge[4][3]={{0,3,1},
-					{2,4,0},
-					{1,5,2},
-					{4,5,3}
-					};
-
-		assert ((indexF<4)&&(faceindexEdge<3));
-		return faceedge [indexF][faceindexEdge];
-	}
-
-//@}
-
-
-
-
-	
 
 };//end class
 
