@@ -4,6 +4,7 @@
 #include <qimage.h>
 #include <qdir.h> 
 #include <qmessagebox.h> 
+#include <qslider.h>
 
 extern Segmentator *s;
 
@@ -66,7 +67,7 @@ void SimpleGLWidget::LoadTexture(QString p,int level)
 	QString PathFile=Path;
 	PathFile.append(Qd[level]);
 
-	bool b=qI.load(PathFile,qformat);
+	qI.load(PathFile,qformat);
 	QImage tx = QGLWidget::convertToGLFormat (qI);
 
 	
@@ -155,7 +156,7 @@ void drawForces(Segmentator::Part_VertexContainer *pv,int typeForce)
 {
 Segmentator::Part_VertexContainer::iterator vi;
 glPushAttrib(GL_ALL_ATTRIB_BITS);
-glLineWidth(0.3);
+glLineWidth(0.3f);
 glDisable(GL_NORMALIZE);
 glDisable(GL_LIGHTING);
 glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
@@ -169,7 +170,7 @@ else
 if (typeForce==2)
 	glColor3d(0,1,0);
 
-for (vi=pv->begin();vi<pv->end();vi++)
+for (vi=pv->begin();vi<pv->end();++vi)
 {
 	glBegin(GL_LINE_LOOP);
 	vcg::glVertex((*vi).P());
@@ -262,8 +263,7 @@ void SimpleGLWidget::SmoothMesh()
 }
 
 void SimpleGLWidget::glDraw(){
-	
-	glClearColor(0.2,0.2,0.2,1);
+	glClearColor(0.2f,0.2f,0.2f,1.f);
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -336,31 +336,42 @@ void SimpleGLWidget::glDraw(){
 		else
 			glPolygonMode(GL_FRONT,GL_FILL);
 
-		int i=0;
 		if (s->m!=NULL)
 		{
 			glBegin(GL_TRIANGLES);
 			for (fi=s->m->face.begin();fi<s->m->face.end();fi++)
 			{
-				glColor3d(0.4,0.8,0.8);
-			if (fi->intersected)
-				glColor3d(1.f,0,0);
+				if(!(*fi).IsD())
+				{
+					glColor3d(0.4,0.8,0.8);
+					if (fi->intersected)
+						glColor3d(1.f,0,0);
 
-			if (((blocked)&&(!fi->IsBlocked()))||(!blocked))
-			{
-				
-				if (!wire)
-					vcg::glNormal(fi->Normal());
+					if (((blocked)&&(!fi->IsBlocked()))||(!blocked))
+					{
+						if (!wire)
+						{
+							vcg::glNormal(fi->V(0)->N());
+							vcg::glVertex(fi->V(0)->P());
+							vcg::glNormal(fi->V(1)->N());
+							vcg::glVertex(fi->V(1)->P());
+							vcg::glNormal(fi->V(2)->N());
+							vcg::glVertex(fi->V(2)->P());
+						}
+						else
+						{
+							vcg::glVertex(fi->V(0)->P());
+							vcg::glVertex(fi->V(1)->P());
+							vcg::glVertex(fi->V(2)->P());
+						}
 
-				vcg::glVertex(fi->V(0)->P());
-				vcg::glVertex(fi->V(1)->P());
-				vcg::glVertex(fi->V(2)->P());
+					}
+				}
 			}
 		}
 		glEnd();
-		}
-		glPopMatrix();
-		//WriteInfo();
+	glPopMatrix();
+	//WriteInfo();
 		
 	}
 	QGLWidget::glDraw();
@@ -442,18 +453,21 @@ void SimpleGLWidget::mousePressEvent ( QMouseEvent * e )
 		//LoadMatrix();
 		glReadPixels(e->x(),_H-e->y(),1,1,GL_DEPTH_COMPONENT,GL_FLOAT,&winz);
 		gluUnProject(e->x(),_H-e->y(),winz,modelMatrix,projection,viewport,&x,&y,&z);
-		QString color="";
-		color.sprintf("%i",s->gray_init);
-		//w->Color->text()=color;
+
 		SetExtractionParameters();
-		//s->SetInitialBarycenter(Point3f(x,y,_numslide));
-		//s->InitSegmentation(Point3f(x,y,_numslide));
 		s->InitSegmentation(Point3f(x,y,z));
+		w->slider1->setValue(s->gray_init);
+
 		UpdateBBMesh();
 		//vcg::tri::UpdateBounding<Segmentator::MyTriMesh>::Box(*(s->m));
 		repaint();
 	}
 	//vcg::tri::UpdateBounding<Segmentator::MyTriMesh>::Box(s->m);
+}
+
+void SimpleGLWidget::setColor()
+{
+	s->gray_init=w->slider1->value();
 }
 
 void SimpleGLWidget::wheelEvent(QWheelEvent *e)
@@ -520,7 +534,7 @@ void SimpleGLWidget::SetExtractionParameters()
 		//int color =atoi(w->Color->text());
 		///to modify
 
-		s->SetSegmentParameters(s->gray_init,tolerance,mass,k_elanst,dihedral,timestep,edge,Point3f(1.f,1.f,dinstance));
+		s->SetSegmentParameters(tolerance,mass,k_elanst,dihedral,timestep,edge,Point3f(1.f,1.f,dinstance));
 	}
 
 void SimpleGLWidget::mouseMoveEvent ( QMouseEvent * e )
@@ -536,7 +550,7 @@ void SimpleGLWidget::mouseMoveEvent ( QMouseEvent * e )
 
 void SimpleGLWidget::initializeGL(){
 
-	GLfloat f[4]={0.2,0.2,0.2,1.f};
+	GLfloat f[4]={0.2f,0.2f,0.2f,1.f};
 	GLfloat p[4]={3,3,5,0};
 	glLightfv(GL_LIGHT0, GL_AMBIENT,f);
 	glLightfv(GL_LIGHT1, GL_POSITION,p);

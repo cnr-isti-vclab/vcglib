@@ -32,6 +32,7 @@ public:
 	//control if two faces share an edge
 	bool ShareEdge(SimplexType *f0,SimplexType *f1)
 	{
+		assert((!f0->IsD())&&(!f1->IsD()));
 		for (int i=0;i<3;i++)
 				if (f0->FFp(i)==f1)
 					return (true);
@@ -49,6 +50,7 @@ public:
 	//control if two faces share a vertex
 	bool ShareVertex(SimplexType *f0,SimplexType *f1)
 	{
+		assert((!f0->IsD())&&(!f1->IsD()));
 		for (int i=0;i<3;i++)
 			for (int j=0;j<3;j++)
 				if (f0->V(i)==f1->V(j))
@@ -61,7 +63,7 @@ public:
 	bool TestRealIntersection(SimplexType *f0,SimplexType *f1)
 	{
 		
-		if (((!f0->IsActive())&&(!f1->IsActive()))||(f0->IsD())||(f1->IsD()))
+		if ((f0->IsD())||(f1->IsD())||((!f0->IsActive())&&(!f1->IsActive())))
 			return false;
 		//no adiacent faces
 		if ((f0!=f1)&& (!ShareEdge(f0,f1))
@@ -71,26 +73,28 @@ public:
 	}
 
 	///refresh all the elements of spatial hashing table 
-	///this function must called sometimes
 	void RefreshElements()
 	{
 		HTable->Clear();
 		vactive.clear();///new
 		for (SimplexIterator si=_simplex.begin();si<_simplex.end();++si)
 		{
-			if ((!(*si).IsD())&&(!(*si).IsActive()))
-					HTable->addSimplex(&*si);
-			///new now
-			else
+			if (!(*si).IsD())
 			{
-				std::vector<Point3i> cells=HTable->addSimplex(&*si);
-				for(std::vector<Point3i>::iterator it=cells.begin();it<cells.end();it++)
-					vactive.insert(*it);
-			}
+			if (!(*si).IsActive())
+				HTable->addSimplex(&*si);
+			///new now
+				else
+				{
+					std::vector<Point3i> cells=HTable->addSimplex(&*si);
+					for(std::vector<Point3i>::iterator it=cells.begin();it<cells.end();it++)
+						vactive.insert(*it);
+				}
 			///end new now
-		}
+			}
 
 		//UpdateStep();	commented  now
+		}
 	}
 	
 	/////put active cells on apposite structure
@@ -116,7 +120,7 @@ public:
 		vactive.clear();
 		for (Container_Type::iterator si=simplex.begin();si<simplex.end();++si)
 		{
-			if ((((!(*si).IsD()))&&(*si).IsActive()))
+			if ((!(*si).IsD())&&((*si).IsActive()))
 			{
 				std::vector<Point3i> cells=HTable->addSimplex(&*si);
 				for(std::vector<Point3i>::iterator it=cells.begin();it<cells.end();it++)
@@ -125,6 +129,28 @@ public:
 		}
 	}
 
+	
+	///put active cells on apposite structure
+	void AddElements(typename ContSimplex::iterator newSimplex)
+	{
+		while (newSimplex!=_simplex.end())
+		{
+			if (!(*newSimplex).IsD())
+			{
+			if (!(*newSimplex).IsActive())
+				HTable->addSimplex(&*newSimplex);
+			///new now
+				else
+				{
+					std::vector<Point3i> cells=HTable->addSimplex(&*newSimplex);
+					for(std::vector<Point3i>::iterator it=cells.begin();it<cells.end();it++)
+						vactive.insert(*it);
+				}
+			///end new now
+			}
+			newSimplex++;
+		}
+	}
 
 	///control the real self intersection in the mesh and returns the elements that intersect with someone
 	std::vector<SimplexType*> computeSelfIntersection()

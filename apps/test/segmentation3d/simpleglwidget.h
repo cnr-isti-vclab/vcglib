@@ -63,6 +63,7 @@ public:
 	void OpenDirectory();
 	void MarchingCube();
 	void UpdateBBMesh();
+	void setColor();
 	
 	//virtual void keyPressEvent(QKeyEvent *qk);
 
@@ -163,5 +164,9 @@ public:
 		UpdateBBMesh();
 		repaint();
 	}
-
+	
+	void SetSegmentColor()
+	{
+		setColor();
+	}
 };

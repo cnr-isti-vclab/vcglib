@@ -14,7 +14,61 @@ SOURCES	+= D:/sf/wrap/gui/trackmode.cpp \
 	D:/sf/wrap/ply/plylib.cpp \
 	simpleglwidget.cpp \
 	main.cpp
-FORMS	= segmentform.ui
+FORMS	= segmentform.ui \
+	d:\sf\apps\test\segmentation3d\segmentform.ui
+IMAGES	= D:/sf/apps/test/segmentation3d/slider.jpg
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

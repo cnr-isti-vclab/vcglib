@@ -1,3 +1,5 @@
+#ifndef _SEG3D_VOLUMEDATASET
+#define _SEG3D_VOLUMEDATASET
 
 #include <qimage.h>
 #include <qdir.h>
@@ -481,3 +483,4 @@ public:
 	}
 
 };
+#endif
