@@ -34,7 +34,7 @@
 //#include <vcg/tools/plylib.h>
 #include <vcg/simplex/vertex/with/cmnq.h>
 #include <vcg/simplex/face/with/rtfmfn.h>
-#include <vcg/space/index/grid_static_obj.h>
+#include <vcg/space/index/grid_static_ptr.h>
 #include <vcg/complex/trimesh/base.h>
 
 
@@ -46,9 +46,7 @@ using namespace std;
 class MyEdge;
 class CFace;
 class CVertex   : public VertexCMNQ< double,MyEdge,CFace > {};
-class CFace     : public FaceRTFMFN< CVertex > {public:
-	CFace*& F(const int j){ return (CFace*&) FaceRTFMFN<CVertex>::F(j);}
-	};
+class CFace     : public FaceRTFMFN< CVertex,MyEdge,CFace > {};
 class CMesh     : public tri::TriMesh< vector<CVertex>, vector<CFace> > {};
 
 // -----------------------------------------------------------------------------------------------

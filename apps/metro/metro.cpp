@@ -36,7 +36,8 @@ bool SaveErrorAsColour              = false;
 
 inline char* GetExtension(char* filename)
 {
-    for(int i=strlen(filename)-1; i >= 0; i--)
+		size_t i;
+    for( i=strlen(filename)-1; i >= 0; i--)
         if(filename[i] == '.')
             break;
     if(i > 0)
@@ -46,18 +47,18 @@ inline char* GetExtension(char* filename)
 }
 
 
-void main(int argc, char**argv)
+int main(int argc, char**argv)
 {
     CMesh                 S1, S2;
     double                dist1_max, dist1_mean, dist1_RMS, volume_1;
     double                dist2_max, dist2_mean, dist2_RMS, volume_2;
     double                mesh_dist_max;
     unsigned long         n_samples_target, n_samples_output, elapsed_time;
-    double                n_samples_per_area_unit;
+    double								n_samples_per_area_unit;
     int                   flags, flags_fwd, flags_back, n_samples_area, n_samples_edge, n_samples_vertex, err;
     char                 *fmt, *hist_filename, *new_mesh_filename, *new_mesh_filename_2;
     char                  fname_1[] = STR_NEW_MESH_FILENAME_DEFAULT, fname_2[] = STR_NEW_MESH_FILENAME_DEFAULT_2;
-    FILE                 *fd;
+    //FILE                 *fd;
 
     // print program info
     printf("-------------------------------\n"
@@ -78,13 +79,13 @@ void main(int argc, char**argv)
         printf(MSG_ERR_UNKNOWN_FORMAT, fmt);
         exit(-1);
     }
-    if(!_stricmp(FILE_EXT_PLY, fmt))
-	{
+    if(!strcmp(FILE_EXT_PLY, fmt))
+			{
 		printf("reading the mesh `%s'...", argv[1]);		  
 		err = tri::io::ImporterPLY<CMesh>::Open(S1,argv[1]);
 	}
  /*   else
-        if(!_stricmp(FILE_EXT_SMF, fmt))
+        if(!strcmp(FILE_EXT_SMF, fmt))
 		{
 			printf("reading the mesh `%s'...", argv[1]);
 			err = tri::io::ImporterSMF::Open(S1,argv[1]);
@@ -109,13 +110,13 @@ void main(int argc, char**argv)
         printf(MSG_ERR_UNKNOWN_FORMAT, fmt);
         exit(-1);
     }
-    if(!_stricmp(FILE_EXT_PLY, fmt))
+    if(!strcmp(FILE_EXT_PLY, fmt))
 	{
 		printf("reading the mesh `%s'...", argv[2]);
        err = tri::io::ImporterPLY<CMesh>::Open(S2,argv[2]);
 	}
     /*else
-        if(!_stricmp(FILE_EXT_SMF, fmt))
+        if(!strcmp(FILE_EXT_SMF, fmt))
      	{
 			printf("reading the mesh `%s'...", argv[2]);
 		    err = S2.Load_Smf(argv[2]);
@@ -156,8 +157,8 @@ void main(int argc, char**argv)
                                     exit(0);
                             }
                             break;
-                case CMD_LINE_ARG_N_SAMPLES             :  NumberOfSamples       = true;     n_samples_target        = atoi(&(argv[i][2]));          break;
-                case CMD_LINE_ARG_SAMPLES_PER_AREA_UNIT :  SamplesPerAreaUnit    = true;     n_samples_per_area_unit = (double) atof(&(argv[i][2])); break;
+                case CMD_LINE_ARG_N_SAMPLES             :  NumberOfSamples       = true;     n_samples_target        = (unsigned long) atoi(&(argv[i][2]));          break;
+                case CMD_LINE_ARG_SAMPLES_PER_AREA_UNIT :  SamplesPerAreaUnit    = true;     n_samples_per_area_unit = (unsigned long) atoi(&(argv[i][2])); break;
                 case CMD_LINE_ARG_SAVE_DISPLACEMENT     :  SaveErrorDisplacement = true;     new_mesh_filename = &(argv[i][2]);
                                                            if(new_mesh_filename[0] == '\0')
                                                                new_mesh_filename = fname_1;
@@ -370,6 +371,7 @@ void main(int argc, char**argv)
     //else
     //    if(flags_back & FLAG_SAVE_ERROR_AS_COLOUR)
     //        S2.SavePly(new_mesh_filename_2, CMesh::SM_ALL & (CMesh::SM_ALL ^ CMesh::SM_VERTQUALITY));
+return 0;
 }
 
 // -----------------------------------------------------------------------------------------------

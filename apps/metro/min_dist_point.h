@@ -42,8 +42,12 @@
 #include <math.h>
 
 #include <vcg/space/point3.h>
+#include <vcg/space/box3.h>
 #include <vcg/space/Point4.h>
 #include <vcg/math/base.h>
+#include <vcg/space/index/grid_static_ptr.h>
+
+
 using namespace vcg;
 
 
@@ -68,7 +72,7 @@ void MinDistPoint( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & md
   typedef Box3<SCALAR> Box3x;
 	
 	if(!gr.bbox.IsIn(p)) return;
-	typedef GridStaticObj<typename MESH::FaceContainer>::Link A2UGridLink;
+	typedef typename GridStaticPtr<typename MESH::FaceContainer>::Link A2UGridLink;
   scalar ax = p[0] - gr.bbox.min[0];	// Real coodinate of point refer to
   scalar ay = p[1] - gr.bbox.min[1];	
   scalar az = p[2] - gr.bbox.min[2];
@@ -107,7 +111,7 @@ void MinDistPoint( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & md
 	//scalar error = gr.bbox.Diag();
 	scalar error = mdist;
 	Point3x q;
-	MESH::FaceIterator bestf = 0;
+	typename MESH::FaceIterator bestf = (typename MESH::FaceIterator)0;
 
   mesh.UnMarkAll();
 
@@ -129,7 +133,7 @@ void MinDistPoint( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & md
 				{
 					bestq = q;
 					bestf = l->Elem();
-					MESH::ScalarType alfa=1, beta=1, gamma=1;
+					typename MESH::ScalarType alfa=1, beta=1, gamma=1;
 					
 					//bestf->InterpolationParameters(q, alfa, beta);
 					//calcolo normale con interpolazione trilineare
@@ -171,7 +175,7 @@ void MinDistPoint( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & md
 										{
 											bestq = q;
 											bestf = l->Elem();
-											MESH::ScalarType alfa, beta, gamma;
+											typename MESH::ScalarType alfa, beta, gamma;
 											//bestf->InterpolationParameters(q, alfa, beta);
 											//calcolo normale con interpolazione trilineare
 											bestf->InterpolationParameters(q, alfa, beta, gamma);

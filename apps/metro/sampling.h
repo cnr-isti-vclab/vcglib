@@ -36,7 +36,7 @@
 //#include <vcg/tools/Align/Hist.h>
 #include <vcg/space/box3.h>
 #include <vcg/space/color4.h>
-#include <vcg/space/index/grid_static_obj.h>
+#include <vcg/space/index/grid_static_ptr.h>
 using namespace vcg;
 // -----------------------------------------------------------------------------------------------
 
@@ -67,7 +67,7 @@ template <class MetroMesh>
 class Sampling 
 {
 private:
-    typedef GridStaticObj< typename MetroMesh::FaceContainer > MetroMeshGrid;
+    typedef GridStaticPtr< typename MetroMesh::FaceContainer > MetroMeshGrid;
 		typedef Point3<typename MetroMesh::ScalarType> Point3x;
 
     // data structures
@@ -78,8 +78,8 @@ private:
 
     // parameters
     double          dist_upper_bound; 
-    double          n_samples_per_area_unit;
-    double          n_samples_target;
+    double					n_samples_per_area_unit;
+    unsigned long   n_samples_target;
     int             Flags;
     
     // results
@@ -119,17 +119,17 @@ public :
     double          GetDistMean()               {return mean_dist;}
     double          GetDistRMS()                {return RMS_dist;}
     double          GetDistVolume()             {return volume;}
-    double          GetNSamples()               {return n_total_samples;}
-    double          GetNAreaSamples()           {return n_total_area_samples;}
-    double          GetNEdgeSamples()           {return n_total_edge_samples;}
-    double          GetNVertexSamples()         {return n_total_vertex_samples;}
-    double          GetNSamplesPerAreaUnit()    {return n_samples_per_area_unit;}
-    double          GetNSamplesTarget()         {return n_samples_target;}
+    unsigned long   GetNSamples()               {return n_total_samples;}
+    unsigned long   GetNAreaSamples()           {return n_total_area_samples;}
+    unsigned long   GetNEdgeSamples()           {return n_total_edge_samples;}
+    unsigned long   GetNVertexSamples()         {return n_total_vertex_samples;}
+    double					GetNSamplesPerAreaUnit()    {return n_samples_per_area_unit;}
+    unsigned long   GetNSamplesTarget()         {return n_samples_target;}
 //    Hist            &GetHist()                  {return hist;}
     void            SetFlags(int flags)         {Flags = flags;}
     void            ClearFlag(int flag)         {Flags &= (flag ^ -1);}
     void            SetParam(double _n_samp)    {n_samples_target = _n_samp;}
-    void            SetSamplesTarget(int _n_samp);
+    void            SetSamplesTarget(unsigned long _n_samp);
     void            SetSamplesPerAreaUnit(double _n_samp);
 };
 
@@ -146,17 +146,17 @@ Sampling<MetroMesh>::Sampling(MetroMesh &_s1, MetroMesh &_s2):S1(_s1),S2(_s2)
 
 // set sampling parameters
 template <class MetroMesh>
-void Sampling<MetroMesh>::SetSamplesTarget(int _n_samp)
+void Sampling<MetroMesh>::SetSamplesTarget(unsigned long _n_samp)
 {
     n_samples_target        = _n_samp;
-    n_samples_per_area_unit = (double) n_samples_target / area_S1;
+    n_samples_per_area_unit =  n_samples_target / (double)area_S1;
 }
 
 template <class MetroMesh>
 void Sampling<MetroMesh>::SetSamplesPerAreaUnit(double _n_samp)
 {
     n_samples_per_area_unit = _n_samp;
-    n_samples_target        = (int)((double) n_samples_per_area_unit * area_S1);
+    n_samples_target        = (unsigned long)((double) n_samples_per_area_unit * area_S1);
 }
 
 
@@ -164,7 +164,7 @@ void Sampling<MetroMesh>::SetSamplesPerAreaUnit(double _n_samp)
 template <class MetroMesh>
 inline double Sampling<MetroMesh>::ComputeMeshArea(MetroMesh & mesh)
 {
-    MetroMesh::FaceIterator    face;
+    typename MetroMesh::FaceIterator    face;
     double                  area = 0.0;
 
     for(face=mesh.face.begin(); face != mesh.face.end(); face++)
@@ -177,9 +177,9 @@ inline double Sampling<MetroMesh>::ComputeMeshArea(MetroMesh & mesh)
 template <class MetroMesh>
 float Sampling<MetroMesh>::AddSample(const Point3x &p)
 {
-    MetroMesh::FaceType   *f=0;
+    typename MetroMesh::FaceType   *f=0;
     Point3x             normf, bestq, ip;
-		MetroMesh::ScalarType              dist;
+		typename MetroMesh::ScalarType              dist;
 
     dist = dist_upper_bound;
 
@@ -214,7 +214,7 @@ void Sampling<MetroMesh>::VertexSampling()
     float error;
     
     printf("Vertex sampling\n");
-    MetroMesh::VertexIterator vi;
+    typename MetroMesh::VertexIterator vi;
     for(vi=S1.vert.begin();vi!=S1.vert.end();++vi)
     {
         error = AddSample((*vi).cP());
@@ -269,13 +269,13 @@ template <class MetroMesh>
 void Sampling<MetroMesh>::EdgeSampling()
 {
     // Edge sampling.
-typedef pair<typename MetroMesh::VertexPointer, typename MetroMesh::VertexPointer> pvv;
-    vector< pvv > Edges;
+		typedef std::pair<typename MetroMesh::VertexPointer, typename MetroMesh::VertexPointer> pvv;
+		std::vector< pvv > Edges;
 
     printf("Edge sampling\n");
 
     // compute edge list.
-    MetroMesh::FaceIterator fi;
+    typename MetroMesh::FaceIterator fi;
     for(fi=S1.face.begin(); fi != S1.face.end(); fi++)
         for(int i=0; i<3; ++i)
         {
@@ -284,16 +284,16 @@ typedef pair<typename MetroMesh::VertexPointer, typename MetroMesh::VertexPointe
                 swap(Edges.back().first, Edges.back().second);
         }
     sort(Edges.begin(), Edges.end());
-    vector<pvv>::iterator edgeend = unique(Edges.begin(), Edges.end());
+		typename std::vector< pvv>::iterator edgeend = unique(Edges.begin(), Edges.end());
     Edges.resize(edgeend-Edges.begin());
 
     // sample edges.
-    vector<pvv>::iterator   ei;
+		std::vector<pvv>::iterator   ei;
     double                  n_samples_per_length_unit;
     double                  n_samples_decimal = 0.0;
     int                     cnt=0;
     if(Flags & FLAG_FACE_SAMPLING)
-        n_samples_per_length_unit = sqrt(n_samples_per_area_unit);
+        n_samples_per_length_unit = sqrt((double)n_samples_per_area_unit);
     else
         n_samples_per_length_unit = n_samples_per_area_unit;
     for(ei=Edges.begin(); ei!=Edges.end(); ++ei)
@@ -349,7 +349,7 @@ void Sampling<MetroMesh>::MontecarloFaceSampling()
     // Montecarlo sampling.
     int     cnt = 0;
     double  n_samples_decimal = 0.0;
-    MetroMesh::FaceIterator fi;
+    typename MetroMesh::FaceIterator fi;
 
     srand(clock());
  //   printf("Montecarlo face sampling\n");
@@ -425,7 +425,7 @@ void Sampling<MetroMesh>::SubdivFaceSampling()
     // Subdivision sampling.
     int     cnt = 0, maxdepth;
     double  n_samples_decimal = 0.0;
-    MetroMesh::FaceIterator fi;
+    typename MetroMesh::FaceIterator fi;
 
     printf("Subdivision face sampling\n");
     for(fi=S1.face.begin(); fi != S1.face.end(); fi++)
@@ -436,7 +436,7 @@ void Sampling<MetroMesh>::SubdivFaceSampling()
         if(n_samples)
         {
             // face sampling.
-            maxdepth = (int)log((double)n_samples)/log(2.0);
+            maxdepth = ((int)(log((double)n_samples)/log(2.0)));
             n_samples = 0;
             FaceSubdiv((*fi).V(0)->cP(), (*fi).V(1)->cP(), (*fi).V(2)->cP(), maxdepth);
         }
@@ -474,7 +474,7 @@ void Sampling<MetroMesh>::SimilarFaceSampling()
     // Similar Triangles sampling.
     int     cnt = 0, n_samples_per_edge;
     double  n_samples_decimal = 0.0;
-    MetroMesh::FaceIterator fi;
+    typename MetroMesh::FaceIterator fi;
 
     printf("Similar Triangles face sampling\n");
     for(fi=S1.face.begin(); fi != S1.face.end(); fi++)
@@ -505,7 +505,7 @@ void Sampling<MetroMesh>::SimilarFaceSampling()
 template <class MetroMesh>
 void Sampling<MetroMesh>::Hausdorff()
 {
-		Box3< MetroMesh::ScalarType> bbox;
+		Box3< typename MetroMesh::ScalarType> bbox;
 
     // set grid meshes.
     gS2.SetBBox(S2.bbox);
@@ -551,7 +551,7 @@ void Sampling<MetroMesh>::Hausdorff()
     // compute vertex colour
     if(Flags & FLAG_SAVE_ERROR_AS_COLOUR)
     {
-        MetroMesh::VertexIterator vi;
+        typename MetroMesh::VertexIterator vi;
         float   error;
         int     cnt = 0;
         for(vi=S1.vert.begin();vi!=S1.vert.end();++vi)
