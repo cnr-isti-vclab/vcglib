@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2005/02/08 12:43:03  ponchio
+Added copyright
+
 
 ****************************************************************************/
 
@@ -81,7 +84,7 @@ void nxs::ComputeNormals(Nexus &nexus) {
   tmpb.Flush();
   
 
-  map<unsigned int, unsigned int> levels;
+  vector<int> levels;
   nexus.history.BuildLevels(levels);
 
   //first step normals in the same patch.
@@ -90,7 +93,7 @@ void nxs::ComputeNormals(Nexus &nexus) {
   vector<Point3f> normals;
 
   for(unsigned int p = 0; p < nexus.size(); p++) {
-    unsigned int current_level = levels[p];
+    int current_level = levels[p];
     report.Step(p);
     Patch &patch = nexus.GetPatch(p);
     

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/02/08 12:43:03  ponchio
+Added copyright
+
 
 ****************************************************************************/
 
@@ -113,7 +116,7 @@ namespace nxs {
     bool UpdatesToQuick();
     bool IsQuick() { return buffer != NULL; }
 
-    void BuildLevels(std::map<unsigned int, unsigned int> &levels);
+    void BuildLevels(std::vector<int> &levels);
 
     int &quick() { return ((int *)buffer)[0]; }
     int &n_nodes() { return ((int *)buffer)[1]; }

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/02/08 12:43:03  ponchio
+Added copyright
+
 
 ****************************************************************************/
 
@@ -325,7 +328,7 @@ bool History::UpdatesToQuick() {
   return LoadPointers();
 }
 
-void History::BuildLevels(map<unsigned int, unsigned int> &levels) {
+void History::BuildLevels(vector<int> &levels) {
   levels.clear();
   if(buffer) {
     //Saved in quick mode:
@@ -336,7 +339,8 @@ void History::BuildLevels(map<unsigned int, unsigned int> &levels) {
       if(node != nodes) { //not root
 	Link *inlink = node->in_begin();
 	unsigned int p = inlink->begin()->patch;
-	assert(levels.count(p));
+	assert(p < levels.size());
+	assert(p >= 0);
 	current = levels[p]+1;
       }
       for(l = node->out_begin(); l != node->out_end(); l++) {
@@ -344,12 +348,12 @@ void History::BuildLevels(map<unsigned int, unsigned int> &levels) {
 	Link::iterator c;
 	for(c = link.begin(); c != link.end(); c++) {
 	  unsigned int p = (*c).patch;
+	  while(p >= levels.size()) levels.push_back(-1);
 	  levels[p] = current;
 	}
       }
     }
   } else {
-    cerr << "updates.size: " << updates.size() << endl;
     //Saved in updates mode:
     for(unsigned int i = 0; i < updates.size(); i++) {
       Update &u = updates[i];
@@ -357,7 +361,9 @@ void History::BuildLevels(map<unsigned int, unsigned int> &levels) {
       if(!u.erased.size()) current = 0;
       else current = levels[u.erased[0]] + 1;
       for(unsigned int i = 0; i < u.created.size(); i++) {
-	levels[u.created[i]] = current;
+	unsigned int p = u.created[i];
+	while(p >= levels.size()) levels.push_back(-1);
+	levels[p] = current;
       }
     }
   }
