@@ -24,12 +24,15 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/03/18 16:00:10  cignoni
+minor changes
+
 
 ****************************************************************************/
 
 #ifndef _VCG_FACE_TOPOLOGY
 #define _VCG_FACE_TOPOLOGY
-
+#include <vcg/simplex/face/pos.h>
 namespace vcg {
 namespace face {
 /** \addtogroup face */
@@ -43,7 +46,7 @@ template <class FaceType>
 inline bool IsManifold( FaceType const & f, const int j ) 
 {
   if(FaceType::HasFFAdjacency())
-	  return ( f.F(j) == &f || &f == f.F(j)->F(f.Z(j)) );
+	  return ( f.FFp(j) == &f || &f == f.FFp(j)->FFp(f.FFi(j)) );
   else 
     return true;
 }
@@ -56,7 +59,7 @@ template <class FaceType>
 inline bool IsBorder(FaceType const & f,  const int j ) 
 {
   if(FaceType::HasFFAdjacency())
-	  return f.F(j) == &f ;
+	  return f.FFp(j) == &f ;
   else 
     return true;
 }
@@ -84,17 +87,14 @@ inline int ComplexSize(FaceType const & f, const int e)
 {
 if(FaceType::HasFFAdjacency())
 {
+  Pos< FaceType > fpos(&f,e); 
   int cnt=0;
-	FACE_TYPE *fi=(FACE_TYPE *)this;
-	int nzi,zi=e;
-	do
-	{
-		nzi=fi->Z(zi);
-		fi=fi->F(zi);
-		zi=nzi;
+  do
+  {
+		fpos.NextF();
 		++cnt;
 	}
-	while(fi!=this);
+	while(fpos.f=&f);
 	return cnt;
 }
   assert(0);
@@ -110,29 +110,27 @@ if(FaceType::HasFFAdjacency())
 template <class FaceType>
 void Detach(FaceType & f, const int e)
 {
-	typedef FEdgePosB< FACE_TYPE > ETYPE;
-
 	assert(!IsBorder(e));
-	ETYPE EPB(this,e);  // la faccia dall'altra parte
+	Pos< FaceType > EPB(&f,e);  // la faccia dall'altra parte
 	EPB.NextF();
 	int cnt=0;
-	while ( EPB.f->F(EPB.z) != this)
+	while ( EPB.f->FFp(EPB.z) != &f)
 	{ 
 		assert(!IsManifold(e));   // Si entra in questo loop solo se siamo in una situazione non manifold.
 		assert(!EPB.f->IsBorder(EPB.z));
 		EPB.NextF();
 		cnt++;
 	}
-	assert(EPB.f->F(EPB.z)==this);
+	assert(EPB.f->FFp(EPB.z)==&f);
 
-	EPB.f->F(EPB.z) = F(e);
-	EPB.f->Z(EPB.z) = Z(e);
+	EPB.f->FFp(EPB.z) = F(e);
+	EPB.f->FFi(EPB.z) = Z(e);
 	
-	F(e) = this;
+	F(e) = &f;
 	Z(e) = e;
 
 	EPB.f->SetM();
-	this->SetM();
+	f.SetM();
 }
 
 
@@ -143,11 +141,11 @@ void Detach(FaceType & f, const int e)
 		@param z2 The edge of the face f2 
 */
 template <class FaceType>
-void Attach(int z1, FaceType *&f2, int z2)
+void Attach(FaceType * &f, int z1, FaceType *&f2, int z2)
 {
-	typedef FEdgePosB< FACE_TYPE > ETYPE;
-	ETYPE EPB(f2,z2);
-	ETYPE TEPB;
+	//typedef FEdgePosB< FACE_TYPE > ETYPE;
+	Pos< FaceType > EPB(f2,z2);
+	Pos< FaceType > TEPB;
 	TEPB = EPB;
 	EPB.NextF();
 	while( EPB.f != f2)  //Alla fine del ciclo TEPB contiene la faccia che precede f2
@@ -156,27 +154,27 @@ void Attach(int z1, FaceType *&f2, int z2)
 		EPB.NextF();
 	}
 	//Salvo i dati di f1 prima di sovrascrivere
-	face_base *f1prec = this->F(z1);  
-	int z1prec = this->Z(z1);
+	FaceType *f1prec = f.FFp(z1);  
+	int z1prec = f.FFi(z1);
 	//Aggiorno f1
-	this->F(z1) = TEPB.f->F(TEPB.z);  
-	this->Z(z1) = TEPB.f->Z(TEPB.z);
+	f->FFp(z1) = TEPB.f->FFp(TEPB.z);  
+	f->FFi(z1) = TEPB.f->FFi(TEPB.z);
 	//Aggiorno la faccia che precede f2
-	TEPB.f->F(TEPB.z) = f1prec;
-	TEPB.f->Z(TEPB.z) = z1prec;
+	TEPB.f->FFp(TEPB.z) = f1prec;
+	TEPB.f->FFi(TEPB.z) = z1prec;
 }
 
 
 template <class FaceType>
-void AssertAdj()
+void AssertAdj(FaceType & f)
 {
-	assert(F(0)->F(Z(0))==this);
-	assert(F(1)->F(Z(1))==this);
-	assert(F(2)->F(Z(2))==this);
+	assert(f.FFp(0)->FFp(f.FFi(0))==&f);
+	assert(f.FFp(1)->FFp(f.FFi(1))==&f);
+	assert(f.FFp(2)->FFp(f.FFi(2))==&f);
 
-	assert(F(0)->Z(Z(0))==0);
-	assert(F(1)->Z(Z(1))==1);
-	assert(F(2)->Z(Z(2))==2); 
+	assert(f.FFp(0)->FFi(f.FFi(0))==0);
+	assert(f.FFp(1)->FFi(f.FFi(1))==1);
+	assert(f.FFp(2)->FFi(f.FFi(2))==2); 
 }
 // Funzione di supporto usata da swap?
 //template <class FaceType>
@@ -195,30 +193,14 @@ template <class SwapFaceType>
 void Swap (SwapFaceType &f, const int z )
 {
   int i;
-  face_base *tmp, *prec;
+  SwapFaceType *tmp, *prec;
   int t, precz;
 
   swap ( f.V((z  )%3),f.V((z+1)%3));
 
   if(f.HasFFAdjacency() )
   {
-	swap ( f.F((z+1)%3),f.F((z+2)%3));
-	swap ( f.Z((z+1)%3),f.Z((z+2)%3));
-
-	for(i = 1; i < 3; i++)
-	{
-
-      tmp = this;
-      t = (z+i)%3;
-      do {
-					prec = tmp;
-					precz = t;
-					Nexts(tmp,t);
-      }
-      while (tmp != this);
-  
-      (*prec).Z(precz) = (z+i)%3;
-    }
+    // TODO!!!
   }
 }
 
