@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/08/25 15:27:51  ponchio
+Comma at end of enum.
+
 Revision 1.6  2004/08/25 15:15:27  ganovelli
 minor changes to comply gcc compiler (typename's and stuff)
 
@@ -213,8 +216,5 @@ static int OpenBinary( OpenMeshType &m, const char * filename, CallBackPos *cb=0
 } // end Namespace tri
 } // end Namespace io
 } // end Namespace vcg
-
-
-//@}
 
 #endif

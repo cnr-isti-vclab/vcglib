@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2004/10/07 14:25:38  ganovelli
+added camera and shot
+
 Revision 1.10  2004/09/08 15:15:05  ganovelli
 changes for gcc
 
@@ -73,11 +76,11 @@ namespace vcg {
 namespace tri {
 /** \addtogroup trimesh */
 /*@{*/
-
+/*@{*/
 /** Class Mesh.
     This is class for definition of a mesh.
-		@param VertContainer (Template Parameter) Specifies the type of the vertices container any the vertex type.
-		@param STL_FACE_CONT (Template Parameter) Specifies the type of the faces container any the face type.
+		@param VertContainerType (Template Parameter) Specifies the type of the vertices container any the vertex type.
+		@param FaceContainerType (Template Parameter) Specifies the type of the faces container any the face type.
  */
 template < class VertContainerType, class FaceContainerType >
 class TriMesh{
@@ -268,7 +271,7 @@ ScalarType Volume()
 
 
 };	// end class Mesh
-
+/*@}*/
 /*@}*/
 }	 // end namespace
 }	 // end namespace

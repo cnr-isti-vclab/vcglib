@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2004/10/18 17:14:42  ganovelli
+error FFP -> FFp
+
 Revision 1.12  2004/09/14 19:46:10  ganovelli
 constructor added
 
@@ -64,7 +67,7 @@ Initial commit
 
 ****************************************************************************/
 
-/** \file pos.h
+/** \file face/pos.h
  * Definition of vcg:face::Pos class.
  * This file contain the definition of vcg::face::Pos class and the derived vcg::face::PosN class.
  */

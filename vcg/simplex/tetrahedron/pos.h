@@ -97,8 +97,6 @@ void operator++()
 
 };
 
-/** \addtogroup tetra */
-/*@{*/
 
 /**  Templated over the class tetrahedron, it stores a \em position over a tetrahedron in a mesh.
 	It contain a pointer to the current tetrahedron, 
@@ -465,7 +463,7 @@ PosLoop(TetraType*  tp,const int  fap,const int  ep,
   }
 
 };
-
+//@}
   }//end namespace tetra
 }//end namespace vcg
 

@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/03/09 21:26:47  cignoni
+cr lf mismatch
+
 Revision 1.2  2004/03/03 15:35:53  cignoni
 Yet another cr lf mismatch
 
@@ -120,6 +123,5 @@ static bool Save(SaveMeshType &m, const char * filename , bool binary =true, con
 } // end Namespace vcg
 
 
-//@}
 
 #endif

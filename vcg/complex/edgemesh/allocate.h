@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/09/20 08:37:47  cignoni
+Better Doxygen docs
+
 Revision 1.2  2004/05/10 14:41:25  ganovelli
 name of adhacency function updated
 
@@ -77,12 +80,11 @@ public:
 };
 
 
-/** Function to add n vertices to the mesh. The second parameter hold a vector of 
-	pointers to pointer to elements of the mesh that should be updated after a 
-	possible vector realloc. 
-	@param n Il numero di vertici che si vuole aggiungere alla mesh.
-	@param local_var Vettore di variabili locali che rappresentano puntatori a vertici. 
-	restituisce l'iteratore al primo elemento aggiunto.
+/** Function to safely add n vertices to a mesh. 
+
+	@param m The mesh to be expanded
+	@param n the number of vertexes to be added
+	@param pu A PointerUpdater that stores the relocation that can be happened.
 */
 static VertexIterator AddVertices(MeshType &m,int n, PointerUpdater<VertexPointer> &pu)
 {

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2004/10/25 08:22:40  ganovelli
+IsBOrder (typecast on return type)
+
 Revision 1.22  2004/10/20 08:28:31  fiorin
 Added constant access function FFp and renamed F1 F2 to FFp1 FFp2
 
@@ -108,12 +111,14 @@ class DUMMYEDGETYPE;
 class DUMMYFACETYPE;
 class DUMMYTETRATYPE;
 
-/**
-\ingroup face
-    @name Face
-		Class Face.
-    This is the base class for definition of a face of the mesh.
-		@param FVTYPE (Templete Parameter) Specifies the vertex class type.
+/** \addtogroup face */
+//@{
+/*!
+ * This class represent the generic configurable Face; 
+ * Usually you never direclty use this class with this name but you build 
+ * your own type by directly including one of the .h files under the face/with 
+ * directory. Each file specify a class type with the desired fields. So for example 
+ * including 'vcg/simplex/face/with/FCFN.h' allow you to use the class FaceFCFN that has per-face color and normal stored inside.
  */
 template <class FVTYPE, class FETYPE, class FFTYPE, class TCTYPE = TCoord2<float,1> > class FACE_TYPE
 {
@@ -144,8 +149,7 @@ public:
 
 /***********************************************/
 /** @name Vertex Pointer
-    blah
-    blah
+Functions to access to the vertexes of the face;
 **/
   //@{
 protected:
@@ -1234,7 +1238,7 @@ void Swap ( const int z )
 }; //end Class
 
 
-
+//@}
 
 }	 // end namespace
 

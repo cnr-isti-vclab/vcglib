@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/09/20 09:30:03  cignoni
+Better Doxygen docs
+
 Revision 1.2  2004/05/10 14:41:45  ganovelli
 name of adhacency function updated
 
@@ -47,10 +50,10 @@ namespace edge {
 /** \addtogroup edgemesh */
 /*@{*/
 
-/** Class Mesh.
+/** \class EdgeMesh.
     This is class for definition of a mesh.
-		@param VertContainer (Template Parameter) Specifies the type of the vertices container any the vertex type.
-		@param STL_FACE_CONT (Template Parameter) Specifies the type of the faces container any the face type.
+		@param VertContainerType (Template Parameter) Specifies the type of the vertices container any the vertex type.
+		@param EdgeContainerType (Template Parameter) Specifies the type of the faces container any the face type.
  */
 template < class VertContainerType, class EdgeContainerType >
 class EdgeMesh{
@@ -176,19 +179,15 @@ void InitVertexIMark()
 int imark;
 
 /** Check if the vertex incremental mark matches the one of the mesh. 
-	@param v Vertex pointer
 */
 inline bool IsMarked( ConstVertexPointer  v ) const { return v->IMark() == imark; }
 /** Check if the face incremental mark matches the one of the mesh. 
-	@param v Face pointer
 */
 inline bool IsMarked( ConstEdgePointer f ) const { return f->IMark() == imark; }
 /** Set the vertex incremental mark of the vertex to the one of the mesh.
-	@param v Vertex pointer
 */
 inline void Mark( ConstVertexPointer v ) const { v->IMark() = imark; }
 /** Set the face incremental mark of the vertex to the one of the mesh.
-	@param v Vertex pointer
 */
 inline void Mark( ConstEdgePointer f ) const { f->IMark() = imark; }
 /// Unmark the mesh

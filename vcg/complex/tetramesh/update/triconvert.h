@@ -194,7 +194,6 @@ void ConvertCopy(TetraContainer &tetra,TriangleMeshType &trim)
 }
 
 	};// End class
-/*@}*/
 }	// End namespace
 }	// End namespace
 

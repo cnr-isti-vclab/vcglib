@@ -32,13 +32,14 @@
 #include<vcg/simplex/face/topology.h>
 #include<map>
 
+namespace vcg{
+namespace tri{	
+
 /** \addtogroup trimesh */
 /*@{*/
 /** This a static utlity class for the edge collapse. 
     It provides a common set of useful function for actually making an edge collapse over a trimesh. See also 
 **/
-namespace vcg{
-  namespace tri{	
 
 template <class TRI_MESH_TYPE> 
 class EdgeCollapse

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/05/10 14:42:17  ganovelli
+nimor changes
+
 
 ****************************************************************************/
 #ifndef __VCG_EDGE_UPDATE_TOPOLOGY
@@ -31,7 +34,7 @@ $Log: not supported by cvs2svn $
 #include <algorithm>
 namespace vcg {
 namespace edge {
-/** \addtogroup trimesh */
+/** \addtogroup edgemesh */
 /*@{*/
 
 template <class UpdateMeshType>

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2004/09/24 10:14:38  fiorin
+Corrected bug in cone
+
 Revision 1.8  2004/09/22 15:12:38  fiorin
 Corrected bug in hexahedron
 
@@ -49,7 +52,8 @@ First working version (tetrahedron!)
 #include<vcg/math/base.h>
 namespace vcg {
 namespace tri {
-/*@{*/
+/** \addtogroup trimesh */
+//@{
     /**
         A set of functions that builds meshes 
         that represent surfaces of platonic solids,
@@ -569,6 +573,7 @@ void Build( M & in, const V & v, const F & f)
 		in.face.push_back(ft);
 	}
 }
+//@}
 
 } // End Namespace TriMesh
 } // End Namespace vcg

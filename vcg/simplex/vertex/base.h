@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.20  2004/10/11 17:45:05  ganovelli
+added template on corrdinate type (default Point3)
+
 Revision 1.19  2004/09/28 15:24:56  fiorin
 DUMMY classes definition moved into vcg namespace
 
@@ -51,6 +54,9 @@ Revision 1.12  2004/05/10 13:31:13  ganovelli
 function for edge adjacency added
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2004/10/11 17:45:05  ganovelli
+added template on corrdinate type (default Point3)
+
 Revision 1.19  2004/09/28 15:24:56  fiorin
 DUMMY classes definition moved into vcg namespace
 
@@ -129,13 +135,14 @@ namespace vcg {
 	class DUMMYFACETYPE;
 	class DUMMYEDGETYPE;
 	class DUMMYTETRATYPE;
-/**
-    \ingroup vertex
-    @name Vertex
-    Class Vertex.
-    This is the base class for definition of a vertex of the mesh.
-	@param FLTYPE (Template Parameter) Specifies the scalar field of the vertex coordinate type.
-	@param VFTYPE (Template Parameter) Specifies the type for the face, needed only for VF adjacency.
+/** \addtogroup vertex */
+//@{
+/*!
+ * This class represent the generic configurable Vertex; 
+ * Usually you never direclty use this class with this name but you build 
+ * your own type by directly including one of the .h files under the face/with 
+ * directory. Each file specify a class type with the desired fields. So for example 
+ * including 'vcg/simplex/vertex/with/VCVN.h' allow you to use the class VertVCVN that has per-vertex color and normal stored inside.
  */
 template <class FLTYPE, class VETYPE = DUMMYEDGETYPE, class VFTYPE = DUMMYFACETYPE, class VTTYPE = DUMMYTETRATYPE,class TCTYPE = TCoord2<float,1>, class CoordTYPE= Point3<FLTYPE> > class VERTEX_TYPE
 {
@@ -873,7 +880,7 @@ template <class VERTEX_TYPE> typename VERTEX_TYPE::CoordType NormalizedNormalV(V
     return ((typename VERTEX_TYPE::CoordType) N/(typename VERTEX_TYPE::CoordType::ScalarType)i);
   }
 }
-
+//@}
 }	 // end namespace
 #endif
 

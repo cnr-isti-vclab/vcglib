@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/09/01 12:17:25  pietroni
+minor changes to comply gcc compiler (typename's )
+
 Revision 1.6  2004/06/25 11:25:07  pietroni
 changrd update for a vertex normal functions void PerVertex(VertexType *v)
 
@@ -60,7 +63,7 @@ Written some documentation and added to the trimes doxygen module
 namespace vcg {
 namespace tetra {
 
-/** \addtogroup trimesh */
+/** \addtogroup tetramesh */
 /*@{*/
 
 /// Management, updating and computation of per-vertex and per-face normals.

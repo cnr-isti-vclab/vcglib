@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2004/10/27 09:33:10  ganovelli
+cast from scalar type to float added
+
 Revision 1.8  2004/10/07 14:19:06  ganovelli
 shot/camera io added
 
@@ -603,5 +606,5 @@ std::vector<int> FlagV;
 } // end namespace tri
 } // end namespace io
 } // end namespace vcg
-
+//@}
 #endif

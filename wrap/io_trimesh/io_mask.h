@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/05/12 10:19:30  ganovelli
+new line added at the end of file
+
 Revision 1.2  2004/03/09 21:26:47  cignoni
 cr lf mismatch
 
@@ -34,10 +37,6 @@ Initial commit
 #ifndef __VCGLIB_IOTRIMESH_IO_MASK
 #define __VCGLIB_IOTRIMESH_IO_MASK
 
-/**
-@name Load and Save in Ply format
-*/
-//@{
 #include<wrap/callback.h>
 #include<wrap/ply/plylib.h>
 
@@ -45,6 +44,10 @@ namespace vcg {
 namespace tri {
 namespace io {
 
+/**
+@name Load and Save in Ply format
+*/
+//@{
   
 class PLYMask
 {
@@ -108,6 +111,7 @@ static void SMFlags2String( int mask, char str[] )
 }
 
 }; // end class
+//@}
 } // end namespace tri
 } // end namespace io
 } // end namespace vcg
