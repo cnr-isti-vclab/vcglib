@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/09/09 22:59:15  cignoni
+Removed many small warnings
+
 Revision 1.6  2004/07/15 00:15:16  cignoni
 inflate -> offset
 
@@ -67,24 +70,25 @@ bool CleaningFlag=false;
 void Usage()
 {
   printf("\nUsage:  "\
-                                        "metro file1 file2  [opt]\n"\
-                                        "where opt can be:\n"\
-                                        "-v         disable vertex sampling\n"\
-                                        "-e         disable edge sampling\n"\
-                                        "-f         disable face sampling\n"\
-                                        "-u         ignore unreferred vertices\n"\
-                                        "-Sx        set the face sampling mode\n"\
-                                        "           where x can be:\n"\
-                                        "            -S0  montecarlo sampling\n"\
-                                        "            -S1  subdivision sampling\n"\
-                                        "            -S2  similar triangles sampling (Default)\n"\
-                                        "-n#        set the required number of samples (overrides -A)\n"\
-                                        "-a#        set the required number of samples per area unit (overrides -N)\n"\
-                                        "-c         save error as vertex colour and quality"\
-                                        "-C # #     Set the min/max values used for color mapping"\
-                                        "-L         Remove duplicated and unreferenced vertices before processing"\
+                                        "metro file1 file2 [opt]\n"\
+                                        "Where opt can be:\n"\
+                                        "  -v         disable vertex sampling\n"\
+                                        "  -e         disable edge sampling\n"\
+                                        "  -f         disable face sampling\n"\
+                                        "  -u         ignore unreferred vertices\n"\
+                                        "  -Sx        set the face sampling mode\n"\
+                                        "             where x can be:\n"\
+                                        "              -S0  montecarlo sampling\n"\
+                                        "              -S1  subdivision sampling\n"\
+                                        "              -S2  similar triangles sampling (Default)\n"\
+                                        "  -n#        set the required number of samples (overrides -A)\n"\
+                                        "  -a#        set the required number of samples per area unit (overrides -N)\n"\
+                                        "  -c         save a mesh with error as per-vertex colour and quality\n"\
+                                        "  -C # #     Set the min/max values used for color mapping\n"\
+                                        "  -L         Remove duplicated and unreferenced vertices before processing\n"\
                                         "\n"
-                                        "Default options are to sample vertexes, edge and faces, to take a number of sample that is \n"
+                                        "Default options are to sample vertexes, edge and faces taking \n"
+                                        "a number of samples that is approx. 10x the face number.\n"
                                         );
   exit(-1);
 }
@@ -154,7 +158,7 @@ int main(int argc, char**argv)
  
     // print program info
     printf("-------------------------------\n"
-           "         Metro V.4.0 \n"
+           "         Metro V.4.01 \n"
            "     http://vcg.isti.cnr.it\n"
            "   release date: "__DATE__"\n"
            "-------------------------------\n\n");
@@ -298,7 +302,7 @@ int main(int argc, char**argv)
     
     printf("\nHausdorff distance: %f (%f  with respect to bounding box diagonal)\n",(float)mesh_dist_max,(float)mesh_dist_max/bbox.Diag());
     printf("  Computation time  : %d ms\n", (int)elapsed_time);
-    printf("  # samples/second  : %f\n\n", (float)n_total_sample/((float)elapsed_time/1000.0));
+    printf("  # samples/second  : %f\n\n", (float)n_total_sample/((float)elapsed_time/CLOCKS_PER_SEC));
 
     // save error files.
     if(flags & SamplingFlags::SAVE_ERROR)
