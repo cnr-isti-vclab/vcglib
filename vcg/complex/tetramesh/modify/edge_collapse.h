@@ -79,14 +79,99 @@ class EdgeCollapse
 		};
 
   private:
-  vector<TetraType*> To_Del;
-  Topology _Topo;
-  UpdateNormals _UN;
-  //typedef pair <VertexType*,VertexType*> VertPair;
-  typedef pair <int,int> FacePair;
+	typedef pair <int,int> FacePair;
+	struct Face
+	{
+			VertexType* v[3];
+
+      Face(	VertexType* a, VertexType* b,VertexType* c)
+           {
+						assert((a!=b)&&(b!=c)&&(a!=c));
+            v[0]=a;
+            v[1]=b;
+            v[2]=c;
+            sort(v,v+3);
+						}
+
+      const bool operator <(const Face & f) const 
+      {
+				return ((v[0]==f.v[0])?((v[1]==f.v[1])?(v[2]<f.v[2]):(v[1]<f.v[1])):(v[0]<f.v[0]));
+			}
+
+			const bool operator ==(const Face & f) const {
+			return ((v[0]==f.v[0])&&(v[1]==f.v[1])&&(v[2]==f.v[2]));
+			}
+
+      };
+
+	struct Edge{
+			VertexType* v0;
+      VertexType* v1;
+      Edge(	VertexType* a, VertexType* b){
+						assert(a!=b);
+						if(a<b) 
+							{v0=a;v1=b;}
+						else
+						{v1=a;v0=b;}
+      }
+			
+			const bool operator <(const Edge & e) const {
+				return (v0==e.v0)?(v1<e.v1):(v0<e.v0);
+			}
+
+			const bool operator ==(const Edge & e) const {
+			return (v0==e.v0)&&(v1==e.v1);
+			}
+
+};
+struct TetraSets
+{
+  std::vector <TetraType*> v0;
+  std::vector <TetraType*> v1;
+  std::vector <TetraType*> v0_U_v1;
+  std::vector <TetraType*> no_E;
+  std::vector <TetraType*> E;
+  std::vector <char> indexE;
+  std::vector <char> indexv0;
+  std::vector <char> indexv1;
+
+  void clear()
+  {
+    v0.clear();
+    v1.clear();
+    v0_U_v1.clear();
+    no_E.clear();
+    E.clear();
+  }
+};
+
+
+
+
+
+static map<Edge,char> & _EdgeMark(){
+	static map<Edge,char>  em;
+	return em;
+};
+
+static map<Face,char> & _FaceMark(){
+	static map<Face,char> fm;
+	return fm;
+}
+
+static VertexType &_DummyV(){
+	static VertexType _dv;
+	return _dv;
+}
+
+static TetraSets &_Sets(){
+	static TetraSets _s;
+	return _s;
+}
+
 
 ///select the 2 faces that does not share the edge
-FacePair _FindNoEdgeFace(TetraType *t,int edge)
+static FacePair _FindNoEdgeFace(TetraType *t,int edge)
 {	
 				//as first I find the 2 faces on the opposite sides of the egde
         int fa0=Tetra::FofE(edge,0);
@@ -107,7 +192,7 @@ FacePair _FindNoEdgeFace(TetraType *t,int edge)
 }
 
 #ifdef _DEBUG
-void _AssertingVolume(TetraType *t)
+static void _AssertingVolume(TetraType *t)
 {
 		assert(t->ComputeVolume() >0);
 }
@@ -115,8 +200,10 @@ void _AssertingVolume(TetraType *t)
 
 
 ///collpse de edge specified by pos (the first vertex on edge remain)
-void _Collapse(PosType p,CoordType NewP)
+static int _Collapse(PosType p,CoordType NewP)
 {
+			int n_deleted=0;
+			vector<TetraType*> To_Del;
       VertexType *Vrem=(p.T()->V(Tetra::VofE(p.E(),0)));
       VertexType *Vdel=(p.T()->V(Tetra::VofE(p.E(),1)));
       //Vrem->P()=(Vrem->P()*alfa)+(Vdel->P()*(1.f-alfa));
@@ -144,7 +231,7 @@ void _Collapse(PosType p,CoordType NewP)
         //case no one is extern face
 				if ((!pos.T()->IsBorderF(fa0))&&(!pos.T()->IsBorderF(fa1)))
           //connect the 2 tetrahedrons
-          _Topo._AttachTTTopology(tleft,ileft,tright,iright);	
+          Topology::_AttachTTTopology(tleft,ileft,tright,iright);	
 				else
 				  //case f2 is an extern face
 				if (pos.T()->IsBorderF(fa0))
@@ -166,12 +253,13 @@ void _Collapse(PosType p,CoordType NewP)
 
 				//i remove the tetrahedrons that have the edge
 				// to collapse
-				_Topo.DetachVTTopology(pos.T());
+				Topology::DetachVTTopology(pos.T());
 				//end setting the V-T topology	
         To_Del.push_back(pos.T());
 				pos.NextT();
 			  
-        tm.tn--;
+				n_deleted++;
+//        tm.tn--;
       }
 
       //delting old tetrahedrons
@@ -190,8 +278,8 @@ void _Collapse(PosType p,CoordType NewP)
         //VTi++;
 				//assegning the vertex that remain
 				T_Change->V(index)=Vrem;
-        _Topo.DetachVTTopology(Vdel,T_Change);
-				_Topo.InsertVTTopology(Vrem,index,T_Change);
+        Topology::DetachVTTopology(Vdel,T_Change);
+				Topology::InsertVTTopology(Vrem,index,T_Change);
 				//that's cause i restart everytime in the chain 
 				//from the vertex
         VTi.Vt()=Vdel->VTb();
@@ -205,134 +293,63 @@ void _Collapse(PosType p,CoordType NewP)
         Vrem->SetB();
       //set as deleted the vertex
 			Vdel->SetD();
-			tm.vn--;
-
+//			tm.vn--;
+			return n_deleted;
 }
 
-struct Face
-{
-			VertexType* v[3];
 
-      Face(	VertexType* a, VertexType* b,VertexType* c)
-           {
-						assert((a!=b)&&(b!=c)&&(a!=c));
-            v[0]=a;
-            v[1]=b;
-            v[2]=c;
-            sort(v,v+3);
-						}
-
-      const bool operator <(const Face & f) const 
-      {
-				return ((v[0]==f.v[0])?((v[1]==f.v[1])?(v[2]<f.v[2]):(v[1]<f.v[1])):(v[0]<f.v[0]));
-			}
-
-			const bool operator ==(const Face & f) const {
-			return ((v[0]==f.v[0])&&(v[1]==f.v[1])&&(v[2]==f.v[2]));
-			}
-
-      };
-
-struct Edge{
-			VertexType* v0;
-      VertexType* v1;
-      Edge(	VertexType* a, VertexType* b){
-						assert(a!=b);
-						if(a<b) 
-							{v0=a;v1=b;}
-						else
-						{v1=a;v0=b;}
-      }
-			
-			const bool operator <(const Edge & e) const {
-				return (v0==e.v0)?(v1<e.v1):(v0<e.v0);
-			}
-
-			const bool operator ==(const Edge & e) const {
-			return (v0==e.v0)&&(v1==e.v1);
-			}
-
-};
-
-map<Edge,char> EdgeMark;
-map<Face,char> FaceMark;
-
-VertexType _dummyV;
-
-void orMarkE(Edge E,char M)
+static void orMarkE(Edge E,char M)
 {
  map<Edge,char>::iterator EI;
- EI=EdgeMark.find(E);
- if (EI==EdgeMark.end())
-  EdgeMark.insert (pair<Edge,char>(E,M));
+ EI=_EdgeMark().find(E);
+ if (EI==_EdgeMark().end())
+  _EdgeMark().insert (pair<Edge,char>(E,M));
  else
    (*EI).second|=M;
 }
 
-bool isMarkedE(Edge E,char M)
+static bool isMarkedE(Edge E,char M)
 {
  map<Edge,char>::iterator EI;
- EI=EdgeMark.find(E);
- if (EI==EdgeMark.end())
+ EI=_EdgeMark().find(E);
+ if (EI==_EdgeMark().end())
     return false;
  else return ((*EI).second & M);
 }
 
-void orMarkF(Face F,char M)
+static void orMarkF(Face F,char M)
 {
  map<Face,char>::iterator FI;
- FI=FaceMark.find(F);
- if (FI==FaceMark.end())
-  FaceMark.insert (pair<Face,char>(F,M));
+ FI=_FaceMark().find(F);
+ if (FI==_FaceMark().end())
+  _FaceMark().insert (pair<Face,char>(F,M));
  else
    (*FI).second|=M;
 }
 
-bool isMarkedF(Face F,char M)
+static bool isMarkedF(Face F,char M)
 {
  map<Face,char>::iterator FI;
- FI=FaceMark.find(F);
- if (FI==FaceMark.end())
+ FI=_FaceMark().find(F);
+ if (FI==_FaceMark().end())
     return false;
  else return ((*FI).second & M);
 }
 
 ///this structure is used to find the sets that are used in link conditions and more
-struct TetraSets
-{
-  std::vector <TetraType*> v0;
-  std::vector <TetraType*> v1;
-  std::vector <TetraType*> v0_U_v1;
-  std::vector <TetraType*> no_E;
-  std::vector <TetraType*> E;
-  std::vector <char> indexE;
-  std::vector <char> indexv0;
-  std::vector <char> indexv1;
-
-  void clear()
-  {
-    v0.clear();
-    v1.clear();
-    v0_U_v1.clear();
-    no_E.clear();
-    E.clear();
-  }
-};
-
-TetraSets _Sets;
 
 ///verify the link conditions on faces
-bool _LinkConditionsF(PosType pos) 
+static bool _LinkConditionsF(PosType pos) 
 { 	
     const int LINK_V0 = 0x00000001;
     const int LINK_EE = 0x00000002;
    
-    EdgeMark.clear();
+    _EdgeMark().clear();
 
 		// Mark edges of ve0 
-    vector< TetraType *>::iterator ti=_Sets.v0.begin(); 
-    vector< char >::iterator en=_Sets.indexv0.begin();
-    while (ti!=_Sets.v0.end())
+    vector< TetraType *>::iterator ti=_Sets().v0.begin(); 
+    vector< char >::iterator en=_Sets().indexv0.begin();
+    while (ti!=_Sets().v0.end())
     {
       //put dummy face
       for (int f=0;f<3;f++)
@@ -340,19 +357,19 @@ bool _LinkConditionsF(PosType pos)
        int f_test=Tetra::FofV((*en),f);
         if  ((*ti)->IsBorderF(f_test))
         {
-          orMarkF(Face((*ti)->V(Tetra::VofF(f_test,0)),(*ti)->V(Tetra::VofF(f_test,1)),&_dummyV),LINK_V0);
-          orMarkF(Face((*ti)->V(Tetra::VofF(f_test,1)),(*ti)->V(Tetra::VofF(f_test,2)),&_dummyV),LINK_V0);
-          orMarkF(Face((*ti)->V(Tetra::VofF(f_test,2)),(*ti)->V(Tetra::VofF(f_test,0)),&_dummyV),LINK_V0);
+          orMarkF(Face((*ti)->V(Tetra::VofF(f_test,0)),(*ti)->V(Tetra::VofF(f_test,1)),&_DummyV()),LINK_V0);
+          orMarkF(Face((*ti)->V(Tetra::VofF(f_test,1)),(*ti)->V(Tetra::VofF(f_test,2)),&_DummyV()),LINK_V0);
+          orMarkF(Face((*ti)->V(Tetra::VofF(f_test,2)),(*ti)->V(Tetra::VofF(f_test,0)),&_DummyV()),LINK_V0);
         }
       }
      ti++;
      en++;
     }
     
-    ti=_Sets.E.begin(); 
-    en=_Sets.indexE.begin();
+    ti=_Sets().E.begin(); 
+    en=_Sets().indexE.begin();
     //mark them as intersection
-    while (ti!=_Sets.E.end())
+    while (ti!=_Sets().E.end())
     {
       //faces on the edge
       int f0=Tetra::FofE((*en),0);
@@ -360,16 +377,16 @@ bool _LinkConditionsF(PosType pos)
 
       if  ((*ti)->IsBorderF(f0))
       {
-          orMarkF(Face((*ti)->V(Tetra::VofF(f0,0)),(*ti)->V(Tetra::VofF(f0,1)),&_dummyV),LINK_EE);
-          orMarkF(Face((*ti)->V(Tetra::VofF(f0,1)),(*ti)->V(Tetra::VofF(f0,2)),&_dummyV),LINK_EE);
-          orMarkF(Face((*ti)->V(Tetra::VofF(f0,2)),(*ti)->V(Tetra::VofF(f0,0)),&_dummyV),LINK_EE);
+          orMarkF(Face((*ti)->V(Tetra::VofF(f0,0)),(*ti)->V(Tetra::VofF(f0,1)),&_DummyV()),LINK_EE);
+          orMarkF(Face((*ti)->V(Tetra::VofF(f0,1)),(*ti)->V(Tetra::VofF(f0,2)),&_DummyV()),LINK_EE);
+          orMarkF(Face((*ti)->V(Tetra::VofF(f0,2)),(*ti)->V(Tetra::VofF(f0,0)),&_DummyV()),LINK_EE);
       }
 
       if  ((*ti)->IsBorderF(f1))
       {
-          orMarkF(Face((*ti)->V(Tetra::VofF(f1,0)),(*ti)->V(Tetra::VofF(f1,1)),&_dummyV),LINK_EE);
-          orMarkF(Face((*ti)->V(Tetra::VofF(f1,1)),(*ti)->V(Tetra::VofF(f1,2)),&_dummyV),LINK_EE);
-          orMarkF(Face((*ti)->V(Tetra::VofF(f1,2)),(*ti)->V(Tetra::VofF(f1,0)),&_dummyV),LINK_EE);
+          orMarkF(Face((*ti)->V(Tetra::VofF(f1,0)),(*ti)->V(Tetra::VofF(f1,1)),&_DummyV()),LINK_EE);
+          orMarkF(Face((*ti)->V(Tetra::VofF(f1,1)),(*ti)->V(Tetra::VofF(f1,2)),&_DummyV()),LINK_EE);
+          orMarkF(Face((*ti)->V(Tetra::VofF(f1,2)),(*ti)->V(Tetra::VofF(f1,0)),&_DummyV()),LINK_EE);
       }
 
       ti++;
@@ -377,9 +394,9 @@ bool _LinkConditionsF(PosType pos)
     }
    
     //and at the end I verify if the intersection is equal to the star of the edge
-    ti=_Sets.v1.begin(); 
-    en=_Sets.indexv1.begin();
-    while (ti!=_Sets.v1.end())
+    ti=_Sets().v1.begin(); 
+    en=_Sets().indexv1.begin();
+    while (ti!=_Sets().v1.end())
     {
 
       //dummy edges control
@@ -389,9 +406,9 @@ bool _LinkConditionsF(PosType pos)
         if  ((*ti)->IsBorderF(f_test))
         {
           //control all the 3 edges
-          Face f_test0=Face((*ti)->V(Tetra::VofF(f_test,0)),(*ti)->V(Tetra::VofF(f_test,1)),&_dummyV);
-          Face f_test1=Face((*ti)->V(Tetra::VofF(f_test,1)),(*ti)->V(Tetra::VofF(f_test,2)),&_dummyV);
-          Face f_test2=Face((*ti)->V(Tetra::VofF(f_test,2)),(*ti)->V(Tetra::VofF(f_test,0)),&_dummyV);
+          Face f_test0=Face((*ti)->V(Tetra::VofF(f_test,0)),(*ti)->V(Tetra::VofF(f_test,1)),&_DummyV());
+          Face f_test1=Face((*ti)->V(Tetra::VofF(f_test,1)),(*ti)->V(Tetra::VofF(f_test,2)),&_DummyV());
+          Face f_test2=Face((*ti)->V(Tetra::VofF(f_test,2)),(*ti)->V(Tetra::VofF(f_test,0)),&_DummyV());
           if (((isMarkedF(f_test0,LINK_V0))&&(!isMarkedF(f_test0,LINK_EE)))||
             ((isMarkedF(f_test1,LINK_V0))&&(!isMarkedF(f_test1,LINK_EE)))||
             ((isMarkedF(f_test2,LINK_V0))&&(!isMarkedF(f_test2,LINK_EE))))
@@ -405,17 +422,17 @@ bool _LinkConditionsF(PosType pos)
 }
 
 ///verify the link conditions on edges
-bool _LinkConditionsE(PosType pos) 
+static bool _LinkConditionsE(PosType pos) 
 { 	
     const int LINK_V0 = 0x00000001;
     const int LINK_EE = 0x00000002;
    
-    FaceMark.clear();
+    _FaceMark().clear();
 
 		// Mark edges of ve0 
-    vector< TetraType *>::iterator ti=_Sets.v0.begin(); 
-    vector< char >::iterator en=_Sets.indexv0.begin();
-    while (ti!=_Sets.v0.end())
+    vector< TetraType *>::iterator ti=_Sets().v0.begin(); 
+    vector< char >::iterator en=_Sets().indexv0.begin();
+    while (ti!=_Sets().v0.end())
     {
       //put dummy edge
       for (int f=0;f<3;f++)
@@ -423,19 +440,19 @@ bool _LinkConditionsE(PosType pos)
        int f_test=Tetra::FofV((*en),f);
         if  ((*ti)->IsBorderF(f_test))
         {
-          orMarkE(Edge((*ti)->V(Tetra::VofF(f_test,0)),&_dummyV),LINK_V0);
-          orMarkE(Edge((*ti)->V(Tetra::VofF(f_test,1)),&_dummyV),LINK_V0);
-          orMarkE(Edge((*ti)->V(Tetra::VofF(f_test,2)),&_dummyV),LINK_V0);
+          orMarkE(Edge((*ti)->V(Tetra::VofF(f_test,0)),&_DummyV()),LINK_V0);
+          orMarkE(Edge((*ti)->V(Tetra::VofF(f_test,1)),&_DummyV()),LINK_V0);
+          orMarkE(Edge((*ti)->V(Tetra::VofF(f_test,2)),&_DummyV()),LINK_V0);
         }
       }
      ti++;
      en++;
     }
     
-    ti=_Sets.E.begin(); 
-    en=_Sets.indexE.begin();
+    ti=_Sets().E.begin(); 
+    en=_Sets().indexE.begin();
     //mark them as intersection
-    while (ti!=_Sets.E.end())
+    while (ti!=_Sets().E.end())
     {
       //faces on the edge
       int f0=Tetra::FofE((*en),0);
@@ -443,16 +460,16 @@ bool _LinkConditionsE(PosType pos)
 
       if  ((*ti)->IsBorderF(f0))
       {
-          orMarkE(Edge((*ti)->V(Tetra::VofF(f0,0)),&_dummyV),LINK_EE);
-          orMarkE(Edge((*ti)->V(Tetra::VofF(f0,1)),&_dummyV),LINK_EE);
-          orMarkE(Edge((*ti)->V(Tetra::VofF(f0,2)),&_dummyV),LINK_EE);
+          orMarkE(Edge((*ti)->V(Tetra::VofF(f0,0)),&_DummyV()),LINK_EE);
+          orMarkE(Edge((*ti)->V(Tetra::VofF(f0,1)),&_DummyV()),LINK_EE);
+          orMarkE(Edge((*ti)->V(Tetra::VofF(f0,2)),&_DummyV()),LINK_EE);
       }
 
       if  ((*ti)->IsBorderF(f1))
       {
-          orMarkE(Edge((*ti)->V(Tetra::VofF(f1,0)),&_dummyV),LINK_EE);
-          orMarkE(Edge((*ti)->V(Tetra::VofF(f1,1)),&_dummyV),LINK_EE);
-          orMarkE(Edge((*ti)->V(Tetra::VofF(f1,2)),&_dummyV),LINK_EE);
+          orMarkE(Edge((*ti)->V(Tetra::VofF(f1,0)),&_DummyV()),LINK_EE);
+          orMarkE(Edge((*ti)->V(Tetra::VofF(f1,1)),&_DummyV()),LINK_EE);
+          orMarkE(Edge((*ti)->V(Tetra::VofF(f1,2)),&_DummyV()),LINK_EE);
       }
 
       ti++;
@@ -460,9 +477,9 @@ bool _LinkConditionsE(PosType pos)
     }
    
     //and at the end I verify if the intersection is equal to the star of the edge
-    ti=_Sets.v1.begin(); 
-    en=_Sets.indexv1.begin();
-    while (ti!=_Sets.v1.end())
+    ti=_Sets().v1.begin(); 
+    en=_Sets().indexv1.begin();
+    while (ti!=_Sets().v1.end())
     {
 
       //dummy edges control
@@ -472,9 +489,9 @@ bool _LinkConditionsE(PosType pos)
         if  ((*ti)->IsBorderF(f_test))
         {
           //control all the 3 edges
-          Edge e_test0=Edge((*ti)->V(Tetra::VofF(f_test,0)),&_dummyV);
-          Edge e_test1=Edge((*ti)->V(Tetra::VofF(f_test,1)),&_dummyV);
-          Edge e_test2=Edge((*ti)->V(Tetra::VofF(f_test,2)),&_dummyV);
+          Edge e_test0=Edge((*ti)->V(Tetra::VofF(f_test,0)),&_DummyV());
+          Edge e_test1=Edge((*ti)->V(Tetra::VofF(f_test,1)),&_DummyV());
+          Edge e_test2=Edge((*ti)->V(Tetra::VofF(f_test,2)),&_DummyV());
           if (((isMarkedE(e_test0,LINK_V0))&&(!isMarkedE(e_test0,LINK_EE)))||
             ((isMarkedE(e_test1,LINK_V0))&&(!isMarkedE(e_test1,LINK_EE)))||
             ((isMarkedE(e_test2,LINK_V0))&&(!isMarkedE(e_test2,LINK_EE))))
@@ -489,14 +506,14 @@ bool _LinkConditionsE(PosType pos)
 
 
 ///verify the link conditions on vertices
-bool _LinkConditionsV() 
+static bool _LinkConditionsV() 
 { 	
     const int LINK_V0 = VertexType::NewUserBit();
 		const int LINK_V1 = VertexType::NewUserBit();
     const int LINK_EE = VertexType::NewUserBit();
     
 		const int NOT_LINKED = ~(LINK_V0 | LINK_V1 | LINK_EE);
-    _dummyV.Flags() &= NOT_LINKED;
+    _DummyV().Flags() &= NOT_LINKED;
 
     VertexType *vt0;
     VertexType *vt1;
@@ -504,10 +521,10 @@ bool _LinkConditionsV()
     VertexType *vt3;
 		
 
-   vector< TetraType *>::iterator ti=_Sets.v0_U_v1.begin(); 
+   vector< TetraType *>::iterator ti=_Sets().v0_U_v1.begin(); 
     
     //reset all link flags
-    while (ti!=_Sets.v0_U_v1.end())
+    while (ti!=_Sets().v0_U_v1.end())
     {
       for(int i=0;i<4;i++)
         (*ti)->V(i)->Flags() &= NOT_LINKED;
@@ -517,11 +534,11 @@ bool _LinkConditionsV()
 
     //also in the ones that appartain to the edge
     vector< char >::iterator en;
-    ti=_Sets.E.begin(); 
-    en=_Sets.indexE.begin();
+    ti=_Sets().E.begin(); 
+    en=_Sets().indexE.begin();
     //reset all link flags for intersection and in the same
     //time mark them as intersection
-    while (ti!=_Sets.E.end())
+    while (ti!=_Sets().E.end())
     {
       for(int i=0;i<4;i++)
       {
@@ -536,7 +553,7 @@ bool _LinkConditionsV()
       int f1=Tetra::FofE((*en),1);
       
       if  (((*ti)->IsBorderF(f0))||((*ti)->IsBorderF(f1)))
-         _dummyV.Flags() |= LINK_EE;
+         _DummyV().Flags() |= LINK_EE;
 
       ti++;
       en++;
@@ -544,10 +561,10 @@ bool _LinkConditionsV()
 
 
 		// Mark vertices of ve0 
-    ti=_Sets.v0.begin();
-    en=_Sets.indexv0.begin();
+    ti=_Sets().v0.begin();
+    en=_Sets().indexv0.begin();
 
-    while (ti!=_Sets.v0.end())
+    while (ti!=_Sets().v0.end())
     {
       for(int i=0;i<4;i++)
         (*ti)->V(i)->Flags() |= LINK_V0;
@@ -558,7 +575,7 @@ bool _LinkConditionsV()
       int f2=Tetra::FofV((*en),2);
 
       if  (((*ti)->IsBorderF(f0))||((*ti)->IsBorderF(f1))||((*ti)->IsBorderF(f2)))
-        _dummyV.Flags() |= LINK_V0;
+        _DummyV().Flags() |= LINK_V0;
          
       ti++;
       en++;
@@ -566,10 +583,10 @@ bool _LinkConditionsV()
 
     //and at the end I verify if the intersection is equal to the star of the edge
     bool correct=true;
-    ti=_Sets.v1.begin(); 
-    en=_Sets.indexv1.begin();
+    ti=_Sets().v1.begin(); 
+    en=_Sets().indexv1.begin();
 
-    while (ti!=_Sets.v1.end())
+    while (ti!=_Sets().v1.end())
     {
       vt0=(*ti)->V(0);
       vt1=(*ti)->V(1);
@@ -594,7 +611,7 @@ bool _LinkConditionsV()
       int f2=Tetra::FofV((*en),2);
 
       if  (((*ti)->IsBorderF(f0))||((*ti)->IsBorderF(f1))||((*ti)->IsBorderF(f2)))
-        if ((_dummyV.Flags()& LINK_V0)&&(!(_dummyV.Flags()& LINK_EE)))
+        if ((_DummyV().Flags()& LINK_V0)&&(!(_DummyV().Flags()& LINK_EE)))
           correct=false;
 
       if (!correct)
@@ -614,7 +631,7 @@ bool _LinkConditionsV()
 }
 
 ///verify the flip condition
-bool _FlipCondition(PosType pos,CoordType NewP)
+static bool _FlipCondition(PosType pos,CoordType NewP)
 {	
   int edge=pos.E();
   VertexType *ve0=pos.T()->V(Tetra::VofE(edge,0));
@@ -623,7 +640,7 @@ bool _FlipCondition(PosType pos,CoordType NewP)
   CoordType oldpos1;
   //CoordType newpos=((ve0->P()*alfa)+(ve1->P()*(1.f-alfa)));
 
-  vector< TetraType *>::iterator ti=_Sets.no_E.begin();
+  vector< TetraType *>::iterator ti=_Sets().no_E.begin();
 
   //verification
   oldpos0 = ve0->P();
@@ -633,19 +650,20 @@ bool _FlipCondition(PosType pos,CoordType NewP)
   ve0->P() =NewP;
 	ve1->P() =NewP;
 
-	while (ti!=_Sets.no_E.end())
+	while (ti!=_Sets().no_E.end())
     {
 			assert(!(*ti)->IsD());
       assert((((*ti)->V(0)==ve0)||((*ti)->V(1)==ve0)||((*ti)->V(2)==ve0)||((*ti)->V(3)==ve0))^
             (((*ti)->V(0)==ve1)||((*ti)->V(1)==ve1)||((*ti)->V(2)==ve1)||((*ti)->V(3)==ve1)));
 
-      Tetra3<ScalarType> T=Tetra3<ScalarType>();
+  /*    Tetra3<ScalarType> T=Tetra3<ScalarType>();
       T.P0(0)=(*ti)->V(0)->cP();
       T.P1(0)=(*ti)->V(1)->cP();
       T.P2(0)=(*ti)->V(2)->cP();
-      T.P3(0)=(*ti)->V(3)->cP();
+      T.P3(0)=(*ti)->V(3)->cP();*/
       //flip comes if volume is less or equal to zero
-			if (T.ComputeVolume()<=0)
+			ScalarType tv = vcg::ComputeVolume(**ti);
+			if (vcg::ComputeVolume<TetraType>(**ti)<=0)
 			{	
         ve0->P()=oldpos0;
 				ve1->P()=oldpos1;
@@ -662,7 +680,7 @@ bool _FlipCondition(PosType pos,CoordType NewP)
 }
 
 ///update the normal of the modified tetrahedrons ond the normal of the vertex that remain after collapse
-void _InitTetrahedronValues(VertexType* v)
+static void _InitTetrahedronValues(VertexType* v)
 {
  
   VTIterator<TetraType> VTi=VTIterator<TetraType>(v->VTb(),v->VTi());
@@ -690,7 +708,7 @@ void _InitTetrahedronValues(VertexType* v)
       if (VTi.Vt()->V(i)->IsB())
       {
         if (VertexType::HasNormal)
-        _UN.PerVertex(VTi.Vt()->V(i));
+        UpdateNormals::PerVertex(VTi.Vt()->V(i));
       }
       
     }
@@ -704,7 +722,7 @@ public:
 
 ///Return the aspect Ratio media of the tetrahedrons
 ///that share the adge to collapse
-ScalarType AspectRatioCollapsed(PosType p)
+static ScalarType AspectRatioCollapsed(PosType p)
 {
   PosL pos=PosL(p.T(),p.F(),p.E(),p.V());
   pos.Reset();
@@ -722,7 +740,7 @@ ScalarType AspectRatioCollapsed(PosType p)
 
 
 ///check the topologycal preserving  conditions for the collapse indicated by pos
-bool  CheckPreconditions(PosType pos,CoordType NewP)
+static bool  CheckPreconditions(PosType pos,CoordType NewP)
 {	
   VertexType *v0=pos.T()->V(Tetra::VofE(pos.E(),0));
 	VertexType *v1=pos.T()->V(Tetra::VofE(pos.E(),1));
@@ -730,7 +748,7 @@ bool  CheckPreconditions(PosType pos,CoordType NewP)
   //we can do it.
   bool border0=v0->IsB();
   bool border1=v1->IsB();
-  bool bordere=_Topo.IsExternEdge(pos.T(),pos.E());
+  bool bordere=Topology::IsExternEdge(pos.T(),pos.E());
 
   //first case vertex external and edge internal
 	if ((border0 && border1)&&(!bordere))
@@ -750,11 +768,11 @@ bool  CheckPreconditions(PosType pos,CoordType NewP)
 }
 
 ///return the sum of volumes of the union of  stars on vertices (the original volume of tetrahedrons)
-ScalarType VolumeOriginal()
+static ScalarType VolumeOriginal()
 {
-  vector< TetraType *>::iterator ti=_Sets.v0_U_v1.begin(); 
+  vector< TetraType *>::iterator ti=_Sets().v0_U_v1.begin(); 
   ScalarType vol=0;
-  while (ti!=_Sets.v0_U_v1.end())
+  while (ti!=_Sets().v0_U_v1.end())
   {
     vol+=(*ti)->Volume();
     ti++;
@@ -763,7 +781,7 @@ ScalarType VolumeOriginal()
 }
 
 ///Calculate the volume on the vertex resulting after collapse...
-ScalarType VolumeSimulateCollapse(PosType Pos,CoordType newP)
+static ScalarType VolumeSimulateCollapse(PosType Pos,CoordType newP)
 {
   VertexType *Vrem=(Pos.T()->V(Tetra::VofE(Pos.E(),0)));
   VertexType *Vdel=(Pos.T()->V(Tetra::VofE(Pos.E(),1)));
@@ -777,16 +795,20 @@ ScalarType VolumeSimulateCollapse(PosType Pos,CoordType newP)
 //move vertex that remain in the new position
   Vrem->P() = newP;
 
-  vector< TetraType *>::iterator ti=_Sets.no_E.begin(); 
+  vector< TetraType *>::iterator ti=_Sets().no_E.begin(); 
 
-  while (ti!=_Sets.no_E.end())
+  while (ti!=_Sets().no_E.end())
   {
-        Tetra3<ScalarType> T=Tetra3<ScalarType>();
+ /*       Tetra3<ScalarType> T=Tetra3<ScalarType>();
         T.P0(0)=(*ti)->V(0)->cP();
         T.P1(0)=(*ti)->V(1)->cP();
         T.P2(0)=(*ti)->V(2)->cP();
         T.P3(0)=(*ti)->V(3)->cP();
-        vol+=T.ComputeVolume();
+       
+				vol+=T.ComputeVolume(); */
+//				vol+= vcg::ComputeVolume<TetraType>(*((Tetra3<ScalarType>*)&*ti));
+					
+  				vol+= vcg::ComputeVolume(**ti);
         ti++;
   }
   Vrem->P()=oldpos;
@@ -794,19 +816,19 @@ ScalarType VolumeSimulateCollapse(PosType Pos,CoordType newP)
 }
 
 ///finds sets used for all test in edge collapse
-void FindSets(vcg::tetra::Pos<TetraType> pos)
+static void FindSets(vcg::tetra::Pos<TetraType> pos)
 {
  
-  _Sets.clear();
+  _Sets().clear();
   int size=40;
-  _Sets.v0.reserve(size);
-  _Sets.indexv0.reserve(size);
-  _Sets.v1.reserve(size);
-  _Sets.indexv1.reserve(size);
-  _Sets.v0_U_v1.reserve(size*2);
-  _Sets.no_E.reserve(size*2);
-  _Sets.E.reserve(size);
-  _Sets.indexE.reserve(size);
+  _Sets().v0.reserve(size);
+  _Sets().indexv0.reserve(size);
+  _Sets().v1.reserve(size);
+  _Sets().indexv1.reserve(size);
+  _Sets().v0_U_v1.reserve(size*2);
+  _Sets().no_E.reserve(size*2);
+  _Sets().E.reserve(size);
+  _Sets().indexE.reserve(size);
   
   int edge =pos.E();
 
@@ -818,13 +840,13 @@ void FindSets(vcg::tetra::Pos<TetraType> pos)
   while (!vf0.End())
   {
     //set of ve0
-    _Sets.v0.push_back(vf0.Vt());
-    _Sets.indexv0.push_back(vf0.Vi());
+    _Sets().v0.push_back(vf0.Vt());
+    _Sets().indexv0.push_back(vf0.Vi());
     //set of union
-    _Sets.v0_U_v1.push_back(vf0.Vt());
+    _Sets().v0_U_v1.push_back(vf0.Vt());
     //set of union minus intersection
     if ((vf0.Vt()->V(0)!=ve1)&&(vf0.Vt()->V(1)!=ve1)&&(vf0.Vt()->V(2)!=ve1)&&(vf0.Vt()->V(3)!=ve1))
-		  _Sets.no_E.push_back(vf0.Vt());
+		  _Sets().no_E.push_back(vf0.Vt());
     vf0++;
 	}
 
@@ -835,19 +857,19 @@ void FindSets(vcg::tetra::Pos<TetraType> pos)
   while (!vf0.End())
   {
     //set of ve1
-    _Sets.v1.push_back(vf0.Vt());
-    _Sets.indexv1.push_back(vf0.Vi());
+    _Sets().v1.push_back(vf0.Vt());
+    _Sets().indexv1.push_back(vf0.Vi());
     //set of union
-    _Sets.v0_U_v1.push_back(vf0.Vt());
+    _Sets().v0_U_v1.push_back(vf0.Vt());
     //set of union minus intersection 
     if ((vf0.Vt()->V(0)!=ve0)&&(vf0.Vt()->V(1)!=ve0)&&(vf0.Vt()->V(2)!=ve0)&&(vf0.Vt()->V(3)!=ve0))
-		  _Sets.no_E.push_back(vf0.Vt());
+		  _Sets().no_E.push_back(vf0.Vt());
     vf0++;
 	}
 
   //erase duplicated tetrahedrons from the union set
-  sort(_Sets.v0_U_v1.begin(),_Sets.v0_U_v1.end());
-  unique(_Sets.v0_U_v1.begin(),_Sets.v0_U_v1.end());
+  sort(_Sets().v0_U_v1.begin(),_Sets().v0_U_v1.end());
+  unique(_Sets().v0_U_v1.begin(),_Sets().v0_U_v1.end());
 
   //now compute the intersection
   PosLType PL(pos.T(),pos.F(),pos.E(),pos.V());
@@ -855,21 +877,21 @@ void FindSets(vcg::tetra::Pos<TetraType> pos)
     //mark the vertex on the edge
     while (!PL.LoopEnd())
     {
-      _Sets.E.push_back(PL.T());
-      _Sets.indexE.push_back(PL.E());
+      _Sets().E.push_back(PL.T());
+      _Sets().indexE.push_back(PL.E());
       PL.NextT();
     }
 
 }
 
 ///do the collapse on the edge in postype p
-void DoCollapse(PosType p,CoordType newP)
+static int DoCollapse(PosType p,CoordType newP)
 {
   VertexType *v=p.T()->V(p.V());
   assert(p.T()->HasVTAdjacency());
-  _Collapse(p,newP);
+  int n_deleted = _Collapse(p,newP);
   _InitTetrahedronValues(v);
-  
+  return n_deleted;
 }
 
 
