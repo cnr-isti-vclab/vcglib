@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/05/14 11:48:43  pietroni
+templated with also tetratype...
+
 Revision 1.6  2004/05/14 11:07:36  turini
 Changed swap in std::swap.
 
@@ -279,14 +282,14 @@ public:
 	void setBorderV()
 	{	
 		int i;
-		for (i=0;i<4;i++)
+    for (i=0;i<4;i++)
 			if (T(i)==this)
 			{
-				FV(i,0)->SetB();
-				FV(i,1)->SetB();
-				FV(i,2)->SetB();
-			}
-	}
+        V(Tetra::VofF(i,0))->SetB();
+				V(Tetra::VofF(i,1))->SetB();
+				V(Tetra::VofF(i,2))->SetB();
+			}  
+  }
 #endif
 //@}
 
