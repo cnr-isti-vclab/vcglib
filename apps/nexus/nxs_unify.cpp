@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/07/15 14:32:49  ponchio
+Debug.
+
 Revision 1.2  2004/07/05 17:07:14  ponchio
 Tested a bit.
 
@@ -120,7 +123,6 @@ int main(int argc, char *argv[]) {
       }
     }
   }
-
   //finally: there may be duplicated borders
   for(unsigned int p = 0; p < nexus.index.size(); p++) {
     Border border = nexus.GetBorder(p);
@@ -135,6 +137,8 @@ int main(int argc, char *argv[]) {
 	links.insert(border[b]);
     }
   }
-  cerr << "Found " << duplicated << " duplicated vertices" << endl;
+  cout << "Found " << duplicated << " duplicated vertices" << endl;
+  cout << endl;
+  cout << endl;
   return 0;
 }
