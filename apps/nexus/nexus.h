@@ -44,7 +44,7 @@ class Nexus {
 			unsigned int nbord);
 
   //  unsigned int Join(std::vector<unsigned int> &patches);
-  void Join(std::vector<unsigned int> &patches,
+  void Join(const std::vector<unsigned int> &patches,
 	    std::vector<vcg::Point3f> &vert,
 	    std::vector<unsigned int> &faces,
 	    std::vector<Link> &links);

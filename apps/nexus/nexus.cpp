@@ -111,14 +111,14 @@ unsigned int Nexus::AddPatch(unsigned int nvert, unsigned int nface,
   return index.size() -1;
 }
 
-void Nexus::Join(std::vector<unsigned int> &patches,
+void Nexus::Join(const std::vector<unsigned int> &patches,
 		 std::vector<Point3f> &newvert,
 		 std::vector<unsigned int> &newface,
 		 std::vector<Link> &newbord) {
 
   map<unsigned int, vector<unsigned int> > remap;
 
-  vector<unsigned int>::iterator i;
+  vector<unsigned int>::const_iterator i;
   for(i = patches.begin(); i != patches.end(); i++) {
     unsigned int patch = *i;
     Nexus::Entry &entry = index[patch];
