@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/07/09 15:48:37  tarini
+Added an include (<algorithm>)
+
 Revision 1.1  2004/06/24 08:03:59  cignoni
 Initial Release
 
@@ -128,7 +131,7 @@ static int RemoveUnreferencedVertex( CleanMeshType& m )   // V1.0
 {
 	FaceIterator fi;
 	VertexIterator vi;
-	int referredBit = VertexType::NewUserBit();
+	int referredBit = VertexType::NewBitFlag();
 		
 	int j;
 	int deleted = 0;
@@ -148,7 +151,7 @@ static int RemoveUnreferencedVertex( CleanMeshType& m )   // V1.0
 			++deleted;
 		}
 	m.vn -= deleted;
-  VertexType::DeleteUserBit(referredBit);
+  VertexType::DeleteBitFlag(referredBit);
 	return deleted;
 }
 
