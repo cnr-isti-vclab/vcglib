@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/05/14 03:14:29  ponchio
+Fixed some minor bugs
+
 Revision 1.6  2004/05/13 23:43:54  ponchio
 minor bug
 
@@ -89,7 +92,7 @@ namespace vcg {
     T t17 = neworig.Z()*neworig.Z();
     T t19 = neworig.Y()*neworig.Y();
     T t21 = neworig.X()*neworig.X();
-    T t28 = 2.0*t7*t6+2.0*t6*t8+2.0*t7*t8+t1*t15-t1*t17-t1*t19-t2*t21+t2*t15-t2*t17-t3*t21+t3*t15-t3*t19;
+    T t28 = T(2.0*t7*t6+2.0*t6*t8+2.0*t7*t8+t1*t15-t1*t17-t1*t19-t2*t21+t2*t15-t2*t17-t3*t21+t3*t15-t3*t19);
     if(t28<0) return false;
     T t29 = sqrt(t28);      
     T val0 = 1/(t1+t2+t3)*(-t6-t7-t8+t29); 
