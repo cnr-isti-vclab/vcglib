@@ -31,6 +31,7 @@ Initial commit
 #ifndef __VCG_TETRA_UPDATE_TOPOLOGY
 #define __VCG_TETRA_UPDATE_TOPOLOGY
 #include <algorithm>
+#include <vcg\simplex\tetrahedron\pos.h>
 
 namespace vcg {
 namespace tetra {
@@ -241,26 +242,26 @@ void DetachVTTopology(VertexType *v,TetraType *t)
 	{	
 		TetraType *lastt;
 		int lastz;
-		EdgePosT<TetraType> Et(v->Fp(),v->Zp());
-		if (Et.t==t)
+		VTIterator<TetraType> Et(v->VTb(),v->VTi());
+		if (Et.Vt()==t)
 		{
-			v->Fp()=(TetraType *)t->tv[v->Zp()];
-			v->Zp()=t->zv[v->Zp()];
+			v->VTb()=(TetraType *)t->TVp(v->VTi());
+			v->VTi()=t->TVi(v->VTi());
 		}
 		else
 		{	
-			lastz=Et.z;
-			while((Et.t!=t)&&(Et.t!=NULL))
+			lastz=Et.Vi();
+			while((Et.Vt()!=t)&&(!Et.End()))
 			{	
-				lastz=Et.z;
-				lastt=Et.t;
-				Et.NextT();
+				lastz=Et.Vi();
+				lastt=Et.Vt();
+				Et++;
 			}
 			//in the list of the vertex v must be present the 
 			//tetrahedron that you want to detach
-			assert(Et.t!=NULL);
-			lastt->tv[lastz]=Et.t->tv[Et.z];
-			lastt->zv[lastz]=Et.t->zv[Et.z];
+			assert(Et.Vt()!=NULL);
+			lastt->TVp(lastz)=Et.Vt()->TVp(Et.Vi());
+			lastt->TVi(lastz)=Et.Vt()->TVi(Et.Vi());
 		}
 	}
 
@@ -269,10 +270,10 @@ void InsertVTTopology(VertexType *v,int z,TetraType *t)
 	{
 		if( ! (*t).IsD())
 				{
-					(*t).tv[z] = v->Fp();
-					(*t).zv[z] = v->Zp();
-					 v->Fp() = &(*t);
-					 v->Zp() = z;
+					 t->TVp(z) = v->VTb();
+					 t->TVi(z) = v->VTi();
+					 v->VTb() = &(*t);
+					 v->VTi() = z;
 				}
 }
 
@@ -288,6 +289,30 @@ void InsertVTTopology(TetraType *t)
 					InsertVTTopology(t->V(k),k,t);
 			}		
 }
+
+  ///Test the Tetrahedron-Tetrahedron Topology (by Face)
+void TestVTTopology(VertexContainer &vert,TetraContainer &tetra)
+	{
+    int i;
+		for (VertexIterator vi=vert.begin();vi!=vert.end();vi++)
+    {	
+
+				if (!(*vi).IsD())
+        {	
+            TetraType *nextT=vi->VTb();
+            int nextI=vi->VTi();
+            int oldI;
+            while(nextT!=NULL)
+            {
+              assert((nextT->V(nextI)==&(*vi)));
+              oldI=nextI;
+              nextI=nextT->TVi(nextI);
+              nextT=nextT->TVp(oldI);
+            }
+        }
+    }
+  }
+
 /*@}*/
 /***********************************************/
 /** @Tetrahedron-Tetrahedron Topology Funtions
@@ -374,7 +399,7 @@ void TestTTTopology(VertexContainer &vert,TetraContainer &tetra)
     {	
 			for (i=0;i<4;i++)
 			{
-				if ((!(*ti).IsD())&&((*ti).TTp(i)!=&(*ti)))
+				if ((!(*ti).IsD()))
 					{	
 					  assert( ((((*ti).TTp(i))->TTp((*ti).TTi(i)))==&(*ti)));
             
@@ -383,6 +408,7 @@ void TestTTTopology(VertexContainer &vert,TetraContainer &tetra)
             VertexType	*v2=(*ti).V(Tetra3<double>::VofF(i,2));
 						
 						TetraType *t1=(TetraType*)(*ti).TTp(i);
+            assert (!t1->IsD());
 						int z1=(*ti).TTi(i);
             
             VertexType	*vo0=(*t1).V(Tetra3<double>::VofF(z1,0));
