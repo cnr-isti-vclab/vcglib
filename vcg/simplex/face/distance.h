@@ -24,16 +24,22 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/05/12 18:50:25  ganovelli
+created
+
 
 ****************************************************************************/
 
 #ifndef __VCGLIB_FACE_DISTANCE
 #define __VCGLIB_FACE_DISTANCE
 
+
 #include <vcg/space/point3.h>
 
+using namespace std;
+
 namespace vcg {
-	
+	namespace face{
 /*
    Point face distance
    trova il punto <p> sulla faccia piu' vicino a <q>, con possibilità di 
@@ -60,7 +66,7 @@ namespace vcg {
 
 */
 	template <class FaceType>
-	bool Dist(	const FaceType &f, 
+	bool PointDistance(	const FaceType &f, 
 							const Point3<typename FaceType::ScalarType> & q, 
 							typename FaceType::ScalarType & dist, 
 							Point3<typename FaceType::ScalarType> & p )
@@ -202,7 +208,7 @@ namespace vcg {
 		return true;
 	}
 	
-
+}	 // end namespace face
 	
 }	 // end namespace vcg
 
