@@ -211,11 +211,12 @@ int main(int argc, char *argv[]) {
 
 
   Nexus nexus;
-  nexus.MaxRamBuffer(ram_size);
+  
   if(!nexus.Load(input, true)) {
     cerr << "Could not open nexus file: " << input << "\n";
     return -1;
   }
+  nexus.MaxRamBuffer(ram_size);
 
 
   //Sanity tests
@@ -312,7 +313,7 @@ int main(int argc, char *argv[]) {
   cout << "Writing to nexus: " << output << endl;
 
   Nexus out;
-  out.MaxRamBuffer(ram_size);
+  
   if(!chunk_size)
     chunk_size = nexus.patches.chunk_size;
 
@@ -320,6 +321,7 @@ int main(int argc, char *argv[]) {
     cerr << "Could not open output: " << output << endl;
     return -1;
   }
+  out.MaxRamBuffer(ram_size);
 
   //TODO set rambuffer low (or even direct access!)
 
@@ -397,9 +399,9 @@ int main(int argc, char *argv[]) {
     Border dst_border = out.GetBorder(patch);
     out.borders.ResizeBorder(patch, src_border.Size());
     memcpy(dst_border.Start(), src_border.Start(), 
-	   src_border.Size() * sizeof(Link));
+	   src_border.Size() * sizeof(Link));    
   }
-  report.Finish();
+  report.Finish();  
 
   //TODO this is ok only if we have faces still!
   if(add_normals) {
@@ -429,7 +431,7 @@ int main(int argc, char *argv[]) {
 
   out.sphere = nexus.sphere;
   out.history = nexus.history;
-
+  
   out.Close();
   nexus.Close();
   return 0;

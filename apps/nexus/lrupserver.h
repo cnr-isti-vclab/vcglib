@@ -3,6 +3,7 @@
 
 #include <list>
 #include <map>
+#include <iostream>
 #include "pserver.h"
 
 namespace nxs {
@@ -19,7 +20,7 @@ class LruPServer: public PServer {
     Flush();
   }
 
-  Patch &Lookup(unsigned int patch, unsigned short nv, unsigned short nf) {
+  Patch &Lookup(unsigned int patch, unsigned short nv, unsigned short nf) {    
     if(index.count(patch)) {
       Items::iterator &i = index[patch];
       Item item = *i;
@@ -27,10 +28,11 @@ class LruPServer: public PServer {
       items.push_front(item);
       i = items.begin();
       return *((*i).second);
-    } else {
+    } else {          
       while(ram_used > ram_max) {
-	      index.erase(items.back().first);
-	      FlushPatch(patch, items.back().second);
+        Item item = items.back();        
+	      index.erase(item.first);
+	      FlushPatch(item.first, item.second);
 	      items.pop_back();
       }
       Item item;

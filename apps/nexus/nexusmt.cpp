@@ -65,8 +65,11 @@ bool NexusMt::Expand(TNode &tnode) {
   //expand if node error > target error
   if(extraction_used >= extraction_max) return false;    
   if(draw_used >= draw_max) return false;
-  if(disk_used >= disk_max) return false;  
-  
+  if(disk_used >= disk_max) {
+    float ratio = disk_max / (float)disk_used;
+    float error = tnode.error * ratio;
+    return error > target_error;
+  }
   return tnode.error > target_error; 
 }
 

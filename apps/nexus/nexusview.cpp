@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.26  2004/12/15 13:50:32  ponchio
+Optimizing realtime vis.
+
 Revision 1.25  2004/12/15 08:46:16  ponchio
 Optimizing realtime vis.
 
@@ -459,8 +462,9 @@ int main(int argc, char *argv[]) {
 	      nexus.patches.ram_used * nexus.chunk_size/(float)(1<<20));
       gl_print(0.03, 0.09, buffer);
       
-      sprintf(buffer, "Vbo size : %.3fMb(cur)",	      
-	      nexus.patches.vbo_used * nexus.chunk_size/(float)(1<<20));
+      sprintf(buffer, "Vbo size : %.3fMb(cur) Load: %.4fK  Pref: %.4fK",	      
+	      nexus.patches.vbo_used * nexus.chunk_size/(float)(1<<20),
+        nexus.prefetch.loading, nexus.prefetch.prefetching);
       gl_print(0.03, 0.06, buffer);
 
       sprintf(buffer, "Triangles: %.2fK (tot)   %.2fK (vis)    "

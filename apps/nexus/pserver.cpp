@@ -31,7 +31,7 @@ bool PServer::Load(const std::string &filename, Signature sig,
   return MFile::Load(filename, readonly);
 }
 
-void PServer::Close() {
+void PServer::Close() {  
   Flush();
   MFile::Close();
 }
@@ -76,7 +76,7 @@ Patch *PServer::LoadPatch(unsigned int idx,
   //  ramlock.rdlock();
   
   assert(idx < entries.size());
-  Entry &entry = entries[idx];
+  Entry &entry = entries[idx];  
   if(entry.patch) return entry.patch;
   
   char *ram = new char[entry.ram_size * chunk_size];
@@ -111,10 +111,10 @@ Patch *PServer::LoadPatch(unsigned int idx,
 }
 
 void PServer::FlushPatch(unsigned int id, Patch *patch) {
-  //TODO move this into an assert!!!!
-  if(!patch) return;
-  Entry &entry = entries[id];  
-  assert(entry.patch == patch);
+  //TODO move this into an assert!!!!  
+  if(!patch) return;  
+  Entry &entry = entries[id];    
+//  cerr << "entry: " << (void *)(entry.patch) << " patch: " << (void *)patch << endl;  
   entry.patch = NULL;    
 
   if(!readonly) { //write back patch
@@ -150,6 +150,6 @@ void PServer::FlushPatch(unsigned int id, Patch *patch) {
   ram_used -= entry.ram_size;      
 }
 
-void PServer::MaxRamBuffer(unsigned int r_buffer) {
-  ram_max = (unsigned int)(r_buffer/chunk_size) + 1;
+void PServer::MaxRamBuffer(unsigned int r_buffer) {  
+  ram_max = (unsigned int)(r_buffer/chunk_size) + 1;  
 }

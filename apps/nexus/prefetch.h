@@ -24,6 +24,8 @@ class Prefetch: public pt::thread{
   std::vector<PServer::Item> missing;
   pt::jobqueue draw;
   pt::jobqueue load;
+  float prefetching;
+  float loading;
 
   Prefetch(): thread(false), draw(20000), load(64000) {}
   ~Prefetch() {

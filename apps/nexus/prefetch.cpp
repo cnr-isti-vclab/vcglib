@@ -16,19 +16,19 @@ void Prefetch::init(NexusMt *m, std::vector<unsigned int> &selected,
   mt = m;
   missing.clear();
   mt->todraw.clear();
-  
+  float loaded = 0;  
   unsigned int notloaded = 0;
   set<unsigned int> tmp;
   //std::map<unsigned int, float> tmp;
   vector<QueuePServer::Data> flush;
   for(unsigned int i = 0; i < selected.size(); i++) {
     unsigned int patch = selected[i];
-    tmp.insert(patch);
-    //tmp[patch] = 0.0f;
-    if(!mt->patches.entries[patch].patch) {   
-      //cerr << "miss: " << patch << endl;
+    tmp.insert(patch);   
+    
+    if(!mt->patches.entries[patch].patch) {         
+      PServer::Entry &entry = mt->patches.entries[patch];
       load.post(patch);
-      notloaded++;  
+      loaded += entry.disk_size;
     } else {
        PatchInfo &info = mt->index[patch];             
        //WORKING QueuePServer::Data &data = mt->patches.Lookup(patch, info.nvert, info.nface, 0.0f, flush);
@@ -46,8 +46,7 @@ void Prefetch::init(NexusMt *m, std::vector<unsigned int> &selected,
     }    
     //missing.push_back(PServer::Item(patch, 0.0f));
   }
-  if(notloaded)
-    cerr << "Patches to load: " << notloaded << endl;
+  loading = 0.2 * loaded + 0.8 * loading;
 
   for(unsigned int i = 0; i < visited.size(); i++) {
     PServer::Item &item = visited[i];
@@ -78,22 +77,23 @@ void Prefetch::init(NexusMt *m, std::vector<unsigned int> &selected,
   safety.unlock();
 }
 
-void Prefetch::execute() {  
-    unsigned int prefetched = 0;
+void Prefetch::execute() {      
+
+  float prefetch;
+  prefetching = 0;
+  loading = 0;
     while(1) {
       if(get_signaled()) return;               
       vector<QueuePServer::Data> flush;      
       
-      if(load.get_count() || missing.size() == 0) {
-        if(prefetched)        
-          cerr << "Prefetched: " << prefetched << endl;
-        prefetched = 0;
-
+      if(load.get_count() || missing.size() == 0) {  
+        prefetch = 0;
         pt::message *msg = load.getmessage();
         if(msg->id != 0xffffffff) {          
           safety.lock();
           PatchInfo &info = mt->index[msg->id];                   
-
+          PServer::Entry &entry = mt->patches.entries[msg->id];
+          loading += entry.disk_size;
           //posting draw message
           //WORKING QueuePServer::Data &data = mt->patches.Lookup(msg->id, info.nvert, info.nface, 0.0f, flush);
           QueuePServer::Data &data = mt->patches.Lookup(msg->id, info.nvert, info.nface, flush);
@@ -108,6 +108,8 @@ void Prefetch::execute() {
             draw.post(QueuePServer::FLUSH, (unsigned int)data);
           }
           safety.unlock();
+        } else {
+          prefetching = 0.2 * prefetch + 0.8 * prefetching;
         }
         delete msg;        
       } else {             
@@ -124,8 +126,10 @@ void Prefetch::execute() {
             //cerr << "prefetching: " << item.patch << endl;
             //WORKING mt->patches.Lookup(item.patch, info.nvert, info.nface, item.priority, flush);
             if(!mt->patches.entries[item.patch].patch) {
-              mt->patches.Lookup(item.patch, info.nvert, info.nface, flush);
-              prefetched++;
+              PServer::Entry &entry = mt->patches.entries[item.patch];
+              prefetch += entry.disk_size;
+          
+              mt->patches.Lookup(item.patch, info.nvert, info.nface, flush);              
               for(unsigned int i = 0; i < flush.size(); i++) {
                 QueuePServer::Data  *data = new QueuePServer::Data;
                 *data = flush[i];

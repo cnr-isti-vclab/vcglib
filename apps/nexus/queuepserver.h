@@ -51,7 +51,7 @@ class QueuePServer: public PServer {
         Data &data = items.back().second;
         //TODO i should not flush current extraction!
 	      index.erase(items.back().first);        
-	      FlushPatch(patch, data.patch);
+	      FlushPatch(items.back().first, data.patch);
         flush.push_back(data);
 	      items.pop_back();
       }

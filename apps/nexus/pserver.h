@@ -49,8 +49,7 @@ class PServer: public MFile {
   PServer(): chunk_size(1024), 
              ram_max(128000000), 
              ram_used(0) {}
-  virtual ~PServer() {
-    std::cerr << "Closing pserver" << std::endl;
+  virtual ~PServer() {    
     MFile::Close();
   }
 
