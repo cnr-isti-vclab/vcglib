@@ -1,5 +1,5 @@
 CC	 	= g++
-CFLAGS = -Wall -pedantic
+CFLAGS = -Wall -pedantic -O3
 DEFINED = __GNUC
 ROOT=../../../..
 
