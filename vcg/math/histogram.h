@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/03/14 09:23:40  cignoni
+Added missing include<vector>
+
 Revision 1.2  2004/08/25 15:15:26  ganovelli
 minor changes to comply gcc compiler (typename's and stuff)
 
@@ -60,10 +63,13 @@ public:
 	int Interize(ScalarType val);
 	void Add(ScalarType v);
 	ScalarType Percentile(ScalarType frac) const;
-	ScalarType Avg();
-	ScalarType RMS();
-	ScalarType Variance();
-	ScalarType StandardDeviation();
+  ScalarType Avg()               { return avg/cnt;              }
+  ScalarType RMS()               { return sqrt(rms/double(cnt));}
+  ScalarType Variance()          { return rms/cnt-Avg()*Avg();  }
+  ScalarType StandardDeviation() { return sqrt(Variance());     }
+
+  void FileWrite(const std::string &filename);
+
 	void Clear();
 };
 
@@ -121,6 +127,15 @@ void Histogram<ScalarType>::Add(ScalarType v){
 		avg+=v;
 		rms += v*v;
 	}
+}
+
+
+template <class ScalarType> 
+void Histogram<ScalarType>::FileWrite(const std::string &filename){
+FILE *fp;
+fp=fopen(filename.c_str(),"w");
+for(int i=0;i<H.size();i++)
+fprintf (fp,"%12.8lf , %12.8lf \n",R[i],double(H[i])/cnt);
 }
 }// end namespace
 #endif	
