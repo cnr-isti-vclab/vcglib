@@ -10,7 +10,7 @@ bool MFile::Create(const string &fname, unsigned int mxs) {
   files.clear();
   size = 0;
   readonly = false;
-  assert(mxs <= (1<<30));
+  assert(mxs <= MFILE_MAX_SIZE);
   max_size = mxs;
   return AddFile();  
 }
@@ -19,7 +19,7 @@ bool MFile::Load(const string &fname, bool ronly) {
   filename = fname;
   files.clear();
   readonly = ronly;
-  max_size = (1<<30);
+  max_size = MFILE_MAX_SIZE;
   size = 0;
   
   while(1) {
@@ -57,12 +57,14 @@ void MFile::Redim(int64 sz) {
   if(sz > size) {
     unsigned int totfile = (unsigned int)(sz/max_size);
     //TODO test rhis!!!!
-    while(files.size() < totfile) {
+    while(files.size() <= totfile) {
       RedimLast(max_size);
+      assert(size == max_size * (files.size()));
       AddFile();
     }
-    assert(size < sz);
+    assert(size <= sz);
     assert(sz - size < max_size);
+    assert(files.back().Length() + (unsigned int)(sz - size) < max_size);
     RedimLast(files.back().Length() + (unsigned int)(sz - size));
   } else {
     while(size - files.back().Length() > sz)
@@ -75,7 +77,8 @@ void MFile::Redim(int64 sz) {
 void MFile::SetPosition(int64 pos) {
   assert(pos < size);
   curr_fp = (unsigned int)(pos/(int64)max_size);
-  curr_pos = (unsigned int)(pos - (int64)max_size * (int64)curr_fp);
+  curr_pos = (unsigned int)(pos - (int64)max_size * (int64)curr_fp);  
+  assert(curr_pos < max_size);
   assert(curr_fp < files.size());
   files[curr_fp].SetPosition(curr_pos);
 }
@@ -129,7 +132,8 @@ void MFile::WriteBuffer(void *data, unsigned int sz) {
 #endif
  }
 
-void MFile::RedimLast(unsigned int sz) {
+void MFile::RedimLast(unsigned int sz) {  
+  assert(sz <= max_size);
   File &file = files.back();
   unsigned int last_size = file.Length();
   file.Redim(sz);

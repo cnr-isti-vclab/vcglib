@@ -219,22 +219,22 @@ void PatchServer::Flush(PTime &ptime) {
       char *compressed = ptime.patch->Compress(entry.ram_size * chunk_size,
 					       compressed_size);
       if(entry.disk_size == 0xffff) {//allocate space 
-	assert(entry.patch_start == 0xffffffff);
-	entry.disk_size = (unsigned int)((compressed_size-1)/chunk_size) + 1;
-	entry.patch_start = (unsigned int)(Length()/chunk_size);
-	Redim(Length() + entry.disk_size * chunk_size);
+	      assert(entry.patch_start == 0xffffffff);
+	      entry.disk_size = (unsigned int)((compressed_size-1)/chunk_size) + 1;
+	      entry.patch_start = (unsigned int)(Length()/chunk_size);
+	      Redim(Length() + entry.disk_size * chunk_size);
       } else {
-	cerr << "OOOOPSPPPS not supported!" << endl;
-	exit(-1);
+	      cerr << "OOOOPSPPPS not supported!" << endl;
+	      exit(-1);
       }
       SetPosition(entry.patch_start * chunk_size);
       WriteBuffer(compressed, entry.disk_size * chunk_size);
       delete []compressed;
     } else {
       if(entry.disk_size == 0xffff) {
-	entry.disk_size = entry.ram_size;
-	entry.patch_start = (unsigned int)(Length()/chunk_size);
-	Redim(Length() + entry.disk_size * chunk_size);
+	      entry.disk_size = entry.ram_size;
+	      entry.patch_start = (unsigned int)(Length()/chunk_size);
+	      Redim(Length() + entry.disk_size * chunk_size);
       }
       SetPosition(entry.patch_start * chunk_size);
       WriteBuffer(ptime.patch->start, entry.disk_size * chunk_size);

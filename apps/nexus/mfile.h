@@ -14,6 +14,8 @@ typedef __int64 int64;
 typedef unsigned long long int64;
 #endif
 
+#define MFILE_MAX_SIZE (1<<30)
+
 class MFile {
  public:
 
@@ -22,7 +24,7 @@ class MFile {
   
   //max is  so default is 1 G
   bool Create(const std::string &filename, 
-	      unsigned int max_file_size = (1<<30));
+	      unsigned int max_file_size = MFILE_MAX_SIZE);
   bool Load(const std::string &filename, bool readonly = false);
   void Close();
   
