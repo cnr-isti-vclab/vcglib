@@ -82,7 +82,7 @@ namespace vcg
 							JacobiRotate<TYPE>(w,s,tau,ip,j,iq,j);
 						} 
 						for (j=0;j<4;j++) { 
-							JacobiRotate<TYPE>(w,s,tau,j,ip,j,iq);
+							JacobiRotate<TYPE>(v,s,tau,j,ip,j,iq);
 						} 
 						++nrot; 
 					} 
