@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/03/03 16:08:38  cignoni
+First working version
+
 Revision 1.1  2004/02/13 00:44:45  cignoni
 First commit...
 
@@ -34,6 +37,8 @@ First commit...
 #else
 
 #include <vcg/space/box3.h>
+#include <vcg/space/triangle3.h>
+#include <vcg/simplex/face/topology.h>
 
 namespace vcg {
 
@@ -55,11 +60,14 @@ public:
   typedef typename VertexType::ScalarType ScalarType;
 	/// The type of the the vertex coordinate
 	typedef Point3< ScalarType > CoordType;
+	typedef Point3< ScalarType > NormalType;
 	
   typedef typename FVTYPE::FaceType FaceFromVertType;
 	/// The bounding box type
 	typedef Box3<ScalarType> BoxType;
 	
+  /// Default Empty Costructor
+  inline FACE_TYPE(){}
 
 	/// This are the _flags of face, the default value is 0
 	int  _flags;		
@@ -145,7 +153,7 @@ public:
 	inline const FVTYPE * const & cV1( const int j ) const { return cV((j+1)%3);}
 	inline const FVTYPE * const & cV2( const int j ) const { return cV((j+2)%3);}
 
-	// Shortcut per accedere ai punti delle facce
+	/// Shortcut per accedere ai punti delle facce
 	inline CoordType & P0( const int j ) { return V(j)->P();}
 	inline CoordType & P1( const int j ) { return V((j+1)%3)->P();}
 	inline CoordType & P2( const int j ) { return V((j+2)%3)->P();}
@@ -203,13 +211,17 @@ public:
 #ifdef __VCGLIB_FACE_N
 		return _n;
 #else
-		return vcg::Normal(V(0)->P(), V(1)->P(), V(2)->P());
+	return *(CoordType *)0;
 #endif
 	}
 	/// Return the reference of the normal to the face (if __VCGLIB_FACE_N is defined).
 	inline const CoordType cN() const
 	{
-		return Normal();
+#ifdef __VCGLIB_FACE_N
+		return _n;
+#else
+	return *(CoordType *)0;
+#endif
 	}
 
   /// Calculate the normal to the face, the value is store in the field _n of the face
@@ -230,15 +242,13 @@ void ComputeNormalizedNormal()
 #endif
 }
 
-/// Return the value of the face normal; warning: if __VCGLIB_FACE_N is not defined the value is computed each time
-CoordType Normal() const
+/// Return the value of the face normal as it correspond to the current geometry.
+/// it is always computed and never stored. 
+const CoordType Normal() const
 {
-#ifdef __VCGLIB_FACE_N
-	return _n;
-#else
-	return vcg::Normal(V(0)->P(), V(1)->P(), V(2)->P());
-#endif
+	return vcg::Normal(*this);
 }
+
 #ifdef __VCGLIB_FACE_WN
 	/// This vector indicates per wedge normal 
 	CoordType _wn[3];
@@ -741,9 +751,6 @@ public:
 
     void ClearFlags() {_flags=0;}
 
-	inline FACE_TYPE() {
-	};
-
 	/// Return the _flags.
 	inline int & Flags ()
 	{
@@ -866,14 +873,14 @@ static bool HasFaceColor()  {
 #endif
 }
 static bool HasFFAdjacency()  { 
-#if (defined(__VCGLIB_FACE_FA) && defined(__VCGLIB_FACE_SA))
+#if (defined(__VCGLIB_FACE_FA) || defined(__VCGLIB_FACE_SA))
   return true;
 #else
   return false;
 #endif
 }
 static bool HasVFAdjacency()  { 
-#if (defined(__VCGLIB_FACE_VA) && defined(__VCGLIB_FACE_SA))
+#if (defined(__VCGLIB_FACE_VA) || defined(__VCGLIB_FACE_SA))
   return true;
 #else
   return false;
