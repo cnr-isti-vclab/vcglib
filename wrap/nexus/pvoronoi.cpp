@@ -24,11 +24,17 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/06/23 17:17:46  ponchio
+Created
+
 
 ****************************************************************************/
 
 #pragma warning(disable:4786 4804 4244 4018 4267 4311)
+#include <stdio.h>
+#include <iostream>
 #include "pvoronoi.h"
+
 using namespace std;
 using namespace vcg;
 using namespace nxs;
@@ -119,6 +125,11 @@ unsigned int VoronoiPartition::count(Key key) {
   return key > 0 && key < size();
 }
 
+Seed &VoronoiPartition::operator[](Key key) {
+  assert(key < all_seeds.size());
+  return all_seeds[key];
+}
+
 VoronoiPartition::Key VoronoiPartition::Locate(const vcg::Point3f &p) {
   int target;
   Closest(p, target);
@@ -131,3 +142,41 @@ float VoronoiPartition::Priority(const vcg::Point3f &p, Key key) {
   return seed.Dist(p);
 }
 	
+bool VoronoiPartition::Save(const std::string &file) {
+  FILE *fp = fopen(file.c_str(), "wb+");
+  if(!fp) return false;
+  Save(fp);
+  fclose(fp);
+  return true;
+}
+
+bool VoronoiPartition::Load(const std::string &file) {
+  FILE *fp = fopen(file.c_str(), "rb");
+  if(!fp) return false;
+  Load(fp);
+  fclose(fp);
+  return true;
+}
+
+unsigned int VoronoiPartition::Save(FILE *fp) {
+  fwrite(&bbox, sizeof(Box3f), 1, fp);
+  int n = all_seeds.size();
+  fwrite(&n, sizeof(int), 1, fp);
+  fwrite(&all_seeds[0], sizeof(Seed), all_seeds.size(), fp);
+  return sizeof(Box3f) + sizeof(int) + sizeof(Seed) * all_seeds.size();
+}
+
+unsigned int VoronoiPartition::Load(FILE *fp) {
+  clear();
+  fread(&bbox, sizeof(Box3f), 1, fp);
+  int n;
+  fread(&n, sizeof(int), 1, fp);
+  all_seeds.resize(n);
+  fread(&all_seeds[0], sizeof(Seed), all_seeds.size(), fp);
+  ug_seeds.resize(n);
+  for(int i = 0; i < n; i++)
+    ug_seeds[i] = all_seeds[i];
+  ug.SetBBox(bbox);
+  ug.Set(ug_seeds);
+  return sizeof(Box3f) + sizeof(int) + sizeof(Seed) * all_seeds.size();
+}

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/06/23 17:17:46  ponchio
+Created
+
 
 ****************************************************************************/
 
@@ -32,6 +35,8 @@ $Log: not supported by cvs2svn $
 
 #include <vector>
 #include <set>
+#include <string>
+#include <stdio.h>
 
 #include <vcg/space/point3.h>
 #include <vcg/space/box3.h>
@@ -60,7 +65,7 @@ namespace nxs {
       return weight * weight *vcg::SquaredDistance(p,q); 
     }  
   };
-
+  
 
   class VoronoiPartition {
   public:
@@ -87,10 +92,15 @@ namespace nxs {
     iterator end();
     int size();
     unsigned int count(Key key);
+    Seed &operator[](Key key);
     void clear();
     Key Locate(const vcg::Point3f &p);
     float Priority(const vcg::Point3f &p, Key key);
     
+    bool Save(const std::string &file);
+    bool Load(const std::string &file);
+    unsigned int Save(FILE *fp);
+    unsigned int Load(FILE *fp);
   private:    
     vcg::Box3f bbox;
     vcg::GridStaticPtr< std::vector<Seed> > ug;

@@ -24,19 +24,27 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/06/23 17:17:46  ponchio
+Created
+
 
 ****************************************************************************/
 
 #ifndef NXS_PCHAIN_H
 #define NXS_PCHAIN_H
 
+#include <stdio.h>
 #include <vcg/space/point3.h>
 
+/** Partition must be a class with a Key type, with 
+    Levels, Locate, Priority, Save(FILE *), Load(FILE *)
+    as in pvoronoi.h */
 namespace {
 
 template <class Partition> class PChain {
  public:
   typedef typename Partition::Key Key;
+  std::vector<Partition> levels;
 
   unsigned int Levels() {
     return levels.size();
@@ -51,8 +59,29 @@ template <class Partition> class PChain {
     assert(level < levels.size());
     return levels[level].Priority(level, p, key);
   }
- private:
-  std::vector<Partition> levels;
+  bool Save(const std::string &file) {
+    FILE *fp = fopen(file.c_str(), "wb+");
+    if(!fp) return false;
+    int n = Levels();
+    fwrite(&n, sizeof(int), 1, fp);
+    for(int i = 0; i < n; i++)
+      levels[i].Save(fp);
+    fclose(fp);
+    return true;
+  }
+  bool Load(const std::string &file) {
+    levels.clear(); 
+    FILE *fp = fopen(file.c_str(), "rb");
+    if(!fp) return false;
+    int n;
+    fread(&n, sizeof(int), 1, fp);
+    levels.resize(n);
+    for(int i = 0; i < n; i++) 
+      levels[i].Load(fp);
+
+    fclose(fp);
+    return true;
+  }
 };
 
 }//namespace
