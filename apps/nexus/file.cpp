@@ -6,6 +6,7 @@ using namespace nxs;
 
 bool File::Create(const string &filename) {
   size = 0;
+  readonly = false;
 #ifdef WIN32
   fp = CreateFile(filename.c_str(), GENERIC_READ | GENERIC_WRITE, 0, 
 		  NULL, CREATE_ALWAYS, 0, NULL);
@@ -17,13 +18,17 @@ bool File::Create(const string &filename) {
     return true;
 }
 
-bool File::Load(const string &filename) {
+bool File::Load(const string &filename, bool ronly) {
+  readonly = ronly;
 #ifdef WIN32
   fp = CreateFile(filename.c_str(), GENERIC_READ | GENERIC_WRITE, 
 		  0, NULL, OPEN_EXISTING, 0, NULL); 
   if(fp == INVALID_HANDLE_VALUE) return false;
 #else
-  fp = fopen(filename.c_str(), "rb+");
+  if(readonly)
+    fp = fopen(filename.c_str(), "rb");
+  else
+    fp = fopen(filename.c_str(), "rb+");
   if(!fp) return false;
 #endif
 
@@ -48,8 +53,9 @@ void File::Close() {
   }
 }
 
-void File::Resize(unsigned int elem) {
+void File::Redim(unsigned int elem) {
   assert(fp);
+  assert(!readonly);
   if(elem > size) {
     
 #ifdef WIN32
@@ -101,6 +107,7 @@ void File::ReadBuffer(void *data, unsigned int sz) {
 }
 
 void File::WriteBuffer(void *data, unsigned int sz) {
+  assert(!readonly);
 #ifdef WIN32
   DWORD tmp;
   WriteFile(fp, data, sz, &tmp, NULL);

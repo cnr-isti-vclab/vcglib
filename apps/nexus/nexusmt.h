@@ -23,7 +23,7 @@ namespace nxs {
  
  class Policy {
  public:
-   virtual bool Expand(unsigned int patch, Nexus::Entry &entry) = 0;
+   virtual bool Expand(unsigned int patch, Nexus::PatchInfo &entry) = 0;
    virtual void GetView() {}
    virtual void Visit(Node *node, std::queue<Node *> &qnode);
  };
@@ -35,7 +35,7 @@ namespace nxs {
 
    FrustumPolicy(float _err = 4): error(_err) {}
    void GetView() { frustum.GetView(); }
-   bool Expand(unsigned int patch, Nexus::Entry &entry);
+   bool Expand(unsigned int patch, Nexus::PatchInfo &entry);
  };
 
 class NexusMt: public Nexus {
@@ -67,7 +67,6 @@ class NexusMt: public Nexus {
 
   Vbo vbo;
   unsigned int vbo_size;
-  unsigned int ram_size;
 
   Policy *policy;
   float error;
@@ -104,22 +103,6 @@ class NexusMt: public Nexus {
   void ClearHistory();
   void Select(std::vector<unsigned int> &selected);
   Patch &LoadPatch(unsigned int p);
-  void FlushRam();
-
-  unsigned int frame;
-  unsigned int ram_used;
-
-  struct Sgurz {
-    Sgurz(Patch *_patch = NULL, unsigned int _vbo = 0,
-	  unsigned int _vio = 0, unsigned int _last_frame = 0):
-      patch(_patch), vbo(_vbo), vio(_vio), last_frame(_last_frame) {}
-    Patch *patch;
-    unsigned int vbo; //vertex buffer
-    unsigned int vio; //index buffer
-    unsigned int last_frame;
-  };
-
-  std::vector<Sgurz> ram_buffer;
 };
 
 }

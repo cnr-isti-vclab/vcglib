@@ -5,39 +5,42 @@
 #include <vector>
 #include <set>
 #include <vcg/space/point3.h>
-#include <vcg/space/sphere3.h>
-#include "vfile.h"
-#include "patch.h"
-#include "border.h"
+
+#include "patchserver.h"
+#include "borderserver.h"
 
 namespace nxs {
+
+
+struct PatchInfo {
+  unsigned short nvert;
+  unsigned short nface;
+  
+  vcg::Sphere3f sphere;
+  float error;
+};
 
 
 
 class Nexus {
  public:
 
-  struct Entry {
-    Entry(): patch_start(0xffffffff), border_start(0xffffffff),
-	 patch_size(0), border_size(0), border_used(0),
-      nvert(0), nface(0), sphere(vcg::Sphere3f()) {}
-
-    unsigned int patch_start;  //granularita' Chunk
+  struct BorderEntry {
     unsigned int border_start; //granuralita' Link
-    unsigned short patch_size;  //in chunks
-    unsigned short patch_used;  // in chunks (if compressed is < patch_size)
     unsigned short border_size; //in Links
     unsigned short border_used; //in Links
-
-    //Data used for extraction
+  };
+  
+  struct PatchInfo {
     unsigned short nvert;
     unsigned short nface;
+    
     vcg::Sphere3f sphere;
     float error;
-    unsigned short ram;
-    unsigned short agp;
   };
 
+
+  //TODO optimize to be vector with offset.
   struct Update {
     std::vector<unsigned int> erased;
     std::vector<unsigned int> created;
@@ -46,46 +49,50 @@ class Nexus {
 
   Nexus();
   virtual ~Nexus();
+
   bool Create(const std::string &filename, Signature signature);
-  virtual bool Load(const std::string &filename);
+  virtual bool Load(const std::string &filename, bool readonly = false);
   virtual void Close();
 
-  Patch GetPatch(unsigned int patch, bool flush = true);
+  unsigned int AddPatch(unsigned int nv, unsigned int nf, unsigned int nb);
+  Patch &GetPatch(unsigned int patch, bool flush = true);
   Border GetBorder(unsigned int patch, bool flush = true);
 
-  bool IsCompressed() { return signature & NXS_COMPRESSED; }
-
+  bool IsCompressed()    { return signature & NXS_COMPRESSED; }
+  bool HasStrips()       { return signature & NXS_STRIP; }
+  bool HasColors()       { return signature & NXS_COLORS; }
+  bool HasNormalsShort() { return signature & NXS_NORMALS_SHORT; }
+  bool HasNormalsFloat() { return signature & NXS_NORMALS_FLOAT; }
+  
   //MOVE to nexus_build.cpp
-
-  unsigned int AddPatch(unsigned int nvert, unsigned int nface, 
-			unsigned int nbord);
-
-  //  unsigned int Join(std::vector<unsigned int> &patches);
   void Join(const std::set<unsigned int> &patches,
 	    std::vector<vcg::Point3f> &vert,
 	    std::vector<unsigned int> &faces,
 	    std::vector<Link> &links);
 
+  //move to nxsalgo!
   void Unify(float threshold = 0.0f);
 
-  //TODO implement theese
-  void CompactBorder(unsigned int patch);
-  void CompactBorders();
-  void CompactPatches();
+
+  /* Nexus data */
   
-  
+  //BE CAREFUL: this 2 members get replicated into patchserver
   Signature signature;
+  unsigned int chunk_size;
   
   unsigned int totvert;
   unsigned int totface;
   vcg::Sphere3f sphere;
     
-  std::vector<Entry> index;
+  std::vector<PatchInfo> index;
 
-  VFile<Chunk> patches;
-  VFile<Link> borders; 
+  PatchServer patches;
+  BorderServer borders; 
   
   std::vector<Update> history;
+
+  bool readonly;
+
  private:
   FILE *index_file;
 };

@@ -1,6 +1,7 @@
 #include "nxsbuild.h"
 #include <set>
 #include <map>
+#include <iostream>
 
 using namespace nxs;
 using namespace vcg;
@@ -34,27 +35,23 @@ void nxs::NexusAllocate(Crude &crude,
   
   nexus.index.resize(patch_faces.size());
   
-  unsigned int totchunks = 0;
+  //  unsigned int totchunks = 0;
   //now that we know various sizes, lets allocate space
   for(unsigned int i = 0; i < nexus.index.size(); i++) {
-    Nexus::Entry &entry = nexus.index[i];
+    Nexus::PatchInfo &entry = nexus.index[i];
     
     if(patch_faces[i] == 0 || patch_verts[i] == 0) 
       cerr << "Warning! Empty patch.\n";
 
-    entry.patch_start = totchunks;
-    entry.patch_size = Patch::ChunkSize(nexus.signature,
-					patch_verts[i], patch_faces[i]);
-    entry.patch_used = entry.patch_size;
-    totchunks += entry.patch_size;
-    entry.border_start = 0xffffffff;
+    nexus.patches.AddPatch(patch_verts[i], patch_faces[i]);
+
     entry.nvert = patch_verts[i];
-    entry.nface = 0;
+    entry.nface = patch_faces[i];
     entry.error = 0;
   }
 
-  nexus.patches.Resize(totchunks);
-
+  patch_faces.clear();
+  patch_faces.resize(nexus.index.size(), 0);
 
   //now we sort the faces into the patches (but still using absolute indexing
   //instead of relative indexing
@@ -62,8 +59,8 @@ void nxs::NexusAllocate(Crude &crude,
     Crude::Face &face = crude.face[i];
     unsigned int npatch = face_remap[i];
     
-    Nexus::Entry &entry = nexus.index[npatch];
-
+    Nexus::PatchInfo &entry = nexus.index[npatch];
+    //    cerr << "Entrynf: " << entry.nface << endl;
     //TODO this is slow because we have to initialize patch.
     //just get patch.start.
     Patch patch = nexus.GetPatch(npatch);
@@ -75,8 +72,11 @@ void nxs::NexusAllocate(Crude &crude,
       cerr << "Found degenerate.\n";
       continue;
     }
-    faces[entry.nface] = face;
-    entry.nface++;
+    faces[patch_faces[npatch]++] = face;
+  }
+  for(unsigned int i = 0; i < nexus.index.size(); i++) {
+    Nexus::PatchInfo &entry = nexus.index[i];
+    entry.nface = patch_faces[i];
   }
 }
 
@@ -89,12 +89,12 @@ void nxs::NexusFill(Crude &crude,
   //finally for every patch we collect the vertices
   //and fill the patch.
   //we need to remember start and size in border_remap;
-  //  vector<unsigned int> border_start;
-  //  vector<unsigned int> border_size;
   
   for(unsigned int i = 0; i < nexus.index.size(); i++) {
     Patch patch = nexus.GetPatch(i);
-    Nexus::Entry &entry = nexus.index[i];
+    Nexus::PatchInfo &entry = nexus.index[i];
+    //    cerr << "entryf: " << entry.nface << endl;
+    //    cerr << "nf: " << patch.nf << endl;
     
     //make a copy of faces (we need to write there :P)
     Crude::Face *faces = new Crude::Face[patch.nf];
@@ -107,6 +107,7 @@ void nxs::NexusFill(Crude &crude,
     unsigned int count = 0;
     map<unsigned int, unsigned short> remap;
 
+    assert(patch.nf != 0);
     for(unsigned int k = 0; k < patch.nf; k++) {
       Crude::Face &face = faces[k];
       for(int j = 0; j < 3; j++) {
@@ -123,7 +124,7 @@ void nxs::NexusFill(Crude &crude,
     assert(entry.nvert == remap.size());
     
     //record start of border:
-    entry.border_start = border_remap.Size();
+    unsigned int border_start = border_remap.Size();
     
     //TODO hash_set?
     set<unsigned int> border_patches;
@@ -144,8 +145,8 @@ void nxs::NexusFill(Crude &crude,
 	border_remap.PushBack(link);
       }
     }
-    //and number of borders:
-    entry.border_used = border_remap.Size() - entry.border_start;
+    unsigned int needed = border_remap.Size() - border_start;
+    nexus.borders.AddBorder(2 * needed, needed);
     delete []faces;
   }
 
@@ -153,45 +154,21 @@ void nxs::NexusFill(Crude &crude,
   for(unsigned int i = 0; i < nexus.index.size(); i++) 
     nexus.sphere.Add(nexus.index[i].sphere);
 
-  //test no duplicated faces:
-  /*  for(unsigned int i = 0; i < nexus.index.size(); i++) {
-    Patch patch = nexus.GetPatch(i);
-    for(unsigned int k = 0; k < patch.nf; k++) {
-      assert(patch.Face(k)[0] != patch.Face(k)[1]);
-      assert(patch.Face(k)[0] != patch.Face(k)[2]);
-      assert(patch.Face(k)[1] != patch.Face(k)[2]);
-    }
-    }*/
-}
-
-void nxs::NexusFixBorder(Nexus &nexus, 
-			 VFile<RemapLink> &border_remap) {
-  
   //and last convert RemapLinks into Links
-  nexus.borders.Resize(border_remap.Size() * 2);
-  //* 2 is to accomodate future borders
 
-  for(unsigned int i = 0; i < nexus.index.size(); i++) {
-    Nexus::Entry &local = nexus.index[i];
-    local.border_start *= 2;
-    local.border_size = local.border_used * 2;
-  }
 
-  for(unsigned int i = 0; i < nexus.index.size(); i++) {
-    Nexus::Entry &local = nexus.index[i];
-
-    unsigned int remap_start = local.border_start/2;
+  for(unsigned int i = 0; i < nexus.borders.borders.size(); i++) {
+    BorderEntry &local = nexus.borders.borders[i];
     //* 2 is to accomodate future borders
-
+    unsigned int remap_start = local.border_start/2;
 
     // K is the main iterator (where we write to in nexus.borders)
     for(unsigned int k = 0;  k < local.border_used; k++) {
-
+      
       
       RemapLink start_link = border_remap[k + remap_start];
-      assert(start_link.rel_vert < local.nvert);
-
-      Nexus::Entry &remote = nexus.index[start_link.patch];
+      
+      BorderEntry &remote = nexus.borders.borders[start_link.patch];
 
       bool found = false;
 
@@ -210,8 +187,6 @@ void nxs::NexusFixBorder(Nexus &nexus,
 	  found = true;
 	}
       }
-      //      assert(nexus.borders[k + local.border_start].start_vert < local.nvert);
-      //      assert(found);
     }
   }
   nexus.borders.Flush();
@@ -219,21 +194,20 @@ void nxs::NexusFixBorder(Nexus &nexus,
   //Checking border consistency:
   /*  for(unsigned int i = 0; i < nexus.index.size(); i++) {
     Border border = nexus.GetBorder(i);
-    Nexus::Entry &entry = nexus.index[i];
+    Nexus::PatchInfo &entry = nexus.index[i];
     for(unsigned int k = 0; k < border.Size(); k++) {
       Link &link = border[k];
       if(link.start_vert >= entry.nvert) {
 	cerr << "K: " << k << endl;
 	cerr << "patch: " << i << " nvert: " << entry.nvert << " startv: " 
 	     << link.start_vert << endl;
-	cerr << "bstart: " << entry.border_start 
-	     << "bsize: " << entry.border_size << endl;
+	//	cerr << "bstart: " << entry.border_start 
+	//	     << "bsize: " << entry.border_size << endl;
       }
       assert(link.end_patch < nexus.index.size());
       assert(link.start_vert < entry.nvert);
-      Nexus::Entry &remote = nexus.index[link.end_patch];
+      Nexus::PatchInfo &remote = nexus.index[link.end_patch];
       assert(link.end_vert < remote.nvert);
     }
-    
     }*/
 }

@@ -25,11 +25,13 @@ bool Nexus::Create(const string &file, Signature sig) {
   
   index.clear();
 
-  //Important: chunk_size must be 1 so that i can use Region in VFile.
-  if(!patches.Create(file + ".nxp", 1)) {
+  chunk_size = 1024;
+
+  if(!patches.Create(file + ".nxp", signature, chunk_size)) {
     cerr << "Could not create file: " << file << ".nxp" << endl;
     return false;
   }
+  //Important: chunk_size must be 1 so that i can use Region in VFile.
   if(!borders.Create(file + ".nxb", 1)) {
     cerr << "Could not create file: " << file << ".nxb" << endl;
     return false;
@@ -38,7 +40,7 @@ bool Nexus::Create(const string &file, Signature sig) {
   return true;
 }
 
-bool Nexus::Load(const string &file) {
+bool Nexus::Load(const string &file, bool readonly) {
   index_file = fopen((file + ".nxs").c_str(), "rb+");
   if(!index_file) return false;
   
@@ -51,15 +53,19 @@ bool Nexus::Load(const string &file) {
   if(!readed) return false;
   readed = fread(&sphere, sizeof(Sphere3f), 1, index_file);
   if(!readed) return false;
-  
+  readed = fread(&chunk_size, sizeof(unsigned int), 1, index_file);
+    if(!readed) return false;
+
   unsigned int size; //size of index
   readed = fread(&size, sizeof(unsigned int), 1, index_file);
   if(!readed) return false;
 
   index.resize(size);
-  readed = fread(&index[0], sizeof(Entry), size, index_file);
+  readed = fread(&index[0], sizeof(PatchInfo), size, index_file);
   if(readed != size) return false;
-
+  patches.ReadEntries(index_file);
+  borders.ReadEntries(index_file);
+  
   //history size;
   fread(&size, sizeof(unsigned int), 1, index_file);
   vector<unsigned int> buffer;
@@ -81,13 +87,16 @@ bool Nexus::Load(const string &file) {
     for(unsigned int e = 0; e < created; e++) 
       history[i].created[e] = buffer[pos++];
   }
-
-  if(!patches.Load(file + ".nxp", 1)) return false;
+  
+  //TODO support readonly
+  if(!patches.Load(file + ".nxp", signature, chunk_size, readonly)) 
+    return false;
   if(!borders.Load(file + ".nxb", 1)) return false;
   return true;
 }
 
 void Nexus::Close() {
+  cerr << "Closing!" << endl;
   if(!index_file) return;
   rewind(index_file);
 
@@ -95,10 +104,14 @@ void Nexus::Close() {
   fwrite(&totvert, sizeof(unsigned int), 1, index_file);
   fwrite(&totface, sizeof(unsigned int), 1, index_file);
   fwrite(&sphere, sizeof(Sphere3f), 1, index_file);
+  fwrite(&chunk_size, sizeof(unsigned int), 1, index_file);
   
   unsigned int size = index.size(); //size of index
   fwrite(&size, sizeof(unsigned int), 1, index_file);
-  fwrite(&(index[0]), sizeof(Entry), size, index_file);
+  fwrite(&(index[0]), sizeof(PatchInfo), size, index_file);
+
+  patches.WriteEntries(index_file);
+  borders.WriteEntries(index_file);
 
   vector<unsigned int> buffer;
   buffer.push_back(history.size());
@@ -124,38 +137,34 @@ void Nexus::Close() {
   borders.Close();
 }
 
-Patch Nexus::GetPatch(unsigned int patch, bool flush) {
-  Entry &entry = index[patch];
-  Chunk *start = patches.GetRegion(entry.patch_start, entry.patch_used,flush);
-  return Patch(signature, start, entry.nvert, entry.nface);
+Patch &Nexus::GetPatch(unsigned int patch, bool flush) {
+  assert(patch < index.size());
+  PatchInfo &info = index[patch];
+  return patches.GetPatch(patch, info.nvert, info.nface, flush);
 }
 
 Border Nexus::GetBorder(unsigned int patch, bool flush) {
-  Entry &entry = index[patch];
-  Link *start = borders.GetRegion(entry.border_start, entry.border_size,flush);
-  return Border(start, entry.border_used, entry.border_size);
+  PatchInfo &info = index[patch];
+  return borders.GetBorder(patch);
 }
 
 
 unsigned int Nexus::AddPatch(unsigned int nvert, unsigned int nface,
 			     unsigned int nbord) {
-  Entry entry;
-  entry.patch_start = patches.Size();
-  entry.patch_size = Patch::ChunkSize(signature, nvert, nface);
-  entry.patch_used = entry.patch_size;
-  entry.border_start = borders.Size();
-  entry.border_size = nbord;
-  entry.border_used = 0;
-  entry.nvert = nvert;
-  entry.nface = nface;
+
+  PatchInfo info;
+  info.nvert = nvert;
+  info.nface = nface;
   
-  patches.Resize(patches.Size() + entry.patch_size);
-  borders.Resize(borders.Size() + nbord);
-  index.push_back(entry);
+  patches.AddPatch(nvert, nface);
+  borders.AddBorder(nbord);
+
+  index.push_back(info);
   totvert += nvert;
   totface += nface;
   return index.size() -1;
 }
+
 
 void Nexus::Join(const std::set<unsigned int> &patches,
 		 std::vector<Point3f> &newvert,
@@ -172,7 +181,7 @@ void Nexus::Join(const std::set<unsigned int> &patches,
   set<unsigned int>::const_iterator i;
   for(i = patches.begin(); i != patches.end(); i++) {
     unsigned int patch = *i;
-    Nexus::Entry &entry = index[patch];
+    PatchInfo &entry = index[patch];
     remap[*i].resize(entry.nvert, 0xffffffff);
   }
 
@@ -183,7 +192,7 @@ void Nexus::Join(const std::set<unsigned int> &patches,
     unsigned int patch = *i;
     vector<unsigned int> &vmap = remap[*i];
 
-    Nexus::Entry &entry = index[patch];
+    PatchInfo &entry = index[patch];
     fcount += entry.nface;
     for(unsigned int k = 0; k < entry.nvert; k++) {
       if(vmap[k] == 0xffffffff) { //first time
@@ -231,7 +240,7 @@ void Nexus::Join(const std::set<unsigned int> &patches,
       newvert[vmap[i]] = patch.Vert(i);
     }
     
-    for(unsigned int i = 0; i < patch.nf; i++) {
+    /*    for(unsigned int i = 0; i < patch.nf; i++) {
       unsigned short *face = patch.Face(i);
       if(patch.Vert(face[0]) == patch.Vert(face[1]) ||
 	 patch.Vert(face[0]) == patch.Vert(face[2]) ||
@@ -251,7 +260,7 @@ void Nexus::Join(const std::set<unsigned int> &patches,
 	cerr << patch.Face(i)[0] << " " << patch.Face(i)[1] 
 	     << patch.Face(i)[2] << endl;
       }
-    }
+      }*/
     for(unsigned int i = 0; i < patch.nf; i++) 
       for(int k = 0; k < 3; k++) 
 	newface[fcount++] = vmap[patch.Face(i)[k]];
@@ -273,7 +282,7 @@ void Nexus::Unify(float threshold) {
   unsigned int degenerate = 0;
 
   for(unsigned int p = 0; p < index.size(); p++) {
-    Nexus::Entry &entry = index[p];
+    PatchInfo &entry = index[p];
     Patch patch = GetPatch(p);
 
     unsigned int vcount = 0;
@@ -348,6 +357,7 @@ void Nexus::Unify(float threshold) {
       }
     }
   }
+  //TODO: better to compact directly borders than setting them null.
   //finally: there may be duplicated borders
   for(unsigned int p = 0; p < index.size(); p++) {
     Border border = GetBorder(p);

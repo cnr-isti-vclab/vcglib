@@ -18,7 +18,7 @@ void Policy::Visit(Node *node, std::queue<Node *> &qnode) {
   qnode.push(node);
 }
 
-bool FrustumPolicy::Expand(unsigned int patch, Nexus::Entry &entry) {
+bool FrustumPolicy::Expand(unsigned int patch, Nexus::PatchInfo &entry) {
   if(entry.error == 0) return false;
   float dist = Distance(entry.sphere, frustum.ViewPoint());
   /*Point3f line = frustum.viewPoint() - cell->sphere.center;
@@ -33,17 +33,13 @@ bool FrustumPolicy::Expand(unsigned int patch, Nexus::Entry &entry) {
 }
 
 
-NexusMt::NexusMt(): vbo(VBO_AUTO), vbo_size(0), ram_size(128000000),
+NexusMt::NexusMt(): vbo(VBO_AUTO), vbo_size(0), 
 		    policy(NULL), error(4), realtime(true),
 		    mode(SMOOTH) {
   policy = new FrustumPolicy();
 }
 
-NexusMt::~NexusMt() {
-  for(unsigned int i = 0; i < ram_buffer.size(); i++)
-    if(ram_buffer[i].patch)
-      delete ram_buffer[i].patch;
-}
+NexusMt::~NexusMt() {}
 
 bool NexusMt::Load(const string &filename) {
   if(!Nexus::Load(filename)) return false;
@@ -59,9 +55,6 @@ bool NexusMt::Load(const string &filename) {
   SetComponent(TEXTURE, true);
   SetComponent(DATA, true);
 
-  frame = 0;
-  ram_used = 0;
-  ram_buffer.resize(index.size());
   return true;
 }
 
@@ -94,13 +87,15 @@ void NexusMt::Render() {
 
   for(unsigned int i = 0; i < cells.size(); i++) {
     unsigned int cell = cells[i];
-    Nexus::Entry &entry = index[cell];
+    Nexus::PatchInfo &entry = index[cell];
 
     //frustum culling
     if(frustum.IsOutside(entry.sphere.Center(), entry.sphere.Radius()))
       continue;
 
-    Patch &patch = LoadPatch(cell);
+    Patch &patch = GetPatch(cell);
+
+    assert(patch.start);
 
     glVertexPointer(3, GL_FLOAT, 0, patch.VertBegin());
     if(use_colors)
@@ -154,7 +149,7 @@ void NexusMt::SetVbo(Vbo _vbo, unsigned int _vbo_size,
   if(!GLEW_ARB_vertex_buffer_object)
     vbo = VBO_OFF;
   vbo_size = _vbo_size;
-  ram_size = _ram_size;
+  patches.ram_size = _ram_size/chunk_size;
 }
 
 bool NexusMt::SetMode(Mode _mode) {
@@ -344,27 +339,3 @@ void NexusMt::Select(vector<unsigned int> &selected) {
   }
 }
 
-Patch &NexusMt::LoadPatch(unsigned int p) {
-  Sgurz &sgurz = ram_buffer[p];
-  if(sgurz.patch) {
-    sgurz.last_frame = frame;
-    return *(sgurz.patch);
-  }
-
-  Entry &entry = index[p];
-  Chunk *start = new Chunk[entry.patch_size];
-  ram_used += entry.patch_size * sizeof(Chunk);
-  patches.SetPosition(entry.patch_start * sizeof(Chunk));
-  patches.ReadBuffer(start, entry.patch_used * sizeof(Chunk)); 
-  Patch *patch = new Patch(signature, start, entry.nvert, entry.nface);
-  sgurz.patch = patch;
-
-  if(ram_used > ram_size * 1.5) 
-    FlushRam();
-
-  return *(sgurz.patch);
-}
-
-void NexusMt::FlushRam() {
-  //use drame info and error to prune 
-}

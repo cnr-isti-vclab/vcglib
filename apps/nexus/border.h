@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/09/30 00:27:08  ponchio
+Added used counter.
+
 Revision 1.3  2004/07/05 17:02:17  ponchio
 Couple of const missing.
 
@@ -70,6 +73,7 @@ class Border {
   Border(Link *l = NULL, unsigned short _used = 0, unsigned short _size = 0): 
     start(l), used(_used), size(_size) {}
   unsigned int Size() { return used; }
+  //TODO rename available to capacity.
   unsigned int Available() { return size; }
   Link &operator[](unsigned int i) { return start[i]; }
   Link *Start() { return start; }

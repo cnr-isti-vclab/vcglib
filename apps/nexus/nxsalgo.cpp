@@ -1,5 +1,6 @@
 #include <vector>
 #include <map>
+#include <iostream>
 
 #include <wrap/strip/tristrip.h>
 
@@ -24,7 +25,7 @@ void nxs::ComputeNormals(Nexus &nexus) {
 
   //first step normals in the same patch.
   for(unsigned int p = 0; p < nexus.index.size(); p++) {
-    Patch patch = nexus.GetPatch(p);
+    Patch &patch = nexus.GetPatch(p);
 
     vector<Point3f> normals;
     normals.resize(patch.nv, Point3f(0, 0, 0));
@@ -76,7 +77,7 @@ void nxs::ComputeNormals(Nexus &nexus) {
   for(unsigned int p = 0; p < nexus.index.size(); p++) {
     //notice now ew allow flushing of old patches
 
-    Patch patch = nexus.GetPatch(p);
+    Patch &patch = nexus.GetPatch(p);
     Border border = nexus.GetBorder(p);
 
     //first pass we collect all normals
@@ -95,7 +96,7 @@ void nxs::ComputeNormals(Nexus &nexus) {
       }
 
       //no flushing now!
-      Patch remote = nexus.GetPatch(link.end_patch, false);
+      Patch &remote = nexus.GetPatch(link.end_patch, false);
       assert(link.end_vert < remote.nv);
 
       if(use_short) {
@@ -110,7 +111,7 @@ void nxs::ComputeNormals(Nexus &nexus) {
       Link &link = border[i];
       if(link.IsNull()) continue;
 
-      Patch remote = nexus.GetPatch(link.end_patch, false);
+      Patch &remote = nexus.GetPatch(link.end_patch, false);
       Point3f &n = normals[link.start_vert];
       n.Normalize();      
 

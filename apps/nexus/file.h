@@ -21,14 +21,17 @@ class File {
   ~File() { Close(); }   
 
   bool Create(const std::string &filename);
-  bool Load(const std::string &filename);
+  bool Load(const std::string &filename, bool readonly = false);
   void Close();
-
-  void Resize(unsigned int elem);
+  
+  unsigned int Length() { return size; }
+  void Redim(unsigned int elem);
 
   void SetPosition(unsigned int chunk);
   void ReadBuffer(void *data, unsigned int size);
   void WriteBuffer(void *data, unsigned int size);
+
+  bool IsReadOnly() { return readonly; }
 
  protected:
 
@@ -38,6 +41,7 @@ class File {
    FILE *fp;  
 #endif
    unsigned int size;
+   bool readonly;
 };
 
 }
