@@ -430,7 +430,7 @@ namespace vcg
 			{
 				Matrix<TYPE> result(_rows, _columns);
 				for (unsigned int i=0; i<_rows*_columns; i++)
-					results._data[i] =  _data[i]-k;
+					result._data[i] =  _data[i]-k;
 				return result;
 			};
 
@@ -455,7 +455,7 @@ namespace vcg
 			{
 				Matrix<TYPE> result(_rows, _columns);
 				for (unsigned int i=0; i<_rows*_columns; i++)
-					results._data[i] =  _data[i]*k;
+					result._data[i] =  _data[i]*k;
 				return result;
 			};
 
@@ -468,7 +468,7 @@ namespace vcg
 			{
 				Matrix<TYPE> result(_rows, _columns);
 				for (unsigned int i=0; i<_rows*_columns; i++)
-					results._data[i] =  _data[i]/k;
+					result._data[i] =  _data[i]/k;
 				return result;
 			};
 
