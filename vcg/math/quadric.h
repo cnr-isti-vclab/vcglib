@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/09/14 19:48:27  ganovelli
+created
+
 
 ****************************************************************************/
 #ifndef __VCGLIB_QUADRIC
@@ -36,11 +39,11 @@ namespace vcg {
 namespace math {
 
 
-template<typename  PlaneType>
+template<typename  ScalarType>
 class Quadric
 {
 public:
-	typedef typename PlaneType::ScalarType ScalarType;
+	typedef ScalarType ScalarType;
 	ScalarType a[6];		// Matrice 3x3 simmetrica: a11 a12 a13 a22 a23 a33
 	ScalarType b[3];		// Vettore r3
 	ScalarType c;			// Fattore scalare (se -1 quadrica nulla)
@@ -54,6 +57,7 @@ public:
 	bool IsValid() const { return c>=0; }
 	void SetInvalid() { c = -1.0; }
 
+template< class PlaneType >
 	void ByPlane( const PlaneType & p )					// Init dato un piano
 	{
 		a[0] =  p.Direction()[0]*p.Direction()[0];	// a11
@@ -116,7 +120,8 @@ void operator = ( const Quadric & q )			// Assegna una quadrica
 		c    += q.c;
 	}
 
-	ScalarType Apply( const Point3<ScalarType> & p ) const	// Applica la quadrica al punto p
+template <class ResultScalarType>
+	ResultScalarType Apply( const Point3<ResultScalarType> & p ) const	// Applica la quadrica al punto p
 	{
 		assert( IsValid() );
 
@@ -202,9 +207,10 @@ bool Gauss33( FLTYPE x[], FLTYPE C[3][3+1] )
 }
 
 // determina il punto di errore minimo
-bool Minimum(Point3<ScalarType> &x)
+template <class ReturnScalarType>
+bool Minimum(Point3<ReturnScalarType> &x)
 {	
-		ScalarType C[3][4];
+		ReturnScalarType C[3][4];
 		C[0][0]=a[0]; C[0][1]=a[1]; C[0][2]=a[2];
 		C[1][0]=a[1]; C[1][1]=a[3]; C[1][2]=a[4];
 		C[2][0]=a[2]; C[2][1]=a[4]; C[2][2]=a[5];
