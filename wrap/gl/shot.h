@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/10/05 19:04:45  ganovelli
+changed from classes to functions
+
 Revision 1.1  2004/09/15 22:59:13  ganovelli
 creation
 
@@ -38,73 +41,80 @@ creation
 #ifndef __VCGLIB_GLSHOT
 #define __VCGLIB_GLSHOT
 
-// #include <vector>
-// #include <vcg/Matrix44.h>
-// #include <vcg/Box3.h>
+
+// include vcg stuff
+#include <vcg/space/point2.h>
+#include <vcg/space/point3.h>
 #include <vcg/math/similarity.h>
-#include <vcg/space/Point2.h>
-#include <vcg/space/Point3.h>
 #include <vcg/math/shot.h>
 
+// include wrap stuff
+#include <wrap/gui/trackball.h>
 #include <wrap/gl/math.h>
 #include <wrap/gl/camera.h>
 
-#include <dbgUti.h>
+template <class ShotType>
+struct GlShot {
 
+	typedef typename ShotType::ScalarType ScalarType;
+	typedef typename GlCamera<typename ShotType::CameraType> GlCameraType;
 
-template<class ShotType>
-void MatrixGL(const ShotType & shot,vcg::Matrix44<typename ShotType::ScalarType> & m) {
+/// takes the opengl matrix corresponding to the shot
+static void MatrixGL(const ShotType & shot,vcg::Matrix44<typename ShotType::ScalarType> & m) {
 	m = shot.similarity.Matrix();
 }
 
-
-template<class ShotType>
-void TransformGL(const ShotType & shot){
-		vcg::Matrix44<typename ShotType::ScalarType> m;
+/// perform the model transformation correspoding to the shot
+static void TransformGL(const vcg::Shot<typename ShotType::ScalarType> & shot){
+		vcg::Matrix44<ScalarType> m;
 		MatrixGL(shot,m);
 		glMultMatrix(m);
 	}
 
-template <class ShotType>
-void SetView(const ShotType & shot){
+/// set the view as from the shot
+static void SetView(const vcg::Shot<typename ShotType::ScalarType> & shot){
 		assert(glGetError() == 0);
-		glPushAttrib(GL_TRANSFORM_BIT);
 		glMatrixMode(GL_PROJECTION);
 		glPushMatrix();
 		glLoadIdentity();
-		assert(glGetError() == 0);
 
-		OutMatrix("mat.txt","a+");
 		assert(glGetError() == 0);
-
-		TransformGL(shot.camera,1.f);
-		assert(glGetError() == 0);
-
-		OutMatrix("mat.txt","a+");
+		GlCameraType::TransformGL(shot.camera); // apply camera/modelview transformation
 		assert(glGetError() == 0);
 
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
 		glLoadIdentity();
 
-		vcg::Matrix44<typename ShotType::ScalarType> m;
-		TransformGL(shot);
-
-		glPopAttrib();
-		
+		vcg::Matrix44<ScalarType> m;
+		TransformGL(shot);							// apply similarity/modelview transformation
 		assert(glGetError() == 0);
 }
 
-#define UnsetView()\
-		glPushAttrib(GL_TRANSFORM_BIT);\
-		glMatrixMode(GL_MODELVIEW);\
-		glPopMatrix();\
-		glMatrixMode(GL_PROJECTION);\
-		glPopMatrix();\
-		glPopAttrib();\
-		
+/// unset the view
+static void		UnsetView(){
+			glPushAttrib(GL_TRANSFORM_BIT);
+			glMatrixMode(GL_MODELVIEW);
+			glPopMatrix();
+			glMatrixMode(GL_PROJECTION);
+			glPopMatrix();
+			glPopAttrib();
+	}
+	
+/// takes a shot and a trackball and retur the shot corresponding to the transformation
+/// applied by the trackball
+static void FromTrackball(const vcg::Trackball & tr, const vcg::Shot<typename ShotType::ScalarType> & sShot, 
+										vcg::Shot<ScalarType> & shot ){
+											vcg::Point3<ScalarType> vp = sShot.ViewPoint()-tr.center;
+											vcg::Point3<ScalarType> nvp ;
 
+											vcg::Matrix44<ScalarType> trInv = tr.track.InverseMatrix();
+											nvp = trInv*vp;
+										  shot.SetViewPoint(nvp+tr.center);
+											shot.similarity.rot = trInv*sShot.similarity.rot;
+}
 
+};
 #endif
 
 
