@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/03/31 22:36:44  ganovelli
+First Working Release (with this comment)
+
 
 /****************************************************************************/
   
@@ -39,14 +42,14 @@ $Log: not supported by cvs2svn $
 namespace vcg {
 
 // CATBase: abstract base class for all the allocation tables
-template <class STL_CONT>
+template <typename STL_CONT>
 class CATBase{
 public:
-typedef STL_CONT::value_type VALUE_TYPE;
+typedef typename STL_CONT::value_type ValueType;
 
-virtual void Resort(VALUE_TYPE*,VALUE_TYPE*) =0;
+virtual void Resort(ValueType*,ValueType*) =0;
 virtual void Remove(const STL_CONT&) = 0;
-virtual void AddDataElem(VALUE_TYPE*,int)=0;
+virtual void AddDataElem(ValueType*,int)=0;
 
 public:
 // ID serves as a type trait. 
@@ -58,11 +61,11 @@ static int & Id(){
 
 // CATEntry: first derivation templated on the type of entry
 // It implements all the methods to trace and access TVector element
-template <class STL_CONT, class ENTRY_TYPE>
+template <typename STL_CONT, class ENTRY_TYPE>
 class CATEntry: public CATBase<STL_CONT>{
 public:
-typedef STL_CONT::value_type VALUE_TYPE;
-typedef ENTRY_TYPE EntryType;
+typedef typename STL_CONT::value_type ValueType;
+typedef typename ENTRY_TYPE EntryType;
 
 CATEntry(){if(Id()==0){
 							Id() = CATBase<STL_CONT>::Id()+1;
@@ -71,16 +74,16 @@ CATEntry(){if(Id()==0){
 					}
 
 
-static unsigned int Ord(VALUE_TYPE *);
+static unsigned int Ord(ValueType *);
 static ENTRY_TYPE & GetEntry(STL_CONT::value_type*pt);
 
 static	void  Insert( STL_CONT & c,bool cond=false );				// insert a vector to trace
 virtual void	Remove(  const STL_CONT  &	c);								// remove the container c
 static  void	RemoveIfEmpty(  const STL_CONT  &	c);								// remove the container c
-static  void	Remove(  VALUE_TYPE  *	v);										// remove the container that contains v
+static  void	Remove(  ValueType  *	v);										// remove the container that contains v
 
-virtual void Resort(	VALUE_TYPE* old_start,			// resort the allocation table
-											VALUE_TYPE* new_start);			// after a container was moved
+virtual void Resort(	ValueType* old_start,			// resort the allocation table
+											ValueType* new_start);			// after a container was moved
 	
 protected:
 
@@ -93,12 +96,12 @@ static bool & UTD(){
 	return upToDate;																// are up to date
 	}
 
-static VALUE_TYPE *& Lower() {
-	static VALUE_TYPE * lower;											// pointer to the first element
+static ValueType *& Lower() {
+	static ValueType * lower;											// pointer to the first element
 	return lower;																		// of the last container accessed
 	}
-static VALUE_TYPE *& Upper() {
-	static VALUE_TYPE * upper;											// pointer to the first element
+static ValueType *& Upper() {
+	static ValueType * upper;											// pointer to the first element
 	return upper;																		// if the container next to the last accessed
 }		
 
@@ -108,10 +111,10 @@ static std::list<ENTRY_TYPE>::iterator	 & Curr(){		// container that was last ac
 }
 
 
-static bool IsTheSameAsLast(VALUE_TYPE *pt);	// true if pt is in the  container
+static bool IsTheSameAsLast(ValueType *pt);	// true if pt is in the  container
 																							// that was accessed last
-static void Update(VALUE_TYPE*);							// set Upper() e Lower() 
-static std::list<ENTRY_TYPE>::iterator FindBase(const VALUE_TYPE * pt);	
+static void Update(ValueType*);							// set Upper() e Lower() 
+static std::list<ENTRY_TYPE>::iterator FindBase(const ValueType * pt);	
 																							// find the container that contains pt (naive)
 virtual  void  AddDataElem(STL_CONT::value_type * pt,int n);// add n element to the auxiliary data
 
@@ -124,20 +127,20 @@ static int & Id(){															// unique identifier of the istance
 
 // --------------------------- CATEntry: implementation --------------------
 
-template <class STL_CONT, class ENTRY_TYPE>
+template <typename STL_CONT, class ENTRY_TYPE>
 unsigned int CATEntry<STL_CONT,ENTRY_TYPE>::
 
-Ord(VALUE_TYPE * pt)
+Ord(ValueType * pt)
 {
 	Update(pt);
 	return (pt-Lower());
 }
 
 
-template <class STL_CONT, class ENTRY_TYPE>
+template <typename STL_CONT, class ENTRY_TYPE>
 std::list<ENTRY_TYPE>::iterator CATEntry<STL_CONT,ENTRY_TYPE>::
 
-FindBase(const VALUE_TYPE * pt)
+FindBase(const ValueType * pt)
 {
 std::list<ENTRY_TYPE>::iterator ite,curr_base,_;
 ite = AT().begin();
@@ -153,18 +156,18 @@ return curr_base;
 }
 
 
-template <class STL_CONT, class ENTRY_TYPE>
+template <typename STL_CONT, class ENTRY_TYPE>
  bool CATEntry< STL_CONT, ENTRY_TYPE>::
  
-IsTheSameAsLast(VALUE_TYPE * pt)
+IsTheSameAsLast(ValueType * pt)
 {
 return ( UTD() && ( !(Lower()> pt)) && (pt < Upper()) );
 }
 
-template <class STL_CONT, class ENTRY_TYPE>
+template <typename STL_CONT, class ENTRY_TYPE>
 void CATEntry< STL_CONT, ENTRY_TYPE>::
 
-Update(VALUE_TYPE * pt)
+Update(ValueType * pt)
 {
 if(!IsTheSameAsLast(pt)){
 	std::list<ENTRY_TYPE>::iterator lower_ite;
@@ -174,7 +177,7 @@ if(!IsTheSameAsLast(pt)){
 
 	Lower() = (*lower_ite).Start();
 	if( (*lower_ite).Start() == AT().back().Start())
-		Upper() = (VALUE_TYPE *) 0xffffffff;
+		Upper() = (ValueType *) 0xffffffff;
 	else
 	{
 		lower_ite++;		
@@ -186,15 +189,15 @@ if(!IsTheSameAsLast(pt)){
 	}
 }
 
-template <class STL_CONT, class ENTRY_TYPE>
+template <typename STL_CONT, class ENTRY_TYPE>
 void CATEntry< STL_CONT,  ENTRY_TYPE>::
-Resort(VALUE_TYPE* old_start,VALUE_TYPE* new_start)
+Resort(ValueType* old_start,ValueType* new_start)
 {
 AT().sort();
 UTD() = false;
 }
 
-template <class STL_CONT, class ENTRY_TYPE>
+template <typename STL_CONT, class ENTRY_TYPE>
 void CATEntry<STL_CONT, ENTRY_TYPE>::
 
 Remove( const STL_CONT & c )
@@ -209,7 +212,7 @@ for(ite = AT().begin(); ite != AT().end();  ++ite)
 UTD() = false;
 }
 
-template <class STL_CONT, class ENTRY_TYPE>
+template <typename STL_CONT, class ENTRY_TYPE>
 void CATEntry<STL_CONT, ENTRY_TYPE>::
 
 RemoveIfEmpty( const STL_CONT & c )
@@ -222,10 +225,10 @@ for(ite = AT().begin(); ite != AT().end();  ++ite)
 UTD() = false;
 }
 
-template <class STL_CONT, class ENTRY_TYPE>
+template <typename STL_CONT, class ENTRY_TYPE>
 void CATEntry<STL_CONT, ENTRY_TYPE>::
 
-Remove(VALUE_TYPE  *	pt)
+Remove(ValueType  *	pt)
 {
 	std::list<ENTRY_TYPE>::iterator lower_ite;
 	lower_ite = FindBase(pt);
@@ -234,7 +237,7 @@ Remove(VALUE_TYPE  *	pt)
 		
 }
 
-template <class STL_CONT, class ENTRY_TYPE>
+template <typename STL_CONT, class ENTRY_TYPE>
 void CATEntry<STL_CONT, ENTRY_TYPE>::
 
 Insert( STL_CONT & c,bool cond )
@@ -255,14 +258,14 @@ lower_ite->Resize(c.size());
 UTD() = false;
 }
 
-template <class STL_CONT, class ENTRY_TYPE>
+template <typename STL_CONT, class ENTRY_TYPE>
 ENTRY_TYPE & CATEntry<STL_CONT, ENTRY_TYPE>::
 GetEntry(STL_CONT::value_type*pt){
 Update(pt);
 return *Curr();
 }
 
-template <class STL_CONT, class ENTRY_TYPE>
+template <typename STL_CONT, class ENTRY_TYPE>
 void CATEntry<STL_CONT, ENTRY_TYPE>::
 
 AddDataElem(STL_CONT::value_type * pt,int n)
@@ -273,18 +276,19 @@ Curr()->Push_back(n);
 
 //--------------------------------------------------------------------------------------------
 // CAT: derivation of CATEntry for the case where the temporary data is unique for each type.
-// VERY IMPORTANT: there cannot be two vector of value with the same type of temporary datya
+// VERY IMPORTANT: there cannot be two vectors of value with the same type of temporary datya
 // This class is used to implement optional core data (NormalOpt, CoordOpt etc...)
-template <class STL_CONT,class ATTR_TYPE>
+template <typename STL_CONT,class ATTR_TYPE>
 class CAT:public CATEntry<STL_CONT, EntryCAT<STL_CONT,ATTR_TYPE> >{
+typedef typename STL_CONT::value_type ValueType;
 public:
-static ATTR_TYPE & Get(STL_CONT::value_type * pt);
+static ATTR_TYPE & Get(ValueType * pt);
 }; 
 //---------------------- CAT: implementation---------------------------------------------------
-template <class STL_CONT, class ATTR_TYPE>
+template <typename STL_CONT, class ATTR_TYPE>
 ATTR_TYPE & CAT<STL_CONT,ATTR_TYPE>::
 
-Get(STL_CONT::value_type * pt)
+Get(ValueType * pt)
 {
 int ord = Ord(pt);
 return Curr()->Data()[ord];
