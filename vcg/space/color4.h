@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/05/26 15:10:29  cignoni
+Corrected bug in setgrayshade
+
 Revision 1.5  2004/05/07 12:46:55  cignoni
 added ifdef for gcc [Bug c++/14479]
 
@@ -103,6 +106,7 @@ public:
 	
   inline void lerp(const Color4 &c0, const Color4 &c1, const float x);
 	inline void lerp(const Color4 &c0, const Color4 &c1, const Color4 &c2, const Point3f &ip);
+  /// given a float and a range set the corresponding color in the well known red->green->blue color ramp. To reverse the direction of the ramp just swap minf and maxf.
 	inline void ColorRamp(const float &minf,const float  &maxf ,float v );
 
 	inline void SetRGB( unsigned char r, unsigned char g, unsigned char b )
@@ -209,6 +213,7 @@ inline void Color4<T>::lerp(const Color4<T> &c0, const Color4<T> &c1, const Colo
 template <class T>
 inline void Color4<T>::ColorRamp(const float &minf,const float  &maxf ,float v )
 {
+  if(minf>maxf) { ColorRamp(maxf,minf,maxf+(minf-v)); return; }
 	if(v <  minf ) { *this=Color4(Color4<T>::Red); return; }
 	
 	float step=(maxf-minf)/4;
