@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/03/29 08:36:26  cignoni
+First working version!
+
 
 ****************************************************************************/
 #ifndef __VCG_VERTEX_PLUS
@@ -31,6 +34,7 @@ $Log: not supported by cvs2svn $
 
 #include <vcg/space/point3.h>
 #include <vcg/space/tcoord2.h>
+#include <vcg/space/color4.h>
 #include <vcg/simplex/vertexplus/component.h>
 
 namespace vcg {
