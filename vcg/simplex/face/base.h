@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2004/08/25 15:15:27  ganovelli
+minor changes to comply gcc compiler (typename's and stuff)
+
 Revision 1.17  2004/07/15 12:03:07  ganovelli
 minor changes
 
@@ -528,7 +531,7 @@ public:
 #endif
 	}
 
-	inline const FFTYPE * const & FFp( const int j ) const
+	inline const FFTYPE * const  FFp( const int j ) const
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
