@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/09/01 12:21:11  pietroni
+minor changes to comply gcc compiler (typename's )
+
 Revision 1.7  2004/07/09 10:08:21  ganovelli
 ComputeVOlume moved outside the class and other
  minor corrections
@@ -272,8 +275,6 @@ static int FofEE(const int &indexE0,const int &indexE1)
 }
 };
 
-/** \addtogroup space */
-/*@{*/
 /** 
 		Templated class for storing a generic tetrahedron in a 3D space.
     Note the relation with the Face class of TetraMesh complex, both classes provide the P(i) access functions to their points and therefore they share the algorithms on it (e.g. area, normal etc...)
@@ -373,7 +374,7 @@ Point3<typename TetraType::ScalarType> Normal( const TetraType &t,const int &fac
 {
   return(((t.cP(Tetra::VofF(face,1))-t.cP(Tetra::VofF(face,0)))^(t.cP(Tetra::VofF(face,2))-t.cP(Tetra::VofF(face,0)))).Normalize());
 }
-
+/*@}*/
 }	 // end namespace
 
 

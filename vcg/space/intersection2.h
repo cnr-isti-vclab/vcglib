@@ -34,14 +34,14 @@
 #include <vcg/space/triangle2.h>
 
 
+
+namespace vcg {
 /** \addtogroup space */
 /*@{*/
 /** 
     Function computing the intersection between couple of geometric primitives in
     2 dimension
 */
-
-namespace vcg {
 
 /// return true if the algle is convex (right rotation)
 template<class SCALAR_TYPE>
@@ -62,6 +62,6 @@ template<class SCALAR_TYPE>
   return((Convex(p,p0,p1))&&(Convex(p,p1,p2))&&(Convex(p,p2,p0)));
   //return((Convex(p,p0,p1))&&(Convex(p,p1,p2))&&(Convex(p,p2,p0)));
 }
-
+/*@}*/
 } // end namespace
 #endif

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2004/09/10 14:01:40  cignoni
+Added polar to cartesian
+
 Revision 1.16  2004/03/21 17:14:56  ponchio
 Added a math::
 
@@ -68,6 +71,7 @@ Edited doxygen comments
 #include <vcg/math/base.h>
 
 namespace vcg {
+
 /** \addtogroup space */
 /*@{*/
     /**
@@ -458,6 +462,8 @@ typedef Point3<float>  Point3f;
 typedef Point3<double> Point3d;
 
 /*@}*/
+
 } // end namespace
+
 #endif
 

@@ -1,6 +1,6 @@
 /** \defgroup space Space
-This module contains all the basic types for representing spatial entities like points (vcg::Point3) box3, line planes etc.
-*/
+This module contains all the basic types for representing spatial entities like points (vcg::Point3) box3, line planes etc.This module contains the documentation for the types and the functions used for...
+*/
 /** \defgroup vertex VertexesVertex of edge, triangular and tetrahedral meshesThis module contains the documentation for the types and the functions used for representing and managing vertexes of meshes.
 */
 /** \defgroup face Faces Face of a triangular or a tetrahedral mesh

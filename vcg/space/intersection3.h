@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2004/09/09 14:41:32  ponchio
+forgotten typename SEGMENTTYPE::...
+
 Revision 1.10  2004/08/09 09:48:43  pietroni
 correcter .dir to .Direction and .ori in .Origin()
 
@@ -75,14 +78,14 @@ Initial Commit
 
 
 
+
+namespace vcg {
 /** \addtogroup space */
 /*@{*/
 /** 
     Function computing the intersection between couple of geometric primitives in
     3 dimension
 */
-
-namespace vcg {
   /// interseciton between sphere and line
   template<class T>
     inline bool Intersection( const Sphere3<T> & sp, const Line3<T> & li, Point3<T> & p0,Point3<T> & p1 ){
@@ -297,6 +300,7 @@ bool Intersection( const Line3<T> & ray, const Point3<T> & vert0,
 	inte = vert0 + edge1*a + edge2*b;
   return true;
 }
+/*@}*/
 
 } // end namespace
 #endif
