@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2004/05/28 13:01:50  ganovelli
+changed scalar to ScalarType
+
 Revision 1.17  2004/05/26 15:09:32  cignoni
 better comments in set rotate
 
@@ -118,6 +121,44 @@ public:
   T *operator[](const int i);
   const T *operator[](const int i) const;
 
+	// return a copy of the i-th column
+	Point4<T> Column(const int& i)const{
+		assert(i >=0);
+		assert(i<4);
+		int first = i<<2;
+		return Point4<T>(_a[first],_a[first+1],_a[first+2],_a[first+3]);
+	}
+
+	// return the i-th row
+	Point4<T> & Column4(const int& i)const{
+		assert(i >=0);
+		assert(i<4);
+		int first = i<<2;
+		return Point4<T>(_a[first],_a[first+4],_a[first+8],_a[first+12]);
+	}
+
+	// return a copy of the i-th row
+	Point4<T> Row4(const int& i)const{
+		assert(i >=0);
+		assert(i<4);
+		return *((Point4<T>*)(&_a[i<<2]));
+	}
+
+	Point3<T> Column3(const int& i)const{
+		assert(i >=0);
+		assert(i<4);
+		int first  = i <<2;
+		return Point3<T>(_a[first],_a[first+4],_a[first+8]);
+	}	
+	
+	// return a copy of the i-th row
+	Point3<T> Row3(const int& i)const{
+		assert(i >=0);
+		assert(i<4);
+		return *((Point3<T>*)(&_a[i<<2]));
+	}
+
+
   Matrix44 operator+(const Matrix44 &m) const;
   Matrix44 operator-(const Matrix44 &m) const;
   Matrix44 operator*(const Matrix44 &m) const;
@@ -133,6 +174,8 @@ public:
   void operator*=( const Matrix44 & m );	
   void operator*=( const T k );
 
+	void ToMatrix(Matrix44 & m) const {for(int i = 0; i < 16; i++) m.V()[i]=V()[i];}
+	void FromMatrix(const Matrix44 & m){for(int i = 0; i < 16; i++) V()[i]=m.V()[i];}
 	void SetZero();
   void SetIdentity();
   void SetDiagonal(const T k);
@@ -480,7 +523,7 @@ template <class T> bool LinearSolve<T>::Decompose() {
     A[i] = operator[](i);  
   SetIdentity();    
   Point4<T> scale;
-  //* Set scale factor, scale(i) = max( |a(i,j)| ), for each row
+  // Set scale factor, scale(i) = max( |a(i,j)| ), for each row
   for(int i = 0; i < 4; i++ ) {
     index[i] = i;			  // Initialize row index list
     T scalemax = (T)0.0;
@@ -489,10 +532,10 @@ template <class T> bool LinearSolve<T>::Decompose() {
     scale[i] = scalemax;
   }
 
-  //* Loop over rows k = 1, ..., (N-1)
+  // Loop over rows k = 1, ..., (N-1)
   int signDet = 1;
   for(int k = 0; k < 3; k++ ) {
-	  //* Select pivot row from max( |a(j,k)/s(j)| )
+	  // Select pivot row from max( |a(j,k)/s(j)| )
     T ratiomax = (T)0.0;
 	  int jPivot = k;
     for(int i = k; i < 4; i++ ) {
@@ -502,7 +545,7 @@ template <class T> bool LinearSolve<T>::Decompose() {
         ratiomax = ratio;
       }
     }
-	  //* Perform pivoting using row index list
+	  // Perform pivoting using row index list
 	  int indexJ = index[k];
 	  if( jPivot != k ) {	          // Pivot
       indexJ = index[jPivot];
@@ -510,7 +553,7 @@ template <class T> bool LinearSolve<T>::Decompose() {
       index[k] = indexJ;
 	    signDet *= -1;			  // Flip sign of determinant
 	  }
-	  //* Perform forward elimination
+	  // Perform forward elimination
     for(int i=k+1; i < 4; i++ ) {
       T coeff = A.element(index[i],k)/A.element(indexJ,k);
       for(int j=k+1; j < 4; j++ )
@@ -524,7 +567,7 @@ template <class T> bool LinearSolve<T>::Decompose() {
     operator[](i) = A[i];
 
   d = signDet; 
-  //*this = A;
+  // this = A;
   return true;  */
 
   d = 1; //no permutation still
