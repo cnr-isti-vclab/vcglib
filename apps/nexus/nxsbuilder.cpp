@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/12/03 21:19:00  ponchio
+Fixed a couple of memory leak...
+
 Revision 1.7  2004/12/03 01:20:56  ponchio
 Debug
 
@@ -56,7 +59,7 @@ Level 0.
 #else
 #include <unistd.h>
 #endif
-
+#include <hash_map>
 #include <iostream>
 
 #include "nxstypes.h"
@@ -405,7 +408,7 @@ void FourthStep(const string &crudefile, const string &output,
 
     vector<Link> links;   
     
-    map<unsigned int, unsigned short> vremap;
+    hash_map<unsigned int, unsigned short> vremap;
     for(unsigned int i = 0; i < vert_index[start].size; i++) {
       unsigned int global = vert_remap[vert_index[start].offset + i];      
       vremap[global] = i;

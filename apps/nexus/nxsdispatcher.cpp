@@ -56,7 +56,7 @@ void FragIO::execute() {
     server->writing.unlock();
     message *msg = new message(MSG_FAIL, (int)fragin);
     dispatcher->post(msg);
-    //TODO restart Server!
+    server->opener.start();    
     return;
   }
 
@@ -71,6 +71,7 @@ void FragIO::execute() {
     server->reading.unlock();
     message *msg = new message(MSG_FAIL, (int)fragin);
     dispatcher->post(msg);
+    server->opener.start();
     return;
   }
   server->reading.unlock();
