@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2004/10/18 17:15:45  ganovelli
+minor change
+
 Revision 1.13  2004/08/06 01:47:57  pietroni
 corrected errors on vfappend
 
@@ -228,6 +231,103 @@ void Swap (SwapFaceType &f, const int z )
   }
 }
 
+/*!
+* Check if the z-th edge of the face f can be flipped.
+*	\param f	pointer to the face
+*	\param z	the edge index
+*/
+template <class FaceType>
+static bool CheckFlipEdge(FaceType &f, int z)
+{
+	if (z<0 || z>2)
+		return false;
+
+	// boundary edges cannot be flipped
+	if (face::IsBorder(f, z))
+		return false;
+
+	FaceType *g = f.FFp(z);
+	int		 w = f.FFi(z);
+
+	// check if the vertices of the edge are the same
+	if (g->V(w)!=f.V1(z) || g->V1(w)!=f.V(z) )
+		return false;
+
+	// check if the flipped edge is already present in the mesh
+	typedef typename FaceType::VertexType VertexType;
+	VertexType *f_v2 = f.V2(z);
+	VertexType *g_v2 = g->V2(w);
+	if (f_v2 == g_v2)
+		return false;
+
+	vcg::face::Pos< FaceType > pos(&f, (z+2)%3, f.V2(z));
+	do
+	{
+		pos.NextE();
+		if (g_v2==pos.f->V1(pos.z))
+			return false;
+	}
+	while (&f!=pos.f);
+
+	return true;
+};
+
+/*!
+* Flip the z-th edge of the face f.
+* Check for topological correctness first using <CODE>CheckFlipFace()</CODE>.
+*	\param f	pointer to the face
+*	\param z	the edge index
+*/
+template <class FaceType>
+static void FlipEdge(FaceType &f, const int z)
+{	
+	assert(z>=0);
+	assert(z<3);
+	assert( !f.IsBorder(z) );
+	assert( face::IsManifold<FaceType>(f, z));
+
+ 	FaceType *g = f.FFp(z);
+	int		 w = f.FFi(z);
+	
+	assert( g->V(w)	== f.V1(z) );
+	assert( g->V1(w)== f.V(z) );
+	assert( g->V2(w)!= f.V(z) );
+	assert( g->V2(w)!= f.V1(z) );
+	assert( g->V2(w)!= f.V2(z) );
+
+	f.V1(z) = g->V2(w);
+	g->V1(w) = f.V2(z);
+	
+	f.FFp(z)				= g->FFp1(w);
+	f.FFi(z)				= g->FFi((w+1)%3);
+	g->FFp(w)				= f.FFp1(z);
+	g->FFi(w)				= f.FFi((z+1)%3);
+	f.FFp1(z)				= g;
+	f.FFi((z+1)%3)	= (w+1)%3;
+	g->FFp1(w)			= &f;
+	g->FFi((w+1)%3) = (z+1)%3;
+
+	if(f.FFp(z)==g)
+	{
+		f.FFp(z) = &f;
+		f.FFi(z) = z;
+	}
+	else
+	{
+		f.FFp(z)->FFp( f.UberZ(z) ) = &f;
+		f.FFp(z)->FFi( f.UberZ(z) ) = z;
+	}
+	if(g->FFp(w)==&f)
+	{
+		g->FFp(w)=g;
+		g->FFi(w)=w;
+	}
+	else
+	{
+		g->FFp(w)->FFp( g->UberZ(w) ) = g;
+		g->FFp(w)->FFi( g->UberZ(w) ) = w;
+	}
+};
 
 
 // Stacca la faccia corrente dalla catena di facce incidenti sul vertice z, 
