@@ -13,10 +13,10 @@
 namespace vcg {
 
 template <class VTTYPE> 
-class VertexATf : public VertexAT<float,VTTYPE> {};
+class VertexATf : public VertexAT<float,DUMMYFACETYPE,VTTYPE> {};
 
-template <class VFTYPE> 
-class VertexATd : public VertexAT<double,VTTYPE> {};
+template <class VTTYPE> 
+class VertexATd : public VertexAT<double,DUMMYFACETYPE,VTTYPE> {};
 
 }
 
