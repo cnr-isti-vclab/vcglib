@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.19  2004/09/28 15:24:56  fiorin
+DUMMY classes definition moved into vcg namespace
+
 Revision 1.18  2004/08/25 15:15:27  ganovelli
 minor changes to comply gcc compiler (typename's and stuff)
 
@@ -48,6 +51,9 @@ Revision 1.12  2004/05/10 13:31:13  ganovelli
 function for edge adjacency added
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2004/09/28 15:24:56  fiorin
+DUMMY classes definition moved into vcg namespace
+
 Revision 1.18  2004/08/25 15:15:27  ganovelli
 minor changes to comply gcc compiler (typename's and stuff)
 
@@ -131,14 +137,14 @@ namespace vcg {
 	@param FLTYPE (Template Parameter) Specifies the scalar field of the vertex coordinate type.
 	@param VFTYPE (Template Parameter) Specifies the type for the face, needed only for VF adjacency.
  */
-template <class FLTYPE, class VETYPE = DUMMYEDGETYPE, class VFTYPE = DUMMYFACETYPE, class VTTYPE = DUMMYTETRATYPE,class TCTYPE = TCoord2<float,1> > class VERTEX_TYPE
+template <class FLTYPE, class VETYPE = DUMMYEDGETYPE, class VFTYPE = DUMMYFACETYPE, class VTTYPE = DUMMYTETRATYPE,class TCTYPE = TCoord2<float,1>, class CoordTYPE= Point3<FLTYPE> > class VERTEX_TYPE
 {
 public:
 
 	/// The scalar type used to represent coords (i.e. float, double, ...)
 	typedef FLTYPE         ScalarType;
 	/// The coordinate type used to represent the point (i.e. Point3f, Point3d, ...)
-	typedef Point3<ScalarType> CoordType;
+	typedef CoordTYPE CoordType;
 	typedef Point3<ScalarType> NormalType;
 	/// The type base of the vertex, useful for recovering the original typename after user subclassing
 	typedef VERTEX_TYPE    BaseVertexType;
