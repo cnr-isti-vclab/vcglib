@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/03/25 14:57:49  ponchio
+Microerror. ($LOG$ -> $Log: not supported by cvs2svn $
+
 
 ****************************************************************************/
 
@@ -64,7 +67,7 @@ public:
 
 template <class S> Similarity<S> &Invert(Similarity<S> &m);
 template <class S> Similarity<S> Inverse(const Similarity<S> &m);
-template <class S> Point3<S> operator*(const Point3<S> &p, const Similarity<S> &m);
+template <class S> Point3<S> operator*(const Similarity<S> &m, const Point3<S> &p);
 
 
 template <class S> Similarity<S> Similarity<S>::operator*(const Similarity &a) const {
@@ -117,11 +120,12 @@ template <class S> Similarity<S> &Similarity<S>::SetRotate(const Quaternion<S> &
 template <class S> Matrix44<S> Similarity<S>::Matrix() const {
   Matrix44<S> r;
   rot.ToMatrix(r);
-  r *= Matrix44<S>().SetScale(sca, sca, sca);
+  Matrix44<S> s = Matrix44<S>().SetScale(sca, sca, sca);
   Matrix44<S> t = Matrix44<S>().SetTranslate(tra[0], tra[1], tra[2]);
-  r *= t;
-  return r;
+  return s*r*t;  // scale * rot * trans
 }
+
+
 
 template <class S> void Similarity<S>::FromMatrix(const Matrix44<S> &m) {
   sca = (S)pow(m.Determinant(), 1/3);  
@@ -154,7 +158,7 @@ template <class S> Similarity<S> Interpolate(const Similarity<S> &a, const Simil
   return r;
 }
 
-template <class S> Point3<S> operator*(const Point3<S> &p, const Similarity<S> &m) {
+template <class S> Point3<S> operator*(const Similarity<S> &m, const Point3<S> &p) {
   Point3<S> r = m.rot.Rotate(p);
   r *= m.sca;
   r += m.tra;
