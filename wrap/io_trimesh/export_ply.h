@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/03/18 15:30:46  cignoni
+Removed float/double warning
+
 Revision 1.2  2004/03/09 21:26:47  cignoni
 cr lf mismatch
 

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/05/10 14:26:33  ganovelli
+argument name removed to avoid "unreference variable"warning
+
 Revision 1.1  2004/03/03 15:00:51  cignoni
 Initial commit
 

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/05/04 02:36:07  ganovelli
+#ifndef __VCGLIB_IMPORTERPLY added
+
 Revision 1.3  2004/04/03 13:30:01  cignoni
 missing include allocate.h
 
@@ -273,7 +276,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 
 
 	// The main descriptor of the ply file 
-  vcg::ply::PlyFile pf;
+	vcg::ply::PlyFile pf;
   
   // Open the file and parse the header
   if( pf.Open(filename,vcg::ply::PlyFile::MODE_READ)==-1 )
@@ -693,8 +696,8 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 	// Caricamento camera da un ply
 int LoadCamera(const char * filename)
 {
-	PlyFile pf;
-	if( pf.Open(filename,PlyFile::MODE_READ)==-1 )
+	vcg::ply::PlyFile pf;
+	if( pf.Open(filename,vcg::ply::PlyFile::MODE_READ)==-1 )
 	{
 		pi.status = pf.GetError();
 		return -1;
@@ -768,8 +771,8 @@ int LoadCamera(const char * filename)
 bool LoadMask(const char * filename, int &mask)
 {
 	mask=0;
-	PlyFile pf;
-	if( pf.Open(filename,PlyFile::MODE_READ)==-1 )
+	vcg::ply::PlyFile pf;
+	if( pf.Open(filename,vcg::ply::PlyFile::MODE_READ)==-1 )
 	{
 		pi.status = pf.GetError();
 		return false;
