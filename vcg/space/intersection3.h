@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/05/04 02:37:58  ganovelli
+Triangle3<T> replaced by TRIANGLE
+Segment<T> replaced by EDGETYPE
+
 Revision 1.3  2004/04/29 10:48:44  ganovelli
 error in plane segment corrected
 
@@ -95,11 +99,11 @@ template<class T>
 inline bool Intersection( const Plane3<T> & pl, const Line3<T> & li, Point3<T> & po){
 	const T epsilon = T(1e-8);
 
-	T k = pl.n * li.dire;						// Compute 'k' factor
+	T k = pl.Direction() * li.Direction();						// Compute 'k' factor
 	if( (k > -epsilon) && (k < epsilon))
 			return false;
-	T r = (pl.d - pl.n*li.orig)/k;	// Compute ray distance
-	po = li.orig + li.dire*r;
+	T r = (pl.Offset() - pl.Direction()*li.Origin())/k;	// Compute ray distance
+	po = li.Origin() + li.Direction()*r;
 	return true;
 	}
 
