@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/02/19 15:40:56  cignoni
+Added doxygen groups
+
 Revision 1.1  2004/02/13 02:16:22  cignoni
 First working release.
 
@@ -144,21 +147,21 @@ public:
 			if(max.z() < p.z()) max.z() = p.z();
 		}
 	}
-	
-	// Aggiunge ad un box un altro box trasformato secondo la matrice m
-	void Add( const Matrix44<BoxScalarType> &m, const Box3<BoxScalarType> & b )
-	{
-			const Point3<BoxScalarType> &mn= b.min;
-			const Point3<BoxScalarType> &mx= b.max;
-      Add(m.Apply(Point3<BoxScalarType>(mn[0],mn[1],mn[2])));
-			Add(m.Apply(Point3<BoxScalarType>(mx[0],mn[1],mn[2])));
-			Add(m.Apply(Point3<BoxScalarType>(mn[0],mx[1],mn[2])));
-			Add(m.Apply(Point3<BoxScalarType>(mx[0],mx[1],mn[2])));
-			Add(m.Apply(Point3<BoxScalarType>(mn[0],mn[1],mx[2])));
-			Add(m.Apply(Point3<BoxScalarType>(mx[0],mn[1],mx[2])));
-			Add(m.Apply(Point3<BoxScalarType>(mn[0],mx[1],mx[2])));
-			Add(m.Apply(Point3<BoxScalarType>(mx[0],mx[1],mx[2])));
-	}
+	//
+	//// Aggiunge ad un box un altro box trasformato secondo la matrice m
+	//void Add( const Matrix44<BoxScalarType> &m, const Box3<BoxScalarType> & b )
+	//{
+	//		const Point3<BoxScalarType> &mn= b.min;
+	//		const Point3<BoxScalarType> &mx= b.max;
+ //     Add(m.Apply(Point3<BoxScalarType>(mn[0],mn[1],mn[2])));
+	//		Add(m.Apply(Point3<BoxScalarType>(mx[0],mn[1],mn[2])));
+	//		Add(m.Apply(Point3<BoxScalarType>(mn[0],mx[1],mn[2])));
+	//		Add(m.Apply(Point3<BoxScalarType>(mx[0],mx[1],mn[2])));
+	//		Add(m.Apply(Point3<BoxScalarType>(mn[0],mn[1],mx[2])));
+	//		Add(m.Apply(Point3<BoxScalarType>(mx[0],mn[1],mx[2])));
+	//		Add(m.Apply(Point3<BoxScalarType>(mn[0],mx[1],mx[2])));
+	//		Add(m.Apply(Point3<BoxScalarType>(mx[0],mx[1],mx[2])));
+	//}
 		/** Calcola l'intersezione tra due bounding box. Al bounding box viene assegnato il valore risultante.
 			@param b Il bounding box con il quale si vuole effettuare l'intersezione
 		*/
@@ -298,7 +301,6 @@ public:
 
 
 
-#endif
 typedef Box3<short>  Box3s;
 typedef Box3<int>	 Box3i;
 typedef Box3<float>  Box3f;
