@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/05/06 09:06:59  pietroni
+changed names to topology functions
+
 Revision 1.7  2004/05/04 02:46:23  ganovelli
 added function Dist
 
@@ -56,6 +59,9 @@ First commit...
 #include <vcg/simplex/face/topology.h>
 
 namespace vcg {
+class DUMMYEDGETYPE;
+class DUMMYFACETYPE;
+class DUMMYTETRATYPE;
 
 /**
 \ingroup face
@@ -64,7 +70,7 @@ namespace vcg {
     This is the base class for definition of a face of the mesh.
 		@param FVTYPE (Templete Parameter) Specifies the vertex class type.
  */
-template <class FVTYPE, class TCTYPE = TCoord2<float,1> > class FACE_TYPE
+template <class FVTYPE, class FETYPE, class FFTYPE, class TCTYPE = TCoord2<float,1> > class FACE_TYPE
 {
 public:
 	///	The base type of the face
@@ -440,20 +446,20 @@ const Color4b WC(const int i) const
 protected:
 #if defined(__VCGLIB_FACE_AF)
   /// Vector of face pointer, it's used to indicate the adjacency relations (defines if FACE_A is defined)
-	FACE_TYPE   *_ffp[3];				// Facce adiacenti
+	FFTYPE   *_ffp[3];				// Facce adiacenti
 	/// Index of the face in the arrival face 
 	char _ffi[4];									
 #endif
 
 #ifdef __VCGLIB_FACE_AV
 	///Vettore di puntatori a faccia, utilizzato per indicare le adiacenze vertice faccia
-	FACE_TYPE *_fvp[3];
+	FFTYPE *_fvp[3];
 	char _fvi[3];
 #endif
 
 #ifdef __VCGLIB_FACE_AS
 	///Vettore di puntatori a faccia, utilizzato per indicare le adiacenze vertice faccia
-	FACE_TYPE *fs[3];
+	FFTYPE *fs[3];
 	char zs[3];
 #endif
 public:
@@ -464,7 +470,7 @@ public:
 	/** Return the pointer to the j-th adjacent face.
 	    @param j Index of the edge.
 	 */
-	inline FACE_TYPE * & FFp( const int j )
+	inline FFTYPE * & FFp( const int j )
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
@@ -477,12 +483,12 @@ public:
 			return fs[j];
 #else 
 		assert(0);
-        static FACE_TYPE *dum=0;
+        static FFTYPE *dum=0;
 		return dum;
 #endif
 	}
 
-	inline const FACE_TYPE * const & FFp( const int j ) const
+	inline const FFTYPE * const & FFp( const int j ) const
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
@@ -494,19 +500,19 @@ public:
 			return fs[j];
 #else
 		  assert(0);
-		  return (FACE_TYPE *)this;
+		  return (FFTYPE *)this;
 #endif
 	}
-	inline FACE_TYPE * & F1( const int j ) { return F((j+1)%3);}
-	inline FACE_TYPE * & F2( const int j ) { return F((j+2)%3);}
-	inline const FACE_TYPE * const&  F1( const int j ) const { return F((j+1)%3);}
-	inline const FACE_TYPE * const&  F2( const int j ) const { return F((j+2)%3);}
+	inline FFTYPE * & F1( const int j ) { return F((j+1)%3);}
+	inline FFTYPE * & F2( const int j ) { return F((j+2)%3);}
+	inline const FFTYPE * const&  F1( const int j ) const { return F((j+1)%3);}
+	inline const FFTYPE * const&  F2( const int j ) const { return F((j+2)%3);}
 
 
 /** Return the pointer to the j-th adjacent face.
 	    @param j Index of the edge.
 	 */
-	inline FACE_TYPE * & UberF( const int j )
+	inline FFTYPE * & UberF( const int j )
 	{
 		assert(j>=0);
 	  assert(j<3);
@@ -516,11 +522,11 @@ public:
 			return fs[j];
 #else 
 		assert(0); // if you stop here you are probably trying to use FF topology in a face without it
-		return *((FACE_TYPE **)(_flags));
+		return *((FFTYPE **)(_flags));
 #endif
 	}
 
-	inline const FACE_TYPE * const & UberF( const int j ) const
+	inline const FFTYPE * const & UberF( const int j ) const
 	{
 		assert(j>=0);
 	  assert(j<3);
@@ -530,12 +536,12 @@ public:
 			return fs[j];
 #else
 		assert(0); // if you stop here you are probably trying to use FF topology in a face without it
-		return *((FACE_TYPE **)(_flags));
+		return *((FFTYPE **)(_flags));
 #endif
 	}
 	
 
-	inline FACE_TYPE * & FVp( const int j )
+	inline FFTYPE * & VFp( const int j )
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
@@ -548,11 +554,11 @@ public:
 		return fs[j];
 #else
 		assert(0); // you are probably trying to use VF topology in a vertex without it
-		return *((FACE_TYPE **)(_flags));
+		return *((FFTYPE **)(_flags));
 #endif
 	}
 
-	inline const FACE_TYPE * const & FVp( const int j ) const
+	inline const FFTYPE * const & VFp( const int j ) const
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
@@ -564,7 +570,7 @@ public:
 		return fs[j];
 #else
 		assert(0);
-		return (FACE_TYPE *)this;
+		return (FFTYPE *)this;
 #endif
 	}
 
@@ -637,7 +643,7 @@ public:
 	}
 
 
-	inline char & FVi( const int j )
+	inline char & VFi( const int j )
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
@@ -654,7 +660,7 @@ public:
 #endif
 	}
 
-	inline const char & FVi( const int j ) const
+	inline const char & VFi( const int j ) const
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
@@ -938,7 +944,7 @@ static bool HasWedgeNormal()  {
 //@}
 
   /// operator to compare two faces
-	inline bool operator == ( const FACE_TYPE & f ) const {
+	inline bool operator == ( const FFTYPE & f ) const {
 		for(int i=0; i<3; ++i)
 			if( (V(i) != f.V(0)) && (V(i) != f.V(1)) && (V(i) != f.V(2)) )
 				return false;
