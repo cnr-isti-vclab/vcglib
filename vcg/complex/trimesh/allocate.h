@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2004/08/07 17:38:00  pietroni
+solved errors on AddFaces relative to VFp pointers of faces
+
 Revision 1.10  2004/08/07 16:16:32  pietroni
 corrected errors in AddFaces ( must be updated pointers to chain of faces of VFTopology)
 
@@ -200,7 +203,7 @@ static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu
 		pu.Update((FacePointer&)(*it));
 	  }*/
 
-	std::vector<FaceType **>::iterator jit;
+	typename std::vector<FaceType **>::iterator jit;
 	for(jit=local_var.begin(); jit!=local_var.end(); ++jit)
 		if((**jit) !=0 ) 
 		{

@@ -25,6 +25,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/06/23 15:36:44  cignoni
+Restructured management of error, now the standard open for any mesh type return the error code, the default success value is zero
+Any import class has a method ErrorMsg that give a verbal description of an error code.
+
 Revision 1.4  2004/03/18 15:30:57  cignoni
 Removed float/double warning
 

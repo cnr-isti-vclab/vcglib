@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2004/07/27 09:47:49  cignoni
+Added V() access function instead of V(0)
+
 Revision 1.9  2004/07/18 07:45:30  cignoni
 Removed two const modifiers from the VFIterator
 
@@ -327,7 +330,7 @@ public:
 	This class is used as an iterator over the VF adjacency. 
  */ 
 
-template <class FaceType> 
+template <typename FaceType> 
 class VFIterator
 {
 public:
@@ -335,14 +338,14 @@ public:
 	/// The vertex type
 	typedef typename FaceType::VertexType VertexType;
 	/// The Base face type
-	typedef typename FaceType  VFIFaceType;
+	typedef  FaceType  VFIFaceType;
 	/// The vector type
 	typedef typename VertexType::CoordType CoordType;
 	/// The scalar type
 	typedef typename VertexType::ScalarType ScalarType;
 
 	/// Pointer to the face of the half-edge
-	VFIFaceType *f;
+	FaceType *f;
 	/// Index of the vertex
 	int z;
 	
@@ -352,7 +355,7 @@ public:
 	VFIterator(FaceType * _f, const int &  _z){f = _f; z = _z;}
 
 	VFIFaceType *	F() const { return f;}
-	const int					I() const { return z;}
+	const int	&				I() const { return z;}
 
   bool End() const {return f==0;}
   VFIFaceType *operator++() {

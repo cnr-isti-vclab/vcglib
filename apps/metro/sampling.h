@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2004/07/18 10:13:34  cignoni
+NewUserBit -> NewBitFlag
+
 Revision 1.8  2004/06/24 09:08:31  cignoni
 Official Release of Metro 4.00
 
@@ -264,7 +267,7 @@ void Sampling<MetroMesh>::VertexSampling()
     
     printf("Vertex sampling\n");
     VertexIterator vi;
-		std::vector<VertexPointer>::iterator vif;
+		typename std::vector<VertexPointer>::iterator vif;
     for(vi=S1.vert.begin();vi!=S1.vert.end();++vi)
 			if(  (*vi).IsUserBit(referredBit) || // it is referred
 					((Flags&SamplingFlags::INCLUDE_UNREFERENCED_VERTICES) != 0) ) //include also unreferred

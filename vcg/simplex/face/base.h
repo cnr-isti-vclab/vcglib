@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2004/07/15 12:03:07  ganovelli
+minor changes
+
 Revision 1.16  2004/07/15 11:31:59  ganovelli
 minor changes
 
@@ -145,7 +148,7 @@ public:
 		return v[j];
 	}
 
-	inline const FVTYPE * const & V( const int j ) const
+	inline  FVTYPE * const &  V( const int j ) const
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
@@ -153,7 +156,7 @@ public:
 		assert(j<3);
 		return v[j];
 	}
-	inline const FVTYPE * const & cV( const int j ) const
+	inline  FVTYPE * const  cV( const int j ) const
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
@@ -1092,7 +1095,7 @@ const ScalarType EPSILON = ScalarType(0.000001);
 /// Return the DOUBLE of the area of the face
 ScalarType Area() const
 {
-	return Norm( (V(1)->P() - V(0)->P()) ^ (V(2)->P() - V(0)->P()) );
+	return ( (V(1)->cP() - V(0)->cP()) ^ (V(2)->cP() - V(0)->P()) ).Norm();
 }
 
 CoordType Barycenter() const

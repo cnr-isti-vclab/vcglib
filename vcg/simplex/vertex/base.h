@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.17  2004/07/20 15:24:53  pietroni
+corrected NormalizedNormalV function...
+
 Revision 1.16  2004/07/15 11:25:01  ganovelli
 VFb moved to VFp, userbit to bitflag,setV, inclusion of pos.h
 
@@ -42,6 +45,9 @@ Revision 1.12  2004/05/10 13:31:13  ganovelli
 function for edge adjacency added
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2004/07/20 15:24:53  pietroni
+corrected NormalizedNormalV function...
+
 Revision 1.16  2004/07/15 11:25:01  ganovelli
 VFb moved to VFp, userbit to bitflag,setV, inclusion of pos.h
 
@@ -840,10 +846,10 @@ template <class VERTEX_TYPE> typename VERTEX_TYPE::CoordType NormalizedNormalV(V
   }
   else
   {
-    vcg::face::VFIterator<VERTEX_TYPE::FaceType> VFi=vcg::face::VFIterator<VERTEX_TYPE::FaceType>();
+    vcg::face::VFIterator<typename VERTEX_TYPE::FaceType> VFi=vcg::face::VFIterator<typename VERTEX_TYPE::FaceType>();
     VFi.f=v->VFp();
     VFi.z=v->VFi();
-    VERTEX_TYPE::CoordType N=VERTEX_TYPE::CoordType(0,0,0);
+    typename VERTEX_TYPE::CoordType N= typename VERTEX_TYPE::CoordType(0,0,0);
     int i=0;
     while (!VFi.End())
     {
@@ -851,7 +857,7 @@ template <class VERTEX_TYPE> typename VERTEX_TYPE::CoordType NormalizedNormalV(V
       i++;
       VFi++;
     }
-    return ((VERTEX_TYPE::CoordType) N/(VERTEX_TYPE::CoordType::ScalarType)i);
+    return ((typename VERTEX_TYPE::CoordType) N/(typename VERTEX_TYPE::CoordType::ScalarType)i);
   }
 }
 

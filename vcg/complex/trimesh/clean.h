@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/07/18 06:55:37  cignoni
+NewUserBit -> NewBitFlag
+
 Revision 1.2  2004/07/09 15:48:37  tarini
 Added an include (<algorithm>)
 
@@ -73,17 +76,17 @@ static int RemoveDuplicateVertex( MeshType & m )    // V1.0
 {
 	if(m.vert.size()==0 || m.vn==0) return 0;
 
-  std::map<VertexIterator, VertexIterator> mp;
+	std::map<VertexPointer, VertexPointer> mp;
 	int i,j;
 	VertexIterator vi; 
 	int deleted=0;
 	int k=0;
 	int num_vert = m.vert.size();
-	vector<VertexIterator> perm(num_vert);
+	vector<VertexPointer> perm(num_vert);
 	for(vi=m.vert.begin(); vi!=m.vert.end(); ++vi, ++k)
-		perm[k] = vi;
+		perm[k] = &(*vi);
 
-	RemoveDuplicateVert_Compare<VertexIterator> c_obj;
+	RemoveDuplicateVert_Compare<VertexPointer> c_obj;
 
 	std::sort(perm.begin(),perm.end(),c_obj);
 
@@ -97,7 +100,7 @@ static int RemoveDuplicateVertex( MeshType & m )    // V1.0
         (! (*perm[j]).IsD()) && 
 				(*perm[i]).P() == (*perm[j]).cP() )
 		{
-			VertexIterator t = perm[i];
+			VertexPointer t = perm[i];
 	    mp[perm[i]] = perm[j];
 	    ++i;
 			(*t).SetD();
@@ -113,7 +116,7 @@ static int RemoveDuplicateVertex( MeshType & m )    // V1.0
   for(fi = m.face.begin(); fi!=m.face.end(); ++fi)
 		for(k = 0; k < 3; ++k)
 			if( !(*fi).IsD() )
-				if( mp.find( (*fi).V(k) ) != mp.end() )
+				if( mp.find( (typename MeshType::VertexPointer)(*fi).V(k) ) != mp.end() )
 				{
 					(*fi).V(k) = &*mp[ (*fi).V(k) ];
 				}

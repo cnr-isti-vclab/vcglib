@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/07/15 00:13:39  cignoni
+Better doxigen documentation
+
 Revision 1.4  2004/06/24 07:56:54  cignoni
 now use std::numeric_limits instead of old max val()
 
@@ -52,25 +55,25 @@ template <class UpdateMeshType>
 class UpdateColor
 {
 public:
-typedef UpdateMeshType MeshType; 
-typedef typename MeshType::VertexType     VertexType;
-typedef typename MeshType::VertexPointer  VertexPointer;
-typedef typename MeshType::VertexIterator VertexIterator;
-typedef typename MeshType::FaceType       FaceType;
-typedef typename MeshType::FacePointer    FacePointer;
-typedef typename MeshType::FaceIterator   FaceIterator;
+typedef  UpdateMeshType MeshType; 
+typedef typename UpdateMeshType::VertexType     VertexType;
+typedef typename UpdateMeshType::VertexPointer  VertexPointer;
+typedef typename UpdateMeshType::VertexIterator VertexIterator;
+typedef typename UpdateMeshType::FaceType       FaceType;
+typedef typename UpdateMeshType::FacePointer    FacePointer;
+typedef typename UpdateMeshType::FaceIterator   FaceIterator;
 
 /** Color the vertex of the mesh that are on the border
 It uses the information in the flags, and not any topology. So it just require that you have correctly computed (or loaded) the flags; See the 
 **/
-static void VertexBorderFlag(MeshType &m, Color4b vb=Color4b::Blue)
+static void VertexBorderFlag( UpdateMeshType &m, Color4b vb=Color4b::Blue)
 {
-	MeshType::VertexIterator vi;
+	typename UpdateMeshType::VertexIterator vi;
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 		if(!(*vi).IsD())
 			(*vi).C()=Color4b::White;
 
-	MeshType::FaceIterator fi;
+	typename UpdateMeshType::FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
 		for(int j=0;j<3;++j)
 			if((*fi).IsB(j)){
@@ -80,10 +83,10 @@ static void VertexBorderFlag(MeshType &m, Color4b vb=Color4b::Blue)
 			}
 }
 
-static void FaceBF(MeshType &m, Color4b vn=Color4b::White, Color4b vb=Color4b::Blue, 
+static void FaceBF( UpdateMeshType &m, Color4b vn=Color4b::White, Color4b vb=Color4b::Blue, 
 						Color4b vc=Color4b::Red, Color4b vs=Color4b::LightBlue)
 {
-	MeshType::FaceIterator fi;
+	typename UpdateMeshType::FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 		if(!(*fi).IsD())
 			(*fi).C() = vn;
@@ -96,7 +99,7 @@ static void FaceBF(MeshType &m, Color4b vn=Color4b::White, Color4b vb=Color4b::B
 			else
 			{
 				for(int j=0;j<3;++j)
-          if(face::IsManifold(*fi,j)){
+					if(*fi.IsManifold(j)){
 						if((*fi).IsB(j)){
 							(*fi).C() = vb;
 							(*fi).C() = vb;
@@ -112,10 +115,10 @@ static void FaceBF(MeshType &m, Color4b vn=Color4b::White, Color4b vb=Color4b::B
 }
 
 
-static int FaceSelected(MeshType &m, Color4b vs=Color4b::LightBlue)
+static int FaceSelected(UpdateMeshType &m, Color4b vs=Color4b::LightBlue)
 {
 	int cnt=0;
-	MeshType::FaceIterator fi;
+	typename UpdateMeshType::FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 		if(!(*fi).IsD()) 
 			if((*fi).IsS()) { (*fi).C() = vs; ++cnt; }
@@ -123,12 +126,20 @@ static int FaceSelected(MeshType &m, Color4b vs=Color4b::LightBlue)
 	return cnt;
 }
 
-static void FaceColorStrip(MeshType &m, std::vector<FacePointer> &TStripF)
+static void FaceColorStrip(UpdateMeshType &m, std::vector<FacePointer> &TStripF)
 {
-	Color4b::Color4b cc[7]={Color4b::White ,Color4b::Red    ,Color4b::Green  ,Color4b::Blue   ,Color4b::Cyan   ,Color4b::Yellow ,Color4b::Magenta};
+	 vcg::Color4b cc[7]={
+								  vcg::Color4b::White ,
+									vcg::Color4b::Red    ,
+									vcg::Color4b::Green  ,
+									vcg::Color4b::Blue   ,
+									vcg::Color4b::Cyan   ,
+									vcg::Color4b::Yellow ,
+									vcg::Color4b::Magenta
+	};
 	int cnt=0;
 
-	vector<FacePointer>::iterator fi;
+	typename std::vector<FacePointer>::iterator fi;
 	for(fi=TStripF.begin();fi!=TStripF.end();++fi)
 		if(*fi) (**fi).C().ColorRamp(0,16,cnt);
 		else cnt=(cnt+1)%16;
@@ -138,10 +149,10 @@ static void FaceColorStrip(MeshType &m, std::vector<FacePointer> &TStripF)
 }
 
 
-static int VertexSelected(MeshType &m, Color4b vs=Color4b::LightBlue)
+static int VertexSelected(UpdateMeshType &m, Color4b vs=Color4b::LightBlue)
 {
 	int cnt=0;
-	MeshType::VertexIterator vi;
+	typename UpdateMeshType::VertexIterator vi;
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 		if(!(*vi).IsD()) 
 			if((*vi).IsS()) {(*vi).C() = vs;  ++cnt; }
@@ -150,27 +161,27 @@ static int VertexSelected(MeshType &m, Color4b vs=Color4b::LightBlue)
 	return cnt;
 }
 
-static void VertexConstant(MeshType &m, Color4b c=Color4b::White)
+static void VertexConstant(UpdateMeshType &m, Color4b c=Color4b::White)
 {
-	MeshType::VertexIterator vi;
+	typename UpdateMeshType::VertexIterator vi;
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD()) 
 		(*vi).C()=c;
 }
 
-static void FaceConstant(MeshType &m, Color4b c=Color4b::White)
+static void FaceConstant(UpdateMeshType &m, Color4b c=Color4b::White)
 {
-	MeshType::FaceIterator fi;
+	typename UpdateMeshType::FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi)		
 		(*fi).C()=c;
 }
 
-static void VertexBorderManifoldFlag(MeshType &m, Color4b vn=Color4b::White, Color4b vb=Color4b::Blue, Color4b vc=Color4b::Red)
+static void VertexBorderManifoldFlag(UpdateMeshType &m, Color4b vn=Color4b::White, Color4b vb=Color4b::Blue, Color4b vc=Color4b::Red)
 {
-	MeshType::VertexIterator vi;
+	typename UpdateMeshType::VertexIterator vi;
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD()) 
 		(*vi).C()=vn;
 
-	MeshType::FaceIterator fi;
+	typename UpdateMeshType::FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi)		
 		if(!(*fi).IsD()) 
 		for(int j=0;j<3;++j)
@@ -189,10 +200,10 @@ static void VertexBorderManifoldFlag(MeshType &m, Color4b vn=Color4b::White, Col
 
 
 
-static void FaceQuality(MeshType &m)
+static void FaceQuality(UpdateMeshType &m)
 {
 	// step 1: find the range
-	MeshType::FaceIterator fi;
+	typename UpdateMeshType::FaceIterator fi;
 	float minq=m.face[0].Q(),
 				maxq=m.face[0].Q();
 	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
@@ -205,27 +216,27 @@ static void FaceQuality(MeshType &m)
 	FaceQuality(m,minq,maxq);
 }
 
-static void FaceQuality(MeshType &m, float minq, float maxq)
+static void FaceQuality(UpdateMeshType &m, float minq, float maxq)
 {
-	MeshType::FaceIterator fi;
+	typename UpdateMeshType::FaceIterator fi;
 
 	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD()) 		
 		(*fi).C().ColorRamp(minq,maxq,(*fi).Q());
 }
 
-static void VertexQuality(MeshType &m, float minq, float maxq)
+static void VertexQuality(UpdateMeshType &m, float minq, float maxq)
 {
-	MeshType::VertexIterator vi;
+	typename UpdateMeshType::VertexIterator vi;
 
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)		
 		if(!(*vi).IsD()) 
 			(*vi).C().ColorRamp(minq,maxq,(*vi).Q());
 }
 
-static void VertexQuality(MeshType &m)
+static void VertexQuality(UpdateMeshType &m)
 {
 	// step 1: find the range
-	MeshType::VertexIterator vi;
+	typename UpdateMeshType::VertexIterator vi;
   float minq=std::numeric_limits<float>::max(),
 				maxq=std::numeric_limits<float>::min();
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)		
@@ -237,10 +248,10 @@ static void VertexQuality(MeshType &m)
 	VertexQuality(m,minq,maxq);
 }
 
-static void VertexQualityHistEq(MeshType &m)
+static void VertexQualityHistEq(UpdateMeshType &m)
 {
 	// step 1: find the range
-	MeshType::VertexIterator vi;
+	typename UpdateMeshType::VertexIterator vi;
 	float minq=MaxVal(0.0f),
 				maxq=-MaxVal(0.0f);
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)		
@@ -250,12 +261,12 @@ static void VertexQualityHistEq(MeshType &m)
 			maxq=max(maxq,(*vi).Q());
 		}
 	// step 2; Get the distribution
-	Hist H;
-	H.SetRange(minq,maxq,1024);
-	for(vi=m.vert.begin();vi!=m.vert.end();++vi)		
-		if(!(*vi).IsD()) H.Add((*vi).Q());
+	//	Hist H;
+	//H.SetRange(minq,maxq,1024);
+	//for(vi=m.vert.begin();vi!=m.vert.end();++vi)		
+	//	if(!(*vi).IsD()) H.Add((*vi).Q());
 	
-	VertexQuality(m,H.Percentile(.05f),H.Percentile(.95f));
+	// VertexQuality(m,H.Percentile(.05f),H.Percentile(.95f));
 }
 
 };
