@@ -24,59 +24,75 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/02/21 12:13:25  ganovelli
+added vcg header
+
 
 
 ****************************************************************************/
 
-#ifndef SPATIAL_HASHING
-#define SPATIAL_HASHING
+#ifndef VCGLIB_SPATIAL_HASHING
+#define VCGLIB_SPATIAL_HASHING
 
-#define P0 73
-#define P1 19
-#define P2 83
+#define P0 73856093
+#define P1 19349663
+#define P2 83492791
 
 #include <map>
-#include <hash_map>
 #include <vector>
 
-template <class SimplexType>
+#ifdef WIN32
+	#include <hash_map>
+	#define STDEXT stdext
+#else
+	#include <ext/hash_map>
+	#define STDEXT __gnu_cxx
+#endif
 
+namespace vcg{
+/** Spatial Hash Table
+     Spatial Hashing as described in
+		 "Optimized Spatial Hashing for Collision Detection of Deformable Objects", 
+		 Matthias Teschner and Bruno Heidelberger and Matthias Muller and Danat Pomeranets and Markus Gross
+     */
+template <class ElemType>
 class SpatialHashTable{
 
 public:
 	
-	typedef typename SimplexType* SimplexPointer;
-	typedef typename SimplexType::CoordType Point3x;
-	typedef typename Point3x::ScalarType ScalarType;
+	typedef ElemType* SimplexPointer;
+	typedef typename ElemType::CoordType CoordType;
+	typedef typename CoordType::ScalarType ScalarType;
 		
 	
-	//iterator to the map element into the cell
-	typedef typename std::map<SimplexType*,int>::iterator IteMap;
 	//element of a cell
-	typedef typename std::pair<SimplexType*,int> MapCellElem;
+	typedef typename std::pair<ElemType*,int> MapCellElem;
 
 	//element stored in the hash table
-	struct Helement
+	struct HElement
 		{
-		
-			std::map<SimplexType*,int> elem;
+
+			//iterator to the map element into the cell
+			typedef typename std::map<ElemType*,int>::iterator IteMap;
+
+			std::map<ElemType*,int> elem;
 			//int flag;
 
 			public:
 			
-			Helement()
+			HElement()
 			{
 			//	flag=0;
 			}
 
-			Helement(SimplexType* sim,int _tempMark)
+			HElement(ElemType* sim,const int  &_tempMark)
 			{
 				elem.insert(MapCellElem(sim,_tempMark));
 			//	flag=0;
 			}
 
 			///return true if the element is in the cell
-			bool IsIn(SimplexType* sim)
+			bool IsIn(ElemType* sim)
 			{
 				int n=elem.count(sim);
 				return (n==1);
@@ -88,7 +104,7 @@ public:
 			}
 			
 			///update or insert an element into a cell
-			void Update(SimplexType* sim,int _tempMark)
+			void Update(ElemType* sim, const int & _tempMark)
 			{
 				std::pair<IteMap, bool> res=elem.insert(MapCellElem(sim,_tempMark));
 				//the element was already in the map structure so update the temporary mark
@@ -101,111 +117,172 @@ public:
 			}
 			
 			//return an array of all simplexes of the map that have a right timestamp or are not deleted
-			std::vector<SimplexType*> Simplexes(int _tempMark)
+			std::vector<ElemType*> Simplexes(const int & _tempMark)
 			{
-				std::vector<SimplexType*> result;
+				std::vector<ElemType*> result;
 				result.clear();
 				for (IteMap ite=elem.begin();ite!=elem.end();ite++)
 				{
-					SimplexType* sim=(*ite).first;
+					ElemType* sim=(*ite).first;
 					int t=(*ite).second;
 					if ((!sim->IsD())&&(t>=_tempMark))
 						result.push_back(sim);
 				}
 				return (result);
 			}
-		};
+		}; // end struct HElement
 	
-	//enum { 
-	//	// First user bit
-	//	USER0      = 0x0001			// First user bit
-	//		};
 
-	//static int &LastBitFlag()
-	//	{
-	//		static int b =USER0;
-	//		return b;
-	//	}
+		struct ClosersIterator{
+			CoordType p;
+			SpatialHashTable<ElemType> * sh;
+			vcg::Point3i mincorner,maxcorner;
+			ScalarType sq_radius;
 
-	///// allocate a bit among the flags that can be used by user.
-	//static inline int NewBitFlag()
-	//	{
-	//		LastBitFlag()=LastBitFlag()<<1;
-	//		return LastBitFlag();
-	//	}
+			// current position
+			vcg::Point3i curr_ic; // triple corresponding to the cell
+			HElement * curr_c;		// current cell
+			typename HElement::IteMap curr_i; // current iterator
+			bool end;
 
-	//// de-allocate a bit among the flags that can be used by user.
-	//static inline bool DeleteBitFlag(int bitval)
-	//	{	
-	//		if(LastBitFlag()==bitval) {
-	//				LastBitFlag()= LastBitFlag()>>1;
-	//				return true;
-	//		}
-	//		assert(0);
-	//		return false;
-	//	}
+			bool  Advance(){
+				if(curr_ic[0] < maxcorner[0]) ++curr_ic[0]; 
+				else{
+						if(curr_ic[1] < maxcorner[1]) ++curr_ic[1]; 
+						else{
+								if(curr_ic[2] < maxcorner[2])	++curr_ic[2];
+								else
+									return false;
+								curr_ic[1] = mincorner[1];
+						}
+					curr_ic[0] = mincorner[0];
+				}
+				curr_c = &(*(sh->hash_table.find(sh->Hash(curr_ic)))).second;
+				return true;
+			}
+			void Init(SpatialHashTable<ElemType> * _sh, CoordType _p, const ScalarType  &_radius)
+			{
+					sh = _sh;
+					p =_p;
+					CoordType halfDiag(_radius,_radius,_radius);
+					mincorner = sh->Cell(p-halfDiag);
+					maxcorner = sh->Cell(p+halfDiag);
+					curr_ic = mincorner;
+					sq_radius = _radius * _radius;
+
+					IteHtable iht = sh->hash_table.find(sh->Hash(curr_ic));
+
+					// initialize the iterator to the first element
+					bool isempty  = (iht == sh->hash_table.end());
+					if(isempty)
+						while( Advance() && (isempty=sh->IsEmptyCell(curr_ic)));
+
+					if(!isempty){
+						curr_c = &(*(sh->hash_table.find(sh->Hash(curr_ic)))).second;
+						curr_i =  curr_c->elem.begin();
+						end = false;
+					}
+					else
+						end = true;
+
+			}
+
+			void operator ++()  {
+				bool isempty = true;
+				HElement::IteMap e = curr_c->elem.end();
+				--e;
+				if(curr_i != e) 
+					++curr_i;
+				else{
+					while( Advance() && (isempty=sh->IsEmptyCell(curr_ic)));
+					if(!isempty){
+						curr_c = &(*(sh->hash_table.find(sh->Hash(curr_ic)))).second;
+						curr_i =  curr_c->elem.begin();
+					}
+					else
+						end = true;
+				}
+			}
+			 ElemType * operator *(){
+				 vcg::Point3d __ = (*curr_i).first->P();
+						return (*curr_i).first;
+			}
+
+			 bool End(){
+				 //bool __  = (curr_i == curr_c->elem.end());
+				 //return ( (curr_ic == maxcorner) && (curr_i == curr_c->elem.end()) );
+				 return end;
+			 }
+		}; // end struct CloserIterator
+
 
 	//hash table definition
-	typedef typename stdext::hash_map<int,Helement> Htable;
+	typedef typename STDEXT::hash_map<int,HElement> Htable;
 	//record of the hash table
-	typedef typename std::pair<int,Helement> HRecord;
+	typedef typename std::pair<int,HElement> HRecord;
 	//iterator to the hash table
 	typedef typename Htable::iterator IteHtable;
 
-
-	//SpatialHashTable(ContSimplex & r_):_simplex(r_){};
 	SpatialHashTable(){};
     ~SpatialHashTable(){};
 	
 	
 	//ContSimplex & _simplex;
-	int TempMark;
+	int tempMark;
 	Htable hash_table;
 	
 	int num;
 	float l;
 	
 
-	Point3x min;
-	Point3x max;
+	CoordType min;
+	CoordType max;
 
 
-	void Init(Point3x _min,Point3x _max,ScalarType _l)
+	void Init(CoordType _min,CoordType _max,ScalarType _l)
 	{
 		min=_min;
 		max=_max;
 		l=_l;
-		Point3x d=max-min;
-		num=floor(d.V(0)*d.V(1)*d.V(2)/l);
-		TempMark=0;
+		CoordType d=max-min;
+		//num = (int) floor(d.V(0)*d.V(1)*d.V(2)/l);
+		num = (int) floor(100*d.V(0)*d.V(1)*d.V(2)/l);
+		tempMark=0;
 	}
 
-	void InsertInCell(SimplexType* s,Point3i cell)
+	void InsertInCell(ElemType* s,Point3i cell)
 	{
 		int h=Hash(cell);
 		//insert a cell if there isn't
 		if (hash_table.count(h)==0)
-				hash_table.insert(HRecord(h,Helement(s,TempMark)));
+				hash_table.insert(HRecord(h,HElement(s,tempMark)));
 		//otherwise insert the element or update the temporary mark
 		else
 			{
 				IteHtable HI=hash_table.find(h);
 //				(*HI).second.flag|=_flag;
-				(*HI).second.Update(s,TempMark);
+				(*HI).second.Update(s,tempMark);
 			}
 	}
 	
 
-	std::vector<Point3i> addBox(SimplexType* s,Point3x _min,Point3x _max)
+	std::vector<Point3i> AddElem( ElemType* s)
 	{
-		
-		std::vector<Point3i> box=BoxCells(_min,_max);
+		std::vector<Point3i> box=BoxCells(s->BBox().min,s->BBox().max);
 		for (std::vector<Point3i>::iterator bi=box.begin();bi<box.end();bi++)
 			InsertInCell(s,*bi);
 		return box;
 	}
 
-	std::vector<Point3i> BoxCells(Point3x _min,Point3x _max)
+	template<class ContElemType>
+		void AddElems(  ContElemType & elem_set)
+	{
+		typename ContElemType::iterator i; 
+		for(i = elem_set.begin(); i!= elem_set.end(); ++i)
+			AddElem(&(*i));
+	}
+
+	std::vector<Point3i> BoxCells(CoordType _min,CoordType _max)
 	{
 		std::vector<Point3i> ret;
 		ret.clear();
@@ -225,57 +302,24 @@ public:
 		return ret;
 	}
 
-	std::vector<Point3i> Cells(SimplexType *s)
-	{
-		Point3x min=Point3x((*s).V(0)->P());
-		Point3x max=min;
-
-		//find min max coordinate of bounding box
-		for (int i=1;i<3;i++)
-		{
-			if (min.V(0)>(*s).V(i)->P().V(0))
-				min.V(0)=(*s).V(i)->P().V(0);
-			if (min.V(1)>(*s).V(i)->P().V(1))
-				min.V(1)=(*s).V(i)->P().V(1);
-			if (min.V(2)>(*s).V(i)->P().V(2))
-				min.V(2)=(*s).V(i)->P().V(2);
-
-			if (max.V(0)<(*s).V(i)->P().V(0))
-				max.V(0)=(*s).V(i)->P().V(0);
-			if (max.V(1)<(*s).V(i)->P().V(1))
-				max.V(1)=(*s).V(i)->P().V(1);
-			if (max.V(2)>(*s).V(i)->P().V(2))
-				max.V(2)=(*s).V(i)->P().V(2);
-		}
-
-		return BoxCells(s,min,max);
+	// tanto per prova
+	int CloserThan(	typename ElemType::CoordType p, 
+									typename ElemType::ScalarType radius, 
+									std::vector<ElemType*> & closers){
+			ClosersIterator cli;
+			cli.Init(this,p,radius);
+			while(!cli.End()){
+				if ( (((*cli)->P() -p )*((*cli)->P() -p ) < radius*radius) &&
+					(*cli.curr_i).second >= tempMark)
+				closers.push_back(*cli);
+				++cli;
+			}
+			return closers.size();
 	}
 
-	std::vector<Point3i> addSimplex(SimplexType *s)
+	std::vector<Point3i> Cells(ElemType *s)
 	{
-		Point3x min=Point3x((*s).V(0)->P());
-		Point3x max=min;
-
-		//find min max coordinate of bounding box
-		for (int i=1;i<3;i++)
-		{
-			if (min.V(0)>(*s).V(i)->P().V(0))
-				min.V(0)=(*s).V(i)->P().V(0);
-			if (min.V(1)>(*s).V(i)->P().V(1))
-				min.V(1)=(*s).V(i)->P().V(1);
-			if (min.V(2)>(*s).V(i)->P().V(2))
-				min.V(2)=(*s).V(i)->P().V(2);
-
-			if (max.V(0)<(*s).V(i)->P().V(0))
-				max.V(0)=(*s).V(i)->P().V(0);
-			if (max.V(1)<(*s).V(i)->P().V(1))
-				max.V(1)=(*s).V(i)->P().V(1);
-			if (max.V(2)>(*s).V(i)->P().V(2))
-				max.V(2)=(*s).V(i)->P().V(2);
-		}
-
-		///now set the cell touched by the bounding box of the triangle
-		return (addBox(s,min,max));
+		return BoxCells(s,s->BBox().min,s->BBox().max);
 	}
 
 	inline Point3i MinCell()
@@ -300,53 +344,25 @@ public:
 			}
 	}
 
-	///refresh all the alement in the container
-	/*void RefreshElements()
+	inline bool IsEmptyCell(Point3i _c)
 	{
-		TempMark++;
-		for (SimplexIterator si=_simplex.begin();si<_simplex.end();++si)
-		{
-			if (!(*si).IsD())
-				addSimplex(&*si);
-		}
-	}*/
-
-	///erase all element of the hash table where the timestamp is old
-	//void Clean()
-	//{
-	//	for (IteHtable Ih=hash_table.begin();Ih!=hash_table.end();Ih++)
-	//		//if after clean there are no element erase the cell
-	//		if ((*Ih).second.Clean(TempMark))
-	//			hash_table.erase(Ih);
-	//}
-
-	/*void Clean()
-	{
-		hash_table.clear();
-		RefreshElements();
-	}*/
+		int h=Hash(_c);
+		if (hash_table.count(h)==0)
+			return true;
+		else
+			return false;
+	}
+	
 	
 	void Clear()
 	{
 		hash_table.clear();
 	}
 
-	/*int FlagCell(Point3i p)
-	{
-		int h=Hash(p);
-		if (hash_table.count(h)==0)
-			return 0;
-		else 
-		{
-			IteHtable Ih=hash_table.find(h);
-			return ((*Ih).second.Flag());
-		}
-	}*/
-
-	std::vector<SimplexPointer> getAt(Point3x _p)
+		std::vector<SimplexPointer> getAt(CoordType _p)
 	{
 		std::vector<SimplexPointer> result;
-		Point3i c=Cell(p);
+		Point3i c=Cell(_p);
 		return (getAtCell(c));
 	}
 
@@ -361,27 +377,31 @@ public:
 		else
 		{
 			IteHtable res=hash_table.find(h);
-			return ((*res).second.Simplexes(TempMark));
+			return ((*res).second.Simplexes(tempMark));
 		}
 	}
 
-
-private:
-
-		Point3i Cell(Point3x p)
+	const Point3i Cell(const CoordType & p) const 
 		{
-			int x=floor(p.V(0)/l);
-			int y=floor(p.V(1)/l);
-			int z=floor(p.V(2)/l);
+			int x=(int)floor(p.V(0)/l);
+			int y=(int)floor(p.V(1)/l);
+			int z=(int)floor(p.V(2)/l);
 			return Point3i(x,y,z);
 		}
 
-		int Hash(Point3i p)
+		// hashing
+		const int Hash(Point3i p) const
 		{
+			vcg::Point3i dim(100,100,100);
 			return ((p.V(0)*P0 ^ p.V(1)*P1 ^ p.V(2)*P2)%num);
+//			return ( p[2]-min[2] )* dim[0]*dim[1] +
+//						 ( p[1]-min[1] )* dim[1] +
+//						 ( p[0]-min[0] );
 		}
+private:
+}; // end class
 
-};
+}// end namespace
 
 #undef P0
 #undef P1
