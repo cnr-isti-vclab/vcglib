@@ -223,6 +223,7 @@ static void ClearVTTopology(VertexContainer &vert,TetraContainer &tetra)
 
 		TetraIterator   t;
 		for(t=tetra.begin();t!=tetra.end();++t)	
+			if( ! (*t).IsD())
 			for(int j=0;j<4;++j)
 				{
 					(*t).TVp(j) = 0;
@@ -235,6 +236,7 @@ static void ClearVTTopology(VertexContainer &vert,TetraContainer &tetra)
 static void DetachVTTopology(TetraType *t)
 	{	
 		int i;
+			if( ! (*t).IsD())
 		for(i=0;i<4;i++)
 			DetachVTTopology(t->V(i),t);
 	}
@@ -297,8 +299,6 @@ static void TestVTTopology(VertexContainer &vert,TetraContainer &tetra)
 	{
     int i;
 		for (VertexIterator vi=vert.begin();vi!=vert.end();vi++)
-    {	
-
 				if (!(*vi).IsD())
         {	
             TetraType *nextT=vi->VTb();
@@ -311,7 +311,6 @@ static void TestVTTopology(VertexContainer &vert,TetraContainer &tetra)
               nextI=nextT->TVi(nextI);
               nextT=nextT->TVp(oldI);
             }
-        }
     }
   }
 
@@ -329,8 +328,7 @@ static void TTTopology(VertexContainer &vert,TetraContainer &tetra)
 		VertexType* v2;
 		
 		for (TetraIterator ti=tetra.begin();ti!=tetra.end();ti++)
-    {	
-		 if (!(*ti).IsD())
+ 		 if (!(*ti).IsD())
      {
 			(*ti).TTi(0)=0;
 			(*ti).TTi(1)=1;
@@ -364,8 +362,7 @@ static void TTTopology(VertexContainer &vert,TetraContainer &tetra)
       v2=(*ti).V(Tetra3<double>::VofF(3,2));
 
 			VF.push_back(Facet<VertexType,TetraType>(v0,v1,v2,&(*ti),3));
-     }
-		}
+  	}
 	sort(VF.begin(),VF.end());
 	
 	TetraType *t0;
@@ -412,10 +409,9 @@ static void TestTTTopology(VertexContainer &vert,TetraContainer &tetra)
 	{
     int i;
 		for (TetraIterator ti=tetra.begin();ti!=tetra.end();ti++)
-    {	
+		if ((!(*ti).IsD()))
 			for (i=0;i<4;i++)
 			{
-				if ((!(*ti).IsD()))
 					{	
 					  assert( ((((*ti).TTp(i))->TTp((*ti).TTi(i)))==&(*ti)));
             
@@ -439,8 +435,6 @@ static void TestTTTopology(VertexContainer &vert,TetraContainer &tetra)
 						assert ((v2==vo0)||(v2==vo1)||(v2==vo2));
 					}
 			}
-    }
- 		
 	}
 
 ///test if all and only the exernal vertex are set of border
@@ -507,6 +501,7 @@ static void setExternalVertices(VertexContainer &vert,TetraContainer &tetra)
     for (vi=vert.begin();vi<vert.end();++vi)
         vi->ClearB();
     for (tt=tetra.begin();tt<tetra.end();++tt)
+			if(!(*tt).IsD())
     {
 			for(i=0;i<4;i++)
 			{
