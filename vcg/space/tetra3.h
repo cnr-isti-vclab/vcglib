@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/05/13 08:42:36  pietroni
+the relation between entities functions are in tetra class (don't neeed template argoument)
+
 Revision 1.3  2004/04/28 16:31:17  turini
 Changed :
 in SolidAngle(vind) :
@@ -307,9 +310,9 @@ public:
 /// compute and return the solid angle on a vertex
 double SolidAngle(int vind)
 	{	
-		double da0=DiedralAngle(EV(vind,0));
-		double da1=DiedralAngle(EV(vind,1));
-		double da2=DiedralAngle(EV(vind,2));
+		double da0=DiedralAngle(EofV(vind,0));
+		double da1=DiedralAngle(EofV(vind,1));
+		double da2=DiedralAngle(EofV(vind,2));
 
 			return((da0 + da1 + da2)- M_PI);
 	}
@@ -317,15 +320,15 @@ double SolidAngle(int vind)
 /// compute and return the diadedral angle on an edge
 	double DiedralAngle(int edgeind)
   {
-		int f1=FE(edgeind,0);
-		int f2=FE(edgeind,1);
-		Point3d p0=FV(f1,0)->P();
-		Point3d p1=FV(f1,1)->P();
-		Point3d p2=FV(f1,2)->P();
+		int f1=FofE(edgeind,0);
+		int f2=FofE(edgeind,1);
+		Point3d p0=_v[FofV(f1,0)];
+		Point3d p1=_v[FofV(f1,1)];
+		Point3d p2=_v[FofV(f1,2)];
 		Point3d norm1=((p1-p0)^(p2-p0));
-		p0=FV(f2,0)->P();
-		p1=FV(f2,1)->P();
-		p2=FV(f2,2)->P();
+		p0=_v[FofV(f2,0)];
+		p1=_v[FofV(f2,1)];
+		p2=_v[FofV(f2,2)];
 		Point3d norm2=((p1-p0)^(p2-p0));
 		norm1.Normalize();
 		norm2.Normalize();
