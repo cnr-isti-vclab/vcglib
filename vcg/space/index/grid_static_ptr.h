@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/09/09 12:44:39  fasano
+included stdio.h
+
 Revision 1.6  2004/09/09 08:39:29  ganovelli
 minor changes for gcc
 
@@ -229,19 +232,15 @@ class GridStaticPtr
       last  = *(g+1);
     }
   
-  /// Setta il bounding box della griglia
+  /// Set the bounding box of the grid
+  ///We need some extra space for numerical precision.
   void SetBBox( const Box3x & b )
     {
       bbox = b;
+      float t = bbox.Diag()/100.0;
+      if(t = 0) t = 0.0000001;
+      bbox.Offset(t);
       dim  = b.max - b.min;
-    }
-  
-  void SetSafeBBox( const Box3x & b )
-    {
-      Box3x btmp=b;
-      btmp.InflateFix(0.01);
-      bbox = btmp;
-      dim  = bbox.max - bbox.min;
     }
   
   /// Dato un punto 3d ritorna l'indice del box corrispondente
@@ -403,9 +402,9 @@ class GridStaticPtr
 	  bb.Intersect(bbox);
 	  if(! bb.IsNull() )
 	    {
+
 	      Box3i ib;		// Boundig box in voxels
 	      BoxToIBox( bb,ib );
-	      
 	      int x,y,z;
 	      for(z=ib.min[2];z<=ib.max[2];++z)
 		{
