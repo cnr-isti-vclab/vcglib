@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2005/02/19 10:45:05  ponchio
+Patch generalized and small fixes.
+
 Revision 1.9  2005/02/08 12:43:03  ponchio
 Added copyright
 
@@ -286,7 +289,8 @@ void nxs::BuildPartition(VPartition &part,
     Report report(points.Size());
 
     for(unsigned int v = 0; v < points.Size(); v++) {
-      report.Step(v);
+      if(v & 0xffff == 0xffff)
+	report.Step(v);
 
       unsigned int target = part.Locate(points[v]);
       centroids[target] += points[v];
