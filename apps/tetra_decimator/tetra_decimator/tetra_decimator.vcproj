@@ -1,26 +1,26 @@
 <?xml version="1.0" encoding="Windows-1252"?>
-<VisualStudioProject 
+<VisualStudioProject
 	ProjectType="Visual C++"
 	Version="7.10"
 	Name="tetra_decimator"
 	ProjectGUID="{50882E8E-9870-44A2-8038-2932E460C872}"
 	Keyword="Win32Proj">
 	<Platforms>
-		<Platform 
+		<Platform
 			Name="Win32"/>
 	</Platforms>
 	<Configurations>
-		<Configuration 
+		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="Debug"
 			IntermediateDirectory="Debug"
 			ConfigurationType="1"
 			CharacterSet="2">
-			<Tool 
+			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				EnableIntrinsicFunctions="FALSE"
-				AdditionalIncludeDirectories="d:/sf"
+				AdditionalIncludeDirectories="d:/sf;d:/;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -28,18 +28,10 @@
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="TRUE"
-				DebugInformationFormat="4">
-				<IntelOptions 
-					Optimization="0"
-					EnableIntrinsicFunctions="0"
-					MinimalRebuild="1"
-					BasicRuntimeChecks="3"
-					RuntimeLibrary="5"
-					AllOptions="/c  /I &quot;d:/sf&quot; /ZI /nologo /W3 /Wp64 /Od /D &quot;WIN32&quot; /D &quot;_DEBUG&quot; /D &quot;_CONSOLE&quot; /D &quot;_MBCS&quot; /Gm /EHsc /RTC1 /MLd /Fo&quot;Debug/&quot; /Fd&quot;Debug/vc70.pdb&quot; /Gd /TP"/>
-			</Tool>
-			<Tool 
+				DebugInformationFormat="4"/>
+			<Tool
 				Name="VCCustomBuildTool"/>
-			<Tool 
+			<Tool
 				Name="VCLinkerTool"
 				OutputFile="$(OutDir)/tetra_decimator.exe"
 				LinkIncremental="2"
@@ -47,52 +39,45 @@
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/tetra_decimator.pdb"
 				SubSystem="1"
-				TargetMachine="1">
-				<IntelOptions 
-					AllOptions="/NOLOGO /OUT:&quot;Debug/tetra_decimator.exe&quot; /INCREMENTAL /DEBUG /PDB:&quot;Debug/tetra_decimator.pdb&quot; /SUBSYSTEM:CONSOLE /TLBID:1 /MACHINE:IX86  kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib"/>
-			</Tool>
-			<Tool 
+				TargetMachine="1"/>
+			<Tool
 				Name="VCMIDLTool"/>
-			<Tool 
+			<Tool
 				Name="VCPostBuildEventTool"/>
-			<Tool 
+			<Tool
 				Name="VCPreBuildEventTool"/>
-			<Tool 
+			<Tool
 				Name="VCPreLinkEventTool"/>
-			<Tool 
+			<Tool
 				Name="VCResourceCompilerTool"/>
-			<Tool 
+			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
-			<Tool 
+			<Tool
 				Name="VCXMLDataGeneratorTool"/>
-			<Tool 
+			<Tool
 				Name="VCWebDeploymentTool"/>
-			<Tool 
+			<Tool
 				Name="VCManagedWrapperGeneratorTool"/>
-			<Tool 
+			<Tool
 				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
-		<Configuration 
+		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="Release"
 			IntermediateDirectory="Release"
 			ConfigurationType="1"
 			CharacterSet="2">
-			<Tool 
+			<Tool
 				Name="VCCLCompilerTool"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="4"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="TRUE"
-				DebugInformationFormat="3">
-				<IntelOptions 
-					RuntimeLibrary="4"
-					AllOptions="/c  /Zi /nologo /W3 /Wp64 /O2 /D &quot;WIN32&quot; /D &quot;NDEBUG&quot; /D &quot;_CONSOLE&quot; /D &quot;_MBCS&quot; /FD /EHsc /ML /Fo&quot;Release/&quot; /Fd&quot;Release/vc70.pdb&quot; /Gd /TP"/>
-			</Tool>
-			<Tool 
+				DebugInformationFormat="3"/>
+			<Tool
 				Name="VCCustomBuildTool"/>
-			<Tool 
+			<Tool
 				Name="VCLinkerTool"
 				OutputFile="$(OutDir)/tetra_decimator.exe"
 				LinkIncremental="1"
@@ -101,61 +86,55 @@
 				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				TargetMachine="1">
-				<IntelOptions 
-					AllOptions="/NOLOGO /OUT:&quot;Release/tetra_decimator.exe&quot; /INCREMENTAL:NO /DEBUG /PDB:&quot;Release/tetra_decimator.pdb&quot; /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /TLBID:1 /MACHINE:IX86  kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib"/>
-			</Tool>
-			<Tool 
+				TargetMachine="1"/>
+			<Tool
 				Name="VCMIDLTool"/>
-			<Tool 
+			<Tool
 				Name="VCPostBuildEventTool"/>
-			<Tool 
+			<Tool
 				Name="VCPreBuildEventTool"/>
-			<Tool 
+			<Tool
 				Name="VCPreLinkEventTool"/>
-			<Tool 
+			<Tool
 				Name="VCResourceCompilerTool"/>
-			<Tool 
+			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
-			<Tool 
+			<Tool
 				Name="VCXMLDataGeneratorTool"/>
-			<Tool 
+			<Tool
 				Name="VCWebDeploymentTool"/>
-			<Tool 
+			<Tool
 				Name="VCManagedWrapperGeneratorTool"/>
-			<Tool 
+			<Tool
 				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 	</Configurations>
 	<References>
 	</References>
 	<Files>
-		<Filter 
+		<Filter
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
-			<File 
+			<File
 				RelativePath="..\main.cpp">
 			</File>
-			<File 
+			<File
 				RelativePath="..\..\..\wrap\ply\plylib.cpp">
 			</File>
 		</Filter>
-		<Filter 
+		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
-			<File 
-				RelativePath="..\..\..\vcg\complex\local_optimization\base.h">
-			</File>
-			<File 
+			<File
 				RelativePath="..\..\..\vcg\complex\tetramesh\edge_collapse.h">
 			</File>
-			<File 
+			<File
 				RelativePath="..\..\..\vcg\complex\local_optimization\tetra_edge_collapse.h">
 			</File>
 		</Filter>
-		<Filter 
+		<Filter
 			Name="Resource Files"
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}">
@@ -164,4 +143,3 @@
 	<Globals>
 	</Globals>
 </VisualStudioProject>
-
