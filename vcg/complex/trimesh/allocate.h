@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2005/03/23 11:29:49  ganovelli
+cast int->iterator corrected
+
 Revision 1.16  2005/02/19 10:43:11  ponchio
 reverted tarini mod
 
@@ -191,7 +194,7 @@ static FaceIterator AddFaces(MeshType &m, int n,std::vector<FacePointer *> &loca
 */
 static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu,std::vector<FacePointer *> &local_var)
 {
-  FaceIterator  last = (m.face.end();
+  FaceIterator  last = m.face.end();
   pu.Clear();
   if(m.face.empty()) {
     pu.oldBase=0;  // if the vector is empty we cannot find the last valid element
