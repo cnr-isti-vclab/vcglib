@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2004/09/09 13:02:12  ponchio
+Linux compatible path in #include
+
 Revision 1.11  2004/08/07 16:18:20  pietroni
 addet testFFTopology and testVFTopology functions used to test the rispective topology....
 
@@ -62,6 +65,7 @@ Initial commit
 #ifndef __VCG_TRI_UPDATE_TOPOLOGY
 #define __VCG_TRI_UPDATE_TOPOLOGY
 #include <algorithm>
+#include <vector>
 #include <vcg/simplex/face/pos.h>
 namespace vcg {
 namespace tri {
