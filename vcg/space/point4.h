@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/01/12 11:25:02  ganovelli
+added Dimension
+
 Revision 1.7  2004/10/11 17:46:11  ganovelli
 added definition of vector product (not implemented)
 
@@ -190,18 +193,20 @@ public:
 	{
 		return Point4( -_v[0], -_v[1], -_v[2], -_v[3] );
 	}
-	inline Point4 VectProd ( const Point4 x, const Point4 z ) const
+	inline Point4 VectProd ( const Point4 &x, const Point4 &z ) const
 	{	
 		Point4 res;
-		Matrix44<T> b;
-		*(vcg::Point4<T>*)&b[1][0] = *this;
-		*(vcg::Point4<T>*)&b[2][0] = x;
-		*(vcg::Point4<T>*)&b[3][0] = z;
+		const Point4 &y = *this;
 
-		 res[0] = b[1][1]*b[2][2]*b[3][3]-b[1][1]*b[2][3]*b[3][2]-b[2][1]*b[1][2]*b[3][3]+							b[2][1]*b[1][3]*b[3][2]+b[3][1]*b[1][2]*b[2][3]-b[3][1]*b[1][3]*b[2][2];		 res[1] =	b[1][0]*b[2][3]*b[3][2]-b[3][0]*b[1][2]*b[2][3]-b[1][0]*b[2][2]*
-							b[3][3]+b[3][0]*b[1][3]*b[2][2]+b[2][0]*b[1][2]*b[3][3]-b[2][0]*b[1][3]*b[3][2];		 res[2] = -b[1][0]*b[3][1]*b[2][3]+b[2][0]*b[3][1]*b[1][3]+b[1][0]*b[2][1]*
-							b[3][3]-b[2][0]*b[1][1]*b[3][3]-b[3][0]*b[2][1]*b[1][3]+b[3][0]*b[1][1]*b[2][3];		 res[3] = -b[3][0]*b[1][1]*b[2][2]-b[1][0]*b[2][1]*b[3][2]+b[2][0]*b[1][1]*
-							b[3][2]+b[1][0]*b[3][1]*b[2][2]-b[2][0]*b[3][1]*b[1][2]+b[3][0]*b[2][1]*b[1][2];		return res;
+		res[0] = y[1]*x[2]*z[3]-y[1]*x[3]*z[2]-x[1]*y[2]*z[3]+
+		         x[1]*y[3]*z[2]+z[1]*y[2]*x[3]-z[1]*y[3]*x[2];
+		res[1] = y[0]*x[3]*z[2]-z[0]*y[2]*x[3]-y[0]*x[2]*
+		         z[3]+z[0]*y[3]*x[2]+x[0]*y[2]*z[3]-x[0]*y[3]*z[2];
+		res[2] = -y[0]*z[1]*x[3]+x[0]*z[1]*y[3]+y[0]*x[1]*
+  		         z[3]-x[0]*y[1]*z[3]-z[0]*x[1]*y[3]+z[0]*y[1]*x[3];
+		res[3] = -z[0]*y[1]*x[2]-y[0]*x[1]*z[2]+x[0]*y[1]*
+		         z[2]+y[0]*z[1]*x[2]-x[0]*z[1]*y[2]+z[0]*x[1]*y[2];
+		return res;
 	}
 //@}
 	
