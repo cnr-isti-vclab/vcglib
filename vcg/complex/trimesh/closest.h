@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/10/04 15:32:16  ganovelli
+moved from metro core
+
 Revision 1.6  2004/05/14 00:34:36  ganovelli
 header added
 
@@ -37,6 +40,7 @@ header added
 #include <vcg/space/box3.h>
 #include <vcg/space/point4.h>
 #include <vcg/math/base.h>
+#include <vcg/simplex/face/distance.h>
 #include <vcg/space/index/grid_static_ptr.h>
 
 
@@ -121,7 +125,7 @@ void Closest( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & mdist,
 
 				if( ! mesh.IsMarked( &*(l->Elem())) )
 			{
-				if( Dist((*(l->Elem())), p, error, q) )
+				if( vcg::face::PointDistance<MESH::FaceType>((*(l->Elem())), p, error, q) )
 				{
 					bestq = q;
 					bestf = l->Elem();
@@ -163,7 +167,7 @@ void Closest( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & mdist,
 									for(l=first;l!=last;++l)
 									if( ! mesh.IsMarked( &*(l->Elem())) )
 									{
-										if( Dist((*(l->Elem())),  p, error, q) )
+										if( vcg::face::PointDistance<MESH::FaceType>((*(l->Elem())),  p, error, q) )
 										{
 											bestq = q;
 											bestf = l->Elem();
