@@ -11,9 +11,10 @@
 
 #undef __VCGLIB_VERTEX_N
 
-using namespace vcg;
+namespace vcg {
 
 typedef VertexN<float>  VertexNf;
 typedef VertexN<double> VertexNd;
 
+}
 #endif
