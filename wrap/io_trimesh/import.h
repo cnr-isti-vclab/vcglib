@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/11/29 08:12:10  cignoni
+Initial Update
+
 
 ****************************************************************************/
 
@@ -59,12 +62,12 @@ return lastType;
 
 public:
 // simple aux function that returns true if a given file has a given extesnion
-static bool FileExtension(string filename,  string extension)
+static bool FileExtension(std::string filename,  std::string extension)
 {
-  locale loc1 ;
-  use_facet<ctype<char> > ( loc1 ).tolower(&*filename.begin(),&*filename.end());
-  use_facet<ctype<char> > ( loc1 ).tolower(&*extension.begin(),&*extension.end());
-  string end=filename.substr(filename.length()-extension.length(),extension.length());
+  std::locale loc1 ;
+  std::use_facet<std::ctype<char> > ( loc1 ).tolower(&*filename.begin(),&*filename.end());
+  std::use_facet<std::ctype<char> > ( loc1 ).tolower(&*extension.begin(),&*extension.end());
+  std::string end=filename.substr(filename.length()-extension.length(),extension.length());
   return end==extension;
 }
 
