@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2004/05/26 15:09:32  cignoni
+better comments in set rotate
+
 Revision 1.16  2004/05/07 10:05:50  cignoni
 Corrected abuse of for index variable scope
 
@@ -93,7 +96,7 @@ protected:
   T _a[16];
 
 public:	
-  typedef T scalar;
+  typedef T ScalarType;
 
 ///@{
 
