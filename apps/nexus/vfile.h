@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/07/02 13:02:39  ponchio
+Added GetRegion, Read and Write
+
 Revision 1.3  2004/07/01 21:36:54  ponchio
 *** empty log message ***
 
@@ -69,6 +72,7 @@ template <class T> class VFile {
   
   struct Buffer {
     unsigned int key;
+    unsigned int size; //in number of elements
     T *data;
   };
 
@@ -97,7 +101,7 @@ template <class T> class VFile {
   };
   
   VFile(): fp(NULL) {}
-  ~VFile() { if(fp) Close(); }                    
+  ~VFile() { Close(); }                    
   bool Create(const std::string &filename, 
 	      unsigned int _chunk_size = 4096/sizeof(T), 
 	      unsigned int _queue_size = 1000) {
@@ -130,9 +134,11 @@ template <class T> class VFile {
   }
 
   void Close() {
-    Flush();
-    fclose(fp);
-    fp = 0;
+    if(fp) {
+      Flush();
+      fclose(fp);
+      fp = NULL;
+    }
   }
 
   void Flush() {
@@ -145,7 +151,7 @@ template <class T> class VFile {
 
   void FlushBuffer(Buffer buffer) {
     fseek(fp, buffer.key * chunk_size * sizeof(T), SEEK_SET);
-    if(chunk_size != fwrite(buffer.data, sizeof(T), chunk_size, fp)) {
+    if(buffer.size != fwrite(buffer.data, sizeof(T), buffer.size, fp)) {
       assert(0 && "Could not write");
     }
     delete []buffer.data;
@@ -153,6 +159,7 @@ template <class T> class VFile {
 
   void Resize(unsigned int elem) {
     assert(fp);
+    Flush();
     if(elem > n_elements) {
       if(-1 == fseek(fp, elem*sizeof(T) -1, SEEK_SET)) {
 	assert(0 && "Could not resize");
@@ -161,7 +168,6 @@ template <class T> class VFile {
       fwrite(&a, sizeof(unsigned char), 1, fp);
     } else {
       //TODO optimize: we do not need flush for buffers over elem.
-      Flush();
       int fd = fileno(fp);
       ftruncate(fd, elem*sizeof(T));
     }    
@@ -177,13 +183,14 @@ template <class T> class VFile {
 
     unsigned int chunk = n/chunk_size;
     unsigned int offset = n - chunk*chunk_size;
-    assert(offset < chunk_size*sizeof(T));
+    assert(offset < chunk_size * sizeof(T));
 
     if(index.count(chunk)) 
       return *((*(index[chunk])).data + offset);
     
     if(buffers.size() > queue_size) {
       Buffer &buffer= buffers.back();
+      assert(buffer.key != chunk);
       FlushBuffer(buffer);      
       index.erase(buffer.key);  
       buffers.pop_back();
@@ -191,17 +198,20 @@ template <class T> class VFile {
     
     Buffer buffer;
     buffer.key = chunk;
-    buffer.data = new T[chunk_size * sizeof(T)];  
+    buffer.data = new T[chunk_size];  
+    buffer.size = chunk_size;
+    if(buffer.size + chunk * chunk_size > n_elements)
+      buffer.size = n_elements -chunk * chunk_size;
+
+    buffers.push_front(buffer);   
+    index[buffer.key] = buffers.begin();   
+
     if(fseek(fp, chunk * chunk_size * sizeof(T), SEEK_SET)) {
       assert(0 && "failed to fseek");
       return *(buffer.data);
     }
     
-    unsigned int data_size = chunk_size;
-    if(data_size + chunk * chunk_size > n_elements)
-      data_size = -chunk * chunk_size + n_elements;
-    
-    if(data_size != fread(buffer.data, sizeof(T), data_size, fp)) {    
+    if(buffer.size != fread(buffer.data, sizeof(T), buffer.size, fp)) {    
       if(feof(fp)) {
 	assert(0 && "end of file");
       } else {     
@@ -210,8 +220,6 @@ template <class T> class VFile {
       return (*buffer.data);
     }
 
-    buffers.push_front(buffer);    
-    index[chunk] = buffers.begin();   
     return *(buffer.data + offset);
   }
   
@@ -238,17 +246,20 @@ template <class T> class VFile {
     
     Buffer buffer;
     buffer.key = chunk;
-    buffer.data = new T[chunk_size * sizeof(T)*size];  
+    buffer.data = new T[chunk_size * size];  
+    buffer.size = chunk_size * size;
+    if(buffer.size + chunk * chunk_size > n_elements)
+      buffer.size = -chunk * chunk_size + n_elements;
+
+    buffers.push_front(buffer);    
+    index[chunk] = buffers.begin();   
+
     if(fseek(fp, chunk * chunk_size * sizeof(T), SEEK_SET)) {
       assert(0 && "failed to fseek");
       return buffer.data;
     }
     
-    unsigned int data_size = chunk_size*size;
-    if(data_size + chunk * chunk_size > n_elements)
-      data_size = -chunk * chunk_size + n_elements;
-    
-    if(data_size != fread(buffer.data, sizeof(T), data_size, fp)) {    
+    if(buffer.size != fread(buffer.data, sizeof(T), buffer.size, fp)) {    
       if(feof(fp)) {
 	assert(0 && "end of file");
       } else {     
@@ -256,9 +267,6 @@ template <class T> class VFile {
       }
       return buffer.data;
     }
-
-    buffers.push_front(buffer);    
-    index[chunk] = buffers.begin();   
     return buffer.data;
   }
 

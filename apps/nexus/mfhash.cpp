@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/07/01 21:34:04  ponchio
+Rehash bug.
+
 Revision 1.1  2004/06/24 14:32:45  ponchio
 Moved from wrap/nexus
 
@@ -68,8 +71,9 @@ void MFHash::Resize(unsigned int n) {
   FILE *fp = tmpfile();
   unsigned int count = 0;
   for(unsigned int i = 0; i < buffer.Size(); i++) {
-    if(!buffer[i].Empty()) {
-      fwrite(&buffer[i], sizeof(Bucket), 1, fp);
+    Bucket &bucket = buffer[i];
+    if(!bucket.Empty()) {
+      fwrite(&bucket, sizeof(Bucket), 1, fp);
       ++count;
     }
   }
@@ -92,11 +96,13 @@ void MFHash::Insert(unsigned int key, unsigned int value, bool rehash) {
   assert(space > 0);
   unsigned int hash_size = buffer.Size();
   unsigned int j = key % hash_size;
-  while(!buffer[j].Empty()) {
-    if(buffer[j].key == key && buffer[j].value == value)  //already here
+  Bucket bucket = buffer[j];
+  while(!bucket.Empty()) {
+    if(bucket.key == key && bucket.value == value)  //already here
       return;
     j++;
     if(j >= hash_size) j = 0;
+    bucket = buffer[j];
   } 
   buffer[j] = Bucket(key, value);
   space--;

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/07/02 13:08:43  ponchio
+*** empty log message ***
+
 Revision 1.2  2004/07/01 21:34:29  ponchio
 *** empty log message ***
 
@@ -68,7 +71,8 @@ class MFHash {
     unsigned int j = key % hash_size;
     while(!buffer[j].Empty()) {
       if(buffer[j].key == key) {
-	container.push_back(buffer[j].value);
+	//container.push_back(buffer[j].value);
+	container.insert(buffer[j].value);
       }
       j++;
       if(j >= hash_size) j = 0;

@@ -2,7 +2,7 @@
 #define NXS_PATCH_H
 
 #include <vcg/space/point3.h>
-
+#include <iostream>
 namespace nxs {
 
 struct Chunk {
@@ -17,13 +17,22 @@ class Patch {
   unsigned short &VertSize() { return *(unsigned short *)start; }
 
   vcg::Point3f *VertBegin() { 
-    return (vcg::Point3f *)(start + 2*sizeof(short)); }
+    return (vcg::Point3f *)(((char *)start) + 2*sizeof(short)); }
 
   unsigned short &FaceSize() { return *(((unsigned short *)start) + 1); }
 
   unsigned short *FaceBegin() {
-    return (unsigned short *)(start + 2*sizeof(short) + 
+    return (unsigned short *)(((char *)start) + 2*sizeof(short) + 
 			      VertSize() * sizeof(vcg::Point3f)); }
+
+  vcg::Point3f &Vert(unsigned int v) {
+    return VertBegin()[v];
+  }
+  
+  unsigned short *Face(unsigned int f) {
+    return FaceBegin() + f * 3;
+  }
+ 
 
   unsigned int ChunkSize() {
     return ChunkSize(VertSize(), FaceSize());
@@ -48,10 +57,10 @@ class Patch {
     if(size < nface * 3 * sizeof(unsigned int))
       size = nface * 3 * sizeof(unsigned int);
     
-    size = 2 * sizeof(unsigned short);    
+    size += 2 * sizeof(unsigned short);    
     return size;
   }
- private:
+  // private:
   Chunk *start;
 };
 

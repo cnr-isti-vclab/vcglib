@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/07/02 13:09:31  ponchio
+Extensions changed.
+
 Revision 1.1  2004/07/01 21:32:18  ponchio
 Created
 
@@ -80,6 +83,8 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
+  cerr << "Verts: " << crude.Vertices() << endl;
+  cerr << "Faces: " << crude.Faces() << endl;
   cerr << "Getting optimal radius...\n";
   watch.Start();
   
@@ -95,8 +100,8 @@ int main(int argc, char *argv[]) {
 					  crude.vert.End(),
 					  crude.GetBox(),
 					  target);
-  for(unsigned int i = 0; i < radius.size(); i++) 
-  cerr << "Radius: " << radius[i] << endl;
+  //  for(unsigned int i = 0; i < radius.size(); i++) 
+  //  cerr << "Radius: " << radius[i] << endl;
 
   watch.Stop();
   cerr << " ...done in " << watch.Elapsed() << " secs\n";
@@ -134,7 +139,7 @@ int main(int argc, char *argv[]) {
     cerr << "Could not create remap files: " << output << ".frm\n";
     return -1;
   }
-  face_remap.Resize(crude.face.Size());
+  face_remap.Resize(crude.Faces());
 
 
   PIntersect<VoronoiPartition> inter(chain.levels[0], chain.levels[1]);
@@ -142,11 +147,9 @@ int main(int argc, char *argv[]) {
   cerr << "Splitting faces... ";
   
   Point3f bari;
-  for(unsigned int i = 0; i < crude.face.Size(); i++) {
+  for(unsigned int i = 0; i < crude.Faces(); i++) {
     bari = crude.GetBari(i);
     unsigned int patch = inter.Locate(bari);
-    if(patch > 1000)
-      cerr << "Patch: " << patch << endl;
     face_remap[i] = patch;
   }
 
@@ -166,18 +169,61 @@ int main(int argc, char *argv[]) {
 
   cerr << "Splitting vertices... ";
 
-  for(unsigned int i = 0; i < crude.face.Size(); i++) {
+  unsigned int totvert = 0;
+  for(unsigned int i = 0; i < crude.Faces(); i++) {
     Crude::Face &face = crude.GetFace(i);
     unsigned int patch = face_remap[i];
     if((i % 10000) == 0)
       cerr << "inserting: " << i << endl;
     for(int k = 0; k < 3; k++) {
+      //DEBUG:
+      set<unsigned int> pp;
+      vert_remap.GetValues(face[k], pp);
+      if(!pp.count(patch))
+	totvert++;
       vert_remap.Insert(face[k], patch);
     }
   }
   watch.Stop();
   cerr << "done in " << watch.Elapsed() << " secs\n";
+  cerr << "Tot vertices: " << totvert << endl;
   chain.Save(output + ".chn");
+
+  for(unsigned int i = 0; i < vert_remap.all.Size(); i++) {
+    unsigned int patch = vert_remap.all[i];
+    if(patch == 0xffffffff) {
+      continue;
+    }
+    totvert--;
+  }
+  int totbord = 0;
+  VFile<MFHash::Bucket> &border = vert_remap.borders.buffer;
+  cerr << "Border space:" << border.Size() << endl;
+  for(unsigned int i = 0; i < border.Size(); i++) {
+    MFHash::Bucket &bucket = border[i];
+    if(bucket.key == 0xffffffff) continue;
+    totvert--;
+    totbord++;
+  }
+  cerr << "Borders: " << totbord << endl;
+  vert_remap.Close();
+
+  //DEBUG testing if vert_remap.borders works
+
+  /*  for(unsigned int i = 0; i < crude.Faces(); i++) {
+    Crude::Face &face = crude.GetFace(i);
+    unsigned int patch = face_remap[i];
+    for(int k = 0; k < 3; k++) {
+      set<unsigned int> v;
+      vert_remap.GetValues(face[k], v);
+      assert(v.size() != 0);
+      if(!v.count(patch)) {
+	cerr << "count: " << v.size() << endl;
+	cerr << "patch " << patch << endl;
+      }
+      assert(v.count(patch));
+    }
+    }*/
 
   return 0;						 
 }

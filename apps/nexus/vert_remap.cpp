@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/07/02 13:01:28  ponchio
+Changed file extensions to .rmv, .rmb
+
 Revision 1.2  2004/07/01 21:36:30  ponchio
 Various debug
 
@@ -52,6 +55,11 @@ bool VertRemap::Load(const std::string &file) {
   if(!all.Load(file + ".rmv")) return false;
   if(!borders.Load(file + ".rmb")) return false;
   return true;
+}
+
+void VertRemap::Close() {
+  all.Close();
+  borders.Close();
 }
 
 void VertRemap::Resize(unsigned int n_vert) {

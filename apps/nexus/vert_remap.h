@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/07/02 13:02:00  ponchio
+Backup.
+
 Revision 1.1  2004/06/24 14:32:45  ponchio
 Moved from wrap/nexus
 
@@ -43,8 +46,10 @@ namespace nxs {
 
 class VertRemap {
  public:
+  ~VertRemap() { Close(); }
   bool Create(const std::string &file);
   bool Load(const std::string &file);
+  void Close();
   void Resize(unsigned int n_vert);
 
   unsigned int Size();
@@ -56,8 +61,9 @@ class VertRemap {
     assert(key < Size());
     container.clear();
     if(all[key] == 0xffffffff) return;
-    container.push_back(all[key]);
-    borders.GetValue(key, container);
+    //    container.push_back(all[key]);
+    borders.GetValues(key, container);
+    container.insert(all[key]);
   }
 
   VFile<unsigned int> all;
