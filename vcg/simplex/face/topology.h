@@ -1,4 +1,37 @@
+/****************************************************************************
+* VCGLib                                                            o o     *
+* Visual and Computer Graphics Library                            o     o   *
+*                                                                _   O  _   *
+* Copyright(C) 2004                                                \/)\/    *
+* Visual Computing Lab                                            /\/|      *
+* ISTI - Italian National Research Council                           |      *
+*                                                                    \      *
+* All rights reserved.                                                      *
+*                                                                           *
+* This program is free software; you can redistribute it and/or modify      *   
+* it under the terms of the GNU General Public License as published by      *
+* the Free Software Foundation; either version 2 of the License, or         *
+* (at your option) any later version.                                       *
+*                                                                           *
+* This program is distributed in the hope that it will be useful,           *
+* but WITHOUT ANY WARRANTY; without even the implied warranty of            *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
+* GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
+* for more details.                                                         *
+*                                                                           *
+****************************************************************************/
+/****************************************************************************
+  History
 
+$LOG$
+
+****************************************************************************/
+
+#ifndef _VCG_FACE_TOPOLOGY
+#define _VCG_FACE_TOPOLOGY
+
+namespace vcg {
+  namespace face {
 /*#*******************	
 *  Adjacency Members *
 **********************/
@@ -8,49 +41,52 @@
     @param j Index of the edge
 	@return true se la faccia e' manifold, false altrimenti
 */
-inline bool IsManifold( const int j ) const
+template <class FaceType>
+inline bool IsManifold( FaceType const & f, const int j ) 
 {
-#if (defined(__VCGLIB_FACE_A) || defined(__VCGLIB_FACE_S))
-	return ( F(j)==this || this == F(j)->F(Z(j)) );
-#endif
-	return true;
-	assert(0);
+  if(FaceType::HasFFAdjacency())
+	  return ( f.F(j) == &f || &f == f.F(j)->F(f.Z(j)) );
+  else 
+    return true;
 }
 
 /** Return a boolean that indicate if the j-th edge of the face is a border.
 	@param j Index of the edge
 	@return true if j is an edge of border, false otherwise
 */
-inline bool IsBorder( const int j ) const
+template <class FaceType>
+inline bool IsBorder(FaceType const & f,  const int j ) 
 {
-#if (defined(__VCGLIB_FACE_A) || defined(__VCGLIB_FACE_S))
-	return F(j)==this;
-#endif
-	return true;
-	assert(0);
+  if(FaceType::HasFFAdjacency())
+	  return f.F(j) == &f ;
+  else 
+    return true;
 }
 
 
 /// This function counts the boreders of the face
-inline int BorderCount() const
+template <class FaceType>
+inline int BorderCount(FaceType const & f) 
 {
-#if (defined(__VCGLIB_FACE_A) || defined(__VCGLIB_FACE_S))
-	int t = 0;
-	if( IsBorder(0) ) ++t;
-	if( IsBorder(1) ) ++t;
-	if( IsBorder(2) ) ++t;
-	return t;
-#endif
-	assert(0);
-	return 3;
+  if(FaceType::HasFFAdjacency())
+  {
+    int t = 0;
+	  if( f.IsBorder(0) ) ++t;
+	  if( f.IsBorder(1) ) ++t;
+	  if( f.IsBorder(2) ) ++t;
+	  return t;
+  }
+	else 	return 3;
 }
 
 
 /// This function counts the number of incident faces in a complex edge
-inline int ComplexSize(const int e) const
+template <class FaceType>
+inline int ComplexSize(FaceType const & f, const int e)
 {
-#if (defined(__VCGLIB_FACE_A) || defined(__VCGLIB_FACE_S))
-	int cnt=0;
+if(FaceType::HasFFAdjacency())
+{
+  int cnt=0;
 	FACE_TYPE *fi=(FACE_TYPE *)this;
 	int nzi,zi=e;
 	do
@@ -62,8 +98,8 @@ inline int ComplexSize(const int e) const
 	}
 	while(fi!=this);
 	return cnt;
-#endif
-	assert(0);
+}
+  assert(0);
 	return 2;
 }
 
@@ -73,7 +109,8 @@ inline int ComplexSize(const int e) const
 		The function cannot be applicated if the adjacencies among faces aren't define.
 		@param e Index of the edge
 */
-void Detach(const int e)
+template <class FaceType>
+void Detach(FaceType & f, const int e)
 {
 	typedef FEdgePosB< FACE_TYPE > ETYPE;
 
@@ -100,29 +137,6 @@ void Detach(const int e)
 	this->SetM();
 }
 
-void OldDetach(const int e)
-{
-	typedef EdgePosB< FACE_TYPE > ETYPE;
-
-	assert(!IsBorder(e));
-	ETYPE EPB(this,e);
-	ETYPE TEPB(0,-1);
-	EPB.NextF();
-	while ( EPB.f != this)
-	{
-		TEPB = EPB;
-		assert(!EPB.f->IsBorder(EPB.z));
-		EPB.NextF();
-	}
-	assert(TEPB.f->F(TEPB.z)==this);
-	TEPB.f->F(TEPB.z) = F(e);
-	TEPB.f->Z(TEPB.z) = Z(e);
-	F(e) = this;
-	Z(e) = e;
-	TEPB.f->SetM();
-	this->SetM();
-}
-
 
 /** This function attach the face (via the edge z1) to another face (via the edge z2). It's possible to use it also in non-two manifold situation.
 		The function cannot be applicated if the adjacencies among faces aren't define.
@@ -130,7 +144,8 @@ void OldDetach(const int e)
 		@param f2 Pointer to the face
 		@param z2 The edge of the face f2 
 */
-void Attach(int z1, face_base *&f2, int z2)
+template <class FaceType>
+void Attach(int z1, FaceType *&f2, int z2)
 {
 	typedef FEdgePosB< FACE_TYPE > ETYPE;
 	ETYPE EPB(f2,z2);
@@ -154,6 +169,7 @@ void Attach(int z1, face_base *&f2, int z2)
 }
 
 
+template <class FaceType>
 void AssertAdj()
 {
 	assert(F(0)->F(Z(0))==this);
@@ -164,31 +180,32 @@ void AssertAdj()
 	assert(F(1)->Z(Z(1))==1);
 	assert(F(2)->Z(Z(2))==2); 
 }
-// Funzione di supporto
-inline void Nexts( face_base *&f,int &z )
-{
-    int t;
-    t = z;
-    z = (*f).Z(z);
-    f = (*f).F(t);
-}
+// Funzione di supporto usata da swap?
+//template <class FaceType>
+//inline void Nexts(  *&f, int &z )
+//{
+//    int t;
+//    t = z;
+//    z = (*f).Z(z);
+//    f = (*f).F(t);
+//}
 
 /** This function change the orientation of the face. Inverting the index of two vertex 
 @param z Index of the edge
 */
-void Swap ( const int z )
+template <class SwapFaceType>
+void Swap (SwapFaceType &f, const int z )
 {
-
   int i;
   face_base *tmp, *prec;
   int t, precz;
 
-  swap ( V((z  )%3),V((z+1)%3));
+  swap ( f.V((z  )%3),f.V((z+1)%3));
 
-  if( OBJ_TYPE & (OBJ_TYPE_A|OBJ_TYPE_S ) )
+  if(f.HasFFAdjacency() )
   {
-	swap ( F((z+1)%3),F((z+2)%3));
-	swap ( Z((z+1)%3),Z((z+2)%3));
+	swap ( f.F((z+1)%3),f.F((z+2)%3));
+	swap ( f.Z((z+1)%3),f.Z((z+2)%3));
 
 	for(i = 1; i < 3; i++)
 	{
@@ -212,14 +229,14 @@ void Swap ( const int z )
 // Stacca la faccia corrente dalla catena di facce incidenti sul vertice z, 
 // NOTA funziona SOLO per la topologia VF!!!
 // usata nelle classi di collapse
-void VFDetach(int z)
+template <class FaceType>
+void VFDetach(FaceType & f, int z)
 {
-	
-	if(V(z)->Fp()==this )
+	if(f.V(z)->Fp()==this )
 	{
-		int fz = V(z)->Zp();
-		V(z)->Fp() = (face_from_vert_type *) F(fz);
-		V(z)->Zp() = Z(fz);
+		int fz = f.V(z)->Zp();
+		f.V(z)->Fp() = (face_from_vert_type *) f.F(fz);
+		f.V(z)->Zp() = f.Z(fz);
 	}
 	else
 	{
@@ -235,8 +252,8 @@ void VFDetach(int z)
 			assert(x.f!=0);
 			if(x.f==this)
 			{
-				y.f->F(y.z) = F(z);
-				y.f->Z(y.z) = Z(z);
+				y.f->F(y.z) = f.F(z);
+				y.f->Z(y.z) = f.Z(z);
 				break;
 			}
 		}
@@ -244,11 +261,8 @@ void VFDetach(int z)
 }
 
 
-
-
-
 }	 // end namespace
-
+}	 // end namespace
 
 #endif
 
