@@ -18,20 +18,20 @@
  *****************************************************************************/
 /*#**************************************************************************
   History
-$Id: point3.h,v 1.2 2004-02-06 02:17:09 cignoni Exp $
+$Id: point3.h,v 1.3 2004-02-06 02:25:54 cignoni Exp $
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/02/06 02:17:09  cignoni
+First commit...
+
 
 ****************************************************************************/
 
-#pragma once
 #ifndef __VCGLIB_POINT3
 #define __VCGLIB_POINT3
 
 //#include <limits>
 #include <assert.h>
-#ifndef __VCGLIB_UTILITY
-#include <vcg/Utility.h>
-#endif
+#include <vcg/math/base.h>
 
 namespace vcg {
 
@@ -278,23 +278,6 @@ inline operator Point3<short>		 (){ return Point3<short>		(_v[0],_v[1],_v[2]); }
 }; // end class definition
 
 
-
-#ifdef __VCG_USE_P4_INTRINSIC__
-#include <vcg/p4/point3p4.h>
-#endif
-
-/* Deprecata
-template <class T>
-inline Point3<T> operator * ( const T s, Point3<T> const & p )
-{
-    return Point3<T>( p._v[0] * s, p._v[1] * s, p._v[2] * s );
-}
-*/
-
-#endif // include point3nt
-
-	// ========== Parti comune alla vecchia e alla nuova implementazione ==================
-
 template <class T>
 inline T Angle( Point3<T> const & p1, Point3<T> const & p2 )
 {
@@ -441,13 +424,6 @@ T PSDist( const Point3<T> & p,
 	q = v1+e*t;
     return Distance(p,q);
 }
-
-#if defined(FILE)
-inline void print(Point3<int>    const & p, FILE * fp = stdout)   { fprintf(fp,"%d %d %d ",p.x(),p.y(),p.z()); }
-inline void print(Point3<short>  const & p, FILE * fp = stdout)   { fprintf(fp,"%d %d %d ",p.x(),p.y(),p.z()); }
-inline void print(Point3<float>  const & p, FILE * fp = stdout)   { fprintf(fp,"%g %g %g ",p.x(),p.y(),p.z()); }
-inline void print(Point3<double> const & p, FILE * fp = stdout)   { fprintf(fp,"%g %g %g ",p.x(),p.y(),p.z()); }
-#endif
 
 
 typedef Point3<short>  Point3s;
