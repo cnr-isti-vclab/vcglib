@@ -31,9 +31,10 @@ Initial commit
 #ifndef __VCG_TETRA_UPDATE_TOPOLOGY
 #define __VCG_TETRA_UPDATE_TOPOLOGY
 #include <algorithm>
+#include <vector>
 #include <map>
 #include <vcg\simplex\tetrahedron\pos.h>
-
+using namespace std;
 namespace vcg {
 namespace tetra {
 /** Class Facet.
@@ -509,6 +510,156 @@ void setExternalVertices(VertexContainer &vert,TetraContainer &tetra)
 
 
 /*@}*/
+
+private:
+
+typedef struct _triV
+{
+VertexType *v[3];
+
+ _triV(VertexType *v0,VertexType *v1,VertexType *v2)
+	{	
+    v[0]=v0;
+    v[1]=v1;
+    v[2]=v2;
+    sort(v,v+3);
+	}
+
+	inline const VertexType  * V(int index) const
+	{
+		return v[index];
+	}
+
+	inline bool operator == ( _triV const & tv) const
+	{ 
+		return ((v[0]==tv.V(0))&&(v[1]==tv.V(1))&&(v[2]==tv.V(2)));
+	}
+
+	inline bool operator != ( _triV const & tv) const
+	{ 
+		return !((*this) == tv);
+	}
+
+	inline bool operator > ( _triV const & tv ) const
+	{ 
+		
+			if (v[0]!=tv.V(0))
+			{
+				if (v[0]>tv.V(0))
+					return true;
+				else 
+					return false;
+			}
+			else
+			if (v[1]!=tv.V(1))
+			{
+				if (v[1]>tv.V(1))
+					return true;
+				else 
+					return false;
+			}
+			else
+			if (v[2]!=tv.V(2))
+			{
+				if (v[2]>tv.V(2))
+					return true;
+				else 
+					return false;
+			}else 
+				return false;
+		
+	}	
+
+	inline bool operator < (_triV const & tv) const
+	{ 
+		return !(((*this)>tv)&&((*this)!=tv));
+	}
+
+	inline bool operator <= (_triV const & tv) const
+	{ 
+		return (((*this)<tv)||((*this)==tv));
+	}
+
+	inline bool operator >= ( _triV const & tv) const
+	{ 
+		return (((*this)>tv)||((*this)==tv));
+	}
+};
+
+std::vector < _triV > Faces;
+
+public:
+///this function is used to test if an edge is extern
+bool IsExternEdge(TetraType *t,int edge)
+{
+  assert((t->HasTTAdjacency())||(t->HasVTAdjacency()));
+  if ((!t->V(Tetra::VofE(edge,0))->IsB())||(!t->V(Tetra::VofE(edge,1))->IsB()))
+    return (false);
+
+  if (t->HasTTAdjacency())
+  {
+    PosLoop<TetraType> pl(t,Tetra::FofE(edge,0),edge,Tetra::VofE(edge,0));
+    pl.Reset();
+    //stops if one of faces incident to the edge is an extern face
+    while ((!pl.LoopEnd())&&(!pl.T()->IsBorderF(Tetra::FofE(pl.E(),0)))&&(!pl.T()->IsBorderF(Tetra::FofE(pl.E(),1))))
+      pl.NextT();
+    if (pl.LoopEnd())
+      return false;
+    else 
+      return true;
+  }
+  else
+  { //using vt adiacency
+    VertexType *v0=t->V(Tetra::VofE(edge,0));
+    VertexType *v1=t->V(Tetra::VofE(edge,1));
+    assert(v0!=v1);
+    VTIterator<TetraType> Vti(v0->VTb(),v0->VTi());
+    int num=0;
+    Faces.clear();
+    Faces.reserve(40);
+    while (!Vti.End())
+    {   
+        //take the three faces incident on one vertex
+        int f0=Tetra::FofV(Vti.Vi(),0);
+        int f1=Tetra::FofV(Vti.Vi(),1);
+        int f2=Tetra::FofV(Vti.Vi(),2);
+        VertexType *vf0=Vti.Vt()->V(Tetra::VofF(f0,0));
+        VertexType *vf1=Vti.Vt()->V(Tetra::VofF(f0,1));
+        VertexType *vf2=Vti.Vt()->V(Tetra::VofF(f0,2));
+        //if there is the edge then put the three vertex in the vector
+        if ((vf0==v1)||(vf1==v1)||(vf2==v1))
+        {
+          Faces.push_back(_triV(vf0,vf1,vf2));
+          num++;
+        }
+    }
+    sort(Faces.begin(),Faces.end());
+    //now look if one face is no shared from other tetrahedron
+    //2 instances of same face in vector means it is internal face
+    bool isExtern=false;
+    std::vector < _triV >::iterator TVIo;
+    std::vector < _triV >::iterator TVIn;
+    TVIo=Faces.begin();
+    TVIn=Faces.begin();
+    TVIn++;
+    int j=0;
+    while (((*TVIo)==(*TVIn))&&(j<num))
+    {
+        //move 2 steps each iterator to frify each pair of faces
+        TVIo++;
+        TVIo++;
+        TVIn++;
+        TVIn++;
+        j++;
+        j++;
+    }
+    if (j>=num)
+      return false;
+    else
+      return true;
+  }
+
+}
 }; // end class
 
 
