@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/09/17 15:25:09  ponchio
+First working (hopefully) release.
+
 Revision 1.2  2004/07/05 15:49:39  ponchio
 Windows (DevCpp, mingw) port.
 
@@ -56,6 +59,7 @@ using namespace std;
 
 #include <apps/nexus/crude.h>
 #include <apps/nexus/vert_remap.h>
+#include <wrap/gui/trackball.h>
 using namespace vcg;
 using namespace nxs;
 
@@ -143,65 +147,84 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
+  Trackball track;
+
   glClearColor(0, 0, 0, 0);
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
   glEnable(GL_NORMALIZE);
   glEnable(GL_COLOR_MATERIAL);
  
-
+  bool redraw = false;
   bool show_normals = true;
   int quit = 0;
   SDL_Event event;
   int x, y;
   float alpha = 0;
   while( !quit ) {                
-    while( SDL_PollEvent( &event ) ){                        
+    bool first = true;
+    SDL_WaitEvent(&event);
+    while( first || SDL_PollEvent( &event ) ){
+      first = false;
       switch( event.type ) {
-        case SDL_QUIT:  quit = 1; break;      
-        case SDL_KEYDOWN:                                        
-          switch(event.key.keysym.sym) {
-            case SDLK_q: exit(0); break;
-          }
-          //quit = 1;           
-          //error++;
-          //if(error == 5) error = 0;
-          //render.setMaxError(error/10.0);
-          break;
-        case SDL_MOUSEBUTTONDOWN:       
-          x = event.button.x;
-          y = event.button.y;          
-	  //          hand.buttonDown(x, y, 1);
-        break;
-        case SDL_MOUSEBUTTONUP:          
-          x = event.button.x;
-          y = event.button.y;          
-	  //          hand.buttonUp(x, y);
-          break;
-        case SDL_MOUSEMOTION: 
-          while(SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_MOUSEMOTIONMASK));
-          x = event.motion.x;
-          y = event.motion.y;
-	  //          hand.mouseMove(x, y);        
-          break;  
+      case SDL_QUIT:  quit = 1; break;      
+      case SDL_KEYDOWN:                                        
+	switch(event.key.keysym.sym) {
+	case SDLK_RCTRL:
+	case SDLK_LCTRL: 
+	  track.ButtonDown(Trackball::KEY_CTRL); break;
+	case SDLK_q: exit(0); break;
+	}
+	break;
+      case SDL_MOUSEBUTTONDOWN:       
+	x = event.button.x;
+	y = event.button.y;          
+	if(event.button.button == SDL_BUTTON_WHEELUP) 
+	  track.MouseWheel(1);
+	else if(event.button.button == SDL_BUTTON_WHEELDOWN) 
+	  track.MouseWheel(-1);
+	else if(event.button.button == SDL_BUTTON_LEFT)
+	  track.MouseDown(x, y, Trackball::BUTTON_LEFT);
+	else if(event.button.button == SDL_BUTTON_RIGHT)
+	  track.MouseDown(x, y, Trackball::BUTTON_RIGHT);
+	break;
+      case SDL_MOUSEBUTTONUP:          
+	x = event.button.x;
+	y = event.button.y;          
+	if(event.button.button == SDL_BUTTON_LEFT)
+	  track.MouseUp(x, y, Trackball::BUTTON_LEFT);
+	else if(event.button.button == SDL_BUTTON_RIGHT)
+	  track.MouseUp(x, y, Trackball::BUTTON_RIGHT);     
+	break;
+      case SDL_MOUSEMOTION: 
+	while(SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_MOUSEMOTIONMASK));
+	x = event.motion.x;
+	y = event.motion.y;
+	track.MouseMove(x, y);
+	break;  
       default: break;
       }
+      redraw = true;
     }
+    
+    if(!redraw) continue;
+    redraw = false;
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(60, 1, 0.1, 100);
-	  glMatrixMode(GL_MODELVIEW);
-	  glLoadIdentity();
-	  gluLookAt(0,0,3,   0,0,0,   0,1,0);    
-	  //    hand.glTransform();
-	  //    hand.glDraw(ColorUB(255, 100, 100, 200), 3);
-    
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(0,0,3,   0,0,0,   0,1,0);    
+
+    track.GetView();
+    track.Apply();
+
     float scale = 3/box.Diag();
-    //glScalef(0.4, 0.4, 0.4);       
-    glRotatef(alpha, 0, 1, 0);
-    alpha++;
-    if(alpha > 360) alpha = 0;
+    glScalef(0.4, 0.4, 0.4);       
+    //    glRotatef(alpha, 0, 1, 0);
+    //    alpha++;
+    //    if(alpha > 360) alpha = 0;
     glScalef(scale, scale, scale);       
     Point3f center = box.Center();
     glTranslatef(-center[0], -center[1], -center[2]);
