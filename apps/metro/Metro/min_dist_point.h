@@ -65,7 +65,7 @@ void MinDistPoint( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & md
 {
 	typedef SCALAR scalar;
   typedef Point3<scalar> Point3x;
-  typedef Box3<scalar> Box3x;
+  typedef Box3<SCALAR> Box3x;
 	
 	if(!gr.bbox.IsIn(p)) return;
 	typedef GridStaticObj<typename MESH::FaceContainer>::Link A2UGridLink;
