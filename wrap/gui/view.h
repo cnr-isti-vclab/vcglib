@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2004/09/28 10:22:00  ponchio
+Added #include <GL/gl.h>
+
 Revision 1.8  2004/05/26 15:15:46  cignoni
 Removed inclusion of gl extension stuff
 
@@ -68,7 +71,7 @@ y is upward!
 #endif
 
 #include <GL/gl.h>
-
+#include <GL\glext.h>
 namespace vcg {
 /**
 This class represent the viewing parameters under opengl. 
