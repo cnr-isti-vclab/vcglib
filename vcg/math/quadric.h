@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/10/25 16:15:59  ganovelli
+template changed
+
 Revision 1.1  2004/09/14 19:48:27  ganovelli
 created
 
@@ -39,11 +42,11 @@ namespace vcg {
 namespace math {
 
 
-template<typename  ScalarType>
+template<typename  Scalar>
 class Quadric
 {
 public:
-	typedef ScalarType ScalarType;
+        typedef Scalar ScalarType;
 	ScalarType a[6];		// Matrice 3x3 simmetrica: a11 a12 a13 a22 a23 a33
 	ScalarType b[3];		// Vettore r3
 	ScalarType c;			// Fattore scalare (se -1 quadrica nulla)
