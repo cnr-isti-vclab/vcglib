@@ -74,7 +74,6 @@ namespace nxs {
 class NexusMt: public Nexus {
  private:
   std::vector<Node> nodes;
-  std::vector<VboBuffer> vbos;
 
  public:
   //Vertex buffer object mode

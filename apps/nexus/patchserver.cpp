@@ -14,15 +14,16 @@ bool PatchServer::Create(const std::string &filename,
 			 unsigned int rsize) {
   signature = sig;
   chunk_size = csize;
-  frame = 0;
+
   ram_size = rsize;
   ram_used = 0;
-
   vbo_size = 0;
   vbo_used = 0;
 
+  frame = 0;
   ram_readed = 0;
   ram_flushed = 0;
+
   lru.clear();
   return File::Create(filename);
 }
@@ -30,16 +31,19 @@ bool PatchServer::Create(const std::string &filename,
 bool PatchServer::Load(const std::string &filename, Signature sig, 
 		       unsigned int csize, bool readonly, 
 		       unsigned int rsize) {
+
   signature = sig;
   chunk_size = csize;
-  ram_size = rsize;
-  frame = 0;
-  ram_used = 0;
 
-  ram_readed = 0;
-  ram_flushed = 0;
+  ram_size = rsize;
+  ram_used = 0;
   vbo_size = 0;
   vbo_used = 0;
+
+  frame = 0;
+  ram_readed = 0;
+  ram_flushed = 0;
+
   lru.clear();
   return File::Load(filename, readonly);
 }
@@ -55,7 +59,6 @@ bool PatchServer::ReadEntries(FILE *fp) {
   fread(&n, 1, sizeof(int), fp);
   patches.resize(n);
   for(unsigned int i = 0; i < n; i++) {
-    patches[i].patch = NULL;
     fread(&(patches[i].patch_start), 1, sizeof(unsigned int), fp);
     fread(&(patches[i].ram_size),  1, sizeof(unsigned short), fp);
     fread(&(patches[i].disk_size),    1, sizeof(unsigned short), fp);
@@ -77,22 +80,12 @@ bool PatchServer::WriteEntries(FILE *fp) {
 
 void PatchServer::AddPatch(unsigned short nvert, unsigned short nface) {
   PatchEntry entry;
-  entry.patch = NULL;
-  entry.ram_size = Patch::ChunkSize(signature, nvert, nface, chunk_size);
 
-  //if compressed we do not allocate space now (how much anyway?)
-  //  if((signature & NXS_COMPRESSED) != 0) {
-    entry.disk_size = 0xffff;
-    entry.patch_start = 0xffffffff;
-    /*  }  else {
-    entry.disk_size = entry.ram_size;
-    entry.patch_start = Length()/chunk_size;
-    Redim(Length() + entry.disk_size * chunk_size);
-    }*/
+  entry.patch_start = 0xffffffff;
+  entry.ram_size = Patch::ChunkSize(signature, nvert, nface, chunk_size);
+  entry.disk_size = 0xffff;
   entry.lru_pos = 0xffffffff;
   patches.push_back(entry);
-  
-
 }
 
 Patch &PatchServer::GetPatch(unsigned int idx, 
@@ -101,19 +94,12 @@ Patch &PatchServer::GetPatch(unsigned int idx,
   assert(idx < patches.size());
   PatchEntry &entry = patches[idx];
 
-  if(entry.patch) {  //already on buffer
-    assert(entry.lru_pos < lru.size());
-    assert(lru[entry.lru_pos].patch == idx);
-    lru[entry.lru_pos].frame = frame++;
-
-  } else {
-
-    assert(entry.lru_pos == 0xffffffff);
+  if(entry.lru_pos == 0xffffffff) {  //not on buffer
     if(flush) Flush();
-
+    PTime nptime(idx);
 
     char *ram = new char[entry.ram_size * chunk_size];
-    entry.patch = new Patch(signature, ram, nvert, nface);
+    nptime.patch = new Patch(signature, ram, nvert, nface);
     
     if(entry.patch_start != 0xffffffff) { //was allocated.
       assert(entry.disk_size != 0xffff);
@@ -127,17 +113,20 @@ Patch &PatchServer::GetPatch(unsigned int idx,
 	unsigned char *disk = new unsigned char[entry.disk_size * chunk_size];
 	ReadBuffer(disk, entry.disk_size * chunk_size);
 
-	entry.patch->Decompress(entry.ram_size * chunk_size, 
-				disk, entry.disk_size * chunk_size);
+	nptime.patch->Decompress(entry.ram_size * chunk_size, 
+				 disk, entry.disk_size * chunk_size);
 	delete []disk;
       } 
     }
-
+    
     entry.lru_pos = lru.size();
-    lru.push_back(PTime(idx, frame++));
+    lru.push_back(nptime);
     ram_used += entry.ram_size;
     ram_readed += entry.ram_size;
   }
+
+  PTime &ptime = lru[entry.lru_pos];
+  ptime.frame = frame++;
   
   //avoid frame overflow!
   if(frame > (1<<30)) {
@@ -148,40 +137,47 @@ Patch &PatchServer::GetPatch(unsigned int idx,
     }
     make_heap(lru.begin(), lru.end());
     for(unsigned int i = 0; i < lru.size(); i++)
-      patches[lru[i].patch].lru_pos = i;
+      patches[lru[i].npatch].lru_pos = i;
   }
-  return *(entry.patch); 
+  return *(ptime.patch); 
 }
 
-VboBuffer &PatchServer::GetVbo(unsigned int p) {
-  VboBuffer &buffer = vbos[p];
-  if(buffer.index) return buffer;
 
-  //TODO  cerr << "Adding vbo: " << p << endl;
-  assert(patches[p].patch);
-  Patch &patch = *patches[p].patch;
+void PatchServer::GetVbo(unsigned int p, 
+			 unsigned int &element, unsigned int &array) {
+  PatchEntry &entry = patches[p];
+  assert(entry.lru_pos != 0xffffffff);
+  PTime &ptime = lru[entry.lru_pos];
+  if(!ptime.vbo_element) {
+    //TODO  cerr << "Adding vbo: " << p << endl;
+    assert(ptime.patch);
+    
+    Patch &patch = *ptime.patch;
+    
+    glGenBuffersARB(1, &ptime.vbo_element);
+    assert(ptime.vbo_element);
+    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, ptime.vbo_element);
+    
+    unsigned int size = patch.nf * sizeof(unsigned short);
+    if((signature & NXS_FACES) != 0) size *= 3;
+    
+    glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, size, patch.FaceBegin(),
+		    GL_STATIC_DRAW_ARB);
+    
+    //TODO fix this when we allow data :p
+    size = sizeof(float) * patch.dstart;
+    
+    glGenBuffersARB(1, &ptime.vbo_array);
+    glBindBufferARB(GL_ARRAY_BUFFER_ARB, ptime.vbo_array);
+    
+    glBufferDataARB(GL_ARRAY_BUFFER_ARB, size, patch.VertBegin(), 
+		    GL_STATIC_DRAW_ARB);
+    
+    vbo_used += patches[p].ram_size;
+  }
 
-  glGenBuffersARB(1, &buffer.index);
-  assert(buffer.index);
-  glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, buffer.index);
-
-  unsigned int size = patch.nf * sizeof(unsigned short);
-  if((signature & NXS_FACES) != 0) size *= 3;
-
-  glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, size, patch.FaceBegin(),
-  GL_STATIC_DRAW_ARB);
-
-  //TODO fix this when we allow data :p
-  size = sizeof(float) * patch.dstart;
-  
-  glGenBuffersARB(1, &buffer.vertex);
-  glBindBufferARB(GL_ARRAY_BUFFER_ARB, buffer.vertex);
-
-  glBufferDataARB(GL_ARRAY_BUFFER_ARB, size, patch.VertBegin(), 
-		  GL_STATIC_DRAW_ARB);
-
-  vbo_used += patches[p].ram_size;
-  return buffer;
+  element = ptime.vbo_element;
+  array = ptime.vbo_array;
 }
 
 
@@ -191,22 +187,22 @@ void PatchServer::Flush() {
 
   make_heap(lru.begin(), lru.end());
   for(unsigned int i = 0; i < lru.size(); i++)
-    patches[lru[i].patch].lru_pos = i;
+    patches[lru[i].npatch].lru_pos = i;
 
   while(ram_used > ram_size) {
     pop_heap(lru.begin(), lru.end());
     PTime &ptime = lru.back();
-    Flush(ptime.patch);
+    Flush(ptime.npatch);
     lru.pop_back();
   }
   for(unsigned int i = 0; i < lru.size(); i++)
-    patches[lru[i].patch].lru_pos = i;
+    patches[lru[i].npatch].lru_pos = i;
 }
 
 void PatchServer::FlushAll() {
   for(unsigned int i = 0; i < lru.size(); i++) {
     PTime &ptime = lru[i];
-    Flush(ptime.patch);
+    Flush(ptime.npatch);
   }
   assert(ram_used == 0);
   lru.clear();
@@ -214,14 +210,13 @@ void PatchServer::FlushAll() {
 
 void PatchServer::Flush(unsigned int patch) {
   PatchEntry &entry = patches[patch];
-  assert(entry.patch);
-
+  PTime &ptime = lru[entry.lru_pos];
   if(!readonly) { //write back patch
 
 
     if((signature & NXS_COMPRESSED)) {
       unsigned int compressed_size;
-      char *compressed = entry.patch->Compress(entry.ram_size * chunk_size,
+      char *compressed = ptime.patch->Compress(entry.ram_size * chunk_size,
 					       compressed_size);
       if(entry.disk_size == 0xffff) {//allocate space 
 	assert(entry.patch_start == 0xffffffff);
@@ -242,7 +237,7 @@ void PatchServer::Flush(unsigned int patch) {
 	Redim(Length() + entry.disk_size * chunk_size);
       }
       SetPosition(entry.patch_start * chunk_size);
-      WriteBuffer(entry.patch->start, entry.disk_size * chunk_size);
+      WriteBuffer(ptime.patch->start, entry.disk_size * chunk_size);
     }
     /*    FILE *fo = fopen("tmp", "wb+");
     fwrite(entry.patch->start, 1, entry.disk_size * chunk_size, fo);
@@ -250,12 +245,14 @@ void PatchServer::Flush(unsigned int patch) {
     exit(0);*/
   }
 
-  delete [](entry.patch->start);
-  delete entry.patch;
-  entry.patch = NULL;
-  entry.lru_pos = 0xffffffff;
+  delete [](ptime.patch->start);
+  delete ptime.patch;
+  ptime.patch = NULL;
+
   if(FlushVbo(patch))
     vbo_used -= entry.ram_size;
+
+  entry.lru_pos = 0xffffffff;
   ram_used -= entry.ram_size;
   ram_flushed += entry.ram_size;
 }
@@ -263,11 +260,14 @@ void PatchServer::Flush(unsigned int patch) {
 bool PatchServer::FlushVbo(unsigned int patch) {
   //TODO  
   //cerr << "Flushing vbo: " << patch << endl;
-  if(!vbos.size()) return false;
-  VboBuffer &buffer = vbos[patch];
-  if(!buffer.index) return false;
-  glDeleteBuffersARB(1, &buffer.index);
-  glDeleteBuffersARB(1, &buffer.vertex);
+  PatchEntry &entry = patches[patch];
+  assert(entry.lru_pos != 0xffffffff);
+  PTime &ptime = lru[entry.lru_pos];
+  if(!ptime.vbo_element) return false;
+
+  glDeleteBuffersARB(1, &ptime.vbo_element);
+  glDeleteBuffersARB(1, &ptime.vbo_array);
+  assert(!ptime.vbo_element);
   return true;
 }
 

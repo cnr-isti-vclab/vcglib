@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2004/10/15 11:41:03  ponchio
+Tests and small changes.
+
 Revision 1.14  2004/10/10 17:19:42  ponchio
 Added compression and debugged.
 
@@ -85,6 +88,7 @@ using namespace std;
 #include "vert_remap.h"
 
 #include "decimate.h"
+#include "fragment.h"
 #include "nxsbuild.h"
 using namespace vcg;
 using namespace nxs;
@@ -115,6 +119,10 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
 		vector<Link> &newbord,
 		Nexus::Update &update, 
 		float error);
+
+void BuildFragment(Nexus &nexus, VoronoiPartition &part,
+		   set<unsigned int> &patches, 
+		   Fragment &fragment);
 
 /*float Decimate(unsigned int target_faces, 
 	       vector<Point3f> &newvert, 
@@ -324,9 +332,11 @@ int main(int argc, char *argv[]) {
       vector<Point3f> newvert;
       vector<unsigned int> newface;
       vector<Link> newbord;
-      
-      nexus.Join((*fragment).second, newvert, newface, newbord);
+      Fragment frag;
 
+      BuildFragment(nexus, vchain.levels[level+1], (*fragment).second, frag);
+      //      nexus.Join((*fragment).second, newvert, newface, newbord);
+      join(frag, newvert, newface, newbord);
       //simplyfy mesh
       vector<int> vert_remap;
       float error = Decimate(decimation,
@@ -610,6 +620,31 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
   }  
 }
  
+void BuildFragment(Nexus &nexus, VoronoiPartition &part,
+		   set<unsigned int> &patches, 
+		   Fragment &fragment) {
+  set<unsigned int>::iterator f;
+  for(f = patches.begin(); f != patches.end(); f++) {
+    fragment.pieces.push_back(NxsPatch());
+    NxsPatch &nxs = fragment.pieces.back();
+    nxs.patch = *f;
+
+    Patch &patch = nexus.GetPatch(*f);
+    Border border = nexus.GetBorder(*f);
+
+    nxs.vert.resize(patch.nv);
+    nxs.face.resize(patch.nf * 3);
+    memcpy(&*nxs.vert.begin(), patch.VertBegin(), patch.nv * sizeof(Point3f));
+    memcpy(&*nxs.face.begin(), patch.FaceBegin(), patch.nf * 3*sizeof(short));
+    for(unsigned int i = 0; i < border.Size(); i++) {
+      Link &link = border[i];
+      if(!link.IsNull())
+	nxs.bord.push_back(link);
+    }
+    fragment.update.erased.push_back(*f);
+  }
+}
+
 void ReverseHistory(vector<Nexus::Update> &history) {
   reverse(history.begin(), history.end());
   vector<Nexus::Update>::iterator i;

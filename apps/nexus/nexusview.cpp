@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2004/10/15 16:45:27  ponchio
+Vbo added.
+
 Revision 1.14  2004/10/14 13:52:02  ponchio
 Small changes.
 
@@ -188,6 +191,7 @@ int main(int argc, char *argv[]) {
     " b: increase memory buffer\n"
     " B: decrease memory buffer\n"
     " d: debug mode (show patches colored)\n"
+    " f: flas shading mode\n"
     " m: smooth mode\n"
     " c: show colors\n"
     " n: show normals\n"
@@ -225,6 +229,8 @@ int main(int argc, char *argv[]) {
   int x, y;
   float alpha = 0;
   bool redraw = false;
+  float fps = 0;
+  float tframe = 0;
   while( !quit ) {   
     bool first = true;
     SDL_WaitEvent(&event);
@@ -256,6 +262,7 @@ int main(int argc, char *argv[]) {
 	case SDLK_s: metric = NexusMt::FRUSTUM; break;
 	case SDLK_p: mode = NexusMt::POINTS; nexus.SetMode(mode); break;
 	case SDLK_d: mode = NexusMt::DEBUG; nexus.SetMode(mode); break;
+	case SDLK_f: mode = NexusMt::FLAT; nexus.SetMode(mode); break;
 	case SDLK_m: mode = NexusMt::SMOOTH; nexus.SetMode(mode); break;
 
 	case SDLK_r:
@@ -389,9 +396,11 @@ int main(int argc, char *argv[]) {
 	     nexus.patches.vbo_used * nexus.chunk_size/(float)(1<<20));
       gl_print(0.03, 0.06, buffer);
 
-      sprintf(buffer, "Triangles: %.2fK (tot)   %.2fK (vis)",
+      sprintf(buffer, "Triangles: %.2fK (tot)   %.2fK (vis)    "
+                      "%.3f time    %.2f FPS",
 	      nexus.tri_total/(float)(1<<10),
-	      nexus.tri_rendered/(float)(1<<10));
+	      nexus.tri_rendered/(float)(1<<10),
+	      tframe, 1/tframe);
       gl_print(0.03, 0.03, buffer);
 
 
@@ -407,6 +416,8 @@ int main(int argc, char *argv[]) {
     }
     
     SDL_GL_SwapBuffers();
+    tframe = watch.Elapsed();
+    
   }
 
   // Clean up

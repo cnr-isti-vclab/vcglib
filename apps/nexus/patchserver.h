@@ -9,29 +9,27 @@
 namespace nxs {
 
 struct PatchEntry { 
-  Patch *patch;
   unsigned int patch_start;  //granularita' Chunk
   unsigned short ram_size;  //in chunks 
   unsigned short disk_size;  // in chunks (used when compressed)
   unsigned int lru_pos;
 };
 
- struct VboBuffer {
-   VboBuffer(unsigned int v = 0, unsigned int i = 0):
-     vertex(v), index(i) {}
-   unsigned int vertex;
-   unsigned int index;
- };
- 
-
 class PatchServer: public File {
  public:
+
   struct PTime {
-    unsigned int patch;
+    unsigned int npatch;
     unsigned int frame;
+    
+    Patch *patch;
+    unsigned int vbo_array;
+    unsigned int vbo_element;
+    bool locked;
 
     PTime(unsigned int p = 0xffffffff, unsigned int f = 0xffffffff):
-	 patch(p), frame(f) {}
+	 npatch(p), frame(f), patch(NULL), 
+	 vbo_array(0), vbo_element(0) {}
 
     bool operator<(const PTime &p) const { return frame > p.frame; }
   };
@@ -67,7 +65,7 @@ class PatchServer: public File {
 		  unsigned short nvert, unsigned short nface,
 		  bool flush = true);
 
-  VboBuffer &GetVbo(unsigned int patch);
+  void GetVbo(unsigned int patch, unsigned int &element, unsigned int &array);
 
   void Flush(unsigned int patch);
   //return false if was not allocated.
@@ -78,7 +76,6 @@ class PatchServer: public File {
   void SetRamBufferSize(unsigned int ram_buffer);
 
   std::vector<PatchEntry> patches;
-  std::vector<VboBuffer> vbos;
   std::vector<PTime> lru;
 };
 

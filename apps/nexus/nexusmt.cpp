@@ -115,7 +115,6 @@ bool NexusMt::Load(const string &filename, bool readonly) {
   SetComponent(TEXTURE, true);
   SetComponent(DATA, true);
 
-  patches.vbos.resize(index.size());
   return true;
 }
 
@@ -126,10 +125,9 @@ bool NexusMt::InitGL(Vbo mode, unsigned int vbosize) {
     cerr << "No vbo available!" << endl;
     vbo_mode = VBO_OFF;
   }
-  if(vbo_mode == VBO_OFF) {
-    patches.vbo_size = vbosize / patches.chunk_size;
-    patches.vbos.resize(0);
-  }
+  patches.vbo_size = vbosize / patches.chunk_size;
+  if(vbo_mode == VBO_OFF) 
+    patches.vbo_size = 0;
   return true;
 }
 
@@ -171,12 +169,14 @@ void NexusMt::Render() {
     char *nstart;
 
     if(vbo_mode != VBO_OFF) {
-      VboBuffer &vbo = patches.GetVbo(cell);
-      assert(vbo.index);
-      assert(vbo.vertex);
+      unsigned int vbo_array;
+      unsigned int vbo_element;
+      patches.GetVbo(cell, vbo_element, vbo_array);
+      assert(vbo_element);
+      assert(vbo_array);
 
-      glBindBufferARB(GL_ARRAY_BUFFER_ARB, vbo.vertex);
-      glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, vbo.index);
+      glBindBufferARB(GL_ARRAY_BUFFER_ARB, vbo_array);
+      glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, vbo_element);
 
       fstart = NULL;
       vstart = NULL;
@@ -207,6 +207,26 @@ void NexusMt::Render() {
       else if(signature & NXS_STRIP)
 	glDrawElements(GL_TRIANGLE_STRIP, patch.nf, 
 		       GL_UNSIGNED_SHORT, fstart);
+      break;
+    case FLAT:
+      if(signature & NXS_FACES) {
+	glBegin(GL_TRIANGLES);
+	for(int i = 0; i < patch.nf; i++) {
+	  unsigned short *f = patch.Face(i);
+	  Point3f &p0 = patch.Vert(f[0]);
+	  Point3f &p1 = patch.Vert(f[1]);
+	  Point3f &p2 = patch.Vert(f[2]);
+	  Point3f n = ((p1 - p0) ^ (p2 - p0));
+	  glNormal3f(n[0], n[1], n[2]);
+	  glVertex3f(p0[0], p0[1], p0[2]);
+	  glVertex3f(p1[0], p1[1], p1[2]);
+	  glVertex3f(p2[0], p2[1], p2[2]);
+	}
+	glEnd();
+      } else if(signature & NXS_STRIP) {
+	cerr << "Unsupported rendering mode sorry\n";
+	exit(0);
+      }
       break;
     default: 
       cerr << "Unsupported rendering mode sorry\n";

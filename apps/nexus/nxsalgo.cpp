@@ -126,11 +126,12 @@ void nxs::ComputeNormals(Nexus &nexus) {
       Point3f &n = tmpb[off + i];
       n.Normalize();
       if(use_short) {
-	n *= 32767;
+	n *= 32766;
 	short *np = patch.Norm16(link.start_vert);
 	np[0] = (short)n[0];
 	np[1] = (short)n[1];
 	np[2] = (short)n[2];
+	np[3] = 0;
       } else {
 	patch.Norm32(link.start_vert) = n;
       }
@@ -220,4 +221,37 @@ void nxs::ComputeTriStrip(unsigned short nfaces, unsigned short *faces,
       strip.push_back(primitives[i+1].m_Indices[0]);
     }			
   }
+}
+
+void nxs::Reorder(unsigned int signature, Patch &patch) {
+  vector<unsigned> remap;
+  remap.resize(patch.nv, 0xffff);
+  
+  int nf = patch.nf;
+  if(signature & NXS_FACES)
+    nf *= 3;
+  
+  //building remap
+  unsigned short *f = patch.FaceBegin();
+  unsigned int count = 0;
+  for(int i = 0; i < nf; i++) {
+    assert(f[i] < remap.size());
+    if(remap[f[i]] == 0xffff) {
+      remap[f[i]] = count++;
+    }
+  }
+  //test no unreferenced vertices
+  for(int i = 0; i < patch.nv; i++)
+    if(remap[i] == 0xffff)
+      remap[i] = i;
+  
+  //converting faces
+  for(int i = 0; i < nf; i++)
+    f[i] = remap[f[i]];
+  
+  vector<Point3f> vert;
+  vert.resize(patch.nv);
+  memcpy(&*vert.begin(), patch.VertBegin(), patch.nv * sizeof(Point3f));
+  for(int i = 0; i < patch.nv; i++)
+    patch.Vert(remap[i]) = vert[i];
 }

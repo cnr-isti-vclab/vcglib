@@ -338,6 +338,9 @@ int main(int argc, char *argv[]) {
       memcpy(dst_patch.Norm16Begin(), src_patch.Norm16Begin(), 
 	     src_patch.nv * sizeof(short)*4);
 
+    //reordering
+    //WATCH OUT BORDERS!
+    //    Reorder(out.signature, dst_patch);
     //copying entry information;
     dst_entry.sphere = src_entry.sphere;
     dst_entry.error = src_entry.error;
