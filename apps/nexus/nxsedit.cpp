@@ -3,6 +3,7 @@ using namespace std;
 
 #include "nxsalgo.h"
 #include "nexus.h"
+#include "watch.h"
 
 using namespace nxs;
 using namespace vcg;
@@ -195,7 +196,7 @@ int main(int argc, char *argv[]) {
   Nexus nexus;
   nexus.patches.SetRamBufferSize(ram_size);
   if(!nexus.Load(input, true)) {
-    cerr << "Could not open nexus file: " << input << ".mt\n";
+    cerr << "Could not open nexus file: " << input << "\n";
     return -1;
   }
 
@@ -269,7 +270,7 @@ int main(int argc, char *argv[]) {
 
   if(!output.size()) output = input + getSuffix(signature);
 
-  cerr << "Writing to nexus: " << output << endl;
+  cout << "Writing to nexus: " << output << endl;
 
   Nexus out;
   out.patches.SetRamBufferSize(ram_size);
@@ -281,8 +282,12 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-  
+  //TODO set rambuffer low (or even direct access!)
+
+  Report report(nexus.index.size());
+  cout << "Copying and allocating...\n";
   for(unsigned int patch = 0; patch < nexus.index.size(); patch++) {
+    report.Step(patch);
     Nexus::PatchInfo &src_entry = nexus.index[patch];
     Patch src_patch = nexus.GetPatch(patch);
     Border src_border = nexus.GetBorder(patch);
@@ -300,8 +305,6 @@ int main(int argc, char *argv[]) {
     Nexus::PatchInfo &dst_entry = out.index[patch];
     Patch dst_patch = out.GetPatch(patch);
 
-
-    
     //copy vertices: 
     memcpy(dst_patch.VertBegin(), src_patch.VertBegin(), 
 	   src_patch.nv * sizeof(Point3f));
@@ -346,24 +349,21 @@ int main(int argc, char *argv[]) {
     dst_entry.error = src_entry.error;
 
     //adding borders.
-    //Check border is ok:
     for(unsigned int i = 0; i < src_border.Size(); i++) {
       Link &link = src_border[i];
       if(link.IsNull()) continue;
-      if(link.end_patch > nexus.index.size()) {
-	cerr << "Link endp: " << link.end_patch << endl;
-      }
+      assert(link.end_patch < nexus.index.size());
     }
     Border dst_border = out.GetBorder(patch);
     out.borders.ResizeBorder(patch, src_border.Size());
-    //    dst_entry.border_used = src_entry.border_used;
     memcpy(dst_border.Start(), src_border.Start(), 
 	   src_border.Size() * sizeof(Link));
   }
+  report.Finish();
 
   //TODO this is ok only if we have faces still!
   if(add_normals) {
-    cerr << "Computing normals" << endl;
+    cout << "Computing normals" << endl;
     ComputeNormals(out);
   }
 
@@ -371,6 +371,19 @@ int main(int argc, char *argv[]) {
     //source of color:
     cerr << "Unsupported color\n";
     return -1;
+  }
+  if(qvertex) { 
+    report.Init(nexus.index.size());
+    cout << "Quantizing vertices\n";
+    for(unsigned int patch = 0; patch < nexus.index.size(); patch++) {
+      report.Step(patch);
+      Patch src_patch = nexus.GetPatch(patch);
+
+      float *ptr = (float *)src_patch.VertBegin();
+      for(unsigned int i = 0; i < src_patch.nv*3; i++) 
+	ptr[i] =  qvertex * nearbyintf(ptr[i]/qvertex);
+    }
+    report.Finish();
   }
 
   //fixing sphere.

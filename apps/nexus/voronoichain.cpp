@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2004/10/19 04:23:29  ponchio
+*** empty log message ***
+
 Revision 1.13  2004/10/15 16:45:27  ponchio
 Vbo added.
 
@@ -69,6 +72,7 @@ First draft.
 #include <iostream>
 
 #include "voronoichain.h"
+#include "watch.h"
 
 using namespace std;
 using namespace vcg;
@@ -114,16 +118,19 @@ void VoronoiChain::Init(Crude &crude, float scaling, int steps) {
 
 //here goes some optimization pass.
    //Fine optimization.
+  Report report;
   vector<Point3f> fcentroids;
   vector<unsigned int> fcount;
   for(int i = 0; i < steps; i++) {
-    cerr << "Optimization step 0: " << i << "/" << steps << endl;
+    cerr << "Optimization step: " << i+1 << "/" << steps << endl;
     fcentroids.clear();
     fcount.clear();
     fcentroids.resize(fine.size(), Point3f(0, 0, 0));
     fcount.resize(fine.size(), 0);
     
+    report.Init(crude.Vertices());
     for(unsigned int v = 0; v < crude.Vertices(); v++) {
+      if(v & 0xffff) report.Step(v);
       unsigned int ftarget;
       float dist = fine.Closest(crude.vert[v], ftarget);
       assert(ftarget != -1);
@@ -157,14 +164,16 @@ void VoronoiChain::Init(Crude &crude, float scaling, int steps) {
   vector<unsigned int> ccount;
   vector<float> radius;
   for(int i = 0; i < steps; i++) {
-    cerr << "Optimization step 0: " << i << "/" << steps << endl;
+    cerr << "Optimization step: " << i+1 << "/" << steps << endl;
     ccentroids.clear();
     ccount.clear();
     ccentroids.resize(coarse.size(), Point3f(0, 0, 0));
     ccount.resize(coarse.size(), 0);
     radius.resize(coarse.size(), 0);
     
+    report.Init(crude.Vertices());
     for(unsigned int v = 0; v < crude.Vertices(); v++) {
+      if(v & 0xffff) report.Step(v);
       unsigned int ctarget = 0xffffffff;
       float dist = coarse.Closest(crude.vert[v], ctarget);
       assert(ctarget != 0xffffffff);
@@ -372,6 +381,7 @@ void VoronoiChain::BuildLevel(Nexus &nexus, unsigned int offset,
   
   unsigned int tot_coarse = (unsigned int)(fine.size() * scaling);
   
+  //TODO this method for selecting the seeds is ugly!
   float ratio = tot_coarse/(float)(nexus.index.size() - offset);
   float cratio = 0;
   for(unsigned int idx = offset; idx < nexus.index.size(); idx++) {
@@ -394,20 +404,24 @@ void VoronoiChain::BuildLevel(Nexus &nexus, unsigned int offset,
   coarse.Init();
   cerr << "Coarse size: " << coarse.size() << endl;
   cerr << "Coarse mean: " << coarse_vmean << " mean_size: " << mean_size << endl;
+
+  Report report;
 //here goes some optimization pass.
   //Coarse optimization.
   vector<Point3f> ccentroids;
   vector<unsigned int> ccount;
   vector<float> radius;
   for(int i = 0; i < steps; i++) {
-    cerr << "Optimization step 0: " << i << "/" << steps << endl;
+    cerr << "Optimization step: " << i+1 << "/" << steps << endl;
     ccentroids.clear();
     ccount.clear();
     ccentroids.resize(coarse.size(), Point3f(0, 0, 0));
     ccount.resize(coarse.size(), 0);
     radius.resize(coarse.size(), 0);
 
+    report.Init(nexus.index.size());
     for(unsigned int idx = offset; idx < nexus.index.size(); idx++) {
+      report.Step(idx);
       Patch patch = nexus.GetPatch(idx);
       for(unsigned int i = 0; i < patch.nv; i++) {
 

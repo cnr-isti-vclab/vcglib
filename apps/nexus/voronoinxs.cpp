@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2004/10/19 01:23:02  ponchio
+Daily backup (fragment...)
+
 Revision 1.15  2004/10/15 11:41:03  ponchio
 Tests and small changes.
 
@@ -90,27 +93,9 @@ using namespace std;
 #include "decimate.h"
 #include "fragment.h"
 #include "nxsbuild.h"
+#include "watch.h"
 using namespace vcg;
 using namespace nxs;
-
-/*void RemapVertices(Crude &crude,
-		   VertRemap &vert_remap,
-		   VFile<unsigned int> &face_remap,	 
-		   vector<unsigned int> &patch_verts);
-
-void NexusAllocate(Crude &crude,
-		   Nexus &nexus,
-		   VFile<unsigned int> &face_remap,
-		   vector<unsigned int> &patch_faces,
-		   vector<unsigned int> &patch_verts);
-
-void NexusFill(Crude &crude,
-	       Nexus &nexus,
-	       VertRemap &vert_remap,
-	       VFile<RemapLink> &border_remap);
-
-void NexusFixBorder(Nexus &nexus, 
-VFile<RemapLink> &border_remap);*/
 
 void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
 		unsigned int level,
@@ -123,12 +108,6 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
 void BuildFragment(Nexus &nexus, VoronoiPartition &part,
 		   set<unsigned int> &patches, 
 		   Fragment &fragment);
-
-/*float Decimate(unsigned int target_faces, 
-	       vector<Point3f> &newvert, 
-	       vector<unsigned int> &newface,
-	       vector<Link> &newbord,
-	       vector<int> &vert_remap);*/
 
 void ReverseHistory(vector<Nexus::Update> &history);
 
@@ -214,6 +193,7 @@ int main(int argc, char *argv[]) {
     cerr << " -o N: nomber of optimization steps\n";
     cerr << " -d <method>: decimation method: quadric, cluster. (default quadric)\n";
     cerr << " -b N: ram buffer size (in bytes)\n";
+    cerr << " -r  : stop after remapping fase\n";
     return -1;
   }
 
@@ -248,19 +228,18 @@ int main(int argc, char *argv[]) {
 
   VFile<unsigned int> face_remap;
   if(!face_remap.Create(output + ".rmf")) {
-    cerr << "Could not create remap files: " << output << ".frm\n";
+    cerr << "Could not create remap files: " << output << ".rmf\n";
     return -1;
   }
   face_remap.Resize(crude.Faces());
 
-
   VertRemap vert_remap;
   if(!vert_remap.Create(output)) {
-    cerr << "Could not create remap files: " << output << ".rmv and .rmb\n";
+    cerr << "Could not create remap file: " << output << ".rmv and .rmb\n";
     return -1;
   }
   vert_remap.Resize(crude.Vertices());
-
+  
   VFile<RemapLink> border_remap;
   if(!border_remap.Create(output + string(".tmp"))) {
     cerr << "Could not create temporary border remap file\n";
@@ -272,13 +251,15 @@ int main(int argc, char *argv[]) {
   //Remapping faces and vertices using level 0 and 1 of the chain
   cerr << "Remapping faces.\n";
   vector<unsigned int> patch_faces;
-  vchain.RemapFaces(crude, face_remap, patch_faces, scaling, optimization_steps);
   
+  vchain.RemapFaces(crude, face_remap, patch_faces, 
+		    scaling, optimization_steps);
+
   cerr << "Remapping vertices.\n";
   vector<unsigned int> patch_verts;
   patch_verts.resize(patch_faces.size(), 0);
   RemapVertices(crude, vert_remap, face_remap, patch_verts);
-  
+
   if(stop_after_remap) return 0;
 
   cerr << "Allocating space\n";
@@ -302,32 +283,32 @@ int main(int argc, char *argv[]) {
   nexus.patches.FlushAll();
 
   /* BUILDING OTHER LEVELS */
-  unsigned int oldoffset = 0;
 
+  Report report;
+
+  unsigned int oldoffset = 0;
   for(unsigned int level = 1; level < max_level; level++) {
     cerr << "Level: " << level << endl;
 
     unsigned int newoffset = nexus.index.size();
     vchain.BuildLevel(nexus, oldoffset, scaling, optimization_steps);
     
-    cerr << "Level built\n";
+    report.Init(vchain.oldfragments.size(), 1);
+    unsigned int fcount = 0;
     vector<Nexus::Update> level_history;
     map<unsigned int, set<unsigned int> >::iterator fragment;
     for(fragment = vchain.oldfragments.begin(); 
 	fragment != vchain.oldfragments.end(); fragment++) {
-
+      report.Step(fcount++);
 
       update.created.clear();
       update.erased.clear();
 
-      cerr << "Join ";
       set<unsigned int> &fcells = (*fragment).second;
       set<unsigned int>::iterator s;
       for(s = fcells.begin(); s != fcells.end(); s++) {
 	update.erased.push_back(*s);
-	cerr << *s << " ";
       }
-      cerr << endl;
       
       vector<Point3f> newvert;
       vector<unsigned int> newface;
@@ -349,6 +330,7 @@ int main(int argc, char *argv[]) {
 
       level_history.push_back(update);
     }
+    report.Finish();
 
     for(unsigned int i = 0; i < level_history.size(); i++)
       nexus.history.push_back(level_history[i]);
@@ -388,8 +370,6 @@ void NexusSplit(Nexus &nexus, VoronoiChain &vchain,
 		vector<Link> &newbord, 
 		Nexus::Update &update,
 		float error) {
-
-  cerr << "Counting nearby cells" << endl;
 
   map<unsigned int, Point3f> centroids;
   map<unsigned int, unsigned int> counts;

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2004/10/19 01:23:02  ponchio
+Daily backup (fragment...)
+
 Revision 1.15  2004/10/15 16:45:27  ponchio
 Vbo added.
 
@@ -102,7 +105,7 @@ using namespace std;
 #include <GL/glut.h>
 
 #include <wrap/gui/trackball.h>
-#include "stopwatch.h"
+#include "watch.h"
 
 
 using namespace vcg;
@@ -199,7 +202,7 @@ int main(int argc, char *argv[]) {
     " -: decrease error\n"
     " +: increase error (= too)\n";
   
-  StopWatch watch;
+  Watch watch;
   
   bool rotate = false;
   bool show_borders = true;
@@ -361,7 +364,7 @@ int main(int argc, char *argv[]) {
     nexus.SetComponent(NexusMt::COLOR, show_colors);
     nexus.SetComponent(NexusMt::NORMAL, show_normals);
     
-    watch.Restart();
+    watch.Start();
 
     nexus.Render();
 
@@ -416,7 +419,7 @@ int main(int argc, char *argv[]) {
     }
     
     SDL_GL_SwapBuffers();
-    tframe = watch.Elapsed();
+    tframe = watch.Time();
     
   }
 
