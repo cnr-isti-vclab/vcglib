@@ -45,13 +45,17 @@ using namespace std;
 #include<vcg/complex/trimesh/update/topology.h>
 #include <vcg/complex/trimesh/update/edges.h>
 #include <vcg/complex/trimesh/update/bounding.h>
-#include <vcg/math/histogram.h>
 #include <vcg/complex/trimesh/clean.h>
+#include <vcg/space/intersection/triangle_triangle3.h>
+#include <vcg/math/histogram.h>
 #include <wrap/io_trimesh/import.h>
 #include <wrap/io_trimesh/export_ply.h>
 
+
 // loader 
 #include<wrap/io_trimesh/import_ply.h>
+
+#include "defs.h"
 
 using namespace vcg;
 using namespace face;
@@ -73,25 +77,72 @@ void OpenMesh(const char *filename, MyMesh &m)
 }
 
 
+inline char* GetExtension(char* filename)
+{
+    for(int i=strlen(filename)-1; i >= 0; i--)
+        if(filename[i] == '.')
+            break;
+    if(i > 0)
+        return &(filename[i+1]);
+    else
+        return NULL;
+}
 
 void main(int argc,char ** argv){
 
+	char                 *fmt;
 	MyMesh m;
 	//load the mesh
 	//argv[1]=(char*)"c:\\checkup\\debug\\column1m.ply";
-	argv[1] = "C:\\Documents and Settings\\Rita\\Desktop\\MeshReader\\trimeshinfo\\Debug\\prova0.ply";
-	OpenMesh(argv[1],m);
-    FILE * index;
+	//argv[1] = "C:\\Documents and Settings\\Rita\\Desktop\\MeshReader\\trimeshinfo\\Debug\\prova0.ply";
+
+
+ // print program info
+  printf("-------------------------------\n"
+         "             TriMeshInfo\n"
+         "   release date: "__DATE__"\n"
+         "-------------------------------\n\n");
+
+ // load input meshes.
+  if(argc <= 1)
+  {
+      printf(MSG_ERR_N_ARGS);
+      exit(-1);
+  }
+
+  // load mesh M1.
+  if(!(fmt = GetExtension(argv[1])))
+  {
+      printf(MSG_ERR_UNKNOWN_FORMAT, fmt);
+      exit(-1);
+  }
+  if(!_stricmp(FILE_EXT_PLY, fmt))
+	{
+		printf("reading the mesh `%s'...", argv[1]);
+    OpenMesh(argv[1],m);
+	}
+	else
+		printf("done\n");
+
+
+
+  FILE * index;
 	index = fopen((string(argv[1])+string("2.html")).c_str(),"w");
-	fprintf(index,"<p>Checkup: This is the check up result for %s </p>\n\n\n", argv[1]);
+	fprintf(index,"<p>TriMeshInfo: This is the result for %s </p>\n\n\n", argv[1]);
 	
 	fprintf(index,"<p>GENERAL INFO </p>\n\n");
 	fprintf(index,"<p>Number of vertices: %d </p>\n", m.vn);
 	fprintf(index,"<p>Number of faces: %d </p>\n", m.fn);
+	printf("Number of vertices: %d \n", m.vn);
+	printf("Number of faces: %d \n", m.fn);
 	if (m.Volume()!=0)
+	{
         fprintf(index,"<p>Volume: %d </p>\n", m.Volume());
+        printf("Volume: %d \n", m.Volume());
+	}
 	Color4b Color=m.C();
 	fprintf(index, "<p>Object color(4b): %f %f %f </p>\n\n", Color[0], Color[1], Color[2]);
+  printf( "Object color(4b): %f %f %f \n\n", Color[0], Color[1], Color[2]);
 
 	
 	
@@ -106,56 +157,38 @@ void main(int argc,char ** argv){
 	int j;
 	int man=0;
 	bool Manifold = true;
-	bool Manifold_lib = true;
+	
+	MyMesh::FaceIterator prova;
+	prova = m.face.end();
 	for(f=m.face.begin();f!=m.face.end();++f)
 	{
 		for (j=0;j<3;++j)
 		{
 			if(!IsManifold(*f,j))
 			{
-				Manifold_lib = false;
+				Manifold = false;
 				f= m.face.end();
-				break;
-			}
-		}
-	}
-	if (!Manifold_lib)
-		fprintf(index, "<p> Manifold from lib gives: NO </p>"); 
-	else
-		fprintf(index, "<p> Manifold from lib gives: YES </p>"); 
-
-	for(f=m.face.begin();f!=m.face.end();++f)
-	{
-		for (j=0;j<3;++j)
-		{
-      if ((*f).IsBorder(j))
-			{}
-			else if (&(*f) == (*f).FFp(j)->FFp((*f).FFi(j)))
-			{}
-			else
-			{	
-					hei.Set(&(*f), j , f->V(j));
-					he=hei;
-					he.NextF();
-					while (he.f!=hei.f)
-					{
-						man++;
-						he.NextF();
-					}
-					Manifold=false;
+				--f;
+				j=3;
 			}
 		}
 	}
 	if (!Manifold)
-		fprintf(index, "<p> Manifold from Matteo gives: NO </p>"); 
+	{
+		fprintf(index, "<p> Manifold from lib gives: NO </p>"); 
+	  printf( "Manifold from lib gives: NO\n"); 
+	}
 	else
-		fprintf(index, "<p> Manifold from Matteo gives: YES </p>"); 
-
+	{
+		fprintf(index, "<p> Manifold from lib gives: YES </p>"); 
+	  printf( "Manifold from lib gives: YES "); 
+	}
 
 	// COUNT EDGES
 
 	MyMesh::FaceIterator fi;
 	int count_e = 0;
+	bool counted=false;
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 		(*fi).ClearS();
 
@@ -164,9 +197,40 @@ void main(int argc,char ** argv){
 			(*fi).SetS();
 			count_e +=3;
 			for(int i=0; i<3; ++i)
-				if((*fi).FFp(i)->IsS()) count_e--;
+			{
+				if (IsManifold(*fi,i))
+				{
+					if((*fi).FFp(i)->IsS()) 
+						count_e--;
+				}
+				else
+				{
+					hei.Set(&(*fi), i , fi->V(i));
+					he=hei;
+					he.NextF();
+					while (he.f!=hei.f)
+					{
+						if (he.f->IsS())
+						{
+							counted=true;
+							break;
+						}
+						else 
+						{
+							he.NextF();
+						}
+					}
+					if (counted)
+					{
+						count_e--;
+						counted=false;
+					}
+				}
+			}
 		}
 	fprintf(index, "<p>Number of edges: %d </p>\n", count_e);
+  printf("Number of edges: %d \n", count_e);
+
 
 	// DA QUI IN POI!!!
 	
@@ -177,6 +241,7 @@ void main(int argc,char ** argv){
 		if((*fi).Area() == 0)
 			count_fd++;
 	fprintf(index, "<p>Number of degenerated faces: %d </p>\n", count_fd);
+  printf("Number of degenerated faces: %d \n", count_fd);
 
 	// UNREFERENCED VERTEX
 
@@ -196,8 +261,10 @@ void main(int argc,char ** argv){
 		if( !(*v).IsV() )
 			++count_uv;
 	fprintf(index,"<p>Number of unreferenced vertices: %d</p>\n",count_uv);
+  printf("Number of unreferenced vertices: %d\n",count_uv);
 
-// Holes count	
+
+// HOLES COUNT	
 
 	for(f=m.face.begin();f!=m.face.end();++f)
 		(*f).ClearS();
@@ -205,34 +272,64 @@ void main(int argc,char ** argv){
 	
 	int BEdges=0; int numholes=0;
 	
-	for(f=g;f!=m.face.end();++f)
+
+	if (Manifold)
 	{
-		if(!(*f).IsS())
+        for(f=g;f!=m.face.end();++f)
 		{
-			for(j=0;j<3;j++)
-			{
-				if ((*f).IsBorder(j))
+			if(!(*f).IsS())
+			{	
+				for(j=0;j<3;j++)
 				{
-					BEdges++;
-					if(!(IsManifold(*f,j)))
+					if ((*f).IsBorder(j))
 					{
-						(*f).SetS();
-						hei.Set(&(*f),j,f->V(j));
-						he=hei;
-						do
+						BEdges++;
+						
+						if(!(IsManifold(*f,j)))
 						{
-							he.NextB();
-							he.f->SetS();
-					//		BEdges++;
+							(*f).SetS();
+							hei.Set(&(*f),j,f->V(j));
+							he=hei;
+							do
+							{
+								he.NextB();
+								he.f->SetS();
+							//	BEdges++;
+							}
+							while (he.f!=hei.f);
+							//BEdges--;
+							numholes++;
 						}
-						while (he.f!=hei.f);
-						numholes++;
 					}
 				}
 			}
 		}
 	}
-	fprintf(index, "<p> Number of holes: %d </p> \n <p> Number of border edges: %d </p>", numholes, BEdges); 
+	else
+	{
+		for(f=g;f!=m.face.end();++f)
+		{
+			for(j=0;j<3;j++)
+				{
+					if ((*f).IsBorder(j))
+					{
+						BEdges++;
+					}
+				}
+		}
+	}
+	if (Manifold)
+	{
+        fprintf(index, "<p> Number of holes: %d </p> \n <p> Number of border edges: %d </p>", numholes, BEdges); 
+        printf("Number of holes: %d \n", numholes, BEdges); 
+        printf("Number of border edges: %d\n", numholes, BEdges); 
+	}
+	else
+	{
+        fprintf(index, "<p> Number of border edges: %d </p>", BEdges); 
+        printf("Number of border edges: %d\n", BEdges); 
+	}
+	
 
 	// CONNECTED COMPONENTS
 
@@ -269,19 +366,93 @@ void main(int argc,char ** argv){
 		}
 	}
 	fprintf(index, "<p> Number of connected components: %d </p>", CountComp); 
+  printf("Number of connected components: %d\n", CountComp); 
 	
+	if(CountComp ==1)
+	{
+		int eulero; //v-e+f 
+		eulero = (m.vn-count_uv)- (count_e+BEdges)+m.fn;
+		if(Manifold)
+		{
+			int genus = (2-eulero)>>1;
+			fprintf(index, "<p> Genus: %d </p> \n ", genus); 
+		  printf( "Genus: %d \n ", genus); 
+		}
+	}
+// REGULARITY
+
+	bool Regular=true;
+	bool Semiregular=true;
+	int inc=0;
+	for(v=m.vert.begin();v!=m.vert.end();++v)
+		(*v).ClearS();
+	for(f=m.face.begin();f!=m.face.end();++f)
+	{
+		for (j=0; j<3; j++)
+		{
+			he.Set(&(*f),j,f->V(j));
+			if (!(*f).IsBorder(j) && !(*f).IsBorder((j+2)%3) && !f->V(j)->IsS())
+			{
+				hei=he;
+				inc=1;
+				he.FlipE();
+				he.NextF();
+				while (he.f!=hei.f)
+				{
+					he.FlipE();
+					if (he.IsBorder())
+					{
+						inc=6;
+						break;
+					}
+					he.NextF();
+					inc++;
+				}
+				if (inc!=6)
+					Regular=false;
+				if (inc!=6 && inc!=5)
+					Semiregular=false;
+				f->V(j)->SetS();
+
+			}
+			else
+				f->V(j)->SetS();
+		}
+		if (Semiregular==false)
+			break;
+
+	}
+
+	if (Regular)
+	{
+			fprintf(index, "<p> Type of Mesh: REGULAR</p>"); 
+		  printf("Type of Mesh: REGULAR\n"); 
+	}
+	else if (Semiregular)
+	{
+			fprintf(index, "<p> Type of Mesh: SEMIREGULAR</p>");
+		  printf("Type of Mesh: SEMIREGULAR\n");
+	}
+	else 
+	{
+		fprintf(index, "<p> Type of Mesh: IRREGULAR</p>"); 
+	  printf("Type of Mesh: IRREGULAR\n"); 
+	}
 // ORIENTABLE E ORIENTED MESH
 
-	int flag=0;
+	bool Orientable=true;
 	bool Oriented=true;
 	if (!Manifold)
+	{
 		fprintf(index, "<p> Orientable Mesh: NO</p>"); 
+	  printf( "Orientable Mesh: NO\n"); 
+	}
 	else
 	{
 		for(f=m.face.begin();f!=m.face.end();++f)
 		{
 			(*f).ClearS();
-		//	(*f).ClearR();
+			(*f).ClearUserBit(0);
 		}
 		g=m.face.begin(); f=g; 
 		for(f=m.face.begin();f!=m.face.end();++f)
@@ -297,57 +468,125 @@ void main(int argc,char ** argv){
 					sf.pop();
 					for(j=0;j<3;++j)
 					{
-						int prova = (*g).IsR();
 						if( !(*g).IsBorder(j) )
 						{
 							he.Set(&(*g),0,g->V(0));
 							l=he.f->FFp(j);
-							if( !(*l).IsS() )
-							{
-								(*l).SetS();
-								sf.push(l);
-							}
 							he.Set(&(*g),j,g->V(j));								
 							hei.Set(he.f->FFp(j),he.f->FFi(j), (he.f->FFp(j))->V(he.f->FFi(j)));
-							if (he.v!=hei.v)    // bene
+							if( !(*g).IsUserBit(0) )
 							{
-								if ((*l).IsS())
-								{}
-								else
+								if (he.v!=hei.v)    // bene
+								{
+									if ((*l).IsS() && (*l).IsUserBit(0))
+									{
+										Orientable=false;
+										break;
+									}
+									else if (!(*l).IsS())
+									{
+										(*l).SetS();
+										sf.push(l);
+									}
+								}	
+								else if (!(*l).IsS())
+								{
+									Oriented=false;
+									(*l).SetS();
+									(*l).SetUserBit(0);
+									sf.push(l);
+								}
+								else if ((*l).IsS() && !(*l).IsUserBit(0))
+								{
+									Orientable=false;
+									break;
+								}
+							}
+							else if (he.v==hei.v)    // bene
+							{
+								if ((*l).IsS() && (*l).IsUserBit(0))
+								{
+									Orientable=false;
+									break;
+								}
+								else if (!(*l).IsS())
 								{
 									(*l).SetS();
 									sf.push(l);
 								}
 							}	
-						}
-						else if ((*l).IsS() && !(*l).IsR())
-						{
-							flag=1;
-							break;
-						}
-						else
-						{
-							Oriented=false;
-							(*l).SetS();
-							(*l).SetR();
-							sf.push(l);
+							else if (!(*l).IsS())
+							{
+								Oriented=false;
+								(*l).SetS();
+								(*l).SetUserBit(0);
+								sf.push(l);
+							}
+							else if ((*l).IsS() && !(*l).IsUserBit(0))
+							{
+								Orientable=false;
+								break;
+							}
 						}
 					}
 				}
 			}
-			if (flag==1)
+			if (!Orientable)
 				break;
 		}
-		if (flag==0)
+		if (Orientable)
+		{
 				fprintf(index, "<p> Orientable Mesh: YES</p>"); 
+			  printf( "Orientable Mesh: YES\n"); 
+		}
 		else
+		{
 				fprintf(index, "<p> Orientable Mesh: NO</p>"); 
+			  printf( "Orientable Mesh: NO\n"); 
+		}
 	}
 	if (Oriented && Manifold)
+	{
 			fprintf(index, "<p> Oriented Mesh: YES</p>"); 
+		  printf( "Oriented Mesh: YES\n"); 
+	}
 	else
+	{
 			fprintf(index, "<p> Oriented Mesh: NO</p>"); 
+		  printf( "Oriented Mesh: NO\n"); 
+	}
+// SELF INTERSECTION
 
+	if (m.fn<300000)
+	{
+	bool SelfInt=false;
+	for(f=m.face.begin();f!=m.face.end();++f)
+		{
+			for(g=++f , f--;g!=m.face.end();++g)
+				{
+					if ((*f).FFp(0)!=&(*g) && (*f).FFp(1)!=&(*g) && (*f).FFp(2)!=&(*g) &&
+						f->V(0)!=g->V(0) && f->V(0)!=g->V(1) && f->V(0)!=g->V(2) &&
+						f->V(1)!=g->V(0) && f->V(1)!=g->V(1) && f->V(1)!=g->V(2) &&
+						f->V(2)!=g->V(0) && f->V(2)!=g->V(1) && f->V(2)!=g->V(2))
+					{
+						if (NoDivTriTriIsect(f->V(0)->P(), f->V(1)->P(), f->V(2)->P(),g->V(0)->P(), g->V(1)->P(), g->V(2)->P()) )
+							SelfInt=true;
+					}
+				}
+			if (SelfInt)
+				break;			
+		}
+	if (SelfInt)
+	{
+			fprintf(index, "<p> Self Intersection: YES</p>"); 
+		 printf( "Self Intersection: YES\n");
+	}
+	else
+	{
+			fprintf(index, "<p> Self Intersection: NO</p>"); 
+		 printf( "Self Intersection: NO\n"); 
+	}
+	}
 	fclose(index);
 }
 
