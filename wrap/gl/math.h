@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/03/31 15:27:17  ponchio
+*** empty log message ***
+
 
 ****************************************************************************/
 
@@ -37,15 +40,15 @@ $Log: not supported by cvs2svn $
 
 namespace vcg {
 
-void glMultMatrix(const Matrix44f &matrix) {
-  glMultMatrixf((const GLfloat *)&(matrix[0]));  
+inline void glMultMatrix(const Matrix44f &matrix) {
+  glMultMatrixf((const GLfloat *)(matrix[0]));  
 }
 
-void glMultMatrix(const Matrix44d &matrix) {
-  glMultMatrixd((const GLdouble *)&(matrix[0]));
+inline void glMultMatrix(const Matrix44d &matrix) {
+  glMultMatrixd((const GLdouble *)(matrix[0]));
 }
 
-void glMultMatrix(const Similarityf &s) {
+inline void glMultMatrix(const Similarityf &s) {
   glTranslatef(s.tra[0], s.tra[1], s.tra[2]);
   glScalef(s.sca, s.sca, s.sca);
   float alpha;
@@ -55,14 +58,13 @@ void glMultMatrix(const Similarityf &s) {
   
 }
 
-void glMultMatrix(const Similarityd &s) {
+inline void glMultMatrix(const Similarityd &s) {
   glTranslated(s.tra[0], s.tra[1], s.tra[2]);
   double alpha;
   Point3d axis;
   s.rot.ToAxis(alpha, axis);
   glRotated(math::ToDeg(alpha), axis[0], axis[1], axis[2]);
   glScaled(s.sca, s.sca, s.sca);
-
 }
 
 }//namespace
