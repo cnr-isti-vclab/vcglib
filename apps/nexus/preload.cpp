@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/02/08 12:43:03  ponchio
+Added copyright
+
 
 ****************************************************************************/
 
@@ -35,6 +38,10 @@ using namespace std;
 using namespace nxs;
 
  void Preload::execute() {
+
+   total_disk = 0;
+   disk = 0;
+   
    assert(mt);
    while(!get_signaled()) {
      trigger.wait();
@@ -51,7 +58,16 @@ using namespace nxs;
      if(item.error == 0 || mt->CanAdd(item)) {
        //we cannot flush since we are not in the openGL thread
        //and flushing includes VBO buffer flushing also.
-       mt->GetPatch(item.id, item.error, false);
+       Entry &entry = (*mt)[item.id];
+       if(!entry.patch)
+	 disk += entry.disk_size;
+
+       Patch &patch = mt->GetPatch(item.id, item.error, false);
+
+       //test... make sure memory is in ram (if not on vbo that is.
+       if(!entry.vbo_array)
+	 total_disk += patch.Face(0)[0];
+
        queue.pop_back();
      } else
        queue.clear();

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.29  2005/02/14 17:11:07  ponchio
+aggiunta delle sphere
+
 Revision 1.28  2005/02/08 12:43:03  ponchio
 Added copyright
 
@@ -47,15 +50,25 @@ using namespace nxs;
 using namespace vcg;
 using namespace std;
 
-void Stats::Init() {
-  ktri = 0;
-  kdisk = 0;
-  if(count == 25) count = 0;
-  if(!count) {
-    fps = 25/watch.Time();
-    watch.Start();
-  }
-  count++;
+void Stats::Start() {
+  tri = extr = 0;
+  watch.Start();
+}
+
+void Stats::Disk(float _disk) {
+  disk.push_front(_disk);
+  if(disk.size() > log_size) disk.pop_back();
+}
+
+void Stats::Error(float _error) {
+  error.push_front(_error);
+  if(error.size() > log_size) error.pop_back();
+}
+
+void Stats::Stop() {
+  time.push_front((float)watch.Time());
+  if(time.size() > log_size) time.pop_back();
+  fps = (7*fps + 1/time[0])/8.0f;
 }
 
 NexusMt::NexusMt() {
@@ -117,7 +130,6 @@ void NexusMt::Render(DrawContest contest) {
 void NexusMt::Render(Extraction &extraction, DrawContest &contest,
 		     Stats *stats) {
   static ::GLUquadricObj *  spr = gluNewQuadric();
-  if(stats) stats->Init();
 
   for(unsigned int i = 0; i < heap.size(); i++) {
     Item &item = heap[i];
@@ -142,20 +154,13 @@ void NexusMt::Render(Extraction &extraction, DrawContest &contest,
     unsigned int patch = extraction.selected[i].id;
     Entry &entry = operator[](patch);
     vcg::Sphere3f &sphere = entry.sphere;
+
+    if(stats) stats->extr += entry.nface;
+
     if(extraction.frustum.IsOutside(sphere.Center(), sphere.Radius())) 
       continue;
 
-    if(contest.attrs & DrawContest::SPHERES){
-    glPushAttrib(GL_POLYGON_BIT);
-    glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
-    glPushMatrix();
-     glTranslatef(sphere.Center().X(),sphere.Center().Y(),sphere.Center().Z());
-     gluSphere(spr,sphere.Radius(),15,15);
-    glPopMatrix();
-    glPopAttrib();
-    }
-
-    if(stats) stats->ktri += entry.nface;
+    if(stats) stats->tri += entry.nface;
 
     if(!entry.patch) {
       skipped.push_back(extraction.selected[i]);
@@ -168,12 +173,20 @@ void NexusMt::Render(Extraction &extraction, DrawContest &contest,
   preload.trigger.reset();
   preload.lock.enter();  
 
-  if(skipped.size()) cerr << "Skipped: " << skipped.size() << endl;
+  //  if(skipped.size()) cerr << "Skipped: " << skipped.size() << endl;
+
   for(vector<Item>::iterator i = skipped.begin(); i != skipped.end(); i++) {
     GetPatch((*i).id, (*i).error);
     Draw((*i).id, contest);
   }
   Flush(false); //in case there are no skipped... :P
+
+  if(stats) {
+    stats->Error(extraction.max_error);
+    stats->Disk(preload.disk);
+    preload.disk = 0;
+  }
+  
 
   preload.trigger.post();
   preload.lock.leave();
@@ -185,13 +198,27 @@ void NexusMt::Render(Extraction &extraction, DrawContest &contest,
   glDisableClientState(GL_NORMAL_ARRAY);
 }
 
-void NexusMt::Draw(unsigned int cell, DrawContest &contest) {
+void NexusMt::Draw(unsigned int cell, DrawContest &contest) { 
+  static ::GLUquadricObj *  spr = gluNewQuadric();
+
   Entry &entry = operator[](cell);
   Patch &patch = *(entry.patch);
   char *fstart;
   char *vstart;
   char *cstart;
   char *nstart;
+
+  if(contest.attrs & DrawContest::SPHERES){
+    vcg::Sphere3f &sphere = entry.sphere;
+    glPushAttrib(GL_POLYGON_BIT);
+    glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+    glPushMatrix();
+    glTranslatef(sphere.Center().X(),sphere.Center().Y(),sphere.Center().Z());
+    gluSphere(spr,sphere.Radius(),15,15);
+    glPopMatrix();
+    glPopAttrib();
+  }
+
   
   if(use_vbo) {
     if(!entry.vbo_element) 
@@ -215,7 +242,9 @@ void NexusMt::Draw(unsigned int cell, DrawContest &contest) {
   if(contest.attrs & DrawContest::COLOR)
     glColorPointer(4, GL_UNSIGNED_BYTE, 0, cstart);
   if(contest.attrs & DrawContest::NORMAL)
-    glNormalPointer(GL_SHORT, 8, nstart);
+    glNormalPointer(GL_SHORT, 8, nstart);  
+  
+
   
   switch(contest.mode) {
   case DrawContest::POINTS:

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2005/02/14 17:11:07  ponchio
+aggiunta delle sphere
+
 Revision 1.22  2005/02/10 09:18:20  ponchio
 Statistics.
 
@@ -63,20 +66,25 @@ namespace nxs {
   };
 
   struct Stats {
-    float ktri;       //k triangles rendered.	
-    float kdisk;      //k readed per frame (mean)
-    float kdisk_peak; //k readed peak.
-    float fps;
-    float fps_peak;   //low fps peaks
+    //per frame data...
+    float tri;       //k triangles rendered.	
+    float extr;      //k triangles extracted
 
-    float error;      //max error in extraction
-    //double last_time;
-    unsigned int count;
+    int log_size;
+
+    deque<float> error;  //max error in extraction (push_front pop_back)
+    deque<float> time;
+    deque<float> disk;  //kdisk readed per frame
+
+    float fps; //averaged over 8 frames
 
     Watch watch;
 
-    Stats(): count(0) {}
-    void Init();
+    Stats(): log_size(48), fps(0.0f) {}
+    void Start();
+    void Disk(float disk);
+    void Error(float error);
+    void Stop();
   };
 
   class NexusMt: public Nexus {

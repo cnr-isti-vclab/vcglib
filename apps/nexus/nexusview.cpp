@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.39  2005/02/17 14:02:03  ponchio
+Full screen options...
+
 Revision 1.38  2005/02/16 15:52:09  ponchio
 qualche opzione in piu' , tolti i grafici
 
@@ -242,13 +245,16 @@ int main(int argc, char *argv[]) {
 
   if(argc < 2) {
     cerr << "Usage: " << argv[0] << " <nexus file> [options]\n";    
-    cerr << "-e <error>: set initial target error\n"
-	 << "-m <ram>: max ram used\n"
-         << "-x <ram>: max extraction size\n"
-	 << "-r <ram>: max draw size\n"
-	 << "-d <ram>: max disk read per frame\n"
-	 << "-p      : no preload\n"
-    << "-o namefile: ouput stats";
+    cerr << "-e <error> : set initial target error\n"
+	 << "-m <ram>   : max ram used\n"
+         << "-x <ram>   : max extraction size\n"
+	 << "-r <ram>   : max draw size\n"
+	 << "-d <ram>   : max disk read per frame\n"
+	 << "-p         : no preload\n"
+         << "-w <pixels>: window width\n"
+         << "-h <pixels>: window height\n"
+         << "-f         : fullscreen mode\n"
+	 << "-o namefile: ouput stats";
     return -1;
   }      
 
@@ -262,7 +268,7 @@ int main(int argc, char *argv[]) {
   Extraction extraction;
   DrawContest contest;
   Stats stats;
-
+  stats.Start();
  
 
   bool rotate = false;
@@ -274,11 +280,13 @@ int main(int argc, char *argv[]) {
   bool extract = true;
   bool realtime = true;
   bool preload = true;
-  bool step = true;
+
   bool output_stats = false;
   char output_filename[100];
+
   char window_name [100];
   sprintf(window_name,"%s", argv[1]);
+
   int option;
   while((option = getopt(argc, argv, "e:m:x:r:d:o:w:h:p:f")) != EOF) {
     switch(option) {
@@ -491,7 +499,7 @@ int main(int argc, char *argv[]) {
     float r = nexus.sphere.Radius();
 
     glColor3f(0.8f, 0.8f, 0.8f);
-        
+    
     if(extract) {
       extraction.frustum.GetView();
       extraction.metric->GetView();
@@ -501,11 +509,13 @@ int main(int argc, char *argv[]) {
 	extraction.Update(&nexus);
       }
     }
-   if(do_render)
-    nexus.Render(extraction, contest, &stats);
-   else
-    stats.Init();
+    stats.Stop();
+    stats.Start();
+    if(do_render)
+      nexus.Render(extraction, contest, &stats);
 
+
+    
     /*    if(show_borders) {
 	  for(unsigned int i = 0; i < cells.size(); i++) {
 	  Border &border = nexus.GetBorder(cells[i]);
@@ -525,7 +535,7 @@ int main(int argc, char *argv[]) {
 
     tframe.push_front(watch.Time());
     if(tframe.size() > tlen) tframe.pop_back();
-
+    
     terror.push_front(extraction.max_error);
     if(terror.size() > tlen) terror.pop_back();
 
@@ -541,39 +551,42 @@ int main(int argc, char *argv[]) {
      
       glDisable(GL_DEPTH_TEST);
       glDisable(GL_LIGHTING);
-      char buffer[1024];  
+
+      //show frame and error graphics
       if(false){
-      glColor4f(0.6f, 0.6f, 0.6f, 0.5f);
+	glColor4f(0.6f, 0.6f, 0.6f, 0.5f);
 
-      glBegin(GL_LINE_STRIP);
-      for(unsigned int i = 0; i < tframe.size() -1; i++) {
-	double diff = (tframe[i] - tframe[i+1]);
-	//glVertex2f(i/1024.0f,0);
-	glVertex2f(i/1024.0f,2*diff);
+	glBegin(GL_LINE_STRIP);
+	for(unsigned int i = 0; i < tframe.size() -1; i++) {
+	  double diff = (tframe[i] - tframe[i+1]);
+	  //glVertex2f(i/1024.0f,0);
+	  glVertex2f(i/1024.0f,2*diff);
+	}
+	glEnd();
+	
+	glColor4f(0.0f, 0.6f, 0.2f, 0.5f);
+	
+	glBegin(GL_LINE_STRIP);
+	for(unsigned int i = 0; i < terror.size() -1; i++) {
+	  //	glVertex2f(i/1024.0f,0);
+	  glVertex2f(i/1024.0f,terror[i]/300);
+	}
+	glEnd();
       }
-      glEnd();
 
-      glColor4f(0.0f, 0.6f, 0.2f, 0.5f);
-
-      glBegin(GL_LINE_STRIP);
-      for(unsigned int i = 0; i < terror.size() -1; i++) {
-//	glVertex2f(i/1024.0f,0);
-	glVertex2f(i/1024.0f,terror[i]/300);
-      }
-      glEnd();
-              }
       glColor3f(1.0f, 1.0f, 1.0f);
 
+      char buffer[1024];        
       sprintf(buffer, "Ram size : %.2f / %.2f Mb", 
 	      nexus.ram_used * nexus.chunk_size/(float)(1<<20),
 	      nexus.ram_max * nexus.chunk_size/(float)(1<<20));
       gl_print(0.03, 0.15, buffer);
-
+      
       sprintf(buffer, "Extr size: %.2f / %.2f Mb",
       	      extraction.extr_used * nexus.chunk_size/(float)(1<<20), 
       	      extraction.extr_max * nexus.chunk_size/(float)(1<<20));
       gl_print(0.03, 0.12, buffer);
-
+      
       sprintf(buffer, "Draw size: %.2f / %.2f Mb",
       	      extraction.draw_used * nexus.chunk_size/(float)(1<<20), 
       	      extraction.draw_max * nexus.chunk_size/(float)(1<<20));
@@ -585,8 +598,8 @@ int main(int argc, char *argv[]) {
       gl_print(0.03, 0.06, buffer);
 
       sprintf(buffer, "%.2f KTri  %.2f FPS %.0f M/s",
-      	      stats.ktri/(float)(1<<10),
-      	      stats.fps, stats.fps * stats.ktri/(float)(1<<20));
+      	      stats.tri/(float)(1<<10),
+      	      stats.fps, stats.fps * stats.tri/(float)(1<<20));
       gl_print(0.03, 0.03, buffer);
 
       
@@ -595,50 +608,53 @@ int main(int argc, char *argv[]) {
       glPopMatrix();
       glMatrixMode(GL_MODELVIEW);
       glPopMatrix();
-    
+
+      /* statistics: output on file    
       if(output_stats){
-      // statistics: output on file
 
-      static Stats statsAcc;
-      static      float ram_used ,float extr_used, float draw_used  ,float disk_used;
-       static  std::ofstream outf(output_filename);
-       static bool first=true;
-       if(first) {
-              outf<< "ktri\t fps\t ram \t extr \t draw \t disk \n"
-              << "       \t        \t" << nexus.ram_max * nexus.chunk_size/(float)(1<<20) << "\t"
+	static Stats statsAcc;
+	static float ram_used;
+	static float extr_used;
+	static float draw_used;
+	static float disk_used;
+	static std::ofstream outf(output_filename);
+	static bool first=true;
+	if(first) {
+	  outf<< "ktri\t fps\t ram \t extr \t draw \t disk \n"
+              << "       \t        \t" 
+	      << nexus.ram_max * nexus.chunk_size/(float)(1<<20) << "\t"
               << extraction.extr_max * nexus.chunk_size/(float)(1<<20) << "\t"
-              <<  extraction.draw_max * nexus.chunk_size/(float)(1<<20)<<"\t"
-              <<  extraction.disk_max * nexus.chunk_size/(float)(1<<20)<< "\n";
-              first = false;
-       }
-       statsAcc.count++ ;
-      if((statsAcc.count%30)==0) {
-        outf
-          <<       (statsAcc.ktri/(float)statsAcc.count)/(float)(1<<10)      << "\t" 
-          <<       (statsAcc.fps/(float)statsAcc.count)           << "\t" 
-         // <<       (statsAcc.kdisk/(float)statsAcc.count)       << "\t" 
-          <<        ram_used  /(float)statsAcc.count  * nexus.chunk_size/(float)(1<<20) << "\t" 
-          <<        extr_used/(float)statsAcc.count     * nexus.chunk_size/(float)(1<<20) << "\t" 
-          <<        draw_used/(float)statsAcc.count   * nexus.chunk_size/(float)(1<<20) << "\t" 
-          <<        disk_used/(float)statsAcc.count   * nexus.chunk_size/(float)(1<<20) << "\t" 
-          <<        "\n";
-        statsAcc.Init();
-        statsAcc.count=0;
-        statsAcc.fps=0;
-        ram_used = extr_used= draw_used  = disk_used=0.0;
-      }
-      else{
-        statsAcc.fps+=stats.fps;
-        statsAcc.kdisk+=stats.kdisk;
-        statsAcc.ktri+=stats.ktri;
+              << extraction.draw_max * nexus.chunk_size/(float)(1<<20)<<"\t"
+              << extraction.disk_max * nexus.chunk_size/(float)(1<<20)<< "\n";
+	  first = false;
+	}
+	
+	statsAcc.count++ ;
+	if((statsAcc.count%30)==0) {
+	  outf
+	    << (statsAcc.tri/(float)statsAcc.count)/(float)(1<<10) << "\t" 
+	    << (statsAcc.fps/(float)statsAcc.count) << "\t" 
+	    // << (statsAcc.kdisk/(float)statsAcc.count) << "\t" 
+	    << ram_used/(float)statsAcc.count*nexus.chunk_size/(float)(1<<20) << "\t" 
+	    << extr_used/(float)statsAcc.count*nexus.chunk_size/(float)(1<<20) << "\t" 
+	    << draw_used/(float)statsAcc.count*nexus.chunk_size/(float)(1<<20) << "\t" 
+	    << disk_used/(float)statsAcc.count*nexus.chunk_size/(float)(1<<20) << "\t" 
+	    << "\n";
+	  statsAcc.Init();
+	  statsAcc.count = 0;
+	  statsAcc.fps = 0;
+	  ram_used = extr_used = draw_used = disk_used = 0.0;
+	} else {
+	  statsAcc.fps += stats.fps;
+	  statsAcc.kdisk += stats.kdisk;
+	  statsAcc.ktri += stats.ktri;
 
-        ram_used +=nexus.ram_used;
-        extr_used+=extraction.extr_used;
-        draw_used+=extraction.draw_used;
-        disk_used+=extraction.disk_used;
-      }
-        
-      }
+	  ram_used  += nexus.ram_used;
+	  extr_used += extraction.extr_used;
+	  draw_used += extraction.draw_used;
+	  disk_used += extraction.disk_used;
+	}
+	}*/
     }
     
     SDL_GL_SwapBuffers();

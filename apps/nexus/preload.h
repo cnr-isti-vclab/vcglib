@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/02/08 12:43:03  ponchio
+Added copyright
+
 
 ****************************************************************************/
 
@@ -52,6 +55,8 @@ class Preload: public pt::thread{
   
   std::vector<Item> queue;
 
+  unsigned int disk; //kbytes readed from disk
+  unsigned int total_disk;
   Preload(): thread(false), trigger(false, false) {}
   ~Preload() {
     waitfor();
