@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/05/26 15:13:01  cignoni
+Removed inclusion of gl extension stuff and added glcolor stuff
+
 Revision 1.2  2004/05/13 23:44:47  ponchio
 <GL/GL.h>  -->   <GL/gl.h>
 
@@ -42,6 +45,7 @@ First working version!
 #include <vcg/space/point2.h>
 #include <vcg/space/point3.h>
 #include <vcg/space/color4.h>
+#include <vcg/space/box3.h>
 
 namespace vcg {
 
@@ -53,10 +57,10 @@ namespace vcg {
 	inline void glTexCoord(Point2<short> const & p) { glTexCoord2sv(p.V());}
 	inline void glTexCoord(Point2<float> const & p) { glTexCoord2fv(p.V());}
 	inline void glTexCoord(Point2<double> const & p){ glTexCoord2dv(p.V());}
-	inline void glTranslate(Point2<float> const & p) { glTranslatef(p.X(),p.Y(),0);}
-	inline void glTranslate(Point2<double> const & p){ glTranslated(p.X(),p.Y(),0);}
-	inline void glScale(Point2<float> const & p) { glScalef(p.X(),p.Y(),0);}
-	inline void glScale(Point2<double> const & p){ glScaled(p.X(),p.Y(),0);}
+	inline void glTranslate(Point2<float> const & p) { glTranslatef(p[0],p[1],0);}
+	inline void glTranslate(Point2<double> const & p){ glTranslated(p[0],p[1],0);}
+	inline void glScale(Point2<float> const & p) { glScalef(p[0],p[1],0);}
+	inline void glScale(Point2<double> const & p){ glScaled(p[0],p[1],0);}
 
   inline void glVertex(Point3<int> const & p)   { glVertex3iv(p.V());}
 	inline void glVertex(Point3<short> const & p) { glVertex3sv(p.V());}
@@ -70,10 +74,10 @@ namespace vcg {
 	inline void glTexCoord(Point3<short> const & p) { glTexCoord3sv(p.V());}
 	inline void glTexCoord(Point3<float> const & p) { glTexCoord3fv(p.V());}
 	inline void glTexCoord(Point3<double> const & p){ glTexCoord3dv(p.V());}
-	inline void glTranslate(Point3<float> const & p) { glTranslatef(p.X(),p.Y(),p.Z());}
-	inline void glTranslate(Point3<double> const & p){ glTranslated(p.X(),p.Y(),p.Z());}
-	inline void glScale(Point3<float> const & p) { glScalef(p.X(),p.Y(),p.Z());}
-	inline void glScale(Point3<double> const & p){ glScaled(p.X(),p.Y(),p.Z());}
+	inline void glTranslate(Point3<float> const & p) { glTranslatef(p[0],p[1],p[2]);}
+	inline void glTranslate(Point3<double> const & p){ glTranslated(p[0],p[1],p[2]);}
+	inline void glScale(Point3<float> const & p) { glScalef(p[0],p[1],p[2]);}
+	inline void glScale(Point3<double> const & p){ glScaled(p[0],p[1],p[2]);}
 
   inline void glColor(Color4b const & c)   { glColor4ubv(c.V());}
   inline void glClearColor(Color4b const &c) {	::glClearColor(float(c[0])/255.0f,float(c[1])/255.0f,float(c[2])/255.0f,1.0f);}
@@ -82,6 +86,103 @@ namespace vcg {
     cf[0]=float(cf[0]/255.0); cf[1]=float(c[1]/255.0); cf[2]=float(c[2]/255.0); cf[3]=float(c[3]/255.0); 
     glLightfv(light,pname,cf);
   }
+
+
+ template <class T>
+   inline void glBoxWire(Box3<T> const & b)   
+{ 
+	glPushAttrib(GL_ENABLE_BIT);
+	glDisable(GL_LIGHTING);
+	glBegin(GL_LINE_STRIP);
+	glVertex3f((float)b.min[0],(float)b.min[1],(float)b.min[2]);
+	glVertex3f((float)b.max[0],(float)b.min[1],(float)b.min[2]);
+	glVertex3f((float)b.max[0],(float)b.max[1],(float)b.min[2]);
+	glVertex3f((float)b.min[0],(float)b.max[1],(float)b.min[2]);
+	glVertex3f((float)b.min[0],(float)b.min[1],(float)b.min[2]);
+	glEnd();
+	glBegin(GL_LINE_STRIP);
+	glVertex3f((float)b.min[0],(float)b.min[1],(float)b.max[2]);
+	glVertex3f((float)b.max[0],(float)b.min[1],(float)b.max[2]);
+	glVertex3f((float)b.max[0],(float)b.max[1],(float)b.max[2]);
+	glVertex3f((float)b.min[0],(float)b.max[1],(float)b.max[2]);
+	glVertex3f((float)b.min[0],(float)b.min[1],(float)b.max[2]);
+	glEnd();
+	glBegin(GL_LINES);
+	glVertex3f((float)b.min[0],(float)b.min[1],(float)b.min[2]);
+	glVertex3f((float)b.min[0],(float)b.min[1],(float)b.max[2]);
+	
+	glVertex3f((float)b.max[0],(float)b.min[1],(float)b.min[2]);
+	glVertex3f((float)b.max[0],(float)b.min[1],(float)b.max[2]);
+	
+	glVertex3f((float)b.max[0],(float)b.max[1],(float)b.min[2]);
+	glVertex3f((float)b.max[0],(float)b.max[1],(float)b.max[2]);
+	
+	glVertex3f((float)b.min[0],(float)b.max[1],(float)b.min[2]);
+	glVertex3f((float)b.min[0],(float)b.max[1],(float)b.max[2]);
+	glEnd();
+	glPopAttrib();
+};
+template <class T>
+	/// Funzione di utilita' per la visualizzazione in OpenGL (flat shaded)
+inline void glBoxFlat(Box3<T> const & b)   
+{
+	glPushAttrib(GL_SHADE_MODEL);
+	glShadeModel(GL_FLAT);
+	glBegin(GL_QUAD_STRIP);
+	glNormal3f(.0f,.0f,1.0f);
+	glVertex3f(b.min[0], b.max[1], b.max[2]);
+  glVertex3f(b.min[0], b.min[1], b.max[2]);
+	glVertex3f(b.max[0], b.max[1], b.max[2]);
+  glVertex3f(b.max[0], b.min[1], b.max[2]);
+	glNormal3f(1.0f,.0f,.0f);
+	glVertex3f(b.max[0], b.max[1], b.min[2]);
+	glVertex3f(b.max[0], b.min[1], b.min[2]);
+  glNormal3f(.0f,.0f,-1.0f);
+	glVertex3f(b.min[0], b.max[1], b.min[2]);
+	glVertex3f(b.min[0], b.min[1], b.min[2]);
+	glNormal3f(-1.0f,.0f,.0f);
+	glVertex3f(b.min[0], b.max[1], b.max[2]);
+	glVertex3f(b.min[0], b.min[1], b.max[2]);
+	glEnd();
+
+  glBegin(GL_QUADS);
+	glNormal3f(.0f,1.0f,.0f);
+	glVertex3f(b.min[0], b.max[1], b.max[2]);
+	glVertex3f(b.max[0], b.max[1], b.max[2]);
+	glVertex3f(b.max[0], b.max[1], b.min[2]);
+  glVertex3f(b.min[0], b.max[1], b.min[2]);
+
+	glNormal3f(.0f,-1.0f,.0f);
+	glVertex3f(b.min[0], b.min[1], b.min[2]);
+  glVertex3f(b.max[0], b.min[1], b.min[2]);
+	glVertex3f(b.max[0], b.min[1], b.max[2]);
+  glVertex3f(b.min[0], b.min[1], b.max[2]);
+  glEnd();
+	glPopAttrib();
+};
+
+
+template <class T>
+	/// Setta i sei clip planes di opengl a far vedere solo l'interno del box 
+inline void glBoxClip(Box3<T> const & b)   
+{
+	double eq[4];	
+	eq[0]= 1; eq[1]= 0; eq[2]= 0; eq[3]=(double)-b.min[0];
+	glClipPlane(GL_CLIP_PLANE0,eq);
+	eq[0]=-1; eq[1]= 0; eq[2]= 0; eq[3]=(double) b.max[0];
+	glClipPlane(GL_CLIP_PLANE1,eq);
+
+	eq[0]= 0; eq[1]= 1; eq[2]= 0; eq[3]=(double)-b.min[1];
+	glClipPlane(GL_CLIP_PLANE2,eq);
+	eq[0]= 0; eq[1]=-1; eq[2]= 0; eq[3]=(double) b.max[1];
+	glClipPlane(GL_CLIP_PLANE3,eq);
+
+
+	eq[0]= 0; eq[1]= 0; eq[2]= 1; eq[3]=(double)-b.min[2];
+	glClipPlane(GL_CLIP_PLANE4,eq);
+	eq[0]= 0; eq[1]= 0; eq[2]=-1; eq[3]=(double) b.max[2];
+	glClipPlane(GL_CLIP_PLANE5,eq);
+}
 
 }//namespace
 #endif
