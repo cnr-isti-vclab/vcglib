@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2004/08/09 09:48:43  pietroni
+correcter .dir to .Direction and .ori in .Origin()
+
 Revision 1.9  2004/08/04 20:55:02  pietroni
 added rey triangle intersections funtions
 
@@ -190,7 +193,7 @@ namespace vcg {
   template<typename TRIANGLETYPE,typename SEGMENTTYPE >
     inline bool Intersection(const TRIANGLETYPE & t0,const TRIANGLETYPE & t1,bool &coplanar,
 			     SEGMENTTYPE  & sg){
-    Point3<SEGMENTTYPE::PointType> ip0,ip1; 
+    Point3<typename SEGMENTTYPE::PointType> ip0,ip1; 
     return  tri_tri_intersect_with_isectline(t0.P0(0),t0.P0(1),t0.P0(2),
 					     t1.P0(0),t1.P0(1),t1.P0(2),
 					     coplanar,sg.P0(),sg.P1()
