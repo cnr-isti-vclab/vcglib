@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/09/10 14:02:20  cignoni
+Added Cone directions
+
 Revision 1.5  2004/09/09 22:59:21  cignoni
 Removed many small warnings
 
@@ -195,7 +198,9 @@ void ComputeHalf(int nn, Point3x &dir, CallBack *cb)
 	
 	VN.clear();
 	std::vector<Point3x> nvt;
-	GenNormal(nn*2,nvt);
+	assert(0 && "This is only my guess (to compile). (Ponchio)");
+	assert(0 && "Was: GenNormal(nn*2, nvt);");
+	GenNormal<ScalarType>::Uniform(nn*2,nvt);
 	for(int i=0;i<nvt.size();++i)
 		if(dir*nvt[i]>0) VN.push_back(nvt[i]);
  
@@ -207,7 +212,8 @@ void ComputeUniformCone(int nn, std::vector<Point3x> &vv, ScalarType AngleRad, P
 {
 	VN.clear();
   GenNormal<ScalarType>::UniformCone(nn,VN,AngleRad,ConeDir);
-  for(vector<Point3x>::iterator vi=VN.begin();vi!=VN.end();++vi) 
+  typename std::vector<Point3x>::iterator vi;
+  for(vi=VN.begin();vi!=VN.end();++vi) 
     vv.push_back(*vi); 
   
 	char buf[256];
@@ -219,7 +225,8 @@ void ComputeUniform(int nn, std::vector<Point3x> &vv, CallBack *cb)
 {
 	VN.clear();
   GenNormal<ScalarType>::Uniform(nn,VN);
-  for(vector<Point3x>::iterator vi=VN.begin();vi!=VN.end();++vi) 
+  typename std::vector<Point3x>::iterator vi;
+  for(vi=VN.begin();vi!=VN.end();++vi) 
     vv.push_back(*vi); 
   
 	char buf[256];

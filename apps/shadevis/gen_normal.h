@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/09/10 14:02:20  cignoni
+Added Cone directions
+
 Revision 1.1  2004/09/09 22:38:57  cignoni
 Initial Update
 
@@ -46,7 +49,9 @@ static void  Random(int vn, std::vector<Point3<ScalarType > > &NN)
   NN.clear();
   while(NN.size()<vn)
   {
-    Point3x pp(float(rand())/RAND_MAX,float(rand())/RAND_MAX,float(rand())/RAND_MAX);
+    Point3x pp(((float)rand())/RAND_MAX,
+	       ((float)rand())/RAND_MAX,
+	       ((float)rand())/RAND_MAX);
     pp=pp*2.0-Point3x(1,1,1);
     if(pp.SquaredNorm()<1)
     {
@@ -67,7 +72,7 @@ static void UniformCone(int vn, std::vector<Point3<ScalarType > > &NN, ScalarTyp
 
   printf("----------AngleRad %f Angledeg %f ratio %f vn %i vn2 %i \n",AngleRad,math::ToDeg(AngleRad),Ratio,vn,int(vn/Ratio));
   Uniform(vn/Ratio,NNT);
-  std::vector<Point3x>::iterator vi;
+  typename std::vector<Point3<ScalarType> >::iterator vi;
   
   ScalarType DotProd = cos(AngleRad);
   for(vi=NNT.begin();vi!=NNT.end();++vi)
@@ -82,7 +87,7 @@ static void Uniform(int vn, std::vector<Point3<ScalarType > > &NN)
   OctaLevel pp;
 
   int ll=10;
-  while(pow(4,ll)+2>vn) ll--;
+  while(pow(4.0f,ll)+2>vn) ll--;
 
   pp.Init(ll);
   sort(pp.v.begin(),pp.v.end());
@@ -97,9 +102,12 @@ static void Perturb(std::vector<Point3<ScalarType > > &NN)
 {
   float width=0.2f/sqrt(float(NN.size()));
 
-  for(vector<Point3x>::iterator vi=NN.begin(); vi!=NN.end();++vi) 
+  typename std::vector<Point3<ScalarType> >::iterator vi;
+  for(vi=NN.begin(); vi!=NN.end();++vi) 
   {
-    Point3x pp(float(rand())/RAND_MAX,float(rand())/RAND_MAX,float(rand())/RAND_MAX);
+    Point3x pp(((float)rand())/RAND_MAX,
+	       ((float)rand())/RAND_MAX,
+	       ((float)rand())/RAND_MAX);
     pp=pp*2.0-Point3x(1,1,1);
     pp*=width;
     (*vi)+=pp;
@@ -124,7 +132,7 @@ class OctaLevel
 
     void Init(int lev)
     {
-      sz=pow(2,lev+1)+1;
+      sz=pow(2.0f,lev+1)+1;
       v.resize(sz*sz);
       if(lev==0)
       {
@@ -151,7 +159,8 @@ class OctaLevel
             if((i%2)!=0 && (j%2)!=0) 
                 Val(i,j)=(tmp.Val(i/2+0,j/2+0)+tmp.Val(i/2+0,j/2+1)+tmp.Val(i/2+1,j/2+0)+tmp.Val(i/2+1,j/2+1))/4.0;
           }
-        for(vector<Point3x>::iterator vi=v.begin(); vi!=v.end();++vi) 
+	typename std::vector<Point3<ScalarType> >::iterator vi;
+        for(vi=v.begin(); vi!=v.end();++vi) 
             (*vi).Normalize();
   
       }
