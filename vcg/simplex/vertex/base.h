@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/02/24 21:36:39  cignoni
+grouped documentation, changed typenames and reflection mechanism
+
 Revision 1.2  2004/02/13 02:09:39  cignoni
 First working release, with doxygen comment structure
 
@@ -512,37 +515,44 @@ Reflection is a mechanism making it possible to investigate yourself. Reflection
 
 static bool HasNormal()  { 
 #ifdef __VCGLIB_VERTEX_N 
-  return true
+  return true;
 #else
-  return false
+  return false;
 #endif
 }
 static bool HasColor()  { 
 #ifdef __VCGLIB_VERTEX_C 
-  return true
+  return true;
 #else
-  return false
+  return false;
 #endif
 }
 static bool HasMark()     { 
 #ifdef __VCGLIB_VERTEX_M 
-  return true
+  return true;
 #else
-  return false
+  return false;
 #endif
 }
 static bool HasQuality()   { 
 #ifdef __VCGLIB_VERTEX_Q 
-  return true
+  return true;
 #else
-  return false
+  return false;
 #endif
 }
 static bool HasTexture()   { 
 #ifdef __VCGLIB_VERTEX_T 
-  return true
+  return true;
 #else
-  return false
+  return false;
+#endif
+}
+static bool HasVFAdjacency()   { 
+#ifdef __VCGLIB_VERTEX_A 
+  return true;
+#else
+  return false;
 #endif
 }
  //@}
