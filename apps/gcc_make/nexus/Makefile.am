@@ -1,8 +1,17 @@
 bin_PROGRAMS = 	nxspatcher ply2crd crdview nxsbuilder nxsview \
-                nxsedit nxsserver nxstest
+                nxsedit nxsserver nxstest nxs2ply
+lib_LIBRARIES = libnexus.a
 
 LIBS=
 SDL_FLAGS = -lSDL -lpthread -lGL -lGLU
+
+libnexus_a_SOURCES =  	../../nexus/file.cpp		\
+		     	../../nexus/mfile.cpp		\
+			../../nexus/nexus.cpp		\
+			../../nexus/patch.cpp 		\
+			../../nexus/history.cpp 	\
+			../../nexus/borderserver.cpp	\
+			../../nexus/normalscone.cpp	
 
 nxspatcher_SOURCES =    ../../nexus/crude.cpp        	\
 			../../nexus/file.cpp         	\
@@ -38,6 +47,12 @@ nxstest_SOURCES = 	../../nexus/file.cpp		\
 			../../nexus/nxstest.cpp		
 nxstest_LDADD = -llzo
 
+nxs2ply_SOURCES =       ../../nexus/nxs2ply.cpp        \
+			../../nexus/extraction.cpp 	\
+		  	../../../wrap/ply/plylib.cpp
+
+nxs2ply_LDADD = libnexus.a -llzo -lGLEW
+
 nxsbuilder_SOURCES = 	../../nexus/nxsbuilder.cpp 	\
 			../../nexus/crude.cpp 		\
 		     	../../nexus/file.cpp		\
@@ -57,8 +72,7 @@ nxsbuilder_SOURCES = 	../../nexus/nxsbuilder.cpp 	\
 			../../nexus/nxsdispatcher.cpp   \
 			../../../wrap/ply/plylib.cpp 	
 
-nxsbuilder_LDADD = -llzo -lptypes -lGLEW /usr/local/lib/libANN.a
-
+nxsbuilder_LDADD = -llzo -lptypes -lGLEW /usr/local/lib/libANN.a 
 
 nxsserver_SOURCES =     ../../nexus/nxsserver.cpp	\
 			../../nexus/fragment.cpp	\
@@ -66,7 +80,7 @@ nxsserver_SOURCES =     ../../nexus/nxsserver.cpp	\
 		     	../../nexus/normalscone.cpp	\
 		     	../../nexus/decimate.cpp	
 
-nxsserver_LDADD = -lptypes /usr/local/lib/libANN.a
+nxsserver_LDADD = -lptypes /usr/local/lib/libANN.a 
 
 
 nxsview_SOURCES = 	../../nexus/nexusview.cpp 	\
@@ -104,7 +118,7 @@ nxsedit_SOURCES = 	../../nexus/nxsedit.cpp 	\
 		  	../../../wrap/ply/plylib.cpp 	\
 			../../nexus/borderserver.cpp
 
-nxsedit_LDADD = -llzo -lGLEW /usr/local/lib/libANN.a
+nxsedit_LDADD = -llzo -lGLEW /usr/local/lib/libANN.a 
 
 exploder_SOURCES = 	../../nexus/exploder.cpp 	\
 			../../nexus/nexus.cpp 		\
