@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.30  2005/01/21 17:09:13  ponchio
+Porting and debug.
+
 Revision 1.29  2005/01/17 17:35:47  ponchio
 Small changes and adding realtime extr.
 
@@ -203,10 +206,10 @@ int main(int argc, char *argv[]) {
   float error = 4;
 
   Trackball track;
-  //  int option;
 
   if(argc != 2) {
-    cerr << "Usage: " << argv[0] << " <nexus file>\n";    return -1;
+    cerr << "Usage: " << argv[0] << " <nexus file>\n";    
+    return -1;
   }      
 
   NexusMt nexus;
@@ -257,7 +260,7 @@ int main(int argc, char *argv[]) {
   bool show_statistics = true;
   bool extract = true;
   bool realtime = true;
-  bool stepping = true;
+  bool preload = true;
   bool step = true;
   
   if(!nexus.InitGL()) {
@@ -274,7 +277,6 @@ int main(int argc, char *argv[]) {
   SDL_Event event;
   int x, y;
   float alpha = 0;
-  bool redraw = false;
   float fps = 0;
   unsigned int nave = 5;
   unsigned int offset = 0;
@@ -319,8 +321,8 @@ int main(int argc, char *argv[]) {
 	case SDLK_m: contest.mode = DrawContest::SMOOTH; break;
 	    
 	case SDLK_o: realtime = !realtime; break;
-	case SDLK_s: step = true; break;
-	    
+	case SDLK_s: preload = !preload; nexus.SetPreload(preload); break;
+	case SDLK_t: show_statistics = !show_statistics; break;
 	case SDLK_r:
 	case SDLK_SPACE: rotate = !rotate; break;
 	    
@@ -376,11 +378,8 @@ int main(int argc, char *argv[]) {
       default: break;
       }
     }
-    redraw = true;
     
 
-    //if(!redraw && !keepdrawing) continue;
-    redraw = false;
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -421,7 +420,7 @@ int main(int argc, char *argv[]) {
       if(!realtime) {
 	extraction.Extract(&nexus);
       } else {
-	  extraction.Update(&nexus);
+	extraction.Update(&nexus);
       }
     }
     nexus.Render(extraction, contest, &stats);
@@ -443,7 +442,6 @@ int main(int argc, char *argv[]) {
 	  }
 	  }*/
 
-    //cerr Do some reporting:
     if(show_statistics) {
       glMatrixMode(GL_MODELVIEW);
       glPushMatrix();
@@ -461,36 +459,29 @@ int main(int argc, char *argv[]) {
 
       double ftime = (tframe[(offset+4)%5] - tframe[(offset)%5])/5.0f;
 
-      sprintf(buffer, "Ram size : %.3fMb (max)   %.3fMb (cur)", 
-	      nexus.ram_max * nexus.chunk_size/(float)(1<<20), 
-	      nexus.ram_used * nexus.chunk_size/(float)(1<<20));
+      sprintf(buffer, "Ram size : %.2f / %.2f Mb", 
+	      nexus.ram_used * nexus.chunk_size/(float)(1<<20),
+	      nexus.ram_max * nexus.chunk_size/(float)(1<<20));
       gl_print(0.03, 0.15, buffer);
 
-      sprintf(buffer, "Extr size: %.3fMb(max)   %.3fMb(cur)",
-      	      extraction.extr_max * nexus.chunk_size/(float)(1<<20), 
-      	      extraction.extr_used * nexus.chunk_size/(float)(1<<20));
+      sprintf(buffer, "Extr size: %.2f / %.2f Mb",
+      	      extraction.extr_used * nexus.chunk_size/(float)(1<<20), 
+      	      extraction.extr_max * nexus.chunk_size/(float)(1<<20));
       gl_print(0.03, 0.12, buffer);
 
-      sprintf(buffer, "Draw size: %.3fMb(max)   %.3fMb(cur)",
-      	      extraction.draw_max * nexus.chunk_size/(float)(1<<20), 
-      	      extraction.draw_used * nexus.chunk_size/(float)(1<<20));
+      sprintf(buffer, "Draw size: %.2f / %.2f Mb",
+      	      extraction.draw_used * nexus.chunk_size/(float)(1<<20), 
+      	      extraction.draw_max * nexus.chunk_size/(float)(1<<20));
       gl_print(0.03, 0.09, buffer);
       
-      sprintf(buffer, "Disk size: %.3fMb(max)   %.3fMb(cur)",
+      sprintf(buffer, "Disk size: %.2f  / %.2f Mb",
       	      extraction.disk_max * nexus.chunk_size/(float)(1<<20), 
       	      extraction.disk_used * nexus.chunk_size/(float)(1<<20));
       gl_print(0.03, 0.06, buffer);
 
-      //      sprintf(buffer, "Vbo size : %.3fMb(cur) Load: %.4fK  Pref: %.4fK",	      
-      //	      nexus.patches.vbo_used * nexus.chunk_size/(float)(1<<20),
-      //        nexus.prefetch.loading, nexus.prefetch.prefetching);
-      //      gl_print(0.03, 0.06, buffer);
-
-      sprintf(buffer, "Triangles: %.2fK (tot)   %.2fK (vis)    "
-	      " %.2f FPS",
+      sprintf(buffer, "%.2f KTri  %.2f FPS %.0f M/s",
       	      stats.ktri/(float)(1<<10),
-	      stats.ktri/(float)(1<<10),
-      	      stats.fps);
+      	      stats.fps, stats.fps * stats.ktri/(float)(1<<20));
       gl_print(0.03, 0.03, buffer);
       
       glEnable(GL_DEPTH_TEST);

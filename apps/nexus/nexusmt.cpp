@@ -32,18 +32,21 @@ NexusMt::~NexusMt() {
   preload.waitfor();
 }
 
+void NexusMt::SetPreload(bool on) {
+  if(on == (preload.get_running() && !preload.get_finished())) return;
+  if(on) preload.start();
+  else {
+    preload.signal();
+    //    preload.waitfor();
+  }
+}
+
 bool NexusMt::Load(const string &filename) {
   if(!Nexus::Load(filename, true)) return false;
   if(!history.IsQuick() && !history.UpdatesToQuick())
     return false;
   return true;
 }
-
-//void NexusMt::Close() {
-  //  prefetch.signal();
-  //  prefetch.waitfor();
-  //  patches.Close();
-//}
 
 bool NexusMt::InitGL(bool vbo) {
   use_vbo = vbo;
@@ -97,6 +100,7 @@ void NexusMt::Render(Extraction &extraction, DrawContest &contest,
   }
 
   preload.lock.enter();  
+  if(skipped.size()) cerr << "Skipped: " << skipped.size() << endl;
   for(vector<unsigned int>::iterator i = skipped.begin(); 
       i != skipped.end(); i++) {
     GetPatch(*i);
@@ -156,10 +160,15 @@ void NexusMt::Draw(unsigned int cell, DrawContest &contest) {
 		     GL_UNSIGNED_SHORT, fstart);
     break;
   case DrawContest::FLAT:
+    if(use_vbo) {
+      cerr << "Mode incompatible with VBO\n";
+      exit(0);
+    }
     if(signature & NXS_FACES) {
       glBegin(GL_TRIANGLES);
+      unsigned short *f = patch.Face(0);
       for(int i = 0; i < patch.nf; i++) {
-	unsigned short *f = patch.Face(i);
+
 	Point3f &p0 = patch.Vert(f[0]);
 	Point3f &p1 = patch.Vert(f[1]);
 	Point3f &p2 = patch.Vert(f[2]);
@@ -168,6 +177,7 @@ void NexusMt::Draw(unsigned int cell, DrawContest &contest) {
 	glVertex3f(p0[0], p0[1], p0[2]);
 	glVertex3f(p1[0], p1[1], p1[2]);
 	glVertex3f(p2[0], p2[1], p2[2]);
+	f += 3;
       }
       glEnd();
     } else if(signature & NXS_STRIP) {
@@ -195,15 +205,16 @@ void NexusMt::FlushPatch(unsigned int id) {
 }
 
 void NexusMt::LoadVbo(Entry &entry) { 
-  if(entry.vbo_element) return;
-  glGenBuffersARB(1, &entry.vbo_element);
-  assert(entry.vbo_element);
-  glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, entry.vbo_element);
+  assert(entry.vbo_element == 0);
+  //  if(entry.vbo_element) return;
 
   Patch &patch  = *entry.patch;    
   unsigned int size = patch.nf * sizeof(unsigned short);
   if((signature & NXS_FACES) != 0) size *= 3;
   
+  glGenBuffersARB(1, &entry.vbo_element);
+  assert(entry.vbo_element);
+  glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, entry.vbo_element);
   glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, size, patch.FaceBegin(),
 		  GL_STATIC_DRAW_ARB);
   vbo_used += size;
@@ -214,7 +225,6 @@ void NexusMt::LoadVbo(Entry &entry) {
   glGenBuffersARB(1, &entry.vbo_array);
   assert(entry.vbo_array);
   glBindBufferARB(GL_ARRAY_BUFFER_ARB, entry.vbo_array);
-    
   glBufferDataARB(GL_ARRAY_BUFFER_ARB, size, patch.VertBegin(), 
 		  GL_STATIC_DRAW_ARB);
     

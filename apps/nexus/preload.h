@@ -17,10 +17,11 @@ class Preload: public pt::thread{
   NexusMt *mt;
   
   pt::mutex lock;
+  pt::trigger trigger;
   
   std::vector<unsigned int> queue;
 
-  Preload(): thread(false) {}
+  Preload(): thread(false), trigger(true, false) {}
   ~Preload() {
     waitfor();
   }
@@ -29,6 +30,7 @@ class Preload: public pt::thread{
   
   void post(std::vector<unsigned int> &patches) {
     lock.enter();
+    trigger.post();
     queue = patches;
     lock.leave();
   }

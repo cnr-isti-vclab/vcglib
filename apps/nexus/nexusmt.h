@@ -64,8 +64,8 @@ namespace nxs {
     void Render(Extraction &extraction, 
 		DrawContest &contest,
 		Stats *stats = NULL);
-    //    void Draw(std::vector<unsigned int> &selected);
-    //    void Extract(std::vector<unsigned int> &selected);
+
+    void SetPreload(bool on);
 
   protected:
     void FlushPatch(unsigned int id);
