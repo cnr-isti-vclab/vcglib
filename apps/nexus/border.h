@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/07/05 17:02:17  ponchio
+Couple of const missing.
+
 Revision 1.2  2004/07/04 14:21:31  ponchio
 Added operator< to Link
 
@@ -64,13 +67,17 @@ struct Link {
 
 class Border {
  public:
-  Border(Link *l = NULL, unsigned short s = 0): start(l), size(s) {}
-  unsigned int Size() { return size; }
+  Border(Link *l = NULL, unsigned short _used = 0, unsigned short _size = 0): 
+    start(l), used(_used), size(_size) {}
+  unsigned int Size() { return used; }
+  unsigned int Available() { return size; }
   Link &operator[](unsigned int i) { return start[i]; }
+  Link *Start() { return start; }
 
   //TODO implement an iterator! 
  private:
   Link *start;
+  unsigned short used;
   unsigned short size;
 };
 
