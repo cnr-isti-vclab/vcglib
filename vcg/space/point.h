@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/10/20 16:45:21  ganovelli
+first compiling version (MC,INtel,gcc)
+
 Revision 1.4  2004/04/29 10:47:06  ganovelli
 some siyntax error corrected
 
@@ -458,10 +461,10 @@ public:
 };
 
 template <class S> 
-class Point<3,S> : public PointBase<3,S> {
+class Point3<S> : public PointBase<3,S> {
 public:	
 	typedef S ScalarType;
-	typedef Point<3,S>  PointType;
+	typedef Point3<S>  PointType;
 
 	//@{
   /** @name Special members for 3D points. **/
@@ -615,10 +618,10 @@ public:
 };
 
 template <class S> 
-class Point<4, S> : public PointBase<4,S> {
+class Point4< S> : public PointBase<4,S> {
 public:
 	typedef S ScalarType;
-	typedef Point<4,S> PointType;
+	typedef Point4<S> PointType;
 	//@{
   /** @name Special members for 4D points. **/
 		/// default
@@ -767,7 +770,7 @@ public:
 
 
 template <class S>
-inline S Angle( Point<3,S>  const & p1, Point<3,S>  const & p2 )
+inline S Angle( Point3<S>  const & p1, Point3<S>  const & p2 )
 {
 	S w = p1.Norm()*p2.Norm();
 	if(w==0) return -1;
@@ -779,7 +782,7 @@ inline S Angle( Point<3,S>  const & p1, Point<3,S>  const & p2 )
 
 // versione uguale alla precedente ma che assume che i due vettori siano unitari
 template <class S>
-inline S AngleN( Point<3,S>  const & p1, Point<3,S>  const & p2 )
+inline S AngleN( Point3<S>  const & p1, Point3<S>  const & p2 )
 {
 	S w = p1*p2;
 	if(w>1) 
@@ -830,18 +833,18 @@ struct Point2:public Point<2,S>{
 };
 
 template <typename S>
-struct Point3:public Point<3,S> {
+struct Point3:public Point3<S> {
 	inline Point3(){}; 
-	inline Point3(Point<3,S>  const & p):Point<3,S> (p){}
-	inline Point3( const S a, const S b,  const S c):Point<3,S> (a,b,c){};
+	inline Point3(Point3<S>  const & p):Point3<S> (p){}
+	inline Point3( const S a, const S b,  const S c):Point3<S> (a,b,c){};
 };
 
 
 template <typename S>
-struct Point4:public Point<4,S>{
+struct Point4:public Point4<S>{
 	inline Point4(){}; 
-	inline Point4(Point<4,S> const & p):Point<4,S>(p){}
-	inline Point4( const S a, const S b,  const S c, const S d):Point<4,S>(a,b,c,d){};
+	inline Point4(Point4<S> const & p):Point4<S>(p){}
+	inline Point4( const S a, const S b,  const S c, const S d):Point4<S>(a,b,c,d){};
 };
 
 typedef Point2<short>  Point2s;
