@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/05/12 13:07:47  ponchio
+Added #include <glew.h>
+
 Revision 1.3  2004/05/04 23:36:23  cignoni
 remove include of gl and added glextgension exploiting,
 
@@ -41,7 +44,7 @@ Revision 1.1  2004/03/31 15:27:17  ponchio
 
 #include <vcg/math/matrix44.h>
 #include <vcg/math/similarity.h>
-#include <gl/glew.h>
+#include <GL/glew.h>
 
 namespace vcg {
 

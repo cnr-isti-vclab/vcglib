@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/03/31 15:06:41  ponchio
+#include <camera> -> #include <view>
+
 Revision 1.2  2004/03/25 14:55:25  ponchio
 Adding copyright.
 
@@ -40,24 +43,32 @@ Adding copyright.
 
 namespace vcg {
 
-  template <class T> class Frustum: public Camera {
+  template <class T> class Frustum: public View<T> {
 public:                                            
   void GetView();  
+  Point3<T> ViewPoint();
+  T Resolution();
   bool IsOutside(Point3<T> &point);
   bool IsOutside(Point3<T> &point, T radius);
   T Distance(Point3<T> &point, int plane);  
-  Point3<T> ViewPoint();
-
+  
 protected:
   T resolution;  
   Plane3<T> planes[6];  
   Point3<T> view_point;  
 };
 
+typedef Frustum<float> Frustumf;
+typedef Frustum<double> Frustumd;
+
 
 //Implementation
 template <class T> Point3<T> Frustum<T>::ViewPoint() {
   return view_point;  
+}
+
+template <class T> T Frustum<T>::Resolution() {
+  return resolution;  
 }
 
 template <class T> bool Frustum<T>::IsOutside(Point3<T> &point) {

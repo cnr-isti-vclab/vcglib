@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/05/07 12:46:08  cignoni
+Restructured and adapted in a better way to opengl
+
 Revision 1.4  2004/04/07 10:54:10  cignoni
 Commented out unused parameter names and other minor warning related issues
 
@@ -35,8 +38,6 @@ Adding copyright.
 
 
 ****************************************************************************/
-
-#include <gl/glew.h>
 
 #include "trackball.h"
 
