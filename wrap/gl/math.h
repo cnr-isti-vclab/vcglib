@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/05/04 23:36:23  cignoni
+remove include of gl and added glextgension exploiting,
+
 Revision 1.2  2004/04/07 10:47:03  cignoni
 inlined functions for avoid multiple linking errors
 
@@ -38,8 +41,8 @@ Revision 1.1  2004/03/31 15:27:17  ponchio
 
 #include <vcg/math/matrix44.h>
 #include <vcg/math/similarity.h>
-/// Note that this file assume that you have already included your 
-/// GLextesnion managing system
+#include <gl/glew.h>
+
 namespace vcg {
 
 inline void glMultMatrix(const Matrix44f &matrix) {
