@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/07/04 14:21:31  ponchio
+Added operator< to Link
+
 Revision 1.1  2004/07/02 13:00:02  ponchio
 Created.
 
@@ -43,12 +46,12 @@ struct Link {
   unsigned int end_patch;
   bool IsNull() { return end_patch == 0xffffffff; }
 
-  bool operator==(const Link &l) {
+  bool operator==(const Link &l) const {
     return end_patch == l.end_patch && 
       end_vert == l.end_vert &&
       start_vert == l.start_vert;
   }
-  bool operator<(const Link &l) {
+  bool operator<(const Link &l) const {
     if(end_patch == l.end_patch) {
       if(start_vert == l.start_vert) {
 	return end_vert < l.end_vert;
