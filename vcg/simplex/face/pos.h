@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/03/12 15:22:28  cignoni
+Written some documentation and added to the trimes doxygen module
+
 Revision 1.1  2004/03/10 08:32:30  cignoni
 Initial commit
 
@@ -292,6 +295,42 @@ public:
 	typedef typename FaceType::CoordType CoordType;
 	//normale per visualizzazione creaseangle
 	CoordType normal;
+};
+
+
+/** Class VFIterator.
+	This class is used as an iterator over the VF adjacency. 
+ */ 
+
+template <typename FaceType> 
+class VFIterator
+{
+public:
+
+	/// The vertex type
+	typedef typename FaceType::VertexType VertexType;
+	/// The vector type
+	typedef typename VertexType::CoordType CoordType;
+	/// The scalar type
+	typedef typename VertexType::ScalarType ScalarType;
+
+	/// Pointer to the face of the half-edge
+	typename FaceType::BaseFaceType *f;
+	/// Index of the edge
+	int z;
+	
+	/// Default constructor
+	VFIterator(){}
+	/// Constructor which associates the half-edge elementet with a face, its edge and its vertex
+	VFIterator(VertexType  * const vp){f=vp->VFb();z=vp->VFi();}
+
+  bool End() const {return f==0;}
+  bool operator++() {
+		FaceType* t = f;
+		f = t->VFp(z);
+		z = t->VFi(z);
+  }
+		
 };
 
 /*@}*/
