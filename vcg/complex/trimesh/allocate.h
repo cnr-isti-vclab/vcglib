@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2004/08/25 15:15:26  ganovelli
+minor changes to comply gcc compiler (typename's and stuff)
+
 Revision 1.11  2004/08/07 17:38:00  pietroni
 solved errors on AddFaces relative to VFp pointers of faces
 
@@ -78,7 +81,7 @@ class Allocator
 {
  
 public:
-typedef AllocateMeshType MeshType; 
+typedef AllocateMeshType MeshType;
 typedef typename MeshType::VertexType     VertexType;
 typedef typename MeshType::VertexPointer  VertexPointer;
 typedef typename MeshType::VertexIterator VertexIterator;
@@ -126,7 +129,7 @@ static VertexIterator AddVertices(MeshType &m,int n, PointerUpdater<VertexPointe
     
 	for(int i=0; i<n; ++i)
 	{
-    m.vert.push_back(typename MeshType::VertexType());
+    m.vert.push_back(VertexType());
 		m.vert.back().ClearFlags();
 	}
 
@@ -143,7 +146,7 @@ static VertexIterator AddVertices(MeshType &m,int n, PointerUpdater<VertexPointe
           pu.Update((*fi).V(1));
           pu.Update((*fi).V(2));
         }
-		
+
 		// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
 			unsigned int siz=m.vert.size()-n;	
 		  if(last!=(VertexIterator)0)  
@@ -187,7 +190,7 @@ static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu
   } 
 	for(int i=0; i<n; ++i)
 	{
-    m.face.push_back(typename MeshType::FaceType());
+    m.face.push_back(FaceType());
 		m.face.back().ClearFlags();
 	}
 
@@ -276,7 +279,7 @@ static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu
   } 
 	for(int i=0; i<n; ++i)
 	{
-    m.face.push_back(typename MeshType::FaceType());
+    m.face.push_back(FaceType());
 		m.face.back().ClearFlags();
 	}
 
