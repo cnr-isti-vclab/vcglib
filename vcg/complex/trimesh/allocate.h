@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/05/11 14:12:13  ganovelli
+general comment: minor modifications to compile with g++. Almost all
+insertions of "typename" keyword and new line at the end of file
+
 Revision 1.6  2004/05/10 13:24:21  cignoni
 Updated names of adj functions and added ending newline
 
@@ -196,7 +200,7 @@ static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu
         if(!(*vi).IsD())
         {
           if(VertexType::HasVFAdjacency())
-            pu.Update((*vi).VFb());
+            pu.Update((*vi).VFp());
         }
         		// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
 		unsigned int siz=m.face.size()-n;	
