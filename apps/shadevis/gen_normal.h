@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/09/16 14:23:57  ponchio
+fixed gcc template compatibility issues.
+
 Revision 1.2  2004/09/10 14:02:20  cignoni
 Added Cone directions
 
@@ -72,6 +75,7 @@ static void UniformCone(int vn, std::vector<Point3<ScalarType > > &NN, ScalarTyp
 
   printf("----------AngleRad %f Angledeg %f ratio %f vn %i vn2 %i \n",AngleRad,math::ToDeg(AngleRad),Ratio,vn,int(vn/Ratio));
   Uniform(vn/Ratio,NNT);
+  printf("asked %i got %i (expecting %i instead of %i)\n", int(vn/Ratio), NNT.size(), int(NNT.size()*Ratio), vn);
   typename std::vector<Point3<ScalarType> >::iterator vi;
   
   ScalarType DotProd = cos(AngleRad);
