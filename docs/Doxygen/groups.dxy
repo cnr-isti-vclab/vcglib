@@ -1,0 +1,9 @@
+/** \defgroup space Space
+This module contains all the basic types for representing spatial entities like point, box, line planes etc.
+*/
+/** \defgroup vertex Vertex of triangular,tetrahedral meshes
+*/
+/** \defgroup face Faces 
+*/
+/** \defgroup trimesh Triangular Meshes
+*/
