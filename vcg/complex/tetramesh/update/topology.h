@@ -152,7 +152,7 @@ public:
 				@param STL_TETRA_CONT (Template Parameter) Specifies the type of the tetrahedrons container any the tetrahedrons type.
  */
 template  < class STL_VERT_CONT ,class STL_TETRA_CONT >
-class UpdateTopology
+class UpdateTetraTopology
 {
 
 public:
@@ -200,10 +200,10 @@ void VTTopology(VertexContainer &vert,TetraContainer &tetra)
 			if( ! (*t).IsD())
 				for(int j=0;j<4;++j)
 				{
-					(*t).TV(j) = (*t).V(j)->Fp();
-					(*t).ZV(j) = (*t).V(j)->Zp();
-					(*t).V(j)->Fp() = &(*t);
-					(*t).V(j)->Zp() = j;
+					(*t).TVp(j) = (*t).V(j)->VTb();
+					(*t).TVi(j) = (*t).V(j)->VTi();
+					(*t).V(j)->VTb() = &(*t);
+					(*t).V(j)->VTi() = j;
 				}
 	
 	}
@@ -214,16 +214,16 @@ void VTTopology(VertexContainer &vert,TetraContainer &tetra)
 		VertexIterator v;
 		for(v=vert.begin();v!=vert.end();++v)
 			{
-				v->Fp() = 0;
-				v->Zp() = 0;
+				v->VTb() = 0;
+				v->VTi() = 0;
 			}
 
 		TetraIterator   t;
 		for(t=tetra.begin();t!=tetra.end();++t)	
 			for(int j=0;j<4;++j)
 				{
-					(*t).TV(j) = 0;
-					(*t).ZV(j) = 0;
+					(*t).TVp(j) = 0;
+					(*t).TVi(j) = 0;
 				}
 }
 
@@ -305,14 +305,14 @@ void TTTopology(VertexContainer &vert,TetraContainer &tetra)
     {	
 		 if (!(*ti).IsD())
      {
-			(*ti).Z(0)=0;
-			(*ti).Z(1)=1;
-			(*ti).Z(2)=2;
-			(*ti).Z(3)=3;
-		 	(*ti).T(0)=(&(*ti));
-			(*ti).T(1)=(&(*ti));
-			(*ti).T(2)=(&(*ti));
-			(*ti).T(3)=(&(*ti));
+			(*ti).TTi(0)=0;
+			(*ti).TTi(1)=1;
+			(*ti).TTi(2)=2;
+			(*ti).TTi(3)=3;
+		 	(*ti).TTp(0)=(&(*ti));
+			(*ti).TTp(1)=(&(*ti));
+			(*ti).TTp(2)=(&(*ti));
+			(*ti).TTp(3)=(&(*ti));
 			
       v0=(*ti).V(Tetra3<double>::VofF(0,0));
       v1=(*ti).V(Tetra3<double>::VofF(0,1));
@@ -356,10 +356,10 @@ void TTTopology(VertexContainer &vert,TetraContainer &tetra)
 					t1=VF[j].getTetrahedron();
 					faceindex0=VF[i].getFaceIndex();
 					faceindex1=VF[j].getFaceIndex();
-					t0->T(faceindex0)=(t1);
-					t1->T(faceindex1)=(t0);
-					t0->Z(faceindex0)=(faceindex1);
-					t1->Z(faceindex1)=(faceindex0);
+					t0->TTp(faceindex0)=(t1);
+					t1->TTp(faceindex1)=(t0);
+					t0->TTi(faceindex0)=(faceindex1);
+					t1->TTi(faceindex1)=(faceindex0);
 					i++;
 				}
 				
@@ -374,16 +374,16 @@ void TestTTTopology(VertexContainer &vert,TetraContainer &tetra)
     {	
 			for (i=0;i<4;i++)
 			{
-				if ((!(*ti).IsD())&&((*ti).T(i)!=&(*ti)))
+				if ((!(*ti).IsD())&&((*ti).TTp(i)!=&(*ti)))
 					{	
-					  assert( ((((*ti).T(i))->T((*ti).Z(i)))==&(*ti)));
+					  assert( ((((*ti).TTp(i))->TTp((*ti).TTi(i)))==&(*ti)));
             
             VertexType	*v0=(*ti).V(Tetra3<double>::VofF(i,0));
             VertexType	*v1=(*ti).V(Tetra3<double>::VofF(i,1));
             VertexType	*v2=(*ti).V(Tetra3<double>::VofF(i,2));
 						
-						TetraType *t1=(TetraType*)(*ti).T(i);
-						int z1=(*ti).Z(i);
+						TetraType *t1=(TetraType*)(*ti).TTp(i);
+						int z1=(*ti).TTi(i);
             
             VertexType	*vo0=(*t1).V(Tetra3<double>::VofF(z1,0));
             VertexType	*vo1=(*t1).V(Tetra3<double>::VofF(z1,1));
