@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/09/23 13:44:25  ponchio
+Removed SetSafeBBox. SetBBox is now safe enough.
+
 Revision 1.7  2004/09/09 12:44:39  fasano
 included stdio.h
 
@@ -238,9 +241,9 @@ class GridStaticPtr
     {
       bbox = b;
       float t = bbox.Diag()/100.0;
-      if(t = 0) t = 0.0000001;
+      if(t == 0) t = 0.0000001;
       bbox.Offset(t);
-      dim  = b.max - b.min;
+      dim  = bbox.max - bbox.min;
     }
   
   /// Dato un punto 3d ritorna l'indice del box corrispondente
@@ -462,6 +465,7 @@ class GridStaticPtr
       assert(size[1]>=0.0);
       assert(size[2]>=0.0);
       
+
       int ncell = int(elems*GFactor);	// Calcolo numero di voxel
       if(ncell<mincells)
 	ncell = mincells;
