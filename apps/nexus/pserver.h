@@ -16,6 +16,7 @@ class PServer: public MFile {
     unsigned int patch_start;  //granularita' Chunk
     unsigned short ram_size;  //in chunks 
     unsigned short disk_size;  // in chunks (used when compressed)
+    Patch *patch;
   };
 
   /*  struct Data {
@@ -42,17 +43,8 @@ class PServer: public MFile {
 
   unsigned int ram_max;
   unsigned int ram_used;
-
-  //statistics:
-  unsigned int ram_readed;
-  unsigned int ram_flushed;
-    
-  //pt::rwlock ramlock; //read only thread safety...
-  //pt::rwlock disklock; //read only thread safety...
-
-  std::vector<Entry> entries;
   
-  
+  std::vector<Entry> entries;    
   
   PServer(): chunk_size(1024), 
              ram_max(128000000), 

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.24  2004/12/13 00:44:48  ponchio
+Lotsa changes...
+
 Revision 1.23  2004/12/01 18:46:21  ponchio
 Microchanges.
 
@@ -209,14 +212,17 @@ int main(int argc, char *argv[]) {
     " q: quit\n"
     " s: screen error extraction\n"
     " g: geometry error extraction\n"
-    " p: draw points\n"
+    
     " t: show statistics\n"
-    " r: toggle realtime mode (TODO)\n"
+
     " b: increase memory buffer\n"
     " B: decrease memory buffer\n"
+
     " d: debug mode (show patches colored)\n"
     " f: flas shading mode\n"
     " m: smooth mode\n"
+    " p: draw points\n"
+
     " c: show colors\n"
     " n: show normals\n"
     " u: rotate model\n"
@@ -233,11 +239,9 @@ int main(int argc, char *argv[]) {
   bool extract = true;
   
   NexusMt::MetricKind metric;
-  NexusMt::Mode mode = NexusMt::SMOOTH;
-  unsigned int ram_size = 640000;
+  NexusMt::Mode mode = NexusMt::SMOOTH;  
 
-  nexus.SetError(error);
-  nexus.SetExtractionSize(ram_size);   
+  nexus.SetError(error);  
   nexus.SetMetric(NexusMt::FRUSTUM);    
   if(!nexus.InitGL()) {
     cerr << "Could not init glew.\n";
@@ -256,100 +260,99 @@ int main(int argc, char *argv[]) {
   bool redraw = false;
   float fps = 0;
   float tframe = 0;
+  bool keepdrawing = true;
   
-  while( !quit ) {   
-    bool first = true;
-    SDL_WaitEvent(&event);
-    while( first || SDL_PollEvent( &event ) ){                        
-      first = false;
-      switch( event.type ) {
-      case SDL_QUIT:  quit = 1; break;      
-      case SDL_KEYDOWN:                                        
-	switch(event.key.keysym.sym) {
-	case SDLK_RCTRL:
-	case SDLK_LCTRL: 
-	  track.ButtonDown(Trackball::KEY_CTRL); break;
-	case SDLK_q: exit(0); break;
-	case SDLK_b: show_borders = !show_borders; break;
-	case SDLK_e: extract = !extract; break;
-	case SDLK_c: show_colors = !show_colors; break;
-	case SDLK_n: show_normals = !show_normals; break;
-	  //	case SDLK_9: nexus.patches->ram_size *= 0.8f; break;
-	  //	case SDLK_0: nexus.patches->ram_size *= 1.2f; break;
-
-  case SDLK_LEFT: 
-    ram_size *= 0.7; 
-    nexus.SetExtractionSize(ram_size);   
-    cerr << "Max extraction ram size: " << ram_size << endl; break;
-  case SDLK_RIGHT: 
-    ram_size *= 1.5; 
-    nexus.SetExtractionSize(ram_size);   
-    cerr << "Max extraction ram size: " << ram_size << endl; break;
+  while( !quit ) {           
+      unsigned int anything = SDL_PollEvent(&event);      
+      if(!anything && !keepdrawing) {
+        SDL_WaitEvent(&event);
+        anything = true;
+      }
+      if(anything) {        
+        switch( event.type ) {
+          case SDL_QUIT:  quit = 1; break;      
+          case SDL_KEYDOWN:                                        
+	        switch(event.key.keysym.sym) {
+	          case SDLK_RCTRL:
+	          case SDLK_LCTRL: track.ButtonDown(Trackball::KEY_CTRL); break;
+	          case SDLK_q: exit(0); break;	
+            case SDLK_k: keepdrawing = !keepdrawing; break;
+	          case SDLK_e: extract = !extract; break;
+	          case SDLK_c: show_colors = !show_colors; break;
+	          case SDLK_n: show_normals = !show_normals; break;
+        	        
+            case SDLK_LEFT: nexus.extraction_max *= 0.7; break;
+            case SDLK_RIGHT: nexus.extraction_max *= 1.5; break;
+            case SDLK_UP: nexus.draw_max *= 1.5; break;
+            case SDLK_DOWN: nexus.draw_max *= 0.7; break;
+            case SDLK_PAGEUP: nexus.disk_max *= 1.5; break;
+            case SDLK_PAGEDOWN: nexus.disk_max *= 0.7; break;
   
-	case SDLK_s: metric = NexusMt::FRUSTUM; break;
-	case SDLK_p: mode = NexusMt::POINTS; nexus.SetMode(mode); break;
-	case SDLK_d: mode = NexusMt::PATCHES; nexus.SetMode(mode); break;
-	case SDLK_f: mode = NexusMt::FLAT; nexus.SetMode(mode); break;
-	case SDLK_m: mode = NexusMt::SMOOTH; nexus.SetMode(mode); break;
+	          case SDLK_s: metric = NexusMt::FRUSTUM; break;
+	          case SDLK_p: mode = NexusMt::POINTS; nexus.SetMode(mode); break;
+	          case SDLK_d: mode = NexusMt::PATCHES; nexus.SetMode(mode); break;
+	          case SDLK_f: mode = NexusMt::FLAT; nexus.SetMode(mode); break;
+	          case SDLK_m: mode = NexusMt::SMOOTH; nexus.SetMode(mode); break;
 
-	case SDLK_r:
-	case SDLK_SPACE: rotate = !rotate; break;
+	          case SDLK_r:
+	          case SDLK_SPACE: rotate = !rotate; break;
 	  
-	case SDLK_MINUS: 
-    error *= 0.9f;
-    nexus.SetError(error);
-	  cerr << "Error: " << error << endl; break;
+	          case SDLK_MINUS: 
+                error *= 0.9f;
+                nexus.SetError(error);
+	              cerr << "Error: " << error << endl; break;
 	  
-	case SDLK_EQUALS:
-	case SDLK_PLUS: 
-    error *= 1.1f; 
-    nexus.SetError(error);
-	  cerr << "Error: " << error << endl; break;
-	}
-	break;
-      case SDL_KEYUP: 
-	switch(event.key.keysym.sym) {
-	case SDLK_RCTRL:
-	case SDLK_LCTRL:
-	  track.ButtonUp(Trackball::KEY_CTRL); break;
-	}
-	break;
-      case SDL_MOUSEBUTTONDOWN:   
-	x = event.button.x;
-	y = height - event.button.y;          
-#ifdef SDL_BUTTON_WHEELUP
-	if(event.button.button == SDL_BUTTON_WHEELUP) 
-	  track.MouseWheel(1);
-	else if(event.button.button == SDL_BUTTON_WHEELDOWN) 
-	  track.MouseWheel(-1);
-	else 
- #endif
-    if(event.button.button == SDL_BUTTON_LEFT)
-	  track.MouseDown(x, y, Trackball::BUTTON_LEFT);
-	else if(event.button.button == SDL_BUTTON_RIGHT)
-	  track.MouseDown(x, y, Trackball::BUTTON_RIGHT);
-        break;
-      case SDL_MOUSEBUTTONUP:          
-	x = event.button.x;
-	y = height - event.button.y; 
-	if(event.button.button == SDL_BUTTON_LEFT)
-	  track.MouseUp(x, y, Trackball::BUTTON_LEFT);
-	else if(event.button.button == SDL_BUTTON_RIGHT)
-	  track.MouseUp(x, y, Trackball::BUTTON_RIGHT);     
-	break;
-      case SDL_MOUSEMOTION: 
-	while(SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_MOUSEMOTIONMASK));
-	x = event.motion.x;
-	y = height - event.motion.y;
-	track.MouseMove(x, y);
-	break;  
-      case SDL_VIDEOEXPOSE:
-      default: break;
+	          case SDLK_EQUALS:
+	          case SDLK_PLUS: 
+                error *= 1.1f; 
+                nexus.SetError(error);
+	              cerr << "Error: " << error << endl; break;
+	        }
+	        break;
+          case SDL_KEYUP: 
+	          switch(event.key.keysym.sym) {
+	            case SDLK_RCTRL:
+	            case SDLK_LCTRL:
+	              track.ButtonUp(Trackball::KEY_CTRL); break;
+	          }
+	          break;
+          case SDL_MOUSEBUTTONDOWN:   
+	          x = event.button.x;
+	          y = height - event.button.y;          
+          #ifdef SDL_BUTTON_WHEELUP
+	          if(event.button.button == SDL_BUTTON_WHEELUP) 
+	            track.MouseWheel(1);
+	          else if(event.button.button == SDL_BUTTON_WHEELDOWN) 
+	            track.MouseWheel(-1);
+	          else 
+          #endif
+            if(event.button.button == SDL_BUTTON_LEFT)
+	            track.MouseDown(x, y, Trackball::BUTTON_LEFT);
+	          else if(event.button.button == SDL_BUTTON_RIGHT)
+	            track.MouseDown(x, y, Trackball::BUTTON_RIGHT);
+            break;
+          case SDL_MOUSEBUTTONUP:          
+	          x = event.button.x;
+	          y = height - event.button.y; 
+	          if(event.button.button == SDL_BUTTON_LEFT)
+	            track.MouseUp(x, y, Trackball::BUTTON_LEFT);
+	          else if(event.button.button == SDL_BUTTON_RIGHT)
+	            track.MouseUp(x, y, Trackball::BUTTON_RIGHT);     
+	          break;
+          case SDL_MOUSEMOTION: 
+	          while(SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_MOUSEMOTIONMASK));
+	            x = event.motion.x;
+	            y = height - event.motion.y;
+	            track.MouseMove(x, y);
+	          break;  
+          case SDL_VIDEOEXPOSE:
+          default: break;
+        }
       }
       redraw = true;
-    }
+    
 
-    if(!redraw) continue;
+    //if(!redraw && !keepdrawing) continue;
     redraw = false;
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_PROJECTION);
@@ -363,9 +366,11 @@ int main(int argc, char *argv[]) {
     if(rotate) {
       alpha++;
       if(alpha > 360) alpha = 0;
-      SDL_Event redraw;
-      redraw.type = SDL_VIDEOEXPOSE;
-      SDL_PushEvent(&redraw);
+      if(!keepdrawing) {
+        SDL_Event redraw;
+        redraw.type = SDL_VIDEOEXPOSE;
+        SDL_PushEvent(&redraw);
+      }
     }
     
     
@@ -440,8 +445,8 @@ int main(int argc, char *argv[]) {
 	      gl_print(0.03, 0.12, buffer);*/
 
       sprintf(buffer, "Extr size: %.3fMb(max)   %.3fMb(cur)",
-	      nexus.extraction_max * nexus.chunk_size/(float)(1<<20), 
-	      nexus.extraction_used * nexus.chunk_size/(float)(1<<20));
+	      nexus.patches.ram_max * nexus.chunk_size/(float)(1<<20), 
+	      nexus.patches.ram_used * nexus.chunk_size/(float)(1<<20));
       gl_print(0.03, 0.09, buffer);
       
       sprintf(buffer, "Vbo size : %.3fMb(max)   %.3fMb(cur)",
@@ -455,12 +460,7 @@ int main(int argc, char *argv[]) {
 	      nexus.tri_rendered/(float)(1<<10),
 	      tframe, 1/tframe);
       gl_print(0.03, 0.03, buffer);
-
-
-      /* cerr << "Ram flushed: " << nexus.patches.ram_flushed << endl;
-      	cerr << "Ram readed: " << nexus.patches.ram_readed << endl;*/
-      nexus.patches.ram_flushed = 0;
-      nexus.patches.ram_readed = 0;
+      
       glEnable(GL_DEPTH_TEST);
       glEnable(GL_LIGHTING);
       glPopMatrix();

@@ -15,9 +15,6 @@ bool PServer::Create(const std::string &filename,
   ram_max = rsize/chunk_size + 1;
   ram_used = 0;
 
-  ram_readed = 0;
-  ram_flushed = 0;
-  
   return MFile::Create(filename);
 }
 
@@ -30,9 +27,6 @@ bool PServer::Load(const std::string &filename, Signature sig,
 
   ram_max = rsize/chunk_size + 1;
   ram_used = 0;
-
-  ram_readed = 0;
-  ram_flushed = 0;
 
   return MFile::Load(filename, readonly);
 }
@@ -51,6 +45,7 @@ bool PServer::ReadEntries(FILE *fp) {
     fread(&(entries[i].patch_start), 1, sizeof(unsigned int), fp);
     fread(&(entries[i].ram_size),  1, sizeof(unsigned short), fp);
     fread(&(entries[i].disk_size),    1, sizeof(unsigned short), fp);
+    entries[i].patch = NULL;
   }
   return true;
 }
@@ -81,6 +76,7 @@ Patch *PServer::LoadPatch(unsigned int idx,
   
   assert(idx < entries.size());
   Entry &entry = entries[idx];
+  if(entry.patch) return entry.patch;
   
   char *ram = new char[entry.ram_size * chunk_size];
 #ifdef CONTROLS
@@ -108,15 +104,17 @@ Patch *PServer::LoadPatch(unsigned int idx,
       delete []disk;
     } 
   }
-  ram_used += entry.ram_size;
-  ram_readed += entry.ram_size;
-  
+  ram_used += entry.ram_size;  
+  entry.patch = patch;  
   return patch;
 }
 
 void PServer::FlushPatch(unsigned int id, Patch *patch) {
-
+  //TODO move this into an assert!!!!
+  if(!patch) return;
   Entry &entry = entries[id];  
+  assert(entry.patch == patch);
+  entry.patch = NULL;    
 
   if(!readonly) { //write back patch
     if((signature & NXS_COMPRESSED)) {
@@ -147,10 +145,8 @@ void PServer::FlushPatch(unsigned int id, Patch *patch) {
   }
 
   delete [](patch->start);
-  delete patch;
-
-  ram_used -= entry.ram_size;
-  ram_flushed += entry.ram_size;
+  delete patch;  
+  ram_used -= entry.ram_size;      
 }
 
 void PServer::MaxRamBuffer(unsigned int r_buffer) {

@@ -17,14 +17,15 @@ class Prefetch: public pt::thread{
  public:
   
   pt::mutex safety;
-  unsigned int ram_max;
-  unsigned int ram_used;
+  //unsigned int ram_max;
+  //unsigned int ram_used;
   
   NexusMt *mt;
   std::vector<PServer::Item> missing;
+  pt::jobqueue draw;
+  pt::jobqueue load;
 
-
-  Prefetch(): thread(false) {}
+  Prefetch(): thread(false), draw(20000), load(64000) {}
   ~Prefetch() {
     waitfor();
   }

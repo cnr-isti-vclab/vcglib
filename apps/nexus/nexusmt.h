@@ -19,7 +19,8 @@ namespace nxs {
    std::vector<Node *> out;
    std::vector<Frag> frags;    
    float error;
-   bool visited;
+   bool visited;   
+   bool current;
    //   bool pushed;
  };
 
@@ -102,9 +103,15 @@ class NexusMt: public NexusBase {
 
   Metric *metric;
   float target_error;
-  
-  int extraction_max;
-  int extraction_used;
+
+  vcg::Frustumf frustum;
+    
+  unsigned int extraction_max; //total extraxtion (even culled parts)
+  unsigned int extraction_used;
+  unsigned int draw_max;        //only visible parts
+  unsigned int draw_used;
+  unsigned int disk_max;       //max not in ram loadable size
+  unsigned int disk_used;
 
 
   Mode mode;
@@ -119,7 +126,9 @@ class NexusMt: public NexusBase {
   unsigned int tri_rendered;
   unsigned int tri_total;
 
+  vector<QueuePServer::Data *> todraw;
   std::vector<PServer::Item> visited;
+  std::vector<Node *> sequence;
 
   QueuePServer patches;
   BorderServer borders; 
@@ -160,6 +169,7 @@ class NexusMt: public NexusBase {
   void LoadHistory();
   void ClearHistory();
   void VisitNode(Node *node, std::vector<TNode> &heap);
+  void UnvisitNode(Node *node, std::vector<TNode> &heap);
   void Select(std::vector<unsigned int> &selected);
   Patch &LoadPatch(unsigned int p);
 };

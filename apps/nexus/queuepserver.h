@@ -2,6 +2,7 @@
 #define NXS_QUEUE_PSERVER_H
 
 #include <map>
+#include <hash_map>
 #include <vector>
 #include <algorithm>
 
@@ -29,11 +30,15 @@ class QueuePServer: public PServer {
 
   std::map<unsigned int, Data> index;
   std::vector<Item> heap;
-  
-  Data &Lookup(unsigned int patch, unsigned short nv, unsigned short nf,
-		float priority = 0.0f);
 
-  Data &Lookup(unsigned int patch, Patch *mem, float priority = 0.0f);
+  QueuePServer(): queue(64000) {}
+  
+  //Data &Lookup(unsigned int patch, unsigned short nv, unsigned short nf,
+//		float priority = 0.0f);  
+
+  //return flushing too.
+  Data &Lookup(unsigned int patch, unsigned short nv, unsigned short nf, float priority, 
+    std::vector<QueuePServer::Data> &data);
 
   bool IsLoaded(unsigned int patch);
   float MaxPriority();

@@ -9,6 +9,42 @@ using namespace pt;
 
 QueuePServer::Data &QueuePServer::Lookup(unsigned int patch, 
 			    unsigned short nv, unsigned short nf,
+			    float priority,
+          vector<QueuePServer::Data> &flush) {
+  flush.clear();
+  if(index.count(patch)) {    
+    return index[patch];    
+  } else {
+    while(ram_used > ram_max) {
+      if(MaxPriority() == 0) break;
+      pop_heap(heap.begin(), heap.end());
+      Item item = heap.back();      
+      heap.pop_back();
+      assert(item.priority != 0);
+      Data &data = index[item.patch];
+      flush.push_back(data);      
+      FlushPatch(item.patch, data.patch);
+      index.erase(item.patch);
+    }
+    Item item(patch, priority);
+    heap.push_back(item);
+    push_heap(heap.begin(), heap.end());
+    Data &data = index[patch];
+    //    cerr << "Loading: " << patch << endl;
+    data.patch = LoadPatch(patch, nv, nf);
+
+    /*if(priority == 0) {
+      message *msg = new message(DRAW, (unsigned int)&data);
+      msg->result = patch;
+      queue.post(msg);
+    } */
+    return data;
+  }
+}
+
+/*
+QueuePServer::Data &QueuePServer::Lookup(unsigned int patch, 
+			    unsigned short nv, unsigned short nf,
 			    float priority) {
   if(index.count(patch)) {
     Data &data = index[patch];
@@ -48,8 +84,8 @@ QueuePServer::Data &QueuePServer::Lookup(unsigned int patch,
     return data;
   }
 }
-
-QueuePServer::Data &QueuePServer::Lookup(unsigned int patch, 
+*/
+/*QueuePServer::Data &QueuePServer::Lookup(unsigned int patch, 
 					 Patch *mem,
 					 float priority) {
   if(index.count(patch)) {
@@ -75,7 +111,7 @@ QueuePServer::Data &QueuePServer::Lookup(unsigned int patch,
     LoadVbo(data);
     return data;
   }
-}
+} */
 
 bool QueuePServer::IsLoaded(unsigned int patch) {
   return index.count(patch);
