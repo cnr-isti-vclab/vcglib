@@ -1,6 +1,36 @@
+/****************************************************************************
+* VCGLib                                                            o o     *
+* Visual and Computer Graphics Library                            o     o   *
+*                                                                _   O  _   *
+* Copyright(C) 2004                                                \/)\/    *
+* Visual Computing Lab                                            /\/|      *
+* ISTI - Italian National Research Council                           |      *
+*                                                                    \      *
+* All rights reserved.                                                      *
+*                                                                           *
+* This program is free software; you can redistribute it and/or modify      *   
+* it under the terms of the GNU General Public License as published by      *
+* the Free Software Foundation; either version 2 of the License, or         *
+* (at your option) any later version.                                       *
+*                                                                           *
+* This program is distributed in the hope that it will be useful,           *
+* but WITHOUT ANY WARRANTY; without even the implied warranty of            *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
+* GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
+* for more details.                                                         *
+*                                                                           *
+****************************************************************************/
+/****************************************************************************
+  History
 
-#ifndef __VCG_GLWRAP
-#define __VCG_GLWRAP
+$Log: not supported by cvs2svn $
+
+
+
+****************************************************************************/
+
+#ifndef __VCG_GLTRIMESH
+#define __VCG_GLTRIMESH
 
 #include <queue>
 #include <vector>
@@ -9,7 +39,6 @@
 #include <wrap/gl/space.h>
 #include <gl/glew.h>
 
-#include <windows.h>
 namespace vcg {
 
 
@@ -25,7 +54,7 @@ public:
 	enum TextureMode   {TMNone, TMPerVert, TMPerWedge, TMPerWedgeMulti};
 	enum Hint {
 		HNUseTriStrip		  = 0x0001,				// ha bisogno che ci sia la fftopology gia calcolata!
-		HNUseEdgeStrip		  = 0x0002,			// 
+//		HNUseEdgeStrip		  = 0x0002,			// 
 		HNUseDisplayList	  = 0x0004, 
 		HNCacheDisplayList	  = 0x0008,		// Each mode has its dl;
 		HNLazyDisplayList	  = 0x0010,			// Display list are generated only when requested 
