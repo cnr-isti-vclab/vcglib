@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.33  2005/02/10 09:18:20  ponchio
+Statistics.
+
 Revision 1.32  2005/02/03 12:35:01  ponchio
 Patch cache -> heap
 
@@ -224,7 +227,8 @@ int main(int argc, char *argv[]) {
 	 << "-m <ram>: max ram used\n"
          << "-x <ram>: max extraction size\n"
 	 << "-r <ram>: max draw size\n"
-	 << "-d <ram>: max disk read per frame\n";
+	 << "-d <ram>: max disk read per frame\n"
+	 << "-p      : no preload\n";
     return -1;
   }      
 
@@ -256,13 +260,14 @@ int main(int argc, char *argv[]) {
   bool step = true;
   
   int option;
-  while((option = getopt(argc, argv, "e:m:x:r:d:")) != EOF) {
+  while((option = getopt(argc, argv, "e:m:x:r:d:p")) != EOF) {
     switch(option) {
     case 'e': extraction.target_error = atof(optarg); break;
     case 'm': nexus.MaxRam() = atoi(optarg); break;
     case 'x': extraction.extr_max = atoi(optarg); break;
     case 'r': extraction.draw_max = atoi(optarg); break;
     case 'd': extraction.disk_max = atoi(optarg); break;
+    case 'p': preload = false; nexus.SetPreload(preload); break;
     default:
       cerr << "Unknow option.\n"; break;
     }
@@ -276,6 +281,7 @@ int main(int argc, char *argv[]) {
     " t: toggle statistics\n"
     " b: increase memory buffer\n"
     " B: decrease memory buffer\n"
+    " s: toggle preload\n"
 
     " d: debug mode (show patches colored)\n"
     " f: flat shading mode\n"
