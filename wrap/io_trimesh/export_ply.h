@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/03/09 21:26:47  cignoni
+cr lf mismatch
+
 Revision 1.1  2004/03/08 09:21:33  cignoni
 Initial commit
 
@@ -375,14 +378,14 @@ static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &
 
 				for(i=0;i<pi.vdn;i++)
 				{
-					float tf;
+					float tf; double td;
 					int ti;
 					switch (pi.VertexData[i].memtype1)
 					{
 					case ply::T_FLOAT	 :		tf=*( (float  *)        (((char *)vp)+pi.VertexData[i].offset1));	fprintf(fpout,"%g ",tf); break;
-					case ply::T_DOUBLE :    tf=*( (double *)        (((char *)vp)+pi.VertexData[i].offset1));	fprintf(fpout,"%g ",tf); break;
+					case ply::T_DOUBLE :    td=*( (double *)        (((char *)vp)+pi.VertexData[i].offset1));	fprintf(fpout,"%g ",tf); break;
 					case ply::T_INT		 :		ti=*( (int    *)        (((char *)vp)+pi.VertexData[i].offset1));	fprintf(fpout,"%i ",ti); break;
-					case ply::T_SHORT	 :		ti=*( (short  *)        (((char *)vp)+pi.VertexData[i].offset1));  fprintf(fpout,"%i ",ti); break;
+					case ply::T_SHORT	 :		ti=*( (short  *)        (((char *)vp)+pi.VertexData[i].offset1)); fprintf(fpout,"%i ",ti); break;
 					case ply::T_CHAR	 :		ti=*( (char   *)        (((char *)vp)+pi.VertexData[i].offset1));	fprintf(fpout,"%i ",ti); break;
 					case ply::T_UCHAR	 :		ti=*( (unsigned char *) (((char *)vp)+pi.VertexData[i].offset1));	fprintf(fpout,"%i ",ti); break;
 					default : assert(0);
@@ -545,12 +548,12 @@ static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &
 
 					for(i=0;i<pi.fdn;i++)
 					{
-						float tf;
+						float tf; double td;
 						int ti;
 						switch (pi.FaceData[i].memtype1)
 						{
 						case  ply::T_FLOAT	:		tf=*( (float  *)        (((char *)fp)+pi.FaceData[i].offset1));	fprintf(fpout,"%g ",tf); break;
-						case  ply::T_DOUBLE :		tf=*( (double *)        (((char *)fp)+pi.FaceData[i].offset1));	fprintf(fpout,"%g ",tf); break;
+						case  ply::T_DOUBLE :		td=*( (double *)        (((char *)fp)+pi.FaceData[i].offset1));	fprintf(fpout,"%g ",tf); break;
 						case  ply::T_INT		:		ti=*( (int    *)        (((char *)fp)+pi.FaceData[i].offset1));	fprintf(fpout,"%i ",ti); break;
 						case  ply::T_SHORT	:		ti=*( (short  *)        (((char *)fp)+pi.FaceData[i].offset1));	fprintf(fpout,"%i ",ti); break;
 						case  ply::T_CHAR		:		ti=*( (char   *)        (((char *)fp)+pi.FaceData[i].offset1));	fprintf(fpout,"%i ",ti); break;

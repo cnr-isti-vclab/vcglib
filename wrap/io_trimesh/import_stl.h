@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/03/12 21:42:52  cignoni
+First working version!
+
 ****************************************************************************/
 
 #ifndef __VCGLIB_IMPORT_STL
@@ -141,7 +144,6 @@ static int OpenBinary( OpenMeshType &m, const char * filename, CallBackPos *cb=0
   static int OpenAscii( OpenMeshType &m, const char * filename, CallBackPos *cb=0)
   {
     FILE *fp;
-    bool binary;
     fp = fopen(filename, "r");
     if(fp == NULL)
     {
