@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.14  2005/01/14 15:28:33  ponchio
+vcg/Point.h -> vcg/point.h   (again!)
+
 Revision 1.13  2005/01/05 13:25:29  ganovelli
 aggiunte conversione di coordinate
 
@@ -120,10 +123,10 @@ public:
 	char & UberFlags() {return _flags;}
 
 	/// set the camera specifying the perspecive view
-	inline void SetPerspective(S angle, S ratio, S near, S farend,vcg::Point2<S> viewport=vcg::Point2<S>(500,-1) );
+	inline void SetPerspective(S angle, S ratio, S nearend, S farend,vcg::Point2<S> viewport=vcg::Point2<S>(500,-1) );
 
 	/// set the camera specifying the frustum view
-	inline void SetFrustum(S dx, S sx, S bt, S tp, S near, S farend,vcg::Point2<S> viewport=vcg::Point2<S>(500,-1));
+	inline void SetFrustum(S dx, S sx, S bt, S tp, S nearend, S farend,vcg::Point2<S> viewport=vcg::Point2<S>(500,-1));
 
 	/// project a point from space 3d (in the reference system of the camera) to the camera's plane
 	/// the result is in absolute coordinates
@@ -201,16 +204,16 @@ vcg::Point3<S> Camera<S>::UnProject(const vcg::Point2<S> & p){
 }
 /// set the camera specifying the perspective view
 template<class S>
-	void Camera<S>::SetPerspective(S angle, S ratio, S nr, S _far,vcg::Point2<S> vp){
+	void Camera<S>::SetPerspective(S angle, S ratio, S near_thr, S far_thr, vcg::Point2<S> vp){
 		S halfsize[2];
 		halfsize[1] = tan(math::ToRad(angle/2)) * nr;
 		halfsize[0] = halfsize[1]*ratio;
-		SetFrustum(-halfsize[0],halfsize[0],-halfsize[1],halfsize[1],nr,_far,vp);
+		SetFrustum(-halfsize[0],halfsize[0],-halfsize[1],halfsize[1],near_thr,far_thr,vp);
 }
 
 /// set the camera specifying the frustum view
 template<class S>
-	void Camera<S>::SetFrustum(S sx, S dx, S bt, S tp, S nr, S _far,vcg::Point2<S> vp){
+	void Camera<S>::SetFrustum(S sx, S dx, S bt, S tp, S near_thr, S far_thr,vcg::Point2<S> vp){
 		S vpt[2];
 		vpt[0] = dx-sx;
 		vpt[1] = tp-bt;
@@ -227,8 +230,8 @@ template<class S>
 		c[0] = -sx/vpt[0] * viewport[0];
 		c[1] = -bt/vpt[1] * viewport[1];
 
-		f =nr;
-		farend = _far;
+		f =near_thr;
+		farend = far_thr;
 	}
 
 
