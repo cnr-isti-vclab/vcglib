@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/02/15 23:34:04  cignoni
+Initial commit
+
 
 ****************************************************************************/
 
@@ -35,23 +38,24 @@ $Log: not supported by cvs2svn $
 #include <vcg/space/point3>
 namespace vcg {
 
+/** \addtogroup space */
+/*@{*/
 
-template <class T>
-/** @name Box2
-	Class Box2.
-    This is the class for definition of a bounding box in 2D space.	
-	@param T (Templete Parameter) Specifies the scalar field.
+/**
+	Templated class for a 2D bounding box. It is stored just as two Point2	
+	@param BoxScalarType (Template Parameter) Specifies the scalar field.
 */
+template <class BoxScalarType>
 class Box2
 {
 public:
 		/// The scalar type
-	typedef T scalar_type;
+	typedef BoxScalarType ScalarType;
 
 		/// min coordinate point
-    Point2<T> min;
+    Point2<BoxScalarType> min;
 		/// max coordinate point
-    Point2<T> max;
+    Point2<BoxScalarType> max;
 		/// Standard constructor
 	inline  Box2() { min.x()= 1; max.x()= -1; min.y()= 1; max.y()= -1; }
 		/// Copy constructor
@@ -63,28 +67,13 @@ public:
 	{
 		return min==p.min && max==p.max;
 	}
-		/** Varia le dimensioni del bounding box scalandole rispetto al parametro scalare.
-			@param s Valore scalare che indica di quanto deve variare il bounding box
-		*/
-	void Inflate( const T s )
-	{
-		Inflate( (max-min)*s );
-	}
-		/** Varia le dimensioni del bounding box del valore fornito attraverso il parametro.
-			@param delta Point in 2D space
-		*/
-	void Inflate( const Point2<T> & delta )
-	{
-		min -= delta;
-		max += delta;
-	}
-		/// Initializing the bounding box with a point
-	void Set( const Point2<T> & p )
+			/// Initializing the bounding box with a point
+	void Set( const Point2<BoxScalarType> & p )
 	{
 		min = max = p;
 	}
 		// Initializing with the values
-	inline void Set( T minx, T miny, T maxx, T maxy )
+	inline void Set( BoxScalarType minx, BoxScalarType miny, BoxScalarType maxx, BoxScalarType maxy )
 	{
 		min[0] = minx;
 		min[1] = miny;
@@ -119,7 +108,7 @@ public:
 			cade fuori da esso.
 			@param p The point 2D
 		*/
-	void Add( const Point2<T> & p )
+	void Add( const Point2<BoxScalarType> & p )
 	{
 		if(IsNull()) Set(p);
 		else 
@@ -148,7 +137,7 @@ public:
 		/** Trasla il bounding box di un valore definito dal parametro.
 			@param p Il bounding box trasla sulla x e sulla y in base alle coordinate del parametro
 		*/
-	void Translate( const Point2<T> & p )
+	void Translate( const Point2<BoxScalarType> & p )
 	{
 		min += p;
 		max += p;
@@ -157,7 +146,7 @@ public:
 			@param p The point 2D
 			@return True se p appartiene al bounding box, false altrimenti
 		*/
-	bool IsIn( Point2<T> const & p ) const
+	bool IsIn( Point2<BoxScalarType> const & p ) const
 	{
 		return (
 			min.v[0] <= p.v[0] && p.v[0] <= max.v[0] &&
@@ -168,7 +157,7 @@ public:
 			@param p The point 2D
 			@return True se p appartiene al bounding box, false altrimenti
 		*/
-	bool IsInEx( Point2<T> const & p ) const
+	bool IsInEx( Point2<BoxScalarType> const & p ) const
 	{
 		return  (
 			min.v[0] <= p.v[0] && p.v[0] < max.v[0] &&
@@ -199,26 +188,26 @@ public:
 		*/
 	inline bool IsEmpty() const { return min==max; }
 		/// Restituisce la lunghezza della diagonale del bounding box.
-	T Diag() const
+	BoxScalarType Diag() const
 	{
 		return Distance(min,max);
 	}
 		/// Calcola il centro del bounding box.
-	Point2<T> Center() const
+	Point2<BoxScalarType> Center() const
 	{
 		return (min+max)/2;
 	}
 		/// Calcola l'area del Bounding box.
-	inline T Area() const
+	inline BoxScalarType Area() const
 	{
 		return (max.v[0]-min.v[0])*(max.v[1]-min.v[1]);
 	}
 		/// Calcola la dimensione del bounding box sulla x.
-	inline T DimX() const { return max.v[0]-min.v[0]; }
+	inline BoxScalarType DimX() const { return max.v[0]-min.v[0]; }
 	/// Calcola la dimensione del bounding box sulla y.
-	inline T DimY() const { return max.v[1]-min.v[1]; }
+	inline BoxScalarType DimY() const { return max.v[1]-min.v[1]; }
 
-	inline void Normalize( Point2<T> & p )
+	inline void Normalize( Point2<BoxScalarType> & p )
 	{
 		p -= min;
 		p[0] /= max[0]-min[0];
@@ -226,17 +215,6 @@ public:
 	}
 }; // end class definition
 
-
-#ifdef __GL_H__
-	/// Funzione di utilita' per la visualizzazione in OpenGL (short)
-inline void glBox( Box2<short > const & b ) { glRectsv(b.min.v,b.max.v); }
-	/// Funzione di utilita' per la visualizzazione in OpenGL (int)
-inline void glBox( Box2<int   > const & b ) { glRectiv(b.min.v,b.max.v); }
-	/// Funzione di utilita' per la visualizzazione in OpenGL (float)
-inline void glBox( Box2<float > const & b ) { glRectfv(b.min.v,b.max.v); }
-	/// Funzione di utilita' per la visualizzazione in OpenGL (double)
-inline void glBox( Box2<double> const & b ) { glRectdv(b.min.v,b.max.v); }
-#endif
 
 	/// Specificazione di box of short
 typedef Box2<short>  Box2s;
@@ -247,6 +225,7 @@ typedef Box2<float>  Box2f;
 	/// Specificazione di box of double
 typedef Box2<double> Box2d;
 
+/*@}*/
 } // end namespace
 
 

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/03/10 00:35:24  cignoni
+added a math namespace reference
+
 Revision 1.1  2004/02/10 01:11:28  cignoni
 Edited Comments and GPL license
 
@@ -36,8 +39,13 @@ Edited Comments and GPL license
 
 namespace vcg {
 
-
-
+/** \addtogroup space */
+/*@{*/
+    /**
+        The templated class for representing a point in 4D space.
+        The class is templated over the ScalarType class that is used to represent coordinates. All the usual
+        operator overloading (* + - ...) is present. This class is also the base for vcg::Color4
+     */
 template <class T> class Point4
 {
 protected:
@@ -286,6 +294,7 @@ typedef Point4<int>	   Point4i;
 typedef Point4<float>  Point4f;
 typedef Point4<double> Point4d;
 
+/*@}*/
 
 } // end namespace
 #endif

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/02/13 00:44:53  cignoni
+First commit...
+
 
 ****************************************************************************/
 
@@ -33,9 +36,16 @@ $Log: not supported by cvs2svn $
 #include <vcg/space/point2.h>
 
 namespace vcg {
+/** \addtogroup space */
+/*@{*/
 
+/**
+	Templated class for a set of 2D texture coord. It for each is templated over two parameters: 
+  the type of the tex coord and the number of texcoord to be stored. This class is intended to be used when many textures
+  id are shared over the same surface, so for each coord the id of the texture is stored. If no id is needed see the vcg::TCoord2Simple class.
+*/
 
-template<class T = float,int N = 1>
+template<class T = float, int N = 1>
 class TCoord2  
 {
 private:
@@ -73,9 +83,11 @@ public:
 	enum { n_coords=N};
 };
 
-
+/**
+	Templated class for a set of 2D texture coord. It for each is templated over two 
+*/
 template<class T = float>
-class TCoordSimple
+class TCoord2Simple
 {
 private:
 	Point2<T> _t;
@@ -118,15 +130,7 @@ public:
 
 };
 
-#ifdef __GL_H__
-
-
-//inline void glTexCoord(TCoord2<int> const & p)   { glTexCoord3iv(p.v);}
-//inline void glTexCoord(Point3<short> const & p) { glTexCoord3sv(p.v);}
-//inline void glTexCoord(Point3<float> const & p) { glTexCoord3fv(p.v);}
-//inline void glTexCoord(Point3<double> const & p){ glTexCoord3dv(p.v);}
-
-#endif
+/*@}*/
 
 }
 

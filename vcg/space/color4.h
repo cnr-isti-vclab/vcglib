@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/03/10 00:35:01  cignoni
+Removed a wrong (?) copy constructor
+
 Revision 1.1  2004/02/10 01:11:28  cignoni
 Edited Comments and GPL license
 
@@ -35,6 +38,14 @@ Edited Comments and GPL license
 #include <vcg/space/point4.h>
 
 namespace vcg {
+
+/** \addtogroup space */
+/*@{*/
+    /**
+        The templated class for representing 4 entity color.
+        The class is templated over the ScalarType.  class that is used to represent color with float or with unsigned chars. All the usual
+        operator overloading (* + - ...) is present. 
+     */
 template <class T> 
 class Color4 : public Point4<T>
 {
@@ -134,12 +145,12 @@ inline void SetGrayShade(float f)
 }
 
 
-// Given an integer returns a well ordering of colors 
+/** Given an integer returns a well ordering of colors 
 // so that every color differs as much as possible form the previous one
 // params: 
 //		n is the maximum expected value (max of the range)
 //		v is the requested position
-
+*/
 inline static Color4 Scatter(int n, int a,float Sat=.3f,float Val=.9f)
 {
   int b, k, m=n;
@@ -245,6 +256,9 @@ inline Color4<float>::Color4<float>(Color4<float>::ColorConstant cc)
 
 typedef Color4<unsigned char>  Color4b;
 typedef Color4<float>  Color4f;
+
+/*@}*/
+
 
 } // end of NameSpace
 
