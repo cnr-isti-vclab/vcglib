@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/03/31 22:36:44  ganovelli
+First Working Release (with this comment)
+
 /****************************************************************************/
 
 #ifndef __VCGLIB_TRACED_VECTOR__
@@ -31,20 +34,22 @@ $Log: not supported by cvs2svn $
 
 
 #include <vcg/container/container_allocation_table.h>
+#include <vcg/container/entries_allocation_table.h>
+
 #include <assert.h>
 
 namespace vcg {
 
 template <class VALUE_TYPE>
 class TVector: public std::vector<VALUE_TYPE>{
-	typedef TVector<VALUE_TYPE> THIS_TYPE;
-	typedef typename CATEntry<THIS_TYPE,EntryCATMulti<THIS_TYPE> >::EntryType EntryTypeMulti;
+	typedef typename TVector<VALUE_TYPE> ThisType;
+
 public:
 	TVector():std::vector<VALUE_TYPE>(){reserve(1);}
 	~TVector();
 	
 
-	std::list < CATBase<THIS_TYPE>* > attributes;
+	std::list < CATBase<ThisType>* > attributes;
 	// override di tutte le funzioni che possono spostare 
 	// l'allocazione in memoria del container
 	void push_back(const VALUE_TYPE & v);
@@ -54,16 +59,16 @@ public:
 
 	template <class ATTR_TYPE>
 		void EnableAttribute(){
-			CAT<THIS_TYPE,ATTR_TYPE> * cat = new CAT<THIS_TYPE,ATTR_TYPE>();
+			CAT<ThisType,ATTR_TYPE> * cat = new CAT<ThisType,ATTR_TYPE>();
 			cat->Insert(*this);
 			attributes.push_back(cat);
 			}
 
 	template <class ATTR_TYPE>
 		void DisableAttribute(){
-				std::list < CATBase<THIS_TYPE> * >::iterator ia; 
+				std::list < CATBase<ThisType> * >::iterator ia; 
 				for(ia = attributes.begin(); ia != attributes.end(); ++ia)
-					if((*ia)->Id() == CAT<THIS_TYPE,ATTR_TYPE>::Id())
+					if((*ia)->Id() == CAT<ThisType,ATTR_TYPE>::Id())
 						{
 							(*ia)->Remove(*this);
 							delete (*ia);
@@ -73,22 +78,24 @@ public:
 				}
 
 	template <class ATTR_TYPE>
-		TempData<THIS_TYPE,ATTR_TYPE> NewTempData(){
-			CATEntry<THIS_TYPE,EntryTypeMulti>::Insert(*this);
-			EntryTypeMulti	entry = CATEntry<THIS_TYPE,EntryTypeMulti >::GetEntry(&*begin());
+		TempData<ThisType,ATTR_TYPE> NewTempData(){
+			typedef typename CATEntry<ThisType,EntryCATMulti<ThisType> >::EntryType EntryTypeMulti;
+			CATEntry<ThisType,EntryTypeMulti>::Insert(*this);
+			EntryTypeMulti	entry = CATEntry<ThisType,EntryTypeMulti >::GetEntry(&*begin());
 			entry.Data().push_back(new Wrap< ATTR_TYPE>);
 
 			((Wrap<ATTR_TYPE>*)entry.Data().back())->reserve(capacity());
 			((Wrap<ATTR_TYPE>*)entry.Data().back())->resize(size());
 
-			return TempData<THIS_TYPE,ATTR_TYPE>((Wrap<ATTR_TYPE>*) entry.Data().back());
+			return TempData<ThisType,ATTR_TYPE>((Wrap<ATTR_TYPE>*) entry.Data().back());
 			}
 			
 	template <class ATTR_TYPE>
-		void DeleteTempData(TempData<THIS_TYPE,ATTR_TYPE> & td){
-			CATEntry<THIS_TYPE,EntryTypeMulti >::RemoveIfEmpty(*this);
+		void DeleteTempData(TempData<ThisType,ATTR_TYPE> & td){
+			typedef typename CATEntry<ThisType,EntryCATMulti<ThisType> >::EntryType EntryTypeMulti;
+			CATEntry<ThisType,EntryTypeMulti >::RemoveIfEmpty(*this);
 			EntryTypeMulti
-				entry = CATEntry<THIS_TYPE,EntryCATMulti<THIS_TYPE> >::GetEntry(&*begin());
+				entry = CATEntry<ThisType,EntryCATMulti<ThisType> >::GetEntry(&*begin());
 
 			entry.Data().remove((Wrap<ATTR_TYPE>*)td.Item());
 			delete ((Wrap<ATTR_TYPE>*)td.Item());
@@ -104,7 +111,7 @@ template <class VALUE_TYPE>
 void TVector<VALUE_TYPE>::push_back(const VALUE_TYPE & v){
 	std::vector<VALUE_TYPE>::push_back(v);
 	Update();	
-	std::list < CATBase<THIS_TYPE> * >::iterator ia; 
+	std::list < CATBase<ThisType> * >::iterator ia; 
 	for(ia = attributes.begin(); ia != attributes.end(); ++ia)
 		(*ia)->AddDataElem(&(*(this->begin())),1);
 
@@ -118,7 +125,7 @@ void TVector<VALUE_TYPE>::pop_back(){
 template <class VALUE_TYPE>
 void TVector<VALUE_TYPE>::resize(const unsigned int & size){
 	std::vector<VALUE_TYPE>::resize(size);
-	std::list < CATBase<THIS_TYPE> * >::iterator ia; 
+	std::list < CATBase<ThisType> * >::iterator ia; 
 	for(ia = attributes.begin(); ia != attributes.end(); ++ia)
 		(*ia)->
 	Update();
@@ -133,7 +140,7 @@ void TVector<VALUE_TYPE>::reserve(const unsigned int & size){
 template <class VALUE_TYPE>
 	void TVector<VALUE_TYPE>::
 		Update(){
-		std::list < CATBase<THIS_TYPE> * >::iterator ia; 
+		std::list < CATBase<ThisType> * >::iterator ia; 
 		if(&(*begin()) != old_start)
 			for(ia = attributes.begin(); ia != attributes.end(); ++ia)
 				(*ia)->Resort(old_start,&(*begin()));
@@ -145,7 +152,7 @@ template <class VALUE_TYPE>
 
 template <class VALUE_TYPE>
 TVector<VALUE_TYPE>::~TVector(){
-		std::list < CATBase<THIS_TYPE> * >::iterator ia; 
+		std::list < CATBase<ThisType> * >::iterator ia; 
 		for(ia = attributes.begin(); ia != attributes.end(); ++ia)
 			{	
 				(*ia)->Remove(*this);
