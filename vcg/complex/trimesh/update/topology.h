@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/03/31 14:44:43  cignoni
+Added Vertex-Face Topology
+
 Revision 1.3  2004/03/12 15:22:19  cignoni
 Written some documentation and added to the trimes doxygen module
 
@@ -164,13 +167,13 @@ static void FaceFace(MeshType &m)
 				++q_next;
 				assert((*q_next).z>=0);
 				assert((*q_next).z< 3);
-				(*q).f->F(q->z) = (*q_next).f;				// Collegamento in lista delle facce
-				(*q).f->Z(q->z) = (*q_next).z;
+				(*q).f->FFp(q->z) = (*q_next).f;				// Collegamento in lista delle facce
+				(*q).f->FFi(q->z) = (*q_next).z;
 			}
 			assert((*q).z>=0);
 			assert((*q).z< 3);
-			(*q).f->F((*q).z) = ps->f;
-			(*q).f->Z((*q).z) = ps->z;
+			(*q).f->FFp((*q).z) = ps->f;
+			(*q).f->FFi((*q).z) = ps->z;
 			ps = pe;
 			++ne;										// Aggiorno il numero di edge
 		}
@@ -186,8 +189,8 @@ static void VertexFace(MeshType &m)
 
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 	{
-		(*vi).Fp() = 0;
-		(*vi).Zp() = 0;
+		(*vi).VFb() = 0;
+		(*vi).VFi() = 0;
 	}
 
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
@@ -195,10 +198,10 @@ static void VertexFace(MeshType &m)
 	{
 		for(int j=0;j<3;++j)
 		{
-			(*fi).Fv(j) = (*fi).V(j)->Fp();
-			(*fi).Zv(j) = (*fi).V(j)->Zp();
-			(*fi).V(j)->Fp() = &(*fi);
-			(*fi).V(j)->Zp() = j;
+			(*fi).FVp(j) = (*fi).V(j)->VFb();
+			(*fi).FVi(j) = (*fi).V(j)->VFi();
+			(*fi).V(j)->VFb() = &(*fi);
+			(*fi).V(j)->VFi() = j;
 		}
 	}
 }
