@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2004/05/13 11:01:06  turini
+Changed ComputeMormalizedNormal() using Triangle3
+
 Revision 1.13  2004/05/12 18:49:05  ganovelli
 dist and coputeRT removed (see distance.h and updateEdges)
 
@@ -286,6 +289,13 @@ void ComputeNormalizedNormal()
 const CoordType Normal() const
 {
 	return vcg::Normal(*this);
+}
+
+/// Return the value of the face normal as it correspond to the current geometry.
+/// it is always computed and never stored. 
+const CoordType NormalizedNormal() const
+{
+	return vcg::NormalizedNormal(*this);
 }
 
 #ifdef __VCGLIB_FACE_WN
