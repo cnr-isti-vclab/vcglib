@@ -178,6 +178,82 @@ if(last!=0) siz=distance(m.vert.begin(),last);
 	return last;
 }
 
+
+template <class MESH_TYPE >
+struct InsertedVT{
+	InsertedVT(	MESH_TYPE::VertexType *_v,
+				MESH_TYPE::TetraType *_t,	
+				int _z):v(_v),t(_t),z(_z){}
+
+	MESH_TYPE::VertexType *v;
+	MESH_TYPE::TetraType *t;
+	int z;	
+
+	const bool operator <(const InsertedVT & o){
+		return (v<o.v);
+		}
+	const bool operator ==(const InsertedVT & o){
+		return (v==o.v);
+		}
+	const bool operator !=(const InsertedVT & o){
+		return (v!=o.v);
+		}
+	};
+
+/** Crate a copy of the mesh with tetrahedron that are into the templated container
+@param ST_CONT (Template Parameter) Specifies the type of the container of tetrahedron.
+@param subSet Container of tetrahedron.
+@param m destination mesh.
+*/
+template <class STL_CONT >
+void SubSetT(STL_CONT & subSet, TetraMeshType & m)
+{	
+	vector< InsertedVT< TetraMeshType > > newVertices;
+	STL_CONT :: iterator pfi;
+	newVertices.clear();
+
+	for(pfi = subSet.begin(); pfi != subSet.end(); ++pfi) 
+		m.tetra.push_back((*pfi));
+
+	TetraIterator fi;
+	for(fi = m.tetra.begin(); fi != m.tetra.end(); ++fi)
+	{
+		newVertices.push_back(InsertedVT< TetraMeshType >( (*fi).V(0),&(*fi),0));
+		newVertices.push_back(InsertedVT< TetraMeshType >( (*fi).V(1),&(*fi),1));
+		newVertices.push_back(InsertedVT< TetraMeshType >( (*fi).V(2),&(*fi),2));
+		newVertices.push_back(InsertedVT< TetraMeshType >( (*fi).V(3),&(*fi),3));
+	}
+
+	sort(newVertices.begin(),newVertices.end());
+
+	vector< InsertedVT< TetraMeshType > >::iterator curr,next;
+	int pos = 0;
+	curr = next = newVertices.begin();
+	while( next != newVertices.end())
+	{
+		if((*curr)!=(*next))
+			pos++;
+		(*next).t->V( (*next).z) = (VertexType *)pos;
+		curr = next;
+		next++;
+	}
+
+	vector<InsertedVT< TetraMeshType > >::iterator newE = unique(newVertices.begin(),newVertices.end());
+
+	for(curr = newVertices.begin();curr!= newE;++curr)
+		m.vert.push_back(*((*curr).v));
+
+	for(fi = m.tetra.begin(); fi != m.tetra.end(); ++fi)
+	{
+		(*fi).V(0) = &(m.vert[(int)(*fi).V(0)]);
+		(*fi).V(1) = &(m.vert[(int)(*fi).V(1)]);
+		(*fi).V(2) = &(m.vert[(int)(*fi).V(2)]);
+		(*fi).V(3) = &(m.vert[(int)(*fi).V(3)]);
+	}
+	m.vn = m.vert.size();
+	m.tn = m.tetra.size();
+}
+
 }; // end class
 
 
