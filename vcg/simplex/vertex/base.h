@@ -1,78 +1,42 @@
-/*#***************************************************************************
- * VertexBase.h                                                         o o    *
- *                                                                  o     o  *
- * Visual Computing Group                                           _  O  _  *
- * IEI Institute, CNUCE Institute, CNR Pisa                          \/)\/   *
- *                                                                  /\/|     *
- * Copyright(C) 1999 by Paolo Cignoni, Paolo Pingi, Claudio Rocchini   |     *
- * All rights reserved.                                                \     *
- *                                                                           *
- * Permission  to use, copy, modify, distribute  and sell this  software and *
- * its documentation for any purpose is hereby granted without fee, provided *
- * that  the above copyright notice appear  in all copies and that both that *
- * copyright   notice  and  this  permission  notice  appear  in  supporting *
- * documentation. the author makes  no representations about the suitability *
- * of this software for any purpose. It is provided  "as is" without express *
- * or implied warranty.                                                      *
- *                                                                           *
- * NOTE THAT THIS FILE SHOULD NOT DIRECTL BE INCLUDED                        *
- * It is automatically included by Mesh.h                                    *
- *                                                                           *
- ***************************************************************************#*/
-/*#**************************************************************************
+/****************************************************************************
+* VCGLib                                                            o o     *
+* Visual and Computer Graphics Library                            o     o   *
+*                                                                _   O  _   *
+* Copyright(C) 2004                                                \/)\/    *
+* Visual Computing Lab                                            /\/|      *
+* ISTI - Italian National Research Council                           |      *
+*                                                                    \      *
+* All rights reserved.                                                      *
+*                                                                           *
+* This program is free software; you can redistribute it and/or modify      *   
+* it under the terms of the GNU General Public License as published by      *
+* the Free Software Foundation; either version 2 of the License, or         *
+* (at your option) any later version.                                       *
+*                                                                           *
+* This program is distributed in the hope that it will be useful,           *
+* but WITHOUT ANY WARRANTY; without even the implied warranty of            *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
+* GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
+* for more details.                                                         *
+*                                                                           *
+****************************************************************************/
+/****************************************************************************
   History
 
- 2000	Jan 31 First Working release
- 2000 Feb 04 USER0 added to the flag's enum
-					11 Aggiunta funzione InitIMark()
-			Jun 13 Aggiunta adiacenze vertice faccia				 
-			Jun 26 Aggiunto cP() per forzare l'accesso costante alle coord.
-					27 Vertex e' stato templatato anche sul tipo della faccia per
-						 far resitutire a Fp il tipo giusto. Tale tipo ha un valore di 
-						 default = a DUMMYFACETYPE, per permettere l'uso della classe
-						 secondo lo stile precedente. 
-					28 Aggiunti Flag NOTBORDER e NOTMANIFOLD 
-      Sep 27 Aggiunto cN() per forzare l'accesso costante alla Normale.
-			Oct 31 Tolti i flag del bordo per vertice e le funzioni collegate 
-						 che erano inutili e scorretti (pc)
-      Nov 01 Aggiunte assert(0) e commenti se si tenta di usare vf topology 
-						 senza averla
-      Nov 30 Cambiato il tipo flags da int in unsigned int (??);
-			Dec 18 Aggiunto NewBitFlag() e DeleteBitFlag()
- 2001 Jan 03 Aggiunto Supervisor_Normal e assert(0) in normal
-      Jan 27 Aggiunta flags BORDER (C.R.)
-		  Feb 16 Aggiunto colore
-	           Aggiunte coordinate texture
-				     Corretti public e protected per le facce;
-			Mar 08 Aggiunto assert(0) se si cerca di accedere a C() in 
-						 modo non costante e il vertice non ha il colore (pc)
-          20 Corretto VF per i casi sbagliati (	return *(VFTYPE **)flags;  invece di 	return (void *)this; 	) 
-  	  May 16 Aggiunta gestione qualita' (CR)
-			       Aggiunta gestione OBJ per qualita' (CR)		
-		  Jun 12 Aggiunte assert(0) ai lettori di dati inesistenti
-				  13 Cambiato scalare coordinata texture default
-					19 Commentate funzioni normal
-						 Modificate funzione N, cN , in modo da rispettare lo standard
- 			Jul 27 Aggiunto supervisor_flags const (pc)
-			Sep 28 Aggiunto Supervisor_N() (pc)
-			Oct 16 Tolte un paio di parentesi a DeleteBitFlag (facevano un warning nel compilatore intel) (pc)
- 2002 Jan Modificato in operator [] v[i] con V(i) (PP)
-			Dic Tolto IsMF() (gano)
- 2003 Mag Aggiunto dati per TensorMass(particle)
-			July 10: Add 2 properties to the particle (in case of an explicit FEM).
-                        Damping and fixed status.   (cesar)
-			Oct 7, 2003  Damping and fixed status of the particle also for TensorMass  
-			Oct 21  Aggiunte IsUserBit(USERBIT),ClearUserBit(..) e SetUserBit(..) (gano)
+$Log: not supported by cvs2svn $
+Revision 1.1  2004/02/10 01:11:28  cignoni
+Edited Comments and GPL license
+
 ****************************************************************************/
 
-/*
-People should subclass his vertex class from these one...
-*/
 
 #ifndef VERTEX_TYPE 
-#pragma message("\nYou should never directly include this file\n")
+#pragma message("\nYou should never directly include this file\_n")
 #else
 
+#include<vcg/space/point3.h>
+#include<vcg/space/color4.h>
+#include<vcg/space/tcoord2.h>
 
 class DUMMYFACETYPE;
 
@@ -84,327 +48,232 @@ namespace vcg {
 	@param FLTYPE (Template Parameter) Specifies the scalar field of the vertex coordinate type.
 	@param VFTYPE (Template Parameter) Specifies the type for the face, needed only for VF adjacency.
  */
-template <class FLTYPE, class VFTYPE = DUMMYFACETYPE, class TCTYPE = TCoord<float,1> > class VERTEX_TYPE
+template <class FLTYPE, class VFTYPE = DUMMYFACETYPE, class TCTYPE = TCoord2<float,1> > class VERTEX_TYPE
 {
 public:
 
-	/// The scalar type
-	typedef FLTYPE         scalar_type;
-	/// The coordinate type
-	typedef Point3<FLTYPE> coord_type;
-	/// The type base of the vertex
-	typedef VERTEX_TYPE    vertex_base;
-	typedef VFTYPE    face_type;
+	/// The scalar type used to represent coords (i.e. float, double, ...)
+	typedef FLTYPE         ScalarType;
+	/// The coordinate type used to represent the point (i.e. Point3f, Point3d, ...)
+	typedef Point3<ScalarType> CoordType;
+	/// The type base of the vertex, useful for recovering the original typename after user subclassing
+	typedef VERTEX_TYPE    BaseVertexType;
+	/// The type base of the vertex, useful for recovering the original typename after user subclassing
+  typedef VFTYPE         face_type;
+
+
+/***********************************************/
+/** @name Vertex Coords
+    blah
+    blah
+**/
+  //@{
 protected:
 	/// Spatial coordinates of the vertex
-	coord_type p;
-	/// This are the flags of vertex, the default value is 0
-	int flags;		
+	CoordType _p;
 
-		// Definizione texture
+public:
+	/// Return the spatial coordinate of the vertex
+	inline CoordType & P()
+	{
+	  assert( (_flags & DELETED) == 0 );
+		assert( (_flags & NOTREAD) == 0 );
+		assert( (_flags & NOTWRITE) == 0 );
+		return _p;
+	}
+
+	/// Return the constant spatial coordinate of the vertex
+	inline const CoordType & P() const
+	{
+		assert( (_flags & DELETED) == 0 );
+		assert( (_flags & NOTREAD) == 0 );
+		return _p;
+	}
+
+	/// Return the constant spatial coordinate of the vertex
+	inline const CoordType & cP() const
+	{
+		assert( (_flags & DELETED) == 0 );
+		assert( (_flags & NOTREAD) == 0 );
+		return _p;
+	}
+
+	/// Return the spatial coordinate of the vertex, senza effettuare controlli sul flag
+	inline CoordType & UberP()
+	{
+		return _p;
+	}
+
+	/// Return the constant spatial coordinate of the vertex, senza effettuare controlli sul flag
+	inline const CoordType & UberP() const
+	{
+		return _p;
+	}
+
+  //@}
+
+/***********************************************/
+/** @name Vertex Flags
+  blah
+  blah
+**/
+//@{
+
+protected:
+	/// This are the _flags of vertex, the default value is 0
+	int _flags;		
+
+public:
+	/// Return the vector of _flags
+	inline int & Flags ()
+	{
+			assert( (_flags & DELETED) == 0 );
+			assert( (_flags & NOTREAD) == 0 );
+			return _flags;
+	}
+
+	/// Return the vector of _flags, senza effettuare controlli sui bit
+	inline int & UberFlags ()
+	{
+			return _flags;
+	}
+	inline const int UberFlags() const
+	{
+		return _flags;
+	}
+ //@}
+  
+  
+/***********************************************/
+/** @name Vertex Texture Coords
+   blah
+   blah
+   **/
+//@{
+
 #ifdef __VCGLIB_VERTEX_T
-	TCTYPE t;
+protected:
+	TCTYPE _t;
 #endif
 
 public:
 	TCTYPE & T()
 	{
 #ifdef __VCGLIB_VERTEX_T
-		return t;
+		return _t;
 #else
 		assert(0);
-		return *(TCTYPE*)(&flags);
+		return *(TCTYPE*)(&_flags);
 #endif
 	}
 
 	const TCTYPE & T() const
 	{
 #ifdef __VCGLIB_VERTEX_T
-		return t;
+		return _t;
 #else
 		assert(0);
-		return *(TCTYPE*)(&flags);
+		return *(TCTYPE*)(&_flags);
 #endif
 	}
 
-		// Definizione del colore
+//@}
+
+/***********************************************/
+/** @name Per vertex Color
+   blah
+   blah
+   **/
+//@{
 
 #ifdef __VCGLIB_VERTEX_C
 protected:
-	ColorUB c;
+	Color4b _c;
 #endif
 
 public:
-	ColorUB & C()
+	Color4b & C()
 	{
 #ifdef __VCGLIB_VERTEX_C
-		return c;
+		return _c;
 #else
 		assert(0);
-		return *(ColorUB*)(&flags);
+		return *(Color4b*)(&_flags);
 #endif
 	}
 
-	const ColorUB & C() const
+	const Color4b & C() const
 	{
 #ifdef __VCGLIB_VERTEX_C
-		return c;
+		return _c;
 #else
-		return ColorUB(ColorUB::White);
+		return Color4b(Color4b::White);
 #endif
 	}
+ //@}
 
-		// Definizione Qualita'
+/***********************************************/
+/** @name Vertex Quality
+   blah
+   blah
+  **/
+  //@{
+
 #ifdef __VCGLIB_VERTEX_Q
 protected:
-	float quality;
+	float _q;
 #endif
 
 public:
 	float & Q()
 	{
 #ifdef __VCGLIB_VERTEX_Q
-		return quality;
+		return _q;
 #else
 		assert(0);
-		return *(float*)(&flags);
+		return *(float*)(&_flags);
 #endif
 	}
 
 	const float & Q() const
 	{
 #ifdef __VCGLIB_VERTEX_Q
-		return quality;
+		return _q;
 #else
 		return 1;
 #endif
 	}
+ //@}
 
-// Field to contains the index of the object in the CONTAINER
-protected:
-/*#*********************************
-* Puntatore ad una faccia di v star*
-***********************************/
+/***********************************************/
+/** @name Vertex-Face Adjacency
+   blah
+   blah
+ **/
+ //@{
+
 #if ((defined __VCGLIB_VERTEX_A) || (defined __VCGLIB_VERTEX_AS)) 
-	/// Puntatore ad una faccia appartenente alla stella del vertice, implementa l'adiacenza vertice-faccia
-	VFTYPE *fp;
-	int zp;
+	// Puntatore ad una faccia appartenente alla stella del vertice, implementa l'adiacenza vertice-faccia
+protected:
+	VFTYPE *_fp;
+	int _zp;
 #endif
-
-/*#**************
-*  Mark Members *	
-*****************/
-#ifdef __VCGLIB_VERTEX_M
-	/// The incremental vertex mark
-	int imark;
-#endif // Mark
-
-/*#**************
-*  Normal Members *
-*****************/
-#ifdef __VCGLIB_VERTEX_N
-	/// The normal to the vertex
-	coord_type n;
-#endif // Normal
 
 public:
-	/// Return the spatial coordinate of the vertex
-	inline coord_type & P()
-	{
-	  assert( (flags & DELETED) == 0 );
-		assert( (flags & NOTREAD) == 0 );
-		assert( (flags & NOTWRITE) == 0 );
-		return p;
-	}
-
-	/// Return the constant spatial coordinate of the vertex
-	inline const coord_type & P() const
-	{
-		assert( (flags & DELETED) == 0 );
-		assert( (flags & NOTREAD) == 0 );
-		return p;
-	}
-
-	/// Return the constant spatial coordinate of the vertex
-	inline const coord_type & cP() const
-	{
-		assert( (flags & DELETED) == 0 );
-		assert( (flags & NOTREAD) == 0 );
-		return p;
-	}
-
-	/// Return the spatial coordinate of the vertex, senza effettuare controlli sul flag
-	inline coord_type & Supervisor_P()
-	{
-		return p;
-	}
-
-	/// Return the constant spatial coordinate of the vertex, senza effettuare controlli sul flag
-	inline const coord_type & Supervisor_P() const
-	{
-		return p;
-	}
-
-
-
-	/// Return the Normal of the vertex
-	inline coord_type & Normal()
-	{
-	  assert( (flags & DELETED) == 0 );
-		assert( (flags & NOTREAD) == 0 );
-		assert( (flags & NOTWRITE) == 0 );
-#ifdef __VCGLIB_VERTEX_N
-		return n;
-#else
-		assert(0);
-		return *(coord_type *)this;
-#endif
-	}
-
-
-#if 0 // Inizio commentatura vecchio stile normali
-
-	/// Return the constant normal of the vertex
-	inline const coord_type & Normal() const
-	{
-		assert( (flags & DELETED) == 0 );
-		assert( (flags & NOTREAD) == 0 );
-#ifdef __VCGLIB_VERTEX_N
-		return n;
-#else
-		assert(0);
-		return *(coord_type *)this;
-#endif
-	}
-
-#endif // Fine commentatura vecchio stile normali
-
-/// Return the Normal of the vertex
-	inline coord_type & Supervisor_N()
-	{
-#ifdef __VCGLIB_VERTEX_N
-		return n;
-#else
-		assert(0);
-		return *(coord_type *)this;
-#endif
-	}
-
-	/// Return the constant normal of the vertex
-	inline const coord_type & Supervisor_N() const
-	{
-#ifdef __VCGLIB_VERTEX_N
-		return n;
-#else
-		assert(0);
-		return *(coord_type *)this;
-#endif
-	}
-
-
-
-	/// Return the vector of flags
-	inline int & Flags ()
-	{
-			assert( (flags & DELETED) == 0 );
-			assert( (flags & NOTREAD) == 0 );
-			return flags;
-	}
-
-	/// Return the vector of flags, senza effettuare controlli sui bit
-	inline int & Supervisor_Flags ()
-	{
-			return flags;
-	}
-	inline const int Supervisor_Flags() const
-	{
-		return flags;
-	}
-
-
-
-	/// Return the vertex normal
-	inline coord_type & N()
-	{
-		assert( (flags & DELETED) == 0 );
-		assert( (flags & NOTREAD) == 0 );
-		assert( (flags & NOTWRITE) == 0 );
-#ifdef __VCGLIB_VERTEX_N
-		return n;
-#else
-		assert(0);
-		return *(coord_type *)this;
-#endif
-	}
-
-	/// Return the constant vertex normal
-	inline const coord_type & N() const
-	{
-		assert( (flags & DELETED) == 0 );
-		assert( (flags & NOTREAD) == 0 );
-#ifdef __VCGLIB_VERTEX_N
-		return n;
-#else
-		assert(0);
-		return *(coord_type *)this;
-#endif
-	}
-
-	inline const coord_type  cN() const
-	{
-		assert( (flags & DELETED) == 0 );
-		assert( (flags & NOTREAD) == 0 );
-#ifdef __VCGLIB_VERTEX_N
-		return n;
-#else
-		return coord_type(0,0,0);
-#endif
-	}
-
-
-#ifdef __VCGLIB_VERTEX_M
-	/// This function return the vertex incremental mark
-	inline int & IMark()
-	{
-		assert( (flags & DELETED) == 0 );
-		assert( (flags & NOTREAD) == 0 );
-		assert( (flags & NOTWRITE) == 0 );
-		return imark;
-	}
-
-	/// This function return the constant vertex incremental mark
-	inline const int & IMark() const
-	{
-		assert( (flags & DELETED) == 0 );
-		assert( (flags & NOTREAD) == 0 );
-		return imark;
-	}
-#endif
-
-	/// Initialize the imark system of the vertex
-	inline void InitIMark()
-	{
-#ifdef __VCGLIB_VERTEX_M
-		imark = 0;
-#endif
-	}
-
-
-
 inline VFTYPE * & Fp()
 	{
 #if ((defined __VCGLIB_VERTEX_A) || (defined __VCGLIB_VERTEX_AS))
-		  return fp;
+		  return _fp;
 #else
     assert(0);// you are probably trying to use VF topology in a vertex without it
-		return *((VFTYPE **)(flags));  
+		return *((VFTYPE **)(_flags));  
 #endif
 	}
 
 inline const VFTYPE * & Fp() const
 	{
 #if ((defined __VCGLIB_VERTEX_A) || (defined __VCGLIB_VERTEX_AS))
-		  return fp;
+		  return _fp;
 #else
 		assert(0);// you are probably trying to use VF topology in a vertex without it
 		return (VFTYPE *)this;
@@ -415,61 +284,143 @@ inline int & Zp()
 	{
 #if ((defined __VCGLIB_VERTEX_A) || (defined __VCGLIB_VERTEX_AS))
 
-		  return zp;
+		  return _zp;
 #else
     assert(0);// you are probably trying to use VF topology in a vertex without it
-		return flags;
+		return _flags;
 #endif
 	}
 
 inline const int & Zp() const
 	{
 #if ((defined __VCGLIB_VERTEX_A) || (defined __VCGLIB_VERTEX_AS))
-		  return zp;
+		  return _zp;
 #else
 		assert(0);// you are probably trying to use VF topology in a vertex without it
 		return (void *)this;
 #endif
 	}
 
-#ifdef __PARTICLE
-        // variable declaration
-        /** external force acting on the particle */
-		coord_type extForce;
-		/** internal force acting on the particle */
-		coord_type intForce;
-        /** mass of the particle */
-         double mas;
-        /** velocity of the particle */
-		coord_type vel;
-		/** accelleration of the particle */
-		coord_type acc;
-        /** current position of the particle */
-		coord_type pos;
 
-	    /** damping of the particle */
-	    coord_type _damping;
 
-       /** Fixed particle.  */
-        bool _pointFixed;
+ //@}
 
-		void computeAccelleration()
-		{   
-			 // acc=( (  extForce  + intForce  )/mas);
-			  acc=( (  extForce  + intForce + _damping )/mas);
-		};
+/***********************************************/
+/** @name Vertex Incremental Mark
+   blah
+   blah
+ **/
+ //@{
 
-        void resImpFor(){extForce = coord_type(0.0,0.0,0.0);}
+#ifdef __VCGLIB_VERTEX_M
+protected:
+  /// The incremental vertex mark
+	int _imark;
+#endif // Mark
+public:
+#ifdef __VCGLIB_VERTEX_M
+	/// This function return the vertex incremental mark
+	inline int & IMark()
+	{
+		assert( (_flags & DELETED) == 0 );
+		assert( (_flags & NOTREAD) == 0 );
+		assert( (_flags & NOTWRITE) == 0 );
+		return _imark;
+	}
 
-		/** ComputeExternal forces */ 
-		void computeExternalForces( coord_type value)
-			{
-				extForce = value;
-			}
-
-		bool fixedParticle( void ) { return _pointFixed; }
-		void fixParticle( bool value ) { _pointFixed = value;}
+	/// This function return the constant vertex incremental mark
+	inline const int & IMark() const
+	{
+		assert( (_flags & DELETED) == 0 );
+		assert( (_flags & NOTREAD) == 0 );
+		return _imark;
+	}
 #endif
+
+	/// Initialize the _imark system of the vertex
+	inline void InitIMark()
+	{
+#ifdef __VCGLIB_VERTEX_M
+		_imark = 0;
+#endif
+	}
+
+ //@}
+ 
+ /***********************************************/
+ /** @name Vertex Normal 
+   blah
+ blah
+ **/
+ //@{
+
+#ifdef __VCGLIB_VERTEX_N
+protected:
+    CoordType _n;
+#endif 
+
+public:
+  /// Return the vertex normal
+	inline CoordType & N()
+	{
+		assert( (_flags & DELETED) == 0 );
+		assert( (_flags & NOTREAD) == 0 );
+		assert( (_flags & NOTWRITE) == 0 );
+#ifdef __VCGLIB_VERTEX_N
+		return _n;
+#else
+		assert(0);
+		return *(CoordType *)this;
+#endif
+	}
+
+	/// Return the constant vertex normal
+	inline const CoordType & N() const
+	{
+		assert( (_flags & DELETED) == 0 );
+		assert( (_flags & NOTREAD) == 0 );
+#ifdef __VCGLIB_VERTEX_N
+		return _n;
+#else
+		assert(0);
+		return *(CoordType *)this;
+#endif
+	}
+
+	inline const CoordType  cN() const
+	{
+		assert( (_flags & DELETED) == 0 );
+		assert( (_flags & NOTREAD) == 0 );
+#ifdef __VCGLIB_VERTEX_N
+		return _n;
+#else
+		return CoordType(0,0,0);
+#endif
+	}
+   /// Return the Normal of the vertex
+	inline CoordType & UberN()
+	{
+#ifdef __VCGLIB_VERTEX_N
+		return _n;
+#else
+		assert(0);
+		return *(CoordType *)this;
+#endif
+	}
+
+	/// Return the constant normal of the vertex
+	inline const CoordType & UberN() const
+	{
+#ifdef __VCGLIB_VERTEX_N
+		return _n;
+#else
+		assert(0);
+		return *(CoordType *)this;
+#endif
+	}
+ //@}
+
+
 
 	enum {
 		OBJ_TYPE_N =  0x0001,
@@ -554,7 +505,7 @@ static inline bool DeleteBitFlag(int bitval)
 	/** Return the i-th spatial value of the vertex coordinate.
 	    @param i Index of the spatial vertex coordinate (x=0 y=1 z=2).
 	 */
-	inline FLTYPE & operator [] ( const int i ){
+	inline ScalarType & operator [] ( const int i ){
 			assert(i>=0 && i<3);
 			return P().V(i);
 	}
@@ -567,31 +518,31 @@ static inline bool DeleteBitFlag(int bitval)
 	}
 	/// Operator to compare two vertices using lexicographic order
 	inline bool operator < ( const VERTEX_TYPE & ve) const {
-		return p < ve.p;
+		return _p < ve._p;
 		}
 	inline VERTEX_TYPE() {
 #ifdef _DEBUG 
-		flags=0;
+		_flags=0;
 #endif
 	};
 
 	/// This function checks if the vertex is deleted
-	bool IsD() const {return (flags & DELETED) != 0;}
+	bool IsD() const {return (_flags & DELETED) != 0;}
 	/// This function checks if the vertex is readable
-	bool IsR() const {return (flags & NOTREAD) == 0;}
+	bool IsR() const {return (_flags & NOTREAD) == 0;}
 	/// This function checks if the vertex is modifiable
-	bool IsW() const {return (flags & NOTWRITE)== 0;}
+	bool IsW() const {return (_flags & NOTWRITE)== 0;}
 	/// This funcion checks whether the vertex is both readable and modifiable
-	bool IsRW() const {return (flags & (NOTREAD | NOTWRITE)) == 0;}
+	bool IsRW() const {return (_flags & (NOTREAD | NOTWRITE)) == 0;}
 	/// This function checks if the vertex is Modified
-	bool IsM() const {return (flags & MODIFIED)!= 0;}
+	bool IsM() const {return (_flags & MODIFIED)!= 0;}
 	/// This function checks if the vertex is marked as visited
-	bool IsV() const {return (flags & VISITED) != 0;}
+	bool IsV() const {return (_flags & VISITED) != 0;}
 	/// This function checks if the vertex is selected
-	bool IsS() const {return (flags & SELECTED) != 0;}
+	bool IsS() const {return (_flags & SELECTED) != 0;}
 	/// This function checks if the vertex is readable
-	bool IsB() const {return (flags & BORDER) != 0;}
-//	bool IsMF() const {return (flags & NOTMANIFOLD) == 0;}
+	bool IsB() const {return (_flags & BORDER) != 0;}
+//	bool IsMF() const {return (_flags & NOTMANIFOLD) == 0;}
 
 	/// This function checks if the vertex is deleted from the mesh
 	bool IsDeleted() const {return IsD();}
@@ -600,49 +551,44 @@ static inline bool DeleteBitFlag(int bitval)
 	/** Set the flag value
 		@param flagp Valore da inserire nel flag
 	*/
-	void SetFlags(int flagp) {flags=flagp;}
+	void SetFlags(int flagp) {_flags=flagp;}
 
 	/// This function deletes the vertex from the mesh
-	void SetD() {flags |=DELETED;}
+	void SetD() {_flags |=DELETED;}
 	/// This funcion execute the inverse operation of SetD()
-	void ClearD() {flags &=(~DELETED);}
+	void ClearD() {_flags &=(~DELETED);}
 	/// This function marks the vertex as modified. It's necessary to mark all modified vertex to have a consistent mesh
-	void SetM() {flags |=MODIFIED;}
+	void SetM() {_flags |=MODIFIED;}
 	/// This function marks the vertex as not modified
-	void ClearM() {flags &=(~MODIFIED);}
+	void ClearM() {_flags &=(~MODIFIED);}
 	/// This function marks the vertex as readable
-	void SetR() {flags &=(~NOTREAD);}
+	void SetR() {_flags &=(~NOTREAD);}
 	/// This function marks the vertex as not readable
-	void ClearR() {flags |=NOTREAD;}
+	void ClearR() {_flags |=NOTREAD;}
 	/// This function marks the vertex as writable
-	void ClearW() {flags |=NOTWRITE;}
+	void ClearW() {_flags |=NOTWRITE;}
 	/// This function marks the vertex as not writable
-	void SetW() {flags &=(~NOTWRITE);}
+	void SetW() {_flags &=(~NOTWRITE);}
 	/// This funcion marks the vertex as visited
-	void SetV() {flags |=VISITED;}
+	void SetV() {_flags |=VISITED;}
 	/// This function marks the vertex as not visited. This flag, initially, is setted to random value, therefore, to the beginnig of every function it is necessary to clean up the flag
-	void ClearV() {flags &=(~VISITED);}
+	void ClearV() {_flags &=(~VISITED);}
 	/// This function select the vertex
-	void SetS()		{flags |=SELECTED;}
+	void SetS()		{_flags |=SELECTED;}
 	/// This funcion execute the inverse operation of SetS()
-	void ClearS()	{flags &= ~SELECTED;}
-	void SetB()		{flags |=BORDER;}
-	void ClearB()	{flags &=~BORDER;}
+	void ClearS()	{_flags &= ~SELECTED;}
+	void SetB()		{_flags |=BORDER;}
+	void ClearB()	{_flags &=~BORDER;}
 	
 	/// This function checks if the given user bit is true
-	bool IsUserBit(int userBit){return (flags & userBit) != 0;}
+	bool IsUserBit(int userBit){return (_flags & userBit) != 0;}
 	/// This function set  the given user bit 
-	void SetUserBit(int userBit){flags |=userBit;}
+	void SetUserBit(int userBit){_flags |=userBit;}
 	/// This function clear the given user bit 
-	void ClearUserBit(int userBit){flags &= (~userBit);}
+	void ClearUserBit(int userBit){_flags &= (~userBit);}
 };
 
 
 }	 // end namespace
 #endif
 
-/*
- * mode: c++
- * tab-width: 3
- * c-basic-offset: 3
- */
