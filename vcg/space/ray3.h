@@ -24,8 +24,7 @@
   History
 
 $Log: not supported by cvs2svn $
-Revision 1.1  2004/03/08 19:46:47  tarini
-First Version (tarini)
+
 
 
 
@@ -65,26 +64,26 @@ public:
 
 private:
 
-	/// Origin
+	/// Origingin
 	PointType _ori;
 
-	/// Direction (not necessarily normalized)
+	/// Directionection (not necessarily normalized)
 	PointType _dir;
 
 public:
 
 		/// Members to access the origin, direction
-  inline const PointType &Ori() const { return _ori; } 
-  inline const PointType &Dir() const { return _dir; } 
-  inline PointType &Ori() { return _ori; } 
-  inline PointType &Dir() { 
-		assert(NORM); // Direction can't be set for NORMALIZED Rays! Use SetDir instead!
-		return _dir; 
+  inline const PointType &Origin() const { return _ori; } 
+  inline const PointType &Direction() const { return _dir; } 
+  inline PointType &Origin() { return _ori; } 
+  inline PointType &Direction() { 
+		assert(!IsNormalized());  // Directionection can't be set for NORMALIZED Rays! Use SetDirection instead!
+		return _dir;
 	} 
 		/// The empty constructor
 	Ray3() {};
 		/// The (origin, direction) constructor
-	RayType(const PointType &ori, const PointType &dir) {SetOri(ori); SetDir(dir);};
+	RayType(const PointType &ori, const PointType &dir) {SetOrigin(ori); SetDirection(dir);};
 		/// Operator to compare two rays
 	inline bool operator == ( RayType const & p ) const
 	{	return _ori==p._ori && _dir==p._dir; }
@@ -96,16 +95,16 @@ public:
 	{ if (NORM) return ScalarType((p-_ori)*_dir); 
 		else      return ScalarType((p-_ori)*_dir/_dir.SquaredNorm()); 
 	}
-	inline bool IsNorm() const {return NORM;};
+	inline bool IsNormalized() const {return NORM;};
 		///set the origin
-	inline void SetOri( const PointType & ori )
+	inline void SetOrigin( const PointType & ori )
 	{	_ori=ori; }
 		///set the direction
-	inline void SetDir( const PointType & dir)
+	inline void SetDirection( const PointType & dir)
 	{	_dir=dir; if (NORM) _dir.Normalize();  }
 		///set both the origina and direction.
 	inline void Set( const PointType & ori, const PointType & dir )
-	{	SetOri(ori); SetDir(dir); }
+	{	SetOrigin(ori); SetDirection(dir); }
 	  /// calculates the point of parameter t on the ray.
 	inline PointType P( const ScalarType t ) const
 	{ return _ori + _dir * t; }
@@ -118,7 +117,7 @@ public:
 	  /// importer for different ray types
 	template <class Q, bool K>
 	inline void Import( const Ray3<Q,K> & b )
-	{ _ori.Import( b.Ori() );	_dir.Import( b.Dir() ); 
+	{ _ori.Import( b.Origin() );	_dir.Import( b.Direction() ); 
 	  if ((NORM) && (!K)) _dir.Normalize();
 	}
 	PointType ClosestPoint(const PointType & p) const{
@@ -145,7 +144,7 @@ template <class ScalarType, bool NORM>
 Point3<ScalarType> ClosestPoint( Ray3<ScalarType,NORM> r, const Point3<ScalarType> & p) 
 {
 	ScalarType t = r.Projection(p); 
-	if (t<0) t=0;
+	if (t<0) return r.Origin();
 	return r.P(t); 
 }
 
