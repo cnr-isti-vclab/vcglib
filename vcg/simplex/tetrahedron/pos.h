@@ -144,7 +144,7 @@ public:
 	} 
 
   	/// Return the tetrahedron stored in the half edge
-	inline const TetraType* & T() const
+	inline  TetraType* const & T() const
 	{
 		return _t;
 	}
