@@ -24,11 +24,17 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2004/05/04 02:34:03  ganovelli
+wrong use of operator [] corrected
+
 Revision 1.13  2004/04/07 10:45:54  cignoni
 Added: [i][j] access, V() for the raw float values, constructor from T[16]
 
 Revision 1.12  2004/03/25 14:57:49  ponchio
 Microerror. ($LOG$ -> $Log: not supported by cvs2svn $
+Microerror. ($LOG$ -> Revision 1.14  2004/05/04 02:34:03  ganovelli
+Microerror. ($LOG$ -> wrong use of operator [] corrected
+Microerror. ($LOG$ ->
 Microerror. ($LOG$ -> Revision 1.13  2004/04/07 10:45:54  cignoni
 Microerror. ($LOG$ -> Added: [i][j] access, V() for the raw float values, constructor from T[16]
 Microerror. ($LOG$ ->
@@ -39,6 +45,7 @@ Microerror. ($LOG$ ->
 #ifndef __VCGLIB_MATRIX44
 #define __VCGLIB_MATRIX44
 
+#include <memory.h>
 #include <vcg/math/base.h>
 #include <vcg/space/point3.h>
 #include <vcg/space/point4.h>
@@ -55,7 +62,10 @@ Opengl stores matrix in  column-major order. That is, the matrix is stored as:
 	a2  a6  a10 a14
 	a3  a7  a11 a15
 
-e.g. glTranslate generate a matrix that is
+  Usually in opengl (see opengl specs) vectors are 'column' vectors 
+  so usually matrix are PRE-multiplied for a vector.
+  So the command glTranslate generate a matrix that 
+  is ready to be premultipled for a vector:
 
 	1 0 0 tx
 	0 1 0 ty 
@@ -69,12 +79,11 @@ Matrix44 stores matrix in row-major order i.e.
 	a8  a9  a10 a11
 	a12 a13 a14 a15
 
-and the Translate Function generate:
-
-	1  0  0  0
-	0  1  0  0
-	0  0  1  0
-	tx ty tz 1
+So for the use of that matrix in opengl with their supposed meaning you have to transpose them before feeding to glMultMatrix.
+This mechanism is hidden by the templated function defined in wrap/gl/math.h; 
+If your machine has the ARB_transpose_matrix extension it will use the appropriate;
+The various gl-like command SetRotate, SetTranslate assume that you are making matrix
+for 'column' vectors.
 
 */
 
@@ -155,15 +164,10 @@ protected:
   bool Decompose();
 };
 
-///	Apply   POST moltiplica la matrice al vettore (e.g. la traslazione deve stare nell'ultima riga)
-///	Project PRE  moltiplica la matrice al vettore (e.g. la traslazione deve stare nell'ultima colonna)
+/*** Postmultiply */
+//template <class T> Point3<T> operator*(const Point3<T> &p, const Matrix44<T> &m);
 
-/*** Postmultiply (old Apply in the old interface). 
-  * SetTranslate, SetScale, SetRotate prepare the matrix for this.
-  */
-template <class T> Point3<T> operator*(const Point3<T> &p, const Matrix44<T> &m);
-
-///Premultiply  (old Project in the old interface)
+///Premultiply 
 template <class T> Point3<T> operator*(const Matrix44<T> &m, const Point3<T> &p);
 
 template <class T> Matrix44<T> &Transpose(Matrix44<T> &m);
@@ -343,9 +347,9 @@ template <class T> Matrix44<T> &Matrix44<T>::SetTranslate(const Point3<T> &t) {
 }
 template <class T> Matrix44<T> &Matrix44<T>::SetTranslate(const T sx, const T sy, const T sz) {
   SetIdentity();
-	element(3, 0) = sx;
-  element(3, 1) = sy;
-  element(3, 2) = sz;
+	element(0, 3) = sx;
+  element(1, 3) = sy;
+  element(2, 3) = sz;
   return *this;
 }
 template <class T> Matrix44<T> &Matrix44<T>::SetRotate(T angle, const Point3<T> & axis) {  
@@ -356,20 +360,20 @@ template <class T> Matrix44<T> &Matrix44<T>::SetRotate(T angle, const Point3<T> 
 	Point3<T> t = axis;
 	t.Normalize();
 	element(0,0) = t[0]*t[0]*q + c;
-	element(1,0) = t[0]*t[1]*q - t[2]*s;
-	element(2,0) = t[0]*t[2]*q + t[1]*s;
-	element(3,0) = 0;
-	element(0,1) = t[1]*t[0]*q + t[2]*s;
-	element(1,1) = t[1]*t[1]*q + c;
-	element(2,1) = t[1]*t[2]*q - t[0]*s;
-	element(3,1) = 0;
-	element(0,2) = t[2]*t[0]*q -t[1]*s;
-	element(1,2) = t[2]*t[1]*q +t[0]*s;
-	element(2,2) = t[2]*t[2]*q +c;
-	element(3,2) = 0;
+	element(0,1) = t[0]*t[1]*q - t[2]*s;
+	element(0,2) = t[0]*t[2]*q + t[1]*s;
 	element(0,3) = 0;
-	element(1,3) = 0;									
+	element(1,0) = t[1]*t[0]*q + t[2]*s;
+	element(1,1) = t[1]*t[1]*q + c;
+	element(1,2) = t[1]*t[2]*q - t[0]*s;
+	element(1,3) = 0;
+	element(2,0) = t[2]*t[0]*q -t[1]*s;
+	element(2,1) = t[2]*t[1]*q +t[0]*s;
+	element(2,2) = t[2]*t[2]*q +c;
 	element(2,3) = 0;
+	element(3,0) = 0;
+	element(3,1) = 0;									
+	element(3,2) = 0;
 	element(3,3) = 1;	
   return *this;
 }
@@ -392,16 +396,16 @@ template <class T> Point3<T> operator*(const Matrix44<T> &m, const Point3<T> &p)
   return s;
 }
 
-template <class T> Point3<T> operator*(const Point3<T> &p, const Matrix44<T> &m) {
-  T w;
-  Point3<T> s;
-  s[0] = m.element(0, 0)*p[0] + m.element(1, 0)*p[1] + m.element(2, 0)*p[2] + m.element(3, 0);
-  s[1] = m.element(0, 1)*p[0] + m.element(1, 1)*p[1] + m.element(2, 1)*p[2] + m.element(3, 1);
-  s[2] = m.element(0, 2)*p[0] + m.element(1, 2)*p[1] + m.element(2, 2)*p[2] + m.element(3, 2);
-  w    = m.element(0, 3)*p[0] + m.element(1, 3)*p[1] + m.element(2, 3)*p[2] + m.element(3, 3);
-	if(w != 0) s /= w;
-  return s;
-}
+//template <class T> Point3<T> operator*(const Point3<T> &p, const Matrix44<T> &m) {
+//  T w;
+//  Point3<T> s;
+//  s[0] = m.element(0, 0)*p[0] + m.element(1, 0)*p[1] + m.element(2, 0)*p[2] + m.element(3, 0);
+//  s[1] = m.element(0, 1)*p[0] + m.element(1, 1)*p[1] + m.element(2, 1)*p[2] + m.element(3, 1);
+//  s[2] = m.element(0, 2)*p[0] + m.element(1, 2)*p[1] + m.element(2, 2)*p[2] + m.element(3, 2);
+//  w    = m.element(0, 3)*p[0] + m.element(1, 3)*p[1] + m.element(2, 3)*p[2] + m.element(3, 3);
+//	if(w != 0) s /= w;
+//  return s;
+//}
 
 template <class T> Matrix44<T> &Transpose(Matrix44<T> &m) {
   for(int i = 1; i < 4; i++)
@@ -605,16 +609,5 @@ template <class T> Point4<T> LinearSolve<T>::Solve(const Point4<T> &b) {
 
 } //namespace
 #endif
-
-
-
-
-/*#ifdef __GL_H__
-// Applicano la trasformazione intesa secondo la Apply
-void glMultMatrix(Matrix44<double> const & M)   { 	glMultMatrixd(&(M.a[0][0]));}
-void glMultMatrix(Matrix44<float>  const & M)   { 	glMultMatrixf(&(M.a[0][0]));}
-void glLoadMatrix(Matrix44<double> const & M)   { 	glLoadMatrixd(&(M.a[0][0]));}
-void glLoadMatrix(Matrix44<float>  const & M)   { 	glLoadMatrixf(&(M.a[0][0]));}
-#endif*/
 
 
