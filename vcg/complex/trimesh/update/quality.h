@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/07/15 00:13:39  cignoni
+Better doxigen documentation
+
 Revision 1.4  2004/07/06 06:29:53  cignoni
 removed assumption of a using namespace std and added a missing include
 
@@ -45,6 +48,7 @@ First working version!
 #define __VCG_TRI_UPDATE_QUALITY
 #include <vcg/simplex/face/pos.h>
 #include <algorithm>
+#include <assert.h>
 
 namespace vcg {
 namespace tri {
@@ -92,7 +96,12 @@ public:
 
 
 
-// REQUIREMENT VF topology and Border FLags
+// *** IMPORTANT REQUIREMENTS 
+//            VF topology 
+//            Border FLags 
+//        tri::UpdateTopology<SMesh>::VertexFace(sm);
+//        tri::UpdateFlags<SMesh>::FaceBorderFromVF(sm);   
+//
 // Calcola la qualita' come distanza geodesica dal bordo della mesh.
 // Robusta funziona anche per mesh non manifold.
 // La qualita' memorizzata indica la distanza assoluta dal bordo della mesh.
