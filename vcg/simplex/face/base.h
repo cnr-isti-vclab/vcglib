@@ -45,12 +45,12 @@ First commit...
 #pragma error message("\nYou should never directly include this file\_n")
 #else
 
+#include <vcg/math/base.h>
 #include <vcg/space/box3.h>
 #include <vcg/space/tcoord2.h>
 #include <vcg/space/triangle3.h>
-#include <vcg/space/color4.h>
+#include <vcg/space/plane3.h>
 #include <vcg/simplex/face/topology.h>
-
 
 namespace vcg {
 
@@ -680,8 +680,6 @@ public:
 #ifdef __VCGLIB_FACE_FM
 	/// Incremental mark (defines if FACE_I is defined)
 	int imark;
-#endif // Mark
-#ifdef __VCGLIB_FACE_M
 	inline int & IMark()
 	{
 		assert( (_flags & DELETED) == 0 );
@@ -701,7 +699,7 @@ public:
 	/// Initialize the imark system of the face
 	inline void InitIMark()
 	{
-#ifdef __VCGLIB_FACE_M
+#ifdef __VCGLIB_FACE_FM
 		imark = 0;
 #endif
 	}
@@ -956,18 +954,18 @@ bool InterpolationParameters(const CoordType & bq, ScalarType &a, ScalarType &b,
 const ScalarType EPSILON = ScalarType(0.000001);
 
 
-#define x1 (cV(0)->P().x())
-#define y1 (cV(0)->P().y())
-#define z1 (cV(0)->P().z())
-#define x2 (cV(1)->P().x())
-#define y2 (cV(1)->P().y())
-#define z2 (cV(1)->P().z())
-#define x3 (cV(2)->P().x())
-#define y3 (cV(2)->P().y())
-#define z3 (cV(2)->P().z())
-#define px (bq.x())
-#define py (bq.y())
-#define pz (bq.z())
+#define x1 (cV(0)->P()[0])
+#define y1 (cV(0)->P()[1])
+#define z1 (cV(0)->P()[2])
+#define x2 (cV(1)->P()[0])
+#define y2 (cV(1)->P()[1])
+#define z2 (cV(1)->P()[2])
+#define x3 (cV(2)->P()[0])
+#define y3 (cV(2)->P()[1])
+#define z3 (cV(2)->P()[2])
+#define px (bq[0])
+#define py (bq[1])
+#define pz (bq[2])
 
      ScalarType t1  = px*y2;
      ScalarType t2  = px*y3;
@@ -1146,17 +1144,17 @@ void Swap ( const int z )
 		edge[1] = V(2)->P(); edge[1] -= V(1)->P();
 		edge[2] = V(0)->P(); edge[2] -= V(2)->P();
 			// Calcolo di plane
-		plane._n = edge[0]^edge[1];
-		plane.d = plane._n * V(0)->P();
+		plane.SetDirection(edge[0]^edge[1]);
+		plane.SetOffset(plane.Direction() * V(0)->P());
 		plane.Normalize();
 			// Calcolo migliore proiezione
-		ScalarType nx = Abs(plane._n[0]);
-		ScalarType ny = Abs(plane._n[1]);
-		ScalarType nz = Abs(plane._n[2]);
+		ScalarType nx = math::Abs(plane.Direction()[0]);
+		ScalarType ny = math::Abs(plane.Direction()[1]);
+		ScalarType nz = math::Abs(plane.Direction()[2]);
 		ScalarType d;
-		if(nx>ny && nx>nz) { _flags |= NORMX; d = 1/plane._n[0]; }
-		else if(ny>nz)     { _flags |= NORMY; d = 1/plane._n[1]; }
-		else               { _flags |= NORMZ; d = 1/plane._n[2]; }
+		if(nx>ny && nx>nz) { _flags |= NORMX; d = 1/plane.Direction()[0]; }
+		else if(ny>nz)     { _flags |= NORMY; d = 1/plane.Direction()[1]; }
+		else               { _flags |= NORMZ; d = 1/plane.Direction()[2]; }
 
 			// Scalatura spigoli
 		edge[0] *= d;
@@ -1164,6 +1162,177 @@ void Swap ( const int z )
 		edge[2] *= d;
 #endif
   }
+
+/*
+   Point face distance
+   trova il punto <p> sulla faccia piu' vicino a <q>, con possibilità di 
+   rejection veloce su se la distanza trovata è maggiore di <rejdist>
+
+ Commenti del 12/11/02
+ Funziona solo se la faccia e di quelle di tipo E (con edge e piano per faccia gia' calcolati)
+ algoritmo:
+	1) si calcola la proiezione <p> di q sul piano della faccia
+	2) se la distanza punto piano e' > rejdist ritorna
+	3) si lavora sul piano migliore e si cerca di capire se il punto sta dentro il triangolo:
+	   a) prodotto vettore tra edge triangolo (v[i+1]-v[i]) e (p-v[i])
+		 b) se il risultato e' negativo (gira in senso orario) allora il punto
+		    sta fuori da quella parte e si fa la distanza punto segmento.
+     c) se il risultato sempre positivo allora sta dentro il triangolo
+	4) e si restituisce la distanza punto /piano gia` calcolata 
+
+	Note sulla robustezza:
+	il calcolo del prodotto vettore e` la cosa piu` delicata:
+	possibili fallimenti quando a^b ~= 0
+	1) doveva essere <= 0 e viene positivo (q era fuori o sulla linea dell'edge)
+	   allora capita che si faccia la distanza punto piano anziche` la distanza punto seg
+  2) doveva essere > 0 e viene <=0 (q era dentro il triangolo)
+
+*/
+	bool Dist( const Point3<ScalarType> & q, ScalarType & dist, Point3<ScalarType> & p )
+	{
+ #ifdef __VCGLIB_FACE_RT
+		//const ScalarType EPSILON = ScalarType( 0.000001);
+		const ScalarType EPSILON = 0.00000001;
+		ScalarType b,b0,b1,b2;
+			// Calcolo distanza punto piano
+		ScalarType d = Distance( plane, q );
+		if( d>dist || d<-dist )			// Risultato peggiore: niente di fatto
+			return false;
+
+			// Calcolo del punto sul piano
+		// NOTA: aggiunto un '-d' in fondo Paolo C.
+		Point3<ScalarType> t = plane.Direction();
+		t[0] *= -d;
+		t[1] *= -d;
+		t[2] *= -d;
+		p = q; p += t;
+		
+	#define PP(i)	(v[i]->cP())
+	#define E(i)    (edge[i])
+    
+		switch( _flags & (NORMX|NORMY|NORMZ) )
+		{
+		case NORMX:
+			b0 = E(1)[1]*(p[2] - PP(1)[2]) - E(1)[2]*(p[1] - PP(1)[1]);
+			if(b0<=0)
+			{
+				b0 = PSDist(q,V(1)->cP(),V(2)->cP(),p);
+				if(dist>b0) { dist = b0; return true; }
+				else return false;
+			}
+			b1 = E(2)[1]*(p[2] - PP(2)[2]) - E(2)[2]*(p[1] - PP(2)[1]);
+			if(b1<=0)
+			{
+				b1 = PSDist(q,V(2)->cP(),V(0)->cP(),p);
+				if(dist>b1) { dist = b1; return true; }
+				else return false;
+			}
+			b2 = E(0)[1]*(p[2] - PP(0)[2]) - E(0)[2]*(p[1] - PP(0)[1]);
+			if(b2<=0)
+			{
+				b2 = PSDist(q,V(0)->cP(),V(1)->cP(),p);
+				if(dist>b2) { dist = b2; return true; }
+				else return false;
+			}
+			// sono tutti e tre > 0 quindi dovrebbe essere dentro;
+			// per sicurezza se il piu' piccolo dei tre e' < epsilon (scalato rispetto all'area della faccia
+			// per renderlo dimension independent.) allora si usa ancora la distanza punto 
+			// segmento che e' piu robusta della punto piano, e si fa dalla parte a cui siamo piu' 
+			// vicini (come prodotto vettore)
+			// Nota: si potrebbe rendere un pochino piu' veloce sostituendo Area()
+			// con il prodotto vettore dei due edge in 2d lungo il piano migliore.
+			if( (b=min(b0,min(b1,b2))) < EPSILON*Area()) 
+      {
+				ScalarType bt;
+				if(b==b0) 	    bt = PSDist(q,V(1)->cP(),V(2)->cP(),p);
+				else if(b==b1) 	bt = PSDist(q,V(2)->cP(),V(0)->cP(),p);
+				else if(b==b2) 	bt = PSDist(q,V(0)->cP(),V(1)->cP(),p);
+				//printf("Warning area:%g %g %g %g thr:%g bt:%g\n",Area(), b0,b1,b2,EPSILON*Area(),bt);
+				if(dist>bt) { dist = bt; return true; }
+				else return false;
+			}
+			break;
+
+		  case NORMY:
+			b0 = E(1)[2]*(p[0] - PP(1)[0]) - E(1)[0]*(p[2] - PP(1)[2]);
+			if(b0<=0)
+			{
+				b0 = PSDist(q,V(1)->cP(),V(2)->cP(),p);
+				if(dist>b0) { dist = b0; return true; }
+				else return false;
+			}
+			b1 = E(2)[2]*(p[0] - PP(2)[0]) - E(2)[0]*(p[2] - PP(2)[2]);
+			if(b1<=0)
+			{
+				b1 = PSDist(q,V(2)->cP(),V(0)->cP(),p);
+				if(dist>b1) { dist = b1; return true; }
+				else return false;
+			}
+			b2 = E(0)[2]*(p[0] - PP(0)[0]) - E(0)[0]*(p[2] - PP(0)[2]);
+			if(b2<=0)
+			{
+				b2 = PSDist(q,V(0)->cP(),V(1)->cP(),p);
+				if(dist>b2) { dist = b2; return true; }
+				else return false;
+			}
+			if( (b=min(b0,min(b1,b2))) < EPSILON*Area()) 
+      {
+				ScalarType bt;
+				if(b==b0) 	    bt = PSDist(q,V(1)->cP(),V(2)->cP(),p);
+				else if(b==b1) 	bt = PSDist(q,V(2)->cP(),V(0)->cP(),p);
+				else if(b==b2) 	bt = PSDist(q,V(0)->cP(),V(1)->cP(),p);
+				//printf("Warning area:%g %g %g %g thr:%g bt:%g\n",Area(), b0,b1,b2,EPSILON*Area(),bt);
+				if(dist>bt) { dist = bt; return true; }
+				else return false;
+			}
+			break;
+
+		  case NORMZ:
+			b0 = E(1)[0]*(p[1] - PP(1)[1]) - E(1)[1]*(p[0] - PP(1)[0]);
+			if(b0<=0)
+			{
+				b0 = PSDist(q,V(1)->cP(),V(2)->cP(),p);
+				if(dist>b0) { dist = b0; return true; }
+				else return false;
+			}
+			b1 = E(2)[0]*(p[1] - PP(2)[1]) - E(2)[1]*(p[0] - PP(2)[0]);
+			if(b1<=0)
+			{
+				b1 = PSDist(q,V(2)->cP(),V(0)->cP(),p);
+				if(dist>b1) { dist = b1; return true; }
+				else return false;
+			}
+			b2 = E(0)[0]*(p[1] - PP(0)[1]) - E(0)[1]*(p[0] - PP(0)[0]);
+			if(b2<=0)
+			{
+				b2 = PSDist(q,V(0)->cP(),V(1)->cP(),p);
+				if(dist>b2) { dist = b2; return true; }
+				else return false;
+			}
+			if( (b=min(b0,min(b1,b2))) < EPSILON*Area()) 
+      {
+				ScalarType bt;
+				if(b==b0) 	    bt = PSDist(q,V(1)->cP(),V(2)->cP(),p);
+				else if(b==b1) 	bt = PSDist(q,V(2)->cP(),V(0)->cP(),p);
+				else if(b==b2) 	bt = PSDist(q,V(0)->cP(),V(1)->cP(),p);
+				//printf("Warning area:%g %g %g %g thr:%g bt:%g\n",Area(), b0,b1,b2,EPSILON*Area(),bt);
+				
+				if(dist>bt) { dist = bt; return true; }
+				else return false;
+			}
+			break;
+
+		}
+
+	#undef E
+	#undef PP
+
+		dist = ScalarType(fabs(d));
+		//dist = Distance(p,q);
+#endif	
+		return true;
+	}
+
 
 
 
