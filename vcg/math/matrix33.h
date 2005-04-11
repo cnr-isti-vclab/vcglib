@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/10/18 15:03:02  fiorin
+Updated interface: all Matrix classes have now the same interface
+
 Revision 1.2  2004/07/13 06:48:26  cignoni
 removed uppercase references in include
 
@@ -226,9 +229,9 @@ public:
 	/// Funzione per eseguire la trasposta della matrice
 	Matrix33 & Transpose()
 	{
-		swap(a[1],a[3]);
-		swap(a[2],a[6]);
-		swap(a[5],a[7]);
+		math::Swap(a[1],a[3]);
+		math::Swap(a[2],a[6]);
+		math::Swap(a[5],a[7]);
 		return *this;
 	}
 
