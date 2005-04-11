@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2005/03/18 16:35:53  fiorin
+minor changes to comply gcc compiler
+
 Revision 1.15  2004/10/22 13:41:06  fiorin
 Added CheckFlipEdge and FlipEdge
 
@@ -138,29 +141,34 @@ if(FaceType::HasFFAdjacency())
 		@param e Index of the edge
 */
 template <class FaceType>
-void Detach(FaceType & f, const int e)
+void FFDetach(FaceType & f, const int e)
 {
-	assert(!IsBorder<FaceType>(e));
-	Pos< FaceType > EPB(&f,e);  // la faccia dall'altra parte
+	assert(!IsBorder<FaceType>(f,e));
+	Pos< FaceType > EPB(&f,e,f.V(e));//build the half edge
+	//vcg::face::Pos< FaceType > pos(&f, (z+2)%3, f.V2(z));
 	EPB.NextF();
 	int cnt=0;
+
+	///then in case of non manifold face continue to switch the 
+	///set of faces that share the edge until I find the one that 
+	///preceed the one I want to erase
+
 	while ( EPB.f->FFp(EPB.z) != &f)
 	{ 
-		assert(!IsManifold<FaceType>(e));   // Si entra in questo loop solo se siamo in una situazione non manifold.
-		assert(!EPB.f->IsBorder(EPB.z));
+		assert(!IsManifold<FaceType>(f,e));   // Si entra in questo loop solo se siamo in una situazione non manifold.
+		assert(!IsBorder<FaceType>(*EPB.f,e));
 		EPB.NextF();
 		cnt++;
 	}
+
 	assert(EPB.f->FFp(EPB.z)==&f);
 
-	EPB.f->FFp(EPB.z) = F(e);
-	EPB.f->FFi(EPB.z) = Z(e);
+	EPB.f->FFp(EPB.z) = f.FFp(e);
+	EPB.f->FFi(EPB.z) = f.FFi(e);
 	
-	F(e) = &f;
-	Z(e) = e;
+	f.FFp(e) = &f;
+	f.FFi(e) = e;
 
-	EPB.f->SetM();
-	f.SetM();
 }
 
 
