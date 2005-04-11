@@ -48,7 +48,7 @@ public:
 	virtual void mouseReleaseEvent(QMouseEvent * e );
 	virtual void mouseMoveEvent ( QMouseEvent * e );
 	virtual void wheelEvent ( QWheelEvent * e );
-	//virtual void keyPressEvent(QKeyEvent *k);
+	virtual void keyPressEvent(QKeyEvent *k);
 	virtual void initializeGL();
 	virtual void SaveMatrix();
 	virtual void Save();

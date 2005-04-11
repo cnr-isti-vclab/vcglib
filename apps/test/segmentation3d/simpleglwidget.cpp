@@ -12,7 +12,7 @@ SimpleGLWidget::SimpleGLWidget( QWidget * parent, const char * name, const QGLWi
 QGLWidget(parent, name)
 {
 
-	///grabKeyboard();
+	//grabKeyboard();
 	_showslides=false;
 	blocked=false;
 	wire=true;
@@ -343,6 +343,10 @@ void SimpleGLWidget::glDraw(){
 			{
 				if(!(*fi).IsD())
 				{
+					/*if ((!fi->V(0)->IsR())||(!fi->V(1)->IsR())||(!fi->V(2)->IsR()))
+					assert(0);
+					*/
+
 					glColor3d(0.4,0.8,0.8);
 					if (fi->intersected)
 						glColor3d(1.f,0,0);
@@ -468,6 +472,13 @@ void SimpleGLWidget::mousePressEvent ( QMouseEvent * e )
 void SimpleGLWidget::setColor()
 {
 	s->gray_init=w->slider1->value();
+}
+
+///only for debugghing
+void SimpleGLWidget::keyPressEvent(QKeyEvent *k)
+{
+	s->AutoStep();
+	repaint();
 }
 
 void SimpleGLWidget::wheelEvent(QWheelEvent *e)

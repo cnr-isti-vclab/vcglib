@@ -2,14 +2,16 @@
 #define __SEGMENTATOR
 
 
-///need vertex-face topology in case of extended marching cubes
-#ifdef _EXTENDED_MARCH
-	#include <vcg/simplex/vertex/with/afvn.h>
-	#include <vcg/simplex/face/with/afavfnfmrt.h>
-#else
-	#include <vcg/simplex/vertex/with/vn.h>
-	#include <vcg/simplex/face/with/afavfnfmrt.h>
-#endif
+/////need vertex-face topology in case of extended marching cubes
+//#ifdef _EXTENDED_MARCH
+//	#include <vcg/simplex/vertex/with/afvn.h>
+//	#include <vcg/simplex/face/with/afavfnfmrt.h>
+//#else
+
+#include <vcg/simplex/vertex/with/vn.h>
+#include <vcg/simplex/face/with/affnfmrt.h>
+
+//#endif
 
 #include <sim/particle/with/basic_physics.h>
 #include <sim/methods/mass_spring/triangle.h>
@@ -39,6 +41,8 @@
 #include <collision_detection.h>
 #include <vcg/complex/trimesh/smooth.h>
 
+#include <vcg/simplex/face/topology.h>
+#include <vcg/complex/trimesh/update/topology.h>
 
 class Segmentator{
 	
@@ -66,6 +70,7 @@ public:
 		Acc()=Point3f(0,0,0);
 		Vel()=Point3f(0,0,0);
 		ClearFlags();
+		//__super::
 		//neeed call of the super class
 	}
 
@@ -86,89 +91,124 @@ public:
 	{
 		IntForce()=Point3f(0.f,0.f,0.f);
 	}
-
-
+	
+	void SetRestPos()
+	{
+		RPos()=P();
+	}
 
 };
 
-///this class implements the deformable triangle in a mass spring system
-struct MyFace : public TriangleMassSpring< vcg::FaceAFAVFNFMRT<MyVertex,DummyEdge,MyFace> >
-{
-public:
-	bool intersected;
-	float kdihedral;
-
-	MyFace()
+	///this class implements the deformable triangle in a mass spring system
+	struct MyFace : public TriangleMassSpring< vcg::FaceAFFNFMRT<MyVertex,DummyEdge,MyFace> >
 	{
-		intersected=false;
-	}
+	public:
+		bool intersected;
+		float kdihedral;
 
-	void Init ( double k, double  mass,float k_dihedral )
-	{ 
-		__super::Init(k,mass);
-		kdihedral=k_dihedral;
-	}
-
-	bool IsActive()
-	{
-		return((!(((V(0)->blocked)||(V(0)->stopped))&&
-			  ((V(1)->blocked)||(V(1)->stopped))&&
-			  ((V(2)->blocked)||(V(2)->stopped))))&&(!intersected));
-	}
-
-	bool IsBlocked()
-	{
-	return((V(0)->blocked)&&(V(1)->blocked)&&(V(2)->blocked));
-	}
-	
-		
-	double DiedralAngle(int edge)
-	{
-		MyFace *fopp=FFp(edge);
-		CoordType norm1=NormalizedNormal();
-		CoordType norm2=fopp->NormalizedNormal();
-		return (NormalizedNormal()*fopp->NormalizedNormal());
-	}
-
-	///update of the internal forces using the dihedral angle
-	bool Update ( void )	
-	{
-		if (!this->IsD())
+		MyFace()
 		{
-		for (int i=0;i<3;i++)
-		{
-			MyFace *fopp=FFp(i);
-			MyFace *myAddr;
-			if (!fopp->IsD())
-				MyFace *myAddr=fopp->FFp(FFi(i));
+			intersected=false;
+			ClearFlags();
+		}
 
-			if ((fopp->IsD())||(fopp!=0)||(fopp<myAddr))//test do not duplicate updates per edge
+		void Init ( double k, double  mass,float k_dihedral )
+		{ 
+			__super::Init(k,mass);
+			kdihedral=k_dihedral;
+			//if (!intersected)
+			SetS();
+			/*if (QualityFace()<0.1f)
+			ClearS();*/
+		}
+
+		bool IsActive()
+		{
+			return((!(((V(0)->blocked)||(V(0)->stopped))&&
+				((V(1)->blocked)||(V(1)->stopped))&&
+				((V(2)->blocked)||(V(2)->stopped))))&&(!intersected));
+		}
+
+		bool IsBlocked()
+		{
+			return((V(0)->blocked)&&(V(1)->blocked)&&(V(2)->blocked));
+		}
+
+
+		double DiedralAngle(int edge)
+		{
+			MyFace *fopp=FFp(edge);
+			CoordType norm1=NormalizedNormal();
+			CoordType norm2=fopp->NormalizedNormal();
+			return (NormalizedNormal()*fopp->NormalizedNormal());
+		}
+
+		///return the bounding box of the simplex
+		vcg::Box3<float> BBox()
+		{
+			vcg::Box3<float> bb;
+			GetBBox(bb);
+			return (bb);
+		}
+
+		///update of the internal forces using the dihedral angle
+		bool Update ( void )	
+		{
+			if (!IsD())//if this face is not deleted
 			{
-				//normal and area based diadedral angle calcolus
-				CoordType DirEdge=(V(i)->P()-V((i+1)%3)->P()).Normalize();
-				fopp=FFp(i);
-				CoordType Ver=(NormalizedNormal()^fopp->NormalizedNormal()).Normalize();
-				ScalarType diaedral=DiedralAngle(i);
+				for (int i=0;i<3;i++)
+				{
+					if (!IsBorder(i))
+					{
+						MyFace *fopp=FFp(i);
+						MyFace *myAddr=this;
 
-				if ((Ver*DirEdge)<=0)///convex
-				{
-					ScalarType Force=(((-diaedral)+1.f)*kdihedral);
-					V((i+2)%3)->IntForce()+=NormalizedNormal()*(Force);
-					V(i)->IntForce()-=NormalizedNormal()*(Force)/2.f;
-					V((i+1)%3)->IntForce()-=NormalizedNormal()*(Force)/2.f;
+						assert(!fopp->IsD());
+						assert(fopp!=this);
+
+						if ((fopp<myAddr))//test do not duplicate updates per edge
+						{
+							//normal and area based diadedral angle calcolus
+							CoordType DirEdge=(V(i)->P()-V((i+1)%3)->P()).Normalize();
+							fopp=FFp(i);
+							CoordType Ver=(NormalizedNormal()^fopp->NormalizedNormal()).Normalize();
+							ScalarType diaedral=DiedralAngle(i);
+
+							if ((Ver*DirEdge)<=0)///convex
+							{
+								ScalarType Force=(((-diaedral)+1.f)*kdihedral);
+								V((i+2)%3)->IntForce()+=NormalizedNormal()*(Force);
+								V(i)->IntForce()-=NormalizedNormal()*(Force)/2.f;
+								V((i+1)%3)->IntForce()-=NormalizedNormal()*(Force)/2.f;
+							}
+							else	///non-convex
+							{
+								ScalarType Force=(((-diaedral)+1.f)*kdihedral);
+								V((i+2)%3)->IntForce()-=NormalizedNormal()*(Force);
+								V(i)->IntForce()+=NormalizedNormal()*(Force)/2.f;
+								V((i+1)%3)->IntForce()+=NormalizedNormal()*(Force)/2.f;
+							}
+						}
+					}
 				}
-				else	///non-convex
-				{
-					ScalarType Force=(((-diaedral)+1.f)*kdihedral);
-					V((i+2)%3)->IntForce()-=NormalizedNormal()*(Force);
-					V(i)->IntForce()+=NormalizedNormal()*(Force)/2.f;
-					V((i+1)%3)->IntForce()+=NormalizedNormal()*(Force)/2.f;
-				}
+
+				return(__super::Update());
+				///new
+				//double stretch;
+				//CoordType direction;
+				/////for each vertex
+				//for (int i=0;i<3;i++)
+				//{
+				//	//spring on the face
+				//	direction=(V(i)->RPos()-V(i)->P());
+				//	stretch=direction.Norm();
+				//	direction.Normalize();
+				//	V(i)-> IntForce()+=direction*(stretch * _k)/2.f;
+				//}
 			}
+			return true;
+			///new
 		}
-		}
-		return(__super::Update());
-	}
 };
 
 struct MyTriMesh: public vcg::tri::TriMesh<std::vector<MyVertex>,std::vector<MyFace> >{};
@@ -389,24 +429,17 @@ private:
 	void SetIntersectedFace(MyFace *f)
 	{
 		f->intersected=true;
-		///detaching from ff topology
-		/*MyFace *f0=f->FFp(0);
-		MyFace *f1=f->FFp(1);
-		MyFace *f2=f->FFp(2);
-		int i0=f->FFi(0);
-		int i1=f->FFi(1);
-		int i2=f->FFi(2);
-
-		f0->FFp(i0)=f0;
-		f1->FFp(i1)=f1;
-		f2->FFp(i2)=f2;
-
-		f0->FFi(i0)=0;
-		f1->FFi(i1)=1;
-		f2->FFi(i2)=2;
-
-		f->SetD();*/
-
+		f->ClearS();
+		//if ((!f->intersected)&&(!f->IsD()))
+		//{
+		//	f->intersected=true;
+		//	/////detach from Face-Face Topology
+		//	for (int i=0;i<3;i++)
+		//		if (!f->IsBorder(i))
+		//			vcg::face::FFDetach<MyFace>(*f,i);
+		//	f->SetD();
+		//	m->fn--;
+		//}
 	}
 
 	bool IsStopped(MyVertex *v)
@@ -454,6 +487,7 @@ void InitMesh(MyTriMesh *m)
 		{
 			m->vert[i].P()=UnScale(m->vert[i].P());///last change
 			m->vert[i].P()+=InitialBarycenter;
+			m->vert[i].SetRestPos();
 		//	m.vert[i].P()=UnScale(m.vert[i].P());
 		//	P_Vertex.push_back(&m.vert[i]);
 		}
@@ -674,6 +708,32 @@ void PartialUpdateNormals()
 
 }
 
+//bool SelectToRefine()
+//{
+//	MyTriMesh::FaceIterator fi;
+//	for (fi=m->face.begin();pfi<m->face.end();++pfi)
+//	{
+//		if (((*fi).QualityFace()<0.1f))
+//			fi->ClearS();
+//	}
+//}
+
+template<class MESH_TYPE>
+struct MyMidPoint:vcg::MidPoint<MESH_TYPE>
+{
+	void operator()(typename MESH_TYPE::VertexType &nv, face::Pos<typename MESH_TYPE::FaceType>  ep){
+
+		nv.P()=   (ep.f->V(ep.z)->P()+ep.f->V1(ep.z)->P())/2.0;
+		nv.RPos()=(ep.f->V(ep.z)->RPos()+ep.f->V1(ep.z)->RPos())/2.0;
+
+		if( MESH_TYPE::HasPerVertexNormal())
+			nv.N()= (ep.f->V(ep.z)->N()+ep.f->V1(ep.z)->N()).Normalize();
+
+		if( MESH_TYPE::HasPerVertexColor())
+			nv.C().lerp(ep.f->V(ep.z)->C(),ep.f->V1(ep.z)->C(),.5f);
+	}
+};
+
 ///refine the mesh and re-update eventually 
 void RefineStep(float _edge_size)
 {
@@ -682,10 +742,17 @@ void RefineStep(float _edge_size)
 	MyTriMesh::VertexIterator vend=m->vert.end();
 	MyTriMesh::FaceIterator fend=m->face.end();
 
-	refined=vcg::Refine(*m,MidPoint<MyTriMesh>(),_edge_size);
-	
+//	bool to_refine=SelectToRefine();
+
+	/*if (to_refine)*/
+		//refined=vcg::Refine(*m,MidPoint<MyTriMesh>(),_edge_size,true);
+		refined=vcg::Refine(*m,MyMidPoint<MyTriMesh>(),_edge_size,true);
+	/*else
+		refined=false;*/
+
 	if (refined)
 	{
+	
 		MyTriMesh::VertexIterator vinit2=m->vert.begin();
 		MyTriMesh::FaceIterator finit2=m->face.begin();
 
@@ -699,9 +766,14 @@ void RefineStep(float _edge_size)
 			AddNewElements(vend,fend);
 			CollDet->UpdateStep<Part_FaceContainer>(P_Faces);
 		}
-
-		//vcg::tri::UpdateNormals<MyTriMesh>::PerVertexNormalized(*m);
+		/*vcg::tri::UpdateNormals<MyTriMesh>::PerFaceNormalized(*m);
+		vcg::tri::UpdateNormals<MyTriMesh>::PerVertexNormalized(*m);*/
 		PartialUpdateNormals();
+
+//#ifdef _DEBUG
+//		vcg::tri::UpdateTopology<MyTriMesh>::TestFaceFace(*m);
+//#endif
+
 		//CollDet->RefreshElements();
 	}
 }
@@ -714,6 +786,11 @@ void ReinitPhysicMesh()
 	for (pfi=P_Faces.begin();pfi<P_Faces.end();++pfi)
 		if((!(*pfi).IsD())&&((!(*pfi).intersected)))
 			(*pfi).Init(k_elanst,mass,k_dihedral);
+
+	Part_VertexContainer::iterator pvi;
+	for (pvi=P_Vertex.begin();pvi<P_Vertex.end();++pvi)
+		if(!(*pvi).IsD())
+			(*pvi).SetRestPos();
 
 	/*for (MyTriMesh::VertexIterator vi=m.vert.begin();vi<m.vert.end();vi++)
 		ClearStopped(&*vi);*/
