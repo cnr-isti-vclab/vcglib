@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2005/03/18 16:34:42  fiorin
+minor changes to comply gcc compiler
+
 Revision 1.9  2005/01/21 18:02:11  ponchio
 Removed dependence from matrix44 and changed VectProd
 
@@ -51,6 +54,8 @@ Edited Comments and GPL license
 #ifndef __VCGLIB_POINT4
 #define __VCGLIB_POINT4
 #include <assert.h>
+
+#include <vcg/math/base.h>
 
 namespace vcg {
 /** \addtogroup space */
