@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.46  2005/04/04 14:27:53  ponchio
+*** empty log message ***
+
 Revision 1.45  2005/03/02 10:40:17  ponchio
 Extraction rewrittten (to fix recusive problems).
 
@@ -261,6 +264,7 @@ int main(int argc, char *argv[]) {
   int level = 0;
   int apatch = -1;
   float error = 4;
+  string file;
 
   Trackball track;
 
@@ -275,6 +279,7 @@ int main(int argc, char *argv[]) {
          << "-w <pixels>: window width\n"
          << "-h <pixels>: window height\n"
          << "-f         : fullscreen mode\n"
+         << "-l <file>  : log timing on file\n"
 	 << "-o namefile: ouput stats";
     return -1;
   }      
@@ -308,13 +313,14 @@ int main(int argc, char *argv[]) {
   sprintf(window_name,"%s", argv[1]);
 
   int option;
-  while((option = getopt(argc, argv, "e:m:x:r:d:o:w:h:p:f")) != EOF) {
+  while((option = getopt(argc, argv, "e:m:x:r:d:l:o:w:h:p:f")) != EOF) {
     switch(option) {
     case 'e': extraction.target_error = atof(optarg); break;
     case 'm': nexus.MaxRam() = atoi(optarg); break;
     case 'x': extraction.extr_max = atoi(optarg); break;
     case 'r': extraction.draw_max = atoi(optarg); break;
     case 'd': extraction.disk_max = atoi(optarg); break;
+    case 'l': file = optarg; break;
     case 'o': output_stats = true; sprintf(output_filename,"%s",optarg); break;
     case 'w': width =  atoi(optarg); break;
     case 'h': height =  atoi(optarg); break;
@@ -323,6 +329,16 @@ int main(int argc, char *argv[]) {
     default:
       cerr << "Unknow option.\n"; break;
     }
+  }
+
+  FILE *fp = NULL;
+  if(file != "") {
+    fp = fopen(file.c_str(), "rwb+");
+    if(!fp) {
+      cerr << "Could not open log file: " << file << endl;
+      return -1;
+    }
+    fprintf(fp, "timeMs, error, extrTri, drawTri, diskTri, diskKb\n");
   }
 
    if(!init(window_name)) {
@@ -704,7 +720,20 @@ int main(int argc, char *argv[]) {
     }
     
     SDL_GL_SwapBuffers();
+    if(fp && stats.time.size()) {
+      //fprintf(fp, "timeMs, error, extrTri, drawTri, diskTri, diskKb\n");
+      assert(stats.time.size() && stats.error.size() && stats.disk.size());
+      fprintf(fp, "%d, %f, %d, %d, %d, %d\n",
+	      (*stats.time.begin())*1000, 
+	      stats.error.begin(),
+	      (int)stats.extr, 
+	      (int)stats.tri,
+	      (int)stats.disk_tri,
+	      (int)((*stats.disk.begin())/1024)*nexus.chunk_size);
+    }
   }
+  if(fp) 
+    fclose(fp);
 
   SDL_Quit();
   return -1;

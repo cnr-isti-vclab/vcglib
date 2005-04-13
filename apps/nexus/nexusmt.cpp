@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.37  2005/03/02 10:40:17  ponchio
+Extraction rewrittten (to fix recusive problems).
+
 Revision 1.36  2005/02/22 10:38:06  ponchio
 Debug, cleaning and optimization.
 
@@ -72,7 +75,7 @@ using namespace vcg;
 using namespace std;
 
 void Stats::Start() {
-  tri = extr = 0;
+  tri = extr = disk_tri = 0;
   watch.Start();
 }
 
@@ -211,6 +214,7 @@ void NexusMt::Render(Extraction &extraction, DrawContest &contest,
   if(stats) {
     stats->Error(extraction.max_error);
     stats->Disk(preload.disk);
+    stats->disk_tri += preload.disk_tri;
     preload.disk = 0;
   }
   

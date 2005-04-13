@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.24  2005/02/17 15:39:44  ponchio
+Reorderes statistics a bit.
+
 Revision 1.23  2005/02/14 17:11:07  ponchio
 aggiunta delle sphere
 
@@ -69,6 +72,7 @@ namespace nxs {
     //per frame data...
     float tri;       //k triangles rendered.	
     float extr;      //k triangles extracted
+    float disk_tri;      //k triangles readed from disk
 
     int log_size;
 
