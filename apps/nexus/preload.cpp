@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/02/17 15:39:44  ponchio
+Reorderes statistics a bit.
+
 Revision 1.6  2005/02/08 12:43:03  ponchio
 Added copyright
 
@@ -59,8 +62,10 @@ using namespace nxs;
        //we cannot flush since we are not in the openGL thread
        //and flushing includes VBO buffer flushing also.
        Entry &entry = (*mt)[item.id];
-       if(!entry.patch)
+       if(!entry.patch) {
 	 disk += entry.disk_size;
+	 disk_tri += entry.nvert * 2;
+       }
 
        Patch &patch = mt->GetPatch(item.id, item.error, false);
 
