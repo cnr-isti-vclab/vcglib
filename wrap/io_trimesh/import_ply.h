@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2005/03/18 00:14:39  cignoni
+removed small gcc compiling issues
+
 Revision 1.12  2005/02/08 17:28:22  tarini
 changed 120 "const static" to "static const", and added missing "format" fields to all PropDescriptor literals,  to keep Mingw compiler happy
 
@@ -179,9 +182,9 @@ struct LoadPly_Camera
 static const  PropDescriptor &VertDesc(int i)  
 {
 	static const PropDescriptor pv[9]={
-		{"vertex", "x",         ply::T_FLOAT, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p[0]),0,0,0,0,0  ,0},
-		{"vertex", "y",         ply::T_FLOAT, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p[1]),0,0,0,0,0  ,0},
-		{"vertex", "z",         ply::T_FLOAT, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p[2]),0,0,0,0,0  ,0},
+		{"vertex", "x",         ply::T_FLOAT, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p),0,0,0,0,0  ,0},
+		{"vertex", "y",         ply::T_FLOAT, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p) + sizeof(ScalarType),0,0,0,0,0  ,0},
+		{"vertex", "z",         ply::T_FLOAT, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p) + 2*sizeof(ScalarType),0,0,0,0,0  ,0},
 		{"vertex", "flags",     ply::T_INT,   ply::T_INT,           offsetof(LoadPly_VertAux<ScalarType>,flags),0,0,0,0,0  ,0},
 		{"vertex", "quality",   ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,q),0,0,0,0,0  ,0},
 		{"vertex", "red"  ,     ply::T_UCHAR, ply::T_UCHAR,         offsetof(LoadPly_VertAux<ScalarType>,r),0,0,0,0,0  ,0},
@@ -774,8 +777,8 @@ int LoadCamera(const char * filename)
 	vcg::ply::PlyFile pf;
 	if( pf.Open(filename,vcg::ply::PlyFile::MODE_READ)==-1 )
 	{
-		pi.status = pf.GetError();
-		return pi.status;
+		this->pi.status = pf.GetError();
+		return this->pi.status;
 	}
 
 
@@ -791,7 +794,7 @@ int LoadCamera(const char * filename)
 	}
 
 	if(!found)
-		return pi.status;
+		return this->pi.status;
 
 	for(i=0;i<int(pf.elements.size());i++)
 	{
@@ -807,33 +810,33 @@ int LoadCamera(const char * filename)
 			{
 				if( pf.Read( (void *)&(ca) )==-1 )
 				{
-					pi.status = PlyInfo::E_SHORTFILE;
-					return pi.status;
+					this->pi.status = PlyInfo::E_SHORTFILE;
+					return this->pi.status;
 				}	
-				camera.valid     = true;
-				camera.view_p[0] = ca.view_px;
-				camera.view_p[1] = ca.view_py;
-				camera.view_p[2] = ca.view_pz;
-				camera.x_axis[0] = ca.x_axisx;
-				camera.x_axis[1] = ca.x_axisy;
-				camera.x_axis[2] = ca.x_axisz;
-				camera.y_axis[0] = ca.y_axisx;
-				camera.y_axis[1] = ca.y_axisy;
-				camera.y_axis[2] = ca.y_axisz;
-				camera.z_axis[0] = ca.z_axisx;
-				camera.z_axis[1] = ca.z_axisy;
-				camera.z_axis[2] = ca.z_axisz;
-				camera.f         = ca.focal;
-				camera.s[0]      = ca.scalex;
-				camera.s[1]      = ca.scaley;
-				camera.c[0]      = ca.centerx;
-				camera.c[1]      = ca.centery;
-				camera.viewport[0] = ca.viewportx;
-				camera.viewport[1] = ca.viewporty;
-				camera.k[0]      = ca.k1;
-				camera.k[1]      = ca.k2;
-				camera.k[2]      = ca.k3;
-				camera.k[3]      = ca.k4;
+				this->camera.valid     = true;
+				this->camera.view_p[0] = ca.view_px;
+				this->camera.view_p[1] = ca.view_py;
+				this->camera.view_p[2] = ca.view_pz;
+				this->camera.x_axis[0] = ca.x_axisx;
+				this->camera.x_axis[1] = ca.x_axisy;
+				this->camera.x_axis[2] = ca.x_axisz;
+				this->camera.y_axis[0] = ca.y_axisx;
+				this->camera.y_axis[1] = ca.y_axisy;
+				this->camera.y_axis[2] = ca.y_axisz;
+				this->camera.z_axis[0] = ca.z_axisx;
+				this->camera.z_axis[1] = ca.z_axisy;
+				this->camera.z_axis[2] = ca.z_axisz;
+				this->camera.f         = ca.focal;
+				this->camera.s[0]      = ca.scalex;
+				this->camera.s[1]      = ca.scaley;
+				this->camera.c[0]      = ca.centerx;
+				this->camera.c[1]      = ca.centery;
+				this->camera.viewport[0] = ca.viewportx;
+				this->camera.viewport[1] = ca.viewporty;
+				this->camera.k[0]      = ca.k1;
+				this->camera.k[1]      = ca.k2;
+				this->camera.k[2]      = ca.k3;
+				this->camera.k[3]      = ca.k4;
 			}
 			break;
 		}
@@ -849,7 +852,7 @@ bool LoadMask(const char * filename, int &mask)
 	vcg::ply::PlyFile pf;
 	if( pf.Open(filename,vcg::ply::PlyFile::MODE_READ)==-1 )
 	{
-		pi.status = pf.GetError();
+		this->pi.status = pf.GetError();
 		return false;
 	}
 
