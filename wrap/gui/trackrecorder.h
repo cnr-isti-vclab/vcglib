@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/04/14 21:23:39  ganovelli
+*** empty log message ***
+
 
 
 ****************************************************************************/
@@ -45,8 +48,8 @@ struct TrackRecorder{
 	enum { PLAY,REC,OFF } mode;
 	int nextTime,   
 			startTime;  
-
-	StartPlaying(char * namefile){
+ 
+	void StartPlaying(char * namefile){
 		if(trackfile != NULL) return;
 
 		trackfile = fopen(namefile,"rb");
@@ -55,7 +58,7 @@ struct TrackRecorder{
 		fread(&nextTime,4,1,trackfile);
 	} 
 
-	UpdateTrackball(Trackball & t){
+	void UpdateTrackball(Trackball & t){
 
 		while( ( clock()-startTime > nextTime)&& !feof(trackfile)){
 				fread(&t.track,sizeof(float)*4 + sizeof(float)*5,1,trackfile);
@@ -65,20 +68,20 @@ struct TrackRecorder{
 			Stop();
 	}
 
-	StartRecording(char * namefile){
+	void  StartRecording(char * namefile){
 		if(trackfile != NULL) return;
 		trackfile = fopen(namefile,"wb");	
 		startTime = clock();
 		mode = REC;
 	} 
 
-	RecordTrackball(Trackball & t){
+	void  RecordTrackball(Trackball & t){
 		nextTime = clock()-startTime;
 		fwrite(&nextTime,4,1,trackfile);
 		fwrite(&t.track,sizeof(float)*4 + sizeof(float)*5,1,trackfile);
 	}
 
-	Stop(){mode = OFF; trackfile = NULL;};
+	void  Stop(){mode = OFF; trackfile = NULL;};
 
 };
 }
