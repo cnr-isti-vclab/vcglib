@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.13  2005/01/19 10:33:50  cignoni
+  Improved ClearHeap management
+
   Revision 1.12  2004/12/10 01:02:48  cignoni
   added an inline and removed loggng
 
@@ -272,7 +275,7 @@ public:
 // Chiamata dalla do decimate ogni tanto quando lo heap diventa troppo grande (>fn*3)
 void ClearHeap()
 {
-	HeapType::iterator hi;
+	typename HeapType::iterator hi;
 	int sz=h.size();
 	for(hi=h.begin();hi!=h.end();++hi)
   {

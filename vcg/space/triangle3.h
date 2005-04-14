@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/07/15 13:22:37  cignoni
+Added the standard P() access function instead of the shortcut P0()
+
 Revision 1.2  2004/07/15 10:17:42  pietroni
 correct access to point funtions call in usage of triangle3 (ex. t.P(0)  in t.P0(0))
 
@@ -88,16 +91,15 @@ bool InterpolationParameters(const CoordType & bq, ScalarType &a, ScalarType &b,
 {	
 const ScalarType EPSILON = ScalarType(0.000001);
 
-
-#define x1 (cP(0).x())
-#define y1 (cP(0).y())
-#define z1 (cP(0).z())
-#define x2 (cP(1).x())
-#define y2 (cP(1).y())
-#define z2 (cP(1).z())
-#define x3 (cP(2).x())
-#define y3 (cP(2).y())
-#define z3 (cP(2).z())
+#define x1 (cP0.x())
+#define y1 (cP0.y())
+#define z1 (cP0.z())
+#define x2 (cP1.x())
+#define y2 (cP1.y())
+#define z2 (cP1.z())
+#define x3 (cP2.x())
+#define y3 (cP2.y())
+#define z3 (cP2.z())
 #define px (bq.x())
 #define py (bq.y())
 #define pz (bq.z())

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/03/02 15:13:45  ponchio
+Minimal fix in remoteness (Bugged anyway)
+
 Revision 1.8  2005/02/22 14:33:04  ponchio
 small bugs
 
@@ -92,8 +95,8 @@ template <class T> T Frustum<T>::Resolution(float dist) {
 
 template <class T> bool Frustum<T>::IsOutside(Point3<T> &point) {
   Point3<T> r = Project(point);
-  if(r[0] < viewport[0] || r[0] > viewport[0]+viewport[2] ||
-     r[1] < viewport[1] || r[1] > viewport[1]+viewport[3]) 
+  if(r[0] < View<T>::viewport[0] || r[0] > View<T>::viewport[0]+View<T>::viewport[2] ||
+     r[1] < View<T>::viewport[1] || r[1] > View<T>::viewport[1]+View<T>::viewport[3]) 
     return true;
   return false;
 }
@@ -105,18 +108,18 @@ template <class T> float Frustum<T>::Remoteness(Point3<T> &point, T radius) {
   T rad =  1 + radius / (resolution * dist);
   T mindist = 0;
   T tmp;
-  tmp = viewport[0] - r[0] - rad;
+  tmp = View<T>::viewport[0] - r[0] - rad;
   if(tmp > mindist) mindist = tmp;
-  tmp = r[0] - rad - (viewport[0] + viewport[2]);
+  tmp = r[0] - rad - (View<T>::viewport[0] + View<T>::viewport[2]);
   if(tmp > mindist) mindist = tmp;
   
-  tmp = viewport[1] - r[1] - rad;
+  tmp = View<T>::viewport[1] - r[1] - rad;
   if(tmp > mindist) mindist = tmp;
-  tmp = r[1] - rad - (viewport[1] + viewport[3]);
+  tmp = r[1] - rad - (View<T>::viewport[1] + View<T>::viewport[3]);
   if(tmp > mindist) mindist = tmp;
   
   if(mindist == 0) return 0;
-  return 1 + (mindist / (viewport[0] + viewport[2]));
+  return 1 + (mindist / (View<T>::viewport[0] + View<T>::viewport[2]));
 }
 
 template <class T> bool Frustum<T>::IsOutside(Point3<T> &point, T radius) {
@@ -135,10 +138,10 @@ template <class T> T Frustum<T>::Distance(Point3<T> &point, int plane) {
 template <class T> void Frustum<T>::GetView() {
   View<T>::GetView();
   
-  float t = (float)(viewport[1] + viewport[3]);
-  float b = (float)viewport[1];
-  float r = (float)(viewport[0] + viewport[2]);
-  float l = (float)viewport[0];
+  float t = (float)(View<T>::viewport[1] +View<T>:: viewport[3]);
+  float b = (float)View<T>::viewport[1];
+  float r = (float)(View<T>::viewport[0] + View<T>::viewport[2]);
+  float l = (float)View<T>::viewport[0];
   
   Point3<T> nw = UnProject(Point3<T>(l, b, 0.0f));
   Point3<T> sw = UnProject(Point3<T>(l, t, 0.0f));
@@ -160,7 +163,7 @@ template <class T> void Frustum<T>::GetView() {
 
   //compute resolution: sizeo of a pixel unitary distance from view_point
   resolution = ((ne + NE) - (nw + NW)).Norm() /
-               (viewport[2] * ((ne + NE) - view_point).Norm());
+               (View<T>::viewport[2] * ((ne + NE) - view_point).Norm());
 }
 
 }//namespace

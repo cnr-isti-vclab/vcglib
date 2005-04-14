@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/01/19 10:35:28  cignoni
+Better management of symmetric/asymmetric edge collapses
+
 Revision 1.5  2004/12/10 01:07:15  cignoni
 Moved param classes inside; added support for optimal placement and symmetric; added update heap also here (not only in the base class)
 
@@ -98,6 +101,7 @@ public:
 		typedef typename TriMeshType::ScalarType ScalarType;
 		typedef  math::Quadric< double > QuadricType;
 		typedef typename TriMeshType::FaceType FaceType;
+		typedef typename TriMeshType::VertexType VertexType;
 
 class QParameter
 {
@@ -144,14 +148,14 @@ public:
 		inline TriEdgeCollapseQuadric(const EdgeType &p, int i)
 			//:TEC(p,i){}
 		{
-				localMark = i;
-				pos=p;
-				_priority = ComputePriority();
+				this->localMark = i;
+				this->pos=p;
+				this->_priority = ComputePriority();
 		}
 
 
 		inline bool IsFeasible(){
-      bool res = ( !Params().PreserveTopology || LinkConditions(pos) );
+      bool res = ( !Params().PreserveTopology || LinkConditions(this->pos) );
       if(!res) ++( TriEdgeCollapse< TriMeshType,MYTYPE>::FailStat::LinkConditionEdge() );
       return res;
     }
@@ -159,9 +163,9 @@ public:
 		void Execute(TriMeshType &m)
   {	CoordType newPos;
     if(Params().OptimalPlacement) newPos= ComputeMinimal();
-    else newPos=pos.V(1)->P();
-		pos.V(1)->q+=pos.V(0)->q;
-		int FaceDel=DoCollapse(pos, newPos); // v0 is deleted and v1 take the new position
+    else newPos=this->pos.V(1)->P();
+		this->pos.V(1)->q+=this->pos.V(0)->q;
+		int FaceDel=DoCollapse(this->pos, newPos); // v0 is deleted and v1 take the new position
 		m.fn-=FaceDel;
 		--m.vn;
   }
@@ -227,11 +231,11 @@ public:
 									assert(x.F()->V(x.I())==&(*vi));
 									if((x.V0()<x.V1()) && x.V1()->IsRW() && !x.V1()->IsV()){
 												x.V1()->SetV();
-												h_ret.push_back(HeapElem(new MYTYPE(EdgeType(x.V0(),x.V1()),GlobalMark() )));
+												h_ret.push_back(HeapElem(new MYTYPE(EdgeType(x.V0(),x.V1()),TriEdgeCollapse< TriMeshType,MYTYPE>::GlobalMark() )));
 												}
 									if((x.V0()<x.V2()) && x.V2()->IsRW()&& !x.V2()->IsV()){
 												x.V2()->SetV();
-												h_ret.push_back(HeapElem(new MYTYPE(EdgeType(x.V0(),x.V2()),GlobalMark() )));
+												h_ret.push_back(HeapElem(new MYTYPE(EdgeType(x.V0(),x.V2()),TriEdgeCollapse< TriMeshType,MYTYPE>::GlobalMark() )));
 											}
 								}
 		        }	
@@ -246,10 +250,10 @@ public:
         {
 				  assert(x.F()->V(x.I())==&(*vi));
 				  if(x.V()->IsRW() && x.V1()->IsRW() && !m.IsMarked(x.F()->V1(x.I()))){
-							  h_ret.push_back( HeapElem( new MYTYPE( EdgeType (x.V(),x.V1()),GlobalMark())));
+							  h_ret.push_back( HeapElem( new MYTYPE( EdgeType (x.V(),x.V1()),TriEdgeCollapse< TriMeshType,MYTYPE>::GlobalMark())));
 							  }
 				  if(x.V()->IsRW() && x.V2()->IsRW() && !m.IsMarked(x.F()->V2(x.I()))){
-							  h_ret.push_back( HeapElem( new MYTYPE( EdgeType (x.V(),x.V2()),GlobalMark())));
+							  h_ret.push_back( HeapElem( new MYTYPE( EdgeType (x.V(),x.V2()),TriEdgeCollapse< TriMeshType,MYTYPE>::GlobalMark())));
 						  }
 			  }
 		  }	
@@ -287,8 +291,8 @@ public:
 		typename vcg::face::VFIterator<FaceType> x;
 		std::vector<CoordType> on; // original normals
 		typename TriMeshType::VertexType * v[2];
-		v[0] = pos.V(0);
-		v[1] = pos.V(1);
+		v[0] = this->pos.V(0);
+		v[1] = this->pos.V(1);
 
 		if(Params().NormalCheck){ // Compute maximal normal variation 
 			// store the old normals for non-collapsed face in v0
@@ -367,8 +371,8 @@ public:
 		//Rrestore old position of v0 and v1
 		v[0]->P()=OldPos0;
 		v[1]->P()=OldPos1;
-		_priority = -error;
-		return _priority;
+		this->_priority = -error;
+		return this->_priority;
 	}
 
 //	
@@ -376,10 +380,11 @@ public:
 //
   inline  void UpdateHeap(HeapType & h_ret)
   {
-		GlobalMark()++;
+		this->GlobalMark()++;
 		VertexType *v[2];
-		v[0]= pos.V(0);v[1]=pos.V(1);	
-		v[1]->IMark() = GlobalMark();
+		v[0]= this->pos.V(0);
+        v[1]= this->pos.V(1);	
+		v[1]->IMark() = this->GlobalMark();
 
 		// First loop around the remaining vertex to unmark visited flags
     vcg::face::VFIterator<FaceType> vfi(v[1]);	
@@ -399,29 +404,29 @@ public:
 				if( !(vfi.V1()->IsV()) && vfi.V1()->IsRW())
 				{
 				  vfi.V1()->SetV();
-				  h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.V0(),vfi.V1()), GlobalMark())));
+				  h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.V0(),vfi.V1()), this->GlobalMark())));
 				  std::push_heap(h_ret.begin(),h_ret.end());
 				  if(!IsSymmetric()){				
-					  h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.V1(),vfi.V0()), GlobalMark())));
+					  h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.V1(),vfi.V0()), this->GlobalMark())));
 					  std::push_heap(h_ret.begin(),h_ret.end());
 				  }
         }
 				if(  !(vfi.V2()->IsV()) && vfi.V2()->IsRW())
 				{
 					vfi.V2()->SetV();
-				  h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.V0(),vfi.V2()),GlobalMark())));
+				  h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.V0(),vfi.V2()),this->GlobalMark())));
 				  std::push_heap(h_ret.begin(),h_ret.end());
 				  if(!IsSymmetric()){				
-					  h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.V2(),vfi.V0()), GlobalMark())));
+					  h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.V2(),vfi.V0()), this->GlobalMark())));
 					  std::push_heap(h_ret.begin(),h_ret.end());
 				  }
         }
         if(Params().SafeHeapUpdate && vfi.V1()->IsRW() && vfi.V2()->IsRW() )
         {
-          h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.V1(),vfi.V2()),GlobalMark())));
+          h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.V1(),vfi.V2()),this->GlobalMark())));
 				  std::push_heap(h_ret.begin(),h_ret.end());
 				  if(!IsSymmetric()){				
-					  h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.V2(),vfi.V1()), GlobalMark())));
+					  h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.V2(),vfi.V1()), this->GlobalMark())));
 					  std::push_heap(h_ret.begin(),h_ret.end());
 				  }
         }
@@ -529,8 +534,8 @@ static void InitQuadric(TriMeshType &m)
  CoordType ComputeMinimal()
 {	
 		typename TriMeshType::VertexType * v[2];
-		v[0] = pos.V(0);
-		v[1] = pos.V(1);
+		v[0] = this->pos.V(0);
+		v[1] = this->pos.V(1);
 		QuadricType q=v[0]->q;
 		q+=v[1]->q;
 		

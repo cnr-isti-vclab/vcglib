@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2004/12/15 18:45:50  tommyfranken
+*** empty log message ***
+
 Revision 1.9  2004/10/22 14:35:42  ponchio
 m.element(x, y) -> m[x][y]
 
@@ -35,6 +38,9 @@ updated access to matrix44 elements through V() instead simple []
 
 Revision 1.6  2004/03/25 14:57:49  ponchio
 Microerror. ($LOG$ -> $Log: not supported by cvs2svn $
+Microerror. ($LOG$ -> Revision 1.10  2004/12/15 18:45:50  tommyfranken
+Microerror. ($LOG$ -> *** empty log message ***
+Microerror. ($LOG$ ->
 Microerror. ($LOG$ -> Revision 1.9  2004/10/22 14:35:42  ponchio
 Microerror. ($LOG$ -> m.element(x, y) -> m[x][y]
 Microerror. ($LOG$ ->
@@ -76,7 +82,7 @@ public:
   Quaternion operator*(const Quaternion &q) const;
   Quaternion &operator*=(const Quaternion &q);
   void Invert();
-
+  
 	
 	void SetIdentity();
 	
@@ -87,7 +93,11 @@ public:
   void FromMatrix(Matrix44<S> &m);
   void ToMatrix(Matrix44<S> &m) const;
   
-  Point3<S> Rotate(const Point3<S> vec) const;  
+  Point3<S> Rotate(const Point3<S> vec) const; 
+  //duplicated ... because of gcc new confoming to ISO template derived classes
+  //do no 'see' parent members (unless explicitly specified) 
+  const S & V ( const int i ) const	{ assert(i>=0 && i<4); return Point3<S>::_v[i]; }
+  S & V ( const int i )	{ assert(i>=0 && i<4); return Point3<S>::_v[i]; }
 };
 
 template <class S> Quaternion<S> Interpolate(const Quaternion<S> a, const Quaternion<S> b, double t);
@@ -286,10 +296,10 @@ template <class S> Quaternion<S> Inverse(const Quaternion<S> &m) {
 
 template <class S> Quaternion<S> Interpolate(const Quaternion<S> a, const Quaternion<S> b, double t) {
 		double v = a.V(0) * b.V(0) + a.V(1) * b.V(1) + a.V(2) * b.V(2) + a.V(3) * b.V(3);
-		double phi = Acos(v);
+		double phi = math::Acos(v);
 		if(phi > 0.01) {
-			a = a * (Sin(phi *(1-t))/Sin(phi));
-			b = b * (Sin(phi * t)/Sin(phi));	
+			a = a * (math::Sin(phi *(1-t))/math::Sin(phi));
+			b = b * (math::Sin(phi * t)/math::Sin(phi));	
 		}
 		
 		Quaternion<S> c;

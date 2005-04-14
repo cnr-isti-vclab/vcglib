@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2004/09/09 12:51:28  fasano
+corrected ColorRamp code (template specialization)
+
 Revision 1.10  2004/09/09 08:39:33  cignoni
 added a 'template<>' to the specialized constructors from a enum
 
@@ -108,10 +111,10 @@ public:
   template <class Q>  
 	inline void Import(const Color4<Q> & b )
   {
-	  _v[0] = T(b[0]);
-	  _v[1] = T(b[1]);
-	  _v[2] = T(b[2]);
-	  _v[3] = T(b[3]);
+	  Point4<T>::_v[0] = T(b[0]);
+	  Point4<T>::_v[1] = T(b[1]);
+	  Point4<T>::_v[2] = T(b[2]);
+	  Point4<T>::_v[3] = T(b[3]);
   }
 
   //inline void Import(const Color4<float> &b);
@@ -124,18 +127,20 @@ public:
 
 	inline void SetRGB( unsigned char r, unsigned char g, unsigned char b )
 	{
-		_v[0] = r;
-		_v[1] = g;
-		_v[2] = b;
-		_v[3] = 0;
+		Point4<T>::_v[0] = r;
+		Point4<T>::_v[1] = g;
+		Point4<T>::_v[2] = b;
+		Point4<T>::_v[3] = 0;
 	}
 
 	void SetHSVColor( float h, float s, float v){
 	float r,g,b;
   if(s==0.0){	// gray color
 		r = g = b = v;
-		_v[0]=(unsigned char)(255*r);_v[1]=(unsigned char)(255*g);_v[2]=(unsigned char)(255*b);
-		_v[3]=255;
+		Point4<T>::_v[0]=(unsigned char)(255*r);
+        Point4<T>::_v[1]=(unsigned char)(255*g);
+        Point4<T>::_v[2]=(unsigned char)(255*b);
+		Point4<T>::_v[3]=255;
 		return;
 	}
 	if(h==1.0) h = 0.0;
@@ -155,8 +160,10 @@ public:
 			case 4: r=t; g=p; b=v; break;
 			case 5: r=v; g=p; b=q; break;
   }
-		_v[0]=(unsigned char)(255*r);_v[1]=(unsigned char)(255*g);_v[2]=(unsigned char)(255*b);
-		_v[3]=255;
+		Point4<T>::_v[0]=(unsigned char)(255*r);
+        Point4<T>::_v[1]=(unsigned char)(255*g);
+        Point4<T>::_v[2]=(unsigned char)(255*b);
+		Point4<T>::_v[3]=255;
 //	_v[0]=r*256;_v[1]=g*256;_v[2]=b*256;
 }
 
@@ -205,10 +212,10 @@ inline void Color4<T>::lerp(const Color4<T> &c0, const Color4<T> &c1, const floa
 	assert(x>=0);
 	assert(x<=1);
 
-	_v[0]=(T)(c1._v[0]*x + c0._v[0]*(1.0f-x));
-	_v[1]=(T)(c1._v[1]*x + c0._v[1]*(1.0f-x));
-	_v[2]=(T)(c1._v[2]*x + c0._v[2]*(1.0f-x));
-	_v[3]=(T)(c1._v[3]*x + c0._v[3]*(1.0f-x));
+	Point4<T>::_v[0]=(T)(c1._v[0]*x + c0._v[0]*(1.0f-x));
+	Point4<T>::_v[1]=(T)(c1._v[1]*x + c0._v[1]*(1.0f-x));
+	Point4<T>::_v[2]=(T)(c1._v[2]*x + c0._v[2]*(1.0f-x));
+	Point4<T>::_v[3]=(T)(c1._v[3]*x + c0._v[3]*(1.0f-x));
 }
 
 template <class T>
@@ -216,10 +223,10 @@ inline void Color4<T>::lerp(const Color4<T> &c0, const Color4<T> &c1, const Colo
 {
 	assert(fabs(ip[0]+ip[1]+ip[2]-1)<0.00001);
 	
-	c[0]=(T)(c0.c[0]*ip[0] + c1.c[0]*ip[1]+ c2.c[0]*ip[2]);
-	c[1]=(T)(c0.c[1]*ip[0] + c1.c[1]*ip[1]+ c2.c[1]*ip[2]);
-	c[2]=(T)(c0.c[2]*ip[0] + c1.c[2]*ip[1]+ c2.c[2]*ip[2]);
-	c[3]=(T)(c0.c[3]*ip[0] + c1.c[3]*ip[1]+ c2.c[3]*ip[2]);
+	Point4<T>::_v[0]=(T)(c0.c[0]*ip[0] + c1.c[0]*ip[1]+ c2.c[0]*ip[2]);
+	Point4<T>::_v[1]=(T)(c0.c[1]*ip[0] + c1.c[1]*ip[1]+ c2.c[1]*ip[2]);
+	Point4<T>::_v[2]=(T)(c0.c[2]*ip[0] + c1.c[2]*ip[1]+ c2.c[2]*ip[2]);
+	Point4<T>::_v[3]=(T)(c0.c[3]*ip[0] + c1.c[3]*ip[1]+ c2.c[3]*ip[2]);
 }
 
 
@@ -250,10 +257,10 @@ template <>
 template <> 
 inline void Color4<float>::Import(const Color4<unsigned char> &b)
 {
-  _v[0]=b[0]/255.0f;
-  _v[1]=b[1]/255.0f;
-  _v[2]=b[2]/255.0f;
-  _v[3]=b[3]/255.0f;
+  this->_v[0]=b[0]/255.0f;
+  this->_v[1]=b[1]/255.0f;
+  this->_v[2]=b[2]/255.0f;
+  this->_v[3]=b[3]/255.0f;
 }
 
 #if !defined(__GNUC__)
@@ -262,10 +269,10 @@ template <> // [Bug c++/14479] enum definition in template class with template m
 template <>
 inline void Color4<unsigned char>::Import(const Color4<float> &b)
 {
-  _v[0]=(unsigned char)(b[0]*255.0f);
-  _v[1]=(unsigned char)(b[1]*255.0f);
-  _v[2]=(unsigned char)(b[2]*255.0f);
-  _v[3]=(unsigned char)(b[3]*255.0f);
+  this->_v[0]=(unsigned char)(b[0]*255.0f);
+  this->_v[1]=(unsigned char)(b[1]*255.0f);
+  this->_v[2]=(unsigned char)(b[2]*255.0f);
+  this->_v[3]=(unsigned char)(b[3]*255.0f);
 }
 
 

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/10/25 16:25:12  ponchio
+inline Set(...)  -> inline void Set(...)
+
 Revision 1.4  2004/10/25 08:21:17  ganovelli
 added: constructor,Set and some minor changes.
 
@@ -756,12 +759,13 @@ public:
 	void ClearB(int i)	{_flags &= (~(BORDER0<<i));}
 
 	/// This function checks if the face is Crease  on side i
-	bool IsEE(int i) const {return (_flags & (FEATURE0<<i)) != 0;}
+	///Well it would if FEATURE0 was defined somewhere
+/*	bool IsEE(int i) const {return (_flags & (FEATURE0<<i)) != 0;}
 	/// This function select the face flag
 	void SetEE(int i)		{_flags |=(FEATURE0<<i);}
 	/// This funcion execute the inverse operation of Set()
-	void ClearEE(int i)	{_flags &= (~(FEATURE0<<i));}
-
+	void ClearEE(int i)	{_flags &= (~(FEATURE0<<i));} */
+	
 	/// This function checks if the given user bit is true
 	bool IsUserBit(int userBit){return (_flags & userBit) != 0;}
 	/// This function set  the given user bit 

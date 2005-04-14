@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.24  2005/03/18 00:14:39  cignoni
+removed small gcc compiling issues
+
 Revision 1.23  2005/03/15 11:40:56  cignoni
 Added operator*=( std::vector<PointType> ...) to apply a matrix to a vector of vertexes (replacement of the old style mesh.Apply(tr).
 
@@ -538,7 +541,7 @@ template <class T> LinearSolve<T>::LinearSolve(const Matrix44<T> &m): Matrix44<T
   if(!Decompose()) {
     for(int i = 0; i < 4; i++)
       index[i] = i;
-    SetZero();
+    Matrix44<T>::SetZero();
   }
 }
 
@@ -546,7 +549,7 @@ template <class T> LinearSolve<T>::LinearSolve(const Matrix44<T> &m): Matrix44<T
 template <class T> T LinearSolve<T>::Determinant() const {
   T det = d;
   for(int j = 0; j < 4; j++) 
-    det *= ElementAt(j, j);   
+    det *= this-> ElementAt(j, j);   
   return det;
 }
 
@@ -617,7 +620,7 @@ template <class T> bool LinearSolve<T>::Decompose() {
   for(i = 0; i < 4; i++) { 
     T largest = 0.0;
     for(j = 0; j < 4; j++) {
-      T t = math::Abs(ElementAt(i, j));
+      T t = math::Abs(this->ElementAt(i, j));
       if (t > largest) largest = t;
     }
 
@@ -630,17 +633,17 @@ template <class T> bool LinearSolve<T>::Decompose() {
   int imax;
   for(j = 0; j < 4; j++) { 
     for(i = 0; i < j; i++) {
-      T sum = ElementAt(i,j);
+      T sum = this->ElementAt(i,j);
       for(int k = 0; k < i; k++) 
-        sum -= ElementAt(i,k)*ElementAt(k,j);
-      ElementAt(i,j) = sum;
+        sum -= this->ElementAt(i,k)*this->ElementAt(k,j);
+      this->ElementAt(i,j) = sum;
     }
     T largest = 0.0; 
     for(i = j; i < 4; i++) { 
-      T sum = ElementAt(i,j);
+      T sum = this->ElementAt(i,j);
       for(k = 0; k < j; k++)
-        sum -= ElementAt(i,k)*ElementAt(k,j);
-      ElementAt(i,j) = sum;
+        sum -= this->ElementAt(i,k)*this->ElementAt(k,j);
+      this->ElementAt(i,j) = sum;
       T t = scaling[i] * math::Abs(sum);
       if(t >= largest) { 
         largest = t;
@@ -649,19 +652,19 @@ template <class T> bool LinearSolve<T>::Decompose() {
     }
     if (j != imax) { 
       for (int k = 0; k < 4; k++) { 
-        T dum = ElementAt(imax,k);
-        ElementAt(imax,k) = ElementAt(j,k);
-        ElementAt(j,k) = dum;
+        T dum = this->ElementAt(imax,k);
+        this->ElementAt(imax,k) = this->ElementAt(j,k);
+        this->ElementAt(j,k) = dum;
       }
       d = -(d);
       scaling[imax] = scaling[j]; 
     }
     index[j]=imax;
-    if (ElementAt(j,j) == 0.0) ElementAt(j,j) = (T)TINY;
+    if (this->ElementAt(j,j) == 0.0) this->ElementAt(j,j) = (T)TINY;
     if (j != 3) { 
-      T dum = (T)1.0 / (ElementAt(j,j));
+      T dum = (T)1.0 / (this->ElementAt(j,j));
       for (i = j+1; i < 4; i++) 
-        ElementAt(i,j) *= dum;
+        this->ElementAt(i,j) *= dum;
     }
   }
   return true; 
@@ -677,7 +680,7 @@ template <class T> Point4<T> LinearSolve<T>::Solve(const Point4<T> &b) {
     x[ip] = x[i];
     if(first!= -1)
       for(int j = first; j <= i-1; j++) 
-        sum -= ElementAt(i,j) * x[j];
+        sum -= this->ElementAt(i,j) * x[j];
     else 
       if(sum) first = i; 
     x[i] = sum;
@@ -685,8 +688,8 @@ template <class T> Point4<T> LinearSolve<T>::Solve(const Point4<T> &b) {
   for (int i = 3; i >= 0; i--) { 
     T sum = x[i];
     for (int j = i+1; j < 4; j++) 
-      sum -= ElementAt(i, j) * x[j];
-    x[i] = sum / ElementAt(i, i); 
+      sum -= this->ElementAt(i, j) * x[j];
+    x[i] = sum / this->ElementAt(i, i); 
   }
   return x;
 }
