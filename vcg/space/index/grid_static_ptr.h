@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2005/03/15 11:43:18  cignoni
+Removed BestDim function from the grid_static_ptr class and moved to a indipendent file (grid_util.h) for sake of generality.
+
 Revision 1.11  2005/01/03 11:21:26  cignoni
 Added some casts
 
@@ -226,7 +229,7 @@ class GridStaticPtr
   }
   void Grid( const Point3d & p, Cell & first, Cell & last )
     {
-      Cell* g = Grid(s);
+      Cell* g = Grid(p);
       
       first = *g;
       last  = *(g+1);
@@ -461,7 +464,7 @@ class GridStaticPtr
   
   int MemUsed()
     {
-      return sizeof(GridStaticObj)+ sizeof(Link)*links.size() + 
+      return sizeof(GridStaticPtr)+ sizeof(Link)*links.size() + 
 	     sizeof(Cell) * grid.size();
     }
 }; //end class GridStaticObj

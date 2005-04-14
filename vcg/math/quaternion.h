@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2005/04/14 11:35:09  ponchio
+*** empty log message ***
+
 Revision 1.10  2004/12/15 18:45:50  tommyfranken
 *** empty log message ***
 
@@ -38,6 +41,9 @@ updated access to matrix44 elements through V() instead simple []
 
 Revision 1.6  2004/03/25 14:57:49  ponchio
 Microerror. ($LOG$ -> $Log: not supported by cvs2svn $
+Microerror. ($LOG$ -> Revision 1.11  2005/04/14 11:35:09  ponchio
+Microerror. ($LOG$ -> *** empty log message ***
+Microerror. ($LOG$ ->
 Microerror. ($LOG$ -> Revision 1.10  2004/12/15 18:45:50  tommyfranken
 Microerror. ($LOG$ -> *** empty log message ***
 Microerror. ($LOG$ ->
@@ -96,8 +102,8 @@ public:
   Point3<S> Rotate(const Point3<S> vec) const; 
   //duplicated ... because of gcc new confoming to ISO template derived classes
   //do no 'see' parent members (unless explicitly specified) 
-  const S & V ( const int i ) const	{ assert(i>=0 && i<4); return Point3<S>::_v[i]; }
-  S & V ( const int i )	{ assert(i>=0 && i<4); return Point3<S>::_v[i]; }
+  const S & V ( const int i ) const	{ assert(i>=0 && i<4); return ((Point3<S> *)this)->V(i); }
+  S & V ( const int i )	{ assert(i>=0 && i<4); return ((Point3<S> *)this)->V(i); }
 };
 
 template <class S> Quaternion<S> Interpolate(const Quaternion<S> a, const Quaternion<S> b, double t);
