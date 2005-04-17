@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2004/12/17 10:28:10  ricciodimare
+*** empty log message ***
+
 Revision 1.11  2004/09/28 15:30:12  ponchio
 Added a 'else'.
 
@@ -86,8 +89,8 @@ Trackball::Trackball(): current_button(0), current_mode(NULL),
 
 Trackball::~Trackball() {
   map<int, TrackMode *>::iterator i;
-  for(i = modes.begin(); i != modes.end(); i++)
-    delete (*i).second;
+  //for(i = modes.begin(); i != modes.end(); i++)
+  //  delete (*i).second;
 }
 
 void Trackball::SetIdentity() {
