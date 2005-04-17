@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2005/04/15 09:19:50  ponchio
+Typo: Point3 -> Point4
+
 Revision 1.12  2005/04/14 17:22:34  ponchio
 *** empty log message ***
 
@@ -44,6 +47,9 @@ updated access to matrix44 elements through V() instead simple []
 
 Revision 1.6  2004/03/25 14:57:49  ponchio
 Microerror. ($LOG$ -> $Log: not supported by cvs2svn $
+Microerror. ($LOG$ -> Revision 1.13  2005/04/15 09:19:50  ponchio
+Microerror. ($LOG$ -> Typo: Point3 -> Point4
+Microerror. ($LOG$ ->
 Microerror. ($LOG$ -> Revision 1.12  2005/04/14 17:22:34  ponchio
 Microerror. ($LOG$ -> *** empty log message ***
 Microerror. ($LOG$ ->
@@ -112,7 +118,7 @@ public:
   S & V ( const int i )	{ assert(i>=0 && i<4); return Point4<S>::V(i); }
 };
 
-template <class S> Quaternion<S> Interpolate(const Quaternion<S> a, const Quaternion<S> b, double t);
+template <class S> Quaternion<S> Interpolate(  Quaternion<S>   a,   Quaternion<S>   b, double t);
 template <class S> Quaternion<S> &Invert(Quaternion<S> &q);
 template <class S> Quaternion<S> Inverse(const Quaternion<S> &q);
 
@@ -306,12 +312,13 @@ template <class S> Quaternion<S> Inverse(const Quaternion<S> &m) {
   return a;
 }
 
-template <class S> Quaternion<S> Interpolate(const Quaternion<S> a, const Quaternion<S> b, double t) {
+template <class S> Quaternion<S> Interpolate(   Quaternion<S>   a ,    Quaternion<S>   b , double t) {
+ 	 
 		double v = a.V(0) * b.V(0) + a.V(1) * b.V(1) + a.V(2) * b.V(2) + a.V(3) * b.V(3);
 		double phi = math::Acos(v);
 		if(phi > 0.01) {
-			a = a * (math::Sin(phi *(1-t))/math::Sin(phi));
-			b = b * (math::Sin(phi * t)/math::Sin(phi));	
+			a = a  * (math::Sin(phi *(1-t))/math::Sin(phi));
+			b = b  * (math::Sin(phi * t)/math::Sin(phi));	
 		}
 		
 		Quaternion<S> c;
