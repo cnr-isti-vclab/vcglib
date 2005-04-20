@@ -58,7 +58,7 @@ class Resampler:RES
 		vcg::Point3i	_resolution;
 		vcg::Point3i	_cell_size;
 
-		float max_dim;
+		
 		float dim_diag;
 
 		int _slice_dimension;
@@ -83,7 +83,7 @@ class Resampler:RES
 		Grid _g;
 		
 	public:
-
+		float max_dim;
 		/*Walker(Volume_Dataset <short> *Vo,float in,const BoundingBox &bbox,vcg::Point3i &resolution)
 		{*/
 		/*	init=in;
@@ -125,15 +125,15 @@ class Resampler:RES
 
 			_slice_dimension = _resolution.X()*_resolution.Z();
 		
-			Point3f diag=Point3f((float)_cell_size.V(0),(float)_cell_size.V(1),(float)_cell_size.V(2));
-			max_dim=diag.Norm();///diagonal of a cell
-			
+			//Point3f diag=Point3f((float)_cell_size.V(0),(float)_cell_size.V(1),(float)_cell_size.V(2));
+			//max_dim=diag.Norm();///diagonal of a cell
+			//
 			_current_slice = _bbox.min.Y();
 
 			Point3f minD=Point3f((float)_bbox.min.V(0),(float)_bbox.min.V(1),(float)_bbox.min.V(2));
 			Point3f maxD=Point3f((float)_bbox.max.V(0),(float)_bbox.max.V(1),(float)_bbox.max.V(2));
-			Point3f d=(maxD-minD);
-			dim_diag=d.Norm();
+			/*Point3f d=(maxD-minD);
+			dim_diag=d.Norm();*/
 		}
 
 		Walker(const BoundingBox &bbox,vcg::Point3i &resolution)
@@ -513,6 +513,7 @@ class Resampler:RES
 				return false;
 			}
 			assert (0);
+			return false;
 		}
 
 		///interpolate 
@@ -630,7 +631,7 @@ typedef typename vcg::tri::ExtendedMarchingCubes<New_Mesh, MyWalker> ExtendedMar
 
 ///resample the mesh using marching cube algorithm ,the accuracy is the dimension of one cell the parameter
 template <RES::MarchMode mm>
-static void Resample(Old_Mesh &old_mesh,New_Mesh &new_mesh,vcg::Point3<int> accuracy)
+static void Resample(Old_Mesh &old_mesh,New_Mesh &new_mesh,vcg::Point3<int> accuracy,float max_dist)
 {
 	new_mesh.Clear();
 	if (Old_Mesh::HasPerFaceNormal())
@@ -646,7 +647,7 @@ static void Resample(Old_Mesh &old_mesh,New_Mesh &new_mesh,vcg::Point3<int> accu
 	///be sure that the bounding box is updated
 	vcg::tri::UpdateBounding<Old_Mesh>::Box(old_mesh);
 	
-
+	
 	// MARCHING CUBES CALLS
 	Point3i min=Point3i((int)ceil(old_mesh.bbox.min.V(0)),(int)ceil(old_mesh.bbox.min.V(1)),(int)ceil(old_mesh.bbox.min.V(2)));
 	Point3i max=Point3i((int)ceil(old_mesh.bbox.max.V(0)),(int)ceil(old_mesh.bbox.max.V(1)),(int)ceil(old_mesh.bbox.max.V(2)));
@@ -666,7 +667,9 @@ static void Resample(Old_Mesh &old_mesh,New_Mesh &new_mesh,vcg::Point3<int> accu
 	Point3i res=Point3i(rxi,ryi,rzi);
 
 	MyWalker	walker(boxInt,res);
-	
+
+	walker.max_dim=max_dist;
+
 	if (mm==MMarchingCubes)
 	{
 		MarchingCubes mc(new_mesh, walker);
