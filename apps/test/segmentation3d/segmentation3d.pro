@@ -16,7 +16,10 @@ SOURCES	+= D:/sf/wrap/gui/trackmode.cpp \
 	main.cpp
 FORMS	= segmentform.ui \
 	d:\sf\apps\test\segmentation3d\segmentform.ui
-IMAGES	= D:/sf/apps/test/segmentation3d/slider.jpg
+
+
+
+
 
 
 

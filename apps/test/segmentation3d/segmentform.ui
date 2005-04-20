@@ -514,36 +514,6 @@
                     <number>1</number>
                 </property>
             </widget>
-            <widget class="QLineEdit">
-                <property name="name">
-                    <cstring>T_step</cstring>
-                </property>
-                <property name="geometry">
-                    <rect>
-                        <x>30</x>
-                        <y>210</y>
-                        <width>70</width>
-                        <height>31</height>
-                    </rect>
-                </property>
-                <property name="font">
-                    <font>
-                        <pointsize>10</pointsize>
-                    </font>
-                </property>
-                <property name="frameShape">
-                    <enum>LineEditPanel</enum>
-                </property>
-                <property name="frameShadow">
-                    <enum>Sunken</enum>
-                </property>
-                <property name="text">
-                    <string>0.2</string>
-                </property>
-                <property name="cursorPosition">
-                    <number>3</number>
-                </property>
-            </widget>
             <widget class="QPushButton">
                 <property name="name">
                     <cstring>SmoothButton</cstring>
@@ -752,11 +722,38 @@
                         <height>31</height>
                     </rect>
                 </property>
-                <property name="pixmap">
-                    <pixmap>slider.jpg</pixmap>
-                </property>
                 <property name="scaledContents">
                     <bool>true</bool>
+                </property>
+            </widget>
+            <widget class="QLineEdit">
+                <property name="name">
+                    <cstring>T_step</cstring>
+                </property>
+                <property name="geometry">
+                    <rect>
+                        <x>30</x>
+                        <y>210</y>
+                        <width>70</width>
+                        <height>31</height>
+                    </rect>
+                </property>
+                <property name="font">
+                    <font>
+                        <pointsize>10</pointsize>
+                    </font>
+                </property>
+                <property name="frameShape">
+                    <enum>LineEditPanel</enum>
+                </property>
+                <property name="frameShadow">
+                    <enum>Sunken</enum>
+                </property>
+                <property name="text">
+                    <string>0.4</string>
+                </property>
+                <property name="cursorPosition">
+                    <number>3</number>
                 </property>
             </widget>
         </widget>

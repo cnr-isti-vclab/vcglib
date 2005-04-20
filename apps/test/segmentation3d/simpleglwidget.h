@@ -32,11 +32,13 @@ private :
 	bool resultForces;
 	bool continue_int;
 	GLuint texName;
+	
 	//Segmentator *s;
 	//QTimer *timer;
 	//vcg::GlTrimesh<Segmentator::MyTriMesh> *Wrap;
 	
 public:
+	vcg::Point3f CenterExtraction;
 	QString path;
 	SegmentForm *w;
 	SimpleGLWidget( QWidget * parent = 0, const char * name = 0, const QGLWidget * shareWidget = 0, WFlags f = 0 );
@@ -129,20 +131,20 @@ public:
 
 	void Extract()
 	{
-		UpdateBBMesh();
+		//UpdateBBMesh();
 		continue_int=!continue_int;
-		if (continue_int)
-		{
-			_showslides=false;
-			w->SlidesButton->setOn(false);
-			//((SegmentForm *)this->parent())->SlidesButton->setOn(false);
-		}
-		else
-		{
-			_showslides=true;
-			w->SlidesButton->setOn(true);
-			//((SegmentForm *)this->parent())->SlidesButton->setOn(true);
-		}
+		//if (continue_int)
+		//{
+		//	_showslides=false;
+		//	w->SlidesButton->setOn(false);
+		//	//((SegmentForm *)this->parent())->SlidesButton->setOn(false);
+		//}
+		//else
+		//{
+		//	_showslides=true;
+		//	w->SlidesButton->setOn(true);
+		//	//((SegmentForm *)this->parent())->SlidesButton->setOn(true);
+		//}
 		repaint();
 	}
 
@@ -161,7 +163,9 @@ public:
 	void CleanMesh()
 	{
 		MarchingCube();
+#ifndef _TORUS
 		UpdateBBMesh();
+#endif
 		repaint();
 	}
 	

@@ -293,12 +293,17 @@ void SimpleGLWidget::glDraw(){
 			if (s->m!=NULL)
 			{
 				//vcg::tri::UpdateBounding<Segmentator::MyTriMesh>::Box(*(s->m));
+#ifndef _TORUS
 				vcg::Point3f p=s->m->bbox.Center();
+#endif
 				TrackM.GetView();
 				TrackM.Apply();
 				TrackM.Draw();
-				glScalef(1.f/s->m->bbox.Diag(),1.f/s->m->bbox.Diag(),1.f/s->m->bbox.Diag());
+				//glScalef(1.f/s->m->bbox.Diag(),1.f/s->m->bbox.Diag(),1.f/s->m->bbox.Diag());
+#ifndef _TORUS
 				glTranslate(-p);
+#endif
+				//glTranslate(-CenterExtraction);
 				//glScalef(1.f/s->m->bbox.Diag(),1.f/s->m->bbox.Diag(),1.f/s->m->bbox.Diag());
 			}
 		}
@@ -348,7 +353,7 @@ void SimpleGLWidget::glDraw(){
 					*/
 
 					glColor3d(0.4,0.8,0.8);
-					if (fi->intersected)
+					if ((fi->intersected)&&(wire))
 						glColor3d(1.f,0,0);
 
 					if (((blocked)&&(!fi->IsBlocked()))||(!blocked))
@@ -442,6 +447,9 @@ void SimpleGLWidget::mousePressEvent ( QMouseEvent * e )
 			*/
 			UpdateBBMesh();
 			TrackM.MouseDown(e->x(),_H-e->y(),vcg::Trackball::BUTTON_LEFT);
+#ifndef _TORUS
+			CenterExtraction=s->m->bbox.Center();
+#endif
 		}
 		else if (_showslides)
 			TrackS.MouseDown(e->x(),_H-e->y(),vcg::Trackball::BUTTON_LEFT);

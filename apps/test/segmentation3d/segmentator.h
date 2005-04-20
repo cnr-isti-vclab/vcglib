@@ -128,19 +128,24 @@ public:
 				((V(1)->blocked)||(V(1)->stopped))&&
 				((V(2)->blocked)||(V(2)->stopped))))&&(!intersected));
 		}
+		
+		bool HaveVertexActive()
+		{
+			return((V(0)->blocked==false)||(V(1)->blocked==false)||(V(2)->blocked==false));
+		}
 
 		bool IsBlocked()
 		{
 			return((V(0)->blocked)&&(V(1)->blocked)&&(V(2)->blocked));
 		}
 
-
+		
 		double DiedralAngle(int edge)
 		{
 			MyFace *fopp=FFp(edge);
 			CoordType norm1=NormalizedNormal();
 			CoordType norm2=fopp->NormalizedNormal();
-			return (NormalizedNormal()*fopp->NormalizedNormal());
+			return (norm1*norm2);
 		}
 
 		///return the bounding box of the simplex
@@ -151,10 +156,15 @@ public:
 			return (bb);
 		}
 
+		ScalarType ForceValue(ScalarType l0,ScalarType l1)
+		{
+			return ((l0-l1)/(l0/l1) *_k);
+		}
+
 		///update of the internal forces using the dihedral angle
 		bool Update ( void )	
 		{
-			if (!IsD())//if this face is not deleted
+			if (!IsD()&&(!intersected))//if this face is not deleted
 			{
 				for (int i=0;i<3;i++)
 				{
@@ -166,28 +176,30 @@ public:
 						assert(!fopp->IsD());
 						assert(fopp!=this);
 
-						if ((fopp<myAddr))//test do not duplicate updates per edge
+						if ((fopp<myAddr)&&(!fopp->intersected))//test do not duplicate updates per edge
 						{
 							//normal and area based diadedral angle calcolus
 							CoordType DirEdge=(V(i)->P()-V((i+1)%3)->P()).Normalize();
 							fopp=FFp(i);
 							CoordType Ver=(NormalizedNormal()^fopp->NormalizedNormal()).Normalize();
 							ScalarType diaedral=DiedralAngle(i);
-
+							ScalarType Force=(((-diaedral)+1.f)*kdihedral);
+							CoordType VectF=NormalizedNormal()*(Force);
 							if ((Ver*DirEdge)<=0)///convex
-							{
-								ScalarType Force=(((-diaedral)+1.f)*kdihedral);
-								V((i+2)%3)->IntForce()+=NormalizedNormal()*(Force);
-								V(i)->IntForce()-=NormalizedNormal()*(Force)/2.f;
-								V((i+1)%3)->IntForce()-=NormalizedNormal()*(Force)/2.f;
+							{	
+								V((i+2)%3)->IntForce()+=VectF;
+								fopp->V((FFi(i)+2)%3)->IntForce()+=VectF;///opposite vertex
+								V(i)->IntForce()-=VectF;
+								V((i+1)%3)->IntForce()-=VectF;
 							}
 							else	///non-convex
 							{
-								ScalarType Force=(((-diaedral)+1.f)*kdihedral);
-								V((i+2)%3)->IntForce()-=NormalizedNormal()*(Force);
-								V(i)->IntForce()+=NormalizedNormal()*(Force)/2.f;
-								V((i+1)%3)->IntForce()+=NormalizedNormal()*(Force)/2.f;
+								V((i+2)%3)->IntForce()-=VectF;
+								fopp->V((FFi(i)+2)%3)->IntForce()-=VectF;///opposite vertex
+								V(i)->IntForce()+=VectF;
+								V((i+1)%3)->IntForce()+=VectF;
 							}
+							
 						}
 					}
 				}
@@ -253,6 +265,7 @@ public:
 	int gray_init;
 	float time_stamp;
 	float edge_precision;
+	float edge_init;
 
 	bool end_loop;
 	bool refined;
@@ -307,18 +320,43 @@ private:
 
 #ifdef _TORUS
 	///torus version
+	/*float getColor(MyTriMesh::CoordType p)
+	{
+		static float ray=25.f;
+		static float diameter=4.f;
+		float dist=p.Norm();
+		float difference=abs(ray-dist);
+
+		float z=fabs(p.Z());
+		if((difference<diameter)&&(z<diameter))
+			return (100.f);
+		else
+			return (0.f);
+	}*/
+	bool InTorus(MyTriMesh::CoordType p)
+	{
+		static float ray=25.f;
+		static float diameter=4.f;
+		double fatt=(p.X()*p.X()+p.Y()*p.Y());
+		double fatt1=(ray-math::Sqrt(fatt));
+		double fatt2=fatt1*fatt1+p.Z()*p.Z();
+		double conf=diameter*diameter;
+		///now swap 
+		return (fatt2<=conf);
+		
+	}
 	float getColor(MyTriMesh::CoordType p)
 	{
-		static float ray=100.f;
-		static float diameter=20.f;
-		Point3f center=BBox().Center();
-		float dist=(p-center).Norm();
-		float difference=abs(ray-dist);
-		if(difference<diameter)
-			return 100.f;
+		MyTriMesh::CoordType p1=MyTriMesh::CoordType(p.X(),p.Z(),p.Y());
+		//MyTriMesh::CoordType p2=MyTriMesh::CoordType(p.Z(),p.Y(),p.X());
+
+
+		if (InTorus(p)||InTorus(p1))//||InTorus(p2))
+			return (100.f);
 		else
-			return (100.f+difference*5.f);
+			return (0.f);
 	}
+
 #else
 	///return integer coordinete in volumetric dataset
 	float getColor(MyTriMesh::CoordType p)
@@ -492,7 +530,6 @@ void InitMesh(MyTriMesh *m)
 		//	P_Vertex.push_back(&m.vert[i]);
 		}
 		
-		
 		vcg::tri::UpdateNormals<MyTriMesh>::PerVertexNormalized(*m);
 
 	}
@@ -531,7 +568,7 @@ MyTriMesh::CoordType GradientFactor(MyTriMesh::VertexType *v)
 void AddExtForces()
 {
 	Part_VertexContainer::iterator vi;
-	PartialUpdateNormals();
+	//PartialUpdateNormals();
 	end_loop=true;
 	for (vi=P_Vertex.begin();vi<P_Vertex.end();++vi)
 	{
@@ -556,10 +593,9 @@ void AddExtForces()
 				{
 					MyTriMesh::CoordType Inflating=(*vi).N();
 					MyTriMesh::CoordType Containing0=ContainingForce(&*vi);	
-					//MyTriMesh::CoordType Containing1=GradientFactor(&*vi);
-					Containing0*=0.75;
 					if (Containing0.Norm()>1)
 						Containing0.Normalize();
+					Containing0*=0.75;
 					(*vi).ExtForce()=Inflating+Containing0;/*+Containing1+Containing0*/;
 				}
 			}
@@ -682,6 +718,8 @@ bool TimeSelfIntersection()
 
 void PartialUpdateNormals()
 {
+	//vcg::tri::UpdateNormals<MyTriMesh>::PerFaceNormalized(*m);
+	//vcg::tri::UpdateNormals<MyTriMesh>::PerVertexNormalized(*m);
 	Part_FaceContainer::iterator fi;
 	for (fi=P_Faces.begin();fi<P_Faces.end();++fi)
 		if (!(*fi).IsD())
@@ -725,7 +763,7 @@ struct MyMidPoint:vcg::MidPoint<MESH_TYPE>
 
 		nv.P()=   (ep.f->V(ep.z)->P()+ep.f->V1(ep.z)->P())/2.0;
 		nv.RPos()=(ep.f->V(ep.z)->RPos()+ep.f->V1(ep.z)->RPos())/2.0;
-
+		
 		if( MESH_TYPE::HasPerVertexNormal())
 			nv.N()= (ep.f->V(ep.z)->N()+ep.f->V1(ep.z)->N()).Normalize();
 
@@ -768,6 +806,7 @@ void RefineStep(float _edge_size)
 		}
 		/*vcg::tri::UpdateNormals<MyTriMesh>::PerFaceNormalized(*m);
 		vcg::tri::UpdateNormals<MyTriMesh>::PerVertexNormalized(*m);*/
+
 		PartialUpdateNormals();
 
 //#ifdef _DEBUG
@@ -783,14 +822,21 @@ void ReinitPhysicMesh()
 {
 	Part_FaceContainer::iterator pfi;
 
-	for (pfi=P_Faces.begin();pfi<P_Faces.end();++pfi)
+	/*for (pfi=P_Faces.begin();pfi<P_Faces.end();++pfi)
 		if((!(*pfi).IsD())&&((!(*pfi).intersected)))
-			(*pfi).Init(k_elanst,mass,k_dihedral);
+			(*pfi).Init(k_elanst,mass,k_dihedral);*/
 
 	Part_VertexContainer::iterator pvi;
 	for (pvi=P_Vertex.begin();pvi<P_Vertex.end();++pvi)
 		if(!(*pvi).IsD())
 			(*pvi).SetRestPos();
+
+	for (pfi=P_Faces.begin();pfi<P_Faces.end();++pfi)
+		if((!(*pfi).IsD())&&((!(*pfi).intersected)))
+			(*pfi).Init(k_elanst,mass,k_dihedral);
+
+
+	//PartialUpdateNormals();
 
 	/*for (MyTriMesh::VertexIterator vi=m.vert.begin();vi<m.vert.end();vi++)
 		ClearStopped(&*vi);*/
@@ -851,7 +897,7 @@ void LoadFromDir(char *in, char *out)
 ///set parameters for segmentation
 void SetSegmentParameters(int tol,float Mass=0.5f,float K_elanst=0.2f,float Dihedral=0.2f,float Time_stamp=0.2f,
 					  float Edge_precision=4.f,Point3f ScaleFactor=Point3f(1.f,1.f,1.f),
-					  clock_t _interval=1000,clock_t _interval2=250)
+					  clock_t _interval=2000,clock_t _interval2=250)
 {
 	mass=Mass;
 	k_elanst=K_elanst;
@@ -861,6 +907,7 @@ void SetSegmentParameters(int tol,float Mass=0.5f,float K_elanst=0.2f,float Dihe
 	interval_selfcollision=_interval2;
 
 	edge_size=16.f;
+	edge_init=edge_size;
 	edge_precision=Edge_precision;
 	time_stamp=Time_stamp;
 	k_dihedral=Dihedral;
@@ -890,7 +937,7 @@ void InitSegmentation(MyTriMesh::CoordType b)
 }
 
 ///return the bounding box of the mesh
-vcg::Box3<float> BBox()
+vcg::Box3<float>& BBox()
 {
 	return (bbox);
 }
@@ -934,25 +981,40 @@ void AutoStep()
 	}
 }
 
-/////set as deleted intersected vertices
-//void ClearIntersectedFaces()
-//{
-//	MyTriMesh::FaceIterator fi;
-//	for (fi=m->face.begin();fi<m->face.end();fi++)
-//		if ((*fi).intersected==true)
-//			(*fi).SetD();
-//
-//}
+///set as deleted intersected vertices
+void ClearIntersectedFaces()
+{
+	MyTriMesh::FaceIterator fi;
+	for (fi=m->face.begin();fi<m->face.end();fi++)
+#ifdef _TORUS
+		if (((*fi).intersected==true))///||((*fi).HaveVertexActive()))
+		{
+			m->fn--;
+			(*fi).SetD();
+		}
+#else
+		if (((*fi).intersected==true))//||((*fi).HaveVertexActive()))
+		{
+			m->fn--;
+			(*fi).SetD();
+		}
+#endif
+}
 
 ///first version
 void Resample()
 {
-	//ClearIntersectedFaces();
+	ClearIntersectedFaces();
 	new_m=new MyTriMesh();
 	vcg::tri::UpdateBounding<MyTriMesh>::Box(*m);
+#ifdef _TORUS
 	vcg::trimesh::Resampler<MyTriMesh,MyTriMesh>::Resample<vcg::trimesh::RES::MMarchingCubes>(*m,*new_m,
-		Point3i((int) edge_precision,(int) edge_precision,(int) edge_precision));
-
+		Point3i((int) edge_precision,(int) edge_precision,(int) edge_precision),edge_init);
+#else
+	vcg::trimesh::Resampler<MyTriMesh,MyTriMesh>::Resample<vcg::trimesh::RES::MMarchingCubes>(*m,*new_m,
+		Point3i((int) edge_precision,(int) edge_precision,(int) edge_precision),edge_size*2.f);
+#endif
+//	delete(new_m0);
 	delete(m);
 
 	m=new_m;

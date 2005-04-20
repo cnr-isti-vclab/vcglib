@@ -30,10 +30,14 @@ int main( int argc, char ** argv )
 
 	
 	#ifdef _TORUS
-		w.simpleGLWidget1->SetExtractionParameters();
-		s->BBox().min=Point3f(0.f,0.f,0.f);
-		s->BBox().max=Point3f(300.f,300.f,300.f);
-		s->InitSegmentation(Point3f(0.f,100.f,0.f));
+		//w.simpleGLWidget1->SetExtractionParameters();
+		//s->SetSegmentParameters(10,0.5f,0.2f,0.8f,0.4f,3.f,vcg::Point3f(1.f,1.f,1.f),1000,15);
+		s->SetSegmentParameters(10,0.5f,0.8f,0.65f,0.4f,3.f,vcg::Point3f(1.f,1.f,1.f),1000,15);
+		s->BBox().min=Point3f(-40.f,-40.f,-40.f);
+		s->BBox().max=Point3f(40.f,40.f,40.f);
+		s->InitSegmentation(Point3f(0.f,25.f,0.f));
+		w.simpleGLWidget1->CenterExtraction=vcg::Point3f(0.f,-25.f,0.f);
+		s->gray_init=100;
 	#endif
 	
 	
