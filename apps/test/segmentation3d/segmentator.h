@@ -105,6 +105,7 @@ public:
 	public:
 		bool intersected;
 		float kdihedral;
+		ScalarType AreaRep;
 
 		MyFace()
 		{
@@ -116,10 +117,8 @@ public:
 		{ 
 			__super::Init(k,mass);
 			kdihedral=k_dihedral;
-			//if (!intersected)
+			AreaRep=((V(1)->RPos() - V(0)->RPos()) ^ (V(2)->RPos() - V(0)->RPos())).Norm();
 			SetS();
-			/*if (QualityFace()<0.1f)
-			ClearS();*/
 		}
 
 		bool IsActive()
@@ -203,6 +202,19 @@ public:
 						}
 					}
 				}
+
+				///area changing constrain penalize area goes to zero
+				CoordType m0=(V(0)->P()+V(1)->P())/2.f;
+				CoordType m1=(V(1)->P()+V(2)->P())/2.f;
+				CoordType m2=(V(2)->P()+V(0)->P())/2.f;
+				m0=(V(2)->P()-m0).Normalize();//directions
+				m1=(V(0)->P()-m1).Normalize();
+				m2=(V(1)->P()-m2).Normalize();
+				ScalarType FArea=AreaRep/Area()*_k;
+				V(0)->IntForce()+=m0*FArea/3.f;
+				V(1)->IntForce()+=m1*FArea/3.f;
+				V(2)->IntForce()+=m2*FArea/3.f;
+				///end area constrain
 
 				return(__super::Update());
 				///new
