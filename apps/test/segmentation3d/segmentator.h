@@ -157,7 +157,11 @@ public:
 
 		ScalarType ForceValue(ScalarType l0,ScalarType l1)
 		{
-			return ((l0-l1)/(l0/l1) *_k);
+			ScalarType diff=(l0-l1);
+			if (diff>0)//compression
+				return ((diff/l1)*_k);
+			else
+			return (diff *_k);
 		}
 
 		///update of the internal forces using the dihedral angle
@@ -203,18 +207,18 @@ public:
 					}
 				}
 
-				///area changing constrain penalize area goes to zero
-				CoordType m0=(V(0)->P()+V(1)->P())/2.f;
-				CoordType m1=(V(1)->P()+V(2)->P())/2.f;
-				CoordType m2=(V(2)->P()+V(0)->P())/2.f;
-				m0=(V(2)->P()-m0).Normalize();//directions
-				m1=(V(0)->P()-m1).Normalize();
-				m2=(V(1)->P()-m2).Normalize();
-				ScalarType FArea=AreaRep/Area()*_k;
-				V(0)->IntForce()+=m0*FArea/3.f;
-				V(1)->IntForce()+=m1*FArea/3.f;
-				V(2)->IntForce()+=m2*FArea/3.f;
-				///end area constrain
+				////area changing constrain penalize area goes to zero
+				//CoordType m0=(V(0)->P()+V(1)->P())/2.f;
+				//CoordType m1=(V(1)->P()+V(2)->P())/2.f;
+				//CoordType m2=(V(2)->P()+V(0)->P())/2.f;
+				//m0=(V(2)->P()-m0).Normalize();//directions
+				//m1=(V(0)->P()-m1).Normalize();
+				//m2=(V(1)->P()-m2).Normalize();
+				//ScalarType FArea=((ScalarType)1/AreaRep-Area())*_k;
+				//V(0)->IntForce()+=m0*FArea/3.f;
+				//V(1)->IntForce()+=m1*FArea/3.f;
+				//V(2)->IntForce()+=m2*FArea/3.f;
+				////end area constrain
 
 				return(__super::Update());
 				///new
@@ -357,17 +361,18 @@ private:
 		return (fatt2<=conf);
 		
 	}
+
 	float getColor(MyTriMesh::CoordType p)
 	{
 		MyTriMesh::CoordType p1=MyTriMesh::CoordType(p.X(),p.Z(),p.Y());
-		//MyTriMesh::CoordType p2=MyTriMesh::CoordType(p.Z(),p.Y(),p.X());
-
-
-		if (InTorus(p)||InTorus(p1))//||InTorus(p2))
+		MyTriMesh::CoordType p2=MyTriMesh::CoordType(p.Z(),p.Y(),p.X());
+		
+		if (InTorus(p)||InTorus(p1)||InTorus(p2))
 			return (100.f);
 		else
 			return (0.f);
 	}
+
 
 #else
 	///return integer coordinete in volumetric dataset
