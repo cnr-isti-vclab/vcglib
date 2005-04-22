@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/02/26 12:45:23  spinelli
+ripristinata la modalita' di render bbox....
+
 Revision 1.6  2005/01/12 14:39:41  tommyfranken
 constructor name was wrong (old class name)
 
@@ -359,8 +362,8 @@ void DrawFill()
 			}
 			else
 			{
-				glNormalPointer(GL_FLOAT,sizeof(MESH_TYPE::VertexType),&m->vert[0].N()[0]);  
-				glVertexPointer(3,GL_FLOAT,sizeof(MESH_TYPE::VertexType),&m->vert[0].P()[0]); 
+				glNormalPointer(GL_FLOAT,sizeof(MESH_TYPE::VertexType),&(m->vert.begin()->N()[0]));
+				glVertexPointer(3,GL_FLOAT,sizeof(MESH_TYPE::VertexType),&(m->vert.begin()->P()[0])); 
 			}
 		
 
