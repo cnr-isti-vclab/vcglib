@@ -159,9 +159,9 @@ public:
 		{
 			ScalarType diff=(l0-l1);
 			if (diff>0)//compression
-				return ((diff/l1)*_k);
+				return ((diff/(l1))*_k)+(diff *_k);
 			else
-			return (diff *_k);
+				return (diff *_k);
 		}
 
 		///update of the internal forces using the dihedral angle
