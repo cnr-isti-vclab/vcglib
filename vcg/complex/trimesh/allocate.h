@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2005/03/23 13:22:57  turini
+Wrong left parenthesis removed.
+
 Revision 1.17  2005/03/23 11:29:49  ganovelli
 cast int->iterator corrected
 
@@ -328,7 +331,7 @@ static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu
         {
           if(VertexType::HasVFAdjacency())
 			if ((*vi).VFp()!=0)
-			  pu.Update((*vi).VFp());
+			  pu.Update((FaceType*)(*vi).VFp());
 	  // was (for mingw) pu.Update((FaceType*)(*vi).VFp());
 
         }
