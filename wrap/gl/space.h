@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/07/07 23:30:28  cignoni
+Added box3 drawing functions
+
 Revision 1.3  2004/05/26 15:13:01  cignoni
 Removed inclusion of gl extension stuff and added glcolor stuff
 
@@ -45,6 +48,7 @@ First working version!
 #include <vcg/space/point2.h>
 #include <vcg/space/point3.h>
 #include <vcg/space/color4.h>
+#include <vcg/space/box2.h>
 #include <vcg/space/box3.h>
 
 namespace vcg {
@@ -164,7 +168,7 @@ inline void glBoxFlat(Box3<T> const & b)
 
 template <class T>
 	/// Setta i sei clip planes di opengl a far vedere solo l'interno del box 
-inline void glBoxClip(Box3<T> const & b)   
+inline void glBoxClip(const Box3<T>  & b)   
 {
 	double eq[4];	
 	eq[0]= 1; eq[1]= 0; eq[2]= 0; eq[3]=(double)-b.min[0];
@@ -183,6 +187,21 @@ inline void glBoxClip(Box3<T> const & b)
 	eq[0]= 0; eq[1]= 0; eq[2]=-1; eq[3]=(double) b.max[2];
 	glClipPlane(GL_CLIP_PLANE5,eq);
 }
+ template <class T>
+   inline void glBoxWire(const Box2<T>  & b)   
+{ 
+	glPushAttrib(GL_ENABLE_BIT);
+	glDisable(GL_LIGHTING);
+	glBegin(GL_LINE_LOOP);
+
+  glVertex2f((float)b.min[0],(float)b.min[1]);
+	  glVertex2f((float)b.max[0],(float)b.min[1]);
+	  glVertex2f((float)b.max[0],(float)b.max[1]);
+	  glVertex2f((float)b.min[0],(float)b.max[1]);
+  glEnd();
+	
+	glPopAttrib();
+};
 
 }//namespace
 #endif
