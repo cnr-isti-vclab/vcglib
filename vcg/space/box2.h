@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/05/05 10:20:24  croccia
+changed  #include <vcg/space/point3>  to #include <vcg/space/point2.h>
+croccia
+
 Revision 1.2  2004/03/10 21:38:39  cignoni
 Written some documentation and added to the space module
 
@@ -60,7 +64,7 @@ public:
 		/// max coordinate point
     Point2<BoxScalarType> max;
 		/// Standard constructor
-	inline  Box2() { min.x()= 1; max.x()= -1; min.y()= 1; max.y()= -1; }
+	inline  Box2() { min.X()= 1; max.X()= -1; min.Y()= 1; max.Y()= -1; }
 		/// Copy constructor
 	inline  Box2( const Box2 & b ) { min=b.min; max=b.max; }
 		/// Distructor
@@ -206,9 +210,9 @@ public:
 		return (max.v[0]-min.v[0])*(max.v[1]-min.v[1]);
 	}
 		/// Calcola la dimensione del bounding box sulla x.
-	inline BoxScalarType DimX() const { return max.v[0]-min.v[0]; }
+	inline BoxScalarType DimX() const { return max[0]-min[0]; }
 	/// Calcola la dimensione del bounding box sulla y.
-	inline BoxScalarType DimY() const { return max.v[1]-min.v[1]; }
+	inline BoxScalarType DimY() const { return max[1]-min[1]; }
 
 	inline void Normalize( Point2<BoxScalarType> & p )
 	{
