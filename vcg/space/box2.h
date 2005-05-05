@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/03/10 21:38:39  cignoni
+Written some documentation and added to the space module
+
 Revision 1.1  2004/02/15 23:34:04  cignoni
 Initial commit
 
@@ -35,7 +38,7 @@ Initial commit
 
 #include <assert.h>
 #include <vcg/math/base.h>
-#include <vcg/space/point3>
+#include <vcg/space/point2.h>
 namespace vcg {
 
 /** \addtogroup space */
