@@ -90,7 +90,7 @@ public:
 		/// Set the bounding box to a null value
 	void SetNull()
 	{
-		 min.x()= 1; max.x()= -1; min.y()= 1; max.y()= -1;
+		 min.X()= 1; max.X()= -1; min.Y()= 1; max.Y()= -1;
 	}
 		/** Function to add two bounding box
 			@param b Il bounding box che si vuole aggiungere
@@ -102,13 +102,13 @@ public:
 			min=b.min;
 			max=b.max;
 		}
-		esle
+		else
 		{
-			if(min.v[0] > b.min.v[0]) min.v[0] = b.min.v[0];
-			if(min.v[1] > b.min.v[1]) min.v[1] = b.min.v[1];
+			if(min.X() > b.min.X()) min.X() = b.min.X();
+			if(min.Y() > b.min.Y()) min.Y() = b.min.Y();
 
-			if(max.v[0] < b.max.v[0]) max.v[0] = b.max.v[0];
-			if(max.v[1] < b.max.v[1]) max.v[1] = b.max.v[1];
+			if(max.X() < b.max.X()) max.X() = b.max.X();
+			if(max.Y() < b.max.Y()) max.Y() = b.max.Y();
 		}
 	}
 		/** Funzione per aggiungere un punto al bounding box. Il bounding box viene modificato se il punto
@@ -120,11 +120,11 @@ public:
 		if(IsNull()) Set(p);
 		else 
 		{
-			if(min.v[0] > p.v[0]) min.v[0] = p.v[0];
-			if(min.v[1] > p.v[1]) min.v[1] = p.v[1];
+			if(min.X() > p.X()) min.X() = p.X();
+			if(min.Y() > p.Y()) min.Y() = p.Y();
 
-			if(max.v[0] < p.v[0]) max.v[0] = p.v[0];
-			if(max.v[1] < p.v[1]) max.v[1] = p.v[1];
+			if(max.X() < p.X()) max.X() = p.X();
+			if(max.Y() < p.Y()) max.Y() = p.Y();
 		}
 	}
 		/** Calcola l'intersezione tra due bounding box. Al bounding box viene assegnato il valore risultante.
@@ -132,13 +132,13 @@ public:
 		*/
 	void Intersect( const Box2 & b )
 	{
-		if(min.v[0] < b.min.v[0]) min.v[0] = b.min.v[0];
-		if(min.v[1] < b.min.v[1]) min.v[1] = b.min.v[1];
+		if(min.X() < b.min.X()) min.X() = b.min.X();
+		if(min.Y() < b.min.Y()) min.Y() = b.min.Y();
 
-		if(max.v[0] > b.max.v[0]) max.v[0] = b.max.v[0];
-		if(max.v[1] > b.max.v[1]) max.v[1] = b.max.v[1];
+		if(max.X() > b.max.X()) max.X() = b.max.X();
+		if(max.Y() > b.max.Y()) max.Y() = b.max.Y();
 
-		if(min.v[0]>max.v[0] || min.v[1]>max.v[1]) SetNull();
+		if(min.X()>max.X() || min.Y()>max.Y()) SetNull();
 	}
 
 		/** Trasla il bounding box di un valore definito dal parametro.
@@ -156,8 +156,8 @@ public:
 	bool IsIn( Point2<BoxScalarType> const & p ) const
 	{
 		return (
-			min.v[0] <= p.v[0] && p.v[0] <= max.v[0] &&
-			min.v[1] <= p.v[1] && p.v[1] <= max.v[1]
+			min.X() <= p.X() && p.X() <= max.X() &&
+			min.Y() <= p.Y() && p.Y() <= max.Y()
 		);
 	}
 		/** Verifica se un punto appartiene ad un bounding box aperto sul max.
@@ -167,8 +167,8 @@ public:
 	bool IsInEx( Point2<BoxScalarType> const & p ) const
 	{
 		return  (
-			min.v[0] <= p.v[0] && p.v[0] < max.v[0] &&
-			min.v[1] <= p.v[1] && p.v[1] < max.v[1] 
+			min.X() <= p.X() && p.X() < max.X() &&
+			min.Y() <= p.Y() && p.Y() < max.Y() 
 		);
 	}
 		/** Verifica se due bounding box collidono cioe' se hanno una intersezione non vuota. Per esempio
@@ -185,11 +185,11 @@ public:
 		/** Controlla se il bounding box e' nullo.
 			@return True se il bounding box e' nullo, false altrimenti
 		*/
-	inline bool IsNull() const { return min.v[0]>max.v[0] || min.v[1]>max.v[1]; }
+	inline bool IsNull() const { return min.X()>max.X() || min.Y()>max.Y(); }
 		/** Controlla se il bounding box e' consistente.
 			@return True se il bounding box e' consistente, false altrimenti
 		*/
-	inline bool IsValid() const { return min.v[0]<max.v[0] && min.v[1]<max.v[1]; }
+	inline bool IsValid() const { return min.X()<max.X() && min.Y()<max.Y(); }
 		/** Controlla se il bounding box e' vuoto.
 			@return True se il bounding box e' vuoto, false altrimenti
 		*/
@@ -210,9 +210,9 @@ public:
 		return (max.v[0]-min.v[0])*(max.v[1]-min.v[1]);
 	}
 		/// Calcola la dimensione del bounding box sulla x.
-	inline BoxScalarType DimX() const { return max[0]-min[0]; }
+	inline BoxScalarType DimX() const { return max.X()-min.X(); }
 	/// Calcola la dimensione del bounding box sulla y.
-	inline BoxScalarType DimY() const { return max[1]-min[1]; }
+	inline BoxScalarType DimY() const { return max.Y()-min.Y(); }
 
 	inline void Normalize( Point2<BoxScalarType> & p )
 	{
