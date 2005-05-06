@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2005/04/27 16:05:19  callieri
+line 466, added parentesis on default value creator getUV [borland]
+
 Revision 1.19  2004/11/09 15:49:07  ganovelli
 added GetUV
 
@@ -463,7 +466,7 @@ P3ScalarType PSDist( const Point3<P3ScalarType> & p,
 
 
 template <class P3ScalarType>
-void GetUV( Point3<P3ScalarType> &n,Point3<P3ScalarType> &u, Point3<P3ScalarType> &v, Point3<P3ScalarType> up=(Point3<P3ScalarType>)(0,1,0))
+void GetUV( Point3<P3ScalarType> &n,Point3<P3ScalarType> &u, Point3<P3ScalarType> &v, Point3<P3ScalarType> up=(Point3<P3ScalarType>(0,1,0)) )
 {
 	n.Normalize();
 	const double LocEps=double(1e-7);
