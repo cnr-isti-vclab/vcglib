@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/04/22 15:16:48  turini
+Minor Changes To Compile With List Containers.
+
 Revision 1.7  2005/02/26 12:45:23  spinelli
 ripristinata la modalita' di render bbox....
 
@@ -187,7 +190,7 @@ void ClearHint(Hint hn)
 	NormalMode cnm; // Current NormalMode
 	ColorMode ccm; // Current ColorMode
 
-void Update(Change c=CHAll)
+void Update(/*Change c=CHAll*/)
 {
 	if(m==0) return;
 		if(h&HNUseVArray){
@@ -342,7 +345,7 @@ void DrawFill()
 	
 
 	std::vector<MESH_TYPE::FaceType*>::iterator fip;
-	short curtexname=-1;
+	//short curtexname=-1;
 
 	if(cm == CMPerMesh) glColor(m->C());
  
