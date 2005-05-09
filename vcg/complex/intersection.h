@@ -70,7 +70,7 @@ bool Intersect(   GridType & grid,Plane3<ScalarType> plane, vector<typename Grid
 // TODO si dovrebbe considerare la topologia face-face della trimesh per derivare quella della edge mesh..
 */
 template < typename  TriMeshType, typename EdgeMeshType, class ScalarType>
-bool Intersection(	TriMeshType & m, 
+bool Intersection(	/*TriMeshType & m, */
 					Plane3<ScalarType>  pl,
 					EdgeMeshType & em,
 					double& ave_length,
