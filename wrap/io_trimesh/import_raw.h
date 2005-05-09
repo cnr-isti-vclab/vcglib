@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/05/06 13:58:26  callieri
+First working version (callieri)
+
 
 ****************************************************************************/
 
@@ -60,11 +63,15 @@ typedef typename MESH_TYPE::FaceIterator FaceIterator;
 
 enum RAWError {
 	E_NOERROR,				// 0
-		// Errori di open
+		// Error open
 	E_CANTOPEN,				// 1
 	E_UNESPECTEDEOF,        // 2
-	    // errore line descriptor
-	E_INVALIDLINEDESC       // 3
+	    // error line descriptor
+	E_INVALIDLINEDESC,      // 3
+	    // error line parsing
+	E_LINEERROR,            // 4
+        // wrong number of points
+	E_WRONGPOINTNUM			// 5
 };
 
 static const char *ErrorMsg(int error)
@@ -75,6 +82,8 @@ static const char *ErrorMsg(int error)
 	"Can't open file",
 	"Premature End of file",
 	"Invalid line Descriptor",
+	"Error parsing a line",
+	"Point number different from expected"
 	};
 
   if(error>2 || error<0) return "Unknown error";
@@ -169,6 +178,68 @@ static void Skipline(FILE *fp)
   fread(&(buf),sizeof(char),1,fp);
 }
 
+// function to parse the line read from the raw file
+// all characters besides numerals,dot,minus,plus 
+// if e is found between numbers it's ketpt (12e4)
+static int Parseline(int tokennumber, int *tokenorder, char *rawline, float *linebuffer)
+{
+ int linelen;
+ int ii;
+ bool change;
+ int foundtok;
+
+ // length
+ linelen = strlen(rawline);
+
+ // cleaning the line
+ for(ii=0;ii<(linelen-1);)
+ {
+   change = true;
+
+   if(isdigit(rawline[ii]))		// is a number
+    change = false;
+   else if(rawline[ii]==' ')	// is a space
+    change = false;
+   else if((rawline[ii]=='-') || (rawline[ii]=='+') || (rawline[ii]=='-') || (rawline[ii]=='.'))	// is + - .
+    change = false;
+   else if(rawline[ii]=='e')	// is e... is perhaps an exponential ?
+     {  
+	   if((ii>0) || (ii<(linelen-2)))	// if it's at the begin or the end of line, it's not an exponential
+	    if(isdigit(rawline[ii-1]))		// a number before it
+		  if(isdigit(rawline[ii+1]) || (rawline[ii+1]=='+') || (rawline[ii+1]=='-')) // after it a number a plus or a minus
+            change = false;
+	 }
+
+   if(change)
+      rawline[ii++] = ' ';			// then change it to ' ' 
+   else
+	  ii++;
+
+ }
+ rawline[linelen] = '\0';
+
+ // now parsing the line
+ foundtok = 0;
+ ii = 0;
+ while((foundtok<tokennumber)&&(ii<linelen))
+ {
+  //find the next token begin
+  while(rawline[ii] == ' ')
+   ii++;
+
+  foundtok++;
+  sscanf(&(rawline[ii]),"%f", &(linebuffer[tokenorder[foundtok-1]]));
+ 
+  // going after the token
+  while((rawline[ii] != ' ')&&(rawline[ii] != '\0'))
+   ii++;
+ }
+
+ if(foundtok<tokennumber)
+   return E_LINEERROR;
+ else
+   return E_NOERROR;
+}
 
 
 /*!
@@ -181,29 +252,18 @@ static void Skipline(FILE *fp)
 */
 static int Open( MESH_TYPE &m, const char * filename, bool triangulate=false, int lineskip = 0, const char * linedesc = "PX PY PZ")
 {
-	if(triangulate)
-		return Opentriang( m, filename, lineskip, linedesc);
-	else
-		return Openpoints( m, filename, lineskip, linedesc);
-}
-
-
-// in raw files with indication of rows and columns
-static int Opentriang( MESH_TYPE &m, const char * filename, int lineskip = 0, const char * linedesc = "PX PY PZ")
-{
-  return E_NOERROR;
-}
-
-// generic raw reader, only points are imported
-static int Openpoints( MESH_TYPE &m, const char * filename, int lineskip = 0, const char * linedesc = "PX PY PZ")
-{
   int ii;
   int ret;
   FILE *fp;
+  int rownumber;
+  int colnumber;
 
   // line description
   int   tokennumber;
   int   tokenorder[RAW_MAX_TOKEN_LINE_DESCRIPTOR];
+
+  // line read from file, to be parsed
+  char rawline[512];
 
   //line data buffer
   float linebuffer[10];
@@ -224,6 +284,14 @@ static int Openpoints( MESH_TYPE &m, const char * filename, int lineskip = 0, co
   for(ii=0; ii<lineskip; ii++)
    Skipline(fp);
 
+  // in raw files with indication of rows and columns it's also possible to triangulate points
+  // after the skipped lines there should be the number of row and columns
+  if(triangulate)
+  {
+   fscanf(fp,"%i", &(rownumber));
+   fscanf(fp,"%i\n", &(colnumber));
+  }
+
   // parsing line description
   ret = Parselinedescription(linedesc, tokennumber, tokenorder);
   if(ret)
@@ -235,38 +303,93 @@ static int Openpoints( MESH_TYPE &m, const char * filename, int lineskip = 0, co
 
   while(!feof(fp))
   {
-   for(ii=0; ii<tokennumber; ii++)
-     fscanf(fp,"%f", &(linebuffer[tokenorder[ii]]));
+	  /**/
+   //read a new line
+   ii=0;
+   fread(&(rawline[ii++]),sizeof(char),1,fp);
+   while(rawline[ii-1] != '\n')
+    fread(&(rawline[ii++]),sizeof(char),1,fp);
+   rawline[ii-1] = '\0';
 
-   // new vertex
-   VertexType nv;
-   //nv.Supervisor_Flags() = 0;
-
-   // store the position
-   nv.P()[0] = linebuffer[0];   nv.P()[1] = linebuffer[1];   nv.P()[2] = linebuffer[2];
-   // store the normal
-   if(m.HasPerVertexNormal())
+   if(strlen(rawline) >0)  // empty line, just skip
    {
-    nv.N()[0] = linebuffer[3];    nv.N()[1] = linebuffer[4];    nv.N()[2] = linebuffer[5];
-   }
 
-   // store the color
-   if(m.HasPerVertexColor())
-   {
-    nv.C()[0] = linebuffer[6];    nv.C()[1] = linebuffer[7];    nv.C()[2] = linebuffer[8];
-   }
+    ret = Parseline(tokennumber, tokenorder, rawline, linebuffer);
+    if(ret)
+     return ret;
 
-   // store the reflectance
-   if(m.HasPerVertexQuality())
-   {
-    nv.Q() = linebuffer[9];
-   }
+    /*
+    // old code reading directly fom file stream
+    for(ii=0; ii<tokennumber; ii++)
+      fscanf(fp,"%f", &(linebuffer[tokenorder[ii]]));
+    */
 
-   m.vert.push_back(nv);
+    // new vertex
+    VertexType nv;
+
+    // store the position
+    nv.P()[0] = linebuffer[0];    nv.P()[1] = linebuffer[1];    nv.P()[2] = linebuffer[2];
+    // store the normal
+    if(m.HasPerVertexNormal())
+    {
+     nv.N()[0] = linebuffer[3];     nv.N()[1] = linebuffer[4];     nv.N()[2] = linebuffer[5];
+    }
+
+    // store the color
+    if(m.HasPerVertexColor())
+    {
+     nv.C()[0] = linebuffer[6];     nv.C()[1] = linebuffer[7];     nv.C()[2] = linebuffer[8];
+    }
+
+    // store the reflectance
+    if(m.HasPerVertexQuality())
+    {
+     nv.Q() = linebuffer[9];
+    }
+
+    m.vert.push_back(nv);
+   } // end if zero length
   }
 
   // update model point number
   m.vn = m.vert.size();
+
+  // now generate the triangles
+  if(triangulate)
+  {
+    int rr,cc;
+    if(m.vn != (rownumber * colnumber))
+      return E_WRONGPOINTNUM;
+
+    int trinum = (rownumber-1) * (colnumber-1) * 2;
+
+    FaceIterator fi=Allocator<MESH_TYPE>::AddFaces(m,trinum);
+
+	m.fn = 0;
+	for(rr=0; rr<rownumber-1; rr++)
+	 for(cc=0; cc<colnumber-1; cc++)
+	 {
+		// upper tri
+		(*fi).V(0) = &(m.vert[(rr  ) + ((cc  ) * rownumber)]);
+		(*fi).V(1) = &(m.vert[(rr+1) + ((cc  ) * rownumber)]);
+		(*fi).V(2) = &(m.vert[(rr  ) + ((cc+1) * rownumber)]);
+
+		 m.fn++;
+		 fi++;
+
+		// lower tri
+		(*fi).V(0) = &(m.vert[(rr+1) + ((cc  ) * rownumber)]);
+		(*fi).V(1) = &(m.vert[(rr+1) + ((cc+1) * rownumber)]);
+		(*fi).V(2) = &(m.vert[(rr  ) + ((cc+1) * rownumber)]);
+/**/
+		 m.fn++;
+		 fi++;
+	 
+	 }
+	 
+		 
+      ++fi;
+  }
 
   fclose(fp);
   return E_NOERROR;
