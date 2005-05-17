@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/03/08 14:42:22  ganovelli
+added vcg header
+
 
 ****************************************************************************/
 
@@ -33,7 +36,7 @@ $Log: not supported by cvs2svn $
 #include <vcg/space/index/grid_static_ptr.h>
 #include <vcg/space/box3.h>
 #include <vcg/complex/edgemesh/update/bounding.h>
-#include <vector>
+#include <std::vector>
 
 namespace vcg
 	{
@@ -74,7 +77,7 @@ namespace vcg
 					return v->IsD();
 				}
 			};
-			typedef typename GridStaticPtr<	std::vector<PVertex> > GridType;
+			typedef typename GridStaticPtr<	std::std::vector<PVertex> > GridType;
 
 			static void Join(PVertex pv0,PVertex & pv1){
 				pv1.e->V(pv1.z) = pv0.v;
@@ -84,19 +87,19 @@ namespace vcg
 			static GridType & Grid(){static GridType grid; return grid; }
 
 			static void Vertices(EdgeMeshType & em,   ScalarType   epsilon){
-				EdgeMeshType::EdgeIterator ei;
+				typename EdgeMeshType::EdgeIterator ei;
 				bool lastRound ;
 				if(em.vn){
 					vcg::edge::UpdateBounding<EdgeMeshType>::Box(em);
 					Grid().SetBBox(em.bbox);
 
-					vector<PVertex> pv;
+					std::vector<PVertex> pv;
 					for(ei = em.edges.begin(); ei != em.edges.end();++ei){
 						pv.push_back(PVertex(&*ei,0));
 						pv.push_back(PVertex(&*ei,1));
 					}					
 					Grid().Set(pv);
-					vector<PVertex>::iterator pvi;
+					typename std::vector<PVertex>::iterator pvi;
 					Point3<ScalarType> p;
 					PVertex * closest;
 					do{

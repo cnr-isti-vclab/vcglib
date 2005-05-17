@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/10/28 00:47:42  cignoni
+Better Doxygen documentation
+
 Revision 1.3  2004/09/20 09:30:03  cignoni
 Better Doxygen docs
 
@@ -86,8 +89,8 @@ class EdgeMesh{
 	Box3<ScalarType> bbox;
 	
   /// Nomi di textures
-	//vector<string> textures;
-	//vector<string> normalmaps;
+	//std::vector<string> textures;
+	//std::vector<string> normalmaps;
 
 		/// La camera
 	//Camera<ScalarType> camera;
