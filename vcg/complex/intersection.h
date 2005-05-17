@@ -1,4 +1,4 @@
-#include<vector>
+#include<std::vector>
 #include<vcg/space/point3.h>
 #include<vcg/space/plane3.h>
 #include<vcg/space/segment3.h>
@@ -6,7 +6,6 @@
 #include<vcg/space/index/grid_static_ptr.h>
 
 #include<vcg/complex/trimesh/base.h>
-using namespace std;
 
 namespace vcg{
 
@@ -16,7 +15,7 @@ namespace vcg{
     Function computing the intersection between  a grid and a plane. It returns all the cells intersected
 */
 template < typename  GridType,typename ScalarType>
-bool Intersect(   GridType & grid,Plane3<ScalarType> plane, vector<typename GridType::Cell *> &cells){					
+bool Intersect(   GridType & grid,Plane3<ScalarType> plane, std::vector<typename GridType::Cell *> &cells){					
 	Point3d p,_d;
 	Plane3d pl;
 	_d.Import(plane.Direction());
@@ -43,7 +42,7 @@ bool Intersect(   GridType & grid,Plane3<ScalarType> plane, vector<typename Grid
 							seg.P1()[axis1] = grid.bbox.min[axis1]+ (j+0.01) * grid.voxel[axis1];
 							if ( Intersection(pl,seg,p))
 								{
-									pi[axis] =	min(max(0,floor((p[axis ]-grid.bbox.min[axis])/grid.voxel[axis])),grid.siz[axis]);
+									pi[axis] =	min(max(0,(int)floor((p[axis ]-grid.bbox.min[axis])/grid.voxel[axis])),grid.siz[axis]);
 									pi[axis0] = i;
 									pi[axis1] = j;
 									grid.Grid(pi,axis,cells);
@@ -75,25 +74,25 @@ bool Intersection(	/*TriMeshType & m, */
 					EdgeMeshType & em,
 					double& ave_length,
 					typename GridStaticPtr<typename TriMeshType::FaceContainer> *grid,
-					typename vector< typename GridStaticPtr<typename TriMeshType::FaceContainer>::Cell* >& cells)
+					typename std::vector< typename GridStaticPtr<typename TriMeshType::FaceContainer>::Cell* >& cells)
 {
 	typedef typename TriMeshType::FaceContainer FaceContainer;
 	typedef GridStaticPtr<FaceContainer> GridType;
-	EdgeMeshType::VertexIterator vi;
-	TriMeshType::FaceIterator fi;
-    vector<TriMeshType::FaceType*> v;
+	typename EdgeMeshType::VertexIterator vi;
+	typename TriMeshType::FaceIterator fi;
+  std::vector<typename TriMeshType::FaceType*> v;
 	v.clear();
 	Intersect(*grid,pl,cells);
 	Segment3<ScalarType> seg;
 	ave_length = 0.0;
-	vector<GridType::Cell*>::iterator ic;
-	GridType::Cell fs,ls;
+	typename std::vector<typename GridType::Cell*>::iterator ic;
+	typename GridType::Cell fs,ls;
 	for(ic = cells.begin(); ic != cells.end();++ic)
 		{
 			grid->Grid(*ic,fs,ls);
-			GridType::Link * lk = fs;
+			typename GridType::Link * lk = fs;
 			while(lk != ls){
-				TriMeshType::FaceType & face = *(lk->Elem());
+				typename TriMeshType::FaceType & face = *(lk->Elem());
 					if(!face.IsS())
 					{
 						face.SetS();
@@ -116,7 +115,7 @@ bool Intersection(	/*TriMeshType & m, */
 				}//end while
 		}
 	ave_length/=em.en;
-	vector<TriMeshType::FaceType*>::iterator v_i;
+	typename std::vector<typename TriMeshType::FaceType*>::iterator v_i;
     for(v_i=v.begin(); v_i!=v.end(); ++v_i) (*v_i)->ClearS();
 
 	return true;
@@ -133,13 +132,13 @@ bool IntersectionRayMesh(
 	/* Intersect Point */	Point3<ScalarType> & hitPoint)
 {
 	//typedef typename TriMeshType::FaceContainer FaceContainer;
-	TriMeshType::FaceIterator fi;
+	typename TriMeshType::FaceIterator fi;
 	bool hit=false;
 
 	if(m==0) return false;
 
 	//TriMeshType::FaceIterator fi;
-	//vector<TriMeshType::FaceType*>::iterator fi;
+	//std::vector<TriMeshType::FaceType*>::iterator fi;
 
 	ScalarType bar1,bar2,dist;
 	Point3<ScalarType> p1;
