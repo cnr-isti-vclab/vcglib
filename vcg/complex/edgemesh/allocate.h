@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/10/28 00:47:42  cignoni
+Better Doxygen documentation
+
 Revision 1.3  2004/09/20 08:37:47  cignoni
 Better Doxygen docs
 
@@ -114,7 +117,7 @@ static VertexIterator AddVertices(MeshType &m,int n, PointerUpdater<VertexPointe
 		
 		// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
 			unsigned int siz=m.vert.size()-n;	
-		  if(last!=0)  
+		  if(last!=(vertexIterator)0)  
 			{ 
 				last = m.vert.begin(); 
 				advance(last,siz);
@@ -144,7 +147,7 @@ static EdgeIterator AddEdges(MeshType &m, int n)
 */
 static EdgeIterator AddEdges(MeshType &m, int n, PointerUpdater<EdgePointer> &pu)
 {
-  EdgeIterator last=0;
+  EdgeIterator last=(EdgeIterator)0;
   pu.Clear();
   if(m.edges.empty()) {
     pu.oldBase=0;  // if the vector is empty we cannot find the last valid element
@@ -184,7 +187,7 @@ static EdgeIterator AddEdges(MeshType &m, int n, PointerUpdater<EdgePointer> &pu
         }
         		// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
 		unsigned int siz=m.edges.size()-n;	
-		if(last!=0)  
+		if(last!=(EdgeIterator)0)  
 			{ 
 				last = m.edges.begin(); 
 				advance(last,siz);
