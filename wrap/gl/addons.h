@@ -21,7 +21,7 @@
 *                                                                           *
 ****************************************************************************/
 /****************************************************************************
-  Histoy
+Histoy
 
 ****************************************************************************/
 #ifndef __VCG_GLADDONS
@@ -46,7 +46,7 @@ namespace vcg
 		enum DrawMode  {DMUser,DMWire,DMSolid} ;
 	private:
 
-		///used to find right trasformation in caso of rotation 
+		///used to find right trasformation in case of rotation 
 		static void XAxis(  Point3d  zero,  Point3d  uno, Matrix44d & tr){
 			tr.SetZero();
 			*((Point3d*)&tr[0][0]) = uno-zero;
@@ -87,9 +87,9 @@ namespace vcg
 			bool to_insert=false;
 			if (useDisplList)
 			{
-			if (it!=Disp_listMap.end())///the list exist
-				cyl_List=it->second;
-			else to_insert=true;
+				if (it!=Disp_listMap.end())///the list exist
+					cyl_List=it->second;
+				else to_insert=true;
 			}
 
 			glScaled(lenght,width,width);
@@ -104,7 +104,7 @@ namespace vcg
 				int b;
 				vcg::Point3d p0;
 				vcg::Point3d p1;
-				
+
 				double step=6.28/(double)slices;
 				double angle=0;
 				glBegin(GL_TRIANGLE_STRIP);
@@ -164,7 +164,7 @@ namespace vcg
 			if (useDisplList)
 			{
 				glCallList(cyl_List);
-			///I insert key and value in the map if I need
+				///I insert key and value in the map if I need
 				if (to_insert)
 					Disp_listMap.insert(std::pair<int,GLint>(slices,cyl_List));
 			}
@@ -173,58 +173,58 @@ namespace vcg
 		static void Diamond (double radius,bool useDisplList)
 		{ 
 			static GLint diam_List=-1;
-			
+
 			glScaled(radius,radius,radius);
 			if (((!glIsList(diam_List))&&(useDisplList))||(!useDisplList))
 			{
-			if (useDisplList)
-			{
-			diam_List = glGenLists(1);
-			glNewList(diam_List, GL_COMPILE);
-			}
+				if (useDisplList)
+				{
+					diam_List = glGenLists(1);
+					glNewList(diam_List, GL_COMPILE);
+				}
 
-			glBegin(GL_TRIANGLE_FAN);
-			glNormal3f( 0.0, 1,  0.0);
-			glVertex3f(0.0,1,0.0);
+				glBegin(GL_TRIANGLE_FAN);
+				glNormal3f( 0.0, 1,  0.0);
+				glVertex3f(0.0,1,0.0);
 
-			glNormal3f( 1, 0.0,  0.0);
-			glVertex3f( 1, 0.0, 0.0);
+				glNormal3f( 1, 0.0,  0.0);
+				glVertex3f( 1, 0.0, 0.0);
 
-			glNormal3f( 0.0, 0.0, -1);
-			glVertex3f( 0.0, 0.0,-1);
+				glNormal3f( 0.0, 0.0, -1);
+				glVertex3f( 0.0, 0.0,-1);
 
-			glNormal3f(-1, 0.0 , 0.0);
-			glVertex3f(-1, 0.0, 0.0);
+				glNormal3f(-1, 0.0 , 0.0);
+				glVertex3f(-1, 0.0, 0.0);
 
-			glNormal3f( 0.0, 0.0, 1);
-			glVertex3f( 0.0, 0.0, 1);
+				glNormal3f( 0.0, 0.0, 1);
+				glVertex3f( 0.0, 0.0, 1);
 
-			glNormal3f( 1, 0.0,  0.0);
-			glVertex3f( 1, 0.0, 0.0);
+				glNormal3f( 1, 0.0,  0.0);
+				glVertex3f( 1, 0.0, 0.0);
 
-			glEnd();
+				glEnd();
 
-			glBegin(GL_TRIANGLE_FAN);
-			glNormal3f( 0.0, 1,  0.0);
-			glVertex3f( 0.0,-1, 0.0);
+				glBegin(GL_TRIANGLE_FAN);
+				glNormal3f( 0.0, 1,  0.0);
+				glVertex3f( 0.0,-1, 0.0);
 
-			glNormal3f( 1, 0.0,  0.0);
-			glVertex3f( 1, 0.0, 0.0);
+				glNormal3f( 1, 0.0,  0.0);
+				glVertex3f( 1, 0.0, 0.0);
 
-			glNormal3f( 0.0, 0.0, 1);
-			glVertex3f( 0.0, 0.0, 1);
+				glNormal3f( 0.0, 0.0, 1);
+				glVertex3f( 0.0, 0.0, 1);
 
-			glNormal3f(-1,0.0 , 0.0);
-			glVertex3f(-1, 0.0, 0.0);
+				glNormal3f(-1,0.0 , 0.0);
+				glVertex3f(-1, 0.0, 0.0);
 
-			glNormal3f( 0.0,0.0, -1);
-			glVertex3f( 0.0, 0.0,-1);
+				glNormal3f( 0.0,0.0, -1);
+				glVertex3f( 0.0, 0.0,-1);
 
-			glNormal3f( 1, 0.0,  0.0);
-			glVertex3f( 1, 0.0, 0.0);
-			glEnd();
-			if (useDisplList)
-				glEndList();
+				glNormal3f( 1, 0.0,  0.0);
+				glVertex3f( 1, 0.0, 0.0);
+				glEnd();
+				if (useDisplList)
+					glEndList();
 			}
 			if (useDisplList)
 				glCallList(diam_List);
@@ -238,7 +238,7 @@ namespace vcg
 			std::map<int,GLint>::const_iterator it=Disp_listMap.find(slices);
 			///if the diplay list is createdtake the Glint that identify it
 			bool to_insert=false;
-			
+
 			if (useDisplList)
 			{
 				if (it!=Disp_listMap.end())///the list exist
@@ -303,25 +303,28 @@ namespace vcg
 			static void glArrow(Point3d tail, Point3d head,double body_width,double head_lenght,
 			double head_width,int body_slice=10,int head_slice=10,bool useDisplList=true)
 		{
-			//assert(!glGetError());
-			Matrix44d tr;
-			XAxis(tail,head,tr);
-			glPushAttrib(GL_ALL_ATTRIB_BITS);
-			SetGLParameters(dm);
-			glPushMatrix();		
-			glMultMatrixd(&tr[0][0]);
-			vcg::Point3d Direct=(head-tail);
-			double l_body=Direct.Norm()-head_lenght;
-			glPushMatrix();
-			glTranslate(vcg::Point3d(tail.Norm(),0,0));
-			Cylinder(body_slice,l_body,body_width,useDisplList);
-			glPopMatrix();
-			glTranslate(vcg::Point3d(l_body,0,0));
-			Cone(head_slice,head_lenght,head_width,useDisplList);
-			glPopMatrix();
-			//assert(!glGetError());
-			glPopAttrib();
-			//assert(!glGetError());
+			if (tail!=head)
+			{
+				//assert(!glGetError());
+				Matrix44d tr;
+				XAxis(tail,head,tr);
+				glPushAttrib(GL_ALL_ATTRIB_BITS);
+				SetGLParameters(dm);
+				glPushMatrix();		
+				glMultMatrixd(&tr[0][0]);
+				vcg::Point3d Direct=(head-tail);
+				double l_body=Direct.Norm()-head_lenght;
+				glPushMatrix();
+				glTranslate(vcg::Point3d(tail.Norm(),0,0));
+				Cylinder(body_slice,l_body,body_width,useDisplList);
+				glPopMatrix();
+				glTranslate(vcg::Point3d(l_body,0,0));
+				Cone(head_slice,head_lenght,head_width,useDisplList);
+				glPopMatrix();
+				//assert(!glGetError());
+				glPopAttrib();
+				//assert(!glGetError());
+			}
 		}
 
 		/// draw a cone from tail to head
@@ -330,18 +333,21 @@ namespace vcg
 		template <DrawMode dm>
 			static void glCone(Point3d tail, Point3d head,double width,int slice=10,bool useDisplList=true)
 		{
-			Matrix44d tr;								   
-			XAxis(tail,head,tr);
-			glPushAttrib(GL_ALL_ATTRIB_BITS);
-			SetGLParameters(dm);
-			glPushMatrix();
-			glMultMatrixd(&tr[0][0]);
-			vcg::Point3d Direct=(head-tail);
-			double l_body=Direct.Norm();
-			glTranslate(vcg::Point3d(tail.Norm(),0,0));
-			Cone(slice,l_body,width,useDisplList);	
-			glPopMatrix();
-			glPopAttrib();
+			if (tail!=head)
+			{
+				Matrix44d tr;								   
+				XAxis(tail,head,tr);
+				glPushAttrib(GL_ALL_ATTRIB_BITS);
+				SetGLParameters(dm);
+				glPushMatrix();
+				glMultMatrixd(&tr[0][0]);
+				vcg::Point3d Direct=(head-tail);
+				double l_body=Direct.Norm();
+				glTranslate(vcg::Point3d(tail.Norm(),0,0));
+				Cone(slice,l_body,width,useDisplList);	
+				glPopMatrix();
+				glPopAttrib();
+			}
 		}
 
 		/// draw a cylinder from tail to head
@@ -350,20 +356,22 @@ namespace vcg
 		template <DrawMode dm>
 			static void glCylinder(Point3d tail, Point3d head,double width,int slice=10,bool useDisplList=true)
 		{
-			Matrix44d tr;								   
-			XAxis(tail,head,tr);						   
-			glPushAttrib(GL_ALL_ATTRIB_BITS);
-			SetGLParameters(dm);
-			glPushMatrix();
-			glMultMatrixd(&tr[0][0]);
-			vcg::Point3d Direct=(head-tail);
-			double l_body=Direct.Norm();
-			glTranslate(vcg::Point3d(tail.Norm(),0,0));
-			Cylinder(slice,l_body,width,useDisplList);
-			glPopMatrix();
-			glPopAttrib();
-			
-			
+			if (tail!=head)
+			{
+				Matrix44d tr;								   
+				XAxis(tail,head,tr);						   
+				glPushAttrib(GL_ALL_ATTRIB_BITS);
+				SetGLParameters(dm);
+				glPushMatrix();
+				glMultMatrixd(&tr[0][0]);
+				vcg::Point3d Direct=(head-tail);
+				double l_body=Direct.Norm();
+				glTranslate(vcg::Point3d(tail.Norm(),0,0));
+				Cylinder(slice,l_body,width,useDisplList);
+				glPopMatrix();
+				glPopAttrib();
+			}
+
 		}
 
 		/// draw a point in Center
@@ -373,16 +381,18 @@ namespace vcg
 		template <DrawMode dm>
 			static void glPoint(vcg::Point3f Center,float size,int slices =16,int stacks =16)
 		{
-			glPushMatrix();
-			glTranslate(Center);
-			if (dm==DMWire)
-				glutWireSphere(size,slices,stacks);
-			else
-				if (dm==DMSolid)
-					glutSolidSphere(size,slices,stacks);
+			if (size!=0){
+				glPushMatrix();
+				glTranslate(Center);
+				if (dm==DMWire)
+					glutWireSphere(size,slices,stacks);
 				else
-					glutSolidSphere(size,slices,stacks);
-			glPopMatrix();
+					if (dm==DMSolid)
+						glutSolidSphere(size,slices,stacks);
+					else
+						glutSolidSphere(size,slices,stacks);
+				glPopMatrix();
+			}
 		}
 
 		/// draw a point in Center
@@ -390,15 +400,17 @@ namespace vcg
 		/// slices = The number of subdivisions around the Z axis (similar to lines of longitude). 
 		/// stacks = The number of subdivisions along the Z axis (similar to lines of latitude). 
 		template <DrawMode dm>
-		static void glDiamond (Point3f Center, double size,bool useDisplList=true)
+			static void glDiamond (Point3f Center, double size,bool useDisplList=true)
 		{
-			glPushAttrib(GL_ALL_ATTRIB_BITS);
-			SetGLParameters(dm);
-			glPushMatrix();
-			glTranslated(Center[0],Center[1],Center[2]);
-			Diamond(size,useDisplList);
-			glPopMatrix();
-			glPopAttrib();
+			if (size!=0){
+				glPushAttrib(GL_ALL_ATTRIB_BITS);
+				SetGLParameters(dm);
+				glPushMatrix();
+				glTranslated(Center[0],Center[1],Center[2]);
+				Diamond(size,useDisplList);
+				glPopMatrix();
+				glPopAttrib();
+			}
 		}
 	};
 }
