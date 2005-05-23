@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/04/11 14:11:22  pietroni
+changed swap to math::Swap in Traspose Function
+
 Revision 1.3  2004/10/18 15:03:02  fiorin
 Updated interface: all Matrix classes have now the same interface
 
@@ -48,6 +51,17 @@ created
 #include <vector>
 
 namespace vcg {
+
+template <class S>
+class Matrix33Ide:public Point3<S>{
+public:
+	/** @name Matrix33
+	Class Matrix33Ide.
+    This is the class for definition of a diagonal matrix 3x3.	
+	@param S (Templete Parameter) Specifies the ScalarType field.
+*/
+	Matrix33Ide(const S & p0,const S & p1,const S & p2):Point3<S>(p0,p1,p2){};
+};
 
 template<class S>
 /** @name Matrix33
@@ -118,6 +132,15 @@ public:
 		return *this;
 	}
 
+	/// Modificatore somma per matrici 3x3
+	Matrix33 & operator += ( const Matrix33Ide<S>  &p )
+	{
+		a[0] += p[0];
+		a[4] += p[1];
+		a[8] += p[2];
+		return *this;
+	}
+
 	/// Modificatore sottrazione per matrici 3x3
 	Matrix33 & operator -= ( const Matrix33 &m )
 	{
@@ -175,6 +198,7 @@ public:
 
 		return r;
 	}
+
 
 	/** Operatore per il prodotto matrice-vettore.
 		@param v A point in $R^{3}$
