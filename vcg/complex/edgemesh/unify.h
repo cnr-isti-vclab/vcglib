@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/05/17 21:19:37  ganovelli
+some std::and typename  missing  (CRS4)
+
 Revision 1.2  2005/03/08 14:42:22  ganovelli
 added vcg header
 
@@ -36,7 +39,7 @@ added vcg header
 #include <vcg/space/index/grid_static_ptr.h>
 #include <vcg/space/box3.h>
 #include <vcg/complex/edgemesh/update/bounding.h>
-#include <std::vector>
+#include <vector>
 
 namespace vcg
 	{
