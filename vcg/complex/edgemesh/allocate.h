@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/05/17 21:14:56  ganovelli
+some typecast (crs4)
+
 Revision 1.4  2004/10/28 00:47:42  cignoni
 Better Doxygen documentation
 
@@ -117,7 +120,7 @@ static VertexIterator AddVertices(MeshType &m,int n, PointerUpdater<VertexPointe
 		
 		// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
 			unsigned int siz=m.vert.size()-n;	
-		  if(last!=(vertexIterator)0)  
+		  if(last!=(VertexIterator)0)  
 			{ 
 				last = m.vert.begin(); 
 				advance(last,siz);
