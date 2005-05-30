@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/05/30 09:13:08  ganovelli
+error in include
+
 Revision 1.3  2005/05/17 21:19:37  ganovelli
 some std::and typename  missing  (CRS4)
 
@@ -80,7 +83,7 @@ namespace vcg
 					return v->IsD();
 				}
 			};
-			typedef typename GridStaticPtr<	std::std::vector<PVertex> > GridType;
+			typedef typename GridStaticPtr<	std::vector<PVertex> > GridType;
 
 			static void Join(PVertex pv0,PVertex & pv1){
 				pv1.e->V(pv1.z) = pv0.v;
