@@ -1,4 +1,39 @@
-#include<std::vector>
+/****************************************************************************
+* VCGLib                                                            o o     *
+* Visual and Computer Graphics Library                            o     o   *
+*                                                                _   O  _   *
+* Copyright(C) 2004                                                \/)\/    *
+* Visual Computing Lab                                            /\/|      *
+* ISTI - Italian National Research Council                           |      *
+*                                                                    \      *
+* All rights reserved.                                                      *
+*                                                                           *
+* This program is free software; you can redistribute it and/or modify      *   
+* it under the terms of the GNU General Public License as published by      *
+* the Free Software Foundation; either version 2 of the License, or         *
+* (at your option) any later version.                                       *
+*                                                                           *
+* This program is distributed in the hope that it will be useful,           *
+* but WITHOUT ANY WARRANTY; without even the implied warranty of            *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
+* GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
+* for more details.                                                         *
+*                                                                           *
+****************************************************************************/
+/****************************************************************************
+  History
+
+$Log: not supported by cvs2svn $
+Revision 1.3  2005/05/17 21:19:37  ganovelli
+some std::and typename  missing  (CRS4)
+
+Revision 1.2  2005/03/08 14:42:22  ganovelli
+added vcg header
+
+
+****************************************************************************/
+
+#include<vector>
 #include<vcg/space/point3.h>
 #include<vcg/space/plane3.h>
 #include<vcg/space/segment3.h>
