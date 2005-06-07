@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/05/23 15:05:26  ganovelli
+Matrix33Diag Added: it implements diagonal matrix. Added only operator += in Matrix33
+
 Revision 1.4  2005/04/11 14:11:22  pietroni
 changed swap to math::Swap in Traspose Function
 
@@ -53,14 +56,14 @@ created
 namespace vcg {
 
 template <class S>
-class Matrix33Ide:public Point3<S>{
+class Matrix33Diag:public Point3<S>{
 public:
 	/** @name Matrix33
-	Class Matrix33Ide.
+	Class Matrix33Diag.
     This is the class for definition of a diagonal matrix 3x3.	
 	@param S (Templete Parameter) Specifies the ScalarType field.
 */
-	Matrix33Ide(const S & p0,const S & p1,const S & p2):Point3<S>(p0,p1,p2){};
+	Matrix33Diag(const S & p0,const S & p1,const S & p2):Point3<S>(p0,p1,p2){};
 };
 
 template<class S>
@@ -133,7 +136,7 @@ public:
 	}
 
 	/// Modificatore somma per matrici 3x3
-	Matrix33 & operator += ( const Matrix33Ide<S>  &p )
+	Matrix33 & operator += ( const Matrix33Diag<S>  &p )
 	{
 		a[0] += p[0];
 		a[4] += p[1];
