@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/06/07 07:44:08  cignoni
+Added Percentile and removed small bug in Add
+
 Revision 1.4  2005/04/04 10:48:35  cignoni
 Added missing functions Avg, rms etc, now fully (almost) functional
 
@@ -68,7 +71,7 @@ public:
 	ScalarType Percentile(ScalarType frac) const;
   ScalarType Avg()               { return avg/cnt;              }
   ScalarType RMS()               { return sqrt(rms/double(cnt));}
-  ScalarType Variance()          { return rms/cnt-Avg()*Avg();  }
+  ScalarType Variance()          { return fabs(rms/cnt-Avg()*Avg());  }
   ScalarType StandardDeviation() { return sqrt(Variance());     }
 
   void FileWrite(const std::string &filename);
@@ -149,8 +152,10 @@ ScalarType Histogram<ScalarType>::Percentile(ScalarType frac) const
 	assert(frac>=0 && frac<=1);
 	ScalarType sum=0,partsum=0;
 	int isum=0,ipartsum=0;
-  for(int i=0;i<n+1;i++)	{ sum+=H[i]; isum+=H[i];}
-	assert(isum==cnt);
+    int i;
+    for(i=0;i<n+1;i++)	{ sum+=H[i]; isum+=H[i];}
+	
+    assert(isum==cnt);
 	assert(sum==cnt);
 
 	sum*=frac;
