@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/04/04 10:48:35  cignoni
+Added missing functions Avg, rms etc, now fully (almost) functional
+
 Revision 1.3  2005/03/14 09:23:40  cignoni
 Added missing include<vector>
 
@@ -121,12 +124,13 @@ int Histogram<ScalarType>::Interize(ScalarType val)
 template <class ScalarType> 
 void Histogram<ScalarType>::Add(ScalarType v){
 	int pos= lower_bound(R.begin(),R.end(),v)-R.begin()-1;
-	if(pos<=n){
+	if(pos>=0 && pos<=n){
 		++H[pos];
 		++cnt;
 		avg+=v;
 		rms += v*v;
 	}
+  
 }
 
 
@@ -137,5 +141,26 @@ fp=fopen(filename.c_str(),"w");
 for(int i=0;i<H.size();i++)
 fprintf (fp,"%12.8lf , %12.8lf \n",R[i],double(H[i])/cnt);
 }
+
+template <class ScalarType> 
+ScalarType Histogram<ScalarType>::Percentile(ScalarType frac) const
+{
+	if(H.size()==0 && R.size()==0) return 0;
+	assert(frac>=0 && frac<=1);
+	ScalarType sum=0,partsum=0;
+	int isum=0,ipartsum=0;
+  for(int i=0;i<n+1;i++)	{ sum+=H[i]; isum+=H[i];}
+	assert(isum==cnt);
+	assert(sum==cnt);
+
+	sum*=frac;
+	for(i=0;i<n;i++)	{
+			partsum+=H[i];
+			if(partsum>=sum) break;
+		}
+	return R[i+1];
+}
+
+
 }// end namespace
 #endif	
