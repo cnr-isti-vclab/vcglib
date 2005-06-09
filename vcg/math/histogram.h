@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/06/07 09:37:33  ponchio
+Added fabs() to variance, which can sometime be negative in case
+of rounding errors (and sqrt chokes on it).
+
 Revision 1.5  2005/06/07 07:44:08  cignoni
 Added Percentile and removed small bug in Add
 
@@ -166,6 +170,8 @@ ScalarType Histogram<ScalarType>::Percentile(ScalarType frac) const
 	return R[i+1];
 }
 
+typedef Histogram<double> Histogramd ;
+typedef Histogram<float> Histogramf ;
 
 }// end namespace
 #endif	
