@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2005/04/27 16:08:39  callieri
+in addfaces, added casting for face* returned from vertex.VFp() [borland]
+
 Revision 1.18  2005/03/23 13:22:57  turini
 Wrong left parenthesis removed.
 
@@ -168,7 +171,7 @@ static VertexIterator AddVertices(MeshType &m,int n, PointerUpdater<VertexPointe
         }
 
 		// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
-			unsigned int siz=m.vert.size()-n;	
+			unsigned int siz=(unsigned int) m.vert.size()-n;	
 
 			last = m.vert.begin(); 
 			advance(last,siz);
@@ -336,7 +339,7 @@ static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu
 
         }
         		// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
-		unsigned int siz=m.face.size()-n;	
+		unsigned int siz=(unsigned int)m.face.size()-n;	
 		last = m.face.begin(); 
 		advance(last,siz);
 		}
