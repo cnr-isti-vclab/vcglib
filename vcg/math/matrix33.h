@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/06/10 11:46:49  pietroni
+Added Norm Function
+
 Revision 1.6  2005/06/07 14:29:56  ganovelli
 changed from Matrix33Ide to MatrixeeDiag
 
@@ -403,7 +406,7 @@ template <class STLPOINTCONTAINER >
 void CrossCovariance(const STLPOINTCONTAINER &P, const STLPOINTCONTAINER &X, 
 										 Point3<S> &bp, Point3<S> &bx) 
 {
-	Zero();
+	SetZero();
 	assert(P.size()==X.size());
 	bx.Zero();
 	bp.Zero();
