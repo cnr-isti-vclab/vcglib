@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/06/09 14:19:55  cignoni
+Added typedef Histogramf and Histogramd
+
 Revision 1.6  2005/06/07 09:37:33  ponchio
 Added fabs() to variance, which can sometime be negative in case
 of rounding errors (and sqrt chokes on it).
@@ -50,7 +53,7 @@ Initial Release
 #define __VCG_HISTOGRAM
 
 #include <vector>
-
+#include <assert.h>
 namespace vcg {
 
 /**
@@ -118,7 +121,7 @@ void Histogram<ScalarType>::SetRange(ScalarType _minv, ScalarType _maxv, int _n,
 	R.resize(n+1);
 	double dlt=(maxv-minv);
 	for(int i=0;i<n+1;++i)
-		R[i]=minv+dlt*pow(double(i)/n,gamma);
+		R[i]=minv+dlt*pow(ScalarType(i)/n,gamma);
 }
 template <class ScalarType> 
 int Histogram<ScalarType>::Interize(ScalarType val) 
