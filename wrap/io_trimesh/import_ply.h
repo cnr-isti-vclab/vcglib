@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2005/04/14 15:09:38  ponchio
+New gcc 3.3.3 (with bugs and features) now compiles.
+
 Revision 1.13  2005/03/18 00:14:39  cignoni
 removed small gcc compiling issues
 
@@ -85,11 +88,15 @@ namespace io {
 template <class TYPE>
 int PlyType ()  { return 0;}
 
-template <> int PlyType <float >()  { return ply::T_FLOAT; }
-template <> int PlyType <double>()  { return ply::T_DOUBLE; }
-template <> int PlyType <int   >()  { return ply::T_INT; } 
-template <> int PlyType <short >()  { return ply::T_SHORT; }
-template <> int PlyType <unsigned char >()  { return ply::T_UCHAR; }
+
+// 10/6/05 Cignoni this specialization must be inlined becouse otherwise if we include this 
+// .h in two different cpp we should get a double definition error during linking
+
+template <> inline int PlyType <float >()  { return ply::T_FLOAT; }
+template <> inline int PlyType <double>()  { return ply::T_DOUBLE; }
+template <> inline int PlyType <int   >()  { return ply::T_INT; } 
+template <> inline int PlyType <short >()  { return ply::T_SHORT; }
+template <> inline int PlyType <unsigned char >()  { return ply::T_UCHAR; }
 
 /** 
 This class encapsulate a filter for opening ply meshes.
