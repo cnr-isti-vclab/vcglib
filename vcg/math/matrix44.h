@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.25  2005/04/14 11:35:09  ponchio
+*** empty log message ***
+
 Revision 1.24  2005/03/18 00:14:39  cignoni
 removed small gcc compiling issues
 
@@ -123,7 +126,7 @@ public:
 
 ///@{
 
-  /** $name Contrutors
+  /** $name Constructors
     *  No automatic casting and default constructor is empty
     */
 	Matrix44() {};	
@@ -154,42 +157,28 @@ public:
   const T *operator[](const int i) const;
 
 	// return a copy of the i-th column
-	Point4<T> GetColumn(const int& i)const{
-		assert(i >=0);
-		assert(i<4);
-		int first = i<<2;
-		return Point4<T>(_a[first],_a[first+1],_a[first+2],_a[first+3]);
+	Point4<T> GetColumn4(const int& i)const{
+		assert(i>=0 && i<4);
+		return Point4<T>(ElementAt(0,i),ElementAt(1,i),ElementAt(2,i),ElementAt(3,i));
+   //return Point4<T>(_a[i],_a[i+4],_a[i+8],_a[i+12]);
 	}
 
-	// return the i-th row
-	Point4<T> & GetColumn4(const int& i)const{
-		assert(i >=0);
-		assert(i<4);
-		int first = i<<2;
-		return Point4<T>(_a[first],_a[first+4],_a[first+8],_a[first+12]);
+  Point3<T> GetColumn3(const int& i)const{
+		assert(i>=0 && i<4);
+		return Point3<T>(ElementAt(0,i),ElementAt(1,i),ElementAt(2,i));
 	}
 
-	// return a copy of the i-th row
-	Point4<T> Row4(const int& i)const{
-		assert(i >=0);
-		assert(i<4);
-		return *((Point4<T>*)(&_a[i<<2]));
+  Point4<T> GetRow4(const int& i)const{
+		assert(i>=0 && i<4);
+		return Point4<T>(ElementAt(i,0),ElementAt(i,1),ElementAt(i,2),ElementAt(i,3));
+    // return *((Point4<T>*)(&_a[i<<2])); alternativa forse + efficiente
 	}
-
-	Point3<T> GetColumn3(const int& i)const{
-		assert(i >=0);
-		assert(i<4);
-		int first  = i <<2;
-		return Point3<T>(_a[first],_a[first+4],_a[first+8]);
-	}	
-	
-	// return a copy of the i-th row
-	Point3<T> Row3(const int& i)const{
-		assert(i >=0);
-		assert(i<4);
-		return *((Point3<T>*)(&_a[i<<2]));
+  
+  Point3<T> GetRow3(const int& i)const{
+		assert(i>=0 && i<4);
+		return Point3<T>(ElementAt(i,0),ElementAt(i,1),ElementAt(i,2));
+    // return *((Point4<T>*)(&_a[i<<2])); alternativa forse + efficiente
 	}
-
 
   Matrix44 operator+(const Matrix44 &m) const;
   Matrix44 operator-(const Matrix44 &m) const;
@@ -213,9 +202,14 @@ public:
 	void SetZero();
   void SetIdentity();
   void SetDiagonal(const T k);
-  Matrix44 &SetScale(const T sx, const T sy, const T sz);	
-	Matrix44 &SetTranslate(const Point3<T> &t);
+	Matrix44 &SetScale(const T sx, const T sy, const T sz);	
+	Matrix44 &SetScale(const Point3<T> &t);
+  Matrix44 &SetTranslate(const Point3<T> &t);
 	Matrix44 &SetTranslate(const T sx, const T sy, const T sz);
+  Matrix44 &SetShearXY(const T sz);	
+  Matrix44 &SetShearXZ(const T sy);	
+  Matrix44 &SetShearYZ(const T sx);	
+
   ///use radiants for angle.
   Matrix44 &SetRotate(T AngleRad, const Point3<T> & axis); 
 
@@ -289,7 +283,7 @@ template <class T> T Matrix44<T>::ElementAt(const int row, const int col) const 
 //template <class T> const T &Matrix44<T>::operator[](const int i) const {
 //  assert(i >= 0 && i < 16);
 //  return ((T *)_a)[i];
-//}
+//} 
 template <class T> T *Matrix44<T>::operator[](const int i) {
   assert(i >= 0 && i < 16);
   return _a+i*4;
@@ -398,8 +392,8 @@ template < class PointType , class T > void operator*=( std::vector<PointType> &
 }
 
 template <class T> void Matrix44<T>::operator*=( const T k ) {
-  for(int i = 0; i < 4; i++)
-    operator[](i) *= k;
+  for(int i = 0; i < 16; i++)
+      _a[i] *= k;
 }
 
 
@@ -419,6 +413,10 @@ template <class T> void Matrix44<T>::SetDiagonal(const T k) {
   ElementAt(3, 3) = 1;    
 }
 
+template <class T> Matrix44<T> &Matrix44<T>::SetScale(const Point3<T> &t) {
+  SetScale(t[0], t[1], t[2]);
+  return *this;
+}
 template <class T> Matrix44<T> &Matrix44<T>::SetScale(const T sx, const T sy, const T sz) {
   SetZero();
   ElementAt(0, 0) = sx;
@@ -464,6 +462,135 @@ template <class T> Matrix44<T> &Matrix44<T>::SetRotate(T AngleRad, const Point3<
 	ElementAt(3,3) = 1;	
   return *this;
 }
+
+	
+	template <class T> Matrix44<T> & Matrix44<T>:: SetShearXY( const T sh)	{// shear the X coordinate as the Y coordinate change 
+		SetIdentity();
+		ElementAt(1,0) = sh;
+    return *this;
+	}
+	
+	template <class T> Matrix44<T> & Matrix44<T>:: SetShearXZ( const T sh)	{// shear the X coordinate as the Z coordinate change 
+		SetIdentity();
+		ElementAt(2,0) = sh;
+    return *this;
+	}
+	
+	template <class T> Matrix44<T> &Matrix44<T>:: SetShearYZ( const T sh)	{// shear the Y coordinate as the Z coordinate change 
+		SetIdentity();
+		ElementAt(2,1) = sh;
+    return *this;
+	}
+
+
+/*
+Data una matrice non proiettiva (in cui l'ultima riga e' (0,0,0,1) 
+la decompone in una sequenza (nell'ordine) di 
+   Scale,Shear,Rotation e Translation
+
+- ShearV e' un vettore di tre scalari che indicano
+  ShearXY, ShearXZ e ShearYZ
+- RotateV e' un vettore di tre scalari che indicano la sequenza di rotazioni 
+  in assi x,y,z 
+
+Genera una una matrice lasciandoci dentro solo la rototraslazione.
+Example:
+
+	m=Decompose(ScV,ShV,RtV,TrV);
+
+	Matrix44d Scl; Scl.Scale(ScV[0],ScV[1],ScV[2]);
+  Matrix44d Sxy; Sxy.ShearXY(ShV[0]);
+	Matrix44d Sxz; Sxz.ShearXZ(ShV[1]);
+	Matrix44d Syz; Syz.ShearYZ(ShV[2]);
+	Matrix44d Rtx; Rtx.Rotate(RtV[0],Point3d(1,0,0));
+	Matrix44d Rty; Rty.Rotate(RtV[1],Point3d(0,1,0));
+	Matrix44d Rtz; Rtz.Rotate(RtV[2],Point3d(0,0,1));
+	Matrix44d Trn; Trn.Translate(TrV[0],TrV[1],TrV[2]);
+	
+	// Rebuild e' uguale a Orig, prima della decompose
+	Matrix44d Rebuild = Scl * Sxy*Sxz*Syz * Rtx*Rty*Rtz * Trn;
+			
+*/
+template <class T>
+bool Decompose(Matrix44<T> &M, Point3<T> &ScaleV, Point3<T> &ShearV, Point3<T> &RotV,Point3<T> &TranV) 
+{
+	if(!(M[3][0]==0 && M[3][1]==0 && M[3][2]==0 && M[3][3]==1) ) // the matrix is projective
+		return false;
+	if(math::Abs(M.Determinant())<1e-10) return false; // matrix should be at least invertible...
+
+  // First Step recover the traslation
+	TranV=M.GetColumn3(3);
+
+	
+	// Second Step Recover Scale and Shearing interleaved 
+	ScaleV[0]=Norm(M.GetColumn3(0));
+	Point3d R[3];
+	R[0]=M.GetColumn3(0);
+	R[0].Normalize();
+	
+	ShearV[0]=R[0]*M.GetColumn3(1); // xy shearing 
+	R[1]= M.GetColumn3(1)-R[0]*ShearV[0];
+  assert(math::Abs(R[1]*R[0])<1e-10);
+	ScaleV[1]=Norm(R[1]);   // y scaling 
+	R[1]=R[1]/ScaleV[1];
+	ShearV[0]=ShearV[0]/ScaleV[1]; 
+
+	ShearV[1]=R[0]*M.GetColumn3(2); // xz shearing 
+	R[2]= M.GetColumn3(2)-R[0]*ShearV[1];
+	assert(math::Abs(R[2]*R[0])<1e-10);
+	
+	R[2] = R[2]-R[1]*(R[2]*R[1]);
+	assert(math::Abs(R[2]*R[1])<1e-10);
+	assert(math::Abs(R[2]*R[0])<1e-10);
+	
+	ScaleV[2]=Norm(R[2]);
+	ShearV[1]=ShearV[1]/ScaleV[2]; 
+	R[2]=R[2]/ScaleV[2];
+	assert(math::Abs(R[2]*R[1])<1e-10);
+	assert(math::Abs(R[2]*R[0])<1e-10);
+	
+	ShearV[2]=R[1]*M.GetColumn3(2); // yz shearing
+	ShearV[2]=ShearV[2]/ScaleV[2];
+  int i,j;  
+	for(i=0;i<3;++i)
+		for(j=0;j<3;++j)
+				M[i][j]=R[j][i];
+
+	// Third and last step: Recover the rotation
+	//now the matrix should be a pure rotation matrix so its determinant is +-1 
+  double det=M.Determinant();
+  if(math::Abs(det)<1e-10) return false; // matrix should be at least invertible...
+  assert(math::Abs(math::Abs(det)-1.0)<1e-10); // it should be +-1...
+	if(det<0) {  
+		ScaleV  *= -1;
+		M *= -1;
+		}
+
+	double alpha,beta,gamma; // rotations around the x,y and z axis
+	beta=asin( M[0][2]); 
+	double cosbeta=cos(beta);
+  if(math::Abs(cosbeta) > 1e-5)
+		{ 
+			alpha=asin(-M[1][2]/cosbeta);
+			if((M[2][2]/cosbeta) < 0 ) alpha=M_PI-alpha;
+			gamma=asin(-M[0][1]/cosbeta);
+			if((M[0][0]/cosbeta)<0) gamma = M_PI-gamma;
+		}
+  else
+		{ 
+			alpha=asin(-M[1][0]);
+			if(M[1][1]<0) alpha=M_PI-alpha;
+			gamma=0;
+		}
+
+  RotV[0]=math::ToDeg(alpha);
+	RotV[1]=math::ToDeg(beta);
+	RotV[2]=math::ToDeg(gamma);
+
+	return true;
+}
+
+
 
 
 template <class T> T Matrix44<T>::Determinant() const {  
