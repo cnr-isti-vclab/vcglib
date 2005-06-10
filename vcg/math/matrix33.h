@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/06/07 14:29:56  ganovelli
+changed from Matrix33Ide to MatrixeeDiag
+
 Revision 1.5  2005/05/23 15:05:26  ganovelli
 Matrix33Diag Added: it implements diagonal matrix. Added only operator += in Matrix33
 
@@ -373,6 +376,17 @@ void ExternalProduct(const Point3<S> &a, const Point3<S> &b)
 	for(int i=0;i<3;++i)
 		for(int j=0;j<3;++j)
 			 (*this)[i][j] = a[i]*b[j];
+}
+
+/* Compute the Frobenius Norm of the Matrix
+*/
+ScalarType Norm()
+{
+	ScalarType SQsum=0;
+	for(int i=0;i<3;++i)
+		for(int j=0;j<3;++j)
+			 SQsum += a[i]*a[i];
+	return (math::Sqrt(SQsum));
 }
 
 /* 
