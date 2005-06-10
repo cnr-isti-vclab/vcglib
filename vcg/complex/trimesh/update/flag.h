@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/04/01 13:04:55  fiorin
+Minor changes
+
 Revision 1.7  2004/09/14 19:49:43  ganovelli
 first compilation version
 
@@ -145,14 +148,58 @@ static void FaceBorderFromVF(MeshType &m)
 		VertexType::DeleteBitFlag(VertexType::LastBitFlag());
 }
 
+ 
+class EdgeSorter
+{
+public:
+	
+	VertexPointer v[2];		// Puntatore ai due vertici (Ordinati)
+	FacePointer    f;				// Puntatore alla faccia generatrice
+	int      z;				// Indice dell'edge nella faccia
+
+  EdgeSorter() {} // Nothing to do
+
+
+void Set( const FacePointer pf, const int nz )
+{
+	assert(pf!=0);
+	assert(nz>=0);
+	assert(nz<3);
+	
+	v[0] = pf->V(nz);
+	v[1] = pf->V((nz+1)%3);
+	assert(v[0] != v[1]);
+
+	if( v[0] > v[1] ) swap(v[0],v[1]);
+	f    = pf;
+	z    = nz;
+}
+
+inline bool operator <  ( const EdgeSorter & pe ) const {
+	if( v[0]<pe.v[0] ) return true;
+	else if( v[0]>pe.v[0] ) return false;
+	else return v[1] < pe.v[1];
+}
+
+inline bool operator == ( const EdgeSorter & pe ) const
+{
+	return v[0]==pe.v[0] && v[1]==pe.v[1];
+}
+inline bool operator != ( const EdgeSorter & pe ) const
+{
+	return v[0]!=pe.v[0] || v[1]!=pe.v[1];
+}
+
+};
+
 
 
 // versione minimale che non calcola i complex flag.
-void FaceBorderFromNone(MeshType &m)
+static void FaceBorderFromNone(MeshType &m)
 {
-	std::vector<PosType> e;
+	std::vector<EdgeSorter> e;
 	typename UpdateMeshType::FaceIterator pf;
-	typename std::vector<PosType>::iterator p;
+	typename std::vector<EdgeSorter>::iterator p;
 
 	if( m.fn == 0 ) 
 		return;
@@ -170,10 +217,10 @@ void FaceBorderFromNone(MeshType &m)
 	assert(p==e.end());
 	sort(e.begin(), e.end());							// Lo ordino per vertici
 	
-	typename std::vector<PosType>::iterator pe,ps;
+	typename std::vector<EdgeSorter>::iterator pe,ps;
 	for(ps = e.begin(), pe=e.begin(); pe<=e.end(); ++pe)	// Scansione vettore ausiliario
 	{
-		if( pe==e.end() || *pe != *ps )					// Trovo blocco di edge uguali
+		if( pe==e.end() ||  *pe != *ps )					// Trovo blocco di edge uguali
 		{
 			if(pe-ps==1) 	{	
 					//++nborder;
