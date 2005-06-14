@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/06/10 14:59:39  cignoni
+Added include assert.h and cast to ScalarType for a pow in SetRange() function.
+
 Revision 1.7  2005/06/09 14:19:55  cignoni
 Added typedef Histogramf and Histogramd
 
@@ -53,6 +56,7 @@ Initial Release
 #define __VCG_HISTOGRAM
 
 #include <vector>
+#include <algorithm>
 #include <assert.h>
 namespace vcg {
 
