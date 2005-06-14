@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/05/06 14:02:37  croccia
+replaced all the occurences of min.v[0] with min.X(), max.v[0] with max.X() etc.
+
 Revision 1.3  2005/05/05 10:20:24  croccia
 changed  #include <vcg/space/point3>  to #include <vcg/space/point2.h>
 croccia
@@ -178,7 +181,7 @@ public:
 		*/
 	bool Collide( Box2 const &b )
 	{
-		Box2f bb=*this;
+		Box2 bb=*this;
 		bb.Intersect(b);
 		return bb.IsValid();
 	}
