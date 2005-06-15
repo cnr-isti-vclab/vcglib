@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/06/01 13:47:59  pietroni
+resolved hash code conflicts
+
 Revision 1.5  2005/03/15 09:50:44  ganovelli
 there was a debug line, now removed
 
@@ -129,6 +132,7 @@ namespace vcg{
 
 				//at the end update the temporary mark on the simplex
 				sim->Mark()=_tempMark;
+				//Assert();
 			}
 
 			///given an iterator to the instance of the entry in the cell
@@ -136,13 +140,6 @@ namespace vcg{
 			///(using temporary mark).
 			bool IsUpdated(IteMap &I)
 			{
-		/*		if ((*I).second >= (*I).first->Mark())
-					return true;
-				else
-				{
-					printf("DISUPDATED\N");
-					return false;
-				}*/
 				return ((*I).second >= (*I).first->Mark());
 			}
 
@@ -154,7 +151,7 @@ namespace vcg{
 			{
 				IteMap I=_entries.find(sim);
 				if (I!=_entries.end())
-					IsUpdated(I);
+					return(IsUpdated(I));
 				else
 					return false;
 			}
@@ -185,7 +182,34 @@ namespace vcg{
 
 			bool operator !=(const HElement &h)  
 			{return ((cell_n!=h.CellN()));}
-
+			
+			void Assert()
+			{
+				for (IteMap ite=_entries.begin();ite!=_entries.end();ite++)
+				{
+					ElemType* sim=(*ite).first;
+					if (IsUpdated(sim))
+					{
+						ScalarType Xs=sim->P().X();
+						ScalarType Ys=sim->P().Y();
+						ScalarType Zs=sim->P().Z();
+						ScalarType Xm=Min().X()-0.2;
+						ScalarType Ym=Min().Y()-0.2;
+						ScalarType Zm=Min().Z()-0.2;
+						ScalarType XM=Max().X()+0.2;
+						ScalarType YM=Max().Y()+0.2;
+						ScalarType ZM=Max().Z()+0.2;
+						if ((Xs<Xm)||(Xs>XM)||(Ys<Ym)||(Ys>YM)||(Zs<Zm)||(Zs>ZM))
+						{
+							printf("---ERROR---\n");
+							printf("Point=%f,%f,%f.\n",Xs,Ys,Zs);
+							printf("cellMin=%f,%f,%f\n",Xm,Ym,Zm);
+							printf("cellMax=%f,%f,%f\n",XM,YM,ZM);
+					
+						}
+					}
+				}
+			}
 
 		}; // end struct HElement
 
@@ -251,53 +275,31 @@ namespace vcg{
 
 		public:
 
-			/////Initialize the iterator, p is the center of the box and _edge is his size
-			//void Init(SpatialHashTable<ElemType> * _sh, CoordType _p, const ScalarType  &_edge)
-			//{
-			//	sh = _sh;
-			//	p =_p;
-
-			//	///find the box 
-			//	CoordType halfDiag(_edge,_edge,_edge);
-			//	mincorner = sh->PointToCell(p-halfDiag);
-			//	maxcorner = sh->PointToCell(p+halfDiag);
-
-			//	///set the initial cell of the iterator as the one that stay on the
-			//	/// left lower position
-			//	curr_ic = mincorner;
-
-			//	///find the cell corrisponding to first podsition
-			//	IteHtable iht = sh->hash_table.find(sh->Hash(curr_ic));
-
-			//	///advance until find a cell that contain at least one updated element
-			//	//and initialize the current cell and iterator inside it
-			//	bool isempty  = (iht == sh->hash_table.end());
-			//	if(isempty)
-			//		while( Advance() && (isempty=sh->IsEmptyCell(curr_ic)));
-
-			//	if(!isempty){
-			//		curr_c = &(*(sh->hash_table.find(sh->Hash(curr_ic)))).second;
-			//		curr_i =  curr_c->_entries.begin();
-			//		end = false;
-			//	}
-			//	else
-			//		end = true;
-
-			//}
-
 			void AssertUpdated()
 			{
-				ScalarType Xs=(*curr_i).first->P().X();
-				ScalarType Ys=(*curr_i).first->P().Y();
-				ScalarType Zs=(*curr_i).first->P().Z();
-				ScalarType Xm=curr_c->Min().X();
-				ScalarType Ym=curr_c->Min().Y();
-				ScalarType Zm=curr_c->Min().Z();
-				ScalarType XM=curr_c->Max().X();
-				ScalarType YM=curr_c->Max().Y();
-				ScalarType ZM=curr_c->Max().Z();
+				ElemType* sim=(*curr_i).first;
+				ScalarType Xs=sim->P().X();
+				ScalarType Ys=sim->P().Y();
+				ScalarType Zs=sim->P().Z();
+				ScalarType Xm=curr_c->Min().X()-0.2;
+				ScalarType Ym=curr_c->Min().Y()-0.2;
+				ScalarType Zm=curr_c->Min().Z()-0.2;
+				ScalarType XM=curr_c->Max().X()+0.2;
+				ScalarType YM=curr_c->Max().Y()+0.2;
+				ScalarType ZM=curr_c->Max().Z()+0.2;
 				if ((Xs<Xm)||(Xs>XM)||(Ys<Ym)||(Ys>YM)||(Zs<Zm)||(Zs>ZM))
-					printf("ERROR %d %d %d %d %d");
+				{
+					printf("---ERROR---\n");
+					printf("Point=%f,%f,%f.\n",Xs,Ys,Zs);
+					printf("cellMin=%f,%f,%f\n",Xm,Ym,Zm);
+					printf("cellMax=%f,%f,%f\n",XM,YM,ZM);
+					printf("tempMark Simplex=%d\n",sim->Mark());
+					printf("tempMark Global=%d\n",sh->tempMark);
+					if (curr_c->IsUpdated(sim))
+						printf("updated");
+					else
+						printf("disupdated");
+				}
 			}
 
 			///Initialize the iterator, p is the center of the box and _edge is his size
@@ -327,7 +329,7 @@ namespace vcg{
 				{///advance until don't find an non empty cell
 				while((!End())&&(sh->numElemCell(curr_ic,I)==0))
 					Advance();
-				
+				}
 				///then if is not finished find the first updated occorrency
 				if (!End())
 				{
@@ -335,7 +337,6 @@ namespace vcg{
 					curr_i = curr_c->_entries.begin();
 					while ((!curr_c->IsUpdated(curr_i))&&(!end))
 						Next();
-				}
 				}
 			}
 
@@ -372,7 +373,7 @@ namespace vcg{
 				Next();
 				while ((!curr_c->IsUpdated(curr_i))&&(!end))
 					Next();
-
+				
 				assert(curr_c->IsUpdated(curr_i)||(end));
 			}
 
@@ -402,10 +403,12 @@ namespace vcg{
 		SpatialHashTable(){};
 		~SpatialHashTable(){};
 
-	private:
+		int tempMark;
+
+	protected:
 
 		//ContSimplex & _simplex;
-		int tempMark;
+		
 		Htable hash_table;
 
 		int num;
@@ -428,6 +431,7 @@ namespace vcg{
 			_min=CellToPoint(cell);
 			_max=_min+CoordType(l,l,l);
 			hash_table.insert(HRecord(h,HElement(s,tempMark,_min,_max,cell)));
+			//Assert();
 			s->Mark()=tempMark;
 		}
 		
@@ -467,6 +471,8 @@ namespace vcg{
 				_InsertNewHentry(s,cell);
 			else///there is the entry specified by the iterator I so update only the temporary mark
 				(*I).second.Update(s,tempMark);
+
+			//Assert();
 		}
 		
 		// hashing
@@ -477,7 +483,7 @@ namespace vcg{
 		}
 
 		///return the cells intersected by the Bounding box of the simplex
-		void BoxCells(CoordType _min,CoordType _max,std::vector<Point3i>& ret)
+		virtual void BoxCells(CoordType _min,CoordType _max,std::vector<Point3i>& ret)
 		{
 			ret.clear();
 			Point3i MinI=PointToCell(_min);
@@ -506,28 +512,20 @@ namespace vcg{
 						}
 					}*/
 		
-				///add to the vector the simplexes with that eddress
-				void getAtCell(Point3i _c,std::vector<ElemType*> & res)
-					{
-						int h=Hash(_c);
-						IteHtable I;
-						if (_IsInHtable(_c,I))//if there is the cell then
-							(*I).second.Elems(res);
-					}
 
 				Point3i PointToCell(CoordType p) 
 					{
-						int x=(int)floor((p.V(0)-(ScalarType)min.V(0))/l);
-						int y=(int)floor((p.V(1)-(ScalarType)min.V(1))/l);
-						int z=(int)floor((p.V(2)-(ScalarType)min.V(2))/l);
+						int x=(int)floor((p.V(0)-(ScalarType)min.V(0))/(ScalarType)l);
+						int y=(int)floor((p.V(1)-(ScalarType)min.V(1))/(ScalarType)l);
+						int z=(int)floor((p.V(2)-(ScalarType)min.V(2))/(ScalarType)l);
 						return (vcg::Point3i(x,y,z));
 					}
 
 				CoordType CellToPoint(Point3i c)
 					{
-						ScalarType x=(((ScalarType)c.V(0)+min.V(0))*l);
-						ScalarType y=(((ScalarType)c.V(1)+min.V(1))*l);
-						ScalarType z=(((ScalarType)c.V(2)+min.V(2))*l);
+						ScalarType x=(((ScalarType)c.V(0)+min.V(0))*(ScalarType)l);
+						ScalarType y=(((ScalarType)c.V(1)+min.V(1))*(ScalarType)l);
+						ScalarType z=(((ScalarType)c.V(2)+min.V(2))*(ScalarType)l);
 						return (CoordType(x,y,z));
 					}
 	public:
@@ -545,12 +543,13 @@ namespace vcg{
 			conflicts=0;
 		}	
 
-		std::vector<Point3i> AddElem( ElemType* s)
+		virtual std::vector<Point3i> AddElem( ElemType* s)
 		{
 			std::vector<Point3i> box;
 			BoxCells(s->BBox().min,s->BBox().max,box);
 			for (std::vector<Point3i>::iterator bi=box.begin();bi<box.end();bi++)
 				_InsertInCell(s,*bi);
+
 			return box;
 		}
 		
@@ -646,6 +645,13 @@ namespace vcg{
 				}
 				//**********************************************************************
 
+				///return the simplexes on a specified cell
+				void getAtCell(Point3i _c,std::vector<ElemType*> & res)
+					{
+						IteHtable I;
+						if (_IsInHtable(_c,I))//if there is the cell then
+							(*I).second.Elems(res);
+					}
 
 				// return the elem closer than radius
 				int CloserThan(	typename ElemType::CoordType p, 
@@ -688,11 +694,10 @@ namespace vcg{
 						}
 					}*/
 					
-					///return the number of elemnts in the cell ond the iterator to the cell
+					///return the number of elemnts in the cell and the iterator to the cell
 					///if the cell exist
 					int numElemCell(Point3i _c,IteHtable &I)
 					{
-						int h=Hash(_c);
 						if (_IsInHtable(_c,I))
 							return ((*I).second.Size());
 						else
@@ -742,10 +747,13 @@ namespace vcg{
 						for (IteHtable I=hash_table.begin();I!=hash_table.end();I++)
 							DrawCell((*I).second);
 					}
-
-
+					
 					///only debug
-
+					void Assert()
+					{
+						for (IteHtable I=hash_table.begin();I!=hash_table.end();I++)
+							(((*I).second).Assert());
+					}
 	}; // end class
 
 }// end namespace
