@@ -106,13 +106,14 @@ public:
 		bool intersected;
 		float kdihedral;
 		ScalarType AreaRep;
+		int _Mark;
 
 		MyFace()
 		{
 			intersected=false;
 			ClearFlags();
 		}
-
+		
 		void Init ( double k, double  mass,float k_dihedral )
 		{ 
 			__super::Init(k,mass);
@@ -146,6 +147,9 @@ public:
 			CoordType norm2=fopp->NormalizedNormal();
 			return (norm1*norm2);
 		}
+
+		int &Mark()
+		{return (_Mark);}
 
 		///return the bounding box of the simplex
 		vcg::Box3<float> BBox()

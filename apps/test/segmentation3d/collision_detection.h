@@ -77,6 +77,7 @@ public:
 	{
 		HTable->Clear();
 		vactive.clear();///new
+		HTable->tempMark=0;
 		for (SimplexIterator si=_simplex.begin();si<_simplex.end();++si)
 		{
 			if (!(*si).IsD())
@@ -119,6 +120,7 @@ public:
 	void UpdateStep(Container_Type &simplex)
 	{
 		vactive.clear();
+		HTable->UpdateTmark();
 		for (Container_Type::iterator si=simplex.begin();si<simplex.end();++si)
 		{
 			if ((!(*si).IsD())&&((*si).IsActive()))
@@ -131,27 +133,27 @@ public:
 	}
 
 	
-	///put active cells on apposite structure
-	void AddElements(typename ContSimplex::iterator newSimplex)
-	{
-		while (newSimplex!=_simplex.end())
-		{
-			if (!(*newSimplex).IsD())
-			{
-			if (!(*newSimplex).IsActive())
-				HTable->addSimplex(&*newSimplex);
-			///new now
-				else
-				{
-					std::vector<Point3i> cells=HTable->addSimplex(&*newSimplex);
-					for(std::vector<Point3i>::iterator it=cells.begin();it<cells.end();it++)
-						vactive.insert(*it);
-				}
-			///end new now
-			}
-			newSimplex++;
-		}
-	}
+	/////put active cells on apposite structure
+	//void AddElements(typename ContSimplex::iterator newSimplex)
+	//{
+	//	while (newSimplex!=_simplex.end())
+	//	{
+	//		if (!(*newSimplex).IsD())
+	//		{
+	//		if (!(*newSimplex).IsActive())
+	//			HTable->addSimplex(&*newSimplex);
+	//		///new now
+	//			else
+	//			{
+	//				std::vector<Point3i> cells=HTable->addSimplex(&*newSimplex);
+	//				for(std::vector<Point3i>::iterator it=cells.begin();it<cells.end();it++)
+	//					vactive.insert(*it);
+	//			}
+	//		///end new now
+	//		}
+	//		newSimplex++;
+	//	}
+	//}
 
 	///control the real self intersection in the mesh and returns the elements that intersect with someone
 	std::vector<SimplexType*> computeSelfIntersection()
@@ -161,7 +163,8 @@ public:
 		for (act=vactive.begin();act!=vactive.end();act++)
 				{
 					Point3i p=*act;
-					if (HTable->numElemCell(p)>=2)
+					HashingTable::IteHtable I;
+					if (HTable->numElemCell(p,I)>=2)
 					{
  						std::vector<SimplexType*> inCell;
 						HTable->getAtCell(p,inCell);
