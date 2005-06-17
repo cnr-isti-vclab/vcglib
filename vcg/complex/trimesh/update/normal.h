@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/04/01 13:04:55  fiorin
+Minor changes
+
 Revision 1.4  2004/09/09 14:35:14  ponchio
 Typename changes for linux
 
@@ -127,6 +130,16 @@ static void PerVertexPerFace(ComputeMeshType &m)
    }
 }
 
+/// Calculates both vertex and face normals.
+/// The normal of a vertex v is the weigthed average of the normals of the faces incident on v.
+static void PerVertexNormalizedPerFace(ComputeMeshType &m)
+{
+PerVertexPerFace(m);
+ VertexIterator vi;
+ for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+   if( !(*vi).IsD() && (*vi).IsRW() ) 
+     (*vi).N().Normalize();
+}
 
 static void PerFaceRW(ComputeMeshType &m, bool normalize=false)
 {
