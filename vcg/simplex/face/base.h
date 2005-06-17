@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.27  2005/03/18 16:35:53  fiorin
+minor changes to comply gcc compiler
+
 Revision 1.26  2005/03/11 14:14:14  ganovelli
 _ffi was a 4 for positions vector (only 3  used)
 
@@ -140,6 +143,8 @@ public:
 	typedef FVTYPE VertexType;
 	/// The vertex type
 	typedef FETYPE EdgeType;
+	/// The Texture Coordinate type
+	typedef TCTYPE TexCoordType;
 	/// The type of the scalar field of the vertex coordinate
   typedef typename VertexType::ScalarType ScalarType;
 	/// The type of the the vertex coordinate
