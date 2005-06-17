@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/06/14 14:27:00  ganovelli
+added include of algorithm
+
 Revision 1.8  2005/06/10 14:59:39  cignoni
 Added include assert.h and cast to ScalarType for a pow in SetRange() function.
 
@@ -120,7 +123,7 @@ void Histogram<ScalarType>::SetRange(ScalarType _minv, ScalarType _maxv, int _n,
 {
 	Clear();
 	minv=_minv;maxv=_maxv;n=_n;
-	H.resize(n);
+	H.resize(n+1);
 	fill(H.begin(),H.end(),0);
 	R.resize(n+1);
 	double dlt=(maxv-minv);
