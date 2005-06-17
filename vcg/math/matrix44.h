@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.26  2005/06/10 15:04:12  cignoni
+Added Various missing functions: SetShearXY, SetShearXZ, SetShearYZ, SetScale for point3 and Decompose
+Completed *=(scalar); made uniform GetRow and GetColumn
+
 Revision 1.25  2005/04/14 11:35:09  ponchio
 *** empty log message ***
 
@@ -463,53 +467,92 @@ template <class T> Matrix44<T> &Matrix44<T>::SetRotate(T AngleRad, const Point3<
   return *this;
 }
 
-	
+ /* Shear Matrixes
+ XY 
+ 1 k 0 0   x    x+ky
+ 0 1 0 0   y     y
+ 0 0 1 0   z     z
+ 0 0 0 1   1     1
+
+ 1 0 k 0   x    x+kz
+ 0 1 0 0   y     y
+ 0 0 1 0   z     z
+ 0 0 0 1   1     1
+
+ 1 1 0 0   x     x
+ 0 1 k 0   y     y+kz
+ 0 0 1 0   z     z
+ 0 0 0 1   1     1
+
+ */
+
 	template <class T> Matrix44<T> & Matrix44<T>:: SetShearXY( const T sh)	{// shear the X coordinate as the Y coordinate change 
 		SetIdentity();
-		ElementAt(1,0) = sh;
+		ElementAt(0,1) = sh;
     return *this;
 	}
 	
 	template <class T> Matrix44<T> & Matrix44<T>:: SetShearXZ( const T sh)	{// shear the X coordinate as the Z coordinate change 
 		SetIdentity();
-		ElementAt(2,0) = sh;
+		ElementAt(0,2) = sh;
     return *this;
 	}
 	
 	template <class T> Matrix44<T> &Matrix44<T>:: SetShearYZ( const T sh)	{// shear the Y coordinate as the Z coordinate change 
 		SetIdentity();
-		ElementAt(2,1) = sh;
+		ElementAt(1,2) = sh;
     return *this;
 	}
 
 
 /*
-Data una matrice non proiettiva (in cui l'ultima riga e' (0,0,0,1) 
-la decompone in una sequenza (nell'ordine) di 
+Given a non singular, non projective matrix (e.g. with the last row equal to [0,0,0,1] )
+This procedure decompose it in a sequence of 
    Scale,Shear,Rotation e Translation
 
-- ShearV e' un vettore di tre scalari che indicano
-  ShearXY, ShearXZ e ShearYZ
-- RotateV e' un vettore di tre scalari che indicano la sequenza di rotazioni 
-  in assi x,y,z 
+- ScaleV and Tranv are obiviously scaling and translation.
+- ShearV contains three scalars with, respectively
+      ShearXY, ShearXZ e ShearYZ
+- RotateV contains the rotations (in degree!) around the x,y,z axis
+  The input matrix is modified leaving inside it a simple roto translation.
 
-Genera una una matrice lasciandoci dentro solo la rototraslazione.
-Example:
+  To obtain the original matrix the above transformation have to be applied in the strict following way:
+  
+  OriginalMatrix =  Trn * Rtx*Rty*Rtz  * ShearYZ*ShearXZ*ShearXY * Scl
 
-	m=Decompose(ScV,ShV,RtV,TrV);
+Example Code:
+double srv() { return (double(rand()%40)-20)/2.0; } // small random value
 
-	Matrix44d Scl; Scl.Scale(ScV[0],ScV[1],ScV[2]);
-  Matrix44d Sxy; Sxy.ShearXY(ShV[0]);
-	Matrix44d Sxz; Sxz.ShearXZ(ShV[1]);
-	Matrix44d Syz; Syz.ShearYZ(ShV[2]);
-	Matrix44d Rtx; Rtx.Rotate(RtV[0],Point3d(1,0,0));
-	Matrix44d Rty; Rty.Rotate(RtV[1],Point3d(0,1,0));
-	Matrix44d Rtz; Rtz.Rotate(RtV[2],Point3d(0,0,1));
-	Matrix44d Trn; Trn.Translate(TrV[0],TrV[1],TrV[2]);
+  srand(time(0));
+  Point3d ScV(10+srv(),10+srv(),10+srv()),ScVOut(-1,-1,-1);
+  Point3d ShV(srv(),srv(),srv()),ShVOut(-1,-1,-1);
+  Point3d RtV(10+srv(),srv(),srv()),RtVOut(-1,-1,-1);
+  Point3d TrV(srv(),srv(),srv()),TrVOut(-1,-1,-1);
+
+  Matrix44d Scl; Scl.SetScale(ScV);
+  Matrix44d Sxy; Sxy.SetShearXY(ShV[0]);
+	Matrix44d Sxz; Sxz.SetShearXZ(ShV[1]);
+	Matrix44d Syz; Syz.SetShearYZ(ShV[2]);
+  Matrix44d Rtx; Rtx.SetRotate(math::ToRad(RtV[0]),Point3d(1,0,0));
+	Matrix44d Rty; Rty.SetRotate(math::ToRad(RtV[1]),Point3d(0,1,0));
+	Matrix44d Rtz; Rtz.SetRotate(math::ToRad(RtV[2]),Point3d(0,0,1));
+	Matrix44d Trn; Trn.SetTranslate(TrV);
 	
-	// Rebuild e' uguale a Orig, prima della decompose
-	Matrix44d Rebuild = Scl * Sxy*Sxz*Syz * Rtx*Rty*Rtz * Trn;
-			
+	Matrix44d StartM =  Trn * Rtx*Rty*Rtz  * Syz*Sxz*Sxy *Scl;
+  Matrix44d ResultM=StartM;
+  Decompose(ResultM,ScVOut,ShVOut,RtVOut,TrVOut);
+
+  Scl.SetScale(ScVOut);
+  Sxy.SetShearXY(ShVOut[0]);
+  Sxz.SetShearXZ(ShVOut[1]);
+  Syz.SetShearYZ(ShVOut[2]);
+  Rtx.SetRotate(math::ToRad(RtVOut[0]),Point3d(1,0,0));
+  Rty.SetRotate(math::ToRad(RtVOut[1]),Point3d(0,1,0));
+  Rtz.SetRotate(math::ToRad(RtVOut[2]),Point3d(0,0,1));
+  Trn.SetTranslate(TrVOut);
+
+  // Now Rebuild is equal to StartM
+	Matrix44d RebuildM =  Trn * Rtx*Rty*Rtz  * Syz*Sxz*Sxy * Scl ;		
 */
 template <class T>
 bool Decompose(Matrix44<T> &M, Point3<T> &ScaleV, Point3<T> &ShearV, Point3<T> &RotV,Point3<T> &TranV) 
@@ -518,7 +561,7 @@ bool Decompose(Matrix44<T> &M, Point3<T> &ScaleV, Point3<T> &ShearV, Point3<T> &
 		return false;
 	if(math::Abs(M.Determinant())<1e-10) return false; // matrix should be at least invertible...
 
-  // First Step recover the traslation
+  // First Step recover the traslation  
 	TranV=M.GetColumn3(3);
 
 	
@@ -624,9 +667,7 @@ template <class T> Point3<T> operator*(const Matrix44<T> &m, const Point3<T> &p)
 template <class T> Matrix44<T> &Transpose(Matrix44<T> &m) {
   for(int i = 1; i < 4; i++)
     for(int j = 0; j < i; j++) {
-      T t = m.ElementAt(i, j); 
-      m.ElementAt(i, j) = m.ElementAt(j, i);
-      m.ElementAt(j, i) = t;
+      swap(m.ElementAt(i, j), m.ElementAt(j, i)); 
     }
   return m;
 }
