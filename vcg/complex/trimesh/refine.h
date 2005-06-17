@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/02/25 10:28:04  pietroni
+added #include<vcg/complex/trimesh/update/topology.h> use of update topology in refineE
+
 Revision 1.2  2005/02/02 16:01:13  pietroni
 1 warning corrected
 
@@ -349,7 +352,7 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false)
 																		//     3..5 mp01, mp12, mp20 midpoints of the three edges
 	MESH_TYPE::FaceIterator nf[4];   // le quattro facce in gioco.
 
-	TCoord2<typename MESH_TYPE::ScalarType> wtt[6];  // per ogni faccia sono al piu' tre i nuovi valori 
+  typename MESH_TYPE::FaceType::TexCoordType wtt[6];  // per ogni faccia sono al piu' tre i nuovi valori 
 																							 // di texture per wedge (uno per ogni edge) 
 
 	int fca=0,fcn =0;
