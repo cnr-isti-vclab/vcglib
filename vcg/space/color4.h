@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2005/04/14 11:35:09  ponchio
+*** empty log message ***
+
 Revision 1.11  2004/09/09 12:51:28  fasano
 corrected ColorRamp code (template specialization)
 
@@ -223,10 +226,10 @@ inline void Color4<T>::lerp(const Color4<T> &c0, const Color4<T> &c1, const Colo
 {
 	assert(fabs(ip[0]+ip[1]+ip[2]-1)<0.00001);
 	
-	Point4<T>::_v[0]=(T)(c0.c[0]*ip[0] + c1.c[0]*ip[1]+ c2.c[0]*ip[2]);
-	Point4<T>::_v[1]=(T)(c0.c[1]*ip[0] + c1.c[1]*ip[1]+ c2.c[1]*ip[2]);
-	Point4<T>::_v[2]=(T)(c0.c[2]*ip[0] + c1.c[2]*ip[1]+ c2.c[2]*ip[2]);
-	Point4<T>::_v[3]=(T)(c0.c[3]*ip[0] + c1.c[3]*ip[1]+ c2.c[3]*ip[2]);
+	Point4<T>::_v[0]=(T)(c0[0]*ip[0] + c1[0]*ip[1]+ c2[0]*ip[2]);
+	Point4<T>::_v[1]=(T)(c0[1]*ip[0] + c1[1]*ip[1]+ c2[1]*ip[2]);
+	Point4<T>::_v[2]=(T)(c0[2]*ip[0] + c1[2]*ip[1]+ c2[2]*ip[2]);
+	Point4<T>::_v[3]=(T)(c0[3]*ip[0] + c1[3]*ip[1]+ c2[3]*ip[2]);
 }
 
 
