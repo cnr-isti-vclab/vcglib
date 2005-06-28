@@ -404,6 +404,16 @@ static void _AttachTTTopology(TetraType *t0,int i0,TetraType *t1,int i1)
   assert( (((t1->TTp(i1))->TTp(t1->TTi(i1)))==t1));
 }
 
+///Detach Tetrahedron-Tetrahedron Topology 
+static void DetachTTTopology(TetraType *t) 
+{
+  assert(!t->IsD());
+	int i;
+	for(i=0; i < 4; ++i)
+		  t->TTp(i)->TTp(t->TTi(i)) = t->TTp(i);
+}
+
+
 ///Test the Tetrahedron-Tetrahedron Topology (by Face)
 static void TestTTTopology(VertexContainer &vert,TetraContainer &tetra)
 	{
