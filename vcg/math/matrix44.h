@@ -24,6 +24,11 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.27  2005/06/17 05:28:47  cignoni
+Completed Shear Matrix code and comments,
+Added use of swap inside Transpose
+Added more complete comments on the usage of Decompose
+
 Revision 1.26  2005/06/10 15:04:12  cignoni
 Added Various missing functions: SetShearXY, SetShearXZ, SetShearYZ, SetScale for point3 and Decompose
 Completed *=(scalar); made uniform GetRow and GetColumn
@@ -119,6 +124,19 @@ for 'column' vectors.
 
 */
 
+	template <class S>
+class Matrix44Diag:public Point4<S>{
+public:
+	/** @name Matrix33
+	Class Matrix33Diag.
+    This is the class for definition of a diagonal matrix 4x4.	
+	@param S (Templete Parameter) Specifies the ScalarType field.
+*/
+	Matrix44Diag(const S & p0,const S & p1,const S & p2,const S & p3):Point4<S>(p0,p1,p2,p3){};
+	Matrix44Diag( const Point4<S> & p ):Point4<S>(p){};
+};
+
+
   /** This class represent a 4x4 matrix. T is the kind of element in the matrix.
     */
 template <class T> class Matrix44 {  
@@ -187,6 +205,7 @@ public:
   Matrix44 operator+(const Matrix44 &m) const;
   Matrix44 operator-(const Matrix44 &m) const;
   Matrix44 operator*(const Matrix44 &m) const;
+  Matrix44 operator*(const Matrix44Diag<T> &m) const;
   Point4<T> operator*(const Point4<T> &v) const;  
 
   bool operator==(const  Matrix44 &m) const;
@@ -324,6 +343,14 @@ template <class T> Matrix44<T> Matrix44<T>::operator*(const Matrix44 &m) const {
         t += ElementAt(i, k) * m.ElementAt(k, j);
       ret.ElementAt(i, j) = t;
     }
+  return ret;
+}
+
+template <class T> Matrix44<T> Matrix44<T>::operator*(const Matrix44Diag<T> &m) const {
+  Matrix44 ret = (*this);       
+	for(int i = 0; i < 4; ++i)
+ 		for(int j = 0; j < 4; ++j)
+  		  ret[i][j]*=m[i]; 
   return ret;
 }
 
@@ -667,7 +694,7 @@ template <class T> Point3<T> operator*(const Matrix44<T> &m, const Point3<T> &p)
 template <class T> Matrix44<T> &Transpose(Matrix44<T> &m) {
   for(int i = 1; i < 4; i++)
     for(int j = 0; j < i; j++) {
-      swap(m.ElementAt(i, j), m.ElementAt(j, i)); 
+			math::Swap(m.ElementAt(i, j), m.ElementAt(j, i)); 
     }
   return m;
 }
