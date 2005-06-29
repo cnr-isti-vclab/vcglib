@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2005/03/15 11:22:39  ganovelli
+added intersection between tow planes (porting from old vcg lib)
+
 Revision 1.13  2005/01/26 10:03:08  spinelli
 aggiunta intersect  ray-box
 
@@ -94,7 +97,7 @@ namespace vcg {
 */
   /// interseciton between sphere and line
   template<class T>
-    inline bool Intersection( const Sphere3<T> & sp, const Line3<T> & li, Point3<T> & p0,Point3<T> & p1 ){
+    inline bool IntersectionLineSphere( const Sphere3<T> & sp, const Line3<T> & li, Point3<T> & p0,Point3<T> & p1 ){
 
     // Per prima cosa si sposta il sistema di riferimento 
     // fino a portare il centro della sfera nell'origine
@@ -123,7 +126,7 @@ namespace vcg {
 
   /// intersection between line and plane
   template<class T>
-    inline bool Intersection( const Plane3<T> & pl, const Line3<T> & li, Point3<T> & po){
+    inline bool IntersectionLinePlane( const Plane3<T> & pl, const Line3<T> & li, Point3<T> & po){
     const T epsilon = T(1e-8);
 
     T k = pl.Direction() * li.Direction();						// Compute 'k' factor
