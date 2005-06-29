@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/02/22 10:57:05  tommyfranken
+corrected some syntax errors in GetFrustum
+
 Revision 1.7  2005/02/21 18:11:47  ganovelli
 GetFrustum moved from gl/camera to math/camera.h
 
@@ -74,19 +77,64 @@ MatrixGL(vcg::Camera<S> & cam, vcg::Matrix44<S> &m){
 	return m;
 }
 
+static void CavalieriProj(float x1, float x2, float y1, float y2, float z1, float z2)
+{
+	GLfloat cavalieri[16];
+
+	cavalieri[0]  = 2.0f/(x2-x1);                   cavalieri[4] = 0;            
+	cavalieri[8]  = (0.707106f * -2.0f)/(x2-x1);    cavalieri[12] = (x2+x1)/(x2-x1);
+	cavalieri[1]  = 0;                              cavalieri[5] = 2.0/(y2-y1);    
+	cavalieri[9]  = (0.707106f * -2.0f)/(y2-y1);    cavalieri[13] = (y2+y1)/(y2-y1);
+	cavalieri[2]  = 0;                              cavalieri[6] = 0;            
+	cavalieri[10] = -2.0f/(z2-z1);                  cavalieri[14] = (z2+z1)/(z2-z1);
+	cavalieri[3]  = 0;                              cavalieri[7] = 0;            
+	cavalieri[11] = 0;                              cavalieri[15] = 1.0f;
+
+	glLoadMatrixf(cavalieri);
+
+}
+
+static void IsometricProj(float x1, float x2, float y1, float y2, float z1, float z2)
+{
+	GLfloat isometric[16];
+
+	isometric[0]  = 1.6f/(x2-x1);     isometric[4]  = 0;            
+	isometric[8]  = -1.6f/(x2-x1);    isometric[12] = (x2+x1)/(x2-x1);
+	isometric[1]  = -1.0f/(y2-y1);    isometric[5]  = 2.0f/(y2-y1);    
+	isometric[9]  = -1.0f/(y2-y1);    isometric[13] = (y2+y1)/(y2-y1);
+	isometric[2]  = 0;                isometric[6]  = 0;            
+	isometric[10] = -2.0f/(z2-z1);    isometric[14] = (z2+z1)/(z2-z1);
+	isometric[3]  = 0;                isometric[7]  = 0;            
+	isometric[11] = 0;                isometric[15] = 1.0f;
+
+	glLoadMatrixf(isometric);
+}
+
 static void GetFrustum(vcg::Camera<S> & camera, S & sx,S & dx,S & bt,S & tp,S & f ,S & fr)
 {
 	camera.GetFrustum(sx,dx,bt,tp,f,fr);
 }
 
+
 static void TransformGL(vcg::Camera<S> & camera, S farDist = -1 ) {
 	S sx,dx,bt,tp,nr,fr;
 	GetFrustum(camera,sx,dx,bt,tp,nr,fr);	
 	assert(glGetError()==0);
-	if(!camera.IsOrtho())
-		glFrustum(sx,dx,bt,tp,nr,(farDist == -1)?fr:farDist);
-	else glOrtho(sx*camera.viewportM,dx*camera.viewportM,bt*camera.viewportM,tp*camera.viewportM,nr,(farDist == -1)?fr:farDist);
 	
+	switch(camera.cameraType) {
+	case PERSPECTIVE: glFrustum(sx,dx,bt,tp,nr,(farDist == -1)?fr:farDist);	break;
+	case ORTHO:       glOrtho(sx*camera.viewportM,dx*camera.viewportM,bt*camera.viewportM,tp*camera.viewportM,nr,(farDist == -1)?fr:farDist); break;
+	case ISOMETRIC:   IsometricProj(sx,dx,bt,tp,nr,(farDist == -1)?fr:farDist); 	break;
+    case CAVALIERI:   CavalieriProj(sx,dx,bt,tp,nr,(farDist == -1)?fr:farDist); 	break;
+	}
+/*	if(!camera.IsOrtho())
+	{
+		//glFrustum(sx,dx,bt,tp,nr,(farDist == -1)?fr:farDist);
+		IsometricProj(sx,dx,bt,tp,nr,(farDist == -1)?fr:farDist);
+	}
+	else  glOrtho(sx*camera.viewportM,dx*camera.viewportM,bt*camera.viewportM,tp*camera.viewportM,nr,(farDist == -1)?fr:farDist);
+*/	      
+	       
 	assert(glGetError()==0);
 };
 
@@ -103,10 +151,21 @@ static void SetSubView(vcg::Camera<S> & camera,vcg::Point2<S> p0,vcg::Point2<S> 
 	GetFrustum(camera,sx,dx,bt,tp,nr,fr);	
 	S width = dx-sx;	//right - left = width
 	S height = tp-bt;  //top - bottom = height
-	glFrustum(
+	/*glFrustum(
 				width* p0[0]+ sx, width* p1[0]+ sx,	
 				height* p0[1]+ bt, height* p1[1]+ bt,
-				nr,fr);
+				nr,fr);*/
+
+	
+
+	switch(camera.cameraType) {
+	case PERSPECTIVE: glFrustum(	width* p0[0]+ sx, width* p1[0]+ sx,		height* p0[1]+ bt, height* p1[1]+ bt,nr,fr);	break;
+	case ORTHO:       glOrtho((width* p0[0]+sx)*camera.viewportM,  (width* p1[0]+sx)*camera.viewportM, (height* p0[1]+ bt)*camera.viewportM, (height* p1[1]+bt)*camera.viewportM,nr,fr); break;
+	case ISOMETRIC:   IsometricProj(dx-width* p1[0], dx-width* p0[0],		tp-height* p1[1], tp-height* p0[1],nr,fr);	break;
+	case CAVALIERI:   CavalieriProj(dx-width* p1[0], dx-width* p0[0],		tp-height* p1[1], tp-height* p0[1],nr,fr);	break;
+	}
+
+
 	assert(glGetError()==0);
 };
 };
