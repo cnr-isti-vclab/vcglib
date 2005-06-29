@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2005/02/11 11:44:07  tommyfranken
+Trackball translation corrected
+
 Revision 1.11  2005/02/02 16:46:41  pietroni
 some warning corrected
 
@@ -64,6 +67,7 @@ Adding copyright.
 #include <vcg/math/similarity.h>
 #include <iostream>
 
+
 using namespace std;
 using namespace vcg;
 
@@ -99,7 +103,7 @@ Point3f TrackMode::HitViewPlane(Trackball *tb, const Point3f &p) {
   Line3fN ln= tb->camera.ViewLineFromWindow(Point3f(p[0],p[1],0));
 
   Point3f PonVP;
-  /*bool res = */Intersection<float>(vp,ln,PonVP);
+  /*bool res = */IntersectionLinePlane<float>(vp,ln,PonVP);
   return PonVP;
 }
 
@@ -216,12 +220,12 @@ Point3f SphereMode::Hit(Trackball *tb, const Point3f &p) {
   Line3fN vn = tb->camera.ViewLineFromModel(tb->center);
   Line3fN ln = tb->camera.ViewLineFromWindow(Point3f(p[0],p[1],0));
   Point3f viewpoint = tb->camera.ViewPoint();
-  Plane3f vp = GetViewPlane(tb->camera, tb->center); 
+  Plane3f vp = GetViewPlane(tb->camera, tb->center);
   Point3f hit,hitPlane,hitSphere,hitSphere1,hitSphere2,hitHyper;
-  Intersection<float>(vp, ln, hitPlane);
+  IntersectionLinePlane<float>(vp, ln, hitPlane);
   Sphere3f sphere(tb->center,tb->radius);
-  bool resSp = Intersection<float>(sphere, ln, hitSphere1, hitSphere2);
-  if(Distance(viewpoint,hitSphere1)<Distance(viewpoint,hitSphere2)) 
+  bool resSp = IntersectionLineSphere<float>(sphere, ln, hitSphere1, hitSphere2);
+  if(Distance(viewpoint,hitSphere1)<Distance(viewpoint,hitSphere2))
         hitSphere=hitSphere1;
   else  hitSphere=hitSphere2;
 
