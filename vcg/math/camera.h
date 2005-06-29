@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.19  2005/02/22 10:57:58  tommyfranken
+Corrected declaration and some syntax errors in GetFrustum
+
 Revision 1.18  2005/02/21 18:11:07  ganovelli
 GetFrustum moved from gl/camera to math/camera.h
 
@@ -93,6 +96,15 @@ creation
 
 namespace vcg{
 
+	enum {
+
+		PERSPECTIVE = 0,
+		ORTHO       = 1,
+		ISOMETRIC =   2,
+		CAVALIERI =   3
+	};
+
+
 template<class S>
 class Camera
 {
@@ -102,7 +114,7 @@ public:
 		f(0.f),s(vcg::Point2<S>(0.0,0.0)),
 		c(vcg::Point2<S>(0.0,0.0)),
 		viewport(vcg::Point2<int>(0,0)),
-		_flags(0),viewportM(1)
+		_flags(0),viewportM(1), cameraType(0)
 		{}
 
 	S    f;								// Focal Distance (cioe' la distanza del piano immagine dal centro di proiezione
@@ -117,13 +129,20 @@ public:
 	S viewportM;						// ratio between viewport in pixel and size (useful to avoid chancing s or viewport when
 										// zooming a ortho camera (for a perspective camera it is 1)
 
-	enum{
+	/*enum{
 		ORTHO_BIT = 0x01 		// true if the camera is orthogonal
-	};						
+	};*/		
+
+
 
 	char _flags;
-	bool IsOrtho(){ return (_flags & ORTHO_BIT);}
-	void SetOrtho(bool v, S dist )
+
+	int cameraType;
+	//bool IsOrtho(){ return (_flags & ORTHO_BIT);}
+	
+
+    
+	/*void SetOrtho(bool v, S dist )
 	{ 
 		if(v) 
 		{
@@ -132,13 +151,31 @@ public:
 		}
 		else _flags &= ~ORTHO_BIT; 
 		
-	};
+	};*/
+
 	char & UberFlags() {return _flags;}
+
+	void SetOrtho(S dist )
+	{ 
+	
+	    cameraType = ORTHO;
+		viewportM = ( ((viewport[0] * s[0]) * (viewport[1] * s[1])) / f ) * dist;
+	
+	
+	};
 
 	/// set the camera specifying the perspecive view
 	inline void SetPerspective(S angle, S ratio, S nearend, S farend,vcg::Point2<S> viewport=vcg::Point2<S>(500,-1) );
 
-	/// set the camera specifying the frustum view
+
+	/// set the camera specifying the cavalieri view
+	inline void SetCavalieri(S sx, S dx, S bt, S tp, S nearend, S farend, vcg::Point2<S> viewport=vcg::Point2<S>(500,-1) );
+
+
+	/// set the camera specifying the isometric view
+	inline void SetIsometric(S sx, S dx, S bt, S tp, S nearend, S farend, vcg::Point2<S> viewport=vcg::Point2<S>(500,-1) );
+
+    	/// set the camera specifying the frustum view
 	inline void SetFrustum(S dx, S sx, S bt, S tp, S nearend, S farend,vcg::Point2<S> viewport=vcg::Point2<S>(500,-1));
 
 	/// get the camera frustum view
@@ -189,6 +226,23 @@ vcg::Point2<S> Camera<S>::LocalTo_neg1_1(const vcg::Point2<S> & p){
 	return ps;
 }
 
+/// set the camera specifying the cavalieri view
+template<class S>
+void Camera<S>::SetCavalieri(S sx, S dx, S bt, S tp, S nearend, S farend, vcg::Point2<S> viewport=vcg::Point2<S>(500,-1) )
+{
+	cameraType = CAVALIERI;
+	SetFrustum(sx, dx, bt, tp,  nearend,farend,viewport);
+}
+
+/// set the camera specifying the isometric view
+template<class S>
+void Camera<S>::SetIsometric(S sx, S dx, S bt, S tp, S nearend, S farend, vcg::Point2<S> viewport=vcg::Point2<S>(500,-1) )
+{
+	cameraType = ISOMETRIC;
+	SetFrustum(sx, dx, bt, tp,  nearend,farend,viewport);
+}
+
+
 /// set the camera specifying the perspective view
 template<class S>
 	void Camera<S>::SetPerspective(	S angle, 
@@ -197,11 +251,14 @@ template<class S>
 									S far_thr, 
 									vcg::Point2<S> vp)
 {
-		S halfsize[2];
+		cameraType = PERSPECTIVE;
+	    S halfsize[2];
 		halfsize[1] = tan(math::ToRad(angle/2)) * near_thr;
 		halfsize[0] = halfsize[1]*ratio;
 		SetFrustum(-halfsize[0],halfsize[0],-halfsize[1],halfsize[1],near_thr,far_thr,vp);
 }
+
+
 
 /// set the camera specifying the frustum view
 template<class S>
