@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/06/17 00:48:27  cignoni
+Corrected the type name of wedge tex coords WedgeInterp in RefineE
+
 Revision 1.3  2005/02/25 10:28:04  pietroni
 added #include<vcg/complex/trimesh/update/topology.h> use of update topology in refineE
 
@@ -93,7 +96,7 @@ const Split SplitTab[8]={
 
 // Classe di suddivisione base. Taglia il lato esattamente a meta'.
 template<class MESH_TYPE>
-struct MidPoint : public   std::unary_function<face::Pos<typename MESH_TYPE::FaceType> , typename typename MESH_TYPE::CoordType >
+struct MidPoint : public   std::unary_function<face::Pos<typename MESH_TYPE::FaceType> ,  typename MESH_TYPE::CoordType >
 {
 	void operator()(typename MESH_TYPE::VertexType &nv, face::Pos<typename MESH_TYPE::FaceType>  ep){
 		nv.P()=   (ep.f->V(ep.z)->P()+ep.f->V1(ep.z)->P())/2.0;
@@ -125,7 +128,7 @@ struct MidPoint : public   std::unary_function<face::Pos<typename MESH_TYPE::Fac
 
 
 template<class MESH_TYPE>
-struct MidPointArc : public std::unary_function<face::Pos<typename MESH_TYPE::FaceType> , typename typename MESH_TYPE::CoordType>
+struct MidPointArc : public std::unary_function<face::Pos<typename MESH_TYPE::FaceType> ,  typename MESH_TYPE::CoordType>
 {
 	void operator()(typename MESH_TYPE::VertexType &nv, face::Pos<typename MESH_TYPE::FaceType> ep)
 	{
