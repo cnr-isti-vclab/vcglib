@@ -20,7 +20,7 @@ public:
 };
 
 template <typename CONT_TETRA>
-class GLWrapTetra:public GLW{
+class GlTetramesh:public GLW{
 
 
 public:
@@ -146,7 +146,7 @@ public:
 			
 		};
 
-	GLWrapTetra(CONT_TETRA & _t):tetra(_t){}
+	GlTetramesh(CONT_TETRA & _t):tetra(_t){}
 
 	CONT_TETRA	& tetra;	
 	ClipPlane section;
