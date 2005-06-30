@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/05/05 12:28:13  cignoni
+added glboxwire
+
 Revision 1.4  2004/07/07 23:30:28  cignoni
 Added box3 drawing functions
 
@@ -45,6 +48,7 @@ First working version!
 // Please note that this file assume that you have already included your 
 // gl-extension wrapping utility, and that therefore all the extension symbol are already defined.
 
+#include <vcg/space/plane3.h>
 #include <vcg/space/point2.h>
 #include <vcg/space/point3.h>
 #include <vcg/space/color4.h>
@@ -202,6 +206,40 @@ inline void glBoxClip(const Box3<T>  & b)
 	
 	glPopAttrib();
 };
+ template <class T>
+	inline void glPlane3( Plane3<T>   p, Point3<T>  c, T size )  {
+		Point3<T> w = p.Direction();
+		Point3<T> u,v,c1;
+		GetUV<T>(w,u,v);
+
+		c1 = p.Projection(c);
+
+		u.Normalize();
+		w.Normalize();
+		v.Normalize();
+
+		Matrix44<T> m;
+	  *(Point3<T>*)&m[0][0] = *(Point3<T>*)&u[0];m[0][3]=0;
+		*(Point3<T>*)&m[1][0] = *(Point3<T>*)&w[0];m[1][3]=0;
+		*(Point3<T>*)&m[2][0] = *(Point3<T>*)&v[0];m[2][3]=0;
+		*(Point3<T>*)&m[3][0] = *(Point3<T>*)&c1[0];m[3][3]=1;
+
+		vcg::Transpose(m);
+		glPushMatrix();
+		glMultMatrix(m);
+
+		glBegin(GL_QUADS);
+		glNormal(Point3<T>(0,1,0));
+		glVertex(Point3<T>(-size,0,-size));
+		glVertex(Point3<T>(size ,0,-size));
+		glVertex(Point3<T>(size ,0, size));
+		glVertex(Point3<T>(-size,0, size));
+		glEnd();
+
+
+		glPopMatrix();
+	}
+
 
 }//namespace
 #endif
