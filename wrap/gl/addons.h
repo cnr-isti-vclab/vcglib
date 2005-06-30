@@ -158,6 +158,8 @@ namespace vcg
 				glNormal3f(1,0,0);
 				glVertex3d(1,0,1);
 				glEnd();
+
+		
 				if (useDisplList)
 					glEndList();
 			}
@@ -250,32 +252,46 @@ namespace vcg
 
 			if (((!glIsList(cone_List))&&(useDisplList))||(!useDisplList))
 			{
-				int h;
-				vcg::Point3d p0;
+				int h=1;
+				vcg::Point3f p0;
+                vcg::Point3f P[2];
+				vcg::Point3f N[2];
+
 				glScaled(lenght,width,width);
 				if (useDisplList)
 				{
 					cone_List = glGenLists(1);
 					glNewList(cone_List, GL_COMPILE);
 				}
-				for(h=0; h < 2; ++h){
-					glBegin(GL_TRIANGLE_FAN);
-					p0 = Point3d(0,0,0);
-					if(h==0) 
-						//p0[0]+=lenght;
-						p0[0]+=1.f;
-					glNormal3f(1,0.0,0.0);
-					glVertex3d(p0[0],p0[1],p0[2]);
+				for(h=0; h < 2; ++h)
+				{
+					
+					//glBegin(GL_TRIANGLE_FAN);
+					p0 = Point3f(0,0,0);
+					if(h==0) p0[0]+=1.f;
+					//glNormal3f(1,0.0,0.0);
+					//glVertex3d(p0[0],p0[1],p0[2]);
+					 N[0]= Point3f( 1.f,sinf(0),cosf(0) );
+					 P[0]= Point3f( 0,sinf(0),cosf(0));
 					int b;
-					for(b = 0; b <= slices; ++b){
+					for(b = 1; b <= slices; ++b)
+					{
 						double angle = -6.28*b/(double)slices;
-						//double ratio= lenght/width;
-						//Point3d N0( ratio,ratio*sin(angle),ratio* cos(angle) );
-						Point3d N0( 1.f,sin(angle),cos(angle) );
-						glNormal3f(N0[0],N0[1],N0[2]);
-						//p0 = Point3d( 0, width * sin(angle),width * cos(angle));
-						p0 = Point3d( 0,sin(angle),cos(angle));
-						glVertex3d(p0[0],p0[1],p0[2]);
+						if (b==slices) angle=0;
+						N[1] = Point3f( 1.f, sinf(angle), cosf(angle) );
+						P[1] = Point3f( 0,   sinf(angle), cosf(angle));
+						
+						glBegin(GL_TRIANGLES);
+						  Point3f n =  ( (P[0]-p0) ^ (P[2]-p0) ).Normalize();
+						  glNormal3f(n[0],n[1],n[2]);
+						  glVertex3f(p0[0],p0[1],p0[2]);
+						  glNormal3f(N[0][0],N[0][1],N[0][2]);
+						  glVertex3f(P[0][0],P[0][1],P[0][2]);
+						  glNormal3f(N[1][0],N[1][1],N[1][2]);
+						  glVertex3f(P[1][0],P[1][1],P[1][2]);
+						glEnd();
+                        N[0] = N[1];
+						P[0] = P[1];
 					}
 					glEnd();
 				}
