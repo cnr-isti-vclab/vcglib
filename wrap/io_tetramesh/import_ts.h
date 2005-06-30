@@ -21,11 +21,14 @@ class ImporterTS{
 
 	static FILE *& F(){static FILE * f; return f;}
 
-	inline static ReadPos( Point3<ScalarType> &p){
-		fscanf(F(),"%g %g %g\n",&p[0],&p[1],&p[2]);
+	inline static ReadPos( Point3<double> &p){
+		fscanf(F(),"%lg %lg %lg",&p[0],&p[1],&p[2]);
+	}
+	inline static ReadPos( Point3<float> &p){
+		fscanf(F(),"%f %f %f",&p[0],&p[1],&p[2]);
 	}
 	inline static ReadPos( Point4<ScalarType> &p){
-		fscanf(F(),"%g %g %g %g\n",&p[0],&p[1],&p[2],&p[3]);
+		fscanf(F(),"%g %g %g %g",&p[0],&p[1],&p[2],&p[3]);
 	}
 public:
 static int Open( Tetramesh & m, const char * filename )
@@ -47,6 +50,8 @@ static int Open( Tetramesh & m, const char * filename )
    {
 		fscanf(F(), "%i", &nvertex );
 		fscanf(F(), "%i", &ntetra );
+		m.tetra.reserve(ntetra);
+    m.vert.reserve(nvertex);
 		int j;
 		for (j=0;j<nvertex;j++)
 		{
@@ -54,8 +59,6 @@ static int Open( Tetramesh & m, const char * filename )
 			ReadPos(m.vert.back().P());
       m.vert.back().ClearFlags();
 		}
-		m.tetra.reserve(ntetra);
-    m.vert.reserve(nvertex);
 		for (j=0;j<ntetra;j++)
 		{
 			fscanf(F(), "%i", &tp0 );
