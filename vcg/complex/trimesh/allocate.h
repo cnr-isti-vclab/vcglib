@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2005/06/09 14:14:29  ganovelli
+two warnings on type cast
+
 Revision 1.19  2005/04/27 16:08:39  callieri
 in addfaces, added casting for face* returned from vertex.VFp() [borland]
 
@@ -334,8 +337,12 @@ static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu
         {
           if(VertexType::HasVFAdjacency())
 			if ((*vi).VFp()!=0)
-			  pu.Update((FaceType*)(*vi).VFp());
-	  // was (for mingw) pu.Update((FaceType*)(*vi).VFp());
+			  pu.Update((FaceType * &)(*vi).VFp());
+	  // Note the above cast is probably not useful if you have correctly defined 
+    // your vertex type with the correct name of the facetype as a template argument; 
+    //  pu.Update((FaceType*)(*vi).VFp()); compiles on old gcc and borland
+    //  pu.Update((*vi).VFp());            compiles on .net and newer gcc
+
 
         }
         		// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
