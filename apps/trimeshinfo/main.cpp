@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/02/15 12:26:06  rita_borgo
+Minor changes to self-intersection
+
 Revision 1.7  2005/02/07 15:44:31  rita_borgo
 Fixed Color and Volume
 
@@ -93,7 +96,8 @@ void OpenMesh(const char *filename, MyMesh &m)
 
 inline char* GetExtension(char* filename)
 {
-    for(int i=strlen(filename)-1; i >= 0; i--)
+  int i;
+    for(i=strlen(filename)-1; i >= 0; i--)
         if(filename[i] == '.')
             break;
     if(i > 0)
@@ -157,9 +161,9 @@ static int DuplicateVertex( MyMesh & m )    // V1.0
 	}
 	return deleted;
 }
-void main(int argc,char ** argv){
+int main(int argc,char ** argv)
+{
 
-	char                 *fmt;
 	MyMesh m;
 	bool DEBUG = false;
 	//load the mesh
@@ -207,8 +211,8 @@ void main(int argc,char ** argv){
 	if(m.HasPerFaceColor()||m.HasPerVertexColor())
 	{
 		Color4b Color=m.C();
-		fprintf(index, "<p>Object color(4b): %f %f %f </p>\n\n", Color[0], Color[1], Color[2]);
-		printf( "\t Object color(4b): %f %f %f \n", Color[0], Color[1], Color[2]);
+		fprintf(index, "<p>Object color(4b): %i %i %i </p>\n\n", Color[0], Color[1], Color[2]);
+		printf( "\t Object color(4b): %i %i %i \n", Color[0], Color[1], Color[2]);
 	}
 	
 	
@@ -221,7 +225,6 @@ void main(int argc,char ** argv){
 	vcg::face::Pos<MyMesh::FaceType> he;
 	vcg::face::Pos<MyMesh::FaceType> hei;
 	int j;
-	int man=0;
 	bool Manifold = true;
 	
 	MyMesh::FaceIterator prova;
@@ -387,8 +390,8 @@ void main(int argc,char ** argv){
 	if (Manifold)
 	{
         fprintf(index, "<p> Number of holes: %d </p> \n <p> Number of border edges: %d </p>", numholes, BEdges); 
-        printf("\t Number of holes: %d \n", numholes, BEdges); 
-        printf("\t Number of border edges: %d\n", numholes, BEdges); 
+        printf("\t Number of holes: %d \n", numholes); 
+        printf("\t Number of border edges: %d\n", BEdges); 
 	}
 	else
 	{
@@ -397,8 +400,6 @@ void main(int argc,char ** argv){
 	}
 
 	// Mesh Volume
-	float vol = m.Volume();
-	int nuh = numholes;
 	if((m.Volume()>0.)&&(Manifold)&&(numholes==0))
 	{
         fprintf(index,"<p>Volume: %d </p>\n", m.Volume());
@@ -411,23 +412,23 @@ void main(int argc,char ** argv){
 
 	for(f=m.face.begin();f!=m.face.end();++f)
 		(*f).ClearS();
-	g=m.face.begin(); f=g;
-	int CountComp=0; int CountOrient=0;
-	stack<MyMesh::FaceIterator> sf;	
-	MyMesh::FaceType *l;
+	int CountComp=0;
+	stack<MyMesh::FacePointer> sf;	
+	MyMesh::FacePointer l,gf;
+  gf=&*m.face.begin(); 
 	for(f=m.face.begin();f!=m.face.end();++f)
 	{
 		if (!(*f).IsS())
 		{
 			(*f).SetS();
-			sf.push(f);
+			sf.push(&*f);
 			while (!sf.empty())
 			{
-				g=sf.top();
-				he.Set(&(*g),0,g->V(0));
+				gf=sf.top();
+				he.Set(gf,0,gf->V(0));
 				sf.pop();
 				for(j=0;j<3;++j)
-						if( !(*g).IsBorder(j) )
+						if( !(*gf).IsBorder(j) )
 							{
 								l=he.f->FFp(j);
 								if( !(*l).IsS() )
@@ -529,27 +530,27 @@ void main(int argc,char ** argv){
 			(*f).ClearS();
 			(*f).ClearUserBit(0);
 		}
-		g=m.face.begin(); f=g; 
+		gf=&*m.face.begin();
 		for(f=m.face.begin();f!=m.face.end();++f)
 		{
 			if (!(*f).IsS())
 			{
 				(*f).SetS();
-				sf.push(f);
+				sf.push(&*f);
 				
 				while (!sf.empty())
 				{
-					g=sf.top();
+					gf=sf.top();
 					sf.pop();
 					for(j=0;j<3;++j)
 					{
-						if( !(*g).IsBorder(j) )
+						if( !(*gf).IsBorder(j) )
 						{
-							he.Set(&(*g),0,g->V(0));
+							he.Set(gf,0,gf->V(0));
 							l=he.f->FFp(j);
-							he.Set(&(*g),j,g->V(j));								
+							he.Set(gf,j,gf->V(j));								
 							hei.Set(he.f->FFp(j),he.f->FFi(j), (he.f->FFp(j))->V(he.f->FFi(j)));
-							if( !(*g).IsUserBit(0) )
+							if( !(*gf).IsUserBit(0) )
 							{
 								if (he.v!=hei.v)    // bene
 								{
@@ -676,5 +677,6 @@ void main(int argc,char ** argv){
 
 
 	fclose(index);
+  return 0;
 }
 
