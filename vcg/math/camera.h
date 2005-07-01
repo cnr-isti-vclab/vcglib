@@ -23,6 +23,15 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.20  2005/06/29 14:59:03  spinelli
+aggiunto:
+- l' enum dei tipi  PERSPECTIVE,  ORTHO, ISOMETRIC,  CAVALIERI
+- inline void SetCavalieri(...)
+- inline void SetIsometric(...)
+
+- modificato
+- void SetOrtho( .. )
+
 Revision 1.19  2005/02/22 10:57:58  tommyfranken
 Corrected declaration and some syntax errors in GetFrustum
 
@@ -228,7 +237,7 @@ vcg::Point2<S> Camera<S>::LocalTo_neg1_1(const vcg::Point2<S> & p){
 
 /// set the camera specifying the cavalieri view
 template<class S>
-void Camera<S>::SetCavalieri(S sx, S dx, S bt, S tp, S nearend, S farend, vcg::Point2<S> viewport=vcg::Point2<S>(500,-1) )
+void Camera<S>::SetCavalieri(S sx, S dx, S bt, S tp, S nearend, S farend, vcg::Point2<S> viewport)
 {
 	cameraType = CAVALIERI;
 	SetFrustum(sx, dx, bt, tp,  nearend,farend,viewport);
@@ -236,7 +245,7 @@ void Camera<S>::SetCavalieri(S sx, S dx, S bt, S tp, S nearend, S farend, vcg::P
 
 /// set the camera specifying the isometric view
 template<class S>
-void Camera<S>::SetIsometric(S sx, S dx, S bt, S tp, S nearend, S farend, vcg::Point2<S> viewport=vcg::Point2<S>(500,-1) )
+void Camera<S>::SetIsometric(S sx, S dx, S bt, S tp, S nearend, S farend, vcg::Point2<S> viewport )
 {
 	cameraType = ISOMETRIC;
 	SetFrustum(sx, dx, bt, tp,  nearend,farend,viewport);
