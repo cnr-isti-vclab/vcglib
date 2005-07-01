@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/06/17 00:49:29  cignoni
+Added missing Sphere function
+
 Revision 1.2  2005/02/25 11:41:08  pietroni
 Fixed bug in Square
 
@@ -364,22 +367,25 @@ void Square(MeshType &in)
  (*fi).V(0)=ivp[0];  (*fi).V(1)=ivp[2]; (*fi).V(2)=ivp[3]; 
 }
 
-// this function build a sphere starting from a possibly not empty mesh.
-// if the mesh is not empty it is used as base for the subdivision process.
+// this function build a sphere starting from a eventually not empty mesh.
+// If the mesh is not empty it is 'spherified' and used as base for the subdivision process.
 // otherwise an icosahedron is used.
 template <class MESH_TYPE>
 void Sphere(MESH_TYPE &in, const int subdiv = 3 )
 {
 	if(in.vn==0 && in.fn==0) Icosahedron(in);
-	//in.ComputeBorderFlag();
+
+  MESH_TYPE::VertexIterator vi;
+  for(vi = in.vert.begin(); vi!=in.vert.end();++vi)
+	  vi->P().Normalize();
+
   tri::UpdateFlags<AMesh>::FaceBorderFromNone(in);
       
 	int lastsize = 0;
 	for(int i=0;i<subdiv;++i)
 	{
 		Refine<MESH_TYPE, MidPoint<MESH_TYPE> >(in,MidPoint<MESH_TYPE>(),0);
-		MESH_TYPE::VertexIterator vi;
-
+		
 		for(vi = in.vert.begin()+lastsize;vi!=in.vert.end();++vi)
 			vi->P().Normalize();
 
