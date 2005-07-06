@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/06/10 15:07:23  cignoni
+Completed FaceBorderFromNone (and added a missing helper class)
+
 Revision 1.8  2005/04/01 13:04:55  fiorin
 Minor changes
 
@@ -239,7 +242,7 @@ static void FaceBorderFromNone(MeshType &m)
 }
 
 	/// Bisogna carlcolare il border flag delle facce
-void VertexBorderFromFace(MeshType &m)
+static void VertexBorderFromFace(MeshType &m)
 {
 	typename MeshType::VertexIterator v;
 	typename MeshType::FaceIterator f;
