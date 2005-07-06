@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/04/05 13:53:37  ganovelli
+Aggiunto typename
+
 Revision 1.3  2004/03/31 22:36:44  ganovelli
 First Working Release (with this comment)
 
@@ -41,8 +44,8 @@ template <class STL_CONT>
 struct EntryCATBase{
 
 EntryCATBase(STL_CONT & _c):c(_c){};
-typename STL_CONT::value_type * Start() const;
-virtual bool Empty(){};
+typename typename typename STL_CONT::value_type * Start() const;
+virtual bool Empty(){return true;};
 const STL_CONT *  C();
 virtual void Push_back(const int &){};
 
@@ -77,7 +80,7 @@ const bool EntryCATBase<STL_CONT>:: operator < (const EntryCATBase<STL_CONT> & o
 }
 
 template <class STL_CONT>
- STL_CONT::value_type  * EntryCATBase<STL_CONT>::Start()const {
+ typename typename STL_CONT::value_type  * EntryCATBase<STL_CONT>::Start()const {
 	return &(*(c.begin()));
 	}
 
@@ -146,7 +149,7 @@ public:
 
 		std::vector<ATTR_TYPE>  * Item(){return item;};
 		std::vector<ATTR_TYPE>  * item;
-		ATTR_TYPE & operator [](STL_CONT::value_type * v)
+		ATTR_TYPE & operator [](typename typename STL_CONT::value_type * v)
 			{
 				int pos = CATEntry<STL_CONT, EntryCATMulti<STL_CONT> >::Ord(v);
 				return (*item)[pos];

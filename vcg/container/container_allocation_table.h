@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/04/05 18:20:50  ganovelli
+Aggiunto typename
+Eliminata bug di ricorsione nell'istanzazione dei template
+
 Revision 1.3  2004/03/31 22:36:44  ganovelli
 First Working Release (with this comment)
 
@@ -45,7 +49,7 @@ namespace vcg {
 template <typename STL_CONT>
 class CATBase{
 public:
-typedef typename STL_CONT::value_type ValueType;
+typedef typename typename STL_CONT::value_type ValueType;
 
 virtual void Resort(ValueType*,ValueType*) =0;
 virtual void Remove(const STL_CONT&) = 0;
@@ -64,7 +68,7 @@ static int & Id(){
 template <typename STL_CONT, class ENTRY_TYPE>
 class CATEntry: public CATBase<STL_CONT>{
 public:
-typedef typename STL_CONT::value_type ValueType;
+typedef typename typename STL_CONT::value_type ValueType;
 typedef typename ENTRY_TYPE EntryType;
 
 CATEntry(){if(Id()==0){
@@ -75,12 +79,12 @@ CATEntry(){if(Id()==0){
 
 
 static unsigned int Ord(ValueType *);
-static ENTRY_TYPE & GetEntry(STL_CONT::value_type*pt);
+static ENTRY_TYPE & GetEntry(typename STL_CONT::value_type*pt);
 
 static	void  Insert( STL_CONT & c,bool cond=false );				// insert a vector to trace
 virtual void	Remove(  const STL_CONT  &	c);								// remove the container c
-static  void	RemoveIfEmpty(  const STL_CONT  &	c);								// remove the container c
-static  void	Remove(  ValueType  *	v);										// remove the container that contains v
+static  void	RemoveIfEmpty(  const STL_CONT  &	c);					// remove the container c
+static  void	Remove(  ValueType  *	v);										  // remove the container that contains v
 
 virtual void Resort(	ValueType* old_start,			// resort the allocation table
 											ValueType* new_start);			// after a container was moved
@@ -105,7 +109,7 @@ static ValueType *& Upper() {
 	return upper;																		// if the container next to the last accessed
 }		
 
-static std::list<ENTRY_TYPE>::iterator	 & Curr(){		// container that was last accessed
+static typename std::list<ENTRY_TYPE>::iterator	 & Curr(){		// container that was last accessed
 	static std::list<ENTRY_TYPE>::iterator currEntry;
 	return currEntry;
 }
@@ -114,9 +118,9 @@ static std::list<ENTRY_TYPE>::iterator	 & Curr(){		// container that was last ac
 static bool IsTheSameAsLast(ValueType *pt);	// true if pt is in the  container
 																							// that was accessed last
 static void Update(ValueType*);							// set Upper() e Lower() 
-static std::list<ENTRY_TYPE>::iterator FindBase(const ValueType * pt);	
+static typename std::list<ENTRY_TYPE>::iterator FindBase(const ValueType * pt);	
 																							// find the container that contains pt (naive)
-virtual  void  AddDataElem(STL_CONT::value_type * pt,int n);// add n element to the auxiliary data
+virtual  void  AddDataElem(typename STL_CONT::value_type * pt,int n);// add n element to the auxiliary data
 
 public:
 static int & Id(){															// unique identifier of the istance
@@ -138,7 +142,7 @@ Ord(ValueType * pt)
 
 
 template <typename STL_CONT, class ENTRY_TYPE>
-std::list<ENTRY_TYPE>::iterator CATEntry<STL_CONT,ENTRY_TYPE>::
+typename std::list<ENTRY_TYPE>::iterator CATEntry<STL_CONT,ENTRY_TYPE>::
 
 FindBase(const ValueType * pt)
 {
@@ -260,7 +264,7 @@ UTD() = false;
 
 template <typename STL_CONT, class ENTRY_TYPE>
 ENTRY_TYPE & CATEntry<STL_CONT, ENTRY_TYPE>::
-GetEntry(STL_CONT::value_type*pt){
+GetEntry(typename STL_CONT::value_type*pt){
 Update(pt);
 return *Curr();
 }
@@ -268,7 +272,7 @@ return *Curr();
 template <typename STL_CONT, class ENTRY_TYPE>
 void CATEntry<STL_CONT, ENTRY_TYPE>::
 
-AddDataElem(STL_CONT::value_type * pt,int n)
+AddDataElem(typename STL_CONT::value_type * pt,int n)
 {
 Update(pt);
 Curr()->Push_back(n);
@@ -280,7 +284,7 @@ Curr()->Push_back(n);
 // This class is used to implement optional core data (NormalOpt, CoordOpt etc...)
 template <typename STL_CONT,class ATTR_TYPE>
 class CAT:public CATEntry<STL_CONT, EntryCAT<STL_CONT,ATTR_TYPE> >{
-typedef typename STL_CONT::value_type ValueType;
+typedef typename typename STL_CONT::value_type ValueType;
 public:
 static ATTR_TYPE & Get(ValueType * pt);
 }; 
