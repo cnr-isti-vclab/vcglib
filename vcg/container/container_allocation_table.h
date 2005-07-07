@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/07/06 15:28:10  ganovelli
+aggiornamento di alcuni path
+
 Revision 1.4  2004/04/05 18:20:50  ganovelli
 Aggiunto typename
 Eliminata bug di ricorsione nell'istanzazione dei template
@@ -43,9 +46,17 @@ First Working Release (with this comment)
 #include <assert.h>
 #include <vcg/container/entries_allocation_table.h>
 
-namespace vcg {
 
-// CATBase: abstract base class for all the allocation tables
+namespace vcg {
+	/*@{*/
+/*!
+ * CATBase is the abstract class for all the allocation tables. THese table keep track of
+ * where the traced vector (see traced_ector.h) are kepth in memory.
+ * The goal is to know (given a pointer to a memory location), which is the vector the pointed 
+ * element is in
+ * 
+ */
+
 template <typename STL_CONT>
 class CATBase{
 public:
@@ -63,8 +74,8 @@ static int & Id(){
 			}	
 };
 
-// CATEntry: first derivation templated on the type of entry
-// It implements all the methods to trace and access TVector element
+/// CATEntry: first derivation templated on the type of entry
+/// It implements all the methods to trace and access TVector element
 template <typename STL_CONT, class ENTRY_TYPE>
 class CATEntry: public CATBase<STL_CONT>{
 public:

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/04/05 18:20:08  ganovelli
+Aggiunto typename
+
 Revision 1.3  2004/03/31 22:36:44  ganovelli
 First Working Release (with this comment)
 
@@ -39,6 +42,14 @@ First Working Release (with this comment)
 #include <assert.h>
 
 namespace vcg {
+	/*@{*/
+/*!
+ * This class represent a Traced Vector. A TVector is derived by a std::vector.
+ * The characteristic of a TVector is that you can add (at run time) new attributes
+ * to the container::value_type elements contained in the vector. (see the example..)
+ * The position in memory of a traced vector is kept by the Container Allocation Table,
+ * which is a (unique) list of TVector positions.
+ */
 
 template <class VALUE_TYPE>
 class TVector: public std::vector<VALUE_TYPE>{
@@ -57,6 +68,7 @@ public:
 	void resize(const unsigned int & size);
 	void reserve(const unsigned int & size);
 
+	/// this function enable the use of an optional attribute (see...)
 	template <class ATTR_TYPE>
 		void EnableAttribute(){
 			CAT<ThisType,ATTR_TYPE> * cat = new CAT<ThisType,ATTR_TYPE>();
@@ -64,6 +76,8 @@ public:
 			attributes.push_back(cat);
 			}
 
+	/// this function disable the use of an optional attribute (see...)
+  /// Note: once an attribute is disabled, its data is lost (the memory freed)
 	template <class ATTR_TYPE>
 		void DisableAttribute(){
 				std::list < CATBase<ThisType> * >::iterator ia; 
@@ -77,6 +91,13 @@ public:
 						}
 				}
 
+	/// this function create a new attribute of type ATTR_TYPE and return an handle to
+  /// access the value of the attribute. Ex:
+  /// TVector<float> tv;
+  /// TempData<TVect,int> handle =  tv.NewTempData<int>();
+  /// // now handle[&tv[123]] is the value of integer attribute associate with the position 123 on the vector
+  /// // NOTE: it works also if you do some push_back, resize, pop_back, reserve that cause the relocation
+  /// // of the TVector
 	template <class ATTR_TYPE>
 		TempData<ThisType,ATTR_TYPE> NewTempData(){
 			typedef typename CATEntry<ThisType,EntryCATMulti<ThisType> >::EntryType EntryTypeMulti;
@@ -89,7 +110,8 @@ public:
 
 			return TempData<ThisType,ATTR_TYPE>((Wrap<ATTR_TYPE>*) entry.Data().back());
 			}
-			
+
+	/// reciprocal of NewTempData
 	template <class ATTR_TYPE>
 		void DeleteTempData(TempData<ThisType,ATTR_TYPE> & td){
 			typedef typename CATEntry<ThisType,EntryCATMulti<ThisType> >::EntryType EntryTypeMulti;
@@ -106,6 +128,8 @@ private:
 	VALUE_TYPE * old_start;
 	void Update();
 };
+
+	/*@}*/
 
 template <class VALUE_TYPE>
 void TVector<VALUE_TYPE>::push_back(const VALUE_TYPE & v){
