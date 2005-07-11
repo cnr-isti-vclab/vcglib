@@ -159,7 +159,7 @@ namespace vcg
 				glVertex3d(1,0,1);
 				glEnd();
 
-		
+
 				if (useDisplList)
 					glEndList();
 			}
@@ -235,6 +235,7 @@ namespace vcg
 		///draw a cone
 		static void Cone(int slices,double lenght,double width,bool useDisplList)
 		{
+			assert(!glGetError());
 			static std::map<int,GLint> Disp_listMap;
 			GLint cone_List=-1;
 			std::map<int,GLint>::const_iterator it=Disp_listMap.find(slices);
@@ -249,14 +250,14 @@ namespace vcg
 			}
 
 			glScaled(lenght,width,width);
-
+			assert(!glGetError());
 			if (((!glIsList(cone_List))&&(useDisplList))||(!useDisplList))
 			{
 				int h=1;
 				vcg::Point3f p0;
-                vcg::Point3f P[2];
+				vcg::Point3f P[2];
 				vcg::Point3f N[2];
-
+				assert(!glGetError());
 				glScaled(lenght,width,width);
 				if (useDisplList)
 				{
@@ -265,14 +266,14 @@ namespace vcg
 				}
 				for(h=0; h < 2; ++h)
 				{
-					
+					assert(!glGetError());
 					//glBegin(GL_TRIANGLE_FAN);
 					p0 = Point3f(0,0,0);
 					if(h==0) p0[0]+=1.f;
 					//glNormal3f(1,0.0,0.0);
 					//glVertex3d(p0[0],p0[1],p0[2]);
-					 N[0]= Point3f( 1.f,sinf(0),cosf(0) );
-					 P[0]= Point3f( 0,sinf(0),cosf(0));
+					N[0]= Point3f( 1.f,sinf(0),cosf(0) );
+					P[0]= Point3f( 0,sinf(0),cosf(0));
 					int b;
 					for(b = 1; b <= slices; ++b)
 					{
@@ -280,20 +281,21 @@ namespace vcg
 						if (b==slices) angle=0;
 						N[1] = Point3f( 1.f, sinf(angle), cosf(angle) );
 						P[1] = Point3f( 0,   sinf(angle), cosf(angle));
-						
+						assert(!glGetError());
 						glBegin(GL_TRIANGLES);
-						  Point3f n =  ( (P[0]-p0) ^ (P[2]-p0) ).Normalize();
-						  glNormal3f(n[0],n[1],n[2]);
-						  glVertex3f(p0[0],p0[1],p0[2]);
-						  glNormal3f(N[0][0],N[0][1],N[0][2]);
-						  glVertex3f(P[0][0],P[0][1],P[0][2]);
-						  glNormal3f(N[1][0],N[1][1],N[1][2]);
-						  glVertex3f(P[1][0],P[1][1],P[1][2]);
+						Point3f n =  ( (P[0]-p0) ^ (P[2]-p0) ).Normalize();
+						glNormal3f(n[0],n[1],n[2]);
+						glVertex3f(p0[0],p0[1],p0[2]);
+						glNormal3f(N[0][0],N[0][1],N[0][2]);
+						glVertex3f(P[0][0],P[0][1],P[0][2]);
+						glNormal3f(N[1][0],N[1][1],N[1][2]);
+						glVertex3f(P[1][0],P[1][1],P[1][2]);
 						glEnd();
-                        N[0] = N[1];
+						assert(!glGetError());
+						N[0] = N[1];
 						P[0] = P[1];
 					}
-					glEnd();
+					//glEnd();
 				}
 				if (useDisplList)
 					glEndList();
