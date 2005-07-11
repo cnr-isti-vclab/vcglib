@@ -23,11 +23,27 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/03/16 16:14:12  spinelli
+aggiunta funzione PasoDobleSmooth e relative:
+
+- FitMesh
+- FaceErrorGrad
+- CrossProdGradient
+- TriAreaGradient
+- NormalSmooth
+
+e le classi:
+
+- PDVertInfo
+- PDFaceInfo
+
+necessarie per utilizzare SimpleTempData
+
 Revision 1.1  2004/12/11 14:53:19  ganovelli
 first partial porting: compiled gcc,intel and msvc
 
 
-/****************************************************************************/
+****************************************************************************/
 
 
 #ifndef __VCGLIB__SMOOTH
@@ -36,6 +52,7 @@ first partial porting: compiled gcc,intel and msvc
 #include <vcg/space/point3.h>
 #include <vcg/space/line3.h>
 #include <vcg/container/simple_temporary_data.h>
+#include <vcg/complex/trimesh/update/normal.h>
 
 namespace vcg
 {
@@ -534,7 +551,7 @@ void NormalSmooth(MESH_TYPE &m,
 	vcg::face::VFIterator<typename MESH_TYPE::FaceType> ep;
 
 
-	MESH_TYPE::FaceIterator fi;
+	typename MESH_TYPE::FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 	{
 
@@ -645,13 +662,13 @@ Point3<FLT> FaceErrorGrad(Point3<FLT> &p,Point3<FLT> &p0,Point3<FLT> &p1, Point3
 
 template<class MESH_TYPE>
 void FitMesh(MESH_TYPE &m, 
-			 SimpleTempData<typename MESH_TYPE::VertContainer, PDVertInfo<typename typename MESH_TYPE::ScalarType> > &TDV,
-			 SimpleTempData<typename MESH_TYPE::FaceContainer,   PDFaceInfo<typename typename MESH_TYPE::ScalarType> > &TDF,
+			 SimpleTempData<typename MESH_TYPE::VertContainer, PDVertInfo<typename MESH_TYPE::ScalarType> > &TDV,
+			 SimpleTempData<typename MESH_TYPE::FaceContainer, PDFaceInfo<typename MESH_TYPE::ScalarType> > &TDF,
 			 float lambda)
 {
 	//vcg::face::Pos<typename MESH_TYPE::FaceType> ep;
 	vcg::face::VFIterator<typename MESH_TYPE::FaceType> ep;
-	MESH_TYPE::VertexIterator vi;
+	typename MESH_TYPE::VertexIterator vi;
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 	{
 		Point3f ErrGrad=Point3f(0,0,0);
@@ -680,17 +697,19 @@ void FitMesh(MESH_TYPE &m,
 
 
 
-template<class MESH_TYPE>
-void PasoDobleSmooth(MESH_TYPE &m, int step, typename MESH_TYPE::ScalarType Sigma=0, int FitStep=10, typename MESH_TYPE::ScalarType FitLambda=0.05)
+template<class MeshType>
+void PasoDobleSmooth(MeshType &m, int step, typename MeshType::ScalarType Sigma=0, int FitStep=10, typename MeshType::ScalarType FitLambda=0.05)
 {
+  typedef typename MeshType::ScalarType     ScalarType;
+  typedef typename MeshType::CoordType     CoordType;
 
 
-	SimpleTempData< typedef MESH_TYPE::VertContainer, PDVertInfo<MESH_TYPE::ScalarType> > TDV(m.vert);
-	SimpleTempData< typedef MESH_TYPE::FaceContainer, PDFaceInfo<MESH_TYPE::ScalarType> > TDF(m.face);
-	PDVertInfo<MESH_TYPE::ScalarType> lpzv;
-	lpzv.np=typename MESH_TYPE::CoordType(0,0,0);
-	PDFaceInfo<MESH_TYPE::ScalarType> lpzf;
-	lpzf.m=typename MESH_TYPE::CoordType(0,0,0);
+	SimpleTempData< typename MeshType::VertContainer, PDVertInfo<ScalarType> > TDV(m.vert);
+	SimpleTempData< typename MeshType::FaceContainer, PDFaceInfo<ScalarType> > TDF(m.face);
+	PDVertInfo<ScalarType> lpzv;
+	lpzv.np=CoordType(0,0,0);
+	PDFaceInfo<ScalarType> lpzf;
+	lpzf.m=CoordType(0,0,0);
 
 	assert(m.HasVFTopology());
 	m.HasVFTopology();
@@ -699,10 +718,10 @@ void PasoDobleSmooth(MESH_TYPE &m, int step, typename MESH_TYPE::ScalarType Sigm
 	for(int j=0;j<step;++j)
 	{
 
-		vcg::tri::UpdateNormals<MyMesh>::PerFace(m);
-		NormalSmooth<MESH_TYPE>(m,TDF,Sigma);
+		vcg::tri::UpdateNormals<MeshType>::PerFace(m);
+		NormalSmooth<MeshType>(m,TDF,Sigma);
 		for(int k=0;k<FitStep;k++)
-			FitMesh<MESH_TYPE>(m,TDV,TDF,FitLambda);
+			FitMesh<MeshType>(m,TDV,TDF,FitLambda);
 	}
 
 	TDF.Stop();

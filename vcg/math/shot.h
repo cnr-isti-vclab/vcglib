@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.11  2005/01/22 11:20:20  ponchio
+<...Point3.h> -> <...point3.h>
+
 Revision 1.10  2005/01/05 13:26:15  ganovelli
 corretto cambiamento di sistema di rif.
 
@@ -47,7 +50,7 @@ Revision 1.2  2004/09/06 21:41:30  ganovelli
 Revision 1.1  2004/09/03 13:01:51  ganovelli
 creation
 
-/****************************************************************************/
+****************************************************************************/
 
 
 #ifndef __VCGLIB_SHOT

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/07/01 11:17:06  cignoni
+Added option of passing a base mesh to Sphere for spherifying it
+
 Revision 1.3  2005/06/17 00:49:29  cignoni
 Added missing Sphere function
 
@@ -81,22 +84,23 @@ template <class TetraMeshType>
 void Tetrahedron(TetraMeshType &in)
 {
  typedef TetraMeshType MeshType; 
- typedef typename MeshType::CoordType CoordType;
- typedef typename MeshType::VertexPointer  VertexPointer;
- typedef typename MeshType::VertexIterator VertexIterator;
- typedef typename MeshType::FaceIterator   FaceIterator;
+ typedef typename TetraMeshType::CoordType CoordType;
+ typedef typename TetraMeshType::VertexPointer  VertexPointer;
+ typedef typename TetraMeshType::VertexIterator VertexIterator;
+ typedef typename TetraMeshType::FaceIterator   FaceIterator;
 
  in.Clear();
  Allocator<TetraMeshType>::AddVertices(in,4);
  Allocator<TetraMeshType>::AddFaces(in,4);
 
  VertexPointer ivp[4];
-
+ CoordType test;
+test=CoordType ( 1.0, 1.0, 1.0);
  VertexIterator vi=in.vert.begin();
- ivp[0]=&*vi;(*vi).P()=TetraMeshType::CoordType ( 1, 1, 1); ++vi;
- ivp[1]=&*vi;(*vi).P()=TetraMeshType::CoordType (-1, 1,-1); ++vi;
- ivp[2]=&*vi;(*vi).P()=TetraMeshType::CoordType (-1,-1, 1); ++vi;
- ivp[3]=&*vi;(*vi).P()=TetraMeshType::CoordType ( 1,-1,-1); 
+ ivp[0]=&*vi;(*vi).P()=CoordType ( 1.0, 1.0, 1.0); ++vi;
+ ivp[1]=&*vi;(*vi).P()=CoordType (-1.0, 1.0,-1.0); ++vi;
+ ivp[2]=&*vi;(*vi).P()=CoordType (-1.0,-1.0, 1.0); ++vi;
+ ivp[3]=&*vi;(*vi).P()=CoordType ( 1.0,-1.0,-1.0); 
 
  FaceIterator fi=in.face.begin();
  (*fi).V(0)=ivp[0];  (*fi).V(1)=ivp[1]; (*fi).V(2)=ivp[2]; ++fi;
@@ -117,8 +121,8 @@ void Dodecahedron(DodMeshType & in)
  typedef typename MeshType::VertexIterator VertexIterator;
  typedef typename MeshType::FaceIterator   FaceIterator;
  typedef typename MeshType::ScalarType     ScalarType;
- const N_penta=12;
- const N_points=62;
+ const int N_penta=12;
+ const int N_points=62;
 
  int penta[N_penta*3*3]=
 	{20,11, 18,  18, 11,  8,  8, 11,  4,   
@@ -194,7 +198,7 @@ void Dodecahedron(DodMeshType & in)
 		added[ i ] = m++;
 	}
 
-	vector<VertexPointer> index(in.vn);
+  std::vector<VertexPointer> index(in.vn);
 	
 	for(j=0,vi=in.vert.begin();j<in.vn;++j,++vi)	index[j] = &(*vi);
 
@@ -370,21 +374,26 @@ void Square(MeshType &in)
 // this function build a sphere starting from a eventually not empty mesh.
 // If the mesh is not empty it is 'spherified' and used as base for the subdivision process.
 // otherwise an icosahedron is used.
-template <class MESH_TYPE>
-void Sphere(MESH_TYPE &in, const int subdiv = 3 )
+template <class MeshType>
+void Sphere(MeshType &in, const int subdiv = 3 )
 {
+ typedef typename MeshType::ScalarType ScalarType;
+ typedef typename MeshType::CoordType CoordType;
+ typedef typename MeshType::VertexPointer  VertexPointer;
+ typedef typename MeshType::VertexIterator VertexIterator;
+ typedef typename MeshType::FaceIterator   FaceIterator;
 	if(in.vn==0 && in.fn==0) Icosahedron(in);
 
-  MESH_TYPE::VertexIterator vi;
+  VertexIterator vi;
   for(vi = in.vert.begin(); vi!=in.vert.end();++vi)
 	  vi->P().Normalize();
 
-  tri::UpdateFlags<AMesh>::FaceBorderFromNone(in);
+  tri::UpdateFlags<MeshType>::FaceBorderFromNone(in);
       
 	int lastsize = 0;
 	for(int i=0;i<subdiv;++i)
 	{
-		Refine<MESH_TYPE, MidPoint<MESH_TYPE> >(in,MidPoint<MESH_TYPE>(),0);
+		Refine<MeshType, MidPoint<MeshType> >(in,MidPoint<MeshType>(),0);
 		
 		for(vi = in.vert.begin()+lastsize;vi!=in.vert.end();++vi)
 			vi->P().Normalize();
@@ -547,39 +556,45 @@ void Box(MeshType &in, const typename MeshType::BoxType & bb )
 	/// Questa funzione costruisce una mesh a partire da un insieme di coordiante
 	/// ed un insieme di terne di indici di vertici
 
-template <class M,class V, class F >
-void Build( M & in, const V & v, const F & f)
+template <class MeshType,class V, class F >
+void Build( MeshType & in, const V & v, const F & f)
 {
-	in.vn = v.size();
+ typedef typename MeshType::ScalarType ScalarType;
+ typedef typename MeshType::CoordType CoordType;
+ typedef typename MeshType::VertexPointer  VertexPointer;
+ typedef typename MeshType::VertexIterator VertexIterator;
+ typedef typename MeshType::FaceIterator   FaceIterator;
+
+ in.vn = v.size();
 	in.fn = f.size();
 
 	in.vert.clear();
 	in.face.clear();
 
-	V::const_iterator vi;
+	typename V::const_iterator vi;
 
-	M::VertexType tv;
+	typename MeshType::VertexType tv;
 	tv.Supervisor_Flags()=0;
 	
 	for(vi=v.begin();vi!=v.end();++vi)
 	{
-		tv.P() = M::CoordType( 
-			(M::ScalarType)(*vi).Ext(0),
-			(M::ScalarType)(*vi).Ext(1),
-			(M::ScalarType)(*vi).Ext(2)
+		tv.P() = CoordType( 
+			(ScalarType)(*vi).Ext(0),
+			(ScalarType)(*vi).Ext(1),
+			(ScalarType)(*vi).Ext(2)
 		);
 		in.vert.push_back(tv);
 	}
 
-	vector<M::vertex_pointer> index(in.vn);
-	M::vertex_iterator j;
+  std::vector<VertexPointer> index(in.vn);
+	VertexIterator j;
 	int k;
 	for(k=0,j=in.vert.begin();j!=in.vert.end();++j,++k)
 		index[k] = &*j;
 	
-	F::const_iterator fi;
+	typename F::const_iterator fi;
 
-	M::face_type ft;
+	typename MeshType::FaceType ft;
 	ft.Supervisor_Flags()=0;
 	
 	for(fi=f.begin();fi!=f.end();++fi)

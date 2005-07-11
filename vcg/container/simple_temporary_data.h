@@ -24,11 +24,14 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/12/11 15:37:47  ganovelli
+added one more  [], now it is polymorphic, added typenames
+
 Revision 1.2  2004/03/31 22:36:44  ganovelli
 First Working Release (with this comment)
 
 
-/****************************************************************************/
+****************************************************************************/
 
 #ifndef __VCGLIB_SIMPLE__
 #define __VCGLIB_SIMPLE__
@@ -40,7 +43,6 @@ namespace vcg {
 template <class STL_CONT, class ATTR_TYPE>
 class SimpleTempData{
 public:
-typedef typename ATTR_TYPE attr_type;
 
 STL_CONT& c;
 std::vector<ATTR_TYPE> data;
@@ -57,7 +59,7 @@ void Start(){data.reserve(c.capacity());data.resize(c.size());}
 
 // start and initialize temporary attribute
 void Start(ATTR_TYPE val){data.reserve(c.capacity());data.resize(c.size());
-	std::vector<ATTR_TYPE>::iterator i;
+	typename std::vector<ATTR_TYPE>::iterator i;
 	for(i = data.begin(); i!= data.end(); ++i)
 	*i = val;
 }

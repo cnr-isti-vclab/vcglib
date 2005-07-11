@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.21  2005/07/01 10:55:42  cignoni
+Removed default values from the implementation of SetCavalieri and SetIsometric
+
 Revision 1.20  2005/06/29 14:59:03  spinelli
 aggiunto:
 - l' enum dei tipi  PERSPECTIVE,  ORTHO, ISOMETRIC,  CAVALIERI
@@ -123,7 +126,7 @@ public:
 		f(0.f),s(vcg::Point2<S>(0.0,0.0)),
 		c(vcg::Point2<S>(0.0,0.0)),
 		viewport(vcg::Point2<int>(0,0)),
-		_flags(0),viewportM(1), cameraType(0)
+		viewportM(1),_flags(0), cameraType(0)
 		{}
 
 	S    f;								// Focal Distance (cioe' la distanza del piano immagine dal centro di proiezione

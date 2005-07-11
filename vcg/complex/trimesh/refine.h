@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/06/29 15:25:41  callieri
+deleted a wrong declaration "typename typename"
+
 Revision 1.4  2005/06/17 00:48:27  cignoni
 Corrected the type name of wedge tex coords WedgeInterp in RefineE
 
@@ -50,6 +53,7 @@ first working version
 #include <vcg/space/tcoord2.h>
 #include <vcg/space/color4.h>
 #include <vcg/simplex/face/pos.h>
+#include<vcg/complex/trimesh/allocate.h>
 #include<vcg/complex/trimesh/update/topology.h>
 
 namespace vcg{
@@ -297,10 +301,10 @@ template<class MESH_TYPE,class MIDPOINT, class EDGEPRED>
 bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false)
 {
 	int j,NewVertNum=0,NewFaceNum=0;
-	typedef std::pair<typename MESH_TYPE::VertexIterator,typename MESH_TYPE::VertexIterator> vvpair;
-	std::map<vvpair,typename MESH_TYPE::VertexIterator> Edge2Vert;
+	typedef std::pair<typename MESH_TYPE::VertexPointer,typename MESH_TYPE::VertexPointer> vvpair;
+	std::map<vvpair,typename MESH_TYPE::VertexPointer> Edge2Vert;
 	// Primo ciclo si conta quanti sono i vertici  e facce da aggiungere 
-	MESH_TYPE::FaceIterator fi;
+	typename MESH_TYPE::FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
 		for(j=0;j<3;j++){
 				if(ep((*fi).V(j)->P(),(*fi).V1(j)->P()) && 
@@ -325,7 +329,7 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false)
 						(*lastv).UberFlags()=0;
 						mid( (*lastv), face::Pos<typename MESH_TYPE::FaceType> (&*fi,j));
 						//(*lastv).P()=((*fi).V(j)->P()+(*fi).V1(j)->P())/2;
-						Edge2Vert[ vvpair((*fi).V(j),(*fi).V1(j)) ] = lastv;
+						Edge2Vert[ vvpair((*fi).V(j),(*fi).V1(j)) ] = &*lastv;
 						++lastv;
 				}
 	assert(lastv==m.vert.end());
@@ -350,10 +354,10 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false)
 
 */
 
-	typename MESH_TYPE::VertexIterator vv[6]; // i sei vertici in gioco 
+	typename MESH_TYPE::VertexPointer vv[6]; // i sei vertici in gioco 
 																		//     0..2 vertici originali del triangolo 
 																		//     3..5 mp01, mp12, mp20 midpoints of the three edges
-	MESH_TYPE::FaceIterator nf[4];   // le quattro facce in gioco.
+	typename MESH_TYPE::FacePointer nf[4];   // le quattro facce in gioco.
 
   typename MESH_TYPE::FaceType::TexCoordType wtt[6];  // per ogni faccia sono al piu' tre i nuovi valori 
 																							 // di texture per wedge (uno per ogni edge) 
@@ -382,10 +386,10 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false)
 				else vv[5]=0;
 				int ind=((&*vv[3])?1:0)+((&*vv[4])?2:0)+((&*vv[5])?4:0);
 				
-				nf[0]=fi;
-				static int iii=0;
-				for(int i=1;i<SplitTab[ind].TriNum;++i){
-						nf[i]=lastf; ++lastf; fca++;
+				nf[0]=&*fi;
+				int i;
+				for(i=1;i<SplitTab[ind].TriNum;++i){
+						nf[i]=&*lastf; ++lastf; fca++;
 						if(RefineSelected) (*nf[i]).SetS();
 				}
         
@@ -537,7 +541,7 @@ struct MidPointButterfly : public std::unary_function<face::Pos<typename MESH_TY
 			if(vl==vdr) rule+=4;
 			if(vr==vdl) rule+=8;
 			switch(rule){
-/*
+/*      */
 /*      */			case  0 :	return ((*vl)+(*vr))/2.0+((*vu)+(*vd))/8.0 - ((*vul)+(*vur)+(*vdl)+(*vdr))/16.0;
 /* ul   */  		case  1 : return (*vl*6 + *vr*10 + *vu + *vd*3 - *vur - *vdl -*vdr*2 )/16.0; 
 /* ur   */  		case  2 : return (*vr*6 + *vl*10 + *vu + *vd*3 - *vul - *vdr -*vdl*2 )/16.0; 
@@ -590,7 +594,7 @@ double Rules[11][10] =
 	{  .175       ,  .1213525492  ,  .01545084973  , -.04635254918, -.04045084973, -.025        , -.04045084973, -.04635254918,  .01545084973,  .1213525492  } // valenza 10	  
 };
 
-	Pos<typename MESH_TYPE::FaceType> he(ep.f,ep.z,ep.f->V(ep.z));
+face::Pos<typename MESH_TYPE::FaceType> he(ep.f,ep.z,ep.f->V(ep.z));
 	typename MESH_TYPE::CoordType *vl,*vr;
 	vl=&he.v->P();
 	vr=&he.VFlip()->P();
@@ -609,7 +613,7 @@ double Rules[11][10] =
 
 	int kl=0,kr=0; // valence of left and right vertices
 	bool bl=false,br=false; // if left and right vertices are of border
-	Pos<typename MESH_TYPE::FaceType> heStart=he;assert(he.v->P()==*vl);
+  face::Pos<typename MESH_TYPE::FaceType> heStart=he;assert(he.v->P()==*vl);
 	do { // compute valence of left vertex
 		he.FlipE();he.FlipF();
 		if(he.IsBorder()) bl=true; 
