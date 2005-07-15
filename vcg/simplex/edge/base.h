@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/04/14 11:35:09  ponchio
+*** empty log message ***
+
 Revision 1.5  2004/10/25 16:25:12  ponchio
 inline Set(...)  -> inline void Set(...)
 
@@ -55,11 +58,13 @@ namespace vcg {
     This is the base class for definition of a face of the mesh.
 		@param SVTYPE (Templete Parameter) Specifies the vertex class type.
  */
-template <class ScalarType,typename EDGENAME,class SVTYPE, class TCTYPE = TCoord2<float,1> > class EDGE_TYPE
+template <class EDGENAME,class SVTYPE, class TCTYPE = TCoord2<float,1> > class EDGE_TYPE
 {
 public:
 	///	The base type of the segment
 	typedef EDGE_TYPE BaseEdgeType;
+	///	The scalar type derived from the vertex
+	typedef typename SVTYPE::ScalarType ScalarType;
 	/// The vertex type
 	typedef SVTYPE VertexType;
 	/// The type of the the vertex coordinate
