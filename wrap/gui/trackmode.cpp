@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2005/06/29 15:22:26  callieri
+changed the name of some intersection functions to avoid ambiguity
+
 Revision 1.12  2005/02/11 11:44:07  tommyfranken
 Trackball translation corrected
 
@@ -225,16 +228,19 @@ Point3f SphereMode::Hit(Trackball *tb, const Point3f &p) {
   IntersectionLinePlane<float>(vp, ln, hitPlane);
   Sphere3f sphere(tb->center,tb->radius);
   bool resSp = IntersectionLineSphere<float>(sphere, ln, hitSphere1, hitSphere2);
-  if(Distance(viewpoint,hitSphere1)<Distance(viewpoint,hitSphere2))
-        hitSphere=hitSphere1;
-  else  hitSphere=hitSphere2;
+  if(resSp == true)
+  {
+   if(Distance(viewpoint,hitSphere1)<Distance(viewpoint,hitSphere2))
+         hitSphere=hitSphere1;
+   else  hitSphere=hitSphere2;
+  }
 
   /*float dl=*/Distance(ln,tb->center);
   bool resHp = HitHyper(tb->center, tb->radius, viewpoint, vp, hitPlane, hitHyper) ;
 
-  // four cases 
-  
-  // 1) Degenerate line tangent to both sphere and hyperboloid! 
+  // four cases
+
+  // 1) Degenerate line tangent to both sphere and hyperboloid!
   if((!resSp && !resHp) )
   {
     hit=ClosestPoint(ln,tb->center);
@@ -250,7 +256,7 @@ Point3f SphereMode::Hit(Trackball *tb, const Point3f &p) {
   if(angleDeg<45) return hitSphere;
           else    return hitHyper;
 
-  // 
+  //
   // Codice ORIGINALE PONCHIO
   //vp.SetOffset(vp.Offset() + Thr);
 
