@@ -8,8 +8,8 @@
 //	#include <vcg/simplex/face/with/afavfnfmrt.h>
 //#else
 
-#include <vcg/simplex/vertex/with/vn.h>
-#include <vcg/simplex/face/with/affnfmrt.h>
+#include <vcg/simplex/vertex/with/afvn.h>
+#include <vcg/simplex/face/with/afavfnfmrt.h>
 
 //#endif
 
@@ -43,6 +43,7 @@
 
 #include <vcg/simplex/face/topology.h>
 #include <vcg/complex/trimesh/update/topology.h>
+//#include <mymarchingCubes.h>
 
 class Segmentator{
 	
@@ -52,11 +53,11 @@ struct DummyEdge;
 struct DummyTetra;
 struct MyFace;
 
-#ifdef _EXTENDED_MARCH
+//#ifdef _EXTENDED_MARCH
+//	struct MyVertex: public ParticleBasic<vcg::VertexAFVNf<DummyEdge,MyFace,DummyTetra> >
+//#else
 	struct MyVertex: public ParticleBasic<vcg::VertexAFVNf<DummyEdge,MyFace,DummyTetra> >
-#else
-	struct MyVertex: public ParticleBasic<vcg::VertexVNf<DummyEdge,MyFace,DummyTetra> >
-#endif
+//#endif
 {
 public:
 
@@ -100,7 +101,7 @@ public:
 };
 
 	///this class implements the deformable triangle in a mass spring system
-	struct MyFace : public TriangleMassSpring< vcg::FaceAFFNFMRT<MyVertex,DummyEdge,MyFace> >
+	struct MyFace : public TriangleMassSpring< vcg::FaceAFAVFNFMRT<MyVertex,DummyEdge,MyFace> >
 	{
 	public:
 		bool intersected;
@@ -108,18 +109,28 @@ public:
 		ScalarType AreaRep;
 		int _Mark;
 
+		CoordType old_N;
+
 		MyFace()
 		{
 			intersected=false;
 			ClearFlags();
 		}
-		
+
+		bool NormInversion()
+		{
+			return (((old_N*NormalizedNormal())<0)||(Normal().Norm()<0.01));
+		}
+
 		void Init ( double k, double  mass,float k_dihedral )
 		{ 
 			__super::Init(k,mass);
 			kdihedral=k_dihedral;
 			AreaRep=((V(1)->RPos() - V(0)->RPos()) ^ (V(2)->RPos() - V(0)->RPos())).Norm();
 			SetS();
+			ComputeNormal();
+			old_N=Normal();
+			old_N.Normalize();
 		}
 
 		bool IsActive()
@@ -171,7 +182,7 @@ public:
 		///update of the internal forces using the dihedral angle
 		bool Update ( void )	
 		{
-			if (!IsD()&&(!intersected))//if this face is not deleted
+			if (!IsD())//&&(!intersected))//if this face is not deleted
 			{
 				for (int i=0;i<3;i++)
 				{
@@ -185,6 +196,15 @@ public:
 
 						if ((fopp<myAddr)&&(!fopp->intersected))//test do not duplicate updates per edge
 						{
+							/////updateing spring force
+							//ScalarType stretch;
+							//CoordType direction;
+							//stretch=ForceValue(L(i),(V(i)->P()-V((i+1)%3)->P()).Norm());
+							//direction=(V(i)->P()-V((i+1)%3)->P());
+							//direction.Normalize();
+							//V(i)-> IntForce()+=direction*(stretch)/2.f-DampFactor(i);
+							//V((i+1)%3)-> IntForce()+=direction*(-stretch)/2.f-DampFactor(i);
+
 							//normal and area based diadedral angle calcolus
 							CoordType DirEdge=(V(i)->P()-V((i+1)%3)->P()).Normalize();
 							fopp=FFp(i);
@@ -210,33 +230,7 @@ public:
 						}
 					}
 				}
-
-				////area changing constrain penalize area goes to zero
-				//CoordType m0=(V(0)->P()+V(1)->P())/2.f;
-				//CoordType m1=(V(1)->P()+V(2)->P())/2.f;
-				//CoordType m2=(V(2)->P()+V(0)->P())/2.f;
-				//m0=(V(2)->P()-m0).Normalize();//directions
-				//m1=(V(0)->P()-m1).Normalize();
-				//m2=(V(1)->P()-m2).Normalize();
-				//ScalarType FArea=((ScalarType)1/AreaRep-Area())*_k;
-				//V(0)->IntForce()+=m0*FArea/3.f;
-				//V(1)->IntForce()+=m1*FArea/3.f;
-				//V(2)->IntForce()+=m2*FArea/3.f;
-				////end area constrain
-
 				return(__super::Update());
-				///new
-				//double stretch;
-				//CoordType direction;
-				/////for each vertex
-				//for (int i=0;i<3;i++)
-				//{
-				//	//spring on the face
-				//	direction=(V(i)->RPos()-V(i)->P());
-				//	stretch=direction.Norm();
-				//	direction.Normalize();
-				//	V(i)-> IntForce()+=direction*(stretch * _k)/2.f;
-				//}
 			}
 			return true;
 			///new
@@ -371,7 +365,7 @@ private:
 		MyTriMesh::CoordType p1=MyTriMesh::CoordType(p.X(),p.Z(),p.Y());
 		MyTriMesh::CoordType p2=MyTriMesh::CoordType(p.Z(),p.Y(),p.X());
 		
-		if (InTorus(p)||InTorus(p1)||InTorus(p2))
+		if (InTorus(p))//||InTorus(p1)||InTorus(p2))
 			return (100.f);
 		else
 			return (0.f);
@@ -489,6 +483,8 @@ private:
 	{
 		f->intersected=true;
 		f->ClearS();
+		SetBlockedFace(f);
+
 		//if ((!f->intersected)&&(!f->IsD()))
 		//{
 		//	f->intersected=true;
@@ -589,11 +585,10 @@ MyTriMesh::CoordType GradientFactor(MyTriMesh::VertexType *v)
 void AddExtForces()
 {
 	Part_VertexContainer::iterator vi;
-	//PartialUpdateNormals();
+	/*PartialUpdateNormals();*/
 	end_loop=true;
 	for (vi=P_Vertex.begin();vi<P_Vertex.end();++vi)
 	{
-		
 		if (!(*vi).IsD())
 		{
 			if (OutOfLimits((*vi).P()))
@@ -637,7 +632,7 @@ void Reinit_PVectors()
 	{
 		if ((!vi->IsD())&&(!vi->blocked))
 			P_Vertex.push_back(&(*vi));	
-		if ((!vi->IsD())&&((*vi).stopped)&&(!vi->blocked))
+		if ((!vi->IsD())&&((*vi).stopped)&&(!vi->blocked))///to see
 			V_Stopped.push_back(&(*vi));		
 	}
 
@@ -645,7 +640,7 @@ void Reinit_PVectors()
 	MyTriMesh::FaceIterator fi;
 	for (fi=m->face.begin();fi<m->face.end();fi++)
 	{
-		if ((!fi->IsD())&&(!fi->IsBlocked()))
+		if ((!fi->IsD())&&(!fi->IsBlocked())&&(!fi->intersected))
 			P_Faces.push_back(&(*fi));
 	}
 }
@@ -659,17 +654,20 @@ void Refresh_PVectors()
 	P_VertexAux.clear();
 	
 	unsigned int i=0;
+	///as first control normal inversion
+	for (i=0;i<P_Faces.size();i++)
+		if (P_Faces[i]->NormInversion())//if one step inversion the block vertices
+			SetIntersectedFace(P_Faces[i]);
+		else
+			P_Faces[i]->old_N=NormalizedNormal<MyFace>(*P_Faces[i]);
+
 	for (i=0;i<P_Vertex.size();i++)
-	{
-		if ((!P_Vertex[i]->IsD())&&(!P_Vertex[i]->blocked))
+		if ((!P_Vertex[i]->IsD())&&(!P_Vertex[i]->blocked))//&&(!P_Vertex[i]->stopped))
 			P_VertexAux.push_back(P_Vertex[i]);
-	}
 
 	for (i=0;i<P_Faces.size();i++)
-	{
-		if ((!P_Faces[i]->IsD())&&(!P_Faces[i]->IsBlocked()))
+		if ((!P_Faces[i]->IsD())&&(!P_Faces[i]->intersected)&&(!P_Faces[i]->IsBlocked()))//&&(!P_Faces[i]->IsActive()))//&&(!P_Faces[i]->IsBlocked()))
 			P_FacesAux.push_back(P_Faces[i]);
-	}
 
 	P_Faces.clear();
 	P_Vertex.clear();
@@ -739,8 +737,8 @@ bool TimeSelfIntersection()
 
 void PartialUpdateNormals()
 {
-	//vcg::tri::UpdateNormals<MyTriMesh>::PerFaceNormalized(*m);
-	//vcg::tri::UpdateNormals<MyTriMesh>::PerVertexNormalized(*m);
+	/*vcg::tri::UpdateNormals<MyTriMesh>::PerFaceNormalized(*m);
+	vcg::tri::UpdateNormals<MyTriMesh>::PerVertexNormalized(*m);*/
 	Part_FaceContainer::iterator fi;
 	for (fi=P_Faces.begin();fi<P_Faces.end();++fi)
 		if (!(*fi).IsD())
@@ -755,7 +753,7 @@ void PartialUpdateNormals()
 	for(fi=P_Faces.begin();fi!=P_Faces.end();++fi)
 		if( !(*fi).IsD() && (*fi).IsR() )
 		{
-			MyFace::NormalType t = (*fi).Normal();
+			MyFace::NormalType t = (*fi).N();
 			for(int j=0; j<3; ++j)
 				if( !(*fi).V(j)->IsD() && (*fi).V(j)->IsRW() )  
 					(*fi).V(j)->N() += t;
@@ -764,6 +762,30 @@ void PartialUpdateNormals()
 	for(vi=P_Vertex.begin();vi!=P_Vertex.end();++vi)
 		if( !(*vi).IsD() && (*vi).IsRW() )
 			(*vi).N().Normalize();
+
+	//MyTriMesh::FaceIterator fi;
+	//for (fi=m->face.begin();fi!=m->face.end();++fi)
+	//	if ((!(*fi).IsD())&&(!(*fi).intersected))
+	//		(*fi).ComputeNormalizedNormal();
+
+	/////update only on active vertices
+	//Part_VertexContainer::iterator vi;
+	//for (vi=P_Vertex.begin();vi<P_Vertex.end();++vi)
+	//	if( !(*vi).IsD() && (*vi).IsRW() )
+	//		(*vi).N() = MyVertex::NormalType(0.f,0.f,0.f);
+
+	//for(fi=m->face.begin();fi!=m->face.end();++fi)
+	//	if( !(*fi).IsD() && (*fi).IsR() &&(!(*fi).intersected))//(!(*fi).IsBlocked())&&
+	//	{
+	//		MyFace::NormalType t = (*fi).N();
+	//		for(int j=0; j<3; ++j)
+	//			if( !(*fi).V(j)->IsD() && (*fi).V(j)->IsRW())//&& (!(*fi).V(j)->blocked))  
+	//				(*fi).V(j)->N() += t;
+	//	}
+
+	//for(vi=P_Vertex.begin();vi!=P_Vertex.end();++vi)
+	//	if( !(*vi).IsD() && (*vi).IsRW() )
+	//		(*vi).N().Normalize();
 
 }
 
@@ -829,6 +851,7 @@ void RefineStep(float _edge_size)
 		vcg::tri::UpdateNormals<MyTriMesh>::PerVertexNormalized(*m);*/
 
 		PartialUpdateNormals();
+		PartialReinitPhysicMesh();
 
 //#ifdef _DEBUG
 //		vcg::tri::UpdateTopology<MyTriMesh>::TestFaceFace(*m);
@@ -839,13 +862,9 @@ void RefineStep(float _edge_size)
 }
 
 ///reset vertex position and unblock them
-void ReinitPhysicMesh()
+void PartialReinitPhysicMesh()
 {
 	Part_FaceContainer::iterator pfi;
-
-	/*for (pfi=P_Faces.begin();pfi<P_Faces.end();++pfi)
-		if((!(*pfi).IsD())&&((!(*pfi).intersected)))
-			(*pfi).Init(k_elanst,mass,k_dihedral);*/
 
 	Part_VertexContainer::iterator pvi;
 	for (pvi=P_Vertex.begin();pvi<P_Vertex.end();++pvi)
@@ -856,8 +875,19 @@ void ReinitPhysicMesh()
 		if((!(*pfi).IsD())&&((!(*pfi).intersected)))
 			(*pfi).Init(k_elanst,mass,k_dihedral);
 
+	
+	/*MyTriMesh::VertexIterator pvi;
+	MyTriMesh::FaceIterator pfi;
 
-	//PartialUpdateNormals();
+	for (pvi=m->vert.begin();pvi<m->vert.end();++pvi)
+		if(!(*pvi).IsD())
+			(*pvi).SetRestPos();
+
+	for (pfi=m->face.begin();pfi<m->face.end();++pfi)
+		if((!(*pfi).IsD())&&((!(*pfi).intersected)))
+			(*pfi).Init(k_elanst,mass,k_dihedral);
+
+	PartialUpdateNormals();*/
 
 	/*for (MyTriMesh::VertexIterator vi=m.vert.begin();vi<m.vert.end();vi++)
 		ClearStopped(&*vi);*/
@@ -907,12 +937,21 @@ void LoadFromDir(char *in, char *out)
 {
 	inDir=in;
 	outDir=out;
+
 	//caso optimized
-	/*V.Resample(inDir,outDir);
+	/*V.LoadJpg(inDir,outDir);
 
 	V.Init(1000,outDir);*/
-	V.Load(inDir);
+
+	V.LoadJpg(inDir);
 	bbox=vcg::Box3<float>(MapToSpace((V.Min())),(MapToSpace(V.Max())));
+}
+
+///set the input 
+void LoadFromRaw(char *inDir)
+{
+	/*V.LoadRaw(inDir);
+	bbox=vcg::Box3<float>(MapToSpace((V.Min())),(MapToSpace(V.Max())));*/
 }
 
 ///set parameters for segmentation
@@ -952,7 +991,7 @@ void InitSegmentation(MyTriMesh::CoordType b)
 	//init the mesh with new 
 	Reinit_PVectors();
 
-	ReinitPhysicMesh();
+	PartialReinitPhysicMesh();
 	
 	CollDet->Init(bbox.min,bbox.max,5.f);
 }
@@ -970,13 +1009,16 @@ void Step(float t,float _edge_size)
 	{
 		AddExtForces();
 		TrINT->Step(t);
+		PartialUpdateNormals();
 		VerifyForces();
 		Refresh_PVectors();
 		if (end_loop)
 		{
-			RefineStep(_edge_size);
-			ReinitPhysicMesh();
 			ClearStopped();
+			Reinit_PVectors();
+			PartialReinitPhysicMesh();
+			RefineStep(_edge_size);
+			/*ReinitPhysicMesh();*/
 		}
 		if (TimeSelfIntersection())
 			CollisionDetection();
@@ -985,7 +1027,9 @@ void Step(float t,float _edge_size)
 
 void Smooth()
 {
-	ScaleLaplacianSmooth<MyTriMesh>(*m,1,0.5);
+	//ScaleLaplacianSmooth<MyTriMesh>(*m,1,0.5);
+	vcg::tri::UpdateTopology<MyTriMesh>::VertexFace(*m);
+	PasoDobleSmooth<MyTriMesh>(*m,1);
 }
 
 void AutoStep()
@@ -1001,6 +1045,18 @@ void AutoStep()
 				time_stamp/=2.f;
 	}
 }
+
+//void MarchingCubeExtraction()
+//{
+//	/*
+//	new_m = new MyTriMesh();
+//	mcE.Extract(gray_init,&V,vcg::Point3i(2,2,2),*new_m);*/
+//
+//	MC_Extractor<MyTriMesh> mcE;
+//	mcE.Extract(gray_init,V,vcg::Point3i(256,256,100),*m,gray_init);
+//	//mcE.Extract(gray_init,V,vcg::Point3i(512,512,240),*m,gray_init);
+//	//mcE.Extract(gray_init,V,vcg::Point3i(128,128,60),*m,gray_init);
+//}
 
 ///set as deleted intersected vertices
 void ClearIntersectedFaces()
@@ -1033,14 +1089,14 @@ void Resample()
 		Point3i((int) edge_precision,(int) edge_precision,(int) edge_precision),edge_init);
 #else
 	vcg::trimesh::Resampler<MyTriMesh,MyTriMesh>::Resample<vcg::trimesh::RES::MMarchingCubes>(*m,*new_m,
-		Point3i((int) edge_precision,(int) edge_precision,(int) edge_precision),edge_size*2.f);
+		Point3i((int) edge_precision/2.0,(int) edge_precision/2.0,(int) edge_precision/2.0),edge_size*2.f);
 #endif
 //	delete(new_m0);
 	delete(m);
 
 	m=new_m;
 	Reinit_PVectors();
-	ReinitPhysicMesh();
+	PartialReinitPhysicMesh();
 	
 	CollDet->Init(bbox.min,bbox.max,5.f);
 }

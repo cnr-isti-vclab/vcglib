@@ -31,8 +31,8 @@ int main( int argc, char ** argv )
 	
 	#ifdef _TORUS
 		//w.simpleGLWidget1->SetExtractionParameters();
-		//s->SetSegmentParameters(10,0.5f,0.2f,0.8f,0.4f,3.f,vcg::Point3f(1.f,1.f,1.f),1000,15);
-		s->SetSegmentParameters(10,0.5f,0.8f,0.8f,0.2f,3.f,vcg::Point3f(1.f,1.f,1.f),1000,15);
+		//s->SetSegmentParameters(10,0.5f,0.2f,0.8f,0.4f,3.f,vcg::Point3f(1.f,1.f,1.f),1000,30);
+		s->SetSegmentParameters(10,0.5f,0.6f,0.25f,0.2f,3.f,vcg::Point3f(1.f,1.f,1.f),1000,15);
 		s->BBox().min=Point3f(-40.f,-40.f,-40.f);
 		s->BBox().max=Point3f(40.f,40.f,40.f);
 		s->InitSegmentation(Point3f(-25.f,0.f,0.f));
@@ -50,7 +50,7 @@ int main( int argc, char ** argv )
 
 	timer = new QTimer(w.simpleGLWidget1 );
 	QTimer::connect( timer, SIGNAL(timeout()), w.simpleGLWidget1, SLOT(Update()) );
-    timer->start(0); // 2 seconds single-shot timer
+    timer->start(0); //
 	
 
     a.connect( &a, SIGNAL( lastWindowClosed() ), &a, SLOT( quit() ) );

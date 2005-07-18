@@ -82,6 +82,7 @@ public:
 		{
 			if (!(*si).IsD())
 			{
+				(*si).Mark()=0;
 				if (!(*si).IsActive())
 		
 					HTable->AddElem(&*si);

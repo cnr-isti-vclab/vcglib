@@ -55,13 +55,16 @@ void SimpleGLWidget::LoadMatrix()
 }
 
 //load as texture the i jpg of the directory
-void SimpleGLWidget::LoadTexture(QString p,int level)
+void SimpleGLWidget::LoadTextureJpg(QString p,int level)
 {
+	int e=glGetError();
+
 	QImage qI=QImage();
 	QDir Qd=QDir(p);
 	QString qformat;
 	QString Path=QString(p);
 	Qd.setNameFilter("*.jpg");
+	//Qd.setNameFilter("*.bmp");
 
 	Qd.setSorting(QDir::Name);
 	QString PathFile=Path;
@@ -78,7 +81,21 @@ void SimpleGLWidget::LoadTexture(QString p,int level)
 	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-	
+
+	e=glGetError();
+}
+
+
+//load the texture corrisponding to a level
+void SimpleGLWidget::LoadTextureRaw(int level)
+{	
+	//glGenTextures(1, &texName);
+	//glBindTexture(GL_TEXTURE_2D, texName);
+	//glTexImage2D( GL_TEXTURE_2D, 0,GL_LUMINANCE, 512, 512, 0,GL_LUMINANCE, GL_SHORT, &s->V.Data[level*512*512] );
+	//glEnable(GL_TEXTURE_2D);
+	//glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL );
+	//glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+	//glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
 }
 
 void SimpleGLWidget::drawSlide()
@@ -88,9 +105,12 @@ void SimpleGLWidget::drawSlide()
 	glMatrixMode (GL_TEXTURE);
 	glLoadIdentity();
 	glEnable(GL_TEXTURE_2D);
-	glEnable(GL_NORMALIZE);
+	/*glEnable(GL_NORMALIZE);
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
+	*/
+	glDisable(GL_LIGHTING);
+	glDisable(GL_LIGHT0);
 	glEnable(GL_COLOR_MATERIAL);
 
 	float dx=s->BBox().DimX();
@@ -107,7 +127,7 @@ void SimpleGLWidget::drawSlide()
 	Point3f p2=p0+Point3f(dx,dy,0.f);
 	Point3f p3=p0+Point3f(0.f,dy,0.f);
 
-	glColor3d(1,1,1);
+	glColor3d(0.8,0.8,0.8);
 
 	///texture
 	//_numslide
@@ -263,7 +283,8 @@ void SimpleGLWidget::SmoothMesh()
 }
 
 void SimpleGLWidget::glDraw(){
-	glClearColor(0.2f,0.2f,0.2f,1.f);
+	//glClearColor(0.2f,0.2f,0.2f,1.f);
+	glClearColor(1.f,1.f,1.f,1.f);
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -352,7 +373,14 @@ void SimpleGLWidget::glDraw(){
 					assert(0);
 					*/
 
-					glColor3d(0.4,0.8,0.8);
+					//glColor3d(0.4,0.8,0.8);
+					if (wire)
+					{
+						glColor3d(0,0,0);
+						glLineWidth(2);
+					}
+					else 
+						glColor3d(0.4,0.8,0.8);
 					if ((fi->intersected)&&(wire))
 						glColor3d(1.f,0,0);
 
@@ -396,12 +424,36 @@ void SimpleGLWidget::OpenDirectory()
               "Choose a Directory" );
 	if (filename!=NULL)
 	{
+		rawImage=false;
 		filename+="/";
 		path=filename;
 		const char *pa=filename.ascii();
 		char *p=(char*)pa;
 		s->LoadFromDir(p,"prova.txt");
-		LoadTexture(p,0);
+		LoadTextureJpg(p,0);
+		_showslides=true;
+		w->SlidesButton->setOn(true);
+		repaint();
+	}
+}
+
+///open the directiry and initialize dataset
+void SimpleGLWidget::OpenRaw()
+{
+	QString filename = QFileDialog::getOpenFileName(
+			  "D:/Endocas/",
+              "Raw Files(*.raw)",
+              this,
+              "open file dialog"
+              "Choose a Raw file" );
+
+	if (filename!=NULL)
+	{
+		rawImage=true;
+		const char *pa=filename.ascii();
+		char *p=(char*)pa;
+		s->LoadFromRaw(p);
+		LoadTextureRaw(0);
 		_showslides=true;
 		w->SlidesButton->setOn(true);
 		repaint();
@@ -506,7 +558,10 @@ void SimpleGLWidget::wheelEvent(QWheelEvent *e)
 				_numslide=oldnum;
 		if (s!=0)
 		{
-			LoadTexture(path,_numslide);
+			if (!rawImage)
+				LoadTextureJpg(path,_numslide);
+			else
+				LoadTextureRaw(_numslide);
 		}
 	}
 
@@ -531,6 +586,15 @@ void SimpleGLWidget::Step()
 				repaint();
 			}
 	}
+
+//void SimpleGLWidget::MarchingCubesExtraction()
+//	{
+//		if (s!=0)
+//			{
+//				s->MarchingCubeExtraction();
+//				repaint();
+//			}
+//	}
 
 void SimpleGLWidget::MarchingCube()
 {

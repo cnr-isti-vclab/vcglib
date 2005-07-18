@@ -15,7 +15,7 @@
     <property name="minimumSize">
         <size>
             <width>211</width>
-            <height>839</height>
+            <height>868</height>
         </size>
     </property>
     <property name="caption">
@@ -561,75 +561,6 @@
             </widget>
             <widget class="QPushButton">
                 <property name="name">
-                    <cstring>ClearButton</cstring>
-                </property>
-                <property name="geometry">
-                    <rect>
-                        <x>30</x>
-                        <y>740</y>
-                        <width>140</width>
-                        <height>30</height>
-                    </rect>
-                </property>
-                <property name="font">
-                    <font>
-                        <pointsize>10</pointsize>
-                    </font>
-                </property>
-                <property name="cursor">
-                    <cursor>0</cursor>
-                </property>
-                <property name="text">
-                    <string>ClearMesh</string>
-                </property>
-            </widget>
-            <widget class="QPushButton">
-                <property name="name">
-                    <cstring>Marching_Cubes</cstring>
-                </property>
-                <property name="geometry">
-                    <rect>
-                        <x>30</x>
-                        <y>619</y>
-                        <width>141</width>
-                        <height>31</height>
-                    </rect>
-                </property>
-                <property name="font">
-                    <font>
-                        <pointsize>10</pointsize>
-                    </font>
-                </property>
-                <property name="text">
-                    <string>Marching Cube</string>
-                </property>
-            </widget>
-            <widget class="QPushButton">
-                <property name="name">
-                    <cstring>SegmentButton</cstring>
-                </property>
-                <property name="geometry">
-                    <rect>
-                        <x>30</x>
-                        <y>580</y>
-                        <width>141</width>
-                        <height>31</height>
-                    </rect>
-                </property>
-                <property name="font">
-                    <font>
-                        <pointsize>10</pointsize>
-                    </font>
-                </property>
-                <property name="text">
-                    <string>Extract</string>
-                </property>
-                <property name="toggleButton">
-                    <bool>true</bool>
-                </property>
-            </widget>
-            <widget class="QPushButton">
-                <property name="name">
                     <cstring>ApplyButton</cstring>
                 </property>
                 <property name="geometry">
@@ -710,22 +641,6 @@
                     <enum>Horizontal</enum>
                 </property>
             </widget>
-            <widget class="QLabel">
-                <property name="name">
-                    <cstring>GrayScale</cstring>
-                </property>
-                <property name="geometry">
-                    <rect>
-                        <x>14</x>
-                        <y>460</y>
-                        <width>170</width>
-                        <height>31</height>
-                    </rect>
-                </property>
-                <property name="scaledContents">
-                    <bool>true</bool>
-                </property>
-            </widget>
             <widget class="QLineEdit">
                 <property name="name">
                     <cstring>T_step</cstring>
@@ -756,6 +671,94 @@
                     <number>3</number>
                 </property>
             </widget>
+            <widget class="QLabel">
+                <property name="name">
+                    <cstring>GrayScale</cstring>
+                </property>
+                <property name="geometry">
+                    <rect>
+                        <x>14</x>
+                        <y>460</y>
+                        <width>170</width>
+                        <height>31</height>
+                    </rect>
+                </property>
+                <property name="scaledContents">
+                    <bool>true</bool>
+                </property>
+            </widget>
+            <widget class="QPushButton">
+                <property name="name">
+                    <cstring>Marching_Cubes</cstring>
+                </property>
+                <property name="geometry">
+                    <rect>
+                        <x>30</x>
+                        <y>620</y>
+                        <width>141</width>
+                        <height>31</height>
+                    </rect>
+                </property>
+                <property name="font">
+                    <font>
+                        <pointsize>10</pointsize>
+                    </font>
+                </property>
+                <property name="text">
+                    <string>Resample mesh</string>
+                </property>
+                <property name="accel">
+                    <string>Down, Down, Esc, Ctrl+Z</string>
+                </property>
+            </widget>
+            <widget class="QPushButton">
+                <property name="name">
+                    <cstring>SegmentButton</cstring>
+                </property>
+                <property name="geometry">
+                    <rect>
+                        <x>30</x>
+                        <y>580</y>
+                        <width>141</width>
+                        <height>31</height>
+                    </rect>
+                </property>
+                <property name="font">
+                    <font>
+                        <pointsize>10</pointsize>
+                    </font>
+                </property>
+                <property name="text">
+                    <string>Extract</string>
+                </property>
+                <property name="toggleButton">
+                    <bool>true</bool>
+                </property>
+            </widget>
+            <widget class="QPushButton">
+                <property name="name">
+                    <cstring>ClearButton</cstring>
+                </property>
+                <property name="geometry">
+                    <rect>
+                        <x>30</x>
+                        <y>740</y>
+                        <width>140</width>
+                        <height>30</height>
+                    </rect>
+                </property>
+                <property name="font">
+                    <font>
+                        <pointsize>10</pointsize>
+                    </font>
+                </property>
+                <property name="cursor">
+                    <cursor>0</cursor>
+                </property>
+                <property name="text">
+                    <string>ClearMesh</string>
+                </property>
+            </widget>
         </widget>
     </hbox>
 </widget>
@@ -769,6 +772,10 @@
         <separator/>
         <separator/>
         <action name="fileExitAction"/>
+        <action name="fileOpenRawAction"/>
+    </item>
+    <separator/>
+    <item text="new menu" name="new_menu">
     </item>
 </menubar>
 <toolbars>
@@ -802,8 +809,9 @@
         <slot access="public" specifier="">Open()</slot>
         <slot access="public" specifier="">CleanMesh()</slot>
         <slot access="public" specifier="">Clear()</slot>
-        <slot access="public" specifier="">slot()</slot>
         <slot access="public" specifier="">SetSegmentColor()</slot>
+        <slot access="public" specifier="">OpenRawFile()</slot>
+        <slot access="public" specifier="">slot()</slot>
     </customwidget>
 </customwidgets>
 <actions>
@@ -881,6 +889,17 @@
         </property>
         <property name="menuText">
             <string>new item</string>
+        </property>
+    </action>
+    <action>
+        <property name="name">
+            <cstring>fileOpenRawAction</cstring>
+        </property>
+        <property name="text">
+            <string>OpenRaw</string>
+        </property>
+        <property name="menuText">
+            <string>OpenRaw</string>
         </property>
     </action>
 </actions>
@@ -979,6 +998,12 @@
         <signal>sliderMoved(int)</signal>
         <receiver>simpleGLWidget1</receiver>
         <slot>SetSegmentColor()</slot>
+    </connection>
+    <connection>
+        <sender>fileOpenRawAction</sender>
+        <signal>activated()</signal>
+        <receiver>simpleGLWidget1</receiver>
+        <slot>OpenRawFile()</slot>
     </connection>
 </connections>
 <pixmapinproject/>

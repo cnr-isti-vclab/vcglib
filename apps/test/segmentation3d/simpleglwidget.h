@@ -31,6 +31,7 @@ private :
 	bool intForces;
 	bool resultForces;
 	bool continue_int;
+	bool rawImage;
 	GLuint texName;
 	
 	//Segmentator *s;
@@ -55,7 +56,8 @@ public:
 	virtual void SaveMatrix();
 	virtual void Save();
 	void LoadMatrix();
-	void LoadTexture(QString path,int level);
+	void LoadTextureJpg(QString path,int level);
+	void LoadTextureRaw(int level);
 	void drawSlide();
 	void SmoothMesh();
 	void Step();
@@ -63,10 +65,11 @@ public:
 	void WriteInfo();
 	void ClearMesh();
 	void OpenDirectory();
+	void OpenRaw();
 	void MarchingCube();
 	void UpdateBBMesh();
 	void setColor();
-	
+	//void MarchingCubesExtraction();
 	//virtual void keyPressEvent(QKeyEvent *qk);
 
 	public slots:
@@ -74,6 +77,11 @@ public:
 	void Open()
 	{
 		OpenDirectory();
+	}
+	
+	void OpenRawFile()
+	{
+		OpenRaw();
 	}
 
 	void ShowSlides()
@@ -147,6 +155,25 @@ public:
 		//}
 		repaint();
 	}
+	
+	//void Extract()
+	//{
+	//	//UpdateBBMesh();
+	//	continue_int=!continue_int;
+	//	//if (continue_int)
+	//	//{
+	//	//	_showslides=false;
+	//	//	w->SlidesButton->setOn(false);
+	//	//	//((SegmentForm *)this->parent())->SlidesButton->setOn(false);
+	//	//}
+	//	//else
+	//	//{
+	//	//	_showslides=true;
+	//	//	w->SlidesButton->setOn(true);
+	//	//	//((SegmentForm *)this->parent())->SlidesButton->setOn(true);
+	//	//}
+	//	repaint();
+	//}
 
 	void Update()
 	{
@@ -168,7 +195,12 @@ public:
 #endif
 		repaint();
 	}
-	
+	/*
+	void MCExtraction()
+	{
+		MarchingCubesExtraction();
+	}*/
+
 	void SetSegmentColor()
 	{
 		setColor();

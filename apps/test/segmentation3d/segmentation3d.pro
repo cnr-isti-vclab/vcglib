@@ -263,6 +263,26 @@ FORMS	= segmentform.ui \
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 unix {
   UI_DIR = .ui
   MOC_DIR = .moc

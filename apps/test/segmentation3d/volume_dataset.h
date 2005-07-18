@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <list>
 #include <algorithm>
+#include <stdlib.h>
 
 #define LimX 512
 #define LimY 512
@@ -200,7 +201,7 @@ private:
 public:
 
 	///build and save the strucure made fo blocks
-	void Resample(char *path,char *_newFile)
+	void LoadJpg(char *path,char *_newFile)
 	{
 		pFile=fopen (_newFile,"w+b");
 
@@ -256,7 +257,7 @@ public:
 	}
 
 	///set initial size of buffer in terms of cell
-	void Init(int size,char* archive,int timeSort=3000)
+	void Init(int size,char* archive,int _timeSort=3000)
 	{
 		timestamp=0;
 		n_element=0;
@@ -264,6 +265,7 @@ public:
 		CurrStack.clear();
 		pFile=fopen (archive,"r+b");
 		timestamp=0;
+		timesort=_timeSort;
 		for(int z=0;z<TLBz;z++)
 				for(int x=0;x<TLBx;x++)
 					for(int y=0;y<TLBy;y++)
@@ -405,9 +407,39 @@ public:
 	}
 
 public:
+
+	/*template <class Type, int N=1>
+	Type * Loadraw(char * filename){
+		FILE * f = fopen(filename,"rb");
+		fseek(f,0,SEEK_END);
+		int l= ftell(f);
+		fseek(f,0,SEEK_SET);
+		Type * res = (Type *) malloc(l);
+		int readed = fread(res,sizeof(Type),l/sizeof(Type),f);
+		fclose(f);
+	}*/
+
 	
+	void LoadRaw(char * filename){
+		FILE * f = fopen(filename,"rb");
+		fseek(f,0,SEEK_END);
+		int l= ftell(f);
+		fseek(f,0,SEEK_SET);
+		int n=l/sizeof(ScalarType);
+		int readed = fread(&Data,sizeof(ScalarType),l/sizeof(ScalarType),f);
+		for (int i=0;i<readed;i++){
+			//((unsigned short*)&Data[0][0][0])[i]/=((float)(1<<12))*(float)255;
+			((short*)&Data[0][0][0])[i]+=3024;
+			float a=(float)((short*)&Data[0][0][0])[i]/5324;
+			((short*)&Data[0][0][0])[i]=a*255;
+		}
+		int levels=n/(512*512);
+		Resize(512,512,levels);
+		fclose(f);
+	}
+
 	///build and save the strucure made fo blocks
-	void Load(char *path)
+	void LoadJpg(char *path)
 	{
 		//load first one image to see dimensions
 		QImage qI=QImage();
@@ -415,6 +447,7 @@ public:
 		QString qformat;
 		QString Path=QString(path);
 		Qd.setNameFilter("*.jpg");
+		//Qd.setNameFilter("*.bmp");
 		int levels=Qd.count();
 
 		Qd.setSorting(QDir::Name);
@@ -477,7 +510,7 @@ public:
 	///return the value of the element in position point3i(i0,i1,i2)
 	ScalarType getAt(Point3i p)
 	{
-		assert ((p.V(0)<dimX())&&(p.V(1)<dimY())&&(p.V(2)<dimZ()));
+		assert ((p.V(0)<=dimX())&&(p.V(1)<=dimY())&&(p.V(2)<=dimZ()));
 		assert ((p.V(0)>=0)&&(p.V(1)>=0)&&(p.V(2)>=0));
 		return (Data[p.V(0)][p.V(1)][p.V(2)]);
 	}
