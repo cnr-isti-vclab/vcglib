@@ -171,7 +171,7 @@ namespace vcg
 					Disp_listMap.insert(std::pair<int,GLint>(slices,cyl_List));
 			}
 		}
-
+public:
 		static void Diamond (double radius,bool useDisplList)
 		{ 
 			static GLint diam_List=-1;
