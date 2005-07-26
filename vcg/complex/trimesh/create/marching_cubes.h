@@ -602,7 +602,6 @@ namespace vcg
 			{
 				v12 = &*AllocatorType::AddVertices(*_mesh, 1);
 				v12->P() = CoordType(0.0, 0.0, 0.0);
-				v12->N() = CoordType(0.0, 0.0, 0.0); 
 
 				unsigned int count = 0;
 				VertexPointer v = NULL;
@@ -610,76 +609,63 @@ namespace vcg
 				{
 					count++;
 					v12->P() += v->P();
-					v12->N() += v->N();
 				}
 				if (_walker->Exist(_corners[1], _corners[2], v) )
 				{
 					count++;
 					v12->P() += v->P();
-					v12->N() += v->N();
 				}
 				if (_walker->Exist(_corners[3], _corners[2], v) )
 				{
 					count++;
 					v12->P() += v->P();
-					v12->N() += v->N();
 				}
 				if (_walker->Exist(_corners[0], _corners[3], v) )
 				{
 					count++;
 					v12->P() += v->P();
-					v12->N() += v->N();
 				}
 				if (_walker->Exist(_corners[4], _corners[5], v) )
 				{
 					count++;
 					v12->P() += v->P();
-					v12->N() += v->N();
 				}
 				if (_walker->Exist(_corners[5], _corners[6], v) )
 				{
 					count++;
 					v12->P() += v->P();
-					v12->N() += v->N();
 				}
 				if (_walker->Exist(_corners[7], _corners[6], v) )
 				{
 					count++;
 					v12->P() += v->P();
-					v12->N() += v->N();
 				}
 				if (_walker->Exist(_corners[4], _corners[7], v) )
 				{
 					count++;
 					v12->P() += v->P();
-					v12->N() += v->N();
 				}
 				if (_walker->Exist(_corners[0], _corners[4], v) )
 				{
 					count++;
 					v12->P() += v->P();
-					v12->N() += v->N();
 				}
 				if (_walker->Exist(_corners[1], _corners[5], v) )
 				{
 					count++;
 					v12->P() += v->P();
-					v12->N() += v->N();
 				}
 				if (_walker->Exist(_corners[2], _corners[6], v) )
 				{
 					count++;
 					v12->P() += v->P();
-					v12->N() += v->N();
 				}
 				if (_walker->Exist(_corners[3], _corners[7], v) )
 				{
 					count++;
 					v12->P() += v->P();
-					v12->N() += v->N();
 				}
 				v12->P() /= (float) count;
-				v12->N().Normalize();
 			} // end of AddCVertex
 			/*!
 			*	Adds new triangles to the mesh
