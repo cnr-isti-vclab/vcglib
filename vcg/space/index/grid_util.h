@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/07/01 11:33:36  cignoni
+Added a class BasicGrid with some utility function that are scattered among similar classes
+
 Revision 1.1  2005/03/15 11:43:18  cignoni
 Removed BestDim function from the grid_static_ptr class and moved to a indipendent file (grid_util.h) for sake of generality.
 
@@ -55,7 +58,9 @@ Removed BestDim function from the grid_static_ptr class and moved to a indipende
    // Dato un punto ritorna le coordinate della cella
     inline Point3i GridP( const Point3<ScalarType> & p ) const 
 		{
-      Point3i pi; return PToIP(p,pi);
+      Point3i pi; 
+      PToIP(p,pi);
+      return pi;
 		}
 
 		/// Dato un punto 3d ritorna l'indice del box corrispondente
