@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/03/09 13:22:55  ganovelli
+creation
+
 
 ****************************************************************************/
 
@@ -53,7 +56,7 @@ namespace vertex {
 template < class VertContainerType >
 class VertexMesh{
 	public:
-	typedef VertContainerType VertexContainer;
+	typedef VertContainerType VertContainer;
 	typedef typename VertContainerType::value_type VertexType;
 	typedef typename VertContainerType::value_type::ScalarType ScalarType;
 	typedef typename VertContainerType::value_type::CoordType CoordType;
