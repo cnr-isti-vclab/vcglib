@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/08/25 15:15:26  ganovelli
+minor changes to comply gcc compiler (typename's and stuff)
+
 Revision 1.5  2004/07/15 00:13:39  cignoni
 Better doxigen documentation
 
@@ -241,9 +244,9 @@ static void VertexQuality(UpdateMeshType &m)
 				maxq=std::numeric_limits<float>::min();
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)		
 		if(!(*vi).IsD()) 
-		{
-			minq=min(minq,(*vi).Q());
-			maxq=max(maxq,(*vi).Q());
+		{	
+			minq=vcg::math::Min(minq,(*vi).Q());
+			maxq=vcg::math::Max(maxq,(*vi).Q());
 		}
 	VertexQuality(m,minq,maxq);
 }
