@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2005/04/04 10:47:26  cignoni
+Release 4.05
+Added saving of Error Histogram
+
 Revision 1.15  2005/01/26 22:45:34  cignoni
 Release 4.04
 final updates for gcc compiling issues
@@ -102,7 +106,7 @@ public:
 
 private:
 	  typedef typename  MetroMesh::FaceContainer FaceContainer;
-	  typedef GridStaticPtr<FaceContainer > MetroMeshGrid;
+	  typedef GridStaticPtr<FaceContainer, typename MetroMesh::ScalarType > MetroMeshGrid;
 		typedef Point3<typename MetroMesh::ScalarType> Point3x;
 
     typedef typename MetroMesh::CoordType CoordType;
