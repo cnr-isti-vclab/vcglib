@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/02/08 17:49:38  pietroni
+added  if (!l->Elem()->IsD()) test on each element
+
 Revision 1.4  2005/01/28 12:00:33  cignoni
 small gcc compiling issues for namespaces
 
@@ -78,7 +81,8 @@ void Closest( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & mdist,
   typedef Box3<SCALAR> Box3x;
 	
 	if(!gr.bbox.IsIn(p)) return;
-	typedef typename GridStaticPtr<typename MESH::FaceContainer>::Link A2UGridLink;
+	//typedef typename GridStaticPtr<typename MESH::FaceContainer,double>::Link A2UGridLink;
+	typedef typename GRID::Link A2UGridLink;
   scalar ax = p[0] - gr.bbox.min[0];	// Real coodinate of point refer to
   scalar ay = p[1] - gr.bbox.min[1];	
   scalar az = p[2] - gr.bbox.min[2];
