@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2005/08/02 11:18:36  pietroni
+exetended form BasicGrid, changed type of t in class Link (from Iterator to Pointer to the object)
+
 Revision 1.13  2005/04/14 17:23:08  ponchio
 *** empty log message ***
 
@@ -251,16 +254,17 @@ namespace vcg {
 
 		/// Set the bounding box of the grid
 		///We need some extra space for numerical precision.
-		void SetBBox( const Box3x & b )
+		template <class Box3Type>
+    void SetBBox( const Box3Type & b )
 		{
-			bbox = b;
+			bbox.Import( b );
 			ScalarType t = bbox.Diag()/100.0;
 			if(t == 0) t = ScalarType(1e20);  // <--- Some doubts on this (Cigno 5/1/04)
 			bbox.Offset(t);
 			dim  = bbox.max - bbox.min;
 		}
 
-
+    
 
 		void ShowStats(FILE *fp)
 		{
