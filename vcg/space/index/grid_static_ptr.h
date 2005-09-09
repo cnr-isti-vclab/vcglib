@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2005/08/26 09:27:58  cignoni
+Added a templated version of SetBBox
+
 Revision 1.14  2005/08/02 11:18:36  pietroni
 exetended form BasicGrid, changed type of t in class Link (from Iterator to Pointer to the object)
 
@@ -101,16 +104,19 @@ namespace vcg {
 
 	Objects pointed by cells (of kind 'value_type') must have
 	a 'ScalarType' typedef (float or double usually)
-	and 2 member functions:
-
-	bool Dist(const Point3f &point, ScalarType &mindist, Point3f &result);
-	which return true if the distance from point to the object is < mindist
-	and set mindist to said distance, and result must be set as the closest 
-	point of the object to point)
+	and a member function:
 
 	void GetBBox(Box3<ScalarType> &b)
 	which return the bounding box of the object
 
+	When using the GetClosest() method, the user must supply a functor object
+	(whose type is a method template argument) which expose the following
+	operator ():
+
+	bool operator () (const ObjType & obj, const Point3f & point, ScalarType & mindist, Point3f & result);
+	which return true if the distance from point to the object 'obj' is < mindist
+	and set mindist to said distance, and result must be set as the closest 
+	point of the object to point)
 	*/
 
 	template < typename ContainerType,class FLT=float >
@@ -290,10 +296,22 @@ namespace vcg {
 
 		/** Returns the closest posistion of a point p and its distance
 		@param p a 3d point
+		@param max_dist maximum distance not to search beyond.
+		@param dist_funct (templated type) a functor object used to calculate distance from a grid object to the point p.
+		@param min_dist the returned closest distance
+		@param res the returned closest point
 		@return The closest element
 		*/
-		ObjPtr  GetClosest( const CoordType & p, ScalarType & min_dist, CoordType  & res)
+		/*
+			A DISTFUNCT object must implement an operator () with signature:
+				bool operator () (const ObjType& obj, const CoordType & p, ScalarType & min_dist, CoordType & res);
+		*/
+		template <class DISTFUNCTOR>
+		ObjPtr  GetClosest( const CoordType & p, const ScalarType & max_dist, DISTFUNCTOR & dist_funct, ScalarType & min_dist, CoordType & res)
 		{
+			// Initialize min_dist with max_dist to exploit early rejection test.
+			min_dist = max_dist;
+
 			ScalarType dx = ( (p[0]-bbox.min[0])/voxel[0] );
 			ScalarType dy = ( (p[1]-bbox.min[1])/voxel[1] );
 			ScalarType dz = ( (p[2]-bbox.min[2])/voxel[2] );
@@ -330,7 +348,8 @@ namespace vcg {
 					Grid( ix, iy, iz, first, last );
 					for(l=first;l!=last;++l)
 					{
-						if (!l->Elem()->IsD() && l->Elem()->Dist(p,min_dist,t_res)) {
+						//if (!l->Elem()->IsD() && l->Elem()->Dist(p,min_dist,t_res)) {
+						if (!l->Elem()->IsD() && dist_funct(*(l->Elem()), p, min_dist, t_res)) { // <-- NEW: use of distance functor
 							winner=&*(l->Elem());
 							res=t_res;
 
@@ -361,7 +380,8 @@ namespace vcg {
 							Grid( ix, iy, iz, first, last );
 							for(l=first;l!=last;++l)
 							{
-								if (!l->Elem()->IsD() && l->Elem()->Dist(p,min_dist,t_res)) {
+								//if (!l->Elem()->IsD() && l->Elem()->Dist(p,min_dist,t_res)) {
+								if (!l->Elem()->IsD() && dist_funct(*(l->Elem()), p, min_dist, t_res)) { // <-- NEW: use of distance functor
 									winner=&*(l->Elem());
 									res=t_res;
 								};
@@ -370,6 +390,30 @@ namespace vcg {
 			};
 			return winner;
 		};
+
+
+		/** Returns the closest posistion of a point p and its distance (OLD VERSION)
+		@param p a 3d point
+		@param min_dist the returned closest distance
+		@param res the returned closest point
+		@return The closest element
+		*/
+		/*
+			NOTE: kept for backward compatibility.
+			Same as template <class DISTFUNCT> GetClosest() but without maximum distance rejection
+			and distance functor and with the assumption that ObjType expose a Dist() method
+			acting like a DISTFUNCT funcor;
+		*/
+		ObjPtr  GetClosest( const CoordType & p, ScalarType & min_dist, CoordType & res) {
+			class BackCompDist {
+				public:
+					inline bool operator () (const ObjType & obj, const CoordType & pt, ScalarType & mindist, CoordType & result) {
+						return (obj.Dist(pt, mindist, result));
+					}
+			};
+			const ScalarType maxDist = std::numeric_limits<ScalarType>::max();
+			return (this->GetClosest<BackCompDist>(p, min_dist, res));
+		}
 
 		/// Inserisce una mesh nella griglia. Nota: prima bisogna 
 		/// chiamare SetBBox che setta dim in maniera corretta
