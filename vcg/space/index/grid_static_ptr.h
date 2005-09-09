@@ -24,6 +24,10 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2005/09/09 11:01:02  m_di_benedetto
+Modified GetClosest(): now it uses a functor for distance calculation.
+Added comments and a GetClosest() method with backward compatibility.
+
 Revision 1.15  2005/08/26 09:27:58  cignoni
 Added a templated version of SetBBox
 
@@ -79,6 +83,7 @@ Initial commit
 
 #include <vector>
 #include <algorithm>
+#include <limits>
 #include <stdio.h>
 
 #include <vcg/space/box3.h>
@@ -412,7 +417,7 @@ namespace vcg {
 					}
 			};
 			const ScalarType maxDist = std::numeric_limits<ScalarType>::max();
-			return (this->GetClosest<BackCompDist>(p, min_dist, res));
+			return (this->GetClosest<BackCompDist>(p, maxDist, BackCompDist(), min_dist, res));
 		}
 
 		/// Inserisce una mesh nella griglia. Nota: prima bisogna 
