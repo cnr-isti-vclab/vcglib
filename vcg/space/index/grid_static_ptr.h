@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2005/09/09 11:11:15  m_di_benedetto
+#included <limits> for std::numeric_limits<ScalarType>::max() and corrected parameters bug in old GetClosest();
+
 Revision 1.16  2005/09/09 11:01:02  m_di_benedetto
 Modified GetClosest(): now it uses a functor for distance calculation.
 Added comments and a GetClosest() method with backward compatibility.
@@ -83,7 +86,6 @@ Initial commit
 
 #include <vector>
 #include <algorithm>
-#include <limits>
 #include <stdio.h>
 
 #include <vcg/space/box3.h>
@@ -416,8 +418,8 @@ namespace vcg {
 						return (obj.Dist(pt, mindist, result));
 					}
 			};
-			const ScalarType maxDist = std::numeric_limits<ScalarType>::max();
-			return (this->GetClosest<BackCompDist>(p, maxDist, BackCompDist(), min_dist, res));
+			const ScalarType max_dist = min_dist;
+			return (this->GetClosest<BackCompDist>(p, max_dist, BackCompDist(), min_dist, res));
 		}
 
 		/// Inserisce una mesh nella griglia. Nota: prima bisogna 
