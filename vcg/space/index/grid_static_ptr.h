@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2005/09/09 11:29:21  m_di_benedetto
+Modified old GetClosest() to respect old min_dist semantic (in/out) and removed #included <limits>
+
 Revision 1.17  2005/09/09 11:11:15  m_di_benedetto
 #included <limits> for std::numeric_limits<ScalarType>::max() and corrected parameters bug in old GetClosest();
 
@@ -91,7 +94,7 @@ Initial commit
 #include <vcg/space/box3.h>
 #include <vcg/space/line3.h>
 #include <vcg/space/index/grid_util.h>
-
+#include <vcg/simplex/face/distance.h>
 namespace vcg {
 
 	/** Static Uniform Grid
@@ -165,6 +168,9 @@ namespace vcg {
 			inline typename ObjPtr & Elem() {
 				return t;
 			}
+
+			ObjType &operator *(){return *(t);}
+
 			inline int & Index() {
 				return i;
 			}
@@ -182,6 +188,7 @@ namespace vcg {
 		typedef typename Cell CellIterator;
 
 		std::vector<Link>   links;   /// Insieme di tutti i links
+
 		std::vector<Cell> grid;   /// Griglia vera e propria
 
 
@@ -314,7 +321,7 @@ namespace vcg {
 				bool operator () (const ObjType& obj, const CoordType & p, ScalarType & min_dist, CoordType & res);
 		*/
 		template <class DISTFUNCTOR>
-		ObjPtr  GetClosest( const CoordType & p, const ScalarType & max_dist, DISTFUNCTOR & dist_funct, ScalarType & min_dist, CoordType & res)
+			ObjPtr  GetClosest( const CoordType & p, const ScalarType & max_dist, DISTFUNCTOR & dist_funct, ScalarType & min_dist, CoordType & res)
 		{
 			// Initialize min_dist with max_dist to exploit early rejection test.
 			min_dist = max_dist;
@@ -347,6 +354,8 @@ namespace vcg {
 			//ScalarType min_dist=1e10;
 			ObjPtr winner=NULL;
 
+			mesh.UnMarkAll();
+
 			Link  *first, *last;
 			Link *l;
 			if ((ix>=0) && (iy>=0) && (iz>=0) && 
@@ -354,14 +363,20 @@ namespace vcg {
 
 					Grid( ix, iy, iz, first, last );
 					for(l=first;l!=last;++l)
-					{
-						//if (!l->Elem()->IsD() && l->Elem()->Dist(p,min_dist,t_res)) {
-						if (!l->Elem()->IsD() && dist_funct(*(l->Elem()), p, min_dist, t_res)) { // <-- NEW: use of distance functor
-							winner=&*(l->Elem());
-							res=t_res;
-
+						if (!(**l).IsD())
+						{
+							if( ! mesh.IsMarked(l->Elem()))
+							{
+								//if (!l->Elem()->IsD() && l->Elem()->Dist(p,min_dist,t_res)) {
+								//if (!l->Elem()->IsD() && dist_funct(*(l->Elem()), p, min_dist, t_res)) { // <-- NEW: use of distance functor
+								if (dist_funct((**l), p, min_dist, t_res))  // <-- NEW: use of distance functor
+								{
+									winner=l->Elem();
+									res=t_res;
+								}
+								mesh.Mark(l->Elem());
+							}
 						}
-					};
 				};
 
 			//return winner;
@@ -387,11 +402,19 @@ namespace vcg {
 							Grid( ix, iy, iz, first, last );
 							for(l=first;l!=last;++l)
 							{
-								//if (!l->Elem()->IsD() && l->Elem()->Dist(p,min_dist,t_res)) {
-								if (!l->Elem()->IsD() && dist_funct(*(l->Elem()), p, min_dist, t_res)) { // <-- NEW: use of distance functor
-									winner=&*(l->Elem());
-									res=t_res;
-								};
+								if (!(**l).IsD())
+								{
+									if( ! mesh.IsMarked(l->Elem()))
+									{
+										//if (!l->Elem()->IsD() && l->Elem()->Dist(p,min_dist,t_res)) {
+										if (dist_funct((**l), p, min_dist, t_res)) // <-- NEW: use of distance functor
+										{
+											winner=l->Elem();
+											res=t_res;
+										};
+										mesh.Mark(l->Elem());
+									}
+								}
 							};
 						}
 			};
@@ -411,13 +434,16 @@ namespace vcg {
 			and distance functor and with the assumption that ObjType expose a Dist() method
 			acting like a DISTFUNCT funcor;
 		*/
-		ObjPtr  GetClosest( const CoordType & p, ScalarType & min_dist, CoordType & res) {
-			class BackCompDist {
+
+		class BackCompDist {
 				public:
 					inline bool operator () (const ObjType & obj, const CoordType & pt, ScalarType & mindist, CoordType & result) {
-						return (obj.Dist(pt, mindist, result));
+						return (vcg::face::PointDistance<ObjType>(obj,pt, mindist, result));
 					}
 			};
+
+		ObjPtr  GetClosest( const CoordType & p, ScalarType & min_dist, CoordType & res) {
+			
 			const ScalarType max_dist = min_dist;
 			return (this->GetClosest<BackCompDist>(p, max_dist, BackCompDist(), min_dist, res));
 		}
