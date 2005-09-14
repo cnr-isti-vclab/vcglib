@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/09/14 09:03:54  pietroni
+added definition of min function
+
 Revision 1.5  2005/02/02 16:44:34  pietroni
 1 warning corrected added casting in const ScalarType EPSILON = ScalarType( 0.000001);
 
@@ -44,8 +47,6 @@ created
 
 #ifndef __VCGLIB_FACE_DISTANCE
 #define __VCGLIB_FACE_DISTANCE
-
-#define min(a,b)(((a)<(b))?(a):(b))
 
 #include <vcg/space/point3.h>
 
