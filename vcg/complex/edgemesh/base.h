@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/05/17 21:19:37  ganovelli
+some std::and typename  missing  (CRS4)
+
 Revision 1.4  2004/10/28 00:47:42  cignoni
 Better Doxygen documentation
 
@@ -189,10 +192,10 @@ inline bool IsMarked( ConstVertexPointer  v ) const { return v->IMark() == imark
 inline bool IsMarked( ConstEdgePointer f ) const { return f->IMark() == imark; }
 /** Set the vertex incremental mark of the vertex to the one of the mesh.
 */
-inline void Mark( ConstVertexPointer v ) const { v->IMark() = imark; }
+inline void Mark( VertexPointer v ) const { v->IMark() = imark; }
 /** Set the face incremental mark of the vertex to the one of the mesh.
 */
-inline void Mark( ConstEdgePointer f ) const { f->IMark() = imark; }
+inline void Mark( EdgePointer f ) const { f->IMark() = imark; }
 /// Unmark the mesh
 inline void UnMarkAll() { ++imark; }
 
