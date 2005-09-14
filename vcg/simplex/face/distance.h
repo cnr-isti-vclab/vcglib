@@ -24,8 +24,11 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/09/14 09:58:32  pietroni
+removed vcg::math::Min<ScalarType> definition generate warnings
+
 Revision 1.6  2005/09/14 09:03:54  pietroni
-added definition of min function
+added definition of vcg::math::Min<ScalarType> function
 
 Revision 1.5  2005/02/02 16:44:34  pietroni
 1 warning corrected added casting in const ScalarType EPSILON = ScalarType( 0.000001);
@@ -48,6 +51,7 @@ created
 #ifndef __VCGLIB_FACE_DISTANCE
 #define __VCGLIB_FACE_DISTANCE
 
+#include <vcg/math/base.h>
 #include <vcg/space/point3.h>
 
 
@@ -85,7 +89,7 @@ namespace vcg {
 							vcg::Point3<typename FaceType::ScalarType> & p )
 	{
 		typedef typename FaceType::ScalarType ScalarType;
-
+		
 		const ScalarType EPSILON = ScalarType( 0.000001);
 		//const ScalarType EPSILON = 0.00000001;
 		ScalarType b,b0,b1,b2;
@@ -133,7 +137,7 @@ namespace vcg {
 			// vicini (come prodotto vettore)
 			// Nota: si potrebbe rendere un pochino piu' veloce sostituendo Area()
 			// con il prodotto vettore dei due edge in 2d lungo il piano migliore.
-			if( (b=min(b0,min(b1,b2))) < EPSILON*Area(f)) 
+			if( (b=vcg::math::Min<ScalarType>(b0,vcg::math::Min<ScalarType>(b1,b2))) < EPSILON*Area(f)) 
       {
 				ScalarType bt;
 				if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
@@ -167,7 +171,7 @@ namespace vcg {
 				if(dist>b2) { dist = b2; return true; }
 				else return false;
 			}
-			if( (b=min(b0,min(b1,b2))) < EPSILON*Area(f)) 
+			if( (b=vcg::math::Min<ScalarType>(b0,vcg::math::Min<ScalarType>(b1,b2))) < EPSILON*Area(f)) 
       {
 				ScalarType bt;
 				if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
@@ -201,7 +205,7 @@ namespace vcg {
 				if(dist>b2) { dist = b2; return true; }
 				else return false;
 			}
-			if( (b=min(b0,min(b1,b2))) < EPSILON*Area(f)) 
+			if( (b=vcg::math::Min<ScalarType>(b0,vcg::math::Min<ScalarType>(b1,b2))) < EPSILON*Area(f)) 
       {
 				ScalarType bt;
 				if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
