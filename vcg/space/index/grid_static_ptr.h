@@ -24,6 +24,11 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2005/09/14 09:05:32  pietroni
+added * operator to Link
+modified getClosest in order to use Temporary mark
+corrected bug on functor calling compilation
+
 Revision 1.18  2005/09/09 11:29:21  m_di_benedetto
 Modified old GetClosest() to respect old min_dist semantic (in/out) and removed #included <limits>
 
@@ -320,8 +325,8 @@ namespace vcg {
 			A DISTFUNCT object must implement an operator () with signature:
 				bool operator () (const ObjType& obj, const CoordType & p, ScalarType & min_dist, CoordType & res);
 		*/
-		template <class DISTFUNCTOR>
-			ObjPtr  GetClosest( const CoordType & p, const ScalarType & max_dist, DISTFUNCTOR & dist_funct, ScalarType & min_dist, CoordType & res)
+		template <class DISTFUNCTOR,class TMARKER>
+			ObjPtr  GetClosest( const CoordType & p, const ScalarType & max_dist, DISTFUNCTOR & dist_funct, ScalarType & min_dist, CoordType & res,TMARKER tm)
 		{
 			// Initialize min_dist with max_dist to exploit early rejection test.
 			min_dist = max_dist;
@@ -354,7 +359,7 @@ namespace vcg {
 			//ScalarType min_dist=1e10;
 			ObjPtr winner=NULL;
 
-			mesh.UnMarkAll();
+			tm.UnMarkAll();
 
 			Link  *first, *last;
 			Link *l;
@@ -365,7 +370,7 @@ namespace vcg {
 					for(l=first;l!=last;++l)
 						if (!(**l).IsD())
 						{
-							if( ! mesh.IsMarked(l->Elem()))
+							if( ! tm.IsMarked(l->Elem()))
 							{
 								//if (!l->Elem()->IsD() && l->Elem()->Dist(p,min_dist,t_res)) {
 								//if (!l->Elem()->IsD() && dist_funct(*(l->Elem()), p, min_dist, t_res)) { // <-- NEW: use of distance functor
@@ -374,7 +379,7 @@ namespace vcg {
 									winner=l->Elem();
 									res=t_res;
 								}
-								mesh.Mark(l->Elem());
+								tm.Mark(l->Elem());
 							}
 						}
 				};
@@ -404,7 +409,7 @@ namespace vcg {
 							{
 								if (!(**l).IsD())
 								{
-									if( ! mesh.IsMarked(l->Elem()))
+									if( ! tm.IsMarked(l->Elem()))
 									{
 										//if (!l->Elem()->IsD() && l->Elem()->Dist(p,min_dist,t_res)) {
 										if (dist_funct((**l), p, min_dist, t_res)) // <-- NEW: use of distance functor
@@ -412,7 +417,7 @@ namespace vcg {
 											winner=l->Elem();
 											res=t_res;
 										};
-										mesh.Mark(l->Elem());
+										tm.Mark(l->Elem());
 									}
 								}
 							};
@@ -442,10 +447,11 @@ namespace vcg {
 					}
 			};
 
-		ObjPtr  GetClosest( const CoordType & p, ScalarType & min_dist, CoordType & res) {
+		template <class TMARKER>
+		ObjPtr  GetClosest( const CoordType & p, ScalarType & min_dist, CoordType & res,TMARKER tm) {
 			
 			const ScalarType max_dist = min_dist;
-			return (this->GetClosest<BackCompDist>(p, max_dist, BackCompDist(), min_dist, res));
+			return (this->GetClosest<BackCompDist>(p, max_dist, BackCompDist(), min_dist, res,tm));
 		}
 
 		/// Inserisce una mesh nella griglia. Nota: prima bisogna 
