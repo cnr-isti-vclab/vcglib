@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/05/30 09:42:05  spinelli
+std::std::vector<PVertex> sostituito con std::vector<PVertex>
+
 Revision 1.4  2005/05/30 09:13:08  ganovelli
 error in include
 
@@ -53,18 +56,32 @@ namespace vcg
 */
 		template <class EdgeMeshType>
 		struct Unify{
+
+			template <class MESH_TYPE,class OBJ_TYPE>
+			class Tmark
+			{
+				MESH_TYPE m;
+			public:
+				Tmark(MESH_TYPE &_m):m(_m){}
+				void UnMarkAll(){m.UnMarkAll();}
+				bool IsMarked(OBJ_TYPE* obj){return (m.IsMarked(obj->v));}
+				void Mark(OBJ_TYPE* obj){m.Mark(obj->v);}
+			};
+
+
 			typedef typename EdgeMeshType::VertexPointer VertexPointer;
 			typedef typename EdgeMeshType::EdgePointer   EdgePointer;
 			typedef typename EdgeMeshType::ScalarType ScalarType;
+			typedef typename EdgeMeshType::CoordType CoordType;
 
-			struct PVertex
+			struct PVertex:EdgeMeshType::VertexType
 			{
 				typedef typename EdgeMeshType::ScalarType ScalarType;
 				VertexPointer  v;		// the two Vertex pointer are ordered!
 				EdgePointer    e;		  // the edge where this vertex belong
 				int      z;				      // index in [0..2] of the edge of the face
 				PVertex(EdgePointer  pe, const int nz ):e(pe),z(nz),v(pe->V(nz)){}
-				bool Dist(Point3<ScalarType> p,ScalarType & d,Point3<ScalarType>& res)
+				/*bool Dist(Point3<ScalarType> p,ScalarType & d,Point3<ScalarType>& res)
 				{
 					res = p;
 					ScalarType _d =vcg::Distance(p,v->P());
@@ -74,7 +91,7 @@ namespace vcg
 						return true;
 					}
 					return false;
-				}
+				}*/
 
 				void GetBBox(vcg::Box3<ScalarType> & bb){
 					bb.Add(v->P());
@@ -89,11 +106,29 @@ namespace vcg
 				pv1.e->V(pv1.z) = pv0.v;
 				pv1.e = NULL;
 			}
+			
+			class BackCompDist {
+			public:
+				inline bool operator () (const PVertex & obj, const CoordType & pt, ScalarType & mindist, CoordType & result) {
+					result = pt;
+					ScalarType _d =vcg::Distance(result,obj.v->P());
+					if(mindist > _d)
+					{
+						mindist = _d;
+						return true;
+					}
+					return false;
+				}
+			};
 
 			static GridType & Grid(){static GridType grid; return grid; }
 
 			static void Vertices(EdgeMeshType & em,   ScalarType   epsilon){
 				typename EdgeMeshType::EdgeIterator ei;
+
+				typedef Tmark<EdgeMeshType,PVertex> Marker;
+				Marker tm=Marker(em);
+
 				bool lastRound ;
 				if(em.vn){
 					vcg::edge::UpdateBounding<EdgeMeshType>::Box(em);
@@ -116,7 +151,9 @@ namespace vcg
 								float eps = epsilon;
 								Point3<ScalarType> vpos =(*pvi).v->P() ;
 								(*pvi).v->SetD();
-								closest  = Grid().GetClosest(vpos,eps,p);
+								ScalarType max_dist=em.bbox.Diag();
+								closest  = Grid().GetClosest<BackCompDist,Marker>(vpos, max_dist, BackCompDist(), eps, p,tm);
+								//closest  = Grid().GetClosest(vpos,eps,p);
 								(*pvi).v->ClearD();
 
 
