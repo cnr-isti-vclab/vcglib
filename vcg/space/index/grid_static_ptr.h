@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2005/09/14 12:57:52  pietroni
+canged template parameters for Closest Function (use of TempMark class)
+
 Revision 1.19  2005/09/14 09:05:32  pietroni
 added * operator to Link
 modified getClosest in order to use Temporary mark
@@ -451,7 +454,7 @@ namespace vcg {
 		ObjPtr  GetClosest( const CoordType & p, ScalarType & min_dist, CoordType & res,TMARKER tm) {
 			
 			const ScalarType max_dist = min_dist;
-			return (this->GetClosest<BackCompDist>(p, max_dist, BackCompDist(), min_dist, res,tm));
+			return (this->GetClosest<BackCompDist,TMARKER>(p, max_dist, BackCompDist(), min_dist, res,tm));
 		}
 
 		/// Inserisce una mesh nella griglia. Nota: prima bisogna 
