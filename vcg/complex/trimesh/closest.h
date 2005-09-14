@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/08/26 09:12:48  cignoni
+changed  typedef A2UGridLink  da 'GridStaticPtr<MESH::FaceContainer,double>::Link' a  typedef 'GRID::Link'
+
 Revision 1.5  2005/02/08 17:49:38  pietroni
 added  if (!l->Elem()->IsD()) test on each element
 
@@ -60,6 +63,18 @@ header added
 
 namespace vcg {
   namespace trimesh {
+
+template <class MESH_TYPE,class OBJ_TYPE>
+  class Tmark
+  {
+	  MESH_TYPE m;
+  public:
+	  Tmark(MESH_TYPE &_m):m(_m){}
+	  void UnMarkAll(){m.UnMarkAll();}
+	  bool IsMarked(OBJ_TYPE* obj){return (m.IsMarked(obj));}
+	  void Mark(OBJ_TYPE* obj){m.Mark(obj);}
+  };
+
 /*
 aka MetroCore
 data una mesh m e una ug sulle sue facce trova il punto di m piu' vicino ad
@@ -76,119 +91,125 @@ template <class MESH, class GRID, class SCALAR>
 void Closest( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & mdist, 
 									Point3<SCALAR> & normf, Point3<SCALAR> & bestq, typename MESH::FaceType * &f, Point3<SCALAR> &ip)
 {
-	typedef SCALAR scalar;
-  typedef Point3<scalar> Point3x;
-  typedef Box3<SCALAR> Box3x;
+   typedef SCALAR scalar;
+   typedef Point3<scalar> Point3x;
+   typedef Box3<SCALAR> Box3x;
 	
-	if(!gr.bbox.IsIn(p)) return;
-	//typedef typename GridStaticPtr<typename MESH::FaceContainer,double>::Link A2UGridLink;
-	typedef typename GRID::Link A2UGridLink;
-  scalar ax = p[0] - gr.bbox.min[0];	// Real coodinate of point refer to
-  scalar ay = p[1] - gr.bbox.min[1];	
-  scalar az = p[2] - gr.bbox.min[2];
+	//if(!gr.bbox.IsIn(p)) return;
+	////typedef typename GridStaticPtr<typename MESH::FaceContainer,double>::Link A2UGridLink;
+	//typedef typename GRID::Link A2UGridLink;
+ // scalar ax = p[0] - gr.bbox.min[0];	// Real coodinate of point refer to
+ // scalar ay = p[1] - gr.bbox.min[1];	
+ // scalar az = p[2] - gr.bbox.min[2];
 
-  int gx = int( ax/gr.voxel[0] );		// Integer coordinate of the point 
-  int gy = int( ay/gr.voxel[1] );		// voxel
-  int gz = int( az/gr.voxel[2] );
+ // int gx = int( ax/gr.voxel[0] );		// Integer coordinate of the point 
+ // int gy = int( ay/gr.voxel[1] );		// voxel
+ // int gz = int( az/gr.voxel[2] );
 
-  scalar vx = gr.bbox.min[0]+gx*gr.voxel[0];	// Real world coordinate of the Voxel
-  scalar vy = gr.bbox.min[1]+gy*gr.voxel[1];	// origin
-	scalar vz = gr.bbox.min[2]+gz*gr.voxel[2];
+ // scalar vx = gr.bbox.min[0]+gx*gr.voxel[0];	// Real world coordinate of the Voxel
+ // scalar vy = gr.bbox.min[1]+gy*gr.voxel[1];	// origin
+	//scalar vz = gr.bbox.min[2]+gz*gr.voxel[2];
 
-	scalar dx = math::Min(p[0] - vx, vx+gr.voxel[0]-p[0]);  // Dist from the voxel
-  scalar dy = math::Min(p[1] - vy, vy+gr.voxel[1]-p[1]);
-  scalar dz = math::Min(p[2] - vz, vz+gr.voxel[2]-p[2]);
+	//scalar dx = math::Min(p[0] - vx, vx+gr.voxel[0]-p[0]);  // Dist from the voxel
+ // scalar dy = math::Min(p[1] - vy, vy+gr.voxel[1]-p[1]);
+ // scalar dz = math::Min(p[2] - vz, vz+gr.voxel[2]-p[2]);
 
-	scalar vdist,vstep;
+	//scalar vdist,vstep;
 
-	if(dx<dy && dx<dz)
-	{
-	    vdist = dx;
-	    vstep = gr.voxel[0];
-	}
-	else if(dy<dz)
-	{
-	    vdist = dy;
-	    vstep = gr.voxel[1];
-	}
-	else
-	{
-	    vdist = dz;
-	    vstep = gr.voxel[2];
-	}
+	//if(dx<dy && dx<dz)
+	//{
+	//    vdist = dx;
+	//    vstep = gr.voxel[0];
+	//}
+	//else if(dy<dz)
+	//{
+	//    vdist = dy;
+	//    vstep = gr.voxel[1];
+	//}
+	//else
+	//{
+	//    vdist = dz;
+	//    vstep = gr.voxel[2];
+	//}
 
-	//scalar error = gr.bbox.SquaredDiag();
-	//scalar error = gr.bbox.Diag();
-	scalar error = mdist;
-	Point3x q;
-	typename MESH::FaceIterator bestf = (typename MESH::FaceIterator)0;
+	////scalar error = gr.bbox.SquaredDiag();
+	////scalar error = gr.bbox.Diag();
+	//scalar error = mdist;
+	//Point3x q;
+	//typename MESH::FaceIterator bestf = (typename MESH::FaceIterator)0;
 
-  mesh.UnMarkAll();
+ // mesh.UnMarkAll();
 
-	int mxsd = gr.siz[0];
-	if(mxsd<gr.siz[1]) mxsd = gr.siz[1];
-	if(mxsd<gr.siz[2]) mxsd = gr.siz[2];
-	for(int s=0;s<mxsd;++s)
-	{
-		if(s==0)
-		{
-			A2UGridLink *first, *last, *l;
-			gr.Grid( gx, gy, gz, first, last );
-			for(l=first;l!=last;++l)
-			  if (!l->Elem()->IsD())
-			  {
-				if( ! mesh.IsMarked( &*(l->Elem())) )
-				{
-					if( face::PointDistance((*(l->Elem())), p, error, q) )
-					{
-						bestq = q;
-						bestf = l->Elem();
-					}
+	//int mxsd = gr.siz[0];
+	//if(mxsd<gr.siz[1]) mxsd = gr.siz[1];
+	//if(mxsd<gr.siz[2]) mxsd = gr.siz[2];
+	//for(int s=0;s<mxsd;++s)
+	//{
+	//	if(s==0)
+	//	{
+	//		A2UGridLink *first, *last, *l;
+	//		gr.Grid( gx, gy, gz, first, last );
+	//		for(l=first;l!=last;++l)
+	//		  if (!l->Elem()->IsD())
+	//		  {
+	//			if( ! mesh.IsMarked( &*(l->Elem())) )
+	//			{
+	//				if( face::PointDistance((*(l->Elem())), p, error, q) )
+	//				{
+	//					bestq = q;
+	//					bestf = l->Elem();
+	//				}
 
-					mesh.Mark( &*(l->Elem()) );
-				}
-			  }
-		}
-		else
-		{
-			for(int ix=gx-s;ix<=gx+s;++ix)
-				if( ix>=0 && ix<gr.siz[0] )
-				{
-					for(int iy=gy-s;iy<=gy+s;++iy)
-						if( iy>=0 && iy<gr.siz[1] )
-						{
-							int sz = ( ix==gx-s || ix==gx+s ||
-								       iy==gy-s || iy==gy+s   )?1:2*s;
-							for(int iz=gz-s;iz<=gz+s;iz+=sz)
-								if( iz>=0 && iz<gr.siz[2] )
-								{
-									A2UGridLink *first, *last, *l;
-									gr.Grid( ix, iy, iz, first, last );
-									for(l=first;l!=last;++l)
-									if (!l->Elem()->IsD())
-									{
-										if( ! mesh.IsMarked( &*(l->Elem())) )
-										{
-											if( vcg::face::PointDistance((*(l->Elem())),  p, error, q) )
-											{
-												bestq = q;
-												bestf = l->Elem();
-											}	
-											mesh.Mark(&*l->Elem());
-										}
-									}
-								}
-						}
-				}
-		}
+	//				mesh.Mark( &*(l->Elem()) );
+	//			}
+	//		  }
+	//	}
+	//	else
+	//	{
+	//		for(int ix=gx-s;ix<=gx+s;++ix)
+	//			if( ix>=0 && ix<gr.siz[0] )
+	//			{
+	//				for(int iy=gy-s;iy<=gy+s;++iy)
+	//					if( iy>=0 && iy<gr.siz[1] )
+	//					{
+	//						int sz = ( ix==gx-s || ix==gx+s ||
+	//							       iy==gy-s || iy==gy+s   )?1:2*s;
+	//						for(int iz=gz-s;iz<=gz+s;iz+=sz)
+	//							if( iz>=0 && iz<gr.siz[2] )
+	//							{
+	//								A2UGridLink *first, *last, *l;
+	//								gr.Grid( ix, iy, iz, first, last );
+	//								for(l=first;l!=last;++l)
+	//								if (!l->Elem()->IsD())
+	//								{
+	//									if( ! mesh.IsMarked( &*(l->Elem())) )
+	//									{
+	//										if( vcg::face::PointDistance((*(l->Elem())),  p, error, q) )
+	//										{
+	//											bestq = q;
+	//											bestf = l->Elem();
+	//										}	
+	//										mesh.Mark(&*l->Elem());
+	//									}
+	//								}
+	//							}
+	//					}
+	//			}
+	//	}
 
-		if( fabs(error)<vdist )
-			break;
-		vdist += vstep;
-	}
+	//	if( fabs(error)<vdist )
+	//		break;
+	//	vdist += vstep;
+	//}
+	
+  scalar error = gr.bbox.Diag();
+  typedef Tmark<MESH,MESH::FaceType> Marker;
+  Marker t=Marker(mesh);
+  MESH::FaceType* bestf= gr.GetClosest<Marker>(p,mdist,bestq,t);
+
   if(mdist > scalar(fabs(error)))
   {
-	  f=&*bestf;
+	  f=bestf;
 	  typename MESH::ScalarType alfa, beta, gamma;
 	  //calcolo normale con interpolazione trilineare
 	  bestf->InterpolationParameters(bestq, alfa, beta, gamma);
