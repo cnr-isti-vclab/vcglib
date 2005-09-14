@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2005/05/06 14:45:33  spinelli
+cambiato parentesi nel costruttore di GetUV per rendere compatibile tale costruttore con MVC e borland
+
 Revision 1.20  2005/04/27 16:05:19  callieri
 line 466, added parentesis on default value creator getUV [borland]
 
@@ -157,6 +160,11 @@ public:
   static inline Point3 Construct( const Point3<Q> & b )
   {
     return Point3(P3ScalarType(b[0]),P3ScalarType(b[1]),P3ScalarType(b[2]));
+  }
+
+  static inline Point3 Construct( const Point3<ScalarType> & b )
+  {
+    return b;
   }
 
 //@}
