@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/09/15 11:15:00  pietroni
+minor changes
+
 Revision 1.7  2005/09/14 12:56:47  pietroni
 used closest function from grid
 
@@ -70,7 +73,7 @@ namespace vcg {
 template <class MESH_TYPE,class OBJ_TYPE>
   class Tmark
   {
-	  MESH_TYPE m;
+	  MESH_TYPE &m;
   public:
 	  Tmark(MESH_TYPE &_m):m(_m){}
 	  void UnMarkAll(){m.UnMarkAll();}

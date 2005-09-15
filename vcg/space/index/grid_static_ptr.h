@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2005/09/15 11:14:39  pietroni
+minor changes
+
 Revision 1.21  2005/09/14 13:27:38  spinelli
 minor changes
 
@@ -457,7 +460,7 @@ namespace vcg {
 			};
 
 		template <class TMARKER>
-		ObjPtr  GetClosest( const CoordType & p, ScalarType & min_dist, CoordType & res,TMARKER tm) {
+		ObjPtr  GetClosest( const CoordType & p, ScalarType & min_dist, CoordType & res,TMARKER &tm) {
 			
 			const ScalarType max_dist = min_dist;
 			return (this->GetClosest<BackCompDist,TMARKER>(p, max_dist, BackCompDist(), min_dist, res,tm));
