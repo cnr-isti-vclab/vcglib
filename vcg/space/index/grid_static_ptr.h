@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2005/09/14 13:27:38  spinelli
+minor changes
+
 Revision 1.20  2005/09/14 12:57:52  pietroni
 canged template parameters for Closest Function (use of TempMark class)
 
@@ -341,6 +344,9 @@ namespace vcg {
 			int ix = int( dx );
 			int iy = int( dy );
 			int iz = int( dz );
+
+			if (!bbox.IsIn(p))
+				assert (0);///the grid has to be extended until the point
 
 			double voxel_min=voxel[0];
 			if (voxel_min<voxel[1]) voxel_min=voxel[1];

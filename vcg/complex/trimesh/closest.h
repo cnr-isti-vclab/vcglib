@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/09/14 12:56:47  pietroni
+used closest function from grid
+
 Revision 1.6  2005/08/26 09:12:48  cignoni
 changed  typedef A2UGridLink  da 'GridStaticPtr<MESH::FaceContainer,double>::Link' a  typedef 'GRID::Link'
 
@@ -201,11 +204,11 @@ void Closest( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & mdist,
 	//		break;
 	//	vdist += vstep;
 	//}
-	
-  scalar error = gr.bbox.Diag();
+
+  scalar error = mdist;
   typedef Tmark<MESH,MESH::FaceType> Marker;
   Marker t=Marker(mesh);
-  MESH::FaceType* bestf= gr.GetClosest<Marker>(p,mdist,bestq,t);
+  MESH::FaceType* bestf= gr.GetClosest<Marker>(p,error,bestq,t);
 
   if(mdist > scalar(fabs(error)))
   {
