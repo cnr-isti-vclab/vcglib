@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/10/28 00:52:45  cignoni
+Better Doxygen documentation
+
 Revision 1.7  2004/08/25 15:27:51  ponchio
 Comma at end of enum.
 
@@ -47,6 +50,8 @@ First working version!
 #define __VCGLIB_IMPORT_STL
 
 #include <stdio.h>
+#include <wrap/callback.h>
+#include <vcg/complex/trimesh/allocate.h>
 
 namespace vcg {
 namespace tri {
