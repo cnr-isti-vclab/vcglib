@@ -30,6 +30,107 @@
 
 namespace vcg{
 
+template <class MESH_TYPE>
+class GLPickTri
+{
+	typedef typename MESH_TYPE::FaceIterator FaceIterator;
+	typedef typename MESH_TYPE::FacePointer  FacePointer;
+	typedef typename MESH_TYPE::VertexType  VertexType;
+
+public:
+
+	static bool PickNearestFace(int x, int y, MESH_TYPE &m, FaceIterator &fi,int width=4, int height=4)
+	{
+		std::vector<FacePointer> result;
+		int val=PickFace(x,y,m,result,width,height);
+		if(val!=0)
+		{
+			fi=result[0];
+			return true;
+		}
+		fi=0;
+		return false; 
+	}
+
+	static int PickFace(int x, int y, MESH_TYPE &m, std::vector<FacePointer> &result, int width=4, int height=4)
+	{
+		result.clear();
+		long hits;	
+		int sz=m.face.size()*5;
+		unsigned int *selectBuf =new unsigned int[sz];
+		//  static unsigned int selectBuf[16384];
+		glSelectBuffer(sz, selectBuf);
+		glRenderMode(GL_SELECT);
+		glInitNames();
+
+		/* Because LoadName() won't work with no names on the stack */
+		glPushName(-1);
+		double mp[16];
+
+		int viewport[4];
+		glGetIntegerv(GL_VIEWPORT,viewport);
+		glMatrixMode(GL_PROJECTION);
+		glGetDoublev(GL_PROJECTION_MATRIX ,mp);
+		glPushMatrix();
+		glLoadIdentity();
+		//gluPickMatrix(x, viewport[3]-y, 4, 4, viewport);
+		gluPickMatrix(x, y, width, height, viewport);
+		glMultMatrixd(mp);
+
+		glMatrixMode(GL_MODELVIEW);
+		glPushMatrix();
+		int fcnt=0; 
+		FaceIterator fi;
+		for(fi=m.face.begin();fi!=m.face.end();++fi)
+		{
+			if(!(*fi).IsD())
+			{
+				glLoadName(fcnt);
+				glBegin(GL_TRIANGLES);
+				
+					glVertex( (*fi).V(0)->P() );
+					glVertex( (*fi).V(1)->P() );
+					glVertex( (*fi).V(2)->P() );
+
+				
+				glEnd();
+				fcnt++;
+			}
+
+		}
+
+		glPopMatrix();
+		glMatrixMode(GL_PROJECTION);
+		glPopMatrix();
+		glMatrixMode(GL_MODELVIEW);
+		hits = glRenderMode(GL_RENDER);
+		//xstring buf;
+		//if (hits <= 0)     return 0;
+		std::vector< std::pair<double,unsigned int> > H;
+		for(int ii=0;ii<hits;ii++){
+			//TRACE("%ui %ui %ui %ui\n",selectBuf[ii*4],selectBuf[ii*4+1],selectBuf[ii*4+2],selectBuf[ii*4+3]);
+			H.push_back( std::pair<double,unsigned int>(selectBuf[ii*4+1]/4294967295.0,selectBuf[ii*4+3]));
+		}
+		std::sort(H.begin(),H.end());
+		//  if(H.size()>0) TRACE("\n Closest is %i\n",H[0].second);
+		result.resize(H.size());
+		for(ii=0;ii<hits;ii++){
+			FaceIterator fi=m.face.begin();
+			advance(fi ,H[ii].second);
+			result[ii]=&*fi;
+		}
+
+		delete [] selectBuf;
+		return result.size();
+	}
+
+
+
+
+};
+
+
+//////////////////////////////////////////////////////////////////////////
 template <class TETRA_MESH_TYPE>
 class GLPickTetra
 {
@@ -221,4 +322,6 @@ static int PickTetraFace(int x, int y, TETRA_MESH_TYPE &m, std::vector<std::pair
 }
 
 };
+
+
 }
