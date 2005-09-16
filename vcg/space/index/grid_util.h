@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/08/02 11:01:05  pietroni
+added IPToP and IBoxToBox functions, modified BoxToIBox function in order to use PToIP function
+
 Revision 1.3  2005/07/28 06:11:12  cignoni
 corrected error in GridP (did not compile)
 
@@ -48,7 +51,7 @@ namespace vcg {
 	template <class ScalarType>
 	class BasicGrid {
 
-		typedef typename Box3<ScalarType> Box3x;
+		typedef Box3<ScalarType> Box3x;
 
 	public:
 		Box3x bbox;
