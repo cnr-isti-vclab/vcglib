@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2005/04/04 10:36:36  cignoni
+Release 4.05
+Added saving of Error Histogram
+
 Revision 1.14  2005/01/26 22:45:34  cignoni
 Release 4.04
 final updates for gcc compiling issues
@@ -241,10 +245,10 @@ int main(int argc, char**argv)
 
     // print mesh info.
     printf("Mesh info:\n");
-    printf(" M1: '%s'\n\t%vertices  %7i\n\tfaces     %7i\n\tarea      %12.4f\n", argv[1], S1.vn, S1.fn, ForwardSampling.GetArea());
+    printf(" M1: '%s'\n\tvertices  %7i\n\tfaces     %7i\n\tarea      %12.4f\n", argv[1], S1.vn, S1.fn, ForwardSampling.GetArea());
     printf("\tbbox (%7.4f %7.4f %7.4f)-(%7.4f %7.4f %7.4f)\n", tmp_bbox_M1.min[0], tmp_bbox_M1.min[1], tmp_bbox_M1.min[2], tmp_bbox_M1.max[0], tmp_bbox_M1.max[1], tmp_bbox_M1.max[2]);
     printf("\tbbox diagonal %f\n", (float)tmp_bbox_M1.Diag());
-    printf(" M2: '%s'\n\t%vertices  %7i\n\tfaces     %7i\n\tarea      %12.4f\n", argv[2], S2.vn, S2.fn, BackwardSampling.GetArea());
+    printf(" M2: '%s'\n\tvertices  %7i\n\tfaces     %7i\n\tarea      %12.4f\n", argv[2], S2.vn, S2.fn, BackwardSampling.GetArea());
     printf("\tbbox (%7.4f %7.4f %7.4f)-(%7.4f %7.4f %7.4f)\n", tmp_bbox_M2.min[0], tmp_bbox_M2.min[1], tmp_bbox_M2.min[2], tmp_bbox_M2.max[0], tmp_bbox_M2.max[1], tmp_bbox_M2.max[2]);
     printf("\tbbox diagonal %f\n", (float)tmp_bbox_M2.Diag());
 
