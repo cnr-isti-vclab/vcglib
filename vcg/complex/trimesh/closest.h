@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/09/15 13:16:10  spinelli
+fixed bugs
+
 Revision 1.8  2005/09/15 11:15:00  pietroni
 minor changes
 
@@ -209,9 +212,9 @@ void Closest( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & mdist,
 	//}
 
   scalar error = mdist;
-  typedef Tmark<MESH,MESH::FaceType> Marker;
+  typedef Tmark<MESH, typename MESH::FaceType> Marker;
   Marker t=Marker(mesh);
-  MESH::FaceType* bestf= gr.GetClosest<Marker>(p,error,bestq,t);
+  typename MESH::FaceType* bestf= gr.GetClosest(p,error,bestq,t);
 
   if(mdist > scalar(fabs(error)))
   {
