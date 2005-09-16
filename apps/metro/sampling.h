@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2005/08/26 10:42:47  cignoni
+Added scalar type specification in the typedef of MetroMeshGrid
+
 Revision 1.16  2005/04/04 10:47:26  cignoni
 Release 4.05
 Added saving of Error Histogram
@@ -81,6 +84,9 @@ instantiate GridStaticPtr on the simplexClass template.
 #include <vcg/simplex/face/distance.h>
 #include <vcg/complex/trimesh/update/color.h>
 #include <vcg/space/index/grid_static_ptr.h>
+#include <vcg/space/index/aabb_binary_tree.h>
+#include <vcg/space/index/aabb_binary_tree_search.h>
+#include <vcg/space/index/aabb_binary_tree_utils.h>
 namespace vcg
 {
 
@@ -95,7 +101,8 @@ struct SamplingFlags{
 						SIMILAR_SAMPLING			          = 0x0040,
 						NO_SAMPLING     			          = 0x0070,
 						SAVE_ERROR                      = 0x0100,
-						INCLUDE_UNREFERENCED_VERTICES		= 0x0200
+						INCLUDE_UNREFERENCED_VERTICES		= 0x0200,
+            USE_AABB_TREE                   = 0x0400
 				};
 	};
 // -----------------------------------------------------------------------------------------------
@@ -105,11 +112,7 @@ class Sampling
 public:
 
 private:
-	  typedef typename  MetroMesh::FaceContainer FaceContainer;
-	  typedef GridStaticPtr<FaceContainer, typename MetroMesh::ScalarType > MetroMeshGrid;
-		typedef Point3<typename MetroMesh::ScalarType> Point3x;
-
-    typedef typename MetroMesh::CoordType CoordType;
+	  typedef typename MetroMesh::CoordType CoordType;
     typedef typename MetroMesh::ScalarType ScalarType;
 		typedef typename MetroMesh::VertexType  VertexType;
     typedef typename MetroMesh::VertexPointer  VertexPointer;
@@ -117,12 +120,22 @@ private:
     typedef typename MetroMesh::FaceIterator   FaceIterator;
     typedef typename MetroMesh::FaceType   FaceType;
 
+    typedef typename  MetroMesh::FaceContainer FaceContainer;
+	  typedef GridStaticPtr<FaceContainer, typename MetroMesh::ScalarType > MetroMeshGrid;
+    typedef AABBBinaryTreeUtils<typename FaceType::ScalarType, FaceType> AABBUtils;
+    typedef typename AABBUtils::EmptyClass AABBEmptyClass;
+
+    typedef AABBBinaryTreeSearch<FaceType, typename FaceType::ScalarType, AABBEmptyClass> MetroMeshAABB;
+    typedef Point3<typename MetroMesh::ScalarType> Point3x;
+
+    
 
 
     // data structures
     MetroMesh       &S1; 
     MetroMesh       &S2;
     MetroMeshGrid   gS2;
+    MetroMeshAABB   aaS2;
 
 
 		unsigned int n_samples_per_face             ;
@@ -130,7 +143,7 @@ private:
 		float bbox_factor                  ;
 		float inflate_percentage			     ;
 		unsigned int min_size					             ;
-		float n_hist_bins                  ;
+		int n_hist_bins                  ;
 		int print_every_n_elements         ;
 		int referredBit;
     // parameters
@@ -576,13 +589,25 @@ void Sampling<MetroMesh>::Hausdorff()
 {
 		Box3< ScalarType> bbox;
 
-    // set grid meshes.
-    gS2.SetBBox(S2.bbox);
-  	if(S2.face.size() < min_size)
-		gS2.Set(S2.face, min_size);
-    else
-		gS2.Set(S2.face);
 
+    // set grid meshes.
+    if(Flags & SamplingFlags::USE_AABB_TREE)
+    { 
+      typename AABBUtils::ObjIteratorPtrFunct tt0;
+      typename AABBUtils::FaceBoxFunct<FaceType> tt1;
+      typename AABBUtils::FaceBarycenterFunct<FaceType> tt2;
+      
+      aaS2.Set(S2.face.begin(),S2.face.end(), 
+        tt0, 
+        tt1,
+        tt2);
+    }
+    else
+    {
+      gS2.SetBBox(S2.bbox);
+  	  if(S2.face.size() < min_size) gS2.Set(S2.face, min_size);
+      else	gS2.Set(S2.face);
+    }
     // set bounding box
     bbox = S2.bbox;
     dist_upper_bound = /*bbox_factor * */bbox.Diag();
