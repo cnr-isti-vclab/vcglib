@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2005/06/17 00:54:55  cignoni
+Corrected small bug in SetRange (H was resized to n instead of n+1)
+
 Revision 1.9  2005/06/14 14:27:00  ganovelli
 added include of algorithm
 
@@ -155,7 +158,7 @@ template <class ScalarType>
 void Histogram<ScalarType>::FileWrite(const std::string &filename){
 FILE *fp;
 fp=fopen(filename.c_str(),"w");
-for(int i=0;i<H.size();i++)
+for(unsigned int i=0;i<H.size();i++)
 fprintf (fp,"%12.8lf , %12.8lf \n",R[i],double(H[i])/cnt);
 }
 
