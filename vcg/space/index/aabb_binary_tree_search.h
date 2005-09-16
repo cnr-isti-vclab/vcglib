@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/09/11 11:46:21  m_di_benedetto
+First Commit
+
 
 
 
@@ -35,6 +38,8 @@ $Log: not supported by cvs2svn $
 // stl headers
 #include <limits>
 #include <vector>
+#include <queue>
+#include <deque>
 
 // vcg headers
 #include <vcg/space/index/aabb_binary_tree.h>
@@ -75,23 +80,45 @@ class AABBBinaryTreeSearch {
 		inline AABBBinaryTreeSearch(void);
 		inline ~AABBBinaryTreeSearch(void);
 
-		inline void Clear(void);
+		inline TreeType & Tree(void);
+		inline const TreeType & Tree(void) const;
 
 		template <class OBJITERATOR, class OBJITERATORPTRFUNCT, class OBJBOXFUNCT, class OBJBARYCENTERFUNCT>
-		inline bool Set(const OBJITERATOR & oBegin, const OBJITERATOR & oEnd, const unsigned int size, const unsigned int maxElemsPerLeaf, const ScalarType & leafBoxMaxVolume, const bool useVariance, OBJITERATORPTRFUNCT & objPtr, OBJBOXFUNCT & objBox, OBJBARYCENTERFUNCT & objBarycenter);
+		inline bool Set(const OBJITERATOR & oBegin, const OBJITERATOR & oEnd, OBJITERATORPTRFUNCT & objPtr, OBJBOXFUNCT & objBox, OBJBARYCENTERFUNCT & objBarycenter, const unsigned int maxElemsPerLeaf = 1, const ScalarType & leafBoxMaxVolume = ((ScalarType)0), const bool useVariance = true);
+
+		inline void Clear(void);
 
 		template <class OBJPOINTDISTANCEFUNCT>
 		ObjPtr GetClosest(OBJPOINTDISTANCEFUNCT & getPointDistance, const CoordType & p, ScalarType & minDist, CoordType & res) const;
 
-		inline TreeType & Tree(void);
-		inline const TreeType & Tree(void) const;
+		template <class OBJPOINTDISTANCEFUNCT, class OBJPTRCONTAINER, class DISTCONTAINER, class POINTCONTAINER>
+		unsigned int GetKClosests(OBJPOINTDISTANCEFUNCT & getPointDistance, const unsigned int k, const CoordType & p, OBJPTRCONTAINER & closestObjs, DISTCONTAINER & distances, POINTCONTAINER & closestPts) const;
 
 	protected:
+		struct ClosestObjType {
+			ObjPtr pObj;
+			ScalarType minDist;
+			CoordType closestPt;
+		};
+
+		class CompareClosest {
+		public:
+			bool operator () (const ClosestObjType & a, const ClosestObjType & b) {
+				return (a.minDist < b.minDist);
+			}
+		};
+
+		typedef std::priority_queue<typename ClassType::ClosestObjType, std::deque<typename ClassType::ClosestObjType>, typename ClassType::CompareClosest> PQueueType;
+
 		TreeType tree;
 
 		static inline CoordType Abs(const CoordType & p);
 		static inline CoordType LowerClamp(const CoordType & p, const ScalarType & r);
-		static inline ScalarType MinimumMaxDistance(const ScalarType & currMinMaxDist, const std::vector<typename TreeType::NodeType *> & n, const CoordType & p);
+		static inline ScalarType MinimumMaxSquareDistance(const ScalarType & currMinMaxDist, const std::vector<typename TreeType::NodeType *> & n, const CoordType & p);
+		static inline void MinMaxSquareDistance(const typename TreeType::NodeType * n, const CoordType & p, ScalarType & dmin, ScalarType & dmax);
+
+		template <class OBJPOINTDISTANCEFUNCT>
+		static inline void DepthFirstCollect(const CoordType & p, typename TreeType::NodeType * node, ScalarType & mindmax, const unsigned int k, PQueueType & pq, OBJPOINTDISTANCEFUNCT & getPointDistance);
 
 };
 
@@ -110,17 +137,6 @@ AABBBinaryTreeSearch<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::~AABBBinaryTreeSearc
 }
 
 template <class OBJTYPE, class SCALARTYPE, class NODEAUXDATATYPE>
-void AABBBinaryTreeSearch<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::Clear(void) {
-	this->tree.Clear();
-}
-
-template <class OBJTYPE, class SCALARTYPE, class NODEAUXDATATYPE>
-template <class OBJITERATOR, class OBJITERATORPTRFUNCT, class OBJBOXFUNCT, class OBJBARYCENTERFUNCT>
-bool AABBBinaryTreeSearch<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::Set(const OBJITERATOR & oBegin, const OBJITERATOR & oEnd, const unsigned int size, const unsigned int maxElemsPerLeaf, const ScalarType & leafBoxMaxVolume, const bool useVariance, OBJITERATORPTRFUNCT & objPtr, OBJBOXFUNCT & objBox, OBJBARYCENTERFUNCT & objBarycenter) {
-	return (this->tree.Set(oBegin, oEnd, size, maxElemsPerLeaf, leafBoxMaxVolume, useVariance, objPtr, objBox, objBarycenter));
-}
-
-template <class OBJTYPE, class SCALARTYPE, class NODEAUXDATATYPE>
 typename AABBBinaryTreeSearch<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::TreeType & AABBBinaryTreeSearch<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::Tree(void) {
 	return (this->tree);
 }
@@ -128,6 +144,17 @@ typename AABBBinaryTreeSearch<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::TreeType & 
 template <class OBJTYPE, class SCALARTYPE, class NODEAUXDATATYPE>
 const typename AABBBinaryTreeSearch<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::TreeType & AABBBinaryTreeSearch<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::Tree(void) const {
 	return (this->tree);
+}
+
+template <class OBJTYPE, class SCALARTYPE, class NODEAUXDATATYPE>
+template <class OBJITERATOR, class OBJITERATORPTRFUNCT, class OBJBOXFUNCT, class OBJBARYCENTERFUNCT>
+bool AABBBinaryTreeSearch<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::Set(const OBJITERATOR & oBegin, const OBJITERATOR & oEnd, OBJITERATORPTRFUNCT & objPtr, OBJBOXFUNCT & objBox, OBJBARYCENTERFUNCT & objBarycenter, const unsigned int maxElemsPerLeaf, const ScalarType & leafBoxMaxVolume, const bool useVariance) {
+	return (this->tree.Set(oBegin, oEnd, objPtr, objBox, objBarycenter, maxElemsPerLeaf, leafBoxMaxVolume, useVariance));
+}
+
+template <class OBJTYPE, class SCALARTYPE, class NODEAUXDATATYPE>
+void AABBBinaryTreeSearch<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::Clear(void) {
+	this->tree.Clear();
 }
 
 template <class OBJTYPE, class SCALARTYPE, class NODEAUXDATATYPE>
@@ -158,13 +185,16 @@ typename AABBBinaryTreeSearch<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::ObjPtr AABB
 	clist2.resize(0);
 	leaves.resize(0);
 
+#ifdef max
+#undef max
+#endif
 	ScalarType minMaxDist = std::numeric_limits<ScalarType>::max();
 
 	candidates->push_back(t.pRoot);
 
 	while (!candidates->empty()) {
 		newCandidates->resize(0);
-		minMaxDist = ClassType::MinimumMaxDistance(minMaxDist, *candidates, p);
+		minMaxDist = ClassType::MinimumMaxSquareDistance(minMaxDist, *candidates, p);
 		for (NodePtrVector_ci ci=candidates->begin(); ci!=candidates->end(); ++ci) {
 			if ((*ci)->auxData.searchData.minDist < minMaxDist) {
 				if ((*ci)->IsLeaf()) {
@@ -190,8 +220,8 @@ typename AABBBinaryTreeSearch<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::ObjPtr AABB
 
 	ObjPtr closestObject = 0;
 	CoordType closestPoint;
-	ScalarType closestDist = std::numeric_limits<ScalarType>::max();
-	ScalarType closestDistSq = std::numeric_limits<ScalarType>::max();
+	ScalarType closestDist = math::Sqrt(minMaxDist) + std::numeric_limits<ScalarType>::epsilon();
+	ScalarType closestDistSq = minMaxDist + std::numeric_limits<ScalarType>::epsilon();
 
 	for (NodePtrVector_ci ci=leaves.begin(); ci!=leaves.end(); ++ci) {
 		if ((*ci)->auxData.searchData.minDist < closestDistSq) {
@@ -213,6 +243,84 @@ typename AABBBinaryTreeSearch<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::ObjPtr AABB
 }
 
 template <class OBJTYPE, class SCALARTYPE, class NODEAUXDATATYPE>
+template <class OBJPOINTDISTANCEFUNCT>
+void AABBBinaryTreeSearch<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::DepthFirstCollect(const CoordType & p, typename TreeType::NodeType * node, ScalarType & mindmax, const unsigned int k, PQueueType & pq, OBJPOINTDISTANCEFUNCT & getPointDistance) {
+	const CoordType dc = ClassType::Abs(p - node->boxCenter);
+
+	if (pq.size() >= k) {
+		const ScalarType dmin = ClassType::LowerClamp(dc - node->boxHalfDims, (ScalarType)0).SquaredNorm();
+		if (dmin >= mindmax) {
+			return;
+		}
+	}
+
+	if (node->IsLeaf()) {
+		bool someInserted = true;
+		for (TreeType::ObjPtrVectorConstIterator si=node->oBegin; si!=node->oEnd; ++si) {
+			ScalarType minDst = (pq.size() >= k) ? (pq.top().minDist) : (std::numeric_limits<ScalarType>::max());
+			ClosestObjType cobj;
+			if (getPointDistance(*(*si), p, minDst, cobj.closestPt)) {
+				someInserted = true;
+				cobj.pObj = (*si);
+				cobj.minDist = minDst;
+				if (pq.size() >= k) {
+					pq.pop();
+				}
+				pq.push(cobj);
+			}
+		}
+		if (someInserted) {
+			if (pq.size() >= k) {
+				const ScalarType dmax = pq.top().minDist;
+				const ScalarType sqdmax = dmax * dmax;
+				if (sqdmax < mindmax) {
+					mindmax = sqdmax;
+				}
+			}
+		}
+	}
+	else {
+		if (node->children[0] != 0) {
+			DepthFirstCollect(p, node->children[0], mindmax, k, pq, getPointDistance);
+		}
+		if (node->children[1] != 0) {
+			DepthFirstCollect(p, node->children[1], mindmax, k, pq, getPointDistance);
+		}
+	}
+}
+
+template <class OBJTYPE, class SCALARTYPE, class NODEAUXDATATYPE>
+template <class OBJPOINTDISTANCEFUNCT, class OBJPTRCONTAINER, class DISTCONTAINER, class POINTCONTAINER>
+unsigned int AABBBinaryTreeSearch<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::GetKClosests(OBJPOINTDISTANCEFUNCT & getPointDistance, const unsigned int k, const CoordType & p, OBJPTRCONTAINER & closestObjs, DISTCONTAINER & distances, POINTCONTAINER & closestPts) const {
+	typedef std::vector<typename TreeType::NodeType *> NodePtrVector;
+	typedef typename NodePtrVector::const_iterator NodePtrVector_ci;
+
+	const TreeType & t = this->tree;
+	TreeType::NodeType * pRoot = t.pRoot;
+
+	if (pRoot == 0) {
+		return (0);
+	}
+
+	PQueueType pq;
+	ScalarType mindmax = std::numeric_limits<ScalarType>::max();
+
+	ClassType::DepthFirstCollect(p, pRoot, mindmax, k, pq, getPointDistance);
+
+	const unsigned int sz = pq.size();
+
+	while (!pq.empty()) {
+		ClosestObjType cobj = pq.top();
+		pq.pop();
+		closestObjs.push_back(cobj.pObj);
+		distances.push_back(cobj.minDist);
+		closestPts.push_back(cobj.closestPt);
+	}
+
+	return (sz);
+}
+
+template <class OBJTYPE, class SCALARTYPE, class NODEAUXDATATYPE>
 typename AABBBinaryTreeSearch<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::CoordType AABBBinaryTreeSearch<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::Abs(const CoordType & p) {
 	return (CoordType(math::Abs(p[0]), math::Abs(p[1]), math::Abs(p[2])));
 }
@@ -223,7 +331,7 @@ typename AABBBinaryTreeSearch<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::CoordType A
 }
 
 template <class OBJTYPE, class SCALARTYPE, class NODEAUXDATATYPE>
-typename AABBBinaryTreeSearch<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::ScalarType AABBBinaryTreeSearch<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::MinimumMaxDistance(const ScalarType & currMinMaxDist, const std::vector<typename TreeType::NodeType *> & n, const CoordType & p) {
+typename AABBBinaryTreeSearch<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::ScalarType AABBBinaryTreeSearch<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::MinimumMaxSquareDistance(const ScalarType & currMinMaxDist, const std::vector<typename TreeType::NodeType *> & n, const CoordType & p) {
 	typedef std::vector<typename TreeType::NodeType *> NodePtrVector;
 	typedef typename NodePtrVector::const_iterator NodePtrVector_ci;
 
@@ -239,6 +347,13 @@ typename AABBBinaryTreeSearch<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::ScalarType 
 	}
 
 	return (minMaxDist);
+}
+
+template <class OBJTYPE, class SCALARTYPE, class NODEAUXDATATYPE>
+void AABBBinaryTreeSearch<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::MinMaxSquareDistance(const typename TreeType::NodeType * n, const CoordType & p, ScalarType & dmin, ScalarType & dmax) {
+	const CoordType dc = ClassType::Abs(p - n->boxCenter);
+	dmax = (dc + n->boxHalfDims).SquaredNorm();
+	dmin = ClassType::LowerClamp(dc - n->boxHalfDims, (ScalarType)0).SquaredNorm();
 }
 
 }	// end namespace vcg
