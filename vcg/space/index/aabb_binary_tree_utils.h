@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/09/16 10:03:46  m_di_benedetto
+General interface redefinition, added special functors for faces.
+
 Revision 1.2  2005/09/11 11:46:43  m_di_benedetto
 First Commit
 
@@ -66,7 +69,7 @@ class AABBBinaryTreeUtils {
 		class P3Converter {
 		public:
 			static Point3<T1> Convert(const Point3<T2> & p) {
-				return (Point3<T1>(T1(p[0]), T1(p[1]), T1(p[2])));
+				return Point3<T1>( (T1)p[0], (T1)p[1], (T1)p[2] );
       }
 		};
 
@@ -91,26 +94,23 @@ class AABBBinaryTreeUtils {
 		class EmptyClass {
 		};
 
-		template <class T>
+	
 		class ObjIteratorPtrFunct {
 			public:
-				template <class T>
-				inline T * operator () (T & t) {
-					return (&t);
-				}
+					  template <class T>
+            inline T * operator () (T & t) {
+				      return (&t);
+            }
+            template <class T *>
+            inline T * operator () (T* & t) {
+				      return (t);
+				    }
 
 		};
 
-		template <class T>
-		class ObjIteratorPtrFunct<T *> {
-			public:
-				inline T * operator () (T * & t) {
-					return (t);
-				}
-		};
-
-		static ObjIteratorPtrFunct<ObjType> IteratorPtrFunctor(void) {
-			return (ObjIteratorPtrFunct<ObjType>());
+		static ObjIteratorPtrFunct IteratorPtrFunctor(void) {
+      ObjIteratorPtrFunct pp;
+			return pp;
 		}
 
 		template <class OBJ>
@@ -124,21 +124,9 @@ class AABBBinaryTreeUtils {
 				}
 		};
 
-		template <>
-		class ObjBoxFunct<Face> {
-			public:
-				template <class FACETYPE>
-				inline Box3<ScalarType> operator () (const FACETYPE & f) {
-					Box3<ScalarType> box;
-					box.Set(ConvertP3<ScalarType, FACETYPE::ScalarType>(f.P(0)));
-					box.Add(ConvertP3<ScalarType, FACETYPE::ScalarType>(f.P(1)));
-					box.Add(ConvertP3<ScalarType, FACETYPE::ScalarType>(f.P(2)));
-					return (box);
-				}
-		};
-
-		static ObjBoxFunct<ObjType> BoxFunctor(void) {
-			return (ObjBoxFunct<ObjType>());
+			static ObjBoxFunct<ObjType> BoxFunctor(void) {
+      ObjBoxFunct<ObjType> tt;
+			return tt;
 		}
 
 		template <class FACETYPE>
@@ -156,7 +144,8 @@ class AABBBinaryTreeUtils {
 
 		template <class FACETYPE>
 		static FaceBoxFunct<FACETYPE> FaceBoxFunctor(void) {
-			return (FaceBoxFunct<FACETYPE>());
+      FaceBoxFunct<FACETYPE> tt;
+			return tt;
 		}
 
 		template <class OBJ>
@@ -170,18 +159,10 @@ class AABBBinaryTreeUtils {
 				}
 		};
 
-		template <>
-		class ObjBarycenterFunct<Face> {
-			public:
-				template <class FACETYPE>
-				inline Point3<ScalarType> operator () (const Face & f) {
-					printf("FACE\n");
-					return (ConvertP3<ScalarType, Face::ScalarType>(f.Barycenter()));
-				}
-		};
 
 		static ObjBarycenterFunct<ObjType> BarycenterFunctor(void) {
-			return (ObjBarycenterFunct<ObjType>());
+      ObjBarycenterFunct<ObjType> tt;
+			return tt;
 		}
 
 		template <class FACETYPE>
@@ -195,7 +176,8 @@ class AABBBinaryTreeUtils {
 
 		template <class FACETYPE>
 		static FaceBarycenterFunct<FACETYPE> FaceBarycenterFunctor(void) {
-			return (FaceBarycenterFunct<FACETYPE>());
+      FaceBarycenterFunct<FACETYPE> tt;
+			return tt;
 		}
 
 		template <class OBJ>
@@ -210,23 +192,10 @@ class AABBBinaryTreeUtils {
 				}
 		};
 
-		template <>
-		class ObjPointDistanceFunct<Face> {
-			public:
-				template <class FACETYPE>
-				inline bool operator () (const FACETYPE & f, const Point3<ScalarType> & p, ScalarType & minDist, Point3<ScalarType> & res) {
-					Point3<ScalarType> fp = ConvertP3<FACETYPE::ScalarType, ScalarType>(p);
-					FACETYPE::ScalarType md = FACETYPE::ScalarType(minDist);
-					Point3<ScalarType> fres;
-					const bool bret = face::PointDistance(f, p, md, fres);
-					minDist = ScalarType(md);
-					res = ConvertP3<ScalarType, FACETYPE::ScalarType>(fres);
-					return (bret);
-				}
-		};
-
+	
 		static ObjPointDistanceFunct<ObjType> PointDistanceFunctor(void) {
-			return (ObjPointDistanceFunct<ObjType>());
+      ObjPointDistanceFunct<ObjType> tt;
+			return tt;
 		}
 
 		template <class FACETYPE>
@@ -235,18 +204,19 @@ class AABBBinaryTreeUtils {
 				typedef FACETYPE FaceType;
 				inline bool operator () (const FaceType & f, const Point3<ScalarType> & p, ScalarType & minDist, Point3<ScalarType> & res) {
 					Point3<ScalarType> fp = ConvertP3<FaceType::ScalarType, ScalarType>(p);
-					FaceType::ScalarType md = FaceType::ScalarType(minDist);
+					typename FaceType::ScalarType md = (typename FaceType::ScalarType)minDist;
 					Point3<ScalarType> fres;
 					const bool bret = face::PointDistance(f, p, md, fres);
 					minDist = ScalarType(md);
-					res = ConvertP3<ScalarType, FaceType::ScalarType>(fres);
+					res = ConvertP3<ScalarType, typename FaceType::ScalarType>(fres);
 					return (bret);
 				}
 		};
 
 		template <class FACETYPE>
 		static FacePointDistanceFunct<FACETYPE> FacePointDistanceFunctor(void) {
-			return (FacePointDistanceFunct<FACETYPE>());
+      FacePointDistanceFunct<FACETYPE> tt;
+			return tt;
 		}
 
 };
