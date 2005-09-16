@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/09/16 10:04:15  m_di_benedetto
+Modified interface, added GetKClosest().
+
 Revision 1.2  2005/09/11 11:46:21  m_di_benedetto
 First Commit
 
@@ -63,7 +66,7 @@ template <class OBJTYPE, class SCALARTYPE, class NODEUSERATATYPE>
 class AABBBinaryTreeSearch {
 	public:
 		struct NodeSearchDataType {
-			typename SCALARTYPE minDist;
+			SCALARTYPE minDist;
 		};
 		struct NodeAuxDataType {
 			NodeSearchDataType searchData;
@@ -225,7 +228,7 @@ typename AABBBinaryTreeSearch<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::ObjPtr AABB
 
 	for (NodePtrVector_ci ci=leaves.begin(); ci!=leaves.end(); ++ci) {
 		if ((*ci)->auxData.searchData.minDist < closestDistSq) {
-			for (TreeType::ObjPtrVectorConstIterator si=(*ci)->oBegin; si!=(*ci)->oEnd; ++si) {
+			for (typename TreeType::ObjPtrVectorConstIterator si=(*ci)->oBegin; si!=(*ci)->oEnd; ++si) {
 				if (getPointDistance(*(*si), p, closestDist, closestPoint)) {
 					closestDistSq = closestDist * closestDist;
 					closestObject = (*si);
@@ -256,7 +259,7 @@ void AABBBinaryTreeSearch<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::DepthFirstColle
 
 	if (node->IsLeaf()) {
 		bool someInserted = true;
-		for (TreeType::ObjPtrVectorConstIterator si=node->oBegin; si!=node->oEnd; ++si) {
+		for (typename TreeType::ObjPtrVectorConstIterator si=node->oBegin; si!=node->oEnd; ++si) {
 			ScalarType minDst = (pq.size() >= k) ? (pq.top().minDist) : (std::numeric_limits<ScalarType>::max());
 			ClosestObjType cobj;
 			if (getPointDistance(*(*si), p, minDst, cobj.closestPt)) {
