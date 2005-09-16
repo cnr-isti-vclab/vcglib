@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/09/11 11:45:53  m_di_benedetto
+First Commit
+
 
 
 
@@ -99,7 +102,7 @@ class AABBBinaryTree {
 		inline void Clear(void);
 
 		template <class OBJITERATOR, class OBJITERATORPTRFUNCT, class OBJBOXFUNCT, class OBJBARYCENTERFUNCT>
-		inline bool Set(const OBJITERATOR & oBegin, const OBJITERATOR & oEnd, const unsigned int size, const unsigned int maxElemsPerLeaf, const ScalarType & leafBoxMaxVolume, const bool useVariance, OBJITERATORPTRFUNCT & objPtr, OBJBOXFUNCT & objBox, OBJBARYCENTERFUNCT & objBarycenter);
+		inline bool Set(const OBJITERATOR & oBegin, const OBJITERATOR & oEnd, OBJITERATORPTRFUNCT & objPtr, OBJBOXFUNCT & objBox, OBJBARYCENTERFUNCT & objBarycenter, const unsigned int maxElemsPerLeaf = 1, const ScalarType & leafBoxMaxVolume = ((ScalarType)0), const bool useVariance = true);
 
 	protected:
 		template <class OBJBOXFUNCT, class OBJBARYCENTERFUNCT>
@@ -134,19 +137,21 @@ void AABBBinaryTree<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::Clear(void) {
 
 template <class OBJTYPE, class SCALARTYPE, class NODEAUXDATATYPE>
 template <class OBJITERATOR, class OBJITERATORPTRFUNCT, class OBJBOXFUNCT, class OBJBARYCENTERFUNCT>
-bool AABBBinaryTree<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::Set(const OBJITERATOR & oBegin, const OBJITERATOR & oEnd, const unsigned int size, const unsigned int maxElemsPerLeaf, const ScalarType & leafBoxMaxVolume, const bool useVariance, OBJITERATORPTRFUNCT & objPtr, OBJBOXFUNCT & objBox, OBJBARYCENTERFUNCT & objBarycenter) {
+bool AABBBinaryTree<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::Set(const OBJITERATOR & oBegin, const OBJITERATOR & oEnd, OBJITERATORPTRFUNCT & objPtr, OBJBOXFUNCT & objBox, OBJBARYCENTERFUNCT & objBarycenter, const unsigned int maxElemsPerLeaf, const ScalarType & leafBoxMaxVolume, const bool useVariance) {
 	this->Clear();
 
 	if ((maxElemsPerLeaf == 0) && (leafBoxMaxVolume <= ((ScalarType)0))) {
 		return (false);
 	}
 
+	const unsigned int size = (unsigned int)std::distance(oBegin, oEnd);
+
 	this->pObjects.reserve(size);
 	for (OBJITERATOR oi=oBegin; oi!=oEnd; ++oi) {
 		this->pObjects.push_back(objPtr(*oi));
 	}
 
-	this->pRoot = ClassType::BoundObjects(0, this->pObjects.begin(), this->pObjects.end(), (unsigned int)(this->pObjects.size()), maxElemsPerLeaf, leafBoxMaxVolume, useVariance, objBox, objBarycenter);
+	this->pRoot = ClassType::BoundObjects(0, this->pObjects.begin(), this->pObjects.end(), size, maxElemsPerLeaf, leafBoxMaxVolume, useVariance, objBox, objBarycenter);
 
 	return (this->pRoot != 0);
 }
@@ -179,6 +184,8 @@ typename AABBBinaryTree<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::NodeType * AABBBi
 	pNode->boxCenter = bbox.Center();
 	pNode->boxHalfDims = bbox.Dim() / ((ScalarType)2);
 
+	pNode->numObjects = size;
+
 	const bool bMaxObjectsReached = (((maxElemsPerLeaf > 0) && (size <= maxElemsPerLeaf)) || (size == 1));
 	const bool bMaxVolumeReached = ((leafBoxMaxVolume > ((ScalarType)0)) && (bbox.Volume() <= leafBoxMaxVolume));
 	const bool isLeaf = bMaxObjectsReached || bMaxVolumeReached;
@@ -186,8 +193,6 @@ typename AABBBinaryTree<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::NodeType * AABBBi
 	if (isLeaf) {
 		return (pNode);
 	}
-
-	pNode->numObjects = size;
 
 	CoordType pSplit;
 
