@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2005/09/15 13:16:42  spinelli
+fixed bugs
+
 Revision 1.22  2005/09/15 11:14:39  pietroni
 minor changes
 
@@ -179,7 +182,7 @@ namespace vcg {
 			inline bool operator == ( const Link & l ) const{ return i ==  l.i; }
 			inline bool operator != ( const Link & l ) const{ return i !=  l.i; }
 
-			inline typename ObjPtr & Elem() {
+			inline ObjPtr & Elem() {
 				return t;
 			}
 
@@ -199,7 +202,7 @@ namespace vcg {
 		};//end class Link
 
 		typedef Link* Cell;
-		typedef typename Cell CellIterator;
+		typedef Cell CellIterator;
 
 		std::vector<Link>   links;   /// Insieme di tutti i links
 
