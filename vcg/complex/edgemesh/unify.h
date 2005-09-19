@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/09/14 14:34:41  spinelli
+used new version of Grid_ptr
+
 Revision 1.5  2005/05/30 09:42:05  spinelli
 std::std::vector<PVertex> sostituito con std::vector<PVertex>
 
@@ -112,7 +115,7 @@ namespace vcg
 				inline bool operator () (const PVertex & obj, const CoordType & pt, ScalarType & mindist, CoordType & result) {
 					result = pt;
 					ScalarType _d =vcg::Distance(result,obj.v->P());
-					if(mindist > _d)
+					if(mindist < _d)
 					{
 						mindist = _d;
 						return true;
