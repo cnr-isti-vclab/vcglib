@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2005/09/16 11:53:51  cignoni
+Small gcc compliling issues
+
 Revision 1.9  2005/09/15 13:16:10  spinelli
 fixed bugs
 
@@ -68,7 +71,8 @@ header added
 #include <vcg/space/point4.h>
 #include <vcg/math/base.h>
 #include <vcg/simplex/face/distance.h>
-#include <vcg/space/index/grid_static_ptr.h>
+//#include <vcg/space/index/grid_static_ptr.h>
+#include <vcg/space/index/space_iterators.h>
 
 namespace vcg {
   namespace trimesh {
@@ -76,15 +80,47 @@ namespace vcg {
 template <class MESH_TYPE,class OBJ_TYPE>
   class Tmark
   {
-	  MESH_TYPE &m;
+	  MESH_TYPE *m;
   public:
-	  Tmark(MESH_TYPE &_m):m(_m){}
-	  void UnMarkAll(){m.UnMarkAll();}
-	  bool IsMarked(OBJ_TYPE* obj){return (m.IsMarked(obj));}
-	  void Mark(OBJ_TYPE* obj){m.Mark(obj);}
+	  Tmark(){}
+	  void UnMarkAll(){m->UnMarkAll();}
+	  bool IsMarked(OBJ_TYPE* obj){return (m->IsMarked(obj));}
+	  void Mark(OBJ_TYPE* obj){m->Mark(obj);}
+	  void SetMesh(MESH_TYPE *_m)
+	  {m=_m;}
+  };
+
+  template <class MESH_TYPE>
+  class FaceTmark:public Tmark<MESH_TYPE,typename MESH_TYPE::FaceType>
+  {};
+   
+  template <class MESH_TYPE>
+  class VertTmark:public Tmark<MESH_TYPE,typename MESH_TYPE::VertexType>
+  {};
+
+  ///class of functor used to calculate the radius-triangle intersection
+  template <class FACE_TYPE>
+  class FaceIntersection {
+	  typedef typename FACE_TYPE FaceType;
+	  typedef typename FACE_TYPE::ScalarType ScalarType;
+	  typedef typename vcg::Line3<ScalarType> RayType;
+	  typedef typename FaceType::CoordType CoordType;
+
+  public: 
+	  inline bool operator () (const FaceType & f, RayType r,CoordType & Int) {
+		  CoordType p0=f.V(0)->P();
+		  CoordType p1=f.V(1)->P();
+		  CoordType p2=f.V(2)->P();
+		  ///2 sides of normal test 
+		  if ((vcg::Intersection<ScalarType>(r,p0,p1,p2,Int))
+			  ||(vcg::Intersection<ScalarType>(r,p0,p2,p1,Int)))	
+			  return ((r.Direction()*(Int-r.Origin()))>0);///control side of intersection
+		  return false;
+	  }
   };
 
 /*
+
 aka MetroCore
 data una mesh m e una ug sulle sue facce trova il punto di m piu' vicino ad
 un punto dato.
@@ -212,9 +248,10 @@ void Closest( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & mdist,
 	//}
 
   scalar error = mdist;
-  typedef Tmark<MESH, typename MESH::FaceType> Marker;
-  Marker t=Marker(mesh);
-  typename MESH::FaceType* bestf= gr.GetClosest(p,error,bestq,t);
+  typedef FaceTmark<MESH> MarkerFace;
+  MarkerFace t;
+  t.SetMesh(&mesh);
+  typename MESH::FaceType* bestf= gr.GetClosest<MarkerFace>(p,error,bestq,t);
 
   if(mdist > scalar(fabs(error)))
   {
@@ -239,6 +276,29 @@ void Closest( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & mdist,
 	Point3<SCALAR> ip;
 	Closest(mesh,p,gr,mdist,normf,bestq,f,ip);
 }
+
+template <class GRID,class MESH>
+class TriRayIterator:public vcg::RayIterator<GRID,FaceIntersection<typename MESH::FaceType>,typename FaceTmark<MESH> >
+{
+public:
+	typedef typename GRID GridType;
+	typedef typename MESH MeshType;
+	typedef typename FaceTmark<MESH> MarkerFace;
+	typedef typename FaceIntersection<typename MESH::FaceType> FintFunct;
+	typedef typename vcg::RayIterator<GRID,FaceIntersection<typename MESH::FaceType>,typename FaceTmark<MESH> > RayBaseType;
+
+	TriRayIterator(GridType &_Si):RayBaseType(_Si,FintFunct()){}
+
+	void SetMesh(MeshType *m)
+	{tm.SetMesh(m);}
+
+
+	/*void Init(RayType _r,MeshType &mesh)
+	{	
+		__super::Init(_r);
+	}*/
+};
+
 }	 // end namespace trimesh
 }	 // end namespace vcg
 
