@@ -384,6 +384,8 @@ public:
 		Elems.clear();
 		end=false;
 
+		tm.UnMarkAll();
+
 		_FindSphereRadius();
 		Refresh();
 		///until don't find an element
@@ -424,16 +426,15 @@ public:
 						for(l=first;l!=last;++l)
 						{
 							ObjType	*elem=&(**l);
-
-							///to change with functor
-							CoordType nearest;
-							ScalarType dist;
-							dist_funct((**l),p,dist,nearest);
-							//ScalarType dist=(elem->P()-p).Norm();
-							//if (dist>radius_min){
-							//CoordType intersect=elem->P();
-							Elems.push_back(Entry_Type(elem,fabs(dist),nearest));
-							//}
+							if (!tm.IsMarked(elem))
+							{
+								
+								CoordType nearest;
+								ScalarType dist;
+								dist_funct((**l),p,dist,nearest);
+								Elems.push_back(Entry_Type(elem,fabs(dist),nearest));
+								tm.Mark(elem);
+							}
 						}
 					}
 					if(	( (	y == explored.min.Y()) || (	y == explored.max.Y()))	||
@@ -445,7 +446,7 @@ public:
 				}
 
 				std::sort(Elems.begin(),Elems.end());
-				std::unique(Elems.begin(),Elems.end());
+				//std::unique(Elems.begin(),Elems.end());
 				
 				CurrentElem=Elems.end();
 				CurrentElem--;
