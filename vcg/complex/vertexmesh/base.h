@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/08/02 11:37:29  pietroni
+renamed typedef VertexContainer into VertContainer (like trimesh)
+
 Revision 1.1  2005/03/09 13:22:55  ganovelli
 creation
 
@@ -151,7 +154,7 @@ int imark;
 inline bool IsMarked( ConstVertexPointer  v ) const { return v->IMark() == imark; }
 /** Set the vertex incremental mark of the vertex to the one of the mesh.
 */
-inline void Mark( ConstVertexPointer v ) const { v->IMark() = imark; }
+inline void Mark( VertexPointer v ) const { v->IMark() = imark; }
 /// Unmark the mesh
 inline void UnMarkAll() { ++imark; }
 
