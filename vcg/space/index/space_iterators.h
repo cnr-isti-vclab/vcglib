@@ -122,6 +122,7 @@ public:
 		r=_r;
 		end=false;
 		tm.UnMarkAll();
+		Elems.clear();
 		//CoordType ip;
 		//control if intersect the bounding box of the mesh
 		if(vcg::Intersection<ScalarType>(Si.bbox,r,start))
@@ -265,8 +266,7 @@ protected:
 
 };
 
-
-template <class Spatial_Idexing> 
+template <class Spatial_Idexing,class DISTFUNCTOR,class TMARKER> 
 class ClosestIterator
 {	
 	typedef typename Spatial_Idexing::ObjType ObjType;
@@ -352,7 +352,7 @@ class ClosestIterator
 public:
 
 	///contructor
-	ClosestIterator(Spatial_Idexing &_Si):Si(_Si){}
+	ClosestIterator(Spatial_Idexing &_Si,DISTFUNCTOR _dist_funct):Si(_Si),dist_funct(_dist_funct){}
 
 	///set the current spatial indexing structure used
 	void SetIndexStructure(Spatial_Idexing &_Si)
@@ -426,10 +426,13 @@ public:
 							ObjType	*elem=&(**l);
 
 							///to change with functor
-							ScalarType dist=(elem->P()-p).Norm();
+							CoordType nearest;
+							ScalarType dist;
+							dist_funct((**l),p,dist,nearest);
+							//ScalarType dist=(elem->P()-p).Norm();
 							//if (dist>radius_min){
-							CoordType intersect=elem->P();
-							Elems.push_back(Entry_Type(elem,fabs(dist),intersect));
+							//CoordType intersect=elem->P();
+							Elems.push_back(Entry_Type(elem,fabs(dist),nearest));
 							//}
 						}
 					}
@@ -485,10 +488,10 @@ public:
 	    return ((ScalarType)FLT_MAX);
 	}
 	
-	CoordType IntPoint()
+	CoordType NearestPoint()
 	{return ((*CurrentElem).intersection);}
 
-private:
+protected:
 
 	///structure that mantain for the current cell pre-calculated data 
 	typedef struct Entry_Type
@@ -520,6 +523,9 @@ private:
 	//ScalarType radius_min;		  //curret radius of explored simplexes
 	ScalarType voxel_min;		  //minimum value of the voxel
 	std::vector<Entry_Type> Elems; //element loaded from the current sphere
+	
+	DISTFUNCTOR &dist_funct;
+	TMARKER tm;
 
 	typedef typename std::vector<Entry_Type>::iterator ElemIterator;
 	ElemIterator CurrentElem;	//iterator to current element
