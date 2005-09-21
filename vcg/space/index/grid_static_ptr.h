@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.24  2005/09/16 11:57:15  cignoni
+Removed two wrong typenames
+
 Revision 1.23  2005/09/15 13:16:42  spinelli
 fixed bugs
 
@@ -325,149 +328,149 @@ namespace vcg {
 		}
 
 
-		/** Returns the closest posistion of a point p and its distance
-		@param p a 3d point
-		@param max_dist maximum distance not to search beyond.
-		@param dist_funct (templated type) a functor object used to calculate distance from a grid object to the point p.
-		@param min_dist the returned closest distance
-		@param res the returned closest point
-		@return The closest element
-		*/
-		/*
-			A DISTFUNCT object must implement an operator () with signature:
-				bool operator () (const ObjType& obj, const CoordType & p, ScalarType & min_dist, CoordType & res);
-		*/
-		template <class DISTFUNCTOR,class TMARKER>
-			ObjPtr  GetClosest( const CoordType & p, const ScalarType & max_dist, DISTFUNCTOR & dist_funct, ScalarType & min_dist, CoordType & res,TMARKER tm)
-		{
-			// Initialize min_dist with max_dist to exploit early rejection test.
-			min_dist = max_dist;
+		///** Returns the closest posistion of a point p and its distance
+		//@param p a 3d point
+		//@param max_dist maximum distance not to search beyond.
+		//@param dist_funct (templated type) a functor object used to calculate distance from a grid object to the point p.
+		//@param min_dist the returned closest distance
+		//@param res the returned closest point
+		//@return The closest element
+		//*/
+		///*
+		//	A DISTFUNCT object must implement an operator () with signature:
+		//		bool operator () (const ObjType& obj, const CoordType & p, ScalarType & min_dist, CoordType & res);
+		//*/
+		//template <class DISTFUNCTOR,class TMARKER>
+		//	ObjPtr  GetClosest( const CoordType & p, const ScalarType & max_dist, DISTFUNCTOR & dist_funct, ScalarType & min_dist, CoordType & res,TMARKER tm)
+		//{
+		//	// Initialize min_dist with max_dist to exploit early rejection test.
+		//	min_dist = max_dist;
 
-			ScalarType dx = ( (p[0]-bbox.min[0])/voxel[0] );
-			ScalarType dy = ( (p[1]-bbox.min[1])/voxel[1] );
-			ScalarType dz = ( (p[2]-bbox.min[2])/voxel[2] );
+		//	ScalarType dx = ( (p[0]-bbox.min[0])/voxel[0] );
+		//	ScalarType dy = ( (p[1]-bbox.min[1])/voxel[1] );
+		//	ScalarType dz = ( (p[2]-bbox.min[2])/voxel[2] );
 
-			int ix = int( dx );
-			int iy = int( dy );
-			int iz = int( dz );
+		//	int ix = int( dx );
+		//	int iy = int( dy );
+		//	int iz = int( dz );
 
-			if (!bbox.IsIn(p))
-				assert (0);///the grid has to be extended until the point
+		//	if (!bbox.IsIn(p))
+		//		assert (0);///the grid has to be extended until the point
 
-			double voxel_min=voxel[0];
-			if (voxel_min<voxel[1]) voxel_min=voxel[1];
-			if (voxel_min<voxel[2]) voxel_min=voxel[2];
+		//	double voxel_min=voxel[0];
+		//	if (voxel_min<voxel[1]) voxel_min=voxel[1];
+		//	if (voxel_min<voxel[2]) voxel_min=voxel[2];
 
-			ScalarType radius=(dx-ScalarType(ix));
-			if (radius>0.5)  radius=(1.0-radius);	radius*=voxel[0];
+		//	ScalarType radius=(dx-ScalarType(ix));
+		//	if (radius>0.5)  radius=(1.0-radius);	radius*=voxel[0];
 
-			ScalarType tmp=dy-ScalarType(iy); 
-			if (tmp>0.5) tmp=1.0-tmp; 
-			tmp*=voxel[1]; 
-			if (radius>tmp) radius=tmp;
-			tmp=dz-ScalarType(iz); 
-			if (tmp>0.5) tmp=1.0-tmp; 
-			tmp*=voxel[2]; 
-			if (radius>tmp) radius=tmp;
+		//	ScalarType tmp=dy-ScalarType(iy); 
+		//	if (tmp>0.5) tmp=1.0-tmp; 
+		//	tmp*=voxel[1]; 
+		//	if (radius>tmp) radius=tmp;
+		//	tmp=dz-ScalarType(iz); 
+		//	if (tmp>0.5) tmp=1.0-tmp; 
+		//	tmp*=voxel[2]; 
+		//	if (radius>tmp) radius=tmp;
 
-			CoordType t_res;
-			//ScalarType min_dist=1e10;
-			ObjPtr winner=NULL;
+		//	CoordType t_res;
+		//	//ScalarType min_dist=1e10;
+		//	ObjPtr winner=NULL;
 
-			tm.UnMarkAll();
+		//	tm.UnMarkAll();
 
-			Link  *first, *last;
-			Link *l;
-			if ((ix>=0) && (iy>=0) && (iz>=0) && 
-				(ix<siz[0]) && (iy<siz[1]) && (iz<siz[2])) {
+		//	Link  *first, *last;
+		//	Link *l;
+		//	if ((ix>=0) && (iy>=0) && (iz>=0) && 
+		//		(ix<siz[0]) && (iy<siz[1]) && (iz<siz[2])) {
 
-					Grid( ix, iy, iz, first, last );
-					for(l=first;l!=last;++l)
-						if (!(**l).IsD())
-						{
-							if( ! tm.IsMarked(l->Elem()))
-							{
-								//if (!l->Elem()->IsD() && l->Elem()->Dist(p,min_dist,t_res)) {
-								//if (!l->Elem()->IsD() && dist_funct(*(l->Elem()), p, min_dist, t_res)) { // <-- NEW: use of distance functor
-								if (dist_funct((**l), p, min_dist, t_res))  // <-- NEW: use of distance functor
-								{
-									winner=l->Elem();
-									res=t_res;
-								}
-								tm.Mark(l->Elem());
-							}
-						}
-				};
+		//			Grid( ix, iy, iz, first, last );
+		//			for(l=first;l!=last;++l)
+		//				if (!(**l).IsD())
+		//				{
+		//					if( ! tm.IsMarked(l->Elem()))
+		//					{
+		//						//if (!l->Elem()->IsD() && l->Elem()->Dist(p,min_dist,t_res)) {
+		//						//if (!l->Elem()->IsD() && dist_funct(*(l->Elem()), p, min_dist, t_res)) { // <-- NEW: use of distance functor
+		//						if (dist_funct((**l), p, min_dist, t_res))  // <-- NEW: use of distance functor
+		//						{
+		//							winner=l->Elem();
+		//							res=t_res;
+		//						}
+		//						tm.Mark(l->Elem());
+		//					}
+		//				}
+		//		};
 
-			//return winner;
+		//	//return winner;
 
-			Point3i done_min=Point3i(ix,iy,iz), done_max=Point3i(ix,iy,iz);
+		//	Point3i done_min=Point3i(ix,iy,iz), done_max=Point3i(ix,iy,iz);
 
-			//printf(".");
+		//	//printf(".");
 
-			while (min_dist>radius) {
-				//if (dy-ScalarType(iy))
-				done_min[0]--; if (done_min[0]<0) done_min[0]=0;
-				done_min[1]--; if (done_min[1]<0) done_min[1]=0;
-				done_min[2]--; if (done_min[2]<0) done_min[2]=0;
-				done_max[0]++; if (done_max[0]>=siz[0]-1) done_max[0]=siz[0]-1;
-				done_max[1]++; if (done_max[1]>=siz[1]-1) done_max[1]=siz[1]-1;
-				done_max[2]++; if (done_max[2]>=siz[2]-1) done_max[2]=siz[2]-1;
-				radius+=voxel_min;
-				//printf("+");
-				for (ix=done_min[0]; ix<=done_max[0]; ix++) 
-					for (iy=done_min[1]; iy<=done_max[1]; iy++) 
-						for (iz=done_min[2]; iz<=done_max[2]; iz++) 
-						{
-							Grid( ix, iy, iz, first, last );
-							for(l=first;l!=last;++l)
-							{
-								if (!(**l).IsD())
-								{
-									if( ! tm.IsMarked(l->Elem()))
-									{
-										//if (!l->Elem()->IsD() && l->Elem()->Dist(p,min_dist,t_res)) {
-										if (dist_funct((**l), p, min_dist, t_res)) // <-- NEW: use of distance functor
-										{
-											winner=l->Elem();
-											res=t_res;
-										};
-										tm.Mark(l->Elem());
-									}
-								}
-							};
-						}
-			};
-			return winner;
-		};
+		//	while (min_dist>radius) {
+		//		//if (dy-ScalarType(iy))
+		//		done_min[0]--; if (done_min[0]<0) done_min[0]=0;
+		//		done_min[1]--; if (done_min[1]<0) done_min[1]=0;
+		//		done_min[2]--; if (done_min[2]<0) done_min[2]=0;
+		//		done_max[0]++; if (done_max[0]>=siz[0]-1) done_max[0]=siz[0]-1;
+		//		done_max[1]++; if (done_max[1]>=siz[1]-1) done_max[1]=siz[1]-1;
+		//		done_max[2]++; if (done_max[2]>=siz[2]-1) done_max[2]=siz[2]-1;
+		//		radius+=voxel_min;
+		//		//printf("+");
+		//		for (ix=done_min[0]; ix<=done_max[0]; ix++) 
+		//			for (iy=done_min[1]; iy<=done_max[1]; iy++) 
+		//				for (iz=done_min[2]; iz<=done_max[2]; iz++) 
+		//				{
+		//					Grid( ix, iy, iz, first, last );
+		//					for(l=first;l!=last;++l)
+		//					{
+		//						if (!(**l).IsD())
+		//						{
+		//							if( ! tm.IsMarked(l->Elem()))
+		//							{
+		//								//if (!l->Elem()->IsD() && l->Elem()->Dist(p,min_dist,t_res)) {
+		//								if (dist_funct((**l), p, min_dist, t_res)) // <-- NEW: use of distance functor
+		//								{
+		//									winner=l->Elem();
+		//									res=t_res;
+		//								};
+		//								tm.Mark(l->Elem());
+		//							}
+		//						}
+		//					};
+		//				}
+		//	};
+		//	return winner;
+		//};
 
 
-		/** Returns the closest posistion of a point p and its distance (OLD VERSION)
-		@param p a 3d point
-		@param min_dist the returned closest distance
-		@param res the returned closest point
-		@return The closest element
-		*/
-		/*
-			NOTE: kept for backward compatibility.
-			Same as template <class DISTFUNCT> GetClosest() but without maximum distance rejection
-			and distance functor and with the assumption that ObjType expose a Dist() method
-			acting like a DISTFUNCT funcor;
-		*/
+		///** Returns the closest posistion of a point p and its distance (OLD VERSION)
+		//@param p a 3d point
+		//@param min_dist the returned closest distance
+		//@param res the returned closest point
+		//@return The closest element
+		//*/
+		///*
+		//	NOTE: kept for backward compatibility.
+		//	Same as template <class DISTFUNCT> GetClosest() but without maximum distance rejection
+		//	and distance functor and with the assumption that ObjType expose a Dist() method
+		//	acting like a DISTFUNCT funcor;
+		//*/
 
-		class BackCompDist {
-				public:
-					inline bool operator () (const ObjType & obj, const CoordType & pt, ScalarType & mindist, CoordType & result) {
-						return (vcg::face::PointDistance<ObjType>(obj,pt, mindist, result));
-					}
-			};
+		//class BackCompDist {
+		//		public:
+		//			inline bool operator () (const ObjType & obj, const CoordType & pt, ScalarType & mindist, CoordType & result) {
+		//				return (vcg::face::PointDistance<ObjType>(obj,pt, mindist, result));
+		//			}
+		//	};
 
-		template <class TMARKER>
-		ObjPtr  GetClosest( const CoordType & p, ScalarType & min_dist, CoordType & res,TMARKER &tm) {
-			
-			const ScalarType max_dist = min_dist;
-			return (this->GetClosest<BackCompDist,TMARKER>(p, max_dist, BackCompDist(), min_dist, res,tm));
-		}
+		//template <class TMARKER>
+		//ObjPtr  GetClosest( const CoordType & p, ScalarType & min_dist, CoordType & res,TMARKER &tm) {
+		//	
+		//	const ScalarType max_dist = min_dist;
+		//	return (this->GetClosest<BackCompDist,TMARKER>(p, max_dist, BackCompDist(), min_dist, res,tm));
+		//}
 
 		/// Inserisce una mesh nella griglia. Nota: prima bisogna 
 		/// chiamare SetBBox che setta dim in maniera corretta
