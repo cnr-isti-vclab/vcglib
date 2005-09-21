@@ -334,6 +334,9 @@ class ClosestIterator
 	///add cell to the curren set of explored cells
 	void _NextShell()
 	{
+			if (radius>=max_dist)
+				end=true;
+
 			radius+=voxel_min;
 			//control bounds
 			if (radius>max_dist)
