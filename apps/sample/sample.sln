@@ -1,0 +1,51 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "trimesh_base", "trimesh_base\trimesh_base.vcproj", "{0B7F680B-ED20-3001-B9BE-1EDAFE545C64}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "trimesh_topology", "trimesh_topology\trimesh_topology.vcproj", "{627E5101-FB98-3026-850E-BAF0DD88A5CE}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "trimesh_smooth", "trimesh_smooth\trimesh_smooth.vcproj", "{1F2E5C6D-8394-3AC5-83F4-C2947B31B607}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "trimesh_refine", "trimesh_refine\trimesh_refine.vcproj", "{831831A5-C915-3439-8BD1-CA15B529BDB3}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "trimesh_isosurface", "trimesh_isosurface\trimesh_isosurface.vcproj", "{A52CB564-AC7F-34E5-90E5-07F879D5DD3D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "trimesh_sdl", "trimesh_SDL\trimesh_sdl.vcproj", "{637DBA16-5309-3D1C-B69B-27A5E4EA737B}"
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		ConfigName.0 = Debug
+		ConfigName.1 = Release
+	EndGlobalSection
+	GlobalSection(ProjectDependencies) = postSolution
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{0B7F680B-ED20-3001-B9BE-1EDAFE545C64}.Debug.ActiveCfg = Debug|Win32
+		{0B7F680B-ED20-3001-B9BE-1EDAFE545C64}.Debug.Build.0 = Debug|Win32
+		{0B7F680B-ED20-3001-B9BE-1EDAFE545C64}.Release.ActiveCfg = Release|Win32
+		{0B7F680B-ED20-3001-B9BE-1EDAFE545C64}.Release.Build.0 = Release|Win32
+		{627E5101-FB98-3026-850E-BAF0DD88A5CE}.Debug.ActiveCfg = Debug|Win32
+		{627E5101-FB98-3026-850E-BAF0DD88A5CE}.Debug.Build.0 = Debug|Win32
+		{627E5101-FB98-3026-850E-BAF0DD88A5CE}.Release.ActiveCfg = Release|Win32
+		{627E5101-FB98-3026-850E-BAF0DD88A5CE}.Release.Build.0 = Release|Win32
+		{1F2E5C6D-8394-3AC5-83F4-C2947B31B607}.Debug.ActiveCfg = Debug|Win32
+		{1F2E5C6D-8394-3AC5-83F4-C2947B31B607}.Debug.Build.0 = Debug|Win32
+		{1F2E5C6D-8394-3AC5-83F4-C2947B31B607}.Release.ActiveCfg = Release|Win32
+		{1F2E5C6D-8394-3AC5-83F4-C2947B31B607}.Release.Build.0 = Release|Win32
+		{831831A5-C915-3439-8BD1-CA15B529BDB3}.Debug.ActiveCfg = Debug|Win32
+		{831831A5-C915-3439-8BD1-CA15B529BDB3}.Debug.Build.0 = Debug|Win32
+		{831831A5-C915-3439-8BD1-CA15B529BDB3}.Release.ActiveCfg = Release|Win32
+		{831831A5-C915-3439-8BD1-CA15B529BDB3}.Release.Build.0 = Release|Win32
+		{A52CB564-AC7F-34E5-90E5-07F879D5DD3D}.Debug.ActiveCfg = Debug|Win32
+		{A52CB564-AC7F-34E5-90E5-07F879D5DD3D}.Debug.Build.0 = Debug|Win32
+		{A52CB564-AC7F-34E5-90E5-07F879D5DD3D}.Release.ActiveCfg = Release|Win32
+		{A52CB564-AC7F-34E5-90E5-07F879D5DD3D}.Release.Build.0 = Release|Win32
+		{637DBA16-5309-3D1C-B69B-27A5E4EA737B}.Debug.ActiveCfg = Debug|Win32
+		{637DBA16-5309-3D1C-B69B-27A5E4EA737B}.Debug.Build.0 = Debug|Win32
+		{637DBA16-5309-3D1C-B69B-27A5E4EA737B}.Release.ActiveCfg = Release|Win32
+		{637DBA16-5309-3D1C-B69B-27A5E4EA737B}.Release.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal
