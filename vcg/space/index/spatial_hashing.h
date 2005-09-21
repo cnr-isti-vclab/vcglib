@@ -24,6 +24,11 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/09/19 13:35:45  pietroni
+use of standard grid interface
+use of vector instead of map inside the cell
+removed closest iterator
+
 Revision 1.7  2005/06/15 11:44:47  pietroni
 minor changes
 
@@ -69,12 +74,14 @@ added vcg header
 
 
 namespace vcg{
+
+
 	/** Spatial Hash Table
 	Spatial Hashing as described in
 	"Optimized Spatial Hashing for Coll	ision Detection of Deformable Objects", 
 	Matthias Teschner and Bruno Heidelberger and Matthias Muller and Danat Pomeranets and Markus Gross
 	*/
-	template < typename ContainerType,class FLT=float >
+	template < typename ContainerType,class FLT=double>
 	class SpatialHashTable:public BasicGrid<FLT>
 	{
 
@@ -100,26 +107,14 @@ namespace vcg{
 			ObjType& operator *(){return (*this->first);}
 		};
 
-		//typedef typename std::map<ObjType*,int> CellContainerType;
 		typedef typename std::vector<EntryType> CellContainerType;
 		typedef typename CellContainerType::iterator IteMap;
 		typedef typename EntryType* CellIterator;
 
-		////iterator to elems on a cell (need to define method Elem() for Space Iterators)
-		//class CellIterator :public IteMap
-		//{
-		//	//std::vector<int>::iterator i;
-		//public:
-		//	CellIterator(){}
-		//	inline CellIterator & operator = ( IteMap const &c) 
-		//	{this->); };
-		//	ObjType* operator *(){return ((* this)->first);}
-		//};
-
-			//This Class Identify the cell
+		//This Class Identify the cell
 		struct Cell
 		{
-		private:
+		protected:
 
 			///the min and max point corresponding to the cell - used to inverse hashing
 			//CoordType min;//coordinate min of the cell
@@ -146,13 +141,6 @@ namespace vcg{
 				cell_n=_cell;
 			}
 
-			/////return true if the element is in the cell
-			//bool IsIn(ObjType* sim)
-			//{
-			//	int n=elem.count(sim);
-			//	assert((n==0)||(n==1));
-			//	return (n==1);
-			//}
 
 			///return the number of elements stored in the cell
 			int Size()
@@ -171,36 +159,46 @@ namespace vcg{
 			void Update(ObjType* sim, const int & _tempMark)
 			{
 				IteMap I;
-				if (Find(sim,I))///update temporary mark
-					(*I).second=_tempMark;
+				if (Find(sim,I))
+				{///update temporary mark
+						(*I).second=_tempMark;
+				}
 				else
 					_entries.push_back(EntryType(sim,_tempMark));
 
-				//at the end update the temporary mark on the simplex
-				sim->Mark()=_tempMark;
+				////at the end update the temporary mark on the simplex
+				//_UpdateHMark(sim);
+
 				//Assert();
 			}
 
-			///given an iterator to the instance of the entry in the cell
-			///return true if the the entry is valid
-			///(using temporary mark).
-			bool IsUpdated(IteMap &I)
-			{
-				return ((*I).second >= (*I).first->Mark());
-			}
+			/////given an iterator to the instance of the entry in the cell
+			/////return true if the the entry is valid
+			/////(using temporary mark).
+			//bool IsUpdated(IteMap &I)
+			//{
+			//	if (Use_Mark)
+			//		return ((*I).second >= (*I).first->HMark());
+			//	else
+			//		return true;
+			//}
 
-			///given an simplex pointer
-			///return true if the the entry corripondent to that 
-			///simplex is valid or not
-			///(using temporary mark).
-			bool IsUpdated(ObjType* sim)
-			{
-				IteMap I;
-				if (Find(sim,I))
-					return(IsUpdated(I));
-				else
-					return false;
-			}
+			/////given an simplex pointer
+			/////return true if the the entry corripondent to that 
+			/////simplex is valid or not
+			/////(using temporary mark).
+			//bool IsUpdated(ObjType* sim)
+			//{
+			//	if (Use_Mark)
+			//	{
+			//		IteMap I;
+			//		if (Find(sim,I))
+			//			return(IsUpdated(I));
+			//		else
+			//			return false;
+			//	}
+			//	else return true;
+			//}
 
 			Point3i CellN()
 			{return cell_n;}
@@ -211,111 +209,10 @@ namespace vcg{
 			bool operator !=(const Cell &h)  
 			{return ((cell_n!=h.CellN()));}
 
+			protected:
+			virtual void UpdateHMark(ObjType* s){}
 
 		}; // end struct Cell
-
-		////This Class Identify the cell
-		//struct Cell
-		//{
-		//private:
-
-		//	///the min and max point corresponding to the cell - used to inverse hashing
-		//	//CoordType min;//coordinate min of the cell
-		//	//CoordType max;//coordinate max of the cell
-
-		//	Point3i cell_n;//cell number
-		//	//iterator to the map element into the cell
-		//	//typedef typename CellContainerType::iterator IteMap;
-
-		//public:
-
-		//	//elements 
-		//	CellContainerType _entries;
-
-		//	Cell()
-		//	{}
-
-		//	Cell(ObjType* sim,Point3i _cell,const int  &_tempMark)
-		//	{
-		//		_entries.insert(EntryType(sim,_tempMark));
-		//		/*min=_min;
-		//		max=_max;
-		//		assert(min<max);*/
-		//		cell_n=_cell;
-		//	}
-
-		//	///return true if the element is in the cell
-		//	bool IsIn(ObjType* sim)
-		//	{
-		//		int n=elem.count(sim);
-		//		assert((n==0)||(n==1));
-		//		return (n==1);
-		//	}
-
-		//	///return the number of elements stored in the cell
-		//	int Size()
-		//	{return (int)(_entries.size());}
-
-		//	///update or insert an element into a cell
-		//	void Update(ObjType* sim, const int & _tempMark)
-		//	{
-		//		IteMap I=_entries.find(sim);
-
-		//		if (I!=_entries.end())//the entry exist in the cell
-		//			(*I).second=_tempMark;
-		//		else
-		//			_entries.insert(_entries.begin(),EntryType(sim,_tempMark));
-
-		//		//at the end update the temporary mark on the simplex
-		//		sim->Mark()=_tempMark;
-		//		//Assert();
-		//	}
-
-		//	///given an iterator to the instance of the entry in the cell
-		//	///return true if the the entry is valid
-		//	///(using temporary mark).
-		//	bool IsUpdated(CellIterator &I)
-		//	{
-		//		return ((*I).second >= (*I).first->Mark());
-		//	}
-
-		//	///given an simplex pointer
-		//	///return true if the the entry corripondent to that 
-		//	///simplex is valid or not
-		//	///(using temporary mark).
-		//	bool IsUpdated(ObjType* sim)
-		//	{
-		//		IteMap I=_entries.find(sim);
-		//		if (I!=_entries.end())
-		//			return(IsUpdated(I));
-		//		else
-		//			return false;
-		//	}
-
-		//	////add to the vector all simplexes of the map that have a right timestamp or are not deleted
-		//	//void  Elems(std::vector<ObjType*> & res)
-		//	//{
-		//	//	for (IteMap ite=_entries.begin();ite!=_entries.end();ite++)
-		//	//	{
-		//	//		ObjType* sim=(*ite).first;
-		//	//		if (IsUpdated(ite)&&(!sim->IsD()))
-		//	//			res.push_back(sim);
-		//	//	}
-		//	//}
-
-
-		//	Point3i CellN()
-		//	{return cell_n;}
-
-		//	bool operator ==(const Cell &h)  
-		//	{return (cell_n==h.CellN());}
-
-		//	bool operator !=(const Cell &h)  
-		//	{return ((cell_n!=h.CellN()));}
-
-
-		//}; // end struct Cell
-
 
 		//hash table definition
 		typedef typename STDEXT::hash_multimap<int,Cell> Htable;
@@ -344,7 +241,6 @@ namespace vcg{
 		{
 			int h=Hash(cell);
 			hash_table.insert(HRecord(h,Cell(s,cell,tempMark)));
-			s->Mark()=tempMark;
 			//Assert();	
 		}
 		
@@ -376,6 +272,8 @@ namespace vcg{
 			}
 		}
 
+		virtual void _UpdateHMark(ObjType* s){}
+			 
 		///insert an element in a specified cell if the cell doesn't exist than
 		///create it.
 		void _InsertInCell(ObjType* s,Point3i cell)
@@ -385,6 +283,8 @@ namespace vcg{
 				_InsertNewHentry(s,cell);
 			else///there is the entry specified by the iterator I so update only the temporary mark
 				(*I).second.Update(s,tempMark);
+
+			_UpdateHMark(s);
 		}
 
 		// hashing
@@ -553,9 +453,9 @@ namespace vcg{
 			hash_table.clear();
 		}
 
-		void SetHashSpace()
+		void SetHashKeySpace(int n)
 		{
-			HashSpace
+			HashSpace=n;
 		}
 
 		void UpdateTmark()
@@ -563,7 +463,17 @@ namespace vcg{
 
 
 	}; // end class
-
+	
+	/** Spatial Hash Table Dynamic
+	Update the Hmark value on the simplex for dynamic updating of contents of the cell.
+	The simplex must have the HMark() function.
+	*/
+	template < typename ContainerType,class FLT=double>
+	class DynamicSpatialHashTable:SpatialHashTable<ContainerType,FLT>
+	{
+		void _UpdateHMark(ObjType* s){s->HMark()=tempMark;}
+	};
+	
 }// end namespace
 
 #undef P0
