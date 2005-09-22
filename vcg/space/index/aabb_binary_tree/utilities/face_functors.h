@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/09/22 13:03:16  m_di_benedetto
+First Commit.
+
 
 
 ****************************************************************************/
@@ -34,6 +37,8 @@ $Log: not supported by cvs2svn $
 // vcg headers
 #include <vcg/space/point3.h>
 #include <vcg/space/box3.h>
+#include <vcg/space/line3.h>
+#include <vcg/space/intersection3.h>
 #include <vcg/simplex/face/distance.h>
 
 namespace vcg {
@@ -74,7 +79,15 @@ class FaceRayIntersectFunctor {
 public:
 	template <class FACETYPE, class COORDTYPE>
 	inline bool operator () (const FACETYPE & f, const COORDTYPE & rayOrigin, const COORDTYPE & rayDirection, typename COORDTYPE::ScalarType & t, COORDTYPE & q) {
-		return (false);
+		typedef typename COORDTYPE::ScalarType ScalarType;
+		Line3<ScalarType, false> ln(rayOrigin, rayDirection);
+		ScalarType a;
+		ScalarType b;
+
+		const bool bret = Intersection(ln, f.P(0), f.P(1), f.P(2), a, b, t);
+		q = rayOrigin + rayDirection * t;
+
+		return (bret);
 	}
 };
 
