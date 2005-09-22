@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/09/22 13:02:44  m_di_benedetto
+First Commit.
+
 
 
 ****************************************************************************/
@@ -70,6 +73,8 @@ public:
 		rayex.sign[1] = (rayex.invDirection[1] < ((ScalarType)0)) ? (1) : (0);
 		rayex.sign[2] = (rayex.invDirection[2] < ((ScalarType)0)) ? (1) : (0);
 
+		ObjPtr closestObj = 0;
+
 		ClassType::DepthFirstRayIsect(pRoot, rayIntersection, rayex, rayT, pRes, closestObj);
 
 		if (closestObj == 0) {
@@ -77,7 +82,7 @@ public:
 		}
 
 		t = rayT;
-		res = pRes;
+		q = pRes;
 
 		return (closestObj);
 	}
@@ -111,8 +116,7 @@ protected:
 		if ((tmin > tcmax) || (tcmin > tmax)) { return (false); }
 		if (tcmin > tmin) { tmin = tcmin; }
 		if (tcmax < tmax) { tmax = tcmax; }
-		if (tmin < ((ScalarType)0)) { return (false); }
-		t0 = tmin;
+		t0 = (tmin >= ((ScalarType)0)) ? (tmin) :((ScalarType)0);
 		return (true);
 	}
 
@@ -130,6 +134,8 @@ protected:
 
 		if (node->IsLeaf()) {
 			ObjPtr cObj = 0;
+			ScalarType ar;
+			CoordType ap;
 			rt = std::numeric_limits<ScalarType>::max();
 			for (typename TreeType::ObjPtrVectorConstIterator si=node->oBegin; si!=node->oEnd; ++si) {
 				if (rayIntersection(*(*si), ray.origin, ray.direction, ar, ap)) {
