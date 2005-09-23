@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/04/14 11:35:09  ponchio
+*** empty log message ***
+
 Revision 1.3  2004/07/15 13:22:37  cignoni
 Added the standard P() access function instead of the shortcut P0()
 
@@ -60,7 +63,7 @@ public:
     blah
     blah
 **/
-
+	Triangle3(const CoordType & c0,const CoordType & c1,const CoordType & c2){_v[0]=c0;_v[1]=c1;_v[2]=c2;}
 protected:
 	/// Vector of vertex pointer incident in the face
 	Point3<ScalarType> _v[3];
