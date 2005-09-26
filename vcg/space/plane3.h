@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/03/18 16:34:42  fiorin
+minor changes to comply gcc compiler
+
 Revision 1.6  2004/10/09 13:48:02  ponchio
 Fixed bug in init.
 
@@ -109,8 +112,15 @@ public:
   }
 		/// sets origin and direction.
 	void Set( const ScalarType & off, const PointType & dir ) {
-    SetOffset(off); 
-    SetDirection(dir); 
+		if (NORM) {
+			const ScalarType normFactor = dir.Norm();
+			this->_dir = dir / normFactor;
+			this->_offset = off / normFactor;
+		}
+		else {
+			this->_offset = off;
+			this->_dir = dir;
+		}
   }
   void Set( const PointType & dir, const ScalarType & off) {Set(off,dir);}
 	
