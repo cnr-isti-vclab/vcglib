@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/09/14 12:58:44  pietroni
+changed min calls to Min<ScalarType> of math.h of vcglib
+
 Revision 1.7  2005/09/14 09:58:32  pietroni
 removed vcg::math::Min<ScalarType> definition generate warnings
 
@@ -224,7 +227,21 @@ namespace vcg {
 		//dist = Distance(p,q);
 		return true;
 	}
-	
+
+	class PointDistanceFunctor {
+	public:
+		template <class FACETYPE, class SCALARTYPE>
+		inline bool operator () (const FACETYPE & f, const Point3<SCALARTYPE> & p, SCALARTYPE & minDist, Point3<SCALARTYPE> & q) {
+			const Point3<typename FACETYPE::ScalarType> fp = Point3<typename FACETYPE::ScalarType>::Construct(p);
+			Point3<typename FACETYPE::ScalarType> fq;
+			typename FACETYPE::ScalarType md = (typename FACETYPE::ScalarType)(minDist);
+			const bool ret = PointDistance(f, fp, md, fq);
+			minDist = (SCALARTYPE)(md);
+			q = Point3<SCALARTYPE>::Construct(fq);
+			return (ret);
+		}
+	};
+
 }	 // end namespace face
 	
 }	 // end namespace vcg
