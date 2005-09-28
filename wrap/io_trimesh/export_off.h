@@ -69,29 +69,34 @@ namespace vcg {
 
 					MyMesh::FaceIterator fi;
 					int count_e = 0;
+					int boundary_e = 0;
 					bool counted=false;
 					for(fi=m.face.begin();fi!=m.face.end();++fi)
 						(*fi).ClearS();
 
-					for(fi=m.face.begin();fi!=m.face.end();++fi)
+
+
+					for(fi=m.face.begin();fi!=m.face.end();fi++)
 					{
 						(*fi).SetS();
-						count_e +=3;
-						for(int i=0; i<3; ++i)
+						count_e +=3;								//assume that we have to increase the number of edges with three
+						for(int j=0; j<3; j++)
 						{
-							if (IsManifold(*fi,i))
+							if (fi->IsBorder(j))			//If this edge is a border edge
+								boundary_e++;						//  then increase the number of boundary edges
+							else if (IsManifold(*fi,j))		//If this edge is manifold
 							{
-								if((*fi).FFp(i)->IsS()) 
-									count_e--;
+								if((*fi).FFp(j)->IsS()) //If the face on the other side of the edge is already selected
+									count_e--;						//  we counted one edge twice
 							}
-							else
+							else											//We have a non-manifold edge
 							{
-								hei.Set(&(*fi), i , fi->V(i));
+								hei.Set(&(*fi), j , fi->V(j));
 								he=hei;
 								he.NextF();
-								while (he.f!=hei.f)
+								while (he.f!=hei.f)			//	so we have to iterated all faces that are connected to this edge
 								{
-									if (he.f->IsS())
+									if (he.f->IsS())			//  if one of the other faces was already visited than this edge was counted already.
 									{
 										counted=true;
 										break;
@@ -108,7 +113,7 @@ namespace vcg {
 								}
 							}
 						}
-					}
+					}	
 					fprintf(fpout,"%d\n", count_e);
 
 					//vertices
@@ -125,13 +130,13 @@ namespace vcg {
 
 							fprintf(fpout,"Vertex: %g %g %g\n" ,vp->P()[0],vp->P()[1],vp->P()[2]);
 							if( m.HasPerVertexColor() )
-								fprintf(fpout,"Color: %d %d %d %d\n",vp->C()[0],vp->C()[1],vp->C()[2],vp->C()[3] );
+								fprintf(fpout,"%d %d %d %d\n",vp->C()[0],vp->C()[1],vp->C()[2],vp->C()[3] );
 
 							if( m.HasPerVertexNormal())
-								fprintf(fpout,"Normal: %g %g %g\n", vp->N()[0],vp->N()[1],vp->N()[2]);
+								fprintf(fpout,"%g %g %g\n", vp->N()[0],vp->N()[1],vp->N()[2]);
 
 							if( m.HasPerVertexTexture())
-								fprintf(fpout,"Texture: %g %g\n",vp->T().u(),vp->T().v());
+								fprintf(fpout,"%g %g\n",vp->T().u(),vp->T().v());
 						}
 
 						vp->UberFlags()=j; // Trucco! Nascondi nei flags l'indice del vertice non deletato!
