@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.28  2005/06/17 00:43:34  cignoni
+Added a named typedef for the per wedge TexCoordinate
+
 Revision 1.27  2005/03/18 16:35:53  fiorin
 minor changes to comply gcc compiler
 
@@ -950,7 +953,7 @@ public:
 *  Bounding box *
 **********************/
 
-void GetBBox( BoxType & bb )
+void GetBBox( BoxType & bb ) const
 {
 	bb.Set( v[0]->P() );
 	bb.Add( v[1]->P() );
