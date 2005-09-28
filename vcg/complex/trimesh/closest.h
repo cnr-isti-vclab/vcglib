@@ -24,6 +24,11 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2005/09/21 09:24:30  pietroni
+Added RayIterators.
+Added ClosestIterators on Triangles and Vertices.
+Added Closest Functions on triangles and Vertices.
+
 Revision 1.11  2005/09/19 13:36:24  pietroni
 added ray iterator of faces
 
@@ -76,7 +81,7 @@ header added
 #include <vcg/simplex/face/distance.h>
 //#include <vcg/space/index/grid_static_ptr.h>
 #include <vcg/space/index/space_iterators.h>
-#include <vcg/space/index/closest.h>
+#include <vcg/space/index/grid_closest.h>
 
 namespace vcg {
   namespace trimesh {
@@ -175,116 +180,10 @@ void Closest( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & mdist,
 									Point3<SCALAR> & normf, Point3<SCALAR> & bestq, typename MESH::FaceType * &f, Point3<SCALAR> &ip)
 {
    typedef SCALAR ScalarType;
-   typedef Point3<scalar> Point3x;
+   typedef Point3<ScalarType> Point3x;
    typedef Box3<SCALAR> Box3x;
 	
-	//if(!gr.bbox.IsIn(p)) return;
-	////typedef typename GridStaticPtr<typename MESH::FaceContainer,double>::Link A2UGridLink;
-	//typedef typename GRID::Link A2UGridLink;
- // scalar ax = p[0] - gr.bbox.min[0];	// Real coodinate of point refer to
- // scalar ay = p[1] - gr.bbox.min[1];	
- // scalar az = p[2] - gr.bbox.min[2];
-
- // int gx = int( ax/gr.voxel[0] );		// Integer coordinate of the point 
- // int gy = int( ay/gr.voxel[1] );		// voxel
- // int gz = int( az/gr.voxel[2] );
-
- // scalar vx = gr.bbox.min[0]+gx*gr.voxel[0];	// Real world coordinate of the Voxel
- // scalar vy = gr.bbox.min[1]+gy*gr.voxel[1];	// origin
-	//scalar vz = gr.bbox.min[2]+gz*gr.voxel[2];
-
-	//scalar dx = math::Min(p[0] - vx, vx+gr.voxel[0]-p[0]);  // Dist from the voxel
- // scalar dy = math::Min(p[1] - vy, vy+gr.voxel[1]-p[1]);
- // scalar dz = math::Min(p[2] - vz, vz+gr.voxel[2]-p[2]);
-
-	//scalar vdist,vstep;
-
-	//if(dx<dy && dx<dz)
-	//{
-	//    vdist = dx;
-	//    vstep = gr.voxel[0];
-	//}
-	//else if(dy<dz)
-	//{
-	//    vdist = dy;
-	//    vstep = gr.voxel[1];
-	//}
-	//else
-	//{
-	//    vdist = dz;
-	//    vstep = gr.voxel[2];
-	//}
-
-	////scalar error = gr.bbox.SquaredDiag();
-	////scalar error = gr.bbox.Diag();
-	//scalar error = mdist;
-	//Point3x q;
-	//typename MESH::FaceIterator bestf = (typename MESH::FaceIterator)0;
-
- // mesh.UnMarkAll();
-
-	//int mxsd = gr.siz[0];
-	//if(mxsd<gr.siz[1]) mxsd = gr.siz[1];
-	//if(mxsd<gr.siz[2]) mxsd = gr.siz[2];
-	//for(int s=0;s<mxsd;++s)
-	//{
-	//	if(s==0)
-	//	{
-	//		A2UGridLink *first, *last, *l;
-	//		gr.Grid( gx, gy, gz, first, last );
-	//		for(l=first;l!=last;++l)
-	//		  if (!l->Elem()->IsD())
-	//		  {
-	//			if( ! mesh.IsMarked( &*(l->Elem())) )
-	//			{
-	//				if( face::PointDistance((*(l->Elem())), p, error, q) )
-	//				{
-	//					bestq = q;
-	//					bestf = l->Elem();
-	//				}
-
-	//				mesh.Mark( &*(l->Elem()) );
-	//			}
-	//		  }
-	//	}
-	//	else
-	//	{
-	//		for(int ix=gx-s;ix<=gx+s;++ix)
-	//			if( ix>=0 && ix<gr.siz[0] )
-	//			{
-	//				for(int iy=gy-s;iy<=gy+s;++iy)
-	//					if( iy>=0 && iy<gr.siz[1] )
-	//					{
-	//						int sz = ( ix==gx-s || ix==gx+s ||
-	//							       iy==gy-s || iy==gy+s   )?1:2*s;
-	//						for(int iz=gz-s;iz<=gz+s;iz+=sz)
-	//							if( iz>=0 && iz<gr.siz[2] )
-	//							{
-	//								A2UGridLink *first, *last, *l;
-	//								gr.Grid( ix, iy, iz, first, last );
-	//								for(l=first;l!=last;++l)
-	//								if (!l->Elem()->IsD())
-	//								{
-	//									if( ! mesh.IsMarked( &*(l->Elem())) )
-	//									{
-	//										if( vcg::face::PointDistance((*(l->Elem())),  p, error, q) )
-	//										{
-	//											bestq = q;
-	//											bestf = l->Elem();
-	//										}	
-	//										mesh.Mark(&*l->Elem());
-	//									}
-	//								}
-	//							}
-	//					}
-	//			}
-	//	}
-
-	//	if( fabs(error)<vdist )
-	//		break;
-	//	vdist += vstep;
-	//}
-
+	
   ScalarType error = mdist;
   typedef FaceTmark<MESH> MarkerFace;
   MarkerFace t;
@@ -292,7 +191,7 @@ void Closest( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & mdist,
   typedef typename FaceDistance<typename MESH::FaceType> FDistFunct;
   typename MESH::FaceType* bestf= vcg::GetClosest<GRID,FDistFunct,MarkerFace>(p,mdist,FDistFunct() ,error,bestq,t,gr);
 
-  if(mdist > scalar(fabs(error)))
+  if(mdist > ScalarType(fabs(error)))
   {
 	  f=bestf;
 	  typename MESH::ScalarType alfa, beta, gamma;
@@ -304,7 +203,7 @@ void Closest( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & mdist,
 	  ip=Point3x(alfa,beta,gamma);
 	  //normf.Normalize(); inutile si assume le normali ai vertici benfatte										
     
-    mdist = scalar(fabs(error));
+    mdist = ScalarType(fabs(error));
   }
 }
 
