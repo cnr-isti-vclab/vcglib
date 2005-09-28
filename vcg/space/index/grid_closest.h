@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/09/27 15:09:38  cignoni
+First Version
+
 
 ****************************************************************************/
 
@@ -45,7 +48,7 @@ $Log: not supported by cvs2svn $
 
 namespace vcg{
 
-	template <class SPATIAL_INDEX,class DISTFUNCTOR,class TMARKER>
+	template <class SPATIAL_INDEX,class DISTFUNCTOR, class TMARKER>
 		typename SPATIAL_INDEX::ObjPtr  GetClosest( const typename SPATIAL_INDEX::CoordType & p, 
 		                                            const typename SPATIAL_INDEX::ScalarType & max_dist, 
 		                                            DISTFUNCTOR & dist_funct, 
@@ -70,8 +73,16 @@ namespace vcg{
 		int iy = int( dy );
 		int iz = int( dz );
 
+    if (ix<0) ix=0;
+    if (iy<0) iy=0;
+    if (iz<0) iz=0;
+    if (ix>=Si.siz[0]-1) ix=Si.siz[0]-1;
+    if (iy>=Si.siz[1]-1) iy=Si.siz[1]-1;
+    if (iz>=Si.siz[2]-1) iz=Si.siz[2]-1;
+
     if (!Si.bbox.IsIn(p)){
 			assert (0);///the grid has to be extended until the point
+      
     }
 		double voxel_min=Si.voxel[0];
 		if (voxel_min<Si.voxel[1]) voxel_min=Si.voxel[1];
@@ -122,23 +133,28 @@ namespace vcg{
 
 		//return winner;
 
-		Point3i done_min=Point3i(ix,iy,iz), done_max=Point3i(ix,iy,iz);
+		// the portion of the grid that have already been checked.
+    Point3i done_min, done_max; 
+		// the new box that we want to traverse: todo is a superset of done.
+    Point3i todo_min=Point3i(ix,iy,iz), todo_max=Point3i(ix,iy,iz);
 
-		//printf(".");
 
+		// we should traverse only (todo - done).
 		while (dist>radius) {
-			//if (dy-ScalarType(iy))
-			done_min[0]--; if (done_min[0]<0) done_min[0]=0;
-			done_min[1]--; if (done_min[1]<0) done_min[1]=0;
-			done_min[2]--; if (done_min[2]<0) done_min[2]=0;
-			done_max[0]++; if (done_max[0]>=Si.siz[0]-1) done_max[0]=Si.siz[0]-1;
-			done_max[1]++; if (done_max[1]>=Si.siz[1]-1) done_max[1]=Si.siz[1]-1;
-			done_max[2]++; if (done_max[2]>=Si.siz[2]-1) done_max[2]=Si.siz[2]-1;
+			done_min=todo_min; done_max=todo_max;
+			todo_min[0]--; if (todo_min[0]<0) todo_min[0]=0;
+			todo_min[1]--; if (todo_min[1]<0) todo_min[1]=0;
+			todo_min[2]--; if (todo_min[2]<0) todo_min[2]=0;
+			todo_max[0]++; if (todo_max[0]>=Si.siz[0]-1) todo_max[0]=Si.siz[0]-1;
+			todo_max[1]++; if (todo_max[1]>=Si.siz[1]-1) todo_max[1]=Si.siz[1]-1;
+			todo_max[2]++; if (todo_max[2]>=Si.siz[2]-1) todo_max[2]=Si.siz[2]-1;
 			radius+=voxel_min;
-			//printf("+");
-			for (ix=done_min[0]; ix<=done_max[0]; ix++) 
-				for (iy=done_min[1]; iy<=done_max[1]; iy++) 
-					for (iz=done_min[2]; iz<=done_max[2]; iz++) 
+			for (ix=todo_min[0]; ix<=todo_max[0]; ix++) 
+				for (iy=todo_min[1]; iy<=todo_max[1]; iy++) 
+					for (iz=todo_min[2]; iz<=todo_max[2]; iz++) 
+          if(ix<done_min[0] || ix>done_max[0] ||  // this test is to avoid to re-process already analyzed cells.
+             iy<done_min[1] || iy>done_max[1] ||
+             iz<done_min[2] || iz>done_max[2] )
 					{
 						Si.Grid( ix, iy, iz, first, last );
 						for(l=first;l!=last;++l)
