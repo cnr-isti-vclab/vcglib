@@ -25,6 +25,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/09/28 20:10:41  m_di_benedetto
+First Commit.
+
 
 ****************************************************************************/
 
@@ -67,14 +70,16 @@ public:
 		class GetBoxFunctor {
 		public:
 			void operator () (const ObjType & obj, Box3<ScalarType> & box) {
-				obj.GetBBox(box);
+				Box3<typename ObjType::ScalarType> tb;
+				obj.GetBBox(tb);
+				box.Import(tb);
 			}
 		};
 
 		class GetBarycenterFunctor {
 		public:
 			void operator () (const ObjType & obj, CoordType & bar) {
-				bar = obj.Barycenter();
+				bar.Import(obj.Barycenter());
 			}
 		};
 
