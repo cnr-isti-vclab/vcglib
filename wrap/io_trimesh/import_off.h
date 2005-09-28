@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/01/26 22:44:51  cignoni
+Resolved scoping of constant of OFF codes
+
 Revision 1.5  2005/01/18 12:35:18  rita_borgo
 Added #include<vcg/complex/trimesh/allocate.h>
 it was giving problems with Allocator::
@@ -158,9 +161,25 @@ namespace vcg
 							return UnexpectedEOF;
 
 						TokenizeNextLine(stream, tokens);
-						for (unsigned int j=0; j<3; j++)
+						if(tokens.size() ==3)
+						{
+							for (unsigned int j=0; j<3; j++)
 							(*v_iter).P()[j] = (ScalarType) atof(tokens[j].c_str());
-
+						}
+						else
+						{
+							int k = tokens.size();
+							for (unsigned int j=0; j<3; j++)
+							{
+								(*v_iter).P()[j] = (ScalarType) atof(tokens[k].c_str());
+								k--;
+								if(k==0)
+								{
+									TokenizeNextLine(stream, tokens);
+									k = tokens.size();
+								}
+							}
+						}
 						if (isNormalDefined)
 							for (unsigned int j=3; j<6; j++)
 								(*v_iter).N()[j] = (ScalarType)  atof(tokens[j].c_str());
@@ -183,9 +202,26 @@ namespace vcg
 						int vert_per_face = atoi(tokens[0].c_str());
 						if (vert_per_face == 3)
 						{
-							mesh.face[f].V(0) = &(mesh.vert[ atoi(tokens[1].c_str()) ]);
-							mesh.face[f].V(1) = &(mesh.vert[ atoi(tokens[2].c_str()) ]);
-							mesh.face[f].V(2) = &(mesh.vert[ atoi(tokens[3].c_str()) ]);
+							if(tokens.size() ==4)
+							{
+								for(unsigned int j = 0; j<3; j++)
+									mesh.face[f].V(j) = &(mesh.vert[ atoi(tokens[j+1].c_str()) ]);
+							}
+							else
+							{
+								TokenizeNextLine(stream, tokens);
+								int k = tokens.size();
+								for (unsigned int j=0; j<3; j++)
+								{
+									mesh.face[f].V(j) = &(mesh.vert[ atoi(tokens[j].c_str()) ]);
+									k--;
+									if(k==0)
+									{
+										TokenizeNextLine(stream, tokens);	
+										k = tokens.size();
+									}
+								}
+							}
 						}
 						else
 						{
