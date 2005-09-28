@@ -25,6 +25,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/09/28 19:55:08  m_di_benedetto
+All functors but FaceRayIntersectFunctor removed and placed in appropriate files.
+
 Revision 1.1  2005/09/26 18:33:16  m_di_benedetto
 First Commit.
 
@@ -48,10 +51,10 @@ public:
 		ScalarType a;
 		ScalarType b;
 
-		bool bret = Intersection(ray, f.P(0), f.P(1), f.P(2), a, b, t);
+		bool bret = Intersection(ray, Point3<SCALARTYPE>::Construct(f.P(0)), Point3<SCALARTYPE>::Construct(f.P(1)), Point3<SCALARTYPE>::Construct(f.P(2)), a, b, t);
 		if (BACKFACETEST) {
 			if (!bret) {
-				bret = Intersection(ray, f.P(0), f.P(2), f.P(1), a, b, t);
+				bret = Intersection(ray, Point3<SCALARTYPE>::Construct(f.P(0)), Point3<SCALARTYPE>::Construct(f.P(2)), Point3<SCALARTYPE>::Construct(f.P(1)), a, b, t);
 			}
 		}
 		return (bret);
