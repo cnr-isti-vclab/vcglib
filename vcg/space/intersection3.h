@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2005/06/29 15:28:31  callieri
+changed intersection names to more specific to avoid ambiguity
+
 Revision 1.14  2005/03/15 11:22:39  ganovelli
 added intersection between tow planes (porting from old vcg lib)
 
@@ -79,6 +82,7 @@ Initial Commit
 
 #include <vcg/space/point3.h>
 #include <vcg/space/line3.h>
+#include <vcg/space/ray3.h>
 #include <vcg/space/plane3.h>
 #include <vcg/space/segment3.h>
 #include <vcg/space/sphere3.h>
@@ -252,7 +256,7 @@ bool Intersection( const Line3<T> & ray, const Point3<T> & vert0,
   // calculate t, scale parameters, ray intersects triangle 
   dist = edge2 * qvec;
 	if (dist<0) return false;
-  T inv_det = 1.0 / det;
+  T inv_det = T(1.0) / det;
   dist *= inv_det;
   a *= inv_det;
   b *= inv_det;
@@ -260,6 +264,53 @@ bool Intersection( const Line3<T> & ray, const Point3<T> & vert0,
   return true;
 }
 
+  // ray-triangle, gives barycentric coords of intersection and distance along ray.
+	// Ray3 type used.
+template<class T>
+bool Intersection( const Ray3<T> & ray, const Point3<T> & vert0, 
+				  const Point3<T> & vert1, const Point3<T> & vert2,
+				  T & a ,T & b, T & dist)
+{
+	// small (hum) borders around triangle
+	const T EPSILON2= T(1e-8); 
+
+	const T EPSILON = T(1e-8);
+	
+	Point3<T> edge1 = vert1 - vert0;
+	Point3<T> edge2 = vert2 - vert0;
+
+	// determinant 
+	Point3<T> pvec  = ray.Direction() ^ edge2;
+
+	T det = edge1*pvec;
+
+	// if determinant is near zero, ray lies in plane of triangle
+  if (fabs(det) < EPSILON) return false;
+
+  // calculate distance from vert0 to ray origin 
+  Point3<T> tvec = ray.Origin()- vert0;
+
+  // calculate A parameter and test bounds 
+  a = tvec * pvec;
+  if (a < -EPSILON2*det || a > det+det*EPSILON2) return false;
+
+  // prepare to test V parameter 
+  Point3<T> qvec = tvec ^ edge1;
+
+  // calculate B parameter and test bounds 
+  b = ray.Direction() * qvec ;
+  if (b < -EPSILON2*det || b + a > det+det*EPSILON2) return false;
+
+  // calculate t, scale parameters, ray intersects triangle 
+  dist = edge2 * qvec;
+	if (dist<0) return false;
+  T inv_det = T(1.0) / det;
+  dist *= inv_det;
+  a *= inv_det;
+  b *= inv_det;
+
+  return true;
+}
 
 // ray-triangle, gives intersection 3d point and distance along ray
 template<class T>
