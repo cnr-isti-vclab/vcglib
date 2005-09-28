@@ -25,6 +25,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/09/26 18:33:16  m_di_benedetto
+First Commit.
+
 
 ****************************************************************************/
 
@@ -34,8 +37,9 @@ $Log: not supported by cvs2svn $
 // vcg headers
 #include <vcg/space/point3.h>
 #include <vcg/space/plane3.h>
+#include <vcg/space/index/aabb_binary_tree/base.h>
 
-/***************************************************************************************/
+/***************************************************************************/
 
 namespace vcg {
 
@@ -89,7 +93,7 @@ public:
 		ClassType::InitializeNodeFlagsRec(pRoot);
 	}
 
-	static inline void FrustumCull(TreeType & tree, const Plane3<ScalarType> frustumPlanes[6], const unsigned int minNodeObjectsCount) {
+	static inline void FrustumCull(TreeType & tree, const Plane3<ScalarType> & frustumPlanes[6], const unsigned int minNodeObjectsCount) {
 		NodeType * pRoot = tree.pRoot;
 		if (pRoot == 0) {
 			return;
