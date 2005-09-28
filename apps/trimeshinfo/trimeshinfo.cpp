@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/09/28 10:46:04  rita_borgo
+Added possibility of saving File in OFF format
+
 Revision 1.1  2005/09/20 10:15:27  rita_borgo
 Changed file name to uniform with other solution projects,
  before was main.cpp
@@ -91,6 +94,13 @@ class MyEdge;
 class MyVertex:public Vertex<float,MyEdge,MyFace>{};
 class MyFace :public FaceAFAV<MyVertex,MyEdge,MyFace>{};
 class MyMesh: public tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace > >{};
+
+
+typedef MyMesh::VertexPointer  VertexPointer;
+typedef MyMesh::VertexIterator  VertexIterator;
+
+typedef Point3<MyMesh::ScalarType> Point3x;
+typedef vector<Point3x> Hole;
 
 string ans;
 
@@ -187,7 +197,7 @@ void main(int argc,char ** argv){
 
 	
 	MyMesh m;
-	bool DEBUG = true;
+	bool DEBUG = false;
 	
 
 /*------------XML file part ------------------*/
@@ -313,26 +323,27 @@ void main(int argc,char ** argv){
 		vcg::tri::UpdateTopology<MyMesh>::FaceFace(m);
 
 	// IS MANIFOLD
-	
-	MyMesh::FaceIterator f;
-	MyMesh::FaceIterator g;
+	MyMesh::FaceIterator fi;
+	MyMesh::FaceIterator gi;
 	vcg::face::Pos<MyMesh::FaceType> he;
 	vcg::face::Pos<MyMesh::FaceType> hei;
 	int j;
+	for(fi=m.face.begin();fi!=m.face.end();++fi)
+		(*fi).ClearS();
+	
 	int man=0;
 	bool Manifold = true;
 	
-	MyMesh::FaceIterator prova;
-	prova = m.face.end();
-	for(f=m.face.begin();f!=m.face.end();++f)
+	
+	for(fi=m.face.begin();fi!=m.face.end();++fi)
 	{
 		for (j=0;j<3;++j)
 		{
-			if(!IsManifold(*f,j))
+			if(!IsManifold(*fi,j))
 			{
 				Manifold = false;
-				f= m.face.end();
-				--f;
+				fi= m.face.end();
+				--fi;
 				j=3;
 			}
 		}
@@ -374,33 +385,32 @@ void main(int argc,char ** argv){
 		ng->addNode(osn);
 	}
 
+	
 	// COUNT EDGES
-
-	MyMesh::FaceIterator fi;
 	int count_e = 0;
-	bool counted=false;
-	for(fi=m.face.begin();fi!=m.face.end();++fi)
-		(*fi).ClearS();
-
-	for(fi=m.face.begin();fi!=m.face.end();++fi)
+	int boundary_e = 0;
+	bool counted =false;
+	for(fi=m.face.begin();fi!=m.face.end();fi++)
 		{
 			(*fi).SetS();
-			count_e +=3;
-			for(int i=0; i<3; ++i)
+			count_e +=3;								//assume that we have to increase the number of edges with three
+			for(int j=0; j<3; j++)
 			{
-				if (IsManifold(*fi,i))
+				if (fi->IsBorder(j))			//If this edge is a border edge
+					boundary_e++;						//  then increase the number of boundary edges
+				else if (IsManifold(*fi,j))		//If this edge is manifold
 				{
-					if((*fi).FFp(i)->IsS()) 
-						count_e--;
+					if((*fi).FFp(j)->IsS()) //If the face on the other side of the edge is already selected
+						count_e--;						//  we counted one edge twice
 				}
-				else
+				else											//We have a non-manifold edge
 				{
-					hei.Set(&(*fi), i , fi->V(i));
+					hei.Set(&(*fi), j , fi->V(j));
 					he=hei;
 					he.NextF();
-					while (he.f!=hei.f)
+					while (he.f!=hei.f)			//	so we have to iterated all faces that are connected to this edge
 					{
-						if (he.f->IsS())
+						if (he.f->IsS())			//  if one of the other faces was already visited than this edge was counted already.
 						{
 							counted=true;
 							break;
@@ -417,9 +427,13 @@ void main(int argc,char ** argv){
 					}
 				}
 			}
-		}
-	fprintf(index, "<p>Number of edges: %d </p>\n", count_e);
-  printf("\t Number of edges: %d \n", count_e);
+		}	
+		fprintf(index, "<p>Number of edges: %d </p>\n", count_e);
+		fprintf(index, "<p>Number of internal edges: %d </p>\n", count_e-boundary_e);
+		fprintf(index, "<p>Number of boundary edges: %i </p>\n", boundary_e);
+		printf("\t Number of edges: %d \n", count_e);
+		printf("\t Number of internal edges: %d \n", count_e-boundary_e);
+		printf("\t Number of boundary edges: %i \n", boundary_e);
 
 		s = new(char[25]);
 		vn = new ValueNode;
@@ -469,9 +483,9 @@ void main(int argc,char ** argv){
 	for(v=m.vert.begin();v!=m.vert.end();++v)
 		(*v).ClearV();
 
-	for(f=m.face.begin();f!=m.face.end();++f)
+	for(fi=m.face.begin();fi!=m.face.end();++fi)
 			for(j=0;j<3;++j)
-					(*f).V(j)->SetV();
+					(*fi).V(j)->SetV();
 
 	for(v=m.vert.begin();v!=m.vert.end();++v)
 		if( !(*v).IsV() )
@@ -495,63 +509,61 @@ void main(int argc,char ** argv){
 
 // HOLES COUNT	
 
-	for(f=m.face.begin();f!=m.face.end();++f)
-		(*f).ClearS();
-	g=m.face.begin(); f=g;
-	
-	int BEdges=0; int numholes=0;
-	
+	int numholes=0;
+	int numholev=0;
+	int BEdges=0; 
+	vector<vector<Point3x> > holes; //indices of vertices
 
-	if (Manifold)
+	for(fi=m.face.begin();fi!=m.face.end();++fi)
+		(*fi).ClearS();
+	gi=m.face.begin(); fi=gi;
+	
+	
+		if (Manifold)
 	{
-        for(f=g;f!=m.face.end();++f)
+    for(fi=m.face.begin();fi!=m.face.end();fi++)					//for all faces do
 		{
-			if(!(*f).IsS())
-			{	
-				for(j=0;j<3;j++)
+				for(j=0;j<3;j++)										//for all edges
 				{
-					if ((*f).IsBorder(j))
+					if(fi->V(j)->IsS()) continue;
+
+					if((*fi).IsBorder(j))							//found an unvisited border edge
 					{
-						BEdges++;
+						he.Set(&(*fi),j,fi->V(j));			//set the face-face iterator to the current face, edge and vertex
+						vector<Point3x> hole;						//start of a new hole
+						hole.push_back(fi->P(j));				//  including the first vertex
+						numholev++;
+						he.v->SetS();										//set the current vertex as selected
+						he.NextB();											//go to the next boundary edge
 						
-						if(!(IsManifold(*f,j)))
+						
+						while(fi->V(j) != he.v)					//will we do not encounter the first boundary edge.
 						{
-							(*f).SetS();
-							hei.Set(&(*f),j,f->V(j));
-							he=hei;
-							do
+							Point3x newpoint = he.v->P();		//select its vertex.
+							if(he.v->IsS())									//check if this vertex was selected already, because then we have an additional hole.
 							{
-								he.NextB();
-								he.f->SetS();
-							//	BEdges++;
+								//cut and paste the additional hole.
+								vector<Point3x> hole2;				
+								int index = find(hole.begin(),hole.end(),newpoint) - hole.begin();
+								for(int i=index; i<hole.size(); i++)
+									hole2.push_back(hole[i]);
+
+								hole.resize(index);
+								if(hole2.size()!=0)						//annoying in degenerate cases
+									holes.push_back(hole2);							
 							}
-							while (he.f!=hei.f);
-							//BEdges--;
-							numholes++;
+							hole.push_back(newpoint);
+							numholev++;
+							he.v->SetS();										//set the current vertex as selected
+							he.NextB();											//go to the next boundary edge
 						}
-					}
-				}
-			}
-		}
-	}
-	else
-	{
-		for(f=g;f!=m.face.end();++f)
-		{
-			for(j=0;j<3;j++)
-				{
-					if ((*f).IsBorder(j))
-					{
-						BEdges++;
+						holes.push_back(hole);
 					}
 				}
 		}
-	}
-	if (Manifold)
-	{
-        fprintf(index, "<p> Number of holes: %d </p> \n <p> Number of border edges: %d </p>", numholes, BEdges); 
-        printf("\t Number of holes: %d \n", numholes); 
-        printf("\t Number of border edges: %d\n",  BEdges);
+		numholes = holes.size();
+    fprintf(index,"<p>Number of holes/boundaries: %d </p>\n", numholes); 
+    printf("\t Number of holes/boundaries: %d \n", numholes); 
 		s = new(char[25]);
 		vn = new ValueNode;
 		en = new EntryNode;
@@ -566,39 +578,35 @@ void main(int argc,char ** argv){
 		sn->addOwnSlot(osn);
 		ng->addNode(osn);	
 
-		s = new(char[25]);
-		vn = new ValueNode;
-		en = new EntryNode;
-		osn = new OwnSlotNode;
-		sprintf(s,"%d",BEdges);	
-		vn->setValue(s);
-		en->addValue(*vn);
-		en->type = "Integer";
+		
 
-		osn->setName("Number of Border Edges");
-		osn->addEntry(*en);
-		sn->addOwnSlot(osn);
-		ng->addNode(osn);		
+		if(numholes>0)
+		{
+			int BEdges = 0;
+			printf("\t Edges per hole/boundary:\n\t (");
+			for(int i=0; i<numholes; i++)
+			{
+				if(i==numholes-1){ printf("%i)\n",holes[i].size()); BEdges++;}
+				else{ printf("%i, ",holes[i].size()); BEdges++;}
+			}
+			s = new(char[25]);
+			vn = new ValueNode;
+			en = new EntryNode;
+			osn = new OwnSlotNode;
+			sprintf(s,"%d",BEdges);	
+			vn->setValue(s);
+			en->addValue(*vn);
+			en->type = "Integer";
+			osn->setName("Number of Border Edges");
+			osn->addEntry(*en);
+			sn->addOwnSlot(osn);
+			ng->addNode(osn);		
+		}
 	}
 	else
-	{
-        fprintf(index, "<p> Number of border edges: %d </p>", BEdges); 
-        printf("\t Number of border edges: %d\n", BEdges); 
-						s = new(char[25]);
-		vn = new ValueNode;
-		en = new EntryNode;
-		osn = new OwnSlotNode;
-		sprintf(s,"%d",BEdges);	
-		vn->setValue(s);
-		en->addValue(*vn);
-		en->type = "Integer";
+		printf( "\t Number of holes: UNDEFINED, mesh is non-manifold \n");
 
-		osn->setName("Number of Border Edges");
-		osn->addEntry(*en);
-		sn->addOwnSlot(osn);
-		ng->addNode(osn);		
-	}
-
+	
 	// Mesh Volume
 	float vol = m.Volume();
 	int nuh = numholes;
@@ -620,30 +628,38 @@ void main(int argc,char ** argv){
 		sn->addOwnSlot(osn);
 		ng->addNode(osn);		
 	}
+	else 
+	{
+		printf("\t Volume: UNDEFINED, mesh is either non-manifold or has holes \n");
+    fprintf(index,"Volume: UNDEFINED, mesh is either non-manifold or has holes \n");
+	}
 
 
 	// CONNECTED COMPONENTS
 
-
-	for(f=m.face.begin();f!=m.face.end();++f)
-		(*f).ClearS();
-	g=m.face.begin(); f=g;
-	int CountComp=0; int CountOrient=0;
+	vector<int> nrfaces;
+	for(fi=m.face.begin();fi!=m.face.end();++fi)
+		(*fi).ClearS();
+	gi=m.face.begin(); fi=gi;
+	int Compindex=0;
 	stack<MyMesh::FaceIterator> sf;	
 	MyMesh::FaceType *l;
-	for(f=m.face.begin();f!=m.face.end();++f)
+	for(fi=m.face.begin();fi!=m.face.end();++fi)
 	{
-		if (!(*f).IsS())
+		if (!(*fi).IsS())
 		{
-			(*f).SetS();
-			sf.push(f);
+			(*fi).SetS();
+			(*fi).Q()=Compindex;
+			nrfaces.push_back(1);
+			sf.push(fi);
 			while (!sf.empty())
 			{
-				g=sf.top();
-				he.Set(&(*g),0,g->V(0));
+				gi=sf.top();
+				he.Set(&(*gi),0,gi->V(0));
 				sf.pop();
 				for(j=0;j<3;++j)
-						if( !(*g).IsBorder(j) )
+				{
+						if( !(*gi).IsBorder(j) )
 							{
 								l=he.f->FFp(j);
 								if( !(*l).IsS() )
@@ -652,17 +668,19 @@ void main(int argc,char ** argv){
 										sf.push(l);
 									}
 							}
+				}
 			}
-		CountComp++;
+		Compindex++;
 		}
 	}
-	fprintf(index, "<p> Number of connected components: %d </p>", CountComp); 
-  printf("\t Number of connected components: %d\n", CountComp); 
+	int numcomponents = nrfaces.size();
+	fprintf(index, "<p> Number of connected components: %d </p>", numcomponents); 
+  printf("\t Number of connected components: %d\n", numcomponents); 
 	s = new(char[25]);
 		vn = new ValueNode;
 		en = new EntryNode;
 		osn = new OwnSlotNode;
-		sprintf(s,"%d",CountComp);	
+		sprintf(s,"%d",numcomponents);	
 		vn->setValue(s);
 		en->addValue(*vn);
 		en->type = "Integer";
@@ -670,17 +688,18 @@ void main(int argc,char ** argv){
 		osn->setName("Number of Connected Components");
 		osn->addEntry(*en);
 		sn->addOwnSlot(osn);
-		ng->addNode(osn);		
-	if(CountComp ==1)
+		ng->addNode(osn);
+
+	//GENUS  --> 2( #components - genus ) = #vertices + #faces - #edge - #boundary_loops = eulernumber - #holes
+	//eulero = (mesh.vn-count_uv) - (count_e)+mesh.fn;
+
+	int eulernumber = (m.vn-count_uv) + m.fn - count_e;
+	if(Manifold)
 	{
-		int eulero; //v-e+f 
-		eulero = (m.vn-count_uv)- (count_e+BEdges)+m.fn;
-		if(Manifold)
-		{
-			int genus = (2-eulero)>>1;
-			fprintf(index, "<p> Genus: %d </p> \n ", genus); 
-		  printf( "\t Genus: %d \n", genus);
-			s = new(char[25]);
+		int genus = -( 0.5 * (eulernumber - numholes) - numcomponents );
+		fprintf(index, "<p> Genus: %d </p> \n ", genus); 
+		printf( "\t Genus: %d \n", genus);
+		s = new(char[25]);
 		vn = new ValueNode;
 		en = new EntryNode;
 		osn = new OwnSlotNode;
@@ -692,8 +711,12 @@ void main(int argc,char ** argv){
 		osn->setName("Genus");
 		osn->addEntry(*en);
 		sn->addOwnSlot(osn);
-		ng->addNode(osn);		
-		}
+		ng->addNode(osn);			
+	}
+	else //(!Manifold) 
+	{
+		fprintf( index,"<p>Genus: UNDEFINED, mesh is non-manifold </p>\n");
+		printf( "Genus: UNDEFINED, mesh is non-manifold \n");
 	}
 // REGULARITY
 
@@ -702,12 +725,12 @@ void main(int argc,char ** argv){
 	int inc=0;
 	for(v=m.vert.begin();v!=m.vert.end();++v)
 		(*v).ClearS();
-	for(f=m.face.begin();f!=m.face.end();++f)
+	for(fi=m.face.begin();fi!=m.face.end();++fi)
 	{
 		for (j=0; j<3; j++)
 		{
-			he.Set(&(*f),j,f->V(j));
-			if (!(*f).IsBorder(j) && !(*f).IsBorder((j+2)%3) && !f->V(j)->IsS())
+			he.Set(&(*fi),j,fi->V(j));
+			if (!(*fi).IsBorder(j) && !(*fi).IsBorder((j+2)%3) && !fi->V(j)->IsS())
 			{
 				hei=he;
 				inc=1;
@@ -728,11 +751,11 @@ void main(int argc,char ** argv){
 					Regular=false;
 				if (inc!=6 && inc!=5)
 					Semiregular=false;
-				f->V(j)->SetS();
+				fi->V(j)->SetS();
 
 			}
 			else
-				f->V(j)->SetS();
+				fi->V(j)->SetS();
 		}
 		if (Semiregular==false)
 			break;
@@ -817,32 +840,32 @@ void main(int argc,char ** argv){
 	}
 	else
 	{
-		for(f=m.face.begin();f!=m.face.end();++f)
+		for(fi=m.face.begin();fi!=m.face.end();++fi)
 		{
-			(*f).ClearS();
-			(*f).ClearUserBit(0);
+			(*fi).ClearS();
+			(*fi).ClearUserBit(0);
 		}
-		g=m.face.begin(); f=g; 
-		for(f=m.face.begin();f!=m.face.end();++f)
+		gi=m.face.begin(); fi=gi; 
+		for(fi=m.face.begin();fi!=m.face.end();++fi)
 		{
-			if (!(*f).IsS())
+			if (!(*fi).IsS())
 			{
-				(*f).SetS();
-				sf.push(f);
+				(*fi).SetS();
+				sf.push(fi);
 				
 				while (!sf.empty())
 				{
-					g=sf.top();
+					gi=sf.top();
 					sf.pop();
 					for(j=0;j<3;++j)
 					{
-						if( !(*g).IsBorder(j) )
+						if( !(*gi).IsBorder(j) )
 						{
-							he.Set(&(*g),0,g->V(0));
+							he.Set(&(*gi),0,gi->V(0));
 							l=he.f->FFp(j);
-							he.Set(&(*g),j,g->V(j));								
+							he.Set(&(*gi),j,gi->V(j));								
 							hei.Set(he.f->FFp(j),he.f->FFi(j), (he.f->FFp(j))->V(he.f->FFi(j)));
-							if( !(*g).IsUserBit(0) )
+							if( !(*gi).IsUserBit(0) )
 							{
 								if (he.v!=hei.v)    // bene
 								{
@@ -1017,16 +1040,16 @@ void main(int argc,char ** argv){
 	if (m.fn<300000)
 	{
 		bool SelfInt=false;
-		for(f=m.face.begin();f!=m.face.end();++f)
+		for(fi=m.face.begin();fi!=m.face.end();++fi)
 		{
-			for(g=++f , f--;g!=m.face.end();++g)
+			for(gi=++fi , fi--;gi!=m.face.end();++gi)
 			{
-				if ((*f).FFp(0)!=&(*g) && (*f).FFp(1)!=&(*g) && (*f).FFp(2)!=&(*g) &&
-					f->V(0)!=g->V(0) && f->V(0)!=g->V(1) && f->V(0)!=g->V(2) &&
-					f->V(1)!=g->V(0) && f->V(1)!=g->V(1) && f->V(1)!=g->V(2) &&
-					f->V(2)!=g->V(0) && f->V(2)!=g->V(1) && f->V(2)!=g->V(2))
+				if ((*fi).FFp(0)!=&(*gi) && (*fi).FFp(1)!=&(*gi) && (*fi).FFp(2)!=&(*gi) &&
+					fi->V(0)!=gi->V(0) && fi->V(0)!=gi->V(1) && fi->V(0)!=gi->V(2) &&
+					fi->V(1)!=gi->V(0) && fi->V(1)!=gi->V(1) && fi->V(1)!=gi->V(2) &&
+					fi->V(2)!=gi->V(0) && fi->V(2)!=gi->V(1) && fi->V(2)!=gi->V(2))
 				{
-					if (NoDivTriTriIsect(f->V(0)->P(), f->V(1)->P(), f->V(2)->P(),g->V(0)->P(), g->V(1)->P(), g->V(2)->P()) )
+					if (NoDivTriTriIsect(fi->V(0)->P(), fi->V(1)->P(), fi->V(2)->P(),gi->V(0)->P(), gi->V(1)->P(), gi->V(2)->P()) )
 						SelfInt=true;
 				}
 			}
@@ -1080,22 +1103,23 @@ void main(int argc,char ** argv){
 
 		
 		if((ans == "S")||(ans == "s"))
-		cout<< "\t available formats: [ply, off, stl] "<<endl;
-		cout<< "\t enter format"<<endl;
-		cin>>ans;
-		cout<<"\t enter filename"<<endl;
-		cin>>fs;
-	const char* filesave = fs.c_str();
-	if(ans == "ply")
-		tri::io::ExporterPLY<MyMesh>::Save(m, filesave);
-	else if(ans == "stl")
-		tri::io::ExporterSTL<MyMesh>::Save(m,filesave);
-	else if(ans == "dxf")
-		tri::io::ExporterDXF<MyMesh>::Save(m,filesave);
+		{
+			cout<< "\t available formats: [ply, off, stl] "<<endl;
+			cout<< "\t enter format"<<endl;
+			cin>>ans;
+			cout<<"\t enter filename"<<endl;
+			cin>>fs;
+			const char* filesave = fs.c_str();
+			if(ans == "ply")
+				tri::io::ExporterPLY<MyMesh>::Save(m, filesave);
+			else if(ans == "stl")
+				tri::io::ExporterSTL<MyMesh>::Save(m,filesave);
+			else if(ans == "dxf")
+				tri::io::ExporterDXF<MyMesh>::Save(m,filesave);
 	
-	else if(ans == "off")
-		tri::io::ExporterOFF<MyMesh>::Save(m,filesave);
-
+			else if(ans == "off")
+				tri::io::ExporterOFF<MyMesh>::Save(m,filesave);
+		}
 
 	doc.addSlots(sn);
 	OwnSlotsNode* ossn = new OwnSlotsNode;
