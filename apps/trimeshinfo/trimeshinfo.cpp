@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/09/20 10:15:27  rita_borgo
+Changed file name to uniform with other solution projects,
+ before was main.cpp
+
 Revision 1.8  2005/02/15 12:26:06  rita_borgo
 Minor changes to self-intersection
 
@@ -66,8 +70,11 @@ using namespace std;
 #include <vcg/math/histogram.h>
 #include <wrap/io_trimesh/import.h>
 #include <wrap/io_trimesh/export_ply.h>
+#include <wrap/io_trimesh/export_stl.h>
+#include <wrap/io_trimesh/export_dxf.h>
 
 #include "XMLTree.h"
+#include <wrap/io_trimesh/export_off.h>
 
 
 // loader 
@@ -84,6 +91,8 @@ class MyEdge;
 class MyVertex:public Vertex<float,MyEdge,MyFace>{};
 class MyFace :public FaceAFAV<MyVertex,MyEdge,MyFace>{};
 class MyMesh: public tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace > >{};
+
+string ans;
 
 void OpenMesh(const char *filename, MyMesh &m)
 {
@@ -123,6 +132,7 @@ public:
 
 static int DuplicateVertex( MyMesh & m )    // V1.0
 {
+	
 	if(m.vert.size()==0 || m.vn==0)
 		return 0;
 	std::map<VertexPointer, VertexPointer> mp;
@@ -148,11 +158,21 @@ static int DuplicateVertex( MyMesh & m )    // V1.0
         (! (*perm[j]).IsD()) && 
 				(*perm[i]).P() == (*perm[j]).cP() )
 		{
-			VertexPointer t = perm[i];
-	    mp[perm[i]] = perm[j];
-	    ++i;
-			(*t).SetD();
-			deleted++;
+			if(deleted ==0)
+			{
+				cout<< "\t Found Duplicated Vertices"<< endl;
+				cout<< "\t do you want to remove them? [y/Y| n/N]\n";
+				cin>>ans;
+			}
+			if((ans == "s") ||(ans=="S"))
+			{
+				VertexPointer t = perm[i];
+				mp[perm[i]] = perm[j];
+				(*t).SetD();
+				m.vn--;
+			}
+			++i;
+			deleted++;// per evitare che su risposta no rifaccia la domanda ad ogni vertice che incontra;
 		}
 		else
 		{
@@ -160,13 +180,15 @@ static int DuplicateVertex( MyMesh & m )    // V1.0
 	    ++i;
 		}
 	}
+	ans.clear();
 	return deleted;
 }
 void main(int argc,char ** argv){
 
-	char                 *fmt;
+	
 	MyMesh m;
 	bool DEBUG = true;
+	
 
 /*------------XML file part ------------------*/
 
@@ -190,7 +212,7 @@ void main(int argc,char ** argv){
 
 
  if(DEBUG)
-	argv[1] = "C:\\sf\\apps\\msvc\\trimeshinfo\\Release\\cube1.stl";
+	argv[1] = "C:\\sf\\apps\\msvc\\trimeshinfo\\cube.ply";
  
  else
  {
@@ -204,6 +226,8 @@ void main(int argc,char ** argv){
 
 
   OpenMesh(argv[1],m);
+
+	
 
 	
 	doc.initializeMain(XML_SCHEMA_NAME);
@@ -259,6 +283,7 @@ void main(int argc,char ** argv){
 	sn->addOwnSlot(osn);
 	ng->addNode(osn);
 
+	
 
 	if(m.HasPerFaceColor()||m.HasPerVertexColor())
 	{
@@ -286,7 +311,7 @@ void main(int argc,char ** argv){
 
 	
 		vcg::tri::UpdateTopology<MyMesh>::FaceFace(m);
-	
+
 	// IS MANIFOLD
 	
 	MyMesh::FaceIterator f;
@@ -411,7 +436,6 @@ void main(int argc,char ** argv){
 		ng->addNode(osn);
 
 
-	// DA QUI IN POI!!!
 	
 	// DEGENERATED FACES
 
@@ -931,7 +955,8 @@ void main(int argc,char ** argv){
 		osn->setName("Oriented Mesh");
 		osn->addEntry(*en);
 		sn->addOwnSlot(osn);
-		ng->addNode(osn);			}
+		ng->addNode(osn);			
+	}
 	else
 	{
 			fprintf(index, "<p> Oriented Mesh: NO</p>"); 
@@ -948,13 +973,14 @@ void main(int argc,char ** argv){
 		osn->setName("Oriented Mesh");
 		osn->addEntry(*en);
 		sn->addOwnSlot(osn);
-		ng->addNode(osn);			}
+		ng->addNode(osn);			
+	}
 	int dv = DuplicateVertex(m);
 	if(dv>0)
 	{
 		fprintf(index, "<p> Duplicated vertices: %d</p>", dv); 
-		printf( "\t Duplicated vertices: %d\n",dv);
-					s = new(char[25]);
+		printf( "\t Number of duplicated vertices found: %d\n",dv);		
+		s = new(char[25]);
 		vn = new ValueNode;
 		en = new EntryNode;
 		osn = new OwnSlotNode;
@@ -988,7 +1014,6 @@ void main(int argc,char ** argv){
 		ng->addNode(osn);	
 	}
 	// SELF INTERSECTION
-
 	if (m.fn<300000)
 	{
 		bool SelfInt=false;
@@ -1045,6 +1070,33 @@ void main(int argc,char ** argv){
 		ng->addNode(osn);	
 		}
 	}
+
+
+
+	string fs;
+	
+	cout<< "\t To save the file: [s/S]"<< endl;
+	cin>>ans;
+
+		
+		if((ans == "S")||(ans == "s"))
+		cout<< "\t available formats: [ply, off, stl] "<<endl;
+		cout<< "\t enter format"<<endl;
+		cin>>ans;
+		cout<<"\t enter filename"<<endl;
+		cin>>fs;
+	const char* filesave = fs.c_str();
+	if(ans == "ply")
+		tri::io::ExporterPLY<MyMesh>::Save(m, filesave);
+	else if(ans == "stl")
+		tri::io::ExporterSTL<MyMesh>::Save(m,filesave);
+	else if(ans == "dxf")
+		tri::io::ExporterDXF<MyMesh>::Save(m,filesave);
+	
+	else if(ans == "off")
+		tri::io::ExporterOFF<MyMesh>::Save(m,filesave);
+
+
 	doc.addSlots(sn);
 	OwnSlotsNode* ossn = new OwnSlotsNode;
 	ossn->addOwnSlot(ng);
