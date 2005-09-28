@@ -25,6 +25,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/09/26 18:33:16  m_di_benedetto
+First Commit.
+
 
 ****************************************************************************/
 
@@ -34,7 +37,11 @@ $Log: not supported by cvs2svn $
 // stl headers
 #include <limits>
 
-/***************************************************************************************/
+// vcg headers
+#include <vcg/space/ray3.h>
+#include <vcg/space/index/aabb_binary_tree/base.h>
+
+/***************************************************************************/
 
 namespace vcg {
 
@@ -49,7 +56,7 @@ public:
 	typedef typename TreeType::ObjPtr ObjPtr;
 
 	template <class OBJRAYISECTFUNCT>
-	static inline ObjPtr Ray(TreeType & tree, OBJRAYISECTFUNCT & rayIntersection, const CoordType & rayOrigin, const CoordType & rayDirection, ScalarType & t, CoordType & q) {
+	static inline ObjPtr Ray(TreeType & tree, OBJRAYISECTFUNCT & rayIntersection, const Ray3<ScalarType> & ray, const ScalarType & maxDist, ScalarType & t) {
 		typedef std::vector<NodeType *> NodePtrVector;
 		typedef typename NodePtrVector::const_iterator NodePtrVector_ci;
 
@@ -59,12 +66,12 @@ public:
 			return (0);
 		}
 
-		ScalarType rayT = std::numeric_limits<ScalarType>::max();
-		CoordType pRes;
+		const CoordType & rayDirection = ray.Direction();
+
+		ScalarType rayT = maxDist / rayDirection.Norm();
 
 		Ray3Ex rayex;
-		rayex.origin = rayOrigin;
-		rayex.direction = rayDirection;
+		rayex.r = ray;
 		rayex.invDirection[0] = ((ScalarType)1) / rayDirection[0];
 		rayex.invDirection[1] = ((ScalarType)1) / rayDirection[1];
 		rayex.invDirection[2] = ((ScalarType)1) / rayDirection[2];
@@ -74,14 +81,13 @@ public:
 
 		ObjPtr closestObj = 0;
 
-		ClassType::DepthFirstRayIsect(pRoot, rayIntersection, rayex, rayT, pRes, closestObj);
+		ClassType::DepthFirstRayIsect(pRoot, rayIntersection, rayex, rayT, closestObj);
 
 		if (closestObj == 0) {
 			return (0);
 		}
 
 		t = rayT;
-		q = pRes;
 
 		return (closestObj);
 	}
@@ -89,8 +95,7 @@ public:
 protected:
 	class Ray3Ex {
 	public:
-		CoordType origin;
-		CoordType direction;
+		Ray3<ScalarType> r;
 		CoordType invDirection;
 		unsigned char sign[3];
 	};
@@ -102,16 +107,17 @@ protected:
 		};
 		ScalarType tmin, tmax;
 		ScalarType tcmin, tcmax;
+		const CoordType & origin = ray.r.Origin();
 
-		tmin = (bounds[ray.sign[0]][0] - ray.origin[0]) * ray.invDirection[0];
-		tmax = (bounds[1 - ray.sign[0]][0] - ray.origin[0]) * ray.invDirection[0];
-		tcmin = (bounds[ray.sign[1]][1] - ray.origin[1]) * ray.invDirection[1];
-		tcmax = (bounds[1 - ray.sign[1]][1] - ray.origin[1]) * ray.invDirection[1];
+		tmin = (bounds[ray.sign[0]][0] - origin[0]) * ray.invDirection[0];
+		tmax = (bounds[1 - ray.sign[0]][0] - origin[0]) * ray.invDirection[0];
+		tcmin = (bounds[ray.sign[1]][1] - origin[1]) * ray.invDirection[1];
+		tcmax = (bounds[1 - ray.sign[1]][1] - origin[1]) * ray.invDirection[1];
 		if ((tmin > tcmax) || (tcmin > tmax)) { return (false);	}
 		if (tcmin > tmin) { tmin = tcmin; }
 		if (tcmax < tmax) { tmax = tcmax; }
-		tcmin = (bounds[ray.sign[2]][2] - ray.origin[2]) * ray.invDirection[2];
-		tcmax = (bounds[1-ray.sign[2]][2] - ray.origin[2]) * ray.invDirection[2];
+		tcmin = (bounds[ray.sign[2]][2] - origin[2]) * ray.invDirection[2];
+		tcmax = (bounds[1-ray.sign[2]][2] - origin[2]) * ray.invDirection[2];
 		if ((tmin > tcmax) || (tcmin > tmax)) { return (false); }
 		if (tcmin > tmin) { tmin = tcmin; }
 		//if (tcmax < tmax) { tmax = tcmax; }
@@ -120,7 +126,7 @@ protected:
 	}
 
 	template <class OBJRAYISECTFUNCT>
-	static inline void DepthFirstRayIsect(const NodeType * node, OBJRAYISECTFUNCT & rayIntersection, const Ray3Ex & ray, ScalarType & rayT, CoordType & res, ObjPtr & closestObj) {
+	static inline void DepthFirstRayIsect(const NodeType * node, OBJRAYISECTFUNCT & rayIntersection, const Ray3Ex & ray, ScalarType & rayT, ObjPtr & closestObj) {
 		ScalarType rt;
 		CoordType pt;
 		if (!ClassType::IntersectionBoxRay(node->boxCenter, node->boxHalfDims, ray, rt)) {
@@ -135,28 +141,26 @@ protected:
 			ObjPtr cObj = 0;
 			ScalarType ar;
 			CoordType ap;
-			rt = std::numeric_limits<ScalarType>::max();
+			rt = rayT;
 			for (typename TreeType::ObjPtrVectorConstIterator si=node->oBegin; si!=node->oEnd; ++si) {
-				if (rayIntersection(*(*si), ray.origin, ray.direction, ar, ap)) {
+				if (rayIntersection(*(*si), ray.r, ar)) {
 					if (ar < rt) {
 						rt = ar;
-						pt = ap;
 						cObj = (*si);
 					}
 				}
 			}
 			if (rt < rayT) {
 				rayT = rt;
-				res = pt;
 				closestObj = cObj;
 			}
 		}
 		else {
 			if (node->children[0] != 0) {
-				ClassType::DepthFirstRayIsect(node->children[0], rayIntersection, ray, rayT, res, closestObj);
+				ClassType::DepthFirstRayIsect(node->children[0], rayIntersection, ray, rayT, closestObj);
 			}
 			if (node->children[1] != 0) {
-				ClassType::DepthFirstRayIsect(node->children[1], rayIntersection, ray, rayT, res, closestObj);
+				ClassType::DepthFirstRayIsect(node->children[1], rayIntersection, ray, rayT, closestObj);
 			}
 		}
 	}
