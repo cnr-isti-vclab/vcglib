@@ -25,6 +25,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/09/26 18:33:16  m_di_benedetto
+First Commit.
+
 
 ****************************************************************************/
 
@@ -36,7 +39,10 @@ $Log: not supported by cvs2svn $
 #include <deque>
 
 // vcg headers
-#include <vcg/space/index/aabb_binary_tree/utils.h>
+#include <vcg/space/index/aabb_binary_tree/base.h>
+#include <wrap/utils.h>
+
+/***************************************************************************/
 
 namespace vcg {
 
