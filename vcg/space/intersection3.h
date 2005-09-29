@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2005/09/29 11:48:00  m_di_benedetto
+Added functor RayTriangleIntersectionFunctor.
+
 Revision 1.16  2005/09/28 19:40:55  m_di_benedetto
 Added intersection for ray-triangle (with Ray3 type).
 
@@ -365,9 +368,20 @@ bool Intersection( const Line3<T> & ray, const Point3<T> & vert0,
 }
 
 
+
 // ray-box
 template<class T>
-bool Intersection( const Box3<T> & box, const Line3<T> & r, Point3<T> & coord )
+bool Intersection_Ray_Box( const Box3<T> & box, const Ray3<T> & r, Point3<T> & coord )
+{
+	Line3<T> l;
+	l.SetOrigin(r.Origin());
+	l.SetDirection(r.Direction());
+	return(Intersection_Line_Box<T>(box,r,coord));
+}	
+
+// ray-box
+template<class T>
+bool Intersection_Line_Box( const Box3<T> & box, const Line3<T> & r, Point3<T> & coord )
 {
 	const int NUMDIM = 3;
 	const int RIGHT  = 0;
