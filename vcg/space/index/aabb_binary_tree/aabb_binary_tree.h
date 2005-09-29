@@ -25,6 +25,10 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/09/28 21:23:03  m_di_benedetto
+Added Import() to box and barycenter functors
+to handle tree and objects with different ScalarType.
+
 Revision 1.3  2005/09/28 20:10:41  m_di_benedetto
 First Commit.
 
@@ -38,6 +42,7 @@ First Commit.
 #include <vcg/space/index/base.h>
 #include <vcg/space/index/aabb_binary_tree/base.h>
 #include <vcg/space/index/aabb_binary_tree/closest.h>
+#include <vcg/space/index/aabb_binary_tree/frustum_cull.h>
 #include <vcg/space/index/aabb_binary_tree/kclosest.h>
 #include <vcg/space/index/aabb_binary_tree/ray.h>
 #include <wrap/utils.h>
@@ -67,25 +72,9 @@ public:
 
 	template <class OBJITER>
 	inline void Set(const OBJITER & _oBegin, const OBJITER & _oEnd) {
-		class GetBoxFunctor {
-		public:
-			void operator () (const ObjType & obj, Box3<ScalarType> & box) {
-				Box3<typename ObjType::ScalarType> tb;
-				obj.GetBBox(tb);
-				box.Import(tb);
-			}
-		};
-
-		class GetBarycenterFunctor {
-		public:
-			void operator () (const ObjType & obj, CoordType & bar) {
-				bar.Import(obj.Barycenter());
-			}
-		};
-
 		GetPointerFunctor getPtr;
-		GetBoxFunctor getBox;
-		GetBarycenterFunctor getBarycenter;
+		GetBox3Functor getBox;
+		GetBarycenter3Functor getBarycenter;
 		const unsigned int divs = 100;
 		const unsigned int size = (unsigned int)(std::distance(_oBegin, _oEnd));
 		const unsigned int maxObjectsPerLeaf = (size < divs) ? (size) : ((unsigned int)((float)(std::distance(_oBegin, _oEnd)) / (float)divs));
@@ -96,8 +85,8 @@ public:
 	}
 
 	template <class OBJITERATOR, class OBJITERATORPTRFUNCT, class OBJBOXFUNCT, class OBJBARYCENTERFUNCT>
-	inline bool Set(const OBJITERATOR & oBegin, const OBJITERATOR & oEnd, OBJITERATORPTRFUNCT & objPtr, OBJBOXFUNCT & objBox, OBJBARYCENTERFUNCT & objBarycenter, const unsigned int maxElemsPerLeaf = 1, const ScalarType & leafBoxMaxVolume = ((ScalarType)0), const bool useVariance = true) {
-		return (this->tree.Set(oBegin, oEnd, objPtr, objBox, objBarycenter, maxElemsPerLeaf, leafBoxMaxVolume, useVariance));
+	inline bool Set(const OBJITERATOR & _oBegin, const OBJITERATOR & _oEnd, OBJITERATORPTRFUNCT & _objPtr, OBJBOXFUNCT & _objBox, OBJBARYCENTERFUNCT & _objBarycenter, const unsigned int _maxElemsPerLeaf = 1, const ScalarType & _leafBoxMaxVolume = ((ScalarType)0), const bool _useVariance = true) {
+		return (this->tree.Set(_oBegin, _oEnd, _objPtr, _objBox, _objBarycenter, _maxElemsPerLeaf, _leafBoxMaxVolume, _useVariance));
 	}
 
 	template <class OBJPOINTDISTFUNCTOR, class OBJMARKER>
@@ -120,6 +109,14 @@ public:
 	inline ObjPtr DoRay(OBJRAYISECTFUNCTOR & _rayIntersector, OBJMARKER & _marker, const Ray3<ScalarType> & _ray, const ScalarType & _maxDist, ScalarType & _t) {
 		(void)_marker;
 		return (AABBBinaryTreeRay<TreeType>::Ray(this->tree, _rayIntersector, _ray, _maxDist, _t));
+	}
+
+	inline void InitializeFrustumCull(void) {
+		(void)(AABBBinaryTreeFrustumCull<TreeType>::Initialize(this->tree));
+	}
+
+	inline void FrustumCull(const Plane3<ScalarType> _frustumPlanes[6], const unsigned int _minNodeObjectsCount) {
+		(void)(AABBBinaryTreeFrustumCull<TreeType>::FrustumCull(this->tree, _frustumPlanes, _minNodeObjectsCount));
 	}
 
 protected:
