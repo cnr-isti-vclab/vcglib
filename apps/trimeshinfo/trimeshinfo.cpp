@@ -21,15 +21,18 @@
 *                                                                           *
 ****************************************************************************/
 /****************************************************************************
-  History
+History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/09/28 13:57:09  rita_borgo
+Fixed some printout not alligned
+
 Revision 1.2  2005/09/28 10:46:04  rita_borgo
 Added possibility of saving File in OFF format
 
 Revision 1.1  2005/09/20 10:15:27  rita_borgo
 Changed file name to uniform with other solution projects,
- before was main.cpp
+before was main.cpp
 
 Revision 1.8  2005/02/15 12:26:06  rita_borgo
 Minor changes to self-intersection
@@ -106,24 +109,24 @@ string ans;
 
 void OpenMesh(const char *filename, MyMesh &m)
 {
-  int err = tri::io::Importer<MyMesh>::Open(m,filename);
-  if(err) {
-      printf("Error in reading %s: '%s'\n",filename,tri::io::Importer<MyMesh>::ErrorMsg(err));
-      exit(-1);
-    }
-  printf("read mesh `%s'\n", filename);		  
+	int err = tri::io::Importer<MyMesh>::Open(m,filename);
+	if(err) {
+		printf("Error in reading %s: '%s'\n",filename,tri::io::Importer<MyMesh>::ErrorMsg(err));
+		exit(-1);
+	}
+	printf("read mesh `%s'\n", filename);		  
 }
 
 
 inline char* GetExtension(char* filename)
 {
-    for(int i=strlen(filename)-1; i >= 0; i--)
-        if(filename[i] == '.')
-            break;
-    if(i > 0)
-        return &(filename[i+1]);
-    else
-        return NULL;
+	for(int i=strlen(filename)-1; i >= 0; i--)
+		if(filename[i] == '.')
+			break;
+	if(i > 0)
+		return &(filename[i+1]);
+	else
+		return NULL;
 }
 
 
@@ -135,14 +138,14 @@ template <class VertexIterator>
 class DuplicateVert_Compare{
 public:
 	inline bool operator() (VertexIterator a, VertexIterator b)
-		{
-			return *a < *b;
-		}
+	{
+		return *a < *b;
+	}
 };
 
 static int DuplicateVertex( MyMesh & m )    // V1.0
 {
-	
+
 	if(m.vert.size()==0 || m.vn==0)
 		return 0;
 	std::map<VertexPointer, VertexPointer> mp;
@@ -159,14 +162,14 @@ static int DuplicateVertex( MyMesh & m )    // V1.0
 
 	std::sort(perm.begin(),perm.end(),c_obj);
 	j = 0;
-  i = j;
-  mp[perm[i]] = perm[j];
-  ++i;
-  for(;i!=num_vert;)
+	i = j;
+	mp[perm[i]] = perm[j];
+	++i;
+	for(;i!=num_vert;)
 	{
 		if( (! (*perm[i]).IsD()) && 
-        (! (*perm[j]).IsD()) && 
-				(*perm[i]).P() == (*perm[j]).cP() )
+			(! (*perm[j]).IsD()) && 
+			(*perm[i]).P() == (*perm[j]).cP() )
 		{
 			if(deleted ==0)
 			{
@@ -187,7 +190,7 @@ static int DuplicateVertex( MyMesh & m )    // V1.0
 		else
 		{
 			j = i;
-	    ++i;
+			++i;
 		}
 	}
 	ans.clear();
@@ -195,51 +198,51 @@ static int DuplicateVertex( MyMesh & m )    // V1.0
 }
 void main(int argc,char ** argv){
 
-	
+
 	MyMesh m;
 	bool DEBUG = false;
-	
 
-/*------------XML file part ------------------*/
+
+	/*------------XML file part ------------------*/
 
 	static char* XML_SCHEMA_NAME = "protegekb";
 	XMLTree	doc;
 	MainNode* mn = new MainNode;
 
-/*--------------------------------------------*/
+	/*--------------------------------------------*/
 
 	//load the mesh
 	//argv[1]=(char*)"c:\\checkup\\debug\\column1m.ply";
 	//argv[1] = "C:\\sf\\apps\\msvc\\trimeshinfo\\Release\\prism.off";
-//argv[1] = "C:\\sf\\apps\\msvc\\trimeshinfo\\Release\\prova1.ply";
+	//argv[1] = "C:\\sf\\apps\\msvc\\trimeshinfo\\Release\\prova1.ply";
 
-    // print program info
-    printf("-------------------------------\n"
-           "         TriMeshInfo V.1.01 \n"
-           "     http://vcg.isti.cnr.it\n"
-           "   release date: "__DATE__"\n"
-           "-------------------------------\n\n");
-
-
- if(DEBUG)
-	argv[1] = "C:\\sf\\apps\\msvc\\trimeshinfo\\cube.ply";
- 
- else
- {
- // load input meshes.
-  if(argc <= 1)
-  {
-     printf(MSG_ERR_N_ARGS);
-     exit(-1);
-  }
- }
+	// print program info
+	printf("-------------------------------\n"
+		"         TriMeshInfo V.1.01 \n"
+		"     http://vcg.isti.cnr.it\n"
+		"   release date: "__DATE__"\n"
+		"-------------------------------\n\n");
 
 
-  OpenMesh(argv[1],m);
+	if(DEBUG)
+		argv[1] = "C:\\sf\\apps\\msvc\\trimeshinfo\\cube.ply";
 
-	
+	else
+	{
+		// load input meshes.
+		if(argc <= 1)
+		{
+			printf(MSG_ERR_N_ARGS);
+			exit(-1);
+		}
+	}
 
-	
+
+	OpenMesh(argv[1],m);
+
+
+
+	/*------------XML file part ------------------*/
 	doc.initializeMain(XML_SCHEMA_NAME);
 	char* s1 = "http://www.w3.org/2001/XMLSchema-instance";
 	char* s2 = new(char[50]);
@@ -249,11 +252,12 @@ void main(int argc,char ** argv){
 	s2 = new(char[100]);
 	sprintf(s2,"\"%s\"",s1);	
 	doc.addHeaders(" xsi:noNamespaceSchemaLocation=", s2);
+	/*--------------------------------------------*/
 
-  FILE * index;
+	FILE * index;
 	index = fopen((string(argv[1])+string("2.html")).c_str(),"w");
 	fprintf(index,"<p>Mesh info: %s </p>\n\n\n", argv[1]);
-	
+
 	fprintf(index,"<p>GENERAL INFO </p>\n\n");
 	fprintf(index,"<p>Number of vertices: %d </p>\n", m.vn);
 	fprintf(index,"<p>Number of faces: %d </p>\n", m.fn);
@@ -261,8 +265,9 @@ void main(int argc,char ** argv){
 	printf("	M: '%s'\n\t Number of vertices: %d \n", argv[1], m.vn);
 	printf("\t Number of faces: %d \n", m.fn);
 
-	//XML
-	
+
+
+	/*------------XML file part ------------------*/
 	NodeGroup* ng = new NodeGroup;
 
 	char* s =new(char[25]);
@@ -278,7 +283,7 @@ void main(int argc,char ** argv){
 	SlotNode* sn = new SlotNode;
 	sn->addOwnSlot(osn);
 	ng->addNode(osn);
-	
+
 	s = new(char[25]);
 	vn = new ValueNode;
 	en = new EntryNode;
@@ -292,8 +297,9 @@ void main(int argc,char ** argv){
 	osn->addEntry(*en);
 	sn->addOwnSlot(osn);
 	ng->addNode(osn);
+	/*--------------------------------------------*/
 
-	
+
 
 	if(m.HasPerFaceColor()||m.HasPerVertexColor())
 	{
@@ -301,6 +307,7 @@ void main(int argc,char ** argv){
 		fprintf(index, "<p>Object color(4b): %f %f %f </p>\n\n", Color[0], Color[1], Color[2]);
 		printf( "\t Object color(4b): %f %f %f \n", Color[0], Color[1], Color[2]);
 
+		/*------------XML file part ------------------*/
 		s = new(char[25]);
 		vn = new ValueNode;
 		en = new EntryNode;
@@ -314,13 +321,14 @@ void main(int argc,char ** argv){
 		osn->addEntry(*en);
 		sn->addOwnSlot(osn);
 		ng->addNode(osn);
+		/*--------------------------------------------*/
 	}
-	
-	
 
 
-	
-		vcg::tri::UpdateTopology<MyMesh>::FaceFace(m);
+
+
+
+	vcg::tri::UpdateTopology<MyMesh>::FaceFace(m);
 
 	// IS MANIFOLD
 	MyMesh::FaceIterator fi;
@@ -330,11 +338,11 @@ void main(int argc,char ** argv){
 	int j;
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 		(*fi).ClearS();
-	
+
 	int man=0;
 	bool Manifold = true;
-	
-	
+
+
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 	{
 		for (j=0;j<3;++j)
@@ -351,7 +359,9 @@ void main(int argc,char ** argv){
 	if (!Manifold)
 	{
 		fprintf(index, "<p> Manifold: NO </p>"); 
-	  printf( "\t Manifold: NO\n"); 
+		printf( "\t Manifold: NO\n");
+
+		/*------------XML file part ------------------*/
 		s = new(char[25]);
 		vn = new ValueNode;
 		en = new EntryNode;
@@ -365,11 +375,14 @@ void main(int argc,char ** argv){
 		osn->addEntry(*en);
 		sn->addOwnSlot(osn);
 		ng->addNode(osn);
+		/*--------------------------------------------*/
 	}
 	else
 	{
 		fprintf(index, "<p> Manifold: YES </p>"); 
-	  printf( "\t Manifold: YES\n "); 
+		printf( "\t Manifold: YES\n ");
+
+		/*------------XML file part ------------------*/
 		s = new(char[25]);
 		vn = new ValueNode;
 		en = new EntryNode;
@@ -383,74 +396,77 @@ void main(int argc,char ** argv){
 		osn->addEntry(*en);
 		sn->addOwnSlot(osn);
 		ng->addNode(osn);
+		/*--------------------------------------------*/
 	}
 
-	
+
 	// COUNT EDGES
 	int count_e = 0;
 	int boundary_e = 0;
 	bool counted =false;
 	for(fi=m.face.begin();fi!=m.face.end();fi++)
+	{
+		(*fi).SetS();
+		count_e +=3;								//assume that we have to increase the number of edges with three
+		for(int j=0; j<3; j++)
 		{
-			(*fi).SetS();
-			count_e +=3;								//assume that we have to increase the number of edges with three
-			for(int j=0; j<3; j++)
+			if (fi->IsBorder(j))			//If this edge is a border edge
+				boundary_e++;						//  then increase the number of boundary edges
+			else if (IsManifold(*fi,j))		//If this edge is manifold
 			{
-				if (fi->IsBorder(j))			//If this edge is a border edge
-					boundary_e++;						//  then increase the number of boundary edges
-				else if (IsManifold(*fi,j))		//If this edge is manifold
+				if((*fi).FFp(j)->IsS()) //If the face on the other side of the edge is already selected
+					count_e--;						//  we counted one edge twice
+			}
+			else											//We have a non-manifold edge
+			{
+				hei.Set(&(*fi), j , fi->V(j));
+				he=hei;
+				he.NextF();
+				while (he.f!=hei.f)			//	so we have to iterated all faces that are connected to this edge
 				{
-					if((*fi).FFp(j)->IsS()) //If the face on the other side of the edge is already selected
-						count_e--;						//  we counted one edge twice
+					if (he.f->IsS())			//  if one of the other faces was already visited than this edge was counted already.
+					{
+						counted=true;
+						break;
+					}
+					else 
+					{
+						he.NextF();
+					}
 				}
-				else											//We have a non-manifold edge
+				if (counted)
 				{
-					hei.Set(&(*fi), j , fi->V(j));
-					he=hei;
-					he.NextF();
-					while (he.f!=hei.f)			//	so we have to iterated all faces that are connected to this edge
-					{
-						if (he.f->IsS())			//  if one of the other faces was already visited than this edge was counted already.
-						{
-							counted=true;
-							break;
-						}
-						else 
-						{
-							he.NextF();
-						}
-					}
-					if (counted)
-					{
-						count_e--;
-						counted=false;
-					}
+					count_e--;
+					counted=false;
 				}
 			}
-		}	
-		fprintf(index, "<p>Number of edges: %d </p>\n", count_e);
-		fprintf(index, "<p>Number of internal edges: %d </p>\n", count_e-boundary_e);
-		fprintf(index, "<p>Number of boundary edges: %i </p>\n", boundary_e);
-		printf("\t Number of edges: %d \n", count_e);
-		printf("\t Number of internal edges: %d \n", count_e-boundary_e);
-		printf("\t Number of boundary edges: %i \n", boundary_e);
+		}
+	}	
+	fprintf(index, "<p>Number of edges: %d </p>\n", count_e);
+	fprintf(index, "<p>Number of internal edges: %d </p>\n", count_e-boundary_e);
+	fprintf(index, "<p>Number of boundary edges: %i </p>\n", boundary_e);
+	printf("\t Number of edges: %d \n", count_e);
+	printf("\t Number of internal edges: %d \n", count_e-boundary_e);
+	printf("\t Number of boundary edges: %i \n", boundary_e);
 
-		s = new(char[25]);
-		vn = new ValueNode;
-		en = new EntryNode;
-		osn = new OwnSlotNode;
-		sprintf(s,"%d",count_e);	
-		vn->setValue(s);
-		en->addValue(*vn);
-		en->type = "Integer";
+	/*------------XML file part ------------------*/
+	s = new(char[25]);
+	vn = new ValueNode;
+	en = new EntryNode;
+	osn = new OwnSlotNode;
+	sprintf(s,"%d",count_e);	
+	vn->setValue(s);
+	en->addValue(*vn);
+	en->type = "Integer";
 
-		osn->setName("Number of Edges");
-		osn->addEntry(*en);
-		sn->addOwnSlot(osn);
-		ng->addNode(osn);
+	osn->setName("Number of Edges");
+	osn->addEntry(*en);
+	sn->addOwnSlot(osn);
+	ng->addNode(osn);
+	/*--------------------------------------------*/
 
 
-	
+
 	// DEGENERATED FACES
 
 	int count_fd = 0;
@@ -458,56 +474,62 @@ void main(int argc,char ** argv){
 		if((*fi).Area() == 0)
 			count_fd++;
 	fprintf(index, "<p>Number of degenerated faces: %d </p>\n", count_fd);
-  printf("\t Number of degenerated faces: %d \n", count_fd);
-		s = new(char[25]);
-		vn = new ValueNode;
-		en = new EntryNode;
-		osn = new OwnSlotNode;
-		sprintf(s,"%d",count_fd);	
-		vn->setValue(s);
-		en->addValue(*vn);
-		en->type = "Integer";
+	printf("\t Number of degenerated faces: %d \n", count_fd);
 
-		osn->setName("Number of Degenerated Faces");
-		osn->addEntry(*en);
-		sn->addOwnSlot(osn);
-		ng->addNode(osn);
+	/*------------XML file part ------------------*/
+	s = new(char[25]);
+	vn = new ValueNode;
+	en = new EntryNode;
+	osn = new OwnSlotNode;
+	sprintf(s,"%d",count_fd);	
+	vn->setValue(s);
+	en->addValue(*vn);
+	en->type = "Integer";
+
+	osn->setName("Number of Degenerated Faces");
+	osn->addEntry(*en);
+	sn->addOwnSlot(osn);
+	ng->addNode(osn);
+	/*--------------------------------------------*/
 
 	// UNREFERENCED VERTEX
 
 	int count_uv = 0;
 	MyMesh::VertexIterator v;
-	
-	
-	
+
+
+
 	for(v=m.vert.begin();v!=m.vert.end();++v)
 		(*v).ClearV();
 
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
-			for(j=0;j<3;++j)
-					(*fi).V(j)->SetV();
+		for(j=0;j<3;++j)
+			(*fi).V(j)->SetV();
 
 	for(v=m.vert.begin();v!=m.vert.end();++v)
 		if( !(*v).IsV() )
 			++count_uv;
 	fprintf(index,"<p>Number of unreferenced vertices: %d</p>\n",count_uv);
-  printf("\t Number of unreferenced vertices: %d\n",count_uv);
-		s = new(char[25]);
-		vn = new ValueNode;
-		en = new EntryNode;
-		osn = new OwnSlotNode;
-		sprintf(s,"%d",count_uv);	
-		vn->setValue(s);
-		en->addValue(*vn);
-		en->type = "Integer";
+	printf("\t Number of unreferenced vertices: %d\n",count_uv);
 
-		osn->setName("Number of unreferenced vertices");
-		osn->addEntry(*en);
-		sn->addOwnSlot(osn);
-		ng->addNode(osn);	
+	/*------------XML file part ------------------*/
+	s = new(char[25]);
+	vn = new ValueNode;
+	en = new EntryNode;
+	osn = new OwnSlotNode;
+	sprintf(s,"%d",count_uv);	
+	vn->setValue(s);
+	en->addValue(*vn);
+	en->type = "Integer";
+
+	osn->setName("Number of unreferenced vertices");
+	osn->addEntry(*en);
+	sn->addOwnSlot(osn);
+	ng->addNode(osn);	
+	/*--------------------------------------------*/
 
 
-// HOLES COUNT	
+	// HOLES COUNT	
 
 	int numholes=0;
 	int numholev=0;
@@ -517,53 +539,55 @@ void main(int argc,char ** argv){
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 		(*fi).ClearS();
 	gi=m.face.begin(); fi=gi;
-	
-	
-		if (Manifold)
-	{
-    for(fi=m.face.begin();fi!=m.face.end();fi++)					//for all faces do
-		{
-				for(j=0;j<3;j++)										//for all edges
-				{
-					if(fi->V(j)->IsS()) continue;
 
-					if((*fi).IsBorder(j))							//found an unvisited border edge
+
+	if (Manifold)
+	{
+		for(fi=m.face.begin();fi!=m.face.end();fi++)					//for all faces do
+		{
+			for(j=0;j<3;j++)										//for all edges
+			{
+				if(fi->V(j)->IsS()) continue;
+
+				if((*fi).IsBorder(j))							//found an unvisited border edge
+				{
+					he.Set(&(*fi),j,fi->V(j));			//set the face-face iterator to the current face, edge and vertex
+					vector<Point3x> hole;						//start of a new hole
+					hole.push_back(fi->P(j));				//  including the first vertex
+					numholev++;
+					he.v->SetS();										//set the current vertex as selected
+					he.NextB();											//go to the next boundary edge
+
+
+					while(fi->V(j) != he.v)					//will we do not encounter the first boundary edge.
 					{
-						he.Set(&(*fi),j,fi->V(j));			//set the face-face iterator to the current face, edge and vertex
-						vector<Point3x> hole;						//start of a new hole
-						hole.push_back(fi->P(j));				//  including the first vertex
+						Point3x newpoint = he.v->P();		//select its vertex.
+						if(he.v->IsS())									//check if this vertex was selected already, because then we have an additional hole.
+						{
+							//cut and paste the additional hole.
+							vector<Point3x> hole2;				
+							int index = find(hole.begin(),hole.end(),newpoint) - hole.begin();
+							for(int i=index; i<hole.size(); i++)
+								hole2.push_back(hole[i]);
+
+							hole.resize(index);
+							if(hole2.size()!=0)						//annoying in degenerate cases
+								holes.push_back(hole2);							
+						}
+						hole.push_back(newpoint);
 						numholev++;
 						he.v->SetS();										//set the current vertex as selected
 						he.NextB();											//go to the next boundary edge
-						
-						
-						while(fi->V(j) != he.v)					//will we do not encounter the first boundary edge.
-						{
-							Point3x newpoint = he.v->P();		//select its vertex.
-							if(he.v->IsS())									//check if this vertex was selected already, because then we have an additional hole.
-							{
-								//cut and paste the additional hole.
-								vector<Point3x> hole2;				
-								int index = find(hole.begin(),hole.end(),newpoint) - hole.begin();
-								for(int i=index; i<hole.size(); i++)
-									hole2.push_back(hole[i]);
-
-								hole.resize(index);
-								if(hole2.size()!=0)						//annoying in degenerate cases
-									holes.push_back(hole2);							
-							}
-							hole.push_back(newpoint);
-							numholev++;
-							he.v->SetS();										//set the current vertex as selected
-							he.NextB();											//go to the next boundary edge
-						}
-						holes.push_back(hole);
 					}
+					holes.push_back(hole);
 				}
+			}
 		}
 		numholes = holes.size();
-    fprintf(index,"<p>Number of holes/boundaries: %d </p>\n", numholes); 
-    printf("\t Number of holes/boundaries: %d \n", numholes); 
+		fprintf(index,"<p>Number of holes/boundaries: %d </p>\n", numholes); 
+		printf("\t Number of holes/boundaries: %d \n", numholes); 
+
+		/*------------XML file part ------------------*/
 		s = new(char[25]);
 		vn = new ValueNode;
 		en = new EntryNode;
@@ -577,8 +601,9 @@ void main(int argc,char ** argv){
 		osn->addEntry(*en);
 		sn->addOwnSlot(osn);
 		ng->addNode(osn);	
+		/*--------------------------------------------*/
 
-		
+
 
 		if(numholes>0)
 		{
@@ -589,6 +614,8 @@ void main(int argc,char ** argv){
 				if(i==numholes-1){ printf("%i)\n",holes[i].size()); BEdges++;}
 				else{ printf("%i, ",holes[i].size()); BEdges++;}
 			}
+
+			/*------------XML file part ------------------*/
 			s = new(char[25]);
 			vn = new ValueNode;
 			en = new EntryNode;
@@ -600,20 +627,23 @@ void main(int argc,char ** argv){
 			osn->setName("Number of Border Edges");
 			osn->addEntry(*en);
 			sn->addOwnSlot(osn);
-			ng->addNode(osn);		
+			ng->addNode(osn);	
+			/*--------------------------------------------*/
 		}
 	}
 	else
 		printf( "\t Number of holes: UNDEFINED, mesh is non-manifold \n");
 
-	
+
 	// Mesh Volume
 	float vol = m.Volume();
 	int nuh = numholes;
 	if((m.Volume()>0.)&&(Manifold)&&(numholes==0))
 	{
-        fprintf(index,"<p>Volume: %d </p>\n", m.Volume());
-        printf("\t Volume: %f \n", m.Volume());
+		fprintf(index,"<p>Volume: %d </p>\n", m.Volume());
+		printf("\t Volume: %f \n", m.Volume());
+
+		/*------------XML file part ------------------*/
 		s = new(char[25]);
 		vn = new ValueNode;
 		en = new EntryNode;
@@ -626,12 +656,13 @@ void main(int argc,char ** argv){
 		osn->setName("Volume");
 		osn->addEntry(*en);
 		sn->addOwnSlot(osn);
-		ng->addNode(osn);		
+		ng->addNode(osn);	
+		/*--------------------------------------------*/
 	}
 	else 
 	{
 		printf("\t Volume: UNDEFINED, mesh is either non-manifold or has holes \n");
-    fprintf(index,"Volume: UNDEFINED, mesh is either non-manifold or has holes \n");
+		fprintf(index,"Volume: UNDEFINED, mesh is either non-manifold or has holes \n");
 	}
 
 
@@ -659,36 +690,39 @@ void main(int argc,char ** argv){
 				sf.pop();
 				for(j=0;j<3;++j)
 				{
-						if( !(*gi).IsBorder(j) )
-							{
-								l=he.f->FFp(j);
-								if( !(*l).IsS() )
-									{
-										(*l).SetS();
-										sf.push(l);
-									}
-							}
+					if( !(*gi).IsBorder(j) )
+					{
+						l=he.f->FFp(j);
+						if( !(*l).IsS() )
+						{
+							(*l).SetS();
+							sf.push(l);
+						}
+					}
 				}
 			}
-		Compindex++;
+			Compindex++;
 		}
 	}
 	int numcomponents = nrfaces.size();
 	fprintf(index, "<p> Number of connected components: %d </p>", numcomponents); 
-  printf("\t Number of connected components: %d\n", numcomponents); 
-	s = new(char[25]);
-		vn = new ValueNode;
-		en = new EntryNode;
-		osn = new OwnSlotNode;
-		sprintf(s,"%d",numcomponents);	
-		vn->setValue(s);
-		en->addValue(*vn);
-		en->type = "Integer";
+	printf("\t Number of connected components: %d\n", numcomponents); 
 
-		osn->setName("Number of Connected Components");
-		osn->addEntry(*en);
-		sn->addOwnSlot(osn);
-		ng->addNode(osn);
+	/*------------XML file part ------------------*/
+	s = new(char[25]);
+	vn = new ValueNode;
+	en = new EntryNode;
+	osn = new OwnSlotNode;
+	sprintf(s,"%d",numcomponents);	
+	vn->setValue(s);
+	en->addValue(*vn);
+	en->type = "Integer";
+
+	osn->setName("Number of Connected Components");
+	osn->addEntry(*en);
+	sn->addOwnSlot(osn);
+	ng->addNode(osn);
+	/*--------------------------------------------*/
 
 	//GENUS  --> 2( #components - genus ) = #vertices + #faces - #edge - #boundary_loops = eulernumber - #holes
 	//eulero = (mesh.vn-count_uv) - (count_e)+mesh.fn;
@@ -699,6 +733,8 @@ void main(int argc,char ** argv){
 		int genus = -( 0.5 * (eulernumber - numholes) - numcomponents );
 		fprintf(index, "<p> Genus: %d </p> \n ", genus); 
 		printf( "\t Genus: %d \n", genus);
+
+		/*------------XML file part ------------------*/
 		s = new(char[25]);
 		vn = new ValueNode;
 		en = new EntryNode;
@@ -711,14 +747,15 @@ void main(int argc,char ** argv){
 		osn->setName("Genus");
 		osn->addEntry(*en);
 		sn->addOwnSlot(osn);
-		ng->addNode(osn);			
+		ng->addNode(osn);	
+		/*--------------------------------------------*/
 	}
 	else //(!Manifold) 
 	{
 		fprintf( index,"<p>Genus: UNDEFINED, mesh is non-manifold </p>\n");
 		printf( "Genus: UNDEFINED, mesh is non-manifold \n");
 	}
-// REGULARITY
+	// REGULARITY
 
 	bool Regular=true;
 	bool Semiregular=true;
@@ -764,9 +801,11 @@ void main(int argc,char ** argv){
 
 	if (Regular)
 	{
-			fprintf(index, "<p> Type of Mesh: REGULAR</p>"); 
-		  printf("\t Type of Mesh: REGULAR\n"); 
-			s = new(char[25]);
+		fprintf(index, "<p> Type of Mesh: REGULAR</p>"); 
+		printf("\t Type of Mesh: REGULAR\n"); 
+
+		/*------------XML file part ------------------*/
+		s = new(char[25]);
 		vn = new ValueNode;
 		en = new EntryNode;
 		osn = new OwnSlotNode;
@@ -778,13 +817,14 @@ void main(int argc,char ** argv){
 		osn->setName("Type of Mesh");
 		osn->addEntry(*en);
 		sn->addOwnSlot(osn);
-		ng->addNode(osn);		
+		ng->addNode(osn);
+		/*--------------------------------------------*/
 	}
 	else if (Semiregular)
 	{
-			fprintf(index, "<p> Type of Mesh: SEMIREGULAR</p>");
-		  printf("\t Type of Mesh: SEMIREGULAR\n");
-			s = new(char[25]);
+		fprintf(index, "<p> Type of Mesh: SEMIREGULAR</p>");
+		printf("\t Type of Mesh: SEMIREGULAR\n");
+		s = new(char[25]);
 		vn = new ValueNode;
 		en = new EntryNode;
 		osn = new OwnSlotNode;
@@ -801,8 +841,10 @@ void main(int argc,char ** argv){
 	else 
 	{
 		fprintf(index, "<p> Type of Mesh: IRREGULAR</p>"); 
-	  printf("\t Type of Mesh: IRREGULAR\n"); 
-			s = new(char[25]);
+		printf("\t Type of Mesh: IRREGULAR\n"); 
+
+		/*------------XML file part ------------------*/
+		s = new(char[25]);
 		vn = new ValueNode;
 		en = new EntryNode;
 		osn = new OwnSlotNode;
@@ -815,16 +857,19 @@ void main(int argc,char ** argv){
 		osn->addEntry(*en);
 		sn->addOwnSlot(osn);
 		ng->addNode(osn);		
+		/*--------------------------------------------*/
 	}
-// ORIENTABLE E ORIENTED MESH
+	// ORIENTABLE E ORIENTED MESH
 
 	bool Orientable=true;
 	bool Oriented=true;
 	if (!Manifold)
 	{
 		fprintf(index, "<p> Orientable Mesh: NO</p>"); 
-	  printf( "\t Orientable Mesh: NO\n"); 
-			s = new(char[25]);
+		printf( "\t Orientable Mesh: NO\n"); 
+
+		/*------------XML file part ------------------*/
+		s = new(char[25]);
 		vn = new ValueNode;
 		en = new EntryNode;
 		osn = new OwnSlotNode;
@@ -837,6 +882,7 @@ void main(int argc,char ** argv){
 		osn->addEntry(*en);
 		sn->addOwnSlot(osn);
 		ng->addNode(osn);		
+		/*--------------------------------------------*/
 	}
 	else
 	{
@@ -852,7 +898,7 @@ void main(int argc,char ** argv){
 			{
 				(*fi).SetS();
 				sf.push(fi);
-				
+
 				while (!sf.empty())
 				{
 					gi=sf.top();
@@ -927,46 +973,54 @@ void main(int argc,char ** argv){
 		}
 		if (Orientable)
 		{
-				fprintf(index, "<p> Orientable Mesh: YES</p>"); 
-			  printf( "\t Orientable Mesh: YES\n");
-							s = new(char[25]);
-		vn = new ValueNode;
-		en = new EntryNode;
-		osn = new OwnSlotNode;
-		s="YES";	
-		vn->setValue(s);
-		en->addValue(*vn);
-		en->type = "String";
+			fprintf(index, "<p> Orientable Mesh: YES</p>"); 
+			printf( "\t Orientable Mesh: YES\n");
 
-		osn->setName("Orientable Mesh");
-		osn->addEntry(*en);
-		sn->addOwnSlot(osn);
-		ng->addNode(osn);		
+			/*------------XML file part ------------------*/
+			s = new(char[25]);
+			vn = new ValueNode;
+			en = new EntryNode;
+			osn = new OwnSlotNode;
+			s="YES";	
+			vn->setValue(s);
+			en->addValue(*vn);
+			en->type = "String";
+
+			osn->setName("Orientable Mesh");
+			osn->addEntry(*en);
+			sn->addOwnSlot(osn);
+			ng->addNode(osn);	
+			/*--------------------------------------------*/
 		}
 		else
 		{
-				fprintf(index, "<p> Orientable Mesh: NO</p>"); 
-			  printf( "\t Orientable Mesh: NO\n"); 
-							s = new(char[25]);
-		vn = new ValueNode;
-		en = new EntryNode;
-		osn = new OwnSlotNode;
-		s="NO";
-		vn->setValue(s);
-		en->addValue(*vn);
-		en->type = "String";
+			fprintf(index, "<p> Orientable Mesh: NO</p>"); 
+			printf( "\t Orientable Mesh: NO\n");
 
-		osn->setName("Orientable Mesh");
-		osn->addEntry(*en);
-		sn->addOwnSlot(osn);
-		ng->addNode(osn);		
+			/*------------XML file part ------------------*/
+			s = new(char[25]);
+			vn = new ValueNode;
+			en = new EntryNode;
+			osn = new OwnSlotNode;
+			s="NO";
+			vn->setValue(s);
+			en->addValue(*vn);
+			en->type = "String";
+
+			osn->setName("Orientable Mesh");
+			osn->addEntry(*en);
+			sn->addOwnSlot(osn);
+			ng->addNode(osn);	
+			/*--------------------------------------------*/
 		}
 	}
 	if (Oriented && Manifold)
 	{
-			fprintf(index, "<p> Oriented Mesh: YES</p>"); 
-		  printf( "\t Oriented Mesh: YES\n"); 
-			s = new(char[25]);
+		fprintf(index, "<p> Oriented Mesh: YES</p>"); 
+		printf( "\t Oriented Mesh: YES\n"); 
+
+		/*------------XML file part ------------------*/
+		s = new(char[25]);
 		vn = new ValueNode;
 		en = new EntryNode;
 		osn = new OwnSlotNode;
@@ -978,13 +1032,16 @@ void main(int argc,char ** argv){
 		osn->setName("Oriented Mesh");
 		osn->addEntry(*en);
 		sn->addOwnSlot(osn);
-		ng->addNode(osn);			
+		ng->addNode(osn);		
+		/*--------------------------------------------*/
 	}
 	else
 	{
-			fprintf(index, "<p> Oriented Mesh: NO</p>"); 
-		  printf( "\t Oriented Mesh: NO\n"); 
-			s = new(char[25]);
+		fprintf(index, "<p> Oriented Mesh: NO</p>"); 
+		printf( "\t Oriented Mesh: NO\n"); 
+
+		/*------------XML file part ------------------*/
+		s = new(char[25]);
 		vn = new ValueNode;
 		en = new EntryNode;
 		osn = new OwnSlotNode;
@@ -996,13 +1053,16 @@ void main(int argc,char ** argv){
 		osn->setName("Oriented Mesh");
 		osn->addEntry(*en);
 		sn->addOwnSlot(osn);
-		ng->addNode(osn);			
+		ng->addNode(osn);		
+		/*--------------------------------------------*/
 	}
 	int dv = DuplicateVertex(m);
 	if(dv>0)
 	{
 		fprintf(index, "<p> Duplicated vertices: %d</p>", dv); 
-		printf( "\t Number of duplicated vertices found: %d\n",dv);		
+		printf( "\t Number of duplicated vertices found: %d\n",dv);	
+
+		/*------------XML file part ------------------*/
 		s = new(char[25]);
 		vn = new ValueNode;
 		en = new EntryNode;
@@ -1016,13 +1076,15 @@ void main(int argc,char ** argv){
 		osn->addEntry(*en);
 		sn->addOwnSlot(osn);
 		ng->addNode(osn);		
+		/*--------------------------------------------*/
 	}
 	else
 	{
 		fprintf(index, "<p> Duplicated vertices: NO</p>"); 
 		printf( "\t Duplicated vertices: NO\n");
 
-			s = new(char[25]);
+		/*------------XML file part ------------------*/
+		s = new(char[25]);
 		vn = new ValueNode;
 		en = new EntryNode;
 		osn = new OwnSlotNode;
@@ -1035,6 +1097,7 @@ void main(int argc,char ** argv){
 		osn->addEntry(*en);
 		sn->addOwnSlot(osn);
 		ng->addNode(osn);	
+		/*--------------------------------------------*/
 	}
 	// SELF INTERSECTION
 	if (m.fn<300000)
@@ -1060,67 +1123,74 @@ void main(int argc,char ** argv){
 		{
 			fprintf(index, "<p> Self Intersection: YES</p>"); 
 			printf( "\t Self Intersection: YES\n");
-			s = new(char[25]);
-		vn = new ValueNode;
-		en = new EntryNode;
-		osn = new OwnSlotNode;
-		s="YES";	
-		vn->setValue(s);
-		en->addValue(*vn);
-		en->type = "String";
 
-		osn->setName("Self Intersection");
-		osn->addEntry(*en);
-		sn->addOwnSlot(osn);
-		ng->addNode(osn);	
+			/*------------XML file part ------------------*/
+			s = new(char[25]);
+			vn = new ValueNode;
+			en = new EntryNode;
+			osn = new OwnSlotNode;
+			s="YES";	
+			vn->setValue(s);
+			en->addValue(*vn);
+			en->type = "String";
+
+			osn->setName("Self Intersection");
+			osn->addEntry(*en);
+			sn->addOwnSlot(osn);
+			ng->addNode(osn);	
+			/*--------------------------------------------*/
 		}
 		else
 		{
 			fprintf(index, "<p> Self Intersection: NO</p>"); 
-			 printf( "\t Self Intersection: NO\n"); 
-			 s = new(char[25]);
-		vn = new ValueNode;
-		en = new EntryNode;
-		osn = new OwnSlotNode;
-		s="NO";	
-		vn->setValue(s);
-		en->addValue(*vn);
-		en->type = "String";
+			printf( "\t Self Intersection: NO\n"); 
 
-		osn->setName("Self Intersection");
-		osn->addEntry(*en);
-		sn->addOwnSlot(osn);
-		ng->addNode(osn);	
+			/*------------XML file part ------------------*/
+			s = new(char[25]);
+			vn = new ValueNode;
+			en = new EntryNode;
+			osn = new OwnSlotNode;
+			s="NO";	
+			vn->setValue(s);
+			en->addValue(*vn);
+			en->type = "String";
+
+			osn->setName("Self Intersection");
+			osn->addEntry(*en);
+			sn->addOwnSlot(osn);
+			ng->addNode(osn);	
+			/*--------------------------------------------*/
 		}
 	}
 
 
 
 	string fs;
-	
+
 	cout<< "\t To save the file: [s/S]"<< endl;
 	cin>>ans;
 
-		
-		if((ans == "S")||(ans == "s"))
-		{
-			cout<< "\t available formats: [ply, off, stl] "<<endl;
-			cout<< "\t enter format"<<endl;
-			cin>>ans;
-			cout<<"\t enter filename"<<endl;
-			cin>>fs;
-			const char* filesave = fs.c_str();
-			if(ans == "ply")
-				tri::io::ExporterPLY<MyMesh>::Save(m, filesave);
-			else if(ans == "stl")
-				tri::io::ExporterSTL<MyMesh>::Save(m,filesave);
-			else if(ans == "dxf")
-				tri::io::ExporterDXF<MyMesh>::Save(m,filesave);
-	
-			else if(ans == "off")
-				tri::io::ExporterOFF<MyMesh>::Save(m,filesave);
-		}
 
+	if((ans == "S")||(ans == "s"))
+	{
+		cout<< "\t available formats: [ply, off, stl] "<<endl;
+		cout<< "\t enter format"<<endl;
+		cin>>ans;
+		cout<<"\t enter filename"<<endl;
+		cin>>fs;
+		const char* filesave = fs.c_str();
+		if(ans == "ply")
+			tri::io::ExporterPLY<MyMesh>::Save(m, filesave);
+		else if(ans == "stl")
+			tri::io::ExporterSTL<MyMesh>::Save(m,filesave);
+		else if(ans == "dxf")
+			tri::io::ExporterDXF<MyMesh>::Save(m,filesave);
+
+		else if(ans == "off")
+			tri::io::ExporterOFF<MyMesh>::Save(m,filesave);
+	}
+
+	/*------------XML file part ------------------*/
 	doc.addSlots(sn);
 	OwnSlotsNode* ossn = new OwnSlotsNode;
 	ossn->addOwnSlot(ng);
@@ -1134,5 +1204,6 @@ void main(int argc,char ** argv){
 	doc.finalizeMain("/",XML_SCHEMA_NAME);
 	doc.printXMLTree();
 	fclose(index);
+	/*--------------------------------------------*/
 }
 
