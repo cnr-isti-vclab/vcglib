@@ -13,9 +13,9 @@
 #include <vcg/complex/trimesh/update/normal.h>
 #include <vcg/complex/trimesh/update/edges.h>
 #include <vcg/complex/trimesh/update/flag.h>
+#include <vcg/space/intersection3.h>
 
 #include <vcg/space/index/aabb_binary_tree/aabb_binary_tree.h>
-#include <vcg/space/index/aabb_binary_tree/face_functors.h>
 
 typedef float AScalarType;
 
@@ -85,7 +85,7 @@ static void TestKClosest(void) {
 static void TestRay(void) {
 	const bool TEST_BACK_FACES = true;
 
-	vcg::FaceRayIntersectFunctor<TEST_BACK_FACES> rayIntersector;
+	vcg::RayTriangleIntersectionFunctor<TEST_BACK_FACES> rayIntersector;
 	const AIndex::ScalarType maxDist = std::numeric_limits<AIndex::ScalarType>::max();
 	const AIndex::CoordType rayOrigin((AIndex::ScalarType)0, (AIndex::ScalarType)0, (AIndex::ScalarType)0);
 	const AIndex::CoordType rayDirection((AIndex::ScalarType)1, (AIndex::ScalarType)0, (AIndex::ScalarType)0);
