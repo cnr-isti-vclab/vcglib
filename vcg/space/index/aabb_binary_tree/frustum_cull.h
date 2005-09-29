@@ -25,6 +25,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/09/28 19:57:18  m_di_benedetto
+#included aabb tree base.
+
 Revision 1.1  2005/09/26 18:33:16  m_di_benedetto
 First Commit.
 
@@ -93,7 +96,7 @@ public:
 		ClassType::InitializeNodeFlagsRec(pRoot);
 	}
 
-	static inline void FrustumCull(TreeType & tree, const Plane3<ScalarType> & frustumPlanes[6], const unsigned int minNodeObjectsCount) {
+	static inline void FrustumCull(TreeType & tree, const Plane3<ScalarType> frustumPlanes[6], const unsigned int minNodeObjectsCount) {
 		NodeType * pRoot = tree.pRoot;
 		if (pRoot == 0) {
 			return;
