@@ -25,6 +25,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/09/28 20:01:35  m_di_benedetto
+First Commit.
+
 
 ****************************************************************************/
 
@@ -34,6 +37,7 @@ $Log: not supported by cvs2svn $
 // vcg headers
 #include <vcg/math/base.h>
 #include <vcg/space/point3.h>
+#include <vcg/space/box3.h>
 
 namespace vcg {
 
@@ -54,6 +58,24 @@ public:
 	template <class T>
 	inline T * operator () (T * & t) {
 		return (t);
+	}
+};
+
+class GetBox3Functor {
+public:
+	template <class OBJTYPE, class SCALARTYPE>
+	void operator () (const OBJTYPE & obj, Box3<SCALARTYPE> & box) {
+		Box3<typename OBJTYPE::ScalarType> tb;
+		obj.GetBBox(tb);
+		box.Import(tb);
+	}
+};
+
+class GetBarycenter3Functor {
+public:
+	template <class OBJTYPE, class SCALARTYPE>
+	void operator () (const OBJTYPE & obj, Point3<SCALARTYPE> & bar) {
+		bar.Import(obj.Barycenter());
 	}
 };
 
