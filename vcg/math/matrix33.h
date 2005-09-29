@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/06/10 14:51:54  cignoni
+Changed a Zero in SetZero in WeightedCrossCovariance()
+
 Revision 1.7  2005/06/10 11:46:49  pietroni
 Added Norm Function
 
@@ -56,6 +59,7 @@ created
 #define __VCGLIB_MATRIX33_H
 
 #include <stdio.h>
+#include <vcg/math/lin_algebra.h>
 #include <vcg/space/point3.h>
 #include <vector>
 
@@ -70,6 +74,7 @@ public:
 	@param S (Templete Parameter) Specifies the ScalarType field.
 */
 	Matrix33Diag(const S & p0,const S & p1,const S & p2):Point3<S>(p0,p1,p2){};
+	Matrix33Diag(const  Point3<S>&p ):Point3<S>(p){};
 };
 
 template<class S>
@@ -178,6 +183,38 @@ public:
 					r[i][j] = (*this)[i][0]*t[0][j] + (*this)[i][1]*t[1][j] + (*this)[i][2]*t[2][j]; 
 
 		return r;
+	}
+
+	/// Modificatore prodotto per matrice
+	void operator *=( const Matrix33< S> & t ) 
+	{
+		int i,j;
+		for(i=0;i<3;++i)
+			for(j=0;j<3;++j)
+					(*this)[i][j] = (*this)[i][0]*t[0][j] + (*this)[i][1]*t[1][j] + (*this)[i][2]*t[2][j]; 
+
+	}
+
+	/// Dot product with a diagonal matrix
+	Matrix33 operator * ( const Matrix33Diag< S> & t ) const
+	{
+		Matrix33<S> r;
+
+		int i,j;
+		for(i=0;i<3;++i)
+			for(j=0;j<3;++j)
+					r[i][j] = (*this)[i][j]*t[j]; 
+
+		return r;
+	}
+
+		/// Dot product modifier with a diagonal matrix
+	void operator *=( const Matrix33Diag< S> & t ) 
+	{
+		int i,j;
+		for(i=0;i<3;++i)
+			for(j=0;j<3;++j)
+					(*this)[i][j] = (*this)[i][j]*t[j]; 
 	}
 
 	/// Modificatore prodotto per costante
@@ -459,6 +496,27 @@ private:
 	S a[9];
 };
 
+template <class S>
+void 	 Invert(Matrix33<S> &m)
+	{
+		Matrix33<S> v;
+		Point3<typename Matrix33<S>::ScalarType> e;
+		SingularValueDecomposition(m,&e[0],v);
+		e[0]=1/e[0];e[1]=1/e[1];e[2]=1/e[2];
+		m.Transpose();
+		m = v * Matrix33Diag<S>(e) * m;
+	}
+
+template <class S>
+Matrix33<S> Inverse(const Matrix33<S>&m)
+	{
+		Matrix33<S> v,m_copy=m;
+		Point3<S> e;
+		SingularValueDecomposition(m_copy,&e[0],v);
+		m_copy.Transpose();
+		e[0]=1/e[0];e[1]=1/e[1];e[2]=1/e[2];
+		return v * MatrixDiag<S>(e) * m_copy;
+	}
 
 /// 
 typedef Matrix33<short>  Matrix33s;
