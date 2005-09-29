@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2005/09/28 19:40:55  m_di_benedetto
+Added intersection for ray-triangle (with Ray3 type).
+
 Revision 1.15  2005/06/29 15:28:31  callieri
 changed intersection names to more specific to avoid ambiguity
 
@@ -478,6 +481,26 @@ bool Intersection (const Plane3<T> & plane0, const Plane3<T> & plane1,
     return true;
 }
 
+
+// Ray-Triangle Functor
+template <bool BACKFACETEST = true>
+class RayTriangleIntersectionFunctor {
+public:
+	template <class TRIANGLETYPE, class SCALARTYPE>
+	inline bool operator () (const TRIANGLETYPE & f, const Ray3<SCALARTYPE> & ray, SCALARTYPE & t) {
+		typedef SCALARTYPE ScalarType;
+		ScalarType a;
+		ScalarType b;
+
+		bool bret = Intersection(ray, Point3<SCALARTYPE>::Construct(f.P(0)), Point3<SCALARTYPE>::Construct(f.P(1)), Point3<SCALARTYPE>::Construct(f.P(2)), a, b, t);
+		if (BACKFACETEST) {
+			if (!bret) {
+				bret = Intersection(ray, Point3<SCALARTYPE>::Construct(f.P(0)), Point3<SCALARTYPE>::Construct(f.P(2)), Point3<SCALARTYPE>::Construct(f.P(1)), a, b, t);
+			}
+		}
+		return (bret);
+	}
+};
 
 
 /*@}*/
