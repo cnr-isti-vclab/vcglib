@@ -24,6 +24,12 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.26  2005/09/30 13:15:21  pietroni
+added wrapping to functions defined in GridClosest:
+     - GetClosest
+     - GetKClosest
+     - DoRay
+
 Revision 1.25  2005/09/21 09:22:51  pietroni
 removed closest functions. Closest function is now on index\\Closest.h
 Users must use trimesh\\closest.h to perform spatial query.
@@ -216,34 +222,7 @@ namespace vcg {
 		std::vector<Cell> grid;   /// Griglia vera e propria
 
 
-		/// Dato un punto, ritorna la cella che lo contiene
-		inline Cell* Grid( const Point3d & p )
-		{
-			int x = int( (p[0]-bbox.min[0])/voxel[0] );
-			int y = int( (p[1]-bbox.min[1])/voxel[1] );
-			int z = int( (p[2]-bbox.min[2])/voxel[2] );
-
-#ifndef NDEBUG
-			if ( x<0 || x>=siz[0] || y<0 || y>=siz[1] || z<0 || z>=siz[2] )
-				return NULL;
-			else
-#endif
-
-				return grid.begin() + ( x+siz[0]*(y+siz[1]*z) );
-		}
-		/// Date le coordinate ritorna la cella
-		inline Cell* Grid( const int x, const int y, const int z )
-		{
-#ifndef NDEBUG
-			if ( x<0 || x>=siz[0] || y<0 || y>=siz[1] || z<0 || z>=siz[2] )
-				assert(0);
-			//return NULL;
-			else
-#endif
-				assert(((unsigned int)x+siz[0]*y+siz[1]*z)<grid.size());
-			return &*grid.begin() + ( x+siz[0]*(y+siz[1]*z) );
-		}
-
+	
 
 		/// Date le coordinate di un grid point (corner minx,miy,minz) ritorna le celle che condividono
 		/// l'edge cell che parte dal grid point in direzione axis
@@ -273,28 +252,49 @@ namespace vcg {
 				}
 		}
 
-		Cell* Grid(const  int i) {
+
+    //////////////// 
+    // Official access functions
+		//////////////// 
+    /// BY CELL
+    Cell* Grid(const  int i) {
 			return &grid[i];
 		}
-		void Grid( const Point3d & p, Cell & first, Cell & last )
+
+    void Grid( const Cell* g, Cell & first, Cell & last )
 		{
-			Cell* g = Grid(p);
+			first = *g;
+			last  = *(g+1);
+		}
+		
+		/// BY INTEGER COORDS
+		inline Cell* Grid( const int x, const int y, const int z )
+		{
+			assert(( x<0 || x>=siz[0] || y<0 || y>=siz[1] || z<0 || z>=siz[2] ));
+      assert(grid.size()>0);
+			return &*grid.begin() + ( x+siz[0]*(y+siz[1]*z) );
+		}
+
+    inline Cell* Grid( const Point3i &pi)
+    {
+      return Grid(pi[0],pi[1],pi[2]);
+    }
+
+    void Grid( const int x, const int y, const int z, Cell & first, Cell & last )
+		  {
+			  Cell* g = Grid(x,y,z);
+			  first = *g;
+			  last  = *(g+1);
+		  }
+
+    void Grid( const Point3d & p, Cell & first, Cell & last )
+		{
+      Cell* g = Grid(GridP(p));
 
 			first = *g;
 			last  = *(g+1);
 		}
-		void Grid( const Cell* g, Cell & first, Cell & last )
-		{
-			first = *g;
-			last  = *(g+1);
-		}
-		void Grid( const int x, const int y, const int z, Cell & first, Cell & last )
-		{
-			Cell* g = Grid(x,y,z);
-
-			first = *g;
-			last  = *(g+1);
-		}
+		 		
 
 		/// Set the bounding box of the grid
 		///We need some extra space for numerical precision.
@@ -335,17 +335,18 @@ namespace vcg {
 		
 		/// Insert a mesh in the grid
 		template <class OBJITER>
-	    void Set(const OBJITER & _oBegin, const OBJITER & _oEnd)
+	    void Set(const OBJITER & _oBegin, const OBJITER & _oEnd, const Box3x &_bbox=Box3x() )
 		{
 			OBJITER i;
-			bbox.min=Point3<FLT>(0,0,0);
-			bbox.max=Point3<FLT>(0,0,0);
-			Box3<FLT> b;
-			for(i = _oBegin; i!= _oEnd; ++i)
-			{
-				(*i).GetBBox(b);
-				bbox.Add(b);
-			}
+      Box3<FLT> b;
+			
+      if(!_bbox.IsNull()) bbox=_bbox;
+      else
+          for(i = _oBegin; i!= _oEnd; ++i)
+			    {
+				    (*i).GetBBox(b);
+				    bbox.Add(b);
+			    }
 			int _size=std::distance<OBJITER>(_oBegin,_oEnd);
 			dim  = bbox.max - bbox.min;
 			BestDim( _size, dim, siz );
