@@ -1,11 +1,16 @@
+#ifndef __VCGLIB_SPATIAL_ITERATORS
+#define __VCGLIB_SPATIAL_ITERATORS
+
 #include <vector>
+//#include <vcg/space/intersection3.h>
+#include <vcg/space/point3.h>
 #include <vcg/space/box3.h>
+//#include <vcg/space/point4.h>
+#include <vcg/space/ray3.h>
+#include <vcg/math/base.h>
 #include <algorithm>
 #include <float.h>
-#include <vcg/space/intersection3.h>
-#include <vcg/simplex/face/distance.h>//to remove
-#ifndef _VCG_SPACE_ITERATORS
-#define _VCG_SPACE_ITERATORS
+
 
 namespace vcg{
 template <class Spatial_Idexing,class INTFUNCTOR,class TMARKER> 
@@ -15,7 +20,7 @@ protected:
 	typedef typename Spatial_Idexing::ObjType ObjType;
 	typedef typename Spatial_Idexing::ScalarType ScalarType;
 	typedef typename vcg::Point3<ScalarType>  CoordType;
-	typedef typename vcg::Line3<ScalarType> RayType;
+	typedef typename vcg::Ray3<ScalarType> RayType;
 	typedef typename Spatial_Idexing::CellIterator CellIterator;
 
 	///control right bonding current cell index (only on initialization)
@@ -116,8 +121,13 @@ public:
 	///contructor
 	RayIterator(Spatial_Idexing &_Si,INTFUNCTOR _int_funct):Si(_Si),int_funct(_int_funct){
 	};
+	
+	void SetMarker(TMARKER _tm)
+	{
+		tm=_tm;
+	}
 
-	void Init(RayType _r)
+	void Init(const RayType _r)
 	{
 		r=_r;
 		end=false;
@@ -125,7 +135,7 @@ public:
 		Elems.clear();
 		//CoordType ip;
 		//control if intersect the bounding box of the mesh
-		if(vcg::Intersection<ScalarType>(Si.bbox,r,start))
+		if(vcg::Intersection_Ray_Box<ScalarType>(Si.bbox,r,start))
 		{
 			Si.PToIP(start,CurrentCell);
 			_ControlLimits();
@@ -155,25 +165,14 @@ public:
 		for(l=first;l!=last;++l)
 		{
 			ObjType* elem=&(*(*l));
-		/*	CoordType p0 =  elem->V(0)->P();
-			CoordType p1 =  elem->V(1)->P();
-			CoordType p2 =  elem->V(2)->P();*/
-
-			//ScalarType dist=0;
+			ScalarType t;
 			CoordType Int;
-			if((!tm.IsMarked(elem))&&(int_funct((**l),r,Int)))
+			if((!tm.IsMarked(elem))&&(int_funct((**l),r,t)))
 			{
-				Elems.push_back(Entry_Type(elem,(r.Origin()-Int).Norm(),Int));
-				//std::push_heap<ElemIterator>(Elems.begin(),Elems.end());
+				Int=r.Origin()+r.Direction()*t;
+				Elems.push_back(Entry_Type(elem,t,Int));
 				tm.Mark(elem);
 			}
-			
-			/////different types of intersections as required
-			//if ((!_Unique)&&(_DoubleIntersect(r,p0,p1,p2,Int)))
-			//	Elems.push_back(Entry_Type(elem,(r.Origin()-Int).Norm(),Int));
-			//else
-			//if ((_Unique)&&(_UniqueIntersection(r,p0,p1,p2,Int)))
-			//	Elems.push_back(Entry_Type(elem,(r.Origin()-Int).Norm(),Int));
 		}
 		////then control if there are more than 1 element
 		if (Elems.size()>1)
@@ -361,6 +360,11 @@ public:
 	void SetIndexStructure(Spatial_Idexing &_Si)
 	{Si=_Si;}
 
+	void SetMarker(TMARKER _tm)
+	{
+		tm=_tm;
+	}
+
 	///initialize the Itarator
 	void Init(CoordType _p,const ScalarType &_max_dist)
 	{
@@ -433,7 +437,7 @@ public:
 							{
 								
 								CoordType nearest;
-								ScalarType dist;
+								ScalarType dist=Si.bbox.Diag();
 								dist_funct((**l),p,dist,nearest);
 								Elems.push_back(Entry_Type(elem,fabs(dist),nearest));
 								tm.Mark(elem);
@@ -536,4 +540,5 @@ protected:
 
 };
 }
+
 #endif
