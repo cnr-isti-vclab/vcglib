@@ -21,9 +21,12 @@
 *                                                                           *
 ****************************************************************************/
 /****************************************************************************
-  History
+History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/09/21 14:22:49  pietroni
+Added DynamicSpatialHAshTable class
+
 Revision 1.8  2005/09/19 13:35:45  pietroni
 use of standard grid interface
 use of vector instead of map inside the cell
@@ -61,6 +64,7 @@ added vcg header
 #define P2 83492791
 
 #include <vcg/space/index/grid_util.h>
+#include <vcg/space/index/grid_closest.h>
 //#include <map>
 #include <vector>
 #include <algorithm>
@@ -81,17 +85,19 @@ namespace vcg{
 	"Optimized Spatial Hashing for Coll	ision Detection of Deformable Objects", 
 	Matthias Teschner and Bruno Heidelberger and Matthias Muller and Danat Pomeranets and Markus Gross
 	*/
-	template < typename ContainerType,class FLT=double>
-	class SpatialHashTable:public BasicGrid<FLT>
+	template < typename OBJTYPE,class FLT=double>
+	class SpatialHashTable:public BasicGrid<OBJTYPE,FLT>
 	{
 
 	public:
 
-		typedef typename ContainerType::value_type ObjType;
+		typedef OBJTYPE ObjType;
 		typedef ObjType* ObjPtr;
 		typedef typename ObjType::ScalarType ScalarType;
 		typedef Point3<ScalarType> CoordType;
 
+		typedef typename SpatialHashTable<ObjType,FLT> SpatialHashType;
+		//typedef typename SpatialHashTable<ObjType,FLT> GridType;
 
 		//type of container of pointer to object in a Cell
 		//typedef typename std::pair<ObjType*,int> EntryType ;
@@ -149,10 +155,10 @@ namespace vcg{
 			///find the simplex into the cell
 			bool Find(ObjType* sim,IteMap &I)
 			{
-			for (I=_entries.begin();I<_entries.end();I++)
-				if ((*I).first==sim)
-					return true;
-			return false;
+				for (I=_entries.begin();I<_entries.end();I++)
+					if ((*I).first==sim)
+						return true;
+				return false;
 			}
 
 			///update or insert an element into a cell
@@ -161,7 +167,7 @@ namespace vcg{
 				IteMap I;
 				if (Find(sim,I))
 				{///update temporary mark
-						(*I).second=_tempMark;
+					(*I).second=_tempMark;
 				}
 				else
 					_entries.push_back(EntryType(sim,_tempMark));
@@ -209,7 +215,7 @@ namespace vcg{
 			bool operator !=(const Cell &h)  
 			{return ((cell_n!=h.CellN()));}
 
-			protected:
+		protected:
 			virtual void UpdateHMark(ObjType* s){}
 
 		}; // end struct Cell
@@ -229,7 +235,7 @@ namespace vcg{
 	protected:
 
 		Htable hash_table;
-		
+
 		///number of possible hash code [0...HashSpace]
 		int HashSpace;
 
@@ -243,7 +249,7 @@ namespace vcg{
 			hash_table.insert(HRecord(h,Cell(s,cell,tempMark)));
 			//Assert();	
 		}
-		
+
 		///return true and return the iterator to the cell if exist
 		bool _IsInHtable(Point3i cell,IteHtable &result)
 		{
@@ -273,7 +279,7 @@ namespace vcg{
 		}
 
 		virtual void _UpdateHMark(ObjType* s){}
-			 
+
 		///insert an element in a specified cell if the cell doesn't exist than
 		///create it.
 		void _InsertInCell(ObjType* s,Point3i cell)
@@ -293,20 +299,20 @@ namespace vcg{
 			return ((p.V(0)*P0 ^ p.V(1)*P1 ^ p.V(2)*P2)%HashSpace);
 		}
 
-		
+
 	public:
-		
-		///We need some extra space for numerical precision.
-		template <class Box3Type>
-		 void SetBBox( const Box3Type & b )
-		{
-			bbox.Import( b );
-			ScalarType t = bbox.Diag()/100.0;
-			if(t == 0) t = ScalarType(1e20);  // <--- Some doubts on this (Cigno 5/1/04)
-			bbox.Offset(t);
-			dim  = bbox.max - bbox.min;
-		}
-		
+
+		/////We need some extra space for numerical precision.
+		//template <class Box3Type>
+		// void SetBBox( const Box3Type & b )
+		//{
+		//	bbox.Import( b );
+		//	ScalarType t = bbox.Diag()/100.0;
+		//	if(t == 0) t = ScalarType(1e20);  // <--- Some doubts on this (Cigno 5/1/04)
+		//	bbox.Offset(t);
+		//	dim  = bbox.max - bbox.min;
+		//}
+
 		virtual vcg::Box3i Add( ObjType* s)
 		{
 			/*std::vector<Point3i> box;
@@ -325,34 +331,59 @@ namespace vcg{
 			return bb;
 		}
 
-		/// Insert a mesh in the grid.SetBBox() function must be called before
-		/// Hash space is cardinality of hash key set
-		void Set( ContainerType & s)
-		{
-			Set(s,s.size());
-		}
+		///// Insert a mesh in the grid.SetBBox() function must be called before
+		///// Hash space is cardinality of hash key set
+		//void Set( ContainerType & s)
+		//{
+		//	Set(s,s.size());
+		//}
+
+		///// Insert a mesh in the grid.SetBBox() function must be called before
+		//void Set( ContainerType & s,int _size )
+		//{
+		//	Point3i _siz;
+		//	BestDim( _size, dim, _siz );
+		//	Set(s,_siz);
+		//}
 
 		/// Insert a mesh in the grid.SetBBox() function must be called before
-		void Set( ContainerType & s,int _size )
+		template <class OBJITER>
+			void Set(const OBJITER & _oBegin, const OBJITER & _oEnd)
 		{
-			Point3i _siz;
-			BestDim( _size, dim, _siz );
-			Set(s,_siz);
-		}
-		
-		/// Insert a mesh in the grid.SetBBox() function must be called before
-		void Set(ContainerType & s, Point3i _siz)
-		{	
-			siz=_siz;
+			OBJITER i;
+			bbox.min=Point3<FLT>(0,0,0);
+			bbox.max=Point3<FLT>(0,0,0);
+			Box3<FLT> b;
+			for(i = _oBegin; i!= _oEnd; ++i)
+			{
+				(*i).GetBBox(b);
+				bbox.Add(b);
+			}
+
+			int _size=std::distance<OBJITER>(_oBegin,_oEnd);
+			dim  = bbox.max - bbox.min;
+			BestDim( _size, dim, siz );
 			// find voxel size
 			voxel[0] = dim[0]/siz[0];
 			voxel[1] = dim[1]/siz[1];
 			voxel[2] = dim[2]/siz[2];
-			typename ContainerType::iterator i; 
-			for(i = s.begin(); i!= s.end(); ++i)
+
+			for(i = _oBegin; i!= _oEnd; ++i)
 				Add(&(*i));
 		}
-		
+
+		//void Set(ContainerType & s, Point3i _siz)
+		//{	
+		//	siz=_siz;
+		//	// find voxel size
+		//	voxel[0] = dim[0]/siz[0];
+		//	voxel[1] = dim[1]/siz[1];
+		//	voxel[2] = dim[2]/siz[2];
+		//	typename ContainerType::iterator i; 
+		//	for(i = s.begin(); i!= s.end(); ++i)
+		//		Add(&(*i));
+		//}
+		//
 
 		/////initialize the structure HashSpace is one estimation about 
 		/////how many keys the system have to generate in order to obtain as less
@@ -367,7 +398,7 @@ namespace vcg{
 		//	conflicts=0;
 		//}	
 
-		
+
 
 		/*void AddElem( ObjType* s)
 		{
@@ -376,7 +407,7 @@ namespace vcg{
 		for (std::vector<Point3i>::iterator bi=box.begin();bi<box.end();bi++)
 		_InsertInCell(s,*bi);
 		}*/
-		
+
 		///return the simplexes of the cell that contain p
 		void Grid( const Point3d & p, CellIterator & first, CellIterator & last )
 		{
@@ -423,12 +454,12 @@ namespace vcg{
 
 		/*inline Point3i MinCell()
 		{
-			return PointToCell(min);
+		return PointToCell(min);
 		}
 
 		inline Point3i MaxCell()
 		{
-			return PointToCell(max);
+		return PointToCell(max);
 		}*/
 
 		///return the number of elemnts in the cell and the iterator to the cell
@@ -462,8 +493,31 @@ namespace vcg{
 		{tempMark++;}
 
 
+		template <class OBJPOINTDISTFUNCTOR, class OBJMARKER>
+			ObjPtr  GetClosest(OBJPOINTDISTFUNCTOR & _getPointDistance, OBJMARKER & _marker, 
+			const CoordType & _p, const ScalarType & _maxDist,ScalarType & _minDist, CoordType & _closestPt)
+		{
+			return (vcg::GridClosest<SpatialHashType,OBJPOINTDISTFUNCTOR,OBJMARKER>(*this,_getPointDistance,_marker, _p,_maxDist,_minDist,_closestPt));
+		}
+
+
+		template <class OBJPOINTDISTFUNCTOR, class OBJMARKER, class OBJPTRCONTAINER,class DISTCONTAINER, class POINTCONTAINER>
+			unsigned int GetKClosest(OBJPOINTDISTFUNCTOR & _getPointDistance,OBJMARKER & _marker, 
+			const unsigned int _k, const CoordType & _p, const ScalarType & _maxDist,OBJPTRCONTAINER & _objectPtrs,
+			DISTCONTAINER & _distances, POINTCONTAINER & _points)
+		{
+			return (vcg::GridGetKClosest<SpatialHashType,
+				OBJPOINTDISTFUNCTOR,OBJMARKER,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>(*this,_getPointDistance,_marker,_k,_p,_maxDist,_objectPtrs,_distances,_points));
+		}
+		
+		template <class OBJRAYISECTFUNCTOR, class OBJMARKER>
+		ObjPtr DoRay(OBJRAYISECTFUNCTOR & _rayIntersector, OBJMARKER & _marker, const Ray3<ScalarType> & _ray, const ScalarType & _maxDist, ScalarType & _t) 
+		{
+			return(vcg::GridDoRay<SpatialHashType,OBJRAYISECTFUNCTOR,OBJMARKER>(*this,_rayIntersector,_marker,_ray,_maxDist,_t));
+		}
+
 	}; // end class
-	
+
 	/** Spatial Hash Table Dynamic
 	Update the Hmark value on the simplex for dynamic updating of contents of the cell.
 	The simplex must have the HMark() function.
@@ -473,7 +527,7 @@ namespace vcg{
 	{
 		void _UpdateHMark(ObjType* s){s->HMark()=tempMark;}
 	};
-	
+
 }// end namespace
 
 #undef P0
