@@ -24,6 +24,11 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/09/30 13:15:48  pietroni
+added functions:
+     - GetKClosest
+     - DoRay
+
 Revision 1.2  2005/09/28 08:27:11  cignoni
 Added a control to avoid multiple check of the same cells during radial expansion
 Still miss some code to properly initialize when point is out of the BBox of the grid.
@@ -53,131 +58,88 @@ First Version
 
 namespace vcg{
 	
-	template <class SPATIAL_INDEX,class OBJPOINTDISTFUNCTOR, class OBJMARKER>
-		typename SPATIAL_INDEX::ObjPtr  GridClosest(SPATIAL_INDEX &Si,OBJPOINTDISTFUNCTOR _getPointDistance,
-		OBJMARKER & _marker,const typename SPATIAL_INDEX::CoordType & _p,
-		const typename SPATIAL_INDEX::ScalarType & _maxDist,typename SPATIAL_INDEX::ScalarType & _minDist,
-		typename SPATIAL_INDEX:: CoordType &_closestPt)
+	template <class SPATIAL_INDEX, class OBJPOINTDISTFUNCTOR, class OBJMARKER>
+		typename SPATIAL_INDEX::ObjPtr  GridClosest(SPATIAL_INDEX &Si, 
+                                                OBJPOINTDISTFUNCTOR _getPointDistance,
+ 		                                            OBJMARKER & _marker, 
+                                                const typename SPATIAL_INDEX::CoordType  & _p,
+		                                            const typename SPATIAL_INDEX::ScalarType & _maxDist,
+                                                typename SPATIAL_INDEX::ScalarType & _minDist,
+		                                            typename SPATIAL_INDEX:: CoordType &_closestPt)
 	{
-		typedef SPATIAL_INDEX::ObjPtr ObjPtr;
-		typedef SPATIAL_INDEX SpatialIndex;
-		typedef SPATIAL_INDEX::CoordType CoordType;
-		typedef SPATIAL_INDEX::ScalarType ScalarType;
+		typedef typename SPATIAL_INDEX::ObjPtr ObjPtr;
+		typedef typename SPATIAL_INDEX SpatialIndex;
+		typedef typename SPATIAL_INDEX::CoordType CoordType;
+		typedef typename SPATIAL_INDEX::ScalarType ScalarType;
+		typedef typename SPATIAL_INDEX::Box3x Box3x;
 
 		// Initialize min_dist with _maxDist to exploit early rejection test.
 		_minDist = _maxDist;
-
-		ScalarType dx = ( (_p[0]-Si.bbox.min[0])/Si.voxel[0] );
-		ScalarType dy = ( (_p[1]-Si.bbox.min[1])/Si.voxel[1] );
-		ScalarType dz = ( (_p[2]-Si.bbox.min[2])/Si.voxel[2] );
-
-		int ix = int( dx );
-		int iy = int( dy );
-		int iz = int( dz );
-
-		if (ix<0) ix=0;
-		if (iy<0) iy=0;
-		if (iz<0) iz=0;
-		if (ix>=Si.siz[0]-1) ix=Si.siz[0]-1;
-		if (iy>=Si.siz[1]-1) iy=Si.siz[1]-1;
-		if (iz>=Si.siz[2]-1) iz=Si.siz[2]-1;
-
-		if (!Si.bbox.IsIn(_p)){
-			assert (0);///the grid has to be extended until the point
-
-		}
-		double voxel_min=Si.voxel[0];
-		if (voxel_min<Si.voxel[1]) voxel_min=Si.voxel[1];
-		if (voxel_min<Si.voxel[2]) voxel_min=Si.voxel[2];
-
-		ScalarType radius=(dx-ScalarType(ix));
-		if (radius>0.5)  radius=(1.0-radius);	radius*=Si.voxel[0];
-
-		ScalarType tmp=dy-ScalarType(iy); 
-		if (tmp>0.5) tmp=1.0-tmp; 
-		tmp*=Si.voxel[1]; 
-		if (radius>tmp) radius=tmp;
-		tmp=dz-ScalarType(iz); 
-		if (tmp>0.5) tmp=1.0-tmp; 
-		tmp*=Si.voxel[2]; 
-		if (radius>tmp) radius=tmp;
-
-		CoordType t_res;
-		//ScalarType min_dist=1e10;
-		ObjPtr winner=NULL;
-
+    
+    ObjPtr winner=NULL;
 		_marker.UnMarkAll();
+    ScalarType newradius = Si.voxel.Norm();
+    ScalarType radius;
+    Box3i iboxdone,iboxtodo;
+    CoordType t_res;
+    SPATIAL_INDEX::CellIterator first,last,l;
+    if(Si.bbox.IsIn(_p))
+    {
+      Point3i _ip;
+      Si.PToIP(_p,_ip); 
+      Si.Grid( _ip[0],_ip[1],_ip[2], first, last );
+		  for(l=first;l!=last;++l)
+      {
+			  ObjPtr elem=&(**l);
+				if (_getPointDistance((**l), _p,_minDist, t_res))  // <-- NEW: use of distance functor
+							  {
+								  winner=elem;
+								  _closestPt=t_res;
+                  newradius=_minDist; // 
+							  }
+							  _marker.Mark(elem);
+      }
+      iboxdone=Box3i(_ip,_ip);
+    }
+    
+    int ix,iy,iz;
+    
+    do
+    {
+      radius=newradius;
+      Box3x boxtodo=Box3x(_p,radius);
+      boxtodo.Intersect(Si.bbox);
+      Si.BoxToIBox(boxtodo, iboxtodo);
+      if(!boxtodo.IsNull())
+      {
+		  for (ix=iboxtodo.min[0]; ix<=iboxtodo.max[0]; ix++) 
+				for (iy=iboxtodo.min[1]; iy<=iboxtodo.max[1]; iy++) 
+					for (iz=iboxtodo.min[2]; iz<=iboxtodo.max[2]; iz++) 
+						if(ix<iboxdone.min[0] || ix>iboxdone.max[0] ||  // this test is to avoid to re-process already analyzed cells.
+							 iy<iboxdone.min[1] || iy>iboxdone.max[1] ||
+							 iz<iboxdone.min[2] || iz>iboxdone.max[2] )
+						    {
+							    Si.Grid( ix, iy, iz, first, last );
+							     for(l=first;l!=last;++l) if (!(**l).IsD())							     
+								   {
+									  ObjPtr elem=&(**l);
+									  if( ! _marker.IsMarked(elem))
+									    {
+									    	if (_getPointDistance((**l), _p, _minDist, t_res)) 
+										        {
+											        winner=elem;
+											        _closestPt=t_res;
+										        };
+										    _marker.Mark(elem);
+									    }
+								   }
+							   }
+      }
+      if(!winner) newradius=radius+Si.voxel.Norm();
+      else newradius = _minDist;
+    }
+    while (_minDist>radius);
 
-		SpatialIndex::CellIterator first,last;
-		SpatialIndex::CellIterator l;
-
-		if ((ix>=0) && (iy>=0) && (iz>=0) && 
-			(ix<Si.siz[0]) && (iy<Si.siz[1]) && (iz<Si.siz[2])) {
-
-				Si.Grid( ix, iy, iz, first, last );
-				for(l=first;l!=last;++l)
-					if (!(**l).IsD())
-					{
-						ObjPtr elem=&(**l);
-						if(!_marker.IsMarked(elem))
-						{
-							//if (!l->Elem()->IsD() && l->Elem()->Dist(_p,min_dist,t_res)) {
-							//if (!l->Elem()->IsD() && _getPointDistance(*(l->Elem()), _p, min_dist, t_res)) { // <-- NEW: use of distance functor
-							if (_getPointDistance((**l), _p,_minDist, t_res))  // <-- NEW: use of distance functor
-							{
-								winner=elem;
-								_closestPt=t_res;
-							}
-							_marker.Mark(elem);
-						}
-					}
-			};
-
-		//return winner;
-
-		// the portion of the grid that have already been checked.
-		Point3i done_min, done_max; 
-		// the new box that we want to traverse: todo is a superset of done.
-		Point3i todo_min=Point3i(ix,iy,iz), todo_max=Point3i(ix,iy,iz);
-
-
-		// we should traverse only (todo - done).
-		while (_minDist>radius) {
-			done_min=todo_min; done_max=todo_max;
-			todo_min[0]--; if (todo_min[0]<0) todo_min[0]=0;
-			todo_min[1]--; if (todo_min[1]<0) todo_min[1]=0;
-			todo_min[2]--; if (todo_min[2]<0) todo_min[2]=0;
-			todo_max[0]++; if (todo_max[0]>=Si.siz[0]-1) todo_max[0]=Si.siz[0]-1;
-			todo_max[1]++; if (todo_max[1]>=Si.siz[1]-1) todo_max[1]=Si.siz[1]-1;
-			todo_max[2]++; if (todo_max[2]>=Si.siz[2]-1) todo_max[2]=Si.siz[2]-1;
-			radius+=voxel_min;
-			for (ix=todo_min[0]; ix<=todo_max[0]; ix++) 
-				for (iy=todo_min[1]; iy<=todo_max[1]; iy++) 
-					for (iz=todo_min[2]; iz<=todo_max[2]; iz++) 
-						if(ix<done_min[0] || ix>done_max[0] ||  // this test is to avoid to re-process already analyzed cells.
-							iy<done_min[1] || iy>done_max[1] ||
-							iz<done_min[2] || iz>done_max[2] )
-						{
-							Si.Grid( ix, iy, iz, first, last );
-							for(l=first;l!=last;++l)
-							{
-								if (!(**l).IsD())
-								{
-									ObjPtr elem=&(**l);
-									if( ! _marker.IsMarked(elem))
-									{
-										//if (!l->Elem()->IsD() && l->Elem()->Dist(_p,min_dist,t_res)) {
-										if (_getPointDistance((**l), _p, _minDist, t_res)) 
-										{
-											winner=elem;
-											_closestPt=t_res;
-										};
-										_marker.Mark(elem);
-									}
-								}
-							};
-						}
-		};
 		return winner;
 	};
 
