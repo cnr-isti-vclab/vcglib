@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2005/09/28 08:30:48  cignoni
+changed name of include, removed use of an undefined type (scalar instead of Scalar)
+removed unused code portions (the old closest code)
+
 Revision 1.12  2005/09/21 09:24:30  pietroni
 Added RayIterators.
 Added ClosestIterators on Triangles and Vertices.
@@ -79,207 +83,208 @@ header added
 #include <vcg/space/point4.h>
 #include <vcg/math/base.h>
 #include <vcg/simplex/face/distance.h>
-//#include <vcg/space/index/grid_static_ptr.h>
+#include <vcg/space/intersection3.h>
 #include <vcg/space/index/space_iterators.h>
-#include <vcg/space/index/grid_closest.h>
 
 namespace vcg {
-  namespace trimesh {
+	namespace trimesh {
 
-//**MARKER CLASSES**//
-template <class MESH_TYPE,class OBJ_TYPE>
-  class Tmark
-  {
-	  MESH_TYPE *m;
-  public:
-	  Tmark(){}
-	  void UnMarkAll(){m->UnMarkAll();}
-	  bool IsMarked(OBJ_TYPE* obj){return (m->IsMarked(obj));}
-	  void Mark(OBJ_TYPE* obj){m->Mark(obj);}
-	  void SetMesh(MESH_TYPE *_m)
-	  {m=_m;}
-  };
+		//**MARKER CLASSES**//
+		template <class MESH_TYPE,class OBJ_TYPE>
+		class Tmark
+		{
+			MESH_TYPE *m;
+		public:
+			Tmark(){}
+			void UnMarkAll(){m->UnMarkAll();}
+			bool IsMarked(OBJ_TYPE* obj){return (m->IsMarked(obj));}
+			void Mark(OBJ_TYPE* obj){m->Mark(obj);}
+			void SetMesh(MESH_TYPE *_m)
+			{m=_m;}
+		};
 
-  template <class MESH_TYPE>
-  class FaceTmark:public Tmark<MESH_TYPE,typename MESH_TYPE::FaceType>
-  {};
-   
-  template <class MESH_TYPE>
-  class VertTmark:public Tmark<MESH_TYPE,typename MESH_TYPE::VertexType>
-  {};
+		template <class MESH_TYPE>
+		class FaceTmark:public Tmark<MESH_TYPE,typename MESH_TYPE::FaceType>
+		{};
 
-//**INTERSECTION FUNCTIONS**//
-  ///class of functor used to calculate the radius-triangle intersection
-  template <class FACE_TYPE>
-  class FaceIntersection {
-	  typedef typename FACE_TYPE FaceType;
-	  typedef typename FACE_TYPE::ScalarType ScalarType;
-	  typedef typename vcg::Line3<ScalarType> RayType;
-	  typedef typename FaceType::CoordType CoordType;
+		template <class MESH_TYPE>
+		class VertTmark:public Tmark<MESH_TYPE,typename MESH_TYPE::VertexType>
+		{};
 
-  public: 
-	  inline bool operator () (const FaceType & f, RayType r,CoordType & Int) {
-		  CoordType p0=f.V(0)->P();
-		  CoordType p1=f.V(1)->P();
-		  CoordType p2=f.V(2)->P();
-		  ///2 sides of normal test 
-		  if ((vcg::Intersection<ScalarType>(r,p0,p1,p2,Int))
-			  ||(vcg::Intersection<ScalarType>(r,p0,p2,p1,Int)))	
-			  return ((r.Direction()*(Int-r.Origin()))>0);///control side of intersection
-		  return false;
-	  }
-  };
+		///class of functor used to calculate the point triangle distance and nearest point
+		template <class VERTEX_TYPE>
+		class VertexDistance {
+			typedef typename VERTEX_TYPE VertexType;
+			typedef typename VERTEX_TYPE::ScalarType ScalarType;
+			typedef typename VERTEX_TYPE::CoordType CoordType;
 
-//**DISTANCE FUNCTIONS**//
-  ///class of functor used to calculate the point triangle distance and nearest point
-  template <class FACE_TYPE>
-  class FaceDistance {
-	  typedef typename FACE_TYPE FaceType;
-	  typedef typename FACE_TYPE::ScalarType ScalarType;
-	  typedef typename FaceType::CoordType CoordType;
+		public: 
+			bool operator () (const VertexType & v, const CoordType & pt, ScalarType & dist, CoordType & result) {
+				ScalarType d=dist;
+				dist=(v.P()-pt).Norm();
+				result=pt;
+				return(d>dist);
+			}
+		};
 
-  public: 
-	  bool operator () (const FaceType & f, const CoordType & pt, ScalarType & mindist, CoordType & result) {
-		  return (vcg::face::PointDistance<FaceType>(f,pt, mindist, result));
-	  }
-  };
+		//**CLOSEST FUNCTION DEFINITION**//
+
+		/*
+
+		aka MetroCore
+		data una mesh m e una ug sulle sue facce trova il punto di m piu' vicino ad
+		un punto dato.
+		*/
+
+		// input: mesh, punto, griglia (gr), distanza limite (mdist)
+		// output: normale (interpolata) alla faccia e punto piu' vicino su di essa, e coord baricentriche del punto trovato
+
+		// Nota che il parametro template GRID non ci dovrebbe essere, visto che deve essere 
+		// UGrid<MESH::FaceContainer >, ma non sono riuscito a definirlo implicitamente 
+
+		template <class MESH, class GRID>
+			typename MESH::FaceType * GetClosest( MESH & mesh,GRID & gr,const typename GRID::CoordType & _p, 
+			const typename GRID::ScalarType & _maxDist,typename GRID::ScalarType & _minDist,
+			typename GRID::CoordType _closestPt,typename GRID::CoordType & _normf, 
+			typename GRID::CoordType & _ip)
+		{
+			typedef GRID::ScalarType ScalarType;
+			typedef Point3<ScalarType> Point3x;
+
+			typedef FaceTmark<MESH> MarkerFace;
+			MarkerFace mf;
+			mf.SetMesh(&mesh);
+			typedef vcg::face::PointDistanceFunctor FDistFunct;
+			_minDist=_maxDist;
+			typename MESH::FaceType* bestf= gr.GetClosest<FDistFunct,MarkerFace>(FDistFunct(),mf,_p,_maxDist,_minDist,_closestPt);
+
+			if(_maxDist> ScalarType(fabs(_minDist)))
+				{
+					// f=bestf;
+					typename MESH::ScalarType alfa, beta, gamma;
+					//calcolo normale con interpolazione trilineare
+					bestf->InterpolationParameters(_closestPt, alfa, beta, gamma);
+					_normf =  (bestf->V(0)->cN())*alfa+
+						(bestf->V(1)->cN())*beta+
+						(bestf->V(2)->cN())*gamma ;
+					_ip=Point3x(alfa,beta,gamma);
+					//normf.Normalize(); inutile si assume le normali ai vertici benfatte										
+
+					_minDist = fabs(_minDist);
+					return(bestf);
+				}
+				return (0);
+		}
+
+		///*	RICONTROLLARE
+		/*template <class MESH, class GRID>
+			typename MESH::FaceType * GetClosest( MESH & mesh,GRID & gr,const Point3<SCALAR> & _p, 
+			const SCALAR & _maxDist,SCALAR & _minDist,Point3<SCALAR> _closestPt,
+			Point3<SCALAR> & _normf)
+		{
+			Point3<SCALAR> _ip;
+			return (GetClosest<MESH,GRID>(mesh,gr,_p,_maxDist,_minDist,_closestPt,_normf,_ip));
+		}*/
+
+		/*	RICONTROLLARE
+		template <class MESH, class GRID, class SCALAR>
+			void ClosestVertex( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & mdist, 
+			Point3<SCALAR> & normf, Point3<SCALAR> & bestq, typename MESH::VertexType * &v)
+		{
+			scalar error = mdist;
+			typedef VertTmark<MESH> MarkerVert;
+			MarkerVert t;
+			t.SetMesh(&mesh);
+			typedef typename VertexDistance<typename MESH::VertexType> PDistFunct;
+			v= vcg::GetClosest<GRID,PDistFunct,MarkerFace>(p,mdist,PDistFunct() ,error,bestq,t,gr);
+		}*/
+
 	
-  ///class of functor used to calculate the point triangle distance and nearest point
-  template <class VERTEX_TYPE>
-  class VertexDistance {
-	  typedef typename VERTEX_TYPE VertexType;
-	  typedef typename VERTEX_TYPE::ScalarType ScalarType;
-	  typedef typename VERTEX_TYPE::CoordType CoordType;
+		template <class MESH, class GRID, class OBJPTRCONTAINER,class DISTCONTAINER, class POINTCONTAINER>
+			unsigned int GetKClosest(MESH & mesh,GRID & gr, const unsigned int _k, 
+			const typename GRID::CoordType & _p, const typename GRID::ScalarType & _maxDist,
+			OBJPTRCONTAINER & _objectPtrs,DISTCONTAINER & _distances, POINTCONTAINER & _points)
+		{
+			typedef FaceTmark<MESH> MarkerFace;
+			MarkerFace mf;
+			mf.SetMesh(&mesh);
+			typedef vcg::face::PointDistanceFunctor FDistFunct;
+			return (gr.GetKClosest<FDistFunct,MarkerFace,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>
+				(FDistFunct(),mf,_k,_p,_maxDist,_objectPtrs,_distances,_points));
+		}
 
-  public: 
-	  bool operator () (const VertexType & v, const CoordType & pt, ScalarType & dist, CoordType & result) {
-	     ScalarType d=dist;
-		 dist=(v.P()-pt).Norm();
-		 result=pt;
-		 return(d>dist);
-	  }
-  };
-
-//**CLOSEST FUNCTION DEFINITION**//
-
-/*
-
-aka MetroCore
-data una mesh m e una ug sulle sue facce trova il punto di m piu' vicino ad
-un punto dato.
-*/
-
-// input: mesh, punto, griglia (gr), distanza limite (mdist)
-// output: normale (interpolata) alla faccia e punto piu' vicino su di essa, e coord baricentriche del punto trovato
-
-// Nota che il parametro template GRID non ci dovrebbe essere, visto che deve essere 
-// UGrid<MESH::FaceContainer >, ma non sono riuscito a definirlo implicitamente 
-
-template <class MESH, class GRID, class SCALAR>
-void Closest( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & mdist, 
-									Point3<SCALAR> & normf, Point3<SCALAR> & bestq, typename MESH::FaceType * &f, Point3<SCALAR> &ip)
-{
-   typedef SCALAR ScalarType;
-   typedef Point3<ScalarType> Point3x;
-   typedef Box3<SCALAR> Box3x;
-	
-	
-  ScalarType error = mdist;
-  typedef FaceTmark<MESH> MarkerFace;
-  MarkerFace t;
-  t.SetMesh(&mesh);
-  typedef typename FaceDistance<typename MESH::FaceType> FDistFunct;
-  typename MESH::FaceType* bestf= vcg::GetClosest<GRID,FDistFunct,MarkerFace>(p,mdist,FDistFunct() ,error,bestq,t,gr);
-
-  if(mdist > ScalarType(fabs(error)))
-  {
-	  f=bestf;
-	  typename MESH::ScalarType alfa, beta, gamma;
-	  //calcolo normale con interpolazione trilineare
-	  bestf->InterpolationParameters(bestq, alfa, beta, gamma);
-	  normf =  (bestf->V(0)->cN())*alfa+
-						 (bestf->V(1)->cN())*beta+
-						 (bestf->V(2)->cN())*gamma ;
-	  ip=Point3x(alfa,beta,gamma);
-	  //normf.Normalize(); inutile si assume le normali ai vertici benfatte										
-    
-    mdist = ScalarType(fabs(error));
-  }
-}
-
-template <class MESH, class GRID, class SCALAR>
-void Closest( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & mdist, 
-									Point3<SCALAR> & normf, Point3<SCALAR> & bestq, typename MESH::FaceType * &f)
-{
-	Point3<SCALAR> ip;
-	Closest<MESH,GRID,SCALAR>(mesh,p,gr,mdist,normf,bestq,f,ip);
-}
-
-template <class MESH, class GRID, class SCALAR>
-void ClosestVertex( MESH & mesh, const Point3<SCALAR> & p, GRID & gr, SCALAR & mdist, 
-									Point3<SCALAR> & normf, Point3<SCALAR> & bestq, typename MESH::VertexType * &v)
-{
-  scalar error = mdist;
-  typedef VertTmark<MESH> MarkerVert;
-  MarkerVert t;
-  t.SetMesh(&mesh);
-  typedef typename VertexDistance<typename MESH::VertexType> PDistFunct;
-  v= vcg::GetClosest<GRID,PDistFunct,MarkerFace>(p,mdist,PDistFunct() ,error,bestq,t,gr);
-}
+		template <class MESH, class GRID>
+		typename GRID::ObjPtr DoRay(MESH & mesh,GRID & gr, const Ray3<typename GRID::ScalarType> & _ray,
+		const typename GRID::ScalarType & _maxDist, typename GRID::ScalarType & _t) 
+		{
+			typedef MESH::FaceType FaceType;
+			typedef MESH::ScalarType ScalarType;
+			typedef FaceTmark<MESH> MarkerFace;
+			MarkerFace mf;
+			mf.SetMesh(&mesh);
+			typedef vcg::RayTriangleIntersectionFunctor<true> FintFunct;
+			return(gr.DoRay(FintFunct(),mf,_ray,_maxDist,_t));
+		}
 
 
-//**ITERATORS DEFINITION**//
+		//**ITERATORS DEFINITION**//
 
-template <class GRID,class MESH>
-class ClosestFaceIterator:public vcg::ClosestIterator<GRID,FaceDistance<typename MESH::FaceType>,typename FaceTmark<MESH> >
-{
-public:
-	typedef typename GRID GridType;
-	typedef typename MESH MeshType;
-	typedef typename FaceTmark<MESH> MarkerFace;
-	typedef typename FaceDistance<typename MESH::FaceType> FDistFunct;
-	typedef typename vcg::ClosestIterator<GRID,FaceDistance<typename MESH::FaceType>,typename FaceTmark<MESH> > ClosestBaseType;
+		template <class GRID,class MESH>
+		class ClosestFaceIterator:public vcg::ClosestIterator<GRID,
+		 	  vcg::face::PointDistanceFunctor,typename FaceTmark<MESH> >
+		{
+		public:
+			typedef typename GRID GridType;
+			typedef typename MESH MeshType;
+			typedef typename FaceTmark<MESH> MarkerFace;
+			typedef typename vcg::face::PointDistanceFunctor PDistFunct;
+			typedef typename vcg::ClosestIterator<GRID,PDistFunct,typename FaceTmark<MESH> > ClosestBaseType;
+			typedef typename MESH::FaceType FaceType;
+			typedef typename MESH::ScalarType ScalarType;
 
-	ClosestFaceIterator(GridType &_Si):ClosestBaseType(_Si,FDistFunct()){}
+			//ClosestFaceIterator(GridType &_Si):ClosestBaseType(_Si,PDistFunct<FaceType,ScalarType>()){}
+			ClosestFaceIterator(GridType &_Si):ClosestBaseType(_Si,PDistFunct()){}
 
-	void SetMesh(MeshType *m)
-	{tm.SetMesh(m);}
-};
+			void SetMesh(MeshType *m)
+			{tm.SetMesh(m);}
+		};
 
-template <class GRID,class MESH>
-class ClosestVertexIterator:public vcg::ClosestIterator<GRID,VertexDistance<typename MESH::VertexType>,typename VertTmark<MESH> >
-{
-public:
-	typedef typename GRID GridType;
-	typedef typename MESH MeshType;
-	typedef typename VertTmark<MESH> MarkerVert;
-	typedef typename VertexDistance<typename MESH::VertexType> VDistFunct;
-	typedef typename vcg::ClosestIterator<GRID,VertexDistance<typename MESH::VertexType>,typename VertTmark<MESH> > ClosestBaseType;
+		template <class GRID,class MESH>
+		class ClosestVertexIterator:public vcg::ClosestIterator<GRID,VertexDistance<typename MESH::VertexType>,typename VertTmark<MESH> >
+		{
+		public:
+			typedef typename GRID GridType;
+			typedef typename MESH MeshType;
+			typedef typename VertTmark<MESH> MarkerVert;
+			typedef typename VertexDistance<typename MESH::VertexType> VDistFunct;
+			typedef typename vcg::ClosestIterator<GRID,VertexDistance<typename MESH::VertexType>,typename VertTmark<MESH> > ClosestBaseType;
 
-	ClosestVertexIterator(GridType &_Si):ClosestBaseType(_Si,VDistFunct()){}
+			ClosestVertexIterator(GridType &_Si):ClosestBaseType(_Si,VDistFunct()){}
 
-	void SetMesh(MeshType *m)
-	{tm.SetMesh(m);}
-};
+			void SetMesh(MeshType *m)
+			{tm.SetMesh(m);}
+		};
 
-template <class GRID,class MESH>
-class TriRayIterator:public vcg::RayIterator<GRID,FaceIntersection<typename MESH::FaceType>,typename FaceTmark<MESH> >
-{
-public:
-	typedef typename GRID GridType;
-	typedef typename MESH MeshType;
-	typedef typename FaceTmark<MESH> MarkerFace;
-	typedef typename FaceIntersection<typename MESH::FaceType> FintFunct;
-	typedef typename vcg::RayIterator<GRID,FaceIntersection<typename MESH::FaceType>,typename FaceTmark<MESH> > RayBaseType;
+		template <class GRID,class MESH>
+		class TriRayIterator:public vcg::RayIterator<GRID,vcg::RayTriangleIntersectionFunctor<true>,typename FaceTmark<MESH> >
+		{
+		public:
+			typedef typename GRID GridType;
+			typedef typename MESH MeshType;
+			typedef typename FaceTmark<MESH> MarkerFace;
+			typedef typename vcg::RayTriangleIntersectionFunctor<true> FintFunct;
+			typedef typename vcg::RayIterator<GRID,FintFunct,typename FaceTmark<MESH> > RayBaseType;
+			typedef typename MESH::FaceType FaceType;
+			typedef typename MESH::ScalarType ScalarType;
 
-	TriRayIterator(GridType &_Si):RayBaseType(_Si,FintFunct()){}
+			TriRayIterator(GridType &_Si):RayBaseType(_Si,FintFunct()){}
 
-	void SetMesh(MeshType *m)
-	{tm.SetMesh(m);}
+			void SetMesh(MeshType *m)
+			{tm.SetMesh(m);}
 
-};
+		};
 
-}	 // end namespace trimesh
+	}	 // end namespace trimesh
 }	 // end namespace vcg
 
 #endif
