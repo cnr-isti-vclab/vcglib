@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/09/29 14:48:15  rita_borgo
+Fixed code related to creation of the XML file
+
 Revision 1.3  2005/09/28 13:57:09  rita_borgo
 Fixed some printout not alligned
 
@@ -200,7 +203,7 @@ void main(int argc,char ** argv){
 
 
 	MyMesh m;
-	bool DEBUG = false;
+	bool DEBUG = true;
 
 
 	/*------------XML file part ------------------*/
@@ -225,7 +228,7 @@ void main(int argc,char ** argv){
 
 
 	if(DEBUG)
-		argv[1] = "C:\\sf\\apps\\msvc\\trimeshinfo\\cube.ply";
+		argv[1] = "C:\\sf\\apps\\msvc\\trimeshinfo\\Release\\tests\\kite_hole3.ply";
 
 	else
 	{
@@ -335,17 +338,17 @@ void main(int argc,char ** argv){
 	MyMesh::FaceIterator gi;
 	vcg::face::Pos<MyMesh::FaceType> he;
 	vcg::face::Pos<MyMesh::FaceType> hei;
-	int j;
+	
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 		(*fi).ClearS();
 
-	int man=0;
+	int cf=0;
 	bool Manifold = true;
 
-
+	int j =0 ;
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 	{
-		for (j=0;j<3;++j)
+		for (j=0;j<3;j++)
 		{
 			if(!IsManifold(*fi,j))
 			{
@@ -354,8 +357,16 @@ void main(int argc,char ** argv){
 				--fi;
 				j=3;
 			}
+			else if((!fi->HasFFAdjacency())&&(fi!=m.face.begin()))
+			{
+				Manifold = false;
+				fi= m.face.end();
+				--fi;
+				j=3;
+			}
 		}
 	}
+
 	if (!Manifold)
 	{
 		fprintf(index, "<p> Manifold: NO </p>"); 
@@ -408,7 +419,7 @@ void main(int argc,char ** argv){
 	{
 		(*fi).SetS();
 		count_e +=3;								//assume that we have to increase the number of edges with three
-		for(int j=0; j<3; j++)
+		for(j=0; j<3; j++)
 		{
 			if (fi->IsBorder(j))			//If this edge is a border edge
 				boundary_e++;						//  then increase the number of boundary edges
@@ -422,7 +433,7 @@ void main(int argc,char ** argv){
 				hei.Set(&(*fi), j , fi->V(j));
 				he=hei;
 				he.NextF();
-				while (he.f!=hei.f)			//	so we have to iterated all faces that are connected to this edge
+				while (he.f!=hei.f)			//	so we have to iterate all faces that are connected to this edge
 				{
 					if (he.f->IsS())			//  if one of the other faces was already visited than this edge was counted already.
 					{
@@ -1167,13 +1178,13 @@ void main(int argc,char ** argv){
 
 	string fs;
 
-	cout<< "\t To save the file: [s/S]"<< endl;
+	cout<< "\t To save the file: [s/S]\n\t";
 	cin>>ans;
 
 
 	if((ans == "S")||(ans == "s"))
 	{
-		cout<< "\t available formats: [ply, off, stl] "<<endl;
+		cout<< "\t available formats: [ply, off, dxf, stl] "<<endl;
 		cout<< "\t enter format"<<endl;
 		cin>>ans;
 		cout<<"\t enter filename"<<endl;
@@ -1190,6 +1201,10 @@ void main(int argc,char ** argv){
 			tri::io::ExporterOFF<MyMesh>::Save(m,filesave);
 	}
 
+	cout<<"\t create XML files? [y/Y|n/N]"<<endl;
+	cin>>ans;
+	if((ans=="Y")||(ans=="y"))
+	{
 	/*------------XML file part ------------------*/
 	doc.addSlots(sn);
 	OwnSlotsNode* ossn = new OwnSlotsNode;
@@ -1203,7 +1218,8 @@ void main(int argc,char ** argv){
 	doc.addInstances(in);
 	doc.finalizeMain("/",XML_SCHEMA_NAME);
 	doc.printXMLTree();
-	fclose(index);
+	}
 	/*--------------------------------------------*/
+	fclose(index);
 }
 
