@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/09/30 13:29:40  rita_borgo
+Fixed Manifold Test
+
 Revision 1.4  2005/09/29 14:48:15  rita_borgo
 Fixed code related to creation of the XML file
 
@@ -199,13 +202,18 @@ static int DuplicateVertex( MyMesh & m )    // V1.0
 	ans.clear();
 	return deleted;
 }
+
+
 void main(int argc,char ** argv){
 
 
 	MyMesh m;
 	bool DEBUG = true;
-
-
+int k;
+	k=3;
+	int j;
+	j=0;
+cout<<"Punto 1"<<endl;
 	/*------------XML file part ------------------*/
 
 	static char* XML_SCHEMA_NAME = "protegekb";
@@ -213,6 +221,7 @@ void main(int argc,char ** argv){
 	MainNode* mn = new MainNode;
 
 	/*--------------------------------------------*/
+cout<<"Punto 2"<<endl;
 
 	//load the mesh
 	//argv[1]=(char*)"c:\\checkup\\debug\\column1m.ply";
@@ -226,6 +235,7 @@ void main(int argc,char ** argv){
 		"   release date: "__DATE__"\n"
 		"-------------------------------\n\n");
 
+cout<<"Punto 3"<<endl;
 
 	if(DEBUG)
 		argv[1] = "C:\\sf\\apps\\msvc\\trimeshinfo\\Release\\tests\\kite_hole3.ply";
@@ -239,10 +249,12 @@ void main(int argc,char ** argv){
 			exit(-1);
 		}
 	}
+cout<<"Punto 4"<<endl;
 
 
 	OpenMesh(argv[1],m);
 
+cout<<"Punto 5"<<endl;
 
 
 	/*------------XML file part ------------------*/
@@ -269,6 +281,7 @@ void main(int argc,char ** argv){
 	printf("\t Number of faces: %d \n", m.fn);
 
 
+cout<<"Punto 6"<<endl;
 
 	/*------------XML file part ------------------*/
 	NodeGroup* ng = new NodeGroup;
@@ -302,6 +315,7 @@ void main(int argc,char ** argv){
 	ng->addNode(osn);
 	/*--------------------------------------------*/
 
+cout<<"Punto 7"<<endl;
 
 
 	if(m.HasPerFaceColor()||m.HasPerVertexColor())
@@ -327,10 +341,7 @@ void main(int argc,char ** argv){
 		/*--------------------------------------------*/
 	}
 
-
-
-
-
+	cout<<"Punto 8"<<endl;
 	vcg::tri::UpdateTopology<MyMesh>::FaceFace(m);
 
 	// IS MANIFOLD
@@ -341,11 +352,11 @@ void main(int argc,char ** argv){
 	
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 		(*fi).ClearS();
-
 	int cf=0;
-	bool Manifold = true;
-
-	int j =0 ;
+	bool Manifold=true;
+	
+	
+	
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 	{
 		for (j=0;j<3;j++)
@@ -367,6 +378,7 @@ void main(int argc,char ** argv){
 		}
 	}
 
+	
 	if (!Manifold)
 	{
 		fprintf(index, "<p> Manifold: NO </p>"); 
