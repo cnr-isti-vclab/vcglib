@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2005/09/29 15:30:10  pietroni
+Added function RayBoxIntersection, renamed intersection line box from "Intersection" to "Intersection_Line_Box"
+
 Revision 1.17  2005/09/29 11:48:00  m_di_benedetto
 Added functor RayTriangleIntersectionFunctor.
 
@@ -376,7 +379,7 @@ bool Intersection_Ray_Box( const Box3<T> & box, const Ray3<T> & r, Point3<T> & c
 	Line3<T> l;
 	l.SetOrigin(r.Origin());
 	l.SetDirection(r.Direction());
-	return(Intersection_Line_Box<T>(box,r,coord));
+	return(Intersection_Line_Box<T>(box,l,coord));
 }	
 
 // ray-box
