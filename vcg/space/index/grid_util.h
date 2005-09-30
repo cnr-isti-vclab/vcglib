@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/09/16 11:56:38  cignoni
+removed wrong typename and added ending \n
+
 Revision 1.4  2005/08/02 11:01:05  pietroni
 added IPToP and IBoxToBox functions, modified BoxToIBox function in order to use PToIP function
 
@@ -41,6 +44,9 @@ Removed BestDim function from the grid_static_ptr class and moved to a indipende
 #ifndef __VCGLIB_GRID_UTIL
 #define __VCGLIB_GRID_UTIL
 
+#include<vcg/space/index/base.h>
+#include<vcg/space/box3.h>
+#include <vcg/space/index/space_iterators.h>
 
 namespace vcg {
 
@@ -48,10 +54,15 @@ namespace vcg {
 	// contiene tutte le funzioni solite per le conversioni tra point3f e point3i
 
 
-	template <class ScalarType>
-	class BasicGrid {
+	template <class OBJTYPE, class SCALARTYPE> 
+	class BasicGrid:public SpatialIndex<OBJTYPE,SCALARTYPE> {
 
-		typedef Box3<ScalarType> Box3x;
+		typedef typename Box3<ScalarType> Box3x;
+		typedef typename SCALARTYPE ScalarType;
+		typedef typename Point3<SCALARTYPE> CoordType;
+		typedef typename OBJTYPE ObjType;
+		typedef typename OBJTYPE* ObjPtr;
+		typedef typename BasicGrid<OBJTYPE,SCALARTYPE> GridType;
 
 	public:
 		Box3x bbox;
