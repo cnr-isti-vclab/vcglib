@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/07/20 23:10:01  cignoni
+Uncommented Add of matrix transformed bbox
+
 Revision 1.7  2004/07/15 09:47:55  ganovelli
 added function P(int i) to list the box's vertices
 
@@ -83,6 +86,11 @@ public:
 	inline  Box3( const Box3 & b ) { min=b.min; max=b.max; }
 		/// Min Max constructor
 	inline  Box3( const Point3<BoxScalarType> & mi, const Point3<BoxScalarType> & ma ) { min = mi; max = ma; }
+    /// Point Radius Constructor
+  inline Box3(const Point3<BoxScalarType> & center, const BoxScalarType & radius) {
+    min = center-Point3<BoxScalarType>(radius,radius,radius);
+    max = center+Point3<BoxScalarType>(radius,radius,radius);
+  }
 		/// The bounding box distructor
 	inline ~Box3() { }
 		/// Operator to compare two bounding box
