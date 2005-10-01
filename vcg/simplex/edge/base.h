@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/07/15 15:45:51  ganovelli
+template parametere Scalar removed
+
 Revision 1.6  2005/04/14 11:35:09  ponchio
 *** empty log message ***
 
@@ -58,7 +61,7 @@ namespace vcg {
     This is the base class for definition of a face of the mesh.
 		@param SVTYPE (Templete Parameter) Specifies the vertex class type.
  */
-template <class EDGENAME,class SVTYPE, class TCTYPE = TCoord2<float,1> > class EDGE_TYPE
+template <class EDGENAME, class SVTYPE, class TCTYPE = TCoord2<float,1> > class EDGE_TYPE
 {
 public:
 	///	The base type of the segment
@@ -69,7 +72,6 @@ public:
 	typedef SVTYPE VertexType;
 	/// The type of the the vertex coordinate
 	typedef Point3< ScalarType > CoordType;
-	typedef Point3< ScalarType > NormalType;
 	
 	/// The bounding box type
 	typedef Box3<ScalarType> BoxType;
@@ -83,8 +85,6 @@ public:
 	/// Costructor
   inline void Set(VertexType* v0,VertexType* v1){v[0]=v0;v[1]=v1;}
 
-	/// This are the _flags of face, the default value is 0
-	int  _flags;		
 
 /***********************************************/
 /** @name Vertex Pointer
@@ -101,56 +101,42 @@ public:
 	 */
 	inline SVTYPE * & V( const int j )
 	{	
-		assert( (_flags & DELETED) == 0 );
-		assert( (_flags & NOTREAD) == 0 ); 
-		assert( (_flags & NOTWRITE) == 0 );
-		assert(j >= 0);
-		assert(j <  2);
+		assert( !IsD() );
+		assert(j >= 0 && j <  2);
 		return v[j];
 	}
 
 	inline const SVTYPE * const & V( const int j ) const
 	{
-		assert( (_flags & DELETED) == 0 );
-		assert( (_flags & NOTREAD) == 0 );
-		assert(j>=0);
-		assert(j<2);
+		assert( !IsD() );
+		assert(j>=0 && j<2);
 		return v[j];
 	}
 	inline const SVTYPE * const & cV( const int j ) const
 	{
-		assert( (_flags & DELETED) == 0 );
-		assert( (_flags & NOTREAD) == 0 );
-		assert(j>=0);
-		assert(j<2);
+		assert( !IsD() );
+		assert(j>=0 && j<2);
 		return v[j];
 	}
 
 	// Shortcut per accedere ai punti delle facce
 	inline CoordType & P( const int j )
 	{	
-		assert( (_flags & DELETED) == 0 );
-		assert( (_flags & NOTREAD) == 0 ); 
-		assert( (_flags & NOTWRITE) == 0 );
-		assert(j>=0);
-		assert(j<2);
+		assert( !IsD() );
+		assert(j>=0 && j<2);
 		return v[j]->P();
 	}
 
 	inline const CoordType & P( const int j ) const
 	{
-		assert( (_flags & DELETED) == 0 );
-		assert( (_flags & NOTREAD) == 0 );
-		assert(j>=0);
-		assert(j<2);
+		assert( !IsD() );
+		assert(j>=0 && j<2);
 		return v[j]->cP();
 	}
 	inline const CoordType & cP( const int j ) const
 	{
-		assert( (_flags & DELETED) == 0 );
-		assert( (_flags & NOTREAD) == 0 );
-		assert(j>=0);
-		assert(j<2);
+		assert( !IsD() );
+		assert(j>=0 && j<2);
 		return v[j]->cP();
 	}
 
@@ -160,29 +146,27 @@ public:
 	inline SVTYPE * & V0( const int j ) { return V(j);}
 	inline SVTYPE * & V1( const int j ) { return V((j+1)%2);}
 	inline const SVTYPE * const &  V0( const int j ) const { return V(j);}
-	inline const SVTYPE * const &  V1( const int j ) const { return V((j+1)%3);}
+	inline const SVTYPE * const &  V1( const int j ) const { return V((j+1)%2);}
 	inline const SVTYPE * const & cV0( const int j ) const { return cV(j);}
-	inline const SVTYPE * const & cV1( const int j ) const { return cV((j+1)%3);}
+	inline const SVTYPE * const & cV1( const int j ) const { return cV((j+1)%2);}
 
 	/// Shortcut per accedere ai punti delle facce
 	inline CoordType & P0( const int j ) { return V(j)->P();}
-	inline CoordType & P1( const int j ) { return V((j+1)%3)->P();}
+	inline CoordType & P1( const int j ) { return V((j+1)%2)->P();}
 	inline const CoordType &  P0( const int j ) const { return V(j)->P();}
-	inline const CoordType &  P1( const int j ) const { return V((j+1)%3)->P();}
+	inline const CoordType &  P1( const int j ) const { return V((j+1)%2)->P();}
 	inline const CoordType & cP0( const int j ) const { return cV(j)->P();}
-	inline const CoordType & cP1( const int j ) const { return cV((j+1)%3)->P();}
+	inline const CoordType & cP1( const int j ) const { return cV((j+1)%2)->P();}
 
 	inline SVTYPE * & UberV( const int j )
 	{	
-		assert(j>=0);
-		assert(j<2);
+		assert(j>=0 && j<2);
 		return v[j];
 	}
 
 	inline const SVTYPE * const & UberV( const int j ) const
 	{
-		assert(j>=0);
-		assert(j<2);
+		assert(j>=0 && j<2);
 		return v[j];
 	}
 
@@ -196,7 +180,7 @@ public:
 **/
   //@{
 
-#ifdef __VCGLIB_EDGE_FN
+#ifdef __VCGLIB_EDGE_EN
 	/// This vector indicates the normal of the face (defines if FACE_N is defined)
 protected:
 	CoordType _n;
@@ -206,7 +190,7 @@ public:
   /// Return the reference of the normal to the face (if __VCGLIB_EDGE_FN is defined).
 	inline CoordType & N()
 	{
-#ifdef __VCGLIB_EDGE_FN
+#ifdef __VCGLIB_EDGE_EN
 	return _n;
 #else
 	assert(0);
@@ -216,7 +200,7 @@ public:
 		/// Return the reference of the normal to the face (if __VCGLIB_EDGE_FN is defined).
 	inline const CoordType & N() const
 	{
-#ifdef __VCGLIB_EDGE_FN
+#ifdef __VCGLIB_EDGE_EN
 		return _n;
 #else
 	return *(CoordType *)0;
@@ -225,7 +209,7 @@ public:
 	/// Return the reference of the normal to the face (if __VCGLIB_EDGE_FN is defined).
 	inline const CoordType cN() const
 	{
-#ifdef __VCGLIB_EDGE_FN
+#ifdef __VCGLIB_EDGE_EN
 		return _n;
 #else
 	return *(CoordType *)0;
@@ -241,68 +225,32 @@ public:
 **/
   //@{
 
-#ifdef __VCGLIB_EDGE_FQ
+#ifdef __VCGLIB_EDGE_EQ
 protected:
 	float _q;
 #endif
 public:
 	float & Q()
 	{
-#ifdef __VCGLIB_EDGE_FQ
+#ifdef __VCGLIB_EDGE_EQ
 		return _q;
 #else
 		assert(0);
-		return *(float*)(&_flags);
+		return *(float*)(0);
 #endif
 	}
 
 const float & Q() const
 	{
-#ifdef __VCGLIB_EDGE_FQ
+#ifdef __VCGLIB_EDGE_EQ
 		return _q;
 #else
 		assert(0);
-		return *(float*)(&_flags);
+		return *(float*)(0);
 #endif
 	}
 
   //@}
-
-/***********************************************/
-/** @name Texture
-    blah
-    blah
-**/
-  //@{
-
-// Per Wedge Texture Coords
-protected:
-#ifdef __VCGLIB_EDGE_WT
-	TCTYPE _wt[3];
-#endif
-public:
-	TCTYPE & WT(const int i)
-	{
-#ifdef __VCGLIB_EDGE_WT
-		return _wt[i];
-#else
-		assert(0);
-		return *(TCTYPE*)(&_flags);
-#endif
-	}
-
-	const TCTYPE & WT(const int i) const
-	{
-#ifdef __VCGLIB_EDGE_WT
-		return _wt[i];
-#else
-		assert(0);
-		return *(TCTYPE*)(&_flags);
-#endif
-	}
-
-
- //@}
 
 /***********************************************/
 /** @name Colors
@@ -311,55 +259,29 @@ public:
 **/
   //@{
 protected:
-#ifdef __VCGLIB_EDGE_FC
+#ifdef __VCGLIB_EDGE_EC
 	Color4b _c;
 #endif
 
 public:
 	Color4b & C()
 	{
-#ifdef __VCGLIB_EDGE_FC
+#ifdef __VCGLIB_EDGE_EC
 		return _c;
 #else
 		assert(0);
-		return *(Color4b*)(&_flags);
+		return *(Color4b*)(0);
 #endif
 	}
 
 	const Color4b C() const
 	{
-#ifdef __VCGLIB_EDGE_FC
+#ifdef __VCGLIB_EDGE_EC
 		return _c;
 #else
 		return Color4b(Color4b::White);
 #endif
 	}
-
-protected:
-#ifdef __VCGLIB_EDGE_WC
-	Color4b _wc[3];
-#endif
-public:
-	Color4b & WC(const int i)
-	{
-#ifdef __VCGLIB_EDGE_WC
-		return _wc[i];
-#else
-		assert(0);
-		return *(Color4b*)(&_flags);
-#endif
-	}
-
-const Color4b WC(const int i) const
-	{
-#ifdef __VCGLIB_EDGE_WC
-		return _wc[i];
-#else
-		assert(0);
-		return Color4b(Color4b::White);
-#endif
-	}
-
 
 
 
@@ -372,33 +294,20 @@ const Color4b WC(const int i) const
 **/
   //@{
 
-#if (defined(__VCGLIB_EDGE_AE) && defined(__VCGLIB_EDGE_SA))
-	#error Error: You cannot specify face-to-face and shared topology together
-#endif
-
-#if (defined(__VCGLIB_EDGE_VA) && defined(__VCGLIB_EDGE_SA))
-	#error Error: You cannot specify vertex-face and shared topology together
-#endif
-
 protected:
 #if defined(__VCGLIB_EDGE_AE)
   /// Vector of face pointer, it's used to indicate the adjacency relations (defines if FACE_A is defined)
-	EDGENAME   *ee[3];				// Facce adiacenti
+	EDGENAME   *ee[2];				// edge adiacenti
 	/// Index of the face in the arrival face 
-	char zs[4];									
+	char zs[2];									
 #endif
 
-#ifdef __VCGLIB_EDGE_VA
-	///Vettore di puntatori a faccia, utilizzato per indicare le adiacenze vertice faccia
-	EDGENAME *ev[3];
-	char zv[3];
+#ifdef __VCGLIB_EDGE_AV
+	///Vettore di puntatori a edge, utilizzato per indicare le adiacenze vertice faccia
+	EDGENAME *ev[2];
+	char zv[2];
 #endif
 
-#ifdef __VCGLIB_EDGE_SA
-	///Vettore di puntatori a faccia, utilizzato per indicare le adiacenze vertice faccia
-	EDGENAME *es[3];
-	char zs[3];
-#endif
 public:
 
 
@@ -409,35 +318,25 @@ public:
 	 */
 	inline EDGENAME * & EEp( const int j )
 	{
-		assert( (_flags & DELETED) == 0 );
-		assert( (_flags & NOTREAD) == 0 );
-		assert( (_flags & NOTWRITE) == 0 );
-		assert(j>=0);
-	    assert(j<2);
+		assert( !IsD() );
+		assert(j>=0 && j<2);
 #if defined(__VCGLIB_EDGE_AE)
 		  return ee[j];
-#elif defined(__VCGLIB_EDGE_SA)
-			return es[j];
 #else 
 		assert(0);
-        static EDGENAME *dum=0;
-		return dum;
+    return *(EDGENAME **)(0);;
 #endif
 	}
 
 	inline const EDGENAME * const & EEp( const int j ) const
 	{
-		assert( (_flags & DELETED) == 0 );
-		assert( (_flags & NOTREAD) == 0 );
-		assert(j>=0);
-	    assert(j<2);
+		assert( !IsD() );
+		assert(j>=0 && j<2);
 #if defined(__VCGLIB_EDGE_AE)
 		  return ee[j];
-#elif defined(__VCGLIB_EDGE_SA)
-			return es[j];
 #else
 		  assert(0);
-		  return (EDGENAME *)this;
+		  return (EDGENAME *)0;
 #endif
 	}
 	inline EDGENAME * & EEp1( const int j ) { return EEp((j+1)%2);}
@@ -448,63 +347,48 @@ public:
 	 */
 	inline EDGENAME * & UberEEp( const int j )
 	{
-		assert(j>=0);
-	  assert(j<2);
+		assert(j>=0 && j<2);
 #if defined(__VCGLIB_EDGE_AE)
-		  return ee[j];
-#elif defined(__VCGLIB_EDGE_SA)
-			return es[j];
+		return ee[j];
 #else 
 		assert(0); // if you stop here you are probably trying to use FF topology in a face without it
-		return *((EDGENAME **)(_flags));
+    return *(EDGENAME **)(0);
 #endif
 	}
 
 	inline const EDGENAME * const & UberEEp( const int j ) const
 	{
-		assert(j>=0);
-	  assert(j<2);
+		assert(j>=0 && j<2);
 #if defined(__VCGLIB_EDGE_AE)
-		  return ee[j];
-#elif defined(__VCGLIB_EDGE_SA)
-			return es[j];
+		return ee[j];
 #else
 		assert(0); // if you stop here you are probably trying to use FF topology in a face without it
-		return *((EDGENAME **)(_flags));
+    return *(EDGENAME **)(0);
 #endif
 	}
 	
 
 	inline EDGENAME * & VEp( const int j )
 	{
-		assert( (_flags & DELETED) == 0 );
-		assert( (_flags & NOTREAD) == 0 );
-		assert( (_flags & NOTWRITE) == 0 );
-		assert(j>=0);
-		assert(j<2);
-#ifdef __VCGLIB_EDGE_VA
+		assert( !IsD() );
+		assert(j>=0 && j<2);
+#ifdef __VCGLIB_EDGE_AV
 		return ev[j];
-#elif defined(__VCGLIB_EDGE_SA)
-		return es[j];
 #else
 		assert(0); // you are probably trying to use VF topology in a vertex without it
-		return *((EDGENAME **)(_flags));
+    return *(EDGENAME **)(0);
 #endif
 	}
 
 	inline const EDGENAME * const & VEp( const int j ) const
 	{
-		assert( (_flags & DELETED) == 0 );
-		assert( (_flags & NOTREAD) == 0 );
-		assert(j>=0);
-		assert(j<2);
-#ifdef __VCGLIB_EDGE_VA
+		assert( !IsD() );
+		assert(j>=0 && j<2);
+#ifdef __VCGLIB_EDGE_AV
 		return ev[j];
-#elif defined(__VCGLIB_EDGE_SA)
-		return es[j];
 #else
 		assert(0);
-		return (EDGENAME *)this;
+    return *(EDGENAME **)(0);
 #endif
 	}
 
@@ -514,34 +398,25 @@ public:
 	 */
 	inline char & EEi( const int j )
 	{
-		assert( (_flags & DELETED) == 0 );
-		assert( (_flags & NOTREAD) == 0 );
-		assert( (_flags & NOTWRITE) == 0 );
-		assert(j>=0);
-		assert(j<2);
+		assert( !IsD() );
+		assert(j>=0 && j<2);
 #if defined(__VCGLIB_EDGE_AE) 
-		return zs[j];
-#elif defined(__VCGLIB_EDGE_SA) 
 		return zs[j];
 #else
 		assert(0);
-		return *(char *)&_flags; // tanto per farlo compilare...
+		return *(char *)0; // tanto per farlo compilare...
 #endif
 	}
 
 	inline const char & EEi( const int j ) const
 	{
-		assert( (_flags & DELETED) == 0 );
-		assert( (_flags & NOTREAD) == 0 );
-		assert(j>=0);
-		assert(j<2);
+		assert( !IsD() );
+		assert(j>=0 && j<2);
 #if defined(__VCGLIB_EDGE_AE) 
-		return zs[j];
-#elif defined(__VCGLIB_EDGE_SA) 
 		return zs[j];
 #else
 		assert(0);
-		return *(char *)&_flags;
+		return *(char *)0;
 #endif
 	}
 
@@ -551,7 +426,7 @@ public:
 	inline char & UberZ( const int j )
 	{
 		assert(j>=0);
-		assert(j<2);
+		j<2);
 #if defined(__VCGLIB_EDGE_AE) 
 		return zs[j];
 #elif defined(__VCGLIB_EDGE_SA) 
@@ -565,7 +440,7 @@ public:
 	inline const char & UberZ( const int j ) const
 	{
 		assert(j>=0);
-		assert(j<2);
+		j<2);
 #if defined(__VCGLIB_EDGE_AE) 
 		return zs[j];
 #elif defined(__VCGLIB_EDGE_SA) 
@@ -579,11 +454,9 @@ public:
 
 	inline char & VEi( const int j )
 	{
-		assert( (_flags & DELETED) == 0 );
-		assert( (_flags & NOTREAD) == 0 );
-		assert( (_flags & NOTWRITE) == 0 );
+		assert( !IsD() );
 		assert(j>=0);
-		assert(j<2);
+		j<2);
 #ifdef __VCGLIB_EDGE_VA
 		return zv[j];
 #elif defined(__VCGLIB_EDGE_SA)
@@ -596,10 +469,9 @@ public:
 
 	inline const char & VEi( const int j ) const
 	{
-		assert( (_flags & DELETED) == 0 );
-		assert( (_flags & NOTREAD) == 0 );
+		assert( !IsD() );
 		assert(j>=0);
-		assert(j<2);
+		j<2);
 #ifdef __VCGLIB_EDGE_VA
 		return zv[j];
 #elif defined(__VCGLIB_EDGE_SA)
@@ -620,31 +492,34 @@ public:
   //@{
 
 
-#ifdef __VCGLIB_EDGE_FM
+#ifdef __VCGLIB_EDGE_EM
 	/// Incremental mark (defines if FACE_I is defined)
 	int imark;
 #endif // Mark
-#ifdef __VCGLIB_EDGE_M
+
 	inline int & IMark()
 	{
-		assert( (_flags & DELETED) == 0 );
+#ifdef __VCGLIB_EDGE_EM
+		assert( !IsD() );
 		assert( (_flags & NOTREAD) == 0 );
 		assert( (_flags & NOTWRITE) == 0 );
 		return imark;
+#else
+    return 0;
+#endif // Mark
 	}
 
 	inline const int & IMark() const
 	{
-		assert( (_flags & DELETED) == 0 );
+		assert( !IsD() );
 		assert( (_flags & NOTREAD) == 0 );
 		return imark;
 	}
-#endif // Mark
 
 	/// Initialize the imark system of the face
 	inline void InitIMark()
 	{
-#ifdef __VCGLIB_EDGE_M
+#ifdef __VCGLIB_EDGE_EM
 		imark = 0;
 #endif
 	}
@@ -658,7 +533,10 @@ public:
 **/
   //@{
 
-
+	/// This are the _flags of face, the default value is 0
+#ifdef __VCGLIB_EDGE_EF
+	int  _flags;		
+#endif
 	enum {
 		// This bit indicate that the face is deleted from the mesh
 		DELETED     = 0x00000001,		// cancellato
@@ -695,88 +573,136 @@ public:
 			return false;
 		}
 
-    void ClearFlags() {_flags=0;}
+  void ClearFlags() {
+#ifdef __VCGLIB_EDGE_EF
+  _flags=0;
+#endif
+  }
 
 	/// Return the _flags.
 	inline int & Flags ()
 	{
-		assert( (_flags & DELETED) == 0 );
-		assert( (_flags & NOTREAD) == 0 );
+#ifdef __VCGLIB_EDGE_EF
+		assert( !IsD() );
 		return _flags;
+#else
+    return *(int *)0;
+#endif
 	}
 
 	inline const int & Flags () const
 	{
-		assert( (_flags & DELETED) == 0 );
-		assert( (_flags & NOTREAD) == 0 );
+#ifdef __VCGLIB_EDGE_EF
+		assert( !IsD() );
 		return _flags;
+#else
+    return 0;
+#endif
 	}
 	/// Ritorna il _flags senza effettuare alcun controllo sui relativi bit
 	inline int & UberFlags()
 	{
+#ifdef __VCGLIB_EDGE_EF
 		return _flags;
+#else
+    assert(0);
+    return *(int *)0;
+#endif
 	}
 
 	inline const int UberFlags() const
 	{
+#ifdef __VCGLIB_EDGE_EF
 		return _flags;
+#else
+    return 0;
+#endif
 	}
 
 	/// This function checks if the face is deleted 
-	bool IsD() const {return (_flags & DELETED) != 0;}
-	/// This function mark the face as deleted
-	void SetD()		{_flags |=DELETED;}
+	bool IsD() const {
+#ifdef __VCGLIB_EDGE_EF
+    return (_flags & DELETED) != 0;
+#else
+    return false;
+#endif
+  }
+  /// This function mark the face as deleted
+  void SetD()		{
+#ifdef __VCGLIB_EDGE_EF
+    _flags |=DELETED;
+#endif
+  }
 	/// This function mark the face as not deleted
-	void ClearD()	{_flags &= (~DELETED);}
-	/// This function checks if the face is deleted 
-	bool IsDeleted() const {return IsD();}
+	void ClearD()	{
+#ifdef __VCGLIB_EDGE_EF
+   _flags &= (~DELETED);
+#endif
+  }
 	
-	/// This function checks if the face is readable 
-	bool IsR() const {return (_flags & NOTREAD) == 0;}
-	/// This function marks the face as readable
-	void SetR()		{_flags &= (~NOTREAD);}
-	/// This function marks the face as not readable
-	void ClearR() {_flags |=NOTREAD;}
-	
-	/// This function checks if the face is readable 
-	bool IsW() const {return (_flags & NOTWRITE)== 0;}
-	/// This function marks the vertex as not writable
-	void SetW() {_flags &=(~NOTWRITE);}
-	/// This function marks the face as not writable
-	void ClearW() {_flags |=NOTWRITE;}
-
-	/// This funcion checks whether the face is both readable and modifiable
-	bool IsRW() const {return (_flags & (NOTREAD | NOTWRITE)) == 0;}
-
 	
 	/// This function checks if the face is selected
-	bool IsS() const {return (_flags & SELECTED) != 0;}
+	bool IsS() const {
+#ifdef __VCGLIB_EDGE_EF
+    return (_flags & SELECTED) != 0;
+#else
+    return false;
+#endif
+  }
 	/// This function select the face
-	void SetS()		{_flags |=SELECTED;}
+	void SetS()		{
+#ifdef __VCGLIB_EDGE_EF
+    _flags |=SELECTED;
+#endif
+  }
 	/// This funcion execute the inverse operation of SetS()
-	void ClearS()	{_flags &= (~SELECTED);}
+	void ClearS()	{
+#ifdef __VCGLIB_EDGE_EF
+    _flags &= (~SELECTED);
+#endif
+  }
 
-	/// This function checks if the face is selected
-	bool IsB(int i) const {return (_flags & (BORDER0<<i)) != 0;}
-	/// This function select the face
-	void SetB(int i)		{_flags |=(BORDER0<<i);}
-	/// This funcion execute the inverse operation of SetS()
-	void ClearB(int i)	{_flags &= (~(BORDER0<<i));}
-
-	/// This function checks if the face is Crease  on side i
-	///Well it would if FEATURE0 was defined somewhere
-/*	bool IsEE(int i) const {return (_flags & (FEATURE0<<i)) != 0;}
-	/// This function select the face flag
-	void SetEE(int i)		{_flags |=(FEATURE0<<i);}
-	/// This funcion execute the inverse operation of Set()
-	void ClearEE(int i)	{_flags &= (~(FEATURE0<<i));} */
+	/// This function checks if the edge is Border on a given side
+	bool IsB(int i) const {
+#ifdef __VCGLIB_EDGE_EF
+    return (_flags & (BORDER0<<i)) != 0;
+#else
+    return false;
+#endif
+  }
+	/// This function set edge as Border on a given side
+	void SetB(int i)		{
+#ifdef __VCGLIB_EDGE_EF
+    _flags |=(BORDER0<<i);
+#endif
+  }
+	/// This function clear edge as Border on a given side
+	void ClearB(int i)	{
+#ifdef __VCGLIB_EDGE_EF
+    _flags &= (~(BORDER0<<i));
+#endif
+  }
 	
 	/// This function checks if the given user bit is true
-	bool IsUserBit(int userBit){return (_flags & userBit) != 0;}
+	bool IsUserBit(int userBit){
+#ifdef __VCGLIB_EDGE_EF
+    return (_flags & userBit) != 0;
+#else
+    return false;
+#endif
+    }
 	/// This function set  the given user bit 
-	void SetUserBit(int userBit){_flags |=userBit;}
+	void SetUserBit(int userBit){
+#ifdef __VCGLIB_EDGE_EF
+    _flags |=userBit;
+#endif
+  }
 	/// This function clear the given user bit 
-	void ClearUserBit(int userBit){_flags &= (~userBit);}
+	void ClearUserBit(int userBit){
+#ifdef __VCGLIB_EDGE_EF
+    _flags &= (~userBit);
+#endif
+  }
 
 
 //@}
@@ -819,21 +745,14 @@ static bool HasEdgeColor()  {
 #endif
 }
 static bool HasEEAdjacency()  { 
-#if (defined(__VCGLIB_EDGE_AE) || defined(__VCGLIB_EDGE_AE))
+#if (defined(__VCGLIB_EDGE_AE) )
   return true;
 #else
   return false;
 #endif
 }
 static bool HasVEAdjacency()  { 
-#if (defined(__VCGLIB_EDGE_VA) || defined(__VCGLIB_EDGE_AE))
-  return true;
-#else
-  return false;
-#endif
-}
-static bool HasSharedAdjacency()  { 
-#if defined(__VCGLIB_EDGE_AE)
+#if (defined(__VCGLIB_EDGE_AV) )
   return true;
 #else
   return false;
@@ -849,11 +768,10 @@ static bool HasEdgeMark()  {
 
 //@}
 
-  /// operator to compare two faces
+  /// operator to compare two edges
 	inline bool operator == ( const EDGENAME & f ) const {
-		for(int i=0; i<3; ++i)
-			if( (V(i) != f.V(0)) && (V(i) != f.V(1)) )
-				return false;
+		if( (V(0) != f.V(0)) && (V(0) != f.V(1)) ) return false;
+		if( (V(1) != f.V(0)) && (V(1) != f.V(1)) ) return false;
 		return true;
 	}
 
