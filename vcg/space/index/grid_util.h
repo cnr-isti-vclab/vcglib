@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/09/30 13:12:46  pietroni
+basic grid class is derived from Indexing base class defined in base,h
+
 Revision 1.5  2005/09/16 11:56:38  cignoni
 removed wrong typename and added ending \n
 
@@ -50,12 +53,19 @@ Removed BestDim function from the grid_static_ptr class and moved to a indipende
 
 namespace vcg {
 
-	// classe di base per tutte le strutture dati di indexing spaziale basate su griglia.
-	// contiene tutte le funzioni solite per le conversioni tra point3f e point3i
+	// Basic Class abstracting a gridded structure in a 3d space;
+  // Usueful for having coherent float to integer conversion in a unique place:
+  // Some Notes:
+  // - bbox is the real occupation of the box in the space;
+  // - siz is the number of cells for each side
+  // Note that PToIP(bbox.max) returns an invalid cell index (e.g. it returns siz)
+
 
 
 	template <class OBJTYPE, class SCALARTYPE> 
 	class BasicGrid:public SpatialIndex<OBJTYPE,SCALARTYPE> {
+
+  public:
 
 		typedef typename Box3<ScalarType> Box3x;
 		typedef typename SCALARTYPE ScalarType;
@@ -64,7 +74,6 @@ namespace vcg {
 		typedef typename OBJTYPE* ObjPtr;
 		typedef typename BasicGrid<OBJTYPE,SCALARTYPE> GridType;
 
-	public:
 		Box3x bbox;
 		/// Dimensione spaziale (lunghezza lati) del bbox
 		Point3<ScalarType> dim;
