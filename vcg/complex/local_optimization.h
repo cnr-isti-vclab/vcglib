@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.14  2005/04/14 11:34:33  ponchio
+  *** empty log message ***
+
   Revision 1.13  2005/01/19 10:33:50  cignoni
   Improved ClearHeap management
 
@@ -132,7 +135,7 @@ template<class MeshType>
 class LocalOptimization
 {
 public:
-  LocalOptimization(MeshType &mm): m(mm){ ClearTermination();e=0.0;}
+  LocalOptimization(MeshType &mm): m(mm){ ClearTermination();e=0.0;HeapSimplexRatio=5;}
 
 	struct  HeapElem;
 	// scalar type
@@ -162,11 +165,15 @@ public:
 		nTargetSimplices,
 		nTargetVertices;
 
-	int	timeBudget,
-			start;
-	float
-			currMetric,
+	float	timeBudget;
+	int		start;
+	float currMetric,
 			targetMetric;
+
+  // The ratio between Heap size and the number of simplices in the current mesh
+  // When this value is exceeded a ClearHeap Start;
+
+  float HeapSimplexRatio; 
 
 	void SetTerminationFlag		(int v){tf |= v;}
 	void ClearTerminationFlag	(int v){tf &= ~v;}
@@ -221,7 +228,7 @@ public:
     /// usually we mean priority as an error so we should invert the comparison
     inline const bool operator <(const HeapElem & h) const 
     { 
-		  return (pri < h.pri);
+		  return (pri > h.pri);
 		  //return (locModPtr->Priority() < h.locModPtr->Priority());
 	  }
 
@@ -249,10 +256,11 @@ public:
 		nPerfmormedOps =0;
 		while( !GoalReached() && !h.empty())
 			{
-        if(h.size()> m.fn*5 )  ClearHeap();
+        if(h.size()> m.SimplexNumber()*HeapSimplexRatio )  ClearHeap();
 				std::pop_heap(h.begin(),h.end());
         LocModPtrType  locMod   = h.back().locModPtr;
-				h.pop_back();
+				currMetric=h.back().pri;
+        h.pop_back();
         				
 				if( locMod->IsUpToDate() )	
 				{	
@@ -288,7 +296,7 @@ void ClearHeap()
       --hi;
 		}
   }
-  printf("\nReduced heap from %7i to %7i (fn %7i) ",sz,h.size(),m.fn);
+  //printf("\nReduced heap from %7i to %7i (fn %7i) ",sz,h.size(),m.fn);
 	make_heap(h.begin(),h.end());
 }
 
