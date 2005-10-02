@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2005/09/16 11:55:18  cignoni
+Partial adding of AABB trees, still not working...
+
 Revision 1.17  2005/08/26 10:42:47  cignoni
 Added scalar type specification in the typedef of MetroMeshGrid
 
@@ -84,9 +87,8 @@ instantiate GridStaticPtr on the simplexClass template.
 #include <vcg/simplex/face/distance.h>
 #include <vcg/complex/trimesh/update/color.h>
 #include <vcg/space/index/grid_static_ptr.h>
-#include <vcg/space/index/aabb_binary_tree.h>
-#include <vcg/space/index/aabb_binary_tree_search.h>
-#include <vcg/space/index/aabb_binary_tree_utils.h>
+#include <vcg/space/index/aabb_binary_tree/aabb_binary_tree.h>
+#include <vcg/space/index/spatial_hashing.h>
 namespace vcg
 {
 
@@ -102,7 +104,9 @@ struct SamplingFlags{
 						NO_SAMPLING     			          = 0x0070,
 						SAVE_ERROR                      = 0x0100,
 						INCLUDE_UNREFERENCED_VERTICES		= 0x0200,
-            USE_AABB_TREE                   = 0x0400
+            USE_STATIC_GRID                 = 0x0400,
+            USE_HASH_GRID                   = 0x0800,
+            USE_AABB_TREE                   = 0x1000
 				};
 	};
 // -----------------------------------------------------------------------------------------------
@@ -121,11 +125,11 @@ private:
     typedef typename MetroMesh::FaceType   FaceType;
 
     typedef typename  MetroMesh::FaceContainer FaceContainer;
-	  typedef GridStaticPtr<FaceContainer, typename MetroMesh::ScalarType > MetroMeshGrid;
-    typedef AABBBinaryTreeUtils<typename FaceType::ScalarType, FaceType> AABBUtils;
-    typedef typename AABBUtils::EmptyClass AABBEmptyClass;
+	  typedef GridStaticPtr<FaceType, typename MetroMesh::ScalarType > MetroMeshGrid;
+	  typedef SpatialHashTable<FaceType, typename MetroMesh::ScalarType > MetroMeshHash;
+    typedef AABBBinaryTreeIndex<FaceType, typename MetroMesh::ScalarType, vcg::EmptyClass> MetroMeshAABB;
 
-    typedef AABBBinaryTreeSearch<FaceType, typename FaceType::ScalarType, AABBEmptyClass> MetroMeshAABB;
+
     typedef Point3<typename MetroMesh::ScalarType> Point3x;
 
     
@@ -135,7 +139,8 @@ private:
     MetroMesh       &S1; 
     MetroMesh       &S2;
     MetroMeshGrid   gS2;
-    MetroMeshAABB   aaS2;
+    MetroMeshHash   hS2;
+    MetroMeshAABB   tS2;
 
 
 		unsigned int n_samples_per_face             ;
@@ -278,8 +283,13 @@ float Sampling<MetroMesh>::AddSample(const Point3x &p )
     dist = dist_upper_bound;
 
     // compute distance between p_i and the mesh S2
-    trimesh::Closest(S2, p, gS2, dist, normf, bestq, f, ip);
-
+    if(Flags & SamplingFlags::USE_AABB_TREE)
+      f=trimesh::GetClosest<MetroMesh,MetroMeshAABB>(S2, tS2, p, dist_upper_bound, dist, normf, bestq, ip);
+    if(Flags & SamplingFlags::USE_HASH_GRID)
+      f=trimesh::GetClosest<MetroMesh,MetroMeshHash>(S2, hS2, p, dist_upper_bound, dist, normf, bestq, ip);
+    if(Flags & SamplingFlags::USE_STATIC_GRID)
+      f=trimesh::GetClosest<MetroMesh,MetroMeshGrid>(S2, gS2, p, dist_upper_bound, dist, normf, bestq, ip);
+    
     // update distance measures
     if(dist == dist_upper_bound)
         return -1.0;
@@ -591,23 +601,13 @@ void Sampling<MetroMesh>::Hausdorff()
 
 
     // set grid meshes.
+    if(Flags & SamplingFlags::USE_HASH_GRID)
+        hS2.Set<vector<FaceType>::iterator>(S2.face.begin(),S2.face.end());   
     if(Flags & SamplingFlags::USE_AABB_TREE)
-    { 
-      typename AABBUtils::ObjIteratorPtrFunct tt0;
-      typename AABBUtils::FaceBoxFunct<FaceType> tt1;
-      typename AABBUtils::FaceBarycenterFunct<FaceType> tt2;
-      
-      aaS2.Set(S2.face.begin(),S2.face.end(), 
-        tt0, 
-        tt1,
-        tt2);
-    }
-    else
-    {
-      gS2.SetBBox(S2.bbox);
-  	  if(S2.face.size() < min_size) gS2.Set(S2.face, min_size);
-      else	gS2.Set(S2.face);
-    }
+        tS2.Set<vector<FaceType>::iterator>(S2.face.begin(),S2.face.end());   
+    if(Flags & SamplingFlags::USE_STATIC_GRID)
+        gS2.Set<vector<FaceType>::iterator>(S2.face.begin(),S2.face.end());
+    
     // set bounding box
     bbox = S2.bbox;
     dist_upper_bound = /*bbox_factor * */bbox.Diag();
