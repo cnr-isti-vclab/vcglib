@@ -122,10 +122,34 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
 			<File
+				RelativePath="..\..\..\vcg\space\index\aabb_binary_tree\aabb_binary_tree.h">
+			</File>
+			<File
+				RelativePath="..\..\..\vcg\space\index\aabb_binary_tree\base.h">
+			</File>
+			<File
+				RelativePath="..\..\..\vcg\space\box3.h">
+			</File>
+			<File
+				RelativePath="..\..\..\vcg\space\index\aabb_binary_tree\closest.h">
+			</File>
+			<File
+				RelativePath="..\..\..\vcg\complex\trimesh\closest.h">
+			</File>
+			<File
+				RelativePath="..\..\..\vcg\space\index\aabb_binary_tree\core.h">
+			</File>
+			<File
 				RelativePath="..\..\..\wrap\io_trimesh\export_ply.h">
 			</File>
 			<File
 				RelativePath="..\..\..\vcg\space\index\grid_static_ptr.h">
+			</File>
+			<File
+				RelativePath="..\..\..\vcg\space\index\grid_util.h">
+			</File>
+			<File
+				RelativePath="..\..\..\vcg\math\histogram.h">
 			</File>
 			<File
 				RelativePath="..\..\..\wrap\io_trimesh\import_ply.h">
@@ -143,13 +167,25 @@
 				RelativePath="..\..\..\wrap\ply\plylib.h">
 			</File>
 			<File
+				RelativePath=".\resource.h">
+			</File>
+			<File
 				RelativePath="..\..\metro\sampling.h">
+			</File>
+			<File
+				RelativePath="..\..\..\vcg\space\index\spatial_hashing.h">
 			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}">
+			<File
+				RelativePath=".\metro.ico">
+			</File>
+			<File
+				RelativePath=".\metro.rc">
+			</File>
 		</Filter>
 	</Files>
 	<Globals>
