@@ -24,6 +24,14 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/09/30 15:12:16  cignoni
+Completely rewrote the GridClosest, now it:
+- works for point out of the grid
+- expands the box in a distance coherent way
+- does not re-visit already visited cells
+- shorter code!!
+( still to be tested :) )
+
 Revision 1.3  2005/09/30 13:15:48  pietroni
 added functions:
      - GetKClosest
@@ -83,7 +91,7 @@ namespace vcg{
     Box3i iboxdone,iboxtodo;
     CoordType t_res;
     SPATIAL_INDEX::CellIterator first,last,l;
-    if(Si.bbox.IsIn(_p))
+    if(Si.bbox.IsInEx(_p))
     {
       Point3i _ip;
       Si.PToIP(_p,_ip); 
@@ -103,13 +111,14 @@ namespace vcg{
     }
     
     int ix,iy,iz;
-    
+    Box3i ibox(Point3i(0,0,0),Si.siz-Point3i(1,1,1));
     do
     {
       radius=newradius;
       Box3x boxtodo=Box3x(_p,radius);
-      boxtodo.Intersect(Si.bbox);
+      //boxtodo.Intersect(Si.bbox);
       Si.BoxToIBox(boxtodo, iboxtodo);
+      iboxtodo.Intersect(ibox);
       if(!boxtodo.IsNull())
       {
 		  for (ix=iboxtodo.min[0]; ix<=iboxtodo.max[0]; ix++) 
