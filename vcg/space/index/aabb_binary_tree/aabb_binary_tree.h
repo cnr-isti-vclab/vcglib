@@ -25,6 +25,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/09/29 22:18:16  m_di_benedetto
+Added frustum culling methods, renamed some parameters.
+
 Revision 1.4  2005/09/28 21:23:03  m_di_benedetto
 Added Import() to box and barycenter functors
 to handle tree and objects with different ScalarType.
@@ -75,9 +78,10 @@ public:
 		GetPointerFunctor getPtr;
 		GetBox3Functor getBox;
 		GetBarycenter3Functor getBarycenter;
-		const unsigned int divs = 100;
-		const unsigned int size = (unsigned int)(std::distance(_oBegin, _oEnd));
-		const unsigned int maxObjectsPerLeaf = (size < divs) ? (size) : ((unsigned int)((float)(std::distance(_oBegin, _oEnd)) / (float)divs));
+		//const unsigned int divs = 100;
+		//const unsigned int size = (unsigned int)(std::distance(_oBegin, _oEnd));
+		//const unsigned int maxObjectsPerLeaf = (size < divs) ? (size) : ((unsigned int)((float)(std::distance(_oBegin, _oEnd)) / (float)divs));
+		const unsigned int maxObjectsPerLeaf = 10;
 		const ScalarType leafBoxMaxVolume = ((ScalarType)0);
 		const bool useVariance = true;
 
