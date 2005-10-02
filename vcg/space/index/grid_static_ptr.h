@@ -24,6 +24,10 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.27  2005/09/30 15:07:28  cignoni
+Reordered grid access functions
+Added possibility of setting BBox explicitly in Set(...)
+
 Revision 1.26  2005/09/30 13:15:21  pietroni
 added wrapping to functions defined in GridClosest:
      - GetClosest
@@ -270,7 +274,7 @@ namespace vcg {
 		/// BY INTEGER COORDS
 		inline Cell* Grid( const int x, const int y, const int z )
 		{
-			assert(( x<0 || x>=siz[0] || y<0 || y>=siz[1] || z<0 || z>=siz[2] ));
+			assert(!( x<0 || x>=siz[0] || y<0 || y>=siz[1] || z<0 || z>=siz[2] ));
       assert(grid.size()>0);
 			return &*grid.begin() + ( x+siz[0]*(y+siz[1]*z) );
 		}
