@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/04/14 11:35:07  ponchio
+*** empty log message ***
+
 Revision 1.6  2005/01/19 10:35:28  cignoni
 Better management of symmetric/asymmetric edge collapses
 
@@ -371,7 +374,7 @@ public:
 		//Rrestore old position of v0 and v1
 		v[0]->P()=OldPos0;
 		v[1]->P()=OldPos1;
-		this->_priority = -error;
+		this->_priority = error;
 		return this->_priority;
 	}
 
