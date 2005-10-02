@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2005/09/16 11:52:14  cignoni
+removed wrong %v in vertex number printing
+
 Revision 1.15  2005/04/04 10:36:36  cignoni
 Release 4.05
 Added saving of Error Histogram
@@ -117,8 +120,10 @@ void Usage()
                                         "  -c         save a mesh with error as per-vertex colour and quality\n"\
                                         "  -C # #     Set the min/max values used for color mapping\n"\
                                         "  -L         Remove duplicated and unreferenced vertices before processing\n"\
-                                        "  -H         write files with histograms of error distribution\n"\
-
+                                        "  -h         write files with histograms of error distribution\n"\
+                                        "  -G         Use a static Uniform Grid as Search Structure (default)\n"\
+                                        "  -A         Use an AxisAligned Bounding Box Tree as Search Structure\n"\
+                                        "  -H         Use an Hashed Uniform Grid as Search Structure\n"\
                                         "\n"
                                         "Default options are to sample vertexes, edge and faces by taking \n"
                                         "a number of samples that is approx. 10x the face number.\n"
@@ -164,7 +169,7 @@ int main(int argc, char**argv)
  
     // print program info
     printf("-------------------------------\n"
-           "         Metro V.4.05 \n"
+           "         Metro V.4.06 \n"
            "     http://vcg.isti.cnr.it\n"
            "   release date: "__DATE__"\n"
            "-------------------------------\n\n");
@@ -182,7 +187,7 @@ int main(int argc, char**argv)
       if(argv[i][0]=='-')
         switch(argv[i][1])
       { 
-        case 'H' : flags |= SamplingFlags::HIST; break;
+        case 'h' : flags |= SamplingFlags::HIST; break;
         case 'v' : flags &= ~SamplingFlags::VERTEX_SAMPLING; break;
         case 'e' : flags &= ~SamplingFlags::EDGE_SAMPLING; break;
         case 'f' : flags &= ~SamplingFlags::FACE_SAMPLING; break;
@@ -202,11 +207,17 @@ int main(int argc, char**argv)
         case 'c':  flags |= SamplingFlags::SAVE_ERROR;   break;
         case 'L':  CleaningFlag=true; break;
         case 'C':  ColorMin=float(atof(argv[i+1])); ColorMax=float(atof(argv[i+2])); i+=2; break;
+        case 'A':  flags |= SamplingFlags::USE_AABB_TREE; printf("Using AABB Tree as search structure\n"); break;
+        case 'G':  flags |= SamplingFlags::USE_STATIC_GRID; printf("Using static uniform grid as search structure\n"); break;
+        case 'H':  flags |= SamplingFlags::USE_HASH_GRID; printf("Using hashed uniform grid as search structure\n"); break;
         default  :  printf(MSG_ERR_INVALID_OPTION, argv[i]);
           exit(0);
       }
       i++;
     }
+ 
+    if(!(flags & SamplingFlags::USE_HASH_GRID) && !(flags & SamplingFlags::USE_AABB_TREE) )
+       flags |= SamplingFlags::USE_STATIC_GRID;
  
     // load input meshes.
     OpenMesh(argv[1],S1);

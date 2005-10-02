@@ -6,10 +6,9 @@
    Visual Computing Lab  http://vcg.isti.cnr.it                    /\/|      
    ISTI - Italian National Research Council                           |      
                                                                       \      
-   Metro 4.05 04/05/2005
+   Metro 4.06 2005/10/03
    All rights reserved.                                                      
    
-
                                                                        
 This program is free software; you can redistribute it and/or modify      
 it under the terms of the GNU General Public License as published by      
@@ -55,6 +54,8 @@ Note that the three methods described above are used to sample only the interior
 A different scheme is used to sample vertices and edges: vertices are sampled in the straightforward manner, 
 while edges are sampled by uniformly interleaving samples along each edge.
 
+Three different Spatial indexing structures can be used to find the closest point to a sample, a Statically Allocated Uniform Grid, a Hashed Uniform Grid and a Hierarchy of axis aligned bounding boxes.
+
 --- Basic usage ---
 
 Metro is a command-line tool which allows the user to select among different sampling schemes. 
@@ -64,19 +65,21 @@ Usage: Metro file1 file2 [opts]
 
 where "file1" and "file2" are the input meshes in PLY, OFF or STL format, and opts can be:
 
-   -v       disable vertex sampling
-   -e       disable edge sampling
-   -f       disable face sampling
-   -u       does not ignore unreferred vertices and sample also unreferenced vertices 
-            (useful for sampling point clouds against meshes)
-   -sx      set the face sampling mode
-            where x can be:
-             -S0  montecarlo sampling
-             -S1  subdivision sampling
-             -S2  similar triangles sampling (Default)
-   -n#      set the required number of samples (overrides -a)
-   -a#      set the required number of samples per area unit (overrides -n)
-   -c       save computed error as vertex colour and quality in two ply files
-   -C # #   Set the min/max values used for color mapping (useful for taking snapshot with coherent color ramp)
-   -L       Remove duplicated and unreferenced vertices before processing to avoid 
-   -H       write files with histograms of error distribution
+  -v         disable vertex sampling
+  -e         disable edge sampling
+  -f         disable face sampling
+  -u         ignore unreferred vertices
+  -sx        set the face sampling mode
+             where x can be:
+              -s0  montecarlo sampling
+              -s1  subdivision sampling
+              -s2  similar triangles sampling (Default)
+  -n#        set the required number of samples (overrides -A)
+  -a#        set the required number of samples per area unit (overrides -N)
+  -c         save a mesh with error as per-vertex colour and quality
+  -C # #     Set the min/max values used for color mapping
+  -L         Remove duplicated and unreferenced vertices before processing
+  -h         write files with histograms of error distribution
+  -G         Use a static Uniform Grid as Search Structure (default)
+  -A         Use an Axis Aligned Bounding Box Tree as Search Structure
+  -H         Use an Hashed Uniform Grid as Search Structure
