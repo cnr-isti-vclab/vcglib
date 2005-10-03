@@ -24,6 +24,12 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2005/09/30 13:14:59  pietroni
+added wrapping to functions defined in GridClosest:
+- GetClosest
+- GetKClosest
+- DoRay
+
 Revision 1.9  2005/09/21 14:22:49  pietroni
 Added DynamicSpatialHAshTable class
 
@@ -331,45 +337,31 @@ namespace vcg{
 			return bb;
 		}
 
-		///// Insert a mesh in the grid.SetBBox() function must be called before
-		///// Hash space is cardinality of hash key set
-		//void Set( ContainerType & s)
-		//{
-		//	Set(s,s.size());
-		//}
-
-		///// Insert a mesh in the grid.SetBBox() function must be called before
-		//void Set( ContainerType & s,int _size )
-		//{
-		//	Point3i _siz;
-		//	BestDim( _size, dim, _siz );
-		//	Set(s,_siz);
-		//}
 
 		/// Insert a mesh in the grid.SetBBox() function must be called before
 		template <class OBJITER>
-			void Set(const OBJITER & _oBegin, const OBJITER & _oEnd)
+			void Set(const OBJITER & _oBegin, const OBJITER & _oEnd,const Box3x &_bbox=Box3x() )
 		{
 			OBJITER i;
-			bbox.min=Point3<FLT>(0,0,0);
-			bbox.max=Point3<FLT>(0,0,0);
 			Box3<FLT> b;
-			for(i = _oBegin; i!= _oEnd; ++i)
-			{
-				(*i).GetBBox(b);
-				bbox.Add(b);
-			}
+			if(!_bbox.IsNull()) bbox=_bbox;
+			else
+				for(i = _oBegin; i!= _oEnd; ++i)
+				{
+					(*i).GetBBox(b);
+					bbox.Add(b);
+				}
 
-			int _size=std::distance<OBJITER>(_oBegin,_oEnd);
-			dim  = bbox.max - bbox.min;
-			BestDim( _size, dim, siz );
-			// find voxel size
-			voxel[0] = dim[0]/siz[0];
-			voxel[1] = dim[1]/siz[1];
-			voxel[2] = dim[2]/siz[2];
+				int _size=std::distance<OBJITER>(_oBegin,_oEnd);
+				dim  = bbox.max - bbox.min;
+				BestDim( _size, dim, siz );
+				// find voxel size
+				voxel[0] = dim[0]/siz[0];
+				voxel[1] = dim[1]/siz[1];
+				voxel[2] = dim[2]/siz[2];
 
-			for(i = _oBegin; i!= _oEnd; ++i)
-				Add(&(*i));
+				for(i = _oBegin; i!= _oEnd; ++i)
+					Add(&(*i));
 		}
 
 		//void Set(ContainerType & s, Point3i _siz)
@@ -509,9 +501,9 @@ namespace vcg{
 			return (vcg::GridGetKClosest<SpatialHashType,
 				OBJPOINTDISTFUNCTOR,OBJMARKER,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>(*this,_getPointDistance,_marker,_k,_p,_maxDist,_objectPtrs,_distances,_points));
 		}
-		
+
 		template <class OBJRAYISECTFUNCTOR, class OBJMARKER>
-		ObjPtr DoRay(OBJRAYISECTFUNCTOR & _rayIntersector, OBJMARKER & _marker, const Ray3<ScalarType> & _ray, const ScalarType & _maxDist, ScalarType & _t) 
+			ObjPtr DoRay(OBJRAYISECTFUNCTOR & _rayIntersector, OBJMARKER & _marker, const Ray3<ScalarType> & _ray, const ScalarType & _maxDist, ScalarType & _t) 
 		{
 			return(vcg::GridDoRay<SpatialHashType,OBJRAYISECTFUNCTOR,OBJMARKER>(*this,_rayIntersector,_marker,_ray,_maxDist,_t));
 		}
