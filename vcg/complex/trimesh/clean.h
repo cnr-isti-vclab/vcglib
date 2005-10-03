@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/01/28 11:59:35  cignoni
+Add std:: to stl containers
+
 Revision 1.5  2004/09/20 08:37:57  cignoni
 Better Doxygen docs
 
@@ -75,6 +78,7 @@ public:
 			return *a < *b;
 		}
 };
+
 
 /** This function removes all duplicate vertices of the mesh by looking only at their spatial positions. 
  Note that it does not update any topology relation that could be affected by this like the VT or TT relation.
@@ -164,6 +168,9 @@ static int RemoveUnreferencedVertex( CleanMeshType& m )   // V1.0
   VertexType::DeleteBitFlag(referredBit);
 	return deleted;
 }
+
+
+
 
 
 }; // end class
