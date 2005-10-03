@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2005/09/30 13:11:39  pietroni
+corrected 1 compiling error on Ray_Box_Intersection function
+
 Revision 1.18  2005/09/29 15:30:10  pietroni
 Added function RayBoxIntersection, renamed intersection line box from "Intersection" to "Intersection_Line_Box"
 
@@ -370,19 +373,7 @@ bool Intersection( const Line3<T> & ray, const Point3<T> & vert0,
   return true;
 }
 
-
-
-// ray-box
-template<class T>
-bool Intersection_Ray_Box( const Box3<T> & box, const Ray3<T> & r, Point3<T> & coord )
-{
-	Line3<T> l;
-	l.SetOrigin(r.Origin());
-	l.SetDirection(r.Direction());
-	return(Intersection_Line_Box<T>(box,l,coord));
-}	
-
-// ray-box
+// line-box
 template<class T>
 bool Intersection_Line_Box( const Box3<T> & box, const Line3<T> & r, Point3<T> & coord )
 {
@@ -455,6 +446,17 @@ bool Intersection_Line_Box( const Box3<T> & box, const Line3<T> & r, Point3<T> &
 		}
     return true;			// ray hits box
 }	
+
+// ray-box
+template<class T>
+bool Intersection_Ray_Box( const Box3<T> & box, const Ray3<T> & r, Point3<T> & coord )
+{
+	Line3<T> l;
+	l.SetOrigin(r.Origin());
+	l.SetDirection(r.Direction());
+	return(Intersection_Line_Box<T>(box,l,coord));
+}	
+
 
 template<class T>
 bool Intersection (const Plane3<T> & plane0, const Plane3<T> & plane1,
