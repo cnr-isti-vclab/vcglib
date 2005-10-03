@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.28  2005/10/02 23:15:26  cignoni
+Inveted the boolean sign of an assert in Grid()
+
 Revision 1.27  2005/09/30 15:07:28  cignoni
 Reordered grid access functions
 Added possibility of setting BBox explicitly in Set(...)
@@ -419,7 +422,6 @@ namespace vcg {
 
 		}
 
-
 		int MemUsed()
 		{
 			return sizeof(GridStaticPtr)+ sizeof(Link)*links.size() + 
@@ -443,6 +445,29 @@ namespace vcg {
 				OBJPOINTDISTFUNCTOR,OBJMARKER,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>(*this,_getPointDistance,_marker,_k,_p,_maxDist,_objectPtrs,_distances,_points));
 		}
 		
+		template <class OBJPOINTDISTFUNCTOR, class OBJMARKER, class OBJPTRCONTAINER, class DISTCONTAINER, class POINTCONTAINER>
+		unsigned int GetInSphere(OBJPOINTDISTFUNCTOR & _getPointDistance, 
+		OBJMARKER & _marker,
+		const CoordType & _p,
+		const ScalarType & _r,
+		OBJPTRCONTAINER & _objectPtrs,
+		DISTCONTAINER & _distances, 
+		POINTCONTAINER & _points)
+		{
+			return(vcg::GridGetInSphere<GridPtrType,
+				OBJPOINTDISTFUNCTOR,OBJMARKER,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>
+				(*this,_getPointDistance,_marker,_p,_r,_maxDist,_objectPtrs,_distances,_points));
+		}
+
+		template <class OBJMARKER, class OBJPTRCONTAINER>
+			unsigned int GetInBox(OBJMARKER & _marker, 
+			const vcg::Box3<typename ScalarType> _bbox,
+			OBJPTRCONTAINER & _objectPtrs) 
+		{
+			return(vcg::GridGetInBox<GridPtrType,OBJMARKER,OBJPTRCONTAINER>
+				  (*this,_marker,_bbox,_objectPtrs));
+		}
+
 		template <class OBJRAYISECTFUNCTOR, class OBJMARKER>
 		ObjPtr DoRay(OBJRAYISECTFUNCTOR & _rayIntersector, OBJMARKER & _marker, const Ray3<ScalarType> & _ray, const ScalarType & _maxDist, ScalarType & _t) 
 		{

@@ -25,6 +25,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/09/28 17:19:28  m_di_benedetto
+First Commit.
+
 
 ****************************************************************************/
 
@@ -37,6 +40,7 @@ $Log: not supported by cvs2svn $
 // vcg headers
 #include <vcg/space/point3.h>
 #include <vcg/space/ray3.h>
+#include <vcg/space/box3.h>
 
 namespace vcg {
 
@@ -65,6 +69,7 @@ public:
 	typedef SCALARTYPE ScalarType;
 	typedef ObjType * ObjPtr;
 	typedef Point3<ScalarType> CoordType;
+	typedef vcg::Box3<ScalarType> BoxType;
 
 	/**************************************************************************
 	Method Set.
@@ -186,7 +191,88 @@ public:
 		(void)_points;
 		return (0);
 	}
+	
+	
+	/**************************************************************************
+	Method GetInSphere.
 
+	Description:
+		The GetInSphere method finds all the objects in the specified sphere
+
+	Template Parameters:
+		OBJPOINTDISTFUNCTOR : Object-Point distance functor type;
+		                      this type must implement an operator () with signature
+													  bool operator () (const ObjType & obj, const CoordType & p, ScalarType & d, CoordType & q)
+													 where:
+													   obj [IN] is a reference to the current object being tested,
+													   p [IN] is the query point,
+													   d [IN/OUT] is in input the reject distance and in output the closest distance,
+													   q [OUT] is the closest point.
+													 The operator returns true if the closest distance is less than input reject distance.
+		OBJMARKER           : The type of a marker functor.
+		OBJPTRCONTAINER     : The type of a object pointers container.
+		DISTCONTAINER       : The type of a container which, in return, will contain the closest distances.
+		POINTCONTAINER      : The type of a container which, in return, will contain the closest points.
+
+	Method Parameters:
+		_getPointDistance : [IN] Functor for point-distance calculation.
+		_marker           : [IN] Functor for marking objects already tested.
+		_p                : [IN] The query point.
+		_r		          : [IN]  The radius of the specified sphere.
+		_objectPtrs       : [OUT] Container which, in return, will contain pointers to the in-sphere objects.
+		_distances        : [OUT] Container which, in return, will contain the in-sphere distances.
+		_objectPtrs       : [OUT] Container which, in return, will contain the in-sphere nearests points for each object.
+
+	Return Value:
+		The number of in-sphere objects found.
+
+	**************************************************************************/
+	template <class OBJPOINTDISTFUNCTOR, class OBJMARKER, class OBJPTRCONTAINER, class DISTCONTAINER, class POINTCONTAINER>
+	unsigned int GetInSphere(
+		OBJPOINTDISTFUNCTOR & _getPointDistance, OBJMARKER & _marker,const CoordType & _p, const ScalarType & _r,OBJPTRCONTAINER & _objectPtrs, DISTCONTAINER & _distances, POINTCONTAINER & _points) {
+		assert(0);
+		(void)_getPointDistance;
+		(void)_marker;
+		(void)_p;
+		(void)_r;
+		(void)_objectPtrs;
+		(void)_distances;
+		(void)_points;
+		return (0);
+	}
+
+	/**************************************************************************
+	Method GetInBox.
+
+	Description:
+		The GetInBox returns all the object in the specified bbox
+
+	Template Parameters:
+
+		OBJMARKER           : The type of a marker functor.
+		OBJPTRCONTAINER     : The type of a object pointers container.
+	
+	Method Parameters:
+		_marker           : [IN] Functor for marking objects already tested.
+		_bbox             : [IN] The bounding box of spatial query.
+		_objectPtrs       : [OUT] Container which, in return, will contain pointers to the closest objects.
+		
+
+	Return Value:
+		The number of in-box objects found.
+
+	**************************************************************************/
+	template <class OBJMARKER, class OBJPTRCONTAINER>
+	unsigned int GetInBox(OBJMARKER & _marker, const BoxType _bbox,OBJPTRCONTAINER & _objectPtrs) {
+		assert(0);
+		(void)_marker;
+		(void)_bbox;
+		(void)_objectPtrs;
+		return (0);
+	}
+	
+
+	
 	/**************************************************************************
 	Method DoRay.
 

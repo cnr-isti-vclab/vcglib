@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2005/10/03 10:05:26  pietroni
+changed Set functions, added possibility to pass the bbox as parameter
+
 Revision 1.10  2005/09/30 13:14:59  pietroni
 added wrapping to functions defined in GridClosest:
 - GetClosest
@@ -499,14 +502,40 @@ namespace vcg{
 			DISTCONTAINER & _distances, POINTCONTAINER & _points)
 		{
 			return (vcg::GridGetKClosest<SpatialHashType,
-				OBJPOINTDISTFUNCTOR,OBJMARKER,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>(*this,_getPointDistance,_marker,_k,_p,_maxDist,_objectPtrs,_distances,_points));
+				OBJPOINTDISTFUNCTOR,OBJMARKER,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>
+				(*this,_getPointDistance,_marker,_k,_p,_maxDist,_objectPtrs,_distances,_points));
+		}
+	
+		template <class OBJPOINTDISTFUNCTOR, class OBJMARKER, class OBJPTRCONTAINER, class DISTCONTAINER, class POINTCONTAINER>
+		unsigned int GetInSphere(OBJPOINTDISTFUNCTOR & _getPointDistance, 
+		OBJMARKER & _marker,
+		const CoordType & _p,
+		const ScalarType & _r,
+		OBJPTRCONTAINER & _objectPtrs,
+		DISTCONTAINER & _distances, 
+		POINTCONTAINER & _points)
+		{
+			return(vcg::GridGetInSphere<SpatialHashType,
+				OBJPOINTDISTFUNCTOR,OBJMARKER,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>
+				(*this,_getPointDistance,_marker,_p,_r,_objectPtrs,_distances,_points));
+		}
+
+		template <class OBJMARKER, class OBJPTRCONTAINER>
+			unsigned int GetInBox(OBJMARKER & _marker, 
+			const vcg::Box3<typename ScalarType> _bbox,
+			OBJPTRCONTAINER & _objectPtrs) 
+		{
+			return(vcg::GridGetInBox<SpatialHashType,OBJMARKER,OBJPTRCONTAINER>
+				  (*this,_marker,_bbox,_objectPtrs));
 		}
 
 		template <class OBJRAYISECTFUNCTOR, class OBJMARKER>
 			ObjPtr DoRay(OBJRAYISECTFUNCTOR & _rayIntersector, OBJMARKER & _marker, const Ray3<ScalarType> & _ray, const ScalarType & _maxDist, ScalarType & _t) 
 		{
-			return(vcg::GridDoRay<SpatialHashType,OBJRAYISECTFUNCTOR,OBJMARKER>(*this,_rayIntersector,_marker,_ray,_maxDist,_t));
+			return(vcg::GridDoRay<SpatialHashType,OBJRAYISECTFUNCTOR,OBJMARKER>
+				  (*this,_rayIntersector,_marker,_ray,_maxDist,_t));
 		}
+
 
 	}; // end class
 
