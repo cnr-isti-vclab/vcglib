@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/09/19 13:10:12  spinelli
+fixed bugs
+
 Revision 1.6  2005/09/14 14:34:41  spinelli
 used new version of Grid_ptr
 
@@ -103,7 +106,7 @@ namespace vcg
 					return v->IsD();
 				}
 			};
-			typedef typename GridStaticPtr<	std::vector<PVertex> > GridType;
+			typedef typename GridStaticPtr<	PVertex > GridType;
 
 			static void Join(PVertex pv0,PVertex & pv1){
 				pv1.e->V(pv1.z) = pv0.v;
@@ -135,14 +138,14 @@ namespace vcg
 				bool lastRound ;
 				if(em.vn){
 					vcg::edge::UpdateBounding<EdgeMeshType>::Box(em);
-					Grid().SetBBox(em.bbox);
+					//Grid().SetBBox(em.bbox);
 
 					std::vector<PVertex> pv;
 					for(ei = em.edges.begin(); ei != em.edges.end();++ei){
 						pv.push_back(PVertex(&*ei,0));
 						pv.push_back(PVertex(&*ei,1));
 					}					
-					Grid().Set(pv);
+					Grid().Set(pv.begin(), pv.end() );
 					typename std::vector<PVertex>::iterator pvi;
 					Point3<ScalarType> p;
 					PVertex * closest;
@@ -155,7 +158,11 @@ namespace vcg
 								Point3<ScalarType> vpos =(*pvi).v->P() ;
 								(*pvi).v->SetD();
 								ScalarType max_dist=em.bbox.Diag();
-								closest  = Grid().GetClosest<BackCompDist,Marker>(vpos, max_dist, BackCompDist(), eps, p,tm);
+								ScalarType min_dist = 0;
+								p =  (vcg::trimesh::GetClosestVertex<EdgeMeshType, GridType>( em, Grid(), vpos, 
+									max_dist, min_dist))->P();
+
+								//closest  = Grid().GetClosest<BackCompDist,Marker>(vpos, max_dist, BackCompDist(), eps, p,tm);
 								//closest  = Grid().GetClosest(vpos,eps,p);
 								(*pvi).v->ClearD();
 
