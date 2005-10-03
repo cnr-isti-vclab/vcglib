@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2005/10/03 13:59:39  pietroni
+added GetInSphere and GetInBox functions
+rensmed Functions respectively with Face suffix or Vertex suffix for query on vertex or faces
+
 Revision 1.14  2005/09/30 13:10:37  pietroni
 used functor defined in face/distance.h for distance point-face
 used functor defined in intersection3.h for ray-triangle intersection
@@ -171,8 +175,12 @@ namespace vcg {
 			const typename GRID::ScalarType & _maxDist,typename GRID::ScalarType & _minDist,
 			typename GRID::CoordType _closestPt,typename GRID::CoordType & _normf)
 		{
-			Point3<SCALAR> _ip;
-			return (GetClosest<MESH,GRID>(mesh,gr,_p,_maxDist,_minDist,_closestPt,_normf,ip));
+			Point3<GRID::ScalarType> _ip;
+			typedef FaceTmark<MESH> MarkerFace;
+			MarkerFace mf;
+			mf.SetMesh(&mesh);
+			typedef vcg::face::PointDistanceFunctor FDistFunct;
+			return ( gr.GetClosest<FDistFunct,MarkerFace>(FDistFunct(),mf,_p,_maxDist,_minDist,_closestPt) );
 		}
 
 		template <class MESH, class GRID>
@@ -192,8 +200,7 @@ namespace vcg {
 
 		template <class MESH, class GRID>
 			typename MESH::VertexType * GetClosestVertex( MESH & mesh,GRID & gr,const typename GRID::CoordType & _p, 
-			const typename GRID::ScalarType & _maxDist,typename GRID::ScalarType & _minDist,
-			typename GRID::CoordType _closestPt,typename GRID::CoordType & _normf)
+			const typename GRID::ScalarType & _maxDist,typename GRID::ScalarType & _minDist )
 		{
 			typedef GRID::ScalarType ScalarType;
 			typedef Point3<ScalarType> Point3x;
@@ -202,7 +209,8 @@ namespace vcg {
 			mv.SetMesh(&mesh);
 			typedef vcg::vertex::PointDistanceFunctor VDistFunct;
 			_minDist=_maxDist;
-			return (gr.GetClosest<VDistFunct,MarkerFace>(VDistFunct(),mv,_p,_maxDist,_minDist,_closestPt));
+			Point3x _closestPt;
+			return (gr.GetClosest<VDistFunct,MarkerVert>(VDistFunct(),mv,_p,_maxDist,_minDist,_closestPt));
 		}
 
 		template <class MESH, class GRID, class OBJPTRCONTAINER,class DISTCONTAINER, class POINTCONTAINER>
