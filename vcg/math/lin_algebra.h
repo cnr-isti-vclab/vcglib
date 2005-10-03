@@ -1,3 +1,6 @@
+#ifndef __VCGLIB_LINALGEBRA_H
+#define __VCGLIB_LINALGEBRA_H
+
 #include <vcg/math/matrix44.h>
 
 namespace vcg
@@ -436,3 +439,5 @@ namespace vcg
 
 	/*! @} */
 }; // end of namespace
+
+#endif
