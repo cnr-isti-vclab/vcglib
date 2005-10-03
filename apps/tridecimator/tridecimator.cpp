@@ -1,4 +1,6 @@
 #include <vector>
+#include <limits>
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -9,6 +11,7 @@ using namespace std;
 #include <vcg/simplex/edge/edge.h>
 #include <vcg/math/quadric.h>
 #include <vcg/complex/trimesh/base.h>
+#include <vcg/complex/trimesh/clean.h>
 #include <vcg/simplex/face/with/av.h>
 
 // io
@@ -40,17 +43,9 @@ public:
   ScalarType & W(){return w;}
 };
 
-class MyEdge: public Edge<MyEdge,MyVertex> {
-//public:
-  //inline MyEdge():Edge<MyEdge,MyVertex>(){UberFlags()=0;}
-	inline MyEdge(MyVertex* a,MyVertex* b):Edge<MyEdge,MyVertex>(a,b){UberFlags()=0;}
-};
-
-// for edge collpases we need faces and verteses with V->F adjacency
+class MyEdge : public Edge<MyEdge,MyVertex> {};
 class MyFace : public vcg::FaceAV<MyVertex,Edge<MyEdge,MyVertex> , MyFace>{};
-class MyMesh: public vcg::tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace > >{};
-
-
+class MyMesh : public vcg::tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace > >{};
 
 class MyTriEdgeCollapse: public vcg::tri::TriEdgeCollapseQuadric< MyMesh, MyTriEdgeCollapse > {
 						public:
@@ -73,13 +68,13 @@ void Usage()
            "   release date: "__DATE__"\n"
            "---------------------------------\n\n"
 		  "TriDecimator 1.0 \n"__DATE__"\n"
-			"Copyright 2003-2004 Visual Computing Lab I.S.T.I. C.N.R.\n"
+			"Copyright 2003-2006 Visual Computing Lab I.S.T.I. C.N.R.\n"
       "\nUsage:  "\
-      "tri_decimator file1 file2 face_num [opt]\n"\
+      "tridecimator file1 file2 face_num [opt]\n"\
       "Where opt can be:\n"\
       "     -e# QuadricError threshold  (range [0,inf) default inf)\n"
 			"     -b# Boundary Weight (default .5)\n"
-			"     -q# Quality threshold (range [0.0, 0.866],  default .1 )\n"
+			"     -q# Quality threshold (range [0.0, 0.866],  default .3 )\n"
 			"     -n# Normal threshold  (degree range [0,180] default 90)\n"
 			"     -E# Minimal admitted quadric value (default 1e-15, must be >0)\n"
 			"     -Q[y|n]  Use or not Quality Threshold (default yes)\n"
@@ -90,17 +85,10 @@ void Usage()
 			"     -B[y|n]  Preserve or not mesh boundary (default no)\n"
 			"     -T[y|n]  Preserve or not Topology (default no)\n"
 			"     -H[y|n]  Use or not Safe Heap Update (default no)\n"
-			"    ----- Preprocessing Options ---------------\n"
-			"     -Pv      Remove duplicate vertices\n"
-			"     -Pf      Remove degenerated faces\n"
-			"     -Pa      Remove face with null area\n"
-			"     -Pu      Remove unreferenced vertices \n"
-			"     -PA      All the above preprocessing options\n"
-                                        );
+		  "     -P       Before simplification, remove duplicate & unreferenced vertices\n"
+                                       );
   exit(-1);
 }
-
-
 
 
 int main(int argc ,char**argv){
@@ -115,19 +103,12 @@ if(argc<4) Usage();
     exit(-1);
   }
 	printf("mesh loaded %d %d \n",mesh.vn,mesh.fn);
-  printf("reducing it to %i\n",FinalSize);
-	clock_t u=clock();
-  vcg::tri::UpdateTopology<MyMesh>::VertexFace(mesh);
-	printf("vf topology %i\n",int(clock()-u));
-
-	MyMesh::VertexIterator vi;
-	vcg::tri::UpdateBounding<MyMesh>::Box(mesh);
-	//int i=0;
   
-	// decimator initialization
-  vcg::LocalOptimization<MyMesh> DeciSession(mesh);
-	MyTriEdgeCollapse::SetDefaultParams();
 
+MyTriEdgeCollapse::SetDefaultParams();
+  MyTriEdgeCollapse::Params().QualityThr  =.3;
+  double TargetError=numeric_limits<double>::max();
+  bool CleaningFlag =false;
      // parse command line.
 	  for(int i=4; i < argc;)
     {
@@ -143,11 +124,16 @@ if(argc<4) Usage();
                                   else { MyTriEdgeCollapse::Params().OptimalPlacement	= false; printf("NOT Using OptimalPlacement\n");	}        break;		
 				case 'S' : if(argv[i][2]=='y') { MyTriEdgeCollapse::Params().ScaleIndependent	= true;  printf("Using ScaleIndependent\n");	}
                                   else { MyTriEdgeCollapse::Params().ScaleIndependent	= false; printf("NOT Using ScaleIndependent\n");	}        break;		
+				case 'B' : if(argv[i][2]=='y') { MyTriEdgeCollapse::Params().PreserveBoundary	= true;  printf("Preserving Boundary\n");	}
+                                  else { MyTriEdgeCollapse::Params().PreserveBoundary	= false; printf("NOT Preserving Boundary\n");	}        break;		
 				case 'T' : if(argv[i][2]=='y') { MyTriEdgeCollapse::Params().PreserveTopology	= true;  printf("Preserving Topology\n");	}
                                   else { MyTriEdgeCollapse::Params().PreserveTopology	= false; printf("NOT Preserving Topology\n");	}        break;		
 				case 'q' :	MyTriEdgeCollapse::Params().QualityThr	= atof(argv[i]+2);	           printf("Setting Quality Thr to %f\n",atof(argv[i]+2)); 	 break;			
 				case 'n' :	MyTriEdgeCollapse::Params().NormalThr		= atof(argv[i]+2)*M_PI/180.0;  printf("Setting Normal Thr to %f deg\n",atof(argv[i]+2)); break;	
 				case 'b' :	MyTriEdgeCollapse::Params().BoundaryWeight  = atof(argv[i]+2);			printf("Setting Boundary Weight to %f\n",atof(argv[i]+2)); break;		
+				case 'e' :	TargetError = atof(argv[i]+2);			printf("Setting TargetError to %g\n",atof(argv[i]+2)); break;		
+				case 'P' :	CleaningFlag=true;  printf("Cleaning mesh before simplification\n",atof(argv[i]+2)); break;	
+
 				default  :  printf("Unknown option '%s'\n", argv[i]);
           exit(0);
       }
@@ -155,28 +141,37 @@ if(argc<4) Usage();
     }
 
 
+
+  if(CleaningFlag){
+      int dup = tri::Clean<MyMesh>::RemoveDuplicateVertex(mesh);
+      int unref =  tri::Clean<MyMesh>::RemoveUnreferencedVertex(mesh);
+      printf("Removed %i duplicate and %i unreferenced vertices from mesh \n",dup,unref);
+  }
+
+
+  printf("reducing it to %i\n",FinalSize);
+	
+	vcg::tri::UpdateBounding<MyMesh>::Box(mesh);
+  
+	// decimator initialization
+  vcg::LocalOptimization<MyMesh> DeciSession(mesh);
+	
 	int t1=clock();		
 	DeciSession.Init<MyTriEdgeCollapse >();
   int t2=clock();	
   printf("Initial Heap Size %i\n",DeciSession.h.size());
 
 	DeciSession.SetTargetSimplices(FinalSize);
-	DeciSession.DoOptimization();
-  int t3=clock();	
+	DeciSession.SetTimeBudget(0.5f);
+  if(TargetError< numeric_limits<double>::max() ) DeciSession.SetTargetMetric(TargetError);
 
-		printf(" vol %d \n lkv %d \n lke %d \n lkf %d \n ood %d\n bor %d\n ",
-            MyTriEdgeCollapse::FailStat::Volume()           ,
-						MyTriEdgeCollapse::FailStat::LinkConditionFace(),
-						MyTriEdgeCollapse::FailStat::LinkConditionEdge(),
-						MyTriEdgeCollapse::FailStat::LinkConditionVert(),
-						MyTriEdgeCollapse::FailStat::OutOfDate()        ,
-						MyTriEdgeCollapse::FailStat::Border()           
-			);
- 
-  
+  while(DeciSession.DoOptimization() && mesh.fn>FinalSize && DeciSession.currMetric < TargetError)
+    printf("Current Mesh size %7i heap sz %9i err %9g \r",mesh.fn,DeciSession.h.size(),DeciSession.currMetric);
+  int t3=clock();	
+  printf("mesh  %d %d Error %g \n",mesh.vn,mesh.fn,DeciSession.currMetric);
+  printf("\nCompleted in (%i+%i) msec\n",t2-t1,t3-t2);
+	
   vcg::tri::io::ExporterPLY<MyMesh>::Save(mesh,argv[2]);
-  printf("Completed in (%i+%i) msec\n",t2-t1,t3-t2);
-	printf("mesh  %d %d \n",mesh.vn,mesh.fn);
 	return 0;
 
 }
