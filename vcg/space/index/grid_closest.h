@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/10/02 23:18:06  cignoni
+Small bug in the computation of the intersection between the todo box and the grid bbox that failed for extrema points.
+
 Revision 1.4  2005/09/30 15:12:16  cignoni
 Completely rewrote the GridClosest, now it:
 - works for point out of the grid
@@ -34,8 +37,8 @@ Completely rewrote the GridClosest, now it:
 
 Revision 1.3  2005/09/30 13:15:48  pietroni
 added functions:
-     - GetKClosest
-     - DoRay
+- GetKClosest
+- DoRay
 
 Revision 1.2  2005/09/28 08:27:11  cignoni
 Added a control to avoid multiple check of the same cells during radial expansion
@@ -65,15 +68,15 @@ First Version
 #include <vcg/space/index/space_iterators.h>
 
 namespace vcg{
-	
+
 	template <class SPATIAL_INDEX, class OBJPOINTDISTFUNCTOR, class OBJMARKER>
 		typename SPATIAL_INDEX::ObjPtr  GridClosest(SPATIAL_INDEX &Si, 
-                                                OBJPOINTDISTFUNCTOR _getPointDistance,
- 		                                            OBJMARKER & _marker, 
-                                                const typename SPATIAL_INDEX::CoordType  & _p,
-		                                            const typename SPATIAL_INDEX::ScalarType & _maxDist,
-                                                typename SPATIAL_INDEX::ScalarType & _minDist,
-		                                            typename SPATIAL_INDEX:: CoordType &_closestPt)
+		OBJPOINTDISTFUNCTOR _getPointDistance,
+		OBJMARKER & _marker, 
+		const typename SPATIAL_INDEX::CoordType  & _p,
+		const typename SPATIAL_INDEX::ScalarType & _maxDist,
+		typename SPATIAL_INDEX::ScalarType & _minDist,
+		typename SPATIAL_INDEX:: CoordType &_closestPt)
 	{
 		typedef typename SPATIAL_INDEX::ObjPtr ObjPtr;
 		typedef typename SPATIAL_INDEX SpatialIndex;
@@ -83,81 +86,86 @@ namespace vcg{
 
 		// Initialize min_dist with _maxDist to exploit early rejection test.
 		_minDist = _maxDist;
-    
-    ObjPtr winner=NULL;
+
+		ObjPtr winner=NULL;
 		_marker.UnMarkAll();
-    ScalarType newradius = Si.voxel.Norm();
-    ScalarType radius;
-    Box3i iboxdone,iboxtodo;
-    CoordType t_res;
-    SPATIAL_INDEX::CellIterator first,last,l;
-    if(Si.bbox.IsInEx(_p))
-    {
-      Point3i _ip;
-      Si.PToIP(_p,_ip); 
-      Si.Grid( _ip[0],_ip[1],_ip[2], first, last );
-		  for(l=first;l!=last;++l)
-      {
-			  ObjPtr elem=&(**l);
+		ScalarType newradius = Si.voxel.Norm();
+		ScalarType radius;
+		Box3i iboxdone,iboxtodo;
+		CoordType t_res;
+		SPATIAL_INDEX::CellIterator first,last,l;
+		if(Si.bbox.IsInEx(_p))
+		{
+			Point3i _ip;
+			Si.PToIP(_p,_ip); 
+			Si.Grid( _ip[0],_ip[1],_ip[2], first, last );
+			for(l=first;l!=last;++l)
+			{
+				ObjPtr elem=&(**l);
 				if (_getPointDistance((**l), _p,_minDist, t_res))  // <-- NEW: use of distance functor
-							  {
-								  winner=elem;
-								  _closestPt=t_res;
-                  newradius=_minDist; // 
-							  }
-							  _marker.Mark(elem);
-      }
-      iboxdone=Box3i(_ip,_ip);
-    }
-    
-    int ix,iy,iz;
-    Box3i ibox(Point3i(0,0,0),Si.siz-Point3i(1,1,1));
-    do
-    {
-      radius=newradius;
-      Box3x boxtodo=Box3x(_p,radius);
-      //boxtodo.Intersect(Si.bbox);
-      Si.BoxToIBox(boxtodo, iboxtodo);
-      iboxtodo.Intersect(ibox);
-      if(!boxtodo.IsNull())
-      {
-		  for (ix=iboxtodo.min[0]; ix<=iboxtodo.max[0]; ix++) 
-				for (iy=iboxtodo.min[1]; iy<=iboxtodo.max[1]; iy++) 
-					for (iz=iboxtodo.min[2]; iz<=iboxtodo.max[2]; iz++) 
-						if(ix<iboxdone.min[0] || ix>iboxdone.max[0] ||  // this test is to avoid to re-process already analyzed cells.
-							 iy<iboxdone.min[1] || iy>iboxdone.max[1] ||
-							 iz<iboxdone.min[2] || iz>iboxdone.max[2] )
-						    {
-							    Si.Grid( ix, iy, iz, first, last );
-							     for(l=first;l!=last;++l) if (!(**l).IsD())							     
-								   {
-									  ObjPtr elem=&(**l);
-									  if( ! _marker.IsMarked(elem))
-									    {
-									    	if (_getPointDistance((**l), _p, _minDist, t_res)) 
-										        {
-											        winner=elem;
-											        _closestPt=t_res;
-										        };
-										    _marker.Mark(elem);
-									    }
-								   }
-							   }
-      }
-      if(!winner) newradius=radius+Si.voxel.Norm();
-      else newradius = _minDist;
-    }
-    while (_minDist>radius);
+				{
+					winner=elem;
+					_closestPt=t_res;
+					newradius=_minDist; // 
+				}
+				_marker.Mark(elem);
+			}
+			iboxdone=Box3i(_ip,_ip);
+		}
+
+		int ix,iy,iz;
+		Box3i ibox(Point3i(0,0,0),Si.siz-Point3i(1,1,1));
+		do
+		{
+			radius=newradius;
+			Box3x boxtodo=Box3x(_p,radius);
+			//boxtodo.Intersect(Si.bbox);
+			Si.BoxToIBox(boxtodo, iboxtodo);
+			iboxtodo.Intersect(ibox);
+			if(!boxtodo.IsNull())
+			{
+				for (ix=iboxtodo.min[0]; ix<=iboxtodo.max[0]; ix++) 
+					for (iy=iboxtodo.min[1]; iy<=iboxtodo.max[1]; iy++) 
+						for (iz=iboxtodo.min[2]; iz<=iboxtodo.max[2]; iz++) 
+							if(ix<iboxdone.min[0] || ix>iboxdone.max[0] ||  // this test is to avoid to re-process already analyzed cells.
+								iy<iboxdone.min[1] || iy>iboxdone.max[1] ||
+								iz<iboxdone.min[2] || iz>iboxdone.max[2] )
+							{
+								Si.Grid( ix, iy, iz, first, last );
+								for(l=first;l!=last;++l) if (!(**l).IsD())							     
+								{
+									ObjPtr elem=&(**l);
+									if( ! _marker.IsMarked(elem))
+									{
+										if (_getPointDistance((**l), _p, _minDist, t_res)) 
+										{
+											winner=elem;
+											_closestPt=t_res;
+										};
+										_marker.Mark(elem);
+									}
+								}
+							}
+			}
+			if(!winner) newradius=radius+Si.voxel.Norm();
+			else newradius = _minDist;
+		}
+		while (_minDist>radius);
 
 		return winner;
 	};
 
 	template <class SPATIALINDEXING,class OBJPOINTDISTFUNCTOR, class OBJMARKER, 
 	class OBJPTRCONTAINER, class DISTCONTAINER, class POINTCONTAINER>
-	unsigned int GridGetKClosest(SPATIALINDEXING &_Si,OBJPOINTDISTFUNCTOR & _getPointDistance,
-	OBJMARKER & _marker, const unsigned int _k, const typename SPATIALINDEXING::CoordType & _p, 
-	const typename SPATIALINDEXING::ScalarType & _maxDist,OBJPTRCONTAINER & _objectPtrs,
-	DISTCONTAINER & _distances, POINTCONTAINER & _points)
+		unsigned int GridGetKClosest(SPATIALINDEXING &_Si,
+									 OBJPOINTDISTFUNCTOR & _getPointDistance,
+									 OBJMARKER & _marker,
+									 const unsigned int _k,
+									 const typename SPATIALINDEXING::CoordType & _p, 
+									 const typename SPATIALINDEXING::ScalarType & _maxDist,
+									 OBJPTRCONTAINER & _objectPtrs,
+									 DISTCONTAINER & _distances,
+									 POINTCONTAINER & _points)
 	{
 		typedef vcg::ClosestIterator<SPATIALINDEXING,OBJPOINTDISTFUNCTOR,OBJMARKER> ClosestIteratorType;
 		ClosestIteratorType	Cli=ClosestIteratorType(_Si,_getPointDistance);
@@ -177,11 +185,14 @@ namespace vcg{
 		}
 		return (i);
 	};
-		
+
 	template <class SPATIALINDEXING,class OBJRAYISECTFUNCTOR, class OBJMARKER>
-	typename SPATIALINDEXING::ObjPtr GridDoRay(SPATIALINDEXING &_Si,OBJRAYISECTFUNCTOR &_rayIntersector, 
-	OBJMARKER &_marker, const Ray3<typename SPATIALINDEXING::ScalarType> & _ray, 
-	const typename SPATIALINDEXING::ScalarType & _maxDist,typename SPATIALINDEXING::ScalarType & _t) 
+		typename SPATIALINDEXING::ObjPtr GridDoRay(SPATIALINDEXING &_Si,
+												   OBJRAYISECTFUNCTOR &_rayIntersector, 
+												   OBJMARKER &_marker, 
+												   const Ray3<typename SPATIALINDEXING::ScalarType> & _ray, 
+												   const typename SPATIALINDEXING::ScalarType & _maxDist,
+												   typename SPATIALINDEXING::ScalarType & _t) 
 	{
 		typedef vcg::RayIterator<SPATIALINDEXING,OBJRAYISECTFUNCTOR,OBJMARKER> RayIteratorType;
 		RayIteratorType RayIte=RayIteratorType(_Si,_rayIntersector);
@@ -195,6 +206,72 @@ namespace vcg{
 		}
 		return 0;
 	}
-}//end namespace vcg
+
+	
+	template <class SPATIALINDEXING, class OBJPOINTDISTFUNCTOR, class OBJMARKER, class OBJPTRCONTAINER, class DISTCONTAINER, class POINTCONTAINER>
+		unsigned int GridGetInSphere(SPATIALINDEXING &_Si,
+									OBJPOINTDISTFUNCTOR & _getPointDistance, 
+									OBJMARKER & _marker,
+									const typename SPATIALINDEXING::CoordType & _p,
+									const typename SPATIALINDEXING::ScalarType & _r,
+									OBJPTRCONTAINER & _objectPtrs,
+									DISTCONTAINER & _distances, 
+									POINTCONTAINER & _points) 
+	{
+			typedef vcg::ClosestIterator<SPATIALINDEXING,OBJPOINTDISTFUNCTOR,OBJMARKER> ClosestIteratorType;
+			ClosestIteratorType	Cli=ClosestIteratorType(_Si,_getPointDistance);
+			Cli.SetMarker(_marker);
+			Cli.Init(_p,_r);
+			_objectPtrs.clear();
+			_distances.clear();
+			_points.clear();
+			while (!Cli.End())
+			{
+				_objectPtrs.push_back(&(*Cli));
+				_distances.push_back(Cli.Dist());
+				_points.push_back(Cli.NearestPoint());
+				++Cli;
+			}
+			return (_objectPtrs.size());
+		}
+
+		template <class SPATIALINDEXING,class OBJMARKER, class OBJPTRCONTAINER>
+			unsigned int GridGetInBox(SPATIALINDEXING &_Si,
+			OBJMARKER & _marker, 
+			const vcg::Box3<typename SPATIALINDEXING::ScalarType> _bbox,
+			OBJPTRCONTAINER & _objectPtrs) 
+		{
+			SPATIALINDEXING::CellIterator first,last,l;
+			_objectPtrs.clear();
+			vcg::Box3i ibbox;
+			Box3i Si_ibox(Point3i(0,0,0),_Si.siz-Point3i(1,1,1));
+			_Si.BoxToIBox(_bbox, ibbox);
+			ibbox.Intersect(Si_ibox);
+			_marker.UnMarkAll();
+			if (ibbox.IsNull())
+				return 0;
+			else
+			{
+				int ix,iy,iz;
+				for (ix=ibbox.min[0]; ix<=ibbox.max[0]; ix++) 
+					for (iy=ibbox.min[1]; iy<=ibbox.max[1]; iy++) 
+						for (iz=ibbox.min[2]; iz<=ibbox.max[2]; iz++) 
+						{
+							_Si.Grid( ix, iy, iz, first, last );
+							for(l=first;l!=last;++l) 
+								if (!(**l).IsD())
+								{
+									SPATIALINDEXING::ObjPtr elem=&(**l);
+									if( ! _marker.IsMarked(elem)){
+										_objectPtrs.push_back(elem);
+										_marker.Mark(elem);
+									}
+								}
+						}
+						return (_objectPtrs.size());
+			}
+		}
+
+	}//end namespace vcg
 #endif
 
