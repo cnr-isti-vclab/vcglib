@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/10/02 23:16:26  cignoni
+English comment and moved typedef to public scope
+
 Revision 1.6  2005/09/30 13:12:46  pietroni
 basic grid class is derived from Indexing base class defined in base,h
 
@@ -116,7 +119,7 @@ namespace vcg {
 		{
 			PToIP(b.min,ib.min);
 			PToIP(b.max,ib.max);
-			assert(ib.max[0]>=0 && ib.max[1]>=0 && ib.max[2]>=0);	
+			//assert(ib.max[0]>=0 && ib.max[1]>=0 && ib.max[2]>=0);	
 		}
 
 		/// Dato un box in voxel ritorna gli estremi del box reale
