@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2005/03/18 16:37:46  fiorin
+Minor changes
+
 Revision 1.13  2005/01/28 17:56:57  pietroni
 changed HasVFTopology function... control if both vertex and face define the vf topology
 
@@ -260,7 +263,7 @@ ScalarType Volume()
 	    k = (j+1)%3;
 	    T = (*fi).P(k) - (*fi).P(j);
 	    T.Normalize();
-	    T = ( (*fi).P( k     ) - (*fi).P(j) ) ^
+	    B = ( (*fi).P( k     ) - (*fi).P(j) ) ^
 	        ( (*fi).P((k+1)%3) - (*fi).P(j) ) ;
 	    B.Normalize();
 	    N = T ^ B;
