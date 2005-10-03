@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/05/30 09:11:20  ganovelli
+header added, error in include
+
 Revision 1.3  2005/05/17 21:19:37  ganovelli
 some std::and typename  missing  (CRS4)
 
@@ -38,7 +41,7 @@ added vcg header
 #include<vcg/space/plane3.h>
 #include<vcg/space/segment3.h>
 #include<vcg/space/intersection3.h>
-#include<vcg/space/index/grid_static_ptr.h>
+//#include<vcg/space/index/grid_static_ptr.h>
 
 #include<vcg/complex/trimesh/base.h>
 
@@ -103,16 +106,16 @@ bool Intersect(   GridType & grid,Plane3<ScalarType> plane, std::vector<typename
 		it is not safe to put epsilon to 0. 
 // TODO si dovrebbe considerare la topologia face-face della trimesh per derivare quella della edge mesh..
 */
-template < typename  TriMeshType, typename EdgeMeshType, class ScalarType>
+template < typename  TriMeshType, typename EdgeMeshType, class ScalarType, class IndexingType >
 bool Intersection(	/*TriMeshType & m, */
 					Plane3<ScalarType>  pl,
 					EdgeMeshType & em,
 					double& ave_length,
-					typename GridStaticPtr<typename TriMeshType::FaceContainer> *grid,
-					typename std::vector< typename GridStaticPtr<typename TriMeshType::FaceContainer>::Cell* >& cells)
+					typename IndexingType *grid,
+					typename std::vector< typename IndexingType::Cell* >& cells)
 {
 	typedef typename TriMeshType::FaceContainer FaceContainer;
-	typedef GridStaticPtr<FaceContainer> GridType;
+	typedef IndexingType GridType;
 	typename EdgeMeshType::VertexIterator vi;
 	typename TriMeshType::FaceIterator fi;
   std::vector<typename TriMeshType::FaceType*> v;
