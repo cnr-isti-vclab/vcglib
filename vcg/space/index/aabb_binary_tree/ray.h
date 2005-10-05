@@ -25,6 +25,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/09/28 19:48:31  m_di_benedetto
+Removed hit point parameter, #included aabbtree base.
+
 Revision 1.1  2005/09/26 18:33:16  m_di_benedetto
 First Commit.
 
@@ -81,6 +84,15 @@ public:
 
 		ObjPtr closestObj = 0;
 
+		ScalarType rt;
+		if (!ClassType::IntersectionBoxRay(pRoot->boxCenter, pRoot->boxHalfDims, rayex, rt)) {
+			return (0);
+		}
+
+		if (rt >= rayT) {
+			return (0);
+		}
+
 		ClassType::DepthFirstRayIsect(pRoot, rayIntersection, rayex, rayT, closestObj);
 
 		if (closestObj == 0) {
@@ -127,21 +139,11 @@ protected:
 
 	template <class OBJRAYISECTFUNCT>
 	static inline void DepthFirstRayIsect(const NodeType * node, OBJRAYISECTFUNCT & rayIntersection, const Ray3Ex & ray, ScalarType & rayT, ObjPtr & closestObj) {
-		ScalarType rt;
-		CoordType pt;
-		if (!ClassType::IntersectionBoxRay(node->boxCenter, node->boxHalfDims, ray, rt)) {
-			return;
-		}
-
-		if (rt >= rayT) {
-			return;
-		}
-
 		if (node->IsLeaf()) {
 			ObjPtr cObj = 0;
 			ScalarType ar;
 			CoordType ap;
-			rt = rayT;
+			ScalarType rt = rayT;
 			for (typename TreeType::ObjPtrVectorConstIterator si=node->oBegin; si!=node->oEnd; ++si) {
 				if (rayIntersection(*(*si), ray.r, ar)) {
 					if (ar < rt) {
@@ -156,10 +158,30 @@ protected:
 			}
 		}
 		else {
+			ScalarType rt0, rt1;
+			bool b0 = false;
+			bool b1 = false;
 			if (node->children[0] != 0) {
-				ClassType::DepthFirstRayIsect(node->children[0], rayIntersection, ray, rayT, closestObj);
+				b0 = ClassType::IntersectionBoxRay(node->children[0]->boxCenter, node->children[0]->boxHalfDims, ray, rt0);
 			}
 			if (node->children[1] != 0) {
+				b1 = ClassType::IntersectionBoxRay(node->children[1]->boxCenter, node->children[1]->boxHalfDims, ray, rt1);
+			}
+
+			if (b0 && b1) {
+				if (rt0 <= rt1) {
+					ClassType::DepthFirstRayIsect(node->children[0], rayIntersection, ray, rayT, closestObj);
+					ClassType::DepthFirstRayIsect(node->children[1], rayIntersection, ray, rayT, closestObj);
+				}
+				else {
+					ClassType::DepthFirstRayIsect(node->children[1], rayIntersection, ray, rayT, closestObj);
+					ClassType::DepthFirstRayIsect(node->children[0], rayIntersection, ray, rayT, closestObj);
+				}
+			}
+			else if (b0) {
+				ClassType::DepthFirstRayIsect(node->children[0], rayIntersection, ray, rayT, closestObj);
+			}
+			else if (b1) {
 				ClassType::DepthFirstRayIsect(node->children[1], rayIntersection, ray, rayT, closestObj);
 			}
 		}
