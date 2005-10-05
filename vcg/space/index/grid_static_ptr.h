@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.29  2005/10/03 13:57:56  pietroni
+added GetInSphere and GetInBox functions
+
 Revision 1.28  2005/10/02 23:15:26  cignoni
 Inveted the boolean sign of an assert in Grid()
 
@@ -33,9 +36,9 @@ Added possibility of setting BBox explicitly in Set(...)
 
 Revision 1.26  2005/09/30 13:15:21  pietroni
 added wrapping to functions defined in GridClosest:
-     - GetClosest
-     - GetKClosest
-     - DoRay
+- GetClosest
+- GetKClosest
+- DoRay
 
 Revision 1.25  2005/09/21 09:22:51  pietroni
 removed closest functions. Closest function is now on index\\Closest.h
@@ -229,7 +232,7 @@ namespace vcg {
 		std::vector<Cell> grid;   /// Griglia vera e propria
 
 
-	
+
 
 		/// Date le coordinate di un grid point (corner minx,miy,minz) ritorna le celle che condividono
 		/// l'edge cell che parte dal grid point in direzione axis
@@ -260,53 +263,53 @@ namespace vcg {
 		}
 
 
-    //////////////// 
-    // Official access functions
 		//////////////// 
-    /// BY CELL
-    Cell* Grid(const  int i) {
+		// Official access functions
+		//////////////// 
+		/// BY CELL
+		Cell* Grid(const  int i) {
 			return &grid[i];
 		}
 
-    void Grid( const Cell* g, Cell & first, Cell & last )
+		void Grid( const Cell* g, Cell & first, Cell & last )
 		{
 			first = *g;
 			last  = *(g+1);
 		}
-		
+
 		/// BY INTEGER COORDS
 		inline Cell* Grid( const int x, const int y, const int z )
 		{
 			assert(!( x<0 || x>=siz[0] || y<0 || y>=siz[1] || z<0 || z>=siz[2] ));
-      assert(grid.size()>0);
+			assert(grid.size()>0);
 			return &*grid.begin() + ( x+siz[0]*(y+siz[1]*z) );
 		}
 
-    inline Cell* Grid( const Point3i &pi)
-    {
-      return Grid(pi[0],pi[1],pi[2]);
-    }
-
-    void Grid( const int x, const int y, const int z, Cell & first, Cell & last )
-		  {
-			  Cell* g = Grid(x,y,z);
-			  first = *g;
-			  last  = *(g+1);
-		  }
-
-    void Grid( const Point3d & p, Cell & first, Cell & last )
+		inline Cell* Grid( const Point3i &pi)
 		{
-      Cell* g = Grid(GridP(p));
+			return Grid(pi[0],pi[1],pi[2]);
+		}
+
+		void Grid( const int x, const int y, const int z, Cell & first, Cell & last )
+		{
+			Cell* g = Grid(x,y,z);
+			first = *g;
+			last  = *(g+1);
+		}
+
+		void Grid( const Point3d & p, Cell & first, Cell & last )
+		{
+			Cell* g = Grid(GridP(p));
 
 			first = *g;
 			last  = *(g+1);
 		}
-		 		
+
 
 		/// Set the bounding box of the grid
 		///We need some extra space for numerical precision.
 		template <class Box3Type>
-    void SetBBox( const Box3Type & b )
+			void SetBBox( const Box3Type & b )
 		{
 			bbox.Import( b );
 			ScalarType t = bbox.Diag()/100.0;
@@ -315,7 +318,7 @@ namespace vcg {
 			dim  = bbox.max - bbox.min;
 		}
 
-    
+
 
 		void ShowStats(FILE *fp)
 		{
@@ -339,86 +342,94 @@ namespace vcg {
 		}
 
 
-		
+
 		/// Insert a mesh in the grid
 		template <class OBJITER>
-	    void Set(const OBJITER & _oBegin, const OBJITER & _oEnd, const Box3x &_bbox=Box3x() )
+			void Set(const OBJITER & _oBegin, const OBJITER & _oEnd, const Box3x &_bbox=Box3x() )
 		{
 			OBJITER i;
-      Box3<FLT> b;
-			
-      if(!_bbox.IsNull()) bbox=_bbox;
-      else
-          for(i = _oBegin; i!= _oEnd; ++i)
-			    {
-				    (*i).GetBBox(b);
-				    bbox.Add(b);
-			    }
+			Box3<FLT> b;
 			int _size=std::distance<OBJITER>(_oBegin,_oEnd);
-			dim  = bbox.max - bbox.min;
-			BestDim( _size, dim, siz );
-			// find voxel size
-			voxel[0] = dim[0]/siz[0];
-			voxel[1] = dim[1]/siz[1];
-			voxel[2] = dim[2]/siz[2];
-			
-
-			// "Alloca" la griglia: +1 per la sentinella
-			grid.resize( siz[0]*siz[1]*siz[2]+1 );
-
-			// Ciclo inserimento dei tetraedri: creazione link
-			links.clear();
-			for(i=_oBegin; i!=_oEnd; ++i)
+			if(!_bbox.IsNull())
+				bbox=_bbox;
+			else
 			{
-				Box3x bb;			// Boundig box del tetraedro corrente
-				(*i).GetBBox(bb);
-				bb.Intersect(bbox);
-				if(! bb.IsNull() )
+				for(i = _oBegin; i!= _oEnd; ++i)
 				{
+					(*i).GetBBox(b);
+					bbox.Add(b);
+					
+				}
+				///inflate the bb calculated
+				ScalarType infl=bbox.Diag()/_size;
+				bbox.min-=vcg::Point3d(infl,infl,infl);
+				bbox.max+=vcg::Point3d(infl,infl,infl);
+			}	
+				
+				dim  = bbox.max - bbox.min;
+				BestDim( _size, dim, siz );
+				// find voxel size
+				voxel[0] = dim[0]/siz[0];
+				voxel[1] = dim[1]/siz[1];
+				voxel[2] = dim[2]/siz[2];
 
-					Box3i ib;		// Boundig box in voxels
-					BoxToIBox( bb,ib );
-					int x,y,z;
-					for(z=ib.min[2];z<=ib.max[2];++z)
+
+				// "Alloca" la griglia: +1 per la sentinella
+				grid.resize( siz[0]*siz[1]*siz[2]+1 );
+
+				// Ciclo inserimento dei tetraedri: creazione link
+				links.clear();
+				for(i=_oBegin; i!=_oEnd; ++i)
+				{
+					Box3x bb;			// Boundig box del tetraedro corrente
+					(*i).GetBBox(bb);
+					bb.Intersect(bbox);
+					if(! bb.IsNull() )
 					{
-						int bz = z*siz[1];
-						for(y=ib.min[1];y<=ib.max[1];++y)
+
+						Box3i ib;		// Boundig box in voxels
+						BoxToIBox( bb,ib );
+						int x,y,z;
+						for(z=ib.min[2];z<=ib.max[2];++z)
 						{
-							int by = (y+bz)*siz[0];
-							for(x=ib.min[0];x<=ib.max[0];++x)
-								// Inserire calcolo cella corrente
-								// if( pt->Intersect( ... )
-								links.push_back( Link(&(*i),by+x) );
+							int bz = z*siz[1];
+							for(y=ib.min[1];y<=ib.max[1];++y)
+							{
+								int by = (y+bz)*siz[0];
+								for(x=ib.min[0];x<=ib.max[0];++x)
+									// Inserire calcolo cella corrente
+									// if( pt->Intersect( ... )
+									links.push_back( Link(&(*i),by+x) );
+							}
 						}
 					}
 				}
-			}
-			// Push della sentinella
-			/*links.push_back( Link((typename ContainerType::iterator)NULL,
-			(grid.size()-1)));*/
+				// Push della sentinella
+				/*links.push_back( Link((typename ContainerType::iterator)NULL,
+				(grid.size()-1)));*/
 
-			links.push_back( Link(NULL,
-				(grid.size()-1)));
+				links.push_back( Link(NULL,
+					(grid.size()-1)));
 
-			// Ordinamento dei links
-			sort( links.begin(), links.end() );
+				// Ordinamento dei links
+				sort( links.begin(), links.end() );
 
-			// Creazione puntatori ai links
-			typename std::vector<Link>::iterator pl;
-			unsigned int pg;
-			pl = links.begin();
-			for(pg=0;pg<grid.size();++pg)
-			{
-				assert(pl!=links.end());
-
-				grid[pg] = &*pl;
-				while( (int)pg == pl->Index() )	// Trovato inizio
+				// Creazione puntatori ai links
+				typename std::vector<Link>::iterator pl;
+				unsigned int pg;
+				pl = links.begin();
+				for(pg=0;pg<grid.size();++pg)
 				{
-					++pl;		// Ricerca prossimo blocco
-					if(pl==links.end())
-						break;
+					assert(pl!=links.end());
+
+					grid[pg] = &*pl;
+					while( (int)pg == pl->Index() )	// Trovato inizio
+					{
+						++pl;		// Ricerca prossimo blocco
+						if(pl==links.end())
+							break;
+					}
 				}
-			}
 
 		}
 
@@ -444,19 +455,19 @@ namespace vcg {
 			return (vcg::GridGetKClosest<GridPtrType,
 				OBJPOINTDISTFUNCTOR,OBJMARKER,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>(*this,_getPointDistance,_marker,_k,_p,_maxDist,_objectPtrs,_distances,_points));
 		}
-		
+
 		template <class OBJPOINTDISTFUNCTOR, class OBJMARKER, class OBJPTRCONTAINER, class DISTCONTAINER, class POINTCONTAINER>
-		unsigned int GetInSphere(OBJPOINTDISTFUNCTOR & _getPointDistance, 
-		OBJMARKER & _marker,
-		const CoordType & _p,
-		const ScalarType & _r,
-		OBJPTRCONTAINER & _objectPtrs,
-		DISTCONTAINER & _distances, 
-		POINTCONTAINER & _points)
+			unsigned int GetInSphere(OBJPOINTDISTFUNCTOR & _getPointDistance, 
+			OBJMARKER & _marker,
+			const CoordType & _p,
+			const ScalarType & _r,
+			OBJPTRCONTAINER & _objectPtrs,
+			DISTCONTAINER & _distances, 
+			POINTCONTAINER & _points)
 		{
 			return(vcg::GridGetInSphere<GridPtrType,
 				OBJPOINTDISTFUNCTOR,OBJMARKER,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>
-				(*this,_getPointDistance,_marker,_p,_r,_maxDist,_objectPtrs,_distances,_points));
+				(*this,_getPointDistance,_marker,_p,_r,_objectPtrs,_distances,_points));
 		}
 
 		template <class OBJMARKER, class OBJPTRCONTAINER>
@@ -465,11 +476,11 @@ namespace vcg {
 			OBJPTRCONTAINER & _objectPtrs) 
 		{
 			return(vcg::GridGetInBox<GridPtrType,OBJMARKER,OBJPTRCONTAINER>
-				  (*this,_marker,_bbox,_objectPtrs));
+				(*this,_marker,_bbox,_objectPtrs));
 		}
 
 		template <class OBJRAYISECTFUNCTOR, class OBJMARKER>
-		ObjPtr DoRay(OBJRAYISECTFUNCTOR & _rayIntersector, OBJMARKER & _marker, const Ray3<ScalarType> & _ray, const ScalarType & _maxDist, ScalarType & _t) 
+			ObjPtr DoRay(OBJRAYISECTFUNCTOR & _rayIntersector, OBJMARKER & _marker, const Ray3<ScalarType> & _ray, const ScalarType & _maxDist, ScalarType & _t) 
 		{
 			return(vcg::GridDoRay<GridPtrType,OBJRAYISECTFUNCTOR,OBJMARKER>(*this,_rayIntersector,_marker,_ray,_maxDist,_t));
 		}

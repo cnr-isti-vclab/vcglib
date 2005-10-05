@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2005/10/03 13:58:21  pietroni
+added GetInSphere and GetInBox functions
+
 Revision 1.11  2005/10/03 10:05:26  pietroni
 changed Set functions, added possibility to pass the bbox as parameter
 
@@ -347,15 +350,21 @@ namespace vcg{
 		{
 			OBJITER i;
 			Box3<FLT> b;
+			int _size=std::distance<OBJITER>(_oBegin,_oEnd);
 			if(!_bbox.IsNull()) bbox=_bbox;
 			else
+			{
 				for(i = _oBegin; i!= _oEnd; ++i)
 				{
 					(*i).GetBBox(b);
 					bbox.Add(b);
 				}
-
-				int _size=std::distance<OBJITER>(_oBegin,_oEnd);
+				///inflate the bb calculated
+				ScalarType infl=bbox.Diag()/_size;
+				bbox.min-=vcg::Point3d(infl,infl,infl);
+				bbox.max+=vcg::Point3d(infl,infl,infl);
+			}	
+			
 				dim  = bbox.max - bbox.min;
 				BestDim( _size, dim, siz );
 				// find voxel size
