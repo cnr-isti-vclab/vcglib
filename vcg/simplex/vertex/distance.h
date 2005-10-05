@@ -40,14 +40,15 @@ namespace vcg {
 		template <class VERTEXTYPE, class SCALARTYPE>
 		inline bool operator () (const VERTEXTYPE & v, const Point3<SCALARTYPE> & p, SCALARTYPE & minDist, Point3<SCALARTYPE> & q) {
 			const Point3<typename VERTEXTYPE::ScalarType> fp = Point3<typename VERTEXTYPE::ScalarType>::Construct(p);
-			typename VERTEXTYPE::ScalarType md = (typename VERTEXTYPE::ScalarType)(minDist);
+			typename VERTEXTYPE::ScalarType md;
 			md=(v.P()-fp).Norm();
-			const bool ret = (md<minDist);
-			minDist = (SCALARTYPE)(md);
-			q = p;
+			bool ret = (md<=minDist);
+			if (ret) minDist = (SCALARTYPE)(md);
+			q = v.P();
 			return (ret);
 		}
 	};
+
 
 }	 // end namespace face
 	
