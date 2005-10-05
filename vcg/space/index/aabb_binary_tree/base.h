@@ -25,6 +25,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/09/28 19:44:49  m_di_benedetto
+First Commit.
+
 
 ****************************************************************************/
 
@@ -62,16 +65,15 @@ class AABBBinaryTree {
 	public:
 		class AABBBinaryTreeNode {
 			public:
-				AABBBinaryTreeNode * parent;
-				AABBBinaryTreeNode * children[2];
 				CoordType boxCenter;
 				CoordType boxHalfDims;
 				ObjPtrVectorIterator oBegin;
 				ObjPtrVectorIterator oEnd;
+				AABBBinaryTreeNode * children[2];
 				unsigned char splitAxis;
 				NodeAuxDataType auxData;
 
-				inline AABBBinaryTreeNode(AABBBinaryTreeNode * pParent = 0);
+				inline AABBBinaryTreeNode(void);
 				inline ~AABBBinaryTreeNode(void);
 
 				inline void Clear(void);
@@ -120,7 +122,7 @@ class AABBBinaryTree {
 
 	protected:
 		template <class OBJBOXFUNCT, class OBJBARYCENTERFUNCT>
-		inline static NodeType * BoundObjects(NodeType * parent, const ObjPtrVectorIterator & oBegin, const ObjPtrVectorIterator & oEnd, const unsigned int size, const unsigned int maxElemsPerLeaf, const ScalarType & leafBoxMaxVolume, const bool useVariance, OBJBOXFUNCT & getBox, OBJBARYCENTERFUNCT & getBarycenter);
+		inline static NodeType * BoundObjects(const ObjPtrVectorIterator & oBegin, const ObjPtrVectorIterator & oEnd, const unsigned int size, const unsigned int maxElemsPerLeaf, const ScalarType & leafBoxMaxVolume, const bool useVariance, OBJBOXFUNCT & getBox, OBJBARYCENTERFUNCT & getBarycenter);
 
 		template <class OBJBARYCENTERFUNCT>
 		inline static int BalanceMedian(const ObjPtrVectorIterator & oBegin, const ObjPtrVectorIterator & oEnd, const int size, const int splitAxis, OBJBARYCENTERFUNCT & getBarycenter, ObjPtrVectorIterator & medianIter);
@@ -170,12 +172,12 @@ bool AABBBinaryTree<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::Set(const OBJITERATOR
 
 template <class OBJTYPE, class SCALARTYPE, class NODEAUXDATATYPE>
 template <class OBJBOXFUNCT, class OBJBARYCENTERFUNCT>
-typename AABBBinaryTree<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::NodeType * AABBBinaryTree<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::BoundObjects(NodeType * parent, const ObjPtrVectorIterator & oBegin, const ObjPtrVectorIterator & oEnd, const unsigned int size, const unsigned int maxElemsPerLeaf, const ScalarType & leafBoxMaxVolume, const bool useVariance, OBJBOXFUNCT & getBox, OBJBARYCENTERFUNCT & getBarycenter) {
+typename AABBBinaryTree<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::NodeType * AABBBinaryTree<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::BoundObjects(const ObjPtrVectorIterator & oBegin, const ObjPtrVectorIterator & oEnd, const unsigned int size, const unsigned int maxElemsPerLeaf, const ScalarType & leafBoxMaxVolume, const bool useVariance, OBJBOXFUNCT & getBox, OBJBARYCENTERFUNCT & getBarycenter) {
 	if (size <= 0) {
 		return (0);
 	}
 
-	NodeType * pNode = new NodeType(parent);
+	NodeType * pNode = new NodeType();
 	if (pNode == 0) {
 		return (0);
 	}
@@ -322,8 +324,7 @@ int AABBBinaryTree<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::BalanceMedian(const Ob
 }
 
 template <class OBJTYPE, class SCALARTYPE, class NODEAUXDATATYPE>
-AABBBinaryTree<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::AABBBinaryTreeNode::AABBBinaryTreeNode(NodeType * pParent) {
-	this->parent = pParent;
+AABBBinaryTree<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::AABBBinaryTreeNode::AABBBinaryTreeNode(void) {
 	this->children[0] = 0;
 	this->children[1] = 0;
 }
