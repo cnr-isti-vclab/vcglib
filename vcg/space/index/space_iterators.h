@@ -279,7 +279,7 @@ namespace vcg{
 		///control the end of scanning
 		bool  _EndGrid()
 		{
-			if ((explored.min<=vcg::Point3i(0,0,0))&&(explored.max>=Si.siz-vcg::Point3i(1,1,1)))
+			if ((explored.min==vcg::Point3i(0,0,0))&&(explored.max==Si.siz-vcg::Point3i(1,1,1)))
 				end =true;
 			return end;
 		}
@@ -303,6 +303,8 @@ namespace vcg{
 			explored=to_explore;
 			_UpdateRadius();
 			Box3<ScalarType> b3d(p,radius);
+			/*b3d.Intersect(Si.bbox);
+			Si.BoxToIBox(b3d,to_explore);*/
 			Si.BoxToIBox(b3d,to_explore);
 			Box3i ibox(Point3i(0,0,0),Si.siz-Point3i(1,1,1));
 			to_explore.Intersect(ibox);
@@ -335,11 +337,14 @@ namespace vcg{
 		///initialize the Itarator
 		void Init(CoordType _p,const ScalarType &_max_dist)
 		{
+			explored.SetNull();
+			to_explore.SetNull();
 			p=_p;
 			max_dist=_max_dist;
 			Elems.clear();
 			end=false;
 			tm.UnMarkAll();
+			//step_size=Si.voxel.X();
 			step_size=Si.voxel.Norm();
 			radius=0;
 
@@ -373,12 +378,14 @@ namespace vcg{
 		{
 			int	ix,iy,iz;
 			for( iz = to_explore.min.Z();iz <=	to_explore.max.Z(); ++iz)
-				for(iy =	to_explore.min.Y(); iy	<=to_explore.max.Y(); ++iy)
-					for(ix =	to_explore.min.X(); ix	<= to_explore.max.X();++ix)
+				for(iy =to_explore.min.Y(); iy	<=to_explore.max.Y(); ++iy)
+					for(ix =to_explore.min.X(); ix	<= to_explore.max.X();++ix)
 					{
-						if(ix<explored.min[0] || ix>explored.max[0] ||  // this test is to avoid to re-process already analyzed cells.
+						// this test is to avoid to re-process already analyzed cells.
+						if((explored.IsNull())||
+							(ix<explored.min[0] || ix>explored.max[0] ||  
 							iy<explored.min[1] || iy>explored.max[1] ||
-							iz<explored.min[2] || iz>explored.max[2] )
+							iz<explored.min[2] || iz>explored.max[2] ))
 						{
 							Spatial_Idexing::CellIterator first,last,l;
 
@@ -408,17 +415,24 @@ namespace vcg{
 
 		void operator ++()
 		{
+			/*if (Dist()<=radius)
+			{
+				CurrentElem--;
+				Elems.pop_back();
+			}
+
+			while ((!End())&&(Dist()>radius))
+				if (_NextShell()&&!_EndGrid())
+					Refresh();*/
+
 			if (Elems.size()>0)
 			{
 				CurrentElem--;
 				Elems.pop_back();
 			}
 			while ((!End())&&(Dist()>radius))
-			{
-				
 				if (_NextShell()&&!_EndGrid())
 					Refresh();
-			}	
 		}
 
 		ObjType &operator *(){return *((*CurrentElem).elem);}
