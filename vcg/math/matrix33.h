@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/09/29 09:53:58  ganovelli
+added inverse by SVD
+
 Revision 1.8  2005/06/10 14:51:54  cignoni
 Changed a Zero in SetZero in WeightedCrossCovariance()
 
@@ -515,7 +518,7 @@ Matrix33<S> Inverse(const Matrix33<S>&m)
 		SingularValueDecomposition(m_copy,&e[0],v);
 		m_copy.Transpose();
 		e[0]=1/e[0];e[1]=1/e[1];e[2]=1/e[2];
-		return v * MatrixDiag<S>(e) * m_copy;
+		return v * Matrix33Diag<S>(e) * m_copy;
 	}
 
 /// 
