@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2005/10/03 16:19:07  spinelli
+fixed some bugs
+
 Revision 1.15  2005/10/03 13:59:39  pietroni
 added GetInSphere and GetInBox functions
 rensmed Functions respectively with Face suffix or Vertex suffix for query on vertex or faces
@@ -235,7 +238,7 @@ namespace vcg {
 			MarkerVert mv;
 			mv.SetMesh(&mesh);
 			typedef vcg::vertex::PointDistanceFunctor VDistFunct;
-			return (gr.GetKClosest<VDistFunct,MarkerFace,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>
+			return (gr.GetKClosest<VDistFunct,MarkerVert,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>
 				(VDistFunct(),mv,_k,_p,_maxDist,_objectPtrs,_distances,_points));
 		}
 
