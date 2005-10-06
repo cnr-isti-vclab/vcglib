@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.23  2005/03/18 16:38:36  fiorin
+Minor changes
+
 Revision 1.22  2005/03/18 00:13:45  cignoni
 Removed NormalizedNormalV  (out of standard and wrong) and
 added the member functions Normal and NormalizedNormal() (just like for faces)
@@ -61,6 +64,9 @@ Revision 1.12  2004/05/10 13:31:13  ganovelli
 function for edge adjacency added
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2005/03/18 16:38:36  fiorin
+Minor changes
+
 Revision 1.22  2005/03/18 00:13:45  cignoni
 Removed NormalizedNormalV  (out of standard and wrong) and
 added the member functions Normal and NormalizedNormal() (just like for faces)
@@ -142,6 +148,7 @@ Edited Comments and GPL license
 #include<vcg/space/color4.h>
 #include<vcg/space/tcoord2.h>
 #include<vcg/simplex/face/pos.h>
+#include<vcg/space/box3.h>
 
 
 namespace vcg {
@@ -342,6 +349,15 @@ static inline bool DeleteBitFlag(int bitval)
  //@}
   
   
+/*#*******************	
+*  Bounding box *
+**********************/
+
+void GetBBox( Box3<ScalarType> & bb ) const
+{
+	bb.Set( cP() );
+}
+
 /***********************************************/
 /** @name Vertex Texture Coords
    blah
