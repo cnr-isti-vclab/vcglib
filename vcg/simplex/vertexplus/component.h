@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/05/10 13:50:32  cignoni
+Updated names of adj functions to the new standards
+
 Revision 1.6  2004/04/05 11:53:06  cignoni
 addend constant access funcs
 
@@ -104,13 +107,13 @@ template <class T> class Normal3d: public Normal<vcg::Point3d, T> {};
 
 /*-------------------------- NORMAL ----------------------------------------*/ 
 
-template <class T> class EmptyTexture: public T {
+template <class TT> class EmptyTexture: public TT {
 public:
   typedef vcg::TCoord2<float,1> TextureType;
   TextureType &T() { static TextureType dummy_texture; return dummy_texture; }
   static bool HasTexture()   { return false; }
 };
-template <class A, class T> class Texture: public T {
+template <class A, class TT> class Texture: public TT {
 public:
   typedef A TextureType;
   TextureType &T() { return _t; }
@@ -120,9 +123,9 @@ private:
   TextureType _t;    
 };
 
-template <class T> class Texture2s: public Texture<TCoord2<short,1>, T> {};
-template <class T> class Texture2f: public Texture<TCoord2<float,1>, T> {};
-template <class T> class Texture2d: public Texture<TCoord2<double,1>, T> {};
+template <class TT> class Texture2s: public Texture<TCoord2<short,1>, TT> {};
+template <class TT> class Texture2f: public Texture<TCoord2<float,1>, TT> {};
+template <class TT> class Texture2d: public Texture<TCoord2<double,1>, TT> {};
 
 /*------------------------- FLAGS -----------------------------------------*/ 
 template <class T> class EmptyFlag: public T {
@@ -187,14 +190,14 @@ template <class T> class Qualityd: public Quality<double, T> {};
 
 template <class T> class EmptyVFAdj: public T {
 public:
-  typename T::FacePointer &VFb() { static typename T::FacePointer fp=0; return fp; }
+  typename T::FacePointer &VFp() { static typename T::FacePointer fp=0; return fp; }
   int &VFi(){static int z=0; return z;};
   static bool HasVFAdjacency()   {   return false; }
 };
 
 template <class T> class VFAdj: public T {
 public:
-  typename T::FacePointer &VFb() {return _fp; }
+  typename T::FacePointer &VFp() {return _fp; }
   int &VFi() {return _zp; }
   static bool HasVFAdjacency()   {   return true; }
 private:

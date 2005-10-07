@@ -21,23 +21,33 @@
 *                                                                           *
 ****************************************************************************/
 
-This folders contains most common vertex configuration files
-The name of the file specify the members that are added to the vertex class
-The name is a sequence of letters, in strict alphabetical order.
-The possible admitted letters are
+This folders contains most common VERTEX configuration files.
 
-A - vertex-face adjacency
-C - Color
-N - Normal
-Q - Quality
-T - Texture Coords
+The name of the file specifies the members that are added to the vertex
+class. The name is a sequence of letter pairs, in strict alphabetical order. The
+possible admitted letters pairs are:
+
+Adjacency Info
+
+AF - Vertex-Face adjacency
+AE - Vertex-Edge adjacency
+AT - Vertex-Tetra adjacency
+
+Per-Vertex Data
+VC - Color
+VN - Normal
+VM - Incremental Mark
+VQ - Quality
+VT - Texture Coords
 
 E.g. 
 
-#include<vcg/simplex/vertex/with/acq.h> 
+#include<vcg/simplex/vertex/with/afvcvnvq.h> 
 
 generate a type 
-VertexACQ<VScalarType,FaceType> 
-that can store V-F adjacency, color and quality.
+
+VertexAFVCVQ<VScalarType,FaceType> 
+
+That can store V-F adjacency, color, normal and quality.
   
 
