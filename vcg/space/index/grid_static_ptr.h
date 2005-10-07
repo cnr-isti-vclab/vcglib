@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.30  2005/10/05 17:05:08  pietroni
+corrected bug on Set Function .... bbox must be exetended in order to have'nt any object on his borde
+
 Revision 1.29  2005/10/03 13:57:56  pietroni
 added GetInSphere and GetInBox functions
 
@@ -362,8 +365,8 @@ namespace vcg {
 				}
 				///inflate the bb calculated
 				ScalarType infl=bbox.Diag()/_size;
-				bbox.min-=vcg::Point3d(infl,infl,infl);
-				bbox.max+=vcg::Point3d(infl,infl,infl);
+				bbox.min-=vcg::Point3<FLT>(infl,infl,infl);
+				bbox.max+=vcg::Point3<FLT>(infl,infl,infl);
 			}	
 				
 				dim  = bbox.max - bbox.min;
