@@ -21,9 +21,12 @@
 *                                                                           *
 ****************************************************************************/
 /****************************************************************************
-  History
+History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/10/03 15:57:53  rita_borgo
+Alligned with TriMeshInfo Code
+
 Revision 1.6  2005/01/28 11:59:35  cignoni
 Add std:: to stl containers
 
@@ -51,130 +54,613 @@ Initial Release
 #include <map>
 #include <algorithm>
 
+#include <vcg/simplex/face/face.h>
+#include <vcg/complex/trimesh/base.h>
+#include <vcg/complex/trimesh/closest.h>
+#include <vcg/space/index/grid_static_ptr.h>
+
 #include<vcg/complex/trimesh/allocate.h>
+
+
 namespace vcg {
-namespace tri {
-/// 
-/** \addtogroup trimesh */
-/*@{*/
-/// Class of static functions to clean/correct/restore meshs. 
-template <class CleanMeshType>
-class Clean
-{
-  public:
-  typedef CleanMeshType MeshType; 
-  typedef typename MeshType::VertexType     VertexType;
-  typedef typename MeshType::VertexPointer  VertexPointer;
-  typedef typename MeshType::VertexIterator VertexIterator;
-  typedef typename MeshType::FaceType       FaceType;
-  typedef typename MeshType::FacePointer    FacePointer;
-  typedef typename MeshType::FaceIterator   FaceIterator;
-/* classe di confronto per l'algoritmo di eliminazione vertici duplicati*/
-template <class VertexIterator>
-class RemoveDuplicateVert_Compare{
-public:
-	inline bool operator() (VertexIterator a, VertexIterator b)
+	namespace tri{
+		/// 
+		/** \addtogroup trimesh */
+		/*@{*/
+		/// Class of static functions to clean/correct/restore meshs. 
+		template <class CleanMeshType>
+		class Clean
 		{
-			return *a < *b;
-		}
-};
 
+		public:
+			typedef CleanMeshType MeshType; 
+			typedef typename MeshType::VertexType     VertexType;
+			typedef typename MeshType::VertexPointer  VertexPointer;
+			typedef typename MeshType::VertexIterator VertexIterator;
+			typedef	typename MeshType::ScalarType			ScalarType;
+			typedef typename MeshType::FaceType       FaceType;
+			typedef typename MeshType::FacePointer    FacePointer;
+			typedef typename MeshType::FaceIterator   FaceIterator;
+			typedef typename MeshType::FaceContainer  FaceContainer;
 
-/** This function removes all duplicate vertices of the mesh by looking only at their spatial positions. 
- Note that it does not update any topology relation that could be affected by this like the VT or TT relation.
- the reason this function is usually performed BEFORE building any topology information.
-*/
-static int RemoveDuplicateVertex( MeshType & m )    // V1.0
-{
-	if(m.vert.size()==0 || m.vn==0) return 0;
+			typedef GridStaticPtr<FaceType, typename MeshType::ScalarType > TriMeshGrid;
+			typedef Point3<typename MeshType::ScalarType> Point3x;
 
-	std::map<VertexPointer, VertexPointer> mp;
-	int i,j;
-	VertexIterator vi; 
-	int deleted=0;
-	int k=0;
-	int num_vert = m.vert.size();
-	std::vector<VertexPointer> perm(num_vert);
-	for(vi=m.vert.begin(); vi!=m.vert.end(); ++vi, ++k)
-		perm[k] = &(*vi);
+			TriMeshGrid   gM;
+			FaceIterator fi;
+			FaceIterator gi;
+			vcg::face::Pos<FaceType> he;
+			vcg::face::Pos<FaceType> hei;
 
-	RemoveDuplicateVert_Compare<VertexPointer> c_obj;
-
-	std::sort(perm.begin(),perm.end(),c_obj);
-
-  j = 0;
-  i = j;
-  mp[perm[i]] = perm[j];
-  ++i;
-  for(;i!=num_vert;)
-	{
-		if( (! (*perm[i]).IsD()) && 
-        (! (*perm[j]).IsD()) && 
-				(*perm[i]).P() == (*perm[j]).cP() )
-		{
-			VertexPointer t = perm[i];
-	    mp[perm[i]] = perm[j];
-	    ++i;
-			(*t).SetD();
-			deleted++;
-		}
-		else
-		{
-			j = i;
-	    ++i;
-		}
-	}
-  FaceIterator fi;
-  for(fi = m.face.begin(); fi!=m.face.end(); ++fi)
-		for(k = 0; k < 3; ++k)
-			if( !(*fi).IsD() )
-				if( mp.find( (typename MeshType::VertexPointer)(*fi).V(k) ) != mp.end() )
+			/* classe di confronto per l'algoritmo di eliminazione vertici duplicati*/
+			template <class VertexIterator>
+			class RemoveDuplicateVert_Compare{
+			public:
+				inline bool operator() (VertexIterator a, VertexIterator b)
 				{
-					(*fi).V(k) = &*mp[ (*fi).V(k) ];
+					return *a < *b;
 				}
-	m.vn -= deleted;
-	return deleted;
-}
+			};
+
+			static void Initialize(MeshType& m)
+			{
+				FaceIterator fi;
+				for(fi=m.face.begin();fi!=m.face.end();fi++)
+				{
+					(*fi).ClearB(0);
+					(*fi).ClearB(1);
+					(*fi).ClearB(2);
+					(*fi).ClearS();
+				}
+			}
+
+			static int DetectUnreferencedVertex( MeshType& m )   // V1.0
+			{
+				int count_uv = 0;
+				MeshType::VertexIterator v;
+				FaceIterator fi;
+
+				for(v=m.vert.begin();v!=m.vert.end();++v)
+					(*v).ClearV();
+
+				for(fi=m.face.begin();fi!=m.face.end();++fi)
+					for(int j=0;j<3;++j)
+						(*fi).V(j)->SetV();
+
+				for(v=m.vert.begin();v!=m.vert.end();++v)
+					if( !(*v).IsV() )
+						++count_uv;
+				return count_uv;
+
+			}
+
+			/** This function removes all duplicate vertices of the mesh by looking only at their spatial positions. 
+			Note that it does not update any topology relation that could be affected by this like the VT or TT relation.
+			the reason this function is usually performed BEFORE building any topology information.
+			*/
+			static int RemoveDuplicateVertex( MeshType & m )    // V1.0
+			{
+				if(m.vert.size()==0 || m.vn==0) return 0;
+
+				std::map<VertexPointer, VertexPointer> mp;
+				int i,j;
+				VertexIterator vi; 
+				int deleted=0;
+				int k=0;
+				int num_vert = m.vert.size();
+				std::vector<VertexPointer> perm(num_vert);
+				for(vi=m.vert.begin(); vi!=m.vert.end(); ++vi, ++k)
+					perm[k] = &(*vi);
+
+				RemoveDuplicateVert_Compare<VertexPointer> c_obj;
+
+				std::sort(perm.begin(),perm.end(),c_obj);
+
+				j = 0;
+				i = j;
+				mp[perm[i]] = perm[j];
+				++i;
+				for(;i!=num_vert;)
+				{
+					if( (! (*perm[i]).IsD()) && 
+						(! (*perm[j]).IsD()) && 
+						(*perm[i]).P() == (*perm[j]).cP() )
+					{
+						VertexPointer t = perm[i];
+						mp[perm[i]] = perm[j];
+						++i;
+						(*t).SetD();
+						deleted++;
+					}
+					else
+					{
+						j = i;
+						++i;
+					}
+				}
+				FaceIterator fi;
+				for(fi = m.face.begin(); fi!=m.face.end(); ++fi)
+					for(k = 0; k < 3; ++k)
+						if( !(*fi).IsD() )
+							if( mp.find( (typename MeshType::VertexPointer)(*fi).V(k) ) != mp.end() )
+							{
+								(*fi).V(k) = &*mp[ (*fi).V(k) ];
+							}
+							m.vn -= deleted;
+							return deleted;
+			}
 
 
-/** This function removes that are not referenced by any face. The function updates the vn counter.
-		@param m The mesh
-		@return The number of removed vertices
-*/
-static int RemoveUnreferencedVertex( CleanMeshType& m )   // V1.0
-{
-	FaceIterator fi;
-	VertexIterator vi;
-	int referredBit = VertexType::NewBitFlag();
-		
-	int j;
-	int deleted = 0;
+			/** This function removes that are not referenced by any face. The function updates the vn counter.
+			@param m The mesh
+			@return The number of removed vertices
+			*/
+			static int RemoveUnreferencedVertex( MeshType& m )   // V1.0
+			{
+				FaceIterator fi;
+				VertexIterator vi;
+				int referredBit = VertexType::NewBitFlag();
+
+				int j;
+				int deleted = 0;
+
+				for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+					(*vi).ClearUserBit(referredBit);
+
+				for(fi=m.face.begin();fi!=m.face.end();++fi)
+					if( !(*fi).IsD() )
+						for(j=0;j<3;++j)
+							(*fi).V(j)->SetUserBit(referredBit);
+
+				for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+					if( (!(*vi).IsD()) && (!(*vi).IsUserBit(referredBit)))
+					{
+						(*vi).SetD();
+						++deleted;
+					}
+					m.vn -= deleted;
+					VertexType::DeleteBitFlag(referredBit);
+					return deleted;
+			}
+
+
+			static bool IsComplexManifold( MeshType & m ) 
+			{
+				FaceIterator fi;
+				bool Manifold = true;
+				for( fi=m.face.begin();fi!=m.face.end();++fi)
+				{
+					for (int j=0;j<3;j++)
+					{
+						if(!IsManifold(*fi,j))
+						{
+							Manifold = false;
+							fi= m.face.end();
+							--fi;
+							j=3;
+						}
+					}
+					if((BorderCount(*fi)>0))
+					{
+						Manifold = false;
+						fi= m.face.end();
+						--fi;
+					}
+				}
+				return Manifold;
+			}
+
+			static void CountEdges( MeshType & m, int &count_e, int &boundary_e ) 
+			{
+				FaceIterator fi;
+				vcg::face::Pos<FaceType> he;
+				vcg::face::Pos<FaceType> hei;
+				bool counted =false;
+				for(fi=m.face.begin();fi!=m.face.end();fi++)
+				{
+					(*fi).SetS();
+					count_e +=3; //assume that we have to increase the number of edges with three
+					for(int j=0; j<3; j++)
+					{
+						if (fi->IsBorder(j)) //If this edge is a border edge
+							boundary_e++; // then increase the number of boundary edges
+						else if (IsManifold(*fi,j))//If this edge is manifold
+						{
+							if((*fi).FFp(j)->IsS()) //If the face on the other side of the edge is already selected
+								count_e--; // we counted one edge twice
+						}
+						else//We have a non-manifold edge
+						{
+							hei.Set(&(*fi), j , fi->V(j));
+							he=hei;
+							he.NextF();
+							while (he.f!=hei.f)// so we have to iterate all faces that are connected to this edge
+							{
+								if (he.f->IsS())// if one of the other faces was already visited than this edge was counted already.
+								{
+									counted=true;
+									break;
+								}
+								else
+								{
+									he.NextF();
+								}
+							}
+							if (counted)
+							{
+								count_e--;
+								counted=false;
+							}
+						}
+					}
+				}
+			}
+
+
+			static int CountHoles( MeshType & m)
+			{
+				int numholes=0;
+				int numholev=0;
+				int BEdges=0;
+				FaceIterator fi;
+				FaceIterator gi;
+				vcg::face::Pos<FaceType> he;
+				vcg::face::Pos<FaceType> hei;
+
+				vector<vector<Point3x> > holes; //indices of vertices
+
+				for(fi=m.face.begin();fi!=m.face.end();++fi)
+					(*fi).ClearS();
+				gi=m.face.begin(); fi=gi;
+
+
+
+				for(fi=m.face.begin();fi!=m.face.end();fi++)//for all faces do
+				{
+					for(int j=0;j<3;j++)//for all edges
+					{
+						if(fi->V(j)->IsS()) continue;
+
+						if((*fi).IsBorder(j))//found an unvisited border edge
+						{
+							he.Set(&(*fi),j,fi->V(j)); //set the face-face iterator to the current face, edge and vertex
+							vector<Point3x> hole; //start of a new hole
+							hole.push_back(fi->P(j)); // including the first vertex
+							numholev++;
+							he.v->SetS(); //set the current vertex as selected
+							he.NextB(); //go to the next boundary edge
+
+
+							while(fi->V(j) != he.v)//will we do not encounter the first boundary edge.
+							{
+								Point3x newpoint = he.v->P(); //select its vertex.
+								if(he.v->IsS())//check if this vertex was selected already, because then we have an additional hole.
+								{
+									//cut and paste the additional hole.
+									vector<Point3x> hole2;
+									int index = find(hole.begin(),hole.end(),newpoint) - hole.begin();
+									for(int i=index; i<hole.size(); i++)
+										hole2.push_back(hole[i]);
+
+									hole.resize(index);
+									if(hole2.size()!=0) //annoying in degenerate cases
+										holes.push_back(hole2);
+								}
+								hole.push_back(newpoint);
+								numholev++;
+								he.v->SetS(); //set the current vertex as selected
+								he.NextB(); //go to the next boundary edge
+							}
+							holes.push_back(hole);
+						}
+					}
+				}
+				return holes.size();
+			}
+
+			static int BorderEdges( MeshType & m, int numholes)
+			{
+				int BEdges = 0;
+				for(int i=0; i<numholes; i++)
+				{
+					if(i==numholes-1){ printf("%i)\n",numholes); BEdges++;}
+					else{ printf("%i, ",numholes); BEdges++;}
+				}
+				return BEdges;
+
+			}
+
+			static int ConnectedComponents(MeshType &m)
+			{
+				FaceIterator fi;
+				FaceIterator gi;
+				vcg::face::Pos<FaceType> he;
+				vcg::face::Pos<FaceType> hei;
+
+				vector<int> nrfaces;
+				nrfaces.reserve(1);
+
+				for(fi=m.face.begin();fi!=m.face.end();++fi)
+					(*fi).ClearS();
+				gi=m.face.begin(); fi=gi;
+				int Compindex=0;
+				stack<MeshType::FaceIterator> sf;
+				MeshType::FaceType *l;
+				for(fi=m.face.begin();fi!=m.face.end();++fi)
+				{
+					if (!(*fi).IsS())
+					{
+						(*fi).SetS();
+						//(*fi).Q()=Compindex;
+						nrfaces.push_back(1);
+						sf.push(fi);
+						while (!sf.empty())
+						{
+							gi=sf.top();
+							he.Set(&(*gi),0,gi->V(0));
+							sf.pop();
+							for(int j=0;j<3;++j)
+							{
+								if( !(*gi).IsBorder(j) )
+								{
+									l=he.f->FFp(j);
+									if( !(*l).IsS() )
+									{
+										(*l).SetS();
+										sf.push(l);
+									}
+								}
+							}
+						}
+						Compindex++;
+					}
+				}
+				return Compindex;
+			}
+
+			static int DegeneratedFaces(MeshType& m)
+			{
+				FaceIterator fi;
+				int count_fd = 0;
+
+
+				for(fi=m.face.begin(); fi!=m.face.end();++fi)
+					if((*fi).Area() == 0)
+						count_fd++;
+				return count_fd;
+			}
+
+			static float MeshGenus(MeshType &m, int count_uv, int numholes, int numcomponents, int count_e)
+			{
+				int eulernumber = (m.vn-count_uv) + m.fn - count_e;
+				return(-( 0.5 * (eulernumber - numholes) - numcomponents ));
+			}
+
+			static void IsRegularMesh(MeshType &m, bool Regular, bool Semiregular)
+			{
+				int inc=0;
+				VertexIterator v;
+				FaceIterator fi;
+				vcg::face::Pos<FaceType> he;
+				vcg::face::Pos<FaceType> hei;
+				for(v=m.vert.begin();v!=m.vert.end();++v)
+					(*v).ClearS();
+				for(fi=m.face.begin();fi!=m.face.end();++fi)
+				{
+					for (int j=0; j<3; j++)
+					{
+						he.Set(&(*fi),j,fi->V(j));
+						if (!(*fi).IsBorder(j) && !(*fi).IsBorder((j+2)%3) && !fi->V(j)->IsS())
+						{
+							hei=he;
+							inc=1;
+							he.FlipE();
+							he.NextF();
+							while (he.f!=hei.f)
+							{
+								he.FlipE();
+								if (he.IsBorder())
+								{
+									inc=6;
+									break;
+								}
+								he.NextF();
+								inc++;
+							}
+							if (inc!=6)
+								Regular=false;
+							if (inc!=6 && inc!=5)
+								Semiregular=false;
+							fi->V(j)->SetS();
+
+						}
+						else
+							fi->V(j)->SetS();
+					}
+					if (Semiregular==false)
+						break;
+
+				}
+
+			}
+
+			static void IsOrientedMesh(MeshType &m, bool Oriented, bool Orientable)
+			{
+				FaceIterator fi;
+				FaceIterator gi;
+				vcg::face::Pos<FaceType> he;
+				vcg::face::Pos<FaceType> hei;
+				stack<MeshType::FaceIterator> sf;	
+				MeshType::FacePointer l;
+
+				for(fi=m.face.begin();fi!=m.face.end();++fi)
+				{
+					(*fi).ClearS();
+					(*fi).ClearUserBit(0);
+				}
+				gi=m.face.begin(); fi=gi;
+				for(fi=m.face.begin();fi!=m.face.end();++fi)
+				{
+					if (!(*fi).IsS())
+					{
+						(*fi).SetS();
+						sf.push(fi);
+
+						while (!sf.empty())
+						{
+							gi=sf.top();
+							sf.pop();
+							for(int j=0;j<3;++j)
+							{
+								if( !(*gi).IsBorder(j) )
+								{
+									he.Set(&(*gi),0,gi->V(0));
+									l=he.f->FFp(j);
+									he.Set(&(*gi),j,gi->V(j));
+									hei.Set(he.f->FFp(j),he.f->FFi(j), (he.f->FFp(j))->V(he.f->FFi(j)));
+									if( !(*gi).IsUserBit(0) )
+									{
+										if (he.v!=hei.v)// bene
+										{
+											if ((*l).IsS() && (*l).IsUserBit(0))
+											{
+												Orientable=false;
+												break;
+											}
+											else if (!(*l).IsS())
+											{
+												(*l).SetS();
+												sf.push(l);
+											}
+										}
+										else if (!(*l).IsS())
+										{
+											Oriented=false;
+											(*l).SetS();
+											(*l).SetUserBit(0);
+											sf.push(l);
+										}
+										else if ((*l).IsS() && !(*l).IsUserBit(0))
+										{
+											Orientable=false;
+											break;
+										}
+									}
+									else if (he.v==hei.v)// bene
+									{
+										if ((*l).IsS() && (*l).IsUserBit(0))
+										{
+											Orientable=false;
+											break;
+										}
+										else if (!(*l).IsS())
+										{
+											(*l).SetS();
+											sf.push(l);
+										}
+									}
+									else if (!(*l).IsS())
+									{
+										Oriented=false;
+										(*l).SetS();
+										(*l).SetUserBit(0);
+										sf.push(l);
+									}
+									else if ((*l).IsS() && !(*l).IsUserBit(0))
+									{
+										Orientable=false;
+										break;
+									}
+								}
+							}
+						}
+					}
+					if (!Orientable)
+						break;
+				}
+			}
+
+			static bool SelfIntersections(MeshType &m)
+			{
+				
+				Box3< ScalarType> bbox;
+				TriMeshGrid   gM;
+
+				int nelem;
+				bbox = m.bbox;
+				double bdiag = bbox.Diag();
+				
+				FaceType   *f=0;
+				Point3x             normf, bestq, ip,p;
+				FaceIterator fi;
+
+				
+
+				std::vector<FaceType*> ret;
+				std::vector<FaceType*> inCell;
+				gM.Set<vector<FaceType>::iterator>(m.face.begin(),m.face.end());
+
+				for(fi=m.face.begin();fi!=m.face.end();++fi)
+				{
+					
+		//			f = vcg::trimesh::GetClosestFace<MeshType,TriMeshGrid>(m, gM, p, bdiag, bdiag, normf, bestq, ip);
+				// fill the cell
+/*....*/
+					nelem = inCell.size();
+					if (nelem>=2)// in a cell
+					{
+						//test combinations of elements
+						for (int i=0;i<nelem-1;i++)
+							for (int j=i+1;j<nelem;j++)
+							if ((!inCell[i]->IsD())&&(!inCell[j]->IsD())&&(TestIntersection(inCell[i],inCell[j])))
+							{
+								ret.push_back(inCell[i]);
+								ret.push_back(inCell[j]);
+							}
+					}
+				}	
+				return false;
+			}
+
+				
+	//test real intersection between faces
+static	bool TestIntersection(FaceType *f0,FaceType *f1)
+	{
+		assert((!f0->IsD())&&(!f1->IsD()));
+		//no adiacent faces
+		if ((f0!=f1)&& (!ShareEdge(f0,f1))
+			&& (!ShareVertex(f0,f1)))
+			return (vcg::Intersection<FaceType>((*f0),(*f1)));
+		return false;
+	}
+
+			//control if two faces share an edge
+static	bool ShareEdge(FaceType *f0,FaceType *f1)
+	{
+		assert((!f0->IsD())&&(!f1->IsD()));
+		for (int i=0;i<3;i++)
+				if (f0->FFp(i)==f1)
+					return (true);
+
+		return(false);
+	}
+
+	//control if two faces share a vertex
+static	bool ShareVertex(FaceType *f0,FaceType *f1)
+	{
+		assert((!f0->IsD())&&(!f1->IsD()));
+		for (int i=0;i<3;i++)
+			for (int j=0;j<3;j++)
+				if (f0->V(i)==f1->V(j))
+					return (true);
+
+		return(false);
+	}
+
+
+		}; // end class
+		/*@}*/
 	
-	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-		(*vi).ClearUserBit(referredBit);
-
-	for(fi=m.face.begin();fi!=m.face.end();++fi)
-		if( !(*fi).IsD() )
-			for(j=0;j<3;++j)
-					(*fi).V(j)->SetUserBit(referredBit);
-
-	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-		if( (!(*vi).IsD()) && (!(*vi).IsUserBit(referredBit)))
-		{
-			(*vi).SetD();
-			++deleted;
-		}
-	m.vn -= deleted;
-  VertexType::DeleteBitFlag(referredBit);
-	return deleted;
-}
-
-
-
-
-
-}; // end class
-/*@}*/
-} // End Namespace TriMesh
+	} //End Namespace Tri
 } // End Namespace vcg
 #endif
