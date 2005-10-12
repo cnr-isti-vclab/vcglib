@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/05/09 11:28:48  spinelli
+ho tolto 2 warning del tipo unreferenced formal parameter, commentando le var che producevano tale warning.
+
 Revision 1.8  2005/04/22 15:16:48  turini
 Minor Changes To Compile With List Containers.
 
@@ -128,7 +131,7 @@ public:
 	
 };
 
-template <class MESH_TYPE,  bool partial = false , class FACE_POINTER_CONTAINER = std::vector<MESH_TYPE::FacePointer> > 
+template <class MESH_TYPE,  bool partial = false , class FACE_POINTER_CONTAINER = std::vector<typename MESH_TYPE::FacePointer> > 
 class GlTrimesh : public GLW
 	{
 	public:
@@ -150,6 +153,9 @@ class GlTrimesh : public GLW
 		FACE_POINTER_CONTAINER face_pointers;
 
 
+    unsigned int TextureMapID[128];
+	unsigned int & TMId(int i){return TextureMapID[i];}
+
 	unsigned int b[3];
 	int h;      // the current hints
 	// The parameters of hints
@@ -157,11 +163,11 @@ class GlTrimesh : public GLW
 	float HNParamf[8];
 	void SetHintParami(const HintParami hip, const int value)
 		{
-			HNParamI[hip]=value;
+			HNParami[hip]=value;
 		}
 	int GetHintParami(const HintParami hip) const
 		{
-			return HNParamI[hip];
+			return HNParami[hip];
 		}
 	void SetHintParamf(const HintParamf hip, const float value)
 		{
@@ -195,7 +201,7 @@ void Update(/*Change c=CHAll*/)
 	if(m==0) return;
 		if(h&HNUseVArray){
 
-		MESH_TYPE::FaceIterator fi;
+		typename MESH_TYPE::FaceIterator fi;
 		indices.clear();
 		for(fi = m->face.begin(); fi != m->face.end(); ++fi)
 		{
@@ -339,12 +345,12 @@ void Draw()
 template <NormalMode nm, ColorMode cm, TextureMode tm>
 void DrawFill()
 {
-	FACE_POINTER_CONTAINER::iterator fp;
+	typename FACE_POINTER_CONTAINER::iterator fp;
 
-	MESH_TYPE::FaceIterator fi;
+	typename MESH_TYPE::FaceIterator fi;
 	
 
-	std::vector<MESH_TYPE::FaceType*>::iterator fip;
+	typename std::vector<typename MESH_TYPE::FaceType*>::iterator fip;
 	//short curtexname=-1;
 
 	if(cm == CMPerMesh) glColor(m->C());
@@ -427,7 +433,7 @@ void DrawFill()
 
 			while( (partial)?(fp!=face_pointers.end()):(fi!=m->face.end()))
 			{
- 				MESH_TYPE::FaceType & f = (partial)?(*(*fp)): *fi;
+ 				typename MESH_TYPE::FaceType & f = (partial)?(*(*fp)): *fi;
 
 				if(!f.IsD()){
 //ATLTRACE("Drawing face\n");
@@ -475,7 +481,7 @@ void DrawFill()
 template<NormalMode nm, ColorMode cm>
 void DrawPoints()
 {
-	MESH_TYPE::VertexIterator vi;
+	typename MESH_TYPE::VertexIterator vi;
 	glBegin(GL_POINTS);
 	if(cm==CMPerMesh) glColor(m->C());
 		
@@ -554,7 +560,7 @@ void DrawTexture_NPV_TPW2()
 {
 	unsigned int texname=(*(m->face.begin())).WT(0).n(0);
 	glBindTexture(GL_TEXTURE_2D,TMId(texname));
-	MESH_TYPE::FaceIterator fi;
+	typename MESH_TYPE::FaceIterator fi;
 	glBegin(GL_TRIANGLES);
 	for(fi=m->face.begin();fi!=m->face.end();++fi)if(!(*fi).IsD()){
 		  if(texname!=(*fi).WT(0).n(0))	{
@@ -584,15 +590,15 @@ void DrawTexture_NPV_TPW2()
 #endif
 
 
-int MemUsed()
+/*int MemUsed()
 {
-	int tot=sizeof(GLWrap);
-	tot+=sizeof(edge_type)*edge.size();
+	int tot=sizeof(GlTrimesh);
+	tot+=sizeof(mesh_type::edge_type)*edge.size();
 	tot+=sizeof(MESH_TYPE::VertexType *) * EStrip.size();
 	tot+=sizeof(MESH_TYPE::VertexType *) * TStrip.size();
 	tot+=sizeof(MESH_TYPE::FaceType *)   * TStripF.size();
 	return tot;
-}
+}*/
 
 private:
 
@@ -661,10 +667,10 @@ template<class MESH_TYPE>
 void Crease(MESH_TYPE &m, typename MESH_TYPE::scalar_type angleRad)
 {
 	assert(m.HasFFTopology());
-	MESH_TYPE::scalar_type cosangle=Cos(angleRad);
+	typename MESH_TYPE::scalar_type cosangle=Cos(angleRad);
 
 	std::vector<GLW::VertToSplit<MESH_TYPE> > SPL;
-	std::vector<MESH_TYPE::VertexType> newvert;
+	std::vector<typename MESH_TYPE::VertexType> newvert;
 	newvert.reserve(m.fn*3);
 	// indica se un il vertice z della faccia e' stato processato 
 	enum {VISITED_0= MESH_TYPE::FaceType::USER0,      
@@ -673,7 +679,7 @@ void Crease(MESH_TYPE &m, typename MESH_TYPE::scalar_type angleRad)
 	int vis[3]={VISITED_0,VISITED_1,VISITED_2}; 
 						
 	int _t2=clock();
-	MESH_TYPE::FaceIterator fi;
+	typename MESH_TYPE::FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 		if(!(*fi).IsD())	(*fi).Supervisor_Flags()&= (~(VISITED_0 | VISITED_1 | VISITED_2));
 	
@@ -684,9 +690,9 @@ void Crease(MESH_TYPE &m, typename MESH_TYPE::scalar_type angleRad)
 			 {
 				 //VCTRACE("Face %i Spinning around vertex %i\n",fi-m.face.begin(), (*fi).V(j)-m.vert.begin());
 				//(*fi).Supervisor_Flags() |= vis[j];
-				MESH_TYPE::hedgepos_type he(&*fi,j,(*fi).V(j));
-				MESH_TYPE::hedgepos_type she=he;
-				MESH_TYPE::face_base_pointer nextf;
+				typename MESH_TYPE::hedgepos_type he(&*fi,j,(*fi).V(j));
+				typename MESH_TYPE::hedgepos_type she=he;
+				typename MESH_TYPE::face_base_pointer nextf;
 				GLW::VertToSplit<MESH_TYPE>  spl;
 				spl.newp=false;
 				spl.edge=-1;
@@ -703,7 +709,7 @@ void Crease(MESH_TYPE &m, typename MESH_TYPE::scalar_type angleRad)
 						he.FlipF();
 						he.FlipE();
 						nextf=he.f->F(he.z);
-						MESH_TYPE::scalar_type ps=nextf->N()*he.f->N();
+						typename MESH_TYPE::scalar_type ps=nextf->N()*he.f->N();
 						if(ps<cosangle)   break;		
 						int vz=0;
 						if(he.v == he.f->V(he.z)) vz=he.z;
@@ -715,7 +721,7 @@ void Crease(MESH_TYPE &m, typename MESH_TYPE::scalar_type angleRad)
 				
 				she=he;
 				newvert.push_back(*(*fi).V(j));
-				MESH_TYPE::vertex_pointer curvert=&newvert.back();
+				typename MESH_TYPE::vertex_pointer curvert=&newvert.back();
 //				VCTRACE("Starting from face %i edge %i vert %i \n",he.f-m.face.begin(), he.z, he.v-m.vert.begin());
 
 				// Secondo giro in cui si riempie il vettore SPL con tutte le info per fare i nuovi vertici
@@ -737,7 +743,7 @@ void Crease(MESH_TYPE &m, typename MESH_TYPE::scalar_type angleRad)
 					if(he.IsBorder()) break; 
 					nextf=he.f->F(he.z);
 					if(nextf==she.f) break;
-					MESH_TYPE::scalar_type ps=nextf->N()*he.f->N();
+					typename MESH_TYPE::scalar_type ps=nextf->N()*he.f->N();
 					if(ps<cosangle){
 //									VCTRACE("splitting faces %i-%i edge %i vert %i\n",nextf-m.face.begin(),he.f-m.face.begin(), he.z, he.v-m.vert.begin());
 									newvert.push_back(*(he.v));
@@ -753,7 +759,7 @@ void Crease(MESH_TYPE &m, typename MESH_TYPE::scalar_type angleRad)
 			 }
 	assert(SPL.size()==m.fn*3);
 
-	std::vector<GLW::VertToSplit<MESH_TYPE> >::iterator vsi;
+	typename std::vector<GLW::VertToSplit<MESH_TYPE> >::iterator vsi;
 	for(vsi=SPL.begin();vsi!=SPL.end();++vsi)
 		{
 			(*vsi).f->V((*vsi).z)=(*vsi).v;
@@ -775,7 +781,7 @@ void Crease(MESH_TYPE &m, typename MESH_TYPE::scalar_type angleRad)
 	Assume che le normali per faccia siano gia'state fatte (se ci sono)
  */
 
-template<class MESH_TYPE>
+/*template<class MESH_TYPE>
 void CreaseWN(MESH_TYPE &m, typename MESH_TYPE::scalar_type angle)
 {
 	if(!(MESH_TYPE::FaceType::OBJ_TYPE & MESH_TYPE::FaceType::OBJ_TYPE_WN) )
@@ -784,9 +790,9 @@ void CreaseWN(MESH_TYPE &m, typename MESH_TYPE::scalar_type angle)
 			return;
 		}
 
-	MESH_TYPE::scalar_type cosangle=Cos(angle);
+	typename MESH_TYPE::scalar_type cosangle=Cos(angle);
 	
-	MESH_TYPE::FaceIterator fi;
+	typename MESH_TYPE::FaceIterator fi;
 
 	// Clear the per wedge normals
 	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())	
@@ -796,7 +802,7 @@ void CreaseWN(MESH_TYPE &m, typename MESH_TYPE::scalar_type angle)
 			(*fi).WN(2)=MESH_TYPE::vectorial_type(0,0,0);
 		}
 
-	MESH_TYPE::FaceType::vectorial_type nn;
+	typename MESH_TYPE::FaceType::vectorial_type nn;
 		
 	for(fi=m.face.begin();fi!=m.face.end();++fi)		 if(!(*fi).IsD())	
 		{
@@ -811,7 +817,8 @@ void CreaseWN(MESH_TYPE &m, typename MESH_TYPE::scalar_type angle)
 				}
 		}
 	
-}
+}*/
+
 } // end namespace 
 
  #endif
