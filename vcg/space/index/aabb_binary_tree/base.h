@@ -25,6 +25,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/10/05 01:43:28  m_di_benedetto
+Removed "parent" pointer class member in Node class.
+
 Revision 1.1  2005/09/28 19:44:49  m_di_benedetto
 First Commit.
 
@@ -165,7 +168,7 @@ bool AABBBinaryTree<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::Set(const OBJITERATOR
 		this->pObjects.push_back(objPtr(*oi));
 	}
 
-	this->pRoot = ClassType::BoundObjects(0, this->pObjects.begin(), this->pObjects.end(), size, maxElemsPerLeaf, leafBoxMaxVolume, useVariance, objBox, objBarycenter);
+	this->pRoot = ClassType::BoundObjects(this->pObjects.begin(), this->pObjects.end(), size, maxElemsPerLeaf, leafBoxMaxVolume, useVariance, objBox, objBarycenter);
 
 	return (this->pRoot != 0);
 }
@@ -248,7 +251,7 @@ typename AABBBinaryTree<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::NodeType * AABBBi
 	const int rSize = size - lSize;
 
 	if (lSize > 0) {
-		pNode->children[0] = ClassType::BoundObjects(pNode, pNode->oBegin, median, lSize, maxElemsPerLeaf, leafBoxMaxVolume, useVariance, getBox, getBarycenter);
+		pNode->children[0] = ClassType::BoundObjects(pNode->oBegin, median, lSize, maxElemsPerLeaf, leafBoxMaxVolume, useVariance, getBox, getBarycenter);
 		if (pNode->children[0] == 0) {
 			delete pNode;
 			return (0);
@@ -256,7 +259,7 @@ typename AABBBinaryTree<OBJTYPE, SCALARTYPE, NODEAUXDATATYPE>::NodeType * AABBBi
 	}
 
 	if (rSize > 0) {
-		pNode->children[1] = ClassType::BoundObjects(pNode, median, pNode->oEnd, rSize, maxElemsPerLeaf, leafBoxMaxVolume, useVariance, getBox, getBarycenter);
+		pNode->children[1] = ClassType::BoundObjects(median, pNode->oEnd, rSize, maxElemsPerLeaf, leafBoxMaxVolume, useVariance, getBox, getBarycenter);
 		if (pNode->children[1] == 0) {
 			delete pNode;
 			return (0);
