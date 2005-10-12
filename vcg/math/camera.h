@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.22  2005/07/11 13:12:34  cignoni
+small gcc-related compiling issues (typenames,ending cr, initialization order)
+
 Revision 1.21  2005/07/01 10:55:42  cignoni
 Removed default values from the implementation of SetCavalieri and SetIsometric
 
@@ -175,6 +178,7 @@ public:
 	
 	
 	};
+    bool IsOrtho() { return ( cameraType == ORTHO ); }
 
 	/// set the camera specifying the perspecive view
 	inline void SetPerspective(S angle, S ratio, S nearend, S farend,vcg::Point2<S> viewport=vcg::Point2<S>(500,-1) );
