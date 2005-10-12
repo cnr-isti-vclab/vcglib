@@ -23,6 +23,9 @@
 /****************************************************************************
   History
     $Log: not supported by cvs2svn $
+    Revision 1.14  2004/12/10 01:04:42  cignoni
+    better comments
+
     Revision 1.13  2004/11/23 10:34:45  cignoni
     passed parameters by reference in many funcs and gcc cleaning
 
@@ -88,27 +91,6 @@ class EdgeCollapse
   ~EdgeCollapse()
 		{
 		};
-
-
-  struct Edge{
-			VertexType* v0,v1;
-      Edge(	const VertexType*& a,const VertexType*& b){
-						assert(a!=b);
-						if(a<b) 
-							{v0=a;v1=b;}
-						else
-						{v1=a;v0=b;}
-      }
-			
-			const bool operator <(const Edge & e) const {
-				return (v0==e.v0)?(v1<e.v1):(v0<e.v0);
-			}
-
-			const bool operator ==(const Edge & e) const {
-			return (v0==e.v0)&&(v1==e.v1);
-			}
-
-};
 
 	static VFIVec & AV0(){static VFIVec av0; return av0;}
 	static VFIVec & AV1(){static VFIVec av1; return av1;}
