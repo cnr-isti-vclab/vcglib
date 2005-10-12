@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2005/07/01 11:22:00  cignoni
+Corrected for the fourth time line a cast to Facetype at line 341.
+Read the notes there before changing it again
+
 Revision 1.20  2005/06/09 14:14:29  ganovelli
 two warnings on type cast
 
@@ -297,11 +301,13 @@ static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu
     pu.oldBase=&*m.face.begin(); 
     last=m.face.end();
   } 
-	for(int i=0; i<n; ++i)
+  
+	m.face.resize(m.face.size()+n);
+ /* for(int i=0; i<n; ++i)
 	{
     m.face.push_back(FaceType());
 		m.face.back().ClearFlags();
-	}
+	}*/
 
 	m.fn+=n;
 	
@@ -315,19 +321,19 @@ static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu
 		{
           if(FaceType::HasFFAdjacency())
           {
-            pu.Update((*fi).FFp(0));
-            pu.Update((*fi).FFp(1));
-            pu.Update((*fi).FFp(2));
+            if ((*fi).cFFp(0)!=0) pu.Update((*fi).FFp(0));
+            if ((*fi).cFFp(1)!=0) pu.Update((*fi).FFp(1));
+            if ((*fi).cFFp(2)!=0) pu.Update((*fi).FFp(2));
           }
 		   if(FaceType::HasVFAdjacency())
           {
 		    //update pointers to chain of face incident in a vertex
 			//update them only if they are different from zero
-			if ((*fi).VFp(0)!=0)
+			if ((*fi).cVFp(0)!=0)
 				pu.Update((*fi).VFp(0));
-			if ((*fi).VFp(1)!=0)
+			if ((*fi).cVFp(1)!=0)
 				pu.Update((*fi).VFp(1));
-			if ((*fi).VFp(2)!=0)
+			if ((*fi).cVFp(2)!=0)
 				pu.Update((*fi).VFp(2));
 		  }
 		}
@@ -336,7 +342,7 @@ static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu
         if(!(*vi).IsD())
         {
           if(VertexType::HasVFAdjacency())
-			if ((*vi).VFp()!=0)
+			if ((*vi).cVFp()!=0)
 			  pu.Update((FaceType * &)(*vi).VFp());
 	  // Note the above cast is probably not useful if you have correctly defined 
     // your vertex type with the correct name of the facetype as a template argument; 
