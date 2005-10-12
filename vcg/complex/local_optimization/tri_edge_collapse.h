@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.16  2005/01/19 10:35:28  cignoni
+  Better management of symmetric/asymmetric edge collapses
+
   Revision 1.15  2004/12/10 01:03:53  cignoni
   better comments and removed logging
 
@@ -184,17 +187,17 @@ public:
 				if( !(vfi.F()->V1(vfi.I())->IsV()) && (vfi.F()->V1(vfi.I())->IsRW()))
 				{
 				vfi.F()->V1(vfi.I())->SetV();
-				h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.F()->V(vfi.I()),vfi.F()->V1(vfi.I())),GlobalMark())));
+        h_ret.push_back(HeapElem(new MYTYPE(EdgeType::OrderedEdge(vfi.F()->V(vfi.I()),vfi.F()->V1(vfi.I())),GlobalMark())));
 				std::push_heap(h_ret.begin(),h_ret.end());
 				if(this->IsSymmetric()){				
-					h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.F()->V1(vfi.I()),vfi.F()->V(vfi.I())),GlobalMark())));
+					h_ret.push_back(HeapElem(new MYTYPE(EdgeType::OrderedEdge(vfi.F()->V1(vfi.I()),vfi.F()->V(vfi.I())),GlobalMark())));
 					std::push_heap(h_ret.begin(),h_ret.end());
 				}
       }
 				if(  !(vfi.F()->V2(vfi.I())->IsV()) && (vfi.F()->V2(vfi.I())->IsRW()))
 				{
 					vfi.F()->V2(vfi.I())->SetV();
-				h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.F()->V(vfi.I()),vfi.F()->V2(vfi.I())),GlobalMark())));
+				h_ret.push_back(HeapElem(new MYTYPE(EdgeType::OrderedEdge(vfi.F()->V(vfi.I()),vfi.F()->V2(vfi.I())),GlobalMark())));
 				std::push_heap(h_ret.begin(),h_ret.end());
 				//if(false){				
 				//	h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.F()->V1(vfi.I()),vfi.F()->V(vfi.I())),GlobalMark())));
@@ -253,7 +256,7 @@ public:
 		if(!(*fi).IsD()){
 		   for (int j=0;j<3;j++)
       {
-        EdgeType p=EdgeType(&*fi,j,(*fi).V(j));
+        EdgeType p=EdgeType::OrderedEdge(&*fi,j,(*fi).V(j));
         h_ret.push_back(HeapElem(new MYTYPE(p,m.IMark())));
         //printf("Inserting in heap coll %3i ->%3i %f\n",p.V()-&m.vert[0],p.VFlip()-&m.vert[0],h_ret.back().locModPtr->Priority());
       }
