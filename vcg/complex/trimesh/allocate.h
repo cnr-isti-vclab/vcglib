@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2005/10/12 10:47:21  cignoni
+Removed clearing of flags of added faces. Now the flag component has a constructor that clear it.
+FF and VF adjacency are updated only if they are present and consistent (e.g. only if VFp(k) != 0 or FFp(k)!=0)
+
 Revision 1.21  2005/07/01 11:22:00  cignoni
 Corrected for the fourth time line a cast to Facetype at line 341.
 Read the notes there before changing it again
@@ -321,19 +325,19 @@ static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu
 		{
           if(FaceType::HasFFAdjacency())
           {
-            if ((*fi).cFFp(0)!=0) pu.Update((*fi).FFp(0));
-            if ((*fi).cFFp(1)!=0) pu.Update((*fi).FFp(1));
-            if ((*fi).cFFp(2)!=0) pu.Update((*fi).FFp(2));
+            if ((*fi).FFp(0)!=0) pu.Update((*fi).FFp(0));
+            if ((*fi).FFp(1)!=0) pu.Update((*fi).FFp(1));
+            if ((*fi).FFp(2)!=0) pu.Update((*fi).FFp(2));
           }
 		   if(FaceType::HasVFAdjacency())
           {
 		    //update pointers to chain of face incident in a vertex
 			//update them only if they are different from zero
-			if ((*fi).cVFp(0)!=0)
+			if ((*fi).VFp(0)!=0)
 				pu.Update((*fi).VFp(0));
-			if ((*fi).cVFp(1)!=0)
+			if ((*fi).VFp(1)!=0)
 				pu.Update((*fi).VFp(1));
-			if ((*fi).cVFp(2)!=0)
+			if ((*fi).VFp(2)!=0)
 				pu.Update((*fi).VFp(2));
 		  }
 		}
@@ -342,7 +346,7 @@ static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu
         if(!(*vi).IsD())
         {
           if(VertexType::HasVFAdjacency())
-			if ((*vi).cVFp()!=0)
+			if ((*vi).VFp()!=0)
 			  pu.Update((FaceType * &)(*vi).VFp());
 	  // Note the above cast is probably not useful if you have correctly defined 
     // your vertex type with the correct name of the facetype as a template argument; 
