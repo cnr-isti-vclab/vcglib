@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2005/10/12 17:19:03  ponchio
+Added gazillions typenames, commented out old broken functions,
+added unsigned int TextureMapID[128], and unsigned int & TMId(int i).
+
 Revision 1.9  2005/05/09 11:28:48  spinelli
 ho tolto 2 warning del tipo unreferenced formal parameter, commentando le var che producevano tale warning.
 
@@ -365,14 +369,14 @@ void DrawFill()
 
 			if(h&HNUseVBO){
 				glBindBuffer(GL_ARRAY_BUFFER,b[1]);   
-				glNormalPointer(GL_FLOAT,sizeof(MESH_TYPE::VertexType),0);
+				glNormalPointer(GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),0);
 				glBindBuffer(GL_ARRAY_BUFFER,b[0]);   
-				glVertexPointer(3,GL_FLOAT,sizeof(MESH_TYPE::VertexType),0);
+				glVertexPointer(3,GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),0);
 			}
 			else
 			{
-				glNormalPointer(GL_FLOAT,sizeof(MESH_TYPE::VertexType),&(m->vert.begin()->N()[0]));
-				glVertexPointer(3,GL_FLOAT,sizeof(MESH_TYPE::VertexType),&(m->vert.begin()->P()[0])); 
+				glNormalPointer(GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->N()[0]));
+				glVertexPointer(3,GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->P()[0])); 
 			}
 		
 
