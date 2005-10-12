@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/03/11 11:47:20  tarini
+minor updates, corrections, added documentations, etc.
+
 
 Revision 1.3  2004/03/10 15:27:18  tarini
 first version
@@ -98,7 +101,7 @@ public:
  		/// The empty constructor
 	Ray3() {};
 		/// The (origin, direction) constructor
-	RayType(const PointType &ori, const PointType &dir) {SetOrigin(ori); SetDirection(dir);};
+	Ray3(const PointType &ori, const PointType &dir) {SetOrigin(ori); SetDirection(dir);};
 //@}
 
 		/// Operator to compare two rays
@@ -168,7 +171,7 @@ public:
 	 "Ray3dN r0 = r1.Normalize()" if r1 is a Ray3d
 	**/
 		/// copy constructor that takes opposite beaviour
-	RayType (const Ray3<ScalarType,!NORM > &r) 
+	Ray3(const Ray3<ScalarType,!NORM > &r) 
 	{ Import(r); };
 		/// assignment
 	inline RayType & operator = ( Ray3<ScalarType,!NORM> const &r) 
