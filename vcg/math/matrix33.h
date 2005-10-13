@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2005/10/05 17:06:12  pietroni
+corrected sintax error on singular value decomposition
+
 Revision 1.9  2005/09/29 09:53:58  ganovelli
 added inverse by SVD
 
@@ -472,7 +475,7 @@ void WeightedCrossCovariance(const STLREALCONTAINER &  weights,
 							 Point3<S> &bp, 
 							 Point3<S> &bx) 
 {
-	Zero();
+	SetZero();
 	assert(P.size()==X.size());
 	bx.Zero();
 	bp.Zero();
