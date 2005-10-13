@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.29  2005/09/28 19:32:09  m_di_benedetto
+Added const qualifier in GetBBox method.
+
 Revision 1.28  2005/06/17 00:43:34  cignoni
 Added a named typedef for the per wedge TexCoordinate
 
@@ -582,28 +585,13 @@ public:
 		return dum;
 #endif
 	}
-
+  inline const FFTYPE * cFFp( const int j ) const {return FFp(j);}
+	
 	inline FFTYPE * & FFp1( const int j ) { return FFp((j+1)%3);}
 	inline FFTYPE * & FFp2( const int j ) { return FFp((j+2)%3);}
 	inline const FFTYPE * const&  FFp1( const int j ) const { return FFp((j+1)%3);}
 	inline const FFTYPE * const&  FFp2( const int j ) const { return FFp((j+2)%3);}
 
-
-	inline bool const  IsBorder( const int & j ) const
-	{
-		assert( (_flags & DELETED) == 0 );
-		assert( (_flags & NOTREAD) == 0 );
-		assert(j>=0);
-		assert(j<3);
-#if defined(__VCGLIB_FACE_AF)
-		return (_ffp[j]==this);
-#elif defined(__VCGLIB_FACE_AS)
-		return (fs[j]==this);
-#else
-		assert(0);
-		return ((FFTYPE *)this==0);
-#endif
-	}
 
 
 /** Return the pointer to the j-th adjacent face.
@@ -670,6 +658,7 @@ public:
 		return (FFTYPE *)this;
 #endif
 	}
+  inline const FFTYPE * cVFp( const int j ) const {return VFp(j);}
 
 
 	/** Return the index that the face have in the j-th adjacent face.
