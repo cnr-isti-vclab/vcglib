@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/06/30 10:17:04  ganovelli
+added draw plane
+
 Revision 1.5  2005/05/05 12:28:13  cignoni
 added glboxwire
 
@@ -57,6 +60,9 @@ First working version!
 
 namespace vcg {
 
+	inline void glScale(float const & p){ glScalef(p,p,p);}
+	inline void glScale(double const & p){ glScaled(p,p,p);}
+
 	inline void glVertex(Point2<int> const & p)   { glVertex2iv(p.V());}
 	inline void glVertex(Point2<short> const & p) { glVertex2sv(p.V());}
 	inline void glVertex(Point2<float> const & p) { glVertex2fv(p.V());}
@@ -67,8 +73,8 @@ namespace vcg {
 	inline void glTexCoord(Point2<double> const & p){ glTexCoord2dv(p.V());}
 	inline void glTranslate(Point2<float> const & p) { glTranslatef(p[0],p[1],0);}
 	inline void glTranslate(Point2<double> const & p){ glTranslated(p[0],p[1],0);}
-	inline void glScale(Point2<float> const & p) { glScalef(p[0],p[1],0);}
-	inline void glScale(Point2<double> const & p){ glScaled(p[0],p[1],0);}
+	inline void glScale(Point2<float> const & p) { glScalef(p[0],p[1],1.0);}
+	inline void glScale(Point2<double> const & p){ glScaled(p[0],p[1],1.0);}
 
   inline void glVertex(Point3<int> const & p)   { glVertex3iv(p.V());}
 	inline void glVertex(Point3<short> const & p) { glVertex3sv(p.V());}
