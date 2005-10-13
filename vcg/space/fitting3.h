@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/03/14 17:04:24  ganovelli
+created
+
 
 ****************************************************************************/
 
@@ -32,11 +35,54 @@ $Log: not supported by cvs2svn $
 
 #include <vector>
 #include <vcg/space/plane3.h>
+#include <vcg/math/matrix44.h>
+#include <vcg/math/matrix33.h>
+#include <vcg/math/lin_algebra.h>
 
 
 namespace vcg {
 
-	// Funzione di supporto: Ritorna il vettore 1 x y z
+template <class S>
+bool PlaneFittingPoints(  std::vector< Point3<S> > & samples,Plane3<S> &p){
+
+	int j;
+	Matrix44<S> m;m.SetZero();
+	std::vector< Point3<S> > ::iterator i;
+	
+	Point3<S> c; c.Zero();
+	for(i = samples.begin(); i != samples.end(); ++i)
+		c+=*i;
+	c/=samples.size();
+
+	for(i = samples.begin(); i != samples.end(); ++i){	
+	Point3<S> p = (*i)-c;
+	for(j = 0 ; j < 3;++j)
+				*(Point3<S>*)&m[j][0] += p * p[j];
+	}
+
+	m[0][3]=	m[1][3]=m[2][3]=0.0;
+	m[3][3]= 1.0;
+	m[3][0]=	m[3][1]=m[3][2]=0.0;
+
+	int n;
+	Matrix44<S> res;
+	Point4<S> e;
+	Point3<S> d;
+	Jacobi(m,e,res,n);
+
+	S mx = fabs(e[0]); int mxi=0;
+	for(j=1; j < 3; ++j) if( (fabs(e[j]) < mx) ) {mx=fabs(e[j]); mxi = j;}
+	
+	d[0]=res[0][mxi];
+	d[1]=res[1][mxi];
+	d[2]=res[2][mxi];
+
+	p.SetOffset(c*d/d.Norm());
+	p.SetDirection(d/d.Norm());
+
+return true;
+}
+
 template<class S>
 inline double FIT_VExp( const Point3<S> & x, const int i )
 {
@@ -49,19 +95,21 @@ inline double FIT_VExp( const Point3<S> & x, const int i )
 	/** Fitting di piani: trova il piano che meglio approssima
 	    l'insieme di punti dato
 	 */
-template<class POINT_TYPE, class PLANE_TYPE>
-bool PlaneFittingPoints( const std::vector< POINT_TYPE > & samples, Plane3<typename POINT_TYPE::ScalarType> & p )
+template<class S>
+bool PlaneFittingPointsOld(  std::vector< Point3<S> > & samples, Plane3<S> & p )
 {
-	typedef typename POINT_TYPE::ScalarType S;
-	const int N = 4;
+	Point3<S> d;
 
+  const int N = 4;
 	S P[N][N];		// A = s' . s
 	S U[N][N];
 	int i,j,k,n;
 
-	n = samples.size();
+	n = (int)samples.size();
 	if(n<3)
 		return false;
+
+	//printf("\n p_prima: %f %f %f %f \n",p.Offset(),p.Direction()[0],p.Direction()[1],p.Direction()[2]);
 
 	for(i=0;i<N;++i)
 	{
@@ -74,7 +122,30 @@ bool PlaneFittingPoints( const std::vector< POINT_TYPE > & samples, Plane3<typen
 		for(j=0;j<i;++j)
 			P[i][j] = P[j][i];
 	}
-	
+
+	//printf("D \n");
+	//for(i=0;i<N;++i){
+	//	printf("\n");
+ //		for(j=0;j<N;++j)
+	//		printf("%2.3f\t",P[i][j]);
+	//}
+	//
+	Matrix44<S> m;
+	for(i=0;i<N;++i)
+ 		for(j=0;j<N;++j)
+			m[i][j]=P[i][j];
+
+
+//	Point4<S> s;s.Zero();
+//
+//	s.Normalize();
+//	printf("\n RES %f %f %f %f \n",s[0],s[1],s[2],s[3]);
+//printf("\n GJ \n");
+//	for(i=0;i<N;++i){
+//		printf("\n");
+// 		for(j=0;j<N;++j)
+//			printf("%2.3f\t",m[i][j]);
+//	}
 	for(i=0;i<N;++i)
 	{
 		U[i][i] = 1.0;
@@ -91,11 +162,24 @@ bool PlaneFittingPoints( const std::vector< POINT_TYPE > & samples, Plane3<typen
 		}
 	}
 
-	p.SetDirection(Point3<S>(U[1][2]*U[2][3]-U[1][3],-U[2][3],1));
-	p.SetOffset(-(U[0][2]*U[2][3]-U[0][3]+U[0][1]*U[1][3]-U[0][1]*U[1][2]*U[2][3]));
+	//printf("\n U \n");
+	//for(i=0;i<N;++i){
+	//	printf("\n");
+ //		for(j=0;j<N;++j)
+	//		printf("%2.3f\t",U[i][j]);
+	//}
+
+	
+ 	S norm = Point3<S>(U[1][2]*U[2][3]-U[1][3],-U[2][3],1).Norm();
+
+ 	p.SetDirection(Point3<S>(U[1][2]*U[2][3]-U[1][3],-U[2][3],1));
+ 	p.SetOffset(-(U[0][2]*U[2][3]-U[0][3]+U[0][1]*U[1][3]-U[0][1]*U[1][2]*U[2][3])/norm);
+
+ 
+	//printf("\n p: %f %f %f %f \n",p.Offset(),p.Direction()[0],p.Direction()[1],p.Direction()[2]);
+
 	return true;
 }
-
 } // end namespace
 
 #endif
