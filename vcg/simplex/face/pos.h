@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2005/01/03 11:22:31  cignoni
+Added better documentation (with an example and the V0 V1 V2 access members
+
 Revision 1.14  2004/10/28 00:50:48  cignoni
 Better Doxygen documentation
 
@@ -251,10 +254,10 @@ public:
 	//finche' non si trova una faccia di bordo.
 		do
 			NextE();
-		while(!f->IsBorder(z));
+      while(!IsBorder());
 		
 		// L'edge j e' di bordo e deve contenere v
-		assert(f->IsBorder(z) &&( f->V(z)==v || f->V((z+1)%3)==v )); 
+		assert(IsBorder() &&( f->V(z)==v || f->V((z+1)%3)==v )); 
 		
 		FlipV();
 		assert(f->V((z+2)%3)!=v && (f->V((z+1)%3)==v || f->V((z+0)%3)==v));
@@ -264,7 +267,7 @@ public:
 	/// Checks if the half-edge is of border
 	bool IsBorder()
 	{
-		return f->IsBorder(z);
+    return face::IsBorder(*f,z);
 	}
 
 	/// Return the dimension of the star
