@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/06/17 00:46:09  cignoni
+Added a PerVertexNormalizedPerFace (vertex are face/area weighted AND normalized)
+
 Revision 1.5  2005/04/01 13:04:55  fiorin
 Minor changes
 
@@ -99,8 +102,9 @@ static void PerVertex(ComputeMeshType &m)
  for(f=m.face.begin();f!=m.face.end();++f)
    if( !(*f).IsD() && (*f).IsR() )
    {
-    typename FaceType::NormalType t = (*f).Normal();
-
+    //typename FaceType::NormalType t = (*f).Normal();
+    typename FaceType::NormalType t = vcg::Normal(*f);
+ 
     for(int j=0; j<3; ++j)
      if( !(*f).V(j)->IsD() && (*f).V(j)->IsRW() )  
       (*f).V(j)->N() += t;
