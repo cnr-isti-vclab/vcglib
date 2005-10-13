@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2005/04/11 09:17:24  pietroni
+Changed detach to FFdetach , compiled tested in manifold cases
+
 Revision 1.16  2005/03/18 16:35:53  fiorin
 minor changes to comply gcc compiler
 
@@ -92,9 +95,11 @@ template <class FaceType>
 inline bool IsBorder(FaceType const & f,  const int j ) 
 {
   if(FaceType::HasFFAdjacency())
-	  return f.IsBorder(j);
-  else 
-    return true;
+	  return f.cFFp(j)==&f;
+    //return f.IsBorder(j);
+  
+  assert(0);
+  return true;
 }
 
 
@@ -105,9 +110,9 @@ inline int BorderCount(FaceType const & f)
   if(FaceType::HasFFAdjacency())
   {
     int t = 0;
-	  if( f.IsBorder(0) ) ++t;
-	  if( f.IsBorder(1) ) ++t;
-	  if( f.IsBorder(2) ) ++t;
+	  if( IsBorder(f,0) ) ++t;
+	  if( IsBorder(f,1) ) ++t;
+	  if( IsBorder(f,2) ) ++t;
 	  return t;
   }
 	else 	return 3;
