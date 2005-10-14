@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/10/07 15:19:54  cignoni
+minor updates to keep it in line with the rest of the library
+
 Revision 1.7  2004/05/10 13:50:32  cignoni
 Updated names of adj functions to the new standards
 
@@ -68,6 +71,8 @@ public:
   const CoordType &P() const { static CoordType coord(0, 0, 0); return coord; }
   const CoordType &cP() const { static CoordType coord(0, 0, 0); return coord; }
   CoordType &UberP() { static CoordType coord(0, 0, 0); return coord; }
+  static bool HasCoord()   { return false; }
+
 };
 
 template <class A, class T> class Coord: public T {
@@ -78,6 +83,8 @@ public:
   const CoordType &P() const { return _coord; }
   const CoordType &cP() const { return _coord; }
   CoordType &UberP() { return _coord; }
+  
+  static bool HasCoord()   { return true; }
 private:
   CoordType _coord;    
 };
@@ -90,12 +97,15 @@ template <class T> class EmptyNormal: public T {
 public:
   typedef vcg::Point3s NormalType;
   NormalType &N() { static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
+  const NormalType cN()const { static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
   static bool HasNormal()   { return false; }
+  static bool HasNormalOpt()   { return false; }
 };
 template <class A, class T> class Normal: public T {
 public:
   typedef A NormalType;
   NormalType &N() { return _norm; }
+  const NormalType cN() const { return _norm; }
   static bool HasNormal()   { return true; }
 private:
   NormalType _norm;    
@@ -112,6 +122,8 @@ public:
   typedef vcg::TCoord2<float,1> TextureType;
   TextureType &T() { static TextureType dummy_texture; return dummy_texture; }
   static bool HasTexture()   { return false; }
+  static bool HasTextureOpt()   { return false; }
+
 };
 template <class A, class TT> class Texture: public TT {
 public:
@@ -130,15 +142,20 @@ template <class TT> class Texture2d: public Texture<TCoord2<double,1>, TT> {};
 /*------------------------- FLAGS -----------------------------------------*/ 
 template <class T> class EmptyFlag: public T {
 public:
-	/// Return the vector of Flags(), senza effettuare controlli sui bit
+	typedef int FlagType;
+  /// Return the vector of Flags(), senza effettuare controlli sui bit
   int &Flags() { static int dummyflags(0); return dummyflags; }
   const int Flags() const { return 0; }
+  static bool HasFlag()   { return false; }
+
 };
 
 template <class T> class Flag:  public T {
 public:
-   int &Flags() {return _flags; }
-   const int Flags() const {return _flags; }
+	typedef int FlagType;
+  int &Flags() {return _flags; }
+  const int Flags() const {return _flags; }
+  static bool HasFlag()   { return true; }
 
 private:
   int  _flags;    
@@ -191,15 +208,19 @@ template <class T> class Qualityd: public Quality<double, T> {};
 template <class T> class EmptyVFAdj: public T {
 public:
   typename T::FacePointer &VFp() { static typename T::FacePointer fp=0; return fp; }
+  typename T::FacePointer cVFp() { static typename T::FacePointer fp=0; return fp; }
   int &VFi(){static int z=0; return z;};
   static bool HasVFAdjacency()   {   return false; }
+  static bool HasVFAdjacencyOpt()   {   return false; }
 };
 
 template <class T> class VFAdj: public T {
 public:
   typename T::FacePointer &VFp() {return _fp; }
+  typename T::FacePointer cVFp() {return _fp; }
   int &VFi() {return _zp; }
   static bool HasVFAdjacency()   {   return true; }
+  static bool HasVFAdjacencyOpt()   {   return false; }
 private:
   typename T::FacePointer _fp ;    
   int _zp ;    
