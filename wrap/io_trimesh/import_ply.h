@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2005/06/10 15:05:00  cignoni
+Made inline PlyType specializations
+
 Revision 1.14  2005/04/14 15:09:38  ponchio
 New gcc 3.3.3 (with bugs and features) now compiles.
 
@@ -306,6 +309,9 @@ static int Open( OpenMeshType &m, const char * filename, CallBackPos *cb=0)
 }
 
 /// Read a mesh and store in loadmask the loaded field
+/// Note that loadmask is not read! just modified. You cannot specify what fields
+/// have to be read. ALL the data for which your mesh HasSomething and are present 
+/// in the file are read in. 
 static int Open( OpenMeshType &m, const char * filename, int & loadmask, CallBackPos *cb =0)
 {
   PlyInfo pi;
@@ -853,13 +859,18 @@ int LoadCamera(const char * filename)
 }
 
 
-bool LoadMask(const char * filename, int &mask)
+static bool LoadMask(const char * filename, int &mask)
+{
+  PlyInfo pi;
+  return LoadMask(filename, mask,pi);
+}
+static bool LoadMask(const char * filename, int &mask, PlyInfo &pi)
 {
 	mask=0;
 	vcg::ply::PlyFile pf;
 	if( pf.Open(filename,vcg::ply::PlyFile::MODE_READ)==-1 )
 	{
-		this->pi.status = pf.GetError();
+		pi.status = pf.GetError();
 		return false;
 	}
 
