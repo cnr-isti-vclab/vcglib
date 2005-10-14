@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/10/01 09:22:51  cignoni
+Major rewriting of the whole class edge. Removed default flags and nonsense attibutes. Given consistent naming to defines.
+
 Revision 1.7  2005/07/15 15:45:51  ganovelli
 template parametere Scalar removed
 
@@ -80,6 +83,12 @@ public:
   inline EDGE_TYPE(){}
 
   inline EDGE_TYPE(VertexType* v0,VertexType* v1){v[0]=v0;v[1]=v1;}
+
+  static inline EDGE_TYPE OrderedEdge(VertexType* v0,VertexType* v1){
+   if(v0<v1) return EDGE_TYPE(v0,v1);
+   else return EDGE_TYPE(v1,v0);
+  }
+
 
 
 	/// Costructor
