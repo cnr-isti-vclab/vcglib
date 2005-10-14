@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.24  2005/10/06 14:26:39  pietroni
+added getBBox method
+
 Revision 1.23  2005/03/18 16:38:36  fiorin
 Minor changes
 
@@ -64,6 +67,9 @@ Revision 1.12  2004/05/10 13:31:13  ganovelli
 function for edge adjacency added
 
 $Log: not supported by cvs2svn $
+Revision 1.24  2005/10/06 14:26:39  pietroni
+added getBBox method
+
 Revision 1.23  2005/03/18 16:38:36  fiorin
 Minor changes
 
@@ -545,7 +551,17 @@ inline const VFTYPE * & VFp() const
 		  return _vfb;
 #else
 		assert(0);// you are probably trying to use VF topology in a vertex without it
-		return (VFTYPE *)this;
+		return (VFTYPE *)0;
+#endif
+	}
+
+inline const VFTYPE *  cVFp() const
+	{
+#if ((defined __VCGLIB_VERTEX_AF) || (defined __VCGLIB_VERTEX_AFS))
+		  return _vfb;
+#else
+		assert(0);// you are probably trying to use VF topology in a vertex without it
+		return (VFTYPE *)0;
 #endif
 	}
 
