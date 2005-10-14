@@ -2,6 +2,7 @@
 
 #include<vcg/simplex/vertex/vertex.h>
 #include<vcg/simplex/face/with/affm.h>
+#include<vcg/simplex/face/topology.h>
 #include<vcg/complex/trimesh/base.h>
 #include<vcg/complex/trimesh/create/platonic.h>
 
@@ -34,14 +35,14 @@ int main(int ,char ** ){
 
   // Now for each face the F() members are meaningful
   
-  if(m.face[0].IsBorder(0)) printf("Edge 0 of face 0 is a border\n");
+  if(face::IsBorder(m.face[0],0)) printf("Edge 0 of face 0 is a border\n");
                        else printf("Edge 0 of face 0 is NOT a border\n"); // always this path!
 
   vcg::face::FFDetach<MyFace>(m.face[0],0);  // Detach the face [0] from the mesh
   vcg::face::FFDetach<MyFace>(m.face[0],1);
   vcg::face::FFDetach<MyFace>(m.face[0],2);
 
-  if(m.face[0].IsBorder(0)) printf("Edge 0 of face 0 is a border\n"); // always this path!
+  if(face::IsBorder(m.face[0],0)) printf("Edge 0 of face 0 is a border\n"); // always this path!
                        else printf("Edge 0 of face 0 is NOT a border\n"); 
 
   m.face[0].SetD(); // deleting face [0] (i.e. marked as deleted) 
@@ -59,7 +60,7 @@ int main(int ,char ** ){
 			{	
 				for(int j=0;j<3;j++)
 				{
-					if ((*fi).IsBorder(j) && !m.IsMarked(&*fi))
+					if ( face::IsBorder(*fi,j) && !m.IsMarked(&*fi))
             {
               m.Mark(&*fi);
               hei.Set(&*fi,j,fi->V(j));
