@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2005/02/11 11:53:18  tommyfranken
+changed  pointf to point<t> in ViewLineFromWindow
+
 Revision 1.12  2005/02/10 20:09:11  tarini
 dispelled the mega-evil of GL_TRANSPOSE_*_MATRIX_ARB
 
@@ -210,7 +213,7 @@ template <class T> Point3<T> View<T>::NormDevCoordToWindowCoord(const Point3<T> 
   a[0] = (p[0]+1)*(viewport[2]/(T)2.0)+viewport[0];
 	a[1] = (p[1]+1)*(viewport[3]/(T)2.0)+viewport[1];
   //a[1] = viewport[3] - a[1];
-  a[2] = p[2];
+  a[2] = (p[2]+1)/2;
   return a;
 }
 
@@ -220,7 +223,7 @@ template <class T> Point3<T> View<T>::WindowCoordToNormDevCoord(const Point3<T> 
   a[0] = (p[0]- viewport[0])/ (viewport[2]/(T)2.0) - 1;
 	a[1] = (p[1]- viewport[1])/ (viewport[3]/(T)2.0) - 1;
   //a[1] = -a[1];
-	a[2] = p[2];
+	a[2] = 2*p[2] - 1;
   return a;
 }
 
