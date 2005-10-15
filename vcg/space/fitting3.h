@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/10/13 14:59:57  ganovelli
+versione con svd
+
 Revision 1.1  2005/03/14 17:04:24  ganovelli
 created
 
@@ -47,7 +50,7 @@ bool PlaneFittingPoints(  std::vector< Point3<S> > & samples,Plane3<S> &p){
 
 	int j;
 	Matrix44<S> m;m.SetZero();
-	std::vector< Point3<S> > ::iterator i;
+	typename std::vector< Point3<S> > ::iterator i;
 	
 	Point3<S> c; c.Zero();
 	for(i = samples.begin(); i != samples.end(); ++i)
