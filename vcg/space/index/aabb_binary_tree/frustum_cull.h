@@ -25,6 +25,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/10/05 01:59:56  m_di_benedetto
+First Commit, new version.
+
 Revision 1.3  2005/09/29 22:20:49  m_di_benedetto
 Removed '&' in FrustumCull() method.
 
@@ -39,6 +42,9 @@ First Commit.
 
 #ifndef __VCGLIB_AABBBINARYTREE_FRUSTUMCULL_H
 #define __VCGLIB_AABBBINARYTREE_FRUSTUMCULL_H
+
+// std headers
+/* EMPTY */
 
 // vcg headers
 #include <vcg/space/point3.h>
@@ -99,8 +105,8 @@ public:
 		ClassType::InitializeNodeFlagsRec(pRoot);
 	}
 
-	template <class OBJAPPLYFUNCTOR>
-	static inline void FrustumCull(TreeType & tree, const Point3<ScalarType> & viewerPosition, const Plane3<ScalarType> frustumPlanes[6], const unsigned int minNodeObjectsCount, OBJAPPLYFUNCTOR & objApply) {
+	template <class NODEAPPLYFUNCTOR>
+	static inline void FrustumCull(TreeType & tree, const Point3<ScalarType> & viewerPosition, const Plane3<ScalarType> frustumPlanes[6], const unsigned int minNodeObjectsCount, NODEAPPLYFUNCTOR & nodeApply) {
 		NodeType * pRoot = tree.pRoot;
 		if (pRoot == 0) {
 			return;
@@ -116,7 +122,7 @@ public:
 		}
 
 		const unsigned char inMask = 0x3F;
-		ClassType::NodeVsFrustum(tree.pRoot, viewerPosition, frustum, inMask, minNodeObjectsCount, objApply);
+		ClassType::NodeVsFrustum(tree.pRoot, viewerPosition, frustum, inMask, minNodeObjectsCount, nodeApply);
 	}
 
 protected:
@@ -131,8 +137,8 @@ protected:
 		}
 	}
 
-	template <class OBJAPPLYFUNCTOR>
-	static inline void NodeVsFrustum(NodeType * node, const Point3<ScalarType> & viewerPosition, const VFrustum & f, unsigned char inMask, unsigned int minNodeObjectsCount, OBJAPPLYFUNCTOR & objApply) {
+	template <class NODEAPPLYFUNCTOR>
+	static inline void NodeVsFrustum(NodeType * node, const Point3<ScalarType> & viewerPosition, const VFrustum & f, unsigned char inMask, unsigned int minNodeObjectsCount, NODEAPPLYFUNCTOR & nodeApply) {
 		if (node == 0) {
 			return;
 		}
@@ -198,9 +204,7 @@ protected:
 
 		if (fullInside || (node->ObjectsCount() <= minNodeObjectsCount)) {
 			node->Flags() |= FC_FULLY_VISIBLE_BIT;
-			for (typename TreeType::ObjPtrVectorConstIterator oi=node->oBegin; oi!=node->oEnd; ++oi) {
-				objApply(*(*oi));
-			}
+			nodeApply(*node);
 			return;
 		}
 
@@ -218,12 +222,12 @@ protected:
 		}
 
 		if (dt <= (ScalarType)0) {
-			ClassType::NodeVsFrustum(node->children[0], viewerPosition, f, newMask, minNodeObjectsCount, objApply);
-			ClassType::NodeVsFrustum(node->children[1], viewerPosition, f, newMask, minNodeObjectsCount, objApply);
+			ClassType::NodeVsFrustum(node->children[0], viewerPosition, f, newMask, minNodeObjectsCount, nodeApply);
+			ClassType::NodeVsFrustum(node->children[1], viewerPosition, f, newMask, minNodeObjectsCount, nodeApply);
 		}
 		else {
-			ClassType::NodeVsFrustum(node->children[1], viewerPosition, f, newMask, minNodeObjectsCount, objApply);
-			ClassType::NodeVsFrustum(node->children[0], viewerPosition, f, newMask, minNodeObjectsCount, objApply);
+			ClassType::NodeVsFrustum(node->children[1], viewerPosition, f, newMask, minNodeObjectsCount, nodeApply);
+			ClassType::NodeVsFrustum(node->children[0], viewerPosition, f, newMask, minNodeObjectsCount, nodeApply);
 		}
 
 		return;
