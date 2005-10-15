@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/03/18 16:34:42  fiorin
+minor changes to comply gcc compiler
+
 Revision 1.5  2004/05/10 13:22:25  cignoni
 small syntax error Math -> math in Angle
 
@@ -234,7 +237,7 @@ public:
 			return Norm2(*this-p);
 	}	
 	  /// returns the angle with X axis (radiants, in [-PI, +PI] )
-	inline Point2 &Angle(){
+	inline ScalarType Angle() const {
 		return math::Atan2(_v[1],_v[0]);
 	}
 		/// transform the point in cartesian coords into polar coords
@@ -298,7 +301,7 @@ inline T Angle( Point2<T> const & p0, Point2<T> const & p1 )
 
 template <class T>
 inline Point2<T> operator - ( Point2<T> const & p ){
-    return Point2<T>( -p._v[0], -p._v[1] );
+    return Point2<T>( -p[0], -p[1] );
 }
 
 template <class T>
