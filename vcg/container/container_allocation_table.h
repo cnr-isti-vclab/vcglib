@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/07/07 13:33:51  ganovelli
+some comment
+
 Revision 1.5  2005/07/06 15:28:10  ganovelli
 aggiornamento di alcuni path
 
@@ -65,6 +68,7 @@ typedef typename typename STL_CONT::value_type ValueType;
 virtual void Resort(ValueType*,ValueType*) =0;
 virtual void Remove(const STL_CONT&) = 0;
 virtual void AddDataElem(ValueType*,int)=0;
+virtual void Resize(ValueType*,int)=0;
 
 public:
 // ID serves as a type trait. 
@@ -132,6 +136,7 @@ static void Update(ValueType*);							// set Upper() e Lower()
 static typename std::list<ENTRY_TYPE>::iterator FindBase(const ValueType * pt);	
 																							// find the container that contains pt (naive)
 virtual  void  AddDataElem(typename STL_CONT::value_type * pt,int n);// add n element to the auxiliary data
+virtual  void  Resize(typename STL_CONT::value_type * pt,int n);// resize the  auxiliary data
 
 public:
 static int & Id(){															// unique identifier of the istance
@@ -141,7 +146,7 @@ static int & Id(){															// unique identifier of the istance
 };
 
 // --------------------------- CATEntry: implementation --------------------
-
+// derivazione fatta per i membri Occ (Optional Component Compact)
 template <typename STL_CONT, class ENTRY_TYPE>
 unsigned int CATEntry<STL_CONT,ENTRY_TYPE>::
 
@@ -157,6 +162,9 @@ typename std::list<ENTRY_TYPE>::iterator CATEntry<STL_CONT,ENTRY_TYPE>::
 
 FindBase(const ValueType * pt)
 {
+//DEBUG
+int sz = AT().size();
+//
 std::list<ENTRY_TYPE>::iterator ite,curr_base,_;
 ite = AT().begin();
 curr_base = AT().end();
@@ -185,7 +193,7 @@ void CATEntry< STL_CONT, ENTRY_TYPE>::
 Update(ValueType * pt)
 {
 if(!IsTheSameAsLast(pt)){
-	std::list<ENTRY_TYPE>::iterator lower_ite;
+	std::list<ENTRY_TYPE>::iterator lower_ite,upper_ite;
 	lower_ite = FindBase(pt);
 
 	assert(	lower_ite!=AT().end());
@@ -195,8 +203,8 @@ if(!IsTheSameAsLast(pt)){
 		Upper() = (ValueType *) 0xffffffff;
 	else
 	{
-		lower_ite++;		
-		Upper() = (*lower_ite).Start();
+		upper_ite = lower_ite;	++upper_ite;	
+		Upper() = (*upper_ite).Start();
 	}
 	
 	Curr() = lower_ite;
@@ -289,15 +297,25 @@ Update(pt);
 Curr()->Push_back(n);
 }
 
+
+template <typename STL_CONT, class ENTRY_TYPE>
+void CATEntry<STL_CONT, ENTRY_TYPE>::
+
+Resize(typename STL_CONT::value_type * pt,int n)
+{
+Update(pt);
+Curr()->Resize(n);
+}
+
+
 //--------------------------------------------------------------------------------------------
-// CAT: derivation of CATEntry for the case where the temporary data is unique for each type.
-// VERY IMPORTANT: there cannot be two vectors of value with the same type of temporary datya
-// This class is used to implement optional core data (NormalOpt, CoordOpt etc...)
 template <typename STL_CONT,class ATTR_TYPE>
 class CAT:public CATEntry<STL_CONT, EntryCAT<STL_CONT,ATTR_TYPE> >{
 typedef typename typename STL_CONT::value_type ValueType;
 public:
 static ATTR_TYPE & Get(ValueType * pt);
+static CAT<STL_CONT,ATTR_TYPE> * New();
+static CAT<STL_CONT,ATTR_TYPE> *& Instance(){ static CAT<STL_CONT,ATTR_TYPE> *  instance=NULL; return instance;}
 }; 
 //---------------------- CAT: implementation---------------------------------------------------
 template <typename STL_CONT, class ATTR_TYPE>
@@ -306,8 +324,22 @@ ATTR_TYPE & CAT<STL_CONT,ATTR_TYPE>::
 Get(ValueType * pt)
 {
 int ord = Ord(pt);
+//int ord = pt-  &(*  ((*AT().begin()).C()->begin())); se AT() contiene un solo elemento funziona anche così
 return Curr()->Data()[ord];
 }
+
+template <typename STL_CONT, class ATTR_TYPE>
+CAT<STL_CONT,ATTR_TYPE> * CAT<STL_CONT,ATTR_TYPE>::
+
+New(){
+	if(Instance()==NULL) 
+		{
+		 Instance() =  new CAT<STL_CONT,ATTR_TYPE>();
+		}
+	return Instance();
+	}
+
+
 //---------------------------------------------------------------------------------------------
 
 };//end namespace vcg
