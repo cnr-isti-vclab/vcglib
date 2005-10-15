@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/10/14 13:30:07  cignoni
+Added constant access functions and reflective functions (HasSomething stuff)
+to all the components This is the first really working version...
+
 Revision 1.8  2005/10/07 15:19:54  cignoni
 minor updates to keep it in line with the rest of the library
 
@@ -52,6 +56,9 @@ First working version!
 ****************************************************************************/
 #ifndef __VCG_VERTEX_PLUS_COMPONENT
 #define __VCG_VERTEX_PLUS_COMPONENT
+#include <vcg/space/point3.h>
+#include <vcg/space/tcoord2.h>
+#include <vcg/space/color4.h>
 
 namespace vcg {
   namespace vert {
