@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2005/10/13 09:29:10  cignoni
+Removed the reference to Deprecated f->IsBorder(i) now everyone should use IsBorder(*f,i);
+
 Revision 1.15  2005/01/03 11:22:31  cignoni
 Added better documentation (with an example and the V0 V1 V2 access members
 
@@ -91,6 +94,10 @@ namespace face {
 	It contain a pointer to the current face, 
 	the index of one edge and a edge's incident vertex.
  */
+ 
+template <class FaceType>
+bool IsBorder(FaceType const & f,  const int j );
+
 template <class FaceType> 
 class Pos
 {
