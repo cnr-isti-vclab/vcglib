@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2005/04/17 17:48:24  ganovelli
+modes deallocation commented (quick and dirty solution..to debug)
+
 Revision 1.12  2004/12/17 10:28:10  ricciodimare
 *** empty log message ***
 
@@ -59,6 +62,7 @@ Adding copyright.
 
 
 ****************************************************************************/
+
 #include <GL/glew.h>
 #include "trackball.h"
 
@@ -103,33 +107,19 @@ void Trackball::SetPosition(const Point3f &c, int /* millisec */) {
 
 void Trackball::GetView() {
   camera.GetView();
-    
-  /*  //lets get view matrix  
-  Similarityf m = last_track;
-  Point3f c_obj = m*center;   //coordinate of the center of the trackball in obj coords
-  Point3f ScreenCenter = camera.Project(c_obj); //center of the trackball in screen coords.	
-  Point3f ScreenRadius = 10.0f/Distance(center, camera.UnProject(Point3f(ScreenCenter[0] + 10, ScreenCenter[1],     ScreenCenter[2])));
-  
-  Point3f X, Y, Z, C;
-  X = camera.UnProject(Point3f(ScreenCenter[0] + 100, ScreenCenter[1],     ScreenCenter[2]));
-  Y = camera.UnProject(Point3f(ScreenCenter[0],     ScreenCenter[1] - 100, ScreenCenter[2]));
-  Z = camera.UnProject(Point3f(ScreenCenter[0],     ScreenCenter[1],     ScreenCenter[2] + 0.1f));	
-  C = c_obj;
-  X = X - C; X.Normalize();
-  Y = Y - C; Y.Normalize();
-  Z = X ^ Y;	
-  
-  Matrix44f view_axis; //this is before applying last (or track...)
-  view_axis.SetIdentity();
-  view_axis.element(0, 0) = X[0]; view_axis.element(0, 1) = X[1]; view_axis.element(0, 2) = X[2];
-  view_axis.element(1, 0) = Y[0]; view_axis.element(1, 1) = Y[1]; view_axis.element(1, 2) = Y[2];
-  view_axis.element(2, 0) = Z[0]; view_axis.element(2, 1) = Z[1]; view_axis.element(2, 2) = Z[2];
-  view.SetIdentity();
-  view.FromMatrix(view_axis);	*/
 }
 
-void Trackball::Apply() { 
+void Trackball::Apply(bool ToDraw) { 
   glTranslate(center);
+  if(ToDraw) 
+  {
+    glPushMatrix();
+    Matrix44f r;
+    track.rot.ToMatrix(r);
+    glMultMatrix(r);
+    DrawIcon();
+    glPopMatrix();
+  }
   glMultMatrix(track.Matrix());
   glTranslate(-center);
 }
@@ -188,25 +178,11 @@ void Trackball::DrawPlaneHandle() {
   glEnd();
 }
 
-void Trackball::Draw() {
-  
+void Trackball::DrawIcon() {
   glPushMatrix();
-  ApplyInverse();
-/*  glBegin(GL_POINTS);
-  for(vector<Point3f>::iterator vi=Hits.begin();vi!=Hits.end();++vi)
-    glVertex(*vi);
-  glEnd()*/;
-  glPopMatrix();
 
-  glPushMatrix();
-  
-  glTranslate(center);
-  glScalef(radius,radius,radius);
-  glScalef(1.0f/track.sca,1.0f/track.sca,1.0f/track.sca);
-
-
+  glScale(radius);
   /// Here start the real drawing stuff
-  
   float amb[4] ={.3f,.3f,.3f,1.0f};
   float col[4] ={.5f,.5f,.8f,1.0f};
   //float col2[4]={.9f,.9f,1.0f,1.0f};
@@ -232,47 +208,6 @@ void Trackball::Draw() {
   glPopMatrix();
 		
   glColor4f(1.0,.8f,.8f,1.0f);
-
-  /*  switch(current_action) {
-  case TRACK_ROTATE_X:
-  case TRACK_ROTATE_Y:
-  case TRACK_ROTATE_Z:
-    //Point3d raxt(0,0,0),rax;// compute the rotation axis
-    //raxt[current_action.motion-ROTATE_X]=1;
-    //RotM.Apply(rax,raxt);
-    //
-    //glDisable(GL_LIGHTING);
-    //glBegin(GL_LINE_STRIP);
-    //		glVertex(Manip.c-raxt*TrackballRadius*1.3);
-    //		glVertex(Manip.c+raxt*TrackballRadius*1.3);
-    //glEnd();
-    break;
-
-  case DRAG_XY:
-    glPushMatrix();
-    //glTranslate(Manip.c);
-    DrawPlane();
-    glPopMatrix();
-    break;
-
-  case DRAG_XY:
-    glPushMatrix();
-    //glTranslate(Manip.c);
-    glRotatef(90,1,0,0);
-    DrawPlane();
-    glPopMatrix();
-    break;
-
-  case DRAG_XY:
-    glPushMatrix();
-    //glTranslate(Manip.c);
-    glRotatef(90,0,1,0);
-    DrawPlane();
-    glPopMatrix();
-    break;
-  default:
-    break;
-    }*/
 
   glPopAttrib();
 

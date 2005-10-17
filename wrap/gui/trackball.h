@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/07/11 22:06:56  cignoni
+Added scaling by wheel
+
 Revision 1.7  2004/06/09 14:01:13  cignoni
 Heavily restructured. To be completed only rotation works...
 
@@ -43,6 +46,48 @@ Commented out unused parameter names and other minor warning related issues
 Revision 1.2  2004/03/25 14:55:25  ponchio
 Adding copyright.
 
+
+****************************************************************************/
+/****************************************************************************
+Short usage note:
+
+The trackball is a manipulator of an object
+
+Center specify the center of rotation and scaling of the trackball and usually 
+is set by the program and do not interactively change
+Radius specify the radius of the interactive ball shaped icon to specify rotation.
+It is in absolute unit but it should be in screen related units like the previoous 
+one it is not changed during interaction.
+
+When you specify a traslation with the trackball the trackball center remain UNCHANGED.
+Similarly when you apply a scaling the size of the iconshaped ball do not change.
+
+
+Typical use:
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(60, float(width())/float(height()), 1, 100);
+	  glMatrixMode(GL_MODELVIEW);
+	  glLoadIdentity();
+	  gluLookAt(0,0,3,   0,0,0,   0,1,0);        
+    
+    trackball.center=Point3f(0, 0, 0);
+    trackball.radius= 1;
+    
+    trackball.GetView();
+    trackball.Apply();
+        
+    float d=1.0f/mesh.bbox.Diag();
+    glScale(d);
+    glTranslate(-mesh.bbox.Center());
+    mesh->Render();
+
+Note on the typical use:
+Perspective and gllookat are choosed to frame the origin centered 1-radius 
+trackball.
+The final scale and translate are just to fit a generic mesh to the 1sized 
+origin centered where the trackball stays box.
 
 ****************************************************************************/
 
@@ -109,10 +154,9 @@ namespace vcg {
 
     //operating
     void GetView();\
-    void Apply();
+    void Apply(bool Draw=true);
     void ApplyInverse();
-    void Draw();
-    void ApplynDraw() { Apply(); Draw(); }
+    void DrawIcon();
     void Reset();
 
     // Internal Drawing stuff
