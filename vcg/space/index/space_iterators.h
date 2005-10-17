@@ -179,7 +179,9 @@ namespace vcg{
 				std::sort(Elems.begin(),Elems.end());
 
 			CurrentElem=Elems.end();
-			CurrentElem--;
+			if (Elems.size() > 0) {
+				CurrentElem--;
+			}
 
 			return((Elems.size()==0)||(Dist()>dist));
 		}
