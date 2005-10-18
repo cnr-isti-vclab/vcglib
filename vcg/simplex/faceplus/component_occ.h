@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/10/15 16:23:39  ganovelli
+Working release (compilata solo su MSVC), component_occ è migrato da component_opt
+
 
 ****************************************************************************/
 
@@ -38,6 +41,7 @@ compare with OCF(Optional Component Fast)
 
 #include <vcg/simplex/faceplus/component.h>
 #include <vcg/container/vector_occ.h>
+#include <vcg/space/plane3.h>
 
 
 namespace vcg {
@@ -128,6 +132,37 @@ public:
 };
 
 template <class T> class FFAdjOcc : public FFAdjOccBase<FFAdjTypeSup<typename T::FacePointer>,T>{};
+
+/*----------------------------- EdgePlane -----------------------------------*/ 
+
+// questo tipo serve per tenere tutte le informazioni sull'adiacenza dentro una
+// singola classe
+template <class ScalarType>
+struct EdgePlaneSup {
+	vcg::Point3<ScalarType>  edge[3]; 
+	vcg::Plane3<ScalarType>  plane[3]; 
+	};
+
+template <class A, class T> class EdgePlaneOcc: public T {
+public:
+	
+	typedef  A EdgePlaneType;
+
+  Point3<typename T::ScalarType> &Edge(const int j) { 
+		return (CAT< vector_occ<FaceType>,EdgePlaneSup<T::ScalarType> >::Instance()->Get((FaceType*)this)).edge[j];}
+
+  Point3<typename T::ScalarType> const  Edge(const int j) const { 
+		return (CAT< vector_occ<FaceType>,EdgePlaneSup<T::ScalarType> >::Instance()->Get((FaceType*)this)).edge[j];}
+ 
+	vcg::Plane3<typename T::ScalarType> Plane(){
+		 return (CAT< vector_occ<FaceType>,EdgePlaneSup<T::ScalarType> >::Instance()->Get((FaceType*)this)).plane;}
+
+  static bool HasEdgePlane()   {   return true; }
+  static bool HasEdgePlaneOcc()   { return true; }
+
+};
+
+template <class T> class EdgePlane : public EdgePlaneOcc<EdgePlaneSup<typename T::ScalarType>,T>{};
 
 template <class T> class VertexRefOcc: public T {
 public:
