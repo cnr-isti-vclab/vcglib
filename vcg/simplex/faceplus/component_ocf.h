@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/10/14 15:07:58  cignoni
+First Really Working version
+
 
 ****************************************************************************/
 
@@ -212,7 +215,7 @@ public:
     return Base().AF[Index()]._fp[j]; 
   }
 
-  typename T::FacePointer const  FFp(const int j) const { return cFFp(j)}
+  typename T::FacePointer const  FFp(const int j) const { return cFFp(j);}
   typename T::FacePointer const cFFp(const int j) const {
     if(! Base().FFAdjacencyEnabled ) return 0; 
     else return Base().AF[Index()]._fp[j]; 
