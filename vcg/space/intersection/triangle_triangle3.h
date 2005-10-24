@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/04/26 12:33:59  ganovelli
+first version
+
 ****************************************************************************/
 #ifndef __VCGLIB_INTERSECTIONTRITRI3
 #define __VCGLIB_INTERSECTIONTRITRI3
