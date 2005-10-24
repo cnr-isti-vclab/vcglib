@@ -23,6 +23,15 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/06/29 15:02:29  spinelli
+aggiunto:
+- static void CavalieriProj( .. )
+- static void IsometricProj( .. )
+
+modificato:
+- static void TransformGL( .. )
+- static void SetSubView( .. )
+
 Revision 1.8  2005/02/22 10:57:05  tommyfranken
 corrected some syntax errors in GetFrustum
 
@@ -122,10 +131,10 @@ static void TransformGL(vcg::Camera<S> & camera, S farDist = -1 ) {
 	assert(glGetError()==0);
 	
 	switch(camera.cameraType) {
-	case PERSPECTIVE: glFrustum(sx,dx,bt,tp,nr,(farDist == -1)?fr:farDist);	break;
-	case ORTHO:       glOrtho(sx*camera.viewportM,dx*camera.viewportM,bt*camera.viewportM,tp*camera.viewportM,nr,(farDist == -1)?fr:farDist); break;
-	case ISOMETRIC:   IsometricProj(sx,dx,bt,tp,nr,(farDist == -1)?fr:farDist); 	break;
-    case CAVALIERI:   CavalieriProj(sx,dx,bt,tp,nr,(farDist == -1)?fr:farDist); 	break;
+	case vcg::PERSPECTIVE: glFrustum(sx,dx,bt,tp,nr,(farDist == -1)?fr:farDist);	break;
+	case vcg::ORTHO:       glOrtho(sx*camera.viewportM,dx*camera.viewportM,bt*camera.viewportM,tp*camera.viewportM,nr,(farDist == -1)?fr:farDist); break;
+	case vcg::ISOMETRIC:   IsometricProj(sx,dx,bt,tp,nr,(farDist == -1)?fr:farDist); 	break;
+    case vcg::CAVALIERI:   CavalieriProj(sx,dx,bt,tp,nr,(farDist == -1)?fr:farDist); 	break;
 	}
 /*	if(!camera.IsOrtho())
 	{
