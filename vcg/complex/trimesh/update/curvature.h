@@ -23,12 +23,17 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/02/22 16:40:29  ganovelli
+created. This version writes the gaussian curvature on the Q() member of
+the vertex
+
 /****************************************************************************/
 
 #ifndef VCGLIB_UPDATE_CURVATURE_
 #define VCGLIB_UPDATE_CURVATURE_
 
 #include <vcg/math/base.h>
+#include <vcg/simplex/face/topology.h>
 #include <vcg/simplex/face/pos.h>
 
 namespace vcg {
@@ -122,7 +127,7 @@ static void Gaussian( MeshType &  m){
 	{
 		for(int i=0;i<3;i++)
 		{
-			if((*fi).IsBorder(i))
+			if(vcg::face::IsBorder((*fi), i))
 			{
 				MeshType::CoordType e1,e2;
 				vcg::face::Pos<FaceType> hp(&*fi,i,(*fi).V(i));
