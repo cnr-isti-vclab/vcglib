@@ -25,6 +25,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/10/15 19:14:35  m_di_benedetto
+Modified objapplyfunctor to nodeapplyfunctor.
+
 Revision 1.5  2005/10/05 01:59:56  m_di_benedetto
 First Commit, new version.
 
@@ -80,9 +83,10 @@ protected:
 
 public:
 	enum {
-		FC_FIRST_PLANE_BIT = 0,
-		FC_PARTIALLY_VISIBLE_BIT = (1 << (FC_FIRST_PLANE_BIT + 3)),
-		FC_FULLY_VISIBLE_BIT = (1 << (FC_FIRST_PLANE_BIT + 4))
+		FC_FIRST_PLANE_BIT					= 0,
+		FC_PARTIALLY_VISIBLE_BIT		= (1 << (FC_FIRST_PLANE_BIT + 3)),
+		FC_FULLY_VISIBLE_BIT				= (1 << (FC_FIRST_PLANE_BIT + 4)),
+		FC_PASS_THROUGH_FIRST_BIT		= (FC_FIRST_PLANE_BIT + 5)
 	};
 
 	static inline bool IsPartiallyVisible(const NodeType * node) {
@@ -95,6 +99,10 @@ public:
 
 	static inline bool IsVisible(const NodeType * node) {
 		return ((node->Flags() & (FC_PARTIALLY_VISIBLE_BIT | FC_FULLY_VISIBLE_BIT)) != 0);
+	}
+
+	static inline unsigned int PassThrough(const NodeType * node) {
+		return ((node->Flags() >> FC_PASS_THROUGH_FIRST_BIT) & 0x03);
 	}
 
 	static inline void Initialize(TreeType & tree) {
@@ -128,7 +136,8 @@ public:
 protected:
 
 	static inline void InitializeNodeFlagsRec(NodeType * node) {
-		node->Flags() &= ~(0x1F);
+		//node->Flags() &= ~(0x7F);
+		node->Flags() = 0;
 		if (node->children[0] != 0) {
 			ClassType::InitializeNodeFlagsRec(node->children[0]);
 		}
@@ -153,7 +162,7 @@ protected:
 		unsigned char newMask = 0x0;
 		bool fullInside = true;
 
-		node->Flags() &= ~(FC_PARTIALLY_VISIBLE_BIT | FC_FULLY_VISIBLE_BIT);
+		node->Flags() &= ~(FC_PARTIALLY_VISIBLE_BIT | FC_FULLY_VISIBLE_BIT | (0x03 << FC_PASS_THROUGH_FIRST_BIT));
 
 		if ((k & inMask) != 0) {
 			if (
@@ -202,7 +211,7 @@ protected:
 			}
 		}
 
-		if (fullInside || (node->ObjectsCount() <= minNodeObjectsCount)) {
+		if (fullInside || (node->IsLeaf()) || (node->ObjectsCount() <= minNodeObjectsCount)) {
 			node->Flags() |= FC_FULLY_VISIBLE_BIT;
 			nodeApply(*node);
 			return;
@@ -230,7 +239,17 @@ protected:
 			ClassType::NodeVsFrustum(node->children[0], viewerPosition, f, newMask, minNodeObjectsCount, nodeApply);
 		}
 
-		return;
+		const bool c0 = (node->children[0] != 0) && ClassType::IsVisible(node->children[0]);
+		const bool c1 = (node->children[1] != 0) && ClassType::IsVisible(node->children[1]);
+
+		if (c0 != c1) {
+			if (c0) {
+				node->Flags() |= (0x01 << FC_PASS_THROUGH_FIRST_BIT);
+			}
+			else {
+				node->Flags() |= (0x02 << FC_PASS_THROUGH_FIRST_BIT);
+			}
+		}
 	}
 
 };
