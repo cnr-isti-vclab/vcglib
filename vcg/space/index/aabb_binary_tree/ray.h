@@ -25,6 +25,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/10/05 01:40:56  m_di_benedetto
+Node children are now tested in ascending ray-T order.
+
 Revision 1.2  2005/09/28 19:48:31  m_di_benedetto
 Removed hit point parameter, #included aabbtree base.
 
@@ -36,9 +39,6 @@ First Commit.
 
 #ifndef __VCGLIB_AABBBINARYTREE_RAY_H
 #define __VCGLIB_AABBBINARYTREE_RAY_H
-
-// stl headers
-#include <limits>
 
 // vcg headers
 #include <vcg/space/ray3.h>
@@ -71,7 +71,7 @@ public:
 
 		const CoordType & rayDirection = ray.Direction();
 
-		ScalarType rayT = maxDist / rayDirection.Norm();
+		t = maxDist / rayDirection.Norm();
 
 		Ray3Ex rayex;
 		rayex.r = ray;
@@ -83,23 +83,7 @@ public:
 		rayex.sign[2] = (rayex.invDirection[2] < ((ScalarType)0)) ? (1) : (0);
 
 		ObjPtr closestObj = 0;
-
-		ScalarType rt;
-		if (!ClassType::IntersectionBoxRay(pRoot->boxCenter, pRoot->boxHalfDims, rayex, rt)) {
-			return (0);
-		}
-
-		if (rt >= rayT) {
-			return (0);
-		}
-
-		ClassType::DepthFirstRayIsect(pRoot, rayIntersection, rayex, rayT, closestObj);
-
-		if (closestObj == 0) {
-			return (0);
-		}
-
-		t = rayT;
+		ClassType::DepthFirstRayIsect(pRoot, rayIntersection, rayex, t, closestObj);
 
 		return (closestObj);
 	}
@@ -123,68 +107,55 @@ protected:
 
 		tmin = (bounds[ray.sign[0]][0] - origin[0]) * ray.invDirection[0];
 		tmax = (bounds[1 - ray.sign[0]][0] - origin[0]) * ray.invDirection[0];
+
 		tcmin = (bounds[ray.sign[1]][1] - origin[1]) * ray.invDirection[1];
 		tcmax = (bounds[1 - ray.sign[1]][1] - origin[1]) * ray.invDirection[1];
+
 		if ((tmin > tcmax) || (tcmin > tmax)) { return (false);	}
+
 		if (tcmin > tmin) { tmin = tcmin; }
 		if (tcmax < tmax) { tmax = tcmax; }
 		tcmin = (bounds[ray.sign[2]][2] - origin[2]) * ray.invDirection[2];
 		tcmax = (bounds[1-ray.sign[2]][2] - origin[2]) * ray.invDirection[2];
+
 		if ((tmin > tcmax) || (tcmin > tmax)) { return (false); }
+
 		if (tcmin > tmin) { tmin = tcmin; }
 		//if (tcmax < tmax) { tmax = tcmax; }
 		t0 = (tmin >= ((ScalarType)0)) ? (tmin) :((ScalarType)0);
+
 		return (true);
 	}
 
 	template <class OBJRAYISECTFUNCT>
 	static inline void DepthFirstRayIsect(const NodeType * node, OBJRAYISECTFUNCT & rayIntersection, const Ray3Ex & ray, ScalarType & rayT, ObjPtr & closestObj) {
+		if (node == 0) {
+			return;
+		}
+
+		ScalarType rt;
+		if (!ClassType::IntersectionBoxRay(node->boxCenter, node->boxHalfDims, ray, rt)) {
+			return;
+		}
+
+		if (rt >= rayT) {
+			return;
+		}
+
 		if (node->IsLeaf()) {
-			ObjPtr cObj = 0;
-			ScalarType ar;
-			CoordType ap;
-			ScalarType rt = rayT;
 			for (typename TreeType::ObjPtrVectorConstIterator si=node->oBegin; si!=node->oEnd; ++si) {
-				if (rayIntersection(*(*si), ray.r, ar)) {
-					if (ar < rt) {
-						rt = ar;
-						cObj = (*si);
+				if (rayIntersection(*(*si), ray.r, rt)) {
+					if (rt < rayT) {
+						rayT = rt;
+						closestObj = (*si);
 					}
 				}
 			}
-			if (rt < rayT) {
-				rayT = rt;
-				closestObj = cObj;
-			}
+			return;
 		}
-		else {
-			ScalarType rt0, rt1;
-			bool b0 = false;
-			bool b1 = false;
-			if (node->children[0] != 0) {
-				b0 = ClassType::IntersectionBoxRay(node->children[0]->boxCenter, node->children[0]->boxHalfDims, ray, rt0);
-			}
-			if (node->children[1] != 0) {
-				b1 = ClassType::IntersectionBoxRay(node->children[1]->boxCenter, node->children[1]->boxHalfDims, ray, rt1);
-			}
 
-			if (b0 && b1) {
-				if (rt0 <= rt1) {
-					ClassType::DepthFirstRayIsect(node->children[0], rayIntersection, ray, rayT, closestObj);
-					ClassType::DepthFirstRayIsect(node->children[1], rayIntersection, ray, rayT, closestObj);
-				}
-				else {
-					ClassType::DepthFirstRayIsect(node->children[1], rayIntersection, ray, rayT, closestObj);
-					ClassType::DepthFirstRayIsect(node->children[0], rayIntersection, ray, rayT, closestObj);
-				}
-			}
-			else if (b0) {
-				ClassType::DepthFirstRayIsect(node->children[0], rayIntersection, ray, rayT, closestObj);
-			}
-			else if (b1) {
-				ClassType::DepthFirstRayIsect(node->children[1], rayIntersection, ray, rayT, closestObj);
-			}
-		}
+		ClassType::DepthFirstRayIsect(node->children[0], rayIntersection, ray, rayT, closestObj);
+		ClassType::DepthFirstRayIsect(node->children[1], rayIntersection, ray, rayT, closestObj);
 	}
 
 };
