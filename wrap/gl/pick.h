@@ -24,6 +24,8 @@
   History
 
 ****************************************************************************/
+#ifndef __PICK______H
+#define __PICK______H
 
 #include <vector>
 #include <algorithm>
@@ -325,3 +327,5 @@ static int PickTetraFace(int x, int y, TETRA_MESH_TYPE &m, std::vector<std::pair
 
 
 }
+
+#endif
