@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2005/10/15 16:24:10  ganovelli
+Working release (compilata solo su MSVC), component_occ è migrato da component_opt
+
 Revision 1.9  2005/10/14 13:30:07  cignoni
 Added constant access functions and reflective functions (HasSomething stuff)
 to all the components This is the first really working version...
@@ -75,8 +78,8 @@ public:
   typedef CoordType::ScalarType      ScalarType;
 
   CoordType &P() { static CoordType coord(0, 0, 0); return coord; }
-  const CoordType &P() const { static CoordType coord(0, 0, 0); return coord; }
-  const CoordType &cP() const { static CoordType coord(0, 0, 0); return coord; }
+  const CoordType &P() const { static CoordType coord(0, 0, 0);  assert(0); return coord; }
+  const CoordType &cP() const { static CoordType coord(0, 0, 0);  assert(0); return coord; }
   CoordType &UberP() { static CoordType coord(0, 0, 0); return coord; }
   static bool HasCoord()   { return false; }
 
@@ -103,8 +106,8 @@ template <class T> class Coord3d: public Coord<vcg::Point3d, T> {};
 template <class T> class EmptyNormal: public T {
 public:
   typedef vcg::Point3s NormalType;
-  NormalType &N() { static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
-  const NormalType cN()const { static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
+  NormalType &N() { static NormalType dummy_normal(0, 0, 0);  assert(0); return dummy_normal; }
+  const NormalType cN()const { static NormalType dummy_normal(0, 0, 0);  assert(0); return dummy_normal; }
   static bool HasNormal()   { return false; }
   static bool HasNormalOpt()   { return false; }
 };
@@ -127,7 +130,7 @@ template <class T> class Normal3d: public Normal<vcg::Point3d, T> {};
 template <class TT> class EmptyTexture: public TT {
 public:
   typedef vcg::TCoord2<float,1> TextureType;
-  TextureType &T() { static TextureType dummy_texture; return dummy_texture; }
+  TextureType &T() { static TextureType dummy_texture;  assert(0); return dummy_texture; }
   static bool HasTexture()   { return false; }
   static bool HasTextureOpt()   { return false; }
 
@@ -151,7 +154,7 @@ template <class T> class EmptyFlag: public T {
 public:
 	typedef int FlagType;
   /// Return the vector of Flags(), senza effettuare controlli sui bit
-  int &Flags() { static int dummyflags(0); return dummyflags; }
+  int &Flags() { static int dummyflags(0);  assert(0); return dummyflags; }
   const int Flags() const { return 0; }
   static bool HasFlag()   { return false; }
 
@@ -173,7 +176,7 @@ private:
 template <class T> class EmptyColor: public T {
 public:
   typedef vcg::Color4b ColorType;
-  ColorType &C() { static ColorType dumcolor(vcg::Color4b::White); return dumcolor; }
+  ColorType &C() { static ColorType dumcolor(vcg::Color4b::White); assert(0); return dumcolor; }
   static bool HasColor()   { return false; }
 };
 template <class A, class T> class Color: public T {
@@ -192,7 +195,7 @@ template <class T> class Color4b: public Color<vcg::Color4b, T> {};
 template <class T> class EmptyQuality: public T {
 public:
   typedef float QualityType;
-  QualityType &Q() { static QualityType dummyQuality(0); return dummyQuality; }
+  QualityType &Q() { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
   static bool HasQuality()   { return false; }
 };
 template <class A, class T> class Quality: public T {
@@ -214,8 +217,8 @@ template <class T> class Qualityd: public Quality<double, T> {};
 
 template <class T> class EmptyVFAdj: public T {
 public:
-  typename T::FacePointer &VFp() { static typename T::FacePointer fp=0; return fp; }
-  typename T::FacePointer cVFp() { static typename T::FacePointer fp=0; return fp; }
+  typename T::FacePointer &VFp() { static typename T::FacePointer fp=0;  assert(0); return fp; }
+  typename T::FacePointer cVFp() { static typename T::FacePointer fp=0;  assert(0); return fp; }
   int &VFi(){static int z=0; return z;};
   static bool HasVFAdjacency()   {   return false; }
   static bool HasVFAdjacencyOpt()   {   return false; }
