@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.30  2005/10/13 09:25:43  cignoni
+Added cFFp and cVFp const member functions
+
 Revision 1.29  2005/09/28 19:32:09  m_di_benedetto
 Added const qualifier in GetBBox method.
 
@@ -162,7 +165,7 @@ public:
 	typedef Box3<ScalarType> BoxType;
 	
   /// Default Empty Costructor
-  inline FACE_TYPE(){}
+  inline FACE_TYPE(){_flags=0;}
 
 	/// This are the _flags of face, the default value is 0
 	int  _flags;		
