@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/10/11 16:03:40  rita_borgo
+Moved all the main functions inside clean.h
+
 Revision 1.7	2005/09/30 15:48:46	 rita_borgo
 Fixed	manifold Test
 
@@ -136,7 +139,6 @@ typedef CMesh::ScalarType	ScalarType;
 void main(int	argc,char	** argv)
 {
 	CMesh m;
-	bool DEBUG=true;
 	XMLTree	doc;
 	
 
@@ -155,19 +157,15 @@ void main(int	argc,char	** argv)
 
 
 
-	if(DEBUG)
-//		argv[1]	=	"C:\\sf\\apps\\msvc\\trimeshinfo\\Release\\tests\\kite_hole3.ply";
-	argv[1]	=	"C:\\sf\\apps\\msvc\\trimeshinfo\\modelli\\grog50k.ply";
-
-	else
-	{
+	
+	
 		// load	input	meshes.
 		if(argc	<= 1)
 		{
 			printf(MSG_ERR_N_ARGS);
 			exit(-1);
 		}
-	}
+	
 
 
 
@@ -488,6 +486,7 @@ void main(int	argc,char	** argv)
 	// SELF	INTERSECTION
 
 
+	printf("\t Model Bounding Box Diagonal: %f\n", m.bbox.Diag());
 	if (tri::Clean<CMesh>::SelfIntersections(m))
 	{
 
