@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2005/10/05 17:04:18  pietroni
+corrected bug on Set Function .... bbox must be exetended in order to have'nt any object on his borde
+
 Revision 1.12  2005/10/03 13:58:21  pietroni
 added GetInSphere and GetInBox functions
 
@@ -134,13 +137,7 @@ namespace vcg{
 		{
 		protected:
 
-			///the min and max point corresponding to the cell - used to inverse hashing
-			//CoordType min;//coordinate min of the cell
-			//CoordType max;//coordinate max of the cell
-
 			Point3i cell_n;//cell number
-			//iterator to the map element into the cell
-			//typedef typename CellContainerType::iterator IteMap;
 
 		public:
 
@@ -153,9 +150,6 @@ namespace vcg{
 			Cell(ObjType* sim,Point3i _cell,const int  &_tempMark)
 			{
 				_entries.push_back(EntryType(sim,_tempMark));
-				/*min=_min;
-				max=_max;
-				assert(min<max);*/
 				cell_n=_cell;
 			}
 
@@ -178,45 +172,10 @@ namespace vcg{
 			{
 				IteMap I;
 				if (Find(sim,I))
-				{///update temporary mark
 					(*I).second=_tempMark;
-				}
 				else
 					_entries.push_back(EntryType(sim,_tempMark));
-
-				////at the end update the temporary mark on the simplex
-				//_UpdateHMark(sim);
-
-				//Assert();
 			}
-
-			/////given an iterator to the instance of the entry in the cell
-			/////return true if the the entry is valid
-			/////(using temporary mark).
-			//bool IsUpdated(IteMap &I)
-			//{
-			//	if (Use_Mark)
-			//		return ((*I).second >= (*I).first->HMark());
-			//	else
-			//		return true;
-			//}
-
-			/////given an simplex pointer
-			/////return true if the the entry corripondent to that 
-			/////simplex is valid or not
-			/////(using temporary mark).
-			//bool IsUpdated(ObjType* sim)
-			//{
-			//	if (Use_Mark)
-			//	{
-			//		IteMap I;
-			//		if (Find(sim,I))
-			//			return(IsUpdated(I));
-			//		else
-			//			return false;
-			//	}
-			//	else return true;
-			//}
 
 			Point3i CellN()
 			{return cell_n;}
@@ -226,9 +185,6 @@ namespace vcg{
 
 			bool operator !=(const Cell &h)  
 			{return ((cell_n!=h.CellN()));}
-
-		protected:
-			virtual void UpdateHMark(ObjType* s){}
 
 		}; // end struct Cell
 
@@ -259,7 +215,6 @@ namespace vcg{
 		{
 			int h=Hash(cell);
 			hash_table.insert(HRecord(h,Cell(s,cell,tempMark)));
-			//Assert();	
 		}
 
 		///return true and return the iterator to the cell if exist
@@ -271,7 +226,6 @@ namespace vcg{
 				return false;
 			else
 			{
-				////std::pair<Htable::const_iterator, Htable::const_iterator> p =hash_table.equal_range(h);
 				std::pair<IteHtable, IteHtable> p =hash_table.equal_range(h);
 				IteHtable i = p.first;
 
@@ -301,8 +255,6 @@ namespace vcg{
 				_InsertNewHentry(s,cell);
 			else///there is the entry specified by the iterator I so update only the temporary mark
 				(*I).second.Update(s,tempMark);
-
-			_UpdateHMark(s);
 		}
 
 		// hashing
@@ -325,11 +277,8 @@ namespace vcg{
 		//	dim  = bbox.max - bbox.min;
 		//}
 
-		virtual vcg::Box3i Add( ObjType* s)
+		vcg::Box3i Add( ObjType* s)
 		{
-			/*std::vector<Point3i> box;
-			BoxCells(s->BBox().min,s->BBox().max,box);
-			for (std::vector<Point3i>::iterator bi=box.begin();bi<box.end();bi++)*/
 			Box3<ScalarType> b;
 			s->GetBBox(b);
 			vcg::Box3i bb;
@@ -340,10 +289,11 @@ namespace vcg{
 					for (int k=bb.min.Z();k<=bb.max.Z();k++)
 						_InsertInCell(s,vcg::Point3i(i,j,k));
 
+			_UpdateHMark(s);
 			return bb;
 		}
-
-
+		
+		
 		/// Insert a mesh in the grid.SetBBox() function must be called before
 		template <class OBJITER>
 			void Set(const OBJITER & _oBegin, const OBJITER & _oEnd,const Box3x &_bbox=Box3x() )
@@ -376,41 +326,6 @@ namespace vcg{
 					Add(&(*i));
 		}
 
-		//void Set(ContainerType & s, Point3i _siz)
-		//{	
-		//	siz=_siz;
-		//	// find voxel size
-		//	voxel[0] = dim[0]/siz[0];
-		//	voxel[1] = dim[1]/siz[1];
-		//	voxel[2] = dim[2]/siz[2];
-		//	typename ContainerType::iterator i; 
-		//	for(i = s.begin(); i!= s.end(); ++i)
-		//		Add(&(*i));
-		//}
-		//
-
-		/////initialize the structure HashSpace is one estimation about 
-		/////how many keys the system have to generate in order to obtain as less
-		/////conflicts as possible
-		//void Init(CoordType _min,CoordType _max,ScalarType _l,int HashSpace=1000)
-		//{
-		//	l=_l;
-		//	min=_min;
-		//	max=_max;
-		//	HashSpace=HashSpace;
-		//	tempMark=0;
-		//	conflicts=0;
-		//}	
-
-
-
-		/*void AddElem( ObjType* s)
-		{
-		std::vector<Point3i> box;
-		BoxCells(s->BBox().min,s->BBox().max,box);
-		for (std::vector<Point3i>::iterator bi=box.begin();bi<box.end();bi++)
-		_InsertInCell(s,*bi);
-		}*/
 
 		///return the simplexes of the cell that contain p
 		void Grid( const Point3d & p, CellIterator & first, CellIterator & last )
@@ -443,29 +358,6 @@ namespace vcg{
 			}
 		}
 
-		void getAtCell(Point3i _c,std::vector<ObjType*> & res)
-		{
-			IteHtable I;
-			if (_IsInHtable(_c,I))//if there is the cell then
-				(*I).second.Elems(res);
-		}
-
-
-		std::vector<Point3i> Cells(ObjType *s)
-		{
-			return BoxCells(s,s->BBox().min,s->BBox().max);
-		}
-
-		/*inline Point3i MinCell()
-		{
-		return PointToCell(min);
-		}
-
-		inline Point3i MaxCell()
-		{
-		return PointToCell(max);
-		}*/
-
 		///return the number of elemnts in the cell and the iterator to the cell
 		///if the cell exist
 		int numElemCell(Point3i _c,IteHtable &I)
@@ -484,14 +376,10 @@ namespace vcg{
 		{return conflicts;}
 
 		void Clear()
-		{
-			hash_table.clear();
-		}
+		{hash_table.clear();}
 
 		void SetHashKeySpace(int n)
-		{
-			HashSpace=n;
-		}
+		{HashSpace=n;}
 
 		void UpdateTmark()
 		{tempMark++;}
@@ -553,10 +441,41 @@ namespace vcg{
 	The simplex must have the HMark() function.
 	*/
 	template < typename ContainerType,class FLT=double>
-	class DynamicSpatialHashTable:SpatialHashTable<ContainerType,FLT>
+	class DynamicSpatialHashTable: public SpatialHashTable<ContainerType,FLT>
 	{
+	public:
+
 		void _UpdateHMark(ObjType* s){s->HMark()=tempMark;}
+		
+		/// create an empty spatial hash table
+		void InitEmpty(const vcg::Box3<typename ScalarType> &_bbox,vcg::Point3i grid_size)
+		{
+			Box3<FLT> b;
+			assert(!_bbox.IsNull());
+			bbox=_bbox;
+			dim  = bbox.max - bbox.min;
+			assert((grid_size.V(0)>0)&&(grid_size.V(1)>0)&&(grid_size.V(2)>0));
+			siz=grid_size;
+
+			voxel[0] = dim[0]/siz[0];
+			voxel[1] = dim[1]/siz[1];
+			voxel[2] = dim[2]/siz[2];
+		}
+
+		void getInCellUpdated(vcg::Point3i cell,std::vector<ObjPtr> &elems)
+		{
+			CellIterator first,last,l;
+			Grid(cell,first,last);
+			for (l=first;l!=last;l++)
+			{
+				if ((l->second)>=(**l).HMark())
+					elems.push_back(&(**l));
+			}
+		}
+
 	};
+	
+
 
 }// end namespace
 
