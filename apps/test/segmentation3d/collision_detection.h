@@ -9,42 +9,47 @@ template <class ContSimplex>
 class Collision_Detector{
 
 public:
-	
-		typedef typename ContSimplex::value_type SimplexType;
-		typedef typename ContSimplex::value_type* SimplexPointer;
-		typedef typename ContSimplex::iterator SimplexIterator;
-		typedef typename SimplexType::CoordType Point3x;
-		typedef typename Point3x::ScalarType ScalarType;
 
-		typedef  SpatialHashTable<SimplexType> HashingTable;
-		
-		Collision_Detector(ContSimplex & r_):_simplex(r_){};
-		~Collision_Detector(){};
+	typedef typename ContSimplex::value_type SimplexType;
+	typedef typename ContSimplex::value_type* SimplexPointer;
+	typedef typename ContSimplex::iterator SimplexIterator;
+	typedef typename SimplexType::CoordType CoordType;
+	typedef typename CoordType::ScalarType ScalarType;
+	typedef typename vcg::Box3<ScalarType> Box3x;
 
-		ContSimplex & _simplex;
-		
-		HashingTable *HTable;
-		
-		std::set<Point3i> vactive;
+	typedef  DynamicSpatialHashTable<SimplexType,float> HashingTable;
 
-		int active;
+	Collision_Detector(ContSimplex & r_):_simplex(r_){};
+	~Collision_Detector(){};
+
+	ContSimplex & _simplex;
+
+	HashingTable *HTable;
+
+	std::set<Point3i> vactive;
+
+	int active;
 
 	//control if two faces share an edge
 	bool ShareEdge(SimplexType *f0,SimplexType *f1)
 	{
 		assert((!f0->IsD())&&(!f1->IsD()));
 		for (int i=0;i<3;i++)
-				if (f0->FFp(i)==f1)
-					return (true);
+			if (f0->FFp(i)==f1)
+				return (true);
 
 		return(false);
 	}
 
 	///initialize the box for collision detection and the dimension of a cell
-	void Init(Point3x _min,Point3x _max,ScalarType _l)
+	void Init(CoordType _min,CoordType _max,ScalarType _l)
 	{
 		HTable=new HashingTable();
-		HTable->Init(_min,_max,_l);
+		Box3x bb(_min,_max);
+		CoordType d=((_max-_min)/_l);
+		vcg::Point3i dim;
+		dim.Import<ScalarType>(d);
+		HTable->InitEmpty(bb,dim);
 	}
 
 	//control if two faces share a vertex
@@ -58,7 +63,7 @@ public:
 
 		return(false);
 	}
-	
+
 	//test real intersection between faces
 	bool TestRealIntersection(SimplexType *f0,SimplexType *f1)
 	{
@@ -66,9 +71,14 @@ public:
 		if ((!f0->IsActive())&&(!f1->IsActive()))
 			return false;
 		//no adiacent faces
-		if ((f0!=f1)&& (!ShareEdge(f0,f1))
-			&& (!ShareVertex(f0,f1)))
-			return (vcg::Intersection<SimplexType>((*f0),(*f1)));
+		assert(f0!=f1);
+		if ((f0!=f1)&& (!ShareEdge(f0,f1))&&!ShareVertex(f0,f1))
+		{
+			//vcg::Segment3<ScalarType> segm;
+			//bool copl=false;
+			return (vcg::Intersection<SimplexType>((*f0),(*f1)));//,copl,segm))
+				//return ((copl)||(segm.Length()>0.001));
+		}
 		return false;
 	}
 
@@ -76,49 +86,34 @@ public:
 	void RefreshElements()
 	{
 		HTable->Clear();
-		vactive.clear();///new
+		vactive.clear();
+
 		HTable->tempMark=0;
+
 		for (SimplexIterator si=_simplex.begin();si<_simplex.end();++si)
 		{
 			if (!(*si).IsD())
 			{
-				(*si).Mark()=0;
-				if (!(*si).IsActive())
-		
-					HTable->AddElem(&*si);
-				///new now
-				else
+				(*si).HMark()=0;
+				vcg::Box3i cells=HTable->Add(&*si);
+				if ((*si).IsActive())
 				{
-					std::vector<Point3i> cells=HTable->AddElem(&*si);
-					for(std::vector<Point3i>::iterator it=cells.begin();it<cells.end();it++)
-						vactive.insert(*it);
+					vcg::Box3i cells=HTable->Add(&*si);
+					for (int x=cells.min.X(); x<=cells.max.X();x++)
+						for (int y=cells.min.Y(); y<=cells.max.Y();y++)
+							for (int z=cells.min.Z(); z<=cells.max.Z();z++)
+								vactive.insert(vcg::Point3i(x,y,z));
 				}
-				///end new now
 			}
-
-			//UpdateStep();	commented  now
 		}
 	}
-	
-	/////put active cells on apposite structure
-	//void UpdateStep()
-	//{
-	//	vactive.clear();
-	//	for (SimplexIterator si=_simplex.begin();si<_simplex.end();++si)
-	//	{
-	//		if ((((!(*si).IsD()))&&(*si).IsActive()))
-	//		{
-	//			std::vector<Point3i> cells=HTable->addSimplex(&*si);
-	//			for(std::vector<Point3i>::iterator it=cells.begin();it<cells.end();it++)
-	//				vactive.insert(*it);
-	//		}
-	//	}
-	//}
+
+
 
 
 	///put active cells on apposite structure
 	template <class Container_Type>
-	void UpdateStep(Container_Type &simplex)
+		void UpdateStep(Container_Type &simplex)
 	{
 		vactive.clear();
 		HTable->UpdateTmark();
@@ -126,35 +121,16 @@ public:
 		{
 			if ((!(*si).IsD())&&((*si).IsActive()))
 			{
-				std::vector<Point3i> cells=HTable->AddElem(&*si);
-				for(std::vector<Point3i>::iterator it=cells.begin();it<cells.end();it++)
-					vactive.insert(*it);
+				vcg::Box3i cells=HTable->Add(&*si);
+				for (int x=cells.min.X();x<=cells.max.X();x++)
+					for (int y=cells.min.Y();y<=cells.max.Y();y++)
+						for (int z=cells.min.Z();z<=cells.max.Z();z++)
+							vactive.insert(vcg::Point3i(x,y,x));
 			}
 		}
 	}
 
-	
-	/////put active cells on apposite structure
-	//void AddElements(typename ContSimplex::iterator newSimplex)
-	//{
-	//	while (newSimplex!=_simplex.end())
-	//	{
-	//		if (!(*newSimplex).IsD())
-	//		{
-	//		if (!(*newSimplex).IsActive())
-	//			HTable->addSimplex(&*newSimplex);
-	//		///new now
-	//			else
-	//			{
-	//				std::vector<Point3i> cells=HTable->addSimplex(&*newSimplex);
-	//				for(std::vector<Point3i>::iterator it=cells.begin();it<cells.end();it++)
-	//					vactive.insert(*it);
-	//			}
-	//		///end new now
-	//		}
-	//		newSimplex++;
-	//	}
-	//}
+
 
 	///control the real self intersection in the mesh and returns the elements that intersect with someone
 	std::vector<SimplexType*> computeSelfIntersection()
@@ -162,28 +138,30 @@ public:
 		std::vector<SimplexType*> ret;
 		std::set<Point3i>::iterator act;
 		for (act=vactive.begin();act!=vactive.end();act++)
+		{
+			Point3i p=*act;
+			HashingTable::IteHtable I;
+			if (HTable->numElemCell(p,I)>=2)
+			{
+				std::vector<SimplexType*> inCell;
+				inCell.clear();
+				HTable->getInCellUpdated(p,inCell);
+				int nelem=inCell.size();
+				if (nelem>=2)
 				{
-					Point3i p=*act;
-					HashingTable::IteHtable I;
-					if (HTable->numElemCell(p,I)>=2)
-					{
- 						std::vector<SimplexType*> inCell;
-						HTable->getAtCell(p,inCell);
-						int nelem=inCell.size();
-						if (nelem>=2)
-						{
-							//test combinations of elements
-							for (int i=0;i<nelem-1;i++)
-								for (int j=i+1;j<nelem;j++)
-									if ((!inCell[i]->IsD())&&(!inCell[j]->IsD())&&(TestRealIntersection(inCell[i],inCell[j])))
-									{
-										ret.push_back(inCell[i]);
-										ret.push_back(inCell[j]);
-									}
-						}
-					}
+					//test combinations of elements
+					for (int i=0;i<nelem-1;i++)
+						for (int j=i+1;j<nelem;j++)
+							if ((!inCell[i]->IsD())&&(!inCell[j]->IsD())&&(TestRealIntersection(inCell[i],inCell[j])))
+							{
+								ret.push_back(inCell[i]);
+								ret.push_back(inCell[j]);
+							}
 				}
-			return ret;
+
+			}
+		}
+		return ret;
 	}
 
 };
