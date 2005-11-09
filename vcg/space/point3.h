@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2005/09/14 14:09:21  m_di_benedetto
+Added specialized Convert() for the same scalar type.
+
 Revision 1.21  2005/05/06 14:45:33  spinelli
 cambiato parentesi nel costruttore di GetUV per rendere compatibile tale costruttore con MVC e borland
 
@@ -497,6 +500,16 @@ void GetUV( Point3<P3ScalarType> &n,Point3<P3ScalarType> &u, Point3<P3ScalarType
 	Point3<P3ScalarType> uv=u^v;
 }
 
+
+template <class SCALARTYPE>
+inline Point3<SCALARTYPE> Abs(const Point3<SCALARTYPE> & p) {
+	return (Point3<SCALARTYPE>(math::Abs(p[0]), math::Abs(p[1]), math::Abs(p[2])));
+}
+// probably a more uniform naming should be defined...
+template <class SCALARTYPE>
+inline Point3<SCALARTYPE> LowClampToZero(const Point3<SCALARTYPE> & p) {
+	return (Point3<SCALARTYPE>(math::Max(p[0], (SCALARTYPE)0), math::Max(p[1], (SCALARTYPE)0), math::Max(p[2], (SCALARTYPE)0)));
+}
 
 typedef Point3<short>  Point3s;
 typedef Point3<int>	   Point3i;
