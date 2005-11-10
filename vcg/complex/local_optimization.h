@@ -22,6 +22,11 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.15  2005/10/02 23:23:52  cignoni
+  Changed the sense of the < operator for heap: it is reversed according to the stl where highest score elements must float in the heap
+  Completed TimeBudget Termination condition.
+  Parametrized the ClearHeap procedure now there is a HeapSimplexRatio param. Removed dirty printf.
+
   Revision 1.14  2005/04/14 11:34:33  ponchio
   *** empty log message ***
 
@@ -167,8 +172,8 @@ public:
 
 	float	timeBudget;
 	int		start;
-	float currMetric,
-			targetMetric;
+	ScalarType currMetric;
+	ScalarType targetMetric;
 
   // The ratio between Heap size and the number of simplices in the current mesh
   // When this value is exceeded a ClearHeap Start;
@@ -284,7 +289,7 @@ public:
 void ClearHeap()
 {
 	typename HeapType::iterator hi;
-	int sz=h.size();
+	//int sz=h.size();
 	for(hi=h.begin();hi!=h.end();++hi)
   {
     if(!(*hi).locModPtr->IsUpToDate())
