@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.31  2005/10/07 13:27:22  turini
+Minor changes in Set method: added use of template scalar type computing BBox.
+
 Revision 1.30  2005/10/05 17:05:08  pietroni
 corrected bug on Set Function .... bbox must be exetended in order to have'nt any object on his borde
 
@@ -411,8 +414,7 @@ namespace vcg {
 				/*links.push_back( Link((typename ContainerType::iterator)NULL,
 				(grid.size()-1)));*/
 
-				links.push_back( Link(NULL,
-					(grid.size()-1)));
+				links.push_back( Link( NULL,	int(grid.size())-1) );
 
 				// Ordinamento dei links
 				sort( links.begin(), links.end() );
