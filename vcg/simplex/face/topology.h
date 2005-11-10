@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2005/10/13 08:34:19  cignoni
+Removed reference to IsBorder() member of face and substituted with the face templated function version.
+
 Revision 1.17  2005/04/11 09:17:24  pietroni
 Changed detach to FFdetach , compiled tested in manifold cases
 
@@ -82,7 +85,7 @@ template <class FaceType>
 inline bool IsManifold( FaceType const & f, const int j ) 
 {
   if(FaceType::HasFFAdjacency())
-	  return ( f.FFp(j) == &f || &f == f.FFp(j)->FFp(f.FFi(j)) );
+	  return ( f.cFFp(j) == &f || &f == f.cFFp(j)->cFFp(f.cFFi(j)) );
   else 
     return true;
 }
