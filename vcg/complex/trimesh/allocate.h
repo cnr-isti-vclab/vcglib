@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.24  2005/10/13 09:32:11  cignoni
+Re-inserted the cFFp and cVFp access. If only the const version of the member function exists, the compiler will call it
+when a non-const object invokes that function
+
 Revision 1.23  2005/10/12 17:26:19  ponchio
 cFFp doesn not exist -> FFp (there is the const version...)
 same for cVFp.
@@ -168,7 +172,7 @@ static VertexIterator AddVertices(MeshType &m,int n, PointerUpdater<VertexPointe
 	for(int i=0; i<n; ++i)
 	{
     m.vert.push_back(VertexType());
-		m.vert.back().ClearFlags();
+		// m.vert.back().ClearFlags(); // No more necessary, since 9/2005 flags are set to zero in the constuctor.
 	}
 
 	m.vn+=n;
