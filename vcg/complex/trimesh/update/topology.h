@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2004/10/20 07:33:10  cignoni
+removed FaceBorderFlags (already present in update/flags.h)
+
 Revision 1.14  2004/10/18 17:10:22  ganovelli
 added  ::FaceBorderFLags
 
@@ -115,7 +118,7 @@ void Set( FacePointer  pf, const int nz )
 	
 	v[0] = pf->V(nz);
 	v[1] = pf->V((nz+1)%3);
-	assert(v[0] != v[1]);
+	assert(v[0] != v[1]); // The face pointed by 'f' is Degenerate (two coincident vertexes)
 
 	if( v[0] > v[1] ) math::Swap(v[0],v[1]);
 	f    = pf;
