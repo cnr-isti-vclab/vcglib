@@ -25,6 +25,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/09/29 22:22:59  m_di_benedetto
+Added classes GetBox3Functor and GetBarycenter3Functor.
+
 Revision 1.1  2005/09/28 20:01:35  m_di_benedetto
 First Commit.
 
@@ -60,6 +63,8 @@ public:
 		return (t);
 	}
 };
+/// Helper class used to build in a easy way a functor that gives the bbox of a face
+/// used mainly in the aabbtree that require such a functor as a parameter 
 
 class GetBox3Functor {
 public:
@@ -78,16 +83,6 @@ public:
 		bar.Import(obj.Barycenter());
 	}
 };
-
-template <class SCALARTYPE>
-inline Point3<SCALARTYPE> Abs(const Point3<SCALARTYPE> & p) {
-	return (Point3<SCALARTYPE>(math::Abs(p[0]), math::Abs(p[1]), math::Abs(p[2])));
-}
-
-template <class SCALARTYPE>
-inline Point3<SCALARTYPE> LowClampToZero(const Point3<SCALARTYPE> & p) {
-	return (Point3<SCALARTYPE>(math::Max(p[0], (SCALARTYPE)0), math::Max(p[1], (SCALARTYPE)0), math::Max(p[2], (SCALARTYPE)0)));
-}
 
 } // end namespace vcg
 
