@@ -27,7 +27,7 @@ for more details.
 This term can be used for a shading effect, commonly known as ambient occlusion 
 shading, that is aimed to provide more faithful simple realtime rendering of rather complex meshes.
 
-In practice tather than considering the ambient lighting to exist uniformally throughout a scene,
+In practice rather than considering the ambient lighting to exist uniformally throughout a scene,
 this approach determines the ambient brightness of each part of a surface to be proportional to the extent
 to which the surface has "its outward view of its environment" free i.e. occluded, by other surfaces of the object. For example, the upper part of the David forehead is less exposed to its local environment than the nose and as a consequence it will be proportionally darker.
 
@@ -77,18 +77,31 @@ We simply substitute the constant ambient that is usually constant, with a per v
 
 
 Simple one line tutorial:
-
 -- load a ply mesh, press 'enter', wait, press preset keys from 1 to 4.
 
+Another tutorial:
+-- load a ply mesh, 
+-- press 'enter', wait taking care to not overlap existing window with other ones, ambient occlusion will be computed and stored per vertex
 
-Some useful hints:
+Press preset keys from 1 to 4.
+Now you can play with diffuse and ambient percentages, pressing d/D and a/A you increase/decrease 
+the percentage of the diffuse/ambient component of OpenGL lighting, 
+these percentages are shown at the bottom of the screen; when ambient==0 you have pure diffuse lighting.
+when diffuse==0 and ambient=100 you have a pure ambient occlusion lighting. 
+To simultaneously increase ambient and decrease diffuse use e/E keys.
+Note that neither these values nor their sum are clamped to 100%.
+The above keys do not change stored visibility values but just their mapping to opengl ambient.
+Smoothing and Enhancing on the other hand really changes these values.
 
+
+---- Reference ----
  Keys
 'esc' quit
 'enter' compute the sampling (sample are added so pressing the key twice is the same of using 2n sampling directions)
 ' ' add the current view to the sampling direction
 'S' save a ply with the currently computed color.
 's' smooth (average) the computed visibility among adjacent vertices
+'t' enhance the computed visibility among adjacent vertices (enhancement is done by (val + (val-avg)) )
 'v' toggle the rendering of directions used for the sampling.
 'V' Save a Snapshot of the current View.
 
@@ -106,13 +119,12 @@ Some useful hints:
 'c' Toggle per vertex coloring
 'f' Toggle false color visualization 
 
-
 'a'-'A' Increase/Decrease  Ambient Coefficient
 'd'-'D' Increase/Decrease  Diffuse Coefficient
 'e'-'E' Increase/Decrease  Balance between Diffuse and Ambient coefficient
 '1'..'4' Some preset values for the ambient/diffuse terms ranging from standard constant ambient to a strongly shaded coloring;
 
- options
+---- Command Line Options ----
 
 -n <number> set the number of sampling direction (default 64, but 100~500 should be better)
 -f flip normal of the surface
