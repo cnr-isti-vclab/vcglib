@@ -31,6 +31,9 @@ of Greg Turk and on the work of Claudio Rocchini
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/03/15 11:46:52  cignoni
+Cleaning of the automatic bbox caching support for ply files. First working version.
+
 Revision 1.7  2005/01/03 10:35:59  cignoni
 Improved the compatibility for ply format for faces having the list size (e.g. number of vertexes of a face) as a char instead of a uchar.
 Added a couple of new face descriptors, corrected a bug in error reporting function (and restructured) and translated a few comments.
@@ -903,12 +906,12 @@ int PlyElement::AddToRead(
 		const char * propname,
 		int	stotype1,
 		int memtype1,
-		int offset1,
+		size_t offset1,
 		int islist,
 		int alloclist,
 		int stotype2,
 		int memtype2,
-		int offset2
+		size_t offset2
 	)	// Vedi struttura PropDescriptor
 {
 	assert(propname);
@@ -1277,12 +1280,12 @@ int PlyFile::AddToRead(
 		const char * propname,
 		int	stotype1,
 		int memtype1,
-		int offset1,
+		size_t offset1,
 		int islist,
 		int alloclist,
 		int stotype2,
 		int memtype2,
-		int offset2
+		size_t offset2
 	)	// Vedi struttura PropDescriptor
 {
 	assert(elemname);

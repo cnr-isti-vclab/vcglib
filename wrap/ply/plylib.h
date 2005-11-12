@@ -30,6 +30,11 @@ of Greg Turk and on the work of Claudio Rocchini
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/01/03 10:35:59  cignoni
+Improved the compatibility for ply format for faces having the list size (e.g. number of vertexes of a face) as a char instead of a uchar.
+Added a couple of new face descriptors, corrected a bug in error reporting function (and restructured) and translated a few comments.
+Thanks to Patrick Min for the careful bug reporting
+
 Revision 1.2  2004/04/27 13:29:19  turini
 *** empty log message ***
 
@@ -113,12 +118,12 @@ public:
 	char * propname;			// Nome della propieta'
 	int	stotype1;				// Tipo dell'elemento su file    (se lista tipo degli elementi della lista)
 	int memtype1;				// Tipo dell'elemento in memoria (se lista tipo degli elementi della lista)
-	int offset1;				// Offset del valore in memoria
+	size_t offset1;				// Offset del valore in memoria
 	int islist;					// 1 se lista, 0 altrimenti
 	int alloclist;		  // 1 se alloca lista, 0 se preallocata
 	int stotype2;				// Tipo del numero di elementi della lista su file
 	int memtype2;				// Tipo del numero di elementi della lista in memoria
-	int offset2;				// Offset valore memoria
+	size_t offset2;				// Offset valore memoria
 
 	int format;					// duplicazione del formato
 	
@@ -205,12 +210,12 @@ public:
 		const char * propname,
 		int	stotype1,
 		int memtype1,
-		int offset1,
+		size_t offset1,
 		int islist,
 		int alloclist,
 		int stotype2,
 		int memtype2,
-		int offset2
+		size_t offset2
 	);	// Vedi struttura PropDescriptor
 
 	PlyProperty * FindProp( const char * name );
@@ -250,12 +255,12 @@ public:
 		const char * propname,
 		int	stotype1,
 		int memtype1,
-		int offset1,
+		size_t offset1,
 		int islist,
 		int alloclist,
 		int stotype2,
 		int memtype2,
-		int offset2
+		size_t offset2
 	);
 		// Come sopra ma con descrittore
 	inline int AddToRead( const PropDescriptor & p )
