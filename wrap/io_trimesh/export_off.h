@@ -51,8 +51,8 @@ namespace vcg {
 
 				static bool Save(SaveMeshType &m, const char * filename )
 				{
-					vcg::face::Pos<MyMesh::FaceType> he;
-					vcg::face::Pos<MyMesh::FaceType> hei;
+					vcg::face::Pos<SaveMeshType::FaceType> he;
+					vcg::face::Pos<SaveMeshType::FaceType> hei;
 					FILE * fpout = fopen(filename,"w");
 					if(fpout==NULL)	return false;
 
@@ -67,7 +67,7 @@ namespace vcg {
 					fprintf(fpout,"OFF\n");
 					fprintf(fpout,"%d %d ", m.vn, m.fn);
 
-					MyMesh::FaceIterator fi;
+					SaveMeshType::FaceIterator fi;
 					int count_e = 0;
 					int boundary_e = 0;
 					bool counted=false;
@@ -82,7 +82,7 @@ namespace vcg {
 						count_e +=3;								//assume that we have to increase the number of edges with three
 						for(int j=0; j<3; j++)
 						{
-							if (fi->IsBorder(j))			//If this edge is a border edge
+							if (face::IsBorder(*fi,j))			//If this edge is a border edge
 								boundary_e++;						//  then increase the number of boundary edges
 							else if (IsManifold(*fi,j))		//If this edge is manifold
 							{
@@ -144,7 +144,7 @@ namespace vcg {
 					}
 
 					FacePointer fp;
-					int vv[3];
+//					int vv[3];
 
 					int fcnt=0;
 					for(j=0,fi=m.face.begin();fi!=m.face.end();++fi)
