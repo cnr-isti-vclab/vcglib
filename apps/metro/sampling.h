@@ -24,6 +24,12 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2005/10/02 23:11:50  cignoni
+Changed the core for distance computation.
+Current version uses the lib flexible search structures.
+Now the comparison can be done exploiting a static uniform grid,
+a hashed grid or a hierarchy of AA box.
+
 Revision 1.18  2005/09/16 11:55:18  cignoni
 Partial adding of AABB trees, still not working...
 
@@ -284,11 +290,11 @@ float Sampling<MetroMesh>::AddSample(const Point3x &p )
 
     // compute distance between p_i and the mesh S2
     if(Flags & SamplingFlags::USE_AABB_TREE)
-      f=trimesh::GetClosest<MetroMesh,MetroMeshAABB>(S2, tS2, p, dist_upper_bound, dist, normf, bestq, ip);
+      f=trimesh::GetClosestFace<MetroMesh,MetroMeshAABB>(S2, tS2, p, dist_upper_bound, dist, normf, bestq, ip);
     if(Flags & SamplingFlags::USE_HASH_GRID)
-      f=trimesh::GetClosest<MetroMesh,MetroMeshHash>(S2, hS2, p, dist_upper_bound, dist, normf, bestq, ip);
+      f=trimesh::GetClosestFace<MetroMesh,MetroMeshHash>(S2, hS2, p, dist_upper_bound, dist, normf, bestq, ip);
     if(Flags & SamplingFlags::USE_STATIC_GRID)
-      f=trimesh::GetClosest<MetroMesh,MetroMeshGrid>(S2, gS2, p, dist_upper_bound, dist, normf, bestq, ip);
+      f=trimesh::GetClosestFace<MetroMesh,MetroMeshGrid>(S2, gS2, p, dist_upper_bound, dist, normf, bestq, ip);
     
     // update distance measures
     if(dist == dist_upper_bound)
