@@ -5,6 +5,7 @@
 #include <vcg/complex/trimesh/base.h>
 
 #include <vcg/complex/trimesh/update/topology.h>
+#include <vcg/complex/trimesh/update/flag.h>
 #include <vcg/complex/trimesh/update/normal.h>
 #include <vcg/complex/trimesh/refine.h>
 
