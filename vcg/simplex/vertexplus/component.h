@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2005/11/01 18:17:52  cignoni
+Added an assert(0) in all the accesses to empty components
+
 Revision 1.10  2005/10/15 16:24:10  ganovelli
 Working release (compilata solo su MSVC), component_occ è migrato da component_opt
 
@@ -156,7 +159,7 @@ public:
   /// Return the vector of Flags(), senza effettuare controlli sui bit
   int &Flags() { static int dummyflags(0);  assert(0); return dummyflags; }
   const int Flags() const { return 0; }
-  static bool HasFlag()   { return false; }
+  static bool HasFlags()   { return false; }
 
 };
 
