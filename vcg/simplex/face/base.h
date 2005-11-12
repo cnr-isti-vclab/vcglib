@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.31  2005/11/01 18:16:36  cignoni
+Added intialization of _flags to zero in the default constructor of face
+
 Revision 1.30  2005/10/13 09:25:43  cignoni
 Added cFFp and cVFp const member functions
 
@@ -658,7 +661,8 @@ public:
 		return fs[j];
 #else
 		assert(0);
-		return (FFTYPE *)this;
+    static FFTYPE * DummyVal;
+		return DummyVal;
 #endif
 	}
   inline const FFTYPE * cVFp( const int j ) const {return VFp(j);}
