@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/09/28 10:30:14  rita_borgo
+*** empty log message ***
+
 Revision 1.6  2005/01/26 22:44:51  cignoni
 Resolved scoping of constant of OFF codes
 
@@ -116,7 +119,7 @@ namespace vcg
 					TokenizeNextLine(stream, tokens);
 					if (tokens[tokens.size()-1].rfind("OFF")!= std::basic_string<char>::npos)
 					{
-						for (int u=tokens.size()-2; u>=0; u--)
+						for (int u=int(tokens.size())-2; u>=0; u--)
 						{
 							std::string header = tokens[u];
 							if (header.compare("C")==0)
@@ -168,7 +171,7 @@ namespace vcg
 						}
 						else
 						{
-							int k = tokens.size();
+							size_t k = tokens.size();
 							for (unsigned int j=0; j<3; j++)
 							{
 								(*v_iter).P()[j] = (ScalarType) atof(tokens[k].c_str());
@@ -210,7 +213,7 @@ namespace vcg
 							else
 							{
 								TokenizeNextLine(stream, tokens);
-								int k = tokens.size();
+								size_t k = tokens.size();
 								for (unsigned int j=0; j<3; j++)
 								{
 									mesh.face[f].V(j) = &(mesh.vert[ atoi(tokens[j].c_str()) ]);
