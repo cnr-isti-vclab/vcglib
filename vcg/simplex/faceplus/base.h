@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/10/14 13:26:57  cignoni
+First Really Working version
+
 Revision 1.2  2004/04/03 13:33:55  cignoni
 Missing include
 
@@ -219,6 +222,8 @@ public:
 	void SetB(int i)		{Flags() |=(BORDER0<<i);}
 	/// This funcion execute the inverse operation of SetS()
 	void ClearB(int i)	{Flags() &= (~(BORDER0<<i));}
+	/// Un-select a vertex
+	void ClearS()	{Flags() &= ~SELECTED;}
 	
 ///  Return the first bit that is not still used
 static int &LastBitFlag()
@@ -250,7 +255,14 @@ static inline bool DeleteUserBit(int bitval)
 	/// This function clear the given user bit 
 	void ClearUserBit(int userBit){Flags() &= (~userBit);}
 
-          };
+  template<class BoxType>
+  void GetBBox( BoxType & bb ) const
+  {
+	  bb.Set(P(0));
+	  bb.Add(P(1));
+	  bb.Add(P(2));
+  }
+ };
 
 
 template < typename T=int>
