@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.25  2005/10/14 13:25:50  cignoni
+Added cVFp member
+
 Revision 1.24  2005/10/06 14:26:39  pietroni
 added getBBox method
 
@@ -67,6 +70,9 @@ Revision 1.12  2004/05/10 13:31:13  ganovelli
 function for edge adjacency added
 
 $Log: not supported by cvs2svn $
+Revision 1.25  2005/10/14 13:25:50  cignoni
+Added cVFp member
+
 Revision 1.24  2005/10/06 14:26:39  pietroni
 added getBBox method
 
@@ -808,6 +814,10 @@ Reflection is a mechanism making it possible to investigate yourself. Reflection
  **/
  //@{
 
+static bool HasFlags()  { // Note the plural because ONE vertex has many Flags (but just one color, normal, mark, quality ecc.)
+  return true;
+}
+
 static bool HasNormal()  { 
 #ifdef __VCGLIB_VERTEX_VN 
   return true;
@@ -932,9 +942,9 @@ inline void Convert( VERT_TYPE &v )
 		return _p < ve._p;
 		}
 	inline VERTEX_TYPE() {
-#ifdef _DEBUG 
+//#ifdef _DEBUG 
 		_flags=0;
-#endif
+//#endif
   };
 
 };
