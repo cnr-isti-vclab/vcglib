@@ -6,7 +6,7 @@
    Visual Computing Lab  http://vcg.isti.cnr.it                    /\/|      
    ISTI - Italian National Research Council                           |      
                                                                       \      
-   Metro 4.05 04/05/2005
+   TriDecimator 1.00 2/10/2005
    All rights reserved.                                                      
    
 
@@ -24,59 +24,53 @@ for more details.
 
 --- Synopsis ---
 
-Metro is a tool designed to evaluate the difference between two triangular meshes. 
-Metro adopts an approximated approach based on surface sampling and point-to-surface distance computation. 
-Please, when using this tool, cite the following reference:
+tridecimator fileIn fileOut face_num [opt]\
+Where opt can be:\
+    -e# QuadricError threshold  (range [0,inf) default inf)
+    -b# Boundary Weight (default .5)
+    -q# Quality threshold (range [0.0, 0.866],  default .3 )
+    -n# Normal threshold  (degree range [0,180] default 90)
+    -E# Minimal admitted quadric value (default 1e-15, must be >0)
+    -Q[y|n]  Use or not Quality Threshold (default yes)
+    -N[y|n]  Use or not Normal Threshold (default no)
+    -A[y|n]  Use or not Area Weighted Quadrics (default yes)
+    -O[y|n]  Use or not vertex optimal placement (default yes)
+    -S[y|n]  Use or not Scale Independent quadric measure(default yes) 
+    -B[y|n]  Preserve or not mesh boundary (default no)
+    -T[y|n]  Preserve or not Topology (default no)
+    -H[y|n]  Use or not Safe Heap Update (default no)
+    -P       Before simplification, remove duplicate & unreferenced vertices
+    
+
+Supported formats: PLY, OFF, STL
+
+-- Some technical notes -- 
+
+This simplification tool employ a quadric error based edge collapse iterative approach. 
+Each possible collapse is scored taking into account
+- its quadric error
+- its quadric boundary error
+- the normal variation caused by the collapse itself
+- the future quality (aspect ratio) of the triangles involved in the collapse
+
+The simplification can ends when the desired number of triangles has been reached.
+
+The 'Safe Heap Update' change the set of edges re-inserted in the heap
+after a collapse resulting in a vertex v; this option put back in the
+heap not only incident in the vbut all the edges of the triangles incident
+in v. It slows down a lot.
+
+The 'Scale Independent quadric' is useful when you want simplify 
+two different meshes at the same 'error'; otherwise the quadric 
+error used in the heap is somewhat normalized and independent 
+of the size of the mesh.
+
+The Normal threshold avoid to make large changes in variation of the normal
+of the surfaces, but on the other hand it prevent the removal of small 'folded'
+triangles that can be already present. Therefore in most cases is not very useful.
+
+Cleaning the mesh is mandatory for some input format like STL that always
+duplicates all the vertices.
 
 
-P. Cignoni, C. Rocchini and R. Scopigno
-"Metro: measuring error on simplified surfaces"
-Computer Graphics Forum, Blackwell Publishers, vol. 17(2), June 1998, pp 167-174
-Available at http://vcg.sf.net
 
-
-
-You can find some sample mesh to test in the 'Metro Sample dataset' package downloadable from sourceforge.
-
-For any question about this software please contact:
-Paolo Cignoni ( p.cignoni@isti.cnr.it )
-
---- General Info ---
-
-Metro is a tool designed to evaluate the difference between two triangular meshes. 
-Metro adopts an approximated approach based on surface sampling and point-to-surface distance computation. 
-Three different surface sampling methods are implemented:
-
-    *   Montecarlo sampling (pick k random samples in the interior of each face)
-    *   Subdivision sampling (recursively subdivide each face along the longest edge and choose the sample in the center of each cell)
-    *   Similar Triangles sampling (subdivide each face F in k polygons similar to F and sample the face in correspondence with the vertices of these polygons, internal to F)
-
-Note that the three methods described above are used to sample only the interior of each face. 
-A different scheme is used to sample vertices and edges: vertices are sampled in the straightforward manner, 
-while edges are sampled by uniformly interleaving samples along each edge.
-
---- Basic usage ---
-
-Metro is a command-line tool which allows the user to select among different sampling schemes. 
-A list of the command-line parameters accepted by the tool is shown in the following.
-
-Usage: Metro file1 file2 [opts]
-
-where "file1" and "file2" are the input meshes in PLY, OFF or STL format, and opts can be:
-
-   -v       disable vertex sampling
-   -e       disable edge sampling
-   -f       disable face sampling
-   -u       does not ignore unreferred vertices and sample also unreferenced vertices 
-            (useful for sampling point clouds against meshes)
-   -sx      set the face sampling mode
-            where x can be:
-             -S0  montecarlo sampling
-             -S1  subdivision sampling
-             -S2  similar triangles sampling (Default)
-   -n#      set the required number of samples (overrides -a)
-   -a#      set the required number of samples per area unit (overrides -n)
-   -c       save computed error as vertex colour and quality in two ply files
-   -C # #   Set the min/max values used for color mapping (useful for taking snapshot with coherent color ramp)
-   -L       Remove duplicated and unreferenced vertices before processing to avoid 
-   -H       write files with histograms of error distribution
