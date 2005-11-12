@@ -83,3 +83,13 @@ where "file1" and "file2" are the input meshes in PLY, OFF or STL format, and op
   -G         Use a static Uniform Grid as Search Structure (default)
   -A         Use an Axis Aligned Bounding Box Tree as Search Structure
   -H         Use an Hashed Uniform Grid as Search Structure
+  
+  
+The -C option is useful for creating a set of meshes with a coherent coloring scheme. 
+It sets how the errors are mapped into color according to the following formula, 
+let e be the error and ColorRamp be a R->RGB function mapping 0..1 values 
+into a smooth RedYellowGreenCyanBlue ramp:
+
+			e=Clamp(e,min,max);
+			VertexColor = ColorRamp( (e-min)/(max-min) );
+
