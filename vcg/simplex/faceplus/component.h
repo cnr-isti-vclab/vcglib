@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/10/14 15:07:58  cignoni
+First Really Working version
+
 
 ****************************************************************************/
 #ifndef __VCG_FACE_PLUS_COMPONENT
@@ -301,7 +304,8 @@ public:
   typename T::FacePointer       &FFp(const int j)        { assert(j>=0 && j<3);  return _ffp[j]; }
   typename T::FacePointer const  FFp(const int j) const  { assert(j>=0 && j<3);  return _ffp[j]; }
   typename T::FacePointer const cFFp(const int j) const  { assert(j>=0 && j<3);  return _ffp[j]; }
-  char &FFi(const int j) {return _ffi[j]; }
+  char        &FFi(const int j)       { return _ffi[j]; }
+  const char &cFFi(const int j) const { return _ffi[j]; }
   static bool HasFFAdjacency()      {   return true; }
   static bool HasFFAdjacencyOpt()   {   return false; }
 
