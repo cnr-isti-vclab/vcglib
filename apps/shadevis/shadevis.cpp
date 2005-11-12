@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/01/03 13:59:54  cignoni
+Resolved min/max macro conflict
+
 Revision 1.8  2004/09/30 00:57:42  ponchio
 Reference to temporary fixed and indented.
 
@@ -150,7 +153,8 @@ void glutPrintf(int x, int y, const char * f, ... )
 
   int n = vsprintf(buf,f,marker);
   va_end( marker );              
-
+  glPushAttrib(GL_ENABLE_BIT);
+  glDisable(GL_LIGHTING);
   glColor3f(0,0,0);
   glRasterPos2f(x, y);
   len = (int) strlen(buf);
@@ -161,7 +165,7 @@ void glutPrintf(int x, int y, const char * f, ... )
   glPopMatrix();
   glMatrixMode (GL_MODELVIEW);    
   glPopMatrix();
-  
+  glPopAttrib();  
 }
 
 // prototypes
@@ -199,15 +203,32 @@ void DrawLightVector()
 
 void Draw(AMesh &mm)
 {
-  AMesh::FaceIterator fi;
-  glBegin(GL_TRIANGLES);
-  for(fi=mm.face.begin();fi!=mm.face.end();++fi)
-    {
-      glNormal((*fi).V(0)->N()); if(ColorFlag) glColor((*fi).V(0)->C());  glVertex((*fi).V(0)->P());
-      glNormal((*fi).V(1)->N()); if(ColorFlag) glColor((*fi).V(1)->C());  glVertex((*fi).V(1)->P());
-      glNormal((*fi).V(2)->N()); if(ColorFlag) glColor((*fi).V(2)->C());  glVertex((*fi).V(2)->P());
-    }
-  glEnd();
+  if(mm.face.empty())
+  { 
+    glPushAttrib(GL_ENABLE_BIT);
+    glDisable(GL_LIGHTING);
+    AMesh::VertexIterator vi;
+    glBegin(GL_POINTS);
+    for(vi=mm.vert.begin();vi!=mm.vert.end();++vi)
+      {
+        if(ColorFlag) glColor((*vi).C()); 
+        glVertex((*vi).P());
+      }
+    glEnd();
+    glPopAttrib();
+  }
+  else
+  {
+    AMesh::FaceIterator fi;
+    glBegin(GL_TRIANGLES);
+    for(fi=mm.face.begin();fi!=mm.face.end();++fi)
+      {
+        glNormal((*fi).V(0)->N()); if(ColorFlag) glColor((*fi).V(0)->C());  glVertex((*fi).V(0)->P());
+        glNormal((*fi).V(1)->N()); if(ColorFlag) glColor((*fi).V(1)->C());  glVertex((*fi).V(1)->P());
+        glNormal((*fi).V(2)->N()); if(ColorFlag) glColor((*fi).V(2)->C());  glVertex((*fi).V(2)->P());
+      }
+    glEnd();
+  }
 }
 
 AMesh m;
@@ -236,8 +257,8 @@ void  ViewDisplay (void)
   glPushMatrix();
   QL.Apply();
   glutPrintf(5,5,"Diffuse %04.2f   Ambient %04.2f "
-	     "   LowPass %04.2f    HiPass %04.2f    Gamma %04.2f ",
-	     diff,ambi,lopass,hipass,gamma_correction);
+    "   LowPass %04.2f    HiPass %04.2f    Gamma %04.2f    rgb = %03i:%03i:%03i",
+	     diff,ambi,lopass,hipass,gamma_correction,BaseColor[0],BaseColor[1],BaseColor[2]);
 
   GLfloat light_position0[] = {0.0, 10.0, 300.0, 0.0};
   glLightfv(GL_LIGHT0, GL_POSITION, light_position0);
@@ -246,7 +267,7 @@ void  ViewDisplay (void)
   if(Q==&QL) DrawLightVector();	
   QL.GetView();
   QV.GetView();
-  QV.Apply();
+  QV.Apply(false);
   if(ShowDirFlag) DrawViewVector();
 
   float d = 2.0/m.bbox.Diag();
@@ -350,24 +371,12 @@ void ViewKey(unsigned char key, int , int )
     Vis.ComputeSingle(dir,ViewVector,cb); 
     UpdateVis(); 
   } break;
-  case 'r' : BaseColor[0]=min(255,BaseColor[0]+2); 
-    printf("BaseColor %3i %3i %3i \n",BaseColor[0],BaseColor[1],BaseColor[2]); 
-    break;
-  case 'R' : BaseColor[0]=max(  0,BaseColor[0]-2); 
-    printf("BaseColor %3i %3i %3i \n",BaseColor[0],BaseColor[1],BaseColor[2]); 
-    break;
-  case 'g' : BaseColor[1]=min(255,BaseColor[1]+2); 
-    printf("BaseColor %3i %3i %3i \n",BaseColor[0],BaseColor[1],BaseColor[2]); 
-    break;
-  case 'G' : BaseColor[1]=max(  0,BaseColor[1]-2); 
-    printf("BaseColor %3i %3i %3i \n",BaseColor[0],BaseColor[1],BaseColor[2]); 
-    break;
-  case 'b' : BaseColor[2]=min(255,BaseColor[2]+2); 
-    printf("BaseColor %3i %3i %3i \n",BaseColor[0],BaseColor[1],BaseColor[2]); 
-    break;
-  case 'B' : BaseColor[2]=max(  0,BaseColor[2]-2); 
-    printf("BaseColor %3i %3i %3i \n",BaseColor[0],BaseColor[1],BaseColor[2]); 
-    break;
+  case 'r' : BaseColor[0]=min(255,BaseColor[0]+2);     break;
+  case 'R' : BaseColor[0]=max(  0,BaseColor[0]-2);     break;
+  case 'g' : BaseColor[1]=min(255,BaseColor[1]+2);     break;
+  case 'G' : BaseColor[1]=max(  0,BaseColor[1]-2);     break;
+  case 'b' : BaseColor[2]=min(255,BaseColor[2]+2);     break;
+  case 'B' : BaseColor[2]=max(  0,BaseColor[2]-2);     break;
     
   case 'v' : Toggle(ShowDirFlag); break;
   case 'V' : 
@@ -380,6 +389,9 @@ void ViewKey(unsigned char key, int , int )
     }
   case 's' :
     Vis.SmoothVisibility();
+    UpdateVis(); break;
+  case 't' :
+    Vis.SmoothVisibility(true);
     UpdateVis(); break;
   case 'S' :
     { 
