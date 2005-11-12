@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2005/10/14 15:09:56  cignoni
+Added LoadMask without plyinfo and some comment on the mask usage
+
 Revision 1.15  2005/06/10 15:05:00  cignoni
 Made inline PlyType specializations
 
@@ -339,7 +342,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 
   // init defaults
 	VertexType tv;
-	tv.UberFlags() = 0;
+	//tv.ClearFlags();
 	if( VertexType::HasQuality() ) tv.Q()=1.0;
 	if( VertexType::HasColor() )     tv.C()=Color4b(Color4b::White);
 	
@@ -389,7 +392,8 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 						{ pi.status = PlyInfo::E_NO_FACE;   return pi.status; }
 
 		// Descrittori facoltativi dei flags
-	if( pf.AddToRead(VertDesc(3))!=-1 )
+	
+  if(VertexType::HasFlags() && (pf.AddToRead(VertDesc(3))!=-1 ) )
 		pi.mask |= ply::PLYMask::PM_VERTFLAGS;
 
   if( VertexType::HasQuality() )
@@ -551,7 +555,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
       for(j=0;j<n;++j)
 			{
 				if(pi.cb && (j%1000)==0) pi.cb(j*50/n,"Vertex Loading");
-				(*vi).UberFlags()=0;
+				//(*vi).UberFlags()=0; // No more necessary, since 9/2005 flags are set to zero in the constuctor.
 			  if( pf.Read( (void *)&(va) )==-1 )
 				{
 					pi.status = PlyInfo::E_SHORTFILE;
@@ -606,19 +610,12 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 					return pi.status;
 				}
 				if(fa.size!=3)
-				{
-					pi.status = PlyInfo::E_NO_3VERTINFACE;
-					return pi.status;
-				}
-
-				for(k=0;k<3;++k)
-				{
-					if( fa.v[k]<0 || fa.v[k]>=m.vn )
-					{
-						pi.status = PlyInfo::E_BAD_VERT_INDEX;
-						return pi.status;
-					}
-					(*fi).V(k) = index[ fa.v[k] ];
+				{ // Non triangular face are manageable ONLY if there are no Per Wedge attributes
+          if( ( pi.mask & ply::PLYMask::PM_WEDGCOLOR ) || ( pi.mask & ply::PLYMask::PM_WEDGTEXCOORD ) )
+          { 
+					  pi.status = PlyInfo::E_NO_3VERTINFACE;
+					  return pi.status;
+          }
 				}
 
 				if( pi.mask & ply::PLYMask::PM_FACEFLAGS )
@@ -667,18 +664,57 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 						}
 					}
 				}
+        /// Now the temporary struct 'fa' is ready to be copied into the real face '*fi'
+        /// This loop 
+				for(k=0;k<3;++k)
+				{
+					if( fa.v[k]<0 || fa.v[k]>=m.vn )
+					{
+						pi.status = PlyInfo::E_BAD_VERT_INDEX;
+						return pi.status;
+					}
+					(*fi).V(k) = index[ fa.v[k] ];
+				}
 
 				for(k=0;k<pi.fdn;k++)	
 					memcpy((char *)(&(*fi)) + pi.FaceData[k].offset1,
 								 (char *)(&fa) + FPV[k].offset1, 
 									FPV[k].memtypesize());
-      ++fi;
+        ++fi;
+    
+        // Non Triangular Faces Loop
+        // It performs a simple fan triangulation.
+        if(fa.size>3)
+        {
+        int curpos=int(fi-m.face.begin());
+          Allocator<OpenMeshType>::AddFaces(m,fa.size-3);
+				  fi=m.face.begin()+curpos;
+        }     
+        for(int qq=0;qq<fa.size-3;++qq)
+        {
+          (*fi).V(0) = index[ fa.v[0] ];
+            for(k=1;k<3;++k)
+				    {
+					    if( fa.v[2+qq]<0 || fa.v[2+qq]>=m.vn )
+					    {
+						    pi.status = PlyInfo::E_BAD_VERT_INDEX;
+						    return pi.status;
+					    }
+					    (*fi).V(k) = index[ fa.v[1+qq+k] ];
+				    }
+  
+				for(k=0;k<pi.fdn;k++)	
+					memcpy((char *)(&(*fi)) + pi.FaceData[k].offset1,
+								 (char *)(&fa) + FPV[k].offset1, FPV[k].memtypesize());
+        ++fi;
+       }
+
       }
 		}else if( !strcmp( pf.ElemName(i),"tristrips") )//////////////////// LETTURA TRISTRIP DI STANFORD
 		{
 			int j;
 			pf.SetCurElement(i);
-			int numvert_tmp = m.vert.size();
+			int numvert_tmp = (int)m.vert.size();
 			for(j=0;j<n;++j)
 			{
 				int k;
