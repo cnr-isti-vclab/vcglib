@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/09/28 09:45:17  cignoni
+Added MapFalseColor
+
 Revision 1.7  2004/09/16 14:23:57  ponchio
 fixed gcc template compatibility issues.
 
@@ -153,7 +156,7 @@ template <class MESH_TYPE, int MAXVIS=2048> class VisShader
 	void AddPixelCount(std::vector<float> &_VV, const std::vector<int> &PixSeen)
 		{
 		assert(_VV.size()==PixSeen.size());
-			for(int i=0;i<PixSeen.size();++i)
+			for(unsigned int i=0;i<PixSeen.size();++i)
 				if(PixSeen[i]>0) _VV[i]+= 1;
 		}
  
@@ -171,7 +174,9 @@ Funzioni ad alto livello che computano le Visibility Mask per varie distribuzion
 
 *******************************/
 
-// Funzione Generica chiamata da tutte le seguenti 
+// Funzione Generica 
+// Calcola l'occlusion in base all'insieme VN di direzioni.
+
 void Compute( CallBack *cb)
 {
   //cb(buf.format("Start to compute %i dir\n",VN.size()));
@@ -180,7 +185,7 @@ void Compute( CallBack *cb)
 	VV.resize(m.vert.size());
   std::vector<int> PixSeen(VV.size(),0);
 	int TotRay=0,HitRay=0;
-	for(int i=0;i<VN.size();++i)
+	for(unsigned int i=0;i<VN.size();++i)
 		{
       int t0=clock(); 
 			fill(PixSeen.begin(),PixSeen.end(),0);
@@ -191,8 +196,9 @@ void Compute( CallBack *cb)
       TotRay+=VV.size();
       printf("%3i/%i : %i msec -- TotRays %i, HitRays %i, ray/sec %3.1fk \n ",i,VN.size(),t1-t0,TotRay,HitRay,float(TotRay)/(clock()-t00));
 		}
-	
-  RestoreGL();
+  
+  printf("Tot Time %i msec TotRays %i, HitRays %i, ray/sec %3.1fk \n ",clock()-t00,TotRay,HitRay,float(TotRay)/(clock()-t00));
+	RestoreGL();
 }
 
 void ComputeHalf(int nn, Point3x &dir, CallBack *cb)
@@ -373,32 +379,40 @@ template <class MESH_TYPE> class VertexVisShader : public VisShader<MESH_TYPE>
 	}
 
 	void Init()  {		VV.resize(m.vert.size()); }
-//	Vis::VisMode Id() {return Vis::VMPerVert;};
 	void Compute(int nn);
-	
-	void AddPixelCount(std::vector<float> &_VV, std::vector<int> &PixSeen, std::vector<int> &PixNotSeen )
-		{
-			for(int i=0;i<m.vert.size();++i)
-				_VV[i]+= float(PixSeen[i])/float(PixSeen[i]-PixNotSeen[i]);
-		}
 
-void DrawFill(MESH_TYPE &mm)
+void DrawFill (MESH_TYPE &mm)
 {
-  glBegin(GL_TRIANGLES);
-  FaceIterator fi;
-  for(fi=mm.face.begin();fi!=mm.face.end();++fi)
-  {
-    glVertex((*fi).V(0)->P());
-    glVertex((*fi).V(1)->P());
-    glVertex((*fi).V(2)->P());
+  static GLuint dl=0;
+  if(mm.face.empty())
+  { AMesh::VertexIterator vi;
+    glBegin(GL_POINTS);
+    for(vi=mm.vert.begin();vi!=mm.vert.end();++vi)
+      {
+        if(ColorFlag) glColor((*vi).C()); 
+        glVertex((*vi).P());
+      }
+    glEnd();
   }
-  glEnd();
+  else
+  {
+    glBegin(GL_TRIANGLES);
+    FaceIterator fi;
+    for(fi=mm.face.begin();fi!=mm.face.end();++fi)
+    {
+      glVertex((*fi).V(0)->P());
+      glVertex((*fi).V(1)->P());
+      glVertex((*fi).V(2)->P());
+    }
+    glEnd();
+  }
 }
 
 /***************************************************************************/
 
 //VertexVisibility
 // Funzione Principale restituisce per ogni entita' quanti px si vedono o no.
+
 int GLAccumPixel(	std::vector<int> &PixSeen)
 {
 	SimplePic<float> snapZ;
@@ -441,7 +455,7 @@ int GLAccumPixel(	std::vector<int> &PixSeen)
 	glGetIntegerv(GL_VIEWPORT,VP);
 	double tx,ty,tz;
   
-	for(int i=0;i<m.vert.size();++i)
+	for(unsigned int i=0;i<m.vert.size();++i)
 	{
 		gluProject(m.vert[i].P()[0],m.vert[i].P()[1],m.vert[i].P()[2],
 			MM,MP,VP,
@@ -469,7 +483,7 @@ int GLAccumPixel(	std::vector<int> &PixSeen)
 return cnt;
 }
 
-void SmoothVisibility()
+void SmoothVisibility(bool Enhance=false)
 {
 	FaceIterator fi;
 	std::vector<float> VV2;
@@ -482,9 +496,14 @@ void SmoothVisibility()
 			++VC[(*fi).V(i)-&*m.vert.begin()];
 		}
 
-	for(unsigned int i=0;i<VV2.size();++i)
-		VV[i]=VV2[i]/VC[i];
+ if(!Enhance)
+	  for(unsigned int i=0;i<VV2.size();++i)
+    		VV[i]=VV2[i]/VC[i];
+ else
+	  for(unsigned int i=0;i<VV2.size();++i)
+		    VV[i]=VV[i]+ (VV[i]-VV2[i]/VC[i])*.5;
 }
+
 
 void MapFalseColor()
 {
@@ -492,7 +511,6 @@ void MapFalseColor()
 	float maxv=*max_element(VV.begin(),VV.end());
 	printf("Visibility Range %f %f\n", minv,maxv);
   MapFalseColor(minv, maxv);
-
 }
 
 void MapFalseColor(float minv, float maxv)
