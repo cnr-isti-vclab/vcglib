@@ -42,8 +42,9 @@ class CMeshOcf    : public vcg::tri::TriMesh< vector<CVertexOcf>, face::vector_o
 class CMesh       : public vcg::tri::TriMesh< vector<CVertex   >,           vector<CFace   > > {};
 
 // OCC Optional Component Compact
-class CVertexOcc   : public VertexSimp1< CVertexOcc,CEdge,vert::Coord3f,vert::Normal3f >{};
-class CFaceOcc     : public FaceSimp2<CVertexOcc,CEdge, CFaceOcc,face::VertexRef,vcg::face::Normal3fOcc,face::FFAdjOcc,face::Flag> {};
+class CFaceOcc;
+class CVertexOcc   : public VertexSimp2< CVertexOcc,CEdge, CFaceOcc,vert::Coord3f,vert::Normal3f >{};
+class CFaceOcc     : public FaceSimp2<  CVertexOcc, CEdge, CFaceOcc,face::VertexRef,vcg::face::Normal3fOcc,face::FFAdjOcc,face::Flag> {};
 class CMeshOcc     : public vcg::tri::TriMesh< vector_occ<CVertexOcc   >, vector_occ<CFaceOcc  > > {};
 
 
@@ -56,8 +57,7 @@ int main(int , char **)
 
   tri::Tetrahedron(cm);
   tri::Tetrahedron(cmo);
- 	cmoc.face.EnableAttribute<CFaceOcc::FFAdjType>();  
-	tri::Tetrahedron(cmoc);
+ 	tri::Tetrahedron(cmoc);
  
   printf("Generated mesh has %i vertices and %i triangular faces\n",cm.vn,cm.fn);
   
@@ -65,6 +65,7 @@ int main(int , char **)
   /// The normal of a vertex v is the weigthed average of the normals of the faces incident on v.
   /// normals are not normalized
 
+	cmoc.face.EnableAttribute<CFaceOcc::FFAdjType>();  
 	cmo.face.EnableFFAdjacency();
 
 
