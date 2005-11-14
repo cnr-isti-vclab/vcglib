@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2005/10/13 15:45:23  ponchio
+Changed a Zero in SetZero in WeightedCrossCovariance() (again)
+
 Revision 1.10  2005/10/05 17:06:12  pietroni
 corrected sintax error on singular value decomposition
 
@@ -375,7 +378,10 @@ public:
 					 a[2]*(a[3]*a[7]-a[4]*a[6]) ;
 	}
 
-	Matrix33 & Invert()
+  // Warning, this Inversion code can be HIGHLY NUMERICALLY UNSTABLE!
+  // In most case you are advised to use the Invert() method based on SVD decomposition.
+
+	Matrix33 & FastInvert()
 	{
 			// Maple produsse:
 		S t4  = a[0]*a[4];
