@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2005/11/12 18:35:49  cignoni
+Changed HasFlag -> HasFlags
+
 Revision 1.11  2005/11/01 18:17:52  cignoni
 Added an assert(0) in all the accesses to empty components
 
@@ -128,7 +131,27 @@ template <class T> class Normal3s: public Normal<vcg::Point3s, T> {};
 template <class T> class Normal3f: public Normal<vcg::Point3f, T> {};
 template <class T> class Normal3d: public Normal<vcg::Point3d, T> {};
 
-/*-------------------------- NORMAL ----------------------------------------*/ 
+
+/*-------------------------- INCREMENTAL MARK  ----------------------------------------*/ 
+
+template <class T> class EmptyMark: public T {
+public:
+  static bool HasMark()   { return false; }
+  static bool HasMarkOpt()   { return false; }
+};
+template <class T> class Mark: public T {
+public:
+  static bool HasMark()      { return true; }
+  static bool HasMarkOpt()   { return true; }
+  inline void InitIMark()    { _imark = 0; }
+  inline int & IMark()       { return _imark;}
+  inline const int & IMark() const {return _imark;}
+    
+ private:
+	int _imark;
+};
+
+/*-------------------------- TEXTURE ----------------------------------------*/ 
 
 template <class TT> class EmptyTexture: public TT {
 public:
