@@ -24,6 +24,10 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/11/14 09:28:18  cignoni
+changed access to face functions (border, area)
+removed some typecast warnings
+
 Revision 1.8  2005/10/11 16:03:40  rita_borgo
 Added new functions belonging to triMeshInfo
 Started the Self-Intersection routine
@@ -262,6 +266,8 @@ namespace vcg {
 				bool counted =false;
 				for(fi=m.face.begin();fi!=m.face.end();fi++)
 				{
+					if(!((*fi).IsD()))
+					{
 					(*fi).SetS();
 					count_e +=3; //assume that we have to increase the number of edges with three
 					for(int j=0; j<3; j++)
@@ -296,6 +302,7 @@ namespace vcg {
 								counted=false;
 							}
 						}
+					}
 					}
 				}
 			}
@@ -392,6 +399,8 @@ namespace vcg {
 				MeshType::FaceType *l;
 				for(fi=m.face.begin();fi!=m.face.end();++fi)
 				{
+					if(!((*fi).IsD()))
+					{
 					if (!(*fi).IsS())
 					{
 						(*fi).SetS();
@@ -418,6 +427,7 @@ namespace vcg {
 						}
 						Compindex++;
 					}
+					}
 				}
 				return Compindex;
 			}
@@ -430,7 +440,11 @@ namespace vcg {
 
 				for(fi=m.face.begin(); fi!=m.face.end();++fi)
 					if(Area<FaceType>(*fi) == 0)
+					{
 						count_fd++;
+						fi->SetD();
+						m.fn--;
+					}
 				return count_fd;
 			}
       /**
@@ -618,6 +632,7 @@ The polyhedral formula corresponds to the special case g==0.
 				int nelem;
 				bbox = m.bbox;
 				double bdiag = bbox.Diag();
+
 				
 				FaceType   *f=0;
 				Point3x             normf, bestq, ip,p;
@@ -626,7 +641,7 @@ The polyhedral formula corresponds to the special case g==0.
 				
 
 				std::vector<FaceType*> ret;
-				std::vector<FaceType*> inCell;
+				std::vector<FaceType*> inBox;
 				gM.Set<vector<FaceType>::iterator>(m.face.begin(),m.face.end());
 
 				for(fi=m.face.begin();fi!=m.face.end();++fi)
@@ -635,16 +650,17 @@ The polyhedral formula corresponds to the special case g==0.
 		//			f = vcg::trimesh::GetClosestFace<MeshType,TriMeshGrid>(m, gM, p, bdiag, bdiag, normf, bestq, ip);
 				// fill the cell
 /*....*/
-					nelem = inCell.size();
+
+					nelem = inBox.size();
 					if (nelem>=2)// in a cell
 					{
 						//test combinations of elements
 						for (int i=0;i<nelem-1;i++)
 							for (int j=i+1;j<nelem;j++)
-							if ((!inCell[i]->IsD())&&(!inCell[j]->IsD())&&(TestIntersection(inCell[i],inCell[j])))
+							if ((!inBox[i]->IsD())&&(!inBox[j]->IsD())&&(TestIntersection(inBox[i],inBox[j])))
 							{
-								ret.push_back(inCell[i]);
-								ret.push_back(inCell[j]);
+								ret.push_back(inBox[i]);
+								ret.push_back(inBox[j]);
 							}
 					}
 				}	
