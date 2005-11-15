@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2005/10/03 16:00:08  rita_borgo
+Minor changes
+
 Revision 1.14  2005/03/18 16:37:46  fiorin
 Minor changes
 
@@ -266,14 +269,14 @@ ScalarType Volume()
 	    B = ( (*fi).P( k     ) - (*fi).P(j) ) ^
 	        ( (*fi).P((k+1)%3) - (*fi).P(j) ) ;
 	    B.Normalize();
-	    N = T ^ B;
+			N = T ^ B;
      
 	    CoordType pj = (*fi).P(j);
 	    CoordType pk = (*fi).P(k);
    
 
-	    V +=  (pj*  T )*(pj*N)*(pj*B);
-	    V +=  (pk*(-T))*(pk*N)*(pk*B);
+	    V +=  (pk*  T )*(pk*N)*(pk*B);
+	    V +=  (pj*(-T))*(pj*N)*(pj*B);
      }
   }
 	return V/6.0;
