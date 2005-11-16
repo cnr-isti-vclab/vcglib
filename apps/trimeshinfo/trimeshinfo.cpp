@@ -24,6 +24,10 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2005/11/14 09:21:07  cignoni
+Heavily restructured the code of Trimeshinfo.
+Now divided the collecting part from the reporting one (xml and ascii)
+
 Revision 1.9  2005/11/04 15:37:57  rita_borgo
 Removed Debug option
 
@@ -110,8 +114,8 @@ using	namespace	vcg;
 
 class	CFace;
 class	CEdge;
-class CVertex  : public VertexSimp2< CVertex, CEdge, CFace, vert::Coord3f, vert::Flag, vert::Normal3f >{};
-class CFace    : public FaceSimp2< CVertex, CEdge, CFace, face::FFAdj, face::VertexRef, face::Flag > {};
+class CVertex  : public VertexSimp2< CVertex, CEdge, CFace, vert::Coord3f, vert::BitFlags, vert::Normal3f >{};
+class CFace    : public FaceSimp2< CVertex, CEdge, CFace, face::FFAdj, face::VertexRef, face::BitFlags > {};
 class CMesh     : public vcg::tri::TriMesh< vector<CVertex>, vector<CFace> > {};
 
 typedef	CMesh::VertexPointer	VertexPointer;
