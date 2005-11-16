@@ -24,6 +24,12 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2005/11/15 12:16:34  rita_borgo
+Changed DegeneratedFaces, sets the D flags for each faces
+that is found to be degenerated.
+CounEdges and ConnectedComponents check now if a face IsD()
+else for degenerated faces many asserts fail.
+
 Revision 1.9  2005/11/14 09:28:18  cignoni
 changed access to face functions (border, area)
 removed some typecast warnings
@@ -630,10 +636,10 @@ The polyhedral formula corresponds to the special case g==0.
 				TriMeshGrid   gM;
 
 				int nelem;
-				bbox = m.bbox;
-				double bdiag = bbox.Diag();
-
 				
+				double bdiag = m.bbox.Diag();
+
+				bbox.SetNull();
 				FaceType   *f=0;
 				Point3x             normf, bestq, ip,p;
 				FaceIterator fi;
@@ -647,7 +653,9 @@ The polyhedral formula corresponds to the special case g==0.
 				for(fi=m.face.begin();fi!=m.face.end();++fi)
 				{
 					
-		//			f = vcg::trimesh::GetClosestFace<MeshType,TriMeshGrid>(m, gM, p, bdiag, bdiag, normf, bestq, ip);
+			//		for(int i =0; i<3; i++)
+				//		bbox.Add((*fi).V(i)->P());
+					nelem = vcg::trimesh::GetInBoxFace(m, gM, bbox,inBox);
 				// fill the cell
 /*....*/
 
