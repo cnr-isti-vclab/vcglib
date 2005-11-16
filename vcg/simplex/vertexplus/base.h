@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/11/12 18:36:51  cignoni
+Added 'Visited' flag functions
+
 Revision 1.2  2004/04/03 13:33:55  cignoni
 Missing include
 
@@ -83,7 +86,7 @@ class VertexBase: public vert::EmptyTexture<
                          vert::EmptyColor<
                          vert::EmptyQuality<
                          vert::EmptyNormal<
-                         vert::EmptyFlag<
+                         vert::EmptyBitFlags<
                          vert::EmptyCoord<
                             VertexTypeHolder <BVT, BET, BFT, BTT> > > > > > > >{
 };
@@ -224,13 +227,13 @@ static int &LastBitFlag()
 		}
 
 /// allocate a bit among the flags that can be used by user.
-static inline int NewUserBit()
+static inline int NewBitFlag()
 		{
 			LastBitFlag()=LastBitFlag()<<1;
 			return LastBitFlag();
 		}
 // de-allocate a bit among the flags that can be used by user.
-static inline bool DeleteUserBit(int bitval)
+static inline bool DeleteBitFlag(int bitval)
 		{	
 			if(LastBitFlag()==bitval) {
 					LastBitFlag()= LastBitFlag()>>1;
