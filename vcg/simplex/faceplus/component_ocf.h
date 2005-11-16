@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/10/22 13:16:46  cignoni
+Added a missing ';' in  FFAdjOcf (thanks to Mario Latronico).
+
 Revision 1.1  2005/10/14 15:07:58  cignoni
 First Really Working version
 
@@ -60,6 +63,7 @@ public:
 	vector_ocf():std::vector<VALUE_TYPE>(){
   ColorEnabled=false;
   NormalEnabled=false;
+  WedgeTexEnabled=false;
   VFAdjacencyEnabled=false;
   FFAdjacencyEnabled=false;
   }
@@ -86,6 +90,7 @@ public:
     if(NormalEnabled)      NV.resize(_size);
     if(VFAdjacencyEnabled) AV.resize(_size);
     if(FFAdjacencyEnabled) AF.resize(_size);
+    if (WedgeTexEnabled) WTV.resize(_size);
     
    }
   void reserve(const unsigned int & _size)
@@ -96,6 +101,7 @@ public:
     if (NormalEnabled)      NV.reserve(_size);
     if (VFAdjacencyEnabled) AV.reserve(_size);
     if (FFAdjacencyEnabled) AF.reserve(_size);
+    if (WedgeTexEnabled) WTV.reserve(_size);
     if(oldbegin!=begin()) _update(begin(),end());
   }
 
@@ -159,6 +165,17 @@ void DisableFFAdjacency() {
 }
 
 
+void EnableWedgeTex() {
+  assert(VALUE_TYPE::HasWedgeTexture());
+  WedgeTexEnabled=true;
+  WTV.resize(size());
+}
+
+void DisableWedgeTex() {
+  assert(VALUE_TYPE::HasWedgeTexture());
+  WedgeTexEnabled=false;
+  WTV.clear();
+}
 
 struct AdjType {
   typename VALUE_TYPE::FacePointer _fp[3] ;    
@@ -170,9 +187,11 @@ public:
   std::vector<typename VALUE_TYPE::NormalType> NV;
   std::vector<struct AdjType> AV;
   std::vector<struct AdjType> AF;
+  std::vector<typename VALUE_TYPE::TexCoordType> WTV;
 
   bool ColorEnabled;
   bool NormalEnabled;
+  bool WedgeTexEnabled;
   bool VFAdjacencyEnabled;
   bool FFAdjacencyEnabled;
 };
@@ -260,6 +279,19 @@ public:
 };
 
 template <class T> class Color4bOcf: public ColorOcf<vcg::Color4b, T> {};
+
+
+///*-------------------------- WEDGE TEXCOORD  ----------------------------------*/ 
+
+template <class A, class TT> class WedgeTextureOcf: public TT {
+public:
+  typedef A TexCoordType;
+  TexCoordType &WT(const int i)              { assert(Base().WedgeTexEnabled); return Base().WTV[Index()]; }
+  TexCoordType const &cWT(const int i) const { assert(Base().WedgeTexEnabled); return Base().WTV[Index()]; }
+  static bool HasWedgeTexture()   { return true; }
+};
+
+template <class T> class WedgeTexturefOcf: public WedgeTextureOcf<TCoord2<float,1>, T> {};
 
 ///*-------------------------- InfoOpt  ----------------------------------*/ 
 
