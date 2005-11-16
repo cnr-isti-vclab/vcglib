@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/10/24 09:19:33  ponchio
+Added newline at end of file (tired of stupid warnings...)
+
 Revision 1.1  2004/04/26 12:33:59  ganovelli
 first version
 
@@ -45,7 +48,7 @@ namespace vcg {
  */
 
 #define FABS(x) (T(fabs(x)))        
-#define USE_EPSILON_TEST TRUE
+#define USE_EPSILON_TEST
 #define TRI_TRI_INT_EPSILON 0.000001
 
 
@@ -267,7 +270,7 @@ bool NoDivTriTriIsect(const Point3<T> V0,const Point3<T> V1,const Point3<T> V2,
   du2=DOT(N1,U2)+d1;
 
   /* coplanarity robustness check */
-#if USE_TRI_TRI_INT_EPSILON_TEST==TRUE
+#ifdef USE_TRI_TRI_INT_EPSILON_TEST
   if(FABS(du0)<TRI_TRI_INT_EPSILON) du0=0.0;
   if(FABS(du1)<TRI_TRI_INT_EPSILON) du1=0.0;
   if(FABS(du2)<TRI_TRI_INT_EPSILON) du2=0.0;
@@ -290,7 +293,7 @@ bool NoDivTriTriIsect(const Point3<T> V0,const Point3<T> V1,const Point3<T> V2,
   dv1=DOT(N2,V1)+d2;
   dv2=DOT(N2,V2)+d2;
 
-#if USE_TRI_TRI_INT_EPSILON_TEST==TRUE
+#ifdef USE_TRI_TRI_INT_EPSILON_TEST
   if(FABS(dv0)<TRI_TRI_INT_EPSILON) dv0=0.0;
   if(FABS(dv1)<TRI_TRI_INT_EPSILON) dv1=0.0;
   if(FABS(dv2)<TRI_TRI_INT_EPSILON) dv2=0.0;
@@ -492,7 +495,7 @@ bool tri_tri_intersect_with_isectline(	Point3<T> V0,Point3<T> V1,Point3<T> V2,
   du2=DOT(N1,U2)+d1;
 
   /* coplanarity robustness check */
-#if USE_EPSILON_TEST==TRUE
+#ifdef USE_EPSILON_TEST
   if(fabs(du0)<TRI_TRI_INT_EPSILON) du0=0.0;
   if(fabs(du1)<TRI_TRI_INT_EPSILON) du1=0.0;
   if(fabs(du2)<TRI_TRI_INT_EPSILON) du2=0.0;
@@ -515,7 +518,7 @@ bool tri_tri_intersect_with_isectline(	Point3<T> V0,Point3<T> V1,Point3<T> V2,
   dv1=DOT(N2,V1)+d2;
   dv2=DOT(N2,V2)+d2;
 
-#if USE_EPSILON_TEST==TRUE
+#ifdef USE_EPSILON_TEST
   if(fabs(dv0)<TRI_TRI_INT_EPSILON) dv0=0.0;
   if(fabs(dv1)<TRI_TRI_INT_EPSILON) dv1=0.0;
   if(fabs(dv2)<TRI_TRI_INT_EPSILON) dv2=0.0;
