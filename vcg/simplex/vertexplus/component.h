@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2005/11/14 23:50:57  cignoni
+Added Incremental Mark
+
 Revision 1.12  2005/11/12 18:35:49  cignoni
 Changed HasFlag -> HasFlags
 
@@ -138,6 +141,10 @@ template <class T> class EmptyMark: public T {
 public:
   static bool HasMark()   { return false; }
   static bool HasMarkOpt()   { return false; }
+  inline void InitIMark()    {  }
+  inline int & IMark()       { assert(0); static int tmp=-1; return tmp;}
+  inline const int & IMark() const {return 0;}
+
 };
 template <class T> class Mark: public T {
 public:
@@ -176,7 +183,7 @@ template <class TT> class Texture2f: public Texture<TCoord2<float,1>, TT> {};
 template <class TT> class Texture2d: public Texture<TCoord2<double,1>, TT> {};
 
 /*------------------------- FLAGS -----------------------------------------*/ 
-template <class T> class EmptyFlag: public T {
+template <class T> class EmptyBitFlags: public T {
 public:
 	typedef int FlagType;
   /// Return the vector of Flags(), senza effettuare controlli sui bit
@@ -186,12 +193,12 @@ public:
 
 };
 
-template <class T> class Flag:  public T {
+template <class T> class BitFlags:  public T {
 public:
 	typedef int FlagType;
   int &Flags() {return _flags; }
   const int Flags() const {return _flags; }
-  static bool HasFlag()   { return true; }
+  static bool HasFlags()   { return true; }
 
 private:
   int  _flags;    
