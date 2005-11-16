@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/11/12 18:43:14  cignoni
+added missing cFFi
+
 Revision 1.1  2005/10/14 15:07:58  cignoni
 First Really Working version
 
@@ -181,12 +184,12 @@ public:
 template <class A, class TT> class WedgeTexture: public TT {
 public:
   typedef A TexCoordType;
-  TexCoordType &WT(const int i) { return _t[i]; }
-  TexCoordType const &cWT(const int i) const { return _t[i]; }
+  TexCoordType &WT(const int i) { return _wt[i]; }
+  TexCoordType const &cWT(const int i) const { return _wt[i]; }
   static bool HasWedgeTexture()   { return true; }
 
 private:
-  TexCoordType _t;    
+  TexCoordType _wt[3];    
 };
 
 template <class TT> class WedgeTexture2s: public WedgeTexture<TCoord2<short,1>, TT> {};
@@ -194,21 +197,21 @@ template <class TT> class WedgeTexture2f: public WedgeTexture<TCoord2<float,1>, 
 template <class TT> class WedgeTexture2d: public WedgeTexture<TCoord2<double,1>, TT> {};
 
 /*------------------------- FLAGS -----------------------------------------*/ 
-template <class T> class EmptyFlag: public T {
+template <class T> class EmptyBitFlags: public T {
 public:
 	/// Return the vector of Flags(), senza effettuare controlli sui bit
   int &Flags() { static int dummyflags(0); return dummyflags; }
   const int Flags() const { return 0; }
-  static bool HasFlag()   { return false; }
+  static bool HasFlags()   { return false; }
 
 };
 
-template <class T> class Flag:  public T {
+template <class T> class BitFlags:  public T {
 public:
-  Flag(){_flags=0;}
+  BitFlags(){_flags=0;}
    int &Flags() {return _flags; }
    const int Flags() const {return _flags; }
-  static bool HasFlag()   { return true; }
+  static bool HasFlags()   { return true; }
 
 
 private:
@@ -266,6 +269,29 @@ private:
 template <class T> class Qualitys: public Quality<short, T> {};
 template <class T> class Qualityf: public Quality<float, T> {};
 template <class T> class Qualityd: public Quality<double, T> {};
+/*-------------------------- INCREMENTAL MARK  ----------------------------------------*/ 
+
+template <class T> class EmptyMark: public T {
+public:
+  static bool HasMark()   { return false; }
+  static bool HasMarkOpt()   { return false; }
+  inline void InitIMark()    {  }
+  inline int & IMark()       { assert(0); static int tmp=-1; return tmp;}
+  inline const int IMark() const {return 0;}
+
+};
+template <class T> class Mark: public T {
+public:
+  static bool HasMark()      { return true; }
+  static bool HasMarkOpt()   { return true; }
+  inline void InitIMark()    { _imark = 0; }
+  inline int & IMark()       { return _imark;}
+  inline const int & IMark() const {return _imark;}
+    
+ private:
+	int _imark;
+};
+
 
 /*----------------------------- VFADJ ------------------------------*/ 
 
