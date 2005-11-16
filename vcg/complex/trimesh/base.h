@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2005/11/15 12:09:17  rita_borgo
+Changed Volume Routine, before was returning negative values
+
 Revision 1.15  2005/10/03 16:00:08  rita_borgo
 Minor changes
 
@@ -74,7 +77,9 @@ Initial commit
 #ifndef __GNUC
 #pragma warning( disable : 4804 )
 #endif
+#include <assert.h>
 #include <vcg/space/box3.h>
+#include <vcg/space/color4.h>
 #include <vcg/math/shot.h>
 
 /*
@@ -126,8 +131,10 @@ class TriMesh{
 	Box3<ScalarType> bbox;
 	
   /// Nomi di textures
-	//vector<string> textures;
-	//vector<string> normalmaps;
+	//
+  std::vector<std::string> textures;
+	//
+  std::vector<std::string> normalmaps;
 
 		/// La camera
 	Camera<ScalarType> camera; // intrinsic
