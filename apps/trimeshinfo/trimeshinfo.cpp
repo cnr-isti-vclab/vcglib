@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2005/11/16 15:59:46  cignoni
+Changed name of the component from <Flag> to <BitFlags>
+
 Revision 1.10  2005/11/14 09:21:07  cignoni
 Heavily restructured the code of Trimeshinfo.
 Now divided the collecting part from the reporting one (xml and ascii)
@@ -81,7 +84,7 @@ Added	Standard comments
 #include <stack>
 using	namespace	std;
 
-#include<vcg/simplex/face/with/afav.h>
+
 #include<vcg/simplex/face/pos.h> 
 #include<vcg/complex/trimesh/base.h>
 
@@ -153,6 +156,12 @@ struct MeshInfo
   bool SelfIntersect;
 };
 
+void initMeshInfo(MeshInfo &mi)
+{
+	mi.vn = mi.fn = mi.count_e = mi.boundary_e = mi.count_fd = mi.count_uv = mi.numholes = mi.BEdges = 
+		mi.numcomponents = mi.Genus = mi.dv = 0;
+	mi.Volume = 0.;
+}
 void PrintAsciiInfo(MeshInfo &mi)
 {
  	printf("\t Mesh info:\n");
@@ -240,6 +249,7 @@ int main(int	argc,char	** argv)
   string SaveName;
 	
   MeshInfo mi;
+	initMeshInfo(mi);
 	printf("-------------------------------\n"
 		"	TriMeshInfo	V.1.2 \n"
 		"	http://vcg.isti.cnr.it\n"
@@ -273,7 +283,17 @@ int main(int	argc,char	** argv)
 	OpenMesh(mi.FileName.c_str(),m);
   mi.vn=m.vn;  mi.fn=m.fn;
 
+	
+	
+	// DEGENERATED FACES
+	mi.count_fd = tri::Clean<CMesh>::DegeneratedFaces(m);
+	
+	
+	
 	vcg::tri::UpdateTopology<CMesh>::FaceFace(m);
+
+	// UNREFERENCED	VERTEX
+	mi.count_uv = tri::Clean<CMesh>::DetectUnreferencedVertex(m);
 
 	// IS	MANIFOLD
 	tri::Clean<CMesh>::Initialize(m);
@@ -282,11 +302,7 @@ int main(int	argc,char	** argv)
 	// COUNT EDGES
 	tri::Clean<CMesh>::CountEdges(m,	mi.count_e, mi.boundary_e);
 
-	// DEGENERATED FACES
-	mi.count_fd = tri::Clean<CMesh>::DegeneratedFaces(m);
 
-	// UNREFERENCED	VERTEX
-	mi.count_uv = tri::Clean<CMesh>::DetectUnreferencedVertex(m);
 
 	// HOLES COUNT
 	if(mi.Manifold)
