@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/11/12 18:42:18  cignoni
+Added ClearS and GetBBox
+
 Revision 1.2  2005/10/14 13:26:57  cignoni
 First Really Working version
 
@@ -83,9 +86,10 @@ class FaceBase: public   face::EmptyVertexRef<
                          face::EmptyAdj<
                          face::EmptyColorQuality<
                          face::EmptyNormal<
-                         face::EmptyFlag<
+                         face::EmptyBitFlags<
+                         face::EmptyMark<
                          face::EmptyWedgeTexture<
-                         FaceTypeHolder <BVT, BET, BFT, BTT> > > > > > >{
+                         FaceTypeHolder <BVT, BET, BFT, BTT> > > > > > > >{
 };
 
 
@@ -233,13 +237,13 @@ static int &LastBitFlag()
 		}
 
 /// allocate a bit among the flags that can be used by user.
-static inline int NewUserBit()
+static inline int NewBitFlag()
 		{
 			LastBitFlag()=LastBitFlag()<<1;
 			return LastBitFlag();
 		}
 // de-allocate a bit among the flags that can be used by user.
-static inline bool DeleteUserBit(int bitval)
+static inline bool DeleteBitFlag(int bitval)
 		{	
 			if(LastBitFlag()==bitval) {
 					LastBitFlag()= LastBitFlag()>>1;
