@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2005/11/16 16:45:51  rita_borgo
+Minor changes
+
 Revision 1.11  2005/11/16 15:59:46  cignoni
 Changed name of the component from <Flag> to <BitFlags>
 
@@ -85,12 +88,11 @@ Added	Standard comments
 using	namespace	std;
 
 
-#include<vcg/simplex/face/pos.h> 
 #include<vcg/complex/trimesh/base.h>
-
 #include<vcg/complex/trimesh/update/topology.h>
 #include <vcg/complex/trimesh/update/edges.h>
 #include <vcg/complex/trimesh/update/bounding.h>
+#include <vcg/complex/trimesh/update/flag.h>
 #include <vcg/complex/trimesh/clean.h>
 #include <vcg/space/intersection/triangle_triangle3.h>
 
@@ -99,20 +101,19 @@ using	namespace	std;
 #include <wrap/io_trimesh/export.h>
 
 #include<vcg/simplex/vertexplus/base.h>
-#include<vcg/simplex/faceplus/base.h>
 #include<vcg/simplex/vertexplus/component.h>
+
+#include<vcg/simplex/faceplus/base.h>
 #include<vcg/simplex/faceplus/component.h>
+#include<vcg/simplex/face/pos.h> 
 
 #include "XMLTree.h"
 
 #include <vcg/space/index/grid_static_ptr.h>
 #include "defs.h"
-//#include "trimeshtype.h"
 
 using	namespace	std;
 using	namespace	vcg;
-//using	namespace	tri;
-//using	namespace	face;
 
 
 class	CFace;
@@ -295,8 +296,9 @@ int main(int	argc,char	** argv)
 	// UNREFERENCED	VERTEX
 	mi.count_uv = tri::Clean<CMesh>::DetectUnreferencedVertex(m);
 
+	tri::UpdateFlags<CMesh>::Clear(m);
+
 	// IS	MANIFOLD
-	tri::Clean<CMesh>::Initialize(m);
 	mi.Manifold	=	tri::Clean<CMesh>::IsComplexManifold(m);	
 
 	// COUNT EDGES
