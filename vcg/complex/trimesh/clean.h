@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2005/11/16 16:33:23  rita_borgo
+Changed ComputeSelfintersection
+
 Revision 1.10  2005/11/15 12:16:34  rita_borgo
 Changed DegeneratedFaces, sets the D flags for each faces
 that is found to be degenerated.
@@ -115,18 +118,6 @@ namespace vcg {
 					return (*a).cP() < (*b).cP();
 				}
 			};
-
-			static void Initialize(MeshType& m)
-			{
-				FaceIterator fi;
-				for(fi=m.face.begin();fi!=m.face.end();fi++)
-				{
-					(*fi).ClearB(0);
-					(*fi).ClearB(1);
-					(*fi).ClearB(2);
-					(*fi).ClearS();
-				}
-			}
 
 			static int DetectUnreferencedVertex( MeshType& m )   // V1.0
 			{
@@ -466,7 +457,7 @@ namespace vcg {
 			static int MeshGenus(MeshType &m, int count_uv, int numholes, int numcomponents, int count_e)
 			{
 				int eulernumber = (m.vn-count_uv) + m.fn - count_e;
-				return(-( 0.5 * (eulernumber - numholes) - numcomponents ));
+				return int(-( 0.5 * (eulernumber - numholes) - numcomponents ));
 			}
 /*
 Let a closed surface have genus g. Then the polyhedral formula generalizes to the Poincaré formula
