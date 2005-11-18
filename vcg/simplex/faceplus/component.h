@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/11/16 22:58:17  cignoni
+Added IncrementalMark and WedgeTexCoord
+Standardized name of flags. It is plural becouse each simplex has many flag.
+
 Revision 1.2  2005/11/12 18:43:14  cignoni
 added missing cFFi
 
@@ -114,7 +118,7 @@ public:
   //typedef vcg::Point3s NormalType;
   typedef typename T::VertexType::NormalType NormalType;
   NormalType &N() { static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
-  const NormalType cN() const { static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
+  const NormalType &cN() const { static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
   NormalType &WN(int) { static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
   const NormalType cWN(int) const { static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
 
@@ -130,7 +134,7 @@ template <class T> class NormalFromVert: public T {
 public:
   typedef typename T::VertexType::NormalType NormalType;
   NormalType &N() { return _norm; }
-  NormalType cN() const { return _norm; }
+  NormalType &cN() const { return _norm; }
   static bool HasFaceNormal()   { return true; }
   void ComputeNormal() {	_norm = vcg::Normal<typename T::FaceType>(*(static_cast<typename T::FaceType *>(this))); }
   void ComputeNormalizedNormal() {	_norm = vcg::NormalizedNormal(*this);}  

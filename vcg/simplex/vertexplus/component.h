@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2005/11/16 23:02:37  cignoni
+Added some missing members to EmptyMark
+Standardized name of flags. It is plural becouse each simplex has many flag.
+
 Revision 1.13  2005/11/14 23:50:57  cignoni
 Added Incremental Mark
 
@@ -124,7 +128,7 @@ template <class A, class T> class Normal: public T {
 public:
   typedef A NormalType;
   NormalType &N() { return _norm; }
-  const NormalType cN() const { return _norm; }
+  const NormalType &cN() const { return _norm; }
   static bool HasNormal()   { return true; }
 private:
   NormalType _norm;    
