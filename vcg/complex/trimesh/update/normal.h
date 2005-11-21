@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/10/13 08:38:00  cignoni
+removed the access to the face member function normal and substituted with vcg::normal(*f);
+
 Revision 1.6  2005/06/17 00:46:09  cignoni
 Added a PerVertexNormalizedPerFace (vertex are face/area weighted AND normalized)
 
@@ -82,7 +85,7 @@ static void PerFace(ComputeMeshType &m)
 	if( !m.HasPerFaceNormal()) return;
 	FaceIterator f;
 	for(f=m.face.begin();f!=m.face.end();++f)
-			if( !(*f).IsD() )	(*f).ComputeNormal();
+			if( !(*f).IsD() )	ComputeNormal(*f);
 }
 
 
@@ -159,7 +162,7 @@ static void PerFaceRW(ComputeMeshType &m, bool normalize=false)
 		{
 			for(int j=0; j<3; ++j)
 				if( !(*f).V(j)->IsR()) 	cn = false;
-			if( cn ) (*f).ComputeNormalizedNormal();
+      if( cn ) face::ComputeNormalizedNormal(*f);
 			cn = true;
 		}
 	}
@@ -184,7 +187,7 @@ static void PerFaceNormalized(ComputeMeshType &m)
 	if( !m.HasPerFaceNormal()) return;
 	FaceIterator f;
 		for(f=m.face.begin();f!=m.face.end();++f)
-			if( !(*f).IsD() )	(*f).ComputeNormalizedNormal();
+      if( !(*f).IsD() )	face::ComputeNormalizedNormal(*f);
 }
 
 

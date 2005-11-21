@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/11/18 15:44:49  cignoni
+Access to constant normal changed from by val to by reference
+
 Revision 1.3  2005/11/16 22:58:17  cignoni
 Added IncrementalMark and WedgeTexCoord
 Standardized name of flags. It is plural becouse each simplex has many flag.
@@ -126,8 +129,8 @@ public:
   static bool HasFaceNormal()   { return false; }
   static bool HasWedgeNormalOpt()   { return false; }
   static bool HasFaceNormalOpt()   { return false; }
-  void ComputeNormal() {assert(0);}
-  void ComputeNormalizedNormal() {assert(0);}
+//  void ComputeNormal() {assert(0);}
+//  void ComputeNormalizedNormal() {assert(0);}
 
 };
 template <class T> class NormalFromVert: public T {
@@ -136,13 +139,19 @@ public:
   NormalType &N() { return _norm; }
   NormalType &cN() const { return _norm; }
   static bool HasFaceNormal()   { return true; }
-  void ComputeNormal() {	_norm = vcg::Normal<typename T::FaceType>(*(static_cast<typename T::FaceType *>(this))); }
-  void ComputeNormalizedNormal() {	_norm = vcg::NormalizedNormal(*this);}  
+//  void ComputeNormal() {	_norm = vcg::Normal<typename T::FaceType>(*(static_cast<typename T::FaceType *>(this))); }
+//  void ComputeNormalizedNormal() {	_norm = vcg::NormalizedNormal(*this);}  
 
 private:
   NormalType _norm;    
 };
 
+
+template <class T>
+void ComputeNormal(T &f) {	f.N() = vcg::Normal<T>(f); }
+
+template <class T>
+void ComputeNormalizedNormal(T &f) {	f.N() = vcg::NormalizedNormal<T>(f); }
 
 template <class A, class T> class NormalAbs: public T {
 public:
