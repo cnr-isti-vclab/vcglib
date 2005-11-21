@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/11/16 22:43:36  cignoni
+Added WedgeTexture component
+
 Revision 1.2  2005/10/22 13:16:46  cignoni
 Added a missing ';' in  FFAdjOcf (thanks to Mario Latronico).
 
@@ -116,25 +119,25 @@ public:
 // Enabling Eunctions
 
 void EnableColor() {
-  assert(VALUE_TYPE::HasColorOcf());
+  assert(VALUE_TYPE::HasFaceColorOcf());
   ColorEnabled=true;
   CV.resize(size());
 }
 
 void DisableColor() {
-  assert(VALUE_TYPE::HasColorOcf());
+  assert(VALUE_TYPE::HasFaceColorOcf());
   ColorEnabled=false;
   CV.clear();
 }
 
 void EnableNormal() {
-  assert(VALUE_TYPE::HasNormalOcf());
+  assert(VALUE_TYPE::HasFaceNormalOcf());
   NormalEnabled=true;
   NV.resize(size());
 }
 
 void DisableNormal() {
-  assert(VALUE_TYPE::HasNormalOcf());
+  assert(VALUE_TYPE::HasFaceNormalOcf());
   NormalEnabled=false;
   NV.clear();
 }
@@ -255,13 +258,19 @@ private:
 template <class A, class T> class NormalOcf: public T {
 public:
   typedef A NormalType;
-  static bool HasNormal()   { return true; }
-  static bool HasNormalOcf()   { return true; }
+  static bool HasFaceNormal()   { return true; }
+  static bool HasFaceNormalOcf()   { return true; }
 
   NormalType &N() { 
     // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
     assert(Base().NormalEnabled); 
     return Base().NV[Index()];  }
+  const NormalType &cN() const { 
+    // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
+    assert(Base().NormalEnabled); 
+    return Base().NV[Index()];  }
+
+
 };
 
 template <class T> class Normal3sOcf: public NormalOcf<vcg::Point3s, T> {};
@@ -274,8 +283,8 @@ template <class A, class T> class ColorOcf: public T {
 public:
   typedef A ColorType;
   ColorType &C() { assert(Base().NormalEnabled); return Base().CV[Index()]; }
-  static bool HasColor()   { return true; }
-  static bool HasColorOcf()   { return true; }
+  static bool HasFaceColor()   { return true; }
+  static bool HasFaceColorOcf()   { return true; }
 };
 
 template <class T> class Color4bOcf: public ColorOcf<vcg::Color4b, T> {};
