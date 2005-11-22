@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2005/10/12 18:24:30  ponchio
+another bunch of typenames.
+
 Revision 1.10  2005/10/12 17:19:03  ponchio
 Added gazillions typenames, commented out old broken functions,
 added unsigned int TextureMapID[128], and unsigned int & TMId(int i).
@@ -522,7 +525,9 @@ void DrawFlatWire()
 	DrawFill<nm,cm,tm>();
 	glDepthRange(0.0f,1.0f-ZTWIST);
 	glPushAttrib(GL_CURRENT_BIT);
-	glColor3f(.3f,.3f,.3f);
+  glEnable(GL_COLOR_MATERIAL);
+	glColorMaterial(GL_FRONT,GL_DIFFUSE);
+  glColor3f(.3f,.3f,.3f);
 	DrawWire<NMPerVert,CMNone>();
 	glPopAttrib();
 	glDepthRange(0,1.0f);
