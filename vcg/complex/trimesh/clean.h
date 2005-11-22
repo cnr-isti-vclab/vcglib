@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2005/11/17 00:41:07  cignoni
+Removed Initialize use updateflags::Clear() instead.
+
 Revision 1.11  2005/11/16 16:33:23  rita_borgo
 Changed ComputeSelfintersection
 
@@ -70,6 +73,7 @@ Initial Release
 
 #include <map>
 #include <algorithm>
+
 
 #include <vcg/simplex/face/face.h>
 #include<vcg/simplex/face/topology.h>
@@ -641,16 +645,22 @@ The polyhedral formula corresponds to the special case g==0.
 				std::vector<FaceType*> inBox;
 				gM.Set<vector<FaceType>::iterator>(m.face.begin(),m.face.end());
 
+				
+				
 				for(fi=m.face.begin();fi!=m.face.end();++fi)
 				{
 					
-			//		for(int i =0; i<3; i++)
-				//		bbox.Add((*fi).V(i)->P());
-					nelem = vcg::trimesh::GetInBoxFace(m, gM, bbox,inBox);
+					
+					(*fi).GetBBox(bbox);
+					vcg::trimesh::GetInBoxFace(m, gM, bbox,inBox);
+					
 				// fill the cell
 /*....*/
+			
 
 					nelem = inBox.size();
+
+
 					if (nelem>=2)// in a cell
 					{
 						//test combinations of elements
@@ -658,12 +668,15 @@ The polyhedral formula corresponds to the special case g==0.
 							for (int j=i+1;j<nelem;j++)
 							if ((!inBox[i]->IsD())&&(!inBox[j]->IsD())&&(TestIntersection(inBox[i],inBox[j])))
 							{
+							
 								ret.push_back(inBox[i]);
 								ret.push_back(inBox[j]);
 							}
 					}
+					inBox.clear();
+					bbox.SetNull();
 				}	
-				return false;
+				return (ret.size()>0);
 			}
 
 				
@@ -672,8 +685,8 @@ static	bool TestIntersection(FaceType *f0,FaceType *f1)
 	{
 		assert((!f0->IsD())&&(!f1->IsD()));
 		//no adiacent faces
-		if ((f0!=f1)&& (!ShareEdge(f0,f1))
-			&& (!ShareVertex(f0,f1)))
+		if ( (f0!=f1) && (!ShareEdge(f0,f1))
+			&& (!ShareVertex(f0,f1)) )
 			return (vcg::Intersection<FaceType>((*f0),(*f1)));
 		return false;
 	}
