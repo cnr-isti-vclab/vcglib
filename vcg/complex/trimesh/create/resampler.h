@@ -48,7 +48,7 @@ class Resampler:RES
 		typedef typename New_Mesh::CoordType NewCoordType;
 		typedef typename New_Mesh::VertexType* VertexPointer;
 		typedef typename Old_Mesh::FaceContainer FaceCont;
-		typedef typename GridStaticPtr<FaceCont> Grid;
+		typedef typename vcg::GridStaticPtr<typename Old_Mesh::FaceType> GridType;
 		typedef typename vcg::Box3<int> BoundingBox;
 		//typedef typename std::pair<vcg::Point3i,vcg::Point3i> PointPair;
 		typedef vcg::tri::Allocator< New_Mesh > Allocator;
@@ -80,7 +80,7 @@ class Resampler:RES
 
 		New_Mesh	*_newM;
 		Old_Mesh	*_oldM;
-		Grid _g;
+		GridType _g;
 		
 	public:
 		float max_dim;
@@ -211,7 +211,9 @@ class Resampler:RES
 			vcg::Point3f Target;
 			vcg::Point3f pip;
 
-			vcg::trimesh::Closest<Old_Mesh,Grid,float>((*mesh),test,_g,dist,Norm,Target,f,pip);
+			//vcg::tri::get<Old_Mesh,GridType,float>((*mesh),test,_g,dist,Norm,Target,f,pip);
+			
+			f= vcg::trimesh::GetClosestFace<Old_Mesh,GridType>( *mesh,_g,test,dist,dist,Target,Norm,pip);
 
 			if (f==NULL)
 					return false;
@@ -273,18 +275,9 @@ class Resampler:RES
 
 		}
 
-		void SetUGrid()
-		{
-			Point3f min=Point3f((float)_bbox.min.V(0),(float)_bbox.min.V(1),(float)_bbox.min.V(2));
-			Point3f max=Point3f((float)_bbox.max.V(0),(float)_bbox.max.V(1),(float)_bbox.max.V(2));
-
-			Point3f cell=Point3f((float)_cell_size.V(0),(float)_cell_size.V(1),(float)_cell_size.V(2));
-
-			vcg::Box3<float> BBf=vcg::Box3<float>(min-cell,max+cell);
-			
-			_g.SetBBox(BBf);
-			
-			_g.Set(_oldM->face);
+		void SetGrid()
+		{	
+			_g.Set(_oldM->face.begin(),_oldM->face.end());
 		}
 
 		template<class EXTRACTOR_TYPE>
@@ -293,7 +286,7 @@ class Resampler:RES
 			_newM=&new_mesh;
 			_oldM=&old_mesh;
 			
-			SetUGrid();
+			SetGrid();
 
 			_newM->Clear();
 
