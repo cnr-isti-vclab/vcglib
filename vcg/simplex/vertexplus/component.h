@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2005/11/18 15:44:51  cignoni
+Access to constant normal changed from by val to by reference
+
 Revision 1.14  2005/11/16 23:02:37  cignoni
 Added some missing members to EmptyMark
 Standardized name of flags. It is plural becouse each simplex has many flag.
@@ -199,7 +202,8 @@ public:
 
 template <class T> class BitFlags:  public T {
 public:
-	typedef int FlagType;
+	BitFlags(){_flags=0;}
+  typedef int FlagType;
   int &Flags() {return _flags; }
   const int Flags() const {return _flags; }
   static bool HasFlags()   { return true; }
