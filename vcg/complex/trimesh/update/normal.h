@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/11/21 21:44:43  cignoni
+Moved ComputeNormal and ComputeNormalizedNormal out of the face class (no more a member function!)
+
 Revision 1.7  2005/10/13 08:38:00  cignoni
 removed the access to the face member function normal and substituted with vcg::normal(*f);
 
@@ -85,7 +88,7 @@ static void PerFace(ComputeMeshType &m)
 	if( !m.HasPerFaceNormal()) return;
 	FaceIterator f;
 	for(f=m.face.begin();f!=m.face.end();++f)
-			if( !(*f).IsD() )	ComputeNormal(*f);
+    if( !(*f).IsD() )	face::ComputeNormal(*f);
 }
 
 

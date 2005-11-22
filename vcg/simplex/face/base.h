@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.32  2005/11/12 18:39:54  cignoni
+Added dummy static member for avoiding annoying warning in empty functions...
+
 Revision 1.31  2005/11/01 18:16:36  cignoni
 Added intialization of _flags to zero in the default constructor of face
 
@@ -323,24 +326,6 @@ public:
 	return *(CoordType *)0;
 #endif
 	}
-
-  /// Calculate the normal to the face, the value is store in the field _n of the face
-void ComputeNormal() 
-{
-#ifdef __VCGLIB_FACE_FN
-	_n = vcg::Normal(*this);
-#else
-	assert(0);
-#endif
-}
-void ComputeNormalizedNormal() 
-{
-#ifdef __VCGLIB_FACE_FN
-	_n = vcg::NormalizedNormal(*this);
-#else
-	assert(0);
-#endif
-}
 
 /// Return the value of the face normal as it correspond to the current geometry.
 /// it is always computed and never stored. 
@@ -1223,7 +1208,17 @@ inline void Nexts( BaseFaceType *&f,int &z )
 
 }; //end Class
 
+/// Calculate the normal to the face, the value is store in the field _n of the face
+namespace face
+{
 
+template <class MyVertex, class MyEdge, class MyFace>
+void ComputeNormal(FACE_TYPE<MyVertex,MyEdge,MyFace> &f) {	f.N() = vcg::Normal< FACE_TYPE<MyVertex,MyEdge,MyFace> >(f); }
+
+template <class MyVertex, class MyEdge, class MyFace>
+void ComputeNormalizedNormal(FACE_TYPE<MyVertex,MyEdge,MyFace> &f) {	f.N() = vcg::NormalizedNormal< FACE_TYPE<MyVertex,MyEdge,MyFace> >(f); }
+
+}
 //@}
 
 }	 // end namespace
