@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/11/21 21:44:47  cignoni
+Moved ComputeNormal and ComputeNormalizedNormal out of the face class (no more a member function!)
+
 Revision 1.4  2005/11/18 15:44:49  cignoni
 Access to constant normal changed from by val to by reference
 
@@ -160,9 +163,6 @@ public:
   NormalType cN() const { return _norm; }
   static bool HasFaceNormal()   { return true; }
   
-  void ComputeNormal() {	_norm = vcg::Normal<typename T::FaceType>(*(static_cast<typename T::FaceType *>(this))); }
-  void ComputeNormalizedNormal() {	_norm = vcg::NormalizedNormal<FaceType>(*this);}
-
 private:
   NormalType _norm;    
 };
