@@ -3,7 +3,6 @@
 ######################################################################
 
 TARGET = trimesh_sdl
-DEFINES+= _SHOW_A_MESH
 LIBPATH += ../../../../code/lib/SDL/lib
 LIBPATH += ../../../../code/lib/glew/lib
 win32:LIBS += SDL.lib SDLmain.lib opengl32.lib glu32.lib glew32s.lib glew32.lib 
