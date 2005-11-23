@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2005/11/12 18:13:30  cignoni
+Added support for non triangular faces (simple fan triangulation) and removed flags intiailization.
+
 Revision 1.16  2005/10/14 15:09:56  cignoni
 Added LoadMask without plyinfo and some comment on the mask usage
 
@@ -511,37 +514,37 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				//camera.valid     = true;
 
 				// extrinsic
-				m.shot.similarity.SetIdentity();
-			// view point
-				m.shot.similarity.tra[0] = -ca.view_px;
-				m.shot.similarity.tra[1] = -ca.view_py;
-				m.shot.similarity.tra[2] = -ca.view_pz;
+				m.shot.Similarity().SetIdentity();
+				// view point
+				m.shot.Similarity().tra[0] = -ca.view_px;
+				m.shot.Similarity().tra[1] = -ca.view_py;
+				m.shot.Similarity().tra[2] = -ca.view_pz;
 	
 				// axis (i.e. rotation). 
-				m.shot.similarity.rot[0][0] = ca.x_axisx;
-				m.shot.similarity.rot[0][1] = ca.x_axisy;
-				m.shot.similarity.rot[0][2] = ca.x_axisz;
+				m.shot.Similarity().rot[0][0] = ca.x_axisx;
+				m.shot.Similarity().rot[0][1] = ca.x_axisy;
+				m.shot.Similarity().rot[0][2] = ca.x_axisz;
 
-				m.shot.similarity.rot[1][0] = ca.y_axisx;
-				m.shot.similarity.rot[1][1] = ca.y_axisy;
-				m.shot.similarity.rot[1][2] = ca.y_axisz;
+				m.shot.Similarity().rot[1][0] = ca.y_axisx;
+				m.shot.Similarity().rot[1][1] = ca.y_axisy;
+				m.shot.Similarity().rot[1][2] = ca.y_axisz;
 
-				m.shot.similarity.rot[2][0] = ca.z_axisx;
-				m.shot.similarity.rot[2][1] = ca.z_axisy;
-				m.shot.similarity.rot[2][2] = ca.z_axisz;
+				m.shot.Similarity().rot[2][0] = ca.z_axisx;
+				m.shot.Similarity().rot[2][1] = ca.z_axisy;
+				m.shot.Similarity().rot[2][2] = ca.z_axisz;
 
 				//intrinsic
-				m.shot.camera.f         = ca.focal;
-				m.shot.camera.s[0]      = ca.scalex;
-				m.shot.camera.s[1]      = ca.scaley;
-				m.shot.camera.c[0]      = ca.centerx;
-				m.shot.camera.c[1]      = ca.centery;
-				m.shot.camera.viewport[0] = ca.viewportx;
-				m.shot.camera.viewport[1] = ca.viewporty;
-				m.shot.camera.k[0]      = ca.k1;
-				m.shot.camera.k[1]      = ca.k2;
-				m.shot.camera.k[2]      = ca.k3;
-				m.shot.camera.k[3]      = ca.k4;
+				m.shot.Camera().f         = ca.focal;
+				m.shot.Camera().s[0]      = ca.scalex;
+				m.shot.Camera().s[1]      = ca.scaley;
+				m.shot.Camera().c[0]      = ca.centerx;
+				m.shot.Camera().c[1]      = ca.centery;
+				m.shot.Camera().viewport[0] = ca.viewportx;
+				m.shot.Camera().viewport[1] = ca.viewporty;
+				m.shot.Camera().k[0]      = ca.k1;
+				m.shot.Camera().k[1]      = ca.k2;
+				m.shot.Camera().k[2]      = ca.k3;
+				m.shot.Camera().k[3]      = ca.k4;
 
 			}
 		}
