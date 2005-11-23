@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/07/11 13:12:05  cignoni
+small gcc-related compiling issues (typenames,ending cr, initialization order)
+
 Revision 1.2  2005/03/16 16:14:12  spinelli
 aggiunta funzione PasoDobleSmooth e relative:
 
@@ -565,7 +568,7 @@ void NormalSmooth(MESH_TYPE &m,
 			while (!ep.End())
 			{
 				ep.f->ClearS();
-				ep++;
+				++ep;
 			}
 
 		}
@@ -594,7 +597,7 @@ void NormalSmooth(MESH_TYPE &m,
 					//TD[*(ep.f)]->SetV();
 					(*ep.f).SetS();
 				}
-				ep++;
+				++ep;
 			}
 		}
 		mm.Normalize();
@@ -629,10 +632,11 @@ Point3<FLT> TriAreaGradient(Point3<FLT> &p,Point3<FLT> &p0,Point3<FLT> &p1)
 }
 
 template <class FLT>
-Point3<FLT> CrossProdGradient(Point3<FLT> &p,Point3<FLT> &p0,Point3<FLT> &p1, Point3<FLT> &m)
+Point3<FLT> CrossProdGradient(Point3<FLT> &p, Point3<FLT> &p0, Point3<FLT> &p1, Point3<FLT> &m)
 {
 	Point3<FLT> grad;
-
+	p0-=p;
+	p1-=p;
 	grad[0] = (-p0[2] + p1[2])*m[1] + (-p1[1] + p0[1])*m[2];
 	grad[1] = (-p1[2] + p0[2])*m[0] + (-p0[0] + p1[0])*m[2];
 	grad[2] = (-p0[1] + p1[1])*m[0] + (-p1[0] + p0[0])*m[1];
@@ -678,7 +682,7 @@ void FitMesh(MESH_TYPE &m,
 		while (!ep.End())
 		{
 			ErrGrad+=FaceErrorGrad(ep.f->V(ep.z)->P(),ep.f->V1(ep.z)->P(),ep.f->V2(ep.z)->P(),TDF[ep.f].m);
-			ep++;
+			++ep;
 		}
 		TDV[*vi].np=(*vi).P()-ErrGrad*lambda;					
 	}
