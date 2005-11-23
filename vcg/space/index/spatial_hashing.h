@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2005/11/07 14:15:36  pietroni
+added dynamic spatial hashing class for dynamic updating of entries (and relative functions)
+
 Revision 1.13  2005/10/05 17:04:18  pietroni
 corrected bug on Set Function .... bbox must be exetended in order to have'nt any object on his borde
 
@@ -244,7 +247,7 @@ namespace vcg{
 			}
 		}
 
-		virtual void _UpdateHMark(ObjType* s){}
+		virtual void _UpdateHMark(ObjType* s){(void)s;}
 
 		///insert an element in a specified cell if the cell doesn't exist than
 		///create it.
