@@ -23,6 +23,11 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.13  2005/11/23 11:58:52  ganovelli
+Empty constructor added, untemplated class Shotf and Shotd added
+usage: Shotf myShot;
+corrected member access rights
+
 Revision 1.12  2005/07/11 13:12:35  cignoni
 small gcc-related compiling issues (typenames,ending cr, initialization order)
 
@@ -95,6 +100,9 @@ public:
 	void SetValid(bool v){ if(!v) flags|=NOTVALID_BIT; else flags&=~NOTVALID_BIT;}
 
 	Camera<S> & Camera(){return camera;};
+
+	/// access to similarity
+	vcg::Similarity<S,vcg::Matrix44<S> > & Similarity(){return similarity;}
 
 	/// take the i-th axis of the coordinate system of the camera
 	vcg::Point3<S> Axis(const int & i)const;
