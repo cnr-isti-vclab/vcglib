@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2004/10/28 00:52:45  cignoni
+Better Doxygen documentation
+
 Revision 1.9  2004/10/27 09:33:10  ganovelli
 cast from scalar type to float added
 
@@ -283,59 +286,59 @@ static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &
 		 {
 				float t[17];
 
-				t[ 0] = (float) -m.shot.similarity.tra[0];
-				t[ 1] = (float)-m.shot.similarity.tra[1];
-				t[ 2] = (float)-m.shot.similarity.tra[2];
-				t[ 3] = (float)m.shot.similarity.rot[0][0];
-				t[ 4] = (float)m.shot.similarity.rot[0][1];
-				t[ 5] = (float)m.shot.similarity.rot[0][2];
-				t[ 6] = (float)m.shot.similarity.rot[1][0];
-				t[ 7] = (float)m.shot.similarity.rot[1][1];
-				t[ 8] = (float)m.shot.similarity.rot[1][2];
-				t[ 9] = (float)m.shot.similarity.rot[2][0];
-				t[10] = (float)m.shot.similarity.rot[2][1];
-				t[11] = (float)m.shot.similarity.rot[2][2];
-				t[12] = (float)m.shot.camera.f;
-				t[13] = (float)m.shot.camera.s[0];
-				t[14] = (float) m.shot.camera.s[1];
-				t[15] = (float)m.shot.camera.c[0];
-				t[16] = (float)m.shot.camera.c[1];
+				t[ 0] = (float) -m.shot.Similarity().tra[0];
+				t[ 1] = (float)-m.shot.Similarity().tra[1];
+				t[ 2] = (float)-m.shot.Similarity().tra[2];
+				t[ 3] = (float)m.shot.Similarity().rot[0][0];
+				t[ 4] = (float)m.shot.Similarity().rot[0][1];
+				t[ 5] = (float)m.shot.Similarity().rot[0][2];
+				t[ 6] = (float)m.shot.Similarity().rot[1][0];
+				t[ 7] = (float)m.shot.Similarity().rot[1][1];
+				t[ 8] = (float)m.shot.Similarity().rot[1][2];
+				t[ 9] = (float)m.shot.Similarity().rot[2][0];
+				t[10] = (float)m.shot.Similarity().rot[2][1];
+				t[11] = (float)m.shot.Similarity().rot[2][2];
+				t[12] = (float)m.shot.Camera().f;
+				t[13] = (float)m.shot.Camera().s[0];
+				t[14] = (float) m.shot.Camera().s[1];
+				t[15] = (float)m.shot.Camera().c[0];
+				t[16] = (float)m.shot.Camera().c[1];
 				fwrite(t,sizeof(float),17,fpout);
 
-				fwrite( &m.shot.camera.viewport[0],sizeof(int),2,fpout );
+				fwrite( &m.shot.Camera().viewport[0],sizeof(int),2,fpout );
 
-				t[ 0] = (float)m.shot.camera.k[0];
-				t[ 1] = (float)m.shot.camera.k[1];
-				t[ 2] = (float)m.shot.camera.k[2];
-				t[ 3] = (float)m.shot.camera.k[3];
+				t[ 0] = (float)m.shot.Camera().k[0];
+				t[ 1] = (float)m.shot.Camera().k[1];
+				t[ 2] = (float)m.shot.Camera().k[2];
+				t[ 3] = (float)m.shot.Camera().k[3];
 				fwrite(t,sizeof(float),4,fpout);
 		}
 		else
 		{
 			fprintf(fpout,"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %d %d %g %g %g %g\n"
-				,-m.shot.similarity.tra[0]
-				,-m.shot.similarity.tra[1]
-				,-m.shot.similarity.tra[2]
-				,m.shot.similarity.rot[0][0]
-				,m.shot.similarity.rot[0][1]
-				,m.shot.similarity.rot[0][2]
-				,m.shot.similarity.rot[1][0]
-				,m.shot.similarity.rot[1][1]
-				,m.shot.similarity.rot[1][2]
-				,m.shot.similarity.rot[2][0]
-				,m.shot.similarity.rot[2][1]
-				,m.shot.similarity.rot[2][2]
-				,m.shot.camera.f
-				,m.shot.camera.s[0]
-				,m.shot.camera.s[1]
-				,m.shot.camera.c[0]
-				,m.shot.camera.c[1]
-				,m.shot.camera.viewport[0]
-				,m.shot.camera.viewport[1]
-				,m.shot.camera.k[0]
-				,m.shot.camera.k[1]
-				,m.shot.camera.k[2]
-				,m.shot.camera.k[3]
+				,-m.shot.Similarity().tra[0]
+				,-m.shot.Similarity().tra[1]
+				,-m.shot.Similarity().tra[2]
+				,m.shot.Similarity().rot[0][0]
+				,m.shot.Similarity().rot[0][1]
+				,m.shot.Similarity().rot[0][2]
+				,m.shot.Similarity().rot[1][0]
+				,m.shot.Similarity().rot[1][1]
+				,m.shot.Similarity().rot[1][2]
+				,m.shot.Similarity().rot[2][0]
+				,m.shot.Similarity().rot[2][1]
+				,m.shot.Similarity().rot[2][2]
+				,m.shot.Camera().f
+				,m.shot.Camera().s[0]
+				,m.shot.Camera().s[1]
+				,m.shot.Camera().c[0]
+				,m.shot.Camera().c[1]
+				,m.shot.Camera().viewport[0]
+				,m.shot.Camera().viewport[1]
+				,m.shot.Camera().k[0]
+				,m.shot.Camera().k[1]
+				,m.shot.Camera().k[2]
+				,m.shot.Camera().k[3]
 			);
 		}		
 	}
