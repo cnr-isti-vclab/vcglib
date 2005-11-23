@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.33  2005/11/22 15:47:35  cignoni
+Moved ComputeNormal and ComputeNormalizedNormal out of the face class (no more a member function!)
+
 Revision 1.32  2005/11/12 18:39:54  cignoni
 Added dummy static member for avoiding annoying warning in empty functions...
 
@@ -688,6 +691,8 @@ public:
 		return *(char *)&_flags;
 #endif
 	}
+
+	inline const char & cFFi( const int j ) const {return FFi(j);}
 
 		/** Return the index that the face have in the j-th adjacent face.
 	    @param j Index of the edge.
