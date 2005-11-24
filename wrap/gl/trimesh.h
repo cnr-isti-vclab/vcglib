@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2005/11/22 23:57:28  cignoni
+Added a missing colormaterial for flatwire.
+
 Revision 1.11  2005/10/12 18:24:30  ponchio
 another bunch of typenames.
 
@@ -161,7 +164,7 @@ class GlTrimesh : public GLW
 
 
     unsigned int TextureMapID[128];
-	unsigned int & TMId(int i){return TextureMapID[i];}
+	unsigned int & TMId(int i){assert(i<128 && i >=0); return TextureMapID[i];}
 
 	unsigned int b[3];
 	int h;      // the current hints
