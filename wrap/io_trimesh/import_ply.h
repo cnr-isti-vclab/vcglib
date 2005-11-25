@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2005/11/23 16:59:55  callieri
+corrected protected access methods (camera, similarity) of shot
+
 Revision 1.17  2005/11/12 18:13:30  cignoni
 Added support for non triangular faces (simple fan triangulation) and removed flags intiailization.
 
@@ -646,6 +649,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 						(*fi).WT(k).u() = fa.tcoord[k*2+0];
 						(*fi).WT(k).v() = fa.tcoord[k*2+1];
 						if(multit) (*fi).WT(k).n() = fa.tcoordind;
+            else (*fi).WT(k).n()=0; // safely intialize texture index
 					}
 				}
 
