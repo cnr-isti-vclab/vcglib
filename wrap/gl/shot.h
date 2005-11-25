@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/02/22 11:15:01  ganovelli
+added vcg namespace
+
 Revision 1.5  2005/02/11 11:43:09  tommyfranken
 FromTrackball() corrected
 
@@ -68,24 +71,24 @@ struct GlShot {
 	typedef typename ShotType::ScalarType ScalarType;
 	typedef typename GlCamera<typename ShotType::CameraType> GlCameraType;
 
-static void MatrixGL(const ShotType & shot,vcg::Matrix44<ScalarType> & m) {
-	m = shot.similarity.Matrix();
+static void MatrixGL(ShotType & shot,vcg::Matrix44<ScalarType> & m) {
+	m = shot.Similarity().Matrix();
 }
 
-static void TransformGL(const vcg::Shot<ScalarType> & shot){
+static void TransformGL(vcg::Shot<ScalarType> & shot){
 	vcg::Matrix44<ScalarType> m;
 	MatrixGL(shot,m);
 	glMultMatrix(m);
 }
 
-static void SetView(const vcg::Shot<ScalarType> & shot){
+static void SetView(vcg::Shot<ScalarType> & shot){
 	assert(glGetError() == 0);
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadIdentity();
 
 	assert(glGetError() == 0);
-	GlCameraType::TransformGL(shot.camera); // apply camera/modelview transformation
+	GlCameraType::TransformGL(shot.Camera()); // apply camera/modelview transformation
 	assert(glGetError() == 0);
 
 	glMatrixMode(GL_MODELVIEW);
