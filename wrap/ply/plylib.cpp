@@ -31,6 +31,9 @@ of Greg Turk and on the work of Claudio Rocchini
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/11/12 07:07:47  cignoni
+Changed Offset types to remove warnings
+
 Revision 1.8  2005/03/15 11:46:52  cignoni
 Cleaning of the automatic bbox caching support for ply files. First working version.
 
@@ -3609,5 +3612,48 @@ int PlyFile::Read( void * mem )
 	return 0;
 }
 
+void __interpret_texture_name(const char*a, const char*fn, char*output){
+	int ia=0,io=0;
+	output[0]=0;
+	while (a[ia]!=0){
+		if (a[ia]=='<') {
+			if (strlen(a)>ia+5) {
+				if ( ( (a[ia+1]=='t') || (a[ia+1]=='T') ) &&
+						 ( (a[ia+2]=='h') || (a[ia+2]=='H') ) &&
+						 ( (a[ia+3]=='i') || (a[ia+3]=='I') ) &&
+						 ( (a[ia+4]=='s') || (a[ia+4]=='S') ) &&
+						 ( a[ia+5]=='>' ) )
+				{
+					// substitute "<this>" with filename:
+					// 1) remove path from filename 
+					int lastbar=0;
+					int ifn=0;
+					while (fn[ifn]!=0) { if ((fn[ifn]=='/') || (fn[ifn]=='\\')) lastbar=ifn+1; ifn++;}
+					ifn=lastbar;
+					char fn2[255];
+					while (fn[ifn]!=0) { fn2[ifn-lastbar]=fn[ifn]; ifn++;}
+					fn2[ifn-lastbar]=0;
+
+					// 2) remove ".ply" extention from filename
+					int l=ifn-lastbar;
+					if ((fn2[l-4]=='.') 
+						&& ((fn2[l-3]=='P') || (fn2[l-3]=='p')) 
+						&& ((fn2[l-2]=='L') || (fn2[l-2]=='l')) 
+						&& ((fn2[l-1]=='Y') || (fn2[l-1]=='y')) )
+					fn2[l-4]=0;
+
+					// 3) append
+					output[io]=0;
+					sprintf(output,"%s%s",output,fn2);
+					io=strlen(output);
+					ia+=6; //skip the "<this>"
+					continue;
+				};
+			}
+		}
+		output[io++]=a[ia++]; 
+	};
+	output[io]=0;
+};
 } 
 }
