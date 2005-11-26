@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/11/21 21:46:20  cignoni
+Changed HasColor -> HasFaceColor and HasNormal ->HasFaceNormal
+
 Revision 1.3  2005/11/16 22:43:36  cignoni
 Added WedgeTexture component
 
@@ -57,6 +60,7 @@ namespace vcg {
 All the Components that can be added to a faceex should be defined in the namespace face:
 
 */
+
 template <class VALUE_TYPE>
 class vector_ocf: public std::vector<VALUE_TYPE> {
   typedef std::vector<VALUE_TYPE> BaseType; 
@@ -71,6 +75,30 @@ public:
   FFAdjacencyEnabled=false;
   }
   
+// Auxiliary types to build internal vectors
+struct AdjTypePack {
+  typename VALUE_TYPE::FacePointer _fp[3] ;    
+  char _zp[3] ;    
+  };
+  
+//template <class TexCoordType>
+class WedgeTexTypePack {
+public:
+  WedgeTexTypePack() { 
+    wt[0].u()=.5;wt[0].v()=.5;
+    wt[1].u()=.5;wt[1].v()=.5;
+    wt[2].u()=.5;wt[2].v()=.5;
+    wt[0].n()=0; 
+    wt[1].n()=0; 
+    wt[2].n()=0; 
+  }
+
+  typename VALUE_TYPE::TexCoordType wt[3];
+};
+
+
+
+
   // override di tutte le funzioni che possono spostare 
 	// l'allocazione in memoria del container
 	void push_back(const VALUE_TYPE & v)
@@ -93,7 +121,7 @@ public:
     if(NormalEnabled)      NV.resize(_size);
     if(VFAdjacencyEnabled) AV.resize(_size);
     if(FFAdjacencyEnabled) AF.resize(_size);
-    if (WedgeTexEnabled) WTV.resize(_size);
+    if (WedgeTexEnabled) WTV.resize(_size,WedgeTexTypePack());
     
    }
   void reserve(const unsigned int & _size)
@@ -118,6 +146,7 @@ public:
 ////////////////////////////////////////
 // Enabling Eunctions
 
+bool IsColorEnabled() const {return ColorEnabled;}
 void EnableColor() {
   assert(VALUE_TYPE::HasFaceColorOcf());
   ColorEnabled=true;
@@ -130,6 +159,7 @@ void DisableColor() {
   CV.clear();
 }
 
+bool IsNormalEnabled() const {return NormalEnabled;}
 void EnableNormal() {
   assert(VALUE_TYPE::HasFaceNormalOcf());
   NormalEnabled=true;
@@ -142,6 +172,7 @@ void DisableNormal() {
   NV.clear();
 }
   
+bool IsVFAdjacencyEnabled() const {return VFAdjacencyEnabled;}
 void EnableVFAdjacency() {
   assert(VALUE_TYPE::HasVFAdjacencyOcf());
   VFAdjacencyEnabled=true;
@@ -155,6 +186,7 @@ void DisableVFAdjacency() {
 }
 
 
+bool IsFFAdjacencyEnabled() const {return FFAdjacencyEnabled;}
 void EnableFFAdjacency() {
   assert(VALUE_TYPE::HasFFAdjacencyOcf());
   FFAdjacencyEnabled=true;
@@ -167,37 +199,32 @@ void DisableFFAdjacency() {
   AF.clear();
 }
 
-
+bool IsWedgeTexEnabled() const {return WedgeTexEnabled;}
 void EnableWedgeTex() {
-  assert(VALUE_TYPE::HasWedgeTexture());
+  assert(VALUE_TYPE::HasWedgeTextureOcf());
   WedgeTexEnabled=true;
-  WTV.resize(size());
+  WTV.resize(size(),WedgeTexTypePack());
 }
 
 void DisableWedgeTex() {
-  assert(VALUE_TYPE::HasWedgeTexture());
+  assert(VALUE_TYPE::HasWedgeTextureOcf());
   WedgeTexEnabled=false;
   WTV.clear();
 }
 
-struct AdjType {
-  typename VALUE_TYPE::FacePointer _fp[3] ;    
-  char _zp[3] ;    
-  };
-  
 public:
   std::vector<typename VALUE_TYPE::ColorType> CV;
   std::vector<typename VALUE_TYPE::NormalType> NV;
-  std::vector<struct AdjType> AV;
-  std::vector<struct AdjType> AF;
-  std::vector<typename VALUE_TYPE::TexCoordType> WTV;
+  std::vector<struct AdjTypePack> AV;
+  std::vector<struct AdjTypePack> AF;
+  std::vector<class WedgeTexTypePack> WTV;
 
   bool ColorEnabled;
   bool NormalEnabled;
   bool WedgeTexEnabled;
   bool VFAdjacencyEnabled;
   bool FFAdjacencyEnabled;
-};
+}; // end class vector_ocf
 
 
 //template<>	void EnableAttribute<typename VALUE_TYPE::NormalType>(){	NormalEnabled=true;}
@@ -294,10 +321,12 @@ template <class T> class Color4bOcf: public ColorOcf<vcg::Color4b, T> {};
 
 template <class A, class TT> class WedgeTextureOcf: public TT {
 public:
+  WedgeTextureOcf(){ }
   typedef A TexCoordType;
-  TexCoordType &WT(const int i)              { assert(Base().WedgeTexEnabled); return Base().WTV[Index()]; }
-  TexCoordType const &cWT(const int i) const { assert(Base().WedgeTexEnabled); return Base().WTV[Index()]; }
+  TexCoordType &WT(const int i)              { assert(Base().WedgeTexEnabled); return Base().WTV[Index()].wt[i]; }
+  TexCoordType const &cWT(const int i) const { assert(Base().WedgeTexEnabled); return Base().WTV[Index()].wt[i]; }
   static bool HasWedgeTexture()   { return true; }
+  static bool HasWedgeTextureOcf()   { return true; }
 };
 
 template <class T> class WedgeTexturefOcf: public WedgeTextureOcf<TCoord2<float,1>, T> {};
@@ -317,7 +346,25 @@ public:
   vector_ocf<typename T::FaceType> *EV;
 };
 
-
   } // end namespace face
+  
+  template < class, class > class TriMesh;
+
+  namespace tri
+  {
+    template < class VertContainerType, class FaceType >
+      bool HasPerWedgeTexture (const TriMesh < VertContainerType , face::vector_ocf< FaceType > > & m) 
+    {
+      if(FaceContainerType::HasWedgeTextureOcf()) return m.face.WedgeTexEnabled();
+      else return FaceContainerType::HasWedgeTexture();
+    }
+
+    template < class VertContainerType, class FaceType >
+      bool HasPerFaceColor (const TriMesh < VertContainerType , face::vector_ocf< FaceType > > & m) 
+    {
+      if(FaceContainerType::HasPerFaceColorOcf()) return m.face.FaceColor();
+      else return FaceContainerType::HasFaceColor();
+    }
+  }
 }// end namespace vcg
 #endif
