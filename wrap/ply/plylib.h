@@ -30,6 +30,9 @@ of Greg Turk and on the work of Claudio Rocchini
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/11/12 07:07:47  cignoni
+Changed Offset types to remove warnings
+
 Revision 1.3  2005/01/03 10:35:59  cignoni
 Improved the compatibility for ply format for faces having the list size (e.g. number of vertexes of a face) as a char instead of a uchar.
 Added a couple of new face descriptors, corrected a bug in error reporting function (and restructured) and translated a few comments.
@@ -317,6 +320,8 @@ protected:
 	int FindType( const char * name ) const;
 	PlyElement * FindElement( const char * name );
 };
+
+void __interpret_texture_name(const char*a, const char*fn, char*output);
 
 }
 }
