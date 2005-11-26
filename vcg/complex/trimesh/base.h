@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2005/11/16 22:35:47  cignoni
+Added missing includes (color and assert)
+Added texture name members
+
 Revision 1.16  2005/11/15 12:09:17  rita_borgo
 Changed Volume Routine, before was returning negative values
 
@@ -291,6 +295,10 @@ ScalarType Volume()
 
 
 };	// end class Mesh
+
+template < class VertContainerType, class FaceContainerType >
+bool HasPerWedgeTexture (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return FaceContainerType::value_type::HasWedgeTexture();}
+
 /*@}*/
 /*@}*/
 }	 // end namespace
