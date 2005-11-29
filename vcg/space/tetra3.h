@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2004/10/13 12:45:51  cignoni
+Better Doxygen documentation
+
 Revision 1.8  2004/09/01 12:21:11  pietroni
 minor changes to comply gcc compiler (typename's )
 
@@ -101,6 +104,7 @@ Initial commit
 #define __VCG_TETRA3
 
 #include <vcg/space/point3.h>
+#include <vcg/math/Matrix44.h>
 
 namespace vcg {
 /** \addtogroup space */
@@ -357,6 +361,77 @@ ScalarType ComputeAspectRatio()
 		double a2=SolidAngle(2);
 		double a3=SolidAngle(3);
 		return (min(a0,min(a1,min(a2,a3))));
+	}
+
+	///return true of p is inside tetrahedron's volume
+	bool IsInside(const CoordType &p)
+	{
+		//bb control
+		vcg::Box3<CoordType::ScalarType> bb;
+		for (int i=0;i<4;i++)
+			bb.Add(_v[i]);
+
+		if (!bb.IsIn(p))
+			return false;
+
+		vcg::Matrix44<ScalarType> M0;
+		vcg::Matrix44<ScalarType> M1;
+		vcg::Matrix44<ScalarType> M2;
+		vcg::Matrix44<ScalarType> M3;
+		vcg::Matrix44<ScalarType> M4;
+
+		CoordType p1=_v[0];
+		CoordType p2=_v[1];
+		CoordType p3=_v[2];
+		CoordType p4=_v[3];
+
+		M0[0][0]=p1.V(0);
+		M0[0][1]=p1.V(1);
+		M0[0][2]=p1.V(2);
+		M0[1][0]=p2.V(0);
+		M0[1][1]=p2.V(1);
+		M0[1][2]=p2.V(2);
+		M0[2][0]=p3.V(0);
+		M0[2][1]=p3.V(1);
+		M0[2][2]=p3.V(2);
+		M0[3][0]=p4.V(0);
+		M0[3][1]=p4.V(1);
+		M0[3][2]=p4.V(2);
+		M0[0][3]=1;
+		M0[1][3]=1;
+		M0[2][3]=1;
+		M0[3][3]=1;
+
+		M1=M0;
+		M1[0][0]=p.V(0);
+		M1[0][1]=p.V(1);
+		M1[0][2]=p.V(2);
+
+		M2=M0;
+		M2[1][0]=p.V(0);
+		M2[1][1]=p.V(1);
+		M2[1][2]=p.V(2);
+
+		M3=M0;
+		M3[2][0]=p.V(0);
+		M3[2][1]=p.V(1);
+		M3[2][2]=p.V(2);
+
+		M4=M0;
+		M4[3][0]=p.V(0);
+		M4[3][1]=p.V(1);
+		M4[3][2]=p.V(2);
+
+		ScalarType d0=M0.Determinant();
+		ScalarType d1=M1.Determinant();
+		ScalarType d2=M2.Determinant();
+		ScalarType d3=M3.Determinant();
+		ScalarType d4=M4.Determinant();
+
+		// all determinant must have same sign
+		return (((d0>0)&&(d1>0)&&(d2>0)&&(d3>0)&&(d4>0))||((d0<0)&&(d1<0)&&(d2<0)&&(d3<0)&&(d4<0)));
+
+		
 	}
 
 
