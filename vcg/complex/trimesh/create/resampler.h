@@ -642,7 +642,7 @@ static void Resample(Old_Mesh &old_mesh,New_Mesh &new_mesh,vcg::Point3<int> accu
 	
 	
 	// MARCHING CUBES CALLS
-	Point3i min=Point3i((int)ceil(old_mesh.bbox.min.V(0)),(int)ceil(old_mesh.bbox.min.V(1)),(int)ceil(old_mesh.bbox.min.V(2)));
+	Point3i min=Point3i((int)(old_mesh.bbox.min.V(0)),(int)(old_mesh.bbox.min.V(1)),(int)(old_mesh.bbox.min.V(2)));
 	Point3i max=Point3i((int)ceil(old_mesh.bbox.max.V(0)),(int)ceil(old_mesh.bbox.max.V(1)),(int)ceil(old_mesh.bbox.max.V(2)));
 
 	
