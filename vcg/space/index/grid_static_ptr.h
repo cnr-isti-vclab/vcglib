@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.33  2005/11/30 10:32:44  m_di_benedetto
+Added (int) cast to std::distance to prevent compiler warning message.
+
 Revision 1.32  2005/11/10 15:44:17  cignoni
 Added casts to remove warnings
 
@@ -145,6 +148,7 @@ Initial commit
 #include <vcg/space/index/grid_util.h>
 #include <vcg/space/index/grid_closest.h>
 #include <vcg/simplex/face/distance.h>
+
 namespace vcg {
 
 	/** Static Uniform Grid
@@ -263,8 +267,8 @@ namespace vcg {
 			int i,j,x,y;
 			x = p[axis0];
 			y = p[axis1];
-			for(i = max(x-1,0); i <= min( x,siz[axis0]-1);++i)	
-				for(j = max(y-1,0); j <= min( y,siz[axis1]-1);++j){
+			for(i = std::max(x-1,0); i <= std::min( x,siz[axis0]-1);++i)	
+				for(j = std::max(y-1,0); j <= std::min( y,siz[axis1]-1);++j){
 					p[axis0]=i;
 					p[axis1]=j;
 					cl.push_back(Grid(p[0]+siz[0]*(p[1]+siz[1]*p[2])));
