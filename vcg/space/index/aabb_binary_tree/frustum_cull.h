@@ -25,6 +25,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/10/26 11:42:03  m_di_benedetto
+Added PASS_THROUGH flags.
+
 Revision 1.6  2005/10/15 19:14:35  m_di_benedetto
 Modified objapplyfunctor to nodeapplyfunctor.
 
@@ -95,6 +98,14 @@ public:
 
 	static inline bool IsFullyVisible(const NodeType * node) {
 		return ((node->Flags() & FC_FULLY_VISIBLE_BIT) != 0);
+	}
+
+	static inline void SetFullyVisible(NodeType * node) {
+		node->Flags() |= FC_FULLY_VISIBLE_BIT;
+	}
+
+	static inline void SetInvisible(NodeType * node) {
+		node->Flags() &= ~(FC_FULLY_VISIBLE_BIT | FC_PARTIALLY_VISIBLE_BIT);
 	}
 
 	static inline bool IsVisible(const NodeType * node) {
