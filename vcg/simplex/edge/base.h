@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/10/14 12:34:55  cignoni
+Added ordered constructor that build a edge with unique ordering
+among vertices (useful for edge-collapse simplification)
+
 Revision 1.8  2005/10/01 09:22:51  cignoni
 Major rewriting of the whole class edge. Removed default flags and nonsense attibutes. Given consistent naming to defines.
 
@@ -434,29 +438,29 @@ public:
 	 */
 	inline char & UberZ( const int j )
 	{
-		assert(j>=0);
-		j<2);
+		assert(j>=0 && j<2);
 #if defined(__VCGLIB_EDGE_AE) 
 		return zs[j];
 #elif defined(__VCGLIB_EDGE_SA) 
 		return zs[j];
 #else
 		assert(0);
-		return *(char *)&_flags;
+		static char dummy = 0;
+		return dummy;
 #endif
 	}
 
 	inline const char & UberZ( const int j ) const
 	{
-		assert(j>=0);
-		j<2);
+		assert(j>=0 & j<2);
 #if defined(__VCGLIB_EDGE_AE) 
 		return zs[j];
 #elif defined(__VCGLIB_EDGE_SA) 
 		return zs[j];
 #else
 		assert(0);
-		return *(char *)&_flags;
+        static int dummy = 0;
+        return dummy;
 #endif
 	}
 
@@ -464,30 +468,30 @@ public:
 	inline char & VEi( const int j )
 	{
 		assert( !IsD() );
-		assert(j>=0);
-		j<2);
+		assert(j>=0 & j<2);
 #ifdef __VCGLIB_EDGE_VA
 		return zv[j];
 #elif defined(__VCGLIB_EDGE_SA)
 		return zs[j];
 #else
 		assert(0);
-		return *(char *)&_flags;
+		static char dummy = 0;
+        return dummy;
 #endif
 	}
 
 	inline const char & VEi( const int j ) const
 	{
 		assert( !IsD() );
-		assert(j>=0);
-		j<2);
+		assert(j>=0 & j<2);
 #ifdef __VCGLIB_EDGE_VA
 		return zv[j];
 #elif defined(__VCGLIB_EDGE_SA)
 		return zs[j];
 #else
 		assert(0);
-		return *(char *)&_flags;
+		static char dummy = 0;
+        return dummy;
 #endif
 	}
 
@@ -521,8 +525,13 @@ public:
 	inline const int & IMark() const
 	{
 		assert( !IsD() );
+#ifdef __VCGLIB_EDGE_EM		
 		assert( (_flags & NOTREAD) == 0 );
 		return imark;
+#else
+        static int dummy = 0;
+        return dummy;		
+#endif				
 	}
 
 	/// Initialize the imark system of the face
