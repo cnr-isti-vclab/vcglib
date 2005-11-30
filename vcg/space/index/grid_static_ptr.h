@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.32  2005/11/10 15:44:17  cignoni
+Added casts to remove warnings
+
 Revision 1.31  2005/10/07 13:27:22  turini
 Minor changes in Set method: added use of template scalar type computing BBox.
 
@@ -355,7 +358,7 @@ namespace vcg {
 		{
 			OBJITER i;
 			Box3<FLT> b;
-			int _size=std::distance<OBJITER>(_oBegin,_oEnd);
+			int _size=(int)std::distance<OBJITER>(_oBegin,_oEnd);
 			if(!_bbox.IsNull())
 				bbox=_bbox;
 			else
