@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/05/10 13:26:53  cignoni
+missing ending newline
+
 Revision 1.3  2004/03/11 08:54:12  cignoni
 Written some documentation and added to the space module
 
@@ -86,6 +89,21 @@ public:
 			 if(p._t[i] != _t[i] || p._n[i] != _n[i]) return false;
 		 return true;
 		}
+
+  inline bool operator != ( TCoord2 const & p ) const
+		{
+		 for(int i=0;i<N;++i)
+			 if(p._t[i] != _t[i] || p._n[i] != _n[i]) return true;
+		 return false;
+		}
+
+	inline bool operator < ( TCoord2 const & p ) const
+		{
+		 for(int i=0;i<N;++i)
+			 if(p._t[i] != _t[i]) return p._t[i] < _t[i];
+		 return false;
+		}
+
 	enum { n_coords=N};
 };
 
