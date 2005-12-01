@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2005/11/23 13:04:26  ganovelli
+changed IsBOrder
+
 Revision 1.19  2005/11/10 15:49:32  cignoni
 Made IsManifold Constant
 
@@ -292,7 +295,7 @@ static bool CheckFlipEdge(FaceType &f, int z)
 	while (&f!=pos.f);
 
 	return true;
-};
+}
 
 /*!
 * Flip the z-th edge of the face f.
@@ -349,7 +352,7 @@ static void FlipEdge(FaceType &f, const int z)
 		g->FFp(w)->FFp( g->UberZ(w) ) = g;
 		g->FFp(w)->FFi( g->UberZ(w) ) = w;
 	}
-};
+}
 
 
 // Stacca la faccia corrente dalla catena di facce incidenti sul vertice z, 
