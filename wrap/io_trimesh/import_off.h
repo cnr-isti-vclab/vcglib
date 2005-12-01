@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/11/12 18:12:16  cignoni
+Added casts and changed integral types to remove warnings
+
 Revision 1.7  2005/09/28 10:30:14  rita_borgo
 *** empty log message ***
 
@@ -516,8 +519,8 @@ namespace vcg
 				}
 			};
 			// /*! @} */
-		}; //namespace io
-	};//namespace tri
-}; // namespace vcg
+		} //namespace io
+	}//namespace tri
+} // namespace vcg
 
 #endif //__VCGLIB_IMPORT_OFF

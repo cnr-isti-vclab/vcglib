@@ -51,8 +51,8 @@ namespace vcg {
 
 				static bool Save(SaveMeshType &m, const char * filename )
 				{
-					vcg::face::Pos<SaveMeshType::FaceType> he;
-					vcg::face::Pos<SaveMeshType::FaceType> hei;
+					vcg::face::Pos<FaceType> he;
+					vcg::face::Pos<FaceType> hei;
 					FILE * fpout = fopen(filename,"w");
 					if(fpout==NULL)	return false;
 
@@ -67,7 +67,7 @@ namespace vcg {
 					fprintf(fpout,"OFF\n");
 					fprintf(fpout,"%d %d ", m.vn, m.fn);
 
-					SaveMeshType::FaceIterator fi;
+					typename SaveMeshType::FaceIterator fi;
 					int count_e = 0;
 					int boundary_e = 0;
 					bool counted=false;
@@ -84,7 +84,7 @@ namespace vcg {
 						{
 							if (face::IsBorder(*fi,j))			//If this edge is a border edge
 								boundary_e++;						//  then increase the number of boundary edges
-							else if (IsManifold(*fi,j))		//If this edge is manifold
+              else if (face::IsManifold(*fi,j))		//If this edge is manifold
 							{
 								if((*fi).FFp(j)->IsS()) //If the face on the other side of the edge is already selected
 									count_e--;						//  we counted one edge twice

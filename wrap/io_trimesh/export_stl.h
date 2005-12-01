@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/10/28 00:52:45  cignoni
+Better Doxygen documentation
+
 Revision 1.3  2004/03/09 21:26:47  cignoni
 cr lf mismatch
 
