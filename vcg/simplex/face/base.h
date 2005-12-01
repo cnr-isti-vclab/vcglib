@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.34  2005/11/23 14:40:09  pietroni
+added cFFi function
+
 Revision 1.33  2005/11/22 15:47:35  cignoni
 Moved ComputeNormal and ComputeNormalizedNormal out of the face class (no more a member function!)
 
@@ -637,7 +640,7 @@ public:
 #endif
 	}
 
-	inline const FFTYPE * const & VFp( const int j ) const
+	inline const FFTYPE * const VFp( const int j ) const
 	{
 		assert( (_flags & DELETED) == 0 );
 		assert( (_flags & NOTREAD) == 0 );
@@ -649,7 +652,7 @@ public:
 		return fs[j];
 #else
 		assert(0);
-    static FFTYPE * DummyVal;
+    static FFTYPE * const DummyVal=0;
 		return DummyVal;
 #endif
 	}
@@ -952,7 +955,9 @@ void GetBBox( BoxType & bb ) const
 Reflection is a mechanism making it possible to investigate yourself. Reflection is used to investigate format of objects at runtime, invoke methods and access fields of these objects. Here we provide static const functions that are resolved at compile time and they give information about the data (normal, color etc.) supported by the current vertex type.
  **/
  //@{
-
+static bool HasFlags()  { 
+  return true;
+}
 static bool HasFaceNormal()  { 
 #ifdef __VCGLIB_FACE_FN 
   return true;
