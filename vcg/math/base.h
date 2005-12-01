@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2004/08/31 15:42:59  fasano
+Aggiunte macro sin/cos/atan per C++ Builder
+
 Revision 1.17  2004/05/10 13:00:14  ganovelli
 limits function cancelled
 
@@ -123,21 +126,21 @@ namespace math {
   
 	template<class T> inline const T & Min(const T &a, const T &b){
 		if (a<b) return a; else return b;
-	};
+	}
 	template<class T> inline const T & Max(const T &a, const T &b){
 		if (a<b) return b; else return a;
-	};
+	}
 
 	template<class T> inline void Swap(T &a, T &b){
 		T tmp=a; a=b; b=tmp;
-	};
+	}
 	template<class T> inline void Sort(T &a, T &b){
 		if (a>b) Swap(a,b);
-	};
+	}
 	template<class T> inline void Sort(T &a, T &b, T &c){
 		if (a>b) Swap(a,b);
 		if (b>c) {Swap(b,c); if (a>b) Swap(a,b);}
-	};
+	} 
 
 /* Some <math.h> files do not define M_PI... */
 #ifndef M_PI

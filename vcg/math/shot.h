@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.14  2005/11/23 14:18:35  ganovelli
+added access to similarity (just for symmetry with Camera() )
+
 Revision 1.13  2005/11/23 11:58:52  ganovelli
 Empty constructor added, untemplated class Shotf and Shotd added
 usage: Shotf myShot;
@@ -224,7 +227,7 @@ S Shot<S>::Depth(const vcg::Point3<S> & p)const {
 class Shotf: public Shot<float>{};
 class Shotd: public Shot<double>{};
 
-};
+} // end name space
 
 #endif
 

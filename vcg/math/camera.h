@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.23  2005/10/12 16:43:32  ponchio
+Added IsOrtho...
+
 Revision 1.22  2005/07/11 13:12:34  cignoni
 small gcc-related compiling issues (typenames,ending cr, initialization order)
 
@@ -324,7 +327,7 @@ template<class S>
 	fr = farend; 
 }
 
-};
+}
 #endif
 
 
