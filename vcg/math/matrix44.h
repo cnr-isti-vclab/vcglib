@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.28  2005/06/28 17:42:47  ganovelli
+added Matrix44Diag
+
 Revision 1.27  2005/06/17 05:28:47  cignoni
 Completed Shear Matrix code and comments,
 Added use of swap inside Transpose
@@ -308,7 +311,7 @@ template <class T> T Matrix44<T>::ElementAt(const int row, const int col) const 
 //  return ((T *)_a)[i];
 //} 
 template <class T> T *Matrix44<T>::operator[](const int i) {
-  assert(i >= 0 && i < 16);
+  assert(i >= 0 && i < 4);
   return _a+i*4;
 }
 
@@ -367,14 +370,16 @@ template <class T> Point4<T> Matrix44<T>::operator*(const Point4<T> &v) const {
 
 
 template <class T> bool Matrix44<T>::operator==(const  Matrix44 &m) const {
-  for(int i = 0 ; i < 16; i++)
-    if(operator[](i) != m[i])
+	for(int i = 0; i < 4; ++i)
+ 		for(int j = 0; j < 4; ++j)  
+    if(ElementAt(i,j) != m.ElementAt(i,j))
       return false;
   return true;
 }
 template <class T> bool Matrix44<T>::operator!=(const  Matrix44 &m) const {
-  for(int i = 0 ; i < 16; i++)
-    if(operator[](i) != m[i])
+	for(int i = 0; i < 4; ++i)
+ 		for(int j = 0; j < 4; ++j)  
+     if(ElementAt(i,j) != m.ElementAt(i,j))
       return true;
   return false;
 }
