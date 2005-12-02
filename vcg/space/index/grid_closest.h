@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/10/03 13:57:32  pietroni
+added GridGetInSphere and GridGetInBox functions
+
 Revision 1.5  2005/10/02 23:18:06  cignoni
 Small bug in the computation of the intersection between the todo box and the grid bbox that failed for extrema points.
 
@@ -79,7 +82,7 @@ namespace vcg{
 		typename SPATIAL_INDEX:: CoordType &_closestPt)
 	{
 		typedef typename SPATIAL_INDEX::ObjPtr ObjPtr;
-		typedef typename SPATIAL_INDEX SpatialIndex;
+		typedef SPATIAL_INDEX SpatialIndex;
 		typedef typename SPATIAL_INDEX::CoordType CoordType;
 		typedef typename SPATIAL_INDEX::ScalarType ScalarType;
 		typedef typename SPATIAL_INDEX::Box3x Box3x;
@@ -93,7 +96,7 @@ namespace vcg{
 		ScalarType radius;
 		Box3i iboxdone,iboxtodo;
 		CoordType t_res;
-		SPATIAL_INDEX::CellIterator first,last,l;
+		typename SPATIAL_INDEX::CellIterator first,last,l;
 		if(Si.bbox.IsInEx(_p))
 		{
 			Point3i _ip;
@@ -153,7 +156,7 @@ namespace vcg{
 		while (_minDist>radius);
 
 		return winner;
-	};
+	}
 
 	template <class SPATIALINDEXING,class OBJPOINTDISTFUNCTOR, class OBJMARKER, 
 	class OBJPTRCONTAINER, class DISTCONTAINER, class POINTCONTAINER>
@@ -184,7 +187,7 @@ namespace vcg{
 			i++;
 		}
 		return (i);
-	};
+	}
 
 	template <class SPATIALINDEXING,class OBJRAYISECTFUNCTOR, class OBJMARKER>
 		typename SPATIALINDEXING::ObjPtr GridDoRay(SPATIALINDEXING &_Si,
@@ -241,7 +244,7 @@ namespace vcg{
 			const vcg::Box3<typename SPATIALINDEXING::ScalarType> _bbox,
 			OBJPTRCONTAINER & _objectPtrs) 
 		{
-			SPATIALINDEXING::CellIterator first,last,l;
+			typename SPATIALINDEXING::CellIterator first,last,l;
 			_objectPtrs.clear();
 			vcg::Box3i ibbox;
 			Box3i Si_ibox(Point3i(0,0,0),_Si.siz-Point3i(1,1,1));
@@ -261,7 +264,7 @@ namespace vcg{
 							for(l=first;l!=last;++l) 
 								if (!(**l).IsD())
 								{
-									SPATIALINDEXING::ObjPtr elem=&(**l);
+									typename SPATIALINDEXING::ObjPtr elem=&(**l);
 									if( ! _marker.IsMarked(elem)){
 										_objectPtrs.push_back(elem);
 										_marker.Mark(elem);
