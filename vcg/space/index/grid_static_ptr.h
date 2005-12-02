@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.34  2005/11/30 16:01:25  m_di_benedetto
+Added std:: namespace for max() and min().
+
 Revision 1.33  2005/11/30 10:32:44  m_di_benedetto
 Added (int) cast to std::distance to prevent compiler warning message.
 
@@ -183,8 +186,8 @@ namespace vcg {
 	point of the object to point)
 	*/
 
-	template < typename OBJTYPE,class FLT=float >
-	class GridStaticPtr:public BasicGrid<OBJTYPE,FLT>
+	template < class OBJTYPE, class FLT=float >
+	class GridStaticPtr: public BasicGrid<OBJTYPE,FLT>
 	{
 	public:
 		typedef OBJTYPE ObjType;
@@ -193,7 +196,8 @@ namespace vcg {
 		typedef Point3<ScalarType> CoordType;
 		typedef Box3<ScalarType> Box3x;
 		typedef Line3<ScalarType> Line3x;
-		typedef typename GridStaticPtr<OBJTYPE,FLT> GridPtrType;
+		typedef GridStaticPtr<OBJTYPE,FLT> GridPtrType;
+    typedef BasicGrid<OBJTYPE,FLT> BT;
 
 		/** Internal class for keeping the first pointer of object.
 		Definizione Link dentro la griglia. Classe di supporto per GridStaticObj.
@@ -253,14 +257,14 @@ namespace vcg {
 			std::vector<Cell*> & cl) 
 		{
 #ifndef NDEBUG
-			if ( p[0]<0 || p[0]>siz[0] || 
-				p[1]<0 || p[1]>siz[1] || 
-				p[2]<0 || p[2]>siz[2] )
+      if ( p[0]<0 || p[0] > BT::siz[0] || 
+				p[1]<0 || p[1]> BT::siz[1] || 
+				p[2]<0 || p[2]> BT::siz[2] )
 				assert(0);
 			//return NULL;
 			else
 #endif
-				assert(((unsigned int) p[0]+siz[0]*p[1]+siz[1]*p[2])<grid.size());
+        assert(((unsigned int) p[0]+BT::siz[0]*p[1]+BT::siz[1]*p[2])<grid.size());
 
 			int axis0 = (axis+1)%3;
 			int axis1 = (axis+2)%3;
@@ -271,7 +275,7 @@ namespace vcg {
 				for(j = std::max(y-1,0); j <= std::min( y,siz[axis1]-1);++j){
 					p[axis0]=i;
 					p[axis1]=j;
-					cl.push_back(Grid(p[0]+siz[0]*(p[1]+siz[1]*p[2])));
+					cl.push_back(Grid(p[0]+BT::siz[0]*(p[1]+BT::siz[1]*p[2])));
 				}
 		}
 
@@ -293,9 +297,9 @@ namespace vcg {
 		/// BY INTEGER COORDS
 		inline Cell* Grid( const int x, const int y, const int z )
 		{
-			assert(!( x<0 || x>=siz[0] || y<0 || y>=siz[1] || z<0 || z>=siz[2] ));
+			assert(!( x<0 || x>=BT::siz[0] || y<0 || y>=BT::siz[1] || z<0 || z>=BT::siz[2] ));
 			assert(grid.size()>0);
-			return &*grid.begin() + ( x+siz[0]*(y+siz[1]*z) );
+			return &*grid.begin() + ( x+BT::siz[0]*(y+BT::siz[1]*z) );
 		}
 
 		inline Cell* Grid( const Point3i &pi)
@@ -310,7 +314,7 @@ namespace vcg {
 			last  = *(g+1);
 		}
 
-		void Grid( const Point3d & p, Cell & first, Cell & last )
+		void Grid( const Point3<ScalarType> & p, Cell & first, Cell & last )
 		{
 			Cell* g = Grid(GridP(p));
 
@@ -324,11 +328,11 @@ namespace vcg {
 		template <class Box3Type>
 			void SetBBox( const Box3Type & b )
 		{
-			bbox.Import( b );
-			ScalarType t = bbox.Diag()/100.0;
+      this->bbox.Import( b );
+			ScalarType t = this->bbox.Diag()/100.0;
 			if(t == 0) t = ScalarType(1e20);  // <--- Some doubts on this (Cigno 5/1/04)
-			bbox.Offset(t);
-			dim  = bbox.max - bbox.min;
+			this->bbox.Offset(t);
+			this->dim  = this->bbox.max - this->bbox.min;
 		}
 
 
@@ -354,41 +358,37 @@ namespace vcg {
 			//);
 		}
 
-
-
-		/// Insert a mesh in the grid
-		template <class OBJITER>
-			void Set(const OBJITER & _oBegin, const OBJITER & _oEnd, const Box3x &_bbox=Box3x() )
+    template <class OBJITER>
+    inline void Set(const OBJITER & _oBegin, const OBJITER & _oEnd, const Box3x &_bbox=Box3x() )
 		{
 			OBJITER i;
 			Box3<FLT> b;
 			int _size=(int)std::distance<OBJITER>(_oBegin,_oEnd);
 			if(!_bbox.IsNull())
-				bbox=_bbox;
+				this->bbox=_bbox;
 			else
 			{
 				for(i = _oBegin; i!= _oEnd; ++i)
 				{
 					(*i).GetBBox(b);
-					bbox.Add(b);
+					this->bbox.Add(b);
 					
 				}
 				///inflate the bb calculated
-				ScalarType infl=bbox.Diag()/_size;
-				bbox.min-=vcg::Point3<FLT>(infl,infl,infl);
-				bbox.max+=vcg::Point3<FLT>(infl,infl,infl);
+				ScalarType infl=this->bbox.Diag()/_size;
+				this->bbox.min-=vcg::Point3<FLT>(infl,infl,infl);
+				this->bbox.max+=vcg::Point3<FLT>(infl,infl,infl);
 			}	
 				
-				dim  = bbox.max - bbox.min;
-				BestDim( _size, dim, siz );
+				this->dim  = this->bbox.max - this->bbox.min;
+				BestDim( _size, this->dim, this->siz );
 				// find voxel size
-				voxel[0] = dim[0]/siz[0];
-				voxel[1] = dim[1]/siz[1];
-				voxel[2] = dim[2]/siz[2];
-
+				this->voxel[0] = this->dim[0]/this->siz[0];
+				this->voxel[1] = this->dim[1]/this->siz[1];
+				this->voxel[2] = this->dim[2]/this->siz[2];
 
 				// "Alloca" la griglia: +1 per la sentinella
-				grid.resize( siz[0]*siz[1]*siz[2]+1 );
+				grid.resize( this->siz[0]*this->siz[1]*this->siz[2]+1 );
 
 				// Ciclo inserimento dei tetraedri: creazione link
 				links.clear();
@@ -396,7 +396,7 @@ namespace vcg {
 				{
 					Box3x bb;			// Boundig box del tetraedro corrente
 					(*i).GetBBox(bb);
-					bb.Intersect(bbox);
+					bb.Intersect(this->bbox);
 					if(! bb.IsNull() )
 					{
 
@@ -405,10 +405,10 @@ namespace vcg {
 						int x,y,z;
 						for(z=ib.min[2];z<=ib.max[2];++z)
 						{
-							int bz = z*siz[1];
+							int bz = z*this->siz[1];
 							for(y=ib.min[1];y<=ib.max[1];++y)
 							{
-								int by = (y+bz)*siz[0];
+								int by = (y+bz)*this->siz[0];
 								for(x=ib.min[0];x<=ib.max[0];++x)
 									// Inserire calcolo cella corrente
 									// if( pt->Intersect( ... )
@@ -433,7 +433,6 @@ namespace vcg {
 				for(pg=0;pg<grid.size();++pg)
 				{
 					assert(pl!=links.end());
-
 					grid[pg] = &*pl;
 					while( (int)pg == pl->Index() )	// Trovato inizio
 					{
@@ -443,7 +442,8 @@ namespace vcg {
 					}
 				}
 
-		}
+		}		
+
 
 		int MemUsed()
 		{
@@ -484,7 +484,7 @@ namespace vcg {
 
 		template <class OBJMARKER, class OBJPTRCONTAINER>
 			unsigned int GetInBox(OBJMARKER & _marker, 
-			const vcg::Box3<typename ScalarType> _bbox,
+			const vcg::Box3<ScalarType> _bbox,
 			OBJPTRCONTAINER & _objectPtrs) 
 		{
 			return(vcg::GridGetInBox<GridPtrType,OBJMARKER,OBJPTRCONTAINER>
@@ -499,6 +499,6 @@ namespace vcg {
 
 	}; //end class GridStaticPtr
 
-}; // end namespace
+} // end namespace
 
 #endif
