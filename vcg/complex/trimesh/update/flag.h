@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2005/07/06 08:16:34  ganovelli
+set VertexBorderFromFace as static
+
 Revision 1.9  2005/06/10 15:07:23  cignoni
 Completed FaceBorderFromNone (and added a missing helper class)
 
@@ -86,6 +89,7 @@ typedef typename MeshType::FaceIterator   FaceIterator;
 **/
 static void Clear(MeshType &m)
 {
+  assert(HasPerFaceFlags(m));
 	FaceIterator fi;
 	VertexIterator vi;
 	for(fi=m.face.begin(); fi!=m.face.end(); ++fi)
@@ -99,6 +103,7 @@ Obviously it assumes that the topology has been correctly computed (see: UpdateT
 **/
 static void FaceBorderFromFF(MeshType &m)
 {
+  assert(HasPerFaceFlags(m));
 //	const int BORDERFLAG[3]={FaceType::BORDER0,FaceType::BORDER1,FaceType::BORDER2};
 	FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi)if(!(*fi).IsD())
@@ -114,6 +119,7 @@ static void FaceBorderFromFF(MeshType &m)
 
 static void FaceBorderFromVF(MeshType &m)
 {
+  assert(HasPerFaceFlags(m));
 	VertexIterator vi;
   assert(m.HasVFTopology());
 
@@ -200,6 +206,7 @@ inline bool operator != ( const EdgeSorter & pe ) const
 // versione minimale che non calcola i complex flag.
 static void FaceBorderFromNone(MeshType &m)
 {
+  assert(HasPerFaceFlags(m));
 	std::vector<EdgeSorter> e;
 	typename UpdateMeshType::FaceIterator pf;
 	typename std::vector<EdgeSorter>::iterator p;
@@ -244,6 +251,7 @@ static void FaceBorderFromNone(MeshType &m)
 	/// Bisogna carlcolare il border flag delle facce
 static void VertexBorderFromFace(MeshType &m)
 {
+  assert(HasPerFaceFlags(m));
 	typename MeshType::VertexIterator v;
 	typename MeshType::FaceIterator f;
 
@@ -265,8 +273,8 @@ static void VertexBorderFromFace(MeshType &m)
 }; // end class
 
 /*@}*/
-}	// End namespace
-}	// End namespace
+}	// End namespace tri
+}	// End namespace vcg
 
 
 #endif
