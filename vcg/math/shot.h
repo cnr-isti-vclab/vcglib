@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.15  2005/12/01 01:03:37  cignoni
+Removed excess ';' from end of template functions, for gcc compiling
+
 Revision 1.14  2005/11/23 14:18:35  ganovelli
 added access to similarity (just for symmetry with Camera() )
 
@@ -154,7 +157,7 @@ template <class S>
 	vcg::Point3<S>  Shot<S>::Axis(const int & i) const {	
 			vcg::Matrix44<S> m; 
 			similarity.rot.ToMatrix(m); 
-			vcg::Point3<S> aa = m.Row3(i);
+			vcg::Point3<S> aa = m.GetRow3(i);
 			return aa;
 	}
 
