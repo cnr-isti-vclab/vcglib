@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/10/03 16:21:10  spinelli
+erase wrong assert on boxToIbox function
+
 Revision 1.7  2005/10/02 23:16:26  cignoni
 English comment and moved typedef to public scope
 
@@ -70,12 +73,12 @@ namespace vcg {
 
   public:
 
-		typedef typename Box3<ScalarType> Box3x;
-		typedef typename SCALARTYPE ScalarType;
-		typedef typename Point3<SCALARTYPE> CoordType;
-		typedef typename OBJTYPE ObjType;
-		typedef typename OBJTYPE* ObjPtr;
-		typedef typename BasicGrid<OBJTYPE,SCALARTYPE> GridType;
+		typedef SCALARTYPE ScalarType;
+		typedef Box3<ScalarType> Box3x;
+		typedef Point3<ScalarType> CoordType;
+		typedef OBJTYPE ObjType;
+		typedef OBJTYPE* ObjPtr;
+		typedef BasicGrid<OBJTYPE,SCALARTYPE> GridType;
 
 		Box3x bbox;
 		/// Dimensione spaziale (lunghezza lati) del bbox
