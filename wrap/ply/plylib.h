@@ -30,6 +30,9 @@ of Greg Turk and on the work of Claudio Rocchini
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/11/26 00:12:25  cignoni
+added prototype of  interpret_texture_name
+
 Revision 1.4  2005/11/12 07:07:47  cignoni
 Changed Offset types to remove warnings
 
@@ -321,8 +324,8 @@ protected:
 	PlyElement * FindElement( const char * name );
 };
 
-void __interpret_texture_name(const char*a, const char*fn, char*output);
+void interpret_texture_name(const char*a, const char*fn, char*output);
 
-}
-}
+  } // end namespace ply
+} // end namespace vcg
 #endif

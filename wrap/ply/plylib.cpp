@@ -31,6 +31,9 @@ of Greg Turk and on the work of Claudio Rocchini
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2005/11/26 00:22:46  cignoni
+added untested code of interpret_texture
+
 Revision 1.9  2005/11/12 07:07:47  cignoni
 Changed Offset types to remove warnings
 
@@ -3612,7 +3615,7 @@ int PlyFile::Read( void * mem )
 	return 0;
 }
 
-void __interpret_texture_name(const char*a, const char*fn, char*output){
+void interpret_texture_name(const char*a, const char*fn, char*output){
 	int ia=0,io=0;
 	output[0]=0;
 	while (a[ia]!=0){
