@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/07/28 08:41:00  cignoni
+First working version
+
 Revision 1.13  2005/04/14 17:23:08  ponchio
 *** empty log message ***
 
@@ -47,7 +50,7 @@ and contains one istance of the template class.
 */
 
 template < typename class ObjType, class FLT=float  >
-class GridStaticObj : public BasicGrid<FLT>
+class GridStaticObj : public BasicGrid<ObjType, FLT>
 {
  public:
 
