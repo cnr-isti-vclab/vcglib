@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2005/11/22 14:04:10  rita_borgo
+Completed and tested self-intersection routine
+
 Revision 1.12  2005/11/17 00:41:07  cignoni
 Removed Initialize use updateflags::Clear() instead.
 
@@ -105,8 +108,8 @@ namespace vcg {
 			typedef typename MeshType::FaceIterator   FaceIterator;
 			typedef typename MeshType::FaceContainer  FaceContainer;
 
-			typedef GridStaticPtr<FaceType, typename MeshType::ScalarType > TriMeshGrid;
-			typedef Point3<typename MeshType::ScalarType> Point3x;
+			typedef GridStaticPtr<FaceType, ScalarType > TriMeshGrid;
+			typedef Point3<ScalarType> Point3x;
 
 			TriMeshGrid   gM;
 			FaceIterator fi;
@@ -117,7 +120,7 @@ namespace vcg {
 			/* classe di confronto per l'algoritmo di eliminazione vertici duplicati*/
 			class RemoveDuplicateVert_Compare{
 			public:
-				inline bool operator()(VertexPointer &a, VertexPointer &b)
+				inline bool operator()(VertexPointer const &a, VertexPointer const &b)
 				{
 					return (*a).cP() < (*b).cP();
 				}
@@ -126,7 +129,7 @@ namespace vcg {
 			static int DetectUnreferencedVertex( MeshType& m )   // V1.0
 			{
 				int count_uv = 0;
-				MeshType::VertexIterator v;
+				VertexIterator v;
 				FaceIterator fi;
 
 				for(v=m.vert.begin();v!=m.vert.end();++v)
@@ -385,7 +388,7 @@ namespace vcg {
 			static int ConnectedComponents(MeshType &m)
 			{
 				FaceIterator fi;
-				FaceIterator gi;
+				//FaceIterator gi;
 				vcg::face::Pos<FaceType> he;
 				vcg::face::Pos<FaceType> hei;
 
@@ -394,10 +397,11 @@ namespace vcg {
 
 				for(fi=m.face.begin();fi!=m.face.end();++fi)
 					(*fi).ClearS();
-				gi=m.face.begin(); fi=gi;
+				//gi=m.face.begin(); fi=gi;
 				int Compindex=0;
-				stack<MeshType::FaceIterator> sf;
-				MeshType::FaceType *l;
+				stack<FacePointer> sf;
+        FacePointer gi=&*(m.face.begin());
+				FaceType *l;
 				for(fi=m.face.begin();fi!=m.face.end();++fi)
 				{
 					if(!((*fi).IsD()))
@@ -407,7 +411,7 @@ namespace vcg {
 						(*fi).SetS();
 						//(*fi).Q()=Compindex;
 						nrfaces.push_back(1);
-						sf.push(fi);
+						sf.push(&*fi);
 						while (!sf.empty())
 						{
 							gi=sf.top();
@@ -531,24 +535,24 @@ The polyhedral formula corresponds to the special case g==0.
 			static void IsOrientedMesh(MeshType &m, bool Oriented, bool Orientable)
 			{
 				FaceIterator fi;
-				FaceIterator gi;
+				FacePointer gi=&*m.face.begin();
 				vcg::face::Pos<FaceType> he;
 				vcg::face::Pos<FaceType> hei;
-				stack<MeshType::FaceIterator> sf;	
-				MeshType::FacePointer l;
+				stack<FacePointer> sf;	
+				FacePointer l;
 
 				for(fi=m.face.begin();fi!=m.face.end();++fi)
 				{
 					(*fi).ClearS();
 					(*fi).ClearUserBit(0);
 				}
-				gi=m.face.begin(); fi=gi;
+				//gi=m.face.begin(); fi=gi;
 				for(fi=m.face.begin();fi!=m.face.end();++fi)
 				{
 					if (!(*fi).IsS())
 					{
 						(*fi).SetS();
-						sf.push(fi);
+						sf.push(&*fi);
 
 						while (!sf.empty())
 						{
@@ -643,7 +647,7 @@ The polyhedral formula corresponds to the special case g==0.
 
 				std::vector<FaceType*> ret;
 				std::vector<FaceType*> inBox;
-				gM.Set<vector<FaceType>::iterator>(m.face.begin(),m.face.end());
+				gM.Set(m.face.begin(),m.face.end());
 
 				
 				
