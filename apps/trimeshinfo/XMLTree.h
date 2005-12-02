@@ -40,22 +40,22 @@ public:
 
 	MainNode(void){node_type = MAIN_NODE;};
 	int node_type;
-	list<pair<char*,char*> > headers;
+	list<pair<const char*,const char*> > headers;
 
-	void addHeaders(char* str, char*val);
+	void addHeaders(const char* str, const char*val);
 	virtual void printNode();
 	virtual int qualifyNode();
 };
 
-void MainNode::addHeaders(char* str, char*val)
+void MainNode::addHeaders(const char* str, const char*val)
 {
-	headers.push_back(pair<char*,char*>(str,val));
+	headers.push_back(pair<const char*, const char*>(str,val));
 }
 void MainNode::printNode()
 {
 
 	cout<<"MainNode: node_type is "<<node_type<<"\n";
-	list<pair<char*,char*> >::iterator it;
+	list<pair<const char*,const char*> >::iterator it;
 	for(it = headers.begin(); it!= headers.end(); ++it)
 	{
 		cout<<"MainNode: First element is "<< it->first<<"\n";
@@ -80,13 +80,13 @@ public:
 	// methods
 	void initializeMain();
 	void finalizeMain();
-	void addHeaders(char* str, char*val);
+	void addHeaders(const char* str, const char*val);
 
 	void addSlots(SlotNode* sn);
 //	void addFacets();
 	void addClasses(ClassNode* cn);
 	void addInstances(InstanceNode* in);
-	void addNode(char* s, int value_type, char* name);
+	void addNode(const char* s, int value_type, const char* name);
 
 	void printXMLTree();
 
@@ -98,7 +98,7 @@ void XMLTree::initializeMain()
 	MainNode*	mn = new MainNode;
 	//NodeGroup* ng = new NodeGroup;
 	
-	mn->headers.push_back(pair<char*,char*>("protegekb",""));
+	mn->headers.push_back(pair<const char*,const char*>("protegekb",""));
 
 	char* s1 = "http://www.w3.org/2001/XMLSchema-instance";
 	char* s2 = new(char[25]);
@@ -136,16 +136,16 @@ void XMLTree::finalizeMain()
 	addInstances(in);
 	MainNode*	mn = new MainNode;
 	
-	mn->headers.push_back(pair<char*,char*>("/",XML_SCHEMA_NAME));
+	mn->headers.push_back(pair<const char*,const char*>("/",XML_SCHEMA_NAME));
 	root.Sons.push_back(mn);
 
 }
 
 
-void XMLTree::addHeaders(char* str, char*val)
+void XMLTree::addHeaders(const char* str, const char*val)
 {
 	MainNode* mn = (MainNode*) root.Sons.front();
-	mn->headers.push_back(pair<char*,char*>(str,val));
+	mn->headers.push_back(pair<const char*,const char*>(str,val));
 }
 
 void XMLTree::addSlots(SlotNode* sn)
@@ -166,7 +166,7 @@ void XMLTree::addClasses(ClassNode* cn)
 	root.Sons.push_back(cn0);
 }
 
-void XMLTree::addNode(char* s, int value_type, char* name)
+void XMLTree::addNode(const char* s, int value_type, const char* name)
 {
 	
 	ValueNode* vn = new ValueNode;
@@ -227,7 +227,7 @@ void XMLTree::printXMLTree()
 	list<Node*>::iterator it;
 	list<Node*>::iterator it2;
 	list<Node*>::iterator it3;
-	list<pair<char*,char*> >::iterator lit;
+	list<pair<const char*,const char*> >::iterator lit;
 	MainNode* mn;
 	SlotsNode* sns;
 	SlotNode* sn;

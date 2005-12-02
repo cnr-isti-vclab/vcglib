@@ -32,7 +32,7 @@ class EntryNode: public Node
 public:
 	EntryNode(void){node_type = ENTRY_NODE; type = "empty";};
 	int node_type;
-	char* type;
+	const char* type;
 	ValueNode value;
 	void addValue(ValueNode vn);
 	void setEntry(EntryNode en);
@@ -64,12 +64,12 @@ class OwnSlotNode: public Node
 public:
 	OwnSlotNode(void){node_type = OWNSLOT_NODE; name = "empty";};
 	int node_type;
-	char* name;
+	const char* name;
 	EntryNode entry;
 	virtual void printNode();
 	virtual int qualifyNode();
 	void addEntry(EntryNode en);
-	void setName(char* s){name = s;};
+	void setName(const char* s){name = s;};
 };
 
 void OwnSlotNode::printNode()
