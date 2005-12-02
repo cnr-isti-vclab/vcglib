@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2005/11/25 10:23:27  cignoni
+Added safe zero initialization of index of wedge texture
+
 Revision 1.18  2005/11/23 16:59:55  callieri
 corrected protected access methods (camera, similarity) of shot
 
@@ -772,43 +775,43 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 		}
 	}
 
- // // Parsing texture names
-	//textures.clear();
-	//normalmaps.clear();
+  // Parsing texture names
+	m.textures.clear();
+	m.normalmaps.clear();
 
-	//for(int co=0;co<int(pf.comments.size());++co)
-	//{
-	//	const char * TFILE = "TextureFile";
-	//	const char * NFILE = "TextureNormalFile";
-	//	const char * c = pf.comments[co];
-	//	char buf[256];
-	//	int i,j,n;
+	for(int co=0;co<int(pf.comments.size());++co)
+	{
+		string TFILE = "TextureFile";
+		string NFILE = "TextureNormalFile";
+		string &c = pf.comments[co];
+		char buf[256];
+    string bufstr,bufclean;
+		int i,j,n;
 
-	//	if( !strncmp(c,TFILE,strlen(TFILE)) )
-	//	{
-	//		strcpy(buf,c+strlen(TFILE)+1);
-	//		n = strlen(buf);
-	//		for(i=j=0;i<n;i++)
-	//			if( buf[i]!=' ' && buf[i]!='\t' && buf[i]>32 && buf[i]<125 )	buf[j++] = buf[i];
-	//		
-	//		buf[j] = 0;
-	//		char buf2[255];
-	//		__interpret_texture_name( buf,filename,buf2 );
-	//		textures.push_back( xstring(buf2) );
-	//	}
-	//	if( !strncmp(c,NFILE,strlen(NFILE)) )
-	//	{
-	//		strcpy(buf,c+strlen(NFILE)+1);
-	//		n = strlen(buf);
-	//		for(i=j=0;i<n;i++)
-	//			if( buf[i]!=' ' && buf[i]!='\t' && buf[i]>32 && buf[i]<125 )	buf[j++] = buf[i];
-	//		
-	//		buf[j] = 0;
-	//		char buf2[255];
-	//		__interpret_texture_name( buf,filename,buf2 );
-	//		normalmaps.push_back( xstring(buf2) );
-	//	}
-	//}
+    if( TFILE == c.substr(0,TFILE.length()) ) 
+		{
+      bufstr = c.substr(TFILE.length()+1);
+			n = bufstr.length();
+			for(i=0;i<n;i++)
+				if( bufstr[i]!=' ' && bufstr[i]!='\t' && bufstr[i]>32 && bufstr[i]<125 )	bufclean.push_back(bufstr[i]);
+			
+			char buf2[255];
+      ply::interpret_texture_name( bufclean.c_str(),filename,buf2 );
+			m.textures.push_back( string(buf2) );
+		}
+		/*if( !strncmp(c,NFILE,strlen(NFILE)) )
+		{
+			strcpy(buf,c+strlen(NFILE)+1);
+			n = strlen(buf);
+			for(i=j=0;i<n;i++)
+				if( buf[i]!=' ' && buf[i]!='\t' && buf[i]>32 && buf[i]<125 )	buf[j++] = buf[i];
+			
+			buf[j] = 0;
+			char buf2[255];
+			__interpret_texture_name( buf,filename,buf2 );
+			m.normalmaps.push_back( string(buf2) );
+		}*/
+	}
 
   // vn and fn should be correct but if someone wrongly saved some deleted elements they can be wrong.
 	m.vn = 0;
