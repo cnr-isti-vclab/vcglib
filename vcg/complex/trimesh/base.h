@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2005/11/26 00:16:03  cignoni
+added  HasPerWedgeTexture  taking mesh as input. (needed for optional components)
+
 Revision 1.17  2005/11/16 22:35:47  cignoni
 Added missing includes (color and assert)
 Added texture name members
@@ -82,6 +85,8 @@ Initial commit
 #pragma warning( disable : 4804 )
 #endif
 #include <assert.h>
+#include <string>
+#include <vector>
 #include <vcg/space/box3.h>
 #include <vcg/space/color4.h>
 #include <vcg/math/shot.h>
@@ -298,6 +303,10 @@ ScalarType Volume()
 
 template < class VertContainerType, class FaceContainerType >
 bool HasPerWedgeTexture (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return FaceContainerType::value_type::HasWedgeTexture();}
+
+template < class VertContainerType, class FaceContainerType >
+bool HasPerFaceFlags (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return FaceContainerType::value_type::HasFlags();}
+
 
 /*@}*/
 /*@}*/
