@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/11/16 22:59:35  cignoni
+Standardized name of flags. It is plural becouse each simplex has many flag.
+
 Revision 1.3  2005/11/12 18:36:51  cignoni
 Added 'Visited' flag functions
 
@@ -144,49 +147,33 @@ class VertexArityMax: public G<VertexArity6<BVT,BET,BFT,BTT, A, B, C, D, E, F> >
 
 // ----- Flags stuff -----
 public:
+  
+  const int Flags() const { return 0; }
+  int &Flags() { static int dummyflags(0); return dummyflags; }
+
  	enum { 
-		// This bit indicate that the vertex is deleted from the mesh
-		DELETED    = 0x0001,		// cancellato
-		// This bit indicate that the vertex of the mesh is not readable
-		NOTREAD    = 0x0002,		// non leggibile (ma forse modificabile) 
-		// This bit indicate that the vertex is not modifiable
-		NOTWRITE   = 0x0004,		// non modificabile (ma forse leggibile) 
-		// This bit indicate that the vertex is modified
-		MODIFIED   = 0x0008,		// modificato 
-		// This bit can be used to mark the visited vertex
-		VISITED    = 0x0010,		// Visited  
-		// This bit can be used to select 
-		SELECTED   = 0x0020,		// Selection flag
-		// Border Flag
-		BORDER     = 0x0100,
-		// First user bit
-		USER0      = 0x0200			// Fisrt user bit
+		
+		DELETED    = 0x0001,		// This bit indicate that the vertex is deleted from the mesh
+		NOTREAD    = 0x0002,		// This bit indicate that the vertex of the mesh is not readable
+		NOTWRITE   = 0x0004,		// This bit indicate that the vertex is not modifiable
+		MODIFIED   = 0x0008,		// This bit indicate that the vertex is modified
+		VISITED    = 0x0010,		// This bit can be used to mark the visited vertex
+		SELECTED   = 0x0020,		// This bit can be used to select 
+		BORDER     = 0x0100,    // Border Flag
+		USER0      = 0x0200			// First user bit
 			};
 
-
-	inline int & UberFlags ()
-	{
-			return Flags();
-	}
-	inline const int UberFlags() const
-	{
-		return Flags();
-	}
-
- 	///  checks if the vertex is deleted
-	bool IsD() const {return (Flags() & DELETED) != 0;}
-	///  checks if the vertex is readable
-	bool IsR() const {return (Flags() & NOTREAD) == 0;}
-	///  checks if the vertex is modifiable
-	bool IsW() const {return (Flags() & NOTWRITE)== 0;}
-	/// This funcion checks whether the vertex is both readable and modifiable
-	bool IsRW() const {return (Flags() & (NOTREAD | NOTWRITE)) == 0;}
-	///  checks if the vertex is Selected
-	bool IsS() const {return (Flags() & SELECTED) != 0;}
-	///  checks if the vertex is a border one
-	bool IsB() const {return (Flags() & BORDER) != 0;}
-	///  checks if the vertex Has been visited
-	bool IsV() const {return (Flags() & VISITED) != 0;}
+	inline int & UberFlags () { return Flags();	}
+	inline const int UberFlags() const 	{		return Flags();	}
+ 	
+	bool IsD() const {return (Flags() & DELETED) != 0;} ///  checks if the vertex is deleted
+	bool IsR() const {return (Flags() & NOTREAD) == 0;} ///  checks if the vertex is readable
+	bool IsW() const {return (Flags() & NOTWRITE)== 0;}///  checks if the vertex is modifiable
+	bool IsRW() const {return (Flags() & (NOTREAD | NOTWRITE)) == 0;}/// This funcion checks whether the vertex is both readable and modifiable
+	bool IsS() const {return (Flags() & SELECTED) != 0;}///  checks if the vertex is Selected
+	bool IsB() const {return (Flags() & BORDER) != 0;}///  checks if the vertex is a border one
+	bool IsV() const {return (Flags() & VISITED) != 0;}///  checks if the vertex Has been visited
+	
 
 	/** Set the flag value
 		@param flagp Valore da inserire nel flag
@@ -197,23 +184,14 @@ public:
 		@param flagp Valore da inserire nel flag
 	*/
 	void ClearFlags() {Flags()=0;}
-
-	///  deletes the vertex from the mesh
-	void SetD() {Flags() |=DELETED;}
-	///  un-delete a vertex
-	void ClearD() {Flags() &=(~DELETED);}
-	///  marks the vertex as readable
-	void SetR() {Flags() &=(~NOTREAD);}
-	///  marks the vertex as not readable
-	void ClearR() {Flags() |=NOTREAD;}
-	///  marks the vertex as writable
-	void ClearW() {Flags() |=NOTWRITE;}
-	///  marks the vertex as not writable
-	void SetW() {Flags() &=(~NOTWRITE);}
-	///  select the vertex
-	void SetS()		{Flags() |=SELECTED;}
-	/// Un-select a vertex
-	void ClearS()	{Flags() &= ~SELECTED;}
+	void SetD() {Flags() |=DELETED;}///  deletes the vertex from the mesh
+	void ClearD() {Flags() &=(~DELETED);}///  un-delete a vertex
+	void SetR() {Flags() &=(~NOTREAD);}///  marks the vertex as readable
+	void ClearR() {Flags() |=NOTREAD;}///  marks the vertex as not readable
+	void ClearW() {Flags() |=NOTWRITE;}///  marks the vertex as writable
+	void SetW() {Flags() &=(~NOTWRITE);}///  marks the vertex as not writable
+	void SetS()		{Flags() |=SELECTED;}///  select the vertex
+	void ClearS()	{Flags() &= ~SELECTED;}/// Un-select a vertex
 	void SetB()		{Flags() |=BORDER;}
 	void ClearB()	{Flags() &=~BORDER;}
 	void SetV()		{Flags() |=VISITED;}
