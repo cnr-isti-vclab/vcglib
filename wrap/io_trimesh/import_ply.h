@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2005/12/02 00:01:30  cignoni
+Added loading of texturenames (normalmap still to do)
+
 Revision 1.19  2005/11/25 10:23:27  cignoni
 Added safe zero initialization of index of wedge texture
 
@@ -781,11 +784,11 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 
 	for(int co=0;co<int(pf.comments.size());++co)
 	{
-		string TFILE = "TextureFile";
-		string NFILE = "TextureNormalFile";
-		string &c = pf.comments[co];
+    std::string TFILE = "TextureFile";
+		std::string NFILE = "TextureNormalFile";
+		std::string &c = pf.comments[co];
 		char buf[256];
-    string bufstr,bufclean;
+    std::string bufstr,bufclean;
 		int i,j,n;
 
     if( TFILE == c.substr(0,TFILE.length()) ) 
@@ -797,7 +800,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 			
 			char buf2[255];
       ply::interpret_texture_name( bufclean.c_str(),filename,buf2 );
-			m.textures.push_back( string(buf2) );
+			m.textures.push_back( std::string(buf2) );
 		}
 		/*if( !strncmp(c,NFILE,strlen(NFILE)) )
 		{
