@@ -54,10 +54,10 @@ namespace vcg{
 			ScalarType gy=goal.Y();
 			ScalarType gz=goal.Z();
 
-			dist=(r.Origin()-goal).Norm();
+			dist=(r.Origin()-goal).Norm(); 
 
-			const float	 MAXFLOAT =	 FLT_MAX;
-			const float	 EPSILON = 1e-50f;
+      const float LocalMaxScalar = std::numeric_limits<float>::max();
+			const float	EPSILON = 1e-50f;
 
 			/* Parametri della linea */
 			ScalarType tx,ty,tz;
@@ -65,17 +65,17 @@ namespace vcg{
 			if(	fabs(r.Direction().X())>EPSILON	) 
 				tx = (gx-r.Origin().X())/r.Direction().X();
 			else 
-				tx	=MAXFLOAT;
+				tx	=LocalMaxScalar;
 
 			if(	fabs(r.Direction().Y())>EPSILON	)
 				ty = (gy-r.Origin().Y())/r.Direction().Y();
 			else 
-				ty	=MAXFLOAT;
+				ty	=LocalMaxScalar;
 
 			if(	fabs(r.Direction().Z())>EPSILON	) 
 				tz = (gz-r.Origin().Z())/r.Direction().Z();
 			else 
-				tz	=MAXFLOAT;
+				tz	=LocalMaxScalar;
 
 			t=CoordType(tx,ty,tz);
 		}
@@ -158,7 +158,7 @@ namespace vcg{
 		{
 			//Elems.clear();
 
-			Spatial_Idexing::CellIterator first,last,l;
+      typename Spatial_Idexing::CellIterator first,last,l;
 
 			///take first, last iterators to elements in the cell
 			Si.Grid(CurrentCell.X(),CurrentCell.Y(),CurrentCell.Z(),first,last);
@@ -389,7 +389,7 @@ namespace vcg{
 							iy<explored.min[1] || iy>explored.max[1] ||
 							iz<explored.min[2] || iz>explored.max[2] ))
 						{
-							Spatial_Idexing::CellIterator first,last,l;
+							typename Spatial_Idexing::CellIterator first,last,l;
 
 							Si.Grid(ix,iy,iz,first,last);
 							for(l=first;l!=last;++l)
