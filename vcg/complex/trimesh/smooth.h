@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/11/23 16:24:44  pietroni
+corrected CrossProdGradient( )
+
 Revision 1.3  2005/07/11 13:12:05  cignoni
 small gcc-related compiling issues (typenames,ending cr, initialization order)
 
@@ -635,8 +638,8 @@ template <class FLT>
 Point3<FLT> CrossProdGradient(Point3<FLT> &p, Point3<FLT> &p0, Point3<FLT> &p1, Point3<FLT> &m)
 {
 	Point3<FLT> grad;
-	p0-=p;
-	p1-=p;
+	Point3<FLT> p00=p0-p;
+	Point3<FLT> p01=p1-p;
 	grad[0] = (-p0[2] + p1[2])*m[1] + (-p1[1] + p0[1])*m[2];
 	grad[1] = (-p1[2] + p0[2])*m[0] + (-p0[0] + p1[0])*m[2];
 	grad[2] = (-p0[1] + p1[1])*m[0] + (-p1[0] + p0[0])*m[1];
