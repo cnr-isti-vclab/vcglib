@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/11/16 22:56:32  cignoni
+Added EmptyMark to base class
+Standardized name of flags. It is plural becouse each simplex has many flag.
+
 Revision 1.3  2005/11/12 18:42:18  cignoni
 Added ClearS and GetBBox
 
@@ -67,6 +71,10 @@ class FaceTypeHolder{
   typedef BET *EdgePointer;
   typedef BFT *FacePointer;
   typedef BTT *TetraPointer;
+
+
+ // prot
+ 
 };
 
 /* The base class form which we start to add our components.
@@ -147,7 +155,16 @@ class FaceArityMax: public G<FaceArity6<BVT,BET,BFT,BTT, A, B, C, D, E, F> > {
 
 // ----- Flags stuff -----
 public:
- 	enum { 
+  
+	inline int & UberFlags ()
+	{ 
+			return this->Flags();
+	}
+	inline const int UberFlags() const
+	{
+		return this->Flags();
+	}
+   	enum { 
 		// This bit indicate that the face is deleted from the mesh
 		DELETED     = 0x00000001,		// cancellato
 		// This bit indicate that the face of the mesh is not readable
@@ -172,62 +189,51 @@ public:
 		USER0       = 0x00040000
 			};
 
-
-	inline int & UberFlags ()
-	{
-			return Flags();
-	}
-	inline const int UberFlags() const
-	{
-		return Flags();
-	}
-
+ 
  	///  checks if the Face is deleted
-	bool IsD() const {return (Flags() & DELETED) != 0;}
+	bool IsD() const {return (this->Flags() & DELETED) != 0;}
 	///  checks if the Face is readable
-	bool IsR() const {return (Flags() & NOTREAD) == 0;}
+	bool IsR() const {return (this->Flags() & NOTREAD) == 0;}
 	///  checks if the Face is modifiable
-	bool IsW() const {return (Flags() & NOTWRITE)== 0;}
+	bool IsW() const {return (this->Flags() & NOTWRITE)== 0;}
 	/// This funcion checks whether the Face is both readable and modifiable
-	bool IsRW() const {return (Flags() & (NOTREAD | NOTWRITE)) == 0;}
+	bool IsRW() const {return (this->Flags() & (NOTREAD | NOTWRITE)) == 0;}
 	///  checks if the Face is Modified
-	bool IsS() const {return (Flags() & SELECTED) != 0;}
-	///  checks if the Face is readable
-	bool IsB() const {return (Flags() & BORDER) != 0;}
+	bool IsS() const {return (this->Flags() & SELECTED) != 0;}
+	
+	/** Set the flag value
+		@param flagp Valore da inserire nel flag
+	*/
+	void SetFlags(int flagp) {this->Flags()=flagp;}
 
 	/** Set the flag value
 		@param flagp Valore da inserire nel flag
 	*/
-	void SetFlags(int flagp) {Flags()=flagp;}
-
-	/** Set the flag value
-		@param flagp Valore da inserire nel flag
-	*/
-	void ClearFlags() {Flags()=0;}
+	void ClearFlags() {this->Flags()=0;}
 
 	///  deletes the Face from the mesh
-	void SetD() {Flags() |=DELETED;}
+	void SetD() {this->Flags() |=DELETED;}
 	///  un-delete a Face
-	void ClearD() {Flags() &=(~DELETED);}
+	void ClearD() {this->Flags() &=(~DELETED);}
 	///  marks the Face as readable
-	void SetR() {Flags() &=(~NOTREAD);}
+	void SetR() {this->Flags() &=(~NOTREAD);}
 	///  marks the Face as not readable
-	void ClearR() {Flags() |=NOTREAD;}
+	void ClearR() {this->Flags() |=NOTREAD;}
 	///  marks the Face as writable
-	void ClearW() {Flags() |=NOTWRITE;}
+	void ClearW() {this->Flags() |=NOTWRITE;}
 	///  marks the Face as not writable
-	void SetW() {Flags() &=(~NOTWRITE);}
+	void SetW() {this->Flags() &=(~NOTWRITE);}
 	///  select the Face
-	void SetS()		{Flags() |=SELECTED;}
+	void SetS()		{this->Flags() |=SELECTED;}
 	/// Un-select a Face
   	/// This function checks if the face is selected
-	bool IsB(int i) const {return (Flags() & (BORDER0<<i)) != 0;}
+	bool IsB(int i) const {return (this->Flags() & (BORDER0<<i)) != 0;}
 	/// This function select the face
-	void SetB(int i)		{Flags() |=(BORDER0<<i);}
+  void SetB(int i)		{this->Flags() |=(BORDER0<<i);}
 	/// This funcion execute the inverse operation of SetS()
-	void ClearB(int i)	{Flags() &= (~(BORDER0<<i));}
+	void ClearB(int i)	{this->Flags() &= (~(BORDER0<<i));}
 	/// Un-select a vertex
-	void ClearS()	{Flags() &= ~SELECTED;}
+	void ClearS()	{this->Flags() &= ~SELECTED;}
 	
 ///  Return the first bit that is not still used
 static int &LastBitFlag()
@@ -236,14 +242,14 @@ static int &LastBitFlag()
 			return b;
 		}
 
-/// allocate a bit among the flags that can be used by user.
-static inline int NewBitFlag()
-		{
-			LastBitFlag()=LastBitFlag()<<1;
-			return LastBitFlag();
-		}
-// de-allocate a bit among the flags that can be used by user.
-static inline bool DeleteBitFlag(int bitval)
+    /// allocate a bit among the flags that can be used by user.
+    static inline int NewBitFlag()
+		    {
+			    LastBitFlag()=LastBitFlag()<<1;
+			    return LastBitFlag();
+		    }
+    // de-allocate a bit among the flags that can be used by user.
+    static inline bool DeleteBitFlag(int bitval)
 		{	
 			if(LastBitFlag()==bitval) {
 					LastBitFlag()= LastBitFlag()>>1;
@@ -253,21 +259,22 @@ static inline bool DeleteBitFlag(int bitval)
 			return false;
 		}
 	/// This function checks if the given user bit is true
-	bool IsUserBit(int userBit){return (Flags() & userBit) != 0;}
+	bool IsUserBit(int userBit){return (this->Flags() & userBit) != 0;}
 	/// This function set  the given user bit 
-	void SetUserBit(int userBit){Flags() |=userBit;}
+	void SetUserBit(int userBit){this->Flags() |=userBit;}
 	/// This function clear the given user bit 
-	void ClearUserBit(int userBit){Flags() &= (~userBit);}
+	void ClearUserBit(int userBit){this->Flags() &= (~userBit);}
 
-  template<class BoxType>
+ template<class BoxType>
   void GetBBox( BoxType & bb ) const
   {
-	  bb.Set(P(0));
-	  bb.Add(P(1));
-	  bb.Add(P(2));
+	  bb.Set(this->P(0));
+	  bb.Add(this->P(1));
+	  bb.Add(this->P(2));
   }
- };
 
+
+};
 
 template < typename T=int>
 class FaceDefaultDeriver : public T {};
