@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/07/11 13:13:33  cignoni
+small gcc-related compiling issues (typenames,ending cr, initialization order)
+
 Revision 1.5  2005/06/29 15:25:41  callieri
 deleted a wrong declaration "typename typename"
 
@@ -628,7 +631,7 @@ face::Pos<typename MESH_TYPE::FaceType> he(ep.f,ep.z,ep.f->V(ep.z));
 	}	while(he!=heStart);
   if(br||bl) return MidPointButterfly<MESH_TYPE>()( ep );
 	if(kr==6 && kl==6) return MidPointButterfly<MESH_TYPE>()( ep );
-	TRACE("odd vertex among valences of %i %i\n",kl,kr);
+	// TRACE("odd vertex among valences of %i %i\n",kl,kr);
 	typename MESH_TYPE::CoordType newposl=*vl*.75, newposr=*vr*.75;
 	he.FlipV();heStart=he; assert(he.v->P()==*vl);
 	int i=0;
