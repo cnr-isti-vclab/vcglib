@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2005/11/24 08:06:50  cignoni
+Added bound checking in texture access
+
 Revision 1.12  2005/11/22 23:57:28  cignoni
 Added a missing colormaterial for flatwire.
 
@@ -163,10 +166,9 @@ class GlTrimesh : public GLW
 		FACE_POINTER_CONTAINER face_pointers;
 
 
-    unsigned int TextureMapID[128];
-	unsigned int & TMId(int i){assert(i<128 && i >=0); return TextureMapID[i];}
+    std::vector<unsigned int> TMId;
 
-	unsigned int b[3];
+  unsigned int b[3];
 	int h;      // the current hints
 	// The parameters of hints
   int   HNParami[8];
@@ -364,6 +366,12 @@ void DrawFill()
 	//short curtexname=-1;
 
 	if(cm == CMPerMesh) glColor(m->C());
+				//		
+  
+  if(tm == TMPerWedge) {
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D,TMId[0]);
+  }
  
 	if(h&HNUseVArray) 
 	{
@@ -571,14 +579,14 @@ void DrawRadar()
 void DrawTexture_NPV_TPW2()
 {
 	unsigned int texname=(*(m->face.begin())).WT(0).n(0);
-	glBindTexture(GL_TEXTURE_2D,TMId(texname));
+	glBindTexture(GL_TEXTURE_2D,TMId[texname]);
 	typename MESH_TYPE::FaceIterator fi;
 	glBegin(GL_TRIANGLES);
 	for(fi=m->face.begin();fi!=m->face.end();++fi)if(!(*fi).IsD()){
 		  if(texname!=(*fi).WT(0).n(0))	{
 				texname=(*fi).WT(0).n(0);
 				glEnd();
-				glBindTexture(GL_TEXTURE_2D,TMId(texname));
+				glBindTexture(GL_TEXTURE_2D,TMId[texname]);
 				glBegin(GL_TRIANGLES);
 			}
 			glMultiTexCoordARB(GL_TEXTURE0_ARB, (*fi).WT(0).t(0));
