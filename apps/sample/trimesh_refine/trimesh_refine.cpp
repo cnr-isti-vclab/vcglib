@@ -1,8 +1,16 @@
 	
 // mesh definition 
-#include <vcg/simplex/vertex/with/vn.h>
-#include <vcg/simplex/face/with/af.h>
-#include <vcg/complex/trimesh/base.h>
+//#include <vcg/simplex/vertex/with/vn.h>
+//#include <vcg/simplex/face/with/af.h>
+//#include <vcg/complex/trimesh/base.h>
+
+#include<vcg/simplex/vertexplus/base.h>
+#include<vcg/simplex/faceplus/base.h>
+#include<vcg/simplex/face/topology.h>
+
+#include<vcg/simplex/vertexplus/component.h>
+#include<vcg/simplex/faceplus/component.h>
+#include<vcg/complex/trimesh/base.h>
 
 #include <vcg/complex/trimesh/update/topology.h>
 #include <vcg/complex/trimesh/update/normal.h>
@@ -19,11 +27,21 @@
 using namespace vcg;
 using namespace std;
 
-struct MyFace;
-struct MyEdge;
-struct MyVertex: public VertexVN<float,MyEdge,MyFace>{};
-struct MyFace: public FaceAF<MyVertex,MyEdge,MyFace>{};
-struct MyMesh: public tri::TriMesh< vector<MyVertex>, vector<MyFace> >{};
+//struct MyFace;
+//struct MyEdge;
+//struct MyVertex: public VertexVN<float,MyEdge,MyFace>{};
+//struct MyFace: public FaceAF<MyVertex,MyEdge,MyFace>{};
+//struct MyMesh: public tri::TriMesh< vector<MyVertex>, vector<MyFace> >{};
+
+class MyEdge;    // dummy prototype never used
+class MyFace;
+class MyVertex;
+
+class MyVertex  : public VertexSimp2< MyVertex, MyEdge, MyFace, vert::Coord3f, vert::Color4b, vert::Normal3f, vert::Qualityf, vert::BitFlags  >{};
+class MyFace    : public FaceSimp2< MyVertex, MyEdge, MyFace, face::FFAdj, face::VertexRef, face::BitFlags, face::Normal3f > {};
+class MyMesh    : public vcg::tri::TriMesh< vector<MyVertex>, vector<MyFace> > {};
+
+
 
 #define FLAT	0
 #define BUTTERFLY 2
