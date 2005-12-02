@@ -24,6 +24,11 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.35  2005/12/02 00:25:13  cignoni
+Added and removed typenames for gcc compiling.
+Added base class qualifier for referencing the elemntes of the templated base class (BasicGrid)
+it seems to be needed by the standard
+
 Revision 1.34  2005/11/30 16:01:25  m_di_benedetto
 Added std:: namespace for max() and min().
 
@@ -271,8 +276,8 @@ namespace vcg {
 			int i,j,x,y;
 			x = p[axis0];
 			y = p[axis1];
-			for(i = std::max(x-1,0); i <= std::min( x,siz[axis0]-1);++i)	
-				for(j = std::max(y-1,0); j <= std::min( y,siz[axis1]-1);++j){
+			for(i = std::max(x-1,0); i <= std::min( x,BT::siz[axis0]-1);++i)	
+				for(j = std::max(y-1,0); j <= std::min( y,this->siz[axis1]-1);++j){
 					p[axis0]=i;
 					p[axis1]=j;
 					cl.push_back(Grid(p[0]+BT::siz[0]*(p[1]+BT::siz[1]*p[2])));
