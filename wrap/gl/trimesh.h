@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2005/12/02 00:03:22  cignoni
+Added support for one texture mode (perwedge)
+Changed texturemapid array into a safer vector
+
 Revision 1.13  2005/11/24 08:06:50  cignoni
 Added bound checking in texture access
 
@@ -74,7 +78,7 @@ first draft: it includes glew !
 
 #include <GL/glew.h>
 #include <wrap/gl/space.h>
-#include <vcg/space/Color4.h>
+#include <vcg/space/color4.h>
 
 namespace vcg {
 
