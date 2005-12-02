@@ -21,42 +21,40 @@
 using namespace vcg;
 using namespace std;
 
-
-
 class CEdge;    // dummy prototype never used
 class CFace;
 class CFaceOcf;
+class CFaceOcc;
 class CVertex;
 class CVertexOcf;
 
-// Opt stuff
-
+// Optional stuff has two suffixes:
 // OCF Optional Component Fast 
+// OCC Optional Component Compact
+
 class CVertex     : public VertexSimp2< CVertex,    CEdge, CFace,    vert::Coord3f, vert::Normal3f >{};
 class CVertexOcf  : public VertexSimp2< CVertexOcf, CEdge, CFaceOcf, vert::Coord3f, vert::Normal3f >{};
+class CVertexOcc  : public VertexSimp2< CVertexOcc, CEdge, CFaceOcc, vert::Coord3f, vert::Normal3f >{};
 
-class CFace       : public FaceSimp2< CVertex,    CEdge, CFace,                   face::FFAdj,    face::VertexRef, face::Flag, face::Normal3f > {};
-class CFaceOcf    : public FaceSimp2< CVertexOcf, CEdge, CFaceOcf, face::InfoOcf, face::FFAdjOcf, face::VertexRef, face::Flag, face::Normal3fOcf > {};
+class CFace       : public FaceSimp2< CVertex,    CEdge, CFace,                   face::FFAdj,    face::VertexRef, face::BitFlags, face::Normal3f > {};
+class CFaceOcf    : public FaceSimp2< CVertexOcf, CEdge, CFaceOcf, face::InfoOcf, face::FFAdjOcf, face::VertexRef, face::BitFlags, face::Normal3fOcf > {};
+class CFaceOcc    : public FaceSimp2< CVertexOcc, CEdge, CFaceOcc,                face::FFAdjOcc, face::VertexRef, face::BitFlags, face::Normal3fOcc > {};
 
-class CMeshOcf    : public vcg::tri::TriMesh< vector<CVertexOcf>, face::vector_ocf<CFaceOcf> > {};
-class CMesh       : public vcg::tri::TriMesh< vector<CVertex   >,           vector<CFace   > > {};
+class CMesh       : public vcg::tri::TriMesh<     vector<CVertex   >,           vector<CFace   > > {};
+class CMeshOcf    : public vcg::tri::TriMesh<     vector<CVertexOcf>, face::vector_ocf<CFaceOcf> > {};
+class CMeshOcc    : public vcg::tri::TriMesh< vector_occ<CVertexOcc>,       vector_occ<CFaceOcc  > > {};
 
-// OCC Optional Component Compact
-class CFaceOcc;
-class CVertexOcc   : public VertexSimp2< CVertexOcc,CEdge, CFaceOcc,vert::Coord3f,vert::Normal3f >{};
-class CFaceOcc     : public FaceSimp2<  CVertexOcc, CEdge, CFaceOcc,face::VertexRef,vcg::face::Normal3fOcc,face::FFAdjOcc,face::Flag> {};
-class CMeshOcc     : public vcg::tri::TriMesh< vector_occ<CVertexOcc   >, vector_occ<CFaceOcc  > > {};
 
 
 int main(int , char **)
 {
   CMesh cm;
-  CMeshOcf cmo;
+  CMeshOcf cmof;
 	CMeshOcc cmoc;
 
 
   tri::Tetrahedron(cm);
-  tri::Tetrahedron(cmo);
+  tri::Tetrahedron(cmof);
  	tri::Tetrahedron(cmoc);
  
   printf("Generated mesh has %i vertices and %i triangular faces\n",cm.vn,cm.fn);
@@ -66,7 +64,7 @@ int main(int , char **)
   /// normals are not normalized
 
 	cmoc.face.EnableAttribute<CFaceOcc::FFAdjType>();  
-	cmo.face.EnableFFAdjacency();
+	cmof.face.EnableFFAdjacency();
 
 
   printf("Size of CFace            %3i\n",sizeof(CFace));
@@ -74,15 +72,15 @@ int main(int , char **)
   printf("Size of CFaceOcc         %3i\n",sizeof(CFaceOcc));
  
   vcg::tri::UpdateTopology<CMesh   >::FaceFace(cm);
-  vcg::tri::UpdateTopology<CMeshOcf>::FaceFace(cmo);
+  vcg::tri::UpdateTopology<CMeshOcf>::FaceFace(cmof);
   vcg::tri::UpdateTopology<CMeshOcc>::FaceFace(cmoc);
 	
   vcg::tri::UpdateFlags<CMesh   >::FaceBorderFromFF(cm);
-	vcg::tri::UpdateFlags<CMeshOcf>::FaceBorderFromFF(cmo);
+	vcg::tri::UpdateFlags<CMeshOcf>::FaceBorderFromFF(cmof);
  	vcg::tri::UpdateFlags<CMeshOcc>::FaceBorderFromFF(cmoc);
 
 	vcg::tri::UpdateNormals<CMesh   >::PerVertexNormalized(cm);
-	vcg::tri::UpdateNormals<CMeshOcf>::PerVertexNormalized(cmo);
+	vcg::tri::UpdateNormals<CMeshOcf>::PerVertexNormalized(cmof);
 	vcg::tri::UpdateNormals<CMeshOcc>::PerVertexNormalized(cmoc);
 
 
@@ -93,7 +91,7 @@ int main(int , char **)
     t0=clock();
     Refine(cm,MidPointButterfly<CMesh>(),0); 
     t1=clock();
-    Refine(cmo,MidPointButterfly<CMeshOcf>(),0); 
+    Refine(cmof,MidPointButterfly<CMeshOcf>(),0); 
     t2=clock();
     Refine(cmoc,MidPointButterfly<CMeshOcc>(),0);	
 		t3=clock();
