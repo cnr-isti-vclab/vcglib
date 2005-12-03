@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2005/12/02 00:14:43  cignoni
+Removed some pointer vs iterator issues that prevented gcc compilation
+
 Revision 1.13  2005/11/22 14:04:10  rita_borgo
 Completed and tested self-intersection routine
 
@@ -76,6 +79,7 @@ Initial Release
 
 #include <map>
 #include <algorithm>
+#include <stack>
 
 
 #include <vcg/simplex/face/face.h>
@@ -399,7 +403,7 @@ namespace vcg {
 					(*fi).ClearS();
 				//gi=m.face.begin(); fi=gi;
 				int Compindex=0;
-				stack<FacePointer> sf;
+        std::stack<FacePointer> sf;
         FacePointer gi=&*(m.face.begin());
 				FaceType *l;
 				for(fi=m.face.begin();fi!=m.face.end();++fi)
@@ -538,7 +542,7 @@ The polyhedral formula corresponds to the special case g==0.
 				FacePointer gi=&*m.face.begin();
 				vcg::face::Pos<FaceType> he;
 				vcg::face::Pos<FaceType> hei;
-				stack<FacePointer> sf;	
+        std::stack<FacePointer> sf;	
 				FacePointer l;
 
 				for(fi=m.face.begin();fi!=m.face.end();++fi)
