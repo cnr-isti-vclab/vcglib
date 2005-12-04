@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2005/12/03 22:34:25  cignoni
+Added  missing include and sdt:: (tnx to Mario Latronico)
+
 Revision 1.14  2005/12/02 00:14:43  cignoni
 Removed some pointer vs iterator issues that prevented gcc compilation
 
@@ -240,6 +243,22 @@ namespace vcg {
 			}
 
 
+
+      static int RemoveZeroAreaFace(MeshType& m, ScalarType epsilon=0)
+			{
+				FaceIterator fi;
+				int count_fd = 0;
+
+
+				for(fi=m.face.begin(); fi!=m.face.end();++fi)
+					if(Area<FaceType>(*fi) <= epsilon)
+					{
+						count_fd++;
+						fi->SetD();
+						m.fn--;
+					}
+				return count_fd;
+			}
 			static bool IsComplexManifold( MeshType & m ) 
 			{
 				FaceIterator fi;
@@ -441,21 +460,7 @@ namespace vcg {
 				return Compindex;
 			}
 
-			static int DegeneratedFaces(MeshType& m)
-			{
-				FaceIterator fi;
-				int count_fd = 0;
-
-
-				for(fi=m.face.begin(); fi!=m.face.end();++fi)
-					if(Area<FaceType>(*fi) == 0)
-					{
-						count_fd++;
-						fi->SetD();
-						m.fn--;
-					}
-				return count_fd;
-			}
+	
       /**
       GENUS: A topologically invariant property of a surface defined as:
       the largest number of nonintersecting simple closed curves that can be drawn on the surface without separating it. 
