@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/12/02 00:44:41  cignoni
+Reformatted and compacted flags code.
+
 Revision 1.4  2005/11/16 22:59:35  cignoni
 Standardized name of flags. It is plural becouse each simplex has many flag.
 
@@ -148,8 +151,6 @@ class VertexArityMax: public G<VertexArity6<BVT,BET,BFT,BTT, A, B, C, D, E, F> >
 // ----- Flags stuff -----
 public:
   
-  const int Flags() const { return 0; }
-  int &Flags() { static int dummyflags(0); return dummyflags; }
 
  	enum { 
 		
@@ -163,39 +164,39 @@ public:
 		USER0      = 0x0200			// First user bit
 			};
 
-	inline int & UberFlags () { return Flags();	}
-	inline const int UberFlags() const 	{		return Flags();	}
+	inline int & UberFlags () { return this->Flags();	}
+	inline const int UberFlags() const 	{		return this->Flags();	}
  	
-	bool IsD() const {return (Flags() & DELETED) != 0;} ///  checks if the vertex is deleted
-	bool IsR() const {return (Flags() & NOTREAD) == 0;} ///  checks if the vertex is readable
-	bool IsW() const {return (Flags() & NOTWRITE)== 0;}///  checks if the vertex is modifiable
-	bool IsRW() const {return (Flags() & (NOTREAD | NOTWRITE)) == 0;}/// This funcion checks whether the vertex is both readable and modifiable
-	bool IsS() const {return (Flags() & SELECTED) != 0;}///  checks if the vertex is Selected
-	bool IsB() const {return (Flags() & BORDER) != 0;}///  checks if the vertex is a border one
-	bool IsV() const {return (Flags() & VISITED) != 0;}///  checks if the vertex Has been visited
+	bool IsD() const {return (this->Flags() & DELETED) != 0;} ///  checks if the vertex is deleted
+	bool IsR() const {return (this->Flags() & NOTREAD) == 0;} ///  checks if the vertex is readable
+	bool IsW() const {return (this->Flags() & NOTWRITE)== 0;}///  checks if the vertex is modifiable
+	bool IsRW() const {return (this->Flags() & (NOTREAD | NOTWRITE)) == 0;}/// This funcion checks whether the vertex is both readable and modifiable
+	bool IsS() const {return (this->Flags() & SELECTED) != 0;}///  checks if the vertex is Selected
+	bool IsB() const {return (this->Flags() & BORDER) != 0;}///  checks if the vertex is a border one
+	bool IsV() const {return (this->Flags() & VISITED) != 0;}///  checks if the vertex Has been visited
 	
 
 	/** Set the flag value
 		@param flagp Valore da inserire nel flag
 	*/
-	void SetFlags(int flagp) {Flags()=flagp;}
+	void SetFlags(int flagp) {this->Flags()=flagp;}
 
 	/** Set the flag value
 		@param flagp Valore da inserire nel flag
 	*/
-	void ClearFlags() {Flags()=0;}
-	void SetD() {Flags() |=DELETED;}///  deletes the vertex from the mesh
-	void ClearD() {Flags() &=(~DELETED);}///  un-delete a vertex
-	void SetR() {Flags() &=(~NOTREAD);}///  marks the vertex as readable
-	void ClearR() {Flags() |=NOTREAD;}///  marks the vertex as not readable
-	void ClearW() {Flags() |=NOTWRITE;}///  marks the vertex as writable
-	void SetW() {Flags() &=(~NOTWRITE);}///  marks the vertex as not writable
-	void SetS()		{Flags() |=SELECTED;}///  select the vertex
-	void ClearS()	{Flags() &= ~SELECTED;}/// Un-select a vertex
-	void SetB()		{Flags() |=BORDER;}
-	void ClearB()	{Flags() &=~BORDER;}
-	void SetV()		{Flags() |=VISITED;}
-	void ClearV()	{Flags() &=~VISITED;}
+	void ClearFlags() {this->Flags()=0;}
+	void SetD() {this->Flags() |=DELETED;}///  deletes the vertex from the mesh
+	void ClearD() {this->Flags() &=(~DELETED);}///  un-delete a vertex
+	void SetR() {this->Flags() &=(~NOTREAD);}///  marks the vertex as readable
+	void ClearR() {this->Flags() |=NOTREAD;}///  marks the vertex as not readable
+	void ClearW() {this->Flags() |=NOTWRITE;}///  marks the vertex as writable
+	void SetW() {this->Flags() &=(~NOTWRITE);}///  marks the vertex as not writable
+	void SetS()		{this->Flags() |=SELECTED;}///  select the vertex
+	void ClearS()	{this->Flags() &= ~SELECTED;}/// Un-select a vertex
+	void SetB()		{this->Flags() |=BORDER;}
+	void ClearB()	{this->Flags() &=~BORDER;}
+	void SetV()		{this->Flags() |=VISITED;}
+	void ClearV()	{this->Flags() &=~VISITED;}
 	
 ///  Return the first bit that is not still used
 static int &LastBitFlag()
@@ -221,11 +222,11 @@ static inline bool DeleteBitFlag(int bitval)
 			return false;
 		}
 	/// This function checks if the given user bit is true
-	bool IsUserBit(int userBit){return (Flags() & userBit) != 0;}
+	bool IsUserBit(int userBit){return (this->Flags() & userBit) != 0;}
 	/// This function set  the given user bit 
-	void SetUserBit(int userBit){Flags() |=userBit;}
+	void SetUserBit(int userBit){this->Flags() |=userBit;}
 	/// This function clear the given user bit 
-	void ClearUserBit(int userBit){Flags() &= (~userBit);}
+	void ClearUserBit(int userBit){this->Flags() &= (~userBit);}
 
           };
 
