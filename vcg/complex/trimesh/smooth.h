@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/12/02 16:24:56  pietroni
+corrected 1 bug in Cross Prod Gradient
+
 Revision 1.4  2005/11/23 16:24:44  pietroni
 corrected CrossProdGradient( )
 
@@ -640,9 +643,9 @@ Point3<FLT> CrossProdGradient(Point3<FLT> &p, Point3<FLT> &p0, Point3<FLT> &p1, 
 	Point3<FLT> grad;
 	Point3<FLT> p00=p0-p;
 	Point3<FLT> p01=p1-p;
-	grad[0] = (-p0[2] + p1[2])*m[1] + (-p1[1] + p0[1])*m[2];
-	grad[1] = (-p1[2] + p0[2])*m[0] + (-p0[0] + p1[0])*m[2];
-	grad[2] = (-p0[1] + p1[1])*m[0] + (-p1[0] + p0[0])*m[1];
+	grad[0] = (-p00[2] + p01[2])*m[1] + (-p01[1] + p00[1])*m[2];
+	grad[1] = (-p01[2] + p00[2])*m[0] + (-p00[0] + p01[0])*m[2];
+	grad[2] = (-p00[1] + p01[1])*m[0] + (-p01[0] + p00[0])*m[1];
 
 	return grad;
 }
