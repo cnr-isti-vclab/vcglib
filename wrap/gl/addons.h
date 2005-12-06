@@ -27,7 +27,7 @@ Histoy
 #ifndef __VCG_GLADDONS
 #define __VCG_GLADDONS
 
-#include <glut.h>
+#include <GL/glut.h>
 #include <wrap/gl/math.h>
 #include <wrap/gl/space.h>
 #include <vcg/space/point3.h>
