@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/11/22 15:47:34  cignoni
+Moved ComputeNormal and ComputeNormalizedNormal out of the face class (no more a member function!)
+
 Revision 1.8  2005/11/21 21:44:43  cignoni
 Moved ComputeNormal and ComputeNormalizedNormal out of the face class (no more a member function!)
 
@@ -59,6 +62,8 @@ Initial commit
 #ifndef __VCG_TRI_UPDATE_NORMALS
 #define __VCG_TRI_UPDATE_NORMALS
 
+#include <vcg/space/triangle3.h>
+
 namespace vcg {
 namespace tri {
 
@@ -88,7 +93,7 @@ static void PerFace(ComputeMeshType &m)
 	if( !m.HasPerFaceNormal()) return;
 	FaceIterator f;
 	for(f=m.face.begin();f!=m.face.end();++f)
-    if( !(*f).IsD() )	face::ComputeNormal(*f);
+    if( !(*f).IsD() )	FaceType::ComputeNormal(*f);
 }
 
 
@@ -165,7 +170,7 @@ static void PerFaceRW(ComputeMeshType &m, bool normalize=false)
 		{
 			for(int j=0; j<3; ++j)
 				if( !(*f).V(j)->IsR()) 	cn = false;
-      if( cn ) face::ComputeNormalizedNormal(*f);
+      if( cn ) FaceType::ComputeNormalizedNormal(*f);
 			cn = true;
 		}
 	}
@@ -190,7 +195,7 @@ static void PerFaceNormalized(ComputeMeshType &m)
 	if( !m.HasPerFaceNormal()) return;
 	FaceIterator f;
 		for(f=m.face.begin();f!=m.face.end();++f)
-      if( !(*f).IsD() )	face::ComputeNormalizedNormal(*f);
+      if( !(*f).IsD() )	FaceType::ComputeNormalizedNormal(*f);
 }
 
 
