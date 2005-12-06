@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/12/02 00:30:27  cignoni
+Corrected typename usage and removed excess ';' from end of template functions, for gcc compiling
+
 Revision 1.6  2005/10/03 13:57:32  pietroni
 added GridGetInSphere and GridGetInBox functions
 
@@ -105,13 +108,16 @@ namespace vcg{
 			for(l=first;l!=last;++l)
 			{
 				ObjPtr elem=&(**l);
-				if (_getPointDistance((**l), _p,_minDist, t_res))  // <-- NEW: use of distance functor
+				if (!elem->IsD())
 				{
-					winner=elem;
-					_closestPt=t_res;
-					newradius=_minDist; // 
+					if (_getPointDistance((**l), _p,_minDist, t_res))  // <-- NEW: use of distance functor
+					{
+						winner=elem;
+						_closestPt=t_res;
+						newradius=_minDist; // 
+					}
+					_marker.Mark(elem);
 				}
-				_marker.Mark(elem);
 			}
 			iboxdone=Box3i(_ip,_ip);
 		}
@@ -138,14 +144,17 @@ namespace vcg{
 								for(l=first;l!=last;++l) if (!(**l).IsD())							     
 								{
 									ObjPtr elem=&(**l);
-									if( ! _marker.IsMarked(elem))
+									if (!elem->IsD())
 									{
-										if (_getPointDistance((**l), _p, _minDist, t_res)) 
+										if( ! _marker.IsMarked(elem))
 										{
-											winner=elem;
-											_closestPt=t_res;
-										};
-										_marker.Mark(elem);
+											if (_getPointDistance((**l), _p, _minDist, t_res)) 
+											{
+												winner=elem;
+												_closestPt=t_res;
+											};
+											_marker.Mark(elem);
+										}
 									}
 								}
 							}
