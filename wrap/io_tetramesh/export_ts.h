@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/10/11 17:41:41  ganovelli
+added
+
 Revision 1.1  2004/06/03 13:16:32  ganovelli
 created
 
@@ -49,7 +52,7 @@ struct ExporterTS{
 	typedef typename MESHTYPE::TetraType FaceType;
 	typedef typename MESHTYPE::VertexIterator VertexIterator;
 	typedef typename MESHTYPE::TetraIterator TetraIterator;
-	typedef MESHTYPE::ScalarType ScalarType;
+	typedef typename MESHTYPE::ScalarType ScalarType;
 	typedef Point3<ScalarType> Point3x;
 	
 	static FILE *& F(){static FILE * f; return f;}
@@ -63,7 +66,7 @@ struct ExporterTS{
 
 
 
-int Save( MESHTYPE & m, const char * filename )
+static int Save( MESHTYPE & m, const char * filename )
 {	
 	
 	F() = fopen(filename,"w");
