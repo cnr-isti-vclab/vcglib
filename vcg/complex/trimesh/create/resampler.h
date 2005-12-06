@@ -123,7 +123,7 @@ class Resampler:RES
 			assert(_cell_size.Y()*_resolution.Y()==_bbox.DimY());
 			assert(_cell_size.Z()*_resolution.Z()==_bbox.DimZ());
 
-			_slice_dimension = _resolution.X()*_resolution.Z();
+			_slice_dimension = (_resolution.X()+1)*(_resolution.Z()+1);
 		
 			//Point3f diag=Point3f((float)_cell_size.V(0),(float)_cell_size.V(1),(float)_cell_size.V(2));
 			//max_dim=diag.Norm();///diagonal of a cell
@@ -213,14 +213,14 @@ class Resampler:RES
 
 			//vcg::tri::get<Old_Mesh,GridType,float>((*mesh),test,_g,dist,Norm,Target,f,pip);
 			
-			f= vcg::trimesh::GetClosestFace<Old_Mesh,GridType>( *mesh,_g,test,dist,dist,Target,Norm,pip);
+			f= vcg::trimesh::GetClosestFace<Old_Mesh,GridType>( *mesh,_g,test,max_dim,dist,Target,Norm,pip);
 
 			if (f==NULL)
 					return false;
 			else
 			{
 				Point3f dir=(test-Target);
-				//dist=dir.Norm();
+				dist=dir.Norm();
 
 				dir.Normalize();
 				//direction of normal inside the mesh
@@ -270,6 +270,8 @@ class Resampler:RES
 						assert(V(*it)<=max_dim);
 						assert(_bbox.IsIn(*it));
 						vcg::Point3i p1=(*it)+_cell_size;
+						assert((*it)<_bbox.max);
+						assert(p1<=_bbox.max);
 						extractor.ProcessCell((*it), p1);
 			}
 
@@ -355,7 +357,6 @@ class Resampler:RES
 				return true;
 
 			return false;
-			//return true;
 		}
 
 		///filter the cells from to_hexamine vector to the ones that 
@@ -373,8 +374,11 @@ class Resampler:RES
 					int x1=x0+_cell_size.X();
 					int y1=y0+_cell_size.Y();
 					int z1=z0+_cell_size.Z();
-					if (FindMinMax(Point3i(x0,y0,z0),Point3i(x1,y1,z1)))
-						res.push_back(Point3i(x0,y0,z0));
+					vcg::Point3i p0=Point3i(x0,y0,z0);
+					vcg::Point3i p1=Point3i(x1,y1,z1);
+					assert(p0<_bbox.max);
+					if (FindMinMax(p0,p1))
+						res.push_back(p0);
 				}
 			}
 			return res;
@@ -662,6 +666,9 @@ static void Resample(Old_Mesh &old_mesh,New_Mesh &new_mesh,vcg::Point3<int> accu
 	MyWalker	walker(boxInt,res);
 
 	walker.max_dim=max_dist;
+
+	/*new_mesh.vert.reserve(old_mesh.vn*2);
+	new_mesh.face.reserve(old_mesh.fn*2);*/
 
 	if (mm==MMarchingCubes)
 	{
