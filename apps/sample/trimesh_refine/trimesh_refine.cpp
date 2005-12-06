@@ -8,8 +8,6 @@
 #include<vcg/simplex/faceplus/base.h>
 #include<vcg/simplex/face/topology.h>
 
-#include<vcg/simplex/vertexplus/component.h>
-#include<vcg/simplex/faceplus/component.h>
 #include<vcg/complex/trimesh/base.h>
 
 #include <vcg/complex/trimesh/update/topology.h>
@@ -37,8 +35,8 @@ class MyEdge;    // dummy prototype never used
 class MyFace;
 class MyVertex;
 
-class MyVertex  : public VertexSimp2< MyVertex, MyEdge, MyFace, vert::Coord3f, vert::Color4b, vert::Normal3f, vert::Qualityf, vert::BitFlags  >{};
-class MyFace    : public FaceSimp2< MyVertex, MyEdge, MyFace, face::FFAdj, face::VertexRef, face::BitFlags, face::Normal3f > {};
+class MyVertex  : public VertexSimp2< MyVertex, MyEdge, MyFace, vert::Coord3f, vert::Normal3f, vert::BitFlags  >{};
+class MyFace    : public FaceSimp2  < MyVertex, MyEdge, MyFace, face::FFAdj,  face::VertexRef, face::BitFlags > {};
 class MyMesh    : public vcg::tri::TriMesh< vector<MyVertex>, vector<MyFace> > {};
 
 
