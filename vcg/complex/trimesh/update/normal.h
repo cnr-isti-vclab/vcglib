@@ -24,6 +24,11 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2005/12/06 15:30:45  ponchio
+added #include triangle3.h for Normal(...)
+
+added a few FaceType:: instead of face::
+
 Revision 1.9  2005/11/22 15:47:34  cignoni
 Moved ComputeNormal and ComputeNormalizedNormal out of the face class (no more a member function!)
 
@@ -93,7 +98,7 @@ static void PerFace(ComputeMeshType &m)
 	if( !m.HasPerFaceNormal()) return;
 	FaceIterator f;
 	for(f=m.face.begin();f!=m.face.end();++f)
-    if( !(*f).IsD() )	FaceType::ComputeNormal(*f);
+		if( !(*f).IsD() )	face::ComputeNormal(*f);
 }
 
 
@@ -170,7 +175,7 @@ static void PerFaceRW(ComputeMeshType &m, bool normalize=false)
 		{
 			for(int j=0; j<3; ++j)
 				if( !(*f).V(j)->IsR()) 	cn = false;
-      if( cn ) FaceType::ComputeNormalizedNormal(*f);
+      if( cn ) face::ComputeNormalizedNormal(*f);
 			cn = true;
 		}
 	}
@@ -195,7 +200,7 @@ static void PerFaceNormalized(ComputeMeshType &m)
 	if( !m.HasPerFaceNormal()) return;
 	FaceIterator f;
 		for(f=m.face.begin();f!=m.face.end();++f)
-      if( !(*f).IsD() )	FaceType::ComputeNormalizedNormal(*f);
+      if( !(*f).IsD() )	face::ComputeNormalizedNormal(*f);
 }
 
 
