@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.16  2005/12/02 16:14:35  callieri
+in Shot<S>::Axis changed Row3  to  GetRow3 . row3 was the old method name of Matrix44
+
 Revision 1.15  2005/12/01 01:03:37  cignoni
 Removed excess ';' from end of template functions, for gcc compiling
 
@@ -144,6 +147,10 @@ public:
 	/// point. The would be z depth 
 	S Depth(const vcg::Point3<S> & p)const;
 
+	/// project a 3d point from 3D WORLD to 2D VIEWPORT
+	vcg::Point2<S> ProjectWorldtoViewport(const vcg::Point3<S> & p) const;
+
+
 }; // end class definition
 
 template <class S>
@@ -226,6 +233,11 @@ S Shot<S>::Depth(const vcg::Point3<S> & p)const {
 	return ConvertToCameraCoordinates(p).Z();
 }
 
+template <class S>
+vcg::Point2<S> Shot<S>::ProjectWorldtoViewport(const vcg::Point3<S> & p)const 
+{
+ return camera.LocalToViewport( camera.Project( ConvertToCameraCoordinates(p) ) );
+}
 
 class Shotf: public Shot<float>{};
 class Shotd: public Shot<double>{};
