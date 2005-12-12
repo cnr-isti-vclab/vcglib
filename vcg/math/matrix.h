@@ -20,18 +20,40 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
+/***************************************************************************
+$Log: not supported by cvs2svn $
+***************************************************************************/
+
+#ifndef MATRIX_VCGLIB
+#define MATRIX_VCGLIB
 
 #include <stdio.h>
 #include <math.h>
 #include <memory.h>
 #include <assert.h>
 #include <algorithm>
+#include <vcg/space/Point.h>
 
+namespace vcg{
+	namespace ndim{
 
-namespace vcg
-{
 	 /** \addtogroup math */
    /* @{ */
+
+	/*!
+ * This class represent a diagonal <I>m</I>×<I>m</I> matrix.
+ */
+	
+	class MatrixDiagBase{public: 
+	virtual const int & Dimension()const =0;
+	virtual const float operator[](const int & i)const = 0;
+	};
+	template<int N, class S> 
+	class MatrixDiag: public PointBase<N,S>, public MatrixDiagBase{
+	public:
+		const int & Dimension() const {return N;}
+		MatrixDiag(const PointBase<N,S>&p):PointBase<N,S>(p){}
+	};
 
 /*!
  * This class represent a generic <I>m</I>×<I>n</I> matrix. The class is templated over the scalar type field.
@@ -391,13 +413,61 @@ namespace vcg
 				return result;
 			};
 
+						/*!
+			*	Matrix multiplication: calculates the cross product.
+			*	\param	reference to the matrix to multiply by 
+			*	\return the matrix product
+			*/
+			template <int N,int M>
+			void DotProduct(PointBase<N,TYPE> &m,PointBase<M,TYPE> &result)
+			{
+				unsigned int i, j,  p,  r;
+				for (i=0, p=0, r=0; i<M; i++)
+				{ result[i]=0;
+					for (j=0; j<N; j++)
+						result[i]+=(*this)[i][j]*m[j];
+				}
+			};
+
+			/*!
+			*	Matrix multiplication by a diagonal matrix
+			*/
+			Matrix<TYPE> operator*(const MatrixDiagBase &m)
+			{
+				assert(_columns == _rows);
+				assert(_columns == m.Dimension());
+				int i,j;
+				Matrix<TYPE> result(_rows, _columns);
+
+				for (i=0; i<result._rows; i++)
+					for (j=0; j<result._columns; j++)
+						result[i][j]*= m[j];
+				
+				return result;
+			};
+			/*!
+			*	Matrix from outer product.
+			*/
+			template <int N, int M>
+			void OuterProduct(const PointBase<N,TYPE> a, const PointBase< M,TYPE> b)
+			{
+				assert(N == _rows);
+				assert(M == _columns);
+				Matrix<TYPE> result(_rows,_columns);
+				unsigned int i, j;
+
+				for (i=0; i<result._rows; i++)
+					for (j=0; j<result._columns; j++)
+						(*this)[i][j] = a[i] * b[j];
+			};
+
 
 			/*!
 			*	Matrix-vector multiplication.
 			*	\param	reference to the 3-dimensional vector to multiply by
 			*	\return the resulting vector
 			*/
-			vcg::Point3<TYPE> operator*(const vcg::Point3<TYPE> &p)
+			vcg::ndim::Point3<TYPE> operator*(const vcg::ndim::Point3<TYPE> &p)
 			{
 				assert(_columns==3 && _rows==3);
 				vcg::Point3<TYPE> result;
@@ -583,4 +653,24 @@ namespace vcg
 		};
 
   /*! @} */
+
+	template <class MatrixType>
+	void Invert(MatrixType & m){
+		typename MatrixType::ScalarType  *diag;
+		diag = new  MatrixType::ScalarType [m.ColumnsNumber()];
+
+		MatrixType res(m.RowsNumber(),m.ColumnsNumber());
+		vcg::SingularValueDecomposition<MatrixType > (m,&diag[0],res,50 );
+		m.Transpose();		
+		// prodotto per la diagonale
+		unsigned  int i,j;
+		for (i=0; i<m.RowsNumber(); i++)
+					for (j=0; j<m.ColumnsNumber(); j++)
+						res[i][j]/= diag[j];
+		m = res *m;
+		}
+
+	}
 }; // end of namespace
+
+#endif
