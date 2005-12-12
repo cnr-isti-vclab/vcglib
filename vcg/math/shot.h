@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.17  2005/12/07 10:57:52  callieri
+added commodity function ProjectWorldtoViewport() to obtain directly pixel indices without calling two separate function of two different objects
+
 Revision 1.16  2005/12/02 16:14:35  callieri
 in Shot<S>::Axis changed Row3  to  GetRow3 . row3 was the old method name of Matrix44
 
@@ -141,7 +144,8 @@ public:
 	/// project onto the camera plane
 	vcg::Point2<S> Project(const vcg::Point3<S> & p) const;
 
-	vcg::Point3<S> UnProject(const vcg::Point2<S> & p) const;
+	/// inverse projection from camera plane + Zdepth to original 3D
+	vcg::Point3<S> UnProject(const vcg::Point2<S> & p, const S & d) const;
 
 	/// take the distance from the point p and the plane parallel to the camera plane and passing through the view
 	/// point. The would be z depth 
@@ -224,8 +228,9 @@ vcg::Point2<S> Shot<S>::Project(const vcg::Point3<S> & p) const{
 		return camera.Project(ConvertToCameraCoordinates(p));
 	}
 template <class S>
-vcg::Point3<S> Shot<S>::UnProject(const vcg::Point2<S> & p) const{
-	vcg::Point3<S> q = camera.UnProject(p);
+vcg::Point3<S> Shot<S>::UnProject(const vcg::Point2<S> & p, const S & d) const{
+	Point2<S> tp = camera.ViewportToLocal(p);
+	vcg::Point3<S> q = camera.UnProject(tp, d);
 	return ConvertToWorldCoordinates(q);
 }
 template <class S>
