@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/10/14 15:07:59  cignoni
+First Really Working version
+
 
 ****************************************************************************/
 
@@ -67,8 +70,8 @@ public:
     ThisTypeIterator oldbegin=begin();
     ThisTypeIterator oldend=end();
     BaseType::push_back(v);
-    if(oldbegin!=begin()) _update(begin(),end());
-    else _update(oldend,end());
+    if(oldbegin!=begin()) _updateOVP(begin(),end());
+                     else _updateOVP(oldend, end());
   }
 	void pop_back();
   void resize(const unsigned int & _size) 
@@ -76,8 +79,8 @@ public:
     ThisTypeIterator oldbegin=begin();
     ThisTypeIterator oldend=end();
     BaseType::resize(_size);
-    if(oldbegin!=begin()) _update(begin(),end());
-    else _update(oldend,end());
+    if(oldbegin!=begin()) _updateOVP(begin(),end());
+                     else _updateOVP(oldend, end());
     if(ColorEnabled) CV.resize(_size);
     if(NormalEnabled) NV.resize(_size);
     
@@ -88,15 +91,15 @@ public:
     BaseType::reserve(_size);
     if (ColorEnabled) CV.reserve(_size);
     if (NormalEnabled) NV.reserve(_size);
-    if(oldbegin!=begin()) _update(begin(),end());
+    if(oldbegin!=begin()) _updateOVP(begin(),end());
   }
 
- void _update(ThisTypeIterator lbegin, ThisTypeIterator lend)
+ void _updateOVP(ThisTypeIterator lbegin, ThisTypeIterator lend)
 {
     ThisTypeIterator vi;
-    //for(vi=lbegin;vi!=lend;++vi)
-    for(vi=begin();vi!=end();++vi)
-        (*vi).EV=this;
+    for(vi=lbegin;vi!=lend;++vi)
+    //for(vi=begin();vi!=end();++vi)
+        (*vi)._ovp=this;
  }
 ////////////////////////////////////////
 // Enabling Eunctions
@@ -218,15 +221,15 @@ template <class T> class Color4bOcf: public ColorOcf<vcg::Color4b, T> {};
 
 template < class T> class InfoOcf: public T {
 public:
-  vector_ocf<typename T::VertType> &Base() const { return *EV;}
+  vector_ocf<typename T::VertType> &Base() const { return *_ovp;}
 
   inline int Index() const {
     typename  T::VertType const *tp=static_cast<typename T::VertType const*>(this); 
-    int tt2=tp- &*(EV->begin());
+    int tt2=tp- &*(_ovp->begin());
     return tt2;
   } 
 public:
-  vector_ocf<typename T::VertType> *EV;
+  vector_ocf<typename T::VertType> *_ovp;
 };
 
 

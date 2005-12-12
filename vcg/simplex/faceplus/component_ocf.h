@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/11/26 00:16:44  cignoni
+Corrected a lot of bugs about the use of enabled entities
+
 Revision 1.4  2005/11/21 21:46:20  cignoni
 Changed HasColor -> HasFaceColor and HasNormal ->HasFaceNormal
 
@@ -106,8 +109,8 @@ public:
     ThisTypeIterator oldbegin=begin();
     ThisTypeIterator oldend=end();
     BaseType::push_back(v);
-    if(oldbegin!=begin()) _update(begin(),end());
-    else _update(oldend,end());
+    if(oldbegin!=begin()) _updateOVP(begin(),end());
+                     else _updateOVP(oldend, end());
   }
 	void pop_back();
   void resize(const unsigned int & _size) 
@@ -115,8 +118,8 @@ public:
     ThisTypeIterator oldbegin=begin();
     ThisTypeIterator oldend=end();
     BaseType::resize(_size);
-    if(oldbegin!=begin()) _update(begin(),end());
-    else _update(oldend,end());
+    if(oldbegin!=begin()) _updateOVP(begin(),end());
+                     else _updateOVP(oldend, end());
     if(ColorEnabled)       CV.resize(_size);
     if(NormalEnabled)      NV.resize(_size);
     if(VFAdjacencyEnabled) AV.resize(_size);
@@ -133,15 +136,15 @@ public:
     if (VFAdjacencyEnabled) AV.reserve(_size);
     if (FFAdjacencyEnabled) AF.reserve(_size);
     if (WedgeTexEnabled) WTV.reserve(_size);
-    if(oldbegin!=begin()) _update(begin(),end());
+    if(oldbegin!=begin()) _updateOVP(begin(),end());
   }
 
- void _update(ThisTypeIterator lbegin, ThisTypeIterator lend)
+ void _updateOVP(ThisTypeIterator lbegin, ThisTypeIterator lend)
 {
-    ThisTypeIterator vi;
-    //for(vi=lbegin;vi!=lend;++vi)
-    for(vi=begin();vi!=end();++vi)
-        (*vi).EV=this;
+    ThisTypeIterator fi;
+    //for(fi=begin();vi!=end();++vi)
+    for(fi=lbegin;fi!=lend;++fi)
+        (*fi)._ovp=this;
  }
 ////////////////////////////////////////
 // Enabling Eunctions
@@ -335,15 +338,18 @@ template <class T> class WedgeTexturefOcf: public WedgeTextureOcf<TCoord2<float,
 
 template < class T> class InfoOcf: public T {
 public:
-  vector_ocf<typename T::FaceType> &Base() const { return *EV;}
+  vector_ocf<typename T::FaceType> &Base() const { return *_ovp;}
 
   inline int Index() const {
     typename T::FaceType const *tp=static_cast<typename T::FaceType const *>(this); 
-    int tt2=tp- &*(EV->begin());
+    int tt2=tp- &*(_ovp->begin());
     return tt2;
   } 
 public:
-  vector_ocf<typename T::FaceType> *EV;
+  // ovp Optional Vector Pointer
+  // Pointer to the base vector where each face element is stored. 
+  // used to access to the vectors of the other optional members.
+  vector_ocf<typename T::FaceType> *_ovp;
 };
 
   } // end namespace face
