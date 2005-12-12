@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2005/12/12 11:29:21  corsini
+Minor changes
+
 Revision 1.14  2005/12/12 10:48:16  corsini
 Fix indentation
 
@@ -113,6 +116,7 @@ using namespace std;
 #include <vcg/simplex/faceplus/base.h>
 #include <vcg/simplex/faceplus/component.h>
 #include <vcg/simplex/face/pos.h> 
+#include <vcg/complex/trimesh/inertia.h> 
 
 #include "XMLTree.h"
 
@@ -126,7 +130,7 @@ using namespace vcg;
 class CFace;
 class CEdge;
 class CVertex  : public VertexSimp2< CVertex, CEdge, CFace, vert::Coord3f, vert::BitFlags, vert::Normal3f >{};
-class CFace    : public FaceSimp2< CVertex, CEdge, CFace, face::FFAdj, face::VertexRef, face::BitFlags > {};
+class CFace    : public FaceSimp2< CVertex, CEdge, CFace, face::FFAdj, face::VertexRef, face::Normal3f, face::BitFlags, face::Mark > {};
 class CMesh    : public vcg::tri::TriMesh< vector<CVertex>, vector<CFace> > {};
 
 typedef CMesh::VertexPointer VertexPointer;
@@ -363,12 +367,12 @@ int main(int argc, char ** argv)
 	mi.fn=m.fn;
 
 	// DEGENERATED FACES
-	//mi.count_fd = tri::Clean<CMesh>::DegeneratedFaces(m);
+	mi.count_fd = tri::Clean<CMesh>::RemoveZeroAreaFace(m);
 	
 	vcg::tri::UpdateTopology<CMesh>::FaceFace(m);
 
 	// UNREFERENCED VERTEX
-	mi.count_uv = tri::Clean<CMesh>::DetectUnreferencedVertex(m);
+	mi.count_uv = tri::Clean<CMesh>::RemoveUnreferencedVertex(m);
 
 	tri::UpdateFlags<CMesh>::Clear(m);
 
@@ -407,6 +411,11 @@ int main(int argc, char ** argv)
 	// SELF INTERSECTION
 	mi.SelfIntersect = tri::Clean<CMesh>::SelfIntersections(m);
 
+
+  tri::Inertia<CMesh> mm;
+  mm.Compute(m);
+
+  printf("Volume of mesh %f\n",mm.Mass());
 	if (saveFlag) 
 		tri::io::Exporter<CMesh>::Save(m, SaveName.c_str());
 
