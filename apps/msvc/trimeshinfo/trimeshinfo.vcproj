@@ -132,6 +132,9 @@
 				RelativePath=".\defs.h">
 			</File>
 			<File
+				RelativePath="..\..\..\vcg\complex\trimesh\inertia.h">
+			</File>
+			<File
 				RelativePath=".\resource.h">
 			</File>
 		</Filter>

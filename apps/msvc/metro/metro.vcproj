@@ -128,13 +128,16 @@
 				RelativePath="..\..\..\vcg\space\index\aabb_binary_tree\base.h">
 			</File>
 			<File
+				RelativePath="..\..\..\vcg\simplex\vertex\base.h">
+			</File>
+			<File
 				RelativePath="..\..\..\vcg\space\box3.h">
 			</File>
 			<File
-				RelativePath="..\..\..\vcg\space\index\aabb_binary_tree\closest.h">
+				RelativePath="..\..\..\vcg\complex\trimesh\closest.h">
 			</File>
 			<File
-				RelativePath="..\..\..\vcg\complex\trimesh\closest.h">
+				RelativePath="..\..\..\vcg\space\index\aabb_binary_tree\closest.h">
 			</File>
 			<File
 				RelativePath="..\..\..\vcg\space\index\aabb_binary_tree\core.h">
