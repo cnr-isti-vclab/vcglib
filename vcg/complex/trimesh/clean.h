@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2005/12/04 00:25:00  cignoni
+Changed DegeneratedFaces -> RemoveZeroAreaFaces
+
 Revision 1.15  2005/12/03 22:34:25  cignoni
 Added  missing include and sdt:: (tnx to Mario Latronico)
 
@@ -133,25 +136,6 @@ namespace vcg {
 				}
 			};
 
-			static int DetectUnreferencedVertex( MeshType& m )   // V1.0
-			{
-				int count_uv = 0;
-				VertexIterator v;
-				FaceIterator fi;
-
-				for(v=m.vert.begin();v!=m.vert.end();++v)
-					(*v).ClearV();
-
-				for(fi=m.face.begin();fi!=m.face.end();++fi)
-					for(int j=0;j<3;++j)
-						(*fi).V(j)->SetV();
-
-				for(v=m.vert.begin();v!=m.vert.end();++v)
-					if( !(*v).IsV() )
-						++count_uv;
-				return count_uv;
-
-			}
 
 			/** This function removes all duplicate vertices of the mesh by looking only at their spatial positions. 
 			Note that it does not update any topology relation that could be affected by this like the VT or TT relation.
@@ -214,7 +198,7 @@ namespace vcg {
 			@param m The mesh
 			@return The number of removed vertices
 			*/
-			static int RemoveUnreferencedVertex( MeshType& m )   // V1.0
+			static int RemoveUnreferencedVertex( MeshType& m, bool DeleteVertexFlag=true)   // V1.0
 			{
 				FaceIterator fi;
 				VertexIterator vi;
@@ -234,10 +218,13 @@ namespace vcg {
 				for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 					if( (!(*vi).IsD()) && (!(*vi).IsUserBit(referredBit)))
 					{
-						(*vi).SetD();
+						if(DeleteVertexFlag) 
+            {
+              (*vi).SetD();
+              --m.vn;
+            }
 						++deleted;
 					}
-					m.vn -= deleted;
 					VertexType::DeleteBitFlag(referredBit);
 					return deleted;
 			}
