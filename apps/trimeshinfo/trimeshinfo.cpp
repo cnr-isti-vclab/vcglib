@@ -24,6 +24,10 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2005/11/17 00:42:03  cignoni
+Changed include order
+removed clean::initialize
+
 Revision 1.12  2005/11/16 16:45:51  rita_borgo
 Minor changes
 
@@ -85,11 +89,11 @@ Added	Standard comments
 #include <vector>
 #include <string>
 #include <stack>
-using	namespace	std;
 
+using namespace std;
 
-#include<vcg/complex/trimesh/base.h>
-#include<vcg/complex/trimesh/update/topology.h>
+#include <vcg/complex/trimesh/base.h>
+#include <vcg/complex/trimesh/update/topology.h>
 #include <vcg/complex/trimesh/update/edges.h>
 #include <vcg/complex/trimesh/update/bounding.h>
 #include <vcg/complex/trimesh/update/flag.h>
@@ -100,196 +104,249 @@ using	namespace	std;
 #include <wrap/io_trimesh/import.h>
 #include <wrap/io_trimesh/export.h>
 
-#include<vcg/simplex/vertexplus/base.h>
-#include<vcg/simplex/vertexplus/component.h>
+#include <vcg/simplex/vertexplus/base.h>
+#include <vcg/simplex/vertexplus/component.h>
 
-#include<vcg/simplex/faceplus/base.h>
-#include<vcg/simplex/faceplus/component.h>
-#include<vcg/simplex/face/pos.h> 
+#include <vcg/simplex/faceplus/base.h>
+#include <vcg/simplex/faceplus/component.h>
+#include <vcg/simplex/face/pos.h> 
 
 #include "XMLTree.h"
 
 #include <vcg/space/index/grid_static_ptr.h>
 #include "defs.h"
 
-using	namespace	std;
-using	namespace	vcg;
+using namespace std;
+using namespace vcg;
 
 
-class	CFace;
-class	CEdge;
+class CFace;
+class CEdge;
 class CVertex  : public VertexSimp2< CVertex, CEdge, CFace, vert::Coord3f, vert::BitFlags, vert::Normal3f >{};
 class CFace    : public FaceSimp2< CVertex, CEdge, CFace, face::FFAdj, face::VertexRef, face::BitFlags > {};
-class CMesh     : public vcg::tri::TriMesh< vector<CVertex>, vector<CFace> > {};
+class CMesh    : public vcg::tri::TriMesh< vector<CVertex>, vector<CFace> > {};
 
-typedef	CMesh::VertexPointer	VertexPointer;
-typedef	CMesh::VertexIterator VertexIterator;
-typedef	Point3<CMesh::ScalarType> Point3x;
-typedef	vector<Point3x>	Hole;
+typedef CMesh::VertexPointer VertexPointer;
+typedef CMesh::VertexIterator VertexIterator;
+typedef Point3<CMesh::ScalarType> Point3x;
+typedef vector<Point3x> Hole;
 
 void OpenMesh(const	char *filename,	CMesh &m)
 {
-	int	err	=	tri::io::Importer<CMesh>::Open(m,filename);
-	if(err){
-		printf("Error	in reading %s: '%s'\n",filename,tri::io::Importer<CMesh>::ErrorMsg(err));
+	int	err	= tri::io::Importer<CMesh>::Open(m,filename);
+	if(err)
+	{
+		printf("Error in reading %s: '%s'\n",filename, 
+			tri::io::Importer<CMesh>::ErrorMsg(err));
 		exit(-1);
 	}
 	printf("\t read mesh `%s'\n", filename);
 }
 
-typedef	CMesh::VertexPointer	VertexPointer;
-typedef	CMesh::VertexIterator VertexIterator;
-typedef CMesh::FaceContainer  FaceContainer;
-typedef CMesh::ScalarType	ScalarType;
+typedef CMesh::VertexPointer VertexPointer;
+typedef CMesh::VertexIterator VertexIterator;
+typedef CMesh::FaceContainer FaceContainer;
+typedef CMesh::ScalarType ScalarType;
 
 struct MeshInfo
 {
-  string FileName;
-  int vn,fn;
-  bool Manifold;
-  int count_e,boundary_e,count_fd,count_uv,numholes;
-  int BEdges;
-  float Volume;
-  int numcomponents,Genus;
-  bool Regular,Semiregular;
-  bool Orientable,Oriented;
-  int dv;
-  bool SelfIntersect;
+	string FileName;
+	int vn,fn;
+	bool Manifold;
+	int count_e,boundary_e,count_fd,count_uv,numholes;
+	int BEdges;
+	float Volume;
+	int numcomponents,Genus;
+	bool Regular,Semiregular;
+	bool Orientable,Oriented;
+	int dv;
+	bool SelfIntersect;
 };
 
 void initMeshInfo(MeshInfo &mi)
 {
-	mi.vn = mi.fn = mi.count_e = mi.boundary_e = mi.count_fd = mi.count_uv = mi.numholes = mi.BEdges = 
-		mi.numcomponents = mi.Genus = mi.dv = 0;
-	mi.Volume = 0.;
+	mi.vn = mi.fn = mi.count_e = mi.boundary_e = mi.count_fd = mi.count_uv = 
+		mi.numholes = mi.BEdges = mi.numcomponents = mi.Genus = mi.dv = 0;
+	mi.Volume = 0;
 }
 void PrintAsciiInfo(MeshInfo &mi)
 {
- 	printf("\t Mesh info:\n");
+	printf("\t Mesh info:\n");
 	printf(" \t M: '%s'\n\t Number	of vertices: %d	\n", mi.FileName.c_str(), mi.vn);
 	printf("\t Number of faces: %d \n",	mi.fn);
 
-  if (!mi.Manifold) 	printf(	"\t Manifold: NO\n");
-  else 		printf(	"\t Manifold: YES\n");
+	if (!mi.Manifold) printf("\t Manifold: NO\n");
+	else
+		printf("\t Manifold: YES\n");
+
 	printf("\t Number of edges: %d \n", mi.count_e);
 	printf("\t Number of internal edges: %d \n", mi.count_e-mi.boundary_e);
 	printf("\t Number of boundary edges: %i \n", mi.boundary_e);
 	printf("\t Number of degenerated faces: %d\n",	mi.count_fd);
 	printf("\t Number of unreferenced	vertices: %d\n",mi.count_uv);
 	printf("\t Number of holes/boundaries: %d \n", mi.numholes);
-  if( mi.Volume) printf("\t Volume: %f \n", mi.Volume);
-  else printf("\t Volume: UNDEFINED, mesh is either non-manifold or has holes \n");
+	if(mi.Volume) printf("\t Volume: %f \n", mi.Volume);
+	else 
+		printf("\t Volume: UNDEFINED, mesh is either non-manifold or has holes \n");
+
 	printf("\t Number of connected components: %d\n",	mi.numcomponents);
-  if (mi.Manifold)  printf(	"\t Genus: %d \n", mi.Genus);
-            else 		printf(	"\t Genus (n/a)\n");
-	  
-  if      (mi.Regular)     printf("\t Type of Mesh: REGULAR\n");
-  else if	(mi.Semiregular) printf("\t Type of Mesh: SEMIREGULAR\n");
-		                  else printf("\t Type of Mesh: IRREGULAR\n");
+	if (mi.Manifold)
+		printf("\t Genus: %d \n", mi.Genus);
+	else
+		printf("\t Genus (n/a)\n");
 
-  if (!mi.Manifold) {
-      printf(	"\t Orientable Mesh: NO\n");
-      printf(	"\t Oriented Mesh: NO\n");
-  } else {
-      printf(	"\t Orientable Mesh: %s\n",mi.Orientable?"Yes":"No");
-      printf(	"\t Oriented Mesh: %s\n",mi.Oriented?"Yes":"No");
-  }
+	if (mi.Regular) 
+		printf("\t Type of Mesh: REGULAR\n");
+	else if (mi.Semiregular)
+		printf("\t Type of Mesh: SEMIREGULAR\n");
+	else
+		printf("\t Type of Mesh: IRREGULAR\n");
 
-	printf(	"\t Number of duplicated vertices found: %d\n",mi.dv);
-  printf(	"\t Self Intersection: %s\n",mi.SelfIntersect?"Yes":"No");
-  
+	if (!mi.Manifold)
+	{
+		printf("\t Orientable Mesh: NO\n");
+		printf("\t Oriented Mesh: NO\n");
+	}
+	else
+	{
+		printf("\t Orientable Mesh: %s\n",mi.Orientable?"Yes":"No");
+		printf("\t Oriented Mesh: %s\n",mi.Oriented?"Yes":"No");
+	}
+
+	printf("\t Number of duplicated vertices found: %d\n",mi.dv);
+	printf("\t Self Intersection: %s\n",mi.SelfIntersect?"Yes":"No");
 }
 
 void PrintXMLInfo(MeshInfo &mi)
 {
 	XMLTree	doc;
-  doc.initializeMain();	
+	doc.initializeMain();
 
-	char	s[256];
-	sprintf(s,"%d",mi.vn);	doc.addNode(s, VALUE_INTEGER, "Number of	Vertices");
-	sprintf(s,"%d",mi.fn);	doc.addNode(s, VALUE_INTEGER,	"Number	of Faces");
+	char s[256];
+	sprintf(s,"%d",mi.vn);
+	doc.addNode(s, VALUE_INTEGER, "Number of	Vertices");
+	sprintf(s,"%d",mi.fn);
+	doc.addNode(s, VALUE_INTEGER,	"Number	of Faces");
 
-	if(mi.Manifold) doc.addNode("No", VALUE_BOOL,"Manifold");
-             else doc.addNode("Yes", VALUE_BOOL,"Manifold");
+	if(mi.Manifold)
+		doc.addNode("No", VALUE_BOOL,"Manifold");
+	else
+		doc.addNode("Yes", VALUE_BOOL,"Manifold");
 
-	sprintf(s,"%d",mi.count_e);	  doc.addNode(s, VALUE_INTEGER,"Number of	Edges");
-	sprintf(s,"%d",mi.count_fd);	doc.addNode(s, VALUE_INTEGER,"Number of	Degenerated	Faces");
-	sprintf(s,"%d",mi.count_uv);	doc.addNode(s, VALUE_INTEGER,"Number of	unreferenced vertices");
-	sprintf(s,"%d",mi.numholes);	doc.addNode(s, VALUE_INTEGER,"Number of	Holes");
-  sprintf(s,"%d",mi.BEdges);		doc.addNode(s, VALUE_INTEGER,"Number of	Border Edges");
-	sprintf(s,"%f",mi.Volume);		doc.addNode(s, VALUE_FLOAT,"Volume");
-	sprintf(s,"%d",mi.numcomponents);	doc.addNode(s, VALUE_INTEGER,"Number of	Connected	Components");
+	sprintf(s,"%d",mi.count_e);
+	doc.addNode(s, VALUE_INTEGER,"Number of Edges");
+	sprintf(s,"%d",mi.count_fd);
+	doc.addNode(s, VALUE_INTEGER,"Number of Degenerated Faces");
+
+	sprintf(s,"%d",mi.count_uv);
+	doc.addNode(s, VALUE_INTEGER,"Number of unreferenced vertices");
+	sprintf(s,"%d",mi.numholes);
+	doc.addNode(s, VALUE_INTEGER,"Number of Holes");
+	sprintf(s,"%d",mi.BEdges);
+	doc.addNode(s, VALUE_INTEGER,"Number of Border Edges");
+	sprintf(s,"%f",mi.Volume);
+	doc.addNode(s, VALUE_FLOAT,"Volume");
+	sprintf(s,"%d",mi.numcomponents);
+	doc.addNode(s, VALUE_INTEGER,"Number of Connected Components");
 	sprintf(s,"%d",mi.Genus);		doc.addNode(s, VALUE_INTEGER,"Genus");
 
-  if      (mi.Regular) 		  doc.addNode("REGULAR",     VALUE_STRING,"Type	of Mesh");
-	else if	(mi.Semiregular) 	doc.addNode("SEMIREGULAR", VALUE_STRING,"Type	of Mesh");
-			                 else doc.addNode("IRREGULAR",   VALUE_STRING,"Type	of Mesh");
+	if (mi.Regular)
+		doc.addNode("REGULAR", VALUE_STRING,"Type of Mesh");
+	else if (mi.Semiregular)
+		doc.addNode("SEMIREGULAR", VALUE_STRING,"Type of Mesh");
+	else 
+		doc.addNode("IRREGULAR",   VALUE_STRING,"Type of Mesh");
 	
-  if (!mi.Manifold) {
-	    doc.addNode("NO", VALUE_STRING,"Orientable Mesh");
-      doc.addNode("NO", VALUE_STRING,"Oriented Mesh");
-  } else {
-	    doc.addNode(mi.Orientable?"Yes":"No", VALUE_STRING,"Orientable Mesh");
-      doc.addNode(  mi.Oriented?"Yes":"No", VALUE_STRING,"Oriented Mesh");
-  }
-  sprintf(s,"%d",mi.dv);		doc.addNode(s, VALUE_INTEGER,"Duplicated Vertices");
-  doc.addNode(  mi.SelfIntersect?"Yes":"No", VALUE_STRING,"Self	Intersection");
+	if (!mi.Manifold) 
+	{
+		doc.addNode("NO", VALUE_STRING,"Orientable Mesh");
+		doc.addNode("NO", VALUE_STRING,"Oriented Mesh");
+	}
+	else
+	{
+		doc.addNode(mi.Orientable?"Yes":"No", VALUE_STRING,"Orientable Mesh");
+		doc.addNode(  mi.Oriented?"Yes":"No", VALUE_STRING,"Oriented Mesh");
+	}
 
-  doc.finalizeMain();
+	sprintf(s,"%d",mi.dv);		doc.addNode(s, VALUE_INTEGER,"Duplicated Vertices");
+	doc.addNode(  mi.SelfIntersect?"Yes":"No", VALUE_STRING,"Self	Intersection");
+
+	doc.finalizeMain();
 	doc.printXMLTree();
-
 }
 
 int main(int	argc,char	** argv)
 {
 	CMesh m;
-  bool SaveFlag=false;
-  bool AsciiFlag=true;
-  bool XmlFlag=false;
+	bool SaveFlag=false;
+	bool AsciiFlag=true;
+	bool XmlFlag=false;
 
-  string SaveName;
+	string SaveName;
 	
-  MeshInfo mi;
+	MeshInfo mi;
 	initMeshInfo(mi);
 	printf("-------------------------------\n"
-		"	TriMeshInfo	V.1.2 \n"
-		"	http://vcg.isti.cnr.it\n"
-		"	release	date:	"__DATE__"\n"
+		"    TriMeshInfo V.1.2 \n"
+		"    http://vcg.isti.cnr.it\n"
+		"    release date: "__DATE__"\n"
 		"-------------------------------\n\n");
-	
-  
-  // load	input	meshes.
-	if(argc	<= 1)		{
-			printf(MSG_ERR_N_ARGS);
-			exit(-1);
-	}
-  mi.FileName=argv[1];
-  
-	for(int i=3; i < argc;)
-    {
-      if(argv[i][0]=='-')
-        switch(argv[i][1])
-      { 
-        case 'o' : SaveFlag=true; SaveName=argv[i][2]; break;
-        case 'x' : if(argv[i][2]=='y') { XmlFlag = true;   printf("Enable XML Printing\n");	}
-                                  else { XmlFlag = false;  printf("Disable XML Printing\n");	} break;
-        case 'a' : if(argv[i][2]=='y') { AsciiFlag = true;   printf("Enable Ascii Printing\n");	}
-                                  else { AsciiFlag = false;  printf("Disable Ascii Printing\n");	} break;
-        default  :  printf(MSG_ERR_INVALID_OPTION, argv[i]); 
-          exit(0);
-      }
-      i++;
-    }
- 
-	OpenMesh(mi.FileName.c_str(),m);
-  mi.vn=m.vn;  mi.fn=m.fn;
 
-	
-	
+
+	// load input meshes.
+	if (argc <= 1)
+	{
+		printf(MSG_ERR_N_ARGS);
+		exit(-1);
+	}
+	mi.FileName=argv[1];
+
+	for(int i=3; i < argc; i++)
+	{
+		if(argv[i][0]=='-')
+		{
+			switch(argv[i][1])
+			{
+			case 'o' :
+				SaveFlag=true; SaveName=argv[i][2];
+			break;
+			case 'x' :
+				if(argv[i][2]=='y')
+				{
+					XmlFlag = true;
+					printf("Enable XML Printing\n");
+				}
+				else 
+				{
+					XmlFlag = false;
+					printf("Disable XML Printing\n");
+				}
+			break;
+			case 'a' :
+				if(argv[i][2]=='y')
+				{
+					AsciiFlag = true;
+					printf("Enable Ascii Printing\n");
+				}
+				else
+				{
+					AsciiFlag = false;
+					printf("Disable Ascii Printing\n");
+				}
+			break;
+			default:
+				printf(MSG_ERR_INVALID_OPTION, argv[i]);
+				exit(0);
+			}
+		i++;
+	}
+
+	OpenMesh(mi.FileName.c_str(),m);
+	mi.vn=m.vn;
+	mi.fn=m.fn;
+
 	// DEGENERATED FACES
 	mi.count_fd = tri::Clean<CMesh>::DegeneratedFaces(m);
-	
-	
 	
 	vcg::tri::UpdateTopology<CMesh>::FaceFace(m);
 
@@ -304,38 +361,37 @@ int main(int	argc,char	** argv)
 	// COUNT EDGES
 	tri::Clean<CMesh>::CountEdges(m,	mi.count_e, mi.boundary_e);
 
-
-
 	// HOLES COUNT
 	if(mi.Manifold)
 	{
 		mi.numholes = tri::Clean<CMesh>::CountHoles(m);
-    mi.BEdges = tri::Clean<CMesh>::BorderEdges(m, mi.numholes);
-  }
+		mi.BEdges = tri::Clean<CMesh>::BorderEdges(m, mi.numholes);
+	}
 
-  // Mesh	Volume
+	// Mesh	Volume
 	if(mi.numholes==0) mi.Volume	=	m.Volume();
 	
 	// CONNECTED COMPONENTS
-	mi.numcomponents	=	tri::Clean<CMesh>::ConnectedComponents(m);
+	mi.numcomponents = tri::Clean<CMesh>::ConnectedComponents(m);
 
-	if(mi.Manifold) mi.Genus=tri::Clean<CMesh>::MeshGenus(m,mi.count_uv, mi.numholes, mi.numcomponents, mi.count_e);
+	if(mi.Manifold) 
+		mi.Genus = tri::Clean<CMesh>::MeshGenus(m,mi.count_uv, mi.numholes, mi.numcomponents, mi.count_e);
 	
 	// REGULARITY
 	tri::Clean<CMesh>::IsRegularMesh(m, mi.Regular,	mi.Semiregular);
 	
-  // ORIENTABLE	E	ORIENTED MESH
+	// ORIENTABLE E ORIENTED MESH
 	if (mi.Manifold) tri::Clean<CMesh>::IsOrientedMesh(m,	mi.Oriented,	mi.Orientable);
 
-  mi.dv = tri::Clean<CMesh>::RemoveDuplicateVertex(m);
+	mi.dv = tri::Clean<CMesh>::RemoveDuplicateVertex(m);
 
-	// SELF	INTERSECTION
-  mi.SelfIntersect = tri::Clean<CMesh>::SelfIntersections(m);
+	// SELF INTERSECTION
+	mi.SelfIntersect = tri::Clean<CMesh>::SelfIntersections(m);
 
-  if(SaveFlag) tri::io::Exporter<CMesh>::Save(m,SaveName.c_str());
-  
-  if(AsciiFlag) PrintAsciiInfo(mi);
-  if(XmlFlag)  PrintXMLInfo(mi);
+	if(SaveFlag) tri::io::Exporter<CMesh>::Save(m,SaveName.c_str());
+
+	if(AsciiFlag) PrintAsciiInfo(mi);
+	if(XmlFlag) PrintXMLInfo(mi);
 	return 0;
 }
 
