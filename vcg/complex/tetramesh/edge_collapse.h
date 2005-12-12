@@ -271,7 +271,7 @@ static int _Collapse(PosType p,CoordType NewP)
       }
 
       //delting old tetrahedrons
-      vector<TetraType*>::iterator ti;
+      typename vector<TetraType*>::iterator ti;
       for (ti=To_Del.begin();ti<To_Del.end();ti++)
         (*ti)->SetD();
 
@@ -322,7 +322,7 @@ static bool isMarkedE(Edge E,char M)
  EI=_EdgeMark().find(E);
  if (EI==_EdgeMark().end())
     return false;
- else return ((*EI).second & M);
+ else return (((*EI).second & M)!=0);
 }
 
 static void orMarkF(Face F,char M)
@@ -341,7 +341,7 @@ static bool isMarkedF(Face F,char M)
  FI=_FaceMark().find(F);
  if (FI==_FaceMark().end())
     return false;
- else return ((*FI).second & M);
+ else return (((*FI).second & M)!=0);
 }
 
 
@@ -354,8 +354,8 @@ static bool _LinkConditionsF(PosType pos)
     _EdgeMark().clear();
 
 		// Mark edges of ve0 
-    vector< TetraType *>::iterator ti=_Sets().v0.begin(); 
-    vector< char >::iterator en=_Sets().indexv0.begin();
+    typename vector< TetraType *>::iterator ti=_Sets().v0.begin(); 
+    typename vector< char >::iterator en=_Sets().indexv0.begin();
 	VertexType *v0=(*ti)->V(*en);
     while (ti!=_Sets().v0.end())
     {
@@ -444,8 +444,8 @@ static bool _LinkConditionsE(PosType pos)
     _FaceMark().clear();
 
 		// Mark edges of ve0 
-    vector< TetraType *>::iterator ti=_Sets().v0.begin(); 
-    vector< char >::iterator en=_Sets().indexv0.begin();
+    typename vector< TetraType *>::iterator ti=_Sets().v0.begin(); 
+    typename vector< char >::iterator en=_Sets().indexv0.begin();
     while (ti!=_Sets().v0.end())
     {
       //put dummy edge
@@ -541,8 +541,8 @@ static bool _QuickConditions(PosType pos)
  	else /// look if the 2 other faces that don't share the vertex are external on not
 	{
 	
-	vector< TetraType *>::iterator ti=_Sets().E.begin(); 
-	vector< char >::iterator en=_Sets().indexE.begin();
+	typename vector< TetraType *>::iterator ti=_Sets().E.begin(); 
+	typename vector< char >::iterator en=_Sets().indexE.begin();
 		//mark them as intersection
     while (ti!=_Sets().E.end())
     {
@@ -586,7 +586,7 @@ static bool _LinkConditionsV()
     VertexType *vt3;
 		
 
-   vector< TetraType *>::iterator ti=_Sets().v0_U_v1.begin(); 
+   typename vector< TetraType *>::iterator ti=_Sets().v0_U_v1.begin(); 
     
     //reset all link flags
     while (ti!=_Sets().v0_U_v1.end())
@@ -598,7 +598,7 @@ static bool _LinkConditionsV()
 
 
     //also in the ones that appartain to the edge
-    vector< char >::iterator en;
+    typename  vector< char >::iterator en;
     ti=_Sets().E.begin(); 
     en=_Sets().indexE.begin();
     //reset all link flags for intersection and in the same
@@ -705,7 +705,7 @@ static bool _FlipCondition(PosType pos,CoordType NewP)
   CoordType oldpos0;
   CoordType oldpos1;
 
-  vector< TetraType *>::iterator ti=_Sets().no_E.begin();
+  typename  vector< TetraType *>::iterator ti=_Sets().no_E.begin();
 
   //saving old position
   oldpos0 = ve0->P();
@@ -765,7 +765,7 @@ static void _InitTetrahedronValues(VertexType* v)
     {
       if (VTi.Vt()->V(i)->IsB())
       {
-        if (VertexType::HasNormal)
+        if (VertexType::HasNormal())
         UpdateNormals::PerVertex(VTi.Vt()->V(i));
       }
       
@@ -842,7 +842,7 @@ static bool  CheckPreconditions(PosType pos,CoordType NewP)
 ///return the sum of volumes of the union of  stars on vertices (the original volume of tetrahedrons)
 static ScalarType VolumeOriginal()
 {
-  vector< TetraType *>::iterator ti=_Sets().v0_U_v1.begin(); 
+  typename  vector< TetraType *>::iterator ti=_Sets().v0_U_v1.begin(); 
   ScalarType vol=0;
   while (ti!=_Sets().v0_U_v1.end())
   {
@@ -867,7 +867,7 @@ static ScalarType VolumeSimulateCollapse(PosType Pos,CoordType &newP)
 //move vertex that remain in the new position
   Vrem->P() = newP;
 
-  vector< TetraType *>::iterator ti=_Sets().no_E.begin(); 
+  typename vector< TetraType *>::iterator ti=_Sets().no_E.begin(); 
 
   while (ti!=_Sets().no_E.end())
   {

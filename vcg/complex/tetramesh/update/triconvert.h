@@ -31,6 +31,7 @@ Initial commit
 #ifndef __VCG_TETRA_TRI_CONVERTER
 #define __VCG_TETRA_TRI_CONVERTER
 #include <map>
+#include <vector>
 #include<vcg/space/tetra3.h>
 namespace vcg {
 namespace tetra {
@@ -150,7 +151,7 @@ struct InsertedV{
 void ConvertCopy(TetraContainer &tetra,TriangleMeshType &trim)
 {
 	vector<InsertedV > newVertices;
-
+	typename vector<InsertedV>::iterator curr,next;
 	TriVertexIterator vi;
 	vector<TriVertexType*> redirect;
 
@@ -166,7 +167,7 @@ void ConvertCopy(TetraContainer &tetra,TriangleMeshType &trim)
 
 	sort(newVertices.begin(),newVertices.end());
 
-	vector<InsertedV>::iterator curr,next;
+
 	int pos = 0;
 	curr = next = newVertices.begin();
 	while( next != newVertices.end()){
@@ -177,7 +178,7 @@ void ConvertCopy(TetraContainer &tetra,TriangleMeshType &trim)
 		next++;
 		}
 
-	vector<InsertedV>::iterator newE = unique(newVertices.begin(),newVertices.end());
+	typename vector<InsertedV>::iterator newE = unique(newVertices.begin(),newVertices.end());
 	for(curr = newVertices.begin();curr!= newE;++curr)
 		trim.vert.push_back(*((*curr).v));
 

@@ -212,9 +212,9 @@ public:
 	{
 		
 		//take the absolute index of the tree edges of the faces
-    char e0=vcg::Tetra::EofF(fa,0);
-		char e1=vcg::Tetra::EofF(fa,1);
-		char e2=vcg::Tetra::EofF(fa,2);
+    char e0=vcg::Tetra::EofF(_f ,0);
+		char e1=vcg::Tetra::EofF(_f ,1);
+		char e2=vcg::Tetra::EofF(_f ,2);
 		//eliminate the same as himself
 		if (e0==E())
 			{
@@ -369,20 +369,21 @@ private:
 	MTTYPE *_t_initial;
 	short int _back;
 public :
+	typedef  MTTYPE  TetraType;
   PosJump(const TetraType*  tp,const int  fap,const int  ep,
-		int  vp){T()=tp;F()=fap;E()=ep;V()=vp;_t_initial=tp;_back=0;}
+		int  vp){this->T()=tp;this->F()=fap;this->E()=ep;this->V()=vp;_t_initial=tp;_back=0;}
 
 	void NextT()
   {
 #ifdef _DEBUG
 		int cont=0;
 #endif
-		MTTYPE *tpred=T();
+		MTTYPE *tpred=this->T();
 		Pos<MTTYPE>::NextT();
 		//external face
-		if (tpred==T())
+		if (tpred==this->T())
 		{
-			while (T()!=_t_initial)
+			while (this->T()!=_t_initial)
 			{
 				Pos<MTTYPE>::NextT();
 				#ifdef _DEBUG
@@ -408,9 +409,9 @@ private:
 	bool _jump;
   bool _loop;
 public :
-
+	typedef  MTTYPE  TetraType;
 PosLoop(TetraType*  tp,const int  fap,const int  ep,
-		int vp){T()=tp;F()=fap;E()=ep;V()=vp;_t_initial=tp;_jump=false;_loop=false;}
+		int vp){this->T()=tp;this->F()=fap;this->E()=ep;this->V()=vp;_t_initial=tp;_jump=false;_loop=false;}
 
   bool LoopEnd()
   {
@@ -431,34 +432,34 @@ PosLoop(TetraType*  tp,const int  fap,const int  ep,
 	void NextT()
   {	
 #ifdef _DEBUG
-    TetraType *t_old=T();
+    TetraType *t_old=this->T();
 #endif
-		TetraType *tpred=T();
+		TetraType *tpred=this->T();
 		Pos<TetraType>::NextT();
     _loop=false;
     _jump=false;
 
 		//external face
-		if (tpred==T())
+		if (tpred==this->T())
 		{
-      tpred=T();
+      tpred=this->T();
       //jump next one
       Pos<TetraType>::NextT();
       //find the next external face
-			while (tpred!=T())
+			while (tpred!=this->T())
 			{
-        tpred=T();
+        tpred=this->T();
 				Pos<TetraType>::NextT();
 			}
 			////reset right rotation sense
 			//  Pos<TetraType>::NextT();
         _jump=true;
     }	
-    if (T()==_t_initial)
+    if (this->T()==_t_initial)
       _loop=true;
 #ifdef _DEBUG
     if (_loop==false)
-      assert(t_old!=T());
+      assert(t_old!=this->T());
 #endif
   }
 

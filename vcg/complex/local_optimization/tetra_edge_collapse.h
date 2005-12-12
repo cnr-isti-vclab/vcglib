@@ -27,7 +27,11 @@
 #ifndef __VCG_DECIMATION_COLLAPSE
 #define __VCG_DECIMATION_COLLAPSE
 
-#include<vcg\complex\local_optimization.h>
+#include<vcg/complex/local_optimization.h>
+#include<vcg/simplex/tetrahedron/pos.h>
+#include<vcg/complex/tetramesh/edge_collapse.h>
+#include<vcg/space/point3.h>
+
 
 struct FAIL{
 	static int VOL(){static int vol=0; return vol++;}
@@ -74,7 +78,7 @@ class TetraEdgeCollapse: public LocalOptimization<TETRA_MESH_TYPE>::LocModType
 private:
 
 ///the new point that substitute the edge
-Point<3,ScalarType> _NewPoint;
+Point3<ScalarType> _NewPoint;
 ///the pointer to edge collapser method
 vcg::tetra::EdgeCollapse<TETRA_MESH_TYPE> _EC;
 ///mark for up_dating
@@ -154,7 +158,7 @@ ScalarType _VolumePreservingError(PosType &pos,CoordType &new_point,int nsteps)
     for (int i=0;i<nsteps;i++)
     {
       best_error=1000000.f;
-      ScalarType alfatemp=step*((double)i);
+      ScalarType alfatemp=step*((ScalarType)i);
 			//CoordType g;
 			// g.Zero();
 		 //g+=ve0->cP()*alfatemp;
@@ -238,7 +242,7 @@ public:
 
   bool IsUpToDate(){
 	   	if (!pos.T()->IsD())
-		{
+				{
         VertexType *v0=pos.T()->V(Tetra::VofE(pos.E(),0));
 		VertexType *v1=pos.T()->V(Tetra::VofE(pos.E(),1));
 		assert(!v0->IsD());
@@ -247,13 +251,13 @@ public:
 							 _Imark()>=v0->IMark() &&
 							 _Imark()>=v1->IMark()))
 			{
-				FAIL::OFD();
+				FAIL::OFD(); 
 				return false;
 			}
 			else 
 				return true;
 		  }
-			else
+			else 
 			return false;
 	}
 
@@ -265,7 +269,6 @@ public:
 	static void Init(TETRA_MESH_TYPE &m,typename LocalOptimization<TETRA_MESH_TYPE>::HeapType& h_ret){
 		h_ret.clear();
 		typename TETRA_MESH_TYPE::TetraIterator ti;
-		int j;
 		for(ti = m.tetra.begin(); ti != m.tetra.end();++ti)
 		if(!(*ti).IsD()){
 			(*ti).ComputeVolume();

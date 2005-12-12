@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2005/01/12 11:06:54  ganovelli
+added InitVertexIMark
+
 Revision 1.10  2004/10/11 17:44:07  ganovelli
 added include of color4
 
@@ -179,7 +182,7 @@ class Tetramesh{
 
 	inline int MemUsed() const
 	{
-		return sizeof(TMTYPE)+sizeof(VertexType)*vert.size()+sizeof(tetrahedron)*tetra.size()+sizeof(edge)*edges.size();
+		return sizeof(Tetramesh)+sizeof(VertexType)*vert.size()+sizeof(TetraType)*tetra.size();
 	}
 
 	void Clear(){

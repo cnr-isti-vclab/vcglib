@@ -455,7 +455,7 @@ static void TestExternalVertex(VertexContainer &vert,TetraContainer &tetra)
 
  typedef pair <VertexType*, bool> VertBoolPair;
   map<VertexType*, bool> Inserted;
-  map<VertexType*, bool>:: const_iterator MapIte;
+	typename map<VertexType*, bool>::iterator MapIte;
 
   for (ti=tetra.begin();ti<tetra.end();ti++)
   {
@@ -657,8 +657,8 @@ static bool IsExternEdge(TetraType *t,int edge)
     //now look if one face is no shared from other tetrahedron
     //2 instances of same face in vector means it is internal face
     bool isExtern=false;
-    std::vector < _triV >::iterator TVIo;
-    std::vector < _triV >::iterator TVIn;
+    typename std::vector < _triV >::iterator TVIo;
+    typename std::vector < _triV >::iterator TVIn;
     TVIo=Faces.begin();
     TVIn=Faces.begin();
     TVIn++;

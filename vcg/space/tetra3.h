@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2005/11/29 16:20:33  pietroni
+added IsInside() function
+
 Revision 1.9  2004/10/13 12:45:51  cignoni
 Better Doxygen documentation
 
@@ -360,14 +363,14 @@ ScalarType ComputeAspectRatio()
 		double a1=SolidAngle(1);
 		double a2=SolidAngle(2);
 		double a3=SolidAngle(3);
-		return (min(a0,min(a1,min(a2,a3))));
+		return (ScalarType)math::Min(a0,math::Min(a1,math::Min(a2,a3)));
 	}
 
 	///return true of p is inside tetrahedron's volume
 	bool IsInside(const CoordType &p)
 	{
 		//bb control
-		vcg::Box3<CoordType::ScalarType> bb;
+		vcg::Box3<typename CoordType::ScalarType> bb;
 		for (int i=0;i<4;i++)
 			bb.Add(_v[i]);
 
@@ -440,7 +443,7 @@ ScalarType ComputeAspectRatio()
 // compute and return the volume of a tetrahedron
  template<class TetraType>
 typename TetraType::ScalarType ComputeVolume( const TetraType &  t){
-				return (( t.cP(2)-t.cP(0))^(t.cP(1)-t.cP(0) ))*(t.cP(3)-t.cP(0))/6.0;
+	return (typename TetraType::ScalarType)((( t.cP(2)-t.cP(0))^(t.cP(1)-t.cP(0) ))*(t.cP(3)-t.cP(0))/6.0);
 }
 		
 /// Returns the normal to the face face of the tetrahedron t

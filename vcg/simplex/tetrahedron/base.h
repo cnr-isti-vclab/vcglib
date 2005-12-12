@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2004/10/04 17:07:58  pietroni
+changed Q() function
+
 Revision 1.12  2004/09/01 12:18:39  pietroni
 minor changes to comply gcc compiler (typename's )
 
@@ -67,7 +70,7 @@ Revision 1.1  2004/04/15 08:54:20  pietroni
 #ifndef TETRA_TYPE 
 #pragma message("\nYou should never directly include this file\_n")
 #else
-#define NULL 0
+
 #include<vcg/space/point3.h>
 #include<vcg/space/tetra3.h>
 
@@ -316,7 +319,7 @@ public:
 	{	
 		int i;
     for (i=0;i<4;i++)
-			if (T(i)==this)
+			if (TTp(i)==this)
 			{
         V(Tetra::VofF(i,0))->SetB();
 				V(Tetra::VofF(i,1))->SetB();

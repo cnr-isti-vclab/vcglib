@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/10/28 00:54:34  cignoni
+Better Doxygen documentation
+
 Revision 1.7  2004/09/01 12:17:25  pietroni
 minor changes to comply gcc compiler (typename's )
 
@@ -106,7 +109,6 @@ static void PerVertex(VertexType *v)
  while (!VTi.End())
  {
    //take the tree faces on the vertex's tetrahedron
-   int f;
    for (int j=0;j<3;j++)
    {
     int f=Tetra::FofV(VTi.Vi(),j);
@@ -118,7 +120,7 @@ static void PerVertex(VertexType *v)
    }
   ++VTi;
  }
- Norm/=iter;
+ Norm/=(float)iter;
  v->N()=Norm.Normalize();
 }
 
