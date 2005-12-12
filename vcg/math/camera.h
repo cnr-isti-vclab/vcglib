@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.24  2005/12/01 01:03:37  cignoni
+Removed excess ';' from end of template functions, for gcc compiling
+
 Revision 1.23  2005/10/12 16:43:32  ponchio
 Added IsOrtho...
 
@@ -203,7 +206,9 @@ public:
 	/// project a point from space 3d (in the reference system of the camera) to the camera's plane
 	/// the result is in absolute coordinates
 	inline vcg::Point2<S> Project(const vcg::Point3<S> & p);
+	inline vcg::Point3<S> UnProject(const vcg::Point2<S> & p, const S & d);
 	inline vcg::Point2<S> LocalToViewport(const vcg::Point2<S> & p);
+	inline vcg::Point2<S> ViewportToLocal(const vcg::Point2<S> & p);
 	inline vcg::Point2<S> LocalTo_0_1(const vcg::Point2<S> & p);
 	inline vcg::Point2<S> LocalTo_neg1_1(const vcg::Point2<S> & p);
 };
@@ -221,11 +226,34 @@ vcg::Point2<S> Camera<S>::Project(const vcg::Point3<S> & p){
 	return q;
 }
 
+/// project back a 2D point on LOCAL plane + Zdepth to 3D camera space coord
+template<class S>
+vcg::Point3<S> Camera<S>::UnProject(const vcg::Point2<S> & p, const S & d)
+{
+	vcg::Point3<S> np = Point3<S>(p[0], p[1], d);
+
+	if(!IsOrtho())
+	{
+		np[0] /= f/d;
+		np[1] /= f/d;
+	}
+
+	return np;
+}
+
 template<class S>
 vcg::Point2<S> Camera<S>::LocalToViewport(const vcg::Point2<S> & p){
 	vcg::Point2<S>  ps;
 	ps[0] = p[0]/s.X()+c.X();
 	ps[1] = p[1]/s.Y()+c.Y();
+	return ps;
+}
+
+template<class S>
+vcg::Point2<S> Camera<S>::ViewportToLocal(const vcg::Point2<S> & p){
+	vcg::Point2<S>  ps;
+	ps[0] = (p[0]-c.X()) * s.X();
+	ps[1] = (p[1]-c.Y()) * s.Y();
 	return ps;
 }
 
