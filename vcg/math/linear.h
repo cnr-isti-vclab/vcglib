@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/03/16 03:08:17  tarini
+first version
+
 
 ****************************************************************************/
 
@@ -49,7 +52,7 @@ namespace vcg {
 	template <class T>
 	class Linear{
 	public:
-		typedef ScalarType;
+		typedef T ScalarType;
 		inline void Zero();
 		T operator + ( T const & p) const;
 		T operator - ( T const & p) const;
