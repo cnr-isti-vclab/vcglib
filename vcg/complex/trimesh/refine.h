@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/12/02 00:06:37  cignoni
+commented out an old TRACE
+
 Revision 1.6  2005/07/11 13:13:33  cignoni
 small gcc-related compiling issues (typenames,ending cr, initialization order)
 
@@ -58,6 +61,8 @@ first working version
 #include <vcg/simplex/face/pos.h>
 #include<vcg/complex/trimesh/allocate.h>
 #include<vcg/complex/trimesh/update/topology.h>
+#include<wrap/callback.h>
+
 
 namespace vcg{
 /* Tabella che codifica le modalita' di split a seconda di quali dei tre edge sono da splittare 
@@ -293,23 +298,26 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep, bool RefineSelectedP=false
 /*********************************************************/
 
 template<class MESH_TYPE,class MIDPOINT>
-bool Refine(MESH_TYPE &m, MIDPOINT mid, typename MESH_TYPE::ScalarType thr=0,bool RefineSelected=false)
+bool Refine(MESH_TYPE &m, MIDPOINT mid, typename MESH_TYPE::ScalarType thr=0,bool RefineSelected=false, CallBackPos *cb = 0)
 {
 	EdgeLen <typename MESH_TYPE::ScalarType> ep;
 	ep.thr2=thr*thr;
-  return RefineE(m,mid,ep,RefineSelected);
+  return RefineE(m,mid,ep,RefineSelected,cb);
 }
 
 template<class MESH_TYPE,class MIDPOINT, class EDGEPRED>
-bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false)
+bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, CallBackPos *cb = 0)
 {
 	int j,NewVertNum=0,NewFaceNum=0;
 	typedef std::pair<typename MESH_TYPE::VertexPointer,typename MESH_TYPE::VertexPointer> vvpair;
 	std::map<vvpair,typename MESH_TYPE::VertexPointer> Edge2Vert;
 	// Primo ciclo si conta quanti sono i vertici  e facce da aggiungere 
 	typename MESH_TYPE::FaceIterator fi;
-	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
-		for(j=0;j<3;j++){
+  int step=0,PercStep=m.fn/33;
+	for(fi=m.face.begin(),j=0;fi!=m.face.end();++fi) if(!(*fi).IsD())
+  {
+	 if(cb && (++step%PercStep)==0)(*cb)(step/PercStep,"Refining...");
+	    for(j=0;j<3;j++){
 				if(ep((*fi).V(j)->P(),(*fi).V1(j)->P()) && 
 					(!RefineSelected || ((*fi).IsS() && (*fi).FFp(j)->IsS())) ){
 					++NewFaceNum;
@@ -318,14 +326,18 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false)
 						++NewVertNum;
 				}
 		}
+  } // end face loop
 	if(NewVertNum==0) return false;
 	typename MESH_TYPE::VertexIterator lastv = tri::Allocator<MESH_TYPE>::AddVertices(m,NewVertNum);
 //	typename MESH_TYPE::VertexIterator lastv=m.AddVertices(NewVertNum);
 	
 	// Secondo Ciclo si inizializza la mappa da edge a vertici
 	// e la posizione dei nuovi vertici
-	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
-		for(j=0;j<3;j++)
+	//j=0;
+  for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
+  {
+	 if(cb && (++step%PercStep)==0)(*cb)(step/PercStep,"Refining...");
+     for(j=0;j<3;j++)
 			if(ep((*fi).V(j)->P(),(*fi).V1(j)->P())  && 
 					(!RefineSelected || ((*fi).IsS() && (*fi).FFp(j)->IsS())) )
 				if((*fi).V(j)<(*fi).V1(j) || (*fi).IsB(j)){
@@ -335,6 +347,7 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false)
 						Edge2Vert[ vvpair((*fi).V(j),(*fi).V1(j)) ] = &*lastv;
 						++lastv;
 				}
+  }
 	assert(lastv==m.vert.end());
 
 	typename MESH_TYPE::FaceIterator lastf = tri::Allocator<MESH_TYPE>::AddFaces(m,NewFaceNum);
@@ -367,7 +380,9 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false)
 
 	int fca=0,fcn =0;
 	for(fi=m.face.begin();fi!=oldendf;++fi) if(!(*fi).IsD())
-		{fcn++;
+		{
+	      if(cb && (++step%PercStep)==0)(*cb)(step/PercStep,"Refining...");
+        fcn++;
 				vv[0]=(*fi).V(0);
 				vv[1]=(*fi).V(1);
 				vv[2]=(*fi).V(2);
