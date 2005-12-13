@@ -19,12 +19,12 @@
 
 
 // error messages
-#define MSG_ERR_N_ARGS            "\n  Usage:  \n" \
-                                  "  trimeshinfo filename <options>\n\n" \
-                                  "  Options:\n" \
-                                  "    -v Disable verbose mode (enabled by default)\n" \
+#define MSG_ERR_N_ARGS            "  Usage:\n\n" \
+                                  "    trimeshinfo filename <options>\n\n" \
+                                  "  Options:\n\n" \
+                                  "    -q Quiet (disable verbose mode that is enabled by default)\n" \
                                   "    -x Enable XML output\n" \
-                                  "    -h Enable HTML output\n"
+                                  "    -h Enable HTML output\n\n"
 
 #define MSG_ERR_MESH_LOAD               "error loading the input meshes.\n"
 #define MSG_ERR_INVALID_OPTION          "unable to parse option '%s'\n"
