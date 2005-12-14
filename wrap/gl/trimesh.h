@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2005/12/02 10:38:07  cignoni
+Changed a wrong uppercase in the include
+
 Revision 1.14  2005/12/02 00:03:22  cignoni
 Added support for one texture mode (perwedge)
 Changed texturemapid array into a safer vector
@@ -367,12 +370,12 @@ void DrawFill()
 	
 
 	typename std::vector<typename MESH_TYPE::FaceType*>::iterator fip;
-	//short curtexname=-1;
+	short curtexname=-1;
 
 	if(cm == CMPerMesh) glColor(m->C());
 				//		
   
-  if(tm == TMPerWedge) {
+  if(tm == TMPerWedge || tm == TMPerWedgeMulti ) {
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D,TMId[0]);
   }
@@ -452,21 +455,20 @@ void DrawFill()
 				fp = face_pointers.begin();
 			else
 				fi = m->face.begin();
-
+      curtexname=(*fi).WT(0).n();
 			while( (partial)?(fp!=face_pointers.end()):(fi!=m->face.end()))
 			{
  				typename MESH_TYPE::FaceType & f = (partial)?(*(*fp)): *fi;
 
 				if(!f.IsD()){
-//ATLTRACE("Drawing face\n");
-				//if(tm==TMPerWedgeMulti)
-				//	if(f.WT(0).n() != curtexname)
-				//		{
-				//		curtexname=(*fi).WT(0).n();
-				//		glEnd();
-				//		glBindTexture(GL_TEXTURE_2D,TMId(curtexname));
-				//		glBegin(GL_TRIANGLES);
-				//		}
+				if(tm==TMPerWedgeMulti)
+					if(f.WT(0).n() != curtexname)
+						{
+						  curtexname=(*fi).WT(0).n();
+						  glEnd();
+			  		  glBindTexture(GL_TEXTURE_2D,TMId[curtexname]);
+						  glBegin(GL_TRIANGLES);
+						}
 				if(nm == NMPerFace) glNormal(f.cN());
 				if(cm == CMPerFace) glColor(f.C());
 	
@@ -475,7 +477,7 @@ void DrawFill()
 				if(nm==NMPerWedge)glNormal(f.WN(0));
 				if(cm==CMPerVert) glColor(f.V(0)->C());
 //				if(tm==TMPerVert) glTexCoord(f.V(0)->T());
-				if( (tm==TMPerWedge)|| (tm==TMPerWedgeMulti)) glTexCoord(f.WT(0).t(0));
+				if( (tm==TMPerWedge)||(tm==TMPerWedgeMulti) ) glTexCoord(f.WT(0).t(0));
 				glVertex(f.V(0)->P());
 
 				if(nm==NMPerVert) glNormal(f.V(1)->cN());
