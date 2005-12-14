@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2005/12/13 15:46:30  corsini
+Restructuring code
+
 Revision 1.16  2005/12/12 12:09:08  cignoni
 Changed names of clean function and tested inertia.h
 
@@ -334,9 +337,10 @@ void SaveHtmlInfo(MeshInfo &mi)
 int main(int argc, char ** argv)
 {
 	CMesh m;
-	bool verboseFlag = true;  // Verbose mode on/off
-	bool XmlFlag= false;      // XML output enabled/disabled
-	bool HtmlFlag = false;    // HTML output enabled/disabled
+	bool saveCleanMeshFlag = false;   // Save the clean mesh
+	bool verboseFlag = true;          // Verbose mode on/off
+	bool XmlFlag= false;              // XML output enabled/disabled
+	bool HtmlFlag = false;            // HTML output enabled/disabled
 
 	string SaveName;
 	
@@ -361,7 +365,8 @@ int main(int argc, char ** argv)
 
 	mi.FileName = argv[1];
 
-	for(int i = 2; i < argc; i++)
+	int i = 2;
+	while (i < argc)
 	{
 		if (argv[i][0] == '-')
 		{
@@ -370,6 +375,27 @@ int main(int argc, char ** argv)
 			case 'q' : 
 				// Quiet mode, disable verbose mode
 				verboseFlag = false;
+			break;
+
+			case 's':
+				// Save the clean mesh with the name specified
+				saveCleanMeshFlag = true;
+
+				// Check clean mesh name (minimal check)
+				if (i+1 >= argc)
+				{
+					printf("    Invalid output mesh name.\n\n");
+					exit(-1);
+				}
+				else if (argv[i+1][0] != '-')
+					SaveName = argv[i+1];
+				else
+				{
+					printf("    Invalid output mesh name.\n\n");
+					exit(-1);
+				}
+
+				i++;
 			break;
 
 			case 'x' :
@@ -388,7 +414,9 @@ int main(int argc, char ** argv)
 			break;
 			}
 		}
-	}
+
+		i++;
+	};
 
 	// Mesh loading
 	//////////////////////////////////////////
@@ -441,7 +469,11 @@ int main(int argc, char ** argv)
 
 	// VOLUME (require a closed oriented manifold)
 	if ((mi.Manifold)&&(mi.Oriented)&&(!mi.numholes))
-		mi.Volume = m.Volume();
+	{
+		tri::Inertia<CMesh> mm;
+		mm.Compute(m);
+		mi.Volume = mm.Mass();
+	}
 
 	// GENUS
 	if(mi.Manifold) 
@@ -457,14 +489,6 @@ int main(int argc, char ** argv)
 	// SELF INTERSECTION
 	mi.SelfIntersect = tri::Clean<CMesh>::SelfIntersections(m);
 
-  tri::Inertia<CMesh> mm;
-  mm.Compute(m);
-
-	/* Save the clean mesh
-	if (saveFlag)
-		tri::io::Exporter<CMesh>::Save(m, SaveName.c_str());
-	*/
-
 	// Mesh Information Output
 	//////////////////////////////////////////
 
@@ -479,6 +503,14 @@ int main(int argc, char ** argv)
 	// Save mesh information in HTML format
 	if (HtmlFlag)
 		SaveHtmlInfo(mi);
+
+	// Save the clean mesh
+	if (saveCleanMeshFlag)
+	{
+		printf("    Save the 'clean' mesh...");
+		tri::io::Exporter<CMesh>::Save(m, SaveName.c_str());
+		printf(" done.\n\n");
+	}
 
 	return 0;
 }
