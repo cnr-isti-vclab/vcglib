@@ -24,7 +24,8 @@
                                   "  Options:\n\n" \
                                   "    -q Quiet (disable verbose mode that is enabled by default)\n" \
                                   "    -x Enable XML output\n" \
-                                  "    -h Enable HTML output\n\n"
+                                  "    -h Enable HTML output\n\n" \
+                                  "    -s <filename> Save the clean mesh"
 
 #define MSG_ERR_MESH_LOAD               "error loading the input meshes.\n"
 #define MSG_ERR_INVALID_OPTION          "unable to parse option '%s'\n"
@@ -35,8 +36,8 @@
 #define NO_SAMPLES_PER_FACE             10
 #define N_SAMPLES_EDGE_TO_FACE_RATIO    0.1
 #define BBOX_FACTOR                     0.1
-#define INFLATE_PERCENTAGE			    0.02
-#define MIN_SIZE					    125		/* 125 = 5^3 */
+#define INFLATE_PERCENTAGE              0.02
+#define MIN_SIZE                        125    /* 125 = 5^3 */
 #define N_HIST_BINS                     256
 #define PRINT_EVERY_N_ELEMENTS          1000
 #define FILE_EXT_SMF                    "smf"
