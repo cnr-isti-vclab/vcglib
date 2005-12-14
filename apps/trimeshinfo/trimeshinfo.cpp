@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2005/12/14 12:15:37  corsini
+Re-add clean mesh saving feature
+
 Revision 1.17  2005/12/13 15:46:30  corsini
 Restructuring code
 
@@ -204,7 +207,7 @@ void PrintMeshInfo(MeshInfo &mi)
 	if ((mi.Manifold)&&(mi.Oriented)&&(!mi.numholes))
 		printf("    Volume: %f \n", mi.Volume);
 	else 
-		printf("    Volume: UNDEFINED  (a closed oriented manifold is requested)\n");
+		printf("    Volume: UNDEFINED  (a closed oriented manifold is required)\n");
 
 	printf("    Number of connected components: %d\n",	mi.numcomponents);
 
