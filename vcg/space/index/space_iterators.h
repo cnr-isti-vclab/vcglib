@@ -10,7 +10,7 @@
 #include <vcg/math/base.h>
 #include <algorithm>
 #include <float.h>
-
+#include <limits>
 
 namespace vcg{
 	template <class Spatial_Idexing,class INTFUNCTOR,class TMARKER> 
