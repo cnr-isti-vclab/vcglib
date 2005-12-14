@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2005/12/12 12:11:40  cignoni
+Removed unuseful detectunreferenced
+
 Revision 1.16  2005/12/04 00:25:00  cignoni
 Changed DegeneratedFaces -> RemoveZeroAreaFaces
 
@@ -447,38 +450,46 @@ namespace vcg {
 				return Compindex;
 			}
 
-	
-      /**
-      GENUS: A topologically invariant property of a surface defined as:
-      the largest number of nonintersecting simple closed curves that can be drawn on the surface without separating it. 
+
+			/**
+			GENUS.
+			
+			A topologically invariant property of a surface defined as
+			the largest number of non-intersecting simple closed curves that can be 
+			drawn on the surface without separating it. 
+
       Roughly speaking, it is the number of holes in a surface. 
-      The genus g of a surface, also called the geometric genus, is related to the Euler characteristic $chi$ by $chi==2-2g$.
+			The genus g of a closed surface, also called the geometric genus, is related to the 
+			Euler characteristic by the relation $chi$ by $chi==2-2g$.
       
-      The genus of a connected, orientable surface is an integer representing the maximum number of cuttings along closed 
-      simple curves without rendering the resultant manifold disconnected. It is equal to the number of handles on it.
+			The genus of a connected, orientable surface is an integer representing the maximum
+			number of cuttings along closed simple curves without rendering the resultant 
+			manifold disconnected. It is equal to the number of handles on it.
 
-    */  
-			static int MeshGenus(MeshType &m, int count_uv, int numholes, int numcomponents, int count_e)
+			For general polyhedra the <em>Euler Formula</em> is:
+
+			      V + F - E = 2 - 2G - B
+
+			where V is the number of vertices, F is the number of faces, E is the
+			number of edges, G is the genus and B is the number of <em>boundary polygons</em>.
+
+			The above formula is valid for a mesh with one single connected component. 
+			By considering multiple connected components the formula becomes:
+
+			      V + F - E = 2C - 2Gs - B
+
+			where C is the number of connected components and Gs is the sum of
+			the genus of all connected components.
+
+			*/
+			static int MeshGenus(MeshType &m, int count_uv, int numholes, 
+				int numcomponents, int count_e)
 			{
-				int eulernumber = (m.vn-count_uv) + m.fn - count_e;
-				return int(-( 0.5 * (eulernumber - numholes) - numcomponents ));
+				int V = (m.vn - count_uv);  // Unreferenced vertices are subtracted
+				int F = m.fn;
+				int E = count_e;
+				return -((V + F - E + numholes - 2 * numcomponents) / 2);
 			}
-/*
-Let a closed surface have genus g. Then the polyhedral formula generalizes to the Poincaré formula
-chi=V-E+F,	(1)
-
-where
-chi(g)==2-2g	(2)
-
-is the Euler characteristic, sometimes also known as the Euler-Poincaré characteristic. 
-The polyhedral formula corresponds to the special case g==0.
-*/
-
-      static int EulerCharacteristic()
-      {
-
-      }
-
 
 			static void IsRegularMesh(MeshType &m, bool Regular, bool Semiregular)
 			{
