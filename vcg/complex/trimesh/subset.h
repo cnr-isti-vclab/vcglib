@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/02/08 14:38:05  turini
+Warnings Correction
+
 Revision 1.8  2004/05/17 08:26:28  turini
 Changed : Parameters Order As In  vcg::tetra::SubSet.
 
@@ -90,6 +93,8 @@ struct InsertedV
 //	  @param : subSet, stl vector of face poitners.
 //             m,  output mesh mesh.
 //	  It assumes FF topology has been computed.
+
+
 template <class S_MESH_TYPE, class STL_CONT>
 void SubSet(S_MESH_TYPE & m, STL_CONT & subSet)
 {
@@ -99,7 +104,10 @@ void SubSet(S_MESH_TYPE & m, STL_CONT & subSet)
   std::vector<S_MESH_TYPE::VertexPointer> redirect;
   
   for(pfi=subSet.begin(); pfi!=subSet.end(); ++pfi)
-    m.face.push_back(*(*pfi));
+  {		
+		assert(!(*pfi)->IsD());
+		m.face.push_back(*(*pfi));
+  }
   
   S_MESH_TYPE::FaceIterator fi;
   for(fi=m.face.begin(); fi!=m.face.end(); ++fi)
