@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2005/12/14 14:04:35  corsini
+Fix genus computation
+
 Revision 1.17  2005/12/12 12:11:40  cignoni
 Removed unuseful detectunreferenced
 
@@ -86,17 +89,18 @@ Initial Release
 #ifndef __VCGLIB_CLEAN
 #define __VCGLIB_CLEAN
 
+// Standard headers
 #include <map>
 #include <algorithm>
 #include <stack>
 
-
+// VCG headers
 #include <vcg/simplex/face/face.h>
-#include<vcg/simplex/face/topology.h>
+#include <vcg/simplex/face/pos.h>
+#include <vcg/simplex/face/topology.h>
 #include <vcg/complex/trimesh/base.h>
 #include <vcg/complex/trimesh/closest.h>
 #include <vcg/space/index/grid_static_ptr.h>
-
 #include<vcg/complex/trimesh/allocate.h>
 
 
@@ -232,13 +236,10 @@ namespace vcg {
 					return deleted;
 			}
 
-
-
       static int RemoveZeroAreaFace(MeshType& m, ScalarType epsilon=0)
 			{
 				FaceIterator fi;
 				int count_fd = 0;
-
 
 				for(fi=m.face.begin(); fi!=m.face.end();++fi)
 					if(Area<FaceType>(*fi) <= epsilon)
@@ -249,30 +250,66 @@ namespace vcg {
 					}
 				return count_fd;
 			}
+
+			/**
+			 * Check if the mesh is a manifold.
+			 *
+			 * First of all, for each face the FF condition is checked.
+			 * Then, a second test is performed: for each vertex the 
+			 * number of face found have to be the same of the number of 
+			 * face found with the VF walk trough.
+			 */
 			static bool IsComplexManifold( MeshType & m ) 
 			{
+				bool flagManifold = true;
+
+				VertexIterator vi;
 				FaceIterator fi;
-				bool Manifold = true;
-				for( fi=m.face.begin();fi!=m.face.end();++fi)
+
+				// First Test
+				assert(m.HasFFTopology());
+				for (fi = m.face.begin(); fi != m.face.end(); ++fi)
 				{
-					for (int j=0;j<3;j++)
+					if ((!IsManifold(*fi,0))||
+							(!IsManifold(*fi,1))||
+							(!IsManifold(*fi,2)))
 					{
-						if(!IsManifold(*fi,j))
-						{
-							Manifold = false;
-							fi= m.face.end();
-							--fi;
-							j=3;
-						}
-					}
-					if((BorderCount(*fi)>0))
-					{
-						Manifold = false;
-						fi= m.face.end();
-						--fi;
+						flagManifold = false;
+						break;
 					}
 				}
-				return Manifold;
+
+				// Second Test
+				if (flagManifold)
+				{
+					assert(m.HasVFTopology());
+
+					face::VFIterator<FaceType> vfi;
+					int starSizeFF;
+					int starSizeVF;
+					for (vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+					{
+						face::VFIterator<FaceType> vfi(&*vi);
+						face::Pos<FaceType> pos((*vi).VFp(), &*vi);
+
+						starSizeFF = pos.StarSize();
+
+						starSizeVF = 0;
+						while(!vfi.End())
+						{
+							++vfi;
+							starSizeVF++;
+						}
+
+						if (starSizeFF != starSizeVF)
+						{
+							flagManifold = false;
+							break;
+						}
+					}
+				}
+
+				return flagManifold;
 			}
 
 			static void CountEdges( MeshType & m, int &count_e, int &boundary_e ) 
@@ -341,8 +378,6 @@ namespace vcg {
 					(*fi).ClearS();
 				gi=m.face.begin(); fi=gi;
 
-
-
 				for(fi=m.face.begin();fi!=m.face.end();fi++)//for all faces do
 				{
 					for(int j=0;j<3;j++)//for all edges
@@ -383,7 +418,7 @@ namespace vcg {
 						}
 					}
 				}
-				return holes.size();
+				return static_cast<int>(holes.size());
 			}
 
 			static int BorderEdges( MeshType & m, int numholes)
@@ -491,148 +526,65 @@ namespace vcg {
 				return -((V + F - E + numholes - 2 * numcomponents) / 2);
 			}
 
-			static void IsRegularMesh(MeshType &m, bool Regular, bool Semiregular)
+			/**
+			 * Check if the given mesh is regular, semi-regular or irregular.
+			 *
+			 * Each vertex of a \em regular mesh has valence 6 except for border vertices
+			 * which have valence 4.
+			 *
+			 * A \em semi-regular mesh is derived from an irregular one applying
+			 * 1-to-4 subdivision recursively. (not checked for now)
+			 *
+			 * All other meshes are \em irregular.
+			 */
+			static void IsRegularMesh(MeshType &m, bool &Regular, bool &Semiregular)
 			{
-				int inc=0;
-				VertexIterator v;
-				FaceIterator fi;
-				vcg::face::Pos<FaceType> he;
-				vcg::face::Pos<FaceType> hei;
-				for(v=m.vert.begin();v!=m.vert.end();++v)
-					(*v).ClearS();
-				for(fi=m.face.begin();fi!=m.face.end();++fi)
+				// This algorithm requires Vertex-Face topology
+				assert(m.HasVFTopology());
+
+				Regular = true;
+			
+				VertexIterator vi;
+
+				// for each vertex the number of edges are count
+				for (vi = m.vert.begin(); vi != m.vert.end(); ++vi)
 				{
-					for (int j=0; j<3; j++)
+					face::Pos<FaceType> he((*vi).VFp(), &*vi);
+					face::Pos<FaceType> ht = he;
+
+					int n=0;
+					bool border=false;
+					do
 					{
-						he.Set(&(*fi),j,fi->V(j));
-						if (!face::IsBorder(*fi,j) && !face::IsBorder(*fi,(j+2)%3) && !fi->V(j)->IsS())
-						{
-							hei=he;
-							inc=1;
-							he.FlipE();
-							he.NextF();
-							while (he.f!=hei.f)
-							{
-								he.FlipE();
-								if (he.IsBorder())
-								{
-									inc=6;
-									break;
-								}
-								he.NextF();
-								inc++;
-							}
-							if (inc!=6)
-								Regular=false;
-							if (inc!=6 && inc!=5)
-								Semiregular=false;
-							fi->V(j)->SetS();
+						++n;
+						ht.NextE();
+						if (ht.IsBorder()) 
+							border=true;
+					} 
+					while (ht != he);
 
-						}
-						else
-							fi->V(j)->SetS();
-					}
-					if (Semiregular==false)
+					if (border)
+						n = n/2;
+
+					if ((n != 6)&&(!border && n != 4))
+					{
+						Regular = false;
 						break;
-
+					}
 				}
 
+				if (!Regular)
+					Semiregular = false;
+				else
+				{
+					// For now we do not account for semi-regularity
+					Semiregular = false;
+				}
 			}
 
 			static void IsOrientedMesh(MeshType &m, bool Oriented, bool Orientable)
 			{
-				FaceIterator fi;
-				FacePointer gi=&*m.face.begin();
-				vcg::face::Pos<FaceType> he;
-				vcg::face::Pos<FaceType> hei;
-        std::stack<FacePointer> sf;	
-				FacePointer l;
-
-				for(fi=m.face.begin();fi!=m.face.end();++fi)
-				{
-					(*fi).ClearS();
-					(*fi).ClearUserBit(0);
-				}
-				//gi=m.face.begin(); fi=gi;
-				for(fi=m.face.begin();fi!=m.face.end();++fi)
-				{
-					if (!(*fi).IsS())
-					{
-						(*fi).SetS();
-						sf.push(&*fi);
-
-						while (!sf.empty())
-						{
-							gi=sf.top();
-							sf.pop();
-							for(int j=0;j<3;++j)
-							{
-								if( !face::IsBorder(*gi,j) )
-								{
-									he.Set(&(*gi),0,gi->V(0));
-									l=he.f->FFp(j);
-									he.Set(&(*gi),j,gi->V(j));
-									hei.Set(he.f->FFp(j),he.f->FFi(j), (he.f->FFp(j))->V(he.f->FFi(j)));
-									if( !(*gi).IsUserBit(0) )
-									{
-										if (he.v!=hei.v)// bene
-										{
-											if ((*l).IsS() && (*l).IsUserBit(0))
-											{
-												Orientable=false;
-												break;
-											}
-											else if (!(*l).IsS())
-											{
-												(*l).SetS();
-												sf.push(l);
-											}
-										}
-										else if (!(*l).IsS())
-										{
-											Oriented=false;
-											(*l).SetS();
-											(*l).SetUserBit(0);
-											sf.push(l);
-										}
-										else if ((*l).IsS() && !(*l).IsUserBit(0))
-										{
-											Orientable=false;
-											break;
-										}
-									}
-									else if (he.v==hei.v)// bene
-									{
-										if ((*l).IsS() && (*l).IsUserBit(0))
-										{
-											Orientable=false;
-											break;
-										}
-										else if (!(*l).IsS())
-										{
-											(*l).SetS();
-											sf.push(l);
-										}
-									}
-									else if (!(*l).IsS())
-									{
-										Oriented=false;
-										(*l).SetS();
-										(*l).SetUserBit(0);
-										sf.push(l);
-									}
-									else if ((*l).IsS() && !(*l).IsUserBit(0))
-									{
-										Orientable=false;
-										break;
-									}
-								}
-							}
-						}
-					}
-					if (!Orientable)
-						break;
-				}
+				//...TODO...	
 			}
 
 			static bool SelfIntersections(MeshType &m)
