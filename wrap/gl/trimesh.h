@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2005/12/14 00:18:43  cignoni
+multiple texture support
+
 Revision 1.15  2005/12/02 10:38:07  cignoni
 Changed a wrong uppercase in the include
 
@@ -455,7 +458,7 @@ void DrawFill()
 				fp = face_pointers.begin();
 			else
 				fi = m->face.begin();
-      curtexname=(*fi).WT(0).n();
+     if(tm==TMPerWedgeMulti) curtexname=(*fi).WT(0).n();
 			while( (partial)?(fp!=face_pointers.end()):(fi!=m->face.end()))
 			{
  				typename MESH_TYPE::FaceType & f = (partial)?(*(*fp)): *fi;
