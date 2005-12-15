@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2005/12/15 10:53:16  corsini
+Add constructor which takes as input a face and a vertex
+
 Revision 1.17  2005/10/16 23:30:39  ponchio
 IsBorder(...) declaration needed.
 
@@ -144,16 +147,16 @@ public:
 	VertexType *& V(const int & i){assert( (i>=0) && (i<2)); return f->UberV( (z +i) %3);}
 
 	/// Operator to compare two half-edge
-	inline bool operator == ( FaceType const & p ) const {
+	inline bool operator == ( Pos<FaceType> const & p ) const {
 			return (f==p.f && z==p.z && v==p.v);
 	} 
 
 	/// Operator to compare two half-edge
-	inline bool operator != ( FaceType const & p ) const {
+	inline bool operator != ( Pos<FaceType> const & p ) const {
 			return (f!=p.f || z!=p.z || v!=p.v);
 	} 
 	/// Operator to order half-edge; it's compare at the first the face pointers, then the index of the edge and finally the vertex pointers
-	inline bool operator <= ( FaceType const & p) const {
+	inline bool operator <= ( Pos<FaceType> const & p) const {
 		return	(f!=p.f)?(f<f.p):
 						(z!=p.z)?(z<p.z):
 						(v<=p.v);
@@ -302,7 +305,7 @@ public:
 			++n;
 			ht.NextE();
 			if(ht.IsBorder()) bf=true;
-		} while(&ht != this);
+		} while (ht != *this);
 
 		if(bf) return n/2;
 		else return n;
