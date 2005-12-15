@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2005/12/14 14:05:37  corsini
+Adjust comments
+
 Revision 1.18  2005/12/14 12:15:37  corsini
 Re-add clean mesh saving feature
 
@@ -141,8 +144,10 @@ using namespace vcg;
 
 class CFace;
 class CEdge;
-class CVertex  : public VertexSimp2< CVertex, CEdge, CFace, vert::Coord3f, vert::BitFlags, vert::Normal3f >{};
-class CFace    : public FaceSimp2< CVertex, CEdge, CFace, face::FFAdj, face::VertexRef, face::Normal3f, face::BitFlags, face::Mark > {};
+class CVertex  : public VertexSimp2< CVertex, CEdge, CFace, vert::VFAdj, vert::Coord3f, 
+																			vert::BitFlags, vert::Normal3f > {};
+class CFace    : public FaceSimp2< CVertex, CEdge, CFace, face::FFAdj, face::VFAdj, 
+												face::VertexRef, face::Normal3f, face::BitFlags, face::Mark > {};
 class CMesh    : public vcg::tri::TriMesh< vector<CVertex>, vector<CFace> > {};
 
 typedef CMesh::VertexPointer VertexPointer;
@@ -441,11 +446,12 @@ int main(int argc, char ** argv)
 	// DEGENERATED FACES => (faces with area zero)
 	mi.count_fd = tri::Clean<CMesh>::RemoveZeroAreaFace(m);
 	
-	// Update topology (face-to-face)
-	tri::UpdateTopology<CMesh>::FaceFace(m);
-
 	// UNREFERENCED VERTEX
 	mi.count_uv = tri::Clean<CMesh>::RemoveUnreferencedVertex(m);
+
+	// Update topology (face-to-face)
+	tri::UpdateTopology<CMesh>::FaceFace(m);
+	tri::UpdateTopology<CMesh>::VertexFace(m);
 
 	// Update flags
 	tri::UpdateFlags<CMesh>::Clear(m);
