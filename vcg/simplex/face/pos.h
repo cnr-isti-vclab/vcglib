@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2005/12/15 11:19:00  corsini
+Fix operators
+
 Revision 1.18  2005/12/15 10:53:16  corsini
 Add constructor which takes as input a face and a vertex
 
@@ -147,16 +150,16 @@ public:
 	VertexType *& V(const int & i){assert( (i>=0) && (i<2)); return f->UberV( (z +i) %3);}
 
 	/// Operator to compare two half-edge
-	inline bool operator == ( Pos<FaceType> const & p ) const {
+	inline bool operator == ( PosType const & p ) const {
 			return (f==p.f && z==p.z && v==p.v);
 	} 
 
 	/// Operator to compare two half-edge
-	inline bool operator != ( Pos<FaceType> const & p ) const {
+	inline bool operator != ( PosType const & p ) const {
 			return (f!=p.f || z!=p.z || v!=p.v);
 	} 
 	/// Operator to order half-edge; it's compare at the first the face pointers, then the index of the edge and finally the vertex pointers
-	inline bool operator <= ( Pos<FaceType> const & p) const {
+	inline bool operator <= ( PosType const & p) const {
 		return	(f!=p.f)?(f<f.p):
 						(z!=p.z)?(z<p.z):
 						(v<=p.v);
@@ -298,7 +301,7 @@ public:
 	int StarSize()
 	{
 		int n=0;
-		Pos<FaceType> ht = *this;
+		PosType ht = *this;
 		bool bf=false;
 		do
 		{
