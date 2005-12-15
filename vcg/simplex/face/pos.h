@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2005/10/16 23:30:39  ponchio
+IsBorder(...) declaration needed.
+
 Revision 1.16  2005/10/13 09:29:10  cignoni
 Removed the reference to Deprecated f->IsBorder(i) now everyone should use IsBorder(*f,i);
 
@@ -121,9 +124,20 @@ public:
 
 	/// Default constructor
 	Pos(){}
-	/// Constructor which associates the half-edge elementet with a face, its edge and its vertex
-	Pos(FaceType  * const fp, int const zp,	VertexType  * const vp){f=fp; z=zp; v=vp;}
-	Pos(FaceType  * const fp, int const zp){f=fp; z=zp; v=f->V(zp);}
+	/// Constructor which associates the half-edge element with a face, its edge and its vertex
+	Pos(FaceType * const fp, int const zp, VertexType * const vp){f=fp; z=zp; v=vp;}
+	Pos(FaceType * const fp, int const zp){f=fp; z=zp; v=f->V(zp);}
+	Pos(FaceType * const fp, VertexType * const vp)
+	{
+		f = fp;
+		v = vp;
+		if (f->V(0) == v)
+			z = 2;
+		else if (f->V(1) == v)
+			z = 0;
+		else if (f->V(2) == v)
+			z = 1;
+	}
 
 	// access functions
 	VertexType *& V(){return f->UberV(z);}
@@ -281,14 +295,14 @@ public:
 	int StarSize()
 	{
 		int n=0;
-		FaceType ht=*this;
+		Pos<FaceType> ht = *this;
 		bool bf=false;
 		do
 		{
 			++n;
 			ht.NextE();
 			if(ht.IsBorder()) bf=true;
-		} while(ht!=*this);
+		} while(&ht != this);
 
 		if(bf) return n/2;
 		else return n;
