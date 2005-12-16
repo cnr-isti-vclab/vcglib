@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2005/12/01 23:54:59  cignoni
+Removed excess ';' from end of template functions, for gcc compiling
+
 Revision 1.20  2005/11/23 13:04:26  ganovelli
 changed IsBOrder
 
@@ -238,22 +241,64 @@ void AssertAdj(FaceType & f)
 //    f = (*f).F(t);
 //}
 
-/** This function change the orientation of the face. Inverting the index of two vertex 
-@param z Index of the edge
-*/
-template <class SwapFaceType>
-void Swap (SwapFaceType &f, const int z )
+/**
+ * Check if the given face is oriented as the one adjacent to the specified edge.
+ * @param f Face to check the orientation
+ * @param z Index of the edge
+ */
+template <class FaceType>
+bool CheckOrientation(FaceType &f, int z)
 {
-  int i;
-  SwapFaceType *tmp, *prec;
-  int t, precz;
+	if (IsBorder(f, z))
+		return true;
+	else
+	{
+		FaceType *g = f.FFp(z);
+		int gi = f.FFi(z);
+		if (f.V0(z) == g->V1(gi))
+			return true;
+		else
+			return false;
+	}
+}
 
-  swap ( f.V((z  )%3),f.V((z+1)%3));
+/** 
+ * This function change the orientation of the face by inverting the index of two vertex.
+ * @param z Index of the edge
+ */
+template <class FaceType>
+void SwapEdge(FaceType &f, const int z)
+{
+	int i;
+	FaceType *tmp, *prec;
+	int t, precz;
 
-  if(f.HasFFAdjacency() )
-  {
-    // TODO!!!
-  }
+	// store information to preserve topology
+	int z0 = z;
+	int z1 = (z+1)%3;
+	int z2 = (z+2)%3;
+	FaceType *g1p = f.FFp(z1);
+	FaceType *g2p = f.FFp(z2);
+	int g1i = f.FFi(z1);
+	int g2i = f.FFi(z2);
+
+	// swap V0(z0) with V1(z0)
+	swap(f.V0(z0), f.V1(z0));
+
+	if(f.HasFFAdjacency())
+	{
+		// g0 face topology is not affected by the swap
+
+		if (g1p != f)
+			g1p->FFi(g1i) = f.FFi(z2);
+
+		if (g2p != f)
+			g2p->FFi(g2i) = f.FFi(z1);
+
+		// finalize swap
+		swap(f.FFp(z1), f.FFp(z2));
+		swap(f.FFi(z1), f.FFi(z2));
+	}
 }
 
 /*!
