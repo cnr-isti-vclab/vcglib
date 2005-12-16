@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2005/12/15 11:20:00  corsini
+Add vertex-face topology
+
 Revision 1.19  2005/12/14 14:05:37  corsini
 Adjust comments
 
@@ -245,7 +248,7 @@ void PrintMeshInfo(MeshInfo &mi)
 	if (mi.Manifold)
 		printf("    Genus: %d \n", mi.Genus);
 	else
-		printf("    Genus (n/a)\n");
+		printf("    Genus: N/A \n");
 
 	// Mesh Type
 	if (mi.Regular) 
@@ -475,6 +478,11 @@ int main(int argc, char ** argv)
 	// ORIENTATION
 	if (mi.Manifold)
 		tri::Clean<CMesh>::IsOrientedMesh(m, mi.Oriented, mi.Orientable);
+	else
+	{
+		mi.Oriented = false;
+		mi.Orientable = false;
+	}
 
 	// VOLUME (require a closed oriented manifold)
 	if ((mi.Manifold)&&(mi.Oriented)&&(!mi.numholes))
@@ -490,7 +498,13 @@ int main(int argc, char ** argv)
 			mi.numcomponents, mi.count_e);
 	
 	// REGULARITY
-	tri::Clean<CMesh>::IsRegularMesh(m, mi.Regular,	mi.Semiregular);
+	if (mi.Manifold)
+		tri::Clean<CMesh>::IsRegularMesh(m, mi.Regular, mi.Semiregular);
+	else
+	{
+		mi.Regular = false;
+		mi.Semiregular = false;
+	}
 
 	// DUPLICATED VERTICES
 	mi.dv = tri::Clean<CMesh>::RemoveDuplicateVertex(m);
