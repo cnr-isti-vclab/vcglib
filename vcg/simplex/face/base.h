@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.35  2005/12/01 23:54:29  cignoni
+Added HasFlags
+
 Revision 1.34  2005/11/23 14:40:09  pietroni
 added cFFi function
 
@@ -830,8 +833,11 @@ public:
 		FEATURE0    = 0x00008000,
 		FEATURE1    = 0x00010000,
 		FEATURE2    = 0x00020000,
-		// First user bit
-		USER0       = 0x00040000
+		// User bits
+		USER0       = 0x00040000,
+		USER1       = 0x00080000,
+		USER2       = 0x00100000,
+		USER3       = 0x00200000
 		};
 public:
 	static int &LastBitFlag()
