@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2005/12/16 10:54:59  corsini
+Reimplement isOrientedMesh
+
 Revision 1.21  2005/12/16 10:53:39  corsini
 Take account for deletion in isComplexManifold
 
@@ -633,58 +636,46 @@ namespace vcg {
 				}
 			}
 
-			static bool SelfIntersections(MeshType &m)
+			static bool SelfIntersections(MeshType &m, std::vector<FaceType*> &ret)
 			{
-				
+        assert(FaceType::HasMark()); // Needed by the UG
+        
 				Box3< ScalarType> bbox;
 				TriMeshGrid   gM;
-
-				int nelem;
-				
-				double bdiag = m.bbox.Diag();
-
-				bbox.SetNull();
-				FaceType   *f=0;
-				Point3x             normf, bestq, ip,p;
+        ret.clear();
 				FaceIterator fi;
+	      int referredBit = FaceType::NewBitFlag();
 
+				int deleted = 0;
+
+				for(fi=m.face.begin();fi!=m.face.end();++fi)
+					(*fi).ClearUserBit(referredBit);
 				
-
-				std::vector<FaceType*> ret;
 				std::vector<FaceType*> inBox;
 				gM.Set(m.face.begin(),m.face.end());
-
-				
 				
 				for(fi=m.face.begin();fi!=m.face.end();++fi)
 				{
-					
-					
+          (*fi).SetUserBit(referredBit);
 					(*fi).GetBBox(bbox);
 					vcg::trimesh::GetInBoxFace(m, gM, bbox,inBox);
-					
-				// fill the cell
-/*....*/
-			
-
-					nelem = inBox.size();
-
-
-					if (nelem>=2)// in a cell
-					{
-						//test combinations of elements
-						for (int i=0;i<nelem-1;i++)
-							for (int j=i+1;j<nelem;j++)
-							if ((!inBox[i]->IsD())&&(!inBox[j]->IsD())&&(TestIntersection(inBox[i],inBox[j])))
-							{
-							
-								ret.push_back(inBox[i]);
-								ret.push_back(inBox[j]);
-							}
-					}
+					bool Intersected=false;
+          std::vector<FaceType*>::iterator fib;
+          for(fib=inBox.begin();fib!=inBox.end();++fib)
+          {
+            if(!(*fib)->IsUserBit(referredBit) && (*fib != &*fi) )
+              if(TestIntersection(&*fi,*fib)){
+                ret.push_back(*fib);
+                if(!Intersected) {
+                  ret.push_back(&*fi);
+                  Intersected=true;
+                }
+              }
+          }
 					inBox.clear();
-					bbox.SetNull();
 				}	
+				
+        FaceType::DeleteBitFlag(referredBit);
 				return (ret.size()>0);
 			}
 
