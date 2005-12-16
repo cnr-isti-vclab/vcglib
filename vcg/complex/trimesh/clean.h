@@ -24,6 +24,10 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2005/12/15 13:53:13  corsini
+Reimplement isComplexManifold
+Reimplement isRegular
+
 Revision 1.18  2005/12/14 14:04:35  corsini
 Fix genus computation
 
@@ -549,27 +553,30 @@ namespace vcg {
 				// for each vertex the number of edges are count
 				for (vi = m.vert.begin(); vi != m.vert.end(); ++vi)
 				{
-					face::Pos<FaceType> he((*vi).VFp(), &*vi);
-					face::Pos<FaceType> ht = he;
-
-					int n=0;
-					bool border=false;
-					do
+					if (!vi->IsD())
 					{
-						++n;
-						ht.NextE();
-						if (ht.IsBorder()) 
-							border=true;
-					} 
-					while (ht != he);
+						face::Pos<FaceType> he((*vi).VFp(), &*vi);
+						face::Pos<FaceType> ht = he;
 
-					if (border)
-						n = n/2;
+						int n=0;
+						bool border=false;
+						do
+						{
+							++n;
+							ht.NextE();
+							if (ht.IsBorder()) 
+								border=true;
+						} 
+						while (ht != he);
 
-					if ((n != 6)&&(!border && n != 4))
-					{
-						Regular = false;
-						break;
+						if (border)
+							n = n/2;
+
+						if ((n != 6)&&(!border && n != 4))
+						{
+							Regular = false;
+							break;
+						}
 					}
 				}
 
