@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2005/12/16 10:43:23  corsini
+Fix one bug
+
 Revision 1.22  2005/12/16 10:29:10  corsini
 Add CheckOrientation
 Reimplement SwapEdge function
@@ -351,6 +354,9 @@ static bool CheckFlipEdge(FaceType &f, int z)
 * Check for topological correctness first using <CODE>CheckFlipFace()</CODE>.
 *	\param f	pointer to the face
 *	\param z	the edge index
+*
+* Note: For <em>edge flip</em> we intend the swap of the diagonal of the rectangle 
+*       formed by the face \a f and the face adjacent to the specified edge.
 */
 template <class FaceType>
 static void FlipEdge(FaceType &f, const int z)
