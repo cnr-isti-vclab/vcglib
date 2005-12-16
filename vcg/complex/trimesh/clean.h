@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2005/12/16 10:51:43  corsini
+Take account for deletion in isRegularMesh
+
 Revision 1.19  2005/12/15 13:53:13  corsini
 Reimplement isComplexManifold
 Reimplement isRegular
@@ -274,12 +277,15 @@ namespace vcg {
 				assert(m.HasFFTopology());
 				for (fi = m.face.begin(); fi != m.face.end(); ++fi)
 				{
-					if ((!IsManifold(*fi,0))||
-							(!IsManifold(*fi,1))||
-							(!IsManifold(*fi,2)))
+					if (!fi->IsD())
 					{
-						flagManifold = false;
-						break;
+						if ((!IsManifold(*fi,0))||
+								(!IsManifold(*fi,1))||
+								(!IsManifold(*fi,2)))
+						{
+							flagManifold = false;
+							break;
+						}
 					}
 				}
 
@@ -293,22 +299,25 @@ namespace vcg {
 					int starSizeVF;
 					for (vi = m.vert.begin(); vi != m.vert.end(); ++vi)
 					{
-						face::VFIterator<FaceType> vfi(&*vi);
-						face::Pos<FaceType> pos((*vi).VFp(), &*vi);
-
-						starSizeFF = pos.StarSize();
-
-						starSizeVF = 0;
-						while(!vfi.End())
+						if (!vi->IsD())
 						{
-							++vfi;
-							starSizeVF++;
-						}
+							face::VFIterator<FaceType> vfi(&*vi);
+							face::Pos<FaceType> pos((*vi).VFp(), &*vi);
 
-						if (starSizeFF != starSizeVF)
-						{
-							flagManifold = false;
-							break;
+							starSizeFF = pos.StarSize();
+
+							starSizeVF = 0;
+							while(!vfi.End())
+							{
+								++vfi;
+								starSizeVF++;
+							}
+
+							if (starSizeFF != starSizeVF)
+							{
+								flagManifold = false;
+								break;
+							}
 						}
 					}
 				}
