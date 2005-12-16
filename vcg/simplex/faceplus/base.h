@@ -24,6 +24,11 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/12/02 00:41:38  cignoni
+Added and removed typenames for gcc compiling.
+Added this-> qualifier for referencing the elemntes of the templated base class
+(e.g. to refer the possibly overridden flags())  it seems to be needed by the standard
+
 Revision 1.4  2005/11/16 22:56:32  cignoni
 Added EmptyMark to base class
 Standardized name of flags. It is plural becouse each simplex has many flag.
@@ -134,6 +139,13 @@ template <class BVT, class BET, typename BFT,class BTT,
           template <typename> class E, template <typename> class F > 
           class FaceArity6: public F<FaceArity5<BVT,BET,BFT,BTT, A, B, C, D, E> > {};
 
+template <class BVT, class BET, typename BFT,class BTT,
+          template <typename> class A, template <typename> class B, 
+          template <typename> class C, template <typename> class D,
+          template <typename> class E, template <typename> class F, 
+          template <typename> class G  > 
+          class FaceArity7: public G<FaceArity6<BVT,BET,BFT,BTT, A, B, C, D, E, F> > {};
+
 /* The Real Big Face class;
 
 The class __FaceArityMax__ is the one that is the Last to be derived,
@@ -150,8 +162,8 @@ template <class BVT, class BET, typename BFT,class BTT,
           template <typename> class A, template <typename> class B, 
           template <typename> class C, template <typename> class D, 
           template <typename> class E, template <typename> class F,
-          template <typename> class G> 
-class FaceArityMax: public G<FaceArity6<BVT,BET,BFT,BTT, A, B, C, D, E, F> > {
+          template <typename> class G, template <typename> class H> 
+class FaceArityMax: public H<FaceArity7<BVT,BET,BFT,BTT, A, B, C, D, E, F, G> > {
 
 // ----- Flags stuff -----
 public:
@@ -301,15 +313,15 @@ template <class BVT, class BET, class BFT, class BTT,
           template <typename> class A = FaceDefaultDeriver, template <typename> class B = FaceDefaultDeriver,
           template <typename> class C = FaceDefaultDeriver, template <typename> class D = FaceDefaultDeriver,
           template <typename> class E = FaceDefaultDeriver, template <typename> class F = FaceDefaultDeriver,
-          template <typename> class G = FaceDefaultDeriver > 
-              class FaceSimp3: public FaceArityMax<BVT,BET,BFT,BTT, A, B, C, D, E, F, G>  {};
+          template <typename> class G = FaceDefaultDeriver, template <typename> class H = FaceDefaultDeriver > 
+              class FaceSimp3: public FaceArityMax<BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H>  {};
 
 template <class BVT, class BET, class BFT, 
           template <typename> class A = FaceDefaultDeriver, template <typename> class B = FaceDefaultDeriver,
           template <typename> class C = FaceDefaultDeriver, template <typename> class D = FaceDefaultDeriver,
           template <typename> class E = FaceDefaultDeriver, template <typename> class F = FaceDefaultDeriver,
-          template <typename> class G = FaceDefaultDeriver > 
-              class FaceSimp2: public FaceArityMax<BVT,BET,BFT,DumTT, A, B, C, D, E, F, G>  {};
+          template <typename> class G = FaceDefaultDeriver, template <typename> class H = FaceDefaultDeriver > 
+              class FaceSimp2: public FaceArityMax<BVT,BET,BFT,DumTT, A, B, C, D, E, F, G, H>  {};
 
 
 }// end namespace
