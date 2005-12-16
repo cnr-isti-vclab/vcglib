@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2005/12/16 10:29:10  corsini
+Add CheckOrientation
+Reimplement SwapEdge function
+
 Revision 1.21  2005/12/01 23:54:59  cignoni
 Removed excess ';' from end of template functions, for gcc compiling
 
@@ -289,10 +293,10 @@ void SwapEdge(FaceType &f, const int z)
 	{
 		// g0 face topology is not affected by the swap
 
-		if (g1p != f)
+		if (g1p != &f)
 			g1p->FFi(g1i) = f.FFi(z2);
 
-		if (g2p != f)
+		if (g2p != &f)
 			g2p->FFi(g2i) = f.FFi(z1);
 
 		// finalize swap
