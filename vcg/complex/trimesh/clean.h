@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2005/12/16 10:53:39  corsini
+Take account for deletion in isComplexManifold
+
 Revision 1.20  2005/12/16 10:51:43  corsini
 Take account for deletion in isRegularMesh
 
@@ -598,9 +601,36 @@ namespace vcg {
 				}
 			}
 
-			static void IsOrientedMesh(MeshType &m, bool Oriented, bool Orientable)
+			static void IsOrientedMesh(MeshType &m, bool &Oriented, bool &Orientable)
 			{
-				//...TODO...	
+				FaceIterator fi;
+
+				Orientable = true;
+				Oriented = true;
+
+				// check the orientation of each face
+				for (fi = m.face.begin(); fi != m.face.end(); ++fi)
+				{
+					if (!fi->IsD())
+					{
+						for (int j = 0; j < 3; j++)
+							if (!CheckOrientation(*fi, j))
+							{
+								Oriented = false;
+
+								// if this face has just been swapped the mesh is not orientable
+								if (fi->IsS())
+								{
+									Orientable = false;
+									break;
+								}
+
+								SwapEdge(*fi, j);
+								fi->SetS();
+								assert(CheckOrientation(*fi, j));
+							}
+					}
+				}
 			}
 
 			static bool SelfIntersections(MeshType &m)
