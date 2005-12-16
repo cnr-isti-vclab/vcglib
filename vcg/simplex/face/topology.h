@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.24  2005/12/16 10:47:48  corsini
+Add further comment to FlipEdge
+
 Revision 1.23  2005/12/16 10:43:23  corsini
 Fix one bug
 
@@ -276,10 +279,6 @@ bool CheckOrientation(FaceType &f, int z)
 template <class FaceType>
 void SwapEdge(FaceType &f, const int z)
 {
-	int i;
-	FaceType *tmp, *prec;
-	int t, precz;
-
 	// store information to preserve topology
 	int z0 = z;
 	int z1 = (z+1)%3;
