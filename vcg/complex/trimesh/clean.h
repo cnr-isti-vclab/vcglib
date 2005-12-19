@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2005/12/16 13:13:44  cignoni
+Reimplemented SelfIntersection
+
 Revision 1.22  2005/12/16 10:54:59  corsini
 Reimplement isOrientedMesh
 
@@ -606,33 +609,73 @@ namespace vcg {
 
 			static void IsOrientedMesh(MeshType &m, bool &Oriented, bool &Orientable)
 			{
-				FaceIterator fi;
+				// This algorithms requires FF topology
+				assert(m.HasFFTopology());
 
 				Orientable = true;
 				Oriented = true;
 
-				// check the orientation of each face
+				// Ensure that each face is deselected
+				FaceIterator fi;
+				for (fi = m.face.begin(); fi != m.face.end(); ++fi)
+					fi->ClearS();
+
+				// initialize stack
+				stack<FacePointer> faces;
+
+				// for each face of the mesh
+				FacePointer fp,fpaux;
+				int iaux;
 				for (fi = m.face.begin(); fi != m.face.end(); ++fi)
 				{
-					if (!fi->IsD())
+					if (!fi->IsD() && !fi->IsS())
 					{
-						for (int j = 0; j < 3; j++)
-							if (!CheckOrientation(*fi, j))
+						// each face put in the stack is selected (and oriented)
+						fi->SetS();
+						faces.push(&(*fi));
+
+						// empty the stack
+						while (!faces.empty())
+						{
+							fp = faces.top();
+							faces.pop();
+								
+							// make consistently oriented the adjacent faces
+							for (int j = 0; j < 3; j++)
 							{
-								Oriented = false;
+								// get one of the adjacent face
+								fpaux = fp->FFp(j);
+								iaux = fp->FFi(j);
 
-								// if this face has just been swapped the mesh is not orientable
-								if (fi->IsS())
+								if (!fpaux->IsD() && fpaux != fp)
 								{
-									Orientable = false;
-									break;
-								}
+									if (!CheckOrientation(*fpaux, iaux))
+									{
+										Oriented = false;
 
-								SwapEdge(*fi, j);
-								fi->SetS();
-								assert(CheckOrientation(*fi, j));
+										if (!fpaux->IsS())
+										{
+											SwapEdge(*fpaux, iaux);
+											assert(CheckOrientation(*fpaux, iaux));
+										}
+										else
+											Orientable = false;
+									}
+
+									// put the oriented face into the stack
+
+									if (!fpaux->IsS())
+									{
+										fpaux->SetS();
+										faces.push(fpaux);
+									}
+								}
 							}
+						}
 					}
+
+					if (!Orientable)
+						break;
 				}
 			}
 
