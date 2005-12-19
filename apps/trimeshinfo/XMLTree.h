@@ -53,13 +53,14 @@ void MainNode::addHeaders(const char* str, const char*val)
 }
 void MainNode::printNode()
 {
+	cout << "MainNode: node_type is " << node_type << "\n";
 
-	cout<<"MainNode: node_type is "<<node_type<<"\n";
 	list<pair<const char*,const char*> >::iterator it;
+
 	for(it = headers.begin(); it!= headers.end(); ++it)
 	{
-		cout<<"MainNode: First element is "<< it->first<<"\n";
-		cout<<"MainNode: Second element is "<<it->second<<"\n";
+		cout << "MainNode: First element is " << it->first << "\n";
+		cout << "MainNode: Second element is " << it->second << "\n";
 	}
 }
 
@@ -69,21 +70,29 @@ int MainNode::qualifyNode()
 
 class XMLTree
 {
+private:
+
+	static const char *DEFAULT_NAME;
+	string filename;
+	bool verbose;
+
 public:
-	XMLTree(void){};
-	~XMLTree(void){};
+	XMLTree(void){verbose = false;}
+	~XMLTree(void){}
 	NodeGroup root;
 	NodeGroup ng;	
 	SlotNode sn;
 	
 
 	// methods
+	void setName(const char *name);
+	void setVerboseMode(bool flag);
 	void initializeMain();
 	void finalizeMain();
 	void addHeaders(const char* str, const char*val);
 
 	void addSlots(SlotNode* sn);
-//	void addFacets();
+//void addFacets();
 	void addClasses(ClassNode* cn);
 	void addInstances(InstanceNode* in);
 	void addNode(const char* s, int value_type, const char* name);
@@ -91,6 +100,17 @@ public:
 	void printXMLTree();
 
 };
+const char * XMLTree::DEFAULT_NAME = "XmlTree.xml";
+
+void XMLTree::setName(const char *name)
+{
+	filename = name;
+}
+
+void XMLTree::setVerboseMode(bool flag)
+{
+	verbose = flag;
+}
 
 void XMLTree::initializeMain()
 {
@@ -212,17 +232,12 @@ void XMLTree::addInstances(InstanceNode* in)
 
 void XMLTree::printXMLTree()
 {	
-	string ext,s("XMLFile");
-	cout<<"\t Preparing to create XML file"<<"\n";
-	cout<<"\t enter the name for the file \n \t ";
-	cin >> ext;
+	FILE *fp;
 
-
-	s.append(ext);
-	s.append(".xml");
-
-	const char* filename = s.c_str();
-	FILE* fp = fopen(filename, "w");
+	if (filename.empty())
+		fp = fopen(DEFAULT_NAME, "w");
+	else
+		fp = fopen(filename.c_str(), "w");
 
 	list<Node*>::iterator it;
 	list<Node*>::iterator it2;
@@ -237,9 +252,14 @@ void XMLTree::printXMLTree()
 	InstancesNode* isn;	
 	InstanceNode* in;	
 	int nn = 0;
-	for(it = root.Sons.begin(); it!=root.Sons.end(); ++it){
-		cout<<"Creating Node #"<< nn<<"\n";
-		cout<<"Node Type is "<< (*it)->qualifyNode()<<"\n";
+	for(it = root.Sons.begin(); it!=root.Sons.end(); ++it)
+	{
+		if (verbose)
+		{
+			cout<<"Creating Node #"<< nn<<"\n";
+			cout<<"Node Type is "<< (*it)->qualifyNode()<<"\n";
+		}
+		
 		switch((*it)->qualifyNode())
 		{
 		case MAIN_NODE:
