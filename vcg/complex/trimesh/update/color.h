@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/08/08 10:28:13  ganovelli
+added math:: namespace before min and max
+
 Revision 1.6  2004/08/25 15:15:26  ganovelli
 minor changes to comply gcc compiler (typename's and stuff)
 
@@ -66,23 +69,30 @@ typedef typename UpdateMeshType::FaceType       FaceType;
 typedef typename UpdateMeshType::FacePointer    FacePointer;
 typedef typename UpdateMeshType::FaceIterator   FaceIterator;
 
-/** Color the vertex of the mesh that are on the border
-It uses the information in the flags, and not any topology. So it just require that you have correctly computed (or loaded) the flags; See the 
+/** Color the vertexes of the mesh that are on the border
+It uses the information in the Vertex flags, and not any topology. 
+So it just require that you have correctly computed the flags;
+
+    vcg::tri::UpdateTopology<Mesh>::FaceFace(m.cm);
+    vcg::tri::UpdateFlags<Mesh>::FaceBorderFromFF(m.cm);
+    vcg::tri::UpdateFlags<Mesh>::VertexBorderFromFace (m.cm);
+    vcg::tri::UpdateColor<Mesh>::VertexBorderFlag(m.cm);
+
 **/
-static void VertexBorderFlag( UpdateMeshType &m, Color4b vb=Color4b::Blue)
+static void VertexBorderFlag( UpdateMeshType &m, Color4b BorderColor=Color4b::Blue, Color4b InternalColor=Color4b::White)
 {
 	typename UpdateMeshType::VertexIterator vi;
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 		if(!(*vi).IsD())
-			(*vi).C()=Color4b::White;
+			(*vi).C()=InternalColor;
 
 	typename UpdateMeshType::FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
 		for(int j=0;j<3;++j)
 			if((*fi).IsB(j)){
-				(*fi).V(j)->C() = vb;
-				(*fi).V1(j)->C() = vb;
-				(*fi).C() = vb;
+				(*fi).V(j)->C() = BorderColor;
+				(*fi).V1(j)->C() = BorderColor;
+				//(*fi).C() = BorderColor;
 			}
 }
 
