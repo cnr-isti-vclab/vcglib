@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.25  2005/12/16 11:01:26  corsini
+Remove trivial warnings
+
 Revision 1.24  2005/12/16 10:47:48  corsini
 Add further comment to FlipEdge
 
@@ -279,31 +282,44 @@ bool CheckOrientation(FaceType &f, int z)
 template <class FaceType>
 void SwapEdge(FaceType &f, const int z)
 {
-	// store information to preserve topology
-	int z0 = z;
-	int z1 = (z+1)%3;
-	int z2 = (z+2)%3;
-	FaceType *g1p = f.FFp(z1);
-	FaceType *g2p = f.FFp(z2);
-	int g1i = f.FFi(z1);
-	int g2i = f.FFi(z2);
-
-	// swap V0(z0) with V1(z0)
-	swap(f.V0(z0), f.V1(z0));
+	// swap V0(z) with V1(z)
+	swap(f.V0(z), f.V1(z));
 
 	if(f.HasFFAdjacency())
 	{
+		// store information to preserve topology
+		int z1 = (z+1)%3;
+		int z2 = (z+2)%3;
+		FaceType *g1p = f.FFp(z1);
+		FaceType *g2p = f.FFp(z2);
+		int g1i = f.FFi(z1);
+		int g2i = f.FFi(z2);
+
 		// g0 face topology is not affected by the swap
 
 		if (g1p != &f)
-			g1p->FFi(g1i) = f.FFi(z2);
+		{
+			g1p->FFi(g1i) = z2;
+			f.FFi(z2) = g1i;
+		}
+		else
+		{
+			f.FFi(z2) = z2;
+		}
 
 		if (g2p != &f)
-			g2p->FFi(g2i) = f.FFi(z1);
+		{
+			g2p->FFi(g2i) = z1;
+			f.FFi(z1) = g2i;
+		}
+		else
+		{
+			f.FFi(z1) = z1;
+		}
 
 		// finalize swap
-		swap(f.FFp(z1), f.FFp(z2));
-		swap(f.FFi(z1), f.FFi(z2));
+		f.FFp(z1) = g2p;
+		f.FFp(z2) = g1p;
 	}
 }
 
