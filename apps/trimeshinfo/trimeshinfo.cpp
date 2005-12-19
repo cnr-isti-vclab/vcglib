@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2005/12/19 11:35:13  corsini
+Add html output support
+
 Revision 1.21  2005/12/16 11:16:36  corsini
 Add manifold check to some properties
 
@@ -180,6 +183,7 @@ struct MeshInfo
 	bool Orientable,Oriented;
 	int dv;
 	bool SelfIntersect;
+	std::vector<CMesh::FaceType *> intersections;
 };
 
 
@@ -362,6 +366,16 @@ void SaveXMLInfo(MeshInfo &mi)
 	doc.addNode(mi.SelfIntersect?"Yes":"No", VALUE_STRING,"Self	Intersection");
 
 	doc.finalizeMain();
+
+	// save xml tree
+	string filename = mi.FileName;
+
+	int l = static_cast<int>(filename.size());
+	int index = filename.find_first_of('.');
+	filename.erase(index, l - index);
+	filename.append(".xml");
+
+	doc.setName(filename.c_str());
 	doc.printXMLTree();
 }
 
@@ -608,6 +622,10 @@ int main(int argc, char ** argv)
 		tri::Inertia<CMesh> mm;
 		mm.Compute(m);
 		mi.Volume = mm.Mass();
+
+		// the sign of the volume depend on the mesh orientation
+		if (mi.Volume < 0.0)
+			mi.Volume = -mi.Volume;
 	}
 
 	// GENUS
@@ -628,8 +646,7 @@ int main(int argc, char ** argv)
 	mi.dv = tri::Clean<CMesh>::RemoveDuplicateVertex(m);
 
 	// SELF INTERSECTION
-	vector<CMesh::FaceType *> intersected;
-	mi.SelfIntersect = tri::Clean<CMesh>::SelfIntersections(m, intersected);
+	mi.SelfIntersect = tri::Clean<CMesh>::SelfIntersections(m, mi.intersections);
 
 	// Mesh Information Output
 	//////////////////////////////////////////
@@ -640,7 +657,8 @@ int main(int argc, char ** argv)
 
 	// Save mesh information in XML format
 	if(XmlFlag)
-		SaveXMLInfo(mi);
+		printf("    This feature will be available soon.\n\n");
+		//SaveXMLInfo(mi);
 
 	// Save mesh information in HTML format
 	if (HtmlFlag)
@@ -653,6 +671,8 @@ int main(int argc, char ** argv)
 		tri::io::Exporter<CMesh>::Save(m, SaveName.c_str());
 		printf(" done.\n\n");
 	}
+
+	mi.intersections.clear();
 
 	return 0;
 }
