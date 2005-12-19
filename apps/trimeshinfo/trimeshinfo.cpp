@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2005/12/16 11:16:36  corsini
+Add manifold check to some properties
+
 Revision 1.20  2005/12/15 11:20:00  corsini
 Add vertex-face topology
 
@@ -109,6 +112,7 @@ Added	Standard comments
 ****************************************************************************/
 
 // Standard headers
+#include <iostream>
 #include <fstream>
 #include <vector>
 #include <string>
@@ -177,6 +181,44 @@ struct MeshInfo
 	int dv;
 	bool SelfIntersect;
 };
+
+
+static const int HTML_LINES = 31;
+static const char * HTML_TABLE[HTML_LINES]=
+{
+"<html>",
+"  <head>",
+"    <meta http-equiv=\"content-type\" content=\"text/html; charset=ISO-8859-1\">",
+"    <title>description.html</title>",
+"  </head>",
+"  <body>",
+"    <span style=\"font-weight: bold;\"></span>",
+"    <h2>TriMeshInfo V.1.2 - Results</h2>",
+"    <hr style=\"width: 100%; height: 2px;\"><br>",
+"    <table",
+"      style=\"width: 100%; text-align: center; margin-left: auto; margin-right: auto;\" ",
+"      border=\"1\" cellpadding=\"2\" cellspacing=\"2\">",
+"      <tbody>",
+"        <tr>",
+"          <td>Name</td>",
+"          <td>Vertices</td>",
+"          <td>Faces</td>",
+"          <td>Edges</td>",
+"          <td>Holes</td>",
+"          <td>Connected<br>Components</td>",
+"          <td>Isolated<br>Vertices</td>",
+"          <td>Duplicated<br>Vertices</td>",
+"          <td>Self<br>Interesection</td>",
+"          <td>Manifold</td>",
+"          <td>Orientable/<br>Oriented</td>",
+"          <td>Genus</td>",
+"        </tr>",
+"      </tbody>",
+"    </table>",
+"  </body>",
+"</html>"
+};
+
 
 void OpenMesh(const	char *filename,	CMesh &m)
 {
@@ -323,26 +365,99 @@ void SaveXMLInfo(MeshInfo &mi)
 	doc.printXMLTree();
 }
 
+void SaveMeshInfoHtmlTable(fstream &fout, MeshInfo &mi)
+{
+	fout << "        <tr>" << std::endl;
+	fout << "          <td>" << mi.FileName << "</td>" << std::endl;
+	fout << "          <td>" << mi.vn << "</td>" << std::endl;
+	fout << "          <td>" << mi.fn << "</td>" << std::endl;
+	fout << "          <td>" << mi.count_e << "</td>" << std::endl;
+	fout << "          <td>" << mi.numholes << "</td>" << std::endl;
+	fout << "          <td>" << mi.numcomponents << "</td>" << std::endl;
+	fout << "          <td>" << mi.count_uv << "</td>" << std::endl;
+	fout << "          <td>" << mi.dv << "</td>" << std::endl;
+
+	if (mi.SelfIntersect)
+		fout << "          <td>Yes</td>" << std::endl;
+	else
+		fout << "          <td>No</td>" << std::endl;
+
+	if (mi.Manifold)
+		fout << "          <td>Yes</td>" << std::endl;
+	else
+		fout << "          <td>No</td>" << std::endl;
+
+	if ((mi.Orientable)&&(mi.Oriented))
+		fout << "          <td>Yes / Yes</td>" << std::endl;
+	else if ((mi.Orientable)&&(!mi.Oriented))
+		fout << "          <td>Yes / No</td>" << std::endl;
+	else if (!mi.Orientable)
+		fout << "          <td>No / No</td>" << std::endl;
+
+	fout << "          <td>" << mi.Genus << "</td>" << std::endl;
+
+	fout << "        </tr>" << std::endl;
+}
+
 void SaveHtmlInfo(MeshInfo &mi)
 {
-	ofstream fout;
+	char buff[1024];
+	bool flagInsert = false;
+	ifstream fin;
+	fstream fout;
 	
-	fout.open("result.txt", ios::out);
-
-	if (!fout)
+	// Try to open
+	fin.open("result.html");
+	long pos;
+	if (fin.is_open())
 	{
-		printf("\n  Impossible to create the HTML output file.\n");
+		while (!fin.eof())
+		{
+			pos = fin.tellg();
+			fin.getline(buff, 1024);
+			string str(buff);
+			if (str == "      </tbody>")
+				break;
+		}
+		flagInsert = true;
+	}
+	fin.close();
+
+	if (flagInsert)
+		fout.open("result.html", ios::in | ios::out);
+	else
+		fout.open("result.html", ios::out);
+
+	if (!fout.is_open())
+	{
+		printf("\n  Impossible to write the HTML output file.\n");
 	}
 	else
 	{
-		char dquotes = 32;  // double quotes
+		if (flagInsert)
+		{
+			// Insert the mesh information into an existing table
+			fout.seekp(pos, ios::beg);
 
-		fout << "<table>" << endl;
-		fout << "...todo..." << endl;
-		fout << "<\table>";
+			SaveMeshInfoHtmlTable(fout, mi);
 
-		fout.close();
+			for (int i = HTML_LINES - 4; i < HTML_LINES; i++)
+				fout << HTML_TABLE[i] << std::endl;
+		}
+		else
+		{
+			// Create a new table
+			for (int i = 0; i < HTML_LINES - 4; i++)
+				fout << HTML_TABLE[i] << std::endl;
+
+			SaveMeshInfoHtmlTable(fout, mi);
+
+			for (int i = HTML_LINES - 4; i < HTML_LINES; i++)
+				fout << HTML_TABLE[i] << std::endl;
+		}
 	}
+
+	fout.close();
 }
 
 int main(int argc, char ** argv)
@@ -484,6 +599,9 @@ int main(int argc, char ** argv)
 		mi.Orientable = false;
 	}
 
+	// Rebuild Vertex-Face topology
+	tri::UpdateTopology<CMesh>::VertexFace(m);
+
 	// VOLUME (require a closed oriented manifold)
 	if ((mi.Manifold)&&(mi.Oriented)&&(!mi.numholes))
 	{
@@ -510,7 +628,8 @@ int main(int argc, char ** argv)
 	mi.dv = tri::Clean<CMesh>::RemoveDuplicateVertex(m);
 
 	// SELF INTERSECTION
-	mi.SelfIntersect = tri::Clean<CMesh>::SelfIntersections(m);
+	vector<CMesh::FaceType *> intersected;
+	mi.SelfIntersect = tri::Clean<CMesh>::SelfIntersections(m, intersected);
 
 	// Mesh Information Output
 	//////////////////////////////////////////
