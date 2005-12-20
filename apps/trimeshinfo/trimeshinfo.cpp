@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2005/12/19 15:00:53  corsini
+Disable xml output temporarily
+
 Revision 1.22  2005/12/19 11:35:13  corsini
 Add html output support
 
@@ -585,10 +588,7 @@ int main(int argc, char ** argv)
 	tri::UpdateTopology<CMesh>::FaceFace(m);
 	tri::UpdateTopology<CMesh>::VertexFace(m);
 
-	// Update flags
-	tri::UpdateFlags<CMesh>::Clear(m);
-
-	// IS MANIFOLD
+	// IS MANIFOLD?
 	mi.Manifold = tri::Clean<CMesh>::IsComplexManifold(m);
 
 	// COUNT EDGES
