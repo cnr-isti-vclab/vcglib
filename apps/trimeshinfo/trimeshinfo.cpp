@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.24  2005/12/20 13:29:41  corsini
+Remove unuseful Clear function
+
 Revision 1.23  2005/12/19 15:00:53  corsini
 Disable xml output temporarily
 
@@ -211,7 +214,7 @@ static const char * HTML_TABLE[HTML_LINES]=
 "          <td>Vertices</td>",
 "          <td>Faces</td>",
 "          <td>Edges</td>",
-"          <td>Holes</td>",
+"          <td>Holes/<br>Boundaries</td>",
 "          <td>Connected<br>Components</td>",
 "          <td>Isolated<br>Vertices</td>",
 "          <td>Duplicated<br>Vertices</td>",
@@ -389,7 +392,13 @@ void SaveMeshInfoHtmlTable(fstream &fout, MeshInfo &mi)
 	fout << "          <td>" << mi.vn << "</td>" << std::endl;
 	fout << "          <td>" << mi.fn << "</td>" << std::endl;
 	fout << "          <td>" << mi.count_e << "</td>" << std::endl;
-	fout << "          <td>" << mi.numholes << "</td>" << std::endl;
+	
+	if (mi.Manifold)
+		fout << "          <td>" << mi.numholes << "</td>" << std::endl;
+	else
+		fout << "          <td>N/A</td>" << std::endl;
+
+
 	fout << "          <td>" << mi.numcomponents << "</td>" << std::endl;
 	fout << "          <td>" << mi.count_uv << "</td>" << std::endl;
 	fout << "          <td>" << mi.dv << "</td>" << std::endl;
@@ -411,7 +420,10 @@ void SaveMeshInfoHtmlTable(fstream &fout, MeshInfo &mi)
 	else if (!mi.Orientable)
 		fout << "          <td>No / No</td>" << std::endl;
 
-	fout << "          <td>" << mi.Genus << "</td>" << std::endl;
+	if (mi.Manifold)
+		fout << "          <td>" << mi.Genus << "</td>" << std::endl;
+	else
+		fout << "          <td>N/A</td>" << std::endl;
 
 	fout << "        </tr>" << std::endl;
 }
