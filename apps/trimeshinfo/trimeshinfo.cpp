@@ -24,6 +24,10 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.26  2005/12/21 13:10:10  corsini
+Move duplicated vertices routine
+Modify genus computation call
+
 Revision 1.25  2005/12/20 14:44:10  corsini
 Modify html table
 
@@ -672,8 +676,8 @@ int main(int argc, char ** argv)
 
 	// Save mesh information in XML format
 	if(XmlFlag)
-		printf("    This feature will be available soon.\n\n");
-		//SaveXMLInfo(mi);
+		//printf("    This feature will be available soon.\n\n");
+		SaveXMLInfo(mi);
 
 	// Save mesh information in HTML format
 	if (HtmlFlag)
