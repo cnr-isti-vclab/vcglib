@@ -44,10 +44,11 @@ For each analyzed dataset the following information are extracted:
 * Genus (computed only for Manifold Datasets) 
 * Self-Intersection (currently computed only for Datasets with less than 3M faces) 
 * Orientability 
-* Orientation 
+* Orientation
 * Regularity (We consider REGULAR those meshes that have 6 incident edges
   for each internal vertex, and 4 incident edges for each vertex on the 
-  boundary. In all other cases we consider the mesh irregular.) 
+  boundary. In all other cases we consider the mesh irregular.)
+* Volume
 
 The application has no graphical interface but works as the "Metro" tool on command line. 
 
