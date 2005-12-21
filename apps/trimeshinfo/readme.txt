@@ -6,7 +6,7 @@
    Visual Computing Lab  http://vcg.isti.cnr.it                    /\/|      
    ISTI - Italian National Research Council                           |      
                                                                       \      
-   TriMeshInfo 1.0 21/09/2004
+   TriMeshInfo 1.2 2005/12/21
    All rights reserved.                                                      
    
 
