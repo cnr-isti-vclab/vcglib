@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.27  2005/12/21 13:26:58  corsini
+Re-add save xml feature
+
 Revision 1.26  2005/12/21 13:10:10  corsini
 Move duplicated vertices routine
 Modify genus computation call
@@ -269,6 +272,7 @@ void PrintMeshInfo(MeshInfo &mi)
 	printf("    Number of boundary edges: %i \n", mi.boundary_e);
 	printf("    Number of degenerated faces: %d\n",	mi.count_fd);
 	printf("    Number of unreferenced vertices: %d\n",mi.count_uv);
+	printf("    Number of duplicated vertices found: %d\n", mi.dv);
 	printf("    Number of holes/boundaries: %d \n", mi.numholes);
 
 	if ((mi.Manifold)&&(mi.Oriented)&&(!mi.numholes))
@@ -318,8 +322,10 @@ void PrintMeshInfo(MeshInfo &mi)
 		printf("    Mesh Type: IRREGULAR\n");
 
 	// Further details
-	printf("    Number of duplicated vertices found: %d\n", mi.dv);
-	printf("    Self Intersection: %s\n", mi.SelfIntersect?"Yes":"No");
+	if (mi.SelfIntersect)
+		printf("    Self Intersection: %d\n", mi.intersections.size());
+	else
+		printf("    Self Intersection: NONE.\n");
 }
 
 void SaveXMLInfo(MeshInfo &mi)
@@ -411,9 +417,9 @@ void SaveMeshInfoHtmlTable(fstream &fout, MeshInfo &mi)
 	fout << "          <td>" << mi.dv << "</td>" << std::endl;
 
 	if (mi.SelfIntersect)
-		fout << "          <td>Yes</td>" << std::endl;
+		fout << "          <td>" << mi.intersections.size() << "</td>" << std::endl;
 	else
-		fout << "          <td>No</td>" << std::endl;
+		fout << "          <td>None</td>" << std::endl;
 
 	if (mi.Manifold)
 		fout << "          <td>Yes</td>" << std::endl;
@@ -676,7 +682,6 @@ int main(int argc, char ** argv)
 
 	// Save mesh information in XML format
 	if(XmlFlag)
-		//printf("    This feature will be available soon.\n\n");
 		SaveXMLInfo(mi);
 
 	// Save mesh information in HTML format
