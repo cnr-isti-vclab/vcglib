@@ -129,7 +129,7 @@
 				RelativePath="..\..\..\vcg\complex\trimesh\clean.h">
 			</File>
 			<File
-				RelativePath=".\defs.h">
+				RelativePath="..\..\trimeshinfo\defs.h">
 			</File>
 			<File
 				RelativePath="..\..\..\vcg\complex\trimesh\inertia.h">
