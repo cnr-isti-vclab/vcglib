@@ -9,11 +9,13 @@
    TriMeshInfo 1.03 2005/10/03
    All rights reserved.                                                      
    
+
 2005/12/21 Release 1.2
 Fix orientability and genus computation.
 Re-design output (add html info support).
 
+2005/10/03 Release 1.03
+Version with the final functionalities.
 
-????/??/?? Release 1.01
-
+2004/21/09 Release 1.0
 First working version. 
