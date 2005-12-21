@@ -37,20 +37,52 @@ For each analyzed dataset the following information are extracted:
 * Number of Edges 
 * Number of Connected Components 
 * Number of Boundaries 
-* Number of Isolated Vertices (i.e. Unreferenced) 
+* Number of Isolated Vertices (i.e. Unreferenced)
+* Number of Duplicated vertices (duplicated vertices are referenced vertices
+                                 which have the same positon in the space)
 * Manifold 
-* Genus (Computed only for Manifold Datasets) 
-* Self-Intersection (Currently computed only for Datasets with less than 3M faces) 
+* Genus (computed only for Manifold Datasets) 
+* Self-Intersection (currently computed only for Datasets with less than 3M faces) 
 * Orientability 
 * Orientation 
-* Regularity (We consider as regular those meshes generated through 
-  regular subdivision. Each non boundary vertex of a regular mesh has 
-  6 incident edges, if there are only 5 incident edges the mesh is said to be 
-  semi-regular, irregular in all other cases) 
+* Regularity (We consider REGULAR those meshes that have 6 incident edges
+  for each internal vertex, and 4 incident edges for each vertex on the 
+  boundary. In all other cases we consider the mesh irregular.) 
 
 The application has no graphical interface but works as the "Metro" tool on command line. 
 
-TriMeshInfo is written in C++ and makes use of the VCL library. 
+TriMeshInfo is written in C++ and makes use of the VCG library. 
 The tool supports two file formats ply (as described in the following document 
 http://vcg.sourceforge.net/img/wiki_up/plyformat.pdf) 
 and off (as described in http://www.geomview.org/docs/html/geomview_41.html#SEC44) . 
+
+
+--- Command-line Reference ---
+
+Usage:
+
+    TriMeshInfo <mesh> [options]
+
+Valid options are the following:
+
+    -q Quiet (disable verbose mode that is enabled by default)
+    -x Enable XML output
+    -h Enable HTML output
+    -s <filename> Save the clean mesh
+
+The XML output produces an XML file with the same name of the mesh under
+examination. This file summarize the mesh information.
+Such xml-schema is designed to be processed by the
+Protégé Ontology Editor and Knowledge Acquisition System.
+For further details about Protégé see http://protege.stanford.edu .
+
+The HTML output creates in the directory where TriMeshInfo is launched a file
+called "result.html". This file contains an hmtl table with the retrieved 
+mesh information. 
+If this file is just present in the working directory the output of the TriMeshInfo 
+is added to the existing table. In this way it is possible to summarize the results
+obtained from several meshes.
+
+If you choose to save the "clean" mesh, the mesh without its unreferenced vertices
+and with the duplicated vertices merged is saved.
+
