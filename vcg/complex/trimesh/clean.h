@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.24  2005/12/19 15:13:06  corsini
+Fix IsOrientedMesh
+
 Revision 1.23  2005/12/16 13:13:44  cignoni
 Reimplemented SelfIntersection
 
@@ -539,10 +542,9 @@ namespace vcg {
 			the genus of all connected components.
 
 			*/
-			static int MeshGenus(MeshType &m, int count_uv, int numholes, 
-				int numcomponents, int count_e)
+			static int MeshGenus(MeshType &m, int numholes, int numcomponents, int count_e)
 			{
-				int V = (m.vn - count_uv);  // Unreferenced vertices are subtracted
+				int V = m.vn;
 				int F = m.fn;
 				int E = count_e;
 				return -((V + F - E + numholes - 2 * numcomponents) / 2);
