@@ -20,7 +20,7 @@
 
 // error messages
 #define MSG_ERR_N_ARGS            "  Usage:\n\n" \
-                                  "    trimeshinfo filename <options>\n\n" \
+                                  "    trimeshinfo <mesh> [options]\n\n" \
                                   "  Options:\n\n" \
                                   "    -q Quiet (disable verbose mode that is enabled by default)\n" \
                                   "    -x Enable XML output\n" \
