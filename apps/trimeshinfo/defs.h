@@ -24,8 +24,8 @@
                                   "  Options:\n\n" \
                                   "    -q Quiet (disable verbose mode that is enabled by default)\n" \
                                   "    -x Enable XML output\n" \
-                                  "    -h Enable HTML output\n\n" \
-                                  "    -s <filename> Save the clean mesh"
+                                  "    -h Enable HTML output\n" \
+                                  "    -s <filename> Save the clean mesh\n\n"
 
 #define MSG_ERR_MESH_LOAD               "error loading the input meshes.\n"
 #define MSG_ERR_INVALID_OPTION          "unable to parse option '%s'\n"
