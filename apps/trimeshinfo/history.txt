@@ -6,27 +6,14 @@
    Visual Computing Lab  http://vcg.isti.cnr.it                    /\/|      
    ISTI - Italian National Research Council                           |      
                                                                       \      
-   Metro 4.06 2005/10/03
+   TriMeshInfo 1.03 2005/10/03
    All rights reserved.                                                      
    
-2005/10/03 Release 4.06
-Changed the core for distance computation. 
-Current version uses the lib flexible search structures. 
-Now the comparison can be done exploiting a static uniform grid, 
-a hashed grid or a hierarchy of AA box. 
+2005/12/21 Release 1.2
+Fix orientability and genus computation.
+Re-design output (add html info support).
 
-2005/04/04 Release 4.05
-Added saving of Error Histogram
 
-2005/01/26 Release 4.04
-Gcc compiling issues
-Moved to the library core the code for computing min distance froma a point to a mesh using a uniform grid.
-Slightly faster.
+????/??/?? Release 1.01
 
-2005/01/03 Release 4.03
-Better ply compatibility, and improved error reporting
-
-2004/11/29 Release 4.02
-removed bug in printing Hausdorf distance,
-removed bug in command line parsing,
-upgraded import mesh library to support off format
+First working version. 
