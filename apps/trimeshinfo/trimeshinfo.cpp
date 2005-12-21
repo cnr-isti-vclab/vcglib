@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.25  2005/12/20 14:44:10  corsini
+Modify html table
+
 Revision 1.24  2005/12/20 13:29:41  corsini
 Remove unuseful Clear function
 
@@ -596,6 +599,9 @@ int main(int argc, char ** argv)
 	// UNREFERENCED VERTEX
 	mi.count_uv = tri::Clean<CMesh>::RemoveUnreferencedVertex(m);
 
+	// DUPLICATED VERTICES
+	mi.dv = tri::Clean<CMesh>::RemoveDuplicateVertex(m);
+
 	// Update topology (face-to-face)
 	tri::UpdateTopology<CMesh>::FaceFace(m);
 	tri::UpdateTopology<CMesh>::VertexFace(m);
@@ -642,7 +648,7 @@ int main(int argc, char ** argv)
 
 	// GENUS
 	if(mi.Manifold) 
-		mi.Genus = tri::Clean<CMesh>::MeshGenus(m,mi.count_uv, mi.numholes,
+		mi.Genus = tri::Clean<CMesh>::MeshGenus(m, mi.numholes,
 			mi.numcomponents, mi.count_e);
 	
 	// REGULARITY
@@ -653,9 +659,6 @@ int main(int argc, char ** argv)
 		mi.Regular = false;
 		mi.Semiregular = false;
 	}
-
-	// DUPLICATED VERTICES
-	mi.dv = tri::Clean<CMesh>::RemoveDuplicateVertex(m);
 
 	// SELF INTERSECTION
 	mi.SelfIntersect = tri::Clean<CMesh>::SelfIntersections(m, mi.intersections);
