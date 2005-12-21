@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.25  2005/12/21 13:09:03  corsini
+Modify genus computation
+
 Revision 1.24  2005/12/19 15:13:06  corsini
 Fix IsOrientedMesh
 
@@ -451,8 +454,10 @@ namespace vcg {
 				int BEdges = 0;
 				for(int i=0; i<numholes; i++)
 				{
-					if(i==numholes-1){ printf("%i)\n",numholes); BEdges++;}
-					else{ printf("%i, ",numholes); BEdges++;}
+					if(i==numholes-1) 
+						BEdges++;
+					else 
+						BEdges++;
 				}
 				return BEdges;
 
