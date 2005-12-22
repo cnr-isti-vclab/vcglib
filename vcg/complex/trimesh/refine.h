@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/12/13 11:01:01  cignoni
+Added Callback in refine
+
 Revision 1.7  2005/12/02 00:06:37  cignoni
 commented out an old TRACE
 
@@ -314,6 +317,7 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
 	// Primo ciclo si conta quanti sono i vertici  e facce da aggiungere 
 	typename MESH_TYPE::FaceIterator fi;
   int step=0,PercStep=m.fn/33;
+  if(PercStep==0) PercStep=1;
 	for(fi=m.face.begin(),j=0;fi!=m.face.end();++fi) if(!(*fi).IsD())
   {
 	 if(cb && (++step%PercStep)==0)(*cb)(step/PercStep,"Refining...");
