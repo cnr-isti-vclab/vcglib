@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.26  2005/12/21 14:15:03  corsini
+Remove printf
+
 Revision 1.25  2005/12/21 13:09:03  corsini
 Modify genus computation
 
@@ -281,11 +284,10 @@ namespace vcg {
 			 * number of face found have to be the same of the number of 
 			 * face found with the VF walk trough.
 			 */
-			static bool IsComplexManifold( MeshType & m ) 
+			static bool IsTwoManifoldFace( MeshType & m ) 
 			{
 				bool flagManifold = true;
 
-				VertexIterator vi;
 				FaceIterator fi;
 
 				// First Test
@@ -303,11 +305,14 @@ namespace vcg {
 						}
 					}
 				}
+        return flagManifold;
+      }
 
-				// Second Test
-				if (flagManifold)
-				{
-					assert(m.HasVFTopology());
+			static bool IsTwoManifoldVertex( MeshType & m ) 
+			{
+				VertexIterator vi;
+				bool flagManifold = true;
+				assert(m.HasVFTopology());
 
 					face::VFIterator<FaceType> vfi;
 					int starSizeFF;
@@ -335,7 +340,6 @@ namespace vcg {
 							}
 						}
 					}
-				}
 
 				return flagManifold;
 			}
@@ -616,6 +620,7 @@ namespace vcg {
 
 			static void IsOrientedMesh(MeshType &m, bool &Oriented, bool &Orientable)
 			{
+        assert(&Oriented != &Orientable);
 				// This algorithms requires FF topology
 				assert(m.HasFFTopology());
 
@@ -654,11 +659,11 @@ namespace vcg {
 								fpaux = fp->FFp(j);
 								iaux = fp->FFi(j);
 
-								if (!fpaux->IsD() && fpaux != fp)
+								if (!fpaux->IsD() && fpaux != fp && face::IsManifold<FaceType>(*fp, j))
 								{
 									if (!CheckOrientation(*fpaux, iaux))
 									{
-										Oriented = false;
+                    Oriented = false;
 
 										if (!fpaux->IsS())
 										{
@@ -666,7 +671,10 @@ namespace vcg {
 											assert(CheckOrientation(*fpaux, iaux));
 										}
 										else
+                    {
 											Orientable = false;
+                      break;
+                    }
 									}
 
 									// put the oriented face into the stack
@@ -681,8 +689,7 @@ namespace vcg {
 						}
 					}
 
-					if (!Orientable)
-						break;
+					if (!Orientable)	break;
 				}
 			}
 

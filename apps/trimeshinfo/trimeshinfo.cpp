@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.28  2005/12/21 14:11:59  corsini
+Out the number of self intersection
+
 Revision 1.27  2005/12/21 13:26:58  corsini
 Re-add save xml feature
 
@@ -617,7 +620,7 @@ int main(int argc, char ** argv)
 	tri::UpdateTopology<CMesh>::VertexFace(m);
 
 	// IS MANIFOLD?
-	mi.Manifold = tri::Clean<CMesh>::IsComplexManifold(m);
+	mi.Manifold = tri::Clean<CMesh>::IsTwoManifoldFace(m) && tri::Clean<CMesh>::IsTwoManifoldVertex(m);
 
 	// COUNT EDGES
 	tri::Clean<CMesh>::CountEdges(m, mi.count_e, mi.boundary_e);
