@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.27  2005/12/29 12:27:37  cignoni
+Splitted IsComplexManifold in IsTwoManifoldFace and IsTwoManifoldVertex
+
 Revision 1.26  2005/12/21 14:15:03  corsini
 Remove printf
 
@@ -404,7 +407,7 @@ namespace vcg {
 				vcg::face::Pos<FaceType> he;
 				vcg::face::Pos<FaceType> hei;
 
-				vector<vector<Point3x> > holes; //indices of vertices
+        std::vector< std::vector<Point3x> > holes; //indices of vertices
 
 				for(fi=m.face.begin();fi!=m.face.end();++fi)
 					(*fi).ClearS();
@@ -419,7 +422,7 @@ namespace vcg {
             if(face::IsBorder(*fi,j))//found an unvisited border edge
 						{
 							he.Set(&(*fi),j,fi->V(j)); //set the face-face iterator to the current face, edge and vertex
-							vector<Point3x> hole; //start of a new hole
+              std::vector<Point3x> hole; //start of a new hole
 							hole.push_back(fi->P(j)); // including the first vertex
 							numholev++;
 							he.v->SetS(); //set the current vertex as selected
@@ -432,7 +435,7 @@ namespace vcg {
 								if(he.v->IsS())//check if this vertex was selected already, because then we have an additional hole.
 								{
 									//cut and paste the additional hole.
-									vector<Point3x> hole2;
+                  std::vector<Point3x> hole2;
 									int index = find(hole.begin(),hole.end(),newpoint) - hole.begin();
 									for(unsigned int i=index; i<hole.size(); i++)
 										hole2.push_back(hole[i]);
@@ -474,7 +477,7 @@ namespace vcg {
 				vcg::face::Pos<FaceType> he;
 				vcg::face::Pos<FaceType> hei;
 
-				vector<int> nrfaces;
+        std::vector<int> nrfaces;
 				nrfaces.reserve(1);
 
 				for(fi=m.face.begin();fi!=m.face.end();++fi)
@@ -633,7 +636,7 @@ namespace vcg {
 					fi->ClearS();
 
 				// initialize stack
-				stack<FacePointer> faces;
+        std::stack<FacePointer> faces;
 
 				// for each face of the mesh
 				FacePointer fp,fpaux;
