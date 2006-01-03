@@ -334,7 +334,7 @@ namespace vcg
 				rank = (c > cos(_featureAngle) ? 2 : 3);
 
 				// setup linear system (find intersection of tangent planes)
-				vcg::Matrix<double>  A((unsigned int) vertices_num, 3);
+				vcg::ndim::Matrix<double>  A((unsigned int) vertices_num, 3);
 				double *b = new double[ vertices_num ];
 				for (i=0; i<vertices_num; ++i)
 				{
@@ -345,9 +345,9 @@ namespace vcg
 				}
 
 				// SVD of matrix A
-				vcg::Matrix<double>  V(3, 3);
+				vcg::ndim::Matrix<double>  V(3, 3);
 				double *w = new double[vertices_num];
-				vcg::SingularValueDecomposition< vcg::Matrix<double> >(A, w, V, 100);
+				vcg::SingularValueDecomposition< vcg::ndim::Matrix<double> >(A, w, V, 100);
 
 				// rank == 2 -> suppress smallest singular value
 				if (rank == 2)
@@ -369,7 +369,7 @@ namespace vcg
 
 				// SVD backsubstitution -> least squares, least norm solution x
 				double *x = new double[3];
-				vcg::SingularValueBacksubstitution< vcg::Matrix<double> >(A, w, V, x, b);
+				vcg::SingularValueBacksubstitution< vcg::ndim::Matrix<double> >(A, w, V, x, b);
 
 				// transform x to world coords
 				CoordType point((ScalarType) x[0], (ScalarType) x[1], (ScalarType) x[2]);
