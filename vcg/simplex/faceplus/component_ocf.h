@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/12/12 11:17:32  cignoni
+Corrected update function, now only the needed simplexes should be updated.
+
 Revision 1.5  2005/11/26 00:16:44  cignoni
 Corrected a lot of bugs about the use of enabled entities
 
@@ -361,15 +364,15 @@ public:
     template < class VertContainerType, class FaceType >
       bool HasPerWedgeTexture (const TriMesh < VertContainerType , face::vector_ocf< FaceType > > & m) 
     {
-      if(FaceContainerType::HasWedgeTextureOcf()) return m.face.WedgeTexEnabled();
-      else return FaceContainerType::HasWedgeTexture();
+      if(face::vector_ocf< FaceType >::HasWedgeTextureOcf()) return m.face.WedgeTexEnabled();
+      else return face::vector_ocf< FaceType > >::HasWedgeTexture();
     }
 
     template < class VertContainerType, class FaceType >
       bool HasPerFaceColor (const TriMesh < VertContainerType , face::vector_ocf< FaceType > > & m) 
     {
-      if(FaceContainerType::HasPerFaceColorOcf()) return m.face.FaceColor();
-      else return FaceContainerType::HasFaceColor();
+      if(face::vector_ocf< FaceType >::HasPerFaceColorOcf()) return m.face.FaceColor();
+      else return face::vector_ocf< FaceType > > ::HasFaceColor();
     }
   }
 }// end namespace vcg
