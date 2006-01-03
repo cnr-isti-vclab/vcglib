@@ -39,7 +39,6 @@ namespace vcg
 	/** Class Add_Ons.
 	This is class draw 3d icons on the screen
 	*/
-
 	class Add_Ons
 	{
 	public:
@@ -47,12 +46,12 @@ namespace vcg
 	private:
 
 		///used to find right trasformation in case of rotation 
-		static void XAxis(  Point3d  zero,  Point3d  uno, Matrix44d & tr){
+		static void XAxis(  vcg::Point3f  zero,  vcg::Point3f  uno, Matrix44f & tr){
 			tr.SetZero();
-			*((Point3d*)&tr[0][0]) = uno-zero;
-			GetUV(*((Point3d*)tr[0]),*((Point3d*)tr[1]),*((Point3d*)tr[2]));
+			*((vcg::Point3f*)&tr[0][0]) = uno-zero;
+			GetUV(*((vcg::Point3f*)tr[0]),*((vcg::Point3f*)tr[1]),*((vcg::Point3f*)tr[2]));
 			tr[3][3] = 1.0;
-			*((Point3d*)&tr[3][0]) = zero;
+			*((vcg::Point3f*)&tr[3][0]) = zero;
 		}
 
 		//set drawingmode parameters
@@ -78,7 +77,7 @@ namespace vcg
 		}
 
 		///draw a cylinder
-		static void Cylinder(int slices,double lenght,double width,bool useDisplList)
+		static void Cylinder(int slices,float lenght,float width,bool useDisplList)
 		{
 			static std::map<int,GLint> Disp_listMap;
 			GLint cyl_List=-1;
@@ -102,19 +101,14 @@ namespace vcg
 					glNewList(cyl_List, GL_COMPILE);
 				}
 				int b;
-				vcg::Point3d p0;
-				vcg::Point3d p1;
+				vcg::Point3f p0;
+				vcg::Point3f p1;
 
-				double step=6.28/(double)slices;
-				double angle=0;
+				float step=6.28/(float)slices;
+				float angle=0;
 				glBegin(GL_TRIANGLE_STRIP);
 				for(b = 0; b <= slices-1; ++b){
-					//double angle = 6.28*b/(double)lenght;
-					//double angle = 6.28*(double)b;
-					//angle+=step;
-					//p0 = Point3d( 0, width * sin(angle),width * cos(angle));
-					p0 = Point3d( 0, sin(angle),cos(angle));
-					//p1 = p0; p1[0] = lenght;
+					p0 = vcg::Point3f( 0, sin(angle),cos(angle));
 					p1 = p0; p1[0] = 1.f;
 					glNormal3f(p0[0],p0[1],p0[2]);
 					glVertex3d(p0[0],p0[1],p0[2]);
@@ -130,13 +124,13 @@ namespace vcg
 
 				///fill the cylinder down
 				angle=0;
-				p0=vcg::Point3d(0,0,0);
+				p0=vcg::Point3f(0,0,0);
 				glBegin(GL_TRIANGLE_FAN);
 				glNormal3f(-1,0,0);
 				glVertex3d(p0[0],p0[1],p0[2]);
 				for(b = 0; b <= slices-1; ++b){
 					glNormal3f(-1,0,0);
-					p1 = Point3d( 0, sin(angle),cos(angle));
+					p1 = Point3f( 0, sin(angle),cos(angle));
 					glVertex3d(p1[0],p1[1],p1[2]);
 					angle+=step;
 				}
@@ -145,13 +139,13 @@ namespace vcg
 				glEnd();
 
 				angle=0;
-				p0=vcg::Point3d(1,0,0);
+				p0=vcg::Point3f(1,0,0);
 				glBegin(GL_TRIANGLE_FAN);
 				glNormal3f(1,0,0);
 				glVertex3d(p0[0],p0[1],p0[2]);
 				for(b = 0; b <= slices-1; ++b){
 					glNormal3f(1,0,0);
-					p1 = Point3d( 1, sin(angle),cos(angle));
+					p1 = Point3f( 1, sin(angle),cos(angle));
 					glVertex3d(p1[0],p1[1],p1[2]);
 					angle+=step;
 				}
@@ -172,7 +166,7 @@ namespace vcg
 			}
 		}
 public:
-		static void Diamond (double radius,bool useDisplList)
+		static void Diamond (float radius,bool useDisplList)
 		{ 
 			static GLint diam_List=-1;
 
@@ -233,7 +227,7 @@ public:
 		}
 
 		///draw a cone
-		static void Cone(int slices,double lenght,double width,bool useDisplList)
+		static void Cone(int slices,float lenght,float width,bool useDisplList)
 		{
 			assert(!glGetError());
 			static std::map<int,GLint> Disp_listMap;
@@ -277,7 +271,7 @@ public:
 					int b;
 					for(b = 1; b <= slices; ++b)
 					{
-						double angle = -6.28*b/(double)slices;
+						float angle = -6.28*b/(float)slices;
 						if (b==slices) angle=0;
 						N[1] = Point3f( 1.f, sinf(angle), cosf(angle) );
 						P[1] = Point3f( 0,   sinf(angle), cosf(angle));
@@ -318,25 +312,25 @@ public:
 		/// body_slice = number of slices on the body
 		/// head_slice = number of slices on the head
 		template <DrawMode dm>
-			static void glArrow(Point3d tail, Point3d head,double body_width,double head_lenght,
-			double head_width,int body_slice=10,int head_slice=10,bool useDisplList=true)
+			static void glArrow(Point3f tail, Point3f head,float body_width,float head_lenght,
+			float head_width,int body_slice=10,int head_slice=10,bool useDisplList=true)
 		{
 			if (tail!=head)
 			{
 				//assert(!glGetError());
-				Matrix44d tr;
+				Matrix44f tr;
 				XAxis(tail,head,tr);
 				glPushAttrib(GL_ALL_ATTRIB_BITS);
 				SetGLParameters(dm);
 				glPushMatrix();		
-				glMultMatrixd(&tr[0][0]);
-				vcg::Point3d Direct=(head-tail);
-				double l_body=Direct.Norm()-head_lenght;
+				glMultMatrixf(&tr[0][0]);
+				vcg::Point3f Direct=(head-tail);
+				float l_body=Direct.Norm()-head_lenght;
 				glPushMatrix();
-				glTranslate(vcg::Point3d(tail.Norm(),0,0));
+				glTranslate(vcg::Point3f(tail.Norm(),0,0));
 				Cylinder(body_slice,l_body,body_width,useDisplList);
 				glPopMatrix();
-				glTranslate(vcg::Point3d(l_body,0,0));
+				glTranslate(vcg::Point3f(l_body,0,0));
 				Cone(head_slice,head_lenght,head_width,useDisplList);
 				glPopMatrix();
 				//assert(!glGetError());
@@ -349,7 +343,7 @@ public:
 		/// width = width of the base of the cone
 		/// slice = number of slices on the cone
 		template <DrawMode dm>
-			static void glCone(Point3d tail, Point3d head,double width,int slice=10,bool useDisplList=true)
+			static void glCone(Point3f tail, Point3f head,float width,int slice=10,bool useDisplList=true)
 		{
 			if (tail!=head)
 			{
@@ -358,10 +352,10 @@ public:
 				glPushAttrib(GL_ALL_ATTRIB_BITS);
 				SetGLParameters(dm);
 				glPushMatrix();
-				glMultMatrixd(&tr[0][0]);
-				vcg::Point3d Direct=(head-tail);
-				double l_body=Direct.Norm();
-				glTranslate(vcg::Point3d(tail.Norm(),0,0));
+				glMultMatrixf(&tr[0][0]);
+				vcg::Point3f Direct=(head-tail);
+				float l_body=Direct.Norm();
+				glTranslate(vcg::Point3f(tail.Norm(),0,0));
 				Cone(slice,l_body,width,useDisplList);	
 				glPopMatrix();
 				glPopAttrib();
@@ -372,19 +366,19 @@ public:
 		/// width = width of the base of the cylinder
 		/// slice = number of slices on the cylinder
 		template <DrawMode dm>
-			static void glCylinder(Point3d tail, Point3d head,double width,int slice=10,bool useDisplList=true)
+			static void glCylinder(Point3f tail, Point3f head,float width,int slice=10,bool useDisplList=true)
 		{
 			if (tail!=head)
 			{
-				Matrix44d tr;								   
+				Matrix44f tr;								   
 				XAxis(tail,head,tr);						   
 				glPushAttrib(GL_ALL_ATTRIB_BITS);
 				SetGLParameters(dm);
 				glPushMatrix();
-				glMultMatrixd(&tr[0][0]);
-				vcg::Point3d Direct=(head-tail);
-				double l_body=Direct.Norm();
-				glTranslate(vcg::Point3d(tail.Norm(),0,0));
+				glMultMatrixf(&tr[0][0]);
+				vcg::Point3f Direct=(head-tail);
+				float l_body=Direct.Norm();
+				glTranslate(vcg::Point3f(tail.Norm(),0,0));
 				Cylinder(slice,l_body,width,useDisplList);
 				glPopMatrix();
 				glPopAttrib();
@@ -418,7 +412,7 @@ public:
 		/// slices = The number of subdivisions around the Z axis (similar to lines of longitude). 
 		/// stacks = The number of subdivisions along the Z axis (similar to lines of latitude). 
 		template <DrawMode dm>
-			static void glDiamond (Point3f Center, double size,bool useDisplList=true)
+			static void glDiamond (Point3f Center, float size,bool useDisplList=true)
 		{
 			if (size!=0){
 				glPushAttrib(GL_ALL_ATTRIB_BITS);
