@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/03/16 03:08:02  tarini
+first commit
+
 
 ****************************************************************************/
 
@@ -45,6 +48,8 @@ namespace vcg {
 template <int N, class S> class Point;
 template <int N, class S> class Box;
 
+class ParamType;
+
 template <int N, class S> 
 class Space {
 public:
@@ -55,7 +60,7 @@ public:
 	/// type used as point Type
 	typedef Point<N,S> PointType;
 	/// the ...
-	typedef ParamType;
+	//typedef ParamType;
 
 	/// returns the bounding box of the object
 	Box<N,S> const BBox() const; 
