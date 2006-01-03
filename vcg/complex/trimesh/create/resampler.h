@@ -214,13 +214,14 @@ class Resampler:RES
 			//vcg::tri::get<Old_Mesh,GridType,float>((*mesh),test,_g,dist,Norm,Target,f,pip);
 			
 			f= vcg::trimesh::GetClosestFace<Old_Mesh,GridType>( *mesh,_g,test,max_dim,dist,Target,Norm,pip);
-
+		
 			if (f==NULL)
 					return false;
 			else
 			{
+				assert(!f->IsD());
 				Point3f dir=(test-Target);
-				dist=dir.Norm();
+			/*	dist=dir.Norm();*/
 
 				dir.Normalize();
 				//direction of normal inside the mesh
@@ -236,11 +237,6 @@ class Resampler:RES
 		void CumputeSliceValues(int slice,field_value *slice_values)
 		{
 			float dist;
-			/*for (int i=_bbox.min.X(); i<=_bbox.max.X()-_cell_size.X(); i+=_cell_size.X())
-			{
-				for (int k=_bbox.min.Z(); k<=_bbox.max.Z()-_cell_size.X(); k+=_cell_size.Z())
-					{
-			*/		
 			for (int i=_bbox.min.X(); i<=_bbox.max.X(); i+=_cell_size.X())
 			{
 				for (int k=_bbox.min.Z(); k<=_bbox.max.Z(); k+=_cell_size.Z())
@@ -646,7 +642,7 @@ static void Resample(Old_Mesh &old_mesh,New_Mesh &new_mesh,vcg::Point3<int> accu
 	
 	
 	// MARCHING CUBES CALLS
-	Point3i min=Point3i((int)(old_mesh.bbox.min.V(0)),(int)(old_mesh.bbox.min.V(1)),(int)(old_mesh.bbox.min.V(2)));
+	Point3i min=Point3i((int)ceil(old_mesh.bbox.min.V(0)),(int)ceil(old_mesh.bbox.min.V(1)),(int)ceil(old_mesh.bbox.min.V(2)));
 	Point3i max=Point3i((int)ceil(old_mesh.bbox.max.V(0)),(int)ceil(old_mesh.bbox.max.V(1)),(int)ceil(old_mesh.bbox.max.V(2)));
 
 	
