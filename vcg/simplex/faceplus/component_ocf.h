@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2006/01/03 10:54:21  cignoni
+Corrected HasPerFaceColor and HasPerWedgeTexture to comply gcc
+
 Revision 1.6  2005/12/12 11:17:32  cignoni
 Corrected update function, now only the needed simplexes should be updated.
 
@@ -114,6 +117,11 @@ public:
     BaseType::push_back(v);
     if(oldbegin!=begin()) _updateOVP(begin(),end());
                      else _updateOVP(oldend, end());
+
+    if(NormalEnabled)      NV.push_back(typename VALUE_TYPE::NormalType());
+    if(VFAdjacencyEnabled) AV.push_back(AdjTypePack());
+    if(FFAdjacencyEnabled) AF.push_back(AdjTypePack());
+    if(WedgeTexEnabled)   WTV.push_back(WedgeTexTypePack());
   }
 	void pop_back();
   void resize(const unsigned int & _size) 
@@ -277,6 +285,10 @@ public:
   }
 
   char &FFi(const int j) {
+    assert(Base().FFAdjacencyEnabled); 
+    return Base().AF[Index()]._zp[j]; 
+  }
+  const char cFFi(const int j) const {
     assert(Base().FFAdjacencyEnabled); 
     return Base().AF[Index()]._zp[j]; 
   }
