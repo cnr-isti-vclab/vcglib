@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/09/15 09:29:45  m_di_benedetto
+#included missing <wrap/callback.h> and <vcg/complex/trimesh/allocate.h>
+
 Revision 1.8  2004/10/28 00:52:45  cignoni
 Better Doxygen documentation
 
@@ -173,6 +176,7 @@ static int OpenBinary( OpenMeshType &m, const char * filename, CallBackPos *cb=0
         ++vi;
       }
       ++fi;
+      if(cb && (i%1000)==0) cb((i*100)/facenum,"STL Mesh Loading");	
     }
     fclose(fp);
     return E_NOERROR;
