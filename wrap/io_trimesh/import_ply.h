@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2005/12/30 22:30:43  cignoni
+Added support for per vertex color stored as 'diffuse_xxx' property
+
 Revision 1.21  2005/12/02 10:04:18  cignoni
 forgotten a couple of std::
 
@@ -336,8 +339,8 @@ static int Open( OpenMeshType &m, const char * filename, CallBackPos *cb=0)
 static int Open( OpenMeshType &m, const char * filename, int & loadmask, CallBackPos *cb =0)
 {
   PlyInfo pi;
-  pi.mask=loadmask;
-	return Open(m, filename,pi);
+  pi.cb=cb; 
+  return Open(m, filename,pi);
   loadmask=pi.mask;
 }
 
