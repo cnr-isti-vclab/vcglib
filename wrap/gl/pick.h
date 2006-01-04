@@ -41,7 +41,7 @@ class GLPickTri
 
 public:
 
-	static bool PickNearestFace(int x, int y, MESH_TYPE &m, FaceIterator &fi,int width=4, int height=4)
+	static bool PickNearestFace(int x, int y, MESH_TYPE &m, FacePointer &fi,int width=4, int height=4)
 	{
 		std::vector<FacePointer> result;
 		int val=PickFace(x,y,m,result,width,height);
@@ -50,7 +50,7 @@ public:
 			fi=result[0];
 			return true;
 		}
-		fi=0;
+		fi=NULL;
 		return false; 
 	}
 
@@ -109,14 +109,14 @@ public:
 		//xstring buf;
 		//if (hits <= 0)     return 0;
 		std::vector< std::pair<double,unsigned int> > H;
-		for(int ii=0;ii<hits;ii++){
+		for(long ii=0;ii<hits;ii++){
 			//TRACE("%ui %ui %ui %ui\n",selectBuf[ii*4],selectBuf[ii*4+1],selectBuf[ii*4+2],selectBuf[ii*4+3]);
 			H.push_back( std::pair<double,unsigned int>(selectBuf[ii*4+1]/4294967295.0,selectBuf[ii*4+3]));
 		}
 		std::sort(H.begin(),H.end());
 		//  if(H.size()>0) TRACE("\n Closest is %i\n",H[0].second);
 		result.resize(H.size());
-		for(ii=0;ii<hits;ii++){
+		for(long ii=0;ii<hits;ii++){
 			FaceIterator fi=m.face.begin();
 			advance(fi ,H[ii].second);
 			result[ii]=&*fi;
