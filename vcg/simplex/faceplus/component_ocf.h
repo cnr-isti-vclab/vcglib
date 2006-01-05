@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2006/01/04 18:46:25  cignoni
+Corrected push_back (did not worked at all!)
+added missing cFFi
+
 Revision 1.7  2006/01/03 10:54:21  cignoni
 Corrected HasPerFaceColor and HasPerWedgeTexture to comply gcc
 
@@ -377,14 +381,14 @@ public:
       bool HasPerWedgeTexture (const TriMesh < VertContainerType , face::vector_ocf< FaceType > > & m) 
     {
       if(face::vector_ocf< FaceType >::HasWedgeTextureOcf()) return m.face.WedgeTexEnabled();
-      else return face::vector_ocf< FaceType > >::HasWedgeTexture();
+      else return face::vector_ocf< FaceType >::HasWedgeTexture();
     }
 
     template < class VertContainerType, class FaceType >
       bool HasPerFaceColor (const TriMesh < VertContainerType , face::vector_ocf< FaceType > > & m) 
     {
       if(face::vector_ocf< FaceType >::HasPerFaceColorOcf()) return m.face.FaceColor();
-      else return face::vector_ocf< FaceType > > ::HasFaceColor();
+      else return face::vector_ocf< FaceType > ::HasFaceColor();
     }
   }
 }// end namespace vcg
