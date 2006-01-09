@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2005/11/22 23:58:03  cignoni
+Added intiailization of flags to zero in the constructor,
+
 Revision 1.15  2005/11/18 15:44:51  cignoni
 Access to constant normal changed from by val to by reference
 
@@ -222,6 +225,7 @@ public:
 };
 template <class A, class T> class Color: public T {
 public:
+  Color():_color(vcg::Color4b::White) {}
   typedef A ColorType;
   ColorType &C() { return _color; }
   static bool HasColor()   { return true; }
@@ -229,7 +233,7 @@ private:
   ColorType _color;    
 };
 
-template <class T> class Color4b: public Color<vcg::Color4b, T> {};
+template <class T> class Color4b: public vert::Color<vcg::Color4b, T> {};
 
 /*-------------------------- Quality  ----------------------------------*/ 
 

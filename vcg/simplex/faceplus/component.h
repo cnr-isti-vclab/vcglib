@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/11/22 15:49:39  cignoni
+removed two spurious computenormal
+
 Revision 1.5  2005/11/21 21:44:47  cignoni
 Moved ComputeNormal and ComputeNormalizedNormal out of the face class (no more a member function!)
 
@@ -247,6 +250,7 @@ public:
 template <class A, class T> class Color: public T {
 public:
   typedef A ColorType;
+  Color():_color(vcg::Color4b::White) {}
   ColorType &C() { return _color; }
   static bool HasFaceColor()   { return true; }
 private:
