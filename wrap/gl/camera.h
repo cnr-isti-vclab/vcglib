@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.10  2005/10/24 14:42:57  spinelli
+add namespace vcg:: to GetFrustum(...)
+
 Revision 1.9  2005/06/29 15:02:29  spinelli
 aggiunto:
 - static void CavalieriProj( .. )
@@ -168,10 +171,10 @@ static void SetSubView(vcg::Camera<S> & camera,vcg::Point2<S> p0,vcg::Point2<S> 
 	
 
 	switch(camera.cameraType) {
-	case PERSPECTIVE: glFrustum(	width* p0[0]+ sx, width* p1[0]+ sx,		height* p0[1]+ bt, height* p1[1]+ bt,nr,fr);	break;
-	case ORTHO:       glOrtho((width* p0[0]+sx)*camera.viewportM,  (width* p1[0]+sx)*camera.viewportM, (height* p0[1]+ bt)*camera.viewportM, (height* p1[1]+bt)*camera.viewportM,nr,fr); break;
-	case ISOMETRIC:   IsometricProj(dx-width* p1[0], dx-width* p0[0],		tp-height* p1[1], tp-height* p0[1],nr,fr);	break;
-	case CAVALIERI:   CavalieriProj(dx-width* p1[0], dx-width* p0[0],		tp-height* p1[1], tp-height* p0[1],nr,fr);	break;
+	case vcg::PERSPECTIVE: glFrustum(	width* p0[0]+ sx, width* p1[0]+ sx,		height* p0[1]+ bt, height* p1[1]+ bt,nr,fr);	break;
+	case vcg::ORTHO:       glOrtho((width* p0[0]+sx)*camera.viewportM,  (width* p1[0]+sx)*camera.viewportM, (height* p0[1]+ bt)*camera.viewportM, (height* p1[1]+bt)*camera.viewportM,nr,fr); break;
+	case vcg::ISOMETRIC:   IsometricProj(dx-width* p1[0], dx-width* p0[0],		tp-height* p1[1], tp-height* p0[1],nr,fr);	break;
+	case vcg::CAVALIERI:   CavalieriProj(dx-width* p1[0], dx-width* p0[0],		tp-height* p1[1], tp-height* p0[1],nr,fr);	break;
 	}
 
 
