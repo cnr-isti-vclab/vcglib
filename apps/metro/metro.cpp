@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2005/10/02 23:11:00  cignoni
+Version 4.06, Added possibility of using three different search structures UG Hash and AABB
+
 Revision 1.16  2005/09/16 11:52:14  cignoni
 removed wrong %v in vertex number printing
 
@@ -326,7 +329,8 @@ int main(int argc, char**argv)
     if(flags & SamplingFlags::SAVE_ERROR)
     {
       vcg::tri::io::PlyInfo p; 
-      p.mask|=vcg::ply::PLYMask::PM_VERTCOLOR|vcg::ply::PLYMask::PM_VERTQUALITY;
+      p.mask|=vcg::tri::io::Mask::IOM_VERTCOLOR | vcg::tri::io::Mask::IOM_VERTQUALITY /* | vcg::ply::PLYMask::PM_VERTQUALITY*/ ;
+      //p.mask|=vcg::ply::PLYMask::PM_VERTCOLOR|vcg::ply::PLYMask::PM_VERTQUALITY;
       if(ColorMax!=0 || ColorMin != 0){
         vcg::tri::UpdateColor<CMesh>::VertexQuality(S1,ColorMin,ColorMax);
         vcg::tri::UpdateColor<CMesh>::VertexQuality(S2,ColorMin,ColorMax);

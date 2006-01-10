@@ -29,9 +29,9 @@
 #ifndef __VCGLIB_EXPORT_OFF
 #define __VCGLIB_EXPORT_OFF
 
-#include<wrap/ply/io_mask.h>
-
 #include <stdio.h>
+#include <wrap/io_trimesh/io_mask.h>
+
 
 namespace vcg {
 	namespace tri {

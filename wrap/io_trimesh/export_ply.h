@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2005/11/23 15:48:25  pietroni
+changed shot::similarity to shot::Similarity() and shot::camera to shot::Camera()
+
 Revision 1.10  2004/10/28 00:52:45  cignoni
 Better Doxygen documentation
 
@@ -67,7 +70,8 @@ Initial commit
 #ifndef __VCGLIB_EXPORT_PLY
 #define __VCGLIB_EXPORT_PLY
 
-#include<wrap/ply/io_mask.h>
+//#include<wrap/ply/io_mask.h>
+#include<wrap/io_trimesh/io_mask.h>
 #include<wrap/io_trimesh/io_ply.h>
 
 #include <stdio.h>
@@ -149,7 +153,7 @@ static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &
 		,h
 	);
 
-	if( pi.mask & ply::PLYMask::PM_WEDGTEXCOORD )
+	if( pi.mask & Mask::IOM_WEDGTEXCOORD )
 	{
 		//const char * TFILE = "TextureFile";
 
@@ -159,7 +163,7 @@ static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &
 		//if(textures.size()>1 && (HasPerWedgeTexture() || HasPerVertexTexture())) multit = true;
 	}
 
-	if( (pi.mask & ply::PLYMask::PM_CAMERA) && m.shot.IsValid())
+	if( (pi.mask & Mask::IOM_CAMERA) && m.shot.IsValid())
 	 {
 		fprintf(fpout,
 			"element camera 1\n"
@@ -198,14 +202,14 @@ static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &
 	);
 
 
-	if( pi.mask & ply::PLYMask::PM_VERTFLAGS )
+	if( pi.mask & Mask::IOM_VERTFLAGS )
 	{
 		fprintf(fpout,
 			"property int flags\n"
 		);
 	}
 	
-	if( m.HasPerVertexColor()  && (pi.mask & ply::PLYMask::PM_VERTCOLOR) )
+	if( m.HasPerVertexColor()  && (pi.mask & Mask::IOM_VERTCOLOR) )
 	{
 		fprintf(fpout,
 			"property uchar red\n"
@@ -215,7 +219,7 @@ static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &
 		);
 	}
 
-	if( m.HasPerVertexQuality() && (pi.mask & ply::PLYMask::PM_VERTQUALITY) )
+	if( m.HasPerVertexQuality() && (pi.mask & Mask::IOM_VERTQUALITY) )
 	{
 		fprintf(fpout,
 			"property float quality\n"
@@ -231,7 +235,7 @@ static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &
 		,m.fn
 	);
 
-	if( pi.mask & ply::PLYMask::PM_FACEFLAGS )
+	if( pi.mask & Mask::IOM_FACEFLAGS )
 	{
 		fprintf(fpout,
 			"property int flags\n"
@@ -250,7 +254,7 @@ static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &
 			);
 	}
 
-	if( m.HasPerFaceColor() && (pi.mask & ply::PLYMask::PM_FACECOLOR) )
+	if( m.HasPerFaceColor() && (pi.mask & Mask::IOM_FACECOLOR) )
 	{
 		fprintf(fpout,
 			"property uchar red\n"
@@ -260,14 +264,14 @@ static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &
 		);
 	}
 	
-	if ( m.HasPerWedgeColor() && (pi.mask & ply::PLYMask::PM_WEDGCOLOR)  )
+	if ( m.HasPerWedgeColor() && (pi.mask & Mask::IOM_WEDGCOLOR)  )
 	{
 		fprintf(fpout,
 			"property list uchar float color\n"
 		);
 	}
 
-	if( m.HasPerFaceQuality() && (pi.mask & ply::PLYMask::PM_FACEQUALITY) )
+	if( m.HasPerFaceQuality() && (pi.mask & Mask::IOM_FACEQUALITY) )
 	{
 		fprintf(fpout,
 			"property float quality\n"
@@ -280,7 +284,7 @@ static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &
 	fprintf(fpout, "end_header\n"	);
 
 		// Salvataggio camera
-	 if( (pi.mask & ply::PLYMask::PM_CAMERA) && m.shot.IsValid() )
+	 if( (pi.mask & Mask::IOM_CAMERA) && m.shot.IsValid() )
 	 {
 		 if(binary)
 		 {
@@ -362,13 +366,13 @@ std::vector<int> FlagV;
 				t = float(vp->UberP()[1]); fwrite(&t,sizeof(float),1,fpout);
 				t = float(vp->UberP()[2]); fwrite(&t,sizeof(float),1,fpout);
 				
-				if( pi.mask & ply::PLYMask::PM_VERTFLAGS )
+				if( pi.mask & Mask::IOM_VERTFLAGS )
 					fwrite(&(vp->UberFlags()),sizeof(int),1,fpout);
 
-				if( m.HasPerVertexColor() && (pi.mask & ply::PLYMask::PM_VERTCOLOR) )
+				if( m.HasPerVertexColor() && (pi.mask & Mask::IOM_VERTCOLOR) )
 					fwrite(&( vp->C() ),sizeof(char),4,fpout);
 
-				if( m.HasPerVertexQuality() && (pi.mask & ply::PLYMask::PM_VERTQUALITY) )
+				if( m.HasPerVertexQuality() && (pi.mask & Mask::IOM_VERTQUALITY) )
 					fwrite(&( vp->Q() ),sizeof(float),1,fpout);
 
 
@@ -391,13 +395,13 @@ std::vector<int> FlagV;
 			{
 				fprintf(fpout,"%g %g %g " ,vp->P()[0],vp->P()[1],vp->P()[2]);
 
-				if( pi.mask & ply::PLYMask::PM_VERTFLAGS )
+				if( pi.mask & Mask::IOM_VERTFLAGS )
 					fprintf(fpout,"%d ",vp->UberFlags());
 
-				if( m.HasPerVertexColor() && (pi.mask & ply::PLYMask::PM_VERTCOLOR) )
+				if( m.HasPerVertexColor() && (pi.mask & Mask::IOM_VERTCOLOR) )
 					fprintf(fpout,"%d %d %d %d ",vp->C()[0],vp->C()[1],vp->C()[2],vp->C()[3] );
 
-				if( m.HasPerVertexQuality() && (pi.mask & ply::PLYMask::PM_VERTQUALITY) )
+				if( m.HasPerVertexQuality() && (pi.mask & Mask::IOM_VERTQUALITY) )
 					fprintf(fpout,"%g ",vp->Q());
 
 				for(i=0;i<pi.vdn;i++)
@@ -445,10 +449,10 @@ std::vector<int> FlagV;
 					fwrite(&c,1,1,fpout);
 					fwrite(vv,sizeof(int),3,fpout);
 
-					if( pi.mask & ply::PLYMask::PM_FACEFLAGS )
+					if( pi.mask & Mask::IOM_FACEFLAGS )
 						fwrite(&(fp->Flags()),sizeof(int),1,fpout);
 
-					if( m.HasPerVertexTexture() && (pi.mask & ply::PLYMask::PM_VERTTEXCOORD) )
+					if( m.HasPerVertexTexture() && (pi.mask & Mask::IOM_VERTTEXCOORD) )
 					{
 						fwrite(&b6,sizeof(char),1,fpout);
 						float t[6];
@@ -459,7 +463,7 @@ std::vector<int> FlagV;
 						}
 						fwrite(t,sizeof(float),6,fpout);
 					}
-					else if( m.HasPerWedgeTexture() && (pi.mask & ply::PLYMask::PM_WEDGTEXCOORD)  )
+					else if( m.HasPerWedgeTexture() && (pi.mask & Mask::IOM_WEDGTEXCOORD)  )
 					{
 						fwrite(&b6,sizeof(char),1,fpout);
 						float t[6];
@@ -477,11 +481,11 @@ std::vector<int> FlagV;
 						fwrite(&t,sizeof(int),1,fpout);
 					}
           
-					if( m.HasPerFaceColor() && (pi.mask & ply::PLYMask::PM_FACECOLOR) )
+					if( m.HasPerFaceColor() && (pi.mask & Mask::IOM_FACECOLOR) )
 					   fwrite(&( fp->C() ),sizeof(char),4,fpout);
 
 
-					if( m.HasPerWedgeColor() && (pi.mask & ply::PLYMask::PM_WEDGCOLOR)  )
+					if( m.HasPerWedgeColor() && (pi.mask & Mask::IOM_WEDGCOLOR)  )
 					{
 						fwrite(&b9,sizeof(char),1,fpout);
 						float t[3];
@@ -494,7 +498,7 @@ std::vector<int> FlagV;
 						}
 					}
 
-					if( m.HasPerFaceQuality() && (pi.mask & ply::PLYMask::PM_FACEQUALITY) )
+					if( m.HasPerFaceQuality() && (pi.mask & Mask::IOM_FACEQUALITY) )
 						fwrite( &(fp->Q()),sizeof(float),1,fpout);
 
 
@@ -517,10 +521,10 @@ std::vector<int> FlagV;
 					fprintf(fpout,"3 %d %d %d ",
 						fp->cV(0)->UberFlags(),	fp->cV(1)->UberFlags(), fp->cV(2)->UberFlags() );
 
-					if( pi.mask & ply::PLYMask::PM_FACEFLAGS )
+					if( pi.mask & Mask::IOM_FACEFLAGS )
 						fprintf(fpout,"%d ",fp->Flags());
 
-					if( m.HasPerVertexTexture() && (pi.mask & ply::PLYMask::PM_VERTTEXCOORD) )
+					if( m.HasPerVertexTexture() && (pi.mask & Mask::IOM_VERTTEXCOORD) )
 					{
 						fprintf(fpout,"6 ");
 						for(int k=0;k<3;++k)
@@ -529,7 +533,7 @@ std::vector<int> FlagV;
 								,fp->V(k)->T().v()
 							);
 					}
-					else if( m.HasPerWedgeTexture() && (pi.mask & ply::PLYMask::PM_WEDGTEXCOORD)  )
+					else if( m.HasPerWedgeTexture() && (pi.mask & Mask::IOM_WEDGTEXCOORD)  )
 					{
 						fprintf(fpout,"6 ");
 						for(int k=0;k<3;++k)
@@ -544,7 +548,7 @@ std::vector<int> FlagV;
 						fprintf(fpout,"%d ",fp->WT(0).n());
 					}
 
-					if( m.HasPerFaceColor() && (pi.mask & ply::PLYMask::PM_FACECOLOR)  )
+					if( m.HasPerFaceColor() && (pi.mask & Mask::IOM_FACECOLOR)  )
 					{
 						float t[3];
 						t[0] = float(fp->C()[0])/255;
@@ -555,7 +559,7 @@ std::vector<int> FlagV;
 						fprintf(fpout,"%g %g %g ",t[0],t[1],t[2]);
 						fprintf(fpout,"%g %g %g ",t[0],t[1],t[2]);
 					}
-					else if( m.HasPerWedgeColor() && (pi.mask & ply::PLYMask::PM_WEDGCOLOR)  )
+					else if( m.HasPerWedgeColor() && (pi.mask & Mask::IOM_WEDGCOLOR)  )
 					{
 						fprintf(fpout,"9 ");
 						for(int z=0;z<3;++z)
@@ -566,7 +570,7 @@ std::vector<int> FlagV;
 							);
 					}
 
-					if( m.HasPerFaceQuality() && (pi.mask & ply::PLYMask::PM_FACEQUALITY) )
+					if( m.HasPerFaceQuality() && (pi.mask & Mask::IOM_FACEQUALITY) )
 						fprintf(fpout,"%g ",fp->Q());
 
 					for(i=0;i<pi.fdn;i++)

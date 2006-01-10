@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/10/28 00:52:45  cignoni
+Better Doxygen documentation
+
 Revision 1.3  2004/05/12 10:19:30  ganovelli
 new line added at the end of file
 
@@ -37,8 +40,7 @@ Initial commit
 #ifndef __VCGLIB_IOTRIMESH_IO_MASK
 #define __VCGLIB_IOTRIMESH_IO_MASK
 
-#include<wrap/callback.h>
-#include<wrap/ply/plylib.h>
+//#include<wrap/callback.h>
 
 namespace vcg {
 namespace tri {
@@ -49,7 +51,7 @@ namespace io {
 */
 //@{
   
-class PLYMask
+class Mask
 {
 public:
 
@@ -58,57 +60,57 @@ public:
 */
 
 enum {
-	PM_NONE         = 0x0000,
+	IOM_NONE         = 0x0000,
 
-  PM_VERTCOORD    = 0x0001,
-	PM_VERTFLAGS    = 0x0002, 
-	PM_VERTCOLOR    = 0x0004,
-	PM_VERTQUALITY  = 0x0008,
-	PM_VERTNORMAL   = 0x0010,
-	PM_VERTTEXCOORD = 0x0020,
+  IOM_VERTCOORD    = 0x0001,
+	IOM_VERTFLAGS    = 0x0002, 
+	IOM_VERTCOLOR    = 0x0004,
+	IOM_VERTQUALITY  = 0x0008,
+	IOM_VERTNORMAL   = 0x0010,
+	IOM_VERTTEXCOORD = 0x0020,
 
-	PM_FACEINDEX    = 0x0040,
-	PM_FACEFLAGS    = 0x0080,
-	PM_FACECOLOR    = 0x0100,
-	PM_FACEQUALITY  = 0x0200,
-	PM_FACENORMAL   = 0x0400,
-	PM_WEDGCOLOR    = 0x0800,
-	PM_WEDGTEXCOORD = 0x1000,
-	PM_WEDGTEXMULTI = 0x2000, // Se ha anche l'indice di texture esplicito
-	PM_WEDGNORMAL   = 0x4000,
+	IOM_FACEINDEX    = 0x0040,
+	IOM_FACEFLAGS    = 0x0080,
+	IOM_FACECOLOR    = 0x0100,
+	IOM_FACEQUALITY  = 0x0200,
+	IOM_FACENORMAL   = 0x0400,
+	IOM_WEDGCOLOR    = 0x0800,
+	IOM_WEDGTEXCOORD = 0x1000,
+	IOM_WEDGTEXMULTI = 0x2000, // Se ha anche l'indice di texture esplicito
+	IOM_WEDGNORMAL   = 0x4000,
 
-	PM_CAMERA       = 0x8000,
+	IOM_CAMERA       = 0x8000,
 
-	PM_FLAGS        = PM_VERTFLAGS + PM_FACEFLAGS,
+	IOM_FLAGS        = IOM_VERTFLAGS + IOM_FACEFLAGS,
 
-	PM_ALL          = 0xFFFF
+	IOM_ALL          = 0xFFFF
 };
-
-
-static void SMFlags2String( int mask, char str[] )
-{
-	str[0] = 0;
-
-	strcat(str,"V:");
-	if( mask & PM_VERTFLAGS    ) strcat(str,"flag,");
-	if( mask & PM_VERTCOLOR    ) strcat(str,"color,");
-	if( mask & PM_VERTQUALITY  ) strcat(str,"quality,");
-	if( mask & PM_VERTTEXCOORD ) strcat(str,"tcoord,");
-	if( mask & PM_VERTNORMAL ) strcat(str,"normal,");
-
-	strcat(str," F:");
-	if( mask & PM_FACEFLAGS    ) strcat(str,"mask,");
-	if( mask & PM_FACECOLOR    ) strcat(str,"color,");
-	if( mask & PM_FACEQUALITY  ) strcat(str,"quality,");
-	if( mask & PM_FACENORMAL   ) strcat(str,"normal,");
-
-	strcat(str," W:");
-	if( mask & PM_WEDGCOLOR    ) strcat(str,"color,");
-	if( mask & PM_WEDGTEXCOORD ) strcat(str,"tcoord,");
-	if( mask & PM_WEDGNORMAL  ) strcat(str,"normal,");
-
-	if( mask & PM_CAMERA ) strcat(str," camera");
-}
+//
+//
+//static void IOMask2String( int mask, char str[] )
+//{
+//	str[0] = 0;
+//
+//	strcat(str,"V:");
+//	if( mask & IOM_VERTFLAGS    ) strcat(str,"flag,");
+//	if( mask & IOM_VERTCOLOR    ) strcat(str,"color,");
+//	if( mask & IOM_VERTQUALITY  ) strcat(str,"quality,");
+//	if( mask & IOM_VERTTEXCOORD ) strcat(str,"tcoord,");
+//	if( mask & IOM_VERTNORMAL ) strcat(str,"normal,");
+//
+//	strcat(str," F:");
+//	if( mask & IOM_FACEFLAGS    ) strcat(str,"mask,");
+//	if( mask & IOM_FACECOLOR    ) strcat(str,"color,");
+//	if( mask & IOM_FACEQUALITY  ) strcat(str,"quality,");
+//	if( mask & IOM_FACENORMAL   ) strcat(str,"normal,");
+//
+//	strcat(str," W:");
+//	if( mask & IOM_WEDGCOLOR    ) strcat(str,"color,");
+//	if( mask & IOM_WEDGTEXCOORD ) strcat(str,"tcoord,");
+//	if( mask & IOM_WEDGNORMAL  ) strcat(str,"normal,");
+//
+//	if( mask & IOM_CAMERA ) strcat(str," camera");
+//}
 
 }; // end class
 //@}

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/12/01 00:58:56  cignoni
+Added and removed typenames for gcc compiling...
+
 Revision 1.8  2005/11/12 18:12:16  cignoni
 Added casts and changed integral types to remove warnings
 
@@ -99,13 +102,19 @@ namespace vcg
 						return error_msg[message_code];
 				};
 
+        static int Open(MESH_TYPE &mesh, const char *filename, CallBackPos *cb=0)
+        {
+          int loadmask;
+          return Open(mesh,filename,loadmask,cb);
+        }
+
 				/*!
 				*	Standard call for reading a mesh
 				*	\param mesh				the destination mesh
 				*	\param filename		the name of the file to read from
 				*	\return						the operation result
 				*/
-				static int Open(MESH_TYPE &mesh, const char *filename)
+				static int Open(MESH_TYPE &mesh, const char *filename, int &loadmask, CallBackPos *cb=0)
 				{
 					mesh.Clear();
 
@@ -165,6 +174,8 @@ namespace vcg
 					{
 						if (stream.fail())
 							return UnexpectedEOF;
+            
+            if(cb && (i%1000)==0) cb(i*50/nVertices,"Vertex Loading");
 
 						TokenizeNextLine(stream, tokens);
 						if(tokens.size() ==3)
@@ -203,7 +214,8 @@ namespace vcg
 						if (stream.fail())
 							return UnexpectedEOF;
 
-						
+						if(cb && (f%1000)==0) cb(50+f*50/nFaces,"Vertex Loading");
+
 						TokenizeNextLine(stream, tokens);
 						int vert_per_face = atoi(tokens[0].c_str());
 						if (vert_per_face == 3)
@@ -321,9 +333,9 @@ namespace vcg
 				} // end Open
 
 
-			protected:
-				enum OFFCodes {NoError, CantOpen, UnexpectedEOF};
-
+				enum OFFCodes {NoError=0, CantOpen, UnexpectedEOF};
+    protected:
+			
 				/*!
 				* Read the next valid line and parses it into "tokens", allowing the tokens to be read one at a time.
 				* \param stream	The object providing the input stream

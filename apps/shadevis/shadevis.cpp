@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2005/11/12 06:48:47  cignoni
+Version 1.0
+Added management of point set, correct bug in printing on the screen,
+
 Revision 1.9  2005/01/03 13:59:54  cignoni
 Resolved min/max macro conflict
 
@@ -396,7 +400,7 @@ void ViewKey(unsigned char key, int , int )
   case 'S' :
     { 
       vcg::tri::io::PlyInfo p; 
-      p.mask|=vcg::ply::PLYMask::PM_VERTCOLOR /* | vcg::ply::PLYMask::PM_VERTQUALITY*/ ;
+      p.mask|=vcg::tri::io::Mask::IOM_VERTCOLOR  /* | vcg::ply::PLYMask::PM_VERTQUALITY*/ ;
       tri::io::ExporterPLY<AMesh>::Save(m,OutNameMsh.c_str(),false,p);
     }
     break;
