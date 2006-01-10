@@ -24,6 +24,11 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2005/12/02 00:13:34  cignoni
+Added and removed typenames for gcc compiling.
+removed also some template arguments specifcation that gcc disliked...
+commented out GetInSphereFace and SetMesh that are probably never used and i didnt succeed in compile
+
 Revision 1.17  2005/10/05 17:02:52  pietroni
 corrected bugs on GEtKClosestVert and GetInSphereVert
 
@@ -145,7 +150,7 @@ namespace vcg {
 		template <class MESH, class GRID>
 			typename MESH::FaceType * GetClosestFace( MESH & mesh, GRID & gr, const typename GRID::CoordType & _p, 
 			const typename GRID::ScalarType & _maxDist, typename GRID::ScalarType & _minDist,
-			typename GRID::CoordType _closestPt, typename GRID::CoordType & _normf, 
+			typename GRID::CoordType &_closestPt, typename GRID::CoordType & _normf, 
 			typename GRID::CoordType & _ip)
 		{
 			typedef typename GRID::ScalarType ScalarType;
@@ -179,7 +184,7 @@ namespace vcg {
 		template <class MESH, class GRID>
 			typename MESH::FaceType * GetClosestFace( MESH & mesh,GRID & gr,const typename GRID::CoordType & _p, 
 			const typename GRID::ScalarType & _maxDist,typename GRID::ScalarType & _minDist,
-			typename GRID::CoordType _closestPt,typename GRID::CoordType & _normf)
+			typename GRID::CoordType &_closestPt,typename GRID::CoordType & _normf)
 		{
 			Point3<typename GRID::ScalarType> _ip;
 			typedef FaceTmark<MESH> MarkerFace;
@@ -192,7 +197,7 @@ namespace vcg {
 		template <class MESH, class GRID>
 			typename MESH::FaceType * GetClosestFace( MESH & mesh,GRID & gr,const typename GRID::CoordType & _p, 
 			const typename GRID::ScalarType & _maxDist,typename GRID::ScalarType & _minDist,
-			typename GRID::CoordType _closestPt)
+			typename GRID::CoordType &_closestPt)
 		{
 			typedef typename GRID::ScalarType ScalarType;
 			typedef Point3<ScalarType> Point3x;
@@ -353,8 +358,8 @@ namespace vcg {
 			ClosestVertexIterator(GridType &_Si):ClosestBaseType(_Si,VDistFunct()){}
 
 //    Commented out: it seems unuseful and make gcc complain. p.
-//			void SetMesh(MeshType *m)
-//			{tm.SetMesh(m);}
+	/*		void SetMesh(MeshType *m)
+			{tm.SetMesh(m);}*/
 		};
 
 		template <class GRID,class MESH>
@@ -372,8 +377,8 @@ namespace vcg {
 			TriRayIterator(GridType &_Si):RayBaseType(_Si,FintFunct()){}
 
 //    Commented out: it  seems unuseful and make gcc complain. p.
-//			void SetMesh(MeshType *m)
-//			{tm.SetMesh(m);}
+	/*		void SetMesh(MeshType *m)
+			{tm.SetMesh(m);}*/
 
 		};
 
