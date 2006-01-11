@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.28  2006/01/02 09:49:36  cignoni
+Added some missing std::
+
 Revision 1.27  2005/12/29 12:27:37  cignoni
 Splitted IsComplexManifold in IsTwoManifoldFace and IsTwoManifoldVertex
 
@@ -176,7 +179,7 @@ namespace vcg {
 			Note that it does not update any topology relation that could be affected by this like the VT or TT relation.
 			the reason this function is usually performed BEFORE building any topology information.
 			*/
-			static int RemoveDuplicateVertex( MeshType & m )    // V1.0
+			static int RemoveDuplicateVertex( MeshType & m, bool RemoveDegenerateFlag=true)    // V1.0
 			{
 				if(m.vert.size()==0 || m.vn==0) return 0;
 
@@ -226,7 +229,9 @@ namespace vcg {
 							}
 							m.vn -= deleted;
 							return deleted;
-			}
+			
+        if(RemoveDegenerateFlag) RemoveDegenerateFace(m);  
+      }
 
 
 			/** This function removes that are not referenced by any face. The function updates the vn counter.
@@ -264,6 +269,35 @@ namespace vcg {
 					return deleted;
 			}
 
+
+      /*
+      Degenerate faces are faces that are Topologically degenerate, 
+      i.e. have two or more vertex reference that link the same vertex 
+      (and not only two vertexes with the same coordinates).
+      All Degenerate faces are zero area faces BUT not all zero area faces are degenerate.
+      */ 
+      static int RemoveDegenerateFace(MeshType& m)
+      {
+				FaceIterator fi;
+				int count_fd = 0;
+
+				for(fi=m.face.begin(); fi!=m.face.end();++fi)
+					if((*fi).V(0) == (*fi).V(1) || 
+             (*fi).V(0) == (*fi).V(2) ||
+             (*fi).V(1) == (*fi).V(2) )
+					{
+						count_fd++;
+						fi->SetD();
+						m.fn--;
+					}
+				return count_fd;
+			}
+
+
+      /*
+      This function remove faces that are geometrically degenerate
+      but that could be topologically correct.
+      */
       static int RemoveZeroAreaFace(MeshType& m, ScalarType epsilon=0)
 			{
 				FaceIterator fi;
