@@ -8,6 +8,7 @@ SUBDIRS       = trimesh_base \
                 trimesh_smooth \
                 trimesh_refine \
                 trimesh_isosurface \
+                trimesh_join \
                 trimesh_optional \
                 aabb_binary_tree
                 
