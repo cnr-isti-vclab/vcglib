@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.24  2006/01/10 13:20:42  cignoni
+Changed ply::PlyMask to io::Mask
+
 Revision 1.23  2006/01/04 16:17:03  cignoni
 Corrected use of mask and callback in function Open(m,filename,mask,callback);
 
@@ -806,9 +809,9 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
     std::string TFILE = "TextureFile";
 		std::string NFILE = "TextureNormalFile";
 		std::string &c = pf.comments[co];
-		char buf[256];
+//		char buf[256];
     std::string bufstr,bufclean;
-		int i,j,n;
+		int i,n;
 
     if( TFILE == c.substr(0,TFILE.length()) ) 
 		{
