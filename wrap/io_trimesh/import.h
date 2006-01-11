@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/01/26 22:43:19  cignoni
+Add std:: to stl containers
+
 Revision 1.1  2004/11/29 08:12:10  cignoni
 Initial Update
 
@@ -77,17 +80,17 @@ static int Open(OpenMeshType &m, const char *filename, CallBackPos *cb=0)
   int err;
   if(FileExtension(filename,"ply"))
   {
-    err = ImporterPLY<OpenMeshType>::Open(m,filename);
+    err = ImporterPLY<OpenMeshType>::Open(m,filename,cb);
     LastType()=KT_PLY;
   }
   else if(FileExtension(filename,"stl"))
   {
-    err = ImporterSTL<OpenMeshType>::Open(m,filename);
+    err = ImporterSTL<OpenMeshType>::Open(m,filename,cb);
     LastType()=KT_STL;
   }
    else if(FileExtension(filename,"off"))
   {
-    err = ImporterOFF<OpenMeshType>::Open(m,filename);
+    err = ImporterOFF<OpenMeshType>::Open(m,filename,cb);
     LastType()=KT_OFF;
   }
  else {
