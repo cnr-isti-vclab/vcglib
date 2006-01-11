@@ -9,7 +9,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "trimesh_refine", "trimesh_r
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "trimesh_isosurface", "trimesh_isosurface\trimesh_isosurface.vcproj", "{A52CB564-AC7F-34E5-90E5-07F879D5DD3D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "trimesh_sdl", "trimesh_SDL\trimesh_sdl.vcproj", "{637DBA16-5309-3D1C-B69B-27A5E4EA737B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "trimesh_join", "trimesh_join\trimesh_join.vcproj", "{EFE483ED-FBB7-34A3-B4D6-C229F5595B0D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "trimesh_optional", "trimesh_optional\trimesh_optional.vcproj", "{193DB083-9ACA-3E9B-A911-762040E04820}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "aabb_binary_tree", "aabb_binary_tree\aabb_binary_tree.vcproj", "{22BA9CD4-30BB-30C5-A6FB-B7A015B32721}"
 EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
@@ -39,10 +43,18 @@ Global
 		{A52CB564-AC7F-34E5-90E5-07F879D5DD3D}.Debug.Build.0 = Debug|Win32
 		{A52CB564-AC7F-34E5-90E5-07F879D5DD3D}.Release.ActiveCfg = Release|Win32
 		{A52CB564-AC7F-34E5-90E5-07F879D5DD3D}.Release.Build.0 = Release|Win32
-		{637DBA16-5309-3D1C-B69B-27A5E4EA737B}.Debug.ActiveCfg = Debug|Win32
-		{637DBA16-5309-3D1C-B69B-27A5E4EA737B}.Debug.Build.0 = Debug|Win32
-		{637DBA16-5309-3D1C-B69B-27A5E4EA737B}.Release.ActiveCfg = Release|Win32
-		{637DBA16-5309-3D1C-B69B-27A5E4EA737B}.Release.Build.0 = Release|Win32
+		{EFE483ED-FBB7-34A3-B4D6-C229F5595B0D}.Debug.ActiveCfg = Debug|Win32
+		{EFE483ED-FBB7-34A3-B4D6-C229F5595B0D}.Debug.Build.0 = Debug|Win32
+		{EFE483ED-FBB7-34A3-B4D6-C229F5595B0D}.Release.ActiveCfg = Release|Win32
+		{EFE483ED-FBB7-34A3-B4D6-C229F5595B0D}.Release.Build.0 = Release|Win32
+		{193DB083-9ACA-3E9B-A911-762040E04820}.Debug.ActiveCfg = Debug|Win32
+		{193DB083-9ACA-3E9B-A911-762040E04820}.Debug.Build.0 = Debug|Win32
+		{193DB083-9ACA-3E9B-A911-762040E04820}.Release.ActiveCfg = Release|Win32
+		{193DB083-9ACA-3E9B-A911-762040E04820}.Release.Build.0 = Release|Win32
+		{22BA9CD4-30BB-30C5-A6FB-B7A015B32721}.Debug.ActiveCfg = Debug|Win32
+		{22BA9CD4-30BB-30C5-A6FB-B7A015B32721}.Debug.Build.0 = Debug|Win32
+		{22BA9CD4-30BB-30C5-A6FB-B7A015B32721}.Release.ActiveCfg = Release|Win32
+		{22BA9CD4-30BB-30C5-A6FB-B7A015B32721}.Release.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection
