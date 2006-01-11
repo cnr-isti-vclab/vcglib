@@ -23,6 +23,14 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+
+Revision 1.8  2005/01/11 17:06:30  dellepiane
+FromTrackball() coorected (similarity->Similarity()
+
+Revision 1.7  2005/11/25 10:33:33  spinelli
+shot.camera  -> shot.Camera()
+shot.similarity.Matrix() -> shot.Similarity().Matrix()
+
 Revision 1.6  2005/02/22 11:15:01  ganovelli
 added vcg namespace
 
@@ -132,7 +140,7 @@ After this operation the trackball should be resetted, to avoid
 multiple apply of the same transformation.
 ***********************************/
 static void FromTrackball(const vcg::Trackball & tr, 
-						  const vcg::Shot<ScalarType> & sShot, 
+						  vcg::Shot<ScalarType> & sShot, 
 						  vcg::Shot<ScalarType> & shot )
 {
 	vcg::Point3<ScalarType>		cen; cen.Import(tr.center);
@@ -142,8 +150,8 @@ static void FromTrackball(const vcg::Trackball & tr,
 	vcg::Point3<ScalarType>		vp = Inverse(trM)*(sShot.ViewPoint()-cen) +cen +tra;
 
 	shot.SetViewPoint(vp);
-	shot.similarity.rot =   sShot.similarity.rot*trM;
-	shot.similarity.sca	=	sShot.similarity.sca*(ScalarType)tr.track.sca;
+	shot.Similarity().rot =   sShot.Similarity().rot*trM;
+	shot.Similarity().sca	=	sShot.Similarity().sca*(ScalarType)tr.track.sca;
 }
 };
 #endif
