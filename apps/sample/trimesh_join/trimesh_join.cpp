@@ -57,7 +57,8 @@ int main(int argc,char **argv )
   printf("Output mesh vn:%i fn:%i\n",ml.vn,ml.fn);
 	
   tri::io::ExporterPLY<MyMesh>::Save(ml,"joined.ply");
-  tri::Clean<MyMesh>::RemoveDuplicateVertex(ml);
+  int dv=tri::Clean<MyMesh>::RemoveDuplicateVertex(ml); 
+  printf("Removed %i duplicated vertices\n",dv);
   tri::io::ExporterPLY<MyMesh>::Save(ml,"joined_unif.ply");
 }
 
