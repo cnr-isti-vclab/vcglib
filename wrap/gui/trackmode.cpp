@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2005/07/15 16:39:30  callieri
+in SphereMode::Hit added a check on the sphere intersection, if no intersection, calculating distance could generate a NAN exception
+
 Revision 1.13  2005/06/29 15:22:26  callieri
 changed the name of some intersection functions to avoid ambiguity
 
@@ -115,10 +118,11 @@ Point3f TrackMode::HitViewPlane(Trackball *tb, const Point3f &p) {
 void SphereMode::Apply(Trackball *tb, Point3f new_point) {
   Point3f hitOld=Hit(tb, tb->last_point);
   Point3f hitNew=Hit(tb, new_point);
- // tb->Hits.push_back(hitNew);
+  tb->Hits.push_back(hitNew);
 
-  Point3f center = tb->track.tra+tb->center;
-  Point3f axis = (hitNew- center)^(hitOld- center); 
+  // Point3f center = tb->track.tra+tb->center; // original 2006 01 12 
+  Point3f center = tb->center;
+  Point3f axis = (hitNew - center)^(hitOld- center); 
 
   //  Figure out how much to rotate around that axis.
   //float phi=Angle((hitNew- tb->center),(hitOld- tb->center));
@@ -290,9 +294,9 @@ Point3f SphereMode::Hit(Trackball *tb, const Point3f &p) {
 void PlaneMode::Apply(Trackball *tb, Point3f new_point) {
 	Point3f hitOld = HitViewPlane(tb, tb->last_point);
 	Point3f hitNew = HitViewPlane(tb, new_point);
-	Matrix44f m;     tb->track.rot.ToMatrix(m);
-
-	tb->track.tra = tb->last_track.tra + Inverse(m)*Point3f(hitNew- hitOld);
+	Matrix44f m;     tb->track.rot.ToMatrix(m); 
+	//tb->track.tra = tb->last_track.tra + Inverse(m)*Point3f(hitNew- hitOld);// orig 2006 01 12
+	tb->track.tra = tb->last_track.tra + Inverse(m)*Point3f(hitNew- hitOld)/tb->track.sca;;
 }
 
 
