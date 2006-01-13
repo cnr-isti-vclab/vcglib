@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/12/01 00:58:56  cignoni
+Added and removed typenames for gcc compiling...
+
 Revision 1.4  2004/10/28 00:52:45  cignoni
 Better Doxygen documentation
 
@@ -60,14 +63,14 @@ template <class SaveMeshType>
 class ExporterSTL
 {
 public:
-static bool Save(SaveMeshType &m, const char * filename , bool binary =true, const char *objectname=0)
+static int Save(SaveMeshType &m, const char * filename , bool binary =true, const char *objectname=0)
 {
   typedef typename SaveMeshType::FaceIterator FaceIterator;
 	FILE *fp;
 
 	fp = fopen(filename,"wb");
 	if(fp==0)
-		return false;
+		return 1;
 
 	if(binary)
 	{
@@ -119,6 +122,20 @@ static bool Save(SaveMeshType &m, const char * filename , bool binary =true, con
 	fclose(fp);
 	return true;
 }
+static const char *ErrorMsg(int error)
+{
+  static std::vector<std::string> stl_error_msg;
+  if(stl_error_msg.empty())
+  {
+    stl_error_msg.resize(2 );
+    stl_error_msg[0]="No errors";
+	  stl_error_msg[1]="Can't open file";
+    }
+
+  if(error>1 || error<0) return "Unknown error";
+  else return stl_error_msg[error].c_str();
+};
+
 }; // end class
 
 } // end Namespace tri

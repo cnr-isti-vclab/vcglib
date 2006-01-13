@@ -41,7 +41,7 @@ public:
     /*
        Prima versione da rivedere e ottimizzare, ma compatibile con Autocad.	
     */
-	static bool Save(SaveMeshType &m, const char * filename)
+	static int Save(SaveMeshType &m, const char * filename)
 	{
 		FILE * o = fopen(filename,"w");
 		if(o==NULL)	return false;
@@ -82,11 +82,24 @@ public:
 		fprintf(o,"0\n");
 		fprintf(o,"EOF\n");
 		fclose(o);
-		return true;
+		return 0;
 
 	}
 
-	
+	    static const char *ErrorMsg(int error)
+        {
+          static std::vector<std::string> dxf_error_msg;
+          if(dxf_error_msg.empty())
+          {
+            dxf_error_msg.resize(2 );
+            dxf_error_msg[0]="No errors";
+	          dxf_error_msg[1]="Can't open file";
+            }
+
+          if(error>1 || error<0) return "Unknown error";
+          else return dxf_error_msg[error].c_str();
+        }
+
 
 }; // end class
 

@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/11/12 18:34:17  cignoni
+Initial Commit
+
 
 ****************************************************************************/
 
@@ -68,14 +71,19 @@ static bool FileExtension(std::string filename,  std::string extension)
   std::string end=filename.substr(filename.length()-extension.length(),extension.length());
   return end==extension;
 }
-
 // Open Mesh
 static int Save(OpenMeshType &m, const char *filename, CallBackPos *cb=0)
+{
+ return Save(m,filename,0,cb);
+}
+
+// Open Mesh
+static int Save(OpenMeshType &m, const char *filename, const int mask, CallBackPos *cb=0)
 {
   int err;
   if(FileExtension(filename,"ply"))
   {
-    err = ExporterPLY<OpenMeshType>::Save(m,filename);
+    err = ExporterPLY<OpenMeshType>::Save(m,filename,mask);
     LastType()=KT_PLY;
   }
   else if(FileExtension(filename,"stl"))

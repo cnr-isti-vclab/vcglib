@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2006/01/10 13:20:42  cignoni
+Changed ply::PlyMask to io::Mask
+
 Revision 1.11  2005/11/23 15:48:25  pietroni
 changed shot::similarity to shot::Similarity() and shot::camera to shot::Camera()
 
@@ -114,20 +117,20 @@ typedef typename SaveMeshType::FacePointer FacePointer;
 typedef typename SaveMeshType::VertexIterator VertexIterator;
 typedef typename SaveMeshType::FaceIterator FaceIterator;
 
-static bool Save(SaveMeshType &m, const char * filename, bool binary=true)
+static int Save(SaveMeshType &m, const char * filename, bool binary=true)
 {
   PlyInfo pi;
   return Save(m,filename,binary,pi);
 }
 
-static bool Save(SaveMeshType &m,  const char * filename, int savemask )
+static int Save(SaveMeshType &m,  const char * filename, int savemask )
 {
 	PlyInfo pi;
   pi.mask=savemask;
   return Save(m,filename,true,pi);
 }
 
-static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &pi )	// V1.0
+static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &pi )	// V1.0
 {
 	FILE * fpout;
 	int i;
@@ -155,12 +158,12 @@ static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &
 
 	if( pi.mask & Mask::IOM_WEDGTEXCOORD )
 	{
-		//const char * TFILE = "TextureFile";
+		const char * TFILE = "TextureFile";
 
-		//for(i=0;i<textures.size();++i)
-		//	fprintf(fpout,"comment %s %s\n", TFILE, (const char *)(textures[i]) );
+		for(i=0;i<m.textures.size();++i)
+			fprintf(fpout,"comment %s %s\n", TFILE, (const char *)(m.textures[i].c_str()) );
 
-		//if(textures.size()>1 && (HasPerWedgeTexture() || HasPerVertexTexture())) multit = true;
+		if(m.textures.size()>1 && (m.HasPerWedgeTexture() || m.HasPerVertexTexture())) multit = true;
 	}
 
 	if( (pi.mask & Mask::IOM_CAMERA) && m.shot.IsValid())
@@ -242,7 +245,8 @@ static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &
 		);
 	}
 
-	if(  m.HasPerVertexTexture() || m.HasPerWedgeTexture()  )
+	if( ( m.HasPerVertexTexture() && pi.mask & Mask::IOM_VERTTEXCOORD ) ||
+	    ( m.HasPerWedgeTexture() && pi.mask & Mask::IOM_WEDGTEXCOORD ) )
 	{
 		fprintf(fpout,
 			"property list uchar float texcoord\n"
@@ -603,6 +607,38 @@ std::vector<int> FlagV;
 	return 0;
 }
 
+static const char *ErrorMsg(int error)
+{
+  static std::vector<std::string> ply_error_msg;
+  if(ply_error_msg.empty())
+  {
+    ply_error_msg.resize(PlyInfo::E_MAXPLYINFOERRORS );
+    ply_error_msg[ply::E_NOERROR				]="No errors";
+	  ply_error_msg[ply::E_CANTOPEN				]="Can't open file";
+    ply_error_msg[ply::E_NOTHEADER ]="Header not found";
+	  ply_error_msg[ply::E_UNESPECTEDEOF	]="Eof in header";
+	  ply_error_msg[ply::E_NOFORMAT				]="Format not found";
+	  ply_error_msg[ply::E_SYNTAX				]="Syntax error on header";
+	  ply_error_msg[ply::E_PROPOUTOFELEMENT]="Property without element";
+	  ply_error_msg[ply::E_BADTYPENAME		]="Bad type name";
+	  ply_error_msg[ply::E_ELEMNOTFOUND		]="Element not found";
+	  ply_error_msg[ply::E_PROPNOTFOUND		]="Property not found";
+	  ply_error_msg[ply::E_BADTYPE				]="Bad type on addtoread";
+	  ply_error_msg[ply::E_INCOMPATIBLETYPE]="Incompatible type";
+	  ply_error_msg[ply::E_BADCAST				]="Bad cast";
+
+    ply_error_msg[PlyInfo::E_NO_VERTEX      ]="No vertex field found";
+    ply_error_msg[PlyInfo::E_NO_FACE        ]="No face field found";
+	  ply_error_msg[PlyInfo::E_SHORTFILE      ]="Unespected eof";
+	  ply_error_msg[PlyInfo::E_NO_3VERTINFACE ]="Face with more than 3 vertices";
+	  ply_error_msg[PlyInfo::E_BAD_VERT_INDEX ]="Bad vertex index in face";
+	  ply_error_msg[PlyInfo::E_NO_6TCOORD     ]="Face with no 6 texture coordinates";
+	  ply_error_msg[PlyInfo::E_DIFFER_COLORS  ]="Number of color differ from vertices";
+  }
+
+  if(error>PlyInfo::E_MAXPLYINFOERRORS || error<0) return "Unknown error";
+  else return ply_error_msg[error].c_str();
+};
 
 
 

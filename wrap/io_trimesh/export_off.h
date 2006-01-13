@@ -49,7 +49,7 @@ namespace vcg {
 				typedef typename SaveMeshType::VertexIterator VertexIterator;
 				typedef typename SaveMeshType::FaceIterator FaceIterator;
 
-				static bool Save(SaveMeshType &m, const char * filename )
+				static int Save(SaveMeshType &m, const char * filename )
 				{
 					vcg::face::Pos<FaceType> he;
 					vcg::face::Pos<FaceType> hei;
@@ -167,6 +167,21 @@ namespace vcg {
 
 					return 0;
 				}
+
+        static const char *ErrorMsg(int error)
+        {
+          static std::vector<std::string> off_error_msg;
+          if(off_error_msg.empty())
+          {
+            off_error_msg.resize(2 );
+            off_error_msg[0]="No errors";
+	          off_error_msg[1]="Can't open file";
+            }
+
+          if(error>1 || error<0) return "Unknown error";
+          else return off_error_msg[error].c_str();
+        }
+
 			}; // end class
 		} // end namespace tri
 	} // end namespace io
