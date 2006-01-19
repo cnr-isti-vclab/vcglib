@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/10/03 16:18:15  spinelli
+add template parameter for spatialindexing struction
+
 Revision 1.6  2005/05/30 09:11:20  ganovelli
 header added, error in include
 
@@ -37,6 +40,7 @@ added vcg header
 ****************************************************************************/
 
 #include<vector>
+#include <algorithm>
 #include<vcg/space/point3.h>
 #include<vcg/space/plane3.h>
 #include<vcg/space/segment3.h>
@@ -80,7 +84,7 @@ bool Intersect(   GridType & grid,Plane3<ScalarType> plane, std::vector<typename
 							seg.P1()[axis1] = grid.bbox.min[axis1]+ (j+0.01) * grid.voxel[axis1];
 							if ( Intersection(pl,seg,p))
 								{
-									pi[axis] =	min(max(0,(int)floor((p[axis ]-grid.bbox.min[axis])/grid.voxel[axis])),grid.siz[axis]);
+									pi[axis] =	std::min(std::max(0,(int)floor((p[axis ]-grid.bbox.min[axis])/grid.voxel[axis])),grid.siz[axis]);
 									pi[axis0] = i;
 									pi[axis1] = j;
 									grid.Grid(pi,axis,cells);
