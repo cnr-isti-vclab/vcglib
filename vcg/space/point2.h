@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/10/15 19:11:49  m_di_benedetto
+Corrected return type in Angle() and protected member access in unary operator -
+
 Revision 1.6  2005/03/18 16:34:42  fiorin
 minor changes to comply gcc compiler
 
@@ -306,7 +309,7 @@ inline Point2<T> operator - ( Point2<T> const & p ){
 
 template <class T>
 inline Point2<T> operator * ( const T s, Point2<T> const & p ){
-    return Point2<T>( p._v[0] * s, p._v[1] * s  );
+    return Point2<T>( p[0] * s, p[1] * s  );
 }
 
 template <class T>
@@ -331,7 +334,7 @@ inline T Distance( Point2<T> const & p1,Point2<T> const & p2 ){
 
 template <class T>
 inline T SquaredDistance( Point2<T> const & p1,Point2<T> const & p2 ){
-    return Norm2(p1-p2);
+    return SquaredNorm(p1-p2);
 }
 
 typedef Point2<short>  Point2s;
