@@ -25,6 +25,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/11/30 09:57:13  m_di_benedetto
+Added methods to flag visibility.
+
 Revision 1.7  2005/10/26 11:42:03  m_di_benedetto
 Added PASS_THROUGH flags.
 
@@ -173,6 +176,7 @@ protected:
 		unsigned char newMask = 0x0;
 		bool fullInside = true;
 
+		node->Flags() &= ~(1 << 25);
 		node->Flags() &= ~(FC_PARTIALLY_VISIBLE_BIT | FC_FULLY_VISIBLE_BIT | (0x03 << FC_PASS_THROUGH_FIRST_BIT));
 
 		if ((k & inMask) != 0) {
@@ -230,6 +234,8 @@ protected:
 
 		node->Flags() |= FC_PARTIALLY_VISIBLE_BIT;
 
+		//ClassType::NodeVsFrustum(node->children[0], viewerPosition, f, newMask, minNodeObjectsCount, nodeApply);
+		//ClassType::NodeVsFrustum(node->children[1], viewerPosition, f, newMask, minNodeObjectsCount, nodeApply);
 		ScalarType dt;
 		if (node->splitAxis == 0) {
 			dt = viewerPosition[0] - node->boxCenter[0];
@@ -254,6 +260,7 @@ protected:
 		const bool c1 = (node->children[1] != 0) && ClassType::IsVisible(node->children[1]);
 
 		if (c0 != c1) {
+				node->Flags() &= ~(0x03 << FC_PASS_THROUGH_FIRST_BIT);
 			if (c0) {
 				node->Flags() |= (0x01 << FC_PASS_THROUGH_FIRST_BIT);
 			}
