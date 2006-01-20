@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2005/11/14 10:28:25  cignoni
+Changed Invert -> FastInvert for the function based on the maple expansion
+
 Revision 1.11  2005/10/13 15:45:23  ponchio
 Changed a Zero in SetZero in WeightedCrossCovariance() (again)
 
@@ -171,6 +174,15 @@ public:
 			a[i] -= m.a[i];
 		return *this;
 	}
+	
+	/// Modificatore somma per matrici 3x3
+	Matrix33 & operator -= ( const Matrix33Diag<S>  &p )
+	{
+		a[0] -= p[0];
+		a[4] -= p[1];
+		a[8] -= p[2];
+		return *this;
+	}
 
 	/// Modificatore divisione per scalare
 	Matrix33 & operator /= ( const S &s )
@@ -253,7 +265,36 @@ public:
 
 		return r;
 	}
+	
+	/// Operatore sottrazione di matrici 3x3 con matrici diagonali
+	Matrix33  operator - ( const Matrix33Diag<S>  &p )
+	{
+		Matrix33<S> r=a;
+		r[0][0] -= p[0];
+		r[1][1] -= p[1];
+		r[2][2] -= p[2];
+		return r;
+	}
 
+	/// Operatore sottrazione per matrici 3x3
+	Matrix33  operator + ( const Matrix33 &m )
+	{
+		Matrix33<S> r;
+		for(int i=0;i<9;++i)
+			r.a[i] = a[i] + m.a[i];
+
+		return r;
+	}
+	
+	/// Operatore addizione di matrici 3x3 con matrici diagonali
+	Matrix33  operator + ( const Matrix33Diag<S>  &p )
+	{
+		Matrix33<S> r=a;
+		r.a[0][0] += p[0];
+		r.a[1][1] += p[1];
+		r.a[2][2] += p[2];
+		return r;
+	}
 
 	/** Operatore per il prodotto matrice-vettore.
 		@param v A point in $R^{3}$
