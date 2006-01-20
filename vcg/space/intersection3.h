@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2005/10/03 16:07:50  ponchio
+Changed order of functions intersection_line_box and
+intersectuion_ray_box
+
 Revision 1.19  2005/09/30 13:11:39  pietroni
 corrected 1 compiling error on Ray_Box_Intersection function
 
@@ -455,6 +459,29 @@ bool Intersection_Ray_Box( const Box3<T> & box, const Ray3<T> & r, Point3<T> & c
 	l.SetOrigin(r.Origin());
 	l.SetDirection(r.Direction());
 	return(Intersection_Line_Box<T>(box,l,coord));
+}	
+
+// segment-box
+template<class T>
+bool Intersection_Segment_Box( const Box3<T> & box, const Segment3<T> & s, Point3<T> & coord )
+{
+	//as first perform box-box intersection
+	Box3<T> test;
+	test.Add(s.P0());
+	test.Add(s.P1());
+	if (!test.Collide(box))
+		return false;
+	else
+	{
+		Line3<T> l;
+		Point3<T> dir=s.P1()-s.P0();
+		dir.Normalize();
+		l.SetOrigin(s.P0());
+		l.SetDirection(dir);
+		if(Intersection_Line_Box<T>(box,l,coord))
+			return (test.IsIn(coord));
+		return false;
+	}
 }	
 
 
