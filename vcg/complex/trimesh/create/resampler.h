@@ -4,7 +4,7 @@
 #include <vcg/complex/trimesh/update/normal.h>
 #include <vcg/complex/trimesh/update/bounding.h>
 #include <vcg/complex/trimesh/update/edges.h>
-#include <vcg/complex/trimesh/create/extended_marching_cubes.h>
+//#include <vcg/complex/trimesh/create/extended_marching_cubes.h>
 #include <vcg/complex/trimesh/create/marching_cubes.h>
 #include <vcg/space/index/grid_static_ptr.h>
 #include <vcg/complex/trimesh/closest.h>
@@ -15,12 +15,6 @@
 namespace vcg {
 namespace trimesh {
 
-class RES
-{
-public:
-
-	enum MarchMode  {MMarchingCubes,MExtendedMarchingCubes} ;
-};
 
 /** \addtogroup trimesh */
 /*@{*/
@@ -29,11 +23,10 @@ public:
     This is class reasmpling a mesh using marching cubes methods
 		@param OLD_MESH_TYPE (Template Parameter) Specifies the type of mesh to be resampled
 		@param NEW_MESH_TYPE (Template Parameter) Specifies the type of output mesh.
-		@param MARCHING_ALGORITHM (Template Parameter) Specifies the type of marching cube algorithm (extended or not).
  */
 
 template <class OLD_MESH_TYPE,class NEW_MESH_TYPE>
-class Resampler:RES
+class Resampler
 {
 	typedef typename OLD_MESH_TYPE Old_Mesh;
 	typedef typename NEW_MESH_TYPE New_Mesh;
@@ -620,10 +613,8 @@ public:
 typedef typename  Walker< Old_Mesh,New_Mesh> MyWalker;
 
 typedef typename vcg::tri::MarchingCubes<New_Mesh, MyWalker> MarchingCubes;
-typedef typename vcg::tri::ExtendedMarchingCubes<New_Mesh, MyWalker> ExtendedMarchingCubes;
 
 ///resample the mesh using marching cube algorithm ,the accuracy is the dimension of one cell the parameter
-template <RES::MarchMode mm>
 static void Resample(Old_Mesh &old_mesh,New_Mesh &new_mesh,vcg::Point3<int> accuracy,float max_dist)
 {
 	new_mesh.Clear();
@@ -666,16 +657,16 @@ static void Resample(Old_Mesh &old_mesh,New_Mesh &new_mesh,vcg::Point3<int> accu
 	/*new_mesh.vert.reserve(old_mesh.vn*2);
 	new_mesh.face.reserve(old_mesh.fn*2);*/
 
-	if (mm==MMarchingCubes)
-	{
+	/*if (mm==MMarchingCubes)
+	{*/
 		MarchingCubes mc(new_mesh, walker);
 		walker.BuildMesh<MarchingCubes>(old_mesh,new_mesh,mc);
-	}
-	else if (mm==MExtendedMarchingCubes)
+	/*}*/
+	/*else if (mm==MExtendedMarchingCubes)
 	{
 		ExtendedMarchingCubes mc(new_mesh, walker,30);
 		walker.BuildMesh<ExtendedMarchingCubes>(old_mesh,new_mesh,mc);
-	}
+	}*/
 	
 	
 	
