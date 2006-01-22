@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.18  2005/12/12 16:53:43  callieri
+corrected UnProject, it's necessary also a ZDepth value to perform inverse projection
+
 Revision 1.17  2005/12/07 10:57:52  callieri
 added commodity function ProjectWorldtoViewport() to obtain directly pixel indices without calling two separate function of two different objects
 
@@ -104,7 +107,7 @@ protected:
 
 public:
 
-	Shot( Camera<S> & c):camera(c){similarity.SetIdentity();}
+	Shot( Camera<S> & c):camera(c){similarity.SetIdentity();flags=0;}
 	Shot():camera(*new vcg::Camera<S>()){similarity.SetIdentity();flags|=CREATED_EMPTY;}
 	~Shot(){if(flags&CREATED_EMPTY) delete &camera;}
 
