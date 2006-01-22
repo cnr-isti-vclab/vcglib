@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.29  2006/01/11 15:40:14  cignoni
+Added RemoveDegenerateFace and added its automatic invocation at the end of RemoveDuplicateVertex
+
 Revision 1.28  2006/01/02 09:49:36  cignoni
 Added some missing std::
 
@@ -155,6 +158,7 @@ namespace vcg {
 			typedef typename MeshType::FacePointer    FacePointer;
 			typedef typename MeshType::FaceIterator   FaceIterator;
 			typedef typename MeshType::FaceContainer  FaceContainer;
+			typedef typename Box3<ScalarType>  Box3Type;
 
 			typedef GridStaticPtr<FaceType, ScalarType > TriMeshGrid;
 			typedef Point3<ScalarType> Point3x;
@@ -304,7 +308,7 @@ namespace vcg {
 				int count_fd = 0;
 
 				for(fi=m.face.begin(); fi!=m.face.end();++fi)
-					if(Area<FaceType>(*fi) <= epsilon)
+					if(DoubleArea<FaceType>(*fi) <= epsilon)
 					{
 						count_fd++;
 						fi->SetD();
@@ -312,6 +316,39 @@ namespace vcg {
 					}
 				return count_fd;
 			}
+
+      /** This function removes that are not referenced by any face. The function updates the vn counter.
+			@param m The mesh
+			@return The number of removed vertices
+			*/
+
+
+			static int ClipWithBox( MeshType & m, Box3Type &bb) 
+      {
+        FaceIterator fi;
+        VertexIterator vi;
+
+				for (vi = m.vert.begin(); vi != m.vert.end(); ++vi) if(!(*vi).IsD())
+        {
+          if(!bb.IsIn((*vi).P()) )
+          {
+            (*vi).SetD();
+            --m.vn;
+          }
+        }
+				for (fi = m.face.begin(); fi != m.face.end(); ++fi) if(!(*vi).IsD())
+        {
+          if( (*fi).V(0)->IsD() || 
+              (*fi).V(1)->IsD() || 
+              (*fi).V(2)->IsD() )
+                {
+                  (*fi).SetD();
+                   --m.fn;
+                }
+        }
+        return m.vn;
+      }
+
 
 			/**
 			 * Check if the mesh is a manifold.
