@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/09/28 19:35:06  m_di_benedetto
+Added class PointDistanceFunctor.
+
 Revision 1.8  2005/09/14 12:58:44  pietroni
 changed min calls to Min<ScalarType> of math.h of vcglib
 
@@ -140,7 +143,7 @@ namespace vcg {
 			// vicini (come prodotto vettore)
 			// Nota: si potrebbe rendere un pochino piu' veloce sostituendo Area()
 			// con il prodotto vettore dei due edge in 2d lungo il piano migliore.
-			if( (b=vcg::math::Min<ScalarType>(b0,vcg::math::Min<ScalarType>(b1,b2))) < EPSILON*Area(f)) 
+			if( (b=vcg::math::Min<ScalarType>(b0,vcg::math::Min<ScalarType>(b1,b2))) < EPSILON*DoubleArea(f)) 
       {
 				ScalarType bt;
 				if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
@@ -174,7 +177,7 @@ namespace vcg {
 				if(dist>b2) { dist = b2; return true; }
 				else return false;
 			}
-			if( (b=vcg::math::Min<ScalarType>(b0,vcg::math::Min<ScalarType>(b1,b2))) < EPSILON*Area(f)) 
+			if( (b=vcg::math::Min<ScalarType>(b0,vcg::math::Min<ScalarType>(b1,b2))) < EPSILON*DoubleArea(f)) 
       {
 				ScalarType bt;
 				if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
@@ -208,7 +211,7 @@ namespace vcg {
 				if(dist>b2) { dist = b2; return true; }
 				else return false;
 			}
-			if( (b=vcg::math::Min<ScalarType>(b0,vcg::math::Min<ScalarType>(b1,b2))) < EPSILON*Area(f)) 
+			if( (b=vcg::math::Min<ScalarType>(b0,vcg::math::Min<ScalarType>(b1,b2))) < EPSILON*DoubleArea(f)) 
       {
 				ScalarType bt;
 				if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);

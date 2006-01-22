@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2005/11/12 06:44:29  cignoni
+Changed GetClosest -> GetClosestFace
+
 Revision 1.19  2005/10/02 23:11:50  cignoni
 Changed the core for distance computation.
 Current version uses the lib flexible search structures.
@@ -274,9 +277,9 @@ inline double Sampling<MetroMesh>::ComputeMeshArea(MetroMesh & mesh)
 
     for(face=mesh.face.begin(); face != mesh.face.end(); face++)
 			if(!(*face).IsD())
-        area += face->Area();
+        area += face->DoubleArea();
 
-    return area;
+    return area/2.0;
 }
 
 template <class MetroMesh>
@@ -455,7 +458,7 @@ void Sampling<MetroMesh>::MontecarloFaceSampling()
 		if(!(*fi).IsD())
     {
         // compute # samples in the current face.
-        n_samples_decimal += fi->Area() * n_samples_per_area_unit;
+        n_samples_decimal += 0.5*fi->DoubleArea() * n_samples_per_area_unit;
         n_samples          = (int) n_samples_decimal;
 
         // for every sample p_i in T...
@@ -529,7 +532,7 @@ void Sampling<MetroMesh>::SubdivFaceSampling()
     for(fi=S1.face.begin(); fi != S1.face.end(); fi++)
     {
         // compute # samples in the current face.
-        n_samples_decimal += fi->Area() * n_samples_per_area_unit;
+        n_samples_decimal += 0.5*fi->DoubleArea() * n_samples_per_area_unit;
         n_samples          = (int) n_samples_decimal;
         if(n_samples)
         {
@@ -578,7 +581,7 @@ void Sampling<MetroMesh>::SimilarFaceSampling()
     for(fi=S1.face.begin(); fi != S1.face.end(); fi++)
     {
         // compute # samples in the current face.
-        n_samples_decimal += fi->Area() * n_samples_per_area_unit;
+        n_samples_decimal += 0.5*fi->DoubleArea() * n_samples_per_area_unit;
         n_samples          = (int) n_samples_decimal;
         if(n_samples)
         {
