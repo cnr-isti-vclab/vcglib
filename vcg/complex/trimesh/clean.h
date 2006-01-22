@@ -24,6 +24,10 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.30  2006/01/22 10:07:42  cignoni
+Corrected use of Area with the unambiguous DoubleArea
+Added ClipWithBox function
+
 Revision 1.29  2006/01/11 15:40:14  cignoni
 Added RemoveDegenerateFace and added its automatic invocation at the end of RemoveDuplicateVertex
 
@@ -336,7 +340,7 @@ namespace vcg {
             --m.vn;
           }
         }
-				for (fi = m.face.begin(); fi != m.face.end(); ++fi) if(!(*vi).IsD())
+				for (fi = m.face.begin(); fi != m.face.end(); ++fi) if(!(*fi).IsD())
         {
           if( (*fi).V(0)->IsD() || 
               (*fi).V(1)->IsD() || 
