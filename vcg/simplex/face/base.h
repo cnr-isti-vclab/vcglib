@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.36  2005/12/16 11:42:23  corsini
+Add some user bit
+
 Revision 1.35  2005/12/01 23:54:29  cignoni
 Added HasFlags
 
@@ -1154,7 +1157,12 @@ const ScalarType EPSILON = ScalarType(0.000001);
 
 
 /// Return the DOUBLE of the area of the face
-ScalarType Area() const
+// NOTE the old Area function has been removed to intentionally 
+// cause compiling error that will help people to check their code...
+// A some  people used Area assuming that it returns the double and some not. 
+// So please check your codes!!!
+// And please DO NOT Insert any Area named function here!
+ScalarType DoubleArea() const
 {
 	return ( (V(1)->cP() - V(0)->cP()) ^ (V(2)->cP() - V(0)->P()) ).Norm();
 }

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/09/23 14:18:27  ganovelli
+added constructor
+
 Revision 1.4  2005/04/14 11:35:09  ponchio
 *** empty log message ***
 
@@ -251,9 +254,15 @@ Point3<typename TriangleType::ScalarType> NormalizedNormal(const TriangleType &t
 	return (( t.P(1) - t.P(0)) ^ (t.P(2) - t.P(0))).Normalize();
 }
 
-/// Return the area of the triangle
+/// Return the Double of area of the triangle
+// NOTE the old Area function has been removed to intentionally 
+// cause compiling error that will help people to check their code...
+// A some  people used Area assuming that it returns the double and some not. 
+// So please check your codes!!!
+// And please DO NOT Insert any Area named function here!
+
 template<class TriangleType>
-typename TriangleType::ScalarType Area(const TriangleType &t) 
+typename TriangleType::ScalarType DoubleArea(const TriangleType &t) 
 {
 	return Norm( (t.P(1) - t.P(0)) ^ (t.P(2) - t.P(0)) );
 }
