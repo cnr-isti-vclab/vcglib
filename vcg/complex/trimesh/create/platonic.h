@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/07/11 13:16:34  cignoni
+small gcc-related compiling issues (typenames,ending cr, initialization order)
+
 Revision 1.4  2005/07/01 11:17:06  cignoni
 Added option of passing a base mesh to Sphere for spherifying it
 
@@ -611,6 +614,44 @@ void Build( MeshType & in, const V & v, const F & f)
 		in.face.push_back(ft);
 	}
 }
+
+
+template <class MeshType>
+void Grid(MeshType & in, int w, int h, float wl, float hl, float *data)
+{
+ typedef typename MeshType::CoordType CoordType;
+ typedef typename MeshType::VertexPointer  VertexPointer;
+ typedef typename MeshType::VertexIterator VertexIterator;
+ typedef typename MeshType::FaceIterator   FaceIterator;
+
+  in.Clear();
+	Allocator<MeshType>::AddVertices(in,w*h);
+  Allocator<MeshType>::AddFaces(in,(w-1)*(h-1)*2);
+
+  for(int i=0;i<h;++i)
+    for(int j=0;j<w;++j)
+      in.vert[i*w+j].P()=CoordType ( i, j, data[i*w+j]);
+  
+//   i+0,j+0 -- i+0,j+1
+//      |   \     |
+//      |    \    |
+//      |     \   |
+//      |      \  |
+//   i+1,j+0 -- i+1,j+1
+//
+  for(int i=0;i<h-1;++i)
+    for(int j=0;j<w-1;++j)
+    {
+      in.face[2*(i*(w-1)+j)+0].V(0) = &(in.vert[(i+0)*w+j+0]);
+      in.face[2*(i*(w-1)+j)+0].V(1) = &(in.vert[(i+1)*w+j+1]);
+      in.face[2*(i*(w-1)+j)+0].V(2) = &(in.vert[(i+0)*w+j+1]);
+  
+      in.face[2*(i*(w-1)+j)+1].V(0) = &(in.vert[(i+0)*w+j+0]);
+      in.face[2*(i*(w-1)+j)+1].V(1) = &(in.vert[(i+1)*w+j+0]);
+      in.face[2*(i*(w-1)+j)+1].V(2) = &(in.vert[(i+1)*w+j+1]);
+    }
+}
+
 //@}
 
 } // End Namespace TriMesh
