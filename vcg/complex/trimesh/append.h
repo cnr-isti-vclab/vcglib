@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2006/01/11 15:45:21  cignoni
+Initial Release
+
 ****************************************************************************/
 
 
@@ -92,7 +95,7 @@ static void ImportFace(MeshLeft &ml, MeshRight &mr, FaceLeft &fl, FaceRight &fr,
 static void Mesh(MeshLeft& ml, MeshRight& mr, const bool selected = false)
 {
  // remap[i] keep where the position of where the i-th vertex of meshright has landed in meshleft
-  std::vector<int> remap(mr.vn,-1); 
+  std::vector<int> remap(mr.vert.size(),-1); 
  
  // first loop to find the referenced vertices and copy them preparing the remap vector
  FaceIteratorRight fi;
@@ -127,7 +130,7 @@ static void Mesh(MeshLeft& ml, MeshRight& mr, const bool selected = false)
 static void Subset(MeshLeft& ml, std::vector<FacePointerRight> & vfpr)
 {
  // remap[i] keep where the position of where the i-th vertex of meshright has landed in meshleft
-  std::vector<int> remap(mr.vn,-1);
+  std::vector<int> remap(mr.vert.size(),-1);
  
  // first loop to find the referenced vertices and copy them preparing the remap vector
  vector<FacePointerRight>::iterator  fi;
