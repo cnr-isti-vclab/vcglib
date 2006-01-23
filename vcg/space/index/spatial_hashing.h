@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2005/11/23 15:55:35  pietroni
+1 warning corrected
+
 Revision 1.14  2005/11/07 14:15:36  pietroni
 added dynamic spatial hashing class for dynamic updating of entries (and relative functions)
 
@@ -77,9 +80,9 @@ added vcg header
 #define VCGLIB_SPATIAL_HASHING
 
 
-#define P0 73856093
-#define P1 19349663
-#define P2 83492791
+#define HASH_P0 73856093
+#define HASH_P1 19349663
+#define HASH_P2 83492791
 
 #include <vcg/space/index/grid_util.h>
 #include <vcg/space/index/grid_closest.h>
@@ -263,7 +266,7 @@ namespace vcg{
 		// hashing
 		const int Hash(Point3i p) const
 		{
-			return ((p.V(0)*P0 ^ p.V(1)*P1 ^ p.V(2)*P2)%HashSpace);
+			return ((p.V(0)*HASH_P0 ^ p.V(1)*HASH_P1 ^ p.V(2)*HASH_P2)%HashSpace);
 		}
 
 
@@ -482,8 +485,8 @@ namespace vcg{
 
 }// end namespace
 
-#undef P0
-#undef P1
-#undef P2
+#undef HASH_P0
+#undef HASH_P1
+#undef HASH_P2
 
 #endif
