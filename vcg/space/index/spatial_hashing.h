@@ -24,6 +24,10 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2006/01/23 15:26:31  ponchio
+P1 --> HASH_P1
+Old definition was conflicting with functions in segment.h
+
 Revision 1.15  2005/11/23 15:55:35  pietroni
 1 warning corrected
 
@@ -90,11 +94,16 @@ added vcg header
 #include <vector>
 #include <algorithm>
 #ifdef WIN32
-#include <hash_map>
-#define STDEXT stdext
+ #ifndef __MINGW32__
+  #include <hash_map>
+  #define STDEXT stdext
+ #else
+  #include <ext/hash_map>
+  #define STDEXT __gnu_cxx
+ #endif
 #else
-#include <ext/hash_map>
-#define STDEXT __gnu_cxx
+ #include <ext/hash_map>
+ #define STDEXT __gnu_cxx
 #endif
 
 
@@ -112,12 +121,14 @@ namespace vcg{
 
 	public:
 
-		typedef OBJTYPE ObjType;
+		typedef OBJTYPE ObjType;        
 		typedef ObjType* ObjPtr;
 		typedef typename ObjType::ScalarType ScalarType;
 		typedef Point3<ScalarType> CoordType;
+        typedef typename BasicGrid<OBJTYPE, FLT>::Box3x Box3x;
 
-		typedef typename SpatialHashTable<ObjType,FLT> SpatialHashType;
+//		typedef typename SpatialHashTable<ObjType,FLT> SpatialHashType;
+        typedef SpatialHashTable SpatialHashType;
 		//typedef typename SpatialHashTable<ObjType,FLT> GridType;
 
 		//type of container of pointer to object in a Cell
@@ -127,8 +138,8 @@ namespace vcg{
 		public:
 			EntryType(ObjType* sim,const int  &_tempMark)
 			{
-				first=sim;
-				second=_tempMark;
+				this->first=sim;
+				this->second=_tempMark;
 			}
 
 			ObjType& operator *(){return (*this->first);}
@@ -136,7 +147,7 @@ namespace vcg{
 
 		typedef typename std::vector<EntryType> CellContainerType;
 		typedef typename CellContainerType::iterator IteMap;
-		typedef typename EntryType* CellIterator;
+		typedef EntryType* CellIterator;
 
 		//This Class Identify the cell
 		struct Cell
@@ -300,25 +311,31 @@ namespace vcg{
 		}
 		
 		
-		/// Insert a mesh in the grid.SetBBox() function must be called before
+		/// Insert a mesh in the grid.
 		template <class OBJITER>
 			void Set(const OBJITER & _oBegin, const OBJITER & _oEnd,const Box3x &_bbox=Box3x() )
 		{
+    
 			OBJITER i;
-			Box3<FLT> b;
+			Box3x b;
+            Box3x &bbox = this->bbox;            
+            CoordType &dim = this->dim;
+            Point3i &siz = this->siz;
+            CoordType &voxel = this->voxel;
+
 			int _size=std::distance<OBJITER>(_oBegin,_oEnd);
-			if(!_bbox.IsNull()) bbox=_bbox;
+			if(!_bbox.IsNull()) this->bbox=_bbox;
 			else
 			{
 				for(i = _oBegin; i!= _oEnd; ++i)
 				{
 					(*i).GetBBox(b);
-					bbox.Add(b);
+					this->bbox.Add(b);
 				}
 				///inflate the bb calculated
 				ScalarType infl=bbox.Diag()/_size;
-				bbox.min-=vcg::Point3d(infl,infl,infl);
-				bbox.max+=vcg::Point3d(infl,infl,infl);
+				bbox.min -= CoordType(infl,infl,infl);
+				bbox.max += CoordType(infl,infl,infl);
 			}	
 			
 				dim  = bbox.max - bbox.min;
@@ -425,7 +442,7 @@ namespace vcg{
 
 		template <class OBJMARKER, class OBJPTRCONTAINER>
 			unsigned int GetInBox(OBJMARKER & _marker, 
-			const vcg::Box3<typename ScalarType> _bbox,
+            const Box3x _bbox,
 			OBJPTRCONTAINER & _objectPtrs) 
 		{
 			return(vcg::GridGetInBox<SpatialHashType,OBJMARKER,OBJPTRCONTAINER>
@@ -450,13 +467,23 @@ namespace vcg{
 	class DynamicSpatialHashTable: public SpatialHashTable<ContainerType,FLT>
 	{
 	public:
+        typedef typename SpatialHashTable<ContainerType,FLT>::CoordType CoordType;
+        typedef typename SpatialHashTable<ContainerType,FLT>::ObjType ObjType;
+        typedef typename SpatialHashTable<ContainerType,FLT>::ObjPtr ObjPtr;
+        typedef typename SpatialHashTable<ContainerType,FLT>::Box3x Box3x;
+        typedef typename SpatialHashTable<ContainerType,FLT>::CellIterator CellIterator;
 
-		void _UpdateHMark(ObjType* s){s->HMark()=tempMark;}
+		void _UpdateHMark(ObjType* s){ s->HMark() = this->tempMark;}
 		
 		/// create an empty spatial hash table
-		void InitEmpty(const vcg::Box3<typename ScalarType> &_bbox,vcg::Point3i grid_size)
+		void InitEmpty(const Box3x &_bbox, vcg::Point3i grid_size)
 		{
-			Box3<FLT> b;
+			Box3x b;
+            Box3x &bbox = this->bbox;            
+            CoordType &dim = this->dim;
+            Point3i &siz = this->size;
+            CoordType &voxel = this->voxel;
+
 			assert(!_bbox.IsNull());
 			bbox=_bbox;
 			dim  = bbox.max - bbox.min;
