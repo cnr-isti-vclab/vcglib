@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.31  2006/01/22 17:06:27  cignoni
+vi/fi mismatch in ClipWithBox
+
 Revision 1.30  2006/01/22 10:07:42  cignoni
 Corrected use of Area with the unambiguous DoubleArea
 Added ClipWithBox function
@@ -162,7 +165,7 @@ namespace vcg {
 			typedef typename MeshType::FacePointer    FacePointer;
 			typedef typename MeshType::FaceIterator   FaceIterator;
 			typedef typename MeshType::FaceContainer  FaceContainer;
-			typedef typename Box3<ScalarType>  Box3Type;
+      typedef typename vcg::Box3<ScalarType>  Box3Type;
 
 			typedef GridStaticPtr<FaceType, ScalarType > TriMeshGrid;
 			typedef Point3<ScalarType> Point3x;
