@@ -2,7 +2,7 @@
 #define __VCGLIB_SPATIAL_ITERATORS
 
 #include <vector>
-//#include <vcg/space/intersection3.h>
+#include <vcg/space/intersection3.h>
 #include <vcg/space/point3.h>
 #include <vcg/space/box3.h>
 //#include <vcg/space/point4.h>
