@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/12/06 17:55:16  pietroni
+1 bug corrected
+
 Revision 1.5  2005/12/02 16:24:56  pietroni
 corrected 1 bug in Cross Prod Gradient
 
@@ -559,12 +562,12 @@ void NormalSmooth(MESH_TYPE &m,
 	//vcg::face::Pos<typename MESH_TYPE::FaceType> ep;
 	vcg::face::VFIterator<typename MESH_TYPE::FaceType> ep;
 
-
+	typedef MESH_TYPE::CoordType CoordType;
+	typedef MESH_TYPE::ScalarType ScalarType;
 	typename MESH_TYPE::FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 	{
-
-		Point3f bc=(*fi).Barycenter();
+		CoordType bc=(*fi).Barycenter();
 		for(i=0;i<3;++i)
 		{
 
@@ -583,7 +586,7 @@ void NormalSmooth(MESH_TYPE &m,
 
 		//TD[*fi]->SetV();
 		(*fi).SetS();
-		Point3f mm=Point3f(0,0,0);
+		CoordType mm=CoordType(0,0,0);
 		for(i=0;i<3;++i)
 		{
 			ep.f=(*fi).V(i)->VFp();
@@ -595,9 +598,9 @@ void NormalSmooth(MESH_TYPE &m,
 				{
 					if(sigma>0) 
 					{
-						float dd=SquaredDistance(ep.f->Barycenter(),bc);
-						float ang=Angle(ep.f->N(),(*fi).N());
-						mm+=ep.f->N()*exp(-sigma*ang*ang/dd);
+						ScalarType dd=SquaredDistance(ep.f->Barycenter(),bc);
+						ScalarType ang=Angle(ep.f->N(),(*fi).N());
+						mm+=ep.f->N()*exp(((ScalarType)-sigma)*ang*ang/dd);
 					}
 					else mm+=ep.f->N();
 					//TD[*(ep.f)]->SetV();
@@ -679,9 +682,11 @@ void FitMesh(MESH_TYPE &m,
 	//vcg::face::Pos<typename MESH_TYPE::FaceType> ep;
 	vcg::face::VFIterator<typename MESH_TYPE::FaceType> ep;
 	typename MESH_TYPE::VertexIterator vi;
+	typedef MESH_TYPE::ScalarType ScalarType;
+	typedef MESH_TYPE::CoordType CoordType;
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 	{
-		Point3f ErrGrad=Point3f(0,0,0);
+		CoordType ErrGrad=CoordType(0,0,0);
 
 		ep.f=(*vi).VFp();
 		ep.z=(*vi).VFi();
@@ -690,7 +695,7 @@ void FitMesh(MESH_TYPE &m,
 			ErrGrad+=FaceErrorGrad(ep.f->V(ep.z)->P(),ep.f->V1(ep.z)->P(),ep.f->V2(ep.z)->P(),TDF[ep.f].m);
 			++ep;
 		}
-		TDV[*vi].np=(*vi).P()-ErrGrad*lambda;					
+		TDV[*vi].np=(*vi).P()-ErrGrad*(ScalarType)lambda;					
 	}
 
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
