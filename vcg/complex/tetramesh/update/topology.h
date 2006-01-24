@@ -65,7 +65,15 @@ public:
 		vertex[0]=v0;
 		vertex[1]=v1;
 		vertex[2]=v2;
-		sort(vertex,vertex+3);
+		if(vertex[0] > vertex[1])	std::swap(vertex[0], vertex[1]);
+		if(vertex[1] > vertex[2])
+		{
+			std::swap(vertex[1], vertex[2]);
+			if(vertex[0] > vertex[1])
+			{
+				std::swap(vertex[0], vertex[1]);
+			}
+		}
 		Tr = t;
 		numface = index;
 	}
@@ -127,7 +135,7 @@ public:
 
 	inline bool operator < ( Facet const & f) const
 	{ 
-		return !(((*this)>f)&&((*this)!=f));
+		return (!((*this)>f)&&((*this)!=f));
 	}
 
 	inline bool operator <= ( Facet const & f) const
