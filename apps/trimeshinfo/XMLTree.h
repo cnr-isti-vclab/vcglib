@@ -40,9 +40,9 @@ public:
 
 	MainNode(void){node_type = MAIN_NODE;};
 	int node_type;
-	list<pair<const char*,const char*> > headers;
+	list<pair<const char* , const char* > > headers;
 
-	void addHeaders(const char* str, const char*val);
+	void addHeaders(const char* str, const char* val);
 	virtual void printNode();
 	virtual int qualifyNode();
 };
@@ -114,26 +114,19 @@ void XMLTree::setVerboseMode(bool flag)
 
 void XMLTree::initializeMain()
 {
-	
 	MainNode*	mn = new MainNode;
-	//NodeGroup* ng = new NodeGroup;
 	
-	mn->headers.push_back(pair<const char*,const char*>("protegekb",""));
+	mn->headers.push_back(pair<const char*, const char*>("protegekb", ""));
 
 	char* s1 = "http://www.w3.org/2001/XMLSchema-instance";
-	char* s2 = new(char[100]);
+	char* s2 = new char[100];
 	sprintf(s2,"\"%s\"",s1);
 	mn->addHeaders(" xmlns:xsi=", s2);
 
-	
 	s1 = "http://protege.stanford.edu/plugins/xmlbackend/protege_xml_backend.xsd";
-	s2 = new(char[100]);
 	sprintf(s2,"\"%s\"",s1);
 	mn->addHeaders(" xsi:noNamespaceSchemaLocation=", s2);
-	mn->addHeaders(" xmlns:xsi=", s2);
 	root.Sons.push_back(mn);
-
-
 }
 
 void XMLTree::finalizeMain()
