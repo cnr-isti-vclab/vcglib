@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.29  2005/12/29 12:27:35  cignoni
+Splitted IsComplexManifold in IsTwoManifoldFace and IsTwoManifoldVertex
+
 Revision 1.28  2005/12/21 14:11:59  corsini
 Out the number of self intersection
 
@@ -385,7 +388,7 @@ void SaveXMLInfo(MeshInfo &mi)
 
 	sprintf(s,"%d",mi.dv);
 	doc.addNode(s, VALUE_INTEGER,"Duplicated Vertices");
-	doc.addNode(mi.SelfIntersect?"Yes":"No", VALUE_STRING,"Self	Intersection");
+	doc.addNode(mi.SelfIntersect?"Yes":"No", VALUE_STRING,"Self Intersection");
 
 	doc.finalizeMain();
 
