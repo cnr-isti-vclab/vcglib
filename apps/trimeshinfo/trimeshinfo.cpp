@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.31  2006/01/27 13:35:51  corsini
+fix signed/unsigned mismatch
+
 Revision 1.30  2006/01/26 16:29:21  corsini
 fix typo
 
@@ -402,11 +405,6 @@ void SaveXMLInfo(MeshInfo &mi)
 	int index = static_cast<int>(filename.find_first_of('.'));
 	filename.erase(index, l - index);
 	filename.append(".xml");
-
-
-	list<Node *>::iterator node = doc.ng.Sons.begin();
-	node++;
-	Node *pNode = *node;
 
 	doc.setName(filename.c_str());
 	doc.printXMLTree();
