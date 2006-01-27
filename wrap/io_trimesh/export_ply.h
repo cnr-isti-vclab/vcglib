@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2006/01/13 15:47:43  cignoni
+Uniformed return type to the style of Open. Now every export function returns 0 in case of success.
+
 Revision 1.12  2006/01/10 13:20:42  cignoni
 Changed ply::PlyMask to io::Mask
 
@@ -160,7 +163,7 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 	{
 		const char * TFILE = "TextureFile";
 
-		for(i=0;i<m.textures.size();++i)
+		for(i=0; i < static_cast<int>(m.textures.size()); ++i)
 			fprintf(fpout,"comment %s %s\n", TFILE, (const char *)(m.textures[i].c_str()) );
 
 		if(m.textures.size()>1 && (m.HasPerWedgeTexture() || m.HasPerVertexTexture())) multit = true;
