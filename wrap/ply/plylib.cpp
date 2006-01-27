@@ -31,6 +31,9 @@ of Greg Turk and on the work of Claudio Rocchini
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2005/12/02 00:00:53  cignoni
+Moved and corrected interpret_texture_name from plystuff.h to plylib.cpp
+
 Revision 1.10  2005/11/26 00:22:46  cignoni
 added untested code of interpret_texture
 
@@ -3620,7 +3623,7 @@ void interpret_texture_name(const char*a, const char*fn, char*output){
 	output[0]=0;
 	while (a[ia]!=0){
 		if (a[ia]=='<') {
-			if (strlen(a)>ia+5) {
+			if (static_cast<int>(strlen(a)) > ia+5) {
 				if ( ( (a[ia+1]=='t') || (a[ia+1]=='T') ) &&
 						 ( (a[ia+2]=='h') || (a[ia+2]=='H') ) &&
 						 ( (a[ia+3]=='i') || (a[ia+3]=='I') ) &&
