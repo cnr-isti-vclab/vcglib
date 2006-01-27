@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.32  2006/01/27 14:17:10  corsini
+remove junk code
+
 Revision 1.31  2006/01/27 13:35:51  corsini
 fix signed/unsigned mismatch
 
@@ -352,9 +355,9 @@ void SaveXMLInfo(MeshInfo &mi)
 	doc.addNode(s, VALUE_INTEGER, "Number of Faces");
 
 	if(mi.Manifold)
-		doc.addNode("No", VALUE_BOOL,"Manifold");
+		doc.addNode("false", VALUE_BOOL,"Manifold");
 	else
-		doc.addNode("Yes", VALUE_BOOL,"Manifold");
+		doc.addNode("true", VALUE_BOOL,"Manifold");
 
 	sprintf(s,"%d",mi.count_e);
 	doc.addNode(s, VALUE_INTEGER,"Number of Edges");
