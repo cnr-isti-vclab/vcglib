@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.32  2006/01/23 13:33:54  cignoni
+Added a missing vcg::
+
 Revision 1.31  2006/01/22 17:06:27  cignoni
 vi/fi mismatch in ClipWithBox
 
@@ -514,7 +517,8 @@ namespace vcg {
 								{
 									//cut and paste the additional hole.
                   std::vector<Point3x> hole2;
-									int index = find(hole.begin(),hole.end(),newpoint) - hole.begin();
+									int index = static_cast<int>(find(hole.begin(),hole.end(),newpoint) 
+										- hole.begin());
 									for(unsigned int i=index; i<hole.size(); i++)
 										hole2.push_back(hole[i]);
 

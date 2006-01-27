@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/12/06 18:00:39  pietroni
+added deleted objects control for GridClosest() function call
+
 Revision 1.7  2005/12/02 00:30:27  cignoni
 Corrected typename usage and removed excess ';' from end of template functions, for gcc compiling
 
@@ -280,7 +283,7 @@ namespace vcg{
 									}
 								}
 						}
-						return (_objectPtrs.size());
+						return (static_cast<unsigned int>(_objectPtrs.size()));
 			}
 		}
 
