@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.30  2006/01/26 16:29:21  corsini
+fix typo
+
 Revision 1.29  2005/12/29 12:27:35  cignoni
 Splitted IsComplexManifold in IsTwoManifoldFace and IsTwoManifoldVertex
 
@@ -396,9 +399,14 @@ void SaveXMLInfo(MeshInfo &mi)
 	string filename = mi.FileName;
 
 	int l = static_cast<int>(filename.size());
-	int index = filename.find_first_of('.');
+	int index = static_cast<int>(filename.find_first_of('.'));
 	filename.erase(index, l - index);
 	filename.append(".xml");
+
+
+	list<Node *>::iterator node = doc.ng.Sons.begin();
+	node++;
+	Node *pNode = *node;
 
 	doc.setName(filename.c_str());
 	doc.printXMLTree();
@@ -423,7 +431,8 @@ void SaveMeshInfoHtmlTable(fstream &fout, MeshInfo &mi)
 	fout << "          <td>" << mi.dv << "</td>" << std::endl;
 
 	if (mi.SelfIntersect)
-		fout << "          <td>" << mi.intersections.size() << "</td>" << std::endl;
+		fout << "          <td>" << static_cast<unsigned int>(mi.intersections.size()) 
+			<< "</td>" << std::endl;
 	else
 		fout << "          <td>None</td>" << std::endl;
 
