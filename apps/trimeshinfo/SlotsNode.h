@@ -5,12 +5,13 @@
 #include "Node.h"
 
 using namespace std;
+
 class ValueNode: public Node
 {
 public:
 	ValueNode(void){node_type = VALUE_NODE;value = "empty";};
 	int node_type;
-	const char* value; //tra due tag
+	string value; //tra due tag
 	virtual void printNode();
 	virtual int qualifyNode();
 

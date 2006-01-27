@@ -154,7 +154,7 @@ void XMLTree::finalizeMain()
 
 void XMLTree::addHeaders(const char* str, const char*val)
 {
-	MainNode* mn = (MainNode*) root.Sons.front();
+	MainNode* mn = dynamic_cast<MainNode *>(root.Sons.front());
 	mn->headers.push_back(pair<const char*,const char*>(str,val));
 }
 
@@ -176,7 +176,6 @@ void XMLTree::addClasses(ClassNode* cn)
 
 void XMLTree::addNode(const char* s, int value_type, const char* name)
 {
-	
 	ValueNode* vn = new ValueNode;
 	EntryNode* en = new EntryNode;
 	OwnSlotNode* osn = new OwnSlotNode;
@@ -275,7 +274,7 @@ void XMLTree::printXMLTree()
 					osn = dynamic_cast<OwnSlotNode *>(*it3);
 					fprintf(fp,"\t\t\t<own-slot slot-name=\":%s\">\n",osn->name);
 					fprintf(fp,"\t\t\t\t<entry type=\"%s\">\n",osn->entry.type);
-					fprintf(fp,"\t\t\t\t\t<value>%s", osn->entry.value.value);
+					fprintf(fp,"\t\t\t\t\t<value>%s", osn->entry.value.value.c_str());
 					fprintf(fp,"</value>\n");
 					fprintf(fp,"\t\t\t\t</entry>\n");
 					fprintf(fp,"\t\t\t</own-slot>\n");
@@ -302,7 +301,7 @@ void XMLTree::printXMLTree()
 					osn = dynamic_cast<OwnSlotNode *>(*it3);
 					fprintf(fp,"\t\t\t\t<own-slot slot-name=\":%s\">\n",osn->name);
 					fprintf(fp,"\t\t\t\t\t<entry type=\"%s\">\n",osn->entry.type);
-					fprintf(fp,"\t\t\t\t\t\t<value>%s", osn->entry.value.value);
+					fprintf(fp,"\t\t\t\t\t\t<value>%s", osn->entry.value.value.c_str());
 					fprintf(fp,"</value>\n");
 					fprintf(fp,"\t\t\t\t\t</entry>\n");
 					fprintf(fp,"\t\t\t\t</own-slot>\n");
@@ -337,7 +336,7 @@ void XMLTree::printXMLTree()
 					osn = dynamic_cast<OwnSlotNode *>(*it3);
 					fprintf(fp,"\t\t\t\t<own-slot slot-name=\":%s\">\n",osn->name);
 					fprintf(fp,"\t\t\t\t\t<entry type=\"%s\">\n",osn->entry.type);
-					fprintf(fp,"\t\t\t\t\t\t<value>%s", osn->entry.value.value);
+					fprintf(fp,"\t\t\t\t\t\t<value>%s", osn->entry.value.value.c_str());
 					fprintf(fp,"</value>\n");
 					fprintf(fp,"\t\t\t\t\t</entry>\n");
 					fprintf(fp,"\t\t\t\t</own-slot>\n");
