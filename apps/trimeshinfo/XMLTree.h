@@ -131,10 +131,7 @@ void XMLTree::initializeMain()
 
 void XMLTree::finalizeMain()
 {
-
-
 	addSlots(&sn);
-
 	
 	OwnSlotsNode* ossn = new OwnSlotsNode;
 	ossn->addOwnSlot(&ng);
@@ -167,8 +164,6 @@ void XMLTree::addSlots(SlotNode* sn)
 
 	sn0->addSlot(sn);
 	root.Sons.push_back(sn0);
-	
-
 }
 
 void XMLTree::addClasses(ClassNode* cn)
@@ -186,24 +181,23 @@ void XMLTree::addNode(const char* s, int value_type, const char* name)
 	EntryNode* en = new EntryNode;
 	OwnSlotNode* osn = new OwnSlotNode;
 
-	
-
-
 	switch(value_type)
 	{
-case VALUE_INTEGER:
-	en->type = "Integer";
-		break;
-case VALUE_FLOAT:
-	en->type = "Float";
-			
-case VALUE_BOOL:
-	en->type = "Bool";
-		break;
-case VALUE_STRING:
-	en->type = "String";
-		break;
+	case VALUE_INTEGER:
+		en->type = "Integer";
+	break;
 
+	case VALUE_FLOAT:
+		en->type = "Float";
+	break;
+
+	case VALUE_BOOL:
+		en->type = "Bool";
+	break;
+
+	case VALUE_STRING:
+		en->type = "String";
+	break;
 	}
 
 	
@@ -245,6 +239,7 @@ void XMLTree::printXMLTree()
 	InstancesNode* isn;	
 	InstanceNode* in;	
 	int nn = 0;
+
 	for(it = root.Sons.begin(); it!=root.Sons.end(); ++it)
 	{
 		if (verbose)
@@ -255,8 +250,10 @@ void XMLTree::printXMLTree()
 		
 		switch((*it)->qualifyNode())
 		{
+		
+		// MAIN NODE
 		case MAIN_NODE:
-			mn = (MainNode*)(*it);
+			mn = dynamic_cast<MainNode *>(*it);
 			fprintf(fp,"<");
 			for(lit = mn->headers.begin(); lit!= mn->headers.end(); ++lit)
 					fprintf(fp,"%s%s", lit->first,lit->second );
@@ -264,86 +261,91 @@ void XMLTree::printXMLTree()
 			
 			break;
 		
+		// SLOTS
 		case SLOTS_NODE:
-			sns = (SlotsNode*)(*it);
-			fprintf(fp,"<slots> \n");
+			sns = dynamic_cast<SlotsNode *>(*it);
+			fprintf(fp,"\t<slots>\n");
 
 			for(it2 = sns->slot.Sons.begin(); it2!=sns->slot.Sons.end(); ++it2)
 			{
-				sn = (SlotNode*) (*it2);
-				fprintf(fp,"\t<slot>");
+				sn = dynamic_cast<SlotNode *>(*it2);
+				fprintf(fp,"\t\t<slot>\n");
 				for(it3 = sn->own_slot.Sons.begin(); it3!=sn->own_slot.Sons.end(); ++it3)
 				{
-					osn = (OwnSlotNode*) (*it3);
-					fprintf(fp,"<own-slot slot-name=\":%s\">\n",osn->name);
-					fprintf(fp,"\t\t<entry type=\"%s\">\n",osn->entry.type);
-					fprintf(fp,"\t\t\t<value>\n");
-					fprintf(fp,"\t\t\t%s\n",osn->entry.value.value);
-					fprintf(fp,"\t\t\t</value>\n");
-					fprintf(fp,"\t\t</entry>\n");
-					fprintf(fp,"\t</own-slot>");
-				}
-				fprintf(fp,"</slot>\n");
-			}
-			fprintf(fp,"</slots>\n");
-
-			break;
-	case CLASSES_NODE:
-			csn = (ClassesNode*)(*it);
-			fprintf(fp,"<classes> \n");
-
-			for(it2 = csn->classn.Sons.begin(); it2!=csn->classn.Sons.end(); ++it2)
-			{
-				cn = (ClassNode*) (*it2);
-				fprintf(fp,"\t<class>");
-				fprintf(fp,"<own-slots>\n");
-				for(it3 = cn->own_slots.own_slot.Sons.begin(); it3!=cn->own_slots.own_slot.Sons.end(); ++it3)
-				{
-					osn = (OwnSlotNode*) (*it3);
-					fprintf(fp,"\t\t<own-slot slot-name=\":%s\">\n",osn->name);
-					fprintf(fp,"\t\t\t<entry type=\"%s\">\n",osn->entry.type);
-					fprintf(fp,"\t\t\t\t<value>\n");
-					fprintf(fp,"\t\t\t%s\n",osn->entry.value.value);
-					fprintf(fp,"\t\t\t\t</value>\n");
-					fprintf(fp,"\t\t\t</entry>\n");
-					fprintf(fp,"\t\t</own-slot>\n");
-				}
-				fprintf(fp,"\t</own-slots>\n");
-				fprintf(fp,"</class>\n");
-			}
-			fprintf(fp,"</classes>\n");
-
-			break;
-	case INSTANCES_NODE:
-			isn = (InstancesNode*)(*it);
-			fprintf(fp,"<instances> \n");
-
-			for(it2 = isn->instances.Sons.begin(); it2!=isn->instances.Sons.end(); ++it2)
-			{
-				in = (InstanceNode*) (*it2);
-				fprintf(fp,"\t<instance>\n");
-				fprintf(fp,"\t\t<id>\n");
-				fprintf(fp,"\t\t%s\n", in->id);
-				fprintf(fp,"\t\t</id>\n");
-				fprintf(fp,"\t\t<type>\n");
-				fprintf(fp,"\t\t%s\n", in->type);
-				fprintf(fp,"\t\t</type>\n");
-				fprintf(fp,"\t\t<own-slots>\n");
-				for(it3 = in->own_slots.own_slot.Sons.begin(); it3!=in->own_slots.own_slot.Sons.end(); ++it3)
-				{
-					osn = (OwnSlotNode*) (*it3);
+					osn = dynamic_cast<OwnSlotNode *>(*it3);
 					fprintf(fp,"\t\t\t<own-slot slot-name=\":%s\">\n",osn->name);
 					fprintf(fp,"\t\t\t\t<entry type=\"%s\">\n",osn->entry.type);
-					fprintf(fp,"\t\t\t\t<value>\n");
-					fprintf(fp,"\t\t\t\t%s\n",osn->entry.value.value);
-					fprintf(fp,"\t\t\t\t</value>\n");
+					fprintf(fp,"\t\t\t\t\t<value>%s", osn->entry.value.value);
+					fprintf(fp,"</value>\n");
 					fprintf(fp,"\t\t\t\t</entry>\n");
 					fprintf(fp,"\t\t\t</own-slot>\n");
 				}
-				fprintf(fp,"\t\t</own-slots>\n");
-				fprintf(fp,"\t</instance>\n");
+				fprintf(fp,"\t\t</slot>\n");
 			}
-			fprintf(fp,"</instances>\n");
+			fprintf(fp,"\t</slots>\n");
+
+		break;
+
+		// CLASSES 
+		case CLASSES_NODE:
+			csn = dynamic_cast<ClassesNode *>(*it);
+			fprintf(fp,"\t<classes>\n");
+
+			for(it2 = csn->classn.Sons.begin(); it2!=csn->classn.Sons.end(); ++it2)
+			{
+				cn = dynamic_cast<ClassNode *>(*it2);
+				fprintf(fp,"\t\t<class>\n");
+				fprintf(fp,"\t\t\t<own-slots>\n");
+				for(it3 = cn->own_slots.own_slot.Sons.begin(); 
+					it3!=cn->own_slots.own_slot.Sons.end(); ++it3)
+				{
+					osn = dynamic_cast<OwnSlotNode *>(*it3);
+					fprintf(fp,"\t\t\t\t<own-slot slot-name=\":%s\">\n",osn->name);
+					fprintf(fp,"\t\t\t\t\t<entry type=\"%s\">\n",osn->entry.type);
+					fprintf(fp,"\t\t\t\t\t\t<value>%s", osn->entry.value.value);
+					fprintf(fp,"</value>\n");
+					fprintf(fp,"\t\t\t\t\t</entry>\n");
+					fprintf(fp,"\t\t\t\t</own-slot>\n");
+				}
+				fprintf(fp,"\t\t\t</own-slots>\n");
+				fprintf(fp,"\t\t</class>\n");
+			}
+			fprintf(fp,"\t</classes>\n");
+
+			break;
+
+		// INSTANCES
+		case INSTANCES_NODE:
+			isn = dynamic_cast<InstancesNode *>(*it);
+			fprintf(fp,"\t<instances>\n");
+
+			for(it2 = isn->instances.Sons.begin(); it2!=isn->instances.Sons.end(); ++it2)
+			{
+				in = dynamic_cast<InstanceNode *>(*it2);
+				fprintf(fp,"\t\t<instance>\n");
+				fprintf(fp,"\t\t\t<id>\n");
+				fprintf(fp,"\t\t\t%s\n", in->id);
+				fprintf(fp,"\t\t\t</id>\n");
+				fprintf(fp,"\t\t\t<type>\n");
+				fprintf(fp,"\t\t\t%s\n", in->type);
+				fprintf(fp,"\t\t\t</type>\n");
+				fprintf(fp,"\t\t\t<own-slots>\n");
+
+				for(it3 = in->own_slots.own_slot.Sons.begin(); 
+					it3!=in->own_slots.own_slot.Sons.end(); ++it3)
+				{
+					osn = dynamic_cast<OwnSlotNode *>(*it3);
+					fprintf(fp,"\t\t\t\t<own-slot slot-name=\":%s\">\n",osn->name);
+					fprintf(fp,"\t\t\t\t\t<entry type=\"%s\">\n",osn->entry.type);
+					fprintf(fp,"\t\t\t\t\t\t<value>%s", osn->entry.value.value);
+					fprintf(fp,"</value>\n");
+					fprintf(fp,"\t\t\t\t\t</entry>\n");
+					fprintf(fp,"\t\t\t\t</own-slot>\n");
+				}
+				fprintf(fp,"\t\t\t</own-slots>\n");
+				fprintf(fp,"\t\t</instance>\n");
+			}
+			fprintf(fp,"\t</instances>\n");
 
 			break;
 		}
