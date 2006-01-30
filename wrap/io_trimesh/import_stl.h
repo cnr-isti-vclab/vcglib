@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2006/01/04 16:14:43  cignoni
+Added callback managment on loading of binary stl
+
 Revision 1.9  2005/09/15 09:29:45  m_di_benedetto
 #included missing <wrap/callback.h> and <vcg/complex/trimesh/allocate.h>
 
@@ -108,6 +111,12 @@ static const char *ErrorMsg(int error)
   if(error>2 || error<0) return "Unknown error";
   else return stl_error_msg[error];
 };
+
+static int Open(OpenMeshType &mesh, const char *filename, int &loadmask, CallBackPos *cb=0)
+{
+  loadmask = Mask::IOM_VERTCOORD | Mask::IOM_FACEINDEX;
+  return Open(mesh,filename,cb);
+}
 
 static int Open( OpenMeshType &m, const char * filename, CallBackPos *cb=0)
 {

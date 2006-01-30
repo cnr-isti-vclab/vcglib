@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2006/01/10 13:20:42  cignoni
+Changed ply::PlyMask to io::Mask
+
 Revision 1.9  2005/12/01 00:58:56  cignoni
 Added and removed typenames for gcc compiling...
 
@@ -328,7 +331,8 @@ namespace vcg
 							} //end switch
 						} // end if (isColorDefined)
 					}
-
+          loadmask = Mask::IOM_VERTCOORD | Mask::IOM_FACEINDEX;
+          if(isColorDefined) loadmask |= Mask::IOM_FACECOLOR;
 					return NoError;
 				} // end Open
 
