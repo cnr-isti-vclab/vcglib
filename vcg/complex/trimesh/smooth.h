@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.7  2006/01/24 13:23:22  pietroni
+used template types instead of point3f and float inside function calls
+
 Revision 1.6  2005/12/06 17:55:16  pietroni
 1 bug corrected
 
@@ -562,8 +565,8 @@ void NormalSmooth(MESH_TYPE &m,
 	//vcg::face::Pos<typename MESH_TYPE::FaceType> ep;
 	vcg::face::VFIterator<typename MESH_TYPE::FaceType> ep;
 
-	typedef MESH_TYPE::CoordType CoordType;
-	typedef MESH_TYPE::ScalarType ScalarType;
+	typedef typename MESH_TYPE::CoordType CoordType;
+	typedef typename MESH_TYPE::ScalarType ScalarType;
 	typename MESH_TYPE::FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 	{
