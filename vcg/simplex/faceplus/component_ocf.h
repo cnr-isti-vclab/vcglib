@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2006/01/05 15:46:06  cignoni
+Removed a syntax error (double >) in HasPerWedgeTexture/HasPerFaceColor
+
 Revision 1.8  2006/01/04 18:46:25  cignoni
 Corrected push_back (did not worked at all!)
 added missing cFFi
@@ -380,8 +383,8 @@ public:
     template < class VertContainerType, class FaceType >
       bool HasPerWedgeTexture (const TriMesh < VertContainerType , face::vector_ocf< FaceType > > & m) 
     {
-      if(face::vector_ocf< FaceType >::HasWedgeTextureOcf()) return m.face.WedgeTexEnabled();
-      else return face::vector_ocf< FaceType >::HasWedgeTexture();
+      if(FaceType::HasWedgeTextureOcf()) return m.face.IsWedgeTexEnabled();
+      else return FaceType::HasWedgeTexture();
     }
 
     template < class VertContainerType, class FaceType >
