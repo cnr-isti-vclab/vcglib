@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2006/01/22 17:08:50  cignoni
+Bug due to wrong compuation of size of auxiliary vector (vn instead of vert.size() )
+
 Revision 1.1  2006/01/11 15:45:21  cignoni
 Initial Release
 
@@ -84,7 +87,7 @@ static void ImportFace(MeshLeft &ml, MeshRight &mr, FaceLeft &fl, FaceRight &fr,
   fl.V(2)=&ml.vert[remap[ Index(mr,fr.V(2))]];
   if(fl.HasFaceColor()   && fl.HasFaceColor()) fl.C()=fr.C();
   if(fl.HasFaceQuality() && fl.HasFaceQuality()) fl.Q()=fr.Q();
-  if(fl.HasWedgeTexture() && fl.HasWedgeTexture()) 
+  if(tri::HasPerWedgeTexture(mr) && tri::HasPerWedgeTexture(ml)) 
   {
     fl.WT(0)=fr.WT(0);
     fl.WT(1)=fr.WT(1);
