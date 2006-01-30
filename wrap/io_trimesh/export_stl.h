@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2006/01/13 15:47:43  cignoni
+Uniformed return type to the style of Open. Now every export function returns 0 in case of success.
+
 Revision 1.5  2005/12/01 00:58:56  cignoni
 Added and removed typenames for gcc compiling...
 
@@ -135,6 +138,18 @@ static const char *ErrorMsg(int error)
   if(error>1 || error<0) return "Unknown error";
   else return stl_error_msg[error].c_str();
 };
+
+/*
+	returns mask of capability one define with what are the saveable information of the format.
+*/
+static int GetExportMaskCapability()
+{
+	int capability = 0;			
+	capability |= vcg::tri::io::Mask::IOM_VERTCOORD;
+	capability |= vcg::tri::io::Mask::IOM_FACEINDEX;
+	return capability;
+}
+
 
 }; // end class
 

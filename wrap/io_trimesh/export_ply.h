@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2006/01/27 09:11:48  corsini
+fix signed/unsigned mismatch
+
 Revision 1.13  2006/01/13 15:47:43  cignoni
 Uniformed return type to the style of Open. Now every export function returns 0 in case of success.
 
@@ -643,6 +646,26 @@ static const char *ErrorMsg(int error)
   else return ply_error_msg[error].c_str();
 };
 
+  static int GetExportMaskCapability()
+  {
+	  int capability = 0;			
+	  capability |= vcg::tri::io::Mask::IOM_VERTCOORD    ;
+	  capability |= vcg::tri::io::Mask::IOM_VERTFLAGS    ;
+	  capability |= vcg::tri::io::Mask::IOM_VERTCOLOR    ;
+	  capability |= vcg::tri::io::Mask::IOM_VERTQUALITY  ;
+	  capability |= vcg::tri::io::Mask::IOM_VERTNORMAL   ;
+	  capability |= vcg::tri::io::Mask::IOM_VERTTEXCOORD ;
+	  capability |= vcg::tri::io::Mask::IOM_FACEINDEX    ;
+	  capability |= vcg::tri::io::Mask::IOM_FACEFLAGS    ;
+	  capability |= vcg::tri::io::Mask::IOM_FACECOLOR    ;
+	  capability |= vcg::tri::io::Mask::IOM_FACEQUALITY  ;
+	  capability |= vcg::tri::io::Mask::IOM_FACENORMAL   ;
+	  capability |= vcg::tri::io::Mask::IOM_WEDGCOLOR    ;
+	  capability |= vcg::tri::io::Mask::IOM_WEDGTEXCOORD ;
+	  capability |= vcg::tri::io::Mask::IOM_WEDGTEXMULTI ;
+    capability |= vcg::tri::io::Mask::IOM_WEDGNORMAL   ;
+	  return capability;
+  }
 
 
 }; // end class

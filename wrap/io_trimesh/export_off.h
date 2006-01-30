@@ -49,7 +49,7 @@ namespace vcg {
 				typedef typename SaveMeshType::VertexIterator VertexIterator;
 				typedef typename SaveMeshType::FaceIterator FaceIterator;
 
-				static int Save(SaveMeshType &m, const char * filename )
+				static int Save(SaveMeshType &m, const char * filename, int mask=0 )
 				{
 					vcg::face::Pos<FaceType> he;
 					vcg::face::Pos<FaceType> hei;
@@ -58,12 +58,9 @@ namespace vcg {
 
 
 
-					if( m.HasPerVertexNormal())
-						fprintf(fpout,"N");
-					if( m.HasPerVertexColor())
-						fprintf(fpout,"C");
-					if( m.HasPerVertexTexture())
-						fprintf(fpout,"ST");
+					if( m.HasPerVertexNormal()  && (mask & io::Mask::IOM_VERTNORMAL)) 	fprintf(fpout,"N");
+					if( m.HasPerVertexColor()   && (mask & io::Mask::IOM_VERTCOLOR))		fprintf(fpout,"C");
+					if( m.HasPerVertexTexture() && (mask & io::Mask::IOM_VERTTEXCOORD))	fprintf(fpout,"ST");
 					fprintf(fpout,"OFF\n");
 					fprintf(fpout,"%d %d ", m.vn, m.fn);
 
@@ -180,6 +177,17 @@ namespace vcg {
 
           if(error>1 || error<0) return "Unknown error";
           else return off_error_msg[error].c_str();
+        }
+        /*
+	        returns mask of capability one define with what are the saveable information of the format.
+        */
+        static int GetExportMaskCapability()
+        {
+	        int capability = 0;			
+	        capability |= vcg::tri::io::Mask::IOM_VERTCOORD;
+	        capability |= vcg::tri::io::Mask::IOM_VERTCOLOR;
+          capability |= vcg::tri::io::Mask::IOM_FACEINDEX;
+	        return capability;
         }
 
 			}; // end class
