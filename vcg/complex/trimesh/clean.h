@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.33  2006/01/27 09:55:25  corsini
+fix signed/unsigned mismatch
+
 Revision 1.32  2006/01/23 13:33:54  cignoni
 Added a missing vcg::
 
@@ -796,7 +799,7 @@ namespace vcg {
 				std::vector<FaceType*> inBox;
 				gM.Set(m.face.begin(),m.face.end());
 				
-				for(fi=m.face.begin();fi!=m.face.end();++fi)
+				for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
 				{
           (*fi).SetUserBit(referredBit);
 					(*fi).GetBBox(bbox);
