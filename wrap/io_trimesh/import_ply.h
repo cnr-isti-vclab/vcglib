@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.25  2006/01/11 10:37:12  cignoni
+Removed warning for unused vars
+
 Revision 1.24  2006/01/10 13:20:42  cignoni
 Changed ply::PlyMask to io::Mask
 
@@ -816,7 +819,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
     if( TFILE == c.substr(0,TFILE.length()) ) 
 		{
       bufstr = c.substr(TFILE.length()+1);
-			n = bufstr.length();
+			n = static_cast<int>(bufstr.length());
 			for(i=0;i<n;i++)
 				if( bufstr[i]!=' ' && bufstr[i]!='\t' && bufstr[i]>32 && bufstr[i]<125 )	bufclean.push_back(bufstr[i]);
 			
