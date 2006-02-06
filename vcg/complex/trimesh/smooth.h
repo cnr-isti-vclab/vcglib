@@ -685,8 +685,8 @@ void FitMesh(MESH_TYPE &m,
 	//vcg::face::Pos<typename MESH_TYPE::FaceType> ep;
 	vcg::face::VFIterator<typename MESH_TYPE::FaceType> ep;
 	typename MESH_TYPE::VertexIterator vi;
-	typedef MESH_TYPE::ScalarType ScalarType;
-	typedef MESH_TYPE::CoordType CoordType;
+	typedef typename MESH_TYPE::ScalarType ScalarType;
+	typedef typename MESH_TYPE::CoordType CoordType;
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 	{
 		CoordType ErrGrad=CoordType(0,0,0);
