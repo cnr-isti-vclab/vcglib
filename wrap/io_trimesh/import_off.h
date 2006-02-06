@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2006/01/30 15:02:50  cignoni
+Added mask filling in open
+
 Revision 1.10  2006/01/10 13:20:42  cignoni
 Changed ply::PlyMask to io::Mask
 
@@ -90,18 +93,19 @@ namespace vcg
 				/*!
 				*	Standard call for knowing the meaning of an error code
 				* \param message_code	The code returned by <CODE>Open</CODE>
-				*	\return							The string describing the error code 
+				*	\return							The string describing the error code
 				*/
 				static const char* ErrorMsg(int message_code)
 				{
-					static const char* error_msg[3] =
+					static const char* error_msg[] =
 					{
-						"No errors", "Can't open file", "Premature End of file",
+						"No errors", "Can't open file", "Invalid file",
+							"Unsupported format", "Face with more than 3 vertices"
 					};
 
-					if(message_code>2 || message_code<0) 
+					if(message_code>4 || message_code<0)
 						return "Unknown error";
-					else 
+					else
 						return error_msg[message_code];
 				};
 
