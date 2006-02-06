@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.33  2006/01/27 14:18:07  corsini
+fix boolean entry type
+
 Revision 1.32  2006/01/27 14:17:10  corsini
 remove junk code
 
@@ -273,7 +276,26 @@ void OpenMesh(const	char *filename,	CMesh &m)
 
 void initMeshInfo(MeshInfo &mi)
 {
-	memset(&mi, 0, sizeof(mi));
+	mi.vn = 0;
+	mi.fn = 0;
+	mi.Manifold = false;
+	mi.count_e = 0;
+	mi.boundary_e = 0;
+	mi.count_fd = 0;
+	mi.count_uv = 0;
+	mi.numholes = 0;
+	mi.BEdges = 0;
+	mi.Volume = 0;
+	mi.numcomponents = 0;
+	mi.Genus = 0;
+	mi.Regular = false;
+	mi.Semiregular = false;
+	mi.Orientable = false;
+	mi.Oriented = false;
+	mi.dv = 0;
+	mi.SelfIntersect = false;
+	// mi.FileName has a constructor
+	// mi.intersections has a constructor
 }
 
 void PrintMeshInfo(MeshInfo &mi)
