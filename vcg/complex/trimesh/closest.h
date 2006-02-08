@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2006/01/10 13:31:54  pietroni
+correct pass of variable closest_pt by reference in getclosestFace function
+
 Revision 1.18  2005/12/02 00:13:34  cignoni
 Added and removed typenames for gcc compiling.
 removed also some template arguments specifcation that gcc disliked...
@@ -181,7 +184,7 @@ namespace vcg {
 			return (0);
 		}
 
-		template <class MESH, class GRID>
+		/*template <class MESH, class GRID>
 			typename MESH::FaceType * GetClosestFace( MESH & mesh,GRID & gr,const typename GRID::CoordType & _p, 
 			const typename GRID::ScalarType & _maxDist,typename GRID::ScalarType & _minDist,
 			typename GRID::CoordType &_closestPt,typename GRID::CoordType & _normf)
@@ -191,8 +194,8 @@ namespace vcg {
 			MarkerFace mf;
 			mf.SetMesh(&mesh);
 			vcg::face::PointDistanceFunctor FDistFunct;
-			return ( gr.GetClosest(FDistFunct,mf,_p,_maxDist,_minDist,_closestPt) );
-		}
+			typename MESH::FaceType* bestf= gr.GetClosest(FDistFunct,mf,_p,_maxDist,_minDist,_closestPt) );
+		}*/
 
 		template <class MESH, class GRID>
 			typename MESH::FaceType * GetClosestFace( MESH & mesh,GRID & gr,const typename GRID::CoordType & _p, 
@@ -357,10 +360,10 @@ namespace vcg {
 
 			ClosestVertexIterator(GridType &_Si):ClosestBaseType(_Si,VDistFunct()){}
 
-//    Commented out: it seems unuseful and make gcc complain. p.
-	/*		void SetMesh(MeshType *m)
-			{tm.SetMesh(m);}*/
-		};
+////    Commented out: it seems unuseful and make gcc complain. p.
+//			void SetMesh(MeshType *m)
+//			{this->tm.SetMesh(m);}
+//		};
 
 		template <class GRID,class MESH>
 		class TriRayIterator:public vcg::RayIterator<GRID,vcg::RayTriangleIntersectionFunctor<true>,FaceTmark<MESH> >
@@ -376,11 +379,11 @@ namespace vcg {
 
 			TriRayIterator(GridType &_Si):RayBaseType(_Si,FintFunct()){}
 
-//    Commented out: it  seems unuseful and make gcc complain. p.
-	/*		void SetMesh(MeshType *m)
-			{tm.SetMesh(m);}*/
-
-		};
+////    Commented out: it  seems unuseful and make gcc complain. p.
+//			void SetMesh(MeshType *m)
+//			{this->tm.SetMesh(m);}
+//
+//		};
 
 	}	 // end namespace trimesh
 }	 // end namespace vcg
