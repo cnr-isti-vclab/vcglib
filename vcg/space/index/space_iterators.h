@@ -15,12 +15,14 @@
 namespace vcg{
 	template <class Spatial_Idexing,class INTFUNCTOR,class TMARKER> 
 	class RayIterator
-	{	
+	{
+	public:
+		typedef typename Spatial_Idexing::ScalarType ScalarType;
+		typedef typename vcg::Ray3<ScalarType> RayType;
+		typedef typename Spatial_Idexing::Box3x IndexingBoxType;
 	protected:
 		typedef typename Spatial_Idexing::ObjType ObjType;
-		typedef typename Spatial_Idexing::ScalarType ScalarType;
 		typedef typename vcg::Point3<ScalarType>  CoordType;
-		typedef typename vcg::Ray3<ScalarType> RayType;
 		typedef typename Spatial_Idexing::CellIterator CellIterator;
 
 		///control right bonding current cell index (only on initialization)
