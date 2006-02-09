@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.34  2006/02/06 12:59:12  corsini
+Fix mesh info structure initialization
+
 Revision 1.33  2006/01/27 14:18:07  corsini
 fix boolean entry type
 
@@ -207,6 +210,11 @@ typedef CMesh::ScalarType ScalarType;
 struct MeshInfo
 {
 	string FileName;
+	bool hasVNormal;
+	bool hasFNormal;
+	bool hasVColor;
+	bool hasFColor;
+	bool hasTexture;
 	int vn,fn;
 	bool Manifold;
 	int count_e,boundary_e,count_fd,count_uv,numholes;
@@ -258,11 +266,12 @@ static const char * HTML_TABLE[HTML_LINES]=
 };
 
 
-void OpenMesh(const	char *filename,	CMesh &m)
+int OpenMesh(const	char *filename,	CMesh &m)
 {
 	printf("    Mesh loading...");
 
-	int err = tri::io::Importer<CMesh>::Open(m,filename);
+	int mask;
+	int err = tri::io::Importer<CMesh>::Open(m, filename, mask);
 
 	if (err)
 	{
@@ -272,12 +281,19 @@ void OpenMesh(const	char *filename,	CMesh &m)
 	}
 	else
 		printf(" done.\n\n");
+
+	return mask;
 }
 
 void initMeshInfo(MeshInfo &mi)
 {
 	mi.vn = 0;
 	mi.fn = 0;
+	mi.hasVColor = false;
+	mi.hasFColor = false;
+	mi.hasFNormal = false;
+	mi.hasVNormal = false;
+	mi.hasTexture = false;
 	mi.Manifold = false;
 	mi.count_e = 0;
 	mi.boundary_e = 0;
@@ -311,6 +327,31 @@ void PrintMeshInfo(MeshInfo &mi)
 	printf("    Number of unreferenced vertices: %d\n",mi.count_uv);
 	printf("    Number of duplicated vertices found: %d\n", mi.dv);
 	printf("    Number of holes/boundaries: %d \n", mi.numholes);
+
+	if (mi.hasVNormal)
+		printf("    Has Per-Vertex Normal: YES\n");
+	else
+		printf("    Has Per-Vertex Normal: NO\n");
+
+	if (mi.hasFNormal)
+		printf("    Has Per-Face Normal: YES\n");
+	else
+		printf("    Has Per-Face Normal: NO\n");
+
+	if (mi.hasVColor)
+		printf("    Has Per-Vertex Color: YES\n");	
+	else
+		printf("    Has Per-Vertex Color: NO\n");
+	
+	if (mi.hasFColor)
+		printf("    Has Per-Face Color: YES\n");
+	else
+		printf("    Has Per-Face Color: NO\n");
+
+	if (mi.hasTexture)
+		printf("    Has Texture information: YES\n");
+	else
+		printf("    Has Texture information: NO\n");
 
 	if ((mi.Manifold)&&(mi.Oriented)&&(!mi.numholes))
 		printf("    Volume: %f \n", mi.Volume);
@@ -389,9 +430,35 @@ void SaveXMLInfo(MeshInfo &mi)
 	sprintf(s,"%d",mi.count_uv);
 	doc.addNode(s, VALUE_INTEGER,"Number of unreferenced vertices");
 	sprintf(s,"%d",mi.numholes);
-	doc.addNode(s, VALUE_INTEGER,"Number of Holes");
+	doc.addNode(s, VALUE_INTEGER, "Number of Holes");
 	sprintf(s,"%d",mi.BEdges);
-	doc.addNode(s, VALUE_INTEGER,"Number of Border Edges");
+	doc.addNode(s, VALUE_INTEGER, "Number of Border Edges");
+
+	if (mi.hasVColor)
+		doc.addNode("true", VALUE_BOOL, "Per-Vertex Color Information");
+	else
+		doc.addNode("false", VALUE_BOOL, "Per-Vertex Color Information");
+
+	if (mi.hasFColor)
+		doc.addNode("true", VALUE_BOOL, "Per-Face Color Information");
+	else
+		doc.addNode("false", VALUE_BOOL, "Per-Face Color Information");
+
+	if (mi.hasVNormal)
+		doc.addNode("true", VALUE_BOOL, "Per-Vertex Normal");
+	else
+		doc.addNode("false", VALUE_BOOL, "Per-Vertex Normal");
+
+	if (mi.hasFNormal)
+		doc.addNode("true", VALUE_BOOL, "Per-Face Normal");
+	else
+		doc.addNode("false", VALUE_BOOL, "Per-Face Normal");
+
+	if (mi.hasTexture)
+		doc.addNode("true", VALUE_BOOL, "Texture Information");
+	else
+		doc.addNode("false", VALUE_BOOL, "Texture Information");
+
 	sprintf(s,"%f",mi.Volume);
 	doc.addNode(s, VALUE_FLOAT,"Volume");
 	sprintf(s,"%d",mi.numcomponents);
@@ -627,8 +694,32 @@ int main(int argc, char ** argv)
 	// Mesh loading
 	//////////////////////////////////////////
 	
-	OpenMesh(mi.FileName.c_str(),m);
+	int load_mask = OpenMesh(mi.FileName.c_str(),m);
 
+	if (load_mask & vcg::tri::io::Mask::IOM_VERTNORMAL)
+		mi.hasVNormal = true;
+	else
+		mi.hasVNormal = false;
+
+	if (load_mask & vcg::tri::io::Mask::IOM_FACENORMAL)
+		mi.hasFNormal = true;
+	else
+		mi.hasFNormal = false;
+
+	if (load_mask & vcg::tri::io::Mask::IOM_VERTCOLOR)
+		mi.hasVColor = true;
+	else
+		mi.hasVColor = false;
+
+	if (load_mask & vcg::tri::io::Mask::IOM_FACECOLOR)
+		mi.hasFColor = true;
+	else
+		mi.hasFColor = false;
+
+	if (load_mask & vcg::tri::io::Mask::IOM_VERTTEXCOORD)
+		mi.hasTexture = true;
+	else
+		mi.hasTexture = false;
 
 	// Mesh processing
 	//////////////////////////////////////////
