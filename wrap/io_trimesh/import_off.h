@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2006/02/06 13:11:01  corsini
+Renamed UnexpectedEOF as InvalidFile and
+added UnsupportedFormat and ErrorNotTriangularFace (by Laurent Saboret)
+
 Revision 1.11  2006/01/30 15:02:50  cignoni
 Added mask filling in open
 
@@ -81,6 +85,7 @@ namespace vcg
 			class ImporterOFF
 			{
 			public:
+
 				typedef typename MESH_TYPE::VertexType			VertexType;
 				typedef typename MESH_TYPE::VertexIterator	VertexIterator;
 				typedef typename MESH_TYPE::VertexPointer		VertexPointer;
@@ -89,6 +94,10 @@ namespace vcg
 				typedef typename MESH_TYPE::FacePointer			FacePointer;
 				typedef typename MESH_TYPE::CoordType				CoordType;
 				typedef typename MESH_TYPE::ScalarType			ScalarType;
+
+				// OFF codes
+				enum OFFCodes {NoError=0, CantOpen, InvalidFile,
+					UnsupportedFormat, ErrorNotTriangularFace};
 
 				/*!
 				*	Standard call for knowing the meaning of an error code
@@ -121,14 +130,18 @@ namespace vcg
 				*	\param filename		the name of the file to read from
 				*	\return						the operation result
 				*/
-				static int Open(MESH_TYPE &mesh, const char *filename, int &loadmask, CallBackPos *cb=0)
+				static int Open(MESH_TYPE &mesh, const char *filename, int &loadmask,
+					CallBackPos *cb=0)
 				{
+
 					mesh.Clear();
 
-					bool isNormalDefined	 = false;
-					bool isColorDefined		 = false;
+					// The "[ST][C][N][4][n]OFF" keyword is optional. Default is "OFF".
+					bool isNormalDefined   = false;
+					bool isColorDefined    = false;
 					bool isTexCoordDefined = false;
 					int	 dimension = 3;
+					bool homogeneousComponents = false;
 
 					std::ifstream stream(filename);
 					if (stream.fail())
@@ -136,121 +149,222 @@ namespace vcg
 
 					std::vector< std::string > tokens;
 					TokenizeNextLine(stream, tokens);
-					if (tokens[tokens.size()-1].rfind("OFF")!= std::basic_string<char>::npos)
+
+					std::string header = tokens[tokens.size()-1];
+					if (header.rfind("OFF") != std::basic_string<char>::npos)
 					{
-						for (int u=int(tokens.size())-2; u>=0; u--)
+						for (int u = static_cast<int>(header.rfind("OFF")-1); u>=0; u--)
 						{
-							std::string header = tokens[u];
-							if (header.compare("C")==0)
-							{
+							if (header[u] == 'C')
 								isColorDefined = true;
-								continue;
-							}
-							if (header.compare("N")==0)
-							{
+							else if (header[u] == 'N')
 								isNormalDefined = true;
-								continue;
-							}
-							if (header.compare("ST")==0)
-							{
+							else if (u>0 && header[u-1] == 'S' && header[u] == 'T')
 								isTexCoordDefined = true;
-								continue;
+							else if (header[u] == '4')
+								homogeneousComponents = true;
+							else if (header[u] == 'n')
+							{
+								TokenizeNextLine(stream, tokens);
+								dimension = atoi(tokens[0].c_str());
 							}
 						}
-						if (tokens[tokens.size()-1].compare("4OFF")==0)
-							dimension = 4;
-						else if (tokens[tokens.size()-1].compare("nOFF")==0)
-						{
-							TokenizeNextLine(stream, tokens);
-							dimension = atoi(tokens[0].c_str());
-						}
-						else
-							dimension = 3;
 
 						TokenizeNextLine(stream, tokens);
 					}
+
+					// check on next 2 lines to detect corrupted files
+					if(tokens.size() < 3)
+						return InvalidFile;
 
 					unsigned int nVertices, nFaces, nEdges;
 					nVertices = atoi(tokens[0].c_str());
-					nFaces		= atoi(tokens[1].c_str());
-					nEdges		= atoi(tokens[2].c_str());
+					nFaces    = atoi(tokens[1].c_str());
+					nEdges    = atoi(tokens[2].c_str());
 
-					assert(dimension = 3);
+					// dimension is the space dimension of vertices => it must be three(!)
+					if (dimension != 3)
+						return UnsupportedFormat;
+
+					if (homogeneousComponents)
+						return UnsupportedFormat;
+
 					VertexIterator v_iter = Allocator<MESH_TYPE>::AddVertices(mesh, nVertices);
+					TokenizeNextLine(stream, tokens);
+					size_t k = 0; // next token to read
+
 					for (unsigned int i=0; i<nVertices; i++, v_iter++)
 					{
-						if (stream.fail())
-							return UnexpectedEOF;
-            
-            if(cb && (i%1000)==0) cb(i*50/nVertices,"Vertex Loading");
+						if (cb && (i%1000)==0) cb(i*50/nVertices,"Vertex Loading");
 
-						TokenizeNextLine(stream, tokens);
-						if(tokens.size() ==3)
+						// Read 3 vertex coordinates
+						for (unsigned int j=0; j<3; j++)
 						{
-							for (unsigned int j=0; j<3; j++)
-							(*v_iter).P()[j] = (ScalarType) atof(tokens[j].c_str());
+							// Go to next line when needed
+							if (k == tokens.size())   // if EOL
+							{
+								TokenizeNextLine(stream, tokens);
+								if (tokens.size() == 0) // if EOF
+									return InvalidFile;
+								k = 0;
+							}
+							// Read vertex coordinate
+							(*v_iter).P()[j] = (ScalarType) atof(tokens[k].c_str());
+							k++;
 						}
-						else
+
+						if (isNormalDefined)
 						{
-							size_t k = tokens.size();
+							// Read 3 normal coordinates
 							for (unsigned int j=0; j<3; j++)
 							{
-								(*v_iter).P()[j] = (ScalarType) atof(tokens[k].c_str());
-								k--;
-								if(k==0)
+								// Go to next line when needed
+								if (k == tokens.size())   // if EOL
 								{
 									TokenizeNextLine(stream, tokens);
-									k = tokens.size();
+									if (tokens.size() == 0) // if EOF
+										return InvalidFile;
+									k = 0;
+								}
+								// Read normal coordinate
+								(*v_iter).N()[j] = (ScalarType) atof(tokens[k].c_str());
+								k++;
+							}
+						}
+
+						if (isColorDefined)
+						{
+							// The number of color components varies from 0 to 4.
+							// The OFF format guaranties that there is 1 vertex per line.
+							int nb_color_components = static_cast<int>(tokens.size())
+								- static_cast<int>(k) /* tokens already parsed */
+								- 2 * (isTexCoordDefined ? 1 : 0);
+							if (nb_color_components < 0 || nb_color_components > 4)
+								return InvalidFile;
+
+							// Store color components
+							if (VertexType::HasColor())
+							{
+								// Read color components
+
+								if (nb_color_components == 1)
+								{
+									// read color index
+									(*v_iter).C().Import(ColorMap(atoi(tokens[k].c_str())));
+								}
+								else if (nb_color_components == 3)
+								{
+									// read RGB color
+									if (tokens[k].find(".") == -1)
+									{ 
+										// integers
+										unsigned char r = 
+											static_cast<unsigned char>(atoi(tokens[k].c_str()));
+										unsigned char g = 
+											static_cast<unsigned char>(atoi(tokens[k+1].c_str()));
+										unsigned char b = 
+											static_cast<unsigned char>(atoi(tokens[k+2].c_str()));
+
+										vcg::Color4b color(r, g, b, 255);
+										(*v_iter).C().Import(color);
+									}
+									else
+									{ 
+										// floats
+										float r = static_cast<float>(atof(tokens[k].c_str()));
+										float g = static_cast<float>(atof(tokens[k+1].c_str()));
+										float b = static_cast<float>(atof(tokens[k+2].c_str()));
+
+										vcg::Color4f color(r, g, b, 1.0);
+										(*v_iter).C().Import(color);
+									}
+								}
+								else if (nb_color_components == 4)
+								{
+									// read RGBA color
+									if (tokens[k].find(".") == -1)
+									{ 
+										// integers
+										unsigned char r = 
+											static_cast<unsigned char>(atoi(tokens[k].c_str()));
+										unsigned char g = 
+											static_cast<unsigned char>(atoi(tokens[k+1].c_str()));
+										unsigned char b = 
+											static_cast<unsigned char>(atoi(tokens[k+2].c_str()));
+										unsigned char a =
+											static_cast<unsigned char>(atoi(tokens[k+3].c_str()));
+
+										Color4b color(r, g, b, a);
+										(*v_iter).C().Import(color);
+									}
+									else
+									{ 
+										// floats
+										float r = static_cast<float>(atof(tokens[k].c_str()));
+										float g = static_cast<float>(atof(tokens[k+1].c_str()));
+										float b = static_cast<float>(atof(tokens[k+2].c_str()));
+										float a = static_cast<float>(atof(tokens[k+3].c_str()));
+
+										vcg::Color4f color(r, g, b, a);
+										(*v_iter).C().Import(color);
+									}
+								}
+							}
+							else // Skip color components
+								k += nb_color_components;
+						}
+
+						if (isTexCoordDefined)
+						{
+							for (unsigned int j=0; j<2; j++)
+							{
+								// Go to next line when needed
+								if (k == tokens.size())   // if EOL
+								{
+									TokenizeNextLine(stream, tokens);
+									if (tokens.size() == 0) // if EOF
+										return InvalidFile;
+									k = 0;
+								}
+
+								// Store texture coordinates
+								if (VertexType::HasTexture())
+								{
+									//...TODO...
 								}
 							}
 						}
-						if (isNormalDefined)
-							for (unsigned int j=3; j<6; j++)
-								(*v_iter).N()[j] = (ScalarType)  atof(tokens[j].c_str());
+					} // for i=...
 
-						if (isColorDefined) {}
-
-						if (isTexCoordDefined) {}
-					}
-
+					// Read faces
 					Allocator<MESH_TYPE>::AddFaces(mesh, nFaces);
 					unsigned int f0=0;
 					for (unsigned int f=0; f<nFaces; f++)
 					{
 						f0 = f;
 						if (stream.fail())
-							return UnexpectedEOF;
+							return InvalidFile;
 
-						if(cb && (f%1000)==0) cb(50+f*50/nFaces,"Vertex Loading");
+						if(cb && (f%1000)==0) cb(50+f*50/nFaces,"Face Loading");
 
 						TokenizeNextLine(stream, tokens);
 						int vert_per_face = atoi(tokens[0].c_str());
+
 						if (vert_per_face == 3)
 						{
-							if(tokens.size() ==4)
+							// It is assumed that the vertex indexes are on 1 line
+							if(tokens.size() >= 4)
 							{
 								for(unsigned int j = 0; j<3; j++)
 									mesh.face[f].V(j) = &(mesh.vert[ atoi(tokens[j+1].c_str()) ]);
 							}
 							else
-							{
-								TokenizeNextLine(stream, tokens);
-								size_t k = tokens.size();
-								for (unsigned int j=0; j<3; j++)
-								{
-									mesh.face[f].V(j) = &(mesh.vert[ atoi(tokens[j].c_str()) ]);
-									k--;
-									if(k==0)
-									{
-										TokenizeNextLine(stream, tokens);	
-										k = tokens.size();
-									}
-								}
-							}
+								return InvalidFile;
 						}
 						else
 						{
-							unsigned int trigs = vert_per_face-3;
+							// The face must be triangulate
+							unsigned int trigs = vert_per_face-3; // number of extra faces to add
 							nFaces += trigs;
 							Allocator<MESH_TYPE>::AddFaces(mesh, trigs);
 							int *vertIndices = new int[vert_per_face];
@@ -264,6 +378,7 @@ namespace vcg
 								mesh.face[f+k].V(1) = &(mesh.vert[ vertIndices[1+k] ]);
 								mesh.face[f+k].V(2) = &(mesh.vert[ vertIndices[2+k] ]);
 							}
+
 							f+=trigs;
 							delete []vertIndices;
 						}
@@ -283,7 +398,7 @@ namespace vcg
 							case 1:
 								{
 									for ( ; f0<=f; f0++)
-										mesh.face[f0].C().Import( ColorMap( atoi(tokens[vert_per_face+1].c_str()) ) ); 
+										mesh.face[f0].C().Import( ColorMap( atoi(tokens[vert_per_face+1].c_str()) ) );
 									break;
 								}
 							case 3:
@@ -334,14 +449,30 @@ namespace vcg
 								}
 							} //end switch
 						} // end if (isColorDefined)
+					} // end of for f=...
+
+					// Update loading mask
+					///////////////////////////////////////
+
+					loadmask = Mask::IOM_VERTCOORD | Mask::IOM_FACEINDEX;
+
+					if (isColorDefined)
+					{
+						if (VertexType::HasColor())
+							loadmask |= Mask::IOM_VERTCOLOR;
+
+						// FIXME: This can not be true in the general case.
+						if (FaceType::HasFaceColor())
+							loadmask |= Mask::IOM_FACECOLOR;
 					}
-          loadmask = Mask::IOM_VERTCOORD | Mask::IOM_FACEINDEX;
-          if(isColorDefined) loadmask |= Mask::IOM_FACECOLOR;
+
+					if (isTexCoordDefined && VertexType::HasTexture())
+						loadmask |= Mask::IOM_VERTTEXCOORD;
+
 					return NoError;
+
 				} // end Open
 
-
-				enum OFFCodes {NoError=0, CantOpen, UnexpectedEOF};
     protected:
 			
 				/*!
