@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2005/12/15 14:05:59  spinelli
+add test (tm==TMPerWedgeMulti)
+
 Revision 1.16  2005/12/14 00:18:43  cignoni
 multiple texture support
 
@@ -524,33 +527,40 @@ void DrawPoints()
 
 void DrawHidden()
 {
-	const float ZTWIST=HNParamf[HNPZTwist];
-	glDepthRange(ZTWIST,1.0f);
+	//const float ZTWIST=HNParamf[HNPZTwist];
+  glPushAttrib(GL_ENABLE_BIT | GL_CURRENT_BIT | GL_LIGHTING_BIT );
+	glEnable(GL_POLYGON_OFFSET_FILL);
+  glPolygonOffset(1.0, 1);
+	//glDepthRange(ZTWIST,1.0f);
 	glDisable(GL_LIGHTING);
 	glColorMask(GL_FALSE,GL_FALSE,GL_FALSE,GL_FALSE);
 	DrawFill<NMNone,CMNone,TMNone>();
+	glDisable(GL_POLYGON_OFFSET_FILL);
 	glEnable(GL_LIGHTING);
 	glColorMask(GL_TRUE,GL_TRUE,GL_TRUE,GL_TRUE);
-	
-	glDepthRange(0.0f,1.0f-ZTWIST);
+	//glDepthRange(0.0f,1.0f-ZTWIST);
 	DrawWire<NMPerVert,CMNone>();
-	glDepthRange(0,1.0f);
+	glPopAttrib();
+//	glDepthRange(0,1.0f);
 }
 
 template <NormalMode nm, ColorMode cm, TextureMode tm>
 void DrawFlatWire()
 {
-	const float ZTWIST=HNParamf[HNPZTwist];
-	glDepthRange(ZTWIST,1.0f);
+	//const float ZTWIST=HNParamf[HNPZTwist];
+	//glDepthRange(ZTWIST,1.0f);
+  glPushAttrib(GL_ENABLE_BIT | GL_CURRENT_BIT | GL_LIGHTING_BIT );
+  glEnable(GL_POLYGON_OFFSET_FILL);
+  glPolygonOffset(1.0, 1);
 	DrawFill<nm,cm,tm>();
-	glDepthRange(0.0f,1.0f-ZTWIST);
-	glPushAttrib(GL_CURRENT_BIT);
+  glDisable(GL_POLYGON_OFFSET_FILL);
+	//glDepthRange(0.0f,1.0f-ZTWIST);
   glEnable(GL_COLOR_MATERIAL);
 	glColorMaterial(GL_FRONT,GL_DIFFUSE);
   glColor3f(.3f,.3f,.3f);
 	DrawWire<NMPerVert,CMNone>();
 	glPopAttrib();
-	glDepthRange(0,1.0f);
+	//glDepthRange(0,1.0f);
 }	
 
 template <NormalMode nm, ColorMode cm>
