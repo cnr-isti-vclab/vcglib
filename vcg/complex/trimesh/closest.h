@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2006/02/08 17:02:41  pietroni
+commented one  GetClosestFace function ... the code is the same then getClosest that return barycentric coordinates
+
 Revision 1.19  2006/01/10 13:31:54  pietroni
 correct pass of variable closest_pt by reference in getclosestFace function
 
@@ -345,7 +348,7 @@ namespace vcg {
 
 //    Commented out: it seems unuseful and make gcc complain. p.
 //      void SetMesh(MeshType *m)
-//			{tm.SetMesh(m);}
+//			{this->tm.SetMesh(m);}
 		};
 
 		template <class GRID,class MESH>
@@ -363,7 +366,7 @@ namespace vcg {
 ////    Commented out: it seems unuseful and make gcc complain. p.
 //			void SetMesh(MeshType *m)
 //			{this->tm.SetMesh(m);}
-//		};
+		};
 
 		template <class GRID,class MESH>
 		class TriRayIterator:public vcg::RayIterator<GRID,vcg::RayTriangleIntersectionFunctor<true>,FaceTmark<MESH> >
@@ -382,8 +385,8 @@ namespace vcg {
 ////    Commented out: it  seems unuseful and make gcc complain. p.
 //			void SetMesh(MeshType *m)
 //			{this->tm.SetMesh(m);}
-//
-//		};
+
+		};
 
 	}	 // end namespace trimesh
 }	 // end namespace vcg
