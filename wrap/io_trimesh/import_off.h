@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2006/02/09 15:18:32  corsini
+*** empty log message ***
+
 Revision 1.12  2006/02/06 13:11:01  corsini
 Renamed UnexpectedEOF as InvalidFile and
 added UnsupportedFormat and ErrorNotTriangularFace (by Laurent Saboret)
@@ -455,6 +458,9 @@ namespace vcg
 					///////////////////////////////////////
 
 					loadmask = Mask::IOM_VERTCOORD | Mask::IOM_FACEINDEX;
+
+					if (isNormalDefined)
+						loadmask |= Mask::IOM_VERTNORMAL;
 
 					if (isColorDefined)
 					{
