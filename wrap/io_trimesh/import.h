@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2006/01/11 10:37:45  cignoni
+Added use of Callback
+
 Revision 1.2  2005/01/26 22:43:19  cignoni
 Add std:: to stl containers
 
@@ -99,6 +102,33 @@ static int Open(OpenMeshType &m, const char *filename, CallBackPos *cb=0)
   }
 
   return err;
+}
+
+// Open Mesh and return load mask
+static int Open(OpenMeshType &m, const char *filename, int &loadmask, CallBackPos *cb=0)
+{
+	int err;
+	if(FileExtension(filename,"ply"))
+	{
+		err = ImporterPLY<OpenMeshType>::Open(m, filename, loadmask, cb);
+		LastType()=KT_PLY;
+	}
+	else if(FileExtension(filename,"stl"))
+	{
+		err = ImporterSTL<OpenMeshType>::Open(m, filename, loadmask, cb);
+		LastType()=KT_STL;
+	}
+	else if(FileExtension(filename,"off"))
+	{
+		err = ImporterOFF<OpenMeshType>::Open(m, filename, loadmask, cb);
+		LastType()=KT_OFF;
+	}
+	else {
+		err=1;
+		LastType()=KT_UNKNOWN;
+	}
+
+	return err;
 }
 
 static const char *ErrorMsg(int error)
