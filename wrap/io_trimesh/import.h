@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2006/02/09 16:04:45  corsini
+Expose load mask
+
 Revision 1.3  2006/01/11 10:37:45  cignoni
 Added use of Callback
 
@@ -77,31 +80,11 @@ static bool FileExtension(std::string filename,  std::string extension)
   return end==extension;
 }
 
-// Open Mesh
+// Open Mesh and return load mask
 static int Open(OpenMeshType &m, const char *filename, CallBackPos *cb=0)
 {
-  int err;
-  if(FileExtension(filename,"ply"))
-  {
-    err = ImporterPLY<OpenMeshType>::Open(m,filename,cb);
-    LastType()=KT_PLY;
-  }
-  else if(FileExtension(filename,"stl"))
-  {
-    err = ImporterSTL<OpenMeshType>::Open(m,filename,cb);
-    LastType()=KT_STL;
-  }
-   else if(FileExtension(filename,"off"))
-  {
-    err = ImporterOFF<OpenMeshType>::Open(m,filename,cb);
-    LastType()=KT_OFF;
-  }
- else {
-    err=1;
-    LastType()=KT_UNKNOWN;
-  }
-
-  return err;
+  int &dummymask;
+  return Open(m,filename,dummymask,cb);
 }
 
 // Open Mesh and return load mask
