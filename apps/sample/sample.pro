@@ -10,6 +10,7 @@ SUBDIRS       = trimesh_base \
                 trimesh_isosurface \
                 trimesh_join \
                 trimesh_optional \
+                trimesh_intersection \
                 aabb_binary_tree
                 
 
