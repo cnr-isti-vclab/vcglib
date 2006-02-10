@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2006/02/10 08:14:32  cignoni
+Refactored import. No more duplicated code
+
 Revision 1.4  2006/02/09 16:04:45  corsini
 Expose load mask
 
@@ -83,7 +86,7 @@ static bool FileExtension(std::string filename,  std::string extension)
 // Open Mesh and return load mask
 static int Open(OpenMeshType &m, const char *filename, CallBackPos *cb=0)
 {
-  int &dummymask;
+  int dummymask;
   return Open(m,filename,dummymask,cb);
 }
 
