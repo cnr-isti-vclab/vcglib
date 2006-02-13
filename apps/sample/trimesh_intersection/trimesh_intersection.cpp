@@ -88,8 +88,6 @@ int main(int argc,char ** argv)
 
 	vcg::Plane3<MyMesh::ScalarType> plane(distance, direction);
 
-	printf("%f %f %f %f\n",distance,direction[0],direction[1],direction[2]);
-
 	double avg_length;     // average length of the edges
 	MyEdgeMesh edge_mesh;  // returned EdgeMesh (i.e. the cross-section)
 
@@ -100,8 +98,6 @@ int main(int argc,char ** argv)
 
 	vcg::Intersection<MyMesh, MyEdgeMesh, MyMesh::ScalarType, TriMeshGrid>(plane, 
 		edge_mesh, avg_length, &static_grid, intersected_cells);
-
-	printf("%d", edge_mesh.edges.size());
 
 	// Compute bounding box
 	vcg::edge::UpdateBounding<MyEdgeMesh>::Box(edge_mesh);
