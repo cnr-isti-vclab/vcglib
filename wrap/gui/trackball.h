@@ -25,6 +25,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/10/17 01:29:46  cignoni
+Main restructuring. Removed the Draw function and slightly changed the meaning of the trackball itself.
+See the notes at the beginning of trackball.h
+
 Revision 1.8  2004/07/11 22:06:56  cignoni
 Added scaling by wheel
 
@@ -59,7 +63,8 @@ Radius specify the radius of the interactive ball shaped icon to specify rotatio
 It is in absolute unit but it should be in screen related units like the previoous 
 one it is not changed during interaction.
 
-When you specify a traslation with the trackball the trackball center remain UNCHANGED.
+When you specify a traslation with the trackball the trackball center remain UNCHANGED, 
+in other words it means that the object move out of the trackball icon. 
 Similarly when you apply a scaling the size of the iconshaped ball do not change.
 
 
@@ -88,6 +93,8 @@ Perspective and gllookat are choosed to frame the origin centered 1-radius
 trackball.
 The final scale and translate are just to fit a generic mesh to the 1sized 
 origin centered where the trackball stays box.
+The trackball works also on Orthographic projections 
+BUT that are not centered around origin (just move it back along the Z)
 
 ****************************************************************************/
 
@@ -95,6 +102,7 @@ origin centered where the trackball stays box.
 #define TRACKBALL_H
 
 #include <vcg/math/similarity.h>
+#include <vcg/space/color4.h>
 #include <wrap/gui/view.h>
 #include <wrap/gui/trackmode.h>
 #include <list>
@@ -126,9 +134,20 @@ namespace vcg {
  class DrawingHint
     {
     public:
-      DrawingHint() {  CircleStep=32;   }
+      DrawingHint() {  
+        CircleStep=64;
+        HideStill=false;
+        DrawTrack=false;
+        LineWidthStill=0.5f;
+        LineWidthMoving=1.5f;
+        color=Color4b::LightBlue;
+      }
 
       int CircleStep;
+      bool HideStill,DrawTrack;
+      Color4b color;
+      float LineWidthStill;
+      float LineWidthMoving;
     };
 
 
@@ -151,20 +170,25 @@ namespace vcg {
     void SetPosition(const Point3f &c, int millisec = 0);
     void SetScale(const float s) {radius=s;};
     void SetTransform(const Transform &transform, int miilisec = 0);
+    void Translate(Point3f tr);
+    void Scale(const float f);
+
 
     //operating
     void GetView();\
     void Apply(bool Draw=true);
+    void DrawPostApply();
     void ApplyInverse();
     void DrawIcon();
     void Reset();
-
+    
     // Internal Drawing stuff
     void DrawCircle ();
     void DrawPlane();
     void DrawPlaneHandle();
 
     //interface
+    void MouseDown(/*Button*/ int button);
     void MouseDown(int x, int y, /*Button*/ int button);
     void MouseMove(int x, int y); 
     void MouseUp(int x, int y, /*Button */ int button); 

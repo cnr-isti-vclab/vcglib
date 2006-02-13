@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2005/10/17 01:29:46  cignoni
+Main restructuring. Removed the Draw function and slightly changed the meaning of the trackball itself.
+See the notes at the beginning of trackball.h
+
 Revision 1.13  2005/04/17 17:48:24  ganovelli
 modes deallocation commented (quick and dirty solution..to debug)
 
@@ -87,6 +91,7 @@ Trackball::Trackball(): current_button(0), current_mode(NULL),
   modes[BUTTON_LEFT]             = new SphereMode();
   modes[BUTTON_LEFT | KEY_CTRL]  = new PlaneMode(Plane3f(0, Point3f(1, 0, 0)));
   modes[BUTTON_LEFT | KEY_SHIFT] = new ScaleMode();
+  modes[BUTTON_LEFT | KEY_ALT  ] = new ZMode();
   modes[WHEEL]                   = new ScaleMode();
   SetCurrentAction();
 }
@@ -109,10 +114,30 @@ void Trackball::GetView() {
   camera.GetView();
 }
 
+void Trackball::DrawPostApply() { 
+    glPushMatrix();
+
+  glTranslate(center);
+  glMultMatrix(track.InverseMatrix());
+  Matrix44f r;
+    track.rot.ToMatrix(r);
+    glMultMatrix(r);
+    DrawIcon();
+    
+  glTranslate(-center);
+glMultMatrix(track.Matrix());
+}
+
 void Trackball::Apply(bool ToDraw) { 
   glTranslate(center);
   if(ToDraw) 
   {
+     if(DH.DrawTrack)     {
+       glBegin(GL_LINE_STRIP);
+        for(vector<Point3f>::iterator vi=Hits.begin();vi!=Hits.end();++vi)
+         glVertex(*vi);
+       glEnd();
+     }
     glPushMatrix();
     Matrix44f r;
     track.rot.ToMatrix(r);
@@ -130,13 +155,25 @@ void Trackball::ApplyInverse() {
   glTranslate(-center);
 }
 
+void Trackball::Scale(const float s)
+{
+  track.sca*=s;
+}
+
+void Trackball::Translate(Point3f tr)
+{
+  Matrix44f m;  
+  track.rot.ToMatrix(m); 
+  track.tra = last_track.tra + Inverse(m)*tr/track.sca;;
+}
+
 /***************************************************************/
 
 void Trackball::DrawCircle() {
   int nside=DH.CircleStep;
   const double pi2=3.14159265*2.0;
-  glBegin(GL_LINE_STRIP);
-  for(double i=0;i<=nside;i++){
+  glBegin(GL_LINE_LOOP);
+  for(double i=0;i<nside;i++){
     glNormal3d(cos(i*pi2/nside), sin(i*pi2/nside),  0.0);
     glVertex3d(cos(i*pi2/nside), sin(i*pi2/nside),  0.0);
   }
@@ -180,19 +217,25 @@ void Trackball::DrawPlaneHandle() {
 
 void Trackball::DrawIcon() {
   glPushMatrix();
-
+  
   glScale(radius);
   /// Here start the real drawing stuff
   float amb[4] ={.3f,.3f,.3f,1.0f};
   float col[4] ={.5f,.5f,.8f,1.0f};
   //float col2[4]={.9f,.9f,1.0f,1.0f};
   glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_CURRENT_BIT | GL_LIGHTING_BIT);
-  glLineWidth(2.0);
+
+ 
+  if(current_mode == NULL ) glLineWidth(DH.LineWidthStill);
+                       else glLineWidth(DH.LineWidthMoving);
+  
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
   glEnable(GL_LINE_SMOOTH);
   glEnable(GL_BLEND);
-
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glColor(DH.color);
+  
   glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,amb);
   glMaterialfv(GL_FRONT_AND_BACK,GL_DIFFUSE,col);
   glPushMatrix();
@@ -207,7 +250,7 @@ void Trackball::DrawIcon() {
     glPopMatrix();
   glPopMatrix();
 		
-  glColor4f(1.0,.8f,.8f,1.0f);
+  //glColor4f(1.0,.8f,.8f,1.0f);
 
   glPopAttrib();
 
@@ -219,6 +262,11 @@ void Trackball::Reset() {
 }
 
 //interface
+void Trackball::MouseDown(int button) {
+  current_button |= button;  
+  SetCurrentAction();
+  Hits.clear();
+}
 void Trackball::MouseDown(int x, int y, int button) {
   current_button |= button;  
   SetCurrentAction();
