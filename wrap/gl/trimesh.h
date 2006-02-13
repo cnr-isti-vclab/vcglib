@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2006/02/09 10:00:39  cignoni
+Switched from rough zoffset to glpolygonoffset for hiddenline and flatlines modes. Less zfighting...
+
 Revision 1.17  2005/12/15 14:05:59  spinelli
 add test (tm==TMPerWedgeMulti)
 
@@ -85,7 +88,7 @@ first draft: it includes glew !
 #include <queue>
 #include <vector>
 
-#include <GL/glew.h>
+//#include <GL/glew.h>
 #include <wrap/gl/space.h>
 #include <vcg/space/color4.h>
 

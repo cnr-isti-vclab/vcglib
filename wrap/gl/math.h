@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2004/09/30 00:48:07  ponchio
+<gl/glew.h> -> <GL/glew.h>
+
 Revision 1.8  2004/09/28 14:04:36  ganovelli
 glGet added
 
@@ -59,7 +62,8 @@ Revision 1.1  2004/03/31 15:27:17  ponchio
 
 #include <vcg/math/matrix44.h>
 #include <vcg/math/similarity.h>
-#include <GL/glew.h>
+//#include <GL/glew.h> // please do not include it!
+
 
 namespace vcg {
 
