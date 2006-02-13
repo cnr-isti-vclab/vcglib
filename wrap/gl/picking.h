@@ -28,11 +28,17 @@ This file contains two function providing the standard way to do picking using o
 
   History
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/12/03 09:36:28  ganovelli
+*** empty log message ***
+
 ****************************************************************************/
 
+#ifndef WRAP_GL_PICKING_H
+#define WRAP_GL_PICKING_H
 
 #include <algorithm>
-#include <GL/glut.h>
+namespace vcg
+{
 
 template <class TO_PICK_CONT_TYPE>
 int Pick(	const int & x, const int &y, 
@@ -100,8 +106,11 @@ int Pick(	const int & x, const int &y,
 		return result.size();
 	}
 
+// 10/2/06 Slightly changed the interface. 
+// Return value is used to determine if the picked point was against the far plane 
+// (and therefore nothing was picked)
 template <class PointType>
-PointType Pick(const int & x, const int &y){
+bool Pick(const int & x, const int &y, PointType &pp){
 	double res[3];
 	GLdouble mm[16],pm[16]; GLint vp[4];
 	glGetDoublev(GL_MODELVIEW_MATRIX,mm);
@@ -110,7 +119,14 @@ PointType Pick(const int & x, const int &y){
 	
 	float   pix;
 	glReadPixels(x,y,1,1,GL_DEPTH_COMPONENT,GL_FLOAT,&pix);
+  GLfloat depthrange[2]={0,0};
+  glGetFloatv(GL_DEPTH_RANGE,depthrange);
+  if(pix==depthrange[1]) return false;
 	gluUnProject(x,y,pix,mm,pm,vp,&res[0],&res[1],&res[2]);
-	return PointType (res[0],res[1],res[2]);
+	pp=PointType (res[0],res[1],res[2]);
+  return true;
 	}
 
+} // end namespace
+
+#endif
