@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2006/01/12 15:40:05  cignoni
+Corrected small bugs on rotating after scaling+translating
+changed void PlaneMode::Apply and void SphereMode::Apply
+
 Revision 1.14  2005/07/15 16:39:30  callieri
 in SphereMode::Hit added a check on the sphere intersection, if no intersection, calculating distance could generate a NAN exception
 
@@ -294,9 +298,17 @@ Point3f SphereMode::Hit(Trackball *tb, const Point3f &p) {
 void PlaneMode::Apply(Trackball *tb, Point3f new_point) {
 	Point3f hitOld = HitViewPlane(tb, tb->last_point);
 	Point3f hitNew = HitViewPlane(tb, new_point);
-	Matrix44f m;     tb->track.rot.ToMatrix(m); 
+	//Matrix44f m;     tb->track.rot.ToMatrix(m); 
 	//tb->track.tra = tb->last_track.tra + Inverse(m)*Point3f(hitNew- hitOld);// orig 2006 01 12
-	tb->track.tra = tb->last_track.tra + Inverse(m)*Point3f(hitNew- hitOld)/tb->track.sca;;
+	//tb->track.tra = tb->last_track.tra + Inverse(m)*Point3f(hitNew- hitOld)/tb->track.sca;;
+  tb->Translate(hitNew- hitOld);
 }
 
+void ZMode::Apply(Trackball *tb, Point3f new_point) {
+  float ScreenHeight= float(tb->camera.viewport[3]-tb->camera.viewport[1]);
+  float dist=(new_point[1]-tb->last_point[1])/ScreenHeight;
+	//Matrix44f m;     tb->track.rot.ToMatrix(m); 
+	//tb->track.tra = tb->last_track.tra + Inverse(m)*Point3f(0,0,-2*dist)/tb->track.sca;;
+  tb->Translate(Point3f(0,0,-2*dist));
+}
 

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2004/07/18 06:54:08  cignoni
+Added Scaling
+
 Revision 1.7  2004/07/11 22:06:56  cignoni
 Added scaling by wheel
 
@@ -94,6 +97,13 @@ public:
   void Apply(Trackball *trackball, Point3f new_point);
 protected:
   Plane3f plane;
+};
+
+// Move the object along the Z of the Camera
+// complement of the Plane mode
+class ZMode: public TrackMode {
+public:
+  void Apply(Trackball *trackball, Point3f new_point);
 };
 
 class LineMode: public TrackMode {
