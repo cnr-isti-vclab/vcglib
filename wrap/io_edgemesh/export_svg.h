@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2006/02/13 16:18:09  corsini
+first working version
+
 
 ****************************************************************************/
 #ifndef __VCG_LIB_EXPORTER_SVG
@@ -36,19 +39,15 @@ namespace vcg
 		namespace io 
 		{
 
-/**
- * SVG exporter.
- *
- * This exporter save a mesh of EdgeMesh type in the SVG format.
- * Most of the features of the SVG format are not supported. 
- * The given EdgeMesh is saved as a set lines. It is possible to 
- * set the width and the color of the lines.
- */
-template <class EdgeMeshType>
-class ExporterSVG
-{
 
-// definitions
+/**
+ * SVG Properties.
+ *
+ * Support class to set the properties of the SVG exporter.
+ */
+class SVGProperties
+{
+	// definitions
 public:
 
 	//! Stroke colors.
@@ -80,6 +79,10 @@ public:
 		SQUARE
 	};
 
+	static const int DEFAULT_LINE_WIDTH;
+	static const char * DEFAULT_LINE_COLOR;
+	static const char * DEFAULT_LINE_CAP;
+
 // private data members
 private:
 
@@ -92,22 +95,27 @@ private:
 	//! Stroke linecap (see StrokeLineCap).
 	std::string stroke_linecap;
 
+// construction
+public:
+
+	SVGProperties()
+	{
+		lwidth = DEFAULT_LINE_WIDTH;
+		stroke_color = DEFAULT_LINE_COLOR;
+		stroke_linecap = DEFAULT_LINE_CAP;
+	}
+
 // public methods
 public:
 
-	ExporterSVG(void)
-	{
-		lwidth = 5;
-		stroke_color = "black";
-		stroke_linecap = "round";
-	}
-
-	static void setLineWidth(int width)
+	//! Set the line width.
+	void setLineWidth(int width)
 	{
 		lwidth = width;
 	}
 
-	static void setColor(enum StrokeColor color)
+	//! Set the stroke color.
+	void setColor(enum StrokeColor color)
 	{
 		if (color == BLACK)
 			stroke_color = "black";
@@ -143,7 +151,8 @@ public:
 			stroke_color = "aqua";
 	}
 
-	static void setLineCap(enum StrokeLineCap linecap)
+	//! Set the line cap style.
+	void setLineCap(enum StrokeLineCap linecap)
 	{
 		if (linecap == BUTT)
 			stroke_linecap = "butt";
@@ -152,8 +161,44 @@ public:
 		else if (linecap == SQUARE)
 			stroke_linecap = "square";
 	}
+
+// accessors
+public:
+
+	int lineWidth(){return lwidth;}
+	const char * lineColor(){return stroke_color.c_str();}
+	const char * lineCapStyle(){return stroke_linecap.c_str();}
+
+};
+
+// DEFAULT SVG PROPERTIES
+const int SVGProperties::DEFAULT_LINE_WIDTH = 2;
+const char * SVGProperties::DEFAULT_LINE_COLOR = "black";
+const char * SVGProperties::DEFAULT_LINE_CAP = "round";
+
+/**
+ * SVG exporter.
+ *
+ * This exporter save a mesh of EdgeMesh type in the SVG format.
+ * Most of the features of the SVG format are not supported. 
+ * The given EdgeMesh is saved as a set lines. The properties
+ * of the SVG export can be set through the SVGProp class.
+ */
+template <class EdgeMeshType>
+class ExporterSVG
+{
+
+public:
+
+	//! Save with the default SVG properties.
+	static bool Save(EdgeMeshType *mp, const char *filename)
+	{
+		SVGProperties properties;
+		return Save(mp, filename, properties);
+	}
 	
-	bool Save(EdgeMeshType  *mp, const char * filename)
+	//! Save with the given SVG properties.
+	static bool Save(EdgeMeshType *mp, const char *filename, SVGProperties & props)
 	{
 		FILE * o = fopen(filename,"w");
 		if (o==NULL)
@@ -179,7 +224,7 @@ public:
 		fprintf(o, "    </rdf:RDF> \n");
 		fprintf(o, "  </metadata> \n");
 
-		Save(mp,o);
+		Save(mp, o, props);
 
 		fprintf(o, "</svg>");
 
@@ -189,7 +234,7 @@ public:
 		return true;
 	}
 
-	void Save(EdgeMeshType *mp, FILE* o)
+	static void Save(EdgeMeshType *mp, FILE* o, SVGProperties & props)
 	{
 		EdgeMeshType::EdgeIterator i;
 
@@ -198,7 +243,7 @@ public:
 
 		// line settings
 		fprintf(o, "      <g stroke=\"%s\" stroke-linecap=\"%s\" > \n", 
-			stroke_color.c_str(), stroke_linecap.c_str());
+			props.lineColor(), props.lineCapStyle());
 
 		for(i = mp->edges.begin(); i != mp->edges.end(); ++i)
 		{
@@ -209,7 +254,7 @@ public:
 				(p1[0] - pmin[0]) * scale, (p1[2] - pmin[2]) * scale,
 				(p2[0] - pmin[0]) * scale, (p2[2] - pmin[2]) * scale );
 
-			fprintf(o, "          stroke-width = \"%d\" ",lwidth);
+			fprintf(o, "          stroke-width = \"%d\" ",props.lineWidth());
 			fprintf(o, "/>\n");
 		}
 
