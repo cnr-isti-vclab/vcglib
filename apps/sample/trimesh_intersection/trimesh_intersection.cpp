@@ -103,8 +103,7 @@ int main(int argc,char ** argv)
 	vcg::edge::UpdateBounding<MyEdgeMesh>::Box(edge_mesh);
 
 	// export the cross-section
-	vcg::edge::io::ExporterSVG<MyEdgeMesh> exporter;
-	if (exporter.Save(&edge_mesh, "out.svg"))
+	if (vcg::edge::io::ExporterSVG<MyEdgeMesh>::Save(&edge_mesh, "out.svg"))
 		printf("    The cross-intersection has been successfully saved (OUT.SVG).\n");
 	else
 		printf("    The cross-intersection cannot be saved.\n");
