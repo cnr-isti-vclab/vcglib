@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2006/01/13 15:47:42  cignoni
+Uniformed return type to the style of Open. Now every export function returns 0 in case of success.
+
 Revision 1.1  2005/11/12 18:34:17  cignoni
 Initial Commit
 
@@ -38,6 +41,7 @@ Initial Commit
 #include <wrap/io_trimesh/export_stl.h>
 #include <wrap/io_trimesh/export_off.h>
 #include <wrap/io_trimesh/export_dxf.h>
+#include <wrap/io_trimesh/export_obj.h>
 
 #include <locale>
 
@@ -54,7 +58,7 @@ template <class OpenMeshType>
 class Exporter
 {
 private:
-  enum KnownTypes { KT_UNKNOWN, KT_PLY, KT_STL, KT_DXF, KT_OFF };
+  enum KnownTypes { KT_UNKNOWN, KT_PLY, KT_STL, KT_DXF, KT_OFF, KT_OBJ};
 static int &LastType()
 {
   static int lastType= KT_UNKNOWN;
@@ -101,6 +105,11 @@ static int Save(OpenMeshType &m, const char *filename, const int mask, CallBackP
     err = ExporterDXF<OpenMeshType>::Save(m,filename);
     LastType()=KT_DXF;
   }
+  else if(FileExtension(filename,"obj"))
+  {
+	err = ExporterOBJ<OpenMeshType>::Save(m,filename,mask,cb);
+	LastType()=KT_OBJ;
+  }
  else {
     err=1;
     LastType()=KT_UNKNOWN;
@@ -117,6 +126,7 @@ static const char *ErrorMsg(int error)
     case KT_STL : return ExporterSTL<OpenMeshType>::ErrorMsg(error); break;
     case KT_OFF : return ExporterOFF<OpenMeshType>::ErrorMsg(error); break;
     case KT_DXF : return ExporterDXF<OpenMeshType>::ErrorMsg(error); break;
+	case KT_OBJ : return ExporterOBJ<OpenMeshType>::ErrorMsg(error); break;
   }
   return "Unknown type";  
 }
