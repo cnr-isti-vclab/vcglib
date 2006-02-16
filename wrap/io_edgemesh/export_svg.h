@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2006/02/15 15:40:06  corsini
+Decouple SVG properties and exporter for simmetry with the other exporter
+
 Revision 1.1  2006/02/13 16:18:09  corsini
 first working version
 
@@ -95,6 +98,9 @@ private:
 	//! Stroke linecap (see StrokeLineCap).
 	std::string stroke_linecap;
 
+	//! Plane where to project the edge mesh.
+	Plane3d proj;
+
 // construction
 public:
 
@@ -103,6 +109,11 @@ public:
 		lwidth = DEFAULT_LINE_WIDTH;
 		stroke_color = DEFAULT_LINE_COLOR;
 		stroke_linecap = DEFAULT_LINE_CAP;
+
+		// default projection plane (XZ plane)
+		Point3d n(0.0, 1.0, 0.0);
+		proj.SetDirection(n);
+		proj.SetOffset(0.0);
 	}
 
 // public methods
@@ -162,12 +173,19 @@ public:
 			stroke_linecap = "square";
 	}
 
+	void setPlane(double distance, Point3d &direction)
+	{
+		proj.SetDirection(direction);
+		proj.SetOffset(distance);
+	}
+
 // accessors
 public:
 
 	int lineWidth(){return lwidth;}
 	const char * lineColor(){return stroke_color.c_str();}
 	const char * lineCapStyle(){return stroke_linecap.c_str();}
+	const Plane3d * projPlane(){return &proj;}
 
 };
 
@@ -236,23 +254,86 @@ public:
 
 	static void Save(EdgeMeshType *mp, FILE* o, SVGProperties & props)
 	{
-		EdgeMeshType::EdgeIterator i;
+		// build vector basis (n, v1, v2)
+		Point3d p1(0.0,0.0,0.0);
+		Point3d p2(1.0,0.0,0.0);
 
-		Point3f pmin = mp->bbox.min;
-		float scale = 1000.0f / max(mp->bbox.DimX(), mp->bbox.DimZ());
+		Point3d d = props.projPlane()->Direction() - p2;
+
+		Point3d v1;
+		if (d.Norm() < 0.00001)
+			v1 = Point3d(0.0,0.0,1.0) - p1;
+		else
+			v1 = p2 - p1;
+
+		v1.Normalize();
+		Point3d v2 = v1 ^ props.projPlane()->Direction();
+
+		std::vector<Point2f> pts;
+		Point2f pmin(100000000.0f,  100000000.0f);
+		Point2f pmax(-100000000.0f, -100000000.0f);
+
+		EdgeMeshType::EdgeIterator i;
+		for (i = mp->edges.begin(); i != mp->edges.end(); ++i)
+		{
+			Point3<EdgeMeshType::ScalarType> p1 = (*i).V(0)->P();
+			Point3<EdgeMeshType::ScalarType> p2 = (*i).V(1)->P();
+
+			Point3d p1d(p1[0], p1[1], p1[2]);
+			Point3d p2d(p2[0], p2[1], p2[2]);
+
+			// Project the line on the reference plane
+			Point3d p1proj = props.projPlane()->Projection(p1d);
+			Point3d p2proj = props.projPlane()->Projection(p2d);
+
+			// Convert the 3D coordinates of the line to the uv coordinates of the plane
+			Point2f pt1(static_cast<float>(p1proj * v1), static_cast<float>(p1proj * v2));
+			Point2f pt2(static_cast<float>(p2proj * v1), static_cast<float>(p2proj * v2));
+
+			pts.push_back(pt1);
+			pts.push_back(pt2);
+
+			if (pt1[0] <= pmin[0])
+				pmin[0] = pt1[0];
+
+			if (pt2[0] <= pmin[0])
+				pmin[0] = pt2[0];
+
+			if (pt1[1] <= pmin[1])
+				pmin[1] = pt1[1];
+
+			if (pt2[1] <= pmin[1])
+				pmin[1] = pt2[1];
+
+			if (pt1[0] >= pmax[0])
+				pmax[0] = pt1[0];
+
+			if (pt2[0] >= pmax[0])
+				pmax[0] = pt2[0];
+
+			if (pt1[1] >= pmax[1])
+				pmax[1] = pt1[1];
+
+			if (pt2[1] >= pmax[1])
+				pmax[1] = pt2[1];
+		}
+
+		float scale = 1000.0f / std::max(pmax[0] - pmin[0], pmax[1] - pmin[1]);
 
 		// line settings
 		fprintf(o, "      <g stroke=\"%s\" stroke-linecap=\"%s\" > \n", 
 			props.lineColor(), props.lineCapStyle());
 
-		for(i = mp->edges.begin(); i != mp->edges.end(); ++i)
+		std::vector<Point2f>::iterator itPoints;
+		for(itPoints = pts.begin(); itPoints != pts.end(); ++itPoints)
 		{
-			Point3f p1 = (*i).V(0)->P();
-			Point3f p2 = (*i).V(1)->P();
+			Point2f p1 = *itPoints;
+			++itPoints;
+			Point2f p2 = *itPoints;
 
 			fprintf(o, "        <line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" \n", 
-				(p1[0] - pmin[0]) * scale, (p1[2] - pmin[2]) * scale,
-				(p2[0] - pmin[0]) * scale, (p2[2] - pmin[2]) * scale );
+				(p1[0] - pmin[0]) * scale, (p1[1] - pmin[1]) * scale,
+				(p2[0] - pmin[0]) * scale, (p2[1] - pmin[1]) * scale );
 
 			fprintf(o, "          stroke-width = \"%d\" ",props.lineWidth());
 			fprintf(o, "/>\n");
