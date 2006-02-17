@@ -25,6 +25,9 @@
   History
 
  $Log: not supported by cvs2svn $
+ Revision 1.1  2006/02/16 19:28:36  fmazzant
+ transfer of Export_3ds.h, Export_obj.h, Io_3ds_obj_material.h from Meshlab to vcg
+
  Revision 1.14  2006/02/06 11:26:26  fmazzant
  bug-fix comment
 
@@ -136,6 +139,10 @@
 	this information has been taken by the official site.
 
 	runable from http://lib3ds.sourceforge.net/
+
+	the Lib3ds library must have the following relative path:
+		INCLUDEPATH  += ../../../../code/lib/lib3ds-1.2.0
+		win32:LIBS	 += ../../../../code/lib/lib3ds-1.2.0/lib3ds-120s.lib
 */
 #include <lib3ds/file.h>
 #include <lib3ds/io.h>
