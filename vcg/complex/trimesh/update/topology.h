@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2005/11/10 15:36:42  cignoni
+Added clarifying comment in an assert
+
 Revision 1.15  2004/10/20 07:33:10  cignoni
 removed FaceBorderFlags (already present in update/flags.h)
 
@@ -192,7 +195,8 @@ static void FaceFace(MeshType &m)
 	int ne = 0;											// Numero di edge reali
 
 	typename std::vector<PEdge>::iterator pe,ps;
-	for(ps = e.begin(),pe=e.begin();pe<=e.end();++pe)	// Scansione vettore ausiliario
+	//for(ps = e.begin(),pe=e.begin();pe<=e.end();++pe)	// Scansione vettore ausiliario
+	for(ps = e.begin(),pe=e.begin();pe!=e.end();++pe)	// Scansione vettore ausiliario
 	{
 		if( pe==e.end() || *pe != *ps )					// Trovo blocco di edge uguali
 		{
