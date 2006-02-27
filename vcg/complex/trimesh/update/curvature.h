@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/10/25 09:17:41  spinelli
+correct IsBorder
+
 Revision 1.1  2005/02/22 16:40:29  ganovelli
 created. This version writes the gaussian curvature on the Q() member of
 the vertex
@@ -67,8 +70,8 @@ Discrete Differential-Geometry Operators for Triangulated 2-Manifolds Mark Meyer
 static void Gaussian( MeshType &  m){
 		assert(m.HasPerVertexQuality());
 
-	MeshType::VertexIterator vi;   // iteratore vertice
-	MeshType::FaceIterator fi;     // iteratore facce
+	typename MeshType::VertexIterator vi;   // iteratore vertice
+	typename MeshType::FaceIterator fi;     // iteratore facce
 	double *area;                  // areamix vector
 	int i;												 // index
 	double area0, area1, area2;
@@ -109,9 +112,9 @@ static void Gaussian( MeshType &  m){
 		}
 		else // triangolo ottuso
 		{  
-			(*fi).V(0)->Q() += (*fi).Area() / 3;
-			(*fi).V(1)->Q() += (*fi).Area() / 3;
-			(*fi).V(2)->Q() += (*fi).Area() / 3;            
+			(*fi).V(0)->Q() += (*fi).DoubleArea() / 6;
+			(*fi).V(1)->Q() += (*fi).DoubleArea() / 6;
+			(*fi).V(2)->Q() += (*fi).DoubleArea() / 6;            
 		}
 	}
 
@@ -129,7 +132,7 @@ static void Gaussian( MeshType &  m){
 		{
 			if(vcg::face::IsBorder((*fi), i))
 			{
-				MeshType::CoordType e1,e2;
+				typename MeshType::CoordType e1,e2;
 				vcg::face::Pos<FaceType> hp(&*fi,i,(*fi).V(i));
 				//MeshType::hedgepos_type hp(&*fi,i,(*fi).V(i));
 				vcg::face::Pos<FaceType> hp1=hp;
