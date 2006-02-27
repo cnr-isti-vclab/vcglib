@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2006/02/27 11:56:48  spinelli
+minor bug in Face-Face topology loop fixed
+
 Revision 1.16  2005/11/10 15:36:42  cignoni
 Added clarifying comment in an assert
 
@@ -195,8 +198,9 @@ static void FaceFace(MeshType &m)
 	int ne = 0;											// Numero di edge reali
 
 	typename std::vector<PEdge>::iterator pe,ps;
+	ps = e.begin();pe=e.begin();
 	//for(ps = e.begin(),pe=e.begin();pe<=e.end();++pe)	// Scansione vettore ausiliario
-	for(ps = e.begin(),pe=e.begin();pe!=e.end();++pe)	// Scansione vettore ausiliario
+	do
 	{
 		if( pe==e.end() || *pe != *ps )					// Trovo blocco di edge uguali
 		{
@@ -219,7 +223,9 @@ static void FaceFace(MeshType &m)
 			ps = pe;
 			++ne;										// Aggiorno il numero di edge
 		}
-	}
+		if(pe==e.end()) break;
+		++pe;
+	} while(true);
 }
 
 
