@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/12/16 13:28:09  cignoni
+Increased the maximum number of possible template args from 7  to 8
+
 Revision 1.5  2005/12/02 00:41:38  cignoni
 Added and removed typenames for gcc compiling.
 Added this-> qualifier for referencing the elemntes of the templated base class
@@ -306,6 +309,22 @@ class MyFaceNf   : public FaceSimp2< VertProto, EdgeProto, MyFaceNf, face::Flag,
 A Face with coords, and normal for use in a tetrahedral mesh AND in a standard trimesh:
 
 class TetraFace   : public FaceSimp3< VertProto, EdgeProto, TetraFace, TetraProto, face::Coord3d, face::Normal3f  > {};
+
+
+A summary of the components that can be added to a face (see components.h for details):
+          
+VertexRef
+NormalFromVert, WedgeNormal
+Normal3s, Normal3f, Normal3d
+WedgeTexture2s, WedgeTexture2f, WedgeTexture2d
+BitFlags
+WedgeColor, Color4b
+Qualitys, Qualityf, Qualityd
+Mark                                            //Incremental mark (int)
+VFAdj                                           //Topology vertex face adjacency
+                                                 (pointers to next face in the ring of the vertex
+FFAdj                                           //topology: face face adj
+                                                  pointers to adjacent faces
 
 */
 
