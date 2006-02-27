@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/12/05 15:58:10  cignoni
+Removed spurious definition of flags in Aritymax that was overriding the correct definition in EmplyBitFlags and BitFlags classes
+
 Revision 1.5  2005/12/02 00:44:41  cignoni
 Reformatted and compacted flags code.
 
@@ -250,6 +253,17 @@ A vertex with coords, and normal for use in a tetrahedral mesh AND in a standard
 
 class TetraVertex   : public VertexSimp3< TetraVertex, EdgeProto, FaceProto, TetraProto, vert::Coord3d, vert::Normal3f  > {};
 
+
+A summary of the available vertex attributes (see component.h for more details):
+          
+Coord3f,  Coord3d, 
+Normal3s,  Normal3f,  Normal3d
+Mark                              //a int component (incremental mark)
+BitFlags
+Texture2s,  Texture2f,  Texture2d
+Color4b
+Qualitys, Qualityf, Qualityd
+VFAdj                             //topology (vertex->face adjacency)
 */
 
 template <class BVT, class BET, class BFT, class BTT,
