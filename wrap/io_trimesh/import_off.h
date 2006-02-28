@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2006/02/09 15:56:34  corsini
+Update load mask
+
 Revision 1.14  2006/02/09 15:18:32  corsini
 *** empty log message ***
 
@@ -463,16 +466,9 @@ namespace vcg
 						loadmask |= Mask::IOM_VERTNORMAL;
 
 					if (isColorDefined)
-					{
-						if (VertexType::HasColor())
-							loadmask |= Mask::IOM_VERTCOLOR;
+						loadmask |= Mask::IOM_VERTCOLOR;
 
-						// FIXME: This can not be true in the general case.
-						if (FaceType::HasFaceColor())
-							loadmask |= Mask::IOM_FACECOLOR;
-					}
-
-					if (isTexCoordDefined && VertexType::HasTexture())
+					if (isTexCoordDefined)
 						loadmask |= Mask::IOM_VERTTEXCOORD;
 
 					return NoError;
