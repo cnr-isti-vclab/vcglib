@@ -25,6 +25,9 @@
   History
 
  $Log: not supported by cvs2svn $
+ Revision 1.1  2006/02/16 19:28:36  fmazzant
+ transfer of Export_3ds.h, Export_obj.h, Io_3ds_obj_material.h from Meshlab to vcg
+
  Revision 1.7  2006/02/06 11:04:40  fmazzant
  added file material.h. it include struct Material, CreateNewMaterial(...) and MaterialsCompare(...)
 
@@ -76,7 +79,6 @@
 #include <iostream>
 #include <fstream>
 #include <map>
-#include <QMessageBox>
 
 namespace vcg {
 namespace tri {
