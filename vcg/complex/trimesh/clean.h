@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.34  2006/02/01 15:27:00  cignoni
+Added IsD() test in SelfIntersection
+
 Revision 1.33  2006/01/27 09:55:25  corsini
 fix signed/unsigned mismatch
 
@@ -805,7 +808,7 @@ namespace vcg {
 					(*fi).GetBBox(bbox);
 					vcg::trimesh::GetInBoxFace(m, gM, bbox,inBox);
 					bool Intersected=false;
-          std::vector<FaceType*>::iterator fib;
+          typename std::vector<FaceType*>::iterator fib;
           for(fib=inBox.begin();fib!=inBox.end();++fib)
           {
             if(!(*fib)->IsUserBit(referredBit) && (*fib != &*fi) )
