@@ -28,6 +28,10 @@ This file contains two function providing the standard way to do picking using o
 
   History
 $Log: not supported by cvs2svn $
+Revision 1.2  2006/02/13 13:06:34  cignoni
+Removed glut. Added ifdef guards and namespace.
+Added bool return value to the pick function
+
 Revision 1.1  2005/12/03 09:36:28  ganovelli
 *** empty log message ***
 
@@ -96,7 +100,7 @@ int Pick(	const int & x, const int &y,
 		std::sort(H.begin(),H.end());
 
 		result.resize(H.size());
-		for(ii=0;ii<hits;ii++){
+		for(int ii=0;ii<hits;ii++){
 			typename TO_PICK_CONT_TYPE::iterator ei=m.begin();
 			advance(ei ,H[ii].second);
 			result[ii]=&*ei;
