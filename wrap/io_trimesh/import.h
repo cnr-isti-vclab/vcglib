@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2006/02/10 16:14:53  corsini
+Fix typo
+
 Revision 1.5  2006/02/10 08:14:32  cignoni
 Refactored import. No more duplicated code
 
@@ -83,14 +86,14 @@ static bool FileExtension(std::string filename,  std::string extension)
   return end==extension;
 }
 
-// Open Mesh and return load mask
+// Open Mesh
 static int Open(OpenMeshType &m, const char *filename, CallBackPos *cb=0)
 {
-  int dummymask;
+  int dummymask = 0;
   return Open(m,filename,dummymask,cb);
 }
 
-// Open Mesh and return load mask
+// Open Mesh and return the load mask (the load mask must be initialized first)
 static int Open(OpenMeshType &m, const char *filename, int &loadmask, CallBackPos *cb=0)
 {
 	int err;
