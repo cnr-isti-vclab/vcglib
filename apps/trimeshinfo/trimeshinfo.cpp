@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.35  2006/02/09 16:12:27  corsini
+Add normal, color, texture information
+
 Revision 1.34  2006/02/06 12:59:12  corsini
 Fix mesh info structure initialization
 
@@ -270,7 +273,7 @@ int OpenMesh(const	char *filename,	CMesh &m)
 {
 	printf("    Mesh loading...");
 
-	int mask;
+	int mask = 0;
 	int err = tri::io::Importer<CMesh>::Open(m, filename, mask);
 
 	if (err)
