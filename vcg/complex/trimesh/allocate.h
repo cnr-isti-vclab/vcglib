@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.26  2006/02/28 12:13:49  spinelli
+fix bug end iterator++
+
 Revision 1.25  2005/11/10 15:37:58  cignoni
 Removed flags clearing (now it should be in the constructor of face and vertex)
 
@@ -196,16 +199,10 @@ namespace vcg {
 
 				}
 				unsigned int siz=(unsigned int)m.vert.size()-n;	
-				//if(last!=(VertexIterator)0)  
-				//{ 
+			
 				last = m.vert.begin(); 
 				advance(last,siz);
-				//}
-				//else last=m.vert.begin(); 
-
-
-
-
+			
 				return last;// deve restituire l'iteratore alla prima faccia aggiunta;
 			}
 
@@ -291,13 +288,13 @@ namespace vcg {
 										if ((*vi).VFp()!=0)
 											pu.Update((*vi).VFp());
 								}
-								// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
-								unsigned int siz=m.face.size()-n;	
 
-								last = m.face.begin(); 
-								advance(last,siz);
 				}
+				// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
+				unsigned int siz=m.face.size()-n;	
 
+				last = m.face.begin(); 
+				advance(last,siz);
 				return last;
 			}
 
@@ -315,7 +312,7 @@ namespace vcg {
 			*/
 			static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu)
 			{
-				FaceIterator  last = m.face.end();
+				FaceIterator  last;
 				pu.Clear();
 				if(m.face.empty()) {
 					pu.oldBase=0;  // if the vector is empty we cannot find the last valid element
@@ -371,11 +368,11 @@ namespace vcg {
 
 							}
 							// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
-							unsigned int siz=(unsigned int)m.face.size()-n;	
-							last = m.face.begin(); 
-							advance(last,siz);
-				}
 
+				}
+				unsigned int siz=(unsigned int)m.face.size()-n;	
+				last = m.face.begin(); 
+				advance(last,siz);
 				return last;
 			}
 
