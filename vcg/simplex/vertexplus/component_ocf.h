@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/12/12 11:17:32  cignoni
+Corrected update function, now only the needed simplexes should be updated.
+
 Revision 1.1  2005/10/14 15:07:59  cignoni
 First Really Working version
 
@@ -67,38 +70,38 @@ public:
 	// l'allocazione in memoria del container
 	void push_back(const VALUE_TYPE & v)
   {
-    ThisTypeIterator oldbegin=begin();
-    ThisTypeIterator oldend=end();
+    ThisTypeIterator oldbegin=(*this).begin();
+    ThisTypeIterator oldend=(*this).end();
     BaseType::push_back(v);
-    if(oldbegin!=begin()) _updateOVP(begin(),end());
-                     else _updateOVP(oldend, end());
+    if(oldbegin!=(*this).begin()) _updateOVP((*this).begin(),(*this).end());
+                     else _updateOVP(oldend, (*this).end());
   }
 	void pop_back();
   void resize(const unsigned int & _size) 
   {
-    ThisTypeIterator oldbegin=begin();
-    ThisTypeIterator oldend=end();
+    ThisTypeIterator oldbegin=(*this).begin();
+    ThisTypeIterator oldend=(*this).end();
     BaseType::resize(_size);
-    if(oldbegin!=begin()) _updateOVP(begin(),end());
-                     else _updateOVP(oldend, end());
+    if(oldbegin!=(*this).begin()) _updateOVP((*this).begin(),(*this).end());
+                     else _updateOVP(oldend, (*this).end());
     if(ColorEnabled) CV.resize(_size);
     if(NormalEnabled) NV.resize(_size);
     
    }
   void reserve(const unsigned int & _size)
   {
-    ThisTypeIterator oldbegin=begin();
+    ThisTypeIterator oldbegin=(*this).begin();
     BaseType::reserve(_size);
     if (ColorEnabled) CV.reserve(_size);
     if (NormalEnabled) NV.reserve(_size);
-    if(oldbegin!=begin()) _updateOVP(begin(),end());
+    if(oldbegin!=(*this).begin()) _updateOVP((*this).begin(),(*this).end());
   }
 
  void _updateOVP(ThisTypeIterator lbegin, ThisTypeIterator lend)
 {
     ThisTypeIterator vi;
     for(vi=lbegin;vi!=lend;++vi)
-    //for(vi=begin();vi!=end();++vi)
+    //for(vi=(*this).begin();vi!=(*this).end();++vi)
         (*vi)._ovp=this;
  }
 ////////////////////////////////////////
@@ -107,7 +110,7 @@ public:
 void EnableColor() {
   assert(VALUE_TYPE::HasColorOcf());
   ColorEnabled=true;
-  CV.resize(size());
+  CV.resize((*this).size());
 }
 
 void DisableColor() {
@@ -119,7 +122,7 @@ void DisableColor() {
 void EnableNormal() {
   assert(VALUE_TYPE::HasNormalOcf());
   NormalEnabled=true;
-  NV.resize(size());
+  NV.resize((*this).size());
 }
 
 void DisableNormal() {
@@ -131,7 +134,7 @@ void DisableNormal() {
 void EnableVFAdjacency() {
   assert(VALUE_TYPE::HasVFAdjacencyOcf());
   VFAdjacencyEnabled=true;
-  AV.resize(size());
+  AV.resize((*this).size());
 }
 
 void DisableVFAdjacency() {
@@ -168,18 +171,18 @@ public:
 template <class T> class VFAdjOcf: public T {
 public:
   typename T::FacePointer &VFp() {
-    assert(Base().VFAdjacencyEnabled); 
-    return Base().AV[Index()]._fp; 
+    assert((*this).Base().VFAdjacencyEnabled); 
+    return (*this).Base().AV[(*this).Index()()]._fp; 
   }
 
   typename T::FacePointer cVFp() const {
-    if(! Base().VFAdjacencyEnabled ) return 0; 
-    else return Base().AV[Index()]._fp; 
+    if(! (*this).Base().VFAdjacencyEnabled ) return 0; 
+    else return (*this).Base().AV[(*this).Index()()]._fp; 
   }
 
   int &VFi() {
-    assert(Base().VFAdjacencyEnabled); 
-    return Base().AV[Index()]._zp; 
+    assert((*this).Base().VFAdjacencyEnabled); 
+    return (*this).Base().AV[(*this).Index()()]._zp; 
   }
   static bool HasVFAdjacency()   {   return true; }
   static bool HasVFAdjacencyOcf()   { return true; }
@@ -197,8 +200,8 @@ public:
 
   NormalType &N() { 
     // you cannot use Normals before enabling them with: yourmesh.vert.EnableNormal()
-    assert(Base().NormalEnabled); 
-    return Base().NV[Index()];  }
+    assert((*this).Base().NormalEnabled); 
+    return (*this).Base().NV[(*this).Index()()];  }
 };
 
 template <class T> class Normal3sOcf: public NormalOcf<vcg::Point3s, T> {};
@@ -210,7 +213,7 @@ template <class T> class Normal3dOcf: public NormalOcf<vcg::Point3d, T> {};
 template <class A, class T> class ColorOcf: public T {
 public:
   typedef A ColorType;
-  ColorType &C() { assert(Base().NormalEnabled); return Base().CV[Index()]; }
+  ColorType &C() { assert((*this).Base().NormalEnabled); return (*this).Base().CV[(*this).Index()()]; }
   static bool HasColor()   { return true; }
   static bool HasColorOcf()   { return true; }
 };

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2006/01/30 08:47:40  cignoni
+Corrected HasPerWedgeTexture
+
 Revision 1.9  2006/01/05 15:46:06  cignoni
 Removed a syntax error (double >) in HasPerWedgeTexture/HasPerFaceColor
 
@@ -119,11 +122,11 @@ public:
 	// l'allocazione in memoria del container
 	void push_back(const VALUE_TYPE & v)
   {
-    ThisTypeIterator oldbegin=begin();
-    ThisTypeIterator oldend=end();
+    ThisTypeIterator oldbegin=(*this).begin();
+    ThisTypeIterator oldend=(*this).end();
     BaseType::push_back(v);
-    if(oldbegin!=begin()) _updateOVP(begin(),end());
-                     else _updateOVP(oldend, end());
+    if(oldbegin!=(*this).begin()) _updateOVP((*this).begin(),(*this).end());
+                     else _updateOVP(oldend, (*this).end());
 
     if(NormalEnabled)      NV.push_back(typename VALUE_TYPE::NormalType());
     if(VFAdjacencyEnabled) AV.push_back(AdjTypePack());
@@ -133,11 +136,11 @@ public:
 	void pop_back();
   void resize(const unsigned int & _size) 
   {
-    ThisTypeIterator oldbegin=begin();
-    ThisTypeIterator oldend=end();
+    ThisTypeIterator oldbegin=(*this).begin();
+    ThisTypeIterator oldend=(*this).end();
     BaseType::resize(_size);
-    if(oldbegin!=begin()) _updateOVP(begin(),end());
-                     else _updateOVP(oldend, end());
+    if(oldbegin!=(*this).begin()) _updateOVP((*this).begin(),(*this).end());
+                     else _updateOVP(oldend, (*this).end());
     if(ColorEnabled)       CV.resize(_size);
     if(NormalEnabled)      NV.resize(_size);
     if(VFAdjacencyEnabled) AV.resize(_size);
@@ -147,20 +150,20 @@ public:
    }
   void reserve(const unsigned int & _size)
   {
-    ThisTypeIterator oldbegin=begin();
+    ThisTypeIterator oldbegin=(*this).begin();
     BaseType::reserve(_size);
     if (ColorEnabled)       CV.reserve(_size);
     if (NormalEnabled)      NV.reserve(_size);
     if (VFAdjacencyEnabled) AV.reserve(_size);
     if (FFAdjacencyEnabled) AF.reserve(_size);
     if (WedgeTexEnabled) WTV.reserve(_size);
-    if(oldbegin!=begin()) _updateOVP(begin(),end());
+    if(oldbegin!=(*this).begin()) _updateOVP((*this).begin(),(*this).end());
   }
 
  void _updateOVP(ThisTypeIterator lbegin, ThisTypeIterator lend)
 {
     ThisTypeIterator fi;
-    //for(fi=begin();vi!=end();++vi)
+    //for(fi=(*this).begin();vi!=(*this).end();++vi)
     for(fi=lbegin;fi!=lend;++fi)
         (*fi)._ovp=this;
  }
@@ -171,7 +174,7 @@ bool IsColorEnabled() const {return ColorEnabled;}
 void EnableColor() {
   assert(VALUE_TYPE::HasFaceColorOcf());
   ColorEnabled=true;
-  CV.resize(size());
+  CV.resize((*this).size());
 }
 
 void DisableColor() {
@@ -184,7 +187,7 @@ bool IsNormalEnabled() const {return NormalEnabled;}
 void EnableNormal() {
   assert(VALUE_TYPE::HasFaceNormalOcf());
   NormalEnabled=true;
-  NV.resize(size());
+  NV.resize((*this).size());
 }
 
 void DisableNormal() {
@@ -197,7 +200,7 @@ bool IsVFAdjacencyEnabled() const {return VFAdjacencyEnabled;}
 void EnableVFAdjacency() {
   assert(VALUE_TYPE::HasVFAdjacencyOcf());
   VFAdjacencyEnabled=true;
-  AV.resize(size());
+  AV.resize((*this).size());
 }
 
 void DisableVFAdjacency() {
@@ -211,7 +214,7 @@ bool IsFFAdjacencyEnabled() const {return FFAdjacencyEnabled;}
 void EnableFFAdjacency() {
   assert(VALUE_TYPE::HasFFAdjacencyOcf());
   FFAdjacencyEnabled=true;
-  AF.resize(size());
+  AF.resize((*this).size());
 }
 
 void DisableFFAdjacency() {
@@ -224,7 +227,7 @@ bool IsWedgeTexEnabled() const {return WedgeTexEnabled;}
 void EnableWedgeTex() {
   assert(VALUE_TYPE::HasWedgeTextureOcf());
   WedgeTexEnabled=true;
-  WTV.resize(size(),WedgeTexTypePack());
+  WTV.resize((*this).size(),WedgeTexTypePack());
 }
 
 void DisableWedgeTex() {
@@ -257,18 +260,18 @@ public:
 template <class T> class VFAdjOcf: public T {
 public:
   typename T::FacePointer &VFp(const int j) {
-    assert(Base().VFAdjacencyEnabled); 
-    return Base().AV[Index()]._fp[j]; 
+    assert((*this).Base().VFAdjacencyEnabled); 
+    return (*this).Base().AV[(*this).Index()]._fp[j]; 
   }
 
   typename T::FacePointer cVFp(const int j) const {
-    if(! Base().VFAdjacencyEnabled ) return 0; 
-    else return Base().AV[Index()]._fp[j]; 
+    if(! (*this).Base().VFAdjacencyEnabled ) return 0; 
+    else return (*this).Base().AV[(*this).Index()]._fp[j]; 
   }
 
   char &VFi(const int j) {
-    assert(Base().VFAdjacencyEnabled); 
-    return Base().AV[Index()]._zp[j]; 
+    assert((*this).Base().VFAdjacencyEnabled); 
+    return (*this).Base().AV[(*this).Index()]._zp[j]; 
   }
   static bool HasVFAdjacency()   {   return true; }
   static bool HasVFAdjacencyOcf()   { return true; }
@@ -281,23 +284,23 @@ private:
 template <class T> class FFAdjOcf: public T {
 public:
   typename T::FacePointer &FFp(const int j) {
-    assert(Base().FFAdjacencyEnabled); 
-    return Base().AF[Index()]._fp[j]; 
+    assert((*this).Base().FFAdjacencyEnabled); 
+    return (*this).Base().AF[(*this).Index()]._fp[j]; 
   }
 
   typename T::FacePointer const  FFp(const int j) const { return cFFp(j);}
   typename T::FacePointer const cFFp(const int j) const {
-    if(! Base().FFAdjacencyEnabled ) return 0; 
-    else return Base().AF[Index()]._fp[j]; 
+    if(! (*this).Base().FFAdjacencyEnabled ) return 0; 
+    else return (*this).Base().AF[(*this).Index()]._fp[j]; 
   }
 
   char &FFi(const int j) {
-    assert(Base().FFAdjacencyEnabled); 
-    return Base().AF[Index()]._zp[j]; 
+    assert((*this).Base().FFAdjacencyEnabled); 
+    return (*this).Base().AF[(*this).Index()]._zp[j]; 
   }
   const char cFFi(const int j) const {
-    assert(Base().FFAdjacencyEnabled); 
-    return Base().AF[Index()]._zp[j]; 
+    assert((*this).Base().FFAdjacencyEnabled); 
+    return (*this).Base().AF[(*this).Index()]._zp[j]; 
   }
   static bool HasFFAdjacency()   {   return true; }
   static bool HasFFAdjacencyOcf()   { return true; }
@@ -315,12 +318,12 @@ public:
 
   NormalType &N() { 
     // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
-    assert(Base().NormalEnabled); 
-    return Base().NV[Index()];  }
+    assert((*this).Base().NormalEnabled); 
+    return (*this).Base().NV[(*this).Index()];  }
   const NormalType &cN() const { 
     // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
-    assert(Base().NormalEnabled); 
-    return Base().NV[Index()];  }
+    assert((*this).Base().NormalEnabled); 
+    return (*this).Base().NV[(*this).Index()];  }
 
 
 };
@@ -334,7 +337,7 @@ template <class T> class Normal3dOcf: public NormalOcf<vcg::Point3d, T> {};
 template <class A, class T> class ColorOcf: public T {
 public:
   typedef A ColorType;
-  ColorType &C() { assert(Base().NormalEnabled); return Base().CV[Index()]; }
+  ColorType &C() { assert((*this).Base().NormalEnabled); return (*this).Base().CV[(*this).Index()]; }
   static bool HasFaceColor()   { return true; }
   static bool HasFaceColorOcf()   { return true; }
 };
@@ -348,8 +351,8 @@ template <class A, class TT> class WedgeTextureOcf: public TT {
 public:
   WedgeTextureOcf(){ }
   typedef A TexCoordType;
-  TexCoordType &WT(const int i)              { assert(Base().WedgeTexEnabled); return Base().WTV[Index()].wt[i]; }
-  TexCoordType const &cWT(const int i) const { assert(Base().WedgeTexEnabled); return Base().WTV[Index()].wt[i]; }
+  TexCoordType &WT(const int i)              { assert((*this).Base().WedgeTexEnabled); return (*this).Base().WTV[(*this).Index()].wt[i]; }
+  TexCoordType const &cWT(const int i) const { assert((*this).Base().WedgeTexEnabled); return (*this).Base().WTV[(*this).Index()].wt[i]; }
   static bool HasWedgeTexture()   { return true; }
   static bool HasWedgeTextureOcf()   { return true; }
 };
