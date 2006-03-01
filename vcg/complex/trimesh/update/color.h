@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/12/19 16:47:42  cignoni
+Better comment and a parameter more for UpdateColor::VertexBorderFlag
+
 Revision 1.7  2005/08/08 10:28:13  ganovelli
 added math:: namespace before min and max
 
@@ -50,6 +53,7 @@ Changed name from plural to singular (normals->normal)
 #ifndef __VCG_TRI_UPDATE_COLOR
 #define __VCG_TRI_UPDATE_COLOR
 #include <limits>
+#include <math.h>
 namespace vcg {
 namespace tri {
 /** \addtogroup trimesh */
@@ -265,8 +269,8 @@ static void VertexQualityHistEq(UpdateMeshType &m)
 {
 	// step 1: find the range
 	typename UpdateMeshType::VertexIterator vi;
-	float minq=MaxVal(0.0f),
-				maxq=-MaxVal(0.0f);
+	float minq = 1e36; //MaxVal(0.0f),
+	float maxq = -1e36; //MaxVal(0.0f);
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)		
 		if(!(*vi).IsD()) 
 		{
