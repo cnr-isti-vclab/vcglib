@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2005/12/12 11:15:26  ganovelli
+modifications to compile with gcc
+
 Revision 1.10  2005/11/29 16:20:33  pietroni
 added IsInside() function
 
@@ -108,6 +111,7 @@ Initial commit
 
 #include <vcg/space/point3.h>
 #include <vcg/math/Matrix44.h>
+#include <vcg/math/Matrix33.h>
 
 namespace vcg {
 /** \addtogroup space */
@@ -433,10 +437,40 @@ ScalarType ComputeAspectRatio()
 
 		// all determinant must have same sign
 		return (((d0>0)&&(d1>0)&&(d2>0)&&(d3>0)&&(d4>0))||((d0<0)&&(d1<0)&&(d2<0)&&(d3<0)&&(d4<0)));
-
-		
 	}
 
+	void InterpolationParameters(const CoordType & bq, ScalarType &a, ScalarType &b, ScalarType &c ,ScalarType &d)
+	{
+		const ScalarType EPSILON = ScalarType(0.000001);
+		Matrix33<ScalarType> M;
+		
+		CoordType v0=P(0)-P(2);
+		CoordType v1=P(1)-P(2);
+		CoordType v2=P(3)-P(2);
+		CoordType v3=bq-P(2);
+
+		M[0][0]=v0.X();
+		M[1][0]=v0.Y();
+		M[2][0]=v0.Z();
+
+		M[0][1]=v1.X();
+		M[1][1]=v1.Y();
+		M[2][1]=v1.Z();
+
+		M[0][2]=v2.X();
+		M[1][2]=v2.Y();
+		M[2][2]=v2.Z();
+
+		Matrix33<ScalarType> inv_M =vcg::Inverse<ScalarType>(M);
+
+		CoordType Barycentric=inv_M*v3;
+
+		a=Barycentric.V(0);
+		b=Barycentric.V(1);
+		c=Barycentric.V(2);
+		d=1-(a+b+c);
+
+	}
 
 }; //end Class
 
