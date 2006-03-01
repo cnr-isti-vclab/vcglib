@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2006/02/28 15:18:10  corsini
+Fix loading mask update
+
 Revision 1.15  2006/02/09 15:56:34  corsini
 Update load mask
 
@@ -316,7 +319,7 @@ namespace vcg
 									}
 								}
 							}
-							else // Skip color components
+						//	else // Skip color components
 								k += nb_color_components;
 						}
 
