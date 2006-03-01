@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2006/01/22 10:00:56  cignoni
+Very Important Change: Area->DoubleArea (and no more Area function)
+
 Revision 1.5  2005/09/23 14:18:27  ganovelli
 added constructor
 
@@ -96,19 +99,18 @@ public:
 bool InterpolationParameters(const CoordType & bq, ScalarType &a, ScalarType &b, ScalarType &_c ) const
 {	
 const ScalarType EPSILON = ScalarType(0.000001);
-
-#define x1 (cP0.x())
-#define y1 (cP0.y())
-#define z1 (cP0.z())
-#define x2 (cP1.x())
-#define y2 (cP1.y())
-#define z2 (cP1.z())
-#define x3 (cP2.x())
-#define y3 (cP2.y())
-#define z3 (cP2.z())
-#define px (bq.x())
-#define py (bq.y())
-#define pz (bq.z())
+#define x1 (P(0).X())
+#define y1 (P(0).Y())
+#define z1 (P(0).Z())
+#define x2 (P(1).X())
+#define y2 (P(1).Y())
+#define z2 (P(1).Z())
+#define x3 (P(2).X())
+#define y3 (P(2).Y())
+#define z3 (P(2).Z())
+#define px (bq[0])
+#define py (bq[1])
+#define pz (bq[2])
 
      ScalarType t1  = px*y2;
      ScalarType t2  = px*y3;
