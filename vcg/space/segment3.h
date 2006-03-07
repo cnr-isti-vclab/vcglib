@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/05/13 23:39:47  ponchio
+SegmentType -> Segment3 in constructor (g++ complained)
+
 Revision 1.4  2004/05/08 14:07:50  ganovelli
 return type of length and squaredlength corrected
 
@@ -149,10 +152,28 @@ typedef Segment3<double> Segment3d;
 template <class ScalarType> 
 Point3<ScalarType> ClosestPoint( Segment3<ScalarType> s, const Point3<ScalarType> & p) 
 {
-	ScalarType t = s.Projection(p); 
+	vcg::Line3<ScalarType> l;
+	l.Set(s.P0(),s.P1()-s.P0());
+	l.Normalize();
+	Point3<ScalarType> clos=vcg::ClosestPoint<ScalarType,true>(l,p) ;//attention to call
+	vcg::Box3<ScalarType> b;
+	b.Add(s.P0());
+	b.Add(s.P1());
+	if (b.IsIn(clos))
+		return clos;
+	else
+	{
+		ScalarType d0=(s.P0()-p).Norm();
+		ScalarType d1=(s.P1()-p).Norm();
+		if (d0<d1)
+			return (s.P0());
+		else
+			return (s.P1());
+	}
+	/*ScalarType t = s.Projection(p); 
 	if (s<0) return s.P0();
 	if (s>1) return s.P0();
-	return s.P(t); 
+	return s.P(t);*/ 
 }
 
 /*@}*/
