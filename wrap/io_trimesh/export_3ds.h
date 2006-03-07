@@ -25,6 +25,9 @@
   History
 
  $Log: not supported by cvs2svn $
+ Revision 1.2  2006/02/17 23:53:36  fmazzant
+ added relative Path of the Lib3ds library
+
  Revision 1.1  2006/02/16 19:28:36  fmazzant
  transfer of Export_3ds.h, Export_obj.h, Io_3ds_obj_material.h from Meshlab to vcg
 
@@ -120,7 +123,7 @@
 #include <vcg/complex/trimesh/allocate.h>
 #include <wrap/io_trimesh/io_mask.h>
 
-#include "io_3ds_obj_material.h"
+#include "io_material.h"
 
 /*
 	3DS export needs the Lib3ds library.
