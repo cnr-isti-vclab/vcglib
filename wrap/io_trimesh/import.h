@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2006/02/28 14:50:00  corsini
+Fix comments
+
 Revision 1.6  2006/02/10 16:14:53  corsini
 Fix typo
 
@@ -49,6 +52,7 @@ Initial Update
 #ifndef __VCGLIB_IMPORT
 #define __VCGLIB_IMPORT
 
+#include <wrap/io_trimesh/import_obj.h>
 #include <wrap/io_trimesh/import_ply.h>
 #include <wrap/io_trimesh/import_stl.h>
 #include <wrap/io_trimesh/import_off.h>
@@ -68,7 +72,7 @@ template <class OpenMeshType>
 class Importer
 {
 private:
-  enum KnownTypes { KT_UNKNOWN, KT_PLY, KT_STL, KT_OFF };
+  enum KnownTypes { KT_UNKNOWN, KT_PLY, KT_STL, KT_OFF, KT_OBJ };
 static int &LastType()
 {
   static int lastType= KT_UNKNOWN;
@@ -112,7 +116,12 @@ static int Open(OpenMeshType &m, const char *filename, int &loadmask, CallBackPo
 		err = ImporterOFF<OpenMeshType>::Open(m, filename, loadmask, cb);
 		LastType()=KT_OFF;
 	}
-	else {
+	else if(FileExtension(filename,"obj"))
+	{
+		err = ImporterOBJ<OpenMeshType>::Open(m, filename, loadmask, cb);
+		LastType()=KT_OBJ;
+	}
+  else {
 		err=1;
 		LastType()=KT_UNKNOWN;
 	}

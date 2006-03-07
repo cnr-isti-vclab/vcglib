@@ -25,6 +25,9 @@
   History
 
  $Log: not supported by cvs2svn $
+ Revision 1.2  2006/02/28 14:38:09  corsini
+ remove qt include
+
  Revision 1.1  2006/02/16 19:28:36  fmazzant
  transfer of Export_3ds.h, Export_obj.h, Io_3ds_obj_material.h from Meshlab to vcg
 
@@ -75,7 +78,7 @@
 #include <wrap/callback.h>
 #include <vcg/complex/trimesh/allocate.h>
 #include <wrap/io_trimesh/io_mask.h>
-#include "io_3ds_obj_material.h"
+#include "io_material.h"
 #include <iostream>
 #include <fstream>
 #include <map>
@@ -151,10 +154,8 @@ namespace io {
 		/*
 			function which saves in OBJ file format
 		*/
-		static int SaveASCII(SaveMeshType &m, const char * filename, ObjInfo &oi)	
+		static int SaveASCII(SaveMeshType &m, const char * filename, int mask, CallBackPos *cb=0)	
 		{
-			CallBackPos *cb = oi.cb;
-			
 			if(m.vert.size() == 0)
 				return E_NOTVEXTEXVALID;
 			if(m.face.size() == 0)
@@ -177,7 +178,7 @@ namespace io {
 			fprintf(fp,"# Object %s\n#\n# Vertices: %d\n# Faces: %d\n#\n####\n",fn.substr(i+1).c_str(),m.vert.size(),m.face.size());
 			
 			//library materials
-			if(oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR)
+			if(mask & vcg::tri::io::Mask::IOM_FACECOLOR)
 				fprintf(fp,"mtllib ./%s.mtl\n\n",fn.substr(i+1).c_str());
 			
 			//vertexs + normal
@@ -188,7 +189,7 @@ namespace io {
 			for(vi=m.vert.begin(); vi!=m.vert.end(); ++vi) if( !(*vi).IsD() )
 			{
 				//saves normal per vertex
-				if(oi.mask & vcg::tri::io::Mask::IOM_VERTNORMAL | oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL) 
+				if(mask & vcg::tri::io::Mask::IOM_VERTNORMAL | mask & vcg::tri::io::Mask::IOM_WEDGNORMAL) 
 				{
 					if(AddNewNormalVertex(NormalVertex,(*vi).N(),value))
 					{
@@ -201,7 +202,7 @@ namespace io {
 				fprintf(fp,"v %f %f %f\n",(*vi).P()[0],(*vi).P()[1],(*vi).P()[2]);
 
 				if (cb !=NULL)
-					(*cb)(100.0 * (float)++current/(float)max, "writing vertices ");
+					(*cb)((100*++current)/max, "writing vertices ");
 				else
 				{ fclose(fp); return E_ABORTED;}
 			}
@@ -215,7 +216,7 @@ namespace io {
 			/*int*/ value = 1;//tmp
 			for(fi=m.face.begin(); fi!=m.face.end(); ++fi) if( !(*fi).IsD() )
 			{
-				if(oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR)
+				if(mask & vcg::tri::io::Mask::IOM_FACECOLOR)
 				{
 					int index = vcg::tri::io::Materials<SaveMeshType>::CreateNewMaterial(m,materials,material_num,fi);
 					
@@ -239,7 +240,7 @@ namespace io {
 				unsigned int MAX = 3;
 				for(unsigned int k=0;k<MAX;k++)
 				{
-					if(m.HasPerWedgeTexture() && oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD)
+					if(m.HasPerWedgeTexture() && mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD)
 					{
 						if(AddNewTextureCoord(CoordIndexTexture,(*fi).WT(k),value))
 						{
@@ -257,11 +258,11 @@ namespace io {
 					v = GetIndexVertex(m, (*fi).V(k)) + 1;//index of vertex per face
 					
 					int vt = -1;
-					if(oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD)
+					if(mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD)
 						vt = GetIndexVertexTexture(CoordIndexTexture,(*fi).WT(k));//index of vertex texture per face
 
 					int vn = -1;
-					if(oi.mask & vcg::tri::io::Mask::IOM_VERTNORMAL | oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL) 
+					if(mask & vcg::tri::io::Mask::IOM_VERTNORMAL | mask & vcg::tri::io::Mask::IOM_WEDGNORMAL) 
 						vn = GetIndexVertexNormal(m, NormalVertex, v);//index of vertex normal per face.
 
 					//writes elements on file obj
@@ -273,7 +274,7 @@ namespace io {
 						fprintf(fp,"\n");	
 				}	
 				if (cb !=NULL)
-					(*cb)(100.0 * (float)++current/(float)max, "writing faces ");
+					(*cb)((100*++current)/max, "writing faces ");
 				else
 				{ fclose(fp); return E_ABORTED;}
 			}//for
@@ -283,7 +284,7 @@ namespace io {
 			fclose(fp);
 
 			int r = 0;
-			if(oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD | oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR)
+			if(mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD | mask & vcg::tri::io::Mask::IOM_FACECOLOR)
 				r = WriteMaterials(materials, filename,cb);//write material 
 			
 			if(r!= E_NOERROR)
@@ -294,7 +295,7 @@ namespace io {
 		/*
 			function which saves in OBJ file format
 		*/
-		static int SaveBinary(SaveMeshType &m, const char * filename, ObjInfo &oi)
+		static int SaveBinary(SaveMeshType &m, const char * filename)
 		{
 			return E_NOTDEFINITION;
 		}
@@ -304,10 +305,7 @@ namespace io {
 		*/
 		static int Save(SaveMeshType &m, const char * filename, const int &mask, CallBackPos *cb=0)
 		{
-			ObjInfo oi;
-			oi.cb=cb;
-			oi.mask=mask;
-			return SaveASCII(m,filename,oi);
+			return SaveASCII(m,filename,mask,cb);
 		}
 
 		/*
@@ -397,7 +395,7 @@ namespace io {
 				for(unsigned int i=0;i<materials.size();i++)
 				{
 					if (cb !=NULL)
-						(*cb)(100.0 * (float)++current/(float)materials.size(), "saving material file ");
+						(*cb)((100 * ++current)/materials.size(), "saving material file ");
 					else
 					{ fclose(fp); return E_ABORTED;}
 
