@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2006/01/20 16:35:51  pietroni
+added Intersection_Segment_Box function
+
 Revision 1.20  2005/10/03 16:07:50  ponchio
 Changed order of functions intersection_line_box and
 intersectuion_ray_box
@@ -155,6 +158,17 @@ namespace vcg {
     T r = (pl.Offset() - pl.Direction()*li.Origin())/k;	// Compute ray distance
     po = li.Origin() + li.Direction()*r;
     return true;
+  }
+	
+   /// intersection between segment and plane
+  template<class T>
+    inline bool IntersectionSegmentPlane( const Plane3<T> & pl, const Segment3<T> & s, Point3<T> & po){
+	vcg::Line3<T> l;
+	l.Set(s.P0(),s.P1()-s.P0());
+	l.Normalize();
+	if (IntersectionLinePlane(pl,l,po))
+		return((po-s.P0()).Norm()<=(s.P0()-s.P1()).Norm());
+    return false;
   }
 
   /// intersection between segment and plane
@@ -461,7 +475,7 @@ bool Intersection_Ray_Box( const Box3<T> & box, const Ray3<T> & r, Point3<T> & c
 	return(Intersection_Line_Box<T>(box,l,coord));
 }	
 
-// segment-box
+// segment-box return fist intersection found  from p0 to p1
 template<class T>
 bool Intersection_Segment_Box( const Box3<T> & box, const Segment3<T> & s, Point3<T> & coord )
 {
@@ -484,6 +498,23 @@ bool Intersection_Segment_Box( const Box3<T> & box, const Segment3<T> & s, Point
 	}
 }	
 
+// segment-box intersection , return number of intersections and intersection points
+template<class T>
+int Intersection_Segment_Box( const Box3<T> & box, const Segment3<T> & s, Point3<T> & coord0, Point3<T> & coord1 )
+{
+	int num=0;
+	Segment3<T> test= s
+	if (Intersection_Segment_Box(box,test,coord0 ))
+	{
+		num++;
+		Point3<T> swap=test.P0();
+		test.P0()=test.P1();
+		test.P1()=swap;
+		if (Intersection_Segment_Box(box,test,coord1 ))
+			num++;
+	}
+	return num;
+}	
 
 template<class T>
 bool Intersection (const Plane3<T> & plane0, const Plane3<T> & plane1,
