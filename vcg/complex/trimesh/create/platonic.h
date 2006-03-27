@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2006/01/30 08:09:05  cignoni
+Corrected Grid
+
 Revision 1.6  2006/01/22 17:10:15  cignoni
 Added Grid function (to build range map meshes...)
 
@@ -182,7 +185,7 @@ void Dodecahedron(DodMeshType & in)
 	for (i=0; i<N_points; i++) used[i]=false;
 
 	int reindex[20+12 *10];
-	double xx,yy,zz, sx,sy,sz;
+	ScalarType xx,yy,zz, sx,sy,sz;
 
 	int order[5]={0,1,8,6,2};
 	int added[12];
