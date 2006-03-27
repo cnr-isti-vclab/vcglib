@@ -6,9 +6,15 @@
    Visual Computing Lab  http://vcg.isti.cnr.it                    /\/|      
    ISTI - Italian National Research Council                           |      
                                                                       \      
-   TriMeshInfo 1.03 2005/10/03
+   TriMeshInfo 1.21 2006/03/27
    All rights reserved.                                                      
    
+
+27/03/2006 Release 1.21
+
+Now trimeshinfo support OFF,STL,OBJ and PLY format
+Added normal, color and texture information
+Fix mesh info data initialization
 
 2005/12/21 Release 1.2
 

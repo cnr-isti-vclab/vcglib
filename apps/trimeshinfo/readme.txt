@@ -2,11 +2,11 @@
    VCGLib  http://vcg.sf.net                                         o o     
    Visual and Computer Graphics Library                            o     o   
                                                                   _   O  _   
-   Copyright(C) 2004-2005                                           \/)\/    
+   Copyright(C) 2004-2006                                           \/)\/    
    Visual Computing Lab  http://vcg.isti.cnr.it                    /\/|      
    ISTI - Italian National Research Council                           |      
                                                                       \      
-   TriMeshInfo 1.2 2005/12/21
+   TriMeshInfo 1.21 2006/03/27
    All rights reserved.                                                      
    
 
@@ -53,9 +53,12 @@ For each analyzed dataset the following information are extracted:
 The application has no graphical interface but works as the "Metro" tool on command line. 
 
 TriMeshInfo is written in C++ and makes use of the VCG library. 
-The tool supports two file formats ply (as described in the following document 
-http://vcg.sourceforge.net/img/wiki_up/plyformat.pdf) 
-and off (as described in http://www.geomview.org/docs/html/geomview_41.html#SEC44) . 
+The tool supports the following file formats:
+
+  - PLY (http://vcg.sourceforge.net/img/wiki_up/plyformat.pdf)
+  - OFF (http://www.geomview.org/docs/html/geomview_41.html#SEC44)
+  - STL (http://astronomy.swin.edu.au/~pbourke/dataformats/stl/) 
+  - OBJ (http://www.eg-models.de/formats/Format_Obj.html)
 
 
 --- Command-line Reference ---
@@ -75,6 +78,8 @@ The XML output produces an XML file with the same name of the mesh under
 examination. This file summarize the mesh information.
 Such xml-schema is designed to be processed by the
 Protégé Ontology Editor and Knowledge Acquisition System.
+The current xml schema working with Protege version 3.0. 
+Future releases of Protege could not work with this xml schema.
 For further details about Protégé see http://protege.stanford.edu .
 
 The HTML output creates in the directory where TriMeshInfo is launched a file
