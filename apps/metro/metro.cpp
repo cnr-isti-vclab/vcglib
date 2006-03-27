@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2006/01/10 13:20:40  cignoni
+Changed ply::PlyMask to io::Mask
+
 Revision 1.17  2005/10/02 23:11:00  cignoni
 Version 4.06, Added possibility of using three different search structures UG Hash and AABB
 
@@ -90,7 +93,7 @@ GPL  added
 #include <vcg/math/histogram.h>
 #include <vcg/complex/trimesh/clean.h>
 #include <wrap/io_trimesh/import.h>
-#include <wrap/io_trimesh/export_ply.h>
+#include <wrap/io_trimesh/export.h>
 
 
 // -----------------------------------------------------------------------------------------------
