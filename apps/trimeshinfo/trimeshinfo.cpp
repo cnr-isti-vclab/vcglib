@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.36  2006/02/28 14:54:10  corsini
+Fix load mask initialization
+
 Revision 1.35  2006/02/09 16:12:27  corsini
 Add normal, color, texture information
 
@@ -274,7 +277,8 @@ int OpenMesh(const	char *filename,	CMesh &m)
 	printf("    Mesh loading...");
 
 	int mask = 0;
-	int err = tri::io::Importer<CMesh>::Open(m, filename, mask);
+  tri::io::Importer<CMesh>::LoadMask(filename,mask);
+	int err = tri::io::Importer<CMesh>::Open(m, filename);
 
 	if (err)
 	{
@@ -624,7 +628,7 @@ int main(int argc, char ** argv)
 	initMeshInfo(mi);
 
 	printf("\n  -------------------------------\n"
-		"     TriMeshInfo V.1.2 \n"
+		"     TriMeshInfo V.1.21 \n"
 		"     http://vcg.isti.cnr.it\n"
 		"     release date: "__DATE__"\n"
 		"  -------------------------------\n\n\n");
@@ -719,7 +723,8 @@ int main(int argc, char ** argv)
 	else
 		mi.hasFColor = false;
 
-	if (load_mask & vcg::tri::io::Mask::IOM_VERTTEXCOORD)
+	if( (load_mask & vcg::tri::io::Mask::IOM_VERTTEXCOORD) ||
+      (load_mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD) )
 		mi.hasTexture = true;
 	else
 		mi.hasTexture = false;
