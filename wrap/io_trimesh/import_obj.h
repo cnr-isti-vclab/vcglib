@@ -25,13 +25,15 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2006/03/07 13:19:29  cignoni
+First Release with OBJ import support
+
 Initial Working version coded by Buzzelli.
 ****************************************************************************/
 
 #ifndef __VCGLIB_IMPORT_OBJ
 #define __VCGLIB_IMPORT_OBJ
 
-#include <stdio.h>
 #include <wrap/callback.h>
 #include <vcg/complex/trimesh/allocate.h>
 #include <wrap/io_trimesh/io_mask.h>
@@ -895,10 +897,10 @@ static bool LoadMask(const char * filename, int &mask)
 			return false;
 
 		 // obtain length of file:
-		stream.seekg (0, ios::end);
+    stream.seekg (0, std::ios::end);
 		int length = stream.tellg();
 		if (length == 0) return false;
-		stream.seekg (0, ios::beg);
+    stream.seekg (0, std::ios::beg);
 
 
 		bool bHasPerWedgeTexCoord = false;
