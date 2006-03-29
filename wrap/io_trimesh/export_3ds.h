@@ -25,6 +25,9 @@
   History
 
  $Log: not supported by cvs2svn $
+ Revision 1.3  2006/03/07 13:20:40  cignoni
+ changed include of io_material
+
  Revision 1.2  2006/02/17 23:53:36  fmazzant
  added relative Path of the Lib3ds library
 
@@ -119,6 +122,7 @@
 #ifndef __VCGLIB_EXPORT_3DS
 #define __VCGLIB_EXPORT_3DS
 
+#include <map>
 #include <wrap/callback.h>
 #include <vcg/complex/trimesh/allocate.h>
 #include <wrap/io_trimesh/io_mask.h>

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2006/01/12 13:12:54  callieri
+in FileWrite, added file closing after finishing
+
 Revision 1.11  2005/09/16 11:51:23  cignoni
 removed signed/unsigned warning
 
@@ -67,6 +70,7 @@ Initial Release
 #include <vector>
 #include <algorithm>
 #include <assert.h>
+#include <string>
 namespace vcg {
 
 /**
