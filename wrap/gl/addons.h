@@ -21,7 +21,8 @@
 *                                                                           *
 ****************************************************************************/
 /****************************************************************************
-Histoy
+History
+$Log: not supported by cvs2svn $
 
 ****************************************************************************/
 #ifndef __VCG_GLADDONS
@@ -347,7 +348,7 @@ public:
 		{
 			if (tail!=head)
 			{
-				Matrix44d tr;								   
+				Matrix44f tr;								   
 				XAxis(tail,head,tr);
 				glPushAttrib(GL_ALL_ATTRIB_BITS);
 				SetGLParameters(dm);
