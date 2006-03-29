@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2006/03/27 07:17:49  cignoni
+Added generic LoadMask
+
 Revision 1.8  2006/03/07 13:19:29  cignoni
 First Release with OBJ import support
 
@@ -145,7 +148,8 @@ static const char *ErrorMsg(int error)
 
 static bool LoadMask(const char * filename, int &mask)
 {
-  bool err;
+	bool err;
+
 	if(FileExtension(filename,"ply"))
 	{
 		err = ImporterPLY<OpenMeshType>::LoadMask(filename, mask);
@@ -154,12 +158,13 @@ static bool LoadMask(const char * filename, int &mask)
 	else if(FileExtension(filename,"stl"))
 	{
 		mask = Mask::IOM_VERTCOORD | Mask::IOM_FACEINDEX;
-    LastType()=KT_STL;
+		err = true;
+		LastType()=KT_STL;
 	}
 	else if(FileExtension(filename,"off"))
 	{
 		mask = Mask::IOM_VERTCOORD | Mask::IOM_FACEINDEX;
-		//err = ImporterOFF<OpenMeshType>::Open(m, filename, loadmask, cb);
+		err = ImporterOFF<OpenMeshType>::LoadMask(filename, mask);
 		LastType()=KT_OFF;
 	}
 	else if(FileExtension(filename,"obj"))
@@ -167,8 +172,9 @@ static bool LoadMask(const char * filename, int &mask)
 		err = ImporterOBJ<OpenMeshType>::LoadMask(filename, mask);
 		LastType()=KT_OBJ;
 	}
-  else {
-		err=false;
+	else 
+	{
+		err = false;
 		LastType()=KT_UNKNOWN;
 	}
 
