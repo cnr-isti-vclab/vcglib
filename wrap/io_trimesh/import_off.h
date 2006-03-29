@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2006/03/01 08:25:30  cignoni
+Corrected bug in wrong counting the parsed tokens during the reading of color components
+
 Revision 1.16  2006/02/28 15:18:10  corsini
 Fix loading mask update
 
@@ -127,30 +130,47 @@ namespace vcg
 						return error_msg[message_code];
 				};
 
-        static int Open(MESH_TYPE &mesh, const char *filename, CallBackPos *cb=0)
-        {
-          int loadmask;
-          return Open(mesh,filename,loadmask,cb);
-        }
+				/**
+				 * Load only the properties of the 3D objects.
+				 *
+				 * \param filename    the name of the file to read from
+				 * \param loadmask    the mask which encodes the properties
+				 * \return            the operation result
+				 */
+				static bool LoadMask(const char *filename, int &loadmask)
+				{
+					// To obtain the loading mask all the file must be parsed
+					// to distinguish between per-vertex and per-face color attribute.
+
+					MESH_TYPE dummyMesh;
+
+					if (Open(dummyMesh, filename, loadmask) == NoError)
+					{
+						dummyMesh.Clear();
+
+						return true;
+					}
+					else
+						return false;
+				}
+
+				static int Open(MESH_TYPE &mesh, const char *filename, CallBackPos *cb=0)
+				{
+					int loadmask;
+					return Open(mesh,filename,loadmask,cb);
+				}
 
 				/*!
-				*	Standard call for reading a mesh
-				*	\param mesh				the destination mesh
-				*	\param filename		the name of the file to read from
-				*	\return						the operation result
-				*/
+				 *  Standard call for reading a mesh.
+				 *
+				 *  \param mesh         the destination mesh
+				 *  \param filename     the name of the file to read from
+				 *  \return             the operation result
+				 */
 				static int Open(MESH_TYPE &mesh, const char *filename, int &loadmask,
 					CallBackPos *cb=0)
 				{
-
 					mesh.Clear();
-
-					// The "[ST][C][N][4][n]OFF" keyword is optional. Default is "OFF".
-					bool isNormalDefined   = false;
-					bool isColorDefined    = false;
-					bool isTexCoordDefined = false;
-					int	 dimension = 3;
-					bool homogeneousComponents = false;
 
 					std::ifstream stream(filename);
 					if (stream.fail())
@@ -159,6 +179,13 @@ namespace vcg
 					std::vector< std::string > tokens;
 					TokenizeNextLine(stream, tokens);
 
+					bool isNormalDefined   = false;
+					bool isColorDefined    = false;
+					bool isTexCoordDefined = false;
+					int dimension = 3;
+					bool homogeneousComponents = false;
+
+					// The "[ST][C][N][4][n]OFF" keyword is optional. Default is "OFF".
 					std::string header = tokens[tokens.size()-1];
 					if (header.rfind("OFF") != std::basic_string<char>::npos)
 					{
@@ -182,6 +209,17 @@ namespace vcg
 						TokenizeNextLine(stream, tokens);
 					}
 
+					// Update loading mask
+					///////////////////////////////////////
+
+					loadmask = Mask::IOM_VERTCOORD | Mask::IOM_FACEINDEX;
+
+					if (isNormalDefined)
+						loadmask |= Mask::IOM_VERTNORMAL;
+
+					if (isTexCoordDefined)
+						loadmask |= Mask::IOM_VERTTEXCOORD;
+
 					// check on next 2 lines to detect corrupted files
 					if(tokens.size() < 3)
 						return InvalidFile;
@@ -198,13 +236,17 @@ namespace vcg
 					if (homogeneousComponents)
 						return UnsupportedFormat;
 
+					// READ VERTICES
+					//////////////////////////////////////////////////////
+
 					VertexIterator v_iter = Allocator<MESH_TYPE>::AddVertices(mesh, nVertices);
 					TokenizeNextLine(stream, tokens);
 					size_t k = 0; // next token to read
 
 					for (unsigned int i=0; i<nVertices; i++, v_iter++)
 					{
-						if (cb && (i%1000)==0) cb(i*50/nVertices,"Vertex Loading");
+						if (cb && (i%1000)==0) 
+							cb(i*50/nVertices, "Vertex Loading");
 
 						// Read 3 vertex coordinates
 						for (unsigned int j=0; j<3; j++)
@@ -217,6 +259,7 @@ namespace vcg
 									return InvalidFile;
 								k = 0;
 							}
+
 							// Read vertex coordinate
 							(*v_iter).P()[j] = (ScalarType) atof(tokens[k].c_str());
 							k++;
@@ -235,12 +278,16 @@ namespace vcg
 										return InvalidFile;
 									k = 0;
 								}
+
 								// Read normal coordinate
 								(*v_iter).N()[j] = (ScalarType) atof(tokens[k].c_str());
 								k++;
 							}
 						}
 
+						// NOTE: It is assumed that colored vertex takes exactly one text line
+						//       (otherwise it is impossible to parse color information since
+						//        color components can vary)
 						if (isColorDefined)
 						{
 							// The number of color components varies from 0 to 4.
@@ -248,8 +295,13 @@ namespace vcg
 							int nb_color_components = static_cast<int>(tokens.size())
 								- static_cast<int>(k) /* tokens already parsed */
 								- 2 * (isTexCoordDefined ? 1 : 0);
+
 							if (nb_color_components < 0 || nb_color_components > 4)
 								return InvalidFile;
+
+							// set per-vertex color attribute
+							if (nb_color_components > 0)
+								loadmask |= Mask::IOM_VERTCOLOR;
 
 							// Store color components
 							if (VertexType::HasColor())
@@ -319,8 +371,8 @@ namespace vcg
 									}
 								}
 							}
-						//	else // Skip color components
-								k += nb_color_components;
+
+							k += nb_color_components;
 						}
 
 						if (isTexCoordDefined)
@@ -345,30 +397,40 @@ namespace vcg
 						}
 					} // for i=...
 
-					// Read faces
+					// READ FACES
+					//////////////////////////////////////////////////////
+
 					Allocator<MESH_TYPE>::AddFaces(mesh, nFaces);
 					unsigned int f0=0;
-					for (unsigned int f=0; f<nFaces; f++)
+					for (unsigned int f=0; f < nFaces; f++)
 					{
 						f0 = f;
 						if (stream.fail())
 							return InvalidFile;
 
-						if(cb && (f%1000)==0) cb(50+f*50/nFaces,"Face Loading");
+						if(cb && (f%1000)==0)
+							cb(50+f*50/nFaces,"Face Loading");
 
 						TokenizeNextLine(stream, tokens);
 						int vert_per_face = atoi(tokens[0].c_str());
 
+						k = 1;
 						if (vert_per_face == 3)
 						{
-							// It is assumed that the vertex indexes are on 1 line
-							if(tokens.size() >= 4)
+							for (int j = 0; j < 3; j++)
 							{
-								for(unsigned int j = 0; j<3; j++)
-									mesh.face[f].V(j) = &(mesh.vert[ atoi(tokens[j+1].c_str()) ]);
+								// Go to next line when needed
+								if (k == tokens.size())   // if EOL
+								{
+									TokenizeNextLine(stream, tokens);
+									if (tokens.size() == 0) // if EOF
+										return InvalidFile;
+									k = 0;
+								}
+							
+								mesh.face[f].V(j) = &(mesh.vert[ atoi(tokens[k].c_str()) ]);
+								k++;
 							}
-							else
-								return InvalidFile;
 						}
 						else
 						{
@@ -378,23 +440,42 @@ namespace vcg
 							Allocator<MESH_TYPE>::AddFaces(mesh, trigs);
 							int *vertIndices = new int[vert_per_face];
 
-							for (int k=0; k<vert_per_face; k++)
-								vertIndices[k] = atoi(tokens[1+k].c_str());
-
-							for (int k=0; k<=vert_per_face-3; k++)
+							for (int j=0; j < vert_per_face; j++)
 							{
-								mesh.face[f+k].V(0) = &(mesh.vert[ vertIndices[0  ] ]);
-								mesh.face[f+k].V(1) = &(mesh.vert[ vertIndices[1+k] ]);
-								mesh.face[f+k].V(2) = &(mesh.vert[ vertIndices[2+k] ]);
+								// Go to next line when needed
+								if (k == tokens.size())   // if EOL
+								{
+									TokenizeNextLine(stream, tokens);
+									if (tokens.size() == 0) // if EOF
+										return InvalidFile;
+									k = 0;
+								}
+
+								vertIndices[j] = atoi(tokens[k].c_str());
+								k++;
+							}
+
+							for (int j=0; j<=vert_per_face-3; j++)
+							{
+								mesh.face[f+j].V(0) = &(mesh.vert[ vertIndices[0  ] ]);
+								mesh.face[f+j].V(1) = &(mesh.vert[ vertIndices[1+j] ]);
+								mesh.face[f+j].V(2) = &(mesh.vert[ vertIndices[2+j] ]);
 							}
 
 							f+=trigs;
-							delete []vertIndices;
+							delete [] vertIndices;
 						}
 
+						// NOTE: It is assumed that colored face takes exactly one text line
+						//       (otherwise it is impossible to parse color information since
+						//        color components can vary)
 						if (isColorDefined)
 						{
-							size_t color_elements = tokens.size()-vert_per_face-1;
+							size_t color_elements = tokens.size() - vert_per_face-1;
+
+							// set per-face color attribute
+							if (color_elements > 0)
+								loadmask |= Mask::IOM_FACECOLOR;
 
 							switch (color_elements)
 							{
@@ -460,20 +541,6 @@ namespace vcg
 						} // end if (isColorDefined)
 					} // end of for f=...
 
-					// Update loading mask
-					///////////////////////////////////////
-
-					loadmask = Mask::IOM_VERTCOORD | Mask::IOM_FACEINDEX;
-
-					if (isNormalDefined)
-						loadmask |= Mask::IOM_VERTNORMAL;
-
-					if (isColorDefined)
-						loadmask |= Mask::IOM_VERTCOLOR;
-
-					if (isTexCoordDefined)
-						loadmask |= Mask::IOM_VERTTEXCOORD;
-
 					return NoError;
 
 				} // end Open
@@ -492,26 +559,25 @@ namespace vcg
 						std::getline(stream, line, '\n');
 					while (line[0] == '#' || line.length()==0);
 
-					size_t from		= 0; 
-					size_t to			= 0;
+					size_t from = 0; 
+					size_t to = 0;
 					size_t length = line.size();
 					tokens.clear();
 					do
 					{
-						while (line[from]==' ' && from!=length)
+						while ( (line[from]==' ' || line[from] == '\t') && from!=length)
 							from++;
-            if(from!=length)
-            {
-						  to = from+1;
-						  while (line[to]!=' ' && to!=length)
-							  to++;
-						  tokens.push_back(line.substr(from, to-from).c_str());
-						  from = to;
-            }
+						if(from!=length)
+						{
+							to = from+1;
+							while ( (line[to]!=' ' && line[to] != '\t') && to!=length)
+								to++;
+							tokens.push_back(line.substr(from, to-from).c_str());
+							from = to;
+						}
 					}
 					while (from<length);
 				} // end Tokenize
-
 
 				/*!
 				*	Provide the int->color mapping, according to the Geomview's `cmap.fmap' file.
