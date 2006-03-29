@@ -74,14 +74,6 @@ Valid options are the following:
     -h Enable HTML output
     -s <filename> Save the clean mesh
 
-The XML output produces an XML file with the same name of the mesh under
-examination. This file summarize the mesh information.
-Such xml-schema is designed to be processed by the
-Protégé Ontology Editor and Knowledge Acquisition System.
-The current xml schema working with Protege version 3.0. 
-Future releases of Protege could not work with this xml schema.
-For further details about Protégé see http://protege.stanford.edu .
-
 The HTML output creates in the directory where TriMeshInfo is launched a file
 called "result.html". This file contains an hmtl table with the retrieved 
 mesh information. 
