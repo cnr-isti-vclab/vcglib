@@ -32,7 +32,7 @@ and retrieval.
 
 For each analyzed dataset the following information are extracted: 
 
-* Number of Vertices (Unreferenced vertices are listed separately) 
+* Number of Vertices 
 * Number of Faces 
 * Number of Edges 
 * Number of Connected Components 
@@ -49,6 +49,7 @@ For each analyzed dataset the following information are extracted:
   for each internal vertex, and 4 incident edges for each vertex on the 
   boundary. In all other cases we consider the mesh irregular.)
 * Volume
+* Attribute present on mesh (colors, texture coords etc);
 
 The application has no graphical interface but works as the "Metro" tool on command line. 
 
