@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2006/03/20 14:42:49  pietroni
+IntersectionSegmentPlane and Intersection_Segment_Box functions Added
+
 Revision 1.21  2006/01/20 16:35:51  pietroni
 added Intersection_Segment_Box function
 
@@ -503,7 +506,7 @@ template<class T>
 int Intersection_Segment_Box( const Box3<T> & box, const Segment3<T> & s, Point3<T> & coord0, Point3<T> & coord1 )
 {
 	int num=0;
-	Segment3<T> test= s
+	Segment3<T> test= s;
 	if (Intersection_Segment_Box(box,test,coord0 ))
 	{
 		num++;
