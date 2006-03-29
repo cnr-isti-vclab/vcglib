@@ -24,6 +24,11 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2006/03/29 08:15:46  corsini
+Fix several bugs
+Add LoadMask
+Improve parsing capabilities (account for unexpected newline)
+
 Revision 1.17  2006/03/01 08:25:30  cignoni
 Corrected bug in wrong counting the parsed tokens during the reading of color components
 
@@ -387,6 +392,9 @@ namespace vcg
 										return InvalidFile;
 									k = 0;
 								}
+
+								std::string str = tokens[k];
+								k++;
 
 								// Store texture coordinates
 								if (VertexType::HasTexture())
