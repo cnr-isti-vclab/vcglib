@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.38  2006/03/29 08:17:56  corsini
+fix typo
+
 Revision 1.37  2006/03/27 07:15:59  cignoni
 Added LoadMask
 
@@ -286,9 +289,17 @@ int OpenMesh(const	char *filename, CMesh &m)
 
 	if (err)
 	{
+   if(tri::io::Importer<CMesh>::ErrorCritical(err))
+   {
 		printf("\n    Error during loading %s: '%s'\n",filename, 
 			tri::io::Importer<CMesh>::ErrorMsg(err));
 		exit(-1);
+   }
+   else
+   {
+    printf("\n    Non Critical Troubles during loading %s: '%s'\n",filename, 
+			tri::io::Importer<CMesh>::ErrorMsg(err));
+   }
 	}
 	else
 		printf(" done.\n\n");

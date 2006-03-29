@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2006/03/29 08:16:31  corsini
+Minor change in LoadMask
+
 Revision 1.9  2006/03/27 07:17:49  cignoni
 Added generic LoadMask
 
@@ -135,6 +138,19 @@ static int Open(OpenMeshType &m, const char *filename, int &loadmask, CallBackPo
 	return err;
 }
 
+static bool ErrorCritical(int error)
+{
+  switch(LastType())
+  {
+    case KT_PLY : return (error>0); break;
+    case KT_STL : return (error>0); break;
+    case KT_OFF : return (error>0); break;
+    case KT_OBJ : return ImporterOBJ<OpenMeshType>::ErrorCritical(error); break;
+  }
+
+  return true;  
+}
+
 static const char *ErrorMsg(int error)
 {
   switch(LastType())
@@ -142,6 +158,7 @@ static const char *ErrorMsg(int error)
     case KT_PLY : return ImporterPLY<OpenMeshType>::ErrorMsg(error); break;
     case KT_STL : return ImporterSTL<OpenMeshType>::ErrorMsg(error); break;
     case KT_OFF : return ImporterOFF<OpenMeshType>::ErrorMsg(error); break;
+    case KT_OBJ : return ImporterOBJ<OpenMeshType>::ErrorMsg(error); break;
   }
   return "Unknown type";  
 }

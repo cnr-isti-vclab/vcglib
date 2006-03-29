@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2006/03/29 08:51:16  corsini
+reset to zero warnings
+
 Revision 1.2  2006/03/27 07:18:22  cignoni
 added missing std::
 
@@ -164,6 +167,13 @@ enum OBJError {
 	E_BAD_VERT_TEX_INDEX 					= 0x01E,	// 15
 	E_BAD_VERT_NORMAL_INDEX 			= 0x020		// 16
 };
+
+// to check if a given error is critical or not.
+static bool ErrorCritical(int err)
+{ 
+  if(err<0x00A && err>=0) return false;
+  return true;
+}
 
 static const char* ErrorMsg(int error)
 {
