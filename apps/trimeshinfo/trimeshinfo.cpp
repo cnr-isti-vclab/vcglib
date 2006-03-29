@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.37  2006/03/27 07:15:59  cignoni
+Added LoadMask
+
 Revision 1.36  2006/02/28 14:54:10  corsini
 Fix load mask initialization
 
@@ -272,12 +275,13 @@ static const char * HTML_TABLE[HTML_LINES]=
 };
 
 
-int OpenMesh(const	char *filename,	CMesh &m)
+int OpenMesh(const	char *filename, CMesh &m)
 {
 	printf("    Mesh loading...");
 
 	int mask = 0;
-  tri::io::Importer<CMesh>::LoadMask(filename,mask);
+	
+	tri::io::Importer<CMesh>::LoadMask(filename,mask);
 	int err = tri::io::Importer<CMesh>::Open(m, filename);
 
 	if (err)
@@ -701,7 +705,7 @@ int main(int argc, char ** argv)
 	// Mesh loading
 	//////////////////////////////////////////
 	
-	int load_mask = OpenMesh(mi.FileName.c_str(),m);
+	int load_mask = OpenMesh(mi.FileName.c_str(), m);
 
 	if (load_mask & vcg::tri::io::Mask::IOM_VERTNORMAL)
 		mi.hasVNormal = true;
