@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2006/03/27 07:18:22  cignoni
+added missing std::
+
 Revision 1.1  2006/03/07 13:19:29  cignoni
 First Release with OBJ import support
 
@@ -261,7 +264,7 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 		tokens.clear();
 		TokenizeNextLine(stream, tokens);
 		
-		unsigned numTokens = tokens.size();
+		unsigned int numTokens = static_cast<unsigned int>(tokens.size());
 		if (numTokens > 0)
 		{
 			header.clear();
@@ -304,8 +307,8 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 				if (numTokens < 3) return E_BAD_VERT_TEX_STATEMENT;
 
 				TexCoord t;
-				t.u = (ScalarType) atof(tokens[1].c_str());
-				t.v = (ScalarType) atof(tokens[2].c_str());
+				t.u = static_cast<float>(atof(tokens[1].c_str()));
+				t.v = static_cast<float>(atof(tokens[2].c_str()));
 				texCoords.push_back(t);
 				
 				numTexCoords++;
@@ -545,7 +548,7 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 				++fi;
 				++numTriangles;
 
-				int vertexesPerFace = tokens.size() -1;
+				int vertexesPerFace = static_cast<int>(tokens.size()-1);
 				int iVertex = 3;
 				while (iVertex < vertexesPerFace)  // add other triangles
 				{
@@ -680,7 +683,7 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 						(*fi).C()[3] = faceColor[3];
 					}
 
-					// A face polygon composed of more than three vertices is tringulated
+					// A face polygon composed of more than three vertices is triangulated
 					// according to the following schema:
 					//                     v5
 					//                    /  \
@@ -704,7 +707,9 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 				}
 				
 				// callback invocation, abort loading process if the call returns false
-				if ((cb !=NULL) && (((numTriangles + numVertices)%100)==0) && !(*cb)(100.0f * (float)(numTriangles + numVertices)/(float)numVerticesPlusFaces, "Face Loading"))
+				if ((cb !=NULL) && (((numTriangles + numVertices)%100)==0) && 
+					!(*cb)(static_cast<int>(100.0f * static_cast<float>(numTriangles + 
+					numVertices) / static_cast<float>(numVerticesPlusFaces)), "Face Loading"))
 					return E_ABORTED;
 			}
 			else if (header.compare("mtllib")==0)	// material library
@@ -937,7 +942,7 @@ static bool LoadMask(const char * filename, int &mask)
 				}
 				else if (header.compare("f")==0)
 				{
-					numTriangles += (tokens.size() - 3);
+					numTriangles += (static_cast<int>(tokens.size()) - 3);
 					std::string remainingText = tokens[1];
 					
 					// we base our assumption on the fact that the way vertex data is
@@ -1007,7 +1012,7 @@ static bool LoadMask(const char * filename, int &mask)
 				}
 				else if (header.compare("f")==0)
 				{
-					numTriangles += (tokens.size() - 3);
+					numTriangles += (static_cast<int>(tokens.size()) - 3);
 					if (bUsingMaterial)	bHasPerFaceColor = true;
 				}
 				else if (header.compare("usemtl")==0)
@@ -1129,7 +1134,7 @@ static bool LoadMask(const char * filename, int &mask)
 					// adding texture name into textures vector (if not already present)
 					// avoid adding the same name twice
 					bool found = false;
-					unsigned size = textures.size();
+					unsigned int size = static_cast<unsigned int>(textures.size());
 					unsigned j = 0;
 					while (!found && (j < size))
 					{
