@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/12/12 12:08:30  cignoni
+First working version
+
 Revision 1.1  2005/11/21 15:58:12  cignoni
 First Release (not working!)
 
@@ -221,7 +224,7 @@ void Compute(MeshType &m)
 
 ScalarType Mass()
 { 
-	return T0;
+	return static_cast<ScalarType>(T0);
 }
 
 Point3<ScalarType>  CenterOfMass()
