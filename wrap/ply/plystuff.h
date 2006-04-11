@@ -31,6 +31,9 @@ of Greg Turk and on the work of Claudio Rocchini
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/12/02 00:00:53  cignoni
+Moved and corrected interpret_texture_name from plystuff.h to plylib.cpp
+
 Revision 1.3  2005/03/18 00:14:40  cignoni
 removed small gcc compiling issues
 
@@ -48,7 +51,9 @@ Cleaning of the automatic bbox caching support for ply files. First working vers
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h> 
+#ifdef WIN32
 #include <io.h>
+#endif
 
 #include <vcg/space/box3.h>
 #include <wrap/ply/plylib.h>
@@ -69,6 +74,8 @@ using namespace vcg;
 #define pb_fstat   fstat
 #define pb_open   open
 #define pb_close  close
+#define _O_BINARY 0 // Does not exist on Unix
+#define _O_RDONLY O_RDONLY
 #endif
 
 
@@ -256,9 +263,9 @@ bool ScanBBox( const char * fname, Box3d & box, bool use_cache=true )
 
 	static const PropDescriptor pv[3]=
 	{
-		{"vertex","x",T_FLOAT,T_DOUBLE,offsetof(PlyPoint3d,x),0,0,0,0,0},
-		{"vertex","y",T_FLOAT,T_DOUBLE,offsetof(PlyPoint3d,y),0,0,0,0,0},
-		{"vertex","z",T_FLOAT,T_DOUBLE,offsetof(PlyPoint3d,z),0,0,0,0,0},
+		{"vertex","x",T_FLOAT,T_DOUBLE,offsetof(PlyPoint3d,x),0,0,0,0,0 ,0}, // TO GET RID OF COMPILER WARNING I ADDED 0 TO INITIALIZE format (MV)
+		{"vertex","y",T_FLOAT,T_DOUBLE,offsetof(PlyPoint3d,y),0,0,0,0,0 ,0}, // TO GET RID OF COMPILER WARNING I ADDED 0 TO INITIALIZE format (MV)
+		{"vertex","z",T_FLOAT,T_DOUBLE,offsetof(PlyPoint3d,z),0,0,0,0,0, 0},//  TO GET RID OF COMPILER WARNING I ADDED 0 TO INITIALIZE format (MV)
 	};
 
 
@@ -321,9 +328,9 @@ bool ScanBBox( const char * fname, Box3d & box, const Matrix44d & m, bool use_ca
 
 	static const PropDescriptor pv[3]=
 	{
-		{"vertex","x",T_FLOAT,T_DOUBLE,offsetof(PlyPoint3d,x),0,0,0,0,0},
-		{"vertex","y",T_FLOAT,T_DOUBLE,offsetof(PlyPoint3d,y),0,0,0,0,0},
-		{"vertex","z",T_FLOAT,T_DOUBLE,offsetof(PlyPoint3d,z),0,0,0,0,0},
+		{"vertex","x",T_FLOAT,T_DOUBLE,offsetof(PlyPoint3d,x),0,0,0,0,0, 0},// TO GET RID OF COMPILER WARNING I ADDED 0 TO INITIALIZE format (MV)
+		{"vertex","y",T_FLOAT,T_DOUBLE,offsetof(PlyPoint3d,y),0,0,0,0,0, 0},// TO GET RID OF COMPILER WARNING I ADDED 0 TO INITIALIZE format (MV)
+		{"vertex","z",T_FLOAT,T_DOUBLE,offsetof(PlyPoint3d,z),0,0,0,0,0, 0},// TO GET RID OF COMPILER WARNING I ADDED 0 TO INITIALIZE format (MV)
 	};
 
 

@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2006/03/29 09:27:07  cignoni
+Added managemnt of non critical errors
+
 Revision 1.3  2006/03/29 08:51:16  corsini
 reset to zero warnings
 
@@ -693,12 +696,13 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 						(*fi).C()[3] = faceColor[3];
 					}
 
+					/*
 					// A face polygon composed of more than three vertices is triangulated
 					// according to the following schema:
 					//                     v5
-					//                    /  \
-					//                   /    \
-					//                  /      \ 
+					//                    /  \   
+					//                   /    \    
+					//                  /      \   
 					//                 v1------v4 
 					//                 |\      /
 					//                 | \    /
@@ -709,7 +713,7 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 					// has been split into the triangles (v1,v2,v3), (v1,v3,v4) e (v1,v4,v5).
 					// This way vertex v1 becomes the common vertex of all newly generated
 					// triangles, and this may lead to the creation of very thin triangles.
-
+					*/
 					++fi;
 					++numTriangles;
 
