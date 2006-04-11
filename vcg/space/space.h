@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2006/01/03 12:44:58  spinelli
+fix some bugs.
+
 Revision 1.1  2004/03/16 03:08:02  tarini
 first commit
 

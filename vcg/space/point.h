@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/12/12 11:22:32  ganovelli
+compiled with gcc
+
 Revision 1.6  2005/01/12 11:25:52  ganovelli
 corrected Point<3
 
@@ -305,6 +308,9 @@ class Point2 : public PointBase<2,S> {
 public:	
 	typedef S ScalarType;
 	typedef Point2 PointType;
+	using PointBase<2,S>::_v;
+	using PointBase<2,S>::V;
+	using PointBase<2,S>::W;
 
 	//@{
   /** @name Special members for 2D points. **/
@@ -469,6 +475,12 @@ class Point3 : public PointBase<3,S> {
 public:	
 	typedef S ScalarType;
 	typedef Point3<S>  PointType;
+	using PointBase<3,S>::_v;
+	using PointBase<3,S>::V;
+	using PointBase<3,S>::W;
+	using PointBase<3,S>::k0;
+	using PointBase<3,S>::k1;
+	using PointBase<3,S>::k2;
 
 	//@{
   /** @name Special members for 3D points. **/
@@ -481,7 +493,7 @@ public:
 
 		/// Cross product for 3D points
 	inline PointType operator ^ ( PointType const & p ) const {
-		return Point (
+		return Point3 (
 			_v[1]*p._v[2] - _v[2]*p._v[1],
 			_v[2]*p._v[0] - _v[0]*p._v[2],
 			_v[0]*p._v[1] - _v[1]*p._v[0] );
@@ -626,6 +638,12 @@ class Point4 : public PointBase<4,S> {
 public:
 	typedef S ScalarType;
 	typedef Point4<S> PointType;
+	using PointBase<3,S>::_v;
+	using PointBase<3,S>::V;
+	using PointBase<3,S>::W;
+	using PointBase<3,S>::k0;
+	using PointBase<3,S>::k1;
+	using PointBase<3,S>::k2;
 	//@{
   /** @name Special members for 4D points. **/
 		/// default
