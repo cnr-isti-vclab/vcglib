@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/12/12 11:24:09  ganovelli
+missing type added
+
 Revision 1.1  2004/03/16 03:08:17  tarini
 first version
 

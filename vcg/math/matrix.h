@@ -22,6 +22,9 @@
 ****************************************************************************/
 /***************************************************************************
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/12/12 11:25:00  ganovelli
+added diagonal matrix, outer produce and namespace
+
 ***************************************************************************/
 
 #ifndef MATRIX_VCGLIB
@@ -32,7 +35,8 @@ $Log: not supported by cvs2svn $
 #include <memory.h>
 #include <assert.h>
 #include <algorithm>
-#include <vcg/space/Point.h>
+#include <vcg/space/point.h>
+#include <vcg/math/lin_algebra.h>
 
 namespace vcg{
 	namespace ndim{
@@ -656,8 +660,9 @@ namespace vcg{
 
 	template <class MatrixType>
 	void Invert(MatrixType & m){
-		typename MatrixType::ScalarType  *diag;
-		diag = new  MatrixType::ScalarType [m.ColumnsNumber()];
+		typedef typename MatrixType::ScalarType X;
+		X  *diag;
+		diag = new  X [m.ColumnsNumber()];
 
 		MatrixType res(m.RowsNumber(),m.ColumnsNumber());
 		vcg::SingularValueDecomposition<MatrixType > (m,&diag[0],res,50 );
