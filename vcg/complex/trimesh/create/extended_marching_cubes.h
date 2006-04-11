@@ -424,8 +424,8 @@ namespace vcg
 				vcg::tri::UpdateTopology< TRIMESH_TYPE >::VertexFace( *_mesh );
 				vcg::tri::UpdateTopology< TRIMESH_TYPE >::FaceFace( *_mesh );
 
-				std::vector< LightEdge >::iterator e_it		= edges.begin();
-				std::vector< LightEdge >::iterator e_end	= edges.end();
+				typename std::vector< LightEdge >::iterator e_it		= edges.begin();
+				typename std::vector< LightEdge >::iterator e_end	= edges.end();
 
 				FacePointer g, f;
 				int			w, z;
