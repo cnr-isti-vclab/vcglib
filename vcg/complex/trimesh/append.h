@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2006/01/30 09:00:40  cignoni
+Corrected use of HasPerWedgeTexture
+
 Revision 1.2  2006/01/22 17:08:50  cignoni
 Bug due to wrong compuation of size of auxiliary vector (vn instead of vert.size() )
 
@@ -87,7 +90,7 @@ static void ImportFace(MeshLeft &ml, MeshRight &mr, FaceLeft &fl, FaceRight &fr,
   fl.V(2)=&ml.vert[remap[ Index(mr,fr.V(2))]];
   if(fl.HasFaceColor()   && fl.HasFaceColor()) fl.C()=fr.C();
   if(fl.HasFaceQuality() && fl.HasFaceQuality()) fl.Q()=fr.Q();
-  if(tri::HasPerWedgeTexture(mr) && tri::HasPerWedgeTexture(ml)) 
+  if(HasPerWedgeTexture(mr) && HasPerWedgeTexture(ml)) 
   {
     fl.WT(0)=fr.WT(0);
     fl.WT(1)=fr.WT(1);
@@ -130,39 +133,39 @@ static void Mesh(MeshLeft& ml, MeshRight& mr, const bool selected = false)
 }
 
 
-static void Subset(MeshLeft& ml, std::vector<FacePointerRight> & vfpr)
-{
- // remap[i] keep where the position of where the i-th vertex of meshright has landed in meshleft
-  std::vector<int> remap(mr.vert.size(),-1);
+// static void Subset(MeshLeft& ml, std::vector<FacePointerRight> & vfpr)
+// {
+//  // remap[i] keep where the position of where the i-th vertex of meshright has landed in meshleft
+//   std::vector<int> remap(mr.vert.size(),-1); 
  
- // first loop to find the referenced vertices and copy them preparing the remap vector
- vector<FacePointerRight>::iterator  fi;
- int FaceToAdd=0;
- for(fi=vfpr.begin();fi!=vfpr.end();++fi)
-    if(!(*fi)->IsD())
-        {
-          FaceToAdd++;
-          for(int i=0;i<3;++i)
-          {
-            int vind=Index(mr, *(**fi).V(i));
-            if(remap[vind]==-1)
-            {
-              VertexIteratorLeft vp;
-              vp=Allocator<MeshLeft>::AddVertices(ml,1);
-              ImportVertex((*vp),*(**fi).V(i));
-              remap[vind]=Index(ml,*vp);
-            }
-          }
-        }
- // second loop copy the faces updating the vertex references
- FaceIteratorLeft fp=Allocator<MeshLeft>::AddFaces(ml,FaceToAdd); 
- for(fi=vfpr.begin();fi!=vfpr.end();++fi)
-    if(!(*fi).IsD())
-    {
-        ImportFace(ml,mr,(*fp),(*fi),remap);
-        ++fp;
-    }
-}
+//  // first loop to find the referenced vertices and copy them preparing the remap vector
+// typename  std::vector<FacePointerRight>::iterator  fi;
+//  int FaceToAdd=0;
+//  for(fi=vfpr.begin();fi!=vfpr.end();++fi)
+//     if(!(*fi)->IsD())
+//         {
+//           FaceToAdd++;
+//           for(int i=0;i<3;++i)
+//           {
+//             int vind=Index(mr, *(**fi).V(i));
+//             if(remap[vind]==-1)
+//             {
+//               VertexIteratorLeft vp;
+//               vp=Allocator<MeshLeft>::AddVertices(ml,1);
+//               ImportVertex((*vp),*(**fi).V(i));
+//               remap[vind]=Index(ml,*vp);
+//             }
+//           }
+//         }
+//  // second loop copy the faces updating the vertex references
+//  FaceIteratorLeft fp=Allocator<MeshLeft>::AddFaces(ml,FaceToAdd); 
+//  for(fi=vfpr.begin();fi!=vfpr.end();++fi)
+//     if(!(*fi).IsD())
+//     {
+//         ImportFace(ml,mr,(*fp),(*fi),remap);
+//         ++fp;
+//     }
+// }
 
 
 static void Selected(MeshLeft& ml, MeshRight& mr)
