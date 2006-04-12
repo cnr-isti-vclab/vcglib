@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.35  2006/02/28 16:51:29  ponchio
+Added typename
+
 Revision 1.34  2006/02/01 15:27:00  cignoni
 Added IsD() test in SelfIntersection
 
@@ -156,6 +159,62 @@ Initial Release
 
 namespace vcg {
 	namespace tri{
+template <class ConnectedMeshType>
+class ConnectedIterator
+{
+  	public:
+			typedef ConnectedMeshType MeshType; 
+			typedef typename MeshType::VertexType     VertexType;
+			typedef typename MeshType::VertexPointer  VertexPointer;
+			typedef typename MeshType::VertexIterator VertexIterator;
+			typedef	typename MeshType::ScalarType			ScalarType;
+			typedef typename MeshType::FaceType       FaceType;
+			typedef typename MeshType::FacePointer    FacePointer;
+			typedef typename MeshType::FaceIterator   FaceIterator;
+			typedef typename MeshType::FaceContainer  FaceContainer;
+      typedef typename vcg::Box3<ScalarType>  Box3Type;
+
+public:
+ void operator ++()
+ {
+	FacePointer fpt=sf.top();
+  sf.pop();
+	for(int j=0;j<3;++j)
+		if( !face::IsBorder(*fpt,j) )
+			{
+				FacePointer l=fpt->FFp(j);
+				if( !mp->IsMarked(l) )
+				{
+					mp->Mark(l);
+					sf.push(l);
+				}
+			}
+}
+
+ void start(MeshType &m, FacePointer p)
+ {
+  mp=&m;
+  while(!sf.empty()) sf.pop();
+  mp->UnMarkAll();
+  assert(p);
+  assert(!p->IsD());
+	mp->Mark(p);
+	sf.push(p);
+ }
+ bool completed() {
+   return sf.empty();
+ }
+
+ FacePointer operator *() 
+ {
+   return sf.top();
+ }
+private:
+  std::stack<FacePointer> sf;
+  MeshType *mp;
+};
+
+
 		/// 
 		/** \addtogroup trimesh */
 		/*@{*/
@@ -558,43 +617,51 @@ namespace vcg {
 
 			}
 
+ 
+      static int DeleteConnectedComponent(MeshType &m,FacePointer fp)
+      {
+        int deleted=0;
+        return deleted;
+      }
+      
+      /*
+  Compute the set of connected components of a given mesh
+  it fills a vector of pair < int , faceptr > with, for each connecteed component its size and a represnant
+ */
 			static int ConnectedComponents(MeshType &m)
+      {
+        std::vector< std::pair<int,FacePointer> > &CCV
+        return ConnectedComponents(m,CCV);
+      }
+      static int ConnectedComponents(MeshType &m, std::vector< std::pair<int,FacePointer> > &CCV)
 			{
 				FaceIterator fi;
-				//FaceIterator gi;
-				vcg::face::Pos<FaceType> he;
-				vcg::face::Pos<FaceType> hei;
-
-        std::vector<int> nrfaces;
-				nrfaces.reserve(1);
+				FacePointer l;
+		    CCV.clear();
 
 				for(fi=m.face.begin();fi!=m.face.end();++fi)
 					(*fi).ClearS();
-				//gi=m.face.begin(); fi=gi;
-				int Compindex=0;
+		
+        int Compindex=0;
         std::stack<FacePointer> sf;
-        FacePointer gi=&*(m.face.begin());
-				FaceType *l;
+        FacePointer fpt=&*(m.face.begin());
 				for(fi=m.face.begin();fi!=m.face.end();++fi)
 				{
-					if(!((*fi).IsD()))
-					{
-					if (!(*fi).IsS())
+					if(!((*fi).IsD()) && !(*fi).IsS())
 					{
 						(*fi).SetS();
-						//(*fi).Q()=Compindex;
-						nrfaces.push_back(1);
+						CCV.push_back(make_pair(0,&*fi));
 						sf.push(&*fi);
 						while (!sf.empty())
 						{
-							gi=sf.top();
-							he.Set(&(*gi),0,gi->V(0));
+							fpt=sf.top();
+              ++CCV.back().first;
 							sf.pop();
 							for(int j=0;j<3;++j)
 							{
-								if( !face::IsBorder(*gi,j) )
+								if( !face::IsBorder(*fpt,j) )
 								{
-									l=he.f->FFp(j);
+									l=fpt->FFp(j);
 									if( !(*l).IsS() )
 									{
 										(*l).SetS();
@@ -605,8 +672,8 @@ namespace vcg {
 						}
 						Compindex++;
 					}
-					}
 				}
+        assert(CCV.size()==Compindex);
 				return Compindex;
 			}
 
