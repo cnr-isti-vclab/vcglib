@@ -24,6 +24,10 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.36  2006/04/12 15:08:51  cignoni
+Added ConnectedIterator (should be moved somewhere else)
+Cleaned ConnectedComponents
+
 Revision 1.35  2006/02/28 16:51:29  ponchio
 Added typename
 
@@ -630,7 +634,7 @@ private:
  */
 			static int ConnectedComponents(MeshType &m)
       {
-        std::vector< std::pair<int,FacePointer> > &CCV
+        std::vector< std::pair<int,FacePointer> > &CCV;
         return ConnectedComponents(m,CCV);
       }
       static int ConnectedComponents(MeshType &m, std::vector< std::pair<int,FacePointer> > &CCV)
