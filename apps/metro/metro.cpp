@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2006/03/27 04:17:07  cignoni
+moved to generic export.h
+
 Revision 1.18  2006/01/10 13:20:40  cignoni
 Changed ply::PlyMask to io::Mask
 
@@ -83,7 +86,7 @@ GPL  added
 
 // standard libraries
 #include <time.h>
-
+using namespace std;
 // project definitions.
 #include "defs.h"
 #include "sampling.h"
@@ -97,11 +100,11 @@ GPL  added
 
 
 // -----------------------------------------------------------------------------------------------
-using namespace std;
+
 using namespace vcg;
 
 
-////////////////// Command line Flags and parameters 
+////////////////// Command line Flags and parameters
 bool NumberOfSamples                = false;
 bool SamplesPerAreaUnit             = false;
 bool CleaningFlag=false;
@@ -155,7 +158,7 @@ void OpenMesh(const char *filename, CMesh &m)
       printf("Error in reading %s: '%s'\n",filename,tri::io::Importer<CMesh>::ErrorMsg(err));
       exit(-1);
     }
-  printf("read mesh `%s'\n", filename);		  
+  printf("read mesh `%s'\n", filename);
   if(CleaningFlag){
       int dup = tri::Clean<CMesh>::RemoveDuplicateVertex(m);
       int unref =  tri::Clean<CMesh>::RemoveUnreferencedVertex(m);
@@ -172,7 +175,7 @@ int main(int argc, char**argv)
     unsigned long         n_samples_target, elapsed_time;
     double								n_samples_per_area_unit;
     int                   flags;
- 
+
     // print program info
     printf("-------------------------------\n"
            "         Metro V.4.06 \n"
@@ -192,7 +195,7 @@ int main(int argc, char**argv)
     {
       if(argv[i][0]=='-')
         switch(argv[i][1])
-      { 
+      {
         case 'h' : flags |= SamplingFlags::HIST; break;
         case 'v' : flags &= ~SamplingFlags::VERTEX_SAMPLING; break;
         case 'e' : flags &= ~SamplingFlags::EDGE_SAMPLING; break;
@@ -221,17 +224,17 @@ int main(int argc, char**argv)
       }
       i++;
     }
- 
+
     if(!(flags & SamplingFlags::USE_HASH_GRID) && !(flags & SamplingFlags::USE_AABB_TREE) )
        flags |= SamplingFlags::USE_STATIC_GRID;
- 
+
     // load input meshes.
     OpenMesh(argv[1],S1);
     OpenMesh(argv[2],S2);
 
     string S1NewName=SaveFileName(argv[1]);
     string S2NewName=SaveFileName(argv[2]);
-   
+
     if(!NumberOfSamples && !SamplesPerAreaUnit)
     {
         NumberOfSamples = true;
@@ -253,7 +256,7 @@ int main(int argc, char**argv)
 		bbox.Offset(bbox.Diag()*0.02);
 	  S1.bbox = bbox;
 	  S2.bbox = bbox;
-    
+
     // initialize time info.
     int t0=clock();
 
@@ -323,7 +326,7 @@ int main(int argc, char**argv)
     elapsed_time = clock() - t0;
     int n_total_sample=ForwardSampling.GetNSamples()+BackwardSampling.GetNSamples();
     double mesh_dist_max  = max(dist1_max , dist2_max);
-    
+
     printf("\nHausdorff distance: %f (%f  wrt bounding box diagonal)\n",(float)mesh_dist_max,(float)mesh_dist_max/bbox.Diag());
     printf("  Computation time  : %d ms\n",(int)(1000.0*elapsed_time/CLOCKS_PER_SEC));
     printf("  # samples/second  : %f\n\n", (float)n_total_sample/((float)elapsed_time/CLOCKS_PER_SEC));
@@ -331,7 +334,7 @@ int main(int argc, char**argv)
     // save error files.
     if(flags & SamplingFlags::SAVE_ERROR)
     {
-      vcg::tri::io::PlyInfo p; 
+      vcg::tri::io::PlyInfo p;
       p.mask|=vcg::tri::io::Mask::IOM_VERTCOLOR | vcg::tri::io::Mask::IOM_VERTQUALITY /* | vcg::ply::PLYMask::PM_VERTQUALITY*/ ;
       //p.mask|=vcg::ply::PLYMask::PM_VERTCOLOR|vcg::ply::PLYMask::PM_VERTQUALITY;
       if(ColorMax!=0 || ColorMin != 0){

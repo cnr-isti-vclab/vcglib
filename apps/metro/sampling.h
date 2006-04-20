@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2006/01/22 10:05:43  cignoni
+Corrected use of Area with the unambiguous DoubleArea
+
 Revision 1.20  2005/11/12 06:44:29  cignoni
 Changed GetClosest -> GetClosestFace
 
@@ -101,7 +104,7 @@ instantiate GridStaticPtr on the simplexClass template.
 namespace vcg
 {
 
-struct SamplingFlags{	
+struct SamplingFlags{
 			 enum{
 						HIST														= 0x0001,
 						VERTEX_SAMPLING									= 0x0002,
@@ -120,7 +123,7 @@ struct SamplingFlags{
 	};
 // -----------------------------------------------------------------------------------------------
 template <class MetroMesh>
-class Sampling 
+class Sampling
 {
 public:
 
@@ -141,11 +144,11 @@ private:
 
     typedef Point3<typename MetroMesh::ScalarType> Point3x;
 
-    
+
 
 
     // data structures
-    MetroMesh       &S1; 
+    MetroMesh       &S1;
     MetroMesh       &S2;
     MetroMeshGrid   gS2;
     MetroMeshHash   hS2;
@@ -161,11 +164,11 @@ private:
 		int print_every_n_elements         ;
 		int referredBit;
     // parameters
-    double          dist_upper_bound; 
+    double          dist_upper_bound;
     double					n_samples_per_area_unit;
     unsigned long   n_samples_target;
     int             Flags;
-    
+
     // results
     Histogram<double>            hist;
     unsigned long   n_total_samples;
@@ -173,7 +176,7 @@ private:
     unsigned long   n_total_edge_samples;
     unsigned long   n_total_vertex_samples;
     double          max_dist;
-    double          mean_dist; 
+    double          mean_dist;
     double          RMS_dist;
     double          volume;
     double          area_S1;
@@ -242,7 +245,7 @@ Sampling<MetroMesh>::Sampling(MetroMesh &_s1, MetroMesh &_s2):S1(_s1),S2(_s2)
 			// store the unreferred vertices
 			FaceIterator fi; VertexIterator vi; int i;
 			for(fi = _s1.face.begin(); fi!= _s1.face.end(); ++fi)
-				for(i=0;i<3;++i) (*fi).V(i)->SetUserBit(referredBit);	
+				for(i=0;i<3;++i) (*fi).V(i)->SetUserBit(referredBit);
 }
 
 template <class MetroMesh>
@@ -298,11 +301,11 @@ float Sampling<MetroMesh>::AddSample(const Point3x &p )
       f=trimesh::GetClosestFace<MetroMesh,MetroMeshHash>(S2, hS2, p, dist_upper_bound, dist, normf, bestq, ip);
     if(Flags & SamplingFlags::USE_STATIC_GRID)
       f=trimesh::GetClosestFace<MetroMesh,MetroMeshGrid>(S2, gS2, p, dist_upper_bound, dist, normf, bestq, ip);
-    
+
     // update distance measures
     if(dist == dist_upper_bound)
         return -1.0;
-    
+
     if(dist > max_dist)
         max_dist = dist;        // L_inf
     mean_dist += dist;	        // L_1
@@ -312,7 +315,7 @@ float Sampling<MetroMesh>::AddSample(const Point3x &p )
     if(Flags &  SamplingFlags::HIST)
         hist.Add((float)fabs(dist));
 
-    return (float)dist;    
+    return (float)dist;
 }
 
 
@@ -325,7 +328,7 @@ void Sampling<MetroMesh>::VertexSampling()
     // Vertex sampling.
     int   cnt = 0;
     float error;
-    
+
     printf("Vertex sampling\n");
     VertexIterator vi;
 		typename std::vector<VertexPointer>::iterator vif;
@@ -339,7 +342,7 @@ void Sampling<MetroMesh>::VertexSampling()
 
         // save vertex quality
         if(Flags & SamplingFlags::SAVE_ERROR)  (*vi).Q() = error;
-	
+
         // print progress information
         if(!(++cnt % print_every_n_elements))
             printf("Sampling vertices %d%%\r", (100 * cnt/S1.vn));
@@ -357,7 +360,7 @@ inline void Sampling<MetroMesh>::SampleEdge(const Point3x & v0, const Point3x & 
     // uniform sampling of the segment v0v1.
     Point3x     e((v1-v0)/(double)(n_samples_per_edge+1));
     int         i;
-    
+
     for(i=1; i <= n_samples_per_edge; i++)
     {
         AddSample(v0 + e*i);
@@ -381,7 +384,7 @@ void Sampling<MetroMesh>::EdgeSampling()
         for(int i=0; i<3; ++i)
         {
             Edges.push_back(make_pair((*fi).V0(i),(*fi).V1(i)));
-            if(Edges.back().first > Edges.back().second) 
+            if(Edges.back().first > Edges.back().second)
                 swap(Edges.back().first, Edges.back().second);
         }
     sort(Edges.begin(), Edges.end());
@@ -480,7 +483,7 @@ template <class MetroMesh>
 void Sampling<MetroMesh>::FaceSubdiv(const Point3x & v0, const Point3x & v1, const Point3x & v2, int maxdepth)
 {
     // recursive face subdivision.
-    if(maxdepth == 0) 
+    if(maxdepth == 0)
     {
         // ground case.
         AddSample((v0+v1+v2)/3.0f);
@@ -494,7 +497,7 @@ void Sampling<MetroMesh>::FaceSubdiv(const Point3x & v0, const Point3x & v1, con
     double  maxd12 = SquaredDistance(v1,v2);
     double  maxd20 = SquaredDistance(v2,v0);
     int     res;
-    if(maxd01 > maxd12) 
+    if(maxd01 > maxd12)
         if(maxd01 > maxd20)     res = 0;
         else                    res = 2;
     else
@@ -503,17 +506,17 @@ void Sampling<MetroMesh>::FaceSubdiv(const Point3x & v0, const Point3x & v1, con
 
     // break the input triangle along the median to the the longest edge.
     Point3x  pp;
-    switch(res) 
+    switch(res)
     {
-     case 0 :    pp = (v0+v1)/2; 
+     case 0 :    pp = (v0+v1)/2;
                  FaceSubdiv(v0,pp,v2,maxdepth-1);
                  FaceSubdiv(pp,v1,v2,maxdepth-1);
                  break;
-     case 1 :    pp = (v1+v2)/2; 
+     case 1 :    pp = (v1+v2)/2;
                  FaceSubdiv(v0,v1,pp,maxdepth-1);
                  FaceSubdiv(v0,pp,v2,maxdepth-1);
                  break;
-     case 2 :    pp = (v2+v0)/2; 
+     case 2 :    pp = (v2+v0)/2;
                  FaceSubdiv(v0,v1,pp,maxdepth-1);
                  FaceSubdiv(pp,v1,v2,maxdepth-1);
                  break;
@@ -608,15 +611,15 @@ void Sampling<MetroMesh>::Hausdorff()
 {
 		Box3< ScalarType> bbox;
 
-
+    typedef typename std::vector<FaceType>::iterator  FaceVecIterator;
     // set grid meshes.
     if(Flags & SamplingFlags::USE_HASH_GRID)
-        hS2.Set<vector<FaceType>::iterator>(S2.face.begin(),S2.face.end());   
+        hS2.Set(S2.face.begin(),S2.face.end());
     if(Flags & SamplingFlags::USE_AABB_TREE)
-        tS2.Set<vector<FaceType>::iterator>(S2.face.begin(),S2.face.end());   
+        tS2.Set(S2.face.begin(),S2.face.end());
     if(Flags & SamplingFlags::USE_STATIC_GRID)
-        gS2.Set<vector<FaceType>::iterator>(S2.face.begin(),S2.face.end());
-    
+        gS2.Set(S2.face.begin(),S2.face.end());
+
     // set bounding box
     bbox = S2.bbox;
     dist_upper_bound = /*bbox_factor * */bbox.Diag();
@@ -655,7 +658,7 @@ void Sampling<MetroMesh>::Hausdorff()
     // compute vertex colour
     if(Flags & SamplingFlags::SAVE_ERROR)
       vcg::tri::UpdateColor<MetroMesh>::VertexQuality(S1);
-  
+
     // compute statistics
     n_samples_per_area_unit = (double) n_total_samples / area_S1;
     volume     = mean_dist / n_samples_per_area_unit / 2.0;

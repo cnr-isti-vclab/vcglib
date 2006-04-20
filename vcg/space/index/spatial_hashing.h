@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -24,6 +24,11 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2006/01/23 21:26:57  ponchio
+gcc compatibility (templates mostly)
+bbox -> this->bbox
+More consistent use of Box3x and such.
+
 Revision 1.16  2006/01/23 15:26:31  ponchio
 P1 --> HASH_P1
 Old definition was conflicting with functions in segment.h
@@ -112,7 +117,7 @@ namespace vcg{
 
 	/** Spatial Hash Table
 	Spatial Hashing as described in
-	"Optimized Spatial Hashing for Coll	ision Detection of Deformable Objects", 
+	"Optimized Spatial Hashing for Coll	ision Detection of Deformable Objects",
 	Matthias Teschner and Bruno Heidelberger and Matthias Muller and Danat Pomeranets and Markus Gross
 	*/
 	template < typename OBJTYPE,class FLT=double>
@@ -121,7 +126,7 @@ namespace vcg{
 
 	public:
 
-		typedef OBJTYPE ObjType;        
+		typedef OBJTYPE ObjType;
 		typedef ObjType* ObjPtr;
 		typedef typename ObjType::ScalarType ScalarType;
 		typedef Point3<ScalarType> CoordType;
@@ -158,7 +163,7 @@ namespace vcg{
 
 		public:
 
-			//elements 
+			//elements
 			CellContainerType _entries;
 
 			Cell()
@@ -197,10 +202,10 @@ namespace vcg{
 			Point3i CellN()
 			{return cell_n;}
 
-			bool operator ==(const Cell &h)  
+			bool operator ==(const Cell &h)
 			{return (cell_n==h.CellN());}
 
-			bool operator !=(const Cell &h)  
+			bool operator !=(const Cell &h)
 			{return ((cell_n!=h.CellN()));}
 
 		}; // end struct Cell
@@ -309,16 +314,16 @@ namespace vcg{
 			_UpdateHMark(s);
 			return bb;
 		}
-		
-		
+
+
 		/// Insert a mesh in the grid.
 		template <class OBJITER>
 			void Set(const OBJITER & _oBegin, const OBJITER & _oEnd,const Box3x &_bbox=Box3x() )
 		{
-    
+
 			OBJITER i;
 			Box3x b;
-            Box3x &bbox = this->bbox;            
+            Box3x &bbox = this->bbox;
             CoordType &dim = this->dim;
             Point3i &siz = this->siz;
             CoordType &voxel = this->voxel;
@@ -336,8 +341,8 @@ namespace vcg{
 				ScalarType infl=bbox.Diag()/_size;
 				bbox.min -= CoordType(infl,infl,infl);
 				bbox.max += CoordType(infl,infl,infl);
-			}	
-			
+			}
+
 				dim  = bbox.max - bbox.min;
 				BestDim( _size, dim, siz );
 				// find voxel size
@@ -355,17 +360,17 @@ namespace vcg{
 		{
 			IteHtable I;
 			vcg::Point3i _c;
-			PToIP(p,_c);
+			this->PToIP(p,_c);
 			Grid(_c,first,last);
 		}
 
-		///return the simplexes on a specified cell 
+		///return the simplexes on a specified cell
 		void Grid( int x,int y,int z, CellIterator & first, CellIterator & last )
 		{
 			Grid(vcg::Point3i(x,y,z),first,last);
 		}
 
-		///return the simplexes on a specified cell 
+		///return the simplexes on a specified cell
 		void Grid( const Point3i & _c, CellIterator & first, CellIterator & last )
 		{
 			IteHtable I;
@@ -374,7 +379,7 @@ namespace vcg{
 				first= &*(*I).second._entries.begin();
 				last=  &*(*I).second._entries.end();
 			}
-			else 
+			else
 			{	///return 2 equals pointers
 				first=&*(*hash_table.begin()).second._entries.begin();
 				last= &*(*hash_table.begin()).second._entries.begin();
@@ -409,7 +414,7 @@ namespace vcg{
 
 
 		template <class OBJPOINTDISTFUNCTOR, class OBJMARKER>
-			ObjPtr  GetClosest(OBJPOINTDISTFUNCTOR & _getPointDistance, OBJMARKER & _marker, 
+			ObjPtr  GetClosest(OBJPOINTDISTFUNCTOR & _getPointDistance, OBJMARKER & _marker,
 			const CoordType & _p, const ScalarType & _maxDist,ScalarType & _minDist, CoordType & _closestPt)
 		{
 			return (vcg::GridClosest<SpatialHashType,OBJPOINTDISTFUNCTOR,OBJMARKER>(*this,_getPointDistance,_marker, _p,_maxDist,_minDist,_closestPt));
@@ -417,7 +422,7 @@ namespace vcg{
 
 
 		template <class OBJPOINTDISTFUNCTOR, class OBJMARKER, class OBJPTRCONTAINER,class DISTCONTAINER, class POINTCONTAINER>
-			unsigned int GetKClosest(OBJPOINTDISTFUNCTOR & _getPointDistance,OBJMARKER & _marker, 
+			unsigned int GetKClosest(OBJPOINTDISTFUNCTOR & _getPointDistance,OBJMARKER & _marker,
 			const unsigned int _k, const CoordType & _p, const ScalarType & _maxDist,OBJPTRCONTAINER & _objectPtrs,
 			DISTCONTAINER & _distances, POINTCONTAINER & _points)
 		{
@@ -425,14 +430,14 @@ namespace vcg{
 				OBJPOINTDISTFUNCTOR,OBJMARKER,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>
 				(*this,_getPointDistance,_marker,_k,_p,_maxDist,_objectPtrs,_distances,_points));
 		}
-	
+
 		template <class OBJPOINTDISTFUNCTOR, class OBJMARKER, class OBJPTRCONTAINER, class DISTCONTAINER, class POINTCONTAINER>
-		unsigned int GetInSphere(OBJPOINTDISTFUNCTOR & _getPointDistance, 
+		unsigned int GetInSphere(OBJPOINTDISTFUNCTOR & _getPointDistance,
 		OBJMARKER & _marker,
 		const CoordType & _p,
 		const ScalarType & _r,
 		OBJPTRCONTAINER & _objectPtrs,
-		DISTCONTAINER & _distances, 
+		DISTCONTAINER & _distances,
 		POINTCONTAINER & _points)
 		{
 			return(vcg::GridGetInSphere<SpatialHashType,
@@ -441,16 +446,16 @@ namespace vcg{
 		}
 
 		template <class OBJMARKER, class OBJPTRCONTAINER>
-			unsigned int GetInBox(OBJMARKER & _marker, 
+			unsigned int GetInBox(OBJMARKER & _marker,
             const Box3x _bbox,
-			OBJPTRCONTAINER & _objectPtrs) 
+			OBJPTRCONTAINER & _objectPtrs)
 		{
 			return(vcg::GridGetInBox<SpatialHashType,OBJMARKER,OBJPTRCONTAINER>
 				  (*this,_marker,_bbox,_objectPtrs));
 		}
 
 		template <class OBJRAYISECTFUNCTOR, class OBJMARKER>
-			ObjPtr DoRay(OBJRAYISECTFUNCTOR & _rayIntersector, OBJMARKER & _marker, const Ray3<ScalarType> & _ray, const ScalarType & _maxDist, ScalarType & _t) 
+			ObjPtr DoRay(OBJRAYISECTFUNCTOR & _rayIntersector, OBJMARKER & _marker, const Ray3<ScalarType> & _ray, const ScalarType & _maxDist, ScalarType & _t)
 		{
 			return(vcg::GridDoRay<SpatialHashType,OBJRAYISECTFUNCTOR,OBJMARKER>
 				  (*this,_rayIntersector,_marker,_ray,_maxDist,_t));
@@ -474,12 +479,12 @@ namespace vcg{
         typedef typename SpatialHashTable<ContainerType,FLT>::CellIterator CellIterator;
 
 		void _UpdateHMark(ObjType* s){ s->HMark() = this->tempMark;}
-		
+
 		/// create an empty spatial hash table
 		void InitEmpty(const Box3x &_bbox, vcg::Point3i grid_size)
 		{
 			Box3x b;
-            Box3x &bbox = this->bbox;            
+            Box3x &bbox = this->bbox;
             CoordType &dim = this->dim;
             Point3i &siz = this->size;
             CoordType &voxel = this->voxel;
@@ -507,7 +512,7 @@ namespace vcg{
 		}
 
 	};
-	
+
 
 
 }// end namespace
