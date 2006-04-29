@@ -22,6 +22,9 @@
 ****************************************************************************/
 /***************************************************************************
 $Log: not supported by cvs2svn $
+Revision 1.6  2006/04/11 08:09:35  zifnab1974
+changes necessary for gcc 3.4.5 on linux 64bit. Please take note of case-sensitivity of filenames
+
 Revision 1.5  2005/12/12 11:25:00  ganovelli
 added diagonal matrix, outer produce and namespace
 
@@ -95,10 +98,12 @@ namespace vcg{
 			{
 				_rows = m;
 				_columns = n;
-				_data = new ScalarType[m*n];
-				unsigned int i;
-        for (i=0; i<_rows*_columns; i++)
-					_data[i] = values[i];
+				unsigned int dim = m*n;
+				_data = new ScalarType[dim];
+				memcpy(_data, values, dim*sizeof(ScalarType));
+				//unsigned int i;
+				//for (i=0; i<_rows*_columns; i++)
+				//	_data[i] = values[i];
 			};
 
 			/*!
@@ -275,7 +280,7 @@ namespace vcg{
 						/*!
 			*	Get the <I>j</I>-th column on the matrix.
 			*	\param j	the column index.
-			*	\return		the reference to the column elements.
+			*	\return		the reference to the column elements. This pointer must be deallocated by the caller.
 			*/
 			TYPE* GetColumn(const unsigned int j)
 			{
@@ -290,7 +295,7 @@ namespace vcg{
 			/*!
 			*	Get the <I>i</I>-th row on the matrix.
 			*	\param i	the column index.
-			*	\return		the reference to the row elements.
+			*	\return		the reference to the row elements. This pointer must be deallocated by the caller.
 			*/
 			TYPE* GetRow(const unsigned int i)
 			{
@@ -300,6 +305,40 @@ namespace vcg{
 				for (j=0, p=i*_columns; j<_columns; j++, p++)
 					v[j] = _data[p];
 				return v;
+			};
+
+			/*!
+			* Swaps the values of the elements between the <I>i</I>-th and the <I>j</I>-th column.
+			* \param i the index of the first column
+			* \param j the index of the second column
+			*/
+			void SwapColumns(const unsigned int i, const unsigned int j)
+			{
+				assert(0<=i && i<_columns);
+				assert(0<=j && j<_columns);
+				if (i==j)
+					return;
+
+				unsigned int r, e0, e1;
+				for (r=0, e0=i, e1=j; r<_rows; r++, e0+=_columns, e1+=_columns)
+					std::swap(_data[e0], _data[e1]);
+			};
+
+			/*!
+			* Swaps the values of the elements between the <I>i</I>-th and the <I>j</I>-th row.
+			* \param i the index of the first row
+			* \param j the index of the second row
+			*/
+			void SwapRows(const unsigned int i, const unsigned int j)
+			{
+				assert(0<=i && i<_rows);
+				assert(0<=j && j<_rows);
+				if (i==j)
+					return;
+
+				unsigned int r, e0, e1;
+				for (r=0, e0=i*_columns, e1=j*_columns; r<_columns; r++, e0++, e1++)
+					std::swap(_data[e0], _data[e1]);
 			};
 
 			/*!
@@ -397,7 +436,7 @@ namespace vcg{
 
 			/*!
 			*	Matrix multiplication: calculates the cross product.
-			*	\param	reference to the matrix to multiply by 
+			*	\param	m reference to the matrix to multiply by 
 			*	\return the matrix product
 			*/
 			Matrix<TYPE> operator*(const Matrix<TYPE> &m)
@@ -418,6 +457,23 @@ namespace vcg{
 			};
 
 						/*!
+			* Matrix-Vector product. Computes the product of the matrix by the vector v.
+			* \param  v reference to the vector to multiply by
+			* \return   the matrix-vector product. This pointer must be deallocated by the caller
+			*/
+			ScalarType* operator*(const ScalarType v[])
+			{
+				ScalarType *result = new ScalarType[_rows];
+				memset(result, 0, _rows*sizeof(ScalarType));
+				unsigned int r, c, i;
+				for (r=0, i=0; r<_rows; r++)
+					for (c=0; c<_columns; c++, i++)
+						result[r] += _data[i]*v[c];
+
+				return result;
+			};
+
+			/*!
 			*	Matrix multiplication: calculates the cross product.
 			*	\param	reference to the matrix to multiply by 
 			*	\return the matrix product
@@ -565,7 +621,7 @@ namespace vcg{
 			{
 				assert(j>=0 && j<_columns);
 				unsigned int i, p;
-				for (i=0, p=0; i<_rows; i++, p+=_columns)
+				for (i=0, p=j; i<_rows; i++, p+=_columns)
 					_data[p] = v[i];
 			};
 
@@ -638,7 +694,7 @@ namespace vcg{
 				{
 					printf("[\t");
 					for (j=0; j<_columns; j++)
-						printf("%g\t", _data[p+j]);
+						printf("%f\t", _data[p+j]);
 					
 					printf("]\n");
 				}
@@ -655,6 +711,9 @@ namespace vcg{
 			/// the matrix elements 
 			ScalarType *_data;
 		};
+
+		typedef vcg::ndim::Matrix<double> MatrixMNd;
+		typedef vcg::ndim::Matrix<float>  MatrixMNf;
 
   /*! @} */
 
