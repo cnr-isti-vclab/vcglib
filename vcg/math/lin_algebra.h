@@ -150,7 +150,7 @@ namespace vcg
 	*	\return 
 	*/
 	template <typename MATRIX_TYPE>
-		static bool SingularValueDecomposition(MATRIX_TYPE &A, typename MATRIX_TYPE::ScalarType *W, MATRIX_TYPE &V, const int max_iters = 30)
+		static bool SingularValueDecomposition(MATRIX_TYPE &A, typename MATRIX_TYPE::ScalarType *W, MATRIX_TYPE &V, const bool sort_w=false, const int max_iters=30)
 	{
 		typedef typename MATRIX_TYPE::ScalarType ScalarType;
 		int m = (int) A.RowsNumber();
@@ -394,8 +394,103 @@ namespace vcg
 			}
 		}
 		delete []rv1;
+
+		if (sort_w)
+			Sort<MATRIX_TYPE>(A, W, V, false);
+
 		return convergence;
-	};  
+	};
+
+
+	/*!
+	*	Sort the singular values computed by the <CODE>SingularValueDecomposition</CODE> procedure and
+	* modify the matrices <I>U</I> and <I>V</I> accordingly.
+	*/
+	template< typename MATRIX_TYPE >
+	void Sort(MATRIX_TYPE &U, typename MATRIX_TYPE::ScalarType W[], MATRIX_TYPE &V, bool ascending) 
+	{
+		typedef typename MATRIX_TYPE::ScalarType ScalarType;
+
+		assert(U.ColumnsNumber()==V.ColumnsNumber());
+
+		int mu = U.RowsNumber(); 
+		int mv = V.RowsNumber(); 
+		int n  = U.ColumnsNumber();
+				
+		//ScalarType* u = &U[0][0]; 
+		//ScalarType* v = &V[0][0];
+
+		for (int i=0; i<n; i++)
+		{
+			int  k = i; 
+			ScalarType p = W[i];
+			if (ascending)
+			{
+				for (int j=i+1; j<n; j++)
+				{ 
+					if (W[j] < p) 
+					{ 
+						k = j; 
+						p = W[j]; 
+					} 
+				}
+			}
+			else
+			{
+				for (int j=i+1; j<n; j++)
+				{ 
+					if (W[j] > p) 
+					{ 
+						k = j; 
+						p = W[j]; 
+					} 
+				}
+			}
+			if (k != i)
+			{
+				W[k] = W[i];  // i.e.
+				W[i] = p;			// swaps the i-th and the k-th elements
+
+				int j = mu;
+				//ScalarType* uji = u + i; // uji = &U[0][i]
+				//ScalarType* ujk = u + k; // ujk = &U[0][k]
+				//ScalarType* vji = v + i; // vji = &V[0][i]
+				//ScalarType* vjk = v + k; // vjk = &V[0][k]
+				//if (j)									
+				//{												
+				//	for(;;)									for( ; j!=0; --j, uji+=n, ujk+=n)
+				//	{												{
+				//		p = *uji;								p = *uji;			// i.e.
+				//		*uji = *ujk;						*uji = *ujk;	// swap( U[s][i], U[s][k] )
+				//		*ujk = p;								*ujk = p;			//
+				//		if (!(--j))						}
+				//			break;								
+				//		uji += n;								
+				//		ujk += n;								
+				//	}										
+				//}												
+				for(int s=0; j!=0; ++s, --j)
+					std::swap(U[s][i], U[s][k]);
+
+				j = mv;
+				//if (j!=0) 
+				//{
+				//	for(;;)									for ( ; j!=0; --j, vji+=n, ujk+=n)
+				//	{												{
+				//		p    = *vji;						p    = *vji;	// i.e.
+				//		*vji = *vjk;						*vji = *vjk;	// swap( V[s][i], V[s][k] )
+				//		*vjk = p;								*vjk = p;			//
+				//		if (!(--j))						}
+				//			break;
+				//		vji += n; 
+				//		vjk += n;
+				//	}
+				//}
+				for (int s=0; j!=0; ++s, --j)
+					std::swap(V[s][i], V[s][k]);
+			}
+		}
+	}
 
 
 	/*!
@@ -414,23 +509,25 @@ namespace vcg
 	{
 		typedef typename MATRIX_TYPE::ScalarType ScalarType;
 		unsigned int jj, j, i;
+		unsigned int columns_number = U.ColumnsNumber();
+		unsigned int rows_number    = U.RowsNumber();
 		ScalarType s;
-		ScalarType *tmp	=	new ScalarType[U.ColumnsNumber()];
-		for (j=0; j<U.ColumnsNumber(); j++) //Calculate U^T * B.
+		ScalarType *tmp	=	new ScalarType[columns_number];
+		for (j=0; j<columns_number; j++) //Calculate U^T * B.
 		{			
 			s = 0;
 			if (W[j]!=0)							//Nonzero result only if wj is nonzero.
 			{ 
-				for (i=0; i<U.RowsNumber(); i++) 
+				for (i=0; i<rows_number; i++) 
 					s += U[i][j]*b[i];
 				s /= W[j];							//This is the divide by wj .
 			}
 			tmp[j]=s;
 		}
-		for (j=0;j<U.ColumnsNumber();j++)	//Matrix multiply by V to get answer.
+		for (j=0;j<columns_number;j++)	//Matrix multiply by V to get answer.
 		{			
 			s = 0;
-			for (jj=0; jj<U.ColumnsNumber(); jj++) 
+			for (jj=0; jj<columns_number; jj++) 
 				s += V[j][jj]*tmp[jj];
 			x[j]=s;
 		}
