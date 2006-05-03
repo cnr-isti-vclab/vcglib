@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.26  2006/02/03 09:46:24  corsini
+Remove signed/unsigned warning
+
 Revision 1.25  2006/01/11 10:37:12  cignoni
 Removed warning for unused vars
 
@@ -380,7 +383,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 	tf.UberFlags() = 0;
 	if( FaceType::HasFaceQuality() )  tf.Q()=1.0;
 	if( FaceType::HasWedgeColor() )   tf.WC(0)=tf.WC(1)=tf.WC(2)=Color4b(Color4b::White);
-	if( FaceType::HasFaceColor() )    tf.C()=Color4b(Color4b::White);			
+	if( HasPerFaceColor(m) )    tf.C()=Color4b(Color4b::White);			
 	// Descrittori delle strutture
 
   //bool isvflags = false;	// Il file contiene i flags 
@@ -429,7 +432,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
   if( VertexType::HasQuality() )
 	{
 		if( pf.AddToRead(VertDesc(4))!=-1 ||
-		    pf.AddToRead(VertDesc(8))!=-1 )
+		    pf.AddToRead(VertDesc(11))!=-1 )
 			pi.mask |= Mask::IOM_VERTQUALITY;
 	}
 
@@ -954,7 +957,7 @@ static bool LoadMask(const char * filename, int &mask, PlyInfo &pi)
 
 	if( pf.AddToRead(VertDesc(3))!=-1 )		mask |= Mask::IOM_VERTFLAGS;
 	if( pf.AddToRead(VertDesc(4))!=-1 )		mask |= Mask::IOM_VERTQUALITY;
-	if( pf.AddToRead(VertDesc(8))!=-1 )		mask |= Mask::IOM_VERTQUALITY;
+	if( pf.AddToRead(VertDesc(11))!=-1 )		mask |= Mask::IOM_VERTQUALITY;
 	if( ( pf.AddToRead(VertDesc(5))!=-1 ) && 
 		  ( pf.AddToRead(VertDesc(6))!=-1 ) &&
 			( pf.AddToRead(VertDesc(7))!=-1 )  )  mask |= Mask::IOM_VERTCOLOR;
