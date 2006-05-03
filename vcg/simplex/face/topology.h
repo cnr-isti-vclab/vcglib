@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.26  2005/12/19 13:47:26  corsini
+Rewrite SwapEdge to fix problems with borders
+
 Revision 1.25  2005/12/16 11:01:26  corsini
 Remove trivial warnings
 
@@ -280,12 +283,15 @@ bool CheckOrientation(FaceType &f, int z)
  * @param z Index of the edge
  */
 template <class FaceType>
+void SwapEdge(FaceType &f, const int z) { SwapEdge<FaceType,true>(f,z); }
+
+template <class FaceType, bool UpdateTopology>
 void SwapEdge(FaceType &f, const int z)
 {
 	// swap V0(z) with V1(z)
 	swap(f.V0(z), f.V1(z));
 
-	if(f.HasFFAdjacency())
+	if(f.HasFFAdjacency() && UpdateTopology)
 	{
 		// store information to preserve topology
 		int z1 = (z+1)%3;
