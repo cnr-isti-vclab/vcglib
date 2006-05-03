@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2005/12/02 00:09:12  cignoni
+Added assert(HasFlags) everywhere..
+
 Revision 1.10  2005/07/06 08:16:34  ganovelli
 set VertexBorderFromFace as static
 
@@ -217,7 +220,7 @@ static void FaceBorderFromNone(MeshType &m)
 	e.resize(m.fn*3);								// Alloco il vettore ausiliario
 	p = e.begin();
 	for(pf=m.face.begin();pf!=m.face.end();++pf)			// Lo riempio con i dati delle facce
-		if( ! (*pf).IsDeleted() )
+		if( ! (*pf).IsD() )
 			for(int j=0;j<3;++j)
 			{
 				(*p).Set(&(*pf),j);
