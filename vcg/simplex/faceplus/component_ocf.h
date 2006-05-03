@@ -24,6 +24,11 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2006/02/28 11:59:39  ponchio
+g++ compliance:
+
+begin() -> (*this).begin() and for end(), size(), Base(), Index()
+
 Revision 1.10  2006/01/30 08:47:40  cignoni
 Corrected HasPerWedgeTexture
 
@@ -88,6 +93,7 @@ class vector_ocf: public std::vector<VALUE_TYPE> {
 public:
 	vector_ocf():std::vector<VALUE_TYPE>(){
   ColorEnabled=false;
+  MarkEnabled=false;
   NormalEnabled=false;
   WedgeTexEnabled=false;
   VFAdjacencyEnabled=false;
@@ -128,10 +134,12 @@ public:
     if(oldbegin!=(*this).begin()) _updateOVP((*this).begin(),(*this).end());
                      else _updateOVP(oldend, (*this).end());
 
-    if(NormalEnabled)      NV.push_back(typename VALUE_TYPE::NormalType());
-    if(VFAdjacencyEnabled) AV.push_back(AdjTypePack());
-    if(FFAdjacencyEnabled) AF.push_back(AdjTypePack());
-    if(WedgeTexEnabled)   WTV.push_back(WedgeTexTypePack());
+    if (ColorEnabled)       CV.push_back(vcg::Color4b(vcg::Color4b::White));
+    if (MarkEnabled)        MV.push_back(0);
+    if (NormalEnabled)      NV.push_back(typename VALUE_TYPE::NormalType());
+    if (VFAdjacencyEnabled) AV.push_back(AdjTypePack());
+    if (FFAdjacencyEnabled) AF.push_back(AdjTypePack());
+    if (WedgeTexEnabled)   WTV.push_back(WedgeTexTypePack());
   }
 	void pop_back();
   void resize(const unsigned int & _size) 
@@ -141,10 +149,12 @@ public:
     BaseType::resize(_size);
     if(oldbegin!=(*this).begin()) _updateOVP((*this).begin(),(*this).end());
                      else _updateOVP(oldend, (*this).end());
-    if(ColorEnabled)       CV.resize(_size);
-    if(NormalEnabled)      NV.resize(_size);
-    if(VFAdjacencyEnabled) AV.resize(_size);
-    if(FFAdjacencyEnabled) AF.resize(_size);
+
+    if (ColorEnabled)       CV.resize(_size);
+    if (MarkEnabled)        MV.resize(_size);
+    if (NormalEnabled)      NV.resize(_size);
+    if (VFAdjacencyEnabled) AV.resize(_size);
+    if (FFAdjacencyEnabled) AF.resize(_size);
     if (WedgeTexEnabled) WTV.resize(_size,WedgeTexTypePack());
     
    }
@@ -152,11 +162,14 @@ public:
   {
     ThisTypeIterator oldbegin=(*this).begin();
     BaseType::reserve(_size);
+
     if (ColorEnabled)       CV.reserve(_size);
+    if (MarkEnabled)        MV.reserve(_size);
     if (NormalEnabled)      NV.reserve(_size);
     if (VFAdjacencyEnabled) AV.reserve(_size);
     if (FFAdjacencyEnabled) AF.reserve(_size);
-    if (WedgeTexEnabled) WTV.reserve(_size);
+    if (WedgeTexEnabled)   WTV.reserve(_size);
+
     if(oldbegin!=(*this).begin()) _updateOVP((*this).begin(),(*this).end());
   }
 
@@ -168,7 +181,7 @@ public:
         (*fi)._ovp=this;
  }
 ////////////////////////////////////////
-// Enabling Eunctions
+// Enabling Functions
 
 bool IsColorEnabled() const {return ColorEnabled;}
 void EnableColor() {
@@ -181,6 +194,19 @@ void DisableColor() {
   assert(VALUE_TYPE::HasFaceColorOcf());
   ColorEnabled=false;
   CV.clear();
+}
+
+bool IsMarkEnabled() const {return MarkEnabled;}
+void EnableMark() {
+  assert(VALUE_TYPE::HasFaceMarkOcf());
+  MarkEnabled=true;
+  MV.resize((*this).size());
+}
+
+void DisableMark() {
+  assert(VALUE_TYPE::HasFaceMarkOcf());
+  MarkEnabled=false;
+  MV.clear();
 }
 
 bool IsNormalEnabled() const {return NormalEnabled;}
@@ -238,12 +264,14 @@ void DisableWedgeTex() {
 
 public:
   std::vector<typename VALUE_TYPE::ColorType> CV;
+  std::vector<int> MV;
   std::vector<typename VALUE_TYPE::NormalType> NV;
   std::vector<struct AdjTypePack> AV;
   std::vector<struct AdjTypePack> AF;
   std::vector<class WedgeTexTypePack> WTV;
 
   bool ColorEnabled;
+  bool MarkEnabled;
   bool NormalEnabled;
   bool WedgeTexEnabled;
   bool VFAdjacencyEnabled;
@@ -337,13 +365,34 @@ template <class T> class Normal3dOcf: public NormalOcf<vcg::Point3d, T> {};
 template <class A, class T> class ColorOcf: public T {
 public:
   typedef A ColorType;
-  ColorType &C() { assert((*this).Base().NormalEnabled); return (*this).Base().CV[(*this).Index()]; }
+  ColorType &C() { 
+    assert((*this).Base().ColorEnabled); 
+    return (*this).Base().CV[(*this).Index()]; 
+  }
   static bool HasFaceColor()   { return true; }
   static bool HasFaceColorOcf()   { return true; }
 };
 
 template <class T> class Color4bOcf: public ColorOcf<vcg::Color4b, T> {};
 
+///*-------------------------- MARK  ----------------------------------*/ 
+
+template <class T> class MarkOcf: public T {
+public:
+  inline int & IMark()       { 
+    assert((*this).Base().MarkEnabled); 
+    return (*this).Base().MV[(*this).Index()]; 
+  }
+ 
+  inline int IMark() const   { 
+    assert((*this).Base().MarkEnabled); 
+    return (*this).Base().MV[(*this).Index()]; 
+  } ;
+ 
+  static bool HasFaceMark()   { return true; }
+  static bool HasFaceMarkOcf()   { return true; }
+  inline void InitIMark()    { _imark = 0; }
+};
 
 ///*-------------------------- WEDGE TEXCOORD  ----------------------------------*/ 
 
@@ -393,8 +442,15 @@ public:
     template < class VertContainerType, class FaceType >
       bool HasPerFaceColor (const TriMesh < VertContainerType , face::vector_ocf< FaceType > > & m) 
     {
-      if(face::vector_ocf< FaceType >::HasPerFaceColorOcf()) return m.face.FaceColor();
-      else return face::vector_ocf< FaceType > ::HasFaceColor();
+      if(FaceType::HasFaceColorOcf()) return m.face.IsColorEnabled();
+      else return FaceType::HasFaceColor();
+    }
+
+    template < class VertContainerType, class FaceType >
+      bool HasPerFaceMark (const TriMesh < VertContainerType , face::vector_ocf< FaceType > > & m) 
+    {
+      if(FaceType::HasFaceMarkOcf()) return m.face.IsMarkEnabled();
+      else return FaceType::HasFaceMark();
     }
   }
 }// end namespace vcg
