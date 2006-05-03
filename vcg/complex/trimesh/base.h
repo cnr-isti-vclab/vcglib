@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2005/12/02 00:05:34  cignoni
+Added HasFlags and a couple of missing include files
+
 Revision 1.18  2005/11/26 00:16:03  cignoni
 added  HasPerWedgeTexture  taking mesh as input. (needed for optional components)
 
@@ -307,6 +310,11 @@ bool HasPerWedgeTexture (const TriMesh < VertContainerType , FaceContainerType> 
 template < class VertContainerType, class FaceContainerType >
 bool HasPerFaceFlags (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return FaceContainerType::value_type::HasFlags();}
 
+template < class VertContainerType, class FaceContainerType >
+bool HasPerFaceColor (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return FaceContainerType::value_type::HasFaceColor();}
+
+template < class VertContainerType, class FaceContainerType >
+bool HasPerFaceMark (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return FaceContainerType::value_type::HasMark();}
 
 /*@}*/
 /*@}*/
