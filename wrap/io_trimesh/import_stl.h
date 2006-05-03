@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2006/01/30 15:02:50  cignoni
+Added mask filling in open
+
 Revision 1.10  2006/01/04 16:14:43  cignoni
 Added callback managment on loading of binary stl
 
@@ -55,6 +58,7 @@ First working version!
 #ifndef __VCGLIB_IMPORT_STL
 #define __VCGLIB_IMPORT_STL
 
+#include <io.h>
 #include <stdio.h>
 #include <wrap/callback.h>
 #include <vcg/complex/trimesh/allocate.h>
@@ -207,9 +211,13 @@ static int OpenBinary( OpenMeshType &m, const char * filename, CallBackPos *cb=0
     while(getc(fp) != '\n');
 
     STLFacet f;
+    int cnt=0;
+    int fileLen=_filelength(_fileno(fp));
     /* Read a single facet from an ASCII .STL file */
     while(!feof(fp))
     {
+      if((++cnt)%1000) cb( (ftell(fp)*100)/fileLen, "STL Mesh Loading");	
+
       fscanf(fp, "%*s %*s %f %f %f\n", &f.n.X(), &f.n.Y(), &f.n.Z());
       fscanf(fp, "%*s %*s");
       fscanf(fp, "%*s %f %f %f\n", &f.v[0].X(),  &f.v[0].Y(),  &f.v[0].Z());
