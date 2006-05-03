@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/12/22 11:24:09  cignoni
+removed div by zero bug in callback of refine (tnx to Mario Latronico)
+
 Revision 1.8  2005/12/13 11:01:01  cignoni
 Added Callback in refine
 
@@ -415,7 +418,7 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
 						if(RefineSelected) (*nf[i]).SetS();
 				}
         
-				if(MESH_TYPE::HasPerWedgeTexture())
+        if(tri::HasPerWedgeTexture(m))
 					for(i=0;i<3;++i)	{
 						wtt[i]=(*fi).WT(i);
 						wtt[3+i]=mid.WedgeInterp((*fi).WT(i),(*fi).WT((i+1)%3));
@@ -426,7 +429,7 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
 					for(j=0;j<3;++j){
 						(*nf[i]).V(j)=&*vv[SplitTab[ind].TV[i][j]];
 						
-						if(MESH_TYPE::HasPerWedgeTexture()) //analogo ai vertici...
+						if(tri::HasPerWedgeTexture(m)) //analogo ai vertici...
 									(*nf[i]).WT(j)=wtt[SplitTab[ind].TV[i][j]];
 
 						assert((*nf[i]).V(j)!=0);
@@ -445,7 +448,7 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
 							{ // swap the last two triangles
 								(*nf[2]).V(1)=(*nf[1]).V(0);
 								(*nf[1]).V(1)=(*nf[2]).V(0);
-								if(MESH_TYPE::HasPerWedgeTexture()){ //analogo ai vertici...
+								if(tri::HasPerWedgeTexture(m)){ //analogo ai vertici...
 									(*nf[2]).WT(1)=(*nf[1]).WT(0);
 									(*nf[1]).WT(1)=(*nf[2]).WT(0);
 								}
