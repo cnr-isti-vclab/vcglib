@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.37  2006/04/18 07:01:22  zifnab1974
+added a ; how could this ever compile?
+
 Revision 1.36  2006/04/12 15:08:51  cignoni
 Added ConnectedIterator (should be moved somewhere else)
 Cleaned ConnectedComponents
@@ -242,11 +245,11 @@ private:
 			typedef GridStaticPtr<FaceType, ScalarType > TriMeshGrid;
 			typedef Point3<ScalarType> Point3x;
 
-			TriMeshGrid   gM;
-			FaceIterator fi;
-			FaceIterator gi;
-			vcg::face::Pos<FaceType> he;
-			vcg::face::Pos<FaceType> hei;
+			//TriMeshGrid   gM;
+			//FaceIterator fi;
+			//FaceIterator gi;
+			//vcg::face::Pos<FaceType> he;
+			//vcg::face::Pos<FaceType> hei;
 
 			/* classe di confronto per l'algoritmo di eliminazione vertici duplicati*/
 			class RemoveDuplicateVert_Compare{
@@ -634,7 +637,7 @@ private:
  */
 			static int ConnectedComponents(MeshType &m)
       {
-        std::vector< std::pair<int,FacePointer> > &CCV;
+        std::vector< std::pair<int,FacePointer> > CCV;
         return ConnectedComponents(m,CCV);
       }
       static int ConnectedComponents(MeshType &m, std::vector< std::pair<int,FacePointer> > &CCV)
@@ -829,7 +832,7 @@ private:
 
 										if (!fpaux->IsS())
 										{
-											SwapEdge(*fpaux, iaux);
+                      SwapEdge(*fpaux, iaux);
 											assert(CheckOrientation(*fpaux, iaux));
 										}
 										else
@@ -855,17 +858,20 @@ private:
 				}
 			}
 
-			static bool SelfIntersections(MeshType &m, std::vector<FaceType*> &ret)
+			static void FlipMesh(MeshType &m)
+      {
+        for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
+          SwapEdge<FaceType,false>((*fi), 0);
+      }
+      static bool SelfIntersections(MeshType &m, std::vector<FaceType*> &ret)
 			{
-        assert(FaceType::HasMark()); // Needed by the UG
-        
+        //assert(FaceType::HasMark()); // Needed by the UG
+        assert(HasPerFaceMark(m));// Needed by the UG
 				Box3< ScalarType> bbox;
 				TriMeshGrid   gM;
         ret.clear();
 				FaceIterator fi;
 	      int referredBit = FaceType::NewBitFlag();
-
-				int deleted = 0;
 
 				for(fi=m.face.begin();fi!=m.face.end();++fi)
 					(*fi).ClearUserBit(referredBit);
