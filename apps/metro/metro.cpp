@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2006/04/20 08:30:24  cignoni
+small GCC compiling issues
+
 Revision 1.19  2006/03/27 04:17:07  cignoni
 moved to generic export.h
 
@@ -86,6 +89,7 @@ GPL  added
 
 // standard libraries
 #include <time.h>
+#include <vector>
 using namespace std;
 // project definitions.
 #include "defs.h"
