@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2006/03/29 09:25:47  zifnab1974
+extra includes necessary for compilation of meshlab on AMD 64 with gcc 3.4.5
+
 Revision 1.12  2006/01/12 13:12:54  callieri
 in FileWrite, added file closing after finishing
 
@@ -177,7 +180,7 @@ ScalarType Histogram<ScalarType>::Percentile(ScalarType frac) const
 	if(H.size()==0 && R.size()==0) return 0;
 	assert(frac>=0 && frac<=1);
 	ScalarType sum=0,partsum=0;
-	int isum=0,ipartsum=0;
+	int isum=0;
     int i;
     for(i=0;i<n+1;i++)	{ sum+=H[i]; isum+=H[i];}
 	
