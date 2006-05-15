@@ -138,6 +138,11 @@ namespace vcg
 		return (sqr_arg == 0 ? 0 : sqr_arg*sqr_arg);
 	}
 
+	/*!
+	* 
+	*/
+	enum SortingStrategy {LeaveUnsorted=0, SortAscending=1, SortDescending=2};
+
 
 	/*!
 	*	Given a matrix <I>A<SUB>m×n</SUB></I>, this routine computes its singular value decomposition,
@@ -150,7 +155,7 @@ namespace vcg
 	*	\return 
 	*/
 	template <typename MATRIX_TYPE>
-		static bool SingularValueDecomposition(MATRIX_TYPE &A, typename MATRIX_TYPE::ScalarType *W, MATRIX_TYPE &V, const bool sort_w=false, const int max_iters=30)
+		static bool SingularValueDecomposition(MATRIX_TYPE &A, typename MATRIX_TYPE::ScalarType *W, MATRIX_TYPE &V, const SortingStrategy sorting=LeaveUnsorted, const int max_iters=30)
 	{
 		typedef typename MATRIX_TYPE::ScalarType ScalarType;
 		int m = (int) A.RowsNumber();
@@ -395,8 +400,8 @@ namespace vcg
 		}
 		delete []rv1;
 
-		if (sort_w)
-			Sort<MATRIX_TYPE>(A, W, V, false);
+		if (sorting!=LeaveUnsorted)
+			Sort<MATRIX_TYPE>(A, W, V, sorting);
 
 		return convergence;
 	};
@@ -406,8 +411,9 @@ namespace vcg
 	*	Sort the singular values computed by the <CODE>SingularValueDecomposition</CODE> procedure and
 	* modify the matrices <I>U</I> and <I>V</I> accordingly.
 	*/
+	// TODO modify the last parameter type
 	template< typename MATRIX_TYPE >
-	void Sort(MATRIX_TYPE &U, typename MATRIX_TYPE::ScalarType W[], MATRIX_TYPE &V, bool ascending) 
+	void Sort(MATRIX_TYPE &U, typename MATRIX_TYPE::ScalarType W[], MATRIX_TYPE &V, const SortingStrategy sorting) 
 	{
 		typedef typename MATRIX_TYPE::ScalarType ScalarType;
 
@@ -424,26 +430,31 @@ namespace vcg
 		{
 			int  k = i; 
 			ScalarType p = W[i];
-			if (ascending)
+			switch (sorting)
 			{
-				for (int j=i+1; j<n; j++)
-				{ 
-					if (W[j] < p) 
+			case SortAscending:
+				{
+					for (int j=i+1; j<n; j++)
 					{ 
-						k = j; 
-						p = W[j]; 
-					} 
+						if (W[j] < p) 
+						{ 
+							k = j; 
+							p = W[j]; 
+						} 
+					}
+					break;
 				}
-			}
-			else
-			{
-				for (int j=i+1; j<n; j++)
-				{ 
-					if (W[j] > p) 
+			case SortDescending:
+				{
+					for (int j=i+1; j<n; j++)
 					{ 
-						k = j; 
-						p = W[j]; 
-					} 
+						if (W[j] > p) 
+						{ 
+							k = j; 
+							p = W[j]; 
+						} 
+					}
+					break;
 				}
 			}
 			if (k != i)
