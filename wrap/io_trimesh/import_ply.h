@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.27  2006/05/03 21:21:21  cignoni
+Corrected bug: mismatch in the index of confidence vertex property (8 instead of 11)
+Changed HasPerFaceColor to the new syntax (HasPerFaceColor(m)  instead of FaceType::HasFaceColor() )
+
 Revision 1.26  2006/02/03 09:46:24  corsini
 Remove signed/unsigned warning
 
@@ -697,7 +701,8 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 							(*fi).WC(k)[2] = (unsigned char)(fa.colors[k*3+2]*255);
 						}
 					}
-					if(FaceType::HasFaceColor()){
+					//if(FaceType::HasFaceColor()){
+					if(pi.mask & Mask::IOM_FACECOLOR){
 						{
 							(*fi).C()[0] = (unsigned char)((fa.colors[0*3+0]*255+fa.colors[1*3+0]*255+fa.colors[2*3+0]*255)/3.0f);
 							(*fi).C()[1] = (unsigned char)((fa.colors[0*3+1]*255+fa.colors[1*3+1]*255+fa.colors[2*3+1]*255)/3.0f);
