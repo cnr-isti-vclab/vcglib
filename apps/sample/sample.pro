@@ -7,6 +7,7 @@ SUBDIRS       = trimesh_base \
                 trimesh_topology\
                 trimesh_smooth \
                 trimesh_refine \
+                trimesh_clustering \
                 trimesh_isosurface \
                 trimesh_join \
                 trimesh_optional \
