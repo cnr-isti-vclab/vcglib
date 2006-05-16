@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2006/05/15 13:12:36  pietroni
+Updating of edge values id divided into 2 functions ( the first one update only a face...) added also resetting of edges flags.. (see first line of Set function)
+
 Revision 1.2  2004/05/12 18:52:35  ganovelli
 removed call to ComputeRT and put its body here
 
@@ -42,8 +45,7 @@ namespace tri {
 /** \addtogroup trimesh */
 /*@{*/
 
-	/// Management, updating and computation of per-vertex and per-face normals.
-	/// This class is used to compute or update the normals that can be stored in the vertex or face component of a mesh.
+	/// This class is used to compute or update the precomputed data used to efficiently compute point-face distances..
 	template <class ComputeMeshType>
 	class UpdateEdges
 	{
@@ -57,16 +59,6 @@ namespace tri {
 		typedef typename MeshType::FacePointer    FacePointer;
 		typedef typename MeshType::FaceIterator   FaceIterator;
 		typedef typename MeshType::FaceType::ScalarType     ScalarType;
-
-		/// Calculates the vertex normal (if stored in the current face type)
-		static void Box(ComputeMeshType &m)
-		{
-			m.bbox.SetNull();
-			VertexIterator vi;
-			for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-				if( !(*vi).IsD() )	m.bbox.Add((*vi).P());
-
-		}
 
 		static void Set(FaceType &f)
 		{
