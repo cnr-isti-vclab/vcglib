@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.39  2006/03/29 09:27:07  cignoni
+Added managemnt of non critical errors
+
 Revision 1.38  2006/03/29 08:17:56  corsini
 fix typo
 
@@ -756,7 +759,7 @@ int main(int argc, char ** argv)
 	mi.fn = m.fn;
 
 	// DEGENERATED FACES => (faces with area zero)
-	mi.count_fd = tri::Clean<CMesh>::RemoveZeroAreaFace(m);
+	mi.count_fd = tri::Clean<CMesh>::RemoveFaceOutOfRangeArea<false>(m,0);
 	
 	// UNREFERENCED VERTEX
 	mi.count_uv = tri::Clean<CMesh>::RemoveUnreferencedVertex(m);
