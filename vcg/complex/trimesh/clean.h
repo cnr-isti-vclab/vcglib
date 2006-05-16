@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.38  2006/05/03 21:40:27  cignoni
+Changed HasMark to HasPerFaceMark(m) and commented some unused internal vars of the class
+
 Revision 1.37  2006/04/18 07:01:22  zifnab1974
 added a ; how could this ever compile?
 
@@ -379,30 +382,75 @@ private:
 				return count_fd;
 			}
 
-
+       
       /*
-      This function remove faces that are geometrically degenerate
+      The following functions remove faces that are geometrically "bad" according to edges and area criteria. 
+      They remove the faces that are out of a given range of area or edges (e.g. faces too large or too small, or with edges too short or too long)
       but that could be topologically correct.
+      These functions can optionally take into account only the selected faces.
       */
-      static int RemoveZeroAreaFace(MeshType& m, ScalarType epsilon=0)
+      template<bool Selected>  
+			static int RemoveFaceOutOfRangeAreaSel(MeshType& m, ScalarType MinAreaThr=0, ScalarType MaxAreaThr=numeric_limits<ScalarType>::max())
 			{
 				FaceIterator fi;
 				int count_fd = 0;
-
-				for(fi=m.face.begin(); fi!=m.face.end();++fi)
-					if(DoubleArea<FaceType>(*fi) <= epsilon)
-					{
-						count_fd++;
-						fi->SetD();
-						m.fn--;
-					}
+        MinAreaThr*=2;
+        MaxAreaThr*=2;
+        for(fi=m.face.begin(); fi!=m.face.end();++fi)
+     			if(!(*fi).IsD())
+              if(!Selected || (*fi).IsS())
+              {
+                const ScalarType doubleArea=DoubleArea<FaceType>(*fi);
+					      if((doubleArea<=MinAreaThr) || (doubleArea>=MaxAreaThr) )
+					      {
+						      count_fd++;
+						      fi->SetD();
+						      m.fn--;
+					      }
+              }
 				return count_fd;
 			}
+      template<bool Selected>  
+        static int RemoveFaceOutOfRangeEdgeSel( MeshType& m, ScalarType MinEdgeThr=0, ScalarType MaxEdgeThr=numeric_limits<ScalarType>::max())
+      {
+        FaceIterator fi;
+        int count_fd = 0;
+        MinEdgeThr=MinEdgeThr*MinEdgeThr;
+        MaxEdgeThr=MaxEdgeThr*MaxEdgeThr;
+        for(fi=m.face.begin(); fi!=m.face.end();++fi)
+          if(!(*fi).IsD())
+            if(!Selected || (*fi).IsS())
+            {
+              for(unsigned int i=0;i<3;++i)
+              {
+                const ScalarType squaredEdge=SquaredDistance((*fi).V0(i)->cP(),(*fi).V1(i)->cP());
+                if((squaredEdge<=MinEdgeThr) || (squaredEdge>=MaxEdgeThr) )
+                {
+                  count_fd++;
+                  fi->SetD();
+                  m.fn--;
+                  break; // skip the rest of the edges of the tri
+                }
+              }
+            }
+            return count_fd;
+      }
 
-      /** This function removes that are not referenced by any face. The function updates the vn counter.
-			@param m The mesh
-			@return The number of removed vertices
-			*/
+      	// alias for the old style. Kept for backward compatibility
+      static int RemoveZeroAreaFace(MeshType& m) { return RemoveFaceOutOfRangeArea(m);}
+      
+      // Aliases for the functions that do not look at selection
+      static int RemoveFaceOutOfRangeArea(MeshType& m, ScalarType MinAreaThr=0, ScalarType MaxAreaThr=numeric_limits<ScalarType>::max())
+      {
+        return RemoveFaceOutOfRangeArea<false>(m,MinAreaThr,MaxAreaThr);
+      }
+      static int RemoveFaceOutOfRangeEdge(MeshType& m, ScalarType MinEdgeThr=0, ScalarType MaxEdgeThr=numeric_limits<ScalarType>::max())
+      {
+        return RemoveFaceOutOfRangeEdgeSel<false>(m,MinEdgeThr,MaxEdgeThr);
+      }
+
+
+
 
 
 			static int ClipWithBox( MeshType & m, Box3Type &bb) 
