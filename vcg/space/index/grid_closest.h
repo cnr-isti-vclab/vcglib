@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2006/01/27 09:58:47  corsini
+fix signed/unsigned mismatch
+
 Revision 1.8  2005/12/06 18:00:39  pietroni
 added deleted objects control for GridClosest() function call
 
@@ -277,7 +280,9 @@ namespace vcg{
 								if (!(**l).IsD())
 								{
 									typename SPATIALINDEXING::ObjPtr elem=&(**l);
-									if( ! _marker.IsMarked(elem)){
+									vcg::Box3<typename SPATIALINDEXING::ScalarType> box_elem;
+									elem->GetBBox(box_elem);
+									if(( ! _marker.IsMarked(elem))&&(box_elem.Collide(_bbox))){
 										_objectPtrs.push_back(elem);
 										_marker.Mark(elem);
 									}
