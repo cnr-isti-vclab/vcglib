@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2006/05/16 21:56:06  cignoni
+First working Version
+
 ****************************************************************************/
 
 #ifndef __VCGLIB_CLUSTERING
@@ -77,6 +80,9 @@ public:
   {return Hash();}
 };
 
+
+
+//
 template<class MeshType>
 class  AverageCell
 {
@@ -86,7 +92,9 @@ class  AverageCell
     inline void Add(MeshType &m, FaceType &f, int i)
     {
       p+=f.cV(i)->cP();
-      n+=f.cV(i)->cN();
+      // we prefer to use the un-normalized face normal so small faces facing away are dropped out 
+      // and the resulting average is weighed with the size of the faces falling here.
+      n+=f.cN();      
       cnt++;
     }
     AverageCell(): p(0,0,0), n(0,0,0),cnt(0){}
@@ -213,8 +221,9 @@ class Clustering
       if( N*(*ti).v[0]->n <0) ++badOrient;
       if( N*(*ti).v[1]->n <0) ++badOrient;
       if( N*(*ti).v[2]->n <0) ++badOrient;
-      if(badOrient>=2)
+      if(badOrient>2)
         swap(m.face[i].V(0),m.face[i].V(1));
+   
       i++;
     }
     
