@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2006/05/18 13:59:20  cignoni
+Some minor optimizations
+
 Revision 1.1  2006/05/16 21:56:06  cignoni
 First working Version
 
@@ -137,9 +140,9 @@ class Clustering
     void sort()
     {
       //std::sort(&(v[0]),&(v[3]));
-      if(v[0] > v[1] ) swap(v[0],v[1]); // now v0 < v1
-      if(v[0] > v[2] ) swap(v[0],v[2]); // now v0 is the minimum
-      if(v[1] > v[2] ) swap(v[1],v[2]); // sorted!
+		if(v[0] > v[1] ) std::swap(v[0],v[1]); // now v0 < v1
+		if(v[0] > v[2] ) std::swap(v[0],v[2]); // now v0 is the minimum
+		if(v[1] > v[2] ) std::swap(v[1],v[2]); // sorted!
     }
     // Hashing Function;
     operator size_t () const
@@ -179,6 +182,10 @@ class Clustering
     FaceIterator fi;
     for(fi=m.face.begin();fi!=m.face.end();++fi)
     {
+		if ((*fi).IsD())
+		{
+			continue;
+		}
       HashedPoint3i pi;
       SimpleTri st;
       for(int i=0;i<3;++i)
@@ -200,7 +207,7 @@ class Clustering
   {
     m.Clear();
     Allocator<MeshType>::AddVertices(m,GridCell.size());
-    std::hash_map<HashedPoint3i,CellType>::iterator gi;
+    STDEXT::hash_map<HashedPoint3i,CellType>::iterator gi;
     int i=0;
     for(gi=GridCell.begin();gi!=GridCell.end();++gi)
     {
@@ -209,7 +216,7 @@ class Clustering
       ++i;
     }
     Allocator<MeshType>::AddFaces(m,TriSet.size());
-    std::hash_set<SimpleTri>::iterator ti;
+    STDEXT::hash_set<SimpleTri>::iterator ti;
     i=0;
     for(ti=TriSet.begin();ti!=TriSet.end();++ti)
     {
@@ -222,7 +229,7 @@ class Clustering
       if( N*(*ti).v[1]->n <0) ++badOrient;
       if( N*(*ti).v[2]->n <0) ++badOrient;
       if(badOrient>2)
-        swap(m.face[i].V(0),m.face[i].V(1));
+		  std::swap(m.face[i].V(0),m.face[i].V(1));
    
       i++;
     }
