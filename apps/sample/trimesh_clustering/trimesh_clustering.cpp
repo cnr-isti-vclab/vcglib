@@ -32,7 +32,7 @@ class MyFace;
 class MyVertex;
 
 class MyVertex  : public VertexSimp2< MyVertex, MyEdge, MyFace, vert::Coord3f, vert::Normal3f, vert::BitFlags  >{};
-class MyFace    : public FaceSimp2  < MyVertex, MyEdge, MyFace, face::VertexRef, face::BitFlags > {};
+class MyFace    : public FaceSimp2  < MyVertex, MyEdge, MyFace, face::VertexRef, face::Normal3f, face::BitFlags > {};
 class MyMesh    : public vcg::tri::TriMesh< vector<MyVertex>, vector<MyFace> > {};
 
 int  main(int argc, char **argv)
@@ -73,7 +73,8 @@ int  main(int argc, char **argv)
 			exit(0);
 		}
   vcg::tri::UpdateBounding<MyMesh>::Box(m);
-  vcg::tri::UpdateNormals<MyMesh>::PerVertexNormalized(m);
+  //vcg::tri::UpdateNormals<MyMesh>::PerVertexNormalized(m);
+  vcg::tri::UpdateNormals<MyMesh>::PerFace(m);
   printf("Input mesh  vn:%i fn:%i\n",m.vn,m.fn);
   vcg::tri::Clustering<MyMesh, vcg::tri::AverageCell<MyMesh> > Grid;
   Grid.Init(m.bbox,CellNum,CellSize);
