@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2006/05/18 22:20:53  m_di_benedetto
+added check for deleted faces and modified/added std namespace qualifier.
+
 Revision 1.2  2006/05/18 13:59:20  cignoni
 Some minor optimizations
 
@@ -206,6 +209,12 @@ class Clustering
   void Extract(MeshType &m)
   {
     m.Clear();
+
+	if (TriSet.empty() || GridCell.empty())
+	{
+		return;
+	}
+
     Allocator<MeshType>::AddVertices(m,GridCell.size());
     STDEXT::hash_map<HashedPoint3i,CellType>::iterator gi;
     int i=0;
