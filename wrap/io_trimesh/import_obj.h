@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2006/04/11 09:48:00  zifnab1974
+changes needed for compilation on linux 64b with gcc 3.4.5
+
 Revision 1.4  2006/03/29 09:27:07  cignoni
 Added managemnt of non critical errors
 
@@ -238,6 +241,8 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 	// if LoadMask has not been called yet, we call it here
 	if (oi.mask == -1)
 		LoadMask(filename, oi);
+  
+  Mask::ClampMask<OpenMeshType>(m,oi.mask);
 
 	if (oi.numVertices == 0)
 		return E_NO_VERTEX;
