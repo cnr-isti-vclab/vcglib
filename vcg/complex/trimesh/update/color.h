@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2006/03/01 10:29:55  ponchio
+HACK: MaxVal(0.0f) not defined in vcg/math/base.h as it should be,
+changing it to 1e36 (pretty close :P)
+
 Revision 1.8  2005/12/19 16:47:42  cignoni
 Better comment and a parameter more for UpdateColor::VertexBorderFlag
 
@@ -255,7 +259,7 @@ static void VertexQuality(UpdateMeshType &m)
 	// step 1: find the range
 	typename UpdateMeshType::VertexIterator vi;
   float minq=std::numeric_limits<float>::max(),
-				maxq=std::numeric_limits<float>::min();
+				maxq=-std::numeric_limits<float>::max();
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)		
 		if(!(*vi).IsD()) 
 		{	
@@ -263,27 +267,6 @@ static void VertexQuality(UpdateMeshType &m)
 			maxq=vcg::math::Max(maxq,(*vi).Q());
 		}
 	VertexQuality(m,minq,maxq);
-}
-
-static void VertexQualityHistEq(UpdateMeshType &m)
-{
-	// step 1: find the range
-	typename UpdateMeshType::VertexIterator vi;
-	float minq = 1e36; //MaxVal(0.0f),
-	float maxq = -1e36; //MaxVal(0.0f);
-	for(vi=m.vert.begin();vi!=m.vert.end();++vi)		
-		if(!(*vi).IsD()) 
-		{
-			minq=min(minq,(*vi).Q());
-			maxq=max(maxq,(*vi).Q());
-		}
-	// step 2; Get the distribution
-	//	Hist H;
-	//H.SetRange(minq,maxq,1024);
-	//for(vi=m.vert.begin();vi!=m.vert.end();++vi)		
-	//	if(!(*vi).IsD()) H.Add((*vi).Q());
-	
-	// VertexQuality(m,H.Percentile(.05f),H.Percentile(.95f));
 }
 
 };
