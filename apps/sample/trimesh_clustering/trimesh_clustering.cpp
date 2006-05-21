@@ -46,11 +46,15 @@ int  main(int argc, char **argv)
       "options: \n"
       "-k cellnum     approx number of cluster that should be defined; (default 10e5)\n"
 			"-s size        in absolute units the size of the clustering cell\n"
+			"-d             enable the duplication of faces for double surfaces\n"
 			);
 		exit(0);
 	}
 
-  int i=3;  int CellNum=100000; float CellSize=0;
+  int i=3;  
+  int CellNum=100000; 
+  float CellSize=0; 
+  bool DupFace=false;
 
 	while(i<argc)
 		{
@@ -60,6 +64,8 @@ int  main(int argc, char **argv)
 			{				
 				case 'k' :	CellNum=atoi(argv[i+1]); ++i; printf("Using %i clustering cells\n",CellNum); break;
 				case 's' :	CellSize=atof(argv[i+1]); ++i; printf("Using %5f as clustering cell size\n",CellSize); break;
+				case 'd' :	DupFace=true; printf("Enabling the duplication of faces for double surfaces\n"); break;
+
 				default : {printf("Error unable to parse option '%s'\n",argv[i]); exit(0);}
 			}
 			++i;
@@ -77,6 +83,7 @@ int  main(int argc, char **argv)
   vcg::tri::UpdateNormals<MyMesh>::PerFace(m);
   printf("Input mesh  vn:%i fn:%i\n",m.vn,m.fn);
   vcg::tri::Clustering<MyMesh, vcg::tri::AverageCell<MyMesh> > Grid;
+  Grid.DuplicateFaceParam=DupFace;
   Grid.Init(m.bbox,CellNum,CellSize);
   
   printf("Clustering to %i cells\n",Grid.Grid.siz[0]*Grid.Grid.siz[1]*Grid.Grid.siz[2] );

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2006/05/19 20:49:03  m_di_benedetto
+Added check for empty generated mesh (prevent call to mesh allocator with zero vertices or faces).
+
 Revision 1.3  2006/05/18 22:20:53  m_di_benedetto
 added check for deleted faces and modified/added std namespace qualifier.
 
@@ -129,6 +132,14 @@ class Clustering
   typedef typename MeshType::VertexIterator VertexIterator;
   typedef typename MeshType::FaceIterator   FaceIterator;
 
+  // DuplicateFace == bool means that during the clustering doublesided surface (like a thin shell) that would be clustered to a single surface
+  // will be merged into two identical but opposite faces. 
+  // So in practice:
+  // DuplicateFace=true a model with looks ok if you enable backface culling
+  // DuplicateFace=false a model with looks ok if you enable doublesided lighting and disable backfaceculling
+
+  bool DuplicateFaceParam;
+
   class SimpleTri
   {
   public: 
@@ -140,12 +151,18 @@ class Clustering
 				(v[0]<p.v[0]);
 	  }
 
+    // Sort the vertex of the face maintaining the original face orientation (it only ensure that v0 is the minimum)
+    void sortOrient()
+    { 
+      if(v[1] < v[0] && v[1] < v[2] ) { swap(v[0],v[1]); swap(v[1],v[2]); return; } // v1 was the minimum
+      if(v[2] < v[0] && v[2] < v[1] ) { swap(v[0],v[2]); swap(v[1],v[2]); return; } // v2 was the minimum
+      return; // v0 was the minimum;
+    }
     void sort()
     {
-      //std::sort(&(v[0]),&(v[3]));
-		if(v[0] > v[1] ) std::swap(v[0],v[1]); // now v0 < v1
-		if(v[0] > v[2] ) std::swap(v[0],v[2]); // now v0 is the minimum
-		if(v[1] > v[2] ) std::swap(v[1],v[2]); // sorted!
+      if(v[0] > v[1] ) swap(v[0],v[1]); // now v0 < v1
+      if(v[0] > v[2] ) swap(v[0],v[2]); // now v0 is the minimum
+      if(v[1] > v[2] ) swap(v[1],v[2]); // sorted!
     }
     // Hashing Function;
     operator size_t () const
@@ -198,8 +215,9 @@ class Clustering
         st.v[i]->Add(m,*(fi),i);
       }        
       if( (st.v[0]!=st.v[1]) && (st.v[0]!=st.v[2]) && (st.v[1]!=st.v[2]) )
-      {
-        st.sort();
+      { // if we allow the duplication of faces we sort the vertex only partially (to maintain the original face orientation)
+        if(DuplicateFaceParam) st.sortOrient();  
+                          else st.sort();
         TriSet.insert(st);
       }
     //  printf("Inserted %8i triangles, clustered to %8i tri and %i cells\n",distance(m.face.begin(),fi),TriSet.size(),GridCell.size());
@@ -232,14 +250,18 @@ class Clustering
       m.face[i].V(0)=&(m.vert[(*ti).v[0]->id]);
       m.face[i].V(1)=&(m.vert[(*ti).v[1]->id]);
       m.face[i].V(2)=&(m.vert[(*ti).v[2]->id]);
+      // if we are merging faces even when opposite we choose 
+      // the best orientation according to the averaged normal
+      if(!DuplicateFaceParam) 
+      {
       CoordType N=Normal(m.face[i]);
       int badOrient=0;
       if( N*(*ti).v[0]->n <0) ++badOrient;
       if( N*(*ti).v[1]->n <0) ++badOrient;
       if( N*(*ti).v[2]->n <0) ++badOrient;
       if(badOrient>2)
-		  std::swap(m.face[i].V(0),m.face[i].V(1));
-   
+          swap(m.face[i].V(0),m.face[i].V(1));
+      }
       i++;
     }
     
