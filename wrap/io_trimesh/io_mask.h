@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2006/01/10 13:20:42  cignoni
+Changed ply::PlyMask to io::Mask
+
 Revision 1.4  2004/10/28 00:52:45  cignoni
 Better Doxygen documentation
 
@@ -111,9 +114,18 @@ enum {
 //
 //	if( mask & IOM_CAMERA ) strcat(str," camera");
 //}
+template <class MeshType> 
+static void ClampMask(MeshType &m, int &mask)
+{
+  if( (mask & IOM_FACECOLOR)    && !HasPerFaceColor(m) ) mask = mask & (~IOM_FACECOLOR);
+  if( (mask & IOM_WEDGTEXCOORD) && !HasPerWedgeTexture(m) ) mask = mask & (~IOM_WEDGTEXCOORD);
+  if( (mask & IOM_WEDGNORMAL) && !m.HasPerWedgeNormal() ) mask = mask & (~IOM_WEDGNORMAL);
+  if( (mask & IOM_VERTCOLOR) && !m.HasPerVertexColor() ) mask = mask & (~IOM_VERTCOLOR);
+}
 
 }; // end class
 //@}
+
 } // end namespace tri
 } // end namespace io
 } // end namespace vcg
