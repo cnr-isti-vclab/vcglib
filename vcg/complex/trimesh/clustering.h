@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2006/05/24 15:16:01  cignoni
+better comment to the init parameters
+
 Revision 1.6  2006/05/24 08:54:04  cignoni
 Added missing std:: to swap
 
@@ -160,8 +163,8 @@ class Clustering
     // Sort the vertex of the face maintaining the original face orientation (it only ensure that v0 is the minimum)
     void sortOrient()
     { 
-      if(v[1] < v[0] && v[1] < v[2] ) { std::swap(v[0],v[1]); swap(v[1],v[2]); return; } // v1 was the minimum
-      if(v[2] < v[0] && v[2] < v[1] ) { std::swap(v[0],v[2]); swap(v[1],v[2]); return; } // v2 was the minimum
+      if(v[1] < v[0] && v[1] < v[2] ) { std::swap(v[0],v[1]); std::swap(v[1],v[2]); return; } // v1 was the minimum
+      if(v[2] < v[0] && v[2] < v[1] ) { std::swap(v[0],v[2]); std::swap(v[1],v[2]); return; } // v2 was the minimum
       return; // v0 was the minimum;
     }
     void sort()
@@ -194,7 +197,7 @@ class Clustering
   {
     Grid.bbox=_mbb;
 	///inflate the bb calculated
-	  ScalarType infl=Grid.bbox.Diag()/_size;
+      ScalarType infl = (_cellsize == (ScalarType)0) ? (Grid.bbox.Diag() / _size) : (_cellsize);
 	  Grid.bbox.min-=CoordType(infl,infl,infl);
 	  Grid.bbox.max+=CoordType(infl,infl,infl);
     Grid.dim  = Grid.bbox.max - Grid.bbox.min;
