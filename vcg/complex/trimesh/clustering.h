@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2006/05/24 08:54:04  cignoni
+Added missing std:: to swap
+
 Revision 1.5  2006/05/21 06:40:31  cignoni
 Added DoubleFace management
 
@@ -174,6 +177,17 @@ class Clustering
     }
   };
 
+
+  // The init function Take two parameters
+  // _size is the approximate total number of cells composing the grid surrounding the objects (usually a large number) 
+  //       eg _size==1.000.000 means a 100x100x100 grid
+  // _cellsize is the absolute lenght of the edge of the grid cell.
+  //       eg _cellsize==2.0 means that all the vertexes in a 2.0x2.0x2.0 cell are clustered togheter
+
+  // Notes:
+  // _size is used only if the cell edge IS zero. 
+  // _cellsize gives you an absolute measure of the maximum error introduced
+  //           during the simplification (e.g. half of the cell edge lenght)
 
 
   void Init(Box3<ScalarType> _mbb, int _size, ScalarType _cellsize=0)
