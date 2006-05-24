@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2006/05/21 06:40:31  cignoni
+Added DoubleFace management
+
 Revision 1.4  2006/05/19 20:49:03  m_di_benedetto
 Added check for empty generated mesh (prevent call to mesh allocator with zero vertices or faces).
 
@@ -154,15 +157,15 @@ class Clustering
     // Sort the vertex of the face maintaining the original face orientation (it only ensure that v0 is the minimum)
     void sortOrient()
     { 
-      if(v[1] < v[0] && v[1] < v[2] ) { swap(v[0],v[1]); swap(v[1],v[2]); return; } // v1 was the minimum
-      if(v[2] < v[0] && v[2] < v[1] ) { swap(v[0],v[2]); swap(v[1],v[2]); return; } // v2 was the minimum
+      if(v[1] < v[0] && v[1] < v[2] ) { std::swap(v[0],v[1]); swap(v[1],v[2]); return; } // v1 was the minimum
+      if(v[2] < v[0] && v[2] < v[1] ) { std::swap(v[0],v[2]); swap(v[1],v[2]); return; } // v2 was the minimum
       return; // v0 was the minimum;
     }
     void sort()
     {
-      if(v[0] > v[1] ) swap(v[0],v[1]); // now v0 < v1
-      if(v[0] > v[2] ) swap(v[0],v[2]); // now v0 is the minimum
-      if(v[1] > v[2] ) swap(v[1],v[2]); // sorted!
+      if(v[0] > v[1] ) std::swap(v[0],v[1]); // now v0 < v1
+      if(v[0] > v[2] ) std::swap(v[0],v[2]); // now v0 is the minimum
+      if(v[1] > v[2] ) std::swap(v[1],v[2]); // sorted!
     }
     // Hashing Function;
     operator size_t () const
@@ -260,7 +263,7 @@ class Clustering
       if( N*(*ti).v[1]->n <0) ++badOrient;
       if( N*(*ti).v[2]->n <0) ++badOrient;
       if(badOrient>2)
-          swap(m.face[i].V(0),m.face[i].V(1));
+          std::swap(m.face[i].V(0),m.face[i].V(1));
       }
       i++;
     }
