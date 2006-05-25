@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2006/04/11 13:51:21  zifnab1974
+commented out one function which does not compile on linux with gcc 3.4.5
+
 Revision 1.3  2006/01/30 09:00:40  cignoni
 Corrected use of HasPerWedgeTexture
 
@@ -88,8 +91,8 @@ static void ImportFace(MeshLeft &ml, MeshRight &mr, FaceLeft &fl, FaceRight &fr,
   fl.V(0)=&ml.vert[remap[ Index(mr,fr.V(0))]];
   fl.V(1)=&ml.vert[remap[ Index(mr,fr.V(1))]];
   fl.V(2)=&ml.vert[remap[ Index(mr,fr.V(2))]];
-  if(fl.HasFaceColor()   && fl.HasFaceColor()) fl.C()=fr.C();
-  if(fl.HasFaceQuality() && fl.HasFaceQuality()) fl.Q()=fr.Q();
+  if(HasPerFaceColor(mr)   && HasPerFaceColor(ml)) fl.C()=fr.C();
+  if(HasPerFaceQuality(mr) && HasPerFaceQuality(ml)) fl.Q()=fr.Q();
   if(HasPerWedgeTexture(mr) && HasPerWedgeTexture(ml)) 
   {
     fl.WT(0)=fr.WT(0);

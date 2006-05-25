@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2006/05/03 21:35:31  cignoni
+Added new style HasPerFaceColor(m) and HasPerFaceMark(m)
+
 Revision 1.19  2005/12/02 00:05:34  cignoni
 Added HasFlags and a couple of missing include files
 
@@ -315,6 +318,9 @@ bool HasPerFaceColor (const TriMesh < VertContainerType , FaceContainerType> & /
 
 template < class VertContainerType, class FaceContainerType >
 bool HasPerFaceMark (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return FaceContainerType::value_type::HasMark();}
+
+template < class VertContainerType, class FaceContainerType >
+bool HasPerFaceQuality (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return FaceContainerType::value_type::HasFaceQuality();}
 
 /*@}*/
 /*@}*/
