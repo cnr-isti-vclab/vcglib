@@ -29,7 +29,7 @@
 
 #include <vector>
 #include <algorithm>
-
+#include <vcg/space/tetra3.h>
 namespace vcg{
 
 template <class MESH_TYPE>
@@ -212,7 +212,8 @@ static int PickTetra(int x, int y, TETRA_MESH_TYPE &m, std::vector<TetraPointer>
 	//xstring buf;
 	//if (hits <= 0)     return 0;
 	std::vector< std::pair<double,unsigned int> > H;
-	for(int ii=0;ii<hits;ii++){
+	int ii;
+	for(ii=0;ii<hits;ii++){
 		//TRACE("%ui %ui %ui %ui\n",selectBuf[ii*4],selectBuf[ii*4+1],selectBuf[ii*4+2],selectBuf[ii*4+3]);
 		H.push_back( std::pair<double,unsigned int>(selectBuf[ii*4+1]/4294967295.0,selectBuf[ii*4+3]));
 	}
@@ -303,7 +304,8 @@ static int PickTetraFace(int x, int y, TETRA_MESH_TYPE &m, std::vector<std::pair
 	//xstring buf;
 	//if (hits <= 0)     return 0;
 	std::vector< std::pair<double,unsigned int> > H;
-	for(int ii=0;ii<hits;ii++){
+	int ii;
+	for(ii=0;ii<hits;ii++){
 		//TRACE("%ui %ui %ui %ui\n",selectBuf[ii*4],selectBuf[ii*4+1],selectBuf[ii*4+2],selectBuf[ii*4+3]);
 		H.push_back( std::pair<double,unsigned int>(selectBuf[ii*4+1]/4294967295.0,selectBuf[ii*4+3]));
 	}

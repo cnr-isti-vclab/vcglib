@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2006/02/13 13:05:05  cignoni
+Removed glew inclusion
+
 Revision 1.18  2006/02/09 10:00:39  cignoni
 Switched from rough zoffset to glpolygonoffset for hiddenline and flatlines modes. Less zfighting...
 
@@ -775,7 +778,7 @@ void Crease(MESH_TYPE &m, typename MESH_TYPE::scalar_type angleRad)
 					if(he.v == he.f->V(he.z)) spl.z=he.z;
 					if(he.v == he.f->V((he.z+1)%3)) spl.z=(he.z+1)%3;
 					assert(spl.z>=0);
-					//VCTRACE("     -- spinning face vert %i Adding spl face %i vert %i\n",\
+					//VCTRACE("     -- spinning face vert %i Adding spl face %i vert %i\n", 
 					//	he.v-m.vert.begin(),	spl.f-m.face.begin(), spl.z );
 					assert((spl.f->Supervisor_Flags() & vis[spl.z] )==0);
 					spl.f->Supervisor_Flags() |= vis[spl.z];
