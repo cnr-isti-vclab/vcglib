@@ -23,12 +23,14 @@
 /****************************************************************************
 History
 $Log: not supported by cvs2svn $
+Revision 1.11  2006/03/29 07:54:03  cignoni
+Wrong matrix type in cone (thx Maarten)
+
 
 ****************************************************************************/
 #ifndef __VCG_GLADDONS
 #define __VCG_GLADDONS
 
-#include <GL/glut.h>
 #include <wrap/gl/math.h>
 #include <wrap/gl/space.h>
 #include <vcg/space/point3.h>
@@ -36,7 +38,7 @@ $Log: not supported by cvs2svn $
 
 namespace vcg
 {
-
+#include "gl_geometry.h"
 	/** Class Add_Ons.
 	This is class draw 3d icons on the screen
 	*/
