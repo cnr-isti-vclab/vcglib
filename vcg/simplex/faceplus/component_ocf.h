@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2006/05/03 21:37:02  cignoni
+Added Optional Mark
+
 Revision 1.11  2006/02/28 11:59:39  ponchio
 g++ compliance:
 
@@ -391,7 +394,7 @@ public:
  
   static bool HasFaceMark()   { return true; }
   static bool HasFaceMarkOcf()   { return true; }
-  inline void InitIMark()    { _imark = 0; }
+  inline void InitIMark()    { IMark() = 0; }
 };
 
 ///*-------------------------- WEDGE TEXCOORD  ----------------------------------*/ 

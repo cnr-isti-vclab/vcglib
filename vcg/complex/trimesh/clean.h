@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.39  2006/05/16 21:51:07  cignoni
+Redesigned the function for the removal of faces according to their area and edge lenght
+
 Revision 1.38  2006/05/03 21:40:27  cignoni
 Changed HasMark to HasPerFaceMark(m) and commented some unused internal vars of the class
 
@@ -390,7 +393,7 @@ private:
       These functions can optionally take into account only the selected faces.
       */
       template<bool Selected>  
-			static int RemoveFaceOutOfRangeAreaSel(MeshType& m, ScalarType MinAreaThr=0, ScalarType MaxAreaThr=numeric_limits<ScalarType>::max())
+		  static int RemoveFaceOutOfRangeAreaSel(MeshType& m, ScalarType MinAreaThr=0, ScalarType MaxAreaThr=std::numeric_limits<ScalarType>::max())
 			{
 				FaceIterator fi;
 				int count_fd = 0;
@@ -411,7 +414,7 @@ private:
 				return count_fd;
 			}
       template<bool Selected>  
-        static int RemoveFaceOutOfRangeEdgeSel( MeshType& m, ScalarType MinEdgeThr=0, ScalarType MaxEdgeThr=numeric_limits<ScalarType>::max())
+        static int RemoveFaceOutOfRangeEdgeSel( MeshType& m, ScalarType MinEdgeThr=0, ScalarType MaxEdgeThr=std::numeric_limits<ScalarType>::max())
       {
         FaceIterator fi;
         int count_fd = 0;
@@ -440,11 +443,11 @@ private:
       static int RemoveZeroAreaFace(MeshType& m) { return RemoveFaceOutOfRangeArea(m);}
       
       // Aliases for the functions that do not look at selection
-      static int RemoveFaceOutOfRangeArea(MeshType& m, ScalarType MinAreaThr=0, ScalarType MaxAreaThr=numeric_limits<ScalarType>::max())
+      static int RemoveFaceOutOfRangeArea(MeshType& m, ScalarType MinAreaThr=0, ScalarType MaxAreaThr=std::numeric_limits<ScalarType>::max())
       {
-        return RemoveFaceOutOfRangeArea<false>(m,MinAreaThr,MaxAreaThr);
+        return RemoveFaceOutOfRangeAreaSel<false>(m,MinAreaThr,MaxAreaThr);
       }
-      static int RemoveFaceOutOfRangeEdge(MeshType& m, ScalarType MinEdgeThr=0, ScalarType MaxEdgeThr=numeric_limits<ScalarType>::max())
+      static int RemoveFaceOutOfRangeEdge(MeshType& m, ScalarType MinEdgeThr=0, ScalarType MaxEdgeThr=std::numeric_limits<ScalarType>::max())
       {
         return RemoveFaceOutOfRangeEdgeSel<false>(m,MinEdgeThr,MaxEdgeThr);
       }
@@ -880,7 +883,7 @@ private:
 
 										if (!fpaux->IsS())
 										{
-                      SwapEdge(*fpaux, iaux);
+											face::SwapEdge<FaceType,false>(*fpaux, iaux);
 											assert(CheckOrientation(*fpaux, iaux));
 										}
 										else
@@ -909,7 +912,7 @@ private:
 			static void FlipMesh(MeshType &m)
       {
         for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
-          SwapEdge<FaceType,false>((*fi), 0);
+			face::SwapEdge<FaceType,false>((*fi), 0);
       }
       static bool SelfIntersections(MeshType &m, std::vector<FaceType*> &ret)
 			{

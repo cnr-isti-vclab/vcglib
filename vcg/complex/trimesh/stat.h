@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2006/05/21 06:59:13  cignoni
+Initial Commit
+
 ****************************************************************************/
 
 #ifndef __VCGLIB_TRIMESH_STAT
@@ -61,7 +64,7 @@ class Stat
       
       static std::pair<float,float> ComputePerVertexQualityMinMax( MeshType & m)    // V1.0
       {
-        std::pair<float,float> minmax = make_pair(std::numeric_limits<float>::max(),-std::numeric_limits<float>::max());
+		  std::pair<float,float> minmax = std::make_pair(std::numeric_limits<float>::max(),-std::numeric_limits<float>::max());
          
         VertexIterator vi;
         for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
@@ -86,8 +89,8 @@ class Stat
 			static int ComputeEdgeHistogram( MeshType & m, Histogramf &h)    // V1.0
       {
         ScalarType Diag = m.bbox.Diag();
-        h.clear();
-        h.SetRange( 0, diagonale, 10000);
+        h.Clear();
+        h.SetRange( 0, Diag, 10000);
         FaceIterator fi;
         for(fi = m.face.begin(); fi != m.face.end(); ++fi)
         {
@@ -116,7 +119,8 @@ class Stat
         VertexIterator vi;
         for(vi = m.cm.vert.begin(); vi != m.cm.vert.end(); ++vi)
           (*vi).ClearS();
-      }
+      return 0;
+	  }
 }; // end class
 	
 	} //End Namespace tri
