@@ -54,9 +54,10 @@ public:
 		return false; 
 	}
 
-	static int PickFace(int x, int y, MESH_TYPE &m, std::vector<FacePointer> &result, int width=4, int height=4)
+	static int PickFace(int x, int y, MESH_TYPE &m, std::vector<FacePointer> &result, int width=4, int height=4,bool sorted=true)
 	{
 		result.clear();
+    if(width==0 ||height==0) return 0; 
 		long hits;	
 		int sz=m.face.size()*5;
 		unsigned int *selectBuf =new unsigned int[sz];
@@ -89,16 +90,12 @@ public:
 			{
 				glLoadName(fcnt);
 				glBegin(GL_TRIANGLES);
-				
 					glVertex( (*fi).V(0)->P() );
 					glVertex( (*fi).V(1)->P() );
 					glVertex( (*fi).V(2)->P() );
-
-				
 				glEnd();
-				fcnt++;
 			}
-
+      fcnt++; // the counter should advance even for deleted faces!      
 		}
 
 		glPopMatrix();
@@ -113,7 +110,8 @@ public:
 			//TRACE("%ui %ui %ui %ui\n",selectBuf[ii*4],selectBuf[ii*4+1],selectBuf[ii*4+2],selectBuf[ii*4+3]);
 			H.push_back( std::pair<double,unsigned int>(selectBuf[ii*4+1]/4294967295.0,selectBuf[ii*4+3]));
 		}
-		std::sort(H.begin(),H.end());
+		if(sorted) 
+      std::sort(H.begin(),H.end());
 		//  if(H.size()>0) TRACE("\n Closest is %i\n",H[0].second);
 		result.resize(H.size());
 		for(long ii=0;ii<hits;ii++){
