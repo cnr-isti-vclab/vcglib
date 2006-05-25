@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2006/05/24 16:42:22  m_di_benedetto
+Corrected bbox inflation amount in case of _cellsize != 0
+
 Revision 1.7  2006/05/24 15:16:01  cignoni
 better comment to the init parameters
 
@@ -97,7 +100,17 @@ public:
   operator size_t () const
   {return Hash();}
 };
+}}
+namespace STDEXT
+{
+template <>
+struct hash<vcg::tri::HashedPoint3i>{
+inline	size_t	operator ()(const vcg::tri::HashedPoint3i &p) const {return size_t(p);}
+};
 
+}
+namespace vcg{
+namespace tri{
 
 
 //
@@ -180,6 +193,10 @@ class Clustering
     }
   };
 
+  struct SimpleTriHashFunc{
+	inline	size_t	operator ()(const SimpleTri &p) const {return size_t(p);}
+};
+
 
   // The init function Take two parameters
   // _size is the approximate total number of cells composing the grid surrounding the objects (usually a large number) 
@@ -214,7 +231,7 @@ class Clustering
   
   
   BasicGrid<CellType,ScalarType> Grid;
-  STDEXT::hash_set<SimpleTri> TriSet;
+  STDEXT::hash_set<SimpleTri,SimpleTriHashFunc> TriSet;
   STDEXT::hash_map<HashedPoint3i,CellType> GridCell;
   
   void Add(MeshType &m)
@@ -254,7 +271,7 @@ class Clustering
 	}
 
     Allocator<MeshType>::AddVertices(m,GridCell.size());
-    STDEXT::hash_map<HashedPoint3i,CellType>::iterator gi;
+    typename STDEXT::hash_map<HashedPoint3i,CellType>::iterator gi;
     int i=0;
     for(gi=GridCell.begin();gi!=GridCell.end();++gi)
     {
@@ -263,7 +280,7 @@ class Clustering
       ++i;
     }
     Allocator<MeshType>::AddFaces(m,TriSet.size());
-    STDEXT::hash_set<SimpleTri>::iterator ti;
+    typename STDEXT::hash_set<SimpleTri,SimpleTriHashFunc>::iterator ti;
     i=0;
     for(ti=TriSet.begin();ti!=TriSet.end();++ti)
     {
@@ -274,7 +291,7 @@ class Clustering
       // the best orientation according to the averaged normal
       if(!DuplicateFaceParam) 
       {
-      CoordType N=Normal(m.face[i]);
+		  CoordType N=vcg::Normal(m.face[i]);
       int badOrient=0;
       if( N*(*ti).v[0]->n <0) ++badOrient;
       if( N*(*ti).v[1]->n <0) ++badOrient;
