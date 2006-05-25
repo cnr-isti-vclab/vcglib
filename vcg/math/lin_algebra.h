@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2006/05/17 09:26:35  cignoni
+Added initial disclaimer
+
 ****************************************************************************/
 #ifndef __VCGLIB_LINALGEBRA_H
 #define __VCGLIB_LINALGEBRA_H
@@ -169,7 +172,9 @@ namespace vcg
 	* 
 	*/
 	enum SortingStrategy {LeaveUnsorted=0, SortAscending=1, SortDescending=2};
-
+	template< typename MATRIX_TYPE >
+	void Sort(MATRIX_TYPE &U, typename MATRIX_TYPE::ScalarType W[], MATRIX_TYPE &V, const SortingStrategy sorting) ;
+	
 
 	/*!
 	*	Given a matrix <I>A<SUB>m×n</SUB></I>, this routine computes its singular value decomposition,
