@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2006/05/25 09:37:14  cignoni
+Many changes for the different interpretation of hash_set between gcc and .net. Probably to be completed.
+
 Revision 1.8  2006/05/24 16:42:22  m_di_benedetto
 Corrected bbox inflation amount in case of _cellsize != 0
 
@@ -100,18 +103,15 @@ public:
   operator size_t () const
   {return Hash();}
 };
-}}
-namespace STDEXT
-{
-template <>
-struct hash<vcg::tri::HashedPoint3i>{
-inline	size_t	operator ()(const vcg::tri::HashedPoint3i &p) const {return size_t(p);}
+
+// needed for gcc compilation
+#ifndef _MSC_VER
+}} namespace STDEXT {
+  template <> struct hash<vcg::tri::HashedPoint3i>{
+  inline	size_t	operator ()(const vcg::tri::HashedPoint3i &p) const {return size_t(p);}
 };
-
-}
-namespace vcg{
-namespace tri{
-
+} namespace vcg{ namespace tri{
+#endif
 
 //
 template<class MeshType>
@@ -193,10 +193,6 @@ class Clustering
     }
   };
 
-  struct SimpleTriHashFunc{
-	inline	size_t	operator ()(const SimpleTri &p) const {return size_t(p);}
-};
-
 
   // The init function Take two parameters
   // _size is the approximate total number of cells composing the grid surrounding the objects (usually a large number) 
@@ -231,7 +227,18 @@ class Clustering
   
   
   BasicGrid<CellType,ScalarType> Grid;
+
+#ifdef _MSC_VER
+  STDEXT::hash_set<SimpleTri> TriSet;
+  typedef typename STDEXT::hash_set<SimpleTri>::iterator TriHashSetIterator;
+#else
+  struct SimpleTriHashFunc{
+	inline	size_t	operator ()(const SimpleTri &p) const {return size_t(p);}
+  };
   STDEXT::hash_set<SimpleTri,SimpleTriHashFunc> TriSet;
+  typedef typename STDEXT::hash_set<SimpleTri,SimpleTriHashFunc>::iterator TriHashSetIterator;
+#endif
+
   STDEXT::hash_map<HashedPoint3i,CellType> GridCell;
   
   void Add(MeshType &m)
@@ -280,7 +287,7 @@ class Clustering
       ++i;
     }
     Allocator<MeshType>::AddFaces(m,TriSet.size());
-    typename STDEXT::hash_set<SimpleTri,SimpleTriHashFunc>::iterator ti;
+    TriHashSetIterator ti;
     i=0;
     for(ti=TriSet.begin();ti!=TriSet.end();++ti)
     {
