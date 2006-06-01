@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2006/03/01 15:35:09  pietroni
+compiled InterspolationParameters function
+
 Revision 1.6  2006/01/22 10:00:56  cignoni
 Very Important Change: Area->DoubleArea (and no more Area function)
 
@@ -48,6 +51,8 @@ Initial commit
 #define __VCG_TRIANGLE3
 
 #include <vcg/space/box3.h>
+#include <vcg/space/plane3.h>
+#include <vcg/space/segment3.h>
 
 namespace vcg {
 
@@ -281,6 +286,48 @@ typename TriangleType::ScalarType Perimeter(const TriangleType &t)
 	return Distance(t.P(0),t.P(1))+
 		     Distance(t.P(1),t.P(2))+
 				 Distance(t.P(2),t.P(0));
+}
+
+template<class TriangleType>
+void PointDistance(const  TriangleType &t,
+				   typename TriangleType::CoordType & q,
+				   typename TriangleType::ScalarType & dist, 
+				   typename TriangleType::CoordType & p )
+{
+	typedef typename TriangleType::CoordType CoordType;
+	typedef typename TriangleType::ScalarType ScalarType;
+
+	CoordType clos[4];
+	ScalarType distv[4];
+
+	///find distance on the plane
+	vcg::Plane3<ScalarType> plane;
+	plane.Init(t.P(0),t.P(1),t.P(2));
+	clos[0]=plane.Projection(q);
+	distv[0]=(clos[0]-p).Norm();
+
+	//distance from the edges
+	vcg::Segment3<ScalarType> e0=vcg::Segment3<ScalarType>(t.P(0),t.P(1));
+	vcg::Segment3<ScalarType> e1=vcg::Segment3<ScalarType>(t.P(1),t.P(2));
+	vcg::Segment3<ScalarType> e2=vcg::Segment3<ScalarType>(t.P(2),t.P(0));
+	clos[1]=ClosestPoint<ScalarType>( e0, q);
+	clos[2]=ClosestPoint<ScalarType>( e1, q);
+	clos[3]=ClosestPoint<ScalarType>( e2, q);
+	
+	distv[1]=(clos[1]-p).Norm();
+	distv[2]=(clos[2]-p).Norm();
+	distv[3]=(clos[3]-p).Norm();
+	int min=0;
+
+	///find minimum distance
+	for (int i=1;i<4;i++)
+	{
+		if (distv[i]<distv[min])
+			min=i;
+	}
+
+	p=clos[min];
+	dist=distv[min];
 }
 
 
