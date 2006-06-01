@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2006/03/29 07:53:36  cignoni
+Missing ';' (thx Maarten)
+
 Revision 1.22  2006/03/20 14:42:49  pietroni
 IntersectionSegmentPlane and Intersection_Segment_Box functions Added
 
@@ -479,38 +482,43 @@ bool Intersection_Ray_Box( const Box3<T> & box, const Ray3<T> & r, Point3<T> & c
 }	
 
 // segment-box return fist intersection found  from p0 to p1
-template<class T>
-bool Intersection_Segment_Box( const Box3<T> & box, const Segment3<T> & s, Point3<T> & coord )
+template<class ScalarType>
+bool Intersection_Segment_Box( const Box3<ScalarType> & box, 
+							  const Segment3<ScalarType> & s, 
+							  Point3<ScalarType> & coord )
 {
 	//as first perform box-box intersection
-	Box3<T> test;
+	Box3<ScalarType> test;
 	test.Add(s.P0());
 	test.Add(s.P1());
 	if (!test.Collide(box))
 		return false;
 	else
 	{
-		Line3<T> l;
-		Point3<T> dir=s.P1()-s.P0();
+		Line3<ScalarType> l;
+		Point3<ScalarType> dir=s.P1()-s.P0();
 		dir.Normalize();
 		l.SetOrigin(s.P0());
 		l.SetDirection(dir);
-		if(Intersection_Line_Box<T>(box,l,coord))
+		if(Intersection_Line_Box<ScalarType>(box,l,coord))
 			return (test.IsIn(coord));
 		return false;
 	}
-}	
+}
 
 // segment-box intersection , return number of intersections and intersection points
-template<class T>
-int Intersection_Segment_Box( const Box3<T> & box, const Segment3<T> & s, Point3<T> & coord0, Point3<T> & coord1 )
+template<class ScalarType>
+int Intersection_Segment_Box( const Box3<ScalarType> & box, 
+							 const Segment3<ScalarType> & s,
+							 Point3<ScalarType> & coord0,
+							 Point3<ScalarType> & coord1 )
 {
 	int num=0;
-	Segment3<T> test= s;
+	Segment3<ScalarType> test= s;
 	if (Intersection_Segment_Box(box,test,coord0 ))
 	{
 		num++;
-		Point3<T> swap=test.P0();
+		Point3<ScalarType> swap=test.P0();
 		test.P0()=test.P1();
 		test.P1()=swap;
 		if (Intersection_Segment_Box(box,test,coord1 ))
@@ -518,6 +526,101 @@ int Intersection_Segment_Box( const Box3<T> & box, const Segment3<T> & s, Point3
 	}
 	return num;
 }	
+
+
+// segment-triangle intersection
+template<class ScalarType>
+bool Intersection_Segment_Triangle( const vcg::Segment3<ScalarType> & seg, 
+								   const Point3<ScalarType> & vert0, 
+									const Point3<ScalarType> & vert1, const
+									Point3<ScalarType> & vert2,
+									ScalarType & a ,ScalarType & b, ScalarType & dist)
+{
+	//first set both directions of ray
+	vcg::Ray3<ScalarType> ray;
+	vcg::Point3<ScalarType> dir;
+	dir=(seg.P1()-seg.P0());
+	dir.Normalize();
+	ray.Set(seg.P0(),dir);
+
+	//then control for each direction the interseciton with triangle
+	if ((Intersection<ScalarType>(ray,vert0,vert1,vert2,a,b,dist))
+		||(Intersection<ScalarType>(ray,vert0,vert2,vert1,a,b,dist)))
+		return (dist<(seg.P1()-seg.P0()).Norm());
+	else
+		return(false);
+}
+
+template <class ScalarType>
+bool Intersection_Plane_Box(const vcg::Plane3<ScalarType> &pl,
+							vcg::Box3<ScalarType> &bbox)
+{
+	
+	typedef typename Segment3<ScalarType> SegmentType;
+	typedef typename vcg::Point3<ScalarType> CoordType;
+	SegmentType diag[4];
+	
+	CoordType intersection;
+	//find the 4 diagonals
+	diag[0]=SegmentType(bbox.P(0),bbox.P(7));
+	diag[1]=SegmentType(bbox.P(1),bbox.P(6));
+	diag[2]=SegmentType(bbox.P(2),bbox.P(5));
+	diag[3]=SegmentType(bbox.P(3),bbox.P(4));
+	ScalarType a,b,dist;
+	for (int i=0;i<3;i++)
+		//call intersection of segment and plane
+		if (vcg::Intersection<SegmentType>(pl,diag[i],intersection)) 
+			return true;
+	return false;
+}
+
+template<class ScalarType>
+bool Intersection_Triangle_Box( vcg::Box3<ScalarType> &bbox,
+							   const vcg::Point3<ScalarType> &p0,
+							   const vcg::Point3<ScalarType> &p1,
+							   const vcg::Point3<ScalarType> &p2)
+{
+	typedef typename vcg::Point3<ScalarType> CoordType;
+	CoordType intersection;
+
+	/// control bounding box collision
+	vcg::Box3<ScalarType> test;
+	test.SetNull();
+	test.Add(p0);
+	test.Add(p1);
+	test.Add(p2);
+	if (!test.Collide(bbox))
+		return false;
+	/// control if each point is inside the bouding box
+	if ((bbox.IsIn(p0))||(bbox.IsIn(p1))||(bbox.IsIn(p2)))
+		return true;
+
+	/////control plane of the triangle with bbox
+	//vcg::Plane3<ScalarType> plTri=vcg::Plane3<ScalarType>();
+	//plTri.Init(p0,p1,p2);
+	//if (!Intersection_Plane_Box<ScalarType>(plTri,bbox))
+	//	return false;
+
+	///then control intersection of segments with box
+	if (Intersection_Segment_Box<ScalarType>(bbox,vcg::Segment3<ScalarType>(p0,p1),intersection)||
+		Intersection_Segment_Box<ScalarType>(bbox,vcg::Segment3<ScalarType>(p1,p2),intersection)||
+		Intersection_Segment_Box<ScalarType>(bbox,vcg::Segment3<ScalarType>(p2,p0),intersection))
+		return true;
+	///control intersection of diagonal of the cube with triangle
+
+	Segment3<ScalarType> diag[4];
+
+	diag[0]=Segment3<ScalarType>(bbox.P(0),bbox.P(7));
+	diag[1]=Segment3<ScalarType>(bbox.P(1),bbox.P(6));
+	diag[2]=Segment3<ScalarType>(bbox.P(2),bbox.P(5));
+	diag[3]=Segment3<ScalarType>(bbox.P(3),bbox.P(4));
+	ScalarType a,b,dist;
+	for (int i=0;i<3;i++)
+		if (Intersection_Segment_Triangle<ScalarType>(diag[i],p0,p1,p2,a,b,dist))
+			return true;
+
+	return false;
+}
 
 template<class T>
 bool Intersection (const Plane3<T> & plane0, const Plane3<T> & plane1,
