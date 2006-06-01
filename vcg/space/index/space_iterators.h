@@ -137,17 +137,20 @@ namespace vcg{
 			Elems.clear();
 			//CoordType ip;
 			//control if intersect the bounding box of the mesh
-			if(vcg::Intersection_Ray_Box<ScalarType>(Si.bbox,r,start))
-			{
+			if (Si.bbox.IsIn(r.Origin()))
+				start=r.Origin();
+			else
+			if (!(vcg::Intersection_Ray_Box<ScalarType>(Si.bbox,r,start))){
+				end=true;
+				return;
+			}
 				Si.PToIP(start,CurrentCell);
 				_ControlLimits();
 				_FindLinePar();
 				//go to first intersection
 				while ((!End())&& Refresh())
 					_NextCell();
-			}
-			else
-				end=true;
+			
 		}
 
 		bool End()
