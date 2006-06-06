@@ -24,6 +24,13 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.24  2006/06/01 08:38:02  pietroni
+Added functions:
+
+- Intersection_Segment_Triangle
+- Intersection_Plane_Box
+- Intersection_Triangle_Box
+
 Revision 1.23  2006/03/29 07:53:36  cignoni
 Missing ';' (thx Maarten)
 
@@ -556,7 +563,7 @@ bool Intersection_Plane_Box(const vcg::Plane3<ScalarType> &pl,
 							vcg::Box3<ScalarType> &bbox)
 {
 	
-	typedef typename Segment3<ScalarType> SegmentType;
+	typedef typename vcg::Segment3<ScalarType> SegmentType;
 	typedef typename vcg::Point3<ScalarType> CoordType;
 	SegmentType diag[4];
 	

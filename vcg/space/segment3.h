@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2006/03/07 16:39:38  pietroni
+compiled  and corrected ClosestPoint function
+
 Revision 1.5  2004/05/13 23:39:47  ponchio
 SegmentType -> Segment3 in constructor (g++ complained)
 
@@ -45,6 +48,7 @@ First Version (tarini)
 #define __VCGLIB_SEGMENT3
 
 #include <vcg/space/point3.h>
+#include <vcg/space/line3.h>
 #include <vcg/space/box3.h>
 
 namespace vcg {

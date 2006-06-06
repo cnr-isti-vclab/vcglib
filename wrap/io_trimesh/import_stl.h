@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2006/05/03 21:19:34  cignoni
+Added support for progress callback
+
 Revision 1.11  2006/01/30 15:02:50  cignoni
 Added mask filling in open
 
@@ -57,8 +60,9 @@ First working version!
 
 #ifndef __VCGLIB_IMPORT_STL
 #define __VCGLIB_IMPORT_STL
-
+#ifdef WIN32
 #include <io.h>
+#endif
 #include <stdio.h>
 #include <wrap/callback.h>
 #include <vcg/complex/trimesh/allocate.h>
@@ -204,6 +208,15 @@ static int OpenBinary( OpenMeshType &m, const char * filename, CallBackPos *cb=0
     {
       return E_CANTOPEN;
     }
+#ifdef WIN32
+    int fileLen=_filelength(_fileno(fp));
+#else
+		int fileLen = 0;
+		char temp;
+		while (getc(fp)!=EOF)
+			++fileLen;
+		rewind(fp);
+#endif
 
     m.Clear();
   
@@ -212,7 +225,6 @@ static int OpenBinary( OpenMeshType &m, const char * filename, CallBackPos *cb=0
 
     STLFacet f;
     int cnt=0;
-    int fileLen=_filelength(_fileno(fp));
     /* Read a single facet from an ASCII .STL file */
     while(!feof(fp))
     {

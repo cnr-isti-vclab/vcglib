@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2006/03/01 15:59:34  pietroni
+added InterpolationParameters function
+
 Revision 1.11  2005/12/12 11:15:26  ganovelli
 modifications to compile with gcc
 
@@ -110,8 +113,8 @@ Initial commit
 #define __VCG_TETRA3
 
 #include <vcg/space/point3.h>
-#include <vcg/math/Matrix44.h>
-#include <vcg/math/Matrix33.h>
+#include <vcg/math/matrix44.h>
+#include <vcg/math/matrix33.h>
 
 namespace vcg {
 /** \addtogroup space */

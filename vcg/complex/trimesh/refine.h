@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2006/05/03 21:42:10  cignoni
+HasPerWedgeTexture -> HasPerWedgeTexture(m)
+
 Revision 1.9  2005/12/22 11:24:09  cignoni
 removed div by zero bug in callback of refine (tnx to Mario Latronico)
 
@@ -68,6 +71,7 @@ first working version
 #include<vcg/complex/trimesh/allocate.h>
 #include<vcg/complex/trimesh/update/topology.h>
 #include<wrap/callback.h>
+#include <vcg/complex/trimesh/base.h>
 
 
 namespace vcg{
