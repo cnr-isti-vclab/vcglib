@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2006/05/26 10:18:11  cignoni
+Re-adapted to ms compilers
+
 Revision 1.9  2006/05/25 09:37:14  cignoni
 Many changes for the different interpretation of hash_set between gcc and .net. Probably to be completed.
 
@@ -133,11 +136,48 @@ class  AverageCell
    CoordType n;
    int cnt;
    int id;
-  CoordType Pos() const 
+   CoordType Pos() const 
+  {
+    return p/cnt;
+  }
+  Color4b Col() const {return Color4b::White;}
+
+};
+
+
+template<class MeshType>
+class  AverageColorCell
+{
+  typedef typename MeshType::CoordType CoordType;
+  typedef typename MeshType::FaceType  FaceType;
+  public:
+    inline void Add(MeshType &m, FaceType &f, int i)
+    {
+      p+=f.cV(i)->cP();
+      c+=CoordType(f.cV(i)->C()[0],f.cV(i)->C()[1],f.cV(i)->C()[2]);
+
+      // we prefer to use the un-normalized face normal so small faces facing away are dropped out 
+      // and the resulting average is weighed with the size of the faces falling here.
+      n+=f.cN();      
+      cnt++;
+    }
+    AverageColorCell(): p(0,0,0), n(0,0,0), c(0,0,0),cnt(0){}
+   CoordType p;
+   CoordType n;
+   CoordType c;
+   int cnt;
+   int id;
+  Color4b Col() const 
+  {
+    return Color4b(c[0]/cnt,c[1]/cnt,c[2]/cnt,255);
+  }
+
+   CoordType Pos() const 
   {
     return p/cnt;
   }
 };
+
 
 /*
   Metodo di clustering
@@ -283,6 +323,7 @@ class Clustering
     for(gi=GridCell.begin();gi!=GridCell.end();++gi)
     {
       m.vert[i].P()=(*gi).second.Pos();
+      m.vert[i].C()=(*gi).second.Col();
       (*gi).second.id=i;
       ++i;
     }
