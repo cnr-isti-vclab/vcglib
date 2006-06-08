@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2005/06/24 12:21:48  ponchio
+Fixed "lerp" function.
+
 Revision 1.12  2005/04/14 11:35:09  ponchio
 *** empty log message ***
 
@@ -254,7 +257,7 @@ inline void Color4<T>::ColorRamp(const float &minf,const float  &maxf ,float v )
 }
 
 
-#if !defined(__GNUC__)
+#if !defined(__GNUC__) || (__GNUC__ > 3)
 template <>
 #endif
 template <> 
@@ -266,7 +269,7 @@ inline void Color4<float>::Import(const Color4<unsigned char> &b)
   this->_v[3]=b[3]/255.0f;
 }
 
-#if !defined(__GNUC__)
+#if !defined(__GNUC__) || (__GNUC__ > 3)
 template <> // [Bug c++/14479] enum definition in template class with template methods causes error.
 #endif
 template <>
