@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/10/15 16:21:49  ganovelli
+Working release (compilata solo su MSVC), vector_occ è migrato da component_opt
+
 Revision 1.5  2005/07/07 13:33:52  ganovelli
 some comment
 
@@ -82,7 +85,7 @@ public:
 	/// this function disable the use of an optional attribute (see...)
   /// Note: once an attribute is disabled, its data is lost (the memory freed)
 	template <class ATTR_TYPE>
-		void IsEnabledAttribute(){
+		bool IsEnabledAttribute(){
 				std::list < CATBase<ThisType> * >::iterator ia; 
 				for(ia = attributes.begin(); ia != attributes.end(); ++ia)
 					if((*ia)->Id() == CAT<ThisType,ATTR_TYPE>::Id())
