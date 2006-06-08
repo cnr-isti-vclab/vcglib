@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/10/18 14:27:22  ganovelli
+EdgePLaneType added (_RT)
+
 Revision 1.1  2005/10/15 16:23:39  ganovelli
 Working release (compilata solo su MSVC), component_occ è migrato da component_opt
 
@@ -46,6 +49,30 @@ compare with OCF(Optional Component Fast)
 
 namespace vcg {
   namespace face {
+
+	///*-------------------------- WedgeTextureOcc ----------------------------------------*/ 
+
+	template <class A, class T> class WedgeTextureOcc: public T {
+	public:
+		typedef A WedgeTextureType;
+		WedgeTextureType &N() {return CAT< vector_occ<FaceType>,WedgeTextureType>::Instance()->Get((FaceType*)this);}
+	  static bool HasWedgeTexture()   { return true; }
+		static bool HasWedgeTextureOcc()   { return true; }
+	};
+
+	template <class T> class WedgeTexturefOcc: public WedgeTextureOcc<TCoord2<float,1>, T> {};
+
+	///*-------------------------- FACEINFO ----------------------------------------*/ 
+
+	template <class A, class T> class InfoOccBase: public T {
+	public:
+		typedef A InfoType;
+		InfoType &N() {return CAT< vector_occ<FaceType>,InfoType>::Instance()->Get((FaceType*)this);}
+	  static bool HasInfo()   { return true; }
+		static bool HasInfoOcc()   { return true; }
+	};
+
+	template <class T> class InfoOcc: public InfoOccBase<int, T> {};
 
 ///*-------------------------- NORMAL ----------------------------------------*/ 
 
@@ -112,7 +139,8 @@ struct FFAdjTypeSup {
 template <class A, class T> class FFAdjOccBase: public T {
 public:
 	
-	typedef  A FFAdjType;
+//	typedef  A FFAdjType;
+	typedef FFAdjTypeSup<typename T::FacePointer> FFAdjType;
 
   typename T::FacePointer &FFp(const int j) { 
 		return (CAT< vector_occ<FaceType>,FFAdjTypeSup<T::FacePointer> >::Instance()->Get((FaceType*)this))._ffp[j];}
@@ -125,6 +153,10 @@ public:
  
   char &FFi(const int j) {
    return (CAT< vector_occ<FaceType>,FFAdjTypeSup<T::FacePointer> >::Instance()->Get((FaceType*)this))._ffi[j];}  
+
+  char cFFi(const int j) const{
+   return (CAT< vector_occ<FaceType>,FFAdjTypeSup<T::FacePointer> >::Instance()->Get((FaceType*)this ))._ffi[j];
+	}  
 
   static bool HasFFAdjacency()   {   return true; }
   static bool HasFFAdjacencyOcc()   { return true; }
