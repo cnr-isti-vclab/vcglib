@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/10/15 16:21:48  ganovelli
+Working release (compilata solo su MSVC), vector_occ è migrato da component_opt
+
 Revision 1.6  2005/07/07 13:33:51  ganovelli
 some comment
 
@@ -93,7 +96,7 @@ CATEntry(){if(Id()==0){
 					}
 
 
-static unsigned int Ord(ValueType *);
+static unsigned int Ord(const ValueType *);
 static ENTRY_TYPE & GetEntry(typename STL_CONT::value_type*pt);
 
 static	void  Insert( STL_CONT & c,bool cond=false );				// insert a vector to trace
@@ -130,9 +133,9 @@ static typename std::list<ENTRY_TYPE>::iterator	 & Curr(){		// container that wa
 }
 
 
-static bool IsTheSameAsLast(ValueType *pt);	// true if pt is in the  container
+static bool IsTheSameAsLast(const ValueType *pt);	// true if pt is in the  container
 																							// that was accessed last
-static void Update(ValueType*);							// set Upper() e Lower() 
+static void Update(const ValueType*);							// set Upper() e Lower() 
 static typename std::list<ENTRY_TYPE>::iterator FindBase(const ValueType * pt);	
 																							// find the container that contains pt (naive)
 virtual  void  AddDataElem(typename STL_CONT::value_type * pt,int n);// add n element to the auxiliary data
@@ -150,7 +153,7 @@ static int & Id(){															// unique identifier of the istance
 template <typename STL_CONT, class ENTRY_TYPE>
 unsigned int CATEntry<STL_CONT,ENTRY_TYPE>::
 
-Ord(ValueType * pt)
+Ord(const ValueType * pt)
 {
 	Update(pt);
 	return (pt-Lower());
@@ -182,7 +185,7 @@ return curr_base;
 template <typename STL_CONT, class ENTRY_TYPE>
  bool CATEntry< STL_CONT, ENTRY_TYPE>::
  
-IsTheSameAsLast(ValueType * pt)
+IsTheSameAsLast(const ValueType * pt)
 {
 return ( UTD() && ( !(Lower()> pt)) && (pt < Upper()) );
 }
@@ -190,7 +193,7 @@ return ( UTD() && ( !(Lower()> pt)) && (pt < Upper()) );
 template <typename STL_CONT, class ENTRY_TYPE>
 void CATEntry< STL_CONT, ENTRY_TYPE>::
 
-Update(ValueType * pt)
+Update(const ValueType * pt)
 {
 if(!IsTheSameAsLast(pt)){
 	std::list<ENTRY_TYPE>::iterator lower_ite,upper_ite;
@@ -313,7 +316,7 @@ template <typename STL_CONT,class ATTR_TYPE>
 class CAT:public CATEntry<STL_CONT, EntryCAT<STL_CONT,ATTR_TYPE> >{
 typedef typename typename STL_CONT::value_type ValueType;
 public:
-static ATTR_TYPE & Get(ValueType * pt);
+static ATTR_TYPE & Get(const ValueType * pt);
 static CAT<STL_CONT,ATTR_TYPE> * New();
 static CAT<STL_CONT,ATTR_TYPE> *& Instance(){ static CAT<STL_CONT,ATTR_TYPE> *  instance=NULL; return instance;}
 }; 
@@ -321,7 +324,7 @@ static CAT<STL_CONT,ATTR_TYPE> *& Instance(){ static CAT<STL_CONT,ATTR_TYPE> *  
 template <typename STL_CONT, class ATTR_TYPE>
 ATTR_TYPE & CAT<STL_CONT,ATTR_TYPE>::
 
-Get(ValueType * pt)
+Get(const ValueType * pt)
 {
 int ord = Ord(pt);
 //int ord = pt-  &(*  ((*AT().begin()).C()->begin())); se AT() contiene un solo elemento funziona anche così
