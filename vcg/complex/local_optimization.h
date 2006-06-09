@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.16  2005/11/10 15:38:46  cignoni
+  Added casts to remove warnings
+
   Revision 1.15  2005/10/02 23:23:52  cignoni
   Changed the sense of the < operator for heap: it is reversed according to the stl where highest score elements must float in the heap
   Completed TimeBudget Termination condition.
@@ -290,18 +293,18 @@ void ClearHeap()
 {
 	typename HeapType::iterator hi;
 	//int sz=h.size();
-	for(hi=h.begin();hi!=h.end();++hi)
-  {
-    if(!(*hi).locModPtr->IsUpToDate())
+	for(hi=h.begin();hi!=h.end();)
+	{
+		if(!(*hi).locModPtr->IsUpToDate())
 		{
-     	delete (*hi).locModPtr;
+			delete (*hi).locModPtr;
 			*hi=h.back();
-      h.pop_back();
-      if(hi==h.end()) break;
-      --hi;
+			h.pop_back();
+			continue;
 		}
-  }
-  //printf("\nReduced heap from %7i to %7i (fn %7i) ",sz,h.size(),m.fn);
+		++hi;
+	}
+	//printf("\nReduced heap from %7i to %7i (fn %7i) ",sz,h.size(),m.fn);
 	make_heap(h.begin(),h.end());
 }
 
