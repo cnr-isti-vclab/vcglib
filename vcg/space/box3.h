@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/09/30 15:03:57  cignoni
+Added Center-Radius Constructor
+
 Revision 1.8  2004/07/20 23:10:01  cignoni
 Uncommented Add of matrix transformed bbox
 
@@ -315,7 +318,7 @@ public:
 	}
 		
 		/// gives the ith box vertex in order: (x,y,z),(X,y,z),(x,Y,z),(X,Y,z),(x,y,Z),(X,y,Z),(x,Y,Z),(X,Y,Z)
-	Point3<BoxScalarType> P(const int & i){
+	Point3<BoxScalarType> P(const int & i) const {
 			return Point3<BoxScalarType>(
 				min[0]+ (i%2) * DimX(),
 				min[1]+ ((i / 2)%2) * DimY(),
