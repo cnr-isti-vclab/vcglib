@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2006/06/06 14:35:32  zifnab1974
+Changes for compilation on linux AMD64. Some remarks: Linux filenames are case-sensitive. _fileno and _filelength do not exist on linux
+
 Revision 1.12  2006/05/03 21:19:34  cignoni
 Added support for progress callback
 
@@ -60,9 +63,6 @@ First working version!
 
 #ifndef __VCGLIB_IMPORT_STL
 #define __VCGLIB_IMPORT_STL
-#ifdef WIN32
-#include <io.h>
-#endif
 #include <stdio.h>
 #include <wrap/callback.h>
 #include <vcg/complex/trimesh/allocate.h>
@@ -208,15 +208,10 @@ static int OpenBinary( OpenMeshType &m, const char * filename, CallBackPos *cb=0
     {
       return E_CANTOPEN;
     }
-#ifdef WIN32
-    int fileLen=_filelength(_fileno(fp));
-#else
-		int fileLen = 0;
-		char temp;
-		while (getc(fp)!=EOF)
-			++fileLen;
-		rewind(fp);
-#endif
+		long currentPos = ftell(fp);
+		fseek(fp,0L,SEEK_END);
+		long fileLen = ftell(fp);
+		fseek(fp,currentPos,SEEK_SET);
 
     m.Clear();
   
@@ -225,6 +220,7 @@ static int OpenBinary( OpenMeshType &m, const char * filename, CallBackPos *cb=0
 
     STLFacet f;
     int cnt=0;
+
     /* Read a single facet from an ASCII .STL file */
     while(!feof(fp))
     {
