@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2006/06/06 14:35:28  zifnab1974
+Changes for compilation on linux AMD64. Some remarks: Linux filenames are case-sensitive. _fileno and _filelength do not exist on linux
+
 Revision 1.10  2006/05/03 21:42:10  cignoni
 HasPerWedgeTexture -> HasPerWedgeTexture(m)
 
@@ -463,7 +466,9 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
 								(*nf[2]).ClearB(0);
 							}
 		}
-	m.fn= m.face.size();
+	
+    // m.fn= m.face.size();
+
 	assert(lastf==m.face.end());	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD()){
 					assert((*fi).V(0)>=&*m.vert.begin() && (*fi).V(0)<&*m.vert.end() );
 					assert((*fi).V(1)>=&*m.vert.begin() && (*fi).V(1)<&*m.vert.end() );
