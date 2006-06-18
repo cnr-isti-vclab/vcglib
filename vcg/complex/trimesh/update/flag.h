@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2006/05/03 21:23:25  cignoni
+Corrected IsDeleted -> isD
+
 Revision 1.11  2005/12/02 00:09:12  cignoni
 Added assert(HasFlags) everywhere..
 
@@ -251,7 +254,7 @@ static void FaceBorderFromNone(MeshType &m)
 
 }
 
-	/// Bisogna carlcolare il border flag delle facce
+/// Compute the PerVertex Border flag deriving it from the faces
 static void VertexBorderFromFace(MeshType &m)
 {
   assert(HasPerFaceFlags(m));
@@ -262,14 +265,15 @@ static void VertexBorderFromFace(MeshType &m)
 		(*v).ClearB();
 
 	for(f=m.face.begin();f!=m.face.end();++f)
-	{
-		for(int z=0;z<3;++z)
-			if( (*f).IsB(z) )
-			{
-				(*f).V0(z)->SetB();
-				(*f).V1(z)->SetB();
-			}
-	}
+    if(!(*f).IsD())
+	    {
+		    for(int z=0;z<3;++z)
+			    if( (*f).IsB(z) )
+			    {
+				    (*f).V0(z)->SetB();
+				    (*f).V1(z)->SetB();
+			    }
+	    }
 }
 
 
