@@ -78,134 +78,137 @@ public:
 			else
 			{
 				geomsh[ii] = geolib->GetEntity(ii)->GetMesh();
-				geomsh[ii]->Triangulate(); 
-				//geomsh[ii]->Get
-				size_t dim = geomsh[ii]->GetFaceVertexCount() / geomsh[ii]->GetFaceCount();
-				assert(dim == 3);
-				//MyMesh* msh = new MyMesh();
-				//size_t  nattr = geomsh[ii]->GetSourceCount();
-				//FCDGeometrySourceList& srclst = geomsh[ii]->GetVertexSources(); 
-					
-				FCDGeometrySource* src;
-				if ((src = geomsh[ii]->GetPositionSource()) != NULL)
+				if (geomsh[ii]->GetFaceCount() > 0)
 				{
-					FloatList& flst = src->GetSourceData();
-					unsigned int str = src->GetSourceStride();
-					assert(flst.size() % str == 0);
-					for(unsigned int cont = 0;cont < flst.size();cont += str)
+					geomsh[ii]->Triangulate(); 
+					//geomsh[ii]->Get
+					size_t dim = geomsh[ii]->GetFaceVertexCount() / geomsh[ii]->GetFaceCount();
+					assert(dim == 3);
+					//MyMesh* msh = new MyMesh();
+					//size_t  nattr = geomsh[ii]->GetSourceCount();
+					//FCDGeometrySourceList& srclst = geomsh[ii]->GetVertexSources(); 
+						
+					FCDGeometrySource* src;
+					if ((src = geomsh[ii]->GetPositionSource()) != NULL)
 					{
-						OpenMeshType::VertexIterator vi=vcg::tri::Allocator<OpenMeshType>::AddVertices(m,1);
-						vi->P()= vcg::Point3f(flst[cont],flst[cont + 1],flst[cont + 2]);
-						vi->N() = vcg::Point3f(0.0,0.0,0.0);
+						FloatList& flst = src->GetSourceData();
+						unsigned int str = src->GetSourceStride();
+						assert(flst.size() % str == 0);
+						for(unsigned int cont = 0;cont < flst.size();cont += str)
+						{
+							OpenMeshType::VertexIterator vi=vcg::tri::Allocator<OpenMeshType>::AddVertices(m,1);
+							vi->P()= vcg::Point3f(flst[cont],flst[cont + 1],flst[cont + 2]);
+							vi->N() = vcg::Point3f(0.0,0.0,0.0);
+						}
 					}
-				}
-				else return E_NOVERTEXPOSITION;
+					else return E_NOVERTEXPOSITION;
 
-				//a single mesh may be composed by a variable numbers of polygons' subsets
-				size_t pol = geomsh[ii]->GetPolygonsCount();
+					//a single mesh may be composed by a variable numbers of polygons' subsets
+					size_t pol = geomsh[ii]->GetPolygonsCount();
 
-				//for any polygons' subset in a single mesh
-				for(unsigned int pset = 0; pset < pol;++pset)
-				{
-					FCDGeometryMesh* tmp = geomsh[ii];
-					FCDGeometryPolygonsInput* pos = tmp->GetPolygons(pset)->FindInput(FUDaeGeometryInput::POSITION);
-					if ((pos == NULL) || (pos->source->GetSourceStride() != 3)) return E_NO3DVERTEXPOSITION;
-					//unsigned int hi = pos->indices[1];
-					FCDGeometryPolygonsInput* norm = tmp->GetPolygons(pset)->FindInput(FUDaeGeometryInput::NORMAL);
-					//unsigned int li = norm->indices[1];
-					FCDGeometryPolygonsInput* text = tmp->GetPolygons(pset)->FindInput(FUDaeGeometryInput::TEXCOORD);
-					
-					bool isvalidwnorm = (m.HasPerWedgeNormal()) && (norm != NULL) && (norm->source->GetSourceStride() == 3); 
-					bool isvalidnorm = (m.HasPerVertexNormal()) && (norm != NULL) && (norm->source->GetSourceStride() == 3);
-					bool isvalidtext = (m.HasPerWedgeTexture()) && (text != NULL) && (text->source->GetSourceStride() == 2);
-					
-					FCDGeometryPolygonsInputList tet; 
-					tmp->GetPolygons(pset)->FindInputs(FUDaeGeometryInput::TEXCOORD,tet);
-
-					for(unsigned int ind = 0;ind < pos->indices.size();++ind)
+					//for any polygons' subset in a single mesh
+					for(unsigned int pset = 0; pset < pol;++pset)
 					{
-						OpenMeshType::FaceIterator fi=vcg::tri::Allocator<OpenMeshType>::AddFaces(m,1);		
-						assert(pos->indices[ind] < m.vert.size());
-						fi->V(0) = &m.vert[pos->indices[ind]];
+						FCDGeometryMesh* tmp = geomsh[ii];
+						FCDGeometryPolygonsInput* pos = tmp->GetPolygons(pset)->FindInput(FUDaeGeometryInput::POSITION);
+						if ((pos == NULL) || (pos->source->GetSourceStride() != 3)) return E_NO3DVERTEXPOSITION;
+						//unsigned int hi = pos->indices[1];
+						FCDGeometryPolygonsInput* norm = tmp->GetPolygons(pset)->FindInput(FUDaeGeometryInput::NORMAL);
+						//unsigned int li = norm->indices[1];
+						FCDGeometryPolygonsInput* text = tmp->GetPolygons(pset)->FindInput(FUDaeGeometryInput::TEXCOORD);
 						
-						if (isvalidnorm) 
-						{
-							assert(norm->indices[ind]  * 3  < norm->source->GetSourceData().size());
-							fi->V(0)->N() += vcg::Point3f(norm->source->GetSourceData()[norm->indices[ind] * 3],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 1],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 2]).Normalize();
-							//++fi->V(0)->incidentfaces;
-						}
-
-						if (isvalidtext)
-						{
-							for(unsigned int hh = 0; hh < tet.size();++hh)
-							{
-								//NON CAMBIARE!!!!E' L'unico modo in cui restituisce gli indici corretti quando c'e' piu' di un insieme con la stessa semantica!!
-								UInt32List* ls = tmp->GetPolygons(pset)->FindIndices(tet[hh]);
-								fi->WT(0).t(hh) = vcg::Point2f(tet[hh]->source->GetSourceData()[(*ls)[ind] * 2],tet[hh]->source->GetSourceData()[(*ls)[ind] * 2 + 1]);
-							}
-						}
-
-						if (isvalidwnorm)
-						{
-							fi->WN(0) = vcg::Point3f(norm->source->GetSourceData()[norm->indices[ind] * 3],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 1],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 2]).Normalize();
-							fi->WN(1) = vcg::Point3f(norm->source->GetSourceData()[norm->indices[ind + 1] * 3],norm->source->GetSourceData()[norm->indices[ind + 1]  * 3 + 1],norm->source->GetSourceData()[norm->indices[ind + 1]  * 3 + 2]).Normalize();
-							fi->WN(2) = vcg::Point3f(norm->source->GetSourceData()[norm->indices[ind + 2] * 3],norm->source->GetSourceData()[norm->indices[ind + 2]  * 3 + 1],norm->source->GetSourceData()[norm->indices[ind + 2]  * 3 + 2]).Normalize();
-						}
-
-						++ind;
-						assert(pos->indices[ind] < m.vert.size());
-						fi->V(1) = &m.vert[pos->indices[ind]];
+						bool isvalidwnorm = (m.HasPerWedgeNormal()) && (norm != NULL) && (norm->source->GetSourceStride() == 3); 
+						bool isvalidnorm = (m.HasPerVertexNormal()) && (norm != NULL) && (norm->source->GetSourceStride() == 3);
+						bool isvalidtext = (HasPerWedgeTexture(m)) && (text != NULL) && (text->source->GetSourceStride() == 2);
 						
-						if (isvalidnorm) 
-						{	
-							assert(norm->indices[ind]  * 3 < norm->source->GetSourceData().size());
-							fi->V(1)->N() += vcg::Point3f(norm->source->GetSourceData()[norm->indices[ind] * 3],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 1],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 2]).Normalize();
-							//++fi->V(1)->incidentfaces;
-						}
+						FCDGeometryPolygonsInputList tet; 
+						tmp->GetPolygons(pset)->FindInputs(FUDaeGeometryInput::TEXCOORD,tet);
 
-						if (isvalidtext)
+						for(unsigned int ind = 0;ind < pos->indices.size();++ind)
 						{
-							for(unsigned int hh = 0; hh < tet.size();++hh)
+							OpenMeshType::FaceIterator fi=vcg::tri::Allocator<OpenMeshType>::AddFaces(m,1);		
+							assert(pos->indices[ind] < m.vert.size());
+							fi->V(0) = &m.vert[pos->indices[ind]];
+							
+							if (isvalidnorm) 
 							{
-								UInt32List* ls = tmp->GetPolygons(pset)->FindIndices(tet[hh]);
-								fi->WT(1).t(hh) = vcg::Point2f(tet[hh]->source->GetSourceData()[(*ls)[ind] * 2],tet[hh]->source->GetSourceData()[(*ls)[ind] * 2 + 1]);
+								assert(norm->indices[ind]  * 3  < norm->source->GetSourceData().size());
+								fi->V(0)->N() += vcg::Point3f(norm->source->GetSourceData()[norm->indices[ind] * 3],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 1],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 2]).Normalize();
+								//++fi->V(0)->incidentfaces;
 							}
-						}
 
-						++ind;
-						assert(pos->indices[ind] < m.vert.size());
-						fi->V(2) = &m.vert[pos->indices[ind]];
+							if (isvalidtext)
+							{
+								for(unsigned int hh = 0; hh < tet.size();++hh)
+								{
+									//NON CAMBIARE!!!!E' L'unico modo in cui restituisce gli indici corretti quando c'e' piu' di un insieme con la stessa semantica!!
+									UInt32List* ls = tmp->GetPolygons(pset)->FindIndices(tet[hh]);
+									fi->WT(0).t(hh) = vcg::Point2f(tet[hh]->source->GetSourceData()[(*ls)[ind] * 2],tet[hh]->source->GetSourceData()[(*ls)[ind] * 2 + 1]);
+								}
+							}
+
+							if (isvalidwnorm)
+							{
+								fi->WN(0) = vcg::Point3f(norm->source->GetSourceData()[norm->indices[ind] * 3],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 1],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 2]).Normalize();
+								fi->WN(1) = vcg::Point3f(norm->source->GetSourceData()[norm->indices[ind + 1] * 3],norm->source->GetSourceData()[norm->indices[ind + 1]  * 3 + 1],norm->source->GetSourceData()[norm->indices[ind + 1]  * 3 + 2]).Normalize();
+								fi->WN(2) = vcg::Point3f(norm->source->GetSourceData()[norm->indices[ind + 2] * 3],norm->source->GetSourceData()[norm->indices[ind + 2]  * 3 + 1],norm->source->GetSourceData()[norm->indices[ind + 2]  * 3 + 2]).Normalize();
+							}
+
+							++ind;
+							assert(pos->indices[ind] < m.vert.size());
+							fi->V(1) = &m.vert[pos->indices[ind]];
+							
+							if (isvalidnorm) 
+							{	
+								assert(norm->indices[ind]  * 3 < norm->source->GetSourceData().size());
+								fi->V(1)->N() += vcg::Point3f(norm->source->GetSourceData()[norm->indices[ind] * 3],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 1],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 2]).Normalize();
+								//++fi->V(1)->incidentfaces;
+							}
+
+							if (isvalidtext)
+							{
+								for(unsigned int hh = 0; hh < tet.size();++hh)
+								{
+									UInt32List* ls = tmp->GetPolygons(pset)->FindIndices(tet[hh]);
+									fi->WT(1).t(hh) = vcg::Point2f(tet[hh]->source->GetSourceData()[(*ls)[ind] * 2],tet[hh]->source->GetSourceData()[(*ls)[ind] * 2 + 1]);
+								}
+							}
+
+							++ind;
+							assert(pos->indices[ind] < m.vert.size());
+							fi->V(2) = &m.vert[pos->indices[ind]];
+							
+							if (isvalidnorm)
+							{
+								assert(norm->indices[ind]  * 3 < norm->source->GetSourceData().size());
+								fi->V(2)->N() += vcg::Point3f(norm->source->GetSourceData()[norm->indices[ind]  * 3],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 1],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 2]).Normalize();
+								//++fi->V(2)->incidentfaces;
+							}
+							
+							if (isvalidtext)
+							{
+								for(unsigned int hh = 0; hh < tet.size();++hh)
+								{
+									UInt32List* ls = tmp->GetPolygons(pset)->FindIndices(tet[hh]);
+									fi->WT(2).t(hh) = vcg::Point2f(tet[hh]->source->GetSourceData()[(*ls)[ind] * 2],tet[hh]->source->GetSourceData()[(*ls)[ind] * 2 + 1]);
+								}
+							}
+
+							if (isvalidnorm) fi->N() = ((fi->V(1)->P() - fi->V(0)->P()) ^ (fi->V(2)->P() - fi->V(0)->P())).Normalize();
+
+							/*FCDGeometryPolygonsInput* posa = tmp->GetPolygons(pset)->FindInput(FUDaeGeometryInput::POSITION);
+							FloatList& list = posa->source->GetSourceData();
+							int dim = list.size();
+							list[0] = -100.0;*/
+						}
+						//vm.push_back(msh);
 						
 						if (isvalidnorm)
 						{
-							assert(norm->indices[ind]  * 3 < norm->source->GetSourceData().size());
-							fi->V(2)->N() += vcg::Point3f(norm->source->GetSourceData()[norm->indices[ind]  * 3],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 1],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 2]).Normalize();
-							//++fi->V(2)->incidentfaces;
+							vcg::tri::UpdateNormals<OpenMeshType>::PerVertexNormalized(m);
+							/*for(MyMesh::VertexIterator vit = msh->vert.begin(); vit != msh->vert.end();++vit)
+								vit->N() = (vit->N() / vit->incidentfaces).Normalize();*/
 						}
-						
-						if (isvalidtext)
-						{
-							for(unsigned int hh = 0; hh < tet.size();++hh)
-							{
-								UInt32List* ls = tmp->GetPolygons(pset)->FindIndices(tet[hh]);
-								fi->WT(2).t(hh) = vcg::Point2f(tet[hh]->source->GetSourceData()[(*ls)[ind] * 2],tet[hh]->source->GetSourceData()[(*ls)[ind] * 2 + 1]);
-							}
-						}
-
-						if (isvalidnorm) fi->N() = ((fi->V(1)->P() - fi->V(0)->P()) ^ (fi->V(2)->P() - fi->V(0)->P())).Normalize();
-
-						/*FCDGeometryPolygonsInput* posa = tmp->GetPolygons(pset)->FindInput(FUDaeGeometryInput::POSITION);
-						FloatList& list = posa->source->GetSourceData();
-						int dim = list.size();
-						list[0] = -100.0;*/
-					}
-					//vm.push_back(msh);
-					
-					if (isvalidnorm)
-					{
-						vcg::tri::UpdateNormals<OpenMeshType>::PerVertexNormalized(m);
-						/*for(MyMesh::VertexIterator vit = msh->vert.begin(); vit != msh->vert.end();++vit)
-							vit->N() = (vit->N() / vit->incidentfaces).Normalize();*/
 					}
 				}
 			}
