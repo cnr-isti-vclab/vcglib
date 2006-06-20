@@ -121,6 +121,8 @@ public:
 						bool isvalidnorm = (m.HasPerVertexNormal()) && (norm != NULL) && (norm->source->GetSourceStride() == 3);
 						bool isvalidtext = (HasPerWedgeTexture(m)) && (text != NULL) && (text->source->GetSourceStride() == 2);
 						
+						FCDGeometryPolygonsInputList normlist;
+						tmp->GetPolygons(pset)->FindInputs(FUDaeGeometryInput::NORMAL,normlist);
 						FCDGeometryPolygonsInputList tet; 
 						tmp->GetPolygons(pset)->FindInputs(FUDaeGeometryInput::TEXCOORD,tet);
 
@@ -130,10 +132,13 @@ public:
 							assert(pos->indices[ind] < m.vert.size());
 							fi->V(0) = &m.vert[pos->indices[ind]];
 							
+							size_t dimn = norm->indices.size();
 							if (isvalidnorm) 
 							{
-								assert(norm->indices[ind]  * 3  < norm->source->GetSourceData().size());
-								fi->V(0)->N() += vcg::Point3f(norm->source->GetSourceData()[norm->indices[ind] * 3],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 1],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 2]).Normalize();
+								//assert(norm->indices[ind]  * 3  < norm->source->GetSourceData().size());
+								UInt32List* ls = tmp->GetPolygons(pset)->FindIndices(normlist[0]);
+								//fi->V(0)->N() += vcg::Point3f(norm->source->GetSourceData()[norm->indices[ind] * 3],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 1],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 2]).Normalize();
+								fi->V(0)->N() += vcg::Point3f(normlist[0]->source->GetSourceData()[(*ls)[ind] * 2],normlist[0]->source->GetSourceData()[(*ls)[ind] * 2 + 1],normlist[0]->source->GetSourceData()[(*ls)[ind] * 2 + 2]);
 								//++fi->V(0)->incidentfaces;
 							}
 
@@ -160,8 +165,12 @@ public:
 							
 							if (isvalidnorm) 
 							{	
-								assert(norm->indices[ind]  * 3 < norm->source->GetSourceData().size());
-								fi->V(1)->N() += vcg::Point3f(norm->source->GetSourceData()[norm->indices[ind] * 3],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 1],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 2]).Normalize();
+								//assert(norm->indices[ind]  * 3 < norm->source->GetSourceData().size());
+								//fi->V(1)->N() += vcg::Point3f(norm->source->GetSourceData()[norm->indices[ind] * 3],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 1],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 2]).Normalize();
+								UInt32List* ls = tmp->GetPolygons(pset)->FindIndices(normlist[0]);
+								//fi->V(0)->N() += vcg::Point3f(norm->source->GetSourceData()[norm->indices[ind] * 3],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 1],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 2]).Normalize();
+								fi->V(1)->N() += vcg::Point3f(normlist[0]->source->GetSourceData()[(*ls)[ind] * 2],normlist[0]->source->GetSourceData()[(*ls)[ind] * 2 + 1],normlist[0]->source->GetSourceData()[(*ls)[ind] * 2 + 2]);
+								
 								//++fi->V(1)->incidentfaces;
 							}
 
@@ -180,8 +189,11 @@ public:
 							
 							if (isvalidnorm)
 							{
-								assert(norm->indices[ind]  * 3 < norm->source->GetSourceData().size());
-								fi->V(2)->N() += vcg::Point3f(norm->source->GetSourceData()[norm->indices[ind]  * 3],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 1],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 2]).Normalize();
+								//assert(norm->indices[ind]  * 3 < norm->source->GetSourceData().size());
+								//fi->V(2)->N() += vcg::Point3f(norm->source->GetSourceData()[norm->indices[ind]  * 3],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 1],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 2]).Normalize();
+								UInt32List* ls = tmp->GetPolygons(pset)->FindIndices(normlist[0]);
+								//fi->V(0)->N() += vcg::Point3f(norm->source->GetSourceData()[norm->indices[ind] * 3],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 1],norm->source->GetSourceData()[norm->indices[ind]  * 3 + 2]).Normalize();
+								fi->V(2)->N() += vcg::Point3f(normlist[0]->source->GetSourceData()[(*ls)[ind] * 2],normlist[0]->source->GetSourceData()[(*ls)[ind] * 2 + 1],normlist[0]->source->GetSourceData()[(*ls)[ind] * 2 + 2]);
 								//++fi->V(2)->incidentfaces;
 							}
 							
