@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2005/04/13 09:40:30  ponchio
+Including math/bash.h
+
 Revision 1.10  2005/03/18 16:34:42  fiorin
 minor changes to comply gcc compiler
 
@@ -95,7 +98,7 @@ public:
 	{   
 		_v[0]= p._v[0]; _v[1]= p._v[1]; _v[2]= p._v[2]; _v[3]= p._v[3];
 	}
-	inline Point4 &Zero()
+	inline void &Zero()
 	{   
 		_v[0] = _v[1] = _v[2] = _v[3]= 0;
 	}
