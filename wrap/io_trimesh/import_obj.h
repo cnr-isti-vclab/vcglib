@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2006/05/21 07:01:04  cignoni
+Added mask clamping to the effective capabilities of the mesh
+
 Revision 1.5  2006/04/11 09:48:00  zifnab1974
 changes needed for compilation on linux 64b with gcc 3.4.5
 
@@ -776,6 +779,7 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 	*/
 	inline static const void TokenizeNextLine(std::ifstream &stream, std::vector< std::string > &tokens)
 	{
+		if(stream.eof()) return;
 		std::string line;
 		do
 			std::getline(stream, line, '\n');
