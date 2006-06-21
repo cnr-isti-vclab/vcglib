@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2006/06/21 11:06:16  ganovelli
+changed return type of Zero() (to void)
+
 Revision 1.11  2005/04/13 09:40:30  ponchio
 Including math/bash.h
 
@@ -98,7 +101,7 @@ public:
 	{   
 		_v[0]= p._v[0]; _v[1]= p._v[1]; _v[2]= p._v[2]; _v[3]= p._v[3];
 	}
-	inline void &Zero()
+	inline void Zero()
 	{   
 		_v[0] = _v[1] = _v[2] = _v[3]= 0;
 	}
