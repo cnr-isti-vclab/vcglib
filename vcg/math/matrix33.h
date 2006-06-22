@@ -24,6 +24,13 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2006/01/20 16:41:44  pietroni
+added operators:
+            operator -= ( const Matrix33Diag<S>  &p )
+           Matrix33  operator - ( const Matrix33Diag<S>  &p )
+           Matrix33  operator + ( const Matrix33 &m )
+           Matrix33  operator + ( const Matrix33Diag<S>  &p )
+
 Revision 1.12  2005/11/14 10:28:25  cignoni
 Changed Invert -> FastInvert for the function based on the maple expansion
 
@@ -80,6 +87,7 @@ namespace vcg {
 template <class S>
 class Matrix33Diag:public Point3<S>{
 public:
+	
 	/** @name Matrix33
 	Class Matrix33Diag.
     This is the class for definition of a diagonal matrix 3x3.	
@@ -289,10 +297,10 @@ public:
 	/// Operatore addizione di matrici 3x3 con matrici diagonali
 	Matrix33  operator + ( const Matrix33Diag<S>  &p )
 	{
-		Matrix33<S> r=a;
-		r.a[0][0] += p[0];
-		r.a[1][1] += p[1];
-		r.a[2][2] += p[2];
+		Matrix33<S> r=(*this);
+		r[0][0] += p[0];
+		r[1][1] += p[1];
+		r[2][2] += p[2];
 		return r;
 	}
 
