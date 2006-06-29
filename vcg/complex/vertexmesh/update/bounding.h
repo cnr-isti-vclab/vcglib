@@ -24,10 +24,15 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/03/09 13:22:55  ganovelli
+creation
+
 
 ****************************************************************************/
 #ifndef __VCG_POINT_UPDATE_BOUNDING
 #define __VCG_POINT_UPDATE_BOUNDING
+
+#include <vcg/space/box3.h>
 
 namespace vcg {
 namespace vertex {
@@ -37,28 +42,38 @@ namespace vertex {
 
 /// Management, updating and computation of per-vertex and per-face normals.
 /// This class is used to compute or update the normals that can be stored in the vertex or face component of a mesh.
-template <class ComputeMeshType>
-class UpdateBounding
+template <class VERTEX_CONTAINER>
+class UpdateBoundingBase
 {
 
 public:
-typedef ComputeMeshType MeshType; 
-typedef typename MeshType::VertexType     VertexType;
-typedef typename MeshType::VertexPointer  VertexPointer;
-typedef typename MeshType::VertexIterator VertexIterator;
+typedef typename VERTEX_CONTAINER::value_type   VertexType;
+typedef typename VERTEX_CONTAINER::value_type * VertexPointer;
+typedef typename VERTEX_CONTAINER::iterator			VertexIterator;
+typedef typename VERTEX_CONTAINER::value_type::ScalarType			ScalarType;
 
 /// Calculates the vertex normal (if stored in the current face type)
-static void Box(ComputeMeshType &m)
+static Box3<ScalarType> Box(VERTEX_CONTAINER &vert)
 {
-  m.bbox.SetNull();
+  Box3<ScalarType> res;res.SetNull();
 	VertexIterator vi;
-	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-			if( !(*vi).IsD() )	m.bbox.Add((*vi).P());
-
+	for(vi= vert.begin();vi!= vert.end();++vi)
+			if( !(*vi).IsD() )	res.Add((*vi).P());
+	return res;
 }
 
-
 }; // end class
+
+template <class VMType>
+class UpdateBounding: public UpdateBoundingBase<typename VMType::VertexContainer> {
+	public:
+	typedef typename VMType::VertexContainer VertexContainer;
+
+	static void Box(VMType &vm){
+		vm.bbox = UpdateBoundingBase<typename VMType::VertexContainer>::Box(vm.vert);
+		}
+
+};
 
 }	// End namespace
 }	// End namespace
