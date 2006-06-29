@@ -10,6 +10,7 @@
 
 namespace vcg {
 
+namespace tetra {
 
 class GLW {
 public:
@@ -146,9 +147,10 @@ public:
 			
 		};
 
-	GlTetramesh(CONT_TETRA & _t):tetra(_t){}
+	GlTetramesh(CONT_TETRA * _t):tetra(_t){}
+	GlTetramesh( )  {}
 
-	CONT_TETRA	& tetra;	
+	CONT_TETRA	* tetra;	
 	ClipPlane section;
 
 	private:
@@ -212,7 +214,7 @@ template <ColorMode cm >
 			section.GlDraw();	
 		}
 		/*glBegin(GL_TRIANGLES);*/
-		for( it = tetra.begin(); it != tetra.end(); ++it)
+		for( it = tetra->begin(); it != tetra->end(); ++it)
 			if((!it->IsD())&&(!(it->IsS()))) //draw as normal
 			{
 					_DrawSmallTetra<cm>(*it);
@@ -260,7 +262,7 @@ void _DrawSurface(){
 			glPolygonMode(GL_FRONT,GL_FILL);
 		}
 		//glBegin(GL_TRIANGLES);
-		for( it = tetra.begin(); it != tetra.end(); ++it)
+		for( it = tetra->begin(); it != tetra->end(); ++it)
 			_DrawTetra<dm,nm,cm>((*it));
 	  //glEnd();
 	  glPopAttrib();
@@ -431,5 +433,6 @@ void _DrawSmallTetra(TetraType &t)
 
 };
 
-}
+} // end namespace tetra	
+} // end nemaspace tri
 #endif
