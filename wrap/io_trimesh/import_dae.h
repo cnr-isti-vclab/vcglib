@@ -69,7 +69,7 @@ public:
 		
 		//for any mesh in the collada file
 
-		for(unsigned int ii = 0;ii < geomsh.size();++ii)
+ 		for(unsigned int ii = 0;ii < geomsh.size();++ii)
 		{
 			if (!geolib->GetEntity(ii)->IsMesh())
 			{
