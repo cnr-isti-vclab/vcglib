@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2006/06/09 07:26:37  m_di_benedetto
+Added const qualifier to P() method.
+
 Revision 1.9  2005/09/30 15:03:57  cignoni
 Added Center-Radius Constructor
 
@@ -76,7 +79,7 @@ class Box3
 {
 public:
 
-		/// The scalar type
+	/// The scalar type
 	typedef BoxScalarType ScalarType;
 
 	/// min coordinate point
@@ -303,6 +306,20 @@ public:
 	inline BoxScalarType DimY() const { return max.Y()-min.Y();}
 		/// Calcola la dimensione del bounding box sulla z.
 	inline BoxScalarType DimZ() const { return max.Z()-min.Z();}
+		/// Calcola il lato di lunghezza maggiore  
+	inline unsigned char MaxDim() const { 
+		int i;
+		Point3<BoxScalarType> diag = max-min;
+		if(diag[0]>diag[1]) i=0; else i=1;
+		return (diag[i]>diag[2])?(Axis)i:(Axis)2;
+	}
+		/// Calcola il lato di lunghezza minore  
+	inline unsigned char MinDim() const { 
+		Axis i;
+		Point3<BoxScalarType> diag =  max-min;
+		if(diag[0]<diag[1]) i=0; else i=1;
+		return (diag[i]<diag[2])?(Axis)i:(Axis)2;
+	}
 
 	template <class Q>
 	inline void Import( const Box3<Q> & b )
