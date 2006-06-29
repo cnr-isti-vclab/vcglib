@@ -23,6 +23,8 @@
 /****************************************************************************
   History
 
+$Log: not supported by cvs2svn $
+
 Revision 1.1  2004/16/04 14:32  pietroni
 Initial commit
 
@@ -163,7 +165,7 @@ public:
 				@param STL_TETRA_CONT (Template Parameter) Specifies the type of the tetrahedrons container any the tetrahedrons type.
  */
 template  < class STL_VERT_CONT ,class STL_TETRA_CONT >
-class UpdateTetraTopology
+class UpdateTopologyBase
 {
 
 public:
@@ -328,7 +330,7 @@ static void TestVTTopology(VertexContainer &vert,TetraContainer &tetra)
 **/
 //@{
 ///Build the Tetrahedron-Tetrahedron Topology (by Face)
-static void TTTopology(VertexContainer &vert,TetraContainer &tetra)
+static void TTTopology(const VertexContainer &vert,TetraContainer &tetra)
 	{
 		vector <Facet<VertexType,TetraType> > VF;
 		VertexType* v0;
@@ -397,6 +399,8 @@ static void TTTopology(VertexContainer &vert,TetraContainer &tetra)
 				
 		}
   }
+
+
 
 ///Connect trought Tetrahedron-Tetrahedron Topology t0 and t1 with faces i0 and i1
 static void _AttachTTTopology(TetraType *t0,int i0,TetraType *t1,int i1) 
@@ -690,6 +694,21 @@ static bool IsExternEdge(TetraType *t,int edge)
 }
 }; // end class
 
+template <class TetraMeshType>
+class UpdateTopology: public UpdateTopologyBase<typename TetraMeshType::VertexContainer,
+																										typename TetraMeshType::TetraContainer>{
+public:
+		static void TTTopology(TetraMeshType & tmesh){
+			UpdateTopologyBase<typename TetraMeshType::VertexContainer,typename TetraMeshType::TetraContainer>::
+				TTTopology(tmesh.vert,tmesh.tetra);
+		}
+		static void VTTopology(TetraMeshType & tmesh){	
+			UpdateTopologyBase<typename TetraMeshType::VertexContainer,typename TetraMeshType::TetraContainer>::
+				TTTopology(tmesh.vert,tmesh.tetra);
+		}
+
+
+};
 
 /*@}*/
 }	// End namespace
