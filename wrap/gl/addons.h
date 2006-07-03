@@ -23,6 +23,9 @@
 /****************************************************************************
 History
 $Log: not supported by cvs2svn $
+Revision 1.12  2006/05/25 09:22:58  cignoni
+Removed all GLUT dependencies!
+
 Revision 1.11  2006/03/29 07:54:03  cignoni
 Wrong matrix type in cone (thx Maarten)
 
@@ -107,7 +110,7 @@ namespace vcg
 				vcg::Point3f p0;
 				vcg::Point3f p1;
 
-				float step=6.28/(float)slices;
+				float step=6.28f/(float)slices;
 				float angle=0;
 				glBegin(GL_TRIANGLE_STRIP);
 				for(b = 0; b <= slices-1; ++b){
@@ -274,7 +277,7 @@ public:
 					int b;
 					for(b = 1; b <= slices; ++b)
 					{
-						float angle = -6.28*b/(float)slices;
+						float angle = -6.28f*(float)b/(float)slices;
 						if (b==slices) angle=0;
 						N[1] = Point3f( 1.f, sinf(angle), cosf(angle) );
 						P[1] = Point3f( 0,   sinf(angle), cosf(angle));
