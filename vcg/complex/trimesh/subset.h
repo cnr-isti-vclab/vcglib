@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2005/12/14 17:14:13  pietroni
+added assert on deleted flag condition
+
 Revision 1.9  2005/02/08 14:38:05  turini
 Warnings Correction
 
@@ -92,7 +95,6 @@ struct InsertedV
 //  This function build a nesh from a subset of faces of another.
 //	  @param : subSet, stl vector of face poitners.
 //             m,  output mesh mesh.
-//	  It assumes FF topology has been computed.
 
 
 template <class S_MESH_TYPE, class STL_CONT>
