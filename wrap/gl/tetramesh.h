@@ -154,7 +154,7 @@ public:
 	ClipPlane section;
 
 	private:
-	double shrink_factor;
+	ScalarType shrink_factor;
 	
 
 	public:
