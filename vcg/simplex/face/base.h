@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.37  2006/01/22 10:00:43  cignoni
+Very Important Change: Area->DoubleArea (and no more Area function)
+
 Revision 1.36  2005/12/16 11:42:23  corsini
 Add some user bit
 
@@ -141,6 +144,7 @@ First commit...
 #include <vcg/space/box3.h>
 #include <vcg/space/tcoord2.h>
 #include <vcg/space/triangle3.h>
+#include <vcg/space/sphere3.h>
 #include <vcg/space/color4.h>
 #include <vcg/space/plane3.h>
 #include <vcg/simplex/face/topology.h>
@@ -177,6 +181,8 @@ public:
 	/// The type of the the vertex coordinate
 	typedef Point3< ScalarType > CoordType;
 	typedef Point3< ScalarType > NormalType;
+	/// The geometric type of the face
+	typedef Triangle3<ScalarType> GeometricType;
 	
   typedef typename FVTYPE::FaceType FaceFromVertType;
 	/// The bounding box type
@@ -1170,6 +1176,11 @@ ScalarType DoubleArea() const
 CoordType Barycenter() const
 {
 	return (V(0)->P()+V(1)->P()+V(2)->P())/ScalarType(3.0);
+}
+
+Sphere3<ScalarType> SmallestEnclosingSphere() const
+{
+		return SmallestEnclosing::Sphere<ScalarType>(*this);
 }
 
 ScalarType Perimeter() const
