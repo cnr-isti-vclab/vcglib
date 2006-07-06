@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2006/06/06 14:35:31  zifnab1974
+Changes for compilation on linux AMD64. Some remarks: Linux filenames are case-sensitive. _fileno and _filelength do not exist on linux
+
 Revision 1.12  2006/03/01 15:59:34  pietroni
 added InterpolationParameters function
 
@@ -476,6 +479,13 @@ ScalarType ComputeAspectRatio()
 	}
 
 }; //end Class
+
+// compute the barycenter
+template<class ScalarType>
+Point3<ScalarType> Barycenter(const Tetra3<ScalarType> &t) 
+{
+	return ((t.cP(0)+t.cP(1)+t.cP(2)+t.cP(3))/(ScalarType) 4.0);
+}
 
 // compute and return the volume of a tetrahedron
  template<class TetraType>
