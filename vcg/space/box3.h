@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2006/06/29 13:22:04  ganovelli
+Aggiunte funzioni che determinano il lato magiore (minore)
+
 Revision 1.10  2006/06/09 07:26:37  m_di_benedetto
 Added const qualifier to P() method.
 
@@ -311,14 +314,14 @@ public:
 		int i;
 		Point3<BoxScalarType> diag = max-min;
 		if(diag[0]>diag[1]) i=0; else i=1;
-		return (diag[i]>diag[2])?(Axis)i:(Axis)2;
+		return (diag[i]>diag[2])? i: 2;
 	}
 		/// Calcola il lato di lunghezza minore  
 	inline unsigned char MinDim() const { 
-		Axis i;
+		int i;
 		Point3<BoxScalarType> diag =  max-min;
 		if(diag[0]<diag[1]) i=0; else i=1;
-		return (diag[i]<diag[2])?(Axis)i:(Axis)2;
+		return (diag[i]<diag[2])? i: 2;
 	}
 
 	template <class Q>
