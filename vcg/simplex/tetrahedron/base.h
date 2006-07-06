@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2005/12/12 11:10:36  ganovelli
+modifications to compile with gcc
+
 Revision 1.13  2004/10/04 17:07:58  pietroni
 changed Q() function
 
@@ -96,6 +99,8 @@ public:
   typedef typename VertexType::CoordType CoordType;
   /// The scalar type used to represent coords (i.e. float, double, ...)
 	typedef typename VertexType::ScalarType ScalarType;
+	/// The geometric type of the tetrahedron
+	typedef Tetra3<ScalarType> GeometricType;
 
  
 /***********************************************/
@@ -443,6 +448,17 @@ ScalarType ComputeAspectRatio(){
 		return (( (Tetra3<ScalarType> *) this) -> ComputeAspectRatio());
 #endif
 		}
+
+CoordType Barycenter() const
+{
+	return (V(0)->cP()+V(1)->cP()+V(2)->cP()+V(3)->cP())/ScalarType(4.0);
+}
+
+Sphere3<ScalarType> SmallestEnclosingSphere()const 
+{
+	return SmallestEnclosing::SphereOfTetra(*this);
+}
+
 //@}
 
 
