@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/02/22 14:18:15  ponchio
+assert addded.
+
 Revision 1.7  2005/02/21 17:03:03  ponchio
 Added Tight creation.
 
@@ -70,6 +73,7 @@ protected:
   Point3<T> _center;
   T _radius;
  public:
+	typedef T ScalarType;
   Sphere3(): _radius(-1) {}
   Sphere3(const Point3<T> &center, T radius): _center(center), _radius(radius) {}
   
