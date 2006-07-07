@@ -12,10 +12,12 @@
 #include <FCDocument/FCDGeometrySource.h>
 #include <FCDocument/FCDGeometryPolygons.h>
 
+
 //#include <wrap/gl/trimesh.h>
 #include <vcg/complex/trimesh/update/normal.h>
 #include <vcg/complex/trimesh/allocate.h>
 
+//#include <hgrd/hgrd.h>
 
 namespace vcg {
 namespace tri {
@@ -56,6 +58,7 @@ public:
 
 	static int Open(OpenMeshType& m,const char* filename)
 	{
+
 		assert(filename!=0);
 		FCDocument* doc = new FCDocument();
 		
@@ -81,6 +84,10 @@ public:
 				if (geomsh[ii]->GetFaceCount() > 0)
 				{
 					geomsh[ii]->Triangulate(); 
+					/*std::vector< std::vector<OpenMeshType::VertexType> > vt(m.face.size());
+					for(std::vector< std::vector<OpenMeshType::VertexType> >::iterator
+					HGRD<OpenMeshType::VertexType>::Triangulate(*/
+					
 					//geomsh[ii]->Get
 					size_t dim = geomsh[ii]->GetFaceVertexCount() / geomsh[ii]->GetFaceCount();
 					assert(dim == 3);
@@ -101,6 +108,7 @@ public:
 							vi->N() = vcg::Point3f(0.0,0.0,0.0);
 						}
 					}
+
 					else return E_NOVERTEXPOSITION;
 
 					//a single mesh may be composed by a variable numbers of polygons' subsets
@@ -231,7 +239,7 @@ public:
 		return E_NOERROR;
 	}
 };
-
+	
 }
 }
 }
