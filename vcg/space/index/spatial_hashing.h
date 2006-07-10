@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2006/04/20 08:30:27  cignoni
+small GCC compiling issues
+
 Revision 1.17  2006/01/23 21:26:57  ponchio
 gcc compatibility (templates mostly)
 bbox -> this->bbox
@@ -243,7 +246,7 @@ namespace vcg{
 		bool _IsInHtable(Point3i cell,IteHtable &result)
 		{
 			int h=Hash(cell);
-			int count=hash_table.count(h);
+			int count = (int) hash_table.count(h);
 			if (count==0)///in this case there is no entry for that key
 				return false;
 			else
