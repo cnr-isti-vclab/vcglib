@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2006/05/25 04:40:57  cignoni
+Updated HasPerFaceColor/Quality to the new style with mesh param.
+
 Revision 1.20  2006/05/03 21:35:31  cignoni
 Added new style HasPerFaceColor(m) and HasPerFaceMark(m)
 
@@ -172,7 +175,7 @@ public:
 
 
 	/// Default constructor
-	TriMesh():shot(camera)
+	TriMesh():shot(this->camera)
 	{
 		fn = vn = 0;
 		imark = 0;
