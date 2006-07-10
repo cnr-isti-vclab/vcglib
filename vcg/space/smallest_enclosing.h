@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2006/07/06 12:37:18  ganovelli
+draft version. For the triangle is not tehe smallest enclosing sphere and for the set of spheres works only for two spheres
+
 
 
 ****************************************************************************/
@@ -65,7 +68,7 @@ static SmallestEnclosing::SphereOfTriangle(const TriangleType & t){
 template <class TetraType>
 Sphere3<typename TetraType::ScalarType> 
 static SmallestEnclosing::SphereOfTetra(const TetraType & t){
-	return Sphere3<typename TetraType::ScalarType>( Barycenter(t),( Barycenter(t)-t.cP(0)).Norm() );
+	return Sphere3<typename TetraType::ScalarType>( t.Barycenter(),( t.Barycenter() - t.cP(0) ).Norm() );
 }
 
 template <class SphereContType>
