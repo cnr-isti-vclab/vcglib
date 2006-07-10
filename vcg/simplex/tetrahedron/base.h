@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2006/07/06 12:46:19  ganovelli
+added GeometicType e SmallestEnclosingSphere
+
 Revision 1.14  2005/12/12 11:10:36  ganovelli
 modifications to compile with gcc
 
@@ -76,6 +79,7 @@ Revision 1.1  2004/04/15 08:54:20  pietroni
 
 #include<vcg/space/point3.h>
 #include<vcg/space/tetra3.h>
+#include<vcg/space/sphere3.h>
 
 namespace vcg {
 /**
