@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.26  2005/11/12 18:41:14  cignoni
+Added HasFlags and initialization of flags at construction.
+
 Revision 1.25  2005/10/14 13:25:50  cignoni
 Added cVFp member
 
@@ -70,6 +73,9 @@ Revision 1.12  2004/05/10 13:31:13  ganovelli
 function for edge adjacency added
 
 $Log: not supported by cvs2svn $
+Revision 1.26  2005/11/12 18:41:14  cignoni
+Added HasFlags and initialization of flags at construction.
+
 Revision 1.25  2005/10/14 13:25:50  cignoni
 Added cVFp member
 
@@ -611,7 +617,7 @@ protected:
 #endif
 
 public:
-inline VTTYPE * & VTb()
+inline VTTYPE * & VTp()
 	{
 #if ((defined __VCGLIB_VERTEX_AT) || (defined __VCGLIB_VERTEX_ATS))
 		  return _vtb;
@@ -621,7 +627,7 @@ inline VTTYPE * & VTb()
 #endif
 	}
 
-inline const VTTYPE * &  VTb() const
+inline const VTTYPE * &  VTp() const
 	{
 #if ((defined __VCGLIB_VERTEX_AT) || (defined __VCGLIB_VERTEX_ATS))
 		  return _vtb;
