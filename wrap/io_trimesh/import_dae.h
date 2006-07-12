@@ -103,7 +103,7 @@ public:
 						assert(flst.size() % str == 0);
 						for(unsigned int cont = 0;cont < flst.size();cont += str)
 						{
-							OpenMeshType::VertexIterator vi=vcg::tri::Allocator<OpenMeshType>::AddVertices(m,1);
+							typename OpenMeshType::VertexIterator vi=vcg::tri::Allocator<OpenMeshType>::AddVertices(m,1);
 							vi->P()= vcg::Point3f(flst[cont],flst[cont + 1],flst[cont + 2]);
 							vi->N() = vcg::Point3f(0.0,0.0,0.0);
 						}
@@ -136,7 +136,7 @@ public:
 
 						for(unsigned int ind = 0;ind < pos->indices.size();++ind)
 						{
-							OpenMeshType::FaceIterator fi=vcg::tri::Allocator<OpenMeshType>::AddFaces(m,1);		
+							typename OpenMeshType::FaceIterator fi=vcg::tri::Allocator<OpenMeshType>::AddFaces(m,1);		
 							assert(pos->indices[ind] < m.vert.size());
 							fi->V(0) = &m.vert[pos->indices[ind]];
 							
