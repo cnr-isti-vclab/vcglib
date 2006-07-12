@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.38  2006/07/06 12:45:08  ganovelli
+added SmallestEnclosingSphere
+
 Revision 1.37  2006/01/22 10:00:43  cignoni
 Very Important Change: Area->DoubleArea (and no more Area function)
 
@@ -147,6 +150,7 @@ First commit...
 #include <vcg/space/sphere3.h>
 #include <vcg/space/color4.h>
 #include <vcg/space/plane3.h>
+#include <vcg/space/smallest_enclosing.h>
 #include <vcg/simplex/face/topology.h>
 
 namespace vcg {
@@ -1180,7 +1184,7 @@ CoordType Barycenter() const
 
 Sphere3<ScalarType> SmallestEnclosingSphere() const
 {
-		return SmallestEnclosing::Sphere<ScalarType>(*this);
+		return SmallestEnclosing::SphereOfTriangle<ScalarType>(*this);
 }
 
 ScalarType Perimeter() const
