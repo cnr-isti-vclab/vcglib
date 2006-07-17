@@ -347,7 +347,7 @@ namespace vcg
 				// SVD of matrix A
 				vcg::ndim::Matrix<double>  V(3, 3);
 				double *w = new double[vertices_num];
-				vcg::SingularValueDecomposition< vcg::ndim::Matrix<double> >(A, w, V, 100);
+				vcg::SingularValueDecomposition< typename vcg::ndim::Matrix<double> > (A, w, V, LeaveUnsorted, 100);
 
 				// rank == 2 -> suppress smallest singular value
 				if (rank == 2)
