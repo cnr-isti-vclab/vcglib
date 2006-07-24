@@ -305,9 +305,9 @@ namespace vcg
 				// normal angle criterion
 				double c, minC, maxC; 
 				CoordType axis;
-				for (minC=1.0, i=0; i<vertices_num; ++i)
+				for (minC=1.0, i=0; i<vertices_num-1; ++i)
 				{
-					for (j=0; j<vertices_num; ++j)
+					for (j=i+1; j<vertices_num; ++j)
 					{
 						c = normals[i]*normals[j];
 						if (c < minC)
