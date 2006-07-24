@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2006/05/25 09:35:55  cignoni
+added missing internal prototype to Sort function
+
 Revision 1.10  2006/05/17 09:26:35  cignoni
 Added initial disclaimer
 
@@ -41,11 +44,11 @@ namespace vcg
 	/*!
 	*
 	*/
-	template< typename TYPE >
-	static void JacobiRotate(Matrix44<TYPE> &A, TYPE s, TYPE tau, int i,int j,int k,int l)
+	template< typename MATRIX_TYPE >
+	static void JacobiRotate(MATRIX_TYPE &A, typename MATRIX_TYPE::ScalarType s, typename MATRIX_TYPE::ScalarType tau, int i,int j,int k,int l)
 	{
-		TYPE g=A[i][j];
-		TYPE h=A[k][l];
+		MATRIX_TYPE::ScalarType g=A[i][j];
+		MATRIX_TYPE::ScalarType h=A[k][l];
 		A[i][j]=g-s*(h+g*tau);
 		A[k][l]=h+s*(g-h*tau); 
 	};
@@ -57,17 +60,20 @@ namespace vcg
 	* \param v  is a matrix whose columns contain, the normalized eigenvectors 
 	* \param nrot returns the number of Jacobi rotations that were required. 
 	*/
-	template <typename TYPE>
-		static void Jacobi(Matrix44<TYPE> &w, Point4<TYPE> &d, Matrix44<TYPE> &v, int &nrot) 
+	template <typename MATRIX_TYPE, typename POINT_TYPE>
+	static void Jacobi(MATRIX_TYPE &w, POINT_TYPE &d, MATRIX_TYPE &v, int &nrot) 
 	{ 
+		assert(w.RowsNumber()==w.ColumnsNumber());
+		int dimension = w.RowsNumber();
+
 		int j,iq,ip,i; 
 		//assert(w.IsSymmetric());
-		TYPE tresh, theta, tau, t, sm, s, h, g, c; 
-		Point4<TYPE> b, z; 
+		MATRIX_TYPE::ScalarType tresh, theta, tau, t, sm, s, h, g, c; 
+		POINT_TYPE b, z; 
 
 		v.SetIdentity();
 
-		for (ip=0;ip<4;++ip)			//Initialize b and d to the diagonal of a. 
+		for (ip=0;ip<dimension;++ip)			//Initialize b and d to the diagonal of a. 
 		{		
 			b[ip]=d[ip]=w[ip][ip]; 
 			z[ip]=0.0;							//This vector will accumulate terms of the form tapq as in equation (11.1.14). 
@@ -76,9 +82,9 @@ namespace vcg
 		for (i=0;i<50;i++) 
 		{ 
 			sm=0.0; 
-			for (ip=0;ip<3;++ip)		// Sum off diagonal elements
+			for (ip=0;ip<dimension-1;++ip)		// Sum off diagonal elements
 			{
-				for (iq=ip+1;iq<4;++iq) 
+				for (iq=ip+1;iq<dimension;++iq) 
 					sm += fabs(w[ip][iq]); 
 			} 
 			if (sm == 0.0)					//The normal return, which relies on quadratic convergence to machine underflow. 
@@ -86,12 +92,12 @@ namespace vcg
 				return; 
 			} 
 			if (i < 4) 	
-				tresh=0.2*sm/(4*4); //...on the first three sweeps. 
+				tresh=0.2*sm/(dimension*dimension); //...on the first three sweeps. 
 			else 		
 				tresh=0.0;				//...thereafter. 
-			for (ip=0;ip<4-1;++ip) 
+			for (ip=0;ip<dimension-1;++ip) 
 			{  
-				for (iq=ip+1;iq<4;iq++) 
+				for (iq=ip+1;iq<dimension;iq++) 
 				{ 
 					g=100.0*fabs(w[ip][iq]); 
 					//After four sweeps, skip the rotation if the off-diagonal element is small. 
@@ -118,28 +124,65 @@ namespace vcg
 						d[iq] += h; 
 						w[ip][iq]=0.0; 
 						for (j=0;j<=ip-1;j++) { //Case of rotations 1 <= j < p. 
-							JacobiRotate<TYPE>(w,s,tau,j,ip,j,iq) ;
+							JacobiRotate<MATRIX_TYPE>(w,s,tau,j,ip,j,iq) ;
 						} 
 						for (j=ip+1;j<=iq-1;j++) { //Case of rotations p < j < q. 
-							JacobiRotate<TYPE>(w,s,tau,ip,j,j,iq);
+							JacobiRotate<MATRIX_TYPE>(w,s,tau,ip,j,j,iq);
 						} 
-						for (j=iq+1;j<4;j++) { //Case of rotations q< j <= n. 
-							JacobiRotate<TYPE>(w,s,tau,ip,j,iq,j);
+						for (j=iq+1;j<dimension;j++) { //Case of rotations q< j <= n. 
+							JacobiRotate<MATRIX_TYPE>(w,s,tau,ip,j,iq,j);
 						} 
-						for (j=0;j<4;j++) { 
-							JacobiRotate<TYPE>(v,s,tau,j,ip,j,iq);
+						for (j=0;j<dimension;j++) { 
+							JacobiRotate<MATRIX_TYPE>(v,s,tau,j,ip,j,iq);
 						} 
 						++nrot; 
 					} 
 				} 
 			} 
-			for (ip=0;ip<4;ip++) 
+			for (ip=0;ip<dimension;ip++) 
 			{ 
 				b[ip] += z[ip]; 
 				d[ip]=b[ip]; //Update d with the sum of ta_pq , 
 				z[ip]=0.0; //and reinitialize z. 
 			} 
 		} 
+	};
+
+
+	/*!
+	* Given the eigenvectors and the eigenvalues as output from JacobiRotate, sorts the eigenvalues 
+	* into descending order, and rearranges the columns of v correspondinlgy. 
+	/param eigenvalues
+	/param eigenvector
+	*/
+	template < typename MATRIX_TYPE, typename POINT_TYPE >
+	void SortEigenvaluesAndEigenvectors(POINT_TYPE &eigenvalues, MATRIX_TYPE &eigenvectors)
+	{
+		assert(eigenvectors.ColumnsNumber()==eigenvectors.RowsNumber());
+		int dimension = eigenvectors.ColumnsNumber();
+		int i, j, k;
+		float p;
+		for (i=0; i<dimension-1; i++) 
+		{
+			p = eigenvalues[ k=i ];
+			
+			for (j=i+1; j<dimension; j++)
+				if (eigenvalues[j] >= p) 
+					p = eigenvalues[ k=j ];
+			
+			if (k != i) 
+			{
+				eigenvalues[k] = eigenvalues[i];  // i.e. 
+				eigenvalues[i] = p;								// swaps the value of the elements i-th and k-th 
+				
+				for (j=0; j<dimension; j++) 
+				{
+					p = eigenvectors[j][i];										// i.e.
+					eigenvectors[j][i] = eigenvectors[j][k];	// swaps the eigenvectors stored in the
+					eigenvectors[j][k] = p;										// i-th and the k-th column
+				}
+			}
+		}
 	};
 
 	
