@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2006/07/10 12:43:13  turini
+explicit cast in _IsInHtable() to resolve a warning
+
 Revision 1.18  2006/04/20 08:30:27  cignoni
 small GCC compiling issues
 
@@ -318,6 +321,26 @@ namespace vcg{
 			return bb;
 		}
 
+		
+		/// set an empty spatial hash table
+		void InitEmpty(const Box3x &_bbox, vcg::Point3i grid_size)
+		{
+			Box3x b;
+			Box3x &bbox = this->bbox;
+			CoordType &dim = this->dim;
+			Point3i &siz = this->siz;
+			CoordType &voxel = this->voxel;
+
+			assert(!_bbox.IsNull());
+			bbox=_bbox;
+			dim  = bbox.max - bbox.min;
+			assert((grid_size.V(0)>0)&&(grid_size.V(1)>0)&&(grid_size.V(2)>0));
+			siz=grid_size;
+
+			voxel[0] = dim[0]/siz[0];
+			voxel[1] = dim[1]/siz[1];
+			voxel[2] = dim[2]/siz[2];
+		}
 
 		/// Insert a mesh in the grid.
 		template <class OBJITER>
@@ -482,26 +505,6 @@ namespace vcg{
         typedef typename SpatialHashTable<ContainerType,FLT>::CellIterator CellIterator;
 
 		void _UpdateHMark(ObjType* s){ s->HMark() = this->tempMark;}
-
-		/// create an empty spatial hash table
-		void InitEmpty(const Box3x &_bbox, vcg::Point3i grid_size)
-		{
-			Box3x b;
-            Box3x &bbox = this->bbox;
-            CoordType &dim = this->dim;
-            Point3i &siz = this->size;
-            CoordType &voxel = this->voxel;
-
-			assert(!_bbox.IsNull());
-			bbox=_bbox;
-			dim  = bbox.max - bbox.min;
-			assert((grid_size.V(0)>0)&&(grid_size.V(1)>0)&&(grid_size.V(2)>0));
-			siz=grid_size;
-
-			voxel[0] = dim[0]/siz[0];
-			voxel[1] = dim[1]/siz[1];
-			voxel[2] = dim[2]/siz[2];
-		}
 
 		void getInCellUpdated(vcg::Point3i cell,std::vector<ObjPtr> &elems)
 		{
