@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2006/02/13 13:10:27  cignoni
+Added Zmode for moving objects along the perpendicular to the viewplane
+
 Revision 1.15  2006/01/12 15:40:05  cignoni
 Corrected small bugs on rotating after scaling+translating
 changed void PlaneMode::Apply and void SphereMode::Apply
@@ -83,7 +86,7 @@ using namespace vcg;
 
 
 void TrackMode::Apply(Trackball *trackball, float WheelNotch) {
-    trackball->track.sca*=pow(1.2f,WheelNotch);
+    trackball->track.sca*=pow(1.2f,-WheelNotch);
  }
 
 void ScaleMode::Apply(Trackball *tb, Point3f new_point) {

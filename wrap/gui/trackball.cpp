@@ -24,6 +24,13 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2006/02/13 13:15:52  cignoni
+Added Scale and Translate methods.
+Added many drawing hints and raised the default num. of steps when drawing circles.
+Added MouseDown without coords (for remembering changes of keys modifiers)
+Added ZMode to the default modes under Alt+left
+Added DrawPostApply (to be completed)
+
 Revision 1.14  2005/10/17 01:29:46  cignoni
 Main restructuring. Removed the Draw function and slightly changed the meaning of the trackball itself.
 See the notes at the beginning of trackball.h
@@ -90,6 +97,7 @@ Trackball::Trackball(): current_button(0), current_mode(NULL),
   modes[0]                       = NULL;
   modes[BUTTON_LEFT]             = new SphereMode();
   modes[BUTTON_LEFT | KEY_CTRL]  = new PlaneMode(Plane3f(0, Point3f(1, 0, 0)));
+  modes[BUTTON_MIDDLE]           = new PlaneMode(Plane3f(0, Point3f(1, 0, 0)));
   modes[BUTTON_LEFT | KEY_SHIFT] = new ScaleMode();
   modes[BUTTON_LEFT | KEY_ALT  ] = new ZMode();
   modes[WHEEL]                   = new ScaleMode();
