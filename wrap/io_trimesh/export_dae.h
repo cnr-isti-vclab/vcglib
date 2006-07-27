@@ -9,6 +9,7 @@
 #include <FCDocument/FCDGeometrySource.h>
 #include <FCDocument/FCDGeometryPolygons.h>
 #include <FCDocument/FCDSceneNode.h>
+#include <FCDocument/FCDGeometryInstance.h>
 
 namespace vcg {
 namespace tri {
@@ -101,6 +102,11 @@ public:
 		}
 		nsource->SetSourceData(nlist,3);
 		
+		FCDSceneNode* root = doc->AddVisualScene();
+		root->SetDaeId("vcg-scenenode");
+		FCDSceneNode* scenenod = root->AddChildNode();
+		scenenod->AddInstance(geo);
+		//root->
 		doc->WriteToFile(FUStringConversion::ToFString(filename));
 		return 0;
 	}
