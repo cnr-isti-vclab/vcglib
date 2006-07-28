@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2006/07/24 07:26:47  fiorin
+Changed the template argument in JacobiRotate and added method for sorting eigenvalues and eigenvectors (SortEigenvaluesAndEigenvectors)
+
 Revision 1.11  2006/05/25 09:35:55  cignoni
 added missing internal prototype to Sort function
 
@@ -47,8 +50,8 @@ namespace vcg
 	template< typename MATRIX_TYPE >
 	static void JacobiRotate(MATRIX_TYPE &A, typename MATRIX_TYPE::ScalarType s, typename MATRIX_TYPE::ScalarType tau, int i,int j,int k,int l)
 	{
-		MATRIX_TYPE::ScalarType g=A[i][j];
-		MATRIX_TYPE::ScalarType h=A[k][l];
+		typename MATRIX_TYPE::ScalarType g=A[i][j];
+		typename MATRIX_TYPE::ScalarType h=A[k][l];
 		A[i][j]=g-s*(h+g*tau);
 		A[k][l]=h+s*(g-h*tau); 
 	};
@@ -68,7 +71,7 @@ namespace vcg
 
 		int j,iq,ip,i; 
 		//assert(w.IsSymmetric());
-		MATRIX_TYPE::ScalarType tresh, theta, tau, t, sm, s, h, g, c; 
+		typename MATRIX_TYPE::ScalarType tresh, theta, tau, t, sm, s, h, g, c; 
 		POINT_TYPE b, z; 
 
 		v.SetIdentity();
