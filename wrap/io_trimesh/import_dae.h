@@ -89,6 +89,7 @@ public:
 			else
 			{
 				geomsh[ii] = geolib->GetEntity(ii)->GetMesh();
+				unsigned int offset = m.vert.size();
 				if (geomsh[ii]->GetFaceCount() > 0)
 				{
 					geomsh[ii]->Triangulate(); 
@@ -150,7 +151,6 @@ public:
 						FCDGeometryPolygonsInputList tet; 
 						tmp->GetPolygons(pset)->FindInputs(FUDaeGeometryInput::TEXCOORD,tet);
 						
-						unsigned int offset = m.face.size();
 
 						for(unsigned int ind = 0;ind < pos->indices.size();++ind)
 						{
