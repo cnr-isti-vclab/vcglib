@@ -25,6 +25,13 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2006/02/13 13:15:52  cignoni
+Added Scale and Translate methods.
+Added many drawing hints and raised the default num. of steps when drawing circles.
+Added MouseDown without coords (for remembering changes of keys modifiers)
+Added ZMode to the default modes under Alt+left
+Added DrawPostApply (to be completed)
+
 Revision 1.9  2005/10/17 01:29:46  cignoni
 Main restructuring. Removed the Draw function and slightly changed the meaning of the trackball itself.
 See the notes at the beginning of trackball.h
@@ -175,7 +182,7 @@ namespace vcg {
 
 
     //operating
-    void GetView();\
+    void GetView();
     void Apply(bool Draw=true);
     void DrawPostApply();
     void ApplyInverse();
