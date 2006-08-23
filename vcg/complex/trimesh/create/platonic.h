@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2006/03/27 04:18:35  cignoni
+Double->Scalar in dodecahedron
+
 Revision 1.7  2006/01/30 08:09:05  cignoni
 Corrected Grid
 
@@ -330,14 +333,15 @@ void Hexahedron(MeshType &in)
  VertexPointer ivp[8];
 
  VertexIterator vi=in.vert.begin();
- ivp[0]=&*vi;(*vi).P()=CoordType (-1,-1,-1); ++vi;
- ivp[1]=&*vi;(*vi).P()=CoordType ( 1,-1,-1); ++vi;
- ivp[2]=&*vi;(*vi).P()=CoordType (-1, 1,-1); ++vi;
- ivp[3]=&*vi;(*vi).P()=CoordType ( 1, 1,-1); ++vi;
- ivp[4]=&*vi;(*vi).P()=CoordType (-1,-1, 1); ++vi;
- ivp[5]=&*vi;(*vi).P()=CoordType ( 1,-1, 1); ++vi;
- ivp[6]=&*vi;(*vi).P()=CoordType (-1, 1, 1); ++vi;
- ivp[7]=&*vi;(*vi).P()=CoordType ( 1, 1, 1); 
+
+ ivp[7]=&*vi;(*vi).P()=CoordType (-1,-1,-1); ++vi;
+ ivp[6]=&*vi;(*vi).P()=CoordType ( 1,-1,-1); ++vi;
+ ivp[5]=&*vi;(*vi).P()=CoordType (-1, 1,-1); ++vi;
+ ivp[4]=&*vi;(*vi).P()=CoordType ( 1, 1,-1); ++vi;
+ ivp[3]=&*vi;(*vi).P()=CoordType (-1,-1, 1); ++vi;
+ ivp[2]=&*vi;(*vi).P()=CoordType ( 1,-1, 1); ++vi;
+ ivp[1]=&*vi;(*vi).P()=CoordType (-1, 1, 1); ++vi;
+ ivp[0]=&*vi;(*vi).P()=CoordType ( 1, 1, 1); 
 
  FaceIterator fi=in.face.begin();
  (*fi).V(0)=ivp[0];  (*fi).V(1)=ivp[1]; (*fi).V(2)=ivp[2]; ++fi;
@@ -393,20 +397,20 @@ void Sphere(MeshType &in, const int subdiv = 3 )
  typedef typename MeshType::FaceIterator   FaceIterator;
 	if(in.vn==0 && in.fn==0) Icosahedron(in);
 
-  VertexIterator vi;
-  for(vi = in.vert.begin(); vi!=in.vert.end();++vi)
-	  vi->P().Normalize();
+	VertexIterator vi;
+	for(vi = in.vert.begin(); vi!=in.vert.end();++vi)
+		vi->P().Normalize();
 
-  tri::UpdateFlags<MeshType>::FaceBorderFromNone(in);
-      
-	int lastsize = 0;
-	for(int i=0;i<subdiv;++i)
+	tri::UpdateFlags<MeshType>::FaceBorderFromNone(in);
+
+	size_t lastsize = 0;
+	for(int i = 0 ; i < subdiv; ++i)
 	{
-		Refine<MeshType, MidPoint<MeshType> >(in,MidPoint<MeshType>(),0);
-		
-		for(vi = in.vert.begin()+lastsize;vi!=in.vert.end();++vi)
-			vi->P().Normalize();
+		Refine< MeshType, MidPoint<MeshType> >(in, MidPoint<MeshType>(), 0);
 
+		for(vi = in.vert.begin() + lastsize; vi != in.vert.end(); ++vi)
+			vi->P().Normalize();
+ 
 		lastsize = in.vert.size();
 	}
 }
