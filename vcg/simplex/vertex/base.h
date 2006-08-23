@@ -183,7 +183,8 @@ namespace vcg {
  * directory. Each file specify a class type with the desired fields. So for example 
  * including 'vcg/simplex/vertex/with/VCVN.h' allow you to use the class VertVCVN that has per-vertex color and normal stored inside.
  */
-template <class FLTYPE, class VETYPE = DUMMYEDGETYPE, class VFTYPE = DUMMYFACETYPE, class VTTYPE = DUMMYTETRATYPE,class TCTYPE = TCoord2<float,1>, class CoordTYPE= Point3<FLTYPE> > class VERTEX_TYPE
+template <class FLTYPE, class VETYPE = DUMMYEDGETYPE, class VFTYPE = DUMMYFACETYPE, class VTTYPE = DUMMYTETRATYPE,class TCTYPE = TCoord2<float,1>, class CoordTYPE= Point3<FLTYPE> > 
+class VERTEX_TYPE
 {
 public:
 
@@ -617,7 +618,7 @@ protected:
 #endif
 
 public:
-inline VTTYPE * & VTp()
+inline VTTYPE * & VTb()
 	{
 #if ((defined __VCGLIB_VERTEX_AT) || (defined __VCGLIB_VERTEX_ATS))
 		  return _vtb;
@@ -627,7 +628,7 @@ inline VTTYPE * & VTp()
 #endif
 	}
 
-inline const VTTYPE * &  VTp() const
+inline const VTTYPE * &  VTb() const
 	{
 #if ((defined __VCGLIB_VERTEX_AT) || (defined __VCGLIB_VERTEX_ATS))
 		  return _vtb;
