@@ -22,6 +22,9 @@
 ****************************************************************************/
 /***************************************************************************
 $Log: not supported by cvs2svn $
+Revision 1.7  2006/04/29 10:26:04  fiorin
+Added some utility methods (swapping of columns and rows, matrix-vector multiplication)
+
 Revision 1.6  2006/04/11 08:09:35  zifnab1974
 changes necessary for gcc 3.4.5 on linux 64bit. Please take note of case-sensitivity of filenames
 
@@ -29,6 +32,11 @@ Revision 1.5  2005/12/12 11:25:00  ganovelli
 added diagonal matrix, outer produce and namespace
 
 ***************************************************************************/
+
+// marco
+// Copy constructor : memcpy instead of 'for' cycle
+// empty constructor
+
 
 #ifndef MATRIX_VCGLIB
 #define MATRIX_VCGLIB
@@ -107,6 +115,17 @@ namespace vcg{
 			};
 
 			/*!
+			*	Empty constructor
+			*   Just create the object
+			*/
+			Matrix()
+			{
+				_rows = 0;
+				_columns = 0;
+				_data = NULL;
+			};
+
+			/*!
 			*	Copy constructor
 			*	The matrix elements are initialized with the value of the corresponding element in \i m
 			* \param m the matrix to be copied
@@ -116,8 +135,12 @@ namespace vcg{
 				_rows = m._rows;
 				_columns = m._columns;
 				_data = new ScalarType[_rows*_columns];
-				for (unsigned int i=0; i<_rows*_columns; i++)
-					_data[i] = m._data[i];
+
+				unsigned int dim = _rows * _columns;
+				memcpy(_data, m._data, dim * sizeof(ScalarType));
+
+//				for (unsigned int i=0; i<_rows*_columns; i++)
+//					_data[i] = m._data[i];
 			};
 
 			/*!
