@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/12/02 00:29:00  cignoni
+updated the templates of BasicGrid
+
 Revision 1.1  2005/07/28 08:41:00  cignoni
 First working version
 
@@ -54,38 +57,38 @@ class GridStaticObj : public BasicGrid<ObjType, FLT>
 {
  public:
 
-		/// La matriciona della griglia
-	  ObjType *grid;
+	 /// La matriciona della griglia
+	 ObjType *grid;
 
-	int size() const { return siz[0]*siz[1]*siz[2];}
+	 int size() const { return siz[0]*siz[1]*siz[2];}
 
-	inline  GridStaticObj() { grid = 0; }
-	inline ~GridStaticObj() { if(grid) delete[] grid; }
-  inline Init(const ObjType &val)
-		{
+	 inline  GridStaticObj() { grid = 0; }
+	 inline ~GridStaticObj() { if(grid) delete[] grid; }
+	 inline Init(const ObjType &val)
+	 {
 		 fill(grid,grid+size(),val);
-		}
+	 }
 
 
-		/// Date le coordinate ritorna la cella
-    inline ObjType & Grid( const int x, const int y, const int z ) {return grid[GridInd(Point3i(x,y,z))]; }
-    
-    // Dato un punto ritorna la cella  
-    inline ObjType & Grid( const Point3<FLT> & p )                 {				return grid[GridInd(p)];		}
+	 /// Date le coordinate ritorna la cella
+	 inline ObjType & Grid( const int x, const int y, const int z ) {return grid[GridInd(Point3i(x,y,z))]; }
 
-		inline int GridInd( const Point3i & pi ) const
-		{
+	 // Dato un punto ritorna la cella  
+	 inline ObjType & Grid( const Point3<FLT> & p )                 {				return grid[GridInd(p)];		}
+
+	 inline int GridInd( const Point3i & pi ) const
+	 {
 #ifndef NDEBUG
-			if ( pi[0]<0 || pi[0]>=siz[0] || pi[1]<0 || pi[1]>=siz[1] || pi[2]<0 || pi[2]>=siz[2] )
-			{	assert(0);
-				return 0;
-			} 
+		 if ( pi[0]<0 || pi[0]>=siz[0] || pi[1]<0 || pi[1]>=siz[1] || pi[2]<0 || pi[2]>=siz[2] )
+		 {	assert(0);
+		 return 0;
+		 } 
 #endif
-			return pi[0]+siz[0]*(pi[1]+siz[1]*pi[2]);
-		}
+		 return pi[0]+siz[0]*(pi[1]+siz[1]*pi[2]);
+	 }
 
-		// Dato un punto ritorna l'indice della cella
-    inline int GridInd( const Point3<FLT> & p ) const { return GridInd(GridP(p)); 	}
+	 // Dato un punto ritorna l'indice della cella
+	 inline int GridInd( const Point3<FLT> & p ) const { return GridInd(GridP(p)); 	}
   
 	void Create( Point3i &_siz, const ObjType & init )
 	{
@@ -101,19 +104,19 @@ class GridStaticObj : public BasicGrid<ObjType, FLT>
 	}
 
 	/// Crea una griglia di un dato bbox e con un certo numero di elem.
-  /// il bbox viene gonfiato appositamente.
+	/// il bbox viene gonfiato appositamente.
 
-  template<class FLT2>
-  void Create(const Box3<FLT2> & b, int ncell, const ObjType & init, bool Inflate = true )
+	template<class FLT2>
+	void Create(const Box3<FLT2> & b, int ncell, const ObjType & init, bool Inflate = true )
 	{
 		bbox.Import(b);
 		if(Inflate) bbox.Offset(0.01*bbox.Diag());
 		dim  = bbox.max - bbox.min;
 
-    // Calcola la dimensione della griglia
+		// Calcola la dimensione della griglia
 		Point3i _siz;
-    BestDim( ncell, dim, _siz );
-    Create(_siz, init );
+		BestDim( ncell, dim, _siz );
+		Create(_siz, init );
 	}
 };
 //end class SGrid
