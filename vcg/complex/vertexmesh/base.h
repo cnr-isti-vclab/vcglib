@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/09/20 13:58:55  pietroni
+Modified MArk function parameter form ConstVertexPointer to VertexPointer
+
 Revision 1.2  2005/08/02 11:37:29  pietroni
 renamed typedef VertexContainer into VertContainer (like trimesh)
 
@@ -54,7 +57,6 @@ namespace vertex {
 /** \class VertexMesh.
     This is class for definition of a mesh.
 		@param VertContainerType (Template Parameter) Specifies the type of the vertices container any the vertex type.
-		@param PointContainerType (Template Parameter) Specifies the type of the faces container any the face type.
  */
 template < class VertContainerType >
 class VertexMesh{
@@ -69,17 +71,13 @@ class VertexMesh{
 	typedef const VertexType * ConstVertexPointer;
 	typedef Box3<ScalarType> BoxType;
 
-	/// Set of vertices 
-	VertContainerType vert;
-	/// Real number of vertices
-	int vn;
-
-	/// Bounding box of the mesh
-	Box3<ScalarType> bbox;
+	VertContainerType vert;	/// Set of vertices 	
+	size_t vn;				/// Actual number of vertices
 	
-	/// Global color
+	Box3<ScalarType> bbox;	/// Bounding box of the mesh
+	
 private:
-	Color4b c;
+	Color4b c;	/// Global color
 public:
 
 	inline const Color4b & C() const
