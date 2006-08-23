@@ -20,10 +20,17 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
+
+// marco: removed types FaceType, FacePointer, FaceIterator to allow the use of this method from vertex meshes
+
+
 /****************************************************************************
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/09/15 11:16:27  ganovelli
+changed P() to cP()
+
 Revision 1.1  2004/04/05 11:56:13  cignoni
 First working version!
 
@@ -61,17 +68,15 @@ typedef ComputeMeshType MeshType;
 typedef typename MeshType::VertexType     VertexType;
 typedef typename MeshType::VertexPointer  VertexPointer;
 typedef typename MeshType::VertexIterator VertexIterator;
-typedef typename MeshType::FaceType       FaceType;
-typedef typename MeshType::FacePointer    FacePointer;
-typedef typename MeshType::FaceIterator   FaceIterator;
 
-/// Calculates the vertex normal (if stored in the current face type)
+/// Calculates the bounding box of the <ComputeMeshType> m
+/// 
 static void Box(ComputeMeshType &m)
 {
-  m.bbox.SetNull();
+	m.bbox.SetNull();
 	VertexIterator vi;
-	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-			if( !(*vi).IsD() )	m.bbox.Add((*vi).cP());
+	for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+		if( !(*vi).IsD() )	m.bbox.Add((*vi).cP());
 
 }
 
