@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2006/06/29 13:02:38  ganovelli
+agiunta UpdateBoundingBase, superclasse di UpdateBounding, templated sul container di vertici.
+
 Revision 1.1  2005/03/09 13:22:55  ganovelli
 creation
 
@@ -40,43 +43,39 @@ namespace vertex {
 /** \addtogroup vertexmesh */
 /*@{*/
 
-/// Management, updating and computation of per-vertex and per-face normals.
-/// This class is used to compute or update the normals that can be stored in the vertex or face component of a mesh.
 template <class VERTEX_CONTAINER>
 class UpdateBoundingBase
 {
 
 public:
-typedef typename VERTEX_CONTAINER::value_type   VertexType;
-typedef typename VERTEX_CONTAINER::value_type * VertexPointer;
-typedef typename VERTEX_CONTAINER::iterator			VertexIterator;
-typedef typename VERTEX_CONTAINER::value_type::ScalarType			ScalarType;
+	typedef typename VERTEX_CONTAINER::value_type   VertexType;
+	typedef typename VERTEX_CONTAINER::value_type*  VertexPointer;
+	typedef typename VERTEX_CONTAINER::iterator		VertexIterator;
+	typedef typename VERTEX_CONTAINER::value_type::ScalarType	ScalarType;
 
-/// Calculates the vertex normal (if stored in the current face type)
-static Box3<ScalarType> Box(VERTEX_CONTAINER &vert)
-{
-  Box3<ScalarType> res;res.SetNull();
-	VertexIterator vi;
-	for(vi= vert.begin();vi!= vert.end();++vi)
+	static Box3<ScalarType> Box(VERTEX_CONTAINER &vert)
+	{
+		Box3<ScalarType> res; res.SetNull();
+		VertexIterator vi;
+		for(vi= vert.begin();vi!= vert.end();++vi)
 			if( !(*vi).IsD() )	res.Add((*vi).P());
-	return res;
-}
+		return res;
+	}
 
-}; // end class
+}; // end class UpdateBoundingBase
 
 template <class VMType>
-class UpdateBounding: public UpdateBoundingBase<typename VMType::VertexContainer> {
+class UpdateBounding: public UpdateBoundingBase<typename VMType::VertexContainer> 
+{
 	public:
-	typedef typename VMType::VertexContainer VertexContainer;
-
-	static void Box(VMType &vm){
-		vm.bbox = UpdateBoundingBase<typename VMType::VertexContainer>::Box(vm.vert);
-		}
-
+	static void Box(VMType &vm)
+	{
+		vm.bbox = UpdateBoundingBase<VMType::VertexContainer>::Box(vm.vert);
+	}
 };
 
-}	// End namespace
-}	// End namespace
+}	// End namespace vertex
+}	// End namespace vcg
 
 
 #endif

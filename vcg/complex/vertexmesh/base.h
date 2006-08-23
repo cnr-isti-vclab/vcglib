@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2006/08/23 15:32:24  marfr960
+added bbox of the mesh
+vn int->size_t
+
 Revision 1.3  2005/09/20 13:58:55  pietroni
 Modified MArk function parameter form ConstVertexPointer to VertexPointer
 
@@ -62,6 +66,7 @@ template < class VertContainerType >
 class VertexMesh{
 	public:
 	typedef VertContainerType VertContainer;
+	typedef VertContainer VertexContainer;
 	typedef typename VertContainerType::value_type VertexType;
 	typedef typename VertContainerType::value_type::ScalarType ScalarType;
 	typedef typename VertContainerType::value_type::CoordType CoordType;
