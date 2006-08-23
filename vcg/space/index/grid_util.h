@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/12/02 00:27:22  cignoni
+removed excess typenames
+
 Revision 1.8  2005/10/03 16:21:10  spinelli
 erase wrong assert on boxToIbox function
 
@@ -59,90 +62,105 @@ Removed BestDim function from the grid_static_ptr class and moved to a indipende
 
 namespace vcg {
 
-	// Basic Class abstracting a gridded structure in a 3d space;
-  // Usueful for having coherent float to integer conversion in a unique place:
-  // Some Notes:
-  // - bbox is the real occupation of the box in the space;
-  // - siz is the number of cells for each side
-  // Note that PToIP(bbox.max) returns an invalid cell index (e.g. it returns siz)
+	/** BasicGrid
+	
+	Basic Class abstracting a gridded structure in a 3d space;
+	Usueful for having coherent float to integer conversion in a unique place:
+	Some Notes:
+		- bbox is the real occupation of the box in the space;
+		- siz is the number of cells for each side
 
+	OBJTYPE:      Type of the indexed objects.
+	SCALARTYPE:   Scalars type for structure's internal data (may differ from
+	              object's scalar type).
 
+	*/
 
-	template <class OBJTYPE, class SCALARTYPE> 
-	class BasicGrid:public SpatialIndex<OBJTYPE,SCALARTYPE> {
+template <class OBJTYPE, class SCALARTYPE> 
+class BasicGrid:public SpatialIndex<OBJTYPE,SCALARTYPE> 
+{
+public:
 
-  public:
+	typedef SCALARTYPE ScalarType;
+	typedef Box3<ScalarType> Box3x;
+	typedef Point3<ScalarType> CoordType;
+	typedef OBJTYPE ObjType;
+	typedef OBJTYPE* ObjPtr;
+	typedef BasicGrid<OBJTYPE,SCALARTYPE> GridType;
 
-		typedef SCALARTYPE ScalarType;
-		typedef Box3<ScalarType> Box3x;
-		typedef Point3<ScalarType> CoordType;
-		typedef OBJTYPE ObjType;
-		typedef OBJTYPE* ObjPtr;
-		typedef BasicGrid<OBJTYPE,SCALARTYPE> GridType;
+	Box3x bbox;
 
-		Box3x bbox;
-		/// Dimensione spaziale (lunghezza lati) del bbox
-		Point3<ScalarType> dim;
-		/// Dimensioni griglia in celle
-		Point3i siz;
-		/// Dimensioni di una cella
-		Point3<ScalarType> voxel;
+	CoordType dim;		/// Spatial Dimention (edge legth) of the bounding box
+	Point3i siz;		/// Number of cells forming the grid
+	CoordType voxel;	/// Dimensions of a single cell
 
+	/* Given a 3D point, returns the coordinates of the cell where the point is
+	 * @param p is a 3D point
+	 * @return integer coordinates of the cell
+	 */
+	inline Point3i GridP( const Point3<ScalarType> & p ) const 
+	{
+		Point3i pi; 
+		PToIP(p, pi);
+		return pi;
+	}
 
+	/* Given a 3D point p, returns the index of the corresponding cell
+	 * @param p is a 3D point in the space
+	 * @return integer coordinates pi of the cell
+	 */
+	inline void PToIP(const CoordType & p, Point3i &pi ) const
+	{
+		CoordType t = p - bbox.min;
+		pi[0] = int( t[0] / voxel[0] );
+		pi[1] = int( t[1] / voxel[1] );
+		pi[2] = int( t[2] / voxel[2] );
+	}
 
-		// Dato un punto ritorna le coordinate della cella
-		inline Point3i GridP( const Point3<ScalarType> & p ) const 
-		{
-			Point3i pi; 
-			PToIP(p,pi);
-			return pi;
-		}
+	/* Given a cell index return the lower corner of the cell
+	 * @param integer coordinates pi of the cell
+	 * @return p is a 3D point representing the lower corner of the cell
+	 */
+	inline void IPToP(const Point3i & pi, CoordType &p ) const
+	{
+		p[0] = ((ScalarType)pi[0])*voxel[0];
+		p[1] = ((ScalarType)pi[1])*voxel[1];
+		p[2] = ((ScalarType)pi[2])*voxel[2];
+		p += bbox.min;
+	}
 
+	/* Given a cell in <ScalarType> coordinates, compute the corresponding cell in integer coordinates
+	 * @param b is the cell in <ScalarType> coordinates
+	 * @return ib is the correspondent box in integer coordinates
+	 */
+	void BoxToIBox( const Box3x & b, Box3i & ib ) const
+	{
+		PToIP(b.min, ib.min);
+		PToIP(b.max, ib.max);
+		//assert(ib.max[0]>=0 && ib.max[1]>=0 && ib.max[2]>=0);	
+	}
 
-		/// Dato un punto 3d ritorna l'indice del box corrispondente
-		inline void PToIP(const Point3<ScalarType> & p, Point3i &pi ) const
-		{
-			Point3<ScalarType> t = p - bbox.min;
-			pi[0] = int( t[0]/voxel[0] );
-			pi[1] = int( t[1]/voxel[1] );
-			pi[2] = int( t[2]/voxel[2] );
-		}
-
-		/// Given a voxel index return the lower corner of the voxel
-		inline void IPToP(const Point3i & pi, Point3<ScalarType> &p ) const
-		{
-			p[0] = ((ScalarType)pi[0])*voxel[0];
-			p[1] = ((ScalarType)pi[1])*voxel[1];
-			p[2] = ((ScalarType)pi[2])*voxel[2];
-			p +=bbox.min;
-		}
-
-		/// Dato un box reale ritorna gli indici dei voxel compresi dentro un ibox
-		void BoxToIBox( const Box3x & b, Box3i & ib ) const
-		{
-			PToIP(b.min,ib.min);
-			PToIP(b.max,ib.max);
-			//assert(ib.max[0]>=0 && ib.max[1]>=0 && ib.max[2]>=0);	
-		}
-
-		/// Dato un box in voxel ritorna gli estremi del box reale
-		void IBoxToBox( const Box3i & ib, Box3x & b ) const
-		{
-			IPtoP(ib.min,b.min);
-			IPtoP(ib.max,b.max);
-		}
-
-	};
+	/* Given a cell in integer coordinates, compute the corresponding cell in <ScalarType> coordinates
+	 * @param ib is the cell in integer coordinates
+	 * @return b is the correspondent box in <ScalarType> coordinates
+	 */
+	/// Dato un box in voxel ritorna gli estremi del box reale
+	void IBoxToBox( const Box3i & ib, Box3x & b ) const
+	{
+		IPtoP(ib.min,b.min);
+		IPtoP(ib.max,b.max);
+	}
+};
 
 	/** Calcolo dimensioni griglia.
 	Calcola la dimensione della griglia in funzione
 	della ratio del bounding box e del numero di elementi
 	*/
 	template<class scalar_type>
-		void BestDim( const int elems, const Point3<scalar_type> & size, Point3i & dim )
+	void BestDim( const int elems, const Point3<scalar_type> & size, Point3i & dim )
 	{
 		const int mincells   = 1;		// Numero minimo di celle
-		const double GFactor = 1.0;	// GridEntry = NumElem*GFactor
+		const double GFactor = 1;	// GridEntry = NumElem*GFactor
 		double diag = size.Norm();	// Diagonale del box
 		double eps  = diag*1e-4;		// Fattore di tolleranza
 
