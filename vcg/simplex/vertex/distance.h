@@ -20,6 +20,11 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
+// marco :
+// comments
+// corrected bug
+
+
 /****************************************************************************
   History
 
@@ -38,19 +43,38 @@ namespace vcg {
 	class PointDistanceFunctor {
 	public:
 		template <class VERTEXTYPE, class SCALARTYPE>
-		inline bool operator () (const VERTEXTYPE & v, const Point3<SCALARTYPE> & p, SCALARTYPE & minDist, Point3<SCALARTYPE> & q) {
+
+		/*
+		 * @param v [IN] is a reference to the current object being tested,
+		 * @param p [IN] is the query point,
+		 * @param minDist [IN/OUT] is in input the reject distance and in output the closest distance,
+	     * @param q [OUT] is the closest point.
+		 * 
+		 * @remarks The operator returns true if the closest distance is less than input reject distance.
+		 *
+		 */
+		inline bool operator () (const VERTEXTYPE & v, const Point3<SCALARTYPE> & p, SCALARTYPE & minDist, Point3<SCALARTYPE> & q) 
+		{
+			// convert the coordinates of p from SCALARTYPE to VERTEXTYPE::ScalarType type
 			const Point3<typename VERTEXTYPE::ScalarType> fp = Point3<typename VERTEXTYPE::ScalarType>::Construct(p);
-			typename VERTEXTYPE::ScalarType md;
-			md=(v.P()-fp).Norm();
-			bool ret = (md<=minDist);
-			if (ret) minDist = (SCALARTYPE)(md);
-			q = v.P();
-			return (ret);
+
+			typename VERTEXTYPE::ScalarType md;		// distance between v and fp
+			md = (v.P() - fp).Norm();
+
+			if (md <= minDist) 
+			{
+				minDist = (SCALARTYPE)(md);		// minDist is updated to the closest distance
+				q = v.P();						// q is the current closest point
+
+				return true;
+			}
+
+			return false;
 		}
 	};
 
 
-}	 // end namespace face
+}	 // end namespace vertex
 	
 }	 // end namespace vcg
 
