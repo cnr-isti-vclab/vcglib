@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2006/05/17 12:48:52  pietroni
+corrected bug in GridGetInBox function
+
 Revision 1.9  2006/01/27 09:58:47  corsini
 fix signed/unsigned mismatch
 
@@ -111,21 +114,27 @@ namespace vcg{
 			Point3i _ip;
 			Si.PToIP(_p,_ip); 
 			Si.Grid( _ip[0],_ip[1],_ip[2], first, last );
-			for(l=first;l!=last;++l)
+
+			if (first != last)
 			{
-				ObjPtr elem=&(**l);
-				if (!elem->IsD())
+				l = first - 1;
+				do
 				{
-					if (_getPointDistance((**l), _p,_minDist, t_res))  // <-- NEW: use of distance functor
+					l++;
+					ObjPtr elem=&(**l);
+					if (!elem->IsD())
 					{
-						winner=elem;
-						_closestPt=t_res;
-						newradius=_minDist; // 
+						if (_getPointDistance((**l), _p,_minDist, t_res))  // <-- NEW: use of distance functor
+						{
+							winner=elem;
+							_closestPt=t_res;
+							newradius=_minDist; // 
+						}
+						_marker.Mark(elem);
 					}
-					_marker.Mark(elem);
-				}
+				} while (l != last);
+				iboxdone=Box3i(_ip,_ip);
 			}
-			iboxdone=Box3i(_ip,_ip);
 		}
 
 		int ix,iy,iz;
@@ -243,12 +252,14 @@ namespace vcg{
 			_objectPtrs.clear();
 			_distances.clear();
 			_points.clear();
+			int i = 0;
 			while (!Cli.End())
 			{
 				_objectPtrs.push_back(&(*Cli));
 				_distances.push_back(Cli.Dist());
 				_points.push_back(Cli.NearestPoint());
 				++Cli;
+				i++;
 			}
 			return (_objectPtrs.size());
 		}
