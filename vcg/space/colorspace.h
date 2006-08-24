@@ -348,77 +348,6 @@ private:
 		return XYZ_TO_RGB[index];
 	}
 
-	static Illuminant refIlluminant(RGBSpaces rgb_space)
-	{
-		// RGB WORKING SPACE DATA
-		// 
-		// Illuminant Reference for each RGB Space.
-		//
-		
-		if (rgb_space == ADOBE_RGB)
-		{
-			return ILLUMINANT_D65;
-		}
-		else if (rgb_space == APPLE_RGB)
-		{
-			return ILLUMINANT_D65;
-		}
-		else if (rgb_space == BEST_RGB)
-		{
-			return ILLUMINANT_D50;
-		}
-		else if (rgb_space == BETA_RGB)
-		{
-			return ILLUMINANT_D50;
-		}
-		else if (rgb_space == BRUCE_RGB)
-		{
-			return ILLUMINANT_D65;
-		}
-		else if (rgb_space == CIE_RGB)
-		{
-			return ILLUMINANT_E;
-		}
-		else if (rgb_space == DON_RGB4)
-		{
-			return ILLUMINANT_D50;
-		}
-		else if (rgb_space == ECI_RGB)
-		{
-			return ILLUMINANT_D50;
-		}
-		else if (rgb_space == EKTA_SPACE)
-		{
-			return ILLUMINANT_D50;
-		}
-		else if (rgb_space == NTSC_RGB)
-		{
-			return ILLUMINANT_C;
-		}
-		else if (rgb_space == PAL_RGB)
-		{
-			return ILLUMINANT_D65;
-		}
-		else if (rgb_space == PROPHOTO)
-		{
-			return ILLUMINANT_D50;
-		}
-		else if (rgb_space == SMPTE_C)
-		{
-			return ILLUMINANT_D65;
-		}
-		else if (rgb_space == SRGB)
-		{
-			return ILLUMINANT_D65;
-		}
-		else if (rgb_space == WIDE_GAMUT)
-		{
-			return ILLUMINANT_D50;
-		}
-		else
-			assert(false);
-	}
-
 	static double CA(int index)
 	{
 		// CHROMATIC ADAPTATION MATRIX 
@@ -1379,12 +1308,149 @@ private:
 // public methods
 public:
 
+	static double gamma(RGBSpaces rgb_space)
+	{
+		if (rgb_space == ADOBE_RGB)
+		{
+			return 2.2;
+		}
+		else if (rgb_space == APPLE_RGB)
+		{
+			return 1.8;
+		}
+		else if (rgb_space == BEST_RGB)
+		{
+			return 2.2;
+		}
+		else if (rgb_space == BETA_RGB)
+		{
+			return 2.2;
+		}
+		else if (rgb_space == BRUCE_RGB)
+		{
+			return 2.2;
+		}
+		else if (rgb_space == CIE_RGB)
+		{
+			return 2.2;
+		}
+		else if (rgb_space == DON_RGB4)
+		{
+			return 1.8;
+		}
+		else if (rgb_space == ECI_RGB)
+		{
+			return 2.2;
+		}
+		else if (rgb_space == EKTA_SPACE)
+		{
+			return 2.2;
+		}
+		else if (rgb_space == NTSC_RGB)
+		{
+			return 2.2;
+		}
+		else if (rgb_space == PAL_RGB)
+		{
+			return 2.2;
+		}
+		else if (rgb_space == PROPHOTO)
+		{
+			return 1.8;
+		}
+		else if (rgb_space == SMPTE_C)
+		{
+			return 2.2;
+		}
+		else if (rgb_space == SRGB)
+		{
+			return 2.2; // about 2.2
+		}
+		else if (rgb_space == WIDE_GAMUT)
+		{
+			return 2.2;
+		}
+		else
+			assert(false);
+	}
+
+	static Illuminant refIlluminant(RGBSpaces rgb_space)
+	{
+		// RGB WORKING SPACE DATA
+		// 
+		// Illuminant Reference for each RGB Space.
+		//
+		
+		if (rgb_space == ADOBE_RGB)
+		{
+			return ILLUMINANT_D65;
+		}
+		else if (rgb_space == APPLE_RGB)
+		{
+			return ILLUMINANT_D65;
+		}
+		else if (rgb_space == BEST_RGB)
+		{
+			return ILLUMINANT_D50;
+		}
+		else if (rgb_space == BETA_RGB)
+		{
+			return ILLUMINANT_D50;
+		}
+		else if (rgb_space == BRUCE_RGB)
+		{
+			return ILLUMINANT_D65;
+		}
+		else if (rgb_space == CIE_RGB)
+		{
+			return ILLUMINANT_E;
+		}
+		else if (rgb_space == DON_RGB4)
+		{
+			return ILLUMINANT_D50;
+		}
+		else if (rgb_space == ECI_RGB)
+		{
+			return ILLUMINANT_D50;
+		}
+		else if (rgb_space == EKTA_SPACE)
+		{
+			return ILLUMINANT_D50;
+		}
+		else if (rgb_space == NTSC_RGB)
+		{
+			return ILLUMINANT_C;
+		}
+		else if (rgb_space == PAL_RGB)
+		{
+			return ILLUMINANT_D65;
+		}
+		else if (rgb_space == PROPHOTO)
+		{
+			return ILLUMINANT_D50;
+		}
+		else if (rgb_space == SMPTE_C)
+		{
+			return ILLUMINANT_D65;
+		}
+		else if (rgb_space == SRGB)
+		{
+			return ILLUMINANT_D65;
+		}
+		else if (rgb_space == WIDE_GAMUT)
+		{
+			return ILLUMINANT_D50;
+		}
+		else
+			assert(false);
+	}
+
 	static Color4<T> RGBtoHSV(const Color4<T> & color)
 	{
 		double h,s,v;
 		RGBtoHSV(static_cast<double>(color[0]), static_cast<double>(color[1]),
       static_cast<double>(color[2]), h,s,v);
-		Color4<T> c(h,s,v,0.0);
+		Color4<T> c(h,s,v,color[3]);
 		return c;
 	}
 
@@ -1433,7 +1499,7 @@ public:
 		double r,g,b;
 		HSVtoRGB(static_cast<double>(color[0]), static_cast<double>(color[1]),
       static_cast<double>(color[2]), r,g,b);
-		Color4<T> c(r,g,b,0.0);
+		Color4<T> c(r,g,b,color[3]);
 		return c;
 	}
 
@@ -1501,54 +1567,109 @@ public:
 
 	}
 
-	static Color4<T> XYZtoRGB(const Color4<T> & color)
+	static Color4<T> XYZtoRGB(const Color4<T> & color, Illuminant src, 
+		RGBSpaces dest, ConeResponse response = BRADFORD)
 	{
 		double r,g,b;
 		XYZtoRGB(static_cast<double>(color[0]), static_cast<double>(color[1]),
-      static_cast<double>(color[2]), r,g,b);
-		Color4<T>(r,g,b,0.0);
+      static_cast<double>(color[2]), src, r,g,b, dest, response);
+		Color4<T>(r,g,b,color[3]);
 		return c;
 	}
 
 	static void XYZtoRGB(double X, double Y, double Z, Illuminant src, 
-		double &R, double &G, double &B, RGBSpaces space)
+		double &R, double &G, double &B, RGBSpaces space, ConeResponse response = BRADFORD)
 	{
 		double Xp, Yp, Zp;
-		chromaticAdaptation(X, Y, Z, src, Xp, Yp, Zp, refIlluminant(space));
+		chromaticAdaptation(X, Y, Z, src, Xp, Yp, Zp, refIlluminant(space), response);
 
 		int index = static_cast<int>(space) * 3 * 3;
-		X = Xp * XYZ2RGB(index)   + Yp * XYZ2RGB(index+3) + Zp * XYZ2RGB(index+6);
-		Y = Yp * XYZ2RGB(index+1) + Yp * XYZ2RGB(index+4) + Zp * XYZ2RGB(index+7);
-		Z = Zp * XYZ2RGB(index+2) + Yp * XYZ2RGB(index+5) + Zp * XYZ2RGB(index+8);
+		double r = Xp * XYZ2RGB(index)   + Yp * XYZ2RGB(index+3) + Zp * XYZ2RGB(index+6);
+		double g = Yp * XYZ2RGB(index+1) + Yp * XYZ2RGB(index+4) + Zp * XYZ2RGB(index+7);
+		double b = Zp * XYZ2RGB(index+2) + Yp * XYZ2RGB(index+5) + Zp * XYZ2RGB(index+8);
+
+		// Account for gamma correction
+		if (space == SRGB)
+		{
+			if (r > 0.0031308)
+				R = 1.055 * pow(r, 1.0/2.4) - 0.055;
+			else
+				R = 12.92 * r;
+
+			if (g > 0.0031308)
+				G = 1.055 * pow(g, 1.0/2.4) - 0.055;
+			else
+				G = 12.92 * g;
+
+			if (b > 0.0031308)
+				B = 1.055 * pow(b, 1.0/2.4) - 0.055;
+			else
+				B = 12.92 * b;
+		}
+		else
+		{
+			double lambda = gamma(space);
+			R = pow(r, 1.0/lambda);
+			G = pow(g, 1.0/lambda);
+			B = pow(b, 1.0/lambda);
+		}
 	}
 
-	static Color4<T> RGBtoXYZ(const Color4<T> & color)
+	static Color4<T> RGBtoXYZ(const Color4<T> & color, RGBSpaces space, 
+		Illuminant dest, ConeResponse response = BRADFORD)
 	{
 		double x,y,z;
 		RGBtoXYZ(static_cast<double>(color[0]), static_cast<double>(color[1]), 
-			static_cast<double>(color[2]), x,y,z);
-		Color4<T>(x,y,z,0.0);
+			static_cast<double>(color[2]), space, x,y,z, dest, response);
+		Color4<T> c(x,y,z,color[3]);
 		return c;
 	}
 
 	static void RGBtoXYZ(double R, double G, double B, RGBSpaces space, 
-		double &X, double &Y, double &Z, Illuminant dest)
+		double &X, double &Y, double &Z, Illuminant dest, ConeResponse response = BRADFORD)
 	{
+		// Account for Gamma Correction
+		double r,g,b;
+		if (space == SRGB)
+		{
+			if (R <= 0.04045)
+				r = R / 12.92;
+			else
+				r = pow((R + 0.055) / 1.055, 2.4);
+
+			if (G <= 0.04045)
+				g = G / 12.92;
+			else
+				g = pow((G + 0.055) / 1.055, 2.4);
+
+			if (B <= 0.04045)
+				b = B / 12.92;
+			else
+				b = pow((B + 0.055) / 1.055, 2.4);
+		}
+		else
+		{
+			double lambda = gamma(space);
+			r = pow(R, lambda);
+			g = pow(G, lambda);
+			b = pow(B, lambda);
+		}
+
 		int index = static_cast<int>(space) * 3 * 3;
-		double Xt = R * RGB2XYZ(index) + G * RGB2XYZ(index+3) + B * RGB2XYZ(index+6);
-		double Yt = R * RGB2XYZ(index+1) + G * RGB2XYZ(index+4) + B * RGB2XYZ(index+7);
-		double Zt = R * RGB2XYZ(index+2) + G * RGB2XYZ(index+5) + B * RGB2XYZ(index+8);
+		double Xt = r * RGB2XYZ(index) + g * RGB2XYZ(index+3) + b * RGB2XYZ(index+6);
+		double Yt = r * RGB2XYZ(index+1) + g * RGB2XYZ(index+4) + b * RGB2XYZ(index+7);
+		double Zt = r * RGB2XYZ(index+2) + g * RGB2XYZ(index+5) + b * RGB2XYZ(index+8);
 
 		// Convert from reference illuminant to the desired one
-		chromaticAdaptation(Xt, Yt, Zt, refIlluminant(space), X, Y, Z, dest);
+		chromaticAdaptation(Xt, Yt, Zt, refIlluminant(space), X, Y, Z, dest, response);
 	}
 
-	static Color4<T> XYZtoCIELab(const Color4<T> & color)
+	static Color4<T> XYZtoCIELab(const Color4<T> & color, Illuminant ref)
 	{
 		double L,a,b;
 		XYZtoCIELab(static_cast<double>(color[0]), static_cast<double>(color[1]),
-			static_cast<double>(color[2]), L,a,b);
-		Color4<T>(L,a,b,0.0);
+			static_cast<double>(color[2]), L,a,b, ref);
+		Color4<T> c(L,a,b,color[3]);
 		return c;
 	}
 
@@ -1590,12 +1711,12 @@ public:
 		b = 200.0 * (fy - fz);
 	}
 
-	static Color4<T> CIELabtoXYZ(const Color4<T> & color)
+	static Color4<T> CIELabtoXYZ(const Color4<T> & color, Illuminant ref)
 	{
 		double x,y,z;
 		CIELabtoXYZ(static_cast<double>(color[0]), static_cast<double>(color[1]),
 			static_cast<double>(color[2]), x,y,z);
-		Color4<T>(x,y,z,0.0);
+		Color4<T>(x,y,z,color[3]);
 		return c;
 	}
 
@@ -1656,7 +1777,7 @@ public:
 		double h,s,l;
 		RGBtoHSL(static_cast<double>(color[0]), static_cast<double>(color[1]),
 			static_cast<double>(color[2]), h,s,l);
-		Color4<T>(h,s,l,0.0);
+		Color4<T>(h,s,l,color[3]);
 		return c;
 	}
 
@@ -1709,7 +1830,7 @@ public:
 		double r,g,b;
 		HSLtoRGB(static_cast<double>(color[0]), static_cast<double>(color[1]),
 			static_cast<double>(color[2]), r,g,b);
-		Color4<T>(r,g,b,0.0);
+		Color4<T>(r,g,b,color[3]);
 		return c;
 	}
 	
@@ -1764,7 +1885,7 @@ public:
 		xyYtoXYZ(static_cast<double>(color[0]), static_cast<double>(color[1]),
 			static_cast<double>(color[2]), X,Y,Z));
 
-		Color4<T>(X,Y,Z,0.0);
+		Color4<T>(X,Y,Z,color[3]);
 		return c;
 	}
 
@@ -1793,17 +1914,18 @@ public:
 		Y = _Y;
 	}
 
+	// XYZ (Illuminant src) --> XYZ (Illuminant dest) - [ILLUMINANT CHANGE]
 	static Color4<T> chromaticAdaptation(const Color4<T> & color, Illuminant src, 
 		Illuminant dst, ConeResponse response = BRADFORD)
 	{
 		double X,Y,Z;
     chromaticAdaptation(static_cast<double>(color[0]), static_cast<double>(color[1]),
 			static_cast<double>(color[2]), src, X, Y, Z, dst, response);
-		Color4<T>(X,Y,Z,0.0);
+		Color4<T> c(X,Y,Z,color[3]);
 		return c;
 	}
 
-	// XYZ (Illuminant src) --> XYZ (Illuminant dst) - [ILLUMINANT CHANGE]
+	// XYZ (Illuminant src) --> XYZ (Illuminant dest) - [ILLUMINANT CHANGE]
 	static void chromaticAdaptation(double _X, double _Y, double _Z, Illuminant src, 
 		double &X, double &Y, double &Z, Illuminant dst, ConeResponse response = BRADFORD)
 	{
@@ -1813,6 +1935,27 @@ public:
 		X = CA(index)   * _X + CA(index+3) * _Y + CA(index+6) * _Z;
 		Y = CA(index+1) * _X + CA(index+4) * _Y + CA(index+7) * _Z;
 		Z = CA(index+2) * _X + CA(index+5) * _Y + CA(index+8) * _Z;
+	}
+
+	// RGB (working space src) --> RGB (working space dest) - [RGB WORKING SPACE CHANGE]
+	static Color4<T> RGBtoRGB(const Color4<T> & color, RGBSpaces src, RGBSpaces dest, 
+		ConeResponse response = BRADFORD)
+	{
+		double R,G,B;
+		RGBtoRGB(static_cast<double>(color[0]), static_cast<double>(color[1]),
+			static_cast<double>(color[2]), src, R,G,B, dest, response);
+
+		Color4<T> c(R,G,B,color[3]);
+		return c;
+	}
+
+	// RGB (working space src) --> RGB (working space dest) - [RGB WORKING SPACE CHANGE]
+	static void RGBtoRGB(double _R, double _G, double _B, RGBSpaces src, 
+		double &R, double &G, double &B, RGBSpaces dest, ConeResponse response = BRADFORD)
+	{
+		double X,Y,Z;
+		RGBtoXYZ(_R, _G, _B, src, X,Y,Z, refIlluminant(src));
+		XYZtoRGB(X,Y,Z, refIlluminant(src), R,G,B, dest);
 	}
 	
 };
