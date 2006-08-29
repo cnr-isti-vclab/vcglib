@@ -1459,8 +1459,8 @@ public:
 		double v = std::min(R, G);
 		double v_min = std::min(v, B);  // Min value of RGB
 
-		double v = std::max(R, G);
-		double v_max = std::max(v, B);  // Max value of RGB
+		double v2 = std::max(R, G);
+		double v_max = std::max(v2, B);  // Max value of RGB
 
 		double delta = v_max - v_min;   //Delta RGB value
 
@@ -1518,10 +1518,12 @@ public:
 			if (var_h == 6.0)
 				var_h = 0.0;     // H must be < 1
 
-			var_i = static_cast<int>(var_h);
-			var_1 = V * (1.0 - S);
-			var_2 = V * (1.0 - S * (var_h - var_i ));
-			var_3 = V * (1.0 - S * (1.0 - (var_h - var_i)));
+			int var_i = static_cast<int>(var_h);
+			double var_1 = V * (1.0 - S);
+			double var_2 = V * (1.0 - S * (var_h - var_i ));
+			double var_3 = V * (1.0 - S * (1.0 - (var_h - var_i)));
+
+			double var_r, var_g, var_b;
 
 			if (var_i == 0) 
 			{ 
@@ -1573,7 +1575,7 @@ public:
 		double r,g,b;
 		XYZtoRGB(static_cast<double>(color[0]), static_cast<double>(color[1]),
       static_cast<double>(color[2]), src, r,g,b, dest, response);
-		Color4<T>(r,g,b,color[3]);
+		Color4<T> c(r,g,b,color[3]);
 		return c;
 	}
 
@@ -1585,8 +1587,8 @@ public:
 
 		int index = static_cast<int>(space) * 3 * 3;
 		double r = Xp * XYZ2RGB(index)   + Yp * XYZ2RGB(index+3) + Zp * XYZ2RGB(index+6);
-		double g = Yp * XYZ2RGB(index+1) + Yp * XYZ2RGB(index+4) + Zp * XYZ2RGB(index+7);
-		double b = Zp * XYZ2RGB(index+2) + Yp * XYZ2RGB(index+5) + Zp * XYZ2RGB(index+8);
+		double g = Xp * XYZ2RGB(index+1) + Yp * XYZ2RGB(index+4) + Zp * XYZ2RGB(index+7);
+		double b = Xp * XYZ2RGB(index+2) + Yp * XYZ2RGB(index+5) + Zp * XYZ2RGB(index+8);
 
 		// Account for gamma correction
 		if (space == SRGB)
@@ -1715,8 +1717,8 @@ public:
 	{
 		double x,y,z;
 		CIELabtoXYZ(static_cast<double>(color[0]), static_cast<double>(color[1]),
-			static_cast<double>(color[2]), x,y,z);
-		Color4<T>(x,y,z,color[3]);
+			static_cast<double>(color[2]), x,y,z, ref);
+		Color4<T> c(x,y,z,color[3]);
 		return c;
 	}
 
@@ -1772,12 +1774,13 @@ public:
 		Z = zr * Zr;
 	}
 
+	// RGB --> HSL
 	static Color4<T> RGBtoHSL(const Color4<T> & color)
 	{
 		double h,s,l;
 		RGBtoHSL(static_cast<double>(color[0]), static_cast<double>(color[1]),
 			static_cast<double>(color[2]), h,s,l);
-		Color4<T>(h,s,l,color[3]);
+		Color4<T> c(h,s,l,color[3]);
 		return c;
 	}
 
@@ -1785,10 +1788,10 @@ public:
 	static void RGBtoHSL(double R, double G, double B, double &H, double &S, double &L)
 	{
 		double v = std::min(R,G);
-		double v_min = std::min(v, var_B);    // Min value of RGB
+		double v_min = std::min(v, B);    // Min value of RGB
 
 		v = std::max(R,G);
-		double v_max = std::max(v, var_B);    // Max value of RGB
+		double v_max = std::max(v, B);    // Max value of RGB
 
 		double delta = v_max - v_min;         // Delta RGB value
 
@@ -1806,15 +1809,15 @@ public:
 			else
 				S = delta / (2.0 - v_max - v_min);
 
-			double deltaR = (((v_max - var_R) / 6.0) + (delta/2.0)) / delta;
-			double deltaG = (((v_max - var_G) / 6.0) + (delta/2.0)) / delta;
-			double deltaB = (((v_max - var_B) / 6.0) + (delta/2.0)) / delta;
+			double deltaR = (((v_max - R) / 6.0) + (delta/2.0)) / delta;
+			double deltaG = (((v_max - G) / 6.0) + (delta/2.0)) / delta;
+			double deltaB = (((v_max - B) / 6.0) + (delta/2.0)) / delta;
 
-			if (var_R == v_max) 
+			if (R == v_max) 
 				H = deltaB - deltaG;
-			else if (var_G == v_max) 
+			else if (G == v_max) 
 				H = (1.0 / 3.0) + deltaR - deltaB;
-			else if (var_B == v_max) 
+			else if (B == v_max) 
 				H = (2.0 / 3.0) + deltaG - deltaR;
 
 			if ( H < 0.0 )
@@ -1830,7 +1833,7 @@ public:
 		double r,g,b;
 		HSLtoRGB(static_cast<double>(color[0]), static_cast<double>(color[1]),
 			static_cast<double>(color[2]), r,g,b);
-		Color4<T>(r,g,b,color[3]);
+		Color4<T> c(r,g,b,color[3]);
 		return c;
 	}
 	
@@ -1845,6 +1848,8 @@ public:
 		}
 		else
 		{
+			double var_1, var_2;
+
 			if (L < 0.5) 
 				var_2 = L * ( 1 + S );
 			else
@@ -1859,7 +1864,7 @@ public:
 
 	}
 
-	double Hue2RGB(double v1, double v2, double vH)
+	static double Hue2RGB(double v1, double v2, double vH)
 	{
 		if ( vH < 0 ) 
 			vH += 1.0;
