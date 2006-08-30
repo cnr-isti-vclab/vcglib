@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2006/06/18 20:49:30  cignoni
+Added missing IsD tests
+
 Revision 1.12  2006/05/03 21:23:25  cignoni
 Corrected IsDeleted -> isD
 
@@ -185,14 +188,7 @@ void Set( const FacePointer pf, const int nz )
 	v[1] = pf->V((nz+1)%3);
 	assert(v[0] != v[1]);
 
-	if( v[0] > v[1] ) 
-	{
-		// swap(v[0],v[1]);
-		VertexPointer t = v[0];
-		v[0] = v[1];
-		v[1] = t;
-	}
-
+	if( v[0] > v[1] ) swap(v[0],v[1]);
 	f    = pf;
 	z    = nz;
 }
@@ -241,22 +237,19 @@ static void FaceBorderFromNone(MeshType &m)
 	sort(e.begin(), e.end());							// Lo ordino per vertici
 	
 	typename std::vector<EdgeSorter>::iterator pe,ps;
-	for(ps = e.begin(), pe = e.begin(); pe != e.end(); ++pe)	// Scansione vettore ausiliario
+	for(ps = e.begin(), pe=e.begin(); pe<=e.end(); ++pe)	// Scansione vettore ausiliario
 	{
-		if( pe == e.end() ||  *pe != *ps )					// Trovo blocco di edge uguali
+		if( pe==e.end() ||  *pe != *ps )					// Trovo blocco di edge uguali
 		{
-			if(pe - ps == 1) 	
-			{	
+			if(pe-ps==1) 	{	
 					//++nborder;
 					ps->f->SetB(ps->z);
-			} 
-			else if (pe - ps != 2)  
-			{  // Caso complex!!
-				for(; ps != pe; ++ps)
+			} else
+			if(pe-ps!=2)  {  // Caso complex!!
+				for(;ps!=pe;++ps)
 						ps->f->SetB(ps->z); // Si settano border anche i complex.
 			} 
 			ps = pe;
-
 //			++ne;										// Aggiorno il numero di edge
 		}
 	}
@@ -264,7 +257,7 @@ static void FaceBorderFromNone(MeshType &m)
 
 }
 
-	/// Bisogna carlcolare il border flag delle facce
+/// Compute the PerVertex Border flag deriving it from the faces
 static void VertexBorderFromFace(MeshType &m)
 {
   assert(HasPerFaceFlags(m));
@@ -275,14 +268,15 @@ static void VertexBorderFromFace(MeshType &m)
 		(*v).ClearB();
 
 	for(f=m.face.begin();f!=m.face.end();++f)
-	{
-		for(int z=0;z<3;++z)
-			if( (*f).IsB(z) )
-			{
-				(*f).V0(z)->SetB();
-				(*f).V1(z)->SetB();
-			}
-	}
+    if(!(*f).IsD())
+	    {
+		    for(int z=0;z<3;++z)
+			    if( (*f).IsB(z) )
+			    {
+				    (*f).V0(z)->SetB();
+				    (*f).V1(z)->SetB();
+			    }
+	    }
 }
 
 
