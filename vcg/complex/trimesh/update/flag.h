@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2006/08/30 06:50:07  cignoni
+Reverted to version 1.13. Version 1.14 was done on outdated version.
+
 Revision 1.13  2006/06/18 20:49:30  cignoni
 Added missing IsD tests
 
@@ -188,7 +191,7 @@ void Set( const FacePointer pf, const int nz )
 	v[1] = pf->V((nz+1)%3);
 	assert(v[0] != v[1]);
 
-	if( v[0] > v[1] ) swap(v[0],v[1]);
+	if( v[0] > v[1] ) std::swap(v[0],v[1]);
 	f    = pf;
 	z    = nz;
 }
