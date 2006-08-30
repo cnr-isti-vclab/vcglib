@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *
+* This program is free software; you can redistribute it and/or modify      *   
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2006/07/26 13:54:45  cignoni
+Reversed the direction of wheel scaling and added middle mouse panning
+
 Revision 1.16  2006/02/13 13:10:27  cignoni
 Added Zmode for moving objects along the perpendicular to the viewplane
 
@@ -86,7 +89,7 @@ using namespace vcg;
 
 
 void TrackMode::Apply(Trackball *trackball, float WheelNotch) {
-    trackball->track.sca*=pow(1.2f,WheelNotch);
+    trackball->track.sca*=pow(1.2f,-WheelNotch);
  }
 
 void ScaleMode::Apply(Trackball *tb, Point3f new_point) {
