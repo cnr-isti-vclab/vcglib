@@ -30,6 +30,10 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2006/08/23 15:23:05  marfr960
+added comments
+corrected bad reference in void Grid( const Point3i & _c, CellIterator & first, CellIterator & last )
+
 Revision 1.20  2006/07/26 08:12:56  pietroni
 added InitEmpty Function
 
@@ -269,21 +273,16 @@ namespace vcg{
 				return false;
 
 			std::pair<IteHtable, IteHtable> p = hash_table.equal_range(h);
-			IteHtable i = p.first;
 
 			bool found = false;
-			if ( ((*i).second.CellN() == cell) )
-				found = true;
-			else 
+			IteHtable i;
+			for (i = p.first; i != p.second; i++)
 			{
-				do {
-					i++;
-					if ((*i).second.CellN() == cell)
-					{
-						found = true;
-						break;
-					}
-				} while (i != p.second);
+				if ( ((*i).second.CellN() == cell) )
+				{
+					found = true;
+					break;
+				}
 			}
 
 			if (!found) /// the scan is terminated and 
@@ -386,7 +385,7 @@ namespace vcg{
 
 			OBJITER i;
 			Box3x b;
-			Box3x &bbox = this->bbox;
+		 	Box3x &bbox = this->bbox;
 			CoordType &dim = this->dim;
 			Point3i &siz = this->siz;
 			CoordType &voxel = this->voxel;
