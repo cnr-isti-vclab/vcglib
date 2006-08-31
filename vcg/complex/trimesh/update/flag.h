@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2006/08/30 12:59:49  marfr960
+Added missing std:: to swap
+
 Revision 1.15  2006/08/30 06:50:07  cignoni
 Reverted to version 1.13. Version 1.14 was done on outdated version.
 
@@ -240,7 +243,7 @@ static void FaceBorderFromNone(MeshType &m)
 	sort(e.begin(), e.end());							// Lo ordino per vertici
 	
 	typename std::vector<EdgeSorter>::iterator pe,ps;
-	for(ps = e.begin(), pe=e.begin(); pe<=e.end(); ++pe)	// Scansione vettore ausiliario
+	for(ps = e.begin(), pe = e.begin(); pe < e.end(); ++pe)	// Scansione vettore ausiliario
 	{
 		if( pe==e.end() ||  *pe != *ps )					// Trovo blocco di edge uguali
 		{
