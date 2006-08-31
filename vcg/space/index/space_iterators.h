@@ -25,6 +25,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2006/08/23 15:22:14  marfr960
+*** empty log message ***
+
 Revision 1.14  2006/06/01 20:53:56  cignoni
 added missing header
 
@@ -434,8 +437,9 @@ namespace vcg{
 
 									CoordType nearest;
 									ScalarType dist=max_dist;
-									if (dist_funct((**l),p,dist,nearest))
-										Elems.push_back(Entry_Type(elem,fabs(dist),nearest));
+									if (dist_funct((**l), p, dist, nearest))
+										if (dist > 0.f)	// avoids to insert p in the query result
+											Elems.push_back(Entry_Type(elem,fabs(dist),nearest));
 									tm.Mark(elem);
 								}
 							}
