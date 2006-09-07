@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2006/08/29 15:38:36  pietroni
+in GridDoRay function the RayIterator must be initialized with maximum distance
+
 Revision 1.11  2006/08/23 15:17:46  marfr960
 *** empty log message ***
 
@@ -264,7 +267,7 @@ namespace vcg{
 				++Cli;
 				i++;
 			}
-			return (_objectPtrs.size());
+			return (int)(_objectPtrs.size());
 		}
 
 		template <class SPATIALINDEXING,class OBJMARKER, class OBJPTRCONTAINER>
