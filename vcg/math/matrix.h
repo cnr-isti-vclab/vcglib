@@ -22,6 +22,10 @@
 ****************************************************************************/
 /***************************************************************************
 $Log: not supported by cvs2svn $
+Revision 1.8  2006/08/23 15:24:45  marfr960
+Copy constructor : faster memcpy instead of slow 'for' cycle
+empty constructor
+
 Revision 1.7  2006/04/29 10:26:04  fiorin
 Added some utility methods (swapping of columns and rows, matrix-vector multiplication)
 
@@ -32,11 +36,6 @@ Revision 1.5  2005/12/12 11:25:00  ganovelli
 added diagonal matrix, outer produce and namespace
 
 ***************************************************************************/
-
-// marco
-// Copy constructor : memcpy instead of 'for' cycle
-// empty constructor
-
 
 #ifndef MATRIX_VCGLIB
 #define MATRIX_VCGLIB
@@ -462,7 +461,7 @@ namespace vcg{
 			*	\param	m reference to the matrix to multiply by 
 			*	\return the matrix product
 			*/
-			Matrix<TYPE> operator*(const Matrix<TYPE> &m)
+			Matrix<TYPE> operator*(const Matrix<TYPE> &m) const
 			{
 				assert(_columns == m._rows);
 				Matrix<TYPE> result(_rows, m._columns);
@@ -484,7 +483,7 @@ namespace vcg{
 			* \param  v reference to the vector to multiply by
 			* \return   the matrix-vector product. This pointer must be deallocated by the caller
 			*/
-			ScalarType* operator*(const ScalarType v[])
+			ScalarType* operator*(const ScalarType v[]) const
 			{
 				ScalarType *result = new ScalarType[_rows];
 				memset(result, 0, _rows*sizeof(ScalarType));
@@ -515,7 +514,7 @@ namespace vcg{
 			/*!
 			*	Matrix multiplication by a diagonal matrix
 			*/
-			Matrix<TYPE> operator*(const MatrixDiagBase &m)
+			Matrix<TYPE> operator*(const MatrixDiagBase &m) const
 			{
 				assert(_columns == _rows);
 				assert(_columns == m.Dimension());
@@ -550,7 +549,8 @@ namespace vcg{
 			*	\param	reference to the 3-dimensional vector to multiply by
 			*	\return the resulting vector
 			*/
-			vcg::ndim::Point3<TYPE> operator*(const vcg::ndim::Point3<TYPE> &p)
+
+			Point3<TYPE> operator*(Point3<TYPE> &p) const
 			{
 				assert(_columns==3 && _rows==3);
 				vcg::Point3<TYPE> result;
@@ -604,7 +604,7 @@ namespace vcg{
 			*	\param k	value to multiply every member by 
 			*	\return		the resultant matrix 
 			*/
-			Matrix<TYPE> operator*(const TYPE k)
+			Matrix<TYPE> operator*(const TYPE k) const
 			{
 				Matrix<TYPE> result(_rows, _columns);
 				for (unsigned int i=0; i<_rows*_columns; i++)
