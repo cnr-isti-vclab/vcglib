@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2006/07/12 12:13:23  zifnab1974
+static keyword only in declaration not in implementation
+
 Revision 1.2  2006/07/10 10:38:16  turini
 minor changes in SphereOfTetra()
 
@@ -37,7 +40,7 @@ draft version. For the triangle is not tehe smallest enclosing sphere and for th
 
 #include <vcg/space/triangle3.h>
 #include <vcg/space/tetra3.h>
-
+#include <vcg/space/sphere3.h>
 #include <assert.h>
 namespace vcg{
 	/** \addtogroup space */
