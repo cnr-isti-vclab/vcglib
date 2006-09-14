@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2006/06/01 08:38:58  pietroni
+added PointDistance function
+
 Revision 1.7  2006/03/01 15:35:09  pietroni
 compiled InterspolationParameters function
 
@@ -277,7 +280,7 @@ typename TriangleType::ScalarType DoubleArea(const TriangleType &t)
 template<class TriangleType>
 Point3<typename TriangleType::ScalarType> Barycenter(const TriangleType &t) 
 {
-	return ((t.P(0)+t.P(1)+t.P(2))/(typename TriangleType::ScalarType) 3.0);
+	return ((t.cP(0)+t.cP(1)+t.cP(2))/(typename TriangleType::ScalarType) 3.0);
 }
 
 template<class TriangleType>
