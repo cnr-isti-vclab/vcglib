@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.25  2006/06/06 14:35:31  zifnab1974
+Changes for compilation on linux AMD64. Some remarks: Linux filenames are case-sensitive. _fileno and _filelength do not exist on linux
+
 Revision 1.24  2006/06/01 08:38:02  pietroni
 Added functions:
 
@@ -629,6 +632,11 @@ bool Intersection_Triangle_Box( vcg::Box3<ScalarType> &bbox,
 	return false;
 }
 
+template <class SphereType>
+bool Intersection_Sphere_Sphere( const SphereType & s0,const SphereType & s1){
+	return (s0.Center()-s1.Center()).SquaredNorm() < (s0.Radius()+s1.Radius())*(s0.Radius()+s1.Radius());
+}
+
 template<class T>
 bool Intersection (const Plane3<T> & plane0, const Plane3<T> & plane1,
                        Line3<T> & line)
@@ -691,6 +699,8 @@ public:
 		return (bret);
 	}
 };
+
+
 
 
 /*@}*/
