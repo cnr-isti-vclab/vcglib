@@ -25,6 +25,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2006/08/31 13:19:59  marfr960
+ClosestIterator avoids to put the query point p into the result set
+
 Revision 1.16  2006/08/23 15:22:14  marfr960
 *** empty log message ***
 
@@ -92,7 +95,7 @@ namespace vcg{
 
 			dist=(r.Origin()-goal).Norm(); 
 
-      const float LocalMaxScalar = std::numeric_limits<float>::(max)();
+      const float LocalMaxScalar = std::numeric_limits<float>::max();
 			const float	EPSILON = 1e-50f;
 
 			/* Parametri della linea */
