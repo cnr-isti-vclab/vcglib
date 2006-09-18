@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2006/01/30 13:43:59  cignoni
+Added GetExportMaskCapability
+
 Revision 1.6  2006/01/13 15:47:43  cignoni
 Uniformed return type to the style of Open. Now every export function returns 0 in case of success.
 
@@ -123,7 +126,7 @@ static int Save(SaveMeshType &m, const char * filename , bool binary =true, cons
 		fprintf(fp,"endsolid vcg\n");
 	}
 	fclose(fp);
-	return true;
+	return 0;
 }
 static const char *ErrorMsg(int error)
 {
