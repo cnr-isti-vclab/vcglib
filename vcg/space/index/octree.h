@@ -1,0 +1,552 @@
+/****************************************************************************
+* VCGLib                                                            o o     *
+* Visual and Computer Graphics Library                            o     o   *
+*                                                                _   O  _   *
+* Copyright(C) 2004                                                \/)\/    *
+* Visual Computing Lab                                            /\/|      *
+* ISTI - Italian National Research Council                           |      *
+*                                                                    \      *
+* All rights reserved.                                                      *
+*                                                                           *
+* This program is free software; you can redistribute it and/or modify      *   
+* it under the terms of the GNU General Public License as published by      *
+* the Free Software Foundation; either version 2 of the License, or         *
+* (at your option) any later version.                                       *
+*                                                                           *
+* This program is distributed in the hope that it will be useful,           *
+* but WITHOUT ANY WARRANTY; without even the implied warranty of            *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
+* GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
+* for more details.                                                         *
+*                                                                           *
+****************************************************************************/
+
+#ifndef OCTREE_H
+#define OCTREE_H
+
+#include <stdlib.h>
+#include <algorithm>
+#include <vector>
+#include <iterator>
+
+#include <vcg/space/color4.h>
+#include <vcg/space/index/base.h>
+#include <vcg/space/index/octree_template.h>
+#include <vcg/space/box3.h>
+#include <wrap/callback.h>
+
+namespace vcg
+{
+	/*!
+	* Given an object or an object pointer, return the reference to the object
+	*/
+	template <typename TYPE>
+	struct Dereferencer
+	{
+		static				TYPE& Ref(TYPE &t)				{ return ( t);	}
+		static				TYPE& Ref(TYPE* &t)				{ return (*t);	}
+		static const	TYPE& Ref(const TYPE &t)	{ return ( t);	}
+		static const	TYPE& Ref(const TYPE* &t) { return (*t);	}
+	};
+
+	
+	/*!
+	* Given a type, return the type
+	*/
+	template <typename T>
+	class ReferenceType
+	{
+	public:
+		typedef T Type;
+	};
+
+	
+	/*!
+	* Given as type a pointer to type, return the type
+	*/
+	template <typename T>
+	class ReferenceType<T *>
+	{
+	public:
+		typedef typename ReferenceType<T>::Type Type;
+	};
+
+
+	
+	/*!
+	* The type of the octree voxels
+	*/
+	struct Voxel
+	{
+		Voxel() { count = begin = end = -1; }
+
+		void SetRange(const int begin, const int end)
+		{
+			this->begin = begin;
+			this->end		= end;
+			count				= end-begin;
+		};
+
+		void AddRange(const Voxel *voxel)
+		{
+			assert(voxel->end>end);
+
+			count += voxel->count;
+			end		 = voxel->end;
+		};
+
+		int begin;
+		int end;
+		int count;
+	};
+	
+	
+	template < class OBJECT_TYPE, class SCALAR_TYPE>
+	class Octree : public OctreeTemplate< Voxel >, public vcg::SpatialIndex< OBJECT_TYPE, SCALAR_TYPE >
+	{
+	public: 
+		typedef						OBJECT_TYPE													ObjectType;
+		typedef						vcg::Box3<ScalarType>								BoundingBoxType;	
+		typedef typename	Octree::Leaf											* LeafPointer;
+		typedef typename	Octree::InnerNode									* InnerNodePointer;
+		typedef typename	ReferenceType<OBJECT_TYPE>::Type	* ObjectPointer;
+
+		/*!
+		* Structure which holds the rendering settings
+		*/
+		struct OcreeRenderingSetting
+		{
+			OcreeRenderingSetting()
+			{
+				color						= vcg::Color4b(155, 155, 155, 255);
+				isVisible				= false;
+				minVisibleDepth	= 1;
+				maxVisibleDepth	= 4;
+			};
+
+			int						isVisible;
+			int						minVisibleDepth;
+			int						maxVisibleDepth;
+			vcg::Color4b	color;
+		};
+
+
+
+
+		
+	protected:
+		/***********************************************
+		*     INNER DATA STRUCTURES AND PREDICATES     *
+		***********************************************/
+		/*!
+		* Structure used during the sorting of the dataset
+		*/
+		template < typename LEAF_TYPE >
+		struct ObjectPlaceholder
+		{
+			typedef LEAF_TYPE* LeafPointer;
+
+			ObjectPlaceholder() { z_order = object_index = -1, leaf_pointer = NULL;}
+
+			ObjectPlaceholder(unsigned long long z_order, void* leaf_pointer, unsigned int object_index)
+			{
+				this->z_order				= z_order;
+				this->leaf_pointer	= leaf_pointer;
+				this->object_index	= object_index;
+			}
+
+			unsigned long long	z_order;
+			LeafPointer					leaf_pointer;
+			unsigned int				object_index;
+		};
+
+		
+		/*!
+		* Predicate used during the sorting of the dataset
+		*/
+		template <typename LEAF_TYPE >
+		struct ObjectSorter
+		{
+			inline bool operator()(const ObjectPlaceholder< LEAF_TYPE > &first, const ObjectPlaceholder< LEAF_TYPE > &second)
+			{
+				return (first.z_order<second.z_order);
+			}
+		};
+
+		/*!
+		* Structure which holds the reference to the object and the position of the mark for that object
+		*/
+		struct ObjectReference
+		{
+			ObjectReference() {mark_position=-1; pObject=NULL;}
+
+			int						mark_position;
+			ObjectPointer pObject;
+		};
+
+		/*
+		* The generic item in the neighbors vector computed by GetNearestNeighbors;
+		*/
+		struct Neighbour
+		{
+			Neighbour() 
+			{
+				this->object	 = NULL;
+				this->distance = -1.0f;
+			};
+
+			Neighbour(ObjectPointer &object, CoordType &point, float distance)
+			{
+				this->object	 = object;
+				this->point		 = point;
+				this->distance = distance;
+			}
+
+
+			ObjectPointer		object;
+			CoordType				point;
+			float						distance;
+		};
+
+		/*
+		* The operator used for sorting the items in neighbors based on the distances
+		*/
+		struct DistanceCompare
+		{
+			inline bool operator()( const Neighbour &p1, const Neighbour &p2) const { return p1.distance<p2.distance; }
+		}; //end of DistanceCompare
+
+
+
+public:
+		~Octree()
+		{
+			delete []marks;
+			int node_count = NodeCount();
+			for (int i=0; i<node_count; i++)
+				delete nodes[i];
+			nodes.clear();
+		}
+
+
+		/*!
+		* Populate the octree
+		*/
+		template <class OBJECT_ITERATOR, class BOUNDING_BOX_FUNCTOR>
+		void Set(const OBJECT_ITERATOR & bObj, const OBJECT_ITERATOR & eObj, const BoundingBoxType &bounding_box, const BOUNDING_BOX_FUNCTOR &bb_functor/*, vcg::CallBackPos *callback=NULL*/) 
+		{
+			typedef Dereferencer<typename ReferenceType<typename OBJECT_ITERATOR::value_type>::Type >	DereferencerType;
+
+			// Compute the bounding-box enclosing the whole dataset
+			BoundingBoxType resulting_bb(bounding_box);
+			CoordType offset = bounding_box.Dim()*Octree::EXPANSION_FACTOR;
+			CoordType center = bounding_box.Center();
+			resulting_bb.Offset(offset);
+			float longest_side = vcg::math::Max( resulting_bb.DimX(), vcg::math::Max(resulting_bb.DimY(), resulting_bb.DimZ()) )/2.0f;
+			resulting_bb.Set(center);
+			resulting_bb.Offset(longest_side);
+			boundingBox = resulting_bb;
+
+			// Try to find a reasonable octree depth 
+			int dataset_dimension = std::distance(bObj, eObj);
+
+			// Allocate the mark array
+			global_mark				= 1;
+			marks							= new unsigned char[dataset_dimension];
+			memset(&marks[0], 0, sizeof(unsigned char)*dataset_dimension);
+
+			int primitives_per_voxel;
+			int depth = 4;
+			do 
+			{
+				int		number_of_voxel = 1<<(3*depth); // i.e. 8^depth
+				float density					= float(number_of_voxel)/float(depth);
+				primitives_per_voxel	= int(float(dataset_dimension)/density);
+				depth++;
+			}
+			while (primitives_per_voxel>25 && depth<15);
+			Initialize(depth);
+
+			// Sort the dataset (using the lebesgue space filling curve...)
+			std::string message("Indexing dataset...");
+			Octree::NodePointer *route = new Octree::NodePointer[depth+1];
+			OBJECT_ITERATOR iObj = bObj;
+
+			//if (callback!=NULL) callback(int((i+1)*100/dataset_dimension), message.c_str());
+
+			std::vector< ObjectPlaceholder< Octree::Node > > placeholders/*(dataset_dimension)*/;
+			vcg::Box3<ScalarType>		object_bb;
+			vcg::Point3<ScalarType> hit_leaf;
+			for (int i=0; i<dataset_dimension; i++, iObj++)
+			{
+				object_bb = bb_functor(*iObj);
+				hit_leaf  = object_bb.min;
+
+				while (object_bb.IsIn(hit_leaf))
+				{
+					int placeholder_index = placeholders.size();
+					placeholders.push_back( ObjectPlaceholder< Octree::Node >() ); 
+					placeholders[placeholder_index].z_order			 = BuildRoute(hit_leaf, route);
+					placeholders[placeholder_index].leaf_pointer = route[depth];
+					placeholders[placeholder_index].object_index = i;					
+					
+					hit_leaf.X() += leafDimension.X();
+					if (hit_leaf.X()>object_bb.max.X())
+					{
+						hit_leaf.X() = object_bb.min.X();
+						hit_leaf.Z()+= leafDimension.Z();
+						if (hit_leaf.Z()>object_bb.max.Z())
+						{
+							hit_leaf.Z() = object_bb.min.Z();
+							hit_leaf.Y()+= leafDimension.Y();
+						}
+					}
+				}
+			}
+			delete []route;
+
+			int placeholder_count = int(placeholders.size());
+			std::sort(placeholders.begin(), placeholders.end(), ObjectSorter< Octree::Node >());
+			std::vector< Octree::Node* > filled_leaves(placeholder_count);
+			sorted_dataset.resize( dataset_dimension );
+			for (int i=0; i<placeholder_count; i++)
+			{
+				std::advance((iObj=bObj), placeholders[i].object_index);
+				sorted_dataset[i].pObject				= &DereferencerType::Ref(*iObj);
+				sorted_dataset[i].mark_position = i;
+				filled_leaves[i]								= placeholders[i].leaf_pointer;
+			}
+
+			// The dataset is sorted and the octree is built, but the indexing information aren't stored yet in the octree:
+			// we assign to each leaf the range inside the sorted dataset of the primitives contained inside the leaf
+			int begin									= -1;
+			NodePointer initial_leaf	= NULL;
+			for (int end=0; end<placeholder_count; )
+			{
+				begin = end;
+				initial_leaf = filled_leaves[begin];
+				do end++;
+				while (end<placeholder_count && initial_leaf==filled_leaves[end]);
+
+				VoxelType *voxel = Voxel(initial_leaf);
+				voxel->SetRange(begin, end);	
+			}
+
+			// The octree is built, the dataset is sorted but only the leaves are indexed: 
+			// we propaget the indexing information bottom-up to the root
+			IndexInnerNodes( Root() );
+		} //end of Set
+
+		/*!
+		* Retrive the k closest element to the query point
+		*/
+		template <class OBJECT_POINT_DISTANCE_FUNCTOR, class OBJECT_MARKER, class OBJECT_POINTER_CONTAINER, class DISTANCE_CONTAINER, class POINT_POINTER_CONTAINER>
+		unsigned int GetKClosest
+			(
+			OBJECT_POINT_DISTANCE_FUNCTOR &distance_functor, 
+			OBJECT_MARKER									&/*marker*/, 
+			const unsigned int						 k, 
+			const CoordType								&query_point, 
+			const ScalarType							&max_distance,
+			OBJECT_POINTER_CONTAINER			&objects, 
+			DISTANCE_CONTAINER						&distances, 
+			POINT_POINTER_CONTAINER				&points,
+			bool													 sort_per_distance   = false,
+			bool													 allow_zero_distance = false
+			)
+		{
+			// costruisco una bounging box centrata in query di dimensione pari a quella di una foglia.
+			// e controllo se in tale bounging box sono contenute un numero di elementi >= a k.
+			// Altrimenti espando il bounding box.
+			BoundingBoxType query_bb;
+			query_bb.Set(query_point);
+
+			// Il raggio della sfera centrata nel punto query
+			float sphere_radius = 0.0f;
+
+			// se il bounding-box non interseca il bounding-box dell'octree, lo espando subito
+			if (!query_bb.IsIn(query_point))
+			{
+				do
+				{ 
+					query_bb.Offset(leafDiagonal); 
+					sphere_radius += leafDiagonal;
+				}
+				while ( !boundingBox.Collide(query_bb) || sphere_radius>max_distance); // TODO check the termination condintion
+			}
+
+			std::vector< NodePointer > leaves;
+			std::vector< Neighbour	 > neighbors;
+
+			unsigned int object_count;
+			int					 leaves_count;
+			float				 k_distance = leafDiagonal;
+			do
+			{
+				// update the marks
+				global_mark = (global_mark+1)%255;
+				if (global_mark == 0)
+				{
+					memset(&marks[0], 0, sizeof(unsigned char)*int(sorted_dataset.size()));
+					global_mark++;
+				}
+
+				do
+				{
+					leaves.clear();
+					object_count = 0;
+					query_bb.Offset(k_distance);
+					sphere_radius += vcg::math::Max<float>(leafDiagonal, k_distance);
+
+					ContainedLeaves(query_bb, leaves, Root(), boundingBox);
+
+					leaves_count = int(leaves.size());
+					object_count = 0;
+					for (int i=0; i<leaves_count; i++)
+						object_count += Voxel( leaves[i] )->count;
+				}
+				while (object_count<k && sphere_radius>max_distance); // TODO check the termination condintion
+
+				// i punti contenuti nelle foglie sono sufficienti. 
+				// seleziono solamente i k punti più vicini.
+				CoordType				 closest_point;
+				VoxelType				*voxel;
+				ObjectReference *ref;
+				int							 begin;
+				int							 end;
+				float						 distance;
+
+				neighbors.clear();
+				for (int i=0; i<leaves_count; i++)
+				{
+					voxel = Voxel(leaves[i]);
+					begin = voxel->begin;
+					end		= voxel->end;
+					for ( ; begin<end; begin++)
+					{
+						ref				= &sorted_dataset[begin];
+						if (marks[ref->mark_position]==global_mark)
+							continue;
+						
+						distance = max_distance;
+						if (!distance_functor(*ref->pObject, query_point, distance, closest_point))
+							continue;
+
+						marks[ref->mark_position]=global_mark;
+						if ((distance!=0.0f || allow_zero_distance)/* && distance<max_distance*/)
+							neighbors.push_back( Neighbour(ref->pObject, closest_point, distance) );
+					} //end of for ( ; begin<end; begin++)
+				} // end of for (int i=0; i<leavesCount; i++)
+
+
+				if (sphere_radius<max_distance)
+				{
+					if (int(neighbors.size())<k)
+					{
+						k_distance = 2.0f*sphere_radius;
+						continue;
+					}
+					else
+						object_count = k;
+				}
+				else 
+					object_count=int(neighbors.size());
+
+				std::vector< Neighbour >::iterator first = neighbors.begin();
+				std::vector< Neighbour >::iterator last	 = neighbors.end();
+
+				if (sort_per_distance)  std::partial_sort(first, first+object_count, last, DistanceCompare());
+				else										std::nth_element (first, first+object_count, last, DistanceCompare()); 
+				k_distance = neighbors[object_count-1].distance;
+			} 
+			while (k_distance>sphere_radius && sphere_radius<max_distance);
+
+			// copy the nearest object into  
+			if (points.size()!=object_count) 
+			{
+				points.resize(object_count);
+				distances.resize(object_count);
+				objects.resize(object_count);
+			}
+
+			POINT_POINTER_CONTAINER::iterator  iPoint			= points.begin();
+			DISTANCE_CONTAINER::iterator			 iDistance	= distances.begin();
+			OBJECT_POINTER_CONTAINER::iterator iObject		= objects.begin();
+			for (unsigned int n=0; n<object_count; n++, iPoint++, iDistance++, iObject++)
+			{
+				(*iPoint)		 = neighbors[n].point;
+				(*iDistance) = neighbors[n].distance;
+				(*iObject)	 = neighbors[n].object;
+			}
+			return object_count;
+		}; //end of GetKClosest
+
+
+		/*!
+		* Draw the octree in a valid OpenGL context according to the rendering settings
+		*/
+		void Octree::DrawOctree(vcg::Box3f &boundingBox, NodePointer n)
+		{
+			char level = Level(n);
+			NodePointer son;
+			if (rendering_settings.minVisibleDepth>level)
+			{
+				for (int s=0; s<8; s++)
+					if ((son=Son(n, s))!=0)
+						DrawOctree(SubBox(boundingBox, s), son);
+			}
+			else
+			{
+				vcg::glBoxWire(boundingBox);
+				if (level<rendering_settings.maxVisibleDepth)
+					for (int s=0; s<8; s++)
+						if ((son=Son(n, s))!=0)
+							DrawOctree(SubBox(boundingBox, s), son);
+			}
+		};
+
+	protected:
+		/*!
+		* Contains pointer to the objects in the dataset. 
+		* The pointers are sorted so that the object pointed to result ordered in the space
+		*/
+		std::vector< ObjectReference >	sorted_dataset;
+
+		/*!
+		* Markers used to avoid duplication of the same result during a query
+		*/
+		unsigned char	*marks;
+		unsigned char  global_mark;
+
+	public:
+		OcreeRenderingSetting					rendering_settings;
+
+	protected:
+		/*!
+		* When all the leaves are indexed, this procedure is called in order to propagate the indexing information to the inner nodes
+		*/
+		void IndexInnerNodes(NodePointer n)
+		{
+			assert(n!=NULL);
+
+			VoxelPointer current_voxel = Voxel(n);
+			VoxelPointer son_voxel;
+			for (int s=0; s<8; s++)
+			{
+				NodePointer son_index = Son(n, s);
+				if (son_index!=NULL)
+				{
+					if (Level(son_index)!=maximumDepth)
+						IndexInnerNodes(son_index);
+
+					son_voxel = Voxel(son_index);
+					current_voxel->AddRange( son_voxel );
+				}
+			}
+		}; // end of IndexInnerNodes
+	};
+
+
+} //end of namespace vcg
+
+#endif //OCTREE_H
