@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2006/02/09 08:38:04  pietroni
+sintax error corrected
+
 Revision 1.20  2006/02/08 17:02:41  pietroni
 commented one  GetClosestFace function ... the code is the same then getClosest that return barycentric coordinates
 
@@ -286,8 +289,9 @@ namespace vcg {
 			MarkerVert mv;
 			mv.SetMesh(&mesh);
 			typedef vcg::vertex::PointDistanceFunctor VDistFunct;
+			VDistFunct fn;
 			return (gr.GetInSphere/*<VDistFunct,MarkerVert,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>*/
-				(VDistFunct(),mv,_p,_r,_objectPtrs,_distances,_points));
+				(fn, mv,_p,_r,_objectPtrs,_distances,_points));
 		}
 
 		template <class MESH, class GRID, class OBJPTRCONTAINER>
