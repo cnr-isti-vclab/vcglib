@@ -22,6 +22,10 @@
 ****************************************************************************/
 /***************************************************************************
 $Log: not supported by cvs2svn $
+Revision 1.9  2006/09/11 16:11:39  marfr960
+Added const to declarations of the overloaded (operators *).
+Otherwise the  * operator would always attempt to convert any type of data passed as an argument to Point3<TYPE>
+
 Revision 1.8  2006/08/23 15:24:45  marfr960
 Copy constructor : faster memcpy instead of slow 'for' cycle
 empty constructor
@@ -633,6 +637,17 @@ namespace vcg{
 			{
 				for (unsigned int i=0; i<_rows*_columns; i++)
 					_data[i] = ScalarType(0.0);
+			};
+
+			/*!
+			*	Set the matrix to identity.
+			*/
+			void SetIdentity()
+			{
+				assert(_rows==_columns);
+				for (unsigned int i=0; i<_rows; i++)
+					for (unsigned int j=0; j<_columns; j++)
+						_data[i] = (i==j) ? ScalarType(1.0) : ScalarType(0.0f);
 			};
 
 			/*!
