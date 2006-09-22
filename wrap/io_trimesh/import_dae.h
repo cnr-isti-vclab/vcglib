@@ -4,16 +4,18 @@
 //importer for collada's files
 
 #include <FCollada.h>
-//#include <FUtils/FUStringConversion.h>
+#include <FUtils/FUStringConversion.h>
 #include <FCDocument/FCDocument.h>
 #include <FCDocument/FCDLibrary.h>
 #include <FCDocument/FCDGeometry.h>
 #include <FCDocument/FCDGeometryMesh.h>
 #include <FCDocument/FCDGeometrySource.h>
 #include <FCDocument/FCDGeometryPolygons.h>
+#include <FCDocument/FCDImage.h>
 
 
 //#include <wrap/gl/trimesh.h>
+#include <wrap/additionalinfo.h>
 #include <vcg/complex/trimesh/update/normal.h>
 #include <vcg/complex/trimesh/allocate.h>
 
@@ -23,10 +25,52 @@ namespace vcg {
 namespace tri {
 namespace io {
 
+
+	class InfoDAE : public AdditionalInfo
+	{
+		public:
+
+		InfoDAE()
+		{
+			mask	= 0;
+			numvert = 0;
+			numface = 0;
+			doc = NULL;
+		}
+
+		~InfoDAE()
+		{
+			delete doc;
+			texturefile.clear();
+		}
+
+		FCDocument* doc;		
+		std::vector<std::string> texturefile; 
+	};
+
+	class AdditionalInfoDAE : public AdditionalInfo
+	{
+	public: 
+		vcg::tri::io::InfoDAE* dae;
+
+		AdditionalInfoDAE()
+		:AdditionalInfo()
+		{
+		}
+
+		~AdditionalInfoDAE()
+		{
+			delete dae;
+		}
+	};
+
 template<typename OpenMeshType>
 class ImporterDAE
 {
+
+
 public:
+
 	//merge all meshes in the collada's file in the templeted mesh m
 	//I assume the mesh 
 
@@ -132,7 +176,7 @@ public:
 					{
 						FCDGeometryMesh* tmp = geomsh[ii];
 						FCDGeometryPolygonsInput* pos = tmp->GetPolygons(pset)->FindInput(FUDaeGeometryInput::POSITION);
-						if ((pos == NULL) || (pos->source->GetSourceStride() != 3)) 
+						if ((pos == NULL) || (pos->GetSource()->GetSourceStride() != 3)) 
 						{
 							delete doc;
 							return E_NO3DVERTEXPOSITION;
@@ -260,35 +304,41 @@ public:
 	/*this open function should be used when you want to maintain the Collada's XML tree. If the file will correctly opened 
 	doc argument in the function's signiture will contain the pointer to XML tree otherwise a NULL pointer*/
 
-	static int Open(OpenMeshType& m,const char* filename,FCDocument** doc)
-	{
-		(*doc) = new FCDocument();
 
-		FUStatus st = (*doc)->LoadFromFile(FUStringConversion::ToFString(filename));
+	static int Open(OpenMeshType& m,const char* filename,AdditionalInfo*& addinfo)
+	{
+		AdditionalInfoDAE* inf = new AdditionalInfoDAE();
+		inf->dae = new InfoDAE(); 
+		InfoDAE* info = inf->dae;
+		info->doc = new FCDocument();
+
+		FUStatus st = info->doc->LoadFromFile(FUStringConversion::ToFString(filename));
 		if (st.IsFailure()) 
 		{
-			delete *doc;
-			*doc = NULL;
+			delete info->doc;
+			info->doc = NULL;
 			return E_CANTOPEN;
 		}
 
-		FCDGeometryLibrary* geolib = (*doc)->GetGeometryLibrary();
+		FCDGeometryLibrary* geolib = info->doc->GetGeometryLibrary();
 		if (geolib->IsEmpty()) return E_NOGEOMETRYLIBRARY;
 		size_t n = geolib->GetEntityCount();
 		std::vector<FCDGeometryMesh*> geomsh(n);
 		
-		//for any mesh in the collada file
 
- 		for(unsigned int ii = 0;ii < geomsh.size();++ii)
+		//it tests if there is at least a mesh in the collada file
+		bool amesh = false; 
+
+ 		//for any mesh in the collada file
+		for(unsigned int ii = 0;ii < geomsh.size();++ii)
 		{
 			if (!geolib->GetEntity(ii)->IsMesh())
 			{
-				delete *doc;
-				*doc = NULL;
-				return E_NOMESH;
+				amesh |= false;
 			}
 			else
 			{
+				amesh |= true;
 				geomsh[ii] = geolib->GetEntity(ii)->GetMesh();
 				unsigned int offset = m.vert.size();
 				if (geomsh[ii]->GetFaceCount() > 0)
@@ -316,8 +366,8 @@ public:
 					}
 					else 
 					{
-						delete *doc;
-						*doc = NULL;
+						delete info->doc;
+						info->doc = NULL;
 						return E_NOVERTEXPOSITION;
 					}
 
@@ -333,8 +383,8 @@ public:
 						FCDGeometryPolygonsInput* pos = tmp->GetPolygons(pset)->FindInput(FUDaeGeometryInput::POSITION);
 						if ((pos == NULL) || (pos->GetSource()->GetSourceStride() != 3)) 
 						{
-							delete *doc;
-							*doc = NULL;
+							delete info->doc;
+							info->doc = NULL;
 							return E_NO3DVERTEXPOSITION;
 						}
 						//unsigned int hi = pos->indices[1];
@@ -346,6 +396,24 @@ public:
 						bool isvalidnorm = (m.HasPerVertexNormal()) && (norm != NULL) && (norm->GetSource()->GetSourceStride() == 3);
 						bool isvalidtext = (HasPerWedgeTexture(m)) && (text != NULL) && (text->GetSource()->GetSourceStride() == 2);
 						
+						//m.Enable(
+
+						if (isvalidtext)
+						{
+							FCDImageLibrary* imlib = NULL;
+							imlib = info->doc->GetImageLibrary();
+							
+							if (imlib != NULL)
+							{
+								info->texturefile.resize(imlib->GetEntityCount());
+								for(unsigned int gg = 0;gg < imlib->GetEntityCount();++gg)
+								{
+									 FCDImage* img = imlib->GetEntity(gg);
+									 info->texturefile[gg] = FUStringConversion::ToString(img->GetFilename());
+								}
+							}
+						}
+
 						FCDGeometryPolygonsInputList normlist;
 						tmp->GetPolygons(pset)->FindInputs(FUDaeGeometryInput::NORMAL,normlist);
 						FCDGeometryPolygonsInputList tet; 
@@ -451,11 +519,134 @@ public:
 			}
 		}
 
+		addinfo = inf;
+		if (!amesh)
+		{
+			delete info->doc;
+			info->doc = NULL;
+			return E_NOMESH;
+		}
 		//doc->WriteToFile("PincoPalla.dae");
 		return E_NOERROR;
 	}
-};
-	
+
+	static bool LoadMask(const char * filename, AdditionalInfoDAE &addinfo)
+	{
+		std::ifstream stream(filename);
+		if (stream.fail())
+			return false;
+
+		stream.seekg (0, std::ios::end);
+		int length = stream.tellg();
+		if (length == 0) return false;
+		stream.seekg (0, std::ios::beg);
+
+		bool bHasPerWedgeTexCoord = false;
+		bool bHasPerWedgeNormal		= false;
+		bool bUsingMaterial				= false;
+		bool bHasPerVertexColor		= false;
+		bool bHasPerFaceColor			= false;
+
+		AdditionalInfoDAE* inf = new AdditionalInfoDAE();
+		inf->dae = new InfoDAE(); 
+		InfoDAE* info = inf->dae;
+		info->doc = new FCDocument();
+
+		unsigned int numvert = 0;
+		unsigned int numtriang = 0;
+
+		unsigned int mask = 0;
+
+		FCDGeometryLibrary* geolib = info->doc->GetGeometryLibrary();
+		if (geolib->IsEmpty()) return false;
+		size_t n = geolib->GetEntityCount();
+		std::vector<FCDGeometryMesh*> geomsh(n);
+
+		
+		FUStatus st = info->doc->LoadFromFile(FUStringConversion::ToFString(filename));
+		if (st.IsFailure()) 
+		{
+			delete info->doc;
+			info->doc = NULL;
+			return false;
+		}
+		
+		bool amesh = false; 
+
+ 		//for any mesh in the collada file
+		for(unsigned int ii = 0;ii < geomsh.size();++ii)
+		{
+			if (!geolib->GetEntity(ii)->IsMesh())
+			{
+				amesh |= false;
+			}
+			else
+			{
+				amesh |= true;
+				geomsh[ii] = geolib->GetEntity(ii)->GetMesh();
+				
+				unsigned int ver;
+				if (geomsh[ii]->GetFaceCount() > 0)
+				{
+					geomsh[ii]->Triangulate(); 
+					
+					size_t dim = geomsh[ii]->GetFaceVertexCount() / geomsh[ii]->GetFaceCount();
+					assert(dim == 3);
+					//MyMesh* msh = new MyMesh();
+					//size_t  nattr = geomsh[ii]->GetSourceCount();
+					//FCDGeometrySourceList& srclst = geomsh[ii]->GetVertexSources(); 
+						
+					FCDGeometrySource* src;
+					if ((src = geomsh[ii]->GetPositionSource()) != NULL)
+					{
+						FloatList& flst = src->GetSourceData();
+						unsigned int str = src->GetSourceStride();
+						assert(flst.size() % str == 0);
+						ver = flst.size() / str;
+						numvert += flst.size() / str;  
+					}
+					else 
+					{
+						delete info->doc;
+						info->doc = NULL;
+						return false;
+					}
+
+					size_t pol = geomsh[ii]->GetPolygonsCount();
+
+					for(unsigned int pset = 0; pset < pol;++pset)
+					{
+						FCDGeometryMesh* tmp = geomsh[ii];
+						FCDGeometryPolygonsInput* pos = tmp->GetPolygons(pset)->FindInput(FUDaeGeometryInput::POSITION);
+						if ((pos == NULL) || (pos->GetSource()->GetSourceStride() != 3)) 
+						{
+							delete info->doc;
+							info->doc = NULL;
+							return false;
+						}
+						//unsigned int hi = pos->indices[1];
+
+						FCDGeometryPolygonsInputList normlist;
+						tmp->GetPolygons(pset)->FindInputs(FUDaeGeometryInput::NORMAL,normlist);
+						FCDGeometryPolygonsInputList tet; 
+						tmp->GetPolygons(pset)->FindInputs(FUDaeGeometryInput::TEXCOORD,tet);
+						
+						for(unsigned int kk = 0; kk < tet.size();++kk)
+							if ((normlist[0]->GetSource()->GetSourceData().size() == ver * 3 * 3) && (!bHasPerWedgeNormal))
+								bHasPerWedgeNormal = true;
+						
+						for(unsigned int kk = 0; kk < tet.size();++kk)
+							if ((tet[kk]->GetSource()->GetSourceData().size() == ver * 3 * 2) && (!bHasPerTexCoord))
+								bHasPerTexCoord = true;
+					}
+				}
+			}
+		}
+		inf.nvert = 
+		addinfo = inf;
+		return true;
+	}
+	};
 }
 }
 }
