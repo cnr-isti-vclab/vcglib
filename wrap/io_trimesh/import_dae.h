@@ -15,7 +15,7 @@
 
 
 //#include <wrap/gl/trimesh.h>
-#include <wrap/additionalinfo.h>
+#include <wrap/io_trimesh/additionalinfo.h>
 #include <vcg/complex/trimesh/update/normal.h>
 #include <vcg/complex/trimesh/allocate.h>
 
