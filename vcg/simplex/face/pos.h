@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2005/12/15 11:57:48  corsini
+Replace Pos<FaceType> with PosType
+
 Revision 1.19  2005/12/15 11:19:00  corsini
 Fix operators
 
@@ -373,9 +376,15 @@ public:
   It allow to easily traverse all the faces around a given vertex;
   typical example:
 
-    vcg::face::VFIterator<FaceType> vfi(v[1]);	
+    vcg::face::VFIterator<FaceType> vfi(f,v[1]);	
+    for (;!vfi.End();++vfi)
+			vfi.F()->ClearV();
+			
+		// Alternative 
+
+    vcg::face::VFIterator<FaceType> vfi(f, 1);
 		while (!vfi.End()){
-			vfi.V1()->ClearV();
+			vfi.F()->ClearV();
 			++vfi;
 		}
  */ 
