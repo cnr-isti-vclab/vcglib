@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2006/06/22 08:00:05  ganovelli
+bug in operator + with MatrixxDig
+
 Revision 1.13  2006/01/20 16:41:44  pietroni
 added operators:
             operator -= ( const Matrix33Diag<S>  &p )
@@ -79,6 +82,7 @@ created
 
 #include <stdio.h>
 #include <vcg/math/lin_algebra.h>
+#include <vcg/math/matrix44.h>
 #include <vcg/space/point3.h>
 #include <vector>
 
@@ -122,6 +126,17 @@ public:
 	Matrix33( const S * v )
 	{
 		for(int i=0;i<9;++i) a[i] = v[i];
+	}
+
+	/// create from Matrix44 excluding row and column k
+	Matrix33 (const Matrix44<S> & m, const int & k)
+	{
+		int i,j, r=0, c=0;
+		for(i = 0; i< 4;++i)if(i!=k){c=0;
+			for(j=0; j < 4;++j)if(j!=k)
+			{ (*this)[r][c] = m[i][j]; ++c;}
+			++r;
+		}
 	}
 
 	///	Number of columns
