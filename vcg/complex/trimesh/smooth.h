@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.9  2006/02/06 10:45:47  cignoni
+Added missing typenames
+
 Revision 1.7  2006/01/24 13:23:22  pietroni
 used template types instead of point3f and float inside function calls
 
@@ -534,6 +537,9 @@ void DepthSmooth(MESH_TYPE &m,
 /****************************************************************************************************************/
 /****************************************************************************************************************/
 // Paso Double Smoothing
+//  The proposed
+// approach is a two step method where  in the first step the face normals
+// are adjusted and then, in a second phase, the vertex positions are updated.
 /****************************************************************************************************************/
 /****************************************************************************************************************/
 // Classi di info
@@ -553,60 +559,55 @@ public:
 /***************************************************************************/
 // Paso Doble Step 1 compute the smoothed normals
 /***************************************************************************/
-// Calcola la normale media per ogni  faccia come area weighted mean con tutte
-// le facce adiacenti anche per vertice 
-//
+// Requirements:
+// VF Topology
+// Normalized Face Normals
+// 
+// This is the Normal Smoothing approach of Shen and Berner
+// Fuzzy Vector Median-Based Surface Smoothing TVCG 2004
+
 template<class MESH_TYPE>
-void NormalSmooth(MESH_TYPE &m, 	
+void NormalSmoothSB(MESH_TYPE &m, 	
 				  SimpleTempData<typename MESH_TYPE::FaceContainer,PDFaceInfo< typename MESH_TYPE::ScalarType > > &TD,
-				  float sigma)
+				  typename MESH_TYPE::ScalarType sigma)
 {
 	int i;
-	//vcg::face::Pos<typename MESH_TYPE::FaceType> ep;
-	vcg::face::VFIterator<typename MESH_TYPE::FaceType> ep;
-
+	
 	typedef typename MESH_TYPE::CoordType CoordType;
 	typedef typename MESH_TYPE::ScalarType ScalarType;
 	typename MESH_TYPE::FaceIterator fi;
+
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 	{
 		CoordType bc=(*fi).Barycenter();
+    // 1) Clear all the selected flag of faces that are vertex-adjacent to fi
 		for(i=0;i<3;++i)
 		{
-
-			ep.f=(*fi).V(i)->VFp();
-			ep.z=(*fi).V(i)->VFi();
-
-			while (!ep.End())
+    	vcg::face::VFIterator<typename MESH_TYPE::FaceType> ep(&*fi,i);
+		  while (!ep.End())
 			{
 				ep.f->ClearS();
 				++ep;
 			}
-
 		}
 
-
-
-		//TD[*fi]->SetV();
-		(*fi).SetS();
+    // 1) Effectively average the normals weighting them with 
+    (*fi).SetS();
 		CoordType mm=CoordType(0,0,0);
 		for(i=0;i<3;++i)
 		{
-			ep.f=(*fi).V(i)->VFp();
-			ep.z=(*fi).V(i)->VFi();
-			while (!ep.End())
+		  vcg::face::VFIterator<typename MESH_TYPE::FaceType> ep(&*fi,i);
+		  while (!ep.End())
 			{
-				//if(!TD[*(ep.f)]->IsV())
 				if(! (*ep.f).IsS() )
 				{
 					if(sigma>0) 
 					{
 						ScalarType dd=SquaredDistance(ep.f->Barycenter(),bc);
-						ScalarType ang=Angle(ep.f->N(),(*fi).N());
-						mm+=ep.f->N()*exp(((ScalarType)-sigma)*ang*ang/dd);
+						ScalarType ang=AngleN(ep.f->N(),(*fi).N());
+						mm+=ep.f->N()*exp((-sigma)*ang*ang/dd);
 					}
 					else mm+=ep.f->N();
-					//TD[*(ep.f)]->SetV();
 					(*ep.f).SetS();
 				}
 				++ep;
@@ -614,8 +615,68 @@ void NormalSmooth(MESH_TYPE &m,
 		}
 		mm.Normalize();
 		TD[*fi].m=mm;
-
 	}
+}
+
+/***************************************************************************/
+// Paso Doble Step 1 compute the smoothed normals
+/***************************************************************************/
+// Requirements:
+// VF Topology
+// Normalized Face Normals
+// 
+// This is the Normal Smoothing approach bsased on a angle thresholded weighting
+// sigma is in the 0 .. 1 range
+template<class MESH_TYPE>
+void NormalSmooth(MESH_TYPE &m, 	
+				  SimpleTempData<typename MESH_TYPE::FaceContainer,PDFaceInfo< typename MESH_TYPE::ScalarType > > &TD,
+				  typename MESH_TYPE::ScalarType sigma)
+{
+	int i;
+	
+	typedef typename MESH_TYPE::CoordType CoordType;
+	typedef typename MESH_TYPE::ScalarType ScalarType;
+	typedef typename vcg::face::VFIterator<typename MESH_TYPE::FaceType> VFLocalIterator;
+  typename MESH_TYPE::FaceIterator fi;
+	
+	for(fi=m.face.begin();fi!=m.face.end();++fi)
+	{
+		CoordType bc=Barycenter<MESH_TYPE::FaceType>(*fi);
+    // 1) Clear all the selected flag of faces that are vertex-adjacent to fi
+		for(i=0;i<3;++i)
+		{
+    	VFLocalIterator ep(&*fi,i);
+		  for (;!ep.End();++ep)
+				ep.f->ClearS();
+		}
+
+    // 1) Effectively average the normals weighting them with 
+    //(*fi).SetS();
+		CoordType mm=CoordType(0,0,0);
+		//CoordType mm=(*fi).N();
+		for(i=0;i<3;++i)
+		{
+    	VFLocalIterator ep(&*fi,i);
+		  for (;!ep.End();++ep)
+			{
+				if(! (*ep.f).IsS() )
+				{ 
+          ScalarType cosang=ep.f->N()*(*fi).N();
+          if(cosang >= sigma)
+          {
+            ScalarType w = cosang-sigma;
+						mm += ep.f->N()*(w*w);
+          }
+					(*ep.f).SetS();
+				}
+			}
+		}
+		mm.Normalize();
+		TD[*fi].m=mm;
+	}
+  
+  for(fi=m.face.begin();fi!=m.face.end();++fi) 
+    (*fi).N()=TD[*fi].m;
 }
 
 /****************************************************************************************************************/
@@ -708,7 +769,36 @@ void FitMesh(MESH_TYPE &m,
 /****************************************************************************************************************/
 
 
+template<class MESH_TYPE>
+void FastFitMesh(MESH_TYPE &m, 
+			 SimpleTempData<typename MESH_TYPE::VertContainer, PDVertInfo<typename MESH_TYPE::ScalarType> > &TDV,
+			 SimpleTempData<typename MESH_TYPE::FaceContainer, PDFaceInfo<typename MESH_TYPE::ScalarType> > &TDF)
+{
+	//vcg::face::Pos<typename MESH_TYPE::FaceType> ep;
+	vcg::face::VFIterator<typename MESH_TYPE::FaceType> ep;
+	typename MESH_TYPE::VertexIterator vi;
+	typedef typename MESH_TYPE::ScalarType ScalarType;
+	typedef typename MESH_TYPE::CoordType CoordType;
+	typedef typename vcg::face::VFIterator<typename MESH_TYPE::FaceType> VFLocalIterator;
 
+	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+	{
+   CoordType Sum(0,0,0);
+   ScalarType cnt=0;
+   VFLocalIterator ep(&*vi);
+	 for (;!ep.End();++ep)
+		{
+      CoordType bc=Barycenter<MESH_TYPE::FaceType>(*ep.F());
+      Sum += ep.F()->N()*(ep.F()->N()*(bc - (*vi).P()));
+      ++cnt;
+		}
+		TDV[*vi].np=(*vi).P()+ Sum*(1.0/cnt);					
+	}
+
+	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+		(*vi).P()=TDV[*vi].np;
+
+}
 
 
 
@@ -741,6 +831,37 @@ void PasoDobleSmooth(MeshType &m, int step, typename MeshType::ScalarType Sigma=
 		for(int k=0;k<FitStep;k++)
 			FitMesh<MeshType>(m,TDV,TDF,FitLambda);
 	}
+
+	TDF.Stop();
+	TDV.Stop();
+
+}
+template<class MeshType>
+void PasoDobleSmoothFast(MeshType &m, int step, typename MeshType::ScalarType Sigma=0, int FitStep=50)
+{
+  typedef typename MeshType::ScalarType     ScalarType;
+  typedef typename MeshType::CoordType     CoordType;
+
+
+	SimpleTempData< typename MeshType::VertContainer, PDVertInfo<ScalarType> > TDV(m.vert);
+	SimpleTempData< typename MeshType::FaceContainer, PDFaceInfo<ScalarType> > TDF(m.face);
+	PDVertInfo<ScalarType> lpzv;
+	lpzv.np=CoordType(0,0,0);
+	PDFaceInfo<ScalarType> lpzf;
+	lpzf.m=CoordType(0,0,0);
+
+	assert(m.HasVFTopology());
+	m.HasVFTopology();
+	TDV.Start(lpzv);
+	TDF.Start(lpzf);
+	
+  for(int j=0;j<step;++j)
+	   NormalSmooth<MeshType>(m,TDF,Sigma);
+		
+  for(int j=0;j<FitStep;++j)
+	  FastFitMesh<MeshType>(m,TDV,TDF);
+
+	
 
 	TDF.Stop();
 	TDV.Stop();
