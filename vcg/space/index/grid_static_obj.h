@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2006/08/23 15:20:14  marfr960
+corrected minor bugs
+
 Revision 1.2  2005/12/02 00:29:00  cignoni
 updated the templates of BasicGrid
 
@@ -64,7 +67,7 @@ class GridStaticObj : public BasicGrid<ObjType, FLT>
 
 	 inline  GridStaticObj() { grid = 0; }
 	 inline ~GridStaticObj() { if(grid) delete[] grid; }
-	 inline Init(const ObjType &val)
+	 inline void Init(const ObjType &val)
 	 {
 		 fill(grid,grid+size(),val);
 	 }
