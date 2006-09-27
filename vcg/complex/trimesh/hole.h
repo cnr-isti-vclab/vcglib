@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2006/09/25 09:17:44  cignoni
+First Non working Version
+
 ****************************************************************************/
 #ifndef __VCG_TRI_UPDATE_HOLE
 #define __VCG_TRI_UPDATE_HOLE
@@ -39,20 +42,45 @@ template<class MESH>
 class SimpleEdge
 {
 	public:
-	MESH::VertexPointer v[2];
-	SimpleEdge(MESH::VertexPointer v0, MESH::VertexPointer v1)
+	typename MESH::VertexType v[2];
+	SimpleEdge()
+	{}
+
+	SimpleEdge(typename MESH::VertexType v0, typename MESH::VertexType v1)
 		{
-			if(v0>v1) {v[0]=v1; v[1]=v0;}
+			if(v0.P().X() != v1.P().X() && 
+			   v0.P().Y() != v1.P().Y() &&
+				 v0.P().Z() != v1.P().Z())
+			{v[0]=v1; v[1]=v0;}
 			else {v[0]=v0; v[1]=v1;}
 		}
 
-	SimpleEdge(MESH::hedgepos_type &ep)		{
-			*this=SimpleEdge(ep.VFlip(), ep.v);
+	SimpleEdge(face::Pos<typename MESH::FaceType> &ep)		{
+			//*this=SimpleEdge(*ep.VFlip(), *ep.v);
+				MESH::VertexType v0 ,v1;
+				v0 = *ep.VFlip(); 
+				v1 = *ep.v;
+			if(v0.P().X() != v1.P().X() && 
+			   v0.P().Y() != v1.P().Y() &&
+				 v0.P().Z() != v1.P().Z())
+			{v[0]=v1; v[1]=v0;}
+			else {v[0]=v0; v[1]=v1;}
 	}
 	
+
 	bool operator < (const SimpleEdge & e) const
-		{		return (v[0]!=e.v[0])?(v[0]<e.v[0]):(v[1]<e.v[1]); }
+		{		v[0] = e.v[0]; v[1]=e.v[1];
+		}
 						
+	bool operator != (const SimpleEdge & e)
+	{		
+		if(v[0].P().X() != e.v[0].P().X() && 
+			 v[0].P().Y() != e.v[0].P().Y() &&
+			 v[0].P().Z() != e.v[0].P().Z())
+			 return true;
+		else return false;
+		
+	}
 };
 
 template<class MESH>
@@ -60,15 +88,15 @@ class HoleInfo
 {
 public: 
 	HoleInfo(){}
-	HoleInfo(MESH::hedgepos_type const &pHole, int  const pHoleSize, Box3<MESH::scalar_type> &pHoleBB)
+	HoleInfo(face::Pos<typename MESH::FaceType> const &pHole, int  const pHoleSize, vcg::Box3<typename MESH::ScalarType> &pHoleBB)
 		{
 			p=pHole;	
 			size=pHoleSize;
 			bb=pHoleBB;
 		}
-	MESH::hedgepos_type p;
+	typename face::Pos<typename MESH::FaceType> p;
 	int size;
-	Box3<MESH::scalar_type>  bb;
+	vcg::Box3<typename MESH::ScalarType>  bb;
 
 	bool operator <  (const  HoleInfo & hh) const {return size <  hh.size;}
 	bool operator >  (const  HoleInfo & hh) const {return size >  hh.size;}
@@ -77,10 +105,10 @@ public:
 	bool operator >= (const  HoleInfo & hh) const {return size >= hh.size;}
 	bool operator <= (const  HoleInfo & hh) const {return size <= hh.size;}
 
-	MESH::scalar_type Perimeter()
+typename MESH::ScalarType Perimeter()
 		{
-			MESH::scalar_type sum=0;
-			MESH::hedgepos_type ip = p;
+			MESH::ScalarType sum=0;
+			face::Pos<typename MESH::FaceType> ip = p;
 						do
 						{
 							sum+=Distance(ip.v->cP(),ip.VFlip()->cP());
@@ -91,13 +119,13 @@ public:
 		}
 
 
-	int CollectEdges(set< SimpleEdge<MESH> > &EV)
+		int CollectEdges(std::vector< SimpleEdge<MESH> > &EV)
 	{
 		assert(p.IsBorder());
 		EV.clear();
 		int tsz=0;
-		MESH::hedgepos_type ip=p;
-		MESH::hedgepos_type tp;
+		face::Pos<typename MESH::FaceType> ip=p;
+		face::Pos<typename MESH::FaceType> tp;
 
 		do
 		{
@@ -105,16 +133,16 @@ public:
 			do
 			{
 				ip.NextE();
-				EV.insert(SimpleEdge<MESH>(ip)); // l'edge che sto scorrendo
+				EV.push_back(SimpleEdge<MESH>(ip)); // l'edge che sto scorrendo
 				tp=ip;
 				tp.FlipV();tp.FlipE();
-				EV.insert(SimpleEdge<MESH>(tp)); // l'edge della faccia su cui sono e opposto al vertice su cui ruoto
+				EV.push_back(SimpleEdge<MESH>(tp)); // l'edge della faccia su cui sono e opposto al vertice su cui ruoto
 				tp.FlipF(); tp.FlipE();
-				EV.insert(SimpleEdge<MESH>(tp));  // gli altri due edge della faccia opposta a questa
+				EV.push_back(SimpleEdge<MESH>(tp));  // gli altri due edge della faccia opposta a questa
 				tp.FlipE();
-				EV.insert(SimpleEdge<MESH>(tp));
+				EV.push_back(SimpleEdge<MESH>(tp));
 			}
-			while(!ip.f->IsBorder(ip.z));
+			while(!ip.f->IsB(ip.z));
 			ip.FlipV();
 			++tsz;
 		}
@@ -126,15 +154,15 @@ public:
 };
 
 template<class MESH>
-void FindHole(MESH &m, MESH::hedgepos_type ep, HoleInfo<MESH> &h)
+void FindHole(MESH &m, face::Pos<typename MESH::FaceType> ep, HoleInfo<MESH> &h)
 {
 	if(!ep.IsBorder()) return;
 
 	int holesize = 0;
 						
-	Box3<MESH::scalar_type> hbox;
+	Box3<MESH::ScalarType> hbox;
 	if(ep.v->IsR()) hbox.Add(ep.v->cP());
-	MESH::hedgepos_type init;
+	face::Pos<typename MESH::FaceType> init;
 	init = ep;
 	do
 	{
@@ -150,32 +178,32 @@ void FindHole(MESH &m, MESH::hedgepos_type ep, HoleInfo<MESH> &h)
 template<class MESH,class STL_CONTAINER_HOLES>
 void FindHole(MESH &m, STL_CONTAINER_HOLES & H)
 {
-	MESH::face_iterator pf;
+	MESH::FaceIterator pf;
 	int holesize;
 	for (pf=m.face.begin(); pf!=m.face.end(); ++pf)
 			if( !(*pf).IsD() && (*pf).IsW() )
-				(*pf).ClearV();
+				(*pf).ClearS();
 
-		MESH::hedgepos_type ep;
+		face::Pos<typename MESH::FaceType> ep;
 		for (pf=m.face.begin(); pf!=m.face.end(); ++pf)
 		{
-			if( !(*pf).IsDeleted() && !(*pf).IsV() && (*pf).IsR() )
+			if( !(*pf).IsD() && !(*pf).IsS() && (*pf).IsR() )
 			{
 				for(int j=0; j<3; ++j)
-					if( (*pf).IsBorder(j) && !(*pf).IsV() && (*pf).IsR() )
+					if( (*pf).IsB(j) && !(*pf).IsS() && (*pf).IsR() )
 					{
-						(*pf).SetV();
+						(*pf).SetS();
 						ep.Set(&*pf, j, (*pf).V(j));
 						holesize = 0;
 						
-						Box3<MESH::scalar_type> hbox;
+						Box3<MESH::ScalarType> hbox;
 						if(ep.v->IsR()) hbox.Add(ep.v->cP());
-						MESH::hedgepos_type init;
+						face::Pos<typename MESH::FaceType> init;
 						init = ep;
 						do
 						{
 							ep.NextB();
-							ep.f->SetV();
+							ep.f->SetS();
 							if(ep.v->IsR()) hbox.Add(ep.v->cP());
 							++holesize;
 						}
@@ -216,11 +244,11 @@ XXXXXXXXXXXXXXXX   XXXXXXXXXXXXXXXX       XXXXXXXXXXXXXXXX
 template<class MSH_TYPE> class TrivialEar
 {
 	public:
-	MSH_TYPE::hedgepos_type e0;	// 
-	MSH_TYPE::hedgepos_type e1;	// 
-	MSH_TYPE::scalar_type quality;
+	face::Pos<typename MSH_TYPE::FaceType> e0;	// 
+	face::Pos<typename MSH_TYPE::FaceType> e1;	// 
+	typename MSH_TYPE::ScalarType quality;
 	TrivialEar(){}
-	TrivialEar(const MSH_TYPE::hedgepos_type & ep)
+	TrivialEar(const face::Pos<typename MSH_TYPE::FaceType> & ep)
 	{
 		e0=ep;
 		assert(e0.IsBorder());
@@ -244,8 +272,8 @@ template<class MSH_TYPE> class TrivialEar
 
 	bool Degen()
 		{
-			MSH_TYPE::hedgepos_type	ep=e0; ep.FlipV(); ep.NextB(); ep.FlipV(); // he precedente a e0 
-			MSH_TYPE::hedgepos_type	en=e1; en.NextB();												 // he successivo a e1
+			face::Pos<typename MSH_TYPE::FaceType>	ep=e0; ep.FlipV(); ep.NextB(); ep.FlipV(); // he precedente a e0 
+			face::Pos<typename MSH_TYPE::FaceType>	en=e1; en.NextB();												 // he successivo a e1
 
 			// caso ear degenere per buco triangolare
 			if(ep==en) return true; 
@@ -257,69 +285,73 @@ template<class MSH_TYPE> class TrivialEar
 			return false;
 		}
 
-	bool Close(TrivialEar &ne0, TrivialEar &ne1, MSH_TYPE::face_type* f)
+	bool Close(TrivialEar &ne0, TrivialEar &ne1, typename MSH_TYPE::FaceType * f)
 	{
 		// simple topological check
 		if(e0.f==e1.f) {
-			TRACE("Avoided bad ear");
+			//TRACE("Avoided bad ear");
+			printf("Avoided bad ear");
 			return false;
 		}
 
 		//usato per generare una delle due nuove orecchie.
-		MSH_TYPE::hedgepos_type	ep=e0; ep.FlipV(); ep.NextB(); ep.FlipV(); // he precedente a e0 
-		MSH_TYPE::hedgepos_type	en=e1; en.NextB();												 // he successivo a e1
+		face::Pos<typename MSH_TYPE::FaceType>	ep=e0; ep.FlipV(); ep.NextB(); ep.FlipV(); // he precedente a e0 
+		face::Pos<typename MSH_TYPE::FaceType>	en=e1; en.NextB();												 // he successivo a e1
 		
 		(*f).V(0) = e0.VFlip();
 		(*f).V(1) = e0.v;
 		(*f).V(2) = e1.v;
 
-		(*f).F(0) = e0.f;
-		(*f).Z(0) = e0.z;
-		(*f).F(1) = e1.f;
-		(*f).Z(1) = e1.z;
-		(*f).F(2) = f;
-		(*f).Z(2) = 2;
+		(*f).FFp(0) = e0.f;
+		(*f).FFi(0) = e0.z;
+		(*f).FFp(1) = e1.f;
+		(*f).FFi(1) = e1.z;
+		(*f).FFp(2) = f;
+		(*f).FFi(2) = 2;
 
-		e0.f->F(e0.z)=f;
-		e0.f->Z(e0.z)=0;	
+		e0.f->FFp(e0.z)=f;
+		e0.f->FFi(e0.z)=0;	
 		
-		e1.f->F(e1.z)=f;
-		e1.f->Z(e1.z)=1;	
+		e1.f->FFp(e1.z)=f;
+		e1.f->FFi(e1.z)=1;	
 
 		// caso ear degenere per buco triangolare
 		if(ep==en)
 		{
-			TRACE("Closing the last triangle");
-			f->F(2)=en.f;
-			f->Z(2)=en.z;
-			en.f->F(en.z)=f;
-			en.f->Z(en.z)=2;
+			//TRACE("Closing the last triangle");
+			printf("Closing the last triangle");
+			f->FFp(2)=en.f;
+			f->FFi(2)=en.z;
+			en.f->FFp(en.z)=f;
+			en.f->FFi(en.z)=2;
 			ne0.SetNull();
 			ne1.SetNull();
 		}
 	  // Caso ear non manifold a
 		else if(ep.v==en.v)
 		{
-			TRACE("Ear Non manif A\n");
-			MSH_TYPE::hedgepos_type	enold=en;
+			//TRACE("Ear Non manif A\n");
+			printf("Ear Non manif A\n");
+			face::Pos<typename MSH_TYPE::FaceType>	enold=en;
 			en.NextB();
-			f->F(2)=enold.f;
-			f->Z(2)=enold.z;
-			enold.f->F(enold.z)=f;
-			enold.f->Z(enold.z)=2;
+			f->FFp(2)=enold.f;
+			f->FFi(2)=enold.z;
+			enold.f->FFp(enold.z)=f;
+			enold.f->FFi(enold.z)=2;
 			ne0=TrivialEar(ep);
 			ne1=TrivialEar(en);
 		}
 		// Caso ear non manifold b
 		else if(ep.VFlip()==e1.v)
 		{
-			TRACE("Ear Non manif B\n");
-			MSH_TYPE::hedgepos_type	epold=ep; 
+			//TRACE("Ear Non manif B\n");
+			printf("Ear Non manif B\n");
+			face::Pos<typename MSH_TYPE::FaceType>	epold=ep; 
 			ep.FlipV(); ep.NextB(); ep.FlipV();
-			f->F(2)=epold.f;
-			f->Z(2)=epold.z;
-			epold.f->F(epold.z)=f;
-			epold.f->Z(epold.z)=2;
+			f->FFp(2)=epold.f;
+			f->FFi(2)=epold.z;
+			epold.f->FFp(epold.z)=f;
+			epold.f->FFi(epold.z)=2;
 			ne0=TrivialEar(ep);
 			ne1=TrivialEar(en);
 		}
@@ -327,7 +359,7 @@ template<class MSH_TYPE> class TrivialEar
 		// Now compute the new ears;
 		{
 			ne0=TrivialEar(ep);
-			ne1=TrivialEar(MSH_TYPE::hedgepos_type(f,2,e1.v));
+			ne1=TrivialEar(face::Pos<typename MSH_TYPE::FaceType>(f,2,e1.v));
 		}
 
 		return true;
@@ -346,41 +378,69 @@ template<class MSH_TYPE> class TrivialEar
 // Attenzione: se per riaggiungere facce deve riallocare il vettore non funge!!!!
 // 
 template<class MESH, class EAR>
-MESH::face_iterator CloseHole(MESH &m, HoleInfo<MESH> &h)
+typename MESH::FaceIterator CloseHole(MESH &m, HoleInfo <MESH> &h)
 {
 
-	set<SimpleEdge<MESH> > ES;  // vettore con tutti gli edge adiacenti al buco.
+	std::vector<SimpleEdge<MESH> > ES;
+	//set<SimpleEdge<MESH> > ES;  // vettore con tutti gli edge adiacenti al buco.
 	h.CollectEdges(ES);
 	vector<EAR> H;			// Heap delle ear da chiudere
 	H.reserve(h.size);
-	
+	std::vector<MESH::FacePointer *> app;
+	app.push_back( &h.p.f );
+	MESH::FaceIterator f = tri::Allocator<MESH>::AddFaces(m, h.size-2, app);
+	h.CollectEdges(ES);
+
 	assert(h.p.IsBorder());
-	MESH::hedgepos_type ep=h.p;
+
+	face::Pos<typename MESH::FaceType> ep=h.p;
+
 	do {
 		H.push_back(EAR(ep));
+		ep.f->SetS();
 		ep.NextB();
+
+		assert(ep.IsBorder());		
 	}	while(ep!=h.p);
+		
 
 	make_heap(H.begin(),H.end());
 	int cnt=h.size;
 	EAR en0,en1;
-	MESH::face_iterator f=m.AddFaces(h.size-2);
-	
-	MESH::face_iterator firstf=f;
-  SimpleEdge<MESH> se(0,0);
-	while(cnt>2 && !H.empty())
+
+	MESH::FaceIterator firstf = f;
+
+  //SimpleEdge<MESH> se();
+	while(cnt > 2 && !H.empty())
 	{
-		pop_heap(H.begin(),H.end());
-		se=SimpleEdge<MESH>(H.back().e0.VFlip(), H.back().e1.v);
+		//pop_heap(H.begin(),H.end());
+		
+		SimpleEdge<MESH> se( *(H.back().e0.VFlip()) , *(H.back().e1.v));
+		
+	//	se.v = p.v;
+//		se.v[1] = p.v[1];
+
+		//Sostituito la funzione find con la ricerca manuale
+		std::vector<SimpleEdge<MESH> >::iterator it;
+		it = ES.begin();
+		while( it != ES.end()  && 
+				 se != ((SimpleEdge<MESH> )(*it)) )
+		{it++;		} 
+		//per far funzionare il test sottostante.
+
 		if(H.back().IsUpToDate())	
 		{
-			if(!H.back().Degen() && ES.find(se)!=ES.end()){ 
+			
+			if(/*!*/H.back().Degen() && it != ES.end()){ /*Test sbagliato*/
 				// Nota che nel caso di ear degeneri si DEVE permettere la creazione di un edge che gia'esiste
-				TRACE("Evitata orecchia brutta!");
+				//TRACE("Evitata orecchia brutta!");
+				printf("\n -> Evitata orecchia brutta!");
 			}
-			else if(H.back().Close(en0,en1,&*f))
+			else 
+					if(H.back().Close(en0,en1,&*f))
 			{
-				ES.insert(se);
+				//ES.insert(se);
+				ES.push_back(se);
 				if(!en0.IsNull()){
 					H.push_back(en0);
 					push_heap( H.begin(), H.end());
@@ -414,7 +474,7 @@ template<class MSH_TYPE> class TrivialEarN : public TrivialEar<MSH_TYPE>
 	public:
 
 		TrivialEarN(){}
-	TrivialEarN(const MSH_TYPE::hedgepos_type & ep)
+	TrivialEarN(const face::Pos<typename MSH_TYPE::FaceType> & ep)
 	{
 		e0=ep;
 		assert(e0.IsBorder());
@@ -424,9 +484,9 @@ template<class MSH_TYPE> class TrivialEarN : public TrivialEar<MSH_TYPE>
 	}
 
 
-	static MSH_TYPE::vectorial_type &PreferredNormal()
+	static typename MSH_TYPE::VertexType &PreferredNormal()
 	{
-			static MSH_TYPE::vectorial_type nn;
+			static MSH_TYPE::VertexType nn;
 			return nn;
 	}
 
@@ -451,7 +511,7 @@ static double Area(const vector<Point2d> &contour)
   double A=0.0f;
 
   for(int p=n-1,q=0; q<n; p=q++) {
-    A+= contour[p].x()*contour[q].y() - contour[q].x()*contour[p].y();
+    A+= contour[p].X()*contour[q].Y() - contour[q].X()*contour[p].Y();
   }
   return A*0.5f;
 }
@@ -489,22 +549,22 @@ static bool Snip(const vector<Point2d> &contour,int u,int v,int w,int n,int *V)
   double Ax, Ay, Bx, By, Cx, Cy, Px, Py;
 	const double epsilon =1e-2;
 
-  Ax = contour[V[u]].x();
-  Ay = contour[V[u]].y();
+  Ax = contour[V[u]].X();
+  Ay = contour[V[u]].Y();
 
-  Bx = contour[V[v]].x();
-  By = contour[V[v]].y();
+  Bx = contour[V[v]].X();
+  By = contour[V[v]].Y();
 
-  Cx = contour[V[w]].x();
-  Cy = contour[V[w]].y();
+  Cx = contour[V[w]].X();
+  Cy = contour[V[w]].Y();
 
   if ( epsilon> (((Bx-Ax)*(Cy-Ay)) - ((By-Ay)*(Cx-Ax))) ) return false;
 
   for (p=0;p<n;p++)
   {
     if( (p == u) || (p == v) || (p == w) ) continue;
-    Px = contour[V[p]].x();
-    Py = contour[V[p]].y();
+    Px = contour[V[p]].X();
+    Py = contour[V[p]].Y();
     if (InsideTriangle(Ax,Ay,Bx,By,Cx,Cy,Px,Py)) return false;
   }
 
@@ -535,7 +595,7 @@ static bool Process(const vector<Point2d> &contour,vector<int> &result)
   /*  remove nv-2 Vertices, creating 1 triangle every time */
   int count = 2*nv;   /* error detection */
 
-	double CurrBest=Sqrt(area)/1000;
+	double CurrBest= sqrt(area)/1000;
 
   for(int m=0, v=nv-1; nv>2; )
   {
@@ -546,7 +606,7 @@ static bool Process(const vector<Point2d> &contour,vector<int> &result)
 			CurrBest*=1.3;
 			count = 2*nv;
 			
-			if(CurrBest>Sqrt(area)*2)
+			if(CurrBest > sqrt(area)*2)
 				return false;
     }
 
@@ -586,4 +646,5 @@ static bool Process(const vector<Point2d> &contour,vector<int> &result)
 
 };
 } // end namespace
+}
 #endif
