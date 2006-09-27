@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2006/09/27 09:29:53  giec
+Frist working release whit a few bugs.
+It almost fills the hole ...
+
 Revision 1.1  2006/09/25 09:17:44  cignoni
 First Non working Version
 
@@ -267,7 +271,39 @@ template<class MSH_TYPE> class TrivialEar
 
 	bool IsNull(){return e0.IsNull() || e1.IsNull();}
 	void SetNull(){e0.SetNull();e1.SetNull();}
-	void ComputeQuality(){ quality = Distance(e0.VFlip()->P(),e1.v->P());};
+	//void ComputeQuality(){ quality = Distance(e0.VFlip()->P(),e1.v->P());}; //metodo vecchio per il calcolo della qualita
+	void ComputeQuality()
+	{ 
+				
+			MSH_TYPE::ScalarType qt;
+			MSH_TYPE::ScalarType k0 = e0.VFlip()->P().X()*e1.v->P().X();
+			MSH_TYPE::ScalarType k1 = e0.VFlip()->P().Y()*e1.v->P().Y();
+			MSH_TYPE::ScalarType k2 = e0.VFlip()->P().Z()*e1.v->P().Z();
+
+				int exp0,exp1,exp2;
+
+				frexp( double(k0), &exp0 );
+				frexp( double(k1), &exp1 );
+				frexp( double(k2), &exp2 );
+
+				if( exp0<exp1 )
+				{
+						if(exp0<exp2)
+								qt = (MSH_TYPE::ScalarType) (k1+k2)+k0;
+						else
+								qt = (MSH_TYPE::ScalarType) (k0+k1)+k2;
+				}
+				else
+				{
+						if(exp1<exp2)
+								qt = (MSH_TYPE::ScalarType)(k0+k2)+k1;
+						else
+								qt = (MSH_TYPE::ScalarType) (k0+k1)+k2;
+				}
+					quality	= qt * Distance(e0.VFlip()->P(),e1.v->P());
+			
+	
+	};//dovrebbe
 	bool IsUpToDate()	{return (e0.IsBorder() && e1.IsBorder());};
 
 	bool Degen()
@@ -276,7 +312,7 @@ template<class MSH_TYPE> class TrivialEar
 			face::Pos<typename MSH_TYPE::FaceType>	en=e1; en.NextB();												 // he successivo a e1
 
 			// caso ear degenere per buco triangolare
-			if(ep==en) return true; 
+			if(ep==en) return true;
 			// Caso ear non manifold a
 			if(ep.v==en.v)	return true;
 			// Caso ear non manifold b
@@ -430,32 +466,62 @@ typename MESH::FaceIterator CloseHole(MESH &m, HoleInfo <MESH> &h)
 
 		if(H.back().IsUpToDate())	
 		{
-			
-			if(/*!*/H.back().Degen() && it != ES.end()){ /*Test sbagliato*/
-				// Nota che nel caso di ear degeneri si DEVE permettere la creazione di un edge che gia'esiste
-				//TRACE("Evitata orecchia brutta!");
-				printf("\n -> Evitata orecchia brutta!");
-			}
-			else 
-					if(H.back().Close(en0,en1,&*f))
-			{
-				//ES.insert(se);
-				ES.push_back(se);
-				if(!en0.IsNull()){
-					H.push_back(en0);
-					push_heap( H.begin(), H.end());
+
+				if(/*!*/H.back().Degen() && it != ES.end()){ 
+						// Nota che nel caso di ear degeneri si DEVE permettere la creazione di un edge che gia'esiste
+						//TRACE("Evitata orecchia brutta!");
+						printf("\n -> Evitata orecchia brutta!");
 				}
-				if(!en1.IsNull()){
-					H.push_back(en1);
-					push_heap( H.begin(), H.end());
+				else {
+						if(it == ES.end())
+						{
+								//H.back().Close(en0,en1,&*f);
+								int i = H.size();
+						}
+						else
+								if(H.back().Close(en0,en1,&*f))
+								{
+										//ES.insert(se);
+										ES.push_back(se);
+										if(!en0.IsNull()){
+												H.push_back(en0);
+												push_heap( H.begin(), H.end());
+										}
+										if(!en1.IsNull()){
+												H.push_back(en1);
+												push_heap( H.begin(), H.end());
+										}
+										--cnt;
+										++f;
+										//return firstf;///////////////dbug
+								}
 				}
-				--cnt;
-				++f;
-				//return firstf;///////////////dbug
-			}
+		}
+		if((cnt == 3) && ( H.back().e0.IsBorder() ) )
+		{
+				//dovrebbe mancare un triangolo da tappare
+				if(H.back().Close(en0,en1,&*f))
+				{
+								ES.push_back(se);
+										if(!en0.IsNull()){
+												H.push_back(en0);
+												push_heap( H.begin(), H.end());
+										}
+										if(!en1.IsNull()){
+												H.push_back(en1);
+												push_heap( H.begin(), H.end());
+										}
+										--cnt;
+										++f;
+				}
 		}
 		H.pop_back();
+		make_heap(H.begin(),H.end());
+
 	}
+		
+	
+
 	//Delete the unused faces (caused by non 1-manifold vertexes)
 	while(f!=m.face.end())
 		{
