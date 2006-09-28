@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2005/11/09 16:11:55  cignoni
+Added Abs and LowClampToZero
+
 Revision 1.22  2005/09/14 14:09:21  m_di_benedetto
 Added specialized Convert() for the same scalar type.
 
@@ -194,6 +197,10 @@ public:
 	inline P3ScalarType &Y() { return _v[1]; }
 	inline P3ScalarType &Z() { return _v[2]; }
 	inline const P3ScalarType * V() const
+	{
+		return _v;
+	}
+	inline P3ScalarType * V()
 	{
 		return _v;
 	}
