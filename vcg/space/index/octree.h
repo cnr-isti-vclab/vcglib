@@ -102,11 +102,11 @@ namespace vcg
 	
 	
 	template < class OBJECT_TYPE, class SCALAR_TYPE>
-	class Octree : public OctreeTemplate< Voxel >, public vcg::SpatialIndex< OBJECT_TYPE, SCALAR_TYPE >
+	class Octree : public OctreeTemplate< Voxel, SCALAR_TYPE >, public vcg::SpatialIndex< OBJECT_TYPE, SCALAR_TYPE >
 	{
 	public: 
+		typedef						SCALAR_TYPE													ScalarType;
 		typedef						OBJECT_TYPE													ObjectType;
-		typedef						vcg::Box3<ScalarType>								BoundingBoxType;	
 		typedef typename	Octree::Leaf											* LeafPointer;
 		typedef typename	Octree::InnerNode									* InnerNodePointer;
 		typedef typename	ReferenceType<OBJECT_TYPE>::Type	* ObjectPointer;
@@ -178,10 +178,10 @@ namespace vcg
 		*/
 		struct ObjectReference
 		{
-			ObjectReference() {mark_position=-1; pObject=NULL;}
+			ObjectReference() {pMark=NULL; pObject=NULL;}
 
-			int						mark_position;
-			ObjectPointer pObject;
+			unsigned char *pMark;
+			ObjectPointer  pObject;
 		};
 
 		/*
@@ -195,7 +195,7 @@ namespace vcg
 				this->distance = -1.0f;
 			};
 
-			Neighbour(ObjectPointer &object, CoordType &point, float distance)
+			Neighbour(ObjectPointer &object, CoordType &point, ScalarType distance)
 			{
 				this->object	 = object;
 				this->point		 = point;
@@ -205,7 +205,7 @@ namespace vcg
 
 			ObjectPointer		object;
 			CoordType				point;
-			float						distance;
+			ScalarType			distance;
 		};
 
 		/*
@@ -232,28 +232,31 @@ public:
 		/*!
 		* Populate the octree
 		*/
-		template <class OBJECT_ITERATOR, class BOUNDING_BOX_FUNCTOR>
-		void Set(const OBJECT_ITERATOR & bObj, const OBJECT_ITERATOR & eObj, const BoundingBoxType &bounding_box, const BOUNDING_BOX_FUNCTOR &bb_functor/*, vcg::CallBackPos *callback=NULL*/) 
+		template <class OBJECT_ITERATOR/*, class BOUNDING_BOX_FUNCTOR*/>
+		void Set(const OBJECT_ITERATOR & bObj, const OBJECT_ITERATOR & eObj /*, const BoundingBoxType &bounding_box*/ /*, const BOUNDING_BOX_FUNCTOR &bb_functor*/ /*, vcg::CallBackPos *callback=NULL*/) 
 		{
-			typedef Dereferencer<typename ReferenceType<typename OBJECT_ITERATOR::value_type>::Type >	DereferencerType;
-
 			// Compute the bounding-box enclosing the whole dataset
+			typedef Dereferencer<typename ReferenceType<typename OBJECT_ITERATOR::value_type>::Type >	DereferencerType;
+			BoundingBoxType bounding_box, obj_bb;
+			bounding_box.SetNull();
+			for (OBJECT_ITERATOR iObj=bObj; iObj!=eObj; iObj++)
+			{
+				(*iObj).GetBBox(obj_bb);
+				bounding_box.Add(obj_bb);
+			}
+
+			//...and expand it a bit more
 			BoundingBoxType resulting_bb(bounding_box);
 			CoordType offset = bounding_box.Dim()*Octree::EXPANSION_FACTOR;
 			CoordType center = bounding_box.Center();
 			resulting_bb.Offset(offset);
-			float longest_side = vcg::math::Max( resulting_bb.DimX(), vcg::math::Max(resulting_bb.DimY(), resulting_bb.DimZ()) )/2.0f;
+			ScalarType longest_side = vcg::math::Max( resulting_bb.DimX(), vcg::math::Max(resulting_bb.DimY(), resulting_bb.DimZ()) )/2.0f;
 			resulting_bb.Set(center);
 			resulting_bb.Offset(longest_side);
 			boundingBox = resulting_bb;
 
 			// Try to find a reasonable octree depth 
 			int dataset_dimension = std::distance(bObj, eObj);
-
-			// Allocate the mark array
-			global_mark				= 1;
-			marks							= new unsigned char[dataset_dimension];
-			memset(&marks[0], 0, sizeof(unsigned char)*dataset_dimension);
 
 			int primitives_per_voxel;
 			int depth = 4;
@@ -265,7 +268,7 @@ public:
 				depth++;
 			}
 			while (primitives_per_voxel>25 && depth<15);
-			Initialize(depth);
+			Initialize(++depth);
 
 			// Sort the dataset (using the lebesgue space filling curve...)
 			std::string message("Indexing dataset...");
@@ -279,7 +282,7 @@ public:
 			vcg::Point3<ScalarType> hit_leaf;
 			for (int i=0; i<dataset_dimension; i++, iObj++)
 			{
-				object_bb = bb_functor(*iObj);
+				(*iObj).GetBBox(object_bb);
 				hit_leaf  = object_bb.min;
 
 				while (object_bb.IsIn(hit_leaf))
@@ -306,15 +309,21 @@ public:
 			delete []route;
 
 			int placeholder_count = int(placeholders.size());
+			
+			// Allocate the mark array
+			global_mark				= 1;
+			marks							= new unsigned char[placeholder_count];
+			memset(&marks[0], 0, sizeof(unsigned char)*placeholder_count);
+			
 			std::sort(placeholders.begin(), placeholders.end(), ObjectSorter< Octree::Node >());
 			std::vector< Octree::Node* > filled_leaves(placeholder_count);
-			sorted_dataset.resize( dataset_dimension );
+			sorted_dataset.resize( placeholder_count );
 			for (int i=0; i<placeholder_count; i++)
 			{
 				std::advance((iObj=bObj), placeholders[i].object_index);
-				sorted_dataset[i].pObject				= &DereferencerType::Ref(*iObj);
-				sorted_dataset[i].mark_position = i;
-				filled_leaves[i]								= placeholders[i].leaf_pointer;
+				sorted_dataset[i].pObject	= &DereferencerType::Ref(*iObj);
+				sorted_dataset[i].pMark		= &marks[i];
+				filled_leaves[i]					= placeholders[i].leaf_pointer;
 			}
 
 			// The dataset is sorted and the octree is built, but the indexing information aren't stored yet in the octree:
@@ -338,42 +347,115 @@ public:
 		} //end of Set
 
 		/*!
+		* Finds the closest object to a given point.
+		*/
+		template <class OBJECT_POINT_DISTANCE_FUNCTOR, class OBJECT_MARKER>
+		ObjectPointer GetClosest
+		(
+			OBJECT_POINT_DISTANCE_FUNCTOR & distance_functor, 
+			OBJECT_MARKER									& /*marker*/, 
+			const CoordType								& query_point, 
+			const ScalarType							& max_distance,
+			ScalarType										& distance, 
+			CoordType											& point,
+			bool														allow_zero_distance = false
+		) 
+		{
+			BoundingBoxType query_bb;
+			ScalarType sphere_radius;
+			if (!GuessInitialBoundingBox(query_point, max_distance, sphere_radius, query_bb))
+				return NULL;
+			
+			std::vector< NodePointer > leaves;
+
+			unsigned int object_count;
+			int					 leaves_count;
+			ScalarType	 k_distance = leafDiagonal;
+
+			IncrementMark();
+			
+			do
+			{
+				leaves.clear();
+				object_count = 0;
+				query_bb.Offset(k_distance);
+				sphere_radius += vcg::math::Max<ScalarType>(leafDiagonal, k_distance);
+				
+				ContainedLeaves(query_bb, leaves, Root(), boundingBox);
+
+				leaves_count = int(leaves.size());
+				object_count = 0;
+				for (int i=0; i<leaves_count; i++)
+					object_count += Voxel( leaves[i] )->count;
+			}
+			while (object_count==0 && sphere_radius<max_distance);
+
+			if (sphere_radius>max_distance)
+				return NULL;
+			
+
+			CoordType				 closest_point;
+			VoxelType				*voxel;
+			ObjectReference *ref;
+			int							 begin;
+			int							 end;
+			ScalarType			 dist;
+
+			std::vector< Neighbour > neighbors;
+			object_count = 0;
+			for (int i=0; i<leaves_count; i++)
+			{
+				voxel = Voxel(leaves[i]);
+				begin = voxel->begin;
+				end		= voxel->end;
+				for ( ; begin<end; begin++)
+				{
+					ref				= &sorted_dataset[begin];
+					if (IsMarked(ref))
+						continue;
+
+					dist = max_distance;
+					if (!distance_functor(*ref->pObject, query_point, dist, closest_point))
+						continue;
+
+					Mark(ref);
+					if (dist!=ScalarType(0.0) || allow_zero_distance)
+						neighbors.push_back( Neighbour(ref->pObject, closest_point, dist) );
+
+				} //end of for ( ; begin<end; begin++)
+			} // end of for (int i=0; i<leavesCount; i++)
+
+			object_count = int(neighbors.size());
+			std::vector< Neighbour >::iterator first = neighbors.begin();
+			std::vector< Neighbour >::iterator last	 = neighbors.end();
+			std::partial_sort(first, first+object_count, last, DistanceCompare());
+			distance	= neighbors[0].distance;
+			point			= neighbors[0].point;
+			return			neighbors[0].object;
+		}; //end of GetClosest
+
+		/*!
 		* Retrive the k closest element to the query point
 		*/
-		template <class OBJECT_POINT_DISTANCE_FUNCTOR, class OBJECT_MARKER, class OBJECT_POINTER_CONTAINER, class DISTANCE_CONTAINER, class POINT_POINTER_CONTAINER>
+		template <class OBJECT_POINT_DISTANCE_FUNCTOR, class OBJECT_MARKER, class OBJECT_POINTER_CONTAINER, class DISTANCE_CONTAINER, class POINT_CONTAINER>
 		unsigned int GetKClosest
 			(
-			OBJECT_POINT_DISTANCE_FUNCTOR &distance_functor, 
-			OBJECT_MARKER									&/*marker*/, 
-			const unsigned int						 k, 
-			const CoordType								&query_point, 
-			const ScalarType							&max_distance,
-			OBJECT_POINTER_CONTAINER			&objects, 
-			DISTANCE_CONTAINER						&distances, 
-			POINT_POINTER_CONTAINER				&points,
-			bool													 sort_per_distance   = false,
-			bool													 allow_zero_distance = false
+			OBJECT_POINT_DISTANCE_FUNCTOR & distance_functor, 
+			OBJECT_MARKER									& /*marker*/, 
+			const unsigned int						  k, 
+			const CoordType								& query_point, 
+			const ScalarType							& max_distance,
+			OBJECT_POINTER_CONTAINER			& objects, 
+			DISTANCE_CONTAINER						& distances, 
+			POINT_CONTAINER								& points,
+			bool													  sort_per_distance   = false,
+			bool													  allow_zero_distance = false
 			)
 		{
-			// costruisco una bounging box centrata in query di dimensione pari a quella di una foglia.
-			// e controllo se in tale bounging box sono contenute un numero di elementi >= a k.
-			// Altrimenti espando il bounding box.
 			BoundingBoxType query_bb;
-			query_bb.Set(query_point);
-
-			// Il raggio della sfera centrata nel punto query
-			float sphere_radius = 0.0f;
-
-			// se il bounding-box non interseca il bounding-box dell'octree, lo espando subito
-			if (!query_bb.IsIn(query_point))
-			{
-				do
-				{ 
-					query_bb.Offset(leafDiagonal); 
-					sphere_radius += leafDiagonal;
-				}
-				while ( !boundingBox.Collide(query_bb) || sphere_radius>max_distance); // TODO check the termination condintion
-			}
+			ScalarType sphere_radius;
+			if (!GuessInitialBoundingBox(query_point, max_distance, sphere_radius, query_bb))
+				return 0;
 
 			std::vector< NodePointer > leaves;
 			std::vector< Neighbour	 > neighbors;
@@ -383,13 +465,7 @@ public:
 			float				 k_distance = leafDiagonal;
 			do
 			{
-				// update the marks
-				global_mark = (global_mark+1)%255;
-				if (global_mark == 0)
-				{
-					memset(&marks[0], 0, sizeof(unsigned char)*int(sorted_dataset.size()));
-					global_mark++;
-				}
+				IncrementMark();
 
 				do
 				{
@@ -405,7 +481,7 @@ public:
 					for (int i=0; i<leaves_count; i++)
 						object_count += Voxel( leaves[i] )->count;
 				}
-				while (object_count<k && sphere_radius>max_distance); // TODO check the termination condintion
+				while (object_count<k && sphere_radius<max_distance); // TODO check the termination condintion
 
 				// i punti contenuti nelle foglie sono sufficienti. 
 				// seleziono solamente i k punti più vicini.
@@ -417,6 +493,7 @@ public:
 				float						 distance;
 
 				neighbors.clear();
+				object_count = 0;
 				for (int i=0; i<leaves_count; i++)
 				{
 					voxel = Voxel(leaves[i]);
@@ -425,23 +502,23 @@ public:
 					for ( ; begin<end; begin++)
 					{
 						ref				= &sorted_dataset[begin];
-						if (marks[ref->mark_position]==global_mark)
+						if (IsMarked(ref))
 							continue;
 						
 						distance = max_distance;
 						if (!distance_functor(*ref->pObject, query_point, distance, closest_point))
 							continue;
 
-						marks[ref->mark_position]=global_mark;
-						if ((distance!=0.0f || allow_zero_distance)/* && distance<max_distance*/)
+						Mark(ref);
+						if ((distance!=0.0f || allow_zero_distance))
 							neighbors.push_back( Neighbour(ref->pObject, closest_point, distance) );
 					} //end of for ( ; begin<end; begin++)
 				} // end of for (int i=0; i<leavesCount; i++)
 
-
+				object_count = int(neighbors.size());
 				if (sphere_radius<max_distance)
 				{
-					if (int(neighbors.size())<k)
+					if (object_count<k)
 					{
 						k_distance = 2.0f*sphere_radius;
 						continue;
@@ -461,28 +538,142 @@ public:
 			} 
 			while (k_distance>sphere_radius && sphere_radius<max_distance);
 
-			// copy the nearest object into  
-			if (points.size()!=object_count) 
-			{
-				points.resize(object_count);
-				distances.resize(object_count);
-				objects.resize(object_count);
-			}
-
-			POINT_POINTER_CONTAINER::iterator  iPoint			= points.begin();
-			DISTANCE_CONTAINER::iterator			 iDistance	= distances.begin();
-			OBJECT_POINTER_CONTAINER::iterator iObject		= objects.begin();
-			for (unsigned int n=0; n<object_count; n++, iPoint++, iDistance++, iObject++)
-			{
-				(*iPoint)		 = neighbors[n].point;
-				(*iDistance) = neighbors[n].distance;
-				(*iObject)	 = neighbors[n].object;
-			}
-			return object_count;
+			return CopyQueryResults<OBJECT_POINTER_CONTAINER, DISTANCE_CONTAINER, POINT_CONTAINER>(neighbors, object_count, objects, distances, points);
 		}; //end of GetKClosest
 
 
 		/*!
+		* Returns all the objects contained inside a specified sphere
+		*/
+		template <class OBJECT_POINT_DISTANCE_FUNCTOR, class OBJECT_MARKER, class OBJECT_POINTER_CONTAINER, class DISTANCE_CONTAINER, class POINT_CONTAINER>
+		unsigned int GetInSphere
+			(
+				OBJECT_POINT_DISTANCE_FUNCTOR		&distance_functor, 
+				OBJECT_MARKER										&/*marker*/,
+				const CoordType									&sphere_center, 
+				const ScalarType								&sphere_radius,
+				OBJECT_POINTER_CONTAINER				&objects, 
+				DISTANCE_CONTAINER							&distances, 
+				POINT_CONTAINER									&points,
+				bool													 sort_per_distance   = false,
+				bool													 allow_zero_distance = false
+			)
+		{
+			// Define the minimum bounding-box containing the sphere
+			BoundingBoxType query_bb(sphere_center, sphere_radius);
+			
+			// If that bounding-box don't collide with the octree bounding-box, simply return 0
+			if (!boundingBox.Collide(query_bb))
+				return 0;
+
+			std::vector< NodePointer > leaves;
+			std::vector< Neighbour	 > neighbors;
+
+			unsigned int object_count = 0;
+			float				 k_distance		= leafDiagonal;
+
+			IncrementMark();
+			ContainedLeaves(query_bb, leaves, Root(), boundingBox);
+
+			int	leaves_countleaves_count = int(leaves.size());
+			if (leaves_count==0)
+				return 0;
+
+			CoordType				 closest_point;
+			VoxelType				*voxel;
+			ObjectReference *ref;
+			int							 begin;
+			int							 end;
+			float						 distance;
+			for (int i=0; i<leaves_count; i++)
+			{
+				voxel = Voxel(leaves[i]);
+				begin = voxel->begin;
+				end		= voxel->end;
+				for ( ; begin<end; begin++)
+				{
+					ref				= &sorted_dataset[begin];
+					if (IsMarked(ref))
+						continue;
+					
+					distance = sphere_radius;
+					if (!distance_functor(*ref->pObject, query_point, distance, closest_point))
+						continue;
+
+					object_count++;
+					Mark(ref);
+					if ((distance!=0.0f || allow_zero_distance) && distance<max_distance)
+						neighbors.push_back( Neighbour(ref->pObject, closest_point, distance) );
+				} //end of for ( ; begin<end; begin++)
+			} // end of for (int i=0; i<leavesCount; i++)
+
+			std::vector< Neighbour >::iterator first = neighbors.begin();
+			std::vector< Neighbour >::iterator last	 = neighbors.end();
+			if (sort_per_distance)  std::partial_sort(first, first+object_count, last, DistanceCompare());
+			else										std::nth_element (first, first+object_count, last, DistanceCompare()); 
+			
+			return CopyQueryResults<OBJECT_POINTER_CONTAINER, DISTANCE_CONTAINER, POINT_CONTAINER>(neighbors, object_count, objects, distances, points);
+		};//end of GetInSphere
+
+		/*!
+		* Returns all the objects lying inside the specified bbox
+		*/
+			template <class OBJECT_MARKER, class OBJECT_POINTER_CONTAINER>
+			unsigned int GetInBox
+				(
+					OBJECT_MARKER							&/*marker*/, 
+					const BoundingBoxType			&query_bounding_box,
+					OBJECT_POINTER_CONTAINER	&objects
+					) 
+			{
+				//if the query bounding-box don't collide with the octree bounding-box, simply return 0
+				if (!query_bounding_box.Collide())
+				{
+					objects.clear();
+					return 0;
+				}
+				
+				//otherwise, retrieve the leaves and fill the container with the objects contained
+				std::vector< NodePointer > leaves;
+				unsigned int object_count;
+				int					 leaves_count;
+			
+				ContainedLeaves(query_bounding_box, leaves, Root(), boundingBox);
+				leaves_count = int(leaves.size());
+				if (leaves_count==0)
+				{
+					objects.clear();
+					return 0;
+				}
+				
+				IncrementMark();
+
+				VoxelType				*voxel;
+				ObjectReference *ref;
+				int							 begin;
+				int							 end;
+				object_count = 0;
+				for (int i=0; i<leaves_count; i++)
+				{
+					voxel = Voxel(leaves[i]);
+					begin = voxel->begin;
+					end		= voxel->end;
+					for ( ; begin<end; begin++)
+					{
+						ref	= &sorted_dataset[begin];
+						if (IsMarked(ref))
+							continue;
+						
+						object_count++;
+						Mark(ref);
+						objects.push_back(ref->pObject);
+					} //end of for ( ; begin<end; begin++)
+				} // end of for (int i=0; i<leavesCount; i++)
+
+				return int(objects.size());
+			}; //end of GetInBox
+
+		/*
 		* Draw the octree in a valid OpenGL context according to the rendering settings
 		*/
 		void Octree::DrawOctree(vcg::Box3f &boundingBox, NodePointer n)
@@ -522,6 +713,89 @@ public:
 		OcreeRenderingSetting					rendering_settings;
 
 	protected:
+		/*!
+		*/
+		inline void IncrementMark()
+		{
+			// update the marks
+			global_mark = (global_mark+1)%255;
+			if (global_mark == 0)
+			{
+				memset(&marks[0], 0, sizeof(unsigned char)*int(sorted_dataset.size()));
+				global_mark++;
+			}
+		};//end of IncrementMark
+
+		/*
+		*/
+		inline bool IsMarked(const ObjectReference *ref) const 
+		{ return *ref->pMark == global_mark; };
+
+		/*
+		*/
+		inline void Mark(const ObjectReference *ref)
+		{ *ref->pMark = global_mark;};
+
+		/*!
+		* Guess an initial bounding-box from which starting the research of the closest point(s).
+		* \return true iff it's possibile to find a sphere, centered in query_point and having radius max_distance at most, which collide the octree bounding-box.
+		*/
+		inline bool GuessInitialBoundingBox(const CoordType &query_point, const ScalarType max_distance, ScalarType &sphere_radius, BoundingBoxType &query_bb)
+		{
+			// costruisco una bounging box centrata in query di dimensione pari a quella di una foglia.
+			// e controllo se in tale bounging box sono contenute un numero di elementi >= a k.
+			// Altrimenti espando il bounding box.
+			query_bb.Set(query_point);
+
+			// Il raggio della sfera centrata nel punto query
+			sphere_radius = 0.0f;
+
+			// se il bounding-box non interseca il bounding-box dell'octree, lo espando subito
+			if (!query_bb.IsIn(query_point))
+			{
+				do
+				{ 
+					query_bb.Offset(leafDiagonal); 
+					sphere_radius += leafDiagonal;
+				}
+				while ( !boundingBox.Collide(query_bb) || sphere_radius>max_distance); // TODO check the termination condintion
+			}
+			return (sphere_radius<=max_distance);
+		};
+
+		/*!
+		* Copy the results of a query
+		*/
+		template <class OBJECT_POINTER_CONTAINER, class DISTANCE_CONTAINER, class POINT_CONTAINER>
+		inline int CopyQueryResults
+		(
+			std::vector< Neighbour	 > &neighbors,
+			const unsigned int					object_count,
+			OBJECT_POINTER_CONTAINER	 &objects,
+			DISTANCE_CONTAINER				 &distances, 
+			POINT_CONTAINER						 &points
+		)
+		{
+			// copy the nearest object into  
+			if (int(points.size())!=object_count) 
+			{
+				points.resize(object_count);
+				distances.resize(object_count);
+				objects.resize(object_count);
+			}
+
+			POINT_CONTAINER::iterator					 iPoint			= points.begin();
+			DISTANCE_CONTAINER::iterator			 iDistance	= distances.begin();
+			OBJECT_POINTER_CONTAINER::iterator iObject		= objects.begin();
+			for (unsigned int n=0; n<object_count; n++, iPoint++, iDistance++, iObject++)
+			{
+				(*iPoint)		 = neighbors[n].point;
+				(*iDistance) = neighbors[n].distance;
+				(*iObject)	 = neighbors[n].object;
+			}
+			return object_count;
+		}
+		
 		/*!
 		* When all the leaves are indexed, this procedure is called in order to propagate the indexing information to the inner nodes
 		*/

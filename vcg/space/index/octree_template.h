@@ -48,7 +48,7 @@ Si tiene int invece di puntatori per garantirsi reallocazione dinamica.
 I dati veri e propri stanno in un vettore di nodi
 */
 
-template <typename VOXEL_TYPE>
+template <typename VOXEL_TYPE, class SCALAR_TYPE>
 class OctreeTemplate
 {
 protected:
@@ -56,12 +56,15 @@ protected:
 
 public:
 	// Octree Type Definitions
-	typedef typename VOXEL_TYPE		VoxelType;
-	typedef typename VOXEL_TYPE  *VoxelPointer;
-	typedef vcg::Point3i					CenterType;	
-	static const float						EXPANSION_FACTOR;
-	typedef	int										NodeIndex;
-	typedef Node								 *NodePointer;
+	typedef SCALAR_TYPE								ScalarType;
+	typedef typename VOXEL_TYPE				VoxelType;
+	typedef typename VOXEL_TYPE		   *VoxelPointer;
+	typedef vcg::Point3i							CenterType;	
+	static const ScalarType						EXPANSION_FACTOR;
+	typedef	int												NodeIndex;
+	typedef Node										 *NodePointer;
+	typedef	vcg::Box3<ScalarType>			BoundingBoxType;	
+	typedef vcg::Point3<ScalarType>	CoordinateType;
 
 protected:
 	/*
@@ -154,14 +157,14 @@ public:
 		nodes.push_back( root );
 		root->center	= CenterType(size, size, size);
 		
-		float szf = (float) size;
+		ScalarType szf = (ScalarType) size;
 		leafDimension  = boundingBox.Dim();
 		leafDimension /= szf;
 		leafDiagonal	 = leafDimension.Norm();
 	};
 
 	// Return the octree bounding-box
-	inline vcg::Box3f		BoundingBox()											{ return boundingBox;				}
+	inline BoundingBoxType		BoundingBox()								{ return boundingBox;				}
 	
 	// Return the Voxel of the n-th node
 	inline VoxelPointer	Voxel(const NodePointer n)				{ return &(n->voxel);				}
@@ -199,15 +202,15 @@ public:
 	inline CenterType CenterInOctreeCoordinates(const NodePointer n) const { return n->center;}
 	
 	// Return the center of the n-th node expressed in world-coordinate
-	inline vcg::Point3f CenterInWorldCoordinates(const NodePointer n) const
+	inline CoordinateType CenterInWorldCoordinates(const NodePointer n) const
 	{
 		assert(0<=n && n<NodeCount());
 
 		int level = n->level;
 		int shift = maxDepth-level+1;
-		vcg::Point3f wcCenter; 
-		vcg::Point3f ocCenter = CenterInOctreeCoordinates(n);
-		vcg::Point3f nodeSize = boundingBox.Dim()/float(1<<level);
+		CoordinateType wcCenter; 
+		CoordinateType ocCenter = CenterInOctreeCoordinates(n);
+		CoordinateType nodeSize = boundingBox.Dim()/float(1<<level);
 		wcCenter.X() = boundingBox.min.X() + (nodeSize.X()*(0.5f+(ocCenter.X()>>shift)));
 		wcCenter.Y() = boundingBox.min.Y() + (nodeSize.Y()*(0.5f+(ocCenter.Y()>>shift)));
 		wcCenter.Z() = boundingBox.min.Z() + (nodeSize.Z()*(0.5f+(ocCenter.Z()>>shift)));
@@ -264,9 +267,9 @@ public:
 
 	The center of each cell can simply be obtained by adding .5 to the path of the leaves.
 	*/
-	vcg::Point3f Center(NodePointer n) const
+	CoordinateType Center(NodePointer n) const
 	{
-		vcg::Point3f center;
+		CoordinateType center;
 		center.Import(GetPath(n));
 		center+=Point3f(.5f,.5f,.5f);
 
@@ -277,15 +280,15 @@ public:
 	}
 
 	// Return the bounding-box of the n-th node expressed in world-coordinate
-	vcg::Box3f BoundingBoxInWorldCoordinates(const NodePointer n)
+	BoundingBoxType BoundingBoxInWorldCoordinates(const NodePointer n)
 	{
 		assert(0<=n && n<Size());
 
 		char level = Level(n);
 		int shift  = maximumDepth-level+1;
-		vcg::Point3f nodeDim = boundingBox.Dim()/float(1<<level);
-		CenterType   center	 = CenterInOctreeCoordinates(n);
-		vcg::Box3f	 nodeBB;
+		CoordinateType	nodeDim = boundingBox.Dim()/float(1<<level);
+		CenterType			center	 = CenterInOctreeCoordinates(n);
+		BoundingBoxType	nodeBB;
 		nodeBB.min.X() = boundingBox.min.X() + (nodeDim.X()*(center.X()>>shift));
 		nodeBB.min.Y() = boundingBox.min.Y() + (nodeDim.Y()*(center.Y()>>shift));
 		nodeBB.min.Z() = boundingBox.min.Z() + (nodeDim.Z()*(center.Z()>>shift));
@@ -294,9 +297,9 @@ public:
 	};
 
 	// Return one of the 8 subb box of a given box.
-	vcg::Box3f SubBox(vcg::Box3f &lbb, int i)
+	BoundingBoxType SubBox(BoundingBoxType &lbb, int i)
 	{
-		vcg::Box3f bs;
+		BoundingBoxType bs;
 		if (i&1)	bs.min.X()=(lbb.min.X()+(bs.max.X()=lbb.max.X()))/2.0f;
 		else			bs.max.X()=((bs.min.X()=lbb.min.X())+lbb.max.X())/2.0f;
 		if (i&2)	bs.min.Y()=(lbb.min.Y()+(bs.max.Y()=lbb.max.Y()))/2.0f;
@@ -309,9 +312,9 @@ public:
 
 	// Given the bounding-box and the center (both in world-coordinates)
 	// of a node, return the bounding-box (in world-coordinats) of the i-th son 
-	vcg::Box3f SubBoxAndCenterInWorldCoordinates(vcg::Box3f &lbb, vcg::Point3f &center, int i)
+	BoundingBoxType SubBoxAndCenterInWorldCoordinates(BoundingBoxType &lbb, CoordinateType &center, int i)
 	{
-		vcg::Box3f bs;
+		BoundingBoxType bs;
 		if (i&1)	
 		{
 			bs.min[0]=center[0];
@@ -407,9 +410,9 @@ public:
 
 	// Convert the point p coordinates to the integer based representation 
 	// in the range 0..size, where size is 2^maxdepth
-	vcg::Point3i Interize(const vcg::Point3f &pf) const  
+	CenterType Interize(const CoordinateType &pf) const  
 	{
-		vcg::Point3i pi;
+		CenterType pi;
 
 		assert(pf.X()>=boundingBox.min.X() &&  pf.X()<=boundingBox.max.X());
 		assert(pf.Y()>=boundingBox.min.Y() &&  pf.Y()<=boundingBox.max.Y());
@@ -424,9 +427,9 @@ public:
 
 	// Inverse function of Interize; 
 	// Return to the original coords space (not to the original values!!)
-	vcg::Point3f DeInterize(const vcg::Point3i &pi ) const 
+	CoordinateType DeInterize(const CenterType &pi ) const 
 	{
-		vcg::Point3f pf;
+		CoordinateType pf;
 
 		assert(pi.X()>=0 && pi.X()<size); 
 		assert(pi.Y()>=0 && pi.Y()<size); 
@@ -525,7 +528,7 @@ public:
 	// I nodi mancanti dalla radice fino a profondità maxDepth vengono aggiunti. 
 	// In posizione i ci sarà il nodo di livello i.
 	// Restituisce lo z-order del punto p
-	unsigned long long BuildRoute(const vcg::Point3f &p, NodePointer *&route)
+	unsigned long long BuildRoute(const CoordinateType &p, NodePointer *&route)
 	{
 		assert( boundingBox.min.X()<=p.X() && p.X()<=boundingBox.max.X() );
 		assert( boundingBox.min.Y()<=p.Y() && p.Y()<=boundingBox.max.Y() );
@@ -568,7 +571,7 @@ public:
 	// fino al nodo di profontidà massima presente; nelle eventuali posizioni rimaste
 	// libere è inserito il valore -1. Restituisce true se il punto p cade in una foglia
 	// dell'otree, false altrimenti
-	bool GetRoute(const vcg::Point3f &p, NodePointer *&route)
+	bool GetRoute(const CoordinateType &p, NodePointer *&route)
 	{
 		assert( boundingBox.min.X()<=p.X() && p.X()<=boundingBox.max.X() );
 		assert( boundingBox.min.Y()<=p.Y() && p.Y()<=boundingBox.max.Y() );
@@ -606,12 +609,13 @@ public:
 	// bb (la bounding-box dell'octree); i puntatori a tali nodi sono 
 	// inseriti progressivamente in contained_nodes.
 	// The vector nodes must be cleared before calling this method.
-	void ContainedNodes(
-		vcg::Box3f								 &query,
+	void ContainedNodes
+	(
+		BoundingBoxType						 &query,
 		std::vector< NodePointer > &nodes,
 		int													depth, 
 		NodePointer									n,
-		vcg::Box3f								 &nodeBB)
+		BoundingBoxType						 &nodeBB)
 	{
 		if (!query.Collide(nodeBB))
 			return;
@@ -621,8 +625,8 @@ public:
 		else
 		{
 			NodePointer	son;
-			vcg::Box3f	sonBB;
-			vcg::Point3f nodeCenter = nodeBB.Center();
+			BoundingBoxType	sonBB;
+			CoordinateType  nodeCenter = nodeBB.Center();
 			for (int s=0; s<8; s++)
 			{
 				son = Son(n, s);
@@ -640,15 +644,15 @@ public:
 	// bounding-box ha intersezione non nulla con bb; i loro indici
 	// sono inseriti all'interno di leaves.
 	void ContainedLeaves(
-		vcg::Box3f								 &query, 
+		BoundingBoxType						 &query, 
 		std::vector< NodePointer > &leaves,
 		NodePointer									node,
-		vcg::Box3f								 &nodeBB
+		BoundingBoxType						 &nodeBB
 		)
 	{
 		NodePointer	son;
-		vcg::Box3f	sonBB;
-		vcg::Point3f nodeCenter = nodeBB.Center();
+		BoundingBoxType	sonBB;
+		CoordinateType nodeCenter = nodeBB.Center();
 		for (int s=0; s<8; s++)
 		{
 			son = Son(node, s); //nodes[nodeIndex].sonIndex[s]
@@ -681,21 +685,20 @@ public:
 	int						maximumDepth;
 
 	// The dimension of a leaf
-	vcg::Point3f	leafDimension; 
+	CoordinateType	leafDimension; 
 
 	// The diagonal of a leaf
-	float					leafDiagonal;
+	ScalarType			leafDiagonal;
 	
 	// The Octree nodes
 	std::vector< Node* > nodes;
 
 	// The bounding box containing the octree (in world coordinate)
-	vcg::Box3f				boundingBox;
+	BoundingBoxType				boundingBox;
 }; //end of class OctreeTemplate
 
-template <typename VOXEL_TYPE>
-const float OctreeTemplate<VOXEL_TYPE>::EXPANSION_FACTOR  = 0.035f;
-
+template <typename VOXEL_TYPE, class SCALAR_TYPE>
+const SCALAR_TYPE OctreeTemplate<VOXEL_TYPE, SCALAR_TYPE>::EXPANSION_FACTOR  = SCALAR_TYPE(0.035);
 }
 
 #endif //OCTREETEMPLATE_H
