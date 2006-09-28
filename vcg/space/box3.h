@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2006/07/06 12:42:10  ganovelli
+tolto il tipo enumerato axis
+
 Revision 1.11  2006/06/29 13:22:04  ganovelli
 Aggiunte funzioni che determinano il lato magiore (minore)
 
@@ -249,7 +252,7 @@ public:
 		return bb.IsValid();
 	}
 	*/
-	bool Collide(Box3<BoxScalarType> const &b)
+	bool Collide(Box3<BoxScalarType> const &b) const
 	{
 		return b.min.X()<max.X() && b.max.X()>min.X() &&
 			   b.min.Y()<max.Y() && b.max.Y()>min.Y() &&
