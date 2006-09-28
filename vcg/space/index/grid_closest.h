@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2006/09/07 09:25:49  marfr960
+casted returned value type to avoid warning C4267
+
 Revision 1.12  2006/08/29 15:38:36  pietroni
 in GridDoRay function the RayIterator must be initialized with maximum distance
 
@@ -123,10 +126,10 @@ namespace vcg{
 
 			if (first != last)
 			{
-				l = first - 1;
-				do
+				l = first;// - 1;
+				while (l != last)
 				{
-					l++;
+					//l++;
 					ObjPtr elem=&(**l);
 					if (!elem->IsD())
 					{
@@ -138,7 +141,8 @@ namespace vcg{
 						}
 						_marker.Mark(elem);
 					}
-				} while (l != last);
+				l++;
+				} 
 				iboxdone=Box3i(_ip,_ip);
 			}
 		}
