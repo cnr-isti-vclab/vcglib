@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2006/02/27 17:42:43  ponchio
+Added some documentation.
+
 Revision 1.6  2005/12/05 15:58:10  cignoni
 Removed spurious definition of flags in Aritymax that was overriding the correct definition in EmplyBitFlags and BitFlags classes
 
@@ -230,6 +233,11 @@ static inline bool DeleteBitFlag(int bitval)
 	void SetUserBit(int userBit){this->Flags() |=userBit;}
 	/// This function clear the given user bit 
 	void ClearUserBit(int userBit){this->Flags() &= (~userBit);}
+
+ template<class BoxType>
+  void GetBBox( BoxType & bb ) const
+  {	  bb.Set(this->P());  }
+
 
           };
 
