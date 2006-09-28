@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2006/07/28 12:39:05  zifnab1974
+added some typename directives
+
 Revision 1.12  2006/07/24 07:26:47  fiorin
 Changed the template argument in JacobiRotate and added method for sorting eigenvalues and eigenvectors (SortEigenvaluesAndEigenvectors)
 
@@ -79,33 +82,33 @@ namespace vcg
 		for (ip=0;ip<dimension;++ip)			//Initialize b and d to the diagonal of a. 
 		{		
 			b[ip]=d[ip]=w[ip][ip]; 
-			z[ip]=0.0;							//This vector will accumulate terms of the form tapq as in equation (11.1.14). 
+			z[ip]=ScalarType(0.0);							//This vector will accumulate terms of the form tapq as in equation (11.1.14). 
 		}
 		nrot=0; 
 		for (i=0;i<50;i++) 
 		{ 
-			sm=0.0; 
+			sm=ScalarType(0.0); 
 			for (ip=0;ip<dimension-1;++ip)		// Sum off diagonal elements
 			{
 				for (iq=ip+1;iq<dimension;++iq) 
 					sm += fabs(w[ip][iq]); 
 			} 
-			if (sm == 0.0)					//The normal return, which relies on quadratic convergence to machine underflow. 
+			if (sm == ScalarType(0.0))					//The normal return, which relies on quadratic convergence to machine underflow. 
 			{				
 				return; 
 			} 
 			if (i < 4) 	
-				tresh=0.2*sm/(dimension*dimension); //...on the first three sweeps. 
+				tresh=ScalarType(0.2)*sm/(dimension*dimension); //...on the first three sweeps. 
 			else 		
-				tresh=0.0;				//...thereafter. 
+				tresh=ScalarType(0.0);				//...thereafter. 
 			for (ip=0;ip<dimension-1;++ip) 
 			{  
 				for (iq=ip+1;iq<dimension;iq++) 
 				{ 
-					g=100.0*fabs(w[ip][iq]); 
+					g=ScalarType(100.0)*fabs(w[ip][iq]); 
 					//After four sweeps, skip the rotation if the off-diagonal element is small. 
 					if(i>4 && (float)(fabs(d[ip])+g) == (float)fabs(d[ip]) && (float)(fabs(d[iq])+g) == (float)fabs(d[iq])) 
-						w[ip][iq]=0.0; 
+						w[ip][iq]=ScalarType(0.0); 
 					else if (fabs(w[ip][iq]) > tresh) 
 					{ 
 						h=d[iq]-d[ip]; 
@@ -113,19 +116,19 @@ namespace vcg
 							t=(w[ip][iq])/h; //t =1/(2#) 
 						else 
 						{ 
-							theta=0.5*h/(w[ip][iq]); //Equation (11.1.10). 
-							t=1.0/(fabs(theta)+sqrt(1.0+theta*theta)); 
-							if (theta < 0.0) t = -t; 
+							theta=ScalarType(0.5)*h/(w[ip][iq]); //Equation (11.1.10). 
+							t=ScalarType(1.0)/(fabs(theta)+sqrt(ScalarType(1.0)+theta*theta)); 
+							if (theta < ScalarType(0.0)) t = -t; 
 						} 
-						c=1.0/sqrt(1+t*t); 
+						c=ScalarType(1.0)/sqrt(ScalarType(1.0)+t*t); 
 						s=t*c; 
-						tau=s/(1.0+c); 
+						tau=s/(ScalarType(1.0)+c); 
 						h=t*w[ip][iq]; 
 						z[ip] -= h; 
 						z[iq] += h; 
 						d[ip] -= h; 
 						d[iq] += h; 
-						w[ip][iq]=0.0; 
+						w[ip][iq]=ScalarType(0.0); 
 						for (j=0;j<=ip-1;j++) { //Case of rotations 1 <= j < p. 
 							JacobiRotate<MATRIX_TYPE>(w,s,tau,j,ip,j,iq) ;
 						} 
@@ -156,7 +159,7 @@ namespace vcg
 	* Given the eigenvectors and the eigenvalues as output from JacobiRotate, sorts the eigenvalues 
 	* into descending order, and rearranges the columns of v correspondinlgy. 
 	/param eigenvalues
-	/param eigenvector
+	/param eigenvector (in columns)
 	*/
 	template < typename MATRIX_TYPE, typename POINT_TYPE >
 	void SortEigenvaluesAndEigenvectors(POINT_TYPE &eigenvalues, MATRIX_TYPE &eigenvectors)
