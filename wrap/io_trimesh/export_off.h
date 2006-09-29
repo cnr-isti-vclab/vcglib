@@ -62,56 +62,51 @@ namespace vcg {
 					if( m.HasPerVertexColor()   && (mask & io::Mask::IOM_VERTCOLOR))		fprintf(fpout,"C");
 					if( m.HasPerVertexTexture() && (mask & io::Mask::IOM_VERTTEXCOORD))	fprintf(fpout,"ST");
 					fprintf(fpout,"OFF\n");
-					fprintf(fpout,"%d %d ", m.vn, m.fn);
+					fprintf(fpout,"%d %d 0", m.vn, m.fn);
+          typename SaveMeshType::FaceIterator fi;
+					
+					// USeless portio of code that try tocomput the exact number of edges. 
+          // OFF usually has a 0 as edge number.
+          //
+          //int count_e = 0;
+					//int boundary_e = 0;
+					//bool counted=false;
+					//for(fi=m.face.begin();fi!=m.face.end();++fi)
+					//	(*fi).ClearS();
 
-					typename SaveMeshType::FaceIterator fi;
-					int count_e = 0;
-					int boundary_e = 0;
-					bool counted=false;
-					for(fi=m.face.begin();fi!=m.face.end();++fi)
-						(*fi).ClearS();
-
-
-
-					for(fi=m.face.begin();fi!=m.face.end();fi++)
-					{
-						(*fi).SetS();
-						count_e +=3;								//assume that we have to increase the number of edges with three
-						for(int j=0; j<3; j++)
-						{
-							if (face::IsBorder(*fi,j))			//If this edge is a border edge
-								boundary_e++;						//  then increase the number of boundary edges
-              else if (face::IsManifold(*fi,j))		//If this edge is manifold
-							{
-								if((*fi).FFp(j)->IsS()) //If the face on the other side of the edge is already selected
-									count_e--;						//  we counted one edge twice
-							}
-							else											//We have a non-manifold edge
-							{
-								hei.Set(&(*fi), j , fi->V(j));
-								he=hei;
-								he.NextF();
-								while (he.f!=hei.f)			//	so we have to iterated all faces that are connected to this edge
-								{
-									if (he.f->IsS())			//  if one of the other faces was already visited than this edge was counted already.
-									{
-										counted=true;
-										break;
-									}
-									else 
-									{
-										he.NextF();
-									}
-								}
-								if (counted)
-								{
-									count_e--;
-									counted=false;
-								}
-							}
-						}
-					}	
-					fprintf(fpout,"%d\n", count_e);
+					//for(fi=m.face.begin();fi!=m.face.end();fi++)
+					//{
+					//	(*fi).SetS();
+					//	count_e +=3;								//assume that we have to increase the number of edges with three
+					//	for(int j=0; j<3; j++)
+					//	{
+					//		if (face::IsBorder(*fi,j))			//If this edge is a border edge
+					//			boundary_e++;						//  then increase the number of boundary edges
+     //         else if (face::IsManifold(*fi,j))		//If this edge is manifold
+					//		{
+					//			if((*fi).FFp(j)->IsS()) //If the face on the other side of the edge is already selected
+					//				count_e--;						//  we counted one edge twice
+					//		}
+					//		else											//We have a non-manifold edge
+					//		{
+					//			hei.Set(&(*fi), j , fi->V(j));
+					//			he=hei;
+					//			he.NextF();
+					//			while (he.f!=hei.f)			//	so we have to iterated all faces that are connected to this edge
+					//			{
+					//				if (he.f->IsS()){			//  if one of the other faces was already visited than this edge was counted already.
+					//					counted=true;
+					//					break;
+					//				}	else { he.NextF();	}
+					//			}
+					//			if (counted) {
+					//				count_e--;
+					//				counted=false;
+					//			}
+					//		}
+					//	}
+					//}	
+					//fprintf(fpout,"%d\n", count_e);
 
 					//vertices
 					int j;
@@ -125,14 +120,14 @@ namespace vcg {
 						if( ! vp->IsD() )
 						{	// ***** ASCII *****
 
-							fprintf(fpout,"Vertex: %g %g %g\n" ,vp->P()[0],vp->P()[1],vp->P()[2]);
-							if( m.HasPerVertexColor() )
+							fprintf(fpout,"%g %g %g\n" ,vp->P()[0],vp->P()[1],vp->P()[2]);
+							if( m.HasPerVertexColor()  && (mask & io::Mask::IOM_VERTCOLOR) )
 								fprintf(fpout,"%d %d %d %d\n",vp->C()[0],vp->C()[1],vp->C()[2],vp->C()[3] );
 
-							if( m.HasPerVertexNormal())
+							if( m.HasPerVertexNormal()  && (mask & io::Mask::IOM_VERTNORMAL) )
 								fprintf(fpout,"%g %g %g\n", vp->N()[0],vp->N()[1],vp->N()[2]);
 
-							if( m.HasPerVertexTexture())
+							if( m.HasPerVertexTexture()  && (mask & io::Mask::IOM_VERTTEXCOORD) )
 								fprintf(fpout,"%g %g\n",vp->T().u(),vp->T().v());
 						}
 
