@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2006/09/28 22:49:49  fiorin
+Removed some warnings
+
 Revision 1.13  2006/07/28 12:39:05  zifnab1974
 added some typename directives
 
@@ -69,6 +72,7 @@ namespace vcg
 	template <typename MATRIX_TYPE, typename POINT_TYPE>
 	static void Jacobi(MATRIX_TYPE &w, POINT_TYPE &d, MATRIX_TYPE &v, int &nrot) 
 	{ 
+       typedef typename MATRIX_TYPE::ScalarType ScalarType;
 		assert(w.RowsNumber()==w.ColumnsNumber());
 		int dimension = w.RowsNumber();
 
