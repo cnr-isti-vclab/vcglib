@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.27  2006/02/28 12:22:48  spinelli
+fix bug end iterator++
+
 Revision 1.26  2006/02/28 12:13:49  spinelli
 fix bug end iterator++
 
@@ -170,6 +173,7 @@ namespace vcg {
 			*/
 			static VertexIterator AddVertices(MeshType &m,int n, PointerUpdater<VertexPointer> &pu)
 			{
+        assert(n>0);
 				VertexIterator last;
 				pu.Clear();
 				if(m.vert.empty()) pu.oldBase=0;  // if the vector is empty we cannot find the last valid element
@@ -213,105 +217,35 @@ namespace vcg {
 			}
 
 
-			/** Function to add n faces to the mesh.
-			@param n Il numero di facce che si vuole aggiungere alla mesh
-			*/
-			static FaceIterator AddFaces(MeshType &m, int n,std::vector<FacePointer *> &local_var)
-			{
-				PointerUpdater<FacePointer> pu;
-				return AddFaces(m,n,pu,local_var);
-			}
-			/** Function to add n faces to the mesh. 
-			NOTA: Aggiorna fn;
-			*/
-			static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu,std::vector<FacePointer *> &local_var)
-			{
-				FaceIterator  last = m.face.end();
-				pu.Clear();
-				if(m.face.empty()) {
-					pu.oldBase=0;  // if the vector is empty we cannot find the last valid element
-				}	else  {
-					pu.oldBase=&*m.face.begin(); 
-					last=m.face.end();
-				} 
-				for(int i=0; i<n; ++i)
-				{
-					m.face.push_back(FaceType());
-					m.face.back().ClearFlags();
-				}
-
-				m.fn+=n;
-
-				pu.newBase = &*m.face.begin();
-
-				if(pu.NeedUpdate())
-				{
-					/*  std::vector<FacePointer *>::iterator it;
-					for (it=local_var.begin();it<local_var.end();it++)
-					{
-					pu.Update((FacePointer&)(*it));
-					}*/
-
-					typename std::vector<FaceType **>::iterator jit;
-					for(jit=local_var.begin(); jit!=local_var.end(); ++jit)
-						if((**jit) !=0 ) 
-						{
-							//FaceType **f =(**jit);
-							pu.Update(**jit);
-						}
-
-						FaceIterator fi;
-						for (fi=m.face.begin(); fi!=m.face.end(); ++fi)
-							if(!(*fi).IsD())
-							{
-								if(FaceType::HasFFAdjacency())
-								{
-									pu.Update((*fi).FFp(0));
-									pu.Update((*fi).FFp(1));
-									pu.Update((*fi).FFp(2));
-								}
-								if(FaceType::HasVFAdjacency())
-								{
-									if ((*fi).VFp(0)!=0)
-										pu.Update((*fi).VFp(0));
-									if ((*fi).VFp(1)!=0)
-										pu.Update((*fi).VFp(1));
-									if ((*fi).VFp(2)!=0)
-										pu.Update((*fi).VFp(2));
-								}
-							}
-							VertexIterator vi;
-							for (vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
-								if(!(*vi).IsD())
-								{
-									if(VertexType::HasVFAdjacency())
-										if ((*vi).VFp()!=0)
-											pu.Update((*vi).VFp());
-								}
-
-				}
-				// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
-				unsigned int siz=m.face.size()-n;	
-
-				last = m.face.begin(); 
-				advance(last,siz);
-				return last;
-			}
-
+	
 
 			/** Function to add n faces to the mesh.
-			@param n Il numero di facce che si vuole aggiungere alla mesh
+			First wrapper, with no parameters
 			*/
 			static FaceIterator AddFaces(MeshType &m, int n)
 			{
 				PointerUpdater<FacePointer> pu;
 				return AddFaces(m,n,pu);
 			}
+
+      /** Function to add n faces to the mesh.
+			Second Wrapper, with a vector of face pointer to be updated.
+			*/
+			static FaceIterator AddFaces(MeshType &m, int n,std::vector<FacePointer *> &local_vec)
+			{
+				PointerUpdater<FacePointer> pu;
+				return AddFaces(m,n,pu,local_var);
+        for(std::vector<FacePointer *>::iterator fi=local_vec.begin();fi!=local_vec.end();++fi)
+          pu.Update(*fi);
+			}
+
 			/** Function to add n faces to the mesh. 
-			NOTA: Aggiorna fn;
+      This is the only full featured function
+			NOTE: THIS FUNCTION ALSO UPDATE FN
 			*/
 			static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu)
 			{
+        assert(n>0); 
 				FaceIterator  last;
 				pu.Clear();
 				if(m.face.empty()) {
