@@ -20,17 +20,10 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-
 /****************************************************************************
 History
 
 $Log: not supported by cvs2svn $
-Revision 1.17  2006/08/31 13:19:59  marfr960
-ClosestIterator avoids to put the query point p into the result set
-
-Revision 1.16  2006/08/23 15:22:14  marfr960
-*** empty log message ***
-
 Revision 1.14  2006/06/01 20:53:56  cignoni
 added missing header
 
@@ -323,7 +316,7 @@ namespace vcg{
 		///control the end of scanning
 		bool  _EndGrid()
 		{
-			if ((explored.min==vcg::Point3i(0,0,0))&&(explored.max>Si.siz/*-vcg::Point3i(1,1,1)*/))
+			if ((explored.min==vcg::Point3i(0,0,0))&&(explored.max==Si.siz-vcg::Point3i(1,1,1)))
 				end =true;
 			return end;
 		}
@@ -350,14 +343,14 @@ namespace vcg{
 			/*b3d.Intersect(Si.bbox);
 			Si.BoxToIBox(b3d,to_explore);*/
 			Si.BoxToIBox(b3d,to_explore);
-			Box3i ibox(Point3i(0,0,0),Si.siz/*-Point3i(1,1,1)*/);
+			Box3i ibox(Point3i(0,0,0),Si.siz-Point3i(1,1,1));
 			to_explore.Intersect(ibox);
 			if (!to_explore.IsNull())
 			{
-/*				assert(!( to_explore.min.X()<0 || to_explore.max.X()>Si.siz[0] ||
-					to_explore.min.Y()<0 || to_explore.max.Y()>Si.siz[1] ||  to_explore.min.Z()<0 
-					|| to_explore.max.Z()>Si.siz[2] ));
-*/				return true;
+				assert(!( to_explore.min.X()<0 || to_explore.max.X()>=Si.siz[0] ||
+					to_explore.min.Y()<0 || to_explore.max.Y()>=Si.siz[1] ||  to_explore.min.Z()<0 
+					|| to_explore.max.Z()>=Si.siz[2] ));
+				return true;
 			}
 			return false;
 		}
@@ -381,13 +374,14 @@ namespace vcg{
 		///initialize the Itarator
 		void Init(CoordType _p,const ScalarType &_max_dist)
 		{
-			explored.SetNull();		// box currently searched
+			explored.SetNull();
 			to_explore.SetNull();
-			p=_p;					// p is the CoordType point from which the search begin
-			max_dist=_max_dist;		// max_dist is the maximal distance where the search stops
-			Elems.clear();			// set of Entry_Type elements where to search
+			p=_p;
+			max_dist=_max_dist;
+			Elems.clear();
 			end=false;
 			tm.UnMarkAll();
+			//step_size=Si.voxel.X();
 			step_size=Si.voxel.Norm();
 			radius=0;
 
@@ -405,8 +399,10 @@ namespace vcg{
 					Refresh();
 			}
 
-			if (!Elems.empty())
-				std::sort(Elems.begin(), Elems.end());
+			//set to the last element ..the nearest
+			CurrentElem=Elems.end();
+			CurrentElem--;
+
 		}
 
 		//return true if the scan is complete
@@ -431,8 +427,7 @@ namespace vcg{
 							typename Spatial_Idexing::CellIterator first,last,l;
 
 							Si.Grid(ix,iy,iz,first,last);
-
-							for(l=first;l!=(last + 1);++l)
+							for(l=first;l!=last;++l)
 							{
 								ObjType	*elem=&(**l);
 								if (!tm.IsMarked(elem))
@@ -440,53 +435,57 @@ namespace vcg{
 
 									CoordType nearest;
 									ScalarType dist=max_dist;
-									if (dist_funct((**l), p, dist, nearest))
-										if (dist > 0.f)	// avoids to insert p in the query result
-											Elems.push_back(Entry_Type(elem,fabs(dist),nearest));
+									if (dist_funct((**l),p,dist,nearest))
+										Elems.push_back(Entry_Type(elem,fabs(dist),nearest));
 									tm.Mark(elem);
 								}
 							}
-
 						}
+
 					}
 
-			if (!Elems.empty())
-				std::sort(Elems.begin(), Elems.end());
+					std::sort(Elems.begin(),Elems.end());
+
+					CurrentElem=Elems.end();
+					CurrentElem--;
 		}
 
 		void operator ++()
 		{
-			if (!Elems.empty())
+			/*if (Dist()<=radius)
+			{
+				CurrentElem--;
 				Elems.pop_back();
+			}
 
+			while ((!End())&&(Dist()>radius))
+				if (_NextShell()&&!_EndGrid())
+					Refresh();*/
+
+			if (Elems.size()>0)
+			{
+				CurrentElem--;
+				Elems.pop_back();
+			}
 			while ((!End())&&(Dist()>radius))
 				if (_NextShell()&&!_EndGrid())
 					Refresh();
 		}
 
-		ObjType &operator *()
-		{
-			assert (!Elems.empty());
-
-			return *(Elems.back().elem);
-		}
+		ObjType &operator *(){return *((*CurrentElem).elem);}
 
 		//return distance of the element form the point if no element 
 		//are in the vector then return max dinstance
 		ScalarType Dist()
 		{
-			if (!Elems.empty())
-				return (Elems.back()).dist;
+			if (Elems.size()>0)
+				return ((*CurrentElem).dist);
 			else 
 				return ((ScalarType)FLT_MAX);
 		}
 
 		CoordType NearestPoint()
-		{
-			assert (!Elems.empty());
-
-			return (Elems.back().intersection);
-		}
+		{return ((*CurrentElem).intersection);}
 
 	protected:
 
@@ -511,18 +510,22 @@ namespace vcg{
 			CoordType intersection;
 		};
 
-		CoordType p;					// initial point
-		Spatial_Idexing &Si;			// reference to spatial index structure
-		bool end;						// true if the scan is terminated
-		ScalarType max_dist;			// max distance when the scan terminate
-		vcg::Box3i explored;			// current bounding box explored
-		vcg::Box3i to_explore;	
-		ScalarType radius;				// current radius of the volume sphere where to scan
-		ScalarType step_size;			// step fro incrementing the radius
-		std::vector<Entry_Type> Elems;  // set of elements contained in the current sphere
+		CoordType p;				  //initial point
+		Spatial_Idexing &Si;		  //reference to spatial index algorithm
+		bool end;					  //true if the scan is terminated
+		ScalarType max_dist;		  //max distance when the scan terminate
+		vcg::Box3i explored;		  //current bounding box explored
+		vcg::Box3i to_explore;		  //current bounding box explored
+		ScalarType radius;			  //curret radius for sphere expansion
+		ScalarType step_size;		  //radius step
+		std::vector<Entry_Type> Elems; //element loaded from the current sphere
 
 		DISTFUNCTOR &dist_funct;
 		TMARKER tm;
+
+		typedef typename std::vector<Entry_Type>::iterator ElemIterator;
+		ElemIterator CurrentElem;	//iterator to current element
+
 };
 }
 
