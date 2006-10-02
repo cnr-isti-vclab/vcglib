@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2006/09/27 15:33:32  giec
+It close one simple hole . . .
+
 Revision 1.2  2006/09/27 09:29:53  giec
 Frist working release whit a few bugs.
 It almost fills the hole ...
@@ -419,6 +422,7 @@ typename MESH::FaceIterator CloseHole(MESH &m, HoleInfo <MESH> &h)
 
 	std::vector<SimpleEdge<MESH> > ES;
 	//set<SimpleEdge<MESH> > ES;  // vettore con tutti gli edge adiacenti al buco.
+	
 	h.CollectEdges(ES);
 	vector<EAR> H;			// Heap delle ear da chiudere
 	H.reserve(h.size);
@@ -467,9 +471,8 @@ typename MESH::FaceIterator CloseHole(MESH &m, HoleInfo <MESH> &h)
 		if(H.back().IsUpToDate())	
 		{
 
-				if(/*!*/H.back().Degen() && it != ES.end()){ 
+				if(H.back().Degen() && it != ES.end()){ 
 						// Nota che nel caso di ear degeneri si DEVE permettere la creazione di un edge che gia'esiste
-						//TRACE("Evitata orecchia brutta!");
 						printf("\n -> Evitata orecchia brutta!");
 				}
 				else {
@@ -493,7 +496,7 @@ typename MESH::FaceIterator CloseHole(MESH &m, HoleInfo <MESH> &h)
 										}
 										--cnt;
 										++f;
-										//return firstf;///////////////dbug
+										
 								}
 				}
 		}
@@ -516,8 +519,6 @@ typename MESH::FaceIterator CloseHole(MESH &m, HoleInfo <MESH> &h)
 				}
 		}
 		H.pop_back();
-		make_heap(H.begin(),H.end());
-
 	}
 		
 	
