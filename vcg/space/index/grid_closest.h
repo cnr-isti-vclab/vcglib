@@ -24,15 +24,6 @@
 History
 
 $Log: not supported by cvs2svn $
-Revision 1.13  2006/09/07 09:25:49  marfr960
-casted returned value type to avoid warning C4267
-
-Revision 1.12  2006/08/29 15:38:36  pietroni
-in GridDoRay function the RayIterator must be initialized with maximum distance
-
-Revision 1.11  2006/08/23 15:17:46  marfr960
-*** empty log message ***
-
 Revision 1.10  2006/05/17 12:48:52  pietroni
 corrected bug in GridGetInBox function
 
@@ -123,28 +114,21 @@ namespace vcg{
 			Point3i _ip;
 			Si.PToIP(_p,_ip); 
 			Si.Grid( _ip[0],_ip[1],_ip[2], first, last );
-
-			if (first != last)
+			for(l=first;l!=last;++l)
 			{
-				l = first;// - 1;
-				while (l != last)
+				ObjPtr elem=&(**l);
+				if (!elem->IsD())
 				{
-					//l++;
-					ObjPtr elem=&(**l);
-					if (!elem->IsD())
+					if (_getPointDistance((**l), _p,_minDist, t_res))  // <-- NEW: use of distance functor
 					{
-						if (_getPointDistance((**l), _p,_minDist, t_res))  // <-- NEW: use of distance functor
-						{
-							winner=elem;
-							_closestPt=t_res;
-							newradius=_minDist; // 
-						}
-						_marker.Mark(elem);
+						winner=elem;
+						_closestPt=t_res;
+						newradius=_minDist; // 
 					}
-				l++;
-				} 
-				iboxdone=Box3i(_ip,_ip);
+					_marker.Mark(elem);
+				}
 			}
+			iboxdone=Box3i(_ip,_ip);
 		}
 
 		int ix,iy,iz;
@@ -232,7 +216,7 @@ namespace vcg{
 												   typename SPATIALINDEXING::ScalarType & _t) 
 	{
 		typedef vcg::RayIterator<SPATIALINDEXING,OBJRAYISECTFUNCTOR,OBJMARKER> RayIteratorType;
-		RayIteratorType RayIte=RayIteratorType(_Si,_rayIntersector,_maxDist);
+		RayIteratorType RayIte=RayIteratorType(_Si,_rayIntersector);
 		RayIte.SetMarker(_marker);
 		RayIte.Init(_ray);
 
@@ -262,16 +246,14 @@ namespace vcg{
 			_objectPtrs.clear();
 			_distances.clear();
 			_points.clear();
-			int i = 0;
 			while (!Cli.End())
 			{
 				_objectPtrs.push_back(&(*Cli));
 				_distances.push_back(Cli.Dist());
 				_points.push_back(Cli.NearestPoint());
 				++Cli;
-				i++;
 			}
-			return (int)(_objectPtrs.size());
+			return (_objectPtrs.size());
 		}
 
 		template <class SPATIALINDEXING,class OBJMARKER, class OBJPTRCONTAINER>
