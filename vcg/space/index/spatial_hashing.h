@@ -20,20 +20,10 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-
-// marco
-// added comments
-// corrected bad reference in void Grid( const Point3i & _c, CellIterator & first, CellIterator & last )
-
-
 /****************************************************************************
 History
 
 $Log: not supported by cvs2svn $
-Revision 1.21  2006/08/23 15:23:05  marfr960
-added comments
-corrected bad reference in void Grid( const Point3i & _c, CellIterator & first, CellIterator & last )
-
 Revision 1.20  2006/07/26 08:12:56  pietroni
 added InitEmpty Function
 
@@ -157,12 +147,6 @@ namespace vcg{
 
 		//type of container of pointer to object in a Cell
 		//typedef typename std::pair<ObjType*,int> EntryType ;
-
-		/* EntryType is the entry data tyep stored into a cell.
-		 * It is composed by:
-		 *   - a ObjType* pointer, pointing to the simplex to spatially index
-		 *   - an integer (temporal mark ??? ) ???
-		 */
 		class  EntryType : public std::pair<ObjType*,int>
 		{
 		public:
@@ -184,7 +168,7 @@ namespace vcg{
 		{
 		protected:
 
-			Point3i cell_n;		// cell index
+			Point3i cell_n;//cell number
 
 		public:
 
@@ -194,7 +178,7 @@ namespace vcg{
 			Cell()
 			{}
 
-			Cell(ObjType* sim, Point3i _cell, const int  &_tempMark)
+			Cell(ObjType* sim,Point3i _cell,const int  &_tempMark)
 			{
 				_entries.push_back(EntryType(sim,_tempMark));
 				cell_n=_cell;
@@ -208,7 +192,7 @@ namespace vcg{
 			///find the simplex into the cell
 			bool Find(ObjType* sim,IteMap &I)
 			{
-				for (I=_entries.begin();I != _entries.end();I++)
+				for (I=_entries.begin();I<_entries.end();I++)
 					if ((*I).first==sim)
 						return true;
 				return false;
@@ -235,10 +219,10 @@ namespace vcg{
 
 		}; // end struct Cell
 
-		//record of the hash table
-		typedef typename std::pair<int,Cell> HRecord;
 		//hash table definition
 		typedef typename STDEXT::hash_multimap<int,Cell> Htable;
+		//record of the hash table
+		typedef typename std::pair<int,Cell> HRecord;
 		//iterator to the hash table
 		typedef typename Htable::iterator IteHtable;
 
@@ -271,30 +255,23 @@ namespace vcg{
 			int count = (int) hash_table.count(h);
 			if (count==0)///in this case there is no entry for that key
 				return false;
-
-			std::pair<IteHtable, IteHtable> p = hash_table.equal_range(h);
-
-			bool found = false;
-			IteHtable i;
-			for (i = p.first; i != p.second; i++)
+			else
 			{
-				if ( ((*i).second.CellN() == cell) )
+				std::pair<IteHtable, IteHtable> p =hash_table.equal_range(h);
+				IteHtable i = p.first;
+
+				while((i != p.second)&&((*i).second.CellN()!=cell))++i;
+
+				if (i==p.second)///the scan is terminated and we have not found the right cell
 				{
-					found = true;
-					break;
+					conflicts++;
+					return false;
 				}
-			}
-
-			if (!found) /// the scan is terminated and 
-			{
-				// we have not found the right cell
-				conflicts++;
-				return false;
-			}
-			else	///we have found the right cell
-			{
-				result=i;
-				return true;
+				else	///we have found the right cell
+				{
+					result=i;
+					return true;
+				}
 			}
 		}
 
@@ -306,15 +283,9 @@ namespace vcg{
 		{
 			IteHtable I;
 			if (!_IsInHtable(cell,I))
-			{
-				entry_inserted++;
 				_InsertNewHentry(s,cell);
-			}
 			else///there is the entry specified by the iterator I so update only the temporary mark
-			{
-				entry_updated++;
 				(*I).second.Update(s,tempMark);
-			}
 		}
 
 		// hashing
@@ -326,7 +297,6 @@ namespace vcg{
 
 	public:
 
-		int entry_inserted, entry_updated;
 		/////We need some extra space for numerical precision.
 		//template <class Box3Type>
 		// void SetBBox( const Box3Type & b )
@@ -370,33 +340,24 @@ namespace vcg{
 			assert((grid_size.V(0)>0)&&(grid_size.V(1)>0)&&(grid_size.V(2)>0));
 			siz=grid_size;
 
-			// voxel[i] is the lenght of the edge i of the cell
-			// siz[i] is the number of cells in direction i
-			// dim[i] is the spatial dimension of the grid
-			voxel[0] = dim[0] / siz[0];
-			voxel[1] = dim[1] / siz[1];
-			voxel[2] = dim[2] / siz[2];
+			voxel[0] = dim[0]/siz[0];
+			voxel[1] = dim[1]/siz[1];
+			voxel[2] = dim[2]/siz[2];
 		}
 
 		/// Insert a mesh in the grid.
 		template <class OBJITER>
-		void Set(const OBJITER & _oBegin, const OBJITER & _oEnd,const Box3x &_bbox=Box3x() )
+			void Set(const OBJITER & _oBegin, const OBJITER & _oEnd,const Box3x &_bbox=Box3x() )
 		{
 
 			OBJITER i;
 			Box3x b;
-		 	Box3x &bbox = this->bbox;
-			CoordType &dim = this->dim;
-			Point3i &siz = this->siz;
-			CoordType &voxel = this->voxel;
+            Box3x &bbox = this->bbox;
+            CoordType &dim = this->dim;
+            Point3i &siz = this->siz;
+            CoordType &voxel = this->voxel;
 
-			entry_inserted = 0;
-			entry_updated = 0;
-
-			int _size = std::distance<OBJITER>(_oBegin,_oEnd);
-
-			HashSpace = _size;
-
+			int _size=std::distance<OBJITER>(_oBegin,_oEnd);
 			if(!_bbox.IsNull()) this->bbox=_bbox;
 			else
 			{
@@ -411,15 +372,15 @@ namespace vcg{
 				bbox.max += CoordType(infl,infl,infl);
 			}
 
-			dim  = bbox.max - bbox.min;
-			BestDim( _size, dim, siz );
-			// find voxel size
-			voxel[0] = dim[0]/siz[0];
-			voxel[1] = dim[1]/siz[1];
-			voxel[2] = dim[2]/siz[2];
+				dim  = bbox.max - bbox.min;
+				BestDim( _size, dim, siz );
+				// find voxel size
+				voxel[0] = dim[0]/siz[0];
+				voxel[1] = dim[1]/siz[1];
+				voxel[2] = dim[2]/siz[2];
 
-			for(i = _oBegin; i != _oEnd; ++i)
-				Add(&(*i));
+				for(i = _oBegin; i!= _oEnd; ++i)
+					Add(&(*i));
 		}
 
 
@@ -438,36 +399,19 @@ namespace vcg{
 			Grid(vcg::Point3i(x,y,z),first,last);
 		}
 
-		/* return the simplexes on a specified cell
-		 *
-		 * @param _c is the 3D integer index of the cell [IN]
-		 * @param first is the pointer to the first entry stored into the cell _c
-		 * @param second is the pointer to the last entry stored into the cell _c
-		 * @note an entry is a pair composed by the simplex (e.g., a vertex, a face, ...) indexed by the grid and 
-		 *       an integer representing a temporal time stamp
-		 * @note the time stamp is not used here, it is used in the dynamic version of the spatial hashing
-		 */
+		///return the simplexes on a specified cell
 		void Grid( const Point3i & _c, CellIterator & first, CellIterator & last )
 		{
 			IteHtable I;
 			if (_IsInHtable(_c,I))//if there is the cell then
-			{
-				// (*I) is the pair<int, cell> corresponding to _c
-				// (*I).second is the cell
-				// (*I).second._entries is the vector of simplices stored into the cell
-				// (*I).second._entries.begin() is the pointer to the first entry
-				// *(*I).second._entries.begin() is the pointer to the pointer to the first entry
-				// &*(*I).second._entries.begin() is the address of the pointer to the pointer to the first entry (hooray)
-
-				// WARNING : (*I).second._entries.end() does not point to an entry, it is just a marker to end 
-				//			 of the vector
-				first = &(*(*I).second._entries.begin());
-				last=  &*((*I).second._entries.end() - 1);
+			{	///return pointers to first and last element cell elems
+				first= &*(*I).second._entries.begin();
+				last=  &*(*I).second._entries.end();
 			}
 			else
 			{	///return 2 equals pointers
-				first =&(*(*hash_table.begin()).second._entries.begin());
-				last = &(*((*hash_table.begin()).second._entries.begin() ));
+				first=&*(*hash_table.begin()).second._entries.begin();
+				last= &*(*hash_table.begin()).second._entries.begin();
 			}
 		}
 
