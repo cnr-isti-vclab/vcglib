@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2006/10/02 09:28:45  cignoni
+Reverted to version 1.10 to nullify dangerous marfr960's changes
+
 Revision 1.10  2006/05/17 12:48:52  pietroni
 corrected bug in GridGetInBox function
 
@@ -216,7 +219,7 @@ namespace vcg{
 												   typename SPATIALINDEXING::ScalarType & _t) 
 	{
 		typedef vcg::RayIterator<SPATIALINDEXING,OBJRAYISECTFUNCTOR,OBJMARKER> RayIteratorType;
-		RayIteratorType RayIte=RayIteratorType(_Si,_rayIntersector);
+		RayIteratorType RayIte=RayIteratorType(_Si,_rayIntersector,_maxDist);
 		RayIte.SetMarker(_marker);
 		RayIte.Init(_ray);
 
