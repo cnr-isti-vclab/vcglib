@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2005/11/30 14:05:04  ponchio
+Fixed some UberZ fuynctions and non defined _flags
+
 Revision 1.9  2005/10/14 12:34:55  cignoni
 Added ordered constructor that build a edge with unique ordering
 among vertices (useful for edge-collapse simplification)
@@ -800,8 +803,9 @@ static bool HasEdgeMark()  {
 	@param _c Valore di ritorno per il vertice V(2)
 	@return true se bq appartiene alla faccia, false altrimenti
 */
-bool InterpolationParameters(const CoordType & bq, ScalarType &a, ScalarType &_b) const
+  bool InterpolationParameters(const CoordType & bq, typename VertexType::ScalarType &a, ScalarType &_b) const
 {	
+  typedef typename VertexType::ScalarType ScalarType;
 const ScalarType EPSILON = ScalarType(0.000001);
 ScalarType l;
 
