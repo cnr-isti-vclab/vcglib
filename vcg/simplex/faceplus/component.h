@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2006/01/09 13:58:55  cignoni
+Added Initialization of Color in Vertex and Face Components
+
 Revision 1.6  2005/11/22 15:49:39  cignoni
 removed two spurious computenormal
 
@@ -315,10 +318,10 @@ public:
 
 template <class T> class EmptyAdj: public T {
 public:
-  typename T::FacePointer       &VFp(const int) { static typename T::FacePointer fp=0; return fp; }
-  typename T::FacePointer const cVFp(const int) { static typename T::FacePointer fp=0; return fp; }
-  typename T::FacePointer       &FFp(const int) { static typename T::FacePointer fp=0; return fp; }
-  typename T::FacePointer const cFFp(const int) { static typename T::FacePointer fp=0; return fp; }
+  typename T::FacePointer       &VFp(const int)       { static typename T::FacePointer fp=0; return fp; }
+  typename T::FacePointer const cVFp(const int) const { static typename T::FacePointer const fp=0; return fp; }
+  typename T::FacePointer       &FFp(const int)       { static typename T::FacePointer fp=0; return fp; }
+  typename T::FacePointer const cFFp(const int) const { static typename T::FacePointer const fp=0; return fp; }
   char &VFi(const int j){static char z=0; return z;};
   char &FFi(const int j){static char z=0; return z;};
   static bool HasVFAdjacency()   {   return false; }
