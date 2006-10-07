@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/06/14 13:46:20  ponchio
+Minibug: Box2f -> Box2 in the template.
+
 Revision 1.5  2005/05/06 14:02:37  croccia
 replaced all the occurences of min.v[0] with min.X(), max.v[0] with max.X() etc.
 
@@ -216,6 +219,9 @@ public:
 	inline BoxScalarType DimX() const { return max.X()-min.X(); }
 	/// Calcola la dimensione del bounding box sulla y.
 	inline BoxScalarType DimY() const { return max.Y()-min.Y(); }
+
+	/// Calcola la dimensione del bounding box.
+	inline Point2<BoxScalarType> Dim() const { return max-min; }
 
 	inline void Normalize( Point2<BoxScalarType> & p )
 	{
