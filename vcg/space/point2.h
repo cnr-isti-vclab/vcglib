@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2006/01/19 13:53:19  m_di_benedetto
+Fixed product by scalar and SquaredNorm()
+
 Revision 1.7  2005/10/15 19:11:49  m_di_benedetto
 Corrected return type in Angle() and protected member access in unary operator -
 
@@ -187,7 +190,12 @@ public:
 	{
 			return ( _v[0]*_v[0] + _v[1]*_v[1] );
 	}
-	inline Point2 & Scale( const ScalarType sx, const ScalarType sy );
+	inline Point2 & Scale( const ScalarType sx, const ScalarType sy )
+	{
+		_v[0] *= sx;
+		_v[1] *= sy;
+		return * this;
+	}
 	  /// normalizes, and returns itself as result
 	inline Point2 & Normalize( void )
 	{
