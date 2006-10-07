@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2006/09/25 09:57:49  cignoni
+Better comment on usage of VF iterators
+
 Revision 1.20  2005/12/15 11:57:48  corsini
 Replace Pos<FaceType> with PosType
 
@@ -418,6 +421,9 @@ public:
 
 	VFIFaceType *&	F() { return f;}
 	int	&					  I() { return z;}
+  
+  // Access to the vertex. Having a VFIterator vfi, it corresponds to 
+  // vfi.V() = vfi.F()->V(vfi.I())
   inline VertexType *V() const { return f->V(z);}
 
   inline VertexType * const & V0() const { return f->V0(z);} 
