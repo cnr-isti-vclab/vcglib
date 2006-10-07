@@ -23,6 +23,9 @@
 /****************************************************************************
   History
     $Log: not supported by cvs2svn $
+    Revision 1.15  2005/10/12 10:36:26  cignoni
+    Removed unused local type Edge. Now it use the standard simplex edge.
+
     Revision 1.14  2004/12/10 01:04:42  cignoni
     better comments
 
@@ -38,7 +41,6 @@
 
 #include<vcg/simplex/face/pos.h>
 #include<vcg/simplex/face/topology.h>
-#include<map>
 
 namespace vcg{
 namespace tri{	
