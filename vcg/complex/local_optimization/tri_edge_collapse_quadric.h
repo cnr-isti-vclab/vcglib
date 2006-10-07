@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/10/02 23:19:36  cignoni
+Changed the sign of the priority of a collapse. Now it is its the error as it should (and not -error)
+
 Revision 1.7  2005/04/14 11:35:07  ponchio
 *** empty log message ***
 
@@ -301,11 +304,11 @@ public:
 			// store the old normals for non-collapsed face in v0
 			for(x.F() = v[0]->VFp(), x.I() = v[0]->VFi(); x.F()!=0; ++x )	 // for all faces in v0		
 				if(x.F()->V(0)!=v[1] && x.F()->V(1)!=v[1] && x.F()->V(2)!=v[1] ) // skip faces with v1
-					on.push_back(x.F()->NormalizedNormal());
+					on.push_back(NormalizedNormal(*x.F()));
 				// store the old normals for non-collapsed face in v1
 				for(x.F() = v[1]->VFp(), x.I() = v[1]->VFi(); x.F()!=0; ++x )	 // for all faces in v1	
 					if(x.F()->V(0)!=v[0] && x.F()->V(1)!=v[0] && x.F()->V(2)!=v[0] ) // skip faces with v0
-						on.push_back(x.F()->NormalizedNormal());
+						on.push_back(NormalizedNormal(*x.F()));
 			}
 
 		//// Move the two vertexe  into new position (storing the old ones)
@@ -325,12 +328,12 @@ public:
 			if(x.F()->V(0)!=v[1] && x.F()->V(1)!=v[1] && x.F()->V(2)!=v[1] )		// skip faces with v1
 			{
 				if(Params().NormalCheck){
-					nn=x.F()->NormalizedNormal();
+					nn=NormalizedNormal(*x.F());
 					ndiff=nn*on[i++];
 					if(ndiff<MinCos) MinCos=ndiff;
 				}
 				if(Params().QualityCheck){
-					qt= x.F()->QualityFace();
+					qt= QualityFace(*x.F());
 					if(qt<MinQual) MinQual=qt;
 				}
 			}
@@ -338,12 +341,12 @@ public:
 			if(x.F()->V(0)!=v[0] && x.F()->V(1)!=v[0] && x.F()->V(2)!=v[0] )			// skip faces with v0
 			{
 				if(Params().NormalCheck){
-					nn=x.F()->NormalizedNormal();
+					nn=NormalizedNormal(*x.F());
 					ndiff=nn*on[i++];
 					if(ndiff<MinCos) MinCos=ndiff;
 				}
 				if(Params().QualityCheck){
-					qt= x.F()->QualityFace();
+					qt= QualityFace(*x.F());
 					if(qt<MinQual) MinQual=qt;
 				}
 			}
@@ -366,10 +369,10 @@ public:
 		
 		if( Params().UseVertexWeight ) QuadErr *= (v[1]->W()+v[0]->W())/2;
 		
-		if(!Params().QualityCheck && !Params().NormalCheck) error = QuadErr;
-		if( Params().QualityCheck && !Params().NormalCheck) error = QuadErr / MinQual;
-		if(!Params().QualityCheck &&  Params().NormalCheck) error = QuadErr / MinCos;
-		if( Params().QualityCheck &&  Params().NormalCheck) error = QuadErr / (MinQual*MinCos);
+		if(!Params().QualityCheck && !Params().NormalCheck) error = (ScalarType)(QuadErr);
+		if( Params().QualityCheck && !Params().NormalCheck) error = (ScalarType)(QuadErr / MinQual);
+		if(!Params().QualityCheck &&  Params().NormalCheck) error = (ScalarType)(QuadErr / MinCos);
+		if( Params().QualityCheck &&  Params().NormalCheck) error = (ScalarType)(QuadErr / (MinQual*MinCos));
 																							           
 		//Rrestore old position of v0 and v1
 		v[0]->P()=OldPos0;
@@ -407,29 +410,29 @@ public:
 				if( !(vfi.V1()->IsV()) && vfi.V1()->IsRW())
 				{
 				  vfi.V1()->SetV();
-				  h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.V0(),vfi.V1()), this->GlobalMark())));
+          h_ret.push_back(HeapElem(new MYTYPE(EdgeType(vfi.V0(),vfi.V1()), this->GlobalMark())));
 				  std::push_heap(h_ret.begin(),h_ret.end());
 				  if(!IsSymmetric()){				
-					  h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.V1(),vfi.V0()), this->GlobalMark())));
+					  h_ret.push_back(HeapElem(new MYTYPE(EdgeType(vfi.V1(),vfi.V0()), this->GlobalMark())));
 					  std::push_heap(h_ret.begin(),h_ret.end());
 				  }
         }
 				if(  !(vfi.V2()->IsV()) && vfi.V2()->IsRW())
 				{
 					vfi.V2()->SetV();
-				  h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.V0(),vfi.V2()),this->GlobalMark())));
+				  h_ret.push_back(HeapElem(new MYTYPE(EdgeType(vfi.V0(),vfi.V2()),this->GlobalMark())));
 				  std::push_heap(h_ret.begin(),h_ret.end());
 				  if(!IsSymmetric()){				
-					  h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.V2(),vfi.V0()), this->GlobalMark())));
+					  h_ret.push_back(HeapElem(new MYTYPE(EdgeType(vfi.V2(),vfi.V0()), this->GlobalMark())));
 					  std::push_heap(h_ret.begin(),h_ret.end());
 				  }
         }
         if(Params().SafeHeapUpdate && vfi.V1()->IsRW() && vfi.V2()->IsRW() )
         {
-          h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.V1(),vfi.V2()),this->GlobalMark())));
+          h_ret.push_back(HeapElem(new MYTYPE(EdgeType(vfi.V1(),vfi.V2()),this->GlobalMark())));
 				  std::push_heap(h_ret.begin(),h_ret.end());
 				  if(!IsSymmetric()){				
-					  h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.V2(),vfi.V1()), this->GlobalMark())));
+					  h_ret.push_back(HeapElem(new MYTYPE(EdgeType(vfi.V2(),vfi.V1()), this->GlobalMark())));
 					  std::push_heap(h_ret.begin(),h_ret.end());
 				  }
         }
