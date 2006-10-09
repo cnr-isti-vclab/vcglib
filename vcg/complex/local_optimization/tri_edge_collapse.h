@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.17  2005/10/12 10:44:01  cignoni
+  Now creation of new edge use Ordered() constructor to comply the fact that the basic collapse is simmetric.
+
   Revision 1.16  2005/01/19 10:35:28  cignoni
   Better management of symmetric/asymmetric edge collapses
 
@@ -72,7 +75,7 @@ namespace tri{
 /// This is the base class of all the specialized collapse classes like for example Quadric Edge Collapse. 
 /// Each derived class 
 
-template<class TriMeshType,class MYTYPE>
+template<class TriMeshType, class MYTYPE>
 class TriEdgeCollapse: public LocalOptimization<TriMeshType>::LocModType , public EdgeCollapse<TriMeshType> 
 {
 public:
@@ -104,7 +107,7 @@ protected:
   typedef typename LocalOptimization<TriMeshType>::HeapElem HeapElem;
 	typedef typename LocalOptimization<TriMeshType>::HeapType HeapType;
 
-TriMeshType *mt;
+  TriMeshType *mt;
 	///the pair to collapse 
 	EdgeType pos;
 
@@ -171,8 +174,8 @@ public:
 		// First loop around the remaining vertex to unmark visited flags
     vcg::face::VFIterator<FaceType> vfi(v[1]->VFp(),v[1]->VFi());	
 		while (!vfi.End()){
-			vfi.F()->V1(vfi.I())->ClearV();
-			vfi.F()->V2(vfi.I())->ClearV();
+			vfi.V1()->ClearV();
+			vfi.V2()->ClearV();
 			++vfi;
 		}
 
@@ -184,19 +187,19 @@ public:
 			assert(!vfi.F()->IsD());
       for (int j=0;j<3;j++)
 			{
-				if( !(vfi.F()->V1(vfi.I())->IsV()) && (vfi.F()->V1(vfi.I())->IsRW()))
+				if( !(vfi.V1()->IsV()) && (vfi.V1()->IsRW()))
 				{
 				vfi.F()->V1(vfi.I())->SetV();
-        h_ret.push_back(HeapElem(new MYTYPE(EdgeType::OrderedEdge(vfi.F()->V(vfi.I()),vfi.F()->V1(vfi.I())),GlobalMark())));
+        h_ret.push_back(HeapElem(new MYTYPE(EdgeType::OrderedEdge( vfi.V(),vfi.V1() ),GlobalMark())));
 				std::push_heap(h_ret.begin(),h_ret.end());
 				if(this->IsSymmetric()){				
-					h_ret.push_back(HeapElem(new MYTYPE(EdgeType::OrderedEdge(vfi.F()->V1(vfi.I()),vfi.F()->V(vfi.I())),GlobalMark())));
+					h_ret.push_back(HeapElem(new MYTYPE(EdgeType::OrderedEdge( vfi.V1(),vfi.V()),GlobalMark())));
 					std::push_heap(h_ret.begin(),h_ret.end());
 				}
       }
-				if(  !(vfi.F()->V2(vfi.I())->IsV()) && (vfi.F()->V2(vfi.I())->IsRW()))
+				if(  !(vfi.V2()->IsV()) && (vfi.V2()->IsRW()))
 				{
-					vfi.F()->V2(vfi.I())->SetV();
+					vfi.V2()->SetV();
 				h_ret.push_back(HeapElem(new MYTYPE(EdgeType::OrderedEdge(vfi.F()->V(vfi.I()),vfi.F()->V2(vfi.I())),GlobalMark())));
 				std::push_heap(h_ret.begin(),h_ret.end());
 				//if(false){				
