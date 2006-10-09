@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2006/10/07 17:20:25  cignoni
+Updated to the new style face->Normal() becomes Normal(face)
+
 Revision 1.8  2005/10/02 23:19:36  cignoni
 Changed the sign of the priority of a collapse. Now it is its the error as it should (and not -error)
 
@@ -75,10 +78,15 @@ namespace tri{
 	Requirements:
 
 	Vertex 
-	must have incremental mark
 	must have:
-		field QuadricType Q;
-		member 
+   incremental mark
+   VF topology
+  
+	must have:
+		members
+      
+      QuadricType Qd();
+		 
 			ScalarType W() const;
 				A per-vertex Weight that can be used in simplification 
 				lower weight means that error is lowered, 
@@ -89,27 +97,26 @@ namespace tri{
 				(e.g. its weight with the one of the given vertex, the color ect).
 				Standard: void function;
 
-	Faces devono avere Shared Adjacency 
-		durante la init serve FF per le quadriche di bordo
-		durante la semplificazione si usa VF
+      OtherWise the class should be templated with a static helper class that helps to retrieve these functions.
+      If the vertex class exposes these functions a default static helper class is provided.
 
 */
+		//**Helper CLASSES**//
+		template <class VERTEX_TYPE>
+		class QInfoStandard
+		{
+		public:
+			QInfoStandard(){};
+      static void Init(){};
+      static math::Quadric<double> &Qd(VERTEX_TYPE &v) {return v.Qd();}
+      static math::Quadric<double> &Qd(VERTEX_TYPE *v) {return v->Qd();}
+      static typename VERTEX_TYPE::ScalarType W(VERTEX_TYPE *v) {return 1.0;};
+      static typename VERTEX_TYPE::ScalarType W(VERTEX_TYPE &v) {return 1.0;};
+      static void Merge(VERTEX_TYPE & v_dest, VERTEX_TYPE const & v_del){};
+		};
 
-template<class TriMeshType,class MYTYPE>
-class TriEdgeCollapseQuadric: public TriEdgeCollapse< TriMeshType,MYTYPE> 
-{
-public:
-		typedef typename vcg::tri::TriEdgeCollapse< TriMeshType, MYTYPE > TEC;
-		typedef typename TEC::EdgeType EdgeType;
-		typedef typename TriEdgeCollapse<TriMeshType, MYTYPE>::HeapType HeapType;
-		typedef typename TriEdgeCollapse<TriMeshType, MYTYPE>::HeapElem HeapElem;
-		typedef typename TriMeshType::CoordType CoordType;
-		typedef typename TriMeshType::ScalarType ScalarType;
-		typedef  math::Quadric< double > QuadricType;
-		typedef typename TriMeshType::FaceType FaceType;
-		typedef typename TriMeshType::VertexType VertexType;
 
-class QParameter
+class TriEdgeCollapseQuadricParameter
 {
 public:
 	double	QualityThr; // all 
@@ -134,6 +141,22 @@ public:
 	bool		SafeHeapUpdate;
 };
 
+
+template<class TriMeshType,class MYTYPE, class HelperType = QInfoStandard<TriMeshType::VertexType> >
+class TriEdgeCollapseQuadric: public TriEdgeCollapse< TriMeshType, MYTYPE> 
+{
+public:
+		typedef typename vcg::tri::TriEdgeCollapse< TriMeshType, MYTYPE > TEC;
+		typedef typename TEC::EdgeType EdgeType;
+		typedef typename TriEdgeCollapse<TriMeshType, MYTYPE>::HeapType HeapType;
+		typedef typename TriEdgeCollapse<TriMeshType, MYTYPE>::HeapElem HeapElem;
+		typedef typename TriMeshType::CoordType CoordType;
+		typedef typename TriMeshType::ScalarType ScalarType;
+		typedef  math::Quadric< double > QuadricType;
+		typedef typename TriMeshType::FaceType FaceType;
+		typedef typename TriMeshType::VertexType VertexType;
+    typedef TriEdgeCollapseQuadricParameter QParameter;
+    typedef HelperType QH;
 
 		static QParameter & Params(){static QParameter p; return p;}
 		enum Hint {
@@ -170,7 +193,8 @@ public:
   {	CoordType newPos;
     if(Params().OptimalPlacement) newPos= ComputeMinimal();
     else newPos=this->pos.V(1)->P();
-		this->pos.V(1)->q+=this->pos.V(0)->q;
+		//this->pos.V(1)->Qd()+=this->pos.V(0)->Qd();
+    QH::Qd(this->pos.V(1))+=QH::Qd(this->pos.V(0));
 		int FaceDel=DoCollapse(this->pos, newPos); // v0 is deleted and v1 take the new position
 		m.fn-=FaceDel;
 		--m.vn;
@@ -351,8 +375,8 @@ public:
 				}
 			}
 
-		QuadricType qq=v[0]->q;
-		qq+=v[1]->q;
+    QuadricType qq=QH::Qd(v[0]);
+    qq+=QH::Qd(v[1]);
 		double QuadErr = Params().ScaleFactor*qq.Apply(v[1]->P()); 
 
 		// All collapses involving triangles with quality larger than <QualityThr> has no penalty;
@@ -367,7 +391,7 @@ public:
 		
 		if(QuadErr<Params().QuadricEpsilon) QuadErr=Params().QuadricEpsilon;
 		
-		if( Params().UseVertexWeight ) QuadErr *= (v[1]->W()+v[0]->W())/2;
+		if( Params().UseVertexWeight ) QuadErr *= (QH::W(v[1])+QH::W(v[0]))/2;
 		
 		if(!Params().QualityCheck && !Params().NormalCheck) error = (ScalarType)(QuadErr);
 		if( Params().QualityCheck && !Params().NormalCheck) error = (ScalarType)(QuadErr / MinQual);
@@ -447,10 +471,11 @@ static void InitQuadric(TriMeshType &m)
 	typename TriMeshType::FaceIterator pf;
 	typename TriMeshType::VertexIterator pv;
 	int j;
+  QH::Init();
 	//	m.ClearFlags();
 	for(pv=m.vert.begin();pv!=m.vert.end();++pv)		// Azzero le quadriche
 		if( ! (*pv).IsD() && (*pv).IsW()) 	
-			(*pv).q.Zero();
+      QH::Qd(*pv).Zero();
 
 		
 	for(pf=m.face.begin();pf!=m.face.end();++pf)
@@ -472,7 +497,7 @@ static void InitQuadric(TriMeshType &m)
 						q.ByPlane(p);
 
 						for(j=0;j<3;++j)
-							if( (*pf).V(j)->IsW() )	(*pf).V(j)->q += q;				// Sommo la quadrica ai vertici
+              if( (*pf).V(j)->IsW() )	QH::Qd((*pf).V(j)) += q;				// Sommo la quadrica ai vertici
 						
 						for(j=0;j<3;++j)
 							if( (*pf).IsB(j))				// Bordo!
@@ -484,12 +509,12 @@ static void InitQuadric(TriMeshType &m)
 								// poiche' la pesatura in funzione dell'area e'gia fatta in p.Direction() 
 								// Senza la normalize il bordo e' pesato in funzione della grandezza della mesh (mesh grandi non decimano sul bordo)
 								pb.SetDirection(p.Direction() ^ ( (*pf).V1(j)->cP() - (*pf).V(j)->cP() ).Normalize());
-								pb.SetDirection(pb.Direction()* Params().BoundaryWeight);  // amplify border planes
+								pb.SetDirection(pb.Direction()* (ScalarType)Params().BoundaryWeight);  // amplify border planes
 								pb.SetOffset(pb.Direction() * (*pf).V(j)->cP());
 								q.ByPlane(pb);
 
-								if( (*pf).V (j)->IsW() )	(*pf).V (j)->q += q;			// Sommo le quadriche
-								if( (*pf).V1(j)->IsW() )	(*pf).V1(j)->q += q;
+								if( (*pf).V (j)->IsW() )	QH::Qd((*pf).V (j)) += q;			// Sommo le quadriche
+								if( (*pf).V1(j)->IsW() )	QH::Qd((*pf).V1(j)) += q;
 							}
 					}
    
@@ -542,21 +567,21 @@ static void InitQuadric(TriMeshType &m)
 		typename TriMeshType::VertexType * v[2];
 		v[0] = this->pos.V(0);
 		v[1] = this->pos.V(1);
-		QuadricType q=v[0]->q;
-		q+=v[1]->q;
+		QuadricType q=QH::Qd(v[0]);
+		q+=QH::Qd(v[1]);
 		
-		CoordType x;
-		bool rt=q.Minimum(x);
-		if(!rt) {
-			x=(v[0]->P()+v[1]->P())/2;
+    Point3<QuadricType::ScalarType> x;
+    bool rt=q.Minimum(x);
+		if(!rt) { // if the computation of the minimum fails we choose between the two edge points and the middle one.
+			x.Import((v[0]->P()+v[1]->P())/2);
 			double qvx=q.Apply(x);
 			double qv0=q.Apply(v[0]->P());
 			double qv1=q.Apply(v[1]->P());
-			if(qv0<qvx) x=v[0]->P();
-			if(qv1<qvx && qv1<qv0) x=v[1]->P();
+      if(qv0<qvx) x.Import(v[0]->P());
+			if(qv1<qvx && qv1<qv0) x.Import(v[1]->P());
 		}
 		
-		return x;
+    return CoordType::Construct(x);
 }
 //
 //
