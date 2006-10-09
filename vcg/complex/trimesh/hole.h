@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2006/10/06 15:28:14  giec
+first working implementationof "EAR HOLE FILLING".
+
 Revision 1.4  2006/10/02 12:06:40  giec
 BugFix
 
@@ -296,34 +299,39 @@ namespace vcg {
 			//void ComputeQuality(){ quality = Distance(e0.VFlip()->P(),e1.v->P());}; //metodo vecchio per il calcolo della qualita
 			void ComputeQuality()
 			{ 
-
+				//comute quality by max(dihedral ancgle)
+				Point3f n1 = (e0.v->N() + e1.v->N() + e0.VFlip()->N() ) / 3;
+				face::Pos<typename MSH_TYPE::FaceType> tmp = e1;
+				tmp.FlipE();tmp.FlipV();
+				Point3f n2= (	e1.VFlip()->N(), e1.v->N(), tmp.v->N());
 				MSH_TYPE::ScalarType qt;
-				MSH_TYPE::ScalarType k0 = e0.VFlip()->P().X()*e1.v->P().X();
-				MSH_TYPE::ScalarType k1 = e0.VFlip()->P().Y()*e1.v->P().Y();
-				MSH_TYPE::ScalarType k2 = e0.VFlip()->P().Z()*e1.v->P().Z();
+				qt = Angle(n1,n2);
+				quality = qt * -1000;
 
-				int exp0,exp1,exp2;
-
-				frexp( double(k0), &exp0 );
-				frexp( double(k1), &exp1 );
-				frexp( double(k2), &exp2 );
-
-				if( exp0<exp1 )
-				{
-					if(exp0<exp2)
-						qt = (MSH_TYPE::ScalarType) (k1+k2)+k0;
-					else
-						qt = (MSH_TYPE::ScalarType) (k0+k1)+k2;
-				}
-				else
-				{
-					if(exp1<exp2)
-						qt = (MSH_TYPE::ScalarType)(k0+k2)+k1;
-					else
-						qt = (MSH_TYPE::ScalarType) (k0+k1)+k2;
-				}
-				quality	= qt * Distance(e0.VFlip()->P(),e1.v->P());
-
+				////calcolo della qualita' come angolo dell'orecchio per il lato opposto
+				//MSH_TYPE::ScalarType qt;
+				//MSH_TYPE::ScalarType k0 = e0.VFlip()->P().X()*e1.v->P().X();
+				//MSH_TYPE::ScalarType k1 = e0.VFlip()->P().Y()*e1.v->P().Y();
+				//MSH_TYPE::ScalarType k2 = e0.VFlip()->P().Z()*e1.v->P().Z();
+				//int exp0,exp1,exp2;
+				//frexp( double(k0), &exp0 );
+				//frexp( double(k1), &exp1 );
+				//frexp( double(k2), &exp2 );
+				//if( exp0<exp1 )
+				//{
+				//	if(exp0<exp2)
+				//		qt = (MSH_TYPE::ScalarType) (k1+k2)+k0;
+				//	else
+				//		qt = (MSH_TYPE::ScalarType) (k0+k1)+k2;
+				//}
+				//else
+				//{
+				//	if(exp1<exp2)
+				//		qt = (MSH_TYPE::ScalarType)(k0+k2)+k1;
+				//	else
+				//		qt = (MSH_TYPE::ScalarType) (k0+k1)+k2;
+				//}
+				//quality	= qt * Distance(e0.VFlip()->P(),e1.v->P());
 
 			};//dovrebbe
 			bool IsUpToDate()	{return (e0.IsBorder() && e1.IsBorder());};
@@ -347,7 +355,6 @@ namespace vcg {
 			{
 				// simple topological check
 				if(e0.f==e1.f) {
-					//TRACE("Avoided bad ear");
 					printf("Avoided bad ear");
 					return false;
 				}
@@ -479,7 +486,6 @@ namespace vcg {
 			std::vector<MESH::FacePointer *> app;
 			app.push_back( &h.p.f );
 
-			assert(h.p.IsBorder());
 			MESH::FaceIterator f = tri::Allocator<MESH>::AddFaces(m, h.size-2, app);
 
 			h.Refresh(m);	//rinfresco il puntatore tramite l'indice precedentemente salvato.
@@ -499,25 +505,21 @@ namespace vcg {
 			int cnt=h.size;
 			MESH::FaceIterator tmp;
 
+
+			make_heap(H.begin(), H.end());
+
 			while( cnt > 2 && !H.empty() ) //finche' il buco non e' chiuso o non ci sono piu' orecchie da analizzare
 			{
-				//ordino il vettore di orecchie
-				//sort(H.begin(), H.end(), greater<EAR>() );//descending 
-				sort(H.begin(), H.end(), less<EAR>() ); //ascending
+
+				pop_heap(H.begin(), H.end());		
 
 				EAR en0,en1;
-
-				MESH::VertexType vfit = *H.back().e0.v;
-				std::vector<MESH::VertexType >::iterator it;
-				it = vv.begin();
-				while( it != vv.end()  && (vfit.P() != ((MESH::VertexType )(*it)).P() ) )
-				{it++;		} 
 
 				MESH::FaceIterator Fadd = f;
 
 				if(H.back().IsUpToDate())	
 				{
-					if(H.back().Degen() && it != vv.end()){ 
+					if(H.back().Degen()){ 
 						// Nota che nel caso di ear degeneri si DEVE permettere la creazione di un edge che gia'esiste
 						printf("\n -> Evitata orecchia brutta!");
 					}
@@ -525,49 +527,34 @@ namespace vcg {
 					{
 						if(H.back().Close(en0,en1,&*f))
 						{
-							//ES.insert(se);
-							/*	ES.push_back(se);
 							if(!en0.IsNull()){
-							H.push_back(en0);
-							push_heap( H.begin(), H.end());
+								H.push_back(en0);
+								push_heap( H.begin(), H.end());
 							}
 							if(!en1.IsNull()){
-							H.push_back(en1);
-							push_heap( H.begin(), H.end());
-							}*/
+								H.push_back(en1);
+								push_heap( H.begin(), H.end());
+							}
 							--cnt;
-							tmp = f;
+							f->SetUserBit(UBIT);
 							++f;
 							fitted = true;
 						}
 					}
-				}
-				if(cnt == 3 && !fitted)
-				{//ultimo buco o unico buco
-					if(H.back().Close(en0,en1,&*f))
-					{
-						--cnt;
-						tmp = f;
-						++f;
-						fitted = true;
+
+					if(cnt == 3 && !fitted)
+					{//ultimo buco o unico buco
+						if(H.back().Close(en0,en1,&*f))
+						{
+							--cnt;
+							tmp = f;
+							++f;
+						}
 					}
-				}
-				if(fitted && cnt >2)
-				{
-					face::Pos<typename MESH::FaceType> ff( &(*tmp) ,2);
-					//ho inserito il triangolo e devo aggiornare le strutture dati
-					H.clear();
-					vv.clear();
-					tmp->SetUserBit(UBIT);
-					//ri-prendo le informazioni sul buco
-					refreshHole<MESH,EAR, std::vector<EAR> >(m,H,ff,vv);
-					fitted = false;
-				}
-				else
-				{
-					//non ho messo il triangolo quindi tolgo l'orecchio e continuo
-					H.pop_back();
-				}
+				}//is update()
+				fitted = false;
+				//non ho messo il triangolo quindi tolgo l'orecchio e continuo
+				H.pop_back();
 			}//fine del while principale
 
 			while(f!=m.face.end())
