@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2006/07/09 05:41:17  cignoni
+Major rewrite. Now shorter and more robust.
+
 Revision 1.7  2006/06/21 04:26:26  cignoni
 added initial test on end of file in the tokenize
 
@@ -478,7 +481,7 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 				// callback invocation, abort loading process if the call returns false
 				if ((cb !=NULL)&& (((numTriangles + numVertices)%100)==0) )
         {
-          if (!(*cb)((100.0f * (numTriangles +numVertices) / numVerticesPlusFaces), "Face Loading"))
+          if (!(*cb)( (100*(numTriangles +numVertices))/ numVerticesPlusFaces, "Face Loading"))
 					  return E_ABORTED;
         }
 			}
@@ -771,7 +774,7 @@ static bool LoadMask(const char * filename, int &mask)
 				}
 				else if (header.compare("f")==0)
 				{
-					numTriangles += (tokens.size() - 3);
+					numTriangles += (int)tokens.size() - 3;
 					std::string remainingText = tokens[1];
 					
 					// we base our assumption on the fact that the way vertex data is

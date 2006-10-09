@@ -25,6 +25,9 @@
   History
 
  $Log: not supported by cvs2svn $
+ Revision 1.4  2006/09/18 12:14:38  cignoni
+ Removed bug in the creation of the material filename
+
  Revision 1.3  2006/03/07 13:19:29  cignoni
  First Release with OBJ import support
 
@@ -206,8 +209,8 @@ namespace io {
 				fprintf(fp,"v %f %f %f\n",(*vi).P()[0],(*vi).P()[1],(*vi).P()[2]);
 
 				if (cb !=NULL) {
-          if(*cb)((100*++current)/max, "writing vertices ");
-          else { fclose(fp); return E_ABORTED;} }
+          if(!(*cb)((100*++current)/max, "writing vertices ")) 
+            { fclose(fp); return E_ABORTED;} }
 			}
 			fprintf(fp,"# %d vertices, %d vertices normals\n\n",m.vert.size(),NormalVertex.size());
 			
@@ -277,8 +280,9 @@ namespace io {
 						fprintf(fp,"\n");	
 				}
      		if (cb !=NULL) {
-          if(*cb)((100*++current)/max, "writing vertices ");
-          else { fclose(fp); return E_ABORTED;} }
+          if(!(*cb)((100*++current)/max, "writing vertices "))
+              { fclose(fp); return E_ABORTED;} 
+        }
 
 			}//for
 			fprintf(fp,"# %d faces, %d coords texture\n\n",m.face.size(),CoordIndexTexture.size());

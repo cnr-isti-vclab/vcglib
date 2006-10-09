@@ -25,6 +25,9 @@
   History
 
  $Log: not supported by cvs2svn $
+ Revision 1.1  2006/03/07 13:19:29  cignoni
+ First Release with OBJ import support
+
  Revision 1.1  2006/02/16 19:28:36  fmazzant
  transfer of Export_3ds.h, Export_obj.h, Io_3ds_obj_material.h from Meshlab to vcg
 
@@ -116,7 +119,7 @@ namespace io {
 		*/
 		inline static int MaterialsCompare(std::vector<Material> &materials, Material mtl)
 		{
-			for(int i=0;i<materials.size();i++)
+			for(unsigned int i=0;i<materials.size();i++)
 			{
 				bool ka = materials[i].Ka == mtl.Ka;
 				bool kd = materials[i].Kd == mtl.Kd;
