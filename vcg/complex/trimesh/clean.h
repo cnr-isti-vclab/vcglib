@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.40  2006/05/25 09:41:09  cignoni
+missing std and other gcc detected syntax errors
+
 Revision 1.39  2006/05/16 21:51:07  cignoni
 Redesigned the function for the removal of faces according to their area and edge lenght
 
@@ -367,6 +370,8 @@ private:
       i.e. have two or more vertex reference that link the same vertex 
       (and not only two vertexes with the same coordinates).
       All Degenerate faces are zero area faces BUT not all zero area faces are degenerate.
+      We do not take care of topology because when we have degenerate faces the 
+      topology calculation functions crash.
       */ 
       static int RemoveDegenerateFace(MeshType& m)
       {
@@ -384,7 +389,35 @@ private:
 					}
 				return count_fd;
 			}
+      static int RemoveNonManifoldFace(MeshType& m)
+      {
+				FaceIterator fi;
+				int count_fd = 0;
+        vector<FacePointer> ToDelVec;
 
+				for(fi=m.face.begin(); fi!=m.face.end();++fi)
+					if (!fi->IsD())
+					{
+						if ((!IsManifold(*fi,0))||
+								(!IsManifold(*fi,1))||
+								(!IsManifold(*fi,2)))
+					                  ToDelVec.push_back(&*fi);
+					}
+				
+          for(int i=0;i<ToDelVec.size();++i)
+          {
+            FaceType &ff= *ToDelVec[i];
+              if ((!IsManifold(ff,0))||
+							  	(!IsManifold(ff,1))||
+								  (!IsManifold(ff,2)))
+              for(int j=0;j<3;++j)
+                if(!face::IsBorder<FaceType>(ff,j))  vcg::face::FFDetach<FaceType>(ff,j);
+              ff.SetD();
+              count_fd++;
+						  m.fn--;	
+          }
+				return count_fd;
+			}
        
       /*
       The following functions remove faces that are geometrically "bad" according to edges and area criteria. 
