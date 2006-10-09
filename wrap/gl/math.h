@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2006/02/13 13:05:05  cignoni
+Removed glew inclusion
+
 Revision 1.9  2004/09/30 00:48:07  ponchio
 <gl/glew.h> -> <GL/glew.h>
 
@@ -67,7 +70,7 @@ Revision 1.1  2004/03/31 15:27:17  ponchio
 
 namespace vcg {
 
-inline void glMultMatrix(const Matrix44f &matrix) {
+inline void glMultMatrixE(const Matrix44f &matrix) {
   //glMultMatrixf((const GLfloat *)(matrix[0]));  
   if(glMultTransposeMatrixf) glMultTransposeMatrixf((const GLfloat *)(matrix[0])); 
   else  {
@@ -77,14 +80,32 @@ inline void glMultMatrix(const Matrix44f &matrix) {
   }
 }
 
-inline void glMultMatrix(const Matrix44d &matrix) {
-//  glMultMatrixd((const GLdouble *)(matrix[0]));
+inline void glMultMatrix(const Matrix44f &matrix) {
+    Matrix44f tmp(matrix);
+    Transpose(tmp);
+    glMultMatrixf((const GLfloat *)(tmp[0]));
+}
+
+inline void glMultMatrixE(const Matrix44d &matrix) {
   if(glMultTransposeMatrixd) glMultTransposeMatrixd((const GLdouble *)(matrix[0])); 
   else  {
     Matrix44d tmp(matrix);
     Transpose(tmp);
     glMultMatrixd((const GLdouble *)(tmp[0]));
   }
+}
+inline void glMultMatrix(const Matrix44d &matrix) {
+    Matrix44d tmp(matrix);
+    Transpose(tmp);
+    glMultMatrixd((const GLdouble *)(tmp[0]));
+}
+
+inline void glMultMatrixDirect(const Matrix44f &matrix) {
+   glMultMatrixf((const GLfloat *)(matrix[0]));
+}
+
+inline void glMultMatrixDirect(const Matrix44d &matrix) {
+   glMultMatrixd((const GLdouble *)(matrix[0]));
 }
 
 inline void glMultMatrix(const Similarityf &s) {
@@ -108,9 +129,19 @@ inline void glMultMatrix(const Similarityd &s) {
 
 inline void glGetv(const GLenum  pname, Matrix44f  & m){
 	glGetFloatv(pname,&m[0][0]);
+  Transpose(m);
 }
 
 inline void glGetv(const GLenum  pname, Matrix44d  & m){
+	glGetDoublev(pname,&m[0][0]);
+  Transpose(m);
+}
+
+inline void glGetDirectv(const GLenum  pname, Matrix44f  & m){
+	glGetFloatv(pname,&m[0][0]);
+}
+
+inline void glGetDirecv(const GLenum  pname, Matrix44d  & m){
 	glGetDoublev(pname,&m[0][0]);
 }
 
