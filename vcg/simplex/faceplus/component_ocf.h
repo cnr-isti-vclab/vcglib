@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2006/05/25 09:39:09  cignoni
+missing std and other gcc detected syntax errors
+
 Revision 1.12  2006/05/03 21:37:02  cignoni
 Added Optional Mark
 
@@ -416,6 +419,11 @@ template <class T> class WedgeTexturefOcf: public WedgeTextureOcf<TCoord2<float,
 template < class T> class InfoOcf: public T {
 public:
   vector_ocf<typename T::FaceType> &Base() const { return *_ovp;}
+
+  static bool HasFaceColorOcf()   { return false; }
+  static bool HasFaceNormalOcf()   { return false; }
+  static bool HasFaceMarkOcf()   { return false; }
+  static bool HasWedgeTextureOcf()   { return false; }
 
   inline int Index() const {
     typename T::FaceType const *tp=static_cast<typename T::FaceType const *>(this); 
