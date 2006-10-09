@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2004/12/10 01:31:59  cignoni
+added an alternative QuadricMinimization (we should use LRU decomposition!!)
+
 Revision 1.3  2004/10/25 16:23:51  ponchio
 typedef ScalarType ScalarType; was a problem on g++
 
@@ -94,7 +97,7 @@ template< class PlaneType >
 
 void operator = ( const Quadric & q )			// Assegna una quadrica
 	{
-		assert( IsValid() );
+		//assert( IsValid() );
 		assert( q.IsValid() );
 
 		a[0] = q.a[0];
@@ -144,9 +147,10 @@ template <class ResultScalarType>
 */
 	/* Versione veloce */
 
-		return p[0]*p[0]*a[0] + 2*p[0]*p[1]*a[1] + 2*p[0]*p[2]*a[2] + p[0]*b[0] 
-			  +   p[1]*p[1]*a[3] + 2*p[1]*p[2]*a[4] + p[1]*b[1]
-			 +   p[2]*p[2]*a[5] + p[2]*b[2]	+ c;
+		return ResultScalarType (
+      p[0]*p[0]*a[0] + 2*p[0]*p[1]*a[1] + 2*p[0]*p[2]*a[2] + p[0]*b[0] 
+			               +   p[1]*p[1]*a[3] + 2*p[1]*p[2]*a[4] + p[1]*b[1]
+			                                  +   p[2]*p[2]*a[5] + p[2]*b[2]	+ c);
 	}
 
 // spostare..risolve un sistema 3x3
@@ -225,6 +229,24 @@ bool Minimum(Point3<ReturnScalarType> &x)
 		C[1][3]=-b[1]/2;
 		C[2][3]=-b[2]/2;
 		return Gauss33(&(x[0]),C);
+}
+
+// determina il punto di errore minimo usando le fun di inversione di matrice che usano svd
+// Molto + lento 
+template <class ReturnScalarType>
+bool MinimumSVD(Point3<ReturnScalarType> &x)
+{	
+    Matrix33<ReturnScalarType> C;
+		C[0][0]=a[0]; C[0][1]=a[1]; C[0][2]=a[2];
+		C[1][0]=a[1]; C[1][1]=a[3]; C[1][2]=a[4];
+		C[2][0]=a[2]; C[2][1]=a[4]; C[2][2]=a[5];
+    Invert(C);
+
+		C[0][3]=-b[0]/2;
+		C[1][3]=-b[1]/2;
+		C[2][3]=-b[2]/2;
+		x = C * Point3<ReturnScalarType>(-b[0]/2,-b[1]/2,-b[2]/2) ;
+    return  true;
 }
 
 
