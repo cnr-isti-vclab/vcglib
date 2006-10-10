@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2006/09/14 08:44:07  ganovelli
+changed t.P(*) in t.cP() nella funzione Barycenter
+
 Revision 1.8  2006/06/01 08:38:58  pietroni
 added PointDistance function
 
@@ -227,6 +230,14 @@ ScalarType QualityFace( ) const
 
 
 }; //end Class
+
+/// Returns the normal to the plane passing through p0,p1,p2
+template<class TriangleType>
+typename TriangleType::ScalarType QualityFace(const TriangleType &t)
+{
+  return Quality(t.cP(0), t.cP(1), t.cP(2));
+}
+
 
 /// Compute a shape quality measure of the triangle composed by points p0,p1,p2
 /// It Returns 2*AreaTri/(MaxEdge^2), 
