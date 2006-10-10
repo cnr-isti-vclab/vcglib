@@ -12,7 +12,8 @@ SUBDIRS       = trimesh_base \
                 trimesh_join \
                 trimesh_optional \
                 trimesh_intersection \
-                aabb_binary_tree
+                aabb_binary_tree \
+                edgemesh_grid
                 
 
 sources.files = *.pro
