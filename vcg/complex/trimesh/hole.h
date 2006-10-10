@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2006/10/09 10:07:07  giec
+Optimized version of "EAR HOLE FILLING", the Ear is selected according to its dihedral angle.
+
 Revision 1.5  2006/10/06 15:28:14  giec
 first working implementationof "EAR HOLE FILLING".
 
@@ -273,8 +276,8 @@ namespace vcg {
 		template<class MSH_TYPE> class TrivialEar
 		{
 		public:
-			face::Pos<typename MSH_TYPE::FaceType> e0;	// 
-			face::Pos<typename MSH_TYPE::FaceType> e1;	// 
+			face::Pos<typename MSH_TYPE::FaceType> e0;	 
+			face::Pos<typename MSH_TYPE::FaceType> e1;	 
 			typename MSH_TYPE::ScalarType quality;
 			TrivialEar(){}
 			TrivialEar(const face::Pos<typename MSH_TYPE::FaceType> & ep)
@@ -296,43 +299,16 @@ namespace vcg {
 
 			bool IsNull(){return e0.IsNull() || e1.IsNull();}
 			void SetNull(){e0.SetNull();e1.SetNull();}
-			//void ComputeQuality(){ quality = Distance(e0.VFlip()->P(),e1.v->P());}; //metodo vecchio per il calcolo della qualita
 			void ComputeQuality()
 			{ 
 				//comute quality by max(dihedral ancgle)
 				Point3f n1 = (e0.v->N() + e1.v->N() + e0.VFlip()->N() ) / 3;
 				face::Pos<typename MSH_TYPE::FaceType> tmp = e1;
 				tmp.FlipE();tmp.FlipV();
-				Point3f n2= (	e1.VFlip()->N(), e1.v->N(), tmp.v->N());
+				Point3f n2= (	e1.VFlip()->N()+ e1.v->N()+ tmp.v->N())/3;
 				MSH_TYPE::ScalarType qt;
 				qt = Angle(n1,n2);
 				quality = qt * -1000;
-
-				////calcolo della qualita' come angolo dell'orecchio per il lato opposto
-				//MSH_TYPE::ScalarType qt;
-				//MSH_TYPE::ScalarType k0 = e0.VFlip()->P().X()*e1.v->P().X();
-				//MSH_TYPE::ScalarType k1 = e0.VFlip()->P().Y()*e1.v->P().Y();
-				//MSH_TYPE::ScalarType k2 = e0.VFlip()->P().Z()*e1.v->P().Z();
-				//int exp0,exp1,exp2;
-				//frexp( double(k0), &exp0 );
-				//frexp( double(k1), &exp1 );
-				//frexp( double(k2), &exp2 );
-				//if( exp0<exp1 )
-				//{
-				//	if(exp0<exp2)
-				//		qt = (MSH_TYPE::ScalarType) (k1+k2)+k0;
-				//	else
-				//		qt = (MSH_TYPE::ScalarType) (k0+k1)+k2;
-				//}
-				//else
-				//{
-				//	if(exp1<exp2)
-				//		qt = (MSH_TYPE::ScalarType)(k0+k2)+k1;
-				//	else
-				//		qt = (MSH_TYPE::ScalarType) (k0+k1)+k2;
-				//}
-				//quality	= qt * Distance(e0.VFlip()->P(),e1.v->P());
-
 			};//dovrebbe
 			bool IsUpToDate()	{return (e0.IsBorder() && e1.IsBorder());};
 
@@ -383,7 +359,6 @@ namespace vcg {
 				// caso ear degenere per buco triangolare
 				if(ep==en)
 				{
-					//TRACE("Closing the last triangle");
 					printf("Closing the last triangle");
 					f->FFp(2)=en.f;
 					f->FFi(2)=en.z;
@@ -395,7 +370,6 @@ namespace vcg {
 				// Caso ear non manifold a
 				else if(ep.v==en.v)
 				{
-					//TRACE("Ear Non manif A\n");
 					printf("Ear Non manif A\n");
 					face::Pos<typename MSH_TYPE::FaceType>	enold=en;
 					en.NextB();
@@ -409,7 +383,6 @@ namespace vcg {
 				// Caso ear non manifold b
 				else if(ep.VFlip()==e1.v)
 				{
-					//TRACE("Ear Non manif B\n");
 					printf("Ear Non manif B\n");
 					face::Pos<typename MSH_TYPE::FaceType>	epold=ep; 
 					ep.FlipV(); ep.NextB(); ep.FlipV();
@@ -432,6 +405,156 @@ namespace vcg {
 		};
 
 
+				template<class MSH_TYPE> class LeipaEar
+
+		{
+		public:
+			face::Pos<typename MSH_TYPE::FaceType> e0;	 
+			face::Pos<typename MSH_TYPE::FaceType> e1;	 
+			typename MSH_TYPE::ScalarType dihedral;
+			typename MSH_TYPE::ScalarType area;
+			LeipaEar(){}
+			LeipaEar(const face::Pos<typename MSH_TYPE::FaceType> & ep)
+			{
+				e0=ep;
+				assert(e0.IsBorder());
+				e1=e0;
+				e1.NextB();
+				ComputeQuality();
+			}
+
+			// Nota: minori invertiti
+			inline bool operator <  ( const LeipaEar & c ) const 
+			{ 
+				if(dihedral < c.dihedral)return true;
+				else return ((dihedral == c.dihedral) && (area < c.area));
+			}
+			inline bool operator >  ( const LeipaEar & c ) const 
+			{
+				if(dihedral > c.dihedral)return true;
+				else return ((dihedral == c.dihedral) && (area > c.area));
+			}
+			inline bool operator == ( const LeipaEar & c ) const 
+			{
+				 return ((dihedral == c.dihedral) && (area == c.area));
+			}
+			inline bool operator != ( const LeipaEar & c ) const 
+			{
+				return ((dihedral != c.dihedral)&& (area != c.area));
+			}
+
+			bool IsNull(){return e0.IsNull() || e1.IsNull();}
+			void SetNull(){e0.SetNull();e1.SetNull();}
+			void ComputeQuality()
+			{ 
+				//comute quality by (dihedral ancgle, area)
+				Point3f n1 = (e0.v->N() + e1.v->N() + e0.VFlip()->N() ) / 3;
+				face::Pos<typename MSH_TYPE::FaceType> tmp = e1;
+				tmp.FlipE();tmp.FlipV();
+				Point3f n2=(e1.VFlip()->N() + e1.v->N() + tmp.v->N() ) / 3; 
+				MSH_TYPE::ScalarType qt;
+				qt = Angle(n1,n2);
+
+				dihedral = qt * -1000;
+
+				MSH_TYPE::ScalarType ar;
+				ar = ( (e0.VFlip()->P() - e0.v->P()) ^ ( e1.v->P() - e0.v->P()) ).Norm() ;
+				area = (ar)*1000;
+
+			};//dovrebbe
+			bool IsUpToDate()	{return (e0.IsBorder() && e1.IsBorder());};
+
+			bool Degen()
+			{
+				face::Pos<typename MSH_TYPE::FaceType>	ep=e0; ep.FlipV(); ep.NextB(); ep.FlipV(); // he precedente a e0 
+				face::Pos<typename MSH_TYPE::FaceType>	en=e1; en.NextB();												 // he successivo a e1
+
+				// caso ear degenere per buco triangolare
+				if(ep==en) return true;//provo a togliere sto controllo
+				// Caso ear non manifold a
+				if(ep.v==en.v)	return true;
+				// Caso ear non manifold b
+				if(ep.VFlip()==e1.v) return true;
+
+				return false;
+			}
+
+			bool Close(LeipaEar &ne0, LeipaEar &ne1, typename MSH_TYPE::FaceType * f)
+			{
+				// simple topological check
+				if(e0.f==e1.f) {
+					printf("Avoided bad ear");
+					return false;
+				}
+
+				//usato per generare una delle due nuove orecchie.
+				face::Pos<typename MSH_TYPE::FaceType>	ep=e0; ep.FlipV(); ep.NextB(); ep.FlipV(); // he precedente a e0 
+				face::Pos<typename MSH_TYPE::FaceType>	en=e1; en.NextB();												 // he successivo a e1
+
+				(*f).V(0) = e0.VFlip();
+				(*f).V(1) = e0.v;
+				(*f).V(2) = e1.v;
+
+				(*f).FFp(0) = e0.f;
+				(*f).FFi(0) = e0.z;
+				(*f).FFp(1) = e1.f;
+				(*f).FFi(1) = e1.z;
+				(*f).FFp(2) = f;
+				(*f).FFi(2) = 2;
+
+				e0.f->FFp(e0.z)=f;
+				e0.f->FFi(e0.z)=0;	
+
+				e1.f->FFp(e1.z)=f;
+				e1.f->FFi(e1.z)=1;	
+
+				// caso ear degenere per buco triangolare
+				if(ep==en)
+				{
+					printf("Closing the last triangle");
+					f->FFp(2)=en.f;
+					f->FFi(2)=en.z;
+					en.f->FFp(en.z)=f;
+					en.f->FFi(en.z)=2;
+					ne0.SetNull();
+					ne1.SetNull();
+				}
+				// Caso ear non manifold a
+				else if(ep.v==en.v)
+				{
+					printf("Ear Non manif A\n");
+					face::Pos<typename MSH_TYPE::FaceType>	enold=en;
+					en.NextB();
+					f->FFp(2)=enold.f;
+					f->FFi(2)=enold.z;
+					enold.f->FFp(enold.z)=f;
+					enold.f->FFi(enold.z)=2;
+					ne0=LeipaEar(ep);
+					ne1=LeipaEar(en);
+				}
+				// Caso ear non manifold b
+				else if(ep.VFlip()==e1.v)
+				{
+					printf("Ear Non manif B\n");
+					face::Pos<typename MSH_TYPE::FaceType>	epold=ep; 
+					ep.FlipV(); ep.NextB(); ep.FlipV();
+					f->FFp(2)=epold.f;
+					f->FFi(2)=epold.z;
+					epold.f->FFp(epold.z)=f;
+					epold.f->FFi(epold.z)=2;
+					ne0=LeipaEar(ep);
+					ne1=LeipaEar(en);
+				}
+				else // caso standard
+					// Now compute the new ears;
+				{
+					ne0=LeipaEar(ep);
+					ne1=LeipaEar(face::Pos<typename MSH_TYPE::FaceType>(f,2,e1.v));
+				}
+
+				return true;
+			}
+		};
 
 
 		// Funzione principale per chiudier un buco in maniera topologicamente corretta.
@@ -462,8 +585,6 @@ namespace vcg {
 			return tri::HoleInfo<MESH>(sp,holesize,hbox, tmp );
 		}
 
-
-
 		template<class MESH,class EAR , class VECTOR_EAR>
 			void refreshHole(MESH &m, VECTOR_EAR &ve, face::Pos<typename MESH::FaceType> &fp, std::vector<typename MESH::VertexType > &vv)
 		{
@@ -478,22 +599,17 @@ namespace vcg {
 
 		}
 
-
 		template <class MESH, class EAR>
 			void fillHoleEar(MESH &m, tri::HoleInfo<MESH> &h ,int UBIT)
 		{
 			//Aggiungo le facce e aggiorno il puntatore alla faccia!
 			std::vector<MESH::FacePointer *> app;
 			app.push_back( &h.p.f );
-
 			MESH::FaceIterator f = tri::Allocator<MESH>::AddFaces(m, h.size-2, app);
-
-			h.Refresh(m);	//rinfresco il puntatore tramite l'indice precedentemente salvato.
-
+			h.Refresh(m);	
 			assert(h.p.IsBorder());//test fondamentale altrimenti qualcosa s'e' rotto!
 
 			std::vector<MESH::VertexType > vv; //vettore di vertici 
-
 			std::vector<EAR > H; //vettore di orecchie
 
 			H.reserve(h.size);
@@ -504,7 +620,6 @@ namespace vcg {
 			bool fitted = false;
 			int cnt=h.size;
 			MESH::FaceIterator tmp;
-
 
 			make_heap(H.begin(), H.end());
 
@@ -567,7 +682,7 @@ namespace vcg {
 		}
 
 
-		template<class MESH>
+		template<class MESH, class EAR>
 			void holeFillingEar(MESH &m, int sizeHole,bool Selected = false)
 		{
 			MESH::FaceIterator fi;
@@ -613,7 +728,7 @@ namespace vcg {
 				app=(tri::HoleInfo<MESH>)*ith;
 				if(app.size < sizeHole){		
 					//app.Refresh(m);//non so se serve
-					fillHoleEar<MESH, typename tri::TrivialEar<MESH> >(m, app,UBIT);
+					fillHoleEar<MESH, EAR >(m, app,UBIT);
 				}
 			}
 
