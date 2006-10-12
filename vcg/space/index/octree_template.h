@@ -22,8 +22,8 @@
 ****************************************************************************/
 
 
-#ifndef OCTREETEMPLATE_H
-#define OCTREETEMPLATE_H
+#ifndef VCG_SPACE_INDEX_OCTREETEMPLATE_H
+#define VCG_SPACE_INDEX_OCTREETEMPLATE_H
 
 #include <vcg/space/point3.h>
 #include <vcg/space/box3.h>
@@ -56,6 +56,7 @@ protected:
 
 public:
 	// Octree Type Definitions
+	typedef unsigned long long				ZOrderType;
 	typedef SCALAR_TYPE								ScalarType;
 	typedef typename VOXEL_TYPE				VoxelType;
 	typedef typename VOXEL_TYPE		   *VoxelPointer;
@@ -201,21 +202,21 @@ public:
 	// Return the center of the n-th node 
 	inline CenterType CenterInOctreeCoordinates(const NodePointer n) const { return n->center;}
 	
-	// Return the center of the n-th node expressed in world-coordinate
-	inline CoordinateType CenterInWorldCoordinates(const NodePointer n) const
+	/*!
+	* Return the center of the n-th node expressed in world-coordinate
+	* \param NodePointer the pointer to the node whose center in world coordinate has to be computed
+	*/
+	inline void CenterInWorldCoordinates(const NodePointer n, CoordinateType &wc_Center) const
 	{
 		assert(0<=n && n<NodeCount());
 
-		int level = n->level;
-		int shift = maxDepth-level+1;
-		CoordinateType wcCenter; 
+		int shift = maximumDepth - n->level + 1;
 		CoordinateType ocCenter = CenterInOctreeCoordinates(n);
 		CoordinateType nodeSize = boundingBox.Dim()/float(1<<level);
 		wcCenter.X() = boundingBox.min.X() + (nodeSize.X()*(0.5f+(ocCenter.X()>>shift)));
 		wcCenter.Y() = boundingBox.min.Y() + (nodeSize.Y()*(0.5f+(ocCenter.Y()>>shift)));
 		wcCenter.Z() = boundingBox.min.Z() + (nodeSize.Z()*(0.5f+(ocCenter.Z()>>shift)));
-		return wcCenter
-	}
+	};
 
 	// Given a node (even not leaf) it returns the center of the box it represent.
 	// the center is expressed not in world-coordinates.
@@ -282,8 +283,6 @@ public:
 	// Return the bounding-box of the n-th node expressed in world-coordinate
 	BoundingBoxType BoundingBoxInWorldCoordinates(const NodePointer n)
 	{
-		assert(0<=n && n<Size());
-
 		char level = Level(n);
 		int shift  = maximumDepth-level+1;
 		CoordinateType	nodeDim = boundingBox.Dim()/float(1<<level);
@@ -294,6 +293,22 @@ public:
 		nodeBB.min.Z() = boundingBox.min.Z() + (nodeDim.Z()*(center.Z()>>shift));
 		nodeBB.max = nodeBB.min+nodeDim;
 		return nodeBB;
+	};
+
+	/*!
+	* Return the bounding-box of a node expressed in world-coordinate
+	* \param NodePointer  the node whose bounding-box has to be computed
+	* \param wc_BB				the bounding-box of the node in world coordinta
+	*/
+	inline void BoundingBoxInWorldCoordinates(const NodePointer n, BoundingBoxType &wc_bb) const
+	{
+		char level = Level(n);
+		int	 shift = maximumDepth - level + 1;
+		CoordinateType node_dimension = boundingBox.Dim()/ScalarType(1<<level);
+		wc_bb.min.X()	= boundingBox.min.X()+(node_dimension.X()*(n->center.X()>>shift));
+		wc_bb.min.Y()	= boundingBox.min.Y()+(node_dimension.Y()*(n->center.Y()>>shift));
+		wc_bb.min.Z()	= boundingBox.min.Z()+(node_dimension.Z()*(n->center.Z()>>shift));
+		wc_bb.max	= wc_bb.min+node_dimension;
 	};
 
 	// Return one of the 8 subb box of a given box.
@@ -408,6 +423,10 @@ public:
 		return curNode;
 	}
 
+	/*!
+	* Given a query point, compute the z_order of the leaf where this point would be contained.
+	* This leaf not necessarily must be exist!
+	*/
 	// Convert the point p coordinates to the integer based representation 
 	// in the range 0..size, where size is 2^maxdepth
 	CenterType Interize(const CoordinateType &pf) const  
@@ -445,13 +464,13 @@ public:
 	// Compute the z-ordering integer value for a given node;
 	// this value can be used to compute a complete ordering of the nodes of a given level of the octree. 
 	// It assumes that the octree has a max depth of 10.
-	unsigned long long ZOrder(NodePointer n)
-	{
-		unsigned long long finalPosition = 0;
-		unsigned long long currentPosition;
-		char level				= Level(n);
+	ZOrderType ZOrder(NodePointer n)											const	{ return ZOrder(GetPath(n), Level(n)); }
+	ZOrderType ComputeZOrder(const CoordinateType &query) const { return ZOrder(CenterType::Construct(Interize(query)), maximumDepth); };
 
-		CenterType path = GetPath(n); 
+	inline ZOrderType ZOrder(const CenterType &path, const char level) const
+	{
+		ZOrderType finalPosition = 0;
+		ZOrderType currentPosition;
 		
 		for(int i=0; i<level; ++i)
 		{
@@ -464,7 +483,7 @@ public:
 			finalPosition	 |= currentPosition;
 		}
 		return finalPosition;
-	}
+	};
 
 	// Funzione principale di accesso secondo un path; 
 	// restituisce l'indice del voxel di profondita' massima 
@@ -528,7 +547,7 @@ public:
 	// I nodi mancanti dalla radice fino a profondità maxDepth vengono aggiunti. 
 	// In posizione i ci sarà il nodo di livello i.
 	// Restituisce lo z-order del punto p
-	unsigned long long BuildRoute(const CoordinateType &p, NodePointer *&route)
+	ZOrderType BuildRoute(const CoordinateType &p, NodePointer *&route)
 	{
 		assert( boundingBox.min.X()<=p.X() && p.X()<=boundingBox.max.X() );
 		assert( boundingBox.min.Y()<=p.Y() && p.Y()<=boundingBox.max.Y() );
@@ -536,11 +555,9 @@ public:
 
 		route[0]						= Root();
 		NodePointer curNode = Root();
-		int finalLevel			= 0;
 		int shift						= maximumDepth-1;
-
-		CenterType path = CenterType::Construct(Interize(p));
-		while(shift >= finalLevel)
+		CenterType path			= CenterType::Construct(Interize(p));
+		while(shift >= 0)
 		{
 			int son = 0;
 			if((path[0]>>shift)%2) son +=1; 
@@ -701,4 +718,4 @@ template <typename VOXEL_TYPE, class SCALAR_TYPE>
 const SCALAR_TYPE OctreeTemplate<VOXEL_TYPE, SCALAR_TYPE>::EXPANSION_FACTOR  = SCALAR_TYPE(0.035);
 }
 
-#endif //OCTREETEMPLATE_H
+#endif //VCG_SPACE_INDEX_OCTREETEMPLATE_H

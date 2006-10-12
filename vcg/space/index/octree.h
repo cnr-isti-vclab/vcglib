@@ -21,8 +21,8 @@
 *                                                                           *
 ****************************************************************************/
 
-#ifndef OCTREE_H
-#define OCTREE_H
+#ifndef VCG_SPACE_INDEX_OCTREE_H
+#define VCG_SPACE_INDEX_OCTREE_H
 
 #include <stdlib.h>
 #include <algorithm>
@@ -102,7 +102,7 @@ namespace vcg
 	
 	
 	template < class OBJECT_TYPE, class SCALAR_TYPE>
-	class Octree : public OctreeTemplate< Voxel, SCALAR_TYPE >, public vcg::SpatialIndex< OBJECT_TYPE, SCALAR_TYPE >
+	class Octree : public vcg::OctreeTemplate< Voxel, SCALAR_TYPE >, public vcg::SpatialIndex< OBJECT_TYPE, SCALAR_TYPE >
 	{
 	public: 
 		typedef						SCALAR_TYPE													ScalarType;
@@ -148,16 +148,16 @@ namespace vcg
 
 			ObjectPlaceholder() { z_order = object_index = -1, leaf_pointer = NULL;}
 
-			ObjectPlaceholder(unsigned long long z_order, void* leaf_pointer, unsigned int object_index)
+			ObjectPlaceholder(ZOrderType z_order, void* leaf_pointer, unsigned int object_index)
 			{
 				this->z_order				= z_order;
 				this->leaf_pointer	= leaf_pointer;
 				this->object_index	= object_index;
 			}
 
-			unsigned long long	z_order;
-			LeafPointer					leaf_pointer;
-			unsigned int				object_index;
+			ZOrderType		z_order;
+			LeafPointer		leaf_pointer;
+			unsigned int	object_index;
 		};
 
 		
@@ -823,4 +823,4 @@ public:
 
 } //end of namespace vcg
 
-#endif //OCTREE_H
+#endif //VCG_SPACE_INDEX_OCTREE_H
