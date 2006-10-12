@@ -69,12 +69,6 @@ namespace vcg
 			**************************************************/
 			// Dummy class: no object marker is needed
 			class DummyObjectMarker {};
-			// Object functor: return the bounding-box enclosing a given vertex
-			struct BoundingBoxForVertexFunctor
-			{
-				inline BoundingBoxType operator()( const VertexType &vertex ) const 
-				{ BoundingBoxType bb; bb.Set(vertex.P()); return bb; }
-			};
 
 			// Object functor: compute the distance between a vertex and a point
 			struct VertPointDistanceFunctor
@@ -94,6 +88,10 @@ namespace vcg
 			struct Plane
 			{
 				Plane() { center.Zero(); normal.Zero();};
+
+				// Object functor: return the bounding-box enclosing a given plane
+				inline void GetBBox(BoundingBoxType	&bb) { bb.Set(center); };
+
 				CoordType		center;
 				NormalType	normal;
 				int					index;
@@ -112,13 +110,6 @@ namespace vcg
 					q = plane.center;
 					return true;
 				}
-			};
-
-			// Object functor: return the bounding-box enclosing a given plane
-			struct BoundingBoxForPlaneFunctor
-			{
-				inline BoundingBoxType	operator()( const Plane &plane ) const 
-				{ BoundingBoxType bb; bb.Set(plane.center); return bb; }
 			};
 
 			// Represent an edge in the Riemannian graph
@@ -161,7 +152,7 @@ namespace vcg
 			int vertex_count = int( std::distance(begin, end) );
 			std::vector< Plane > tangent_planes(vertex_count);		
 			vcg::Octree< VertexType, ScalarType > octree_for_planes;
-			octree_for_planes.Set< VertexIterator , BoundingBoxForVertexFunctor >(begin, end, dataset_bb, BoundingBoxForVertexFunctor());
+			octree_for_planes.Set< VertexIterator >(begin, end);
 
 			std::vector< VertexPointer > nearest_vertices;
 			std::vector< CoordType	 	 > nearest_points;
@@ -209,7 +200,7 @@ namespace vcg
 			max_distance = dataset_bb.Diag();
 
 			vcg::Octree< Plane, ScalarType > octree_for_plane;
-			octree_for_plane.Set< std::vector<Plane>::iterator, BoundingBoxForPlaneFunctor >(tangent_planes.begin(), tangent_planes.end(), dataset_bb, BoundingBoxForPlaneFunctor());
+			octree_for_plane.Set< std::vector<Plane>::iterator >(tangent_planes.begin(), tangent_planes.end());
 			std::vector< Plane* >	nearest_planes(distances.size());
 			std::vector< std::vector< RiemannianEdge > > riemannian_graph(vertex_count); //it's probably that we are wasting the last position...
 			for (std::vector< Plane >::iterator iPlane=tangent_planes.begin(); iPlane!=ePlane; iPlane++)
