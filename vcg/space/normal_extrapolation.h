@@ -188,7 +188,7 @@ namespace vcg
 				for (int d=0; d<3; d++)
 					plane->normal[d] = eigenvectors[d][2];
 				plane->normal.Normalize();
-				
+				iter->N() = plane->normal;				
 				plane->index = int( std::distance(begin, iter) );
 			}
 			
