@@ -25,6 +25,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/11/12 18:10:35  cignoni
+Removed Abs and LowClampToZero and added comments
+
 Revision 1.2  2005/09/29 22:22:59  m_di_benedetto
 Added classes GetBox3Functor and GetBarycenter3Functor.
 
@@ -80,7 +83,7 @@ class GetBarycenter3Functor {
 public:
 	template <class OBJTYPE, class SCALARTYPE>
 	void operator () (const OBJTYPE & obj, Point3<SCALARTYPE> & bar) {
-		bar.Import(obj.Barycenter());
+		bar.Import(Barycenter<OBJTYPE>(obj));
 	}
 };
 
