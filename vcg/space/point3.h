@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.24  2006/09/28 13:37:35  m_di_benedetto
+added non const * V()
+
 Revision 1.23  2005/11/09 16:11:55  cignoni
 Added Abs and LowClampToZero
 
@@ -166,6 +169,12 @@ public:
   static inline Point3 Construct( const Point3<Q> & b )
   {
     return Point3(P3ScalarType(b[0]),P3ScalarType(b[1]),P3ScalarType(b[2]));
+  }
+
+  template <class Q> 
+  static inline Point3 Construct( const Q & P0, const Q & P1, const Q & P2)
+  {
+    return Point3(P3ScalarType(P0),P3ScalarType(P1),P3ScalarType(P2));
   }
 
   static inline Point3 Construct( const Point3<ScalarType> & b )
