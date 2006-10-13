@@ -27,12 +27,11 @@
 #include <vcg/math/matrix33.h>
 #include <vcg/math/linear.h> 
 #include <vcg/math/lin_algebra.h>
-
+#include <vcg/math/disjoint_set.h>
 #include <vcg/space/box3.h>
 #include <vcg/space/point3.h>
 #include <vcg/space/index/octree.h>
-
-#include <vcg/math/disjoint_set.h>
+#include <wrap/callback.h>
 
 #include <vector>
 #include <queue>
@@ -62,7 +61,7 @@ namespace vcg
 	public:
 		/*!
 		*/
-		static void ExtrapolateNormlas(const VertexIterator &begin, const VertexIterator &end, int k, const int root_index=-1, NormalOrientation orientation=IsCorrect)
+		static void ExtrapolateNormlas(const VertexIterator &begin, const VertexIterator &end, int k, const int root_index=-1, NormalOrientation orientation=IsCorrect, CallBackPos *callback=NULL)
 		{
 			/*************************************************
 			*		Inner class definitions
@@ -150,6 +149,11 @@ namespace vcg
 
 			// Step 1: identify the tangent planes used to locally approximate the surface
 			int vertex_count = int( std::distance(begin, end) );
+			int step				 = int(vertex_count/100)-1;
+			int progress		 = 0;
+			int percentage;
+			char message[128];
+			sprintf(message, "Locating tangent planes...");
 			std::vector< Plane > tangent_planes(vertex_count);		
 			vcg::Octree< VertexType, ScalarType > octree_for_planes;
 			octree_for_planes.Set< VertexIterator >(begin, end);
@@ -159,6 +163,8 @@ namespace vcg
 			std::vector< ScalarType		 > distances;
 			for (VertexIterator iter=begin; iter!=end; iter++)
 			{
+				if (callback!=NULL && (++progress%step)==0 && (percentage=int((progress*100)/vertex_count))<100) (callback)(percentage, message);
+
 				octree_for_planes.GetKClosest<VertPointDistanceFunctor, DummyObjectMarker, std::vector<VertexPointer>, std::vector<ScalarType>, std::vector<CoordType> >
 					(VertPointDistanceFunctor(), DummyObjectMarker(), k, iter->P(), max_distance, nearest_vertices, distances, nearest_points);
 
@@ -203,8 +209,12 @@ namespace vcg
 			octree_for_plane.Set< std::vector<Plane>::iterator >(tangent_planes.begin(), tangent_planes.end());
 			std::vector< Plane* >	nearest_planes(distances.size());
 			std::vector< std::vector< RiemannianEdge > > riemannian_graph(vertex_count); //it's probably that we are wasting the last position...
+			progress = 0;
+			sprintf(message, "Building Riemannian graph...");
 			for (std::vector< Plane >::iterator iPlane=tangent_planes.begin(); iPlane!=ePlane; iPlane++)
 			{
+				if (callback!=NULL && (++progress%step)==0 && (percentage=int((progress*100)/vertex_count))<100) (callback)(percentage, message);
+			
 				octree_for_plane.GetKClosest< PlanePointDistanceFunctor, DummyObjectMarker,  std::vector< Plane* >, std::vector< ScalarType >, std::vector< CoordType > >
 					(PlanePointDistanceFunctor(), DummyObjectMarker(), k, iPlane->center, max_distance, nearest_planes, distances, nearest_points, true, false);
 
@@ -240,8 +250,14 @@ namespace vcg
 			std::vector< std::vector< int > > incident_edges(vertex_count);
 			iMSTEdge = unoriented_tree.begin();
 			eMSTEdge = unoriented_tree.end();
+
+			progress			= 0;
+			int mst_size  = int(unoriented_tree.size());
+			sprintf(message, "Building orieted graph...");
 			for ( ; iMSTEdge!=eMSTEdge; iMSTEdge++)
 			{
+				if (callback!=NULL && (++progress%step)==0 && (percentage=int((progress*100)/mst_size))<100) (callback)(percentage, message);
+		
 				int u_index = int(iMSTEdge->u->index);
 				int v_index = int(iMSTEdge->v->index);
 				incident_edges[ u_index ].push_back( v_index ),
@@ -270,8 +286,14 @@ namespace vcg
 			{ // just to limit the scope of the variable border
 				std::queue< int > border;
 				border.push(r_index);
-				while (!border.empty())
+				int maxSize		= 0;
+				int	queueSize = 0;
+				progress			= 0;
+				sprintf(message, "Extracting the tree...");
+				while ((queueSize=int(border.size()))>0)
 				{
+					if (callback!=NULL && ((++progress%step)==0) && (percentage=int((maxSize-queueSize)*100/maxSize))<100) (callback)(percentage, message);
+
 					int current_node_index = border.front();  border.pop();
 
 					MSTNode *current_node = &MST[current_node_index];					//retrieve the pointer to the current MST node
@@ -290,6 +312,7 @@ namespace vcg
 							//std::advance((iSonVertex=begin), *iSon);//retrieve the pointer to the Vertex associated to son
 							border.push( *iSon );
 						}
+						maxSize = vcg::math::Max<int>(maxSize, queueSize); 
 					}
 				}
 			}
@@ -298,19 +321,27 @@ namespace vcg
 			{
 				std::queue< MSTNode* > border;
 				border.push(mst_root);
-				while (!border.empty())
+				sprintf(message, "Orienting normals...");
+				progress			= 0;
+				int maxSize		= 0;
+				int queueSize		= 0;
+				while ((queueSize=int(border.size()))>0)
 				{
 					MSTNode *current_node = border.front(); border.pop();
 					//std::vector< MSTNode* >::iterator iMSTSon = current_node->sons.begin();
 					//std::vector< MSTNode* >::iterator eMSTSon = current_node->sons.end();
 					for (int s=0; s<int(current_node->sons.size()); s++)
 					{
+						if (callback!=NULL && ((++progress%step)==0) && (percentage=int((maxSize-queueSize)*100/maxSize))<100) (callback)(percentage, message);
+						
 						if (current_node->vertex->N()*current_node->sons[s]->vertex->N()<ScalarType(0.0f))
 							current_node->sons[s]->vertex->N() *= ScalarType(-1.0f);
 						border.push( current_node->sons[s] );
+						maxSize = vcg::math::Max<int>(maxSize, queueSize); 
 					}
 				}
 			}
+			if (callback!=NULL) (callback)(100, message);
 		};
 	};
 
