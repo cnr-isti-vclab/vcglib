@@ -12,6 +12,7 @@ SUBDIRS       = trimesh_base \
                 trimesh_join \
                 trimesh_optional \
                 trimesh_intersection \
+                trimesh_ball_pivoting \
                 aabb_binary_tree \
                 edgemesh_grid
                 
