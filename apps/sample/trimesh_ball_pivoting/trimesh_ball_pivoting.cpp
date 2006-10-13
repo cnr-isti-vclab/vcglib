@@ -45,25 +45,23 @@ int  main(int argc, char **argv)
       "Usage: PlyRefine filein.ply fileout.ply [opt] \n"
       "options: \n"
       "-r <val> radius of the rolling ball\n"
+      "-c <val> clustering radius (as fraction of radius) default: 0.05\n"
 			);
 		exit(0);
 	}
 
-  int i=3;  
-  int CellNum=100000; 
-  float CellSize=0; 
-  bool DupFace=false;
-
+   float radius = 1.0f;
+   float clustering = 0.05;
+   float crease = 
 	while(i<argc)
 		{
 			if(argv[i][0]!='-')
 				{printf("Error unable to parse option '%s'\n",argv[i]); exit(0);}
 			switch(argv[i][1])
 			{				
-				case 'k' :	CellNum=atoi(argv[i+1]); ++i; printf("Using %i clustering cells\n",CellNum); break;
-				case 's' :	CellSize=atof(argv[i+1]); ++i; printf("Using %5f as clustering cell size\n",CellSize); break;
-				case 'd' :	DupFace=true; printf("Enabling the duplication of faces for double surfaces\n"); break;
-
+				case 'r' :	radius = atof(argv[i+1]); printf("Using %f sphere radius\n",radius); break;
+				case 'c' :	clustering = atof(argv[i+1]); printf("Using %f clustering radius\n",clustering); break;
+      
 				default : {printf("Error unable to parse option '%s'\n",argv[i]); exit(0);}
 			}
 			++i;
@@ -82,17 +80,19 @@ int  main(int argc, char **argv)
 
   int t0=clock();
   // Initialization
+  Pivot<MyMesh> pivot(m, radius, clustering); 
 
   int t1=clock();
   // the main processing
+  while(pivot.addFace() != -1);
 
   int t2=clock();
 
   printf("Output mesh vn:%i fn:%i\n",m.vn,m.fn);
-  printf("Simplified in :%i msec (%i+%i)\n",t2-t0,t1-t0,t2-t1);
+  printf("Created in :%i msec (%i+%i)\n",t2-t0,t1-t0,t2-t1);
 	
   vcg::tri::io::PlyInfo pi;
-	vcg::tri::io::ExporterPLY<MyMesh>::Save(m,argv[2],pi.mask);
-	return 0;
+  vcg::tri::io::ExporterPLY<MyMesh>::Save(m,argv[2],pi.mask);
+  return 0;
 
 }
