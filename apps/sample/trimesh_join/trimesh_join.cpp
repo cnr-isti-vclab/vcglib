@@ -59,8 +59,8 @@ int main(int argc,char **argv )
                 printf("Error in parsing bbox option");
   		          exit(0);
               }
-              ClipBB.min[0]=atof(argv[i+1]); ClipBB.min[1]=atof(argv[i+2]); ClipBB.min[2]=atof(argv[i+3]);
-              ClipBB.max[0]=atof(argv[i+4]); ClipBB.max[1]=atof(argv[i+5]); ClipBB.max[2]=atof(argv[i+6]);
+              ClipBB.min=Point3f::Construct(atof(argv[i+1]),atof(argv[i+2]),atof(argv[i+3]));
+              ClipBB.max=Point3f::Construct(atof(argv[i+4]),atof(argv[i+5]),atof(argv[i+6]));
               i+=6;
               printf("Clipping incoming meshes with box:\n (%7.4f %7.4f %7.4f) - (%7.4f %7.4f %7.4f)\n",
                     ClipBB.min[0],ClipBB.min[1],ClipBB.min[2],

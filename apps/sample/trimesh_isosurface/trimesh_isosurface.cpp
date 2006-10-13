@@ -10,8 +10,8 @@
 using namespace std;
 using namespace vcg;
 
-#include <vcg/simplex/vertex/vertex.h>
-#include <vcg/simplex/face/face.h>
+#include <vcg/simplex/vertexplus/base.h>
+#include <vcg/simplex/faceplus/base.h>
 #include <vcg/complex/trimesh/base.h>
 #include <vcg/complex/trimesh/allocate.h>
 
@@ -19,8 +19,13 @@ typedef float ScalarType;
 
 class MyEdge;
 class MyFace;
-class MyVertex : public vcg::Vertex< ScalarType, MyEdge, MyFace > {};
-class MyFace		: public vcg::Face< MyVertex, MyEdge, MyFace> {};
+
+class MyVertex     : public VertexSimp2< MyVertex,  MyEdge, MyFace, vert::Coord3f>{};
+class MyFace       : public FaceSimp2< MyVertex,    MyEdge, MyFace, face::VertexRef, face::BitFlags> {};
+
+//class MyVertex  : public vcg::Vertex< ScalarType, MyEdge, MyFace > {};
+//class MyFace		: public vcg::Face< MyVertex, MyEdge, MyFace> {};
+
 class MyMesh		: public vcg::tri::TriMesh< std::vector< MyVertex>, std::vector< MyFace > > {};
 
 template <class VOX_TYPE>
@@ -118,7 +123,7 @@ public:
 
 typedef Volume<SimpleVoxel> MyVolume;
 
-int main(int argc, char *argv[])
+int main(int /*argc*/ , char /**argv[]*/)
 {
 	MyVolume	volume;
   
@@ -132,7 +137,7 @@ int main(int argc, char *argv[])
   for(int i=0;i<64;i++)
     for(int j=0;j<64;j++)
       for(int k=0;k<64;k++)
-        volume.Val(i,j,k)=(j-32)*(j-32)+(k-32)*(k-32)  + i*10*math::Perlin::Noise(i*.2,j*.2,k*.2);
+        volume.Val(i,j,k)=(j-32)*(j-32)+(k-32)*(k-32)  + i*10*(float)math::Perlin::Noise(i*.2,j*.2,k*.2);
 
 
 	// MARCHING CUBES

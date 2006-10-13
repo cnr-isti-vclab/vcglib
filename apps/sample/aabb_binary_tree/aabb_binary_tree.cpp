@@ -5,8 +5,12 @@
 #include <vector>
 
 // vcg headers
-#include<vcg/simplex/vertex/vertex.h>
-#include<vcg/simplex/face/with/rtfmfn.h>
+//#include<vcg/simplex/vertex/vertex.h>
+//#include<vcg/simplex/face/with/rtfmfn.h>
+#include<vcg/simplex/vertexplus/base.h>
+#include<vcg/simplex/faceplus/base.h>
+#include<vcg/simplex/faceplus/component_rt.h>
+
 #include<vcg/simplex/face/distance.h>
 #include<vcg/complex/trimesh/base.h>
 #include <vcg/complex/trimesh/create/platonic.h>
@@ -19,10 +23,16 @@
 
 typedef float AScalarType;
 
+using namespace vcg;
+
 class AEdge;
 class AFace;
-class AVertex   : public vcg::Vertex< AScalarType, AEdge, AFace > { };
-class AFace     : public vcg::FaceRTFMFN< AVertex, AEdge, AFace > { };
+class AVertex     : public VertexSimp2< AVertex, AEdge, AFace, vert::Normal3f, vert::Coord3f >{};
+class AFace       : public FaceSimp2<   AVertex, AEdge, AFace, face::VertexRef, face::Normal3f, face::RTInfo, face::BitFlags> {};
+
+//class AVertex   : public vcg::Vertex< AScalarType, AEdge, AFace > { };
+//class AFace     : public vcg::FaceRTFMFN< AVertex, AEdge, AFace > { };
+
 class AMesh     : public vcg::tri::TriMesh< std::vector<AVertex>, std::vector<AFace> > { };
 
 typedef vcg::AABBBinaryTreeIndex<AFace, AScalarType, vcg::EmptyClass> AIndex;

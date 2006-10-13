@@ -1,7 +1,7 @@
 #include <vector>
 
-#include<vcg/simplex/vertex/vertex.h>
-#include<vcg/simplex/face/with/affm.h>
+#include<vcg/simplex/vertexplus/base.h>
+#include<vcg/simplex/faceplus/base.h>
 #include<vcg/simplex/face/topology.h>
 #include<vcg/complex/trimesh/base.h>
 #include<vcg/complex/trimesh/create/platonic.h>
@@ -16,10 +16,17 @@
 
 using namespace vcg;
 
+class MyEdge;    // dummy prototype never used
 class MyFace;
-class MyEdge;
-class MyVertex:public Vertex<float,MyEdge,MyFace>{};
-class MyFace : public FaceAFFM<MyVertex,MyEdge,MyFace>{};
+class MyVertex;
+
+class MyVertex  : public VertexSimp2< MyVertex, MyEdge, MyFace, vert::Coord3f, vert::BitFlags  >{};
+class MyFace    : public FaceSimp2  < MyVertex, MyEdge, MyFace, face::VertexRef,face::FFAdj, face::Mark, face::BitFlags > {};
+
+
+//class MyVertex:public Vertex<float,MyEdge,MyFace>{};
+//class MyFace : public FaceAFFM<MyVertex,MyEdge,MyFace>{};
+
 class MyMesh : public tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace > >{};
 
 
