@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2005/12/01 01:03:37  cignoni
+Removed excess ';' from end of template functions, for gcc compiling
+
 Revision 1.18  2004/08/31 15:42:59  fasano
 Aggiunte macro sin/cos/atan per C++ Builder
 
@@ -107,7 +110,9 @@ namespace math {
 	    inline bool operator() ( const SCALAR a, const SCALAR b ) { return fabs(a)>fabs(b);  }
     };
   
-
+  inline float Sqrt(const short v)   { return sqrtf(v); }
+  inline float Sqrt(const int v)   { return sqrtf(v); }
+  
   inline float Sqrt(const float v)   { return sqrtf(v); }
   inline float Abs(const float v)   { return fabsf(v); }
   inline float Cos(const float v)   { return cosf(v); }
