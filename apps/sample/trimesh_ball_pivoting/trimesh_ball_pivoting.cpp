@@ -31,7 +31,7 @@ class MyEdge;    // dummy prototype never used
 class MyFace;
 class MyVertex;
 
-class MyVertex  : public VertexSimp2< MyVertex, MyEdge, MyFace, vert::Coord3f, vert::Normal3f, vert::BitFlags  >{};
+class MyVertex  : public VertexSimp2< MyVertex, MyEdge, MyFace, vert::Coord3f, vert::Normal3f, vert::BitFlags, vert::Mark>{};
 class MyFace    : public FaceSimp2  < MyVertex, MyEdge, MyFace, face::VertexRef, face::Normal3f, face::BitFlags > {};
 class MyMesh    : public vcg::tri::TriMesh< vector<MyVertex>, vector<MyFace> > {};
 
@@ -52,15 +52,15 @@ int  main(int argc, char **argv)
 
    float radius = 1.0f;
    float clustering = 0.05;
-   float crease = 
+   int i = 3;
 	while(i<argc)
 		{
 			if(argv[i][0]!='-')
 				{printf("Error unable to parse option '%s'\n",argv[i]); exit(0);}
 			switch(argv[i][1])
 			{				
-				case 'r' :	radius = atof(argv[i+1]); printf("Using %f sphere radius\n",radius); break;
-				case 'c' :	clustering = atof(argv[i+1]); printf("Using %f clustering radius\n",clustering); break;
+				case 'r' :	radius = atof(argv[++i]); printf("Using %f sphere radius\n",radius);  break;
+				case 'c' :	clustering = atof(argv[++i]); printf("Using %f clustering radius\n",clustering); break;
       
 				default : {printf("Error unable to parse option '%s'\n",argv[i]); exit(0);}
 			}
@@ -80,7 +80,7 @@ int  main(int argc, char **argv)
 
   int t0=clock();
   // Initialization
-  Pivot<MyMesh> pivot(m, radius, clustering); 
+  tri::Pivot<MyMesh> pivot(m, radius, clustering); 
 
   int t1=clock();
   // the main processing
