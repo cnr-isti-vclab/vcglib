@@ -63,10 +63,11 @@ class Pivot {
     std::vector<int> nb; //number of fronts a vertex is into,
                          //this is used for the Visited and Border flags
                          //but adding topology may not be needed anymode
+    int last_seed;
 
       
 Pivot(MESH &_mesh, ScalarType _radius, ScalarType _mindist = 0.05, ScalarType _crease = -0.5): 
-       mesh(_mesh), radius(_radius), mindist(_mindist), crease(_crease) {
+       mesh(_mesh), radius(_radius), mindist(_mindist), crease(_crease), last_seed(0) {
     
       //Compute bounding box. (this may be passed as a parameter?
       for(int i = 0; i < mesh.vert.size(); i++)
@@ -147,6 +148,18 @@ bool seed(bool outside = true, int start = -1) {
                 break;
               }
             }
+            //check on the other side there are not a surface
+            Point3x recenter;
+            if(!findSphere(p0, p2, p1, recenter)) continue;           
+            for(int t = 0; t < n; t++) {
+              CVertex &v = mesh.vert[targets[t]];
+              Point3x &p = v.P();
+              if((center - p).Norm() <= radius && (v.IsV() || v.IsB())) {
+                failed = true;
+                break;
+              }
+            }
+            
             if(failed) continue;  
             found = true;
             i = k = j = n;
@@ -203,18 +216,21 @@ int addFace() {
       }
       
       if(!front.size()) {
+        return -1;
         //maybe there are unconnected parts of the mesh:
         //find a non D, V, B point and try to seed if failed D it.
-        for(int i = 0; i < mesh.vert.size();i ++) {
-          CVertex &v = mesh.vert[i];
+        for(; last_seed < mesh.vert.size(); ++last_seed) {
+          CVertex &v = mesh.vert[last_seed];
           if(v.IsD() || v.IsV() || v.IsB()) continue;
-          if(seed(true, i)) return 1;
+          printf("seeding new: %i\n", last_seed);
+          if(seed(true, last_seed)) return 1;
           v.SetD();
           --mesh.vn;
         }
+        printf("done\n");
         return -1;
       }
-    
+      if(last_seed > 1) printf("frontsixe: %d\n", front.size());
       typename std::list<Edgex>::iterator ei = front.begin();
       Edgex &e = *ei;
       Edgex &previous = *e.previous;           
@@ -346,7 +362,7 @@ int addFace() {
           (*up).v1 = v2;
           (*up).face = fn;
           (*up).center = center;
-          moveBack(ei);
+           moveBack(ei);
         }                         
     
               
@@ -500,7 +516,8 @@ int addFace() {
       int tot = 0;
       //HACK to speed up things until i can use a seach structure
       int i = mesh.face.size() - 2*(front.size());
-    //  i = 0;
+      if(front.size() < 100) i = mesh.face.size() - 100;
+//      i = 0;
       if(i < 0) i = 0;
       for(; i < mesh.face.size(); i++) { 
         CFace &f = mesh.face[i];
