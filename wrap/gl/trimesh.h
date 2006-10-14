@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2006/05/25 09:40:14  cignoni
+gcc dislike doubleline comments; removed.
+
 Revision 1.19  2006/02/13 13:05:05  cignoni
 Removed glew inclusion
 
@@ -245,16 +248,16 @@ void Update(/*Change c=CHAll*/)
 		if(!glIsBuffer(b[1]))
 				glGenBuffers(2,b);
 		glBindBuffer(GL_ARRAY_BUFFER,b[0]);   
-		glBufferData(GL_ARRAY_BUFFER_ARB, m->vn * sizeof(MESH_TYPE::VertexType), 
+		glBufferData(GL_ARRAY_BUFFER_ARB, m->vn * sizeof(typename MESH_TYPE::VertexType), 
 								(char *)&(m->vert[0].P()), GL_STATIC_DRAW_ARB); 
 		
 		glBindBuffer(GL_ARRAY_BUFFER,b[1]);   
-		glBufferData(GL_ARRAY_BUFFER_ARB, m->vn * sizeof(MESH_TYPE::VertexType), 
+		glBufferData(GL_ARRAY_BUFFER_ARB, m->vn * sizeof(typename MESH_TYPE::VertexType), 
 								(char *)&(m->vert[0].N()), GL_STATIC_DRAW_ARB); 
 
 		}
-		glVertexPointer(3,GL_FLOAT,sizeof(MESH_TYPE::VertexType),0);
-		glNormalPointer(GL_FLOAT,sizeof(MESH_TYPE::VertexType),0);
+		glVertexPointer(3,GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),0);
+		glNormalPointer(GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),0);
 	}
 
 	//int C=c;
