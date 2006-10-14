@@ -17,7 +17,6 @@ namespace tri {
 template <class MESH>
 class Pivot {
   public:
-//    typedef CMesh MESH;
     typedef GridStaticPtr<typename MESH::VertexType, typename MESH::ScalarType > StaticGrid;
     typedef typename MESH::VertexType CVertex;
     typedef typename MESH::FaceType CFace;
@@ -66,13 +65,17 @@ class Pivot {
                          //but adding topology may not be needed anymode
 
       
-    Pivot(MESH &_mesh, ScalarType _radius, ScalarType _mindist = 0.05, ScalarType _crease = -0.5): 
+Pivot(MESH &_mesh, ScalarType _radius, ScalarType _mindist = 0.05, ScalarType _crease = -0.5): 
        mesh(_mesh), radius(_radius), mindist(_mindist), crease(_crease) {
     
       //Compute bounding box. (this may be passed as a parameter?
       for(int i = 0; i < mesh.vert.size(); i++)
         box.Add(mesh.vert[i].P());
-     
+
+      //estimate radius if not provided     
+      if(radius <= 0.0f)
+        radius = sqrt((box.Diag()*box.Diag())/mesh.vn);
+      
       /* we need to enlarge the grid to allow queries from little outside of the box 
          Someone is a bit lazy... */        
       box.Offset(4*radius);
@@ -90,7 +93,8 @@ class Pivot {
        Use the center of the box to get a sphere inside (or outside) the model 
        You may be unlucky... */
        
-    bool seed(bool outside = true, int start = -1) {         
+bool seed(bool outside = true, int start = -1) {   
+           
       //pick a random point (well...)
       if(start == -1) start = rand()%mesh.vert.size();
       
@@ -187,8 +191,10 @@ class Pivot {
        all edges are dead  returns:
        1: added a face
        0: added nothing
-       -1: finished */
-    int addFace() {
+       -1: finished         */
+       
+int addFace() {
+
       //We try to seed again
       if(!mesh.face.size()) {
         for(int i = 0; i < 100; i++) 
@@ -215,39 +221,13 @@ class Pivot {
       Edgex &next = *e.next;  
       int v0 = e.v0, v1 = e.v1;
     
-      //last triangle missing. or it is the first?
-      if(0 &&next.next == e.previous) {  
-    
-        int v[3] = { previous.v0, next.v0, e.v0 };
-        int c[3] = { 0, 0, 0 };
-            
-        for(int k = 0; k < 3; k++) {
-          int vert = v[k];
-          nb[vert]--;
-          if(nb[vert] == 0) {       
-            mesh.vert[vert].SetV();
-            mesh.vert[vert].ClearB();
-          }              
-        }        
-        assert(previous.previous == e.next); 
-        addFace(previous.v0, next.v0, e.v0);                       
-    
-        front.erase(e.previous);
-        front.erase(e.next);        
-        front.erase(ei);    
-        
-        return 1;
-      }
-    
       int v2;
       Point3x center;
-    
       std::vector<int> targets;
       bool success = pivot(e, v2, center, targets);
     
-      //if no pivoting move this thing to the end and try again
-      //or we are trying to connect to the inside of the mesh. BAD.
-      if(!success || mesh.vert[v2].IsV()) {
+      //if no pivoting or we are trying to connect to the inside of the mesh.
+      if(!success || mesh.vert[v2].IsV()) { 
         killEdge(ei);
         return 0;
       } 
@@ -259,13 +239,15 @@ class Pivot {
     
       int fn = mesh.face.size();
       if(touch != front.end()) {       
-    
+
+        //check for orientation and manifoldness    
         if(!checkEdge(v0, v2) || !checkEdge(v2, v1)) {                      
           killEdge(ei);
           return 0;
         }
         
-        if(v2 == previous.v0) {    
+        if(v2 == previous.v0) {   
+               
           /*touching previous edge  (we reuse previous)        
                                     next
              ------->v2 -----> v1------>
@@ -292,7 +274,8 @@ class Pivot {
           
            
         } else if(v2 == next.v1) {
-        /*touching previous edge  (we reuse next)        
+               
+        /*touching next edge  (we reuse next)        
           previous
              ------->v0 -----> v2------>
                       \       /
@@ -340,8 +323,8 @@ class Pivot {
           typename std::list<Edgex>::iterator right = (*touch).previous;      
           typename std::list<Edgex>::iterator up = ei;
           
+          //this would be a really bad join
           if(v1 == (*right).v0 || v0 == (*left).v1) {
-//            cout << "Bad join.\n";
             killEdge(ei);
             return 0;
           }
@@ -369,7 +352,6 @@ class Pivot {
               
       
       } else {
-        assert(!mesh.vert[v2].IsB()); //fatal error! a new point is already a border?
     
         /*  adding a new vertex
                  
@@ -380,7 +362,11 @@ class Pivot {
                        /       \
                       /         V
                  ----v0 - - - > v1--------- */
-        cluster(v2);        
+        assert(!mesh.vert[v2].IsB()); //fatal error! a new point is already a border?
+        
+        //clustering points aroundf v2                 
+        cluster(v2);    
+            
         nb[v2]++;                 
         mesh.vert[v2].SetB();
         typename std::list<Edgex>::iterator down = newEdge(Edgex(v2, v1, v0, fn, center));
@@ -440,10 +426,8 @@ class Pivot {
           
           if(id == edge.v0 || id == edge.v1 || id == edge.v2) continue;
     
-          if(mesh.vert[id].IsD()) {
-            continue;      
-          }
-    
+          if(mesh.vert[id].IsD()) 
+            continue;                    
     
           Point3x p = mesh.vert[id].P();
     
