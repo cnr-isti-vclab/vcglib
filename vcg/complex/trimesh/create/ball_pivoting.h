@@ -533,7 +533,7 @@ class Pivot {
     }        
     
                
-    void Pivot::cluster(int v) {
+    void cluster(int v) {
       /* clean up too close points */
         std::vector<int> targets;
         std::vector<ScalarType> dists;    
@@ -550,13 +550,13 @@ class Pivot {
             
     }
     
-    void Pivot::trovamiunnome(typename std::list<Edgex>::iterator e) {
+    void trovamiunnome(typename std::list<Edgex>::iterator e) {
       if(glue((*e).previous, e)) return;
       glue(e, (*e).next);
     }
     
     //glue toghether a and b (where a.next = b
-    bool Pivot::glue(typename std::list<Edgex>::iterator a, typename std::list<Edgex>::iterator b) {
+    bool glue(typename std::list<Edgex>::iterator a, typename std::list<Edgex>::iterator b) {
       if((*a).v0 != (*b).v1) return false; 
       
       typename std::list<Edgex>::iterator previous = (*a).previous;
@@ -570,7 +570,7 @@ class Pivot {
       return true;
     }
     
-    void Pivot::detach(int v) {
+    void detach(int v) {
       assert(nb[v] > 0);
       if(--nb[v] == 0) {
         mesh.vert[v].SetV();
