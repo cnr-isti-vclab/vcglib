@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.28  2006/05/16 15:01:30  cignoni
+Wedge colors are loaded into facecolor only if specified in the incoming pi.mask
+
 Revision 1.27  2006/05/03 21:21:21  cignoni
 Corrected bug: mismatch in the index of confidence vertex property (8 instead of 11)
 Changed HasPerFaceColor to the new syntax (HasPerFaceColor(m)  instead of FaceType::HasFaceColor() )
@@ -636,7 +639,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 			for(j=0,vi=m.vert.begin();j<n;++j,++vi)
 				index[j] = &*vi;
 		}
-		else if( !strcmp( pf.ElemName(i),"face") )/************************************************************/
+		else if( !strcmp( pf.ElemName(i),"face") && (n>0) )/************************************************************/
 		{
 			int j;
 			
