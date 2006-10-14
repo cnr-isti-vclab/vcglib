@@ -204,6 +204,7 @@ class Pivot {
           if(v.IsD() || v.IsV() || v.IsB()) continue;
           if(seed(true, i)) return 1;
           v.SetD();
+          --mesh.vn;
         }
         return -1;
       }
@@ -546,6 +547,7 @@ class Pivot {
           CVertex &v = mesh.vert[id];
           if(v.IsD() || v.IsV() || v.IsB()) continue;
           v.SetD();
+          --mesh.vn;
         }
             
     }
