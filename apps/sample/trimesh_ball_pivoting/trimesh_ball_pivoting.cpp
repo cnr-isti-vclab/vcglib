@@ -50,7 +50,7 @@ int  main(int argc, char **argv)
 		exit(0);
 	}
 
-   float radius = 1.0f;
+   float radius = 0.0f;
    float clustering = 0.05;
    int i = 3;
 	while(i<argc)
@@ -66,7 +66,9 @@ int  main(int argc, char **argv)
 			}
 			++i;
 		}
-
+    if(radius == 0) 
+      printf("Autodetecting ball radius...\n");
+                
 	MyMesh m;
 
 	if(vcg::tri::io::ImporterPLY<MyMesh>::Open(m,argv[1])!=0)
@@ -81,6 +83,7 @@ int  main(int argc, char **argv)
   int t0=clock();
   // Initialization
   tri::Pivot<MyMesh> pivot(m, radius, clustering); 
+  printf("Ball radius: %f\nClustering points withing %f radii\n", pivot.radius, clustering);
 
   int t1=clock();
   // the main processing
