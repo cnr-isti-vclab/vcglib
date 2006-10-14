@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2006/01/30 13:43:59  cignoni
+Added GetExportMaskCapability
+
 Revision 1.14  2006/01/27 09:11:48  corsini
 fix signed/unsigned mismatch
 
@@ -437,7 +440,8 @@ std::vector<int> FlagV;
 			j++;
 		}
 	}
-	assert(j==m.vn);
+	// this assert triggers when the vn != number of vertexes in vert that are not deleted.
+  assert(j==m.vn); 
 
 	char c = 3;
 	unsigned char b9 = 9;
