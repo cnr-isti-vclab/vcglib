@@ -85,9 +85,18 @@ Pivot(MESH &_mesh, ScalarType _radius, ScalarType _mindist = 0.05, ScalarType _c
       nb.resize(mesh.vert.size(), 0);
       for(int i = 0; i < mesh.vert.size(); i++) 
          mesh.vert[i].ClearFlags();
+      srand(time(NULL));
       
     }
-    
+    /* ci mettero' anche una callback prima o poi */
+void buildMesh() {
+     while(addFace() != -1);
+     for(int i = 0; i < mesh.face.size(); i++) {
+       CFace &face = mesh.face[i];
+       for(int k = 0; k < 3; k++)
+         face.V(k) = &(mesh.vert[(int)face.V(k)]);
+     } 
+}
     
     /* select a vertex at random, a small group of nearby vertices and looks
        for a sphere that touches 3 and contains none.

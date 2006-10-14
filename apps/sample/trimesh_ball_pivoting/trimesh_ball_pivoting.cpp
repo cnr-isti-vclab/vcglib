@@ -87,7 +87,7 @@ int  main(int argc, char **argv)
 
   int t1=clock();
   // the main processing
-  while(pivot.addFace() != -1);
+  pivot.buildMesh();
 
   int t2=clock();
 
