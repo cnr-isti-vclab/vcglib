@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.18  2006/10/09 20:09:40  cignoni
+  Changed some access to VertexFaceIterator to reflect the shorter new operators.
+
   Revision 1.17  2005/10/12 10:44:01  cignoni
   Now creation of new edge use Ordered() constructor to comply the fact that the basic collapse is simmetric.
 
@@ -101,7 +104,7 @@ public:
 protected:
   typedef	typename TriMeshType::FaceType FaceType;
   typedef	typename TriMeshType::FaceType::VertexType VertexType;
-	typedef	typename FaceType::EdgeType EdgeType;
+	typedef	typename VertexType::EdgeType EdgeType;
   typedef	typename FaceType::VertexType::CoordType CoordType;
   typedef	typename TriMeshType::VertexType::ScalarType ScalarType;
   typedef typename LocalOptimization<TriMeshType>::HeapElem HeapElem;

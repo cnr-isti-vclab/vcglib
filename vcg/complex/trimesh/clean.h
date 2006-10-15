@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.41  2006/10/09 20:06:46  cignoni
+Added Remove NonManifoldFace
+
 Revision 1.40  2006/05/25 09:41:09  cignoni
 missing std and other gcc detected syntax errors
 
@@ -393,7 +396,7 @@ private:
       {
 				FaceIterator fi;
 				int count_fd = 0;
-        vector<FacePointer> ToDelVec;
+				std::vector<FacePointer> ToDelVec;
 
 				for(fi=m.face.begin(); fi!=m.face.end();++fi)
 					if (!fi->IsD())

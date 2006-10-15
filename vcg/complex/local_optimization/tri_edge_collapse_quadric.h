@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2006/10/09 20:12:55  cignoni
+Heavyly restructured for meshlab inclusion. Now the access to the quadric elements are mediated by a static helper class.
+
 Revision 1.9  2006/10/07 17:20:25  cignoni
 Updated to the new style face->Normal() becomes Normal(face)
 
@@ -142,7 +145,7 @@ public:
 };
 
 
-template<class TriMeshType,class MYTYPE, class HelperType = QInfoStandard<TriMeshType::VertexType> >
+template<class TriMeshType,class MYTYPE, class HelperType = QInfoStandard<typename TriMeshType::VertexType> >
 class TriEdgeCollapseQuadric: public TriEdgeCollapse< TriMeshType, MYTYPE> 
 {
 public:
