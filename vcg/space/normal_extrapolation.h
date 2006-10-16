@@ -47,23 +47,19 @@ namespace vcg
 	class NormalExtrapolation
 	{
 	public:
-		typedef typename VERTEX_CONTAINER::value_type	VertexType;
-		typedef typename VertexType									 *VertexPointer;
-		typedef typename VERTEX_CONTAINER::iterator		VertexIterator;
-		typedef typename VertexType::CoordType				CoordType;
-		typedef typename VertexType::NormalType				NormalType;
-		typedef typename VertexType::ScalarType				ScalarType;
-		typedef typename vcg::Box3< ScalarType >			BoundingBoxType;
-		typedef typename vcg::Matrix33<ScalarType> MatrixType;
+		typedef typename VERTEX_CONTAINER::value_type	 VertexType;
+		typedef 				 VertexType									 * VertexPointer;
+		typedef typename VERTEX_CONTAINER::iterator		 VertexIterator;
+		typedef typename VertexType::CoordType				 CoordType;
+		typedef typename VertexType::NormalType				 NormalType;
+		typedef typename VertexType::ScalarType				 ScalarType;
+		typedef typename vcg::Box3< ScalarType >			 BoundingBoxType;
+		typedef typename vcg::Matrix33<ScalarType>  	 MatrixType;
 
 		enum NormalOrientation {IsCorrect=0, MustBeFlipped=1};
-
-	public:
-		/*!
-		*/
-		static void ExtrapolateNormlas(const VertexIterator &begin, const VertexIterator &end, int k, const int root_index=-1, NormalOrientation orientation=IsCorrect, CallBackPos *callback=NULL)
-		{
-			/*************************************************
+		
+	private:
+				/*************************************************
 			*		Inner class definitions
 			**************************************************/
 			// Dummy class: no object marker is needed
@@ -139,9 +135,14 @@ namespace vcg
 				std::vector< MSTNode* >			 sons;
 			};
 			
-			/*************************************************
-			*		The Algorithm
-			**************************************************/
+			typedef 					std::vector< Plane > 			PlaneContainer;
+			typedef typename 	PlaneContainer::iterator 	PlaneIterator;
+
+	public:
+		/*!
+		*/
+		static void ExtrapolateNormals(const VertexIterator &begin, const VertexIterator &end, const unsigned int k, const int root_index=-1, NormalOrientation orientation=IsCorrect, CallBackPos *callback=NULL)
+		{
 			BoundingBoxType dataset_bb;
 			for (VertexIterator iter=begin; iter!=end; iter++)
 				dataset_bb.Add(iter->P());
@@ -156,7 +157,7 @@ namespace vcg
 			sprintf(message, "Locating tangent planes...");
 			std::vector< Plane > tangent_planes(vertex_count);		
 			vcg::Octree< VertexType, ScalarType > octree_for_planes;
-			octree_for_planes.Set< VertexIterator >(begin, end);
+			octree_for_planes.Set( begin, end );
 
 			std::vector< VertexPointer > nearest_vertices;
 			std::vector< CoordType	 	 > nearest_points;
@@ -165,8 +166,7 @@ namespace vcg
 			{
 				if (callback!=NULL && (++progress%step)==0 && (percentage=int((progress*100)/vertex_count))<100) (callback)(percentage, message);
 
-				octree_for_planes.GetKClosest<VertPointDistanceFunctor, DummyObjectMarker, std::vector<VertexPointer>, std::vector<ScalarType>, std::vector<CoordType> >
-					(VertPointDistanceFunctor(), DummyObjectMarker(), k, iter->P(), max_distance, nearest_vertices, distances, nearest_points);
+				octree_for_planes.GetKClosest(VertPointDistanceFunctor(), DummyObjectMarker(), k, iter->P(), max_distance, nearest_vertices, distances, nearest_points);
 
 				// for each vertex *iter, compute the centroid as avarege of the k-nearest vertices of *iter
 				Plane *plane = &tangent_planes[ std::distance(begin, iter) ];
@@ -200,23 +200,24 @@ namespace vcg
 			
 			// Step 2: build the Riemannian graph, i.e. the graph where each point is connected to the k-nearest neigbours.
 			dataset_bb.SetNull();
-			std::vector< Plane >::iterator ePlane = tangent_planes.end();
-			for (std::vector< Plane >::iterator iPlane=tangent_planes.begin(); iPlane!=ePlane; iPlane++)
+			PlaneIterator ePlane = tangent_planes.end();
+			for (PlaneIterator iPlane=tangent_planes.begin(); iPlane!=ePlane; iPlane++)
 				dataset_bb.Add(iPlane->center);
 			max_distance = dataset_bb.Diag();
 
 			vcg::Octree< Plane, ScalarType > octree_for_plane;
-			octree_for_plane.Set< std::vector<Plane>::iterator >(tangent_planes.begin(), tangent_planes.end());
+			octree_for_plane.Set( tangent_planes.begin(), tangent_planes.end());
 			std::vector< Plane* >	nearest_planes(distances.size());
 			std::vector< std::vector< RiemannianEdge > > riemannian_graph(vertex_count); //it's probably that we are wasting the last position...
 			progress = 0;
 			sprintf(message, "Building Riemannian graph...");
-			for (std::vector< Plane >::iterator iPlane=tangent_planes.begin(); iPlane!=ePlane; iPlane++)
+			for (PlaneIterator iPlane=tangent_planes.begin(); iPlane!=ePlane; iPlane++)
 			{
 				if (callback!=NULL && (++progress%step)==0 && (percentage=int((progress*100)/vertex_count))<100) (callback)(percentage, message);
 			
-				octree_for_plane.GetKClosest< PlanePointDistanceFunctor, DummyObjectMarker,  std::vector< Plane* >, std::vector< ScalarType >, std::vector< CoordType > >
-					(PlanePointDistanceFunctor(), DummyObjectMarker(), k, iPlane->center, max_distance, nearest_planes, distances, nearest_points, true, false);
+			unsigned int kk = k;
+				octree_for_plane.GetKClosest
+				(PlanePointDistanceFunctor(), DummyObjectMarker(), kk, iPlane->center, max_distance, nearest_planes, distances, nearest_points, true, false);
 
 				for (int n=0; n<k; n++)
 					if (iPlane->index<nearest_planes[n]->index)
@@ -225,8 +226,8 @@ namespace vcg
 
 			// Step 3: compute the minimum spanning tree (MST) over the Riemannian graph (we use the Kruskal algorithm)
 			std::vector< MSTEdge > E;
-			std::vector< std::vector< RiemannianEdge > >::iterator iRiemannian = riemannian_graph.begin();
-			std::vector< RiemannianEdge >::iterator iRiemannianEdge, eRiemannianEdge;
+			typename std::vector< std::vector< RiemannianEdge > >::iterator iRiemannian = riemannian_graph.begin();
+			typename std::vector< RiemannianEdge >::iterator 								iRiemannianEdge, eRiemannianEdge;
 			for (int i=0; i<vertex_count; i++, iRiemannian++)
 				for (iRiemannianEdge=iRiemannian->begin(), eRiemannianEdge=iRiemannian->end(); iRiemannianEdge!=eRiemannianEdge; iRiemannianEdge++)
 					E.push_back(MSTEdge(&tangent_planes[i], iRiemannianEdge->plane, iRiemannianEdge->weight));
@@ -234,11 +235,11 @@ namespace vcg
 			std::sort( E.begin(), E.end() );
 			vcg::DisjointSet<Plane> set;
 			
-			for (std::vector< Plane >::iterator iPlane=tangent_planes.begin(); iPlane!=ePlane; iPlane++)
+			for (typename std::vector< Plane >::iterator iPlane=tangent_planes.begin(); iPlane!=ePlane; iPlane++)
 				set.MakeSet( &*iPlane );
 
-			std::vector< MSTEdge >::iterator iMSTEdge = E.begin();
-			std::vector< MSTEdge >::iterator eMSTEdge = E.end();
+			typename std::vector< MSTEdge >::iterator iMSTEdge = E.begin();
+			typename std::vector< MSTEdge >::iterator eMSTEdge = E.end();
 			std::vector< MSTEdge > unoriented_tree;
 			Plane *u, *v;
 			for ( ; iMSTEdge!=eMSTEdge; iMSTEdge++)
@@ -268,8 +269,8 @@ namespace vcg
 			VertexIterator iCurrentVertex, iSonVertex;
 			std::vector< MSTNode > MST(vertex_count);
 			
-			std::vector< Plane >::iterator iFirstPlane = tangent_planes.begin();
-			std::vector< Plane >::iterator iCurrentPlane, iSonPlane;
+			typename std::vector< Plane >::iterator iFirstPlane = tangent_planes.begin();
+			typename std::vector< Plane >::iterator iCurrentPlane, iSonPlane;
 			
 			MSTNode *mst_root;
 			int r_index = (root_index!=-1)? root_index : rand()*vertex_count/RAND_MAX;

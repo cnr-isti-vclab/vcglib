@@ -34,6 +34,7 @@
 #include <vcg/space/index/octree_template.h>
 #include <vcg/space/box3.h>
 #include <wrap/callback.h>
+#include <wrap/gl/space.h>
 
 namespace vcg
 {
@@ -104,12 +105,31 @@ namespace vcg
 	template < class OBJECT_TYPE, class SCALAR_TYPE>
 	class Octree : public vcg::OctreeTemplate< Voxel, SCALAR_TYPE >, public vcg::SpatialIndex< OBJECT_TYPE, SCALAR_TYPE >
 	{
-	public: 
+	protected:
+		 struct Neighbour;
+		
+	public:
 		typedef						SCALAR_TYPE													ScalarType;
 		typedef						OBJECT_TYPE													ObjectType;
 		typedef typename	Octree::Leaf											* LeafPointer;
 		typedef typename	Octree::InnerNode									* InnerNodePointer;
 		typedef typename	ReferenceType<OBJECT_TYPE>::Type	* ObjectPointer;
+
+		typedef 					vcg::Voxel													VoxelType;
+		typedef						VoxelType													* VoxelPointer;
+
+		typedef vcg::OctreeTemplate< VoxelType, SCALAR_TYPE >	TemplatedOctree;
+		typedef typename TemplatedOctree::ZOrderType 					ZOrderType;
+		
+		typedef typename TemplatedOctree::BoundingBoxType 		BoundingBoxType;
+		typedef typename TemplatedOctree::CenterType 					CenterType;
+		typedef typename TemplatedOctree::CoordinateType			CoordType;
+		
+		typedef typename TemplatedOctree::NodeType						NodeType;
+		typedef typename TemplatedOctree::NodePointer 				NodePointer;
+		typedef typename TemplatedOctree::NodeIndex						NodeIndex;
+				
+		typedef typename std::vector< Neighbour >::iterator   NeighbourIterator;
 
 		/*!
 		* Structure which holds the rendering settings
@@ -130,10 +150,6 @@ namespace vcg
 			vcg::Color4b	color;
 		};
 
-
-
-
-		
 	protected:
 		/***********************************************
 		*     INNER DATA STRUCTURES AND PREDICATES     *
@@ -148,11 +164,11 @@ namespace vcg
 
 			ObjectPlaceholder() { z_order = object_index = -1, leaf_pointer = NULL;}
 
-			ObjectPlaceholder(ZOrderType z_order, void* leaf_pointer, unsigned int object_index)
+			ObjectPlaceholder(ZOrderType zOrder, void* leafPointer, unsigned int objectIndex)
 			{
-				this->z_order				= z_order;
-				this->leaf_pointer	= leaf_pointer;
-				this->object_index	= object_index;
+				z_order				= zOrder;
+				leaf_pointer	= leafPointer;
+				object_index	= objectIndex;
 			}
 
 			ZOrderType		z_order;
@@ -201,6 +217,11 @@ namespace vcg
 				this->point		 = point;
 				this->distance = distance;
 			}
+			
+			inline bool operator<(const Neighbour &n) 
+			{
+				return distance<n.distance;
+			}
 
 
 			ObjectPointer		object;
@@ -208,13 +229,13 @@ namespace vcg
 			ScalarType			distance;
 		};
 
-		/*
-		* The operator used for sorting the items in neighbors based on the distances
-		*/
-		struct DistanceCompare
-		{
-			inline bool operator()( const Neighbour &p1, const Neighbour &p2) const { return p1.distance<p2.distance; }
-		}; //end of DistanceCompare
+//		/*
+//		* The operator used for sorting the items in neighbors based on the distances
+//		*/
+//		struct DistanceCompare
+//		{
+//			inline bool operator()( const Neighbour &p1, const Neighbour &p2) const { return p1.distance<p2.distance; }
+//		}; //end of DistanceCompare
 
 
 
@@ -222,18 +243,18 @@ public:
 		~Octree()
 		{
 			delete []marks;
-			int node_count = NodeCount();
+			int node_count = TemplatedOctree::NodeCount();
 			for (int i=0; i<node_count; i++)
-				delete nodes[i];
-			nodes.clear();
+				delete TemplatedOctree::nodes[i];
+			TemplatedOctree::nodes.clear();
 		}
 
 
 		/*!
 		* Populate the octree
 		*/
-		template <class OBJECT_ITERATOR/*, class BOUNDING_BOX_FUNCTOR*/>
-		void Set(const OBJECT_ITERATOR & bObj, const OBJECT_ITERATOR & eObj /*, const BoundingBoxType &bounding_box*/ /*, const BOUNDING_BOX_FUNCTOR &bb_functor*/ /*, vcg::CallBackPos *callback=NULL*/) 
+		template < class OBJECT_ITERATOR >
+		void Set(const OBJECT_ITERATOR & bObj, const OBJECT_ITERATOR & eObj /*, vcg::CallBackPos *callback=NULL*/) 
 		{
 			// Compute the bounding-box enclosing the whole dataset
 			typedef Dereferencer<typename ReferenceType<typename OBJECT_ITERATOR::value_type>::Type >	DereferencerType;
@@ -253,7 +274,7 @@ public:
 			ScalarType longest_side = vcg::math::Max( resulting_bb.DimX(), vcg::math::Max(resulting_bb.DimY(), resulting_bb.DimZ()) )/2.0f;
 			resulting_bb.Set(center);
 			resulting_bb.Offset(longest_side);
-			boundingBox = resulting_bb;
+			TemplatedOctree::boundingBox = resulting_bb;
 
 			// Try to find a reasonable octree depth 
 			int dataset_dimension = std::distance(bObj, eObj);
@@ -268,16 +289,16 @@ public:
 				depth++;
 			}
 			while (primitives_per_voxel>25 && depth<15);
-			Initialize(++depth);
+			TemplatedOctree::Initialize(++depth);
 
 			// Sort the dataset (using the lebesgue space filling curve...)
 			std::string message("Indexing dataset...");
-			Octree::NodePointer *route = new Octree::NodePointer[depth+1];
+			NodePointer *route = new NodePointer[depth+1];
 			OBJECT_ITERATOR iObj = bObj;
 
 			//if (callback!=NULL) callback(int((i+1)*100/dataset_dimension), message.c_str());
 
-			std::vector< ObjectPlaceholder< Octree::Node > > placeholders/*(dataset_dimension)*/;
+			std::vector< ObjectPlaceholder< NodeType > > placeholders/*(dataset_dimension)*/;
 			vcg::Box3<ScalarType>		object_bb;
 			vcg::Point3<ScalarType> hit_leaf;
 			for (int i=0; i<dataset_dimension; i++, iObj++)
@@ -288,20 +309,20 @@ public:
 				while (object_bb.IsIn(hit_leaf))
 				{
 					int placeholder_index = placeholders.size();
-					placeholders.push_back( ObjectPlaceholder< Octree::Node >() ); 
+					placeholders.push_back( ObjectPlaceholder< NodeType >() ); 
 					placeholders[placeholder_index].z_order			 = BuildRoute(hit_leaf, route);
 					placeholders[placeholder_index].leaf_pointer = route[depth];
 					placeholders[placeholder_index].object_index = i;					
 					
-					hit_leaf.X() += leafDimension.X();
+					hit_leaf.X() += TemplatedOctree::leafDimension.X();
 					if (hit_leaf.X()>object_bb.max.X())
 					{
 						hit_leaf.X() = object_bb.min.X();
-						hit_leaf.Z()+= leafDimension.Z();
+						hit_leaf.Z()+= TemplatedOctree::leafDimension.Z();
 						if (hit_leaf.Z()>object_bb.max.Z())
 						{
 							hit_leaf.Z() = object_bb.min.Z();
-							hit_leaf.Y()+= leafDimension.Y();
+							hit_leaf.Y()+= TemplatedOctree::leafDimension.Y();
 						}
 					}
 				}
@@ -315,8 +336,8 @@ public:
 			marks							= new unsigned char[placeholder_count];
 			memset(&marks[0], 0, sizeof(unsigned char)*placeholder_count);
 			
-			std::sort(placeholders.begin(), placeholders.end(), ObjectSorter< Octree::Node >());
-			std::vector< Octree::Node* > filled_leaves(placeholder_count);
+			std::sort(placeholders.begin(), placeholders.end(), ObjectSorter< NodeType >());
+			std::vector< NodePointer > filled_leaves(placeholder_count);
 			sorted_dataset.resize( placeholder_count );
 			for (int i=0; i<placeholder_count; i++)
 			{
@@ -337,13 +358,13 @@ public:
 				do end++;
 				while (end<placeholder_count && initial_leaf==filled_leaves[end]);
 
-				VoxelType *voxel = Voxel(initial_leaf);
+				VoxelType *voxel = TemplatedOctree::Voxel(initial_leaf);
 				voxel->SetRange(begin, end);	
 			}
 
 			// The octree is built, the dataset is sorted but only the leaves are indexed: 
 			// we propaget the indexing information bottom-up to the root
-			IndexInnerNodes( Root() );
+			IndexInnerNodes( TemplatedOctree::Root() );
 		} //end of Set
 
 		/*!
@@ -370,7 +391,7 @@ public:
 
 			unsigned int object_count;
 			int					 leaves_count;
-			ScalarType	 k_distance = leafDiagonal;
+			ScalarType	 k_distance = TemplatedOctree::leafDiagonal;
 
 			IncrementMark();
 			
@@ -379,14 +400,14 @@ public:
 				leaves.clear();
 				object_count = 0;
 				query_bb.Offset(k_distance);
-				sphere_radius += vcg::math::Max<ScalarType>(leafDiagonal, k_distance);
+				sphere_radius += vcg::math::Max<ScalarType>(TemplatedOctree::leafDiagonal, k_distance);
 				
-				ContainedLeaves(query_bb, leaves, Root(), boundingBox);
+				ContainedLeaves(query_bb, leaves, TemplatedOctree::Root(), TemplatedOctree::boundingBox);
 
 				leaves_count = int(leaves.size());
 				object_count = 0;
 				for (int i=0; i<leaves_count; i++)
-					object_count += Voxel( leaves[i] )->count;
+					object_count += TemplatedOctree::Voxel( leaves[i] )->count;
 			}
 			while (object_count==0 && sphere_radius<max_distance);
 
@@ -426,9 +447,9 @@ public:
 			} // end of for (int i=0; i<leavesCount; i++)
 
 			object_count = int(neighbors.size());
-			std::vector< Neighbour >::iterator first = neighbors.begin();
-			std::vector< Neighbour >::iterator last	 = neighbors.end();
-			std::partial_sort(first, first+object_count, last, DistanceCompare());
+			typename std::vector< Neighbour >::iterator first = neighbors.begin();
+			typename std::vector< Neighbour >::iterator last	 = neighbors.end();
+			std::partial_sort< Neighbour >(first, first+object_count, last/*, DistanceCompare()*/);
 			distance	= neighbors[0].distance;
 			point			= neighbors[0].point;
 			return			neighbors[0].object;
@@ -442,14 +463,14 @@ public:
 			(
 			OBJECT_POINT_DISTANCE_FUNCTOR & distance_functor, 
 			OBJECT_MARKER									& /*marker*/, 
-			const unsigned int						  k, 
+			unsigned int						  k, 
 			const CoordType								& query_point, 
 			const ScalarType							& max_distance,
 			OBJECT_POINTER_CONTAINER			& objects, 
 			DISTANCE_CONTAINER						& distances, 
 			POINT_CONTAINER								& points,
-			bool													  sort_per_distance   = false,
-			bool													  allow_zero_distance = false
+			bool													  sort_per_distance   = true,
+			bool													  allow_zero_distance = true
 			)
 		{
 			BoundingBoxType query_bb;
@@ -462,7 +483,7 @@ public:
 
 			unsigned int object_count;
 			int					 leaves_count;
-			float				 k_distance = leafDiagonal;
+			float				 k_distance = TemplatedOctree::leafDiagonal;
 			do
 			{
 				IncrementMark();
@@ -472,14 +493,14 @@ public:
 					leaves.clear();
 					object_count = 0;
 					query_bb.Offset(k_distance);
-					sphere_radius += vcg::math::Max<float>(leafDiagonal, k_distance);
+					sphere_radius += vcg::math::Max<float>(TemplatedOctree::leafDiagonal, k_distance);
 
-					ContainedLeaves(query_bb, leaves, Root(), boundingBox);
+					ContainedLeaves(query_bb, leaves, TemplatedOctree::Root(), TemplatedOctree::boundingBox);
 
 					leaves_count = int(leaves.size());
 					object_count = 0;
 					for (int i=0; i<leaves_count; i++)
-						object_count += Voxel( leaves[i] )->count;
+						object_count += TemplatedOctree::Voxel( leaves[i] )->count;
 				}
 				while (object_count<k && sphere_radius<max_distance); // TODO check the termination condintion
 
@@ -529,11 +550,11 @@ public:
 				else 
 					object_count=int(neighbors.size());
 
-				std::vector< Neighbour >::iterator first = neighbors.begin();
-				std::vector< Neighbour >::iterator last	 = neighbors.end();
+				NeighbourIterator first = neighbors.begin();
+				NeighbourIterator last	= neighbors.end();
 
-				if (sort_per_distance)  std::partial_sort(first, first+object_count, last, DistanceCompare());
-				else										std::nth_element (first, first+object_count, last, DistanceCompare()); 
+				if (sort_per_distance)  std::partial_sort< NeighbourIterator >(first, first+object_count, last /*, DistanceCompare()*/ );
+				else										std::nth_element < NeighbourIterator >(first, first+object_count, last /*, DistanceCompare()*/ ); 
 				k_distance = neighbors[object_count-1].distance;
 			} 
 			while (k_distance>sphere_radius && sphere_radius<max_distance);
@@ -563,19 +584,19 @@ public:
 			BoundingBoxType query_bb(sphere_center, sphere_radius);
 			
 			// If that bounding-box don't collide with the octree bounding-box, simply return 0
-			if (!boundingBox.Collide(query_bb))
+			if (!TemplatedOctree::boundingBox.Collide(query_bb))
 				return 0;
 
 			std::vector< NodePointer > leaves;
 			std::vector< Neighbour	 > neighbors;
 
 			unsigned int object_count = 0;
-			float				 k_distance		= leafDiagonal;
+			//float				 k_distance		= TemplatedOctree::leafDiagonal;
 
 			IncrementMark();
-			ContainedLeaves(query_bb, leaves, Root(), boundingBox);
+			ContainedLeaves(query_bb, leaves, TemplatedOctree::Root(), TemplatedOctree::boundingBox);
 
-			int	leaves_countleaves_count = int(leaves.size());
+			int	leaves_count = int(leaves.size());
 			if (leaves_count==0)
 				return 0;
 
@@ -597,20 +618,20 @@ public:
 						continue;
 					
 					distance = sphere_radius;
-					if (!distance_functor(*ref->pObject, query_point, distance, closest_point))
+					if (!distance_functor(*ref->pObject, sphere_center, distance, closest_point))
 						continue;
 
 					object_count++;
 					Mark(ref);
-					if ((distance!=0.0f || allow_zero_distance) && distance<max_distance)
+					if ((distance!=0.0f || allow_zero_distance) && distance<sphere_radius)
 						neighbors.push_back( Neighbour(ref->pObject, closest_point, distance) );
 				} //end of for ( ; begin<end; begin++)
 			} // end of for (int i=0; i<leavesCount; i++)
 
-			std::vector< Neighbour >::iterator first = neighbors.begin();
-			std::vector< Neighbour >::iterator last	 = neighbors.end();
-			if (sort_per_distance)  std::partial_sort(first, first+object_count, last, DistanceCompare());
-			else										std::nth_element (first, first+object_count, last, DistanceCompare()); 
+			NeighbourIterator first = neighbors.begin();
+			NeighbourIterator last	 = neighbors.end();
+			if (sort_per_distance)  std::partial_sort< NeighbourIterator >(first, first+object_count, last /*, DistanceCompare()*/ );
+			else										std::nth_element < NeighbourIterator >(first, first+object_count, last /*, DistanceCompare()*/ ); 
 			
 			return CopyQueryResults<OBJECT_POINTER_CONTAINER, DISTANCE_CONTAINER, POINT_CONTAINER>(neighbors, object_count, objects, distances, points);
 		};//end of GetInSphere
@@ -638,7 +659,7 @@ public:
 				unsigned int object_count;
 				int					 leaves_count;
 			
-				ContainedLeaves(query_bounding_box, leaves, Root(), boundingBox);
+				ContainedLeaves(query_bounding_box, leaves, TemplatedOctree::Root(), TemplatedOctree::boundingBox);
 				leaves_count = int(leaves.size());
 				if (leaves_count==0)
 				{
@@ -684,7 +705,7 @@ public:
 			{
 				for (int s=0; s<8; s++)
 					if ((son=Son(n, s))!=0)
-						DrawOctree(SubBox(boundingBox, s), son);
+						DrawOctree(TemplatedOctree::SubBox(boundingBox, s), son);
 			}
 			else
 			{
@@ -692,7 +713,7 @@ public:
 				if (level<rendering_settings.maxVisibleDepth)
 					for (int s=0; s<8; s++)
 						if ((son=Son(n, s))!=0)
-							DrawOctree(SubBox(boundingBox, s), son);
+							DrawOctree(TemplatedOctree::SubBox(boundingBox, s), son);
 			}
 		};
 
@@ -755,10 +776,10 @@ public:
 			{
 				do
 				{ 
-					query_bb.Offset(leafDiagonal); 
-					sphere_radius += leafDiagonal;
+					query_bb.Offset(TemplatedOctree::leafDiagonal); 
+					sphere_radius += TemplatedOctree::leafDiagonal;
 				}
-				while ( !boundingBox.Collide(query_bb) || sphere_radius>max_distance); // TODO check the termination condintion
+				while ( !TemplatedOctree::boundingBox.Collide(query_bb) || sphere_radius>max_distance); // TODO check the termination condintion
 			}
 			return (sphere_radius<=max_distance);
 		};
@@ -784,9 +805,9 @@ public:
 				objects.resize(object_count);
 			}
 
-			POINT_CONTAINER::iterator					 iPoint			= points.begin();
-			DISTANCE_CONTAINER::iterator			 iDistance	= distances.begin();
-			OBJECT_POINTER_CONTAINER::iterator iObject		= objects.begin();
+			typename POINT_CONTAINER::iterator					iPoint		= points.begin();
+			typename DISTANCE_CONTAINER::iterator			  iDistance	= distances.begin();
+			typename OBJECT_POINTER_CONTAINER::iterator iObject		= objects.begin();
 			for (unsigned int n=0; n<object_count; n++, iPoint++, iDistance++, iObject++)
 			{
 				(*iPoint)		 = neighbors[n].point;
@@ -803,24 +824,22 @@ public:
 		{
 			assert(n!=NULL);
 
-			VoxelPointer current_voxel = Voxel(n);
+			VoxelPointer current_voxel = TemplatedOctree::Voxel(n);
 			VoxelPointer son_voxel;
 			for (int s=0; s<8; s++)
 			{
 				NodePointer son_index = Son(n, s);
 				if (son_index!=NULL)
 				{
-					if (Level(son_index)!=maximumDepth)
+					if (Level(son_index)!=TemplatedOctree::maximumDepth)
 						IndexInnerNodes(son_index);
 
-					son_voxel = Voxel(son_index);
+					son_voxel = TemplatedOctree::Voxel(son_index);
 					current_voxel->AddRange( son_voxel );
 				}
 			}
 		}; // end of IndexInnerNodes
 	};
-
-
 } //end of namespace vcg
 
 #endif //VCG_SPACE_INDEX_OCTREE_H

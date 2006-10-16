@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -58,13 +58,14 @@ public:
 	// Octree Type Definitions
 	typedef unsigned long long				ZOrderType;
 	typedef SCALAR_TYPE								ScalarType;
-	typedef typename VOXEL_TYPE				VoxelType;
-	typedef typename VOXEL_TYPE		   *VoxelPointer;
-	typedef vcg::Point3i							CenterType;	
+	typedef VOXEL_TYPE				        VoxelType;
+	typedef VoxelType							  * VoxelPointer;
+	typedef vcg::Point3i							CenterType;
 	static const ScalarType						EXPANSION_FACTOR;
+	typedef Node											NodeType;
 	typedef	int												NodeIndex;
-	typedef Node										 *NodePointer;
-	typedef	vcg::Box3<ScalarType>			BoundingBoxType;	
+	typedef NodeType								* NodePointer;
+	typedef	vcg::Box3<ScalarType>			BoundingBoxType;
 	typedef vcg::Point3<ScalarType>	CoordinateType;
 
 protected:
@@ -94,19 +95,19 @@ protected:
 
 		// The position of the center of the node in integer coords in the 0..2^(2*sz) -1 range
 		// The root has position (lsz/2,lsz/2,lsz/2)
-		CenterType	center;   
-		char				level;	
+		CenterType	center;
+		char				level;
 		NodePointer parent;
 		VoxelType		voxel;
 	};
 
 	/*
-	* Inner struct: Node 
+	* Inner struct: Node
 	*/
 	struct InnerNode : public Node
 	{
 		InnerNode() : Node() {};
-		InnerNode(NodePointer parent, int level) : Node(parent, level) 
+		InnerNode(NodePointer parent, int level) : Node(parent, level)
 		{
 			memset(&sons[0], NULL, 8*sizeof(Node*));
 		}
@@ -136,7 +137,8 @@ protected:
 		inline NodePointer &Son(int /*sonIndex*/)
 		{
 			assert(false);
-			return parent;
+			NodePointer p = NULL;
+			return p;
 		}
 
 		inline bool IsLeaf()
@@ -152,12 +154,12 @@ public:
 		this->maximumDepth	= maximumDepth;
 		size	= 1<< maximumDepth;			// e.g. 1*2^maxDepth
 		lSize = 1<<(maximumDepth+1);	// e.g. 1*2^(maxDepth+1)
-		
+
 		InnerNode *root = new InnerNode(NULL,0);
 		nodes.clear();
 		nodes.push_back( root );
 		root->center	= CenterType(size, size, size);
-		
+
 		ScalarType szf = (ScalarType) size;
 		leafDimension  = boundingBox.Dim();
 		leafDimension /= szf;
@@ -166,7 +168,7 @@ public:
 
 	// Return the octree bounding-box
 	inline BoundingBoxType		BoundingBox()								{ return boundingBox;				}
-	
+
 	// Return the Voxel of the n-th node
 	inline VoxelPointer	Voxel(const NodePointer n)				{ return &(n->voxel);				}
 
@@ -188,20 +190,20 @@ public:
 	// Return the index of the current node in its father
 	int WhatSon(NodePointer n) const
 	{
-		if(n==Root()) 
+		if(n==Root())
 			assert(false);
-		
+
 		NodePointer parent = Parent(n);
 		for(int i=0;i<8;++i)
-			if(parent->Son(i)==n) 
+			if(parent->Son(i)==n)
 				return i;
-		
+
 		return -1;
 	}
 
-	// Return the center of the n-th node 
+	// Return the center of the n-th node
 	inline CenterType CenterInOctreeCoordinates(const NodePointer n) const { return n->center;}
-	
+
 	/*!
 	* Return the center of the n-th node expressed in world-coordinate
 	* \param NodePointer the pointer to the node whose center in world coordinate has to be computed
@@ -210,12 +212,12 @@ public:
 	{
 		assert(0<=n && n<NodeCount());
 
-		int shift = maximumDepth - n->level + 1;
+		int shift = maximumDepth - Level(n) + 1;
 		CoordinateType ocCenter = CenterInOctreeCoordinates(n);
-		CoordinateType nodeSize = boundingBox.Dim()/float(1<<level);
-		wcCenter.X() = boundingBox.min.X() + (nodeSize.X()*(0.5f+(ocCenter.X()>>shift)));
-		wcCenter.Y() = boundingBox.min.Y() + (nodeSize.Y()*(0.5f+(ocCenter.Y()>>shift)));
-		wcCenter.Z() = boundingBox.min.Z() + (nodeSize.Z()*(0.5f+(ocCenter.Z()>>shift)));
+		CoordinateType nodeSize = boundingBox.Dim()/float(1<<Level(n));
+		wc_Center.X() = boundingBox.min.X() + (nodeSize.X()*(0.5f+(ocCenter.X()>>shift)));
+		wc_Center.Y() = boundingBox.min.Y() + (nodeSize.Y()*(0.5f+(ocCenter.Y()>>shift)));
+		wc_Center.Z() = boundingBox.min.Z() + (nodeSize.Z()*(0.5f+(ocCenter.Z()>>shift)));
 	};
 
 	// Given a node (even not leaf) it returns the center of the box it represent.
@@ -238,30 +240,30 @@ public:
 
 	a) a leaf at the deepest level 2 has position (.5,.5)
 	b) a mid node (lev 1) has position (1,1)
-	c) root has level 0 and position (sz/2,sz/2) = (2,2) 
+	c) root has level 0 and position (sz/2,sz/2) = (2,2)
 
 	The center of a node has integer coords in the 2^(MaxDepth+1) range.
 
-	The other approach is to use position as a bit string 
-	codifying the tree path, but in this case you have to 
-	supply also the level (e.g. the string lenght) 
+	The other approach is to use position as a bit string
+	codifying the tree path, but in this case you have to
+	supply also the level (e.g. the string lenght)
 	you desire. The lower left corner node is always 0 ( (,) for the root (0,0) level 1, and (00,00) for level 2)
 
 	|              ~~~              |
 	|      0~~      |      1~~      |
 	|  00~  |  01~  |  10~  |  11~  |
-	|000|001|010|011|100|101|110|111|      
+	|000|001|010|011|100|101|110|111|
 
 	The interesting properties is that
-	if your octree represent a space [minv,maxv] and you want 
-	to find the octree cell containing a point p in [minv,maxv] 
+	if your octree represent a space [minv,maxv] and you want
+	to find the octree cell containing a point p in [minv,maxv]
 	you just have to convert p in the range [0,sz) truncate it to an integer and use it as a path.
 	For example, consider an octree of depth 3, representing a range [0..100)
 	sz=8 (each cell contains form 0 to 12.5
-	the point 
+	the point
 	5		-> 0.4	-> path is 000
-	45	-> 3.6	-> path is 011 
-	50  -> 4.0	-> path is 100  
+	45	-> 3.6	-> path is 011
+	50  -> 4.0	-> path is 100
 	100 -> 8		-> ERROR the interval is right open!!!
 
 	Note how each cell is meant to contains a right open interval (e.g. the first cell contains [0,12.5) and the second [12.5,25) and so on)
@@ -321,21 +323,21 @@ public:
 		else			bs.max.Y()=((bs.min.Y()=lbb.min.Y())+lbb.max.Y())/2.0f;
 		if (i&4)	bs.min.Z()=(lbb.min.Z()+(bs.max.Z()=lbb.max.Z()))/2.0f;
 		else			bs.max.Z()=((bs.min.Z()=lbb.min.Z())+lbb.max.Z())/2.0f;
-		
+
 		return bs;
 	}
 
 	// Given the bounding-box and the center (both in world-coordinates)
-	// of a node, return the bounding-box (in world-coordinats) of the i-th son 
+	// of a node, return the bounding-box (in world-coordinats) of the i-th son
 	BoundingBoxType SubBoxAndCenterInWorldCoordinates(BoundingBoxType &lbb, CoordinateType &center, int i)
 	{
 		BoundingBoxType bs;
-		if (i&1)	
+		if (i&1)
 		{
 			bs.min[0]=center[0];
 			bs.max[0]=lbb.max[0];
 		}
-		else			
+		else
 		{
 			bs.min[0]=lbb.min[0];
 			bs.max[0]=center[0];
@@ -345,17 +347,17 @@ public:
 			bs.min[1]=center[1];
 			bs.max[1]=lbb.max[1];
 		}
-		else			
+		else
 		{
 			bs.max[1]=center[1];
 			bs.min[1]=lbb.min[1];
 		}
-		if (i&4)	
+		if (i&4)
 		{
 			bs.min[2]=center[2];
 			bs.max[2]=lbb.max[2];
 		}
-		else			
+		else
 		{
 			bs.max[2]=center[2];
 			bs.min[2]=lbb.min[2];
@@ -364,7 +366,7 @@ public:
 	};
 
 	/*
-	* Add a new Node to the octree. 
+	* Add a new Node to the octree.
 	*	The created node is the i-th son of the node pointed to by parent.
 	*	Return the pointer to the new node
 	*/
@@ -375,11 +377,11 @@ public:
 
 		//int index  = NodeCount();
 		char level = Level(parent)+1;
-				
+
 		Node *node = (level<maximumDepth)? (Node*) new InnerNode(parent, level) : (Node*) new Leaf(parent, level);
 		nodes.push_back( node );
 		Son(parent, i) = node;
-		
+
 		CenterType *parentCenter = &(parent->center);
 		int displacement = 1<<(maximumDepth-level);
 		node->center.X() = parentCenter->X() + ((i&1)? displacement : -displacement);
@@ -395,24 +397,24 @@ public:
 	NodePointer AddNode(CenterType path)
 	{
 		//the input coordinates must be in the range 0..2^maxdepth
-		assert(path[0]>=0 && path[0]<size);    
-		assert(path[1]>=0 && path[1]<size);    
+		assert(path[0]>=0 && path[0]<size);
+		assert(path[1]>=0 && path[1]<size);
 		assert(path[2]>=0 && path[2]<size);
 
 		NodePointer curNode	= Root();
 		int rootLevel				= 0;
 		int shiftLevel			= maximumDepth-1;
-		
+
 		while(shiftLevel >= rootLevel)
 		{
 			int nextSon=0;
-			if((path[0]>>shiftLevel)%2) nextSon +=1; 
-			if((path[1]>>shiftLevel)%2) nextSon +=2; 
-			if((path[2]>>shiftLevel)%2) nextSon +=4; 
-			NodePointer nextNode = Son(curNode, nextSon);	
-			if(nextNode!=NULL) // nessun nodo può aver Root() per figlio 
+			if((path[0]>>shiftLevel)%2) nextSon +=1;
+			if((path[1]>>shiftLevel)%2) nextSon +=2;
+			if((path[2]>>shiftLevel)%2) nextSon +=4;
+			NodePointer nextNode = Son(curNode, nextSon);
+			if(nextNode!=NULL) // nessun nodo può aver Root() per figlio
 				curNode = nextNode;
-			else 
+			else
 			{
 				NodePointer newNode = NewNode(curNode, nextSon);
 				assert(Son(curNode, nextSon)==newNode); // TODO delete an assignment
@@ -427,9 +429,9 @@ public:
 	* Given a query point, compute the z_order of the leaf where this point would be contained.
 	* This leaf not necessarily must be exist!
 	*/
-	// Convert the point p coordinates to the integer based representation 
+	// Convert the point p coordinates to the integer based representation
 	// in the range 0..size, where size is 2^maxdepth
-	CenterType Interize(const CoordinateType &pf) const  
+	CenterType Interize(const CoordinateType &pf) const
 	{
 		CenterType pi;
 
@@ -440,29 +442,29 @@ public:
 		pi.X() = int((pf.X() - boundingBox.min.X()) * size / (boundingBox.max.X() - boundingBox.min.X()));
 		pi.Y() = int((pf.Y() - boundingBox.min.Y()) * size / (boundingBox.max.Y() - boundingBox.min.Y()));
 		pi.Z() = int((pf.Z() - boundingBox.min.Z()) * size / (boundingBox.max.Z() - boundingBox.min.Z()));
-		
+
 		return pi;
 	}
 
-	// Inverse function of Interize; 
+	// Inverse function of Interize;
 	// Return to the original coords space (not to the original values!!)
-	CoordinateType DeInterize(const CenterType &pi ) const 
+	CoordinateType DeInterize(const CenterType &pi ) const
 	{
 		CoordinateType pf;
 
-		assert(pi.X()>=0 && pi.X()<size); 
-		assert(pi.Y()>=0 && pi.Y()<size); 
-		assert(pi.Z()>=0 && pi.Z()<size); 
+		assert(pi.X()>=0 && pi.X()<size);
+		assert(pi.Y()>=0 && pi.Y()<size);
+		assert(pi.Z()>=0 && pi.Z()<size);
 
-		pf.X() = vi.X() * (boundingBox.max.X() - boundingBox.min.X()) / size + boundingBox.min.X();
-		pf.Y() = vi.Y() * (boundingBox.max.Y() - boundingBox.min.Y()) / size + boundingBox.min.Y();
-		pf.Z() = vi.Z() * (boundingBox.max.Z() - boundingBox.min.Z()) / size + boundingBox.min.Z();
-		
+		pf.X() = pi.X() * (boundingBox.max.X() - boundingBox.min.X()) / size + boundingBox.min.X();
+		pf.Y() = pi.Y() * (boundingBox.max.Y() - boundingBox.min.Y()) / size + boundingBox.min.Y();
+		pf.Z() = pi.Z() * (boundingBox.max.Z() - boundingBox.min.Z()) / size + boundingBox.min.Z();
+
 		return pf;
 	}
 
 	// Compute the z-ordering integer value for a given node;
-	// this value can be used to compute a complete ordering of the nodes of a given level of the octree. 
+	// this value can be used to compute a complete ordering of the nodes of a given level of the octree.
 	// It assumes that the octree has a max depth of 10.
 	ZOrderType ZOrder(NodePointer n)											const	{ return ZOrder(GetPath(n), Level(n)); }
 	ZOrderType ComputeZOrder(const CoordinateType &query) const { return ZOrder(CenterType::Construct(Interize(query)), maximumDepth); };
@@ -471,7 +473,7 @@ public:
 	{
 		ZOrderType finalPosition = 0;
 		ZOrderType currentPosition;
-		
+
 		for(int i=0; i<level; ++i)
 		{
 			currentPosition = 0;
@@ -485,33 +487,33 @@ public:
 		return finalPosition;
 	};
 
-	// Funzione principale di accesso secondo un path; 
-	// restituisce l'indice del voxel di profondita' massima 
-	// che contiene il punto espresso in range 0..2^maxk	
+	// Funzione principale di accesso secondo un path;
+	// restituisce l'indice del voxel di profondita' massima
+	// che contiene il punto espresso in range 0..2^maxk
 	NodePointer DeepestNode(CenterType path, int MaxLev)
 	{
-		assert(path[0]>=0 && path[0]<sz);
-		assert(path[1]>=0 && path[1]<sz);
-		assert(path[2]>=0 && path[2]<sz);
+		assert(path[0]>=0 && path[0]<size);
+		assert(path[1]>=0 && path[1]<size);
+		assert(path[2]>=0 && path[2]<size);
 
 		NodePointer curNode	= Root();
 		int shift						= maximumDepth-1;
-		
+
 		while(shift && Level(curNode) < MaxLev)
 		{
 			int son = 0;
-			if((path[0]>>shift)%2) son +=1; 
-			if((path[1]>>shift)%2) son +=2; 
-			if((path[2]>>shift)%2) son +=4; 
+			if((path[0]>>shift)%2) son +=1;
+			if((path[1]>>shift)%2) son +=2;
+			if((path[2]>>shift)%2) son +=4;
 			NodePointer nextNode = Son(curNode, son);
-			if(nextNode!=NULL) 
-				CurNode=nextNode;
-			else 
+			if(nextNode!=NULL)
+				curNode=nextNode;
+			else
 				break;
 
 			--shift;
 		}
-		return CurNode;
+		return curNode;
 	}
 
 
@@ -522,9 +524,9 @@ public:
 	// for the first level only one bit of each one of the three components are maninguful;
 	CenterType GetPath(NodePointer n) const
 	{
-		if(n==Root()) 
+		if(n==Root())
 			return CenterType(0,0,0);
-		
+
 		CenterType	path(0,0,0);
 
 		int shift, mask, son;
@@ -538,13 +540,13 @@ public:
 			if(son&2) path[1] |= mask;
 			if(son&4) path[2] |= mask;
 			n = Parent(n);									// nodes[n].parent
-		}       
+		}
 		return path;
 	}
 
-	// Dato un punto 3D nello spazio restituisce un array contenente 
-	// i puntatori ai nodi che lo contengono, dalla radice fino alle foglie. 
-	// I nodi mancanti dalla radice fino a profondità maxDepth vengono aggiunti. 
+	// Dato un punto 3D nello spazio restituisce un array contenente
+	// i puntatori ai nodi che lo contengono, dalla radice fino alle foglie.
+	// I nodi mancanti dalla radice fino a profondità maxDepth vengono aggiunti.
 	// In posizione i ci sarà il nodo di livello i.
 	// Restituisce lo z-order del punto p
 	ZOrderType BuildRoute(const CoordinateType &p, NodePointer *&route)
@@ -560,9 +562,9 @@ public:
 		while(shift >= 0)
 		{
 			int son = 0;
-			if((path[0]>>shift)%2) son +=1; 
-			if((path[1]>>shift)%2) son +=2; 
-			if((path[2]>>shift)%2) son +=4; 
+			if((path[0]>>shift)%2) son +=1;
+			if((path[1]>>shift)%2) son +=2;
+			if((path[2]>>shift)%2) son +=4;
 			NodePointer nextNode = Son(curNode, son);
 
 			if(nextNode!=NULL)
@@ -570,7 +572,7 @@ public:
 				route[maximumDepth-shift] = nextNode;
 				curNode										= nextNode;
 			}
-			else 
+			else
 			{
 				NodePointer newNode = NewNode(curNode, son);
 				route[maximumDepth-shift] = newNode;
@@ -594,43 +596,43 @@ public:
 		assert( boundingBox.min.Y()<=p.Y() && p.Y()<=boundingBox.max.Y() );
 		assert( boundingBox.min.Z()<=p.Z() && p.Z()<=boundingBox.max.Z() );
 
-		memset(route, NULL, maxDepth*sizeof(NodePointer));
+		memset(route, NULL, maximumDepth*sizeof(NodePointer));
 
 		CenterType path				 = CenterType::Construct(Interize(p));
-		int shift							 = maxDepth-1;
+		int shift							 = maximumDepth-1;
 		NodePointer finalLevel = Root();
 		NodePointer curNode		 = Root();
-		
+
 		while(shift >= finalLevel)
 		{
 			int son=0;
-			if((path[0]>>shift)%2) son +=1; 
-			if((path[1]>>shift)%2) son +=2; 
-			if((path[2]>>shift)%2) son +=4; 
-			NodePointer nextNode = Son(curNode, son); 
-			if(nextNode!=NULL) 
+			if((path[0]>>shift)%2) son +=1;
+			if((path[1]>>shift)%2) son +=2;
+			if((path[2]>>shift)%2) son +=4;
+			NodePointer nextNode = Son(curNode, son);
+			if(nextNode!=NULL)
 			{
-				route[maxDepth-shift] = nextNode;
+				route[maximumDepth-shift] = nextNode;
 				curNode = nextNode;
 			}
-			else 
+			else
 				return false;
-			
+
 			--shift;
 		}
 		return true;
 	}; //end of GetReoute
 
-	// Data una bounding-box bb_query, calcola l'insieme dei nodi di 
-	// profondità depth il cui bounding-box ha intersezione non nulla con 
-	// bb (la bounding-box dell'octree); i puntatori a tali nodi sono 
+	// Data una bounding-box bb_query, calcola l'insieme dei nodi di
+	// profondità depth il cui bounding-box ha intersezione non nulla con
+	// bb (la bounding-box dell'octree); i puntatori a tali nodi sono
 	// inseriti progressivamente in contained_nodes.
 	// The vector nodes must be cleared before calling this method.
 	void ContainedNodes
 	(
 		BoundingBoxType						 &query,
 		std::vector< NodePointer > &nodes,
-		int													depth, 
+		int													depth,
 		NodePointer									n,
 		BoundingBoxType						 &nodeBB)
 	{
@@ -655,13 +657,13 @@ public:
 			}
 		}
 	}; //end of ContainedNodes
-	
 
-	// Data una bounding-box bb, calcola l'insieme delle foglie il cui 
+
+	// Data una bounding-box bb, calcola l'insieme delle foglie il cui
 	// bounding-box ha intersezione non nulla con bb; i loro indici
 	// sono inseriti all'interno di leaves.
 	void ContainedLeaves(
-		BoundingBoxType						 &query, 
+		BoundingBoxType						 &query,
 		std::vector< NodePointer > &leaves,
 		NodePointer									node,
 		BoundingBoxType						 &nodeBB
@@ -687,7 +689,7 @@ public:
 		}
 	}; //end of ContainedLeaves
 
-	
+
 	/*
 	* Octree Data Members
 	*/
@@ -702,11 +704,11 @@ public:
 	int						maximumDepth;
 
 	// The dimension of a leaf
-	CoordinateType	leafDimension; 
+	CoordinateType	leafDimension;
 
 	// The diagonal of a leaf
 	ScalarType			leafDiagonal;
-	
+
 	// The Octree nodes
 	std::vector< Node* > nodes;
 
