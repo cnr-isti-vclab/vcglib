@@ -21,6 +21,7 @@
 #include <wrap/io_trimesh/export_ply.h>
 
 // std
+#include <iostream>
 #include <vector>
 #include <time.h>
 
@@ -34,6 +35,11 @@ class MyVertex;
 class MyVertex  : public VertexSimp2< MyVertex, MyEdge, MyFace, vert::Coord3f, vert::Normal3f, vert::BitFlags, vert::Mark>{};
 class MyFace    : public FaceSimp2  < MyVertex, MyEdge, MyFace, face::VertexRef, face::Normal3f, face::BitFlags > {};
 class MyMesh    : public vcg::tri::TriMesh< vector<MyVertex>, vector<MyFace> > {};
+
+bool callback(int percent, const char *str) {
+  cout << "str: " << str << " " << percent << "%\n";
+  return true;
+}
 
 int  main(int argc, char **argv)
 {
@@ -87,7 +93,7 @@ int  main(int argc, char **argv)
 
   int t1=clock();
   // the main processing
-  pivot.buildMesh();
+  pivot.buildMesh(callback);
 
   int t2=clock();
 
