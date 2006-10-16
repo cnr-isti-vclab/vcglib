@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2006/10/09 20:20:55  cignoni
+Added some missing Add***Ocf() for the default case.
+
 Revision 1.13  2006/05/25 09:39:09  cignoni
 missing std and other gcc detected syntax errors
 
@@ -152,9 +155,10 @@ public:
   {
     ThisTypeIterator oldbegin=(*this).begin();
     ThisTypeIterator oldend=(*this).end();
+    const unsigned int  oldsize=(*this).size();
     BaseType::resize(_size);
     if(oldbegin!=(*this).begin()) _updateOVP((*this).begin(),(*this).end());
-                     else _updateOVP(oldend, (*this).end());
+                     else if(oldsize<_size) _updateOVP(oldend, (*this).end());
 
     if (ColorEnabled)       CV.resize(_size);
     if (MarkEnabled)        MV.resize(_size);
