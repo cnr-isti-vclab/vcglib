@@ -42,7 +42,7 @@ int  main(int argc, char **argv)
 		printf(
 		"\n                  trimesh_ball_pivoting ("__DATE__")\n"
 			"						Visual Computing Group I.S.T.I. C.N.R.\n"
-      "Usage: PlyRefine filein.ply fileout.ply [opt] \n"
+      "Usage: trimesh_ball_pivoting filein.ply fileout.ply [opt]\n"
       "options: \n"
       "-r <val> radius of the rolling ball\n"
       "-c <val> clustering radius (as fraction of radius) default: 0.05\n"
