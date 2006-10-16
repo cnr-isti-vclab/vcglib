@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <list>
-
+#include <wrap/callback.h>
 
 #include "vcg/space/index/grid_static_ptr.h"
 #include "vcg/complex/trimesh/closest.h"
@@ -88,15 +88,31 @@ Pivot(MESH &_mesh, ScalarType _radius, ScalarType _mindist = 0.05, ScalarType _c
       srand(time(NULL));
       
     }
-    /* ci mettero' anche una callback prima o poi */
-void buildMesh() {
-     while(addFace() != -1);
+    /* return false if you want to stop.\n */
+void buildMesh(CallBackPos *call = NULL, int interval = 512) {
+     bool done = false;
+     float estimated_faces = mesh.vn*2;     
+     while(!done) {
+       //estimating progress
+       float vdeleted = mesh.vert.size() - mesh.vn;
+       float vused = mesh.face.size()/2.0f;       
+       float progress = 100*(vdeleted + vused)/mesh.vert.size();
+       if(progress > 99) progress = 99;
+       if(call) call((int)progress, "Pivoting");
+       for(int i = 0; i < interval; i++) {
+         if(addFace() == -1) {       
+           done = true;
+           break;
+         }
+       }       
+     }
+     if(call) call(0, "Reindexing");
      for(int i = 0; i < mesh.face.size(); i++) {
        CFace &face = mesh.face[i];
        for(int k = 0; k < 3; k++)
          face.V(k) = &(mesh.vert[(int)face.V(k)]);
      } 
-}
+   }
     
     /* select a vertex at random, a small group of nearby vertices and looks
        for a sphere that touches 3 and contains none.
