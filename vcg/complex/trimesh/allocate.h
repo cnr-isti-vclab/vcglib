@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.30  2006/10/02 09:31:47  ponchio
+usual typename missing
+
 Revision 1.29  2006/09/29 15:11:41  giec
 Fixed a few bug.
 
@@ -126,6 +129,7 @@ Initial commit
 #define __VCGLIB_TRIALLOCATOR
 
 #include <vector>
+#include <assert.h>
 
 namespace vcg {
 	namespace tri {
