@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2006/10/10 09:33:47  cignoni
+added quality for triangle wrap
+
 Revision 1.9  2006/09/14 08:44:07  ganovelli
 changed t.P(*) in t.cP() nella funzione Barycenter
 
@@ -291,7 +294,7 @@ typename TriangleType::ScalarType DoubleArea(const TriangleType &t)
 template<class TriangleType>
 Point3<typename TriangleType::ScalarType> Barycenter(const TriangleType &t) 
 {
-	return ((t.cP(0)+t.cP(1)+t.cP(2))/(typename TriangleType::ScalarType) 3.0);
+	return ((t.P(0)+t.P(1)+t.P(2))/(typename TriangleType::ScalarType) 3.0);
 }
 
 template<class TriangleType>
