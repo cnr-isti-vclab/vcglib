@@ -40,6 +40,7 @@ class Pivot {
       Coord center;  //center of the sphere touching the face
       int count;   //test delay touch edges. 
       
+      bool active; //keep tracks of wether it is in front or in deads
       float angle;
       int candidate;
       Coord newcenter;
@@ -299,13 +300,17 @@ int addFace() {
       if(!front.size()) {
         //maybe there are unconnected parts of the mesh:
         //find a non D, V, B point and try to seed if failed D it.
-        for(; last_seed < mesh.vert.size(); ++last_seed) {
-          CVertex &v = mesh.vert[last_seed];
+        while(last_seed < mesh.vert.size() {
+          ++last_seed;
+          CVertex &v = mesh.vert[last_seed-1];
           if(v.IsD() || v.IsV() || v.IsB()) continue;
-          printf("seeding new: %i\n", last_seed);
-          if(seed(true, last_seed)) return 1;
+          
+          printf("seeding new: %i\n", last_seed-1);
+          if(seed(true, last_seed-1)) return 1;
+          
           v.SetD();
           --mesh.vn;
+          return 0;
         }
         printf("done\n");
         return -1;
@@ -314,22 +319,7 @@ int addFace() {
       typename std::list<Edgex>::iterator ei = front.begin();
       Edgex &e = *ei;
       Edgex &previous = *e.previous;           
-      Edgex &next = *e.next;  
-      
-/*      if(e.count == -1) {
-        printf("angle %f\n", e.angle);
-        if(e.angle < 1) e.count = 0;
-        else if(e.angle < 1.5) e.count = 2;
-        else if(e.angle < 2) e.count = 4;
-        else e.count = 6;
-      }
-
-      if(e.count > 0) {
-        printf("delay\n");
-        e.count--;
-        moveBack(ei);
-        return 0;
-      } */
+      Edgex &next = *e.next;        
  
       int v0 = e.v0, v1 = e.v1;
       
@@ -374,19 +364,14 @@ int addFace() {
           
           detach(v0);
         
-          previous.v1 = v1;       
-          previous.v2 = v0;
-          previous.face = fn;
-          previous.center = center;
-          
-          previous.next = e.next;
-          next.previous = e.previous;
-          pivot(previous);
-          moveBack(e.previous);            
-          
-          //this checks if we can glue something to e.previous
-          trovamiunnome(e.previous);      
-          front.erase(ei);    
+          typename std::list<Edgex>::iterator up = newEdge(Edgex(v2, v1, v0, fn, center));
+          (*up).previous = previous.previous;
+          (*up).next = e.next;
+          (*previous.previous).next = up;
+          next.previous = up;
+          erase(e.previous);
+          erase(ei);
+          trovamiunnome(up);
           
            
         } else if(v2 == next.v1) {
@@ -402,33 +387,18 @@ int addFace() {
                           v1           */      
     
           detach(v1);
-          
-          next.v0 = v0;
-          next.v2 = v1;
-          next.face = fn;
-          next.center = center;
-          next.previous = e.previous;
-          previous.next = e.next;
-          pivot(next);
-    //      moveBack(e.next);
-          
-          //this checks if we can glue something to e.previous
-          trovamiunnome(e.next);         
-          front.erase(ei);
-              
-        } else {
 
-     /*   if(e.count == -1) {
-          e.count = 4;
-          moveBack(ei);
-          return 0;
-        }*/
-    /*   this code would delay the joining edge to avoid bad situations not used but..
-         if(e.count < 2) {
-            e.count++;
-            moveBack(ei);
-            return true;         
-          }*/
+          typename std::list<Edgex>::iterator up = newEdge(Edgex(v0, v2, v1, fn, center));
+          (*up).previous = e.previous;
+          (*up).next = (*e.next).next;
+          previous.next = up;
+          (*next.next).previous = up;
+          erase(e.next);
+          erase(ei);
+          trovamiunnome(up);
+
+              
+        } else {     
     
         //touching some loop: split (or merge it is local does not matter.
         //like this 
@@ -469,8 +439,6 @@ int addFace() {
           (*up).v1 = v2;
           (*up).face = fn;
           (*up).center = center;
-          pivot(*up);
-          pivot(*down);
           moveBack(ei);
         }                         
     
@@ -504,8 +472,6 @@ int addFace() {
         e.face = fn;
         e.center = center;
         e.next = down; 
-        pivot(*ei);
-        pivot(*down);
         moveBack(ei);
       }
       addFace(v0, v2, v1);
@@ -554,19 +520,10 @@ int addFace() {
     
           if(mesh.vert[id].IsD()) 
             continue;                    
-    
+
           Point3x p = mesh.vert[id].P();
     
-          if(normals && normal * mesh.vert[id].N() < 0) {
-            continue;
-          }
-          /* Prevent 360 edges, also often reject ~ 50% points */      
-          Point3x n = ((p - v0)^(v1 - v0)).Normalize();
-          if(n * normal < crease) {
-            continue;               
-          }
-          
-    
+                                
           /* Find the sphere through v0, p, v1 (store center on end_pivot */
           if(!findSphere(v0, p, v1, center)) {
             continue;      
@@ -591,19 +548,20 @@ int addFace() {
           
             if(alpha > beta) alpha -= 2*M_PI; 
           }
-          //if alphs < 0.1
-                  
-          //scale alpha by distance:
-          if(edge.candidate == -1 || 
-              (alpha < 0.1 && id < edge.candidate) ||
-              (alpha >= 0.1 && alpha < edge.angle)) {
+         //scale alpha by distance:
+          if(edge.candidate == -1 || alpha < edge.angle) {
             edge.candidate = id; 
             edge.angle = alpha;
             edge.newcenter = center;
           }
         }
+        
+        if(edge.candidate == -1) return false;
+        Point3x n = ((mesh.vert[edge.candidate].P() - v0)^(v1 - v0)).Normalize();
         //found no point suitable.
-        if(edge.candidate == -1 || normal * mesh.vert[edge.candidate].N() < 0) {
+        if(normal * mesh.vert[edge.candidate].N() < 0 ||
+           n * normal < crease ||
+           nb[edge.candidate] >= 2) {
           return false;
         }
            
@@ -614,14 +572,20 @@ int addFace() {
   private:
      //front management:
      //Add a new edge to the back of the queue
-     typename std::list<Edgex>::iterator newEdge(Edgex e) {                  
+     typename std::list<Edgex>::iterator newEdge(Edgex e) {  
+       e.active = true;                
        return front.insert(front.end(), e);
      }     
      //move an Edge among the dead ones
      void killEdge(typename std::list<Edgex>::iterator e) {
+       (*e).active = false;
        deads.splice(deads.end(), front, e);
      }
 
+     void erase(typename std::list<Edgex>::iterator e) {
+       if((*e).active) front.erase(e);
+       else deads.erase(e);
+     }
      //move an Edge to the back of the queue
      void moveBack(typename std::list<Edgex>::iterator e) {
        front.splice(front.end(), front, e);          
@@ -671,9 +635,8 @@ int addFace() {
             
     }
     
-    void trovamiunnome(typename std::list<Edgex>::iterator e) {
-      if(glue((*e).previous, e)) return;
-      glue(e, (*e).next);
+    bool trovamiunnome(typename std::list<Edgex>::iterator e) {
+      return glue((*e).previous, e) || glue(e, (*e).next);
     }
     
     //glue toghether a and b (where a.next = b
