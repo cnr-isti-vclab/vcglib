@@ -218,7 +218,7 @@ namespace vcg
 				this->distance = distance;
 			}
 			
-			inline bool operator<(const Neighbour &n) 
+			inline bool operator<(const Neighbour &n) const 
 			{
 				return distance<n.distance;
 			}
@@ -426,7 +426,7 @@ public:
 			object_count = 0;
 			for (int i=0; i<leaves_count; i++)
 			{
-				voxel = Voxel(leaves[i]);
+				voxel = OctreeTemplate< Voxel, SCALAR_TYPE >::Voxel(leaves[i]);
 				begin = voxel->begin;
 				end		= voxel->end;
 				for ( ; begin<end; begin++)
@@ -517,7 +517,7 @@ public:
 				object_count = 0;
 				for (int i=0; i<leaves_count; i++)
 				{
-					voxel = Voxel(leaves[i]);
+					voxel = OctreeTemplate< Voxel, SCALAR_TYPE >::Voxel(leaves[i]);
 					begin = voxel->begin;
 					end		= voxel->end;
 					for ( ; begin<end; begin++)
@@ -554,7 +554,7 @@ public:
 				NeighbourIterator last	= neighbors.end();
 
 				if (sort_per_distance)  std::partial_sort< NeighbourIterator >(first, first+object_count, last /*, DistanceCompare()*/ );
-				else										std::nth_element < NeighbourIterator >(first, first+object_count, last /*, DistanceCompare()*/ ); 
+				else		               std::nth_element < NeighbourIterator >(first, first+object_count, last /*, DistanceCompare()*/ ); 
 				k_distance = neighbors[object_count-1].distance;
 			} 
 			while (k_distance>sphere_radius && sphere_radius<max_distance);
@@ -608,7 +608,7 @@ public:
 			float						 distance;
 			for (int i=0; i<leaves_count; i++)
 			{
-				voxel = Voxel(leaves[i]);
+				voxel = OctreeTemplate< Voxel, SCALAR_TYPE >::Voxel(leaves[i]);
 				begin = voxel->begin;
 				end		= voxel->end;
 				for ( ; begin<end; begin++)
@@ -676,7 +676,7 @@ public:
 				object_count = 0;
 				for (int i=0; i<leaves_count; i++)
 				{
-					voxel = Voxel(leaves[i]);
+					voxel = OctreeTemplate< Voxel, SCALAR_TYPE >::Voxel(leaves[i]);
 					begin = voxel->begin;
 					end		= voxel->end;
 					for ( ; begin<end; begin++)

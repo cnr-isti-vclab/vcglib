@@ -109,7 +109,7 @@ protected:
 		InnerNode() : Node() {};
 		InnerNode(NodePointer parent, int level) : Node(parent, level)
 		{
-			memset(&sons[0], NULL, 8*sizeof(Node*));
+			memset(&sons[0], 0, 8*sizeof(Node*));
 		}
 
 		inline NodePointer &Son(int sonIndex)

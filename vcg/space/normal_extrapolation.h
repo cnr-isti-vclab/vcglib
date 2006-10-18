@@ -165,8 +165,9 @@ namespace vcg
 			for (VertexIterator iter=begin; iter!=end; iter++)
 			{
 				if (callback!=NULL && (++progress%step)==0 && (percentage=int((progress*100)/vertex_count))<100) (callback)(percentage, message);
-
-				octree_for_planes.GetKClosest(VertPointDistanceFunctor(), DummyObjectMarker(), k, iter->P(), max_distance, nearest_vertices, distances, nearest_points);
+            VertPointDistanceFunctor vpdf;
+            DummyObjectMarker dom;
+				octree_for_planes.GetKClosest(vpdf, dom, k, iter->P(), max_distance, nearest_vertices, distances, nearest_points);
 
 				// for each vertex *iter, compute the centroid as avarege of the k-nearest vertices of *iter
 				Plane *plane = &tangent_planes[ std::distance(begin, iter) ];
@@ -216,8 +217,10 @@ namespace vcg
 				if (callback!=NULL && (++progress%step)==0 && (percentage=int((progress*100)/vertex_count))<100) (callback)(percentage, message);
 			
 			unsigned int kk = k;
+            PlanePointDistanceFunctor ppdf;
+            DummyObjectMarker dom;
 				octree_for_plane.GetKClosest
-				(PlanePointDistanceFunctor(), DummyObjectMarker(), kk, iPlane->center, max_distance, nearest_planes, distances, nearest_points, true, false);
+				(ppdf, dom, kk, iPlane->center, max_distance, nearest_planes, distances, nearest_points, true, false);
 
 				for (int n=0; n<k; n++)
 					if (iPlane->index<nearest_planes[n]->index)
