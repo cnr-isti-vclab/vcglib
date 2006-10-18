@@ -164,7 +164,8 @@ void buildMesh(CallBackPos *call = NULL, int interval = 512) {
        CFace &face = mesh.face[i];
        for(int k = 0; k < 3; k++)
          face.V(k) = &(mesh.vert[(int)face.V(k)]);
-     } 
+     }     
+
    }
     
     /* select a vertex at random, a small group of nearby vertices and looks
