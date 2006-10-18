@@ -73,7 +73,7 @@ class Pivot {
 
       
 Pivot(MESH &_mesh, ScalarType _radius, ScalarType _mindist = 0.1, ScalarType _crease = -0.5): 
-       mesh(_mesh), radius(_radius), mindist(_mindist), crease(_crease), normals(false), last_seed(0) {
+       mesh(_mesh), radius(_radius), mindist(_mindist), crease(_crease), normals(true), last_seed(0) {
     
       //Compute bounding box. (this may be passed as a parameter?
       for(int i = 0; i < mesh.vert.size(); i++)
