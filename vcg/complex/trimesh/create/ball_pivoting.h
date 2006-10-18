@@ -335,7 +335,6 @@ int addFace() {
 
       //if no pivoting or we are trying to connect to the inside of the mesh.
       if(!success || mesh.vert[v2].IsV()) { 
-        printf("no success\n");
         killEdge(ei);
         return 0;
       } 
