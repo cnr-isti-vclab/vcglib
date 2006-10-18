@@ -517,7 +517,8 @@ public:
 				object_count = 0;
 				for (int i=0; i<leaves_count; i++)
 				{
-					voxel = OctreeTemplate< Voxel, SCALAR_TYPE >::Voxel(leaves[i]);
+					//voxel = OctreeTemplate< Voxel, SCALAR_TYPE >::Voxel(leaves[i]);
+					voxel = TemplatedOctree::Voxel(leaves[i]);
 					begin = voxel->begin;
 					end		= voxel->end;
 					for ( ; begin<end; begin++)
@@ -697,11 +698,12 @@ public:
 		/*
 		* Draw the octree in a valid OpenGL context according to the rendering settings
 		*/
-		void Octree::DrawOctree(vcg::Box3f &boundingBox, NodePointer n)
+		void DrawOctree(vcg::Box3f &boundingBox, NodePointer n)
 		{
-			char level = Level(n);
+      char _level;
+      _level= TemplatedOctree::Level(n);
 			NodePointer son;
-			if (rendering_settings.minVisibleDepth>level)
+			if (rendering_settings.minVisibleDepth>_level)
 			{
 				for (int s=0; s<8; s++)
 					if ((son=Son(n, s))!=0)
@@ -710,7 +712,7 @@ public:
 			else
 			{
 				vcg::glBoxWire(boundingBox);
-				if (level<rendering_settings.maxVisibleDepth)
+				if (_level<rendering_settings.maxVisibleDepth)
 					for (int s=0; s<8; s++)
 						if ((son=Son(n, s))!=0)
 							DrawOctree(TemplatedOctree::SubBox(boundingBox, s), son);
