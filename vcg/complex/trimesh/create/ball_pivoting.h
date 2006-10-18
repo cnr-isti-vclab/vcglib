@@ -26,6 +26,7 @@ class Pivot {
     ScalarType radius;  //default 1 (not meaningful
     ScalarType mindist; //minimum distance between points in the mesh (% of radius)   
     ScalarType crease;  // -0.5 
+    bool normals;       //default false
     Box3<ScalarType> box;
     
     MESH &mesh;    
@@ -37,7 +38,11 @@ class Pivot {
                         //this edge belongs to
       int face;        //corresponding face
       Coord center;  //center of the sphere touching the face
-      int count;   //test delay touch edges.  
+      int count;   //test delay touch edges. 
+      
+      float angle;
+      int candidate;
+      Coord newcenter;
       
       //the loops in the front are mantained as a double linked list
       typename std::list<Edge>::iterator next;            
@@ -46,7 +51,7 @@ class Pivot {
       Edge() {}
       Edge(int _v0, int _v1, int _v2, int _face, Point3f &_center): 
                v0(_v0), v1(_v1), v2(_v2), 
-               face(_face), center(_center), count(0) {
+               face(_face), center(_center), count(-1) {
                  assert(v0 != v1 && v1 != v2 && v0 != v2);
                }
     };    
@@ -66,8 +71,8 @@ class Pivot {
     int last_seed;
 
       
-Pivot(MESH &_mesh, ScalarType _radius, ScalarType _mindist = 0.05, ScalarType _crease = -0.5): 
-       mesh(_mesh), radius(_radius), mindist(_mindist), crease(_crease), last_seed(0) {
+Pivot(MESH &_mesh, ScalarType _radius, ScalarType _mindist = 0.1, ScalarType _crease = -0.5): 
+       mesh(_mesh), radius(_radius), mindist(_mindist), crease(_crease), normals(false), last_seed(0) {
     
       //Compute bounding box. (this may be passed as a parameter?
       for(int i = 0; i < mesh.vert.size(); i++)
@@ -83,10 +88,54 @@ Pivot(MESH &_mesh, ScalarType _radius, ScalarType _mindist = 0.05, ScalarType _c
       grid.Set(mesh.vert.begin(), mesh.vert.end(), box);
       nb.clear();
       nb.resize(mesh.vert.size(), 0);
-      for(int i = 0; i < mesh.vert.size(); i++) 
-         mesh.vert[i].ClearFlags();
+      if(mesh.face.size()) {
+        //init border from mesh
+        Point3x center;
+        CVertex *start = &*mesh.vert.begin();
+        for(int i = 0; i < mesh.face.size(); i++) {
+          CFace &face = mesh.face[i];          
+          for(int k = 0; k < 3; k++) {
+            if(!face.V(k)->IsB()) face.V(k)->SetV();
+            if(face.IsB(k)) {
+              //compute center:
+              findSphere(face.P(k), face.P((k+1)%3), face.P((k+2)%3), center);
+              newEdge(Edgex(face.V((k)%3) -start, face.V((k+1)%3) - start, face.V((k+2)%3) - start,
+                            i, center));
+            }
+          }
+        }
+        for(typename std::list<Edgex>::iterator s = front.begin(); s != front.end(); s++) {
+          (*s).previous = front.end();
+          (*s).next = front.end();
+            printf("%d %d\n", (*s).v0, (*s).v1);
+        }
+        //now create loops:
+        for(typename std::list<Edgex>::iterator s = front.begin(); s != front.end(); s++) {
+          for(typename std::list<Edgex>::iterator j = front.begin(); j != front.end(); j++) {
+            if(s == j) continue;
+            if((*s).v1 != (*j).v0) continue;
+            if((*j).previous != front.end()) continue;
+            (*s).next = j;
+            (*j).previous = s;
+
+          }
+        }
+/*        for(typename std::list<Edgex>::iterator s = front.begin(); s != front.end(); s++) {
+          assert((*s).next != front.end());
+          assert((*s).previous != front.end());
+        }   */
+        for(int i = 0; i < mesh.face.size(); i++) {
+          CFace &face = mesh.face[i];
+          for(int k = 0; k < 3; k++) 
+            face.V(k) = (CVertex *)(face.V(k) - start);
+        }
+        
+      } else {
+        for(int i = 0; i < mesh.vert.size(); i++) 
+           mesh.vert[i].ClearFlags();
+        
+      }      
       srand(time(NULL));
-      
     }
     /* return false if you want to stop.\n */
 void buildMesh(CallBackPos *call = NULL, int interval = 512) {
@@ -122,13 +171,14 @@ void buildMesh(CallBackPos *call = NULL, int interval = 512) {
 bool seed(bool outside = true, int start = -1) {   
            
       //pick a random point (well...)
-      if(start == -1) start = rand()%mesh.vert.size();
+      if(start == -1) start = 0;//rand()%mesh.vert.size();
       
       //get a sphere of neighbours
       std::vector<int> targets;
       std::vector<ScalarType> dists;
       int n = getInSphere(mesh.vert[start].P(), 2*radius, targets, dists);
       if(n < 3) { 
+         mesh.vert[start].SetD();
         //bad luck. we should call seed again (assuming random pick) up to
         //some maximum tries. im lazy.
         return false;
@@ -160,8 +210,14 @@ bool seed(bool outside = true, int start = -1) {
             if((p2 - p0).Norm() < mindist*radius) continue;
             if((p2 - p1).Norm() < mindist*radius) continue;
             Point3x normal = (p1 - p0)^(p2 - p0);
-            //check normal pointing inside
-            if(normal * out < 0) continue;
+            if(!normals) {
+              //check normal pointing inside
+              if(normal * out < 0) continue;
+            } else {
+              if(normal * vv0.N() < 0) continue;
+              if(normal * vv1.N() < 0) continue;
+              if(normal * vv2.N() < 0) continue;
+            }
             if(!findSphere(p0, p1, p2, center)) continue;
             
             bool failed = false;
@@ -241,7 +297,6 @@ int addFace() {
       }
       
       if(!front.size()) {
-        return -1;
         //maybe there are unconnected parts of the mesh:
         //find a non D, V, B point and try to seed if failed D it.
         for(; last_seed < mesh.vert.size(); ++last_seed) {
@@ -260,21 +315,40 @@ int addFace() {
       Edgex &e = *ei;
       Edgex &previous = *e.previous;           
       Edgex &next = *e.next;  
+      
+/*      if(e.count == -1) {
+        printf("angle %f\n", e.angle);
+        if(e.angle < 1) e.count = 0;
+        else if(e.angle < 1.5) e.count = 2;
+        else if(e.angle < 2) e.count = 4;
+        else e.count = 6;
+      }
+
+      if(e.count > 0) {
+        printf("delay\n");
+        e.count--;
+        moveBack(ei);
+        return 0;
+      } */
+ 
       int v0 = e.v0, v1 = e.v1;
-    
+      
+      assert(nb[v0] < 10 && nb[v1] < 10);
       int v2;
       Point3x center;
-      std::vector<int> targets;
-      bool success = pivot(e, v2, center, targets);
-    
+      bool success = pivot(e);
+      v2 = e.candidate;
+      center = e.newcenter;
+
       //if no pivoting or we are trying to connect to the inside of the mesh.
       if(!success || mesh.vert[v2].IsV()) { 
+        printf("no success\n");
         killEdge(ei);
         return 0;
       } 
     
       //does v2 belongs to a front? (and which?)
-      typename std::list<Edgex>::iterator touch = touches(v2, ei);
+      typename std::list<Edgex>::iterator touch = touches(ei);
     
       assert(v2 != v0 && v2 != v1);  
     
@@ -307,6 +381,7 @@ int addFace() {
           
           previous.next = e.next;
           next.previous = e.previous;
+          pivot(previous);
           moveBack(e.previous);            
           
           //this checks if we can glue something to e.previous
@@ -315,6 +390,7 @@ int addFace() {
           
            
         } else if(v2 == next.v1) {
+        
                
         /*touching next edge  (we reuse next)        
           previous
@@ -333,6 +409,7 @@ int addFace() {
           next.center = center;
           next.previous = e.previous;
           previous.next = e.next;
+          pivot(next);
     //      moveBack(e.next);
           
           //this checks if we can glue something to e.previous
@@ -340,7 +417,12 @@ int addFace() {
           front.erase(ei);
               
         } else {
-    
+
+     /*   if(e.count == -1) {
+          e.count = 4;
+          moveBack(ei);
+          return 0;
+        }*/
     /*   this code would delay the joining edge to avoid bad situations not used but..
          if(e.count < 2) {
             e.count++;
@@ -387,7 +469,9 @@ int addFace() {
           (*up).v1 = v2;
           (*up).face = fn;
           (*up).center = center;
-           moveBack(ei);
+          pivot(*up);
+          pivot(*down);
+          moveBack(ei);
         }                         
     
               
@@ -420,6 +504,8 @@ int addFace() {
         e.face = fn;
         e.center = center;
         e.next = down; 
+        pivot(*ei);
+        pivot(*down);
         moveBack(ei);
       }
       addFace(v0, v2, v1);
@@ -430,7 +516,7 @@ int addFace() {
     
     /* return new vertex and the center of the new sphere pivoting from edge
        if the vertex belongs to another edge, touch points to it. */
-    bool pivot(Edgex &edge, int &candidate, Point3x &end_pivot, std::vector<int> &targets) {
+    bool pivot(Edgex &edge) {
         Point3x v0 = mesh.vert[edge.v0].P();
         Point3x v1 = mesh.vert[edge.v1].P();  
         Point3x v2 = mesh.vert[edge.v2].P();  
@@ -440,8 +526,7 @@ int addFace() {
            Point3x &normal = mesh.face[edge.face].N();
         */
     
-        Point3x normal = ((v1 - v0)^(v2 - v0)).Normalize();
-        
+        Point3x normal = ((v1 - v0)^(v2 - v0)).Normalize();        
         Point3x middle = (v0 + v1)/2;    
         Point3x start_pivot = edge.center - middle;          
         Point3x axis = (v1 - v0);
@@ -453,13 +538,13 @@ int addFace() {
         // r is the radius of the thorus of all possible spheres passing throug v0 and v1
         ScalarType r = sqrt(radius*radius - axis_len/4);
         
-    
+        std::vector<int> targets;
         std::vector<ScalarType> dists;    
         getInSphere(middle, r + radius, targets, dists);
     
         if(targets.size() == 0) return false; //this really would be strange but one never knows.
     
-        candidate = -1;
+        edge.candidate = -1;
         ScalarType minangle = 0;
         Point3x center;  //to be computed for each sample
         for(int i = 0; i < targets.size(); i++) {      
@@ -472,9 +557,12 @@ int addFace() {
     
           Point3x p = mesh.vert[id].P();
     
+          if(normals && normal * mesh.vert[id].N() < 0) {
+            continue;
+          }
           /* Prevent 360 edges, also often reject ~ 50% points */      
           Point3x n = ((p - v0)^(v1 - v0)).Normalize();
-          if(n * normal < -0.5) {
+          if(n * normal < crease) {
             continue;               
           }
           
@@ -489,7 +577,7 @@ int addFace() {
     
           /* adding a small bias to already chosen vertices.
              doesn't solve numerical problems, but helps. */
-          if(mesh.vert[id].IsB()) alpha -= 0.001;
+//          if(mesh.vert[id].IsB()) alpha -= 0.001;
           
           /* Sometimes alpha might be little less then M_PI while it should be 0,
              by numerical errors: happens for example pivoting 
@@ -503,18 +591,23 @@ int addFace() {
           
             if(alpha > beta) alpha -= 2*M_PI; 
           }
-          if(candidate == -1 || alpha < minangle) {        
-            candidate = id; 
-            minangle = alpha;
-            end_pivot = center;
+          //if alphs < 0.1
+                  
+          //scale alpha by distance:
+          if(edge.candidate == -1 || 
+              (alpha < 0.1 && id < edge.candidate) ||
+              (alpha >= 0.1 && alpha < edge.angle)) {
+            edge.candidate = id; 
+            edge.angle = alpha;
+            edge.newcenter = center;
           }
         }
         //found no point suitable.
-        if(candidate == -1) {
+        if(edge.candidate == -1 || normal * mesh.vert[edge.candidate].N() < 0) {
           return false;
         }
            
-        assert(candidate != edge.v0 && candidate != edge.v1);
+        assert(edge.candidate != edge.v0 && edge.candidate != edge.v1);
         return true;
     }         
     
@@ -540,7 +633,7 @@ int addFace() {
     bool checkEdge(int v0, int v1) {
       int tot = 0;
       //HACK to speed up things until i can use a seach structure
-      int i = mesh.face.size() - 2*(front.size());
+      int i = mesh.face.size() - 4*(front.size());
       if(front.size() < 100) i = mesh.face.size() - 100;
 //      i = 0;
       if(i < 0) i = 0;
@@ -697,10 +790,11 @@ int addFace() {
     
       return true;
     }         
-    typename std::list<Edgex>::iterator touches(int v, typename std::list<Edgex>::iterator e) {
+
+    typename std::list<Edgex>::iterator touches(typename std::list<Edgex>::iterator e) {
       //TODO what happens when it touches more than one front?
       //might still work.
-    
+      int v = (*e).candidate;
       typename std::list<Edgex>::iterator touch = front.end();
       if(mesh.vert[v].IsB()) {
         //test nearby Edges: it is faster
