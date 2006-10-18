@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2006/10/10 09:12:02  giec
+Bugfix and added a new type of ear (Liepa like)
+
 Revision 1.6  2006/10/09 10:07:07  giec
 Optimized version of "EAR HOLE FILLING", the Ear is selected according to its dihedral angle.
 
@@ -46,6 +49,8 @@ First Non working Version
 ****************************************************************************/
 #ifndef __VCG_TRI_UPDATE_HOLE
 #define __VCG_TRI_UPDATE_HOLE
+
+#include <vcg/math/base.h>
 
 /*
 Questa Classe serve per gestire la non duplicazione degli edge durante la chiusura 
@@ -278,7 +283,9 @@ namespace vcg {
 		public:
 			face::Pos<typename MSH_TYPE::FaceType> e0;	 
 			face::Pos<typename MSH_TYPE::FaceType> e1;	 
-			typename MSH_TYPE::ScalarType quality;
+			typedef typename MSH_TYPE::ScalarType ScalarType;
+			ScalarType quality;
+			ScalarType angle;
 			TrivialEar(){}
 			TrivialEar(const face::Pos<typename MSH_TYPE::FaceType> & ep)
 			{
@@ -287,30 +294,51 @@ namespace vcg {
 				e1=e0;
 				e1.NextB();
 				ComputeQuality();
+				computeAngle();
 			}
 
-			// Nota: minori invertiti
-			inline bool operator <  ( const TrivialEar & c ) const { return quality >  c.quality; }
-			inline bool operator >  ( const TrivialEar & c ) const { return quality <  c.quality; }
-			inline bool operator == ( const TrivialEar & c ) const { return quality == c.quality; }
-			inline bool operator != ( const TrivialEar & c ) const { return quality != c.quality; }
-			inline bool operator >= ( const TrivialEar & c ) const { return quality <= c.quality; }
-			inline bool operator <= ( const TrivialEar & c ) const { return quality >= c.quality; }
+			void computeAngle()
+			{
+				Point3f p1 = e0.VFlip()->P() - e0.v->P();
+				Point3f p2 = e1.v->P() - e0.v->P();
+
+				ScalarType  w = p2.Norm()*p1.Norm();
+				if(w==0) angle =90;
+				MSH_TYPE::ScalarType p = (p2*p1);
+				p= p/w;
+				p = acos(p);
+				if(p < -1) p = -1;
+				if(p > 1) p = 1;
+
+				Point3f t = p2^p1;
+				ScalarType n = t* e0.v->N();
+				if(n<0)
+				{
+					p = 2.0 *(float)M_PI - p;
+				}
+				angle = p;
+			}
+
+			inline bool operator < ( const TrivialEar & c ) const { return quality <  c.quality; }
 
 			bool IsNull(){return e0.IsNull() || e1.IsNull();}
 			void SetNull(){e0.SetNull();e1.SetNull();}
 			void ComputeQuality()
 			{ 
-				//comute quality by max(dihedral ancgle)
-				Point3f n1 = (e0.v->N() + e1.v->N() + e0.VFlip()->N() ) / 3;
-				face::Pos<typename MSH_TYPE::FaceType> tmp = e1;
-				tmp.FlipE();tmp.FlipV();
-				Point3f n2= (	e1.VFlip()->N()+ e1.v->N()+ tmp.v->N())/3;
-				MSH_TYPE::ScalarType qt;
-				qt = Angle(n1,n2);
-				quality = qt * -1000;
-			};//dovrebbe
+				ScalarType ar;
+				ar = ( (e0.VFlip()->P() - e0.v->P()) ^ ( e1.v->P() - e0.v->P()) ).Norm() ;
+				ScalarType area = (ar);
+
+				ScalarType l1 = Distance( e0.v->P(),e1.v->P());
+				ScalarType l2 = Distance( e0.v->P(),e0.VFlip()->P());
+				ScalarType l3 = Distance( e0.VFlip()->P(),e1.v->P());
+
+				quality = area / ( (l1 *l1) + (l2 * l2) + (l3 * l3) );
+			};
 			bool IsUpToDate()	{return (e0.IsBorder() && e1.IsBorder());};
+
+			bool IsConvex(){return (angle > (float)M_PI);}
+
 
 			bool Degen()
 			{
@@ -404,15 +432,16 @@ namespace vcg {
 			}
 		};
 
-
-				template<class MSH_TYPE> class LeipaEar
-
+		//Ear with Leipa's quality policy
+		template<class MSH_TYPE> class LeipaEar
 		{
 		public:
 			face::Pos<typename MSH_TYPE::FaceType> e0;	 
 			face::Pos<typename MSH_TYPE::FaceType> e1;	 
-			typename MSH_TYPE::ScalarType dihedral;
-			typename MSH_TYPE::ScalarType area;
+			typedef typename MSH_TYPE::ScalarType ScalarType;
+			ScalarType angle;
+			ScalarType dihedral;
+			ScalarType area;
 			LeipaEar(){}
 			LeipaEar(const face::Pos<typename MSH_TYPE::FaceType> & ep)
 			{
@@ -421,33 +450,43 @@ namespace vcg {
 				e1=e0;
 				e1.NextB();
 				ComputeQuality();
+				computeAngle();
 			}
 
-			// Nota: minori invertiti
+			void computeAngle()
+			{
+				Point3f p1 = e0.VFlip()->P() - e0.v->P();
+				Point3f p2 = e1.v->P() - e0.v->P();
+
+				ScalarType  w = p2.Norm()*p1.Norm();
+				if(w==0) angle =90;
+				ScalarType p = (p2*p1);
+				p= p/w;
+				p = acos(p);
+				if(p < -1) p = -1;
+				if(p > 1) p = 1;
+
+				Point3f t = p2^p1;
+				ScalarType n = t* e0.v->N();
+				if(n<0)
+				{
+					p = 2.0 *(float)M_PI - p;
+				}
+				angle = p;
+			}
+
+			// Nota: minori invertiti		
 			inline bool operator <  ( const LeipaEar & c ) const 
 			{ 
 				if(dihedral < c.dihedral)return true;
 				else return ((dihedral == c.dihedral) && (area < c.area));
-			}
-			inline bool operator >  ( const LeipaEar & c ) const 
-			{
-				if(dihedral > c.dihedral)return true;
-				else return ((dihedral == c.dihedral) && (area > c.area));
-			}
-			inline bool operator == ( const LeipaEar & c ) const 
-			{
-				 return ((dihedral == c.dihedral) && (area == c.area));
-			}
-			inline bool operator != ( const LeipaEar & c ) const 
-			{
-				return ((dihedral != c.dihedral)&& (area != c.area));
 			}
 
 			bool IsNull(){return e0.IsNull() || e1.IsNull();}
 			void SetNull(){e0.SetNull();e1.SetNull();}
 			void ComputeQuality()
 			{ 
-				//comute quality by (dihedral ancgle, area)
+				//comute quality by (dihedral ancgle, area/sum(edge^2) )
 				Point3f n1 = (e0.v->N() + e1.v->N() + e0.VFlip()->N() ) / 3;
 				face::Pos<typename MSH_TYPE::FaceType> tmp = e1;
 				tmp.FlipE();tmp.FlipV();
@@ -455,15 +494,22 @@ namespace vcg {
 				MSH_TYPE::ScalarType qt;
 				qt = Angle(n1,n2);
 
-				dihedral = qt * -1000;
+				dihedral = -qt;
 
 				MSH_TYPE::ScalarType ar;
 				ar = ( (e0.VFlip()->P() - e0.v->P()) ^ ( e1.v->P() - e0.v->P()) ).Norm() ;
-				area = (ar)*1000;
+
+				/*ScalarType l1 = Distance( e0.v->P(),e1.v->P());
+				ScalarType l2 = Distance( e0.v->P(),e0.VFlip()->P());
+				ScalarType l3 = Distance( e0.VFlip()->P(),e1.v->P());*/
+
+
+				area = ar ;// ( (l1 *l1) + (l2 * l2) + (l3 * l3) );
+
 
 			};//dovrebbe
 			bool IsUpToDate()	{return (e0.IsBorder() && e1.IsBorder());};
-
+			bool IsConvex(){return angle > (float)M_PI;}
 			bool Degen()
 			{
 				face::Pos<typename MSH_TYPE::FaceType>	ep=e0; ep.FlipV(); ep.NextB(); ep.FlipV(); // he precedente a e0 
@@ -555,6 +601,178 @@ namespace vcg {
 				return true;
 			}
 		};
+		//Ear for selfintersection algorithm
+		template<class MSH_TYPE> class SelfIntersection
+		{
+		public:
+			face::Pos<typename MSH_TYPE::FaceType> e0;	 
+			face::Pos<typename MSH_TYPE::FaceType> e1;	 
+			typedef typename MSH_TYPE::ScalarType ScalarType;
+			ScalarType quality;
+			ScalarType angle;
+			SelfIntersection(){}
+			SelfIntersection(const face::Pos<typename MSH_TYPE::FaceType> & ep)
+			{
+				e0=ep;
+				assert(e0.IsBorder());
+				e1=e0;
+				e1.NextB();
+				ComputeQuality();
+				computeAngle();
+			}
+
+			inline bool operator <  ( const SelfIntersection & c ) const 
+			{ 
+				return (quality < c.quality);
+			}
+			void computeAngle()
+			{
+				Point3f p1 = e0.VFlip()->P() - e0.v->P();
+				Point3f p2 = e1.v->P() - e0.v->P();
+
+				ScalarType  w = p2.Norm()*p1.Norm();
+				if(w==0) angle =90;
+				MSH_TYPE::ScalarType p = (p2*p1);
+				p= p/w;
+				p = acos(p);
+				if(p < -1) p = -1;
+				if(p > 1) p = 1;
+
+				Point3f t = p2^p1;
+				ScalarType n = t* e0.v->N();
+				if(n<0)
+				{
+					p = 2.0 *(float)M_PI - p;
+				}
+				angle = p;
+			}
+
+			bool IsNull(){return e0.IsNull() || e1.IsNull();}
+			void SetNull(){e0.SetNull();e1.SetNull();}
+			void ComputeQuality()
+			{ 
+				ScalarType ar;
+				ar = ( (e0.VFlip()->P() - e0.v->P()) ^ ( e1.v->P() - e0.v->P()) ).Norm() ;
+				ScalarType area = (ar);
+
+				ScalarType l1 = Distance( e0.v->P(),e1.v->P());
+				ScalarType l2 = Distance( e0.v->P(),e0.VFlip()->P());
+				ScalarType l3 = Distance( e0.VFlip()->P(),e1.v->P());
+
+				quality = area / ( (l1 *l1) + (l2 * l2) + (l3 * l3) );
+			};
+			bool IsUpToDate()	{return (e0.IsBorder() && e1.IsBorder());};
+			bool IsConvex(){ return (angle > (float)M_PI);}
+			bool Degen()
+			{
+				face::Pos<typename MSH_TYPE::FaceType>	ep=e0; ep.FlipV(); ep.NextB(); ep.FlipV(); // he precedente a e0 
+				face::Pos<typename MSH_TYPE::FaceType>	en=e1; en.NextB();												 // he successivo a e1
+
+				// caso ear degenere per buco triangolare
+				if(ep==en) return true;//provo a togliere sto controllo
+				// Caso ear non manifold a
+				if(ep.v==en.v)	return true;
+				// Caso ear non manifold b
+				if(ep.VFlip()==e1.v) return true;
+
+				return false;
+			}
+
+			bool Close(SelfIntersection &ne0, SelfIntersection &ne1, typename MSH_TYPE::FaceType * f, std::vector<typename MSH_TYPE::FaceType> vf)
+			{
+				// simple topological check
+				if(e0.f==e1.f) {
+					printf("Avoided bad ear");
+					return false;
+				}
+
+				face::Pos<typename MSH_TYPE::FaceType>	ep=e0; ep.FlipV(); ep.NextB(); ep.FlipV(); // he precedente a e0 
+				face::Pos<typename MSH_TYPE::FaceType>	en=e1; en.NextB();												 // he successivo a e1
+				//costruisco la faccia e poi testo, o copio o butto via.				
+				(*f).V(0) = e0.VFlip();
+				(*f).V(1) = e0.v;
+				(*f).V(2) = e1.v;
+
+				(*f).FFp(0) = e0.f;
+				(*f).FFi(0) = e0.z;
+				(*f).FFp(1) = e1.f;
+				(*f).FFi(1) = e1.z;
+				(*f).FFp(2) = f;
+				(*f).FFi(2) = 2;
+
+				int a1, a2;
+				a1=e0.z;
+				a2=e1.z;
+
+				e0.f->FFp(e0.z)=f;
+				e0.f->FFi(e0.z)=0;	
+
+				e1.f->FFp(e1.z)=f;
+				e1.f->FFi(e1.z)=1;
+				std::vector< MSH_TYPE::FaceType>::iterator it;
+				for(it = vf.begin();it!= vf.end();++it)
+				{
+					if(!it->IsD())
+						if(		tri::Clean<MSH_TYPE>::TestIntersection(&(*f),&(*it)))
+						{
+							//rimetto a posto
+
+							e0.f->FFp(e0.z)=e0.f;
+							e0.f->FFi(e0.z)=a1;	
+
+							e1.f->FFp(e1.z)=e1.f;
+							e1.f->FFi(e1.z)=a2;
+
+							return false;
+						}
+				}
+				// caso ear degenere per buco triangolare
+				if(ep==en)
+				{
+					printf("Closing the last triangle");
+					f->FFp(2)=en.f;
+					f->FFi(2)=en.z;
+					en.f->FFp(en.z)=f;
+					en.f->FFi(en.z)=2;
+					ne0.SetNull();
+					ne1.SetNull();
+				}
+				// Caso ear non manifold a
+				else if(ep.v==en.v)
+				{
+					printf("Ear Non manif A\n");
+					face::Pos<typename MSH_TYPE::FaceType>	enold=en;
+					en.NextB();
+					f->FFp(2)=enold.f;
+					f->FFi(2)=enold.z;
+					enold.f->FFp(enold.z)=f;
+					enold.f->FFi(enold.z)=2;
+					ne0=SelfIntersection(ep);
+					ne1=SelfIntersection(en);
+				}
+				// Caso ear non manifold b
+				else if(ep.VFlip()==e1.v)
+				{
+					printf("Ear Non manif B\n");
+					face::Pos<typename MSH_TYPE::FaceType>	epold=ep; 
+					ep.FlipV(); ep.NextB(); ep.FlipV();
+					f->FFp(2)=epold.f;
+					f->FFi(2)=epold.z;
+					epold.f->FFp(epold.z)=f;
+					epold.f->FFi(epold.z)=2;
+					ne0=SelfIntersection(ep);
+					ne1=SelfIntersection(en);
+				}
+				else // caso standard
+					// Now compute the new ears;
+				{
+					ne0=SelfIntersection(ep);
+					ne1=SelfIntersection(face::Pos<typename MSH_TYPE::FaceType>(f,2,e1.v));
+				}
+				return true;
+			}
+		};
+
 
 
 		// Funzione principale per chiudier un buco in maniera topologicamente corretta.
@@ -586,13 +804,12 @@ namespace vcg {
 		}
 
 		template<class MESH,class EAR , class VECTOR_EAR>
-			void refreshHole(MESH &m, VECTOR_EAR &ve, face::Pos<typename MESH::FaceType> &fp, std::vector<typename MESH::VertexType > &vv)
+			void refreshHole(MESH &m, VECTOR_EAR &ve, face::Pos<typename MESH::FaceType> &fp)
 		{
 			face::Pos<typename MESH::FaceType> ff = fp;
 
 			do{
 				ve.push_back(EAR(fp));
-				vv.push_back(*fp.v);
 				fp.NextB();//semmai da provare a sostituire il codice della NextB();
 				assert(fp.IsBorder());
 			}while(fp!=ff);
@@ -609,13 +826,12 @@ namespace vcg {
 			h.Refresh(m);	
 			assert(h.p.IsBorder());//test fondamentale altrimenti qualcosa s'e' rotto!
 
-			std::vector<MESH::VertexType > vv; //vettore di vertici 
 			std::vector<EAR > H; //vettore di orecchie
 
 			H.reserve(h.size);
 
 			//prendo le informazioni sul buco
-			refreshHole<MESH,EAR, std::vector<EAR> >(m,H,h.p,vv);
+			refreshHole<MESH,EAR, std::vector<EAR> >(m,H,h.p);
 
 			bool fitted = false;
 			int cnt=h.size;
@@ -623,7 +839,7 @@ namespace vcg {
 
 			make_heap(H.begin(), H.end());
 
-			while( cnt > 2 && !H.empty() ) //finche' il buco non e' chiuso o non ci sono piu' orecchie da analizzare
+			while( cnt > 2 && !H.empty()  && !fitted) //finche' il buco non e' chiuso o non ci sono piu' orecchie da analizzare
 			{
 
 				pop_heap(H.begin(), H.end());		
@@ -632,7 +848,7 @@ namespace vcg {
 
 				MESH::FaceIterator Fadd = f;
 
-				if(H.back().IsUpToDate())	
+				if(H.back().IsUpToDate() && !H.back().IsConvex())	
 				{
 					if(H.back().Degen()){ 
 						// Nota che nel caso di ear degeneri si DEVE permettere la creazione di un edge che gia'esiste
@@ -640,6 +856,7 @@ namespace vcg {
 					}
 					else 
 					{
+
 						if(H.back().Close(en0,en1,&*f))
 						{
 							if(!en0.IsNull()){
@@ -727,7 +944,6 @@ namespace vcg {
 			{
 				app=(tri::HoleInfo<MESH>)*ith;
 				if(app.size < sizeHole){		
-					//app.Refresh(m);//non so se serve
 					fillHoleEar<MESH, EAR >(m, app,UBIT);
 				}
 			}
@@ -739,6 +955,161 @@ namespace vcg {
 			}
 		}
 
+		/*
+		FillHoleSelfIntersection
+		*/
+		template <class MESH, class EAR>
+			void fillHoleInt(MESH &m, tri::HoleInfo<MESH> &h ,int UBIT, std::vector<typename MESH::FaceType > vf)
+		{
+			//Aggiungo le facce e aggiorno il puntatore alla faccia!
+			std::vector<MESH::FacePointer *> app;
+			app.push_back( &h.p.f );
+			MESH::FaceIterator f = tri::Allocator<MESH>::AddFaces(m, h.size-2, app);
+			h.Refresh(m);	
+			assert(h.p.IsBorder());//test fondamentale altrimenti qualcosa s'e' rotto!
+			std::vector<EAR > H; //vettore di orecchie
+			H.reserve(h.size);
+
+			//prendo le informazioni sul buco
+			tri::refreshHole<MESH,EAR, std::vector<EAR> >(m,H,h.p);
+
+			bool fitted = false;
+			int cnt=h.size;
+			MESH::FaceIterator tmp;
+
+			make_heap(H.begin(), H.end());
+			//finche' il buco non e' chiuso o non ci sono piu' orecchie da analizzare.
+			while( cnt > 2 && !H.empty() ) 
+			{
+				pop_heap(H.begin(), H.end());		
+				EAR en0,en1;
+				MESH::FaceIterator Fadd = f;
+				if(H.back().IsUpToDate() && !H.back().IsConvex())	
+				{
+					if(H.back().Degen()){ 
+						// Nota che nel caso di ear degeneri si DEVE permettere la creazione di un edge che gia'esiste.
+						printf("\n -> Evitata orecchia brutta!");
+					}
+					else 
+					{
+						if(H.back().Close(en0,en1,&*f,vf))
+						{
+							if(!en0.IsNull()){
+								H.push_back(en0);
+								push_heap( H.begin(), H.end());
+							}
+							if(!en1.IsNull()){
+								H.push_back(en1);
+								push_heap( H.begin(), H.end());
+							}
+							--cnt;
+							f->SetUserBit(UBIT);
+							vf.push_back(*f);
+							++f;
+							fitted = true;
+						}
+					}
+					//ultimo buco o unico buco.
+					if(cnt == 3 && !fitted)
+					{
+						if(H.back().Close(en0,en1,&*f,vf))
+						{
+							--cnt;
+							tmp = f;
+							vf.push_back(*f);
+							++f;
+						}
+					}
+				}//is update()
+				fitted = false;
+				//non ho messo il triangolo quindi tolgo l'orecchio e continuo.
+				H.pop_back();
+			}//fine del while principale.
+			//tolgo le facce non utilizzate.
+			while(f!=m.face.end())
+			{
+				(*f).SetD();
+				++f;
+				m.fn--;
+			}
+
+		}
+
+		//hole filling selfintersection main algorithm
+		template<class MESH, class EAR>
+			void holeFillingIntersection(MESH &m, int sizeHole,bool Selected = false)
+		{
+			MESH::FaceIterator fi;
+			std::vector<tri::HoleInfo<MESH> > vinfo;
+			int UBIT = fi->LastBitFlag();
+
+			for(fi = m.face.begin(); fi!=m.face.end(); ++fi)
+			{
+				if(!(*fi).IsD())
+				{
+					if(Selected && !(*fi).IsS())
+					{
+						//se devo considerare solo i triangoli selezionati e 
+						//quello che sto considerando non lo e' lo marchio e vado avanti
+						(*fi).SetUserBit(UBIT);
+					}
+					else
+					{
+						if( !(*fi).IsUserBit(UBIT) )
+						{
+							(*fi).SetUserBit(UBIT);
+							for(int j =0; j<3 ; ++j)
+							{
+								if( (*fi).IsB(j) )
+								{//Trovato una faccia di bordo non ancora visitata.
+									face::Pos<typename MESH::FaceType> sp(&*fi, j, (*fi).V(j));
+
+									//	if(!(*fi).IsR())return;
+									tri::HoleInfo<MESH> HI = tri::getHoleInfo<MESH>(m,sp,sp,  UBIT);
+									//ho recuperato l'inofrmazione su tutto il buco
+									vinfo.push_back(HI);
+								}
+							}//for sugli edge del triangolo
+						}//se e' gia stato visitato
+					}//S & !S
+				}//!IsD()
+			}//for principale!!!
+
+			std::vector<MESH::FaceType > vf;
+			face::Pos<typename MESH::FaceType>sp;
+			face::Pos<typename MESH::FaceType>ap;
+			std::vector<tri::HoleInfo<MESH> >::iterator ith;
+			tri::HoleInfo<MESH> app;
+			for(ith = vinfo.begin(); ith!= vinfo.end(); ++ith)
+			{
+				app=(tri::HoleInfo<MESH>)*ith;
+				if(app.size < sizeHole){		
+					app.Refresh(m);
+					//colleziono il ring intorno al buco per poi fare il test sul'intersezione
+					sp = app.p;
+					do
+					{
+						ap = sp;
+						do
+						{
+							ap.FlipE();
+							ap.FlipF();
+							vf.push_back(*ap.f);
+						}while(!ap.IsBorder());
+						sp.NextB();
+
+					}while(sp != app.p);	
+
+					fillHoleInt<MESH, EAR >(m, app,UBIT,vf);
+					vf.clear();
+				}
+			}
+			for(fi = m.face.begin(); fi!=m.face.end(); ++fi)
+			{
+				if(!(*fi).IsD())
+					(*fi).ClearUserBit(UBIT);
+			}
+		}
 
 		/*
 		Trivial Ear con preferred Normal
