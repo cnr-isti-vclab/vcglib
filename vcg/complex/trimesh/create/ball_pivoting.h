@@ -52,7 +52,7 @@ class Pivot {
       Edge() {}
       Edge(int _v0, int _v1, int _v2, int _face, Point3f &_center): 
                v0(_v0), v1(_v1), v2(_v2), 
-               face(_face), center(_center), count(-1) {
+               face(_face), center(_center), count(-1), active(true) {
                  assert(v0 != v1 && v1 != v2 && v0 != v2);
                }
     };    
