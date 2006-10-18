@@ -652,8 +652,8 @@ int addFace() {
       (*next).previous = previous;
       detach((*a).v1);
       detach((*a).v0); 
-      front.erase(a);
-      front.erase(b);  
+      erase(a);
+      erase(b);  
       return true;
     }
     
