@@ -89,6 +89,7 @@ Pivot(MESH &_mesh, ScalarType _radius, ScalarType _mindist = 0.1, ScalarType _cr
       grid.Set(mesh.vert.begin(), mesh.vert.end(), box);
       nb.clear();
       nb.resize(mesh.vert.size(), 0);
+
       if(mesh.face.size()) {
         //init border from mesh
         Point3x center;
@@ -97,6 +98,7 @@ Pivot(MESH &_mesh, ScalarType _radius, ScalarType _mindist = 0.1, ScalarType _cr
           CFace &face = mesh.face[i];          
           for(int k = 0; k < 3; k++) {
             if(!face.V(k)->IsB()) face.V(k)->SetV();
+            cluster(face.V(k) - start);
             if(face.IsB(k)) {
               //compute center:
               findSphere(face.P(k), face.P((k+1)%3), face.P((k+2)%3), center);
@@ -132,8 +134,9 @@ Pivot(MESH &_mesh, ScalarType _radius, ScalarType _mindist = 0.1, ScalarType _cr
         }
         
       } else {
-        for(int i = 0; i < mesh.vert.size(); i++) 
+        for(int i = 0; i < mesh.vert.size(); i++) {
            mesh.vert[i].ClearFlags();
+        }
         
       }      
       srand(time(NULL));
@@ -300,7 +303,7 @@ int addFace() {
       if(!front.size()) {
         //maybe there are unconnected parts of the mesh:
         //find a non D, V, B point and try to seed if failed D it.
-        while(last_seed < mesh.vert.size() {
+        while(last_seed < mesh.vert.size()) {
           ++last_seed;
           CVertex &v = mesh.vert[last_seed-1];
           if(v.IsD() || v.IsV() || v.IsB()) continue;
