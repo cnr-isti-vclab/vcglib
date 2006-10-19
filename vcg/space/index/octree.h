@@ -426,7 +426,7 @@ public:
 			object_count = 0;
 			for (int i=0; i<leaves_count; i++)
 			{
-				voxel = OctreeTemplate< Voxel, SCALAR_TYPE >::Voxel(leaves[i]);
+				voxel = TemplatedOctree::Voxel(leaves[i]);
 				begin = voxel->begin;
 				end		= voxel->end;
 				for ( ; begin<end; begin++)
@@ -517,7 +517,6 @@ public:
 				object_count = 0;
 				for (int i=0; i<leaves_count; i++)
 				{
-					//voxel = OctreeTemplate< Voxel, SCALAR_TYPE >::Voxel(leaves[i]);
 					voxel = TemplatedOctree::Voxel(leaves[i]);
 					begin = voxel->begin;
 					end		= voxel->end;
@@ -555,7 +554,7 @@ public:
 				NeighbourIterator last	= neighbors.end();
 
 				if (sort_per_distance)  std::partial_sort< NeighbourIterator >(first, first+object_count, last /*, DistanceCompare()*/ );
-				else		               std::nth_element < NeighbourIterator >(first, first+object_count, last /*, DistanceCompare()*/ ); 
+				else										std::nth_element < NeighbourIterator >(first, first+object_count, last /*, DistanceCompare()*/ ); 
 				k_distance = neighbors[object_count-1].distance;
 			} 
 			while (k_distance>sphere_radius && sphere_radius<max_distance);
@@ -609,7 +608,7 @@ public:
 			float						 distance;
 			for (int i=0; i<leaves_count; i++)
 			{
-				voxel = OctreeTemplate< Voxel, SCALAR_TYPE >::Voxel(leaves[i]);
+				voxel = TemplatedOctree::Voxel(leaves[i]);
 				begin = voxel->begin;
 				end		= voxel->end;
 				for ( ; begin<end; begin++)
@@ -622,17 +621,19 @@ public:
 					if (!distance_functor(*ref->pObject, sphere_center, distance, closest_point))
 						continue;
 
-					object_count++;
 					Mark(ref);
 					if ((distance!=0.0f || allow_zero_distance) && distance<sphere_radius)
+					{
+						object_count++;
 						neighbors.push_back( Neighbour(ref->pObject, closest_point, distance) );
+					}
 				} //end of for ( ; begin<end; begin++)
 			} // end of for (int i=0; i<leavesCount; i++)
 
 			NeighbourIterator first = neighbors.begin();
 			NeighbourIterator last	 = neighbors.end();
-			if (sort_per_distance)  std::partial_sort< NeighbourIterator >(first, first+object_count, last /*, DistanceCompare()*/ );
-			else										std::nth_element < NeighbourIterator >(first, first+object_count, last /*, DistanceCompare()*/ ); 
+			if (sort_per_distance)  std::partial_sort< NeighbourIterator >(first, last, last /*, DistanceCompare()*/ );
+			else										std::nth_element < NeighbourIterator >(first, last, last /*, DistanceCompare()*/ ); 
 			
 			return CopyQueryResults<OBJECT_POINTER_CONTAINER, DISTANCE_CONTAINER, POINT_CONTAINER>(neighbors, object_count, objects, distances, points);
 		};//end of GetInSphere
@@ -677,7 +678,7 @@ public:
 				object_count = 0;
 				for (int i=0; i<leaves_count; i++)
 				{
-					voxel = OctreeTemplate< Voxel, SCALAR_TYPE >::Voxel(leaves[i]);
+					voxel = TemplatedOctree::Voxel(leaves[i]);
 					begin = voxel->begin;
 					end		= voxel->end;
 					for ( ; begin<end; begin++)
@@ -700,10 +701,9 @@ public:
 		*/
 		void DrawOctree(vcg::Box3f &boundingBox, NodePointer n)
 		{
-      char _level;
-      _level= TemplatedOctree::Level(n);
+			char level = TemplatedOctree::Level(n);
 			NodePointer son;
-			if (rendering_settings.minVisibleDepth>_level)
+			if (rendering_settings.minVisibleDepth>level)
 			{
 				for (int s=0; s<8; s++)
 					if ((son=Son(n, s))!=0)
@@ -712,7 +712,7 @@ public:
 			else
 			{
 				vcg::glBoxWire(boundingBox);
-				if (_level<rendering_settings.maxVisibleDepth)
+				if (level<rendering_settings.maxVisibleDepth)
 					for (int s=0; s<8; s++)
 						if ((son=Son(n, s))!=0)
 							DrawOctree(TemplatedOctree::SubBox(boundingBox, s), son);
@@ -800,12 +800,9 @@ public:
 		)
 		{
 			// copy the nearest object into  
-			if (int(points.size())!=object_count) 
-			{
-				points.resize(object_count);
-				distances.resize(object_count);
-				objects.resize(object_count);
-			}
+			points.resize(		object_count	);
+			distances.resize(	object_count	);
+			objects.resize(		object_count	);
 
 			typename POINT_CONTAINER::iterator					iPoint		= points.begin();
 			typename DISTANCE_CONTAINER::iterator			  iDistance	= distances.begin();
