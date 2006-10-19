@@ -141,6 +141,7 @@ Pivot(MESH &_mesh, ScalarType _radius, ScalarType _mindist = 0.1, ScalarType _cr
       }      
       srand(time(NULL));
     }
+
     /* return false if you want to stop.\n */
 void buildMesh(CallBackPos *call = NULL, int interval = 512) {
      bool done = false;
@@ -188,6 +189,18 @@ bool seed(bool outside = true, int start = -1) {
         //some maximum tries. im lazy.
         return false;
       }
+      //find the closest visited or boundary
+      for(int i = 0; i < n; i++) {
+        if(dists[i] < radius) {
+          int id = targets[i];
+          CVertex &v = mesh.vert[id];
+          if(v.IsB() || v.IsV()) {
+            mesh.vert[start].SetD();
+            return false;
+          }
+        }
+      }
+
       int v0, v1, v2;
       bool found = false;
       //find a triplet that does not contains any other point
