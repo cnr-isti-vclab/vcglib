@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.10  2006/09/25 09:41:41  cignoni
+Added new version of pasodoble smoothing
+
 Revision 1.9  2006/02/06 10:45:47  cignoni
 Added missing typenames
 
@@ -209,18 +212,18 @@ public:
 };
 
 template<class MESH_TYPE>
-void LaplacianSmooth(MESH_TYPE &m, int step,bool SmoothSelected=false)
+void LaplacianSmooth(MESH_TYPE &m, int step, bool SmoothSelected=false)
 {
 	SimpleTempData<typename MESH_TYPE::VertContainer,LaplacianInfo<typename MESH_TYPE::ScalarType> > TD(m.vert);
   LaplacianInfo<typename MESH_TYPE::ScalarType> lpz;
 	lpz.sum=typename  MESH_TYPE::CoordType(0,0,0);
-	lpz.cnt=0;
+	lpz.cnt=1;
 	TD.Start(lpz);
 	for(int i=0;i<step;++i)
 	{
 		typename  MESH_TYPE::VertexIterator vi;
 		for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-			 TD[*vi]=lpz;
+			 TD[*vi].sum=(*vi).P();
 
 		typename  MESH_TYPE::FaceIterator fi;
 		for(fi=m.face.begin();fi!=m.face.end();++fi)
@@ -240,8 +243,12 @@ void LaplacianSmooth(MESH_TYPE &m, int step,bool SmoothSelected=false)
 					for(int j=0;j<3;++j)
 						if((*fi).IsB(j))
 							{
-								TD[(*fi).V(j)]=lpz;
-								TD[(*fi).V1(j)]=lpz;
+								//TD[(*fi).V(j)]=lpz;
+								//TD[(*fi).V1(j)]=lpz;
+								TD[(*fi).V0(j)].sum=(*fi).P0(j);
+								TD[(*fi).V1(j)].sum=(*fi).P1(j);
+                TD[(*fi).V0(j)].cnt=1;
+                TD[(*fi).V1(j)].cnt=1;
 							}
 
 			// se l'edge j e' di bordo si deve mediare solo con gli adiacenti
@@ -265,6 +272,11 @@ void LaplacianSmooth(MESH_TYPE &m, int step,bool SmoothSelected=false)
 	TD.Stop();
 };
 
+/*
+  Improved Laplacian Smoothing of Noisy Surface Meshes
+  J. Vollmer, R. Mencl, and H. Müller
+  EUROGRAPHICS Volume 18 (1999), Number 3
+*/
 
 template<class FLT> 
 class HCSmoothInfo 
@@ -275,7 +287,7 @@ public:
 	int cnt;
 };
 template<class MESH_TYPE>
-void HCSmooth(MESH_TYPE &m, int step)
+void HCSmooth(MESH_TYPE &m, int step, bool SmoothSelected=false )
 {
 	typename MESH_TYPE::ScalarType beta=0.5;
 	SimpleTempData<typename MESH_TYPE::VertContainer,HCSmoothInfo<typename MESH_TYPE::ScalarType> > TD(m.vert);
@@ -286,7 +298,7 @@ void HCSmooth(MESH_TYPE &m, int step)
 	TD.Start(lpz);
 	// First Loop compute the laplacian
 	typename  MESH_TYPE::FaceIterator fi;
-	for(fi=m.face.begin();fi!=m.face.end();++fi)
+	for(fi=m.face.begin();fi!=m.face.end();++fi)if(!(*fi).IsD())
 		{
 			for(int j=0;j<3;++j)
 			{
@@ -305,11 +317,11 @@ void HCSmooth(MESH_TYPE &m, int step)
 			}
 		}
 	typename  MESH_TYPE::VertexIterator vi;
-	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+	for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
 		 TD[*vi].sum/=(float)TD[*vi].cnt;
 	
 	// Second Loop compute average difference
-	for(fi=m.face.begin();fi!=m.face.end();++fi)
+	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
 		{
 			for(int j=0;j<3;++j)
 			{
@@ -327,7 +339,8 @@ void HCSmooth(MESH_TYPE &m, int step)
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 		{
 		 TD[*vi].dif/=(float)TD[*vi].cnt;
-		 (*vi).P()=TD[*vi].sum -((TD[*vi].sum-(*vi).P()*beta) + TD[*vi].dif)*(1.f-beta);
+		 if(!SmoothSelected || (*vi).IsS())
+	      (*vi).P()= TD[*vi].sum - (TD[*vi].sum - (*vi).P())*beta  + (TD[*vi].dif)*(1.f-beta);
 		}
 		 	
 	TD.Stop();
@@ -837,7 +850,7 @@ void PasoDobleSmooth(MeshType &m, int step, typename MeshType::ScalarType Sigma=
 
 }
 template<class MeshType>
-void PasoDobleSmoothFast(MeshType &m, int step, typename MeshType::ScalarType Sigma=0, int FitStep=50)
+void PasoDobleSmoothFast(MeshType &m, int step, typename MeshType::ScalarType Sigma=0, int FitStep=50, bool SmoothSelected =false)
 {
   typedef typename MeshType::ScalarType     ScalarType;
   typedef typename MeshType::CoordType     CoordType;
