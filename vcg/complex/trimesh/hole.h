@@ -24,6 +24,11 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2006/10/18 15:06:47  giec
+New policy for compute quality in TrivialEar.
+Bugfixed LeipaEar.
+Added new algorithm "selfintersection" with test for self intersection.
+
 Revision 1.7  2006/10/10 09:12:02  giec
 Bugfix and added a new type of ear (Liepa like)
 
@@ -1149,7 +1154,7 @@ namespace vcg {
 		class Triangulate2D 
 		{
 
-			static double Area(const vector<Point2d> &contour)
+      static double Area(const std::vector<Point2d> &contour)
 			{
 				int n = contour.size();
 
@@ -1188,7 +1193,7 @@ namespace vcg {
 				return ((aCROSSbp >= 0.0f) && (bCROSScp >= 0.0f) && (cCROSSap >= 0.0f));
 			};
 
-			static bool Snip(const vector<Point2d> &contour,int u,int v,int w,int n,int *V)
+      static bool Snip(const std::vector<Point2d> &contour,int u,int v,int w,int n,int *V)
 			{
 				int p;
 				double Ax, Ay, Bx, By, Cx, Cy, Px, Py;
@@ -1216,7 +1221,7 @@ namespace vcg {
 				return true;
 			}
 		public:
-			static bool Process(const vector<Point2d> &contour,vector<int> &result)
+      static bool Process(const std::vector<Point2d> &contour,vector<int> &result)
 			{
 				/* allocate and initialize list of Vertices in polygon */
 
