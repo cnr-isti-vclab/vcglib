@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.26  2006/09/14 08:39:07  ganovelli
+Intersection_sphere_sphere added
+
 Revision 1.25  2006/06/06 14:35:31  zifnab1974
 Changes for compilation on linux AMD64. Some remarks: Linux filenames are case-sensitive. _fileno and _filelength do not exist on linux
 
@@ -546,6 +549,19 @@ bool Intersection_Segment_Triangle( const vcg::Segment3<ScalarType> & seg,
 									Point3<ScalarType> & vert2,
 									ScalarType & a ,ScalarType & b, ScalarType & dist)
 {
+	//control intersection of bounding boxes
+	vcg::Box3<ScalarType> bb0,bb1;
+	bb0.Add(seg.P0());
+	bb0.Add(seg.P1());
+	bb1.Add(vert0);
+	bb1.Add(vert1);
+	bb1.Add(vert2);
+	Point3<ScalarType> inter;
+	if (!bb0.Collide(bb1))
+		return false;
+	if (!vcg::Intersection_Segment_Box(bb1,seg,inter))
+		return false;
+
 	//first set both directions of ray
 	vcg::Ray3<ScalarType> ray;
 	vcg::Point3<ScalarType> dir;
@@ -553,9 +569,9 @@ bool Intersection_Segment_Triangle( const vcg::Segment3<ScalarType> & seg,
 	dir.Normalize();
 	ray.Set(seg.P0(),dir);
 
-	//then control for each direction the interseciton with triangle
+	//then control for each direction the intersection with triangle
 	if ((Intersection<ScalarType>(ray,vert0,vert1,vert2,a,b,dist))
-		||(Intersection<ScalarType>(ray,vert0,vert2,vert1,a,b,dist)))
+		||(Intersection<ScalarType>(ray,vert1,vert0,vert2,b,a,dist)))
 		return (dist<(seg.P1()-seg.P0()).Norm());
 	else
 		return(false);
