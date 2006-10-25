@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2006/05/03 21:22:39  cignoni
+added missing Include
+
 Revision 1.20  2006/04/20 08:30:24  cignoni
 small GCC compiling issues
 
@@ -135,6 +138,7 @@ void Usage()
                                         "  -L         Remove duplicated and unreferenced vertices before processing\n"\
                                         "  -h         write files with histograms of error distribution\n"\
                                         "  -G         Use a static Uniform Grid as Search Structure (default)\n"\
+																				"  -O         Use an octree as a Search Structure\n"\
                                         "  -A         Use an AxisAligned Bounding Box Tree as Search Structure\n"\
                                         "  -H         Use an Hashed Uniform Grid as Search Structure\n"\
                                         "\n"
@@ -220,16 +224,17 @@ int main(int argc, char**argv)
         case 'c':  flags |= SamplingFlags::SAVE_ERROR;   break;
         case 'L':  CleaningFlag=true; break;
         case 'C':  ColorMin=float(atof(argv[i+1])); ColorMax=float(atof(argv[i+2])); i+=2; break;
-        case 'A':  flags |= SamplingFlags::USE_AABB_TREE; printf("Using AABB Tree as search structure\n"); break;
+        case 'A':  flags |= SamplingFlags::USE_AABB_TREE;   printf("Using AABB Tree as search structure\n");           break;
         case 'G':  flags |= SamplingFlags::USE_STATIC_GRID; printf("Using static uniform grid as search structure\n"); break;
-        case 'H':  flags |= SamplingFlags::USE_HASH_GRID; printf("Using hashed uniform grid as search structure\n"); break;
+        case 'H':  flags |= SamplingFlags::USE_HASH_GRID;   printf("Using hashed uniform grid as search structure\n"); break;
+				case 'O':  flags |= SamplingFlags::USE_OCTREE;      printf("Using octree as search structure\n");              break;
         default  :  printf(MSG_ERR_INVALID_OPTION, argv[i]);
           exit(0);
       }
       i++;
     }
 
-    if(!(flags & SamplingFlags::USE_HASH_GRID) && !(flags & SamplingFlags::USE_AABB_TREE) )
+		if(!(flags & SamplingFlags::USE_HASH_GRID) && !(flags & SamplingFlags::USE_AABB_TREE) && !(flags & SamplingFlags::USE_OCTREE))
        flags |= SamplingFlags::USE_STATIC_GRID;
 
     // load input meshes.

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2006/04/20 08:30:24  cignoni
+small GCC compiling issues
+
 Revision 1.21  2006/01/22 10:05:43  cignoni
 Corrected use of Area with the unambiguous DoubleArea
 
@@ -100,6 +103,7 @@ instantiate GridStaticPtr on the simplexClass template.
 #include <vcg/complex/trimesh/update/color.h>
 #include <vcg/space/index/grid_static_ptr.h>
 #include <vcg/space/index/aabb_binary_tree/aabb_binary_tree.h>
+#include <vcg/space/index/octree.h>
 #include <vcg/space/index/spatial_hashing.h>
 namespace vcg
 {
@@ -118,7 +122,8 @@ struct SamplingFlags{
 						INCLUDE_UNREFERENCED_VERTICES		= 0x0200,
             USE_STATIC_GRID                 = 0x0400,
             USE_HASH_GRID                   = 0x0800,
-            USE_AABB_TREE                   = 0x1000
+            USE_AABB_TREE                   = 0x1000,
+						USE_OCTREE                      = 0x2000
 				};
 	};
 // -----------------------------------------------------------------------------------------------
@@ -128,19 +133,19 @@ class Sampling
 public:
 
 private:
-	  typedef typename MetroMesh::CoordType CoordType;
-    typedef typename MetroMesh::ScalarType ScalarType;
-		typedef typename MetroMesh::VertexType  VertexType;
-    typedef typename MetroMesh::VertexPointer  VertexPointer;
-    typedef typename MetroMesh::VertexIterator VertexIterator;
-    typedef typename MetroMesh::FaceIterator   FaceIterator;
-    typedef typename MetroMesh::FaceType   FaceType;
-
-    typedef typename  MetroMesh::FaceContainer FaceContainer;
-	  typedef GridStaticPtr<FaceType, typename MetroMesh::ScalarType > MetroMeshGrid;
-	  typedef SpatialHashTable<FaceType, typename MetroMesh::ScalarType > MetroMeshHash;
-    typedef AABBBinaryTreeIndex<FaceType, typename MetroMesh::ScalarType, vcg::EmptyClass> MetroMeshAABB;
-
+	  typedef typename MetroMesh::CoordType				CoordType;
+    typedef typename MetroMesh::ScalarType			ScalarType;
+		typedef typename MetroMesh::VertexType			VertexType;
+    typedef typename MetroMesh::VertexPointer		VertexPointer;
+    typedef typename MetroMesh::VertexIterator	VertexIterator;
+    typedef typename MetroMesh::FaceIterator		FaceIterator;
+    typedef typename MetroMesh::FaceType				FaceType;
+    typedef typename MetroMesh::FaceContainer		FaceContainer;
+	  
+		typedef GridStaticPtr				<FaceType, typename MetroMesh::ScalarType >									MetroMeshGrid;
+	  typedef SpatialHashTable		<FaceType, typename MetroMesh::ScalarType >									MetroMeshHash;
+    typedef AABBBinaryTreeIndex	<FaceType, typename MetroMesh::ScalarType, vcg::EmptyClass>	MetroMeshAABB;
+		typedef Octree							<FaceType, typename MetroMesh::ScalarType >                 MetroMeshOctree;
 
     typedef Point3<typename MetroMesh::ScalarType> Point3x;
 
@@ -153,16 +158,17 @@ private:
     MetroMeshGrid   gS2;
     MetroMeshHash   hS2;
     MetroMeshAABB   tS2;
+		MetroMeshOctree oS2;
 
 
-		unsigned int n_samples_per_face             ;
+		unsigned int n_samples_per_face    ;
 		float n_samples_edge_to_face_ratio ;
 		float bbox_factor                  ;
 		float inflate_percentage			     ;
-		unsigned int min_size					             ;
-		int n_hist_bins                  ;
+		unsigned int min_size					     ;
+		int n_hist_bins                    ;
 		int print_every_n_elements         ;
-		int referredBit;
+		int referredBit                    ;
     // parameters
     double          dist_upper_bound;
     double					n_samples_per_area_unit;
@@ -301,6 +307,8 @@ float Sampling<MetroMesh>::AddSample(const Point3x &p )
       f=trimesh::GetClosestFace<MetroMesh,MetroMeshHash>(S2, hS2, p, dist_upper_bound, dist, normf, bestq, ip);
     if(Flags & SamplingFlags::USE_STATIC_GRID)
       f=trimesh::GetClosestFace<MetroMesh,MetroMeshGrid>(S2, gS2, p, dist_upper_bound, dist, normf, bestq, ip);
+		if (Flags & SamplingFlags::USE_OCTREE)
+			f=trimesh::GetClosestFace<MetroMesh,MetroMeshOctree>(S2, oS2, p, dist_upper_bound, dist, normf, bestq, ip);
 
     // update distance measures
     if(dist == dist_upper_bound)
@@ -619,6 +627,8 @@ void Sampling<MetroMesh>::Hausdorff()
         tS2.Set(S2.face.begin(),S2.face.end());
     if(Flags & SamplingFlags::USE_STATIC_GRID)
         gS2.Set(S2.face.begin(),S2.face.end());
+		if (Flags & SamplingFlags::USE_OCTREE)
+			  oS2.Set(S2.face.begin(),S2.face.end());
 
     // set bounding box
     bbox = S2.bbox;
