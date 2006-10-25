@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2006/10/25 09:47:53  pietroni
+added max dist control and constructor
+
 Revision 1.19  2006/10/02 07:47:57  cignoni
 Reverted to version 1.14 to nullify dangerous marfr960's changes
 
@@ -356,8 +359,6 @@ namespace vcg{
 			explored=to_explore;
 			_UpdateRadius();
 			Box3<ScalarType> b3d(p,radius);
-			/*b3d.Intersect(Si.bbox);
-			Si.BoxToIBox(b3d,to_explore);*/
 			Si.BoxToIBox(b3d,to_explore);
 			Box3i ibox(Point3i(0,0,0),Si.siz-Point3i(1,1,1));
 			to_explore.Intersect(ibox);
@@ -404,20 +405,20 @@ namespace vcg{
 			///inflate the bbox until find a valid bbox
 			while ((!_NextShell())&&(!End()));
 
-			if (!_EndGrid())
-				Refresh();///load elements form currect cell
+			while ((!End())&& Refresh()&&(!_EndGrid()))
+					_NextShell();
 
-			///until don't find an element
-			///that is inside the radius
-			while ((!End())&&(Dist()>radius))
-			{
-				if ((_NextShell())&&(!_EndGrid()))
-					Refresh();
-			}
+			/////until don't find an element
+			/////that is inside the radius
+			//while ((!End())&&(Dist()>radius))
+			//{
+			//	if ((_NextShell())&&(!_EndGrid()))
+			//		Refresh();
+			//}
 
-			//set to the last element ..the nearest
-			CurrentElem=Elems.end();
-			CurrentElem--;
+			////set to the last element ..the nearest
+			//CurrentElem=Elems.end();
+			//CurrentElem--;
 
 		}
 
@@ -427,7 +428,8 @@ namespace vcg{
 
 		///refresh Object found	also considering current shere radius, 
 		//and object comes from	previos	that are already in	the	stack
-		void Refresh()
+		//return false if no elements find
+		bool Refresh()
 		{
 			int	ix,iy,iz;
 			for( iz = to_explore.min.Z();iz <=	to_explore.max.Z(); ++iz)
@@ -460,24 +462,20 @@ namespace vcg{
 
 					}
 
-					std::sort(Elems.begin(),Elems.end());
+					////then control if there are more than 1 element
+					if (Elems.size()>1)
+						std::sort(Elems.begin(),Elems.end());
 
 					CurrentElem=Elems.end();
-					CurrentElem--;
+					if (Elems.size() > 0) {
+							CurrentElem--;
+					}
+
+				return((Elems.size()==0)||(Dist()>radius));
 		}
 
-		void operator ++()
+		/*void operator ++()
 		{
-			/*if (Dist()<=radius)
-			{
-				CurrentElem--;
-				Elems.pop_back();
-			}
-
-			while ((!End())&&(Dist()>radius))
-				if (_NextShell()&&!_EndGrid())
-					Refresh();*/
-
 			if (Elems.size()>0)
 			{
 				CurrentElem--;
@@ -486,8 +484,20 @@ namespace vcg{
 			while ((!End())&&(Dist()>radius))
 				if (_NextShell()&&!_EndGrid())
 					Refresh();
+		}*/
+		
+		void operator ++()
+		{
+			if (Elems.size()>0)
+			{
+				CurrentElem--;
+				Elems.pop_back();
+			}
+			else
+			while ((!End())&& Refresh()&&(!_EndGrid()))
+					_NextShell();
 		}
-
+		
 		ObjType &operator *(){return *((*CurrentElem).elem);}
 
 		//return distance of the element form the point if no element 
