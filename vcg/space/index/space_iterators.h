@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2006/10/02 07:47:57  cignoni
+Reverted to version 1.14 to nullify dangerous marfr960's changes
+
 Revision 1.14  2006/06/01 20:53:56  cignoni
 added missing header
 
@@ -54,6 +57,7 @@ namespace vcg{
 		typedef typename Spatial_Idexing::ObjType ObjType;
 		typedef typename vcg::Point3<ScalarType>  CoordType;
 		typedef typename Spatial_Idexing::CellIterator CellIterator;
+		ScalarType max_dist;
 
 		///control right bonding current cell index (only on initialization)
 		void _ControlLimits()
@@ -121,6 +125,12 @@ namespace vcg{
 		void _NextCell()
 		{
 			assert(!end);
+				ScalarType testmax_dist=(r.Origin()-goal).Norm();
+
+			if (testmax_dist>max_dist)
+				end=true;
+			else
+			{
 			if( t.X()<t.Y() && t.X()<t.Z() )
 			{
 				if(r.Direction().X()<0.0) 
@@ -146,14 +156,20 @@ namespace vcg{
 			dist=(r.Origin()-goal).Norm();
 			end=_controlEnd();
 		}
+		}
 
 	public:
 
 
 		///contructor
-		RayIterator(Spatial_Idexing &_Si,INTFUNCTOR _int_funct):Si(_Si),int_funct(_int_funct){
+		RayIterator(Spatial_Idexing &_Si,
+					INTFUNCTOR _int_funct
+					,const ScalarType &_max_dist)
+					:Si(_Si),int_funct(_int_funct)
+		{
+			max_dist=_max_dist;
 		};
-
+		
 		void SetMarker(TMARKER _tm)
 		{
 			tm=_tm;
@@ -202,7 +218,7 @@ namespace vcg{
 				ObjType* elem=&(*(*l));
 				ScalarType t;
 				CoordType Int;
-				if((!tm.IsMarked(elem))&&(int_funct((**l),r,t)))
+				if((!elem->IsD())&&(!tm.IsMarked(elem))&&(int_funct((**l),r,t)))
 				{
 					Int=r.Origin()+r.Direction()*t;
 					Elems.push_back(Entry_Type(elem,t,Int));
