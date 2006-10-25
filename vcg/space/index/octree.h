@@ -29,12 +29,15 @@
 #include <vector>
 #include <iterator>
 
+#ifdef __glut_h__
 #include <vcg/space/color4.h>
+#include <wrap/gl/space.h>
+#endif
+
 #include <vcg/space/index/base.h>
 #include <vcg/space/index/octree_template.h>
 #include <vcg/space/box3.h>
 #include <wrap/callback.h>
-#include <wrap/gl/space.h>
 
 namespace vcg
 {
@@ -131,25 +134,6 @@ namespace vcg
 				
 		typedef typename std::vector< Neighbour >::iterator   NeighbourIterator;
 
-		/*!
-		* Structure which holds the rendering settings
-		*/
-		struct OcreeRenderingSetting
-		{
-			OcreeRenderingSetting()
-			{
-				color						= vcg::Color4b(155, 155, 155, 255);
-				isVisible				= false;
-				minVisibleDepth	= 1;
-				maxVisibleDepth	= 4;
-			};
-
-			int						isVisible;
-			int						minVisibleDepth;
-			int						maxVisibleDepth;
-			vcg::Color4b	color;
-		};
-
 	protected:
 		/***********************************************
 		*     INNER DATA STRUCTURES AND PREDICATES     *
@@ -229,16 +213,6 @@ namespace vcg
 			ScalarType			distance;
 		};
 
-//		/*
-//		* The operator used for sorting the items in neighbors based on the distances
-//		*/
-//		struct DistanceCompare
-//		{
-//			inline bool operator()( const Neighbour &p1, const Neighbour &p2) const { return p1.distance<p2.distance; }
-//		}; //end of DistanceCompare
-
-
-
 public:
 		~Octree()
 		{
@@ -277,7 +251,7 @@ public:
 			TemplatedOctree::boundingBox = resulting_bb;
 
 			// Try to find a reasonable octree depth 
-			int dataset_dimension = std::distance(bObj, eObj);
+			int dataset_dimension = int(std::distance(bObj, eObj));
 
 			int primitives_per_voxel;
 			int depth = 4;
@@ -308,7 +282,7 @@ public:
 
 				while (object_bb.IsIn(hit_leaf))
 				{
-					int placeholder_index = placeholders.size();
+					int placeholder_index = int(placeholders.size());
 					placeholders.push_back( ObjectPlaceholder< NodeType >() ); 
 					placeholders[placeholder_index].z_order			 = BuildRoute(hit_leaf, route);
 					placeholders[placeholder_index].leaf_pointer = route[depth];
@@ -363,7 +337,7 @@ public:
 			}
 
 			// The octree is built, the dataset is sorted but only the leaves are indexed: 
-			// we propaget the indexing information bottom-up to the root
+			// we propagate the indexing information bottom-up to the root
 			IndexInnerNodes( TemplatedOctree::Root() );
 		} //end of Set
 
@@ -379,7 +353,7 @@ public:
 			const ScalarType							& max_distance,
 			ScalarType										& distance, 
 			CoordType											& point,
-			bool														allow_zero_distance = false
+			bool														allow_zero_distance = true
 		) 
 		{
 			BoundingBoxType query_bb;
@@ -389,81 +363,36 @@ public:
 			
 			std::vector< NodePointer > leaves;
 
-			unsigned int object_count;
-			int					 leaves_count;
-			ScalarType	 k_distance = TemplatedOctree::leafDiagonal;
+			//unsigned int object_count;
+			//int					 leaves_count;
 
 			IncrementMark();
-			
-			do
-			{
-				leaves.clear();
-				object_count = 0;
-				query_bb.Offset(k_distance);
-				sphere_radius += vcg::math::Max<ScalarType>(TemplatedOctree::leafDiagonal, k_distance);
-				
-				ContainedLeaves(query_bb, leaves, TemplatedOctree::Root(), TemplatedOctree::boundingBox);
-
-				leaves_count = int(leaves.size());
-				object_count = 0;
-				for (int i=0; i<leaves_count; i++)
-					object_count += TemplatedOctree::Voxel( leaves[i] )->count;
-			}
-			while (object_count==0 && sphere_radius<max_distance);
+			AdjustBoundingBox(query_bb, sphere_radius, max_distance, leaves, 1);
 
 			if (sphere_radius>max_distance)
 				return NULL;
-			
-
-			CoordType				 closest_point;
-			VoxelType				*voxel;
-			ObjectReference *ref;
-			int							 begin;
-			int							 end;
-			ScalarType			 dist;
 
 			std::vector< Neighbour > neighbors;
-			object_count = 0;
-			for (int i=0; i<leaves_count; i++)
-			{
-				voxel = TemplatedOctree::Voxel(leaves[i]);
-				begin = voxel->begin;
-				end		= voxel->end;
-				for ( ; begin<end; begin++)
-				{
-					ref				= &sorted_dataset[begin];
-					if (IsMarked(ref))
-						continue;
-
-					dist = max_distance;
-					if (!distance_functor(*ref->pObject, query_point, dist, closest_point))
-						continue;
-
-					Mark(ref);
-					if (dist!=ScalarType(0.0) || allow_zero_distance)
-						neighbors.push_back( Neighbour(ref->pObject, closest_point, dist) );
-
-				} //end of for ( ; begin<end; begin++)
-			} // end of for (int i=0; i<leavesCount; i++)
-
-			object_count = int(neighbors.size());
+			RetrieveContainedObjects(query_point, distance_functor, max_distance, allow_zero_distance, leaves, neighbors);
+			
 			typename std::vector< Neighbour >::iterator first = neighbors.begin();
-			typename std::vector< Neighbour >::iterator last	 = neighbors.end();
-			std::partial_sort< Neighbour >(first, first+object_count, last/*, DistanceCompare()*/);
+			typename std::vector< Neighbour >::iterator last	= neighbors.end();
+			std::partial_sort(first, first+1, last);
+			
 			distance	= neighbors[0].distance;
 			point			= neighbors[0].point;
 			return			neighbors[0].object;
 		}; //end of GetClosest
 
 		/*!
-		* Retrive the k closest element to the query point
+		* Retrieve the k closest element to the query point
 		*/
 		template <class OBJECT_POINT_DISTANCE_FUNCTOR, class OBJECT_MARKER, class OBJECT_POINTER_CONTAINER, class DISTANCE_CONTAINER, class POINT_CONTAINER>
 		unsigned int GetKClosest
 			(
 			OBJECT_POINT_DISTANCE_FUNCTOR & distance_functor, 
 			OBJECT_MARKER									& /*marker*/, 
-			unsigned int						  k, 
+			unsigned int										k, 
 			const CoordType								& query_point, 
 			const ScalarType							& max_distance,
 			OBJECT_POINTER_CONTAINER			& objects, 
@@ -482,82 +411,26 @@ public:
 			std::vector< Neighbour	 > neighbors;
 
 			unsigned int object_count;
-			int					 leaves_count;
-			float				 k_distance = TemplatedOctree::leafDiagonal;
-			do
-			{
-				IncrementMark();
+			float				 k_distance;
 
-				do
-				{
-					leaves.clear();
-					object_count = 0;
-					query_bb.Offset(k_distance);
-					sphere_radius += vcg::math::Max<float>(TemplatedOctree::leafDiagonal, k_distance);
+OBJECT_RETRIEVER:
+			IncrementMark();
+			AdjustBoundingBox(query_bb, sphere_radius, max_distance, leaves, k);
+			object_count = RetrieveContainedObjects(query_point, distance_functor, max_distance, allow_zero_distance, leaves, neighbors);
 
-					ContainedLeaves(query_bb, leaves, TemplatedOctree::Root(), TemplatedOctree::boundingBox);
+			if (sphere_radius<max_distance && object_count<k)
+				goto OBJECT_RETRIEVER;
 
-					leaves_count = int(leaves.size());
-					object_count = 0;
-					for (int i=0; i<leaves_count; i++)
-						object_count += TemplatedOctree::Voxel( leaves[i] )->count;
-				}
-				while (object_count<k && sphere_radius<max_distance); // TODO check the termination condintion
+			NeighbourIterator first = neighbors.begin();
+			NeighbourIterator last	= neighbors.end();
 
-				// i punti contenuti nelle foglie sono sufficienti. 
-				// seleziono solamente i k punti più vicini.
-				CoordType				 closest_point;
-				VoxelType				*voxel;
-				ObjectReference *ref;
-				int							 begin;
-				int							 end;
-				float						 distance;
-
-				neighbors.clear();
-				object_count = 0;
-				for (int i=0; i<leaves_count; i++)
-				{
-					voxel = TemplatedOctree::Voxel(leaves[i]);
-					begin = voxel->begin;
-					end		= voxel->end;
-					for ( ; begin<end; begin++)
-					{
-						ref				= &sorted_dataset[begin];
-						if (IsMarked(ref))
-							continue;
-						
-						distance = max_distance;
-						if (!distance_functor(*ref->pObject, query_point, distance, closest_point))
-							continue;
-
-						Mark(ref);
-						if ((distance!=0.0f || allow_zero_distance))
-							neighbors.push_back( Neighbour(ref->pObject, closest_point, distance) );
-					} //end of for ( ; begin<end; begin++)
-				} // end of for (int i=0; i<leavesCount; i++)
-
-				object_count = int(neighbors.size());
-				if (sphere_radius<max_distance)
-				{
-					if (object_count<k)
-					{
-						k_distance = 2.0f*sphere_radius;
-						continue;
-					}
-					else
-						object_count = k;
-				}
-				else 
-					object_count=int(neighbors.size());
-
-				NeighbourIterator first = neighbors.begin();
-				NeighbourIterator last	= neighbors.end();
-
-				if (sort_per_distance)  std::partial_sort< NeighbourIterator >(first, first+object_count, last /*, DistanceCompare()*/ );
-				else										std::nth_element < NeighbourIterator >(first, first+object_count, last /*, DistanceCompare()*/ ); 
-				k_distance = neighbors[object_count-1].distance;
-			} 
-			while (k_distance>sphere_radius && sphere_radius<max_distance);
+			object_count = vcg::math::Min(k, object_count);
+			if (sort_per_distance)  std::partial_sort< NeighbourIterator >(first, first+object_count, last );
+			else										std::nth_element < NeighbourIterator >(first, first+object_count, last );
+			
+			k_distance = neighbors[object_count-1].distance;
+			if (k_distance>sphere_radius && sphere_radius<max_distance)
+				goto OBJECT_RETRIEVER;
 
 			return CopyQueryResults<OBJECT_POINTER_CONTAINER, DISTANCE_CONTAINER, POINT_CONTAINER>(neighbors, object_count, objects, distances, points);
 		}; //end of GetKClosest
@@ -590,9 +463,6 @@ public:
 			std::vector< NodePointer > leaves;
 			std::vector< Neighbour	 > neighbors;
 
-			unsigned int object_count = 0;
-			//float				 k_distance		= TemplatedOctree::leafDiagonal;
-
 			IncrementMark();
 			ContainedLeaves(query_bb, leaves, TemplatedOctree::Root(), TemplatedOctree::boundingBox);
 
@@ -600,40 +470,12 @@ public:
 			if (leaves_count==0)
 				return 0;
 
-			CoordType				 closest_point;
-			VoxelType				*voxel;
-			ObjectReference *ref;
-			int							 begin;
-			int							 end;
-			float						 distance;
-			for (int i=0; i<leaves_count; i++)
-			{
-				voxel = TemplatedOctree::Voxel(leaves[i]);
-				begin = voxel->begin;
-				end		= voxel->end;
-				for ( ; begin<end; begin++)
-				{
-					ref				= &sorted_dataset[begin];
-					if (IsMarked(ref))
-						continue;
-					
-					distance = sphere_radius;
-					if (!distance_functor(*ref->pObject, sphere_center, distance, closest_point))
-						continue;
-
-					Mark(ref);
-					if ((distance!=0.0f || allow_zero_distance) && distance<sphere_radius)
-					{
-						object_count++;
-						neighbors.push_back( Neighbour(ref->pObject, closest_point, distance) );
-					}
-				} //end of for ( ; begin<end; begin++)
-			} // end of for (int i=0; i<leavesCount; i++)
+			int object_count = RetrieveContainedObjects(sphere_center, distance_functor, sphere_radius, allow_zero_distance, leaves, neighbors);
 
 			NeighbourIterator first = neighbors.begin();
-			NeighbourIterator last	 = neighbors.end();
-			if (sort_per_distance)  std::partial_sort< NeighbourIterator >(first, last, last /*, DistanceCompare()*/ );
-			else										std::nth_element < NeighbourIterator >(first, last, last /*, DistanceCompare()*/ ); 
+			NeighbourIterator last	= neighbors.end();
+			if (sort_per_distance)  std::partial_sort< NeighbourIterator >(first, first+object_count, last );
+			else										std::nth_element < NeighbourIterator >(first, first+object_count, last );
 			
 			return CopyQueryResults<OBJECT_POINTER_CONTAINER, DISTANCE_CONTAINER, POINT_CONTAINER>(neighbors, object_count, objects, distances, points);
 		};//end of GetInSphere
@@ -661,33 +503,23 @@ public:
 				unsigned int object_count;
 				int					 leaves_count;
 			
-				ContainedLeaves(query_bounding_box, leaves, TemplatedOctree::Root(), TemplatedOctree::boundingBox);
+				TemplatedOctree::ContainedLeaves(query_bounding_box, leaves, TemplatedOctree::Root(), TemplatedOctree::boundingBox);
 				leaves_count = int(leaves.size());
 				if (leaves_count==0)
-				{
-					objects.clear();
 					return 0;
-				}
 				
 				IncrementMark();
-
-				VoxelType				*voxel;
-				ObjectReference *ref;
-				int							 begin;
-				int							 end;
-				object_count = 0;
 				for (int i=0; i<leaves_count; i++)
 				{
-					voxel = TemplatedOctree::Voxel(leaves[i]);
-					begin = voxel->begin;
-					end		= voxel->end;
+					VoxelType *voxel = TemplatedOctree::Voxel(leaves[i]);
+					int begin = voxel->begin;
+					int end		= voxel->end;
 					for ( ; begin<end; begin++)
 					{
-						ref	= &sorted_dataset[begin];
+						ObjectReference *ref	= &sorted_dataset[begin];
 						if (IsMarked(ref))
 							continue;
 						
-						object_count++;
 						Mark(ref);
 						objects.push_back(ref->pObject);
 					} //end of for ( ; begin<end; begin++)
@@ -695,29 +527,6 @@ public:
 
 				return int(objects.size());
 			}; //end of GetInBox
-
-		/*
-		* Draw the octree in a valid OpenGL context according to the rendering settings
-		*/
-		void DrawOctree(vcg::Box3f &boundingBox, NodePointer n)
-		{
-			char level = TemplatedOctree::Level(n);
-			NodePointer son;
-			if (rendering_settings.minVisibleDepth>level)
-			{
-				for (int s=0; s<8; s++)
-					if ((son=Son(n, s))!=0)
-						DrawOctree(TemplatedOctree::SubBox(boundingBox, s), son);
-			}
-			else
-			{
-				vcg::glBoxWire(boundingBox);
-				if (level<rendering_settings.maxVisibleDepth)
-					for (int s=0; s<8; s++)
-						if ((son=Son(n, s))!=0)
-							DrawOctree(TemplatedOctree::SubBox(boundingBox, s), son);
-			}
-		};
 
 	protected:
 		/*!
@@ -732,8 +541,17 @@ public:
 		unsigned char	*marks;
 		unsigned char  global_mark;
 
-	public:
-		OcreeRenderingSetting					rendering_settings;
+		/*!
+		* The expansion factor used to solve the spatial queries
+		* The current expansion factor is computed on the basis of the last expansion factor
+		* and on the history of these values, through the following heuristic:
+		*		current_expansion_factor = alpha*last_expansion_factor + (1.0f-alpha)*mean_expansion_factor
+		* where alpha = 1.0/3.0;
+		*/
+		//float last_expansion_factor;
+		//float mean_expansion_factor;
+		//float ALPHA;
+		//float ONE_MINUS_ALPHA;
 
 	protected:
 		/*!
@@ -770,10 +588,10 @@ public:
 			// Altrimenti espando il bounding box.
 			query_bb.Set(query_point);
 
-			// Il raggio della sfera centrata nel punto query
+			// the radius of the sphere centered in query
 			sphere_radius = 0.0f;
 
-			// se il bounding-box non interseca il bounding-box dell'octree, lo espando subito
+			// if the bounding-box doesn't intersect the bounding-box of the octree, then it must be immediately expanded
 			if (!query_bb.IsIn(query_point))
 			{
 				do
@@ -781,9 +599,84 @@ public:
 					query_bb.Offset(TemplatedOctree::leafDiagonal); 
 					sphere_radius += TemplatedOctree::leafDiagonal;
 				}
-				while ( !TemplatedOctree::boundingBox.Collide(query_bb) || sphere_radius>max_distance); // TODO check the termination condintion
+				while ( !TemplatedOctree::boundingBox.Collide(query_bb) || sphere_radius>max_distance);
 			}
 			return (sphere_radius<=max_distance);
+		};
+
+		/*!
+		* Modify the bounding-box used during the query until either at least k points 
+		*	are contained inside the box or the box radius became greater than the threshold distance
+		* Return the number of leaves contained inside the bounding-box
+		*/
+		inline int AdjustBoundingBox
+			(
+				BoundingBoxType							&	query_bb,
+				ScalarType									&	sphere_radius,
+				const ScalarType							max_allowed_distance,
+				std::vector< NodePointer >	&	leaves,
+				const int											required_object_count
+			)
+		{
+			int leaves_count;
+			int object_count;
+			do
+			{
+				leaves.clear();
+
+				query_bb.Offset(TemplatedOctree::leafDiagonal);
+				sphere_radius+= TemplatedOctree::leafDiagonal;
+
+				ContainedLeaves(query_bb, leaves, TemplatedOctree::Root(), TemplatedOctree::boundingBox);
+
+				leaves_count = int(leaves.size());
+				object_count = 0;
+				for (int i=0; i<leaves_count; i++)
+					object_count += TemplatedOctree::Voxel( leaves[i] )->count;
+			}
+			while (object_count<required_object_count && sphere_radius<max_allowed_distance);
+
+			return leaves_count;
+		}
+
+		/*!
+		* Retrieves the objects contained inside the leaves whose distance isn't greater than max_distance.
+		*	Returns the number of valid objects
+		*/
+		template < class OBJECT_POINT_DISTANCE_FUNCTOR >
+		inline int RetrieveContainedObjects
+			(
+			const CoordType									query_point, 
+			OBJECT_POINT_DISTANCE_FUNCTOR	& distance_functor, 
+			const ScalarType								max_allowed_distance, 
+			bool														allow_zero_distance, 
+			std::vector< NodePointer	>		&	leaves, 
+			std::vector< Neighbour		>		&	neighbors
+			)
+		{
+			CoordType	closest_point;
+			neighbors.clear();
+			for (int i=0, leaves_count=int(leaves.size()); i<leaves_count; i++)
+			{
+				VoxelType	*voxel	= TemplatedOctree::Voxel(leaves[i]);
+				int begin					= voxel->begin;
+				int end						= voxel->end;
+				for ( ; begin<end; begin++)
+				{
+					ObjectReference * ref	= &sorted_dataset[begin];
+					if (IsMarked(ref))
+						continue;
+
+					ScalarType distance = max_allowed_distance;
+					if (!distance_functor(*ref->pObject, query_point, distance, closest_point))
+						continue;
+
+					Mark(ref);
+					if ((distance!=ScalarType(0.0) || allow_zero_distance))
+						neighbors.push_back( Neighbour(ref->pObject, closest_point, distance) );
+				} //end of for ( ; begin<end; begin++)
+			} // end of for (int i=0; i<leavesCount; i++)
+			return int(neighbors.size());
 		};
 
 		/*!
@@ -839,6 +732,57 @@ public:
 			}
 		}; // end of IndexInnerNodes
 	};
+
+#ifdef __glut_h__
+	/************************************************************************/
+	/* Rendering                                                            */
+	/************************************************************************/
+protected:
+	/*!
+	* Structure which holds the rendering settings
+	*/
+	struct OcreeRenderingSetting
+	{
+		OcreeRenderingSetting()
+		{
+			color						= vcg::Color4b(155, 155, 155, 255);
+			isVisible				= false;
+			minVisibleDepth	= 1;
+			maxVisibleDepth	= 4;
+		};
+
+		int						isVisible;
+		int						minVisibleDepth;
+		int						maxVisibleDepth;
+		vcg::Color4b	color;
+	};
+
+public:
+	/*
+	* Draw the octree in a valid OpenGL context according to the rendering settings
+	*/
+	void DrawOctree(vcg::Box3f &boundingBox, NodePointer n)
+	{
+		char level = TemplatedOctree::Level(n);
+		NodePointer son;
+		if (rendering_settings.minVisibleDepth>level)
+		{
+			for (int s=0; s<8; s++)
+				if ((son=Son(n, s))!=0)
+					DrawOctree(TemplatedOctree::SubBox(boundingBox, s), son);
+		}
+		else
+		{
+			vcg::glBoxWire(boundingBox);
+			if (level<rendering_settings.maxVisibleDepth)
+				for (int s=0; s<8; s++)
+					if ((son=Son(n, s))!=0)
+						DrawOctree(TemplatedOctree::SubBox(boundingBox, s), son);
+		}
+	};
+
+		OcreeRenderingSetting					rendering_settings;
+#endif
 } //end of namespace vcg
 
 #endif //VCG_SPACE_INDEX_OCTREE_H
