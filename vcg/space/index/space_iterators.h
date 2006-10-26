@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2006/10/25 15:59:29  pietroni
+corrected bug in closest iterator.. if doesn't find any alement at first cells examinated continue until find some element
+
 Revision 1.20  2006/10/25 09:47:53  pietroni
 added max dist control and constructor
 
@@ -485,7 +488,10 @@ namespace vcg{
 				if (_NextShell()&&!_EndGrid())
 					Refresh();
 		}*/
-		
+
+		bool ToUpdate()
+		{return ((Elems.size()==0)||(Dist()>radius));}
+
 		void operator ++()
 		{
 			if (Elems.size()>0)
@@ -493,7 +499,7 @@ namespace vcg{
 				CurrentElem--;
 				Elems.pop_back();
 			}
-			else
+			if ((!End())&& ToUpdate())
 			while ((!End())&& Refresh()&&(!_EndGrid()))
 					_NextShell();
 		}
