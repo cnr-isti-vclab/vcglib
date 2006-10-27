@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.31  2006/10/17 06:54:14  fiorin
+Added #include <assert.h>
+
 Revision 1.30  2006/10/02 09:31:47  ponchio
 usual typename missing
 
@@ -285,13 +288,13 @@ namespace vcg {
 					for (fi=m.face.begin(); fi!=m.face.end(); ++fi)
 						if(!(*fi).IsD())
 						{
-							if(FaceType::HasFFAdjacency())
+							if(HasFFAdjacency(m))
 							{
 								if ((*fi).cFFp(0)!=0) pu.Update((*fi).FFp(0));
 								if ((*fi).cFFp(1)!=0) pu.Update((*fi).FFp(1));
 								if ((*fi).cFFp(2)!=0) pu.Update((*fi).FFp(2));
 							}
-							if(FaceType::HasVFAdjacency())
+							if(HasVFAdjacency(m))
 							{
 								//update pointers to chain of face incident in a vertex
 								//update them only if they are different from zero
