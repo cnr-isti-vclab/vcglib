@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2006/10/16 08:49:29  cignoni
+Better managment of resize overloading when reducing the size of a vector
+
 Revision 1.14  2006/10/09 20:20:55  cignoni
 Added some missing Add***Ocf() for the default case.
 
@@ -447,7 +450,21 @@ public:
 
   namespace tri
   {
-    template < class VertContainerType, class FaceType >
+	template < class VertContainerType, class FaceType >
+	  bool HasVFAdjacency (const TriMesh < VertContainerType , face::vector_ocf< FaceType > > & m) 
+	{
+	  if(FaceType::HasVFAdjacencyOcf()) return m.face.IsVFAdjacencyEnabled();
+	  else return FaceType::FaceType::HasVFAdjacency();
+	}
+
+	template < class VertContainerType, class FaceType >
+	  bool HasFFAdjacency (const TriMesh < VertContainerType , face::vector_ocf< FaceType > > & m) 
+	{
+	  if(FaceType::HasFFAdjacencyOcf()) return m.face.IsFFAdjacencyEnabled();
+	  else return FaceType::FaceType::HasFFAdjacency();
+	}
+
+	template < class VertContainerType, class FaceType >
       bool HasPerWedgeTexture (const TriMesh < VertContainerType , face::vector_ocf< FaceType > > & m) 
     {
       if(FaceType::HasWedgeTextureOcf()) return m.face.IsWedgeTexEnabled();
