@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2006/07/10 14:26:22  cignoni
+Minor. Added a disambiguating this at the constructor of trimesh
+
 Revision 1.21  2006/05/25 04:40:57  cignoni
 Updated HasPerFaceColor/Quality to the new style with mesh param.
 
@@ -175,7 +178,7 @@ public:
 
 
 	/// Default constructor
-	TriMesh():shot(this->camera)
+	TriMesh():shot(camera)
 	{
 		fn = vn = 0;
 		imark = 0;
@@ -325,6 +328,11 @@ bool HasPerFaceMark (const TriMesh < VertContainerType , FaceContainerType> & /*
 template < class VertContainerType, class FaceContainerType >
 bool HasPerFaceQuality (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return FaceContainerType::value_type::HasFaceQuality();}
 
+template < class VertContainerType, class FaceContainerType >
+bool HasFFAdjacency (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return FaceContainerType::value_type::HasFFAdjacency();}
+
+template < class VertContainerType, class FaceContainerType >
+bool HasVFAdjacency (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return FaceContainerType::value_type::HasVFAdjacency();}
 /*@}*/
 /*@}*/
 }	 // end namespace
