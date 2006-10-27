@@ -32,9 +32,9 @@ class CVertexOcf;
 // OCF Optional Component Fast 
 // OCC Optional Component Compact
 
-class CVertex     : public VertexSimp2< CVertex,    CEdge, CFace,    vert::Coord3f, vert::Normal3f >{};
-class CVertexOcf  : public VertexSimp2< CVertexOcf, CEdge, CFaceOcf, vert::Coord3f, vert::Normal3f >{};
-class CVertexOcc  : public VertexSimp2< CVertexOcc, CEdge, CFaceOcc, vert::Coord3f, vert::Normal3f >{};
+class CVertex     : public VertexSimp2< CVertex,    CEdge, CFace,    vert::Coord3f, vert::BitFlags,vert::Normal3f >{};
+class CVertexOcf  : public VertexSimp2< CVertexOcf, CEdge, CFaceOcf, vert::Coord3f, vert::BitFlags,vert::Normal3f >{};
+class CVertexOcc  : public VertexSimp2< CVertexOcc, CEdge, CFaceOcc, vert::Coord3f, vert::BitFlags,vert::Normal3f >{};
 
 class CFace       : public FaceSimp2< CVertex,    CEdge, CFace,                   face::FFAdj,    face::VertexRef, face::BitFlags, face::Normal3f > {};
 class CFaceOcf    : public FaceSimp2< CVertexOcf, CEdge, CFaceOcf, face::InfoOcf, face::FFAdjOcf, face::VertexRef, face::BitFlags, face::Normal3fOcf > {};
@@ -50,12 +50,12 @@ int main(int , char **)
 {
   CMesh cm;
   CMeshOcf cmof;
-	CMeshOcc cmoc;
+//	CMeshOcc cmoc;
 
 
   tri::Tetrahedron(cm);
   tri::Tetrahedron(cmof);
- 	tri::Tetrahedron(cmoc);
+// 	tri::Tetrahedron(cmoc);
  
   printf("Generated mesh has %i vertices and %i triangular faces\n",cm.vn,cm.fn);
   
@@ -63,25 +63,25 @@ int main(int , char **)
   /// The normal of a vertex v is the weigthed average of the normals of the faces incident on v.
   /// normals are not normalized
 
-	cmoc.face.EnableAttribute<CFaceOcc::FFAdjType>();  
+//	cmoc.face.EnableAttribute<CFaceOcc::FFAdjType>();  
 	cmof.face.EnableFFAdjacency();
 
 
   printf("Size of CFace            %3i\n",sizeof(CFace));
   printf("Size of CFaceOcf         %3i\n",sizeof(CFaceOcf));
-  printf("Size of CFaceOcc         %3i\n",sizeof(CFaceOcc));
+//  printf("Size of CFaceOcc         %3i\n",sizeof(CFaceOcc));
  
   vcg::tri::UpdateTopology<CMesh   >::FaceFace(cm);
   vcg::tri::UpdateTopology<CMeshOcf>::FaceFace(cmof);
-  vcg::tri::UpdateTopology<CMeshOcc>::FaceFace(cmoc);
+//  vcg::tri::UpdateTopology<CMeshOcc>::FaceFace(cmoc);
 	
   vcg::tri::UpdateFlags<CMesh   >::FaceBorderFromFF(cm);
 	vcg::tri::UpdateFlags<CMeshOcf>::FaceBorderFromFF(cmof);
- 	vcg::tri::UpdateFlags<CMeshOcc>::FaceBorderFromFF(cmoc);
+ //	vcg::tri::UpdateFlags<CMeshOcc>::FaceBorderFromFF(cmoc);
 
 	vcg::tri::UpdateNormals<CMesh   >::PerVertexNormalized(cm);
 	vcg::tri::UpdateNormals<CMeshOcf>::PerVertexNormalized(cmof);
-	vcg::tri::UpdateNormals<CMeshOcc>::PerVertexNormalized(cmoc);
+//	vcg::tri::UpdateNormals<CMeshOcc>::PerVertexNormalized(cmoc);
 
 
   printf("Normal of face 0 is %f %f %f\n\n",cm.face[0].N()[0],cm.face[0].N()[1],cm.face[0].N()[2]);
@@ -93,7 +93,7 @@ int main(int , char **)
     t1=clock();
     Refine(cmof,MidPointButterfly<CMeshOcf>(),0); 
     t2=clock();
-    Refine(cmoc,MidPointButterfly<CMeshOcc>(),0);	
+//    Refine(cmoc,MidPointButterfly<CMeshOcc>(),0);	
 		t3=clock();
 		printf("Mesh is %i %i in Std:%i Ocf:%i Occ:%i\n",cm.vn,cm.fn,t1-t0,t2-t1,t3-t2);
   }
