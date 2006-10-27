@@ -28,6 +28,9 @@ This file contains two function providing the standard way to do picking using o
 
   History
 $Log: not supported by cvs2svn $
+Revision 1.3  2006/02/28 13:25:48  ponchio
+for(ii... -> for(int ii
+
 Revision 1.2  2006/02/13 13:06:34  cignoni
 Removed glut. Added ifdef guards and namespace.
 Added bool return value to the pick function
@@ -54,7 +57,7 @@ int Pick(	const int & x, const int &y,
 	{
 		result.clear();
 		long hits;	
-		int sz=m.size()*5;
+		int sz = int(m.size())*5;
 		unsigned int *selectBuf =new unsigned int[sz];
 		glSelectBuffer(sz, selectBuf);
 		glRenderMode(GL_SELECT);
@@ -107,7 +110,7 @@ int Pick(	const int & x, const int &y,
 		}
 
 		delete [] selectBuf;
-		return result.size();
+		return int(result.size());
 	}
 
 // 10/2/06 Slightly changed the interface. 
