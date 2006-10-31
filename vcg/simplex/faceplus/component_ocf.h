@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2006/10/27 14:15:10  ganovelli
+added overrides to HasFFAddAdjacency and HasVFAddAdjacency
+
 Revision 1.15  2006/10/16 08:49:29  cignoni
 Better managment of resize overloading when reducing the size of a vector
 
@@ -140,12 +143,8 @@ public:
 	// l'allocazione in memoria del container
 	void push_back(const VALUE_TYPE & v)
   {
-    ThisTypeIterator oldbegin=(*this).begin();
-    ThisTypeIterator oldend=(*this).end();
     BaseType::push_back(v);
-    if(oldbegin!=(*this).begin()) _updateOVP((*this).begin(),(*this).end());
-                     else _updateOVP(oldend, (*this).end());
-
+	BaseType::back()._ovp = this;
     if (ColorEnabled)       CV.push_back(vcg::Color4b(vcg::Color4b::White));
     if (MarkEnabled)        MV.push_back(0);
     if (NormalEnabled)      NV.push_back(typename VALUE_TYPE::NormalType());
@@ -156,13 +155,13 @@ public:
 	void pop_back();
   void resize(const unsigned int & _size) 
   {
-    ThisTypeIterator oldbegin=(*this).begin();
-    ThisTypeIterator oldend=(*this).end();
-    const unsigned int  oldsize=(*this).size();
+	int oldsize = BaseType::size();
     BaseType::resize(_size);
-    if(oldbegin!=(*this).begin()) _updateOVP((*this).begin(),(*this).end());
-                     else if(oldsize<_size) _updateOVP(oldend, (*this).end());
-
+	if(oldsize<_size){
+		ThisTypeIterator firstnew = BaseType::begin();
+		advance(firstnew,oldsize);
+		_updateOVP(firstnew,(*this).end());
+	}  
     if (ColorEnabled)       CV.resize(_size);
     if (MarkEnabled)        MV.resize(_size);
     if (NormalEnabled)      NV.resize(_size);

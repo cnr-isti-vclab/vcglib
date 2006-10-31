@@ -24,6 +24,11 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2006/02/28 11:59:55  ponchio
+g++ compliance:
+
+begin() -> (*this).begin() and for end(), size(), Base(), Index()
+
 Revision 1.2  2005/12/12 11:17:32  cignoni
 Corrected update function, now only the needed simplexes should be updated.
 
@@ -70,38 +75,33 @@ public:
 	// l'allocazione in memoria del container
 	void push_back(const VALUE_TYPE & v)
   {
-    ThisTypeIterator oldbegin=(*this).begin();
-    ThisTypeIterator oldend=(*this).end();
     BaseType::push_back(v);
-    if(oldbegin!=(*this).begin()) _updateOVP((*this).begin(),(*this).end());
-                     else _updateOVP(oldend, (*this).end());
+	BaseType::back()._ovp = this;
   }
 	void pop_back();
   void resize(const unsigned int & _size) 
   {
-    ThisTypeIterator oldbegin=(*this).begin();
-    ThisTypeIterator oldend=(*this).end();
+	int oldsize = BaseType::size();
     BaseType::resize(_size);
-    if(oldbegin!=(*this).begin()) _updateOVP((*this).begin(),(*this).end());
-                     else _updateOVP(oldend, (*this).end());
-    if(ColorEnabled) CV.resize(_size);
+	if(oldsize<_size){
+		ThisTypeIterator firstnew = BaseType::begin();
+		advance(firstnew,oldsize);
+		_updateOVP(firstnew,(*this).end());
+	}  
+	if(ColorEnabled) CV.resize(_size);
     if(NormalEnabled) NV.resize(_size);
-    
    }
   void reserve(const unsigned int & _size)
   {
-    ThisTypeIterator oldbegin=(*this).begin();
     BaseType::reserve(_size);
     if (ColorEnabled) CV.reserve(_size);
     if (NormalEnabled) NV.reserve(_size);
-    if(oldbegin!=(*this).begin()) _updateOVP((*this).begin(),(*this).end());
   }
 
  void _updateOVP(ThisTypeIterator lbegin, ThisTypeIterator lend)
 {
     ThisTypeIterator vi;
     for(vi=lbegin;vi!=lend;++vi)
-    //for(vi=(*this).begin();vi!=(*this).end();++vi)
         (*vi)._ovp=this;
  }
 ////////////////////////////////////////
