@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2006/10/20 07:44:45  cignoni
+Added missing std::
+
 Revision 1.8  2006/10/18 15:06:47  giec
 New policy for compute quality in TrivialEar.
 Bugfixed LeipaEar.
@@ -909,7 +912,7 @@ namespace vcg {
 		{
 			MESH::FaceIterator fi;
 			std::vector<tri::HoleInfo<MESH> > vinfo;
-			int UBIT = fi->LastBitFlag();
+			int UBIT = MESH::FaceType::LastBitFlag();
 
 			for(fi = m.face.begin(); fi!=m.face.end(); ++fi)
 			{
