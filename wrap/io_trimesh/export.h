@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2006/07/09 05:32:15  cignoni
+Uncommented obj export. Now obj saving is enabled by default
+
 Revision 1.4  2006/03/29 08:14:20  corsini
 Add LoadMask to OFF importer
 
@@ -76,8 +79,8 @@ public:
 static bool FileExtension(std::string filename,  std::string extension)
 {
   std::locale loc1 ;
-  std::use_facet<std::ctype<char> > ( loc1 ).tolower(&*filename.begin(),&*filename.end());
-  std::use_facet<std::ctype<char> > ( loc1 ).tolower(&*extension.begin(),&*extension.end());
+  std::use_facet<std::ctype<char> > ( loc1 ).tolower(&*filename.begin(),&(*filename.rbegin()));
+  std::use_facet<std::ctype<char> > ( loc1 ).tolower(&*extension.begin(),&(*extension.rbegin()));
   std::string end=filename.substr(filename.length()-extension.length(),extension.length());
   return end==extension;
 }
