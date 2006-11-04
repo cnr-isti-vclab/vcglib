@@ -32,7 +32,9 @@ public:
 		scenelst.at(0).appendChild(vsnode);
 
 		QDomNodeList vsscene = info->doc->elementsByTagName("library_visual_scenes"); 
+		int vsscene_size = vsscene.size();
 		assert(vsscene.size() == 1);
+		removeChildNode(vsscene,"visual_scene","id","vcg-scene-node");
 		QDomElement vslnode = info->doc->createElement("visual_scene");
 		vslnode.setAttribute("id","vcg-scene-node");
 		vslnode.setAttribute("name","vcg-untitled");
@@ -53,6 +55,8 @@ public:
 		
 		/*QDomElement mshnode;
 		mshnode.setTagName("mesh");*/
+		
+		removeChildNode(geolib.at(0),"geometry","id","vcg-mesh-lib");
 		QDomElement geonode = info->doc->createElement("geometry");
 		geonode.setAttribute("id","vcg-mesh-lib");
 		geonode.setAttribute("name","vcg-mesh");
@@ -65,22 +69,26 @@ public:
 
 		QDomElement arrayposnode = info->doc->createElement("float_array");
 		arrayposnode.setAttribute("id","vcg-mesh-positions-array");
-		QString countst;
-		arrayposnode.setAttribute("count",countst.number(m.vert.size() * 3));
+		
 		QString arrp;
 		QString arrn;
+		int nvert = 0;
 		for(SaveMeshType::VertexIterator it = m.vert.begin();it != m.vert.end();++it)
 		{
-			QString x,y,z;
-			arrp.append(x.number(it->P().X()) + " " + y.number(it->P().Y()) + " " + z.number(it->P().Z()));
-			arrn.append(x.number(it->N().X()) + " " + y.number(it->N().Y()) + " " + z.number(it->N().Z()));
+			if (!(it->IsD()))
+			{
+				arrp.append(QString::number(it->P().X()) + " " +QString::number(it->P().Y()) + " " + QString::number(it->P().Z()) + " ");
+				arrn.append(QString::number(it->N().X()) + " " + QString::number(it->N().Y()) + " " + QString::number(it->N().Z())+ " ");
+				++nvert;
+			}
 		}
+		arrayposnode.setAttribute("count",QString::number(nvert * 3));
 		QDomText ap = info->doc->createTextNode(arrp);
 
 		QDomElement technode = info->doc->createElement("technique_common");
 		QDomElement accnode = info->doc->createElement("accessor");
 		accnode.setAttribute("source","#vcg-mesh-positions-array");
-		accnode.setAttribute("count",countst.number(m.vert.size()));
+		accnode.setAttribute("count",QString::number(nvert));
 		accnode.setAttribute("stride","3");
 		
 		QDomElement parxnode = info->doc->createElement("param");
@@ -102,8 +110,6 @@ public:
 		srcposnode.appendChild(technode);
 		
 		meshnode.appendChild(srcposnode);
-		geonode.appendChild(meshnode);
-		geolib.at(0).appendChild(geonode);
 		
 		QDomElement srcnmnode = info->doc->createElement("source");
 		srcnmnode.setAttribute("id","vcg-mesh-normals");
@@ -111,12 +117,12 @@ public:
 
 		QDomElement arraynmnode = info->doc->createElement("float_array");
 		arraynmnode.setAttribute("id","vcg-mesh-normals-array");
-		arraynmnode.setAttribute("count",countst.number(m.vert.size() * 3));
+		arraynmnode.setAttribute("count",QString::number(nvert * 3));
 
 		QDomElement technode2 = info->doc->createElement("technique_common");
 		QDomElement accnode2 = info->doc->createElement("accessor");
-		accnode2.setAttribute("source","#vcg-mesh-positions-array");
-		accnode2.setAttribute("count",countst.number(m.vert.size()));
+		accnode2.setAttribute("source","#vcg-mesh-normals-array");
+		accnode2.setAttribute("count",QString::number(nvert));
 		accnode2.setAttribute("stride","3");
 		
 		QDomElement parxnode2 = info->doc->createElement("param");
@@ -141,12 +147,56 @@ public:
 		srcnmnode.appendChild(technode2);
 		
 		meshnode.appendChild(srcnmnode);
+
+		QDomElement vert = info->doc->createElement("vertices");
+		vert.setAttribute("id","vcg-mesh-vertices");
+		QDomElement vinp_pos = info->doc->createElement("input");
+		vinp_pos.setAttribute("semantic","POSITION");
+		vinp_pos.setAttribute("source","#vcg-mesh-positions");
+		QDomElement vinp_nm = info->doc->createElement("input");
+		vinp_nm.setAttribute("semantic","NORMAL");
+		vinp_nm.setAttribute("source","#vcg-mesh-normals");
+
+		vert.appendChild(vinp_pos);
+		vert.appendChild(vinp_nm);
+
+		meshnode.appendChild(vert);
 		
+		QDomElement tri = info->doc->createElement("triangles");
 		
+
+		QDomElement tinp_vert = info->doc->createElement("input");
+		tinp_vert.setAttribute("offset","0");
+		tinp_vert.setAttribute("semantic","VERTEX");
+		tinp_vert.setAttribute("source","#vcg-mesh-vertices");
+		QDomElement poly = info->doc->createElement("p");
+		QString triangles_tess;
+		int nface = 0;
+		for(SaveMeshType::FaceIterator itf = m.face.begin();itf != m.face.end();++itf)
+		{
+			if (!(itf->IsD()))
+			{
+				for(unsigned int ii = 0;ii < 3;++ii)
+				{
+					int ind_v = (*itf).V(ii) - &(m.vert[0]);
+					if (triangles_tess == "")
+						triangles_tess = QString::number(ind_v);
+					else triangles_tess = triangles_tess + " " + QString::number(ind_v);
+				}
+				++nface;
+			}
+		}
+		tri.setAttribute("count",nface);
+
+		QDomText tri_list = info->doc->createTextNode(triangles_tess);
+		poly.appendChild(tri_list);
+		tri.appendChild(tinp_vert);
+		tri.appendChild(poly);
+		meshnode.appendChild(tri);
+		geonode.appendChild(meshnode);
+		geolib.at(0).appendChild(geonode);
 
 		QString st = info->doc->toString();
-
-
 		QFile file(filename);
 		if (!file.open(QIODevice::ReadWrite | QIODevice::Truncate))
 			return 1;
