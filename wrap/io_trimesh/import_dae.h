@@ -168,6 +168,7 @@ namespace io {
 										valueStringList(face,tripatch.at(tript),"p");
 										int face_size = face.size();
 										int offsetface = (int)m.face.size();
+										if (face_size == 0) return E_NOMESH;
 										vcg::tri::Allocator<OpenMeshType>::AddFaces(m,face_size / (nfcatt * 3));
 										QDomNode wnsrc = QDomNode();
 										QStringList wn;
