@@ -193,6 +193,65 @@ namespace io {
 			}
 			return true;
 		}
+
+		static void ParseRotationMatrix(vcg::Matrix44f& m,const std::vector<QDomNode>& t)
+		{
+			vcg::Matrix44f tmp;
+			tmp.SetIdentity();
+			for(unsigned int ii = 0;ii < t.size();++ii)
+			{
+				QString rt = t[ii].firstChild().nodeValue();
+				QStringList rtl = rt.split(" ");
+				if (rtl.last() == "") rtl.removeLast();
+				assert(rtl.size() == 4);
+				tmp.SetRotate(rtl.at(3).toFloat(),vcg::Point3f(rtl.at(0).toFloat(),rtl.at(1).toFloat(),rtl.at(2).toFloat()));
+				tmp *= tmp;
+			}
+			m = m * tmp;
+		}
+
+		static void AddTranslation(vcg::Matrix44f& m,const QDomNode& t)
+		{
+			QDomNode tr = t.firstChild();
+			QString coord = tr.nodeValue();
+			QStringList coordlist = coord.split(" ");
+			if (coordlist.last() == "") 
+				coordlist.removeLast();
+			assert(coordlist.size() == 3);
+			m[0][0] = 1.0f;
+			m[1][1] = 1.0f;
+			m[2][2] = 1.0f;
+			m[3][3] = 1.0f;
+			m[0][3] = coordlist.at(0).toFloat();
+			m[1][3] = coordlist.at(1).toFloat();
+			m[2][3] = coordlist.at(2).toFloat();
+		}
+
+		static void TransfMatrix(const QDomNode& parentnode,const QDomNode& presentnode,vcg::Matrix44f& m)
+		{
+			if (presentnode == parentnode) return;
+			else
+			{
+				QDomNode par = presentnode.parentNode();
+				std::vector<QDomNode> rotlist;
+				QDomNode trans;
+				for(int ch = 0;ch < par.childNodes().size();++ch)
+				{
+					if (par.childNodes().at(ch).nodeName() == "rotate")
+						rotlist.push_back(par.childNodes().at(ch));
+					else if (par.childNodes().at(ch).nodeName() == "translate")
+						 {
+							trans = par.childNodes().at(ch);
+					     }		
+				}
+				vcg::Matrix44f tmp;
+				tmp.SetIdentity();
+				if (!trans.isNull()) AddTranslation(tmp,trans);
+				ParseRotationMatrix(tmp,rotlist);
+				m = m * tmp;
+				TransfMatrix(parentnode,par,m);
+			}
+		}
 	};
 }
 }

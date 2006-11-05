@@ -14,7 +14,8 @@ namespace io {
 	{
 
 	private:
-		static int LoadMesh(OpenMeshType& m,InfoDAE* info,const QDomNode& geo)
+
+		static int LoadMesh(OpenMeshType& m,InfoDAE* info,const QDomNode& geo,const vcg::Matrix44f& t)
 		{
 			if (isThereTag(geo,"mesh"))
 			{
@@ -61,12 +62,20 @@ namespace io {
 				for(size_t vv = offset;vv < m.vert.size();++vv)
 				{
 					assert((ii * 3 < geosrcposarr_size) && (ii * 3 + 1 < geosrcposarr_size) && (ii * 3 + 2 < geosrcposarr_size));
-					m.vert[vv].P() = vcg::Point3f(geosrcposarr[ii * 3].toFloat(),geosrcposarr[ii * 3 + 1].toFloat(),geosrcposarr[ii * 3 + 2].toFloat());
+					vcg::Point4f tmp = t * vcg::Point4f(geosrcposarr[ii * 3].toFloat(),geosrcposarr[ii * 3 + 1].toFloat(),geosrcposarr[ii * 3 + 2].toFloat(),1.0f);
+					m.vert[vv].P() = vcg::Point3f(tmp.X(),tmp.Y(),tmp.Z());
 
 					if (!srcnodenorm.isNull())
 					{
 						assert((ii * 3 < geosrcvertnorm.size()) && (ii * 3 + 1 < geosrcvertnorm.size()) && (ii * 3 + 2 < geosrcvertnorm.size()));
-						m.vert[vv].N() = vcg::Point3f(geosrcvertnorm[ii * 3].toFloat(),geosrcvertnorm[ii * 3 + 1].toFloat(),geosrcvertnorm[ii * 3 + 2].toFloat());
+						vcg::Matrix44f intr44 = vcg::Transpose(vcg::Inverse(t));
+						Matrix33f intr33;
+						for(unsigned int rr = 0; rr < 2; ++rr)
+						{
+							for(unsigned int cc = 0;cc < 2;++cc)
+								intr33[rr][cc] = intr44[rr][cc];
+						}
+						m.vert[vv].N() = (intr33 * vcg::Point3f(geosrcvertnorm[ii * 3].toFloat(),geosrcvertnorm[ii * 3 + 1].toFloat(),geosrcvertnorm[ii * 3 + 2].toFloat())).Normalize();
 					}
 
 					/*if (!srcnodecolor.isNull())
@@ -288,20 +297,25 @@ namespace io {
 						int geoinst_size = geoinst.size();
 						if (geoinst_size != 0)
 						{
+							
 							geoinst_found |= true;
 							QDomNodeList& geolib = info->doc->elementsByTagName("library_geometries");
 							int geolib_size = geolib.size();
 							assert(geolib_size == 1);
 							//!!!!!!!!!!!!!!!!!here will be the code for geometry transformations!!!!!!!!!!!!!!!!!!!!!!
+							
 							for(int geoinst_ind = 0;geoinst_ind < geoinst_size;++geoinst_ind)
 							{
 								QString geo_url;
 								referenceToANodeAttribute(geoinst.at(geoinst_ind),"url",geo_url);
-
+								
 								QDomNode geo = findNodeBySpecificAttributeValue(geolib.at(0),"geometry","id",geo_url);
 								if (geo.isNull())
 									return E_UNREFERENCEBLEDCOLLADAATTRIBUTE;
-								problem |= LoadMesh(m,info,geo); 
+								vcg::Matrix44f tr;
+								tr.SetIdentity();
+								TransfMatrix(visscn,geoinst.at(geoinst_ind),tr);
+								problem |= LoadMesh(m,info,geo,tr); 
 								if (problem) return problem;
 							}
 						}
@@ -319,7 +333,9 @@ namespace io {
 				int problem = 0;
 				for(int chd = 0;chd < geochild_size;++chd)
 				{
-					problem |= LoadMesh(m,info,geochild.at(chd)); 
+					vcg::Matrix44f tmp;
+					tmp.SetIdentity();
+					problem |= LoadMesh(m,info,geochild.at(chd),tmp); 
 					if (problem) return problem;
 				}
 			}
