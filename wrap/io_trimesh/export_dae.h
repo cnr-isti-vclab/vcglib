@@ -264,7 +264,9 @@ public:
 		arrayposnode.setAttribute("id","vcg-mesh-positions-array");
 		
 		QString arrp;
+		arrp.reserve(8 * m.vert.size());
 		QString arrn;
+		arrn.reserve(8 * m.vert.size());
 		int nvert = 0;
 		for(SaveMeshType::VertexIterator it = m.vert.begin();it != m.vert.end();++it)
 		{
@@ -272,6 +274,8 @@ public:
 			{
 				arrp.append(QString::number(it->P().X()) + " " +QString::number(it->P().Y()) + " " + QString::number(it->P().Z()) + " ");
 				arrn.append(QString::number(it->N().X()) + " " + QString::number(it->N().Y()) + " " + QString::number(it->N().Z())+ " ");
+				//arrp.append(QString::number(it->P().X()).append(" ").append(QString::number(it->P().Y())).append(" ").append(QString::number(it->P().Z())).append(" "));
+				//arrp.append(QString::number(it->N().X()).append(" ").append(QString::number(it->N().Y())).append(" ").append(QString::number(it->N().Z())).append(" "));
 				++nvert;
 			}
 		}
@@ -365,6 +369,7 @@ public:
 		QDomElement poly = info->doc->createElement("p");
 		QString triangles_tess;
 		int nface = 0;
+		triangles_tess.reserve(9*m.face.size());
 		for(SaveMeshType::FaceIterator itf = m.face.begin();itf != m.face.end();++itf)
 		{
 			if (!(itf->IsD()))
@@ -374,7 +379,7 @@ public:
 					int ind_v = (*itf).V(ii) - &(m.vert[0]);
 					if (triangles_tess == "")
 						triangles_tess = QString::number(ind_v);
-					else triangles_tess = triangles_tess + " " + QString::number(ind_v);
+					else triangles_tess = triangles_tess.append(" ").append(QString::number(ind_v));
 				}
 				++nface;
 			}
