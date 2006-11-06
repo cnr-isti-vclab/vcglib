@@ -5,6 +5,8 @@
 #include <vcg/complex/trimesh/update/normal.h>
 #include <vcg/complex/trimesh/allocate.h>
 
+#include <wrap/io_trimesh/io_mask.h>
+
 #include<QtXml/QDomDocument>
 #include<QtCore/QFile>
 #include <QtCore/QStringList>

@@ -343,120 +343,143 @@ namespace io {
 			return E_NOERROR;
 		}
 
-		static bool LoadMask(const char * filename, AdditionalInfoDAE &addinfo)
+		static bool LoadMask(const char * filename, AdditionalInfoDAE*& addinfo)
 		{
-			std::ifstream stream(filename);
-			if (stream.fail())
-				return false;
-
-			stream.seekg (0, std::ios::end);
-			int length = stream.tellg();
-			if (length == 0) return false;
-			stream.seekg (0, std::ios::beg);
-
 			bool bHasPerWedgeTexCoord = false;
 			bool bHasPerWedgeNormal		= false;
-			bool bUsingMaterial				= false;
 			bool bHasPerVertexColor		= false;
 			bool bHasPerFaceColor			= false;
-
+			bool bHasPerVertexNormal = false;
+			bool bHasPerVertexText = false;
+			
 			AdditionalInfoDAE* inf = new AdditionalInfoDAE();
 			inf->dae = new InfoDAE(); 
 			InfoDAE* info = inf->dae;
-			info->doc = new FCDocument();
 
-			unsigned int numvert = 0;
-			unsigned int numtriang = 0;
-
-			unsigned int mask = 0;
-
-			FCDGeometryLibrary* geolib = info->doc->GetGeometryLibrary();
-			if (geolib->IsEmpty()) return false;
-			size_t n = geolib->GetEntityCount();
-			std::vector<FCDGeometryMesh*> geomsh(n);
-
-
-			FUStatus st = info->doc->LoadFromFile(FUStringConversion::ToFString(filename));
-			if (st.IsFailure()) 
+			QDomDocument* doc = new QDomDocument(filename);
+			QFile file(filename);
+			if (!file.open(QIODevice::ReadOnly))
+				return E_CANTOPEN;
+			if (!doc->setContent(&file)) 
 			{
-				delete info->doc;
-				info->doc = NULL;
-				return false;
+				file.close();
+				return E_CANTOPEN;
 			}
+			file.close();
+			
 
-			bool amesh = false; 
+			info->doc = doc;
+			
+			QDomNodeList& scenes = info->doc->elementsByTagName("scene");
+			int scn_size = scenes.size();
+			
 
-			//for any mesh in the collada file
-			for(unsigned int ii = 0;ii < geomsh.size();++ii)
+			//Is there geometry in the file? 
+			bool geoinst_found = false;
+			//for each scene in COLLADA FILE
+			for(int scn = 0;scn < scn_size;++scn)
 			{
-				if (!geolib->GetEntity(ii)->IsMesh())
-				{
-					amesh |= false;
-				}
-				else
-				{
-					amesh |= true;
-					geomsh[ii] = geolib->GetEntity(ii)->GetMesh();
+				QDomNodeList& instscenes = scenes.at(scn).toElement().elementsByTagName("instance_visual_scene");
+				int instscn_size = instscenes.size();
+				if (instscn_size == 0) 
+					return E_INCOMPATIBLECOLLADA141FORMAT;
 
-					unsigned int ver;
-					if (geomsh[ii]->GetFaceCount() > 0)
+				//for each scene instance in a COLLADA scene
+				for(int instscn = 0;instscn < instscn_size; ++instscn)
+				{
+					QString libscn_url;
+					referenceToANodeAttribute(instscenes.at(instscn),"url",libscn_url);	
+					QDomNode nd = QDomNode(*(info->doc));
+					QDomNode visscn = findNodeBySpecificAttributeValue(*(info->doc),"visual_scene","id",libscn_url);
+					if(visscn.isNull())
+						return E_UNREFERENCEBLEDCOLLADAATTRIBUTE;
+					
+					//for each node in the libscn_url visual scene  
+					QDomNodeList& visscn_child = visscn.childNodes();
+					
+					//for each direct child of a libscn_url visual scene find if there is some geometry instance
+					int problem = 0;
+					for(int chdind = 0; chdind < visscn_child.size();++chdind)
 					{
-						geomsh[ii]->Triangulate(); 
-
-						size_t dim = geomsh[ii]->GetFaceVertexCount() / geomsh[ii]->GetFaceCount();
-						assert(dim == 3);
-						//MyMesh* msh = new MyMesh();
-						//size_t  nattr = geomsh[ii]->GetSourceCount();
-						//FCDGeometrySourceList& srclst = geomsh[ii]->GetVertexSources(); 
-
-						FCDGeometrySource* src;
-						if ((src = geomsh[ii]->GetPositionSource()) != NULL)
+						QDomNodeList& geoinst = visscn_child.at(chdind).toElement().elementsByTagName("instance_geometry");
+						int geoinst_size = geoinst.size();
+						if (geoinst_size != 0)
 						{
-							FloatList& flst = src->GetSourceData();
-							unsigned int str = src->GetSourceStride();
-							assert(flst.size() % str == 0);
-							ver = flst.size() / str;
-							numvert += flst.size() / str;  
-						}
-						else 
-						{
-							delete info->doc;
-							info->doc = NULL;
-							return false;
-						}
-
-						size_t pol = geomsh[ii]->GetPolygonsCount();
-
-						for(unsigned int pset = 0; pset < pol;++pset)
-						{
-							FCDGeometryMesh* tmp = geomsh[ii];
-							FCDGeometryPolygonsInput* pos = tmp->GetPolygons(pset)->FindInput(FUDaeGeometryInput::POSITION);
-							if ((pos == NULL) || (pos->GetSource()->GetSourceStride() != 3)) 
+							
+							geoinst_found |= true;
+							QDomNodeList& geolib = info->doc->elementsByTagName("library_geometries");
+							int geolib_size = geolib.size();
+							assert(geolib_size == 1);
+							//!!!!!!!!!!!!!!!!!here will be the code for geometry transformations!!!!!!!!!!!!!!!!!!!!!!
+							info->numvert = 0;
+							info->numface = 0;
+							for(int geoinst_ind = 0;geoinst_ind < geoinst_size;++geoinst_ind)
 							{
-								delete info->doc;
-								info->doc = NULL;
-								return false;
+								QString geo_url;
+								referenceToANodeAttribute(geoinst.at(geoinst_ind),"url",geo_url);
+								
+								QDomNode geo = findNodeBySpecificAttributeValue(geolib.at(0),"geometry","id",geo_url);
+								if (geo.isNull())
+									return E_UNREFERENCEBLEDCOLLADAATTRIBUTE;
+							
+								QDomNodeList vertlist = geo.toElement().elementsByTagName("vertices");
+
+								for(int vert = 0;vert < vertlist.size();++vert)
+								{
+									QDomNode no;
+									no = findNodeBySpecificAttributeValue(vertlist.at(vert),"input","semantic","POSITION");
+									QString srcurl;
+									referenceToANodeAttribute(no,"source",srcurl);
+									no = findNodeBySpecificAttributeValue(geo,"source","id",srcurl);
+									QDomNodeList fa = no.toElement().elementsByTagName("float_array");
+									assert(fa.size() == 1);
+									info->numvert += (fa.at(0).toElement().attribute("count").toInt() / 3);
+									no = findNodeBySpecificAttributeValue(vertlist.at(vert),"input","semantic","COLOR");									
+									if (!no.isNull()) 
+										bHasPerVertexColor = true;
+									no = findNodeBySpecificAttributeValue(vertlist.at(vert),"input","semantic","NORMAL");									
+									if (!no.isNull()) 
+										bHasPerVertexNormal = true;
+									no = findNodeBySpecificAttributeValue(vertlist.at(vert),"input","semantic","TEXCOORD");									
+									if (!no.isNull()) 
+										bHasPerVertexText = true;
+								}
+
+								QDomNodeList facelist = geo.toElement().elementsByTagName("triangles");
+								for(int face = 0;face < facelist.size();++face)
+								{
+									info->numface += facelist.at(face).toElement().attribute("count").toInt() ;
+									QDomNode no;
+									no = findNodeBySpecificAttributeValue(facelist.at(face),"input","semantic","NORMAL");
+									if (!no.isNull()) 
+										bHasPerWedgeNormal = true;
+									no = findNodeBySpecificAttributeValue(facelist.at(face),"input","semantic","TEXCOORD");
+									if (!no.isNull()) 
+										bHasPerWedgeTexCoord = true;
+								}
 							}
-							//unsigned int hi = pos->indices[1];
-
-							FCDGeometryPolygonsInputList normlist;
-							tmp->GetPolygons(pset)->FindInputs(FUDaeGeometryInput::NORMAL,normlist);
-							FCDGeometryPolygonsInputList tet; 
-							tmp->GetPolygons(pset)->FindInputs(FUDaeGeometryInput::TEXCOORD,tet);
-
-							for(unsigned int kk = 0; kk < tet.size();++kk)
-								if ((normlist[0]->GetSource()->GetSourceData().size() == ver * 3 * 3) && (!bHasPerWedgeNormal))
-									bHasPerWedgeNormal = true;
-
-							for(unsigned int kk = 0; kk < tet.size();++kk)
-								if ((tet[kk]->GetSource()->GetSourceData().size() == ver * 3 * 2) && (!bHasPerTexCoord))
-									bHasPerTexCoord = true;
 						}
 					}
 				}
 			}
-			inf.nvert = 
-				addinfo = inf;
+
+			info->mask = 0;
+	
+			if (bHasPerWedgeTexCoord) 
+				info->mask |= vcg::tri::io::Mask::IOM_WEDGTEXCOORD;
+			if (bHasPerWedgeNormal) 
+				info->mask |= vcg::tri::io::Mask::IOM_WEDGNORMAL;
+			if (bHasPerVertexColor)	
+				info->mask |= vcg::tri::io::Mask::IOM_VERTCOLOR;
+			if (bHasPerFaceColor) 
+				info->mask |= vcg::tri::io::Mask::IOM_FACECOLOR;
+			if (bHasPerVertexNormal) 
+				info->mask |= vcg::tri::io::Mask::IOM_VERTNORMAL;
+			if (bHasPerVertexText) 
+				info->mask |= vcg::tri::io::Mask::IOM_VERTTEXCOORD;
+			
+			delete (info->doc);
+			addinfo = inf;
 			return true;
 		}
 	};
