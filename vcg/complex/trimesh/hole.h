@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2006/10/31 11:30:41  ganovelli
+changed access throught iterator with static call to comply 2005 compiler
+
 Revision 1.9  2006/10/20 07:44:45  cignoni
 Added missing std::
 
@@ -498,11 +501,14 @@ namespace vcg {
 				Point3f n1 = (e0.v->N() + e1.v->N() + e0.VFlip()->N() ) / 3;
 				face::Pos<typename MSH_TYPE::FaceType> tmp = e1;
 				tmp.FlipE();tmp.FlipV();
-				Point3f n2=(e1.VFlip()->N() + e1.v->N() + tmp.v->N() ) / 3; 
-				MSH_TYPE::ScalarType qt;
+				Point3f n2=(e1.VFlip()->N() + e1.v->N() + tmp.v->N() ) / 3;
+				tmp = e0;
+				tmp.FlipE(); tmp.FlipV();
+				Point3f n3=(e0.VFlip()->N() + e0.v->N() + tmp.v->N() ) / 3; 
+				MSH_TYPE::ScalarType qt,qp;
 				qt = Angle(n1,n2);
-
-				dihedral = -qt;
+				qp = Angle(n1,n3);
+				dihedral = std::max(qt,qp);
 
 				MSH_TYPE::ScalarType ar;
 				ar = ( (e0.VFlip()->P() - e0.v->P()) ^ ( e1.v->P() - e0.v->P()) ).Norm() ;
