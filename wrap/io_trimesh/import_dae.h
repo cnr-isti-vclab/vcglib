@@ -382,7 +382,7 @@ namespace io {
 				QDomNodeList& instscenes = scenes.at(scn).toElement().elementsByTagName("instance_visual_scene");
 				int instscn_size = instscenes.size();
 				if (instscn_size == 0) 
-					return E_INCOMPATIBLECOLLADA141FORMAT;
+					return false;
 
 				//for each scene instance in a COLLADA scene
 				for(int instscn = 0;instscn < instscn_size; ++instscn)
@@ -392,7 +392,7 @@ namespace io {
 					QDomNode nd = QDomNode(*(info->doc));
 					QDomNode visscn = findNodeBySpecificAttributeValue(*(info->doc),"visual_scene","id",libscn_url);
 					if(visscn.isNull())
-						return E_UNREFERENCEBLEDCOLLADAATTRIBUTE;
+						return false;
 					
 					//for each node in the libscn_url visual scene  
 					QDomNodeList& visscn_child = visscn.childNodes();
@@ -420,7 +420,7 @@ namespace io {
 								
 								QDomNode geo = findNodeBySpecificAttributeValue(geolib.at(0),"geometry","id",geo_url);
 								if (geo.isNull())
-									return E_UNREFERENCEBLEDCOLLADAATTRIBUTE;
+									return false;
 							
 								QDomNodeList vertlist = geo.toElement().elementsByTagName("vertices");
 
@@ -462,9 +462,58 @@ namespace io {
 					}
 				}
 			}
+			
+			if (!geoinst_found)
+			{
+				QDomNodeList& geolib = info->doc->elementsByTagName("library_geometries");
+				int geolib_size = geolib.size();
+				assert(geolib_size == 1);
+				QDomNodeList& geochild = geolib.at(0).toElement().elementsByTagName("geometry");
+				//!!!!!!!!!!!!!!!!!here will be the code for geometry transformations!!!!!!!!!!!!!!!!!!!!!!
+				info->numvert = 0;
+				info->numface = 0;
+				for(int geoinst_ind = 0;geoinst_ind < geochild.size();++geoinst_ind)
+				{
+					QDomNodeList vertlist = geochild.at(geoinst_ind).toElement().elementsByTagName("vertices");
+
+					for(int vert = 0;vert < vertlist.size();++vert)
+					{
+						QDomNode no;
+						no = findNodeBySpecificAttributeValue(vertlist.at(vert),"input","semantic","POSITION");
+						QString srcurl;
+						referenceToANodeAttribute(no,"source",srcurl);
+						no = findNodeBySpecificAttributeValue(geochild.at(geoinst_ind),"source","id",srcurl);
+						QDomNodeList fa = no.toElement().elementsByTagName("float_array");
+						assert(fa.size() == 1);
+						info->numvert += (fa.at(0).toElement().attribute("count").toInt() / 3);
+						no = findNodeBySpecificAttributeValue(vertlist.at(vert),"input","semantic","COLOR");									
+						if (!no.isNull()) 
+							bHasPerVertexColor = true;
+						no = findNodeBySpecificAttributeValue(vertlist.at(vert),"input","semantic","NORMAL");									
+						if (!no.isNull()) 
+							bHasPerVertexNormal = true;
+						no = findNodeBySpecificAttributeValue(vertlist.at(vert),"input","semantic","TEXCOORD");									
+						if (!no.isNull()) 
+							bHasPerVertexText = true;
+					}
+
+					QDomNodeList facelist = geochild.at(geoinst_ind).toElement().elementsByTagName("triangles");
+					for(int face = 0;face < facelist.size();++face)
+					{
+						info->numface += facelist.at(face).toElement().attribute("count").toInt() ;
+						QDomNode no;
+						no = findNodeBySpecificAttributeValue(facelist.at(face),"input","semantic","NORMAL");
+						if (!no.isNull()) 
+							bHasPerWedgeNormal = true;
+						no = findNodeBySpecificAttributeValue(facelist.at(face),"input","semantic","TEXCOORD");
+						if (!no.isNull()) 
+							bHasPerWedgeTexCoord = true;
+					}
+				}
+			}
 
 			info->mask = 0;
-	
+		
 			if (bHasPerWedgeTexCoord) 
 				info->mask |= vcg::tri::io::Mask::IOM_WEDGTEXCOORD;
 			if (bHasPerWedgeNormal) 
@@ -478,6 +527,8 @@ namespace io {
 			if (bHasPerVertexText) 
 				info->mask |= vcg::tri::io::Mask::IOM_VERTTEXCOORD;
 			
+			
+
 			delete (info->doc);
 			addinfo = inf;
 			return true;
