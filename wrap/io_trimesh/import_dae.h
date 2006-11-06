@@ -238,6 +238,19 @@ namespace io {
 			}
 			else return E_NOMESH;
 		}
+
+		static void GetTexture(const QDomDocument& doc,AdditionalInfoDAE* inf)
+		{
+			QDomNodeList txlst = doc.elementsByTagName("library_images");
+			for(int img = 0;img < txlst.size();++img)
+			{
+				QDomNodeList nlst = txlst.at(img).toElement().elementsByTagName("init_from");
+				if (nlst.size() > 0)
+				{
+					inf->dae->texturefile.push_back(nlst.at(0).firstChild().nodeValue());
+				}
+			}
+		}
 	public:
 
 		//merge all meshes in the collada's file in the templeted mesh m
@@ -261,6 +274,8 @@ namespace io {
 			file.close();
 			
 			info->doc = doc;
+			//GetTexture(*(info->doc),inf);
+
 			QDomNodeList& scenes = info->doc->elementsByTagName("scene");
 			int scn_size = scenes.size();
 			if (scn_size == 0) 
@@ -369,7 +384,7 @@ namespace io {
 			
 
 			info->doc = doc;
-			
+			GetTexture(*(info->doc),inf);
 			QDomNodeList& scenes = info->doc->elementsByTagName("scene");
 			int scn_size = scenes.size();
 			

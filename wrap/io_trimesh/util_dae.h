@@ -37,7 +37,7 @@ namespace io {
 		}
 
 		QDomDocument* doc;		
-		std::vector<std::string> texturefile; 
+		std::vector<QString> texturefile; 
 	};
 
 	class AdditionalInfoDAE : public AdditionalInfo
