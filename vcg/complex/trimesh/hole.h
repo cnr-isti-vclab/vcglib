@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2006/11/07 11:47:11  cignoni
+gcc compiling issues
+
 Revision 1.12  2006/11/07 07:56:43  cignoni
 Added missing std::
 
@@ -150,7 +153,7 @@ namespace vcg {
 
 			void Refresh(MESH &m)
 			{
-				p.f = (MESH::FacePointer)(faceindex + &(*(m.face.begin())));
+				p.f = (typename MESH::FacePointer)(faceindex + &(*(m.face.begin())));
 			}
 
 			bool operator <  (const  HoleInfo & hh) const {return size <  hh.size;}
@@ -1136,6 +1139,9 @@ namespace vcg {
 		{
 		public:
 
+			using TrivialEar<MSH_TYPE>::e0;
+			using TrivialEar<MSH_TYPE>::e1;
+			using TrivialEar<MSH_TYPE>::quality;
 			TrivialEarN(){}
 			TrivialEarN(const face::Pos<typename MSH_TYPE::FaceType> & ep)
 			{

@@ -40,6 +40,16 @@
  #include <ext/hash_map>
  #include <ext/hash_set>
  #define STDEXT __gnu_cxx
+// It's terrible but gnu's hash_map needs an instantiation of hash() for
+// every key type! So we cast the pointer to void*
+namespace __gnu_cxx
+{
+	template <> class hash<void *>: private hash<unsigned long>
+	{
+	public:
+		size_t operator()(const void *ptr) const { return hash<unsigned long>::operator()((unsigned long)ptr); }
+	};
+}
 #endif
 
 #include <vector>
@@ -68,7 +78,11 @@ namespace vcg
 
 		typedef OBJECT_TYPE*																							ObjectPointer;
 		typedef std::pair< ObjectPointer, int >														hPair;
+#ifdef __GNUC__
+ 		typedef typename STDEXT::hash_map< /*ObjectPointer*/void*, int >::iterator	hIterator;
+#else
 		typedef typename STDEXT::hash_map< ObjectPointer, int >::iterator	hIterator;
+#endif
 		typedef std::pair< hIterator, bool >															hInsertResult;
 
 	public:
@@ -132,7 +146,11 @@ namespace vcg
 		}
 
 	protected:
+#ifdef __GNUC__
+ 		STDEXT::hash_map< void*, int > inserted_objects;
+#else
 		STDEXT::hash_map< OBJECT_TYPE*, int > inserted_objects;
+#endif
 		std::vector< DisjointSetNode >				nodes;
 	};
 };// end of namespace vcg

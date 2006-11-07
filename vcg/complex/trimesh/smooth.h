@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.12  2006/11/07 11:28:02  cignoni
+Added Quality weighted laplacian smoothing
+
 Revision 1.11  2006/10/19 07:33:03  cignoni
 Corrected Laplacian, Added selection to HCSmooth
 
@@ -677,7 +680,7 @@ void NormalSmooth(MESH_TYPE &m,
 	
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 	{
-		CoordType bc=Barycenter<MESH_TYPE::FaceType>(*fi);
+		CoordType bc=Barycenter<typename MESH_TYPE::FaceType>(*fi);
     // 1) Clear all the selected flag of faces that are vertex-adjacent to fi
 		for(i=0;i<3;++i)
 		{
@@ -824,7 +827,7 @@ void FastFitMesh(MESH_TYPE &m,
    VFLocalIterator ep(&*vi);
 	 for (;!ep.End();++ep)
 		{
-      CoordType bc=Barycenter<MESH_TYPE::FaceType>(*ep.F());
+      CoordType bc=Barycenter<typename MESH_TYPE::FaceType>(*ep.F());
       Sum += ep.F()->N()*(ep.F()->N()*(bc - (*vi).P()));
       ++cnt;
 		}

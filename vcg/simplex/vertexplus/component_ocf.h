@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2006/11/07 11:29:24  cignoni
+Corrected some errors in the reflections Has*** functions
+
 Revision 1.4  2006/10/31 16:02:59  ganovelli
 vesione 2005 compliant
 
@@ -278,7 +281,7 @@ namespace tri
     bool HasPerVertexQuality (const TriMesh < vert::vector_ocf< VertType > , FaceContainerType > & m) 
 	{
 	  if(VertType::HasQualityOcf()) return m.vert.IsQualityEnabled();
-	  else return VertexType::HasQuality();
+	  else return VertType::HasQuality();
 	}
 
 }

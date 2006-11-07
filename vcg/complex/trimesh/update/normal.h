@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2005/12/06 18:22:31  pietroni
+changed FaceType::ComputeNormal and FaceType::ComputeNormalizedNormal
+with face::ComputeNormal and face::ComputeNormalizedNormal
+
 Revision 1.10  2005/12/06 15:30:45  ponchio
 added #include triangle3.h for Normal(...)
 
@@ -98,7 +102,7 @@ static void PerFace(ComputeMeshType &m)
 	if( !m.HasPerFaceNormal()) return;
 	FaceIterator f;
 	for(f=m.face.begin();f!=m.face.end();++f)
-		if( !(*f).IsD() )	face::ComputeNormal(*f);
+		if( !(*f).IsD() )	/*face::*/ComputeNormal(*f);
 }
 
 

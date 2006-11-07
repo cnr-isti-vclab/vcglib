@@ -236,18 +236,18 @@ namespace vcg
 					E.push_back(MSTEdge(&tangent_planes[i], iRiemannianEdge->plane, iRiemannianEdge->weight));
 
 			std::sort( E.begin(), E.end() );
-			vcg::DisjointSet<Plane> set;
+			vcg::DisjointSet<Plane> planeset;
 			
 			for (typename std::vector< Plane >::iterator iPlane=tangent_planes.begin(); iPlane!=ePlane; iPlane++)
-				set.MakeSet( &*iPlane );
+				planeset.MakeSet( &*iPlane );
 
 			typename std::vector< MSTEdge >::iterator iMSTEdge = E.begin();
 			typename std::vector< MSTEdge >::iterator eMSTEdge = E.end();
 			std::vector< MSTEdge > unoriented_tree;
 			Plane *u, *v;
 			for ( ; iMSTEdge!=eMSTEdge; iMSTEdge++)
-				if ((u=set.FindSet(iMSTEdge->u))!=(v=set.FindSet(iMSTEdge->v)))
-					unoriented_tree.push_back( *iMSTEdge ), set.Union(u, v);
+				if ((u=planeset.FindSet(iMSTEdge->u))!=(v=planeset.FindSet(iMSTEdge->v)))
+					unoriented_tree.push_back( *iMSTEdge ), planeset.Union(u, v);
 			E.clear();
 
 			// compute for each plane the list of sorting edges
