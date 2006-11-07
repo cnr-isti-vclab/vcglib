@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.11  2006/10/19 07:33:03  cignoni
+Corrected Laplacian, Added selection to HCSmooth
+
 Revision 1.10  2006/09/25 09:41:41  cignoni
 Added new version of pasodoble smoothing
 
@@ -211,8 +214,12 @@ public:
 	FLT cnt;
 };
 
+// Classical Laplacian Smoothing. Each vertex can be moved onto the average of the adjacent vertices.
+// Can smooth only the selected vertices and weight the smoothing according to the quality 
+// In the latter case 0 means that the vertex is not moved and 1 means that the vertex is moved onto the computed position.
+
 template<class MESH_TYPE>
-void LaplacianSmooth(MESH_TYPE &m, int step, bool SmoothSelected=false)
+void LaplacianSmooth(MESH_TYPE &m, int step, bool SmoothSelected=false, float QualityWeight=0)
 {
 	SimpleTempData<typename MESH_TYPE::VertContainer,LaplacianInfo<typename MESH_TYPE::ScalarType> > TD(m.vert);
   LaplacianInfo<typename MESH_TYPE::ScalarType> lpz;
@@ -263,7 +270,21 @@ void LaplacianSmooth(MESH_TYPE &m, int step, bool SmoothSelected=false)
 								++TD[(*fi).V1(j)].cnt;
 						}
 	
-	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+  if(QualityWeight>0)
+  { // quality weighted smoothing
+    // We assume that weights are in the 0..1 range.
+    assert(tri::HasPerVertexQuality(m));
+    for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+		if(!(*vi).IsD() && TD[*vi].cnt>0 )
+			if(!SmoothSelected || (*vi).IsS())
+      {
+        float q=1.0-(*vi).Q();
+				(*vi).P()=(*vi).P()*(1.0-q) + (TD[*vi].sum/TD[*vi].cnt)*q;
+      }
+  }
+
+	else
+    for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 		if(!(*vi).IsD() && TD[*vi].cnt>0 )
 			if(!SmoothSelected || (*vi).IsS())
 					(*vi).P()=TD[*vi].sum/TD[*vi].cnt;
@@ -346,6 +367,8 @@ void HCSmooth(MESH_TYPE &m, int step, bool SmoothSelected=false )
 	TD.Stop();
 };
 
+
+// Laplacian smooth of the quality. 
 
 template<class FLT> 
 class QualitySmoothInfo 
