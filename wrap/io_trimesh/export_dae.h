@@ -106,7 +106,7 @@ private:
 			if (!(it->IsD()))
 			{
 				arrp.append(QString::number(float(it->P().X())).append(" ").append(QString::number(float(it->P().Y()))).append(" ").append(QString::number(float(it->P().Z()))).append(" "));
-				if(mask & vcg::tri::io::Mask::IOM_VERTNORMAL)
+				//if(mask & vcg::tri::io::Mask::IOM_VERTNORMAL)
 					arrn.append(QString::number(float(it->N().X())).append(" ").append(QString::number(float(it->N().Y()))).append(" ").append(QString::number(float(it->N().Z()))).append(" "));
 				if(mask & vcg::tri::io::Mask::IOM_VERTTEXCOORD)
 					arrt.append(QString::number(float(it->T().u())).append(" ").append(QString::number(float(it->T().v()))).append(" "));
@@ -119,11 +119,11 @@ private:
 		QDomText ap = doc.createTextNode(arrp);
 		CreateSource(doc,meshnode,"positions",ap,nvert);
 		
-		if(mask & vcg::tri::io::Mask::IOM_VERTNORMAL | mask & vcg::tri::io::Mask::IOM_WEDGNORMAL)
-		{
+		/*if(mask & vcg::tri::io::Mask::IOM_VERTNORMAL | mask & vcg::tri::io::Mask::IOM_WEDGNORMAL)
+		{*/
 			QDomText an = doc.createTextNode(arrn);
 			CreateSource(doc,meshnode,"normals",an,nvert);
-		}
+		/*}*/
 
 		if(mask & vcg::tri::io::Mask::IOM_VERTTEXCOORD)
 		{
@@ -140,8 +140,8 @@ private:
 		QDomElement vert = doc.createElement("vertices");
 		vert.setAttribute("id","vcg-mesh-vertices");
 		CreateVertInput(doc,vert,"POSITION","#vcg-mesh-positions");
-		if(mask & vcg::tri::io::Mask::IOM_VERTNORMAL)
-			CreateVertInput(doc,vert,"NORMAL","#vcg-mesh-normals");
+		//if(mask & vcg::tri::io::Mask::IOM_VERTNORMAL)
+		CreateVertInput(doc,vert,"NORMAL","#vcg-mesh-normals");
 		if(mask & vcg::tri::io::Mask::IOM_VERTCOLOR)
 			CreateVertInput(doc,vert,"COLOR","#vcg-mesh-colors");
 		if(mask & vcg::tri::io::Mask::IOM_VERTTEXCOORD)
