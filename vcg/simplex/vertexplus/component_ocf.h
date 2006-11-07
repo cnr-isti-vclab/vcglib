@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2006/10/31 16:02:59  ganovelli
+vesione 2005 compliant
+
 Revision 1.3  2006/02/28 11:59:55  ponchio
 g++ compliance:
 
@@ -66,6 +69,7 @@ class vector_ocf: public std::vector<VALUE_TYPE> {
   
 public:
 	vector_ocf():std::vector<VALUE_TYPE>(){
+  QualityEnabled=false;
   ColorEnabled=false;
   NormalEnabled=false;
   VFAdjacencyEnabled=false;
@@ -107,6 +111,20 @@ public:
 ////////////////////////////////////////
 // Enabling Eunctions
 
+bool IsQualityEnabled() const {return QualityEnabled;}
+void EnableQuality() {
+  assert(VALUE_TYPE::HasQualityOcf());
+  QualityEnabled=true;
+  QV.resize((*this).size());
+}
+
+void DisableQuality() {
+  assert(VALUE_TYPE::HasQualityOcf());
+  QualityEnabled=false;
+  QV.clear();
+}
+
+bool IsColorEnabled() const {return ColorEnabled;}
 void EnableColor() {
   assert(VALUE_TYPE::HasColorOcf());
   ColorEnabled=true;
@@ -119,6 +137,7 @@ void DisableColor() {
   CV.clear();
 }
 
+bool IsNormalEnabled() const {return NormalEnabled;}
 void EnableNormal() {
   assert(VALUE_TYPE::HasNormalOcf());
   NormalEnabled=true;
@@ -152,10 +171,12 @@ struct VFAdjType {
   };
   
 public:
+  std::vector<typename VALUE_TYPE::QualityType> QV;
   std::vector<typename VALUE_TYPE::ColorType> CV;
   std::vector<typename VALUE_TYPE::NormalType> NV;
   std::vector<struct VFAdjType> AV;
 
+  bool QualityEnabled;
   bool ColorEnabled;
   bool NormalEnabled;
   bool VFAdjacencyEnabled;
@@ -220,6 +241,19 @@ public:
 
 template <class T> class Color4bOcf: public ColorOcf<vcg::Color4b, T> {};
 
+///*-------------------------- QUALITY  ----------------------------------*/ 
+
+template <class A, class T> class QualityOcf: public T {
+public:
+  typedef A QualityType;
+  QualityType &Q() { assert((*this).Base().QualityEnabled); return (*this).Base().QV[(*this).Index()()]; }
+  static bool HasQuality()   { return true; }
+  static bool HasQualityOcf()   { return true; }
+};
+
+template <class T> class QualityfOcf: public QualityOcf<float, T> {};
+
+
 ///*-------------------------- InfoOpt  ----------------------------------*/ 
 
 template < class T> class InfoOcf: public T {
@@ -236,6 +270,17 @@ public:
 };
 
 
-  } // end namespace vert
+} // end namespace vert
+
+namespace tri
+{
+	template < class VertType, class FaceContainerType >
+    bool HasPerVertexQuality (const TriMesh < vert::vector_ocf< VertType > , FaceContainerType > & m) 
+	{
+	  if(VertType::HasQualityOcf()) return m.vert.IsQualityEnabled();
+	  else return VertexType::HasQuality();
+	}
+
+}
 }// end namespace vcg
 #endif

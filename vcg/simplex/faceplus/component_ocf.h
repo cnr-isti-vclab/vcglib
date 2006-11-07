@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2006/10/31 16:02:18  ganovelli
+vesione 2005 compliant
+
 Revision 1.16  2006/10/27 14:15:10  ganovelli
 added overrides to HasFFAddAdjacency and HasVFAddAdjacency
 
@@ -430,6 +433,8 @@ public:
   static bool HasFaceNormalOcf()   { return false; }
   static bool HasFaceMarkOcf()   { return false; }
   static bool HasWedgeTextureOcf()   { return false; }
+  static bool HasFFAdjacencyOcf()   { return false; }
+  static bool HasVFAdjacencyOcf()   { return false; }
 
   inline int Index() const {
     typename T::FaceType const *tp=static_cast<typename T::FaceType const *>(this); 

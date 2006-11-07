@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2006/10/27 11:08:18  ganovelli
+added override to HasFFAdjacency , HasVFAdjacency for the optional attributes (see also complex/trimesh/allocate.h)
+
 Revision 1.22  2006/07/10 14:26:22  cignoni
 Minor. Added a disambiguating this at the constructor of trimesh
 
@@ -312,6 +315,9 @@ ScalarType Volume()
 
 
 };	// end class Mesh
+
+template < class VertContainerType, class FaceContainerType >
+bool HasPerVertexQuality (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return VertContainerType::value_type::HasQuality();}
 
 template < class VertContainerType, class FaceContainerType >
 bool HasPerWedgeTexture (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return FaceContainerType::value_type::HasWedgeTexture();}
