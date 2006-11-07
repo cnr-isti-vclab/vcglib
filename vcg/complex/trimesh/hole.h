@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2006/11/06 16:12:29  giec
+Leipa ear now compute max dihedral angle.
+
 Revision 1.10  2006/10/31 11:30:41  ganovelli
 changed access throught iterator with static call to comply 2005 compiler
 
@@ -1230,7 +1233,7 @@ namespace vcg {
 				return true;
 			}
 		public:
-      static bool Process(const std::vector<Point2d> &contour,vector<int> &result)
+      static bool Process(const std::vector<Point2d> &contour,std::vector<int> &result)
 			{
 				/* allocate and initialize list of Vertices in polygon */
 
