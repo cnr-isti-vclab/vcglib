@@ -78,12 +78,25 @@ namespace vcg
 
 		typedef OBJECT_TYPE*																							ObjectPointer;
 		typedef std::pair< ObjectPointer, int >														hPair;
-#ifdef __GNUC__
- 		typedef typename STDEXT::hash_map< /*ObjectPointer*/void*, int >::iterator	hIterator;
+
+		struct SimpleObjHashFunc{
+			inline	size_t	operator ()(const ObjectPointer &p) const {return size_t(p);}
+		};
+
+#ifdef _MSC_VER
+		STDEXT::hash_map< OBJECT_TYPE*, int > inserted_objects;
+	  typedef typename STDEXT::hash_map< ObjectPointer, int >::iterator	hIterator;
 #else
-		typedef typename STDEXT::hash_map< ObjectPointer, int >::iterator	hIterator;
+		STDEXT::hash_map< OBJECT_TYPE*, int, SimpleObjHashFunc > inserted_objects;
+		typedef typename STDEXT::hash_map< ObjectPointer, int, SimpleObjHashFunc  >::iterator	hIterator;
 #endif
+
 		typedef std::pair< hIterator, bool >															hInsertResult;
+
+
+
+
+
 
 	public:
 		/*!
@@ -146,11 +159,6 @@ namespace vcg
 		}
 
 	protected:
-#ifdef __GNUC__
- 		STDEXT::hash_map< void*, int > inserted_objects;
-#else
-		STDEXT::hash_map< OBJECT_TYPE*, int > inserted_objects;
-#endif
 		std::vector< DisjointSetNode >				nodes;
 	};
 };// end of namespace vcg

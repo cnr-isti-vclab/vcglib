@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2006/11/07 15:13:57  zifnab1974
+Necessary changes for compilation with gcc 3.4.6. Especially the hash function is a problem
+
 Revision 1.5  2006/11/07 11:29:24  cignoni
 Corrected some errors in the reflections Has*** functions
 
@@ -277,11 +280,11 @@ public:
 
 namespace tri
 {
-	template < class VertType, class FaceContainerType >
-    bool HasPerVertexQuality (const TriMesh < vert::vector_ocf< VertType > , FaceContainerType > & m) 
+	template < class VertexType, class FaceContainerType >
+    bool HasPerVertexQuality (const TriMesh < vert::vector_ocf< VertexType > , FaceContainerType > & m) 
 	{
-	  if(VertType::HasQualityOcf()) return m.vert.IsQualityEnabled();
-	  else return VertType::HasQuality();
+	  if(VertexType::HasQualityOcf()) return m.vert.IsQualityEnabled();
+	  else return VertexType::HasQuality();
 	}
 
 }

@@ -161,7 +161,7 @@ namespace io {
 		
 		}
 
-		inline static bool removeChildNode(QDomNodeList& nodelst,const QString& tag = "", const QString& attribname = "", const QString& attribvalue = "")
+		inline static bool removeChildNodeList(QDomNodeList& nodelst,const QString& tag = "", const QString& attribname = "", const QString& attribvalue = "")
 		{
 			for(int jj = 0;jj < nodelst.size();++jj)
 			{
@@ -170,12 +170,13 @@ namespace io {
 			return true;
 		}
 
-		inline static bool removeChildNode(QDomNode& node,const QString& tag = "", const QString& attribname = "", const QString& attribvalue = "")
+	/*	inline static bool removeChildNode(QDomNode& node,const QString& tag = "", const QString& attribname = "", const QString& attribvalue = "")
 		{
 			return removeChildNode((QDomDocument&) node.toElement(),tag,attribname,attribvalue);
-		}
+		}*/
 
-		inline static bool removeChildNode(QDomDocument& node,const QString& tag = "", const QString& attribname = "", const QString& attribvalue = "")
+		//inline static bool removeChildNode(QDomDocument& node,const QString& tag = "", const QString& attribname = "", const QString& attribvalue = "")
+		inline static bool removeChildNode(QDomNode node,const QString& tag = "", const QString& attribname = "", const QString& attribvalue = "")
 		{
 			QDomNodeList clst = node.childNodes();
 			for(int ii = 0;ii < clst.size();++ii)

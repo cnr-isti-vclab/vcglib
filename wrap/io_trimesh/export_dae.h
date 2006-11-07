@@ -101,17 +101,17 @@ private:
 		if(mask & vcg::tri::io::Mask::IOM_VERTCOLOR)
 			arrc.reserve(5 * 4 * m.vert.size());
 		int nvert = 0;
-		for(SaveMeshType::VertexIterator it = m.vert.begin();it != m.vert.end();++it)
+		for(typename SaveMeshType::VertexIterator it = m.vert.begin();it != m.vert.end();++it)
 		{
 			if (!(it->IsD()))
 			{
-				arrp.append(QString::number(it->P().X()).append(" ").append(QString::number(it->P().Y())).append(" ").append(QString::number(it->P().Z())).append(" "));
+				arrp.append(QString::number(float(it->P().X())).append(" ").append(QString::number(float(it->P().Y()))).append(" ").append(QString::number(float(it->P().Z()))).append(" "));
 				if(mask & vcg::tri::io::Mask::IOM_VERTNORMAL)
-					arrn.append(QString::number(it->N().X()).append(" ").append(QString::number(it->N().Y())).append(" ").append(QString::number(it->N().Z())).append(" "));
+					arrn.append(QString::number(float(it->N().X())).append(" ").append(QString::number(float(it->N().Y()))).append(" ").append(QString::number(float(it->N().Z()))).append(" "));
 				if(mask & vcg::tri::io::Mask::IOM_VERTTEXCOORD)
-					arrt.append(QString::number(it->T().u()).append(" ").append(QString::number(it->T().v())).append(" "));
+					arrt.append(QString::number(float(it->T().u())).append(" ").append(QString::number(float(it->T().v()))).append(" "));
 				if(mask & vcg::tri::io::Mask::IOM_VERTCOLOR)
-					arrc.append(QString::number(it->C().X()).append(" ").append(QString::number(it->C().Y())).append(" ").append(QString::number(it->C().Z())).append(" ").append(QString::number(it->C().W())).append(" "));
+					arrc.append(QString::number(float(it->C().X())).append(" ").append(QString::number(float(it->C().Y()))).append(" ").append(QString::number(float(it->C().Z()))).append(" ").append(QString::number(float(it->C().W()))).append(" "));
 				++nvert;
 			}
 		}
@@ -174,7 +174,7 @@ private:
 		triangles_tess.reserve(nattr * 3 * 10 * m.face.size());
 		int wn = 0;
 		int wt = 0;
-		for(SaveMeshType::FaceIterator itf = m.face.begin();itf != m.face.end();++itf)
+		for(typename SaveMeshType::FaceIterator itf = m.face.begin();itf != m.face.end();++itf)
 		{
 			if (!(itf->IsD()))
 			{
@@ -188,7 +188,7 @@ private:
 					{
 						triangles_tess.append(" ").append(QString::number(wn));
 						++wn;
-						triangles_wn.append(QString::number((*itf).WN(ii).X()).append(" ").append(QString::number((*itf).WN(ii).Y())).append(" ").append(QString::number((*itf).WN(ii).Z())).append(" "));
+						triangles_wn.append(QString::number(float((*itf).WN(ii).X())).append(" ").append(QString::number(float((*itf).WN(ii).Y()))).append(" ").append(QString::number(float((*itf).WN(ii).Z()))).append(" "));
 					}
 
 					if (mask & MeshModel::IOM_WEDGTEXCOORD)
@@ -335,7 +335,7 @@ public:
 			/*QDomElement mshnode;
 			mshnode.setTagName("mesh");*/
 			
-			removeChildNode(geolib.at(0),"geometry","id","vcg-mesh-lib");
+			removeChildNode(geolib.at(0),QString("geometry"),QString("id"),QString("vcg-mesh-lib"));
 			QDomElement geonode = info->doc->createElement("geometry");
 			geonode.setAttribute("id","vcg-mesh-lib");
 			geonode.setAttribute("name","vcg-mesh");
@@ -349,7 +349,7 @@ public:
 		}
 		else
 		{
-			removeChildNode(scenelst,"instance_visual_scene");
+			removeChildNodeList(scenelst,QString("instance_visual_scene"));
 			for(int vsscn = 0;vsscn < scenelst.size();++vsscn)
 			{
 				QString url = scenelst.at(vsscn).toElement().attribute("url");
@@ -361,7 +361,7 @@ public:
 			
 			int vsscene_size = vsscene.size();
 			assert(vsscene.size() == 1);
-			removeChildNode(vsscene,"visual_scene","id","vcg-scene-node");
+			removeChildNodeList(vsscene,QString("visual_scene"),QString("id"),QString("vcg-scene-node"));
 			QDomElement vslnode = info->doc->createElement("visual_scene");
 			vslnode.setAttribute("id","vcg-scene-node");
 			vslnode.setAttribute("name","vcg-untitled");
@@ -380,7 +380,7 @@ public:
 			QDomNodeList geolib = info->doc->elementsByTagName("library_geometries");
 			assert(geolib.size() == 1);
 
-			removeChildNode(geolib.at(0),"geometry","id","vcg-mesh-lib");
+			removeChildNode(geolib.at(0),QString("geometry"),QString("id"),QString("vcg-mesh-lib"));
 			QDomElement geonode = info->doc->createElement("geometry");
 			geonode.setAttribute("id","vcg-mesh-lib");
 			geonode.setAttribute("name","vcg-mesh");

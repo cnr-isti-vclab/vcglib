@@ -68,7 +68,8 @@ namespace io {
 					if (!srcnodenorm.isNull())
 					{
 						assert((ii * 3 < geosrcvertnorm.size()) && (ii * 3 + 1 < geosrcvertnorm.size()) && (ii * 3 + 2 < geosrcvertnorm.size()));
-						vcg::Matrix44f intr44 = vcg::Transpose(vcg::Inverse(t));
+						vcg::Matrix44f intr44 = vcg::Inverse(t);
+						vcg::Transpose(intr44);
 						Matrix33f intr33;
 						for(unsigned int rr = 0; rr < 2; ++rr)
 						{
@@ -276,7 +277,7 @@ namespace io {
 			info->doc = doc;
 			//GetTexture(*(info->doc),inf);
 
-			QDomNodeList& scenes = info->doc->elementsByTagName("scene");
+			QDomNodeList scenes = info->doc->elementsByTagName("scene");
 			int scn_size = scenes.size();
 			if (scn_size == 0) 
 				return E_NO3DSCENE;
@@ -286,7 +287,7 @@ namespace io {
 			//for each scene in COLLADA FILE
 			for(int scn = 0;scn < scn_size;++scn)
 			{
-				QDomNodeList& instscenes = scenes.at(scn).toElement().elementsByTagName("instance_visual_scene");
+				QDomNodeList instscenes = scenes.at(scn).toElement().elementsByTagName("instance_visual_scene");
 				int instscn_size = instscenes.size();
 				if (instscn_size == 0) 
 					return E_INCOMPATIBLECOLLADA141FORMAT;
@@ -302,19 +303,19 @@ namespace io {
 						return E_UNREFERENCEBLEDCOLLADAATTRIBUTE;
 					
 					//for each node in the libscn_url visual scene  
-					QDomNodeList& visscn_child = visscn.childNodes();
+					QDomNodeList visscn_child = visscn.childNodes();
 					
 					//for each direct child of a libscn_url visual scene find if there is some geometry instance
 					int problem = 0;
 					for(int chdind = 0; chdind < visscn_child.size();++chdind)
 					{
-						QDomNodeList& geoinst = visscn_child.at(chdind).toElement().elementsByTagName("instance_geometry");
+						QDomNodeList geoinst = visscn_child.at(chdind).toElement().elementsByTagName("instance_geometry");
 						int geoinst_size = geoinst.size();
 						if (geoinst_size != 0)
 						{
 							
 							geoinst_found |= true;
-							QDomNodeList& geolib = info->doc->elementsByTagName("library_geometries");
+							QDomNodeList geolib = info->doc->elementsByTagName("library_geometries");
 							int geolib_size = geolib.size();
 							assert(geolib_size == 1);
 							//!!!!!!!!!!!!!!!!!here will be the code for geometry transformations!!!!!!!!!!!!!!!!!!!!!!
@@ -340,10 +341,10 @@ namespace io {
 
 			if (!geoinst_found)
 			{
-				QDomNodeList& geolib = info->doc->elementsByTagName("library_geometries");
+				QDomNodeList geolib = info->doc->elementsByTagName("library_geometries");
 				int geolib_size = geolib.size();
 				assert(geolib_size == 1);
-				QDomNodeList& geochild = geolib.at(0).childNodes();
+				QDomNodeList geochild = geolib.at(0).childNodes();
 				int geochild_size = geochild.size();
 				int problem = 0;
 				for(int chd = 0;chd < geochild_size;++chd)
@@ -385,7 +386,7 @@ namespace io {
 
 			info->doc = doc;
 			GetTexture(*(info->doc),inf);
-			QDomNodeList& scenes = info->doc->elementsByTagName("scene");
+			QDomNodeList scenes = info->doc->elementsByTagName("scene");
 			int scn_size = scenes.size();
 			
 
@@ -394,7 +395,7 @@ namespace io {
 			//for each scene in COLLADA FILE
 			for(int scn = 0;scn < scn_size;++scn)
 			{
-				QDomNodeList& instscenes = scenes.at(scn).toElement().elementsByTagName("instance_visual_scene");
+				QDomNodeList instscenes = scenes.at(scn).toElement().elementsByTagName("instance_visual_scene");
 				int instscn_size = instscenes.size();
 				if (instscn_size == 0) 
 					return false;
@@ -410,19 +411,21 @@ namespace io {
 						return false;
 					
 					//for each node in the libscn_url visual scene  
-					QDomNodeList& visscn_child = visscn.childNodes();
+					//QDomNodeList& visscn_child = visscn.childNodes();
+					QDomNodeList visscn_child = visscn.childNodes();
 					
 					//for each direct child of a libscn_url visual scene find if there is some geometry instance
 					int problem = 0;
 					for(int chdind = 0; chdind < visscn_child.size();++chdind)
 					{
-						QDomNodeList& geoinst = visscn_child.at(chdind).toElement().elementsByTagName("instance_geometry");
+						//QDomNodeList& geoinst = visscn_child.at(chdind).toElement().elementsByTagName("instance_geometry");
+						QDomNodeList geoinst = visscn_child.at(chdind).toElement().elementsByTagName("instance_geometry");
 						int geoinst_size = geoinst.size();
 						if (geoinst_size != 0)
 						{
 							
 							geoinst_found |= true;
-							QDomNodeList& geolib = info->doc->elementsByTagName("library_geometries");
+							QDomNodeList geolib = info->doc->elementsByTagName("library_geometries");
 							int geolib_size = geolib.size();
 							assert(geolib_size == 1);
 							//!!!!!!!!!!!!!!!!!here will be the code for geometry transformations!!!!!!!!!!!!!!!!!!!!!!
@@ -480,10 +483,10 @@ namespace io {
 			
 			if (!geoinst_found)
 			{
-				QDomNodeList& geolib = info->doc->elementsByTagName("library_geometries");
+				QDomNodeList geolib = info->doc->elementsByTagName("library_geometries");
 				int geolib_size = geolib.size();
 				assert(geolib_size == 1);
-				QDomNodeList& geochild = geolib.at(0).toElement().elementsByTagName("geometry");
+				QDomNodeList geochild = geolib.at(0).toElement().elementsByTagName("geometry");
 				//!!!!!!!!!!!!!!!!!here will be the code for geometry transformations!!!!!!!!!!!!!!!!!!!!!!
 				info->numvert = 0;
 				info->numface = 0;

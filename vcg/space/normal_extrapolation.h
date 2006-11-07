@@ -171,7 +171,7 @@ namespace vcg
 
 				// for each vertex *iter, compute the centroid as avarege of the k-nearest vertices of *iter
 				Plane *plane = &tangent_planes[ std::distance(begin, iter) ];
-				for (int n=0; n<k; n++)
+				for (unsigned int n=0; n<k; n++)
 					plane->center += nearest_points[n];
 				plane->center /= float(k);
 
@@ -179,7 +179,7 @@ namespace vcg
 				MatrixType	covariance_matrix;
 				CoordType diff;
 				covariance_matrix.SetZero();
-				for (int n=0; n<k; n++)
+				for (unsigned int n=0; n<k; n++)
 				{
 					diff = nearest_points[n] - plane->center;
 					for (int i=0; i<3; i++) 
