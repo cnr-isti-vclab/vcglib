@@ -172,8 +172,6 @@ namespace io {
 							m.face[ff].WT(0).u() = wt.at(indtx * 2).toFloat();
 							m.face[ff].WT(0).v() = wt.at(indtx * 2 + 1).toFloat();
 							m.face[ff].WT(0).n() = 1;
-							vcg::TCoord2<float> ttt = m.face[ff].WT(0);
-							int hh = 0;
 						}
 
 						/*int indcl;
@@ -203,8 +201,6 @@ namespace io {
 							m.face[ff].WT(1).u() = wt.at(indtx * 2).toFloat();
 							m.face[ff].WT(1).v() = wt.at(indtx * 2 + 1).toFloat();	
 							m.face[ff].WT(1).n() = 1;
-							vcg::TCoord2<float> ttt = m.face[ff].WT(1);
-							int hh = 0;
 						}
 
 						/*if (!wcsrc.isNull())
@@ -233,8 +229,6 @@ namespace io {
 							m.face[ff].WT(2).u() = wt.at(indtx * 2).toFloat();
 							m.face[ff].WT(2).v() = wt.at(indtx * 2 + 1).toFloat();	
 							m.face[ff].WT(2).n() = 1;
-							vcg::TCoord2<float> ttt = m.face[ff].WT(2);
-							int hh = 0;
 						}
 
 						/*if (!wcsrc.isNull())

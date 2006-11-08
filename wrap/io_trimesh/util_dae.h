@@ -102,15 +102,8 @@ namespace io {
 			assert(url_st.size() != 0);
 		}
 
-		inline static QDomNode findNodeBySpecificAttributeValue(const QDomNode& n,const QString& tag,const QString& attrname,const QString& attrvalue)
+		inline static QDomNode findNodeBySpecificAttributeValue(const QDomNodeList& ndl,const QString& attrname,const QString& attrvalue)
 		{
-			QDomNode ndl = n.toElement();
-			return findNodeBySpecificAttributeValue((QDomDocument&) ndl,tag,attrname,attrvalue);
-		}
-
-		inline static QDomNode findNodeBySpecificAttributeValue(const QDomDocument& n,const QString& tag,const QString& attrname,const QString& attrvalue)
-		{
-			QDomNodeList ndl = n.elementsByTagName(tag);
 			int ndl_size = ndl.size();
 			assert(ndl_size != 0);
 			int ind = 0;
@@ -123,15 +116,29 @@ namespace io {
 			return QDomNode();
 		}
 
+		inline static QDomNode findNodeBySpecificAttributeValue(const QDomNode& n,const QString& tag,const QString& attrname,const QString& attrvalue)
+		{
+			return findNodeBySpecificAttributeValue(n.toElement().elementsByTagName(tag),attrname,attrvalue);
+		}
+
+		inline static QDomNode findNodeBySpecificAttributeValue(const QDomDocument& n,const QString& tag,const QString& attrname,const QString& attrvalue)
+		{
+			return findNodeBySpecificAttributeValue(n.elementsByTagName(tag),attrname,attrvalue);
+		}
+		
+		inline static bool isThereTag(const QDomNodeList& list)
+		{
+			return ((list.size() > 0) ? true : false);
+		}
+
 		inline static bool isThereTag(const QDomNode& n,const QString& tagname)
 		{
-			QDomNode ndl = n.toElement();
-			return isThereTag((QDomDocument&) n,tagname);
+			return isThereTag(n.toElement().elementsByTagName(tagname));
 		}
 
 		inline static bool isThereTag(const QDomDocument& n,const QString& tagname)
 		{
-			return ((n.toElement().elementsByTagName(tagname).size() > 0)? true : false);
+			return isThereTag(n.elementsByTagName(tagname));
 		}
 
 
@@ -162,6 +169,8 @@ namespace io {
 		
 		}
 
+		/*inline static bool removeChildNode(QDomNodeList*/
+		
 		inline static bool removeChildNodeList(QDomNodeList& nodelst,const QString& tag = "", const QString& attribname = "", const QString& attribvalue = "")
 		{
 			for(int jj = 0;jj < nodelst.size();++jj)
@@ -171,13 +180,8 @@ namespace io {
 			return true;
 		}
 
-		inline static bool removeChildNode(QDomNode& node,const QString& tag = "", const QString& attribname = "", const QString& attribvalue = "")
-		{
-			return removeChildNode((QDomDocument&) node.toElement(),tag,attribname,attribvalue);
-		}
 
-		inline static bool removeChildNode(QDomDocument& node,const QString& tag = "", const QString& attribname = "", const QString& attribvalue = "")
-		//inline static bool removeChildNode(QDomNode node,const QString& tag = "", const QString& attribname = "", const QString& attribvalue = "")
+		inline static bool removeChildNode(QDomNode& node,const QString& tag = "", const QString& attribname = "", const QString& attribvalue = "")
 		{
 			QDomNodeList clst = node.childNodes();
 			for(int ii = 0;ii < clst.size();++ii)
@@ -203,6 +207,34 @@ namespace io {
 			}
 			return true;
 		}
+
+		//inline static bool removeChildNode(QDomDocument& node,const QString& tag = "", const QString& attribname = "", const QString& attribvalue = "")
+		////inline static bool removeChildNode(QDomNode node,const QString& tag = "", const QString& attribname = "", const QString& attribvalue = "")
+		//{
+		//	QDomNodeList clst = node.childNodes();
+		//	for(int ii = 0;ii < clst.size();++ii)
+		//	{
+		//		QDomNode oldchild = node.childNodes().at(ii); 
+		//		if (tag != "")
+		//		{
+		//			if ((attribname != "") && (attribvalue != ""))
+		//			{
+		//				if (clst.at(ii).toElement().attribute(attribname) == attribvalue)
+		//					node.removeChild(oldchild);
+		//			}
+		//			else 
+		//			{	
+		//				QString nm = clst.at(ii).nodeName();
+		//				if (clst.at(ii).nodeName() == tag) 
+		//				{
+		//					node.removeChild(oldchild);
+		//				}
+		//			}
+		//		}
+		//		else node.removeChild(oldchild);
+		//	}
+		//	return true;
+		//}
 
 		/*inline static bool removeChildNode(QDomDocument node,const QString& tag = "", const QString& attribname = "", const QString& attribvalue = "")
 		{
