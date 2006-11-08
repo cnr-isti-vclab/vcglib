@@ -25,6 +25,9 @@
   History
 
  $Log: not supported by cvs2svn $
+ Revision 1.4  2006/03/29 09:25:49  zifnab1974
+ extra includes necessary for compilation of meshlab on AMD 64 with gcc 3.4.5
+
  Revision 1.3  2006/03/07 13:20:40  cignoni
  changed include of io_material
 
@@ -236,7 +239,7 @@ namespace io {
 			//capability |= MeshModel::IOM_VERTTEXCOORD;
 
 			//face
-			capability |= MeshModel::IOM_FACEFLAGS;
+			//capability |= MeshModel::IOM_FACEFLAGS;
 			capability |= MeshModel::IOM_FACECOLOR;
 			capability |= MeshModel::IOM_FACENORMAL;
 
@@ -329,7 +332,7 @@ namespace io {
 			
 			int count = 1;
 			int nface = 0;
-			if(m.HasPerWedgeTexture() && mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD )
+			if(HasPerWedgeTexture(m) && (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD) )
 			{
 				FaceIterator fi;
 				for(fi=m.face.begin(); fi!=m.face.end(); ++fi) if( !(*fi).IsD() )
@@ -358,7 +361,7 @@ namespace io {
 
 			int number_vertex_to_duplicate = 0;
 			
-			if(m.HasPerWedgeTexture() && mask & MeshModel::IOM_WEDGTEXCOORD )
+			if(HasPerWedgeTexture(m) && (mask & MeshModel::IOM_WEDGTEXCOORD ))
 				number_vertex_to_duplicate = (count-1) - m.vert.size();
 
 			Lib3dsFile *file = lib3ds_file_new();//creates new file
@@ -372,13 +375,13 @@ namespace io {
 			
 			lib3ds_mesh_new_point_list(mesh, m.vert.size() + number_vertex_to_duplicate);// set number of vertexs
 	
-			if(m.HasPerWedgeTexture() && mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD )
+			if(HasPerWedgeTexture(m) && (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD ))
 				lib3ds_mesh_new_texel_list(mesh,m.vert.size() + number_vertex_to_duplicate); //set number of textures
 
 			int v_index = 0;
 			VertexIterator vi;
 			//saves vert
-			if(m.HasPerWedgeTexture() && mask & MeshModel::IOM_WEDGTEXCOORD )
+			if(HasPerWedgeTexture(m) && (mask & MeshModel::IOM_WEDGTEXCOORD ))
 			{
 				for(unsigned int i=0; i< VectorOfVertexType.size();i++)
 				{
@@ -426,7 +429,7 @@ namespace io {
 				vcg::TCoord2<float> t1;
 				int i2 = GetIndexVertex(m, (*fi).V(2));
 				vcg::TCoord2<float> t2;
-				if(m.HasPerWedgeTexture() && mask & MeshModel::IOM_WEDGTEXCOORD )
+				if(HasPerWedgeTexture(m) && (mask & MeshModel::IOM_WEDGTEXCOORD ) )
 				{
 					t0 = (*fi).WT(0);
 					t1 = (*fi).WT(1);
@@ -434,7 +437,7 @@ namespace io {
 				}
 
 				Lib3dsFace face;
-				if(m.HasPerWedgeTexture() && mask & MeshModel::IOM_WEDGTEXCOORD )
+				if(HasPerWedgeTexture(m) && (mask & MeshModel::IOM_WEDGTEXCOORD ))
 				{
 					face.points[0] = GetIndexDuplexVertex(ListOfDuplexVert,Key(i0,t0));
 					face.points[1] = GetIndexDuplexVertex(ListOfDuplexVert,Key(i1,t1));
@@ -448,7 +451,7 @@ namespace io {
 				}
 				
 				//saves coord textures
-				if(m.HasPerWedgeTexture() && mask & MeshModel::IOM_WEDGTEXCOORD )
+				if(HasPerWedgeTexture(m) && (mask & MeshModel::IOM_WEDGTEXCOORD ) )
 				{
 					mesh->texelL[face.points[0]][0] = t0.u();
 					mesh->texelL[face.points[0]][1] = t0.v();
@@ -463,14 +466,14 @@ namespace io {
 				
 				face.smoothing = 10;
 
-				if(mask & MeshModel::IOM_FACENORMAL | mask & MeshModel::IOM_WEDGNORMAL)
+				if((mask & MeshModel::IOM_FACENORMAL) | (mask & MeshModel::IOM_WEDGNORMAL) )
 				{
 					face.normal[0] = (*fi).N()[0];
 					face.normal[1] = (*fi).N()[1];
 					face.normal[2] = (*fi).N()[2];
 				}
 
-				if(mask & MeshModel::IOM_FACECOLOR | mask & MeshModel::IOM_WEDGTEXCOORD)
+				if((mask & MeshModel::IOM_FACECOLOR) | (mask & MeshModel::IOM_WEDGTEXCOORD))
 				{
 					int material_index = vcg::tri::io::Materials<SaveMeshType>::CreateNewMaterial(m, materials, 0, fi);
 					if(material_index == materials.size())
@@ -505,7 +508,7 @@ namespace io {
 						}
 											
 						//texture
-						if(mask & MeshModel::IOM_WEDGTEXCOORD)
+				    if(HasPerWedgeTexture(m) && (mask & MeshModel::IOM_WEDGTEXCOORD ) )
 							strcpy(material->texture1_map.name,materials[materials.size()-1].map_Kd.c_str());
 
 						lib3ds_file_insert_material(file,material);//inserts the material inside the file
