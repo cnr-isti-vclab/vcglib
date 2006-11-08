@@ -13,6 +13,43 @@ template<typename SaveMeshType>
 class ExporterDAE : public UtilDAE
 {
 private:
+	
+	static void SaveTexture(QDomDocument& doc,QDomNode& n,const std::vector<QString>& stv)
+	{
+		removeChildNode(doc,"library_images");
+		QDomElement el = doc.createElement("library_images");
+		for(int img = 0;img < stv.size();++img)
+		{
+			QDomElement imgnode = doc.createElement("image");
+			imgnode.setAttribute("id","file"+QString::number(img));
+			imgnode.setAttribute("name","file"+QString::number(img));
+			QDomElement tex = doc.createElement("init_from");
+			QDomText txname = doc.createTextNode(stv[img]);
+			tex.appendChild(txname);
+			imgnode.appendChild(tex);
+			el.appendChild(imgnode);
+		}
+		n.appendChild(el);
+	}
+
+	static void SaveTexture(QDomDocument& doc,QDomNode& n,const std::vector<std::string>& stv)
+	{
+		removeChildNode(doc,"library_images");
+		QDomElement el = doc.createElement("library_images");
+		for(int img = 0;img < stv.size();++img)
+		{
+			QDomElement imgnode = doc.createElement("image");
+			imgnode.setAttribute("id","file"+QString::number(img));
+			imgnode.setAttribute("name","file"+QString::number(img));
+			QDomElement tex = doc.createElement("init_from");
+			QDomText txname = doc.createTextNode(QString(stv[img].c_str()));
+			tex.appendChild(txname);
+			imgnode.appendChild(tex);
+			el.appendChild(imgnode);
+		}
+		n.appendChild(el);
+	}
+
 	static void CreateVertInput(QDomDocument& doc,QDomNode& vert,const QString& attr,const QString& ref)
 	{
 		QDomElement vinp_pos = doc.createElement("input");
@@ -233,6 +270,8 @@ public:
 		QDomElement ass = doc.createElement("asset");
 		coll.appendChild(ass);
 
+		if (m.textures.size() != 0)
+			SaveTexture(doc,doc.firstChild(),m.textures);
 		QDomElement geolib = doc.createElement("library_geometries");
 		
 		QDomElement geonode = doc.createElement("geometry");
@@ -297,6 +336,8 @@ public:
 		//removeChildNode(scenelst,"instance_visual_scene");
 		assert(scenelst.size() == 1);
 
+		if (m.textures.size() != 0)
+			SaveTexture(*(info->doc),info->doc->firstChild(),m.textures);
 		QDomNodeList vsscene = info->doc->elementsByTagName("library_visual_scenes");
 
 		if (info->doc->elementsByTagName("instance_geometry").size() != 0)

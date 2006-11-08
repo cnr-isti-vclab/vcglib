@@ -15,10 +15,12 @@ namespace io {
 
 	private:
 
-		static int LoadMesh(OpenMeshType& m,InfoDAE* info,const QDomNode& geo,const vcg::Matrix44f& t)
+		static int LoadMesh(OpenMeshType& m,InfoDAE* info,const QDomNode& geo,const vcg::Matrix44f& t, CallBackPos *cb=0)
 		{
 			if (isThereTag(geo,"mesh"))
 			{
+				if ((cb !=NULL) && (((info->numvert + info->numface)%100)==0) && !(*cb)((100*(info->numvert + info->numface))/(info->numvert + info->numface), "Vertex Loading"))
+					return E_CANTOPEN;
 				/*QDomNodeList geosrc = geo.toElement().elementsByTagName("source");
 				int geosrc_size = geosrc.size();
 				if (geosrc_size < 1)
@@ -61,6 +63,7 @@ namespace io {
 				int ii = 0;
 				for(size_t vv = offset;vv < m.vert.size();++vv)
 				{
+					
 					assert((ii * 3 < geosrcposarr_size) && (ii * 3 + 1 < geosrcposarr_size) && (ii * 3 + 2 < geosrcposarr_size));
 					vcg::Point4f tmp = t * vcg::Point4f(geosrcposarr[ii * 3].toFloat(),geosrcposarr[ii * 3 + 1].toFloat(),geosrcposarr[ii * 3 + 2].toFloat(),1.0f);
 					m.vert[vv].P() = vcg::Point3f(tmp.X(),tmp.Y(),tmp.Z());
@@ -167,7 +170,10 @@ namespace io {
 							assert(indtx * 2 < wt.size());
 							m.face[ff].WT(0) = vcg::TCoord2<float>();
 							m.face[ff].WT(0).u() = wt.at(indtx * 2).toFloat();
-							m.face[ff].WT(0).v() = wt.at(indtx * 2 + 1).toFloat();	
+							m.face[ff].WT(0).v() = wt.at(indtx * 2 + 1).toFloat();
+							m.face[ff].WT(0).n() = 1;
+							vcg::TCoord2<float> ttt = m.face[ff].WT(0);
+							int hh = 0;
 						}
 
 						/*int indcl;
@@ -196,6 +202,9 @@ namespace io {
 							m.face[ff].WT(1) = vcg::TCoord2<float>();
 							m.face[ff].WT(1).u() = wt.at(indtx * 2).toFloat();
 							m.face[ff].WT(1).v() = wt.at(indtx * 2 + 1).toFloat();	
+							m.face[ff].WT(1).n() = 1;
+							vcg::TCoord2<float> ttt = m.face[ff].WT(1);
+							int hh = 0;
 						}
 
 						/*if (!wcsrc.isNull())
@@ -223,6 +232,9 @@ namespace io {
 							m.face[ff].WT(2) = vcg::TCoord2<float>();
 							m.face[ff].WT(2).u() = wt.at(indtx * 2).toFloat();
 							m.face[ff].WT(2).v() = wt.at(indtx * 2 + 1).toFloat();	
+							m.face[ff].WT(2).n() = 1;
+							vcg::TCoord2<float> ttt = m.face[ff].WT(2);
+							int hh = 0;
 						}
 
 						/*if (!wcsrc.isNull())
@@ -252,12 +264,13 @@ namespace io {
 				}
 			}
 		}
+
 	public:
 
 		//merge all meshes in the collada's file in the templeted mesh m
 		//I assume the mesh 
 		
-		static int Open(OpenMeshType& m,const char* filename,AdditionalInfo*& addinfo)
+		static int Open(OpenMeshType& m,const char* filename,AdditionalInfo*& addinfo, CallBackPos *cb=0)
 		{
 			AdditionalInfoDAE* inf = new AdditionalInfoDAE();
 			inf->dae = new InfoDAE(); 

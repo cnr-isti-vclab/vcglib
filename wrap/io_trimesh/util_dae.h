@@ -14,6 +14,7 @@
 #include<vcg/space/point3.h>
 #include<vcg/space/tcoord2.h>
 #include<vcg/space/color4.h>
+#include <wrap/callback.h>
 
 namespace vcg {
 namespace tri {
@@ -176,7 +177,7 @@ namespace io {
 		}*/
 
 		//inline static bool removeChildNode(QDomDocument& node,const QString& tag = "", const QString& attribname = "", const QString& attribvalue = "")
-		inline static bool removeChildNode(QDomNode node,const QString& tag = "", const QString& attribname = "", const QString& attribvalue = "")
+		inline static bool removeChildNode(QDomNode& node,const QString& tag = "", const QString& attribname = "", const QString& attribvalue = "")
 		{
 			QDomNodeList clst = node.childNodes();
 			for(int ii = 0;ii < clst.size();++ii)
@@ -196,6 +197,27 @@ namespace io {
 			}
 			return true;
 		}
+
+		/*inline static bool removeChildNode(QDomDocument node,const QString& tag = "", const QString& attribname = "", const QString& attribvalue = "")
+		{
+			QDomNodeList clst = node.childNodes();
+			for(int ii = 0;ii < clst.size();++ii)
+			{
+				QDomNode oldchild = node.childNodes().at(ii); 
+				if (tag != "")
+				{
+					if ((attribname != "") && (attribvalue != ""))
+					{
+						if (clst.at(ii).toElement().attribute(attribname) == attribvalue)
+							node.removeChild(oldchild);
+					}
+					else if (clst.at(ii).nodeName() == tag) 
+							node.removeChild(oldchild);
+				}
+				else node.removeChild(oldchild);
+			}
+			return true;
+		}*/
 
 		static void ParseRotationMatrix(vcg::Matrix44f& m,const std::vector<QDomNode>& t)
 		{
