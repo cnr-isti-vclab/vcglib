@@ -388,11 +388,11 @@ namespace io {
 			QDomDocument* doc = new QDomDocument(filename);
 			QFile file(filename);
 			if (!file.open(QIODevice::ReadOnly))
-				return E_CANTOPEN;
+				return false;
 			if (!doc->setContent(&file)) 
 			{
 				file.close();
-				return E_CANTOPEN;
+				return false;
 			}
 			file.close();
 			

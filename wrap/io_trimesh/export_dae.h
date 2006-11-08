@@ -14,28 +14,26 @@ class ExporterDAE : public UtilDAE
 {
 private:
 	
-	static void SaveTexture(QDomDocument& doc,QDomNode& n,const std::vector<QString>& stv)
-	{
-		removeChildNode(doc,"library_images");
-		QDomElement el = doc.createElement("library_images");
-		for(int img = 0;img < stv.size();++img)
-		{
-			QDomElement imgnode = doc.createElement("image");
-			imgnode.setAttribute("id","file"+QString::number(img));
-			imgnode.setAttribute("name","file"+QString::number(img));
-			QDomElement tex = doc.createElement("init_from");
-			QDomText txname = doc.createTextNode(stv[img]);
-			tex.appendChild(txname);
-			imgnode.appendChild(tex);
-			el.appendChild(imgnode);
-		}
-		n.appendChild(el);
-	}
+	//static void SaveTexture(QDomDocument& doc,QDomNode& n,const std::vector<QString>& stv)
+	//{
+	//	removeChildNode(doc,"library_images");
+	//	QDomElement el = doc.createElement("library_images");
+	//	for(int img = 0;img < stv.size();++img)
+	//	{
+	//		QDomElement imgnode = doc.createElement("image");
+	//		imgnode.setAttribute("id","file"+QString::number(img));
+	//		imgnode.setAttribute("name","file"+QString::number(img));
+	//		QDomElement tex = doc.createElement("init_from");
+	//		QDomText txname = doc.createTextNode(stv[img]);
+	//		tex.appendChild(txname);
+	//		imgnode.appendChild(tex);
+	//		el.appendChild(imgnode);
+	//	}
+	//	n.appendChild(el);
+	//}
 
-	static void SaveTexture(QDomDocument& doc,QDomNode& n,const std::vector<std::string>& stv)
+	static void SaveTextureName(QDomDocument& doc,QDomNode& lbim,const std::vector<std::string>& stv)
 	{
-		removeChildNode(doc,"library_images");
-		QDomElement el = doc.createElement("library_images");
 		for(int img = 0;img < stv.size();++img)
 		{
 			QDomElement imgnode = doc.createElement("image");
@@ -45,9 +43,24 @@ private:
 			QDomText txname = doc.createTextNode(QString(stv[img].c_str()));
 			tex.appendChild(txname);
 			imgnode.appendChild(tex);
-			el.appendChild(imgnode);
+			lbim.appendChild(imgnode);
 		}
-		n.appendChild(el);
+	}
+
+	static void SaveTexture(QDomDocument& doc,QDomNode& n,const std::vector<std::string>& stv)
+	{
+		QDomElement el = doc.createElement("library_images");
+		SaveTextureName(doc,el,stv);
+		n.appendChild(el);	
+	}
+
+	static void SaveTexture(QDomDocument& doc,const std::vector<std::string>& stv)
+	{
+		QDomNodeList lbim = doc.elementsByTagName("library_images");
+		assert(lbim.size() == 1);
+		removeChildNode(lbim.at(0));
+		
+		SaveTextureName(doc,lbim.at(0),stv);
 	}
 
 	static void CreateVertInput(QDomDocument& doc,QDomNode& vert,const QString& attr,const QString& ref)
@@ -271,7 +284,11 @@ public:
 		coll.appendChild(ass);
 
 		if (m.textures.size() != 0)
-			SaveTexture(doc,doc.firstChild(),m.textures);
+		{
+			QDomNodeList cl = doc.elementsByTagName("COLLADA");
+			assert(cl.size() == 1);
+			SaveTexture(doc,cl.at(0),m.textures);
+		}
 		QDomElement geolib = doc.createElement("library_geometries");
 		
 		QDomElement geonode = doc.createElement("geometry");
@@ -337,8 +354,12 @@ public:
 		assert(scenelst.size() == 1);
 
 		if (m.textures.size() != 0)
-			SaveTexture(*(info->doc),info->doc->firstChild(),m.textures);
+			SaveTexture(*(info->doc),m.textures);
 		QDomNodeList vsscene = info->doc->elementsByTagName("library_visual_scenes");
+
+
+		QDomNodeList geolib = info->doc->elementsByTagName("library_geometries");
+		assert(geolib.size() == 1);
 
 		if (info->doc->elementsByTagName("instance_geometry").size() != 0)
 		{
@@ -352,8 +373,17 @@ public:
 			for(int no = 0;no < sc.childNodes().size();++no)
 			{
 				QDomNode oldnode = sc.childNodes().at(no);
-				if (sc.childNodes().at(no).toElement().elementsByTagName("instance_geometry").size() != 0)
+				QDomNodeList lst = sc.childNodes().at(no).toElement().elementsByTagName("instance_geometry");
+				int lst_size = lst.size();
+				if (lst_size != 0)
 				{
+					for(int ingeo = 0;ingeo < lst_size;++ingeo)
+					{
+						QString url;
+						referenceToANodeAttribute(lst.at(ingeo),"url",url);
+						QDomNode oldgeo = findNodeBySpecificAttributeValue(geolib.at(0),"geometry","id",url);
+						geolib.at(0).removeChild(oldgeo);
+					}
 					sc.removeChild(oldnode);
 				}
 			}
@@ -372,6 +402,8 @@ public:
 			QDomNodeList geolib = info->doc->elementsByTagName("library_geometries");
 			assert(geolib.size() == 1);
 			//removeChildNode(geolib.at(0));
+
+
 			
 			/*QDomElement mshnode;
 			mshnode.setTagName("mesh");*/
