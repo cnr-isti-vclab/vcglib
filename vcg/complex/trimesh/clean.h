@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.42  2006/10/15 07:31:22  cignoni
+typenames and qualifiers for gcc compliance
+
 Revision 1.41  2006/10/09 20:06:46  cignoni
 Added Remove NonManifoldFace
 
@@ -406,18 +409,25 @@ private:
 								(!IsManifold(*fi,2)))
 					                  ToDelVec.push_back(&*fi);
 					}
-				
+          
           for(int i=0;i<ToDelVec.size();++i)
           {
+            if(!ToDelVec[i]->IsD())
+            {
             FaceType &ff= *ToDelVec[i];
               if ((!IsManifold(ff,0))||
 							  	(!IsManifold(ff,1))||
 								  (!IsManifold(ff,2)))
-              for(int j=0;j<3;++j)
-                if(!face::IsBorder<FaceType>(ff,j))  vcg::face::FFDetach<FaceType>(ff,j);
-              ff.SetD();
-              count_fd++;
-						  m.fn--;	
+              {
+                for(int j=0;j<3;++j)
+                    if(!face::IsBorder<FaceType>(ff,j)) 
+                      vcg::face::FFDetach<FaceType>(ff,j);
+                  
+                ff.SetD();
+                count_fd++;
+						    m.fn--;	
+              }
+            }
           }
 				return count_fd;
 			}
