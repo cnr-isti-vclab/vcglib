@@ -25,6 +25,9 @@
   History
 
  $Log: not supported by cvs2svn $
+ Revision 1.2  2006/10/09 19:58:08  cignoni
+ Added casts to remove warnings
+
  Revision 1.1  2006/03/07 13:19:29  cignoni
  First Release with OBJ import support
 
@@ -78,13 +81,12 @@ namespace io {
 		*/
 		inline static int CreateNewMaterial(SaveMeshType &m, std::vector<Material> &materials, unsigned int index, FaceIterator &fi)
 		{			
-			unsigned char r = (*fi).C()[0];
-			unsigned char g = (*fi).C()[1];
-			unsigned char b = (*fi).C()[2];
-			unsigned char alpha = (*fi).C()[3];
-			
-			Point3f diffuse = Point3f((float)r/255.0f,(float)g/255.0f,(float)b/255.0f);//diffuse
-			float Tr = (float)alpha/255.0f;//alpha
+			Point3f diffuse(1,1,1);
+      float Tr = 1;
+      if(HasPerFaceColor(m)){
+        diffuse = Point3f((float)((*fi).C()[0])/255.0f,(float)((*fi).C()[1])/255.0f,(float)((*fi).C()[2])/255.0f);//diffuse
+			  (float)((*fi).C()[3])/255.0f;//alpha
+      }
 			
 			int illum = 2; //default not use Ks!
 			float ns = 0.0; //default
