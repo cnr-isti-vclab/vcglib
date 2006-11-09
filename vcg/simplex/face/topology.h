@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.27  2006/05/03 21:38:57  cignoni
+Added possibility of not updating the topology during a SwapEdge
+
 Revision 1.26  2005/12/19 13:47:26  corsini
 Rewrite SwapEdge to fix problems with borders
 
@@ -109,6 +112,7 @@ namespace face {
 template <class FaceType>
 inline bool IsManifold( FaceType const & f, const int j ) 
 {
+  assert(f.cFFp(j) != 0); // never try to use this on uncomputed topology
   if(FaceType::HasFFAdjacency())
 	  return ( f.cFFp(j) == &f || &f == f.cFFp(j)->cFFp(f.cFFi(j)) );
   else 
@@ -149,59 +153,125 @@ inline int BorderCount(FaceType const & f)
 
 /// Counts the number of incident faces in a complex edge
 template <class FaceType>
-inline int ComplexSize(FaceType const & f, const int e)
+inline int ComplexSize(FaceType & f, const int e)
 {
-if(FaceType::HasFFAdjacency())
-{
-  Pos< FaceType > fpos(&f,e); 
-  int cnt=0;
-  do
+  if(FaceType::HasFFAdjacency())
   {
-		fpos.NextF();
-		++cnt;
-	}
-	while(fpos.f=&f);
-	return cnt;
-}
+    if(face::IsBorder<FaceType>(f,e))  return 1;
+    if(face::IsManifold<FaceType>(f,e)) return 2;
+                      
+    // Non manifold case
+    Pos< FaceType > fpos(&f,e); 
+    int cnt=0;
+    do
+    {
+		  fpos.NextF();
+      assert(!fpos.IsBorder());
+      assert(!fpos.IsManifold());
+		  ++cnt;
+	  }
+	  while(fpos.f!=&f);
+    assert (cnt>2);
+	  return cnt;
+  }
   assert(0);
 	return 2;
 }
 
-/*Funzione di detach che scollega una faccia da un ciclo 
-(eventualmente costituito da due soli elementi) incidente su un edge*/
-/** This function detach the face from the adjacent face via the edge e. It's possible to use it also in non-two manifold situation.
-		The function cannot be applicated if the adjacencies among faces aren't define.
-		@param e Index of the edge
+
+/** This function check the FF topology correctness for an edge of a face. 
+    It's possible to use it also in non-two manifold situation.
+		The function cannot be applicated if the adjacencies among faces aren't defined.
+		@param f the face to be checked 
+		@param e Index of the edge to be checked 
 */
+template <class FaceType>
+bool FFCorrectness(FaceType & f, const int e)
+{
+  if(f.FFp(e)==0) return false;   // Not computed or inconsistent topology
+
+  if(f.FFp(e)==&f) // Border
+  {
+   if(f.FFi(e)==e) return true;
+   else return false;
+  }
+
+  if(f.FFp(e)->FFp(f.FFi(e))==&f) // plain two manifold 
+  {
+    if(f.FFp(e)->FFi(f.FFi(e))==e) return true;
+    else return false;
+  }
+
+  // Non Manifold Case
+  // all the faces must be connected in a loop.
+
+  Pos< FaceType > curFace(&f,e);  // Build the half edge
+  	int cnt=0;
+  do
+	{ 
+		if(curFace.IsManifold()) return false;  
+		if(curFace.IsBorder()) return false;
+		curFace.NextF();
+		cnt++;
+    assert(cnt<100);
+	}
+  while ( curFace.f != &f);
+  return true;
+}
+
+
+
+
+/** This function detach the face from the adjacent face via the edge e. 
+    It's possible to use it also in non-two manifold situation.
+		The function cannot be applicated if the adjacencies among faces aren't defined.
+		@param f the face to be detached 
+		@param e Index of the edge to be detached 
+*/
+
 template <class FaceType>
 void FFDetach(FaceType & f, const int e)
 {
-	assert(!IsBorder<FaceType>(f,e));
-	Pos< FaceType > EPB(&f,e,f.V(e));//build the half edge
-	//vcg::face::Pos< FaceType > pos(&f, (z+2)%3, f.V2(z));
-	EPB.NextF();
+  assert(FFCorrectness(f,e));        
+  assert(!IsBorder<FaceType>(f,e));  // Never try to detach a border edge!
+  int complexity;
+  assert(complexity=ComplexSize(f,e));
+
+  Pos< FaceType > FirstFace(&f,e);  // Build the half edge
+	Pos< FaceType > LastFace(&f,e);  // Build the half edge
+	FirstFace.NextF(); 
+  LastFace.NextF(); 
 	int cnt=0;
+  
+	///then in case of non manifold face continue to advance LastFace
+  // until I find it become the one that
+	///preceed the face I want to erase
 
-	///then in case of non manifold face continue to switch the 
-	///set of faces that share the edge until I find the one that 
-	///preceed the one I want to erase
-
-	while ( EPB.f->FFp(EPB.z) != &f)
+	while ( LastFace.f->FFp(LastFace.z) != &f)
 	{ 
-		assert(!IsManifold<FaceType>(f,e));   // Si entra in questo loop solo se siamo in una situazione non manifold.
-		assert(!IsBorder<FaceType>(*EPB.f,e));
-		EPB.NextF();
+    assert(ComplexSize(*LastFace.f,LastFace.z)==complexity);
+		assert(!LastFace.IsManifold());   // We enter in this loop only if we are on a non manifold edge
+		assert(!LastFace.IsBorder());
+		LastFace.NextF();
 		cnt++;
+    assert(cnt<100);
 	}
 
-	assert(EPB.f->FFp(EPB.z)==&f);
+	assert(LastFace.f->FFp(LastFace.z)==&f);
+  assert(f.FFp(e)== FirstFace.f);
 
-	EPB.f->FFp(EPB.z) = f.FFp(e);
-	EPB.f->FFi(EPB.z) = f.FFi(e);
-	
-	f.FFp(e) = &f;
+	// Now we link the last one to the first one, skipping the face to be detached;
+  LastFace.f->FFp(LastFace.z) = FirstFace.f;
+	LastFace.f->FFi(LastFace.z) = FirstFace.z;
+  assert(ComplexSize(*LastFace.f,LastFace.z)==complexity-1);
+	  
+  // At the end selfconnect the chosen edge to make a border.
+  f.FFp(e) = &f;
 	f.FFi(e) = e;
+  assert(ComplexSize(f,e)==1); 
 
+  assert(FFCorrectness(*LastFace.f,LastFace.z));
+  assert(FFCorrectness(f,e));
 }
 
 
