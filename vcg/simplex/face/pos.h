@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2006/10/07 14:24:26  cignoni
+Explained the use of V() operator of a pos
+
 Revision 1.21  2006/09/25 09:57:49  cignoni
 Better comment on usage of VF iterators
 
@@ -301,6 +304,11 @@ public:
 	bool IsBorder()
 	{
     return face::IsBorder(*f,z);
+	}
+
+  bool IsManifold()
+	{
+    return face::IsManifold(*f,z);
 	}
 
 	/// Return the dimension of the star
