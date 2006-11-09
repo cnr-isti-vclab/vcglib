@@ -32,9 +32,9 @@ private:
 	//	n.appendChild(el);
 	//}
 
-	static void SaveTextureName(QDomDocument& doc,QDomNode& lbim,const std::vector<std::string>& stv)
+	static void SaveTextureName(QDomDocument doc,QDomNode lbim,const std::vector<std::string>& stv)
 	{
-		for(int img = 0;img < stv.size();++img)
+		for(unsigned int img = 0;img < stv.size();++img)
 		{
 			QDomElement imgnode = doc.createElement("image");
 			imgnode.setAttribute("id","file"+QString::number(img));
@@ -47,23 +47,23 @@ private:
 		}
 	}
 
-	static void SaveTexture(QDomDocument& doc,QDomNode& n,const std::vector<std::string>& stv)
+	static void SaveTexture(QDomDocument doc,QDomNode n,const std::vector<std::string>& stv)
 	{
 		QDomElement el = doc.createElement("library_images");
 		SaveTextureName(doc,el,stv);
 		n.appendChild(el);	
 	}
 
-	static void SaveTexture(QDomDocument& doc,const std::vector<std::string>& stv)
+	static void SaveTexture(QDomDocument doc,const std::vector<std::string>& stv)
 	{
 		QDomNodeList lbim = doc.elementsByTagName("library_images");
-		assert(lbim.size() == 1);
-		removeChildNode(lbim.at(0));
+		if (lbim.size() == 1)
+			removeChildNode(lbim.at(0));
 		
 		SaveTextureName(doc,lbim.at(0),stv);
 	}
 
-	static void CreateVertInput(QDomDocument& doc,QDomNode& vert,const QString& attr,const QString& ref)
+	static void CreateVertInput(QDomDocument doc,QDomNode vert,const QString& attr,const QString& ref)
 	{
 		QDomElement vinp_pos = doc.createElement("input");
 		vinp_pos.setAttribute("semantic",attr);
@@ -71,7 +71,7 @@ private:
 		vert.appendChild(vinp_pos);
 	}
 
-	static void CreateFaceInput(QDomDocument& doc,QDomNode& tri,const QString& attr,const QString& ref,const int offset)
+	static void CreateFaceInput(QDomDocument doc,QDomNode tri,const QString& attr,const QString& ref,const int offset)
 	{
 		QDomElement tinp_vert = doc.createElement("input");
 		tinp_vert.setAttribute("offset",QString::number(offset));
@@ -80,7 +80,7 @@ private:
 		tri.appendChild(tinp_vert);
 	}
 
-	static void CreateSource(QDomDocument& doc,QDomNode& meshnode,const QString& attr,const QDomText& val,int nvert)
+	static void CreateSource(QDomDocument doc,QDomNode meshnode,const QString& attr,const QDomText& val,int nvert)
 	{
 		int nel;
 		std::vector<QString> coord;
@@ -137,7 +137,7 @@ private:
 		meshnode.appendChild(srcnmnode);
 	}
 
-	static int SaveMesh(SaveMeshType& m,QDomDocument& doc,QDomNode& meshnode,const int mask)
+	static int SaveMesh(SaveMeshType& m,QDomDocument& doc,QDomNode meshnode,const int mask)
 	{				
 		QString arrp;
 		arrp.reserve(10 * 3 * m.vert.size());
@@ -333,7 +333,7 @@ public:
 		QFile file(filename);
 		if (!file.open(QIODevice::ReadWrite | QIODevice::Truncate))
 			return E_CANTOPEN;
-		doc.setContent(&file);
+		
 		file.write(st.toAscii());
 		file.close();
 		return E_NOERROR;
@@ -351,7 +351,7 @@ public:
 		InfoDAE* info = inf->dae;
 		QDomNodeList scenelst = info->doc->elementsByTagName("scene"); 
 		//removeChildNode(scenelst,"instance_visual_scene");
-		assert(scenelst.size() == 1);
+		//assert(scenelst.size() == 1);
 
 		if (m.textures.size() != 0)
 			SaveTexture(*(info->doc),m.textures);
@@ -359,6 +359,7 @@ public:
 
 
 		QDomNodeList geolib = info->doc->elementsByTagName("library_geometries");
+		
 		assert(geolib.size() == 1);
 
 		if (info->doc->elementsByTagName("instance_geometry").size() != 0)
@@ -408,7 +409,8 @@ public:
 			/*QDomElement mshnode;
 			mshnode.setTagName("mesh");*/
 			
-			removeChildNode(geolib.at(0),QString("geometry"),QString("id"),QString("vcg-mesh-lib"));
+			geolib.at(0).childNodes().size();
+			removeChildNode(geolib.at(0),QString("geometry"),QString("id"),QString("vcg-mesh-lib")); 
 			QDomElement geonode = info->doc->createElement("geometry");
 			geonode.setAttribute("id","vcg-mesh-lib");
 			geonode.setAttribute("name","vcg-mesh");
@@ -417,12 +419,13 @@ public:
 			
 			
 			int res = SaveMesh(m,*(info->doc),meshnode,mask);
+			if (res != 0) return res;
 			geonode.appendChild(meshnode);
 			geolib.at(0).appendChild(geonode);
 		}
 		else
 		{
-			removeChildNodeList(scenelst,QString("instance_visual_scene"));
+			/* removeChildNodeList(scenelst,QString("instance_visual_scene")); */
 			for(int vsscn = 0;vsscn < scenelst.size();++vsscn)
 			{
 				QString url = scenelst.at(vsscn).toElement().attribute("url");
@@ -432,9 +435,9 @@ public:
 			vsnode.setAttribute("url","#vcg-scene-node");
 			scenelst.at(0).appendChild(vsnode);
 			
-			int vsscene_size = vsscene.size();
+			
 			assert(vsscene.size() == 1);
-			removeChildNodeList(vsscene,QString("visual_scene"),QString("id"),QString("vcg-scene-node"));
+			removeChildNodeList(vsscene,QString("visual_scene"),QString("id"),QString("vcg-scene-node")); 
 			QDomElement vslnode = info->doc->createElement("visual_scene");
 			vslnode.setAttribute("id","vcg-scene-node");
 			vslnode.setAttribute("name","vcg-untitled");
@@ -453,7 +456,7 @@ public:
 			QDomNodeList geolib = info->doc->elementsByTagName("library_geometries");
 			assert(geolib.size() == 1);
 
-			removeChildNode(geolib.at(0),QString("geometry"),QString("id"),QString("vcg-mesh-lib"));
+			removeChildNode(geolib.at(0),QString("geometry"),QString("id"),QString("vcg-mesh-lib")); 
 			QDomElement geonode = info->doc->createElement("geometry");
 			geonode.setAttribute("id","vcg-mesh-lib");
 			geonode.setAttribute("name","vcg-mesh");
@@ -464,13 +467,16 @@ public:
 			geonode.appendChild(meshnode);
 			geolib.at(0).appendChild(geonode);
 		}
+
+
 		QString st = info->doc->toString();
 		QFile file(filename);
 		if (!file.open(QIODevice::ReadWrite | QIODevice::Truncate))
 			return E_CANTOPEN;
-		info->doc->setContent(&file);
+		
 		file.write(st.toAscii());
 		file.close();
+
 		return E_NOERROR;
 	}
 

@@ -19,41 +19,41 @@
 namespace vcg {
 namespace tri {
 namespace io {
-	class InfoDAE : public AdditionalInfo
+	class InfoDAE
 	{
 		public:
 
 		InfoDAE()
 		{
-			mask	= 0;
-			numvert = 0;
-			numface = 0;
 			doc = NULL;
 		}
 
 		~InfoDAE()
 		{
 			delete doc;
-			texturefile.clear();
 		}
 
 		QDomDocument* doc;		
-		std::vector<QString> texturefile; 
 	};
 
 	class AdditionalInfoDAE : public AdditionalInfo
 	{
 	public: 
 		vcg::tri::io::InfoDAE* dae;
+		std::vector<QString> texturefile; 
 
 		AdditionalInfoDAE()
 		:AdditionalInfo()
 		{
+			mask	= 0;
+			numvert = 0;
+			numface = 0;
 		}
 
 		~AdditionalInfoDAE()
 		{
 			delete dae;
+			texturefile.clear();
 		}
 	};
 
@@ -94,7 +94,7 @@ namespace io {
 			else return dae_error_msg[error];
 		};
 	protected:
-		inline static void referenceToANodeAttribute(const QDomNode& n,const QString& attr,QString& url_st)
+		inline static void referenceToANodeAttribute(const QDomNode n,const QString& attr,QString& url_st)
 		{
 			url_st = n.toElement().attribute(attr);
 			int sz = url_st.size() - 1;
@@ -116,12 +116,12 @@ namespace io {
 			return QDomNode();
 		}
 
-		inline static QDomNode findNodeBySpecificAttributeValue(const QDomNode& n,const QString& tag,const QString& attrname,const QString& attrvalue)
+		inline static QDomNode findNodeBySpecificAttributeValue(const QDomNode n,const QString& tag,const QString& attrname,const QString& attrvalue)
 		{
 			return findNodeBySpecificAttributeValue(n.toElement().elementsByTagName(tag),attrname,attrvalue);
 		}
 
-		inline static QDomNode findNodeBySpecificAttributeValue(const QDomDocument& n,const QString& tag,const QString& attrname,const QString& attrvalue)
+		inline static QDomNode findNodeBySpecificAttributeValue(const QDomDocument n,const QString& tag,const QString& attrname,const QString& attrvalue)
 		{
 			return findNodeBySpecificAttributeValue(n.elementsByTagName(tag),attrname,attrvalue);
 		}
@@ -131,18 +131,18 @@ namespace io {
 			return ((list.size() > 0) ? true : false);
 		}
 
-		inline static bool isThereTag(const QDomNode& n,const QString& tagname)
+		inline static bool isThereTag(const QDomNode n,const QString& tagname)
 		{
 			return isThereTag(n.toElement().elementsByTagName(tagname));
 		}
 
-		inline static bool isThereTag(const QDomDocument& n,const QString& tagname)
+		inline static bool isThereTag(const QDomDocument n,const QString& tagname)
 		{
 			return isThereTag(n.elementsByTagName(tagname));
 		}
 
 
-		inline static QDomNode attributeSourcePerSimplex(const QDomNode& n,const QDomDocument& startpoint,const QString& sem)
+		inline static QDomNode attributeSourcePerSimplex(const QDomNode n,const QDomDocument startpoint,const QString& sem)
 		{
 			QDomNodeList vertattr = n.toElement().elementsByTagName("input");
 			for(int ind = 0;ind < vertattr.size();++ind)
@@ -157,11 +157,10 @@ namespace io {
 			return QDomNode();
 		}
 
-		inline static void valueStringList(QStringList& res,const QDomNode& srcnode,const QString& tag) 
+		inline static void valueStringList(QStringList& res,const QDomNode srcnode,const QString& tag) 
 		{
 			QDomNodeList list = srcnode.toElement().elementsByTagName(tag);
-			int list_size = list.size();
-			assert(list_size == 1);
+			assert(list.size() == 1);
 			QString nd = list.at(0).firstChild().nodeValue();
 			res = nd.split(" ");
 			if (res.last() == "")
@@ -175,13 +174,13 @@ namespace io {
 		{
 			for(int jj = 0;jj < nodelst.size();++jj)
 			{
-				removeChildNode(nodelst.at(jj),tag,attribname,attribvalue);
+				removeChildNode(nodelst.at(jj),tag,attribname,attribvalue); 
 			}
 			return true;
 		}
 
 
-		inline static bool removeChildNode(QDomNode& node,const QString& tag = "", const QString& attribname = "", const QString& attribvalue = "")
+		inline static bool removeChildNode(QDomNode node,const QString& tag = "", const QString& attribname = "", const QString& attribvalue = "")
 		{
 			QDomNodeList clst = node.childNodes();
 			for(int ii = 0;ii < clst.size();++ii)
@@ -208,55 +207,6 @@ namespace io {
 			return true;
 		}
 
-		//inline static bool removeChildNode(QDomDocument& node,const QString& tag = "", const QString& attribname = "", const QString& attribvalue = "")
-		////inline static bool removeChildNode(QDomNode node,const QString& tag = "", const QString& attribname = "", const QString& attribvalue = "")
-		//{
-		//	QDomNodeList clst = node.childNodes();
-		//	for(int ii = 0;ii < clst.size();++ii)
-		//	{
-		//		QDomNode oldchild = node.childNodes().at(ii); 
-		//		if (tag != "")
-		//		{
-		//			if ((attribname != "") && (attribvalue != ""))
-		//			{
-		//				if (clst.at(ii).toElement().attribute(attribname) == attribvalue)
-		//					node.removeChild(oldchild);
-		//			}
-		//			else 
-		//			{	
-		//				QString nm = clst.at(ii).nodeName();
-		//				if (clst.at(ii).nodeName() == tag) 
-		//				{
-		//					node.removeChild(oldchild);
-		//				}
-		//			}
-		//		}
-		//		else node.removeChild(oldchild);
-		//	}
-		//	return true;
-		//}
-
-		/*inline static bool removeChildNode(QDomDocument node,const QString& tag = "", const QString& attribname = "", const QString& attribvalue = "")
-		{
-			QDomNodeList clst = node.childNodes();
-			for(int ii = 0;ii < clst.size();++ii)
-			{
-				QDomNode oldchild = node.childNodes().at(ii); 
-				if (tag != "")
-				{
-					if ((attribname != "") && (attribvalue != ""))
-					{
-						if (clst.at(ii).toElement().attribute(attribname) == attribvalue)
-							node.removeChild(oldchild);
-					}
-					else if (clst.at(ii).nodeName() == tag) 
-							node.removeChild(oldchild);
-				}
-				else node.removeChild(oldchild);
-			}
-			return true;
-		}*/
-
 		static void ParseRotationMatrix(vcg::Matrix44f& m,const std::vector<QDomNode>& t)
 		{
 			vcg::Matrix44f tmp;
@@ -273,7 +223,7 @@ namespace io {
 			m = m * tmp;
 		}
 
-		static void AddTranslation(vcg::Matrix44f& m,const QDomNode& t)
+		static void AddTranslation(vcg::Matrix44f& m,const QDomNode t)
 		{
 			QDomNode tr = t.firstChild();
 			QString coord = tr.nodeValue();
@@ -290,7 +240,7 @@ namespace io {
 			m[2][3] = coordlist.at(2).toFloat();
 		}
 
-		static void TransfMatrix(const QDomNode& parentnode,const QDomNode& presentnode,vcg::Matrix44f& m)
+		static void TransfMatrix(const QDomNode parentnode,const QDomNode presentnode,vcg::Matrix44f& m)
 		{
 			if (presentnode == parentnode) return;
 			else

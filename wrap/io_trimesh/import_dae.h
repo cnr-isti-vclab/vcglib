@@ -15,7 +15,7 @@ namespace io {
 
 	private:
 
-		static int LoadMesh(OpenMeshType& m,InfoDAE* info,const QDomNode& geo,const vcg::Matrix44f& t, CallBackPos *cb=0)
+		static int LoadMesh(OpenMeshType& m,AdditionalInfoDAE* info,const QDomNode& geo,const vcg::Matrix44f& t, CallBackPos *cb=0)
 		{
 			if (isThereTag(geo,"mesh"))
 			{
@@ -31,7 +31,7 @@ namespace io {
 				if (vertices_size != 1)
 					return E_INCOMPATIBLECOLLADA141FORMAT;
 
-				QDomNode srcnode = attributeSourcePerSimplex(vertices.at(0),*(info->doc),"POSITION");
+				QDomNode srcnode = attributeSourcePerSimplex(vertices.at(0),*(info->dae->doc),"POSITION");
 				if (srcnode.isNull())
 					return E_NOVERTEXPOSITION;
 
@@ -43,202 +43,205 @@ namespace io {
 					return E_CANTOPEN;
 				int nvert = geosrcposarr_size / 3;
 				size_t offset = m.vert.size();
-				vcg::tri::Allocator<OpenMeshType>::AddVertices(m,nvert);
-
-				QDomNode srcnodenorm = attributeSourcePerSimplex(vertices.at(0),*(info->doc),"NORMAL");
-				QStringList geosrcvertnorm;
-				if (!srcnodenorm.isNull())
-					valueStringList(geosrcvertnorm,srcnodenorm,"float_array");
-
-				QDomNode srcnodetext = attributeSourcePerSimplex(vertices.at(0),*(info->doc),"TEXCOORD");
-				QStringList geosrcverttext;
-				if (!srcnodetext.isNull())
-					valueStringList(geosrcverttext,srcnodetext,"float_array");
-
-				QDomNode srcnodecolor = attributeSourcePerSimplex(vertices.at(0),*(info->doc),"COLOR");
-				QStringList geosrcvertcol;
-				if (!srcnodecolor.isNull())
-					valueStringList(geosrcvertcol,srcnodecolor,"float_array");
-
-				int ii = 0;
-				for(size_t vv = offset;vv < m.vert.size();++vv)
+				if (geosrcposarr_size != 0)
 				{
-					
-					assert((ii * 3 < geosrcposarr_size) && (ii * 3 + 1 < geosrcposarr_size) && (ii * 3 + 2 < geosrcposarr_size));
-					vcg::Point4f tmp = t * vcg::Point4f(geosrcposarr[ii * 3].toFloat(),geosrcposarr[ii * 3 + 1].toFloat(),geosrcposarr[ii * 3 + 2].toFloat(),1.0f);
-					m.vert[vv].P() = vcg::Point3f(tmp.X(),tmp.Y(),tmp.Z());
+					vcg::tri::Allocator<OpenMeshType>::AddVertices(m,nvert);
 
+					QDomNode srcnodenorm = attributeSourcePerSimplex(vertices.at(0),*(info->dae->doc),"NORMAL");
+					QStringList geosrcvertnorm;
 					if (!srcnodenorm.isNull())
-					{
-						assert((ii * 3 < geosrcvertnorm.size()) && (ii * 3 + 1 < geosrcvertnorm.size()) && (ii * 3 + 2 < geosrcvertnorm.size()));
-						vcg::Matrix44f intr44 = vcg::Inverse(t);
-						vcg::Transpose(intr44);
-						Matrix33f intr33;
-						for(unsigned int rr = 0; rr < 2; ++rr)
-						{
-							for(unsigned int cc = 0;cc < 2;++cc)
-								intr33[rr][cc] = intr44[rr][cc];
-						}
-						m.vert[vv].N() = (intr33 * vcg::Point3f(geosrcvertnorm[ii * 3].toFloat(),geosrcvertnorm[ii * 3 + 1].toFloat(),geosrcvertnorm[ii * 3 + 2].toFloat())).Normalize();
-					}
+						valueStringList(geosrcvertnorm,srcnodenorm,"float_array");
 
-					/*if (!srcnodecolor.isNull())
-					{
-					assert((ii * 4 < geosrcvertcol.size()) && (ii * 4 + 1 < geosrcvertcol.size()) && (ii * 4 + 2 < geosrcvertcol.size()) && (ii * 4 + 1 < geosrcvertcol.size()));
-					m.vert[vv].C() = vcg::Color4b(geosrcvertcol[ii * 4].toFloat(),geosrcvertcol[ii * 4 + 1].toFloat(),geosrcvertcol[ii * 4 + 2].toFloat(),geosrcvertcol[ii * 4 + 3].toFloat());
-					}*/
-
+					QDomNode srcnodetext = attributeSourcePerSimplex(vertices.at(0),*(info->dae->doc),"TEXCOORD");
+					QStringList geosrcverttext;
 					if (!srcnodetext.isNull())
+						valueStringList(geosrcverttext,srcnodetext,"float_array");
+
+					QDomNode srcnodecolor = attributeSourcePerSimplex(vertices.at(0),*(info->dae->doc),"COLOR");
+					QStringList geosrcvertcol;
+					if (!srcnodecolor.isNull())
+						valueStringList(geosrcvertcol,srcnodecolor,"float_array");
+
+					int ii = 0;
+					for(size_t vv = offset;vv < m.vert.size();++vv)
 					{
-						assert((ii * 2 < geosrcverttext.size()) && (ii * 2 + 1 < geosrcverttext.size()));
-						m.vert[vv].T() = vcg::TCoord2<float>();
-						m.vert[vv].T().u() = geosrcverttext[ii * 2].toFloat();
-						m.vert[vv].T().v() = geosrcverttext[ii * 2 + 1].toFloat();
-					}
-					++ii;
-				}
+						
+						assert((ii * 3 < geosrcposarr_size) && (ii * 3 + 1 < geosrcposarr_size) && (ii * 3 + 2 < geosrcposarr_size));
+						vcg::Point4f tmp = t * vcg::Point4f(geosrcposarr[ii * 3].toFloat(),geosrcposarr[ii * 3 + 1].toFloat(),geosrcposarr[ii * 3 + 2].toFloat(),1.0f);
+						m.vert[vv].P() = vcg::Point3f(tmp.X(),tmp.Y(),tmp.Z());
 
-				QDomNodeList tripatch = geo.toElement().elementsByTagName("triangles");
-				int tripatch_size = tripatch.size();
-				if (tripatch_size == 0)
-					return E_NOTRIANGLES;
+						if (!srcnodenorm.isNull())
+						{
+							assert((ii * 3 < geosrcvertnorm.size()) && (ii * 3 + 1 < geosrcvertnorm.size()) && (ii * 3 + 2 < geosrcvertnorm.size()));
+							vcg::Matrix44f intr44 = vcg::Inverse(t);
+							vcg::Transpose(intr44);
+							Matrix33f intr33;
+							for(unsigned int rr = 0; rr < 2; ++rr)
+							{
+								for(unsigned int cc = 0;cc < 2;++cc)
+									intr33[rr][cc] = intr44[rr][cc];
+							}
+							m.vert[vv].N() = (intr33 * vcg::Point3f(geosrcvertnorm[ii * 3].toFloat(),geosrcvertnorm[ii * 3 + 1].toFloat(),geosrcvertnorm[ii * 3 + 2].toFloat())).Normalize();
+						}
 
-				for(int tript = 0; tript < tripatch_size;++tript)
-				{
+						/*if (!srcnodecolor.isNull())
+						{
+						assert((ii * 4 < geosrcvertcol.size()) && (ii * 4 + 1 < geosrcvertcol.size()) && (ii * 4 + 2 < geosrcvertcol.size()) && (ii * 4 + 1 < geosrcvertcol.size()));
+						m.vert[vv].C() = vcg::Color4b(geosrcvertcol[ii * 4].toFloat(),geosrcvertcol[ii * 4 + 1].toFloat(),geosrcvertcol[ii * 4 + 2].toFloat(),geosrcvertcol[ii * 4 + 3].toFloat());
+						}*/
 
-					int nfcatt = tripatch.at(tript).toElement().elementsByTagName("input").size();
-
-					QStringList face;
-					valueStringList(face,tripatch.at(tript),"p");
-					int face_size = face.size();
-					int offsetface = (int)m.face.size();
-					if (face_size == 0) return E_NOMESH;
-					vcg::tri::Allocator<OpenMeshType>::AddFaces(m,face_size / (nfcatt * 3));
-					QDomNode wnsrc = QDomNode();
-					QStringList wn;
-					wnsrc = findNodeBySpecificAttributeValue(tripatch.at(tript),"input","semantic","NORMAL");
-					int offnm;
-					if (!wnsrc.isNull())
-					{
-						offnm = wnsrc.toElement().attribute("offset").toInt();
-						QDomNode sn = attributeSourcePerSimplex(tripatch.at(tript),*(info->doc),"NORMAL");
-						valueStringList(wn,sn,"float_array");
-					}
-
-					QDomNode wtsrc = QDomNode();
-					QStringList wt;
-					wtsrc = findNodeBySpecificAttributeValue(tripatch.at(tript),"input","semantic","TEXCOORD");
-					int offtx;
-					if (!wtsrc.isNull())
-					{
-						offtx = wtsrc.toElement().attribute("offset").toInt();
-						QDomNode st = attributeSourcePerSimplex(tripatch.at(tript),*(info->doc),"TEXCOORD");
-						valueStringList(wt,st,"float_array");
+						if (!srcnodetext.isNull())
+						{
+							assert((ii * 2 < geosrcverttext.size()) && (ii * 2 + 1 < geosrcverttext.size()));
+							m.vert[vv].T() = vcg::TCoord2<float>();
+							m.vert[vv].T().u() = geosrcverttext[ii * 2].toFloat();
+							m.vert[vv].T().v() = geosrcverttext[ii * 2 + 1].toFloat();
+						}
+						++ii;
 					}
 
-					QDomNode wcsrc = QDomNode();
-					QStringList wc;
-					wcsrc = findNodeBySpecificAttributeValue(tripatch.at(tript),"input","semantic","COLOR");
-					int offcl;
-					if (!wcsrc.isNull())
+					QDomNodeList tripatch = geo.toElement().elementsByTagName("triangles");
+					int tripatch_size = tripatch.size();
+					if (tripatch_size == 0)
+						return E_NOTRIANGLES;
+
+					for(int tript = 0; tript < tripatch_size;++tript)
 					{
-						offcl = wcsrc.toElement().attribute("offset").toInt();
-						QDomNode sc = attributeSourcePerSimplex(tripatch.at(tript),*(info->doc),"COLOR");
-						valueStringList(wc,sc,"float_array");
-					}
 
-					int jj = 0;	
-					//int dd = m.face.size();
-					for(int ff = offsetface;ff < (int) m.face.size();++ff)
-					{ 
-						int indvt = face.at(jj).toInt();
-						assert(indvt + offset < m.vert.size());
-						m.face[ff].V(0) = &(m.vert[indvt + offset]);
+						int nfcatt = tripatch.at(tript).toElement().elementsByTagName("input").size();
 
-						int indnm;
+						QStringList face;
+						valueStringList(face,tripatch.at(tript),"p");
+						int face_size = face.size();
+						int offsetface = (int)m.face.size();
+						if (face_size == 0) return E_NOMESH;
+						vcg::tri::Allocator<OpenMeshType>::AddFaces(m,face_size / (nfcatt * 3));
+						QDomNode wnsrc = QDomNode();
+						QStringList wn;
+						wnsrc = findNodeBySpecificAttributeValue(tripatch.at(tript),"input","semantic","NORMAL");
+						int offnm;
 						if (!wnsrc.isNull())
 						{
-							indnm = face.at(jj + offnm).toInt();
-							assert(indnm * 3 < wn.size());
-							m.face[ff].WN(0) = vcg::Point3f(wn.at(indnm * 3).toFloat(),wn.at(indnm * 3 + 1).toFloat(),wn.at(indnm * 3 + 2).toFloat());
+							offnm = wnsrc.toElement().attribute("offset").toInt();
+							QDomNode sn = attributeSourcePerSimplex(tripatch.at(tript),*(info->dae->doc),"NORMAL");
+							valueStringList(wn,sn,"float_array");
 						}
 
-						int indtx;
+						QDomNode wtsrc = QDomNode();
+						QStringList wt;
+						wtsrc = findNodeBySpecificAttributeValue(tripatch.at(tript),"input","semantic","TEXCOORD");
+						int offtx;
 						if (!wtsrc.isNull())
 						{
-							indtx = face.at(jj + offtx).toInt();
-							assert(indtx * 2 < wt.size());
-							m.face[ff].WT(0) = vcg::TCoord2<float>();
-							m.face[ff].WT(0).u() = wt.at(indtx * 2).toFloat();
-							m.face[ff].WT(0).v() = wt.at(indtx * 2 + 1).toFloat();
-							m.face[ff].WT(0).n() = 1;
+							offtx = wtsrc.toElement().attribute("offset").toInt();
+							QDomNode st = attributeSourcePerSimplex(tripatch.at(tript),*(info->dae->doc),"TEXCOORD");
+							valueStringList(wt,st,"float_array");
 						}
 
-						/*int indcl;
+						QDomNode wcsrc = QDomNode();
+						QStringList wc;
+						wcsrc = findNodeBySpecificAttributeValue(tripatch.at(tript),"input","semantic","COLOR");
+						int offcl;
 						if (!wcsrc.isNull())
 						{
-						indcl = face.at(jj + offcl).toInt();
-						assert(indcl * 4 < wc.size());
-						m.face[ff].WC(0) = vcg::Color4b(wc.at(indcl * 4).toFloat(),wc.at(indcl * 4 + 1).toFloat(),wc.at(indcl * 4 + 2).toFloat(),wc.at(indcl * 4 + 3).toFloat());
-						}*/
-						jj += nfcatt;
-
-						indvt = face.at(jj).toInt();
-						assert(indvt + offset < m.vert.size());
-						m.face[ff].V(1) = &(m.vert[indvt + offset]);
-						if (!wnsrc.isNull())
-						{
-							indnm = face.at(jj + offnm).toInt();
-							assert(indnm * 3 < wn.size());
-							m.face[ff].WN(1) = vcg::Point3f(wn.at(indnm * 3).toFloat(),wn.at(indnm * 3 + 1).toFloat(),wn.at(indnm * 3 + 2).toFloat());
+							offcl = wcsrc.toElement().attribute("offset").toInt();
+							QDomNode sc = attributeSourcePerSimplex(tripatch.at(tript),*(info->dae->doc),"COLOR");
+							valueStringList(wc,sc,"float_array");
 						}
 
-						if (!wtsrc.isNull())
-						{
-							indtx = face.at(jj + offtx).toInt();
-							assert(indtx * 2 < wt.size());
-							m.face[ff].WT(1) = vcg::TCoord2<float>();
-							m.face[ff].WT(1).u() = wt.at(indtx * 2).toFloat();
-							m.face[ff].WT(1).v() = wt.at(indtx * 2 + 1).toFloat();	
-							m.face[ff].WT(1).n() = 1;
+						int jj = 0;	
+						//int dd = m.face.size();
+						for(int ff = offsetface;ff < (int) m.face.size();++ff)
+						{ 
+							int indvt = face.at(jj).toInt();
+							assert(indvt + offset < m.vert.size());
+							m.face[ff].V(0) = &(m.vert[indvt + offset]);
+
+							int indnm;
+							if (!wnsrc.isNull())
+							{
+								indnm = face.at(jj + offnm).toInt();
+								assert(indnm * 3 < wn.size());
+								m.face[ff].WN(0) = vcg::Point3f(wn.at(indnm * 3).toFloat(),wn.at(indnm * 3 + 1).toFloat(),wn.at(indnm * 3 + 2).toFloat());
+							}
+
+							int indtx;
+							if (!wtsrc.isNull())
+							{
+								indtx = face.at(jj + offtx).toInt();
+								assert(indtx * 2 < wt.size());
+								m.face[ff].WT(0) = vcg::TCoord2<float>();
+								m.face[ff].WT(0).u() = wt.at(indtx * 2).toFloat();
+								m.face[ff].WT(0).v() = wt.at(indtx * 2 + 1).toFloat();
+								m.face[ff].WT(0).n() = 1;
+							}
+
+							/*int indcl;
+							if (!wcsrc.isNull())
+							{
+							indcl = face.at(jj + offcl).toInt();
+							assert(indcl * 4 < wc.size());
+							m.face[ff].WC(0) = vcg::Color4b(wc.at(indcl * 4).toFloat(),wc.at(indcl * 4 + 1).toFloat(),wc.at(indcl * 4 + 2).toFloat(),wc.at(indcl * 4 + 3).toFloat());
+							}*/
+							jj += nfcatt;
+
+							indvt = face.at(jj).toInt();
+							assert(indvt + offset < m.vert.size());
+							m.face[ff].V(1) = &(m.vert[indvt + offset]);
+							if (!wnsrc.isNull())
+							{
+								indnm = face.at(jj + offnm).toInt();
+								assert(indnm * 3 < wn.size());
+								m.face[ff].WN(1) = vcg::Point3f(wn.at(indnm * 3).toFloat(),wn.at(indnm * 3 + 1).toFloat(),wn.at(indnm * 3 + 2).toFloat());
+							}
+
+							if (!wtsrc.isNull())
+							{
+								indtx = face.at(jj + offtx).toInt();
+								assert(indtx * 2 < wt.size());
+								m.face[ff].WT(1) = vcg::TCoord2<float>();
+								m.face[ff].WT(1).u() = wt.at(indtx * 2).toFloat();
+								m.face[ff].WT(1).v() = wt.at(indtx * 2 + 1).toFloat();	
+								m.face[ff].WT(1).n() = 1;
+							}
+
+							/*if (!wcsrc.isNull())
+							{
+							indcl = face.at(jj + offcl).toInt();
+							assert(indcl * 4 < wc.size());
+							m.face[ff].WC(1) = vcg::Color4b(wc.at(indcl * 4).toFloat(),wc.at(indcl * 4 + 1).toFloat(),wc.at(indcl * 4 + 2).toFloat(),wc.at(indcl * 4 + 3).toFloat());
+							}*/
+							jj += nfcatt;
+
+							indvt = face.at(jj).toInt();
+							assert(indvt + offset < m.vert.size());
+							m.face[ff].V(2) = &(m.vert[indvt + offset]);
+							if (!wnsrc.isNull())
+							{
+								indnm = face.at(jj + offnm).toInt();
+								assert(indnm * 3 < wn.size());
+								m.face[ff].WN(2) = vcg::Point3f(wn.at(indnm * 3).toFloat(),wn.at(indnm * 3 + 1).toFloat(),wn.at(indnm * 3 + 2).toFloat());
+							}
+
+							if (!wtsrc.isNull())
+							{
+								indtx = face.at(jj + offtx).toInt();
+								assert(indtx * 2 < wt.size());
+								m.face[ff].WT(2) = vcg::TCoord2<float>();
+								m.face[ff].WT(2).u() = wt.at(indtx * 2).toFloat();
+								m.face[ff].WT(2).v() = wt.at(indtx * 2 + 1).toFloat();	
+								m.face[ff].WT(2).n() = 1;
+							}
+
+							/*if (!wcsrc.isNull())
+							{
+							indcl = face.at(jj + offcl).toInt();
+							assert(indcl * 4 < wc.size());
+							m.face[ff].WC(2) = vcg::Color4b(wc.at(indcl * 4).toFloat(),wc.at(indcl * 4 + 1).toFloat(),wc.at(indcl * 4 + 2).toFloat(),wc.at(indcl * 4 + 3).toFloat());
+							}*/
+							jj += nfcatt;
+
 						}
-
-						/*if (!wcsrc.isNull())
-						{
-						indcl = face.at(jj + offcl).toInt();
-						assert(indcl * 4 < wc.size());
-						m.face[ff].WC(1) = vcg::Color4b(wc.at(indcl * 4).toFloat(),wc.at(indcl * 4 + 1).toFloat(),wc.at(indcl * 4 + 2).toFloat(),wc.at(indcl * 4 + 3).toFloat());
-						}*/
-						jj += nfcatt;
-
-						indvt = face.at(jj).toInt();
-						assert(indvt + offset < m.vert.size());
-						m.face[ff].V(2) = &(m.vert[indvt + offset]);
-						if (!wnsrc.isNull())
-						{
-							indnm = face.at(jj + offnm).toInt();
-							assert(indnm * 3 < wn.size());
-							m.face[ff].WN(2) = vcg::Point3f(wn.at(indnm * 3).toFloat(),wn.at(indnm * 3 + 1).toFloat(),wn.at(indnm * 3 + 2).toFloat());
-						}
-
-						if (!wtsrc.isNull())
-						{
-							indtx = face.at(jj + offtx).toInt();
-							assert(indtx * 2 < wt.size());
-							m.face[ff].WT(2) = vcg::TCoord2<float>();
-							m.face[ff].WT(2).u() = wt.at(indtx * 2).toFloat();
-							m.face[ff].WT(2).v() = wt.at(indtx * 2 + 1).toFloat();	
-							m.face[ff].WT(2).n() = 1;
-						}
-
-						/*if (!wcsrc.isNull())
-						{
-						indcl = face.at(jj + offcl).toInt();
-						assert(indcl * 4 < wc.size());
-						m.face[ff].WC(2) = vcg::Color4b(wc.at(indcl * 4).toFloat(),wc.at(indcl * 4 + 1).toFloat(),wc.at(indcl * 4 + 2).toFloat(),wc.at(indcl * 4 + 3).toFloat());
-						}*/
-						jj += nfcatt;
-
 					}
 				}
 				return E_NOERROR;
@@ -254,7 +257,7 @@ namespace io {
 				QDomNodeList nlst = txlst.at(img).toElement().elementsByTagName("init_from");
 				if (nlst.size() > 0)
 				{
-					inf->dae->texturefile.push_back(nlst.at(0).firstChild().nodeValue());
+					inf->texturefile.push_back(nlst.at(0).firstChild().nodeValue());
 				}
 			}
 		}
@@ -264,12 +267,11 @@ namespace io {
 		//merge all meshes in the collada's file in the templeted mesh m
 		//I assume the mesh 
 		
-		static int Open(OpenMeshType& m,const char* filename,AdditionalInfo*& addinfo, CallBackPos *cb=0)
+		static int Open(OpenMeshType& m,const char* filename,AdditionalInfo*& info, CallBackPos *cb=0)
 		{
 			AdditionalInfoDAE* inf = new AdditionalInfoDAE();
 			inf->dae = new InfoDAE(); 
-			InfoDAE* info = inf->dae;
-
+			
 			QDomDocument* doc = new QDomDocument(filename);
 			QFile file(filename);
 			if (!file.open(QIODevice::ReadOnly))
@@ -281,10 +283,10 @@ namespace io {
 			}
 			file.close();
 			
-			info->doc = doc;
+			inf->dae->doc = doc;
 			//GetTexture(*(info->doc),inf);
 
-			QDomNodeList scenes = info->doc->elementsByTagName("scene");
+			QDomNodeList scenes = inf->dae->doc->elementsByTagName("scene");
 			int scn_size = scenes.size();
 			if (scn_size == 0) 
 				return E_NO3DSCENE;
@@ -304,8 +306,8 @@ namespace io {
 				{
 					QString libscn_url;
 					referenceToANodeAttribute(instscenes.at(instscn),"url",libscn_url);	
-					QDomNode nd = QDomNode(*(info->doc));
-					QDomNode visscn = findNodeBySpecificAttributeValue(*(info->doc),"visual_scene","id",libscn_url);
+					QDomNode nd = QDomNode(*(inf->dae->doc));
+					QDomNode visscn = findNodeBySpecificAttributeValue(*(inf->dae->doc),"visual_scene","id",libscn_url);
 					if(visscn.isNull())
 						return E_UNREFERENCEBLEDCOLLADAATTRIBUTE;
 					
@@ -322,9 +324,8 @@ namespace io {
 						{
 							
 							geoinst_found |= true;
-							QDomNodeList geolib = info->doc->elementsByTagName("library_geometries");
-							int geolib_size = geolib.size();
-							assert(geolib_size == 1);
+							QDomNodeList geolib = inf->dae->doc->elementsByTagName("library_geometries");
+							assert(geolib.size() == 1);
 							//!!!!!!!!!!!!!!!!!here will be the code for geometry transformations!!!!!!!!!!!!!!!!!!!!!!
 							
 							for(int geoinst_ind = 0;geoinst_ind < geoinst_size;++geoinst_ind)
@@ -338,7 +339,7 @@ namespace io {
 								vcg::Matrix44f tr;
 								tr.SetIdentity();
 								TransfMatrix(visscn,geoinst.at(geoinst_ind),tr);
-								problem |= LoadMesh(m,info,geo,tr); 
+								problem |= LoadMesh(m,inf,geo,tr); 
 								if (problem) return problem;
 							}
 						}
@@ -348,9 +349,8 @@ namespace io {
 
 			if (!geoinst_found)
 			{
-				QDomNodeList geolib = info->doc->elementsByTagName("library_geometries");
-				int geolib_size = geolib.size();
-				assert(geolib_size == 1);
+				QDomNodeList geolib = inf->dae->doc->elementsByTagName("library_geometries");
+				assert(geolib.size() == 1);
 				QDomNodeList geochild = geolib.at(0).childNodes();
 				int geochild_size = geochild.size();
 				int problem = 0;
@@ -358,11 +358,11 @@ namespace io {
 				{
 					vcg::Matrix44f tmp;
 					tmp.SetIdentity();
-					problem |= LoadMesh(m,info,geochild.at(chd),tmp); 
+					problem |= LoadMesh(m,inf,geochild.at(chd),tmp); 
 					if (problem) return problem;
 				}
 			}
-			addinfo = inf;
+			info = inf;
 			return E_NOERROR;
 		}
 
@@ -375,9 +375,9 @@ namespace io {
 			bool bHasPerVertexNormal = false;
 			bool bHasPerVertexText = false;
 			
-			AdditionalInfoDAE* inf = new AdditionalInfoDAE();
-			inf->dae = new InfoDAE(); 
-			InfoDAE* info = inf->dae;
+			AdditionalInfoDAE* info = new AdditionalInfoDAE();
+			info->dae = new InfoDAE(); 
+			
 
 			QDomDocument* doc = new QDomDocument(filename);
 			QFile file(filename);
@@ -391,9 +391,9 @@ namespace io {
 			file.close();
 			
 
-			info->doc = doc;
-			GetTexture(*(info->doc),inf);
-			QDomNodeList scenes = info->doc->elementsByTagName("scene");
+			info->dae->doc = doc;
+			GetTexture(*(info->dae->doc),info);
+			QDomNodeList scenes = info->dae->doc->elementsByTagName("scene");
 			int scn_size = scenes.size();
 			
 
@@ -412,8 +412,8 @@ namespace io {
 				{
 					QString libscn_url;
 					referenceToANodeAttribute(instscenes.at(instscn),"url",libscn_url);	
-					QDomNode nd = QDomNode(*(info->doc));
-					QDomNode visscn = findNodeBySpecificAttributeValue(*(info->doc),"visual_scene","id",libscn_url);
+					QDomNode nd = QDomNode(*(info->dae->doc));
+					QDomNode visscn = findNodeBySpecificAttributeValue(*(info->dae->doc),"visual_scene","id",libscn_url);
 					if(visscn.isNull())
 						return false;
 					
@@ -422,7 +422,6 @@ namespace io {
 					QDomNodeList visscn_child = visscn.childNodes();
 					
 					//for each direct child of a libscn_url visual scene find if there is some geometry instance
-					int problem = 0;
 					for(int chdind = 0; chdind < visscn_child.size();++chdind)
 					{
 						//QDomNodeList& geoinst = visscn_child.at(chdind).toElement().elementsByTagName("instance_geometry");
@@ -432,9 +431,8 @@ namespace io {
 						{
 							
 							geoinst_found |= true;
-							QDomNodeList geolib = info->doc->elementsByTagName("library_geometries");
-							int geolib_size = geolib.size();
-							assert(geolib_size == 1);
+							QDomNodeList geolib = info->dae->doc->elementsByTagName("library_geometries");
+							assert(geolib.size() == 1);
 							//!!!!!!!!!!!!!!!!!here will be the code for geometry transformations!!!!!!!!!!!!!!!!!!!!!!
 							info->numvert = 0;
 							info->numface = 0;
@@ -490,9 +488,8 @@ namespace io {
 			
 			if (!geoinst_found)
 			{
-				QDomNodeList geolib = info->doc->elementsByTagName("library_geometries");
-				int geolib_size = geolib.size();
-				assert(geolib_size == 1);
+				QDomNodeList geolib = info->dae->doc->elementsByTagName("library_geometries");
+				assert(geolib.size() == 1);
 				QDomNodeList geochild = geolib.at(0).toElement().elementsByTagName("geometry");
 				//!!!!!!!!!!!!!!!!!here will be the code for geometry transformations!!!!!!!!!!!!!!!!!!!!!!
 				info->numvert = 0;
@@ -554,8 +551,9 @@ namespace io {
 			
 			
 
-			delete (info->doc);
-			addinfo = inf;
+			delete (info->dae->doc);
+			info->dae->doc = NULL;
+			addinfo = info;
 			return true;
 		}
 	};
