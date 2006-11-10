@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2006/09/20 17:18:26  ponchio
+VDistFunct() at line 292 was passed as a temporary.
+Invalid under g++. Fixed.
+
 Revision 1.21  2006/02/09 08:38:04  pietroni
 sintax error corrected
 
@@ -330,7 +334,33 @@ namespace vcg {
 			typedef vcg::RayTriangleIntersectionFunctor<true> FintFunct;
 			return(gr.DoRay(FintFunct(),mf,_ray,_maxDist,_t));
 		}
-
+		
+		template <class MESH, class GRID>
+			typename GRID::ObjPtr DoRay(MESH & mesh,GRID & gr, const Ray3<typename GRID::ScalarType> & _ray,
+										const typename GRID::ScalarType & _maxDist, 
+										typename GRID::ScalarType & _t, 
+										typename GRID::CoordType & _normf) 
+		{
+			typedef typename MESH::FaceType FaceType;
+			typedef typename MESH::ScalarType ScalarType;
+			typedef FaceTmark<MESH> MarkerFace;
+			MarkerFace mf;
+			mf.SetMesh(&mesh);
+			typedef vcg::RayTriangleIntersectionFunctor<true> FintFunct;
+			FaceType *f=gr.DoRay(FintFunct(),mf,_ray,_maxDist,_t);
+			GRID::CoordType dir=_ray.Direction();
+			dir.Normalize();
+			GRID::CoordType int_point=_ray.Origin()+_ray.Direction()*_t;
+			GRID::ScalarType alfa,beta,gamma;
+			if (f!=NULL)
+			{
+				f->InterpolationParameters(int_point, alfa, beta, gamma);
+				_normf =  (f->V(0)->cN())*alfa+
+						  (f->V(1)->cN())*beta+
+						  (f->V(2)->cN())*gamma ;
+			}
+			return f;
+		}
 
 		//**ITERATORS DEFINITION**//
 
@@ -351,8 +381,8 @@ namespace vcg {
 			ClosestFaceIterator(GridType &_Si):ClosestBaseType(_Si,PDistFunct()){}
 
 //    Commented out: it seems unuseful and make gcc complain. p.
-//      void SetMesh(MeshType *m)
-//			{this->tm.SetMesh(m);}
+      void SetMesh(MeshType *m)
+			{this->tm.SetMesh(m);}
 		};
 
 		template <class GRID,class MESH>
@@ -367,9 +397,9 @@ namespace vcg {
 
 			ClosestVertexIterator(GridType &_Si):ClosestBaseType(_Si,VDistFunct()){}
 
-////    Commented out: it seems unuseful and make gcc complain. p.
-//			void SetMesh(MeshType *m)
-//			{this->tm.SetMesh(m);}
+//    Commented out: it seems unuseful and make gcc complain. p.
+			void SetMesh(MeshType *m)
+			{this->tm.SetMesh(m);}
 		};
 
 		template <class GRID,class MESH>
@@ -386,9 +416,9 @@ namespace vcg {
 
 			TriRayIterator(GridType &_Si):RayBaseType(_Si,FintFunct()){}
 
-////    Commented out: it  seems unuseful and make gcc complain. p.
-//			void SetMesh(MeshType *m)
-//			{this->tm.SetMesh(m);}
+//    Commented out: it  seems unuseful and make gcc complain. p.
+			void SetMesh(MeshType *m)
+			{this->tm.SetMesh(m);}
 
 		};
 
