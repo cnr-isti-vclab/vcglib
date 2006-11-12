@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2006/11/10 11:41:49  pietroni
+added DoRayFuntion that return interpolated normal
+
 Revision 1.22  2006/09/20 17:18:26  ponchio
 VDistFunct() at line 292 was passed as a temporary.
 Invalid under g++. Fixed.
@@ -331,8 +334,10 @@ namespace vcg {
 			typedef FaceTmark<MESH> MarkerFace;
 			MarkerFace mf;
 			mf.SetMesh(&mesh);
+			Ray3<typename GRID::ScalarType> _ray1=_ray;
+			_ray1.Normalize();
 			typedef vcg::RayTriangleIntersectionFunctor<true> FintFunct;
-			return(gr.DoRay(FintFunct(),mf,_ray,_maxDist,_t));
+			return(gr.DoRay(FintFunct(),mf,_ray1,_maxDist,_t));
 		}
 		
 		template <class MESH, class GRID>
@@ -347,10 +352,12 @@ namespace vcg {
 			MarkerFace mf;
 			mf.SetMesh(&mesh);
 			typedef vcg::RayTriangleIntersectionFunctor<true> FintFunct;
-			FaceType *f=gr.DoRay(FintFunct(),mf,_ray,_maxDist,_t);
+			Ray3<typename GRID::ScalarType> _ray1=_ray;
+			_ray1.Normalize();
+			FaceType *f=gr.DoRay(FintFunct(),mf,_ray1,_maxDist,_t);
 			GRID::CoordType dir=_ray.Direction();
 			dir.Normalize();
-			GRID::CoordType int_point=_ray.Origin()+_ray.Direction()*_t;
+			GRID::CoordType int_point=_ray.Origin()+_ray1.Direction()*_t;
 			GRID::ScalarType alfa,beta,gamma;
 			if (f!=NULL)
 			{
