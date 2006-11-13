@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2006/10/09 20:23:00  cignoni
+Added a minimum method that uses SVD. Unfortunately it is much much slower.
+
 Revision 1.5  2004/12/10 01:31:59  cignoni
 added an alternative QuadricMinimization (we should use LRU decomposition!!)
 
@@ -43,6 +46,7 @@ created
 
 #include <vcg/space/point3.h>
 #include <vcg/space/plane3.h>
+#include <vcg/math/matrix33.h>
 
 namespace vcg {
 namespace math {
