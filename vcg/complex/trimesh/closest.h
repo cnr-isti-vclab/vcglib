@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.24  2006/11/12 02:41:03  pietroni
+added normalization of normal in DoRay functions
+
 Revision 1.23  2006/11/10 11:41:49  pietroni
 added DoRayFuntion that return interpolated normal
 
@@ -355,10 +358,10 @@ namespace vcg {
 			Ray3<typename GRID::ScalarType> _ray1=_ray;
 			_ray1.Normalize();
 			FaceType *f=gr.DoRay(FintFunct(),mf,_ray1,_maxDist,_t);
-			GRID::CoordType dir=_ray.Direction();
+			typename GRID::CoordType dir=_ray.Direction();
 			dir.Normalize();
-			GRID::CoordType int_point=_ray.Origin()+_ray1.Direction()*_t;
-			GRID::ScalarType alfa,beta,gamma;
+			typename GRID::CoordType int_point=_ray.Origin()+_ray1.Direction()*_t;
+			typename GRID::ScalarType alfa,beta,gamma;
 			if (f!=NULL)
 			{
 				f->InterpolationParameters(int_point, alfa, beta, gamma);
