@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.25  2006/10/13 12:59:24  cignoni
+Added **explicit** constructor from three coords of a different scalartype
+
 Revision 1.24  2006/09/28 13:37:35  m_di_benedetto
 added non const * V()
 
@@ -100,6 +103,7 @@ namespace vcg {
         The class is templated over the ScalarType class that is used to represent coordinates. All the usual
         operator overloading (* + - ...) is present. 
      */
+template <class T> class Box3;
 
 template <class P3ScalarType> class Point3
 {
@@ -336,7 +340,8 @@ public:
     _v[1]= ro*sin(theta)*sin(phi);
     _v[2]= ro*cos(phi);
 	}
-
+	
+  Box3<P3ScalarType> GetBBox(Box3<P3ScalarType> &bb) const;
 //@}
 //@{
 

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2006/09/28 13:37:13  m_di_benedetto
+Added "const" to Collide()
+
 Revision 1.12  2006/07/06 12:42:10  ganovelli
 tolto il tipo enumerato axis
 
@@ -349,6 +352,9 @@ public:
 	}
 }; // end class definition
 
+template <class T> Box3<T> Point3<T>::GetBBox(Box3<T> &bb) const {
+ bb.Set( *this );
+}
 
 
 
