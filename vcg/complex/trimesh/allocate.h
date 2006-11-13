@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.32  2006/10/27 11:06:29  ganovelli
+the calls to  HasFFAdjacency e HasVFAdjacency have been changed to override them for the optional attributes (see vcg/complex/trimesh/base.h)
+
 Revision 1.31  2006/10/17 06:54:14  fiorin
 Added #include <assert.h>
 
@@ -186,7 +189,6 @@ namespace vcg {
 			*/
 			static VertexIterator AddVertices(MeshType &m,int n, PointerUpdater<VertexPointer> &pu)
 			{
-        assert(n>0);
 				VertexIterator last;
 				pu.Clear();
 				if(m.vert.empty()) pu.oldBase=0;  // if the vector is empty we cannot find the last valid element
@@ -261,7 +263,6 @@ namespace vcg {
 			*/
 			static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu)
 			{
-        assert(n>0); 
 				FaceIterator  last;
 				pu.Clear();
 				if(m.face.empty()) {
