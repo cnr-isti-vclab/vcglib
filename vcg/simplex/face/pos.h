@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2006/11/09 17:22:56  cignoni
+Added ismanifold
+
 Revision 1.22  2006/10/07 14:24:26  cignoni
 Explained the use of V() operator of a pos
 
@@ -108,13 +111,17 @@ namespace face {
 /** \addtogroup face */
 /*@{*/
 
+// Needed Prototypes (pos is include before topology)
+template <class FaceType>
+bool IsBorder(FaceType const & f,  const int j );
+template <class FaceType>
+bool IsManifold(FaceType const & f,  const int j );
+
 /**  Templated over the class face, it stores a \em position over a face in a mesh.
 	It contain a pointer to the current face, 
 	the index of one edge and a edge's incident vertex.
  */
  
-template <class FaceType>
-bool IsBorder(FaceType const & f,  const int j );
 
 template <class FaceType> 
 class Pos
