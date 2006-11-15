@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.26  2006/11/13 13:03:45  ponchio
+Added GetBBox in Point3 (declaration) the body of the function is in box3.h
+
 Revision 1.25  2006/10/13 12:59:24  cignoni
 Added **explicit** constructor from three coords of a different scalartype
 
@@ -326,19 +329,39 @@ public:
 		if(n>0.0) {	_v[0] /= n;	_v[1] /= n;	_v[2] /= n;  }
 		return *this;
 	}
-		// Convert to polar coordinates
-	void ToPolar( P3ScalarType & ro, P3ScalarType & theta, P3ScalarType & fi ) const
+	
+	/** 
+	 * Convert to polar coordinates from cartesian coordinates.
+	 *
+	 * Theta is the azimuth angle and ranges between [0, 360) degrees.
+	 * Phi is the elevation angle (not the polar angle) and ranges between [-90, 90] degrees.
+	 *
+	 * /note Note that instead of the classical polar angle, which ranges between 
+	 *       0 and 180 degrees we opt for the elevation angle to obtain a more 
+	 *       intuitive spherical coordinate system.
+	 */
+	void ToPolar(P3ScalarType &ro, P3ScalarType &theta, P3ScalarType &phi) const
 	{
 		ro = Norm();
-		theta = (P3ScalarType)atan2( _v[1], _v[0] );
-		fi    = (P3ScalarType)acos( _v[2]/ro );
+		theta = (P3ScalarType)atan2(_v[2], _v[0]);
+		phi   = (P3ScalarType)asin(_v[1]/ro);
 	}
 
-  void FromPolar( const P3ScalarType & ro, const P3ScalarType & theta, const P3ScalarType & phi )
+	/**
+	 * Convert from polar coordinates to cartesian coordinates.
+	 *
+	 * Theta is the azimuth angle and ranges between [0, 360) degrees.
+	 * Phi is the elevation angle (not the polar angle) and ranges between [-90, 90] degrees.
+	 *
+	 * \note Note that instead of the classical polar angle, which ranges between 
+	 *       0 and 180 degrees, we opt for the elevation angle to obtain a more 
+	 *       intuitive spherical coordinate system.
+	 */
+  void FromPolar(const P3ScalarType &ro, const P3ScalarType &theta, const P3ScalarType &phi)
 	{
-    _v[0]= ro*cos(theta)*sin(phi);
-    _v[1]= ro*sin(theta)*sin(phi);
-    _v[2]= ro*cos(phi);
+    _v[0]= ro*cos(theta)*cos(phi);
+    _v[1]= ro*sin(phi);
+    _v[2]= ro*sin(theta)*cos(phi);
 	}
 	
   Box3<P3ScalarType> GetBBox(Box3<P3ScalarType> &bb) const;
