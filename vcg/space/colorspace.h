@@ -126,7 +126,8 @@ public:
 		ILLUMINANT_D55 = 4,	
 		ILLUMINANT_D65 = 5,	
 		ILLUMINANT_D75 = 6,
-		ILLUMINANT_E = 7
+		ILLUMINANT_E = 7,
+		ILLUMINANT_INVALID = 8
 	};
 
 	enum RGBSpaces
@@ -1371,7 +1372,10 @@ public:
 			return 2.2;
 		}
 		else
+		{
 			assert(false);
+			return 0.0;
+		}
 	}
 
 	static Illuminant refIlluminant(RGBSpaces rgb_space)
@@ -1442,7 +1446,10 @@ public:
 			return ILLUMINANT_D50;
 		}
 		else
+		{
 			assert(false);
+			return ILLUMINANT_INVALID;
+		}
 	}
 
 	static Color4<T> RGBtoHSV(const Color4<T> & color)
@@ -1888,9 +1895,9 @@ public:
 	{
 		double X,Y,Z;
 		xyYtoXYZ(static_cast<double>(color[0]), static_cast<double>(color[1]),
-			static_cast<double>(color[2]), X,Y,Z));
+			static_cast<double>(color[2]), X,Y,Z);
 
-		Color4<T>(X,Y,Z,color[3]);
+		Color4<T> c(X,Y,Z,color[3]);
 		return c;
 	}
 
@@ -1907,7 +1914,8 @@ public:
 		double x,y,Y;
 		XYZtoxyY(static_cast<double>(color[0]), static_cast<double>(color[1]),
 			static_cast<double>(color[2]), x, y, Y);
-		Color4<T>(x,y,Y,0.0);
+
+		Color4<T> c(x,y,Y,color[3]);
 		return c;
 	}
 
@@ -1926,41 +1934,42 @@ public:
 		double X,Y,Z;
     chromaticAdaptation(static_cast<double>(color[0]), static_cast<double>(color[1]),
 			static_cast<double>(color[2]), src, X, Y, Z, dst, response);
+
 		Color4<T> c(X,Y,Z,color[3]);
 		return c;
 	}
 
 	// XYZ (Illuminant src) --> XYZ (Illuminant dest) - [ILLUMINANT CHANGE]
-	static void chromaticAdaptation(double _X, double _Y, double _Z, Illuminant src, 
+	static void chromaticAdaptation(double Xi, double Yi, double Zi, Illuminant src,
 		double &X, double &Y, double &Z, Illuminant dst, ConeResponse response = BRADFORD)
 	{
 		int index = static_cast<int>(src) * 8 * 3 * 3 * 3 + static_cast<int>(dst) * 3 * 3 * 3 +
 			static_cast<int>(response) * 3 * 3;
 
-		X = CA(index)   * _X + CA(index+3) * _Y + CA(index+6) * _Z;
-		Y = CA(index+1) * _X + CA(index+4) * _Y + CA(index+7) * _Z;
-		Z = CA(index+2) * _X + CA(index+5) * _Y + CA(index+8) * _Z;
+		X = CA(index)   * Xi + CA(index+3) * Yi + CA(index+6) * Zi;
+		Y = CA(index+1) * Xi + CA(index+4) * Yi + CA(index+7) * Zi;
+		Z = CA(index+2) * Xi + CA(index+5) * Yi + CA(index+8) * Zi;
 	}
 
 	// RGB (working space src) --> RGB (working space dest) - [RGB WORKING SPACE CHANGE]
-	static Color4<T> RGBtoRGB(const Color4<T> & color, RGBSpaces src, RGBSpaces dest, 
+	static Color4<T> RGBtoRGB(const Color4<T> & color, RGBSpaces rgbsrc, RGBSpaces rgbdest, 
 		ConeResponse response = BRADFORD)
 	{
 		double R,G,B;
 		RGBtoRGB(static_cast<double>(color[0]), static_cast<double>(color[1]),
-			static_cast<double>(color[2]), src, R,G,B, dest, response);
+			static_cast<double>(color[2]), rgbsrc, R,G,B, rgbdest, response);
 
 		Color4<T> c(R,G,B,color[3]);
 		return c;
 	}
 
 	// RGB (working space src) --> RGB (working space dest) - [RGB WORKING SPACE CHANGE]
-	static void RGBtoRGB(double _R, double _G, double _B, RGBSpaces src, 
-		double &R, double &G, double &B, RGBSpaces dest, ConeResponse response = BRADFORD)
+	static void RGBtoRGB(double Ri, double Gi, double Bi, RGBSpaces rgbsrc,
+		double &R, double &G, double &B, RGBSpaces rgbdest, ConeResponse response = BRADFORD)
 	{
 		double X,Y,Z;
-		RGBtoXYZ(_R, _G, _B, src, X,Y,Z, refIlluminant(src));
-		XYZtoRGB(X,Y,Z, refIlluminant(src), R,G,B, dest);
+		RGBtoXYZ(Ri, Gi, Bi, rgbsrc, X,Y,Z, refIlluminant(rgbsrc));
+		XYZtoRGB(X,Y,Z, refIlluminant(rgbsrc), R,G,B, rgbdest);
 	}
 	
 };
