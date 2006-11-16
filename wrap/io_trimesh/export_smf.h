@@ -20,38 +20,78 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
+/****************************************************************************
+  History
+$Log: not supported by cvs2svn $
+****************************************************************************/
 
+#ifndef __VCGLIB_EXPORT_SMF
+#define __VCGLIB_EXPORT_SMF
 
-/** Function to save to Smf format file.
-	@param filename Name of the new Smf file
-*/
-void Save_Smf(const char * filename)
-{
-	FILE *fp;
-  fp = fopen(filename,"wb");
-  fprintf(fp,"#SMF \n" );
+#include <stdio.h>
 
-	face_iterator fi;
-	vertex_iterator vi;
-	map<vertex_pointer,int> index;
-	int ind;
-
-	for(ind=1,vi=vert.begin(); vi!=vert.end(); ++vi,++ind)
+namespace vcg {
+namespace tri {
+namespace io {
+	
+	template <class SaveMeshType>
+	class ExporterSMF
 	{
-	  fprintf(fp,"v " );
-		fprintf(fp,"%f%s",(*vi).P()[0]," " );
-    fprintf(fp,"%f%s",(*vi).P()[1]," " );
-		fprintf(fp,"%f%s",(*vi).P()[2],"\n");
-		index[&*vi] = ind;
-	}
+	public:
+		typedef typename SaveMeshType::VertexPointer VertexPointer;
+		typedef typename SaveMeshType::ScalarType ScalarType;
+		typedef typename SaveMeshType::VertexType VertexType;
+		typedef typename SaveMeshType::FaceType FaceType;
+		typedef typename SaveMeshType::VertexIterator VertexIterator;
+		typedef typename SaveMeshType::FaceIterator FaceIterator;
+		
+		static int Save(SaveMeshType &m, const char * filename, const int &mask, CallBackPos *cb=0)
+		{
+			VertexIterator vi;
+			FaceIterator fi;
+			FILE *fp;
+			fp = fopen(filename,"wb");
+			fprintf(fp,"#SMF \n" );
+			
+			std::map<VertexPointer,int> index;
+			int ind;
+	
+			for(ind=1,vi=m.vert.begin(); vi!=m.vert.end(); ++vi,++ind)
+			{
+				fprintf(fp,"v " );
+				fprintf(fp,"%f%s",(*vi).P()[0]," " );
+				fprintf(fp,"%f%s",(*vi).P()[1]," " );
+				fprintf(fp,"%f%s",(*vi).P()[2],"\n");
+	
+				index[&*vi] = ind;
+			}
+			for (fi=m.face.begin(); fi!=m.face.end(); ++fi)
+			{
+				fprintf(fp,"%s","f ");
+				for (int j = 0; j < 3; j++)
+					fprintf(fp,"%i%s",index[(*fi).V(j)]," ");
+				fprintf(fp,"%s","\n");
+			}
+			fclose(fp);
+			return 0;
+		}
+		static const char *ErrorMsg(int error)
+		{
+			static std::vector<std::string> smf_error_msg;
+			if(smf_error_msg.empty())
+			{
+				smf_error_msg.resize(2 );
+				smf_error_msg[0]="No errors";
+				smf_error_msg[1]="Can't open file";
+			}
 
-  for (fi=face.begin(); fi!=face.end(); ++fi)
-  {
-		fprintf(fp,"%s","f ");
-		for (int j = 0; j < 3; j++)
-			fprintf(fp,"%i%s",index[(*fi).V(j)]," ");
-		fprintf(fp,"%s","\n");
-	}
+			if(error>1 || error<0) return "Unknown error";
+			else return smf_error_msg[error].c_str();
+		}
+	}; // end class
+} // end Namespace tri
+} // end Namespace io
+} // end Namespace vcg
 
-  fclose(fp);
-}
+#endif
+

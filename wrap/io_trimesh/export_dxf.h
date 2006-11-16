@@ -20,14 +20,8 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-
-
-
-
 #ifndef __VCGLIB_EXPORT_DXF
 #define __VCGLIB_EXPORT_DXF
-
-
 
 namespace vcg {
 namespace tri {
@@ -43,8 +37,9 @@ public:
     */
 	static int Save(SaveMeshType &m, const char * filename)
 	{
+	
 		FILE * o = fopen(filename,"w");
-		if(o==NULL)	return false;
+		if(o==NULL)	return 1;
 		fprintf(o,"0\n");
 		fprintf(o,"SECTION\n");
 		fprintf(o,"2\n");
@@ -83,7 +78,6 @@ public:
 		fprintf(o,"EOF\n");
 		fclose(o);
 		return 0;
-
 	}
 
 	    static const char *ErrorMsg(int error)
@@ -106,7 +100,5 @@ public:
 } // end Namespace tri
 } // end Namespace io
 } // end Namespace vcg
-
-
 
 #endif
