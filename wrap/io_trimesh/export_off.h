@@ -62,7 +62,7 @@ namespace vcg {
 					if( m.HasPerVertexColor()   && (mask & io::Mask::IOM_VERTCOLOR))		fprintf(fpout,"C");
 					if( m.HasPerVertexTexture() && (mask & io::Mask::IOM_VERTTEXCOORD))	fprintf(fpout,"ST");
 					fprintf(fpout,"OFF\n");
-					fprintf(fpout,"%d %d 0", m.vn, m.fn);
+					fprintf(fpout,"%d %d 0\n", m.vn, m.fn);
           typename SaveMeshType::FaceIterator fi;
 					
 					// USeless portio of code that try tocomput the exact number of edges. 
