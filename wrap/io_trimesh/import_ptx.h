@@ -23,6 +23,9 @@
 /****************************************************************************
 History
 $Log: not supported by cvs2svn $
+Revision 1.4  2006/11/21 19:23:50  e_cerisoli
+Added comments for documentation
+
 ****************************************************************************/
 
 #ifndef __VCGLIB_IMPORT_PTX
@@ -33,6 +36,8 @@ $Log: not supported by cvs2svn $
 #include <wrap/callback.h>
 #include <vcg/complex/trimesh/allocate.h>
 #include <vcg/complex/trimesh/clean.h>
+#include <vcg/complex/trimesh/update/normal.h>
+#include <vcg/complex/trimesh/update/bounding.h>
 
 namespace vcg {
 	namespace tri {
@@ -184,7 +189,7 @@ namespace vcg {
 					bool onlypoints  =  ((mask & PTX_ONLY_POINTS) != 0);
 					if(! onlypoints)
 					{
-						for(OpenMeshType::FaceIterator fi = m.face.begin(); fi != m.face.end(); fi++)
+						for(typename OpenMeshType::FaceIterator fi = m.face.begin(); fi != m.face.end(); fi++)
 						{
 							if( ((*fi).V(0)->IsD()) || ((*fi).V(1)->IsD()) || ((*fi).V(2)->IsD()) )
 							{
@@ -202,7 +207,7 @@ namespace vcg {
 
 						if(cb) cb(85,"PTX Mesh Loading - remove bad face!");	
 						vcg::tri::UpdateNormals<OpenMeshType>::PerFaceNormalized(m);
-						for(OpenMeshType::FaceIterator fi = m.face.begin(); fi != m.face.end(); fi++)
+						for(typename OpenMeshType::FaceIterator fi = m.face.begin(); fi != m.face.end(); fi++)
 							if(!(*fi).IsD())
 							{
 								raggio = -((*fi).V(0)->P() + (*fi).V(1)->P() + (*fi).V(2)->P()) / 3.0;
@@ -290,7 +295,7 @@ namespace vcg {
 					{
 
 
-						for(OpenMeshType::FaceIterator fi = m.face.begin(); fi != m.face.end(); fi++)
+						for(typename OpenMeshType::FaceIterator fi = m.face.begin(); fi != m.face.end(); fi++)
 						{
 							if( ((*fi).V(0)->IsD()) || ((*fi).V(1)->IsD()) || ((*fi).V(2)->IsD()) )
 							{
@@ -307,7 +312,7 @@ namespace vcg {
 						Point3f raggio;
 
 						vcg::tri::UpdateNormals<OpenMeshType>::PerFaceNormalized(m);
-						for(OpenMeshType::FaceIterator fi = m.face.begin(); fi != m.face.end(); fi++)
+						for(typename OpenMeshType::FaceIterator fi = m.face.begin(); fi != m.face.end(); fi++)
 							if(!(*fi).IsD())
 							{
 								raggio = -((*fi).V(0)->P() + (*fi).V(1)->P() + (*fi).V(2)->P()) / 3.0;
@@ -652,7 +657,7 @@ namespace vcg {
 					{
 						// now i can triangulate
 						int trinum = (rownum-1) * (colnum-1) * 2;
-						OpenMeshType::FaceIterator fi= Allocator<OpenMeshType>::AddFaces(m,trinum);
+						typename OpenMeshType::FaceIterator fi= Allocator<OpenMeshType>::AddFaces(m,trinum);
 						m.fn = trinum;
 						int v0i,v1i,v2i, t;
 						t=0;
@@ -712,7 +717,7 @@ namespace vcg {
 							}
 					}	
 					if(cb) cb(40,"PTX Mesh Loading - remove bad vertex!");	
-					for(OpenMeshType::VertexIterator vi = m.vert.begin(); vi != m.vert.end(); vi++)
+					for(typename OpenMeshType::VertexIterator vi = m.vert.begin(); vi != m.vert.end(); vi++)
 					{
 						if((*vi).P() == Point3f(0.0, 0.0, 0.0))
 						{
@@ -724,7 +729,7 @@ namespace vcg {
 					onlypoints  =  ((mask & PTX_ONLY_POINTS) != 0);
 					if(! onlypoints)
 					{
-						for(OpenMeshType::FaceIterator fi = m.face.begin(); fi != m.face.end(); fi++)
+						for(typename OpenMeshType::FaceIterator fi = m.face.begin(); fi != m.face.end(); fi++)
 						{
 							if( ((*fi).V(0)->IsD()) || ((*fi).V(1)->IsD()) || ((*fi).V(2)->IsD()) )
 							{
@@ -739,7 +744,7 @@ namespace vcg {
 						Point3f raggio;
 
 						vcg::tri::UpdateNormals<OpenMeshType>::PerFaceNormalized(m);
-						for(OpenMeshType::FaceIterator fi = m.face.begin(); fi != m.face.end(); fi++)
+						for(typename OpenMeshType::FaceIterator fi = m.face.begin(); fi != m.face.end(); fi++)
 							if(!(*fi).IsD())
 							{
 								raggio = -((*fi).V(0)->P() + (*fi).V(1)->P() + (*fi).V(2)->P()) / 3.0;
@@ -751,7 +756,7 @@ namespace vcg {
 								}
 							}
 					}
-					for(OpenMeshType::VertexIterator vi = m.vert.begin(); vi != m.vert.end(); vi++)
+					for(typename OpenMeshType::VertexIterator vi = m.vert.begin(); vi != m.vert.end(); vi++)
 					{
 						if(!(*vi).IsD())
 							(*vi).P() = currtrasf * (*vi).P();
