@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/11/22 17:50:15  cignoni
+Refactored the sample code.
+Shortened a lot and removed all unused unnecessary stuff
+
 Revision 1.1  2005/09/21 10:29:33  cignoni
 Initial Relase
 
@@ -116,8 +120,8 @@ void display(){
     track.radius= 1;
 
 		track.GetView();
-    track.Apply();
-    
+    track.Apply(false);
+    glPushMatrix();
     float d=1.0f/mesh.bbox.Diag();
     glScale(d);
 		glTranslate(-glWrap.m->bbox.Center());	
@@ -133,6 +137,8 @@ void display(){
 		  case 5: glWrap.Draw<vcg::GLW::DMFlat,     vcg::GLW::CMNone,vcg::GLW::TMNone> ();break;
 		  default: break;
 		}
+    glPopMatrix();
+    track.DrawPostApply();
     SDL_GL_SwapBuffers();
 }
 
