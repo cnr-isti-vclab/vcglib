@@ -23,6 +23,7 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.2  2006/11/16 11:24:44 
 ****************************************************************************/
 
 #ifndef __VCGLIB_EXPORT_SMF
@@ -35,6 +36,9 @@ namespace tri {
 namespace io {
 	
 	template <class SaveMeshType>
+	/** 
+	This class encapsulate a filter for save smf meshes.
+	*/
 	class ExporterSMF
 	{
 	public:
@@ -45,6 +49,7 @@ namespace io {
 		typedef typename SaveMeshType::VertexIterator VertexIterator;
 		typedef typename SaveMeshType::FaceIterator FaceIterator;
 		
+		///Standard call for saving a mesh
 		static int Save(SaveMeshType &m, const char * filename, const int &mask, CallBackPos *cb=0)
 		{
 			VertexIterator vi;
@@ -75,6 +80,8 @@ namespace io {
 			fclose(fp);
 			return 0;
 		}
+
+		/// Standard call for knowing the meaning of an error code
 		static const char *ErrorMsg(int error)
 		{
 			static std::vector<std::string> smf_error_msg;

@@ -20,6 +20,11 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
+/****************************************************************************
+History
+$Log: not supported by cvs2svn $
+****************************************************************************/
+
 #ifndef __VCGLIB_IMPORT_PTX
 #define __VCGLIB_IMPORT_PTX
 
@@ -69,7 +74,8 @@ namespace vcg {
 					int    fn;
 					RANGEMAP_INFO_TABLE rmapInfo; 
 				};
-
+				
+				/// Standard call for knowing the meaning of an error code
 				static const char *ErrorMsg(int error)
 				{
 					static const char * ptx_error_msg[] =
@@ -84,6 +90,7 @@ namespace vcg {
 					if(error>6 || error<0) return "Unknown error";
 					else return ptx_error_msg[error];
 				};
+
 				static bool skipmesh(FILE* fp, CallBackPos *cb=NULL)
 				{
 					PTX_HEAD_INFO tab;
@@ -537,7 +544,7 @@ namespace vcg {
 
 
 				}
-
+				///Call that load a mesh
 				static bool readPTX( OpenMeshType &m, FILE *fp, int mask, CallBackPos *cb=NULL)
 				{
 					int numtokens;
@@ -755,7 +762,7 @@ namespace vcg {
 					return true;
 				}
 
-				//The Open function called from meshio.cpp
+				///Standard call that reading a mesh
 				static int Open( OpenMeshType &m, const char * filename, int mask = PTX_ONLY_POINTS, CallBackPos *cb=NULL)
 				{
 					FILE *fp;

@@ -20,6 +20,11 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
+/****************************************************************************
+History
+$Log: not supported by cvs2svn $
+****************************************************************************/
+
 #ifndef __VCGLIB_EXPORT_DXF
 #define __VCGLIB_EXPORT_DXF
 
@@ -28,14 +33,14 @@ namespace tri {
 namespace io {
 
 template <class SaveMeshType>
+/** 
+This class encapsulate a filter for save dxf meshes.
+*/
 class ExporterDXF
 {
 public:
-
-    /*
-       Prima versione da rivedere e ottimizzare, ma compatibile con Autocad.	
-    */
-	static int Save(SaveMeshType &m, const char * filename)
+	///Standard call for saving a mesh
+    static int Save(SaveMeshType &m, const char * filename)
 	{
 	
 		FILE * o = fopen(filename,"w");
@@ -79,7 +84,7 @@ public:
 		fclose(o);
 		return 0;
 	}
-
+		/// Standard call for knowing the meaning of an error code
 	    static const char *ErrorMsg(int error)
         {
           static std::vector<std::string> dxf_error_msg;

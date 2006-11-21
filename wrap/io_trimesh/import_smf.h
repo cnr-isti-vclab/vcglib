@@ -23,7 +23,6 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
-
 ****************************************************************************/
 
 #ifndef __VCGLIB_IMPORTER_SMF
@@ -36,6 +35,9 @@ namespace vcg {
 namespace tri {
 namespace io {
 	template<class OpenMeshType>
+	/** 
+	This class encapsulate a filter for opening smf meshes.
+	*/
 	class ImporterSMF
 	{
 	public:
@@ -63,6 +65,7 @@ namespace io {
 			E_UNESPECTEDEOF       	// 2
 		};
 		
+		/// Standard call for knowing the meaning of an error code
 		static const char *ErrorMsg(int error)
 		{
 			static const char * smf_error_msg[] =
@@ -74,6 +77,7 @@ namespace io {
 			if(error>2 || error<0) return "Unknown error";
 			else return smf_error_msg[error];
 		};
+		///Standard call for reading a mesh
 		static int Open(OpenMeshType &m, const char * filename )
 		{
 			VertexType v;
