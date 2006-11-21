@@ -1,3 +1,30 @@
+/****************************************************************************
+* VCGLib                                                            o o     *
+* Visual and Computer Graphics Library                            o     o   *
+*                                                                _   O  _   *
+* Copyright(C) 2004                                                \/)\/    *
+* Visual Computing Lab                                            /\/|      *
+* ISTI - Italian National Research Council                           |      *
+*                                                                    \      *
+* All rights reserved.                                                      *
+*                                                                           *
+* This program is free software; you can redistribute it and/or modify      *   
+* it under the terms of the GNU General Public License as published by      *
+* the Free Software Foundation; either version 2 of the License, or         *
+* (at your option) any later version.                                       *
+*                                                                           *
+* This program is distributed in the hope that it will be useful,           *
+* but WITHOUT ANY WARRANTY; without even the implied warranty of            *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
+* GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
+* for more details.                                                         *
+*                                                                           *
+****************************************************************************/
+/****************************************************************************
+History
+$Log: not supported by cvs2svn $
+****************************************************************************/
+
 #ifndef __VCGLIB_EXPORT_WRL
 #define __VCGLIB_EXPORT_WRL
 
@@ -11,6 +38,9 @@ namespace vcg {
 		namespace io {
 
 			template <class SaveMeshType>
+			/** 
+			This class encapsulate a filter for save vrml meshes.
+			*/
 			class ExporterWRL
 			{
 			public:
@@ -21,6 +51,7 @@ namespace vcg {
 				typedef typename SaveMeshType::VertexIterator VertexIterator;
 				typedef typename SaveMeshType::FaceIterator FaceIterator;
 				
+				///Standard call for saving a mesh
 				static int Save(SaveMeshType &m, const char * filename, const int &mask, CallBackPos *cb=0)
 				{					
 					FILE *fp;
@@ -265,6 +296,7 @@ namespace vcg {
 					fclose(fp);
 					return 0;
 	}
+	///Returns mask of capability one define with what are the saveable information of the format.
 	static int GetExportMaskCapability()
 	{
 		int capability = 0;
@@ -279,6 +311,7 @@ namespace vcg {
 		return capability;
 	}
 
+	/// Standard call for knowing the meaning of an error code
 	static const char *ErrorMsg(int error)
 	{
 		static std::vector<std::string> wrl_error_msg;
