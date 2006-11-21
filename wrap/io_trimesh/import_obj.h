@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2006/10/09 19:58:08  cignoni
+Added casts to remove warnings
+
 Revision 1.8  2006/07/09 05:41:17  cignoni
 Major rewrite. Now shorter and more robust.
 
@@ -567,7 +570,7 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 		if(stream.eof()) return;
 		std::string line;
 		do
-			std::getline(stream, line, '\n');
+			std::getline(stream, line);
 		while ((line[0] == '#' || line.length()==0) && !stream.eof());  // skip comments and empty lines
 		
 		if ((line[0] == '#') || (line.length() == 0))  // can be true only on last line of file
@@ -708,6 +711,53 @@ inline static const void SplitVToken(std::string token, std::string &vertex)
 		}
 	}	// end of SplitVVTVNToken
 
+	/*!
+	* Retrieves infos about kind of data stored into the file and fills a mask appropriately
+	* \param filename The name of the file to open
+	*	\param mask	A mask which will be filled according to type of data found in the object
+	* \param oi A structure which will be filled with infos about the object to be opened
+  	*/
+
+static bool LoadMask(const char * filename, Info &oi)
+{
+ 		std::ifstream stream(filename);
+		if (stream.fail()) return false;
+
+		 // obtain length of file:
+    stream.seekg (0, std::ios::end);
+		int length = stream.tellg();
+    stream.seekg (0, std::ios::beg);
+    
+    if (length == 0) return false;
+
+    bool bHasPerFaceColor			= false;
+
+    oi.numVertices=0;
+    oi.numFaces=0;
+    oi.numTexCoords=0;
+		int lineCount=0;
+    std::string line;
+	  while (!stream.eof())
+    {
+      lineCount++;
+      if(oi.cb && (lineCount%1000)==0) 
+					(*oi.cb)( (int)(100.0*(float(stream.tellg()))/float(length)), "Loading mask...");
+			std::getline(stream, line);
+      if(line.size()>2)
+      {
+        if(line[0]=='v')
+        {
+          if(line[1]==' ') oi.numVertices++;
+          if(line[1]=='t') oi.numTexCoords++;
+        } 
+        else 
+         if(line[0]=='f') oi.numFaces++;
+      }
+		}
+		oi.mask = 0;
+		if (oi.numTexCoords)	oi.mask |= vcg::tri::io::Mask::IOM_WEDGTEXCOORD;
+  return true;
+}
 
 static bool LoadMask(const char * filename, int &mask)
 {
@@ -716,170 +766,6 @@ static bool LoadMask(const char * filename, int &mask)
   mask= oi.mask;
   return ret;
 }
-
-	/*!
-	* Retrieves infos about kind of data stored into the file and fills a mask appropriately
-	* \param filename The name of the file to open
-	*	\param mask	A mask which will be filled according to type of data found in the object
-	* \param oi A structure which will be filled with infos about the object to be opened
-  	*/
-	static bool LoadMask(const char * filename, Info &oi)
-	{
-		std::ifstream stream(filename);
-		if (stream.fail())
-			return false;
-
-		 // obtain length of file:
-    stream.seekg (0, std::ios::end);
-		int length = stream.tellg();
-		if (length == 0) return false;
-    stream.seekg (0, std::ios::beg);
-
-
-		bool bHasPerWedgeTexCoord = false;
-		bool bHasPerWedgeNormal		= false;
-		bool bUsingMaterial				= false;
-		bool bHasPerVertexColor		= false;
-		bool bHasPerFaceColor			= false;
-
-		std::string header;
-		std::vector<std::string> tokens;
-		
-		int numVertices		= 0;  // stores the number of vertexes been read till now
-		int numTriangles	= 0;	// stores the number of triangular faces been read till now
-		
-		const int deltaPos	= 100;
-		int currPos					= 0;
-		int lastPos					= currPos; 
-
-		// cycle till we encounter first face
-		while (!stream.eof())
-		{
-			tokens.clear();
-			header.clear();
-			TokenizeNextLine(stream, tokens);
-			
-			if (tokens.size() > 0)
-			{
-				header = tokens[0];
-
-				if (header.compare("v")==0)
-				{
-					++numVertices;
-					if (bUsingMaterial)	bHasPerVertexColor = true;
-				}
-        if (header.compare("vt")==0)
-				{
-					++oi.numTexCoords;
-				}
-				else if (header.compare("f")==0)
-				{
-					numTriangles += (int)tokens.size() - 3;
-					std::string remainingText = tokens[1];
-					
-					// we base our assumption on the fact that the way vertex data is
-					// referenced into faces must be consistent among the entire file
-					int charIdx = 0;
-					size_t length = remainingText.size();
-					char c;
-					while((charIdx != length) && ((c = remainingText[charIdx])!='/') && (c != ' '))
-						++charIdx;
-
-					if (c == '/')
-					{
-						++charIdx;
-						if ((charIdx != length) && ((c = remainingText[charIdx])!='/'))
-						{
-							bHasPerWedgeTexCoord = true;
-
-							++charIdx;
-							while((charIdx != length) && ((c = remainingText[charIdx])!='/') && (c != ' '))
-								++charIdx;
-							
-							if (c == '/')
-								bHasPerWedgeNormal   = true;
-							break;
-						}
-						else
-						{
-							bHasPerWedgeNormal   = true;
-							break;
-						}					
-					}
-
-					if (bUsingMaterial)	bHasPerFaceColor = true;
-				}
-				else if (header.compare("usemtl")==0)
-					bUsingMaterial = true;
-			}
-
-			// callback invocation, abort loading process if the call returns false
-			if (oi.cb !=NULL)
-			{
-				currPos = stream.tellg();
-				if ((currPos - lastPos) > deltaPos)
-				{
-					if (!(*oi.cb)((100 * currPos)/length, "Loading mask..."))
-						return false;
-					lastPos = currPos;
-				}
-			}
-		}
-
-		// after the encounter of first face we avoid to do additional tests
-		while (!stream.eof())
-		{
-			tokens.clear();
-			header.clear();
-			TokenizeNextLine(stream, tokens);
-			
-			if (tokens.size() > 0)
-			{
-				header = tokens[0];
-				
-				if (header.compare("v")==0)
-				{
-					++numVertices;
-					if (bUsingMaterial)	bHasPerVertexColor = true;
-				}
-				else if (header.compare("f")==0)
-				{
-					numTriangles += (static_cast<int>(tokens.size()) - 3);
-					if (bUsingMaterial)	bHasPerFaceColor = true;
-				}
-				else if (header.compare("vt")==0)
-				{
-					++oi.numTexCoords;
-				}
-        else if (header.compare("usemtl")==0)
-					bUsingMaterial = true;
-			}
-
-			// callback invocation, abort loading process if the call returns false
-			if (oi.cb !=NULL)
-			{
-				currPos = stream.tellg();
-				if ((currPos - lastPos) > deltaPos)
-				{
-					if (!(*oi.cb)((100 * currPos)/length, "Loading mask..."))
-						return false;
-					lastPos = currPos;
-				}
-			}
-		}
-
-		oi.mask = 0;
-		if (bHasPerWedgeTexCoord)	oi.mask |= vcg::tri::io::Mask::IOM_WEDGTEXCOORD;
-		if (bHasPerWedgeNormal)		oi.mask |= vcg::tri::io::Mask::IOM_WEDGNORMAL;
-		if (bHasPerVertexColor)		oi.mask |= vcg::tri::io::Mask::IOM_VERTCOLOR;
-		if (bHasPerFaceColor)			oi.mask |= vcg::tri::io::Mask::IOM_FACECOLOR;
-
-		oi.numVertices	= numVertices;
-		oi.numFaces = numTriangles;
-
-		return true;
-	}
-
 
 	static bool LoadMaterials(const char * filename, std::vector<Material> &materials, std::vector<std::string> &textures)
 	{
