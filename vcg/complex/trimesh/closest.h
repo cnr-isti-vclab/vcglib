@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.25  2006/11/13 13:13:49  ponchio
+Added usual typename.
+
 Revision 1.24  2006/11/12 02:41:03  pietroni
 added normalization of normal in DoRay functions
 
@@ -238,9 +241,10 @@ namespace vcg {
 			MarkerVert mv;
 			mv.SetMesh(&mesh);
 			typedef vcg::vertex::PointDistanceFunctor VDistFunct;
+			VDistFunct fn;
 			_minDist=_maxDist;
 			Point3x _closestPt;
-			return (gr.GetClosest/*<VDistFunct,MarkerVert>*/(VDistFunct(),mv,_p,_maxDist,_minDist,_closestPt));
+			return (gr.GetClosest/*<VDistFunct,MarkerVert>*/(fn,mv,_p,_maxDist,_minDist,_closestPt));
 		}
 
 		template <class MESH, class GRID, class OBJPTRCONTAINER,class DISTCONTAINER, class POINTCONTAINER>
@@ -263,10 +267,11 @@ namespace vcg {
 		{
 			typedef VertTmark<MESH> MarkerVert;
 			MarkerVert mv;
-			mv.SetMesh(&mesh);
+			mv.SetMesh(&mesh);			
 			typedef vcg::vertex::PointDistanceFunctor VDistFunct;
+			VDistFunct distFunct;
 			return (gr.GetKClosest/* <VDistFunct,MarkerVert,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>*/
-				(VDistFunct(),mv,_k,_p,_maxDist,_objectPtrs,_distances,_points));
+				(distFunct,mv,_k,_p,_maxDist,_objectPtrs,_distances,_points));
 		}
 
 		//template <class MESH, class GRID, class OBJPTRCONTAINER, class DISTCONTAINER, class POINTCONTAINER>
@@ -404,8 +409,8 @@ namespace vcg {
 			typedef VertTmark<MESH> MarkerVert;
 			typedef vcg::vertex::PointDistanceFunctor VDistFunct;
 			typedef vcg::ClosestIterator<GRID, VDistFunct, VertTmark<MESH> > ClosestBaseType;
-
-			ClosestVertexIterator(GridType &_Si):ClosestBaseType(_Si,VDistFunct()){}
+            VDistFunct fn;
+			ClosestVertexIterator(GridType &_Si):ClosestBaseType(_Si,fn){}
 
 //    Commented out: it seems unuseful and make gcc complain. p.
 			void SetMesh(MeshType *m)
