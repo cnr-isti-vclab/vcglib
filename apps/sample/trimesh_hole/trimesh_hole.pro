@@ -5,8 +5,8 @@
 TARGET = trimesh_hole
 LIBPATH += 
 DEPENDPATH += . 
-INCLUDEPATH += . ..\..\..\
+INCLUDEPATH += . ../../..
 CONFIG += console stl
 TEMPLATE = app
-SOURCES += trimesh_hole.cpp ..\..\..\wrap\ply\plylib.cpp
-HEADERS += ..\..\..\wrap\ply\plylib.h
+SOURCES += trimesh_hole.cpp ../../../wrap/ply/plylib.cpp
+HEADERS += ../../../wrap/ply/plylib.h
