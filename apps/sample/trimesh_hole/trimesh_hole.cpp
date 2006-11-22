@@ -30,10 +30,6 @@ class MyVertex;
 class MyVertex  : public VertexSimp2< MyVertex, MyEdge, MyFace, vert::Coord3f, vert::BitFlags, vert::Normal3f  >{};
 class MyFace    : public FaceSimp2  < MyVertex, MyEdge, MyFace, face::VertexRef,face::FFAdj, face::Mark, face::BitFlags, face::Normal3f > {};
 
-
-//class MyVertex:public Vertex<float,MyEdge,MyFace>{};
-//class MyFace : public FaceAFFM<MyVertex,MyEdge,MyFace>{};
-
 class MyMesh : public tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace > >{};
 
 int main(int argc,char ** argv){
@@ -48,10 +44,11 @@ int main(int argc,char ** argv){
 			" 1) Trivial Ear \n"
 			" 2) Leipa Ear \n"
 			" 3) Selfintersection Ear \n"
-			" 4) Real Leipa \n"
+			" 4) Minimumweight \n"
 			);
 		exit(0);
 	}
+
 	int algorithm = atoi(argv[1]);
 	if(algorithm < 0 && algorithm > 4)
 	{
@@ -88,8 +85,6 @@ int main(int argc,char ** argv){
 		vcg::tri::FillHoleMinimumWeight<MyMesh>(m, false);
 		break;
 	}
-
-	//vcg::tri::UpdateTopology<MyMesh>::FaceFace(m);
 
 	vcg::tri::io::ExporterPLY<MyMesh>::Save(m,argv[3],false);
 	return 0;

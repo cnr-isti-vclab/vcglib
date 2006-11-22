@@ -9,4 +9,4 @@ INCLUDEPATH += . ..\..\..\
 CONFIG += console stl
 TEMPLATE = app
 SOURCES += trimesh_hole.cpp ..\..\..\wrap\ply\plylib.cpp
-HEADERS += ..\..\..\vcg\wrap\ply\plylib.h
+HEADERS += ..\..\..\wrap\ply\plylib.h
