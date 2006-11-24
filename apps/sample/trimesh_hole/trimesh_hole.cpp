@@ -73,13 +73,13 @@ int main(int argc,char ** argv){
 	switch(algorithm)
 	{
 	case 1:
-		vcg::tri::holeFillingEar<MyMesh, typename vcg::tri::TrivialEar<MyMesh> >(m,50,false);
+		vcg::tri::holeFillingEar<MyMesh,  vcg::tri::TrivialEar<MyMesh> >(m,50,false);
 		break;
 	case 2: 
-		vcg::tri::holeFillingEar<MyMesh, typename vcg::tri::MinimumWeightEar<MyMesh> >(m,500,false);
+		vcg::tri::holeFillingEar<MyMesh, vcg::tri::MinimumWeightEar< MyMesh> >(m,500,false);
 		break;
 	case 3:
-		vcg::tri::holeFillingIntersection<MyMesh, typename vcg::tri::SelfIntersectionEar<MyMesh> >(m,500,false);
+		vcg::tri::holeFillingIntersection<MyMesh, vcg::tri::SelfIntersectionEar< MyMesh> >(m,500,false);
 		break;
 	case 4:
 		vcg::tri::FillHoleMinimumWeight<MyMesh>(m, false);
