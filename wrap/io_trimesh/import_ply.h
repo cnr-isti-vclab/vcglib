@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.29  2006/10/14 00:18:42  cignoni
+Allowed the correct loading of meshes with 0 faces
+
 Revision 1.28  2006/05/16 15:01:30  cignoni
 Wedge colors are loaded into facecolor only if specified in the incoming pi.mask
 
@@ -387,7 +390,8 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 	if( VertexType::HasColor() )     tv.C()=Color4b(Color4b::White);
 	
 	FaceType tf;
-	tf.UberFlags() = 0;
+	// No more needed. The default constructor clear the flags;
+  // tf.UberFlags() = 0;
 	if( FaceType::HasFaceQuality() )  tf.Q()=1.0;
 	if( FaceType::HasWedgeColor() )   tf.WC(0)=tf.WC(1)=tf.WC(2)=Color4b(Color4b::White);
 	if( HasPerFaceColor(m) )    tf.C()=Color4b(Color4b::White);			
