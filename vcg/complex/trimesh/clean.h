@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.43  2006/11/09 17:26:24  cignoni
+Corrected RemoveNonManifoldFace
+
 Revision 1.42  2006/10/15 07:31:22  cignoni
 typenames and qualifiers for gcc compliance
 
@@ -1001,7 +1004,24 @@ private:
 				return (ret.size()>0);
 			}
 
-				
+      /**
+      This function simply test that the vn and fn counters be consistent with the size of the containers and the number of deleted simplexes.
+      */
+      static bool IsSizeConsistent(MeshType &m)
+      {
+        int DeletedVertexNum=0;
+        for (VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+          if((*vi).IsD()) DeletedVertexNum++;
+
+        int DeletedFaceNum=0;
+        for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
+          if((*fi).IsD()) DeletedFaceNum++;
+
+        if(m.vn+DeletedVertexNum != m.vert.size()) return false;
+        if(m.fn+DeletedFaceNum != m.face.size()) return false;
+
+        return true;
+      }
 	//test real intersection between faces
 static	bool TestIntersection(FaceType *f0,FaceType *f1)
 	{
