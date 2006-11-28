@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2006/01/09 13:58:56  cignoni
+Added Initialization of Color in Vertex and Face Components
+
 Revision 1.16  2005/11/22 23:58:03  cignoni
 Added intiailization of flags to zero in the constructor,
 
@@ -271,6 +274,7 @@ public:
 
 template <class T> class VFAdj: public T {
 public:
+  VFAdj(){_fp=0;}
   typename T::FacePointer &VFp() {return _fp; }
   typename T::FacePointer cVFp() {return _fp; }
   int &VFi() {return _zp; }

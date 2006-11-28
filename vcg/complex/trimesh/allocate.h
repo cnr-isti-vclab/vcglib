@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.33  2006/11/13 13:12:27  ponchio
+Removed a couple of useless assert.
+
 Revision 1.32  2006/10/27 11:06:29  ganovelli
 the calls to  HasFFAdjacency e HasVFAdjacency have been changed to override them for the optional attributes (see vcg/complex/trimesh/base.h)
 
@@ -168,9 +171,11 @@ namespace vcg {
 				void Clear(){newBase=oldBase=newEnd=oldEnd=0;preventUpdateFlag=false;};
 				void Update(SimplexPointerType &vp)
 				{
+					assert(vp>=oldBase);
+					assert(vp<oldEnd);
 					vp=newBase+(vp-oldBase);
 				}
-				bool NeedUpdate() {if(newBase!=oldBase && !preventUpdateFlag) return true; else return false;}
+				bool NeedUpdate() {if(oldBase && newBase!=oldBase && !preventUpdateFlag) return true; else return false;}
 
 				SimplexPointerType oldBase;
 				SimplexPointerType newBase;
@@ -192,14 +197,12 @@ namespace vcg {
 				VertexIterator last;
 				pu.Clear();
 				if(m.vert.empty()) pu.oldBase=0;  // if the vector is empty we cannot find the last valid element
-				else               pu.oldBase=&*m.vert.begin(); 
+        else {
+          pu.oldBase=&*m.vert.begin(); 
+  				pu.oldEnd=&m.vert.back()+1; 
+        }
 
-				for(int i=0; i<n; ++i)
-				{
-					m.vert.push_back(VertexType());
-					// m.vert.back().ClearFlags(); // No more necessary, since 9/2005 flags are set to zero in the constuctor.
-				}
-
+				m.vert.resize(m.vert.size()+n);
 				m.vn+=n;
 
 				pu.newBase = &*m.vert.begin();
@@ -258,7 +261,7 @@ namespace vcg {
 			}
 
 			/** Function to add n faces to the mesh. 
-      This is the only full featured function
+      This is the only full featured function that is able to manage correctly all the internal pointers of the mesh (ff and vf relations).
 			NOTE: THIS FUNCTION ALSO UPDATE FN
 			*/
 			static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu)
@@ -269,16 +272,11 @@ namespace vcg {
 					pu.oldBase=0;  // if the vector is empty we cannot find the last valid element
 				}	else  {
 					pu.oldBase=&*m.face.begin(); 
+					pu.oldEnd=&m.face.back()+1; 
 					last=m.face.end();
 				} 
 
 				m.face.resize(m.face.size()+n);
-				/* for(int i=0; i<n; ++i)
-				{
-				m.face.push_back(FaceType());
-				m.face.back().ClearFlags();
-				}*/
-
 				m.fn+=n;
 
 				pu.newBase = &*m.face.begin();
@@ -308,15 +306,13 @@ namespace vcg {
 						for (vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
 							if(!(*vi).IsD())
 							{
-								if(VertexType::HasVFAdjacency())
+								if(HasVFAdjacency(m))
 									if ((*vi).cVFp()!=0)
 										pu.Update((FaceType * &)(*vi).VFp());
 								// Note the above cast is probably not useful if you have correctly defined 
 								// your vertex type with the correct name of the facetype as a template argument; 
 								//  pu.Update((FaceType*)(*vi).VFp()); compiles on old gcc and borland
 								//  pu.Update((*vi).VFp());            compiles on .net and newer gcc
-
-
 							}
 							// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
 

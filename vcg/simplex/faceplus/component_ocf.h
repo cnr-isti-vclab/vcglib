@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2006/11/07 11:29:24  cignoni
+Corrected some errors in the reflections Has*** functions
+
 Revision 1.17  2006/10/31 16:02:18  ganovelli
 vesione 2005 compliant
 
@@ -121,7 +124,16 @@ public:
 // Auxiliary types to build internal vectors
 struct AdjTypePack {
   typename VALUE_TYPE::FacePointer _fp[3] ;    
-  char _zp[3] ;    
+  char _zp[3] ;  
+
+  // Default constructor. 
+  // Needed because we need to know if adjacency is initialized or not
+  // when resizing vectors and during an allocate face.
+  AdjTypePack() { 
+ 		_fp[0]=0;
+		_fp[1]=0;
+		_fp[2]=0;
+  }
   };
   
 //template <class TexCoordType>
@@ -158,19 +170,19 @@ public:
 	void pop_back();
   void resize(const unsigned int & _size) 
   {
-	int oldsize = BaseType::size();
+	  int oldsize = BaseType::size();
     BaseType::resize(_size);
-	if(oldsize<_size){
-		ThisTypeIterator firstnew = BaseType::begin();
-		advance(firstnew,oldsize);
-		_updateOVP(firstnew,(*this).end());
-	}  
+	  if(oldsize<_size){
+		  ThisTypeIterator firstnew = BaseType::begin();
+		  advance(firstnew,oldsize);
+		  _updateOVP(firstnew,(*this).end());
+	  }  
     if (ColorEnabled)       CV.resize(_size);
     if (MarkEnabled)        MV.resize(_size);
     if (NormalEnabled)      NV.resize(_size);
     if (VFAdjacencyEnabled) AV.resize(_size);
     if (FFAdjacencyEnabled) AF.resize(_size);
-    if (WedgeTexEnabled) WTV.resize(_size,WedgeTexTypePack());
+    if (WedgeTexEnabled)    WTV.resize(_size,WedgeTexTypePack());
     
    }
   void reserve(const unsigned int & _size)

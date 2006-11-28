@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2006/10/07 09:59:42  cignoni
+Added missing const to EmptyFF
+
 Revision 1.7  2006/01/09 13:58:55  cignoni
 Added Initialization of Color in Vertex and Face Components
 
@@ -332,6 +335,7 @@ public:
 
 template <class T> class VFAdj: public T {
 public:
+
   typename T::FacePointer       &VFp(const int j)        { assert(j>=0 && j<3);  return _vfp[j]; }
   typename T::FacePointer const  VFp(const int j) const  { assert(j>=0 && j<3);  return _vfp[j]; }
   typename T::FacePointer const cVFp(const int j) const  { assert(j>=0 && j<3);  return _vfp[j]; }
@@ -347,6 +351,11 @@ private:
 
 template <class T> class FFAdj: public T {
 public:
+	FFAdj(){
+		_ffp[0]=0;
+		_ffp[1]=0;
+		_ffp[2]=0;
+	}
   typename T::FacePointer       &FFp(const int j)        { assert(j>=0 && j<3);  return _ffp[j]; }
   typename T::FacePointer const  FFp(const int j) const  { assert(j>=0 && j<3);  return _ffp[j]; }
   typename T::FacePointer const cFFp(const int j) const  { assert(j>=0 && j<3);  return _ffp[j]; }
