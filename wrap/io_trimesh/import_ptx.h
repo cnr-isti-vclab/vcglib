@@ -23,6 +23,9 @@
 /****************************************************************************
 History
 $Log: not supported by cvs2svn $
+Revision 1.5  2006/11/21 22:34:58  cignoni
+small gcc compiling issues
+
 Revision 1.4  2006/11/21 19:23:50  e_cerisoli
 Added comments for documentation
 
@@ -31,7 +34,6 @@ Added comments for documentation
 #ifndef __VCGLIB_IMPORT_PTX
 #define __VCGLIB_IMPORT_PTX
 
-#include <io.h>
 #include <stdio.h>
 #include <wrap/callback.h>
 #include <vcg/complex/trimesh/allocate.h>
