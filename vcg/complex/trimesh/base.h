@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.24  2006/11/07 11:29:23  cignoni
+Corrected some errors in the reflections Has*** functions
+
 Revision 1.23  2006/10/27 11:08:18  ganovelli
 added override to HasFFAdjacency , HasVFAdjacency for the optional attributes (see also complex/trimesh/allocate.h)
 
@@ -338,7 +341,10 @@ template < class VertContainerType, class FaceContainerType >
 bool HasFFAdjacency (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return FaceContainerType::value_type::HasFFAdjacency();}
 
 template < class VertContainerType, class FaceContainerType >
-bool HasVFAdjacency (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return FaceContainerType::value_type::HasVFAdjacency();}
+bool HasVFAdjacency (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {
+  assert(FaceContainerType::value_type::HasVFAdjacency() == VertContainerType::value_type::HasVFAdjacency());
+  return FaceContainerType::value_type::HasVFAdjacency();
+}
 /*@}*/
 /*@}*/
 }	 // end namespace
