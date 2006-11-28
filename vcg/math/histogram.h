@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2006/11/28 09:47:42  corsini
+add documentation
+fix typo
+
 Revision 1.14  2006/05/04 00:09:53  cignoni
 minor change: removed unused vars
 
@@ -291,6 +295,9 @@ ScalarType Histogram<ScalarType>::Percentile(ScalarType frac) const
 	
 	return R[i+1];
 }
+
+typedef Histogram<double> Histogramd ;
+typedef Histogram<float> Histogramf ;
 
 } // end namespace (vcg)
 
