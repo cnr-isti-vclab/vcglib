@@ -7,6 +7,8 @@
 
 #include "vcg/space/index/grid_static_ptr.h"
 #include "vcg/complex/trimesh/closest.h"
+#include <iostream>
+using namespace std;
 
 namespace vcg {
 namespace tri {
@@ -127,11 +129,11 @@ Pivot(MESH &_mesh, ScalarType _radius, ScalarType _mindist = 0.1, ScalarType _cr
           assert((*s).next != front.end());
           assert((*s).previous != front.end());
         }   */
-        for(int i = 0; i < mesh.face.size(); i++) {
+/*        for(int i = 0; i < mesh.face.size(); i++) {
           CFace &face = mesh.face[i];
           for(int k = 0; k < 3; k++) 
             face.V(k) = (CVertex *)(face.V(k) - start);
-        }
+        }*/
         
       } else {
         for(int i = 0; i < mesh.vert.size(); i++) {
@@ -160,13 +162,6 @@ void buildMesh(CallBackPos *call = NULL, int interval = 512) {
          }
        }       
      }
-     if(call) call(0, "Reindexing");
-     for(int i = 0; i < mesh.face.size(); i++) {
-       CFace &face = mesh.face[i];
-       for(int k = 0; k < 3; k++)
-         face.V(k) = &(mesh.vert[(int)face.V(k)]);
-     }     
-
    }
     
     /* select a vertex at random, a small group of nearby vertices and looks
@@ -187,6 +182,7 @@ bool seed(bool outside = true, int start = -1) {
          mesh.vert[start].SetD();
         //bad luck. we should call seed again (assuming random pick) up to
         //some maximum tries. im lazy.
+        cout << "Isolated\n";
         return false;
       }
       //find the closest visited or boundary
@@ -196,6 +192,7 @@ bool seed(bool outside = true, int start = -1) {
           CVertex &v = mesh.vert[id];
           if(v.IsB() || v.IsV()) {
             mesh.vert[start].SetD();
+            cout << "visited near\n";
             return false;
           }
         }
@@ -266,8 +263,10 @@ bool seed(bool outside = true, int start = -1) {
         }
       }
       
-      if(!found)  //see bad luck above
+      if(!found) { //see bad luck above
+        cout << "No empty sphere\n";
         return false;
+      }
       
       assert(!front.size());
       //TODO: should i check the edgex too?
@@ -277,9 +276,9 @@ bool seed(bool outside = true, int start = -1) {
       typename std::list<Edgex>::iterator e = front.end();
       typename std::list<Edgex>::iterator last;
       for(int i = 0; i < 3; i++) {
-        int v0 = (int)(mesh.face.back().V0(i));
-        int v1 = (int)(mesh.face.back().V1(i));    
-        int v2 = (int)(mesh.face.back().V2(i));    
+        int v0 = mesh.face.back().V0(i) - &*mesh.vert.begin();
+        int v1 = mesh.face.back().V1(i) - &*mesh.vert.begin();    
+        int v2 = mesh.face.back().V2(i) - &*mesh.vert.begin();    
         nb[v0] = 1;
         assert(!mesh.vert[v0].IsB());
         mesh.vert[v0].SetB();
@@ -308,11 +307,17 @@ bool seed(bool outside = true, int start = -1) {
 int addFace() {
 
       //We try to seed again
-      if(!mesh.face.size()) {
-        for(int i = 0; i < 100; i++) 
-          if(seed()) return 1;
+/*      if(!mesh.face.size()) {
+        for(int i = 0; i < 100; i++) {
+          ++last_seed;
+          CVertex &v = mesh.vert[last_seed-1];
+          if(v.IsD() || v.IsV() || v.IsB()) continue;
+          
+          printf("seeding new: %i\n", last_seed-1);
+          if(seed(true, last_seed-1)) return 1;                
+        }
         return -1;
-      }
+      }*/
       
       if(!front.size()) {
         //maybe there are unconnected parts of the mesh:
@@ -524,7 +529,10 @@ int addFace() {
         std::vector<ScalarType> dists;    
         getInSphere(middle, r + radius, targets, dists);
     
-        if(targets.size() == 0) return false; //this really would be strange but one never knows.
+        if(targets.size() == 0) {
+          cout << "Isolated\n";
+          return false; //this really would be strange but one never knows.
+        }
     
         edge.candidate = -1;
         ScalarType minangle = 0;
@@ -572,12 +580,16 @@ int addFace() {
           }
         }
         
-        if(edge.candidate == -1) return false;
+        if(edge.candidate == -1) {
+          cout << "No candidate\n";
+          return false;
+        }
         Point3x n = ((mesh.vert[edge.candidate].P() - v0)^(v1 - v0)).Normalize();
         //found no point suitable.
         if(normal * mesh.vert[edge.candidate].N() < 0 ||
            n * normal < crease ||
            nb[edge.candidate] >= 2) {
+           cout << "failed normal or crease\n";
           return false;
         }
            
@@ -610,6 +622,7 @@ int addFace() {
      void moveFront(typename std::list<Edgex>::iterator e) {
        front.splice(front.begin(), front, e);
      }
+
     bool checkEdge(int v0, int v1) {
       int tot = 0;
       //HACK to speed up things until i can use a seach structure
@@ -617,11 +630,12 @@ int addFace() {
       if(front.size() < 100) i = mesh.face.size() - 100;
 //      i = 0;
       if(i < 0) i = 0;
+      CVertex *start = &*mesh.vert.begin();
       for(; i < mesh.face.size(); i++) { 
         CFace &f = mesh.face[i];
         for(int k = 0; k < 3; k++) {
-          if(v1== (int)f.V(k) && v0 == (int)f.V((k+1)%3)) ++tot;
-          else if(v0 == (int)f.V(k) && v1 == (int)f.V((k+1)%3)) { //orientation non constistent
+          if(v1== f.V(k)-start && v0 == f.V((k+1)%3)-start) ++tot;
+          else if(v0 == f.V(k)-start && v1 == f.V((k+1)%3)-start) { //orientation non constistent
              return false;
           }
         }
@@ -690,7 +704,7 @@ int addFace() {
       return angle;
     }          
     /* add a new face. compute normals. */
-    void addFace(int a, int b, int c) {
+/*    void addFace(int a, int b, int c) {
       CFace face;
       face.V(0) = (CVertex *)a;
       face.V(1) = (CVertex *)b;
@@ -702,7 +716,38 @@ int addFace() {
       
       mesh.face.push_back(face);
       mesh.fn++;
-    }         
+    }   */
+
+   void addFace(int v0, int v1, int v2) {
+     assert(v0 < mesh.vert.size() && v1 < mesh.vert.size() && v2 < mesh.vert.size());  
+     CFace face;
+     face.V(0) = &mesh.vert[v0];
+     face.V(1) = &mesh.vert[v1];
+     face.V(2) = &mesh.vert[v2];
+     ComputeNormalizedNormal(face);
+     mesh.face.push_back(face);
+     mesh.fn++;
+     //update topology?
+   //  FaceIterator f = Allocator<MESH>::AddFaces(mesh, 1);
+   }
+   
+   void addVertex(CVertex &vertex) {
+     CVertex *oldstart = &*mesh.vert.begin();
+   //  VertexIterator v = Allocator<MESH>::AddVertices(mesh, 1);
+     mesh.vert.push_back(vertex);
+     mesh.vn++;
+     CVertex *newstart = &*mesh.vert.begin();
+     if(oldstart != newstart) { 
+       for(int i = 0; i < mesh.face.size(); i++) {
+         CFace &face = mesh.face[i];
+         for(int k = 0; k < 3; k++) 
+           face.V(k) = newstart + (face.V(k) - oldstart);
+       }
+     }
+     nb.push_back(0);
+     assert(nb.size() == mesh.vert.size());
+   }
+      
               
                              
     /* intersects segment [v0, v1] with the sphere of radius radius. */
