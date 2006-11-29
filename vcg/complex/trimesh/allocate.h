@@ -24,6 +24,10 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.34  2006/11/28 22:34:28  cignoni
+Added default constructor with null initialization to adjacency members.
+AddFaces and AddVertices NEED to know if the topology is correctly computed to update it.
+
 Revision 1.33  2006/11/13 13:12:27  ponchio
 Removed a couple of useless assert.
 
@@ -171,6 +175,7 @@ namespace vcg {
 				void Clear(){newBase=oldBase=newEnd=oldEnd=0;preventUpdateFlag=false;};
 				void Update(SimplexPointerType &vp)
 				{
+					if(vp>=newBase && vp<newEnd) return;
 					assert(vp>=oldBase);
 					assert(vp<oldEnd);
 					vp=newBase+(vp-oldBase);
@@ -206,7 +211,8 @@ namespace vcg {
 				m.vn+=n;
 
 				pu.newBase = &*m.vert.begin();
-				if(pu.NeedUpdate())
+				pu.newEnd =  &m.vert.back()+1; 
+        if(pu.NeedUpdate())
 				{
 					FaceIterator fi;
 					for (fi=m.face.begin(); fi!=m.face.end(); ++fi)
@@ -280,7 +286,8 @@ namespace vcg {
 				m.fn+=n;
 
 				pu.newBase = &*m.face.begin();
-
+        pu.newEnd  = &m.face.back()+1;
+				
 				if(pu.NeedUpdate())
 				{
 					FaceIterator fi;
