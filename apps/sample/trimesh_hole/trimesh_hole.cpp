@@ -8,6 +8,7 @@
 // topology computation
 #include<vcg/complex/trimesh/update/topology.h>
 #include <vcg/complex/trimesh/update/flag.h>
+#include <vcg/complex/trimesh/update/normal.h>
 
 // half edge iterators
 #include<vcg/simplex/face/pos.h>
@@ -16,12 +17,9 @@
 #include <wrap/io_trimesh/import_ply.h>
 #include <wrap/io_trimesh/export_ply.h>
 
-
 #include<vcg/complex/trimesh/hole.h>
 
-
 using namespace vcg;
-
 
 class MyEdge;    // dummy prototype never used
 class MyFace;
@@ -39,12 +37,12 @@ int main(int argc,char ** argv){
 		printf(
 			"\n     HoleFilling ("__DATE__")\n"
 			"Visual Computing Group I.S.T.I. C.N.R.\n"
-			"Usage: holefilling #algorithm filein.ply fileout.ply \n"
+			"Usage: trimesh_hole #algorithm filein.ply fileout.ply \n"
 			"#algorithm: \n"
 			" 1) Trivial Ear \n"
 			" 2) Leipa Ear \n"
 			" 3) Selfintersection Ear \n"
-			" 4) Minimumweight \n"
+			" 4) Minimum weight \n"
 			);
 		exit(0);
 	}
@@ -52,7 +50,7 @@ int main(int argc,char ** argv){
 	int algorithm = atoi(argv[1]);
 	if(algorithm < 0 && algorithm > 4)
 	{
-		printf("Error on selecting algorithm %d\n",algorithm);
+		printf("Error in algorithm's selection\n",algorithm);
 		exit(0);
 	}
 
@@ -67,22 +65,25 @@ int main(int argc,char ** argv){
 
 	//update the face-face topology 
 	vcg::tri::UpdateTopology<MyMesh>::FaceFace(m);
+	vcg::tri::UpdateNormals<MyMesh>::PerVertex(m);
 	tri::UpdateFlags<MyMesh>::FaceBorderFromFF(m);
 
-	//selecting the right algorithm
+vcg::tri::Hole<MyMesh> holeFiller;
+
 	switch(algorithm)
 	{
 	case 1:
-		vcg::tri::holeFillingEar<MyMesh,  vcg::tri::TrivialEar<MyMesh> >(m,50,false);
+		
+		holeFiller.EarCuttingFill<vcg::tri::TrivialEar<MyMesh> >(m,50,false);
 		break;
 	case 2: 
-		vcg::tri::holeFillingEar<MyMesh, vcg::tri::MinimumWeightEar< MyMesh> >(m,500,false);
+		holeFiller.EarCuttingFill<vcg::tri::MinimumWeightEar< MyMesh> >(m,500,false);
 		break;
 	case 3:
-		vcg::tri::holeFillingIntersection<MyMesh, vcg::tri::SelfIntersectionEar< MyMesh> >(m,500,false);
+		holeFiller.EarCuttingIntersectionFill<vcg::tri::SelfIntersectionEar< MyMesh> >(m,500,false);
 		break;
 	case 4:
-		vcg::tri::FillHoleMinimumWeight<MyMesh>(m, false);
+		holeFiller.MinimumWeightFill(m, false);
 		break;
 	}
 
