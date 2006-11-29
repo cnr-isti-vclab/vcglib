@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2006/11/29 15:25:22  giec
+Removed limit.
+
 Revision 1.18  2006/11/29 15:18:49  giec
 Code refactory and bugfix.
 
@@ -486,7 +489,7 @@ public:
 
 
 template<class EAR>
-			void FillHoleEar(MESH &m, Info &h ,int UBIT, std::vector<FacePointer *> &app,std::vector<FaceType > *vf =0)
+	static void FillHoleEar(MESH &m, Info &h ,int UBIT, std::vector<FacePointer *> &app,std::vector<FaceType > *vf =0)
 		{
 			//Aggiungo le facce e aggiorno il puntatore alla faccia!
 			FaceIterator f = tri::Allocator<MESH>::AddFaces(m, h.size-2, app);
@@ -564,8 +567,8 @@ template<class EAR>
 
 
 
-		template<class EAR>//!!!
-			void EarCuttingFill(MESH &m, int sizeHole,bool Selected = false)
+template<class EAR>//!!!
+	static void EarCuttingFill(MESH &m, int sizeHole,bool Selected = false)
 		{
 			std::vector< Info > vinfo;
 			int UBIT = GetInfo(m, Selected,vinfo);
@@ -596,8 +599,8 @@ template<class EAR>
 
 
 
-		template<class EAR>
-			void EarCuttingIntersectionFill(MESH &m, int sizeHole,bool Selected = false)
+template<class EAR>
+	static void EarCuttingIntersectionFill(MESH &m, int sizeHole,bool Selected = false)
 		{
 			std::vector<Info > vinfo;
 			int UBIT = GetInfo(m, Selected,vinfo);
@@ -648,7 +651,7 @@ template<class EAR>
 
 
 
-		int GetInfo(MESH &m,bool Selected ,std::vector<Info >& VHI)
+	static int GetInfo(MESH &m,bool Selected ,std::vector<Info >& VHI)
 		{
 			FaceIterator fi;
 			int UBIT = FaceType::LastBitFlag();
@@ -730,7 +733,7 @@ template<class EAR>
 | v3      v2\
 */
 		
-			float ComputeDihedralAngle(CoordType  p1,CoordType  p2,CoordType  p3,CoordType  p4)
+	static float ComputeDihedralAngle(CoordType  p1,CoordType  p2,CoordType  p3,CoordType  p4)
 		{
 			CoordType  n1 = ((p1 - p2) ^ (p3 - p1) ).Normalize();
 			CoordType	 n2 = ((p2 - p1) ^ (p4 - p2) ).Normalize();
@@ -738,7 +741,7 @@ template<class EAR>
 			return  math::ToDeg(acos(t));
 		}
 
-bool existEdge(PosType pi,PosType pf)
+  static bool existEdge(PosType pi,PosType pf)
 		{
 			PosType app = pi;
 			PosType appF = pi;
@@ -760,7 +763,7 @@ bool existEdge(PosType pi,PosType pf)
 			return false;
 		}
 
-		Weight computeWeight( int i, int j, int k,
+	static Weight computeWeight( int i, int j, int k,
 			std::vector<PosType > pv,
 			std::vector< std::vector< int > >  v)
 		{
@@ -815,7 +818,7 @@ bool existEdge(PosType pi,PosType pf)
 			return Weight(angle, area);
 		}
 
-	std::vector<VertexPointer > calculateMinimumWeightTriangulation(MESH &m, std::vector<PosType > vv )
+	static std::vector<VertexPointer > calculateMinimumWeightTriangulation(MESH &m, std::vector<PosType > vv )
 		{
 			std::vector< std::vector< Weight > > w; //matrice dei pesi minimali di ogni orecchio preso in conzideraione
 			std::vector< std::vector< int    > > vi;//memorizza l'indice del terzo vertice del triangolo
@@ -872,7 +875,7 @@ bool existEdge(PosType pi,PosType pf)
 		}
 
 
-			void triangulate(std::vector<VertexPointer > &m,int i, int j, std::vector< std::vector<int> > vi, 
+	static void triangulate(std::vector<VertexPointer > &m,int i, int j, std::vector< std::vector<int> > vi, 
 			std::vector<PosType > vv)
 		{
 			if(i + 1 == j){return;}
@@ -890,7 +893,7 @@ bool existEdge(PosType pi,PosType pf)
 			triangulate(m, k, j, vi, vv);
 		}
 
-void MinimumWeightFill(MESH &m, bool Selected)
+  static void MinimumWeightFill(MESH &m, bool Selected)
 		{
 			FaceIterator fi;
 			std::vector<PosType > vvi;
@@ -946,7 +949,7 @@ void MinimumWeightFill(MESH &m, bool Selected)
 		}
 
 
-	void getBoundHole (PosType sp,std::vector<PosType >&ret)
+	static void getBoundHole (PosType sp,std::vector<PosType >&ret)
 		{
 			PosType fp = sp;
 			//take vertex around the hole
