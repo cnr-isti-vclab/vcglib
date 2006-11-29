@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2006/11/29 15:18:49  giec
+Code refactory and bugfix.
+
 Revision 1.17  2006/11/24 10:42:39  mariolatronico
 Now compiles on gcc under linux.
 
@@ -923,11 +926,6 @@ void MinimumWeightFill(MESH &m, bool Selected)
 
 				ps = *ith;
 				getBoundHole(ps,app);
-
-				if(app.size() >= 200)
-				{
-					continue;
-				}
 
 				vf = calculateMinimumWeightTriangulation(m, app);
 
