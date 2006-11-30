@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2006/09/18 08:55:33  cignoni
+Corrected return value of save function (zero is no error)
+
 Revision 1.7  2006/01/30 13:43:59  cignoni
 Added GetExportMaskCapability
 
@@ -69,6 +72,11 @@ template <class SaveMeshType>
 class ExporterSTL
 {
 public:
+static int Save(SaveMeshType &m, const char * filename, const int &mask, CallBackPos *cb=0)
+{
+ return Save(m,filename,true);
+}
+
 static int Save(SaveMeshType &m, const char * filename , bool binary =true, const char *objectname=0)
 {
   typedef typename SaveMeshType::FaceIterator FaceIterator;

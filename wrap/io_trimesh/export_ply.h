@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2006/10/14 00:39:22  cignoni
+Added a comment on an assert
+
 Revision 1.15  2006/01/30 13:43:59  cignoni
 Added GetExportMaskCapability
 
@@ -132,7 +135,7 @@ static int Save(SaveMeshType &m, const char * filename, bool binary=true)
   return Save(m,filename,binary,pi);
 }
 
-static int Save(SaveMeshType &m,  const char * filename, int savemask )
+static int Save(SaveMeshType &m,  const char * filename, int savemask, CallBackPos *cb=0 )
 {
 	PlyInfo pi;
   pi.mask=savemask;
