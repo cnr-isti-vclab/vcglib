@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2006/11/29 16:21:45  cignoni
+Made static exposed funtions of the class
+
 Revision 1.19  2006/11/29 15:25:22  giec
 Removed limit.
 
@@ -573,7 +576,7 @@ template<class EAR>//!!!
 			std::vector< Info > vinfo;
 			int UBIT = GetInfo(m, Selected,vinfo);
 
-			std::vector<Info >::iterator ith;
+			typename std::vector<Info >::iterator ith;
 			//Info app;
 			int ind=0;
 
@@ -607,7 +610,7 @@ template<class EAR>
 			std::vector<FaceType > vf;
 			PosType sp;
 			PosType ap;
-			std::vector<Info >::iterator ith;
+			typename std::vector<Info >::iterator ith;
 			Info app;
 
 			std::vector<FacePointer *> vfp;
@@ -813,7 +816,7 @@ template<class EAR>
 				angle = std::max<float>(angle , ComputeDihedralAngle(pk.v->P(), pi.v->P(),  pj.v->P(),px.v->P() )	);
 			}
 
-			typename ScalarType area = ( (pj.v->P() - pi.v->P()) ^ (pk.v->P() - pi.v->P()) ).Norm() * 0.5;
+			ScalarType area = ( (pj.v->P() - pi.v->P()) ^ (pk.v->P() - pi.v->P()) ).Norm() * 0.5;
 
 			return Weight(angle, area);
 		}
