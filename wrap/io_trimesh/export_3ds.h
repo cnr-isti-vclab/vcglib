@@ -25,6 +25,9 @@
   History
 
  $Log: not supported by cvs2svn $
+ Revision 1.5  2006/11/08 15:48:50  cignoni
+ Corrected management of capabilities and masks
+
  Revision 1.4  2006/03/29 09:25:49  zifnab1974
  extra includes necessary for compilation of meshlab on AMD 64 with gcc 3.4.5
 
@@ -253,22 +256,14 @@ namespace io {
 		/*
 			function which saves in 3DS file format
 		*/
-		static int SaveASCII(SaveMeshType &m, const char * filename)	
-		{
-			return E_NOTDEFINITION;
-		}
-
-		/*
-			function which saves in 3DS file format
-		*/
 		static int SaveBinary(SaveMeshType &m, const char * filename, const int &mask, CallBackPos *cb=0)
 		{
-			if(m.vert.size() > MAX_POLYGONS)//check max polygons
+			if(m.vn > MAX_POLYGONS)//check max polygons
 				return E_NOTNUMBERVERTVALID;
 
-			if(m.vert.size() == 0)
+			if(m.vn == 0)
 				return E_NOTVEXTEXVALID;
-			if(m.face.size() == 0)
+			if(m.fn == 0)
 				return E_NOTFACESVALID;
 
 			/*
@@ -329,7 +324,7 @@ namespace io {
 			*/			
 			std::map<Key,int> ListOfDuplexVert;
 			std::vector<VertexType> VectorOfVertexType;
-			
+      std::vector<int> VertRemap; // VertRemap[i] keep the final position of m.vert[i] inside the 3ds vertex list. used for remapping the pointers to vertex in the faces
 			int count = 1;
 			int nface = 0;
 			if(HasPerWedgeTexture(m) && (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD) )
@@ -362,7 +357,7 @@ namespace io {
 			int number_vertex_to_duplicate = 0;
 			
 			if(HasPerWedgeTexture(m) && (mask & MeshModel::IOM_WEDGTEXCOORD ))
-				number_vertex_to_duplicate = (count-1) - m.vert.size();
+				number_vertex_to_duplicate = (count-1) - m.vn;
 
 			Lib3dsFile *file = lib3ds_file_new();//creates new file
 			Lib3dsMesh *mesh = lib3ds_mesh_new("mesh");//creates a new mesh with mesh's name "mesh"		
@@ -371,12 +366,12 @@ namespace io {
 			std::vector<Material> materials;
 			
 			int current = 0;
-			int max = m.vert.size()+m.face.size()+ number_vertex_to_duplicate;
+			int max = m.vn+m.fn+number_vertex_to_duplicate;
 			
-			lib3ds_mesh_new_point_list(mesh, m.vert.size() + number_vertex_to_duplicate);// set number of vertexs
+			lib3ds_mesh_new_point_list(mesh, m.vn + number_vertex_to_duplicate);// set number of vertexs
 	
 			if(HasPerWedgeTexture(m) && (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD ))
-				lib3ds_mesh_new_texel_list(mesh,m.vert.size() + number_vertex_to_duplicate); //set number of textures
+				lib3ds_mesh_new_texel_list(mesh,m.vn + number_vertex_to_duplicate); //set number of textures
 
 			int v_index = 0;
 			VertexIterator vi;
@@ -400,6 +395,7 @@ namespace io {
 			}
 			else
 			{
+        VertRemap.resize(m.vert.size(),-1);
 				for(vi=m.vert.begin(); vi!=m.vert.end(); ++vi) if( !(*vi).IsD() )
 				{
 					Lib3dsPoint point;
@@ -408,7 +404,7 @@ namespace io {
 					point.pos[2] = (*vi).P()[2];
 
 					mesh->pointL[v_index] = point;		
-
+          VertRemap[vi-m.vert.begin()]=v_index;
 					if (cb !=NULL)
 						(*cb)(100.0 * (float)++current/(float)max, "writing vertices ");
 					else
@@ -423,12 +419,10 @@ namespace io {
 			FaceIterator fi;
 			for(fi=m.face.begin(); fi!=m.face.end(); ++fi) if( !(*fi).IsD() )
 			{
+				vcg::TCoord2<float> t0,t1,t2;
 				int i0 = GetIndexVertex(m, (*fi).V(0));
-				vcg::TCoord2<float> t0;
 				int i1 = GetIndexVertex(m, (*fi).V(1));
-				vcg::TCoord2<float> t1;
 				int i2 = GetIndexVertex(m, (*fi).V(2));
-				vcg::TCoord2<float> t2;
 				if(HasPerWedgeTexture(m) && (mask & MeshModel::IOM_WEDGTEXCOORD ) )
 				{
 					t0 = (*fi).WT(0);
@@ -445,9 +439,9 @@ namespace io {
 				}
 				else
 				{
-					face.points[0] = i0;
-					face.points[1] = i1;
-					face.points[2] = i2;
+					face.points[0] = VertRemap[i0];
+					face.points[1] = VertRemap[i1];
+					face.points[2] = VertRemap[i2];
 				}
 				
 				//saves coord textures
