@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.46  2006/12/01 08:12:30  cignoni
+Added a function for FF topology consistency check
+
 Revision 1.45  2006/12/01 00:00:56  cignoni
 Corrected IsOrientedMesh. After the templating of the swapedge it did not worked any more....
 Added Texture management to the FlipMesh
@@ -1044,7 +1047,7 @@ private:
         if(!HasFFAdjacency(m)) return false;
 
         for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
-          if((*fi).IsD()) 
+          if(!(*fi).IsD()) 
           {
             for(int i=0;i<3;++i)
               if(!FFCorrectness(*fi, i)) return false;
