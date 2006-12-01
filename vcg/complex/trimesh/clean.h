@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.44  2006/11/27 10:36:35  cignoni
+Added IsSizeConsistent
+
 Revision 1.43  2006/11/09 17:26:24  cignoni
 Corrected RemoveNonManifoldFace
 
@@ -932,7 +935,7 @@ private:
 
 										if (!fpaux->IsS())
 										{
-											face::SwapEdge<FaceType,false>(*fpaux, iaux);
+											face::SwapEdge<FaceType,true>(*fpaux, iaux);
 											assert(CheckOrientation(*fpaux, iaux));
 										}
 										else
@@ -957,12 +960,17 @@ private:
 					if (!Orientable)	break;
 				}
 			}
-
+      /// Flip the orientation of the whole mesh flipping all the faces (by swapping the first two vertices)
 			static void FlipMesh(MeshType &m)
       {
-        for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
-			face::SwapEdge<FaceType,false>((*fi), 0);
+        for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) if(!(*fi).IsD())
+        {
+			       face::SwapEdge<FaceType,false>((*fi), 0);
+      			 if (HasPerWedgeTexture(m))
+			        		swap((*fi).WT(0),(*fi).WT(1));
+        }
       }
+
       static bool SelfIntersections(MeshType &m, std::vector<FaceType*> &ret)
 			{
         //assert(FaceType::HasMark()); // Needed by the UG
