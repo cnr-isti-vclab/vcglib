@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2006/12/01 08:53:55  cignoni
+Corrected pop_heap vs pop_back issue in heap usage
+
 Revision 1.22  2006/12/01 00:11:17  cignoni
 Added Callback, Corrected some spelling errors (adiacense -> adjacency).
 Added Validity Check function for hole loops
@@ -215,7 +218,7 @@ namespace vcg {
 			{
 				// simple topological check
 				if(e0.f==e1.f) {
-					printf("Avoided bad ear");
+					//printf("Avoided bad ear");
 					return false;
 				}
 
@@ -243,7 +246,7 @@ namespace vcg {
 				// caso ear degenere per buco triangolare
 				if(ep==en)
 				{
-					printf("Closing the last triangle");
+					//printf("Closing the last triangle");
 					f->FFp(2)=en.f;
 					f->FFi(2)=en.z;
 					en.f->FFp(en.z)=f;
@@ -254,7 +257,7 @@ namespace vcg {
 				// Caso ear non manifold a
 				else if(ep.v==en.v)
 				{
-					printf("Ear Non manif A\n");
+					//printf("Ear Non manif A\n");
 					face::Pos<typename MESH::FaceType>	enold=en;
 					en.NextB();
 					f->FFp(2)=enold.f;
@@ -267,7 +270,7 @@ namespace vcg {
 				// Caso ear non manifold b
 				else if(ep.VFlip()==e1.v)
 				{
-					printf("Ear Non manif B\n");
+					//printf("Ear Non manif B\n");
 					face::Pos<typename MESH::FaceType>	epold=ep; 
 					ep.FlipV(); ep.NextB(); ep.FlipV();
 					f->FFp(2)=epold.f;
@@ -349,7 +352,7 @@ namespace vcg {
 			{
 				// simple topological check
 				if(this->e0.f==this->e1.f) {
-					printf("Avoided bad ear");
+					//printf("Avoided bad ear");
 					return false;
 				}
 
@@ -393,7 +396,7 @@ namespace vcg {
 				// caso ear degenere per buco triangolare
 				if(ep==en)
 				{
-					printf("Closing the last triangle");
+					//printf("Closing the last triangle");
 					f->FFp(2)=en.f;
 					f->FFi(2)=en.z;
 					en.f->FFp(en.z)=f;
@@ -404,7 +407,7 @@ namespace vcg {
 				// Caso ear non manifold a
 				else if(ep.v==en.v)
 				{
-					printf("Ear Non manif A\n");
+					//printf("Ear Non manif A\n");
 					face::Pos<typename MESH::FaceType>	enold=en;
 					en.NextB();
 					f->FFp(2)=enold.f;
@@ -419,7 +422,7 @@ namespace vcg {
 				// Caso ear non manifold b
 				else if(ep.VFlip()==this->e1.v)
 				{
-					printf("Ear Non manif B\n");
+					//printf("Ear Non manif B\n");
 					face::Pos<typename MESH::FaceType>	epold=ep; 
 					ep.FlipV(); ep.NextB(); ep.FlipV();
 					f->FFp(2)=epold.f;
@@ -507,7 +510,7 @@ public:
       {
        if(!p.IsBorder()) 
          return false;
-       PosType ip=p;ip.NextB()
+       PosType ip=p;ip.NextB();
        for(;ip!=p;ip.NextB())
        {
           if(!ip.IsBorder()) 
@@ -619,7 +622,7 @@ template<class EAR>//!!!
 			{
 				ind++;
         if(cb) (*cb)(ind*100/vinfo.size(),"Closing Holes");
-				if((*ith).size < sizeHole){		
+        if((*ith).size < sizeHole){		
 					FillHoleEar< EAR >(m, *ith,UBIT,vfp);
 				}
 			}
@@ -705,24 +708,26 @@ template<class EAR>
 					{
 						if( !(*fi).IsUserBit(UBIT) )
 						{
-							(*fi).SetUserBit(UBIT);
 							for(int j =0; j<3 ; ++j)
 							{
-								if( (*fi).IsB(j) )
+                if( face::IsBorder(*fi,j) && !(*fi).IsUserBit(UBIT) )
 								{//Trovato una faccia di bordo non ancora visitata.
-									PosType sp(&*fi, j, (*fi).V(j));
+									(*fi).SetUserBit(UBIT);
+							    PosType sp(&*fi, j, (*fi).V(j));
 									PosType fp=sp;
 									int holesize=0;
 
 									Box3Type hbox;
 									hbox.Add(sp.v->cP());
-
+                  //printf("Looping %i : (face %i edge %i) \n", VHI.size(),sp.f-&*m.face.begin(),sp.z);
+                  sp.f->SetUserBit(UBIT);
 									do
 									{
 										sp.f->SetUserBit(UBIT);
 										hbox.Add(sp.v->cP());
 										++holesize;
 										sp.NextB();
+										sp.f->SetUserBit(UBIT);
 										assert(sp.IsBorder());
 									}while(sp != fp);
 
