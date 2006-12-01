@@ -24,6 +24,10 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.45  2006/12/01 00:00:56  cignoni
+Corrected IsOrientedMesh. After the templating of the swapedge it did not worked any more....
+Added Texture management to the FlipMesh
+
 Revision 1.44  2006/11/27 10:36:35  cignoni
 Added IsSizeConsistent
 
@@ -1030,6 +1034,24 @@ private:
 
         return true;
       }
+
+      /**
+      This function simply test that all the faces have a consistent face-face topology relation.
+      useful for checking that a topology modifying algorithm does not mess something.
+      */
+      static bool IsFFAdjacencyConsistent(MeshType &m)
+      {
+        if(!HasFFAdjacency(m)) return false;
+
+        for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
+          if((*fi).IsD()) 
+          {
+            for(int i=0;i<3;++i)
+              if(!FFCorrectness(*fi, i)) return false;
+          }
+        return true;
+      }
+
 	//test real intersection between faces
 static	bool TestIntersection(FaceType *f0,FaceType *f1)
 	{
