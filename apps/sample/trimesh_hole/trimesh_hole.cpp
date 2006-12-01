@@ -36,18 +36,18 @@ class MyMesh : public tri::TriMesh< vector<MyVertex>, vector<MyFace > >{};
 
 
 bool callback(int percent, const char *str) {
-  cout << "str: " << str << " " << percent << "%\n";
+  cout << "str: " << str << " " << percent << "%\r";
   return true;
 }
 
 int main(int argc,char ** argv){
 
-	if(argc<4)
+	if(argc<5)
 	{
 		printf(
 			"\n     HoleFilling ("__DATE__")\n"
 			"Visual Computing Group I.S.T.I. C.N.R.\n"
-			"Usage: trimesh_hole #algorithm filein.ply fileout.ply \n"
+      "Usage: trimesh_hole #algorithm #size filein.ply fileout.ply \n"
 			"#algorithm: \n"
 			" 1) Trivial Ear \n"
 			" 2) Leipa Ear \n"
@@ -58,6 +58,7 @@ int main(int argc,char ** argv){
 	}
 
 	int algorithm = atoi(argv[1]);
+	int holeSize  = atoi(argv[2]);
 	if(algorithm < 0 && algorithm > 4)
 	{
 		printf("Error in algorithm's selection\n",algorithm);
@@ -66,7 +67,7 @@ int main(int argc,char ** argv){
 
 	MyMesh m;
 
-	if(tri::io::ImporterPLY<MyMesh>::Open(m,argv[2])!=0)
+	if(tri::io::ImporterPLY<MyMesh>::Open(m,argv[3])!=0)
 	{
 		printf("Error reading file  %s\n",argv[2]);
 		exit(0);
@@ -77,29 +78,19 @@ int main(int argc,char ** argv){
 	tri::UpdateTopology<MyMesh>::FaceFace(m);
 	tri::UpdateNormals<MyMesh>::PerVertex(m);
 	tri::UpdateFlags<MyMesh>::FaceBorderFromFF(m);
+  assert(tri::Clean<MyMesh>::IsFFAdjacencyConsistent(m));
 
-vcg::tri::Hole<MyMesh> holeFiller;
-
+  tri::Hole<MyMesh> holeFiller;
 	switch(algorithm)
 	{
-	case 1:
-		
-		holeFiller.EarCuttingFill<vcg::tri::TrivialEar<MyMesh> >(m,50,false);
-		break;
-	case 2: 
-    assert(tri::Clean<MyMesh>::IsFFAdjacencyConsistent(m));
-		holeFiller.EarCuttingFill<vcg::tri::MinimumWeightEar< MyMesh> >(m,10,false,callback);
-    assert(tri::Clean<MyMesh>::IsFFAdjacencyConsistent(m));
-		break;
-	case 3:
-		holeFiller.EarCuttingIntersectionFill<vcg::tri::SelfIntersectionEar< MyMesh> >(m,500,false);
-		break;
-	case 4:
-		holeFiller.MinimumWeightFill(m, false);
-		break;
+  case 1:			tri::Hole<MyMesh>::EarCuttingFill<tri::TrivialEar<MyMesh> >(m,holeSize,false);                	        break;
+  case 2:   	tri::Hole<MyMesh>::EarCuttingFill<tri::MinimumWeightEar< MyMesh> >(m,holeSize,false,callback);          break;
+  case 3: 		tri::Hole<MyMesh>::EarCuttingIntersectionFill<tri::SelfIntersectionEar< MyMesh> >(m,holeSize,false);		break;
+  case 4: 		tri::Hole<MyMesh>::MinimumWeightFill(m, false);		                                                      break;
 	}
-
-	tri::io::ExporterPLY<MyMesh>::Save(m,argv[3],false);
+  printf("\nCompleted. Saving....\n");
+  assert(tri::Clean<MyMesh>::IsFFAdjacencyConsistent(m));
+	tri::io::ExporterPLY<MyMesh>::Save(m,argv[4],false);
 	return 0;
 }
 
