@@ -3,7 +3,7 @@
 ######################################################################
 
 TEMPLATE      = subdirs
-SUBDIRS       = trimesh_base \
+SUBDIRS       = trimesh_base  \
                 trimesh_topology\
                 trimesh_smooth \
                 trimesh_refine \
@@ -13,9 +13,9 @@ SUBDIRS       = trimesh_base \
                 trimesh_optional \
                 trimesh_intersection \
                 trimesh_ball_pivoting \
+                trimesh_hole \
                 aabb_binary_tree \
                 edgemesh_grid
-                
 
 sources.files = *.pro
 sources.path = .
