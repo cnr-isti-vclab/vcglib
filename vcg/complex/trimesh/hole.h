@@ -24,6 +24,10 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2006/12/01 00:11:17  cignoni
+Added Callback, Corrected some spelling errors (adiacense -> adjacency).
+Added Validity Check function for hole loops
+
 Revision 1.21  2006/11/30 11:49:20  cignoni
 small gcc compiling issues
 
@@ -518,11 +522,11 @@ public:
 template<class EAR>
 	static void FillHoleEar(MESH &m, Info &h ,int UBIT, std::vector<FacePointer *> &app,std::vector<FaceType > *vf =0)
 		{
-			//Aggiungo le facce e aggiorno il puntatore alla faccia!
+      //Aggiungo le facce e aggiorno il puntatore alla faccia!
 			FaceIterator f = tri::Allocator<MESH>::AddFaces(m, h.size-2, app);
 			assert(h.p.f >= &*m.face.begin());
 			assert(h.p.f < &*m.face.end());
-			assert(h.p.IsBorder());//test fondamentale altrimenti qualcosa s'e' rotto!
+      assert(h.p.IsBorder());//test fondamentale altrimenti qualcosa s'e' rotto!
 			std::vector<EAR > H; //vettore di orecchie
 			H.reserve(h.size);
 
@@ -547,11 +551,14 @@ template<class EAR>
 			{
 				pop_heap(H.begin(), H.end());		
 				EAR en0,en1;
+        EAR BestEar=H.back();
+        H.pop_back();
+
 				FaceIterator Fadd = f;
-				if(H.back().IsUpToDate() && !H.back().IsConvex())	
+				if(BestEar.IsUpToDate() && !BestEar.IsConvex())	
 				{
-					if(!H.back().Degen()){ 
-						if(H.back().Close(en0,en1,&*f))
+					if(!BestEar.Degen()){ 
+						if(BestEar.Close(en0,en1,&*f))
 						{
 							if(!en0.IsNull()){
 								H.push_back(en0);
@@ -571,7 +578,7 @@ template<class EAR>
 					//ultimo buco o unico buco.
 					if(cnt == 3 && !fitted)
 					{
-						if(H.back().Close(en0,en1,&*f))
+						if(BestEar.Close(en0,en1,&*f))
 						{
 							--cnt;
 							if(vf != 0)(*vf).push_back(*f);
@@ -581,7 +588,7 @@ template<class EAR>
 				}//is update()
 				fitted = false;
 				//non ho messo il triangolo quindi tolgo l'orecchio e continuo.
-				H.pop_back();
+				
 			}//fine del while principale.
 			//tolgo le facce non utilizzate.
 			while(f!=m.face.end())
