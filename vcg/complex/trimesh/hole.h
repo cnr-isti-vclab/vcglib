@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2006/11/30 11:49:20  cignoni
+small gcc compiling issues
+
 Revision 1.20  2006/11/29 16:21:45  cignoni
 Made static exposed funtions of the class
 
@@ -91,6 +94,7 @@ First Non working Version
 #ifndef __VCG_TRI_UPDATE_HOLE
 #define __VCG_TRI_UPDATE_HOLE
 
+#include <wrap/callback.h>
 #include <vcg/math/base.h>
 #include <vcg/complex/trimesh/clean.h>
 #include <vcg/space/point3.h>
@@ -140,28 +144,32 @@ namespace vcg {
 				ComputeAngle();
 			}
 
-			void SetAdiacenseRing(std::vector<typename MESH::FaceType>* ar){vf = ar;}
+			void SetAdjacencyRing(std::vector<typename MESH::FaceType>* ar){vf = ar;}
 
+      /// Compute the angle of the two edges of the ear.
+      // it tries to make the computation in a precision safe way.
+      // the angle computation takes into account the case of reversed ears 
 			void ComputeAngle()
 			{
 				Point3f p1 = e0.VFlip()->P() - e0.v->P();
 				Point3f p2 = e1.v->P() - e0.v->P();
-
+        
 				ScalarType  w = p2.Norm()*p1.Norm();
-				if(w==0) angle = acos(0.0f);
-				ScalarType p = (p2*p1);
-				p= p/w;
-				if(p < -1) p = -1;
-				if(p > 1) p = 1;
-				p = acos(p);
+        if(w==0) 
+          angle = acos(0.0f);
+        else
+        {
+          ScalarType p = (p2*p1);
+          p= p/w;
+          if(p < -1) p = -1;
+          if(p >  1) p = 1;
+          p = acos(p);
 
-				Point3f t = p2^p1;
-				ScalarType n = t* e0.v->N();
-				if(n<0)
-				{
-					p = (2.0 *(float)M_PI) - p;
-				}
-				angle = p;
+          Point3f NormalOfEar = p2^p1; 
+          ScalarType n = NormalOfEar * e0.v->N();
+          if(n<0)		p = (2.0 *(float)M_PI) - p;
+          angle = p;
+        }
 			}
 
 			virtual inline bool operator < ( const TrivialEar & c ) const { return quality <  c.quality; }
@@ -400,9 +408,9 @@ namespace vcg {
 					enold.f->FFp(enold.z)=f;
 					enold.f->FFi(enold.z)=2;
 					ne0=SelfIntersectionEar(ep);
-					ne0.SetAdiacenseRing(this->vf);
+					ne0.SetAdjacencyRing(this->vf);
 					ne1=SelfIntersectionEar(en);
-					ne1.SetAdiacenseRing(this->vf);
+					ne1.SetAdjacencyRing(this->vf);
 				}
 				// Caso ear non manifold b
 				else if(ep.VFlip()==this->e1.v)
@@ -415,16 +423,16 @@ namespace vcg {
 					epold.f->FFp(epold.z)=f;
 					epold.f->FFi(epold.z)=2;
 					ne0=SelfIntersectionEar(ep);
-					ne0.SetAdiacenseRing(this->vf);
+					ne0.SetAdjacencyRing(this->vf);
 					ne1=SelfIntersectionEar(en);
-					ne1.SetAdiacenseRing(this->vf);
+					ne1.SetAdjacencyRing(this->vf);
 				}
 				else// Now compute the new ears;
 				{
 					ne0=SelfIntersectionEar(ep);
-					ne0.SetAdiacenseRing(this->vf);
+					ne0.SetAdjacencyRing(this->vf);
 					ne1=SelfIntersectionEar(face::Pos<typename MESH::FaceType>(f,2,this->e1.v));
-					ne1.SetAdiacenseRing(this->vf);
+					ne1.SetAdjacencyRing(this->vf);
 				}
 				return true;
 			}
@@ -487,6 +495,22 @@ public:
 				return sum;				
 			}
 
+      // Support function to test the validity of a single hole loop
+      // for now it test only that all the edges are border;
+      // The real test should check if all non manifold vertices 
+      // are touched only by edges belonging to this hole loop.
+      bool CheckValidity()
+      {
+       if(!p.IsBorder()) 
+         return false;
+       PosType ip=p;ip.NextB()
+       for(;ip!=p;ip.NextB())
+       {
+          if(!ip.IsBorder()) 
+            return false;
+       }       
+       return true;
+      }
 		};
 
 
@@ -507,7 +531,7 @@ template<class EAR>
 			PosType fp = h.p;
 			do{
 				EAR app = EAR(fp);
-				app.SetAdiacenseRing(vf);
+				app.SetAdjacencyRing(vf);
 				H.push_back( app );
 				fp.NextB();//semmai da provare a sostituire il codice della NextB();
 				assert(fp.IsBorder());
@@ -571,7 +595,7 @@ template<class EAR>
 
 
 template<class EAR>//!!!
-	static void EarCuttingFill(MESH &m, int sizeHole,bool Selected = false)
+	static void EarCuttingFill(MESH &m, int sizeHole,bool Selected = false, CallBackPos *cb=0)
 		{
 			std::vector< Info > vinfo;
 			int UBIT = GetInfo(m, Selected,vinfo);
@@ -587,6 +611,7 @@ template<class EAR>//!!!
 			for(ith = vinfo.begin(); ith!= vinfo.end(); ++ith)
 			{
 				ind++;
+        if(cb) (*cb)(ind*100/vinfo.size(),"Closing Holes");
 				if((*ith).size < sizeHole){		
 					FillHoleEar< EAR >(m, *ith,UBIT,vfp);
 				}
