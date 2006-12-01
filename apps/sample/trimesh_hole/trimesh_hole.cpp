@@ -1,4 +1,5 @@
 #include <vector>
+#include <iostream>
 
 #include<vcg/simplex/vertexplus/base.h>
 #include<vcg/simplex/faceplus/base.h>
@@ -13,13 +14,16 @@
 // half edge iterators
 #include<vcg/simplex/face/pos.h>
 
+#include<vcg/complex/trimesh/hole.h>
+
 // input output
 #include <wrap/io_trimesh/import_ply.h>
 #include <wrap/io_trimesh/export_ply.h>
 
-#include<vcg/complex/trimesh/hole.h>
+
 
 using namespace vcg;
+using namespace std;
 
 class MyEdge;    // dummy prototype never used
 class MyFace;
@@ -28,7 +32,13 @@ class MyVertex;
 class MyVertex  : public VertexSimp2< MyVertex, MyEdge, MyFace, vert::Coord3f, vert::BitFlags, vert::Normal3f  >{};
 class MyFace    : public FaceSimp2  < MyVertex, MyEdge, MyFace, face::VertexRef,face::FFAdj, face::Mark, face::BitFlags, face::Normal3f > {};
 
-class MyMesh : public tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace > >{};
+class MyMesh : public tri::TriMesh< vector<MyVertex>, vector<MyFace > >{};
+
+
+bool callback(int percent, const char *str) {
+  cout << "str: " << str << " " << percent << "%\n";
+  return true;
+}
 
 int main(int argc,char ** argv){
 
@@ -56,7 +66,7 @@ int main(int argc,char ** argv){
 
 	MyMesh m;
 
-	if(vcg::tri::io::ImporterPLY<MyMesh>::Open(m,argv[2])!=0)
+	if(tri::io::ImporterPLY<MyMesh>::Open(m,argv[2])!=0)
 	{
 		printf("Error reading file  %s\n",argv[2]);
 		exit(0);
@@ -64,8 +74,8 @@ int main(int argc,char ** argv){
 
 
 	//update the face-face topology 
-	vcg::tri::UpdateTopology<MyMesh>::FaceFace(m);
-	vcg::tri::UpdateNormals<MyMesh>::PerVertex(m);
+	tri::UpdateTopology<MyMesh>::FaceFace(m);
+	tri::UpdateNormals<MyMesh>::PerVertex(m);
 	tri::UpdateFlags<MyMesh>::FaceBorderFromFF(m);
 
 vcg::tri::Hole<MyMesh> holeFiller;
@@ -77,7 +87,9 @@ vcg::tri::Hole<MyMesh> holeFiller;
 		holeFiller.EarCuttingFill<vcg::tri::TrivialEar<MyMesh> >(m,50,false);
 		break;
 	case 2: 
-		holeFiller.EarCuttingFill<vcg::tri::MinimumWeightEar< MyMesh> >(m,500,false);
+    assert(tri::Clean<MyMesh>::IsFFAdjacencyConsistent(m));
+		holeFiller.EarCuttingFill<vcg::tri::MinimumWeightEar< MyMesh> >(m,10,false,callback);
+    assert(tri::Clean<MyMesh>::IsFFAdjacencyConsistent(m));
 		break;
 	case 3:
 		holeFiller.EarCuttingIntersectionFill<vcg::tri::SelfIntersectionEar< MyMesh> >(m,500,false);
@@ -87,7 +99,7 @@ vcg::tri::Hole<MyMesh> holeFiller;
 		break;
 	}
 
-	vcg::tri::io::ExporterPLY<MyMesh>::Save(m,argv[3],false);
+	tri::io::ExporterPLY<MyMesh>::Save(m,argv[3],false);
 	return 0;
 }
 
