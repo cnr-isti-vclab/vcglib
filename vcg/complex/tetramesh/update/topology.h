@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2006/06/29 13:07:33  ganovelli
+Aggiunta superclasse UpdateTopology templated sui container e con funzioni sui container
+
 
 Revision 1.1  2004/16/04 14:32  pietroni
 Initial commit
@@ -213,9 +216,9 @@ static void VTTopology(VertexContainer &vert,TetraContainer &tetra)
 			if( ! (*t).IsD())
 				for(int j=0;j<4;++j)
 				{
-					(*t).TVp(j) = (*t).V(j)->VTb();
+					(*t).TVp(j) = (*t).V(j)->VTp();
 					(*t).TVi(j) = (*t).V(j)->VTi();
-					(*t).V(j)->VTb() = &(*t);
+					(*t).V(j)->VTp() = &(*t);
 					(*t).V(j)->VTi() = j;
 				}
 	
@@ -227,7 +230,7 @@ static void ClearVTTopology(VertexContainer &vert,TetraContainer &tetra)
 		VertexIterator v;
 		for(v=vert.begin();v!=vert.end();++v)
 			{
-				v->VTb() = 0;
+				v->VTp() = 0;
 				v->VTi() = 0;
 			}
 
@@ -704,7 +707,7 @@ public:
 		}
 		static void VTTopology(TetraMeshType & tmesh){	
 			UpdateTopologyBase<typename TetraMeshType::VertexContainer,typename TetraMeshType::TetraContainer>::
-				TTTopology(tmesh.vert,tmesh.tetra);
+				VTTopology(tmesh.vert,tmesh.tetra);
 		}
 
 
