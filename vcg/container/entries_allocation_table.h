@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/07/06 15:28:11  ganovelli
+aggiornamento di alcuni path
+
 Revision 1.4  2004/04/05 13:53:37  ganovelli
 Aggiunto typename
 
@@ -81,7 +84,7 @@ const bool EntryCATBase<STL_CONT>:: operator < (const EntryCATBase<STL_CONT> & o
 
 template <class STL_CONT>
  typename typename STL_CONT::value_type  * EntryCATBase<STL_CONT>::Start()const {
-	return &(*(c.begin()));
+	return  c.Pointer2begin();
 	}
 
 template <class STL_CONT>

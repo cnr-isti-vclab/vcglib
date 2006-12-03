@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2006/06/08 20:28:57  ganovelli
+aggiunto qualche const sui parametri
+
 Revision 1.7  2005/10/15 16:21:48  ganovelli
 Working release (compilata solo su MSVC), vector_occ è migrato da component_opt
 
@@ -82,7 +85,7 @@ static int & Id(){
 };
 
 /// CATEntry: first derivation templated on the type of entry
-/// It implements all the methods to trace and access TVector element
+/// It implements all the methods to trace and access vector_occ's elements
 template <typename STL_CONT, class ENTRY_TYPE>
 class CATEntry: public CATBase<STL_CONT>{
 public:
@@ -165,9 +168,6 @@ typename std::list<ENTRY_TYPE>::iterator CATEntry<STL_CONT,ENTRY_TYPE>::
 
 FindBase(const ValueType * pt)
 {
-//DEBUG
-int sz = AT().size();
-//
 std::list<ENTRY_TYPE>::iterator ite,curr_base,_;
 ite = AT().begin();
 curr_base = AT().end();
@@ -270,7 +270,7 @@ Insert( STL_CONT & c,bool cond )
 {
 ENTRY_TYPE entry(c);
 std::list<ENTRY_TYPE>::iterator lower_ite,upper_ite;
-upper_ite = FindBase(&*c.begin());
+upper_ite = FindBase( c.Pointer2begin());
 bool isIn = (upper_ite != AT().end());
 if(isIn){
 	if((*upper_ite).C() != &c )

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2006/06/08 20:28:38  ganovelli
+Corretto IsEnabledAttribute
+
 Revision 1.1  2005/10/15 16:21:49  ganovelli
 Working release (compilata solo su MSVC), vector_occ è migrato da component_opt
 
@@ -62,10 +65,12 @@ class vector_occ: public std::vector<VALUE_TYPE>{
 	typedef typename vector_occ<VALUE_TYPE> ThisType;
 
 public:
-	vector_occ():std::vector<VALUE_TYPE>(){reserve(1);}
+	vector_occ():std::vector<VALUE_TYPE>(){id = ID(); ID()=ID()+1; reserve(1);}
 	~vector_occ();
 	
-
+	VALUE_TYPE * Pointer2begin(){
+		if(empty()) return (VALUE_TYPE *)id; else return &*std::vector<VALUE_TYPE>::begin();
+	}
 	std::list < CATBase<ThisType>* > attributes;
 	// override di tutte le funzioni che possono spostare 
 	// l'allocazione in memoria del container
@@ -120,7 +125,7 @@ public:
 		TempData<ThisType,ATTR_TYPE> NewTempData(){
 			typedef typename CATEntry<ThisType,EntryCATMulti<ThisType> >::EntryType EntryTypeMulti;
 			CATEntry<ThisType,EntryTypeMulti>::Insert(*this);
-			EntryTypeMulti	entry = CATEntry<ThisType,EntryTypeMulti >::GetEntry(&*begin());
+			EntryTypeMulti	entry = CATEntry<ThisType,EntryTypeMulti >::GetEntry(Pointer2begin());
 			entry.Data().push_back(new Wrap< ATTR_TYPE>);
 
 			((Wrap<ATTR_TYPE>*)entry.Data().back())->reserve(capacity());
@@ -135,7 +140,7 @@ public:
 			typedef typename CATEntry<ThisType,EntryCATMulti<ThisType> >::EntryType EntryTypeMulti;
 			CATEntry<ThisType,EntryTypeMulti >::RemoveIfEmpty(*this);
 			EntryTypeMulti
-				entry = CATEntry<ThisType,EntryCATMulti<ThisType> >::GetEntry(&*begin());
+				entry = CATEntry<ThisType,EntryCATMulti<ThisType> >::GetEntry(Pointer2begin);
 
 			entry.Data().remove((Wrap<ATTR_TYPE>*)td.Item());
 			delete ((Wrap<ATTR_TYPE>*)td.Item());
@@ -144,6 +149,8 @@ public:
 
 private:	
 	VALUE_TYPE * old_start;
+	int id;
+	static int & ID(){static int id; return id;} 
 	void Update();
 };
 
@@ -184,11 +191,11 @@ template <class VALUE_TYPE>
 	void vector_occ<VALUE_TYPE>::
 		Update(){
 		std::list < CATBase<ThisType> * >::iterator ia; 
-		if(&(*begin()) != old_start)
+		if(Pointer2begin() != old_start)
 			for(ia = attributes.begin(); ia != attributes.end(); ++ia)
-				(*ia)->Resort(old_start,&(*begin()));
+				(*ia)->Resort(old_start,Pointer2begin());
 
-		old_start = &(*begin());
+		old_start = Pointer2begin();
 	}
 
 
