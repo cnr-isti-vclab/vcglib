@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2006/12/03 18:01:01  ganovelli
+versione compliant vs2005
+
 Revision 1.2  2006/06/08 20:28:38  ganovelli
 Corretto IsEnabledAttribute
 
@@ -87,11 +90,11 @@ public:
 			attributes.push_back(cat);
 			}
 
-	/// this function disable the use of an optional attribute (see...)
+	/// this function returns true if the attribute in the template parameter is enabled
   /// Note: once an attribute is disabled, its data is lost (the memory freed)
 	template <class ATTR_TYPE>
-		bool IsEnabledAttribute(){
-				std::list < CATBase<ThisType> * >::iterator ia; 
+		bool IsEnabledAttribute() const{
+				std::list < CATBase<ThisType> * >::const_iterator ia; 
 				for(ia = attributes.begin(); ia != attributes.end(); ++ia)
 					if((*ia)->Id() == CAT<ThisType,ATTR_TYPE>::Id())
 						return true;
