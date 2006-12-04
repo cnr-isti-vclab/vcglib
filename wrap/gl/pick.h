@@ -22,14 +22,13 @@
 ****************************************************************************/
 /****************************************************************************
   History
-
+$Log: not supported by cvs2svn $
 ****************************************************************************/
 #ifndef __PICK______H
 #define __PICK______H
 
 #include <vector>
 #include <algorithm>
-#include <vcg/space/tetra3.h>
 namespace vcg{
 
 template <class MESH_TYPE>
