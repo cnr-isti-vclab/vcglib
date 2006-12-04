@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/05/09 12:29:55  callieri
+added line cleaning to eliminate all separators, added a rough triangulation scheme.
+
 Revision 1.1  2005/05/06 13:58:26  callieri
 First working version (callieri)
 
@@ -35,6 +38,8 @@ First working version (callieri)
 #define __VCGLIB_IMPORT_RAW
 
 #include <stdio.h>
+#include <fstream>
+#include <iostream>
 
 namespace vcg {
 namespace tri {
@@ -242,6 +247,36 @@ static int Parseline(int tokennumber, int *tokenorder, char *rawline, float *lin
 }
 
 
+static int fillHoles( MESH_TYPE &m, size_t rowCount, size_t colCount)
+{
+
+ for (size_t i = 1; i<colCount-1; ++i)
+ for (size_t j = 1; j<rowCount-1; ++j)
+ {
+      
+     size_t ind  = (i) + ((j)   * colCount);
+     size_t indL = (i-1) + ((j) * colCount);
+     size_t indR = (i+1) + ((j) * colCount);
+     size_t indT = (i) + ((j-1) * colCount);
+     size_t indB = (i) + ((j+1) * colCount);
+
+    if ((m.vert[ind].P()  == vcg::Point3<MESH_TYPE::ScalarType>(0,0,0)) &&
+        (m.vert[indL].P() != vcg::Point3<MESH_TYPE::ScalarType>(0,0,0)) &&
+        (m.vert[indR].P() != vcg::Point3<MESH_TYPE::ScalarType>(0,0,0)) &&
+        (m.vert[indT].P() != vcg::Point3<MESH_TYPE::ScalarType>(0,0,0)) &&
+        (m.vert[indB].P() != vcg::Point3<MESH_TYPE::ScalarType>(0,0,0)) )
+    {
+      m.vert[ind].P() = ( m.vert[indL].P() + m.vert[indR].P() + m.vert[indT].P() + m.vert[indB].P() ) * 0.25;
+
+    } 
+   
+  
+ }
+
+  //vcg::tri::io::ExporterPLY<MESH_TYPE>::Save( hm, "hole.ply" );
+  return 1;
+}
+
 /*!
 *	Standard call for reading a mesh
 *	\param m			the destination mesh
@@ -254,6 +289,8 @@ static int Open( MESH_TYPE &m, const char * filename, bool triangulate=false, in
 {
   int ii;
   int ret;
+  
+ 
   FILE *fp;
   int rownumber;
   int colnumber;
@@ -265,6 +302,8 @@ static int Open( MESH_TYPE &m, const char * filename, bool triangulate=false, in
   // line read from file, to be parsed
   char rawline[512];
 
+   
+
   //line data buffer
   float linebuffer[10];
   // fill buffer with standard values
@@ -275,14 +314,14 @@ static int Open( MESH_TYPE &m, const char * filename, bool triangulate=false, in
 
 
   fp = fopen(filename, "r");
+ 
   if(fp == NULL)
   {
    return E_CANTOPEN;
   }
 
   // skip initial lines
-  for(ii=0; ii<lineskip; ii++)
-   Skipline(fp);
+  for(ii=0; ii<lineskip; ii++) Skipline(fp);
 
   // in raw files with indication of rows and columns it's also possible to triangulate points
   // after the skipped lines there should be the number of row and columns
@@ -298,19 +337,24 @@ static int Open( MESH_TYPE &m, const char * filename, bool triangulate=false, in
    return ret;
 
   m.Clear();
-//  FaceIterator fi=Allocator<OpenMeshType>::AddFaces(m,facenum);
-//  VertexIterator vi=Allocator<OpenMeshType>::AddVertices(m,facenum*3);
-
+  m.vert.reserve( rownumber * colnumber );
+  int line = 0;
+  size_t rowCounter = 0;
+  size_t colCounter = 0;
   while(!feof(fp))
   {
 	  /**/
    //read a new line
-   ii=0;
-   fread(&(rawline[ii++]),sizeof(char),1,fp);
-   while(rawline[ii-1] != '\n')
-    fread(&(rawline[ii++]),sizeof(char),1,fp);
-   rawline[ii-1] = '\0';
 
+   ii=0;
+   memset( rawline, 0, 512);
+   fread(&(rawline[ii++]),sizeof(char),1,fp);
+   while( (rawline[ii-1] != '\n') && (ii<512) ) 
+   {
+   fread(&(rawline[ii++]),sizeof(char),1,fp);
+   }
+   rawline[ii-1] = '\0';
+   line++;
    if(strlen(rawline) >0)  // empty line, just skip
    {
 
@@ -328,17 +372,24 @@ static int Open( MESH_TYPE &m, const char * filename, bool triangulate=false, in
     VertexType nv;
 
     // store the position
-    nv.P()[0] = linebuffer[0];    nv.P()[1] = linebuffer[1];    nv.P()[2] = linebuffer[2];
+    nv.P()[0] = linebuffer[0];
+    nv.P()[1] = linebuffer[1];
+    nv.P()[2] = linebuffer[2];
+
     // store the normal
     if(m.HasPerVertexNormal())
     {
-     nv.N()[0] = linebuffer[3];     nv.N()[1] = linebuffer[4];     nv.N()[2] = linebuffer[5];
+     nv.N()[0] = linebuffer[3];
+     nv.N()[1] = linebuffer[4];
+     nv.N()[2] = linebuffer[5];
     }
 
     // store the color
     if(m.HasPerVertexColor())
     {
-     nv.C()[0] = linebuffer[6];     nv.C()[1] = linebuffer[7];     nv.C()[2] = linebuffer[8];
+     nv.C()[0] = linebuffer[6];
+     nv.C()[1] = linebuffer[7];
+     nv.C()[2] = linebuffer[8];
     }
 
     // store the reflectance
@@ -348,47 +399,50 @@ static int Open( MESH_TYPE &m, const char * filename, bool triangulate=false, in
     }
 
     m.vert.push_back(nv);
+    
+    
+    
    } // end if zero length
   }
+   m.vn = m.vert.size();
+ if(triangulate) fillHoles(m, rownumber, colnumber);
 
   // update model point number
-  m.vn = m.vert.size();
+ 
 
   // now generate the triangles
   if(triangulate)
   {
     int rr,cc;
-    if(m.vn != (rownumber * colnumber))
-      return E_WRONGPOINTNUM;
+    //if(m.vn != (rownumber * colnumber)) return E_WRONGPOINTNUM;
 
     int trinum = (rownumber-1) * (colnumber-1) * 2;
 
     FaceIterator fi=Allocator<MESH_TYPE>::AddFaces(m,trinum);
 
-	m.fn = 0;
+	m.fn = trinum;
+	for(cc=0; cc<colnumber-1; cc++)
 	for(rr=0; rr<rownumber-1; rr++)
-	 for(cc=0; cc<colnumber-1; cc++)
 	 {
 		// upper tri
-		(*fi).V(0) = &(m.vert[(rr  ) + ((cc  ) * rownumber)]);
-		(*fi).V(1) = &(m.vert[(rr+1) + ((cc  ) * rownumber)]);
-		(*fi).V(2) = &(m.vert[(rr  ) + ((cc+1) * rownumber)]);
+		(*fi).V(2) = &(m.vert[(cc  ) + ((rr  ) * colnumber)]);
+		(*fi).V(1) = &(m.vert[(cc+1) + ((rr  ) * colnumber)]);
+		(*fi).V(0) = &(m.vert[(cc  ) + ((rr+1) * colnumber)]);
 
-		 m.fn++;
+
 		 fi++;
 
 		// lower tri
-		(*fi).V(0) = &(m.vert[(rr+1) + ((cc  ) * rownumber)]);
-		(*fi).V(1) = &(m.vert[(rr+1) + ((cc+1) * rownumber)]);
-		(*fi).V(2) = &(m.vert[(rr  ) + ((cc+1) * rownumber)]);
-/**/
-		 m.fn++;
+		(*fi).V(2) = &(m.vert[(cc+1) + ((rr  ) * colnumber)]);
+		(*fi).V(1) = &(m.vert[(cc+1) + ((rr+1) * colnumber)]);
+		(*fi).V(0) = &(m.vert[(cc  ) + ((rr+1) * colnumber)]);
+
+
 		 fi++;
 	 
 	 }
 	 
-		 
-      ++fi;
+	
   }
 
   fclose(fp);
