@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2006/11/07 17:22:52  cignoni
+many gcc compiling issues
+
 Revision 1.6  2006/11/07 15:13:57  zifnab1974
 Necessary changes for compilation with gcc 3.4.6. Especially the hash function is a problem
 
@@ -277,6 +280,8 @@ public:
 
 
 } // end namespace vert
+
+template < class, class > class TriMesh;
 
 namespace tri
 {
