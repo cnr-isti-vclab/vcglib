@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.24  2006/11/13 01:57:23  cignoni
+Added a missing prototype to ismanifold
+
 Revision 1.23  2006/11/09 17:22:56  cignoni
 Added ismanifold
 
@@ -275,6 +278,24 @@ public:
 		if(f->V((z+1)%3)==v)	return f->V((z+0)%3);
 								else			return f->V((z+1)%3);
 	}
+
+  // return the vertex that it should have if we make FlipV;
+	const VertexType *VFlip() const 
+	{
+		assert(f->cV((z+2)%3)!=v && (f->cV((z+1)%3)==v || f->cV((z+0)%3)==v));
+		if(f->cV((z+1)%3)==v)	return f->cV((z+0)%3);
+								else			return f->cV((z+1)%3);
+	}
+
+  // return the face that it should have if we make FlipF;
+	const FaceType *FFlip() const 
+	{
+		assert( f->FFp(z)->FFp(f->FFi(z))==f );
+		assert(f->V((z+2)%3)!=v && (f->V((z+1)%3)==v || f->V((z+0)%3)==v));
+		FaceType *nf=f->FFp(z);
+		return nf;
+  }
+
 
 	// Trova il prossimo half-edge di bordo (nhe)
 	// tale che 
