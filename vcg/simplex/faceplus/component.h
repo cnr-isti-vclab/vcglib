@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2006/11/28 22:34:28  cignoni
+Added default constructor with null initialization to adjacency members.
+AddFaces and AddVertices NEED to know if the topology is correctly computed to update it.
+
 Revision 1.8  2006/10/07 09:59:42  cignoni
 Added missing const to EmptyFF
 
@@ -139,8 +143,8 @@ public:
 
   static bool HasWedgeNormal()   { return false; }
   static bool HasFaceNormal()   { return false; }
-  static bool HasWedgeNormalOpt()   { return false; }
-  static bool HasFaceNormalOpt()   { return false; }
+  static bool HasWedgeNormalOcc()   { return false; }
+  static bool HasFaceNormalOcc()   { return false; }
 //  void ComputeNormal() {assert(0);}
 //  void ComputeNormalizedNormal() {assert(0);}
 
@@ -197,14 +201,17 @@ template <class T> class Normal3d: public NormalAbs<vcg::Point3d, T> {};
 
 template <class TT> class EmptyWedgeTexture: public TT {
 public:
+	typedef int WedgeTextureType;
   typedef vcg::TCoord2<float,1> TexCoordType;
   TexCoordType &WT(const int) { static TexCoordType dummy_texture; return dummy_texture;}
   TexCoordType const &cWT(const int) const { static TexCoordType dummy_texture; return dummy_texture;}
   static bool HasWedgeTexture()   { return false; }
+  static bool HasWedgeTextureOcc()   { return false; }
 
 };
 template <class A, class TT> class WedgeTexture: public TT {
 public:
+	typedef int WedgeTextureType;
   typedef A TexCoordType;
   TexCoordType &WT(const int i) { return _wt[i]; }
   TexCoordType const &cWT(const int i) const { return _wt[i]; }
@@ -225,7 +232,7 @@ public:
   int &Flags() { static int dummyflags(0); return dummyflags; }
   const int Flags() const { return 0; }
   static bool HasFlags()   { return false; }
-
+  static bool HasFlagsOcc()   { return false; }
 };
 
 template <class T> class BitFlags:  public T {
@@ -252,6 +259,7 @@ public:
   static bool HasFaceColor()   { return false; }
   static bool HasWedgeColor()   { return false; }
   static bool HasFaceQuality()   { return false; }
+	static bool HasFaceColorOcc() { return false;}
 };
 template <class A, class T> class Color: public T {
 public:
@@ -284,6 +292,7 @@ public:
   typedef A QualityType;
   QualityType &Q() { return _quality; }
   static bool HasFaceQuality()   { return true; }
+  static bool HasFaceQualityOcc()   { return true; }
 
 private:
   QualityType _quality;    
@@ -296,8 +305,9 @@ template <class T> class Qualityd: public Quality<double, T> {};
 
 template <class T> class EmptyMark: public T {
 public:
+	typedef int MarkType;
   static bool HasMark()   { return false; }
-  static bool HasMarkOpt()   { return false; }
+  static bool HasMarkOcc()   { return false; }
   inline void InitIMark()    {  }
   inline int & IMark()       { assert(0); static int tmp=-1; return tmp;}
   inline const int IMark() const {return 0;}
@@ -306,7 +316,7 @@ public:
 template <class T> class Mark: public T {
 public:
   static bool HasMark()      { return true; }
-  static bool HasMarkOpt()   { return true; }
+  static bool HasMarkOcc()   { return true; }
   inline void InitIMark()    { _imark = 0; }
   inline int & IMark()       { return _imark;}
   inline const int & IMark() const {return _imark;}
@@ -321,6 +331,7 @@ public:
 
 template <class T> class EmptyAdj: public T {
 public:
+	typedef int VFAdjType;
   typename T::FacePointer       &VFp(const int)       { static typename T::FacePointer fp=0; return fp; }
   typename T::FacePointer const cVFp(const int) const { static typename T::FacePointer const fp=0; return fp; }
   typename T::FacePointer       &FFp(const int)       { static typename T::FacePointer fp=0; return fp; }
@@ -329,8 +340,8 @@ public:
   char &FFi(const int j){static char z=0; return z;};
   static bool HasVFAdjacency()   {   return false; }
   static bool HasFFAdjacency()   {   return false; }
-  static bool HasFFAdjacencyOpt()   {   return false; }
-  static bool HasVFAdjacencyOpt()   {   return false; }
+  static bool HasFFAdjacencyOcc()   {   return false; }
+  static bool HasVFAdjacencyOcc()   {   return false; }
 };
 
 template <class T> class VFAdj: public T {
@@ -341,7 +352,7 @@ public:
   typename T::FacePointer const cVFp(const int j) const  { assert(j>=0 && j<3);  return _vfp[j]; }
   char &VFi(const int j) {return _vfi[j]; }
   static bool HasVFAdjacency()      {   return true; }
-  static bool HasVFAdjacencyOpt()   {   return false; }
+  static bool HasVFAdjacencyOcc()   {   return false; }
 private:
   typename T::FacePointer _vfp[3] ;    
   char _vfi[3] ;    
@@ -362,7 +373,7 @@ public:
   char        &FFi(const int j)       { return _ffi[j]; }
   const char &cFFi(const int j) const { return _ffi[j]; }
   static bool HasFFAdjacency()      {   return true; }
-  static bool HasFFAdjacencyOpt()   {   return false; }
+  static bool HasFFAdjacencyOcc()   {   return false; }
 
 private:
   typename T::FacePointer _ffp[3] ;    
