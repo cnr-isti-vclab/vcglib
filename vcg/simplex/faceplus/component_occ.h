@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2006/06/08 20:32:10  ganovelli
+aggiunte wedge coord
+
 Revision 1.2  2005/10/18 14:27:22  ganovelli
 EdgePLaneType added (_RT)
 
@@ -55,7 +58,7 @@ namespace vcg {
 	template <class A, class T> class WedgeTextureOcc: public T {
 	public:
 		typedef A WedgeTextureType;
-		WedgeTextureType &N() {return CAT< vector_occ<FaceType>,WedgeTextureType>::Instance()->Get((FaceType*)this);}
+		WedgeTextureType &WT(const int&i) {return CAT< vector_occ<FaceType>,WedgeTextureType>::Instance()->Get((FaceType*)this);}
 	  static bool HasWedgeTexture()   { return true; }
 		static bool HasWedgeTextureOcc()   { return true; }
 	};
@@ -80,13 +83,24 @@ namespace vcg {
 	public:
 		typedef A NormalType;
 		NormalType &N() {return CAT< vector_occ<FaceType>,NormalType>::Instance()->Get((FaceType*)this);}
-	  static bool HasNormal()   { return true; }
-		static bool HasColorOcc()   { return true; }
+	  static bool HasFaceNormal()   { return true; }
+		static bool HasFaceNormalOcc()   { return true; }
 	};
 
 	template <class T> class Normal3sOcc: public NormalOcc<vcg::Point3s, T> {};
 	template <class T> class Normal3fOcc: public NormalOcc<vcg::Point3f, T> {};
 	template <class T> class Normal3dOcc: public NormalOcc<vcg::Point3d, T> {};
+
+///*-------------------------- MARK ----------------------------------------*/ 
+
+	template <class T> class MarkOcc: public T {
+	public:
+		typedef int MarkType;
+		int &IMark() {return CAT< vector_occ<FaceType>,MarkType>::Instance()->Get((MarkType*)this);}
+	  static bool HasFaceMark()   { return true; }
+		static bool HasFaceMarkOcc()   { return true; }
+	  inline void InitIMark()    { IMark() = 0; }
+	};
 
 ///*-------------------------- COLOR ----------------------------------------*/ 
 
@@ -94,8 +108,8 @@ template <class A, class T> class ColorOcc: public T {
 public:
   typedef A ColorType;
   ColorType &C() { return CAT< vector_occ<FaceType>,ColorType>::Instance()->Get((FaceType*)this); }
-  static bool HasColor()   { return true; }
-  static bool HasColorOcc()   { return true; }
+  static bool HasFaceColor()   { return true; }
+  static bool HasfaceColorOcc()   { return true; }
 };
 
 template <class T> class Color4bOcc: public ColorOcc<vcg::Color4b, T> {};
@@ -112,6 +126,7 @@ struct VFAdjTypeSup {
 
 template <class A, class T> class VFAdjOccBase: public T {
 public:
+	typedef A VFAdjType;
   typename T::FacePointer &VFp(const int j) {
 		return (CAT< vector_occ<FaceType>,VFAdjTypeSup<T::FacePointer> >::Instance()->Get((FaceType*)this))._vfp[j];}
 
@@ -142,7 +157,7 @@ public:
 //	typedef  A FFAdjType;
 	typedef FFAdjTypeSup<typename T::FacePointer> FFAdjType;
 
-  typename T::FacePointer &FFp(const int j) { 
+  typename T::FacePointer &FFp(const int j) {
 		return (CAT< vector_occ<FaceType>,FFAdjTypeSup<T::FacePointer> >::Instance()->Get((FaceType*)this))._ffp[j];}
 
   typename T::FacePointer const  FFp(const int j) const { 
@@ -243,8 +258,47 @@ public:
 	inline const typename T::VertexType * const & UberV( const int j ) const	{ assert(j>=0 && j<3);	return v[j];	}
   static bool HasVertexRef()   { return true; }
 };
-
-
   } // end namespace face
+
+	template < class, class > class TriMesh;
+
+	namespace tri
+  {
+		template < class VertContainerType, class FaceType >
+			bool HasVFAdjacency (const TriMesh < VertContainerType , vector_occ< FaceType > > & m) 
+		{
+			if(FaceType::HasVFAdjacencyOcc()) return m.face.IsEnabledAttribute<FaceType::VFAdjType >();
+			else return FaceType::FaceType::HasVFAdjacency();
+		}
+
+		template < class VertContainerType, class FaceType >
+			bool HasFFAdjacency (const TriMesh < VertContainerType , vector_occ< FaceType > > & m) 
+		{
+			if(FaceType::HasFFAdjacencyOcc()) return m.face.IsEnabledAttribute<FaceType::FFAdjType >();
+			else return FaceType::FaceType::HasFFAdjacency();
+		}
+
+		template < class VertContainerType, class FaceType >
+			bool HasPerWedgeTexture (const TriMesh < VertContainerType , vector_occ< FaceType > > & m) 
+		{
+			if(FaceType::HasWedgeTextureOcc()) return m.face.IsEnabledAttribute<FaceType::WedgeTextureType >();
+			else return FaceType::FaceType::HasWedgeTexture();
+		}
+
+		template < class VertContainerType, class FaceType >
+			bool HasPerFaceColor (const TriMesh < VertContainerType , vector_occ< FaceType > > & m) 
+		{
+			if(FaceType::HasFaceColorOcc()) return m.face.IsEnabledAttribute<FaceType::ColorType>();
+			else return FaceType::FaceType::HasFaceColor();
+		}
+
+		template < class VertContainerType, class FaceType >
+			bool HasPerFaceMark (const TriMesh < VertContainerType , vector_occ< FaceType > > & m) 
+		{
+			if(FaceType::HasFaceMarkOcc()) return m.face.IsEnabledAttribute<FaceType::MarkType>();
+			else return FaceType::FaceType::HasFaceMark();
+		}
+
+	}; // end namesace tri
 }// end namespace vcg
 #endif
