@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.28  2006/11/09 17:28:42  cignoni
+Corrected Detach; added FFCorrectness; Corrected ComplexSize, Dissemination of a lot of assert()
+
 Revision 1.27  2006/05/03 21:38:57  cignoni
 Added possibility of not updating the topology during a SwapEdge
 
@@ -485,8 +488,8 @@ static void FlipEdge(FaceType &f, const int z)
 	}
 	else
 	{
-		f.FFp(z)->FFp( f.UberZ(z) ) = &f;
-		f.FFp(z)->FFi( f.UberZ(z) ) = z;
+		f.FFp(z)->FFp( f.FFi(z) ) = &f;
+		f.FFp(z)->FFi( f.FFi(z) ) = z;
 	}
 	if(g->FFp(w)==&f)
 	{
@@ -495,8 +498,8 @@ static void FlipEdge(FaceType &f, const int z)
 	}
 	else
 	{
-		g->FFp(w)->FFp( g->UberZ(w) ) = g;
-		g->FFp(w)->FFi( g->UberZ(w) ) = w;
+		g->FFp(w)->FFp( g->FFi(w) ) = g;
+		g->FFp(w)->FFi( g->FFi(w) ) = w;
 	}
 }
 
