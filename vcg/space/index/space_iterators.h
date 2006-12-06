@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2006/10/26 08:28:50  pietroni
+corrected 1 bug in operator ++ of closest iterator
+
 Revision 1.21  2006/10/25 15:59:29  pietroni
 corrected bug in closest iterator.. if doesn't find any alement at first cells examinated continue until find some element
 
@@ -209,7 +212,7 @@ namespace vcg{
 		{return end;}
 
 
-		///refresh current cell intersection , return true if there are 
+		///refresh current cell intersection , return false if there are 
 		///at lest 1 intersection
 		bool Refresh()
 		{
