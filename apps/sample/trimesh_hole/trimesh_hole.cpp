@@ -5,6 +5,9 @@
 #include<vcg/simplex/faceplus/base.h>
 #include<vcg/simplex/face/topology.h>
 #include<vcg/complex/trimesh/base.h>
+#include <vcg/complex/local_optimization.h>
+#include<vcg/complex/local_optimization/tri_edge_flip.h>
+
 
 // topology computation
 #include<vcg/complex/trimesh/update/topology.h>
@@ -29,10 +32,19 @@ class MyEdge;    // dummy prototype never used
 class MyFace;
 class MyVertex;
 
-class MyVertex  : public VertexSimp2< MyVertex, MyEdge, MyFace, vert::Coord3f, vert::BitFlags, vert::Normal3f  >{};
+class MyVertex  : public VertexSimp2< MyVertex, MyEdge, MyFace, vert::Coord3f, vert::BitFlags, vert::Normal3f, vert::Mark >{};
 class MyFace    : public FaceSimp2  < MyVertex, MyEdge, MyFace, face::VertexRef,face::FFAdj, face::Mark, face::BitFlags, face::Normal3f > {};
 
 class MyMesh : public tri::TriMesh< vector<MyVertex>, vector<MyFace > >{};
+
+
+
+class MyTriEdgeFlip: public vcg::tri::TriEdgeFlip< MyMesh, MyTriEdgeFlip > {
+						public:
+						typedef  vcg::tri::TriEdgeFlip< MyMesh,  MyTriEdgeFlip > TEF;
+            //typedef  MyMesh::VertexType::PosType PosType;
+            inline MyTriEdgeFlip(  const TEF::PosType &p, int i) :TEF(p,i){}
+};
 
 
 bool callback(int percent, const char *str) {
@@ -76,7 +88,7 @@ int main(int argc,char ** argv){
 
 	//update the face-face topology 
 	tri::UpdateTopology<MyMesh>::FaceFace(m);
-	tri::UpdateNormals<MyMesh>::PerVertex(m);
+	tri::UpdateNormals<MyMesh>::PerVertexPerFace(m);
 	tri::UpdateFlags<MyMesh>::FaceBorderFromFF(m);
   assert(tri::Clean<MyMesh>::IsFFAdjacencyConsistent(m));
 
@@ -91,6 +103,15 @@ int main(int argc,char ** argv){
   printf("\nCompleted. Saving....\n");
   assert(tri::Clean<MyMesh>::IsFFAdjacencyConsistent(m));
 	tri::io::ExporterPLY<MyMesh>::Save(m,argv[4],false);
+  printf("\nCompleted. flipping....\n");
+
+  /* Does not Work!!! (but it compiles :) ) */
+  vcg::LocalOptimization<MyMesh> FlippingSession(m);
+	FlippingSession.SetTargetOperations(100);
+  FlippingSession.Init<MyTriEdgeFlip >();
+  FlippingSession.DoOptimization();
+  tri::io::ExporterPLY<MyMesh>::Save(m,"out2.ply",false);
+  
 	return 0;
 }
 
