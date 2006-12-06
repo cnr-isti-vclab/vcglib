@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.26  2006/11/21 16:06:54  ponchio
+passing VDistFunct() to functions wanting a reference, not a value
+(why a reference btw?)
+
 Revision 1.25  2006/11/13 13:13:49  ponchio
 Added usual typename.
 
@@ -429,7 +433,7 @@ namespace vcg {
 			typedef typename MESH::FaceType FaceType;
 			typedef typename MESH::ScalarType ScalarType;
 
-			TriRayIterator(GridType &_Si):RayBaseType(_Si,FintFunct()){}
+			TriRayIterator(GridType &_Si,const ScalarType &max_d):RayBaseType(_Si,FintFunct(),max_d){}
 
 //    Commented out: it  seems unuseful and make gcc complain. p.
 			void SetMesh(MeshType *m)
