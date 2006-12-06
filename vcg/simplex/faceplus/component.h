@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2006/12/04 11:00:02  ganovelli
+Cambiate Has*Opt in Has*Occ e aggiunti typedef per la compilazione di Occ
+
 Revision 1.9  2006/11/28 22:34:28  cignoni
 Added default constructor with null initialization to adjacency members.
 AddFaces and AddVertices NEED to know if the topology is correctly computed to update it.
@@ -372,6 +375,12 @@ public:
   typename T::FacePointer const cFFp(const int j) const  { assert(j>=0 && j<3);  return _ffp[j]; }
   char        &FFi(const int j)       { return _ffi[j]; }
   const char &cFFi(const int j) const { return _ffi[j]; }
+
+  typename T::FacePointer        &FFp1( const int j )       { return FFp((j+1)%3);}
+	typename T::FacePointer        &FFp2( const int j )       { return FFp((j+2)%3);}
+	typename T::FacePointer  const  FFp1( const int j ) const { return FFp((j+1)%3);}
+	typename T::FacePointer  const  FFp2( const int j ) const { return FFp((j+2)%3);}
+
   static bool HasFFAdjacency()      {   return true; }
   static bool HasFFAdjacencyOcc()   {   return false; }
 
