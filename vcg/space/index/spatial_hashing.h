@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2006/10/02 09:25:49  ganovelli
+reverted to version 1.20 for critical bug
+
 Revision 1.20  2006/07/26 08:12:56  pietroni
 added InitEmpty Function
 
@@ -400,18 +403,18 @@ namespace vcg{
 		}
 
 		///return the simplexes on a specified cell
-		void Grid( const Point3i & _c, CellIterator & first, CellIterator & last )
+		void Grid( const Point3i & _c, CellIterator & first, CellIterator & end )
 		{
 			IteHtable I;
 			if (_IsInHtable(_c,I))//if there is the cell then
 			{	///return pointers to first and last element cell elems
-				first= &*(*I).second._entries.begin();
-				last=  &*(*I).second._entries.end();
+				first = &*(*I).second._entries.begin();
+				end =  &((*I).second._entries.back()) + 1;
 			}
 			else
 			{	///return 2 equals pointers
-				first=&*(*hash_table.begin()).second._entries.begin();
-				last= &*(*hash_table.begin()).second._entries.begin();
+				first = 0;
+				end   = 0;
 			}
 		}
 
