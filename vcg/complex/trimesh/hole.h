@@ -24,6 +24,12 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.25  2006/12/06 00:12:53  cignoni
+Heavily restructured and corrected. Now a single Close ear function
+Corrected Hole search function, and management of double non manifold vertex in a hole
+Changed priority strategy in the heap, now a mix of quality and dihedral angle.
+Changed but still untested IntersectionEar
+
 Revision 1.24  2006/12/01 21:24:16  cignoni
 Corrected bug in the search of holes. Removed output prints
 
@@ -138,6 +144,7 @@ namespace vcg {
 		{
 		public:
       typedef typename MESH::FaceType FaceType;
+      typedef typename MESH::FacePointer FacePointer;
 			typedef typename face::Pos<FaceType>    PosType;
       typedef typename MESH::ScalarType ScalarType;
       typedef typename MESH::CoordType CoordType;
@@ -329,27 +336,27 @@ namespace vcg {
 
 		};
 		//Ear for selfintersection algorithm
-		template<class MESH> class SelfIntersectionEar : public TrivialEar<MESH>
+		template<class MESH> class SelfIntersectionEar : public MinimumWeightEar<MESH>
 		{
 		public:
-	    static std::vector<FaceType> &AdjacencyRing() 
+	    static std::vector<FacePointer> &AdjacencyRing() 
       {
-        static std::vector<FaceType> ar;
+        static std::vector<FacePointer> ar;
         return ar;
       }
 
 			SelfIntersectionEar(){}
-			SelfIntersectionEar(const PosType & ep)
-			{
-				this->e0=ep;
-				assert(this->e0.IsBorder());
-				this->e1=this->e0;
-				this->e1.NextB();
-				this->ComputeQuality();
-				this->ComputeAngle();
-			}
+      SelfIntersectionEar(const PosType & ep):MinimumWeightEar<MESH>(ep){}
+			//{
+			//	this->e0=ep;
+			//	assert(this->e0.IsBorder());
+			//	this->e1=this->e0;
+			//	this->e1.NextB();
+			//	this->ComputeQuality();
+			//	this->ComputeAngle();
+			//}
 
-			virtual bool Close(PosType &np0, PosType &np1, typename MESH::FaceType * f)
+			virtual bool Close(PosType &np0, PosType &np1, FacePointer f)
 			{
 				PosType	ep=e0; ep.FlipV(); ep.NextB(); ep.FlipV(); // he precedente a e0 
 				PosType	en=e1; en.NextB();												 // he successivo a e1
@@ -374,11 +381,11 @@ namespace vcg {
 
 				e1.f->FFp(e1.z)=f;
 				e1.f->FFi(e1.z)=1;
-				std::vector<FaceType>::iterator it;
+				std::vector<FacePointer>::iterator it;
 				for(it = AdjacencyRing().begin();it!= AdjacencyRing().end();++it)
 				{
-					if(!it->IsD())
-						if(	tri::Clean<MESH>::TestIntersection(&(*f),&(*it)))
+					if(!(*it)->IsD())
+						if(	tri::Clean<MESH>::TestIntersection(&(*f),*it))
 						{
 							e0.f->FFp(e0.z)= e0.f;
 							e0.f->FFi(e0.z)=a1;	
@@ -388,8 +395,17 @@ namespace vcg {
 							return false;
 						}
 				}
-        return ((TrivialEar<MESH> *)this)->Close(np0,np1,f);
-			}
+        //return ((TrivialEar<MESH> *)this)->Close(np0,np1,f);
+        e0.f->FFp(e0.z)= e0.f;
+        e0.f->FFi(e0.z)=a1;	
+
+        e1.f->FFp(e1.z)=e1.f;
+        e1.f->FFi(e1.z)=a2;
+
+        bool ret=TrivialEar<MESH>::Close(np0,np1,f);
+        if(ret) AdjacencyRing().push_back(f);
+        return ret;
+      }
 		};
 
 		// Funzione principale per chiudier un buco in maniera topologicamente corretta.
@@ -588,18 +604,20 @@ template<class EAR>
 			PosType sp;
 			PosType ap;
 			typename std::vector<Info >::iterator ith;
-			Info app;
-
+			
    		// collect the face pointer that has to be updated by the various addfaces 
-      std::vector<FacePointer *> vfp;
+      std::vector<FacePointer *> vfpOrig;
 			for(ith = vinfo.begin(); ith!= vinfo.end(); ++ith)
-					vfp.push_back( &(*ith).p.f );
+					vfpOrig.push_back( &(*ith).p.f );
 	
-      EAR::AdjacencyRing().clear();
+      
 			for(ith = vinfo.begin(); ith!= vinfo.end(); ++ith)
 			{
 				if((*ith).size < sizeHole){		
-
+          std::vector<FacePointer *> vfp;
+          
+          vfp=vfpOrig;
+          EAR::AdjacencyRing().clear();
 					//Loops around the hole to collect the races .
   				PosType ip = (*ith).p;
 					do
@@ -609,13 +627,16 @@ template<class EAR>
 						{
 							inp.FlipE();
 							inp.FlipF();
-							EAR::AdjacencyRing().push_back(*inp.f);
+							EAR::AdjacencyRing().push_back(inp.f);
 						} while(!inp.IsBorder());
 						ip.NextB();
+					}while(ip != (*ith).p);	
 
-					}while(ip != app.p);	
-
-					FillHoleEar<EAR >(m, app,UBIT,vfp,&vf);
+          std::vector<FacePointer>::iterator fpi;
+          for(fpi=EAR::AdjacencyRing().begin();fpi!=EAR::AdjacencyRing().end();++fpi)
+					      vfp.push_back( &*fpi );
+              
+					FillHoleEar<EAR >(m, *ith,UBIT,vfp,&vf);
 					EAR::AdjacencyRing().clear();
 				}
 			}
