@@ -1,3 +1,32 @@
+/****************************************************************************
+* VCGLib                                                            o o     *
+* Visual and Computer Graphics Library                            o     o   *
+*                                                                _   O  _   *
+* Copyright(C) 2004                                                \/)\/    *
+* Visual Computing Lab                                            /\/|      *
+* ISTI - Italian National Research Council                           |      *
+*                                                                    \      *
+* All rights reserved.                                                      *
+*                                                                           *
+* This program is free software; you can redistribute it and/or modify      *   
+* it under the terms of the GNU General Public License as published by      *
+* the Free Software Foundation; either version 2 of the License, or         *
+* (at your option) any later version.                                       *
+*                                                                           *
+* This program is distributed in the hope that it will be useful,           *
+* but WITHOUT ANY WARRANTY; without even the implied warranty of            *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
+* GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
+* for more details.                                                         *
+*                                                                           *
+****************************************************************************/
+
+/****************************************************************************
+  History
+
+$Log: not supported by cvs2svn $
+****************************************************************************/
+
 #ifndef __VCGLIB_EXPORTERDAE
 #define __VCGLIB_EXPORTERDAE
 
@@ -151,10 +180,12 @@ private:
 		if(mask & vcg::tri::io::Mask::IOM_VERTCOLOR)
 			arrc.reserve(5 * 4 * m.vert.size());
 		int nvert = 0;
+    std::vector<int> VertexInd(m.vert.size());
 		for(typename SaveMeshType::VertexIterator it = m.vert.begin();it != m.vert.end();++it)
 		{
 			if (!(it->IsD()))
 			{
+        VertexInd[it-m.vert.begin()]=nvert;
 				arrp.append(QString::number(float(it->P().X())).append(" ").append(QString::number(float(it->P().Y()))).append(" ").append(QString::number(float(it->P().Z()))).append(" "));
 				//if(mask & vcg::tri::io::Mask::IOM_VERTNORMAL)
 					arrn.append(QString::number(float(it->N().X())).append(" ").append(QString::number(float(it->N().Y()))).append(" ").append(QString::number(float(it->N().Z()))).append(" "));
@@ -165,7 +196,7 @@ private:
 				++nvert;
 			}
 		}
-
+    assert(nvert==m.vn);
 		QDomText ap = doc.createTextNode(arrp);
 		CreateSource(doc,meshnode,"positions",ap,nvert);
 		
@@ -230,7 +261,7 @@ private:
 			{
 				for(unsigned int ii = 0;ii < 3;++ii)
 				{
-					int ind_v = (*itf).V(ii) - &(m.vert[0]);
+					int ind_v = VertexInd[(*itf).V(ii) - &(m.vert[0])];
 					if (triangles_tess == "")
 						triangles_tess = QString::number(ind_v);
 					else triangles_tess.append(" ").append(QString::number(ind_v));
