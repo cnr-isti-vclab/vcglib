@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.9  2006/12/04 09:27:13  cignoni
+Removed useless include <tetra.h>
+
 ****************************************************************************/
 #ifndef __PICK______H
 #define __PICK______H
@@ -150,6 +153,10 @@ static bool PickNearestTetra(int x, int y,TETRA_MESH_TYPE &m, TetraIterator &ti,
  ti=0;
  return false; 
 }
+
+
+// class prototype needed for avoid the inclusion of tetra.h
+class Tetra;
 
 static int PickTetra(int x, int y, TETRA_MESH_TYPE &m, std::vector<TetraPointer> &result, int width=4, int height=4)
 {
