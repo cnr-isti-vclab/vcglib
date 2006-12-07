@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.26  2006/12/06 13:03:59  cignoni
+Corrected bugs on selfintersection
+
 Revision 1.25  2006/12/06 00:12:53  cignoni
 Heavily restructured and corrected. Now a single Close ear function
 Corrected Hole search function, and management of double non manifold vertex in a hole
@@ -285,17 +288,19 @@ namespace vcg {
 		template<class MESH> class MinimumWeightEar : public TrivialEar<MESH>
 		{
 		public:
+			typedef TrivialEar<MESH> TE;
 			typename MESH::ScalarType dihedralRad;
 			typename MESH::ScalarType aspectRatio;
       const char * Dump() {
         static char buf[200]; 
-        if(IsConcave()) sprintf(buf,"Dihedral (deg) %6.2f Quality %6.2f\n",math::ToDeg(dihedralRad),aspectRatio);
+        if(this->IsConcave()) sprintf(buf,"Dihedral (deg) %6.2f Quality %6.2f\n",math::ToDeg(dihedralRad),aspectRatio);
                   else sprintf(buf,"Dihedral-(deg) %6.2f Quality %6.2f\n",math::ToDeg(dihedralRad),aspectRatio);
         return buf;
       }
       
 			MinimumWeightEar(){}
-      MinimumWeightEar(const PosType & ep) : TrivialEar<MESH>(ep)
+      //MinimumWeightEar(const PosType & ep) : TrivialEar<MESH>(ep)
+			MinimumWeightEar(const typename face::Pos<typename MESH::FaceType>& ep) : TrivialEar<MESH>(ep)
 			{
         ComputeQuality();
 			}
@@ -316,21 +321,21 @@ namespace vcg {
       	virtual inline bool operator <  ( const MinimumWeightEar & c ) const 
 			{ 
 
-				if(IsConcave() == c.IsConcave())
+				if(TE::IsConcave() == c.IsConcave())
         {
           return pow(dihedralRad,1)> pow(c.dihedralRad,1)/c.aspectRatio;
         }
-        if(IsConcave()) return true;
+        if(TE::IsConcave()) return true;
           return false;
 			}
 
 			virtual void ComputeQuality()
 			{
 				//compute quality by (dihedral ancgle, area/sum(edge^2) )
-	      Point3f n1=e0.FFlip()->cN();
-        Point3f n2=e1.FFlip()->cN();
+				Point3f n1=TE::e0.FFlip()->cN();
+        Point3f n2=TE::e1.FFlip()->cN();
 
-				dihedralRad = std::max(Angle(n,n1),Angle(n,n2));
+				dihedralRad = std::max(Angle(TE::n,n1),Angle(TE::n,n2));
         aspectRatio = QualityFace(*this) ;
 			}
 
@@ -339,6 +344,12 @@ namespace vcg {
 		template<class MESH> class SelfIntersectionEar : public MinimumWeightEar<MESH>
 		{
 		public:
+      typedef typename MESH::FaceType FaceType;
+      typedef typename MESH::FacePointer FacePointer;
+			typedef typename face::Pos<FaceType>    PosType;
+      typedef typename MESH::ScalarType ScalarType;
+      typedef typename MESH::CoordType CoordType;
+
 	    static std::vector<FacePointer> &AdjacencyRing() 
       {
         static std::vector<FacePointer> ar;
@@ -358,49 +369,49 @@ namespace vcg {
 
 			virtual bool Close(PosType &np0, PosType &np1, FacePointer f)
 			{
-				PosType	ep=e0; ep.FlipV(); ep.NextB(); ep.FlipV(); // he precedente a e0 
-				PosType	en=e1; en.NextB();												 // he successivo a e1
+				PosType	ep=this->e0; ep.FlipV(); ep.NextB(); ep.FlipV(); // he precedente a e0 
+				PosType	en=this->e1; en.NextB();												 // he successivo a e1
 				//costruisco la faccia e poi testo, o copio o butto via.				
-				(*f).V(0) = e0.VFlip();
-				(*f).V(1) = e0.v;
-				(*f).V(2) = e1.v;
+				(*f).V(0) = this->e0.VFlip();
+				(*f).V(1) = this->e0.v;
+				(*f).V(2) = this->e1.v;
 
-				(*f).FFp(0) = e0.f;
-				(*f).FFi(0) = e0.z;
-				(*f).FFp(1) = e1.f;
-				(*f).FFi(1) = e1.z;
+				(*f).FFp(0) = this->e0.f;
+				(*f).FFi(0) = this->e0.z;
+				(*f).FFp(1) = this->e1.f;
+				(*f).FFi(1) = this->e1.z;
 				(*f).FFp(2) = f;
 				(*f).FFi(2) = 2; 
 
 				int a1, a2;
-				a1= e0.z;
-				a2= e1.z;
+				a1= this->e0.z;
+				a2= this->e1.z;
 
-				e0.f->FFp(e0.z)=f;
-				e0.f->FFi(e0.z)=0;	
+				this->e0.f->FFp(this->e0.z)=f;
+				this->e0.f->FFi(this->e0.z)=0;	
 
-				e1.f->FFp(e1.z)=f;
-				e1.f->FFi(e1.z)=1;
-				std::vector<FacePointer>::iterator it;
-				for(it = AdjacencyRing().begin();it!= AdjacencyRing().end();++it)
+				this->e1.f->FFp(this->e1.z)=f;
+				this->e1.f->FFi(this->e1.z)=1;
+				typename std::vector< FacePointer >::iterator it;
+				for(it = this->AdjacencyRing().begin();it!= this->AdjacencyRing().end();++it)
 				{
 					if(!(*it)->IsD())
 						if(	tri::Clean<MESH>::TestIntersection(&(*f),*it))
 						{
-							e0.f->FFp(e0.z)= e0.f;
-							e0.f->FFi(e0.z)=a1;	
+							this->e0.f->FFp(this->e0.z)= this->e0.f;
+							this->e0.f->FFi(this->e0.z)=a1;	
 
-							e1.f->FFp(e1.z)=e1.f;
-							e1.f->FFi(e1.z)=a2;
+							this->e1.f->FFp(this->e1.z)= this->e1.f;
+							this->e1.f->FFi(this->e1.z)=a2;
 							return false;
 						}
 				}
         //return ((TrivialEar<MESH> *)this)->Close(np0,np1,f);
-        e0.f->FFp(e0.z)= e0.f;
-        e0.f->FFi(e0.z)=a1;	
+        this->e0.f->FFp(this->e0.z)= this->e0.f;
+        this->e0.f->FFi(this->e0.z)=a1;	
 
-        e1.f->FFp(e1.z)=e1.f;
-        e1.f->FFi(e1.z)=a2;
+        this->e1.f->FFp(this->e1.z)=this->e1.f;
+        this->e1.f->FFi(this->e1.z)=a2;
 
         bool ret=TrivialEar<MESH>::Close(np0,np1,f);
         if(ret) AdjacencyRing().push_back(f);
@@ -632,7 +643,7 @@ template<class EAR>
 						ip.NextB();
 					}while(ip != (*ith).p);	
 
-          std::vector<FacePointer>::iterator fpi;
+          typename std::vector<FacePointer>::iterator fpi;
           for(fpi=EAR::AdjacencyRing().begin();fpi!=EAR::AdjacencyRing().end();++fpi)
 					      vfp.push_back( &*fpi );
               
