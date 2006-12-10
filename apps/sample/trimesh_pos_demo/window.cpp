@@ -52,7 +52,6 @@ Window::Window()
     mainLayout->addWidget(ldButton);
     setLayout(mainLayout);
 
-		glWidget->LoadTriMesh("torus.ply");
 		glWidget->glWrap.m = &glWidget->mesh; 
 
     setWindowTitle(tr("TriMesh Pos Demo"));

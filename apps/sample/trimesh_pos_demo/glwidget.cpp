@@ -70,9 +70,9 @@ QSize GLWidget::sizeHint() const
     return QSize(400, 400);
 }
 
-void GLWidget::LoadTriMesh( char* namefile)
+void GLWidget::LoadTriMesh(QString &namefile)
 {
-	vcg::tri::io::ImporterPLY<MyStraightMesh>::Open(mesh,namefile);
+	vcg::tri::io::ImporterPLY<MyStraightMesh>::Open(mesh,namefile.toAscii());
 	vcg::tri::UpdateBounding<MyStraightMesh>::Box(mesh);
 	vcg::tri::UpdateNormals<MyStraightMesh>::PerFace(mesh);
 	vcg::tri::UpdateNormals<MyStraightMesh>::PerVertex(mesh);
@@ -88,7 +88,7 @@ void GLWidget::OpenFile(){
 	
 	if (fileName.isEmpty())	return;
 	else
-	 LoadTriMesh((char*)fileName.data());
+	 LoadTriMesh( fileName );
 
 }
 

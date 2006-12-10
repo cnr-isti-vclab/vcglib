@@ -57,7 +57,7 @@ public slots:
     void flipE( );
     void flipF( );
     void nextE( );
-		void LoadTriMesh( char* namefile);
+		void LoadTriMesh(QString& namefile);
 		void OpenFile();
 
 protected:
