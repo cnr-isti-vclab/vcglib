@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2006/12/10 22:17:18  ganovelli
+cvs problem during frist committ. repeated
+
 */
 #ifndef WINDOW_H_POS_DEMO
 #define WINDOW_H_POS_DEMO
@@ -45,7 +48,7 @@ private:
 		QPushButton *createButton(const char *changedSignal, const char *setterSlot);
 
     GLWidget *glWidget;
-		QPushButton * fvButton,*feButton,*ffButton,*neButton,*ldButton;
+		QPushButton * fvButton,*feButton,*ffButton,*neButton,*ldButton,*nbButton,*vfButton;
 };												 
 													 
 #endif

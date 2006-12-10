@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2006/12/10 22:17:18  ganovelli
+cvs problem during frist committ. repeated
+
 */
 
 #include <QtGui>
@@ -52,6 +55,9 @@ GLWidget::GLWidget(QWidget *parent)
 		track.SetIdentity();
 		track.radius = 0.4;
 		pos.f=NULL;
+		vfite.f = NULL;
+		doPickVfIte = false;
+		doPickPos = false;
 }
 
 GLWidget::~GLWidget()
@@ -77,7 +83,9 @@ void GLWidget::LoadTriMesh(QString &namefile)
 	vcg::tri::UpdateNormals<MyStraightMesh>::PerFace(mesh);
 	vcg::tri::UpdateNormals<MyStraightMesh>::PerVertex(mesh);
 	vcg::tri::UpdateTopology<MyStraightMesh>::FaceFace(mesh);
+	vcg::tri::UpdateTopology<MyStraightMesh>::VertexFace(mesh);
 	pos.f=0;
+	vfite.f=NULL;
 }
 
 void GLWidget::OpenFile(){
@@ -108,14 +116,32 @@ void GLWidget::nextE( ){
 	if(pos.f) pos.NextE();
 	repaint();
 }
+void GLWidget::nextB( ){
+	if(pos.f) pos.NextB();
+	repaint();
+}
+
+void GLWidget::nextVfite( ){
+	if(vfite.F()) ++vfite;
+	repaint();
+}
 
 void GLWidget::initializeGL()
 {
     qglClearColor(trolltechPurple.dark());
-    object = makeObject();
     glShadeModel(GL_FLAT);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
+}
+
+template <class VertexType>
+void drawVertex(VertexType & v){
+	glPushAttrib(0xffffffff);
+	glPointSize(2.0);
+	glBegin(GL_POINTS);
+	glVertex(v.P());
+	glEnd();
+	glPopAttrib();
 }
 
 void GLWidget::paintGL()
@@ -134,7 +160,8 @@ void GLWidget::paintGL()
 
 		// to do some picking
 		 MyStraightMesh::FaceType* fp=NULL;
-		 	if(doPick)
+		 MyStraightMesh::VertexType* vp=NULL;
+		 	if(doPickPos)
 		 	{
 				std::vector<MyStraightMesh::FaceType*> res;
 				int yes = vcg::Pick<MyStraightMesh::FaceContainer>(pic_x,ScreenH-pic_y+1,mesh.face,res,vcg::glTriangle3<MyStraightMesh::FaceType>,1,1);
@@ -142,8 +169,20 @@ void GLWidget::paintGL()
 					{fp = res[0];
 						pos.Set(fp,0,fp->V(0));
 					}
-				doPick=false;
-		  	}
+				doPickPos=false;
+		  }else
+		 	if(doPickVfIte)
+			{
+				std::vector<MyStraightMesh::VertexType*> res;
+				int yes = vcg::Pick<MyStraightMesh::VertContainer>(pic_x,ScreenH-pic_y+1,mesh.vert,res,drawVertex<MyStraightMesh::VertexType>,3,3);
+				if(yes) 
+					{vp = res[0];
+MyStraightMesh::FaceType* g  = vp->VFp();
+						vfite=vcg::face::VFIterator<typename MyStraightMesh::FaceType>(vp);
+					}
+
+				doPickVfIte = false;
+			}
 		
 		glWrap.Draw<vcg::GLW::DMFlatWire,vcg::GLW::CMNone,vcg::GLW::TMNone> ();
  
@@ -155,6 +194,15 @@ void GLWidget::paintGL()
 			vcg::GlPos<vcg::face::Pos<MyStraightMesh::FaceType> >::Draw(pos);
 			glPopAttrib();
 		}
+		if(vfite.F()!=NULL) {
+			glPushAttrib(0xffffffff);
+			glDisable(GL_LIGHTING);
+			glColor3f(0.0,1.0,0.0);
+			glDepthRange(0.0,0.999);
+			vcg::GlVfIterator<vcg::face::VFIterator<MyStraightMesh::FaceType> >::Draw(vfite);
+			glPopAttrib();
+		}
+
 }
 
 
@@ -180,95 +228,6 @@ void GLWidget::mouseMoveEvent(QMouseEvent *e)
 			keypress = e->key();
  }
 
-GLuint GLWidget::makeObject()
-{
-    GLuint list = glGenLists(1);
-    glNewList(list, GL_COMPILE);
-
-    glBegin(GL_QUADS);
-
-    GLdouble x1 = +0.06;
-    GLdouble y1 = -0.14;
-    GLdouble x2 = +0.14;
-    GLdouble y2 = -0.06;
-    GLdouble x3 = +0.08;
-    GLdouble y3 = +0.00;
-    GLdouble x4 = +0.30;
-    GLdouble y4 = +0.22;
-
-    quad(x1, y1, x2, y2, y2, x2, y1, x1);
-    quad(x3, y3, x4, y4, y4, x4, y3, x3);
-
-    extrude(x1, y1, x2, y2);
-    extrude(x2, y2, y2, x2);
-    extrude(y2, x2, y1, x1);
-    extrude(y1, x1, x1, y1);
-    extrude(x3, y3, x4, y4);
-    extrude(x4, y4, y4, x4);
-    extrude(y4, x4, y3, x3);
-
-    const double Pi = 3.14159265358979323846;
-    const int NumSectors = 200;
-
-    for (int i = 0; i < NumSectors; ++i) {
-        double angle1 = (i * 2 * Pi) / NumSectors;
-        GLdouble x5 = 0.30 * sin(angle1);
-        GLdouble y5 = 0.30 * cos(angle1);
-        GLdouble x6 = 0.20 * sin(angle1);
-        GLdouble y6 = 0.20 * cos(angle1);
-
-        double angle2 = ((i + 1) * 2 * Pi) / NumSectors;
-        GLdouble x7 = 0.20 * sin(angle2);
-        GLdouble y7 = 0.20 * cos(angle2);
-        GLdouble x8 = 0.30 * sin(angle2);
-        GLdouble y8 = 0.30 * cos(angle2);
-
-        quad(x5, y5, x6, y6, x7, y7, x8, y8);
-
-        extrude(x6, y6, x7, y7);
-        extrude(x8, y8, x5, y5);
-    }
-
-    glEnd();
-
-    glEndList();
-    return list;
-}
-
-void GLWidget::quad(GLdouble x1, GLdouble y1, GLdouble x2, GLdouble y2,
-                    GLdouble x3, GLdouble y3, GLdouble x4, GLdouble y4)
-{
-    qglColor(trolltechGreen);
-
-    glVertex3d(x1, y1, -0.05);
-    glVertex3d(x2, y2, -0.05);
-    glVertex3d(x3, y3, -0.05);
-    glVertex3d(x4, y4, -0.05);
-
-    glVertex3d(x4, y4, +0.05);
-    glVertex3d(x3, y3, +0.05);
-    glVertex3d(x2, y2, +0.05);
-    glVertex3d(x1, y1, +0.05);
-}
-
-void GLWidget::extrude(GLdouble x1, GLdouble y1, GLdouble x2, GLdouble y2)
-{
-    qglColor(trolltechGreen.dark(250 + int(100 * x1)));
-
-    glVertex3d(x1, y1, +0.05);
-    glVertex3d(x2, y2, +0.05);
-    glVertex3d(x2, y2, -0.05);
-    glVertex3d(x1, y1, -0.05);
-}
-
-void GLWidget::normalizeAngle(int *angle)
-{
-    while (*angle < 0)
-        *angle += 360 * 16;
-    while (*angle > 360 * 16)
-        *angle -= 360 * 16;
-}
-
  void GLWidget:: mousePressEvent(QMouseEvent *e)
 {
 		if( (keypress==Qt::Key_Control) && (e->button() == Qt::LeftButton) )
@@ -279,7 +238,7 @@ void GLWidget::normalizeAngle(int *angle)
 				else
 					if(e->button() == Qt::RightButton)
 					{
-						doPick=true;
+						doPickVfIte=true;
 						pic_x = e->x();
 						pic_y = e->y();
 					}

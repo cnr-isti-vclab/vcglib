@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2006/12/10 19:55:09  ganovelli
+first draft. Working but  ugly interface. right mouse of the button to place a pos, then prss buttons.
+
 */
 #pragma once
 /** the definition of vertex */
@@ -44,10 +47,10 @@ class StraightFace;
 /*    DEFINITION OF A VERY STRAIGHT MESH. No optional atributes, just normals in the vertices and flags in vertices and faces*/
 
 /** definition of a very simple vertex type. Just coordinates and normal as attributes*/
-class StraightVertex: public vcg::VertexSimp2< StraightVertex, DummyEdge, StraightFace, vcg::vert::Coord3f,vcg::vert::Normal3f,vcg::vert::BitFlags>{};
+class StraightVertex: public vcg::VertexSimp2< StraightVertex, DummyEdge, StraightFace, vcg::vert::Coord3f,vcg::vert::VFAdj,vcg::vert::Normal3f,vcg::vert::BitFlags>{};
 
 /** definition of a very simple face type. Just color and reference to vertices as attribute*/
-class StraightFace: public vcg::FaceSimp2< StraightVertex, DummyEdge, StraightFace,  vcg::	face::VertexRef,  vcg::	face::FFAdj,vcg::	face::Normal3f,vcg::face::BitFlags > {};
+class StraightFace: public vcg::FaceSimp2< StraightVertex, DummyEdge, StraightFace,  vcg::	face::VertexRef,  vcg::	face::FFAdj,  vcg::	face::VFAdj,vcg::	face::Normal3f,vcg::face::BitFlags > {};
 
 /** definition of a very simple mesh*/
 class MyStraightMesh: public vcg::tri::TriMesh< std::vector<StraightVertex>,std::vector<StraightFace> >{};

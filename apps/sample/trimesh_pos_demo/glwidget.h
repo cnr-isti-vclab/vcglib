@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2006/12/10 22:17:18  ganovelli
+cvs problem during frist committ. repeated
+
 */
 #ifndef GLWIDGET_H_POS_DEMO
 #define GLWIDGET_H_POS_DEMO
@@ -34,6 +37,7 @@ $Log: not supported by cvs2svn $
 #include <wrap/gui/trackball.h>
 #include <wrap/gl/trimesh.h>
 #include <vcg/simplex/face/pos.h>
+#include <vcg/simplex/face/topology.h>
 
 class GLWidget : public QGLWidget
 {
@@ -50,13 +54,18 @@ public:
 		vcg::GlTrimesh<MyStraightMesh> glWrap;
 		vcg::Trackball track;
 		int ScreenH,ScreenW,pic_x,pic_y,keypress;
-		bool doPick;
+		bool doPickPos,doPickVfIte;
 		vcg::face::Pos<typename MyStraightMesh::FaceType> pos;
+		vcg::face::VFIterator<typename MyStraightMesh::FaceType> vfite;
+
 public slots:
     void flipV( );
     void flipE( );
     void flipF( );
     void nextE( );
+    void nextB( );
+    void nextVfite( );
+
 		void LoadTriMesh(QString& namefile);
 		void OpenFile();
 

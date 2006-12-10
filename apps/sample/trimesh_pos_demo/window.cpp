@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2006/12/10 22:17:18  ganovelli
+cvs problem during frist committ. repeated
+
 */
 #include <QtGui>
 
@@ -39,8 +42,10 @@ Window::Window()
 		fvButton = createButton("FlipV()",SLOT(flipV( )));
 		feButton = createButton("FlipE()",SLOT(flipE( )));
 		ffButton = createButton("FlipF()",SLOT(flipF( )));
-		neButton = createButton("NextE()",SLOT(nextE( )));
-		ldButton = createButton("Load",SLOT(OpenFile( )));
+		neButton = createButton("NextE() {FlipE() + FlipF() }",SLOT(nextE( )));
+		nbButton = createButton("NextB() ",SLOT(nextB( )));
+		ldButton = createButton("Load TriMesh",SLOT(OpenFile( )));
+		vfButton = createButton("++()",SLOT(nextVfite()));
 
     QVBoxLayout *mainLayout = new QVBoxLayout;
     mainLayout->addWidget(glWidget);
@@ -48,7 +53,8 @@ Window::Window()
     mainLayout->addWidget(feButton);
     mainLayout->addWidget(ffButton);
     mainLayout->addWidget(neButton);
-
+    mainLayout->addWidget(nbButton);
+    mainLayout->addWidget(vfButton);
     mainLayout->addWidget(ldButton);
     setLayout(mainLayout);
 
