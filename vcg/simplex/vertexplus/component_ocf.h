@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2006/12/04 11:17:42  ganovelli
+added forward declaration of TriMesh
+
 Revision 1.7  2006/11/07 17:22:52  cignoni
 many gcc compiling issues
 
@@ -231,7 +234,7 @@ public:
   NormalType &N() { 
     // you cannot use Normals before enabling them with: yourmesh.vert.EnableNormal()
     assert((*this).Base().NormalEnabled); 
-    return (*this).Base().NV[(*this).Index()()];  }
+    return (*this).Base().NV[(*this).Index()];  }
 };
 
 template <class T> class Normal3sOcf: public NormalOcf<vcg::Point3s, T> {};
