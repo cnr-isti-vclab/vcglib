@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2006/11/28 22:34:28  cignoni
+Added default constructor with null initialization to adjacency members.
+AddFaces and AddVertices NEED to know if the topology is correctly computed to update it.
+
 Revision 1.17  2006/01/09 13:58:56  cignoni
 Added Initialization of Color in Vertex and Face Components
 
@@ -131,7 +135,7 @@ public:
   NormalType &N() { static NormalType dummy_normal(0, 0, 0);  assert(0); return dummy_normal; }
   const NormalType cN()const { static NormalType dummy_normal(0, 0, 0);  assert(0); return dummy_normal; }
   static bool HasNormal()   { return false; }
-  static bool HasNormalOpt()   { return false; }
+  static bool HasNormalOcc()   { return false; }
 };
 template <class A, class T> class Normal: public T {
 public:
@@ -153,7 +157,7 @@ template <class T> class Normal3d: public Normal<vcg::Point3d, T> {};
 template <class T> class EmptyMark: public T {
 public:
   static bool HasMark()   { return false; }
-  static bool HasMarkOpt()   { return false; }
+  static bool HasMarkOcc()   { return false; }
   inline void InitIMark()    {  }
   inline int & IMark()       { assert(0); static int tmp=-1; return tmp;}
   inline const int & IMark() const {return 0;}
@@ -162,7 +166,7 @@ public:
 template <class T> class Mark: public T {
 public:
   static bool HasMark()      { return true; }
-  static bool HasMarkOpt()   { return true; }
+  static bool HasMarkOcc()   { return true; }
   inline void InitIMark()    { _imark = 0; }
   inline int & IMark()       { return _imark;}
   inline const int & IMark() const {return _imark;}
@@ -178,9 +182,7 @@ public:
   typedef vcg::TCoord2<float,1> TextureType;
   TextureType &T() { static TextureType dummy_texture;  assert(0); return dummy_texture; }
   static bool HasTexture()   { return false; }
-  static bool HasTextureOpt()   { return false; }
-
-};
+ };
 template <class A, class TT> class Texture: public TT {
 public:
   typedef A TextureType;
@@ -269,7 +271,7 @@ public:
   typename T::FacePointer cVFp() { static typename T::FacePointer fp=0;  assert(0); return fp; }
   int &VFi(){static int z=0; return z;};
   static bool HasVFAdjacency()   {   return false; }
-  static bool HasVFAdjacencyOpt()   {   return false; }
+  static bool HasVFAdjacencyOcc()   {   return false; }
 };
 
 template <class T> class VFAdj: public T {
@@ -279,7 +281,7 @@ public:
   typename T::FacePointer cVFp() {return _fp; }
   int &VFi() {return _zp; }
   static bool HasVFAdjacency()   {   return true; }
-  static bool HasVFAdjacencyOpt()   {   return false; }
+  static bool HasVFAdjacencyOcc()   {   return true; }
 private:
   typename T::FacePointer _fp ;    
   int _zp ;    
