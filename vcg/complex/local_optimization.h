@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.17  2006/06/09 07:28:43  m_di_benedetto
+  Corrected ClearHeap(): iterator "hi" not decrementable if it was the first of the container.
+
   Revision 1.16  2005/11/10 15:38:46  cignoni
   Added casts to remove warnings
 
@@ -316,6 +319,7 @@ void ClearHeap()
 		m.InitVertexIMark();
 		LocalModificationType::Init(m,h);
 		std::make_heap(h.begin(),h.end());
+		if(!h.empty()) currMetric=h.back().pri;
 	}
 
 
