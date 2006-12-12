@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2006/10/14 16:26:26  ponchio
+Aggiunti un paio di typename... al solito.
+
 Revision 1.20  2006/05/25 09:40:14  cignoni
 gcc dislike doubleline comments; removed.
 
@@ -565,7 +568,8 @@ void DrawFlatWire()
   glDisable(GL_POLYGON_OFFSET_FILL);
 	//glDepthRange(0.0f,1.0f-ZTWIST);
   glEnable(GL_COLOR_MATERIAL);
-	glColorMaterial(GL_FRONT,GL_DIFFUSE);
+	glColorMaterial(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE);
+	//glColorMaterial(GL_FRONT,GL_DIFFUSE);
   glColor3f(.3f,.3f,.3f);
 	DrawWire<NMPerVert,CMNone>();
 	glPopAttrib();
