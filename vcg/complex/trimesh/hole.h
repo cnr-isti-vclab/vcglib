@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.27  2006/12/07 00:40:18  cignoni
+Added many this-> for gcc compiling
+
 Revision 1.26  2006/12/06 13:03:59  cignoni
 Corrected bugs on selfintersection
 
@@ -288,13 +291,14 @@ namespace vcg {
 		template<class MESH> class MinimumWeightEar : public TrivialEar<MESH>
 		{
 		public:
+      static float &DiedralWeight() { static float _dw=1.0; return _dw;}
 			typedef TrivialEar<MESH> TE;
 			typename MESH::ScalarType dihedralRad;
 			typename MESH::ScalarType aspectRatio;
       const char * Dump() {
         static char buf[200]; 
-        if(this->IsConcave()) sprintf(buf,"Dihedral (deg) %6.2f Quality %6.2f\n",math::ToDeg(dihedralRad),aspectRatio);
-                  else sprintf(buf,"Dihedral-(deg) %6.2f Quality %6.2f\n",math::ToDeg(dihedralRad),aspectRatio);
+        if(this->IsConcave()) sprintf(buf,"Dihedral -(deg) %6.2f Quality %6.2f\n",math::ToDeg(dihedralRad),aspectRatio);
+                         else sprintf(buf,"Dihedral  (deg) %6.2f Quality %6.2f\n",math::ToDeg(dihedralRad),aspectRatio);
         return buf;
       }
       
@@ -305,38 +309,43 @@ namespace vcg {
         ComputeQuality();
 			}
 
-      // in the heap we retrieve the LARGEST value, 
+      // In the heap, by default, we retrieve the LARGEST value, 
       // so if we need the ear with minimal dihedral angle, we must reverse the sign of the comparison.
-	/*		virtual inline bool operator <  ( const MinimumWeightEar & c ) const 
-			{ 
-				if(IsConcave() == c.IsConcave())
-        {
-				  if(dihedralRad > c.dihedralRad) return true; 
-				  else return ((dihedralRad == c.dihedralRad) && (aspectRatio > c.aspectRatio));
-        }
-        if(IsConcave()) return true;
-          return false;
-			}*/
+      // The concave elements must be all in the end of the heap, sorted accordingly, 
+      // So if only one of the two ear is Concave that one is always the minimum one.
+      // the pow function is here just to give a way to play with different weighting schemas, balancing in a different way 
 
       	virtual inline bool operator <  ( const MinimumWeightEar & c ) const 
 			{ 
-
 				if(TE::IsConcave() == c.IsConcave())
         {
-          return pow(dihedralRad,1)> pow(c.dihedralRad,1)/c.aspectRatio;
+          return (pow(dihedralRad,DiedralWeight())/aspectRatio) > (pow(c.dihedralRad,DiedralWeight())/c.aspectRatio);
         }
         if(TE::IsConcave()) return true;
-          return false;
+        // assert(c.IsConcave());
+        return false; 
 			}
 
+      // the real core of the whole hole filling strategy.
 			virtual void ComputeQuality()
 			{
 				//compute quality by (dihedral ancgle, area/sum(edge^2) )
 				Point3f n1=TE::e0.FFlip()->cN();
         Point3f n2=TE::e1.FFlip()->cN();
-
+        
 				dihedralRad = std::max(Angle(TE::n,n1),Angle(TE::n,n2));
-        aspectRatio = QualityFace(*this) ;
+
+        // The following two options are also reasonable: Weighting angles with their area
+        //float a1=DoubleArea(*TE::e0.FFlip());
+        //float a2=DoubleArea(*TE::e1.FFlip());
+        //dihedralRad = std::max(a1*Angle(TE::n,n1),a2*Angle(TE::n,n2));
+				//dihedralRad = a1*Angle(TE::n,n1)+a2*Angle(TE::n,n2);    
+				
+        aspectRatio = QualityFace(*this);
+        
+        // Weighting quality with its area is not very reasonable :)  
+        //aspectRatio = QualityFace(*this) * DoubleArea(*this); 
+        
 			}
 
 		};
