@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2006/11/21 10:56:41  cignoni
+ReWrote loadMask. Now shorter and faster.
+
 Revision 1.9  2006/10/09 19:58:08  cignoni
 Added casts to remove warnings
 
@@ -484,7 +487,7 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 				// callback invocation, abort loading process if the call returns false
 				if ((cb !=NULL)&& (((numTriangles + numVertices)%100)==0) )
         {
-          if (!(*cb)( (100*(numTriangles +numVertices))/ numVerticesPlusFaces, "Face Loading"))
+					  if (!(*cb)( (100*(numTriangles +numVertices))/ numVerticesPlusFaces, "Face Loading"))
 					  return E_ABORTED;
         }
 			}
@@ -527,8 +530,9 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 			// we simply ignore other situations
 		} // end for each line...
 	} // end while stream not eof
-	
-  FaceIterator   fi = Allocator<OpenMeshType>::AddFaces(m,numTriangles);
+	assert((numTriangles +numVertices) == numVerticesPlusFaces);
+
+	FaceIterator   fi = Allocator<OpenMeshType>::AddFaces(m,numTriangles);
   //-------------------------------------------------------------------------------
 	// Now the final pass to convert indexes into pointers for face to vert/norm/tex references
   for(int i=0;i<numTriangles;++i)
@@ -582,12 +586,12 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 		tokens.clear();
 		do
 		{
-			while ((line[from]==' ' || line[from]=='\t') && from!=length)
+			while (from!=length && (line[from]==' ' || line[from]=='\t') )
 				from++;
       if(from!=length)
       {
 				to = from+1;
-				while (line[to]!=' ' && to!=length)
+				while (to!=length && line[to]!=' ')
 					to++;
 				tokens.push_back(line.substr(from, to-from).c_str());
 				from = to;
@@ -736,14 +740,16 @@ static bool LoadMask(const char * filename, Info &oi)
     oi.numFaces=0;
     oi.numTexCoords=0;
 		int lineCount=0;
+		int totRead=0;
     std::string line;
 	  while (!stream.eof())
     {
       lineCount++;
-      if(oi.cb && (lineCount%1000)==0) 
-					(*oi.cb)( (int)(100.0*(float(stream.tellg()))/float(length)), "Loading mask...");
 			std::getline(stream, line);
-      if(line.size()>2)
+      totRead+=line.size();
+      if(oi.cb && (lineCount%1000)==0) 
+					(*oi.cb)( (int)(100.0*(float(totRead))/float(length)), "Loading mask...");
+			if(line.size()>2)
       {
         if(line[0]=='v')
         {
@@ -756,6 +762,8 @@ static bool LoadMask(const char * filename, Info &oi)
 		}
 		oi.mask = 0;
 		if (oi.numTexCoords)	oi.mask |= vcg::tri::io::Mask::IOM_WEDGTEXCOORD;
+
+
   return true;
 }
 
