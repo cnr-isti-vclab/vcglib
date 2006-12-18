@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.9  2006/12/18 09:46:39  callieri
+camera+shot revamp: changed field names to something with more sense, cleaning of various functions, correction of minor bugs/incongruences, removal of the infamous reference in shot.
+
 Revision 1.8  2006/01/11 16:06:25  matteodelle
 *** empty log message ***
 
@@ -135,7 +138,7 @@ static void SetSubView(vcg::Shot<ScalarType> & shot,
 	glPushMatrix();
 	glLoadIdentity();
 	assert(glGetError() == 0);
-	GlCameraType::SetSubView(shot.Camera(),p1,p2);
+	GlCameraType::SetSubView(shot.Intrinsics,p1,p2);
 	assert(glGetError() == 0);
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();

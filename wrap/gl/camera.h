@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.12  2006/12/18 09:46:39  callieri
+camera+shot revamp: changed field names to something with more sense, cleaning of various functions, correction of minor bugs/incongruences, removal of the infamous reference in shot.
+
 Revision 1.11  2006/01/10 12:22:34  spinelli
 add namespace vcg::
 
@@ -163,10 +166,10 @@ static void GetViewSize(vcg::Camera<S> & camera, S &width, S &height) {
 };
 
 
-static void SetSubView(vcg::Camera<S> & camera,vcg::Point2<S> p0,vcg::Point2<S> p1){
+static void SetSubView(vcg::Camera<S> & camera,vcg::Point2<S> p0,S nearDist, S farDist,vcg::Point2<S> p1){
 	//typedef typename CameraType::ScalarType S;
-	S sx,dx,bt,tp,nr,fr;
-	GetFrustum(camera,sx,dx,bt,tp,nr,fr);	
+	S sx,dx,bt,tp,f;
+	GetFrustum(camera,sx,dx,bt,tp,f);	
 	S width = dx-sx;	//right - left = width
 	S height = tp-bt;  //top - bottom = height
 	/*glFrustum(
@@ -178,10 +181,10 @@ static void SetSubView(vcg::Camera<S> & camera,vcg::Point2<S> p0,vcg::Point2<S> 
 
 	switch(camera.cameraType) 
 	{
-	 case vcg::PERSPECTIVE: glFrustum(	width* p0[0]+ sx, width* p1[0]+ sx,		height* p0[1]+ bt, height* p1[1]+ bt,nr,fr);	break;
-	 case vcg::ORTHO:       glOrtho((width* p0[0]+sx)*camera.viewportM,  (width* p1[0]+sx)*camera.viewportM, (height* p0[1]+ bt)*camera.viewportM, (height* p1[1]+bt)*camera.viewportM,nr,fr); break;
-	 case vcg::ISOMETRIC:   IsometricProj(dx-width* p1[0], dx-width* p0[0],		tp-height* p1[1], tp-height* p0[1],nr,fr);	break;
-	 case vcg::CAVALIERI:   CavalieriProj(dx-width* p1[0], dx-width* p0[0],		tp-height* p1[1], tp-height* p0[1],nr,fr);	break;
+	 case vcg::PERSPECTIVE: glfarDistustum(	width* p0[0]+ sx, width* p1[0]+ sx,		height* p0[1]+ bt, height* p1[1]+bt,nearDist,farDist);	break;
+	 case vcg::ORTHO:       glOrtho(width* p0[0]+sx, width* p1[0]+sx,			height* p0[1]+ bt, height* p1[1]+bt,nearDist,farDist); break;
+	 case vcg::ISOMETRIC:   IsometricProj(dx-width* p1[0], dx-width* p0[0],		tp-height* p1[1], tp-height* p0[1],nearDist,farDist);	break;
+	 case vcg::CAVALIERI:   CavalieriProj(dx-width* p1[0], dx-width* p0[0],		tp-height* p1[1], tp-height* p0[1],nearDist,farDist);	break;
 	}
 
 
