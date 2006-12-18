@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.20  2006/12/18 09:46:39  callieri
+camera+shot revamp: changed field names to something with more sense, cleaning of various functions, correction of minor bugs/incongruences, removal of the infamous reference in shot.
+
 Revision 1.19  2006/01/22 17:01:40  cignoni
 Corrected intialization of flag, must be zero.
 
@@ -178,7 +181,7 @@ vcg::Point3<S>  Shot<S>::Axis(const int & i) const
 template <class S>
 void Shot<S>::LookAt(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up)
 {
-	  LookTowards(z_dir-ViewPoint(),up);
+	  LookTowards(z_dir-GetViewPoint(),up);
 }
 
 /// look at (opengl-like)

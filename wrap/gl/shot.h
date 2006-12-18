@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.11  2006/12/18 15:26:24  callieri
+added a function to approximate a far plane value given a shot and the mesh bbox
+
 Revision 1.10  2006/12/18 14:28:07  matteodelle
 *** empty log message ***
 
@@ -34,11 +37,11 @@ Revision 1.8  2006/01/11 16:06:25  matteodelle
 
 
 Revision 1.8  2005/01/11 17:06:30  dellepiane
-FromTrackball() coorected (similarity->Similarity()
+FromTrackball() coorected (similarity->Extrinsics
 
 Revision 1.7  2005/11/25 10:33:33  spinelli
-shot.camera  -> shot.Camera()
-shot.similarity.Matrix() -> shot.Similarity().Matrix()
+shot.camera  -> shot.Intrinsics
+shot.similarity.Matrix() -> shot.Extrinsics.Matrix()
 
 Revision 1.6  2005/02/22 11:15:01  ganovelli
 added vcg namespace
@@ -170,7 +173,7 @@ static void SetSubView(vcg::Shot<ScalarType> & shot,
 	glPushMatrix();
 	glLoadIdentity();
 	assert(glGetError() == 0);
-	GlCameraType::SetSubView(shot.Intrinsics,p1,p2);
+	GlCameraType::SetSubView(shot.Intrinsics,p1,0,1000,p2);
 	assert(glGetError() == 0);
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
@@ -195,11 +198,11 @@ static void FromTrackball(const vcg::Trackball & tr,
 	vcg::Point3<ScalarType>		tra; tra.Import(tr.track.tra);
 	vcg::Matrix44<ScalarType>	trM; trM.FromMatrix(tr.track.Matrix());
 
-	vcg::Point3<ScalarType>		vp = Inverse(trM)*(sShot.ViewPoint()-cen) +cen +tra;
+	vcg::Point3<ScalarType>		vp = Inverse(trM)*(sShot.GetViewPoint()-cen) +cen +tra;
 
 	shot.SetViewPoint(vp);
-	shot.Similarity().rot =   sShot.Similarity().rot*trM;
-	shot.Similarity().sca	=	sShot.Similarity().sca*(ScalarType)tr.track.sca;
+	shot.Extrinsics.rot =   sShot.Extrinsics.rot*trM;
+	shot.Extrinsics.sca	=	sShot.Extrinsics.sca*(ScalarType)tr.track.sca;
 }
 };
 #endif
@@ -382,7 +385,7 @@ static void FromTrackball(const vcg::Trackball & tr,
 //				}
 //		}
 //
-//	inline Camera()
+//	inline Intrinsics
 //	{
 //		k[0]=k[1]=k[2]=k[3]=0.0;
 //		valid = false;

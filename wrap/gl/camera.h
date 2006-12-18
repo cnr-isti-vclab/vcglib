@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.13  2006/12/18 14:28:07  matteodelle
+*** empty log message ***
+
 Revision 1.12  2006/12/18 09:46:39  callieri
 camera+shot revamp: changed field names to something with more sense, cleaning of various functions, correction of minor bugs/incongruences, removal of the infamous reference in shot.
 
@@ -181,10 +184,10 @@ static void SetSubView(vcg::Camera<S> & camera,vcg::Point2<S> p0,S nearDist, S f
 
 	switch(camera.cameraType) 
 	{
-	 case vcg::PERSPECTIVE: glfarDistustum(	width* p0[0]+ sx, width* p1[0]+ sx,		height* p0[1]+ bt, height* p1[1]+bt,nearDist,farDist);	break;
+	 case vcg::PERSPECTIVE: glFrustum(	width* p0[0]+ sx, width* p1[0]+ sx,		height* p0[1]+ bt, height* p1[1]+bt,nearDist,farDist);	break;
 	 case vcg::ORTHO:       glOrtho(width* p0[0]+sx, width* p1[0]+sx,			height* p0[1]+ bt, height* p1[1]+bt,nearDist,farDist); break;
-	 case vcg::ISOMETRIC:   IsometricProj(dx-width* p1[0], dx-width* p0[0],		tp-height* p1[1], tp-height* p0[1],nearDist,farDist);	break;
-	 case vcg::CAVALIERI:   CavalieriProj(dx-width* p1[0], dx-width* p0[0],		tp-height* p1[1], tp-height* p0[1],nearDist,farDist);	break;
+	 //case vcg::ISOMETRIC:   IsometricProj(dx-width* p1[0], dx-width* p0[0],		tp-height* p1[1], tp-height* p0[1],nearDist,farDist);	break;
+	 //case vcg::CAVALIERI:   CavalieriProj(dx-width* p1[0], dx-width* p0[0],		tp-height* p1[1], tp-height* p0[1],nearDist,farDist);	break;
 	}
 
 

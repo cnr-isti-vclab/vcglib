@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.26  2006/12/18 09:46:38  callieri
+camera+shot revamp: changed field names to something with more sense, cleaning of various functions, correction of minor bugs/incongruences, removal of the infamous reference in shot.
+
 Revision 1.25  2005/12/12 16:52:55  callieri
 Added Unproject, from 2D local space + Zdepth to 3D camera space. Added ViewportToLocal, inverse of LocalToViewport
 
@@ -298,9 +301,9 @@ void Camera<S>::SetPerspective(	S AngleDeg, S AspectRatio, S Focal, vcg::Point2<
 template<class S>
 void Camera<S>::SetFrustum(	S sx, S dx, S bt, S tp, S Focal, vcg::Point2<int> Viewport)
 {
-	S vpt[2];
-	vpt[0] = dx-sx;
-	vpt[1] = tp-bt;
+	S vp[2];
+	vp[0] = dx-sx;
+	vp[1] = tp-bt;
 
 	ViewportPx[0] = vp[0];
 	if(vp[1] != -1)
@@ -308,11 +311,11 @@ void Camera<S>::SetFrustum(	S sx, S dx, S bt, S tp, S Focal, vcg::Point2<int> Vi
 	else
 		ViewportPx[1] = ViewportPx[0];	// default viewport
 
-	PixelSizeMm[0] = vpt[0] / (S)Viewport[0];
-	PixelSizeMm[1] = vpt[1] / (S)Viewport[1];
+	PixelSizeMm[0] = vp[0] / (S)Viewport[0];
+	PixelSizeMm[1] = vp[1] / (S)Viewport[1];
 
-	CenterPx[0] = -sx/vpt[0] * (S)Viewport[0];
-	CenterPx[1] = -bt/vpt[1] * (S)Viewport[1];
+	CenterPx[0] = -sx/vp[0] * (S)Viewport[0];
+	CenterPx[1] = -bt/vp[1] * (S)Viewport[1];
 
 	FocalMm =Focal;
 }
