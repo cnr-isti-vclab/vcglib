@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.10  2006/12/18 14:28:07  matteodelle
+*** empty log message ***
+
 Revision 1.9  2006/12/18 09:46:39  callieri
 camera+shot revamp: changed field names to something with more sense, cleaning of various functions, correction of minor bugs/incongruences, removal of the infamous reference in shot.
 
@@ -128,6 +131,35 @@ static void	UnsetView()
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
 	glPopAttrib();
+}
+
+/// given a shot and the mesh bounding box, returns an approximate far plane distance
+/// distance is always approximated by excess
+static ScalarType GetFarPlane(vcg::Shot<ScalarType> & shot, vcg::Box3<ScalarType> bbox)
+{
+	ScalarType farDist;
+
+	Point3<ScalarType> farcorner;
+    Point3<ScalarType> campos = shot.Extrinsics.tra;
+	 
+	 if (abs(campos.X() - mainmodel->bbox.max.X()) > abs(campos.X() - bbox.min.X()))
+		 farcorner.X() = mainmodel->bbox.max.X();
+	 else
+		 farcorner.X() = mainmodel->bbox.min.X();
+
+	 if (abs(campos.Y() - mainmodel->bbox.max.Y()) > abs(campos.Y() - bbox.min.Y()))
+		 farcorner.Y() = mainmodel->bbox.max.Y();
+	 else
+		 farcorner.Y() = mainmodel->bbox.min.Y();
+
+	 if (abs(campos.Z() - mainmodel->bbox.max.Z()) > abs(campos.Z() - bbox.min.Z()))
+		 farcorner.Z() = mainmodel->bbox.max.Z();
+	 else
+		 farcorner.Z() = mainmodel->bbox.min.Z();
+
+	 farDist = (campos - farcorner).Norm();
+
+	return farDist;
 }
 
 static void SetSubView(vcg::Shot<ScalarType> & shot,
