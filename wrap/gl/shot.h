@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.8  2006/01/11 16:06:25  matteodelle
+*** empty log message ***
+
 
 Revision 1.8  2005/01/11 17:06:30  dellepiane
 FromTrackball() coorected (similarity->Similarity()
@@ -79,24 +82,30 @@ struct GlShot {
 	typedef typename ShotType::ScalarType ScalarType;
 	typedef typename GlCamera<typename ShotType::CameraType> GlCameraType;
 
-static void MatrixGL(ShotType & shot,vcg::Matrix44<ScalarType> & m) {
-	m = shot.Similarity().Matrix();
+/// returns the OpenGL 4x4 MODELVIEW matrix that describes the shot position and orientation (extrinsics)
+static void MatrixGL(ShotType & shot,vcg::Matrix44<ScalarType> & m) 
+{
+	m = shot.Extrinsics.Matrix();
 }
 
-static void TransformGL(vcg::Shot<ScalarType> & shot){
+/// set the OpenGL MODELVIEW matrix to match the shot (extrinsics)
+static void TransformGL(vcg::Shot<ScalarType> & shot)
+{
 	vcg::Matrix44<ScalarType> m;
 	MatrixGL(shot,m);
 	glMultMatrix(m);
 }
 
-static void SetView(vcg::Shot<ScalarType> & shot){
+/// set the OpenGL PROJECTION and MODELVIEW matrix to match camera+shot. requires near and far plane
+static void SetView(vcg::Shot<ScalarType> & shot, ScalarType nearDist, ScalarType farDist)
+{
 	assert(glGetError() == 0);
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadIdentity();
 
 	assert(glGetError() == 0);
-	GlCameraType::TransformGL(shot.Camera()); // apply camera/modelview transformation
+	GlCameraType::TransformGL(shot.Intrinsics, nearDist, farDist); // apply camera/projection transformation
 	assert(glGetError() == 0);
 
 	glMatrixMode(GL_MODELVIEW);
@@ -106,6 +115,18 @@ static void SetView(vcg::Shot<ScalarType> & shot){
 	GlShot<ShotType>::TransformGL(shot);	// apply similarity/modelview transformation
 	assert(glGetError() == 0);
 }
+
+/// restore the previous OpenGL modelview and projection state. to be called AFTER a SetView
+static void	UnsetView()
+{
+	glPushAttrib(GL_TRANSFORM_BIT);
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glPopAttrib();
+}
+
 static void SetSubView(vcg::Shot<ScalarType> & shot,
 					   vcg::Point2<ScalarType> p1,
 					   vcg::Point2<ScalarType> p2)
@@ -123,15 +144,7 @@ static void SetSubView(vcg::Shot<ScalarType> & shot,
 	assert(glGetError() == 0);
 }
 
-static void		UnsetView()
-{
-	glPushAttrib(GL_TRANSFORM_BIT);
-	glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	glPopAttrib();
-}
+
 	
 /**********************************
 DEFINE SHOT FROM TRACKBALL

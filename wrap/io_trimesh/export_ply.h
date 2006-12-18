@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2006/11/30 22:49:32  cignoni
+Added save with (unused) callback
+
 Revision 1.16  2006/10/14 00:39:22  cignoni
 Added a comment on an assert
 
@@ -178,7 +181,7 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 		if(m.textures.size()>1 && (m.HasPerWedgeTexture() || m.HasPerVertexTexture())) multit = true;
 	}
 
-	if( (pi.mask & Mask::IOM_CAMERA) && m.shot.IsValid())
+	if((pi.mask & Mask::IOM_CAMERA))
 	 {
 		fprintf(fpout,
 			"element camera 1\n"
@@ -300,65 +303,65 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 	fprintf(fpout, "end_header\n"	);
 
 		// Salvataggio camera
-	 if( (pi.mask & Mask::IOM_CAMERA) && m.shot.IsValid() )
+	 if((pi.mask & Mask::IOM_CAMERA))
 	 {
 		 if(binary)
 		 {
 				float t[17];
 
-				t[ 0] = (float) -m.shot.Similarity().tra[0];
-				t[ 1] = (float)-m.shot.Similarity().tra[1];
-				t[ 2] = (float)-m.shot.Similarity().tra[2];
-				t[ 3] = (float)m.shot.Similarity().rot[0][0];
-				t[ 4] = (float)m.shot.Similarity().rot[0][1];
-				t[ 5] = (float)m.shot.Similarity().rot[0][2];
-				t[ 6] = (float)m.shot.Similarity().rot[1][0];
-				t[ 7] = (float)m.shot.Similarity().rot[1][1];
-				t[ 8] = (float)m.shot.Similarity().rot[1][2];
-				t[ 9] = (float)m.shot.Similarity().rot[2][0];
-				t[10] = (float)m.shot.Similarity().rot[2][1];
-				t[11] = (float)m.shot.Similarity().rot[2][2];
-				t[12] = (float)m.shot.Camera().f;
-				t[13] = (float)m.shot.Camera().s[0];
-				t[14] = (float) m.shot.Camera().s[1];
-				t[15] = (float)m.shot.Camera().c[0];
-				t[16] = (float)m.shot.Camera().c[1];
+				t[ 0] = (float)-m.shot.Extrinsics.tra[0];
+				t[ 1] = (float)-m.shot.Extrinsics.tra[1];
+				t[ 2] = (float)-m.shot.Extrinsics.tra[2];
+				t[ 3] = (float)m.shot.Extrinsics.rot[0][0];
+				t[ 4] = (float)m.shot.Extrinsics.rot[0][1];
+				t[ 5] = (float)m.shot.Extrinsics.rot[0][2];
+				t[ 6] = (float)m.shot.Extrinsics.rot[1][0];
+				t[ 7] = (float)m.shot.Extrinsics.rot[1][1];
+				t[ 8] = (float)m.shot.Extrinsics.rot[1][2];
+				t[ 9] = (float)m.shot.Extrinsics.rot[2][0];
+				t[10] = (float)m.shot.Extrinsics.rot[2][1];
+				t[11] = (float)m.shot.Extrinsics.rot[2][2];
+				t[12] = (float)m.shot.Intrinsics.FocalMm;
+				t[13] = (float)m.shot.Intrinsics.PixelSizeMm[0];
+				t[14] = (float)m.shot.Intrinsics.PixelSizeMm[1];
+				t[15] = (float)m.shot.Intrinsics.CenterPx[0];
+				t[16] = (float)m.shot.Intrinsics.CenterPx[1];
 				fwrite(t,sizeof(float),17,fpout);
 
-				fwrite( &m.shot.Camera().viewport[0],sizeof(int),2,fpout );
+				fwrite( &m.shot.Intrinsics.ViewportPx[0],sizeof(int),2,fpout );
 
-				t[ 0] = (float)m.shot.Camera().k[0];
-				t[ 1] = (float)m.shot.Camera().k[1];
-				t[ 2] = (float)m.shot.Camera().k[2];
-				t[ 3] = (float)m.shot.Camera().k[3];
+				t[ 0] = (float)m.shot.Intrinsics.k[0];
+				t[ 1] = (float)m.shot.Intrinsics.k[1];
+				t[ 2] = (float)m.shot.Intrinsics.k[2];
+				t[ 3] = (float)m.shot.Intrinsics.k[3];
 				fwrite(t,sizeof(float),4,fpout);
 		}
 		else
 		{
 			fprintf(fpout,"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %d %d %g %g %g %g\n"
-				,-m.shot.Similarity().tra[0]
-				,-m.shot.Similarity().tra[1]
-				,-m.shot.Similarity().tra[2]
-				,m.shot.Similarity().rot[0][0]
-				,m.shot.Similarity().rot[0][1]
-				,m.shot.Similarity().rot[0][2]
-				,m.shot.Similarity().rot[1][0]
-				,m.shot.Similarity().rot[1][1]
-				,m.shot.Similarity().rot[1][2]
-				,m.shot.Similarity().rot[2][0]
-				,m.shot.Similarity().rot[2][1]
-				,m.shot.Similarity().rot[2][2]
-				,m.shot.Camera().f
-				,m.shot.Camera().s[0]
-				,m.shot.Camera().s[1]
-				,m.shot.Camera().c[0]
-				,m.shot.Camera().c[1]
-				,m.shot.Camera().viewport[0]
-				,m.shot.Camera().viewport[1]
-				,m.shot.Camera().k[0]
-				,m.shot.Camera().k[1]
-				,m.shot.Camera().k[2]
-				,m.shot.Camera().k[3]
+				,-m.shot.Extrinsics.tra[0]
+				,-m.shot.Extrinsics.tra[1]
+				,-m.shot.Extrinsics.tra[2]
+				,m.shot.Extrinsics.rot[0][0]
+				,m.shot.Extrinsics.rot[0][1]
+				,m.shot.Extrinsics.rot[0][2]
+				,m.shot.Extrinsics.rot[1][0]
+				,m.shot.Extrinsics.rot[1][1]
+				,m.shot.Extrinsics.rot[1][2]
+				,m.shot.Extrinsics.rot[2][0]
+				,m.shot.Extrinsics.rot[2][1]
+				,m.shot.Extrinsics.rot[2][2]
+				,m.shot.Intrinsics.FocalMm
+				,m.shot.Intrinsics.PixelSizeMm[0]
+				,m.shot.Intrinsics.PixelSizeMm[1]
+				,m.shot.Intrinsics.CenterPx[0]
+				,m.shot.Intrinsics.CenterPx[1]
+				,m.shot.Intrinsics.ViewportPx[0]
+				,m.shot.Intrinsics.ViewportPx[1]
+				,m.shot.Intrinsics.k[0]
+				,m.shot.Intrinsics.k[1]
+				,m.shot.Intrinsics.k[2]
+				,m.shot.Intrinsics.k[3]
 			);
 		}		
 	}

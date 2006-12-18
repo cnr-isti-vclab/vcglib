@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.19  2006/01/22 17:01:40  cignoni
+Corrected intialization of flag, must be zero.
+
 Revision 1.18  2005/12/12 16:53:43  callieri
 corrected UnProject, it's necessary also a ZDepth value to perform inverse projection
 
@@ -79,9 +82,6 @@ creation
 #ifndef __VCGLIB_SHOT
 #define __VCGLIB_SHOT
 
-// #include <vector>
-// #include <vcg/Matrix44.h>
-// #include <vcg/Box3.h>
 #include <vcg/space/point2.h>
 #include <vcg/space/point3.h>
 #include <vcg/math/similarity.h>
@@ -95,160 +95,179 @@ public:
 	typedef Camera<S> CameraType;
 	typedef S ScalarType;
 
-protected:	
+	Camera<S>							Intrinsics;		// the camera that made the shot
+	Similarity<S,vcg::Matrix44<S> >		Extrinsics;		// the position and orientation of the camera 
 
-	enum {
-		NOTVALID_BIT = 0x1,
-		CREATED_EMPTY= 0x2
-	};
-	char flags;
-	Camera<S> & camera;																	// the camera that shot
-	vcg::Similarity<S,vcg::Matrix44<S> > similarity;		// the position from where it did it
 
-public:
+	Shot(Camera<S> c)
+	{
+		Intrinsics = c;
+		Extrinsics.SetIdentity();
+	}
 
-	Shot( Camera<S> & c):camera(c){similarity.SetIdentity();flags=0;}
-	Shot():camera(*new vcg::Camera<S>()){similarity.SetIdentity();flags|=CREATED_EMPTY;}
-	~Shot(){if(flags&CREATED_EMPTY) delete &camera;}
+	Shot()
+	{
+		Extrinsics.SetIdentity();
+	}
 
-	bool IsValid(){ return (flags& NOTVALID_BIT)==0;}
-	void SetValid(bool v){ if(!v) flags|=NOTVALID_BIT; else flags&=~NOTVALID_BIT;}
 
-	Camera<S> & Camera(){return camera;};
-
-	/// access to similarity
-	vcg::Similarity<S,vcg::Matrix44<S> > & Similarity(){return similarity;}
-
-	/// take the i-th axis of the coordinate system of the camera
+	/// GET the i-th axis of the coordinate system of the camera
 	vcg::Point3<S> Axis(const int & i)const;
 
-	/// take the viewpoint
-	 const vcg::Point3<S> ViewPoint()const;
-
-	/// set the viewpoint
+	/// GET the viewpoint
+	const vcg::Point3<S> GetViewPoint()const;
+	/// SET the viewpoint
 	void SetViewPoint(const vcg::Point3<S> & viewpoint);
 
-	/// look at
+	/// look at (dir+up)
 	void LookAt(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up);
 
-	/// look at (same as opengl)
-	void LookAt(const S & eye_x,const S & eye_y,const S & eye_z,const S & at_x,const S & at_y,const S & at_z,
-							const S & up_x,const S & up_y,const S & up_z);
+	/// look at (opengl-like)
+	void LookAt(const S & eye_x,const S & eye_y,const S & eye_z,
+				const S & at_x,const S & at_y,const S & at_z,
+				const S & up_x,const S & up_y,const S & up_z);
 
 	/// look towards
 	void LookTowards(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up);
 
-	/// convert a 3d point in camera coordinates
-	vcg::Point3<S>  ConvertToCameraCoordinates(const vcg::Point3<S> & p) const;
+	/// convert a 3d point from world to camera coordinates
+	vcg::Point3<S>  ConvertWorldToCameraCoordinates(const vcg::Point3<S> & p) const;
 
-	/// convert a 3d point in camera coordinates
-	vcg::Point3<S>  ConvertToWorldCoordinates(const vcg::Point3<S> & p) const;
+	/// convert a 3d point from camera to world coordinates
+	vcg::Point3<S>  ConvertCameraToWorldCoordinates(const vcg::Point3<S> & p) const;
 
-	/// project onto the camera plane
+	/// project a 3d point from world coordinates to 2d camera viewport (pixel) 
 	vcg::Point2<S> Project(const vcg::Point3<S> & p) const;
 
-	/// inverse projection from camera plane + Zdepth to original 3D
+	/// inverse projection from 2d camera viewport (pixel) + Zdepth to 3d world coordinates
 	vcg::Point3<S> UnProject(const vcg::Point2<S> & p, const S & d) const;
 
-	/// take the distance from the point p and the plane parallel to the camera plane and passing through the view
-	/// point. The would be z depth 
+	/// returns distance of point p from camera plane (z depth), used for unprojection 
 	S Depth(const vcg::Point3<S> & p)const;
-
-	/// project a 3d point from 3D WORLD to 2D VIEWPORT
-	vcg::Point2<S> ProjectWorldtoViewport(const vcg::Point3<S> & p) const;
-
 
 }; // end class definition
 
+
+
+//---
+/// GET the viewpoint
 template <class S>
-const vcg::Point3<S> Shot<S>::ViewPoint() const {
-	//Matrix44<S> m = similarity.Matrix();
-	//return Point3<S>(m[0][3],m[1][3],m[2][3]);
-	return -similarity.tra;
+const vcg::Point3<S> Shot<S>::GetViewPoint() const 
+{
+	return -Extrinsics.tra;
+}
+/// SET the viewpoint
+template <class S>
+void Shot<S>::SetViewPoint(const vcg::Point3<S> & viewpoint)
+{
+	Extrinsics.tra = -viewpoint;
+}
+//---
+
+/// GET the i-th axis of the coordinate system of the camera
+template <class S>
+vcg::Point3<S>  Shot<S>::Axis(const int & i) const 
+{	
+	vcg::Matrix44<S> m; 
+	Extrinsics.rot.ToMatrix(m); 
+	vcg::Point3<S> aa = m.GetRow3(i);
+	return aa;
 }
 
+/// look at (dir+up)
 template <class S>
-	vcg::Point3<S>  Shot<S>::Axis(const int & i) const {	
-			vcg::Matrix44<S> m; 
-			similarity.rot.ToMatrix(m); 
-			vcg::Point3<S> aa = m.GetRow3(i);
-			return aa;
-	}
-
-template <class S>
-void Shot<S>::SetViewPoint(const vcg::Point3<S> & viewpoint){
-	similarity.tra = -viewpoint;
-}
-
-template <class S>
-void Shot<S>::LookAt(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up){
+void Shot<S>::LookAt(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up)
+{
 	  LookTowards(z_dir-ViewPoint(),up);
 }
 
+/// look at (opengl-like)
 template <class S>
-void Shot<S>::LookAt(const S & eye_x,const S & eye_y,const S & eye_z,const S & at_x,const S & at_y,const S & at_z,
-										 const S & up_x,const S & up_y,const S & up_z){
+void Shot<S>::LookAt(const S & eye_x, const S & eye_y, const S & eye_z,
+					 const S & at_x, const S & at_y, const S & at_z,
+					 const S & up_x,const S & up_y,const S & up_z)
+{
 	SetViewPoint(Point3<S>(eye_x,eye_y,eye_z));
 	LookAt(Point3<S>(at_x,at_y,at_z),Point3<S>(up_x,up_y,up_z));
 }
 
-
+/// look towards
 template <class S>
-void Shot<S>::LookTowards(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up){
-	vcg::Point3<S> x_dir = up ^-z_dir ;
-	vcg::Point3<S> y_dir = -z_dir ^x_dir ;
+void Shot<S>::LookTowards(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up)
+{
+	vcg::Point3<S> x_dir = up ^-z_dir;
+	vcg::Point3<S> y_dir = -z_dir ^x_dir;
 	
 	Matrix44<S> m;
 	m.SetIdentity();
-	*(vcg::Point3<S> *)&m[0][0] = x_dir/x_dir.Norm();
-	*(vcg::Point3<S> *)&m[1][0] = y_dir/y_dir.Norm();
+	*(vcg::Point3<S> *)&m[0][0] =  x_dir/x_dir.Norm();
+	*(vcg::Point3<S> *)&m[1][0] =  y_dir/y_dir.Norm();
 	*(vcg::Point3<S> *)&m[2][0] = -z_dir/z_dir.Norm();
 
-	similarity.rot.FromMatrix(m);
+	Extrinsics.rot.FromMatrix(m);
 }
 
+//--- Space transformation methods
+
+/// convert a 3d point from world to camera coordinates
 template <class S>
-vcg::Point3<S> Shot<S>::ConvertToCameraCoordinates(const vcg::Point3<S> & p) const{
+vcg::Point3<S> Shot<S>::ConvertWorldToCameraCoordinates(const vcg::Point3<S> & p) const
+{
 	Matrix44<S> rotM;
-	similarity.rot.ToMatrix(rotM);
-	vcg::Point3<S> cp = rotM * (p+similarity.tra);
-	// note: the camera reference system is right handed
-	cp[2]=-cp[2];
+	Extrinsics.rot.ToMatrix(rotM);
+	vcg::Point3<S> cp = rotM * (p + Extrinsics.tra);
+	cp[2]=-cp[2]; 	// note: camera reference system is right handed
 	return cp;
 	}
+
+/// convert a 3d point from camera to world coordinates
 template <class S>
-vcg::Point3<S> Shot<S>::ConvertToWorldCoordinates(const vcg::Point3<S> & p) const{
+vcg::Point3<S> Shot<S>::ConvertCameraToWorldCoordinates(const vcg::Point3<S> & p) const
+{
 	Matrix44<S> rotM;
 	vcg::Point3<S> cp = p;
-	// note: the World reference system is left handed
-	cp[2]=-cp[2];
-	similarity.rot.ToMatrix(rotM);
-	cp = Inverse(rotM) * cp-similarity.tra;
+	cp[2]=-cp[2];	// note: World reference system is left handed
+	Extrinsics.rot.ToMatrix(rotM);
+	cp = Inverse(rotM) * cp-Extrinsics.tra;
 	return cp;
 }
-template <class S>
-vcg::Point2<S> Shot<S>::Project(const vcg::Point3<S> & p) const{
-		return camera.Project(ConvertToCameraCoordinates(p));
-	}
-template <class S>
-vcg::Point3<S> Shot<S>::UnProject(const vcg::Point2<S> & p, const S & d) const{
-	Point2<S> tp = camera.ViewportToLocal(p);
-	vcg::Point3<S> q = camera.UnProject(tp, d);
-	return ConvertToWorldCoordinates(q);
-}
-template <class S>
-S Shot<S>::Depth(const vcg::Point3<S> & p)const {
-	return ConvertToCameraCoordinates(p).Z();
-}
 
+/// project a 3d point from world coordinates to 2d camera viewport (pixel) 
 template <class S>
-vcg::Point2<S> Shot<S>::ProjectWorldtoViewport(const vcg::Point3<S> & p)const 
+vcg::Point2<S> Shot<S>::Project(const vcg::Point3<S> & p) const
 {
- return camera.LocalToViewport( camera.Project( ConvertToCameraCoordinates(p) ) );
+	Point3<S> cp = ConvertWorldToCameraCoordinates(p);
+	Point2<S> pp = Intrinsics.Project(cp);
+	Point2<S> vp = Intrinsics.LocalToViewportPx(pp);
+	return vp;
 }
 
+/// inverse projection from 2d camera viewport (pixel) + Zdepth to 3d world coordinates
+template <class S>
+vcg::Point3<S> Shot<S>::UnProject(const vcg::Point2<S> & p, const S & d) const
+{
+	Point2<S> lp = Intrinsics.ViewportPxToLocal(p);
+	Point3<S> cp = Intrinsics.UnProject(lp,d);
+	Point3<S> wp = ConvertCameraToWorldCoordinates(cp);
+	return wp;
+}
+
+/// returns distance of point p from camera plane (z depth), used for unprojection 
+template <class S>
+S Shot<S>::Depth(const vcg::Point3<S> & p)const 
+{
+	return ConvertWorldToCameraCoordinates(p).Z();
+}
+
+
+
+//--------------------------------
+
+
+//--- utility definitions
 class Shotf: public Shot<float>{};
 class Shotd: public Shot<double>{};
+//-----------------------
 
 } // end name space
 

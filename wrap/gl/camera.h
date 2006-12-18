@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.11  2006/01/10 12:22:34  spinelli
+add namespace vcg::
+
 Revision 1.10  2005/10/24 14:42:57  spinelli
 add namespace vcg:: to GetFrustum(...)
 
@@ -76,8 +79,11 @@ struct GlCamera{
 	typedef typename CameraType::ScalarType ScalarType;
 	typedef typename CameraType::ScalarType S;
 
+
+/// returns the OpenGL 4x4 PROJECTION matrix that describes the camera (intrinsics)
 static vcg::Matrix44<ScalarType>
-MatrixGL(vcg::Camera<S> & cam, vcg::Matrix44<S> &m){
+MatrixGL(vcg::Camera<S> & cam, vcg::Matrix44<S> &m)
+{
 	glPushAttrib(GL_TRANSFORM_BIT);
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
@@ -89,7 +95,8 @@ MatrixGL(vcg::Camera<S> & cam, vcg::Matrix44<S> &m){
 	return m;
 }
 
-static void CavalieriProj(float x1, float x2, float y1, float y2, float z1, float z2)
+/// set the OpenGL PROJECTION matrix for the Cavalieri projection
+static void SetGLCavalieriProj(float x1, float x2, float y1, float y2, float z1, float z2)
 {
 	GLfloat cavalieri[16];
 
@@ -103,10 +110,10 @@ static void CavalieriProj(float x1, float x2, float y1, float y2, float z1, floa
 	cavalieri[11] = 0;                              cavalieri[15] = 1.0f;
 
 	glLoadMatrixf(cavalieri);
-
 }
 
-static void IsometricProj(float x1, float x2, float y1, float y2, float z1, float z2)
+/// set the OpenGL PROJECTION matrix for the Isometric projection
+static void SetGLIsometricProj(float x1, float x2, float y1, float y2, float z1, float z2)
 {
 	GLfloat isometric[16];
 
@@ -122,33 +129,31 @@ static void IsometricProj(float x1, float x2, float y1, float y2, float z1, floa
 	glLoadMatrixf(isometric);
 }
 
-static void GetFrustum(vcg::Camera<S> & camera, S & sx,S & dx,S & bt,S & tp,S & f ,S & fr)
+/// get OpenGL-like frustum from a vcg camera (intrinsics)
+static void GetFrustum(vcg::Camera<S> & intrinsics, S & sx,S & dx,S & bt,S & tp,S & f)
 {
-	camera.GetFrustum(sx,dx,bt,tp,f,fr);
+	intrinsics.GetFrustum(sx,dx,bt,tp,f);
 }
 
-
-static void TransformGL(vcg::Camera<S> & camera, S farDist = -1 ) {
+/// set the OpenGL PROJECTION matrix to match the camera (intrinsics). requires near and far plane
+static void TransformGL(vcg::Camera<S> & camera, S nearDist, S farDist ) 
+{
 	S sx,dx,bt,tp,nr,fr;
-	GetFrustum(camera,sx,dx,bt,tp,nr,fr);	
+	camera.GetFrustum(sx,dx,bt,tp,nr);	
+
 	assert(glGetError()==0);
 	
-	switch(camera.cameraType) {
-	case vcg::PERSPECTIVE: glFrustum(sx,dx,bt,tp,nr,(farDist == -1)?fr:farDist);	break;
-	case vcg::ORTHO:       glOrtho(sx*camera.viewportM,dx*camera.viewportM,bt*camera.viewportM,tp*camera.viewportM,nr,(farDist == -1)?fr:farDist); break;
-	case vcg::ISOMETRIC:   IsometricProj(sx,dx,bt,tp,nr,(farDist == -1)?fr:farDist); 	break;
-    case vcg::CAVALIERI:   CavalieriProj(sx,dx,bt,tp,nr,(farDist == -1)?fr:farDist); 	break;
-	}
-/*	if(!camera.IsOrtho())
+	switch(camera.cameraType) 
 	{
-		//glFrustum(sx,dx,bt,tp,nr,(farDist == -1)?fr:farDist);
-		IsometricProj(sx,dx,bt,tp,nr,(farDist == -1)?fr:farDist);
+	 case vcg::PERSPECTIVE: glFrustum(sx,dx,bt,tp,nearDist,farDist);	break;
+	 case vcg::ORTHO:       glOrtho(sx,dx,bt,tp,nearDist,farDist); break;
+	 case vcg::ISOMETRIC:   SetGLIsometricProj(sx,dx,bt,tp,nearDist,farDist); 	break;
+     case vcg::CAVALIERI:   SetGLCavalieriProj(sx,dx,bt,tp,nearDist,farDist); 	break;
 	}
-	else  glOrtho(sx*camera.viewportM,dx*camera.viewportM,bt*camera.viewportM,tp*camera.viewportM,nr,(farDist == -1)?fr:farDist);
-*/	      
-	       
+       
 	assert(glGetError()==0);
 };
+
 
 static void GetViewSize(vcg::Camera<S> & camera, S &width, S &height) {
 	S sx,dx,bt,tp,nr,fr;
@@ -156,6 +161,7 @@ static void GetViewSize(vcg::Camera<S> & camera, S &width, S &height) {
 	width = dx-sx;	//right - left = width
 	height = tp-bt;  //top - bottom = height
 };
+
 
 static void SetSubView(vcg::Camera<S> & camera,vcg::Point2<S> p0,vcg::Point2<S> p1){
 	//typedef typename CameraType::ScalarType S;
@@ -170,11 +176,12 @@ static void SetSubView(vcg::Camera<S> & camera,vcg::Point2<S> p0,vcg::Point2<S> 
 
 	
 
-	switch(camera.cameraType) {
-	case vcg::PERSPECTIVE: glFrustum(	width* p0[0]+ sx, width* p1[0]+ sx,		height* p0[1]+ bt, height* p1[1]+ bt,nr,fr);	break;
-	case vcg::ORTHO:       glOrtho((width* p0[0]+sx)*camera.viewportM,  (width* p1[0]+sx)*camera.viewportM, (height* p0[1]+ bt)*camera.viewportM, (height* p1[1]+bt)*camera.viewportM,nr,fr); break;
-	case vcg::ISOMETRIC:   IsometricProj(dx-width* p1[0], dx-width* p0[0],		tp-height* p1[1], tp-height* p0[1],nr,fr);	break;
-	case vcg::CAVALIERI:   CavalieriProj(dx-width* p1[0], dx-width* p0[0],		tp-height* p1[1], tp-height* p0[1],nr,fr);	break;
+	switch(camera.cameraType) 
+	{
+	 case vcg::PERSPECTIVE: glFrustum(	width* p0[0]+ sx, width* p1[0]+ sx,		height* p0[1]+ bt, height* p1[1]+ bt,nr,fr);	break;
+	 case vcg::ORTHO:       glOrtho((width* p0[0]+sx)*camera.viewportM,  (width* p1[0]+sx)*camera.viewportM, (height* p0[1]+ bt)*camera.viewportM, (height* p1[1]+bt)*camera.viewportM,nr,fr); break;
+	 case vcg::ISOMETRIC:   IsometricProj(dx-width* p1[0], dx-width* p0[0],		tp-height* p1[1], tp-height* p0[1],nr,fr);	break;
+	 case vcg::CAVALIERI:   CavalieriProj(dx-width* p1[0], dx-width* p0[0],		tp-height* p1[1], tp-height* p0[1],nr,fr);	break;
 	}
 
 
