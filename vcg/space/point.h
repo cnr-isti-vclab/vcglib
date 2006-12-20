@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2006/04/11 08:10:05  zifnab1974
+changes necessary for gcc 3.4.5 on linux 64bit.
+
 Revision 1.7  2005/12/12 11:22:32  ganovelli
 compiled with gcc
 
@@ -478,9 +481,7 @@ public:
 	using PointBase<3,S>::_v;
 	using PointBase<3,S>::V;
 	using PointBase<3,S>::W;
-	using PointBase<3,S>::k0;
-	using PointBase<3,S>::k1;
-	using PointBase<3,S>::k2;
+
 
 	//@{
   /** @name Special members for 3D points. **/
@@ -641,9 +642,7 @@ public:
 	using PointBase<3,S>::_v;
 	using PointBase<3,S>::V;
 	using PointBase<3,S>::W;
-	using PointBase<3,S>::k0;
-	using PointBase<3,S>::k1;
-	using PointBase<3,S>::k2;
+
 	//@{
   /** @name Special members for 4D points. **/
 		/// default
