@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2006/12/12 02:47:12  cignoni
+Removed use of tellg that is broken in current version of mingw
+
 Revision 1.10  2006/11/21 10:56:41  cignoni
 ReWrote loadMask. Now shorter and faster.
 
@@ -314,7 +317,7 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 	int numVNormals	 = 0;  // stores the number of vertex normals been read till now
 
 	int numVerticesPlusFaces = oi.numVertices + oi.numFaces;
-
+  int extraTriangles=0;
 	// vertices and faces allocatetion
 	VertexIterator vi = Allocator<OpenMeshType>::AddVertices(m,oi.numVertices);
 	//FaceIterator   fi = Allocator<OpenMeshType>::AddFaces(m,oi.numFaces);
@@ -458,11 +461,13 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 						// ------------------------------------------
             if(!GoodObjIndex(v4_index, numVertices))
               return E_BAD_VERT_INDEX;
-            if(!GoodObjIndex(vn4_index,numVNormals))
-              return E_BAD_VERT_NORMAL_INDEX;
             if(!GoodObjIndex(vt4_index,oi.numTexCoords))
               return E_BAD_VERT_TEX_INDEX;
 						
+				    if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
+                if(!GoodObjIndex(vn4_index,numVNormals))
+                  return E_BAD_VERT_NORMAL_INDEX;
+            
          		ffNew.t[1]=ff.t[2];
             ffNew.t[2]=vt4_index;            
 					}
@@ -480,6 +485,7 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 					}
 
 					++numTriangles;
+          ++extraTriangles;
           indexedFaces.push_back(ffNew);
 					ff.v[2] = v4_index;
 				}
@@ -530,7 +536,7 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 			// we simply ignore other situations
 		} // end for each line...
 	} // end while stream not eof
-	assert((numTriangles +numVertices) == numVerticesPlusFaces);
+	assert((numTriangles +numVertices) == numVerticesPlusFaces+extraTriangles);
 
 	FaceIterator   fi = Allocator<OpenMeshType>::AddFaces(m,numTriangles);
   //-------------------------------------------------------------------------------
@@ -612,7 +618,7 @@ inline static const void SplitToken(std::string token, int &vId, int &nId, int &
 
           vId	= atoi(vertex.c_str())-1;
           if(mask & Mask::IOM_WEDGTEXCOORD) tId = atoi(texcoord.c_str())-1;
-					if(mask & Mask::IOM_WEDGNORMAL)nId= atoi(normal.c_str())-1;
+					if(mask & Mask::IOM_WEDGNORMAL)   nId= atoi(normal.c_str())-1;
 }
 
 inline static const void SplitVToken(std::string token, std::string &vertex) 
