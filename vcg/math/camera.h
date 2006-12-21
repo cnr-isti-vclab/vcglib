@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.27  2006/12/18 16:02:55  matteodelle
+minor eroor correction on variable names
+
 Revision 1.26  2006/12/18 09:46:38  callieri
 camera+shot revamp: changed field names to something with more sense, cleaning of various functions, correction of minor bugs/incongruences, removal of the infamous reference in shot.
 
@@ -138,10 +141,11 @@ public:
 	typedef S ScalarType;
 
 	Camera():
-		FocalMm(0.f),PixelSizeMm(vcg::Point2<S>(0.0,0.0)),
+		FocalMm(0.f),
+		ViewportPx(vcg::Point2<int>(0,0)),
+		PixelSizeMm(vcg::Point2<S>(0.0,0.0)),
 		CenterPx(vcg::Point2<S>(0.0,0.0)),
 		DistorCenterPx(vcg::Point2<S>(0.0,0.0)),
-		ViewportPx(vcg::Point2<int>(0,0)),
 		cameraType(0)
 		{}
 
@@ -160,7 +164,7 @@ public:
 	void SetOrtho(S dist)
 	{ 
 		cameraType = ORTHO;
-		ViewportPx = ( ((ViewportPx[0] * PixelSizeMm[0]) * (ViewportPx[1] * PixelSizeMm[1])) / f ) * dist;
+		ViewportPx = ( ((ViewportPx[0] * PixelSizeMm[0]) * (ViewportPx[1] * PixelSizeMm[1])) / FocalMm ) * dist;
 	};
 
 	bool IsOrtho() const
