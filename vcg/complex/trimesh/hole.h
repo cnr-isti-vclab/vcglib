@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.28  2006/12/12 11:14:51  cignoni
+Commented some variant of the quality measure of weighted ears
+
 Revision 1.27  2006/12/07 00:40:18  cignoni
 Added many this-> for gcc compiling
 
@@ -755,7 +758,8 @@ template<class EAR>
 		{
 			CoordType  n1 = ((p1 - p2) ^ (p3 - p1) ).Normalize();
 			CoordType	 n2 = ((p2 - p1) ^ (p4 - p2) ).Normalize();
-			ScalarType t = (n1 * n2 )  ;
+			ScalarType t = (n1 * n2 );
+			if(t == 0)return 0;
 			return  math::ToDeg(acos(t));
 		}
 
