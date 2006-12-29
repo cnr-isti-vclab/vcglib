@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.25  2006/12/04 16:06:12  cignoni
+Added FFlip() and const VFlip() operators
+
 Revision 1.24  2006/11/13 01:57:23  cignoni
 Added a missing prototype to ismanifold
 
@@ -166,7 +169,7 @@ public:
 
 	// access functions
 	VertexType *& V(){return f->UberV(z);}
-	VertexType *& V(const int & i){assert( (i>=0) && (i<2)); return f->UberV( (z +i) %3);}
+	VertexType *& V(const int & i){assert( (i>=0) && (i<3)); return f->UberV( (z +i) %3);}
 
 	/// Operator to compare two half-edge
 	inline bool operator == ( PosType const & p ) const {
