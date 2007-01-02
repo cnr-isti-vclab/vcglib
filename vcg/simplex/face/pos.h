@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.26  2006/12/29 13:13:00  giec
+Corrected wrong assert in V(i) access function
+
 Revision 1.25  2006/12/04 16:06:12  cignoni
 Added FFlip() and const VFlip() operators
 
@@ -170,6 +173,8 @@ public:
 	// access functions
 	VertexType *& V(){return f->UberV(z);}
 	VertexType *& V(const int & i){assert( (i>=0) && (i<3)); return f->UberV( (z +i) %3);}
+	FaceType   *& F(){ return f;}
+  
 
 	/// Operator to compare two half-edge
 	inline bool operator == ( PosType const & p ) const {
