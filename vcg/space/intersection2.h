@@ -21,7 +21,7 @@
  *                                                                           *
  ****************************************************************************/
 /****************************************************************************
-
+ History
 
 ****************************************************************************/
 
@@ -29,9 +29,11 @@
 
 #ifndef __VCGLIB_INTERSECTION_2
 #define __VCGLIB_INTERSECTION_2
-
+#include <vcg/space/line2.h>
+#include <vcg/space/segment2.h>
 #include <vcg/space/point2.h>
 #include <vcg/space/triangle2.h>
+#include <vcg/space/box2.h>
 
 
 
@@ -48,6 +50,65 @@ template<class SCALAR_TYPE>
     inline bool Convex(const Point2<SCALAR_TYPE> & p0,const Point2<SCALAR_TYPE> & p1,const Point2<SCALAR_TYPE> & p2)
 {
   return (((p0-p1)^(p2-p1))<=0);
+}
+
+///return if exist the intersection point
+///between 2 lines in a 2d plane
+template<class SCALAR_TYPE>
+inline bool LineLineIntersection(const vcg::Line2<SCALAR_TYPE> & l0,
+								 const vcg::Line2<SCALAR_TYPE> & l1,
+								 Point2<SCALAR_TYPE> &p)
+{
+	const SCALAR_TYPE EPSILON= SCALAR_TYPE(1e-8);
+	///first line
+	SCALAR_TYPE x1=l0.Origin().X();
+	SCALAR_TYPE y1=l0.Origin().Y(); 
+	SCALAR_TYPE x2=x1+l0.Direction().X();
+	SCALAR_TYPE y2=y1+l0.Direction().Y(); 
+	
+	///second line
+	SCALAR_TYPE x3=l1.Origin().X();
+	SCALAR_TYPE y3=l1.Origin().Y(); 
+	SCALAR_TYPE x4=x3+l1.Direction().X();
+	SCALAR_TYPE y4=y3+l1.Direction().Y(); 
+
+	///then  find intersection
+
+	///denominator
+	SCALAR_TYPE den=((x1-x2)*(y3-y4))-((y1-y2)*(x3-x4));
+	if (fabs(den)<EPSILON)
+		return false;
+
+	SCALAR_TYPE d0=(x1*y2)-(y1*x2);
+	SCALAR_TYPE d1=(x3*y4)-(y3*x4);
+	SCALAR_TYPE numx=(d0*(x3-x4))-(d1*(x1-x2));
+	SCALAR_TYPE numy=(d0*(y3-y4))-(d1*(y1-y2));
+
+	p.X()=numx/den;
+	p.Y()=numy/den;
+	return true;
+}
+
+/// interseciton between point and triangle
+template<class SCALAR_TYPE>
+inline bool LineSegmentIntersection(const vcg::Line2<SCALAR_TYPE> & line,
+									const vcg::Segment2<SCALAR_TYPE> &seg,
+									Point2<SCALAR_TYPE> &p_inters)
+{
+ ///first compute intersection between lines
+ vcg::Line2<SCALAR_TYPE> line2;
+ line2.SetOrigin(seg.P0());
+ vcg::Point2<SCALAR_TYPE> dir=seg.P1()-seg.P0();
+ dir.Normalize();
+ line2.SetDirection(dir);
+ if(!LineLineIntersection(line,line2,p_inters))
+	return false;
+ ///then test if intersection point is nearest 
+ ///to both extremes then lenght of the segment 
+ SCALAR_TYPE d0=(seg.P1()-p_inters).Norm();
+ SCALAR_TYPE d1=(seg.P0()-p_inters).Norm();
+ SCALAR_TYPE lenght=(seg.P0()-seg.P1()).Norm();
+ return ((d0<lenght)&&(d1<lenght));
 }
 
 /// interseciton between point and triangle
