@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2006/01/19 14:06:37  spinelli
+add std:: namespace...
+
 Revision 1.7  2005/10/03 16:18:15  spinelli
 add template parameter for spatialindexing struction
 
@@ -45,9 +48,13 @@ added vcg header
 #include<vcg/space/plane3.h>
 #include<vcg/space/segment3.h>
 #include<vcg/space/intersection3.h>
+#include<vcg/complex/edgemesh/allocate.h>
 //#include<vcg/space/index/grid_static_ptr.h>
-
+#include<algorithm>
 #include<vcg/complex/trimesh/base.h>
+
+#ifndef __VCGLIB_INTERSECTION_TRI_MESH
+#define __VCGLIB_INTERSECTION_TRI_MESH
 
 namespace vcg{
 
@@ -202,3 +209,4 @@ bool IntersectionRayMesh(
 }
 /*@}*/
 } // end namespace vcg
+#endif
