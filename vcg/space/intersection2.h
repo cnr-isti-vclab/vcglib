@@ -49,7 +49,8 @@ namespace vcg {
 template<class SCALAR_TYPE>
     inline bool Convex(const Point2<SCALAR_TYPE> & p0,const Point2<SCALAR_TYPE> & p1,const Point2<SCALAR_TYPE> & p2)
 {
-  return (((p0-p1)^(p2-p1))<=0);
+  const SCALAR_TYPE EPSILON= SCALAR_TYPE(1e-8);
+  return (((p0-p1)^(p2-p1))<=EPSILON);
 }
 
 ///return if exist the intersection point
@@ -113,11 +114,21 @@ inline bool LineSegmentIntersection(const vcg::Line2<SCALAR_TYPE> & line,
 
 /// interseciton between point and triangle
 template<class SCALAR_TYPE>
-    inline bool Intersection( const Triangle2<SCALAR_TYPE> & t,const Point2<SCALAR_TYPE> & p)
+    inline bool IsInsideTrianglePoint( const Triangle2<SCALAR_TYPE> & t,const Point2<SCALAR_TYPE> & p)
 {
   Point2<SCALAR_TYPE> p0=t.P0(0);
   Point2<SCALAR_TYPE> p1=t.P0(1);
   Point2<SCALAR_TYPE> p2=t.P0(2);
+
+  ///first test with bounding box
+  vcg::Box2<SCALAR_TYPE> b2d;
+  b2d.Add(p0);
+  b2d.Add(p1);
+  b2d.Add(p2);
+  if (!b2d.IsIn(p))
+	  return false;
+  
+  ///then text convex
   if (!Convex(p0,p1,p2))
     std::swap<Point2<SCALAR_TYPE> >(p1,p2);
   return((Convex(p,p0,p1))&&(Convex(p,p1,p2))&&(Convex(p,p2,p0)));
