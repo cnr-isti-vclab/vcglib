@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2006/10/13 13:14:50  cignoni
+Added two sqrt templates for resolving ambiguity of sqrt(int)
+
 Revision 1.19  2005/12/01 01:03:37  cignoni
 Removed excess ';' from end of template functions, for gcc compiling
 
@@ -111,7 +114,7 @@ namespace math {
     };
   
   inline float Sqrt(const short v)   { return sqrtf(v); }
-  inline float Sqrt(const int v)   { return sqrtf(v); }
+  inline float Sqrt(const int v)   { return sqrtf((float)v); }
   
   inline float Sqrt(const float v)   { return sqrtf(v); }
   inline float Abs(const float v)   { return fabsf(v); }
