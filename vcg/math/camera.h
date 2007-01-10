@@ -23,6 +23,10 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.28  2006/12/21 00:13:27  cignoni
+Corrected a syntax error detected only by gcc.
+Corrected the order of initialization in the constructor to match the declaration order
+
 Revision 1.27  2006/12/18 16:02:55  matteodelle
 minor eroor correction on variable names
 
@@ -309,9 +313,9 @@ void Camera<S>::SetFrustum(	S sx, S dx, S bt, S tp, S Focal, vcg::Point2<int> Vi
 	vp[0] = dx-sx;
 	vp[1] = tp-bt;
 
-	ViewportPx[0] = vp[0];
+	ViewportPx[0] = Viewport[0];
 	if(vp[1] != -1)
-		ViewportPx[1] = vp[1];			// the user specified the viewport
+		ViewportPx[1] = Viewport[1];			// the user specified the viewport
 	else
 		ViewportPx[1] = ViewportPx[0];	// default viewport
 

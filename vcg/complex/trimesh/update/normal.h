@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2006/11/07 15:13:56  zifnab1974
+Necessary changes for compilation with gcc 3.4.6. Especially the hash function is a problem
+
 Revision 1.11  2005/12/06 18:22:31  pietroni
 changed FaceType::ComputeNormal and FaceType::ComputeNormalizedNormal
 with face::ComputeNormal and face::ComputeNormalizedNormal
@@ -102,7 +105,7 @@ static void PerFace(ComputeMeshType &m)
 	if( !m.HasPerFaceNormal()) return;
 	FaceIterator f;
 	for(f=m.face.begin();f!=m.face.end();++f)
-		if( !(*f).IsD() )	/*face::*/ComputeNormal(*f);
+		if( !(*f).IsD() )	face::ComputeNormal(*f);
 }
 
 
