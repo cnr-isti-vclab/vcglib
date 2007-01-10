@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.29  2006/12/27 15:09:52  giec
+Bug fix on ComputeDihedralAngle function
+
 Revision 1.28  2006/12/12 11:14:51  cignoni
 Commented some variant of the quality measure of weighted ears
 
@@ -337,18 +340,7 @@ namespace vcg {
         Point3f n2=TE::e1.FFlip()->cN();
         
 				dihedralRad = std::max(Angle(TE::n,n1),Angle(TE::n,n2));
-
-        // The following two options are also reasonable: Weighting angles with their area
-        //float a1=DoubleArea(*TE::e0.FFlip());
-        //float a2=DoubleArea(*TE::e1.FFlip());
-        //dihedralRad = std::max(a1*Angle(TE::n,n1),a2*Angle(TE::n,n2));
-				//dihedralRad = a1*Angle(TE::n,n1)+a2*Angle(TE::n,n2);    
-				
         aspectRatio = QualityFace(*this);
-        
-        // Weighting quality with its area is not very reasonable :)  
-        //aspectRatio = QualityFace(*this) * DoubleArea(*this); 
-        
 			}
 
 		};
@@ -535,7 +527,7 @@ template<class EAR>
 			do{
 				EAR app = EAR(fp);
 				H.push_back( app );
-        printf("Adding ear %s ",app.Dump());
+        //printf("Adding ear %s ",app.Dump());
 				fp.NextB();
 				assert(fp.IsBorder());
 			}while(fp!=h.p);
@@ -547,7 +539,7 @@ template<class EAR>
 			//finche' il buco non e' chiuso o non ci sono piu' orecchie da analizzare.
 			while( cnt > 2 && !H.empty() ) 
 			{	   
-        printf("Front of the heap is %s", H.front().Dump());
+        //printf("Front of the heap is %s", H.front().Dump());
         pop_heap(H.begin(), H.end());	 // retrieve the MAXIMUM value and put in the back;
 				PosType ep0,ep1;
         EAR BestEar=H.back();
@@ -756,11 +748,9 @@ template<class EAR>
 		
 	static float ComputeDihedralAngle(CoordType  p1,CoordType  p2,CoordType  p3,CoordType  p4)
 		{
-			CoordType  n1 = ((p1 - p2) ^ (p3 - p1) ).Normalize();
-			CoordType	 n2 = ((p2 - p1) ^ (p4 - p2) ).Normalize();
-			ScalarType t = (n1 * n2 );
-			if(t == 0)return 0;
-			return  math::ToDeg(acos(t));
+			CoordType  n1 = NormalizedNormal(p1,p3,p2);
+			CoordType	 n2 = NormalizedNormal(p1,p2,p4);
+			return  math::ToDeg(AngleN(n1,n2));
 		}
 
   static bool existEdge(PosType pi,PosType pf)
