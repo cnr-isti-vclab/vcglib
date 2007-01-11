@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2006/12/06 00:08:57  cignoni
+Added FFp1 and FFp2 shortcuts
+
 Revision 1.10  2006/12/04 11:00:02  ganovelli
 Cambiate Has*Opt in Has*Occ e aggiunti typedef per la compilazione di Occ
 
@@ -87,8 +90,11 @@ public:
 };
 template <class T> class VertexRef: public T {
 public:
- // typedef typename T::VertexType VertexType;
- // typedef typename T::VertexType::CoordType CoordType;
+	VertexRef(){
+		v[0]=0;
+		v[1]=0;
+		v[2]=0;
+	}
 
   inline typename T::VertexType *       & V( const int j ) 	     { assert(j>=0 && j<3); return v[j]; }
   inline typename T::VertexType * const & V( const int j ) const { assert(j>=0 && j<3); return v[j]; }
