@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.35  2006/11/29 15:58:50  cignoni
+Added check with the new end and avoided dangerous updating of already updated pointers
+
 Revision 1.34  2006/11/28 22:34:28  cignoni
 Added default constructor with null initialization to adjacency members.
 AddFaces and AddVertices NEED to know if the topology is correctly computed to update it.
@@ -218,9 +221,9 @@ namespace vcg {
 					for (fi=m.face.begin(); fi!=m.face.end(); ++fi)
 						if(!(*fi).IsD())
 						{
-							pu.Update((*fi).V(0));
-							pu.Update((*fi).V(1));
-							pu.Update((*fi).V(2));
+							if ((*fi).cV(0)!=0) pu.Update((*fi).V(0));
+							if ((*fi).cV(1)!=0) pu.Update((*fi).V(1));
+							if ((*fi).cV(2)!=0) pu.Update((*fi).V(2));
 						}
 
 						// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
