@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.27  2007/01/02 10:06:53  giec
+Added access functions F()
+
 Revision 1.26  2006/12/29 13:13:00  giec
 Corrected wrong assert in V(i) access function
 
@@ -113,6 +116,8 @@ Initial commit
 
 #ifndef __VCG_FACE_POS
 #define __VCG_FACE_POS
+
+#include <assert.h>
 
 namespace vcg {
 namespace face {
