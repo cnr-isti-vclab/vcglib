@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.18  2006/12/11 14:09:44  ganovelli
+  added missing initialization of currMetric
+
   Revision 1.17  2006/06/09 07:28:43  m_di_benedetto
   Corrected ClearHeap(): iterator "hi" not decrementable if it was the first of the container.
 
@@ -319,7 +322,7 @@ void ClearHeap()
 		m.InitVertexIMark();
 		LocalModificationType::Init(m,h);
 		std::make_heap(h.begin(),h.end());
-		if(!h.empty()) currMetric=h.back().pri;
+		if(!h.empty()) currMetric=h.front().pri;
 	}
 
 
