@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2006/05/25 09:39:09  cignoni
+missing std and other gcc detected syntax errors
+
 Revision 1.1  2006/05/21 06:59:13  cignoni
 Initial Commit
 
@@ -36,7 +39,6 @@ Initial Commit
 // VCG headers
 
 #include <vcg/math/histogram.h>
-#include <vcg/simplex/face/face.h>
 #include <vcg/simplex/face/pos.h>
 #include <vcg/simplex/face/topology.h>
 #include <vcg/complex/trimesh/base.h>

@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.47  2006/12/01 21:26:14  cignoni
+Corrected bug in the IsFFAdjacencyConsistent the Topology checking function.
+
 Revision 1.46  2006/12/01 08:12:30  cignoni
 Added a function for FF topology consistency check
 
@@ -183,7 +186,6 @@ Initial Release
 #include <stack>
 
 // VCG headers
-#include <vcg/simplex/face/face.h>
 #include <vcg/simplex/face/pos.h>
 #include <vcg/simplex/face/topology.h>
 #include <vcg/complex/trimesh/base.h>
