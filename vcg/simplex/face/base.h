@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.39  2006/07/12 12:14:31  zifnab1974
+changes for compilation on linux. Not sure about using either SphereOfTriangle or SphereOfTetra, please check.
+
 Revision 1.38  2006/07/06 12:45:08  ganovelli
 added SmallestEnclosingSphere
 
@@ -1251,11 +1254,11 @@ inline void Nexts( BaseFaceType *&f,int &z )
 namespace face
 {
 
-template <class MyVertex, class MyEdge, class MyFace>
-void ComputeNormal(FACE_TYPE<MyVertex,MyEdge,MyFace> &f) {	f.N() = vcg::Normal< FACE_TYPE<MyVertex,MyEdge,MyFace> >(f); }
+template <class FaceType>
+void ComputeNormal(FaceType &f) {	f.N() = vcg::Normal< FaceType >(f); }
 
-template <class MyVertex, class MyEdge, class MyFace>
-void ComputeNormalizedNormal(FACE_TYPE<MyVertex,MyEdge,MyFace> &f) {	f.N() = vcg::NormalizedNormal< FACE_TYPE<MyVertex,MyEdge,MyFace> >(f); }
+template <class FaceType>
+void ComputeNormalizedNormal(FaceType &f) {	f.N() = vcg::NormalizedNormal< FaceType >(f); }
 
 }
 //@}
