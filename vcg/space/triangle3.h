@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2006/10/17 06:51:33  fiorin
+In function Barycenter, replaced calls to (the inexistent) cP(i) with P(i)
+
 Revision 1.10  2006/10/10 09:33:47  cignoni
 added quality for triangle wrap
 
@@ -270,6 +273,12 @@ Point3<typename TriangleType::ScalarType> Normal(const TriangleType &t)
 {
 	return (( t.P(1) - t.P(0)) ^ (t.P(2) - t.P(0)));
 }
+template<class Point3Type>
+Point3Type Normal( Point3Type const &p0, Point3Type const & p1,  Point3Type const & p2)
+{
+	return (( p1 - p0) ^ (p2 - p0));
+}
+
 
 /// Like the above, it returns the normal to the plane passing through p0,p1,p2, but normalized.
 template<class TriangleType>
@@ -277,6 +286,13 @@ Point3<typename TriangleType::ScalarType> NormalizedNormal(const TriangleType &t
 {
 	return (( t.P(1) - t.P(0)) ^ (t.P(2) - t.P(0))).Normalize();
 }
+template<class Point3Type>
+Point3Type NormalizedNormal( Point3Type const &p0, Point3Type const & p1,  Point3Type const & p2)
+{
+	return (( p1 - p0) ^ (p2 - p0)).Normalize();
+}
+
+
 
 /// Return the Double of area of the triangle
 // NOTE the old Area function has been removed to intentionally 
