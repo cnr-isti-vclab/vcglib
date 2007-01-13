@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.40  2007/01/11 10:13:11  cignoni
+Rewrote the template of ComputeNormal functions to a more readable form.
+
 Revision 1.39  2006/07/12 12:14:31  zifnab1974
 changes for compilation on linux. Not sure about using either SphereOfTriangle or SphereOfTetra, please check.
 
@@ -1250,6 +1253,11 @@ inline void Nexts( BaseFaceType *&f,int &z )
 
 }; //end Class
 
+
+#ifndef __VCG_FACE_BASE_SINGLE
+#define __VCG_FACE_BASE_SINGLE
+// Note that while the whole file can be included more than once, this portion of the file MUST be included once
+
 /// Calculate the normal to the face, the value is store in the field _n of the face
 namespace face
 {
@@ -1260,10 +1268,11 @@ void ComputeNormal(FaceType &f) {	f.N() = vcg::Normal< FaceType >(f); }
 template <class FaceType>
 void ComputeNormalizedNormal(FaceType &f) {	f.N() = vcg::NormalizedNormal< FaceType >(f); }
 
-}
+} // end namespace face
 //@}
+#endif
 
-}	 // end namespace
+}	 // end namespace vcg
 
 
 #endif
