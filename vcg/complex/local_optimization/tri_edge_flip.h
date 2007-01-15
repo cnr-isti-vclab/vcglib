@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -23,6 +23,7 @@
 
 #include <vcg/complex/local_optimization.h>
 #include <vcg/simplex/face/topology.h>
+#include <vcg/space/point3.h>
 
 namespace vcg
 {
@@ -33,19 +34,22 @@ namespace vcg
 
 		/*!
 		*	This Class is specialization of LocalModification for the edge flip
-		*	It wraps the atomic operation EdgeFlip to be used in a optimizatin routine.
+		*	It wraps the atomic operation EdgeFlip to be used in a optimization routine.
 		* Note that it has knowledge of the heap of the class LocalOptimization because
 		* it is responsible of updating it after a flip has been performed
+		* This is the simplest edge flipping class. 
+		* It flips an edge only if two adjacent faces are coplanar and the 
+		* quality of the faces improves after the flip.
 		*/
 		template <class TRIMESH_TYPE, class MYTYPE>
-		class TriEdgeFlip : public LocalOptimization< TRIMESH_TYPE >::LocModType
+		class PlanarEdgeFlip : public LocalOptimization< TRIMESH_TYPE >::LocModType
 		{
 		protected:
 			typedef	typename TRIMESH_TYPE::FaceType				FaceType;
 			typedef typename TRIMESH_TYPE::FacePointer		FacePointer;
 			typedef typename TRIMESH_TYPE::FaceIterator		FaceIterator;
 			typedef	typename TRIMESH_TYPE::VertexType			VertexType;
-      typedef	typename TRIMESH_TYPE::VertexPointer	VertexPointer;
+			typedef	typename TRIMESH_TYPE::VertexPointer	VertexPointer;
 			typedef	typename TRIMESH_TYPE::ScalarType			ScalarType;
 			typedef	typename TRIMESH_TYPE::CoordType			CoordType;
 			typedef vcg::face::Pos<FaceType>							PosType;
@@ -79,38 +83,15 @@ namespace vcg
 
 		public:
 			/*!
-			*	static data to gather statistical information 
-			*	about the reasons of collapse failures
-			*/
-			struct FailStat 
-			{
-				static int &Volume()           {static int vol=0; return vol;}
-				static int &LinkConditionFace(){static int lkf=0; return lkf;}
-				static int &LinkConditionEdge(){static int lke=0; return lke;}
-				static int &LinkConditionVert(){static int lkv=0; return lkv;}
-				static int &OutOfDate()        {static int ofd=0; return ofd;}
-				static int &Border()           {static int bor=0; return bor;}
-				static void Init() 
-				{
-					Volume()           =0;
-					LinkConditionFace()=0;
-					LinkConditionEdge()=0;
-					LinkConditionVert()=0;
-					OutOfDate()        =0;
-					Border()           =0;
-				}
-			};
-
-			/*!
 			*	Default constructor
 			*/
-			inline TriEdgeFlip()
+			inline PlanarEdgeFlip()
 			{};
 
 			/*!
 			*	Constructor with <I>pos</I> type
 			*/
-      inline TriEdgeFlip(PosType pos, int mark)
+			inline PlanarEdgeFlip(PosType pos, int mark)
 			{
 				_pos = pos;
 				_localMark = mark;
@@ -118,10 +99,34 @@ namespace vcg
 			};
 
 			/*!
+			*	Copy Constructor 
 			*/
-			~TriEdgeFlip()
+			inline PlanarEdgeFlip(const PlanarEdgeFlip &par)
+			{
+				_pos = par.GetPos();
+				_localMark = par.GetMark();
+				_priority = par.Priority();
+			};
+
+
+			/*!
+			*/
+			~PlanarEdgeFlip()
 			{
 			};
+
+
+			/*!
+			* Parameter 
+			*/
+			static ScalarType &CoplanarAngleThresholdDeg() { 
+				static ScalarType _CoplanarAngleThresholdDeg = 0.01f;
+				return _CoplanarAngleThresholdDeg;
+			}
+
+			inline PosType GetPos()	{return _pos;}
+
+			inline int GetMark(){return _localMark;}
 
 			/*!
 			*	Return the LocalOptimization type
@@ -136,77 +141,69 @@ namespace vcg
 			*/
 			bool IsUpToDate()
 			{
-				VertexPointer v0 = _pos.V(0);
-				VertexPointer v1 = _pos.V(1);
+				int MostRecentVertexMark = _pos.V(0)->IMark();
+				MostRecentVertexMark = std::max(MostRecentVertexMark, _pos.V(1)->IMark());
+				MostRecentVertexMark = std::max(MostRecentVertexMark, _pos.V(2)->IMark());
 
-				if ((v0->IsD()) || (v1->IsD()) || _localMark < vcg::math::Min< int >( v0->IMark(), v1->IMark()))
-				{
-					++FailStat::OutOfDate();
-					return false;
-				}
-				return true;
+				return ( _localMark >=  MostRecentVertexMark );
 			};
 
 			/*!
-			* Check if this flipping operation can be performed
+			* 
+			Check if this flipping operation can be performed.
+			It is a topological and geometrical check. 
 			*/
-			bool IsFeasible()
+			virtual bool IsFeasible()
 			{
-				return vcg::face::CheckFlipEdge(*_pos.f, _pos.z);
+				if( math::ToDeg( Angle( _pos.FFlip()->cN() , _pos.F()->cN() ) ) >  CoplanarAngleThresholdDeg() ) return false;
+				return  vcg::face::CheckFlipEdge(*_pos.f, _pos.z);
 			};
+
+
 
 			/*!
 			*	Compute the priority of this optimization
 			*/
-			ScalarType ComputePriority()
+			/*
+			0  
+			/|\
+			/ | \
+			1  |  3 
+			\ | /
+			\|/
+			2
+			*/			virtual ScalarType ComputePriority()
 			{
-				FacePointer f = _pos.f;
-				int z					= _pos.z;
 
-				const ScalarType RatioThr = 20;
-				const ScalarType AngleThr = (ScalarType)(M_PI/3600.0);
-				
-				int z1 = (*f).FFi(z);
-				FacePointer f1 = (*f).FFp(z);
-				VertexType *vx = (*f).FFp(z)->V2(z1); // ... ->V2((*f).FFi(z));
-				CoordType &n0 = (*f).N();
-				CoordType &n1 = (*f1).N();
-				CoordType &n0d = (*f).FFp1(z)->N();
-				CoordType &n0u = (*f).FFp2(z)->N();
-				CoordType &n1d = (*f1).FFp1(z1)->N();
-				CoordType &n1u = (*f1).FFp2(z1)->N();
+				CoordType v0,v1,v2,v3;
+				PosType app   = _pos;
 
-				ScalarType a01 = AngleN((*f).N(),(*f1).N());
-				ScalarType e01		= vcg::Distance((*f).V(z)->cP(), (*f).V1(z)->cP() );
-				ScalarType e01f	= vcg::Distance((*f).V2(z)->cP(), vx->cP() );
+				v0 = app.v->P();
+				app.FlipE(); app.FlipV();
+				v1 = app.v->P();
+				app.FlipE(); app.FlipV();
+				v2 = app.v->P();	
+				app.FlipE(); app.FlipF(); app.FlipE(); app.FlipV();
+				v3 = app.v->P();
 
-				//Compute Edge Lenght Note that border edges are lenght 0
-				ScalarType e0d = (vcg::face::IsBorder(*f, 1)) ? 0 : Distance((*f).V1(z)->cP(), (*f).V2(z)->cP() ) ;
-				ScalarType e0u = (vcg::face::IsBorder(*f, 2)) ? 0 : Distance((*f).V(z)->cP() , (*f).V2(z)->cP() );
-				ScalarType e1d = (vcg::face::IsBorder(*f1, (z1+1)%3)) ? 0 : Distance((*f).V1(z)->cP(), vx->cP() );
-				ScalarType e1u = (vcg::face::IsBorder(*f1, (z1+2)%3)) ? 0 : Distance((*f).V(z)->cP() , vx->cP() ); 
+				ScalarType Qa = Quality(v0,v1,v2);
+				ScalarType Qb = Quality(v0,v2,v3);
 
-				CoordType  n01u = ((vx->cP() - (*f).V(z)->cP())  ^ ((*f).V2(z)->cP() - (*f).V(z)->cP())).Normalize();
-				CoordType  n01d = (((*f).V1(z)->cP() - vx->cP()) ^ ((*f).V2(z)->cP() - vx->cP())).Normalize();
-				ScalarType a01f = vcg::AngleN(n01u,n01d); 
-				ScalarType af0u = vcg::AngleN(n01u,n0u);
-				ScalarType af0d = vcg::AngleN(n01d,n0d);
-				ScalarType af1u = vcg::AngleN(n01u,n1u);
-				ScalarType af1d = vcg::AngleN(n01d,n1d);
+				ScalarType QaAfter = Quality(v0,v1,v3);
+				ScalarType QbAfter = Quality(v1,v2,v3);
 
-				e01 = e01f = e0d = e1d = e0u = e1u = 1; //pezza per pesare solo gli angoli!!!
-
-				ScalarType OldCurvature = math::Max<ScalarType>(e01*a01, math::Max<ScalarType>(e0u*vcg::AngleN(n0,n0u), math::Max<ScalarType>( e0d*vcg::AngleN(n0,n0d), math::Max<ScalarType>(e1u*vcg::AngleN(n1,n1u) , e1d*vcg::AngleN(n1,n1d)))));
-				ScalarType NewCurvature = math::Max<ScalarType>(e01f*a01f, math::Max<ScalarType>(e0u*AngleN(n01u,n0u), math::Max<ScalarType>( e0d*vcg::AngleN(n01d,n0d), math::Max<ScalarType>(e1u*vcg::AngleN(n01u,n1u), e1d*vcg::AngleN(n01d,n1d)))));
-
-				_priority = (NewCurvature+AngleThr) - OldCurvature;
+				// higher the quality better the triangle.
+				// swaps that improve the worst quality more are performed before 
+				// (e.g. they have an higher priority)
+				_priority = std::min(QaAfter,QbAfter) - std::min(Qa,Qb) ;
+				_priority *=-1;
 				return _priority;
 			};
 
 			/*!
 			* Return the priority of this optimization
 			*/
-			ScalarType Priority() const
+			virtual ScalarType Priority() const
 			{
 				return _priority;
 			};
@@ -216,7 +213,10 @@ namespace vcg
 			*/
 			void Execute(TRIMESH_TYPE &m)
 			{
-				vcg::face::FlipEdge(*_pos.f, _pos.z);
+
+				int z = _pos.z;
+
+				vcg::face::FlipEdge(*_pos.f, z);
 			};
 
 			/*!
@@ -230,7 +230,7 @@ namespace vcg
 
 			/*!
 			*/
-			static void Init(TRIMESH_TYPE &mesh, HeapType &heap)
+			static void Init(TRIMESH_TYPE &mesh, HeapType &heap , bool Selected = false)
 			{
 				heap.clear();
 				FaceIterator f_iter;
@@ -238,12 +238,17 @@ namespace vcg
 				{
 					if (! (*f_iter).IsD() )
 					{
-						for (unsigned int i=0; i<3; i++)
+						if(!(Selected && !(*f_iter).IsS()))
 						{
-							VertexPointer v0 = (*f_iter).V(i);
-							VertexPointer v1 = (*f_iter).V((i+1)%3);
-							if (v1-v0 > 0)
-								heap.push_back( HeapElem( new MYTYPE(PosType(&*f_iter, i), mesh.IMark()) ) );
+							for (unsigned int i=0; i<3; i++)					
+							{
+								VertexPointer v0 = (*f_iter).V0(i);
+								VertexPointer v1 = (*f_iter).V1(i);
+								if (v1-v0 > 0)
+								{
+									heap.push_back( HeapElem( new MYTYPE(PosType(&*f_iter, i), mesh.IMark() )) );	
+								}
+							} //endif
 						} // endfor
 					} // endif
 				} //endfor
@@ -256,28 +261,148 @@ namespace vcg
 				GlobalMark()++;
 				PosType pos(_pos.f, _pos.z);
 				pos.FlipF();
-				
-				_pos.f->V1(_pos.z)->IMark() = GlobalMark();
-				_pos.f->V2(_pos.z)->IMark() = GlobalMark();
-				pos.f->V1(pos.z)->IMark() = GlobalMark();
-				pos.f->V2(pos.z)->IMark() = GlobalMark();
 
-				
-				if (_pos.f->V2(_pos.z) - _pos.f->V1(_pos.z) > 0)
-					heap.push_back( HeapElem( new MYTYPE( PosType(_pos.f, (_pos.z+1)%3, _pos.f->V1(_pos.z)), GlobalMark() ) ) );
-				
-				if (_pos.f->V(_pos.z) - _pos.f->V2(_pos.z) >0 )
-					heap.push_back( HeapElem( new MYTYPE( PosType(_pos.f, (_pos.z+2)%3, _pos.f->V2(_pos.z)), GlobalMark() ) ) );
+				_pos.V(0)->IMark() = GlobalMark();
+				_pos.V(1)->IMark() = GlobalMark();
+				_pos.V(2)->IMark() = GlobalMark();
+				pos.V(2)->IMark() = GlobalMark();
 
-				if (pos.f->V2(pos.z) - pos.f->V1(pos.z) > 0)
-					heap.push_back( HeapElem( new MYTYPE( PosType(pos.f, (pos.z+1)%3, pos.f->V1(pos.z)), GlobalMark() ) ) );
+				PosType poss(_pos.f, _pos.z);
+				poss.FlipE();
+				if(!poss.IsBorder())
+				{
+					heap.push_back( HeapElem( new MYTYPE( PosType(poss.f, poss.z), GlobalMark() ) ) );
+				}
 
-				if (pos.f->V(pos.z) - pos.f->V2(pos.z) > 0)
-					heap.push_back( HeapElem( new MYTYPE( PosType(pos.f, (pos.z+2)%3, pos.f->V2(pos.z)), GlobalMark() ) ) );
+				poss.FlipE(); poss.FlipV(); poss.FlipE();
+				if(!poss.IsBorder() )
+				{
+					heap.push_back( HeapElem( new MYTYPE( PosType(poss.f, poss.z), GlobalMark() ) ) );
+				}
+
+				pos.FlipE();
+				if(!poss.IsBorder())
+				{
+					heap.push_back( HeapElem( new MYTYPE( PosType(pos.f, pos.z), GlobalMark() ) ) );
+				}
+
+				pos.FlipE(); pos.FlipV(); pos.FlipE();
+				if(!poss.IsBorder())
+				{
+					heap.push_back( HeapElem( new MYTYPE( PosType(pos.f, pos.z), GlobalMark() ) ) );
+				}
 
 				std::push_heap(heap.begin(),heap.end());
 			};
-		}; // end of TriEdgeFlip class
+		}; // end of PlanarEdgeFlip class
+
+
+		template <class TRIMESH_TYPE, class MYTYPE>
+		class TriEdgeFlip : public PlanarEdgeFlip<TRIMESH_TYPE, MYTYPE>
+		{
+		public:
+			/*!
+			*	Constructor with <I>pos</I> type
+			*/
+			inline TriEdgeFlip(const PosType pos, int mark) //: PlanarEdgeFlip<TRIMESH_TYPE,MYTYPE>( pos, mark)
+			{
+				_pos = pos;
+				_localMark = mark;
+				_priority = ComputePriority();
+			};
+
+			/*!
+			*	Copy Constructor 
+			*/
+			inline TriEdgeFlip(const TriEdgeFlip &par)
+			{
+				_pos = par.GetPos();
+				_localMark = par.GetMark();
+				_priority = par.Priority();
+			};
+
+			inline TriEdgeFlip(const PlanarEdgeFlip &par)
+			{
+				_pos = par.GetPos();
+				_localMark = par.GetMark();
+				_priority = ComputePriority();
+			};
+
+
+			//only topology check 
+			bool IsFeasible()
+			{
+				return  vcg::face::CheckFlipEdge(*_pos.f, _pos.z);
+			};
+
+
+			ScalarType ComputePriority()
+			{
+				/*
+				0  
+       /|\
+      / | \
+     1  |  3 
+      \ | /
+       \|/
+        2
+			 */
+				CoordType v0,v1,v2,v3;
+				PosType app   = _pos;
+
+				v0 = app.v->P();
+				app.FlipE(); app.FlipV();
+				v1 = app.v->P();
+				app.FlipE(); app.FlipV();
+				v2 = app.v->P();	
+				app.FlipE(); app.FlipF(); app.FlipE(); app.FlipV();
+				v3 = app.v->P();
+
+
+				CoordType e01 = v0-v1; 
+				CoordType e12 = v1-v2;
+				CoordType e20 = v2-v0;
+				CoordType e01Norm = e01; e01Norm.Normalize(); 
+				CoordType e12Norm = e12; e12Norm.Normalize(); 
+				CoordType e20Norm = e20; e20Norm.Normalize(); 
+
+				// The trilinear coordinates of the circumcenter are:  cosA:cosB:cosC,
+
+				ScalarType CosV0=-e01Norm*e20Norm;
+				ScalarType CosV1=e01Norm*-e12Norm;
+				ScalarType CosV2=e12Norm*-e20Norm;
+
+				// to swithc frm trilinear coordinates to barycentric coords it is necessary to multply each coord for the lenght of the opposite side
+
+				ScalarType C0 = CosV0 * Distance(v2,v1);
+				ScalarType C1 = CosV1 * Distance(v2,v0);
+				ScalarType C2 = CosV2 * Distance(v0,v1);
+				ScalarType SumC=C0+C1+C2;
+				if(SumC==0) return 20;
+
+
+				CoordType CircumCenter= v0*C0/SumC + v1*C1/SumC + v2*C2/SumC;
+
+				ScalarType Radius= Distance(v0,CircumCenter);
+				ScalarType Radius1= Distance(v1,CircumCenter);
+				ScalarType Radius2= Distance(v2,CircumCenter);
+
+				assert( fabs(Radius-Radius1) < 0.1 );
+				assert( fabs(Radius-Radius2) < 0.1 );
+
+				///Return the difference of radius and the distance of v3 and the CircumCenter
+				_priority =  (Radius - Distance(v3,CircumCenter));
+
+
+				_priority *=-1;
+
+
+				return _priority;
+			}	
+
+
+		};
+
 
 		/*! @} */
 	}; // end of namespace tri
