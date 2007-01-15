@@ -6,6 +6,7 @@
 #include<vcg/simplex/face/topology.h>
 #include<vcg/complex/trimesh/base.h>
 #include <vcg/complex/local_optimization.h>
+//#include <relaxation.h>
 #include<vcg/complex/local_optimization/tri_edge_flip.h>
 
 
@@ -32,21 +33,28 @@ class MyEdge;    // dummy prototype never used
 class MyFace;
 class MyVertex;
 
-class MyVertex  : public VertexSimp2< MyVertex, MyEdge, MyFace, vert::Coord3f, vert::BitFlags, vert::Normal3f, vert::Mark >{};
-class MyFace    : public FaceSimp2  < MyVertex, MyEdge, MyFace, face::VertexRef,face::FFAdj, face::Mark, face::BitFlags, face::Normal3f > {};
+class MyVertex  : public VertexSimp2< MyVertex, MyEdge, MyFace, vert::Coord3f, vert::BitFlags, vert::Normal3f, vert::Mark, vert::Color4b >{};
+class MyFace    : public FaceSimp2  < MyVertex, MyEdge, MyFace, face::VertexRef,face::FFAdj, face::Mark, face::BitFlags, face::Normal3f> {};
 
 class MyMesh : public tri::TriMesh< vector<MyVertex>, vector<MyFace > >{};
 
 
 
+/*
+//for coplanar mesh
+class MyTriEdgeFlip: public vcg::tri::PlanarEdgeFlip< MyMesh, MyTriEdgeFlip > {
+						public:
+						typedef  vcg::tri::PlanarEdgeFlip< MyMesh,  MyTriEdgeFlip > TEF;
+            inline MyTriEdgeFlip(  const TEF::PosType &p, int i) :TEF(p,i){}
+};
+/*/
+//Delaunay
 class MyTriEdgeFlip: public vcg::tri::TriEdgeFlip< MyMesh, MyTriEdgeFlip > {
 						public:
 						typedef  vcg::tri::TriEdgeFlip< MyMesh,  MyTriEdgeFlip > TEF;
-            //typedef  MyMesh::VertexType::PosType PosType;
             inline MyTriEdgeFlip(  const TEF::PosType &p, int i) :TEF(p,i){}
 };
-
-
+//*/
 bool callback(int percent, const char *str) {
   cout << "str: " << str << " " << percent << "%\r";
   return true;
@@ -91,6 +99,7 @@ int main(int argc,char ** argv){
 	tri::UpdateNormals<MyMesh>::PerVertexPerFace(m);
 	tri::UpdateFlags<MyMesh>::FaceBorderFromFF(m);
   assert(tri::Clean<MyMesh>::IsFFAdjacencyConsistent(m));
+	
 
   tri::Hole<MyMesh> holeFiller;
 	switch(algorithm)
@@ -100,17 +109,16 @@ int main(int argc,char ** argv){
   case 3: 		tri::Hole<MyMesh>::EarCuttingIntersectionFill<tri::SelfIntersectionEar< MyMesh> >(m,holeSize,false);		break;
   case 4: 		tri::Hole<MyMesh>::MinimumWeightFill(m, false);		                                                      break;
 	}
-  printf("\nCompleted. Saving....\n");
+  printf("\nCompleted. Saving...\n");
   assert(tri::Clean<MyMesh>::IsFFAdjacencyConsistent(m));
 	tri::io::ExporterPLY<MyMesh>::Save(m,argv[4],false);
-  printf("\nCompleted. flipping....\n");
+  printf("\nStart flipping...\n");
 
-  /* Does not Work!!! (but it compiles :) ) */
   vcg::LocalOptimization<MyMesh> FlippingSession(m);
-	FlippingSession.SetTargetOperations(100);
+	FlippingSession.SetTargetMetric(-0.000000000001f);//
   FlippingSession.Init<MyTriEdgeFlip >();
   FlippingSession.DoOptimization();
-  tri::io::ExporterPLY<MyMesh>::Save(m,"out2.ply",false);
+  tri::io::ExporterPLY<MyMesh>::Save(m,"out2.ply",vcg::tri::io::Mask::IOM_VERTCOLOR);
   
 	return 0;
 }
