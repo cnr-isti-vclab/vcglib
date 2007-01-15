@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2006/08/23 15:40:57  marfr960
+*** empty log message ***
+
 Revision 1.10  2006/02/13 13:15:52  cignoni
 Added Scale and Translate methods.
 Added many drawing hints and raised the default num. of steps when drawing circles.
@@ -235,6 +238,9 @@ namespace vcg {
 		  TRACK_SCALE = 13
     };
 
+    // loads/stores current status from/to ascii stings
+    void ToAscii(char * st);
+    bool SetFromAscii(char * st);
 	
     //protected:
     View<float> camera;

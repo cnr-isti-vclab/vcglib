@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2006/07/26 13:54:45  cignoni
+Reversed the direction of wheel scaling and added middle mouse panning
+
 Revision 1.15  2006/02/13 13:15:52  cignoni
 Added Scale and Translate methods.
 Added many drawing hints and raised the default num. of steps when drawing circles.
@@ -202,6 +205,21 @@ void Trackball::DrawPlane() {
     glVertex3f(+u,	+w, 0);
   }
   glEnd();
+}
+
+void Trackball::ToAscii(char* result){
+  float * f = (float*) &track;
+  sprintf(result, "trackball(%f,%f,%f,%f,%f,%f,%f,%f,%f)", 
+                  f[0],f[1],f[2],f[3],f[4],f[5],f[6],f[7],f[8] );
+}
+
+bool Trackball::SetFromAscii(char * st){
+  float * f = (float*) &track;
+  int res=  sscanf(st, "trackball(%f,%f,%f,%f,%f,%f,%f,%f,%f)", 
+                  f+0,f+1,f+2,f+3,f+4,f+5,f+6,f+7,f+8 );
+                  
+  return res=9;
+
 }
 
 void Trackball::DrawPlaneHandle() {
