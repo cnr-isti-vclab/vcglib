@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2006/10/27 13:26:49  ganovelli
+changed   &*vert.end() to !vert.empty()  -> &vert.back() to comply vs2005 compiler
+
 Revision 1.12  2006/06/18 20:42:01  cignoni
 removed wrong fn setting
 
@@ -78,7 +81,7 @@ first working version
 #include<vcg/complex/trimesh/update/topology.h>
 #include<wrap/callback.h>
 #include <vcg/complex/trimesh/base.h>
-
+#include <vcg/space/triangle3.h>
 
 namespace vcg{
 /* Tabella che codifica le modalita' di split a seconda di quali dei tre edge sono da splittare 
@@ -800,6 +803,89 @@ class EdgeSplSphere
 		return true;
 	}
 };
+
+/*!
+* Triangle split
+*/
+
+template<class TRIMESH_TYPE>
+struct CenterPoint : public std::unary_function<typename TRIMESH_TYPE::FacePointer, typename TRIMESH_TYPE::CoordType>
+{
+	typename TRIMESH_TYPE::CoordType operator()(typename TRIMESH_TYPE::FacePointer f){
+		return vcg::Barycenter<typename TRIMESH_TYPE::FaceType>(*f);
+	}
+};
+
+template<class TRIMESH_TYPE, class CenterPoint>
+void TriSplit(typename TRIMESH_TYPE::FacePointer f,
+							typename TRIMESH_TYPE::FacePointer f1,typename TRIMESH_TYPE::FacePointer f2,
+							typename TRIMESH_TYPE::VertexPointer vB, CenterPoint	Center)
+{
+	vB->P() = Center(f);
+
+	//i tre vertici della faccia da dividere
+	TRIMESH_TYPE::VertexType* V0,*V1,*V2;
+	V0 = f->V(0);
+	V1 = f->V(1);
+	V2 = f->V(2);
+
+	//risistemo la faccia di partenza
+	(*f).V(2) = &(*vB);
+	//Faccia nuova #1
+	(*f1).V(0) = &(*vB);
+	(*f1).V(1) = V1;
+	(*f1).V(2) = V2;
+	//Faccia nuova #2
+	(*f2).V(0) = V0;
+	(*f2).V(1) = &(*vB);
+	(*f2).V(2) = V2;
+
+	if(f->HasFFAdjacency())
+	{
+		//adiacenza delle facce adiacenti a quelle aggiunte
+		f->FFp(1)->FFp(f->FFi(1)) = f1;
+		f->FFp(2)->FFp(f->FFi(2)) = f2;
+
+		//adiacenza ff
+		TRIMESH_TYPE::FacePointer FF0,FF1,FF2;
+		FF0 = f->FFp(0);
+		FF1 = f->FFp(1);
+		FF2 = f->FFp(2);
+
+		//Indici di adiacenza ff
+		char FFi0,FFi1,FFi2;
+		FFi0 = f->FFi(0);
+		FFi1 = f->FFi(1);
+		FFi2 = f->FFi(2);
+
+		//adiacenza della faccia di partenza
+		(*f).FFp(1) = &(*f1);
+		(*f).FFi(1) = 0;
+		(*f).FFp(2) = &(*f2);
+		(*f).FFi(2) = 0;
+
+		//adiacenza della faccia #1
+		(*f1).FFp(0) = f;
+		(*f1).FFi(0) = 1;
+
+		(*f1).FFp(1) = FF1;
+		(*f1).FFi(1) = FFi1;
+
+		(*f1).FFp(2) = &(*f2);
+		(*f1).FFi(2) = 1;
+
+		//adiacenza della faccia #2
+		(*f2).FFp(0) = f;
+		(*f2).FFi(0) = 2;
+
+		(*f2).FFp(1) = &(*f1);
+		(*f2).FFi(1) = 2;
+
+		(*f2).FFp(2) = FF2;
+		(*f2).FFi(2) = FFi2;
+	}
+}
+
 
 } // namespace vcg
 
