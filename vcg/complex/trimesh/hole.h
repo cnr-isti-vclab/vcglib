@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.30  2007/01/10 12:07:54  giec
+Bugfixed ComputeDihedralAngle function
+
 Revision 1.29  2006/12/27 15:09:52  giec
 Bug fix on ComputeDihedralAngle function
 
@@ -362,14 +365,6 @@ namespace vcg {
 
 			SelfIntersectionEar(){}
       SelfIntersectionEar(const PosType & ep):MinimumWeightEar<MESH>(ep){}
-			//{
-			//	this->e0=ep;
-			//	assert(this->e0.IsBorder());
-			//	this->e1=this->e0;
-			//	this->e1.NextB();
-			//	this->ComputeQuality();
-			//	this->ComputeAngle();
-			//}
 
 			virtual bool Close(PosType &np0, PosType &np1, FacePointer f)
 			{
@@ -493,8 +488,6 @@ public:
       }
 		};
 
-
-
 template<class EAR>
 	static void FillHoleEar(MESH &m, Info &h ,int UBIT, std::vector<FacePointer *> &app,std::vector<FaceType > *vf =0)
 		{
@@ -574,10 +567,7 @@ template<class EAR>
 	  VertexType::DeleteBitFlag(nmBit); // non manifoldness bit
 	}
 
-
-
-
-template<class EAR>//!!!
+	template<class EAR>
 	static void EarCuttingFill(MESH &m, int sizeHole,bool Selected = false, CallBackPos *cb=0)
 		{
 			std::vector< Info > vinfo;
@@ -607,8 +597,6 @@ template<class EAR>//!!!
 					(*fi).ClearUserBit(UBIT);
 			}
 		}
-
-
 
 template<class EAR>
 	static void EarCuttingIntersectionFill(MESH &m, int sizeHole,bool Selected = false)
@@ -830,14 +818,14 @@ template<class EAR>
 			return Weight(angle, area);
 		}
 
-	static std::vector<VertexPointer > calculateMinimumWeightTriangulation(MESH &m, std::vector<PosType > vv )
+	static void calculateMinimumWeightTriangulation(MESH &m, FaceIterator f,std::vector<PosType > vv )
 		{
 			std::vector< std::vector< Weight > > w; //matrice dei pesi minimali di ogni orecchio preso in conzideraione
 			std::vector< std::vector< int    > > vi;//memorizza l'indice del terzo vertice del triangolo
 
 			//hole size
 			int nv = vv.size();
-
+			
 			w.clear();
 			w.resize( nv, std::vector<Weight>( nv, Weight() ) );
 
@@ -878,17 +866,14 @@ template<class EAR>
 			//Triangulate
 			int i, j;
 			i=0; j=nv-1;
-			std::vector<VertexPointer > vf;
-
-			vf.clear();
-
-			triangulate(vf, i, j, vi, vv);
-			return vf;
+			
+			PosType PF = vv[i];
+			triangulate(m,f, i, j, vi, vv,PF);
 		}
 
 
-	static void triangulate(std::vector<VertexPointer > &m,int i, int j, std::vector< std::vector<int> > vi, 
-			std::vector<PosType > vv)
+	static void triangulate(MESH &m, FaceIterator f,int i, int j,
+                          std::vector< std::vector<int> > vi, std::vector<PosType > vv, PosType &PosFrom)
 		{
 			if(i + 1 == j){return;}
 			if(i==j)return;
@@ -897,15 +882,50 @@ template<class EAR>
 
 			if(k == -1)	return;
 
-			m.push_back(vv[i].v);
-			m.push_back(vv[k].v);
-			m.push_back(vv[j].v);
+			//Setto i vertici
+			f->V(0) = vv[i].v;
+			f->V(1) = vv[k].v;
+			f->V(2) = vv[j].v;
+			
+			if(f->HasFFAdjacency())
+			{
+				
+				f->FFp(2) = PosFrom.f;
+				f->FFi(2) = PosFrom.z;
+				PosFrom.f->FFp(PosFrom.z) = &(*f);
+				PosFrom.f->FFi(PosFrom.z) = 2;
 
-			triangulate(m, i, k, vi, vv);
-			triangulate(m, k, j, vi, vv);
+				if(i+1 == k)
+				{
+					f->FFp(0) = vv[k].f;
+					f->FFi(0) = vv[k].z;
+					vv[k].f->FFp(vv[k].z) = &(*f);
+					vv[k].f->FFi(vv[k].z) = 0;
+				}
+
+				if(k+1 == j)
+				{
+					f->FFp(1) = vv[j].f;
+					f->FFi(1) = vv[j].z;
+					vv[j].f->FFp(vv[j].z) = &(*f);
+					vv[j].f->FFi(vv[j].z) = 1;
+				}
+			}
+			
+			PosFrom.f = &(*f);
+			PosFrom.v=f->V(0);
+			PosFrom.z=0;
+			f++;
+			triangulate(m,f,i,k,vi,vv, PosFrom);
+			f--;
+			PosFrom.f = &(*f);
+			PosFrom.v=f->V(1);
+			PosFrom.z=1;
+			f++;
+			triangulate(m,f,k,j,vi,vv,PosFrom);
 		}
 
-  static void MinimumWeightFill(MESH &m, bool Selected)
+  static void MinimumWeightFill(MESH &m, int holeSize, bool Selected)
 		{
 			FaceIterator fi;
 			std::vector<PosType > vvi;
@@ -936,30 +956,28 @@ template<class EAR>
 				app.clear();
 				vfp.clear();
 
-				for(ithn = vvi.begin(); ithn!= vvi.end(); ++ithn)
-					vfp.push_back(&(ithn->f));
-
 				ps = *ith;
 				getBoundHole(ps,app);
 
-				vf = calculateMinimumWeightTriangulation(m, app);
-
-				if(vf.size() == 0)continue;//non e' stata trovata la triangolazione
-
-				FaceIterator f = tri::Allocator<MESH>::AddFaces(m, app.size()-2, vfp);
-
-				for(itf = vf.begin();itf != vf.end(); )
+				if(app.size() <= holeSize)
 				{
-					(*f).V(0) = (*itf++);
-					(*f).V(1) = (*itf++);
-					(*f).V(2) = (*itf++);
-					++f;
-				}
+					std::vector<PosType >::iterator itP;
+					std::vector<FacePointer *> vfp;
 
+					for(ithn = vvi.begin(); ithn!= vvi.end(); ++ithn)
+						vfp.push_back(&(ithn->f));
+
+					for(itP = app.begin (); itP != app.end ();++itP)
+						vfp.push_back( &(*itP).f );
+
+					//aggiungo le facce
+					FaceIterator f = tri::Allocator<MESH>::AddFaces(m, (app.size()-2) , vfp);
+
+					calculateMinimumWeightTriangulation(m,f, app);
+				}
 			}		
 
 		}
-
 
 	static void getBoundHole (PosType sp,std::vector<PosType >&ret)
 		{
