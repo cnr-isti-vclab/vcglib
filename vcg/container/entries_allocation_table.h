@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2006/12/03 18:01:01  ganovelli
+versione compliant vs2005
+
 Revision 1.5  2005/07/06 15:28:11  ganovelli
 aggiornamento di alcuni path
 
@@ -44,10 +47,10 @@ namespace vcg {
 // EntryCATBase: base class for the entry of the allocation table
 // templated over the container type
 template <class STL_CONT>
-struct EntryCATBase{
-
+class EntryCATBase{
+public:
 EntryCATBase(STL_CONT & _c):c(_c){};
-typename typename typename STL_CONT::value_type * Start() const;
+typename STL_CONT::value_type * Start() const;
 virtual bool Empty(){return true;};
 const STL_CONT *  C();
 virtual void Push_back(const int &){};
@@ -83,7 +86,7 @@ const bool EntryCATBase<STL_CONT>:: operator < (const EntryCATBase<STL_CONT> & o
 }
 
 template <class STL_CONT>
- typename typename STL_CONT::value_type  * EntryCATBase<STL_CONT>::Start()const {
+ typename STL_CONT::value_type  * EntryCATBase<STL_CONT>::Start()const {
 	return  c.Pointer2begin();
 	}
 
@@ -106,20 +109,20 @@ virtual void Resize(const int & n)=0;
 template <class ATTR_TYPE>
 struct Wrap: public WrapBase,std::vector<ATTR_TYPE>{
 	virtual void Push_back(const int & n){for (int i = 0 ; i < n;	++i) push_back(		ATTR_TYPE());}	
-	virtual void Reserve(const int & n){reserve(n);}
-	virtual void Resize(const int & n){resize(n);}	
+	virtual void Reserve(const int & n){this->reserve(n);}
+	virtual void Resize(const int & n){this->resize(n);}	
 	};
 //-------------------------------------------------------------------------------------------
 
 // -----------------------------------------------------------------------------------------
 // EntryCATMulti: entry type for multiple user data
 template <class STL_CONT>
-struct EntryCATMulti: public EntryCATBase<STL_CONT>{
-
+class EntryCATMulti: public EntryCATBase<STL_CONT>{
+public:
 EntryCATMulti(STL_CONT & _c) : EntryCATBase<STL_CONT>(_c){};
 std::list<WrapBase * > & Data(){return data;}
 void push_back(const int & n ){
-	std::list< void * >::iterator ite;
+	std::list<WrapBase *  >::iterator ite;
 	for(ite = data.begin(); ite != data.end(); ++ite)
 		(*ite)->Push_back(n);
 	}
@@ -148,11 +151,11 @@ template <class STL_CONT, class ATTR_TYPE>
 class TempData{
 public:
 	TempData(std::vector<ATTR_TYPE>  *d):item(d){};
-		typedef typename ATTR_TYPE attr_type;
+		typedef ATTR_TYPE attr_type;
 
 		std::vector<ATTR_TYPE>  * Item(){return item;};
 		std::vector<ATTR_TYPE>  * item;
-		ATTR_TYPE & operator [](typename typename STL_CONT::value_type * v)
+		ATTR_TYPE & operator []( typename STL_CONT::value_type * v)
 			{
 				int pos = CATEntry<STL_CONT, EntryCATMulti<STL_CONT> >::Ord(v);
 				return (*item)[pos];
