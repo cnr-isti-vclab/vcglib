@@ -107,7 +107,7 @@ int main(int argc,char ** argv){
   case 1:			tri::Hole<MyMesh>::EarCuttingFill<tri::TrivialEar<MyMesh> >(m,holeSize,false);                	        break;
   case 2:   	tri::Hole<MyMesh>::EarCuttingFill<tri::MinimumWeightEar< MyMesh> >(m,holeSize,false,callback);          break;
   case 3: 		tri::Hole<MyMesh>::EarCuttingIntersectionFill<tri::SelfIntersectionEar< MyMesh> >(m,holeSize,false);		break;
-  case 4: 		tri::Hole<MyMesh>::MinimumWeightFill(m, false);		                                                      break;
+  case 4: 		tri::Hole<MyMesh>::MinimumWeightFill(m,holeSize, false);                                                break;
 	}
   printf("\nCompleted. Saving...\n");
   assert(tri::Clean<MyMesh>::IsFFAdjacencyConsistent(m));
