@@ -109,9 +109,9 @@ private:
 			{
 				_x_cs[index] = (VertexIndex) _mesh->vert.size();
 				pos = _x_cs[index];
-        Allocator<MeshType>::AddVertices( *_mesh, 1 );
+                Allocator<MeshType>::AddVertices( *_mesh, 1 );
 				v = &_mesh->vert[pos];
-				_volume->GetXIntercept<VertexPointer>(p1, p2, v, _thr);
+				_volume->GetXIntercept(p1, p2, v, _thr);
 				return;
 			}
 		}
