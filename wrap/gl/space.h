@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/10/13 08:32:26  cignoni
+Added glscale(scalar) and corrected bug in glscale(point2)
+
 Revision 1.6  2005/06/30 10:17:04  ganovelli
 added draw plane
 
@@ -63,11 +66,11 @@ namespace vcg {
 	inline void glScale(float const & p){ glScalef(p,p,p);}
 	inline void glScale(double const & p){ glScaled(p,p,p);}
 
-	inline void glVertex(Point2<int> const & p)   { glVertex2iv(p.V());}
+	inline void glVertex(Point2<int> const & p)   { glVertex2iv((const GLint*)p.V());}
 	inline void glVertex(Point2<short> const & p) { glVertex2sv(p.V());}
 	inline void glVertex(Point2<float> const & p) { glVertex2fv(p.V());}
 	inline void glVertex(Point2<double> const & p){ glVertex2dv(p.V());}
-	inline void glTexCoord(Point2<int> const & p)   { glTexCoord2iv(p.V());}
+	inline void glTexCoord(Point2<int> const & p)   { glTexCoord2iv((const GLint*)p.V());}
 	inline void glTexCoord(Point2<short> const & p) { glTexCoord2sv(p.V());}
 	inline void glTexCoord(Point2<float> const & p) { glTexCoord2fv(p.V());}
 	inline void glTexCoord(Point2<double> const & p){ glTexCoord2dv(p.V());}
@@ -76,15 +79,15 @@ namespace vcg {
 	inline void glScale(Point2<float> const & p) { glScalef(p[0],p[1],1.0);}
 	inline void glScale(Point2<double> const & p){ glScaled(p[0],p[1],1.0);}
 
-  inline void glVertex(Point3<int> const & p)   { glVertex3iv(p.V());}
+  inline void glVertex(Point3<int> const & p)   { glVertex3iv((const GLint*)p.V());}
 	inline void glVertex(Point3<short> const & p) { glVertex3sv(p.V());}
 	inline void glVertex(Point3<float> const & p) { glVertex3fv(p.V());}
 	inline void glVertex(Point3<double> const & p){ glVertex3dv(p.V());}
-	inline void glNormal(Point3<int> const & p)   { glNormal3iv(p.V());}
+	inline void glNormal(Point3<int> const & p)   { glNormal3iv((const GLint*)p.V());}
 	inline void glNormal(Point3<short> const & p) { glNormal3sv(p.V());}
 	inline void glNormal(Point3<float> const & p) { glNormal3fv(p.V());}
 	inline void glNormal(Point3<double> const & p){ glNormal3dv(p.V());}
-	inline void glTexCoord(Point3<int> const & p)   { glTexCoord3iv(p.V());}
+	inline void glTexCoord(Point3<int> const & p)   { glTexCoord3iv((const GLint*)p.V());}
 	inline void glTexCoord(Point3<short> const & p) { glTexCoord3sv(p.V());}
 	inline void glTexCoord(Point3<float> const & p) { glTexCoord3fv(p.V());}
 	inline void glTexCoord(Point3<double> const & p){ glTexCoord3dv(p.V());}

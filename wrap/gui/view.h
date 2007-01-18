@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2005/10/15 15:23:32  ponchio
+Fixed viewport<->window coordinate change for the z. (z = 2*z -1 now)
+Accordingly to gluUnproject documentation.
+
 Revision 1.13  2005/02/11 11:53:18  tommyfranken
 changed  pointf to point<t> in ViewLineFromWindow
 
@@ -144,7 +148,7 @@ template <class T> void View<T>::GetView() {
   model.Import(Matrix44d(m));
   Transpose(model);
 	
-	glGetIntegerv(GL_VIEWPORT, viewport);
+	glGetIntegerv(GL_VIEWPORT, (GLint*)viewport);
   
   matrix = proj*model;
   inverse = matrix;

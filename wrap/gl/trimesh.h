@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2006/12/12 11:06:58  cignoni
+Slightly changed the colormaterial mode for the flatwire
+
 Revision 1.21  2006/10/14 16:26:26  ponchio
 Aggiunti un paio di typename... al solito.
 
@@ -249,7 +252,7 @@ void Update(/*Change c=CHAll*/)
 		
 		if(h&HNUseVBO){
 		if(!glIsBuffer(b[1]))
-				glGenBuffers(2,b);
+				glGenBuffers(2,(GLuint*)b);
 		glBindBuffer(GL_ARRAY_BUFFER,b[0]);   
 		glBufferData(GL_ARRAY_BUFFER_ARB, m->vn * sizeof(typename MESH_TYPE::VertexType), 
 								(char *)&(m->vert[0].P()), GL_STATIC_DRAW_ARB); 
