@@ -5,6 +5,7 @@
 #include<vcg/simplex/face/topology.h>
 
 #include<vcg/complex/trimesh/base.h>
+#include<vcg/complex/trimesh/allocate.h>
 #include<vcg/complex/trimesh/append.h>
 #include<vcg/complex/trimesh/clean.h>
 #include<vcg/complex/trimesh/update/bounding.h>
