@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2006/12/20 15:23:52  ganovelli
+using of locally defined variable removed
+
 Revision 1.8  2006/04/11 08:10:05  zifnab1974
 changes necessary for gcc 3.4.5 on linux 64bit.
 
@@ -620,7 +623,7 @@ public:
 		_v[0] *= p._v[0]; _v[1] *= p._v[1]; _v[2] *= p._v[2]; return *this; }
 
 	inline S StableDot ( const PointType & p ) const {
-		PointType k0(_v[0]*p._v[0],	k1=_v[1]*p._v[1], k2=_v[2]*p._v[2]);
+		S k0=_v[0]*p._v[0],	k1=_v[1]*p._v[1], k2=_v[2]*p._v[2];
 		int exp0,exp1,exp2;
 		frexp( double(k0), &exp0 );
 		frexp( double(k1), &exp1 );
