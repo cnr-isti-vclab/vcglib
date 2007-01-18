@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2006/12/04 10:59:15  ganovelli
+aggiunte funzioni di override per Has*
+
 Revision 1.3  2006/06/08 20:32:10  ganovelli
 aggiunte wedge coord
 
@@ -254,8 +257,8 @@ public:
 	inline const typename T::CoordType & cP1( const int j ) const { return cV((j+1)%3)->P();}
 	inline const typename T::CoordType & cP2( const int j ) const { return cV((j+2)%3)->P();}
 
-	inline       typename T::VertexType *       & UberV( const int j )	      { assert(j>=0 && j<3); return v[j]; }
-	inline const typename T::VertexType * const & UberV( const int j ) const	{ assert(j>=0 && j<3);	return v[j];	}
+	//inline       typename T::VertexType *       & UberV( const int j )	      { assert(j>=0 && j<3); return v[j]; }
+	//inline const typename T::VertexType * const & UberV( const int j ) const	{ assert(j>=0 && j<3);	return v[j];	}
   static bool HasVertexRef()   { return true; }
 };
   } // end namespace face
