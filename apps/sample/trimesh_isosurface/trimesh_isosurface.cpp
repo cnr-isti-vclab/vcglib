@@ -3,6 +3,10 @@
 #include <vcg/space/point3.h>
 #include <vcg/space/box3.h>
 #include <vcg/math/perlin_noise.h>
+#include <vcg/simplex/vertexplus/base.h>
+#include <vcg/simplex/faceplus/base.h>
+#include <vcg/complex/trimesh/base.h>
+#include <vcg/complex/trimesh/allocate.h>
 #include "trivial_walker.h"
 #include <vcg/complex/trimesh/create/marching_cubes.h>
 #include <vcg/complex/trimesh/create/extended_marching_cubes.h>
@@ -10,10 +14,6 @@
 using namespace std;
 using namespace vcg;
 
-#include <vcg/simplex/vertexplus/base.h>
-#include <vcg/simplex/faceplus/base.h>
-#include <vcg/complex/trimesh/base.h>
-#include <vcg/complex/trimesh/allocate.h>
 
 typedef float ScalarType;
 
@@ -64,9 +64,9 @@ public:
 	}
 
 
-enum { XAxis=0,YAxis=1,ZAxis=2} VolumeAxis;
+typedef enum { XAxis=0,YAxis=1,ZAxis=2} VolumeAxis;
 
-template < class VertexPointerType, enum VolumeAxis AxisVal >
+template < class VertexPointerType,  VolumeAxis AxisVal >
   void GetIntercept(const vcg::Point3i &p1, const vcg::Point3i &p2, VertexPointerType &v, const float thr)
 {
 			float f1 = Val(p1.X(), p1.Y(), p1.Z())-thr;
@@ -100,9 +100,9 @@ public:
 {
 		// Funzioni superiori
   UNDEF=0,
-  BYTE=1;
-  SHORT=2;
-  FLOAT=3;
+  BYTE=1,
+  SHORT=2,
+  FLOAT=3
 };
 
 static bool Open(const char *filename, VolumeType &V, Point3i sz, DataType d)
