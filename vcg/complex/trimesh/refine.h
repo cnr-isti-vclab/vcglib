@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2007/01/17 14:31:47  giec
+Added TrSplit function.
+
 Revision 1.13  2006/10/27 13:26:49  ganovelli
 changed   &*vert.end() to !vert.empty()  -> &vert.back() to comply vs2005 compiler
 
@@ -824,7 +827,7 @@ void TriSplit(typename TRIMESH_TYPE::FacePointer f,
 	vB->P() = Center(f);
 
 	//i tre vertici della faccia da dividere
-	TRIMESH_TYPE::VertexType* V0,*V1,*V2;
+	typename TRIMESH_TYPE::VertexType* V0,*V1,*V2;
 	V0 = f->V(0);
 	V1 = f->V(1);
 	V2 = f->V(2);
@@ -847,7 +850,7 @@ void TriSplit(typename TRIMESH_TYPE::FacePointer f,
 		f->FFp(2)->FFp(f->FFi(2)) = f2;
 
 		//adiacenza ff
-		TRIMESH_TYPE::FacePointer FF0,FF1,FF2;
+		typename TRIMESH_TYPE::FacePointer FF0,FF1,FF2;
 		FF0 = f->FFp(0);
 		FF1 = f->FFp(1);
 		FF2 = f->FFp(2);

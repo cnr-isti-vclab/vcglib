@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.31  2007/01/18 11:17:43  giec
+The minimum weight algorithm keep the topology consistent.
+
 Revision 1.30  2007/01/10 12:07:54  giec
 Bugfixed ComputeDihedralAngle function
 
@@ -961,7 +964,7 @@ template<class EAR>
 
 				if(app.size() <= holeSize)
 				{
-					std::vector<PosType >::iterator itP;
+					typename std::vector<PosType >::iterator itP;
 					std::vector<FacePointer *> vfp;
 
 					for(ithn = vvi.begin(); ithn!= vvi.end(); ++ithn)
