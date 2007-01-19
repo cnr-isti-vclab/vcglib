@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.19  2007/01/11 11:48:33  ganovelli
+  currMetric inizialied to heap.front() (it was heap.back()- wrong)
+
   Revision 1.18  2006/12/11 14:09:44  ganovelli
   added missing initialization of currMetric
 
@@ -326,6 +329,10 @@ void ClearHeap()
 	}
 
 
+	template <class LocalModificationType> void Finalize()
+	{
+		LocalModificationType::Finalize(m,h);
+	}
 
 
 	/// say if the process is to end or not: the process ends when any of the termination conditions is verified
