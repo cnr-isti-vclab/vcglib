@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2006/10/15 07:31:21  cignoni
+typenames and qualifiers for gcc compliance
+
 Revision 1.10  2006/10/09 20:12:55  cignoni
 Heavyly restructured for meshlab inclusion. Now the access to the quadric elements are mediated by a static helper class.
 
@@ -175,7 +178,9 @@ public:
 		static bool IsSetHint(Hint hn)  { return (Hnt()&hn)!=0; }
 
 		// puntatori ai vertici che sono stati messi non-w per preservare il boundary
-		static std::vector<typename TriMeshType::VertexPointer>  & WV(){static std::vector<typename TriMeshType::VertexPointer> _WV; return _WV;}; 
+		static std::vector<typename TriMeshType::VertexPointer>  & WV(){
+      static std::vector<typename TriMeshType::VertexPointer> _WV; return _WV;
+    }; 
 
 		inline TriEdgeCollapseQuadric(const EdgeType &p, int i)
 			//:TEC(p,i){}
@@ -202,6 +207,31 @@ public:
 		m.fn-=FaceDel;
 		--m.vn;
   }
+
+  
+    
+    // Final Clean up after the end of the simplification process
+    static void Finalize(TriMeshType &m,HeapType&h_ret)
+    {
+      // if the mesh was prepared with precomputed borderflags 
+      // correctly set them again.
+      if(IsSetHint(HNHasBorderFlag) ) 
+			  vcg::tri::UpdateFlags<TriMeshType>::FaceBorderFromVF(m);
+
+      // If we had the boundary preservation we should clean up the writable flags
+      if(Params().FastPreserveBoundary)
+      {
+        typename 	TriMeshType::VertexIterator  vi;
+    	  for(vi=m.vert.begin();vi!=m.vert.end();++vi) 
+          if(!(*vi).IsD()) (*vi).SetW();
+      }
+    	if(Params().FastPreserveBoundary)
+      {
+        typename 	std::vector<typename TriMeshType::VertexPointer>::iterator wvi;
+        for(wvi=WV().begin();wvi!=WV().end();++wvi)
+          if(!(*wvi)->IsD()) (*wvi)->SetW();
+      }
+    }
 
 	static void Init(TriMeshType &m,HeapType&h_ret){
 
@@ -236,6 +266,7 @@ public:
 
 	if(Params().PreserveBoundary)
 		{
+      WV().clear();
 			for(pf=m.face.begin();pf!=m.face.end();++pf)
 			if( !(*pf).IsD() && (*pf).IsW() )
 				for(int j=0;j<3;++j)
@@ -252,7 +283,7 @@ public:
 		if(IsSymmetric()) 
     { // if the collapse is symmetric (e.g. u->v == v->u)
 		  for(vi=m.vert.begin();vi!=m.vert.end();++vi) 
-				if((*vi).IsRW())
+				if(!(*vi).IsD() && (*vi).IsRW())
 						{
 								vcg::face::VFIterator<FaceType> x;
 								for( x.F() = (*vi).VFp(), x.I() = (*vi).VFi(); x.F()!=0; ++ x){
@@ -291,7 +322,6 @@ public:
 			  }
 		  }	
 	  }
-	make_heap(h_ret.begin(),h_ret.end());
 }
 
 	static bool IsSymmetric() {return Params().OptimalPlacement;} 
