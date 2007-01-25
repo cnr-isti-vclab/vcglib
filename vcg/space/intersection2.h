@@ -30,10 +30,12 @@
 #ifndef __VCGLIB_INTERSECTION_2
 #define __VCGLIB_INTERSECTION_2
 #include <vcg/space/line2.h>
+#include <vcg/space/ray2.h>
 #include <vcg/space/segment2.h>
 #include <vcg/space/point2.h>
 #include <vcg/space/triangle2.h>
 #include <vcg/space/box2.h>
+
 
 
 
@@ -90,6 +92,46 @@ inline bool LineLineIntersection(const vcg::Line2<SCALAR_TYPE> & l0,
 	return true;
 }
 
+///return if exist the intersection point
+///between 2 lines in a 2d plane
+template<class SCALAR_TYPE>
+inline bool RayLineIntersection(const vcg::Line2<SCALAR_TYPE> & l,
+								const vcg::Ray2<SCALAR_TYPE> & r,
+								 Point2<SCALAR_TYPE> &p)
+{
+	///construct line from ray
+	vcg::Line2<SCALAR_TYPE> l_test;
+	l_test.Set(r.Origin(),r.Direction());
+	if (!LineLineIntersection(l,l_test,p))
+		return false;
+	Point2<SCALAR_TYPE> dir=p-r.Origin();
+	dir.Normalize();
+	return (dir*r.Direction()>0);
+}
+
+
+/// interseciton between point and triangle
+template<class SCALAR_TYPE>
+inline bool RaySegmentIntersection(const vcg::Ray2<SCALAR_TYPE> & r,
+									const vcg::Segment2<SCALAR_TYPE> &seg,
+									Point2<SCALAR_TYPE> &p_inters)
+{
+ ///first compute intersection between lines
+ vcg::Line2<SCALAR_TYPE> line2;
+ line2.SetOrigin(seg.P0());
+ vcg::Point2<SCALAR_TYPE> dir=seg.P1()-seg.P0();
+ dir.Normalize();
+ line2.SetDirection(dir);
+ if(!RayLineIntersection<SCALAR_TYPE>(line2,r,p_inters))
+	return false;
+ ///then test if intersection point is nearest 
+ ///to both extremes then lenght of the segment 
+ SCALAR_TYPE d0=(seg.P1()-p_inters).Norm();
+ SCALAR_TYPE d1=(seg.P0()-p_inters).Norm();
+ SCALAR_TYPE lenght=(seg.P0()-seg.P1()).Norm();
+ return ((d0<lenght)&&(d1<lenght));
+}
+
 /// interseciton between point and triangle
 template<class SCALAR_TYPE>
 inline bool LineSegmentIntersection(const vcg::Line2<SCALAR_TYPE> & line,
@@ -110,6 +152,38 @@ inline bool LineSegmentIntersection(const vcg::Line2<SCALAR_TYPE> & line,
  SCALAR_TYPE d1=(seg.P0()-p_inters).Norm();
  SCALAR_TYPE lenght=(seg.P0()-seg.P1()).Norm();
  return ((d0<lenght)&&(d1<lenght));
+}
+
+/// interseciton between point and triangle
+template<class SCALAR_TYPE>
+inline bool SegmentSegmentIntersection(const vcg::Segment2<SCALAR_TYPE> &seg0,
+									   const vcg::Segment2<SCALAR_TYPE> &seg1,
+									   Point2<SCALAR_TYPE> &p_inters)
+{
+  ///test intersection of bbox
+  vcg::Box2<SCALAR_TYPE> bb0,bb1;
+  bb0.Add(seg0.P0());
+  bb0.Add(seg0.P1());
+  bb1.Add(seg1.P0());
+  bb1.Add(seg1.P1());
+  if (!bb0.Collide(bb1))
+	  return false;
+  else
+  {
+	///first compute intersection between lines
+	vcg::Line2<SCALAR_TYPE> l0,l1;
+
+	l0.SetOrigin(seg0.P0());
+	vcg::Point2<SCALAR_TYPE> dir0=seg0.P1()-seg0.P0();
+	dir0.Normalize();
+	l0.SetDirection(dir0);
+	l1.SetOrigin(seg1.P0());
+	vcg::Point2<SCALAR_TYPE> dir1=seg1.P1()-seg1.P0();
+	dir1.Normalize();
+	l1.SetDirection(dir1);
+	return ((LineSegmentIntersection<SCALAR_TYPE>(l0,seg1,p_inters))&&
+			(LineSegmentIntersection<SCALAR_TYPE>(l1,seg0,p_inters)));
+  }
 }
 
 /// interseciton between point and triangle
