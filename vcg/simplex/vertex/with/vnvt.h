@@ -1,5 +1,5 @@
-#ifndef __VCGLIB_VERTEX__VN__TYPE
-#define __VCGLIB_VERTEX__VN__TYPE
+#ifndef __VCGLIB_VERTEX__VNVT__TYPE
+#define __VCGLIB_VERTEX__VNVT__TYPE
 
 
 #define VERTEX_TYPE VertexVNVT 
