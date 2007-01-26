@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.20  2007/01/19 09:13:09  cignoni
+  Added Finalize() method to the interface
+
   Revision 1.19  2007/01/11 11:48:33  ganovelli
   currMetric inizialied to heap.front() (it was heap.back()- wrong)
 
@@ -296,8 +299,9 @@ public:
 		return !(h.empty());
   }
  
-  // Toglie dallo heap tutti i collassi non up to date
-// Chiamata dalla do decimate ogni tanto quando lo heap diventa troppo grande (>fn*3)
+// It removes from the heap all the operations that are no more 'uptodate' 
+// (e.g. collapses that have some recently modified vertices)
+// This function  is called from time to time by the doOptimization (e.g. when the heap is larger than fn*3)
 void ClearHeap()
 {
 	typename HeapType::iterator hi;
@@ -308,7 +312,13 @@ void ClearHeap()
 		{
 			delete (*hi).locModPtr;
 			*hi=h.back();
-			h.pop_back();
+			if(&*hi==&h.back()) 
+			{
+				hi=h.end();
+				h.pop_back();
+				break;
+			}
+		    h.pop_back();
 			continue;
 		}
 		++hi;
