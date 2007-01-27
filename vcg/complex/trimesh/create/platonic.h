@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2006/08/23 15:29:44  marfr960
+*** empty log message ***
+
 Revision 1.8  2006/03/27 04:18:35  cignoni
 Double->Scalar in dodecahedron
 
@@ -106,8 +109,6 @@ void Tetrahedron(TetraMeshType &in)
  Allocator<TetraMeshType>::AddFaces(in,4);
 
  VertexPointer ivp[4];
- CoordType test;
-test=CoordType ( 1.0, 1.0, 1.0);
  VertexIterator vi=in.vert.begin();
  ivp[0]=&*vi;(*vi).P()=CoordType ( 1.0, 1.0, 1.0); ++vi;
  ivp[1]=&*vi;(*vi).P()=CoordType (-1.0, 1.0,-1.0); ++vi;
