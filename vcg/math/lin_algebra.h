@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2006/09/29 08:36:10  cignoni
+Added missing typedef for gcc compiing
+
 Revision 1.14  2006/09/28 22:49:49  fiorin
 Removed some warnings
 
@@ -203,9 +206,9 @@ namespace vcg
 		TYPE abs_a = fabs(a);
 		TYPE abs_b = fabs(b);
 		if (abs_a > abs_b) 
-			return abs_a*sqrt(1.0+sqr(abs_b/abs_a));
+			return abs_a*sqrt((TYPE)1.0+sqr(abs_b/abs_a));
 		else 
-			return (abs_b == 0.0 ? 0.0 : abs_b*sqrt(1.0+sqr(abs_a/abs_b)));
+			return (abs_b == (TYPE)0.0 ? (TYPE)0.0 : abs_b*sqrt((TYPE)1.0+sqr(abs_a/abs_b)));
 	};
 
 	template <typename TYPE>
@@ -246,10 +249,10 @@ namespace vcg
 		int m = (int) A.RowsNumber();
 		int n = (int) A.ColumnsNumber();
 		int flag,i,its,j,jj,k,l,nm;
-		double anorm, c, f, g, h, s, scale, x, y, z, *rv1;
+		ScalarType anorm, c, f, g, h, s, scale, x, y, z, *rv1;
 		bool convergence = true;
 
-		rv1 = new double[n];
+		rv1 = new ScalarType[n];
 		g = scale = anorm = 0; 
 		// Householder reduction to bidiagonal form.
 		for (i=0; i<n; i++) 
@@ -269,7 +272,7 @@ namespace vcg
 						s += A[k][i]*A[k][i];
 					}
 					f=A[i][i];
-					g = -sign<double>( sqrt(s), f );
+					g = -sign<ScalarType>( sqrt(s), f );
 					h = f*g - s;
 					A[i][i]=f-g;
 					for (j=l; j<n; j++) 
@@ -298,7 +301,7 @@ namespace vcg
 						s += A[i][k]*A[i][k];
 					}
 					f = A[i][l];
-					g = -sign<double>(sqrt(s),f);
+					g = -sign<ScalarType>(sqrt(s),f);
 					h = f*g - s;
 					A[i][l] = f-g;
 					for (k=l; k<n; k++) 
@@ -350,7 +353,7 @@ namespace vcg
 				A[i][j]=0.0;
 			if (g) 
 			{
-				g = 1.0/g;
+				g = (ScalarType)1.0/g;
 				for (j=l; j<n; j++) 
 				{
 					for (s=0.0, k=l; k<m; k++) 
@@ -398,9 +401,9 @@ namespace vcg
 						if ((double)(fabs(f)+anorm) == anorm) 
 							break;
 						g = W[i];
-						h = pythagora<double>(f,g);
+						h = pythagora<ScalarType>(f,g);
 						W[i] = h;
-						h = 1.0/h;
+						h = (ScalarType)1.0/h;
 						c = g*h;
 						s = -f*h;
 						for (j=0; j<m; j++) 
@@ -432,8 +435,8 @@ namespace vcg
 				y = W[nm];
 				g = rv1[nm];
 				h = rv1[k];
-				f = ((y-z)*(y+z) + (g-h)*(g+h))/(2.0*h*y);
-				g = pythagora<double>(f,1.0);
+				f = ((y-z)*(y+z) + (g-h)*(g+h))/((ScalarType)2.0*h*y);
+				g = pythagora<ScalarType>(f,1.0);
 				f=((x-z)*(x+z) + h*((y/(f+sign(g,f)))-h))/x;
 				c=s=1.0; 
 				//Next QR transformation:
@@ -444,7 +447,7 @@ namespace vcg
 					y = W[i];
 					h = s*g;
 					g = c*g;
-					z = pythagora<double>(f,h);
+					z = pythagora<ScalarType>(f,h);
 					rv1[j] = z;
 					c = f/z;
 					s = h/z;
@@ -459,12 +462,12 @@ namespace vcg
 						V[jj][j] = x*c + z*s;
 						V[jj][i] = z*c - x*s;
 					}
-					z = pythagora<double>(f,h);
+					z = pythagora<ScalarType>(f,h);
 					W[j] = z;
 					// Rotation can be arbitrary if z = 0.
 					if (z) 
 					{
-						z = 1.0/z;
+						z = (ScalarType)1.0/z;
 						c = f*z;
 						s = h*z;
 					}
