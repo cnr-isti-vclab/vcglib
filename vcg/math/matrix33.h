@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2006/09/25 23:05:29  ganovelli
+added constructor from matrix44 excluding a row and colum
+
 Revision 1.14  2006/06/22 08:00:05  ganovelli
 bug in operator + with MatrixxDig
 
@@ -353,10 +356,10 @@ public:
 
 	void Rotate(S angle, const Point3<S> & axis )
 	{
-		angle = angle*3.14159265358979323846/180;
-		double c = cos(angle);
-		double s = sin(angle);
-		double q = 1-c;
+		angle = angle*(S)3.14159265358979323846/180;
+		S c = cos(angle);
+		S s = sin(angle);
+		S q = 1-c;
 		Point3<S> t = axis;
 		t.Normalize();
 		a[0] = t[0]*t[0]*q + c;
