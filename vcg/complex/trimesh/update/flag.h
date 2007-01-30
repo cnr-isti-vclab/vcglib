@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2006/08/31 13:11:12  marfr960
+corrected bounds of a vector scan
+
 Revision 1.16  2006/08/30 12:59:49  marfr960
 Added missing std:: to swap
 
@@ -217,6 +220,49 @@ inline bool operator != ( const EdgeSorter & pe ) const
 };
 
 
+// versione minimale che non calcola i complex flag.
+static void VertexBorderFromNone(MeshType &m)
+{
+  assert(HasPerVertexFlags(m));
+	std::vector<EdgeSorter> e;
+	typename UpdateMeshType::FaceIterator pf;
+	typename std::vector<EdgeSorter>::iterator p;
+
+	if( m.fn == 0 ) 
+		return;
+
+	e.resize(m.fn*3);								// Alloco il vettore ausiliario
+	p = e.begin();
+	for(pf=m.face.begin();pf!=m.face.end();++pf)			// Lo riempio con i dati delle facce
+		if( ! (*pf).IsD() )
+			for(int j=0;j<3;++j)
+			{
+				(*p).Set(&(*pf),j);
+				(*pf).ClearB(j);
+				++p;
+			}
+	assert(p==e.end());
+	sort(e.begin(), e.end());							// Lo ordino per vertici
+	
+	typename std::vector<EdgeSorter>::iterator pe,ps;
+	for(ps = e.begin(), pe = e.begin(); pe < e.end(); ++pe)	// Scansione vettore ausiliario
+	{
+		if( pe==e.end() ||  *pe != *ps )					// Trovo blocco di edge uguali
+		{
+			if(pe-ps==1) 	{	
+					ps->v[0]->SetB();
+					ps->v[1]->SetB();
+			} else
+			if(pe-ps!=2)  {  // not twomanyfold!
+				for(;ps!=pe;++ps) {
+						ps->v[0]->SetB(); // Si settano border anche i complex.
+						ps->v[1]->SetB();
+        }
+			} 
+			ps = pe;
+		}
+	}
+}
 
 // versione minimale che non calcola i complex flag.
 static void FaceBorderFromNone(MeshType &m)
@@ -226,6 +272,9 @@ static void FaceBorderFromNone(MeshType &m)
 	typename UpdateMeshType::FaceIterator pf;
 	typename std::vector<EdgeSorter>::iterator p;
 
+	for(VertexIterator v=m.vert.begin();v!=m.vert.end();++v)
+		(*v).ClearB();
+		
 	if( m.fn == 0 ) 
 		return;
 
@@ -260,7 +309,6 @@ static void FaceBorderFromNone(MeshType &m)
 		}
 	}
 //	TRACE("found %i border (%i complex) on %i edges\n",nborder,ncomplex,ne);
-
 }
 
 /// Compute the PerVertex Border flag deriving it from the faces
