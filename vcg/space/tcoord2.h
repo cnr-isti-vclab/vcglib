@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/11/30 08:38:01  cignoni
+Added missing < operator
+
 Revision 1.4  2004/05/10 13:26:53  cignoni
 missing ending newline
 
@@ -54,65 +57,101 @@ namespace vcg {
   id are shared over the same surface, so for each coord the id of the texture is stored. If no id is needed see the vcg::TCoord2Simple class.
 */
 
-template<class T = float, int N = 1>
+template<class T = float, int NMAX = 1>
 class TCoord2  
 {
-private:
-	Point2<T> _t[N];
-	short     _n[N];
 public:
+  typedef Point2<T>  PointType;
+  typedef T ScalarType;
+  
+
+private:
+	PointType _t[NMAX];
+	short     _n[NMAX];
+public:
+  
+  TCoord2(T u, T v) { _t[0][0]=u; _t[0][1]=v; };
+  TCoord2() {  };
+  
+  inline const PointType &P() const { return _t[0]; }; 	
+  inline PointType &P() { return _t[0]; }; 	
+
+  inline const PointType &P(const int i) const { assert(i>0 && i<NMAX); return _t[0]; }; 	
+  inline PointType &P(const int i) { assert(i>0 && i<NMAX); return _t[0]; }; 	
+  
+	inline T & U() { return _t[0][0]; }
+	inline T & V() { return _t[0][1]; }
+	inline const T & U() const { return _t[0][0]; }
+	inline const T & V() const { return _t[0][1]; }
+	inline T & U(const int i) { assert(i>0 && i<NMAX);  return _t[i][0]; }
+	inline T & V(const int i) { assert(i>0 && i<NMAX);  return _t[i][1]; }
+	inline const T & U(const int i) const { assert(i>0 && i<NMAX); return _t[i][0]; }
+	inline const T & V(const int i) const { assert(i>0 && i<NMAX); return _t[i][1]; }
+  
+	inline short     & N() { return _n[0]; }
+	inline const short N() const { return _n[0]; }
+  
+	inline short     & N(const int i) { assert(i>0 && i<NMAX); return _n[i]; }
+	inline const short N(const int i) const { assert(i>0 && i<NMAX); return _n[i]; }
 	
-	inline T & u() { return _t[0][0]; }
-	inline T & v() { return _t[0][1]; }
-	inline const T & u() const { return _t[0][0]; }
-	inline const T & v() const { return _t[0][1]; }
-	inline T & u(const int i) { return _t[i][0]; }
-	inline T & v(const int i) { return _t[i][1]; }
-	inline const T & u(const int i) const { return _t[i][0]; }
-	inline const T & v(const int i) const { return _t[i][1]; }
-
-	inline short     & n() { return _n[0]; }
-	inline const short n() const { return _n[0]; }
-
-	inline short     & n(const int i) { return _n[i]; }
-	inline const short n(const int i) const { return _n[i]; }
-	
-	inline Point2<T> & t(const int i) { return _t[i]; }
-	inline Point2<T> t(const int i) const { return _t[i]; }
-
-	inline Point2<T> & t() { return _t[0]; }
-	inline Point2<T> t() const { return _t[0]; }
+  
+  /* <OLD_METHODS> (lowercase ones). DEPRECATED. TO BE REMOVED SOON.*/
+	/**/inline T & u() { return _t[0][0]; }
+	/**/inline T & v() { return _t[0][1]; }
+	/**/inline const T & u() const { return _t[0][0]; }
+	/**/inline const T & v() const { return _t[0][1]; }
+	/**/inline T & u(const int i) { return _t[i][0]; }
+	/**/inline T & v(const int i) { return _t[i][1]; }
+	/**/inline const T & u(const int i) const { return _t[i][0]; }
+	/**/inline const T & v(const int i) const { return _t[i][1]; }
+  /**/
+	/**/inline short     & n() { return _n[0]; }
+	/**/inline const short n() const { return _n[0]; }
+  /**/
+	/**/inline short     & n(const int i) { return _n[i]; }
+	/**/inline const short n(const int i) const { return _n[i]; }
+	/**/
+	/**/inline Point2<T> & t(const int i) { return _t[i]; }
+	/**/inline Point2<T> t(const int i) const { return _t[i]; }
+  /**/
+	/**/inline Point2<T> & t() { return _t[0]; }
+	/**/inline Point2<T> t() const { return _t[0]; }
+  /* </OLD_METHODS> */
 	
 	inline bool operator == ( TCoord2 const & p ) const
 		{
-		 for(int i=0;i<N;++i)
+		 for(int i=0;i<NMAX;++i)
 			 if(p._t[i] != _t[i] || p._n[i] != _n[i]) return false;
 		 return true;
 		}
 
   inline bool operator != ( TCoord2 const & p ) const
 		{
-		 for(int i=0;i<N;++i)
+		 for(int i=0;i<NMAX;++i)
 			 if(p._t[i] != _t[i] || p._n[i] != _n[i]) return true;
 		 return false;
 		}
 
 	inline bool operator < ( TCoord2 const & p ) const
 		{
-		 for(int i=0;i<N;++i)
+		 for(int i=0;i<NMAX;++i)
 			 if(p._t[i] != _t[i]) return p._t[i] < _t[i];
 		 return false;
 		}
 
-	enum { n_coords=N};
+	enum { n_coords=NMAX };
 };
 
 /**
 	Templated class for a single 2D texture coord.
 */
-template<class T = float>
+template<class T = float >
 class TCoord2Simple
 {
+public:
+  typedef Point2<T>  PointType;
+  typedef T ScalarType;
+
 private:
 	Point2<T> _t;
 
@@ -124,6 +163,29 @@ private:
 
 public:
 
+	inline T & U() { return _t[0]; }
+	inline T & V() { return _t[1]; }
+	inline const T & U() const { return _t[0]; }
+	inline const T & V() const { return _t[1]; }
+	inline T & U(const int i) { assert(i==0); return _t[0]; }
+	inline T & V(const int i) { assert(i==0); return _t[1]; }
+	inline const T & U(const int i) const { assert(i==0); return _t[0]; }
+	inline const T & V(const int i) const { assert(i==0); return _t[1]; }
+
+	inline Point2<T> & P(const int i) { assert(i==0); return _t; }
+	inline Point2<T> P(const int i) const { assert(i==0); return _t; }
+
+	inline Point2<T> & P() { return _t; }
+	inline Point2<T> P() const { return _t; }
+
+	inline short & N() { assert(static_n()==0); return static_n(); }
+	inline short   N() const { assert(static_n()==0); return 0; }
+
+	inline short & N(const int i) { assert(i==0); return static_n(); }
+	inline short   N(const int i) const { assert(i==0); return 0; }
+
+
+/* <OLD_METHODS> (lowercase ones). DEPRECATED. TO BE REMOVED SOON.*/
 	inline T & u() { return _t[0]; }
 	inline T & v() { return _t[1]; }
 	inline const T & u() const { return _t[0]; }
@@ -132,11 +194,6 @@ public:
 	inline T & v(const int i) { assert(i==0); return _t[1]; }
 	inline const T & u(const int i) const { assert(i==0); return _t[0]; }
 	inline const T & v(const int i) const { assert(i==0); return _t[1]; }
-
-	inline bool operator == ( TCoord2Simple const & p ) const
-		{
-			return _t==p._t;
-		}
 
 	inline Point2<T> & t(const int i) { assert(i==0); return _t; }
 	inline Point2<T> t(const int i) const { assert(i==0); return _t; }
@@ -149,6 +206,13 @@ public:
 
 	inline short & n(const int i) { assert(i==0); return static_n(); }
 	inline short   n(const int i) const { assert(i==0); return 0; }
+
+/* </OLD_METHODS> */
+
+	inline bool operator == ( TCoord2Simple const & p ) const
+		{
+			return _t==p._t;
+		}
 
 	enum { n_coords=1};
 
