@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.33  2007/01/31 11:46:12  giec
+Bug fix
+
 Revision 1.32  2007/01/18 18:15:14  cignoni
 added missing typenames
 
@@ -873,8 +876,7 @@ template<class EAR>
 			int i, j;
 			i=0; j=nv-1;
 			
-			PosType PF = vv[i];
-			triangulate(m,f, i, j, vi, vv,PF);
+			triangulate(m,f, i, j, vi, vv);
 
 			while(f!=m.face.end())
 			{
@@ -886,7 +888,7 @@ template<class EAR>
 
 
 	static void triangulate(MESH &m, FaceIterator &f,int i, int j,
-                          std::vector< std::vector<int> > vi, std::vector<PosType > vv, PosType &PosFrom)
+                          std::vector< std::vector<int> > vi, std::vector<PosType > vv)
 		{
 			if(i + 1 == j){return;}
 			if(i==j)return;
@@ -900,42 +902,9 @@ template<class EAR>
 			f->V(1) = vv[k].v;
 			f->V(2) = vv[j].v;
 			
-			if(f->HasFFAdjacency())
-			{
-				
-				f->FFp(2) = PosFrom.f;
-				f->FFi(2) = PosFrom.z;
-				PosFrom.f->FFp(PosFrom.z) = &(*f);
-				PosFrom.f->FFi(PosFrom.z) = 2;
-
-				if(i+1 == k)
-				{
-					f->FFp(0) = vv[k].f;
-					f->FFi(0) = vv[k].z;
-					vv[k].f->FFp(vv[k].z) = &(*f);
-					vv[k].f->FFi(vv[k].z) = 0;
-				}
-
-				if(k+1 == j)
-				{
-					f->FFp(1) = vv[j].f;
-					f->FFi(1) = vv[j].z;
-					vv[j].f->FFp(vv[j].z) = &(*f);
-					vv[j].f->FFi(vv[j].z) = 1;
-				}
-			}
-			
-			PosFrom.f = &(*f);
-			PosFrom.v=f->V(0);
-			PosFrom.z=0;
 			f++;
-			triangulate(m,f,i,k,vi,vv, PosFrom);
-			f--;
-			PosFrom.f = &(*f);
-			PosFrom.v=f->V(1);
-			PosFrom.z=1;
-			f++;
-			triangulate(m,f,k,j,vi,vv,PosFrom);
+			triangulate(m,f,i,k,vi,vv);
+			triangulate(m,f,k,j,vi,vv);
 		}
 
   static void MinimumWeightFill(MESH &m, int holeSize, bool Selected)
