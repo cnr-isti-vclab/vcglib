@@ -230,7 +230,7 @@ namespace vcg
 
 			/*!
 			*/
-			static void Init(TRIMESH_TYPE &mesh, HeapType &heap , bool Selected = false)
+			static void Init(TRIMESH_TYPE &mesh, HeapType &heap)
 			{
 				heap.clear();
 				FaceIterator f_iter;
@@ -238,18 +238,22 @@ namespace vcg
 				{
 					if (! (*f_iter).IsD() )
 					{
-						if(!(Selected && !(*f_iter).IsS()))
+						//if(!(Selected && !(*f_iter).IsS()))
+						if( (*f_iter).V(0)->IsW() && (*f_iter).V(1)->IsW() && (*f_iter).V(2)->IsW())
 						{
-							for (unsigned int i=0; i<3; i++)					
+							for (unsigned int i=0; i<3; i++)
 							{
-								VertexPointer v0 = (*f_iter).V0(i);
-								VertexPointer v1 = (*f_iter).V1(i);
-								if (v1-v0 > 0)
-								{
-									heap.push_back( HeapElem( new MYTYPE(PosType(&*f_iter, i), mesh.IMark() )) );	
-								}
-							} //endif
-						} // endfor
+								if( !(*f_iter).IsB(i) && (*f_iter).FFp(i)->V2((*f_iter).FFi(i) )->IsW() )
+									{
+										VertexPointer v0 = (*f_iter).V0(i);
+										VertexPointer v1 = (*f_iter).V1(i);
+										if (v1-v0 > 0)
+										{
+											heap.push_back( HeapElem( new MYTYPE(PosType(&*f_iter, i), mesh.IMark() )) );	
+										}
+									} //endif
+							} //endfor
+						}
 					} // endif
 				} //endfor
 			};
