@@ -70,7 +70,7 @@ int main(int argc,char ** argv){
       "Usage: trimesh_hole #algorithm #size filein.ply fileout.ply \n"
 			"#algorithm: \n"
 			" 1) Trivial Ear \n"
-			" 2) Leipa Ear \n"
+			" 2) Minimum weight Ear \n"
 			" 3) Selfintersection Ear \n"
 			" 4) Minimum weight \n"
 			);

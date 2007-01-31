@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.32  2007/01/18 18:15:14  cignoni
+added missing typenames
+
 Revision 1.31  2007/01/18 11:17:43  giec
 The minimum weight algorithm keep the topology consistent.
 
@@ -872,10 +875,17 @@ template<class EAR>
 			
 			PosType PF = vv[i];
 			triangulate(m,f, i, j, vi, vv,PF);
+
+			while(f!=m.face.end())
+			{
+				(*f).SetD();
+				++f;
+				m.fn--;
+			}
 		}
 
 
-	static void triangulate(MESH &m, FaceIterator f,int i, int j,
+	static void triangulate(MESH &m, FaceIterator &f,int i, int j,
                           std::vector< std::vector<int> > vi, std::vector<PosType > vv, PosType &PosFrom)
 		{
 			if(i + 1 == j){return;}
@@ -995,12 +1005,6 @@ template<class EAR>
 		}
 
 };//close class Hole
-			
-
-			
-
-	
-		
 
 	} // end namespace
 }
