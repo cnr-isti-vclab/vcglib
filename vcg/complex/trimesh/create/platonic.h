@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2007/01/27 13:14:34  marfr960
+Removed unuseful CoordType test
+
 Revision 1.9  2006/08/23 15:29:44  marfr960
 *** empty log message ***
 
@@ -626,6 +629,9 @@ void Build( MeshType & in, const V & v, const F & f)
 	}
 }
 
+// Build a regular grid mesh as a typical height field mesh
+// x y are the position on the grid scaled by wl and hl (at the end x is in the range 0..wl and y is in 0..hl)
+// z is taken from the <data> array 
 
 template <class MeshType>
 void Grid(MeshType & in, int w, int h, float wl, float hl, float *data)
