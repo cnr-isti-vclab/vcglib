@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2006/10/16 08:50:58  cignoni
+First Working Version
+
 ****************************************************************************/
 #ifndef __VCG_TRI_UPDATE_SELECTION
 #define __VCG_TRI_UPDATE_SELECTION
@@ -205,6 +208,22 @@ static size_t FaceFromVertexLoose(MeshType &m)
   return selCnt;
 }
 
+static size_t FaceFromBorder(MeshType &m)
+{
+  size_t selCnt=0;
+	ClearFace(m);
+  FaceIterator fi;
+	for(fi = m.face.begin(); fi != m.face.end(); ++fi)
+		if( !(*fi).IsD() )	
+    {
+      if((*fi).IsB(0) || (*fi).IsB(1) || (*fi).IsB(2))
+      { 
+        (*fi).SetS();
+        ++selCnt;
+      }
+    }
+  return selCnt;
+} 
 
 }; // end class
 
