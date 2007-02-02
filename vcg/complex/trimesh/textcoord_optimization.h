@@ -24,6 +24,9 @@
   History
   
 $Log: not supported by cvs2svn $
+Revision 1.3  2007/02/02 01:18:15  tarini
+First version: general virtual class for texture optimizers. A subclass for area preservation.
+
 
 ****************************************************************************/
 
@@ -132,7 +135,25 @@ public:
 };
 
 
-/* Texture optimizer that balances area and angle distortions. */
+
+/*
+AREA PRESERVING TEXTURE OPTIMIZATION
+as in DEGENER, P., MESETH, J., AND KLEIN, R. An adaptable surface
+parameterization method. [2003] In Proc. of the 12th International Meshing
+Roundtable, 201–213.
+
+Features:
+  
+:) - Balances angle and area distortions (best results!).
+:( - Slowest method.
+:( - Requires a fixed boundary, else expands forever in texture space.
+:( - Diverges in presence of flipped faces.
+:( - Requires a speed parameter to be set. 
+       Speed too large => bounces  back and forth around minima, w/o getting closer.
+       Lower speed => longest convercence times
+
+*/
+
 template<class MESH_TYPE> 
 class AreaPreservingTextureOptimizer:public TextureOptimizer<MESH_TYPE>{
 public:
