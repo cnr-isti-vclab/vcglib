@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/07/11 13:12:34  cignoni
+small gcc-related compiling issues (typenames,ending cr, initialization order)
+
 Revision 1.3  2004/12/11 15:37:47  ganovelli
 added one more  [], now it is polymorphic, added typenames
 
@@ -52,6 +55,7 @@ SimpleTempData(STL_CONT  &_c):c(_c){};
 // access to data
 ATTR_TYPE & operator[](const typename STL_CONT::value_type & v){return data[&v-&*c.begin()];}
 ATTR_TYPE & operator[](const typename STL_CONT::value_type * v){return data[v-&*c.begin()];}
+ATTR_TYPE & operator[](const typename STL_CONT::iterator & cont){return data[&(*cont)-&*c.begin()];}
 ATTR_TYPE & operator[](const int & i){return data[i];}
 
 // start temporary attribute
