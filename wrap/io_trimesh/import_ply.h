@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.31  2006/12/18 09:46:39  callieri
+camera+shot revamp: changed field names to something with more sense, cleaning of various functions, correction of minor bugs/incongruences, removal of the infamous reference in shot.
+
 Revision 1.30  2006/11/27 10:36:13  cignoni
 Removed  flags initialization. no more necessary
 
@@ -389,13 +392,13 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
   // init defaults
 	VertexType tv;
 	//tv.ClearFlags();
-	if( VertexType::HasQuality() ) tv.Q()=1.0;
+	if( VertexType::HasQuality() ) tv.Q()=(typename OpenMeshType::VertexType::QualityType)1.0;
 	if( VertexType::HasColor() )     tv.C()=Color4b(Color4b::White);
 	
 	FaceType tf;
 	// No more needed. The default constructor clear the flags;
   // tf.UberFlags() = 0;
-	if( FaceType::HasFaceQuality() )  tf.Q()=1.0;
+	if( FaceType::HasFaceQuality() )  tf.Q()=(typename OpenMeshType::FaceType::QualityType)1.0;
 	if( FaceType::HasWedgeColor() )   tf.WC(0)=tf.WC(1)=tf.WC(2)=Color4b(Color4b::White);
 	if( HasPerFaceColor(m) )    tf.C()=Color4b(Color4b::White);			
 	// Descrittori delle strutture
@@ -624,7 +627,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 					(*vi).UberFlags() = va.flags;
 
 				if( pi.mask & Mask::IOM_VERTQUALITY )
-					(*vi).Q() = va.q;
+					(*vi).Q() = (typename OpenMeshType::VertexType::QualityType)va.q;
 
 				if( pi.mask & Mask::IOM_VERTCOLOR )
 				{
@@ -679,7 +682,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 
 				if( pi.mask & Mask::IOM_FACEQUALITY )
 				{
-					(*fi).Q() = fa.q;
+					(*fi).Q() = (typename OpenMeshType::FaceType::QualityType) fa.q;
 				}
 
 				if( pi.mask & Mask::IOM_FACECOLOR )
