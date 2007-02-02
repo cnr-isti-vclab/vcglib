@@ -24,6 +24,9 @@
   History
   
 $Log: not supported by cvs2svn $
+Revision 1.5  2007/02/02 01:39:58  tarini
+added three general-utility global functions for texture coordinates: SmoothTextureCoords, IsFoldFree, MarkFolds (see descriptions)
+
 Revision 1.4  2007/02/02 01:23:47  tarini
 added a few general comments on AreaPreserving optimizer, recapping optimizer features.
 
@@ -141,20 +144,24 @@ public:
 
 /*
 AREA PRESERVING TEXTURE OPTIMIZATION
-as in DEGENER, P., MESETH, J., AND KLEIN, R. An adaptable surface
-parameterization method. [2003] In Proc. of the 12th International Meshing
-Roundtable, 201–213.
+
+as in: Degener, P., Meseth, J., Klein, R. 
+       "An adaptable surface parameterization method."
+       Proc. of the 12th International Meshing oundtable, 201–213 [2003].
 
 Features:
   
 :) - Balances angle and area distortions (best results!).
+:) - Can choose how to balance area and angle preservation (see SetTheta)
+       theta=0 -> pure conformal (use MIPS instead!)
+       theta=3 -> good balance between area and angle preservation
+       theta>3 -> care more about area than about angles
 :( - Slowest method.
-:( - Requires a fixed boundary, else expands forever in texture space.
-:( - Diverges in presence of flipped faces.
+:( - Requires a fixed boundary, else expands forever in texture space (unless theta=0).
+:( - Diverges in presence of flipped faces (unless theta=0).
 :( - Requires a speed parameter to be set. 
-       Speed too large => bounces  back and forth around minima, w/o getting closer.
-       Lower speed => longest convercence times
-
+       Speed too large => when close, bounces back and forth around minimum, w/o getting any closer.
+       Lower speed => longer convercence times
 */
 
 template<class MESH_TYPE> 
@@ -179,12 +186,14 @@ private:
   ScalarType totArea;
   ScalarType speed;
   
-public:
+  int theta;
   
+public:
    
   // constructor and destructor
   AreaPreservingTextureOptimizer(MeshType &_m):Super(_m),data(_m.face),sum(_m.vert){
     speed=0.001;
+    theta=3;
   }
   
   ~AreaPreservingTextureOptimizer(){
@@ -197,8 +206,21 @@ public:
     speed=_speed;
   }
 
-  ScalarType GetSpeed(ScalarType _speed){
+  ScalarType GetSpeed(){
     return speed;
+  }
+  
+  // sets the parameter theta:
+  // good parameters are in 1..3
+  //  0 = converge to pure conformal, ignore area preservation
+  //  3 = good balance between area and conformal
+  // >3 = area more important, angle preservation less important
+  void SetTheta(int _theta){
+    theta=_theta;
+  }
+
+  int GetTheta(){
+    return theta;
   }
   
   void IterateBlind(){
@@ -213,7 +235,6 @@ public:
     #define v0 (f->V0(i)->T().P())
     #define v1 (f->V1(i)->T().P())
     #define v2 (f->V2(i)->T().P())
-    #define THETA 3
 	  for (VertexIterator v=Super::m.vert.begin(); v!=Super::m.vert.end(); v++) {
 		  sum[v].Zero();
 	  }
@@ -260,24 +281,24 @@ public:
 				  // exponential weighting
 				  // 2d gradient
 				
-				  dx=M1*M1 
-				  	 *(px*(M1+ THETA*M2) - 2.0*qx*M1), 
-				  dy=M1*M1
-					   *(py*(M1+ THETA*M2) - 2.0*qy*M1), 
+				  dx=// M1
+				  	 //*M1 // ^ theta-1 
+				  	 pow(M1,theta-1)
+				  	 *(px*(M1+ theta*M2) - 2.0*qx*M1), 
+				  dy=// M1
+					   //*M1 // ^ theta-1 
+					   pow(M1,theta-1)
+					   *(py*(M1+ theta*M2) - 2.0*qy*M1), 
 
 				  gy= dy/c,
 				  gx= (dx - gy*b) / a;
 
 				  // 3d gradient
 
-			    sum[f->V(i)]
-			    //f->V(i)->sum
-          += ( (v1-v0) * gx + (v2-v0) * gy ) * data[f][3]; 
+			    sum[f->V(i)]+= ( (v1-v0) * gx + (v2-v0) * gy ) * data[f][3]; 
 		  }
 	  }
-
-  	max=0; // max displacement
-  	
+  	max=0; // max displacement  	
   	speed=0.001;
 	  for (VertexIterator v=Super::m.vert.begin(); v!=Super::m.vert.end(); v++) 
     if (  !Super::isFixed[v] ) //if (!v->IsB()) 
@@ -294,7 +315,6 @@ public:
   	#undef v0
     #undef v1 
     #undef v2 
-    #undef THETA 
   	//printf("rejected %d\n",rejected);
   }
   
