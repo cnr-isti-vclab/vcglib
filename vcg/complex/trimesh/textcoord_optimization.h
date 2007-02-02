@@ -24,6 +24,9 @@
   History
   
 $Log: not supported by cvs2svn $
+Revision 1.4  2007/02/02 01:23:47  tarini
+added a few general comments on AreaPreserving optimizer, recapping optimizer features.
+
 Revision 1.3  2007/02/02 01:18:15  tarini
 First version: general virtual class for texture optimizers. A subclass for area preservation.
 
@@ -418,6 +421,111 @@ void SmoothTextureCoords(MESH_TYPE &m){
   sum.Stop();
 
 }
+
+
+
+/* texture coords general utility functions */
+/*++++++++++++++++++++++++++++++++++++++++++*/
+
+// returns false if any fold is present (faster than MarkFolds)
+template<class MESH_TYPE>
+bool IsFoldFree(MESH_TYPE &m){
+  
+  assert(m.HasPerVertexTexture());
+  
+  typedef typename MESH_TYPE::VertexType::TextureType::PointType PointType;
+  typedef typename MESH_TYPE::VertexType::TextureType::PointType::ScalarType ScalarType;
+  
+  ScalarType lastsign=0;
+  for (typename MESH_TYPE::FaceIterator f=m.face.begin(); f!=m.face.end(); f++){
+    ScalarType sign=((f->V(1)->T().P()-f->V(0)->T().P()) ^ (f->V(2)->T().P()-f->V(0)->T().P()));
+    if (sign!=0) {
+      if (sign*lastsign<0) return false;
+      lastsign=sign;
+    }
+  }
+  return true;
+}
+
+// detects and marks folded faces, by setting their quality to 0 (or 1 otherwise)
+// returns number of folded faces
+template<class MESH_TYPE>
+int MarkFolds(MESH_TYPE &m){
+  
+  assert(m.HasPerVertexTexture());
+  assert(m.HasPerFaceQuality());
+  
+  typedef typename MESH_TYPE::VertexType::TextureType::PointType PointType;
+  typedef typename MESH_TYPE::VertexType::TextureType::PointType::ScalarType ScalarType;
+  
+  SimpleTempData<typename MESH_TYPE::FaceContainer, short> sign(m.face);
+  sign.Start(0);
+  
+  // first pass, determine predominant sign
+  int npos=0, nneg=0;
+  ScalarType lastsign=0;
+  for (typename MESH_TYPE::FaceIterator f=m.face.begin(); f!=m.face.end(); f++){
+    ScalarType fsign=((f->V(1)->T().P()-f->V(0)->T().P()) ^ (f->V(2)->T().P()-f->V(0)->T().P()));
+    if (fsign<0) { sign[f]=-1;  nneg++; }
+    if (fsign>0) { sign[f]=+1; npos++; }
+  }
+  
+  // second pass, detect folded faces
+  int res=0;
+  short gsign= (nneg>npos)?-1:+1;
+  for (typename MESH_TYPE::FaceIterator f=m.face.begin(); f!=m.face.end(); f++){
+    if (sign[f]*gsign<0){
+      res++;
+      f->Q()=0;
+    } else f->Q()=1;
+  }
+  
+  sign.Stop();
+  
+  return res;
+}
+
+// Smooths texture coords.
+// (can be useful to remove folds, 
+//  e.g. these created when obtaining tecture coordinates after projections)
+template<class MESH_TYPE>
+void SmoothTextureCoords(MESH_TYPE &m){
+  
+  assert(m.HasPerVertexTexture());
+  
+  typedef typename MESH_TYPE::VertexType::TextureType::PointType PointType;
+  
+  SimpleTempData<typename MESH_TYPE::VertContainer, int> div(m.vert);
+  SimpleTempData<typename MESH_TYPE::VertContainer, PointType > sum(m.vert);
+  
+  div.Start();
+  sum.Start();
+  
+	for (typename MESH_TYPE::VertexIterator v=m.vert.begin(); v!=m.vert.end(); v++) {
+		sum[v].Zero();
+    div[v]=0;
+	}
+
+	for (typename MESH_TYPE::FaceIterator f=m.face.begin(); f!=m.face.end(); f++){
+		div[f->V(0)] +=2; sum[f->V(0)] += f->V(2)->T().P(); sum[f->V(0)] += f->V(1)->T().P();
+		div[f->V(1)] +=2; sum[f->V(1)] += f->V(0)->T().P(); sum[f->V(1)] += f->V(2)->T().P();
+		div[f->V(2)] +=2; sum[f->V(2)] += f->V(1)->T().P(); sum[f->V(2)] += f->V(0)->T().P();
+	}
+
+	for (typename MESH_TYPE::VertexIterator v=m.vert.begin(); v!=m.vert.end(); v++) // if (!v->IsB()) 
+  {
+		if (v->div>0) {
+			v->T().P() = sum[v]/div[v];
+		}
+	}
+	
+	div.Stop();
+  sum.Stop();
+
+}
+
+
+
 
 
 }	}	// End namespace vcg::tri
