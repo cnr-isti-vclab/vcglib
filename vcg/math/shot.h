@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.21  2006/12/18 16:02:55  matteodelle
+minor eroor correction on variable names
+
 Revision 1.20  2006/12/18 09:46:39  callieri
 camera+shot revamp: changed field names to something with more sense, cleaning of various functions, correction of minor bugs/incongruences, removal of the infamous reference in shot.
 
@@ -147,6 +150,18 @@ public:
 
 	/// returns distance of point p from camera plane (z depth), used for unprojection 
 	S Depth(const vcg::Point3<S> & p)const;
+
+
+// accessors
+public:
+
+	vcg::Similarity<S, vcg::Matrix44<S> > * getExtrinsics(){return &Extrinsic;}
+	void setExtrinsics(vcg::Similarity<S, vcg::Matrix44<S> > &m44)
+	{
+		Extrinsics.tra = m44.tra;
+		Extrinsics.rot.FromMatrix(m44.rot);
+		Extrinsics.sca = m44.sca;
+	}
 
 }; // end class definition
 
