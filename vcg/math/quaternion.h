@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2006/06/22 08:00:26  ganovelli
+toMatrix with matrix33 added
+
 Revision 1.14  2005/04/17 21:57:03  ganovelli
 tolto il const a interpolate
 
@@ -50,6 +53,9 @@ updated access to matrix44 elements through V() instead simple []
 
 Revision 1.6  2004/03/25 14:57:49  ponchio
 Microerror. ($LOG$ -> $Log: not supported by cvs2svn $
+Microerror. ($LOG$ -> Revision 1.15  2006/06/22 08:00:26  ganovelli
+Microerror. ($LOG$ -> toMatrix with matrix33 added
+Microerror. ($LOG$ ->
 Microerror. ($LOG$ -> Revision 1.14  2005/04/17 21:57:03  ganovelli
 Microerror. ($LOG$ -> tolto il const a interpolate
 Microerror. ($LOG$ ->
@@ -110,7 +116,6 @@ public:
   
 	
 	void SetIdentity();
-	
 
   void FromAxis(const S phi, const Point3<S> &a);
   void ToAxis(S &phi, Point3<S> &a ) const;
@@ -118,6 +123,8 @@ public:
   void FromMatrix(Matrix44<S> &m);
   void ToMatrix(Matrix44<S> &m) const;
   void ToMatrix(Matrix33<S> &m) const;
+
+	void FromEulerAngles(S alpha, S beta, S gamma);
   
   Point3<S> Rotate(const Point3<S> vec) const; 
   //duplicated ... because of gcc new confoming to ISO template derived classes
@@ -310,6 +317,23 @@ template <class S> void Quaternion<S>::FromMatrix(Matrix44<S> &m) {
 		}
 	}
 }
+
+template<class S>
+void FromEulerAngles(S alpha, S beta, S gamma)
+{
+	S cosalpha = cos(alpha / 2.0);
+	S cosbeta = cos(beta / 2.0);
+	S cosgamma = cos(gamma / 2.0);
+	S sinalpha = sin(alpha / 2.0);
+	S sinbeta = sin(beta / 2.0);
+	S singamma = sin(gamma / 2.0);
+
+	V(0) = cosalpha * cosbeta * cosgamma + sinalpha * sinbeta * singamma;
+	V(1) = sinalpha * cosbeta * cosgamma - cosalpha * sinbeta * singamma;
+	V(2) = cosalpha * sinbeta * cosgamma + sinalpha * cosbeta * singamma;
+	V(3) = cosalpha * cosbeta * singamma - sinalpha * sinbeta * cosgamma;
+}
+
 template <class S> Quaternion<S> &Invert(Quaternion<S> &m) {
   m.Invert();
   return m;
