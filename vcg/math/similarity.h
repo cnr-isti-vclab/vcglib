@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2004/12/15 18:45:50  tommyfranken
+*** empty log message ***
+
 Revision 1.10  2004/10/07 13:55:47  ganovelli
 templated on the kind of class used to implement rotation
 (default is QUternion but it can be Matrix44 as well)
@@ -39,6 +42,9 @@ unified to the gl stlyle matix*vector. removed vector*matrix operator
 
 Revision 1.6  2004/03/25 14:57:49  ponchio
 Microerror. ($LOG$ -> $Log: not supported by cvs2svn $
+Microerror. ($LOG$ -> Revision 1.11  2004/12/15 18:45:50  tommyfranken
+Microerror. ($LOG$ -> *** empty log message ***
+Microerror. ($LOG$ ->
 Microerror. ($LOG$ -> Revision 1.10  2004/10/07 13:55:47  ganovelli
 Microerror. ($LOG$ -> templated on the kind of class used to implement rotation
 Microerror. ($LOG$ -> (default is QUternion but it can be Matrix44 as well)
@@ -70,6 +76,12 @@ public:
   Similarity(const RotationType &q) { SetRotate(q); }
   Similarity(const Point3<S> &p) { SetTranslate(p); }
   Similarity(S s) { SetScale(s); }
+	Similarity(S alpha, S beta, S gamma)
+	{
+		rot.FromEulerAngles(alpha, beta, gamma);
+		tra = Point3<S>(0, 0, 0);
+		sca = 1;
+	}
   
   Similarity operator*(const Similarity &affine) const;
   Similarity &operator*=(const Similarity &affine);
