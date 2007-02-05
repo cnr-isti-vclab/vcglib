@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.29  2005/12/02 09:46:49  croccia
+Corrected bug in == and != Matrix44 operators
+
 Revision 1.28  2005/06/28 17:42:47  ganovelli
 added Matrix44Diag
 
@@ -225,6 +228,7 @@ public:
 	void ToMatrix(Matrix44Type & m) const {for(int i = 0; i < 16; i++) m.V()[i]=V()[i];}
 	template <class Matrix44Type>
 	void FromMatrix(const Matrix44Type & m){for(int i = 0; i < 16; i++) V()[i]=m.V()[i];}
+	void FromEulerAngles(T alpha, T beta, T gamma);
 	void SetZero();
   void SetIdentity();
   void SetDiagonal(const T k);
@@ -432,6 +436,32 @@ template <class T> void Matrix44<T>::operator*=( const T k ) {
       _a[i] *= k;
 }
 
+template <class T> 
+void Matrix44<T>::FromEulerAngles(T alpha, T beta, T gamma)
+{
+	this->SetZero();
+
+	T cosalpha = cos(alpha);
+	T cosbeta = cos(beta);
+	T cosgamma = cos(gamma);
+	T sinalpha = sin(alpha);
+	T sinbeta = sin(beta);
+	T singamma = sin(gamma);
+
+	ElementAt(0,0) = cosbeta * cosgamma; 
+	ElementAt(0,1) = -cosalpha * singamma + sinalpha * sinbeta * cosgamma; 
+	ElementAt(0,2) = sinalpha * singamma + cosalpha * sinbeta * singamma;
+	
+	ElementAt(1,0) = cosbeta * singamma; 
+	ElementAt(1,1) = cosalpha * cosgamma + sinalpha * sinbeta * singamma; 
+	ElementAt(1,2) = -sinalpha * cosgamma + cosalpha * sinbeta * singamma;
+	
+	ElementAt(2,0) = -sinbeta; 
+	ElementAt(2,1) = sinalpha * cosbeta; 
+	ElementAt(2,2) = cosalpha * cosbeta;
+	
+	ElementAt(3,3) = 1;
+}
 
 template <class T> void Matrix44<T>::SetZero() {
   memset((T *)_a, 0, 16 * sizeof(T));
@@ -466,11 +496,11 @@ template <class T> Matrix44<T> &Matrix44<T>::SetTranslate(const Point3<T> &t) {
   SetTranslate(t[0], t[1], t[2]);
   return *this;
 }
-template <class T> Matrix44<T> &Matrix44<T>::SetTranslate(const T sx, const T sy, const T sz) {
+template <class T> Matrix44<T> &Matrix44<T>::SetTranslate(const T tx, const T ty, const T tz) {
   SetIdentity();
-	ElementAt(0, 3) = sx;
-  ElementAt(1, 3) = sy;
-  ElementAt(2, 3) = sz;
+	ElementAt(0, 3) = tx;
+  ElementAt(1, 3) = ty;
+  ElementAt(2, 3) = tz;
   return *this;
 }
 template <class T> Matrix44<T> &Matrix44<T>::SetRotate(T AngleRad, const Point3<T> & axis) {  
