@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2007/02/05 13:55:21  corsini
+add euler angle to quaternion conversion
+
 Revision 1.15  2006/06/22 08:00:26  ganovelli
 toMatrix with matrix33 added
 
@@ -53,6 +56,9 @@ updated access to matrix44 elements through V() instead simple []
 
 Revision 1.6  2004/03/25 14:57:49  ponchio
 Microerror. ($LOG$ -> $Log: not supported by cvs2svn $
+Microerror. ($LOG$ -> Revision 1.16  2007/02/05 13:55:21  corsini
+Microerror. ($LOG$ -> add euler angle to quaternion conversion
+Microerror. ($LOG$ ->
 Microerror. ($LOG$ -> Revision 1.15  2006/06/22 08:00:26  ganovelli
 Microerror. ($LOG$ -> toMatrix with matrix33 added
 Microerror. ($LOG$ ->
@@ -319,7 +325,7 @@ template <class S> void Quaternion<S>::FromMatrix(Matrix44<S> &m) {
 }
 
 template<class S>
-void FromEulerAngles(S alpha, S beta, S gamma)
+void Quaternion<S>::FromEulerAngles(S alpha, S beta, S gamma)
 {
 	S cosalpha = cos(alpha / 2.0);
 	S cosbeta = cos(beta / 2.0);
