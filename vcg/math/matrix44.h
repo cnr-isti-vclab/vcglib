@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.30  2007/02/05 14:16:33  corsini
+add from euler angles to rotation matrix conversion
+
 Revision 1.29  2005/12/02 09:46:49  croccia
 Corrected bug in == and != Matrix44 operators
 
@@ -450,9 +453,9 @@ void Matrix44<T>::FromEulerAngles(T alpha, T beta, T gamma)
 
 	ElementAt(0,0) = cosbeta * cosgamma; 
 	ElementAt(0,1) = -cosalpha * singamma + sinalpha * sinbeta * cosgamma; 
-	ElementAt(0,2) = sinalpha * singamma + cosalpha * sinbeta * singamma;
+	ElementAt(0,2) = sinalpha * singamma + cosalpha * sinbeta * cosgamma;
 	
-	ElementAt(1,0) = cosbeta * singamma; 
+	ElementAt(1,0) = cosbeta * singamma;
 	ElementAt(1,1) = cosalpha * cosgamma + sinalpha * sinbeta * singamma; 
 	ElementAt(1,2) = -sinalpha * cosgamma + cosalpha * sinbeta * singamma;
 	
