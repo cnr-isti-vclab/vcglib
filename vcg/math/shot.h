@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.22  2007/02/05 14:17:21  corsini
+add extrinsic parameters accessors
+
 Revision 1.21  2006/12/18 16:02:55  matteodelle
 minor eroor correction on variable names
 
@@ -155,8 +158,8 @@ public:
 // accessors
 public:
 
-	vcg::Similarity<S, vcg::Matrix44<S> > * getExtrinsics(){return &Extrinsic;}
-	void setExtrinsics(vcg::Similarity<S, vcg::Matrix44<S> > &m44)
+	vcg::Similarity<S, vcg::Matrix44<S> > * GetExtrinsics(){return &Extrinsics;}
+	void SetExtrinsics(vcg::Similarity<S, vcg::Matrix44<S> > &m44)
 	{
 		Extrinsics.tra = m44.tra;
 		Extrinsics.rot.FromMatrix(m44.rot);
