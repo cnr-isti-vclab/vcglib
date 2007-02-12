@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2006/10/09 20:20:18  cignoni
+Increased the maximum number of possible template args from 8  to 9
+
 Revision 1.7  2006/02/27 17:58:11  ponchio
 Added some documentation
 
@@ -82,6 +85,7 @@ class FaceTypeHolder{
   typedef BET *EdgePointer;
   typedef BFT *FacePointer;
   typedef BTT *TetraPointer;
+  static void Name(std::vector<std::string> & name){}
 
 
  // prot

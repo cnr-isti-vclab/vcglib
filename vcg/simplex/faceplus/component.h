@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2007/01/11 10:22:39  cignoni
+Added intialization of vertexRef to 0.
+
 Revision 1.11  2006/12/06 00:08:57  cignoni
 Added FFp1 and FFp2 shortcuts
 
@@ -64,6 +67,7 @@ First Really Working version
 #ifndef __VCG_FACE_PLUS_COMPONENT
 #define __VCG_FACE_PLUS_COMPONENT
 
+#include <vector>
 #include <vcg/space/triangle3.h>
 
 namespace vcg {
@@ -85,7 +89,8 @@ public:
 	inline       typename T::CoordType & P( const int j ) 	    {	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
 	inline const typename T::CoordType & P( const int j ) const {	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
 	inline const typename T::CoordType &cP( const int j ) const	{	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
-   static bool HasVertexRef()   { return false; }
+  static bool HasVertexRef()   { return false; }
+	static void Name(std::vector<std::string> & name){T::Name(name);}
 
 };
 template <class T> class VertexRef: public T {
@@ -132,6 +137,8 @@ public:
 	inline       typename T::VertexType *       & UberV( const int j )	      { assert(j>=0 && j<3); return v[j]; }
 	inline const typename T::VertexType * const & UberV( const int j ) const	{ assert(j>=0 && j<3);	return v[j];	}
   static bool HasVertexRef()   { return true; }
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("VertexRef"));T::Name(name);}
+
 
   private:
   typename T::VertexType *v[3];
@@ -156,6 +163,7 @@ public:
   static bool HasFaceNormalOcc()   { return false; }
 //  void ComputeNormal() {assert(0);}
 //  void ComputeNormalizedNormal() {assert(0);}
+	static void Name(std::vector<std::string> & name){ T::Name(name);}
 
 };
 template <class T> class NormalFromVert: public T {
@@ -166,6 +174,7 @@ public:
   static bool HasFaceNormal()   { return true; }
 //  void ComputeNormal() {	_norm = vcg::Normal<typename T::FaceType>(*(static_cast<typename T::FaceType *>(this))); }
 //  void ComputeNormalizedNormal() {	_norm = vcg::NormalizedNormal(*this);}  
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("NormalFromVert"));T::Name(name);}
 
 private:
   NormalType _norm;    
@@ -184,7 +193,8 @@ public:
   NormalType &N() { return _norm; }
   NormalType cN() const { return _norm; }
   static bool HasFaceNormal()   { return true; }
-  
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("NormalAbs"));T::Name(name);}
+
 private:
   NormalType _norm;    
 };
@@ -195,15 +205,22 @@ public:
   NormalType &WN(const int j) { return _wnorm[j]; }
   const NormalType cWN(const int j) const { return _wnorm[j]; }
   static bool HasWedgeNormal()   { return true; }
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeNormal"));T::Name(name);}
 
 private:
   NormalType _wnorm[3];    
 };
 
 
-template <class T> class Normal3s: public NormalAbs<vcg::Point3s, T> {};
-template <class T> class Normal3f: public NormalAbs<vcg::Point3f, T> {};
-template <class T> class Normal3d: public NormalAbs<vcg::Point3d, T> {};
+template <class T> class Normal3s: public NormalAbs<vcg::Point3s, T> {
+public:static void Name(std::vector<std::string> & name){name.push_back(std::string("Normal3s"));T::Name(name);}
+};
+template <class T> class Normal3f: public NormalAbs<vcg::Point3f, T> {
+public:  static void Name(std::vector<std::string> & name){name.push_back(std::string("Normal3f"));T::Name(name);}
+};
+template <class T> class Normal3d: public NormalAbs<vcg::Point3d, T> {
+public: static void Name(std::vector<std::string> & name){name.push_back(std::string("Normal3d"));T::Name(name);}
+};
 
 
 /*-------------------------- Texture ----------------------------------------*/ 
@@ -216,6 +233,7 @@ public:
   TexCoordType const &cWT(const int) const { static TexCoordType dummy_texture; return dummy_texture;}
   static bool HasWedgeTexture()   { return false; }
   static bool HasWedgeTextureOcc()   { return false; }
+  static void Name(std::vector<std::string> & name){TT::Name(name);}
 
 };
 template <class A, class TT> class WedgeTexture: public TT {
@@ -225,14 +243,21 @@ public:
   TexCoordType &WT(const int i) { return _wt[i]; }
   TexCoordType const &cWT(const int i) const { return _wt[i]; }
   static bool HasWedgeTexture()   { return true; }
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeTexture"));TT::Name(name);}
 
 private:
   TexCoordType _wt[3];    
 };
 
-template <class TT> class WedgeTexture2s: public WedgeTexture<TCoord2<short,1>, TT> {};
-template <class TT> class WedgeTexture2f: public WedgeTexture<TCoord2<float,1>, TT> {};
-template <class TT> class WedgeTexture2d: public WedgeTexture<TCoord2<double,1>, TT> {};
+template <class TT> class WedgeTexture2s: public WedgeTexture<TCoord2<short,1>, TT> {
+public:  static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeTexture2s"));TT::Name(name);}
+};
+template <class TT> class WedgeTexture2f: public WedgeTexture<TCoord2<float,1>, TT> {
+public:  static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeTexture2f"));TT::Name(name);}
+};
+template <class TT> class WedgeTexture2d: public WedgeTexture<TCoord2<double,1>, TT> {
+public: static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeTexture2d"));TT::Name(name);}
+};
 
 /*------------------------- FLAGS -----------------------------------------*/ 
 template <class T> class EmptyBitFlags: public T {
@@ -242,6 +267,8 @@ public:
   const int Flags() const { return 0; }
   static bool HasFlags()   { return false; }
   static bool HasFlagsOcc()   { return false; }
+	static void Name(std::vector<std::string> & name){T::Name(name);}
+
 };
 
 template <class T> class BitFlags:  public T {
@@ -250,6 +277,7 @@ public:
    int &Flags() {return _flags; }
    const int Flags() const {return _flags; }
   static bool HasFlags()   { return true; }
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("BitFlags"));T::Name(name);}
 
 
 private:
@@ -269,6 +297,8 @@ public:
   static bool HasWedgeColor()   { return false; }
   static bool HasFaceQuality()   { return false; }
 	static bool HasFaceColorOcc() { return false;}
+  static void Name(std::vector<std::string> & name){T::Name(name);}
+
 };
 template <class A, class T> class Color: public T {
 public:
@@ -276,6 +306,8 @@ public:
   Color():_color(vcg::Color4b::White) {}
   ColorType &C() { return _color; }
   static bool HasFaceColor()   { return true; }
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("Color"));T::Name(name);}
+
 private:
   ColorType _color;    
 };
@@ -285,16 +317,22 @@ public:
   typedef A ColorType;
   ColorType &WC(const int i) { return _color[i]; }
   static bool HasFaceColor()   { return true; }
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeColor"));T::Name(name);}
+
 private:
   ColorType _color[3];    
 };
 
-template <class T> class Color4b: public Color<vcg::Color4b, T> {};
+template <class T> class Color4b: public Color<vcg::Color4b, T> {
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("Color4b"));T::Name(name);}
+};
 
 /*-------------------------- Quality  ----------------------------------*/ 
 
 template <class T> class EmptyQuality: public T {
 public:
+	static void Name(std::vector<std::string> & name){T::Name(name);}
+
 };
 template <class A, class T> class Quality: public T {
 public:
@@ -302,14 +340,20 @@ public:
   QualityType &Q() { return _quality; }
   static bool HasFaceQuality()   { return true; }
   static bool HasFaceQualityOcc()   { return true; }
-
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("Quality"));T::Name(name);}
 private:
   QualityType _quality;    
 };
 
-template <class T> class Qualitys: public Quality<short, T> {};
-template <class T> class Qualityf: public Quality<float, T> {};
-template <class T> class Qualityd: public Quality<double, T> {};
+template <class T> class Qualitys: public Quality<short, T> {
+public:  static void Name(std::vector<std::string> & name){name.push_back(std::string("Qualitys"));T::Name(name);}
+};
+template <class T> class Qualityf: public Quality<float, T> {
+public:  static void Name(std::vector<std::string> & name){name.push_back(std::string("Qualityf"));T::Name(name);}
+};
+template <class T> class Qualityd: public Quality<double, T> {
+public:  static void Name(std::vector<std::string> & name){name.push_back(std::string("Qualityd"));T::Name(name);}
+};
 /*-------------------------- INCREMENTAL MARK  ----------------------------------------*/ 
 
 template <class T> class EmptyMark: public T {
@@ -320,6 +364,7 @@ public:
   inline void InitIMark()    {  }
   inline int & IMark()       { assert(0); static int tmp=-1; return tmp;}
   inline const int IMark() const {return 0;}
+  static void Name(std::vector<std::string> & name){T::Name(name);}
 
 };
 template <class T> class Mark: public T {
@@ -329,6 +374,7 @@ public:
   inline void InitIMark()    { _imark = 0; }
   inline int & IMark()       { return _imark;}
   inline const int & IMark() const {return _imark;}
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("Mark"));T::Name(name);}
     
  private:
 	int _imark;
@@ -351,6 +397,8 @@ public:
   static bool HasFFAdjacency()   {   return false; }
   static bool HasFFAdjacencyOcc()   {   return false; }
   static bool HasVFAdjacencyOcc()   {   return false; }
+  static void Name(std::vector<std::string> & name){T::Name(name);}
+
 };
 
 template <class T> class VFAdj: public T {
@@ -362,6 +410,8 @@ public:
   char &VFi(const int j) {return _vfi[j]; }
   static bool HasVFAdjacency()      {   return true; }
   static bool HasVFAdjacencyOcc()   {   return false; }
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("VFAdj"));T::Name(name);}
+
 private:
   typename T::FacePointer _vfp[3] ;    
   char _vfi[3] ;    
@@ -389,6 +439,7 @@ public:
 
   static bool HasFFAdjacency()      {   return true; }
   static bool HasFFAdjacencyOcc()   {   return false; }
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("FFAdj"));T::Name(name);}
 
 private:
   typename T::FacePointer _ffp[3] ;    
