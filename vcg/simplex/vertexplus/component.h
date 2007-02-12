@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2006/12/11 23:40:57  ganovelli
+Has*Opt migrated to Has*Occ
+
 Revision 1.18  2006/11/28 22:34:28  cignoni
 Added default constructor with null initialization to adjacency members.
 AddFaces and AddVertices NEED to know if the topology is correctly computed to update it.
@@ -85,6 +88,7 @@ First working version!
 ****************************************************************************/
 #ifndef __VCG_VERTEX_PLUS_COMPONENT
 #define __VCG_VERTEX_PLUS_COMPONENT
+#include <vector>
 #include <vcg/space/point3.h>
 #include <vcg/space/tcoord2.h>
 #include <vcg/space/color4.h>
@@ -108,6 +112,7 @@ public:
   const CoordType &cP() const { static CoordType coord(0, 0, 0);  assert(0); return coord; }
   CoordType &UberP() { static CoordType coord(0, 0, 0); return coord; }
   static bool HasCoord()   { return false; }
+  static void Name(std::vector<std::string> & name){T::Name(name);}
 
 };
 
@@ -121,11 +126,17 @@ public:
   CoordType &UberP() { return _coord; }
   
   static bool HasCoord()   { return true; }
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("Coord")));T::Name(name);}
+
 private:
   CoordType _coord;    
 };
-template <class T> class Coord3f: public Coord<vcg::Point3f, T> {};
-template <class T> class Coord3d: public Coord<vcg::Point3d, T> {};
+template <class T> class Coord3f: public Coord<vcg::Point3f, T> {
+public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("Coord3f"));T::Name(name);}
+};
+template <class T> class Coord3d: public Coord<vcg::Point3d, T> {
+public: static void Name(std::vector<std::string> & name){name.push_back(std::string("Coord3d"));T::Name(name);}
+};
 
 /*-------------------------- NORMAL ----------------------------------------*/ 
 
@@ -136,6 +147,8 @@ public:
   const NormalType cN()const { static NormalType dummy_normal(0, 0, 0);  assert(0); return dummy_normal; }
   static bool HasNormal()   { return false; }
   static bool HasNormalOcc()   { return false; }
+	static void Name(std::vector<std::string> & name){T::Name(name);}
+
 };
 template <class A, class T> class Normal: public T {
 public:
@@ -143,13 +156,21 @@ public:
   NormalType &N() { return _norm; }
   const NormalType &cN() const { return _norm; }
   static bool HasNormal()   { return true; }
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("Normal"));T::Name(name);}
+
 private:
   NormalType _norm;    
 };
 
-template <class T> class Normal3s: public Normal<vcg::Point3s, T> {};
-template <class T> class Normal3f: public Normal<vcg::Point3f, T> {};
-template <class T> class Normal3d: public Normal<vcg::Point3d, T> {};
+template <class T> class Normal3s: public Normal<vcg::Point3s, T> {
+public:static void Name(std::vector<std::string> & name){name.push_back(std::string("Normal3s"));T::Name(name);}
+};
+template <class T> class Normal3f: public Normal<vcg::Point3f, T> {
+public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("Normal3f"));T::Name(name);}
+};
+template <class T> class Normal3d: public Normal<vcg::Point3d, T> {
+public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("Normal3d"));T::Name(name);}
+};
 
 
 /*-------------------------- INCREMENTAL MARK  ----------------------------------------*/ 
@@ -161,6 +182,7 @@ public:
   inline void InitIMark()    {  }
   inline int & IMark()       { assert(0); static int tmp=-1; return tmp;}
   inline const int & IMark() const {return 0;}
+	static void Name(std::vector<std::string> & name){T::Name(name);}
 
 };
 template <class T> class Mark: public T {
@@ -170,6 +192,7 @@ public:
   inline void InitIMark()    { _imark = 0; }
   inline int & IMark()       { return _imark;}
   inline const int & IMark() const {return _imark;}
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("Mark"));T::Name(name);}
     
  private:
 	int _imark;
@@ -182,20 +205,30 @@ public:
   typedef vcg::TCoord2<float,1> TextureType;
   TextureType &T() { static TextureType dummy_texture;  assert(0); return dummy_texture; }
   static bool HasTexture()   { return false; }
+	static void Name(std::vector<std::string> & name){TT::Name(name);}
+
  };
 template <class A, class TT> class Texture: public TT {
 public:
   typedef A TextureType;
   TextureType &T() { return _t; }
   static bool HasTexture()   { return true; }
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("Texture"));T::Name(name);}
 
 private:
   TextureType _t;    
 };
 
-template <class TT> class Texture2s: public Texture<TCoord2<short,1>, TT> {};
-template <class TT> class Texture2f: public Texture<TCoord2<float,1>, TT> {};
-template <class TT> class Texture2d: public Texture<TCoord2<double,1>, TT> {};
+template <class TT> class Texture2s: public Texture<TCoord2<short,1>, TT> {
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("Texture2s"));TT::Name(name);}
+
+};
+template <class TT> class Texture2f: public Texture<TCoord2<float,1>, TT> {
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("Texture2f"));TT::Name(name);}
+};
+template <class TT> class Texture2d: public Texture<TCoord2<double,1>, TT> {
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("Texture2d"));TT::Name(name);}
+};
 
 /*------------------------- FLAGS -----------------------------------------*/ 
 template <class T> class EmptyBitFlags: public T {
@@ -205,6 +238,7 @@ public:
   int &Flags() { static int dummyflags(0);  assert(0); return dummyflags; }
   const int Flags() const { return 0; }
   static bool HasFlags()   { return false; }
+	static void Name(std::vector<std::string> & name){T::Name(name);}
 
 };
 
@@ -215,6 +249,7 @@ public:
   int &Flags() {return _flags; }
   const int Flags() const {return _flags; }
   static bool HasFlags()   { return true; }
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("BitFlags"));T::Name(name);}
 
 private:
   int  _flags;    
@@ -227,6 +262,8 @@ public:
   typedef vcg::Color4b ColorType;
   ColorType &C() { static ColorType dumcolor(vcg::Color4b::White); assert(0); return dumcolor; }
   static bool HasColor()   { return false; }
+	static void Name(std::vector<std::string> & name){T::Name(name);}
+
 };
 template <class A, class T> class Color: public T {
 public:
@@ -234,11 +271,15 @@ public:
   typedef A ColorType;
   ColorType &C() { return _color; }
   static bool HasColor()   { return true; }
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("Color"));T::Name(name);}
+
 private:
   ColorType _color;    
 };
 
-template <class T> class Color4b: public vert::Color<vcg::Color4b, T> {};
+template <class T> class Color4b: public vert::Color<vcg::Color4b, T> {
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("Color4b"));TT::Name(name);}
+};
 
 /*-------------------------- Quality  ----------------------------------*/ 
 
@@ -247,20 +288,29 @@ public:
   typedef float QualityType;
   QualityType &Q() { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
   static bool HasQuality()   { return false; }
+	static void Name(std::vector<std::string> & name){T::Name(name);}
+
 };
 template <class A, class T> class Quality: public T {
 public:
   typedef A QualityType;
   QualityType &Q() { return _quality; }
   static bool HasQuality()   { return true; }
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("Quality"));TT::Name(name);}
 
 private:
   QualityType _quality;    
 };
 
-template <class T> class Qualitys: public Quality<short, T> {};
-template <class T> class Qualityf: public Quality<float, T> {};
-template <class T> class Qualityd: public Quality<double, T> {};
+template <class T> class Qualitys: public Quality<short, T> {
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("Qualitys"));TT::Name(name);}
+};
+template <class T> class Qualityf: public Quality<float, T> {
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("Qualityf"));TT::Name(name);}
+};
+template <class T> class Qualityd: public Quality<double, T> {
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("Qualityd"));TT::Name(name);}
+};
 
 /*----------------------------- VFADJ ------------------------------*/ 
 
@@ -272,6 +322,7 @@ public:
   int &VFi(){static int z=0; return z;};
   static bool HasVFAdjacency()   {   return false; }
   static bool HasVFAdjacencyOcc()   {   return false; }
+	static void Name(std::vector<std::string> & name){ T::Name(name);}
 };
 
 template <class T> class VFAdj: public T {
@@ -282,6 +333,8 @@ public:
   int &VFi() {return _zp; }
   static bool HasVFAdjacency()   {   return true; }
   static bool HasVFAdjacencyOcc()   {   return true; }
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("VFAdj"));T::Name(name);}
+
 private:
   typename T::FacePointer _fp ;    
   int _zp ;    

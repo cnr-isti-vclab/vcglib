@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2006/09/28 17:34:11  cignoni
+Added Missing GetBBox function
+
 Revision 1.7  2006/02/27 17:42:43  ponchio
 Added some documentation.
 
@@ -78,6 +81,8 @@ class VertexTypeHolder{
   typedef BET *EdgePointer;
   typedef BFT *FacePointer;
   typedef BTT *TetraPointer;
+	static void Name(std::vector<std::string> & name){}
+
 };
 
 /* The base class form which we start to add our components.
@@ -237,7 +242,6 @@ static inline bool DeleteBitFlag(int bitval)
  template<class BoxType>
   void GetBBox( BoxType & bb ) const
   {	  bb.Set(this->P());  }
-
 
           };
 
