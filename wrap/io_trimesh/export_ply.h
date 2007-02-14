@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2006/12/18 09:46:39  callieri
+camera+shot revamp: changed field names to something with more sense, cleaning of various functions, correction of minor bugs/incongruences, removal of the infamous reference in shot.
+
 Revision 1.17  2006/11/30 22:49:32  cignoni
 Added save with (unused) callback
 
@@ -91,6 +94,8 @@ Initial commit
 //#include<wrap/ply/io_mask.h>
 #include<wrap/io_trimesh/io_mask.h>
 #include<wrap/io_trimesh/io_ply.h>
+#include<vcg/container/simple_temporary_data.h>
+
 
 #include <stdio.h>
 
@@ -220,7 +225,7 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 	);
 
 
-	if( pi.mask & Mask::IOM_VERTFLAGS )
+	if( m.HasPerVertexFlags() &&( pi.mask & Mask::IOM_VERTFLAGS) )
 	{
 		fprintf(fpout,
 			"property int flags\n"
@@ -253,7 +258,7 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 		,m.fn
 	);
 
-	if( pi.mask & Mask::IOM_FACEFLAGS )
+	if(m.HasPerFaceFlags()   && (pi.mask & Mask::IOM_FACEFLAGS) )
 	{
 		fprintf(fpout,
 			"property int flags\n"
@@ -368,14 +373,21 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 
 
 	int j;
-std::vector<int> FlagV; 
+	std::vector<int> FlagV;
 	VertexPointer  vp;
 	VertexIterator vi;
-	for(j=0,vi=m.vert.begin();vi!=m.vert.end();++vi)
-	{
+	SimpleTempData<SaveMeshType::VertContainer,int> indices(m.vert);
+	if(!m.HasPerVertexFlags())
+			indices.Start();
+
+	for(j=0,vi=m.vert.begin();vi!=m.vert.end();++vi){
 		vp=&(*vi);
-		FlagV.push_back(vp->UberFlags()); // Salva in ogni caso flag del vertice
-		if( ! vp->IsD() )
+		if(m.HasPerVertexFlags()) 
+				FlagV.push_back(vp->UberFlags()); // Salva in ogni caso flag del vertice
+		else
+			indices[j] = j;
+
+		if( !m.HasPerVertexFlags() || !vp->IsD() )
 		{
 			if(binary)
 			{
@@ -385,7 +397,7 @@ std::vector<int> FlagV;
 				t = float(vp->UberP()[1]); fwrite(&t,sizeof(float),1,fpout);
 				t = float(vp->UberP()[2]); fwrite(&t,sizeof(float),1,fpout);
 				
-				if( pi.mask & Mask::IOM_VERTFLAGS )
+				if( m.HasPerVertexFlags() && (pi.mask & Mask::IOM_VERTFLAGS) )
 					fwrite(&(vp->UberFlags()),sizeof(int),1,fpout);
 
 				if( m.HasPerVertexColor() && (pi.mask & Mask::IOM_VERTCOLOR) )
@@ -414,7 +426,7 @@ std::vector<int> FlagV;
 			{
 				fprintf(fpout,"%g %g %g " ,vp->P()[0],vp->P()[1],vp->P()[2]);
 
-				if( pi.mask & Mask::IOM_VERTFLAGS )
+				if( m.HasPerVertexFlags() && (pi.mask & Mask::IOM_VERTFLAGS))
 					fprintf(fpout,"%d ",vp->UberFlags());
 
 				if( m.HasPerVertexColor() && (pi.mask & Mask::IOM_VERTCOLOR) )
@@ -441,8 +453,8 @@ std::vector<int> FlagV;
 
 				fprintf(fpout,"\n");
 			}
-
-			vp->UberFlags()=j; // Trucco! Nascondi nei flags l'indice del vertice non deletato!
+		if(m.HasPerVertexFlags()) 
+				vp->UberFlags()=j; // Trucco! Nascondi nei flags l'indice del vertice non deletato!
 			j++;
 		}
 	}
@@ -463,11 +475,20 @@ std::vector<int> FlagV;
 			{ fcnt++;
 				if(binary)
 				{
-					vv[0]=fp->cV(0)->UberFlags();
-					vv[1]=fp->cV(1)->UberFlags();
-					vv[2]=fp->cV(2)->UberFlags();
-					fwrite(&c,1,1,fpout);
-					fwrite(vv,sizeof(int),3,fpout);
+						
+						if(m.HasPerVertexFlags()){
+							vv[0]=fp->cV(0)->UberFlags();
+							vv[1]=fp->cV(1)->UberFlags();
+							vv[2]=fp->cV(2)->UberFlags();
+						}
+						else
+						{
+							vv[0]=indices[fp->cV(0)];
+							vv[1]=indices[fp->cV(1)];
+							vv[2]=indices[fp->cV(2)];
+						}
+						fwrite(&c,1,1,fpout);
+						fwrite(vv,sizeof(int),3,fpout);
 
 					if( pi.mask & Mask::IOM_FACEFLAGS )
 						fwrite(&(fp->Flags()),sizeof(int),1,fpout);
@@ -538,10 +559,14 @@ std::vector<int> FlagV;
 				}
 				else	// ***** ASCII *****
 				{
+				if(m.HasPerVertexFlags()) 
 					fprintf(fpout,"3 %d %d %d ",
 						fp->cV(0)->UberFlags(),	fp->cV(1)->UberFlags(), fp->cV(2)->UberFlags() );
+				else
+					fprintf(fpout,"3 %d %d %d ",
+						indices[fp->cV(0)],	indices[fp->cV(1)], indices[fp->cV(2)] );
 
-					if( pi.mask & Mask::IOM_FACEFLAGS )
+					if(m.HasPerVertexFlags()&&( pi.mask & Mask::IOM_FACEFLAGS ))
 						fprintf(fpout,"%d ",fp->Flags());
 
 					if( m.HasPerVertexTexture() && (pi.mask & Mask::IOM_VERTTEXCOORD) )
@@ -617,9 +642,12 @@ std::vector<int> FlagV;
 	fclose(fpout); 
 	
 	// Recupera i flag originali
-	for(j=0,vi=m.vert.begin();vi!=m.vert.end();++vi)
-		(*vi).UberFlags()=FlagV[j++]; 
-	
+	if(!m.HasPerVertexFlags())
+		for(j=0,vi=m.vert.begin();vi!=m.vert.end();++vi)
+			(*vi).UberFlags()=FlagV[j++]; 
+	else
+			indices.Stop();
+
 	return 0;
 }
 

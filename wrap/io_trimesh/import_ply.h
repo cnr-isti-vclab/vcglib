@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.32  2007/02/02 00:29:33  tarini
+added a few  typecasts to QualityTypefor vertices and faces (avoids warinings when short int or int is used for Quality).
+
 Revision 1.31  2006/12/18 09:46:39  callieri
 camera+shot revamp: changed field names to something with more sense, cleaning of various functions, correction of minor bugs/incongruences, removal of the infamous reference in shot.
 
@@ -443,8 +446,8 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 
 		// Descrittori facoltativi dei flags
 	
-  if(VertexType::HasFlags() && (pf.AddToRead(VertDesc(3))!=-1 ) )
-		pi.mask |= Mask::IOM_VERTFLAGS;
+  if(VertexType::HasFlags() && pf.AddToRead(VertDesc(3))!=-1 ) 
+			pi.mask |= Mask::IOM_VERTFLAGS;
 
   if( VertexType::HasQuality() )
 	{
@@ -623,7 +626,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				(*vi).P()[1] = va.p[1];
 				(*vi).P()[2] = va.p[2];
 
-				if( pi.mask & Mask::IOM_VERTFLAGS )
+				if( m.HasPerVertexFlags() &&  (pi.mask & Mask::IOM_VERTFLAGS) )
 					(*vi).UberFlags() = va.flags;
 
 				if( pi.mask & Mask::IOM_VERTQUALITY )
@@ -675,7 +678,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
           }
 				}
 
-				if( pi.mask & Mask::IOM_FACEFLAGS )
+				if(m.HasPerFaceFlags() &&( pi.mask & Mask::IOM_FACEFLAGS) )
 				{
 					(*fi).UberFlags() = fa.flags;
 				}
