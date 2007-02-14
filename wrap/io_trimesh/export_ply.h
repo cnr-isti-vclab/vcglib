@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2007/02/14 15:30:13  ganovelli
+added treatment of HasPerVertexFlags absent
+
 Revision 1.18  2006/12/18 09:46:39  callieri
 camera+shot revamp: changed field names to something with more sense, cleaning of various functions, correction of minor bugs/incongruences, removal of the infamous reference in shot.
 
@@ -642,7 +645,7 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 	fclose(fpout); 
 	
 	// Recupera i flag originali
-	if(!m.HasPerVertexFlags())
+	if(m.HasPerVertexFlags())
 		for(j=0,vi=m.vert.begin();vi!=m.vert.end();++vi)
 			(*vi).UberFlags()=FlagV[j++]; 
 	else
