@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.25  2006/11/28 22:35:29  cignoni
+Added Consistency check in the HasVFAdj static function
+
 Revision 1.24  2006/11/07 11:29:23  cignoni
 Corrected some errors in the reflections Has*** functions
 
@@ -219,11 +222,13 @@ static bool HasPerVertexColor()   { return VertexType::HasColor()  ; }
 static bool HasPerVertexMark()    { return VertexType::HasMark()   ; }
 static bool HasPerVertexQuality() { return VertexType::HasQuality(); }
 static bool HasPerVertexTexture() { return VertexType::HasTexture(); }
+static bool HasPerVertexFlags()		{ return VertexType::HasFlags(); }
 
 static bool HasPerFaceColor()     { return FaceType::HasFaceColor() ; }
 static bool HasPerFaceNormal()    { return FaceType::HasFaceNormal()  ; }
 static bool HasPerFaceMark()      { return FaceType::HasFaceMark()   ; }
 static bool HasPerFaceQuality()   { return FaceType::HasFaceQuality(); }
+static bool HasPerFaceFlags()			{ return FaceType::HasFlags(); }
 
 static bool HasPerWedgeColor()     { return FaceType::HasWedgeColor()  ; }
 static bool HasPerWedgeNormal()    { return FaceType::HasWedgeNormal()  ; }
@@ -321,6 +326,9 @@ ScalarType Volume()
 
 template < class VertContainerType, class FaceContainerType >
 bool HasPerVertexQuality (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return VertContainerType::value_type::HasQuality();}
+
+template < class VertContainerType, class FaceContainerType >
+bool HasPerVertexFlags (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return VertContainerType::value_type::HasFlags();}
 
 template < class VertContainerType, class FaceContainerType >
 bool HasPerWedgeTexture (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return FaceContainerType::value_type::HasWedgeTexture();}
