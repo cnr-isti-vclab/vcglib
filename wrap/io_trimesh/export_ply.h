@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2007/02/14 15:40:20  ganovelli
+a wrong "!" corrected
+
 Revision 1.19  2007/02/14 15:30:13  ganovelli
 added treatment of HasPerVertexFlags absent
 
@@ -493,7 +496,7 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 						fwrite(&c,1,1,fpout);
 						fwrite(vv,sizeof(int),3,fpout);
 
-					if( pi.mask & Mask::IOM_FACEFLAGS )
+					if(m.HasPerVertexFlags()&&( pi.mask & Mask::IOM_FACEFLAGS) )
 						fwrite(&(fp->Flags()),sizeof(int),1,fpout);
 
 					if( m.HasPerVertexTexture() && (pi.mask & Mask::IOM_VERTTEXCOORD) )
