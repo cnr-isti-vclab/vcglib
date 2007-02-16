@@ -25,6 +25,9 @@
   History
 
  $Log: not supported by cvs2svn $
+ Revision 1.6  2006/12/07 00:37:58  cignoni
+ Corrected bug in the management of deleted vertices
+
  Revision 1.5  2006/10/09 19:58:08  cignoni
  Added casts to remove warnings
 
@@ -410,7 +413,7 @@ namespace io {
 					if (cb !=NULL)
 						(*cb)((100 * ++current)/materials.size(), "saving material file ");
 					else
-					{ fclose(fp); return E_ABORTED;}
+					{ /* fclose(fp); return E_ABORTED; */ }
 
 					fprintf(fp,"newmtl material_%d\n",materials[i].index);
 					fprintf(fp,"Ka %f %f %f\n",materials[i].Ka[0],materials[i].Ka[1],materials[i].Ka[2]);
