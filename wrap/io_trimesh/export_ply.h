@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2007/02/14 16:07:41  ganovelli
+added HasPerFaceFlag
+
 Revision 1.20  2007/02/14 15:40:20  ganovelli
 a wrong "!" corrected
 
@@ -382,7 +385,7 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 	std::vector<int> FlagV;
 	VertexPointer  vp;
 	VertexIterator vi;
-	SimpleTempData<SaveMeshType::VertContainer,int> indices(m.vert);
+	SimpleTempData<typename SaveMeshType::VertContainer,int> indices(m.vert);
 	if(!m.HasPerVertexFlags())
 			indices.Start();
 
