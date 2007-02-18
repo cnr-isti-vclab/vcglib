@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2007/02/12 19:00:56  ganovelli
+added Name(std:vector<std::string>& n) that fills n with the names of the attribute of the vertex type
+
 Revision 1.19  2006/12/11 23:40:57  ganovelli
 Has*Opt migrated to Has*Occ
 
@@ -126,7 +129,7 @@ public:
   CoordType &UberP() { return _coord; }
   
   static bool HasCoord()   { return true; }
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("Coord")));T::Name(name);}
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("Coord"));T::Name(name);}
 
 private:
   CoordType _coord;    
@@ -213,7 +216,7 @@ public:
   typedef A TextureType;
   TextureType &T() { return _t; }
   static bool HasTexture()   { return true; }
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("Texture"));T::Name(name);}
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("Texture"));TT::Name(name);}
 
 private:
   TextureType _t;    
@@ -277,7 +280,7 @@ private:
   ColorType _color;    
 };
 
-template <class T> class Color4b: public vert::Color<vcg::Color4b, T> {
+template <class TT> class Color4b: public vert::Color<vcg::Color4b, TT> {
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("Color4b"));TT::Name(name);}
 };
 
@@ -291,7 +294,7 @@ public:
 	static void Name(std::vector<std::string> & name){T::Name(name);}
 
 };
-template <class A, class T> class Quality: public T {
+template <class A, class TT> class Quality: public TT {
 public:
   typedef A QualityType;
   QualityType &Q() { return _quality; }
@@ -302,13 +305,13 @@ private:
   QualityType _quality;    
 };
 
-template <class T> class Qualitys: public Quality<short, T> {
+template <class TT> class Qualitys: public Quality<short, TT> {
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("Qualitys"));TT::Name(name);}
 };
-template <class T> class Qualityf: public Quality<float, T> {
+template <class TT> class Qualityf: public Quality<float, TT> {
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("Qualityf"));TT::Name(name);}
 };
-template <class T> class Qualityd: public Quality<double, T> {
+template <class TT> class Qualityd: public Quality<double, TT> {
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("Qualityd"));TT::Name(name);}
 };
 
