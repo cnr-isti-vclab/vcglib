@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.28  2006/08/23 15:34:20  marfr960
+added minimal comments
+
 Revision 1.26  2005/11/12 18:41:14  cignoni
 Added HasFlags and initialization of flags at construction.
 
@@ -73,6 +76,9 @@ Revision 1.12  2004/05/10 13:31:13  ganovelli
 function for edge adjacency added
 
 $Log: not supported by cvs2svn $
+Revision 1.28  2006/08/23 15:34:20  marfr960
+added minimal comments
+
 Revision 1.26  2005/11/12 18:41:14  cignoni
 Added HasFlags and initialization of flags at construction.
 
@@ -196,9 +202,11 @@ public:
 	/// The type base of the vertex, useful for recovering the original typename after user subclassing
 	typedef VERTEX_TYPE    BaseVertexType;
 	/// The type of the face pointed by the vertex if vertex edge topology is present
-  typedef VETYPE         EdgeType;
+	typedef VETYPE         EdgeType;
 	/// The type base of the vertex, useful for recovering the original typename after user subclassing
-  typedef VFTYPE         FaceType;
+	typedef VFTYPE         FaceType;
+	/// The type of the quality (same as scalar)
+	typedef  ScalarType  QualityType;
 
 
 /***********************************************/
