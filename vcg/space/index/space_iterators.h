@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2006/12/06 12:53:14  pietroni
+changed 1 wrong comment RayIterator---- Refresh .. was the opposite
+
 Revision 1.22  2006/10/26 08:28:50  pietroni
 corrected 1 bug in operator ++ of closest iterator
 
@@ -101,7 +104,7 @@ namespace vcg{
 
 			dist=(r.Origin()-goal).Norm(); 
 
-      const float LocalMaxScalar = std::numeric_limits<float>::max();
+      const float LocalMaxScalar = (std::numeric_limits<float>::max)();
 			const float	EPSILON = 1e-50f;
 
 			/* Parametri della linea */
@@ -326,7 +329,7 @@ namespace vcg{
 		CoordType t;
 
 	};
-
+ 
 
 	template <class Spatial_Idexing,class DISTFUNCTOR,class TMARKER> 
 	class ClosestIterator
@@ -341,7 +344,7 @@ namespace vcg{
 		///control the end of scanning
 		bool  _EndGrid()
 		{
-			if ((explored.min==vcg::Point3i(0,0,0))&&(explored.max==Si.siz-vcg::Point3i(1,1,1)))
+			if ((explored.min==vcg::Point3i(0,0,0))&&(explored.max==Si.siz))
 				end =true;
 			return end;
 		}
@@ -366,7 +369,7 @@ namespace vcg{
 			_UpdateRadius();
 			Box3<ScalarType> b3d(p,radius);
 			Si.BoxToIBox(b3d,to_explore);
-			Box3i ibox(Point3i(0,0,0),Si.siz-Point3i(1,1,1));
+			Box3i ibox(Point3i(0,0,0),Si.siz);
 			to_explore.Intersect(ibox);
 			if (!to_explore.IsNull())
 			{
@@ -468,40 +471,22 @@ namespace vcg{
 
 					}
 
-					////then control if there are more than 1 element
-					if (Elems.size()>1)
-						std::sort(Elems.begin(),Elems.end());
+				////sort the elements in Elems and take a iterator to the last one
+				std::sort(Elems.begin(),Elems.end());
+				CurrentElem=Elems.rbegin();
 
-					CurrentElem=Elems.end();
-					if (Elems.size() > 0) {
-							CurrentElem--;
-					}
-
-				return((Elems.size()==0)||(Dist()>radius));
+			return((Elems.size()==0)||(Dist()>radius));
 		}
-
-		/*void operator ++()
-		{
-			if (Elems.size()>0)
-			{
-				CurrentElem--;
-				Elems.pop_back();
-			}
-			while ((!End())&&(Dist()>radius))
-				if (_NextShell()&&!_EndGrid())
-					Refresh();
-		}*/
 
 		bool ToUpdate()
 		{return ((Elems.size()==0)||(Dist()>radius));}
 
 		void operator ++()
 		{
-			if (Elems.size()>0)
-			{
-				CurrentElem--;
-				Elems.pop_back();
-			}
+			if (!Elems.empty()) Elems.pop_back();
+				
+			CurrentElem = Elems.rbegin();
+
 			if ((!End())&& ToUpdate())
 			while ((!End())&& Refresh()&&(!_EndGrid()))
 					_NextShell();
@@ -558,7 +543,7 @@ namespace vcg{
 		DISTFUNCTOR &dist_funct;
 		TMARKER tm;
 
-		typedef typename std::vector<Entry_Type>::iterator ElemIterator;
+		typedef typename std::vector<Entry_Type>::reverse_iterator ElemIterator;
 		ElemIterator CurrentElem;	//iterator to current element
 
 };
