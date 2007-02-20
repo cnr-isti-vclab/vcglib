@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.41  2007/01/13 00:25:36  cignoni
+Added #ifdefs to guarantee that ComputeNormal would be defined only once
+
 Revision 1.40  2007/01/11 10:13:11  cignoni
 Rewrote the template of ComputeNormal functions to a more readable form.
 
@@ -193,7 +196,9 @@ public:
 	typedef Point3< ScalarType > NormalType;
 	/// The geometric type of the face
 	typedef Triangle3<ScalarType> GeometricType;
-	
+	/// The type of the quality (same as scalar)
+	typedef  ScalarType  QualityType;
+
   typedef typename FVTYPE::FaceType FaceFromVertType;
 	/// The bounding box type
 	typedef Box3<ScalarType> BoxType;
