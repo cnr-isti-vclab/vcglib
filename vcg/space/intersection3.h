@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.27  2006/10/25 16:04:32  pietroni
+added intersection control between bounding boxes for intersection between segment and triangle function
+
 Revision 1.26  2006/09/14 08:39:07  ganovelli
 Intersection_sphere_sphere added
 
@@ -601,7 +604,7 @@ bool Intersection_Plane_Box(const vcg::Plane3<ScalarType> &pl,
 }
 
 template<class ScalarType>
-bool Intersection_Triangle_Box( vcg::Box3<ScalarType> &bbox,
+bool Intersection_Triangle_Box(const vcg::Box3<ScalarType>   &bbox,
 							   const vcg::Point3<ScalarType> &p0,
 							   const vcg::Point3<ScalarType> &p1,
 							   const vcg::Point3<ScalarType> &p2)
