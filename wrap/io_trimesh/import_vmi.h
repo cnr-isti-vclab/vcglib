@@ -25,6 +25,9 @@
   History
 
  $Log: not supported by cvs2svn $
+ Revision 1.1  2007/02/14 01:20:37  ganovelli
+ working draft of VCG Mesh Image importer and exporter. Does not consider optional attributes. The mesh atributes are only vn and fn (no bbox, texture coordiantes)
+
  
 
 ****************************************************************************/
@@ -51,20 +54,10 @@ namespace io {
 		typedef typename OpenMeshType::VertexIterator VertexIterator;
 		typedef typename OpenMeshType::VertexType VertexType;
 
-		static bool Open(OpenMeshType &m,char * filename){
-			int i;
-			OpenMeshType::FaceIterator fi;
-			OpenMeshType::VertexIterator vi;
-			FILE * f = fopen(filename,"rb");
-			std::vector<string> nameF,nameV,fnameF,fnameV;
-			int nameFsize,nameVsize,vertSize,faceSize;
-
-			OpenMeshType::FaceType::Name(nameF);	
-			OpenMeshType::VertexType::Name(nameV);
-
-			/* read header */
+		static bool GetHeader(FILE * f,std::vector<std::string>& fnameV, std::vector<std::string>& fnameF, int & vertSize, int &faceSize){
 			char name[100];
 			char buf[4096];
+			int nameFsize,nameVsize,i;
 			fgets(buf,4096,f);
 			sscanf(buf,"%s %d",&name[0],&nameFsize);
 			for(i=0; i < nameFsize; ++i) {
@@ -83,6 +76,28 @@ namespace io {
 			sscanf(buf,"%s %d",&name[0],&vertSize);
 			fgets(buf,4096,f);
 			assert(strstr(buf,"end_header")!=NULL);
+			return true;
+		}
+
+		static bool GetHeader(char * filename,std::vector<std::string>& nameV, std::vector<std::string>& nameF, int & vertSize, int &faceSize){
+				FILE * f = fopen(filename,"rb");
+				return GetHeader(f,nameV, nameF, vertSize, faceSize);
+				fclose(f);
+	}
+		static bool Open(OpenMeshType &m,char * filename){
+			int i;
+			OpenMeshType::FaceIterator fi;
+			OpenMeshType::VertexIterator vi;
+			FILE * f = fopen(filename,"rb");
+			std::vector<string> nameF,nameV,fnameF,fnameV;
+			int vertSize,faceSize;
+
+			/* read the header */
+			GetHeader(f,fnameV, fnameF, vertSize, faceSize);
+
+			/* read the mesh type */
+			OpenMeshType::FaceType::Name(nameF);	
+			OpenMeshType::VertexType::Name(nameV);
 
 			/* check if the type is the very same, otherwise return */
 			if(fnameV != nameV) return false;
@@ -96,20 +111,25 @@ namespace io {
 			fread(&offsetF,sizeof( int),1,f);
 
 			/* read the object mesh */
-			fread(&m.vn,sizeof(int),1,f);
-			fread(&m.fn,sizeof(int),1,f);
+			fread(&m,sizeof(OpenMeshType),1,f);
+
+			/* overwrite che container because they could be inconsistent */
+			OpenMeshType::VertContainer tvc;
+			OpenMeshType::FaceContainer tfc;
+			memcpy(&m.vert,&tvc,sizeof(OpenMeshType::VertContainer));
+			memcpy(&m.face,&tfc,sizeof(OpenMeshType::FaceContainer));
 
 			m.vert.resize(vertSize);
 
 			int read;
 			/* load the vertices */
-			read=fread((void*)& m.vert[0],sizeof(OpenMeshType::VertexType)*vertSize,1,f);
+			read=fread((void*)& m.vert[0],sizeof(OpenMeshType::VertexType),vertSize,f);
 			assert(ferror(f)==0);
 			assert(read==vertSize);
 
 			m.face.resize(faceSize);
 			/* load the faces */
-			read = fread((void*)& m.face[0],sizeof(OpenMeshType::FaceType)*faceSize,1,f);
+			read = fread((void*)& m.face[0],sizeof(OpenMeshType::FaceType),faceSize,f);
 			assert(ferror(f)==0);
 			assert(!feof(f));
 			assert(read==faceSize);
