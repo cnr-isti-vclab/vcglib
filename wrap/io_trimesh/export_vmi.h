@@ -25,6 +25,9 @@
   History
 
  $Log: not supported by cvs2svn $
+ Revision 1.1  2007/02/14 01:20:37  ganovelli
+ working draft of VCG Mesh Image importer and exporter. Does not consider optional attributes. The mesh atributes are only vn and fn (no bbox, texture coordiantes)
+
  
 
 ****************************************************************************/
@@ -80,9 +83,8 @@ namespace io {
 			/* write the address of the first face */
 			fwrite(&offsetF,sizeof( int),1,f);
 
-			/* save the object mesh (first draft)*/
-			fwrite(&m.vn,sizeof(int),1,f);
-			fwrite(&m.fn,sizeof(int),1,f);
+			/* save the object mesh */
+			fwrite(&m,sizeof(SaveMeshType),1,f);
 
 			int written;
 			/* save the vertices */
