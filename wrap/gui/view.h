@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2007/01/18 01:24:32  cignoni
+Added cast for mac compiling
+
 Revision 1.14  2005/10/15 15:23:32  ponchio
 Fixed viewport<->window coordinate change for the z. (z = 2*z -1 now)
 Accordingly to gluUnproject documentation.
@@ -86,7 +89,12 @@ y is upward!
 #include <windows.h>
 #endif
 
+#if defined(__APPLE__)
+#include <OpenGL/gl.h>
+#else
 #include <GL/gl.h>
+#endif
+
 namespace vcg {
 /**
 This class represent the viewing parameters under opengl. 
