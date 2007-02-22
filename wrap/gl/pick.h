@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.10  2006/12/07 00:39:22  cignoni
+Added a class prototype for avoiding the inclusion of tetra.h
+
 Revision 1.9  2006/12/04 09:27:13  cignoni
 Removed useless include <tetra.h>
 
@@ -62,7 +65,7 @@ public:
     if(width==0 ||height==0) return 0; 
 		long hits;	
 		int sz=m.face.size()*5;
-		unsigned int *selectBuf =new unsigned int[sz];
+		GLuint *selectBuf =new GLuint[sz];
 		//  static unsigned int selectBuf[16384];
 		glSelectBuffer(sz, selectBuf);
 		glRenderMode(GL_SELECT);
@@ -72,7 +75,7 @@ public:
 		glPushName(-1);
 		double mp[16];
 
-		int viewport[4];
+		GLint viewport[4];
 		glGetIntegerv(GL_VIEWPORT,viewport);
 		glMatrixMode(GL_PROJECTION);
 		glGetDoublev(GL_PROJECTION_MATRIX ,mp);
