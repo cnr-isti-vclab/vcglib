@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.26  2007/02/14 15:31:41  ganovelli
+Added HasPerVertexFlag
+
 Revision 1.25  2006/11/28 22:35:29  cignoni
 Added Consistency check in the HasVFAdj static function
 
@@ -102,7 +105,7 @@ Initial commit
 
 
 ****************************************************************************/
-#ifndef __GNUC
+#if defined(_MSC_VER)
 #pragma warning( disable : 4804 )
 #endif
 #include <assert.h>
