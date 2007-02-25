@@ -159,7 +159,7 @@ if(argc<4) Usage();
 				case 'T' : if(argv[i][2]=='y') { qparams.PreserveTopology	= true;  printf("Preserving Topology\n");	}
                                   else { qparams.PreserveTopology	= false; printf("NOT Preserving Topology\n");	}        break;		
 				case 'q' :	qparams.QualityThr	= atof(argv[i]+2);	           printf("Setting Quality Thr to %f\n",atof(argv[i]+2)); 	 break;			
-				case 'n' :	qparams.NormalThr		= atof(argv[i]+2)*M_PI/180.0;  printf("Setting Normal Thr to %f deg\n",atof(argv[i]+2)); break;	
+				case 'n' :	qparams.NormalThrRad = math::ToRad(atof(argv[i]+2));  printf("Setting Normal Thr to %f deg\n",atof(argv[i]+2)); break;	
 				case 'b' :	qparams.BoundaryWeight  = atof(argv[i]+2);			printf("Setting Boundary Weight to %f\n",atof(argv[i]+2)); break;		
 				case 'e' :	TargetError = float(atof(argv[i]+2));			printf("Setting TargetError to %g\n",atof(argv[i]+2)); break;		
 				case 'P' :	CleaningFlag=true;  printf("Cleaning mesh before simplification\n",atof(argv[i]+2)); break;	
