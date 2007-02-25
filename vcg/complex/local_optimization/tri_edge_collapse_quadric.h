@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2007/01/19 09:13:14  cignoni
+Added Finalize() method to the interface, corrected minor bugs on border preserving and postsimplification cleanup
+Avoided double make_heap (it is done only in the local_optimization init)
+
 Revision 1.11  2006/10/15 07:31:21  cignoni
 typenames and qualifiers for gcc compliance
 
@@ -127,7 +131,7 @@ class TriEdgeCollapseQuadricParameter
 public:
 	double	QualityThr; // all 
 	double	BoundaryWeight;
-	double	NormalThr;
+	double	NormalThrRad;
 	double	CosineThr;
 	double	QuadricEpsilon;
 	double	ScaleFactor;
@@ -239,7 +243,7 @@ public:
 	typename 	TriMeshType::FaceIterator  pf;
 
 	EdgeType av0,av1,av01;
-	Params().CosineThr=cos(Params().NormalThr);
+	Params().CosineThr=cos(Params().NormalThrRad);
 
 	if(!IsSetHint(HNHasVFTopology) ) vcg::tri::UpdateTopology<TriMeshType>::VertexFace(m);
 
@@ -307,20 +311,21 @@ public:
 		else 
     { // if the collapse is A-symmetric (e.g. u->v != v->u) 
 			for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-		  {
-			  vcg::face::VFIterator<FaceType> x;
-			  m.UnMarkAll();
-			  for( x.F() = (*vi).VFp(), x.I() = (*vi).VFi(); x.F()!=0; ++ x)
-        {
-				  assert(x.F()->V(x.I())==&(*vi));
-				  if(x.V()->IsRW() && x.V1()->IsRW() && !m.IsMarked(x.F()->V1(x.I()))){
-							  h_ret.push_back( HeapElem( new MYTYPE( EdgeType (x.V(),x.V1()),TriEdgeCollapse< TriMeshType,MYTYPE>::GlobalMark())));
-							  }
-				  if(x.V()->IsRW() && x.V2()->IsRW() && !m.IsMarked(x.F()->V2(x.I()))){
-							  h_ret.push_back( HeapElem( new MYTYPE( EdgeType (x.V(),x.V2()),TriEdgeCollapse< TriMeshType,MYTYPE>::GlobalMark())));
-						  }
-			  }
-		  }	
+				if(!(*vi).IsD() && (*vi).IsRW())
+					{
+						vcg::face::VFIterator<FaceType> x;
+						m.UnMarkAll();
+						for( x.F() = (*vi).VFp(), x.I() = (*vi).VFi(); x.F()!=0; ++ x)
+						{
+							assert(x.F()->V(x.I())==&(*vi));
+							if(x.V()->IsRW() && x.V1()->IsRW() && !m.IsMarked(x.F()->V1(x.I()))){
+										h_ret.push_back( HeapElem( new MYTYPE( EdgeType (x.V(),x.V1()),TriEdgeCollapse< TriMeshType,MYTYPE>::GlobalMark())));
+										}
+							if(x.V()->IsRW() && x.V2()->IsRW() && !m.IsMarked(x.F()->V2(x.I()))){
+										h_ret.push_back( HeapElem( new MYTYPE( EdgeType (x.V(),x.V2()),TriEdgeCollapse< TriMeshType,MYTYPE>::GlobalMark())));
+									}
+						}
+					}	
 	  }
 }
 
@@ -330,7 +335,7 @@ public:
 		Params().UseArea=true;
 		Params().UseVertexWeight=false;
 		Params().NormalCheck=false;
-		Params().NormalThr=M_PI/2;
+		Params().NormalThrRad=M_PI/2;
 		Params().QualityCheck=true;
 		Params().QualityThr=.1;
 		Params().BoundaryWeight=.5;
