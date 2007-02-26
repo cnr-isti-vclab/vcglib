@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.29  2007/02/20 14:08:34  ganovelli
+added QualityType to comply vertexplus type
+
 Revision 1.28  2006/08/23 15:34:20  marfr960
 added minimal comments
 
@@ -76,6 +79,9 @@ Revision 1.12  2004/05/10 13:31:13  ganovelli
 function for edge adjacency added
 
 $Log: not supported by cvs2svn $
+Revision 1.29  2007/02/20 14:08:34  ganovelli
+added QualityType to comply vertexplus type
+
 Revision 1.28  2006/08/23 15:34:20  marfr960
 added minimal comments
 
@@ -621,25 +627,25 @@ inline const int & VFi() const
 #if ((defined __VCGLIB_VERTEX_AT) || (defined __VCGLIB_VERTEX_ATS)) 
 	// Pointer to first tetrahedron of the start implements the Vertex-Tetrahedron Topology
 protected:
-	VTTYPE *_vtb;
+	VTTYPE *_vtp;
 	int _vti;
 #endif
 
 public:
-inline VTTYPE * & VTb()
+inline VTTYPE * & VTp()
 	{
 #if ((defined __VCGLIB_VERTEX_AT) || (defined __VCGLIB_VERTEX_ATS))
-		  return _vtb;
+		  return _vtp;
 #else
     assert(0);// you are probably trying to use VF topology in a vertex without it
 		return *((VTTYPE **)(_flags));  
 #endif
 	}
 
-inline const VTTYPE * &  VTb() const
+inline const VTTYPE * &  VTp() const
 	{
 #if ((defined __VCGLIB_VERTEX_AT) || (defined __VCGLIB_VERTEX_ATS))
-		  return _vtb;
+		  return _vtp;
 #else
 		assert(0);// you are probably trying to use VF topology in a vertex without it
 		return (VTTYPE *)this;
