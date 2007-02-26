@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2006/02/13 13:10:27  cignoni
+Added Zmode for moving objects along the perpendicular to the viewplane
+
 Revision 1.8  2004/07/18 06:54:08  cignoni
 Added Scaling
 
@@ -64,7 +67,7 @@ public:
   virtual ~TrackMode() {}
   virtual void Apply(Trackball *trackball, Point3f new_point) = 0;
   virtual void Apply(Trackball *trackball, float WheelNotch);
-
+  virtual const char *Name()=0;
   virtual void Draw() {}
  protected:
   Plane3f GetViewPlane(const View<float> &view, const Point3f &center);
@@ -76,16 +79,17 @@ public:
 class SphereMode: public TrackMode {
  public:  
   void Apply(Trackball *trackball, Point3f new_point);
+  const char* Name() {return "SphereMode";};
  protected:
   Point3f Hit(Trackball *trackball, const Point3f &p);
   bool HitHyper(Point3f center,  float radius, Point3f viewpoint, Plane3f vp, Point3f hitplane, Point3f &hit) ;
-
 };
 
 class CylinderMode: public TrackMode {
 public:
   CylinderMode(const Line3f &/*line*/, float /*radius = 1*/) {}
   void Apply(Trackball * /*trackball*/, Point3f /*new_point*/) {}
+  const char* Name() {return "CylinderMode";};
 protected:
   Line3f line;
   float radius;
@@ -95,6 +99,7 @@ class PlaneMode: public TrackMode {
 public:
   PlaneMode(const Plane3f &pl): plane(pl) {}
   void Apply(Trackball *trackball, Point3f new_point);
+  const char* Name() {return "PlaneMode";};
 protected:
   Plane3f plane;
 };
@@ -102,6 +107,7 @@ protected:
 // Move the object along the Z of the Camera
 // complement of the Plane mode
 class ZMode: public TrackMode {
+  const char* Name() {return "ZMode";};
 public:
   void Apply(Trackball *trackball, Point3f new_point);
 };
@@ -110,12 +116,14 @@ class LineMode: public TrackMode {
 public:
   LineMode(const Line3f &/*line*/) {}
   void Apply(Trackball * /*trackball*/, Point3f /*new_point*/) {}
+  const char* Name() {return "LineMode";};
 protected:
   Line3f line;
 };
 
 class ScaleMode: public TrackMode {
 public:
+  const char* Name() {return "ScaleMode";};
   void Apply(Trackball *trackball, Point3f new_point);
 };
 

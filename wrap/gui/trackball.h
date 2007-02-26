@@ -25,6 +25,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2007/01/15 15:04:15  tarini
+added "ToAscii" and "SetFromAscii" methods to load/store current trackball status from/to ascii strings
+(intended uses: clipboard operations and comments inside png snapshots!)
+
 Revision 1.11  2006/08/23 15:40:57  marfr960
 *** empty log message ***
 
@@ -223,7 +227,7 @@ namespace vcg {
     void Store();
     void HistorySize(int lenght);
 
-    //internals
+/*    //internals  // commented out no more used this stuff!
     enum Action { NONE = 0,
 		  VIEW_ROTATE = 1,
 		  // Axis Constrained Rotation 
@@ -237,7 +241,7 @@ namespace vcg {
 		  //scale trackball and model
 		  TRACK_SCALE = 13
     };
-
+*/
     // loads/stores current status from/to ascii stings
     void ToAscii(char * st);
     bool SetFromAscii(char * st);
