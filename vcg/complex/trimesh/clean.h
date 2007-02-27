@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.48  2007/01/11 10:12:19  cignoni
+Removed useless and conflicting inclusion of face.h
+
 Revision 1.47  2006/12/01 21:26:14  cignoni
 Corrected bug in the IsFFAdjacencyConsistent the Topology checking function.
 
@@ -454,7 +457,7 @@ private:
       These functions can optionally take into account only the selected faces.
       */
       template<bool Selected>  
-		  static int RemoveFaceOutOfRangeAreaSel(MeshType& m, ScalarType MinAreaThr=0, ScalarType MaxAreaThr=std::numeric_limits<ScalarType>::max())
+		  static int RemoveFaceOutOfRangeAreaSel(MeshType& m, ScalarType MinAreaThr=0, ScalarType MaxAreaThr=(std::numeric_limits<ScalarType>::max)())
 			{
 				FaceIterator fi;
 				int count_fd = 0;
@@ -475,7 +478,7 @@ private:
 				return count_fd;
 			}
       template<bool Selected>  
-        static int RemoveFaceOutOfRangeEdgeSel( MeshType& m, ScalarType MinEdgeThr=0, ScalarType MaxEdgeThr=std::numeric_limits<ScalarType>::max())
+        static int RemoveFaceOutOfRangeEdgeSel( MeshType& m, ScalarType MinEdgeThr=0, ScalarType MaxEdgeThr=(std::numeric_limits<ScalarType>::max)())
       {
         FaceIterator fi;
         int count_fd = 0;
@@ -504,11 +507,11 @@ private:
       static int RemoveZeroAreaFace(MeshType& m) { return RemoveFaceOutOfRangeArea(m);}
       
       // Aliases for the functions that do not look at selection
-      static int RemoveFaceOutOfRangeArea(MeshType& m, ScalarType MinAreaThr=0, ScalarType MaxAreaThr=std::numeric_limits<ScalarType>::max())
+      static int RemoveFaceOutOfRangeArea(MeshType& m, ScalarType MinAreaThr=0, ScalarType MaxAreaThr=(std::numeric_limits<ScalarType>::max)())
       {
         return RemoveFaceOutOfRangeAreaSel<false>(m,MinAreaThr,MaxAreaThr);
       }
-      static int RemoveFaceOutOfRangeEdge(MeshType& m, ScalarType MinEdgeThr=0, ScalarType MaxEdgeThr=std::numeric_limits<ScalarType>::max())
+      static int RemoveFaceOutOfRangeEdge(MeshType& m, ScalarType MinEdgeThr=0, ScalarType MaxEdgeThr=(std::numeric_limits<ScalarType>::max)())
       {
         return RemoveFaceOutOfRangeEdgeSel<false>(m,MinEdgeThr,MaxEdgeThr);
       }
