@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2007/02/12 19:01:23  ganovelli
+added Name(std:vector<std::string>& n) that fills n with the names of the attribute of the face type
+
 Revision 1.12  2007/01/11 10:22:39  cignoni
 Added intialization of vertexRef to 0.
 
@@ -403,7 +406,11 @@ public:
 
 template <class T> class VFAdj: public T {
 public:
-
+	VFAdj(){
+		_vfp[0]=0;
+		_vfp[1]=0;
+		_vfp[2]=0;
+	}
   typename T::FacePointer       &VFp(const int j)        { assert(j>=0 && j<3);  return _vfp[j]; }
   typename T::FacePointer const  VFp(const int j) const  { assert(j>=0 && j<3);  return _vfp[j]; }
   typename T::FacePointer const cVFp(const int j) const  { assert(j>=0 && j<3);  return _vfp[j]; }
