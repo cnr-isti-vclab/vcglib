@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.33  2007/02/14 15:30:13  ganovelli
+added treatment of HasPerVertexFlags absent
+
 Revision 1.32  2007/02/02 00:29:33  tarini
 added a few  typecasts to QualityTypefor vertices and faces (avoids warinings when short int or int is used for Quality).
 
@@ -398,12 +401,6 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 	if( VertexType::HasQuality() ) tv.Q()=(typename OpenMeshType::VertexType::QualityType)1.0;
 	if( VertexType::HasColor() )     tv.C()=Color4b(Color4b::White);
 	
-	FaceType tf;
-	// No more needed. The default constructor clear the flags;
-  // tf.UberFlags() = 0;
-	if( FaceType::HasFaceQuality() )  tf.Q()=(typename OpenMeshType::FaceType::QualityType)1.0;
-	if( FaceType::HasWedgeColor() )   tf.WC(0)=tf.WC(1)=tf.WC(2)=Color4b(Color4b::White);
-	if( HasPerFaceColor(m) )    tf.C()=Color4b(Color4b::White);			
 	// Descrittori delle strutture
 
   //bool isvflags = false;	// Il file contiene i flags 
@@ -773,7 +770,13 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 
       }
 		}else if( !strcmp( pf.ElemName(i),"tristrips") )//////////////////// LETTURA TRISTRIP DI STANFORD
-		{
+		{ 
+			// Warning the parsing of tristrips could not work if OCF types are used
+			FaceType tf;  
+			if( FaceType::HasFaceQuality() )  tf.Q()=(typename OpenMeshType::FaceType::QualityType)1.0;
+			if( FaceType::HasWedgeColor() )   tf.WC(0)=tf.WC(1)=tf.WC(2)=Color4b(Color4b::White);
+			if( HasPerFaceColor(m) )    tf.C()=Color4b(Color4b::White);			
+
 			int j;
 			pf.SetCurElement(i);
 			int numvert_tmp = (int)m.vert.size();
