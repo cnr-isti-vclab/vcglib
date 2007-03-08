@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2006/03/29 09:27:07  cignoni
+Added managemnt of non critical errors
+
 Revision 1.10  2006/03/29 08:16:31  corsini
 Minor change in LoadMask
 
@@ -93,8 +96,8 @@ public:
 static bool FileExtension(std::string filename,  std::string extension)
 {
   std::locale loc1 ;
-  std::use_facet<std::ctype<char> > ( loc1 ).tolower(&*filename.begin(),&*filename.end());
-  std::use_facet<std::ctype<char> > ( loc1 ).tolower(&*extension.begin(),&*extension.end());
+  std::use_facet<std::ctype<char> > ( loc1 ).tolower(&*filename.begin(),&*filename.rbegin());
+  std::use_facet<std::ctype<char> > ( loc1 ).tolower(&*extension.begin(),&*extension.rbegin());
   std::string end=filename.substr(filename.length()-extension.length(),extension.length());
   return end==extension;
 }
