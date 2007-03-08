@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.24  2007/02/20 16:22:50  ganovelli
+modif in ClosestIterator to include  the last shell Si.siz [X|Y|X]. Tested with minialign and point based animation
+
 Revision 1.23  2006/12/06 12:53:14  pietroni
 changed 1 wrong comment RayIterator---- Refresh .. was the opposite
 
@@ -369,7 +372,7 @@ namespace vcg{
 			_UpdateRadius();
 			Box3<ScalarType> b3d(p,radius);
 			Si.BoxToIBox(b3d,to_explore);
-			Box3i ibox(Point3i(0,0,0),Si.siz);
+			Box3i ibox(Point3i(0,0,0),Si.siz-Point3i(1,1,1));
 			to_explore.Intersect(ibox);
 			if (!to_explore.IsNull())
 			{
