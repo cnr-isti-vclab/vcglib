@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.31  2007/02/06 09:57:40  corsini
+fix euler angles computation
+
 Revision 1.30  2007/02/05 14:16:33  corsini
 add from euler angles to rotation matrix conversion
 
@@ -452,15 +455,15 @@ void Matrix44<T>::FromEulerAngles(T alpha, T beta, T gamma)
 	T singamma = sin(gamma);
 
 	ElementAt(0,0) = cosbeta * cosgamma; 
-	ElementAt(0,1) = -cosalpha * singamma + sinalpha * sinbeta * cosgamma; 
-	ElementAt(0,2) = sinalpha * singamma + cosalpha * sinbeta * cosgamma;
+	ElementAt(1,0) = -cosalpha * singamma + sinalpha * sinbeta * cosgamma; 
+	ElementAt(2,0) = sinalpha * singamma + cosalpha * sinbeta * cosgamma;
 	
-	ElementAt(1,0) = cosbeta * singamma;
+	ElementAt(0,1) = cosbeta * singamma;
 	ElementAt(1,1) = cosalpha * cosgamma + sinalpha * sinbeta * singamma; 
-	ElementAt(1,2) = -sinalpha * cosgamma + cosalpha * sinbeta * singamma;
+	ElementAt(2,1) = -sinalpha * cosgamma + cosalpha * sinbeta * singamma;
 	
-	ElementAt(2,0) = -sinbeta; 
-	ElementAt(2,1) = sinalpha * cosbeta; 
+	ElementAt(0,2) = -sinbeta; 
+	ElementAt(1,2) = sinalpha * cosbeta; 
 	ElementAt(2,2) = cosalpha * cosbeta;
 	
 	ElementAt(3,3) = 1;
