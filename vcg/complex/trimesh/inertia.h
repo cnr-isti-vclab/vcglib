@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2006/03/29 10:12:08  corsini
+Add cast to avoid warning
+
 Revision 1.2  2005/12/12 12:08:30  cignoni
 First working version
 
@@ -51,6 +54,8 @@ journal of graphics tools, volume 1, number 2, 1996
 */
 
 #include <vcg/math/matrix33.h>
+#include <vcg/math/lin_algebra.h>
+
 #include <vcg/complex/trimesh/update/normal.h>
 namespace vcg
 {
@@ -290,7 +295,7 @@ void InertiaTensorEigen(Matrix44<ScalarType> &EV, Point4<ScalarType> &ev )
 	Matrix44d EVd,ITd;ITd.Import(it);
 	Point4d evd; evd.Import(ev);
 	int n;
-	ITd.Jacobi(evd,EVd,n);
+	Jacobi(ITd,evd,EVd,n);
 	EV.Import(EVd);
 	ev.Import(evd);
 }
