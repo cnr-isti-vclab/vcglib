@@ -25,6 +25,9 @@
   History
 
  $Log: not supported by cvs2svn $
+ Revision 1.7  2007/02/16 21:12:13  m_di_benedetto
+ Commented out strange abort in WriteMaterials()
+
  Revision 1.6  2006/12/07 00:37:58  cignoni
  Corrected bug in the management of deleted vertices
 
@@ -89,6 +92,7 @@
 
 #include <wrap/callback.h>
 #include <vcg/complex/trimesh/allocate.h>
+#include <vcg/space/tcoord2.h>
 #include <wrap/io_trimesh/io_mask.h>
 #include "io_material.h"
 #include <iostream>
