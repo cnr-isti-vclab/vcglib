@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.40  2006/05/16 21:55:28  cignoni
+Updated to the new remove zero area syntax
+
 Revision 1.39  2006/03/29 09:27:07  cignoni
 Added managemnt of non critical errors
 
@@ -176,6 +179,12 @@ Added	Standard comments
 using namespace std;
 
 // VCG headers
+#include <vcg/simplex/vertexplus/base.h>
+#include <vcg/simplex/vertexplus/component.h>
+
+#include <vcg/simplex/faceplus/base.h>
+#include <vcg/simplex/faceplus/component.h>
+
 #include <vcg/complex/trimesh/base.h>
 #include <vcg/complex/trimesh/update/topology.h>
 #include <vcg/complex/trimesh/update/edges.h>
@@ -188,11 +197,6 @@ using namespace std;
 #include <wrap/io_trimesh/import.h>
 #include <wrap/io_trimesh/export.h>
 
-#include <vcg/simplex/vertexplus/base.h>
-#include <vcg/simplex/vertexplus/component.h>
-
-#include <vcg/simplex/faceplus/base.h>
-#include <vcg/simplex/faceplus/component.h>
 #include <vcg/simplex/face/pos.h> 
 #include <vcg/complex/trimesh/inertia.h> 
 
@@ -231,7 +235,8 @@ struct MeshInfo
 	bool hasFColor;
 	bool hasTexture;
 	int vn,fn;
-	bool Manifold;
+	bool VManifold;
+	bool FManifold;
 	int count_e,boundary_e,count_fd,count_uv,numholes;
 	int BEdges;
 	float Volume;
@@ -319,7 +324,8 @@ void initMeshInfo(MeshInfo &mi)
 	mi.hasFNormal = false;
 	mi.hasVNormal = false;
 	mi.hasTexture = false;
-	mi.Manifold = false;
+	mi.VManifold = false;
+	mi.FManifold = false;
 	mi.count_e = 0;
 	mi.boundary_e = 0;
 	mi.count_fd = 0;
@@ -378,7 +384,7 @@ void PrintMeshInfo(MeshInfo &mi)
 	else
 		printf("    Has Texture information: NO\n");
 
-	if ((mi.Manifold)&&(mi.Oriented)&&(!mi.numholes))
+	if ((mi.VManifold && mi.FManifold )&&(mi.Oriented)&&(!mi.numholes))
 		printf("    Volume: %f \n", mi.Volume);
 	else 
 		printf("    Volume: UNDEFINED  (a closed oriented manifold is required)\n");
@@ -386,7 +392,7 @@ void PrintMeshInfo(MeshInfo &mi)
 	printf("    Number of connected components: %d\n",	mi.numcomponents);
 
 	// Orientation
-	if (!mi.Manifold)
+	if (!mi.VManifold && mi.FManifold)
 	{
 		printf("    Orientable Mesh: NO\n");
 		printf("    Oriented Mesh: NO\n");
@@ -405,13 +411,13 @@ void PrintMeshInfo(MeshInfo &mi)
 	}
 
 	// Manifold
-	if (!mi.Manifold) 
-		printf("    Manifold: NO\n");
-	else
+	if (mi.VManifold && mi.FManifold ) 
 		printf("    Manifold: YES\n");
+	else
+		printf("    Manifold: NO\n");
 
 	// Genus
-	if (mi.Manifold)
+	if (mi.VManifold && mi.FManifold)
 		printf("    Genus: %d \n", mi.Genus);
 	else
 		printf("    Genus: N/A \n");
@@ -442,7 +448,7 @@ void SaveXMLInfo(MeshInfo &mi)
 	sprintf(s,"%d",mi.fn);
 	doc.addNode(s, VALUE_INTEGER, "Number of Faces");
 
-	if(mi.Manifold)
+	if(mi.VManifold && mi.FManifold)
 		doc.addNode("false", VALUE_BOOL,"Manifold");
 	else
 		doc.addNode("true", VALUE_BOOL,"Manifold");
@@ -498,7 +504,7 @@ void SaveXMLInfo(MeshInfo &mi)
 	else 
 		doc.addNode("IRREGULAR", VALUE_STRING,"Type of Mesh");
 	
-	if (!mi.Manifold) 
+	if (!mi.VManifold && mi.FManifold) 
 	{
 		doc.addNode("NO", VALUE_STRING,"Orientable Mesh");
 		doc.addNode("NO", VALUE_STRING,"Oriented Mesh");
@@ -535,7 +541,7 @@ void SaveMeshInfoHtmlTable(fstream &fout, MeshInfo &mi)
 	fout << "          <td>" << mi.fn << "</td>" << std::endl;
 	fout << "          <td>" << mi.count_e << "</td>" << std::endl;
 	
-	if (mi.Manifold)
+	if (mi.VManifold && mi.FManifold)
 		fout << "          <td>" << mi.numholes << "</td>" << std::endl;
 	else
 		fout << "          <td>N/A</td>" << std::endl;
@@ -551,7 +557,7 @@ void SaveMeshInfoHtmlTable(fstream &fout, MeshInfo &mi)
 	else
 		fout << "          <td>None</td>" << std::endl;
 
-	if (mi.Manifold)
+	if(mi.VManifold && mi.FManifold)
 		fout << "          <td>Yes</td>" << std::endl;
 	else
 		fout << "          <td>No</td>" << std::endl;
@@ -563,7 +569,7 @@ void SaveMeshInfoHtmlTable(fstream &fout, MeshInfo &mi)
 	else if (!mi.Orientable)
 		fout << "          <td>No / No</td>" << std::endl;
 
-	if (mi.Manifold)
+	if (mi.VManifold && mi.FManifold)
 		fout << "          <td>" << mi.Genus << "</td>" << std::endl;
 	else
 		fout << "          <td>N/A</td>" << std::endl;
@@ -758,27 +764,29 @@ int main(int argc, char ** argv)
 	// Number of faces
 	mi.fn = m.fn;
 
-	// DEGENERATED FACES => (faces with area zero)
-	mi.count_fd = tri::Clean<CMesh>::RemoveFaceOutOfRangeArea<false>(m,0);
-	
-	// UNREFERENCED VERTEX
-	mi.count_uv = tri::Clean<CMesh>::RemoveUnreferencedVertex(m);
-
 	// DUPLICATED VERTICES
 	mi.dv = tri::Clean<CMesh>::RemoveDuplicateVertex(m);
 
+	// DEGENERATED FACES => (faces with area zero)
+	mi.count_fd = tri::Clean<CMesh>::RemoveDegenerateFace(m);
+	mi.count_fd += tri::Clean<CMesh>::RemoveFaceOutOfRangeArea<false>(m,0);
+	
+	// UNREFERENCED VERTEX
+	mi.count_uv = tri::Clean<CMesh>::RemoveUnreferencedVertex(m);
+  
 	// Update topology (face-to-face)
 	tri::UpdateTopology<CMesh>::FaceFace(m);
 	tri::UpdateTopology<CMesh>::VertexFace(m);
 
 	// IS MANIFOLD?
-	mi.Manifold = tri::Clean<CMesh>::IsTwoManifoldFace(m) && tri::Clean<CMesh>::IsTwoManifoldVertex(m);
-
+	mi.VManifold = tri::Clean<CMesh>::IsTwoManifoldVertex(m);
+	mi.FManifold = tri::Clean<CMesh>::IsTwoManifoldFace(m);
+ 
 	// COUNT EDGES
 	tri::Clean<CMesh>::CountEdges(m, mi.count_e, mi.boundary_e);
 
 	// HOLES COUNT
-	if(mi.Manifold)
+	if(mi.VManifold && mi.FManifold)
 	{
 		mi.numholes = tri::Clean<CMesh>::CountHoles(m);
 		mi.BEdges = tri::Clean<CMesh>::BorderEdges(m, mi.numholes);
@@ -788,7 +796,7 @@ int main(int argc, char ** argv)
 	mi.numcomponents = tri::Clean<CMesh>::ConnectedComponents(m);
 
 	// ORIENTATION
-	if (mi.Manifold)
+	if (mi.VManifold && mi.FManifold)
 		tri::Clean<CMesh>::IsOrientedMesh(m, mi.Oriented, mi.Orientable);
 	else
 	{
@@ -800,7 +808,7 @@ int main(int argc, char ** argv)
 	tri::UpdateTopology<CMesh>::VertexFace(m);
 
 	// VOLUME (require a closed oriented manifold)
-	if ((mi.Manifold)&&(mi.Oriented)&&(!mi.numholes))
+	if ((mi.VManifold && mi.FManifold)&&(mi.Oriented)&&(!mi.numholes))
 	{
 		tri::Inertia<CMesh> mm;
 		mm.Compute(m);
@@ -812,12 +820,12 @@ int main(int argc, char ** argv)
 	}
 
 	// GENUS
-	if(mi.Manifold) 
+	if(mi.VManifold && mi.FManifold) 
 		mi.Genus = tri::Clean<CMesh>::MeshGenus(m, mi.numholes,
 			mi.numcomponents, mi.count_e);
 	
 	// REGULARITY
-	if (mi.Manifold)
+	if (mi.VManifold && mi.FManifold)
 		tri::Clean<CMesh>::IsRegularMesh(m, mi.Regular, mi.Semiregular);
 	else
 	{
