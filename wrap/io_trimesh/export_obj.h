@@ -25,6 +25,9 @@
   History
 
  $Log: not supported by cvs2svn $
+ Revision 1.8  2007/03/08 11:27:52  ganovelli
+ added  include to tcoord2
+
  Revision 1.7  2007/02/16 21:12:13  m_di_benedetto
  Commented out strange abort in WriteMaterials()
 
@@ -92,7 +95,7 @@
 
 #include <wrap/callback.h>
 #include <vcg/complex/trimesh/allocate.h>
-#include <vcg/space/tcoord2.h>
+#include <vcg/space/texcoord2.h>
 #include <wrap/io_trimesh/io_mask.h>
 #include "io_material.h"
 #include <iostream>
@@ -229,7 +232,7 @@ namespace io {
 			
 			//faces + texture coords
 			FaceIterator fi;
-			std::map<vcg::TCoord2<float>,int> CoordIndexTexture;
+			std::map<vcg::TexCoord2<float>,int> CoordIndexTexture;
 			unsigned int material_num = 0;
 			int mem_index = 0; //var temporany
 			/*int*/ value = 1;//tmp
@@ -259,7 +262,7 @@ namespace io {
 				unsigned int MAX = 3;
 				for(unsigned int k=0;k<MAX;k++)
 				{
-					if(m.HasPerWedgeTexture() && mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD)
+					if(m.HasPerWedgeTexCoord() && mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD)
 					{
 						if(AddNewTextureCoord(CoordIndexTexture,(*fi).WT(k),value))
 						{
@@ -339,7 +342,7 @@ namespace io {
 		/*
 			returns index of the texture coord
 		*/
-		inline static int GetIndexVertexTexture(std::map<vcg::TCoord2<float>,int> &m, const vcg::TCoord2<float> &wt)
+		inline static int GetIndexVertexTexture(std::map<vcg::TexCoord2<float>,int> &m, const vcg::TexCoord2<float> &wt)
 		{
 			int index = m[wt];
 			if(index!=0){return index;}
@@ -376,7 +379,7 @@ namespace io {
 			adds a new index to the coordinate of Texture if it is the first time 
 			which is otherwise met not execute anything
 		*/
-		inline static bool AddNewTextureCoord(std::map<vcg::TCoord2<float>,int> &m, const vcg::TCoord2<float> &wt,int value)
+		inline static bool AddNewTextureCoord(std::map<vcg::TexCoord2<float>,int> &m, const vcg::TexCoord2<float> &wt,int value)
 		{
 			int index = m[wt];
 			if(index==0){m[wt]=value;return true;}

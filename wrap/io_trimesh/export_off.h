@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2006/12/07 00:37:58  cignoni
+Corrected bug in the management of deleted vertices
+
 ****************************************************************************/
 
 /**
@@ -65,7 +68,7 @@ namespace vcg {
 
 					if( m.HasPerVertexNormal()  && (mask & io::Mask::IOM_VERTNORMAL)) 	fprintf(fpout,"N");
 					if( m.HasPerVertexColor()   && (mask & io::Mask::IOM_VERTCOLOR))		fprintf(fpout,"C");
-					if( m.HasPerVertexTexture() && (mask & io::Mask::IOM_VERTTEXCOORD))	fprintf(fpout,"ST");
+					if( m.HasPerVertexTexCoord() && (mask & io::Mask::IOM_VERTTEXCOORD))	fprintf(fpout,"ST");
 					fprintf(fpout,"OFF\n");
 					fprintf(fpout,"%d %d 0\n", m.vn, m.fn); // note that as edge number we simply write zero
           typename SaveMeshType::FaceIterator fi;
@@ -89,7 +92,7 @@ namespace vcg {
               if( m.HasPerVertexNormal()  && (mask & io::Mask::IOM_VERTNORMAL) )
                 fprintf(fpout,"%g %g %g\n", vp->N()[0],vp->N()[1],vp->N()[2]);
 
-              if( m.HasPerVertexTexture()  && (mask & io::Mask::IOM_VERTTEXCOORD) )
+              if( m.HasPerVertexTexCoord()  && (mask & io::Mask::IOM_VERTTEXCOORD) )
                 fprintf(fpout,"%g %g\n",vp->T().u(),vp->T().v());
 
               vp->UberFlags()=j; // Trucco! Nascondi nei flags l'indice del vertice non deletato!

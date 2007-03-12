@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.34  2007/03/03 02:28:59  cignoni
+Removed initialization of a single face in the main parsing loop. Single face cannot exist anymore with OCF. Moved into the tristrip parsing section.
+
 Revision 1.33  2007/02/14 15:30:13  ganovelli
 added treatment of HasPerVertexFlags absent
 
@@ -183,9 +186,9 @@ struct LoadPly_FaceAux
 	int v[512];
 	int flags;
 	float q;
-	float tcoord[32];
-	unsigned char ntcoord;
-	int tcoordind;
+	float texcoord[32];
+	unsigned char ntexcoord;
+	int texcoordind;
 	float colors[32];
 	unsigned char ncolors;
 	
@@ -271,9 +274,9 @@ static const  PropDescriptor &FaceDesc(int i)
 		{"face", "vertex_indices", ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_UCHAR,ply::T_UCHAR,offsetof(LoadPly_FaceAux,size)   ,0},
 		{"face", "flags",          ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,flags),     0,0,0,0,0  ,0},
 		{"face", "quality",        ply::T_FLOAT, ply::T_FLOAT, offsetof(LoadPly_FaceAux,q),         0,0,0,0,0  ,0},
-		{"face", "texcoord",       ply::T_FLOAT, ply::T_FLOAT, offsetof(LoadPly_FaceAux,tcoord),    1,0,ply::T_UCHAR,ply::T_UCHAR,offsetof(LoadPly_FaceAux,ntcoord)   ,0},
+		{"face", "texcoord",       ply::T_FLOAT, ply::T_FLOAT, offsetof(LoadPly_FaceAux,texcoord),    1,0,ply::T_UCHAR,ply::T_UCHAR,offsetof(LoadPly_FaceAux,ntexcoord)   ,0},
 		{"face", "color",          ply::T_FLOAT, ply::T_FLOAT, offsetof(LoadPly_FaceAux,colors),    1,0,ply::T_UCHAR,ply::T_UCHAR,offsetof(LoadPly_FaceAux,ncolors)   ,0},
-		{"face", "texnumber",      ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,tcoordind), 0,0,0,0,0  ,0},
+		{"face", "texnumber",      ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,texcoordind), 0,0,0,0,0  ,0},
 		{"face", "red"  ,          ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_FaceAux,r),         0,0,0,0,0  ,0},
 		{"face", "green",          ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_FaceAux,g),         0,0,0,0,0  ,0},
 		{"face", "blue" ,          ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_FaceAux,b),         0,0,0,0,0  ,0},
@@ -491,7 +494,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 	}
 
 
-	if( FaceType::HasWedgeTexture() )
+	if( FaceType::HasWedgeTexCoord() )
 	{
 		if( pf.AddToRead(FaceDesc(3))!=-1 )
 		{
@@ -697,9 +700,9 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				{
 					for(int k=0;k<3;++k)
 					{
-						(*fi).WT(k).u() = fa.tcoord[k*2+0];
-						(*fi).WT(k).v() = fa.tcoord[k*2+1];
-						if(multit) (*fi).WT(k).n() = fa.tcoordind;
+						(*fi).WT(k).u() = fa.texcoord[k*2+0];
+						(*fi).WT(k).v() = fa.texcoord[k*2+1];
+						if(multit) (*fi).WT(k).n() = fa.texcoordind;
             else (*fi).WT(k).n()=0; // safely intialize texture index
 					}
 				}

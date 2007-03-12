@@ -93,7 +93,7 @@ namespace io {
 						if (!srcnodetext.isNull())
 						{
 							assert((ii * 2 < geosrcverttext.size()) && (ii * 2 + 1 < geosrcverttext.size()));
-							m.vert[vv].T() = vcg::TCoord2<float>();
+							m.vert[vv].T() = vcg::TexCoord2<float>();
 							m.vert[vv].T().u() = geosrcverttext[ii * 2].toFloat();
 							m.vert[vv].T().v() = geosrcverttext[ii * 2 + 1].toFloat();
 						}
@@ -170,7 +170,7 @@ namespace io {
 							{
 								indtx = face.at(jj + offtx).toInt();
 								assert(indtx * 2 < wt.size());
-								m.face[ff].WT(0) = vcg::TCoord2<float>();
+								m.face[ff].WT(0) = vcg::TexCoord2<float>();
 								m.face[ff].WT(0).u() = wt.at(indtx * 2).toFloat();
 								m.face[ff].WT(0).v() = wt.at(indtx * 2 + 1).toFloat();
 								m.face[ff].WT(0).n() = 1;
@@ -199,7 +199,7 @@ namespace io {
 							{
 								indtx = face.at(jj + offtx).toInt();
 								assert(indtx * 2 < wt.size());
-								m.face[ff].WT(1) = vcg::TCoord2<float>();
+								m.face[ff].WT(1) = vcg::TexCoord2<float>();
 								m.face[ff].WT(1).u() = wt.at(indtx * 2).toFloat();
 								m.face[ff].WT(1).v() = wt.at(indtx * 2 + 1).toFloat();	
 								m.face[ff].WT(1).n() = 1;
@@ -227,7 +227,7 @@ namespace io {
 							{
 								indtx = face.at(jj + offtx).toInt();
 								assert(indtx * 2 < wt.size());
-								m.face[ff].WT(2) = vcg::TCoord2<float>();
+								m.face[ff].WT(2) = vcg::TexCoord2<float>();
 								m.face[ff].WT(2).u() = wt.at(indtx * 2).toFloat();
 								m.face[ff].WT(2).v() = wt.at(indtx * 2 + 1).toFloat();	
 								m.face[ff].WT(2).n() = 1;
@@ -249,7 +249,7 @@ namespace io {
 			else return E_NOMESH;
 		}
 
-		static void GetTexture(const QDomDocument& doc,AdditionalInfoDAE* inf)
+		static void GetTexCoord(const QDomDocument& doc,AdditionalInfoDAE* inf)
 		{
 			QDomNodeList txlst = doc.elementsByTagName("library_images");
 			for(int img = 0;img < txlst.size();++img)

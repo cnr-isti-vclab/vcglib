@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2007/02/18 08:01:07  cignoni
+Added missing typename
+
 Revision 1.21  2007/02/14 16:07:41  ganovelli
 added HasPerFaceFlag
 
@@ -192,7 +195,7 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 		for(i=0; i < static_cast<int>(m.textures.size()); ++i)
 			fprintf(fpout,"comment %s %s\n", TFILE, (const char *)(m.textures[i].c_str()) );
 
-		if(m.textures.size()>1 && (m.HasPerWedgeTexture() || m.HasPerVertexTexture())) multit = true;
+		if(m.textures.size()>1 && (m.HasPerWedgeTexCoord() || m.HasPerVertexTexCoord())) multit = true;
 	}
 
 	if((pi.mask & Mask::IOM_CAMERA))
@@ -274,8 +277,8 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 		);
 	}
 
-	if( ( m.HasPerVertexTexture() && pi.mask & Mask::IOM_VERTTEXCOORD ) ||
-	    ( m.HasPerWedgeTexture() && pi.mask & Mask::IOM_WEDGTEXCOORD ) )
+	if( ( m.HasPerVertexTexCoord() && pi.mask & Mask::IOM_VERTTEXCOORD ) ||
+	    ( m.HasPerWedgeTexCoord() && pi.mask & Mask::IOM_WEDGTEXCOORD ) )
 	{
 		fprintf(fpout,
 			"property list uchar float texcoord\n"
@@ -502,7 +505,7 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 					if(m.HasPerVertexFlags()&&( pi.mask & Mask::IOM_FACEFLAGS) )
 						fwrite(&(fp->Flags()),sizeof(int),1,fpout);
 
-					if( m.HasPerVertexTexture() && (pi.mask & Mask::IOM_VERTTEXCOORD) )
+					if( m.HasPerVertexTexCoord() && (pi.mask & Mask::IOM_VERTTEXCOORD) )
 					{
 						fwrite(&b6,sizeof(char),1,fpout);
 						float t[6];
@@ -513,7 +516,7 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 						}
 						fwrite(t,sizeof(float),6,fpout);
 					}
-					else if( m.HasPerWedgeTexture() && (pi.mask & Mask::IOM_WEDGTEXCOORD)  )
+					else if( m.HasPerWedgeTexCoord() && (pi.mask & Mask::IOM_WEDGTEXCOORD)  )
 					{
 						fwrite(&b6,sizeof(char),1,fpout);
 						float t[6];
@@ -578,7 +581,7 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 					if(m.HasPerVertexFlags()&&( pi.mask & Mask::IOM_FACEFLAGS ))
 						fprintf(fpout,"%d ",fp->Flags());
 
-					if( m.HasPerVertexTexture() && (pi.mask & Mask::IOM_VERTTEXCOORD) )
+					if( m.HasPerVertexTexCoord() && (pi.mask & Mask::IOM_VERTTEXCOORD) )
 					{
 						fprintf(fpout,"6 ");
 						for(int k=0;k<3;++k)
@@ -587,7 +590,7 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 								,fp->V(k)->T().v()
 							);
 					}
-					else if( m.HasPerWedgeTexture() && (pi.mask & Mask::IOM_WEDGTEXCOORD)  )
+					else if( m.HasPerWedgeTexCoord() && (pi.mask & Mask::IOM_WEDGTEXCOORD)  )
 					{
 						fprintf(fpout,"6 ");
 						for(int k=0;k<3;++k)

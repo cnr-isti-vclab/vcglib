@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2006/05/21 06:58:55  cignoni
+Added ClampMask function
+
 Revision 1.5  2006/01/10 13:20:42  cignoni
 Changed ply::PlyMask to io::Mask
 
@@ -98,7 +101,7 @@ enum {
 //	if( mask & IOM_VERTFLAGS    ) strcat(str,"flag,");
 //	if( mask & IOM_VERTCOLOR    ) strcat(str,"color,");
 //	if( mask & IOM_VERTQUALITY  ) strcat(str,"quality,");
-//	if( mask & IOM_VERTTEXCOORD ) strcat(str,"tcoord,");
+//	if( mask & IOM_VERTTEXCOORD ) strcat(str,"texcoord,");
 //	if( mask & IOM_VERTNORMAL ) strcat(str,"normal,");
 //
 //	strcat(str," F:");
@@ -109,7 +112,7 @@ enum {
 //
 //	strcat(str," W:");
 //	if( mask & IOM_WEDGCOLOR    ) strcat(str,"color,");
-//	if( mask & IOM_WEDGTEXCOORD ) strcat(str,"tcoord,");
+//	if( mask & IOM_WEDGTEXCOORD ) strcat(str,"texcoord,");
 //	if( mask & IOM_WEDGNORMAL  ) strcat(str,"normal,");
 //
 //	if( mask & IOM_CAMERA ) strcat(str," camera");
@@ -118,7 +121,7 @@ template <class MeshType>
 static void ClampMask(MeshType &m, int &mask)
 {
   if( (mask & IOM_FACECOLOR)    && !HasPerFaceColor(m) ) mask = mask & (~IOM_FACECOLOR);
-  if( (mask & IOM_WEDGTEXCOORD) && !HasPerWedgeTexture(m) ) mask = mask & (~IOM_WEDGTEXCOORD);
+  if( (mask & IOM_WEDGTEXCOORD) && !HasPerWedgeTexCoord(m) ) mask = mask & (~IOM_WEDGTEXCOORD);
   if( (mask & IOM_WEDGNORMAL) && !m.HasPerWedgeNormal() ) mask = mask & (~IOM_WEDGNORMAL);
   if( (mask & IOM_VERTCOLOR) && !m.HasPerVertexColor() ) mask = mask & (~IOM_VERTCOLOR);
 }

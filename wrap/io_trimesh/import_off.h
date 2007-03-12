@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2006/03/29 08:50:10  corsini
+Fix bug in texture coordinates reading
+
 Revision 1.18  2006/03/29 08:15:46  corsini
 Fix several bugs
 Add LoadMask
@@ -397,7 +400,7 @@ namespace vcg
 								k++;
 
 								// Store texture coordinates
-								if (VertexType::HasTexture())
+								if (VertexType::HasTexCoord())
 								{
 									//...TODO...
 								}

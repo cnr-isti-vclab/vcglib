@@ -12,7 +12,7 @@
 #include <QtCore/QStringList>
 
 #include<vcg/space/point3.h>
-#include<vcg/space/tcoord2.h>
+#include<vcg/space/texcoord2.h>
 #include<vcg/space/color4.h>
 #include <wrap/callback.h>
 

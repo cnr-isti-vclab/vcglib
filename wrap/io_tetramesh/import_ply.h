@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/06/03 13:16:32  ganovelli
+created
+
 ****************************************************************************/
 #ifndef __VCGLIB_TETRAIMPORTERPLY
 #define __VCGLIB_TETRAIMPORTERPLY
@@ -76,9 +79,9 @@ struct LoadPly_TetraAux
 	int v[512];
 	int flags;
 	float q;
-	float tcoord[32];
-	unsigned char ntcoord;
-	int tcoordind;
+	float texcoord[32];
+	unsigned char ntexcoord;
+	int texcoordind;
 	float colors[32];
 	unsigned char ncolors;
 	
@@ -161,9 +164,9 @@ static const  PropDescriptor &TetraDesc(int i)
 		{"tetra", "vertex_indices", ply::T_INT,   ply::T_INT,   offsetof(LoadPly_TetraAux,v),		     1,0,ply::T_UCHAR,ply::T_UCHAR,offsetof(LoadPly_TetraAux,size) },
 		{"tetra", "flags",          ply::T_INT,   ply::T_INT,   offsetof(LoadPly_TetraAux,flags),     0,0,0,0,0},
 		{"tetra", "quality",        ply::T_FLOAT, ply::T_FLOAT, offsetof(LoadPly_TetraAux,q),         0,0,0,0,0},
-		{"tetra", "texcoord",       ply::T_FLOAT, ply::T_FLOAT, offsetof(LoadPly_TetraAux,tcoord),    1,0,ply::T_UCHAR,ply::T_UCHAR,offsetof(LoadPly_TetraAux,ntcoord) },
+		{"tetra", "texcoord",       ply::T_FLOAT, ply::T_FLOAT, offsetof(LoadPly_TetraAux,texcoord),    1,0,ply::T_UCHAR,ply::T_UCHAR,offsetof(LoadPly_TetraAux,ntexcoord) },
 		{"tetra", "color",          ply::T_FLOAT, ply::T_FLOAT, offsetof(LoadPly_TetraAux,colors),    1,0,ply::T_UCHAR,ply::T_UCHAR,offsetof(LoadPly_TetraAux,ncolors) },
-		{"tetra", "texnumber",      ply::T_INT,   ply::T_INT,   offsetof(LoadPly_TetraAux,tcoordind), 0,0,0,0,0},
+		{"tetra", "texnumber",      ply::T_INT,   ply::T_INT,   offsetof(LoadPly_TetraAux,texcoordind), 0,0,0,0,0},
 		{"tetra", "red"  ,          ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_TetraAux,r),         0,0,0,0,0},
 		{"tetra", "green",          ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_TetraAux,g),         0,0,0,0,0},
 		{"tetra", "blue" ,          ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_TetraAux,b),         0,0,0,0,0},

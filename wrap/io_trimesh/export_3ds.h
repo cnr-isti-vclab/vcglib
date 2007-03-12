@@ -25,6 +25,9 @@
   History
 
  $Log: not supported by cvs2svn $
+ Revision 1.6  2006/11/30 22:48:06  cignoni
+ Corrected bug in exporting mesh with deleted vertices
+
  Revision 1.5  2006/11/08 15:48:50  cignoni
  Corrected management of capabilities and masks
 
@@ -185,8 +188,8 @@ namespace io {
 		typedef typename SaveMeshType::VertexType VertexType;
 
 		//int: old index vertex
-		//TCoord2: textcoord with vertex's index i
-		typedef std::pair<int,vcg::TCoord2<float> > Key;
+		//TexCoord2: tex coord with vertex's index i
+		typedef std::pair<int,vcg::TexCoord2<float> > Key;
 	
 		/*
 			enum of all the types of error
@@ -327,7 +330,7 @@ namespace io {
       std::vector<int> VertRemap; // VertRemap[i] keep the final position of m.vert[i] inside the 3ds vertex list. used for remapping the pointers to vertex in the faces
 			int count = 1;
 			int nface = 0;
-			if(HasPerWedgeTexture(m) && (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD) )
+			if(HasPerWedgeTexCoord(m) && (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD) )
 			{
 				FaceIterator fi;
 				for(fi=m.face.begin(); fi!=m.face.end(); ++fi) if( !(*fi).IsD() )
@@ -335,7 +338,7 @@ namespace io {
 					for(unsigned int k=0;k<3;k++)
 					{
 						int i = GetIndexVertex(m, (*fi).V(k));
-						vcg::TCoord2<float> t = (*fi).WT(k);
+						vcg::TexCoord2<float> t = (*fi).WT(k);
 						if(!m.vert[i].IsD())
 						{
 							if(AddDuplexVertexCoord(ListOfDuplexVert,Key(i,t)))
@@ -356,7 +359,7 @@ namespace io {
 
 			int number_vertex_to_duplicate = 0;
 			
-			if(HasPerWedgeTexture(m) && (mask & MeshModel::IOM_WEDGTEXCOORD ))
+			if(HasPerWedgeTexCoord(m) && (mask & MeshModel::IOM_WEDGTEXCOORD ))
 				number_vertex_to_duplicate = (count-1) - m.vn;
 
 			Lib3dsFile *file = lib3ds_file_new();//creates new file
@@ -370,13 +373,13 @@ namespace io {
 			
 			lib3ds_mesh_new_point_list(mesh, m.vn + number_vertex_to_duplicate);// set number of vertexs
 	
-			if(HasPerWedgeTexture(m) && (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD ))
+			if(HasPerWedgeTexCoord(m) && (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD ))
 				lib3ds_mesh_new_texel_list(mesh,m.vn + number_vertex_to_duplicate); //set number of textures
 
 			int v_index = 0;
 			VertexIterator vi;
 			//saves vert
-			if(HasPerWedgeTexture(m) && (mask & MeshModel::IOM_WEDGTEXCOORD ))
+			if(HasPerWedgeTexCoord(m) && (mask & MeshModel::IOM_WEDGTEXCOORD ))
 			{
 				for(unsigned int i=0; i< VectorOfVertexType.size();i++)
 				{
@@ -419,11 +422,11 @@ namespace io {
 			FaceIterator fi;
 			for(fi=m.face.begin(); fi!=m.face.end(); ++fi) if( !(*fi).IsD() )
 			{
-				vcg::TCoord2<float> t0,t1,t2;
+				vcg::TexCoord2<float> t0,t1,t2;
 				int i0 = GetIndexVertex(m, (*fi).V(0));
 				int i1 = GetIndexVertex(m, (*fi).V(1));
 				int i2 = GetIndexVertex(m, (*fi).V(2));
-				if(HasPerWedgeTexture(m) && (mask & MeshModel::IOM_WEDGTEXCOORD ) )
+				if(HasPerWedgeTexCoord(m) && (mask & MeshModel::IOM_WEDGTEXCOORD ) )
 				{
 					t0 = (*fi).WT(0);
 					t1 = (*fi).WT(1);
@@ -431,7 +434,7 @@ namespace io {
 				}
 
 				Lib3dsFace face;
-				if(HasPerWedgeTexture(m) && (mask & MeshModel::IOM_WEDGTEXCOORD ))
+				if(HasPerWedgeTexCoord(m) && (mask & MeshModel::IOM_WEDGTEXCOORD ))
 				{
 					face.points[0] = GetIndexDuplexVertex(ListOfDuplexVert,Key(i0,t0));
 					face.points[1] = GetIndexDuplexVertex(ListOfDuplexVert,Key(i1,t1));
@@ -445,7 +448,7 @@ namespace io {
 				}
 				
 				//saves coord textures
-				if(HasPerWedgeTexture(m) && (mask & MeshModel::IOM_WEDGTEXCOORD ) )
+				if(HasPerWedgeTexCoord(m) && (mask & MeshModel::IOM_WEDGTEXCOORD ) )
 				{
 					mesh->texelL[face.points[0]][0] = t0.u();
 					mesh->texelL[face.points[0]][1] = t0.v();
@@ -502,7 +505,7 @@ namespace io {
 						}
 											
 						//texture
-				    if(HasPerWedgeTexture(m) && (mask & MeshModel::IOM_WEDGTEXCOORD ) )
+				    if(HasPerWedgeTexCoord(m) && (mask & MeshModel::IOM_WEDGTEXCOORD ) )
 							strcpy(material->texture1_map.name,materials[materials.size()-1].map_Kd.c_str());
 
 						lib3ds_file_insert_material(file,material);//inserts the material inside the file
