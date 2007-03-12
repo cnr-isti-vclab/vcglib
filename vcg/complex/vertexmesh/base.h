@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2006/08/23 16:49:25  marfr960
+added typedef VertContainer VertexContainer to avoid inconsistency with pre-existing methods
+
 Revision 1.4  2006/08/23 15:32:24  marfr960
 added bbox of the mesh
 vn int->size_t
@@ -127,7 +130,7 @@ static bool HasPerVertexNormal()  { return VertexType::HasNormal() ; }
 static bool HasPerVertexColor()   { return VertexType::HasColor()  ; }
 static bool HasPerVertexMark()    { return VertexType::HasMark()   ; }
 static bool HasPerVertexQuality() { return VertexType::HasQuality(); }
-static bool HasPerVertexTexture() { return VertexType::HasTexture(); }
+static bool HasPerVertexTexCoord(){ return VertexType::HasTexCoord(); }
 
 /// Initialize the imark-system of the faces
 void InitPointIMark()

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2007/03/12 15:37:19  tarini
+Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
+
 Revision 1.14  2007/02/27 09:32:00  cignoni
 Added constructor to the VFadj component to comply to the allocator needs
 
@@ -249,20 +252,20 @@ public:
   TexCoordType &WT(const int i) { return _wt[i]; }
   TexCoordType const &cWT(const int i) const { return _wt[i]; }
   static bool HasWedgeTexCoord()   { return true; }
-  static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeTexture"));TT::Name(name);}
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeTexCoord"));TT::Name(name);}
 
 private:
   TexCoordType _wt[3];    
 };
 
 template <class TT> class WedgeTexCoord2s: public WedgeTexCoord<TexCoord2<short,1>, TT> {
-public:  static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeTexture2s"));TT::Name(name);}
+public:  static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeTexCoord2s"));TT::Name(name);}
 };
 template <class TT> class WedgeTexCoord2f: public WedgeTexCoord<TexCoord2<float,1>, TT> {
-public:  static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeTexture2f"));TT::Name(name);}
+public:  static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeTexCoord2f"));TT::Name(name);}
 };
 template <class TT> class WedgeTexCoord2d: public WedgeTexCoord<TexCoord2<double,1>, TT> {
-public: static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeTexture2d"));TT::Name(name);}
+public: static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeTexCoord2d"));TT::Name(name);}
 };
 
 /*------------------------- FLAGS -----------------------------------------*/ 

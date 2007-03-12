@@ -24,6 +24,10 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.49  2007/02/27 15:17:17  marfr960
+std::numeric_limits<ScalarType>::max() -> (std::numeric_limits<ScalarType>::max)()
+to avoid annoying misunderstaindings on msvc8
+
 Revision 1.48  2007/01/11 10:12:19  cignoni
 Removed useless and conflicting inclusion of face.h
 
@@ -978,7 +982,7 @@ private:
         for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) if(!(*fi).IsD())
         {
 			       face::SwapEdge<FaceType,false>((*fi), 0);
-      			 if (HasPerWedgeTexture(m))
+      			 if (HasPerWedgeTexCoord(m))
 			        		swap((*fi).WT(0),(*fi).WT(1));
         }
       }

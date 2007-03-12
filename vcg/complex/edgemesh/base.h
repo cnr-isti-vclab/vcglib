@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/09/14 14:09:16  spinelli
+ConstVertexPointer --> VertexPointer
+ConstEdgePointer --> EdgePointer
+
 Revision 1.5  2005/05/17 21:19:37  ganovelli
 some std::and typename  missing  (CRS4)
 
@@ -149,7 +153,7 @@ static bool HasPerVertexNormal()  { return VertexType::HasNormal() ; }
 static bool HasPerVertexColor()   { return VertexType::HasColor()  ; }
 static bool HasPerVertexMark()    { return VertexType::HasMark()   ; }
 static bool HasPerVertexQuality() { return VertexType::HasQuality(); }
-static bool HasPerVertexTexture() { return VertexType::HasTexture(); }
+static bool HasPerVertexTexCoord(){ return VertexType::HasTexCoord(); }
 
 static bool HasPerEdgeColor()     { return EdgeType::HasEdgeColor() ; }
 static bool HasPerEdgeNormal()    { return EdgeType::HasEdgeNormal()  ; }

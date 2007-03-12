@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2007/02/18 07:41:32  cignoni
+Corrected small syntax errors detected by gcc
+
 Revision 1.20  2007/02/12 19:00:56  ganovelli
 added Name(std:vector<std::string>& n) that fills n with the names of the attribute of the vertex type
 
@@ -93,7 +96,7 @@ First working version!
 #define __VCG_VERTEX_PLUS_COMPONENT
 #include <vector>
 #include <vcg/space/point3.h>
-#include <vcg/space/tcoord2.h>
+#include <vcg/space/texcoord2.h>
 #include <vcg/space/color4.h>
 
 namespace vcg {
@@ -201,36 +204,36 @@ public:
 	int _imark;
 };
 
-/*-------------------------- TEXTURE ----------------------------------------*/ 
+/*-------------------------- TEXCOORD ----------------------------------------*/ 
 
-template <class TT> class EmptyTexture: public TT {
+template <class TT> class EmptyTexCoord: public TT {
 public:
-  typedef vcg::TCoord2<float,1> TextureType;
-  TextureType &T() { static TextureType dummy_texture;  assert(0); return dummy_texture; }
-  static bool HasTexture()   { return false; }
+  typedef vcg::TexCoord2<float,1> TexCoordType;
+  TexCoordType &T() { static TexCoordType dummy_texcoord;  assert(0); return dummy_texcoord; }
+  static bool HasTexCoord()   { return false; }
 	static void Name(std::vector<std::string> & name){TT::Name(name);}
 
  };
-template <class A, class TT> class Texture: public TT {
+template <class A, class TT> class TexCoord: public TT {
 public:
-  typedef A TextureType;
-  TextureType &T() { return _t; }
-  static bool HasTexture()   { return true; }
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("Texture"));TT::Name(name);}
+  typedef A TexCoordType;
+  TexCoordType &T() { return _t; }
+  static bool HasTexCoord()   { return true; }
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("TexCoord"));TT::Name(name);}
 
 private:
-  TextureType _t;    
+  TexCoordType _t;    
 };
 
-template <class TT> class Texture2s: public Texture<TCoord2<short,1>, TT> {
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("Texture2s"));TT::Name(name);}
+template <class TT> class TexCoord2s: public TexCoord<TexCoord2<short,1>, TT> {
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("TexCoord2s"));TT::Name(name);}
 
 };
-template <class TT> class Texture2f: public Texture<TCoord2<float,1>, TT> {
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("Texture2f"));TT::Name(name);}
+template <class TT> class TexCoord2f: public TexCoord<TexCoord2<float,1>, TT> {
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("TexCoord2f"));TT::Name(name);}
 };
-template <class TT> class Texture2d: public Texture<TCoord2<double,1>, TT> {
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("Texture2d"));TT::Name(name);}
+template <class TT> class TexCoord2d: public TexCoord<TexCoord2<double,1>, TT> {
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("TexCoord2d"));TT::Name(name);}
 };
 
 /*------------------------- FLAGS -----------------------------------------*/ 

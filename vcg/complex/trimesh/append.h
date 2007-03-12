@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2006/05/25 04:40:57  cignoni
+Updated HasPerFaceColor/Quality to the new style with mesh param.
+
 Revision 1.4  2006/04/11 13:51:21  zifnab1974
 commented out one function which does not compile on linux with gcc 3.4.5
 
@@ -83,7 +86,7 @@ static void ImportVertex(VertexLeft &vl, VertexRight &vr)
   vl.P().Import(vr.P());
   if(vl.HasColor()   && vl.HasColor()) vl.C()=vr.C();
   if(vl.HasQuality() && vl.HasQuality()) vl.Q()=vr.Q();
-  if(vl.HasTexture() && vl.HasTexture()) vl.T()=vr.T();
+  if(vl.HasTexCoord() && vl.HasTexCoord()) vl.T()=vr.T();
 }
 
 static void ImportFace(MeshLeft &ml, MeshRight &mr, FaceLeft &fl, FaceRight &fr, std::vector<int> &remap)
@@ -93,7 +96,7 @@ static void ImportFace(MeshLeft &ml, MeshRight &mr, FaceLeft &fl, FaceRight &fr,
   fl.V(2)=&ml.vert[remap[ Index(mr,fr.V(2))]];
   if(HasPerFaceColor(mr)   && HasPerFaceColor(ml)) fl.C()=fr.C();
   if(HasPerFaceQuality(mr) && HasPerFaceQuality(ml)) fl.Q()=fr.Q();
-  if(HasPerWedgeTexture(mr) && HasPerWedgeTexture(ml)) 
+  if(HasPerWedgeTexCoord(mr) && HasPerWedgeTexCoord(ml)) 
   {
     fl.WT(0)=fr.WT(0);
     fl.WT(1)=fr.WT(1);

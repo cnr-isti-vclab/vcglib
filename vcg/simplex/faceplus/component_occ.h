@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2007/01/18 01:29:48  cignoni
+commented UberP access method (syntax errors)
+
 Revision 1.4  2006/12/04 10:59:15  ganovelli
 aggiunte funzioni di override per Has*
 
@@ -56,17 +59,17 @@ compare with OCF(Optional Component Fast)
 namespace vcg {
   namespace face {
 
-	///*-------------------------- WedgeTextureOcc ----------------------------------------*/ 
+	///*-------------------------- WedgeTexCoordOcc ----------------------------------------*/ 
 
-	template <class A, class T> class WedgeTextureOcc: public T {
+	template <class A, class T> class WedgeTexCoordOcc: public T {
 	public:
-		typedef A WedgeTextureType;
-		WedgeTextureType &WT(const int&i) {return CAT< vector_occ<FaceType>,WedgeTextureType>::Instance()->Get((FaceType*)this);}
-	  static bool HasWedgeTexture()   { return true; }
-		static bool HasWedgeTextureOcc()   { return true; }
+		typedef A WedgeTexCoordType;
+		WedgeTexCoordType &WT(const int&i) {return CAT< vector_occ<FaceType>,WedgeTexCoordType>::Instance()->Get((FaceType*)this);}
+	  static bool HasWedgeTexCoord()   { return true; }
+		static bool HasWedgeTexCoordOcc()   { return true; }
 	};
 
-	template <class T> class WedgeTexturefOcc: public WedgeTextureOcc<TCoord2<float,1>, T> {};
+	template <class T> class WedgeTexCoordfOcc: public WedgeTexCoordOcc<TexCoord2<float,1>, T> {};
 
 	///*-------------------------- FACEINFO ----------------------------------------*/ 
 
@@ -282,10 +285,10 @@ public:
 		}
 
 		template < class VertContainerType, class FaceType >
-			bool HasPerWedgeTexture (const TriMesh < VertContainerType , vector_occ< FaceType > > & m) 
+			bool HasPerWedgeTexCoord (const TriMesh < VertContainerType , vector_occ< FaceType > > & m) 
 		{
-			if(FaceType::HasWedgeTextureOcc()) return m.face.IsEnabledAttribute<FaceType::WedgeTextureType >();
-			else return FaceType::FaceType::HasWedgeTexture();
+			if(FaceType::HasWedgeTexCoordOcc()) return m.face.IsEnabledAttribute<FaceType::WedgeTexCoordType >();
+			else return FaceType::FaceType::HasWedgeTexCoord();
 		}
 
 		template < class VertContainerType, class FaceType >

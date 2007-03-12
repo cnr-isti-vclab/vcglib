@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2007/02/12 19:00:56  ganovelli
+added Name(std:vector<std::string>& n) that fills n with the names of the attribute of the vertex type
+
 Revision 1.8  2006/09/28 17:34:11  cignoni
 Added Missing GetBBox function
 
@@ -54,7 +57,7 @@ First working version!
 #define __VCG_VERTEX_PLUS
 
 #include <vcg/space/point3.h>
-#include <vcg/space/tcoord2.h>
+#include <vcg/space/texcoord2.h>
 #include <vcg/space/color4.h>
 #include <vcg/simplex/vertexplus/component.h>
 
@@ -98,7 +101,7 @@ we have to build the type a step a time (deriving from a single ancestor at a ti
 
 */ 
 template <class BVT, class BET=DumET, class BFT=DumFT, class BTT=DumTT>
-class VertexBase: public vert::EmptyTexture<
+class VertexBase: public vert::EmptyTexCoord<
                          vert::EmptyVFAdj<
                          vert::EmptyColor<
                          vert::EmptyQuality<
@@ -272,7 +275,7 @@ Coord3f,  Coord3d,
 Normal3s,  Normal3f,  Normal3d
 Mark                              //a int component (incremental mark)
 BitFlags
-Texture2s,  Texture2f,  Texture2d
+TexCoord2s,  TexCoord2f,  TexCoord2d
 Color4b
 Qualitys, Qualityf, Qualityd
 VFAdj                             //topology (vertex->face adjacency)

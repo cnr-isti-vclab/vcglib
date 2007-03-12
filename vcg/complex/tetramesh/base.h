@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2005/12/12 11:10:35  ganovelli
+modifications to compile with gcc
+
 Revision 1.11  2005/01/12 11:06:54  ganovelli
 added InitVertexIMark
 
@@ -211,7 +214,7 @@ static bool HasPerVertexNormal()  { return VertexType::HasNormal() ; }
 static bool HasPerVertexColor()   { return VertexType::HasColor()  ; }
 static bool HasPerVertexMark()    { return VertexType::HasMark()   ; }
 static bool HasPerVertexQuality() { return VertexType::HasQuality(); }
-static bool HasPerVertexTexture() { return VertexType::HasTexture(); }
+static bool HasPerVertexTexCoord(){ return VertexType::HasTexCoord(); }
 
 static bool HasPerTetraNormal()    { return TetraType::HasTetraNormal()  ; }
 static bool HasPerTetraMark()      { return TetraType::HasTetraMark()   ; }

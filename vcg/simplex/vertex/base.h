@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.30  2007/02/26 14:21:44  turini
+VTb moved to VTp
+
 Revision 1.29  2007/02/20 14:08:34  ganovelli
 added QualityType to comply vertexplus type
 
@@ -79,6 +82,9 @@ Revision 1.12  2004/05/10 13:31:13  ganovelli
 function for edge adjacency added
 
 $Log: not supported by cvs2svn $
+Revision 1.30  2007/02/26 14:21:44  turini
+VTb moved to VTp
+
 Revision 1.29  2007/02/20 14:08:34  ganovelli
 added QualityType to comply vertexplus type
 
@@ -176,7 +182,7 @@ Edited Comments and GPL license
 
 #include<vcg/space/point3.h>
 #include<vcg/space/color4.h>
-#include<vcg/space/tcoord2.h>
+#include<vcg/space/texcoord2.h>
 #include<vcg/simplex/face/pos.h>
 #include<vcg/space/box3.h>
 
@@ -195,7 +201,7 @@ namespace vcg {
  * directory. Each file specify a class type with the desired fields. So for example 
  * including 'vcg/simplex/vertex/with/VCVN.h' allow you to use the class VertVCVN that has per-vertex color and normal stored inside.
  */
-template <class FLTYPE, class VETYPE = DUMMYEDGETYPE, class VFTYPE = DUMMYFACETYPE, class VTTYPE = DUMMYTETRATYPE,class TCTYPE = TCoord2<float,1>, class CoordTYPE= Point3<FLTYPE> > 
+template <class FLTYPE, class VETYPE = DUMMYEDGETYPE, class VFTYPE = DUMMYFACETYPE, class VTTYPE = DUMMYTETRATYPE,class TCTYPE = TexCoord2<float,1>, class CoordTYPE= Point3<FLTYPE> > 
 class VERTEX_TYPE
 {
 public:
@@ -867,7 +873,7 @@ static bool HasQuality()   {
   return false;
 #endif
 }
-static bool HasTexture()   { 
+static bool HasTexCoord()   { 
 #ifdef __VCGLIB_VERTEX_VT 
   return true;
 #else
@@ -918,7 +924,7 @@ inline void Convert( VERT_TYPE &v )
 #endif
   if ((HasQuality())&&(v.HasQuality()))
     Q()=v.Q();
-  if ((HasTexture())&&(v.HasTexture()))
+  if ((HasTexCoord())&&(v.HasTexCoord()))
     T()=v.T();
 }
 	

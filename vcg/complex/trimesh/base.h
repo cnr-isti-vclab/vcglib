@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.27  2007/02/22 09:18:41  cignoni
+Added guards on msvc pragmas
+
 Revision 1.26  2007/02/14 15:31:41  ganovelli
 Added HasPerVertexFlag
 
@@ -224,7 +227,7 @@ static bool HasPerVertexNormal()  { return VertexType::HasNormal() ; }
 static bool HasPerVertexColor()   { return VertexType::HasColor()  ; }
 static bool HasPerVertexMark()    { return VertexType::HasMark()   ; }
 static bool HasPerVertexQuality() { return VertexType::HasQuality(); }
-static bool HasPerVertexTexture() { return VertexType::HasTexture(); }
+static bool HasPerVertexTexCoord(){ return VertexType::HasTexCoord(); }
 static bool HasPerVertexFlags()		{ return VertexType::HasFlags(); }
 
 static bool HasPerFaceColor()     { return FaceType::HasFaceColor() ; }
@@ -237,7 +240,7 @@ static bool HasPerWedgeColor()     { return FaceType::HasWedgeColor()  ; }
 static bool HasPerWedgeNormal()    { return FaceType::HasWedgeNormal()  ; }
 static bool HasPerWedgeMark()      { return FaceType::HasWedgeMark()   ; }
 static bool HasPerWedgeQuality()   { return FaceType::HasWedgeQuality(); }
-static bool HasPerWedgeTexture()   { return FaceType::HasWedgeTexture(); }
+static bool HasPerWedgeTexCoord()  { return FaceType::HasWedgeTexCoord(); }
 
 static bool HasFFTopology()       { return FaceType::HasFFAdjacency();  }
 static bool HasVFTopology()       { return ((FaceType::HasVFAdjacency())&&(VertexType::HasVFAdjacency())); }
@@ -334,7 +337,7 @@ template < class VertContainerType, class FaceContainerType >
 bool HasPerVertexFlags (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return VertContainerType::value_type::HasFlags();}
 
 template < class VertContainerType, class FaceContainerType >
-bool HasPerWedgeTexture (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return FaceContainerType::value_type::HasWedgeTexture();}
+bool HasPerWedgeTexCoord (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return FaceContainerType::value_type::HasWedgeTexCoord();}
 
 template < class VertContainerType, class FaceContainerType >
 bool HasPerFaceFlags (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return FaceContainerType::value_type::HasFlags();}

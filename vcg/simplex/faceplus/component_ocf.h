@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2006/11/28 22:34:28  cignoni
+Added default constructor with null initialization to adjacency members.
+AddFaces and AddVertices NEED to know if the topology is correctly computed to update it.
+
 Revision 1.18  2006/11/07 11:29:24  cignoni
 Corrected some errors in the reflections Has*** functions
 
@@ -278,13 +282,13 @@ void DisableFFAdjacency() {
 
 bool IsWedgeTexEnabled() const {return WedgeTexEnabled;}
 void EnableWedgeTex() {
-  assert(VALUE_TYPE::HasWedgeTextureOcf());
+  assert(VALUE_TYPE::HasWedgeTexCoordOcf());
   WedgeTexEnabled=true;
   WTV.resize((*this).size(),WedgeTexTypePack());
 }
 
 void DisableWedgeTex() {
-  assert(VALUE_TYPE::HasWedgeTextureOcf());
+  assert(VALUE_TYPE::HasWedgeTexCoordOcf());
   WedgeTexEnabled=false;
   WTV.clear();
 }
@@ -423,17 +427,17 @@ public:
 
 ///*-------------------------- WEDGE TEXCOORD  ----------------------------------*/ 
 
-template <class A, class TT> class WedgeTextureOcf: public TT {
+template <class A, class TT> class WedgeTexCoordOcf: public TT {
 public:
-  WedgeTextureOcf(){ }
+  WedgeTexCoordOcf(){ }
   typedef A TexCoordType;
   TexCoordType &WT(const int i)              { assert((*this).Base().WedgeTexEnabled); return (*this).Base().WTV[(*this).Index()].wt[i]; }
   TexCoordType const &cWT(const int i) const { assert((*this).Base().WedgeTexEnabled); return (*this).Base().WTV[(*this).Index()].wt[i]; }
-  static bool HasWedgeTexture()   { return true; }
-  static bool HasWedgeTextureOcf()   { return true; }
+  static bool HasWedgeTexCoord()   { return true; }
+  static bool HasWedgeTexCoordOcf()   { return true; }
 };
 
-template <class T> class WedgeTexturefOcf: public WedgeTextureOcf<TCoord2<float,1>, T> {};
+template <class T> class WedgeTexCoordfOcf: public WedgeTexCoordOcf<TexCoord2<float,1>, T> {};
 
 ///*-------------------------- InfoOpt  ----------------------------------*/ 
 
@@ -444,7 +448,7 @@ public:
   static bool HasFaceColorOcf()   { return false; }
   static bool HasFaceNormalOcf()   { return false; }
   static bool HasFaceMarkOcf()   { return false; }
-  static bool HasWedgeTextureOcf()   { return false; }
+  static bool HasWedgeTexCoordOcf()   { return false; }
   static bool HasFFAdjacencyOcf()   { return false; }
   static bool HasVFAdjacencyOcf()   { return false; }
 
@@ -481,10 +485,10 @@ public:
 	}
 
 	template < class VertContainerType, class FaceType >
-      bool HasPerWedgeTexture (const TriMesh < VertContainerType , face::vector_ocf< FaceType > > & m) 
+      bool HasPerWedgeTexCoord (const TriMesh < VertContainerType , face::vector_ocf< FaceType > > & m) 
     {
-      if(FaceType::HasWedgeTextureOcf()) return m.face.IsWedgeTexEnabled();
-      else return FaceType::HasWedgeTexture();
+      if(FaceType::HasWedgeTexCoordOcf()) return m.face.IsWedgeTexEnabled();
+      else return FaceType::HasWedgeTexCoord();
     }
 
     template < class VertContainerType, class FaceType >

@@ -11,7 +11,7 @@
 
 
 namespace vcg {
-template < class VETYPE, class VFTYPE, class VTTYPE,class TCTYPE = TCoord2<float,1>, class CoordTYPE= Point3<float> >
+template < class VETYPE, class VFTYPE, class VTTYPE,class TCTYPE = TexCoord2<float,1>, class CoordTYPE= Point3<float> >
 class Vertexf : public Vertex<float,VETYPE,VFTYPE,VTTYPE, TCTYPE , CoordTYPE> {};
 
 template < class VETYPE, class VFTYPE, class VTTYPE>

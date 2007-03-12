@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/10/15 16:24:10  ganovelli
+Working release (compilata solo su MSVC), component_occ è migrato da component_opt
+
 
 
 ****************************************************************************/
@@ -69,21 +72,21 @@ template <class T> class Normal3sOcc: public NormalOcc<vcg::Point3s, T> {};
 template <class T> class Normal3fOcc: public NormalOcc<vcg::Point3f, T> {};
 template <class T> class Normal3dOcc: public NormalOcc<vcg::Point3d, T> {};
 
-/*-------------------------- TEXTURE ----------------------------------------*/ 
+/*-------------------------- TEXCOORD ----------------------------------------*/ 
 
-template <class A, class T> class TextureOcc: public T {
+template <class A, class T> class TexCoordOcc: public T {
 public:
-  typedef A TextureType;
-  TextureType &T() {return CAT< vector_occ<VertType>,TextureType>::Instance()->Get((VertType*)this); }
-  static bool HasTexture()   { return true; }
+  typedef A TexCoordType;
+  TexCoordType &T() {return CAT< vector_occ<VertType>,TexCoordType>::Instance()->Get((VertType*)this); }
+  static bool HasTexCoord()   { return true; }
 
 /* private:
-  TextureType _t;   */ 
+  TexCoordType _t;   */ 
 };
 
-template <class T> class Texture2sOcc: public TextureOcc<TCoord2<short,1>, T> {};
-template <class T> class Texture2fOcc: public TextureOcc<TCoord2<float,1>, T> {};
-template <class T> class Texture2dOcc: public TextureOcc<TCoord2<double,1>, T> {};
+template <class T> class TexCoord2sOcc: public TexCoordOcc<TexCoord2<short,1>, T> {};
+template <class T> class TexCoord2fOcc: public TexCoordOcc<TexCoord2<float,1>, T> {};
+template <class T> class TexCoord2dOcc: public TexCoordOcc<TexCoord2<double,1>, T> {};
 
 ///*------------------------- FLAGS -----------------------------------------*/ 
 
