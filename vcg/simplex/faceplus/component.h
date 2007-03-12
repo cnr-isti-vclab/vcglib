@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2007/02/27 09:32:00  cignoni
+Added constructor to the VFadj component to comply to the allocator needs
+
 Revision 1.13  2007/02/12 19:01:23  ganovelli
 added Name(std:vector<std::string>& n) that fills n with the names of the attribute of the face type
 
@@ -226,39 +229,39 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 };
 
 
-/*-------------------------- Texture ----------------------------------------*/ 
+/*-------------------------- TexCoord ----------------------------------------*/ 
 
-template <class TT> class EmptyWedgeTexture: public TT {
+template <class TT> class EmptyWedgeTexCoord: public TT {
 public:
-	typedef int WedgeTextureType;
-  typedef vcg::TCoord2<float,1> TexCoordType;
+	typedef int WedgeTexCoordType;
+  typedef vcg::TexCoord2<float,1> TexCoordType;
   TexCoordType &WT(const int) { static TexCoordType dummy_texture; return dummy_texture;}
   TexCoordType const &cWT(const int) const { static TexCoordType dummy_texture; return dummy_texture;}
-  static bool HasWedgeTexture()   { return false; }
-  static bool HasWedgeTextureOcc()   { return false; }
+  static bool HasWedgeTexCoord()   { return false; }
+  static bool HasWedgeTexCoordOcc()   { return false; }
   static void Name(std::vector<std::string> & name){TT::Name(name);}
 
 };
-template <class A, class TT> class WedgeTexture: public TT {
+template <class A, class TT> class WedgeTexCoord: public TT {
 public:
-	typedef int WedgeTextureType;
+	typedef int WedgeTexCoordType;
   typedef A TexCoordType;
   TexCoordType &WT(const int i) { return _wt[i]; }
   TexCoordType const &cWT(const int i) const { return _wt[i]; }
-  static bool HasWedgeTexture()   { return true; }
+  static bool HasWedgeTexCoord()   { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeTexture"));TT::Name(name);}
 
 private:
   TexCoordType _wt[3];    
 };
 
-template <class TT> class WedgeTexture2s: public WedgeTexture<TCoord2<short,1>, TT> {
+template <class TT> class WedgeTexCoord2s: public WedgeTexCoord<TexCoord2<short,1>, TT> {
 public:  static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeTexture2s"));TT::Name(name);}
 };
-template <class TT> class WedgeTexture2f: public WedgeTexture<TCoord2<float,1>, TT> {
+template <class TT> class WedgeTexCoord2f: public WedgeTexCoord<TexCoord2<float,1>, TT> {
 public:  static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeTexture2f"));TT::Name(name);}
 };
-template <class TT> class WedgeTexture2d: public WedgeTexture<TCoord2<double,1>, TT> {
+template <class TT> class WedgeTexCoord2d: public WedgeTexCoord<TexCoord2<double,1>, TT> {
 public: static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeTexture2d"));TT::Name(name);}
 };
 

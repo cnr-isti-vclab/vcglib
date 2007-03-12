@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2006/10/07 10:02:16  cignoni
+Added missing typename for interp.parameters
+
 Revision 1.10  2005/11/30 14:05:04  ponchio
 Fixed some UberZ fuynctions and non defined _flags
 
@@ -60,7 +63,7 @@ created
 #define __VCGLIB__EDGE_TYPE_BASE
 
 #include <vcg/space/box3.h>
-#include <vcg/space/tcoord2.h>
+#include <vcg/space/texcoord2.h>
 
 namespace vcg {
 
@@ -71,7 +74,7 @@ namespace vcg {
     This is the base class for definition of a face of the mesh.
 		@param SVTYPE (Templete Parameter) Specifies the vertex class type.
  */
-template <class EDGENAME, class SVTYPE, class TCTYPE = TCoord2<float,1> > class EDGE_TYPE
+template <class EDGENAME, class SVTYPE, class TCTYPE = TexCoord2<float,1> > class EDGE_TYPE
 {
 public:
 	///	The base type of the segment

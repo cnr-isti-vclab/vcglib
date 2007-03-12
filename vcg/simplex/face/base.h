@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.42  2007/02/20 14:07:53  ganovelli
+added QualityType to comply faceplus type
+
 Revision 1.41  2007/01/13 00:25:36  cignoni
 Added #ifdefs to guarantee that ComputeNormal would be defined only once
 
@@ -154,7 +157,7 @@ First commit...
 
 #include <vcg/math/base.h>
 #include <vcg/space/box3.h>
-#include <vcg/space/tcoord2.h>
+#include <vcg/space/texcoord2.h>
 #include <vcg/space/triangle3.h>
 #include <vcg/space/sphere3.h>
 #include <vcg/space/color4.h>
@@ -176,7 +179,7 @@ class DUMMYTETRATYPE;
  * directory. Each file specify a class type with the desired fields. So for example 
  * including 'vcg/simplex/face/with/FCFN.h' allow you to use the class FaceFCFN that has per-face color and normal stored inside.
  */
-template <class FVTYPE, class FETYPE, class FFTYPE, class TCTYPE = TCoord2<float,1> > class FACE_TYPE
+template <class FVTYPE, class FETYPE, class FFTYPE, class TCTYPE = TexCoord2<float,1> > class FACE_TYPE
 {
 public:
 	///	The base type of the face
@@ -1051,7 +1054,7 @@ static bool HasWedgeColor()  {
   return false;
 #endif
 }
-static bool HasWedgeTexture()  { 
+static bool HasWedgeTexCoord()  { 
 #ifdef __VCGLIB_FACE_WT 
   return true;
 #else

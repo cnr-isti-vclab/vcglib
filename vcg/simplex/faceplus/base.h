@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2007/02/12 19:01:23  ganovelli
+added Name(std:vector<std::string>& n) that fills n with the names of the attribute of the face type
+
 Revision 1.8  2006/10/09 20:20:18  cignoni
 Increased the maximum number of possible template args from 8  to 9
 
@@ -60,7 +63,7 @@ First working version!
 #define __VCG_FACE_PLUS
 
 #include <vcg/space/point3.h>
-#include <vcg/space/tcoord2.h>
+#include <vcg/space/texcoord2.h>
 #include <vcg/space/color4.h>
 #include <vcg/simplex/faceplus/component.h>
 
@@ -111,7 +114,7 @@ class FaceBase: public   face::EmptyVertexRef<
                          face::EmptyNormal<
                          face::EmptyBitFlags<
                          face::EmptyMark<
-                         face::EmptyWedgeTexture<
+                         face::EmptyWedgeTexCoord<
                          FaceTypeHolder <BVT, BET, BFT, BTT> > > > > > > >{
 };
 
@@ -331,7 +334,7 @@ A summary of the components that can be added to a face (see components.h for de
 VertexRef
 NormalFromVert, WedgeNormal
 Normal3s, Normal3f, Normal3d
-WedgeTexture2s, WedgeTexture2f, WedgeTexture2d
+WedgeTexCoord2s, WedgeTexCoord2f, WedgeTexCoord2d
 BitFlags
 WedgeColor, Color4b
 Qualitys, Qualityf, Qualityd

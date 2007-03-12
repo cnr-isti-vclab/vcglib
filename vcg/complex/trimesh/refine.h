@@ -1,4 +1,4 @@
-/****************************************************************************
+/***********F*****************************************************************
 * VCGLib                                                            o o     *
 * Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2007/01/18 18:15:14  cignoni
+added missing typenames
+
 Revision 1.14  2007/01/17 14:31:47  giec
 Added TrSplit function.
 
@@ -77,7 +80,7 @@ first working version
 #include <vector>
 #include <vcg/space/sphere3.h>
 #include <vcg/space/plane3.h>
-#include <vcg/space/tcoord2.h>
+#include <vcg/space/texcoord2.h>
 #include <vcg/space/color4.h>
 #include <vcg/simplex/face/pos.h>
 #include<vcg/complex/trimesh/allocate.h>
@@ -149,9 +152,9 @@ struct MidPoint : public   std::unary_function<face::Pos<typename MESH_TYPE::Fac
 	}
 
 	template<class FL_TYPE>
-	TCoord2<FL_TYPE,1> WedgeInterp(TCoord2<FL_TYPE,1> &t0, TCoord2<FL_TYPE,1> &t1)
+	TexCoord2<FL_TYPE,1> WedgeInterp(TexCoord2<FL_TYPE,1> &t0, TexCoord2<FL_TYPE,1> &t1)
 	{
-		TCoord2<FL_TYPE,1> tmp;
+		TexCoord2<FL_TYPE,1> tmp;
 		assert(t0.n()== t1.n());
 		tmp.n()=t0.n(); 
 		tmp.t()=(t0.t()+t1.t())/2.0;
@@ -209,9 +212,9 @@ struct MidPointArc : public std::unary_function<face::Pos<typename MESH_TYPE::Fa
 	}
 
 	template<class FL_TYPE>
-	TCoord2<FL_TYPE,1> WedgeInterp(TCoord2<FL_TYPE,1> &t0, TCoord2<FL_TYPE,1> &t1)
+	TexCoord2<FL_TYPE,1> WedgeInterp(TexCoord2<FL_TYPE,1> &t0, TexCoord2<FL_TYPE,1> &t1)
 	{
-		TCoord2<FL_TYPE,1> tmp;
+		TexCoord2<FL_TYPE,1> tmp;
 		assert(t0.n()== t1.n());
 		tmp.n()=t0.n(); 
 		tmp.t()=(t0.t()+t1.t())/2.0;
@@ -434,7 +437,7 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
 						if(RefineSelected) (*nf[i]).SetS();
 				}
         
-        if(tri::HasPerWedgeTexture(m))
+        if(tri::HasPerWedgeTexCoord(m))
 					for(i=0;i<3;++i)	{
 						wtt[i]=(*fi).WT(i);
 						wtt[3+i]=mid.WedgeInterp((*fi).WT(i),(*fi).WT((i+1)%3));
@@ -445,7 +448,7 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
 					for(j=0;j<3;++j){
 						(*nf[i]).V(j)=&*vv[SplitTab[ind].TV[i][j]];
 						
-						if(tri::HasPerWedgeTexture(m)) //analogo ai vertici...
+						if(tri::HasPerWedgeTexCoord(m)) //analogo ai vertici...
 									(*nf[i]).WT(j)=wtt[SplitTab[ind].TV[i][j]];
 
 						assert((*nf[i]).V(j)!=0);
@@ -464,7 +467,7 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
 							{ // swap the last two triangles
 								(*nf[2]).V(1)=(*nf[1]).V(0);
 								(*nf[1]).V(1)=(*nf[2]).V(0);
-								if(tri::HasPerWedgeTexture(m)){ //analogo ai vertici...
+								if(tri::HasPerWedgeTexCoord(m)){ //analogo ai vertici...
 									(*nf[2]).WT(1)=(*nf[1]).WT(0);
 									(*nf[1]).WT(1)=(*nf[2]).WT(0);
 								}
@@ -568,9 +571,9 @@ struct MidPointButterfly : public std::unary_function<face::Pos<typename MESH_TY
 	}
 
 	template<class FL_TYPE>
-	TCoord2<FL_TYPE,1> WedgeInterp(TCoord2<FL_TYPE,1> &t0, TCoord2<FL_TYPE,1> &t1)
+	TexCoord2<FL_TYPE,1> WedgeInterp(TexCoord2<FL_TYPE,1> &t0, TexCoord2<FL_TYPE,1> &t1)
 	{
-		TCoord2<FL_TYPE,1> tmp;
+		TexCoord2<FL_TYPE,1> tmp;
 		assert(t0.n()== t1.n());
 		tmp.n()=t0.n(); 
 		tmp.t()=(t0.t()+t1.t())/2.0;
@@ -733,9 +736,9 @@ struct MidPointPlane : public std::unary_function<face::Pos<typename MESH_TYPE::
 	}
 
 	template<class FL_TYPE>
-	TCoord2<FL_TYPE,1> WedgeInterp(TCoord2<FL_TYPE,1> &t0, TCoord2<FL_TYPE,1> &t1)
+	TexCoord2<FL_TYPE,1> WedgeInterp(TexCoord2<FL_TYPE,1> &t0, TexCoord2<FL_TYPE,1> &t1)
 	{
-		TCoord2<FL_TYPE,1> tmp;
+		TexCoord2<FL_TYPE,1> tmp;
 		assert(t0.n()== t1.n());
 		tmp.n()=t0.n(); 
 		tmp.t()=(t0.t()+t1.t())/2.0;
@@ -780,9 +783,9 @@ struct MidPointSphere : public std::unary_function<face::Pos<typename MESH_TYPE:
 	}
 
 	template<class FL_TYPE>
-	TCoord2<FL_TYPE,1> WedgeInterp(TCoord2<FL_TYPE,1> &t0, TCoord2<FL_TYPE,1> &t1)
+	TexCoord2<FL_TYPE,1> WedgeInterp(TexCoord2<FL_TYPE,1> &t0, TexCoord2<FL_TYPE,1> &t1)
 	{
-		TCoord2<FL_TYPE,1> tmp;
+		TexCoord2<FL_TYPE,1> tmp;
 		assert(t0.n()== t1.n());
 		tmp.n()=t0.n(); 
 		tmp.t()=(t0.t()+t1.t())/2.0;
