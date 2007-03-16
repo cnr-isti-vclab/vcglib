@@ -142,8 +142,8 @@ namespace vcg
 			bool IsUpToDate()
 			{
 				int MostRecentVertexMark = _pos.V(0)->IMark();
-				MostRecentVertexMark = std::max(MostRecentVertexMark, _pos.V(1)->IMark());
-				MostRecentVertexMark = std::max(MostRecentVertexMark, _pos.V(2)->IMark());
+				MostRecentVertexMark = vcg::math::Max<ScalarType>(MostRecentVertexMark, _pos.V(1)->IMark());
+				MostRecentVertexMark = vcg::math::Max<ScalarType>(MostRecentVertexMark, _pos.V(2)->IMark());
 
 				return ( _localMark >=  MostRecentVertexMark );
 			};
@@ -195,7 +195,7 @@ namespace vcg
 				// higher the quality better the triangle.
 				// swaps that improve the worst quality more are performed before 
 				// (e.g. they have an higher priority)
-				_priority = std::min(QaAfter,QbAfter) - std::min(Qa,Qb) ;
+				_priority = vcg::math::Max<ScalarType>(QaAfter,QbAfter) - vcg::math::Min<ScalarType>(Qa,Qb) ;
 				_priority *=-1;
 				return _priority;
 			};
