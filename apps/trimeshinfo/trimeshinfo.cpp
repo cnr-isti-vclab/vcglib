@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.41  2007/03/08 22:49:35  cignoni
+Changed the include order and the order in which cleaning filters are applied.
+
 Revision 1.40  2006/05/16 21:55:28  cignoni
 Updated to the new remove zero area syntax
 
@@ -652,7 +655,7 @@ int main(int argc, char ** argv)
 	initMeshInfo(mi);
 
 	printf("\n  -------------------------------\n"
-		"     TriMeshInfo V.1.21 \n"
+		"     TriMeshInfo V.1.23 \n"
 		"     http://vcg.isti.cnr.it\n"
 		"     release date: "__DATE__"\n"
 		"  -------------------------------\n\n\n");
