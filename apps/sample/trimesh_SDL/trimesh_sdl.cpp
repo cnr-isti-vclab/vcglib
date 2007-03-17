@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2006/11/21 17:44:06  cignoni
+Update to the latest version of the trackball
+
 Revision 1.2  2005/11/22 17:50:15  cignoni
 Refactored the sample code.
 Shortened a lot and removed all unused unnecessary stuff
@@ -33,27 +36,48 @@ Initial Relase
 
 ****************************************************************************/
 #include <SDL/SDL.h>
-
 #include <gl/glew.h>
 #include <vector>
 
-// mesh definition
+/*include the base definition for the vertex */
 #include <vcg/simplex/vertexplus/base.h>
+
+/*include the base definition for the face */
 #include <vcg/simplex/faceplus/base.h>
+
+/*include the base definition for the trimesh*/
 #include <vcg/complex/trimesh/base.h>
+
+/*include the algorihm that update bounding box and normals*/
 #include <vcg/complex/trimesh/update/bounding.h>
 #include <vcg/complex/trimesh/update/normal.h>
+
+/*include the importer from disk*/
 #include <wrap/io_trimesh/import.h>
+
+/*include wrapping of the trimesh towards opengl*/
 #include <wrap/gl/trimesh.h>
+
+/*include the trackball: NOTE, you the implementation of the trackball is found in the files:
+wrap/gui/trackball.cpp and wrap/gui/trackmode.cpp. You should include these files in your solution
+otherwise you'll get linking errors */
 #include <wrap/gui/trackball.h>
 
 using namespace vcg;
 using namespace std;
+
 class CEdge;    // dummy prototype never used
 class CFace;
 
+/* define a vertex passing the attributes you want it to have. Each attributes has its own class.
+Check vcg/simplex/vertexplus/component.h to find out the existing attributes. Note: then you could 
+also personalized attributes */
 class CVertex : public VertexSimp2< CVertex, CEdge, CFace, vert::Coord3f, vert::Normal3f >{};
+
+/*same as for the vertes */ 
 class CFace   : public FaceSimp2<   CVertex, CEdge, CFace, face::VertexRef, face::Normal3f > {};
+
+/*the mesh is a container of vertices and a container of faces */ 
 class CMesh   : public vcg::tri::TriMesh< vector<CVertex>, vector<CFace> > {};
 
 
