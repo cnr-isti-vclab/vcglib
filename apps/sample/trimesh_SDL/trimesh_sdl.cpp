@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2007/03/17 13:22:55  ganovelli
+some more comment added
+
 Revision 1.3  2006/11/21 17:44:06  cignoni
 Update to the latest version of the trackball
 
@@ -35,7 +38,7 @@ Revision 1.1  2005/09/21 10:29:33  cignoni
 Initial Relase
 
 ****************************************************************************/
-#include <SDL/SDL.h>
+#include <SDL.h>
 #include <gl/glew.h>
 #include <vector>
 
