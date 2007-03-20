@@ -392,7 +392,7 @@ namespace io {
 			
 
 			info->dae->doc = doc;
-			GetTexture(*(info->dae->doc),info);
+			GetTexCoord(*(info->dae->doc),info);
 			QDomNodeList scenes = info->dae->doc->elementsByTagName("scene");
 			int scn_size = scenes.size();
 			

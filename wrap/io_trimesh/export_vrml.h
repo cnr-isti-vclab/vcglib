@@ -23,6 +23,9 @@
 /****************************************************************************
 History
 $Log: not supported by cvs2svn $
+Revision 1.4  2006/11/21 19:22:53  e_cerisoli
+Added Comments for documentation
+
 ****************************************************************************/
 
 #ifndef __VCGLIB_EXPORT_WRL
@@ -209,7 +212,7 @@ namespace vcg {
 							"       ]\n"							
 							);					
 					}					
-					else if (HasPerWedgeTexture(m) &&(mask &  vcg::tri::io::Mask::IOM_WEDGTEXCOORD))
+					else if (HasPerWedgeTexCoord(m) &&(mask &  vcg::tri::io::Mask::IOM_WEDGTEXCOORD))
 					{
 						fprintf(fp,
 							"\n"
