@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2007/03/22 17:29:16  pietroni
+*** empty log message ***
+
 Revision 1.14  2006/11/13 13:03:45  ponchio
 Added GetBBox in Point3 (declaration) the body of the function is in box3.h
 
@@ -383,7 +386,7 @@ ScalarType DistancePoint3Box3(const Point3<ScalarType> &test,
 		return ((test-bbox.P(0)).Norm());
 	if ((Ym)&&(Zm)&&(XM))
 		return ((test-bbox.P(1)).Norm());
-	if ((YM)&&(ZM)&&(Xm))
+	if ((Xm)&&(Zm)&&(YM))
 		return ((test-bbox.P(2)).Norm());
 	if ((XM)&&(YM)&&(Zm))
 		return ((test-bbox.P(3)).Norm());
@@ -391,14 +394,19 @@ ScalarType DistancePoint3Box3(const Point3<ScalarType> &test,
 		return ((test-bbox.P(4)).Norm());
 	if ((XM)&&(ZM)&&(Ym))
 		return ((test-bbox.P(5)).Norm());
-	if ((YM)&&(ZM)&&(Zm))
+	if ((YM)&&(ZM)&&(Xm))
 		return ((test-bbox.P(6)).Norm());
 	if ((XM)&&(YM)&&(ZM))
 		return ((test-bbox.P(7)).Norm());
+	
+	bool Xin=((test.X()>=bbox.min.X())&&(test.X()<=bbox.max.X()));
+	bool Yin=((test.Y()>=bbox.min.Y())&&(test.Y()<=bbox.max.Y()));
+	bool Zin=((test.Z()>=bbox.min.Z())&&(test.Z()<=bbox.max.Z()));
+	
 
 	///EDGES CASES
 	///edge case 0
-	if ((XM)&&(Xm)&&(Ym)&&(Zm))
+	if ((Xin) &&(Ym)&&(Zm))
 	{
 		vcg::Line3<ScalarType> edge;
 		vcg::Point3<ScalarType> dir=bbox.P(1)-bbox.P(0);
@@ -408,7 +416,7 @@ ScalarType DistancePoint3Box3(const Point3<ScalarType> &test,
 		return ((test-clos).Norm());
 	}
 	///edge case 1
-	if ((ZM)&&(Zm)&&(XM)&&(Ym))
+	if ((Zin)&&(XM)&&(Ym))
 	{
 		vcg::Line3<ScalarType> edge;
 		vcg::Point3<ScalarType> dir=bbox.P(5)-bbox.P(1);
@@ -418,7 +426,7 @@ ScalarType DistancePoint3Box3(const Point3<ScalarType> &test,
 		return ((test-clos).Norm());
 	}
 	///edge case 2
-	if ((XM)&&(Xm)&&(Ym)&&(ZM))
+	if ((Xin)&&(Ym)&&(ZM))
 	{
 		vcg::Line3<ScalarType> edge;
 		vcg::Point3<ScalarType> dir=bbox.P(5)-bbox.P(4);
@@ -428,7 +436,7 @@ ScalarType DistancePoint3Box3(const Point3<ScalarType> &test,
 		return ((test-clos).Norm());
 	}
 	///edge case 3
-	if ((ZM)&&(Zm)&&(Xm)&&(Ym))
+	if ((Zin)&&(Xm)&&(Ym))
 	{
 		vcg::Line3<ScalarType> edge;
 		vcg::Point3<ScalarType> dir=bbox.P(4)-bbox.P(0);
@@ -438,7 +446,7 @@ ScalarType DistancePoint3Box3(const Point3<ScalarType> &test,
 		return ((test-clos).Norm());
 	}
 	///edge case 4
-	if ((XM)&&(Xm)&&(YM)&&(Zm))
+	if ((Xin)&&(YM)&&(Zm))
 	{
 		vcg::Line3<ScalarType> edge;
 		vcg::Point3<ScalarType> dir=bbox.P(3)-bbox.P(2);
@@ -448,7 +456,7 @@ ScalarType DistancePoint3Box3(const Point3<ScalarType> &test,
 		return ((test-clos).Norm());
 	}
 	///edge case 5
-	if ((ZM)&&(Zm)&&(XM)&&(YM))
+	if ((Zin)&&(XM)&&(YM))
 	{
 		vcg::Line3<ScalarType> edge;
 		vcg::Point3<ScalarType> dir=bbox.P(7)-bbox.P(3);
@@ -458,7 +466,7 @@ ScalarType DistancePoint3Box3(const Point3<ScalarType> &test,
 		return ((test-clos).Norm());
 	}
 	///edge case 6
-	if ((XM)&&(Xm)&&(ZM)&&(YM))
+	if ((Xin)&&(ZM)&&(YM))
 	{
 		vcg::Line3<ScalarType> edge;
 		vcg::Point3<ScalarType> dir=bbox.P(7)-bbox.P(6);
@@ -468,7 +476,7 @@ ScalarType DistancePoint3Box3(const Point3<ScalarType> &test,
 		return ((test-clos).Norm());
 	}
 	///edge case 7
-	if ((ZM)&&(Zm)&&(Xm)&&(YM))
+	if ((Zin)&&(Xm)&&(YM))
 	{
 		vcg::Line3<ScalarType> edge;
 		vcg::Point3<ScalarType> dir=bbox.P(6)-bbox.P(2);
@@ -478,7 +486,7 @@ ScalarType DistancePoint3Box3(const Point3<ScalarType> &test,
 		return ((test-clos).Norm());
 	}
 	///edge case 8
-	if ((YM)&&(Ym)&&(Xm)&&(Zm))
+	if ((Yin)&&(Xm)&&(Zm))
 	{
 		vcg::Line3<ScalarType> edge;
 		vcg::Point3<ScalarType> dir=bbox.P(2)-bbox.P(0);
@@ -488,7 +496,7 @@ ScalarType DistancePoint3Box3(const Point3<ScalarType> &test,
 		return ((test-clos).Norm());
 	}
 	///edge case 9
-	if ((YM)&&(Ym)&&(XM)&&(Zm))
+	if ((Yin)&&(XM)&&(Zm))
 	{
 		vcg::Line3<ScalarType> edge;
 		vcg::Point3<ScalarType> dir=bbox.P(3)-bbox.P(1);
@@ -498,7 +506,7 @@ ScalarType DistancePoint3Box3(const Point3<ScalarType> &test,
 		return ((test-clos).Norm());
 	}
 	///edge case 10
-	if ((YM)&&(Ym)&&(XM)&&(ZM))
+	if ((Yin)&&(XM)&&(ZM))
 	{
 		vcg::Line3<ScalarType> edge;
 		vcg::Point3<ScalarType> dir=bbox.P(7)-bbox.P(5);
@@ -508,7 +516,7 @@ ScalarType DistancePoint3Box3(const Point3<ScalarType> &test,
 		return ((test-clos).Norm());
 	}
 	///edge case 11
-	if ((YM)&&(Ym)&&(Xm)&&(ZM))
+	if ((Yin)&&(Xm)&&(ZM))
 	{
 		vcg::Line3<ScalarType> edge;
 		vcg::Point3<ScalarType> dir=bbox.P(6)-bbox.P(4);
@@ -520,22 +528,22 @@ ScalarType DistancePoint3Box3(const Point3<ScalarType> &test,
 
 	///FACES CASES
 	//face 0
-	if ((Xm)&&(XM)&&(Zm)&&(ZM)&&(Ym))
+	if ((Xin)&&(Zin)&&(Ym))
 		return (fabs(bbox.min.Y()-test.Y()));
 	//face 1
-	if ((Xm)&&(XM)&&(Zm)&&(ZM)&&(YM))
+	if ((Xin)&&(Zin)&&(YM))
 		return (fabs(bbox.min.Y()-test.Y()));
 	//face 2
-	if ((Xm)&&(XM)&&(Ym)&&(YM)&&(Zm))
+	if ((Xin)&&(Yin)&&(Zm))
 		return (fabs(bbox.min.Z()-test.Z()));
 	//face 3
-	if ((Xm)&&(XM)&&(Ym)&&(YM)&&(ZM))
+	if ((Xin)&&(Yin)&&(ZM))
 		return (fabs(bbox.min.Z()-test.Z()));
 	//face 4
-	if ((Ym)&&(YM)&&(Zm)&&(ZM)&&(Xm))
+	if ((Yin)&&(Zin)&&(Xm))
 		return (fabs(bbox.min.X()-test.X()));
 	//face 5
-	if ((Ym)&&(YM)&&(Zm)&&(ZM)&&(XM))
+	if ((Yin)&&(Zin)&&(XM))
 		return (fabs(bbox.min.X()-test.X()));
 
 	//no more cases
