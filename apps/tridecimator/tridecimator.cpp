@@ -66,7 +66,12 @@ class MyEdge : public Edge<MyEdge,MyVertex> {
 public:
   inline MyEdge() {};
   inline MyEdge( MyVertex * v0, MyVertex * v1):Edge<MyEdge,MyVertex>(v0,v1){};
-  inline MyEdge( Edge<MyEdge,MyVertex> &e):Edge<MyEdge,MyVertex>(e){};
+	  static inline MyEdge OrderedEdge(MyVertex* v0,MyVertex* v1){
+   if(v0<v1) return MyEdge(v0,v1);
+   else return MyEdge(v1,v0);
+  }
+
+//  inline MyEdge( Edge<MyEdge,MyVertex> &e):Edge<MyEdge,MyVertex>(e){};
 };
 
 
@@ -76,12 +81,12 @@ class MyFace    : public FaceSimp2  < MyVertex, MyEdge, MyFace,
   face::BitFlags > {};
 
 /// the main mesh class 
-class MyMesh    : public vcg::tri::TriMesh<vector<MyVertex>, std::vector<MyFace> > {};
+class MyMesh    : public vcg::tri::TriMesh<std::vector<MyVertex>, std::vector<MyFace> > {};
 
 
-class MyTriEdgeCollapse: public vcg::tri::TriEdgeCollapseQuadric< MyMesh, MyTriEdgeCollapse > {
+class MyTriEdgeCollapse: public vcg::tri::TriEdgeCollapseQuadric< MyMesh, MyTriEdgeCollapse, QInfoStandard<MyVertex>  > {
 						public:
-						typedef  vcg::tri::TriEdgeCollapseQuadric< MyMesh,  MyTriEdgeCollapse > TECQ;
+						typedef  vcg::tri::TriEdgeCollapseQuadric< MyMesh,  MyTriEdgeCollapse, QInfoStandard<MyVertex>  > TECQ;
             typedef  MyMesh::VertexType::EdgeType EdgeType;
             inline MyTriEdgeCollapse(  const EdgeType &p, int i) :TECQ(p,i){}
 };
@@ -134,7 +139,7 @@ if(argc<4) Usage();
   }
 	printf("mesh loaded %d %d \n",mesh.vn,mesh.fn);
     
-  TriEdgeCollapseQuadricParameter qparams;
+  TriEdgeCollapseQuadricParameter &qparams = MyTriEdgeCollapse::Params() ;
   MyTriEdgeCollapse::SetDefaultParams();
   qparams.QualityThr  =.3;
   float TargetError=numeric_limits<float>::max();
@@ -162,7 +167,7 @@ if(argc<4) Usage();
 				case 'n' :	qparams.NormalThrRad = math::ToRad(atof(argv[i]+2));  printf("Setting Normal Thr to %f deg\n",atof(argv[i]+2)); break;	
 				case 'b' :	qparams.BoundaryWeight  = atof(argv[i]+2);			printf("Setting Boundary Weight to %f\n",atof(argv[i]+2)); break;		
 				case 'e' :	TargetError = float(atof(argv[i]+2));			printf("Setting TargetError to %g\n",atof(argv[i]+2)); break;		
-				case 'P' :	CleaningFlag=true;  printf("Cleaning mesh before simplification\n",atof(argv[i]+2)); break;	
+				case 'P' :	CleaningFlag=true;  printf("Cleaning mesh before simplification\n"); break;	
 
 				default  :  printf("Unknown option '%s'\n", argv[i]);
           exit(0);
