@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2006/11/13 12:53:40  ponchio
+just added an #include <matrix33>
+
 Revision 1.6  2006/10/09 20:23:00  cignoni
 Added a minimum method that uses SVD. Unfortunately it is much much slower.
 
@@ -73,16 +76,16 @@ public:
 template< class PlaneType >
 	void ByPlane( const PlaneType & p )					// Init dato un piano
 	{
-		a[0] =  p.Direction()[0]*p.Direction()[0];	// a11
-		a[1] =  p.Direction()[1]*p.Direction()[0];	// a12 (=a21)
-		a[2] =  p.Direction()[2]*p.Direction()[0];	// a13 (=a31)
-		a[3] =  p.Direction()[1]*p.Direction()[1];	// a22
-		a[4] =  p.Direction()[2]*p.Direction()[1];	// a23 (=a32)
-		a[5] =  p.Direction()[2]*p.Direction()[2];	// a33
+		a[0] =  (ScalarType)p.Direction()[0]*p.Direction()[0];	// a11
+		a[1] =  (ScalarType)p.Direction()[1]*p.Direction()[0];	// a12 (=a21)
+		a[2] =  (ScalarType)p.Direction()[2]*p.Direction()[0];	// a13 (=a31)
+		a[3] =  (ScalarType)p.Direction()[1]*p.Direction()[1];	// a22
+		a[4] =  (ScalarType)p.Direction()[2]*p.Direction()[1];	// a23 (=a32)
+		a[5] =  (ScalarType)p.Direction()[2]*p.Direction()[2];	// a33
 		b[0] = (ScalarType)(-2.0)*p.Offset()*p.Direction()[0];
 		b[1] = (ScalarType)(-2.0)*p.Offset()*p.Direction()[1];
 		b[2] = (ScalarType)(-2.0)*p.Offset()*p.Direction()[2];
-		c    =  p.Offset()*p.Offset();
+		c    =  (ScalarType)p.Offset()*p.Offset();
 	}
 
 	void Zero()																// Azzera la quadrica
@@ -137,31 +140,32 @@ template <class ResultScalarType>
 	ResultScalarType Apply( const Point3<ResultScalarType> & p ) const	// Applica la quadrica al punto p
 	{
 		assert( IsValid() );
-
-	// Versione Lenta
 /*
+	// Versione Lenta
+
 		Point3d t;
 		t[0] = p[0]*a[0] + p[1]*a[1] + p[2]*a[2];
 		t[1] = p[0]*a[1] + p[1]*a[3] + p[2]*a[4];
 		t[2] = p[0]*a[2] + p[1]*a[4] + p[2]*a[5];
 		double k = b[0]*p[0] + b[1]*p[1] + b[2]*p[2];
-		double tp =t*p;
+		double tp = t*p ;
+		assert(tp+k+c >= 0);
 		return tp + k + c;
-	
-*/
-	/* Versione veloce */
+	*/
 
+	/* Versione veloce */
 		return ResultScalarType (
       p[0]*p[0]*a[0] + 2*p[0]*p[1]*a[1] + 2*p[0]*p[2]*a[2] + p[0]*b[0] 
 			               +   p[1]*p[1]*a[3] + 2*p[1]*p[2]*a[4] + p[1]*b[1]
 			                                  +   p[2]*p[2]*a[5] + p[2]*b[2]	+ c);
+
 	}
 
 // spostare..risolve un sistema 3x3
 template<class FLTYPE> 	
 bool Gauss33( FLTYPE x[], FLTYPE C[3][3+1] )
 {
-    const FLTYPE keps = (FLTYPE)1e-6;
+    const FLTYPE keps = (FLTYPE)1e-3;
     int i,j,k;
 
     FLTYPE eps;					// Determina valore cond.

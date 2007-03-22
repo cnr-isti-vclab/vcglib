@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2007/02/25 09:20:10  cignoni
+Added Rad to the NormalThr Option and removed a bug in multiple exectuion of non optimal simplification (missing an isD check)
+
 Revision 1.12  2007/01/19 09:13:14  cignoni
 Added Finalize() method to the interface, corrected minor bugs on border preserving and postsimplification cleanup
 Avoided double make_heap (it is done only in the local_optimization init)
@@ -168,7 +171,10 @@ public:
     typedef TriEdgeCollapseQuadricParameter QParameter;
     typedef HelperType QH;
 
-		static QParameter & Params(){static QParameter p; return p;}
+		static QParameter & Params(){
+			static QParameter p; 
+			return p;
+		}
 		enum Hint {
 			HNHasFFTopology       = 0x0001,  // La mesh arriva con la topologia ff gia'fatta
 			HNHasVFTopology       = 0x0002,  // La mesh arriva con la topologia bf gia'fatta
@@ -415,7 +421,8 @@ public:
 
     QuadricType qq=QH::Qd(v[0]);
     qq+=QH::Qd(v[1]);
-		double QuadErr = Params().ScaleFactor*qq.Apply(v[1]->P()); 
+		Point3d tpd=Point3d::Construct(v[1]->P());
+    double QuadErr = Params().ScaleFactor*qq.Apply(tpd); 
 
 		// All collapses involving triangles with quality larger than <QualityThr> has no penalty;
 		if(MinQual>Params().QualityThr) MinQual=Params().QualityThr;  
@@ -609,14 +616,17 @@ static void InitQuadric(TriMeshType &m)
 		q+=QH::Qd(v[1]);
 		
     Point3<QuadricType::ScalarType> x;
+		
     bool rt=q.Minimum(x);
 		if(!rt) { // if the computation of the minimum fails we choose between the two edge points and the middle one.
-			x.Import((v[0]->P()+v[1]->P())/2);
+			Point3<QuadricType::ScalarType> x0=Point3d::Construct(v[0]->P());
+		  Point3<QuadricType::ScalarType> x1=Point3d::Construct(v[1]->P());
+      x.Import((v[0]->P()+v[1]->P())/2);
 			double qvx=q.Apply(x);
-			double qv0=q.Apply(v[0]->P());
-			double qv1=q.Apply(v[1]->P());
-      if(qv0<qvx) x.Import(v[0]->P());
-			if(qv1<qvx && qv1<qv0) x.Import(v[1]->P());
+			double qv0=q.Apply(x0);
+			double qv1=q.Apply(x1);
+      if(qv0<qvx) x=x0;
+			if(qv1<qvx && qv1<qv0) x=x1;
 		}
 		
     return CoordType::Construct(x);
