@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2006/11/13 13:03:45  ponchio
+Added GetBBox in Point3 (declaration) the body of the function is in box3.h
+
 Revision 1.13  2006/09/28 13:37:13  m_di_benedetto
 Added "const" to Collide()
 
@@ -72,7 +75,8 @@ First working release.
 
 #include <vcg/space/point3.h>
 #include <vcg/math/matrix44.h>
-
+#include <vcg/space/line3.h>
+#include <vcg/space/plane3.h>
 
 namespace vcg {
 
@@ -355,7 +359,188 @@ public:
 template <class T> Box3<T> Point3<T>::GetBBox(Box3<T> &bb) const {
  bb.Set( *this );
 }
+ 
 
+template <class ScalarType> 
+ScalarType DistancePoint3Box3(const Point3<ScalarType> &test,
+							  const Box3<ScalarType> &bbox)
+{
+	///if fall inside return zero
+	if (bbox.IsIn(test))
+		return 0;
+
+	///find the right quandrant 
+	bool XM=(test.X()>=bbox.max.X());
+	bool Xm=(test.X()<=bbox.min.X());
+	bool YM=(test.Y()>=bbox.max.Y());
+	bool Ym=(test.Y()<=bbox.min.Y());
+	bool ZM=(test.Z()>=bbox.max.Z());
+	bool Zm=(test.Z()<=bbox.min.Z());
+	
+
+	///VERTICES CASES
+	if ((Xm)&&(Ym)&&(Zm))
+		return ((test-bbox.P(0)).Norm());
+	if ((Ym)&&(Zm)&&(XM))
+		return ((test-bbox.P(1)).Norm());
+	if ((YM)&&(ZM)&&(Xm))
+		return ((test-bbox.P(2)).Norm());
+	if ((XM)&&(YM)&&(Zm))
+		return ((test-bbox.P(3)).Norm());
+	if ((Xm)&&(Ym)&&(ZM))
+		return ((test-bbox.P(4)).Norm());
+	if ((XM)&&(ZM)&&(Ym))
+		return ((test-bbox.P(5)).Norm());
+	if ((YM)&&(ZM)&&(Zm))
+		return ((test-bbox.P(6)).Norm());
+	if ((XM)&&(YM)&&(ZM))
+		return ((test-bbox.P(7)).Norm());
+
+	///EDGES CASES
+	///edge case 0
+	if ((XM)&&(Xm)&&(Ym)&&(Zm))
+	{
+		vcg::Line3<ScalarType> edge;
+		vcg::Point3<ScalarType> dir=bbox.P(1)-bbox.P(0);
+		dir.Normalize();
+		edge.Set(bbox.P(0),dir);
+		vcg::Point3<ScalarType> clos=vcg::ClosestPoint<ScalarType,true>(edge,test);
+		return ((test-clos).Norm());
+	}
+	///edge case 1
+	if ((ZM)&&(Zm)&&(XM)&&(Ym))
+	{
+		vcg::Line3<ScalarType> edge;
+		vcg::Point3<ScalarType> dir=bbox.P(5)-bbox.P(1);
+		dir.Normalize();
+		edge.Set(bbox.P(1),dir);
+		vcg::Point3<ScalarType> clos=vcg::ClosestPoint<ScalarType,true>(edge,test);
+		return ((test-clos).Norm());
+	}
+	///edge case 2
+	if ((XM)&&(Xm)&&(Ym)&&(ZM))
+	{
+		vcg::Line3<ScalarType> edge;
+		vcg::Point3<ScalarType> dir=bbox.P(5)-bbox.P(4);
+		dir.Normalize();
+		edge.Set(bbox.P(4),dir);
+		vcg::Point3<ScalarType> clos=vcg::ClosestPoint<ScalarType,true>(edge,test);
+		return ((test-clos).Norm());
+	}
+	///edge case 3
+	if ((ZM)&&(Zm)&&(Xm)&&(Ym))
+	{
+		vcg::Line3<ScalarType> edge;
+		vcg::Point3<ScalarType> dir=bbox.P(4)-bbox.P(0);
+		dir.Normalize();
+		edge.Set(bbox.P(0),dir);
+		vcg::Point3<ScalarType> clos=vcg::ClosestPoint<ScalarType,true>(edge,test);
+		return ((test-clos).Norm());
+	}
+	///edge case 4
+	if ((XM)&&(Xm)&&(YM)&&(Zm))
+	{
+		vcg::Line3<ScalarType> edge;
+		vcg::Point3<ScalarType> dir=bbox.P(3)-bbox.P(2);
+		dir.Normalize();
+		edge.Set(bbox.P(2),dir);
+		vcg::Point3<ScalarType> clos=vcg::ClosestPoint<ScalarType,true>(edge,test);
+		return ((test-clos).Norm());
+	}
+	///edge case 5
+	if ((ZM)&&(Zm)&&(XM)&&(YM))
+	{
+		vcg::Line3<ScalarType> edge;
+		vcg::Point3<ScalarType> dir=bbox.P(7)-bbox.P(3);
+		dir.Normalize();
+		edge.Set(bbox.P(3),dir);
+		vcg::Point3<ScalarType> clos=vcg::ClosestPoint<ScalarType,true>(edge,test);
+		return ((test-clos).Norm());
+	}
+	///edge case 6
+	if ((XM)&&(Xm)&&(ZM)&&(YM))
+	{
+		vcg::Line3<ScalarType> edge;
+		vcg::Point3<ScalarType> dir=bbox.P(7)-bbox.P(6);
+		dir.Normalize();
+		edge.Set(bbox.P(6),dir);
+		vcg::Point3<ScalarType> clos=vcg::ClosestPoint<ScalarType,true>(edge,test);
+		return ((test-clos).Norm());
+	}
+	///edge case 7
+	if ((ZM)&&(Zm)&&(Xm)&&(YM))
+	{
+		vcg::Line3<ScalarType> edge;
+		vcg::Point3<ScalarType> dir=bbox.P(6)-bbox.P(2);
+		dir.Normalize();
+		edge.Set(bbox.P(2),dir);
+		vcg::Point3<ScalarType> clos=vcg::ClosestPoint<ScalarType,true>(edge,test);
+		return ((test-clos).Norm());
+	}
+	///edge case 8
+	if ((YM)&&(Ym)&&(Xm)&&(Zm))
+	{
+		vcg::Line3<ScalarType> edge;
+		vcg::Point3<ScalarType> dir=bbox.P(2)-bbox.P(0);
+		dir.Normalize();
+		edge.Set(bbox.P(0),dir);
+		vcg::Point3<ScalarType> clos=vcg::ClosestPoint<ScalarType,true>(edge,test);
+		return ((test-clos).Norm());
+	}
+	///edge case 9
+	if ((YM)&&(Ym)&&(XM)&&(Zm))
+	{
+		vcg::Line3<ScalarType> edge;
+		vcg::Point3<ScalarType> dir=bbox.P(3)-bbox.P(1);
+		dir.Normalize();
+		edge.Set(bbox.P(1),dir);
+		vcg::Point3<ScalarType> clos=vcg::ClosestPoint<ScalarType,true>(edge,test);
+		return ((test-clos).Norm());
+	}
+	///edge case 10
+	if ((YM)&&(Ym)&&(XM)&&(ZM))
+	{
+		vcg::Line3<ScalarType> edge;
+		vcg::Point3<ScalarType> dir=bbox.P(7)-bbox.P(5);
+		dir.Normalize();
+		edge.Set(bbox.P(5),dir);
+		vcg::Point3<ScalarType> clos=vcg::ClosestPoint<ScalarType,true>(edge,test);
+		return ((test-clos).Norm());
+	}
+	///edge case 11
+	if ((YM)&&(Ym)&&(Xm)&&(ZM))
+	{
+		vcg::Line3<ScalarType> edge;
+		vcg::Point3<ScalarType> dir=bbox.P(6)-bbox.P(4);
+		dir.Normalize();
+		edge.Set(bbox.P(4),dir);
+		vcg::Point3<ScalarType> clos=vcg::ClosestPoint<ScalarType,true>(edge,test);
+		return ((test-clos).Norm());
+	}
+
+	///FACES CASES
+	//face 0
+	if ((Xm)&&(XM)&&(Zm)&&(ZM)&&(Ym))
+		return (fabs(bbox.min.Y()-test.Y()));
+	//face 1
+	if ((Xm)&&(XM)&&(Zm)&&(ZM)&&(YM))
+		return (fabs(bbox.min.Y()-test.Y()));
+	//face 2
+	if ((Xm)&&(XM)&&(Ym)&&(YM)&&(Zm))
+		return (fabs(bbox.min.Z()-test.Z()));
+	//face 3
+	if ((Xm)&&(XM)&&(Ym)&&(YM)&&(ZM))
+		return (fabs(bbox.min.Z()-test.Z()));
+	//face 4
+	if ((Ym)&&(YM)&&(Zm)&&(ZM)&&(Xm))
+		return (fabs(bbox.min.X()-test.X()));
+	//face 5
+	if ((Ym)&&(YM)&&(Zm)&&(ZM)&&(XM))
+		return (fabs(bbox.min.X()-test.X()));
+
+	//no more cases
+	assert(0);
+}
 
 
 typedef Box3<short>  Box3s;
@@ -368,3 +553,4 @@ typedef Box3<double> Box3d;
 
 } // end namespace
 #endif
+
