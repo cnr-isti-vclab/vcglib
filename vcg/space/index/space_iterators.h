@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.25  2007/03/08 17:05:50  pietroni
+line 375,  corrected 1 error concerning intersection with bounding of the grid
+
 Revision 1.24  2007/02/20 16:22:50  ganovelli
 modif in ClosestIterator to include  the last shell Si.siz [X|Y|X]. Tested with minialign and point based animation
 
@@ -140,7 +143,14 @@ namespace vcg{
 		void _NextCell()
 		{
 			assert(!end);
-				ScalarType testmax_dist=(r.Origin()-goal).Norm();
+			vcg::Box3<ScalarType> bb_current;
+
+			Si.IPToP(CurrentCell,bb_current.min);
+			Si.IPToP(CurrentCell+vcg::Point3i(1,1,1),bb_current.max);
+
+			CoordType inters;
+			Intersection_Ray_Box(bb_current,r,inters);
+			ScalarType testmax_dist=(inters-r.Origin()).Norm();
 
 			if (testmax_dist>max_dist)
 				end=true;
@@ -233,7 +243,7 @@ namespace vcg{
 				ObjType* elem=&(*(*l));
 				ScalarType t;
 				CoordType Int;
-				if((!elem->IsD())&&(!tm.IsMarked(elem))&&(int_funct((**l),r,t)))
+				if((!elem->IsD())&&(!tm.IsMarked(elem))&&(int_funct((**l),r,t))&&(t<=max_dist))
 				{
 					Int=r.Origin()+r.Direction()*t;
 					Elems.push_back(Entry_Type(elem,t,Int));
@@ -400,7 +410,7 @@ namespace vcg{
 			tm=_tm;
 		}
 
-		///initialize the Itarator
+		///initialize the Iterator
 		void Init(CoordType _p,const ScalarType &_max_dist)
 		{
 			explored.SetNull();
