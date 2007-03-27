@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2007/03/12 15:37:18  tarini
+Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
+
 Revision 1.15  2007/01/18 18:15:14  cignoni
 added missing typenames
 
@@ -336,7 +339,8 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
 	int j,NewVertNum=0,NewFaceNum=0;
 	typedef std::pair<typename MESH_TYPE::VertexPointer,typename MESH_TYPE::VertexPointer> vvpair;
 	std::map<vvpair,typename MESH_TYPE::VertexPointer> Edge2Vert;
-	// Primo ciclo si conta quanti sono i vertici  e facce da aggiungere 
+	
+	// First Loop: We analyze the mesh to compute the number of the new faces and new vertices 
 	typename MESH_TYPE::FaceIterator fi;
   int step=0,PercStep=m.fn/33;
   if(PercStep==0) PercStep=1;
@@ -344,11 +348,10 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
   {
 	 if(cb && (++step%PercStep)==0)(*cb)(step/PercStep,"Refining...");
 	    for(j=0;j<3;j++){
-				if(ep((*fi).V(j)->P(),(*fi).V1(j)->P()) && 
+				if(ep((*fi).P(j),(*fi).P1(j)) && 
 					(!RefineSelected || ((*fi).IsS() && (*fi).FFp(j)->IsS())) ){
 					++NewFaceNum;
-					if(((*fi).V(j)<(*fi).V1(j)) || 
-						(*fi).IsB(j))  
+					if(  ((*fi).V(j)<(*fi).V1(j))  || 	(*fi).IsB(j)  )  
 						++NewVertNum;
 				}
 		}
@@ -362,12 +365,11 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
 	//j=0;
   for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
   {
-	 if(cb && (++step%PercStep)==0)(*cb)(step/PercStep,"Refining...");
+	   if(cb && (++step%PercStep)==0)(*cb)(step/PercStep,"Refining...");
      for(j=0;j<3;j++)
 			if(ep((*fi).V(j)->P(),(*fi).V1(j)->P())  && 
 					(!RefineSelected || ((*fi).IsS() && (*fi).FFp(j)->IsS())) )
 				if((*fi).V(j)<(*fi).V1(j) || (*fi).IsB(j)){
-						(*lastv).UberFlags()=0;
 						mid( (*lastv), face::Pos<typename MESH_TYPE::FaceType> (&*fi,j));
 						//(*lastv).P()=((*fi).V(j)->P()+(*fi).V1(j)->P())/2;
 						Edge2Vert[ vvpair((*fi).V(j),(*fi).V1(j)) ] = &*lastv;
@@ -434,7 +436,7 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
 				int i;
 				for(i=1;i<SplitTab[ind].TriNum;++i){
 						nf[i]=&*lastf; ++lastf; fca++;
-						if(RefineSelected) (*nf[i]).SetS();
+						if(RefineSelected || (*fi).IsS()) (*nf[i]).SetS();
 				}
         
         if(tri::HasPerWedgeTexCoord(m))
