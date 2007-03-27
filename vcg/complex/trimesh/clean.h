@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.50  2007/03/12 15:38:03  tarini
+Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
+
 Revision 1.49  2007/02/27 15:17:17  marfr960
 std::numeric_limits<ScalarType>::max() -> (std::numeric_limits<ScalarType>::max)()
 to avoid annoying misunderstaindings on msvc8
@@ -977,9 +980,10 @@ private:
 				}
 			}
       /// Flip the orientation of the whole mesh flipping all the faces (by swapping the first two vertices)
-			static void FlipMesh(MeshType &m)
+			static void FlipMesh(MeshType &m, bool selected=false)
       {
         for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) if(!(*fi).IsD())
+	      if(!selected || (*fi).IsS())
         {
 			       face::SwapEdge<FaceType,false>((*fi), 0);
       			 if (HasPerWedgeTexCoord(m))
