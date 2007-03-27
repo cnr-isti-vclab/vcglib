@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.13  2006/11/07 15:13:56  zifnab1974
+Necessary changes for compilation with gcc 3.4.6. Especially the hash function is a problem
+
 Revision 1.12  2006/11/07 11:28:02  cignoni
 Added Quality weighted laplacian smoothing
 
@@ -619,26 +622,26 @@ void NormalSmoothSB(MESH_TYPE &m,
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 	{
 		CoordType bc=(*fi).Barycenter();
-    // 1) Clear all the selected flag of faces that are vertex-adjacent to fi
+    // 1) Clear all the visited flag of faces that are vertex-adjacent to fi
 		for(i=0;i<3;++i)
 		{
     	vcg::face::VFIterator<typename MESH_TYPE::FaceType> ep(&*fi,i);
 		  while (!ep.End())
 			{
-				ep.f->ClearS();
+				ep.f->ClearV();
 				++ep;
 			}
 		}
 
     // 1) Effectively average the normals weighting them with 
-    (*fi).SetS();
+    (*fi).SetV();
 		CoordType mm=CoordType(0,0,0);
 		for(i=0;i<3;++i)
 		{
 		  vcg::face::VFIterator<typename MESH_TYPE::FaceType> ep(&*fi,i);
 		  while (!ep.End())
 			{
-				if(! (*ep.f).IsS() )
+				if(! (*ep.f).IsV() )
 				{
 					if(sigma>0) 
 					{
@@ -647,7 +650,7 @@ void NormalSmoothSB(MESH_TYPE &m,
 						mm+=ep.f->N()*exp((-sigma)*ang*ang/dd);
 					}
 					else mm+=ep.f->N();
-					(*ep.f).SetS();
+					(*ep.f).SetV();
 				}
 				++ep;
 			}
@@ -665,7 +668,9 @@ void NormalSmoothSB(MESH_TYPE &m,
 // Normalized Face Normals
 // 
 // This is the Normal Smoothing approach bsased on a angle thresholded weighting
-// sigma is in the 0 .. 1 range
+// sigma is in the 0 .. 1 range, it represent the cosine of a threshold angle. 
+// Only within the specified range are averaged toghether. The averagin is weighted with the 
+
 template<class MESH_TYPE>
 void NormalSmooth(MESH_TYPE &m, 	
 				  SimpleTempData<typename MESH_TYPE::FaceContainer,PDFaceInfo< typename MESH_TYPE::ScalarType > > &TD,
@@ -681,37 +686,40 @@ void NormalSmooth(MESH_TYPE &m,
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 	{
 		CoordType bc=Barycenter<typename MESH_TYPE::FaceType>(*fi);
-    // 1) Clear all the selected flag of faces that are vertex-adjacent to fi
+    // 1) Clear all the visited flag of faces that are vertex-adjacent to fi
 		for(i=0;i<3;++i)
 		{
     	VFLocalIterator ep(&*fi,i);
 		  for (;!ep.End();++ep)
-				ep.f->ClearS();
+				ep.f->ClearV();
 		}
 
-    // 1) Effectively average the normals weighting them with 
-    //(*fi).SetS();
-		CoordType mm=CoordType(0,0,0);
-		//CoordType mm=(*fi).N();
+    // 1) Effectively average the normals weighting them with the squared difference of the angle similarity
+		// sigma is the cosine of a threshold angle. sigma \in 0..1 
+		// sigma == 0 All the normals are averaged
+		// sigma == 1 Nothing is averaged.
+		// The averaging is weighted with the difference between normals. more similar the normal more important they are. 
+
+    CoordType normalSum=CoordType(0,0,0);
 		for(i=0;i<3;++i)
 		{
     	VFLocalIterator ep(&*fi,i);
 		  for (;!ep.End();++ep)
 			{
-				if(! (*ep.f).IsS() )
+				if(! (*ep.f).IsV() )
 				{ 
           ScalarType cosang=ep.f->N()*(*fi).N();
-          if(cosang >= sigma)
+          if(cosang >= sigma) 
           {
             ScalarType w = cosang-sigma;
-						mm += ep.f->N()*(w*w);
+						normalSum += ep.f->N()*(w*w);   // similar normals have a cosang very close to 1 so cosang - sigma is maximized
           }
-					(*ep.f).SetS();
+					(*ep.f).SetV();
 				}
 			}
 		}
-		mm.Normalize();
-		TD[*fi].m=mm;
+		normalSum.Normalize();
+		TD[*fi].m=normalSum;
 	}
   
   for(fi=m.face.begin();fi!=m.face.end();++fi) 
@@ -875,6 +883,10 @@ void PasoDobleSmooth(MeshType &m, int step, typename MeshType::ScalarType Sigma=
 	TDV.Stop();
 
 }
+
+// The sigma parameter affect the normal smoothing step
+
+
 template<class MeshType>
 void PasoDobleSmoothFast(MeshType &m, int step, typename MeshType::ScalarType Sigma=0, int FitStep=50, bool SmoothSelected =false)
 {
