@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2007/03/12 15:37:19  tarini
+Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
+
 Revision 1.9  2007/02/12 19:01:23  ganovelli
 added Name(std:vector<std::string>& n) that fills n with the names of the attribute of the face type
 
@@ -198,22 +201,20 @@ public:
 		return this->Flags();
 	}
    	enum { 
-		// This bit indicate that the face is deleted from the mesh
-		DELETED     = 0x00000001,		// cancellato
-		// This bit indicate that the face of the mesh is not readable
-		NOTREAD     = 0x00000002,		// non leggibile (ma forse modificabile)
-		// This bit indicate that the face is not modifiable
-		NOTWRITE    = 0x00000004,		// non modificabile (ma forse leggibile) 
-		// This bit indicate that the face is modified
-		SELECTED    = 0x00000020,		// Selection _flags
+		
+		DELETED     = 0x00000001,		// Face is deleted from the mesh
+		NOTREAD     = 0x00000002,		// Face of the mesh is not readable
+		NOTWRITE    = 0x00000004,		// Face of the mesh is not writable
+    VISITED     = 0x00000010,		// Face has been visited. Usualy this is a per-algorithm used bit. 
+		SELECTED    = 0x00000020,		// Face is selected. Algorithms should try to work only on selected face (if explicitly requested)
 		// Border _flags, it is assumed that BORDERi = BORDER0<<i 
 		BORDER0     = 0x00000040,
 		BORDER1     = 0x00000080,
 		BORDER2     = 0x00000100,
 		// Face Orientation Flags, used efficiently compute point face distance  
-		NORMX		= 0x00000200,
-		NORMY		= 0x00000400,
-		NORMZ		= 0x00000800,
+		NORMX				= 0x00000200,
+		NORMY				= 0x00000400,
+		NORMZ				= 0x00000800,
 		// Crease _flags,  it is assumed that FEATUREi = FEATURE0<<i 
 		FEATURE0    = 0x00008000,
 		FEATURE1    = 0x00010000,
@@ -233,6 +234,8 @@ public:
 	bool IsRW() const {return (this->Flags() & (NOTREAD | NOTWRITE)) == 0;}
 	///  checks if the Face is Modified
 	bool IsS() const {return (this->Flags() & SELECTED) != 0;}
+	///  checks if the Face is Modified
+	bool IsV() const {return (this->Flags() & VISITED) != 0;}
 	
 	/** Set the flag value
 		@param flagp Valore da inserire nel flag
@@ -253,20 +256,24 @@ public:
 	///  marks the Face as not readable
 	void ClearR() {this->Flags() |=NOTREAD;}
 	///  marks the Face as writable
-	void ClearW() {this->Flags() |=NOTWRITE;}
-	///  marks the Face as not writable
 	void SetW() {this->Flags() &=(~NOTWRITE);}
+	///  marks the Face as notwritable
+	void ClearW() {this->Flags() |=NOTWRITE;}
 	///  select the Face
 	void SetS()		{this->Flags() |=SELECTED;}
 	/// Un-select a Face
-  	/// This function checks if the face is selected
+  void ClearS()	{this->Flags() &= ~SELECTED;}
+	///  select the Face
+	void SetV()		{this->Flags() |=VISITED;}
+	/// Un-select a Face
+  void ClearV()	{this->Flags() &= ~VISITED;}
+	
+	/// This function checks if the face is selected
 	bool IsB(int i) const {return (this->Flags() & (BORDER0<<i)) != 0;}
 	/// This function select the face
   void SetB(int i)		{this->Flags() |=(BORDER0<<i);}
 	/// This funcion execute the inverse operation of SetS()
 	void ClearB(int i)	{this->Flags() &= (~(BORDER0<<i));}
-	/// Un-select a vertex
-	void ClearS()	{this->Flags() &= ~SELECTED;}
 	
 ///  Return the first bit that is not still used
 static int &LastBitFlag()
