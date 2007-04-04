@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.28  2007/02/21 02:40:52  m_di_benedetto
+Added const qualifier to bbox parameter in Intersection_Triangle_Box().
+
 Revision 1.27  2006/10/25 16:04:32  pietroni
 added intersection control between bounding boxes for intersection between segment and triangle function
 
@@ -214,7 +217,7 @@ namespace vcg {
   /// intersection between plane and triangle 
   // not optimal: uses plane-segment intersection (and the fact the two or none edges can be intersected)
   template<typename TRIANGLETYPE> 
-    inline bool Intersection( const Plane3<typename TRIANGLETYPE::ScalarType> & pl, 
+    inline bool IntersectionPlaneTriangle( const Plane3<typename TRIANGLETYPE::ScalarType> & pl, 
 			      const  TRIANGLETYPE & tr, 
 			      Segment3<typename TRIANGLETYPE::ScalarType> & sg){
     typedef typename TRIANGLETYPE::ScalarType T;
@@ -602,6 +605,45 @@ bool Intersection_Plane_Box(const vcg::Plane3<ScalarType> &pl,
 			return true;
 	return false;
 }
+
+///if exists return the center and ardius of circle
+///that is the intersectionk between the sphere and 
+//the plane
+template <class ScalarType>
+bool Intersection_Plane_Sphere(const vcg::Plane3<ScalarType> &pl,
+							   const vcg::Sphere3<ScalarType> &sphere,
+							   vcg::Point3<ScalarType> &center,
+							   vcg::Point3<ScalarType> &radius)
+{
+	///set the origin on the center of the sphere
+	vcg::Plane3<ScalarType> pl1;
+	vcg::Point3<ScalarType> p_plane=pl.Direction()*pl.Offset();
+	vcg::Point3<ScalarType> p_plane=p_plane-sphere.Center();
+
+	///set again the plane
+	pl1.Set(p_plane,pl.Direction());
+
+	///test d must be positive
+	d=pl1.Offset();
+	vcg::Point3<ScalarType> n=pl1.Direction();
+	///invert d if is <0
+	if (d<0)
+	{
+		n=-n;
+		d=-d;
+	}
+	///no intersection occour
+	if (d>r)
+		return false;
+	else
+	{
+		///calculate center and translate in back
+		center=n*d;
+		center+=sphere.Center();
+		radius=math::Sqrt((r*r)-(d*d));
+	}
+}
+
 
 template<class ScalarType>
 bool Intersection_Triangle_Box(const vcg::Box3<ScalarType>   &bbox,
