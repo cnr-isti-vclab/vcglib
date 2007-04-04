@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2007/01/13 00:25:23  cignoni
+Added (Normalized) Normal version templated on three points (instead forcing the creation of a new triangle)
+
 Revision 1.11  2006/10/17 06:51:33  fiorin
 In function Barycenter, replaced calls to (the inexistent) cP(i) with P(i)
 
@@ -322,44 +325,59 @@ typename TriangleType::ScalarType Perimeter(const TriangleType &t)
 }
 
 template<class TriangleType>
-void PointDistance(const  TriangleType &t,
-				   typename TriangleType::CoordType & q,
-				   typename TriangleType::ScalarType & dist, 
-				   typename TriangleType::CoordType & p )
+void TrianglePointDistance(const  TriangleType &t,
+							const typename TriangleType::CoordType & q,
+							typename TriangleType::ScalarType & dist, 
+							typename TriangleType::CoordType & closest )
 {
 	typedef typename TriangleType::CoordType CoordType;
 	typedef typename TriangleType::ScalarType ScalarType;
 
-	CoordType clos[4];
-	ScalarType distv[4];
+	CoordType clos[3];
+	ScalarType distv[3];
+	CoordType clos_proj;
+	ScalarType distproj;
 
 	///find distance on the plane
 	vcg::Plane3<ScalarType> plane;
 	plane.Init(t.P(0),t.P(1),t.P(2));
-	clos[0]=plane.Projection(q);
-	distv[0]=(clos[0]-p).Norm();
+	clos_proj=plane.Projection(q);
+
+	///control if inside/outside
+	CoordType n=(t.P(1)-t.P(0))^(t.P(2)-t.P(0));
+	CoordType n0=(t.P(0)-clos_proj)^(t.P(1)-clos_proj);
+	CoordType n1=(t.P(1)-clos_proj)^(t.P(2)-clos_proj);
+	CoordType n2=(t.P(2)-clos_proj)^(t.P(0)-clos_proj);
+	distproj=(clos_proj-q).Norm();
+	if (((n*n0)>=0)&&((n*n1)>=0)&&((n*n2)>=0))
+	{
+		closest=clos_proj;
+		dist=distproj;
+		return;
+	}
+	
 
 	//distance from the edges
 	vcg::Segment3<ScalarType> e0=vcg::Segment3<ScalarType>(t.P(0),t.P(1));
 	vcg::Segment3<ScalarType> e1=vcg::Segment3<ScalarType>(t.P(1),t.P(2));
 	vcg::Segment3<ScalarType> e2=vcg::Segment3<ScalarType>(t.P(2),t.P(0));
-	clos[1]=ClosestPoint<ScalarType>( e0, q);
-	clos[2]=ClosestPoint<ScalarType>( e1, q);
-	clos[3]=ClosestPoint<ScalarType>( e2, q);
+	clos[0]=ClosestPoint<ScalarType>( e0, q);
+	clos[1]=ClosestPoint<ScalarType>( e1, q);
+	clos[2]=ClosestPoint<ScalarType>( e2, q);
 	
-	distv[1]=(clos[1]-p).Norm();
-	distv[2]=(clos[2]-p).Norm();
-	distv[3]=(clos[3]-p).Norm();
+	distv[0]=(clos[0]-q).Norm();
+	distv[1]=(clos[1]-q).Norm();
+	distv[2]=(clos[2]-q).Norm();
 	int min=0;
 
 	///find minimum distance
-	for (int i=1;i<4;i++)
+	for (int i=1;i<3;i++)
 	{
 		if (distv[i]<distv[min])
 			min=i;
 	}
 
-	p=clos[min];
+	closest=clos[min];
 	dist=distv[min];
 }
 
