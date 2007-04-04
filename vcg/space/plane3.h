@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/09/26 19:49:30  m_di_benedetto
+Method Set(off, dir) now correctly normalizes direction and offset if template parameter NORM is set.
+
 Revision 1.7  2005/03/18 16:34:42  fiorin
 minor changes to comply gcc compiler
 
@@ -134,7 +137,7 @@ public:
   }
 	
   ///Project a point on the plane
-  PointType Projection(PointType &p) const	{
+  PointType Projection(const PointType &p) const	{
 		ScalarType k = p * _dir - _offset;
 		return p - _dir * k;
 	}
