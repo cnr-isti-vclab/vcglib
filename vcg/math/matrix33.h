@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2007/01/29 00:20:25  pietroni
+-Used scalar type passed as template argument istead of double to prevent warnings.. in Rotate function
+
 Revision 1.15  2006/09/25 23:05:29  ganovelli
 added constructor from matrix44 excluding a row and colum
 
@@ -596,6 +599,53 @@ Matrix33<S> Inverse(const Matrix33<S>&m)
 		e[0]=1/e[0];e[1]=1/e[1];e[2]=1/e[2];
 		return v * Matrix33Diag<S>(e) * m_copy;
 	}
+
+///given 2 vector centered into origin calculate the rotation matrix from first to the second
+template <class S>
+Matrix33<S> RotationMatrix(vcg::Point3<S> v0,vcg::Point3<S> v1,bool normalized=true)
+	{
+		typedef typename vcg::Point3<S> CoordType;
+		Matrix33<S> rotM;
+		const S epsilon=0.00001;
+		if (!normalized)
+		{
+			v0.Normalize();
+			v1.Normalize();
+		}
+		S dot=(v0*v1);
+		///control if there is no rotation
+		if (dot>((S)1-epsilon))
+		{
+			rotM.SetIdentity();
+			return rotM;
+		}
+
+		///find the axis of rotation 
+		CoordType axis;
+		axis=v0^v1;
+		axis.Normalize();
+		
+		///construct rotation matrix
+		S u=axis.X();
+		S v=axis.Y();
+		S w=axis.Z();
+		S phi=acos(dot);
+		S rcos = cos(phi);
+		S rsin = sin(phi);
+		
+		rotM[0][0] =      rcos + u*u*(1-rcos);
+		rotM[1][0] =  w * rsin + v*u*(1-rcos);
+		rotM[2][0] = -v * rsin + w*u*(1-rcos);
+		rotM[0][1] = -w * rsin + u*v*(1-rcos);
+		rotM[1][1] =      rcos + v*v*(1-rcos);
+		rotM[2][1] =  u * rsin + w*v*(1-rcos);
+		rotM[0][2] =  v * rsin + u*w*(1-rcos);
+		rotM[1][2] = -u * rsin + v*w*(1-rcos);
+		rotM[2][2] =      rcos + w*w*(1-rcos);
+
+		return rotM;
+	}
+
 
 /// 
 typedef Matrix33<short>  Matrix33s;
