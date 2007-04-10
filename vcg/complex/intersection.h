@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2007/01/03 15:51:28  pietroni
+added initial define and included missing files
+
 Revision 1.8  2006/01/19 14:06:37  spinelli
 add std:: namespace...
 
@@ -146,7 +149,7 @@ bool Intersection(	/*TriMeshType & m, */
 					{
 						face.SetS();
 						v.push_back(&face);
-						if(vcg::Intersection(pl,face,seg))// intersezione piano triangolo
+						if(vcg::IntersectionPlaneTriangle(pl,face,seg))// intersezione piano triangolo
 							{
 								face.SetS();
 								// add to em
