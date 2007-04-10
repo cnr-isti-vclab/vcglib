@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.29  2007/04/04 23:19:40  pietroni
+- Changed name of intersection function between plane and triangle from Intersection to IntersectionPlaneTriangle.
+- Added Intersection_Plane_Sphere function.
+
 Revision 1.28  2007/02/21 02:40:52  m_di_benedetto
 Added const qualifier to bbox parameter in Intersection_Triangle_Box().
 
@@ -699,8 +703,8 @@ bool Intersection_Sphere_Sphere( const SphereType & s0,const SphereType & s1){
 }
 
 template<class T>
-bool Intersection (const Plane3<T> & plane0, const Plane3<T> & plane1,
-                       Line3<T> & line)
+bool IntersectionPlanePlane (const Plane3<T> & plane0, const Plane3<T> & plane1,
+                             Line3<T> & line)
 {
     // If Cross(N0,N1) is zero, then either planes are parallel and separated
     // or the same plane.  In both cases, 'false' is returned.  Otherwise,
