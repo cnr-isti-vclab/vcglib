@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.30  2007/04/10 22:26:47  pietroni
+IntersectionPlanePlane first parameter is a const
+
 Revision 1.29  2007/04/04 23:19:40  pietroni
 - Changed name of intersection function between plane and triangle from Intersection to IntersectionPlaneTriangle.
 - Added Intersection_Plane_Sphere function.
@@ -614,12 +617,12 @@ bool Intersection_Plane_Box(const vcg::Plane3<ScalarType> &pl,
 ///that is the intersectionk between the sphere and 
 //the plane
 template <class ScalarType>
-bool Intersection_Plane_Sphere(const vcg::Plane3<ScalarType> &pl,
-							   const vcg::Sphere3<ScalarType> &sphere,
-							   vcg::Point3<ScalarType> &center,
-							   vcg::Point3<ScalarType> &radius)
+bool Intersection_Plane_Sphere(const Plane3<ScalarType> &pl,
+							   const Sphere3<ScalarType> &sphere,
+							   Point3<ScalarType> &center,
+							   ScalarType &radius)
 {
-	///set the origin on the center of the sphere
+	/* ///set the origin on the center of the sphere
 	vcg::Plane3<ScalarType> pl1;
 	vcg::Point3<ScalarType> p_plane=pl.Direction()*pl.Offset();
 	vcg::Point3<ScalarType> p_plane=p_plane-sphere.Center();
@@ -646,6 +649,9 @@ bool Intersection_Plane_Sphere(const vcg::Plane3<ScalarType> &pl,
 		center+=sphere.Center();
 		radius=math::Sqrt((r*r)-(d*d));
 	}
+	 */
+	 assert(0);
+	 return true;
 }
 
 
