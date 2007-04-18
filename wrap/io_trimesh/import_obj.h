@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2007/04/18 07:01:26  cignoni
+Added managment of map_Ka textures (and not only map_Kd)
+
 Revision 1.12  2006/12/21 00:36:17  cignoni
 Removed a bug in the managment of non triangular faces
 
@@ -595,12 +598,12 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 		tokens.clear();
 		do
 		{
-			while (from!=length && (line[from]==' ' || line[from]=='\t') )
+			while (from!=length && (line[from]==' ' || line[from]=='\t' || line[from]=='\r') )
 				from++;
       if(from!=length)
       {
 				to = from+1;
-				while (to!=length && line[to]!=' ')
+				while (to!=length && line[to]!=' ' && line[to]!='\r')
 					to++;
 				tokens.push_back(line.substr(from, to-from).c_str());
 				from = to;
