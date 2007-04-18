@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2006/12/21 00:36:17  cignoni
+Removed a bug in the managment of non triangular faces
+
 Revision 1.11  2006/12/12 02:47:12  cignoni
 Removed use of tellg that is broken in current version of mingw
 
@@ -856,7 +859,7 @@ static bool LoadMask(const char * filename, int &mask)
 					int illumination = atoi(tokens[1].c_str());
           currentMaterial.bSpecular = (illumination == 2);
 				}
-				else if (header.compare("map_Kd")==0)	// texture name
+				else if( (header.compare("map_Kd")==0)	|| (header.compare("map_Ka")==0) ) // texture name
 				{
 					std::string textureName = tokens[1];
 					strcpy(currentMaterial.textureFileName, textureName.c_str());
