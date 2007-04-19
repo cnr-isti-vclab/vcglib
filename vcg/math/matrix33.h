@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2007/04/07 23:06:47  pietroni
+Added function RotationMatrix
+
 Revision 1.16  2007/01/29 00:20:25  pietroni
 -Used scalar type passed as template argument istead of double to prevent warnings.. in Rotate function
 
@@ -646,6 +649,19 @@ Matrix33<S> RotationMatrix(vcg::Point3<S> v0,vcg::Point3<S> v1,bool normalized=t
 		return rotM;
 	}
 
+///return the rotation matrix along axis
+template <class S>
+Matrix33<S> RotationMatrix(const vcg::Point3<S> &axis,
+						   const float &angleRad)
+	{
+		vcg::Matrix44<S> matr44;
+		vcg::Matrix33<S> matr33;
+		matr44.SetRotate(angleRad,axis);
+		for (int i=0;i<3;i++)
+			for (int j=0;j<3;j++)
+				matr33[i][j]=matr44[i][j];
+		return matr33;
+	}
 
 /// 
 typedef Matrix33<short>  Matrix33s;
