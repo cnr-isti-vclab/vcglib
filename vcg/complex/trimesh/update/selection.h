@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2007/02/01 06:37:05  cignoni
+Added FaceFromBorder
+
 Revision 1.1  2006/10/16 08:50:58  cignoni
 First Working Version
 
@@ -158,10 +161,13 @@ static size_t VertexFromFaceLoose(MeshType &m)
 }
 
 // Select ONLY the vertices that are touched ONLY by selected faces
+// or in other words all the vertices having all the faces incident on them selected.
+// Ambiguity in the def: isolated vertices should be selected? NO.
+//
 static size_t VertexFromFaceStrict(MeshType &m)
 {
   size_t selCnt=0;
-	AllVertex(m);
+	VertexFromFaceLoose(m);
   FaceIterator fi;
 	for(fi = m.face.begin(); fi != m.face.end(); ++fi)
 		if( !(*fi).IsD() && !(*fi).IsS())	
