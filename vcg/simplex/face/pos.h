@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.28  2007/01/11 10:37:08  cignoni
+Added include assert.h
+
 Revision 1.27  2007/01/02 10:06:53  giec
 Added access functions F()
 
@@ -176,8 +179,8 @@ public:
 	}
 
 	// access functions
-	VertexType *& V(){return f->UberV(z);}
-	VertexType *& V(const int & i){assert( (i>=0) && (i<3)); return f->UberV( (z +i) %3);}
+   VertexType *& V(){return v;}
+//	VertexType *& V(const int & i){assert( (i>=0) && (i<3)); return f->UberV( (z +i) %3);}
 	FaceType   *& F(){ return f;}
   
 
