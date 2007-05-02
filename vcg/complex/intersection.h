@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2007/04/10 22:46:57  pietroni
+- line 152 changed call intersection to IntersectionPlaneTriangle because changing in function's name
+
 Revision 1.9  2007/01/03 15:51:28  pietroni
 added initial define and included missing files
 
@@ -125,7 +128,7 @@ bool Intersection(	/*TriMeshType & m, */
 					Plane3<ScalarType>  pl,
 					EdgeMeshType & em,
 					double& ave_length,
-					typename IndexingType *grid,
+					IndexingType *grid,
 					typename std::vector< typename IndexingType::Cell* >& cells)
 {
 	typedef typename TriMeshType::FaceContainer FaceContainer;
