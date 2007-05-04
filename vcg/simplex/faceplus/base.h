@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2007/03/27 09:22:11  cignoni
+Added Visited flags
+
 Revision 1.10  2007/03/12 15:37:19  tarini
 Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
 
@@ -360,7 +363,7 @@ template <class BVT, class BET, class BFT, class BTT,
           template <typename> class G = FaceDefaultDeriver, template <typename> class H = FaceDefaultDeriver,
           template <typename> class I = FaceDefaultDeriver > 
               class FaceSimp3: public FaceArityMax<BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H, I>  {};
-
+class DumTT;
 template <class BVT, class BET, class BFT, 
           template <typename> class A = FaceDefaultDeriver, template <typename> class B = FaceDefaultDeriver,
           template <typename> class C = FaceDefaultDeriver, template <typename> class D = FaceDefaultDeriver,

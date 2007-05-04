@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2006/01/22 10:06:23  cignoni
+Corrected use of Area with the unambiguous DoubleArea
+
 Revision 1.9  2005/09/28 19:35:06  m_di_benedetto
 Added class PointDistanceFunctor.
 
@@ -100,13 +103,13 @@ namespace vcg {
 		//const ScalarType EPSILON = 0.00000001;
 		ScalarType b,b0,b1,b2;
 			// Calcolo distanza punto piano
-		ScalarType d = Distance( f.plane, q );
+		ScalarType d = Distance( f.cPlane(), q );
 		if( d>dist || d<-dist )			// Risultato peggiore: niente di fatto
 			return false;
 
 			// Calcolo del punto sul piano
 		// NOTA: aggiunto un '-d' in fondo Paolo C.
-		Point3<ScalarType> t = f.plane.Direction();
+		Point3<ScalarType> t = f.cPlane().Direction();
 		t[0] *= -d;
 		t[1] *= -d;
 		t[2] *= -d;
@@ -115,21 +118,21 @@ namespace vcg {
 		switch( f.Flags() & (FaceType::NORMX|FaceType::NORMY|FaceType::NORMZ) )
 		{
 		case FaceType::NORMX:
-			b0 = f.edge[1][1]*(p[2] - f.cP(1)[2]) - f.edge[1][2]*(p[1] - f.cP(1)[1]);
+			b0 = f.cEdge(1)[1]*(p[2] - f.cP(1)[2]) - f.cEdge(1)[2]*(p[1] - f.cP(1)[1]);
 			if(b0<=0)
 			{
 				b0 = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
 				if(dist>b0) { dist = b0; return true; }
 				else return false;
 			}
-			b1 = f.edge[2][1]*(p[2] - f.cP(2)[2]) - f.edge[2][2]*(p[1] - f.cP(2)[1]);
+			b1 = f.cEdge(2)[1]*(p[2] - f.cP(2)[2]) - f.cEdge(2)[2]*(p[1] - f.cP(2)[1]);
 			if(b1<=0)
 			{
 				b1 = PSDist(q,f.V(2)->cP(),f.V(0)->cP(),p);
 				if(dist>b1) { dist = b1; return true; }
 				else return false;
 			}
-			b2 = f.edge[0][1]*(p[2] - f.cP(0)[2]) - f.edge[0][2]*(p[1] - f.cP(0)[1]);
+			b2 = f.cEdge(0)[1]*(p[2] - f.cP(0)[2]) - f.cEdge(0)[2]*(p[1] - f.cP(0)[1]);
 			if(b2<=0)
 			{
 				b2 = PSDist(q,f.V(0)->cP(),f.V(1)->cP(),p);
@@ -156,21 +159,21 @@ namespace vcg {
 			break;
 
 		  case FaceType::NORMY:
-			b0 = f.edge[1][2]*(p[0] - f.cP(1)[0]) - f.edge[1][0]*(p[2] - f.cP(1)[2]);
+			b0 = f.cEdge(1)[2]*(p[0] - f.cP(1)[0]) - f.cEdge(1)[0]*(p[2] - f.cP(1)[2]);
 			if(b0<=0)
 			{
 				b0 = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
 				if(dist>b0) { dist = b0; return true; }
 				else return false;
 			}
-			b1 = f.edge[2][2]*(p[0] - f.cP(2)[0]) - f.edge[2][0]*(p[2] - f.cP(2)[2]);
+			b1 = f.cEdge(2)[2]*(p[0] - f.cP(2)[0]) - f.cEdge(2)[0]*(p[2] - f.cP(2)[2]);
 			if(b1<=0)
 			{
 				b1 = PSDist(q,f.V(2)->cP(),f.V(0)->cP(),p);
 				if(dist>b1) { dist = b1; return true; }
 				else return false;
 			}
-			b2 = f.edge[0][2]*(p[0] - f.cP(0)[0]) - f.edge[0][0]*(p[2] - f.cP(0)[2]);
+			b2 = f.cEdge(0)[2]*(p[0] - f.cP(0)[0]) - f.cEdge(0)[0]*(p[2] - f.cP(0)[2]);
 			if(b2<=0)
 			{
 				b2 = PSDist(q,f.V(0)->cP(),f.V(1)->cP(),p);
@@ -190,21 +193,21 @@ namespace vcg {
 			break;
 
 		  case FaceType::NORMZ:
-			b0 = f.edge[1][0]*(p[1] - f.cP(1)[1]) - f.edge[1][1]*(p[0] - f.cP(1)[0]);
+			b0 = f.cEdge(1)[0]*(p[1] - f.cP(1)[1]) - f.cEdge(1)[1]*(p[0] - f.cP(1)[0]);
 			if(b0<=0)
 			{
 				b0 = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
 				if(dist>b0) { dist = b0; return true; }
 				else return false;
 			}
-			b1 = f.edge[2][0]*(p[1] - f.cP(2)[1]) - f.edge[2][1]*(p[0] - f.cP(2)[0]);
+			b1 = f.cEdge(2)[0]*(p[1] - f.cP(2)[1]) - f.cEdge(2)[1]*(p[0] - f.cP(2)[0]);
 			if(b1<=0)
 			{
 				b1 = PSDist(q,f.V(2)->cP(),f.V(0)->cP(),p);
 				if(dist>b1) { dist = b1; return true; }
 				else return false;
 			}
-			b2 = f.edge[0][0]*(p[1] - f.cP(0)[1]) - f.edge[0][1]*(p[0] - f.cP(0)[0]);
+			b2 = f.cEdge(0)[0]*(p[1] - f.cP(0)[1]) - f.cEdge(0)[1]*(p[0] - f.cP(0)[0]);
 			if(b2<=0)
 			{
 				b2 = PSDist(q,f.V(0)->cP(),f.V(1)->cP(),p);

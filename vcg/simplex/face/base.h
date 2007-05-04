@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.43  2007/03/12 15:37:19  tarini
+Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
+
 Revision 1.42  2007/02/20 14:07:53  ganovelli
 added QualityType to comply faceplus type
 
@@ -1245,7 +1248,15 @@ inline void Nexts( BaseFaceType *&f,int &z )
 
 	// Sezione dist e ray
 #ifdef __VCGLIB_FACE_RT
-	CoordType edge[3];
+
+	CoordType & Edge(const int& i){return edges[i];};
+	CoordType  cEdge(const int& i)const{return  edges[i];};
+
+	Plane3<ScalarType>  & Plane(){return plane;};
+	Plane3<ScalarType>   cPlane()const{return plane;};
+
+
+	CoordType edges[3];;
 	Plane3<ScalarType> plane;
 #endif
 
