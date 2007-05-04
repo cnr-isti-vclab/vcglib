@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/01/26 22:45:34  cignoni
+Release 4.04
+final updates for gcc compiling issues
+
 Revision 1.5  2004/05/14 00:32:36  ganovelli
 just color and quality on the vertex
 
@@ -36,16 +40,29 @@ just color and quality on the vertex
 #pragma warning(disable:4786 4804 4666) 
 
 #include <math.h>
-#include <vcg/simplex/vertex/with/vcvq.h>
-#include <vcg/simplex/face/with/rtfcfmfn.h>
 #include <vcg/space/index/grid_static_ptr.h>
 #include <vcg/complex/trimesh/base.h>
 
 // Vertex, Face, Mesh and Grid definitions.
+#ifdef _PLUS_TYPES_
+#include <vcg/simplex/vertexplus/base.h>
+#include <vcg/simplex/vertexplus/component.h>
+#include <vcg/simplex/faceplus/base.h>
+#include <vcg/simplex/faceplus/component.h>
+#include <vcg/simplex/faceplus/component_rt.h>
+class MyEdge;
+class CFace;
+class CVertex   : public vcg::VertexSimp2<CVertex,MyEdge,CFace,vcg::vert::Coord3d,vcg::vert::Qualityf,vcg::vert::Normal3d,vcg::vert::BitFlags> {};
+class CFace     : public vcg::FaceSimp2< CVertex,MyEdge,CFace,vcg::face::VertexRef, vcg::face::Normal3d, vcg::face::EdgePlane,vcg::face::Color4b,vcg::face::Mark,vcg::face::BitFlags> {};
+class CMesh     : public vcg::tri::TriMesh< std::vector<CVertex>, std::vector<CFace> > {};
+#else
+#include <vcg/simplex/vertex/with/vcvq.h>
+#include <vcg/simplex/face/with/rtfcfmfn.h>
 class MyEdge;
 class CFace;
 class CVertex   : public vcg::VertexVCVQ< double,MyEdge,CFace > {};
 class CFace     : public vcg::FaceRTFCFMFN< CVertex,MyEdge,CFace > {};
 class CMesh     : public vcg::tri::TriMesh< std::vector<CVertex>, std::vector<CFace> > {};
+#endif
 
 #endif

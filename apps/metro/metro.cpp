@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2006/10/25 12:40:19  fiorin
+Added possibility to use Octree as search structure:
+
 Revision 1.21  2006/05/03 21:22:39  cignoni
 added missing Include
 
@@ -259,7 +262,7 @@ int main(int argc, char**argv)
 		tri::UpdateBounding<CMesh>::Box(S2);
 
     // set Bounding Box.
-    Box3d    bbox, tmp_bbox_M1=S1.bbox, tmp_bbox_M2=S2.bbox;
+		Box3<CMesh::ScalarType>    bbox, tmp_bbox_M1=S1.bbox, tmp_bbox_M2=S2.bbox;
     bbox.Add(S1.bbox);
     bbox.Add(S2.bbox);
 		bbox.Offset(bbox.Diag()*0.02);

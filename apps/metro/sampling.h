@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2006/10/25 12:40:19  fiorin
+Added possibility to use Octree as search structure:
+
 Revision 1.22  2006/04/20 08:30:24  cignoni
 small GCC compiling issues
 
@@ -286,7 +289,7 @@ inline double Sampling<MetroMesh>::ComputeMeshArea(MetroMesh & mesh)
 
     for(face=mesh.face.begin(); face != mesh.face.end(); face++)
 			if(!(*face).IsD())
-        area += face->DoubleArea();
+        area += DoubleArea(*face);
 
     return area/2.0;
 }
@@ -469,7 +472,7 @@ void Sampling<MetroMesh>::MontecarloFaceSampling()
 		if(!(*fi).IsD())
     {
         // compute # samples in the current face.
-        n_samples_decimal += 0.5*fi->DoubleArea() * n_samples_per_area_unit;
+        n_samples_decimal += 0.5*DoubleArea(*fi) * n_samples_per_area_unit;
         n_samples          = (int) n_samples_decimal;
 
         // for every sample p_i in T...
@@ -543,7 +546,7 @@ void Sampling<MetroMesh>::SubdivFaceSampling()
     for(fi=S1.face.begin(); fi != S1.face.end(); fi++)
     {
         // compute # samples in the current face.
-        n_samples_decimal += 0.5*fi->DoubleArea() * n_samples_per_area_unit;
+        n_samples_decimal += 0.5*DoubleArea(*fi) * n_samples_per_area_unit;
         n_samples          = (int) n_samples_decimal;
         if(n_samples)
         {
@@ -592,7 +595,7 @@ void Sampling<MetroMesh>::SimilarFaceSampling()
     for(fi=S1.face.begin(); fi != S1.face.end(); fi++)
     {
         // compute # samples in the current face.
-        n_samples_decimal += 0.5*fi->DoubleArea() * n_samples_per_area_unit;
+        n_samples_decimal += 0.5*DoubleArea(*fi) * n_samples_per_area_unit;
         n_samples          = (int) n_samples_decimal;
         if(n_samples)
         {
