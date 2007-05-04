@@ -24,6 +24,10 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2006/10/02 09:34:03  cignoni
+Re-added diff 1.12 by Pietroni (cancelled by previous rollback):
+in GridDoRay function the RayIterator must be initialized with maximum distance
+
 Revision 1.15  2006/10/02 09:28:45  cignoni
 Reverted to version 1.10 to nullify dangerous marfr960's changes
 
@@ -256,7 +260,7 @@ namespace vcg{
 				_points.push_back(Cli.NearestPoint());
 				++Cli;
 			}
-			return (_objectPtrs.size());
+			return ((int)_objectPtrs.size());
 		}
 
 		template <class SPATIALINDEXING,class OBJMARKER, class OBJPTRCONTAINER>
