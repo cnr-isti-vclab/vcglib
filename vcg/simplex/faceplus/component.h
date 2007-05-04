@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2007/03/12 15:42:11  tarini
+Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
+
 Revision 1.15  2007/03/12 15:37:19  tarini
 Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
 
@@ -78,6 +81,7 @@ First Really Working version
 
 #include <vector>
 #include <vcg/space/triangle3.h>
+#include <vcg/space/texcoord2.h>
 
 namespace vcg {
   namespace face {
