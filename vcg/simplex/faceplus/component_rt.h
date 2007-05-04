@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2006/10/13 14:11:49  cignoni
+first version
+
 ****************************************************************************/
 
 #ifndef __VCG_FACE_PLUS_COMPONENT_RT
@@ -34,12 +37,40 @@ $Log: not supported by cvs2svn $
 namespace vcg {
   namespace face {
 
-template <class T> class RTInfo: public T {
-public:
-  typename T::VertexType::CoordType edge[3];
-  Plane3<typename T::VertexType::ScalarType> plane;
+template <class CoordType>
+struct EdgePlaneInfo{
+  typename CoordType edge[3];
+	::vcg::Plane3<typename CoordType::ScalarType> plane;
+	typename CoordType::ScalarType edgescale;
 };
 
-  } // end namespace vert
+template <class T> class EdgePlane: public T {
+public:
+	typedef EdgePlaneInfo<typename T::VertexType::CoordType> EdgePlaneType;
+
+  typename T::VertexType::CoordType &Edge(const int j) {
+		return _ep.edge[j];
+	}
+  typename T::VertexType::CoordType  cEdge(const int j)const {
+		return _ep.edge[j];
+	}
+
+	typename vcg::Plane3<typename T::VertexType::CoordType::ScalarType> &Plane() {
+		return _ep.plane;
+	}
+  typename vcg::Plane3<typename T::VertexType::CoordType::ScalarType>  cPlane()const {
+		return _ep.plane;
+	}
+
+  static bool HasEdgePlane()   {   return true; }
+
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("EdgePlane"));T::Name(name);}
+
+private:
+
+EdgePlaneType _ep;
+};
+
+  } // end namespace face
 }// end namespace vcg
 #endif
