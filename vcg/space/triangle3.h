@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2007/04/04 23:23:55  pietroni
+- corrected and renamed distance to point ( function TrianglePointDistance)
+
 Revision 1.12  2007/01/13 00:25:23  cignoni
 Added (Normalized) Normal version templated on three points (instead forcing the creation of a new triangle)
 
@@ -109,6 +112,30 @@ public:
 	inline const CoordType & cP2( const int j ) const { return _v[(j+2)%3];}
 
 
+
+	bool InterpolationParameters(const CoordType & bq, ScalarType &a, ScalarType &b, ScalarType &_c ) const{
+		return InterpolationParameters(*this, const CoordType & bq, TriangleType::ScalarType &a, TriangleType::ScalarType &b, TriangleType::ScalarType &_c ); 
+	}
+
+
+
+
+
+/// Return the _q of the face, the return value is in [0,sqrt(3)/2] = [0 - 0.866.. ]
+ScalarType QualityFace( ) const
+{
+	return Quality(P(0), P(1), P(2));
+}
+
+}; //end Class
+
+/// Returns the normal to the plane passing through p0,p1,p2
+template<class TriangleType>
+typename TriangleType::ScalarType QualityFace(const TriangleType &t)
+{
+  return Quality(t.cP(0), t.cP(1), t.cP(2));
+}
+
 /** Calcola i coefficienti della combinazione convessa.
 	@param bq Punto appartenente alla faccia
 	@param a Valore di ritorno per il vertice V(0)
@@ -116,18 +143,19 @@ public:
 	@param _c Valore di ritorno per il vertice V(2)
 	@return true se bq appartiene alla faccia, false altrimenti
 */
-bool InterpolationParameters(const CoordType & bq, ScalarType &a, ScalarType &b, ScalarType &_c ) const
+template<class TriangleType, class ScalarType>
+bool InterpolationParameters(const TriangleType t,const vcg::Point3<ScalarType> & bq, ScalarType &a, ScalarType &b, ScalarType &_c ) 
 {	
 const ScalarType EPSILON = ScalarType(0.000001);
-#define x1 (P(0).X())
-#define y1 (P(0).Y())
-#define z1 (P(0).Z())
-#define x2 (P(1).X())
-#define y2 (P(1).Y())
-#define z2 (P(1).Z())
-#define x3 (P(2).X())
-#define y3 (P(2).Y())
-#define z3 (P(2).Z())
+#define x1 (t.P(0).X())
+#define y1 (t.P(0).Y())
+#define z1 (t.P(0).Z())
+#define x2 (t.P(1).X())
+#define y2 (t.P(1).Y())
+#define z2 (t.P(1).Z())
+#define x3 (t.P(2).X())
+#define y3 (t.P(2).Y())
+#define z3 (t.P(2).Z())
 #define px (bq[0])
 #define py (bq[1])
 #define pz (bq[2])
@@ -204,47 +232,6 @@ const ScalarType EPSILON = ScalarType(0.000001);
 #undef pz
 
      return false;
-}
-
-
-
-
-/// Return the _q of the face, the return value is in [0,sqrt(3)/2] = [0 - 0.866.. ]
-ScalarType QualityFace( ) const
-{
-	
-	return Quality(P(0), P(1), P(2));
-	/*
-	CoordType d10 = P(1) - P(0);
-	CoordType d20 = P(2) - P(0);
-	CoordType d12 = P(1) - P(2);
-
-	CoordType x = d10^d20;
-
-	ScalarType a = Norm( x );		// doppio dell' Area
-	ScalarType b;
-	
-	b = Norm2( d10 );
-	ScalarType t = b; 
-	t = Norm2( d20 ); if( b<t ) b = t;
-	t = Norm2( d12 ); if( b<t ) b = t;
-
-	assert(b!=0.0);
-
-	return a/b;*/
-
-}
-
-
-
-
-}; //end Class
-
-/// Returns the normal to the plane passing through p0,p1,p2
-template<class TriangleType>
-typename TriangleType::ScalarType QualityFace(const TriangleType &t)
-{
-  return Quality(t.cP(0), t.cP(1), t.cP(2));
 }
 
 
