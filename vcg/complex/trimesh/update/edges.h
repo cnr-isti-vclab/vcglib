@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2006/05/16 21:36:54  cignoni
+Removed unused box function and rewrote initial comment.
+
 Revision 1.3  2006/05/15 13:12:36  pietroni
 Updating of edge values id divided into 2 functions ( the first one update only a face...) added also resetting of edges flags.. (see first line of Set function)
 
@@ -65,26 +68,26 @@ namespace tri {
 			f.Flags() = f.Flags() & (~(FaceType::NORMX|FaceType::NORMY|FaceType::NORMZ));
 		
 			// Primo calcolo degli edges
-			f.edge[0] = f.V(1)->P(); f.edge[0] -= f.V(0)->P();
-			f.edge[1] = f.V(2)->P(); f.edge[1] -= f.V(1)->P();
-			f.edge[2] = f.V(0)->P(); f.edge[2] -= f.V(2)->P();
+			f.Edge(0) = f.V(1)->P(); f.Edge(0) -= f.V(0)->P();
+			f.Edge(1) = f.V(2)->P(); f.Edge(1) -= f.V(1)->P();
+			f.Edge(2) = f.V(0)->P(); f.Edge(2) -= f.V(2)->P();
 			// Calcolo di plane
-			f.plane.SetDirection(f.edge[0]^f.edge[1]);
-			f.plane.SetOffset(f.plane.Direction() * f.V(0)->P());
-			f.plane.Normalize();
+			f.Plane().SetDirection(f.Edge(0)^f.Edge(1));
+			f.Plane().SetOffset(f.Plane().Direction() * f.V(0)->P());
+			f.Plane().Normalize();
 			// Calcolo migliore proiezione
-			ScalarType nx = math::Abs(f.plane.Direction()[0]);
-			ScalarType ny = math::Abs(f.plane.Direction()[1]);
-			ScalarType nz = math::Abs(f.plane.Direction()[2]);
+			ScalarType nx = math::Abs(f.Plane().Direction()[0]);
+			ScalarType ny = math::Abs(f.Plane().Direction()[1]);
+			ScalarType nz = math::Abs(f.Plane().Direction()[2]);
 			ScalarType d;
-			if(nx>ny && nx>nz) { f.Flags() |= FaceType::NORMX; d = 1/f.plane.Direction()[0]; }
-			else if(ny>nz)     { f.Flags() |= FaceType::NORMY; d = 1/f.plane.Direction()[1]; }
-			else               { f.Flags() |= FaceType::NORMZ; d = 1/f.plane.Direction()[2]; }
+			if(nx>ny && nx>nz) { f.Flags() |= FaceType::NORMX; d = 1/f.Plane().Direction()[0]; }
+			else if(ny>nz)     { f.Flags() |= FaceType::NORMY; d = 1/f.Plane().Direction()[1]; }
+			else               { f.Flags() |= FaceType::NORMZ; d = 1/f.Plane().Direction()[2]; }
 
 			// Scalatura spigoli
-			f.edge[0] *= d;
-			f.edge[1] *= d;
-			f.edge[2] *= d;
+			f.Edge(0)*=d;
+			f.Edge(1)*=d;
+			f.Edge(2)*=d;
 		}
 
 		static void Set(ComputeMeshType &m)

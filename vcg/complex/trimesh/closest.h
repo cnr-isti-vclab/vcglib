@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.27  2006/12/06 12:59:13  pietroni
+added max distance to rayIterator
+
 Revision 1.26  2006/11/21 16:06:54  ponchio
 passing VDistFunct() to functions wanting a reference, not a value
 (why a reference btw?)
@@ -194,7 +197,7 @@ namespace vcg {
 				// f=bestf;
 				typename MESH::ScalarType alfa, beta, gamma;
 				//calcolo normale con interpolazione trilineare
-				bestf->InterpolationParameters(_closestPt, alfa, beta, gamma);
+				InterpolationParameters(*bestf,_closestPt, alfa, beta, gamma);
 				_normf =  (bestf->V(0)->cN())*alfa+
 					(bestf->V(1)->cN())*beta+
 					(bestf->V(2)->cN())*gamma ;

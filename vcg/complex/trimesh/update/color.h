@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2006/05/21 07:00:01  cignoni
+Removed not working Equalized color (use funcs in stat.h)
+
 Revision 1.9  2006/03/01 10:29:55  ponchio
 HACK: MaxVal(0.0f) not defined in vcg/math/base.h as it should be,
 changing it to 1e36 (pretty close :P)
@@ -263,8 +266,8 @@ static void VertexQuality(UpdateMeshType &m)
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)		
 		if(!(*vi).IsD()) 
 		{	
-			minq=vcg::math::Min(minq,(*vi).Q());
-			maxq=vcg::math::Max(maxq,(*vi).Q());
+			minq=vcg::math::Min<float>(minq,(*vi).Q());
+			maxq=vcg::math::Max<float>(maxq,(*vi).Q());
 		}
 	VertexQuality(m,minq,maxq);
 }
