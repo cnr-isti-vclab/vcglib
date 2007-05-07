@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2006/10/07 16:51:43  m_di_benedetto
+Implemented Scale() method (was only declared).
+
 Revision 1.8  2006/01/19 13:53:19  m_di_benedetto
 Fixed product by scalar and SquaredNorm()
 
@@ -75,6 +78,7 @@ protected:
 public:
 	  /// the scalar type 
 	typedef P2ScalarType ScalarType;
+	enum {Dimension = 2};
 
 //@{
 
