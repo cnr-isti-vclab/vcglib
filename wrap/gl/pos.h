@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2006/12/10 19:59:28  ganovelli
+first draft of the class the draw a Pos
+
 
 
 ****************************************************************************/
@@ -59,8 +62,27 @@ namespace vcg {
 					{glVertex(bc1); glVertex(mid);}
 				glEnd();
 			}
-		
-
 		};
+		
+	template<class VfIteType>
+		struct GlVfIterator{
+			typedef typename VfIteType::ScalarType S;
+			static void Draw(VfIteType & v){
+				Point3<S>	p = v.F()->P(v.I());// anchor
+				Point3<S> c[3];
+				for(int i = 0; i < 3;++i)
+				{
+					c[i] = v.F()->P(i)*0.9 + v.F()->P1(i)*0.05 + v.F()->P2(i)*0.05;
+					if(v.F()->VFp(i) != NULL)
+					{
+						glBegin(GL_LINES);
+						glVertex(c[i]);
+						glVertex( vcg::Barycenter(*(v.F()->VFp(i))));
+						glEnd();
+					}
+				}
+			}
+		};
+
 }//namespace
 #endif
