@@ -3,7 +3,7 @@
 #include <GL/glew.h>
 #include <GL/GL.h>
 #include <vcg/space/color4.h>
-#include <vcg/space/Tetra3.h>
+#include <vcg/space/tetra3.h>
 #include <wrap/gui/view.h>
 #include <wrap/gl/space.h>
 #include <wrap/gl/math.h>
