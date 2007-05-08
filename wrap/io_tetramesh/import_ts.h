@@ -21,13 +21,13 @@ class ImporterTS{
 
 	static FILE *& F(){static FILE * f; return f;}
 
-	inline static ReadPos( Point3<double> &p){
+	inline static void ReadPos( Point3<double> &p){
 		fscanf(F(),"%lg %lg %lg",&p[0],&p[1],&p[2]);
 	}
-	inline static ReadPos( Point3<float> &p){
+	inline static void  ReadPos( Point3<float> &p){
 		fscanf(F(),"%f %f %f",&p[0],&p[1],&p[2]);
 	}
-	inline static ReadPos( Point4<ScalarType> &p){
+	inline static void  ReadPos( Point4<ScalarType> &p){
 		fscanf(F(),"%g %g %g %g",&p[0],&p[1],&p[2],&p[3]);
 	}
 public:
@@ -81,6 +81,6 @@ static int Open( Tetramesh & m, const char * filename )
 	 }
 	};// end class
 };// end of io
-};// end of tri
+};// end of tetra
 };// end of vcg
 #endif
