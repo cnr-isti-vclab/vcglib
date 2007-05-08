@@ -23,6 +23,8 @@
 /****************************************************************************
  History
 
+$Log: not supported by cvs2svn $
+
 ****************************************************************************/
 
 
@@ -208,6 +210,46 @@ template<class SCALAR_TYPE>
   return((Convex(p,p0,p1))&&(Convex(p,p1,p2))&&(Convex(p,p2,p0)));
   //return((Convex(p,p0,p1))&&(Convex(p,p1,p2))&&(Convex(p,p2,p0)));
 }
+
+//intersection between a circle and a line
+template<class SCALAR_TYPE>
+	inline bool CircleLineIntersection(const vcg::Line2<SCALAR_TYPE> & line,
+									   const vcg::Point2<ScalarType> &center,
+									   const ScalarType &radius,
+									   vcg::Point2<ScalarType> &p0,
+									   vcg::Point2<ScalarType> &p1)
+	{
+		///translate with origin on the center
+		ScalarType x1,x2,y1,y2;
+		x1=p.X()-center.X();
+		y1=p.Y()-center.Y();
+		x2=x1+line.Direction.X();
+		y2=y1+line.Direction.Y();
+
+		ScalarType dx,dy,dr,D,delta,sign;
+		dx=x2-x1;
+		dy=y2-y1;
+		dr=sqrt(dx*dx+dy*dy);
+		D=x1*y2-x2*y1;
+		delta=radius*radius*dr*dr-D*D;
+		if (dy>=0)
+			sign=1;
+		else
+			sign=-1;
+
+		if (delta<0.000001)
+			return false;///no intersection
+		else
+		{
+			p0.X()=(D*dy+sign*dx*sqrt(delta))/dr*dr;
+			p0.Y()=(-D*dx+fabs(dy)*sqrt(delta))/dr*dr;
+			p1.X()=(D*dy-sign*dx*sqrt(delta))/dr*dr;
+			p1.Y()=(-D*dx-fabs(dy)*sqrt(delta))/dr*dr;
+			p0+=center;
+			p1+=center;
+			return true;
+		}
+	}
 /*@}*/
 } // end namespace
 #endif
