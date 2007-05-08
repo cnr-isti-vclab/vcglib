@@ -24,6 +24,9 @@
  History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2007/05/08 12:11:58  pietroni
+added circle-line intersection
+
 
 ****************************************************************************/
 
@@ -214,17 +217,19 @@ template<class SCALAR_TYPE>
 //intersection between a circle and a line
 template<class SCALAR_TYPE>
 	inline bool CircleLineIntersection(const vcg::Line2<SCALAR_TYPE> & line,
-									   const vcg::Point2<ScalarType> &center,
-									   const ScalarType &radius,
-									   vcg::Point2<ScalarType> &p0,
-									   vcg::Point2<ScalarType> &p1)
+									   const vcg::Point2<SCALAR_TYPE> &center,
+									   const SCALAR_TYPE &radius,
+									   vcg::Point2<SCALAR_TYPE> &p0,
+									   vcg::Point2<SCALAR_TYPE> &p1)
 	{
+		typedef typename SCALAR_TYPE ScalarType;
+
 		///translate with origin on the center
 		ScalarType x1,x2,y1,y2;
-		x1=p.X()-center.X();
-		y1=p.Y()-center.Y();
-		x2=x1+line.Direction.X();
-		y2=y1+line.Direction.Y();
+		x1=line.Origin().X()-center.X();
+		y1=line.Origin().Y()-center.Y();
+		x2=x1+line.Direction().X();
+		y2=y1+line.Direction().Y();
 
 		ScalarType dx,dy,dr,D,delta,sign;
 		dx=x2-x1;
