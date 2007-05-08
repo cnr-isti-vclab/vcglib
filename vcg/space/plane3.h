@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2007/04/04 23:22:29  pietroni
+setted to const the parameter passed to function Projection
+
 Revision 1.8  2005/09/26 19:49:30  m_di_benedetto
 Method Set(off, dir) now correctly normalizes direction and offset if template parameter NORM is set.
 
@@ -171,7 +174,7 @@ template<class T> T Distance(const Plane3<T> &plane, const Point3<T> &point) {
 
 	///Distance point-plane (Move this function to somewhere else)
 template<class T> T Distance(const Point3<T> &point, const Plane3<T> &plane) {
-  return plane.Direction() * point - plane.Offset;      
+  return plane.Direction() * point - plane.Offset();      
 }
 
 } // end namespace
