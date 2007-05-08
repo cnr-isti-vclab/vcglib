@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2007/01/18 01:26:23  cignoni
+Added cast for mac compiling
+
 Revision 1.7  2005/10/13 08:32:26  cignoni
 Added glscale(scalar) and corrected bug in glscale(point2)
 
@@ -54,6 +57,7 @@ First working version!
 // Please note that this file assume that you have already included your 
 // gl-extension wrapping utility, and that therefore all the extension symbol are already defined.
 
+#include <vcg/space/triangle3.h>
 #include <vcg/space/plane3.h>
 #include <vcg/space/point2.h>
 #include <vcg/space/point3.h>
@@ -249,6 +253,15 @@ inline void glBoxClip(const Box3<T>  & b)
 		glPopMatrix();
 	}
 
+
+template <class TriangleType>
+	inline void glTriangle3(  TriangleType & c )  {
+		glBegin(GL_TRIANGLES);
+		glVertex(c.P(0));
+		glVertex(c.P(1));
+		glVertex(c.P(2));
+		glEnd();
+	}
 
 }//namespace
 #endif
