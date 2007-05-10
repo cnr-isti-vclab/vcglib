@@ -214,9 +214,13 @@ namespace vcg
 		};
 
 public:
+	  Octree()
+		{
+		marks=0;
+		}
 		~Octree()
 		{
-			delete []marks;
+			if(marks) delete []marks;
 			int node_count = TemplatedOctree::NodeCount();
 			for (int i=0; i<node_count; i++)
 				delete TemplatedOctree::nodes[i];
