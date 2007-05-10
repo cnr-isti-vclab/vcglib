@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2007/05/04 16:33:27  ganovelli
+moved InterpolationParamaters out the class Triangle
+
 Revision 1.13  2007/04/04 23:23:55  pietroni
 - corrected and renamed distance to point ( function TrianglePointDistance)
 
@@ -114,7 +117,7 @@ public:
 
 
 	bool InterpolationParameters(const CoordType & bq, ScalarType &a, ScalarType &b, ScalarType &_c ) const{
-		return InterpolationParameters(*this, const CoordType & bq, TriangleType::ScalarType &a, TriangleType::ScalarType &b, TriangleType::ScalarType &_c ); 
+		return InterpolationParameters(*this, bq, a, b,_c ); 
 	}
 
 
