@@ -31,6 +31,9 @@ of Greg Turk and on the work of Claudio Rocchini
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2006/01/27 09:09:10  corsini
+Fix signed/unsigned mismatch
+
 Revision 1.11  2005/12/02 00:00:53  cignoni
 Moved and corrected interpret_texture_name from plystuff.h to plylib.cpp
 
@@ -70,7 +73,12 @@ Initial commit
 ****************************************************************************/
 
 
+// Note that on ppc mac (the only bigendian machine around)
+// the preprocessor def __BIG_ENDIAN__ is always defined.
+// Otherwise we should be on  a little endian machine (intel/amd based)
+#ifndef __BIG_ENDIAN__
 #define LITTLE_MACHINE
+#endif
 
 #ifdef WIN32
 #define assert ASSERT
