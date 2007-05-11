@@ -6,7 +6,7 @@
    Visual Computing Lab  http://vcg.isti.cnr.it                    /\/|      
    ISTI - Italian National Research Council                           |      
                                                                       \      
-   Metro 4.06 2005/10/03
+   Metro 4.07 2007/05/11 
    All rights reserved.                                                      
    
                                                                        
@@ -83,6 +83,7 @@ where "file1" and "file2" are the input meshes in PLY, OFF or STL format, and op
   -G         Use a static Uniform Grid as Search Structure (default)
   -A         Use an Axis Aligned Bounding Box Tree as Search Structure
   -H         Use an Hashed Uniform Grid as Search Structure
+  -O         Use an Octree as Search Structure
   
   
 The -C option is useful in combination with -c option for creating a set of 

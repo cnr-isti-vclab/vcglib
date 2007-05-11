@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.24  2007/05/04 16:50:23  ganovelli
+added plus types version (#ifdef _PLUS_TYPES_ to use it ).
+
 Revision 1.23  2006/10/25 12:40:19  fiorin
 Added possibility to use Octree as search structure:
 
@@ -624,14 +627,10 @@ void Sampling<MetroMesh>::Hausdorff()
 
     typedef typename std::vector<FaceType>::iterator  FaceVecIterator;
     // set grid meshes.
-    if(Flags & SamplingFlags::USE_HASH_GRID)
-        hS2.Set(S2.face.begin(),S2.face.end());
-    if(Flags & SamplingFlags::USE_AABB_TREE)
-        tS2.Set(S2.face.begin(),S2.face.end());
-    if(Flags & SamplingFlags::USE_STATIC_GRID)
-        gS2.Set(S2.face.begin(),S2.face.end());
-		if (Flags & SamplingFlags::USE_OCTREE)
-			  oS2.Set(S2.face.begin(),S2.face.end());
+    if(Flags & SamplingFlags::USE_HASH_GRID)   hS2.Set(S2.face.begin(),S2.face.end());
+    if(Flags & SamplingFlags::USE_AABB_TREE)   tS2.Set(S2.face.begin(),S2.face.end());
+    if(Flags & SamplingFlags::USE_STATIC_GRID) gS2.Set(S2.face.begin(),S2.face.end());
+		if(Flags & SamplingFlags::USE_OCTREE)      oS2.Set(S2.face.begin(),S2.face.end());
 
     // set bounding box
     bbox = S2.bbox;
@@ -647,10 +646,10 @@ void Sampling<MetroMesh>::Hausdorff()
     // Vertex sampling.
     if(Flags & SamplingFlags::VERTEX_SAMPLING)
         VertexSampling();
-    // Edge sammpling.
-    n_samples_target -= (int) n_total_samples;
-    if(n_samples_target > 0)
-    {
+    // Edge sampling.
+    if(n_samples_target > n_total_samples)
+			{		
+				n_samples_target -= (int) n_total_samples;
         n_samples_per_area_unit  = n_samples_target / area_S1;
 				if(Flags & SamplingFlags::EDGE_SAMPLING)
         {

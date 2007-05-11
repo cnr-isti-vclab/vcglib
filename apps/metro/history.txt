@@ -6,9 +6,14 @@
    Visual Computing Lab  http://vcg.isti.cnr.it                    /\/|      
    ISTI - Italian National Research Council                           |      
                                                                       \      
-   Metro 4.06 2005/10/03
+   Metro 4.07 2007/05/11 
    All rights reserved.                                                      
    
+2007/05/11 Release 4.07
+Added support for obj files.
+Now the Distance comparison can be done exploiting also a (slow) octree. 
+Removed bug on the display of the area of the mesh.
+
 2005/10/03 Release 4.06
 Changed the core for distance computation. 
 Current version uses the lib flexible search structures. 

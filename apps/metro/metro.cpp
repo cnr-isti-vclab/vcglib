@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2007/05/04 16:50:23  ganovelli
+added plus types version (#ifdef _PLUS_TYPES_ to use it ).
+
 Revision 1.22  2006/10/25 12:40:19  fiorin
 Added possibility to use Octree as search structure:
 
@@ -167,7 +170,7 @@ void OpenMesh(const char *filename, CMesh &m)
   int err = tri::io::Importer<CMesh>::Open(m,filename);
   if(err) {
       printf("Error in reading %s: '%s'\n",filename,tri::io::Importer<CMesh>::ErrorMsg(err));
-      exit(-1);
+      if(tri::io::Importer<CMesh>::ErrorCritical(err)) exit(-1);
     }
   printf("read mesh `%s'\n", filename);
   if(CleaningFlag){
@@ -189,7 +192,7 @@ int main(int argc, char**argv)
 
     // print program info
     printf("-------------------------------\n"
-           "         Metro V.4.06 \n"
+           "         Metro V.4.07 \n"
            "     http://vcg.isti.cnr.it\n"
            "   release date: "__DATE__"\n"
            "-------------------------------\n\n");
