@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2007/02/26 01:30:02  cignoni
+Added reflection Name
+
 Revision 1.17  2007/01/15 15:04:15  tarini
 added "ToAscii" and "SetFromAscii" methods to load/store current trackball status from/to ascii strings
 (intended uses: clipboard operations and comments inside png snapshots!)
@@ -86,9 +89,8 @@ Adding copyright.
 
 #include <wrap/gl/math.h>
 #include <wrap/gl/space.h>
-using namespace vcg;
 
-#include <iostream>  //debug!
+using namespace vcg;
 using namespace std;
 
 Transform::Transform() {
@@ -97,24 +99,30 @@ Transform::Transform() {
   center=Point3f(0,0,0);
 }
 
-Trackball::Trackball(): current_button(0), current_mode(NULL),
+Trackball::Trackball(): current_button(0), current_mode(NULL), inactive_mode(NULL),
 			dragging(false), spinnable(true), spinning(false), 
-			history_size(10) {
-  //here we add mode
-  modes[0]                       = NULL;
-  modes[BUTTON_LEFT]             = new SphereMode();
-  modes[BUTTON_LEFT | KEY_CTRL]  = new PlaneMode(Plane3f(0, Point3f(1, 0, 0)));
-  modes[BUTTON_MIDDLE]           = new PlaneMode(Plane3f(0, Point3f(1, 0, 0)));
-  modes[BUTTON_LEFT | KEY_SHIFT] = new ScaleMode();
-  modes[BUTTON_LEFT | KEY_ALT  ] = new ZMode();
-  modes[WHEEL]                   = new ScaleMode();
-  SetCurrentAction();
+			history_size(10){
+  setDefaultMapping ();
 }
 
 Trackball::~Trackball() {
-  map<int, TrackMode *>::iterator i;
+  //map<int, TrackMode *>::iterator i;
   //for(i = modes.begin(); i != modes.end(); i++)
   //  delete (*i).second;
+}
+
+
+void Trackball::setDefaultMapping () {
+  inactive_mode = new InactiveMode ();
+  modes.clear ();
+  modes[0] = NULL;
+  modes[BUTTON_LEFT] = new SphereMode ();
+  modes[BUTTON_LEFT | KEY_CTRL] = new PanMode ();
+  modes[BUTTON_MIDDLE] = new PanMode ();
+  modes[BUTTON_LEFT | KEY_SHIFT] = new ScaleMode ();
+  modes[BUTTON_LEFT | KEY_ALT] = new ZMode ();
+  modes[WHEEL] = new ScaleMode ();
+  SetCurrentAction ();
 }
 
 void Trackball::SetIdentity() {
@@ -129,40 +137,29 @@ void Trackball::GetView() {
   camera.GetView();
 }
 
+// the drawing code has been moved to the trackmodes
 void Trackball::DrawPostApply() { 
-    glPushMatrix();
+	if(current_mode !=NULL){
+		current_mode->Draw(this);
+	}else{
+		assert(inactive_mode != NULL);
+ 		inactive_mode->Draw(this);
+  	}
+}
 
-  glTranslate(center);
-  glMultMatrix(track.InverseMatrix());
-  Matrix44f r;
-    track.rot.ToMatrix(r);
-    glMultMatrix(r);
-    DrawIcon();
-    
-  glTranslate(-center);
-glMultMatrix(track.Matrix());
+void Trackball::Apply () {
+  glTranslate (center);
+  glMultMatrix (track.Matrix ());
+  glTranslate (-center);
 }
 
 void Trackball::Apply(bool ToDraw) { 
-  glTranslate(center);
-  if(ToDraw) 
-  {
-     if(DH.DrawTrack)     {
-       glBegin(GL_LINE_STRIP);
-        for(vector<Point3f>::iterator vi=Hits.begin();vi!=Hits.end();++vi)
-         glVertex(*vi);
-       glEnd();
-     }
-    glPushMatrix();
-    Matrix44f r;
-    track.rot.ToMatrix(r);
-    glMultMatrix(r);
-    DrawIcon();
-    glPopMatrix();
+  Apply();
+  if(ToDraw){
+    DrawPostApply();
   }
-  glMultMatrix(track.Matrix());
-  glTranslate(-center);
 }
+
 
 void Trackball::ApplyInverse() { 
   glTranslate(center);
@@ -183,7 +180,9 @@ void Trackball::Translate(Point3f tr)
 }
 
 /***************************************************************/
-
+// DrawCircle () e DrawPlane() have been moved to trackutils.h
+// the drawing code has been moved to the trackmodes
+/*
 void Trackball::DrawCircle() {
   int nside=DH.CircleStep;
   const double pi2=3.14159265*2.0;
@@ -210,6 +209,7 @@ void Trackball::DrawPlane() {
   }
   glEnd();
 }
+*/
 
 void Trackball::ToAscii(char* result){
   float * f = (float*) &track;
@@ -226,6 +226,9 @@ bool Trackball::SetFromAscii(char * st){
 
 }
 
+// DrawPlaneHandle() e DrawIcon() have been moved to trackutils.h
+// the drawing code has been moved to the trackmodes
+/*
 void Trackball::DrawPlaneHandle() {
   float r=1.0;
   float dr=r/10.0f;
@@ -286,10 +289,19 @@ void Trackball::DrawIcon() {
 
   glPopMatrix();
 }
+*/
 
 void Trackball::Reset() {
   track.SetIdentity();
-}
+  map<int, TrackMode *>::iterator i;
+  for(i = modes.begin(); i != modes.end(); i++){
+   TrackMode * mode=(*i).second;
+   if(mode!=NULL)
+     mode->Reset();
+  }
+  assert(inactive_mode != NULL);
+  inactive_mode->Reset();
+ }
 
 //interface
 void Trackball::MouseDown(int button) {
@@ -317,14 +329,32 @@ void Trackball::MouseUp(int /* x */, int /* y */, int button) {
   current_button &= (~button);
   SetCurrentAction();
 } 
- // it assumes that a notch of 1.0 is a single step of the wheel
+
+// it assumes that a notch of 1.0 is a single step of the wheel
 void Trackball::MouseWheel(float notch  ) {
   if(current_mode == NULL)
   {
-    SphereMode tm;
-    tm.TrackMode::Apply(this, notch);
-  } else
-  current_mode->Apply(this, notch);
+    //SphereMode tm;  
+	//tm.TrackMode::Apply(this, notch);
+    ScaleMode scalemode;
+    scalemode.Apply (this, notch);
+  } else{
+    current_mode->Apply(this, notch);
+  }
+}
+
+void Trackball::MouseWheel (float notch, int button)
+{
+  current_button |= button;
+  SetCurrentAction ();
+  if (current_mode == NULL) {
+    ScaleMode scalemode;
+    scalemode.Apply (this, notch);
+  } else {
+    current_mode->Apply (this, notch);
+  }
+  current_button &= (~button);
+  SetCurrentAction ();
 }
 
 void Trackball::ButtonDown(Trackball::Button button) {
@@ -337,8 +367,6 @@ void Trackball::ButtonUp(Trackball::Button button) {
   SetCurrentAction();
 }
 
-
-
 //spinning interface
 void Trackball::SetSpinnable(bool /* on*/ ){}
 bool Trackball::IsSpinnable() {
@@ -350,23 +378,25 @@ bool Trackball::IsSpinning() {
   return spinning;
 }  
 
-//interfaccia navigation:
+//navigation interface:
 void Trackball::Back(){}
 void Trackball::Forward(){}
 void Trackball::Home(){}
-void Trackball::HistorySize(int /* lenght */){}
+void Trackball::HistorySize(int /* length */){}
 
-void Trackball::SetCurrentAction() {  
+void Trackball::SetCurrentAction ()
+{
   //I use strict matching.
-  assert(modes.count(0));
-  if(!modes.count(current_button))
+  assert (modes.count (0));
+  if (!modes.count (current_button)) {
     current_mode = NULL;
-  else
+  } else {
     current_mode = modes[current_button];
-
-  last_point = Point3f(0, 0, -1);
+    if(current_mode != NULL)
+      current_mode->SetAction();
+  }
+  last_point = Point3f (0, 0, -1);
   last_track = track;
-  //  last_view = view;
 }
 
 ////return center of trackball in Window coordinates.
@@ -388,5 +418,4 @@ void Trackball::SetCurrentAction() {
 //  Similarityf m = local * last_track;
 //  return m;
 //}
-
 

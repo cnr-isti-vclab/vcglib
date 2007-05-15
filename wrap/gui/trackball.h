@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2007/02/26 01:30:02  cignoni
+Added reflection Name
+
 Revision 1.12  2007/01/15 15:04:15  tarini
 added "ToAscii" and "SetFromAscii" methods to load/store current trackball status from/to ascii strings
 (intended uses: clipboard operations and comments inside png snapshots!)
@@ -134,9 +137,9 @@ namespace vcg {
     Transform();
     Similarityf track;
     
-    /// la posizione della track nello spazio di modello. il defgault e' 000
+    /// track position in model space. default is 0,0,0
     Point3f center; 
-    /// size of the widget in spazio di modello. 
+    /// size of the widget in model space.
     float   radius; 
   };
 
@@ -145,27 +148,10 @@ namespace vcg {
   class TrackMode;
    class Trackball: public Transform {
   public:
- class DrawingHint
-    {
-    public:
-      DrawingHint() {  
-        CircleStep=64;
-        HideStill=false;
-        DrawTrack=false;
-        LineWidthStill=0.5f;
-        LineWidthMoving=1.5f;
-        color=Color4b::LightBlue;
-      }
+// the drawing code has been moved to the trackmodes
+//  class DrawingHint {
 
-      int CircleStep;
-      bool HideStill,DrawTrack;
-      Color4b color;
-      float LineWidthStill;
-      float LineWidthMoving;
-    };
-
-
- DrawingHint DH;
+// DrawingHint DH;
 
   
     enum Button { BUTTON_NONE   = 0x0000, 
@@ -183,23 +169,26 @@ namespace vcg {
     void SetIdentity();
     void SetPosition(const Point3f &c, int millisec = 0);
     void SetScale(const float s) {radius=s;};
-    void SetTransform(const Transform &transform, int miilisec = 0);
+    void SetTransform(const Transform &transform, int millisec = 0);
     void Translate(Point3f tr);
     void Scale(const float f);
 
 
     //operating
     void GetView();
-    void Apply(bool Draw=true);
+    void Apply(bool Draw); 
+    void Apply (); 
     void DrawPostApply();
     void ApplyInverse();
-    void DrawIcon();
+    // DrawIcon() has been moved to trackutils.h
+    //void DrawIcon();
     void Reset();
-    
-    // Internal Drawing stuff
-    void DrawCircle ();
-    void DrawPlane();
-    void DrawPlaneHandle();
+
+    // DrawCircle (), DrawPlane(), DrawPlaneHandle() has been moved to trackutils.h
+    // the drawing code has been moved to the trackmodes
+    // void DrawCircle ();
+    // void DrawPlane();
+    // void DrawPlaneHandle();
 
     //interface
     void MouseDown(/*Button*/ int button);
@@ -207,6 +196,7 @@ namespace vcg {
     void MouseMove(int x, int y); 
     void MouseUp(int x, int y, /*Button */ int button); 
     void MouseWheel(float notch);  // it assumes that a notch of 1.0 is a single step of the wheel
+    void MouseWheel (float notch, /*Button */ int button);
     void ButtonUp(Button button);
     void ButtonDown(Button button);
 
@@ -253,7 +243,15 @@ namespace vcg {
   
     int current_button;
     TrackMode *current_mode;
+
+	// inactive_mode is used to draw the inactive trackball
+    // can be assigned, for example, to draw an area or a path
+    // even when the user is not interacting with it
+    TrackMode *inactive_mode;
    
+    // reset modes to default mapping.
+    void setDefaultMapping ();
+
     std::map<int, TrackMode *> modes;
 
     Similarityf last_track;
