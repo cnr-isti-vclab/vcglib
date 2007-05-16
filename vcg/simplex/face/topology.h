@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.29  2006/12/06 00:08:21  cignoni
+Removed Oldstyle uberZ access to FF adjacency
+
 Revision 1.28  2006/11/09 17:28:42  cignoni
 Corrected Detach; added FFCorrectness; Corrected ComplexSize, Dissemination of a lot of assert()
 
@@ -362,7 +365,7 @@ template <class FaceType, bool UpdateTopology>
 void SwapEdge(FaceType &f, const int z)
 {
 	// swap V0(z) with V1(z)
-	swap(f.V0(z), f.V1(z));
+	std::swap(f.V0(z), f.V1(z));
 
 	if(f.HasFFAdjacency() && UpdateTopology)
 	{
