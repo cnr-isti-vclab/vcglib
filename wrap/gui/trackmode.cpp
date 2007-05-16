@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2007/05/15 14:58:57  benedetti
+Main restructuring. added many new modes
+
 Revision 1.19  2006/08/30 07:01:54  cignoni
 Reverted to version 1.17. Version 1.18 was wrongly done starting from a outdated version.
 
@@ -79,6 +82,7 @@ Adding copyright.
 
 ****************************************************************************/
 
+#include <gl/glew.h>
 
 #include <wrap/gui/trackmode.h>
 #include <wrap/gui/trackball.h>
