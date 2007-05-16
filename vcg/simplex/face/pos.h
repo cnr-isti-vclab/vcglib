@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.29  2007/04/20 12:40:31  cignoni
+Corrected  V() operator. It was plainly wrong. Luckly enough it was not very used
+
 Revision 1.28  2007/01/11 10:37:08  cignoni
 Added include assert.h
 
@@ -355,21 +358,28 @@ public:
     return face::IsManifold(*f,z);
 	}
 
-	/// Return the dimension of the star
-	int StarSize()
+	/*!
+	 * Returns the number of vertices incident on the vertex pos is currently pointing to.
+	 */
+	int NumberOfIncidentVertices()
 	{
-		int n=0;
-		PosType ht = *this;
-		bool bf=false;
-		do
-		{
-			++n;
-			ht.NextE();
-			if(ht.IsBorder()) bf=true;
-		} while (ht != *this);
+		int  count		 = 0;
+		bool on_border = false;
+		CheckIncidentFaces(count, on_border);
+		if(on_border) return (count/2)+1;
+		else					return count;
+	}
 
-		if(bf) return n/2;
-		else return n;
+	/*!
+	* Returns the number of faces incident on the vertex pos is currently pointing to.
+	*/
+	int NumberOfIncidentFaces()
+	{
+		int  count		 = 0;
+		bool on_border = false;
+		CheckIncidentFaces(count, on_border);
+		if(on_border) return count/2;
+		else					return count;
 	}
 
 	/** Function to inizialize an half-edge.
@@ -410,6 +420,18 @@ public:
 		return v == f->V(z);	// e^(ip)+1=0 ovvero E=mc^2
 	}
 
+
+	protected:
+		void CheckIncidentFaces(int & count, bool & on_border)
+		{
+			PosType ht = *this;
+			do
+			{
+				++count;
+				ht.NextE();
+				if(ht.IsBorder()) on_border=true;
+			} while (ht != *this);
+		}
 };
 
 template <class FaceType>
