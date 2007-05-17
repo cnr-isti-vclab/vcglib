@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2006/12/10 23:29:57  ganovelli
+added VFIterator (Pos is disabled in this version)
+
 Revision 1.2  2006/12/10 22:17:18  ganovelli
 cvs problem during frist committ. repeated
 
@@ -73,6 +76,7 @@ protected:
 		void initializeGL();
     void paintGL();
     void resizeGL(int width, int height);
+    void mouseDoubleClickEvent(QMouseEvent *event);
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);

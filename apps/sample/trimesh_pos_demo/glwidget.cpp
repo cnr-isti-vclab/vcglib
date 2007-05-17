@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2006/12/10 23:29:57  ganovelli
+added VFIterator (Pos is disabled in this version)
+
 Revision 1.2  2006/12/10 22:17:18  ganovelli
 cvs problem during frist committ. repeated
 
@@ -198,7 +201,7 @@ MyStraightMesh::FaceType* g  = vp->VFp();
 			glPushAttrib(0xffffffff);
 			glDisable(GL_LIGHTING);
 			glColor3f(0.0,1.0,0.0);
-			glDepthRange(0.0,0.999);
+			glDepthRange(0.0,0.99);
 			vcg::GlVfIterator<vcg::face::VFIterator<MyStraightMesh::FaceType> >::Draw(vfite);
 			glPopAttrib();
 		}
@@ -227,7 +230,11 @@ void GLWidget::mouseMoveEvent(QMouseEvent *e)
 		else
 			keypress = e->key();
  }
+ void GLWidget::mouseDoubleClickEvent(QMouseEvent *e){
+					if(e->button() == Qt::RightButton)
+						doPickPos=true;
 
+ }
  void GLWidget:: mousePressEvent(QMouseEvent *e)
 {
 		if( (keypress==Qt::Key_Control) && (e->button() == Qt::LeftButton) )
