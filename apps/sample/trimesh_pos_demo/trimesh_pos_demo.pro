@@ -1,12 +1,12 @@
-INCLUDEPATH += . ../../.. ../../../../code/lib
+INCLUDEPATH += . ../../.. ../../../../code/lib ../../../../code/lib/glew/include
 HEADERS       = glwidget.h \
                 window.h \
-		mesh_type	
+		mesh_type.h	
 SOURCES       = glwidget.cpp \
                 main.cpp \
                 window.cpp\
+		 ../../../../code/lib/glew/src/glew.c \
 		../../../wrap/ply/plylib.cpp\
-		../../../wrap/gui/trackball.cpp\
 		../../../wrap/gui/trackmode.cpp\
 		../../../wrap/gui/trackball.cpp
 QT           += opengl

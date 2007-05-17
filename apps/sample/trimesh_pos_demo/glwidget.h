@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2007/05/17 09:06:44  ganovelli
+gestione double click
+
 Revision 1.3  2006/12/10 23:29:57  ganovelli
 added VFIterator (Pos is disabled in this version)
 
@@ -58,8 +61,8 @@ public:
 		vcg::Trackball track;
 		int ScreenH,ScreenW,pic_x,pic_y,keypress;
 		bool doPickPos,doPickVfIte;
-		vcg::face::Pos<typename MyStraightMesh::FaceType> pos;
-		vcg::face::VFIterator<typename MyStraightMesh::FaceType> vfite;
+		vcg::face::Pos< MyStraightMesh::FaceType> pos;
+		vcg::face::VFIterator< MyStraightMesh::FaceType> vfite;
 
 public slots:
     void flipV( );

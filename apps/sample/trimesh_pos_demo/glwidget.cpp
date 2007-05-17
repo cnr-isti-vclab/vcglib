@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2007/05/17 09:06:44  ganovelli
+gestione double click
+
 Revision 1.3  2006/12/10 23:29:57  ganovelli
 added VFIterator (Pos is disabled in this version)
 
@@ -37,6 +40,7 @@ cvs problem during frist committ. repeated
 #include <QtOpenGL>
 
 #include <math.h>
+#include "glwidget.h"
 #include <wrap/io_trimesh/import_PLY.h>
 #include <wrap/gl/picking.h>
 #include <wrap/gl/space.h>
@@ -45,7 +49,6 @@ cvs problem during frist committ. repeated
 #include <vcg/complex/trimesh/update/normal.h>
 #include <vcg/complex/trimesh/update/topology.h>
 
-#include "glwidget.h"
 
 GLWidget::GLWidget(QWidget *parent)
     : QGLWidget(parent)
@@ -181,7 +184,7 @@ void GLWidget::paintGL()
 				if(yes) 
 					{vp = res[0];
 MyStraightMesh::FaceType* g  = vp->VFp();
-						vfite=vcg::face::VFIterator<typename MyStraightMesh::FaceType>(vp);
+						vfite=vcg::face::VFIterator<MyStraightMesh::FaceType>(vp);
 					}
 
 				doPickVfIte = false;
