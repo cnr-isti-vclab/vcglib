@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2006/01/19 14:18:08  spinelli
+fix bug end iterator++
+
 Revision 1.6  2005/05/30 09:43:41  spinelli
 vertexIterator sostituito con VertexIterator
 
@@ -105,7 +108,7 @@ namespace vcg {
 
 				for(int i=0; i<n; ++i)
 				{
-					m.vert.push_back(MeshType::VertexType());
+					m.vert.push_back(VertexType());
 					m.vert.back().ClearFlags();
 				}
 
