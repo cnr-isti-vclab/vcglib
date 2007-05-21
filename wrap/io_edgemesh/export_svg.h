@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2006/02/16 15:16:51  corsini
+Add reference plane support
+
 Revision 1.2  2006/02/15 15:40:06  corsini
 Decouple SVG properties and exporter for simmetry with the other exporter
 
@@ -273,11 +276,11 @@ public:
 		Point2f pmin(100000000.0f,  100000000.0f);
 		Point2f pmax(-100000000.0f, -100000000.0f);
 
-		EdgeMeshType::EdgeIterator i;
+		typename EdgeMeshType::EdgeIterator i;
 		for (i = mp->edges.begin(); i != mp->edges.end(); ++i)
 		{
-			Point3<EdgeMeshType::ScalarType> p1 = (*i).V(0)->P();
-			Point3<EdgeMeshType::ScalarType> p2 = (*i).V(1)->P();
+			Point3<typename EdgeMeshType::ScalarType> p1 = (*i).V(0)->P();
+			Point3<typename EdgeMeshType::ScalarType> p2 = (*i).V(1)->P();
 
 			Point3d p1d(p1[0], p1[1], p1[2]);
 			Point3d p2d(p2[0], p2[1], p2[2]);

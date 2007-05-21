@@ -28,6 +28,9 @@ This file contains two function providing the standard way to do picking using o
 
   History
 $Log: not supported by cvs2svn $
+Revision 1.4  2006/10/27 08:55:15  fiorin
+Added type cast (in order to remove warnings)
+
 Revision 1.3  2006/02/28 13:25:48  ponchio
 for(ii... -> for(int ii
 
@@ -58,7 +61,7 @@ int Pick(	const int & x, const int &y,
 		result.clear();
 		long hits;	
 		int sz = int(m.size())*5;
-		unsigned int *selectBuf =new unsigned int[sz];
+		GLuint *selectBuf =new GLuint[sz];
 		glSelectBuffer(sz, selectBuf);
 		glRenderMode(GL_SELECT);
 		glInitNames();
@@ -67,7 +70,7 @@ int Pick(	const int & x, const int &y,
 		glPushName(-1);
 		double mp[16];
 
-		int viewport[4];
+		GLint viewport[4];
 		glGetIntegerv(GL_VIEWPORT,viewport);
 		glMatrixMode(GL_PROJECTION);
 		glGetDoublev(GL_PROJECTION_MATRIX ,mp);

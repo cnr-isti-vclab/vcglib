@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2007/03/12 15:38:02  tarini
+Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
+
 Revision 1.6  2005/09/14 14:09:16  spinelli
 ConstVertexPointer --> VertexPointer
 ConstEdgePointer --> EdgePointer
@@ -132,7 +135,7 @@ public:
 
 	inline int MemNeeded() const
 	{
-		return sizeof(EdgeMesh)+sizeof(VertexType)*vn+sizeof(EdgeType)*fn;
+		return sizeof(EdgeMesh)+sizeof(VertexType)*vn+sizeof(EdgeType)*en;
 	}
 
 
@@ -161,7 +164,7 @@ static bool HasPerEdgeMark()      { return EdgeType::HasEdgeMark()   ; }
 static bool HasPerEdgeQuality()   { return EdgeType::HasEdgeQuality(); }
 
 static bool HasEETopology()       { return EdgeType::HasEEAdjacency();  }
-static bool HasVETopology()       { return FaceType::HasVEAdjacency(); }
+static bool HasVETopology()       { return EdgeType::HasVEAdjacency(); }
 static bool HasTopology()         { return HasEETopology() || HasVETopology(); }
 
 
