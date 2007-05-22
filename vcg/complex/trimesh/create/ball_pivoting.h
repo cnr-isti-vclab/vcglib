@@ -73,18 +73,24 @@ class Pivot {
                          //but adding topology may not be needed anymode
     int last_seed;
 
-      
+// Parameters:
+// <mesh> a standard trimesh. Vertex is required to have normals. 
+//    If some faces are already in the process start from the border edges
+//    Bounding Box must have been already computed.
+//    If faces are in border flags must be already computed
+// <radius>  is the radius of the pivoting ball. If set to 0 an automatic guess is used ( sqrt(BBox_Diag^2 / vn) )
+// <mindist> is the minimal distance between two points 
+// <crease>  in the     
+// <normals> 
 Pivot(MESH &_mesh, ScalarType _radius, ScalarType _mindist = 0.1, ScalarType _crease = -0.5): 
        mesh(_mesh), radius(_radius), mindist(_mindist), crease(_crease), normals(true), last_seed(0) {
-    
-      //Compute bounding box. (this may be passed as a parameter?
-      for(int i = 0; i < mesh.vert.size(); i++)
-        box.Add(mesh.vert[i].P());
-
+      box = mesh.bbox;
       //estimate radius if not provided     
       if(radius <= 0.0f)
         radius = sqrt((box.Diag()*box.Diag())/mesh.vn);
       
+			UpdateFlags<MESH>::VertexClearV(mesh);
+			
       /* we need to enlarge the grid to allow queries from little outside of the box 
          Someone is a bit lazy... */        
       box.Offset(4*radius);
@@ -104,7 +110,7 @@ Pivot(MESH &_mesh, ScalarType _radius, ScalarType _mindist = 0.1, ScalarType _cr
             if(face.IsB(k)) {
               //compute center:
               findSphere(face.P(k), face.P((k+1)%3), face.P((k+2)%3), center);
-              newEdge(Edgex(face.V((k)%3) -start, face.V((k+1)%3) - start, face.V((k+2)%3) - start,
+              newEdge(Edgex(face.V0(k) - start, face.V1(k) - start, face.V2(k) - start,
                             i, center));
             }
           }
