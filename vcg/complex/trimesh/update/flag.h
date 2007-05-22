@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2007/01/30 18:49:23  tarini
+aggiunta la VertexBorderFromNone (flag bordo per vertici senza richiedere nulla)
+
 Revision 1.17  2006/08/31 13:11:12  marfr960
 corrected bounds of a vector scan
 
@@ -115,6 +118,18 @@ static void Clear(MeshType &m)
 	for(vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
 		(*vi).Flags() = 0;
 }
+
+static void VertexClear(MeshType &m, unsigned int FlagMask = 0xffffffff)
+{
+	VertexIterator vi;
+	int andMask = ~FlagMask;
+	for(vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
+		if(!(*vi).IsD()) (*vi).Flags() &= andMask ;
+}
+
+static void VertexClearV(MeshType &m) { VertexClear(m,VertexType::VISITED);}
+static void VertexClearB(MeshType &m) { VertexClear(m,VertexType::BORDER);}
+
 
 /** Compute the border flags for the faces using the Face-Face Topology. 
 Obviously it assumes that the topology has been correctly computed (see: UpdateTopology::FaceFace )
