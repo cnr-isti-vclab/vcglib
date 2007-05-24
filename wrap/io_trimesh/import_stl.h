@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2006/06/10 12:49:05  mariolatronico
+file length is now computed using fseek and ftell
+
 Revision 1.13  2006/06/06 14:35:32  zifnab1974
 Changes for compilation on linux AMD64. Some remarks: Linux filenames are case-sensitive. _fileno and _filelength do not exist on linux
 
@@ -147,7 +150,7 @@ static int Open( OpenMeshType &m, const char * filename, CallBackPos *cb=0)
   if(file_size ==  expected_file_size) binary = true;
   unsigned char tmpbuf[128];
   fread(tmpbuf,sizeof(tmpbuf),1,fp);
-  for(int i = 0; i < sizeof(tmpbuf); i++)
+  for(unsigned int i = 0; i < sizeof(tmpbuf); i++)
     {
       if(tmpbuf[i] > 127)
  	      {
