@@ -28,6 +28,9 @@ This file contains two function providing the standard way to do picking using o
 
   History
 $Log: not supported by cvs2svn $
+Revision 1.5  2007/05/21 13:22:40  cignoni
+Corrected gcc compiling issues
+
 Revision 1.4  2006/10/27 08:55:15  fiorin
 Added type cast (in order to remove warnings)
 
@@ -108,7 +111,7 @@ int Pick(	const int & x, const int &y,
 		result.resize(H.size());
 		for(int ii=0;ii<hits;ii++){
 			typename TO_PICK_CONT_TYPE::iterator ei=m.begin();
-			advance(ei ,H[ii].second);
+			std::advance(ei ,H[ii].second);
 			result[ii]=&*ei;
 		}
 
