@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.30  2007/05/16 15:11:32  fiorin
+Replaced ambigous StarSize method with NumberOfIncidentVertices and NumberOfIncidentFaces
+
 Revision 1.29  2007/04/20 12:40:31  cignoni
 Corrected  V() operator. It was plainly wrong. Luckly enough it was not very used
 
@@ -391,6 +394,15 @@ public:
 	{
 		f=fp;z=zp;v=vp;
 		assert(f->V((z+2)%3)!=v && (f->V((z+1)%3)==v || f->V((z+0)%3)==v));
+	}
+	
+	void Set(FaceType  * const pFace, VertexType  * const pVertex)
+	{
+		f = pFace;
+		v = pVertex;
+		if (f->V(0) == v)			 z = 2;
+		else if (f->V(1) == v) z = 0;
+		else if (f->V(2) == v) z = 1;
 	}
 
 	void Assert()
