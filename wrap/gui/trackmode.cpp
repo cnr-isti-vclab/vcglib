@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2007/05/16 08:44:05  ganovelli
+added inclusion of glew.h
+
 Revision 1.20  2007/05/15 14:58:57  benedetti
 Main restructuring. added many new modes
 
@@ -244,7 +247,7 @@ void PlaneMode::Draw(Trackball * tb){
 // Cylinder mode implementation.
 void CylinderMode::Apply (Trackball * tb, float WheelNotch)
 {
-  const float PI2=6.283185307179586232;
+  const float PI2=6.283185307179586232f;
   tb->track.rot = tb->last_track.rot * Quaternionf (WheelNotch/(tb->radius * PI2),axis.Direction());
 }
 
@@ -256,7 +259,7 @@ void CylinderMode::Apply (Trackball * tb, Point3f new_point)
   float angle;
   const float EPSILON=0.005f; // this IS scale independent
   if(axisproj.Direction().Norm() < EPSILON){
-    angle=(10.0 * getDeltaY(tb,new_point)) / tb->radius; 
+    angle=(10.0f * getDeltaY(tb,new_point)) / tb->radius; 
   } else {
     Point3f hitOld = HitViewPlane (tb, tb->last_point);
     Point3f hitNew = HitViewPlane (tb, new_point);
@@ -277,7 +280,7 @@ void CylinderMode::Draw(Trackball * tb){
 // Path mode implementation.
 void PathMode::Init(const vector < Point3f > &pts)
 {
-  unsigned int npts=pts.size();
+  unsigned int npts = int(pts.size());
   assert(npts >= 2);
   points.reserve(npts);
   for(unsigned int i=0;i<npts;i++){
@@ -310,7 +313,7 @@ Point3f PathMode::SetStartNear(Point3f point)
   float nearest_state=0;
   Point3f nearest_point=points[0];
   float nearest_distance=Distance(nearest_point,point);  
-  unsigned int npts=points.size();
+  unsigned int npts = int(points.size());
   for(unsigned int i = 1;i <= npts;i++){
   	if( i == npts){
   	  if (wrap){
@@ -348,7 +351,7 @@ void PathMode::GetPoints(float state, Point3f & point, Point3f & prev_point, Poi
   assert(state <= 1.0f);  
   float remaining_norm=state;  
   Point3f p0,p1;
-  unsigned int npts=points.size();
+  unsigned int npts = int(points.size());
   for(unsigned int i = 1;i <= npts;i++){
   	if( i == npts){
   	  if (wrap){
@@ -511,13 +514,13 @@ void PathMode::Draw(Trackball * tb){
 // Area mode implementation.
 void AreaMode::Init(const vector < Point3f > &pts)
 {
-  unsigned int npts=pts.size();
+  unsigned int npts = int(pts.size());
   
   assert(npts >= 3);
   //get the plane
   Point3f p0=pts[0];
   unsigned int onethird=(unsigned int)floor(npts/3.0);
-  const float EPSILON=0.005;
+  const float EPSILON = 0.005f;
   bool pts_not_in_line=false;
   Point3f a,b;
   for(unsigned int i=0;i<onethird;i++){
@@ -607,7 +610,7 @@ Point3f AreaMode::Move(Point3f start,Point3f end)
     Point3f pside,phit;
     bool slide,mid_inside;
     
-    int np=points.size(), i, j;
+    int np = int(points.size()), i, j;
     for (i = 0, j = np-1; i < np; j = i++) {
       Segment3f side(points[i],points[j]);
       Point3f pseg,psid;
@@ -657,7 +660,7 @@ bool AreaMode::Inside(Point3f point)
   float x=point[first_coord_kept];
   float y=point[second_coord_kept];
   float yi, yj, xi, xj;
-  int i, j, np=points.size();
+  int i, j, np=int(points.size());
   for (i = 0, j = np-1; i < np; j = i++) {
   	xi=points[i][first_coord_kept];
   	yi=points[i][second_coord_kept];
@@ -681,7 +684,7 @@ Point3f AreaMode::SetStartNear(Point3f point)
   }
   Point3f nearest_point=initial_status;
   float nearest_distance=Distance(nearest_point,candidate);  
-  int i, j, np=points.size();
+  int i, j, np=int(points.size());
   for (i = 0, j = np-1; i < np; j = i++) {
     Segment3f side(points[i],points[j]);
     Point3f side_point=ClosestPoint(side,candidate);

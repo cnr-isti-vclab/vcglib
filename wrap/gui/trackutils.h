@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2007/05/15 14:57:34  benedetti
+Utility functions for the trackmodes, first version
+
 
 
 ****************************************************************************/
@@ -385,7 +388,7 @@ Line3f ProjectLineOnPlane(const Line3f & ln, const Plane3f & pl)
 
 float signedDistance(Line3f line,Point3f pt,Point3f positive_dir)
 {
-  return Distance(line,pt) * ((((pt-ClosestPoint(line,pt)) * positive_dir) >= 0.0 )? 1.0: -1.0);
+  return Distance(line,pt) * ((((pt-ClosestPoint(line,pt)) * positive_dir) >= 0.0f )? 1.0f: -1.0f);
 }
 
 float getDeltaY(Trackball * tb, Point3f new_point)
@@ -602,14 +605,14 @@ void DrawUglyAxisMode(Trackball * tb,Line3f axis)
   glMultMatrix (tb->track.InverseMatrix ());
   glTranslate (-tb->center);
   prepara_attrib();
-  glColor3f(0.9,0.9,0.2);
+  glColor3f(0.9f, 0.9f, 0.2f);
   glLineWidth(2.0);
    glBegin(GL_LINES);
     glVertex(axis.Origin()+(axis.Direction()*100));
     glVertex(axis.Origin()-(axis.Direction()*100));
   glEnd();
   glPointSize(8.0);
-  glColor3f(0.2,0.2,0.9);
+  glColor3f(0.2f, 0.2f, 0.9f);
   glBegin(GL_POINTS);
     glVertex(axis.Origin());
   glEnd();
@@ -636,27 +639,27 @@ void DrawUglyPlaneMode(Trackball * tb,Plane3f plane)
   d1=(d2 - p0).Normalize();  
   d2=(d1 ^ norm).Normalize();  
   glLineWidth(3.0);
-  glColor3f(0.2,0.2,0.9);
+  glColor3f(0.2f, 0.2f, 0.9f);
   glBegin(GL_LINES);
     glVertex(p0);
     glVertex(p0+norm);
   glEnd();
   glLineWidth(1.0);
-  for(float i=0.5;i<100.0; i+=0.7){
+  for(float i=0.5f; i<100.0f; i+=0.7f){
     glBegin(GL_LINE_LOOP);
     for(int a=0;a<360;a+=10){
-      float f0=i*cos((M_PI*a)/180);
-      float f1=i*sin((M_PI*a)/180);
+      float f0=i*cosf((float(M_PI)*float(a))/180.0f);
+      float f1=i*sinf((float(M_PI)*float(a))/180.0f);
       glVertex(p0+(d1*f0)+(d2*f1));
     }
     glEnd();
   }  
-  glColor3f(0.9,0.9,0.2);
-  glPointSize(8.0);
+  glColor3f(0.9f, 0.9f, 0.2f);
+  glPointSize(8.0f);
   glBegin(GL_POINTS);
     glVertex(p0);
   glEnd();
-  glColor3f(0.7,0.7,0);
+  glColor3f(0.7f, 0.7f, 0.0f);
   glPointSize(6.0);
   glBegin(GL_POINTS);
     glVertex(p0+norm);
@@ -686,29 +689,29 @@ void DrawUglyCylinderMode(Trackball * tb,Line3f axis)
   d1=(d2 - p0).Normalize();  
   d2=(d1 ^ norm).Normalize();
   glLineWidth(1.0);
-  glColor3f(0.2,0.2,0.9);
+  glColor3f(0.2f, 0.2f, 0.9f);
   for(int i=-100;i<100;i++){
     glBegin(GL_LINE_LOOP);
     for(int a=0;a<360;a+=10){
-      float f0=(tb->radius)*cos((M_PI*a)/180);
-      float f1=(tb->radius)*sin((M_PI*a)/180);
-      glVertex(p0+(norm*i)+(d1*f0)+(d2*f1));
+      float f0=(tb->radius)*cosf((float(M_PI)*float(a))/180.0f);
+      float f1=(tb->radius)*sinf((float(M_PI)*float(a))/180.0f);
+      glVertex(p0+(norm*float(i))+(d1*f0)+(d2*f1));
     }
     glEnd();
   }  
   glLineWidth(3.0);
-  glColor3f(0.2,0.2,0.9);
+  glColor3f(0.2f, 0.2f, 0.9f);
   glBegin(GL_LINES);
      glVertex(axis.Origin());
      glVertex(axis.Origin()+(axis.Direction()*100));
   glEnd();
   glLineWidth(1.5);
-  glColor3f(0.9,0.2,0.9);
+  glColor3f(0.9f, 0.2f, 0.9f);
   glBegin(GL_LINES);
     glVertex(axis.Origin());
     glVertex(axis.Origin()-(axis.Direction()*100));
   glEnd();
-  glColor3f(0.9,0.9,0.2);
+  glColor3f(0.9f, 0.9f, 0.2f);
   glPointSize(8.0);
   glBegin(GL_POINTS);
     glVertex(axis.Origin());
@@ -728,7 +731,7 @@ void DrawUglyPathMode(Trackball * tb,const vector < Point3f > &points,
   glMultMatrix (tb->track.InverseMatrix ());
   glTranslate (-tb->center);
   prepara_attrib();
-  glColor3f(0.9,0.9,0.2);
+  glColor3f(0.9f, 0.9f, 0.2f);
   glLineWidth(2.0);
   if(wrap)
     glBegin(GL_LINE_LOOP);
@@ -743,12 +746,12 @@ void DrawUglyPathMode(Trackball * tb,const vector < Point3f > &points,
   glBegin(GL_POINTS);
     glVertex(current_point);
   glEnd();
-  glColor3f(0.6,0,0.6);
+  glColor3f(0.6f, 0.0f, 0.6f);
   glPointSize(7.0);
   glBegin(GL_POINTS);
     glVertex(old_hitpoint);
   glEnd();
-  glColor3f(0.7,0.7,0.7);
+  glColor3f(0.7f, 0.7f, 0.7f);
   glPointSize(6.5);
   glBegin(GL_POINTS);
     glVertex(prev_point);
@@ -769,15 +772,15 @@ void DrawUglyAreaMode(Trackball * tb,const vector < Point3f > &points,
   glMultMatrix (tb->track.InverseMatrix ());
   glTranslate (-tb->center);
   prepara_attrib();
-  glColor3f(0.9,0.9,0.2);
+  glColor3f(0.9f, 0.9f, 0.2f);
   glLineWidth(2.0);
   glBegin(GL_LINE_LOOP);
   for (vector < Point3f >::const_iterator i = points.begin (); i != points.end (); ++i){
     glVertex(*i);
   }
   glEnd();
-  glColor3f(0.0,0.9,0.2);
-  glLineWidth(1.2);
+  glColor3f(0.0f, 0.9f, 0.2f);
+  glLineWidth(1.2f);
   glBegin(GL_LINE_STRIP);
   for (vector < Point3f >::const_iterator i = path.begin (); i != path.end (); ++i){
     glVertex(*i);
@@ -788,12 +791,12 @@ void DrawUglyAreaMode(Trackball * tb,const vector < Point3f > &points,
   glBegin(GL_POINTS);
     glVertex(status);
   glEnd();
-  glColor3f(0.6,0,0.6);
+  glColor3f(0.6f, 0.0f, 0.6f);
   glPointSize(7.0);
   glBegin(GL_POINTS);
     glVertex(old_status);
   glEnd();
-  glColor3f(0.6,0,0.0);
+  glColor3f(0.6f, 0.0f, 0.0f);
   glPointSize(6.0);
   glBegin(GL_POINTS);
     glVertex(rubberband_handle);
@@ -813,17 +816,17 @@ void DrawUglyAreaMode(Trackball * tb,const vector < Point3f > &points,
   d1=(d2 - p0).Normalize();  
   d2=(d1 ^ norm).Normalize();  
   glLineWidth(3.0);
-  glColor3f(0.2,0.2,0.9);
+  glColor3f(0.2f, 0.2f, 0.9f);
   glBegin(GL_LINES);
     glVertex(p0);
     glVertex(p0+norm);
   glEnd();
-  glLineWidth(0.1);
-  for(float i=0.5;i<100.0; i+=0.7){
+  glLineWidth(0.1f);
+  for(float i=0.5f;i<100.0f; i+=0.7f){
     glBegin(GL_LINE_LOOP);
     for(int a=0;a<360;a+=10){
-      float f0=i*cos((M_PI*a)/180);
-      float f1=i*sin((M_PI*a)/180);
+      float f0=i*cosf((float(M_PI)*float(a))/180.0f);
+      float f1=i*sinf((float(M_PI)*float(a))/180.0f);
       glVertex(p0+(d1*f0)+(d2*f1));
     }
     glEnd();
