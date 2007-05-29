@@ -110,6 +110,29 @@ static void Perturb(std::vector<Point3<ScalarType > > &NN)
 
 }
 
+/*
+Trova la normale piu vicina a quella data.
+Assume che tutte normale in ingresso sia normalizzata;
+*/
+static int BestMatchingNormal(const Point3x &n, std::vector<Point3x> &nv)
+{
+	int ret=-1;
+	ScalarType bestang=-1;
+	ScalarType cosang;
+	typename std::vector<Point3x>::iterator ni;
+	for(ni=nv.begin();ni!=nv.end();++ni)
+		{
+			cosang=(*ni)*n;
+			if(cosang>bestang) {
+				bestang=cosang;
+				ret=ni-nv.begin();
+			}
+		}
+	assert(ret>=0 && ret <nv.size());
+	return ret;
+}
+
+
 private :
 class OctaLevel
   {
@@ -118,7 +141,7 @@ class OctaLevel
     int level;
     int sz;
 
-    Point3f &Val(int i, int j) {
+    Point3x &Val(int i, int j) {
       assert(i>=0 && i<sz);
       assert(j>=0 && j<sz);
       return v[i+j*sz];
