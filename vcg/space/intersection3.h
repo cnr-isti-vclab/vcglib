@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.31  2007/04/16 09:08:15  cignoni
+commented out non compiling intersectionSpherePlane
+
 Revision 1.30  2007/04/10 22:26:47  pietroni
 IntersectionPlanePlane first parameter is a const
 
@@ -178,6 +181,56 @@ namespace vcg {
     p1=li.P(val1);
     return true;
   }
+
+	/*
+	* Function computing the intersection between a sphere and a segment.
+	* @param[in]	sphere				the sphere
+	* @param[in]	segment				the segment
+	* @param[out]	intersection  the intersection point, meaningful only if the segment intersects the sphere
+	* \return			(0, 1 or 2)		the number of intersections between the segment and the sphere. 
+	*														t1 is a valid intersection only if the returned value is at least 1; 
+	*														similarly t2 is valid iff the returned value is 2.
+	*/
+	template < class SCALAR_TYPE >
+	inline int IntersectionSegmentSphere(const Sphere3<SCALAR_TYPE>& sphere, const Segment3<SCALAR_TYPE>& segment, Point3<SCALAR_TYPE> & t0, Point3<SCALAR_TYPE> & t1)
+	{
+		typedef SCALAR_TYPE													ScalarType;
+		typedef typename vcg::Point3< ScalarType >	Point3t;
+
+		Point3t s = segment.P0() - sphere.Center();
+		Point3t r = segment.P1() - segment.P0();
+
+		ScalarType rho2 = sphere.Radius()*sphere.Radius();
+
+		ScalarType sr = s*r;
+		ScalarType r_squared_norm = r.SquaredNorm(); 
+		ScalarType s_squared_norm = s.SquaredNorm(); 
+		ScalarType sigma = sr*sr - r_squared_norm*(s_squared_norm-rho2);
+
+		if (sigma<ScalarType(0.0)) // the line containing the edge doesn't intersect the sphere
+			return 0;
+
+		ScalarType sqrt_sigma = ScalarType(sqrt( ScalarType(sigma) ));
+		ScalarType lambda1 = (-sr - sqrt_sigma)/r_squared_norm;
+		ScalarType lambda2 = (-sr + sqrt_sigma)/r_squared_norm;
+
+		int solution_count = 0;
+		if (ScalarType(0.0)<=lambda1 && lambda1<=ScalarType(1.0))
+		{
+			ScalarType t_enter = vcg::math::Max< ScalarType >(lambda1, ScalarType(0.0));
+			t0 = segment.P0() + r*t_enter;
+			solution_count++;
+		}
+
+		if (ScalarType(0.0)<=lambda2 && lambda2<=ScalarType(1.0))
+		{
+			Point3t *pt = (solution_count>0) ? &t1 : &t0;
+			ScalarType t_exit  = vcg::math::Min< ScalarType >(lambda2, ScalarType(1.0));
+			*pt = segment.P0() + r*t_exit;
+			solution_count++;
+		}
+		return solution_count;
+	}
 
   /// intersection between line and plane
   template<class T>
