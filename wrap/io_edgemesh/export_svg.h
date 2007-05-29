@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2007/05/21 13:22:40  cignoni
+Corrected gcc compiling issues
+
 Revision 1.3  2006/02/16 15:16:51  corsini
 Add reference plane support
 
@@ -59,30 +62,16 @@ public:
 	//! Stroke colors.
 	enum StrokeColor 
 	{
-		BLACK, 
-		SILVER,
-		GRAY,
-		WHITE,
-		MAROON,
-		RED,
-		PURPLE,
-		FUCHSIA,
-		GREEN,
-		LIME,
-		OLIVE,
-		YELLOW,
-		NAVY,
-		BLUE,
-		TEAL,
-		AQUA
+		BLACK, 		SILVER,		GRAY,		WHITE,
+		MAROON,		RED,		PURPLE,		FUCHSIA,
+		GREEN,		LIME,		OLIVE,		YELLOW,
+		NAVY,		BLUE,		TEAL,		AQUA
 	};
 
 	//! Stroke linecap types.
 	enum StrokeLineCap
 	{
-		BUTT,
-		ROUND,
-		SQUARE
+		BUTT,		ROUND,		SQUARE
 	};
 
 	static const int DEFAULT_LINE_WIDTH;
@@ -131,52 +120,35 @@ public:
 	//! Set the stroke color.
 	void setColor(enum StrokeColor color)
 	{
-		if (color == BLACK)
-			stroke_color = "black";
-		else if (color == SILVER)
-			stroke_color = "silver";
-		else if (color == GRAY)
-			stroke_color = "gray";
-		else if (color == WHITE)
-			stroke_color = "white";
-		else if (color == MAROON)
-			stroke_color = "maroon";
-		else if (color == RED)
-			stroke_color = "red";
-		else if (color == PURPLE)
-			stroke_color = "purple";
-		else if (color == FUCHSIA)
-			stroke_color = "fuchsia";
-		else if (color == GREEN)
-			stroke_color = "green";
-		else if (color == OLIVE)
-			stroke_color = "olive";
-		else if (color == LIME)
-			stroke_color = "lime";
-		else if (color == YELLOW)
-			stroke_color = "yellow";
-		else if (color == NAVY)
-			stroke_color = "navy";
-		else if (color == BLUE)
-			stroke_color = "blue";
-		else if (color == TEAL)
-			stroke_color = "teal";
-		else if (color == AQUA)
-			stroke_color = "aqua";
+	  switch (color)
+		{
+			case BLACK  : stroke_color = "black"; break;
+			case SILVER : stroke_color = "silver"; break;
+			case GRAY   : stroke_color = "gray"; break;
+			case WHITE  : stroke_color = "white"; break;
+			case MAROON : stroke_color = "maroon"; break;
+			case RED    : stroke_color = "red"; break;
+			case PURPLE : stroke_color = "purple"; break;
+			case FUCHSIA: stroke_color = "fuchsia"; break;
+			case GREEN  : stroke_color = "green"; break;
+			case OLIVE  : stroke_color = "olive"; break;
+			case LIME   : stroke_color = "lime"; break;
+			case NAVY   : stroke_color = "navy"; break;
+			case TEAL   : stroke_color = "teal"; break;
+			case AQUA   : stroke_color = "aqua"; break;
+			default: assert(0);
+		}
 	}
 
 	//! Set the line cap style.
 	void setLineCap(enum StrokeLineCap linecap)
 	{
-		if (linecap == BUTT)
-			stroke_linecap = "butt";
-		else if (linecap == ROUND)
-			stroke_linecap = "round";
-		else if (linecap == SQUARE)
-			stroke_linecap = "square";
+		if (linecap == BUTT)						stroke_linecap = "butt";
+		else if (linecap == ROUND)			stroke_linecap = "round";
+		else if (linecap == SQUARE)			stroke_linecap = "square";
 	}
 
-	void setPlane(double distance, Point3d &direction)
+	void setPlane(double distance, const Point3d &direction)
 	{
 		proj.SetDirection(direction);
 		proj.SetOffset(distance);
