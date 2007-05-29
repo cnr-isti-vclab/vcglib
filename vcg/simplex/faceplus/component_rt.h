@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2007/05/04 16:16:40  ganovelli
+standardized to component style
+
 Revision 1.1  2006/10/13 14:11:49  cignoni
 first version
 
@@ -39,7 +42,7 @@ namespace vcg {
 
 template <class CoordType>
 struct EdgePlaneInfo{
-  typename CoordType edge[3];
+	CoordType edge[3];
 	::vcg::Plane3<typename CoordType::ScalarType> plane;
 	typename CoordType::ScalarType edgescale;
 };
