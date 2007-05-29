@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2006/02/27 19:26:14  spinelli
+minor bug in Face-Face topology loop fixed
+
 Revision 1.17  2006/02/27 11:56:48  spinelli
 minor bug in Face-Face topology loop fixed
 
@@ -277,7 +280,7 @@ static void TestVertexFace(MeshType &m)
 			{
 				assert(!VFi.F()->IsD());
 				assert((VFi.F()->V(VFi.I()))==&(*vi));
-				VFi++;
+				++VFi;
 			}
 		}
 	}
