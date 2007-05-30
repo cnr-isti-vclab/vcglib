@@ -188,7 +188,6 @@ bool seed(bool outside = true, int start = -1) {
          mesh.vert[start].SetD();
         //bad luck. we should call seed again (assuming random pick) up to
         //some maximum tries. im lazy.
-        cout << "Isolated\n";
         return false;
       }
       //find the closest visited or boundary
@@ -198,7 +197,6 @@ bool seed(bool outside = true, int start = -1) {
           CVertex &v = mesh.vert[id];
           if(v.IsB() || v.IsV()) {
             mesh.vert[start].SetD();
-            cout << "visited near\n";
             return false;
           }
         }
@@ -270,7 +268,6 @@ bool seed(bool outside = true, int start = -1) {
       }
       
       if(!found) { //see bad luck above
-        cout << "No empty sphere\n";
         return false;
       }
       
@@ -536,7 +533,6 @@ int addFace() {
         getInSphere(middle, r + radius, targets, dists);
     
         if(targets.size() == 0) {
-          cout << "Isolated\n";
           return false; //this really would be strange but one never knows.
         }
     
@@ -587,7 +583,6 @@ int addFace() {
         }
         
         if(edge.candidate == -1) {
-          cout << "No candidate\n";
           return false;
         }
         Point3x n = ((mesh.vert[edge.candidate].P() - v0)^(v1 - v0)).Normalize();
@@ -595,7 +590,6 @@ int addFace() {
         if(normal * mesh.vert[edge.candidate].N() < 0 ||
            n * normal < crease ||
            nb[edge.candidate] >= 2) {
-           cout << "failed normal or crease\n";
           return false;
         }
            
