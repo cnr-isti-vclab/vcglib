@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/10/28 00:47:51  cignoni
+Better Doxygen documentation
+
 Revision 1.2  2004/05/10 14:42:17  ganovelli
 nimor changes
 
@@ -114,7 +117,7 @@ static void EdgeEdge(MeshType &m)
 
   vector<PVertex> v;
 	EdgeIterator pf;
-	vector<PVertex>::iterator p;
+	typename vector<PVertex>::iterator p;
 
 	if( m.en == 0 ) return;
 
@@ -132,12 +135,12 @@ static void EdgeEdge(MeshType &m)
 
 	int ne = 0;											// Numero di edge reali
 
-	vector<PVertex>::iterator pe,ps;
+	typename vector<PVertex>::iterator pe,ps;
 	for(ps = v.begin(),pe=v.begin();pe<=v.end();++pe)	// Scansione vettore ausiliario
 	{
 		if( pe==v.end() || *pe != *ps )					// Trovo blocco di edge uguali
 		{
-			vector<PVertex>::iterator q,q_next;
+			typename vector<PVertex>::iterator q,q_next;
 			for (q=ps;q<pe-1;++q)						// Scansione edge associati
 			{
 				assert((*q).z>=0);
@@ -179,7 +182,7 @@ static void VertexEdge(MeshType &m)
 		{
 			(*ei).Ev(j) = (*ei).V(j)->Ep();
 			(*ei).Zv(j) = (*ei).V(j)->Ei();
-			(*ei).V(j)->Ep() = &(*fi);
+			(*ei).V(j)->Ep() = &(*ei);
 			(*ei).V(j)->Ei() = j;
 		}
 	}

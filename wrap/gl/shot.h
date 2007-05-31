@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.12  2006/12/18 16:02:57  matteodelle
+minor eroor correction on variable names
+
 Revision 1.11  2006/12/18 15:26:24  callieri
 added a function to approximate a far plane value given a shot and the mesh bbox
 
@@ -67,7 +70,7 @@ Revision 1.2  2004/09/06 21:41:30  ganovelli
 Revision 1.1  2004/09/03 13:01:51  ganovelli
 creation
 
-/****************************************************************************/
+****************************************************************************/
 
 
 #ifndef __VCGLIB_GLSHOT
@@ -89,7 +92,7 @@ template <class ShotType>
 struct GlShot {
 
 	typedef typename ShotType::ScalarType ScalarType;
-	typedef typename GlCamera<typename ShotType::CameraType> GlCameraType;
+	typedef GlCamera<typename ShotType::CameraType> GlCameraType;
 
 /// returns the OpenGL 4x4 MODELVIEW matrix that describes the shot position and orientation (extrinsics)
 static void MatrixGL(ShotType & shot,vcg::Matrix44<ScalarType> & m) 
@@ -142,23 +145,23 @@ static ScalarType GetFarPlane(vcg::Shot<ScalarType> & shot, vcg::Box3<ScalarType
 {
 	ScalarType farDist;
 
-	Point3<ScalarType> farcorner;
-    Point3<ScalarType> campos = shot.Extrinsics.tra;
+	vcg::Point3<ScalarType> farcorner;
+    vcg::Point3<ScalarType> campos = shot.Extrinsics.tra;
 	 
-	 if (abs(campos.X() - mainmodel->bbox.max.X()) > abs(campos.X() - bbox.min.X()))
-		 farcorner.X() = mainmodel->bbox.max.X();
+	 if (abs(campos.X() - bbox.max.X()) > abs(campos.X() - bbox.min.X()))
+		 farcorner.X() = bbox.max.X();
 	 else
-		 farcorner.X() = mainmodel->bbox.min.X();
+		 farcorner.X() = bbox.min.X();
 
-	 if (abs(campos.Y() - mainmodel->bbox.max.Y()) > abs(campos.Y() - bbox.min.Y()))
-		 farcorner.Y() = mainmodel->bbox.max.Y();
+	 if (abs(campos.Y() - bbox.max.Y()) > abs(campos.Y() - bbox.min.Y()))
+		 farcorner.Y() = bbox.max.Y();
 	 else
-		 farcorner.Y() = mainmodel->bbox.min.Y();
+		 farcorner.Y() = bbox.min.Y();
 
-	 if (abs(campos.Z() - mainmodel->bbox.max.Z()) > abs(campos.Z() - bbox.min.Z()))
-		 farcorner.Z() = mainmodel->bbox.max.Z();
+	 if (abs(campos.Z() - bbox.max.Z()) > abs(campos.Z() - bbox.min.Z()))
+		 farcorner.Z() = bbox.max.Z();
 	 else
-		 farcorner.Z() = mainmodel->bbox.min.Z();
+		 farcorner.Z() = bbox.min.Z();
 
 	 farDist = (campos - farcorner).Norm();
 

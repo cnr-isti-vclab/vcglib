@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.14  2006/12/18 16:02:57  matteodelle
+minor eroor correction on variable names
+
 Revision 1.13  2006/12/18 14:28:07  matteodelle
 *** empty log message ***
 
@@ -68,7 +71,7 @@ changed from classes to functions
 Revision 1.1  2004/09/15 22:59:13  ganovelli
 creation
 
-/****************************************************************************/
+****************************************************************************/
 
 
 #ifndef __GL_CAMERA

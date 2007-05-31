@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2006/07/06 12:30:32  ganovelli
+misleading comment removed
+
 Revision 1.10  2005/12/14 17:14:13  pietroni
 added assert on deleted flag condition
 
@@ -101,9 +104,9 @@ template <class S_MESH_TYPE, class STL_CONT>
 void SubSet(S_MESH_TYPE & m, STL_CONT & subSet)
 {
   std::vector< InsertedV<S_MESH_TYPE> > newVertices;
-  STL_CONT::iterator pfi;
-  S_MESH_TYPE::VertexIterator vi;
-  std::vector<S_MESH_TYPE::VertexPointer> redirect;
+  typename STL_CONT::iterator pfi;
+  typename S_MESH_TYPE::VertexIterator vi;
+  std::vector<typename S_MESH_TYPE::VertexPointer> redirect;
   
   for(pfi=subSet.begin(); pfi!=subSet.end(); ++pfi)
   {		
@@ -111,7 +114,7 @@ void SubSet(S_MESH_TYPE & m, STL_CONT & subSet)
 		m.face.push_back(*(*pfi));
   }
   
-  S_MESH_TYPE::FaceIterator fi;
+  typename S_MESH_TYPE::FaceIterator fi;
   for(fi=m.face.begin(); fi!=m.face.end(); ++fi)
   {
     newVertices.push_back(InsertedV<S_MESH_TYPE>((*fi).V(0), &(*fi),0));
@@ -121,19 +124,19 @@ void SubSet(S_MESH_TYPE & m, STL_CONT & subSet)
   
   sort(newVertices.begin(), newVertices.end());
   
-  std::vector< InsertedV<S_MESH_TYPE> >::iterator curr, next;
+  typename std::vector< InsertedV<S_MESH_TYPE> >::iterator curr, next;
   int pos=0;
   curr=next=newVertices.begin();
   while(next!=newVertices.end())
   {
     if((*curr)!=(*next))
 	  pos++;
-	(*next).f->V((*next).z)=(S_MESH_TYPE::VertexPointer)pos;
+	(*next).f->V((*next).z)=(typename S_MESH_TYPE::VertexPointer)pos;
 	curr=next;
 	next++;
   }
   
-  std::vector< InsertedV<S_MESH_TYPE> >::iterator newE=unique(newVertices.begin(), newVertices.end());
+  typename std::vector< InsertedV<S_MESH_TYPE> >::iterator newE=unique(newVertices.begin(), newVertices.end());
   for(curr=newVertices.begin(); curr!=newE; ++curr)
     m.vert.push_back(*((*curr).v));
   

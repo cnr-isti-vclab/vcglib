@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2007/05/21 11:12:10  cignoni
+Corrected gcc compiling issues
+
 Revision 1.7  2006/01/19 14:18:08  spinelli
 fix bug end iterator++
 

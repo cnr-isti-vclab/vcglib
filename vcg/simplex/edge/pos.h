@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/05/10 14:40:47  ganovelli
+name of adhacency function updated
+
 Revision 1.1  2004/05/10 14:01:56  ganovelli
 created
 
@@ -84,14 +87,14 @@ public:
 	/// The vertex type
 	typedef	typename EDGETYPE::VertexType VertexType;
 	/////The HEdgePos type
-	typedef typename Pos< EDGETYPE> POSTYPE;
+	typedef Pos< EDGETYPE> POSTYPE;
 	///// The vector type
 	//typedef typename MVTYPE::coord_type vectorial_type;
 	///// The scalar type
 	//typedef typename MVTYPE::scalar_type scalar_type;
 
 	/// Pointer to the face of the half-edge
-	typename EDGETYPE *e;
+	EDGETYPE *e;
 	/// Pointer to the vertex
 	VertexType *v;
 
@@ -167,7 +170,7 @@ public:
 	// return the vertex that it should have if we make FlipV;
 	VertexType *VFlip()
 	{
-		return (t->V(0)==v)?t->V(1):t->V(0);
+		return (e->V(0)==v)?e->V(1):e->V(0);
 	}
 
 	// Trova il prossimo half-edge di bordo (nhe)
@@ -202,14 +205,14 @@ public:
 	}
 
 	/// Checks if the half-edge is of border
-	bool IsBorder()
-	{
+	//bool IsBorder()
+	//{
 		//return f->IsBorder(z);
-	}
+	//}
 
 	/// Return the dimension of the star
-	int StarSize()
-	{
+	//int StarSize()
+	//{
 		//int n=0;
 		//POSTYPE ht=*this;
 		//bool bf=false;
@@ -222,7 +225,7 @@ public:
 
 		//if(bf) return n/2;
 		//else return n;
-	}
+	//}
 
 	/** Function to inizialize an half-edge.
 		@param fp Puntatore alla faccia
@@ -256,10 +259,10 @@ public:
 
 	// Controlla la coerenza di orientamento di un hpos con la relativa faccia
 	/// Checks the orientation coherence of a half-edge with the face
-	inline bool Coherent() const
-	{
-		return v == f->V(z);	// e^(ip)+1=0 ovvero E=mc^2
-	}
+	//inline bool Coherent() const
+	//{
+	//	return v == f->V(z);	// e^(ip)+1=0 ovvero E=mc^2
+	//}
 
 };
 	}	 // end namespace
