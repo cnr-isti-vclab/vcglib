@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2007/05/22 15:19:42  cignoni
+Added VertexClear
+
 Revision 1.18  2007/01/30 18:49:23  tarini
 aggiunta la VertexBorderFromNone (flag bordo per vertici senza richiedere nulla)
 
@@ -307,7 +310,7 @@ static void FaceBorderFromNone(MeshType &m)
 	sort(e.begin(), e.end());							// Lo ordino per vertici
 	
 	typename std::vector<EdgeSorter>::iterator pe,ps;
-	for(ps = e.begin(), pe = e.begin(); pe < e.end(); ++pe)	// Scansione vettore ausiliario
+	for(ps = e.begin(), pe = e.begin(); ps < e.end(); ++pe)	// Scansione vettore ausiliario
 	{
 		if( pe==e.end() ||  *pe != *ps )					// Trovo blocco di edge uguali
 		{
