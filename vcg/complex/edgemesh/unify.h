@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/10/03 16:16:54  spinelli
+used new version of grid query
+
 Revision 1.7  2005/09/19 13:10:12  spinelli
 fixed bugs
 
@@ -106,7 +109,7 @@ namespace vcg
 					return v->IsD();
 				}
 			};
-			typedef typename GridStaticPtr<	PVertex > GridType;
+			typedef GridStaticPtr<	PVertex > GridType;
 
 			static void Join(PVertex pv0,PVertex & pv1){
 				pv1.e->V(pv1.z) = pv0.v;
