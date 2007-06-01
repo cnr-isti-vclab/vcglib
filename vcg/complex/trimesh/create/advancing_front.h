@@ -50,9 +50,10 @@ template <class MESH> class AdvancingFront {
   MESH &mesh;           //this structure will be filled by the algorithm
   
   AdvancingFront(MESH &_mesh): mesh(_mesh) {
+//    UpdateFlags<MESH>::VertexClear(mesh);
+    UpdateFlags<MESH>::Clear(mesh);    
 //    UpdateTopology<MESH>::VertexFace(mesh);
   //UpdateTopology<MESH>::TestVertexFace(mesh); //odd i would like to return a false not an assert...
-    UpdateFlags<MESH>::VertexClear(mesh);
 //    UpdateFlags<MESH>::FaceBorderFromVF(mesh);
     UpdateFlags<MESH>::FaceBorderFromNone(mesh);   
     UpdateFlags<MESH>::VertexBorderFromFace(mesh);     
@@ -63,6 +64,7 @@ template <class MESH> class AdvancingFront {
     CreateLoops();
   }
   virtual ~AdvancingFront() {}
+  virtual ScalarType radi() { return 0; }
                         
   void BuildMesh(CallBackPos call = NULL, int interval = 512) {        
     while(1) {
@@ -110,8 +112,7 @@ protected:
         if(f.IsB(k)) {
           NewEdge(FrontEdge(f.V0(k) - start, f.V1(k) - start, f.V2(k) - start, i));     
           nb[f.V0(k)-start]++;
-        }
-          
+        }          
       }
     }
   
@@ -126,9 +127,13 @@ protected:
         if((*s).v1 != (*j).v0) continue;
         if((*j).previous != front.end()) continue;
         (*s).next = j;
-        (*j).previous = s;
-  
+        (*j).previous = s;  
+        break;
       }
+    }
+    for(std::list<FrontEdge>::iterator s = front.begin(); s != front.end(); s++) { 
+      assert((*s).next != front.end());
+      assert((*s).previous != front.end());      
     }
   }   
   
@@ -171,7 +176,6 @@ protected:
   
 public:  
   bool AddFace() {
-  
     if(!front.size()) {
       return SeedFace();    
     }
@@ -185,7 +189,6 @@ public:
     assert(nb[v0] < 10 && nb[v1] < 10);
         
     std::list<FrontEdge>::iterator touch = front.end();
-  
     int v2 = Place(current, touch);
     if(v2 == -1) {
       KillEdge(ei);
@@ -195,15 +198,15 @@ public:
     assert(v2 != v0 && v2 != v1);  
         
     if(touch != front.end()) {       
-  
       //check for orientation and manifoldness    
-      if(!CheckEdge(v0, v2) || !CheckEdge(v2, v1)) {                      
-        KillEdge(ei);
-        return 0;
-      }
+      //if(!CheckEdge(v0, v2) || !CheckEdge(v2, v1)) {                      
+      
       //touch == current.previous?  
       if(v2 == previous.v0) {   
-               
+        if(!CheckEdge(v2, v1)) {
+          KillEdge(ei);
+          return 0;
+        }       
           /*touching previous FrontEdge  (we reuse previous)        
                                     next
              ------->v2 -----> v1------>
@@ -224,11 +227,13 @@ public:
         Erase(current.previous);
         Erase(ei);
         Glue(up);
-          
+
       //touch == (*current.next).next         
-      } else if(v2 == next.v1) {
-        
-               
+      } else if(v2 == next.v1) {    
+        if(!CheckEdge(v0, v2)) {
+          KillEdge(ei);
+          return 0;
+        }     
         /*touching next FrontEdge  (we reuse next)        
           previous
              ------->v0 -----> v2------>
@@ -248,9 +253,11 @@ public:
         Erase(current.next);
         Erase(ei);
         Glue(up);
-              
       } else {
-    
+        if(!CheckEdge(v0, v2) || !CheckEdge(v2, v1)) {
+          KillEdge(ei);
+          return 0;
+        } 
       //touching some loop: split (or merge it is local does not matter.
       //like this 
       /*                 
@@ -293,7 +300,8 @@ public:
               
       
     } else {
-      
+        assert(CheckEdge(v0, v2));
+        assert(CheckEdge(v2, v1));
         /*  adding a new vertex
                  
                            v2
@@ -304,26 +312,21 @@ public:
                       /         V
                  ----v0 - - - > v1--------- */
         assert(!mesh.vert[v2].IsB()); //fatal error! a new point is already a border?
-                    
         nb[v2]++;                 
         mesh.vert[v2].SetB();
-  
+
         std::list<FrontEdge>::iterator down = NewEdge(FrontEdge(v2, v1, v0, mesh.face.size()));
         std::list<FrontEdge>::iterator up = NewEdge(FrontEdge(v0, v2, v1, mesh.face.size()));                        
   
-  
         (*down).previous = up;
         (*up).next = down;
-  
         (*down).next = current.next;
         next.previous = down;
-        
         (*up).previous = current.previous;
         previous.next = up;
-        
         Erase(ei);
       }
-  
+
       AddFace(v0, v2, v1);
       return 1;
   }       
@@ -360,17 +363,18 @@ protected:
   bool CheckEdge(int v0, int v1) {
     int tot = 0;
     //HACK to speed up things until i can use a seach structure
-    int i = mesh.face.size() - 4*(front.size());
+/*    int i = mesh.face.size() - 4*(front.size());
     if(front.size() < 100) i = mesh.face.size() - 100;
-  //      i = 0;
-    if(i < 0) i = 0;
-    for(; i < (int)mesh.face.size(); i++) { 
+    if(i < 0) i = 0;*/
+    VertexType *vv0 = &(mesh.vert[v0]);
+    VertexType *vv1 = &(mesh.vert[v1]);    
+    
+    for(int i = 0; i < (int)mesh.face.size(); i++) { 
       FaceType &f = mesh.face[i];
       for(int k = 0; k < 3; k++) {
-        if(v1== (int)f.V(k) && v0 == (int)f.V((k+1)%3)) ++tot;
-        else if(v0 == (int)f.V(k) && v1 == (int)f.V((k+1)%3)) { //orientation non constistent
-           return false;
-        }
+        if(vv0 == f.V0(k) && vv1 == f.V1(k))  //orientation non constistent
+           return false;              
+        else if(vv1 == f.V0(k) && vv0 == f.V1(k)) ++tot;
       }
       if(tot >= 2) { //non manifold
         return false;

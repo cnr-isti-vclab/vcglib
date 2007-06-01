@@ -29,6 +29,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
   float max_angle;       //max angle between 2 faces (cos(angle) actually)  
   
  public:
+  ScalarType radi() { return radius; }        
   BallPivoting(MESH &_mesh, float _radius = 0, 
                float minr = 0.2, float angle = M_PI/2): 
                      
@@ -37,8 +38,15 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
     last_seed(-1) {
                   
     //compute bbox
-    for(int i = 0; i < (int)this->mesh.vert.size(); i++)
-      this->mesh.bbox.Add(this->mesh.vert[i].P());
+    baricenter = Point3x(0, 0, 0);
+    int count = 0;
+    this->mesh.bbox = Box3<ScalarType>();
+    for(int i = 0; i < (int)this->mesh.vert.size(); i++) {
+      VertexType &v = this->mesh.vert[i];
+      if(v.IsD()) continue;
+      this->mesh.bbox.Add(v.P());
+      baricenter += v.P();
+    }
     
     assert(this->mesh.vn > 3);
     if(radius == 0)
@@ -133,11 +141,12 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
             if(d0 < min_edge || d0 > max_edge) continue;
             
             Point3x normal = (p1 - p0)^(p2 - p0);
-            if(use_normals) {             
+            if(normal * (p0 - baricenter) > 0) continue;
+/*            if(use_normals) {             
               if(normal * vv0->N() < 0) continue;
               if(normal * vv1->N() < 0) continue;
               if(normal * vv2->N() < 0) continue;
-            }
+            }*/
             
             if(!FindSphere(p0, p1, p2, center)) {
               continue;
@@ -197,15 +206,20 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
     
     Point3x normal = ((v1 - v0)^(v2 - v0)).Normalize();        
     Point3x middle = (v0 + v1)/2;    
-    Point3x center;
-    
-    if(!FindSphere(v0, v1, v2, center)) return -1;
+    Point3x center;    
+
+    if(!FindSphere(v0, v1, v2, center)) {
+//      assert(0);
+      return -1;
+    }
     
     Point3x start_pivot = center - middle;          
     Point3x axis = (v1 - v0);
     
     ScalarType axis_len = axis.SquaredNorm();
-    if(axis_len > 4*radius*radius) return false;
+    if(axis_len > 4*radius*radius) {
+      return -1;
+    }
     axis.Normalize();
     
     // r is the radius of the thorus of all possible spheres passing throug v0 and v1
@@ -218,7 +232,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
     int n = trimesh::GetInSphereVertex(this->mesh, grid, middle, r + radius, targets, dists, points);
           
     if(targets.size() == 0) {
-      return false; //this really would be strange but one never knows.
+      return -1; //this really would be strange but one never knows.
     }
     
     VertexType *candidate = NULL;
@@ -268,20 +282,24 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
         min_angle = alpha;
       } 
     }
-    if(min_angle >= M_PI - 0.1) return -1;
+    if(min_angle >= M_PI - 0.1) {
+      return -1;
+    }
         
     if(candidate == NULL) {
       return -1;
     }
-    assert((candidate->P() - v0).Norm() > min_edge);
-    assert((candidate->P() - v1).Norm() > min_edge);    
+    if(!candidate->IsB()) {
+      assert((candidate->P() - v0).Norm() > min_edge);
+      assert((candidate->P() - v1).Norm() > min_edge);    
+    }
     
     int id = candidate - &*this->mesh.vert.begin();
     assert(id != edge.v0 && id != edge.v1);
     
     Point3x newnormal = ((candidate->P() - v0)^(v1 - v0)).Normalize();
-    if(normal * newnormal < max_angle || this->nb[id] >= 2) {   
-       return -1;
+    if(normal * newnormal < max_angle || this->nb[id] >= 2) {  
+      return -1;
     }
     //test if id is in some border (to return touch
     for(list<FrontEdge>::iterator k = this->front.begin(); k != this->front.end(); k++)
@@ -297,6 +315,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
  private:
   int last_seed;     //used for new seeds when front is empty
   int usedBit;       //use to detect if a vertex has been already processed.
+  Point3x baricenter;//used for the first seed.
   
   StaticGrid grid;       //lookup grid for points
   
@@ -305,14 +324,32 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
      the normal of the face points toward the center of the sphere */
      
   bool FindSphere(Point3x &p0, Point3x &p1, Point3x &p2, Point3x &center) {
-    Point3x q1 = p1 - p0;
-    Point3x q2 = p2 - p0;  
+    //we want p0 to be always the smallest one.
+    Point3x p[3];
+    
+    if(p0 < p1 && p0 < p2) {
+      p[0] = p0;
+      p[1] = p1;
+      p[2] = p2;          
+    } else if(p1 < p0 && p1 < p2) {
+      p[0] = p1;
+      p[1] = p2;
+      p[2] = p0;
+    } else {
+      p[0] = p2;
+      p[1] = p0;
+      p[2] = p1;
+    }
+    Point3x q1 = p[1] - p[0];
+    Point3x q2 = p[2] - p[0];  
   
     Point3x up = q1^q2;
     ScalarType uplen = up.Norm();
   
     //the three points are aligned
-    if(uplen < 0.001*q1.Norm()*q2.Norm()) return false;
+    if(uplen < 0.001*q1.Norm()*q2.Norm()) {
+      return false;
+    }
     up /= uplen;
     
   
@@ -326,10 +363,12 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
   
     center = q1*l1 + q2*l2;
     ScalarType circle_r = center.Norm();
-    if(circle_r > radius) return false; //need too big a sphere
+    if(circle_r > radius) {
+      return false; //need too big a sphere
+    }
   
     ScalarType height = sqrt(radius*radius - circle_r*circle_r);
-    center += p0 + up*height;
+    center += p[0] + up*height;
   
     return true;
   }         
