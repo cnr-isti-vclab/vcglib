@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2007/03/12 15:37:21  tarini
+Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
+
 Revision 1.21  2007/02/18 07:41:32  cignoni
 Corrected small syntax errors detected by gcc
 
@@ -344,6 +347,34 @@ public:
 private:
   typename T::FacePointer _fp ;    
   int _zp ;    
+};
+
+/*----------------------------- VTADJ ------------------------------*/ 
+
+
+template <class T> class EmptyVTAdj: public T {
+public:
+	typename T::TetraPointer &VTp() { static typename T::TetraPointer tp = 0;  assert(0); return tp; }
+	typename T::TetraPointer cVTp() { static typename T::TetraPointer tp = 0;  assert(0); return tp; }
+	int &VTi() { static int z = 0; return z; };
+	static bool HasVTAdjacency() { return false; }
+	static bool HasVTAdjacencyOcc() { return false; }
+	static void Name( std::vector< std::string > & name ) { T::Name(name); }
+};
+
+template <class T> class VTAdj: public T {
+public:
+	VTAdj() { _tp = 0; }
+	typename T::TetraPointer &VTp() { return _tp; }
+	typename T::TetraPointer cVTp() { return _tp; }
+	int &VTi() {return _zp; }
+	static bool HasVTAdjacency() { return true; }
+	static bool HasVTAdjacencyOcc()   {   return true; }
+	static void Name( std::vector< std::string > & name ) { name.push_back( std::string("VTAdj") ); T::Name(name); }
+
+private:
+	typename T::TetraPointer _tp ;    
+	int _zp ;    
 };
 
   } // end namespace vert
