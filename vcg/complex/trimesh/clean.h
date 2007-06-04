@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.51  2007/03/27 09:23:32  cignoni
+added honoring of selected flag for flipmesh
+
 Revision 1.50  2007/03/12 15:38:03  tarini
 Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
 
@@ -602,7 +605,7 @@ private:
 							face::VFIterator<FaceType> vfi(&*vi);
 							face::Pos<FaceType> pos((*vi).VFp(), &*vi);
 
-							starSizeFF = pos.StarSize();
+							starSizeFF = pos.NumberOfIncidentFaces();
 
 							starSizeVF = 0;
 							while(!vfi.End())
