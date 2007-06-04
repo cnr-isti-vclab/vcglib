@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2007/05/09 10:31:53  ganovelli
+added
+
 
 
 ****************************************************************************/
@@ -33,7 +36,7 @@ $Log: not supported by cvs2svn $
 #include <vcg/space/point3.h>
 #include <vcg/space/texcoord2.h>
 #include <vcg/space/color4.h>
-#include <vcg/simplex/faceplus/component.h>
+#include <vcg/simplex/tetrahedronplus/component.h>
 
 namespace vcg {
 
