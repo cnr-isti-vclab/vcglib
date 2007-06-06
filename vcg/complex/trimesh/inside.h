@@ -22,7 +22,13 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
+/****************************************************************************
+  History
 
+$Log: not supported by cvs2svn $
+
+
+****************************************************************************/
 #include <vcg/space/ray3.h>
 #include <vcg/space/box3.h>
 
@@ -57,7 +63,7 @@ namespace vcg {
 				typedef typename TriMeshType::ScalarType ScalarType;
 				typedef typename TriMeshType::CoordType CoordType;
 
-				const ScalarType EPSILON 0.000001;
+				const ScalarType EPSILON=0.000001;
 
 				///first test if the element is inside the bb of the mesh
 				if (!m.bbox.IsIn(test))
