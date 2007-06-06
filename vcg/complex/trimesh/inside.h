@@ -26,11 +26,15 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2007/06/06 14:26:51  pietroni
+compiling error resolved
+
 
 
 ****************************************************************************/
 #include <vcg/space/ray3.h>
 #include <vcg/space/box3.h>
+#include <vcg/space/triangle3.h>
 
 #ifndef VCG_INSIDE
 #define VCG_INSIDE
@@ -93,7 +97,7 @@ namespace vcg {
 					///then see normal value again
 					else
 					{
-						CoordType bary=f->Barycenter();
+						CoordType bary = vcg::Barycenter< FaceType >(*f);
 						vcg::Ray3<ScalarType> r;
 						r.Set(test,(bary-test));///set origin and direction
 						r.Normalize();
