@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.24  2006/12/06 17:47:50  marfr960
+end() replaced by pointer lastPlusOne
+
 Revision 1.23  2006/10/02 09:25:49  ganovelli
 reverted to version 1.20 for critical bug
 
@@ -360,7 +363,7 @@ namespace vcg{
             Point3i &siz = this->siz;
             CoordType &voxel = this->voxel;
 
-			int _size=std::distance<OBJITER>(_oBegin,_oEnd);
+			int _size=(int)std::distance<OBJITER>(_oBegin,_oEnd);
 			if(!_bbox.IsNull()) this->bbox=_bbox;
 			else
 			{
