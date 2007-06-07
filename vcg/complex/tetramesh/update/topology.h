@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2006/12/03 14:56:30  ganovelli
+*** empty log message ***
+
 Revision 1.16  2006/06/29 13:07:33  ganovelli
 Aggiunta superclasse UpdateTopology templated sui container e con funzioni sui container
 
@@ -204,128 +207,114 @@ public:
 **/
 //@{
 
-  ///create the VT topology for tetrahedrons that are into containers
-static void VTTopology(VertexContainer &vert,TetraContainer &tetra)
-	{
-			VertexIterator v;
-			TetraIterator  t;
 
-			ClearVTTopology(vert,tetra);
-
-			for(t=tetra.begin();t!=tetra.end();++t)
-			if( ! (*t).IsD())
-				for(int j=0;j<4;++j)
-				{
-					(*t).TVp(j) = (*t).V(j)->VTp();
-					(*t).TVi(j) = (*t).V(j)->VTi();
-					(*t).V(j)->VTp() = &(*t);
-					(*t).V(j)->VTi() = j;
-				}
-	
-	}
-
-  /// clear the Vertex-Tetra topology
-static void ClearVTTopology(VertexContainer &vert,TetraContainer &tetra)
-	{
-		VertexIterator v;
-		for(v=vert.begin();v!=vert.end();++v)
+/// Create the VT topology for tetrahedrons that are into containers.
+static void VTTopology( VertexContainer & vert, TetraContainer & tetra )
+{
+	ClearVTTopology( vert, tetra );
+	for( TetraIterator t = tetra.begin(); t != tetra.end(); ++t )
+		if( !(*t).IsD() )
+			for( int j = 0; j < 4; ++j )
 			{
-				v->VTp() = 0;
-				v->VTi() = 0;
+				(*t).VTp(j) = (*t).V(j)->VTp();
+				(*t).VTi(j) = (*t).V(j)->VTi();
+				(*t).V(j)->VTp() = &(*t);
+				(*t).V(j)->VTi() = j;
 			}
-
-		TetraIterator   t;
-		for(t=tetra.begin();t!=tetra.end();++t)	
-			if( ! (*t).IsD())
-			for(int j=0;j<4;++j)
-				{
-					(*t).TVp(j) = 0;
-					(*t).TVi(j) = 0;
-				}
 }
 
-///erase one tetrahedron from VTTopology of all his vertices
 
-static void DetachVTTopology(TetraType *t)
-	{	
-		int i;
-			if( ! (*t).IsD())
-		for(i=0;i<4;i++)
-			DetachVTTopology(t->V(i),t);
+/// Clear the vertex-tetra (VT) topology.
+static void ClearVTTopology( VertexContainer & vert, TetraContainer & tetra )
+{
+	for( VertexIterator v = vert.begin(); v != vert.end(); ++v ) { v->VTp() = 0; v->VTi() = 0; }
+	for( TetraIterator t = tetra.begin(); t != tetra.end(); ++t )
+		if( ! (*t).IsD() )
+			for( int j = 0; j < 4; ++j ) { (*t).VTp(j) = 0; (*t).VTi(j) = 0; }
+}
+
+
+/// Erase one tetrahedron from VTTopology of all his vertices.
+static void DetachVTTopology( TetraType *t )
+{
+	if( ! (*t).IsD() )
+		for( int i = 0; i < 4; i++ ) DetachVTTopology( t->V(i), t );
+}
+
+
+/// Erase one tetrahedron from VTTopology of one specified vertex.
+static void DetachVTTopology( VertexType *v, TetraType *t )
+{
+	TetraType *lastt;
+	int lastz;
+	VTIterator<TetraType> Et( v->VTb(), v->VTi() );
+	if( Et.Vt() == t )
+	{
+		v->VTb() = (TetraType *) t->VTp( v->VTi() );
+		v->VTi() = t->VTi( v->VTi() );
 	}
-
-///erase one tetrahedron from VTTopology of one specified vertex
-static void DetachVTTopology(VertexType *v,TetraType *t)
-	{	
-		TetraType *lastt;
-		int lastz;
-		VTIterator<TetraType> Et(v->VTb(),v->VTi());
-		if (Et.Vt()==t)
+	else
+	{
+		lastz = Et.Vi();
+		while( ( Et.Vt() != t ) && ( !Et.End() ) )
 		{
-			v->VTb()=(TetraType *)t->TVp(v->VTi());
-			v->VTi()=t->TVi(v->VTi());
+			lastz = Et.Vi();
+			lastt = Et.Vt();
+			++Et;
 		}
-		else
-		{	
-			lastz=Et.Vi();
-			while((Et.Vt()!=t)&&(!Et.End()))
-			{	
-				lastz=Et.Vi();
-				lastt=Et.Vt();
-				++Et;
-			}
-			//in the list of the vertex v must be present the 
-			//tetrahedron that you want to detach
-			assert(Et.Vt()!=NULL);
-			lastt->TVp(lastz)=Et.Vt()->TVp(Et.Vi());
-			lastt->TVi(lastz)=Et.Vt()->TVi(Et.Vi());
-		}
+		/// In the list of the vertex v must be present the tetrahedron that you want to detach
+		assert( Et.Vt() != NULL );
+		lastt->VTp(lastz) = Et.Vt()->VTp( Et.Vi() );
+		lastt->VTi(lastz) = Et.Vt()->VTi( Et.Vi() );
 	}
-
-///insert the tetrahedron t in VT topology for vertex v of index z
-static void InsertVTTopology(VertexType *v,int z, TetraType *t)
-	{
-		if( ! (*t).IsD())
-				{
-					 t->TVp(z) = v->VTb();
-					 t->TVi(z) = v->VTi();
-					 v->VTb() = &(*t);
-					 v->VTi() = z;
-				}
 }
 
 
-///insert the tetrahedron t in VT topology for all his vertices
-static void InsertVTTopology( TetraType *t)
-	{	
-		assert(!t->IsD());
-		int k=0;
-		for (k=0;k<4;k++)
-			{
-					assert(!t->V(k)->IsD());
-					InsertVTTopology(t->V(k),k,t);
-			}		
+/// Insert the tetrahedron t in VT topology for vertex v of index z.
+static void InsertVTTopology( VertexType *v, int z, TetraType *t )
+{
+	if( ! (*t).IsD() )
+	{
+		t->VTp(z) = v->VTb();
+		t->VTi(z) = v->VTi();
+		v->VTb() = &(*t);
+		v->VTi() = z;
+	}
 }
 
-  ///Test the Tetrahedron-Tetrahedron Topology (by Face)
-static void TestVTTopology(VertexContainer &vert,TetraContainer &tetra)
+
+/// Insert the tetrahedron t in VT topology for all his vertices.
+static void InsertVTTopology( TetraType *t )
+{
+	assert( !( t->IsD() ) );
+	for( int k = 0; k < 4; k++ )
 	{
-    int i;
-		for (VertexIterator vi=vert.begin();vi!=vert.end();vi++)
-				if (!(*vi).IsD())
-        {	
-            TetraType *nextT=vi->VTb();
-            int nextI=vi->VTi();
+		assert( !( t->V(k)->IsD() ) );
+		InsertVTTopology( t->V(k), k, t );
+	}		
+}
+
+
+/// Test the Tetrahedron-Tetrahedron (TT) topology (by face).
+static void TestVTTopology( VertexContainer & vert, TetraContainer & tetra )
+{
+	int i;
+	for( VertexIterator vi = vert.begin(); vi != vert.end(); vi++ )
+		if( !(*vi).IsD() )
+        {
+			TetraType *nextT = vi->VTb();
+			int nextI = vi->VTi();
             int oldI;
-            while(nextT!=NULL)
+            while( nextT != NULL )
             {
-              assert((nextT->V(nextI)==&(*vi)));
-              oldI=nextI;
-              nextI=nextT->TVi(nextI);
-              nextT=nextT->TVp(oldI);
+				assert( ( nextT->V(nextI) == &(*vi) ) );
+				oldI = nextI;
+				nextI = nextT->VTi(nextI);
+				nextT = nextT->VTp(oldI);
             }
-    }
-  }
+		}
+}
+
 
 /*@}*/
 /***********************************************/
