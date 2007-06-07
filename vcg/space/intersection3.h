@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.32  2007/05/29 14:33:29  fiorin
+Added IntersectionSegmentSphere
+
 Revision 1.31  2007/04/16 09:08:15  cignoni
 commented out non compiling intersectionSpherePlane
 
@@ -134,6 +137,7 @@ Initial Commit
 #ifndef __VCGLIB_INTERSECTION_3
 #define __VCGLIB_INTERSECTION_3
 
+#include <vcg/math/base.h>
 #include <vcg/space/point3.h>
 #include <vcg/space/line3.h>
 #include <vcg/space/ray3.h>
@@ -230,7 +234,102 @@ namespace vcg {
 			solution_count++;
 		}
 		return solution_count;
-	}
+	}; // end of IntersectionSegmentSphere
+
+	
+	/*!
+	* Compute the intersection between a sphere and a triangle.
+	* \param[in]	sphere		the input sphere
+	* \param[in]	triangle	the input triangle
+	* \param[out]	witness		if intersection is detected, it is the point on the triangle nearest to the center of the sphere
+	* \param[out] res				if not null, in the first item is stored the minimum distance between the triangle and the sphere,
+	*                       while in the second item is stored the penetration depth
+	* \return			true			iff there is an intersection between the sphere and the triangle
+	*/
+	template < class SCALAR_TYPE >
+	bool IntersectionSphereTriangle(const vcg::Sphere3	< SCALAR_TYPE >		& sphere  ,
+																	const vcg::Triangle3< SCALAR_TYPE >		& triangle, 
+																	vcg::Point3					< SCALAR_TYPE >		& witness ,
+																	std::pair< SCALAR_TYPE, SCALAR_TYPE > * res=NULL)
+	{
+		typedef SCALAR_TYPE														ScalarType;
+		typedef typename vcg::Point3< ScalarType >		Point3t;
+		typedef typename vcg::Triangle3< ScalarType > Triangle3t;
+
+		bool penetration_detected = false;
+
+		ScalarType radius = sphere.Radius();
+		Point3t	center = sphere.Center();
+		Point3t p0 = triangle.P(0)-center;
+		Point3t p1 = triangle.P(1)-center;
+		Point3t p2 = triangle.P(2)-center;
+
+		Point3t p10 = p1-p0;
+		Point3t p21 = p2-p1;
+		Point3t p20 = p2-p0;
+
+		ScalarType delta0_p01 =  p10*p1;
+		ScalarType delta1_p01 = -p10*p0;
+		ScalarType delta0_p02 =  p20*p2;
+		ScalarType delta2_p02 = -p20*p0;
+		ScalarType delta1_p12 =  p21*p2;
+		ScalarType delta2_p12 = -p21*p1;
+
+		// the closest point can be one of the vertices of the triangle
+		if			(delta1_p01<=ScalarType(0.0) && delta2_p02<=ScalarType(0.0)) { witness = p0; }
+		else if (delta0_p01<=ScalarType(0.0) && delta2_p12<=ScalarType(0.0)) { witness = p1; }
+		else if (delta0_p02<=ScalarType(0.0) && delta1_p12<=ScalarType(0.0)) { witness = p2; }
+		else
+		{
+			ScalarType temp = p10*p2;
+			ScalarType delta0_p012 = delta0_p01*delta1_p12 + delta2_p12*temp;
+			ScalarType delta1_p012 = delta1_p01*delta0_p02 - delta2_p02*temp;
+			ScalarType delta2_p012 = delta2_p02*delta0_p01 - delta1_p01*(p20*p1);
+
+			// otherwise, can be a point lying on same edge of the triangle
+			if (delta0_p012<=ScalarType(0.0)) 
+			{
+				ScalarType denominator = delta1_p12+delta2_p12;
+				ScalarType mu1 = delta1_p12/denominator;
+				ScalarType mu2 = delta2_p12/denominator;
+				witness = (p1*mu1 + p2*mu2);
+			}
+			else if (delta1_p012<=ScalarType(0.0))
+			{
+				ScalarType denominator = delta0_p02+delta2_p02;
+				ScalarType mu0 = delta0_p02/denominator;
+				ScalarType mu2 = delta2_p02/denominator;
+				witness = (p0*mu0 + p2*mu2);
+			}
+			else if (delta2_p012<=ScalarType(0.0))
+			{
+				ScalarType denominator = delta0_p01+delta1_p01;
+				ScalarType mu0 = delta0_p01/denominator;
+				ScalarType mu1 = delta1_p01/denominator;
+				witness = (p0*mu0 + p1*mu1);
+			}
+			else
+			{
+				// or else can be an point internal to the triangle
+				ScalarType denominator =  delta0_p012 + delta1_p012 + delta2_p012;
+				ScalarType lambda0 = delta0_p012/denominator;
+				ScalarType lambda1 = delta1_p012/denominator;
+				ScalarType lambda2 = delta2_p012/denominator;
+				witness = p0*lambda0 + p1*lambda1 + p2*lambda2;
+			}
+		}
+
+		if (res!=NULL)
+		{
+			ScalarType witness_norm = witness.Norm();
+			res->first  = vcg::math::Max< ScalarType >( witness_norm-radius, ScalarType(0.0) );
+			res->second = vcg::math::Max< ScalarType >( radius-witness_norm, ScalarType(0.0) );
+		}
+		penetration_detected = (witness.SquaredNorm() <= (radius*radius));
+		witness += center;
+		return penetration_detected;
+	}; //end of IntersectionSphereTriangle
+
 
   /// intersection between line and plane
   template<class T>
