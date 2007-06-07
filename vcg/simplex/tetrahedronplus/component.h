@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2007/05/09 10:31:53  ganovelli
+added
+
 
 
 ****************************************************************************/
@@ -192,44 +195,39 @@ public:
 };
 
 
-/*----------------------------- VFADJ ------------------------------*/ 
+/*----------------------------- VTADJ ------------------------------*/ 
 
 template <class T> class EmptyAdj: public T {
 public:
 	typedef int VFAdjType;
-  typename T::TetraPointer       &VTp(const int)       { static typename T::TetraPointer fp=0; return fp; }
-  typename T::TetraPointer const cVTp(const int) const { static typename T::TetraPointer const fp=0; return fp; }
-  typename T::TetraPointer       &TTp(const int)       { static typename T::TetraPointer fp=0; return fp; }
-  typename T::TetraPointer const cTTp(const int) const { static typename T::TetraPointer const fp=0; return fp; }
-  char &VTi(const int j){static char z=0; return z;};
-  char &TTi(const int j){static char z=0; return z;};
-  static bool HasVTAdjacency()   {   return false; }
-  static bool HasTTAdjacency()   {   return false; }
-  static bool HasTTAdjacencyOcc()   {   return false; }
-  static bool HasVTAdjacencyOcc()   {   return false; }
-  static void Name(std::vector<std::string> & name){T::Name(name);}
-
+	typename T::TetraPointer & VTp( const int ) { static typename T::TetraPointer tp=0; return tp; }
+	typename T::TetraPointer const cVTp( const int ) const { static typename T::TetraPointer const tp=0; return tp; }
+	typename T::TetraPointer & TTp( const int ) { static typename T::TetraPointer tp=0; return tp; }
+	typename T::TetraPointer const cTTp( const int ) const { static typename T::TetraPointer const tp=0; return tp; }
+	char & VTi( const int j ) { static char z=0; return z; }
+	char & TTi( const int j ) { static char z=0; return z; }
+	static bool HasVTAdjacency() { return false; }
+	static bool HasTTAdjacency() { return false; }
+	static bool HasTTAdjacencyOcc() { return false; }
+	static bool HasVTAdjacencyOcc() { return false; }
+	static void Name( std::vector< std::string > & name ){ T::Name(name); }
 };
 
 template <class T> class VTAdj: public T {
 public:
-	VTAdj(){
-		_vtp[0]=0;
-		_vtp[1]=0;
-		_vtp[2]=0;
-		_vtp[3]=0;
-	}
-  typename T::TetraPointer       &VTp(const int j)        { assert(j>=0 && j<4);  return _vfp[j]; }
-  typename T::TetraPointer const  VTp(const int j) const  { assert(j>=0 && j<4);  return _vfp[j]; }
-  typename T::TetraPointer const cVFp(const int j) const  { assert(j>=0 && j<4);  return _vfp[j]; }
-  char &VTi(const int j) {return _vti[j]; }
-  static bool HasVTAdjacency()      {   return true; }
-  static bool HasVTAdjacencyOcc()   {   return false; }
-  static void Name(std::vector<std::string> & name){name.push_back(std::string("VTAdj"));T::Name(name);}
+	VTAdj() { _vtp[0]=0; _vtp[1]=0; _vtp[2]=0; _vtp[3]=0; }
+	typename T::TetraPointer & VTp( const int j ) { assert( j >= 0 && j < 4 ); return _vtp[j]; }
+	typename T::TetraPointer const VTp( const int j ) const { assert( j >= 0 && j < 4 ); return _vtp[j]; }
+	typename T::TetraPointer const cVTp( const int j ) const { assert( j >= 0 && j < 4 ); return _vtp[j]; }
+	char & VTi( const int j ) { return _vti[j]; }
+	const char & cVTi( const int j ) const { return _vti[j]; }
+	static bool HasVTAdjacency() { return true; }
+	static bool HasVTAdjacencyOcc() { return false; }
+	static void Name( std::vector< std::string > & name ) { name.push_back( std::string("VTAdj") ); T::Name(name); }
 
 private:
-  typename T::TetraPointer _vtp[4] ;    
-  char _vti[4] ;    
+	typename T::TetraPointer _vtp[4];
+	char _vti[4];
 };
 
 /*----------------------------- TTADJ ------------------------------*/ 
