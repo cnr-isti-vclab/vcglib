@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.33  2007/06/07 15:16:39  fiorin
+Added IntersectionSphereTriangle
+
 Revision 1.32  2007/05/29 14:33:29  fiorin
 Added IntersectionSegmentSphere
 
@@ -241,7 +244,7 @@ namespace vcg {
 	* Compute the intersection between a sphere and a triangle.
 	* \param[in]	sphere		the input sphere
 	* \param[in]	triangle	the input triangle
-	* \param[out]	witness		if intersection is detected, it is the point on the triangle nearest to the center of the sphere
+	* \param[out]	witness		it is the point on the triangle nearest to the center of the sphere (even when there isn't intersection)
 	* \param[out] res				if not null, in the first item is stored the minimum distance between the triangle and the sphere,
 	*                       while in the second item is stored the penetration depth
 	* \return			true			iff there is an intersection between the sphere and the triangle
