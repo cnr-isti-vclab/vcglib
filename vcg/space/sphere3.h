@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2006/07/06 12:40:34  ganovelli
+typdef ..ScalarType  added
+
 Revision 1.8  2005/02/22 14:18:15  ponchio
 assert addded.
 
@@ -90,6 +93,8 @@ protected:
   void Add(const Sphere3 &sphere);
   void Intersect(const Sphere3 &sphere);
   	
+
+  int CreateFromBox(int n, const Point3<T> *points);
   //makes 36 iterations over the data... but get good results.
   int CreateTight(int n, const Point3<T> *points, 
 		  T threshold = 1.01, T speed = 0.6);
@@ -160,6 +165,20 @@ template <class T> void Sphere3<T>::Intersect(const Sphere3<T> &s) {
   _center = (s.Center()*(_radius - r) + _center*(s.Radius() - r))/dist;
   _radius = r;
 }
+
+ template <class T> int Sphere3<T>::CreateFromBox(int n,  const Point3<T> *points) {
+   Point3f max(-1e100, -1e100, -1e100);
+   Point3f min(1e100, 1e100, 1e100);
+   for(int i = 0; i < n; i++) {
+     for(int k = 0; k < 3; k++) {
+       if(max[k] < points[i][k]) max[k] = points[i][k];
+       if(min[k] > points[i][k]) min[k] = points[i][k];
+     }
+   }
+   Center() = (min + max)/2;
+   Radius() = (min - max).Norm()/2;
+   return 0;
+ }
 
  template <class T> int Sphere3<T>::CreateTight(int n, const Point3<T> *points, 
 						T threshold, T speed) { 
