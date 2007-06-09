@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2007/05/29 10:09:29  cignoni
+Added a const (and reformatted)
+
 Revision 1.4  2007/05/21 13:22:40  cignoni
 Corrected gcc compiling issues
 
@@ -48,7 +51,8 @@ namespace vcg
 		namespace io 
 		{
 
-
+static const char * DEFAULT_LINE_COLOR = "black";
+static const char * DEFAULT_LINE_CAP= "round";
 /**
  * SVG Properties.
  *
@@ -74,24 +78,40 @@ public:
 		BUTT,		ROUND,		SQUARE
 	};
 
-	static const int DEFAULT_LINE_WIDTH;
-	static const char * DEFAULT_LINE_COLOR;
-	static const char * DEFAULT_LINE_CAP;
+	static const int DEFAULT_LINE_WIDTH=2;
+	
+	//in singlefile export make the grid of sessiones
+	int numCol;
+	int numRow;
+	
 
 // private data members
 private:
 
-	//! Line width.
+	// Line width.
 	int lwidth;
 
-	//! Stroke color (see StrokeColor).
+	// Stroke color (see StrokeColor).
 	std::string stroke_color;
 
-	//! Stroke linecap (see StrokeLineCap).
+	// Stroke linecap (see StrokeLineCap).
 	std::string stroke_linecap;
 
-	//! Plane where to project the edge mesh.
+	// Plane where to project the edge mesh.
 	Plane3d proj;
+
+	// Scale of rdrawing respect coordinates of mesh  
+	float scale;
+    
+	// Dimension of the drawing square
+    Point2d ViewBox;
+
+	int width,height; //Express in cm
+
+	// Position of the drawing square
+	Point2d position;
+    
+	
 
 // construction
 public:
@@ -106,6 +126,13 @@ public:
 		Point3d n(0.0, 1.0, 0.0);
 		proj.SetDirection(n);
 		proj.SetOffset(0.0);
+
+		scale=0; //scale=0 it means expanded to the boards of the canvas   
+        ViewBox=Point2d(1000, 1000); 
+		position=Point2d(0, 0);
+		width=10; //width of the windows
+		height=10; //height of the windows
+	
 	}
 
 // public methods
@@ -154,6 +181,14 @@ public:
 		proj.SetOffset(distance);
 	}
 
+	void setScale(float x){ scale=x; } //Define the scale between 2d coordinate and mesh
+
+	void setViewBox(Point2d x) { ViewBox=x; }//Define the dimension of the square
+
+	void setPosition(Point2d x) { position=x;}//Define the starting position of the canvas
+    
+	void setDimension(int width, int height){ this->width=width; this->height=height;}
+
 // accessors
 public:
 
@@ -161,13 +196,16 @@ public:
 	const char * lineColor(){return stroke_color.c_str();}
 	const char * lineCapStyle(){return stroke_linecap.c_str();}
 	const Plane3d * projPlane(){return &proj;}
+	float getScale(){return scale;}
+	Point2d getViewBox(){return ViewBox;}
+	Point2d getPosition(){return position;}
+	int getWidth(){return width;}
+	int getHeight(){return height;}
 
 };
-
-// DEFAULT SVG PROPERTIES
-const int SVGProperties::DEFAULT_LINE_WIDTH = 2;
-const char * SVGProperties::DEFAULT_LINE_COLOR = "black";
-const char * SVGProperties::DEFAULT_LINE_CAP = "round";
+	    //const int SVGProperties::DEFAULT_LINE_WIDTH = 2;
+		//const char * SVGProperties::DEFAULT_LINE_COLOR = "black";
+        //const char * SVGProperties::DEFAULT_LINE_CAP = "round";
 
 /**
  * SVG exporter.
@@ -189,18 +227,51 @@ public:
 		SVGProperties properties;
 		return Save(mp, filename, properties);
 	}
-	
-	//! Save with the given SVG properties.
-	static bool Save(EdgeMeshType *mp, const char *filename, SVGProperties & props)
-	{
-		FILE * o = fopen(filename,"w");
-		if (o==NULL)
+	static bool Save(vector<EdgeMeshType*> *vp, const char *filename, SVGProperties & pro){
+	    //Function that export a vector of EdgeMesh in an unic single SVG file. 
+        FILE * o = fopen(filename,"w");  
+	    if (o==NULL)
 			return false;
+		int num = (*vp).size(); //number of square to draw
+		//pro.setDimension((math::Sqrt(num)*10), (math::Sqrt(num)*10));
+		//pro.setViewBox((math::Sqrt(num)*1000));
+		WriteXmlHead(o,pro.getWidth(),pro.getHeight(),pro.getViewBox(),Point2d(0,0));
+		float scale= pro.getScale();
+		vector<EdgeMeshType*>::iterator it;
+        int i=0;
+		
+		for(it=(*vp).begin(); it!=(*vp).end(); it++){
+            
+			EdgeMeshType* ed;
+		    ed=(*it);
+            
+			pro.setPosition(Point2d((pro.getViewBox().V(0)/pro.numCol)*i,40));
+			
+			int x=pro.getViewBox().V(0);
+			int y=pro.getViewBox().V(1);
+			
+			fprintf(o, "<rect width= \" %d \" height= \" %d \" x=\"%d \" y=\" %d \" style= \" stroke-width:1; fill-opacity:0.0; stroke:rgb(0,0,0)\" /> \n",x/pro.numCol,y,  (x/pro.numCol)*i, 30);
+			
+			Save(ed,o,pro);
 
-		// initial xml tags
+
+		    fprintf(o,"<text x= \" %d \" y= \"20 \" font-family= \"Verdana \" font-size= \"20 \" >",(x/pro.numCol)*i);
+			fprintf(o,"Slice num:%d, </text>", i);
+			i++;
+		}
+		fprintf(o, "</svg>");
+		fclose(o);
+		return true;
+	}
+		 
+	static void WriteXmlHead(FILE *o,int width, int height, Point2d viewBox, Point2d position){
+	 
+	   int Vx=viewBox[0];
+		int Vy=viewBox[1];
+	  // initial xml tags
 		fprintf(o, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
 		fprintf(o, "<!-- Created with vcg library -->\n");
-		fprintf(o, "<svg width=\"10cm\" height=\"10cm\" viewBox=\"0 0 1000 1000\" \n");
+		fprintf(o, "<svg width=\"%d cm\" height=\"%d cm\" viewBox=\"0 0 %d %d \" \n",width, height, Vx, Vy+50);
 		fprintf(o, "  xmlns:dc=\"http://purl.org/dc/elements/1.1/\" \n");
 		fprintf(o, "  xmlns:cc=\"http://web.resource.org/cc/\" \n");
 		fprintf(o, "  xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" \n");
@@ -216,6 +287,16 @@ public:
 		fprintf(o, "    </cc:Work> \n");
 		fprintf(o, "    </rdf:RDF> \n");
 		fprintf(o, "  </metadata> \n");
+	}
+	//! Save with the given SVG properties.
+	static bool Save(EdgeMeshType *mp, const char *filename, SVGProperties & props )
+	{
+	  FILE * o = fopen(filename,"w");
+	  if (o==NULL)
+			return false;
+	
+	  WriteXmlHead(o, props.getWidth(),props.getHeight(), props.getViewBox(), props.getPosition());
+			
 
 		Save(mp, o, props);
 
@@ -227,7 +308,7 @@ public:
 		return true;
 	}
 
-	static void Save(EdgeMeshType *mp, FILE* o, SVGProperties & props)
+	 static void Save(EdgeMeshType *mp, FILE* o, SVGProperties & props)
 	{
 		// build vector basis (n, v1, v2)
 		Point3d p1(0.0,0.0,0.0);
@@ -245,14 +326,20 @@ public:
 		Point3d v2 = v1 ^ props.projPlane()->Direction();
 
 		std::vector<Point2f> pts;
+	    pts.clear();
 		Point2f pmin(100000000.0f,  100000000.0f);
 		Point2f pmax(-100000000.0f, -100000000.0f);
-
+       
+		
 		typename EdgeMeshType::EdgeIterator i;
+		
 		for (i = mp->edges.begin(); i != mp->edges.end(); ++i)
 		{
-			Point3<typename EdgeMeshType::ScalarType> p1 = (*i).V(0)->P();
-			Point3<typename EdgeMeshType::ScalarType> p2 = (*i).V(1)->P();
+			Point3<typename EdgeMeshType::ScalarType> p1;
+		    Point3<typename EdgeMeshType::ScalarType> p2;
+			
+			p1 = (*i).V(0)->P();
+			p2 = (*i).V(1)->P();
 
 			Point3d p1d(p1[0], p1[1], p1[2]);
 			Point3d p2d(p2[0], p2[1], p2[2]);
@@ -268,34 +355,21 @@ public:
 			pts.push_back(pt1);
 			pts.push_back(pt2);
 
-			if (pt1[0] <= pmin[0])
-				pmin[0] = pt1[0];
+			pmin[0]=math::Min(math::Min(pt1[0],pmin[0]), pt2[0]);
+			pmin[1]=math::Min(math::Min(pt1[1],pmin[1]), pt2[1]);
+			pmax[0]=math::Max(math::Max(pt1[0],pmax[0]), pt2[0]);
+			pmax[1]=math::Max(math::Max(pt1[1],pmax[1]), pt2[1]); 
 
-			if (pt2[0] <= pmin[0])
-				pmin[0] = pt2[0];
-
-			if (pt1[1] <= pmin[1])
-				pmin[1] = pt1[1];
-
-			if (pt2[1] <= pmin[1])
-				pmin[1] = pt2[1];
-
-			if (pt1[0] >= pmax[0])
-				pmax[0] = pt1[0];
-
-			if (pt2[0] >= pmax[0])
-				pmax[0] = pt2[0];
-
-			if (pt1[1] >= pmax[1])
-				pmax[1] = pt1[1];
-
-			if (pt2[1] >= pmax[1])
-				pmax[1] = pt2[1];
+		
 		}
-
-		float scale = 1000.0f / std::max(pmax[0] - pmin[0], pmax[1] - pmin[1]);
+	
+		
+		float scale=props.getScale();
 
 		// line settings
+		 Point2d pos=props.getPosition();
+		 fprintf(o,"<text x= \" %f \" y= \"50 \" font-family= \"Verdana \" font-size= \"20 \" >",pos[0]);
+		 fprintf(o,"Scale 1: %f, </text>", scale);
 		fprintf(o, "      <g stroke=\"%s\" stroke-linecap=\"%s\" > \n", 
 			props.lineColor(), props.lineCapStyle());
 
@@ -305,10 +379,13 @@ public:
 			Point2f p1 = *itPoints;
 			++itPoints;
 			Point2f p2 = *itPoints;
+			
+			
 
+			
 			fprintf(o, "        <line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" \n", 
-				(p1[0] - pmin[0]) * scale, (p1[1] - pmin[1]) * scale,
-				(p2[0] - pmin[0]) * scale, (p2[1] - pmin[1]) * scale );
+				pos.X()+((p1[0] - pmin[0]) * scale), pos.Y()+((p1[1] - pmin[1]) * scale),
+				pos.X()+((p2[0] - pmin[0]) * scale), pos.Y()+((p2[1] - pmin[1]) * scale ));
 
 			fprintf(o, "          stroke-width = \"%d\" ",props.lineWidth());
 			fprintf(o, "/>\n");
@@ -317,6 +394,7 @@ public:
 		fprintf(o, "  </g>\n");
 	}
 
+	
 };
 
 
