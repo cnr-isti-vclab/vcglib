@@ -9,6 +9,8 @@
 
 namespace vcg {
   namespace tri {
+            
+extern FILE *fp;            
 
 class FrontEdge { 
  public:       
@@ -50,11 +52,8 @@ template <class MESH> class AdvancingFront {
   MESH &mesh;           //this structure will be filled by the algorithm
   
   AdvancingFront(MESH &_mesh): mesh(_mesh) {
-//    UpdateFlags<MESH>::VertexClear(mesh);
-    UpdateFlags<MESH>::Clear(mesh);    
-//    UpdateTopology<MESH>::VertexFace(mesh);
-  //UpdateTopology<MESH>::TestVertexFace(mesh); //odd i would like to return a false not an assert...
-//    UpdateFlags<MESH>::FaceBorderFromVF(mesh);
+
+    
     UpdateFlags<MESH>::FaceBorderFromNone(mesh);   
     UpdateFlags<MESH>::VertexBorderFromFace(mesh);     
 
@@ -69,8 +68,10 @@ template <class MESH> class AdvancingFront {
   void BuildMesh(CallBackPos call = NULL, int interval = 512) {        
     while(1) {
       if(call) call(0, "Advancing front");
-      for(int i = 0; i < interval; i++) 
-        if(!AddFace()) return;      
+      for(int i = 0; i < interval; i++) {
+        if(!front.size() && !SeedFace()) return;
+        AddFace();
+      }
     }
   }                          
   
@@ -82,9 +83,9 @@ protected:
   bool CheckFrontEdge(int v0, int v1) {
     int tot = 0;
     //HACK to speed up things until i can use a seach structure
-    int i = mesh.face.size() - 4*(front.size());
-    if(front.size() < 100) i = mesh.face.size() - 100;
-  //      i = 0;
+//    int i = mesh.face.size() - 4*(front.size());
+//    if(front.size() < 100) i = mesh.face.size() - 100;
+        i = 0;
     if(i < 0) i = 0;
     for(; i < (int)mesh.face.size(); i++) { 
       FaceType &f = mesh.face[i];
@@ -176,9 +177,7 @@ protected:
   
 public:  
   bool AddFace() {
-    if(!front.size()) {
-      return SeedFace();    
-    }
+    if(!front.size()) return false; 
       
     std::list<FrontEdge>::iterator ei = front.begin();
     FrontEdge &current = *ei;
@@ -192,20 +191,20 @@ public:
     int v2 = Place(current, touch);
     if(v2 == -1) {
       KillEdge(ei);
-      return true;
+      return false;
     }
     
     assert(v2 != v0 && v2 != v1);  
         
     if(touch != front.end()) {       
       //check for orientation and manifoldness    
-      //if(!CheckEdge(v0, v2) || !CheckEdge(v2, v1)) {                      
       
       //touch == current.previous?  
       if(v2 == previous.v0) {   
         if(!CheckEdge(v2, v1)) {
+          fprintf(fp, "killing\n");
           KillEdge(ei);
-          return 0;
+          return false;
         }       
           /*touching previous FrontEdge  (we reuse previous)        
                                     next
@@ -231,8 +230,9 @@ public:
       //touch == (*current.next).next         
       } else if(v2 == next.v1) {    
         if(!CheckEdge(v0, v2)) {
+          fprintf(fp, "killing\n");                          
           KillEdge(ei);
-          return 0;
+          return false;
         }     
         /*touching next FrontEdge  (we reuse next)        
           previous
@@ -256,7 +256,7 @@ public:
       } else {
         if(!CheckEdge(v0, v2) || !CheckEdge(v2, v1)) {
           KillEdge(ei);
-          return 0;
+          return false;
         } 
       //touching some loop: split (or merge it is local does not matter.
       //like this 
@@ -276,7 +276,7 @@ public:
         //this would be a really bad join
         if(v1 == (*right).v0 || v0 == (*left).v1) {
           KillEdge(ei);
-          return 0;
+          return false;
         }
         
         nb[v2]++;    
@@ -300,8 +300,8 @@ public:
               
       
     } else {
-        assert(CheckEdge(v0, v2));
-        assert(CheckEdge(v2, v1));
+//        assert(CheckEdge(v0, v2));
+//        assert(CheckEdge(v2, v1));
         /*  adding a new vertex
                  
                            v2
@@ -328,7 +328,7 @@ public:
       }
 
       AddFace(v0, v2, v1);
-      return 1;
+      return false;
   }       
    
 protected:

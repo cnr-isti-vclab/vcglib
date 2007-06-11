@@ -14,6 +14,8 @@
 */   
 namespace vcg {
   namespace tri {
+            
+FILE *fp;
 
 template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
  public:
@@ -53,6 +55,10 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
       radius = sqrt((this->mesh.bbox.Diag()*this->mesh.bbox.Diag())/this->mesh.vn);
     else
       radius *= this->mesh.bbox.Diag()/100;
+      
+    fp = fopen("prova.txt", "wb+");
+    fprintf(fp, "radius %lf\n", radius);    
+
     
     min_edge *= radius;
     max_edge *= radius;    
@@ -67,7 +73,11 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
     std::vector<ScalarType> dists;
     
     usedBit = VertexType::NewBitFlag();
-
+    for(int i = 0; i < (int)this->mesh.vert.size(); i++)
+       this->mesh.vert[i].ClearUserBit(usedBit);
+       
+    UpdateFlags<MESH>::VertexClearV(this->mesh);    
+    
     for(int i = 0; i < (int)this->mesh.face.size(); i++) {
       FaceType &f = this->mesh.face[i];
       if(f.IsD()) continue;
@@ -87,7 +97,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
     VertexType::DeleteBitFlag(usedBit);
   }
   
-  bool Seed(int &v0, int &v1, int &v2) {                
+  bool Seed(int &v0, int &v1, int &v2) {               
     bool use_normals = false;     
     //get a sphere of neighbours
     std::vector<VertexType *> targets;      
@@ -195,6 +205,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
   
   //select a new vertex, mark as Visited and mark as usedBit all neighbours (less than min_edge)
   int Place(FrontEdge &edge, std::list<FrontEdge>::iterator &touch) {
+    fprintf(fp, "place front.size() %d\n", this->front.size());
     Point3x v0 = this->mesh.vert[edge.v0].P();
     Point3x v1 = this->mesh.vert[edge.v1].P();  
     Point3x v2 = this->mesh.vert[edge.v2].P();  
@@ -301,6 +312,9 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
     if(normal * newnormal < max_angle || this->nb[id] >= 2) {  
       return -1;
     }
+    
+     fprintf(fp, "isB: %d\n", candidate->IsB());
+     
     //test if id is in some border (to return touch
     for(list<FrontEdge>::iterator k = this->front.begin(); k != this->front.end(); k++)
       if((*k).v0 == id) touch = k;
@@ -308,7 +322,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
       if((*k).v0 == id) touch = k; 
        
     //mark vertices close to candidate
-    Mark(candidate);
+    Mark(candidate);    
     return id;
   }
   
