@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2007/05/28 08:10:47  fiorin
+Removed type cast warnings
+
 Revision 1.1  2007/05/15 14:57:34  benedetti
 Utility functions for the trackmodes, first version
 
@@ -695,7 +698,7 @@ void DrawUglyCylinderMode(Trackball * tb,Line3f axis)
     for(int a=0;a<360;a+=10){
       float f0=(tb->radius)*cosf((float(M_PI)*float(a))/180.0f);
       float f1=(tb->radius)*sinf((float(M_PI)*float(a))/180.0f);
-      glVertex(p0+(norm*float(i))+(d1*f0)+(d2*f1));
+      glVertex(axis.Origin()+p0+(norm*float(i))+(d1*f0)+(d2*f1));
     }
     glEnd();
   }  
