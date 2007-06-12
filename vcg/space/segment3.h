@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2006/06/06 14:35:31  zifnab1974
+Changes for compilation on linux AMD64. Some remarks: Linux filenames are case-sensitive. _fileno and _filelength do not exist on linux
+
 Revision 1.6  2006/03/07 16:39:38  pietroni
 compiled  and corrected ClosestPoint function
 
@@ -152,6 +155,28 @@ typedef Segment3<short>  Segment3s;
 typedef Segment3<int>	   Segment3i;
 typedef Segment3<float>  Segment3f;
 typedef Segment3<double> Segment3d;
+
+/*
+* Computes the minimum distance between a segment and a point
+* @param[in] segment	The input segment
+* @param[in] p				The input point
+* @return							The distance between the segment and the point p
+*/
+template < class ScalarType >
+ScalarType SquaredDistance(Segment3< ScalarType > &segment, Point3< ScalarType > &p)
+{
+	typedef typename vcg::Point3< ScalarType > Point3t;
+
+	Point3t	 dir = (segment.P1()-segment.P0()).Normalize();
+	ScalarType h = dir * (p-segment.P0());
+	if			(h<=ScalarType(0.0))	return vcg::SquaredDistance<ScalarType>(p, segment.P0());
+	else if (h>=segment.Length())	return vcg::SquaredDistance<ScalarType>(p, segment.P1());
+	else
+	{
+		dir = segment.P0() + dir*h;
+		return vcg::SquaredDistance<ScalarType>(p, dir);
+	}
+}; //end of Distance method
 
 template <class ScalarType> 
 Point3<ScalarType> ClosestPoint( Segment3<ScalarType> s, const Point3<ScalarType> & p) 
