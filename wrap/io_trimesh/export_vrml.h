@@ -23,6 +23,9 @@
 /****************************************************************************
 History
 $Log: not supported by cvs2svn $
+Revision 1.5  2007/03/20 16:47:49  cignoni
+Update to the new texture syntax
+
 Revision 1.4  2006/11/21 19:22:53  e_cerisoli
 Added Comments for documentation
 
@@ -75,7 +78,6 @@ namespace vcg {
 
 					// Tranche principale
 					double ss = 8.0/m.bbox.Diag();					
-					m.bbox.Diag();
 					
 					fprintf(fp,
 					"Transform {\n"
@@ -83,13 +85,10 @@ namespace vcg {
 					"  translation %g %g %g\n"
 					"  children\n"
 					"  [\n"
-					,ss
-					,ss
-					,ss
-					,  -m.bbox.Center()[0]*ss
-					,  -m.bbox.Center()[1]*ss
-					,-3-m.bbox.Center()[2]*ss
-						);
+					,1.0,1.0,1.0,
+					 0.0,0.0,0.0);
+//					,ss,ss,ss
+//					,  -m.bbox.Center()[0]*ss,  -m.bbox.Center()[1]*ss,-3-m.bbox.Center()[2]*ss	);
 
 					// Start Shape
 					fprintf(fp,
