@@ -111,7 +111,8 @@ private:
 	// Position of the drawing square
 	Point2d position;
     
-	
+	//Text details 
+	bool showDetails;
 
 // construction
 public:
@@ -132,7 +133,7 @@ public:
 		position=Point2d(0, 0);
 		width=10; //width of the windows
 		height=10; //height of the windows
-	
+	    showDetails=true;
 	}
 
 // public methods
@@ -186,7 +187,7 @@ public:
 	void setViewBox(Point2d x) { ViewBox=x; }//Define the dimension of the square
 
 	void setPosition(Point2d x) { position=x;}//Define the starting position of the canvas
-    
+	void setTextDetails(bool x){showDetails=x;}
 	void setDimension(int width, int height){ this->width=width; this->height=height;}
 
 // accessors
@@ -199,7 +200,9 @@ public:
 	float getScale(){return scale;}
 	Point2d getViewBox(){return ViewBox;}
 	Point2d getPosition(){return position;}
+	
 	int getWidth(){return width;}
+	bool showTextDetails(){return showDetails;}
 	int getHeight(){return height;}
 
 };
@@ -233,8 +236,6 @@ public:
 	    if (o==NULL)
 			return false;
 		int num = (*vp).size(); //number of square to draw
-		//pro.setDimension((math::Sqrt(num)*10), (math::Sqrt(num)*10));
-		//pro.setViewBox((math::Sqrt(num)*1000));
 		WriteXmlHead(o,pro.getWidth(),pro.getHeight(),pro.getViewBox(),Point2d(0,0));
 		float scale= pro.getScale();
 		vector<EdgeMeshType*>::iterator it;
@@ -250,13 +251,13 @@ public:
 			int x=pro.getViewBox().V(0);
 			int y=pro.getViewBox().V(1);
 			
-			fprintf(o, "<rect width= \" %d \" height= \" %d \" x=\"%d \" y=\" %d \" style= \" stroke-width:1; fill-opacity:0.0; stroke:rgb(0,0,0)\" /> \n",x/pro.numCol,y,  (x/pro.numCol)*i, 30);
+			fprintf(o, "<rect width= \" %d \" height= \" %d \" x=\"%d \" y=\" %d \" style= \" stroke-width:1; fill-opacity:0.0; stroke:rgb(0,0,0)\" /> \n",x/pro.numCol,y,  (x/pro.numCol)*i, 40);
 			
 			Save(ed,o,pro);
 
-
-		    fprintf(o,"<text x= \" %d \" y= \"20 \" font-family= \"Verdana \" font-size= \"20 \" >",(x/pro.numCol)*i);
-			fprintf(o,"Slice num:%d, </text>", i);
+            if(pro.showTextDetails()){
+		    fprintf(o,"<text x= \" %d \" y= \"30 \" font-family= \"Verdana \" font-size= \"30 \" >",(x/pro.numCol)*i);
+			fprintf(o,"Slice n\°:%d </text>", i);}
 			i++;
 		}
 		fprintf(o, "</svg>");
@@ -264,30 +265,7 @@ public:
 		return true;
 	}
 		 
-	static void WriteXmlHead(FILE *o,int width, int height, Point2d viewBox, Point2d position){
-	 
-	   int Vx=viewBox[0];
-		int Vy=viewBox[1];
-	  // initial xml tags
-		fprintf(o, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
-		fprintf(o, "<!-- Created with vcg library -->\n");
-		fprintf(o, "<svg width=\"%d cm\" height=\"%d cm\" viewBox=\"0 0 %d %d \" \n",width, height, Vx, Vy+50);
-		fprintf(o, "  xmlns:dc=\"http://purl.org/dc/elements/1.1/\" \n");
-		fprintf(o, "  xmlns:cc=\"http://web.resource.org/cc/\" \n");
-		fprintf(o, "  xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" \n");
-		fprintf(o, "  xmlns:svg=\"http://www.w3.org/2000/svg\" \n");
-		fprintf(o, "  xmlns=\"http://www.w3.org/2000/svg\" \n");
-		fprintf(o, "  id=\"svg2\"> \n");
-		fprintf(o, "  <defs id=\"defs4\"/> \n");
-		fprintf(o, "  <metadata id=\"metadata7\"> \n");
-		fprintf(o, "    <rdf:RDF> \n");
-		fprintf(o, "    <cc:Work rdf:about=\"\"> \n");
-		fprintf(o, "    <dc:format>image/svg+xml</dc:format> \n");
-		fprintf(o, "    <dc:type rdf:resource=\"http://purl.org/dc/dcmitype/StillImage\" /> \n");
-		fprintf(o, "    </cc:Work> \n");
-		fprintf(o, "    </rdf:RDF> \n");
-		fprintf(o, "  </metadata> \n");
-	}
+	
 	//! Save with the given SVG properties.
 	static bool Save(EdgeMeshType *mp, const char *filename, SVGProperties & props )
 	{
@@ -308,16 +286,16 @@ public:
 		return true;
 	}
 
-	 static void Save(EdgeMeshType *mp, FILE* o, SVGProperties & props)
+	 static void Save(EdgeMeshType *mp, FILE* o, SVGProperties  props)
 	{
 		// build vector basis (n, v1, v2)
 		Point3d p1(0.0,0.0,0.0);
 		Point3d p2(1.0,0.0,0.0);
-
+        Point3d p2less(-1.0,0.0,0.0);
 		Point3d d = props.projPlane()->Direction() - p2;
-
+        Point3d dless = props.projPlane()->Direction() - p2less;
 		Point3d v1;
-		if (d.Norm() < 0.00001)
+		if ((d.Norm() < 0.5)||(dless.Norm() <0.5))
 			v1 = Point3d(0.0,0.0,1.0) - p1;
 		else
 			v1 = p2 - p1;
@@ -368,11 +346,11 @@ public:
 
 		// line settings
 		 Point2d pos=props.getPosition();
-		 fprintf(o,"<text x= \" %f \" y= \"50 \" font-family= \"Verdana \" font-size= \"20 \" >",pos[0]);
-		 fprintf(o,"Scale 1: %f, </text>", scale);
+		 
 		fprintf(o, "      <g stroke=\"%s\" stroke-linecap=\"%s\" > \n", 
-			props.lineColor(), props.lineCapStyle());
-
+		props.lineColor(), props.lineCapStyle());
+		float maxEdges= math::Max((pmax[0]-pmin[0]), (pmax[1]-pmin[1]));
+        Draw_proportions_scale(o,maxEdges, props);
 		std::vector<Point2f>::iterator itPoints;
 		for(itPoints = pts.begin(); itPoints != pts.end(); ++itPoints)
 		{
@@ -394,7 +372,50 @@ public:
 		fprintf(o, "  </g>\n");
 	}
 
-	
+	private:
+		
+		static void Draw_proportions_scale(FILE *o, float maxEdge,SVGProperties & prop){
+        if(prop.showTextDetails()){ 
+		int num_order=log10(maxEdge);
+		int pox= pow(10.0, num_order);
+		int assX=prop.getViewBox()[0];
+		int assY=prop.getViewBox()[1];
+	    int nullAss=0;
+		int OffsetXAs=50;
+		float comput= OffsetXAs+(pox*prop.getScale());
+		fprintf(o, "     <line x1=\" %d \" y1=\" %d \" x2=\" %f \" y2=\" %d \" \n",(nullAss+OffsetXAs ),(assY+50),comput, (assY+50) );
+	    fprintf(o, "          stroke-width = \"5\" ");
+		fprintf(o, "/>\n");
+	    fprintf(o,"<text x= \" %d \" y= \" %d \" font-family= \"Verdana \" font-size= \"25 \" >",(nullAss+OffsetXAs), (assY+80));
+		
+		 
+		 fprintf(o,"%d px --  Scale %f : 1 </text>", pox ,prop.getScale());
+		}
+	}
+		static void WriteXmlHead(FILE *o,int width, int height, Point2d viewBox, Point2d position){
+	 
+	   int Vx=viewBox[0];
+		int Vy=viewBox[1];
+	  // initial xml tags
+		fprintf(o, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
+		fprintf(o, "<!-- Created with vcg library -->\n");
+		fprintf(o, "<svg width=\"%d cm\" height=\"%d cm\" viewBox=\"0 0 %d %d \" \n",width, height, Vx, Vy+100);
+		fprintf(o, "  xmlns:dc=\"http://purl.org/dc/elements/1.1/\" \n");
+		fprintf(o, "  xmlns:cc=\"http://web.resource.org/cc/\" \n");
+		fprintf(o, "  xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" \n");
+		fprintf(o, "  xmlns:svg=\"http://www.w3.org/2000/svg\" \n");
+		fprintf(o, "  xmlns=\"http://www.w3.org/2000/svg\" \n");
+		fprintf(o, "  id=\"svg2\"> \n");
+		fprintf(o, "  <defs id=\"defs4\"/> \n");
+		fprintf(o, "  <metadata id=\"metadata7\"> \n");
+		fprintf(o, "    <rdf:RDF> \n");
+		fprintf(o, "    <cc:Work rdf:about=\"\"> \n");
+		fprintf(o, "    <dc:format>image/svg+xml</dc:format> \n");
+		fprintf(o, "    <dc:type rdf:resource=\"http://purl.org/dc/dcmitype/StillImage\" /> \n");
+		fprintf(o, "    </cc:Work> \n");
+		fprintf(o, "    </rdf:RDF> \n");
+		fprintf(o, "  </metadata> \n");
+	}
 };
 
 
