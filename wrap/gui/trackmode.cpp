@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2007/05/28 08:10:47  fiorin
+Removed type cast warnings
+
 Revision 1.21  2007/05/16 08:44:05  ganovelli
 added inclusion of glew.h
 
@@ -91,7 +94,7 @@ Adding copyright.
 #include <wrap/gui/trackball.h>
 #include <wrap/gui/trackutils.h>
 
- 
+
 using namespace std;
 using namespace vcg;
 using namespace vcg::trackutils;
@@ -132,6 +135,12 @@ void TrackMode::Draw(Trackball * ){}
 void TrackMode::SetAction (){}
 
 void TrackMode::Reset (){}
+
+bool TrackMode::isSticky() {
+  return false;
+}
+
+void TrackMode::Undo(){}
 
 // draw an inactive trackball
 void InactiveMode::Draw(Trackball * tb){
@@ -407,6 +416,9 @@ void PathMode::GetPoints(float state, Point3f & point, Point3f & prev_point, Poi
 
 void PathMode::Apply (Trackball * tb, float WheelNotch)
 {
+  undo_current_state=current_state;
+  undo_old_hitpoint=old_hitpoint;
+
   const float STEP_COEFF = min_seg_length * 0.5f;
   float delta=(WheelNotch*STEP_COEFF)/path_length;
   Point3f old_point,new_point,prev_point,next_point;
@@ -496,11 +508,23 @@ void PathMode::SetAction (){
   
 void PathMode::Apply (Trackball * tb, Point3f new_point)
 {
+    undo_current_state=current_state;
+    undo_old_hitpoint=old_hitpoint;
+
     Ray3fN ray = line2ray(tb->camera.ViewLineFromWindow (new_point));
     Point3f hit_point;
     float delta_state=HitPoint(current_state,ray,hit_point);
     current_state=Normalize(current_state+delta_state);
     tb->Translate (hit_point - old_hitpoint);
+}
+
+bool PathMode::isSticky() {
+  return true;
+}
+
+void PathMode::Undo(){
+  current_state=undo_current_state;
+  old_hitpoint=undo_old_hitpoint;
 }
 
 void PathMode::Draw(Trackball * tb){
@@ -568,6 +592,13 @@ void AreaMode::Reset()
 
 void AreaMode::Apply (Trackball * tb, Point3f new_point)
 {
+  undo_begin_action=begin_action;
+  undo_status=status;
+  undo_delta_mouse=delta_mouse;
+  undo_old_status=old_status;
+  undo_rubberband_handle=rubberband_handle;
+  undo_path_index=path.size();
+
   if(begin_action){
     delta_mouse=tb->camera.Project(status)-new_point;    
     begin_action=false; 
@@ -588,8 +619,7 @@ void AreaMode::SetAction ()
 {
   begin_action=true;  
   old_status=status;
-  
- 
+   
   path.clear();
   path.push_back(status);
   rubberband_handle=status;
@@ -696,6 +726,20 @@ Point3f AreaMode::SetStartNear(Point3f point)
   }
   initial_status=nearest_point;
   return initial_status;
+}
+
+bool AreaMode::isSticky() {
+  return true;
+}
+
+void AreaMode::Undo(){
+  begin_action=undo_begin_action;
+  status=undo_status;
+  delta_mouse=undo_delta_mouse;
+  old_status=undo_old_status;
+  rubberband_handle=undo_rubberband_handle;
+  for(unsigned int i=path.size() - 1; i > undo_path_index; --i)
+     path.pop_back();
 }
 
 void AreaMode::Draw(Trackball * tb)

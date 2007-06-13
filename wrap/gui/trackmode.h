@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2007/05/15 14:59:10  benedetti
+Main restructuring. added many new modes
+
 Revision 1.10  2007/02/26 01:30:02  cignoni
 Added reflection Name
 
@@ -83,6 +86,8 @@ public:
     return "TrackMode";
   };
   virtual void Draw (Trackball * trackball);
+  virtual bool isSticky();
+  virtual void Undo();
 }; 
 
 // Inactive mode.
@@ -274,6 +279,8 @@ public:
   void SetAction ();
   void Reset (); 
   Point3f SetStartNear(Point3f p);
+  bool isSticky();
+  void Undo();
 private:
   void Init(const vector < Point3f > &points);
   void GetPoints(float state, Point3f & point, Point3f & prev_point, Point3f & next_point);
@@ -289,6 +296,8 @@ private:
   float min_seg_length;
   Point3f old_hitpoint;
 
+  float undo_current_state;
+  Point3f undo_old_hitpoint;
 };
 
 // Area mode.
@@ -320,6 +329,8 @@ public:
   void SetAction ();
   void Reset (); 
   Point3f SetStartNear(Point3f p);
+  bool isSticky();
+  void Undo();
 private:
   void Init(const vector < Point3f > &pts);
   bool Inside(Point3f point);
@@ -330,12 +341,22 @@ private:
   int first_coord_kept;
   int second_coord_kept;
   float min_side_length;
-  Point3f status,delta_mouse,old_status,initial_status;
+  Point3f status;
+  Point3f delta_mouse;
+  Point3f old_status;
+  Point3f initial_status;
   
   Plane3f plane;   
   Point3f rubberband_handle ;
   vector < Point3f > path;
-  
+
+  bool undo_begin_action;
+  Point3f undo_status;
+  Point3f undo_delta_mouse;
+  Point3f undo_old_status;
+  Point3f undo_rubberband_handle ;
+  unsigned int undo_path_index;
+
 };
 
 }//namespace 

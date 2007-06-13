@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2007/05/15 15:00:27  benedetti
+Moved the drawing code to trackmodes, some other minor changes
+
 Revision 1.18  2007/02/26 01:30:02  cignoni
 Added reflection Name
 
@@ -176,7 +179,7 @@ void Trackball::Translate(Point3f tr)
 {
   Matrix44f m;  
   track.rot.ToMatrix(m); 
-  track.tra = last_track.tra + Inverse(m)*tr/track.sca;;
+  track.tra = last_track.tra + Inverse(m)*tr/track.sca;
 }
 
 /***************************************************************/
@@ -293,6 +296,7 @@ void Trackball::DrawIcon() {
 
 void Trackball::Reset() {
   track.SetIdentity();
+  undo_track = track;
   map<int, TrackMode *>::iterator i;
   for(i = modes.begin(); i != modes.end(); i++){
    TrackMode * mode=(*i).second;
@@ -305,11 +309,13 @@ void Trackball::Reset() {
 
 //interface
 void Trackball::MouseDown(int button) {
+  undo_track = track;
   current_button |= button;  
   SetCurrentAction();
   Hits.clear();
 }
 void Trackball::MouseDown(int x, int y, int button) {
+  undo_track = track;
   current_button |= button;  
   SetCurrentAction();
   last_point = Point3f((float)x, (float)y, 0);
@@ -322,16 +328,19 @@ void Trackball::MouseMove(int x, int y) {
     last_point = Point3f((float)x, (float)y, 0);
     return;
   }
+  undo_track = track;
   current_mode->Apply(this, Point3f(float(x), float(y), 0));
 } 
 
 void Trackball::MouseUp(int /* x */, int /* y */, int button) { 
+  undo_track = track;
   current_button &= (~button);
   SetCurrentAction();
 } 
 
 // it assumes that a notch of 1.0 is a single step of the wheel
 void Trackball::MouseWheel(float notch  ) {
+  undo_track = track;
   if(current_mode == NULL)
   {
     //SphereMode tm;  
@@ -345,6 +354,7 @@ void Trackball::MouseWheel(float notch  ) {
 
 void Trackball::MouseWheel (float notch, int button)
 {
+  undo_track = track;
   current_button |= button;
   SetCurrentAction ();
   if (current_mode == NULL) {
@@ -358,14 +368,41 @@ void Trackball::MouseWheel (float notch, int button)
 }
 
 void Trackball::ButtonDown(Trackball::Button button) {
+  bool old_sticky=false, new_sticky=false;
+  assert (modes.count (0));
+  if ( ( modes.count (current_button) ) && ( modes[current_button] != NULL ) ) {
+	old_sticky = modes[current_button]->isSticky();
+  }
   current_button |= button;  
+   if ( ( modes.count (current_button) ) && ( modes[current_button] != NULL ) ) {
+	new_sticky = modes[current_button]->isSticky();
+  }
+  if ( old_sticky || new_sticky)
+    return;
   SetCurrentAction();
 }
 
 void Trackball::ButtonUp(Trackball::Button button) { 
+  bool old_sticky=false, new_sticky=false;
+  assert ( modes.count (0) );
+  if ( ( modes.count (current_button) ) && ( modes[current_button] != NULL ) ) {
+	old_sticky = modes[current_button]->isSticky();
+  }
   current_button &= (~button);  
+  if ( ( modes.count (current_button) ) && ( modes[current_button] != NULL ) ) {
+	new_sticky = modes[current_button]->isSticky();
+  }
+  if ( old_sticky || new_sticky)
+    return;
   SetCurrentAction();
 }
+
+void Trackball::Undo(){
+  track = undo_track;
+  if(current_mode != NULL)
+    current_mode->Undo();
+}
+
 
 //spinning interface
 void Trackball::SetSpinnable(bool /* on*/ ){}

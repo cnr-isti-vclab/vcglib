@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2007/05/15 15:00:47  benedetti
+Moved the drawing code to trackmodes, some other minor changes
+
 Revision 1.13  2007/02/26 01:30:02  cignoni
 Added reflection Name
 
@@ -199,6 +202,7 @@ namespace vcg {
     void MouseWheel (float notch, /*Button */ int button);
     void ButtonUp(Button button);
     void ButtonDown(Button button);
+    void Undo();
 
     //default sensitivity 1
     void SetSensitivity(float s);
@@ -255,6 +259,10 @@ namespace vcg {
     std::map<int, TrackMode *> modes;
 
     Similarityf last_track;
+    
+    // undo_track and last_track have different meanings..
+    Similarityf undo_track; 
+	
     Similarityf last_view;
     Point3f last_point;
     std::vector<Point3f> Hits;
