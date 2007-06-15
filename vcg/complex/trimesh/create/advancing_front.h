@@ -9,8 +9,6 @@
 
 namespace vcg {
   namespace tri {
-            
-extern FILE *fp;            
 
 class FrontEdge { 
  public:       
@@ -85,7 +83,7 @@ protected:
     //HACK to speed up things until i can use a seach structure
 //    int i = mesh.face.size() - 4*(front.size());
 //    if(front.size() < 100) i = mesh.face.size() - 100;
-        i = 0;
+    int  i = 0;
     if(i < 0) i = 0;
     for(; i < (int)mesh.face.size(); i++) { 
       FaceType &f = mesh.face[i];
@@ -189,6 +187,7 @@ public:
         
     std::list<FrontEdge>::iterator touch = front.end();
     int v2 = Place(current, touch);
+
     if(v2 == -1) {
       KillEdge(ei);
       return false;
@@ -196,13 +195,12 @@ public:
     
     assert(v2 != v0 && v2 != v1);  
         
-    if(touch != front.end()) {       
+    if(touch != front.end()) {  
       //check for orientation and manifoldness    
       
       //touch == current.previous?  
       if(v2 == previous.v0) {   
         if(!CheckEdge(v2, v1)) {
-          fprintf(fp, "killing\n");
           KillEdge(ei);
           return false;
         }       
@@ -230,7 +228,6 @@ public:
       //touch == (*current.next).next         
       } else if(v2 == next.v1) {    
         if(!CheckEdge(v0, v2)) {
-          fprintf(fp, "killing\n");                          
           KillEdge(ei);
           return false;
         }     

@@ -14,8 +14,6 @@
 */   
 namespace vcg {
   namespace tri {
-            
-FILE *fp;
 
 template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
  public:
@@ -54,12 +52,8 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
     if(radius == 0)
       radius = sqrt((this->mesh.bbox.Diag()*this->mesh.bbox.Diag())/this->mesh.vn);
     else
-      radius *= this->mesh.bbox.Diag()/100;
-      
-    fp = fopen("prova.txt", "wb+");
-    fprintf(fp, "radius %lf\n", radius);    
+      radius *= this->mesh.bbox.Diag()/100;      
 
-    
     min_edge *= radius;
     max_edge *= radius;    
       
@@ -205,7 +199,6 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
   
   //select a new vertex, mark as Visited and mark as usedBit all neighbours (less than min_edge)
   int Place(FrontEdge &edge, std::list<FrontEdge>::iterator &touch) {
-    fprintf(fp, "place front.size() %d\n", this->front.size());
     Point3x v0 = this->mesh.vert[edge.v0].P();
     Point3x v1 = this->mesh.vert[edge.v1].P();  
     Point3x v2 = this->mesh.vert[edge.v2].P();  
@@ -312,9 +305,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
     if(normal * newnormal < max_angle || this->nb[id] >= 2) {  
       return -1;
     }
-    
-     fprintf(fp, "isB: %d\n", candidate->IsB());
-     
+
     //test if id is in some border (to return touch
     for(list<FrontEdge>::iterator k = this->front.begin(); k != this->front.end(); k++)
       if((*k).v0 == id) touch = k;
