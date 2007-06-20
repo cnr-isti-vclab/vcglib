@@ -25,6 +25,9 @@
   History
 
  $Log: not supported by cvs2svn $
+ Revision 1.3  2006/11/09 07:51:44  cignoni
+ bug due to wrong access to eventually unexistent FaceColor
+
  Revision 1.2  2006/10/09 19:58:08  cignoni
  Added casts to remove warnings
 
@@ -138,4 +141,4 @@ namespace io {
 }
 }
 }
-#endif __VCGLIB_MATERIAL
+#endif //__VCGLIB_MATERIAL
