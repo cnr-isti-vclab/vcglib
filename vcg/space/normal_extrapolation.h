@@ -70,7 +70,7 @@ namespace vcg
 			{
 				inline bool operator()(const VertexType &v, const CoordType &p, ScalarType &d, CoordType &q) const 
 				{ 
-					float distance = vcg::Distance(p, v.P()); 
+					ScalarType distance = vcg::Distance(p, v.P()); 
 					if (distance>d) 
 						return false;
 
@@ -95,9 +95,9 @@ namespace vcg
 			// Object functor: compute the distance between a point and the plane
 			struct PlanePointDistanceFunctor
 			{
-				inline bool operator()(const Plane &plane, const vcg::Point3f &p, float &d, vcg::Point3f &q) const 
+				inline bool operator()(const Plane &plane, const CoordType &p, ScalarType &d, CoordType &q) const 
 				{ 
-					float distance = vcg::Distance(p, plane.center); 
+					ScalarType distance = vcg::Distance(p, plane.center); 
 					if (distance>d) 
 						return false;
 
@@ -146,7 +146,7 @@ namespace vcg
 			BoundingBoxType dataset_bb;
 			for (VertexIterator iter=begin; iter!=end; iter++)
 				dataset_bb.Add(iter->P());
-			float max_distance = dataset_bb.Diag();
+			ScalarType max_distance = dataset_bb.Diag();
 
 			// Step 1: identify the tangent planes used to locally approximate the surface
 			int vertex_count = int( std::distance(begin, end) );
@@ -173,7 +173,7 @@ namespace vcg
 				Plane *plane = &tangent_planes[ std::distance(begin, iter) ];
 				for (unsigned int n=0; n<k; n++)
 					plane->center += nearest_points[n];
-				plane->center /= float(k);
+				plane->center /= ScalarType(k);
 
 				// then, identity the normal associated to the centroid
 				MatrixType	covariance_matrix;
