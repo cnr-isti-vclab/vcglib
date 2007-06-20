@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2007/06/13 17:15:08  benedetti
+Added one-level undo system and sticky trackmodes.
+
 Revision 1.19  2007/05/15 15:00:27  benedetti
 Moved the drawing code to trackmodes, some other minor changes
 
@@ -339,24 +342,30 @@ void Trackball::MouseUp(int /* x */, int /* y */, int button) {
 } 
 
 // it assumes that a notch of 1.0 is a single step of the wheel
-void Trackball::MouseWheel(float notch  ) {
+void Trackball::MouseWheel(float notch) 
+{
   undo_track = track;
-  if(current_mode == NULL)
+	int buttons = current_button;
+	current_button = WHEEL | (buttons&(KEY_SHIFT|KEY_CTRL|KEY_ALT));
+	SetCurrentAction();
+  if (current_mode == NULL)
   {
-    //SphereMode tm;  
-	//tm.TrackMode::Apply(this, notch);
     ScaleMode scalemode;
     scalemode.Apply (this, notch);
-  } else{
+  } 
+	else
+	{
     current_mode->Apply(this, notch);
   }
+	current_button = buttons;
+	SetCurrentAction();
 }
 
-void Trackball::MouseWheel (float notch, int button)
+void Trackball::MouseWheel(float notch, int button)
 {
   undo_track = track;
   current_button |= button;
-  SetCurrentAction ();
+  SetCurrentAction();
   if (current_mode == NULL) {
     ScaleMode scalemode;
     scalemode.Apply (this, notch);
