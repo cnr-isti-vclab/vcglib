@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2007/06/13 17:15:09  benedetti
+Added one-level undo system and sticky trackmodes.
+
 Revision 1.11  2007/05/15 14:59:10  benedetti
 Main restructuring. added many new modes
 
@@ -255,7 +258,7 @@ private:
 // the vector passed to build the path is copied locally.
 class PathMode:public TrackMode {
 public:
-  PathMode ( const vector < Point3f > &pts, bool w = false)
+	PathMode ( const std::vector < Point3f > &pts, bool w = false)
     : points(), wrap(w), current_state(0), initial_state(0), old_hitpoint()
   {
     Init(pts);
@@ -282,13 +285,13 @@ public:
   bool isSticky();
   void Undo();
 private:
-  void Init(const vector < Point3f > &points);
+	void Init(const std::vector < Point3f > &points);
   void GetPoints(float state, Point3f & point, Point3f & prev_point, Point3f & next_point);
   float Normalize(float state);
   float HitPoint(float state, Ray3fN ray, Point3f &hit_point);
   int Verse(Point3f reference_point,Point3f current_point,Point3f prev_point,Point3f next_point);
 
-  vector < Point3f > points;
+	std::vector < Point3f > points;
   bool wrap;
   float current_state;
   float initial_state;
@@ -316,7 +319,7 @@ private:
 
 class AreaMode:public TrackMode {
 public:
-  AreaMode (const vector < Point3f > &pts)
+	AreaMode (const std::vector < Point3f > &pts)
   {
     Init(pts);
     assert(min_side_length > 0.0f);
@@ -332,11 +335,11 @@ public:
   bool isSticky();
   void Undo();
 private:
-  void Init(const vector < Point3f > &pts);
+	void Init(const std::vector < Point3f > &pts);
   bool Inside(Point3f point);
   Point3f Move(Point3f start,Point3f end);
 
-  vector < Point3f > points;
+	std::vector < Point3f > points;
   bool begin_action;
   int first_coord_kept;
   int second_coord_kept;
@@ -348,7 +351,7 @@ private:
   
   Plane3f plane;   
   Point3f rubberband_handle ;
-  vector < Point3f > path;
+	std::vector < Point3f > path;
 
   bool undo_begin_action;
   Point3f undo_status;
