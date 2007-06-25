@@ -31,6 +31,9 @@ of Greg Turk and on the work of Claudio Rocchini
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2006/04/11 09:48:04  zifnab1974
+changes needed for compilation on linux 64b with gcc 3.4.5
+
 Revision 1.4  2005/12/02 00:00:53  cignoni
 Moved and corrected interpret_texture_name from plystuff.h to plylib.cpp
 
@@ -89,7 +92,7 @@ const char * cachedir = "vcg_cache";
 const char * bboxcacheext = ".bbox_cache";
 const char * bboxheader = "BBOXCACH";
 
-static bool GetDirFromPath( const char * path, char * dir, char * name )
+bool GetDirFromPath( const char * path, char * dir, char * name )
 {
 	strcpy(dir,path);
 	char * p;
