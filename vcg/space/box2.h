@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2006/10/07 16:50:26  m_di_benedetto
+Added Dim() method.
+
 Revision 1.6  2005/06/14 13:46:20  ponchio
 Minibug: Box2f -> Box2 in the template.
 
@@ -213,7 +216,7 @@ public:
 		/// Calcola l'area del Bounding box.
 	inline BoxScalarType Area() const
 	{
-		return (max.v[0]-min.v[0])*(max.v[1]-min.v[1]);
+		return (max[0]-min[0])*(max[1]-min[1]);
 	}
 		/// Calcola la dimensione del bounding box sulla x.
 	inline BoxScalarType DimX() const { return max.X()-min.X(); }
