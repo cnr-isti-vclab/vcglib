@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.35  2007/03/12 16:40:17  tarini
+Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
+
 Revision 1.34  2007/03/03 02:28:59  cignoni
 Removed initialization of a single face in the main parsing loop. Single face cannot exist anymore with OCF. Moved into the tristrip parsing section.
 
@@ -718,12 +721,11 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 						}
 					}
 					//if(FaceType::HasFaceColor()){
-					if(pi.mask & Mask::IOM_FACECOLOR){
-						{
+					//if(pi.mask & Mask::IOM_FACECOLOR){
+					if(HasPerFaceColor(m))	{
 							(*fi).C()[0] = (unsigned char)((fa.colors[0*3+0]*255+fa.colors[1*3+0]*255+fa.colors[2*3+0]*255)/3.0f);
 							(*fi).C()[1] = (unsigned char)((fa.colors[0*3+1]*255+fa.colors[1*3+1]*255+fa.colors[2*3+1]*255)/3.0f);
 							(*fi).C()[2] = (unsigned char)((fa.colors[0*3+2]*255+fa.colors[1*3+2]*255+fa.colors[2*3+2]*255)/3.0f);
-						}
 					}
 				}
         /// Now the temporary struct 'fa' is ready to be copied into the real face '*fi'
