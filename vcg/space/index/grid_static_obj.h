@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2006/09/27 08:49:32  spinelli
+bug fix, add return type to Init
+
 Revision 1.3  2006/08/23 15:20:14  marfr960
 corrected minor bugs
 
@@ -55,7 +58,7 @@ Kept in the most trivial way. Every cell is allocated
 and contains one istance of the template class.
 */
 
-template < typename class ObjType, class FLT=float  >
+template < class ObjType, class FLT=float  >
 class GridStaticObj : public BasicGrid<ObjType, FLT>
 {
  public:
@@ -63,7 +66,7 @@ class GridStaticObj : public BasicGrid<ObjType, FLT>
 	 /// La matriciona della griglia
 	 ObjType *grid;
 
-	 int size() const { return siz[0]*siz[1]*siz[2];}
+	 int size() const { return this->siz[0]*this->siz[1]*this->siz[2];}
 
 	 inline  GridStaticObj() { grid = 0; }
 	 inline ~GridStaticObj() { if(grid) delete[] grid; }
@@ -82,12 +85,12 @@ class GridStaticObj : public BasicGrid<ObjType, FLT>
 	 inline int GridInd( const Point3i & pi ) const
 	 {
 #ifndef NDEBUG
-		 if ( pi[0]<0 || pi[0]>=siz[0] || pi[1]<0 || pi[1]>=siz[1] || pi[2]<0 || pi[2]>=siz[2] )
+		 if ( pi[0]<0 || pi[0]>=this->siz[0] || pi[1]<0 || pi[1]>=this->siz[1] || pi[2]<0 || pi[2]>=this->siz[2] )
 		 {	assert(0);
 		 return 0;
 		 } 
 #endif
-		 return pi[0]+siz[0]*(pi[1]+siz[1]*pi[2]);
+		 return pi[0]+this->siz[0]*(pi[1]+this->siz[1]*pi[2]);
 	 }
 
 	 // Dato un punto ritorna l'indice della cella
@@ -95,13 +98,13 @@ class GridStaticObj : public BasicGrid<ObjType, FLT>
   
 	void Create( Point3i &_siz, const ObjType & init )
 	{
-		siz=_siz;
-	 	voxel[0] = dim[0]/siz[0];
-		voxel[1] = dim[1]/siz[1];
-		voxel[2] = dim[2]/siz[2];
+		this->siz=_siz;
+	 	this->voxel[0] = this->dim[0]/this->siz[0];
+		this->voxel[1] = this->dim[1]/this->siz[1];
+		this->voxel[2] = this->dim[2]/this->siz[2];
 
 		if(grid) delete[] grid;
-		int n = siz[0]*siz[1]*siz[2];
+		int n = this->siz[0]*this->siz[1]*this->siz[2];
 		grid = new ObjType[n];
 		fill(grid,grid+n,init);
 	}
@@ -112,13 +115,13 @@ class GridStaticObj : public BasicGrid<ObjType, FLT>
 	template<class FLT2>
 	void Create(const Box3<FLT2> & b, int ncell, const ObjType & init, bool Inflate = true )
 	{
-		bbox.Import(b);
-		if(Inflate) bbox.Offset(0.01*bbox.Diag());
-		dim  = bbox.max - bbox.min;
+		this->bbox.Import(b);
+		if(Inflate) this->bbox.Offset(0.01*this->bbox.Diag());
+		this->dim  = this->bbox.max - this->bbox.min;
 
 		// Calcola la dimensione della griglia
 		Point3i _siz;
-		BestDim( ncell, dim, _siz );
+		BestDim( ncell, this->dim, _siz );
 		Create(_siz, init );
 	}
 };
