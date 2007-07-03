@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.32  2007/03/08 14:39:27  corsini
+final fix to euler angles transformation
+
 Revision 1.31  2007/02/06 09:57:40  corsini
 fix euler angles computation
 
@@ -232,6 +235,9 @@ public:
 	
   template <class Matrix44Type>
 	void ToMatrix(Matrix44Type & m) const {for(int i = 0; i < 16; i++) m.V()[i]=V()[i];}
+
+	void ToEulerAngles(T &alpha, T &beta, T &gamma);
+
 	template <class Matrix44Type>
 	void FromMatrix(const Matrix44Type & m){for(int i = 0; i < 16; i++) V()[i]=m.V()[i];}
 	void FromEulerAngles(T alpha, T beta, T gamma);
@@ -440,6 +446,14 @@ template < class PointType , class T > void operator*=( std::vector<PointType> &
 template <class T> void Matrix44<T>::operator*=( const T k ) {
   for(int i = 0; i < 16; i++)
       _a[i] *= k;
+}
+
+template <class T>
+void Matrix44<T>::ToEulerAngles(T &alpha, T &beta, T &gamma)
+{
+	alpha = atan2(ElementAt(1,2), ElementAt(2,2));
+	beta = asin(-ElementAt(0,2));
+	gamma = atan2(ElementAt(0,1), ElementAt(1,1));
 }
 
 template <class T> 
