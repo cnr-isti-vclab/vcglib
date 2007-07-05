@@ -1,3 +1,6 @@
+#ifndef _VCG_GL_GEOMETRY_
+#define _VCG_GL_GEOMETRY_
+
 /* Portion of this file were more or less adapted from 
  * freeglut_geometry.c
  *
@@ -219,3 +222,5 @@ void glutWireSphere(GLdouble radius, GLint slices, GLint stacks)
     free(cost2);
 }
 
+#endif
+	
