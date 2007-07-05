@@ -201,7 +201,7 @@ private:
 template <ColorMode cm >
  void _DrawSmallTetra(){
 		Point3x p[4],br;
-		CONT_TETRA::iterator it;
+		typename CONT_TETRA::iterator it;
 		glPushAttrib(0xffffffff);
 		glEnable(GL_COLOR_MATERIAL);
 		glEnable(GL_LIGHT0);
@@ -245,7 +245,7 @@ void 	_DrawFlatWire(){
 
 template <DrawMode dm,NormalMode nm,ColorMode cm >
 void _DrawSurface(){
-		CONT_TETRA::iterator it;
+		typename CONT_TETRA::iterator it;
 
 		glPushAttrib(0xffff);
 		glEnable(GL_COLOR_MATERIAL);
