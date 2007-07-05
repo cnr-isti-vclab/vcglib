@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2007/04/18 13:33:11  cignoni
+resolved issue related to the parsing of CR LF under *nixes
+
 Revision 1.13  2007/04/18 07:01:26  cignoni
 Added managment of map_Ka textures (and not only map_Kd)
 
@@ -773,7 +776,12 @@ static bool LoadMask(const char * filename, Info &oi)
       }
 		}
 		oi.mask = 0;
-		if (oi.numTexCoords)	oi.mask |= vcg::tri::io::Mask::IOM_WEDGTEXCOORD;
+		if (oi.numTexCoords)	
+			{
+				oi.mask |= vcg::tri::io::Mask::IOM_WEDGTEXCOORD;
+				// Usually if you have tex coords you also have materials
+				oi.mask |= vcg::tri::io::Mask::IOM_FACECOLOR; 
+			}
 
 
   return true;
