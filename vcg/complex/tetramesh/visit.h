@@ -26,6 +26,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2006/12/03 14:55:44  ganovelli
+created
+
 
 ****************************************************************************/
 
@@ -42,7 +45,7 @@ namespace tetra {
 
 	/// assumes TTTopology has been computed
 	template <class TetraPtrContainer>
-		Component(TetraPtrContainer & src, TetraPtrContainer & conn_com){
+		void Component(TetraPtrContainer & src, TetraPtrContainer & conn_com){
 
 			typename TetraPtrContainer::iterator ti;
 			typedef typename TetraPtrContainer::value_type TetraPointer;
