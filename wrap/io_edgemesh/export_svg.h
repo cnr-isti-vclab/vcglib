@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2007/06/13 09:17:14  andrenucci
+Fix problem with scale
+
 Revision 1.5  2007/05/29 10:09:29  cignoni
 Added a const (and reformatted)
 
@@ -80,7 +83,7 @@ public:
 
 	static const int DEFAULT_LINE_WIDTH=2;
 	
-	//in singlefile export make the grid of sessiones
+	//in single-file export make the grid of sessiones
 	int numCol;
 	int numRow;
 	
@@ -113,6 +116,12 @@ private:
     
 	//Text details 
 	bool showDetails;
+    
+    //Starting offset
+	float Xmin, Ymin;
+	Point2f* minPos;
+
+	
 
 // construction
 public:
@@ -134,6 +143,9 @@ public:
 		width=10; //width of the windows
 		height=10; //height of the windows
 	    showDetails=true;
+		Xmin=0;
+		Ymin=0;
+		minPos= new Point2f(0,0);
 	}
 
 // public methods
@@ -204,11 +216,15 @@ public:
 	int getWidth(){return width;}
 	bool showTextDetails(){return showDetails;}
 	int getHeight(){return height;}
+	
+	void setMinPoint(Point2f* p){
+		 minPos = p;
+	}
+	Point2f* getminPoint(){return (minPos);}
+	
 
 };
-	    //const int SVGProperties::DEFAULT_LINE_WIDTH = 2;
-		//const char * SVGProperties::DEFAULT_LINE_COLOR = "black";
-        //const char * SVGProperties::DEFAULT_LINE_CAP = "round";
+	    
 
 /**
  * SVG exporter.
@@ -240,7 +256,16 @@ public:
 		float scale= pro.getScale();
 		vector<EdgeMeshType*>::iterator it;
         int i=0;
-		
+		Point2f pmin(100000000.0f,  100000000.0f);
+		for(it=(*vp).begin(); it!=(*vp).end(); it++){
+			EdgeMeshType* ed;
+		    ed=(*it);
+			Save(ed,o,pro, -2);
+			Point2f* p=pro.getminPoint();
+			pmin[0]=min(pmin[0], p->X());
+			pmin[1]=min(pmin[1], p->Y());
+		}
+		pro.setMinPoint(new Point2f(pmin[0],pmin[1]));
 		for(it=(*vp).begin(); it!=(*vp).end(); it++){
             
 			EdgeMeshType* ed;
@@ -250,35 +275,34 @@ public:
 			
 			int x=pro.getViewBox().V(0);
 			int y=pro.getViewBox().V(1);
-			
+			/*
 			fprintf(o, "<rect width= \" %d \" height= \" %d \" x=\"%d \" y=\" %d \" style= \" stroke-width:1; fill-opacity:0.0; stroke:rgb(0,0,0)\" /> \n",x/pro.numCol,y,  (x/pro.numCol)*i, 40);
-			
-			Save(ed,o,pro);
-
+			*/
+			Save(ed,o,pro, i);
+           
             if(pro.showTextDetails()){
-		    fprintf(o,"<text x= \" %d \" y= \"30 \" font-family= \"Verdana \" font-size= \"30 \" >",(x/pro.numCol)*i);
-			fprintf(o,"Slice n\°:%d </text>", i);}
+		    fprintf(o,"<text x= \" %d \" y= \"30 \" font-family= \"Verdana \" font-size= \"30 \" >\n",(x/pro.numCol)*i);
+			fprintf(o,"Slice num:%d </text>\n", i);}
 			i++;
 		}
 		fprintf(o, "</svg>");
 		fclose(o);
 		return true;
 	}
-		 
-	
-	//! Save with the given SVG properties.
+    //! Save with the given SVG properties.
 	static bool Save(EdgeMeshType *mp, const char *filename, SVGProperties & props )
 	{
+
 	  FILE * o = fopen(filename,"w");
 	  if (o==NULL)
 			return false;
 	
 	  WriteXmlHead(o, props.getWidth(),props.getHeight(), props.getViewBox(), props.getPosition());
-			
-
-		Save(mp, o, props);
-
-		fprintf(o, "</svg>");
+	  		
+        props.setPosition(Point2d(0,40));
+		Save(mp, o, props, 0);
+        fprintf(o, "</svg>");
+		
 
 		// final xml tags
 
@@ -286,8 +310,10 @@ public:
 		return true;
 	}
 
-	 static void Save(EdgeMeshType *mp, FILE* o, SVGProperties  props)
-	{
+	 static void Save(EdgeMeshType *mp, FILE* o, SVGProperties  props, int numSlice)
+	{ 
+		bool preCal=false;
+		if(numSlice==-2) preCal=true; 
 		// build vector basis (n, v1, v2)
 		Point3d p1(0.0,0.0,0.0);
 		Point3d p2(1.0,0.0,0.0);
@@ -302,12 +328,13 @@ public:
 
 		v1.Normalize();
 		Point3d v2 = v1 ^ props.projPlane()->Direction();
-
+        //Global points
+	    vector<vector<Point2f>>* glb;
 		std::vector<Point2f> pts;
 	    pts.clear();
 		Point2f pmin(100000000.0f,  100000000.0f);
 		Point2f pmax(-100000000.0f, -100000000.0f);
-       
+        Point3d bbMin;
 		
 		typename EdgeMeshType::EdgeIterator i;
 		
@@ -318,14 +345,19 @@ public:
 			
 			p1 = (*i).V(0)->P();
 			p2 = (*i).V(1)->P();
+         
+
 
 			Point3d p1d(p1[0], p1[1], p1[2]);
 			Point3d p2d(p2[0], p2[1], p2[2]);
-
+			
+			
 			// Project the line on the reference plane
+		   
 			Point3d p1proj = props.projPlane()->Projection(p1d);
 			Point3d p2proj = props.projPlane()->Projection(p2d);
-
+		
+         
 			// Convert the 3D coordinates of the line to the uv coordinates of the plane
 			Point2f pt1(static_cast<float>(p1proj * v1), static_cast<float>(p1proj * v2));
 			Point2f pt2(static_cast<float>(p2proj * v1), static_cast<float>(p2proj * v2));
@@ -341,35 +373,54 @@ public:
 		
 		}
 	
-		
-		float scale=props.getScale();
+		//Point2f bbp(static_cast<float>(bbMin * v1), static_cast<float>(bbMin * v2));
+		if(!preCal){
+			float scale=props.getScale();
 
-		// line settings
-		 Point2d pos=props.getPosition();
+			// line settings
+			Point2d pos=props.getPosition();
 		 
-		fprintf(o, "      <g stroke=\"%s\" stroke-linecap=\"%s\" > \n", 
-		props.lineColor(), props.lineCapStyle());
-		float maxEdges= math::Max((pmax[0]-pmin[0]), (pmax[1]-pmin[1]));
-        Draw_proportions_scale(o,maxEdges, props);
-		std::vector<Point2f>::iterator itPoints;
-		for(itPoints = pts.begin(); itPoints != pts.end(); ++itPoints)
-		{
-			Point2f p1 = *itPoints;
-			++itPoints;
-			Point2f p2 = *itPoints;
+			fprintf(o, "      <g stroke=\"%s\" stroke-linecap=\"%s\" > \n", 
+			props.lineColor(), props.lineCapStyle());
+			float maxEdges= math::Max((pmax[0]-pmin[0]), (pmax[1]-pmin[1]));
+			if (numSlice==0)
+				Draw_proportions_scale(o,maxEdges, props);
+			fprintf(o, "<svg id = \" %d \">\n", numSlice );
+			int x=props.getViewBox().V(0);
+			int y=props.getViewBox().V(1);
+			fprintf(o, "<rect width= \" %d \" height= \" %d \" x=\"%d \" y=\" %d \" style= \" stroke-width:1; fill-opacity:0.0; stroke:rgb(0,0,0)\" /> \n",x/props.numCol,y,  (x/props.numCol)*numSlice, 40);
 			
 			
-
-			
-			fprintf(o, "        <line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" \n", 
-				pos.X()+((p1[0] - pmin[0]) * scale), pos.Y()+((p1[1] - pmin[1]) * scale),
-				pos.X()+((p2[0] - pmin[0]) * scale), pos.Y()+((p2[1] - pmin[1]) * scale ));
-
-			fprintf(o, "          stroke-width = \"%d\" ",props.lineWidth());
-			fprintf(o, "/>\n");
+			std::vector<Point2f>::iterator itPoints;
+			for(itPoints = pts.begin(); itPoints != pts.end(); ++itPoints)
+			{
+				Point2f p1 = *itPoints;
+				++itPoints;
+				Point2f p2 = *itPoints;
+				if(numSlice==0){
+					fprintf(o, "        <line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" \n", 
+				    pos.X()+((p1[0]-pmin[0]) * scale), pos.Y()+((p1[1]-pmin[1]) * scale),
+				   pos.X()+((p2[0]-pmin[0]) * scale), pos.Y()+((p2[1]-pmin[1]) * scale ));
+					fprintf(o, "          stroke-width = \"%d\" ",props.lineWidth());
+					fprintf(o, "/>\n");
+				}
+				else{
+					fprintf(o, "        <line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" \n", 
+				    pos.X()+((p1[0]-props.getminPoint()->X()) * scale), pos.Y()+((p1[1]-props.getminPoint()->Y()) * scale),
+				   pos.X()+((p2[0]-props.getminPoint()->X()) * scale), pos.Y()+((p2[1]-props.getminPoint()->Y()) * scale ));
+					fprintf(o, "          stroke-width = \"%d\" ",props.lineWidth());
+					fprintf(o, "/>\n");}
 		}
-
+        fprintf(o, "</svg>");
 		fprintf(o, "  </g>\n");
+		}
+		else{
+			Point2f* p=props.getminPoint();
+			p->X()=pmin[0];
+			p->Y()=pmin[1];
+			props.setMinPoint(p);
+
+		}
 	}
 
 	private:
@@ -416,6 +467,7 @@ public:
 		fprintf(o, "    </rdf:RDF> \n");
 		fprintf(o, "  </metadata> \n");
 	}
+		
 };
 
 
