@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2007/06/20 12:59:43  corsini
+adjust wheel back-compatibility
+
 Revision 1.20  2007/06/13 17:15:08  benedetti
 Added one-level undo system and sticky trackmodes.
 
@@ -97,7 +100,6 @@ Adding copyright.
 #include <wrap/gl/space.h>
 
 using namespace vcg;
-using namespace std;
 
 Transform::Transform() {
   track.SetIdentity();
@@ -300,7 +302,7 @@ void Trackball::DrawIcon() {
 void Trackball::Reset() {
   track.SetIdentity();
   undo_track = track;
-  map<int, TrackMode *>::iterator i;
+  std::map<int, TrackMode *>::iterator i;
   for(i = modes.begin(); i != modes.end(); i++){
    TrackMode * mode=(*i).second;
    if(mode!=NULL)

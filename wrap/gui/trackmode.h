@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2007/06/25 10:21:38  fiorin
+Added some std:: here and there
+
 Revision 1.12  2007/06/13 17:15:09  benedetti
 Added one-level undo system and sticky trackmodes.
 
@@ -68,8 +71,6 @@ Adding copyright.
 #include <vcg/space/segment3.h>
 #include <vcg/space/ray3.h>
 #include <wrap/gui/view.h>
-
-using namespace std;
 
 namespace vcg {
   

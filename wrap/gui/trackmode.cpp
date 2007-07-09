@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2007/06/13 17:15:09  benedetti
+Added one-level undo system and sticky trackmodes.
+
 Revision 1.22  2007/05/28 08:10:47  fiorin
 Removed type cast warnings
 
@@ -94,8 +97,6 @@ Adding copyright.
 #include <wrap/gui/trackball.h>
 #include <wrap/gui/trackutils.h>
 
-
-using namespace std;
 using namespace vcg;
 using namespace vcg::trackutils;
 
@@ -226,8 +227,8 @@ void AxisMode::Apply (Trackball * tb, float WheelNotch)
 
 void AxisMode::Apply (Trackball * tb, Point3f new_point)
 {
-  pair< Point3f,bool > hitOld = HitNearestPointOnAxis (tb, axis, tb->last_point);
-  pair< Point3f,bool > hitNew = HitNearestPointOnAxis (tb, axis, new_point);
+  std::pair< Point3f,bool > hitOld = HitNearestPointOnAxis (tb, axis, tb->last_point);
+  std::pair< Point3f,bool > hitNew = HitNearestPointOnAxis (tb, axis, new_point);
   if (hitOld.second && hitNew.second){
     tb->Translate (hitNew.first - hitOld.first);
   }
@@ -241,8 +242,8 @@ void AxisMode::Draw(Trackball * tb){
 // Plane mode implementation.
 void PlaneMode::Apply (Trackball * tb, Point3f new_point)
 {
-  pair< Point3f, bool > hitOld = HitPlane(tb,tb->last_point,plane);
-  pair< Point3f, bool > hitNew = HitPlane(tb,new_point,plane);
+  std::pair< Point3f, bool > hitOld = HitPlane(tb,tb->last_point,plane);
+  std::pair< Point3f, bool > hitNew = HitPlane(tb,new_point,plane);
   if(hitOld.second && hitNew.second){
   	  tb->Translate (hitNew.first - hitOld.first);  	
   }
@@ -287,7 +288,7 @@ void CylinderMode::Draw(Trackball * tb){
 }
 
 // Path mode implementation.
-void PathMode::Init(const vector < Point3f > &pts)
+void PathMode::Init(const std::vector < Point3f > &pts)
 {
   unsigned int npts = int(pts.size());
   assert(npts >= 2);
@@ -301,12 +302,12 @@ void PathMode::Init(const vector < Point3f > &pts)
   for(unsigned int i=1;i<npts;i++){
     seg_length=Distance(points[i-1],points[i]);
     path_length += seg_length;
-    min_seg_length = min(seg_length,min_seg_length);
+    min_seg_length = std::min(seg_length,min_seg_length);
   }
   if(wrap){
     seg_length=Distance(points[npts-1],points[0]);
     path_length += seg_length;
-    min_seg_length = min(seg_length,min_seg_length);
+    min_seg_length = std::min(seg_length,min_seg_length);
   }
 }
 
@@ -536,7 +537,7 @@ void PathMode::Draw(Trackball * tb){
 }
 
 // Area mode implementation.
-void AreaMode::Init(const vector < Point3f > &pts)
+void AreaMode::Init(const std::vector < Point3f > &pts)
 {
   unsigned int npts = int(pts.size());
   
@@ -579,7 +580,7 @@ void AreaMode::Init(const vector < Point3f > &pts)
   }
   min_side_length=Distance(points[0],points[1]);
   for(unsigned int i=1;i<npts;i++){
-  	min_side_length=min(Distance(points[i-1],points[i]),min_side_length);
+  	min_side_length=std::min(Distance(points[i-1],points[i]),min_side_length);
   }
   rubberband_handle=old_status=status=initial_status=p0;
 }
@@ -603,7 +604,7 @@ void AreaMode::Apply (Trackball * tb, Point3f new_point)
     delta_mouse=tb->camera.Project(status)-new_point;    
     begin_action=false; 
   }	
-  pair< Point3f, bool > hitNew = HitPlane(tb,new_point+delta_mouse,plane);
+  std::pair< Point3f, bool > hitNew = HitPlane(tb,new_point+delta_mouse,plane);
   if(! hitNew.second){
   	  return;
   }
@@ -644,7 +645,7 @@ Point3f AreaMode::Move(Point3f start,Point3f end)
     for (i = 0, j = np-1; i < np; j = i++) {
       Segment3f side(points[i],points[j]);
       Point3f pseg,psid;
-      pair<float,bool> res=SegmentSegmentDistance(segment,side,pseg,psid);
+      std::pair<float,bool> res=SegmentSegmentDistance(segment,side,pseg,psid);
       if(res.first < EPSILON && ! res.second){
       	float dist= Distance(pt,pseg);
       	if(dist < EPSILON){
