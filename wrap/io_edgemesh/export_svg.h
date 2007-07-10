@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2007/07/09 15:36:40  andrenucci
+fix bug with exporting of translate plans
+
 Revision 1.7  2007/06/13 09:17:14  andrenucci
 Fix problem with scale
 
@@ -54,8 +57,6 @@ namespace vcg
 		namespace io 
 		{
 
-static const char * DEFAULT_LINE_COLOR = "black";
-static const char * DEFAULT_LINE_CAP= "round";
 /**
  * SVG Properties.
  *
@@ -129,6 +130,10 @@ public:
 	SVGProperties()
 	{
 		lwidth = DEFAULT_LINE_WIDTH;
+		
+		const char * DEFAULT_LINE_COLOR = "black";
+		const char * DEFAULT_LINE_CAP= "round";
+
 		stroke_color = DEFAULT_LINE_COLOR;
 		stroke_linecap = DEFAULT_LINE_CAP;
 
@@ -254,7 +259,7 @@ public:
 		int num = (*vp).size(); //number of square to draw
 		WriteXmlHead(o,pro.getWidth(),pro.getHeight(),pro.getViewBox(),Point2d(0,0));
 		float scale= pro.getScale();
-		vector<EdgeMeshType*>::iterator it;
+		typename std::vector<EdgeMeshType*>::iterator it;
         int i=0;
 		Point2f pmin(100000000.0f,  100000000.0f);
 		for(it=(*vp).begin(); it!=(*vp).end(); it++){
