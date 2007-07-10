@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2007/07/10 06:58:31  cignoni
+added a missing typename
+
 Revision 1.8  2007/07/09 15:36:40  andrenucci
 fix bug with exporting of translate plans
 
@@ -334,7 +337,7 @@ public:
 		v1.Normalize();
 		Point3d v2 = v1 ^ props.projPlane()->Direction();
         //Global points
-	    vector<vector<Point2f>>* glb;
+	  vector<vector<Point2f> >* glb;
 		std::vector<Point2f> pts;
 	    pts.clear();
 		Point2f pmin(100000000.0f,  100000000.0f);
