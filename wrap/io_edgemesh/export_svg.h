@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2007/07/10 07:48:41  cignoni
+changed a template >> into > >
+
 Revision 1.9  2007/07/10 06:58:31  cignoni
 added a missing typename
 
@@ -124,6 +127,7 @@ private:
     //Starting offset
 	float Xmin, Ymin;
 	Point2f* minPos;
+	Point2f* maxPos;
 
 	
 
@@ -154,6 +158,7 @@ public:
 		Xmin=0;
 		Ymin=0;
 		minPos= new Point2f(0,0);
+		maxPos= new Point2f(0,0);
 	}
 
 // public methods
@@ -228,7 +233,11 @@ public:
 	void setMinPoint(Point2f* p){
 		 minPos = p;
 	}
+	void setMaxPoint(Point2f* p){
+		 maxPos = p;
+	}
 	Point2f* getminPoint(){return (minPos);}
+	Point2f* getmaxPoint(){return (maxPos);}
 	
 
 };
@@ -265,15 +274,23 @@ public:
 		typename std::vector<EdgeMeshType*>::iterator it;
         int i=0;
 		Point2f pmin(100000000.0f,  100000000.0f);
+		Point2f pmax(-10000000.0f, -10000000.0f);
 		for(it=(*vp).begin(); it!=(*vp).end(); it++){
 			EdgeMeshType* ed;
 		    ed=(*it);
 			Save(ed,o,pro, -2);
-			Point2f* p=pro.getminPoint();
-			pmin[0]=min(pmin[0], p->X());
-			pmin[1]=min(pmin[1], p->Y());
+			Point2f* pmi=pro.getminPoint();
+			Point2f* pma=pro.getmaxPoint();
+			pmin[0]=min(pmin[0], pmi->X());
+			pmin[1]=min(pmin[1], pmi->Y());
+			pmax[0]=max(pmax[0], pma->X());
+			pmax[1]=max(pmax[1], pma->Y());
 		}
+		float maxEdge=max(pmax[0]-pmin[0], pmax[1]-pmin[1]);
+		float scl = (pro.getViewBox().V(0)/pro.numCol) /maxEdge ;
+		pro.setScale(scl);
 		pro.setMinPoint(new Point2f(pmin[0],pmin[1]));
+		pro.setMaxPoint(new Point2f(pmax[0],pmax[1]));
 		for(it=(*vp).begin(); it!=(*vp).end(); it++){
             
 			EdgeMeshType* ed;
@@ -308,7 +325,7 @@ public:
 	  WriteXmlHead(o, props.getWidth(),props.getHeight(), props.getViewBox(), props.getPosition());
 	  		
         props.setPosition(Point2d(0,40));
-		Save(mp, o, props, 0);
+		Save(mp, o, props, -1);
         fprintf(o, "</svg>");
 		
 
@@ -321,6 +338,7 @@ public:
 	 static void Save(EdgeMeshType *mp, FILE* o, SVGProperties  props, int numSlice)
 	{ 
 		bool preCal=false;
+		
 		if(numSlice==-2) preCal=true; 
 		// build vector basis (n, v1, v2)
 		Point3d p1(0.0,0.0,0.0);
@@ -396,7 +414,10 @@ public:
 			fprintf(o, "<svg id = \" %d \">\n", numSlice );
 			int x=props.getViewBox().V(0);
 			int y=props.getViewBox().V(1);
+			if(numSlice>=0)
 			fprintf(o, "<rect width= \" %d \" height= \" %d \" x=\"%d \" y=\" %d \" style= \" stroke-width:1; fill-opacity:0.0; stroke:rgb(0,0,0)\" /> \n",x/props.numCol,y,  (x/props.numCol)*numSlice, 40);
+			else
+			fprintf(o, "<rect width= \" %d \" height= \" %d \" x=\"%d \" y=\" %d \" style= \" stroke-width:1; fill-opacity:0.0; stroke:rgb(0,0,0)\" /> \n",x/props.numCol,y,  0, 40);
 			
 			
 			std::vector<Point2f>::iterator itPoints;
@@ -405,7 +426,7 @@ public:
 				Point2f p1 = *itPoints;
 				++itPoints;
 				Point2f p2 = *itPoints;
-				if(numSlice==0){
+				if(numSlice==-1){
 					fprintf(o, "        <line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" \n", 
 				    pos.X()+((p1[0]-pmin[0]) * scale), pos.Y()+((p1[1]-pmin[1]) * scale),
 				   pos.X()+((p2[0]-pmin[0]) * scale), pos.Y()+((p2[1]-pmin[1]) * scale ));
@@ -423,10 +444,14 @@ public:
 		fprintf(o, "  </g>\n");
 		}
 		else{
-			Point2f* p=props.getminPoint();
-			p->X()=pmin[0];
-			p->Y()=pmin[1];
-			props.setMinPoint(p);
+			Point2f* pmi=props.getminPoint();
+			Point2f* pma=props.getmaxPoint();
+			pmi->X()=pmin[0];
+			pmi->Y()=pmin[1];
+			pma->X()=pmax[0];
+			pma->Y()=pmax[1];
+			props.setMinPoint(pmi);
+			props.setMaxPoint(pma);
 
 		}
 	}
