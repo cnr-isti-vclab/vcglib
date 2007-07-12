@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2007/01/10 17:25:14  matteodelle
+*** empty log message ***
+
 Revision 1.12  2006/11/07 15:13:56  zifnab1974
 Necessary changes for compilation with gcc 3.4.6. Especially the hash function is a problem
 
@@ -161,12 +164,18 @@ static void PerVertexPerFace(ComputeMeshType &m)
 /// The normal of a vertex v is the weigthed average of the normals of the faces incident on v.
 static void PerVertexNormalizedPerFace(ComputeMeshType &m)
 {
-PerVertexPerFace(m);
- VertexIterator vi;
- for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-   if( !(*vi).IsD() && (*vi).IsRW() ) 
-     (*vi).N().Normalize();
+	PerVertexPerFace(m);
+	VertexIterator vi;
+	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+		if( !(*vi).IsD() && (*vi).IsRW() ) 
+			(*vi).N().Normalize();
 }
+static void PerVertexNormalizedPerFaceNormalized(ComputeMeshType &m)
+{
+	PerVertexNormalizedPerFace(m);
+	FaceIterator fi;
+	for(fi=m.face.begin();fi!=m.face.end();++fi)
+      if( !(*fi).IsD() )	(*fi).N().Normalize();}
 
 static void PerFaceRW(ComputeMeshType &m, bool normalize=false)
 {
