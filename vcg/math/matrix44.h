@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.33  2007/07/03 16:06:48  corsini
+add DCM to Euler Angles conversion
+
 Revision 1.32  2007/03/08 14:39:27  corsini
 final fix to euler angles transformation
 
@@ -261,6 +264,13 @@ public:
     for(int i = 0; i < 16; i++) 
       _a[i] = (T)(m.V()[i]);
   }
+	  template <class Q> 
+  static inline Matrix44 Construct( const Matrix44<Q> & b )
+  {
+	  Matrix44<T> tmp; tmp.FromMatrix(b);
+    return tmp;
+  }
+
 };
 
 
