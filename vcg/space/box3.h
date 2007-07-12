@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2007/03/22 18:12:00  pietroni
+*** empty log message ***
+
 Revision 1.15  2007/03/22 17:29:16  pietroni
 *** empty log message ***
 
@@ -345,7 +348,7 @@ public:
 	}
 
 	template <class Q>
-	inline Box3 Construct( const Box3<Q> & b )
+	static inline Box3 Construct( const Box3<Q> & b )
 	{
     return Box3(Point3<BoxScalarType>::Construct(b.min),Point3<BoxScalarType>::Construct(b.max));
 	}
