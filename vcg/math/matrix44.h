@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.34  2007/07/12 06:42:01  cignoni
+added the missing static Construct() member
+
 Revision 1.33  2007/07/03 16:06:48  corsini
 add DCM to Euler Angles conversion
 
@@ -270,6 +273,13 @@ public:
 	  Matrix44<T> tmp; tmp.FromMatrix(b);
     return tmp;
   }
+	
+  static inline const Matrix44 &Identity( )
+  {
+	  static Matrix44<T> tmp; tmp.SetIdentity();
+    return tmp;
+  }
+
 
 };
 
