@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2007/07/09 22:41:22  benedetti
+Added Doxygen documentation, removed using namespace std, some other minor changes.
+
 Revision 1.3  2007/06/12 08:58:08  benedetti
 Minor fix in DrawUglyCylinderMode()
 
@@ -32,8 +35,6 @@ Removed type cast warnings
 
 Revision 1.1  2007/05/15 14:57:34  benedetti
 Utility functions for the trackmodes, first version
-
-
 
 ****************************************************************************/
 
@@ -53,10 +54,10 @@ Utility functions for the trackmodes, first version
 namespace vcg {
 
 /*!
-This namespace contains some support functions used by TrackMode subclassess.
+  @brief This namespace contains some support functions used by TrackMode subclassess.
 
-\warning Many of these functions shouldn't be here and are supposed to be moved to some appropriate place by the library administrator.
-\warning The \e DrawUgly series of functions is a \b TEMPORARY solution, used while waiting for the \e DrawBeautiful series...
+  \warning Many of these functions shouldn't be here and are supposed to be moved to some appropriate place by the library administrator.
+  \warning The \e DrawUgly series of functions is a \b TEMPORARY solution, used while waiting for the \e DrawBeautiful series...
 */
 namespace trackutils {
 
@@ -106,12 +107,20 @@ Point3f HitViewPlane (Trackball * tb, const Point3f & p)
   return PonVP;
 }
 
+// nota: non ho scritto io questa funzione,
+// quindi la documentazione doxy potrebbe non essere accurata al 100%.
+/*!
+  @brief Project a window coordinate point on the rotational hyperboloid relative to the manipulator.
 
-/*
+  <br>The original documentation (in italian) follows:
+<pre>
 dato un punto in coordinate di schermo e.g. in pixel stile opengl 
-calcola il punto di intersezione tra la viewline  che passa per viewpoint e per hitplane e l'iperboloide.
-l'iperboloide si assume essere quello di rotazione attorno alla retta viewpoint-center e di raggio rad
-si assume come sistema di riferimento quello con l'origine su center ecome x la retta center-viewpoint
+calcola il punto di intersezione tra la viewline  che passa per 
+viewpoint e per hitplane e l'iperboloide.
+l'iperboloide si assume essere quello di rotazione attorno alla 
+retta viewpoint-center e di raggio rad
+si assume come sistema di riferimento quello con l'origine 
+su center ecome x la retta center-viewpoint
 
 eq linea
        hitplane.y
@@ -127,12 +136,7 @@ y = --- * (r^2 /2.0)
  hitplane.y
  ----------- * x^2 - hitplane.y *x + (r^2/2.0) == 0
  viewpoint.x
-
-*/
-// nota: non ho scritto io questa funzione,
-// quindi la documentazione doxy potrebbe non essere accurata al 100%.
-/*!
-  @brief Project a window coordinate point on the rotational hyperboloid relative to the manipulator.
+</pre>
 
   @param center the center of the manipulator.
   @param radius the radius of the manipulator.
@@ -173,24 +177,26 @@ bool HitHyper (Point3f center, float radius, Point3f viewpoint, Plane3f vp,
   return true;
 }
 
-/* dato un punto in coordinate di schermo e.g. in pixel stile opengl 
-   restituisce un punto in coordinate di mondo sulla superficie 
-   della trackball.
-   La superficie della trackball e' data da una sfera + una porzione 
-   di iperboloide di rotazione.
-   Assumiamo la sfera di raggio unitario e centrata sull'origine e 
-   di guardare lungo la y negativa.
-
-                                       X   0   sqrt(1/2)  1  
-   eq sfera:              y=sqrt(1-x*x);   1   sqrt(1/2)  0   
-   eq iperboloide :       y=1/2*x;         inf  sqrt(1/2)  1/2
-   eq cono                y=x+sqrt(2);
-
-   */
 // nota: non ho scritto io questa funzione,
 // quindi la documentazione doxy potrebbe non essere accurata al 100%.
 /*!
   @brief Project a window coordinate point on the sphere relative to the manipulator.
+
+  <br>The original documentation (in italian) follows:
+<pre>
+dato un punto in coordinate di schermo e.g. in pixel stile opengl 
+restituisce un punto in coordinate di mondo sulla superficie 
+della trackball.
+La superficie della trackball e' data da una sfera + una porzione 
+di iperboloide di rotazione.
+Assumiamo la sfera di raggio unitario e centrata sull'origine e 
+di guardare lungo la y negativa.
+
+                                    X   0   sqrt(1/2)  1  
+eq sfera:              y=sqrt(1-x*x);   1   sqrt(1/2)  0   
+eq iperboloide :       y=1/2*x;         inf  sqrt(1/2)  1/2
+eq cono                y=x+sqrt(2);
+</pre>
 
   @param tb the manipulator.
   @param p the window coordinate point.
@@ -493,6 +499,13 @@ float signedDistance(Line3f line,Point3f pt,Point3f positive_dir)
   return Distance(line,pt) * ((((pt-ClosestPoint(line,pt)) * positive_dir) >= 0.0f )? 1.0f: -1.0f);
 }
 
+/*!
+  @brief Computes the verical component of an user mouse drag.
+
+  @param tb the manipulator.
+  @param new_point the new mouse pointer coordinate.
+  @return The verical component of the user mouse drag.
+*/
 float getDeltaY(Trackball * tb, Point3f new_point)
 {
   float ScreenHeight = float (tb->camera.viewport[3] - tb->camera.viewport[1]);
@@ -528,7 +541,7 @@ template<class T>
   camera eye and passing through the point's projection on the viewplane, then uses IntersectionRayPlane()
   to get the ray intersection with a given plane.
 
-  @see IntersectionRayPlane( const Plane3<T> & pl, const Ray3<T> & ray, Point3<T> &po)
+  @see IntersectionRayPlane()
   @param tb the manipulator.
   @param point the window coordinate point.
   @param plane the plane.
