@@ -2,14 +2,13 @@
 * VCGLib                                                            o o     *
 * Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
-* Copyright(C) 2004                      
-\/)\/    *
+* Copyright(C) 2004                                               \/)\/     *
 * Visual Computing Lab                                            /\/|      *
 * ISTI - Italian National Research Council                           |      *
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -25,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2007/06/13 17:15:08  benedetti
+Added one-level undo system and sticky trackmodes.
+
 Revision 1.14  2007/05/15 15:00:47  benedetti
 Moved the drawing code to trackmodes, some other minor changes
 
@@ -72,52 +74,6 @@ Adding copyright.
 
 
 ****************************************************************************/
-/****************************************************************************
-Short usage note:
-
-The trackball is a manipulator of an object
-
-Center specify the center of rotation and scaling of the trackball and usually 
-is set by the program and do not interactively change
-Radius specify the radius of the interactive ball shaped icon to specify rotation.
-It is in absolute unit but it should be in screen related units like the previoous 
-one it is not changed during interaction.
-
-When you specify a traslation with the trackball the trackball center remain UNCHANGED, 
-in other words it means that the object move out of the trackball icon. 
-Similarly when you apply a scaling the size of the iconshaped ball do not change.
-
-
-Typical use:
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(60, float(width())/float(height()), 1, 100);
-	  glMatrixMode(GL_MODELVIEW);
-	  glLoadIdentity();
-	  gluLookAt(0,0,3,   0,0,0,   0,1,0);        
-    
-    trackball.center=Point3f(0, 0, 0);
-    trackball.radius= 1;
-    
-    trackball.GetView();
-    trackball.Apply();
-        
-    float d=1.0f/mesh.bbox.Diag();
-    glScale(d);
-    glTranslate(-mesh.bbox.Center());
-    mesh->Render();
-
-Note on the typical use:
-Perspective and gllookat are choosed to frame the origin centered 1-radius 
-trackball.
-The final scale and translate are just to fit a generic mesh to the 1sized 
-origin centered where the trackball stays box.
-The trackball works also on Orthographic projections 
-BUT that are not centered around origin (just move it back along the Z)
-
-****************************************************************************/
-
 #ifndef TRACKBALL_H
 #define TRACKBALL_H
 
@@ -130,96 +86,316 @@ BUT that are not centered around origin (just move it back along the Z)
 #include <map>
 
 namespace vcg {
-  /* A trackball stores a transformation called 'track' that effectively rotate the object.
-     the rotation center, and size are kept in center and radius.
-   
+/*!
+  @brief The base class for Trackball.
+
+  This class is useful for using a Trackball instance in a scene graph,
+  as a sort of interactive transform.
+*/
+class Transform {
+public:
+  /*!
+    @brief The constructor.
+
+    Initialize:
+    - track to the identity transform.
+    - center to origin 0,0,0.
+    - radius to unit size.
   */
+  Transform();
+  /// A trackball stores a transformation called 'track' that effectively rototranslate the object.
+  Similarityf track;
+  /// track position in model space.
+  Point3f center; 
+  /// size of the widget in model space.
+  float radius; 
+};
 
-  class Transform {
-  public: 
-    Transform();
-    Similarityf track;
-    
-    /// track position in model space. default is 0,0,0
-    Point3f center; 
-    /// size of the widget in model space.
-    float   radius; 
-  };
+/*!
+  @brief Computes the linear interpolation between 2 transforms.
 
-  Transform interpolate(const Transform &a, const Transform &b, float t);
+  @param a The first transform.
+  @param b The second transform.
+  @param t The interpolation value (0: just a, 0.5: middle from a to b, 1: just b).
+  @return The linear interpolation.
+*/
+Transform interpolate(const Transform &a, const Transform &b, float t);
 
-  class TrackMode;
-   class Trackball: public Transform {
-  public:
+class TrackMode;
+
+/*!
+  @brief The manipulator manager system.
+
+  <em>Short usage note:</em>
+
+  - Center specify the center of rotation and scaling of the trackball and usually is set by the program and do not interactively change
+  - Radius specify the radius of the interactive ball shaped icon to specify rotation. It is in absolute unit.
+  - Like the previous one it is not changed during interaction.
+
+  When you specify a translation with the trackball the trackball center remain \b unchanged, in other words it means that the object move out of the trackball icon. Similarly when you apply a scaling the size of the manipulator icon do not change.
+
+  Typical use:
+<pre>
+glMatrixMode(GL_PROJECTION);
+glLoadIdentity();
+gluPerspective(60, float(width())/float(height()), 1, 100);
+glMatrixMode(GL_MODELVIEW);
+glLoadIdentity();
+gluLookAt(0,0,3,   0,0,0,   0,1,0)
+
+trackball.center=Point3f(0, 0, 0);
+trackball.radius= 1;
+
+trackball.GetView();
+trackball.Apply(true); //false if you want an invisible trackball
+
+float d=1.0f/mesh.bbox.Diag();
+glScale(d);
+glTranslate(-mesh.bbox.Center());
+mesh->Render();
+</pre>
+
+  Note on the typical use:
+  - Perspective and glulookat are choosed to frame the origin centered 1-radius trackball.
+  - The final scale and translate are just to fit a generic mesh to the 1sized origin centered where the trackball stays box.
+  - The trackball works also on Orthographic projections \b but that are not centered around origin (just move it back along the Z)
+*/
+class Trackball: public Transform {
+public:
 // the drawing code has been moved to the trackmodes
 //  class DrawingHint {
 
 // DrawingHint DH;
 
-  
-    enum Button { BUTTON_NONE   = 0x0000, 
-		  BUTTON_LEFT   = 0x0001, 
-		  BUTTON_MIDDLE = 0x0002, 
-		  BUTTON_RIGHT  = 0x0004, 
-		  WHEEL         = 0x0008,
-		  KEY_SHIFT     = 0x0010, 
-		  KEY_CTRL      = 0x0020, 
-		  KEY_ALT       = 0x0040, 
-		  HANDLE        = 0x0080 };
+  /// The componibile states of the manipulator system.
+  enum Button { BUTTON_NONE   = 0x0000, ///< No mouse button pressed.
+                BUTTON_LEFT   = 0x0001, ///< Left mouse button pressed.
+                BUTTON_MIDDLE = 0x0002, ///< Middle mouse button pressed.
+                BUTTON_RIGHT  = 0x0004, ///< Right mouse button pressed.
+                WHEEL         = 0x0008, ///< Mouse wheel activated.
+                KEY_SHIFT     = 0x0010, ///< Shift key pressed.
+                KEY_CTRL      = 0x0020, ///< Ctrl key pressed.
+                KEY_ALT       = 0x0040, ///< Alt key pressed.
+                HANDLE        = 0x0080  ///< Application-defined state activated.
+              };
 
-    Trackball();
-    ~Trackball();
-    void SetIdentity();
-    void SetPosition(const Point3f &c, int millisec = 0);
-    void SetScale(const float s) {radius=s;};
-    void SetTransform(const Transform &transform, int millisec = 0);
-    void Translate(Point3f tr);
-    void Scale(const float f);
+  /*!
+    @brief The constructor.
 
+   Initialize the internal state with default values
+   and call setDefaultMapping().
+  */
+  Trackball();
+  /*!
+    @brief The destructor.
 
-    //operating
-    void GetView();
-    void Apply(bool Draw); 
-    void Apply (); 
-    void DrawPostApply();
-    void ApplyInverse();
-    // DrawIcon() has been moved to trackutils.h
-    //void DrawIcon();
-    void Reset();
+    @warning The destructor <b>does not</b> deallocate the memory allocated by setDefaultMapping(), because the application can change the modes map. This can lead to small memory leaks, so please explicitally delete any manipulator in the modes map if you are going to repeatly allocate and deallocate Trackball instances.
+  */
+  ~Trackball();
+  /*!
+    @brief Reset the trackball.
 
-    // DrawCircle (), DrawPlane(), DrawPlaneHandle() has been moved to trackutils.h
-    // the drawing code has been moved to the trackmodes
-    // void DrawCircle ();
-    // void DrawPlane();
-    // void DrawPlaneHandle();
+    Equivalent to Reset().
+  */
+  void SetIdentity();
+  /*!
+    @brief Set the position of the trackball.
 
-    //interface
-    void MouseDown(/*Button*/ int button);
-    void MouseDown(int x, int y, /*Button*/ int button);
-    void MouseMove(int x, int y); 
-    void MouseUp(int x, int y, /*Button */ int button); 
-    void MouseWheel(float notch);  // it assumes that a notch of 1.0 is a single step of the wheel
-    void MouseWheel (float notch, /*Button */ int button);
-    void ButtonUp(Button button);
-    void ButtonDown(Button button);
-    void Undo();
+    @param c The new position of the trackball.
+    @param millisec Currently not in use.
+  */
+  void SetPosition(const Point3f &c, int millisec = 0);
+  /*!
+    @brief Currently not in use.
 
-    //default sensitivity 1
-    void SetSensitivity(float s);
+    @param s Currently not in use.
+  */
+  void SetScale(const float s) {radius=s;};
+  /*!
+    @brief Currently not in use.
 
-    //spinning interface
-    void SetSpinnable(bool on);
-    bool IsSpinnable();  
-    void SetSpinning(Quaternionf &spin);
-    void StopSpinning();
-    bool IsSpinning();  
+    @param transform Currently not in use.
+    @param millisec Currently not in use.
+  */
+  void SetTransform(const Transform &transform, int millisec = 0);
+  /*!
+    @brief Apply a translation on the current transformation.
 
-    //interfaccia navigation:
-    void Back();
-    void Forward();
-    void Home();
-    void Store();
-    void HistorySize(int lenght);
+    @param tr The translation vector.
+  */
+  void Translate(Point3f tr);
+  /*!
+    @brief Apply a scaling on the current transformation.
+
+    @param f The scale factor.
+  */
+  void Scale(const float f);
+
+  //operating
+  /*!
+    @brief Initialize the camera instance.
+  */
+  void GetView();
+  /*!
+    @brief Apply the current transformation on the OpenGL modelview matrix.
+
+    @param Draw true if has to call DrawPostApply() after the application.
+  */
+  void Apply(bool Draw);
+  /*!
+    @brief Old application of the transformation.
+
+    @warning This function does \b not call DrawPostApply() after the application.
+  */
+  void Apply ();
+  /*!
+    @brief Draw the current manipulator.
+
+    Call the draw function of the current manipulator.
+    If no manipulator is selected call the draw function of the manipulator associated to inactive_mode.
+
+    @warning This function assumes that the OpenGL modelview matrix has been initialized with Apply ().
+  */
+  void DrawPostApply();
+  /*!
+    @brief Apply the \b inverse of current transformation on the OpenGL modelview matrix.
+  */
+  void ApplyInverse();
+  // DrawIcon() has been moved to trackutils.h
+  //void DrawIcon();
+  /*!
+    @brief Reset the transformation and every mapped manipulator.
+  */
+  void Reset();
+
+  // DrawCircle (), DrawPlane(), DrawPlaneHandle() has been moved to trackutils.h
+  // the drawing code has been moved to the trackmodes
+  // void DrawCircle ();
+  // void DrawPlane();
+  // void DrawPlaneHandle();
+
+  //interface
+  /*!
+    @brief Interface function relative to mouse down event in QT/SDL.
+
+    @param button The new state.
+  */
+  void MouseDown(/*Button*/ int button);
+  /*!
+    @brief Interface function relative to mouse down event in QT/SDL.
+
+    @param x The horizontal coordinate of the mouse pointer.
+    @param y The vertical coordinate of the mouse pointer.
+    @param button The new state.
+  */
+  void MouseDown(int x, int y, /*Button*/ int button);
+  /*!
+    @brief Interface function relative to mouse down event in QT/SDL.
+
+    @param x The horizontal coordinate of the mouse pointer.
+    @param y The vertical coordinate of the mouse pointer.
+  */
+  void MouseMove(int x, int y); 
+  /*!
+    @brief Interface function relative to mouse down event in QT/SDL.
+
+    @param x The horizontal coordinate of the mouse pointer.
+    @param y The vertical coordinate of the mouse pointer.
+    @param button The new state.
+  */
+  void MouseUp(int x, int y, /*Button */ int button); 
+  /*!
+    @brief Old interface function relative to mouse down event in QT/SDL.
+
+    @param notch The mouse wheel notch (1: one forward step, -1: one backward step).
+  */
+  void MouseWheel(float notch);
+  /*!
+    @brief Interface function relative to mouse down event in QT/SDL.
+
+    @param notch The mouse wheel notch (1: one forward step, -1: one backward step).
+    @param button The new state.
+  */
+  void MouseWheel (float notch, /*Button */ int button);
+  /*!
+    @brief Interface function relative to key down event in QT/SDL.
+
+    @param button the new state.
+  */
+  void ButtonUp(Button button);
+  /*!
+    @brief Interface function relative to key up event in QT/SDL.
+
+    @param button the new state.
+  */
+  void ButtonDown(Button button);
+  /*!
+    @brief Undo function for manipulator system.
+
+    A call of this function restores the state before last user action.
+    This function calls %Undo() on every mapped manipulator.
+  */
+  void Undo();
+
+  //default sensitivity 1
+  /*!
+    @brief Currently not in use.
+
+    @param s Currently not in use.
+  */
+  void SetSensitivity(float s);
+
+  //spinning interface
+  /*!
+    @brief Currently not in use.
+
+    @param on Currently not in use.
+  */
+  void SetSpinnable(bool on);
+  /*!
+    @brief Currently not in use.
+
+    @return A meaningless boolean value.
+  */
+  bool IsSpinnable();
+  /*!
+    @brief Currently not in use.
+
+    @param spin Currently not in use.
+  */
+  void SetSpinning(Quaternionf &spin);
+  /*!
+    @brief Currently not in use.
+  */
+  void StopSpinning();
+  /*!
+    @brief Currently not in use.
+
+    @return A meaningless boolean value.
+  */
+  bool IsSpinning();
+
+  //interfaccia navigation:
+  /*!
+    @brief Currently not in use.
+  */
+  void Back();
+  /*!
+    @brief Currently not in use.
+  */
+  void Forward();
+  /*!
+    @brief Currently not in use.
+  */
+  void Home();
+   /*!
+    @brief Currently not in use.
+  */
+  void Store();
+  /*!
+    @brief Currently not in use.
+  */
+  void HistorySize(int lenght);
 
 /*    //internals  // commented out no more used this stuff!
     enum Action { NONE = 0,
@@ -236,48 +412,86 @@ namespace vcg {
 		  TRACK_SCALE = 13
     };
 */
-    // loads/stores current status from/to ascii stings
-    void ToAscii(char * st);
-    bool SetFromAscii(char * st);
-	
-    //protected:
-    View<float> camera;
+  // loads/stores current status from/to ascii stings
+  /*!
+    @brief Currently not in use.
 
-    void SetCurrentAction();
-  
-    int current_button;
-    TrackMode *current_mode;
+    @param st Currently not in use.
+  */
+  void ToAscii(char * st);
+  /*!
+    @brief Currently not in use.
 
-	// inactive_mode is used to draw the inactive trackball
-    // can be assigned, for example, to draw an area or a path
-    // even when the user is not interacting with it
-    TrackMode *inactive_mode;
-   
-    // reset modes to default mapping.
-    void setDefaultMapping ();
+    @param st Currently not in use.
+    @return A meaningless boolean value.
+  */
+  bool SetFromAscii(char * st);
 
-    std::map<int, TrackMode *> modes;
+  //protected:
+  /// The reference for point projection and unprojection from screen space to modelspace.
+  View<float> camera;
+  /*!
+    @brief Prepare Trackball and every mapped TrackMode for an user action.
 
-    Similarityf last_track;
-    
-    // undo_track and last_track have different meanings..
-    Similarityf undo_track; 
-	
-    Similarityf last_view;
-    Point3f last_point;
-    std::vector<Point3f> Hits;
-    bool dragging;
-    int button_mask;
+    This function is called automatically when an user action begins.
+  */
+  void SetCurrentAction();
+  /// Current state composition.
+  int current_button;
+  /// The selected manipulator.
+  TrackMode *current_mode;
 
-    Quaternionf spin;
-    bool spinnable;
-    bool spinning;
-  
-    std::list<Transform> history;
-    int history_size;
+  /// The inactive manipulator. It is drawed when Trackball is inactive.
+  TrackMode *inactive_mode;
 
-    friend class TrackMode;
-  };
+  /*!
+    @brief Reset modes to default mapping.
+
+    Set the default modes mapping.
+    The default mapping is:
+    - \b LEFT : SphereMode.
+    - \b LEFT+CTRL or \b MIDDLE : PanMode.
+    - \b LEFT+SHIFT or \b WHEEL : ScaleMode.
+    - \b LEFT+ALT : ZMode.
+
+    @warning The memory allocated by this function <b>is not</b> automatically deallocated. see ~Trackball().
+  */
+  void setDefaultMapping ();
+
+  /// The manipulator mapping. Needs to be explicitally managed for custom mappings.
+  std::map<int, TrackMode *> modes;
+
+  // undo_track and last_track have different meanings..
+  /// Transformation before current user action.
+  Similarityf last_track;
+  /// track after an Undo() call.
+  Similarityf undo_track; 
+  /// Currently not in use.
+  Similarityf last_view;
+  /// Mouse cursor coordinates before current action.
+  Point3f last_point;
+  /// Currently not in use.
+  std::vector<Point3f> Hits;
+  /// Currently not in use.
+  bool dragging;
+  /// Currently not in use.
+  int button_mask;
+
+  /// Currently not in use.
+  Quaternionf spin;
+  /// Currently not in use.
+  bool spinnable;
+  /// Currently not in use.
+  bool spinning;
+
+  /// Currently not in use.
+  std::list<Transform> history;
+  /// Currently not in use.
+  int history_size;
+
+  /// Manipulators needs full access to this class.
+  friend class TrackMode;
+};
 
 
 }//namespace
