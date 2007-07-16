@@ -48,13 +48,15 @@ namespace vcg
 			typedef typename	FaceType::VertexType		VertexType;
 			typedef typename	VertexType::CoordType		CoordType;
 			typedef typename	VertexType::ScalarType	ScalarType;
-
+			using Pos<FACE_TYPE>::f;
+			using Pos<FACE_TYPE>::z;
+			using Pos<FACE_TYPE>::FFlip;
 		public:
 			// Constructors
-			JumpingPos()																																: Pos()										{ m_AlreadyJumped = false; }
-			JumpingPos(FaceType * const pFace, int const z, VertexType * const pVertex) : Pos(pFace, z, pVertex)	{ m_AlreadyJumped = false; }
-			JumpingPos(FaceType * const pFace, int const z)															: Pos(pFace, z)						{ m_AlreadyJumped = false; }
-			JumpingPos(FaceType * const pFace, VertexType * const pVertex)							: Pos(pFace, pVertex)			{ m_AlreadyJumped = false; }
+			JumpingPos()																																: Pos<FACE_TYPE>()   								{ m_AlreadyJumped = false; }
+			JumpingPos(FaceType * const pFace, int const z, VertexType * const pVertex) : Pos<FACE_TYPE>(pFace, z, pVertex)	{ m_AlreadyJumped = false; }
+			JumpingPos(FaceType * const pFace, int const z)															: Pos<FACE_TYPE>(pFace, z)						{ m_AlreadyJumped = false; }
+			JumpingPos(FaceType * const pFace, VertexType * const pVertex)							: Pos<FACE_TYPE>(pFace, pVertex)			{ m_AlreadyJumped = false; }
 
 
 			/*!
