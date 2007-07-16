@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.37  2007/07/16 15:13:39  cignoni
+Splitted initialiazation functions of grid to add flexibility in the creation
+
 Revision 1.36  2005/12/02 00:43:31  cignoni
 Forgotten a base deferencing like the previous one
 Note also the different possible sintax with this-> instead of the base class name
@@ -400,21 +403,22 @@ namespace vcg {
 					Point3<FLT> _dim = _bbox.max - _bbox.min;
 					_dim/=radius;
 					assert(_dim[0]>0 && _dim[1]>0 && _dim[2]>0 );
-					_siz[0] = floor(_dim[0]);
-					_siz[1] = floor(_dim[1]);
-					_siz[2] = floor(_dim[2]);
-					
+					_siz[0] = (int)ceil(_dim[0]);
+					_siz[1] = (int)ceil(_dim[1]);
+					_siz[2] = (int)ceil(_dim[2]);
+
 					Point3<FLT> offset=Point3<FLT>::Construct(_siz);
 					offset*=radius;
-					offset-= (_bbox.max - _bbox.min);
+					offset -= (_bbox.max - _bbox.min);
 					offset /=2;
 					
 					assert( offset[0]>=0 && offset[1]>=0 && offset[2]>=0 );
 					
-					_bbox.min -= offset;
-					_bbox.max += offset;
+					Box3x bb = _bbox;
+					bb.min -= offset;
+					bb.max += offset;
 					
-					Set(_oBegin,_oEnd,_bbox,_siz);
+					Set(_oBegin,_oEnd, bb,_siz);
 			}			
 			
 			
@@ -559,6 +563,69 @@ namespace vcg {
 		{
 			return(vcg::GridDoRay<GridPtrType,OBJRAYISECTFUNCTOR,OBJMARKER>(*this,_rayIntersector,_marker,_ray,_maxDist,_t));
 		}
+		
+    /* If the grid has a cubic voxel of side <radius> this function
+     process all couple of elementes in neighbouring cells.
+		 GATHERFUNCTOR needs to expose this method:
+       bool operator()(OBJTYPE *v1, OBJTYPE *v2);
+       which is then called ONCE per unordered pair v1,v2.
+     example:
+   
+     struct GFunctor {           
+       double radius2, iradius2;
+       GFunctor(double radius) { radius2 = radius*radius; iradius2 = 1/radius2; }
+    
+       bool operator()(CVertex *v1, CVertex *v2) {
+         Point3d &p = v1->P();    
+         Point3d &q = v2->P();
+         double dist2 = (p-q).SquaredNorm();
+         if(dist2 < radius2) {
+           double w = exp(dist2*iradius2);
+           //do something
+         }              
+       }
+    }; */
+                  
+		template <class GATHERFUNCTOR> 
+    void Gather(GATHERFUNCTOR gfunctor) {
+      static int corner[8*3] = { 0, 0, 0,  1, 0, 0,  0, 1, 0,  0, 0, 1,
+                                 0, 1, 1,  1, 0, 1,  1, 1, 0,  1, 1, 1 };
+
+      static int diagonals[14*2] = { 0, 0, 
+                                     0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0, 6, 0, 7,
+                                     2, 3, 1, 3, 1, 2,                       
+                                     1, 4, 2, 5, 3, 6 };
+  
+      Cell ostart, oend, dstart, dend;
+      for(int z = 0; z < this->siz[2]; z++) {
+        for(int y = 0; y < this->siz[1]; y++) {
+          for(int x = 0; x < this->siz[0]; x++) {            
+
+            Grid(x, y, z, ostart, oend);
+
+            for(Cell c = ostart; c != oend; c++) 
+              for(Cell s = c+1; s != oend; s++) 
+                gfunctor(c->Elem(), s->Elem());
+                    
+            for(int d = 2; d < 28; d += 2) { //skipping self
+              int *cs = corner + 3*diagonals[d];
+              int *ce = corner + 3*diagonals[d+1];
+              if((x + cs[0] < this->siz[0]) && (y + cs[1] < this->siz[1]) && (z + cs[2] < this->siz[2]) &&
+                 (x + ce[0] < this->siz[0]) && (y + ce[1] < this->siz[1]) && (z + ce[2] < this->siz[2])) {
+
+                 Grid(x+cs[0], y+cs[1], z+cs[2], ostart, oend);
+                 Grid(x+ce[0], y+ce[1], z+ce[2], dstart, dend);
+
+                 for(Cell c = ostart; c != oend; c++) 
+                   for(Cell s = dstart; s != dend; s++) 
+                     gfunctor(c->Elem(), s->Elem());                               
+              }
+            }
+          }
+        }
+      }
+    }
+
 
 	}; //end class GridStaticPtr
 
