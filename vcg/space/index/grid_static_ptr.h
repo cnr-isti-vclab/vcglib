@@ -24,6 +24,10 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.36  2005/12/02 00:43:31  cignoni
+Forgotten a base deferencing like the previous one
+Note also the different possible sintax with this-> instead of the base class name
+
 Revision 1.35  2005/12/02 00:25:13  cignoni
 Added and removed typenames for gcc compiling.
 Added base class qualifier for referencing the elemntes of the templated base class (BasicGrid)
@@ -335,7 +339,7 @@ namespace vcg {
 		{
       this->bbox.Import( b );
 			ScalarType t = this->bbox.Diag()/100.0;
-			if(t == 0) t = ScalarType(1e20);  // <--- Some doubts on this (Cigno 5/1/04)
+			if(t == 0) t = ScalarType(1e-20);  // <--- Some doubts on this (Cigno 5/1/04)
 			this->bbox.Offset(t);
 			this->dim  = this->bbox.max - this->bbox.min;
 		}
@@ -363,35 +367,89 @@ namespace vcg {
 			//);
 		}
 
-    template <class OBJITER>
-    inline void Set(const OBJITER & _oBegin, const OBJITER & _oEnd, const Box3x &_bbox=Box3x() )
+		template <class OBJITER>
+		inline void Set(const OBJITER & _oBegin, const OBJITER & _oEnd)
+		{
+			Box3<FLT> _bbox;
+			Box3<FLT> b;
+			OBJITER i;
+			for(i = _oBegin; i!= _oEnd; ++i)
+			{
+				(*i).GetBBox(b);
+				_bbox.Add(b);				
+			}
+			///inflate the bb calculated
+			int _size=(int)std::distance<OBJITER>(_oBegin,_oEnd);
+			ScalarType infl=_bbox.Diag()/_size;
+			_bbox.min-=vcg::Point3<FLT>(infl,infl,infl);
+			_bbox.max+=vcg::Point3<FLT>(infl,infl,infl);
+			
+			Set(_oBegin,_oEnd,_bbox);
+		}			
+    
+			
+			
+			// This function automatically compute a reasonable size for the uniform grid providing the side (radius) of the cell
+			//
+			// Note that the bbox must be already 'inflated' so to be sure that no object will fall on the border of the grid.
+			
+			template <class OBJITER>
+				inline void Set(const OBJITER & _oBegin, const OBJITER & _oEnd, const Box3x &_bbox, FLT radius)
+			{
+					Point3i _siz;
+					Point3<FLT> _dim = _bbox.max - _bbox.min;
+					_dim/=radius;
+					assert(_dim[0]>0 && _dim[1]>0 && _dim[2]>0 );
+					_siz[0] = floor(_dim[0]);
+					_siz[1] = floor(_dim[1]);
+					_siz[2] = floor(_dim[2]);
+					
+					Point3<FLT> offset=Point3<FLT>::Construct(_siz);
+					offset*=radius;
+					offset-= (_bbox.max - _bbox.min);
+					offset /=2;
+					
+					assert( offset[0]>=0 && offset[1]>=0 && offset[2]>=0 );
+					
+					_bbox.min -= offset;
+					_bbox.max += offset;
+					
+					Set(_oBegin,_oEnd,_bbox,_siz);
+			}			
+			
+			
+		// This function automatically compute a reasonable size for the uniform grid such that the number of cells is
+		// the same of the nubmer of elements to be inserted in the grid.
+		//
+		// Note that the bbox must be already 'inflated' so to be sure that no object will fall on the border of the grid.
+		
+			template <class OBJITER>
+		inline void Set(const OBJITER & _oBegin, const OBJITER & _oEnd, const Box3x &_bbox)
+		{
+      int _size=(int)std::distance<OBJITER>(_oBegin,_oEnd);
+			Point3<FLT> _dim = _bbox.max - _bbox.min;
+			Point3i _siz;
+			BestDim( _size, _dim, _siz );
+			
+	    Set(_oBegin,_oEnd,_bbox,_siz);
+		}			
+			
+			
+		template <class OBJITER>
+    inline void Set(const OBJITER & _oBegin, const OBJITER & _oEnd, const Box3x &_bbox, Point3i _siz)
 		{
 			OBJITER i;
-			Box3<FLT> b;
-			int _size=(int)std::distance<OBJITER>(_oBegin,_oEnd);
-			if(!_bbox.IsNull())
-				this->bbox=_bbox;
-			else
-			{
-				for(i = _oBegin; i!= _oEnd; ++i)
-				{
-					(*i).GetBBox(b);
-					this->bbox.Add(b);
-					
-				}
-				///inflate the bb calculated
-				ScalarType infl=this->bbox.Diag()/_size;
-				this->bbox.min-=vcg::Point3<FLT>(infl,infl,infl);
-				this->bbox.max+=vcg::Point3<FLT>(infl,infl,infl);
-			}	
-				
-				this->dim  = this->bbox.max - this->bbox.min;
-				BestDim( _size, this->dim, this->siz );
-				// find voxel size
-				this->voxel[0] = this->dim[0]/this->siz[0];
-				this->voxel[1] = this->dim[1]/this->siz[1];
-				this->voxel[2] = this->dim[2]/this->siz[2];
-
+			
+			this->bbox=_bbox;
+			this->siz=_siz;
+			
+			// find voxel size starting from the provided bbox and grid size. 
+			
+			this->dim  = this->bbox.max - this->bbox.min;
+			this->voxel[0] = this->dim[0]/this->siz[0];
+			this->voxel[1] = this->dim[1]/this->siz[1];
+			this->voxel[2] = this->dim[2]/this->siz[2];			
+			
 				// "Alloca" la griglia: +1 per la sentinella
 				grid.resize( this->siz[0]*this->siz[1]*this->siz[2]+1 );
 
