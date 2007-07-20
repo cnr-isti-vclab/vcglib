@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2007/07/05 14:47:04  cignoni
+Added face coloring when there is a texture (and therefore a material)
+
 Revision 1.14  2007/04/18 13:33:11  cignoni
 resolved issue related to the parsing of CR LF under *nixes
 
@@ -773,6 +776,8 @@ static bool LoadMask(const char * filename, Info &oi)
         } 
         else 
          if(line[0]=='f') oi.numFaces++;
+				 else 
+				 if(line[0]=='u' && line[1]=='s') bHasPerFaceColor = true; // there is a usematerial so add per face color
       }
 		}
 		oi.mask = 0;
@@ -782,6 +787,7 @@ static bool LoadMask(const char * filename, Info &oi)
 				// Usually if you have tex coords you also have materials
 				oi.mask |= vcg::tri::io::Mask::IOM_FACECOLOR; 
 			}
+  if(bHasPerFaceColor) 				oi.mask |= vcg::tri::io::Mask::IOM_FACECOLOR; 
 
 
   return true;
