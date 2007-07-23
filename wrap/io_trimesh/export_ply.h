@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2007/03/12 16:40:17  tarini
+Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
+
 Revision 1.22  2007/02/18 08:01:07  cignoni
 Added missing typename
 
@@ -502,7 +505,7 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 						fwrite(&c,1,1,fpout);
 						fwrite(vv,sizeof(int),3,fpout);
 
-					if(m.HasPerVertexFlags()&&( pi.mask & Mask::IOM_FACEFLAGS) )
+					if(m.HasPerFaceFlags()&&( pi.mask & Mask::IOM_FACEFLAGS) )
 						fwrite(&(fp->Flags()),sizeof(int),1,fpout);
 
 					if( m.HasPerVertexTexCoord() && (pi.mask & Mask::IOM_VERTTEXCOORD) )
@@ -578,7 +581,7 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 					fprintf(fpout,"3 %d %d %d ",
 						indices[fp->cV(0)],	indices[fp->cV(1)], indices[fp->cV(2)] );
 
-					if(m.HasPerVertexFlags()&&( pi.mask & Mask::IOM_FACEFLAGS ))
+					if(m.HasPerFaceFlags()&&( pi.mask & Mask::IOM_FACEFLAGS ))
 						fprintf(fpout,"%d ",fp->Flags());
 
 					if( m.HasPerVertexTexCoord() && (pi.mask & Mask::IOM_VERTTEXCOORD) )
