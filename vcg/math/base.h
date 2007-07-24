@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2007/01/08 09:23:49  pietroni
+added explicit cast in function inline float Sqrt(const int v) in order to avoid warnings
+
 Revision 1.20  2006/10/13 13:14:50  cignoni
 Added two sqrt templates for resolving ambiguity of sqrt(int)
 
@@ -170,6 +173,21 @@ inline float   ToRad(const float &a){return float(M_PI)*a/180.0f;}
 inline double  ToDeg(const double &a){return a*180.0/M_PI;}
 inline double  ToRad(const double &a){return M_PI*a/180.0;}
 
+#if defined(_MSC_VER) // Microsoft Visual C++
+	template<class T> int IsNAN(T t) {    return _isnan(t); }
+#elif defined(__GNUC__) // GCC
+	template<class T> int IsNAN(T t) {    return isnan(t); }
+#else // generic
+
+template<class T> int IsNAN(T t)
+{
+     if(std::numeric_limits<T>::has_infinity)
+         return !(t <= std::numeric_limits<T>::infinity());
+     else
+         return t != t;
+}
+
+#endif 
 }	// End math namespace
 
 /// a type that stands for "void". Useful for Parameter type of a point.
