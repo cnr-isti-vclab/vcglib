@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.52  2007/06/04 06:45:05  fiorin
+Replaced call to old StarSize method with NumberOfIncidentFaces
+
 Revision 1.51  2007/03/27 09:23:32  cignoni
 added honoring of selected flag for flipmesh
 
@@ -398,8 +401,41 @@ private:
 					return deleted;
 			}
 
+      /**
+      Degenerate vertices are vertices that have coords with invalid floating point values, 
+      All the faces incident on deleted vertices are also deleted
+			*/ 
+      static int RemoveDegenerateVertex(MeshType& m)
+      {
+				VertexIterator vi;
+				int count_vd = 0;
 
-      /*
+				for(vi=m.vert.begin(); vi!=m.vert.end();++vi)
+					if(math::IsNAN( (*vi).P()[0]) || 
+             math::IsNAN( (*vi).P()[1]) || 
+						 math::IsNAN( (*vi).P()[2]) )
+					{
+						count_vd++;
+						vi->SetD();
+						m.vn--;
+					}
+					
+				FaceIterator fi;
+				int count_fd = 0;
+
+				for(fi=m.face.begin(); fi!=m.face.end();++fi)
+					if( (*fi).V(0)->IsD() || 
+							(*fi).V(1)->IsD() || 
+							(*fi).V(2)->IsD() )
+					{
+						count_fd++;
+						fi->SetD();
+						m.fn--;
+					}
+				return count_vd;
+			}
+			
+      /**
       Degenerate faces are faces that are Topologically degenerate, 
       i.e. have two or more vertex reference that link the same vertex 
       (and not only two vertexes with the same coordinates).
@@ -423,6 +459,7 @@ private:
 					}
 				return count_fd;
 			}
+			
       static int RemoveNonManifoldFace(MeshType& m)
       {
 				FaceIterator fi;
