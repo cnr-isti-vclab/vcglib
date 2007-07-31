@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2006/07/06 12:39:51  ganovelli
+adde barycenter()
+
 Revision 1.13  2006/06/06 14:35:31  zifnab1974
 Changes for compilation on linux AMD64. Some remarks: Linux filenames are case-sensitive. _fileno and _filelength do not exist on linux
 
@@ -301,7 +304,7 @@ static int FofEE(const int &indexE0,const int &indexE1)
 {
 public:
   typedef  Point3< ScalarType > CoordType;
-  //typedef typename ScalarType ScalarType;
+  typedef typename ScalarType ScalarType;
 
 /*********************************************
   
