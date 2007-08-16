@@ -14,6 +14,146 @@ namespace io {
 	{
 
 	private:
+		static int WedgeNormalAttribute(OpenMeshType& m,const QStringList face,const QStringList wn,const QDomNode wnsrc,const int meshfaceind,const int faceind,const int component)
+		{
+			int indnm = -1;
+			if (!wnsrc.isNull())
+			{
+				indnm = face.at(faceind).toInt();
+				assert(indnm * 3 < wn.size());
+				m.face[meshfaceind].WN(component) = vcg::Point3f(wn.at(indnm * 3).toFloat(),wn.at(indnm * 3 + 1).toFloat(),wn.at(indnm * 3 + 2).toFloat());
+			}
+			return indnm;
+		}
+
+		static int WedgeTextureAttribute(OpenMeshType& m,const QStringList face,const QStringList wt,const QDomNode wtsrc,const int meshfaceind,const int faceind,const int component)
+		{
+			int indtx = -1;
+			if (!wtsrc.isNull())
+			{
+				indtx = face.at(faceind).toInt();
+				assert(indtx * 2 < wt.size());
+				m.face[meshfaceind].WT(component) = vcg::TexCoord2<float>();
+				m.face[meshfaceind].WT(component).u() = wt.at(indtx * 2).toFloat();
+				m.face[meshfaceind].WT(component).v() = wt.at(indtx * 2 + 1).toFloat();
+				m.face[meshfaceind].WT(component).n() = 1;
+			}
+			return indtx;
+		}
+
+		static int WedgeColorAttribute(OpenMeshType& m,const QStringList face,const QStringList wc,const QDomNode wcsrc,const int meshfaceind,const int faceind,const int component)
+		{
+			int indcl;
+			if (!wcsrc.isNull())
+			{
+				indcl = face.at(faceind).toInt();
+				assert(indcl * 4 < wc.size());
+				m.face[meshfaceind].WC(component) = vcg::Color4b(wc.at(indcl * 4).toFloat(),wc.at(indcl * 4 + 1).toFloat(),wc.at(indcl * 4 + 2).toFloat(),wc.at(indcl * 4 + 3).toFloat());
+			}
+			return indcl;
+		}
+
+		static void FindStandardWedgeAttributes(WedgeAttribute& wed,const QDomNode nd,const QDomDocument doc)
+		{
+			wed.wnsrc = findNodeBySpecificAttributeValue(nd,"input","semantic","NORMAL");
+			wed.offnm = findStringListAttribute(wed.wn,wed.wnsrc,nd,doc,"NORMAL");
+
+			wed.wtsrc = findNodeBySpecificAttributeValue(nd,"input","semantic","TEXCOORD");
+			wed.offtx = findStringListAttribute(wed.wt,wed.wtsrc,nd,doc,"TEXCOORD"); 
+
+			wed.wcsrc = findNodeBySpecificAttributeValue(nd,"input","semantic","COLOR");
+			wed.offcl = findStringListAttribute(wed.wc,wed.wcsrc,nd,doc,"COLOR"); 
+		}
+		
+		static DAEError LoadPolygonalMesh(QDomNodeList& polypatch,OpenMeshType& m,const size_t offset,AdditionalInfoDAE* info)
+		{
+			return E_NOERROR;
+		}
+
+		static DAEError	LoadPolygonalListMesh(QDomNodeList& polylist,OpenMeshType& m,const size_t offset,AdditionalInfoDAE* info)
+		{
+			PolygonalMesh pm;
+			for(OpenMeshType::VertexIterator itv = m.vert.begin();itv != m.vert.end();++itv)
+			{	
+				vcg::Point3f p(itv->P().X(),itv->P().Y(),itv->P().Z());
+				pm.vert.push_back(p);
+			}
+			int polylist_size = polylist.size();
+			for(int pl = 0; pl < polylist_size;++pl)
+			{ 
+				PolygonalMesh::PERWEDGEATTRIBUTETYPE att = PolygonalMesh::NONE;
+				WedgeAttribute wa;
+				FindStandardWedgeAttributes(wa,polylist.at(pl),*(info->dae->doc));
+				
+				QStringList vertcount;
+				valueStringList(vertcount,polylist.at(pl),"vcount");
+				int indforpol = findOffSetForASingleSimplex(polylist.at(pl));
+				int offpols = 0;
+				int npolig = vertcount.size();
+				QStringList polyind;
+				valueStringList(polyind,polylist.at(pl),"p");
+				for(unsigned int ii = 0;ii < npolig;++ii)
+				{
+					int nvert = vertcount.at(ii).toInt();
+					MyPolygon p(nvert);
+					if (!wa.wnsrc.isNull()) 
+						p.usePerWedgeNormal();
+					if (!wa.wcsrc.isNull()) 
+						p.usePerWedgeColor();
+					if (!wa.wtsrc.isNull())
+						p.usePerWedgeMultiTexture();
+
+					for(unsigned int iv = 0;iv < nvert;++iv)
+					{
+						int index = offset + polyind.at(offpols + iv * indforpol).toInt();
+						p._pv[iv] = &(pm.vert[index]);
+					}
+					pm._pols.push_back(p);
+					offpols += nvert * indforpol;
+				}
+			}
+			pm.triangulate(m);
+			return E_NOERROR;
+		}
+		
+		static DAEError LoadTriangularMesh(QDomNodeList& tripatch,OpenMeshType& m,const size_t offset,AdditionalInfoDAE* info)
+		{
+			int tripatch_size = tripatch.size();
+			for(int tript = 0; tript < tripatch_size;++tript)
+			{
+
+				int nfcatt = tripatch.at(tript).toElement().elementsByTagName("input").size();
+
+				QStringList face;
+				valueStringList(face,tripatch.at(tript),"p");
+				int face_size = face.size();
+				int offsetface = (int)m.face.size();
+				if (face_size == 0) return E_NOMESH;
+				vcg::tri::Allocator<OpenMeshType>::AddFaces(m,face_size / (nfcatt * 3));
+				WedgeAttribute wa;
+				FindStandardWedgeAttributes(wa,tripatch.at(tript),*(info->dae->doc));
+
+				int jj = 0;	
+				//int dd = m.face.size();
+				for(int ff = offsetface;ff < (int) m.face.size();++ff)
+				{ 
+					for(unsigned int tt = 0;tt < 3;++tt)
+					{
+						int indvt = face.at(jj).toInt();
+						assert(indvt + offset < m.vert.size());
+						m.face[ff].V(tt) = &(m.vert[indvt + offset]);
+
+						int indnm = WedgeNormalAttribute(m,face,wa.wn,wa.wnsrc,ff,jj + wa.offnm,tt);
+						int indtx = WedgeTextureAttribute(m,face,wa.wt,wa.wtsrc,ff,jj + wa.offtx,tt);
+						int indcl = WedgeColorAttribute(m,face,wa.wc,wa.wcsrc,ff,jj + wa.offcl,tt);
+
+						jj += nfcatt;
+					}
+				}
+			}
+			return E_NOERROR;
+		}
+
 
 		static int LoadMesh(OpenMeshType& m,AdditionalInfoDAE* info,const QDomNode& geo,const vcg::Matrix44f& t, CallBackPos *cb=0)
 		{
@@ -102,147 +242,20 @@ namespace io {
 
 					QDomNodeList tripatch = geo.toElement().elementsByTagName("triangles");
 					int tripatch_size = tripatch.size();
-					if (tripatch_size == 0)
-						return E_NOTRIANGLES;
-
-					for(int tript = 0; tript < tripatch_size;++tript)
-					{
-
-						int nfcatt = tripatch.at(tript).toElement().elementsByTagName("input").size();
-
-						QStringList face;
-						valueStringList(face,tripatch.at(tript),"p");
-						int face_size = face.size();
-						int offsetface = (int)m.face.size();
-						if (face_size == 0) return E_NOMESH;
-						vcg::tri::Allocator<OpenMeshType>::AddFaces(m,face_size / (nfcatt * 3));
-						QDomNode wnsrc = QDomNode();
-						QStringList wn;
-						wnsrc = findNodeBySpecificAttributeValue(tripatch.at(tript),"input","semantic","NORMAL");
-						int offnm;
-						if (!wnsrc.isNull())
-						{
-							offnm = wnsrc.toElement().attribute("offset").toInt();
-							QDomNode sn = attributeSourcePerSimplex(tripatch.at(tript),*(info->dae->doc),"NORMAL");
-							valueStringList(wn,sn,"float_array");
-						}
-
-						QDomNode wtsrc = QDomNode();
-						QStringList wt;
-						wtsrc = findNodeBySpecificAttributeValue(tripatch.at(tript),"input","semantic","TEXCOORD");
-						int offtx;
-						if (!wtsrc.isNull())
-						{
-							offtx = wtsrc.toElement().attribute("offset").toInt();
-							QDomNode st = attributeSourcePerSimplex(tripatch.at(tript),*(info->dae->doc),"TEXCOORD");
-							valueStringList(wt,st,"float_array");
-						}
-
-						QDomNode wcsrc = QDomNode();
-						QStringList wc;
-						wcsrc = findNodeBySpecificAttributeValue(tripatch.at(tript),"input","semantic","COLOR");
-						int offcl;
-						if (!wcsrc.isNull())
-						{
-							offcl = wcsrc.toElement().attribute("offset").toInt();
-							QDomNode sc = attributeSourcePerSimplex(tripatch.at(tript),*(info->dae->doc),"COLOR");
-							valueStringList(wc,sc,"float_array");
-						}
-
-						int jj = 0;	
-						//int dd = m.face.size();
-						for(int ff = offsetface;ff < (int) m.face.size();++ff)
-						{ 
-							int indvt = face.at(jj).toInt();
-							assert(indvt + offset < m.vert.size());
-							m.face[ff].V(0) = &(m.vert[indvt + offset]);
-
-							int indnm;
-							if (!wnsrc.isNull())
-							{
-								indnm = face.at(jj + offnm).toInt();
-								assert(indnm * 3 < wn.size());
-								m.face[ff].WN(0) = vcg::Point3f(wn.at(indnm * 3).toFloat(),wn.at(indnm * 3 + 1).toFloat(),wn.at(indnm * 3 + 2).toFloat());
-							}
-
-							int indtx;
-							if (!wtsrc.isNull())
-							{
-								indtx = face.at(jj + offtx).toInt();
-								assert(indtx * 2 < wt.size());
-								m.face[ff].WT(0) = vcg::TexCoord2<float>();
-								m.face[ff].WT(0).u() = wt.at(indtx * 2).toFloat();
-								m.face[ff].WT(0).v() = wt.at(indtx * 2 + 1).toFloat();
-								m.face[ff].WT(0).n() = 1;
-							}
-
-							/*int indcl;
-							if (!wcsrc.isNull())
-							{
-							indcl = face.at(jj + offcl).toInt();
-							assert(indcl * 4 < wc.size());
-							m.face[ff].WC(0) = vcg::Color4b(wc.at(indcl * 4).toFloat(),wc.at(indcl * 4 + 1).toFloat(),wc.at(indcl * 4 + 2).toFloat(),wc.at(indcl * 4 + 3).toFloat());
-							}*/
-							jj += nfcatt;
-
-							indvt = face.at(jj).toInt();
-							assert(indvt + offset < m.vert.size());
-							m.face[ff].V(1) = &(m.vert[indvt + offset]);
-							if (!wnsrc.isNull())
-							{
-								indnm = face.at(jj + offnm).toInt();
-								assert(indnm * 3 < wn.size());
-								m.face[ff].WN(1) = vcg::Point3f(wn.at(indnm * 3).toFloat(),wn.at(indnm * 3 + 1).toFloat(),wn.at(indnm * 3 + 2).toFloat());
-							}
-
-							if (!wtsrc.isNull())
-							{
-								indtx = face.at(jj + offtx).toInt();
-								assert(indtx * 2 < wt.size());
-								m.face[ff].WT(1) = vcg::TexCoord2<float>();
-								m.face[ff].WT(1).u() = wt.at(indtx * 2).toFloat();
-								m.face[ff].WT(1).v() = wt.at(indtx * 2 + 1).toFloat();	
-								m.face[ff].WT(1).n() = 1;
-							}
-
-							/*if (!wcsrc.isNull())
-							{
-							indcl = face.at(jj + offcl).toInt();
-							assert(indcl * 4 < wc.size());
-							m.face[ff].WC(1) = vcg::Color4b(wc.at(indcl * 4).toFloat(),wc.at(indcl * 4 + 1).toFloat(),wc.at(indcl * 4 + 2).toFloat(),wc.at(indcl * 4 + 3).toFloat());
-							}*/
-							jj += nfcatt;
-
-							indvt = face.at(jj).toInt();
-							assert(indvt + offset < m.vert.size());
-							m.face[ff].V(2) = &(m.vert[indvt + offset]);
-							if (!wnsrc.isNull())
-							{
-								indnm = face.at(jj + offnm).toInt();
-								assert(indnm * 3 < wn.size());
-								m.face[ff].WN(2) = vcg::Point3f(wn.at(indnm * 3).toFloat(),wn.at(indnm * 3 + 1).toFloat(),wn.at(indnm * 3 + 2).toFloat());
-							}
-
-							if (!wtsrc.isNull())
-							{
-								indtx = face.at(jj + offtx).toInt();
-								assert(indtx * 2 < wt.size());
-								m.face[ff].WT(2) = vcg::TexCoord2<float>();
-								m.face[ff].WT(2).u() = wt.at(indtx * 2).toFloat();
-								m.face[ff].WT(2).v() = wt.at(indtx * 2 + 1).toFloat();	
-								m.face[ff].WT(2).n() = 1;
-							}
-
-							/*if (!wcsrc.isNull())
-							{
-							indcl = face.at(jj + offcl).toInt();
-							assert(indcl * 4 < wc.size());
-							m.face[ff].WC(2) = vcg::Color4b(wc.at(indcl * 4).toFloat(),wc.at(indcl * 4 + 1).toFloat(),wc.at(indcl * 4 + 2).toFloat(),wc.at(indcl * 4 + 3).toFloat());
-							}*/
-							jj += nfcatt;
-
-						}
-					}
+					QDomNodeList polypatch = geo.toElement().elementsByTagName("polygons");
+					int polypatch_size = polypatch.size();
+					QDomNodeList polylist = geo.toElement().elementsByTagName("polylist");
+					int polylist_size = polylist.size();
+					if ((tripatch_size == 0) && (polypatch_size == 0) && (polylist_size == 0))
+						return E_NOPOLYGONALMESH;
+					
+					DAEError err = E_NOERROR;
+					if (tripatch_size != 0) err = LoadTriangularMesh(tripatch,m,offset,info);
+					else 
+						if (polypatch_size != 0) err = LoadPolygonalMesh(polypatch,m,offset,info);
+						else
+							if (polylist_size != 0) err = LoadPolygonalListMesh(polylist,m,offset,info);
+					if (err != E_NOERROR) return err;
 				}
 				return E_NOERROR;
 			}
@@ -468,17 +481,22 @@ namespace io {
 										bHasPerVertexText = true;
 								}
 
-								QDomNodeList facelist = geo.toElement().elementsByTagName("triangles");
-								for(int face = 0;face < facelist.size();++face)
+								const char* arr[] = {"triangles","polylist","polygons"};
+
+								for(unsigned int tt= 0;tt < 3;++tt)
 								{
-									info->numface += facelist.at(face).toElement().attribute("count").toInt() ;
-									QDomNode no;
-									no = findNodeBySpecificAttributeValue(facelist.at(face),"input","semantic","NORMAL");
-									if (!no.isNull()) 
-										bHasPerWedgeNormal = true;
-									no = findNodeBySpecificAttributeValue(facelist.at(face),"input","semantic","TEXCOORD");
-									if (!no.isNull()) 
-										bHasPerWedgeTexCoord = true;
+									QDomNodeList facelist = geo.toElement().elementsByTagName(arr[tt]);
+									for(int face = 0;face < facelist.size();++face)
+									{
+										info->numface += facelist.at(face).toElement().attribute("count").toInt() ;
+										QDomNode no;
+										no = findNodeBySpecificAttributeValue(facelist.at(face),"input","semantic","NORMAL");
+										if (!no.isNull()) 
+											bHasPerWedgeNormal = true;
+										no = findNodeBySpecificAttributeValue(facelist.at(face),"input","semantic","TEXCOORD");
+										if (!no.isNull()) 
+											bHasPerWedgeTexCoord = true;
+									}
 								}
 							}
 						}

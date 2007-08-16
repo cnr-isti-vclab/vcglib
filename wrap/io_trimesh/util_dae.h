@@ -1,6 +1,8 @@
 #ifndef __VCGLIB_UTILDAE
 #define __VCGLIB_UTILDAE
 
+
+
 #include <wrap/io_trimesh/additionalinfo.h>
 #include <vcg/complex/trimesh/update/normal.h>
 #include <vcg/complex/trimesh/allocate.h>
@@ -14,7 +16,19 @@
 #include<vcg/space/point3.h>
 #include<vcg/space/texcoord2.h>
 #include<vcg/space/color4.h>
+#include<vcg/space/texcoord2.h>
 #include <wrap/callback.h>
+
+#include <vector>
+
+#include <vcg/simplex/vertex/with/vn.h>
+#include <vcg/simplex/edge/edge.h>
+
+#ifndef CALLBACK
+#define CALLBACK __stdcall
+#endif
+
+#include <wrap/gl/glu_tesselator.h>
 
 namespace vcg {
 namespace tri {
@@ -71,7 +85,151 @@ namespace io {
 			E_NO3DSCENE, // 6
 			E_INCOMPATIBLECOLLADA141FORMAT, //7
 			E_UNREFERENCEBLEDCOLLADAATTRIBUTE, // 8
-			E_NOTRIANGLES
+			E_NOPOLYGONALMESH
+		};
+
+		class MyPolygon;
+		class MyEdge;
+		class MyVertex:public vcg::VertexVNf<MyEdge , MyPolygon, MyEdge>
+		{
+		public:
+			MyVertex()
+				:vcg::VertexVNf<MyEdge , MyPolygon, MyEdge>() 
+			{
+				_flags = 0;
+			}
+
+			MyVertex(MyVertex::CoordType& v)
+			{
+				_flags = 0;
+				P() = v;
+
+			}	
+		};
+
+		class MyPolygon 
+		{
+		public:
+			int _nvert;
+			std::vector<MyVertex*> _pv;
+			std::vector< std::vector<vcg::TexCoord2<> > > _wtx;
+			std::vector<vcg::Point3f> _wnm;
+			std::vector< std::vector<vcg::Color4f> > _wcl;
+
+
+			MyPolygon(int n)
+				:_nvert(n),_pv(_nvert)
+			{
+			}
+
+			void usePerWedgeColor(const unsigned int multicolor = 1)
+			{
+				_wcl.resize(_nvert);
+				for(unsigned int ii = 0;ii < multicolor;++ii)
+					_wcl[ii].resize(multicolor);
+			}
+
+			void usePerWedgeNormal()
+			{
+				_wnm.resize(_nvert);
+			}
+
+			void usePerWedgeMultiTexture(const unsigned int multitex = 1)
+			{
+				_wtx.resize(_nvert);
+				for(unsigned int ii = 0;ii < multitex;++ii)
+					_wtx[ii].resize(multitex);
+			}
+
+		};
+
+		class MyEdge: public vcg::Edge<MyEdge,MyVertex> 
+		{
+		public:
+			MyEdge(MyVertex* v1,MyVertex* v2)
+				:vcg::Edge<MyEdge,MyVertex>(v1,v2)
+			{
+			}
+		};
+
+		class PolygonalMesh
+		{
+		public:
+
+			enum PERWEDGEATTRIBUTETYPE {NONE = 0,NORMAL = 1,MULTITEXTURECOORD = 2,MULTICOLOR = 4};
+
+			typedef MyVertex::BaseVertexType VertexType;
+			typedef VertexType* VertexPointer;
+			typedef std::vector<MyVertex>::iterator VertexIterator; 
+			typedef std::vector<MyPolygon>::iterator PolygonIterator; 
+
+			vcg::Box3<float> bbox;
+
+			std::vector<MyVertex> vert;
+			std::vector<MyPolygon> _pols;
+
+			void generatePointsVector(std::vector<std::vector<vcg::Point3f>>& v)
+			{
+				for(PolygonalMesh::PolygonIterator itp = _pols.begin();itp != _pols.end();++itp)
+				{
+					v.push_back(std::vector<vcg::Point3f>());
+					for(std::vector<MyVertex*>::iterator itv = itp->_pv.begin();itv != itp->_pv.end();++itv)
+					{
+						v[v.size() - 1].push_back((*itv)->P());
+					}	
+				}
+			}
+
+			void usePerWedgeAttributes(PERWEDGEATTRIBUTETYPE att,const unsigned int multitexture = 1,const unsigned int multicolor = 1)
+			{
+				if (att != NONE)
+				{
+					for(PolygonIterator itp = _pols.begin();itp != _pols.end();++itp)
+					{
+						if (att & MULTICOLOR) itp->usePerWedgeColor(multicolor);
+						if (att & MULTITEXTURECOORD) itp->usePerWedgeMultiTexture(multitexture);
+						if (att & NORMAL) itp->usePerWedgeNormal();
+					}
+				}
+			}
+
+			template<typename TRIMESH>
+			void triangulate(TRIMESH& mesh)
+			{
+				std::vector<std::vector<vcg::Point3f>> pl;
+				mesh.vert.resize(vert.size());
+
+				//PolygonalMesh's points been copied in TriangularMesh
+				for(size_t jj = 0;jj < mesh.vert.size();++jj)
+					mesh.vert[jj].P() = vert[jj].P();
+
+
+
+				//transform the polygonal mesh in a vector<vector<Point>>
+				generatePointsVector(pl);
+
+
+				//foreach Polygon
+				for(size_t ii = 0;ii < pl.size();++ii)
+				{
+					std::vector<int> tx;
+					std::vector<std::vector<vcg::Point3f>> pl2(1);
+					pl2[0] = pl[ii];
+
+					vcg::glu_tesselator::tesselate(pl2,tx);
+					size_t ntri = tx.size() / 3;
+					assert(tx.size() % 3 == 0);
+
+					//foreach triangle
+					for(size_t tr = 0;tr < ntri;++tr)
+					{
+						TRIMESH::FaceType f;
+						for(unsigned int tt = 0;tt < 3; ++tt)
+							f.V(tt) = &(mesh.vert[_pols[ii]._pv[tx[3 * tr + tt]] - &(vert[0])]);
+						mesh.face.push_back(f);
+					}
+				}
+			}
 		};
 
 		static const char *ErrorMsg(int error)
@@ -87,7 +245,7 @@ namespace io {
 				"There isn't any scene in Collada file",
 				"The input file is not compatible with COLLADA 1.41 standard format",
 				"Collada file is trying to referece an attribute that is not in the file",
-				"This version of Collada Importer support only triangular mesh file"
+				"This version of Collada Importer support only triangular and polygonal mesh file"
 			};
 
 			if(error>9 || error<0) return "Unknown error";
@@ -265,6 +423,49 @@ namespace io {
 				TransfMatrix(parentnode,par,m);
 			}
 		}
+
+		inline static int findOffSetForASingleSimplex(QDomNode node)
+		{
+			QDomNodeList wedatts = node.toElement().elementsByTagName("input");
+			int max = 0;
+			if (wedatts.size() == 0) return -1;
+			else 
+			{
+				for(unsigned int ii = 0;ii < wedatts.size();++ii)
+				{
+					int tmp = wedatts.at(ii).toElement().attribute("offset").toInt();
+					if (tmp > max) max = tmp;
+				}
+			}
+			return max + 1;
+		}
+
+		inline static int findStringListAttribute(QStringList& list,const QDomNode node,const QDomNode poly,const QDomDocument startpoint,const char* token)
+		{
+			int offset;
+			if (!node.isNull())
+			{
+				offset = node.toElement().attribute("offset").toInt();
+				QDomNode st = attributeSourcePerSimplex(poly,startpoint,token);
+				valueStringList(list,st,"float_array");
+			}
+			return offset;
+		}
+
+		struct WedgeAttribute
+		{
+			QDomNode wnsrc;
+			QStringList wn;
+			int offnm;
+
+			QDomNode wtsrc;
+			QStringList wt;
+			int offtx;
+
+			QDomNode wcsrc;
+			QStringList wc;
+			int offcl;
+		};
 	};
 }
 }
