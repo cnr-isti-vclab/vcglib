@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2007/07/14 12:44:40  benedetti
+Minor edits in Doxygen documentation.
+
 Revision 1.4  2007/07/09 22:41:22  benedetti
 Added Doxygen documentation, removed using namespace std, some other minor changes.
 
@@ -664,13 +667,13 @@ void DrawSphereIcon (Trackball * tb,bool active)
   float amb[4] = { .3f, .3f, .3f, 1.0f };
   float col[4] = { .5f, .5f, .8f, 1.0f };
   glPushAttrib (GL_ENABLE_BIT | GL_LINE_BIT | GL_CURRENT_BIT | GL_LIGHTING_BIT);
+  glEnable (GL_LINE_SMOOTH);
   if (active)
     glLineWidth (DH.LineWidthMoving);
   else
     glLineWidth (DH.LineWidthStill);
   glEnable (GL_LIGHTING);
   glEnable (GL_LIGHT0);
-  glEnable (GL_LINE_SMOOTH);
   glEnable (GL_BLEND);
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glColor (DH.color);
