@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2007/07/31 12:21:50  ganovelli
+added gltetra, added normal gltriangle
+
 Revision 1.9  2007/05/08 18:55:38  ganovelli
 glTriangle added
 
@@ -259,7 +262,7 @@ inline void glBoxClip(const Box3<T>  & b)
 
 template <class TriangleType>
 	inline void glTriangle3(  TriangleType & c )  {
-		vcg::Point3<TriangleType::ScalarType> n =  vcg::Normal(c);
+		vcg::Point3<typename TriangleType::ScalarType> n =  vcg::Normal(c);
 		glBegin(GL_TRIANGLES);
 		glNormal(n);
 		glVertex(c.P(0));
@@ -270,10 +273,10 @@ template <class TriangleType>
 
 template <class TetraType>
 	inline void glTetra3(  TetraType & c )  {
-		glTriangle3(Triangle3<TetraType::ScalarType>(c.P(0),c.P(1),c.P(2)));
-		glTriangle3(Triangle3<TetraType::ScalarType>(c.P(1),c.P(3),c.P(2)));
-		glTriangle3(Triangle3<TetraType::ScalarType>(c.P(0),c.P(2),c.P(3)));
-		glTriangle3(Triangle3<TetraType::ScalarType>(c.P(1),c.P(0),c.P(3)));
+		glTriangle3(Triangle3<typename TetraType::ScalarType>(c.P(0),c.P(1),c.P(2)));
+		glTriangle3(Triangle3<typename TetraType::ScalarType>(c.P(1),c.P(3),c.P(2)));
+		glTriangle3(Triangle3<typename TetraType::ScalarType>(c.P(0),c.P(2),c.P(3)));
+		glTriangle3(Triangle3<typename TetraType::ScalarType>(c.P(1),c.P(0),c.P(3)));
 	}
 
 }//namespace
