@@ -20,6 +20,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
   typedef typename MESH::VertexType     VertexType;
   typedef typename MESH::FaceType       FaceType;
   typedef typename MESH::ScalarType     ScalarType;
+  typedef typename MESH::VertexIterator     VertexIterator;
   typedef typename MESH::VertexType::CoordType   Point3x;
   typedef GridStaticPtr<typename MESH::VertexType, typename MESH::ScalarType > StaticGrid;        
   
@@ -39,16 +40,13 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
                   
     //compute bbox
     baricenter = Point3x(0, 0, 0);
-    int count = 0;
-    this->mesh.bbox = Box3<ScalarType>();
-    for(int i = 0; i < (int)this->mesh.vert.size(); i++) {
-      VertexType &v = this->mesh.vert[i];
-      if(v.IsD()) continue;
-      this->mesh.bbox.Add(v.P());
-      baricenter += v.P();
-    }
+    UpdateBounding<MESH>::Box(_mesh);
+		for(VertexIterator vi=this->mesh.vert.begin();vi!=this->mesh.vert.end();++vi)
+			if( !(*vi).IsD() )  baricenter += (*vi).P();
     
-    assert(this->mesh.vn > 3);
+    baricenter /= this->mesh.vn;
+		
+		assert(this->mesh.vn > 3);
     if(radius == 0)
       radius = sqrt((this->mesh.bbox.Diag()*this->mesh.bbox.Diag())/this->mesh.vn);
     else
