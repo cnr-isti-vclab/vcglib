@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2007/05/14 22:23:36  m_di_benedetto
+First Commit.
+
 
 
 ****************************************************************************/
@@ -32,7 +35,15 @@ $Log: not supported by cvs2svn $
 #define __VCGLIB_GLU_TESSELATOR_H
 
 #include <vector>
-#include <GL/glu.h>
+//#include <GL/glu.h>
+
+#ifndef CALLBACK
+#ifdef WIN32
+#define CALLBACK __stdcall
+#else
+#define CALLBACK 
+#endif
+#endif
 
 namespace vcg
 {
@@ -198,9 +209,9 @@ class glu_tesselator
 		{
 			GLUtesselator * tess = gluNewTess();
 
-			gluTessCallback(tess, GLU_TESS_BEGIN_DATA,  (void (CALLBACK *)(void))(this_type::begin_cb));
-			gluTessCallback(tess, GLU_TESS_END_DATA,    (void (CALLBACK *)(void))(this_type::end_cb));
-			gluTessCallback(tess, GLU_TESS_VERTEX_DATA, (void (CALLBACK *)(void))(this_type::vertex_cb));
+			gluTessCallback(tess, GLU_TESS_BEGIN_DATA,  (GLvoid (CALLBACK *)(...))(this_type::begin_cb));
+			gluTessCallback(tess, GLU_TESS_END_DATA,    (GLvoid (CALLBACK *)(...))(this_type::end_cb));
+			gluTessCallback(tess, GLU_TESS_VERTEX_DATA, (GLvoid (CALLBACK *)(...))(this_type::vertex_cb));
 
 			void * polygon_data = (void *)(&t_data);
 
