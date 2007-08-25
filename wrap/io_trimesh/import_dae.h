@@ -73,7 +73,7 @@ namespace io {
 		static DAEError	LoadPolygonalListMesh(QDomNodeList& polylist,OpenMeshType& m,const size_t offset,AdditionalInfoDAE* info)
 		{
 			PolygonalMesh pm;
-			for(OpenMeshType::VertexIterator itv = m.vert.begin();itv != m.vert.end();++itv)
+			for(typename OpenMeshType::VertexIterator itv = m.vert.begin();itv != m.vert.end();++itv)
 			{	
 				vcg::Point3f p(itv->P().X(),itv->P().Y(),itv->P().Z());
 				pm.vert.push_back(p);
