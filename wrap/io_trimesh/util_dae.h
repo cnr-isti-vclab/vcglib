@@ -24,10 +24,6 @@
 #include <vcg/simplex/vertex/with/vn.h>
 #include <vcg/simplex/edge/edge.h>
 
-#ifndef CALLBACK
-#define CALLBACK __stdcall
-#endif
-
 #include <wrap/gl/glu_tesselator.h>
 
 namespace vcg {
@@ -168,7 +164,7 @@ namespace io {
 			std::vector<MyVertex> vert;
 			std::vector<MyPolygon> _pols;
 
-			void generatePointsVector(std::vector<std::vector<vcg::Point3f>>& v)
+			void generatePointsVector(std::vector<std::vector<vcg::Point3f> >& v)
 			{
 				for(PolygonalMesh::PolygonIterator itp = _pols.begin();itp != _pols.end();++itp)
 				{
@@ -193,10 +189,10 @@ namespace io {
 				}
 			}
 
-			template<typename TRIMESH>
+			template<class TRIMESH>
 			void triangulate(TRIMESH& mesh)
 			{
-				std::vector<std::vector<vcg::Point3f>> pl;
+				std::vector<std::vector<vcg::Point3f> > pl;
 				mesh.vert.resize(vert.size());
 
 				//PolygonalMesh's points been copied in TriangularMesh
@@ -213,7 +209,7 @@ namespace io {
 				for(size_t ii = 0;ii < pl.size();++ii)
 				{
 					std::vector<int> tx;
-					std::vector<std::vector<vcg::Point3f>> pl2(1);
+					std::vector<std::vector<vcg::Point3f> > pl2(1);
 					pl2[0] = pl[ii];
 
 					vcg::glu_tesselator::tesselate(pl2,tx);
@@ -223,7 +219,7 @@ namespace io {
 					//foreach triangle
 					for(size_t tr = 0;tr < ntri;++tr)
 					{
-						TRIMESH::FaceType f;
+						typename TRIMESH::FaceType f;
 						for(unsigned int tt = 0;tt < 3; ++tt)
 							f.V(tt) = &(mesh.vert[_pols[ii]._pv[tx[3 * tr + tt]] - &(vert[0])]);
 						mesh.face.push_back(f);
