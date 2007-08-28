@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2007/08/25 08:43:33  cignoni
+moved here callback def and added some needed opengl related casts
+
 Revision 1.1  2007/05/14 22:23:36  m_di_benedetto
 First Commit.
 
@@ -208,11 +211,15 @@ class glu_tesselator
 		static void do_tesselation(const std::vector< std::vector<point_type> > & outlines, tess_prim_data_vec & t_data)
 		{
 			GLUtesselator * tess = gluNewTess();
-
+#ifdef __APPLE__
 			gluTessCallback(tess, GLU_TESS_BEGIN_DATA,  (GLvoid (CALLBACK *)(...))(this_type::begin_cb));
 			gluTessCallback(tess, GLU_TESS_END_DATA,    (GLvoid (CALLBACK *)(...))(this_type::end_cb));
 			gluTessCallback(tess, GLU_TESS_VERTEX_DATA, (GLvoid (CALLBACK *)(...))(this_type::vertex_cb));
-
+#else
+			gluTessCallback(tess, GLU_TESS_BEGIN_DATA,  (GLvoid (CALLBACK *)())(this_type::begin_cb));
+			gluTessCallback(tess, GLU_TESS_END_DATA,    (GLvoid (CALLBACK *)())(this_type::end_cb));
+			gluTessCallback(tess, GLU_TESS_VERTEX_DATA, (GLvoid (CALLBACK *)())(this_type::vertex_cb));
+#endif
 			void * polygon_data = (void *)(&t_data);
 
 			GLdouble vertex[3];
