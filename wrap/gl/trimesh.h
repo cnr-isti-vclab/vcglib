@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.24  2007/09/12 14:48:50  m_di_benedetto
+Corrected indexing for non textured faces.
+
 Revision 1.23  2007/01/18 01:26:23  cignoni
 Added cast for mac compiling
 
@@ -473,12 +476,24 @@ void DrawFill()
  	else
 	 	{
  
-			glBegin(GL_TRIANGLES);
 			if(partial) 
 				fp = face_pointers.begin();
 			else
 				fi = m->face.begin();
-     if(tm==TMPerWedgeMulti) curtexname=(*fi).WT(0).n();
+     if(tm==TMPerWedgeMulti)
+	 {
+		 curtexname=(*fi).WT(0).n();
+		  if (curtexname >= 0)
+		  {
+			glEnable(GL_TEXTURE_2D);
+			glBindTexture(GL_TEXTURE_2D,TMId[curtexname]);
+		  }
+		  else
+		  {
+			glDisable(GL_TEXTURE_2D);
+		  }
+	 }
+			glBegin(GL_TRIANGLES);
 			while( (partial)?(fp!=face_pointers.end()):(fi!=m->face.end()))
 			{
  				typename MESH_TYPE::FaceType & f = (partial)?(*(*fp)): *fi;
