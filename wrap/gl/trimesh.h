@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2007/01/18 01:26:23  cignoni
+Added cast for mac compiling
+
 Revision 1.22  2006/12/12 11:06:58  cignoni
 Slightly changed the colormaterial mode for the flatwire
 
@@ -397,8 +400,7 @@ void DrawFill()
 				//		
   
   if(tm == TMPerWedge || tm == TMPerWedgeMulti ) {
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D,TMId[0]);
+    glDisable(GL_TEXTURE_2D);
   }
  
 	if(h&HNUseVArray) 
@@ -487,7 +489,15 @@ void DrawFill()
 						{
 						  curtexname=(*fi).WT(0).n();
 						  glEnd();
-			  		  glBindTexture(GL_TEXTURE_2D,TMId[curtexname]);
+						  if (curtexname >= 0)
+						  {
+							glEnable(GL_TEXTURE_2D);
+							glBindTexture(GL_TEXTURE_2D,TMId[curtexname]);
+						  }
+						  else
+						  {
+							glDisable(GL_TEXTURE_2D);
+						  }
 						  glBegin(GL_TRIANGLES);
 						}
 				if(nm == NMPerFace) glNormal(f.cN());
