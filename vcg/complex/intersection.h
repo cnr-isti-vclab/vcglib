@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2007/05/02 13:25:45  zifnab1974
+only use typename when necessary
+
 Revision 1.10  2007/04/10 22:46:57  pietroni
 - line 152 changed call intersection to IntersectionPlaneTriangle because changing in function's name
 
@@ -175,6 +178,41 @@ bool Intersection(	/*TriMeshType & m, */
 
 	return true;
 }
+
+/** \addtogroup complex */
+/*@{*/
+/** 
+    Compute the intersection between a trimesh and a plane. 
+		given a plane return the set of faces that are contained 
+		into intersected cells.
+*/
+template < typename  TriMeshType, class ScalarType, class IndexingType >
+bool Intersection(Plane3<ScalarType>  pl,
+									IndexingType *grid,
+									typename std::vector<typename TriMeshType::FaceType*> &v)
+{
+	typedef typename TriMeshType::FaceContainer FaceContainer;
+	typedef IndexingType GridType;
+	typename TriMeshType::FaceIterator fi;
+	v.clear();
+	typename std::vector< typename GridType::Cell* > cells;
+	Intersect(*grid,pl,cells);
+	typename std::vector<typename GridType::Cell*>::iterator ic;
+	typename GridType::Cell fs,ls;
+
+	for(ic = cells.begin(); ic != cells.end();++ic)
+	{
+		grid->Grid(*ic,fs,ls);
+		typename GridType::Link * lk = fs;
+		while(lk != ls){
+			typename TriMeshType::FaceType & face = *(lk->Elem());
+			v.push_back(&face);
+			lk++;
+		}//end while
+	}//end for
+	return true;
+}
+
 /*****************************************************************/
 /*INTERSECTION    RAY - MESH                                     */
 /*                                                               */
