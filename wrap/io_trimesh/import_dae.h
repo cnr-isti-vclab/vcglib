@@ -26,7 +26,7 @@ namespace io {
 			return indnm;
 		}
 
-		static int WedgeTextureAttribute(OpenMeshType& m,const QStringList face,const QStringList wt,const QDomNode wtsrc,const int meshfaceind,const int faceind,const int component)
+		static int WedgeTextureAttribute(OpenMeshType& m,const QStringList face,QString texture,const QStringList wt,const QDomNode wtsrc,const int meshfaceind,const int faceind,const int component)
 		{
 			int indtx = -1;
 			if (!wtsrc.isNull())
@@ -34,9 +34,10 @@ namespace io {
 				indtx = face.at(faceind).toInt();
 				assert(indtx * 2 < wt.size());
 				m.face[meshfaceind].WT(component) = vcg::TexCoord2<float>();
-				m.face[meshfaceind].WT(component).u() = wt.at(indtx * 2).toFloat();
-				m.face[meshfaceind].WT(component).v() = wt.at(indtx * 2 + 1).toFloat();
-				m.face[meshfaceind].WT(component).n() = 1;
+				m.face[meshfaceind].WT(component).U() = wt.at(indtx * 2).toFloat();
+				m.face[meshfaceind].WT(component).V() = wt.at(indtx * 2 + 1).toFloat();
+				
+				m.face[meshfaceind].WT(component).N() = 1;
 			}
 			return indtx;
 		}
@@ -121,7 +122,13 @@ namespace io {
 			int tripatch_size = tripatch.size();
 			for(int tript = 0; tript < tripatch_size;++tript)
 			{
-
+				QString mat =  tripatch.at(tript).toElement().attribute(QString("material"));
+				
+				QDomNodeList libim = info->dae->doc->elementsByTagName(QString("library_images"));
+				if (libim.size() == 1)
+				{
+					QDomNode img = findNodeBySpecificAttributeValue(libim.at(0).childNodes(),QString("id"),mat);
+				}
 				int nfcatt = tripatch.at(tript).toElement().elementsByTagName("input").size();
 
 				QStringList face;
@@ -143,8 +150,9 @@ namespace io {
 						assert(indvt + offset < m.vert.size());
 						m.face[ff].V(tt) = &(m.vert[indvt + offset]);
 
+
 						int indnm = WedgeNormalAttribute(m,face,wa.wn,wa.wnsrc,ff,jj + wa.offnm,tt);
-						int indtx = WedgeTextureAttribute(m,face,wa.wt,wa.wtsrc,ff,jj + wa.offtx,tt);
+						int indtx = WedgeTextureAttribute(m,face,mat,wa.wt,wa.wtsrc,ff,jj + wa.offtx,tt);
 						int indcl = WedgeColorAttribute(m,face,wa.wc,wa.wcsrc,ff,jj + wa.offcl,tt);
 
 						jj += nfcatt;
@@ -265,9 +273,10 @@ namespace io {
 		static void GetTexCoord(const QDomDocument& doc,AdditionalInfoDAE* inf)
 		{
 			QDomNodeList txlst = doc.elementsByTagName("library_images");
-			for(int img = 0;img < txlst.size();++img)
+			int s = txlst.at(0).childNodes().size();
+			for(int img = 0;img < txlst.at(0).childNodes().size();++img)
 			{
-				QDomNodeList nlst = txlst.at(img).toElement().elementsByTagName("init_from");
+				QDomNodeList nlst = txlst.at(0).childNodes().at(img).toElement().elementsByTagName("init_from");
 				if (nlst.size() > 0)
 				{
 					inf->texturefile.push_back(nlst.at(0).firstChild().nodeValue());
