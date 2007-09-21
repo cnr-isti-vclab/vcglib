@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2006/06/08 08:52:02  zifnab1974
+gcc 4 needs the extra template keyword
+
 Revision 1.13  2005/06/24 12:21:48  ponchio
 Fixed "lerp" function.
 
@@ -239,8 +242,9 @@ inline void Color4<T>::lerp(const Color4<T> &c0, const Color4<T> &c1, const Colo
 template <class T>
 inline void Color4<T>::ColorRamp(const float &minf,const float  &maxf ,float v )
 {
-  if(minf>maxf) { ColorRamp(maxf,minf,maxf+(minf-v)); return; }
+  if(minf>maxf) { ColorRamp(maxf,minf,maxf+(minf-v)); return; }  
 	if(v <  minf ) { *this=Color4<T>(Color4<T>::Red); return; }
+  //the case v > maxf is handled automatically at the end of the function
 
 	float step=(maxf-minf)/4;
 	v-=minf;
