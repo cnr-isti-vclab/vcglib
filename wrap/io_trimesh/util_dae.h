@@ -263,7 +263,8 @@ namespace io {
 			int ind = 0;
 			while(ind < ndl_size)
 			{
-				if (ndl.at(ind).toElement().attribute(attrname) == attrvalue)
+				QString st = ndl.at(ind).toElement().attribute(attrname);
+				if (st == attrvalue)
 					return ndl.at(ind);
 				++ind;
 			}
@@ -446,6 +447,80 @@ namespace io {
 				valueStringList(list,st,"float_array");
 			}
 			return offset;
+		}
+
+		inline static QDomNode textureFinder(const QString& textname,const QDomDocument doc)
+		{
+			//visual_scene -> instance_material
+			QDomNodeList vis_scn = doc.elementsByTagName("library_visual_scenes");
+			if (vis_scn.size() != 1) 
+				return QDomNode();
+			QDomNode symb = findNodeBySpecificAttributeValue(vis_scn.at(0),QString("instance_material"),QString("symbol"),textname);
+			if (symb.isNull()) 
+				return QDomNode();
+			QString tar = symb.toElement().attribute("target");
+			if (tar.isNull())
+				return QDomNode();
+			tar = tar.remove('#');
+
+			//library_material -> material -> instance_effect
+			QDomNodeList lib_mat = doc.elementsByTagName("library_materials");
+			if (lib_mat.size() != 1) 
+				return QDomNode();
+			QDomNode material = findNodeBySpecificAttributeValue(lib_mat.at(0),QString("material"),QString("id"),tar);
+			if (material.isNull()) 
+				return QDomNode();
+			QDomNodeList in_eff = material.toElement().elementsByTagName("instance_effect");
+			if (vis_scn.size() == 0) 
+				return QDomNode();
+			QString url = in_eff.at(0).toElement().attribute("url");
+			if ((url.isNull()) || (url == ""))
+				return QDomNode();
+			url = url.remove('#');
+
+			//library_effects -> effect -> instance_effect
+			QDomNodeList lib_eff = doc.elementsByTagName("library_effects");
+			if (lib_eff.size() != 1) 
+				return QDomNode();
+			QDomNode effect = findNodeBySpecificAttributeValue(lib_eff.at(0),QString("effect"),QString("id"),url);
+			if (effect.isNull()) 
+				return QDomNode();
+			QDomNodeList init_from = effect.toElement().elementsByTagName("init_from");
+			if (init_from.size() == 0)
+				return QDomNode();
+			QString img_id = init_from.at(0).toElement().text();
+			if ((img_id.isNull()) || (img_id == ""))
+				return QDomNode();
+			
+			//library_images -> image
+			QDomNodeList lib_img = doc.elementsByTagName("library_images");
+			if (lib_img.size() != 1) 
+				return QDomNode();
+			QDomNode img = findNodeBySpecificAttributeValue(lib_img.at(0),QString("image"),QString("id"),img_id);
+			if (img.isNull()) 
+				return QDomNode();
+			return img;			
+		}
+
+		static int indexTextureByImgNode(const QDomDocument doc,const QDomNode node)
+		{	
+			QDomNodeList libim = doc.elementsByTagName(QString("library_images"));
+			if (libim.size() != 1)
+				return -1;
+			QDomNodeList imgs = libim.at(0).toElement().elementsByTagName("image");
+			
+			int ii = 0;
+			bool found = false;
+			while((ii < imgs.size()) && (!found))
+			{
+				if (imgs.at(ii) == node) 
+					found = true;
+				else ++ii;
+			}
+			if (found) 
+				return ii;
+			else
+				return -1;
 		}
 
 		struct WedgeAttribute

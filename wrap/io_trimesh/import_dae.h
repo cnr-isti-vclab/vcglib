@@ -26,7 +26,7 @@ namespace io {
 			return indnm;
 		}
 
-		static int WedgeTextureAttribute(OpenMeshType& m,const QStringList face,QString texture,const QStringList wt,const QDomNode wtsrc,const int meshfaceind,const int faceind,const int component)
+		static int WedgeTextureAttribute(OpenMeshType& m,const QStringList face,int ind_txt,const QStringList wt,const QDomNode wtsrc,const int meshfaceind,const int faceind,const int component)
 		{
 			int indtx = -1;
 			if (!wtsrc.isNull())
@@ -37,7 +37,8 @@ namespace io {
 				m.face[meshfaceind].WT(component).U() = wt.at(indtx * 2).toFloat();
 				m.face[meshfaceind].WT(component).V() = wt.at(indtx * 2 + 1).toFloat();
 				
-				m.face[meshfaceind].WT(component).N() = 1;
+				m.face[meshfaceind].WT(component).N() = ind_txt;
+				
 			}
 			return indtx;
 		}
@@ -124,11 +125,11 @@ namespace io {
 			{
 				QString mat =  tripatch.at(tript).toElement().attribute(QString("material"));
 				
-				QDomNodeList libim = info->dae->doc->elementsByTagName(QString("library_images"));
-				if (libim.size() == 1)
-				{
-					QDomNode img = findNodeBySpecificAttributeValue(libim.at(0).childNodes(),QString("id"),mat);
-				}
+				QDomNode txt_node = textureFinder(mat,*(info->dae->doc));
+				int ind_txt = -1;
+				if (!txt_node.isNull())
+					ind_txt = indexTextureByImgNode(*(info->dae->doc),txt_node);
+				
 				int nfcatt = tripatch.at(tript).toElement().elementsByTagName("input").size();
 
 				QStringList face;
@@ -152,7 +153,8 @@ namespace io {
 
 
 						int indnm = WedgeNormalAttribute(m,face,wa.wn,wa.wnsrc,ff,jj + wa.offnm,tt);
-						int indtx = WedgeTextureAttribute(m,face,mat,wa.wt,wa.wtsrc,ff,jj + wa.offtx,tt);
+						if (ind_txt != -1)
+							int indtx = WedgeTextureAttribute(m,face,ind_txt,wa.wt,wa.wtsrc,ff,jj + wa.offtx,tt);
 						int indcl = WedgeColorAttribute(m,face,wa.wc,wa.wcsrc,ff,jj + wa.offcl,tt);
 
 						jj += nfcatt;
