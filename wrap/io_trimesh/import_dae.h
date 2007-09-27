@@ -74,16 +74,19 @@ namespace io {
 
 		static DAEError	LoadPolygonalListMesh(QDomNodeList& polylist,OpenMeshType& m,const size_t offset,AdditionalInfoDAE* info)
 		{
-			PolygonalMesh pm;
+			typedef PolygonalMesh< MyPolygon<typename OpenMeshType::VertexType> > PolyMesh;
+			PolyMesh pm;
 			for(typename OpenMeshType::VertexIterator itv = m.vert.begin();itv != m.vert.end();++itv)
 			{	
 				vcg::Point3f p(itv->P().X(),itv->P().Y(),itv->P().Z());
-				pm.vert.push_back(p);
+				PolyMesh::VertexType v;
+				v.P() = p;
+				pm.vert.push_back(v);
 			}
 			int polylist_size = polylist.size();
 			for(int pl = 0; pl < polylist_size;++pl)
 			{ 
-				PolygonalMesh::PERWEDGEATTRIBUTETYPE att = PolygonalMesh::NONE;
+				PolyMesh::PERWEDGEATTRIBUTETYPE att = PolyMesh::NONE;
 				WedgeAttribute wa;
 				FindStandardWedgeAttributes(wa,polylist.at(pl),*(info->dae->doc));
 				
@@ -97,18 +100,24 @@ namespace io {
 				for(unsigned int ii = 0;ii < npolig;++ii)
 				{
 					int nvert = vertcount.at(ii).toInt();
-					MyPolygon p(nvert);
-					if (!wa.wnsrc.isNull()) 
-						p.usePerWedgeNormal();
-					if (!wa.wcsrc.isNull()) 
-						p.usePerWedgeColor();
-					if (!wa.wtsrc.isNull())
-						p.usePerWedgeMultiTexture();
+					typename PolyMesh::FaceType p(nvert);
 
 					for(unsigned int iv = 0;iv < nvert;++iv)
 					{
 						int index = offset + polyind.at(offpols + iv * indforpol).toInt();
 						p._pv[iv] = &(pm.vert[index]);
+						int nmindex = -1;
+						if (!wa.wnsrc.isNull()) 
+						{
+							nmindex = offset + polyind.at(offpols + iv * indforpol + wa.offnm).toInt();
+							
+						}
+
+						int txindex = -1;
+						if (!wa.wtsrc.isNull())
+						{
+							txindex = offset + polyind.at(offpols + iv * indforpol + wa.offtx).toInt();
+						}
 					}
 					pm._pols.push_back(p);
 					offpols += nvert * indforpol;

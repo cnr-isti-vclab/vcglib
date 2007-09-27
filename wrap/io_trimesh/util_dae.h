@@ -84,92 +84,46 @@ namespace io {
 			E_NOPOLYGONALMESH
 		};
 
-		class MyPolygon;
-		class MyEdge;
-		class MyVertex:public vcg::VertexVNf<MyEdge , MyPolygon, MyEdge>
-		{
-		public:
-			MyVertex()
-				:vcg::VertexVNf<MyEdge , MyPolygon, MyEdge>() 
-			{
-				_flags = 0;
-			}
-
-			MyVertex(MyVertex::CoordType& v)
-			{
-				_flags = 0;
-				P() = v;
-
-			}	
-		};
-
+		template<typename VERTEX_TYPE>
 		class MyPolygon 
 		{
 		public:
+			typedef VERTEX_TYPE BaseVertexType;
+
 			int _nvert;
-			std::vector<MyVertex*> _pv;
-			std::vector< std::vector<vcg::TexCoord2<> > > _wtx;
-			std::vector<vcg::Point3f> _wnm;
-			std::vector< std::vector<vcg::Color4f> > _wcl;
+			std::vector<VERTEX_TYPE*> _pv;
 
 
 			MyPolygon(int n)
 				:_nvert(n),_pv(_nvert)
 			{
 			}
-
-			void usePerWedgeColor(const unsigned int multicolor = 1)
-			{
-				_wcl.resize(_nvert);
-				for(unsigned int ii = 0;ii < multicolor;++ii)
-					_wcl[ii].resize(multicolor);
-			}
-
-			void usePerWedgeNormal()
-			{
-				_wnm.resize(_nvert);
-			}
-
-			void usePerWedgeMultiTexture(const unsigned int multitex = 1)
-			{
-				_wtx.resize(_nvert);
-				for(unsigned int ii = 0;ii < multitex;++ii)
-					_wtx[ii].resize(multitex);
-			}
-
 		};
 
-		class MyEdge: public vcg::Edge<MyEdge,MyVertex> 
-		{
-		public:
-			MyEdge(MyVertex* v1,MyVertex* v2)
-				:vcg::Edge<MyEdge,MyVertex>(v1,v2)
-			{
-			}
-		};
-
+		template<typename POLYGONAL_TYPE>
 		class PolygonalMesh
 		{
 		public:
+			typedef POLYGONAL_TYPE FaceType;
 
 			enum PERWEDGEATTRIBUTETYPE {NONE = 0,NORMAL = 1,MULTITEXTURECOORD = 2,MULTICOLOR = 4};
 
-			typedef MyVertex::BaseVertexType VertexType;
+			typedef typename FaceType::BaseVertexType VertexType;
 			typedef VertexType* VertexPointer;
-			typedef std::vector<MyVertex>::iterator VertexIterator; 
-			typedef std::vector<MyPolygon>::iterator PolygonIterator; 
+			typedef typename std::vector<VertexType>::iterator VertexIterator; 
+			typedef typename std::vector<FaceType>::iterator PolygonIterator; 
 
 			vcg::Box3<float> bbox;
 
-			std::vector<MyVertex> vert;
-			std::vector<MyPolygon> _pols;
+			std::vector<VertexType> vert;
+			std::vector<FaceType> _pols;
 
 			void generatePointsVector(std::vector<std::vector<vcg::Point3f> >& v)
 			{
 				for(PolygonalMesh::PolygonIterator itp = _pols.begin();itp != _pols.end();++itp)
 				{
 					v.push_back(std::vector<vcg::Point3f>());
-					for(std::vector<MyVertex*>::iterator itv = itp->_pv.begin();itv != itp->_pv.end();++itv)
+					for(std::vector<VertexPointer>::iterator itv = itp->_pv.begin();itv != itp->_pv.end();++itv)
 					{
 						v[v.size() - 1].push_back((*itv)->P());
 					}	
