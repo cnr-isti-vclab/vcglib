@@ -79,14 +79,14 @@ namespace io {
 			for(typename OpenMeshType::VertexIterator itv = m.vert.begin();itv != m.vert.end();++itv)
 			{	
 				vcg::Point3f p(itv->P().X(),itv->P().Y(),itv->P().Z());
-				PolyMesh::VertexType v;
+				typename PolyMesh::VertexType v;
 				v.P() = p;
 				pm.vert.push_back(v);
 			}
 			int polylist_size = polylist.size();
 			for(int pl = 0; pl < polylist_size;++pl)
 			{ 
-				PolyMesh::PERWEDGEATTRIBUTETYPE att = PolyMesh::NONE;
+				typename PolyMesh::PERWEDGEATTRIBUTETYPE att = PolyMesh::NONE;
 				WedgeAttribute wa;
 				FindStandardWedgeAttributes(wa,polylist.at(pl),*(info->dae->doc));
 				

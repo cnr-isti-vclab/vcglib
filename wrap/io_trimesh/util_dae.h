@@ -120,10 +120,10 @@ namespace io {
 
 			void generatePointsVector(std::vector<std::vector<vcg::Point3f> >& v)
 			{
-				for(PolygonalMesh::PolygonIterator itp = _pols.begin();itp != _pols.end();++itp)
+				for(typename PolygonalMesh::PolygonIterator itp = _pols.begin();itp != _pols.end();++itp)
 				{
 					v.push_back(std::vector<vcg::Point3f>());
-					for(std::vector<VertexPointer>::iterator itv = itp->_pv.begin();itv != itp->_pv.end();++itv)
+					for(typename std::vector<VertexPointer>::iterator itv = itp->_pv.begin();itv != itp->_pv.end();++itv)
 					{
 						v[v.size() - 1].push_back((*itv)->P());
 					}	
