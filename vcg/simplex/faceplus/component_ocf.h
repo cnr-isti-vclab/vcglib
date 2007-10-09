@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2007/03/12 15:37:19  tarini
+Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
+
 Revision 1.19  2006/11/28 22:34:28  cignoni
 Added default constructor with null initialization to adjacency members.
 AddFaces and AddVertices NEED to know if the topology is correctly computed to update it.
@@ -174,7 +177,7 @@ public:
 	void pop_back();
   void resize(const unsigned int & _size) 
   {
-	  int oldsize = BaseType::size();
+	  unsigned int oldsize = BaseType::size();
     BaseType::resize(_size);
 	  if(oldsize<_size){
 		  ThisTypeIterator firstnew = BaseType::begin();

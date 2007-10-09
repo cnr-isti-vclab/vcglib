@@ -240,7 +240,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
     VertexType *candidate = NULL;
     ScalarType min_angle = M_PI;
 
-    for(int i = 0; i < targets.size(); i++) {      
+    for(int i = 0; i < static_cast<int>(targets.size()); i++) {      
       VertexType *v = targets[i];
       int id = v - &*this->mesh.vert.begin();
       if(v->IsD()) continue; 
