@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2007/05/10 09:31:15  cignoni
+Corrected InterpolationParameters invocation
+
 Revision 1.14  2007/05/04 16:33:27  ganovelli
 moved InterpolationParamaters out the class Triangle
 
@@ -312,6 +315,19 @@ typename TriangleType::ScalarType Perimeter(const TriangleType &t)
 	return Distance(t.P(0),t.P(1))+
 		     Distance(t.P(1),t.P(2))+
 				 Distance(t.P(2),t.P(0));
+}
+
+template<class TriangleType>
+Point3<typename TriangleType::ScalarType> Circumcenter(const TriangleType &t)
+{
+   typename TriangleType::ScalarType a2 = (t.P(1) - t.P(2)).SquaredNorm();
+   typename TriangleType::ScalarType b2 = (t.P(2) - t.P(0)).SquaredNorm();
+   typename TriangleType::ScalarType c2 = (t.P(0) - t.P(1)).SquaredNorm();      
+   Point3<typename TriangleType::ScalarType>c = t.P(0)*a2*(-a2 + b2 + c2) + 
+                                                t.P(1)*b2*( a2 - b2 + c2) + 
+                                                t.P(2)*c2*( a2 + b2 - c2);
+   c /= 2*(a2*b2 + a2*c2 + b2*c2) - a2*a2 - b2*b2 - c2*c2;
+   return c;
 }
 
 template<class TriangleType>
