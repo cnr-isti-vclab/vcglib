@@ -197,6 +197,16 @@ ScalarType Distance(const Line2<ScalarType, NORM> &l,
   return (o - p).Norm();
 }
 
+template <class ScalarType, bool NORM> 
+vcg::Point2<ScalarType> Mirror(const vcg::Line2<ScalarType, NORM> &l, 
+							   const vcg::Point2<ScalarType> &p) 
+{
+  vcg::Point2<ScalarType> nearest=vcg::ClosestPoint<ScalarType,NORM>(l,p);
+  vcg::Point2<ScalarType> dir=(nearest - p);
+  nearest+=dir;
+  return nearest;
+}
+
 /*@}*/
 
 } // end namespace
