@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2007/07/09 22:47:18  benedetti
+Removed using namespace std and modified accordingly.
+
 Revision 1.21  2007/06/20 12:59:43  corsini
 adjust wheel back-compatibility
 
@@ -113,10 +116,14 @@ Trackball::Trackball(): current_button(0), current_mode(NULL), inactive_mode(NUL
   setDefaultMapping ();
 }
 
-Trackball::~Trackball() {
-  //map<int, TrackMode *>::iterator i;
-  //for(i = modes.begin(); i != modes.end(); i++)
-  //  delete (*i).second;
+Trackball::~Trackball() 
+{
+	std::map<int, TrackMode *>::iterator it;
+  for(it = modes.begin(); it != modes.end(); it++)
+	{
+		if ((*it).second)
+			delete (*it).second;
+	}
 }
 
 
