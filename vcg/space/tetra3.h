@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2007/07/31 12:35:42  ganovelli
+added ScalarType to tetra3
+
 Revision 1.14  2006/07/06 12:39:51  ganovelli
 adde barycenter()
 
@@ -304,7 +307,7 @@ static int FofEE(const int &indexE0,const int &indexE1)
 {
 public:
   typedef  Point3< ScalarType > CoordType;
-  typedef typename ScalarType ScalarType;
+  //typedef typename ScalarType ScalarType;
 
 /*********************************************
   
