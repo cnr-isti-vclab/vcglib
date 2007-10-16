@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2007/07/26 16:22:47  m_di_benedetto
+First Commit.
+
 
 
 ****************************************************************************/
@@ -193,7 +196,7 @@ class gl_surface
 			std::vector<GLenum> sites(this->color_texs.size());
 			for (size_t i=0; i<this->color_texs.size(); ++i)
 			{
-				sites[i] = GL_COLOR_ATTACHMENT0_EXT + i;
+				sites[i] = GL_COLOR_ATTACHMENT0_EXT + ((GLenum)i);
 				glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, sites[i], GL_TEXTURE_2D, this->color_texs[i], 0);
 			}
 
