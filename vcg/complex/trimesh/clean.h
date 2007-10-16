@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.53  2007/07/24 07:09:49  cignoni
+Added remove degenerate vertex to manage vertex with NAN coords
+
 Revision 1.52  2007/06/04 06:45:05  fiorin
 Replaced call to old StarSize method with NumberOfIncidentFaces
 
@@ -342,7 +345,7 @@ private:
 						VertexPointer t = perm[i];
 						mp[perm[i]] = perm[j];
 						++i;
-						(*t).SetD();
+						Allocator<MeshType>::DeleteVertex(m,*t);
 						deleted++;
 					}
 					else
@@ -359,7 +362,6 @@ private:
 							{
 								(*fi).V(k) = &*mp[ (*fi).V(k) ];
 							}
-							m.vn -= deleted;
 							return deleted;
 			
         if(RemoveDegenerateFlag) RemoveDegenerateFace(m);  
@@ -390,12 +392,8 @@ private:
 				for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 					if( (!(*vi).IsD()) && (!(*vi).IsUserBit(referredBit)))
 					{
-						if(DeleteVertexFlag) 
-            {
-              (*vi).SetD();
-              --m.vn;
-            }
-						++deleted;
+						if(DeleteVertexFlag) Allocator<MeshType>::DeleteVertex(m,*vi);
+            ++deleted;
 					}
 					VertexType::DeleteBitFlag(referredBit);
 					return deleted;
@@ -416,8 +414,7 @@ private:
 						 math::IsNAN( (*vi).P()[2]) )
 					{
 						count_vd++;
-						vi->SetD();
-						m.vn--;
+						Allocator<MeshType>::DeleteVertex(m,*vi);
 					}
 					
 				FaceIterator fi;
@@ -429,8 +426,7 @@ private:
 							(*fi).V(2)->IsD() )
 					{
 						count_fd++;
-						fi->SetD();
-						m.fn--;
+						Allocator<MeshType>::DeleteFace(m,*fi);			
 					}
 				return count_vd;
 			}
@@ -454,8 +450,7 @@ private:
              (*fi).V(1) == (*fi).V(2) )
 					{
 						count_fd++;
-						fi->SetD();
-						m.fn--;
+						Allocator<MeshType>::DeleteFace(m,*fi);
 					}
 				return count_fd;
 			}
@@ -488,9 +483,8 @@ private:
                     if(!face::IsBorder<FaceType>(ff,j)) 
                       vcg::face::FFDetach<FaceType>(ff,j);
                   
-                ff.SetD();
-                count_fd++;
-						    m.fn--;	
+                Allocator<MeshType>::DeleteFace(m,ff);
+                count_fd++;						   	
               }
             }
           }
@@ -517,9 +511,8 @@ private:
                 const ScalarType doubleArea=DoubleArea<FaceType>(*fi);
 					      if((doubleArea<=MinAreaThr) || (doubleArea>=MaxAreaThr) )
 					      {
+								  Allocator<MeshType>::DeleteFace(m,*fi); 
 						      count_fd++;
-						      fi->SetD();
-						      m.fn--;
 					      }
               }
 				return count_fd;
@@ -541,9 +534,8 @@ private:
                 if((squaredEdge<=MinEdgeThr) || (squaredEdge>=MaxEdgeThr) )
                 {
                   count_fd++;
-                  fi->SetD();
-                  m.fn--;
-                  break; // skip the rest of the edges of the tri
+                  Allocator<MeshType>::DeleteFace(m,*fi);
+									break; // skip the rest of the edges of the tri
                 }
               }
             }
@@ -574,22 +566,14 @@ private:
 
 				for (vi = m.vert.begin(); vi != m.vert.end(); ++vi) if(!(*vi).IsD())
         {
-          if(!bb.IsIn((*vi).P()) )
-          {
-            (*vi).SetD();
-            --m.vn;
-          }
-        }
+          if(!bb.IsIn((*vi).P()) ) Allocator<MeshType>::DeleteVertex(m,*vi);
+				}
 				for (fi = m.face.begin(); fi != m.face.end(); ++fi) if(!(*fi).IsD())
         {
           if( (*fi).V(0)->IsD() || 
               (*fi).V(1)->IsD() || 
-              (*fi).V(2)->IsD() )
-                {
-                  (*fi).SetD();
-                   --m.fn;
-                }
-        }
+              (*fi).V(2)->IsD() ) Allocator<MeshType>::DeleteFace(m,*fi);
+                        }
         return m.vn;
       }
 

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2007/03/22 11:07:16  cignoni
+Solved an issue related to different casting double-float between gcc 3 and gcc 4
+
 Revision 1.13  2007/02/25 09:20:10  cignoni
 Added Rad to the NormalThr Option and removed a bug in multiple exectuion of non optimal simplification (missing an isD check)
 
@@ -213,9 +216,10 @@ public:
     else newPos=this->pos.V(1)->P();
 		//this->pos.V(1)->Qd()+=this->pos.V(0)->Qd();
     QH::Qd(this->pos.V(1))+=QH::Qd(this->pos.V(0));
-		int FaceDel=DoCollapse(this->pos, newPos); // v0 is deleted and v1 take the new position
-		m.fn-=FaceDel;
-		--m.vn;
+		//int FaceDel=
+		DoCollapse(m, this->pos, newPos); // v0 is deleted and v1 take the new position
+		//m.fn-=FaceDel;
+		//--m.vn;
   }
 
   

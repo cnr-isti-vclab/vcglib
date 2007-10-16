@@ -23,6 +23,9 @@
 /****************************************************************************
   History
     $Log: not supported by cvs2svn $
+    Revision 1.16  2006/10/07 15:04:25  cignoni
+    removed a useless include
+
     Revision 1.15  2005/10/12 10:36:26  cignoni
     Removed unused local type Edge. Now it use the standard simplex edge.
 
@@ -41,6 +44,7 @@
 
 #include<vcg/simplex/face/pos.h>
 #include<vcg/simplex/face/topology.h>
+#include<vcg/complex/trimesh/allocate.h>
 
 namespace vcg{
 namespace tri{	
@@ -192,7 +196,7 @@ class EdgeCollapse
 
 
 
-	int DoCollapse(EdgeType & c, const Point3<ScalarType> &p)
+	int DoCollapse(TriMeshType &m, EdgeType & c, const Point3<ScalarType> &p)
 	{
 		FindSets(c);
 		typename VFIVec::iterator i;
@@ -239,8 +243,8 @@ class EdgeCollapse
 			assert(f.V((*i).z) == c.V(0));
 			vcg::face::VFDetach(f,((*i).z+1)%3);
 			vcg::face::VFDetach(f,((*i).z+2)%3);
-			f.SetD();
-			n_face_del++;
+			Allocator<TriMeshType>::DeleteFace(m,f);
+			//n_face_del++;
 		}
 
 		//set Vertex Face topology
@@ -253,7 +257,8 @@ class EdgeCollapse
 			(*i).f->V((*i).z)->VFi() = (*i).z;
 		}
 		
-		c.V(0)->SetD();
+		Allocator<TriMeshType>::DeleteVertex(m,*(c.V(0)));
+		//c.V(0)->SetD();
 		c.V(1)->P()=p;
 		return n_face_del;
 	}

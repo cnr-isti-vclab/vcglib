@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.36  2007/01/11 10:24:25  cignoni
+Added test in AddVertices  to do not update un-initalized vert references (for newly allocated faces)
+
 Revision 1.35  2006/11/29 15:58:50  cignoni
 Added check with the new end and avoided dangerous updating of already updated pointers
 
@@ -333,6 +336,27 @@ namespace vcg {
 				return last;
 			}
 
+		/** Function to delete a face from the mesh. 
+			NOTE: THIS FUNCTION ALSO UPDATE FN
+		*/
+		static void DeleteFace(MeshType &m, FaceType &f)
+		{
+			assert(!f.IsD());
+			f.SetD();
+			--m.fn;
+		}
+
+		/** Function to delete a vertex from the mesh. 
+			NOTE: THIS FUNCTION ALSO UPDATE vn
+		*/
+		static void DeleteVertex(MeshType &m, VertexType &v)
+		{
+			assert(!v.IsD());
+			v.SetD();
+			--m.vn;
+		}
+				
+			
 		}; // end class
 		/*@}*/
 	} // End Namespace TriMesh

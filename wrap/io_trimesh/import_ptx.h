@@ -23,6 +23,9 @@
 /****************************************************************************
 History
 $Log: not supported by cvs2svn $
+Revision 1.6  2006/11/28 11:36:25  cignoni
+Removed nonstandard  include io.h
+
 Revision 1.5  2006/11/21 22:34:58  cignoni
 small gcc compiling issues
 
@@ -180,11 +183,8 @@ namespace vcg {
 					if(cb) cb(40,"PTX Mesh Loading - remove bad vertex!");	
 					for(VertexIterator vi = m.vert.begin(); vi != m.vert.end(); vi++)
 					{
-						if((*vi).P() == Point3f(0.0, 0.0, 0.0))
-						{
-							(*vi).SetD();
-							m.vn--;
-						}
+						if((*vi).P() == Point3f(0.0, 0.0, 0.0)) 
+							Allocator<OpenMeshType>::DeleteVertex(m,*vi);						
 					}
 
 					if(cb) cb(60,"PTX Mesh Loading - remove bad face!");	
@@ -194,12 +194,9 @@ namespace vcg {
 						for(typename OpenMeshType::FaceIterator fi = m.face.begin(); fi != m.face.end(); fi++)
 						{
 							if( ((*fi).V(0)->IsD()) || ((*fi).V(1)->IsD()) || ((*fi).V(2)->IsD()) )
-							{
-								(*fi).SetD();
-								m.fn--;
-							}
+									Allocator<OpenMeshType>::DeleteFace(m,*fi);						
 						}
-
+						
 						// eliminate high angle triangles
 						int angle = 88;
 
@@ -215,10 +212,8 @@ namespace vcg {
 								raggio = -((*fi).V(0)->P() + (*fi).V(1)->P() + (*fi).V(2)->P()) / 3.0;
 								raggio.Normalize();
 								if((raggio * (*fi).N()) < limit)
-								{
-									(*fi).SetD();
-									m.fn--;
-								}
+										Allocator<OpenMeshType>::DeleteFace(m,*fi);	
+								
 							}
 
 					}
@@ -286,10 +281,7 @@ namespace vcg {
 					for(VertexIterator vi = m.vert.begin(); vi != m.vert.end(); vi++)
 					{
 						if((*vi).P() == Point3f(0.0, 0.0, 0.0))
-						{
-							(*vi).SetD();
-							m.vn--;
-						}
+							Allocator<OpenMeshType>::DeleteVertex(m,*vi);	
 					}
 
 					bool onlypoints  =  ((mask & PTX_ONLY_POINTS) != 0);
@@ -300,10 +292,7 @@ namespace vcg {
 						for(typename OpenMeshType::FaceIterator fi = m.face.begin(); fi != m.face.end(); fi++)
 						{
 							if( ((*fi).V(0)->IsD()) || ((*fi).V(1)->IsD()) || ((*fi).V(2)->IsD()) )
-							{
-								(*fi).SetD();
-								m.fn--;
-							}
+							Allocator<OpenMeshType>::DeleteFace(m,*fi);	
 						}
 
 						// eliminate high angle triangles
@@ -320,10 +309,7 @@ namespace vcg {
 								raggio = -((*fi).V(0)->P() + (*fi).V(1)->P() + (*fi).V(2)->P()) / 3.0;
 								raggio.Normalize();
 								if((raggio * (*fi).N()) < limit)
-								{
-									(*fi).SetD();
-									m.fn--;
-								}
+									Allocator<OpenMeshType>::DeleteFace(m,*fi);	
 							}
 
 					}
@@ -722,10 +708,7 @@ namespace vcg {
 					for(typename OpenMeshType::VertexIterator vi = m.vert.begin(); vi != m.vert.end(); vi++)
 					{
 						if((*vi).P() == Point3f(0.0, 0.0, 0.0))
-						{
-							(*vi).SetD();
-							m.vn--;
-						}
+							Allocator<OpenMeshType>::DeleteVertex(m,*vi);	
 					}
 					if(cb) cb(60,"PTX Mesh Loading - remove bad face!");
 					onlypoints  =  ((mask & PTX_ONLY_POINTS) != 0);
@@ -734,10 +717,7 @@ namespace vcg {
 						for(typename OpenMeshType::FaceIterator fi = m.face.begin(); fi != m.face.end(); fi++)
 						{
 							if( ((*fi).V(0)->IsD()) || ((*fi).V(1)->IsD()) || ((*fi).V(2)->IsD()) )
-							{
-								(*fi).SetD();
-								m.fn--;
-							}
+								Allocator<OpenMeshType>::DeleteFace(m,*fi);	
 						}
 						// eliminate high angle triangles
 						int angle = 88;
@@ -752,10 +732,7 @@ namespace vcg {
 								raggio = -((*fi).V(0)->P() + (*fi).V(1)->P() + (*fi).V(2)->P()) / 3.0;
 								raggio.Normalize();
 								if((raggio * (*fi).N()) < limit)
-								{
-									(*fi).SetD();
-									m.fn--;
-								}
+									Allocator<OpenMeshType>::DeleteFace(m,*fi);	
 							}
 					}
 					for(typename OpenMeshType::VertexIterator vi = m.vert.begin(); vi != m.vert.end(); vi++)

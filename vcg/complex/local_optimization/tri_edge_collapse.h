@@ -22,6 +22,9 @@
 ****************************************************************************/
 /****************************************************************************
   $Log: not supported by cvs2svn $
+  Revision 1.19  2006/10/15 07:31:21  cignoni
+  typenames and qualifiers for gcc compliance
+
   Revision 1.18  2006/10/09 20:09:40  cignoni
   Changed some access to VertexFaceIterator to reflect the shorter new operators.
 
@@ -160,9 +163,9 @@ public:
   inline void Execute(TriMeshType &m)
   {	
     CoordType MidPoint=(pos.V(0)->P()+pos.V(1)->P())/2.0;
-	  int FaceDel=DoCollapse(pos, MidPoint);
-    m.fn-=FaceDel;
-    --m.vn;
+	  int FaceDel=DoCollapse(m, pos, MidPoint);
+    //m.fn-=FaceDel;
+    //--m.vn;
   }
   
   static bool IsSymmetric() { return true;}
