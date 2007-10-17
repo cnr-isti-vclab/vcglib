@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.31  2007/05/28 14:09:41  fiorin
+Added Set method which takes a face pointer and a vertex pointer.
+
 Revision 1.30  2007/05/16 15:11:32  fiorin
 Replaced ambigous StarSize method with NumberOfIncidentVertices and NumberOfIncidentFaces
 
@@ -188,6 +191,8 @@ public:
    VertexType *& V(){return v;}
 //	VertexType *& V(const int & i){assert( (i>=0) && (i<3)); return f->UberV( (z +i) %3);}
 	FaceType   *& F(){ return f;}
+
+	int   & I(){ return z;}
   
 
 	/// Operator to compare two half-edge
