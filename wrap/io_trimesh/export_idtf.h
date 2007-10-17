@@ -6,6 +6,9 @@
 #include <fstream>
 #include <ostream>
 
+namespace vcg {
+namespace tri {
+namespace io {
 class TextUtility
 {
 public:
@@ -195,6 +198,24 @@ public:
 		idtf.write(1,"}");
 		idtf.write(0,"}");
 	}
+
+	static int GetExportMaskCapability()
+	{
+		int capability = 0;
+
+		//vert
+		capability |= MeshModel::IOM_VERTNORMAL;
+
+
+		////wedg
+		capability |= MeshModel::IOM_WEDGTEXCOORD;
+		capability |= MeshModel::IOM_WEDGNORMAL;
+
+		return capability;
+	}
 };
+}
+}
+}
 
 #endif
