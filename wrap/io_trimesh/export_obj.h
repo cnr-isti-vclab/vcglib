@@ -25,6 +25,9 @@
   History
 
  $Log: not supported by cvs2svn $
+ Revision 1.9  2007/03/12 16:40:16  tarini
+ Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
+
  Revision 1.8  2007/03/08 11:27:52  ganovelli
  added  include to tcoord2
 
@@ -176,7 +179,8 @@ namespace io {
 		static int SaveASCII(SaveMeshType &m, const char * filename, int mask, CallBackPos *cb=0)	
 		{
 			if(m.vn == 0)	return E_NOTVEXTEXVALID;
-			if(m.fn == 0)	return E_NOTFACESVALID;
+			// Commented out this control. You should be allowed to save a point cloud.
+			// if(m.fn == 0)	return E_NOTFACESVALID;
 
 			int current = 0;
 			int max = m.vn+ m.fn;

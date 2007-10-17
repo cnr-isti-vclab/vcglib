@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2007/07/20 14:49:46  cignoni
+Added in load mask the face color bit when there is a generic material used
+
 Revision 1.15  2007/07/05 14:47:04  cignoni
 Added face coloring when there is a texture (and therefore a material)
 
@@ -302,8 +305,9 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 	if (oi.numVertices == 0)
 		return E_NO_VERTEX;
 
-	if (oi.numFaces == 0)
-		return E_NO_FACE;
+	// Commented out this test. You should be allowed to load point clouds.
+	//if (oi.numFaces == 0)
+	//	return E_NO_FACE;
 
 	std::ifstream stream(filename);
 	if (stream.fail())
