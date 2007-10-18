@@ -6,9 +6,7 @@
 #include <fstream>
 #include <ostream>
 
-namespace vcg {
-namespace tri {
-namespace io {
+
 class TextUtility
 {
 public:
@@ -21,10 +19,10 @@ public:
 	}
 };
 
-class IDTF_File
+class Output_File
 {
 public:
-	IDTF_File(const std::string& file)
+	Output_File(const std::string& file)
 		:_file()
 	{
 		_file.open(file.c_str(),std::ios::out);
@@ -38,7 +36,7 @@ public:
 		_file << tmp << st << std::endl;
 	}
 
-	~IDTF_File()
+	~Output_File()
 	{
 		_file.close();
 	}
@@ -48,13 +46,18 @@ private:
 	std::string _tab;
 };
 
+
+namespace vcg {
+namespace tri {
+namespace io {
+
 template<typename SaveMeshType>
 class ExporterIDTF
 {
 public:
 	static void Save(SaveMeshType& m,const char* file,const int mask)
 	{
-		IDTF_File idtf(file);
+		Output_File idtf(file);
 		idtf.write(0,"FILE_FORMAT \"IDTF\"");
 		idtf.write(0,"FORMAT_VERSION 100\n");
 
