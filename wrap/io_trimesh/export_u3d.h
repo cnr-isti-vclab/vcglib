@@ -35,8 +35,8 @@ private:
 		static void InvokeConverter(const char* converter_path,const QString& input_idtf,const QString& output_u3d)
 		{
 			p.start(converter_path + "IDTFConverter.exe -input " + input_idtf + " -output " + output_u3d);
-			//wait for two minutes
-			bool t = p.waitForFinished(120000);
+			//wait for four minutes
+			bool t = p.waitForFinished(240000);
 			p.close();
 		}
 
@@ -47,7 +47,7 @@ private:
 	{
 		Output_File latex(file.toStdString() + ".tex");
 		QString u3df = file + ".u3d";
-		latex.write(0,"\\\begin{document}");
+		latex.write(0,"\\begin{document}");
 		latex.write(0,"\\includemovie[");
 		latex.write(1,"poster,");
 		latex.write(1,"toolbar, %same as `controls\'");
@@ -61,19 +61,58 @@ private:
 
 public:
 	
-	static void Save(SaveMeshType& m,const char* outputfile,const int mask,const char* converter_path)
+	static int Save(SaveMeshType& m,const char* outputfile,const int mask,const char* converter_path)
 	{
 		QString curr = QDir::currentPath();
 		QString tmp(QDir::tempPath());
-		tmp = tmp + "/" + outputfile + ".idtf";
+		QString pathout(outputfile);
+		QStringList pathlist = pathout.split('/');
+		QString filename;
+		QString outputcom;
+		if (pathlist.size() != 0)
+		{
+			filename = pathlist.at(pathlist.size() - 1);
+			if (pathlist.size() > 1)
+				outputcom = pathout;
+			else 
+				outputcom = curr + "/" + filename;
+		}
+		else return 1;
+
+		tmp = tmp + "/" + filename + ".idtf";
+
 		vcg::tri::io::ExporterIDTF<SaveMeshType>::Save(m,qPrintable(tmp),mask);
-		InvokeConverter(converter_path,qPrintable(tmp),qPrintable(curr + "/" + outputfile));
+		InvokeConverter(converter_path,qPrintable(tmp),qPrintable(outputcom));
 		QDir::setCurrent(curr);
 		QString lat (outputfile);
 		QStringList l = lat.split(".");
 		SaveLatex(m,l[0]);
 		QDir dir(QDir::tempPath());
 		dir.remove(tmp);
+		return 0;
+	}
+
+	static int GetExportMaskCapability()
+	{
+		int capability = 0;
+
+		//camera
+		//capability |= MeshModel::IOM_CAMERA;
+
+		//vert
+		capability |= MeshModel::IOM_VERTNORMAL;
+		capability |= MeshModel::IOM_VERTTEXCOORD;
+		//capability |= MeshModel::
+		////face
+		////capability |= MeshModel::IOM_FACEFLAGS;
+		////capability |= MeshModel::IOM_FACECOLOR;
+		//capability |= MeshModel::IOM_FACENORMAL;
+
+		////wedg
+		capability |= MeshModel::IOM_WEDGTEXCOORD;
+		capability |= MeshModel::IOM_WEDGNORMAL;
+
+		return capability;
 	}
 };
 
