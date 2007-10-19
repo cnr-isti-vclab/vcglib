@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2007/02/01 06:38:27  cignoni
+Added small comment to grid function
+
 Revision 1.10  2007/01/27 13:14:34  marfr960
 Removed unuseful CoordType test
 
@@ -570,8 +573,9 @@ void Box(MeshType &in, const typename MeshType::BoxType & bb )
 }
 
 
-	/// Questa funzione costruisce una mesh a partire da un insieme di coordiante
-	/// ed un insieme di terne di indici di vertici
+// this function build a mesh starting from a vector of generic coords (objects having a triple of float at their beginning)
+// and a vector of faces (objects having a triple of ints at theri beginning). 
+
 
 template <class MeshType,class V, class F >
 void Build( MeshType & in, const V & v, const F & f)
@@ -582,25 +586,18 @@ void Build( MeshType & in, const V & v, const F & f)
  typedef typename MeshType::VertexIterator VertexIterator;
  typedef typename MeshType::FaceIterator   FaceIterator;
 
- in.vn = v.size();
-	in.fn = f.size();
-
-	in.vert.clear();
-	in.face.clear();
+ Allocator<MeshType>::AddVertices(in,v.size());
+ Allocator<MeshType>::AddFaces(in,f.size());
 
 	typename V::const_iterator vi;
 
 	typename MeshType::VertexType tv;
-	tv.Supervisor_Flags()=0;
+//	tv.Supervisor_Flags()=0;
 	
-	for(vi=v.begin();vi!=v.end();++vi)
+	for(int i=0;i<v.size();++i)
 	{
-		tv.P() = CoordType( 
-			(ScalarType)(*vi).Ext(0),
-			(ScalarType)(*vi).Ext(1),
-			(ScalarType)(*vi).Ext(2)
-		);
-		in.vert.push_back(tv);
+		float *vv=(float *)(&v[i]);
+		in.vert[i].P() = CoordType( vv[0],vv[1],vv[2]);
 	}
 
   std::vector<VertexPointer> index(in.vn);
@@ -612,20 +609,20 @@ void Build( MeshType & in, const V & v, const F & f)
 	typename F::const_iterator fi;
 
 	typename MeshType::FaceType ft;
-	ft.Supervisor_Flags()=0;
 	
-	for(fi=f.begin();fi!=f.end();++fi)
+	for(int i=0;i<f.size();++i)
 	{
-		assert( (*fi)[0]>=0 );
-		assert( (*fi)[1]>=0 );
-		assert( (*fi)[2]>=0 );
-		assert( (*fi)[0]<in.vn );
-		assert( (*fi)[1]<in.vn );
-		assert( (*fi)[2]<in.vn );
-		ft.V(0) = index[ (*fi)[0] ];
-		ft.V(1) = index[ (*fi)[1] ];
-		ft.V(2) = index[ (*fi)[2] ];
-		in.face.push_back(ft);
+	int * ff=(int *)(&f[i]);
+		assert( ff[0]>=0 );
+		assert( ff[1]>=0 );
+		assert( ff[2]>=0 );
+		assert( ff[0]<in.vn );
+		assert( ff[1]<in.vn );
+		assert( ff[2]<in.vn );
+		in.face[i].V(0) = &in.vert[ ff[0] ];
+		in.face[i].V(1) = &in.vert[ ff[0] ];
+		in.face[i].V(2) = &in.vert[ ff[0] ];
+
 	}
 }
 
