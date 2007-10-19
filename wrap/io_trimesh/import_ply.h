@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.36  2007/07/02 12:33:34  cignoni
+wedge colors now are loaded into face color if they are available.
+
 Revision 1.35  2007/03/12 16:40:17  tarini
 Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
 
@@ -214,6 +217,7 @@ template<class S>
 struct LoadPly_VertAux
 {
 	S p[3];
+	S n[3];
 	int flags;
 	float q;
 	unsigned char r;
@@ -252,7 +256,7 @@ struct LoadPly_Camera
 
 static const  PropDescriptor &VertDesc(int i)  
 {
-	static const PropDescriptor pv[12]={
+	static const PropDescriptor pv[15]={
 /*00*/ {"vertex", "x",         ply::T_FLOAT, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p),0,0,0,0,0  ,0},
 /*01*/ {"vertex", "y",         ply::T_FLOAT, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p) + sizeof(ScalarType),0,0,0,0,0  ,0},
 /*02*/ {"vertex", "z",         ply::T_FLOAT, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p) + 2*sizeof(ScalarType),0,0,0,0,0  ,0},
@@ -265,6 +269,9 @@ static const  PropDescriptor &VertDesc(int i)
 /*09*/ {"vertex", "diffuse_green",     ply::T_UCHAR, ply::T_UCHAR,         offsetof(LoadPly_VertAux<ScalarType>,g),0,0,0,0,0  ,0},
 /*10*/ {"vertex", "diffuse_blue" ,     ply::T_UCHAR, ply::T_UCHAR,         offsetof(LoadPly_VertAux<ScalarType>,b),0,0,0,0,0  ,0},
 /*11*/ {"vertex", "confidence",ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,q),0,0,0,0,0  ,0},
+/*12*/ {"vertex", "nx",         ply::T_FLOAT, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,n),0,0,0,0,0  ,0},
+/*13*/ {"vertex", "ny",         ply::T_FLOAT, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,n) + sizeof(ScalarType),0,0,0,0,0  ,0},
+/*14*/ {"vertex", "nz",         ply::T_FLOAT, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,n) + 2*sizeof(ScalarType),0,0,0,0,0  ,0},
 	};
 	return pv[i];
 }
@@ -452,6 +459,14 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
   if(VertexType::HasFlags() && pf.AddToRead(VertDesc(3))!=-1 ) 
 			pi.mask |= Mask::IOM_VERTFLAGS;
 
+	 if( VertexType::HasNormal() )
+	 {
+		 if(		pf.AddToRead(VertDesc(12))!=-1 
+				 && pf.AddToRead(VertDesc(13))!=-1 
+				 && pf.AddToRead(VertDesc(14))!=-1 )
+			 pi.mask |= Mask::IOM_VERTNORMAL;
+	 }
+	 
   if( VertexType::HasQuality() )
 	{
 		if( pf.AddToRead(VertDesc(4))!=-1 ||
@@ -473,7 +488,6 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 			pf.AddToRead(VertDesc(10));
 			pi.mask |= Mask::IOM_VERTCOLOR;
 		}
-
 	}
 
 			// se ci sono i flag per vertice ci devono essere anche i flag per faccia
@@ -635,6 +649,13 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				if( pi.mask & Mask::IOM_VERTQUALITY )
 					(*vi).Q() = (typename OpenMeshType::VertexType::QualityType)va.q;
 
+				if( pi.mask & Mask::IOM_VERTNORMAL )
+					{
+						(*vi).N()[0]=va.n[0];
+						(*vi).N()[1]=va.n[1];
+						(*vi).N()[2]=va.n[2];
+					}
+				
 				if( pi.mask & Mask::IOM_VERTCOLOR )
 				{
 					(*vi).C()[0] = va.r;
@@ -983,6 +1004,10 @@ static bool LoadMask(const char * filename, int &mask, PlyInfo &pi)
 	if( pf.AddToRead(VertDesc(0))!=-1 && 
 	    pf.AddToRead(VertDesc(1))!=-1 && 
 	    pf.AddToRead(VertDesc(2))!=-1 )   mask |= Mask::IOM_VERTCOORD;
+
+	if( pf.AddToRead(VertDesc(12))!=-1 && 
+	    pf.AddToRead(VertDesc(13))!=-1 && 
+	    pf.AddToRead(VertDesc(14))!=-1 )   mask |= Mask::IOM_VERTNORMAL;
 
 	if( pf.AddToRead(VertDesc(3))!=-1 )		mask |= Mask::IOM_VERTFLAGS;
 	if( pf.AddToRead(VertDesc(4))!=-1 )		mask |= Mask::IOM_VERTQUALITY;
