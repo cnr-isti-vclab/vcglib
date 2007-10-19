@@ -18,7 +18,6 @@ class ExporterU3D
 {
 private:
 
-#ifdef WIN32
 	static void InvokeConverter(const QString& converter_path,const QString& input_idtf,const QString& output_u3d)
 	{
 		QProcess p;
@@ -28,20 +27,6 @@ private:
 		bool t = p.waitForFinished(120000);
 		p.close();
 	}
-
-#else
-	#ifdef LINUX
-
-		static void InvokeConverter(const char* converter_path,const QString& input_idtf,const QString& output_u3d)
-		{
-			p.start(converter_path + "IDTFConverter.exe -input " + input_idtf + " -output " + output_u3d);
-			//wait for four minutes
-			bool t = p.waitForFinished(240000);
-			p.close();
-		}
-
-	#endif
-#endif
 
 	static void SaveLatex(SaveMeshType& m,const QString& file)
 	{
