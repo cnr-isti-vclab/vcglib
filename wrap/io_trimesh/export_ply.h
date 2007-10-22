@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.24  2007/07/23 13:27:50  tarini
+fixed bug on saving flags-per-face
+
 Revision 1.23  2007/03/12 16:40:17  tarini
 Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
 
@@ -239,6 +242,15 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 		,m.vn
 	);
 
+	if( m.HasPerVertexNormal() &&( pi.mask & Mask::IOM_VERTNORMAL) )
+	{
+		fprintf(fpout,
+						"property float nx\n"
+						"property float ny\n"
+						"property float nz\n"
+						);
+	}
+
 
 	if( m.HasPerVertexFlags() &&( pi.mask & Mask::IOM_VERTFLAGS) )
 	{
@@ -412,6 +424,12 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 				t = float(vp->UberP()[1]); fwrite(&t,sizeof(float),1,fpout);
 				t = float(vp->UberP()[2]); fwrite(&t,sizeof(float),1,fpout);
 				
+				if( m.HasPerVertexNormal() && (pi.mask & Mask::IOM_VERTNORMAL) )
+				{
+					t = float(vp->N()[0]); fwrite(&t,sizeof(float),1,fpout);
+					t = float(vp->N()[1]); fwrite(&t,sizeof(float),1,fpout);
+					t = float(vp->N()[2]); fwrite(&t,sizeof(float),1,fpout);
+				}
 				if( m.HasPerVertexFlags() && (pi.mask & Mask::IOM_VERTFLAGS) )
 					fwrite(&(vp->UberFlags()),sizeof(int),1,fpout);
 
@@ -440,6 +458,9 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 			else 	// ***** ASCII *****
 			{
 				fprintf(fpout,"%g %g %g " ,vp->P()[0],vp->P()[1],vp->P()[2]);
+
+				if( m.HasPerVertexNormal() && (pi.mask & Mask::IOM_VERTNORMAL) )
+					fprintf(fpout,"%g %g %g " ,vp->N()[0],vp->N()[1],vp->N()[2]);
 
 				if( m.HasPerVertexFlags() && (pi.mask & Mask::IOM_VERTFLAGS))
 					fprintf(fpout,"%d ",vp->UberFlags());
@@ -712,7 +733,7 @@ static const char *ErrorMsg(int error)
 	  capability |= vcg::tri::io::Mask::IOM_FACEFLAGS    ;
 	  capability |= vcg::tri::io::Mask::IOM_FACECOLOR    ;
 	  capability |= vcg::tri::io::Mask::IOM_FACEQUALITY  ;
-	  capability |= vcg::tri::io::Mask::IOM_FACENORMAL   ;
+	  // capability |= vcg::tri::io::Mask::IOM_FACENORMAL   ;
 	  capability |= vcg::tri::io::Mask::IOM_WEDGCOLOR    ;
 	  capability |= vcg::tri::io::Mask::IOM_WEDGTEXCOORD ;
 	  capability |= vcg::tri::io::Mask::IOM_WEDGTEXMULTI ;
