@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2007/08/17 09:19:40  cignoni
+glEnable (GL_LINE_SMOOTH) should go before changing the linewidth.
+
 Revision 1.5  2007/07/14 12:44:40  benedetti
 Minor edits in Doxygen documentation.
 
@@ -646,7 +649,6 @@ void DrawCircle ()
   DrawPlaneHandle ();
 }
 
-// nota: non ho scritto io questa funzione.
 /*!
   @brief Draw a spherical manipulator icon.
 
@@ -655,7 +657,9 @@ void DrawCircle ()
 */
 void DrawSphereIcon (Trackball * tb,bool active)
 {  
-  glPushMatrix ();
+  glPushAttrib (GL_TRANSFORM_BIT |GL_ENABLE_BIT | GL_LINE_BIT | GL_CURRENT_BIT | GL_LIGHTING_BIT);
+  glMatrixMode(GL_MODELVIEW);
+	glPushMatrix ();
   glTranslate (tb->center);
   glMultMatrix (tb->track.InverseMatrix ());
   glScale (tb->radius);
@@ -663,10 +667,8 @@ void DrawSphereIcon (Trackball * tb,bool active)
   tb->track.rot.ToMatrix (r);
   glMultMatrix (r);
   
-  glPushMatrix ();
-  float amb[4] = { .3f, .3f, .3f, 1.0f };
+	float amb[4] = { .3f, .3f, .3f, 1.0f };
   float col[4] = { .5f, .5f, .8f, 1.0f };
-  glPushAttrib (GL_ENABLE_BIT | GL_LINE_BIT | GL_CURRENT_BIT | GL_LIGHTING_BIT);
   glEnable (GL_LINE_SMOOTH);
   if (active)
     glLineWidth (DH.LineWidthMoving);
@@ -679,19 +681,15 @@ void DrawSphereIcon (Trackball * tb,bool active)
   glColor (DH.color);
   glMaterialfv (GL_FRONT_AND_BACK, GL_EMISSION, amb);
   glMaterialfv (GL_FRONT_AND_BACK, GL_DIFFUSE, col);
-  glPushMatrix ();
-    DrawCircle ();
-    glPushMatrix ();
-      glRotatef (90, 1, 0, 0);
-      DrawCircle ();
-      glRotatef (90, 0, 1, 0);
-      DrawCircle ();
-    glPopMatrix ();
-  glPopMatrix ();
-  glPopAttrib ();
-  glPopMatrix ();
-  glPopMatrix ();
-  
+	
+	DrawCircle ();
+	glRotatef (90, 1, 0, 0);
+	DrawCircle ();
+	glRotatef (90, 0, 1, 0);
+	DrawCircle ();
+	
+	glPopMatrix ();
+	glPopAttrib ();
 }
 
 // TEMPORARY drawing section
