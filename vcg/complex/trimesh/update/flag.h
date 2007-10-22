@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2007/05/31 15:24:50  ponchio
+FIxed off-by-one error on FaceBorderFromNone.
+
 Revision 1.19  2007/05/22 15:19:42  cignoni
 Added VertexClear
 
@@ -308,14 +311,14 @@ static void FaceBorderFromNone(MeshType &m)
 			}
 	assert(p==e.end());
 	sort(e.begin(), e.end());							// Lo ordino per vertici
-	
+	 
 	typename std::vector<EdgeSorter>::iterator pe,ps;
-	for(ps = e.begin(), pe = e.begin(); ps < e.end(); ++pe)	// Scansione vettore ausiliario
-	{
+	ps = e.begin();pe=e.begin();
+	do
+	{	 
 		if( pe==e.end() ||  *pe != *ps )					// Trovo blocco di edge uguali
 		{
 			if(pe-ps==1) 	{	
-					//++nborder;
 					ps->f->SetB(ps->z);
 			} else
 			if(pe-ps!=2)  {  // Caso complex!!
@@ -323,9 +326,10 @@ static void FaceBorderFromNone(MeshType &m)
 						ps->f->SetB(ps->z); // Si settano border anche i complex.
 			} 
 			ps = pe;
-//			++ne;										// Aggiorno il numero di edge
 		}
-	}
+		if(pe==e.end()) break;
+		++pe;
+	} while(true);
 //	TRACE("found %i border (%i complex) on %i edges\n",nborder,ncomplex,ne);
 }
 
