@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.24  2007/07/09 22:47:18  benedetti
+Removed using namespace std and modified accordingly.
+
 Revision 1.23  2007/06/13 17:15:09  benedetti
 Added one-level undo system and sticky trackmodes.
 
@@ -91,7 +94,7 @@ Adding copyright.
 
 ****************************************************************************/
 
-#include <gl/glew.h>
+#include <GL/glew.h>
 
 #include <wrap/gui/trackmode.h>
 #include <wrap/gui/trackball.h>
