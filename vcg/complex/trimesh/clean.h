@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.54  2007/10/16 16:46:53  cignoni
+Added Allocator::DeleteFace and Allocator::DeleteVertex; Now the use of SetD() should be deprecated.
+
 Revision 1.53  2007/07/24 07:09:49  cignoni
 Added remove degenerate vertex to manage vertex with NAN coords
 
@@ -421,13 +424,14 @@ private:
 				int count_fd = 0;
 
 				for(fi=m.face.begin(); fi!=m.face.end();++fi)
+				if(!(*fi).IsD()) 
 					if( (*fi).V(0)->IsD() || 
 							(*fi).V(1)->IsD() || 
 							(*fi).V(2)->IsD() )
-					{
-						count_fd++;
-						Allocator<MeshType>::DeleteFace(m,*fi);			
-					}
+									{
+										count_fd++;
+										Allocator<MeshType>::DeleteFace(m,*fi);			
+									}
 				return count_vd;
 			}
 			
