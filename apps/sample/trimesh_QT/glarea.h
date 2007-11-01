@@ -24,9 +24,11 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2007/10/18 08:52:06  benedetti
+Initial release.
+
 
 ****************************************************************************/
-
 
 #ifndef GLAREA_H_
 #define GLAREA_H_
@@ -96,9 +98,6 @@ private:
   DrawMode drawmode;
   /// mesh data structure initializer
   void initMesh(QString message);
-  /// translation between QT and VCG keyboard and mouse modifiers 
-  vcg::Trackball::Button QT2VCG (Qt::MouseButton qtbt, Qt::KeyboardModifiers modifiers);
-  vcg::Trackball::Button QTWheel2VCG (Qt::KeyboardModifiers modifiers);
  };
 
 #endif /*GLAREA_H_ */

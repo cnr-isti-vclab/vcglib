@@ -24,11 +24,15 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2007/10/18 08:52:06  benedetti
+Initial release.
+
 
 ****************************************************************************/
 
 #include <QtGui>
 #include "glarea.h"
+#include <wrap/qt/trackball.h>
 
 GLArea::GLArea (QWidget * parent)
           :QGLWidget (parent)
@@ -139,24 +143,6 @@ void GLArea::paintGL ()
     track.DrawPostApply();
 } 
 
-vcg::Trackball::Button GLArea::QT2VCG (Qt::MouseButton qtbt, Qt::KeyboardModifiers modifiers)
-{
-  int vcgbt = vcg::Trackball::BUTTON_NONE;
-  if (qtbt & Qt::LeftButton)
-    vcgbt |= vcg::Trackball::BUTTON_LEFT;
-  if (qtbt & Qt::RightButton)
-    vcgbt |= vcg::Trackball::BUTTON_RIGHT;
-  if (qtbt & Qt::MidButton)
-    vcgbt |= vcg::Trackball::BUTTON_MIDDLE;
-  if (modifiers & Qt::ShiftModifier)
-    vcgbt |= vcg::Trackball::KEY_SHIFT;
-  if (modifiers & Qt::ControlModifier)
-    vcgbt |= vcg::Trackball::KEY_CTRL;
-  if (modifiers & Qt::AltModifier)
-    vcgbt |= vcg::Trackball::KEY_ALT;
-  return vcg::Trackball::Button (vcgbt);
-}
-
 void GLArea::keyReleaseEvent (QKeyEvent * e)
 {
   e->ignore ();
@@ -202,19 +188,6 @@ void GLArea::mouseReleaseEvent (QMouseEvent * e)
   track.MouseUp (e->x (), height () - e->y (), QT2VCG (e->button (), e->modifiers ()));
   updateGL ();
 }
-
-vcg::Trackball::Button GLArea::QTWheel2VCG (Qt::KeyboardModifiers modifiers)
-{
-  int vcgbt = vcg::Trackball::WHEEL;
-  if (modifiers & Qt::ShiftModifier)
-    vcgbt |= vcg::Trackball::KEY_SHIFT;
-  if (modifiers & Qt::ControlModifier)
-    vcgbt |= vcg::Trackball::KEY_CTRL;
-  if (modifiers & Qt::AltModifier)
-    vcgbt |= vcg::Trackball::KEY_ALT;
-  return vcg::Trackball::Button (vcgbt);
-}
-
 
 void GLArea::wheelEvent (QWheelEvent * e)
 {
