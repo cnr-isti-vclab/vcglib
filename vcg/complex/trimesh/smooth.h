@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.14  2007/03/27 09:40:47  cignoni
+Changed use of selected to visited flags. Improved variable namings and comments
+
 Revision 1.13  2006/11/07 15:13:56  zifnab1974
 Necessary changes for compilation with gcc 3.4.6. Especially the hash function is a problem
 
@@ -819,7 +822,8 @@ void FitMesh(MESH_TYPE &m,
 template<class MESH_TYPE>
 void FastFitMesh(MESH_TYPE &m, 
 			 SimpleTempData<typename MESH_TYPE::VertContainer, PDVertInfo<typename MESH_TYPE::ScalarType> > &TDV,
-			 SimpleTempData<typename MESH_TYPE::FaceContainer, PDFaceInfo<typename MESH_TYPE::ScalarType> > &TDF)
+			 SimpleTempData<typename MESH_TYPE::FaceContainer, PDFaceInfo<typename MESH_TYPE::ScalarType> > &TDF,
+			 bool OnlySelected=false)
 {
 	//vcg::face::Pos<typename MESH_TYPE::FaceType> ep;
 	vcg::face::VFIterator<typename MESH_TYPE::FaceType> ep;
@@ -842,9 +846,16 @@ void FastFitMesh(MESH_TYPE &m,
 		TDV[*vi].np=(*vi).P()+ Sum*(1.0/cnt);					
 	}
 
-	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+	if(OnlySelected)
+	{
+		for(vi=m.vert.begin();vi!=m.vert.end();++vi) 
+				if((*vi).IsS()) (*vi).P()=TDV[*vi].np;	
+	}
+	else
+	{
+		for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 		(*vi).P()=TDV[*vi].np;
-
+	}
 }
 
 
@@ -910,7 +921,7 @@ void PasoDobleSmoothFast(MeshType &m, int step, typename MeshType::ScalarType Si
 	   NormalSmooth<MeshType>(m,TDF,Sigma);
 		
   for(int j=0;j<FitStep;++j)
-	  FastFitMesh<MeshType>(m,TDV,TDF);
+	  FastFitMesh<MeshType>(m,TDV,TDF,SmoothSelected);
 
 	
 
