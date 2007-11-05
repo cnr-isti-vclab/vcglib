@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.34  2007/01/31 15:25:49  giec
+Remove some usless code in Minimum Weight Triangulation.
+
 Revision 1.33  2007/01/31 11:46:12  giec
 Bug fix
 
@@ -503,7 +506,7 @@ template<class EAR>
       //Aggiungo le facce e aggiorno il puntatore alla faccia!
 			FaceIterator f = tri::Allocator<MESH>::AddFaces(m, h.size-2, app);
 			assert(h.p.f >= &*m.face.begin());
-			assert(h.p.f < &*m.face.end());
+			assert(h.p.f <= &m.face.back());
       assert(h.p.IsBorder());//test fondamentale altrimenti qualcosa s'e' rotto!
 			std::vector< EAR > H; 
 			H.reserve(h.size);
