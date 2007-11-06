@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.26  2007/11/06 10:51:55  ponchio
+Fixed wrong 'return false' in Save.
+
 Revision 1.25  2007/10/22 14:47:19  cignoni
 Added saving of per vertex normals
 
@@ -188,7 +191,7 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 	fpout = fopen(filename,"wb");
 	if(fpout==NULL)	{
 		pi.status=::vcg::ply::E_CANTOPEN;
-		return E_CANTOPEN;
+		return ::vcg::ply::E_CANTOPEN;
 	}
 	fprintf(fpout,
 		"ply\n"
