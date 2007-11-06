@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2007/03/12 16:40:17  tarini
+Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
+
 Revision 1.11  2006/12/07 00:37:58  cignoni
 Corrected bug in the management of deleted vertices
 
@@ -62,7 +65,7 @@ namespace vcg {
 					vcg::face::Pos<FaceType> he;
 					vcg::face::Pos<FaceType> hei;
 					FILE * fpout = fopen(filename,"w");
-					if(fpout==NULL)	return false;
+					if(fpout==NULL)	return 1; // 1 is the error code for cant'open, see the ErrorMsg function
 
 
 
