@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2006/06/08 13:55:16  cignoni
+Added ColorPreserving Cellbase template.
+
 Revision 1.10  2006/05/26 10:18:11  cignoni
 Re-adapted to ms compilers
 
@@ -323,7 +326,8 @@ class Clustering
     for(gi=GridCell.begin();gi!=GridCell.end();++gi)
     {
       m.vert[i].P()=(*gi).second.Pos();
-      m.vert[i].C()=(*gi).second.Col();
+      if(m.vert[i].HasColor())
+        m.vert[i].C()=(*gi).second.Col();
       (*gi).second.id=i;
       ++i;
     }
