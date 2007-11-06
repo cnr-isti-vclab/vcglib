@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.25  2007/10/22 14:47:19  cignoni
+Added saving of per vertex normals
+
 Revision 1.24  2007/07/23 13:27:50  tarini
 fixed bug on saving flags-per-face
 
@@ -183,10 +186,10 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 	else       h=hasc;
 
 	fpout = fopen(filename,"wb");
-  if(fpout==NULL)		{
-    pi.status=::vcg::ply::E_CANTOPEN;
-    return false;
-  }
+	if(fpout==NULL)	{
+		pi.status=::vcg::ply::E_CANTOPEN;
+		return E_CANTOPEN;
+	}
 	fprintf(fpout,
 		"ply\n"
 		"format %s 1.0\n"
