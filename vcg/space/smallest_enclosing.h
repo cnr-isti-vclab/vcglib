@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2006/09/14 08:46:00  ganovelli
+added inclusion of sphere3
+
 Revision 1.3  2006/07/12 12:13:23  zifnab1974
 static keyword only in declaration not in implementation
 
@@ -59,6 +62,10 @@ struct SmallestEnclosing {
 	template <class TetraType>
 		static Sphere3<typename TetraType::ScalarType>  SphereOfTetra(const TetraType & t); 
 
+	/// computes the smallest enclosing sphere of two spheres
+	template <class SphereType>
+		static SphereType  SphereOfSpheres( const SphereType & s0,const SphereType & s1); 
+
 	/// computes the smallest enclosing sphere of a container of spheres
 	template <class SphereContType>
 		static typename SphereContType::value_type  SphereOfSpheres( const SphereContType & t); 
@@ -77,33 +84,43 @@ SmallestEnclosing::SphereOfTetra(const TetraType & t){
 	return Sphere3<typename TetraType::ScalarType>( t.Barycenter(),( t.Barycenter() - t.cP(0) ).Norm() );
 }
 
+template <class SphereType>
+  SphereType 
+ SmallestEnclosing::
+SphereOfSpheres(  const   SphereType  & s0, const  SphereType  & s1)
+{
+	typename SphereType::ScalarType radius;
+	vcg::Point3f center;
+
+	if(s0.Radius()==-1.0) return s1; else if(s1.Radius()==-1.0) return s0;
+
+ 	float dst = (s1.Center()-s0.Center()).Norm() ;
+	radius = (dst+s1.Radius()+s0.Radius())/2;
+	Point3f a=s0.Center();
+	Point3f b=s1.Center();
+	Point3f dir = (b-a).Normalize();
+	a = a - dir*s0.Radius();
+	b = b + dir*s1.Radius();
+	center = (a+b)/2.0;
+
+	return  SphereType(center,radius);
+}
+
 template <class SphereContType>
 typename SphereContType::value_type
  SmallestEnclosing::
 SphereOfSpheres(  const SphereContType & spheres)
 {
 	typename SphereContType::value_type::ScalarType radius;
-	vcg::Point3f center;
+	typename SphereContType::value_type res;
+	SphereContType::const_iterator si;
 
-	if(spheres.size()==2){
-		const typename SphereContType::value_type & s0 = spheres[0];
-		const typename SphereContType::value_type & s1 = spheres[1];
- 		float dst = (s1.Center()-s0.Center()).Norm() ;
-		radius = (dst+s1.Radius()+s0.Radius())/2;
-		Point3f a=s0.Center();
-		Point3f b=s1.Center();
-		Point3f dir = (b-a).Normalize();
-		a = a - dir*s0.Radius();
-		b = b + dir*s1.Radius();
-		center = (a+b)/2.0;
-	}
-	else{
-		assert(0);
+	for(si = spheres.begin(); si != spheres.end(); ++si){
+		res  = SphereOfSpheres(res,*si);
 	}
 
-	return typename SphereContType::value_type(center,radius);
+	return res;
 }
-
 }
 
 
