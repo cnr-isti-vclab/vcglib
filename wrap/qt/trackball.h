@@ -31,7 +31,7 @@ $Log: trackball.h,v $
 #define QT_TRACKBALL_H
 
 /// Takes a QT MouseButton, some QT KeyboardModifiers and returns the equivalent Trackball::Button
-vcg::Trackball::Button QT2VCG (Qt::MouseButton qtbt, Qt::KeyboardModifiers modifiers)
+static vcg::Trackball::Button QT2VCG (Qt::MouseButton qtbt, Qt::KeyboardModifiers modifiers)
 {
   int vcgbt = vcg::Trackball::BUTTON_NONE;
 
@@ -53,7 +53,7 @@ vcg::Trackball::Button QT2VCG (Qt::MouseButton qtbt, Qt::KeyboardModifiers modif
 }
 
 /// Takes some QT KeyboardModifiers and returns the mouse wheel related Trackball::Button
-vcg::Trackball::Button QTWheel2VCG (Qt::KeyboardModifiers modifiers)
+static vcg::Trackball::Button QTWheel2VCG (Qt::KeyboardModifiers modifiers)
 {
   int vcgbt = vcg::Trackball::WHEEL;
 
