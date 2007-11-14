@@ -24,10 +24,15 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/07/06 08:02:27  cignoni
+Initial commit
+
 
 ****************************************************************************/
 #ifndef __VCG_TRI_UPDATE_POSITION
 #define __VCG_TRI_UPDATE_POSITION
+
+#include "normal.h"
 
 namespace vcg {
 namespace tri {
@@ -51,11 +56,20 @@ typedef typename MeshType::FacePointer    FacePointer;
 typedef typename MeshType::FaceIterator   FaceIterator;
 
 /// Multiply 
-static void Matrix(ComputeMeshType &m, const Matrix44<ScalarType> &M)
+static void Matrix(ComputeMeshType &m, const Matrix44<ScalarType> &M, bool update_also_normals = true)
 {
 	VertexIterator vi;
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 	        if(!(*vi).IsD()) (*vi).P()=M*(*vi).cP();
+
+	if(update_also_normals){
+		if(m.HasPerVertexNormal()){
+			UpdateNormals<ComputeMeshType>::PerVertexMatrix(m,M);
+		}
+		if(m.HasPerFaceNormal()){
+			UpdateNormals<ComputeMeshType>::PerFaceMatrix(m,M);
+		}
+	}
 }
 
 

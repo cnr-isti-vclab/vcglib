@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2007/07/12 23:11:35  cignoni
+added the missing PerVertexNormalizedPerFaceNormalized
+
 Revision 1.13  2007/01/10 17:25:14  matteodelle
 *** empty log message ***
 
@@ -228,6 +231,48 @@ static void PerVertexNormalized(ComputeMeshType &m)
   for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
    if( !(*vi).IsD() && (*vi).IsRW() )
      (*vi).N().Normalize();
+}
+
+/// multiply the vertex normals by the matrix passed. By default, the scale component is removed
+static void PerVertexMatrix(ComputeMeshType &m, const Matrix44<ScalarType> &mat, bool remove_scaling= true){
+	float pos_33; 
+	float scale;
+
+	Matrix33<ScalarType> mat33(mat,3);
+	
+	if( !m.HasPerVertexNormal()) return;
+
+	if(remove_scaling){
+		scale = pow(mat33.Determinant(),1/(float)3.0);
+		mat33[0][0]/=scale;
+		mat33[1][1]/=scale;
+		mat33[2][2]/=scale;
+	}
+	
+  for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
+   if( !(*vi).IsD() && (*vi).IsRW() )
+     (*vi).N()  = mat33*(*vi).N();
+}
+
+/// multiply the face normals by the matrix passed. By default, the scale component is removed
+static void PerFaceMatrix(ComputeMeshType &m, const Matrix44<ScalarType> &mat, bool remove_scaling= true){
+	float pos_33; 
+	float scale;
+
+	Matrix33<ScalarType> mat33(mat,3);
+
+	if( !m.HasPerFaceNormal()) return;
+
+	if(remove_scaling){
+		scale = pow(mat33.Determinant(),1/(float)3.0);
+		mat33[0][0]/=scale;
+		mat33[1][1]/=scale;
+		mat33[2][2]/=scale;
+	}
+	
+  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+   if( !(*fi).IsD() && (*fi).IsRW() )
+     (*fi).N() = mat33* (*fi).N();
 }
 
 }; // end class
