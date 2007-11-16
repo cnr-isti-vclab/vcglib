@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2007/10/10 15:11:30  ponchio
+Added Circumcenter function.
+
 Revision 1.15  2007/05/10 09:31:15  cignoni
 Corrected InterpolationParameters invocation
 
@@ -261,6 +264,28 @@ P3ScalarType Quality( Point3<P3ScalarType> const &p0, Point3<P3ScalarType> const
 	t = SquaredNorm( d12 ); if ( b<t ) b = t;
 	assert(b!=0.0);
 	return a/b;
+}
+
+
+/// Compute a shape quality measure of the triangle composed by points p0,p1,p2
+/// It Returns inradius/circumradius
+/// the range is range [0, 1] 
+/// e.g. Equilateral triangle 1, halfsquare: 1/2, ... up to a line that has zero quality.
+template<class P3ScalarType>
+P3ScalarType QualityRadii(Point3<P3ScalarType> const &p0,
+													Point3<P3ScalarType> const &p1
+													Point3<P3ScalarType> const &p2) {
+
+	P3ScalarType a=(p1-p0).Norm();
+	P3ScalarType b=(p2-p0).Norm();
+	P3ScalarType c=(p1-p2).Norm();
+
+	P3ScalarType sum = (a + b + c)*0.5;
+	P3ScalarType area2 =  sum*(a+b-sum)*(a+c-sum)*(b+c-sum);
+	if(area2 <= 0) return 0;
+	//circumradius: (a*b*c)/(4*sqrt(area2))
+	//inradius: (a*b*c)/(4*circumradius*sum) => sqrt(area2)/sum;
+	return (4*area2)/(a*b*c*sum);
 }
 
 /// Returns the normal to the plane passing through p0,p1,p2
