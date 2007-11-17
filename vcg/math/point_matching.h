@@ -42,6 +42,43 @@ public:
   typedef Quaternion<ScalarType> Quaternionx;
 
 
+/*
+Compute a similarity matching (rigid + uniform scaling)
+simply create a temporary point set with the correct scaling factor
+
+
+*/ 
+static bool ComputeSimilarityMatchMatrix(		Matrix44x &res,
+                                    std::vector<Point3x> &Pfix,		// vertici corrispondenti su fix (rossi)
+						std::vector<Point3x> &Pmov) 		// normali scelti su mov (verdi)
+{
+	Quaternionx qtmp;
+	Point3x tr;
+	
+	std::vector<Point3x> Pnew(Pmov.size());
+	
+	ScalarType scalingFactor=0;
+	
+	for(size_t i=0;i<( Pmov.size()-1);++i)
+	{
+			scalingFactor += Distance(Pmov[i],Pmov[i+1])/ Distance(Pfix[i],Pfix[i+1]);
+			qDebug("Scaling Factor is %f",scalingFactor/(i+1));
+	}
+	scalingFactor/=(Pmov.size()-1);
+
+	for(size_t i=0;i<Pmov.size();++i)
+		Pnew[i]=Pmov[i]/scalingFactor;		
+		
+	
+	bool ret=ComputeRigidMatchMatrix(res,Pfix,Pnew,qtmp,tr);
+	if(!ret) return false;
+	Matrix44x scaleM; scaleM.SetDiagonal(1.0/scalingFactor);
+	
+	res = res * scaleM;
+	return true;
+}
+
+
 
 static bool ComputeRigidMatchMatrix(		Matrix44x &res,
                                     std::vector<Point3x> &Pfix,		// vertici corrispondenti su fix (rossi)
