@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2007/11/16 14:22:35  ponchio
+Added qualityRadii: computes inradius /circumradius.
+(ok the name is ugly...)
+
 Revision 1.16  2007/10/10 15:11:30  ponchio
 Added Circumcenter function.
 
@@ -273,7 +277,7 @@ P3ScalarType Quality( Point3<P3ScalarType> const &p0, Point3<P3ScalarType> const
 /// e.g. Equilateral triangle 1, halfsquare: 1/2, ... up to a line that has zero quality.
 template<class P3ScalarType>
 P3ScalarType QualityRadii(Point3<P3ScalarType> const &p0,
-													Point3<P3ScalarType> const &p1
+													Point3<P3ScalarType> const &p1,
 													Point3<P3ScalarType> const &p2) {
 
 	P3ScalarType a=(p1-p0).Norm();
