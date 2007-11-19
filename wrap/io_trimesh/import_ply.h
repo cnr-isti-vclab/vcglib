@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.37  2007/10/19 22:13:37  cignoni
+added support for per-vertex normal for reading ply point clouds
+
 Revision 1.36  2007/07/02 12:33:34  cignoni
 wedge colors now are loaded into face color if they are available.
 
@@ -387,8 +390,9 @@ static int Open( OpenMeshType &m, const char * filename, int & loadmask, CallBac
 {
   PlyInfo pi;
   pi.cb=cb; 
-  return Open(m, filename,pi);
+  int r =  Open(m, filename,pi);
   loadmask=pi.mask;
+  return r;
 }
 
 
