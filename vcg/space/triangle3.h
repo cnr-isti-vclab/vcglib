@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2007/11/18 19:12:54  ponchio
+Typo (missing comma).
+
 Revision 1.17  2007/11/16 14:22:35  ponchio
 Added qualityRadii: computes inradius /circumradius.
 (ok the name is ugly...)
@@ -273,8 +276,8 @@ P3ScalarType Quality( Point3<P3ScalarType> const &p0, Point3<P3ScalarType> const
 
 /// Compute a shape quality measure of the triangle composed by points p0,p1,p2
 /// It Returns inradius/circumradius
-/// the range is range [0, 1] 
-/// e.g. Equilateral triangle 1, halfsquare: 1/2, ... up to a line that has zero quality.
+/// the range is range [0, 0.5] 
+/// e.g. Equilateral triangle 0.5, halfsquare: 0.41, ... up to a line that has zero quality.
 template<class P3ScalarType>
 P3ScalarType QualityRadii(Point3<P3ScalarType> const &p0,
 													Point3<P3ScalarType> const &p1,
