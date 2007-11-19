@@ -3,9 +3,9 @@
 
 #include <cstdlib>
 #include <string>
-#include <QDir.h>
-#include<QString.h>
-#include <QProcess.h>
+#include <QDir>
+#include <QString>
+#include <QProcess>
 
 #include "export_idtf.h"
 
