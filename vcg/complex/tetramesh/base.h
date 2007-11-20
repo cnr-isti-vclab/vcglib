@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2007/03/12 15:38:03  tarini
+Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
+
 Revision 1.12  2005/12/12 11:10:35  ganovelli
 modifications to compile with gcc
 
@@ -69,12 +72,10 @@ Revision 1.1  2004/04/15 08:54:20  pietroni
 ***************************************************************************/
 
 
-#pragma warning( disable : 4804 )
-
 #ifndef __VCG_TETRAMESH
 #define __VCG_TETRAMESH
-#include <vcg\space\box3.h>
-#include <vcg\space\Color4.h>
+#include <vcg/space/box3.h>
+#include <vcg/space/color4.h>
 
 
 namespace vcg {

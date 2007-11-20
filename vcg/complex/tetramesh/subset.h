@@ -26,6 +26,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/02/08 14:36:20  turini
+Warnings Correction
+
 Revision 1.3  2004/05/17 08:22:45  turini
 Minor Changes and Now Use STLContainer of Tetrahedron Pointers.
 
@@ -92,13 +95,13 @@ template <class S_TETRAMESH_TYPE, class STL_CONT >
 void SubSet(S_TETRAMESH_TYPE & m, STL_CONT & subSet)
 {
   std::vector< InsertedVT<S_TETRAMESH_TYPE> > newVertices;
-  STL_CONT::iterator pfi;
+  typename STL_CONT::iterator pfi;
   newVertices.clear();
   
   for(pfi=subSet.begin(); pfi!=subSet.end(); ++pfi) 
     m.tetra.push_back(*(*pfi));
   
-  S_TETRAMESH_TYPE::TetraIterator fi;
+  typename S_TETRAMESH_TYPE::TetraIterator fi;
   for(fi=m.tetra.begin(); fi!=m.tetra.end(); ++fi)
   {
     newVertices.push_back(InsertedVT<S_TETRAMESH_TYPE>((*fi).V(0), &(*fi), 0));
@@ -109,19 +112,19 @@ void SubSet(S_TETRAMESH_TYPE & m, STL_CONT & subSet)
   
   std::sort(newVertices.begin(), newVertices.end());
   
-  std::vector< InsertedVT<S_TETRAMESH_TYPE> >::iterator curr,next;
+  typename std::vector< InsertedVT<S_TETRAMESH_TYPE> >::iterator curr,next;
   int pos=0;
   curr=next=newVertices.begin();
   while(next!=newVertices.end())
   {
     if((*curr)!=(*next))
 	  pos++;
-	(*next).t->V((*next).z)=(S_TETRAMESH_TYPE::VertexPointer)pos;
+	(*next).t->V((*next).z)=(typename S_TETRAMESH_TYPE::VertexPointer)pos;
 	curr=next;
 	next++;
   }
   
-  std::vector< InsertedVT<S_TETRAMESH_TYPE> >::iterator newE=std::unique(newVertices.begin(), newVertices.end());
+  typename std::vector< InsertedVT<S_TETRAMESH_TYPE> >::iterator newE=std::unique(newVertices.begin(), newVertices.end());
   
   for(curr=newVertices.begin(); curr!=newE; ++curr)
     m.vert.push_back(*((*curr).v));
