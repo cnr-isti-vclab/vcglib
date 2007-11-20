@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2007/11/07 09:37:20  ganovelli
+added draft for sphereofsphres enclosing
+
 Revision 1.4  2006/09/14 08:46:00  ganovelli
 added inclusion of sphere3
 
@@ -106,14 +109,14 @@ SphereOfSpheres(  const   SphereType  & s0, const  SphereType  & s1)
 	return  SphereType(center,radius);
 }
 
-template <class SphereContType>
+template <typename SphereContType>
 typename SphereContType::value_type
  SmallestEnclosing::
 SphereOfSpheres(  const SphereContType & spheres)
 {
 	typename SphereContType::value_type::ScalarType radius;
 	typename SphereContType::value_type res;
-	SphereContType::const_iterator si;
+	typename SphereContType::const_iterator si;
 
 	for(si = spheres.begin(); si != spheres.end(); ++si){
 		res  = SphereOfSpheres(res,*si);
