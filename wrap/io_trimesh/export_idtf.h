@@ -55,7 +55,23 @@ template<typename SaveMeshType>
 class ExporterIDTF
 {
 public:
-	static void Save(SaveMeshType& m,const char* file,const int mask)
+	enum IDTFError 
+	{
+		E_NOERROR				// 0
+	};
+
+	static const char *ErrorMsg(int error)
+	{
+		static const char * dae_error_msg[] =
+		{
+			"No errors"
+		};
+
+		if(error>0 || error<0) return "Unknown error";
+		else return dae_error_msg[error];
+	};
+
+	static int Save(SaveMeshType& m,const char* file,const int mask)
 	{
 		Output_File idtf(file);
 		idtf.write(0,"FILE_FORMAT \"IDTF\"");
@@ -121,7 +137,7 @@ public:
 		idtf.write(4,"}");
 		idtf.write(3,"}");
 		idtf.write(3,"MESH_FACE_POSITION_LIST {");
-		for(typename SaveMeshType::ConstFaceIterator fit = m.face.begin();fit != m.face.end();++fit)  
+		for(SaveMeshType::ConstFaceIterator fit = m.face.begin();fit != m.face.end();++fit)  
 		{
 			idtf.write(4,TextUtility::nmbToStr(fit->V(0) - &(*m.vert.begin())) + " " +
 				TextUtility::nmbToStr(fit->V(1) - &(*m.vert.begin())) + " " + 
@@ -131,7 +147,7 @@ public:
 
 		idtf.write(3,"MESH_FACE_NORMAL_LIST {");
 		unsigned int nn = 0;
-		for(typename SaveMeshType::ConstFaceIterator fit = m.face.begin();fit != m.face.end();++fit)  
+		for(SaveMeshType::ConstFaceIterator fit = m.face.begin();fit != m.face.end();++fit)  
 		{
 			idtf.write(4,TextUtility::nmbToStr(nn) + " " +
 				TextUtility::nmbToStr(nn + 1) + " " + 
@@ -144,7 +160,7 @@ public:
 		{
 			idtf.write(3,"MESH_FACE_TEXTURE_COORD_LIST {");
 			unsigned int nn = 0;
-			for(typename SaveMeshType::ConstFaceIterator fit = m.face.begin();fit != m.face.end();++fit)  
+			for(SaveMeshType::ConstFaceIterator fit = m.face.begin();fit != m.face.end();++fit)  
 			{
 				idtf.write(4,"FACE " + TextUtility::nmbToStr(nn) + "{");
 				idtf.write(5,"TEXTURE_LAYER 0 TEX_COORD: " + TextUtility::nmbToStr(nn) + " " +
@@ -156,14 +172,14 @@ public:
 		}
 
 		idtf.write(3,"MESH_FACE_SHADING_LIST {");
-		for(typename SaveMeshType::ConstFaceIterator fit = m.face.begin();fit != m.face.end();++fit)  
+		for(SaveMeshType::ConstFaceIterator fit = m.face.begin();fit != m.face.end();++fit)  
 		{
 			idtf.write(4,TextUtility::nmbToStr(0));
 		}
 		idtf.write(3,"}");
 
 		idtf.write(3,"MODEL_POSITION_LIST {");
-		for(typename SaveMeshType::ConstVertexIterator vit = m.vert.begin();vit != m.vert.end();++vit)  
+		for(SaveMeshType::ConstVertexIterator vit = m.vert.begin();vit != m.vert.end();++vit)  
 		{
 			idtf.write(4,TextUtility::nmbToStr(vit->P().X()) + " " +
 				TextUtility::nmbToStr(vit->P().Y()) + " " + 
@@ -172,7 +188,7 @@ public:
 		idtf.write(3,"}");
 
 		idtf.write(3,"MODEL_NORMAL_LIST {");
-		for(typename SaveMeshType::FaceIterator fitn = m.face.begin();fitn != m.face.end();++fitn)  
+		for(SaveMeshType::FaceIterator fitn = m.face.begin();fitn != m.face.end();++fitn)  
 		{
 			for(unsigned int ii = 0;ii < 3;++ii)
 			{
@@ -186,7 +202,7 @@ public:
 		if (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD)
 		{
 			idtf.write(3,"MODEL_TEXTURE_COORD_LIST {");
-			for(typename SaveMeshType::FaceIterator fitn = m.face.begin();fitn != m.face.end();++fitn)  
+			for(SaveMeshType::FaceIterator fitn = m.face.begin();fitn != m.face.end();++fitn)  
 			{
 				for(unsigned int ii = 0;ii < 3;++ii)
 				{
@@ -200,6 +216,7 @@ public:
 		idtf.write(2,"}");
 		idtf.write(1,"}");
 		idtf.write(0,"}");
+		return IDTFError::E_NOERROR;
 	}
 
 	static int GetExportMaskCapability()
