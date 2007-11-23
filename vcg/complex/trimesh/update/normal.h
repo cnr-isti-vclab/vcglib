@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2007/11/14 11:56:23  ganovelli
+added updating of vertex and face normals
+
 Revision 1.14  2007/07/12 23:11:35  cignoni
 added the missing PerVertexNormalizedPerFaceNormalized
 
@@ -243,7 +246,7 @@ static void PerVertexMatrix(ComputeMeshType &m, const Matrix44<ScalarType> &mat,
 	if( !m.HasPerVertexNormal()) return;
 
 	if(remove_scaling){
-		scale = pow(mat33.Determinant(),1/(float)3.0);
+		scale = pow(mat33.Determinant(),(ScalarType)(1.0/3.0));
 		mat33[0][0]/=scale;
 		mat33[1][1]/=scale;
 		mat33[2][2]/=scale;
@@ -264,7 +267,7 @@ static void PerFaceMatrix(ComputeMeshType &m, const Matrix44<ScalarType> &mat, b
 	if( !m.HasPerFaceNormal()) return;
 
 	if(remove_scaling){
-		scale = pow(mat33.Determinant(),1/(float)3.0);
+		scale = pow(mat33.Determinant(),1.0/(float)3.0);
 		mat33[0][0]/=scale;
 		mat33[1][1]/=scale;
 		mat33[2][2]/=scale;
