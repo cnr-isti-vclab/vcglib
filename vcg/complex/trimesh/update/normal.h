@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2007/11/23 15:42:11  cignoni
+disambiguated pow call
+
 Revision 1.15  2007/11/14 11:56:23  ganovelli
 added updating of vertex and face normals
 
@@ -267,7 +270,7 @@ static void PerFaceMatrix(ComputeMeshType &m, const Matrix44<ScalarType> &mat, b
 	if( !m.HasPerFaceNormal()) return;
 
 	if(remove_scaling){
-		scale = pow(mat33.Determinant(),1.0/(float)3.0);
+		scale = pow(mat33.Determinant(),ScalarType(1.0/3.0));
 		mat33[0][0]/=scale;
 		mat33[1][1]/=scale;
 		mat33[2][2]/=scale;
