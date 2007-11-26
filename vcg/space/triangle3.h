@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2007/11/19 17:04:05  ponchio
+QualityRadii values fixed.
+
 Revision 1.18  2007/11/18 19:12:54  ponchio
 Typo (missing comma).
 
@@ -276,8 +279,8 @@ P3ScalarType Quality( Point3<P3ScalarType> const &p0, Point3<P3ScalarType> const
 
 /// Compute a shape quality measure of the triangle composed by points p0,p1,p2
 /// It Returns inradius/circumradius
-/// the range is range [0, 0.5] 
-/// e.g. Equilateral triangle 0.5, halfsquare: 0.41, ... up to a line that has zero quality.
+/// the range is range [0, 1] 
+/// e.g. Equilateral triangle 1, halfsquare: 0.81, ... up to a line that has zero quality.
 template<class P3ScalarType>
 P3ScalarType QualityRadii(Point3<P3ScalarType> const &p0,
 													Point3<P3ScalarType> const &p1,
@@ -292,7 +295,25 @@ P3ScalarType QualityRadii(Point3<P3ScalarType> const &p0,
 	if(area2 <= 0) return 0;
 	//circumradius: (a*b*c)/(4*sqrt(area2))
 	//inradius: (a*b*c)/(4*circumradius*sum) => sqrt(area2)/sum;
-	return (4*area2)/(a*b*c*sum);
+	return (8*area2)/(a*b*c*sum);
+}
+
+/// Compute a shape quality measure of the triangle composed by points p0,p1,p2
+/// It Returns mean ratio 2sqrt(a, b)/(a+b) where a+b are the eigenvalues of the M^tM of the
+/// transformation matrix into a regular simplex
+/// the range is range [0, 1] 
+template<class P3ScalarType>
+P3ScalarType QualityMeanRatio(Point3<P3ScalarType> const &p0,
+													Point3<P3ScalarType> const &p1,
+													Point3<P3ScalarType> const &p2) {
+
+	P3ScalarType a=(p1-p0).Norm();
+	P3ScalarType b=(p2-p0).Norm();
+	P3ScalarType c=(p1-p2).Norm();
+	P3ScalarType sum = (a + b + c)*0.5; //semiperimeter
+	P3ScalarType area2 =  sum*(a+b-sum)*(a+c-sum)*(b+c-sum);
+	if(area2 <= 0) return 0;
+	return (4*sqrt(3)*sqrt(area2))/(a*a + b*b + c*c);
 }
 
 /// Returns the normal to the plane passing through p0,p1,p2
