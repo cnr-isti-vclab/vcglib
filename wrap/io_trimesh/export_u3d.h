@@ -102,7 +102,7 @@ private:
 		latex.write(1,"label=" + file.toStdString() + ",");
 		latex.write(1,"text=(" + u3df.toStdString() + "),");
 		std::string cam_string;
-		Movie15Parameters::CameraParameters* cam = mov_par._campar;
+		typename Movie15Parameters::CameraParameters* cam = mov_par._campar;
 		cam_string = cam_string + "3Daac=" + TextUtility::nmbToStr(cam->_cam_fov_angle) + 
 			", 3Droll=" + TextUtility::nmbToStr(cam->_cam_roll_angle) +
 			", 3Dc2c=" + TextUtility::nmbToStr(cam->_obj_to_cam_dir.X()) + " " + TextUtility::nmbToStr(cam->_obj_to_cam_dir.Y()) + " " + TextUtility::nmbToStr(cam->_obj_to_cam_dir.Z()) +
