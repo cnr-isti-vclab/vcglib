@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2007/08/28 05:43:56  cignoni
+Added ifdef needed for mac gcc compilation
+
 Revision 1.2  2007/08/25 08:43:33  cignoni
 moved here callback def and added some needed opengl related casts
 
@@ -204,7 +207,7 @@ class glu_tesselator
 		static void CALLBACK vertex_cb(void * vertex_data, void * polygon_data)
 		{
 			tess_prim_data_vec * t_data = (tess_prim_data_vec *)polygon_data;
-			t_data->back().indices.push_back((int)vertex_data);
+			t_data->back().indices.push_back((int)((size_t)vertex_data));
 		}
 
 		template <class point_type>
