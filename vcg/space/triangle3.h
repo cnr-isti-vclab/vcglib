@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2007/11/26 14:11:38  ponchio
+Added Mean Ratio metric for triangle quality.
+
 Revision 1.19  2007/11/19 17:04:05  ponchio
 QualityRadii values fixed.
 
@@ -313,7 +316,7 @@ P3ScalarType QualityMeanRatio(Point3<P3ScalarType> const &p0,
 	P3ScalarType sum = (a + b + c)*0.5; //semiperimeter
 	P3ScalarType area2 =  sum*(a+b-sum)*(a+c-sum)*(b+c-sum);
 	if(area2 <= 0) return 0;
-	return (4*sqrt(3)*sqrt(area2))/(a*a + b*b + c*c);
+	return (4.0*sqrt(3.0)*sqrt(area2))/(a*a + b*b + c*c);
 }
 
 /// Returns the normal to the plane passing through p0,p1,p2
