@@ -27,8 +27,11 @@
 $Log: point_matching.h,v $
 
 ****************************************************************************/
+#ifndef _VCG_MATH_POINTMATCHING_H
+#define _VCG_MATH_POINTMATCHING_H
 
 #include <vcg/math/matrix33.h>
+#include <vcg/math/quaternion.h>
 #include <vcg/math/lin_algebra.h>
 namespace vcg
 {
@@ -529,3 +532,5 @@ static bool ComputeMatchMatrix2(		Matrix44x &res,
 */
 };
 } // end namespace
+
+#endif
