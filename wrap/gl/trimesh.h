@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.26  2007/12/04 17:59:41  mischitelli
+- Fixed DrawFill method, which required the hint 'HNUseVArray' enabled in order to render the mesh with VBO. This was also causing extra overhead in the Update method since HNUseVArray has to be enabled and therefore extra calculation were done to copy vertices in VArrays even if the user was using only VBOs.
+
 Revision 1.25  2007/09/12 16:20:24  m_di_benedetto
 *** empty log message ***
 
@@ -192,9 +195,9 @@ public:
 
 
 	std::vector<unsigned int> TMId;
-	unsigned int b[3];
+	unsigned int array_buffers[3];
 
-	int h;      // the current hints
+	int curr_hints;      // the current hints
 
 	// The parameters of hints
 	int   HNParami[8];
@@ -205,7 +208,7 @@ public:
 	{
 		m=0;
 		dl=0xffffffff;
-		h=HNUseLazyEdgeStrip;
+		curr_hints=HNUseLazyEdgeStrip;
 		cdm=DMNone;
 		ccm=CMNone;
 		cnm=NMNone;
@@ -218,9 +221,9 @@ public:
 	~GlTrimesh()
 	{
 		//Delete the VBOs
-		if(h&HNUseVBO)
+		if(curr_hints&HNUseVBO)
 		{
-			glDeleteBuffersARB(2, b);
+			glDeleteBuffersARB(2, (GLuint *)array_buffers);
 		}
 	}
 	
@@ -242,11 +245,11 @@ public:
 	}
 	void SetHint(Hint hn) 
 	{
-		h |= hn;
+		curr_hints |= hn;
 	}
 	void ClearHint(Hint hn) 
 	{
-		h&=(~hn);
+		curr_hints&=(~hn);
 	}
 
 	unsigned int dl;  
@@ -260,7 +263,7 @@ void Update(/*Change c=CHAll*/)
 {
 	if(m==0) return;
 		
-	if(h&HNUseVArray || h&HNUseVBO)
+	if(curr_hints&HNUseVArray || curr_hints&HNUseVBO)
 	{
 		typename MESH_TYPE::FaceIterator fi;
 		indices.clear();
@@ -271,15 +274,15 @@ void Update(/*Change c=CHAll*/)
 			indices.push_back((unsigned int)((*fi).V(2) - &(*m->vert.begin())));
 		}
 
-		if(h&HNUseVBO)
+		if(curr_hints&HNUseVBO)
 		{
-			if(!glIsBuffer(b[1]))
-				glGenBuffers(2,(GLuint*)b);
-			glBindBuffer(GL_ARRAY_BUFFER,b[0]);   
+			if(!glIsBuffer(array_buffers[1]))
+				glGenBuffers(2,(GLuint*)array_buffers);
+			glBindBuffer(GL_ARRAY_BUFFER,array_buffers[0]);   
 			glBufferData(GL_ARRAY_BUFFER_ARB, m->vn * sizeof(typename MESH_TYPE::VertexType), 
 				(char *)&(m->vert[0].P()), GL_STATIC_DRAW_ARB); 
 
-			glBindBuffer(GL_ARRAY_BUFFER,b[1]);   
+			glBindBuffer(GL_ARRAY_BUFFER,array_buffers[1]);   
 			glBufferData(GL_ARRAY_BUFFER_ARB, m->vn * sizeof(typename MESH_TYPE::VertexType), 
 				(char *)&(m->vert[0].N()), GL_STATIC_DRAW_ARB);
 		}
@@ -291,19 +294,19 @@ void Update(/*Change c=CHAll*/)
 	//int C=c;
 	//if((C&CHVertex) || (C&CHFace)) {
 	//	ComputeBBox(*m);
-	//	if(!(h&HNHasFaceNormal)) m->ComputeFaceNormal();
-	//	if(!(h&HNHasVertNormal)) m->ComputeVertexNormal();
+	//	if(!(curr_hints&HNHasFaceNormal)) m->ComputeFaceNormal();
+	//	if(!(curr_hints&HNHasVertNormal)) m->ComputeVertexNormal();
 	//	C= (C | CHFaceNormal);
 	//}
-	//if((C&CHFace) && (h&HNUseEdgeStrip)) 		 ComputeEdges();
-	//if((C&CHFace) && (h&HNUseLazyEdgeStrip)) ClearEdges();
+	//if((C&CHFace) && (curr_hints&HNUseEdgeStrip)) 		 ComputeEdges();
+	//if((C&CHFace) && (curr_hints&HNUseLazyEdgeStrip)) ClearEdges();
 	//if(MESH_TYPE::HasFFTopology())
-	//	if((C&CHFace) && (h&HNUseTriStrip)) 		{
-	//			if(!(h&HNHasFFTopology)) m->FFTopology();
+	//	if((C&CHFace) && (curr_hints&HNUseTriStrip)) 		{
+	//			if(!(curr_hints&HNHasFFTopology)) m->FFTopology();
 	//			ComputeTriStrip();
 	//		}
-	//if((C&CHFaceNormal) && (h&HNUsePerWedgeNormal))		{
-	//	  if(!(h&HNHasVFTopology)) m->VFTopology();
+	//if((C&CHFaceNormal) && (curr_hints&HNUsePerWedgeNormal))		{
+	//	  if(!(curr_hints&HNHasVFTopology)) m->VFTopology();
 	//		CreaseWN(*m,MESH_TYPE::scalar_type(GetHintParamf(HNPCreaseAngle)));
 	//}
 	//if(C!=0) { // force the recomputation of display list 
@@ -311,7 +314,7 @@ void Update(/*Change c=CHAll*/)
 	//	ccm=CMNone;
 	//	cnm=NMNone;
 	//}
-	//if((h&HNUseVArray) && (h&HNUseTriStrip)) 
+	//if((curr_hints&HNUseVArray) && (curr_hints&HNUseTriStrip)) 
 	//	{
 	//	 ConvertTriStrip<MESH_TYPE>(*m,TStrip,TStripF,TStripVED,TStripVEI);
 	//	}
@@ -365,7 +368,7 @@ template< DrawMode dm, ColorMode cm, TextureMode tm>
 void Draw()
 {
 	if(!m) return;
-	if((h & HNUseDisplayList)){
+	if((curr_hints & HNUseDisplayList)){
 				if (cdm==dm && ccm==cm){
 						glCallList(dl);
 						return;
@@ -392,7 +395,7 @@ void Draw()
 		}
 	glPopMatrix();
 
-	if((h & HNUseDisplayList)){
+	if((curr_hints & HNUseDisplayList)){
 		cdm=dm;
 		ccm=cm;
 		glEndList();
@@ -421,7 +424,7 @@ void DrawFill()
 	if(tm == TMPerWedge || tm == TMPerWedgeMulti )
 		glDisable(GL_TEXTURE_2D);
 
-	if(h&HNUseVBO)
+	if(curr_hints&HNUseVBO)
 	{
 		if( (cm==CMNone) || (cm==CMPerMesh) )
 		{
@@ -431,10 +434,10 @@ void DrawFill()
 
 			if (nm==NMPerVert)
 			{
-				glBindBuffer(GL_ARRAY_BUFFER,b[1]);   
+				glBindBuffer(GL_ARRAY_BUFFER,array_buffers[1]);   
 				glNormalPointer(GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),0);
 			}
-			glBindBuffer(GL_ARRAY_BUFFER,b[0]);   
+			glBindBuffer(GL_ARRAY_BUFFER,array_buffers[0]);   
 			glVertexPointer(3,GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),0);
 
 			glDrawElements(GL_TRIANGLES ,m->fn*3,GL_UNSIGNED_INT, &(*indices.begin()) );
@@ -449,7 +452,7 @@ void DrawFill()
 		}
 	}
  
-	if(h&HNUseVArray) 
+	if(curr_hints&HNUseVArray) 
 	{
 		if( (cm==CMNone) || (cm==CMPerMesh) )
 		{
@@ -471,10 +474,10 @@ void DrawFill()
 	}
 	else
 	
- 	if(h&HNUseTriStrip) 
+ 	if(curr_hints&HNUseTriStrip) 
 	{
 		//if( (nm==NMPerVert) && ((cm==CMNone) || (cm==CMPerMesh)))
-		//	if(h&HNUseVArray){
+		//	if(curr_hints&HNUseVArray){
 		//		glEnableClientState (GL_NORMAL_ARRAY  );
 		//		glNormalPointer(GL_FLOAT,sizeof(MESH_TYPE::VertexType),&(m->vert[0].cN()));
 		//		glEnableClientState (GL_VERTEX_ARRAY);
@@ -729,7 +732,7 @@ private:
 template <NormalMode nm, ColorMode cm>
 void DrawWire()
 {
-	//if(!(h & (HNUseEdgeStrip | HNUseLazyEdgeStrip) ) )
+	//if(!(curr_hints & (HNUseEdgeStrip | HNUseLazyEdgeStrip) ) )
 	//	{
 			glPushAttrib(GL_POLYGON_BIT);
 			glPolygonMode(GL_FRONT_AND_BACK ,GL_LINE);
