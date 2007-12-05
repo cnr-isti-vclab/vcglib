@@ -6,6 +6,7 @@
 #include <fstream>
 #include <ostream>
 #include <vcg/complex/trimesh/update/bounding.h>
+#include <wrap/io_trimesh/io_mask.h>
 
 
 class TextUtility
@@ -106,7 +107,7 @@ typedef typename SaveMeshType::CoordType CoordType;
 		idtf.write(0,"}");
 
 
-		if (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD)
+		if (mask & Mask::IOM_WEDGTEXCOORD)
 		{
 
 			idtf.write(0,"RESOURCE_LIST \"TEXTURE\" {");
@@ -192,11 +193,11 @@ typedef typename SaveMeshType::CoordType CoordType;
 		idtf.write(3,"MODEL_POSITION_LIST {");
 		
 		vcg::tri::UpdateBounding<SaveMeshType>::Box(m);
-		SaveMeshType::ScalarType diag = m.bbox.Diag();
-		SaveMeshType::CoordType center = m.bbox.Center();
+		ScalarType diag = m.bbox.Diag();
+		CoordType center = m.bbox.Center();
 		for(ConstVertexIterator vit = m.vert.begin();vit != m.vert.end();++vit)  
 		{
-			SaveMeshType::CoordType tmp = (vit->P() - center)/diag;
+			CoordType tmp = (vit->P() - center)/diag;
 			idtf.write(4,TextUtility::nmbToStr(tmp.X()) + " " +
 				TextUtility::nmbToStr(tmp.Z()) + " " + 
 				TextUtility::nmbToStr(tmp.Y()));
@@ -240,12 +241,12 @@ typedef typename SaveMeshType::CoordType CoordType;
 		int capability = 0;
 
 		//vert
-		capability |= MeshModel::IOM_VERTNORMAL;
+		capability |= Mask::IOM_VERTNORMAL;
 
 
 		////wedg
-		capability |= MeshModel::IOM_WEDGTEXCOORD;
-		capability |= MeshModel::IOM_WEDGNORMAL;
+		capability |= Mask::IOM_WEDGTEXCOORD;
+		capability |= Mask::IOM_WEDGNORMAL;
 
 		return capability;
 	}

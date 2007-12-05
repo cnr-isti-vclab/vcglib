@@ -173,12 +173,12 @@ public:
 		int capability = 0;
 
 		//vert
-		capability |= MeshModel::IOM_VERTNORMAL;
+		capability |= Mask::IOM_VERTNORMAL;
 
 
 		////wedg
-		capability |= MeshModel::IOM_WEDGTEXCOORD;
-		capability |= MeshModel::IOM_WEDGNORMAL;
+		capability |= Mask::IOM_WEDGTEXCOORD;
+		capability |= Mask::IOM_WEDGNORMAL;
 
 		return capability;
 	}
