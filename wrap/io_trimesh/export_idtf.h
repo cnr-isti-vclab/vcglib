@@ -5,6 +5,7 @@
 #include <sstream>
 #include <fstream>
 #include <ostream>
+#include <vcg/complex/trimesh/update/bounding.h>
 
 
 class TextUtility
@@ -189,11 +190,16 @@ typedef typename SaveMeshType::CoordType CoordType;
 		idtf.write(3,"}");
 
 		idtf.write(3,"MODEL_POSITION_LIST {");
+		
+		vcg::tri::UpdateBounding<SaveMeshType>::Box(m);
+		SaveMeshType::ScalarType diag = m.bbox.Diag();
+		SaveMeshType::CoordType center = m.bbox.Center();
 		for(ConstVertexIterator vit = m.vert.begin();vit != m.vert.end();++vit)  
 		{
-			idtf.write(4,TextUtility::nmbToStr(vit->P().X()) + " " +
-				TextUtility::nmbToStr(vit->P().Y()) + " " + 
-				TextUtility::nmbToStr(vit->P().Z()));
+			SaveMeshType::CoordType tmp = (vit->P() - center)/diag;
+			idtf.write(4,TextUtility::nmbToStr(tmp.X()) + " " +
+				TextUtility::nmbToStr(tmp.Z()) + " " + 
+				TextUtility::nmbToStr(tmp.Y()));
 		}
 		idtf.write(3,"}");
 
@@ -203,8 +209,8 @@ typedef typename SaveMeshType::CoordType CoordType;
 			for(unsigned int ii = 0;ii < 3;++ii)
 			{
 				idtf.write(4,TextUtility::nmbToStr(fitn->N().X()) + " " +
-					TextUtility::nmbToStr(fitn->N().Y()) + " " + 
-					TextUtility::nmbToStr(fitn->N().Z()));
+					TextUtility::nmbToStr(fitn->N().Z()) + " " + 
+					TextUtility::nmbToStr(fitn->N().Y()));
 			}
 		}
 		idtf.write(3,"}");
