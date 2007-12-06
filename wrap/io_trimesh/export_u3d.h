@@ -17,9 +17,9 @@ namespace u3dparametersclasses
 {
 	struct IDTFConverterParameters
 	{
-		const QString& _converter_loc;
-		const QString& _input_file;
-		const QString& _output_file;
+		const QString _converter_loc;
+		const QString _input_file;
+		const QString _output_file;
 
 		IDTFConverterParameters(const QString& converter_loc,const QString& input_file,const QString& output_file)
 			:_converter_loc(converter_loc),_input_file(input_file),_output_file(output_file)
@@ -92,7 +92,9 @@ private:
 	{
 		QProcess p;
 		QString convstring = par._converter_loc;
-		convstring = convstring + " -input " + par._input_file + " -output " + par._output_file; 
+		convstring =  convstring + " -input " + par._input_file + " -output " + par._output_file; 
+		qDebug("Starting converter %s", qPrintable(convstring));
+		p.setProcessChannelMode(QProcess::MergedChannels);
 		p.start(convstring);
 		//wait until the task has been completed
 		bool t = p.waitForFinished(-1);
@@ -154,6 +156,9 @@ public:
 		QString conv_loc_st(conv_loc);
 		QString output_file_st(output_file);
 		u3dparametersclasses::IDTFConverterParameters idtfpar(conv_loc_st,tmp,output_file_st);
+		qDebug("conv_loc_st '%s'", qPrintable(conv_loc_st));
+		qDebug("conv_loc '%s'", conv_loc);
+		qDebug("idtfpar._converter_loc '%s'", qPrintable(idtfpar._converter_loc));
 		int res = InvokeConverter(idtfpar);
 		QDir::setCurrent(curr);
 		QString lat (output_file);
