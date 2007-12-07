@@ -63,6 +63,23 @@ namespace u3dparametersclasses
 	};
 }
 
+namespace QtUtilityFunctions
+{
+	static void splitFilePath(const QString& filepath,QStringList& trim_path)
+	{
+		QString file_uniformed = filepath;
+		file_uniformed.replace(QString("\\"),QString("/"));
+		trim_path = file_uniformed.split("/");
+	}
+
+	static QString fileNameFromTrimmedPath(const QStringList& file_path)
+	{
+		if (file_path.size() > 0)
+			return file_path.at(file_path.size() - 1);
+	}
+}
+
+
 template<typename SaveMeshType>
 class ExporterU3D
 {
@@ -87,7 +104,6 @@ public:
 	};
 
 private:
-
 	static int InvokeConverter(const u3dparametersclasses::IDTFConverterParameters& par)
 	{
 		QProcess p;
@@ -108,12 +124,8 @@ private:
 		Output_File latex(file.toStdString() + ".tex");
 		QString u3df = file + ".u3d";
 		QStringList file_trim;
-		if (u3df.contains("/"))
-			file_trim = u3df.split("/");
-		else 
-			if (u3df.contains("\\"))
-				file_trim = u3df.split("/");
-		std::string u3d_final =  file_trim.at(file_trim.size() - 1).toStdString();
+		QtUtilityFunctions::splitFilePath(u3df,file_trim);
+		std::string u3d_final =  QtUtilityFunctions::fileNameFromTrimmedPath(file_trim).toStdString();
 		latex.write(0,"\\begin{document}");
 		latex.write(0,"\\includemovie[");
 		latex.write(1,"poster,");
@@ -143,14 +155,9 @@ public:
 		QString curr = QDir::currentPath();
 		QString out(output_file);
 		QStringList out_trim;
-		if (out.contains("/"))
-			out_trim = out.split("/");
-		else 
-			if (out.contains("\\"))
-				out_trim = out.split("/");
-
+		QtUtilityFunctions::splitFilePath(out,out_trim);
 		QString tmp(QDir::tempPath());
-		tmp = tmp + "/" + out_trim.at(out_trim.size() - 1) + ".idtf";
+		tmp = tmp + "/" + QtUtilityFunctions::fileNameFromTrimmedPath(out_trim) + ".idtf";
 
 		vcg::tri::io::ExporterIDTF<SaveMeshType>::Save(m,qPrintable(tmp),mask);
 		QString conv_loc_st(conv_loc);
