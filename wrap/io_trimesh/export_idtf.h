@@ -209,6 +209,7 @@ typedef typename SaveMeshType::CoordType CoordType;
 		{
 			for(unsigned int ii = 0;ii < 3;++ii)
 			{
+				fitn->N().Normalize();
 				idtf.write(4,TextUtility::nmbToStr(fitn->N().X()) + " " +
 					TextUtility::nmbToStr(fitn->N().Z()) + " " + 
 					TextUtility::nmbToStr(fitn->N().Y()));

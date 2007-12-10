@@ -120,7 +120,6 @@ private:
 
 	static void SaveLatex(SaveMeshType& m,const QString& file,const u3dparametersclasses::Movie15Parameters& mov_par)
 	{
-
 		Output_File latex(file.toStdString() + ".tex");
 		QString u3df = file + ".u3d";
 		QStringList file_trim;
@@ -138,9 +137,9 @@ private:
 		{
 			cam_string = cam_string + "3Daac=" + TextUtility::nmbToStr(cam->_cam_fov_angle) + 
 				", 3Droll=" + TextUtility::nmbToStr(cam->_cam_roll_angle) +
-				", 3Dc2c=" + TextUtility::nmbToStr(cam->_obj_to_cam_dir.X()) + " " + TextUtility::nmbToStr(cam->_obj_to_cam_dir.Y()) + " " + TextUtility::nmbToStr(cam->_obj_to_cam_dir.Z()) +
+				", 3Dc2c=" + TextUtility::nmbToStr(cam->_obj_to_cam_dir.X()) + " " + TextUtility::nmbToStr(cam->_obj_to_cam_dir.Z()) + " " + TextUtility::nmbToStr(cam->_obj_to_cam_dir.Y()) +
 				", 3Droo=" + TextUtility::nmbToStr(cam->_obj_to_cam_dist) + 
-				", 3Dcoo=" + TextUtility::nmbToStr(cam->_obj_pos.X()) + " " + TextUtility::nmbToStr(cam->_obj_pos.Y()) + " " + TextUtility::nmbToStr(cam->_obj_pos.Z()) + ",";
+				", 3Dcoo=" + TextUtility::nmbToStr(cam->_obj_pos.X()) + " " + TextUtility::nmbToStr(cam->_obj_pos.Z()) + " " + TextUtility::nmbToStr(cam->_obj_pos.Y()) + ",";
 			latex.write(1,cam_string);
 		}
 		latex.write(1,"3Dlights=File,");
