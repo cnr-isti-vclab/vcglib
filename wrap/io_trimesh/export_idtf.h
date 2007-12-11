@@ -198,7 +198,7 @@ typedef typename SaveMeshType::CoordType CoordType;
 		CoordType center = m.bbox.Center();
 		for(ConstVertexIterator vit = m.vert.begin();vit != m.vert.end();++vit)  
 		{
-			CoordType tmp = (vit->P() - center)/diag;
+			CoordType tmp = vit->P();// - center);// /diag;
 			idtf.write(4,TextUtility::nmbToStr(tmp.X()) + " " +
 				TextUtility::nmbToStr(tmp.Z()) + " " + 
 				TextUtility::nmbToStr(tmp.Y()));

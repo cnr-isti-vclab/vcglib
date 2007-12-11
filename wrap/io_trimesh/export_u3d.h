@@ -39,7 +39,13 @@ namespace u3dparametersclasses
 		{ 
 		public:
 			CameraParameters()
-				:_cam_fov_angle(0.0f),_cam_roll_angle(0.0f),_obj_to_cam_dir(vcg::Point3f(0.0f,0.0f,0.0f)),_obj_to_cam_dist(0.0),_obj_pos(vcg::Point3f(0.0f,0.0f,0.0f))
+				:_cam_fov_angle(0.0f),_cam_roll_angle(0.0f),_obj_to_cam_dir(vcg::Point3f(0.0f,0.0f,0.0f)),_obj_to_cam_dist(0.0f),_obj_bbox_diag(0.0f),_obj_pos(vcg::Point3f(0.0f,0.0f,0.0f))
+			{
+
+			}
+
+			CameraParameters(const vcg::Point3f& mesh_center,const float mesh_bbox_diag)
+				:_cam_fov_angle(0.0f),_cam_roll_angle(0.0f),_obj_to_cam_dir(vcg::Point3f(0.0f,0.0f,mesh_bbox_diag)),_obj_to_cam_dist(0.0),_obj_pos(mesh_center),_obj_bbox_diag(mesh_bbox_diag)
 			{
 
 			}
@@ -47,7 +53,7 @@ namespace u3dparametersclasses
 			CameraParameters(const float cam_fov_angle,const float cam_roll_angle,
 				const vcg::Point3f& obj_to_cam_dir,const float obj_to_cam_dist,
 				const vcg::Point3f& obj_pos = vcg::Point3f(0.0f,0.0f,0.0f))
-				:_cam_fov_angle(cam_fov_angle),_cam_roll_angle(cam_roll_angle),_obj_to_cam_dir(obj_to_cam_dir),_obj_to_cam_dist(obj_to_cam_dist),_obj_pos(obj_pos)
+				:_cam_fov_angle(cam_fov_angle),_cam_roll_angle(cam_roll_angle),_obj_to_cam_dir(obj_to_cam_dir),_obj_to_cam_dist(obj_to_cam_dist),_obj_pos(obj_pos),_obj_bbox_diag(0.0f)
 			{
 
 			}
@@ -57,6 +63,7 @@ namespace u3dparametersclasses
 			vcg::Point3f _obj_to_cam_dir;
 			float _obj_to_cam_dist;
 			vcg::Point3f _obj_pos;
+			float _obj_bbox_diag;
 
 		};
 		CameraParameters* _campar;
