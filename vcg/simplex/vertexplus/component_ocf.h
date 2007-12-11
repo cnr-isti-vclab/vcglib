@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2007/12/11 11:36:03  cignoni
+Added the CompactVertexVector garbage collecting function.
+
 Revision 1.9  2006/12/11 23:42:00  ganovelli
 bug Index()() instead of Index()
 
@@ -69,7 +72,7 @@ Mainly the trick here is to store a base pointer in each simplex...
 
 #include <vcg/simplex/vertexplus/component.h>
 #include <vector>
-
+#include <limits>
 
 namespace vcg {
   namespace vert {
