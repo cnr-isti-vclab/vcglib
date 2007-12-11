@@ -151,9 +151,10 @@ typedef typename SaveMeshType::CoordType CoordType;
 		idtf.write(3,"MESH_FACE_POSITION_LIST {");
 		for(ConstFaceIterator fit = m.face.begin();fit != m.face.end();++fit)  
 		{
+			//WARNING: U3D uses a left-oriented coordinates system (Z-Y have been swapped) so you have to reverse the vertices' order  
 			idtf.write(4,TextUtility::nmbToStr(fit->V(0) - &(*m.vert.begin())) + " " +
-				TextUtility::nmbToStr(fit->V(1) - &(*m.vert.begin())) + " " + 
-				TextUtility::nmbToStr(fit->V(2) - &(*m.vert.begin())));
+				TextUtility::nmbToStr(fit->V(2) - &(*m.vert.begin())) + " " + 
+				TextUtility::nmbToStr(fit->V(1) - &(*m.vert.begin())));
 		}
 		idtf.write(3,"}");
 
