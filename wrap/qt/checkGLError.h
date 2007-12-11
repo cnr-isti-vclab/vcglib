@@ -1,5 +1,5 @@
 #pragma once
-#include <QMessageBox.h>
+#include <QMessageBox>
 class checkGLError
 {
 	public:
