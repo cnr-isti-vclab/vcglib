@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2006/12/11 23:42:00  ganovelli
+bug Index()() instead of Index()
+
 Revision 1.8  2006/12/04 11:17:42  ganovelli
 added forward declaration of TriMesh
 
@@ -97,29 +100,52 @@ public:
 	void pop_back();
   void resize(const unsigned int & _size) 
   {
-	int oldsize = BaseType::size();
-    BaseType::resize(_size);
-	if(oldsize<_size){
-		ThisTypeIterator firstnew = BaseType::begin();
-		advance(firstnew,oldsize);
-		_updateOVP(firstnew,(*this).end());
-	}  
-	if(ColorEnabled) CV.resize(_size);
+		int oldsize = BaseType::size();
+			BaseType::resize(_size);
+		if(oldsize<_size){
+			ThisTypeIterator firstnew = BaseType::begin();
+			advance(firstnew,oldsize);
+			_updateOVP(firstnew,(*this).end());
+		}  
+		if(ColorEnabled) CV.resize(_size);
     if(NormalEnabled) NV.resize(_size);
    }
-  void reserve(const unsigned int & _size)
+  
+	void reserve(const unsigned int & _size)
   {
     BaseType::reserve(_size);
     if (ColorEnabled) CV.reserve(_size);
     if (NormalEnabled) NV.reserve(_size);
   }
 
- void _updateOVP(ThisTypeIterator lbegin, ThisTypeIterator lend)
-{
+	void _updateOVP(ThisTypeIterator lbegin, ThisTypeIterator lend)
+	{
     ThisTypeIterator vi;
     for(vi=lbegin;vi!=lend;++vi)
         (*vi)._ovp=this;
- }
+	}
+ 
+// this function is called by the specialized Reorder function, that is called whenever someone call the allocator::CompactVertVector
+void Reorder(std::vector<size_t> &newVertIndex )
+{
+	size_t pos=0;
+	size_t i=0;
+	if(ColorEnabled) assert( CV.size() == newVertIndex.size() );
+	if(NormalEnabled) assert( NV.size() == newVertIndex.size() );
+		
+	for(i=0;i<newVertIndex.size();++i)
+		{
+			if(newVertIndex[i] != std::numeric_limits<size_t>::max() )
+				{
+					assert(newVertIndex[i] <= i);
+					if(ColorEnabled)  CV[newVertIndex[i]] = CV[i];
+					if(NormalEnabled) NV[newVertIndex[i]] = NV[i];;
+				}
+		}
+}
+
+
+
 ////////////////////////////////////////
 // Enabling Eunctions
 
@@ -295,6 +321,11 @@ namespace tri
 	  else return VertexType::HasQuality();
 	}
 
+	template < class VertexType >
+	void Reorder( std::vector<size_t>  &newVertIndex, vert::vector_ocf< VertexType > &vertVec)
+		{
+			vertVec.Reorder(newVertIndex);
+		}
 }
 }// end namespace vcg
 #endif

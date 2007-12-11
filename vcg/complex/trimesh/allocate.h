@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.37  2007/10/16 16:46:53  cignoni
+Added Allocator::DeleteFace and Allocator::DeleteVertex; Now the use of SetD() should be deprecated.
+
 Revision 1.36  2007/01/11 10:24:25  cignoni
 Added test in AddVertices  to do not update un-initalized vert references (for newly allocated faces)
 
@@ -153,6 +156,11 @@ Initial commit
 namespace vcg {
 	namespace tri {
 		/** \addtogroup trimesh */
+		
+		template <class vector_type>
+		void Reorder( vector<size_t> &newVertIndex, vector_type &vert)
+		{}
+
 		/*@{*/
 		/// Class to safely add vertexes and faces to a mesh updating all the involved pointers.
 		/// It provides static memeber to add either vertex or faces to a trimesh.
@@ -356,8 +364,48 @@ namespace vcg {
 			--m.vn;
 		}
 				
+		/* 
+		Function to compact all the vertices that have been deleted and put them to the end of the vector. 
+		after this pass the isD test in the scanning of vertex vector, is no more strongly necessary.
+		It should not be called when TemporaryData is active;
+		*/
+		
+		static void CompactVertexVector( MeshType &m ) 
+		{
+			// newVertIndex [ <old_vert_position> ] gives you the new position of the vertex in the vector;
+			vector<size_t> newVertIndex(m.vert.size());
 			
-		}; // end class
+			size_t pos=0;
+			size_t i=0;
+			
+			for(i=0;i<m.vert.size();++i)
+			{
+				if(!m.vert[i].IsD())
+				{
+					if(pos!=i)
+						m.vert[pos]=m.vert[i];
+					newVertIndex[i]=pos;
+					++pos;
+				}
+			}
+			assert(pos==m.vn);
+			Reorder<typename MeshType::VertContainer>(newVertIndex,m.vert);
+			m.vert.resize(m.vn);
+			FaceIterator fi;
+			VertexPointer vbase=&m.vert[0];
+			for(fi=m.face.begin();fi!=m.face.end();++fi)
+				if(!(*fi).IsD())
+					for(i=0;i<3;++i)
+					{
+						size_t oldIndex = (*fi).V(i) - vbase;
+						assert(oldIndex >=0 && oldIndex < newVertIndex.size());
+						(*fi).V(i) = vbase+newVertIndex[oldIndex];
+					}
+				
+		}
+}; // end class
+		
+
 		/*@}*/
 	} // End Namespace TriMesh
 } // End Namespace vcg
