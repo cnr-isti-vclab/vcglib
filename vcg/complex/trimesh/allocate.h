@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.38  2007/12/11 11:35:50  cignoni
+Added the CompactVertexVector garbage collecting function.
+
 Revision 1.37  2007/10/16 16:46:53  cignoni
 Added Allocator::DeleteFace and Allocator::DeleteVertex; Now the use of SetD() should be deprecated.
 
@@ -158,7 +161,7 @@ namespace vcg {
 		/** \addtogroup trimesh */
 		
 		template <class vector_type>
-		void Reorder( vector<size_t> &newVertIndex, vector_type &vert)
+			void Reorder( std::vector<size_t> &newVertIndex, vector_type &vert)
 		{}
 
 		/*@{*/
@@ -373,7 +376,7 @@ namespace vcg {
 		static void CompactVertexVector( MeshType &m ) 
 		{
 			// newVertIndex [ <old_vert_position> ] gives you the new position of the vertex in the vector;
-			vector<size_t> newVertIndex(m.vert.size());
+			std::vector<size_t> newVertIndex(m.vert.size());
 			
 			size_t pos=0;
 			size_t i=0;
