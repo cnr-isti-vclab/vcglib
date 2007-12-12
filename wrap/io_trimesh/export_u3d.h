@@ -83,6 +83,7 @@ namespace QtUtilityFunctions
 	{
 		if (file_path.size() > 0)
 			return file_path.at(file_path.size() - 1);
+		return QString();
 	}
 }
 
@@ -125,7 +126,7 @@ private:
 		return (int) t;
 	}
 
-	static void SaveLatex(SaveMeshType& m,const QString& file,const u3dparametersclasses::Movie15Parameters& mov_par)
+	static void SaveLatex(SaveMeshType& /*m*/,const QString& file,const u3dparametersclasses::Movie15Parameters& mov_par)
 	{
 		Output_File latex(file.toStdString() + ".tex");
 		QString u3df = file + ".u3d";

@@ -194,7 +194,7 @@ typedef typename SaveMeshType::CoordType CoordType;
 		idtf.write(3,"MODEL_POSITION_LIST {");
 		
 		vcg::tri::UpdateBounding<SaveMeshType>::Box(m);
-		ScalarType diag = m.bbox.Diag();
+		//ScalarType diag = m.bbox.Diag();
 		CoordType center = m.bbox.Center();
 		for(ConstVertexIterator vit = m.vert.begin();vit != m.vert.end();++vit)  
 		{
