@@ -3,6 +3,8 @@
 using namespace std;
 
 // VCG headers for triangular mesh processing
+#include<vcg/simplex/vertexplus/base.h>
+#include<vcg/simplex/faceplus/base.h>
 #include <vcg/complex/trimesh/base.h>
 #include <vcg/complex/trimesh/update/topology.h>
 #include <vcg/complex/trimesh/update/edges.h>
@@ -11,7 +13,7 @@ using namespace std;
 #include <vcg/complex/trimesh/clean.h>
 #include <vcg/complex/intersection.h>
 #include <vcg/space/index/grid_static_ptr.h>
-#include <vcg/simplex/edge/with/ae.h>
+//#include <vcg/simplex/edge/with/ae.h>
 #include <vcg/complex/edgemesh/base.h>
 #include <vcg/complex/edgemesh/allocate.h>
 #include <vcg/complex/edgemesh/update/bounding.h>
@@ -21,22 +23,30 @@ using namespace std;
 #include <wrap/io_edgemesh/export_svg.h>
 
 // VCG Vertex
-#include <vcg/simplex/vertex/vertex.h>
-#include <vcg/simplex/vertex/with/afvn.h>
 
 // VCG Faces
-#include <vcg/simplex/face/face.h>
-#include <vcg/simplex/face/with/afav.h>
 
 using namespace vcg;
 
-class MyFace;
+/* class MyFace;
 class MyEdge;
 class MyVertex  : public VertexAFVN<float, MyEdge, MyFace> {};
 class MyFace    : public FaceAFAV< MyVertex, MyEdge, MyFace > {};
 class MyEdge    : public vcg::EdgeAE<MyEdge, MyVertex> {};
 class MyMesh    : public vcg::tri::TriMesh< vector<MyVertex>, vector<MyFace> > {};
 class MyEdgeMesh: public vcg::edge::EdgeMesh< vector<MyVertex>, vector<MyEdge> > {};
+
+ */
+
+class MyEdge;    // dummy prototype never used
+class MyFace;
+class MyVertex;
+
+class MyVertex  : public VertexSimp2< MyVertex, MyEdge, MyFace, vert::Coord3f, vert::BitFlags, vert::Normal3f, vert::Mark>{};
+class MyFace    : public FaceSimp2  < MyVertex, MyEdge, MyFace, face::VertexRef,face::FFAdj, face::BitFlags, face::Normal3f> {};
+
+class MyMesh : public tri::TriMesh< vector<MyVertex>, vector<MyFace > >{};
+
 
 typedef vcg::GridStaticPtr<MyMesh::FaceType, MyMesh::ScalarType> TriMeshGrid;
 
