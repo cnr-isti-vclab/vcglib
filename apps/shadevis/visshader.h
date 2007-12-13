@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/11/12 06:47:18  cignoni
+Added Enhancement, removed type warnings,
+started to refactor code in order to remove the unnecessary generality of the class.
+
 Revision 1.8  2004/09/28 09:45:17  cignoni
 Added MapFalseColor
 
@@ -57,7 +61,7 @@ Added GPL comments
 #include <vcg/math/matrix44.h>
 #include <wrap/gl/math.h>
 #include "simplepic.h"
-#include "gen_normal.h"
+#include <vcg/math/gen_normal.h>
 
 namespace vcg {
   // Base Class che definisce le varie interfaccie;
