@@ -6,6 +6,7 @@
 #include <QDir>
 #include <QString>
 #include <QProcess>
+#include <vector>
 
 #include "export_idtf.h"
 #include<vcg/space/point3.h>
@@ -52,8 +53,9 @@ namespace u3dparametersclasses
 
 			CameraParameters(const float cam_fov_angle,const float cam_roll_angle,
 				const vcg::Point3f& obj_to_cam_dir,const float obj_to_cam_dist,
+				const float obj_bbox_diag,
 				const vcg::Point3f& obj_pos = vcg::Point3f(0.0f,0.0f,0.0f))
-				:_cam_fov_angle(cam_fov_angle),_cam_roll_angle(cam_roll_angle),_obj_to_cam_dir(obj_to_cam_dir),_obj_to_cam_dist(obj_to_cam_dist),_obj_pos(obj_pos),_obj_bbox_diag(0.0f)
+				:_cam_fov_angle(cam_fov_angle),_cam_roll_angle(cam_roll_angle),_obj_to_cam_dir(obj_to_cam_dir),_obj_to_cam_dist(obj_to_cam_dist),_obj_pos(obj_pos),_obj_bbox_diag(obj_bbox_diag)
 			{
 
 			}
@@ -81,12 +83,119 @@ namespace QtUtilityFunctions
 
 	static QString fileNameFromTrimmedPath(const QStringList& file_path)
 	{
+
 		if (file_path.size() > 0)
 			return file_path.at(file_path.size() - 1);
-		return QString();
+		else 
+			return QString();
+	}
+
+	static QString fileNameFromPath(const QString& filepath)
+	{
+		QStringList list;
+		splitFilePath(filepath,list);
+		return fileNameFromTrimmedPath(list);
+	}
+
+	static QString pathWithoutFileName(const QString& filepath)
+	{
+		QString tmp(filepath);
+		tmp.remove(fileNameFromPath(filepath));
+		return tmp;
+	}
+
+	static QString fileExtension(const QString& filepath)
+	{
+		QStringList trim_list;
+		splitFilePath(filepath,trim_list);
+		QString file = fileNameFromTrimmedPath(trim_list);
+		trim_list = file.split(".");
+		return trim_list.at(trim_list.size() - 1);
 	}
 }
 
+class TGA_Exporter
+{
+public:
+
+	struct TGAHeader
+	{
+		unsigned char  identsize;          
+		unsigned char  colourmaptype;      
+		unsigned char  imagetype;          
+
+		unsigned char colormapspecs[5];
+
+		short xstart;             
+		short ystart;             
+		short width;              
+		short height;             
+		unsigned char  bits;               
+		unsigned char  descriptor;         
+	};
+
+	static void convert(const QString& outfile,const QImage& im)
+	{
+		TGAHeader tga;
+		tga.identsize = 0;
+		tga.colourmaptype = 0;
+		tga.imagetype = 2;
+
+		memset(tga.colormapspecs,0,5);
+		tga.xstart = (short) im.offset().x();
+		tga.ystart = (short) im.offset().y();
+		tga.height = (short) im.height();
+		tga.width =  (short) im.width();
+
+		std::ofstream file(qPrintable(outfile),std::ofstream::binary);
+		unsigned char* tmpchan;
+		int totbyte;
+		if (im.hasAlphaChannel())
+		{
+			//is a 8-digits binary number code  
+			// always 0 0  |  mirroring | bits 
+			//(future uses)|  image     | for alpha-channel
+			//--------------------------------------------			
+			//     7 6     |      5 4   |      3 2 1 0
+			//--------------------------------------------
+			//     0 0     |      1 0   |      1 0 0 0
+			tga.descriptor = (char) 40;
+			tga.bits = (char) 32;
+		}
+		else
+		{
+			//is a 8-digits binary number code  
+			// always 0 0  |  mirroring | bits 
+			//(future uses)|  image     | for alpha-channel
+			//--------------------------------------------			
+			//     7 6     |      5 4   |      3 2 1 0
+			//--------------------------------------------
+			//     0 0     |      1 0   |      0 0 0 0
+			tga.descriptor = (char) 32;
+			tga.bits = (char) 24;
+		}
+
+		totbyte = tga.height * tga.width * (tga.bits / 8);
+
+		if (im.hasAlphaChannel())
+			tmpchan = const_cast<unsigned char*>(im.bits());
+		else
+		{
+			tmpchan = new unsigned char[totbyte];
+
+			unsigned int ii = 0;
+			while(ii < totbyte)
+			{
+				tmpchan[ii] = const_cast<unsigned char*>(im.bits())[ii + (ii/3)];
+				++ii;
+			}
+		}
+
+		file.write((char *) &tga,sizeof(tga));
+		file.write(reinterpret_cast<const char*>(tmpchan),totbyte);
+		file.close();
+	}
+};
 
 template<typename SaveMeshType>
 class ExporterU3D
@@ -155,6 +264,37 @@ private:
 		latex.write(0,"\\end{document}");
 	}
 
+	static void convertTexturesFiles(SaveMeshType& m,const QString& file_path,QStringList& conv_file)
+	{
+		for(unsigned int ii = 0; ii < m.textures.size(); ++ii)
+		{
+			QString qtmp(m.textures[ii].c_str());
+			QString ext = QtUtilityFunctions::fileExtension(qtmp);
+			if (ext.toLower() != "tga")
+			{
+				QImage img(qtmp);
+				QString stmp;
+				if ((file_path.at(file_path.length() - 1) != '/') || (file_path.at(file_path.length() - 1) != '\\'))
+					stmp = file_path + QString("/");
+				else
+					stmp = file_path;
+				qtmp = stmp + qtmp.remove(ext) + "tga";
+				m.textures[ii] = qtmp.toStdString();
+				TGA_Exporter::convert(qtmp,img);
+				conv_file.push_back(qtmp);
+			}
+		}
+	}
+
+	static void removeConvertedTexturesFiles(QStringList& conv_file)
+	{
+		for(unsigned int ii = 0;ii < conv_file.size();++ii)
+		{
+			QDir dir(QtUtilityFunctions::pathWithoutFileName(conv_file[ii]));
+			dir.remove(QtUtilityFunctions::fileNameFromPath(conv_file[ii]));
+		}
+	}
+
 public:
 
 	static int Save(SaveMeshType& m,const char* output_file,const char* conv_loc,const u3dparametersclasses::Movie15Parameters& mov_par,const int mask)
@@ -164,22 +304,45 @@ public:
 		QStringList out_trim;
 		QtUtilityFunctions::splitFilePath(out,out_trim);
 		QString tmp(QDir::tempPath());
+		
+
 		tmp = tmp + "/" + QtUtilityFunctions::fileNameFromTrimmedPath(out_trim) + ".idtf";
 
-		vcg::tri::io::ExporterIDTF<SaveMeshType>::Save(m,qPrintable(tmp),mask);
 		QString conv_loc_st(conv_loc);
 		QString output_file_st(output_file);
+
+		//if there are textures file that aren't in tga format I have to convert them
+		//I maintain the converted file name (i.e. file_path + originalname without extension + tga) in mesh.textures but I have to revert to the original ones
+		//before the function return. 
+
+		QStringList oldtextname;
+		for(unsigned int ii = 0; ii < m.textures.size();++ii)
+			oldtextname.push_back(m.textures[ii].c_str());
+	
+		//tmp vector to save the tga created files that should be deleted.
+		QStringList convfile;
+		convertTexturesFiles(m,curr,convfile);
+
+		vcg::tri::io::ExporterIDTF<SaveMeshType>::Save(m,qPrintable(tmp),mask);
 		u3dparametersclasses::IDTFConverterParameters idtfpar(conv_loc_st,tmp,output_file_st);
 		qDebug("conv_loc_st '%s'", qPrintable(conv_loc_st));
 		qDebug("conv_loc '%s'", conv_loc);
 		qDebug("idtfpar._converter_loc '%s'", qPrintable(idtfpar._converter_loc));
 		int res = InvokeConverter(idtfpar);
+
+
+		m.textures.clear();
+		for(QStringList::iterator it = oldtextname.begin(); it != oldtextname.end();++it)
+			m.textures.push_back(it->toStdString());
+		//if some tga files have been created I have to delete them
+		removeConvertedTexturesFiles(convfile);
+
 		QDir::setCurrent(curr);
 		QString lat (output_file);
 		QStringList l = lat.split(".");
 		SaveLatex(m,l[0],mov_par);
 		QDir dir(QDir::tempPath());
-		//dir.remove(tmp);
+		dir.remove(tmp);
 		
 		if (res)
 			return 0;
