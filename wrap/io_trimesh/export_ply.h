@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.27  2007/11/06 10:59:41  ponchio
+Typo
+
 Revision 1.26  2007/11/06 10:51:55  ponchio
 Fixed wrong 'return false' in Save.
 
@@ -466,7 +469,7 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 				fprintf(fpout,"%g %g %g " ,vp->P()[0],vp->P()[1],vp->P()[2]);
 
 				if( m.HasPerVertexNormal() && (pi.mask & Mask::IOM_VERTNORMAL) )
-					fprintf(fpout,"%g %g %g " ,vp->N()[0],vp->N()[1],vp->N()[2]);
+					fprintf(fpout,"%g %g %g " ,double(vp->N()[0]),double(vp->N()[1]),double(vp->N()[2]));
 
 				if( m.HasPerVertexFlags() && (pi.mask & Mask::IOM_VERTFLAGS))
 					fprintf(fpout,"%d ",vp->UberFlags());
