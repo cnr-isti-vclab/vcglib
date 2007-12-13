@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2007/03/12 16:40:17  tarini
+Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
+
 Revision 1.19  2006/03/29 08:50:10  corsini
 Fix bug in texture coordinates reading
 
@@ -324,7 +327,7 @@ namespace vcg
 								else if (nb_color_components == 3)
 								{
 									// read RGB color
-									if (tokens[k].find(".") == -1)
+									if (tokens[k].find(".") == size_t(-1))// if it is a float there is a dot
 									{ 
 										// integers
 										unsigned char r = 
@@ -351,7 +354,7 @@ namespace vcg
 								else if (nb_color_components == 4)
 								{
 									// read RGBA color
-									if (tokens[k].find(".") == -1)
+									if (tokens[k].find(".") == size_t(-1))
 									{ 
 										// integers
 										unsigned char r = 
@@ -504,7 +507,7 @@ namespace vcg
 								}
 							case 3:
 								{
-									if (tokens[vert_per_face+1].find('.')==-1)
+									if (tokens[vert_per_face+1].find('.')==size_t(-1))
 									{
 										int rgb[3];
 										rgb[0] = atoi( tokens[vert_per_face+1].c_str() );
@@ -526,7 +529,7 @@ namespace vcg
 								}
 							case 4:
 								{
-									if (tokens[vert_per_face+1].find('.')==-1)
+									if (tokens[vert_per_face+1].find('.')==0) // if it is a float there is a dot
 									{
 										unsigned char color[4];
 										color[0] = (unsigned char) atoi(tokens[vert_per_face+1].c_str());

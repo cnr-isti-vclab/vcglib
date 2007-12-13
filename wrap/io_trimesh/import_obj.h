@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2007/10/17 09:49:50  cignoni
+correct management of point only files
+
 Revision 1.16  2007/07/20 14:49:46  cignoni
 Added in load mask the face color bit when there is a generic material used
 
@@ -559,7 +562,7 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 	// Now the final pass to convert indexes into pointers for face to vert/norm/tex references
   for(int i=0;i<numTriangles;++i)
   {
-    assert(m.face.size()==m.fn);
+    assert(m.face.size()==size_t(m.fn));
     for(int j=0;j<3;++j)
     {
       m.face[i].V(j)=&(m.vert[indexedFaces[i].v[j]]);

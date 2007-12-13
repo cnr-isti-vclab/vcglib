@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2007/11/23 17:02:47  cignoni
+disambiguated pow call (again)
+
 Revision 1.16  2007/11/23 15:42:11  cignoni
 disambiguated pow call
 
@@ -241,7 +244,6 @@ static void PerVertexNormalized(ComputeMeshType &m)
 
 /// multiply the vertex normals by the matrix passed. By default, the scale component is removed
 static void PerVertexMatrix(ComputeMeshType &m, const Matrix44<ScalarType> &mat, bool remove_scaling= true){
-	float pos_33; 
 	float scale;
 
 	Matrix33<ScalarType> mat33(mat,3);
@@ -262,7 +264,6 @@ static void PerVertexMatrix(ComputeMeshType &m, const Matrix44<ScalarType> &mat,
 
 /// multiply the face normals by the matrix passed. By default, the scale component is removed
 static void PerFaceMatrix(ComputeMeshType &m, const Matrix44<ScalarType> &mat, bool remove_scaling= true){
-	float pos_33; 
 	float scale;
 
 	Matrix33<ScalarType> mat33(mat,3);
