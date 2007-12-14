@@ -152,8 +152,8 @@ typedef typename SaveMeshType::CoordType CoordType;
 				idtf.write(1,"RESOURCE " + TextUtility::nmbToStr(ii) + " {");
 				idtf.write(2,"RESOURCE_NAME \"Texture" + TextUtility::nmbToStr(ii) + "\"");
 				idtf.write(2,"TEXTURE_PATH \"" + m.textures[ii] + "\"");
+				idtf.write(1,"}");
 			}
-			idtf.write(1,"}");
 			idtf.write(0,"}");
 		}
 		idtf.write(0,"");
@@ -171,7 +171,12 @@ typedef typename SaveMeshType::CoordType CoordType;
 		if (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD) idtf.write(3,"MODEL_TEXTURE_COORD_COUNT " + TextUtility::nmbToStr(m.face.size() * 3));
 		else idtf.write(3,"MODEL_TEXTURE_COORD_COUNT 0");
 		idtf.write(3,"MODEL_BONE_COUNT 0");
-		idtf.write(3,"MODEL_SHADING_COUNT " + TextUtility::nmbToStr(m.textures.size()));
+		unsigned int mod_sha;
+		if (m.textures.size() == 0)
+			mod_sha = 1;
+		else
+			mod_sha = m.textures.size();
+		idtf.write(3,"MODEL_SHADING_COUNT " + TextUtility::nmbToStr(mod_sha));
 		idtf.write(3,"MODEL_SHADING_DESCRIPTION_LIST {");
 		unsigned int hh = 0;
 		do
@@ -198,10 +203,9 @@ typedef typename SaveMeshType::CoordType CoordType;
 		idtf.write(3,"MESH_FACE_POSITION_LIST {");
 		for(ConstFaceIterator fit = m.face.begin();fit != m.face.end();++fit)  
 		{
-			//WARNING: U3D uses a left-oriented coordinates system (Z-Y have been swapped) so you have to reverse the vertices' order  
 			idtf.write(4,TextUtility::nmbToStr(fit->V(0) - &(*m.vert.begin())) + " " +
-				TextUtility::nmbToStr(fit->V(2) - &(*m.vert.begin())) + " " + 
-				TextUtility::nmbToStr(fit->V(1) - &(*m.vert.begin())));
+				TextUtility::nmbToStr(fit->V(1) - &(*m.vert.begin())) + " " + 
+				TextUtility::nmbToStr(fit->V(2) - &(*m.vert.begin())));
 		}
 		idtf.write(3,"}");
 
@@ -217,10 +221,13 @@ typedef typename SaveMeshType::CoordType CoordType;
 		idtf.write(3,"}");
 
 		idtf.write(3,"MESH_FACE_SHADING_LIST {");
-		for(FaceIterator fit = m.face.begin();fit != m.face.end();++fit)  
-		{
-			idtf.write(4,TextUtility::nmbToStr(fit->WT(0).N()));
-		}
+			for(FaceIterator fit = m.face.begin();fit != m.face.end();++fit)  
+			{
+				unsigned int texind = 0;
+				if (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD) 
+					texind = fit->WT(0).N();
+				idtf.write(4,TextUtility::nmbToStr(texind));
+			}
 		idtf.write(3,"}");
 		if (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD) 
 		{
@@ -228,7 +235,7 @@ typedef typename SaveMeshType::CoordType CoordType;
 				for(unsigned int ii = 0; ii < m.face.size();++ii)
 				{
 					idtf.write(4,"FACE " + TextUtility::nmbToStr(ii) + " {");
-					idtf.write(5,"TEXTURE_LAYER 0 TEX_COORD: " + TextUtility::nmbToStr(ii * 3) + " " + TextUtility::nmbToStr(ii * 3 + 2) + " " + TextUtility::nmbToStr(ii * 3 + 1));
+					idtf.write(5,"TEXTURE_LAYER 0 TEX_COORD: " + TextUtility::nmbToStr(ii * 3) + " " + TextUtility::nmbToStr(ii * 3 + 1) + " " + TextUtility::nmbToStr(ii * 3 + 2));
 					idtf.write(4,"}");
 				}
 				idtf.write(3,"}");
@@ -241,7 +248,7 @@ typedef typename SaveMeshType::CoordType CoordType;
 		for(ConstVertexIterator vit = m.vert.begin();vit != m.vert.end();++vit)  
 		{
 			CoordType tmp = vit->P();// - center);// /diag;
-			idtf.write(4,TextUtility::nmbToStr(tmp.X()) + " " +
+			idtf.write(4,TextUtility::nmbToStr(-tmp.X()) + " " +
 				TextUtility::nmbToStr(tmp.Z()) + " " + 
 				TextUtility::nmbToStr(tmp.Y()));
 		}
@@ -268,7 +275,7 @@ typedef typename SaveMeshType::CoordType CoordType;
 				for(unsigned int ii = 0;ii < 3;++ii)
 				{
 					idtf.write(4,TextUtility::nmbToStr(fitn->WT(ii).U()) + " " +
-						TextUtility::nmbToStr(fitn->WT(ii).V()) + " " + TextUtility::nmbToStr(0.0f) + " " + TextUtility::nmbToStr(0.0f));
+						TextUtility::nmbToStr(-fitn->WT(ii).V()) + " " + TextUtility::nmbToStr(0.0f) + " " + TextUtility::nmbToStr(0.0f));
 				}
 			}
 			idtf.write(3,"}");
