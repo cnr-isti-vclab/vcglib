@@ -92,10 +92,11 @@ namespace io {
 
 			int _nvert;
 			std::vector<VERTEX_TYPE*> _pv;
+			std::vector< vcg::TexCoord2<float> > _txc;
 
 
 			MyPolygon(int n)
-				:_nvert(n),_pv(_nvert)
+			:_nvert(n),_pv(_nvert),_txc(_nvert)
 			{
 			}
 		};
@@ -148,17 +149,23 @@ namespace io {
 			{
 				std::vector<std::vector<vcg::Point3f> > pl;
 				mesh.vert.resize(vert.size());
-
-				//PolygonalMesh's points been copied in TriangularMesh
+				int multicoor = 0;
+				//PolygonalMesh's points has been copied in TriangularMesh
 				for(size_t jj = 0;jj < mesh.vert.size();++jj)
 					mesh.vert[jj].P() = vert[jj].P();
 
-
+				bool texen = mesh.face.IsWedgeTexEnabled();
+				unsigned int totaltri = 0;
+				for(size_t ii = 0;ii < _pols.size();++ii)
+						totaltri += _pols[ii]._nvert - 2;
+				
+				mesh.face.resize(totaltri);
 
 				//transform the polygonal mesh in a vector<vector<Point>>
 				generatePointsVector(pl);
 
 
+				int trioff = 0;
 				//foreach Polygon
 				for(size_t ii = 0;ii < pl.size();++ii)
 				{
@@ -169,16 +176,34 @@ namespace io {
 					vcg::glu_tesselator::tesselate(pl2,tx);
 					size_t ntri = tx.size() / 3;
 					assert(tx.size() % 3 == 0);
+					
 
+					int polvert = 0;
 					//foreach triangle
 					for(size_t tr = 0;tr < ntri;++tr)
 					{
-						typename TRIMESH::FaceType f;
+						
+						//typename TRIMESH::FaceType& f = mesh.face[tr];
+
+						//typename TRIMESH::FaceType& f = mesh.face[tr];
 						for(unsigned int tt = 0;tt < 3; ++tt)
-							f.V(tt) = &(mesh.vert[_pols[ii]._pv[tx[3 * tr + tt]] - &(vert[0])]);
-						mesh.face.push_back(f);
+						{
+							mesh.face[trioff + tr].V(tt) = &(mesh.vert[_pols[ii]._pv[tx[3 * tr + tt]] - &(vert[0])]);
+							//vcg::Point3f ppp = mesh.face[tr].V(tt)->P();
+							if (texen)
+							{
+							/*	f.WT(multicoor).U() = _pols[ii]._txc[polvert].U();
+								f.WT(multicoor).V() = _pols[ii]._txc[polvert].V();
+								f.WT(multicoor).N() = _pols[ii]._txc[polvert].N();*/
+								
+							}
+							polvert = (polvert + 1) % _pols[ii]._nvert;
+						}
+						//mesh.face.push_back(f);
 					}
+					trioff += ntri;
 				}
+				assert(trioff == totaltri);
 			}
 		};
 
@@ -382,7 +407,7 @@ namespace io {
 			if (wedatts.size() == 0) return -1;
 			else 
 			{
-				for(unsigned int ii = 0;ii < wedatts.size();++ii)
+				for(int ii = 0;ii < wedatts.size();++ii)
 				{
 					int tmp = wedatts.at(ii).toElement().attribute("offset").toInt();
 					if (tmp > max) max = tmp;
@@ -485,6 +510,7 @@ namespace io {
 
 			QDomNode wtsrc;
 			QStringList wt;
+			int stride;
 			int offtx;
 
 			QDomNode wcsrc;

@@ -26,16 +26,16 @@ namespace io {
 			return indnm;
 		}
 
-		static int WedgeTextureAttribute(OpenMeshType& m,const QStringList face,int ind_txt,const QStringList wt,const QDomNode wtsrc,const int meshfaceind,const int faceind,const int component)
+		static int WedgeTextureAttribute(OpenMeshType& m,const QStringList face,int ind_txt,const QStringList wt,const QDomNode wtsrc,const int meshfaceind,const int faceind,const int component,const int stride = 2)
 		{
 			int indtx = -1;
 			if (!wtsrc.isNull())
 			{
 				indtx = face.at(faceind).toInt();
-				assert(indtx * 2 < wt.size());
+				assert(indtx * stride < wt.size());
 				m.face[meshfaceind].WT(component) = vcg::TexCoord2<float>();
-				m.face[meshfaceind].WT(component).U() = wt.at(indtx * 2).toFloat();
-				m.face[meshfaceind].WT(component).V() = wt.at(indtx * 2 + 1).toFloat();
+				m.face[meshfaceind].WT(component).U() = wt.at(indtx * stride).toFloat();
+				m.face[meshfaceind].WT(component).V() = wt.at(indtx * stride + 1).toFloat();
 				
 				m.face[meshfaceind].WT(component).N() = ind_txt;
 				
@@ -61,12 +61,26 @@ namespace io {
 			wed.offnm = findStringListAttribute(wed.wn,wed.wnsrc,nd,doc,"NORMAL");
 
 			wed.wtsrc = findNodeBySpecificAttributeValue(nd,"input","semantic","TEXCOORD");
+			if (!wed.wtsrc.isNull())
+			{
+				QDomNode src = attributeSourcePerSimplex(nd,doc,"TEXCOORD");
+				if (isThereTag(src,"accessor"))
+				{
+					QDomNodeList wedatts = src.toElement().elementsByTagName("accessor");
+					wed.stride = wedatts.at(0).toElement().attribute("stride").toInt();
+				}
+				else 
+					wed.stride = 2;
+			}
+			else
+				wed.stride = 2;
+
 			wed.offtx = findStringListAttribute(wed.wt,wed.wtsrc,nd,doc,"TEXCOORD"); 
 
 			wed.wcsrc = findNodeBySpecificAttributeValue(nd,"input","semantic","COLOR");
 			wed.offcl = findStringListAttribute(wed.wc,wed.wcsrc,nd,doc,"COLOR"); 
 		}
-		
+	
 		static DAEError LoadPolygonalMesh(QDomNodeList& polypatch,OpenMeshType& m,const size_t offset,AdditionalInfoDAE* info)
 		{
 			return E_NOERROR;
@@ -76,6 +90,8 @@ namespace io {
 		{
 			typedef PolygonalMesh< MyPolygon<typename OpenMeshType::VertexType> > PolyMesh;
 			PolyMesh pm;
+			
+			//copying vertices 
 			for(typename OpenMeshType::VertexIterator itv = m.vert.begin();itv != m.vert.end();++itv)
 			{	
 				vcg::Point3f p(itv->P().X(),itv->P().Y(),itv->P().Z());
@@ -83,13 +99,19 @@ namespace io {
 				v.P() = p;
 				pm.vert.push_back(v);
 			}
+
 			int polylist_size = polylist.size();
 			for(int pl = 0; pl < polylist_size;++pl)
 			{ 
-				typename PolyMesh::PERWEDGEATTRIBUTETYPE att = PolyMesh::NONE;
+				QString mat =  polylist.at(pl).toElement().attribute(QString("material"));
+				QDomNode txt_node = textureFinder(mat,*(info->dae->doc));
+				int ind_txt = -1;
+				if (!txt_node.isNull())
+					ind_txt = indexTextureByImgNode(*(info->dae->doc),txt_node);
+
+				//PolyMesh::PERWEDGEATTRIBUTETYPE att = PolyMesh::NONE;
 				WedgeAttribute wa;
 				FindStandardWedgeAttributes(wa,polylist.at(pl),*(info->dae->doc));
-				
 				QStringList vertcount;
 				valueStringList(vertcount,polylist.at(pl),"vcount");
 				int indforpol = findOffSetForASingleSimplex(polylist.at(pl));
@@ -97,26 +119,27 @@ namespace io {
 				int npolig = vertcount.size();
 				QStringList polyind;
 				valueStringList(polyind,polylist.at(pl),"p");
-				for(unsigned int ii = 0;ii < npolig;++ii)
+				for(int ii = 0;ii < npolig;++ii)
 				{
 					int nvert = vertcount.at(ii).toInt();
 					typename PolyMesh::FaceType p(nvert);
-
-					for(unsigned int iv = 0;iv < nvert;++iv)
+				
+					for(int iv = 0;iv < nvert;++iv)
 					{
 						int index = offset + polyind.at(offpols + iv * indforpol).toInt();
 						p._pv[iv] = &(pm.vert[index]);
 						int nmindex = -1;
-						if (!wa.wnsrc.isNull()) 
-						{
+
+						if (!wa.wnsrc.isNull())
 							nmindex = offset + polyind.at(offpols + iv * indforpol + wa.offnm).toInt();
-							
-						}
 
 						int txindex = -1;
 						if (!wa.wtsrc.isNull())
 						{
 							txindex = offset + polyind.at(offpols + iv * indforpol + wa.offtx).toInt();
+							/*p._txc[iv].U() = wa.wt.at(txindex * 2).toFloat();
+							p._txc[iv].V() = wa.wt.at(txindex * 2 + 1).toFloat();
+							p._txc[iv].N() = ind_txt;*/
 						}
 					}
 					pm._pols.push_back(p);
@@ -133,7 +156,6 @@ namespace io {
 			for(int tript = 0; tript < tripatch_size;++tript)
 			{
 				QString mat =  tripatch.at(tript).toElement().attribute(QString("material"));
-				
 				QDomNode txt_node = textureFinder(mat,*(info->dae->doc));
 				int ind_txt = -1;
 				if (!txt_node.isNull())
@@ -154,17 +176,20 @@ namespace io {
 				//int dd = m.face.size();
 				for(int ff = offsetface;ff < (int) m.face.size();++ff)
 				{ 
+					
 					for(unsigned int tt = 0;tt < 3;++tt)
 					{
 						int indvt = face.at(jj).toInt();
 						assert(indvt + offset < m.vert.size());
 						m.face[ff].V(tt) = &(m.vert[indvt + offset]);
 
-
-						int indnm = WedgeNormalAttribute(m,face,wa.wn,wa.wnsrc,ff,jj + wa.offnm,tt);
+						
+						WedgeNormalAttribute(m,face,wa.wn,wa.wnsrc,ff,jj + wa.offnm,tt);
 						if (ind_txt != -1)
-							int indtx = WedgeTextureAttribute(m,face,ind_txt,wa.wt,wa.wtsrc,ff,jj + wa.offtx,tt);
-						int indcl = WedgeColorAttribute(m,face,wa.wc,wa.wcsrc,ff,jj + wa.offcl,tt);
+						{
+							WedgeTextureAttribute(m,face,ind_txt,wa.wt,wa.wtsrc,ff,jj + wa.offtx,tt,wa.stride);
+						}
+						WedgeColorAttribute(m,face,wa.wc,wa.wcsrc,ff,jj + wa.offcl,tt);
 
 						jj += nfcatt;
 					}
@@ -251,6 +276,7 @@ namespace io {
 
 						if (!srcnodetext.isNull())
 						{
+
 							assert((ii * 2 < geosrcverttext.size()) && (ii * 2 + 1 < geosrcverttext.size()));
 							m.vert[vv].T() = vcg::TexCoord2<float>();
 							m.vert[vv].T().u() = geosrcverttext[ii * 2].toFloat();
@@ -284,7 +310,6 @@ namespace io {
 		static void GetTexCoord(const QDomDocument& doc,AdditionalInfoDAE* inf)
 		{
 			QDomNodeList txlst = doc.elementsByTagName("library_images");
-			int s = txlst.at(0).childNodes().size();
 			for(int img = 0;img < txlst.at(0).childNodes().size();++img)
 			{
 				QDomNodeList nlst = txlst.at(0).childNodes().at(img).toElement().elementsByTagName("init_from");
