@@ -51,7 +51,7 @@ private:
 #include <QString>
 #include <QtGlobal>
 #include <fstream>
-#include <QtGui\QImage>
+#include <QImage>
 
 
 namespace vcg {
