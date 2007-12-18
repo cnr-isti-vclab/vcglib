@@ -31,6 +31,10 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
   
  public:
   ScalarType radi() { return radius; }        
+
+	// if radius ==0 an autoguess for the ball pivoting radius is attempted 
+	// otherwise the passed value (in absolute mesh units) is used.
+	
   BallPivoting(MESH &_mesh, float _radius = 0, 
                float minr = 0.2, float angle = M_PI/2): 
                      
@@ -47,17 +51,17 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
     baricenter /= this->mesh.vn;
 		
 		assert(this->mesh.vn > 3);
-    if(radius == 0)
+    if(radius == 0) // radius ==0 means that an auto guess should be attempted. 
       radius = sqrt((this->mesh.bbox.Diag()*this->mesh.bbox.Diag())/this->mesh.vn);
-    else
-      radius *= this->mesh.bbox.Diag()/100;      
+      
 
     min_edge *= radius;
     max_edge *= radius;    
       
     //enlarging the bbox for out-of-box queries
-    this->mesh.bbox.Offset(4*radius);
-    grid.Set(this->mesh.vert.begin(), this->mesh.vert.end(), this->mesh.bbox);
+		Box3<ScalarType> BPbbox=this->mesh.bbox;
+    BPbbox.Offset(4*radius);
+    grid.Set(this->mesh.vert.begin(), this->mesh.vert.end(), BPbbox);
     
     //mark visited points
     std::vector<VertexType *> targets;      
@@ -143,7 +147,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
             if(d0 < min_edge || d0 > max_edge) continue;
             
             Point3x normal = (p1 - p0)^(p2 - p0);
-            if(normal * (p0 - baricenter) > 0) continue;
+            if(normal * (p0 - baricenter) < 0) continue;
 /*            if(use_normals) {             
               if(normal * vv0->N() < 0) continue;
               if(normal * vv1->N() < 0) continue;
