@@ -242,6 +242,9 @@ private:
 		QStringList file_trim;
 		QtUtilityFunctions::splitFilePath(u3df,file_trim);
 		std::string u3d_final =  QtUtilityFunctions::fileNameFromTrimmedPath(file_trim).toStdString();
+		latex.write(0,"\\documentclass[a4paper]{article}");
+		latex.write(0,"\\usepackage[3D]{movie15}");
+		latex.write(0,"\\usepackage[UKenglish]{babel}");
 		latex.write(0,"\\begin{document}");
 		latex.write(0,"\\includemovie[");
 		latex.write(1,"poster,");
@@ -259,7 +262,7 @@ private:
 				", 3Dcoo=" + TextUtility::nmbToStr(-cam->_obj_pos.X()) + " " + TextUtility::nmbToStr(cam->_obj_pos.Z()) + " " + TextUtility::nmbToStr(cam->_obj_pos.Y()) + ",";
 			latex.write(1,cam_string);
 		}
-		latex.write(1,"3Dlights=File,");
+		latex.write(1,"3Dlights=CAD,");
 		latex.write(0,"]{\\linewidth}{\\linewidth}{" + u3d_final + "}");
 		latex.write(0,"\\end{document}");
 	}

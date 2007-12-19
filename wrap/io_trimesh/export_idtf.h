@@ -244,7 +244,7 @@ typedef typename SaveMeshType::CoordType CoordType;
 		idtf.write(3,"MODEL_POSITION_LIST {");
 		vcg::tri::UpdateBounding<SaveMeshType>::Box(m);
 		//ScalarType diag = m.bbox.Diag();
-		CoordType center = m.bbox.Center();
+		//CoordType center = m.bbox.Center();
 		for(ConstVertexIterator vit = m.vert.begin();vit != m.vert.end();++vit)  
 		{
 			CoordType tmp = vit->P();// - center);// /diag;
@@ -260,7 +260,7 @@ typedef typename SaveMeshType::CoordType CoordType;
 			for(unsigned int ii = 0;ii < 3;++ii)
 			{
 				fitn->N().Normalize();
-				idtf.write(4,TextUtility::nmbToStr(fitn->N().X()) + " " +
+				idtf.write(4,TextUtility::nmbToStr(-fitn->N().X()) + " " +
 					TextUtility::nmbToStr(fitn->N().Z()) + " " + 
 					TextUtility::nmbToStr(fitn->N().Y()));
 			}
