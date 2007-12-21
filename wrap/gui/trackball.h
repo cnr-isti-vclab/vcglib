@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2007/07/14 12:43:44  benedetti
+Added Doxygen documentation.
+
 Revision 1.15  2007/06/13 17:15:08  benedetti
 Added one-level undo system and sticky trackmodes.
 
@@ -412,20 +415,22 @@ public:
 		  TRACK_SCALE = 13
     };
 */
-  // loads/stores current status from/to ascii stings
+  // loads stores current status from/to ascii stings
   /*!
-    @brief Currently not in use.
+    @brief Stores current status into an ascii stings
 
-    @param st Currently not in use.
+    Stores current status into an ascii stings. This is useful for example to implement cut-and-paste operations of trackball status, or to embed used trackball into a comment inside a screenshot, etc.
+    @param st The string where to export (must be allocated).
   */
   void ToAscii(char * st);
   /*!
-    @brief Currently not in use.
+    @brief Loads current status from an ascii stings
 
-    @param st Currently not in use.
-    @return A meaningless boolean value.
+    Loads current status from an ascii stings. This is useful for example to implement cut-and-paste operations of trackball status, or to embed used trackball into a comment inside a screenshot, etc.
+    @param st The string where to read from (must be allocated). Use ToAscii() method to set it.
+    @return True iff the trackball was successfully recovered.
   */
-  bool SetFromAscii(char * st);
+  bool SetFromAscii(const char * st);
 
   //protected:
   /// The reference for point projection and unprojection from screen space to modelspace.

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2007/10/12 14:02:39  corsini
+solve memory leak in dtor
+
 Revision 1.22  2007/07/09 22:47:18  benedetti
 Removed using namespace std and modified accordingly.
 
@@ -232,7 +235,7 @@ void Trackball::ToAscii(char* result){
                   f[0],f[1],f[2],f[3],f[4],f[5],f[6],f[7],f[8] );
 }
 
-bool Trackball::SetFromAscii(char * st){
+bool Trackball::SetFromAscii(const char * st){
   float * f = (float*) &track;
   int res=  sscanf(st, "trackball(%f,%f,%f,%f,%f,%f,%f,%f,%f)", 
                   f+0,f+1,f+2,f+3,f+4,f+5,f+6,f+7,f+8 );
