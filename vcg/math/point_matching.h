@@ -277,7 +277,6 @@ bool ComputeRigidMatchMatrix(Matrix44x &res,
 	Matrix44x Trn;
 	Trn.SetTranslate(tr);
 		
-	res=Rot*Trn;
 	res=Trn*Rot;
 	return true;
 }
