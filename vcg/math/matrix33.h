@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2007/04/19 14:30:26  pietroni
+added RotationMatrix method to calculate rotation matrix along an axis
+
 Revision 1.17  2007/04/07 23:06:47  pietroni
 Added function RotationMatrix
 
@@ -662,6 +665,35 @@ Matrix33<S> RotationMatrix(const vcg::Point3<S> &axis,
 				matr33[i][j]=matr44[i][j];
 		return matr33;
 	}
+
+/// return a random rotation matrix, from the paper:
+/// Fast Random Rotation Matrices, James Arvo
+/// Graphics Gems III pp. 117-120
+template <class S>
+ Matrix33<S> RandomRotation(){
+	S x1,x2,x3;
+	Matrix33<S> R,H,M,vv;
+	Point3<S> v;
+	R.SetIdentity();
+	H.SetIdentity();
+	x1 = rand()/S(RAND_MAX);
+	x2 = rand()/S(RAND_MAX);
+	x3 = rand()/S(RAND_MAX);
+
+	R[0][0] =		cos(S(2)*M_PI*x1);
+	R[0][1] =		sin(S(2)*M_PI*x1);
+	R[1][0] = -	R[0][1];
+	R[1][1] =		R[0][0];
+
+	v[0] = cos(2.0 * M_PI * x2)*sqrt(x3);
+	v[1] = sin(2.0 * M_PI * x2)*sqrt(x3);
+	v[2] = sqrt(1-x3);
+
+	vv.OuterProduct(v,v);
+	H -= vv*S(2);
+	M = H*R*S(-1);
+	return M;
+}
 
 /// 
 typedef Matrix33<short>  Matrix33s;
