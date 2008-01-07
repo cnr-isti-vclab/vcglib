@@ -4,8 +4,8 @@
 
 #define VERTEX_TYPE VertexVNVT 
 
-#define __VCGLIB_VERTEX_VNVT
-#define __VCGLIB_VERTEX_VTVT
+#define __VCGLIB_VERTEX_VN
+#define __VCGLIB_VERTEX_VT
 
 #include <vcg/simplex/vertex/base.h> 
 
