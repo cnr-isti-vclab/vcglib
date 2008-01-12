@@ -19,6 +19,9 @@
 /*#**************************************************************************
   History
 	$Log: not supported by cvs2svn $
+	Revision 1.5  2005/12/13 17:17:19  ganovelli
+	first importing from old version. NOT optimized! It works with VertexFace Adjacency even over non manifolds
+	
 
  *#**************************************************************************/
 
@@ -40,96 +43,110 @@ class Geo{
 	public:
 
 	typedef typename MeshType::VertexPointer VertexPointer;
+	typedef typename MeshType::ScalarType  ScalarType;
 
+	/* Auxiliary class for keeping the heap of vertices to visit and their estimated distance
+	*/
+	struct VertDist{
+		VertDist(){}
+		VertDist(VertexPointer _v, ScalarType _d):v(_v),d(_d){}
+		VertexPointer v;
+		ScalarType d;
+	};
+
+
+	/* Temporary data to associate to all the vertices: estimated distance and boolean flag
+	*/
 	template <class MeshType>
 	struct TempData{
 		TempData(){}
-		TempData(const double & d_){d=d_;visited=false;}
-		double d;
+		TempData(const ScalarType & d_){d=d_;visited=false;}
+		ScalarType d;
 		bool visited;
 		};
 
 	typedef SimpleTempData<std::vector<typename MeshType::VertexType>, TempData<MeshType> >  TempDataType;
-	static TempDataType  & TD(){ static TempDataType td; return td;}
+	TempDataType  * TD;
 	
 	
-struct pred: public std::binary_function<VertexPointer,VertexPointer,bool>{
-			bool operator()(const VertexPointer& v0, const VertexPointer& v1) const
-				{return (Geo<MeshType>::TD()[v0].d > Geo<MeshType>::TD()[v1].d);}
+	struct pred: public std::binary_function<VertDist,VertDist,bool>{
+		pred(){};
+			bool operator()(const VertDist& v0, const VertDist& v1) const
+				{return (v0.d > v1.d);}
 		};
 
-		
-static 	 typename MeshType::VertexPointer BuildSP( 
+	/*
+	  starting from the seeds, it assign a distance value to each vertex. The distance of a vertex is its 
+	  approximated geodesic distance to the closest seeds.
+	  This is function is not meant to be called (although is not prevented). Instead, it is invoked by 
+	  wrapping function.
+	*/
+ 	 typename MeshType::VertexPointer Visit( 
 		 MeshType & m,
-		 std::vector<typename MeshType::VertexPointer> & _frontier,
-		 double & max_distance,
+		 std::vector<VertDist> & _frontier,
+		 ScalarType & max_distance,
 		 bool fartestOnBorder = false
 		 )
-		 {
-		 TD().c = &m.vert;
+{
+	bool isLeaf,toQueue;
+	std::vector<VertDist> frontier;
+	MeshType::VertexIterator ii;
+	std::list<typename MeshType::VertexPointer> children;
+	typename MeshType::VertexPointer curr,fartest,pw1;	
+	std::list<typename MeshType::VertexPointer>::iterator is;
+	std::deque<typename MeshType::VertexPointer> leaves;
+	std::vector <std::pair<typename MeshType::VertexPointer,typename MeshType::ScalarType> > expansion;
+	std::vector <VertDist >::iterator ifr;
+	face::VFIterator<typename MeshType::FaceType> x;int k;
+	typename MeshType::VertexPointer pw;
 
-		 bool isLeaf;
-		 std::vector<typename MeshType::VertexPointer> frontier;
-		 std::vector<typename MeshType::VertexPointer> :: iterator tmp;
-		 frontier.clear();
-		 //Requirements
-		 assert(m.HasVFTopology());
+	//Requirements
+	assert(m.HasVFTopology());
+	assert(!_frontier.empty());
 
-		 if(m.vn==0) return NULL;
+	TD = new TempDataType(m.vert);
+	TD->Start(TempData<MeshType>(-1.0));
 
-		 MeshType::VertexIterator ii;
-		 std::list<typename MeshType::VertexPointer> children;
-		 typename MeshType::VertexPointer curr,fartest,pw1;	
-		 bool toQueue;
+	for(ifr = _frontier.begin(); ifr != _frontier.end(); ++ifr){
+		(*TD)[(*ifr).v].visited= true;
+		(*TD)[(*ifr).v].d = 0.0;	
+		(*ifr).d = 0.0;
+		}
 
-		 TD().Start(TempData<MeshType>(-1.0));
+	for(ifr = _frontier.begin(); ifr != _frontier.end(); ++ifr)
+		{	
+			// determina la distanza dei vertici della fan
+			for( x.f = (*ifr).v->VFp(), x.z = (*ifr).v->VFi(); x.f!=0; ++x )
+				for(k=0;k<2;++k)
+					{
+					if(k==0) pw = x.f->V1(x.z);
+					else     pw = x.f->V2(x.z);
 
-		 std::list<typename MeshType::VertexPointer>::iterator is;
-		 std::deque<typename MeshType::VertexPointer> leaves;
-		 std::vector <std::pair<typename MeshType::VertexPointer,typename MeshType::ScalarType> > expansion;
-
-		 std::vector <typename MeshType::VertexPointer >::const_iterator ifr;
-		 face::VFIterator<typename MeshType::FaceType> x;int k;
-		 typename MeshType::VertexPointer pw;
-
-		 for(ifr = _frontier.begin(); ifr != _frontier.end(); ++ifr){
-			 TD()[*ifr].visited= true;
-			 TD()[*ifr].d = 0.0;	
-			 }
-
- for(ifr = _frontier.begin(); ifr != _frontier.end(); ++ifr)
-	 {	
-		 // determina la distanza dei vertici della fan
-		 for( x.f = (*ifr)->VFp(), x.z = (*ifr)->VFi(); x.f!=0; ++x )
-			 for(k=0;k<2;++k)
-				 {
-				 if(k==0) pw = x.f->V1(x.z);
-				 else     pw = x.f->V2(x.z);
-
-				if(TD()[pw].d ==-1){
-					TD()[pw].d = Distance(pw->cP(),(*ifr)->cP());
-					frontier.push_back(pw);				
+					if((*TD)[pw].d ==-1){
+						(*TD)[pw].d = Distance(pw->cP(),(*ifr).v->cP());
+						frontier.push_back(VertDist(pw,(*TD)[pw].d));				
+						}
 					}
-				}
-	 }
-    // initialize Heap
-	 make_heap(frontier.begin(),frontier.end(),pred());	
-	  double curr_d,d_curr = 0.0;
+		}
+		// initialize Heap
+		make_heap(frontier.begin(),frontier.end(),pred());	
+		ScalarType curr_d,d_curr = 0.0;
 		max_distance=0.0;
-		std::vector<typename MeshType::VertexPointer >:: iterator iv;
+		std::vector<VertDist >:: iterator iv;
 
  		while(!frontier.empty())
 			{ //printf("size: %d\n", frontier.size());
 				expansion.clear();
 				pop_heap(frontier.begin(),frontier.end(),pred());
-				curr = frontier.back();
+				curr = (frontier.back()).v;
 				frontier.pop_back();
-				d_curr = TD()[curr].d;
-				TD()[curr].visited = true;
+				d_curr =  (*TD)[curr].d;
+				(*TD)[curr].visited = true;
+
 
 				isLeaf = (!fartestOnBorder || curr->IsB());
 
-			 face::VFIterator<typename MeshType::FaceType> x;int k;
+			face::VFIterator<typename MeshType::FaceType> x;int k;
 
 			
 				for( x.f = curr->VFp(), x.z = curr->VFi(); x.f!=0; ++x )
@@ -144,145 +161,181 @@ static 	 typename MeshType::VertexPointer BuildSP(
 							pw1=x.f->V1(x.z);
 							}
 				
-				const double & d_pw1  = TD()[pw1].d;
+				const ScalarType & d_pw1  =  (*TD)[pw1].d;
 
-				if((!TD()[pw1].visited ) || d_curr == 0.0)
+				if((! (*TD)[pw1].visited ) || d_curr == 0.0)
 					{
-					if(TD()[pw].d == -1){
-								curr_d = TD()[curr].d + (pw->P()-curr->P()).Norm();
+					if( (*TD)[pw].d == -1){
+								curr_d =  (*TD)[curr].d + (pw->P()-curr->P()).Norm();
 								expansion.push_back(std::pair<typename MeshType::VertexPointer,typename MeshType::ScalarType>(pw,curr_d));
-					 }
-					 continue;
 					}
-	
-		 assert( TD()[pw1].d != -1);
-		 assert( (curr!=pw) && (pw!=pw1) && (pw1 != curr));				
-		 assert(d_pw1!=-1.0);
+					continue;
+					}
 
-		 //************** calcolo della distanza di pw in base alle distanze note di pw1 e curr
-		 //************** sapendo che (curr,pw,pw1) e'una faccia della mesh
-		 //************** (vedi figura in file distance.gif)
-		 Point3<MeshType::ScalarType> w_c = pw->cP()- curr->cP();
-		 Point3<MeshType::ScalarType> w_w1 = pw->cP()- pw1->cP();
-		 Point3<MeshType::ScalarType> w1_c = pw1->cP()- curr->cP();
+		assert(  (*TD)[pw1].d != -1);
+		assert( (curr!=pw) && (pw!=pw1) && (pw1 != curr));				
+		assert(d_pw1!=-1.0);
 
-		 double ew_c  = (w_c).Norm();
-		 double ew_w1 = (w_w1).Norm();
-		 double ec_w1 = (w1_c).Norm();
-		 double	alpha,alpha_, beta,beta_,theta_c,theta,h,delta,s,a,b;
+		//************** calcolo della distanza di pw in base alle distanze note di pw1 e curr
+		//************** sapendo che (curr,pw,pw1) e'una faccia della mesh
+		//************** (vedi figura in file distance.gif)
+		Point3<MeshType::ScalarType> w_c = pw->cP()- curr->cP();
+		Point3<MeshType::ScalarType> w_w1 = pw->cP()- pw1->cP();
+		Point3<MeshType::ScalarType> w1_c = pw1->cP()- curr->cP();
 
-		 alpha = acos((w_c*w1_c)/(ew_c*ec_w1));
-		 s = (d_curr + d_pw1+ec_w1)/2;
-		 a = s/ec_w1;
-		 b = a*s;
-		 alpha_ = 2*acos ( math::Min(1.0,sqrt(  (b- a* d_pw1)/d_curr)));
+		ScalarType ew_c  = (w_c).Norm();
+		ScalarType ew_w1 = (w_w1).Norm();
+		ScalarType ec_w1 = (w1_c).Norm();
+		ScalarType	alpha,alpha_, beta,beta_,theta,h,delta,s,a,b;
 
-		 if ( alpha+alpha_ > M_PI){
-			 curr_d = d_curr + ew_c;		
-			 }else
-			 {
-				 beta_ = 2*acos ( math::Min(1.0,sqrt(  (b- a* d_curr)/d_pw1)));
-				 beta  = acos((w_w1)*(-w1_c)/(ew_w1*ec_w1));
+		alpha = acos((w_c*w1_c)/(ew_c*ec_w1));
+		s = (d_curr + d_pw1+ec_w1)/2;
+		a = s/ec_w1;
+		b = a*s;
+		alpha_ = 2*acos ( math::Min<ScalarType>(1.0,sqrt(  (b- a* d_pw1)/d_curr)));
 
-				 if ( beta+beta_ > M_PI)
-					 curr_d = d_pw1  + ew_w1;
-				 else 
-					 {
-					 theta	= M_PI-alpha-alpha_;
-					 delta	= cos(theta)* ew_c;
-					 h		= sin(theta)* ew_c;
-					 curr_d = sqrt( pow(h,2)+ pow(d_curr + delta,2));
-					 }
-			 }
-		 //**************************************************************************************
-		 toQueue = (TD()[(pw)].d==-1);
+		if ( alpha+alpha_ > M_PI){
+			curr_d = d_curr + ew_c;		
+			}else
+			{
+				beta_ = 2*acos ( math::Min<ScalarType>(1.0,sqrt(  (b- a* d_curr)/d_pw1)));
+				beta  = acos((w_w1)*(-w1_c)/(ew_w1*ec_w1));
 
-		 if(toQueue){// se non e'gia' in coda ce lo mette
-			 expansion.push_back(std::pair<typename MeshType::VertexPointer,typename MeshType::ScalarType>(pw,curr_d));
-			 }else
-			 {
-				 if(  TD()[(pw)].d > curr_d )
-						TD()[(pw)].d = curr_d;
-			 }
+				if ( beta+beta_ > M_PI)
+					curr_d = d_pw1  + ew_w1;
+				else 
+					{
+					theta	= ScalarType(M_PI)-alpha-alpha_;
+					delta	= cos(theta)* ew_c;
+					h		= sin(theta)* ew_c;
+					curr_d = sqrt( pow(h,2)+ pow(d_curr + delta,2));
+					}
+			}
+		//**************************************************************************************
+		toQueue = ( (*TD)[(pw)].d==-1);
+
+		if(toQueue){// se non e'gia' in coda ce lo mette
+			expansion.push_back(std::pair<typename MeshType::VertexPointer,typename MeshType::ScalarType>(pw,curr_d));
+			}else
+			{
+				if(   (*TD)[(pw)].d > curr_d )
+						(*TD)[(pw)].d = curr_d;
+			}
 				
-		 if(isLeaf){
-			 if(d_curr > max_distance){
-				 max_distance = d_curr;
-				 fartest = curr;
-				 }
-			 }
+		if(isLeaf){
+			if(d_curr > max_distance){
+				max_distance = d_curr;
+				fartest = curr;
+				}
+			}
 
 
 				}
-		 std::vector <std::pair<typename MeshType::VertexPointer,typename MeshType::ScalarType> > ::iterator i;
-		 for(i = expansion.begin(); i!= expansion.end(); ++i)
+		std::vector <std::pair<typename MeshType::VertexPointer,typename MeshType::ScalarType> > ::iterator i;
+		for(i = expansion.begin(); i!= expansion.end(); ++i)
 				{
-					TD()[(*i).first].d = (*i).second;
-					frontier.push_back((*i).first);
+					(*TD)[(*i).first].d = (*i).second;
+					frontier.push_back(VertDist((*i).first,(*TD)[(*i).first].d));
 					push_heap(frontier.begin(),frontier.end(),pred());
 						} // end for
-}// end while
+	}// end while
 
-// scrivi le distanze sul campo qualita' (nn: farlo parametrico)
- MeshType::VertexIterator vi;
- for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
-	 (*vi).Q() = TD()[&(*vi)].d; 
- 
-  
-  TD().Stop();	
+	// scrivi le distanze sul campo qualita' (nn: farlo parametrico)
+	MeshType::VertexIterator vi;
+	for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+		(*vi).Q() =  (*TD)[&(*vi)].d; 
 
- return fartest;
+
+	(*TD).Stop();
+
+	delete TD;
+
+	return fartest;
 
  }
 	
 
 public:
-static void FartestPoint( MeshType & m,
-									std::vector<typename MeshType::VertexPointer> & fro,//insieme di vertici da cui trovare le distanze
-									typename MeshType::VertexPointer & fartest,		//punto piu'lontano
-									double & distance){					//distaza geodesica
-									fartest = BuildSP(m,fro,distance,false); 
+	/*
+	Given a mesh and  a vector of pointers to vertices (sources), assigns the approximated geodesic
+	distance from the cloasest source to all the mesh vertices and returns the pointer to the fartest.
+	Note: update the field Q() of the vertices
+	*/
+ void FartestPoint( MeshType & m,
+									std::vector<typename MeshType::VertexPointer> & fro, 
+									typename MeshType::VertexPointer & fartest,		 
+									ScalarType & distance){					
+
+									std::vector<typename MeshType::VertexPointer>::iterator fi; 
+									std::vector<VertDist>fr;
+
+									for( fi  = fro.begin(); fi != fro.end() ; ++fi)
+										fr.push_back(VertDist(*fi,-1));
+									fartest = Visit(m,fr,distance,false); 
 					  }
-static void FartestBPoint(
-									 MeshType & m,
-									 std::vector<typename MeshType::VertexPointer> & fro, //insieme di vertici da cui trovare le distanze
-									 typename MeshType::VertexPointer & fartest,	    //punto piu'lontano
-									 double & distance){
-									 fartest =  BuildSP(m,fro,distance,true); 
-					  }
+	/*
+	Given a mesh and  a  pointers to a vertex-source (source), assigns the approximated geodesic
+	distance from the vertex-source to all the mesh vertices and returns the pointer to the fartest
+	Note: update the field Q() of the vertices
+	*/
+ void FartestPoint( MeshType & m, 
+									typename MeshType::VertexPointer seed,
+									typename MeshType::VertexPointer & fartest,		 
+									ScalarType & distance){	
+	std::vector<typename MeshType::VertexPointer>  fro;
+	fro.push_back( seed );
+	typename MeshType::VertexPointer v0;
+	FartestPoint(m,fro,v0,distance);
+	fartest = v0;
+}
 
-static void DistanceFromBorder(	MeshType & m,
-									  typename MeshType::VertexPointer & v0,	//ritorna il vertice piu'lontano da ogni punto sul bordo
-										typename MeshType::VertexPointer & v1, // ritorna il vertice di bordo piu'vicino a v0
-										double & distance			// distanza geodesica tra v0 e v1
-					)
-					{
-					std::vector<typename MeshType::VertexPointer> fro;
-					MeshType::VertexIterator vi;
-					MeshType::VertexPointer fartest;
-					for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
-						if( (*vi).IsB())
-							fro.push_back(&(*vi));
-					FartestPoint(m,fro,fartest,distance);
-					}
+/* 
+	Same as FartestPoint but the returned pointer is to a border vertex
+	Note: update the field Q() of the vertices
+*/
+ void FartestBPoint(MeshType & m,
+										std::vector<typename MeshType::VertexPointer> & fro,  
+										typename MeshType::VertexPointer & fartest,	     
+										ScalarType & distance){
 
-static void MostInternal(	MeshType & m,
-									  typename MeshType::VertexPointer & v0,	//ritorna il vertice piu'lontano da ogni punto sul bordo
-										typename MeshType::VertexPointer & v1, // ritorna il vertice di bordo piu'vicino a v0
-										double & distance			// distanza geodesica tra v0 e v1
-					)
-					{
-					std::vector<typename MeshType::VertexPointer> fro;
-					MeshType::VertexIterator vi;
-					MeshType::VertexPointer fartest;
-					for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
-						if( (*vi).IsB())
-							fro.push_back(&(*vi));
-					FartestPoint(m,fro,fartest,distance);
-					fro.clear();
-					fro.push_back(fartest);
-					FartestBPoint(m,fro,fartest,distance);
-					}
+	std::vector<typename MeshType::VertexPointer>::iterator fi; 
+	std::vector<VertDist>fr;
 
-};
+	for( fi  = fro.begin(); fi != fro.end() ; ++fi)
+		fr.push_back(VertDist(*fi,-1));
+	fartest =  Visit(m,fr,distance,true); 
+}
+/* 
+	Same as FartestPoint but the returned pointer is to a border vertex
+	Note: update the field Q() of the vertices
+*/
+ void FartestBPoint( MeshType & m, 
+									typename MeshType::VertexPointer seed,
+									typename MeshType::VertexPointer & fartest,		 
+									ScalarType & distance){	
+	std::vector<typename MeshType::VertexPointer>  fro;
+	fro.push_back( seed );
+	typename MeshType::VertexPointer v0;
+	FartestBPoint(m,fro,v0,distance);
+	fartest = v0;
+ }
+
+/* 
+	Assigns to each vertex of the mesh its distance to the closest vertex on the border
+	Note: update the field Q() of the vertices
+*/
+ void DistanceFromBorder(	MeshType & m,
+									  typename MeshType::VertexPointer & v0,	 
+										ScalarType & distance			 
+					){
+	std::vector<typename MeshType::VertexPointer> fro;
+	MeshType::VertexIterator vi;
+	MeshType::VertexPointer fartest;
+	for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+		if( (*vi).IsB())
+			fro.push_back(&(*vi));
+	FartestPoint(m,fro,fartest,distance);
+}
+
+ };
 };// end namespace
