@@ -1,24 +1,31 @@
-/*#***************************************************************************
- * Geodesic.h                                                         o o    *
- *                                                                  o     o  *
- * Visual Computing Group                                           _  O  _  *
- * IEI Institute, CNUCE Institute, CNR Pisa                          \/)\/   *
- *                                                                  /\/|     *
- * Copyright(C) 1999 by Paolo Cignoni,                                 |     *
- * All rights reserved.                                                \     *
- *                                                                           *
- * Permission  to use, copy, modify, distribute  and sell this  software and *
- * its documentation for any purpose is hereby granted without fee, provided *
- * that  the above copyright notice appear  in all copies and that both that *
- * copyright   notice  and  this  permission  notice  appear  in  supporting *
- * documentation. the author makes  no representations about the suitability *
- * of this software for any purpose. It is provided  "as is" without express *
- * or implied warranty.                                                      *
- *                                                                           *
- ***************************************************************************#*/
+/****************************************************************************
+* VCGLib                                                            o o     *
+* Visual and Computer Graphics Library                            o     o   *
+*                                                                _   O  _   *
+* Copyright(C) 2004                                                \/)\/    *
+* Visual Computing Lab                                            /\/|      *
+* ISTI - Italian National Research Council                           |      *
+*                                                                    \      *
+* All rights reserved.                                                      *
+*                                                                           *
+* This program is free software; you can redistribute it and/or modify      *   
+* it under the terms of the GNU General Public License as published by      *
+* the Free Software Foundation; either version 2 of the License, or         *
+* (at your option) any later version.                                       *
+*                                                                           *
+* This program is distributed in the hope that it will be useful,           *
+* but WITHOUT ANY WARRANTY; without even the implied warranty of            *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
+* GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
+* for more details.                                                         *
+*                                                                           *
+****************************************************************************/
 /*#**************************************************************************
   History
 	$Log: not supported by cvs2svn $
+	Revision 1.6  2008/01/12 19:07:05  ganovelli
+	Recompiled from previous out of date version. Still to revise but working
+	
 	Revision 1.5  2005/12/13 17:17:19  ganovelli
 	first importing from old version. NOT optimized! It works with VertexFace Adjacency even over non manifolds
 	
@@ -36,6 +43,18 @@
 #include <list>
 #include <functional>
 
+/*
+class for computing approximated geodesic distances on a mesh.
+
+basic example: farthest vertex from a specified one
+	MyMesh m;
+	MyMesh::VertexPointer seed,far;
+	MyMesh::ScalarType dist;
+
+  vcg::Geo<MyMesh> g;
+	g.FarthestVertex(m,seed,far,d);
+
+*/
 namespace vcg{
 template <class MeshType>
 class Geo{
@@ -92,7 +111,7 @@ class Geo{
 	std::vector<VertDist> frontier;
 	MeshType::VertexIterator ii;
 	std::list<typename MeshType::VertexPointer> children;
-	typename MeshType::VertexPointer curr,fartest,pw1;	
+	typename MeshType::VertexPointer curr,farthest,pw1;	
 	std::list<typename MeshType::VertexPointer>::iterator is;
 	std::deque<typename MeshType::VertexPointer> leaves;
 	std::vector <std::pair<typename MeshType::VertexPointer,typename MeshType::ScalarType> > expansion;
@@ -225,7 +244,7 @@ class Geo{
 		if(isLeaf){
 			if(d_curr > max_distance){
 				max_distance = d_curr;
-				fartest = curr;
+				farthest = curr;
 				}
 			}
 
@@ -250,7 +269,7 @@ class Geo{
 
 	delete TD;
 
-	return fartest;
+	return farthest;
 
  }
 	
@@ -258,12 +277,12 @@ class Geo{
 public:
 	/*
 	Given a mesh and  a vector of pointers to vertices (sources), assigns the approximated geodesic
-	distance from the cloasest source to all the mesh vertices and returns the pointer to the fartest.
+	distance from the cloasest source to all the mesh vertices and returns the pointer to the farthest.
 	Note: update the field Q() of the vertices
 	*/
- void FartestPoint( MeshType & m,
+ void FartestVertex( MeshType & m,
 									std::vector<typename MeshType::VertexPointer> & fro, 
-									typename MeshType::VertexPointer & fartest,		 
+									typename MeshType::VertexPointer & farthest,		 
 									ScalarType & distance){					
 
 									std::vector<typename MeshType::VertexPointer>::iterator fi; 
@@ -271,31 +290,31 @@ public:
 
 									for( fi  = fro.begin(); fi != fro.end() ; ++fi)
 										fr.push_back(VertDist(*fi,-1));
-									fartest = Visit(m,fr,distance,false); 
+									farthest = Visit(m,fr,distance,false); 
 					  }
 	/*
 	Given a mesh and  a  pointers to a vertex-source (source), assigns the approximated geodesic
-	distance from the vertex-source to all the mesh vertices and returns the pointer to the fartest
+	distance from the vertex-source to all the mesh vertices and returns the pointer to the farthest
 	Note: update the field Q() of the vertices
 	*/
- void FartestPoint( MeshType & m, 
+ void FartestVertex( MeshType & m, 
 									typename MeshType::VertexPointer seed,
-									typename MeshType::VertexPointer & fartest,		 
+									typename MeshType::VertexPointer & farthest,		 
 									ScalarType & distance){	
 	std::vector<typename MeshType::VertexPointer>  fro;
 	fro.push_back( seed );
 	typename MeshType::VertexPointer v0;
-	FartestPoint(m,fro,v0,distance);
-	fartest = v0;
+	FartestVertex(m,fro,v0,distance);
+	farthest = v0;
 }
 
 /* 
 	Same as FartestPoint but the returned pointer is to a border vertex
 	Note: update the field Q() of the vertices
 */
- void FartestBPoint(MeshType & m,
+ void FartestBVertex(MeshType & m,
 										std::vector<typename MeshType::VertexPointer> & fro,  
-										typename MeshType::VertexPointer & fartest,	     
+										typename MeshType::VertexPointer & farthest,	     
 										ScalarType & distance){
 
 	std::vector<typename MeshType::VertexPointer>::iterator fi; 
@@ -303,21 +322,21 @@ public:
 
 	for( fi  = fro.begin(); fi != fro.end() ; ++fi)
 		fr.push_back(VertDist(*fi,-1));
-	fartest =  Visit(m,fr,distance,true); 
+	farthest =  Visit(m,fr,distance,true); 
 }
 /* 
 	Same as FartestPoint but the returned pointer is to a border vertex
 	Note: update the field Q() of the vertices
 */
- void FartestBPoint( MeshType & m, 
+ void FartestBVertex( MeshType & m, 
 									typename MeshType::VertexPointer seed,
-									typename MeshType::VertexPointer & fartest,		 
+									typename MeshType::VertexPointer & farthest,		 
 									ScalarType & distance){	
 	std::vector<typename MeshType::VertexPointer>  fro;
 	fro.push_back( seed );
 	typename MeshType::VertexPointer v0;
-	FartestBPoint(m,fro,v0,distance);
-	fartest = v0;
+	FartestBVertex(m,fro,v0,distance);
+	farthest = v0;
  }
 
 /* 
@@ -330,11 +349,11 @@ public:
 					){
 	std::vector<typename MeshType::VertexPointer> fro;
 	MeshType::VertexIterator vi;
-	MeshType::VertexPointer fartest;
+	MeshType::VertexPointer farthest;
 	for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
 		if( (*vi).IsB())
 			fro.push_back(&(*vi));
-	FartestPoint(m,fro,fartest,distance);
+	FartestVertex(m,fro,farthest,distance);
 }
 
  };
