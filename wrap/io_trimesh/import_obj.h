@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2007/12/13 17:57:33  cignoni
+removed harmless gcc warnings
+
 Revision 1.17  2007/10/17 09:49:50  cignoni
 correct management of point only files
 
@@ -573,13 +576,13 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 			    m.face[i].WT(j).n() = indexedFaces[i].tInd;
       }
 		  if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
-        m.face[i].WN(j)=normals[indexedFaces[i].n[j]];		
+        m.face[i].WN(j).Import(normals[indexedFaces[i].n[j]]);		
     }
 		if ( oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR )
         m.face[i].C()=indexedFaces[i].c;
 		if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
     					// face normal is computed as an average of wedge normals
-	    m.face[i].N()= m.face[i].WN(0)+m.face[i].WN(1)+m.face[i].WN(2);
+	    m.face[i].N().Import(m.face[i].WN(0)+m.face[i].WN(1)+m.face[i].WN(2));
     				else	// computing face normal from position of face vertices
 	  	face::ComputeNormalizedNormal(m.face[i]);
   }
