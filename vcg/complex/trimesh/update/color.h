@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2007/05/04 16:34:31  ganovelli
+changes to comply "plus" types
+
 Revision 1.10  2006/05/21 07:00:01  cignoni
 Removed not working Equalized color (use funcs in stat.h)
 
@@ -61,6 +64,8 @@ Changed name from plural to singular (normals->normal)
 #define __VCG_TRI_UPDATE_COLOR
 #include <limits>
 #include <math.h>
+#include <vcg/space/color4.h>
+
 namespace vcg {
 namespace tri {
 /** \addtogroup trimesh */
