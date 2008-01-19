@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2007/11/20 09:43:53  ganovelli
+added missing include to color4
+
 Revision 1.17  2007/05/04 16:16:04  ganovelli
 added include to texcoor2
 
@@ -410,6 +413,8 @@ public:
   typename T::FacePointer const cFFp(const int) const { static typename T::FacePointer const fp=0; return fp; }
   char &VFi(const int j){static char z=0; return z;};
   char &FFi(const int j){static char z=0; return z;};
+  const char &cVFi(const int j){static char z=0; return z;};
+  const char &cFFi(const int j){static char z=0; return z;};
   static bool HasVFAdjacency()   {   return false; }
   static bool HasFFAdjacency()   {   return false; }
   static bool HasFFAdjacencyOcc()   {   return false; }
