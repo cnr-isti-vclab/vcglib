@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.55  2007/10/29 11:32:46  cignoni
+Added a missing IsD() test
+
 Revision 1.54  2007/10/16 16:46:53  cignoni
 Added Allocator::DeleteFace and Allocator::DeleteVertex; Now the use of SetD() should be deprecated.
 
@@ -359,15 +362,15 @@ private:
 				}
 				FaceIterator fi;
 				for(fi = m.face.begin(); fi!=m.face.end(); ++fi)
-					for(k = 0; k < 3; ++k)
-						if( !(*fi).IsD() )
+					if( !(*fi).IsD() )
+						for(k = 0; k < 3; ++k)
 							if( mp.find( (typename MeshType::VertexPointer)(*fi).V(k) ) != mp.end() )
 							{
 								(*fi).V(k) = &*mp[ (*fi).V(k) ];
 							}
-							return deleted;
-			
+										
         if(RemoveDegenerateFlag) RemoveDegenerateFace(m);  
+				return deleted;
       }
 
 
