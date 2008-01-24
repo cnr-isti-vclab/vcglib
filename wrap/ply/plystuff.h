@@ -31,6 +31,9 @@ of Greg Turk and on the work of Claudio Rocchini
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2007/06/25 15:24:00  cignoni
+removed a possibly useless static kw
+
 Revision 1.5  2006/04/11 09:48:04  zifnab1974
 changes needed for compilation on linux 64b with gcc 3.4.5
 
@@ -70,8 +73,9 @@ using namespace vcg;
 #define pb_fstat   _fstat
 #define pb_open   _open
 #define pb_close  _close
+#define DIR_SEP "\\"
 #else
-#define pb_mkdir(n)  mkdir(n,0)
+#define pb_mkdir(n)  mkdir(n,0755)
 #define pb_access access
 #define pb_stat   stat
 #define pb_fstat   fstat
@@ -79,6 +83,7 @@ using namespace vcg;
 #define pb_close  close
 #define _O_BINARY 0 // Does not exist on Unix
 #define _O_RDONLY O_RDONLY
+#define DIR_SEP "/"
 #endif
 
 
@@ -166,12 +171,12 @@ static bool CheckBBoxCache( const char * fname, Box3d & box, const char *fname2=
 
 		// Controllo esistenza directory delle cache
 	if(d[0]!=0)
-		strcat(d,"\\");
+		strcat(d,DIR_SEP);
 	strcat(d,cachedir);
 	if( !CheckCacheDirectory(d) ) return false;
 
 		// Controllo esistenza e data file cache
-	strcat(d,"\\");
+	strcat(d,DIR_SEP);
 	strcat(d,n);
 	strcat(d,bboxcacheext);
 	if( CheckCacheTime(fname,d)  &&
@@ -210,11 +215,11 @@ bool GetCacheName( const char * fname, const char * ext_name, char * cname )
 
 		// Controllo esistenza directory delle cache
 	if(cname[0]!=0)
-		strcat(cname,"\\");
+		strcat(cname,DIR_SEP);
 	strcat(cname,cachedir);
 	if( !CheckCacheDirectory(cname) ) return false;
 
-	strcat(cname,"\\");
+	strcat(cname,DIR_SEP);
 	strcat(cname,n);
 	strcat(cname,ext_name);
 	return true;
