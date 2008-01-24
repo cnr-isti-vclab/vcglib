@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.28  2007/12/13 00:20:34  cignoni
+removed harmless printf cast warnings
+
 Revision 1.27  2007/11/06 10:59:41  ponchio
 Typo
 
@@ -174,10 +177,10 @@ static int Save(SaveMeshType &m,  const char * filename, int savemask, CallBackP
 {
 	PlyInfo pi;
   pi.mask=savemask;
-  return Save(m,filename,true,pi);
+  return Save(m,filename,true,pi,cb);
 }
 
-static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &pi )	// V1.0
+static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &pi, CallBackPos * /* cb=0 */  )	// V1.0
 {
 	FILE * fpout;
 	int i;
