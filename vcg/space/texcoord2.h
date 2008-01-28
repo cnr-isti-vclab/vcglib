@@ -55,8 +55,8 @@ public:
   inline const PointType &P() const { return _t[0]; }; 	
   inline PointType &P() { return _t[0]; }; 	
 
-  inline const PointType &P(const int i) const { assert(i>0 && i<NMAX); return _t[0]; }; 	
-  inline PointType &P(const int i) { assert(i>0 && i<NMAX); return _t[0]; }; 	
+  inline const PointType &P(const int i) const { assert(i>0 && i<NMAX); return _t[i]; }; 	
+  inline PointType &P(const int i) { assert(i>0 && i<NMAX); return _t[i]; }; 	
   
 	inline T & U() { return _t[0][0]; }
 	inline T & V() { return _t[0][1]; }
