@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.27  2007/12/05 11:08:16  mischitelli
+Renamed some unmeaningful variable names (b -> array_buffers ; h -> curr_hints)
+
 Revision 1.26  2007/12/04 17:59:41  mischitelli
 - Fixed DrawFill method, which required the hint 'HNUseVArray' enabled in order to render the mesh with VBO. This was also causing extra overhead in the Update method since HNUseVArray has to be enabled and therefore extra calculation were done to copy vertices in VArrays even if the user was using only VBOs.
 
@@ -223,7 +226,9 @@ public:
 		//Delete the VBOs
 		if(curr_hints&HNUseVBO)
 		{
-			glDeleteBuffersARB(2, (GLuint *)array_buffers);
+			for(int i=0;i<3;++i)		
+				if(glIsBuffer(array_buffers[i]))
+					glDeleteBuffersARB(1, (GLuint *)(array_buffers+i));
 		}
 	}
 	
