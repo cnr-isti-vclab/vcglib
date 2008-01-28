@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2007/03/12 15:38:03  tarini
+Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
+
 Revision 1.5  2006/05/25 04:40:57  cignoni
 Updated HasPerFaceColor/Quality to the new style with mesh param.
 
@@ -84,9 +87,10 @@ public:
 static void ImportVertex(VertexLeft &vl, VertexRight &vr)
 {
   vl.P().Import(vr.P());
-  if(vl.HasColor()   && vl.HasColor()) vl.C()=vr.C();
-  if(vl.HasQuality() && vl.HasQuality()) vl.Q()=vr.Q();
-  if(vl.HasTexCoord() && vl.HasTexCoord()) vl.T()=vr.T();
+  if(vl.HasNormal()   && vr.HasNormal()) vl.N()=vr.N();
+  if(vl.HasColor()   && vr.HasColor()) vl.C()=vr.C();
+  if(vl.HasQuality() && vr.HasQuality()) vl.Q()=vr.Q();
+  if(vl.HasTexCoord() && vr.HasTexCoord()) vl.T()=vr.T();
 }
 
 static void ImportFace(MeshLeft &ml, MeshRight &mr, FaceLeft &fl, FaceRight &fr, std::vector<int> &remap)
@@ -94,6 +98,7 @@ static void ImportFace(MeshLeft &ml, MeshRight &mr, FaceLeft &fl, FaceRight &fr,
   fl.V(0)=&ml.vert[remap[ Index(mr,fr.V(0))]];
   fl.V(1)=&ml.vert[remap[ Index(mr,fr.V(1))]];
   fl.V(2)=&ml.vert[remap[ Index(mr,fr.V(2))]];
+	if(HasPerFaceNormal(mr) && HasPerFaceNormal(ml)) fl.N()=fr.N();
   if(HasPerFaceColor(mr)   && HasPerFaceColor(ml)) fl.C()=fr.C();
   if(HasPerFaceQuality(mr) && HasPerFaceQuality(ml)) fl.Q()=fr.Q();
   if(HasPerWedgeTexCoord(mr) && HasPerWedgeTexCoord(ml)) 
