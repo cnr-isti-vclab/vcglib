@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.28  2007/03/12 15:38:03  tarini
+Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
+
 Revision 1.27  2007/02/22 09:18:41  cignoni
 Added guards on msvc pragmas
 
@@ -337,10 +340,16 @@ template < class VertContainerType, class FaceContainerType >
 bool HasPerVertexFlags (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return VertContainerType::value_type::HasFlags();}
 
 template < class VertContainerType, class FaceContainerType >
+bool HasPerVertexNormal (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return VertContainerType::value_type::HasNormal();}
+
+template < class VertContainerType, class FaceContainerType >
 bool HasPerWedgeTexCoord (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return FaceContainerType::value_type::HasWedgeTexCoord();}
 
 template < class VertContainerType, class FaceContainerType >
 bool HasPerFaceFlags (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return FaceContainerType::value_type::HasFlags();}
+
+template < class VertContainerType, class FaceContainerType >
+bool HasPerFaceNormal (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return FaceContainerType::value_type::HasFaceNormal();}
 
 template < class VertContainerType, class FaceContainerType >
 bool HasPerFaceColor (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return FaceContainerType::value_type::HasFaceColor();}
