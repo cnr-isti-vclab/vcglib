@@ -183,13 +183,14 @@ namespace io {
 						assert(indvt + offset < m.vert.size());
 						m.face[ff].V(tt) = &(m.vert[indvt + offset]);
 
-						
-						WedgeNormalAttribute(m,face,wa.wn,wa.wnsrc,ff,jj + wa.offnm,tt);
-						if (ind_txt != -1)
+						if(tri::HasPerWedgeNormal(m))  
+								WedgeNormalAttribute(m,face,wa.wn,wa.wnsrc,ff,jj + wa.offnm,tt);
+						if(tri::HasPerWedgeTexCoord(m) && ind_txt != -1)
 						{
 							WedgeTextureAttribute(m,face,ind_txt,wa.wt,wa.wtsrc,ff,jj + wa.offtx,tt,wa.stride);
 						}
-						WedgeColorAttribute(m,face,wa.wc,wa.wcsrc,ff,jj + wa.offcl,tt);
+						if(tri::HasPerWedgeColor(m))
+								WedgeColorAttribute(m,face,wa.wc,wa.wcsrc,ff,jj + wa.offcl,tt);
 
 						jj += nfcatt;
 					}
