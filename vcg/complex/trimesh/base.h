@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.29  2008/01/28 08:42:07  cignoni
+added HasPerFaceNormal and HasPerVertexNormal
+
 Revision 1.28  2007/03/12 15:38:03  tarini
 Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
 
@@ -344,6 +347,12 @@ bool HasPerVertexNormal (const TriMesh < VertContainerType , FaceContainerType> 
 
 template < class VertContainerType, class FaceContainerType >
 bool HasPerWedgeTexCoord (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return FaceContainerType::value_type::HasWedgeTexCoord();}
+
+template < class VertContainerType, class FaceContainerType >
+bool HasPerWedgeNormal (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return FaceContainerType::value_type::HasWedgeNormal();}
+
+template < class VertContainerType, class FaceContainerType >
+bool HasPerWedgeColor (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return FaceContainerType::value_type::HasWedgeColor();}
 
 template < class VertContainerType, class FaceContainerType >
 bool HasPerFaceFlags (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return FaceContainerType::value_type::HasFlags();}
