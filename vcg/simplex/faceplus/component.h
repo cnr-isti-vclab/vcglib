@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2008/01/19 17:49:05  ganovelli
+missing const  cVF added
+
 Revision 1.18  2007/11/20 09:43:53  ganovelli
 added missing include to color4
 
@@ -172,9 +175,9 @@ template <class T> class EmptyNormal: public T {
 public:
   //typedef vcg::Point3s NormalType;
   typedef typename T::VertexType::NormalType NormalType;
-  NormalType &N() { static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
+  NormalType &N() { static NormalType dummy_normal(0, 0, 0);  assert(0); return dummy_normal; }
   const NormalType &cN() const { static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
-  NormalType &WN(int) { static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
+  NormalType &WN(int) { static NormalType dummy_normal(0, 0, 0);  assert(0); return dummy_normal; }
   const NormalType cWN(int) const { static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
 
   static bool HasWedgeNormal()   { return false; }
@@ -249,7 +252,7 @@ template <class TT> class EmptyWedgeTexCoord: public TT {
 public:
 	typedef int WedgeTexCoordType;
   typedef vcg::TexCoord2<float,1> TexCoordType;
-  TexCoordType &WT(const int) { static TexCoordType dummy_texture; return dummy_texture;}
+  TexCoordType &WT(const int) { static TexCoordType dummy_texture;  assert(0); return dummy_texture;}
   TexCoordType const &cWT(const int) const { static TexCoordType dummy_texture; return dummy_texture;}
   static bool HasWedgeTexCoord()   { return false; }
   static bool HasWedgeTexCoordOcc()   { return false; }
@@ -283,7 +286,7 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 template <class T> class EmptyBitFlags: public T {
 public:
 	/// Return the vector of Flags(), senza effettuare controlli sui bit
-  int &Flags() { static int dummyflags(0); return dummyflags; }
+  int &Flags() { static int dummyflags(0);  assert(0); return dummyflags; }
   const int Flags() const { return 0; }
   static bool HasFlags()   { return false; }
   static bool HasFlagsOcc()   { return false; }
@@ -310,9 +313,9 @@ template <class T> class EmptyColorQuality: public T {
 public:
     typedef float QualityType;
   typedef vcg::Color4b ColorType;
-  ColorType &C() { static ColorType dumcolor(vcg::Color4b::White); return dumcolor; }
-  ColorType &WC(const int) { static ColorType dumcolor(vcg::Color4b::White); return dumcolor; }
-  QualityType &Q() { static QualityType dummyQuality(0); return dummyQuality; }
+  ColorType &C() { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
+  ColorType &WC(const int) { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
+  QualityType &Q() { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
   static bool HasFaceColor()   { return false; }
   static bool HasWedgeColor()   { return false; }
   static bool HasFaceQuality()   { return false; }
@@ -407,12 +410,12 @@ public:
 template <class T> class EmptyAdj: public T {
 public:
 	typedef int VFAdjType;
-  typename T::FacePointer       &VFp(const int)       { static typename T::FacePointer fp=0; return fp; }
+  typename T::FacePointer       &VFp(const int)       { static typename T::FacePointer fp=0;  assert(0); return fp; }
   typename T::FacePointer const cVFp(const int) const { static typename T::FacePointer const fp=0; return fp; }
-  typename T::FacePointer       &FFp(const int)       { static typename T::FacePointer fp=0; return fp; }
+  typename T::FacePointer       &FFp(const int)       { static typename T::FacePointer fp=0;  assert(0); return fp; }
   typename T::FacePointer const cFFp(const int) const { static typename T::FacePointer const fp=0; return fp; }
-  char &VFi(const int j){static char z=0; return z;};
-  char &FFi(const int j){static char z=0; return z;};
+  char &VFi(const int j){static char z=0;  assert(0); return z;};
+  char &FFi(const int j){static char z=0;  assert(0); return z;};
   const char &cVFi(const int j){static char z=0; return z;};
   const char &cFFi(const int j){static char z=0; return z;};
   static bool HasVFAdjacency()   {   return false; }
