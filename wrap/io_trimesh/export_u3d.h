@@ -225,7 +225,7 @@ private:
 	{
 		QProcess p;
 		QString convstring = par._converter_loc;
-		convstring =  convstring + " -en1 -input " + par._input_file + " -output " + par._output_file; 
+		convstring =  convstring + " -en1 -input '" + par._input_file + "' -output '" + par._output_file+"'"; 
 		qDebug("Starting converter %s", qPrintable(convstring));
 		p.setProcessChannelMode(QProcess::MergedChannels);
 		p.start(convstring);
