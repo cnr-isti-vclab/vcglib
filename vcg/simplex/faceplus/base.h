@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2007/05/04 16:40:11  ganovelli
+changes to comply "plus" types
+
 Revision 1.11  2007/03/27 09:22:11  cignoni
 Added Visited flags
 
@@ -311,6 +314,11 @@ static int &LastBitFlag()
  template<class BoxType>
   void GetBBox( BoxType & bb ) const
   {
+	  if(this->IsD()) 
+			{
+				bb.SetNull();
+				return;
+			}
 	  bb.Set(this->P(0));
 	  bb.Add(this->P(1));
 	  bb.Add(this->P(2));
