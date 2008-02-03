@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2007/07/12 06:41:24  cignoni
+added a missing static to the Construct() member
+
 Revision 1.16  2007/03/22 18:12:00  pietroni
 *** empty log message ***
 
@@ -160,6 +163,7 @@ public:
 		*/
 	void Add( Box3<BoxScalarType> const & b )
 	{
+		if(b.IsNull()) return; // Adding a null bbox should do nothing
 		if(IsNull()) *this=b;
 		else
 		{
