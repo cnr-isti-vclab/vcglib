@@ -167,32 +167,34 @@ namespace io {
 				valueStringList(face,tripatch.at(tript),"p");
 				int face_size = face.size();
 				int offsetface = (int)m.face.size();
-				if (face_size == 0) return E_NOMESH;
-				vcg::tri::Allocator<OpenMeshType>::AddFaces(m,face_size / (nfcatt * 3));
-				WedgeAttribute wa;
-				FindStandardWedgeAttributes(wa,tripatch.at(tript),*(info->dae->doc));
+				if (face_size != 0) 
+				{	
+					vcg::tri::Allocator<OpenMeshType>::AddFaces(m,face_size / (nfcatt * 3));
+					WedgeAttribute wa;
+					FindStandardWedgeAttributes(wa,tripatch.at(tript),*(info->dae->doc));
 
-				int jj = 0;	
-				//int dd = m.face.size();
-				for(int ff = offsetface;ff < (int) m.face.size();++ff)
-				{ 
-					
-					for(unsigned int tt = 0;tt < 3;++tt)
-					{
-						int indvt = face.at(jj).toInt();
-						assert(indvt + offset < m.vert.size());
-						m.face[ff].V(tt) = &(m.vert[indvt + offset]);
-
-						if(tri::HasPerWedgeNormal(m))  
-								WedgeNormalAttribute(m,face,wa.wn,wa.wnsrc,ff,jj + wa.offnm,tt);
-						if(tri::HasPerWedgeTexCoord(m) && ind_txt != -1)
+					int jj = 0;	
+					//int dd = m.face.size();
+					for(int ff = offsetface;ff < (int) m.face.size();++ff)
+					{ 
+						
+						for(unsigned int tt = 0;tt < 3;++tt)
 						{
-							WedgeTextureAttribute(m,face,ind_txt,wa.wt,wa.wtsrc,ff,jj + wa.offtx,tt,wa.stride);
-						}
-						if(tri::HasPerWedgeColor(m))
-								WedgeColorAttribute(m,face,wa.wc,wa.wcsrc,ff,jj + wa.offcl,tt);
+							int indvt = face.at(jj).toInt();
+							assert(indvt + offset < m.vert.size());
+							m.face[ff].V(tt) = &(m.vert[indvt + offset]);
 
-						jj += nfcatt;
+							if(tri::HasPerWedgeNormal(m))  
+									WedgeNormalAttribute(m,face,wa.wn,wa.wnsrc,ff,jj + wa.offnm,tt);
+							if(tri::HasPerWedgeTexCoord(m) && ind_txt != -1)
+							{
+								WedgeTextureAttribute(m,face,ind_txt,wa.wt,wa.wtsrc,ff,jj + wa.offtx,tt,wa.stride);
+							}
+							if(tri::HasPerWedgeColor(m))
+									WedgeColorAttribute(m,face,wa.wc,wa.wcsrc,ff,jj + wa.offcl,tt);
+
+							jj += nfcatt;
+						}
 					}
 				}
 			}
@@ -304,7 +306,8 @@ namespace io {
 						else
 							if (polylist_size != 0) 
 								err = LoadPolygonalListMesh(polylist,m,offset,info);
-					if (err != E_NOERROR) return err;
+					if (err != E_NOERROR) 
+						return err;
 				}
 				return E_NOERROR;
 			}
@@ -353,6 +356,8 @@ namespace io {
 			if (scn_size == 0) 
 				return E_NO3DSCENE;
 
+			int problem = E_NOERROR;
+			bool found_a_mesh = false;
 			//Is there geometry in the file? 
 			bool geoinst_found = false;
 			//for each scene in COLLADA FILE
@@ -377,7 +382,6 @@ namespace io {
 					QDomNodeList visscn_child = visscn.childNodes();
 					
 					//for each direct child of a libscn_url visual scene find if there is some geometry instance
-					int problem = 0;
 					for(int chdind = 0; chdind < visscn_child.size();++chdind)
 					{
 						QDomNodeList geoinst = visscn_child.at(chdind).toElement().elementsByTagName("instance_geometry");
@@ -389,7 +393,6 @@ namespace io {
 							QDomNodeList geolib = inf->dae->doc->elementsByTagName("library_geometries");
 							assert(geolib.size() == 1);
 							//!!!!!!!!!!!!!!!!!here will be the code for geometry transformations!!!!!!!!!!!!!!!!!!!!!!
-							
 							for(int geoinst_ind = 0;geoinst_ind < geoinst_size;++geoinst_ind)
 							{
 								QString geo_url;
@@ -402,10 +405,16 @@ namespace io {
 								tr.SetIdentity();
 								TransfMatrix(visscn,geoinst.at(geoinst_ind),tr);
 								problem |= LoadMesh(m,inf,geo,tr); 
-								if (problem) return problem;
+								if (problem & E_NOMESH)
+									found_a_mesh |= false;
+								else
+									found_a_mesh = true;
 							}
 						}
 					}
+					//if there is at least a mesh I clean the problem status variable from E_NOMESH ERROR
+					if ((problem & E_NOMESH) && (found_a_mesh))
+						problem = problem & ~E_NOMESH; 
 				}
 			}
 
@@ -421,11 +430,13 @@ namespace io {
 					vcg::Matrix44f tmp;
 					tmp.SetIdentity();
 					problem |= LoadMesh(m,inf,geochild.at(chd),tmp); 
-					if (problem) return problem;
 				}
 			}
+			//if there is at least a mesh I clean the problem status variable from E_NOMESH ERROR
+			if ((problem & E_NOMESH) && (found_a_mesh))
+				problem = problem & ~E_NOMESH;  
 			info = inf;
-			return E_NOERROR;
+			return problem;
 		}
 
 		static bool LoadMask(const char * filename, AdditionalInfoDAE*& addinfo)
