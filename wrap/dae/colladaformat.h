@@ -5,6 +5,7 @@
 #include <vcg/space/point4.h>
 #include <QtGui/QImage>
 #include <wrap/dae/meshaccessors.h>
+#include <QtCore/QVector>
 
 namespace Collada
 {
@@ -527,11 +528,17 @@ namespace Tags
 	class TrianglesTag : public XMLTag
 	{
 	public:
+		TrianglesTag(const int count)
+			:XMLTag("triangles")
+		{
+			_attributes.push_back(TagAttribute("count",QString::number(count)));
+		}
+
 		TrianglesTag(const int count,const QString& material)
 			:XMLTag("triangles")
 		{
 			_attributes.push_back(TagAttribute("count",QString::number(count)));
-			_attributes.push_back(TagAttribute("semantic",material));
+			_attributes.push_back(TagAttribute("material",material));
 		}
 	};
 
@@ -553,6 +560,27 @@ namespace Tags
 						_text.push_back(QString::number(cont));
 					if (texcoord)
 						_text.push_back(QString::number(cont * nedge + ii));
+				}
+				++cont;
+			}
+		}
+
+		template<typename MESHTYPE>
+		PTag(const MESHTYPE& m,const unsigned int nedge,QVector<int>& patchfaces,bool norm = false,bool texcoord = false)
+			:XMLLeafTag("p")
+		{
+			int cont = 0;
+			for(QVector<int>::iterator it = patchfaces.begin();it != patchfaces	.end(); ++it)
+			{
+				for(unsigned int ii = 0; ii < nedge; ++ii)
+				{
+					const MESHTYPE::FaceType& f = m.face[*it];
+					int dist  = f.V(ii) - &(*m.vert.begin());
+					_text.push_back(QString::number(dist));
+					if (norm)
+						_text.push_back(QString::number(*it));
+					if (texcoord)
+						_text.push_back(QString::number(*it * nedge + ii));
 				}
 				++cont;
 			}
@@ -744,6 +772,19 @@ private:
 		node0->_sons.push_back(node1);
 	}
 
+	template<typename MESHMODELTYPE>
+	static void splitMeshInTexturedPatches(const MESHMODELTYPE& m,QVector<QVector<int>>& patches)
+	{
+		patches.resize(m.textures.size());
+		int cc = 0;
+		for(MESHMODELTYPE::ConstFaceIterator itf = m.face.begin();itf != m.face.end();++itf)
+		{
+			int tmp = itf->cWT(0).N();
+			patches[tmp].push_back(cc);
+			++cc;
+		}
+	}
+
 public:
 	template<typename MESHMODELTYPE>
 	static XMLDocument* createColladaDocument(const MESHMODELTYPE& m,const int mask)
@@ -921,7 +962,7 @@ public:
 		{
 			XNode* sourcewedge = new XNode(new Tags::SourceTag(shape+"-lib-map","map"));
 			AccessorComponentNumberInfo<MESHMODELTYPE,MeshAccessors::PolygonWedgeTextureCoordinateAccessor<const MESHMODELTYPE>> pwacc(m);
-			pwacc._return_value_component_number = CoordNumber<MESHMODELTYPE::FaceType::TexCoordType::PointType>::coord();;
+			pwacc._return_value_component_number = CoordNumber<MESHMODELTYPE::FaceType::TexCoordType::PointType>::coord();
 			//we export only triangular face
 			XLeaf* floatwedgearr = new XLeaf(new Tags::FloatWedgeArrayTag(shape+"-lib-map-array",m.face.size() * pwacc._return_value_component_number * edgefacenum,m,pwacc));
 			XNode* techcommwedgenode = new XNode(new Tags::TechniqueCommonTag());
@@ -942,31 +983,72 @@ public:
 			meshnode->_sons.push_back(sourcewedge);
 		}
 
-
 		XNode* vertnode = new XNode(new Tags::VerticesTag(shape+"-lib-vertices"));
 		XNode* inputposnode = new XNode(new Tags::InputTag("POSITION",shape+"-lib-positions"));
 		vertnode->_sons.push_back(inputposnode);
 		meshnode->_sons.push_back(vertnode);
-		XNode* trianglesnode = new XNode(new Tags::TrianglesTag(m.face.size(),"instancematerial"));
-		XNode* inputtrinode = new XNode(new Tags::InputTag(0,"VERTEX",shape+"-lib-vertices"));
-		trianglesnode->_sons.push_back(inputtrinode);
-		if (normalmask)
-		{
-			XNode* inputnormnode = new XNode(new Tags::InputTag(1,"NORMAL",shape+"-lib-normals"));
-			trianglesnode->_sons.push_back(inputnormnode);
-		}
-
+		XNode* trianglesnode = NULL;
+		//if ((m.textures.size() == 0) || (!texmask))
+		//{	
+		//	//there isn't any texture file
+		//	trianglesnode = new XNode(new Tags::TrianglesTag(m.face.size()));
+		//}
+		//else
+		//{
+		//	std::vector<std::vector<int>> _mytripatches(m.textures.size());
+		//	if ((texmask) && (m.textures.size() > 1))
+		//	{
+		//		//there are many textures files - I have to split the mesh in triangular patches that share the same texture's file.
+		//		for(MESHMODELTYPE::ConstFaceIterator itf = m.face.begin();itf != m.face.end();++itf)
+		//		{
+		//			
+		//		}
+		//		trianglesnode = new XNode(new Tags::TrianglesTag(m.face.size(),"instancematerial"));
+		//}
+		
+		QVector<QVector<int>> mytripatches;
 		if (texmask)
+			splitMeshInTexturedPatches(m,mytripatches);
+		
+		QVector<QVector<int>>::iterator itp = mytripatches.begin();
+		int indmat = 0;
+		do 
 		{
-			XNode* inputwedgenode = new XNode(new Tags::InputTag(2,"TEXCOORD",shape+"-lib-map"));
-			trianglesnode->_sons.push_back(inputwedgenode);
-		}
+			if ((m.textures.size() == 0) || (!texmask))
+			{	
+				//there isn't any texture file
+				trianglesnode = new XNode(new Tags::TrianglesTag(m.face.size()));
+			}
+			else
+				trianglesnode = new XNode(new Tags::TrianglesTag(mytripatches[indmat].size(),"instancematerial" + QString::number(indmat)));
 
-		XLeaf* polyleaf = new XLeaf(new Tags::PTag(m,edgefacenum,normalmask,texmask));
+			XNode* inputtrinode = new XNode(new Tags::InputTag(0,"VERTEX",shape+"-lib-vertices"));
+			trianglesnode->_sons.push_back(inputtrinode);
+			if (normalmask)
+			{
+				XNode* inputnormnode = new XNode(new Tags::InputTag(1,"NORMAL",shape+"-lib-normals"));
+				trianglesnode->_sons.push_back(inputnormnode);
+			}
 
-		trianglesnode->_sons.push_back(polyleaf);
-		meshnode->_sons.push_back(trianglesnode);
+			if (texmask)
+			{
+				XNode* inputwedgenode = new XNode(new Tags::InputTag(2,"TEXCOORD",shape+"-lib-map"));
+				trianglesnode->_sons.push_back(inputwedgenode);
+			}
 
+			XLeaf* polyleaf = NULL;
+			if (itp == mytripatches.end())
+				polyleaf = new XLeaf(new Tags::PTag(m,edgefacenum,normalmask,texmask));
+			else
+				polyleaf = new XLeaf(new Tags::PTag(m,edgefacenum,(*itp),normalmask,texmask));
+
+			trianglesnode->_sons.push_back(polyleaf);
+			meshnode->_sons.push_back(trianglesnode);
+			
+			++indmat;
+			++itp;
+		}while(itp != mytripatches.end());
+		
 		connectHierarchyNode(libgeo,geometrynode,meshnode);
 		root->_sons.push_back(libgeo);
 
@@ -974,11 +1056,14 @@ public:
 		XNode* visualscenenode = new XNode(new Tags::VisualSceneTag("VisualSceneNode","VisualScene"));
 		XNode* nodenode = new XNode(new Tags::NodeTag("node","node"));
 		XNode* instgeonode = new XNode(new Tags::InstanceGeometryTag(shape+"-lib"));
-		XNode* bindnode = new XNode(new Tags::BindMaterialTag());
-		XNode* techcommmatnode = new XNode(new Tags::TechniqueCommonTag());
-		XNode* instmatnode = new XNode(new Tags::InstanceMaterialTag("instancematerial","material0"));
-		XNode* bindvertnode = new XNode(new Tags::BindVertexInputTag("UVSET0","TEXCOORD","0"));
-		connectHierarchyNode(instgeonode,bindnode,techcommmatnode,instmatnode,bindvertnode);
+		for(unsigned int ii = 0; ii < m.textures.size(); ++ii)
+		{
+			XNode* bindnode = new XNode(new Tags::BindMaterialTag());
+			XNode* techcommmatnode = new XNode(new Tags::TechniqueCommonTag());
+			XNode* instmatnode = new XNode(new Tags::InstanceMaterialTag("instancematerial"  + QString::number(ii),"material" + QString::number(ii)));
+			XNode* bindvertnode = new XNode(new Tags::BindVertexInputTag("UVSET0","TEXCOORD","0"));
+			connectHierarchyNode(instgeonode,bindnode,techcommmatnode,instmatnode,bindvertnode);
+		}
 		connectHierarchyNode(visualscenenode,nodenode,instgeonode);
 		libvisualnode->_sons.push_back(visualscenenode);
 		root->_sons.push_back(libvisualnode);

@@ -243,7 +243,6 @@ namespace io {
 		inline static QDomNode findNodeBySpecificAttributeValue(const QDomNodeList& ndl,const QString& attrname,const QString& attrvalue)
 		{
 			int ndl_size = ndl.size();
-			assert(ndl_size != 0);
 			int ind = 0;
 			while(ind < ndl_size)
 			{
