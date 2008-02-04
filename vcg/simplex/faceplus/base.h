@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2008/02/03 23:49:42  cignoni
+Important Change. Now GetBBox return a null bbox if called on a deleted face (instead of crashing)
+
 Revision 1.12  2007/05/04 16:40:11  ganovelli
 changes to comply "plus" types
 
@@ -97,6 +100,8 @@ class FaceTypeHolder{
   typedef BET *EdgePointer;
   typedef BFT *FacePointer;
   typedef BTT *TetraPointer;
+	template <class LeftF>
+	void ImportLocal(const LeftF & l){}
   static void Name(std::vector<std::string> & name){}
 
 

@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2007/03/12 15:37:21  tarini
+Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
+
 Revision 1.9  2007/02/12 19:00:56  ganovelli
 added Name(std:vector<std::string>& n) that fills n with the names of the attribute of the vertex type
 
@@ -84,6 +87,8 @@ class VertexTypeHolder{
   typedef BET *EdgePointer;
   typedef BFT *FacePointer;
   typedef BTT *TetraPointer;
+	template < class LeftV>
+	void ImportLocal(const LeftV  & left ) { } 
 	static void Name(std::vector<std::string> & name){}
 
 };

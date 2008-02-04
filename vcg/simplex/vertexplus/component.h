@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2007/06/04 15:40:22  turini
+Add vertex-tetrahedron adjacency component VTAdj.
+
 Revision 1.22  2007/03/12 15:37:21  tarini
 Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
 
@@ -120,6 +123,8 @@ public:
   const CoordType &P() const { static CoordType coord(0, 0, 0);  assert(0); return coord; }
   const CoordType &cP() const { static CoordType coord(0, 0, 0);  assert(0); return coord; }
   CoordType &UberP() { static CoordType coord(0, 0, 0); return coord; }
+	template < class LeftV>
+	void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); } 
   static bool HasCoord()   { return false; }
   static void Name(std::vector<std::string> & name){T::Name(name);}
 
@@ -133,7 +138,9 @@ public:
   const CoordType &P() const { return _coord; }
   const CoordType &cP() const { return _coord; }
   CoordType &UberP() { return _coord; }
-  
+
+	template < class LeftV>
+	void ImportLocal(const LeftV  & left ) { P() = left.cP(); T::ImportLocal( left); } 
   static bool HasCoord()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("Coord"));T::Name(name);}
 
@@ -154,7 +161,9 @@ public:
   typedef vcg::Point3s NormalType;
   NormalType &N() { static NormalType dummy_normal(0, 0, 0);  assert(0); return dummy_normal; }
   const NormalType cN()const { static NormalType dummy_normal(0, 0, 0);  assert(0); return dummy_normal; }
-  static bool HasNormal()   { return false; }
+ 	template < class LeftV>
+	void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
+	static bool HasNormal()   { return false; }
   static bool HasNormalOcc()   { return false; }
 	static void Name(std::vector<std::string> & name){T::Name(name);}
 
@@ -164,6 +173,8 @@ public:
   typedef A NormalType;
   NormalType &N() { return _norm; }
   const NormalType &cN() const { return _norm; }
+	template < class LeftV>
+	void ImportLocal(const LeftV  & left ) { N() = left.cN(); T::ImportLocal( left); }
   static bool HasNormal()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("Normal"));T::Name(name);}
 
@@ -191,6 +202,8 @@ public:
   inline void InitIMark()    {  }
   inline int & IMark()       { assert(0); static int tmp=-1; return tmp;}
   inline const int & IMark() const {return 0;}
+	template < class LeftV>
+	void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
 	static void Name(std::vector<std::string> & name){T::Name(name);}
 
 };
@@ -201,6 +214,8 @@ public:
   inline void InitIMark()    { _imark = 0; }
   inline int & IMark()       { return _imark;}
   inline const int & IMark() const {return _imark;}
+	template < class LeftV>
+	void ImportLocal(const LeftV  & left ) { IMark() = left.IMark(); T::ImportLocal( left); }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("Mark"));T::Name(name);}
     
  private:
@@ -213,6 +228,8 @@ template <class TT> class EmptyTexCoord: public TT {
 public:
   typedef vcg::TexCoord2<float,1> TexCoordType;
   TexCoordType &T() { static TexCoordType dummy_texcoord;  assert(0); return dummy_texcoord; }
+	template < class LeftV>
+	void ImportLocal(const LeftV  & left ) { TT::ImportLocal( left); }
   static bool HasTexCoord()   { return false; }
 	static void Name(std::vector<std::string> & name){TT::Name(name);}
 
@@ -221,6 +238,9 @@ template <class A, class TT> class TexCoord: public TT {
 public:
   typedef A TexCoordType;
   TexCoordType &T() { return _t; }
+  const TexCoordType &cT()  const { return _t; }
+	template < class LeftV>
+	void ImportLocal(const LeftV  & left ) { T() = left.cT(); T::ImportLocal( left); }
   static bool HasTexCoord()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("TexCoord"));TT::Name(name);}
 
@@ -246,6 +266,8 @@ public:
   /// Return the vector of Flags(), senza effettuare controlli sui bit
   int &Flags() { static int dummyflags(0);  assert(0); return dummyflags; }
   const int Flags() const { return 0; }
+	template < class LeftV>
+	void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
   static bool HasFlags()   { return false; }
 	static void Name(std::vector<std::string> & name){T::Name(name);}
 
@@ -257,6 +279,8 @@ public:
   typedef int FlagType;
   int &Flags() {return _flags; }
   const int Flags() const {return _flags; }
+	template < class LeftV>
+	void ImportLocal(const LeftV  & left ) { Flags() = left.cFlags(); T::ImportLocal( left); }
   static bool HasFlags()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("BitFlags"));T::Name(name);}
 
@@ -270,6 +294,8 @@ template <class T> class EmptyColor: public T {
 public:
   typedef vcg::Color4b ColorType;
   ColorType &C() { static ColorType dumcolor(vcg::Color4b::White); assert(0); return dumcolor; }
+	template < class LeftV>
+	void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
   static bool HasColor()   { return false; }
 	static void Name(std::vector<std::string> & name){T::Name(name);}
 
@@ -279,6 +305,10 @@ public:
   Color():_color(vcg::Color4b::White) {}
   typedef A ColorType;
   ColorType &C() { return _color; }
+  const ColorType &C() const { return _color; }
+  const ColorType &cC() const { return _color; }
+	template < class LeftV>
+	void ImportLocal(const LeftV  & left ) { C() = left.cC(); T::ImportLocal( left); }
   static bool HasColor()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("Color"));T::Name(name);}
 
@@ -296,6 +326,8 @@ template <class T> class EmptyQuality: public T {
 public:
   typedef float QualityType;
   QualityType &Q() { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
+	template < class LeftV>
+	void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
   static bool HasQuality()   { return false; }
 	static void Name(std::vector<std::string> & name){T::Name(name);}
 
@@ -304,6 +336,9 @@ template <class A, class TT> class Quality: public TT {
 public:
   typedef A QualityType;
   QualityType &Q() { return _quality; }
+  const QualityType & cQ() const {return _quality; }
+	template < class LeftV>
+	void ImportLocal(const LeftV  & left ) { Q() = left.cQ(); TT::ImportLocal( left); }
   static bool HasQuality()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("Quality"));TT::Name(name);}
 
@@ -329,6 +364,8 @@ public:
   typename T::FacePointer &VFp() { static typename T::FacePointer fp=0;  assert(0); return fp; }
   typename T::FacePointer cVFp() { static typename T::FacePointer fp=0;  assert(0); return fp; }
   int &VFi(){static int z=0; return z;};
+	template < class LeftV>
+	void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
   static bool HasVFAdjacency()   {   return false; }
   static bool HasVFAdjacencyOcc()   {   return false; }
 	static void Name(std::vector<std::string> & name){ T::Name(name);}
@@ -340,6 +377,8 @@ public:
   typename T::FacePointer &VFp() {return _fp; }
   typename T::FacePointer cVFp() {return _fp; }
   int &VFi() {return _zp; }
+	template < class LeftV>
+	void ImportLocal(const LeftV  & left ) { VFp() = NULL; T::ImportLocal( left); }
   static bool HasVFAdjacency()   {   return true; }
   static bool HasVFAdjacencyOcc()   {   return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("VFAdj"));T::Name(name);}

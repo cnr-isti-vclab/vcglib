@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2007/12/11 18:25:31  cignoni
+added missing include limits
+
 Revision 1.10  2007/12/11 11:36:03  cignoni
 Added the CompactVertexVector garbage collecting function.
 
@@ -246,6 +249,9 @@ public:
     assert((*this).Base().VFAdjacencyEnabled); 
     return (*this).Base().AV[(*this).Index()()]._zp; 
   }
+	template <class LeftV>
+	void ImportLocal(const LeftV & leftv){VFp() = NULL; VFi() = -1; T::ImporLocal(leftV);}
+
   static bool HasVFAdjacency()   {   return true; }
   static bool HasVFAdjacencyOcf()   { return true; }
 
@@ -264,6 +270,13 @@ public:
     // you cannot use Normals before enabling them with: yourmesh.vert.EnableNormal()
     assert((*this).Base().NormalEnabled); 
     return (*this).Base().NV[(*this).Index()];  }
+  const NormalType &N() const { 
+    // you cannot use Normals before enabling them with: yourmesh.vert.EnableNormal()
+    assert((*this).Base().NormalEnabled); 
+    return (*this).Base().NV[(*this).Index()];  }
+
+	template <class LeftV>
+	void ImportLocal(const LeftV & leftv){ N() = leftV.cN(); T::ImporLocal(leftV);}
 };
 
 template <class T> class Normal3sOcf: public NormalOcf<vcg::Point3s, T> {};
@@ -276,6 +289,9 @@ template <class A, class T> class ColorOcf: public T {
 public:
   typedef A ColorType;
   ColorType &C() { assert((*this).Base().NormalEnabled); return (*this).Base().CV[(*this).Index()()]; }
+  const ColorType &cC() const { assert((*this).Base().NormalEnabled); return (*this).Base().CV[(*this).Index()()]; }
+	template <class LeftV>
+	void ImportLocal(const LeftV & leftv){ C() = leftV.cC(); T::ImporLocal(leftV);}
   static bool HasColor()   { return true; }
   static bool HasColorOcf()   { return true; }
 };
@@ -288,6 +304,8 @@ template <class A, class T> class QualityOcf: public T {
 public:
   typedef A QualityType;
   QualityType &Q() { assert((*this).Base().QualityEnabled); return (*this).Base().QV[(*this).Index()()]; }
+	template <class LeftV>
+	void ImportLocal(const LeftV & leftv){ Q() = leftV.cQ(); T::ImporLocal(leftV);}
   static bool HasQuality()   { return true; }
   static bool HasQualityOcf()   { return true; }
 };

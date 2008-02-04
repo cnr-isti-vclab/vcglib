@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2007/10/09 12:03:13  corsini
+remove signed/unsigned warning
+
 Revision 1.20  2007/03/12 15:37:19  tarini
 Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
 
@@ -335,6 +338,11 @@ public:
     assert((*this).Base().VFAdjacencyEnabled); 
     return (*this).Base().AV[(*this).Index()]._zp[j]; 
   }
+
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){VFp(0) = NULL; VFp(1) = NULL; VFp(2) = NULL;
+																				VFi(0) =   -1; VFi(1) =   -1; VFi(2) =   -1;
+																				T::ImportLocal(leftF);}
   static bool HasVFAdjacency()   {   return true; }
   static bool HasVFAdjacencyOcf()   { return true; }
 
@@ -364,6 +372,11 @@ public:
     assert((*this).Base().FFAdjacencyEnabled); 
     return (*this).Base().AF[(*this).Index()]._zp[j]; 
   }
+	
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){FFp(0) = NULL; FFp(1) = NULL; FFp(2) = NULL;
+																				FFi(0) =   -1; FFi(1) =   -1; FFi(2) =   -1;
+																				T::ImportLocal(leftF);}
   static bool HasFFAdjacency()   {   return true; }
   static bool HasFFAdjacencyOcf()   { return true; }
 
@@ -387,6 +400,8 @@ public:
     assert((*this).Base().NormalEnabled); 
     return (*this).Base().NV[(*this).Index()];  }
 
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){N() = leftF.cN(); T::ImportLocal(leftF);}
 
 };
 
@@ -403,6 +418,9 @@ public:
     assert((*this).Base().ColorEnabled); 
     return (*this).Base().CV[(*this).Index()]; 
   }
+
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){C() = leftF.cC(); T::ImportLocal(leftF);}
   static bool HasFaceColor()   { return true; }
   static bool HasFaceColorOcf()   { return true; }
 };
@@ -422,7 +440,9 @@ public:
     assert((*this).Base().MarkEnabled); 
     return (*this).Base().MV[(*this).Index()]; 
   } ;
- 
+
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){IMark() = leftF.cIMark(); T::ImportLocal(leftF);}
   static bool HasFaceMark()   { return true; }
   static bool HasFaceMarkOcf()   { return true; }
   inline void InitIMark()    { IMark() = 0; }
@@ -436,6 +456,8 @@ public:
   typedef A TexCoordType;
   TexCoordType &WT(const int i)              { assert((*this).Base().WedgeTexEnabled); return (*this).Base().WTV[(*this).Index()].wt[i]; }
   TexCoordType const &cWT(const int i) const { assert((*this).Base().WedgeTexEnabled); return (*this).Base().WTV[(*this).Index()].wt[i]; }
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){WT() = leftF.cWT(); T::ImportLocal(leftF);}
   static bool HasWedgeTexCoord()   { return true; }
   static bool HasWedgeTexCoordOcf()   { return true; }
 };
@@ -447,6 +469,9 @@ template <class T> class WedgeTexCoordfOcf: public WedgeTexCoordOcf<TexCoord2<fl
 template < class T> class InfoOcf: public T {
 public:
   vector_ocf<typename T::FaceType> &Base() const { return *_ovp;}
+
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){T::ImportLocal(leftF);}
 
   static bool HasFaceColorOcf()   { return false; }
   static bool HasFaceNormalOcf()   { return false; }

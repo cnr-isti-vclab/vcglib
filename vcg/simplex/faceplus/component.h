@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2008/01/28 08:42:51  cignoni
+added assert when writing on empty data members
+
 Revision 1.19  2008/01/19 17:49:05  ganovelli
 missing const  cVF added
 
@@ -112,6 +115,8 @@ public:
 	inline       typename T::CoordType & P( const int j ) 	    {	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
 	inline const typename T::CoordType & P( const int j ) const {	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
 	inline const typename T::CoordType &cP( const int j ) const	{	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
+	template <class LeftF>
+	void ImportLocal(T::ImportLocal(leftF);}
   static bool HasVertexRef()   { return false; }
 	static void Name(std::vector<std::string> & name){T::Name(name);}
 
@@ -159,6 +164,10 @@ public:
 
 	inline       typename T::VertexType *       & UberV( const int j )	      { assert(j>=0 && j<3); return v[j]; }
 	inline const typename T::VertexType * const & UberV( const int j ) const	{ assert(j>=0 && j<3);	return v[j];	}
+
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){ V(0) = NULL; V(1) = NULL; V(2) = NULL; T::ImportLocal(leftF);}
+
   static bool HasVertexRef()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("VertexRef"));T::Name(name);}
 
@@ -180,6 +189,8 @@ public:
   NormalType &WN(int) { static NormalType dummy_normal(0, 0, 0);  assert(0); return dummy_normal; }
   const NormalType cWN(int) const { static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
 
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){ T::ImportLocal(leftF);}
   static bool HasWedgeNormal()   { return false; }
   static bool HasFaceNormal()   { return false; }
   static bool HasWedgeNormalOcc()   { return false; }
@@ -194,6 +205,8 @@ public:
   typedef typename T::VertexType::NormalType NormalType;
   NormalType &N() { return _norm; }
   NormalType &cN() const { return _norm; }
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){ N() = leftF.cN(); T::ImportLocal(leftF);}
   static bool HasFaceNormal()   { return true; }
 //  void ComputeNormal() {	_norm = vcg::Normal<typename T::FaceType>(*(static_cast<typename T::FaceType *>(this))); }
 //  void ComputeNormalizedNormal() {	_norm = vcg::NormalizedNormal(*this);}  
@@ -215,6 +228,8 @@ public:
   typedef A NormalType;
   NormalType &N() { return _norm; }
   NormalType cN() const { return _norm; }
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){ N() = leftF.cN(); T::ImportLocal(leftF);}
   static bool HasFaceNormal()   { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("NormalAbs"));T::Name(name);}
 
@@ -227,6 +242,8 @@ public:
   typedef typename T::VertexType::NormalType NormalType;
   NormalType &WN(const int j) { return _wnorm[j]; }
   const NormalType cWN(const int j) const { return _wnorm[j]; }
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){ WN() = leftF.cWN(); T::ImportLocal(leftF);}
   static bool HasWedgeNormal()   { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeNormal"));T::Name(name);}
 
@@ -254,6 +271,8 @@ public:
   typedef vcg::TexCoord2<float,1> TexCoordType;
   TexCoordType &WT(const int) { static TexCoordType dummy_texture;  assert(0); return dummy_texture;}
   TexCoordType const &cWT(const int) const { static TexCoordType dummy_texture; return dummy_texture;}
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){ TT::ImportLocal(leftF);}
   static bool HasWedgeTexCoord()   { return false; }
   static bool HasWedgeTexCoordOcc()   { return false; }
   static void Name(std::vector<std::string> & name){TT::Name(name);}
@@ -265,6 +284,8 @@ public:
   typedef A TexCoordType;
   TexCoordType &WT(const int i) { return _wt[i]; }
   TexCoordType const &cWT(const int i) const { return _wt[i]; }
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){ WT() = leftF.cWT();TT::ImportLocal(leftF);}
   static bool HasWedgeTexCoord()   { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeTexCoord"));TT::Name(name);}
 
@@ -288,6 +309,8 @@ public:
 	/// Return the vector of Flags(), senza effettuare controlli sui bit
   int &Flags() { static int dummyflags(0);  assert(0); return dummyflags; }
   const int Flags() const { return 0; }
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){ T::ImportLocal(leftF);}
   static bool HasFlags()   { return false; }
   static bool HasFlagsOcc()   { return false; }
 	static void Name(std::vector<std::string> & name){T::Name(name);}
@@ -298,7 +321,10 @@ template <class T> class BitFlags:  public T {
 public:
   BitFlags(){_flags=0;}
    int &Flags() {return _flags; }
-   const int Flags() const {return _flags; }
+  const int Flags() const {return _flags; }
+  const int & cFlags() const {return _flags; }
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){ Flags() = leftF.cFlags();T::ImportLocal(leftF);}
   static bool HasFlags()   { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("BitFlags"));T::Name(name);}
 
@@ -328,6 +354,9 @@ public:
   typedef A ColorType;
   Color():_color(vcg::Color4b::White) {}
   ColorType &C() { return _color; }
+  const ColorType &cC() { return _color; }
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){ C() = leftF.cC();T::ImportLocal(leftF);}
   static bool HasFaceColor()   { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("Color"));T::Name(name);}
 
@@ -339,6 +368,10 @@ template <class A, class T> class WedgeColor: public T {
 public:
   typedef A ColorType;
   ColorType &WC(const int i) { return _color[i]; }
+  const ColorType &WC(const int i) const { return _color[i]; }
+
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){ WC() = leftF.cWC();T::ImportLocal(leftF);}
   static bool HasFaceColor()   { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeColor"));T::Name(name);}
 
@@ -361,6 +394,9 @@ template <class A, class T> class Quality: public T {
 public:
   typedef A QualityType;
   QualityType &Q() { return _quality; }
+  const QualityType &cQ() const { return _quality; }
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){ Q() = leftF.cQ();T::ImportLocal(leftF);}
   static bool HasFaceQuality()   { return true; }
   static bool HasFaceQualityOcc()   { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("Quality"));T::Name(name);}
@@ -387,6 +423,8 @@ public:
   inline void InitIMark()    {  }
   inline int & IMark()       { assert(0); static int tmp=-1; return tmp;}
   inline const int IMark() const {return 0;}
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){T::ImportLocal(leftF);}
   static void Name(std::vector<std::string> & name){T::Name(name);}
 
 };
@@ -397,6 +435,8 @@ public:
   inline void InitIMark()    { _imark = 0; }
   inline int & IMark()       { return _imark;}
   inline const int & IMark() const {return _imark;}
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){ IMark() = leftF.IMark();T::ImportLocal(leftF);}
   static void Name(std::vector<std::string> & name){name.push_back(std::string("Mark"));T::Name(name);}
     
  private:
@@ -418,6 +458,8 @@ public:
   char &FFi(const int j){static char z=0;  assert(0); return z;};
   const char &cVFi(const int j){static char z=0; return z;};
   const char &cFFi(const int j){static char z=0; return z;};
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){ T::ImportLocal(leftF);}
   static bool HasVFAdjacency()   {   return false; }
   static bool HasFFAdjacency()   {   return false; }
   static bool HasFFAdjacencyOcc()   {   return false; }
@@ -437,6 +479,8 @@ public:
   typename T::FacePointer const  VFp(const int j) const  { assert(j>=0 && j<3);  return _vfp[j]; }
   typename T::FacePointer const cVFp(const int j) const  { assert(j>=0 && j<3);  return _vfp[j]; }
   char &VFi(const int j) {return _vfi[j]; }
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){T::ImportLocal(leftF);}
   static bool HasVFAdjacency()      {   return true; }
   static bool HasVFAdjacencyOcc()   {   return false; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("VFAdj"));T::Name(name);}
@@ -466,6 +510,8 @@ public:
 	typename T::FacePointer  const  FFp1( const int j ) const { return FFp((j+1)%3);}
 	typename T::FacePointer  const  FFp2( const int j ) const { return FFp((j+2)%3);}
 
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){T::ImportLocal(leftF);}
   static bool HasFFAdjacency()      {   return true; }
   static bool HasFFAdjacencyOcc()   {   return false; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("FFAdj"));T::Name(name);}
