@@ -3,7 +3,7 @@
 
 //importer for collada's files
 
-#include<wrap/io_trimesh/util_dae.h>
+#include<wrap/dae/util_dae.h>
 
 namespace vcg {
 namespace tri {
@@ -296,11 +296,14 @@ namespace io {
 						return E_NOPOLYGONALMESH;
 					
 					DAEError err = E_NOERROR;
-					if (tripatch_size != 0) err = LoadTriangularMesh(tripatch,m,offset,info);
+					if (tripatch_size != 0) 
+						err = LoadTriangularMesh(tripatch,m,offset,info);
 					else 
-						if (polypatch_size != 0) err = LoadPolygonalMesh(polypatch,m,offset,info);
+						if (polypatch_size != 0) 
+							err = LoadPolygonalMesh(polypatch,m,offset,info);
 						else
-							if (polylist_size != 0) err = LoadPolygonalListMesh(polylist,m,offset,info);
+							if (polylist_size != 0) 
+								err = LoadPolygonalListMesh(polylist,m,offset,info);
 					if (err != E_NOERROR) return err;
 				}
 				return E_NOERROR;
