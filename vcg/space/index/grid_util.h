@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2006/08/23 15:21:35  marfr960
+added some comments
+
 Revision 1.9  2005/12/02 00:27:22  cignoni
 removed excess typenames
 
@@ -147,8 +150,8 @@ public:
 	/// Dato un box in voxel ritorna gli estremi del box reale
 	void IBoxToBox( const Box3i & ib, Box3x & b ) const
 	{
-		IPtoP(ib.min,b.min);
-		IPtoP(ib.max,b.max);
+		IPToP(ib.min,b.min);
+		IPToP(ib.max,b.max);
 	}
 };
 
