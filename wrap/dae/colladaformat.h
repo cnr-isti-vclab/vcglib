@@ -630,7 +630,7 @@ namespace Tags
 			:XMLLeafTag("p")
 		{
 			int cont = 0;
-			for(MESHTYPE::ConstFaceIterator it= m.face.begin();it != m.face.end(); ++it)
+			for(typename MESHTYPE::ConstFaceIterator it= m.face.begin();it != m.face.end(); ++it)
 			{
 				for(unsigned int ii = 0; ii < nedge; ++ii)
 				{
@@ -654,7 +654,7 @@ namespace Tags
 			{
 				for(unsigned int ii = 0; ii < nedge; ++ii)
 				{
-					const MESHTYPE::FaceType& f = m.face[*it];
+					const typename MESHTYPE::FaceType& f = m.face[*it];
 					int dist  = f.V(ii) - &(*m.vert.begin());
 					_text.push_back(QString::number(dist));
 					if (norm)
@@ -817,11 +817,11 @@ private:
 	}
 
 	template<typename MESHMODELTYPE>
-	static void splitMeshInTexturedPatches(const MESHMODELTYPE& m,QVector<QVector<int>>& patches)
+	static void splitMeshInTexturedPatches(const MESHMODELTYPE& m,QVector<QVector<int> >& patches)
 	{
 		patches.resize(m.textures.size());
 		int cc = 0;
-		for(MESHMODELTYPE::ConstFaceIterator itf = m.face.begin();itf != m.face.end();++itf)
+		for(typename MESHMODELTYPE::ConstFaceIterator itf = m.face.begin();itf != m.face.end();++itf)
 		{
 			int tmp = itf->cWT(0).N();
 			patches[tmp].push_back(cc);
@@ -953,7 +953,7 @@ public:
 		XNode* meshnode = new XNode(new Tags::MeshTag());
 		XNode* sourcepos = new XNode(new Tags::SourceTag(shape+"-lib-positions","position"));
 		//AccessorComponentNumberInfo<MESHMODELTYPE,MeshAccessors::VertexPositionAccessor<const MESHMODELTYPE>> acc(m);
-		unsigned int return_component_number = CoordNumber<MESHMODELTYPE::CoordType>::coord();
+		unsigned int return_component_number = CoordNumber<typename MESHMODELTYPE::CoordType>::coord();
 		XLeaf* floatarr = new XLeaf(new Tags::FloatArrayTag(shape+"-lib-positions-array",m.vert.size() * return_component_number,m,Tags::FloatArrayTag::VERTPOSITION,return_component_number));
 		XNode* techcommnode = new XNode(new Tags::TechniqueCommonTag());
 		XNode* accessornode = new XNode(new Tags::AccessorTag(m.vert.size(),shape+"-lib-positions-array",return_component_number));
@@ -1004,7 +1004,7 @@ public:
 		if (texmask)
 		{
 			XNode* sourcewedge = new XNode(new Tags::SourceTag(shape+"-lib-map","map"));
-			return_component_number = CoordNumber<MESHMODELTYPE::FaceType::TexCoordType::PointType>::coord();
+			return_component_number = CoordNumber<typename MESHMODELTYPE::FaceType::TexCoordType::PointType>::coord();
 			//we export only triangular face
 			XLeaf* floatwedgearr = new XLeaf(new Tags::FloatArrayTag(shape+"-lib-map-array",m.face.size() * return_component_number * edgefacenum,m,Tags::FloatArrayTag::WEDGETEXCOORD,return_component_number));
 			XNode* techcommwedgenode = new XNode(new Tags::TechniqueCommonTag());
@@ -1048,11 +1048,11 @@ public:
 		//		trianglesnode = new XNode(new Tags::TrianglesTag(m.face.size(),"instancematerial"));
 		//}
 		
-		QVector<QVector<int>> mytripatches;
+		QVector<QVector<int> > mytripatches;
 		if (texmask)
 			splitMeshInTexturedPatches(m,mytripatches);
 		
-		QVector<QVector<int>>::iterator itp = mytripatches.begin();
+		QVector<QVector<int> >::iterator itp = mytripatches.begin();
 		int indmat = 0;
 		do 
 		{
