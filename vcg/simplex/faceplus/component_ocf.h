@@ -24,6 +24,12 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2008/02/04 21:26:45  ganovelli
+added ImportLocal which imports all local attributes into vertexplus and faceplus.
+A local attribute is everything (N(), C(), Q()....) except pointers to other simplices
+(i.e. FFAdj, VFAdj, VertexRef) which are set to NULL.
+Added some function for const attributes
+
 Revision 1.21  2007/10/09 12:03:13  corsini
 remove signed/unsigned warning
 
@@ -457,7 +463,7 @@ public:
   TexCoordType &WT(const int i)              { assert((*this).Base().WedgeTexEnabled); return (*this).Base().WTV[(*this).Index()].wt[i]; }
   TexCoordType const &cWT(const int i) const { assert((*this).Base().WedgeTexEnabled); return (*this).Base().WTV[(*this).Index()].wt[i]; }
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){WT() = leftF.cWT(); T::ImportLocal(leftF);}
+	void ImportLocal(const LeftF & leftF){WT() = leftF.cWT(); TT::ImportLocal(leftF);}
   static bool HasWedgeTexCoord()   { return true; }
   static bool HasWedgeTexCoordOcf()   { return true; }
 };

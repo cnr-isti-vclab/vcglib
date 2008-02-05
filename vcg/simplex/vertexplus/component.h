@@ -24,6 +24,12 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.24  2008/02/04 21:26:49  ganovelli
+added ImportLocal which imports all local attributes into vertexplus and faceplus.
+A local attribute is everything (N(), C(), Q()....) except pointers to other simplices
+(i.e. FFAdj, VFAdj, VertexRef) which are set to NULL.
+Added some function for const attributes
+
 Revision 1.23  2007/06/04 15:40:22  turini
 Add vertex-tetrahedron adjacency component VTAdj.
 
@@ -240,7 +246,7 @@ public:
   TexCoordType &T() { return _t; }
   const TexCoordType &cT()  const { return _t; }
 	template < class LeftV>
-	void ImportLocal(const LeftV  & left ) { T() = left.cT(); T::ImportLocal( left); }
+	void ImportLocal(const LeftV  & left ) { T() = left.cT(); TT::ImportLocal( left); }
   static bool HasTexCoord()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("TexCoord"));TT::Name(name);}
 
