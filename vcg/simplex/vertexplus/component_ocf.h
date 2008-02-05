@@ -24,6 +24,12 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2008/02/04 21:26:49  ganovelli
+added ImportLocal which imports all local attributes into vertexplus and faceplus.
+A local attribute is everything (N(), C(), Q()....) except pointers to other simplices
+(i.e. FFAdj, VFAdj, VertexRef) which are set to NULL.
+Added some function for const attributes
+
 Revision 1.11  2007/12/11 18:25:31  cignoni
 added missing include limits
 
@@ -250,7 +256,7 @@ public:
     return (*this).Base().AV[(*this).Index()()]._zp; 
   }
 	template <class LeftV>
-	void ImportLocal(const LeftV & leftv){VFp() = NULL; VFi() = -1; T::ImporLocal(leftV);}
+	void ImportLocal(const LeftV & leftV){VFp() = NULL; VFi() = -1; T::ImporLocal(leftV);}
 
   static bool HasVFAdjacency()   {   return true; }
   static bool HasVFAdjacencyOcf()   { return true; }
@@ -276,7 +282,7 @@ public:
     return (*this).Base().NV[(*this).Index()];  }
 
 	template <class LeftV>
-	void ImportLocal(const LeftV & leftv){ N() = leftV.cN(); T::ImporLocal(leftV);}
+	void ImportLocal(const LeftV & leftV){ N() = leftV.cN(); T::ImporLocal(leftV);}
 };
 
 template <class T> class Normal3sOcf: public NormalOcf<vcg::Point3s, T> {};
@@ -291,7 +297,7 @@ public:
   ColorType &C() { assert((*this).Base().NormalEnabled); return (*this).Base().CV[(*this).Index()()]; }
   const ColorType &cC() const { assert((*this).Base().NormalEnabled); return (*this).Base().CV[(*this).Index()()]; }
 	template <class LeftV>
-	void ImportLocal(const LeftV & leftv){ C() = leftV.cC(); T::ImporLocal(leftV);}
+	void ImportLocal(const LeftV & leftV){ C() = leftV.cC(); T::ImporLocal(leftV);}
   static bool HasColor()   { return true; }
   static bool HasColorOcf()   { return true; }
 };
@@ -305,7 +311,7 @@ public:
   typedef A QualityType;
   QualityType &Q() { assert((*this).Base().QualityEnabled); return (*this).Base().QV[(*this).Index()()]; }
 	template <class LeftV>
-	void ImportLocal(const LeftV & leftv){ Q() = leftV.cQ(); T::ImporLocal(leftV);}
+	void ImportLocal(const LeftV & leftV){ Q() = leftV.cQ(); T::ImporLocal(leftV);}
   static bool HasQuality()   { return true; }
   static bool HasQualityOcf()   { return true; }
 };
