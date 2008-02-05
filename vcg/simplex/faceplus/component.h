@@ -24,6 +24,12 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2008/02/04 21:26:45  ganovelli
+added ImportLocal which imports all local attributes into vertexplus and faceplus.
+A local attribute is everything (N(), C(), Q()....) except pointers to other simplices
+(i.e. FFAdj, VFAdj, VertexRef) which are set to NULL.
+Added some function for const attributes
+
 Revision 1.20  2008/01/28 08:42:51  cignoni
 added assert when writing on empty data members
 
@@ -116,7 +122,7 @@ public:
 	inline const typename T::CoordType & P( const int j ) const {	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
 	inline const typename T::CoordType &cP( const int j ) const	{	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
 	template <class LeftF>
-	void ImportLocal(T::ImportLocal(leftF);}
+	void ImportLocal(const LeftF & leftF) {T::ImportLocal(leftF);}
   static bool HasVertexRef()   { return false; }
 	static void Name(std::vector<std::string> & name){T::Name(name);}
 
