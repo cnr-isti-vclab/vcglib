@@ -4,8 +4,49 @@
 #include <wrap/dae/xmldocumentmanaging.h>
 #include <vcg/space/point4.h>
 #include <QtGui/QImage>
-#include <wrap/dae/meshaccessors.h>
 #include <QtCore/QVector>
+
+
+template<typename POINTTYPE>
+struct CoordNumber
+{
+public:
+	static unsigned int coord()
+	{
+		return 0;
+	}
+};
+
+template<>
+struct CoordNumber<vcg::Point2f>
+{
+public:
+	static unsigned int coord() 
+	{
+		return 2;
+	}
+};
+
+template<>
+struct CoordNumber<vcg::Point3f>
+{
+public:
+	static unsigned int coord() 
+	{
+		return 3;
+	}
+};
+
+template<>
+struct CoordNumber<vcg::Point4f>
+{
+public:
+	static unsigned int coord() 
+	{
+		return 4;
+	}
+};
+
 
 namespace Collada
 {
@@ -438,39 +479,78 @@ namespace Tags
 	class FloatArrayTag : public XMLLeafTag
 	{
 	public:
-		template<typename MESHTYPE,typename SIMPLEXACCESSOR>
-		FloatArrayTag(const QString& id,const int count,const MESHTYPE& m,const AccessorComponentNumberInfo<MESHTYPE,SIMPLEXACCESSOR>& accessor)
-			:XMLLeafTag("float_array")
-		{
-			_attributes.push_back(TagAttribute("id",id));
-			_attributes.push_back(TagAttribute("count",QString::number(count)));
-			for(typename SIMPLEXACCESSOR::ConstIterator it= accessor._a.begin();it != accessor._a.end(); ++it)
-			{
-				for(unsigned int ii = 0; ii < accessor._return_value_component_number;++ii)
-					_text.push_back(QString::number(accessor._a(*it)[ii]));
-			}
-		}
-	};
+		enum ARRAYSEMANTIC {VERTPOSITION,VERTNORMAL,FACENORMAL,WEDGETEXCOORD};
 
-	class FloatWedgeArrayTag : public XMLLeafTag
-	{
-	public:
-		template<typename MESHTYPE,typename SIMPLEXACCESSOR>
-		FloatWedgeArrayTag(const QString& id,const int count,const MESHTYPE& m,const AccessorComponentNumberInfo<MESHTYPE,SIMPLEXACCESSOR>& accessor)
+		template<typename MESHTYPE>
+		FloatArrayTag(const QString& id,const int count,const MESHTYPE& m,ARRAYSEMANTIC sem,const unsigned int componenttype)
 			:XMLLeafTag("float_array")
 		{
 			_attributes.push_back(TagAttribute("id",id));
 			_attributes.push_back(TagAttribute("count",QString::number(count)));
-			for(typename SIMPLEXACCESSOR::ConstIterator it= accessor._a.begin();it != accessor._a.end(); ++it)
+
+			if ((sem == VERTPOSITION) || (sem == VERTNORMAL))
 			{
-				for(unsigned int ii = 0; ii < 3;++ii)
-				{				
-					_text.push_back(QString::number(accessor._a(*it,ii).U()));
-					_text.push_back(QString::number(accessor._a(*it,ii).V()));
+				for(typename MESHTYPE::ConstVertexIterator vit = m.vert.begin();vit != m.vert.end();++vit)
+				{
+					for(unsigned int ii = 0; ii < componenttype;++ii)
+					{
+						if (sem == VERTPOSITION)
+							_text.push_back(QString::number(vit->P()[ii]));
+						else
+						{
+							typename MESHTYPE::VertexType::NormalType r = vit->cN();
+							r.Normalize();
+							_text.push_back(QString::number(r[ii]));
+					
+						}
+					}
+				}
+			}
+			else
+			{
+				for(typename MESHTYPE::ConstFaceIterator fit = m.face.begin();fit != m.face.end();++fit)
+				{
+					if (sem == FACENORMAL)
+					{
+						for(unsigned int ii = 0; ii < componenttype;++ii)
+						{
+								typename MESHTYPE::FaceType::NormalType r = fit->cN();
+								r.Normalize();
+								_text.push_back(QString::number(r[ii]));
+						}
+					}
+					else
+					{
+						for(unsigned int ii = 0; ii < 3;++ii)
+						{				
+							_text.push_back(QString::number(fit->cWT(ii).U()));
+							_text.push_back(QString::number(fit->cWT(ii).V()));
+						}
+					}
 				}
 			}
 		}
 	};
+
+	//class FloatWedgeArrayTag : public XMLLeafTag
+	//{
+	//public:
+	//	template<typename MESHTYPE,typename SIMPLEXACCESSOR>
+	//	FloatWedgeArrayTag(const QString& id,const int count,const MESHTYPE& m,const AccessorComponentNumberInfo<MESHTYPE,SIMPLEXACCESSOR>& accessor)
+	//		:XMLLeafTag("float_array")
+	//	{
+	//		_attributes.push_back(TagAttribute("id",id));
+	//		_attributes.push_back(TagAttribute("count",QString::number(count)));
+	//		for(typename SIMPLEXACCESSOR::ConstIterator it= accessor._a.begin();it != accessor._a.end(); ++it)
+	//		{
+	//			for(unsigned int ii = 0; ii < 3;++ii)
+	//			{				
+	//				_text.push_back(QString::number(accessor._a(*it,ii).U()));
+	//				_text.push_back(QString::number(accessor._a(*it,ii).V()));
+	//			}
+	//		}
+	//	}
+	//};
 
 	class AccessorTag : public XMLTag
 	{
@@ -585,42 +665,6 @@ namespace Tags
 				++cont;
 			}
 		}
-
-	/*	template<typename MESHTYPE,typename POLYGONACCESSOR1,typename POLYGONACCESSOR2>
-		PTag(const MESHTYPE& m,const POLYGONACCESSOR1>& p1,const AccessorInfo<POLYGONACCESSOR2>& p2)
-			:XMLLeafTag("p")
-		{
-			for(MESHTYPE::ConstFaceIterator it= m.face.begin();it != m.face.end(); ++it)
-			{
-				for(const unsigned int ii = 0; ii < p1._return_value_component_number;++ii)
-				{
-					_text.push_back(QSTring::number(p1._a(*it)[ii]);
-				
-				}
-			}
-		}
-
-		template<typename MESHTYPE,typename POLYGONACCESSOR1>
-		PTag(const MESHTYPE& m,const AccessorInfo<POLYGONACCESSOR1>& p1)
-			:XMLLeafTag("p")
-		{
-			for(MESHTYPE::ConstFaceIterator it= m.face.begin();it != m.face.end(); ++it)
-			{
-				for(const unsigned int ii = 0; ii < p1._return_value_component_number;++ii)
-					_text.push_back(QSTring::number(p1._a(*it)[ii]);
-			}
-		}
-
-		template<typename MESHTYPE,typename POLYGONACCESSOR1>
-		PTag(const MESHTYPE& m,const AccessorInfo<POLYGONACCESSOR1>& p1)
-			:XMLLeafTag("p")
-		{
-			for(MESHTYPE::ConstFaceIterator it= m.face.begin();it != m.face.end(); ++it)
-			{
-				for(const unsigned int ii = 0; ii < p1._return_value_component_number;++ii)
-					_text.push_back(QSTring::number(p1._a(*it)[ii]);
-			}
-		}*/
 	};
 
 	class LibraryVisualScenesTag : public XMLTag
@@ -908,11 +952,11 @@ public:
 		XNode* geometrynode = new XNode(new Tags::GeometryTag(shape+"-lib",shape));
 		XNode* meshnode = new XNode(new Tags::MeshTag());
 		XNode* sourcepos = new XNode(new Tags::SourceTag(shape+"-lib-positions","position"));
-		AccessorComponentNumberInfo<MESHMODELTYPE,MeshAccessors::VertexPositionAccessor<const MESHMODELTYPE>> acc(m);
-		acc._return_value_component_number = CoordNumber<MESHMODELTYPE::CoordType>::coord();
-		XLeaf* floatarr = new XLeaf(new Tags::FloatArrayTag(shape+"-lib-positions-array",m.vert.size() * CoordNumber<MESHMODELTYPE::CoordType>::coord(),m,acc));
+		//AccessorComponentNumberInfo<MESHMODELTYPE,MeshAccessors::VertexPositionAccessor<const MESHMODELTYPE>> acc(m);
+		unsigned int return_component_number = CoordNumber<MESHMODELTYPE::CoordType>::coord();
+		XLeaf* floatarr = new XLeaf(new Tags::FloatArrayTag(shape+"-lib-positions-array",m.vert.size() * return_component_number,m,Tags::FloatArrayTag::VERTPOSITION,return_component_number));
 		XNode* techcommnode = new XNode(new Tags::TechniqueCommonTag());
-		XNode* accessornode = new XNode(new Tags::AccessorTag(m.vert.size(),shape+"-lib-positions-array",acc._return_value_component_number));
+		XNode* accessornode = new XNode(new Tags::AccessorTag(m.vert.size(),shape+"-lib-positions-array",return_component_number));
 		XNode* paramx = new XNode(new Tags::ParamTag("X","float"));
 		XNode* paramy = new XNode(new Tags::ParamTag("Y","float"));
 		XNode* paramz = new XNode(new Tags::ParamTag("Z","float"));
@@ -933,12 +977,11 @@ public:
 		if (normalmask)
 		{
 			XNode* sourcenormal = new XNode(new Tags::SourceTag(shape+"-lib-normals","normal"));
-			AccessorComponentNumberInfo<MESHMODELTYPE,MeshAccessors::PolygonNormalAccessor<const MESHMODELTYPE>> pnacc(m);
-			pnacc._return_value_component_number = CoordNumber<MESHMODELTYPE::FaceType::NormalType>::coord();
+
 			//we export only triangular face
-			XLeaf* floatnormarr = new XLeaf(new Tags::FloatArrayTag(shape+"-lib-normals-array",m.face.size() * pnacc._return_value_component_number,m,pnacc));
+			XLeaf* floatnormarr = new XLeaf(new Tags::FloatArrayTag(shape+"-lib-normals-array",m.face.size() * return_component_number,m,Tags::FloatArrayTag::FACENORMAL,return_component_number));
 			XNode* techcommnormnode = new XNode(new Tags::TechniqueCommonTag());
-			XNode* accessornormnode = new XNode(new Tags::AccessorTag(m.face.size(),shape+"-lib-normals-array",acc._return_value_component_number));
+			XNode* accessornormnode = new XNode(new Tags::AccessorTag(m.face.size(),shape+"-lib-normals-array",return_component_number));
 			
 			//I have to make up the following piece of code
 			XNode* paramnormx = new XNode(new Tags::ParamTag("X","float"));
@@ -961,12 +1004,11 @@ public:
 		if (texmask)
 		{
 			XNode* sourcewedge = new XNode(new Tags::SourceTag(shape+"-lib-map","map"));
-			AccessorComponentNumberInfo<MESHMODELTYPE,MeshAccessors::PolygonWedgeTextureCoordinateAccessor<const MESHMODELTYPE>> pwacc(m);
-			pwacc._return_value_component_number = CoordNumber<MESHMODELTYPE::FaceType::TexCoordType::PointType>::coord();
+			return_component_number = CoordNumber<MESHMODELTYPE::FaceType::TexCoordType::PointType>::coord();
 			//we export only triangular face
-			XLeaf* floatwedgearr = new XLeaf(new Tags::FloatWedgeArrayTag(shape+"-lib-map-array",m.face.size() * pwacc._return_value_component_number * edgefacenum,m,pwacc));
+			XLeaf* floatwedgearr = new XLeaf(new Tags::FloatArrayTag(shape+"-lib-map-array",m.face.size() * return_component_number * edgefacenum,m,Tags::FloatArrayTag::WEDGETEXCOORD,return_component_number));
 			XNode* techcommwedgenode = new XNode(new Tags::TechniqueCommonTag());
-			XNode* accessorwedgenode = new XNode(new Tags::AccessorTag(m.face.size() * edgefacenum,shape+"-lib-map-array",pwacc._return_value_component_number));
+			XNode* accessorwedgenode = new XNode(new Tags::AccessorTag(m.face.size() * edgefacenum,shape+"-lib-map-array",return_component_number));
 
 			//I have to make up the following piece of code
 			XNode* paramwedgeu = new XNode(new Tags::ParamTag("U","float"));
@@ -1020,7 +1062,7 @@ public:
 				trianglesnode = new XNode(new Tags::TrianglesTag(m.face.size()));
 			}
 			else
-				trianglesnode = new XNode(new Tags::TrianglesTag(mytripatches[indmat].size(),"instancematerial" + QString::number(indmat)));
+					trianglesnode = new XNode(new Tags::TrianglesTag(mytripatches[indmat].size(),"instancematerial" + QString::number(indmat)));
 
 			XNode* inputtrinode = new XNode(new Tags::InputTag(0,"VERTEX",shape+"-lib-vertices"));
 			trianglesnode->_sons.push_back(inputtrinode);
@@ -1046,7 +1088,8 @@ public:
 			meshnode->_sons.push_back(trianglesnode);
 			
 			++indmat;
-			++itp;
+			if (itp != mytripatches.end()) 
+				++itp;
 		}while(itp != mytripatches.end());
 		
 		connectHierarchyNode(libgeo,geometrynode,meshnode);
