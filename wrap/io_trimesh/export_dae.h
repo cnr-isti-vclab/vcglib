@@ -23,10 +23,10 @@ namespace io
 				XMLDocument* document = Collada::DocumentManager::createColladaDocument(model,mask);
 				stream.write(*document);
 				Collada::DocumentManager::destroyColladaDocument(document);
-				return UtilDAE::DAEError::E_NOERROR;
+				return UtilDAE::E_NOERROR;
 			}
 			else 
-				return UtilDAE::DAEError::E_CANTSAVE;
+				return UtilDAE::E_CANTSAVE;
 		}
 
 		static int GetExportMaskCapability()
