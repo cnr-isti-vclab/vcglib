@@ -1048,7 +1048,7 @@ public:
 		//		trianglesnode = new XNode(new Tags::TrianglesTag(m.face.size(),"instancematerial"));
 		//}
 		
-		QVector<QVector<int>> mytripatches;
+		QVector<QVector<int> > mytripatches;
 		if ((texmask) && (m.textures.size() != 0))
 			splitMeshInTexturedPatches(m,mytripatches);
 		
