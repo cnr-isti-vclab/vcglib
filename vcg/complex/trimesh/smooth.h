@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.15  2007/11/05 23:47:20  cignoni
+added selection to the pasodoble smoothing
+
 Revision 1.14  2007/03/27 09:40:47  cignoni
 Changed use of selected to visited flags. Improved variable namings and comments
 
@@ -686,7 +689,7 @@ void NormalSmooth(MESH_TYPE &m,
 	typedef typename vcg::face::VFIterator<typename MESH_TYPE::FaceType> VFLocalIterator;
   typename MESH_TYPE::FaceIterator fi;
 	
-	for(fi=m.face.begin();fi!=m.face.end();++fi)
+	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
 	{
 		CoordType bc=Barycenter<typename MESH_TYPE::FaceType>(*fi);
     // 1) Clear all the visited flag of faces that are vertex-adjacent to fi
