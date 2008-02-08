@@ -58,9 +58,170 @@ namespace vcg {
 namespace tri {
 namespace io {
 
+
+namespace QtUtilityFunctions
+{
+	static void splitFilePath(const QString& filepath,QStringList& trim_path)
+	{
+		QString file_uniformed = filepath;
+		file_uniformed.replace(QString("\\"),QString("/"));
+		trim_path = file_uniformed.split("/");
+	}
+
+	static QString fileNameFromTrimmedPath(const QStringList& file_path)
+	{
+
+		if (file_path.size() > 0)
+			return file_path.at(file_path.size() - 1);
+		else 
+			return QString();
+	}
+
+	static QString fileNameFromPath(const QString& filepath)
+	{
+		QStringList list;
+		splitFilePath(filepath,list);
+		return fileNameFromTrimmedPath(list);
+	}
+
+	static QString pathWithoutFileName(const QString& filepath)
+	{
+		QString tmp(filepath);
+		tmp.remove(fileNameFromPath(filepath));
+		return tmp;
+	}
+
+	static QString fileExtension(const QString& filepath)
+	{
+		QStringList trim_list;
+		splitFilePath(filepath,trim_list);
+		QString file = fileNameFromTrimmedPath(trim_list);
+		trim_list = file.split(".");
+		return trim_list.at(trim_list.size() - 1);
+	}
+}
+
+class TGA_Exporter
+{
+public:
+
+	struct TGAHeader
+	{
+		unsigned char  identsize;          
+		unsigned char  colourmaptype;      
+		unsigned char  imagetype;          
+
+		unsigned char colormapspecs[5];
+
+		short xstart;             
+		short ystart;             
+		short width;              
+		short height;             
+		unsigned char  bits;               
+		unsigned char  descriptor;         
+	};
+
+	static void convert(const QString& outfile,const QImage& im)
+	{
+		TGAHeader tga;
+		tga.identsize = 0;
+		tga.colourmaptype = 0;
+		tga.imagetype = 2;
+
+		memset(tga.colormapspecs,0,5);
+		tga.xstart = (short) im.offset().x();
+		tga.ystart = (short) im.offset().y();
+		tga.height = (short) im.height();
+		tga.width =  (short) im.width();
+
+		std::ofstream file(qPrintable(outfile),std::ofstream::binary);
+		unsigned char* tmpchan;
+		int totbyte;
+		if (im.hasAlphaChannel())
+		{
+			//is a 8-digits binary number code  
+			// always 0 0  |  mirroring | bits 
+			//(future uses)|  image     | for alpha-channel
+			//--------------------------------------------			
+			//     7 6     |      5 4   |      3 2 1 0
+			//--------------------------------------------
+			//     0 0     |      1 0   |      1 0 0 0
+			tga.descriptor = (char) 40;
+			tga.bits = (char) 32;
+		}
+		else
+		{
+			//is a 8-digits binary number code  
+			// always 0 0  |  mirroring | bits 
+			//(future uses)|  image     | for alpha-channel
+			//--------------------------------------------			
+			//     7 6     |      5 4   |      3 2 1 0
+			//--------------------------------------------
+			//     0 0     |      1 0   |      0 0 0 0
+			tga.descriptor = (char) 32;
+			tga.bits = (char) 24;
+		}
+
+		totbyte = tga.height * tga.width * (tga.bits / 8);
+
+		if (im.hasAlphaChannel())
+			tmpchan = const_cast<unsigned char*>(im.bits());
+		else
+		{
+			tmpchan = new unsigned char[totbyte];
+
+			int ii = 0;
+			while(ii < totbyte)
+			{
+				tmpchan[ii] = const_cast<unsigned char*>(im.bits())[ii + (ii/3)];
+				++ii;
+			}
+		}
+
+		file.write((char *) &tga,sizeof(tga));
+		file.write(reinterpret_cast<const char*>(tmpchan),totbyte);
+		file.close();
+	}
+	
+	template<typename SaveMeshType>
+	static void convertTexturesFiles(SaveMeshType& m,const QString& file_path,QStringList& conv_file)
+	{
+		for(unsigned int ii = 0; ii < m.textures.size(); ++ii)
+		{
+			QString qtmp(m.textures[ii].c_str());
+			QString ext = QtUtilityFunctions::fileExtension(qtmp);
+			if (ext.toLower() != "tga")
+			{
+				QImage img(qtmp);
+				QString stmp;
+				if ((file_path.at(file_path.length() - 1) != '/') || (file_path.at(file_path.length() - 1) != '\\'))
+					stmp = file_path + QString("/");
+				else
+					stmp = file_path;
+				qtmp = stmp + qtmp.remove(ext) + "tga";
+				m.textures[ii] = qtmp.toStdString();
+				TGA_Exporter::convert(qtmp,img);
+				conv_file.push_back(qtmp);
+			}
+		}
+	}
+
+	static void removeConvertedTexturesFiles(const QStringList& conv_file)
+	{
+		for(unsigned int ii = 0;ii < conv_file.size();++ii)
+		{
+			QDir dir(QtUtilityFunctions::pathWithoutFileName(conv_file[ii]));
+			dir.remove(QtUtilityFunctions::fileNameFromPath(conv_file[ii]));
+		}
+	}
+};
+
+
+
 template<typename SaveMeshType>
 class ExporterIDTF
 {
+
 public:
 typedef typename SaveMeshType::VertexPointer VertexPointer;
 typedef typename SaveMeshType::ScalarType ScalarType;
@@ -87,10 +248,39 @@ typedef typename SaveMeshType::CoordType CoordType;
 		if(error>0 || error<0) return "Unknown error";
 		else return dae_error_msg[error];
 	};
+	
+	static QStringList covertInTGATextures(SaveMeshType& m,QString& path,QStringList& textures_to_be_restored)
+	{
+		//if there are textures file that aren't in tga format I have to convert them
+		//I maintain the converted file name (i.e. file_path + originalname without extension + tga) in mesh.textures but I have to revert to the original ones
+		//before the function return. 
+		for(unsigned int ii = 0; ii < m.textures.size();++ii)
+			textures_to_be_restored.push_back(m.textures[ii].c_str());
+
+		//tmp vector to save the tga created files that should be deleted.
+		QStringList convfile;
+		vcg::tri::io::TGA_Exporter::convertTexturesFiles(m,path,convfile);
+		return convfile;
+	}
+
+	static void removeConvertedTGATextures(const QStringList& convfile)
+	{
+		//if some tga files have been created I have to delete them
+		vcg::tri::io::TGA_Exporter::removeConvertedTexturesFiles(convfile);
+	}
+
+	static void restoreConvertedTextures(SaveMeshType& mesh_with_textures_to_be_restored,const QStringList& textures_to_be_restored)
+	{
+		mesh_with_textures_to_be_restored.textures.clear();
+		for(QStringList::ConstIterator it = textures_to_be_restored.begin();it != textures_to_be_restored.end();++it)
+			mesh_with_textures_to_be_restored.textures.push_back(it->toStdString());
+	}
 
 	static int Save(SaveMeshType& m,const char* file,const int mask)
 	{
+		
 		Output_File idtf(file);
+
 		idtf.write(0,"FILE_FORMAT \"IDTF\"");
 		idtf.write(0,"FORMAT_VERSION 100\n");
 
@@ -166,7 +356,10 @@ typedef typename SaveMeshType::CoordType CoordType;
 		idtf.write(3,"FACE_COUNT " + TextUtility::nmbToStr(m.face.size()));
 		idtf.write(3,"MODEL_POSITION_COUNT " + TextUtility::nmbToStr(m.vert.size()));
 		idtf.write(3,"MODEL_NORMAL_COUNT " + TextUtility::nmbToStr(m.face.size() * 3));
-		idtf.write(3,"MODEL_DIFFUSE_COLOR_COUNT 0");
+		if (mask & vcg::tri::io::Mask::IOM_VERTCOLOR)
+			idtf.write(3,"MODEL_DIFFUSE_COLOR_COUNT " + TextUtility::nmbToStr(m.face.size() * 3));
+		else 
+			idtf.write(3,"MODEL_DIFFUSE_COLOR_COUNT 0");
 		idtf.write(3,"MODEL_SPECULAR_COLOR_COUNT 0");
 		if (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD) idtf.write(3,"MODEL_TEXTURE_COORD_COUNT " + TextUtility::nmbToStr(m.face.size() * 3));
 		else idtf.write(3,"MODEL_TEXTURE_COORD_COUNT 0");
@@ -221,14 +414,28 @@ typedef typename SaveMeshType::CoordType CoordType;
 		idtf.write(3,"}");
 
 		idtf.write(3,"MESH_FACE_SHADING_LIST {");
+		for(FaceIterator fit = m.face.begin();fit != m.face.end();++fit)  
+		{
+			unsigned int texind = 0;
+			if (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD) 
+				texind = fit->WT(0).N();
+			idtf.write(4,TextUtility::nmbToStr(texind));
+		}
+		idtf.write(3,"}");
+
+		if (mask & vcg::tri::io::Mask::IOM_VERTCOLOR) 
+		{
+			idtf.write(3,"MESH_FACE_DIFFUSE_COLOR_LIST {");
+			nn = 0;
 			for(FaceIterator fit = m.face.begin();fit != m.face.end();++fit)  
 			{
-				unsigned int texind = 0;
-				if (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD) 
-					texind = fit->WT(0).N();
-				idtf.write(4,TextUtility::nmbToStr(texind));
+				idtf.write(4,TextUtility::nmbToStr(nn) + " " +
+					TextUtility::nmbToStr(nn + 2) + " " + 
+					TextUtility::nmbToStr(nn + 1));
+				nn += 3;
 			}
-		idtf.write(3,"}");
+			idtf.write(3,"}");
+		}
 		if (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD) 
 		{
 				idtf.write(3,"MESH_FACE_TEXTURE_COORD_LIST {"); 
@@ -242,7 +449,7 @@ typedef typename SaveMeshType::CoordType CoordType;
 		}
 
 		idtf.write(3,"MODEL_POSITION_LIST {");
-		vcg::tri::UpdateBounding<SaveMeshType>::Box(m);
+		//vcg::tri::UpdateBounding<SaveMeshType>::Box(m);
 		//ScalarType diag = m.bbox.Diag();
 		//CoordType center = m.bbox.Center();
 		for(ConstVertexIterator vit = m.vert.begin();vit != m.vert.end();++vit)  
@@ -266,7 +473,7 @@ typedef typename SaveMeshType::CoordType CoordType;
 			}
 		}
 		idtf.write(3,"}");
-
+	
 		if (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD)
 		{
 			idtf.write(3,"MODEL_TEXTURE_COORD_LIST {");
@@ -281,9 +488,37 @@ typedef typename SaveMeshType::CoordType CoordType;
 			idtf.write(3,"}");
 		}
 
+		if (mask & vcg::tri::io::Mask::IOM_VERTCOLOR)
+		{
+			idtf.write(3,"MODEL_DIFFUSE_COLOR_LIST {");
+			//ScalarType diag = m.bbox.Diag();
+			//CoordType center = m.bbox.Center();
+			for(FaceIterator vit = m.face.begin();vit != m.face.end();++vit)  
+			{
+				for (unsigned int ii =0; ii <3;++ii)
+					idtf.write(4,TextUtility::nmbToStr((int) vit->V(ii)->C().X()) + " " +
+						TextUtility::nmbToStr((int) vit->V(ii)->C().Y()) + " " + 
+						TextUtility::nmbToStr((int) vit->V(ii)->C().Z()) + " 0");
+			}
+			idtf.write(3,"}");
+		}
+
 		idtf.write(2,"}");
 		idtf.write(1,"}");
 		idtf.write(0,"}");
+
+		if (mask & vcg::tri::io::Mask::IOM_VERTCOLOR)
+		{
+			idtf.write(0,"RESOURCE_LIST \"SHADER\" {");
+			idtf.write(1,"RESOURCE_COUNT 1");
+			idtf.write(1,"RESOURCE 0 {");
+			idtf.write(2,"RESOURCE_NAME \"VcgMesh010\"");
+			idtf.write(2,"ATTRIBUTE_USE_VERTEX_COLOR \"TRUE\"");
+			idtf.write(2,"SHADER_ACTIVE_TEXTURE_COUNT 0");
+			idtf.write(1,"}");
+			idtf.write(0,"}");
+		}
+
 		if (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD)
 		{
 			idtf.write(0,"");
@@ -305,6 +540,7 @@ typedef typename SaveMeshType::CoordType CoordType;
 			idtf.write(1,"}");
 			idtf.write(0,"}");
 		}
+	
 		return E_NOERROR;
 	}
 
@@ -313,12 +549,12 @@ typedef typename SaveMeshType::CoordType CoordType;
 		int capability = 0;
 
 		//vert
-		capability |= Mask::IOM_VERTNORMAL;
-
+		capability |= vcg::tri::io::Mask::IOM_VERTNORMAL;
+		capability |= vcg::tri::io::Mask::IOM_VERTCOLOR;
 
 		////wedg
-		capability |= Mask::IOM_WEDGTEXCOORD;
-		capability |= Mask::IOM_WEDGNORMAL;
+		capability |= vcg::tri::io::Mask::IOM_WEDGTEXCOORD;
+		capability |= vcg::tri::io::Mask::IOM_WEDGNORMAL;
 
 		return capability;
 	}
