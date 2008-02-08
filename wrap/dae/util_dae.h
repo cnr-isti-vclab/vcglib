@@ -2,7 +2,6 @@
 #define __VCGLIB_UTILDAE
 
 
-
 #include <wrap/io_trimesh/additionalinfo.h>
 #include <vcg/complex/trimesh/update/normal.h>
 #include <vcg/complex/trimesh/allocate.h>
@@ -22,7 +21,6 @@
 
 #include <vector>
 
-#include <vcg/simplex/vertex/with/vn.h>
 #include <vcg/simplex/edge/edge.h>
 
 #include <wrap/gl/glu_tesselator.h>
