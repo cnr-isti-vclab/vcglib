@@ -249,7 +249,7 @@ typedef typename SaveMeshType::CoordType CoordType;
 		else return dae_error_msg[error];
 	};
 	
-	static QStringList covertInTGATextures(SaveMeshType& m,QString& path,QStringList& textures_to_be_restored)
+	static QStringList convertInTGATextures(SaveMeshType& m,const QString& path,QStringList& textures_to_be_restored)
 	{
 		//if there are textures file that aren't in tga format I have to convert them
 		//I maintain the converted file name (i.e. file_path + originalname without extension + tga) in mesh.textures but I have to revert to the original ones
