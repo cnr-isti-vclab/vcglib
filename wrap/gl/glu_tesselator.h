@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2007/12/01 18:09:14  m_di_benedetto
+Added cast to prevent pointer truncation warning/error messages.
+
 Revision 1.3  2007/08/28 05:43:56  cignoni
 Added ifdef needed for mac gcc compilation
 
@@ -115,7 +118,7 @@ class glu_tesselator
 
 			this_type::do_tesselation(outlines, t_data);
 
-			int k = 0;
+			//int k = 0;
 			for (size_t i=0; i<t_data.size(); ++i)
 			{
 				const size_t st = t_data[i].indices.size();
