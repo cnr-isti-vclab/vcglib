@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2007/05/24 06:56:54  cignoni
+Corrected gcc warning
+
 Revision 1.14  2006/06/10 12:49:05  mariolatronico
 file length is now computed using fseek and ftell
 
@@ -223,19 +226,35 @@ static int OpenBinary( OpenMeshType &m, const char * filename, CallBackPos *cb=0
 
     STLFacet f;
     int cnt=0;
-
+		int ret;
     /* Read a single facet from an ASCII .STL file */
     while(!feof(fp))
     {
       if((++cnt)%1000) cb( (ftell(fp)*100)/fileLen, "STL Mesh Loading");	
 
-      fscanf(fp, "%*s %*s %f %f %f\n", &f.n.X(), &f.n.Y(), &f.n.Z());
-      fscanf(fp, "%*s %*s");
-      fscanf(fp, "%*s %f %f %f\n", &f.v[0].X(),  &f.v[0].Y(),  &f.v[0].Z());
-      fscanf(fp, "%*s %f %f %f\n", &f.v[1].X(),  &f.v[1].Y(),  &f.v[1].Z());
-      fscanf(fp, "%*s %f %f %f\n", &f.v[2].X(),  &f.v[2].Y(),  &f.v[2].Z());
-      fscanf(fp, "%*s"); // end loop
-      fscanf(fp, "%*s"); // end facet
+      ret=fscanf(fp, "%*s %*s %f %f %f\n", &f.n.X(), &f.n.Y(), &f.n.Z());
+			if(ret!=3) 
+			{
+				// we could be in the case of a multiple solid object, where after a endfaced instead of another facet we have to skip two lines:
+				//     endloop
+				//	 endfacet
+				//endsolid     <- continue on ret==0 will skip this line
+				//solid ascii  <- and this one.
+				//   facet normal 0.000000e+000 7.700727e-001 -6.379562e-001
+				continue; 
+			}
+      ret=fscanf(fp, "%*s %*s");
+      ret=fscanf(fp, "%*s %f %f %f\n", &f.v[0].X(),  &f.v[0].Y(),  &f.v[0].Z());
+			if(ret!=3) 
+				return E_UNESPECTEDEOF;
+      ret=fscanf(fp, "%*s %f %f %f\n", &f.v[1].X(),  &f.v[1].Y(),  &f.v[1].Z());
+			if(ret!=3) 
+				return E_UNESPECTEDEOF;
+      ret=fscanf(fp, "%*s %f %f %f\n", &f.v[2].X(),  &f.v[2].Y(),  &f.v[2].Z());
+			if(ret!=3) 
+				return E_UNESPECTEDEOF;
+      ret=fscanf(fp, "%*s"); // end loop
+      ret=fscanf(fp, "%*s"); // end facet
       if(feof(fp)) break;
       FaceIterator fi=Allocator<OpenMeshType>::AddFaces(m,1);
       VertexIterator vi=Allocator<OpenMeshType>::AddVertices(m,3);
