@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2007/05/31 09:39:55  cignoni
+Small gcc compiling  issues
+
 Revision 1.11  2006/07/06 12:30:32  ganovelli
 misleading comment removed
 
@@ -106,20 +109,29 @@ void SubSet(S_MESH_TYPE & m, STL_CONT & subSet)
   std::vector< InsertedV<S_MESH_TYPE> > newVertices;
   typename STL_CONT::iterator pfi;
   typename S_MESH_TYPE::VertexIterator vi;
+  typename S_MESH_TYPE::FaceIterator fi;
+  typedef typename S_MESH_TYPE::VertexType S_VertexType;
   std::vector<typename S_MESH_TYPE::VertexPointer> redirect;
+
   
+	fi = vcg::tri::Allocator<S_MESH_TYPE>::AddFaces(m,subSet.size());
   for(pfi=subSet.begin(); pfi!=subSet.end(); ++pfi)
   {		
 		assert(!(*pfi)->IsD());
-		m.face.push_back(*(*pfi));
+	//	m.face.push_back(*(*pfi));
+		(*fi).ImportLocal(**pfi);
+		(*fi).V(0) = (S_VertexType*)(void*)(*pfi)->V(0);
+		(*fi).V(1) = (S_VertexType*)(void*)(*pfi)->V(1);
+		(*fi).V(2) = (S_VertexType*)(void*)(*pfi)->V(2);
+		++fi;
   }
   
-  typename S_MESH_TYPE::FaceIterator fi;
+
   for(fi=m.face.begin(); fi!=m.face.end(); ++fi)
   {
-    newVertices.push_back(InsertedV<S_MESH_TYPE>((*fi).V(0), &(*fi),0));
-	newVertices.push_back(InsertedV<S_MESH_TYPE>((*fi).V(1), &(*fi),1));
-	newVertices.push_back(InsertedV<S_MESH_TYPE>((*fi).V(2), &(*fi),2));
+		newVertices.push_back(InsertedV<S_MESH_TYPE>((*fi).V(0), &(*fi),0));
+		newVertices.push_back(InsertedV<S_MESH_TYPE>((*fi).V(1), &(*fi),1));
+		newVertices.push_back(InsertedV<S_MESH_TYPE>((*fi).V(2), &(*fi),2));
   }
   
   sort(newVertices.begin(), newVertices.end());
@@ -137,8 +149,9 @@ void SubSet(S_MESH_TYPE & m, STL_CONT & subSet)
   }
   
   typename std::vector< InsertedV<S_MESH_TYPE> >::iterator newE=unique(newVertices.begin(), newVertices.end());
-  for(curr=newVertices.begin(); curr!=newE; ++curr)
-    m.vert.push_back(*((*curr).v));
+	vi = vcg::tri::Allocator<S_MESH_TYPE>::AddVertices(m,newVertices.size());
+		for(curr=newVertices.begin(); curr!=newE; ++curr,++vi)
+    (*vi).ImportLocal(*((*curr).v));
   
   for(vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
     redirect.push_back(&(*vi));
@@ -151,7 +164,6 @@ void SubSet(S_MESH_TYPE & m, STL_CONT & subSet)
   }
   m.vn=(int)m.vert.size();
   m.fn=(int)m.face.size();
-  vcg::tri::UpdateFlags<S_MESH_TYPE>::Clear(m);
 }
 
 
