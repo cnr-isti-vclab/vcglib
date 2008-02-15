@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2007/10/22 14:39:54  cignoni
+corrected bug into the drawsphere (thanks to nico and guido!)
+
 Revision 1.6  2007/08/17 09:19:40  cignoni
 glEnable (GL_LINE_SMOOTH) should go before changing the linewidth.
 
@@ -215,7 +218,7 @@ Point3f HitSphere (Trackball * tb, const Point3f & p)
   Line3fN ln = tb->camera.ViewLineFromWindow (Point3f (p[0], p[1], 0));
   Point3f viewpoint = tb->camera.ViewPoint ();
   Plane3f vp = GetViewPlane (tb->camera, tb->center);
-  Point3f hit, hitPlane, hitSphere, hitSphere1, hitSphere2, hitHyper;
+  Point3f hit(0,0,0), hitPlane(0,0,0), hitSphere(0,0,0), hitSphere1(0,0,0), hitSphere2(0,0,0), hitHyper(0,0,0);
   IntersectionLinePlane < float >(vp, ln, hitPlane);
 
   Sphere3f sphere (tb->center, tb->radius);
