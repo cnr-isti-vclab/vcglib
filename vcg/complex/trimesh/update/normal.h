@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2007/12/13 17:57:27  cignoni
+removed harmless gcc warnings
+
 Revision 1.17  2007/11/23 17:02:47  cignoni
 disambiguated pow call (again)
 
@@ -90,6 +93,7 @@ Initial commit
 #define __VCG_TRI_UPDATE_NORMALS
 
 #include <vcg/space/triangle3.h>
+#include <vcg/math/matrix33.h>
 
 namespace vcg {
 namespace tri {
