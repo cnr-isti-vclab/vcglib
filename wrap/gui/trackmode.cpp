@@ -24,6 +24,11 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.25  2007/10/24 10:39:07  ponchio
+#include <gl/glew.h> -> #include <GL/glew.h>
+
+(it is case sensitive under linux...)
+
 Revision 1.24  2007/07/09 22:47:18  benedetti
 Removed using namespace std and modified accordingly.
 
@@ -261,7 +266,8 @@ void PlaneMode::Draw(Trackball * tb){
 void CylinderMode::Apply (Trackball * tb, float WheelNotch)
 {
   const float PI2=6.283185307179586232f;
-  tb->track.rot = tb->last_track.rot * Quaternionf (WheelNotch/(tb->radius * PI2),axis.Direction());
+  float angle= (snap==0.0) ? WheelNotch/(tb->radius * PI2) : WheelNotch * snap; 
+  tb->track.rot = tb->last_track.rot * Quaternionf (angle,axis.Direction());
 }
 
 void CylinderMode::Apply (Trackball * tb, Point3f new_point)
@@ -281,6 +287,9 @@ void CylinderMode::Apply (Trackball * tb, Point3f new_point)
     float distOld = signedDistance(axisproj,hitOld,plusdir);
     float distNew = signedDistance(axisproj,hitNew,plusdir);
     angle= (distNew-distOld) / tb->radius;
+  }
+  if(snap>0.0){
+    angle = ((angle<0)?-1:1)* floor((((angle<0)?-angle:angle)/snap)+0.5)*snap;
   }
   tb->track.rot = tb->last_track.rot * Quaternionf (angle,axis.Direction());
 }
@@ -363,7 +372,7 @@ void PathMode::GetPoints(float state, Point3f & point, Point3f & prev_point, Poi
   assert(state >= 0.0f);
   assert(state <= 1.0f);  
   float remaining_norm=state;  
-  Point3f p0,p1;
+  Point3f p0(0,0,0),p1(0,0,0);
   unsigned int npts = int(points.size());
   for(unsigned int i = 1;i <= npts;i++){
   	if( i == npts){
@@ -641,8 +650,8 @@ Point3f AreaMode::Move(Point3f start,Point3f end)
     bool p_on_side = false;
     bool hit=false;
     
-    Point3f pside,phit;
-    bool slide,mid_inside;
+    Point3f pside(0,0,0),phit(0,0,0);
+    bool slide=false,mid_inside;
     
     int np = int(points.size()), i, j;
     for (i = 0, j = np-1; i < np; j = i++) {
