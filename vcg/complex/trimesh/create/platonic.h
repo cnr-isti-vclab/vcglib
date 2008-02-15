@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2007/10/19 22:29:36  cignoni
+Re-Wrote basic build function
+
 Revision 1.11  2007/02/01 06:38:27  cignoni
 Added small comment to grid function
 
@@ -669,6 +672,56 @@ void Grid(MeshType & in, int w, int h, float wl, float hl, float *data)
     }
 }
 
+template <class MeshType>
+void Cylinder(const int &slices, const int &stacks, MeshType & m){
+	float rad_step = M_PI / (float)stacks;
+	float sli_step = 1.0 / (float)slices;
+  float angle = 0,heigth = 0;
+
+	float x,y,h;
+	typename MeshType::VertexIterator vi = vcg::tri::Allocator<MeshType>::AddVertices(m,slices*stacks);
+	for ( int j = 0; j < slices; ++j)
+		for ( int i = 0; i < stacks; ++i){
+
+				x = cos(	2.0 * M_PI / stacks * i);
+				y = sin(	2.0 * M_PI / stacks * i);
+				h = j / (float)slices;
+
+				(*vi).P() = MeshType::CoordType(x,y,h);
+				++vi;
+			}
+
+	typename MeshType::FaceIterator fi ;
+	for ( int j = 0; j < slices-1; ++j)
+		for ( int i = 0; i < stacks; ++i){
+
+			 if(((i+j)%2) == 0){
+				fi = vcg::tri::Allocator<MeshType>::AddFaces(m,1);
+				(*fi).V(0) = &m.vert[j    *stacks+ i];
+				(*fi).V(1) = &m.vert[j    *stacks+(i+1)%stacks];
+				(*fi).V(2) = &m.vert[(j+1)*stacks+(i+1)%stacks];
+
+			 	fi = vcg::tri::Allocator<MeshType>::AddFaces(m,1);
+			 	(*fi).V(0) = &m.vert[j    *stacks+i];
+			 	(*fi).V(1) = &m.vert[(j+1)*stacks+(i+1)%stacks];
+			 	(*fi).V(2) = &m.vert[(j+1)*stacks+i];
+			 }
+			 else{
+				fi = vcg::tri::Allocator<MeshType>::AddFaces(m,1);
+				(*fi).V(0) = &m.vert[(j+1)    *stacks+i];
+				(*fi).V(1) = &m.vert[ j      *stacks+i];
+				(*fi).V(2) = &m.vert[ j      *stacks+(i+1)%stacks];
+
+			 	fi = vcg::tri::Allocator<MeshType>::AddFaces(m,1);
+				(*fi).V(0) = &m.vert[(j+1)    *stacks+i];
+				(*fi).V(1) = &m.vert[ j       *stacks+(i+1)%stacks];
+				(*fi).V(2) = &m.vert[ (j+1)   *stacks+(i+1)%stacks];
+
+			 }
+
+}
+
+	}
 //@}
 
 } // End Namespace TriMesh
