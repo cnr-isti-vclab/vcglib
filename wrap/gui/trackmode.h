@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2007/07/14 12:43:44  benedetti
+Added Doxygen documentation.
+
 Revision 1.14  2007/07/09 22:47:18  benedetti
 Removed using namespace std and modified accordingly.
 
@@ -425,8 +428,8 @@ public:
     @param origin a point on the line.
     @param direction the line direction.
   */
-  AxisMode (const Point3f & origin, const Point3f & direction) {
-    axis = Line3fN (origin, direction);
+  AxisMode (const Point3f & origin, const Point3f & direction)
+    : axis(Line3fN (origin, direction)) {
   }
   /*!
     @brief Return this manipulator's name.
@@ -561,9 +564,11 @@ public:
 
     The line will be normalized.
     @param ln the line that represent the axis.
+    @param s a rotational snap angle non negative
   */
-  CylinderMode (Line3fN & ln)
-    : axis (ln){
+  CylinderMode (Line3fN & ln,float s=0.0f)
+    : axis (ln), snap(s){
+    assert(snap>=0.0);
   }
   /*!
     @brief The origin-direction constructor.
@@ -574,9 +579,11 @@ public:
 
     @param origin a point on the axis.
     @param direction the axis direction.
+    @param s a rotational snap angle (non negative)
   */
-  CylinderMode (const Point3f & origin, const Point3f & direction)
-    : axis (Line3fN(origin,direction)){
+  CylinderMode (const Point3f & origin, const Point3f & direction,float s=0.0f)
+    : axis (Line3fN(origin,direction)), snap(s){
+    assert(snap>=0.0);
   }
   /*!
     @brief Return this manipulator's name.
@@ -616,6 +623,8 @@ public:
 private:
   /// The axis, stored as a normalized line.
   Line3fN axis;
+  /// The rotational snap value
+  float snap;
 };
 
 // Path mode.
