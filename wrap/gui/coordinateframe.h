@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.3  2008/02/16 14:12:30  benedetti
+first version
+
 
 ****************************************************************************/
 #ifndef COORDINATEFRAME_H
@@ -76,8 +79,8 @@ public:
   virtual Point3f GetPosition();
   virtual Quaternionf GetRotation();
   virtual void GetTransform(Matrix44f &);
-  virtual void Flip(const Point3f);
-  virtual void AlignWith(const Point3f, const Point3f);
+  virtual void Rot(float,const Point3f);
+  virtual void AlignWith(const Point3f, const Point3f, const char, const char);
 
 protected:
   // data:
@@ -99,7 +102,7 @@ public:
   virtual void Reset(bool, bool);
   virtual void SetPosition(const Point3f);
   virtual void SetRotation(const Quaternionf);
-  virtual void AlignWith(const Point3f, const Point3f);
+  virtual void AlignWith(const Point3f, const Point3f,const char,const char);
   void MouseDown(QPoint,int, int, int);
   void MouseMove(QPoint,int, int); 
   void MouseUp(int, int, int); 

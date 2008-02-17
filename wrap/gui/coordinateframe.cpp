@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.3  2008/02/16 14:12:30  benedetti
+first version
+
 
 ****************************************************************************/
 
@@ -108,13 +111,13 @@ void CoordinateFrame::Render(QGLWidget* glw)
   }
   if(drawlabels){
   	font.setBold(true);
-    font.setPixelSize(10);
+    font.setPixelSize(12);
     glColor(xcolor);
-    glw->renderText(size+(scalefactor*3),0,0,QString("X"),font);
+    glw->renderText(size+scalefactor*linewidth*1.5,0,0,QString("X"),font);
     glColor(ycolor);
-    glw->renderText(0,size+(scalefactor*3),0,QString("Y"),font);
+    glw->renderText(0,size+scalefactor*linewidth*1.5,0,QString("Y"),font);
     glColor(zcolor);
-    glw->renderText(0,0,size+(scalefactor*3),QString("Z"),font);
+    glw->renderText(0,0,size+scalefactor*linewidth*1.5,QString("Z"),font);
   }  
   if(drawvalues){
   	font.setBold(false);  	
@@ -250,14 +253,14 @@ Quaternionf MovableCoordinateFrame::GetRotation()
   return rotation;
 }
 
-void MovableCoordinateFrame::Flip(const Point3f axis)
+void MovableCoordinateFrame::Rot(float angle_deg,const Point3f axis)
 {
   Similarityf s;
-  s.SetRotate(M_PI,Inverse(rotation).Rotate(axis));
+  s.SetRotate(angle_deg*M_PI/180.0f,Inverse(rotation).Rotate(axis));
   Move(s);
 }
 
-void MovableCoordinateFrame::AlignWith(const Point3f pri,const Point3f secondary)
+void MovableCoordinateFrame::AlignWith(const Point3f pri,const Point3f secondary,const char c1, const char c2)
 {
   const float EPSILON=1e-6;
   Point3f primary=pri;
@@ -266,37 +269,55 @@ void MovableCoordinateFrame::AlignWith(const Point3f pri,const Point3f secondary
     return;
 
   primary.Normalize(); // ho l'asse primario, lo normalizzo
-  Plane3f plane(0,primary); // piano di proiezione per la seconda rotazione 
-  Point3f old_z = Inverse(rotation).Rotate(Point3f(0,0,1)); // l'asse z
-  Point3f old_y_pro = plane.Projection(Inverse(rotation).Rotate(Point3f(0,1,0))); //la proiezione dell'asse y
-  Point3f old_x_pro = plane.Projection(Inverse(rotation).Rotate(Point3f(1,0,0))); //la proiezione dell'asse x
+  Plane3f plane(0,primary); // piano di proiezione per la seconda rotazione
+   
+  Point3f x(1,0,0),y(0,1,0),z(0,0,1);
+  Point3f first(0,0,0),second(0,0,0),third(0,0,0);
 
-  // allinea l'asse z corrente all'asse primary
-  RotateToAlign(old_z,primary); // prima rotazione
+  if(c1=='X'){ first = x;
+    if((c2=='Y')||(c2==' ')){ second = y; third = z; } 
+    else if(c2=='Z'){ second = z; third = y; } 
+    else assert (0);
+  } else if(c1=='Y'){ first = y;
+    if((c2=='Z')||(c2==' ')){ second = z; third = x; } 
+    else if(c2=='X'){ second = x; third = z; }
+    else assert (0);
+  } else if(c1=='Z'){ first = z;
+    if((c2=='X')||(c2==' ')){ second = x; third = y; }
+    else if(c2=='Y'){ second = y; third = x; }
+    else assert (0);   
+  } else assert (0);
+
+  Point3f old_first = Inverse(rotation).Rotate(first); // l'asse 1
+  Point3f old_second_pro = plane.Projection(Inverse(rotation).Rotate(second)); //la proiezione dell'asse 2
+  Point3f old_third_pro = plane.Projection(Inverse(rotation).Rotate(third)); //la proiezione dell'asse 3
+
+  // allinea l'asse 1 corrente all'asse primary
+  RotateToAlign(old_first,primary); // prima rotazione
 
   Point3f secondary_pro = plane.Projection(secondary); // la proiezione di secondary
-  Point3f new_y_pro = plane.Projection(Inverse(rotation).Rotate(Point3f(0,1,0))); // la proiezione dell'asse y dopo la prima rotazione
+  Point3f new_second_pro = plane.Projection(Inverse(rotation).Rotate(second)); // la proiezione dell'asse 2 dopo la prima rotazione
 
   // se c'e` un asse secondary e la sua proiezione non e` 0
   if( secondary.Norm() > EPSILON*size && secondary_pro.Norm() > EPSILON ){
-    // allinea la proiezione dell'asse y dopo la prima rotazione alla proiezione dell'asse secondary
+    // allinea la proiezione dell'asse 2 dopo la prima rotazione alla proiezione dell'asse secondary
     secondary_pro.Normalize();
-    RotateToAlign(new_y_pro,secondary_pro);
+    RotateToAlign(new_second_pro,secondary_pro);
     return;
   }
-  // creco di riallineare la y
-  if ( old_y_pro.Norm() > EPSILON ) {
-    // allinea la proiezione dell'asse y dopo la prima rotazione alla proiezione dell'asse y 
-    old_y_pro.Normalize();
-    RotateToAlign(new_y_pro,old_y_pro);
+  // creco di riallineare l'asse 2
+  if ( old_second_pro.Norm() > EPSILON ) {
+    // allinea la proiezione dell'asse 2 dopo la prima rotazione alla proiezione dell'asse 2 
+    old_second_pro.Normalize();
+    RotateToAlign(new_second_pro,old_second_pro);
     return;
   }
-  // cerco di riallineare la x
-  Point3f new_x_pro = plane.Projection(Inverse(rotation).Rotate(Point3f(1,0,0))); //la proiezione dell'asse x dopo la prima rotazione
-  assert(old_x_pro.Norm() > EPSILON ); // la proiezione dell'asse x non dovrebbe essere 0
-  // allinea la proiezione dell'asse x dopo la prima rotazione alla proiezione dell'asse x 
-  old_x_pro.Normalize();
-  RotateToAlign(new_x_pro,old_x_pro);
+  // cerco di riallineare l'asse 3
+  Point3f new_third_pro = plane.Projection(Inverse(rotation).Rotate(third)); //la proiezione dell'asse 3 dopo la prima rotazione
+  assert(old_third_pro.Norm() > EPSILON ); // la proiezione dell'asse 3 non dovrebbe essere 0
+  // allinea la proiezione dell'asse 3 dopo la prima rotazione alla proiezione dell'asse 3 
+  old_third_pro.Normalize();
+  RotateToAlign(new_third_pro,old_third_pro);
 }
 
 void MovableCoordinateFrame::Move(const Similarityf track)
@@ -496,9 +517,9 @@ void ActiveCoordinateFrame::SetRotation(const Quaternionf newrot)
   manipulator->Reset();
 }
 
-void ActiveCoordinateFrame::AlignWith(const Point3f primary,const Point3f secondary=Point3f(0,0,0))
+void ActiveCoordinateFrame::AlignWith(const Point3f primary,const Point3f secondary,const char c1,const char c2)
 {
-  MovableCoordinateFrame::AlignWith(primary,secondary);
+  MovableCoordinateFrame::AlignWith(primary,secondary,c1,c2);
   Update();
   manipulator->Reset();
 }
