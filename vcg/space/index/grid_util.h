@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2008/02/04 19:18:44  ganovelli
+typo corrected
+
 Revision 1.10  2006/08/23 15:21:35  marfr960
 added some comments
 
@@ -160,9 +163,9 @@ public:
 	della ratio del bounding box e del numero di elementi
 	*/
 	template<class scalar_type>
-	void BestDim( const int elems, const Point3<scalar_type> & size, Point3i & dim )
+	void BestDim( const __int64 elems, const Point3<scalar_type> & size, Point3i & dim )
 	{
-		const int mincells   = 1;		// Numero minimo di celle
+		const __int64 mincells   = 1;		// Numero minimo di celle
 		const double GFactor = 1;	// GridEntry = NumElem*GFactor
 		double diag = size.Norm();	// Diagonale del box
 		double eps  = diag*1e-4;		// Fattore di tolleranza
@@ -173,7 +176,7 @@ public:
 		assert(size[2]>=0.0);
 
 
-		int ncell = int(elems*GFactor);	// Calcolo numero di voxel
+		__int64 ncell = __int64(elems*GFactor);	// Calcolo numero di voxel
 		if(ncell<mincells)
 			ncell = mincells;
 
