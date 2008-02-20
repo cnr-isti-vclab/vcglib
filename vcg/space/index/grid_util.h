@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2008/02/19 12:43:01  callieri
+in BestDim(...) changed int -> _int64 to cope with programs with a very large cell number (like plyMC)
+
 Revision 1.11  2008/02/04 19:18:44  ganovelli
 typo corrected
 
@@ -65,6 +68,12 @@ Removed BestDim function from the grid_static_ptr class and moved to a indipende
 #include<vcg/space/index/base.h>
 #include<vcg/space/box3.h>
 #include <vcg/space/index/space_iterators.h>
+
+
+#ifndef WIN32
+#define __int64 long long
+#define __cdecl 
+#endif
 
 namespace vcg {
 
@@ -176,7 +185,7 @@ public:
 		assert(size[2]>=0.0);
 
 
-		__int64 ncell = __int64(elems*GFactor);	// Calcolo numero di voxel
+		__int64 ncell = (__int64)(elems*GFactor);	// Calcolo numero di voxel
 		if(ncell<mincells)
 			ncell = mincells;
 
