@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.30  2008/01/28 14:46:03  cignoni
+added hasPerWedgeColor and HasPerWedgeNormal
+
 Revision 1.29  2008/01/28 08:42:07  cignoni
 added HasPerFaceNormal and HasPerVertexNormal
 
@@ -338,6 +341,10 @@ ScalarType Volume()
 
 template < class VertContainerType, class FaceContainerType >
 bool HasPerVertexQuality (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return VertContainerType::value_type::HasQuality();}
+
+template < class VertContainerType, class FaceContainerType >
+bool HasPerVertexColor (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return VertContainerType::value_type::HasColor();}
+
 
 template < class VertContainerType, class FaceContainerType >
 bool HasPerVertexFlags (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return VertContainerType::value_type::HasFlags();}
