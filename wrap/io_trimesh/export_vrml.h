@@ -23,6 +23,9 @@
 /****************************************************************************
 History
 $Log: not supported by cvs2svn $
+Revision 1.7  2008/02/21 17:23:57  cignoni
+Corrected various bug, involving spurious commas, and pervertex color saved as per wedge color.
+
 Revision 1.6  2007/06/12 10:15:35  cignoni
 Very important change. No more scaling and translation in the saved file!
 
@@ -194,7 +197,8 @@ namespace vcg {
 							"\n"							
 							"       ]\n"							
 							);					
-					}					
+					}
+					// NOTE MULTITEXTURE WRL SAVING DO NOT WORK!
 					else if (HasPerWedgeTexCoord(m) &&(mask &  vcg::tri::io::Mask::IOM_WEDGTEXCOORD))
 					{
 						fprintf(fp,
@@ -207,7 +211,7 @@ namespace vcg {
 						for(ind=0,fi=m.face.begin(); fi!=m.face.end(); ++fi,++ind)
 						if(!(*fi).IsD())
 							{
-								if(fi!=m.face.begin()) fprintf(fp,", ");
+								//if(fi!=m.face.begin()) fprintf(fp,", ");
 								if(ind%4==0) fprintf(fp,"\n          ");
 								for (int j = 0; j < 3; j++)
 										fprintf(fp,"%g %g ",fi->WT(j).u(),fi->WT(j).v());
@@ -223,11 +227,11 @@ namespace vcg {
 						for(ind=0,fi=m.face.begin(); fi!=m.face.end(); ++fi,++ind)
 							if(!(*fi).IsD())
 							{
-								if(fi!=m.face.begin()) fprintf(fp,", ");
+								//if(fi!=m.face.begin()) fprintf(fp,", ");
 								if(ind%4==0) fprintf(fp,"\n          ");								
 								for (int j = 0; j < 3; j++)
-									fprintf(fp,"%d,",nn++);
-								fprintf(fp,"-1,");
+									fprintf(fp,"%d ",nn++);
+								fprintf(fp,"-1 ");
 							}
 						fprintf(fp,
 							"\n"
