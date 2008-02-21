@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2008/02/21 10:30:18  benedetti
+corrected bug in FromMatrix
+
 Revision 1.12  2007/02/05 14:17:48  corsini
 add new ctor (build similarity from euler angles)
 
@@ -45,6 +48,9 @@ unified to the gl stlyle matix*vector. removed vector*matrix operator
 
 Revision 1.6  2004/03/25 14:57:49  ponchio
 Microerror. ($LOG$ -> $Log: not supported by cvs2svn $
+Microerror. ($LOG$ -> Revision 1.13  2008/02/21 10:30:18  benedetti
+Microerror. ($LOG$ -> corrected bug in FromMatrix
+Microerror. ($LOG$ ->
 Microerror. ($LOG$ -> Revision 1.12  2007/02/05 14:17:48  corsini
 Microerror. ($LOG$ -> add new ctor (build similarity from euler angles)
 Microerror. ($LOG$ ->
@@ -176,13 +182,14 @@ template <class S,class RotationType> Matrix44<S> Similarity<S,RotationType>::In
 
 
 template <class S,class RotationType> void Similarity<S,RotationType>::FromMatrix(const Matrix44<S> &m) {
+  tra[0] = m.ElementAt(3, 0);
+  tra[1] = m.ElementAt(3, 1);
+  tra[2] = m.ElementAt(3, 2);
   sca = (S)pow(m.Determinant(), 1/3);  
   assert(sca != 0);
   Matrix44<S> t = m * Matrix44<S>().SetScale(1/sca, 1/sca, 1/sca);
   rot.FromMatrix(t);
-  tra[0] = t.ElementAt(0, 3);
-  tra[1] = t.ElementAt(1, 3);
-  tra[2] = t.ElementAt(2, 3);
+  
 }
 
 template <class S,class RotationType> Similarity<S,RotationType> &Invert(Similarity<S,RotationType> &a) {  
