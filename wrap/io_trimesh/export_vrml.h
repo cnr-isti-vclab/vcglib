@@ -23,6 +23,9 @@
 /****************************************************************************
 History
 $Log: not supported by cvs2svn $
+Revision 1.6  2007/06/12 10:15:35  cignoni
+Very important change. No more scaling and translation in the saved file!
+
 Revision 1.5  2007/03/20 16:47:49  cignoni
 Update to the new texture syntax
 
@@ -110,27 +113,20 @@ namespace vcg {
 
 					// Vertici
 					for(ind=0,vi=m.vert.begin(); vi!=m.vert.end(); ++vi, ++ind)	
-					{
-						if(ind%4==0)
-							fprintf(fp,
-									"\n            "
-									);
-						fprintf(fp,
-							"%g %g %g, "
-							,(*vi).P()[0]
-							,(*vi).P()[1]
-							,(*vi).P()[2]
-							);
-						index[&*vi] = ind;
-
-					}
+					if(!(*vi).IsD())
+						{
+							if(vi!=m.vert.begin()) fprintf(fp,", ");
+							if(ind%4==0) fprintf(fp, "\n            " );
+							fprintf(fp, "%g %g %g" ,(*vi).P()[0] ,(*vi).P()[1] ,(*vi).P()[2] 	);
+							index[&*vi] = ind;
+						}
 					fprintf(fp,"\n"
 								"          ]\n"
 								"        }\n"
 								);
 					
 					
-					if( m.HasPerVertexColor() && (mask & vcg::tri::io::Mask::IOM_VERTCOLOR))
+					if( HasPerVertexColor(m) && (mask & vcg::tri::io::Mask::IOM_VERTCOLOR))
 					{
 						fprintf(fp,
 							"        color Color\n"
@@ -139,37 +135,24 @@ namespace vcg {
 							"          ["
 							);
 						for(ind=0,vi=m.vert.begin();vi!=m.vert.end();++vi,++ind)
+						if(!(*vi).IsD())
 						{
+							if(vi!=m.vert.begin()) fprintf(fp,", ");
 							float r = float(vi->C()[0])/255;
 							float g = float(vi->C()[1])/255;
 							float b = float(vi->C()[2])/255;
 
 							if(ind%4==0)
 								fprintf(fp,"\n            ");
-							fprintf(fp,"%g %g %g,",r,g,b);
+							fprintf(fp,"%g %g %g",r,g,b);
 						}
 						fprintf(fp,	
 							"\n"
 							"          ]\n"							
 							"        }\n"
-							"        colorIndex\n"
-							"        ["    						
-							);
-						
-						for(ind=0,fi=m.face.begin(); fi!=m.face.end(); ++fi,++ind)
-						{
-							if(ind%4==0)
-								fprintf(fp,"\n          ");
-							for (int j = 0; j < 3; j++)
-								fprintf(fp,"%i,",index[(*fi).V(j)]);	
-							fprintf(fp,"-1,");						
-						}						
-						fprintf(fp,
-							"\n"
-							"        ]\n"
 							);
 					}
-					else if( m.HasPerWedgeColor() &&  (mask & vcg::tri::io::Mask::IOM_WEDGCOLOR ))
+					else if( HasPerWedgeColor(m) &&  (mask & vcg::tri::io::Mask::IOM_WEDGCOLOR ))
 					{						
 						fprintf(fp,
 							"        color Color\n"	
@@ -177,16 +160,18 @@ namespace vcg {
 							"          color\n"							
 							"          ["							);
 						for(ind=0,fi=m.face.begin();fi!=m.face.end();++fi,++ind)
-						{							
-							for(int z=0;z<3;++z)							
-							{								
-								float r = float(fi->WC(z)[0])/255;
-								float g = float(fi->WC(z)[1])/255;
-								float b = float(fi->WC(z)[2])/255;
-								if(ind%4==0)
-									fprintf(fp,"\n            ");
-								fprintf(fp,"%g %g %g,",r,g,b);
-							}
+						if(!(*fi).IsD())
+						{
+							if(fi!=m.face.begin()) fprintf(fp,", ");
+							if(ind%4==0) fprintf(fp,"\n            ");
+								for(int z=0;z<3;++z)							
+								{								
+									if(z!=0) fprintf(fp,", ");
+									float r = float(fi->WC(z)[0])/255;
+									float g = float(fi->WC(z)[1])/255;
+									float b = float(fi->WC(z)[2])/255;
+									fprintf(fp,"%g %g %g",r,g,b);
+								}
 						}						
 						fprintf(fp,							
 							"\n"							
@@ -196,15 +181,14 @@ namespace vcg {
 							"        ["							);						
 						int nn = 0;						
 						for(ind=0,fi=m.face.begin(); fi!=m.face.end(); ++fi,++ind)
-						{							
-							if(ind%4==0)							
-								fprintf(fp,"\n          ");							
-							for (int j = 0; j < 3; j++)							
-							{								
-								fprintf(fp,"%i,",nn);								
-								++nn;							
-							}							
-							fprintf(fp,"-1,");						
+						if(!(*fi).IsD())
+						{
+							//if(fi!=m.face.begin()) fprintf(fp,", ");
+							if(ind%4==0) fprintf(fp,"\n          ");							
+									fprintf(fp,"%i",nn++);								
+									fprintf(fp,"%i",nn++);								
+									fprintf(fp,"%i",nn++);								
+							fprintf(fp,"-1");						
 						}						
 						fprintf(fp,							
 							"\n"							
@@ -221,14 +205,13 @@ namespace vcg {
 							"          [\n"
 							);
 						for(ind=0,fi=m.face.begin(); fi!=m.face.end(); ++fi,++ind)
-						{
-							if(ind%4==0)
-								fprintf(fp,"\n          ");
-							for (int j = 0; j < 3; j++)
+						if(!(*fi).IsD())
 							{
-								fprintf(fp,"%g %g, ",fi->WT(j).u(),fi->WT(j).v());
+								if(fi!=m.face.begin()) fprintf(fp,", ");
+								if(ind%4==0) fprintf(fp,"\n          ");
+								for (int j = 0; j < 3; j++)
+										fprintf(fp,"%g %g ",fi->WT(j).u(),fi->WT(j).v());
 							}
-						}
 						fprintf(fp,
 							"\n"
 							"          ]\n"
@@ -238,16 +221,14 @@ namespace vcg {
 							);
 						int nn = 0;
 						for(ind=0,fi=m.face.begin(); fi!=m.face.end(); ++fi,++ind)
-						{
-							if(ind%4==0)
-								fprintf(fp,"\n          ");
- 							for (int j = 0; j < 3; j++)
+							if(!(*fi).IsD())
 							{
-								fprintf(fp,"%d,",nn);
-								++nn;
+								if(fi!=m.face.begin()) fprintf(fp,", ");
+								if(ind%4==0) fprintf(fp,"\n          ");								
+								for (int j = 0; j < 3; j++)
+									fprintf(fp,"%d,",nn++);
+								fprintf(fp,"-1,");
 							}
-							fprintf(fp,"-1,");
-						}
 						fprintf(fp,
 							"\n"
 							"        ]\n"
@@ -259,14 +240,14 @@ namespace vcg {
 							);
 					// Facce
 					for(ind=0,fi=m.face.begin(); fi!=m.face.end(); ++fi,++ind)
+					if(!(*fi).IsD())
 					{
-						if(ind%6==0)
-						{
-							fprintf(fp,"\n          ");
-						}
+						if(fi!=m.face.begin()) fprintf(fp,", ");
+						if(ind%6==0) fprintf(fp,"\n          ");								
 						for (int j = 0; j < 3; j++)
 							fprintf(fp,"%i,",index[(*fi).V(j)]);
-						fprintf(fp,"-1,");	
+						
+						fprintf(fp,"-1");	
 					}
 					fprintf(fp,
 							"\n"
