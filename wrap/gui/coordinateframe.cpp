@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.5  2008/02/22 20:04:02  benedetti
+many user interface improvements, cleaned up a little
+
 Revision 1.4  2008/02/17 20:52:53  benedetti
 some generalization made
 
@@ -115,7 +118,7 @@ void CoordinateFrame::Render(QGLWidget* glw)
   if(drawlabels){
   	font.setBold(true);
     font.setPixelSize(12);
-    float dist=size+scalefactor*linewidth*1.5;
+    float d=size+scalefactor*linewidth*1.5;
     glColor(xcolor);
     glw->renderText(d,0,0,QString("X"),font);
     glColor(ycolor);
