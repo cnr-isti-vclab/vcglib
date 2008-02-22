@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2007/07/03 16:07:09  corsini
+add DCM to Euler Angles method (to implement)
+
 Revision 1.17  2007/02/06 12:24:07  tarini
 added a missing "Quaternion<S>::" in "FromEulerAngles"
 
@@ -59,6 +62,9 @@ updated access to matrix44 elements through V() instead simple []
 
 Revision 1.6  2004/03/25 14:57:49  ponchio
 Microerror. ($LOG$ -> $Log: not supported by cvs2svn $
+Microerror. ($LOG$ -> Revision 1.18  2007/07/03 16:07:09  corsini
+Microerror. ($LOG$ -> add DCM to Euler Angles method (to implement)
+Microerror. ($LOG$ ->
 Microerror. ($LOG$ -> Revision 1.17  2007/02/06 12:24:07  tarini
 Microerror. ($LOG$ -> added a missing "Quaternion<S>::" in "FromEulerAngles"
 Microerror. ($LOG$ ->
@@ -132,7 +138,7 @@ public:
   void FromAxis(const S phi, const Point3<S> &a);
   void ToAxis(S &phi, Point3<S> &a ) const;
 
-  void FromMatrix(Matrix44<S> &m);
+  void FromMatrix(const Matrix44<S> &m);
   void ToMatrix(Matrix44<S> &m) const;
   void ToMatrix(Matrix33<S> &m) const;
 
@@ -254,23 +260,23 @@ template <class S> void Quaternion<S>::ToMatrix(Matrix44<S> &m) const	{
 	S q23 = V(3)*V(0);
 
 	m[0][0] = (S)(1.0-(q11 + q22)*2.0);
-  m[1][0] = (S)((q01 - q23)*2.0);
-  m[2][0] = (S)((q02 + q13)*2.0);
-  m[3][0] = (S)0.0;
-
-  m[0][1] = (S)((q01 + q23)*2.0);
-  m[1][1] = (S)(1.0-(q22 + q00)*2.0);
-  m[2][1] = (S)((q12 - q03)*2.0);
-  m[3][1] = (S)0.0;
-
-  m[0][2] = (S)((q02 - q13)*2.0);
-  m[1][2] = (S)((q12 + q03)*2.0);
-  m[2][2] = (S)(1.0-(q11 + q00)*2.0);
-  m[3][2] = (S)0.0;
-
+  m[0][1] = (S)((q01 - q23)*2.0);
+  m[0][2] = (S)((q02 + q13)*2.0);
   m[0][3] = (S)0.0;
+
+  m[1][0] = (S)((q01 + q23)*2.0);
+  m[1][1] = (S)(1.0-(q22 + q00)*2.0);
+  m[1][2] = (S)((q12 - q03)*2.0);
   m[1][3] = (S)0.0;
+
+  m[2][0] = (S)((q02 - q13)*2.0);
+  m[2][1] = (S)((q12 + q03)*2.0);
+  m[2][2] = (S)(1.0-(q11 + q00)*2.0);
   m[2][3] = (S)0.0;
+
+  m[3][0] = (S)0.0;
+  m[3][1] = (S)0.0;
+  m[3][2] = (S)0.0;
   m[3][3] = (S)1.0;
 }
 	
@@ -286,20 +292,20 @@ template <class S> void Quaternion<S>::ToMatrix(Matrix33<S> &m) const	{
 	S q23 = V(3)*V(0);
 
 	m[0][0] = (S)(1.0-(q11 + q22)*2.0);
-  m[1][0] = (S)((q01 - q23)*2.0);
-  m[2][0] = (S)((q02 + q13)*2.0);
+  m[0][1] = (S)((q01 - q23)*2.0);
+  m[0][2] = (S)((q02 + q13)*2.0);
 
-  m[0][1] = (S)((q01 + q23)*2.0);
+  m[1][0] = (S)((q01 + q23)*2.0);
   m[1][1] = (S)(1.0-(q22 + q00)*2.0);
-  m[2][1] = (S)((q12 - q03)*2.0);
+  m[1][2] = (S)((q12 - q03)*2.0);
 
-  m[0][2] = (S)((q02 - q13)*2.0);
-  m[1][2] = (S)((q12 + q03)*2.0);
+  m[2][0] = (S)((q02 - q13)*2.0);
+  m[2][1] = (S)((q12 + q03)*2.0);
   m[2][2] = (S)(1.0-(q11 + q00)*2.0);
 }
 	
 ///warning m deve essere una matrice di rotazione pena il disastro.
-template <class S> void Quaternion<S>::FromMatrix(Matrix44<S> &m) {		
+template <class S> void Quaternion<S>::FromMatrix(const Matrix44<S> &m) {		
 	S Sc;
 	S t = (m.V()[0] + m.V()[5] + m.V()[10] + (S)1.0);	
 	if(t > 0) {
