@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.4  2008/02/17 20:52:53  benedetti
+some generalization made
+
 Revision 1.3  2008/02/16 14:12:30  benedetti
 first version
 
@@ -112,12 +115,13 @@ void CoordinateFrame::Render(QGLWidget* glw)
   if(drawlabels){
   	font.setBold(true);
     font.setPixelSize(12);
+    float dist=size+scalefactor*linewidth*1.5;
     glColor(xcolor);
-    glw->renderText(size+scalefactor*linewidth*1.5,0,0,QString("X"),font);
+    glw->renderText(d,0,0,QString("X"),font);
     glColor(ycolor);
-    glw->renderText(0,size+scalefactor*linewidth*1.5,0,QString("Y"),font);
+    glw->renderText(0,d,0,QString("Y"),font);
     glColor(zcolor);
-    glw->renderText(0,0,size+scalefactor*linewidth*1.5,QString("Z"),font);
+    glw->renderText(0,0,d,QString("Z"),font);
   }  
   if(drawvalues){
   	font.setBold(false);  	
@@ -197,7 +201,8 @@ void MovableCoordinateFrame::Render(QGLWidget* gla)
   glTranslate(position);  
   Matrix44f mrot; 
   rotation.ToMatrix(mrot);
-  glMultMatrix(mrot);
+
+  glMultMatrix(Inverse(mrot));
   
   CoordinateFrame::Render(gla);
   
@@ -214,8 +219,8 @@ void MovableCoordinateFrame::GetTransform(Matrix44f & transform)
   // ruoto
   Matrix44f rot;
   rotation.ToMatrix(rot);
-  
-  transform = rot * transform ;
+
+  transform = Inverse(rot) * transform ;
   
   // sposto in posizione
   Matrix44f pos;
@@ -355,24 +360,15 @@ void MovableCoordinateFrame::RotateToAlign(const Point3f source, const Point3f d
 
 ActiveCoordinateFrame::ActiveCoordinateFrame(float size)
 :MovableCoordinateFrame(size),manipulator(NULL),drawmoves(true),
-drawrotations(true),
-movx(Trackball::BUTTON_RIGHT ),
-movy(Trackball::BUTTON_RIGHT | Trackball::KEY_CTRL),
-movz(Trackball::BUTTON_RIGHT | Trackball::KEY_SHIFT),
-rotx(Trackball::BUTTON_LEFT),
-roty(Trackball::BUTTON_LEFT | Trackball::KEY_CTRL),
-rotz(Trackball::BUTTON_LEFT | Trackball::KEY_SHIFT),
+drawrotations(true),move_button(Trackball::BUTTON_RIGHT),
+rotate_button(Trackball::BUTTON_LEFT),x_modifier(Trackball::BUTTON_NONE),
+y_modifier(Trackball::KEY_CTRL),z_modifier(Trackball::KEY_SHIFT),
+movx(move_button | x_modifier),movy(move_button | y_modifier),
+movz(move_button | z_modifier),rotx(rotate_button | x_modifier),
+roty(rotate_button | y_modifier),rotz(rotate_button | z_modifier),
 x_axis(1,0,0),y_axis(0,1,0),z_axis(0,0,1),rot_snap_rad(0.0f),mov_snap(0.0f)
 {
   manipulator=new Trackball();
-  std::map<int, TrackMode *>::iterator it;
-  for(it = manipulator->modes.begin(); it != manipulator->modes.end(); it++)
-  {
-    if ((*it).second)
-      delete (*it).second;
-  }
-  manipulator->modes.clear();
-  manipulator->modes[0] = NULL;    
   Update();
  }
 
@@ -405,15 +401,7 @@ void ActiveCoordinateFrame::Render(QGLWidget* glw)
   bool rotating=(current_mode==rotx)||(current_mode==roty)||(current_mode==rotz);
   bool moving=(current_mode==movx)||(current_mode==movy)||(current_mode==movz);
 
-  // non sto draggando o sto draggando quello che non devo disengnare
-  if( (!rotating && !moving)||
-      (!((rotating && drawrotations)||(moving && drawmoves)))
-    ){
-    glPopMatrix();
-    return;  
-  }
-  
-  // sto draggando e devo disegnare qualcosa
+  //devo disegnare qualcosa
   glPushAttrib(GL_ALL_ATTRIB_BITS);
   glDisable(GL_LIGHTING);
   glDisable(GL_TEXTURE_2D);
@@ -422,23 +410,30 @@ void ActiveCoordinateFrame::Render(QGLWidget* glw)
   glEnable(GL_LINE_SMOOTH);
   glEnable(GL_POINT_SMOOTH);
   
-  Color4b color;  
-  QString message;
+  QString message("sovrascrivimi");
   char axis_name;
   float verse;
+  
+  if(current_mode==x_modifier){
+    glColor(xcolor); message = QString("move or rotate on X axis");
+  } else if(current_mode==y_modifier){
+    glColor(ycolor); message = QString("move or rotate on Y axis");
+  } else if(current_mode==z_modifier){
+    glColor(zcolor); message = QString("move or rotate on Z axis");
+  } else 
   if(rotating && drawrotations){ // devo disegnare una rotazione
     Point3f axis, arc_point;
     float angle;
     manipulator->track.rot.ToAxis(angle,axis);
     if(current_mode==rotx){
       verse=((axis+x_axis).Norm()<1?-1:1);
-      color=xcolor; axis_name='x'; arc_point=y_axis*(size*0.8);
+      glColor(xcolor); axis_name='x'; arc_point=y_axis*(size*0.8);
     } else if(current_mode==roty) {
       verse=((axis+y_axis).Norm()<1?-1:1);
-      color=ycolor; axis_name='y'; arc_point=z_axis*(size*0.8);
+      glColor(ycolor); axis_name='y'; arc_point=z_axis*(size*0.8);
     } else if(current_mode==rotz) {
       verse=((axis+z_axis).Norm()<1?-1:1);
-      color=zcolor; axis_name='z'; arc_point=x_axis*(size*0.8);
+      glColor(zcolor); axis_name='z'; arc_point=x_axis*(size*0.8);
     } else assert(0); // doveva essere una rotazione
     // normalizzo la rotazione a [-180,180]
     float sign = ((angle*verse)<0) ? -1 : 1;
@@ -450,7 +445,6 @@ void ActiveCoordinateFrame::Render(QGLWidget* glw)
                       .arg(axis_name);
     Quaternionf arc_rot;
     arc_rot.FromAxis(angle/18.0,axis);
-    glColor(color);
     glBegin(GL_POLYGON);   
       glVertex(position);
       glVertex(position+arc_point);
@@ -464,13 +458,13 @@ void ActiveCoordinateFrame::Render(QGLWidget* glw)
     ntra.Normalize();
     if(current_mode==movx){
       verse=((ntra+x_axis).Norm()<1?-1:1);      
-      color=xcolor; axis_name='x';
+      glColor(xcolor); axis_name='x';
     }else if(current_mode==movy){
       verse=((ntra+y_axis).Norm()<1?-1:1);      
-      color=ycolor; axis_name='y';
+      glColor(ycolor); axis_name='y';
     }else if(current_mode==movz){
       verse=((ntra+z_axis).Norm()<1?-1:1);      
-      color=zcolor; axis_name='z';
+      glColor(zcolor); axis_name='z';
     }else assert(0); // doveva essere una traslazione
     message = QString("moved %1 units along %2")
                       .arg(verse*manipulator->track.tra.Norm(),5,'f',3)
@@ -478,7 +472,6 @@ void ActiveCoordinateFrame::Render(QGLWidget* glw)
     Point3f old_pos = position-manipulator->track.tra;
     glLineWidth(2*linewidth);
     glPointSize(4*linewidth);
-    glColor(color);
     glBegin(GL_LINES);
       glVertex(position);
       glVertex(old_pos);
@@ -486,10 +479,15 @@ void ActiveCoordinateFrame::Render(QGLWidget* glw)
     glBegin(GL_POINTS);
       glVertex(old_pos);
     glEnd();    
-  } else assert(0); // qualcosa lo dovevo disegnare
+  } else { // non dovevo disegnare nulla  	
+    glPopAttrib();
+    glPopMatrix();
+    return;  
+  }
   // disegno la stringa  
   font.setBold(true);
   font.setPixelSize(12);
+  QPoint cursor=glw->mapFromGlobal(glw->cursor().pos());
   glw->renderText(cursor.x()+16,cursor.y()+16,message,font);
 
   glPopAttrib();
@@ -524,17 +522,15 @@ void ActiveCoordinateFrame::AlignWith(const Point3f primary,const Point3f second
   manipulator->Reset();
 }
 
-void ActiveCoordinateFrame::MouseDown(QPoint c,int x, int y, /*Button*/ int button)
+void ActiveCoordinateFrame::MouseDown(int x, int y, /*Button*/ int button)
 {
-  cursor=c;
   Move(manipulator->track);
   manipulator->Reset();
   manipulator->MouseDown(x,y,button);
 }
 
-void ActiveCoordinateFrame::MouseMove(QPoint c,int x, int y)
+void ActiveCoordinateFrame::MouseMove(int x, int y)
 {
-  cursor=c;
   manipulator->MouseMove(x,y);
 }
 
@@ -580,29 +576,19 @@ void ActiveCoordinateFrame::Update()
   y_axis=r.Rotate(Point3f(0,1,0));
   z_axis=r.Rotate(Point3f(0,0,1));
   
-  if(manipulator->modes[movx]!=NULL) 
-    delete manipulator->modes[movx];
+  std::map<int, TrackMode *>::iterator it;
+  for(it = manipulator->modes.begin(); it != manipulator->modes.end(); it++)
+  {
+    if ((*it).second)
+      delete (*it).second;
+  }
+  manipulator->modes.clear();
+  manipulator->modes[0] = NULL;    
   manipulator->modes[movx] = new AxisMode(p,x_axis);
-  
-  if(manipulator->modes[movy]!=NULL) 
-    delete manipulator->modes[movy];
   manipulator->modes[movy] = new AxisMode(p,y_axis);
-  
-  if(manipulator->modes[movz]!=NULL)
-    delete manipulator->modes[movz];
   manipulator->modes[movz] = new AxisMode(p,z_axis);
-  
-  if(manipulator->modes[rotx]!=NULL)
-    delete manipulator->modes[rotx];
   manipulator->modes[rotx] = new CylinderMode(p,x_axis,rot_snap_rad);
-  
-  if(manipulator->modes[roty]!=NULL)
-    delete manipulator->modes[roty];
   manipulator->modes[roty] = new CylinderMode(p,y_axis,rot_snap_rad);
-  
-  if(manipulator->modes[rotz]!=NULL)
-    delete manipulator->modes[rotz];
   manipulator->modes[rotz] = new CylinderMode(p,z_axis,rot_snap_rad);
-  
   manipulator->SetCurrentAction();
 }

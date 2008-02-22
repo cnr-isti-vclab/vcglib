@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.4  2008/02/17 20:52:53  benedetti
+some generalization made
+
 Revision 1.3  2008/02/16 14:12:30  benedetti
 first version
 
@@ -103,8 +106,8 @@ public:
   virtual void SetPosition(const Point3f);
   virtual void SetRotation(const Quaternionf);
   virtual void AlignWith(const Point3f, const Point3f,const char,const char);
-  void MouseDown(QPoint,int, int, int);
-  void MouseMove(QPoint,int, int); 
+  void MouseDown(int, int, int);
+  void MouseMove(int, int); 
   void MouseUp(int, int, int); 
   void ButtonUp(int);
   void ButtonDown(int);
@@ -115,10 +118,11 @@ public:
   bool drawrotations;
 protected:
   // data:
+  const int move_button,rotate_button;
+  const int x_modifier,y_modifier,z_modifier;
   const int movx,movy,movz,rotx,roty,rotz;
   Point3f x_axis,y_axis,z_axis;
   float rot_snap_rad,mov_snap;
-  QPoint cursor;
   
   // functions: 
   virtual void Move(const Similarityf);
