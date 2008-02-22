@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.24  2007/12/21 12:29:34  tarini
+*** empty log message ***
+
 Revision 1.23  2007/10/12 14:02:39  corsini
 solve memory leak in dtor
 
@@ -194,7 +197,7 @@ void Trackball::Translate(Point3f tr)
 {
   Matrix44f m;  
   track.rot.ToMatrix(m); 
-  track.tra = last_track.tra + Inverse(m)*tr/track.sca;
+  track.tra = last_track.tra + m*tr/track.sca;
 }
 
 /***************************************************************/

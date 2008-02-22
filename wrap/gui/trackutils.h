@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2008/02/15 20:54:45  benedetti
+removed some variable initialization related warning
+
 Revision 1.7  2007/10/22 14:39:54  cignoni
 corrected bug into the drawsphere (thanks to nico and guido!)
 
@@ -668,7 +671,8 @@ void DrawSphereIcon (Trackball * tb,bool active)
   glScale (tb->radius);
   Matrix44f r;
   tb->track.rot.ToMatrix (r);
-  glMultMatrix (r);
+
+  glMultMatrix (Inverse(r));
   
 	float amb[4] = { .3f, .3f, .3f, 1.0f };
   float col[4] = { .5f, .5f, .8f, 1.0f };
