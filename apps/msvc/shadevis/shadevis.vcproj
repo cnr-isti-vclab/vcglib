@@ -19,7 +19,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../.."
+				AdditionalIncludeDirectories="&quot;C:\Documents and Settings\Paolo\My Documents\code\lib\glut\include&quot;;&quot;C:\Documents and Settings\Paolo\My Documents\code\lib\glew\include&quot;;../../.."
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -34,6 +34,7 @@
 				AdditionalDependencies="glew32.lib"
 				OutputFile="$(OutDir)/shadevis.exe"
 				LinkIncremental="2"
+				AdditionalLibraryDirectories="&quot;C:\Documents and Settings\Paolo\My Documents\code\lib\glut\lib&quot;;&quot;C:\Documents and Settings\Paolo\My Documents\code\lib\glew\lib&quot;"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/shadevis.pdb"
 				SubSystem="1"
@@ -67,7 +68,7 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../../.."
+				AdditionalIncludeDirectories="&quot;C:\Documents and Settings\Paolo\My Documents\code\lib\glut\include&quot;;&quot;C:\Documents and Settings\Paolo\My Documents\code\lib\glew\include&quot;;../../.."
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="4"
 				UsePrecompiledHeader="0"
@@ -80,6 +81,7 @@
 				AdditionalDependencies="glew32.lib"
 				OutputFile="$(OutDir)/shadevis.exe"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="&quot;C:\Documents and Settings\Paolo\My Documents\code\lib\glut\lib&quot;;&quot;C:\Documents and Settings\Paolo\My Documents\code\lib\glew\lib&quot;"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
 				OptimizeReferences="2"
