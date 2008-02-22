@@ -270,7 +270,6 @@ bool ComputeRigidMatchMatrix(Matrix44x &res,
   // The corresponding eigenvector define the searched rotation,
 		Matrix44x Rot;
 	q.ToMatrix(Rot);
-  Transpose(Rot);
   // the translation (last row) is simply the difference between the transformed src barycenter and the trg baricenter
 	tr= (bfix - Rot*bmov);
 	//res[3][0]=tr[0];res[3][1]=tr[1];res[3][2]=tr[2];
