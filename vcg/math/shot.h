@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.23  2007/02/06 08:54:07  corsini
+fix names
+
 Revision 1.22  2007/02/05 14:17:21  corsini
 add extrinsic parameters accessors
 
@@ -236,6 +239,7 @@ vcg::Point3<S> Shot<S>::ConvertWorldToCameraCoordinates(const vcg::Point3<S> & p
 {
 	Matrix44<S> rotM;
 	Extrinsics.rot.ToMatrix(rotM);
+  Invert(rotM);
 	vcg::Point3<S> cp = rotM * (p + Extrinsics.tra);
 	cp[2]=-cp[2]; 	// note: camera reference system is right handed
 	return cp;
@@ -249,7 +253,7 @@ vcg::Point3<S> Shot<S>::ConvertCameraToWorldCoordinates(const vcg::Point3<S> & p
 	vcg::Point3<S> cp = p;
 	cp[2]=-cp[2];	// note: World reference system is left handed
 	Extrinsics.rot.ToMatrix(rotM);
-	cp = Inverse(rotM) * cp-Extrinsics.tra;
+	cp = rotM * cp-Extrinsics.tra;
 	return cp;
 }
 
