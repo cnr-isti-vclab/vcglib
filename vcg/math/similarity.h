@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2008/02/21 11:34:08  ponchio
+refixed bug in FromMatrix
+
 Revision 1.14  2008/02/21 10:57:59  ponchio
 fixed bug in FromMatrix
 
@@ -51,6 +54,9 @@ unified to the gl stlyle matix*vector. removed vector*matrix operator
 
 Revision 1.6  2004/03/25 14:57:49  ponchio
 Microerror. ($LOG$ -> $Log: not supported by cvs2svn $
+Microerror. ($LOG$ -> Revision 1.15  2008/02/21 11:34:08  ponchio
+Microerror. ($LOG$ -> refixed bug in FromMatrix
+Microerror. ($LOG$ ->
 Microerror. ($LOG$ -> Revision 1.14  2008/02/21 10:57:59  ponchio
 Microerror. ($LOG$ -> fixed bug in FromMatrix
 Microerror. ($LOG$ ->
@@ -179,7 +185,7 @@ template <class S,class RotationType> Matrix44<S> Similarity<S,RotationType>::Ma
   rot.ToMatrix(r);
   Matrix44<S> s = Matrix44<S>().SetScale(sca, sca, sca);
   Matrix44<S> t = Matrix44<S>().SetTranslate(tra[0], tra[1], tra[2]);
-  return s*r*t;  // scale * rot * trans
+  return t*s*r;  // trans * scale * rot;
 }
 
 template <class S,class RotationType> Matrix44<S> Similarity<S,RotationType>::InverseMatrix() const {
@@ -188,13 +194,14 @@ template <class S,class RotationType> Matrix44<S> Similarity<S,RotationType>::In
 
 
 template <class S,class RotationType> void Similarity<S,RotationType>::FromMatrix(const Matrix44<S> &m) {
-  tra[0] = m.ElementAt(0, 3);
-  tra[1] = m.ElementAt(1, 3);
-  tra[2] = m.ElementAt(2, 3);
-  sca = (S)pow(m.Determinant(), 1/3);  
-  assert(sca != 0);
-  Matrix44<S> t = m * Matrix44<S>().SetScale(1/sca, 1/sca, 1/sca);
+  S det = m.Determinant();
+  assert(det > 0);
+  sca = (S)pow(det, 1/3.0);  
+  Matrix44<S> t = m*Matrix44<S>().SetScale(1/sca, 1/sca, 1/sca);
   rot.FromMatrix(t);
+  tra[0] = t.ElementAt(0, 3);
+  tra[1] = t.ElementAt(1, 3);
+  tra[2] = t.ElementAt(2, 3);
   
 }
 
