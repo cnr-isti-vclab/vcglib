@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2008/02/22 17:40:27  ponchio
+Fixed determinantt problem and quaternion problem.
+
 Revision 1.15  2008/02/21 11:34:08  ponchio
 refixed bug in FromMatrix
 
@@ -54,6 +57,9 @@ unified to the gl stlyle matix*vector. removed vector*matrix operator
 
 Revision 1.6  2004/03/25 14:57:49  ponchio
 Microerror. ($LOG$ -> $Log: not supported by cvs2svn $
+Microerror. ($LOG$ -> Revision 1.16  2008/02/22 17:40:27  ponchio
+Microerror. ($LOG$ -> Fixed determinantt problem and quaternion problem.
+Microerror. ($LOG$ ->
 Microerror. ($LOG$ -> Revision 1.15  2008/02/21 11:34:08  ponchio
 Microerror. ($LOG$ -> refixed bug in FromMatrix
 Microerror. ($LOG$ ->
@@ -185,7 +191,7 @@ template <class S,class RotationType> Matrix44<S> Similarity<S,RotationType>::Ma
   rot.ToMatrix(r);
   Matrix44<S> s = Matrix44<S>().SetScale(sca, sca, sca);
   Matrix44<S> t = Matrix44<S>().SetTranslate(tra[0], tra[1], tra[2]);
-  return t*s*r;  // trans * scale * rot;
+  return s*r*t;  // trans * scale * rot;
 }
 
 template <class S,class RotationType> Matrix44<S> Similarity<S,RotationType>::InverseMatrix() const {
@@ -194,6 +200,7 @@ template <class S,class RotationType> Matrix44<S> Similarity<S,RotationType>::In
 
 
 template <class S,class RotationType> void Similarity<S,RotationType>::FromMatrix(const Matrix44<S> &m) {
+ //Computes a t*s*r decomposition
   S det = m.Determinant();
   assert(det > 0);
   sca = (S)pow(det, 1/3.0);  
@@ -202,7 +209,11 @@ template <class S,class RotationType> void Similarity<S,RotationType>::FromMatri
   tra[0] = t.ElementAt(0, 3);
   tra[1] = t.ElementAt(1, 3);
   tra[2] = t.ElementAt(2, 3);
-  
+//Compute a s*r*t decomposition
+  Quaternion<S> irot = rot;
+  irot.Invert();
+  tra = irot.Rotate(tra); 
+  tra /= sca; 
 }
 
 template <class S,class RotationType> Similarity<S,RotationType> &Invert(Similarity<S,RotationType> &a) {  
