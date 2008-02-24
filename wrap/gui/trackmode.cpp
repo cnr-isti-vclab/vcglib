@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.27  2008/02/24 14:37:00  ponchio
+Restored trackball functionality. Not very much tested, and code will need some
+cleanup.
+
 Revision 1.26  2008/02/15 20:56:41  benedetti
 removed some variable initialization related warning, added snap to CylinderMode
 
@@ -170,7 +174,7 @@ void SphereMode::Apply (Trackball * tb, Point3f new_point)
   Point3f hitOld = HitSphere (tb, tb->last_point);
   Point3f hitNew = HitSphere (tb, new_point);
   tb->Hits.push_back (hitNew);
-  Point3f center = tb->center + tb->track.tra;
+  Point3f center = tb->center;
   Point3f axis = (hitNew - center) ^ (hitOld - center);
   //  Figure out how much to rotate around that axis.
   float phi = Distance (hitNew, hitOld) / tb->radius;

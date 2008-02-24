@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2008/02/24 14:37:00  ponchio
+Restored trackball functionality. Not very much tested, and code will need some
+cleanup.
+
 Revision 1.9  2008/02/22 18:57:47  benedetti
 first attempt to correct after quaternion ToMatrix() inversion (does not work yet)
 
@@ -221,7 +225,7 @@ eq cono                y=x+sqrt(2);
 */
 Point3f HitSphere (Trackball * tb, const Point3f & p)
 {
-  Point3f center = tb->center + tb->track.tra;
+  Point3f center = tb->center;
   Line3fN ln = tb->camera.ViewLineFromWindow (Point3f (p[0], p[1], 0));  
   Plane3f vp = GetViewPlane (tb->camera, center);
   Point3f hitPlane(0,0,0), //intersection view plane with point touched
@@ -674,7 +678,8 @@ void DrawSphereIcon (Trackball * tb,bool active)
   glPushAttrib (GL_TRANSFORM_BIT |GL_ENABLE_BIT | GL_LINE_BIT | GL_CURRENT_BIT | GL_LIGHTING_BIT);
   glMatrixMode(GL_MODELVIEW);
 	glPushMatrix ();
-  glTranslate (tb->center);
+  Point3f center = tb->center + tb->track.InverseMatrix()*tb->center;
+  glTranslate(center);
   glScale (tb->radius);
   
 	float amb[4] = { .3f, .3f, .3f, 1.0f };

@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.26  2008/02/24 14:37:00  ponchio
+Restored trackball functionality. Not very much tested, and code will need some
+cleanup.
+
 Revision 1.25  2008/02/22 18:57:46  benedetti
 first attempt to correct after quaternion ToMatrix() inversion (does not work yet)
 
@@ -173,7 +177,7 @@ void Trackball::DrawPostApply() {
 
 void Trackball::Apply () {
   glTranslate (center);
-  glMultMatrix (track.Matrix ());
+  glMultMatrix (track.Matrix());
   glTranslate (-center);
 }
 
@@ -198,10 +202,9 @@ void Trackball::Scale(const float s)
 
 void Trackball::Translate(Point3f tr)
 {
-//  Matrix44f m;  
-//  track.rot.ToMatrix(m); 
-//  track.tra = last_track.tra + m*tr/track.sca;
-    track.tra = last_track.tra + tr;
+  Quaternionf irot = track.rot;
+  irot.Invert();
+  track.tra = last_track.tra + irot.Rotate(tr)/track.sca;
 }
 
 /***************************************************************/
