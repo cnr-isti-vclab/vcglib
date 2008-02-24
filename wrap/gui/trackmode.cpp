@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.26  2008/02/15 20:56:41  benedetti
+removed some variable initialization related warning, added snap to CylinderMode
+
 Revision 1.25  2007/10/24 10:39:07  ponchio
 #include <gl/glew.h> -> #include <GL/glew.h>
 
@@ -167,11 +170,12 @@ void SphereMode::Apply (Trackball * tb, Point3f new_point)
   Point3f hitOld = HitSphere (tb, tb->last_point);
   Point3f hitNew = HitSphere (tb, new_point);
   tb->Hits.push_back (hitNew);
-  Point3f center = tb->center;
+  Point3f center = tb->center + tb->track.tra;
   Point3f axis = (hitNew - center) ^ (hitOld - center);
   //  Figure out how much to rotate around that axis.
   float phi = Distance (hitNew, hitOld) / tb->radius;
-  tb->track.rot = tb->last_track.rot * Quaternionf (phi, axis);
+//  tb->track.rot = tb->last_track.rot * Quaternionf (-phi, axis);
+  tb->track.rot = Quaternionf (-phi, axis) * tb->last_track.rot;
 }
 
 void SphereMode::Draw(Trackball * tb){

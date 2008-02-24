@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.25  2008/02/22 18:57:46  benedetti
+first attempt to correct after quaternion ToMatrix() inversion (does not work yet)
+
 Revision 1.24  2007/12/21 12:29:34  tarini
 *** empty log message ***
 
@@ -195,9 +198,10 @@ void Trackball::Scale(const float s)
 
 void Trackball::Translate(Point3f tr)
 {
-  Matrix44f m;  
-  track.rot.ToMatrix(m); 
-  track.tra = last_track.tra + m*tr/track.sca;
+//  Matrix44f m;  
+//  track.rot.ToMatrix(m); 
+//  track.tra = last_track.tra + m*tr/track.sca;
+    track.tra = last_track.tra + tr;
 }
 
 /***************************************************************/

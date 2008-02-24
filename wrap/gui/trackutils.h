@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2008/02/22 18:57:47  benedetti
+first attempt to correct after quaternion ToMatrix() inversion (does not work yet)
+
 Revision 1.8  2008/02/15 20:54:45  benedetti
 removed some variable initialization related warning
 
@@ -62,6 +65,8 @@ Utility functions for the trackmodes, first version
 #include <wrap/gl/math.h>
 #include <wrap/gl/space.h>
 #include <vector>
+#include <iostream>
+using namespace std;
 
 namespace vcg {
 
@@ -216,17 +221,20 @@ eq cono                y=x+sqrt(2);
 */
 Point3f HitSphere (Trackball * tb, const Point3f & p)
 {
-  // const float Thr = tb->radius/math::Sqrt(2.0f);
-  Line3fN vn = tb->camera.ViewLineFromModel (tb->center);
-  Line3fN ln = tb->camera.ViewLineFromWindow (Point3f (p[0], p[1], 0));
-  Point3f viewpoint = tb->camera.ViewPoint ();
-  Plane3f vp = GetViewPlane (tb->camera, tb->center);
-  Point3f hit(0,0,0), hitPlane(0,0,0), hitSphere(0,0,0), hitSphere1(0,0,0), hitSphere2(0,0,0), hitHyper(0,0,0);
+  Point3f center = tb->center + tb->track.tra;
+  Line3fN ln = tb->camera.ViewLineFromWindow (Point3f (p[0], p[1], 0));  
+  Plane3f vp = GetViewPlane (tb->camera, center);
+  Point3f hitPlane(0,0,0), //intersection view plane with point touched
+          hitSphere(0,0,0), 
+          hitSphere1(0,0,0), 
+          hitSphere2(0,0,0), 
+          hitHyper(0,0,0);
   IntersectionLinePlane < float >(vp, ln, hitPlane);
-
-  Sphere3f sphere (tb->center, tb->radius);
+  
+  Sphere3f sphere (center, tb->radius);//trackball sphere
   bool resSp = IntersectionLineSphere < float >(sphere, ln, hitSphere1, hitSphere2);
 
+  Point3f viewpoint = tb->camera.ViewPoint ();
   if (resSp == true) {
     if (Distance (viewpoint, hitSphere1) < Distance (viewpoint, hitSphere2))
       hitSphere = hitSphere1;
@@ -234,14 +242,14 @@ Point3f HitSphere (Trackball * tb, const Point3f & p)
       hitSphere = hitSphere2;
   }
 
-  /*float dl= */ Distance (ln, tb->center);
-  bool resHp = HitHyper (tb->center, tb->radius, viewpoint, vp, hitPlane, hitHyper);
+  /*float dl= */ Distance (ln, center);
+  bool resHp = HitHyper (center, tb->radius, viewpoint, vp, hitPlane, hitHyper);
 
   // four cases
 
   // 1) Degenerate line tangent to both sphere and hyperboloid!
   if ((!resSp && !resHp)) {
-    hit = ClosestPoint (ln, tb->center);
+    Point3f hit = ClosestPoint (ln, center);
     //printf("closest point to line %f\n",Distance(hit,tb->center));
     return hit;
   }
@@ -251,7 +259,7 @@ Point3f HitSphere (Trackball * tb, const Point3f & p)
     return hitHyper;            // 3) line cross only the hyperboloid
 
   // 4) line cross both sphere and hyperboloid: choose according angle.
-  float angleDeg = math::ToDeg (Angle ((viewpoint - tb->center), (hitSphere - tb->center)));
+  float angleDeg = math::ToDeg (Angle ((viewpoint - center), (hitSphere - center)));
 
   //printf("Angle %f (%5.2f %5.2f %5.2f) (%5.2f %5.2f %5.2f)\n",angleDeg,hitSphere[0],hitSphere[1],hitSphere[2],hitHyper[0],hitHyper[1],hitHyper[2]);
   if (angleDeg < 45)
@@ -667,12 +675,7 @@ void DrawSphereIcon (Trackball * tb,bool active)
   glMatrixMode(GL_MODELVIEW);
 	glPushMatrix ();
   glTranslate (tb->center);
-  glMultMatrix (tb->track.InverseMatrix ());
   glScale (tb->radius);
-  Matrix44f r;
-  tb->track.rot.ToMatrix (r);
-
-  glMultMatrix (Inverse(r));
   
 	float amb[4] = { .3f, .3f, .3f, 1.0f };
   float col[4] = { .5f, .5f, .8f, 1.0f };
