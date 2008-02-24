@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2008/02/24 18:05:08  ponchio
+Should work as before. I didn't test cylinder and other exotic modes.
+
 Revision 1.10  2008/02/24 14:37:00  ponchio
 Restored trackball functionality. Not very much tested, and code will need some
 cleanup.
@@ -680,7 +683,7 @@ void DrawSphereIcon (Trackball * tb,bool active)
 	glPushMatrix ();
   Point3f center = tb->center + tb->track.InverseMatrix()*tb->center;
   glTranslate(center);
-  glScale (tb->radius);
+  glScale (tb->radius/tb->track.sca);
   
 	float amb[4] = { .3f, .3f, .3f, 1.0f };
   float col[4] = { .5f, .5f, .8f, 1.0f };
