@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.6  2008/02/22 20:34:35  benedetti
+corrected typo
+
 Revision 1.5  2008/02/22 20:04:02  benedetti
 many user interface improvements, cleaned up a little
 
@@ -264,7 +267,7 @@ Quaternionf MovableCoordinateFrame::GetRotation()
 void MovableCoordinateFrame::Rot(float angle_deg,const Point3f axis)
 {
   Similarityf s;
-  s.SetRotate(angle_deg*M_PI/180.0f,Inverse(rotation).Rotate(axis));
+  s.SetRotate(angle_deg*M_PI/180.0f,(rotation).Rotate(axis));
   Move(s);
 }
 
@@ -331,7 +334,7 @@ void MovableCoordinateFrame::AlignWith(const Point3f pri,const Point3f secondary
 void MovableCoordinateFrame::Move(const Similarityf track)
 {
   position = position + track.tra;
-  rotation = rotation * track.rot;
+  rotation = rotation * Inverse(track.rot);
 }
 
 void MovableCoordinateFrame::RotateToAlign(const Point3f source, const Point3f dest)
@@ -428,6 +431,7 @@ void ActiveCoordinateFrame::Render(QGLWidget* glw)
     Point3f axis, arc_point;
     float angle;
     manipulator->track.rot.ToAxis(angle,axis);
+    angle = -angle;
     if(current_mode==rotx){
       verse=((axis+x_axis).Norm()<1?-1:1);
       glColor(xcolor); axis_name='x'; arc_point=y_axis*(size*0.8);
