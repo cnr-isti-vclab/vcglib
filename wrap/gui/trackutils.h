@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2008/02/26 18:46:55  ponchio
+Fixed bug in drawing position of the trackball when changin center.
+
 Revision 1.12  2008/02/24 18:10:54  ponchio
 Fixed scale behaviour.
 
@@ -683,16 +686,13 @@ void DrawSphereIcon (Trackball * tb,bool active)
 {  
   glPushAttrib (GL_TRANSFORM_BIT |GL_ENABLE_BIT | GL_LINE_BIT | GL_CURRENT_BIT | GL_LIGHTING_BIT);
   glMatrixMode(GL_MODELVIEW);
-	glPushMatrix ();
-/*  Matrix44f rot;
-   tb->track.rot.ToMatrix(rot);
-  Invert(rot);*/
-//  Point3f center = tb->center + tb->track.InverseMatrix()*tb->center;
+  glPushMatrix ();
+
   Point3f center = tb->center + tb->track.InverseMatrix()*Point3f(0, 0, 0);
   glTranslate(center);
   glScale (tb->radius/tb->track.sca);
   
-	float amb[4] = { .3f, .3f, .3f, 1.0f };
+  float amb[4] = { .3f, .3f, .3f, 1.0f };
   float col[4] = { .5f, .5f, .8f, 1.0f };
   glEnable (GL_LINE_SMOOTH);
   if (active)
