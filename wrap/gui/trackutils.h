@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2008/02/24 18:10:54  ponchio
+Fixed scale behaviour.
+
 Revision 1.11  2008/02/24 18:05:08  ponchio
 Should work as before. I didn't test cylinder and other exotic modes.
 
@@ -681,7 +684,11 @@ void DrawSphereIcon (Trackball * tb,bool active)
   glPushAttrib (GL_TRANSFORM_BIT |GL_ENABLE_BIT | GL_LINE_BIT | GL_CURRENT_BIT | GL_LIGHTING_BIT);
   glMatrixMode(GL_MODELVIEW);
 	glPushMatrix ();
-  Point3f center = tb->center + tb->track.InverseMatrix()*tb->center;
+/*  Matrix44f rot;
+   tb->track.rot.ToMatrix(rot);
+  Invert(rot);*/
+//  Point3f center = tb->center + tb->track.InverseMatrix()*tb->center;
+  Point3f center = tb->center + tb->track.InverseMatrix()*Point3f(0, 0, 0);
   glTranslate(center);
   glScale (tb->radius/tb->track.sca);
   
