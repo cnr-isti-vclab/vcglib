@@ -25,6 +25,9 @@
   History
 
  $Log: not supported by cvs2svn $
+ Revision 1.4  2007/06/20 10:28:04  tarini
+ "newline at end of file" and  "endif" warnings fixed
+
  Revision 1.3  2006/11/09 07:51:44  cignoni
  bug due to wrong access to eventually unexistent FaceColor
 
@@ -126,14 +129,14 @@ namespace io {
 		{
 			for(unsigned int i=0;i<materials.size();i++)
 			{
-				bool ka = materials[i].Ka == mtl.Ka;
-				bool kd = materials[i].Kd == mtl.Kd;
-				bool ks = materials[i].Ks == mtl.Ks;
-				bool tr = materials[i].Tr == mtl.Tr;
-				bool illum = materials[i].illum == mtl.illum;
-				bool ns = materials[i].Ns == mtl.Ns;
-				bool map = materials[i].map_Kd == mtl.map_Kd;
-				if(ka & kd & ks & tr & illum & ns & map){return i;}
+				if(materials[i].Kd     != mtl.Kd    ) continue;
+				if(materials[i].Ka     != mtl.Ka    ) continue;
+				if(materials[i].Ks     != mtl.Ks    ) continue;
+				if(materials[i].Tr     != mtl.Tr    ) continue;
+				if(materials[i].illum  != mtl.illum ) continue;
+				if(materials[i].Ns     != mtl.Ns    ) continue;
+				if(materials[i].map_Kd != mtl.map_Kd) continue;
+				return i;
 			}
 			return -1;
 		}
