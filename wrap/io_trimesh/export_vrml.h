@@ -23,6 +23,9 @@
 /****************************************************************************
 History
 $Log: not supported by cvs2svn $
+Revision 1.8  2008/02/21 17:47:29  cignoni
+corrected texture saving. Still broken the multitexturing
+
 Revision 1.7  2008/02/21 17:23:57  cignoni
 Corrected various bug, involving spurious commas, and pervertex color saved as per wedge color.
 
@@ -42,8 +45,6 @@ Added Comments for documentation
 
 #include <stdio.h>
 #include <wrap/io_trimesh/io_mask.h>
-
-#include "io_material.h"
 
 namespace vcg {
 	namespace tri {
