@@ -25,6 +25,9 @@
   History
 
  $Log: not supported by cvs2svn $
+ Revision 1.5  2008/02/27 00:34:43  cignoni
+ corrected various bugs in the export of texture coords
+
  Revision 1.4  2007/06/20 10:28:04  tarini
  "newline at end of file" and  "endif" warnings fixed
 
@@ -59,6 +62,7 @@ namespace io {
 	struct Material
 	{
 		unsigned int index;//index of material
+		std::string materialName;
 
 		Point3f Ka;//ambient
 		Point3f Kd;//diffuse
