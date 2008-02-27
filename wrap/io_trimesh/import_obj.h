@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2008/01/17 18:02:02  cignoni
+added missing cast for normal assignments
+
 Revision 1.18  2007/12/13 17:57:33  cignoni
 removed harmless gcc warnings
 
@@ -88,6 +91,7 @@ Initial Working version coded by Buzzelli.
 #include <wrap/callback.h>
 #include <vcg/complex/trimesh/allocate.h>
 #include <wrap/io_trimesh/io_mask.h>
+#include <wrap/io_trimesh/io_material.h>
 
 #include <fstream>
 #include <string>
@@ -165,37 +169,6 @@ struct ObjTexCoord
 {
 	float u;
 	float v;
-};
-
-struct Material
-{
-	Material()
-	{
-		strcpy(name, "default_material");
-		ambient		= Point3f( .2f,  .2f,  .2f);
-		diffuse		= Point3f(1.0f, 1.0f, 1.0f);
-		specular	= Point3f(1.0f, 1.0f, 1.0f);
-		
-		shininess =		 0;
-		alpha			= 1.0f;
-		
-		strcpy(textureFileName, "");
-		textureIdx = -1;
-	};
-
-  char		name[FILENAME_MAX];
-
-  Point3f ambient;
-  Point3f diffuse;
-  Point3f specular;
-
-  int			shininess;
-  float		alpha;
-
-  bool		bSpecular;
-
-  char		textureFileName[FILENAME_MAX];
-	short		textureIdx;
 };
 
 enum OBJError {
@@ -417,7 +390,7 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
             if(!GoodObjIndex(ff.t[i],oi.numTexCoords)) 
               return E_BAD_VERT_TEX_INDEX;
 
-					ff.tInd=materials[currentMaterialIdx].textureIdx;
+					ff.tInd=materials[currentMaterialIdx].index;
 				}
 				
 				// verifying validity of vertex indices
@@ -533,16 +506,16 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 				unsigned i = 0;
 				while (!found && (i < materials.size()))
 				{
-					std::string currentMaterialName = materials[i].name;
+					std::string currentMaterialName = materials[i].materialName;
 					if (currentMaterialName == materialName)
 					{
 						currentMaterialIdx = i;
 					  Material &material = materials[currentMaterialIdx];
-					  Point3f diffuseColor = material.diffuse;
+					  Point3f diffuseColor = material.Kd;
 					  unsigned char r			= (unsigned char) (diffuseColor[0] * 255.0);
 					  unsigned char g			= (unsigned char) (diffuseColor[1] * 255.0);
 					  unsigned char b			= (unsigned char) (diffuseColor[2] * 255.0);
-					  unsigned char alpha = (unsigned char) (material.alpha  * 255.0);
+					  unsigned char alpha = (unsigned char) (material.Tr  * 255.0);
 					  currentColor= Color4b(r, g, b, alpha);
 						found = true;
 					}
@@ -845,8 +818,8 @@ static bool LoadMask(const char * filename, int &mask)
 					}
 					else
 						first = false;
-
-					strcpy(currentMaterial.name, tokens[1].c_str());
+					//strcpy(currentMaterial.name, tokens[1].c_str());
+          currentMaterial.materialName=tokens[1];
 				}
 				else if (header.compare("Ka")==0)
 				{
@@ -854,7 +827,7 @@ static bool LoadMask(const char * filename, int &mask)
 					float g = (float) atof(tokens[2].c_str());
 					float b = (float) atof(tokens[3].c_str());
 
-					currentMaterial.ambient = Point3f(r, g, b); 
+					currentMaterial.Ka = Point3f(r, g, b); 
 				}
 				else if (header.compare("Kd")==0)
 				{
@@ -862,7 +835,7 @@ static bool LoadMask(const char * filename, int &mask)
 					float g = (float) atof(tokens[2].c_str());
 					float b = (float) atof(tokens[3].c_str());
 
-          currentMaterial.diffuse = Point3f(r, g, b); 
+          currentMaterial.Kd = Point3f(r, g, b); 
 				}
 				else if (header.compare("Ks")==0)
 				{
@@ -870,26 +843,28 @@ static bool LoadMask(const char * filename, int &mask)
 					float g = (float) atof(tokens[2].c_str());
 					float b = (float) atof(tokens[3].c_str());
 
-          currentMaterial.specular = Point3f(r, g, b); 
+          currentMaterial.Ks = Point3f(r, g, b); 
 				}
 				else if (	(header.compare("d")==0) ||
 									(header.compare("Tr")==0)	)	// alpha
 				{
-          currentMaterial.alpha = (float) atof(tokens[1].c_str());
+          currentMaterial.Tr = (float) atof(tokens[1].c_str());
 				}
 				else if (header.compare("Ns")==0)  // shininess        
 				{
-					currentMaterial.shininess = atoi(tokens[1].c_str());
+					currentMaterial.Ns = atoi(tokens[1].c_str());
 				}
 				else if (header.compare("illum")==0)	// specular illumination on/off
 				{
 					int illumination = atoi(tokens[1].c_str());
-          currentMaterial.bSpecular = (illumination == 2);
+          //currentMaterial.bSpecular = (illumination == 2);
+          currentMaterial.illum = illumination;
 				}
 				else if( (header.compare("map_Kd")==0)	|| (header.compare("map_Ka")==0) ) // texture name
 				{
 					std::string textureName = tokens[1];
-					strcpy(currentMaterial.textureFileName, textureName.c_str());
+					//strcpy(currentMaterial.textureFileName, textureName.c_str());
+					 currentMaterial.map_Kd=textureName;
 					
 					// adding texture name into textures vector (if not already present)
 					// avoid adding the same name twice
@@ -900,7 +875,7 @@ static bool LoadMask(const char * filename, int &mask)
 					{
 						if (textureName.compare(textures[j])==0)
 						{
-							currentMaterial.textureIdx = (int)j;
+							currentMaterial.index = (int)j;
 							found = true;
 						}
 						++j;
@@ -908,7 +883,7 @@ static bool LoadMask(const char * filename, int &mask)
 					if (!found)
 					{
 						textures.push_back(textureName);
-						currentMaterial.textureIdx = (int)size;
+						currentMaterial.index = (int)size;
 					}
 				}
 				// we simply ignore other situations
