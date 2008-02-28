@@ -409,20 +409,20 @@ namespace Tags
 		}
 	};
 
-	class TrasparentTag : public XMLTag
+	class TransparentTag : public XMLTag
 	{
 	public:
-		TrasparentTag()
-			:XMLTag("trasparent")
+		TransparentTag()
+			:XMLTag("transparent")
 		{
 		}
 	};
 
-	class TrasparencyTag : public XMLTag
+	class TransparencyTag : public XMLTag
 	{
 	public:
-		TrasparencyTag()
-			:XMLTag("trasparency")
+		TransparencyTag()
+			:XMLTag("transparency")
 		{
 		}
 	};
@@ -762,7 +762,6 @@ namespace Tags
 		{
 			_attributes.push_back(TagAttribute("semantic",semantic));
 			_attributes.push_back(TagAttribute("input_semantic",input_semantic));
-			_attributes.push_back(TagAttribute("target",input_set));
 		}
 	};
 
@@ -772,6 +771,32 @@ namespace Tags
 		SceneTag()
 			:XMLTag("scene")
 		{
+		}
+	};
+
+	#include <QDateTime>
+
+	class CreatedTag : public XMLLeafTag//added
+	{
+	public:
+		CreatedTag()
+			:XMLLeafTag("created")
+		{
+			QDateTime dateCreated = QDateTime::currentDateTime().toUTC();
+			QString dateCreatedStr = dateCreated.toString();
+			_text.push_back(dateCreatedStr);
+		}
+	};
+
+	class ModifiedTag : public XMLLeafTag//added
+	{
+	public:
+		ModifiedTag()
+			:XMLLeafTag("modified")
+		{
+			QDateTime dateModified = QDateTime::currentDateTime().toUTC();
+			QString dateModifiedStr = dateModified.toString();
+			_text.push_back(dateModifiedStr);
 		}
 	};
 
@@ -846,6 +871,8 @@ public:
 		
 		assetnode->_sons.push_back(contributornode);
 		assetnode->_sons.push_back(new XLeaf(new Tags::UpAxisTag()));
+		assetnode->_sons.push_back(new XLeaf(new Tags::CreatedTag()));//added
+		assetnode->_sons.push_back(new XLeaf(new Tags::ModifiedTag()));
 		root->_sons.push_back(assetnode);
 		
 		XNode* libimages = new XNode(new Tags::LibraryImagesTag());
@@ -921,9 +948,9 @@ public:
 			XLeaf* colorref = new XLeaf(new Tags::ColorTag(0,0,0,1));
 			XNode* reflectivitynode = new XNode(new Tags::ReflectivityTag());
 			XLeaf* floatrefl = new XLeaf(new Tags::FloatTag(0.5));
-			XNode* transparentnode = new XNode(new Tags::TrasparentTag());
+			XNode* transparentnode = new XNode(new Tags::TransparentTag());
 			XLeaf* colortra = new XLeaf(new Tags::ColorTag(0,0,0,1));
-			XNode* transparencynode = new XNode(new Tags::TrasparencyTag());
+			XNode* transparencynode = new XNode(new Tags::TransparencyTag());
 			XLeaf* floattra = new XLeaf(new Tags::FloatTag(0.0));
 			XNode* refranode = new XNode(new Tags::IndexOfRefractionTag());
 			XLeaf* floatrefrac = new XLeaf(new Tags::FloatTag(0.0));
@@ -1062,7 +1089,7 @@ public:
 				trianglesnode = new XNode(new Tags::TrianglesTag(m.face.size()));
 			}
 			else
-					trianglesnode = new XNode(new Tags::TrianglesTag(mytripatches[indmat].size(),"instancematerial" + QString::number(indmat)));
+					trianglesnode = new XNode(new Tags::TrianglesTag(mytripatches[indmat].size(),"material" + QString::number(indmat)));
 
 			XNode* inputtrinode = new XNode(new Tags::InputTag(0,"VERTEX",shape+"-lib-vertices"));
 			trianglesnode->_sons.push_back(inputtrinode);
@@ -1099,15 +1126,16 @@ public:
 		XNode* visualscenenode = new XNode(new Tags::VisualSceneTag("VisualSceneNode","VisualScene"));
 		XNode* nodenode = new XNode(new Tags::NodeTag("node","node"));
 		XNode* instgeonode = new XNode(new Tags::InstanceGeometryTag(shape+"-lib"));
+		XNode* bindnode = new XNode(new Tags::BindMaterialTag());
+		XNode* techcommmatnode = new XNode(new Tags::TechniqueCommonTag());
 		for(unsigned int ii = 0; ii < m.textures.size(); ++ii)
 		{
-			XNode* bindnode = new XNode(new Tags::BindMaterialTag());
-			XNode* techcommmatnode = new XNode(new Tags::TechniqueCommonTag());
-			XNode* instmatnode = new XNode(new Tags::InstanceMaterialTag("instancematerial"  + QString::number(ii),"material" + QString::number(ii)));
+			XNode* instmatnode = new XNode(new Tags::InstanceMaterialTag("material"  + QString::number(ii),"material" + QString::number(ii)));
 			XNode* bindvertnode = new XNode(new Tags::BindVertexInputTag("UVSET0","TEXCOORD","0"));
-			connectHierarchyNode(instgeonode,bindnode,techcommmatnode,instmatnode,bindvertnode);
+			connectHierarchyNode(techcommmatnode,instmatnode,bindvertnode);
 		}
-		connectHierarchyNode(visualscenenode,nodenode,instgeonode);
+
+		connectHierarchyNode(visualscenenode,nodenode,instgeonode,bindnode,techcommmatnode);
 		libvisualnode->_sons.push_back(visualscenenode);
 		root->_sons.push_back(libvisualnode);
 
@@ -1124,6 +1152,18 @@ public:
 	{
 		delete doc;
 	}
+
+	//template<typename MESHMODELTYPE>
+	//static int importColladaDocument(const QDomDocument& doc,MESHMODELTYPE& m,const int mask)
+	//{
+	//	QDomElement root = doc.toElement();
+	//	if (root.isNull())
+	//		return UtilDAE::E_BAD_CONVERTION_FROM_NODE_TO_ELEMENT;
+	//	QDomNodeList lst = root.elementsByTagName("COLLADA");
+	//	int err = UtilDAE::checkOccurencies(lst,UtilDAE::ONE);
+	//	if (
+	//	return vcg::tri::io::UtilDAE::E_NOERROR; 
+	//}
 };
 } //Collada
 #endif
