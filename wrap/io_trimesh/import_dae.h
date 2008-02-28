@@ -32,6 +32,7 @@ namespace io {
 			if (!wtsrc.isNull())
 			{
 				indtx = face.at(faceind).toInt();
+				int num = wt.size(); 
 				assert(indtx * stride < wt.size());
 				m.face[meshfaceind].WT(component) = vcg::TexCoord2<float>();
 				m.face[meshfaceind].WT(component).U() = wt.at(indtx * stride).toFloat();
@@ -351,6 +352,7 @@ namespace io {
 			inf->dae->doc = doc;
 			//GetTexture(*(info->doc),inf);
 
+			//scene->instance_visual_scene
 			QDomNodeList scenes = inf->dae->doc->elementsByTagName("scene");
 			int scn_size = scenes.size();
 			if (scn_size == 0) 
@@ -413,8 +415,14 @@ namespace io {
 						}
 					}
 					//if there is at least a mesh I clean the problem status variable from E_NOMESH ERROR
-					if ((problem & E_NOMESH) && (found_a_mesh))
-						problem = problem & ~E_NOMESH; 
+				
+					if (((problem & E_NOMESH) || (problem & E_NOPOLYGONALMESH)) && (found_a_mesh))
+					{	
+						if (problem & E_NOMESH) 
+							problem = problem & ~E_NOMESH;
+						if (problem & E_NOPOLYGONALMESH)
+							problem = problem & ~E_NOPOLYGONALMESH;
+					}
 				}
 			}
 
@@ -432,9 +440,14 @@ namespace io {
 					problem |= LoadMesh(m,inf,geochild.at(chd),tmp); 
 				}
 			}
-			//if there is at least a mesh I clean the problem status variable from E_NOMESH ERROR
-			if ((problem & E_NOMESH) && (found_a_mesh))
-				problem = problem & ~E_NOMESH;  
+			//if there is at least a mesh I clean the problem status variable from E_NOMESH or E_NOPOLYGONALMESH ERROR
+			if (((problem & E_NOMESH) || (problem & E_NOPOLYGONALMESH)) && (found_a_mesh))
+			{	
+				if (problem & E_NOMESH) 
+					problem = problem & ~E_NOMESH;
+				if (problem & E_NOPOLYGONALMESH)
+					problem = problem & ~E_NOPOLYGONALMESH;
+			}
 			info = inf;
 			return problem;
 		}
