@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2008/02/05 10:11:34  cignoni
+A small typo (a T:: instead of TT::)
+
 Revision 1.22  2008/02/04 21:26:45  ganovelli
 added ImportLocal which imports all local attributes into vertexplus and faceplus.
 A local attribute is everything (N(), C(), Q()....) except pointers to other simplices
@@ -156,12 +159,12 @@ struct AdjTypePack {
 class WedgeTexTypePack {
 public:
   WedgeTexTypePack() { 
-    wt[0].u()=.5;wt[0].v()=.5;
-    wt[1].u()=.5;wt[1].v()=.5;
-    wt[2].u()=.5;wt[2].v()=.5;
-    wt[0].n()=0; 
-    wt[1].n()=0; 
-    wt[2].n()=0; 
+    wt[0].U()=.5;wt[0].V()=.5;
+    wt[1].U()=.5;wt[1].V()=.5;
+    wt[2].U()=.5;wt[2].V()=.5;
+    wt[0].N()=-1; 
+    wt[1].N()=-1; 
+    wt[2].N()=-1; 
   }
 
   typename VALUE_TYPE::TexCoordType wt[3];
@@ -379,6 +382,11 @@ public:
     return (*this).Base().AF[(*this).Index()]._zp[j]; 
   }
 	
+	typename T::FacePointer        &FFp1( const int j )       { return FFp((j+1)%3);}
+	typename T::FacePointer        &FFp2( const int j )       { return FFp((j+2)%3);}
+	typename T::FacePointer  const  FFp1( const int j ) const { return FFp((j+1)%3);}
+	typename T::FacePointer  const  FFp2( const int j ) const { return FFp((j+2)%3);}
+
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){FFp(0) = NULL; FFp(1) = NULL; FFp(2) = NULL;
 																				FFi(0) =   -1; FFi(1) =   -1; FFi(2) =   -1;
