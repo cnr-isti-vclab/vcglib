@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2006/11/28 21:29:21  cignoni
+Re added typedef Histogramf and Histogramd
+
 Revision 1.15  2006/11/28 09:47:42  corsini
 add documentation
 fix typo
@@ -152,6 +155,7 @@ public:
 	 */
 	void Add(ScalarType v);
 
+  int MaxCount() const;
 	/** 
 	 * Returns the value corresponding to a given percentile of the data.
 	 *
@@ -261,6 +265,14 @@ void Histogram<ScalarType>::FileWrite(const std::string &filename)
 
 	fclose(fp);
 }
+
+
+template <class ScalarType> 
+int Histogram<ScalarType>::MaxCount() const
+{
+	return *(std::max_element(H.begin(),H.end()));
+}
+	
 
 
 template <class ScalarType> 
