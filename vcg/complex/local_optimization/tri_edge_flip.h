@@ -45,14 +45,14 @@ namespace vcg
 		class PlanarEdgeFlip : public LocalOptimization< TRIMESH_TYPE >::LocModType
 		{
 		protected:
-			typedef	typename TRIMESH_TYPE::FaceType				FaceType;
-			typedef typename TRIMESH_TYPE::FacePointer		FacePointer;
-			typedef typename TRIMESH_TYPE::FaceIterator		FaceIterator;
-			typedef	typename TRIMESH_TYPE::VertexType			VertexType;
-			typedef	typename TRIMESH_TYPE::VertexPointer	VertexPointer;
-			typedef	typename TRIMESH_TYPE::ScalarType			ScalarType;
-			typedef	typename TRIMESH_TYPE::CoordType			CoordType;
-			typedef vcg::face::Pos<FaceType>							PosType;
+			typedef typename TRIMESH_TYPE::FaceType       FaceType;
+			typedef typename TRIMESH_TYPE::FacePointer    FacePointer;
+			typedef typename TRIMESH_TYPE::FaceIterator   FaceIterator;
+			typedef typename TRIMESH_TYPE::VertexType     VertexType;
+			typedef typename TRIMESH_TYPE::ScalarType     ScalarType;
+			typedef typename TRIMESH_TYPE::VertexPointer  VertexPointer;
+			typedef typename TRIMESH_TYPE::CoordType      CoordType;
+			typedef vcg::face::Pos<FaceType>              PosType;
 			typedef typename LocalOptimization<TRIMESH_TYPE>::HeapElem HeapElem;
 			typedef typename LocalOptimization<TRIMESH_TYPE>::HeapType HeapType;
 
@@ -78,7 +78,7 @@ namespace vcg
 			{ 
 				static int im = 0; 
 				return im;
-			};
+			}
 
 
 		public:
@@ -86,7 +86,7 @@ namespace vcg
 			*	Default constructor
 			*/
 			inline PlanarEdgeFlip()
-			{};
+			{}
 
 			/*!
 			*	Constructor with <I>pos</I> type
@@ -96,7 +96,7 @@ namespace vcg
 				_pos = pos;
 				_localMark = mark;
 				_priority = ComputePriority();
-			};
+			}
 
 			/*!
 			*	Copy Constructor 
@@ -106,20 +106,21 @@ namespace vcg
 				_pos = par.GetPos();
 				_localMark = par.GetMark();
 				_priority = par.Priority();
-			};
+			}
 
 
 			/*!
 			*/
 			~PlanarEdgeFlip()
 			{
-			};
+			}
 
 
 			/*!
 			* Parameter 
 			*/
-			static ScalarType &CoplanarAngleThresholdDeg() { 
+			static ScalarType &CoplanarAngleThresholdDeg()
+			{ 
 				static ScalarType _CoplanarAngleThresholdDeg = 0.01f;
 				return _CoplanarAngleThresholdDeg;
 			}
@@ -134,19 +135,19 @@ namespace vcg
 			ModifierType IsOfType()
 			{ 
 				return TriEdgeFlipOp;
-			};
+			}
 
 			/*!
 			* Check if the pos is updated
 			*/
 			bool IsUpToDate()
 			{
-				int MostRecentVertexMark = _pos.V(0)->IMark();
-				MostRecentVertexMark = vcg::math::Max<ScalarType>(MostRecentVertexMark, _pos.V(1)->IMark());
-				MostRecentVertexMark = vcg::math::Max<ScalarType>(MostRecentVertexMark, _pos.V(2)->IMark());
+				int MostRecentVertexMark = _pos.F()->V(0)->IMark();
+				MostRecentVertexMark = vcg::math::Max<ScalarType>(MostRecentVertexMark, _pos.F()->V(1)->IMark());
+				MostRecentVertexMark = vcg::math::Max<ScalarType>(MostRecentVertexMark, _pos.F()->V(2)->IMark());
 
 				return ( _localMark >=  MostRecentVertexMark );
-			};
+			}
 
 			/*!
 			* 
@@ -157,7 +158,7 @@ namespace vcg
 			{
 				if( math::ToDeg( Angle( _pos.FFlip()->cN() , _pos.F()->cN() ) ) >  CoplanarAngleThresholdDeg() ) return false;
 				return  vcg::face::CheckFlipEdge(*_pos.f, _pos.z);
-			};
+			}
 
 
 
@@ -165,14 +166,15 @@ namespace vcg
 			*	Compute the priority of this optimization
 			*/
 			/*
-			0  
-			/|\
-			/ | \
+			   0  
+			  /|\
+			 / | \
 			1  |  3 
-			\ | /
-			\|/
-			2
-			*/			virtual ScalarType ComputePriority()
+			 \ | /
+			  \|/
+			   2
+			*/
+			virtual ScalarType ComputePriority()
 			{
 
 				CoordType v0,v1,v2,v3;
@@ -198,7 +200,7 @@ namespace vcg
 				_priority = vcg::math::Max<ScalarType>(QaAfter,QbAfter) - vcg::math::Min<ScalarType>(Qa,Qb) ;
 				_priority *=-1;
 				return _priority;
-			};
+			}
 
 			/*!
 			* Return the priority of this optimization
@@ -206,27 +208,25 @@ namespace vcg
 			virtual ScalarType Priority() const
 			{
 				return _priority;
-			};
+			}
 
 			/*!
 			* Execute the flipping of the edge
 			*/
 			void Execute(TRIMESH_TYPE &m)
 			{
-
 				int z = _pos.z;
-
 				vcg::face::FlipEdge(*_pos.f, z);
-			};
+			}
 
 			/*!
 			*/
 			const char* Info(TRIMESH_TYPE &m)
 			{
 				static char dump[60];
-				sprintf(dump,"%i -> %i %g\n", _pos.V(0)-&m.vert[0], _pos.V(1)-&m.vert[0],-_priority);
+				sprintf(dump,"%i -> %i %g\n", _pos.F()->V(0)-&m.vert[0], _pos.F()->V(1)-&m.vert[0],-_priority);
 				return dump;
-			};
+			}
 
 			/*!
 			*/
@@ -256,7 +256,7 @@ namespace vcg
 						}
 					} // endif
 				} //endfor
-			};
+			}
 
 			/*!
 			*/
@@ -266,10 +266,10 @@ namespace vcg
 				PosType pos(_pos.f, _pos.z);
 				pos.FlipF();
 
-				_pos.V(0)->IMark() = GlobalMark();
-				_pos.V(1)->IMark() = GlobalMark();
-				_pos.V(2)->IMark() = GlobalMark();
-				pos.V(2)->IMark() = GlobalMark();
+				_pos.F()->V(0)->IMark() = GlobalMark();
+				_pos.F()->V(1)->IMark() = GlobalMark();
+				_pos.F()->V(2)->IMark() = GlobalMark();
+				pos.F()->V(2)->IMark() = GlobalMark();
 
 				PosType poss(_pos.f, _pos.z);
 				poss.FlipE();
@@ -297,62 +297,72 @@ namespace vcg
 				}
 
 				std::push_heap(heap.begin(),heap.end());
-			};
+			}
 		}; // end of PlanarEdgeFlip class
 
 
 		template <class TRIMESH_TYPE, class MYTYPE>
 		class TriEdgeFlip : public PlanarEdgeFlip<TRIMESH_TYPE, MYTYPE>
 		{
+		protected:
+			typedef typename TRIMESH_TYPE::FaceType       FaceType;
+			typedef typename TRIMESH_TYPE::FacePointer    FacePointer;
+			typedef typename TRIMESH_TYPE::FaceIterator   FaceIterator;
+			typedef typename TRIMESH_TYPE::VertexType     VertexType;
+			typedef typename TRIMESH_TYPE::VertexPointer  VertexPointer;
+			typedef typename TRIMESH_TYPE::ScalarType     ScalarType;
+			typedef typename TRIMESH_TYPE::CoordType      CoordType;
+			typedef vcg::face::Pos<FaceType>              PosType;
+			typedef typename LocalOptimization<TRIMESH_TYPE>::HeapElem HeapElem;
+			typedef typename LocalOptimization<TRIMESH_TYPE>::HeapType HeapType;
+			
 		public:
+			/*!
+			*	Default constructor
+			*/
+			inline TriEdgeFlip() {}
+			
 			/*!
 			*	Constructor with <I>pos</I> type
 			*/
-			inline TriEdgeFlip(const PosType pos, int mark) //: PlanarEdgeFlip<TRIMESH_TYPE,MYTYPE>( pos, mark)
+			inline TriEdgeFlip(const PosType pos, int mark)
 			{
-				_pos = pos;
-				_localMark = mark;
-				_priority = ComputePriority();
-			};
+				this->_pos = pos;
+				this->_localMark = mark;
+				this->_priority = ComputePriority();
+			}
 
 			/*!
 			*	Copy Constructor 
 			*/
 			inline TriEdgeFlip(const TriEdgeFlip &par)
 			{
-				_pos = par.GetPos();
-				_localMark = par.GetMark();
-				_priority = par.Priority();
-			};
-
-			inline TriEdgeFlip(const PlanarEdgeFlip &par)
-			{
-				_pos = par.GetPos();
-				_localMark = par.GetMark();
-				_priority = ComputePriority();
-			};
+				this->_pos = par.GetPos();
+				this->_localMark = par.GetMark();
+				this->_priority = par.Priority();
+			}
 
 
 			//only topology check 
 			bool IsFeasible()
 			{
-				return  vcg::face::CheckFlipEdge(*_pos.f, _pos.z);
-			};
+				return vcg::face::CheckFlipEdge(*this->_pos.f, this->_pos.z);
+			}
 
 
 			ScalarType ComputePriority()
 			{
 				/*
-				0  
-       /|\
-      / | \
-     1  |  3 
-      \ | /
-       \|/
-        2
-			 */
+				    0
+					 /|\
+					/ | \
+				 1  |  3 
+					\ | /
+					 \|/
+				    2
+				*/
 				CoordType v0,v1,v2,v3;
-				PosType app   = _pos;
+				PosType app   = this->_pos;
 
 				v0 = app.v->P();
 				app.FlipE(); app.FlipV();
@@ -395,18 +405,13 @@ namespace vcg
 				assert( fabs(Radius-Radius2) < 0.1 );
 
 				///Return the difference of radius and the distance of v3 and the CircumCenter
-				_priority =  (Radius - Distance(v3,CircumCenter));
-
-
-				_priority *=-1;
-
-
-				return _priority;
-			}	
-
-
+				this->_priority =  (Radius - Distance(v3,CircumCenter));
+				this->_priority *=-1;
+				
+				return this->_priority;
+			}
+			
 		};
-
 
 		/*! @} */
 	}; // end of namespace tri
