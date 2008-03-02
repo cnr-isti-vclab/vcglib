@@ -223,4 +223,3 @@ static void glutWireSphere(GLdouble radius, GLint slices, GLint stacks)
 }
 
 #endif
-	
