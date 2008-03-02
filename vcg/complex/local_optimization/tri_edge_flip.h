@@ -23,7 +23,8 @@
 
 #include <vcg/complex/local_optimization.h>
 #include <vcg/simplex/face/topology.h>
-#include <vcg/space/point3.h>
+//#include <vcg/space/point3.h>
+#include <vcg/space/triangle3.h>
 
 namespace vcg
 {
@@ -178,7 +179,7 @@ namespace vcg
 			{
 
 				CoordType v0,v1,v2,v3;
-				PosType app   = _pos;
+				PosType app = _pos;
 
 				v0 = app.v->P();
 				app.FlipE(); app.FlipV();
@@ -316,6 +317,8 @@ namespace vcg
 			typedef typename LocalOptimization<TRIMESH_TYPE>::HeapElem HeapElem;
 			typedef typename LocalOptimization<TRIMESH_TYPE>::HeapType HeapType;
 			
+			typedef typename vcg::Triangle3<ScalarType> TriangleType;
+			
 		public:
 			/*!
 			*	Default constructor
@@ -353,13 +356,13 @@ namespace vcg
 			ScalarType ComputePriority()
 			{
 				/*
-				    0
+				      0
 					 /|\
 					/ | \
-				 1  |  3 
+				   1  |  3 
 					\ | /
 					 \|/
-				    2
+				      2
 				*/
 				CoordType v0,v1,v2,v3;
 				PosType app   = this->_pos;
@@ -373,7 +376,7 @@ namespace vcg
 				v3 = app.v->P();
 
 
-				CoordType e01 = v0-v1; 
+				/*CoordType e01 = v0-v1; 
 				CoordType e12 = v1-v2;
 				CoordType e20 = v2-v0;
 				CoordType e01Norm = e01; e01Norm.Normalize(); 
@@ -395,7 +398,10 @@ namespace vcg
 				if(SumC==0) return 20;
 
 
-				CoordType CircumCenter= v0*C0/SumC + v1*C1/SumC + v2*C2/SumC;
+				CoordType CircumCenter= v0*C0/SumC + v1*C1/SumC + v2*C2/SumC;*/
+				
+				TriangleType triangle(v0, v1, v2);
+				CoordType CircumCenter = vcg::Circumcenter(triangle);
 
 				ScalarType Radius= Distance(v0,CircumCenter);
 				ScalarType Radius1= Distance(v1,CircumCenter);
