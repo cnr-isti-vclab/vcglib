@@ -23,80 +23,49 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
-Revision 1.5  2008/02/22 20:04:02  benedetti
-many user interface improvements, cleaned up a little
-
-Revision 1.4  2008/02/17 20:52:53  benedetti
-some generalization made
-
-Revision 1.3  2008/02/16 14:12:30  benedetti
-first version
-
 
 ****************************************************************************/
-#ifndef COORDINATEFRAME_H
-#define COORDINATEFRAME_H
+#ifndef ACTIVECOORDINATEFRAME_H
+#define ACTIVECOORDINATEFRAME_H
 
-
-#include <vcg/math/similarity.h>
-#include <vcg/space/color4.h>
-
+#include "coordinateframe.h"
+#include <wrap/gui/trackball.h>
 #include <QGLWidget>
 
 namespace vcg {
 
-class CoordinateFrame
+class ActiveCoordinateFrame: public MovableCoordinateFrame
 {
 public:
-  // functions:  
-  CoordinateFrame(float);
-  virtual ~CoordinateFrame() {}
+  ActiveCoordinateFrame(float);
+  virtual ~ActiveCoordinateFrame();
   virtual void Render(QGLWidget*);
-  // data
-  Color4b basecolor;
-  Color4b xcolor;
-  Color4b ycolor;
-  Color4b zcolor;
-  float size;
-  float linewidth;
-  QFont font;
-  bool drawaxis;
-  bool drawlabels;
-  bool drawvalues;
-  
-protected:
-  // functions:  
-  void drawTickedLine(const Point3d &, const Point3d &, float, float,float);
-  float calcSlope(const Point3d &, const Point3d &, float, int , double *, double *, GLint *);
-  float niceRound(float);
-};
-
-class MovableCoordinateFrame: public CoordinateFrame
-{
-
-public:
-  MovableCoordinateFrame(float);
-  virtual ~MovableCoordinateFrame(){}
-  virtual void Render(QGLWidget*);
-  virtual void Reset(bool ,bool);
+  virtual void Reset(bool, bool);
   virtual void SetPosition(const Point3f);
   virtual void SetRotation(const Quaternionf);
-  virtual Point3f GetPosition();
-  virtual Quaternionf GetRotation();
-  virtual void GetTransform(Matrix44f &);
-  virtual void Rot(float,const Point3f);
-  virtual void AlignWith(const Point3f, const Point3f, const char, const char);
+  virtual void AlignWith(const Point3f, const Point3f,const char,const char);
+  void MouseDown(int, int, int);
+  void MouseMove(int, int); 
+  void MouseUp(int, int, int); 
+  void ButtonUp(int);
+  void ButtonDown(int);
+  void SetSnap(float);
 
+  Trackball *manipulator;
+  bool drawmoves;
+  bool drawrotations;
 protected:
   // data:
-  Point3f position;
-  Quaternionf rotation;
-  
+  const int move_button,rotate_button;
+  const int x_modifier,y_modifier,z_modifier;
+  Point3f x_axis,y_axis,z_axis;
+  float rot_snap_rad,mov_snap;
   // functions: 
   virtual void Move(const Similarityf);
-  void RotateToAlign(const Point3f, const Point3f);
-
+  void Update();
+private:
+  int movx,movy,movz,rotx,roty,rotz;
 };
 
 }//namespace
-#endif /*COORDINATEFRAME_H*/
+#endif /*ACTIVECOORDINATEFRAME_H*/
