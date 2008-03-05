@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2008/02/03 23:50:51  cignoni
+Important Change. Now adding a null bbox to a bbox leave it unchanged (instead of trashing it)
+
 Revision 1.17  2007/07/12 06:41:24  cignoni
 added a missing static to the Construct() member
 
@@ -375,9 +378,14 @@ template <class ScalarType>
 ScalarType DistancePoint3Box3(const Point3<ScalarType> &test,
 							  const Box3<ScalarType> &bbox)
 {
-	///if fall inside return zero
+	///if fall inside return distance to a face
 	if (bbox.IsIn(test))
-		return 0;
+	{
+		ScalarType dx=std::min<ScalarType>(bbox.max.X()-test.X(),test.X()-bbox.min.X());
+		ScalarType dy=std::min<ScalarType>(bbox.max.Y()-test.Y(),test.Y()-bbox.min.Y());
+		ScalarType dz=std::min<ScalarType>(bbox.max.Z()-test.Z(),test.Z()-bbox.min.Z());
+		return std::min<ScalarType>(dx,std::min<ScalarType>(dy,dz));
+	}
 
 	///find the right quandrant 
 	bool XM=(test.X()>=bbox.max.X());
