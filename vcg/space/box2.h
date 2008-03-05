@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2007/07/02 10:01:00  corsini
+fix area
+
 Revision 1.7  2006/10/07 16:50:26  m_di_benedetto
 Added Dim() method.
 
@@ -234,6 +237,54 @@ public:
 	}
 }; // end class definition
 
+template <class ScalarType> 
+ScalarType DistancePoint2Box2(const Point2<ScalarType> &test,
+							  const Box2<ScalarType> &bbox)
+{
+	///test possible position respect to bounding box
+	if (!bbox.IsIN(test)){
+		if ((test.X()<=bbox.min.X())&&(test.Y()<=bbox.min.Y()))
+			return ((test-bbox.min).Norm());
+		else
+		if ((test.X()>=bbox.min.X())&&
+			(test.X()<=bbox.max.X())&&
+			(test.Y()<=bbox.min.Y()))
+			return (bbox.min.Y()-test.Y());
+		else
+		if ((test.X()>=bbox.max.X())&&
+			(test.Y()<=bbox.min.Y()))
+			return ((test-vcg::Point2<ScalarType>(bbox.max.X(),bbox.min.Y())).Norm());
+		else
+		if ((test.Y()>=bbox.min.Y())&&
+			(test.Y()<=bbox.max.Y())&&
+			(test.X()>=bbox.max.X()))
+			return (test.X()-bbox.max.X());
+		else
+		if ((test.X()>=bbox.max.X())&&(test.Y()>=bbox.max.Y()))
+			return ((test-bbox.max).Norm());
+		else
+		if ((test.X()>=bbox.min.X())&&
+			(test.X()<=bbox.max.X())&&
+			(test.Y()>=bbox.max.Y()))
+			return (test.Y()-bbox.max.Y());
+		else
+		if ((test.X()<=bbox.min.X())&&
+			(test.Y()>=bbox.max.Y()))
+			return ((test-vcg::Point2<ScalarType>(bbox.min.X(),bbox.max.Y())).Norm());
+		else
+		if ((test.X()<=bbox.min.X())&&
+			(test.Y()<=bbox.max.Y())&&
+			(test.Y()>=bbox.min.Y()))
+			return (bbox.min.X()-test.X());
+	}
+	else
+	{
+		//return minimum distance
+		ScalarType dx=std::min<ScalarType>(fabs(test.X()-bbox.min.X()),fabs(bbox.max.X()-test.X()));
+		ScalarType dy=std::min<ScalarType>(fabs(test.Y()-bbox.min.Y()),fabs(bbox.max.Y()-test.Y()));
+		return(std::min<ScalarType>(dx,dy));
+	}
+}
 
 	/// Specificazione di box of short
 typedef Box2<short>  Box2s;
