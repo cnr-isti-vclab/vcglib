@@ -24,6 +24,10 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2008/03/05 11:21:49  cignoni
+Heavily refactored the whole structure.
+Some interfaces have been changed. Be careful.
+
 Revision 1.17  2008/02/29 12:15:06  cignoni
 added maxcount
 
@@ -87,6 +91,7 @@ Initial Release
 #include <algorithm>
 #include <assert.h>
 #include <string>
+#include <limits>
 
 
 namespace vcg {
