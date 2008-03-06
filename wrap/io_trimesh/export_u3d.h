@@ -7,6 +7,7 @@
 #include <QString>
 #include <QProcess>
 #include <vector>
+ #include <QMessageBox>
 
 #include "export_idtf.h"
 #include<vcg/space/point3.h>
@@ -107,12 +108,13 @@ private:
 	{
 		QProcess p;
 		QString convstring = par._converter_loc;
-		convstring =  convstring + " -en1 -input " + par._input_file + " -output " + par._output_file; 
+		convstring =  "\""+convstring + "\" -en 1 -input \"" + par._input_file + "\" -output \"" + par._output_file +"\""; 
 		qDebug("Starting converter %s", qPrintable(convstring));
 		p.setProcessChannelMode(QProcess::MergedChannels);
 		p.start(convstring);
 		//wait until the task has been completed
 		bool t = p.waitForFinished(-1);
+		if(!t) QMessageBox::warning(0, QString("Saving Error"), QString("Failed conversion executable '%1'").arg(convstring));
 		p.close();
 		return (int) t;
 	}
