@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.56  2008/01/24 11:52:05  cignoni
+corrected small bug in RemoveDuplicateVertex
+
 Revision 1.55  2007/10/29 11:32:46  cignoni
 Added a missing IsD() test
 
@@ -1098,6 +1101,40 @@ private:
           }
         return true;
       }
+
+/**
+      This function simply test that a mesh has some reasonable tex coord.
+      */
+      static bool HasConsistentPerWedgeTexCoord(MeshType &m)
+      {
+        if(!HasPerWedgeTexCoord(m)) return false;
+
+        for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
+          if(!(*fi).IsD()) 
+          { FaceType &f=(*fi);
+					 if( ! ( (f.WT(0).N() == f.WT(1).N()) && (f.WT(0).N() == (*fi).WT(2).N()) )  )
+							return false; // all the vertices must have the same index.
+												
+					 if((*fi).WT(0).N() <0) return false; // no undefined texture should be allowed
+          }
+        return true;
+      }
+
+		/**
+		Simple check that there are no face with all collapsed tex coords.
+		*/
+		static bool HasZeroTexCoordFace(MeshType &m)
+		{
+			if(!HasPerWedgeTexCoord(m)) return false;
+			
+			for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
+				if(!(*fi).IsD()) 
+				{
+					if( (*fi).WT(0).P() == (*fi).WT(1).P() && (*fi).WT(0).P() == (*fi).WT(2).P() ) return false;
+				}
+			return true;
+		}
+
 
 	//test real intersection between faces
 static	bool TestIntersection(FaceType *f0,FaceType *f1)
