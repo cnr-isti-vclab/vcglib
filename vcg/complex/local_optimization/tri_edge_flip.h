@@ -374,34 +374,8 @@ namespace vcg
 				v2 = app.v->P();	
 				app.FlipE(); app.FlipF(); app.FlipE(); app.FlipV();
 				v3 = app.v->P();
-
-
-				/*CoordType e01 = v0-v1; 
-				CoordType e12 = v1-v2;
-				CoordType e20 = v2-v0;
-				CoordType e01Norm = e01; e01Norm.Normalize(); 
-				CoordType e12Norm = e12; e12Norm.Normalize(); 
-				CoordType e20Norm = e20; e20Norm.Normalize(); 
-
-				// The trilinear coordinates of the circumcenter are:  cosA:cosB:cosC,
-
-				ScalarType CosV0=-e01Norm*e20Norm;
-				ScalarType CosV1=e01Norm*-e12Norm;
-				ScalarType CosV2=e12Norm*-e20Norm;
-
-				// to swithc frm trilinear coordinates to barycentric coords it is necessary to multply each coord for the lenght of the opposite side
-
-				ScalarType C0 = CosV0 * Distance(v2,v1);
-				ScalarType C1 = CosV1 * Distance(v2,v0);
-				ScalarType C2 = CosV2 * Distance(v0,v1);
-				ScalarType SumC=C0+C1+C2;
-				if(SumC==0) return 20;
-
-
-				CoordType CircumCenter= v0*C0/SumC + v1*C1/SumC + v2*C2/SumC;*/
 				
-				TriangleType triangle(v0, v1, v2);
-				CoordType CircumCenter = vcg::Circumcenter(triangle);
+				CoordType CircumCenter = vcg::Circumcenter(*(app.F()));
 
 				ScalarType Radius= Distance(v0,CircumCenter);
 				ScalarType Radius1= Distance(v1,CircumCenter);
