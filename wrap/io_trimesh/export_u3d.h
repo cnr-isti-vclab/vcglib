@@ -108,7 +108,11 @@ private:
 	{
 		QProcess p;
 		QString convstring = par._converter_loc;
+		#if defined(Q_OS_WIN)
 		convstring =  "\""+convstring + "\" -en 1 -input \"" + par._input_file + "\" -output \"" + par._output_file +"\""; 
+		#else
+		convstring =       convstring + " -en 1 -input \"" + par._input_file + "\" -output \"" + par._output_file +"\""; 
+		#endif
 		qDebug("Starting converter %s", qPrintable(convstring));
 		p.setProcessChannelMode(QProcess::MergedChannels);
 		p.start(convstring);
