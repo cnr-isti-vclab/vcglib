@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.1  2008/02/16 12:00:34  benedetti
+first version, adapted from meshlab's editmeasure plugin
+
 
 ****************************************************************************/
 #ifndef RUBBERBAND_H
@@ -33,21 +36,95 @@ $Log: not supported by cvs2svn $
 
 namespace vcg {
 
+/*!
+  @brief The Rubberband class.
+
+  This class is useful for interactively draw a straight line between 2 pickable points in a GL widget.
+*/
 class Rubberband
 {
 public:
   //data:
-  Color4b color;  
-  // functions:  
+  
+  /// The color of the rubberband
+  Color4b color;
+  
+  // functions:
+  
+  /*!
+    @brief The constructor.
+
+    Initialize the rubberband data.
+  */
   Rubberband(Color4b);
+  
+  /*!
+    @brief The destructor.
+
+    The destructor.
+  */
   virtual ~Rubberband() {}
-  void Render(QGLWidget*);
-  void Drag(QPoint);
-  void Pin(QPoint);
+  
+  /*!
+    @brief Render the rubberband and do the picking.
+    
+    Is important that this function is called in order to apply the Drag and Pin commands.
+    
+    @param glw the GL widget.
+  */
+  void Render(QGLWidget* glw);
+  
+  /*!
+    @brief Set the current rubberband endpoint.
+    
+    This function should be called after MouseMove events.
+    
+    @param cursor the cursor position.
+  */
+  void Drag(QPoint cursor);
+  
+  /*!
+    @brief Ask for picking.
+    
+    This function should be called after MouseRelease events.
+    
+    The first time is called, if the picking is successful, sets the startpoint.
+    The second time sets, if the picking is successful, the endpoint.
+    After the second time this has no effect.
+    
+    @param cursor the cursor position.
+  */
+  void Pin(QPoint cursor);
+  
+  /*!
+    @brief Reset the rubberband.
+  */
   void Reset();
+  
+  /*!
+    @brief Return true if the rubberband has been drawn.
+    
+    @return true if the line has been drawn, false otherwise.
+  */
   bool IsReady();  
-  void GetPoints(Point3f &,Point3f &);
-  void RenderLabel(QString text,QGLWidget* gla);
+  
+  /*!
+    @brief Get the rubberband start and end points.
+    
+    @param startpoint is set to the rubberband start point.
+    @param endpoint  is set to the rubberband end point.
+    @warning Don't call this function until IsReady() returns true!
+  */
+  void GetPoints(Point3f &startpoint,Point3f &endpoint);
+  
+  /*!
+    @brief Render a text label near the endpoint (if it exists).
+    
+    @param text the text to render.
+    @param glw the GL widget.
+  */
+  void RenderLabel(QString text,QGLWidget* glw);
+
 private:
   // types:
   typedef enum { RUBBER_BEGIN = 0,
