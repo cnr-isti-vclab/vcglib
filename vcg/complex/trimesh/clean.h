@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.57  2008/03/06 08:37:16  cignoni
+added HasConsistentPerWedgeTexCoord
+
 Revision 1.56  2008/01/24 11:52:05  cignoni
 corrected small bug in RemoveDuplicateVertex
 
@@ -455,12 +458,15 @@ private:
 				int count_fd = 0;
 
 				for(fi=m.face.begin(); fi!=m.face.end();++fi)
-					if((*fi).V(0) == (*fi).V(1) || 
-             (*fi).V(0) == (*fi).V(2) ||
-             (*fi).V(1) == (*fi).V(2) )
+					if(!(*fi).IsD()) 
 					{
-						count_fd++;
-						Allocator<MeshType>::DeleteFace(m,*fi);
+							if((*fi).V(0) == (*fi).V(1) || 
+								 (*fi).V(0) == (*fi).V(2) ||
+								 (*fi).V(1) == (*fi).V(2) )
+							{
+								count_fd++;
+								Allocator<MeshType>::DeleteFace(m,*fi);
+							}
 					}
 				return count_fd;
 			}
