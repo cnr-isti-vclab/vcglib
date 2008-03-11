@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.24  2008/02/28 15:41:17  cignoni
+Added FFpi methods and better init of texture coords
+
 Revision 1.23  2008/02/05 10:11:34  cignoni
 A small typo (a T:: instead of TT::)
 
@@ -226,6 +229,43 @@ public:
     for(fi=lbegin;fi!=lend;++fi)
         (*fi)._ovp=this;
  }
+ 
+ 
+  
+// this function is called by the specialized Reorder function, that is called whenever someone call the allocator::CompactVertVector
+void ReorderFace(std::vector<size_t> &newFaceIndex )
+{
+	size_t pos=0;
+	size_t i=0;
+	if (ColorEnabled)      assert( CV.size() == newFaceIndex.size() );
+	if (MarkEnabled)       assert( MV.size() == newFaceIndex.size() );
+	if (NormalEnabled)     assert( NV.size() == newFaceIndex.size() );
+	if (VFAdjacencyEnabled)assert( AV.size() == newFaceIndex.size() );
+	if (FFAdjacencyEnabled)assert( AF.size() == newFaceIndex.size() );
+	if (WedgeTexEnabled)   assert(WTV.size() == newFaceIndex.size() );
+		
+	for(i=0;i<newFaceIndex.size();++i)
+		{
+			if(newFaceIndex[i] != std::numeric_limits<size_t>::max() )
+				{
+					assert(newFaceIndex[i] <= i);
+					if (ColorEnabled)        CV[newFaceIndex[i]] =  CV[i]; 
+					if (MarkEnabled)         MV[newFaceIndex[i]] =  MV[i];
+					if (NormalEnabled)       NV[newFaceIndex[i]] =  NV[i];
+					if (VFAdjacencyEnabled)  AV[newFaceIndex[i]] =  AV[i];
+					if (FFAdjacencyEnabled)  AF[newFaceIndex[i]] =  AF[i];
+					if (WedgeTexEnabled)    WTV[newFaceIndex[i]] = WTV[i];
+				}
+		}
+	
+	if (ColorEnabled)       CV.resize(BaseType::size());
+	if (MarkEnabled)        MV.resize(BaseType::size());
+	if (NormalEnabled)      NV.resize(BaseType::size());
+	if (VFAdjacencyEnabled) AV.resize(BaseType::size());
+	if (FFAdjacencyEnabled) AF.resize(BaseType::size());
+	if (WedgeTexEnabled)   WTV.resize(BaseType::size());
+}
+
 ////////////////////////////////////////
 // Enabling Functions
 
@@ -546,6 +586,13 @@ public:
       if(FaceType::HasFaceMarkOcf()) return m.face.IsMarkEnabled();
       else return FaceType::HasFaceMark();
     }
+
+		template < class FaceType >
+			void ReorderFace( std::vector<size_t>  &newFaceIndex, face::vector_ocf< FaceType > &faceVec)
+		{
+			faceVec.ReorderFace(newFaceIndex);
+		}
+
   }
 }// end namespace vcg
 #endif

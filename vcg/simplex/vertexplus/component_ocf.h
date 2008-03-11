@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2008/02/05 20:42:43  cignoni
+Other small typos
+
 Revision 1.12  2008/02/04 21:26:49  ganovelli
 added ImportLocal which imports all local attributes into vertexplus and faceplus.
 A local attribute is everything (N(), C(), Q()....) except pointers to other simplices
@@ -138,7 +141,7 @@ public:
 	}
  
 // this function is called by the specialized Reorder function, that is called whenever someone call the allocator::CompactVertVector
-void Reorder(std::vector<size_t> &newVertIndex )
+void ReorderVert(std::vector<size_t> &newVertIndex )
 {
 	size_t pos=0;
 	size_t i=0;
@@ -349,9 +352,9 @@ namespace tri
 	}
 
 	template < class VertexType >
-	void Reorder( std::vector<size_t>  &newVertIndex, vert::vector_ocf< VertexType > &vertVec)
+	void ReorderVert( std::vector<size_t>  &newVertIndex, vert::vector_ocf< VertexType > &vertVec)
 		{
-			vertVec.Reorder(newVertIndex);
+			vertVec.ReorderVert(newVertIndex);
 		}
 }
 }// end namespace vcg

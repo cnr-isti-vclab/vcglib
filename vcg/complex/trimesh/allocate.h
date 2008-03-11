@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.39  2007/12/11 20:18:55  cignoni
+forgotten required std::
+
 Revision 1.38  2007/12/11 11:35:50  cignoni
 Added the CompactVertexVector garbage collecting function.
 
@@ -160,10 +163,17 @@ namespace vcg {
 	namespace tri {
 		/** \addtogroup trimesh */
 		
+		
+		// Placeholder. 
+		// this one is called by the Compact and overridden by more specialized functions for OCF classes.
+		// that manage also the additional types
 		template <class vector_type>
-			void Reorder( std::vector<size_t> &newVertIndex, vector_type &vert)
+			void ReorderFace( std::vector<size_t> &newVertIndex, vector_type &vert)
 		{}
-
+		template <class vector_type>
+		void ReorderVert( std::vector<size_t> &newVertIndex, vector_type &vert)
+		{}
+		
 		/*@{*/
 		/// Class to safely add vertexes and faces to a mesh updating all the involved pointers.
 		/// It provides static memeber to add either vertex or faces to a trimesh.
@@ -376,7 +386,7 @@ namespace vcg {
 		static void CompactVertexVector( MeshType &m ) 
 		{
 			// newVertIndex [ <old_vert_position> ] gives you the new position of the vertex in the vector;
-			std::vector<size_t> newVertIndex(m.vert.size());
+			std::vector<size_t> newVertIndex(m.vert.size(),std::numeric_limits<size_t>::max() );
 			
 			size_t pos=0;
 			size_t i=0;
@@ -392,7 +402,11 @@ namespace vcg {
 				}
 			}
 			assert(pos==m.vn);
-			Reorder<typename MeshType::VertContainer>(newVertIndex,m.vert);
+			
+			// call a templated reordering function that manage any additional data internally stored by the vector 
+			// for the default std::vector no work is needed (some work is typically needed for the OCF stuff) 
+			ReorderVert<typename MeshType::VertContainer>(newVertIndex,m.vert);
+			
 			m.vert.resize(m.vn);
 			FaceIterator fi;
 			VertexPointer vbase=&m.vert[0];
@@ -406,6 +420,77 @@ namespace vcg {
 					}
 				
 		}
+
+		/* 
+		Function to compact all the vertices that have been deleted and put them to the end of the vector. 
+		after this pass the isD test in the scanning of vertex vector, is no more strongly necessary.
+		It should not be called when TemporaryData is active;
+		*/
+		
+		static void CompactFaceVector( MeshType &m ) 
+		{
+			// newFaceIndex [ <old_face_position> ] gives you the new position of the face in the vector;
+			std::vector<size_t> newFaceIndex(m.face.size(),std::numeric_limits<size_t>::max() );
+			
+			size_t pos=0;
+			size_t i=0;
+			
+			for(i=0;i<m.face.size();++i)
+			{
+				if(!m.face[i].IsD())
+				{
+					if(pos!=i)
+						m.face[pos]=m.face[i];
+					newFaceIndex[i]=pos;
+					++pos;
+				}
+			}
+			assert(pos==m.fn);
+			
+			// call a templated reordering function that manage any additional data internally stored by the vector 
+			// for the default std::vector no work is needed (some work is typically needed for the OCF stuff) 
+		  ReorderFace<typename MeshType::FaceType>(newFaceIndex,m.face);
+					
+			// Loop on the vertices to correct VF relation
+			VertexIterator vi;
+			FacePointer fbase=&m.face[0];
+			for (vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
+					if(!(*vi).IsD())
+					{
+						if(HasVFAdjacency(m))
+									if ((*vi).cVFp()!=0)
+									{
+										size_t oldIndex = (*vi).cVFp() - fbase;
+										assert(oldIndex >=0 && oldIndex < newFaceIndex.size());
+										(*vi).VFp() = fbase+newFaceIndex[oldIndex];
+									}
+					}
+			
+			// Loop on the faces to correct VF and FF relations
+			m.face.resize(m.fn);
+			FaceIterator fi;
+			for(fi=m.face.begin();fi!=m.face.end();++fi)
+				if(!(*fi).IsD())
+				{
+					if(HasVFAdjacency(m))
+								for(i=0;i<3;++i)
+								if ((*fi).cVFp(i)!=0)
+									{
+										size_t oldIndex = (*fi).VFp(i) - fbase;
+										assert(oldIndex >=0 && oldIndex < newFaceIndex.size());
+										(*fi).VFp(i) = fbase+newFaceIndex[oldIndex];
+									}
+					if(HasFFAdjacency(m))
+										for(i=0;i<3;++i)
+											if ((*fi).cFFp(i)!=0)
+											{
+												size_t oldIndex = (*fi).FFp(i) - fbase;
+												assert(oldIndex >=0 && oldIndex < newFaceIndex.size());
+												(*fi).FFp(i) = fbase+newFaceIndex[oldIndex];
+											}
+				}
+		}
+
 }; // end class
 		
 
