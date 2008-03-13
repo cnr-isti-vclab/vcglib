@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2007/12/13 17:57:33  cignoni
+removed harmless gcc warnings
+
 Revision 1.20  2007/03/12 16:40:17  tarini
 Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
 
@@ -91,6 +94,8 @@ Corrected small bug in the tokenizer (it would add a fake token for lines ending
 #include <assert.h>
 #include <vcg/space/color4.h>
 #include<vcg/complex/trimesh/allocate.h>
+#include <wrap/callback.h>
+#include <wrap/io_trimesh/io_mask.h>
 
 namespace vcg
 {
@@ -165,7 +170,7 @@ namespace vcg
 						return false;
 				}
 
-				static int Open(MESH_TYPE &mesh, const char *filename, CallBackPos *cb=0)
+				static int Open(MESH_TYPE &mesh, const char *filename,CallBackPos *cb=0)
 				{
 					int loadmask;
 					return Open(mesh,filename,loadmask,cb);
