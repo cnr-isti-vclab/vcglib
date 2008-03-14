@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.8  2008/03/02 16:44:18  benedetti
+moved ActiveCoordinateFrame to its own files
+
 Revision 1.7  2008/02/26 18:22:42  benedetti
 corrected after quaternion/similarity/trackball changes
 
@@ -95,11 +98,11 @@ void CoordinateFrame::Render(QGLWidget* glw)
       glVertex(-c); glVertex(c);
     glEnd();
     glColor(basecolor);
-    // assi positivi
+    // positive axes
     drawTickedLine(o,a,size,slope_a,linewidth);  // Draws x axis
     drawTickedLine(o,b,size,slope_b,linewidth);  // Draws y axis
     drawTickedLine(o,c,size,slope_c,linewidth);  // Draws z axis
-    //assi negativi
+    // negative axes
     drawTickedLine(o,-a,size,slope_a,linewidth);  // Draws x axis
     drawTickedLine(o,-b,size,slope_b,linewidth);  // Draws y axis
     drawTickedLine(o,-c,size,slope_c,linewidth);  // Draws z axis
@@ -220,18 +223,18 @@ void MovableCoordinateFrame::Render(QGLWidget* gla)
 
 void MovableCoordinateFrame::GetTransform(Matrix44f & transform)
 {
-  // costruisco la matrice che porta le coordinate in spazio di mondo
+  // build the matrix that moves points in world coordinates
 
-  // resetto la trasf
+  // clean transform
   transform.SetIdentity();
 
-  // ruoto
+  // apply rotation
   Matrix44f rot;
   rotation.ToMatrix(rot);
 
   transform = Inverse(rot) * transform ;
   
-  // sposto in posizione
+  // apply translation
   Matrix44f pos;
   pos.SetTranslate(position);
   
@@ -282,8 +285,8 @@ void MovableCoordinateFrame::AlignWith(const Point3f pri,const Point3f secondary
   if( primary.Norm() < EPSILON*size )
     return;
 
-  primary.Normalize(); // ho l'asse primario, lo normalizzo
-  Plane3f plane(0,primary); // piano di proiezione per la seconda rotazione
+  primary.Normalize();
+  Plane3f plane(0,primary); // projection plane for the second rotation
    
   Point3f x(1,0,0),y(0,1,0),z(0,0,1);
   Point3f first(0,0,0),second(0,0,0),third(0,0,0);
@@ -302,34 +305,34 @@ void MovableCoordinateFrame::AlignWith(const Point3f pri,const Point3f secondary
     else assert (0);   
   } else assert (0);
 
-  Point3f old_first = Inverse(rotation).Rotate(first); // l'asse 1
-  Point3f old_second_pro = plane.Projection(Inverse(rotation).Rotate(second)); //la proiezione dell'asse 2
-  Point3f old_third_pro = plane.Projection(Inverse(rotation).Rotate(third)); //la proiezione dell'asse 3
+  Point3f old_first = Inverse(rotation).Rotate(first); // axis 1
+  Point3f old_second_pro = plane.Projection(Inverse(rotation).Rotate(second)); // axis 2 projection
+  Point3f old_third_pro = plane.Projection(Inverse(rotation).Rotate(third)); // axis 3 projection
 
-  // allinea l'asse 1 corrente all'asse primary
-  RotateToAlign(old_first,primary); // prima rotazione
+  // align axis 1 to primary
+  RotateToAlign(old_first,primary);
 
-  Point3f secondary_pro = plane.Projection(secondary); // la proiezione di secondary
-  Point3f new_second_pro = plane.Projection(Inverse(rotation).Rotate(second)); // la proiezione dell'asse 2 dopo la prima rotazione
+  Point3f secondary_pro = plane.Projection(secondary); // secondary's projection
+  Point3f new_second_pro = plane.Projection(Inverse(rotation).Rotate(second)); // axis 2 projection after the first rotation
 
-  // se c'e` un asse secondary e la sua proiezione non e` 0
-  if( secondary.Norm() > EPSILON*size && secondary_pro.Norm() > EPSILON ){
-    // allinea la proiezione dell'asse 2 dopo la prima rotazione alla proiezione dell'asse secondary
+  if( secondary.Norm() > EPSILON*size && secondary_pro.Norm() > EPSILON ){ // secondary is not null nor parallel to primary
+    // align axis 2 projection after the first rotation to secondary's projection
     secondary_pro.Normalize();
     RotateToAlign(new_second_pro,secondary_pro);
     return;
   }
-  // creco di riallineare l'asse 2
-  if ( old_second_pro.Norm() > EPSILON ) {
-    // allinea la proiezione dell'asse 2 dopo la prima rotazione alla proiezione dell'asse 2 
+
+  if ( old_second_pro.Norm() > EPSILON ) { // can realign axis 2
+    // align axis 2 projection after the first rotation to old axis 2 projection
     old_second_pro.Normalize();
     RotateToAlign(new_second_pro,old_second_pro);
     return;
   }
-  // cerco di riallineare l'asse 3
-  Point3f new_third_pro = plane.Projection(Inverse(rotation).Rotate(third)); //la proiezione dell'asse 3 dopo la prima rotazione
-  assert(old_third_pro.Norm() > EPSILON ); // la proiezione dell'asse 3 non dovrebbe essere 0
-  // allinea la proiezione dell'asse 3 dopo la prima rotazione alla proiezione dell'asse 3 
+
+  // realign axis 3
+  Point3f new_third_pro = plane.Projection(Inverse(rotation).Rotate(third));// axis 3 projection after the first rotation
+  assert(old_third_pro.Norm() > EPSILON ); // old axis 3 projection should not be null
+  // align axis 3 projection after the first rotation to old axis 3 projection
   old_third_pro.Normalize();
   RotateToAlign(new_third_pro,old_third_pro);
 }
@@ -343,26 +346,26 @@ void MovableCoordinateFrame::Move(const Similarityf track)
 void MovableCoordinateFrame::RotateToAlign(const Point3f source, const Point3f dest)
 {
   const float EPSILON=1e-6;
-  // source e dest devono essere versori
+  // source and dest must be versors
   assert( math::Abs(source.Norm() - 1) < EPSILON);
   assert( math::Abs(dest.Norm() - 1) < EPSILON);
-  
+
   Point3f axis = dest ^ source;
   float sinangle = axis.Norm();
   float cosangle = dest * source;
   float angle = math::Atan2(sinangle,cosangle);  
-  
+
   if( math::Abs(angle) < EPSILON )    
-    return; // angolo ~ 0, annullo
-  
+    return; // angle ~ 0, aborting
+
   if( math::Abs(math::Abs(angle)-M_PI) < EPSILON){
-    // devo trovare un asse su cui flippare
+    // must find a axis to flip on
     Plane3f plane(0,source);
-    axis=plane.Projection(Point3f(1,0,0)); // proietto un punto a caso sul piano normale a source
-  	if(axis.Norm() < EPSILON){ // source era ~ [1,0,0]...
+    axis=plane.Projection(Point3f(1,0,0)); // project a "random" point on source's normal plane
+  	if(axis.Norm() < EPSILON){ // source was ~ [1,0,0]...
   	  axis=plane.Projection(Point3f(0,1,0)); 
-      assert(axis.Norm() > EPSILON); // quest'altro punto deve andare bene
+      assert(axis.Norm() > EPSILON); // this point must be good
   	}
-  }  
-  rotation = rotation * Quaternionf(angle,axis);   
+  }
+  rotation = rotation * Quaternionf(angle,axis);
 }
