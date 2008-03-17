@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2006/12/04 11:11:07  ganovelli
+add const to IsEnabledAttribute
+
 Revision 1.3  2006/12/03 18:01:01  ganovelli
 versione compliant vs2005
 
@@ -31,7 +34,7 @@ Revision 1.2  2006/06/08 20:28:38  ganovelli
 Corretto IsEnabledAttribute
 
 Revision 1.1  2005/10/15 16:21:49  ganovelli
-Working release (compilata solo su MSVC), vector_occ è migrato da component_opt
+Working release (compilata solo su MSVC), vector_occ ï¿½ migrato da component_opt
 
 Revision 1.5  2005/07/07 13:33:52  ganovelli
 some comment
@@ -56,7 +59,7 @@ First Working Release (with this comment)
 namespace vcg {
 	/*@{*/
 /*!
- * This class represent a Traced Vector. A vector_occ is derived by a std::vector.
+ * This class represent a vector_occ. A vector_occ is derived by a std::vector.
  * The characteristic of a vector_occ is that you can add (at run time) new attributes
  * to the container::value_type elements contained in the vector. (see the example..)
  * The position in memory of a traced vector is kept by the Container Allocation Table,
@@ -65,14 +68,15 @@ namespace vcg {
 
 template <class VALUE_TYPE>
 class vector_occ: public std::vector<VALUE_TYPE>{
-	typedef typename vector_occ<VALUE_TYPE> ThisType;
+	typedef  vector_occ<VALUE_TYPE> ThisType;
+	typedef  std::vector<VALUE_TYPE> TT;	
 
 public:
 	vector_occ():std::vector<VALUE_TYPE>(){id = ID(); ID()=ID()+1; reserve(1);}
 	~vector_occ();
 	
 	VALUE_TYPE * Pointer2begin(){
-		if(empty()) return (VALUE_TYPE *)id; else return &*std::vector<VALUE_TYPE>::begin();
+		if(TT::empty()) return (VALUE_TYPE *)id; else return &*std::vector<VALUE_TYPE>::begin();
 	}
 	std::list < CATBase<ThisType>* > attributes;
 	// override di tutte le funzioni che possono spostare 
@@ -94,7 +98,7 @@ public:
   /// Note: once an attribute is disabled, its data is lost (the memory freed)
 	template <class ATTR_TYPE>
 		bool IsEnabledAttribute() const{
-				std::list < CATBase<ThisType> * >::const_iterator ia; 
+				typename std::list < CATBase<ThisType> * >::const_iterator ia; 
 				for(ia = attributes.begin(); ia != attributes.end(); ++ia)
 					if((*ia)->Id() == CAT<ThisType,ATTR_TYPE>::Id())
 						return true;
@@ -106,7 +110,7 @@ public:
   /// Note: once an attribute is disabled, its data is lost (the memory freed)
 	template <class ATTR_TYPE>
 		void DisableAttribute(){
-				std::list < CATBase<ThisType> * >::iterator ia; 
+				typename std::list < CATBase<ThisType> * >::iterator ia; 
 				for(ia = attributes.begin(); ia != attributes.end(); ++ia)
 					if((*ia)->Id() == CAT<ThisType,ATTR_TYPE>::Id())
 						{
@@ -131,8 +135,8 @@ public:
 			EntryTypeMulti	entry = CATEntry<ThisType,EntryTypeMulti >::GetEntry(Pointer2begin());
 			entry.Data().push_back(new Wrap< ATTR_TYPE>);
 
-			((Wrap<ATTR_TYPE>*)entry.Data().back())->reserve(capacity());
-			((Wrap<ATTR_TYPE>*)entry.Data().back())->resize(size());
+			((Wrap<ATTR_TYPE>*)entry.Data().back())->reserve(TT::capacity());
+			((Wrap<ATTR_TYPE>*)entry.Data().back())->resize(TT::size());
 
 			return TempData<ThisType,ATTR_TYPE>((Wrap<ATTR_TYPE>*) entry.Data().back());
 			}
@@ -163,7 +167,7 @@ template <class VALUE_TYPE>
 void vector_occ<VALUE_TYPE>::push_back(const VALUE_TYPE & v){
 	std::vector<VALUE_TYPE>::push_back(v);
 	Update();	
-	std::list < CATBase<ThisType> * >::iterator ia; 
+	typename std::list < CATBase<ThisType> * >::iterator ia; 
 	for(ia = attributes.begin(); ia != attributes.end(); ++ia)
 		(*ia)->AddDataElem(&(*(this->begin())),1);
 
@@ -178,7 +182,7 @@ template <class VALUE_TYPE>
 void vector_occ<VALUE_TYPE>::resize(const unsigned int & size){
 	std::vector<VALUE_TYPE>::resize(size);
 	Update();
-	std::list < CATBase<ThisType> * >::iterator ia; 
+	typename std::list < CATBase<ThisType> * >::iterator ia; 
 	for(ia = attributes.begin(); ia != attributes.end(); ++ia)
 		(*ia)->
 	Resize(&(*(this->begin())),size);
@@ -193,7 +197,7 @@ void vector_occ<VALUE_TYPE>::reserve(const unsigned int & size){
 template <class VALUE_TYPE>
 	void vector_occ<VALUE_TYPE>::
 		Update(){
-		std::list < CATBase<ThisType> * >::iterator ia; 
+		typename std::list < CATBase<ThisType> * >::iterator ia; 
 		if(Pointer2begin() != old_start)
 			for(ia = attributes.begin(); ia != attributes.end(); ++ia)
 				(*ia)->Resort(old_start,Pointer2begin());
@@ -205,7 +209,7 @@ template <class VALUE_TYPE>
 
 template <class VALUE_TYPE>
 vector_occ<VALUE_TYPE>::~vector_occ(){
-		std::list < CATBase<ThisType> * >::iterator ia; 
+		typename std::list < CATBase<ThisType> * >::iterator ia; 
 		for(ia = attributes.begin(); ia != attributes.end(); ++ia)
 			{	
 				(*ia)->Remove(*this);

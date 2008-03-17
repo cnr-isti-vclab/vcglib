@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2007/01/18 01:31:12  cignoni
+Many small syntax changes for mac compiling
+
 Revision 1.6  2006/12/03 18:01:01  ganovelli
 versione compliant vs2005
 
@@ -41,6 +44,7 @@ First Working Release (with this comment)
 /****************************************************************************/ 
 #ifndef __VCGLIB_ENTRIES__
 #define __VCGLIB_ENTRIES__
+
 
 namespace vcg {
 
@@ -145,23 +149,6 @@ private:
 //----------------------------------------------------------------------------------
 
 
-//----------------------------------------------------------------------------------
-// TempData implements a handle to one of the vector od data stored in EntryCATMulti
-template <class STL_CONT, class ATTR_TYPE>
-class TempData{
-public:
-	TempData(std::vector<ATTR_TYPE>  *d):item(d){};
-		typedef ATTR_TYPE attr_type;
-
-		std::vector<ATTR_TYPE>  * Item(){return item;};
-		std::vector<ATTR_TYPE>  * item;
-		ATTR_TYPE & operator []( typename STL_CONT::value_type * v)
-			{
-				int pos = CATEntry<STL_CONT, EntryCATMulti<STL_CONT> >::Ord(v);
-				return (*item)[pos];
-			}
-	};
-//----------------------------------------------------------------------------------
 
 
 }; // end namespace vcg

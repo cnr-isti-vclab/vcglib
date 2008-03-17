@@ -24,11 +24,14 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2006/12/03 18:01:01  ganovelli
+versione compliant vs2005
+
 Revision 1.8  2006/06/08 20:28:57  ganovelli
 aggiunto qualche const sui parametri
 
 Revision 1.7  2005/10/15 16:21:48  ganovelli
-Working release (compilata solo su MSVC), vector_occ è migrato da component_opt
+Working release (compilata solo su MSVC), vector_occ ï¿½ migrato da component_opt
 
 Revision 1.6  2005/07/07 13:33:51  ganovelli
 some comment
@@ -59,8 +62,8 @@ First Working Release (with this comment)
 namespace vcg {
 	/*@{*/
 /*!
- * CATBase is the abstract class for all the allocation tables. THese table keep track of
- * where the traced vector (see traced_ector.h) are kepth in memory.
+ * CATBase is the abstract class for all the allocation tables. These table keep track of
+ * where the traced vector (see traced_ector.h) are kept in memory.
  * The goal is to know (given a pointer to a memory location), which is the vector the pointed 
  * element is in
  * 
@@ -69,7 +72,7 @@ namespace vcg {
 template <typename STL_CONT>
 class CATBase{
 public:
-typedef typename typename STL_CONT::value_type ValueType;
+typedef  typename STL_CONT::value_type ValueType;
 
 virtual void Resort(ValueType*,ValueType*) =0;
 virtual void Remove(const STL_CONT&) = 0;
@@ -89,8 +92,8 @@ static int & Id(){
 template <typename STL_CONT, class ENTRY_TYPE>
 class CATEntry: public CATBase<STL_CONT>{
 public:
-typedef typename typename STL_CONT::value_type ValueType;
-typedef typename ENTRY_TYPE EntryType;
+typedef  typename STL_CONT::value_type ValueType;
+typedef  ENTRY_TYPE EntryType;
 
 CATEntry(){if(Id()==0){
 							Id() = CATBase<STL_CONT>::Id()+1;
@@ -131,7 +134,7 @@ static ValueType *& Upper() {
 }		
 
 static typename std::list<ENTRY_TYPE>::iterator	 & Curr(){		// container that was last accessed
-	static std::list<ENTRY_TYPE>::iterator currEntry;
+	static typename std::list<ENTRY_TYPE>::iterator currEntry;
 	return currEntry;
 }
 
@@ -168,7 +171,7 @@ typename std::list<ENTRY_TYPE>::iterator CATEntry<STL_CONT,ENTRY_TYPE>::
 
 FindBase(const ValueType * pt)
 {
-std::list<ENTRY_TYPE>::iterator ite,curr_base,_;
+typename std::list<ENTRY_TYPE>::iterator ite,curr_base,_;
 ite = AT().begin();
 curr_base = AT().end();
 
@@ -196,7 +199,7 @@ void CATEntry< STL_CONT, ENTRY_TYPE>::
 Update(const ValueType * pt)
 {
 if(!IsTheSameAsLast(pt)){
-	std::list<ENTRY_TYPE>::iterator lower_ite,upper_ite;
+	typename std::list<ENTRY_TYPE>::iterator lower_ite,upper_ite;
 	lower_ite = FindBase(pt);
 
 	assert(	lower_ite!=AT().end());
@@ -228,7 +231,7 @@ void CATEntry<STL_CONT, ENTRY_TYPE>::
 
 Remove( const STL_CONT & c )
 {
-std::list<ENTRY_TYPE>::iterator ite;
+typename std::list<ENTRY_TYPE>::iterator ite;
 for(ite = AT().begin(); ite != AT().end();  ++ite)
 	if((*ite).C() == &c)
 		{
@@ -243,7 +246,7 @@ void CATEntry<STL_CONT, ENTRY_TYPE>::
 
 RemoveIfEmpty( const STL_CONT & c )
 {
-std::list<ENTRY_TYPE>::iterator ite;
+typename std::list<ENTRY_TYPE>::iterator ite;
 for(ite = AT().begin(); ite != AT().end();  ++ite)
 	if((*ite).C() == &c)
 			if(!(*ite).Empty())
@@ -256,7 +259,7 @@ void CATEntry<STL_CONT, ENTRY_TYPE>::
 
 Remove(ValueType  *	pt)
 {
-	std::list<ENTRY_TYPE>::iterator lower_ite;
+	typename std::list<ENTRY_TYPE>::iterator lower_ite;
 	lower_ite = FindBase(pt);
 	AT().erase(lower_ite);
 	UTD() = false;
@@ -269,7 +272,7 @@ void CATEntry<STL_CONT, ENTRY_TYPE>::
 Insert( STL_CONT & c,bool cond )
 {
 ENTRY_TYPE entry(c);
-std::list<ENTRY_TYPE>::iterator lower_ite,upper_ite;
+typename std::list<ENTRY_TYPE>::iterator lower_ite,upper_ite;
 upper_ite = FindBase( c.Pointer2begin());
 bool isIn = (upper_ite != AT().end());
 if(isIn){
@@ -314,7 +317,8 @@ Curr()->Resize(n);
 //--------------------------------------------------------------------------------------------
 template <typename STL_CONT,class ATTR_TYPE>
 class CAT:public CATEntry<STL_CONT, EntryCAT<STL_CONT,ATTR_TYPE> >{
-typedef typename typename STL_CONT::value_type ValueType;
+typedef typename STL_CONT::value_type ValueType;
+typedef CATEntry<STL_CONT, EntryCAT<STL_CONT,ATTR_TYPE> > TT;
 public:
 static ATTR_TYPE & Get(const ValueType * pt);
 static CAT<STL_CONT,ATTR_TYPE> * New();
@@ -327,8 +331,8 @@ ATTR_TYPE & CAT<STL_CONT,ATTR_TYPE>::
 Get(const ValueType * pt)
 {
 int ord = Ord(pt);
-//int ord = pt-  &(*  ((*AT().begin()).C()->begin())); se AT() contiene un solo elemento funziona anche così
-return Curr()->Data()[ord];
+//int ord = pt-  &(*  ((*AT().begin()).C()->begin())); se AT() contiene un solo elemento funziona anche cos
+return TT::Curr()->Data()[ord];
 }
 
 template <typename STL_CONT, class ATTR_TYPE>
@@ -344,6 +348,23 @@ New(){
 
 
 //---------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
+// TempData implements a handle to one of the vector od data stored in EntryCATMulti
+template <class STL_CONT, class ATTR_TYPE>
+class TempData{
+public:
+	TempData(std::vector<ATTR_TYPE>  *d):item(d){};
+		typedef ATTR_TYPE attr_type;
+
+		std::vector<ATTR_TYPE>  * Item(){return item;};
+		std::vector<ATTR_TYPE>  * item;
+		ATTR_TYPE & operator []( typename STL_CONT::value_type * v)
+			{
+				int pos = CATEntry<STL_CONT, EntryCATMulti<STL_CONT> >::Ord(v);
+				return (*item)[pos];
+			}
+	};
+//----------------------------------------------------------------------------------
 
 };//end namespace vcg
 
