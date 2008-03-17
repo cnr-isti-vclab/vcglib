@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2007/01/29 00:18:20  pietroni
+-added some explicit CASTs in order to avoid warning if one use float instead of double as ScalarType
+
 Revision 1.15  2006/09/29 08:36:10  cignoni
 Added missing typedef for gcc compiing
 
@@ -47,6 +50,7 @@ Added initial disclaimer
 #define __VCGLIB_LINALGEBRA_H
 
 #include <vcg/math/matrix44.h>
+#include <algorithm>
 
 namespace vcg
 {
@@ -233,8 +237,8 @@ namespace vcg
 	
 
 	/*!
-	*	Given a matrix <I>A<SUB>m×n</SUB></I>, this routine computes its singular value decomposition,
-	*	i.e. <I>A=U·W·V<SUP>T</SUP></I>. The matrix <I>A</I> will be destroyed!
+	*	Given a matrix <I>A<SUB>mxn</SUB></I>, this routine computes its singular value decomposition,
+	*	i.e. <I>A=UxWxV<SUP>T</SUP></I>. The matrix <I>A</I> will be destroyed!
 	*	(This is the implementation described in <I>Numerical Recipies</I>).
 	*	\param A	the matrix to be decomposed
 	*	\param W	the diagonal matrix of singular values <I>W</I>, stored as a vector <I>W[1...N]</I>
@@ -427,7 +431,6 @@ namespace vcg
 				}
 				if (its == max_iters)
 				{
-					printf("no convergence in %d SingularValueDecomposition iterations\n", max_iters);
 					convergence = false;
 				}
 				x = W[l]; // Shift from bottom 2-by-2 minor.
@@ -593,11 +596,11 @@ namespace vcg
 
 
 	/*!
-	*	Solves A·X = B for a vector X, where A is specified by the matrices <I>U<SUB>m×n</SUB></I>, 
-	*	<I>W<SUB>n×1</SUB></I> and <I>V<SUB>n×n</SUB></I> as returned by <CODE>SingularValueDecomposition</CODE>.
-	*	No input quantities are destroyed, so the routine may be called sequentially with different b’s.
-	*	\param x	is the output solution vector (<I>x<SUB>n×1</SUB></I>)
-	*	\param b	is the input right-hand side (<I>b<SUB>n×1</SUB></I>)
+	*	Solves AxX = B for a vector X, where A is specified by the matrices <I>U<SUB>mxn</SUB></I>, 
+	*	<I>W<SUB>nx1</SUB></I> and <I>V<SUB>nxn</SUB></I> as returned by <CODE>SingularValueDecomposition</CODE>.
+	*	No input quantities are destroyed, so the routine may be called sequentially with different bxs.
+	*	\param x	is the output solution vector (<I>x<SUB>nx1</SUB></I>)
+	*	\param b	is the input right-hand side (<I>b<SUB>nx1</SUB></I>)
 	*/
 	template <typename MATRIX_TYPE>
 		static void SingularValueBacksubstitution(const MATRIX_TYPE												&U,
