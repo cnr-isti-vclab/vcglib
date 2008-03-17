@@ -24,8 +24,11 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2007/03/12 15:37:21  tarini
+Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
+
 Revision 1.1  2005/10/15 16:24:10  ganovelli
-Working release (compilata solo su MSVC), component_occ è migrato da component_opt
+Working release (compilata solo su MSVC), component_occ ï¿½ migrato da component_opt
 
 
 
@@ -51,6 +54,7 @@ template <class A, class T> class CoordOcc: public T {
 public:
   typedef A CoordType;
   typedef typename CoordType::ScalarType      ScalarType;
+	typedef typename T::VertType VertType;
 	CoordType &P() { return CAT< vector_occ<VertType>,CoordType>::Instance()->Get((VertType*)this); }
   CoordType &UberP() { return CAT< vector_occ<VertType>,CoordType>::Instance()->Get((VertType*)this); }
 };
@@ -63,6 +67,7 @@ template <class T> class Coord3dOcc: public CoordOcc<vcg::Point3d, T> {};
 template <class A, class T> class NormalOcc: public T {
 public:
   typedef A NormalType;
+	typedef typename T::VertType VertType;
   NormalType &N() {return CAT< vector_occ<VertType>,NormalType>::Instance()->Get((VertType*)this); }
 /*private:
   NormalType _norm;   */ 
@@ -74,11 +79,13 @@ template <class T> class Normal3dOcc: public NormalOcc<vcg::Point3d, T> {};
 
 /*-------------------------- TEXCOORD ----------------------------------------*/ 
 
-template <class A, class T> class TexCoordOcc: public T {
+template <class A, class TT> class TexCoordOcc: public TT {
 public:
   typedef A TexCoordType;
+	typedef typename TT::VertType VertType;
   TexCoordType &T() {return CAT< vector_occ<VertType>,TexCoordType>::Instance()->Get((VertType*)this); }
   static bool HasTexCoord()   { return true; }
+  static bool HasTexCoordOcc()   { return true; }
 
 /* private:
   TexCoordType _t;   */ 
@@ -92,11 +99,13 @@ template <class T> class TexCoord2dOcc: public TexCoordOcc<TexCoord2<double,1>, 
 
 template <class T> class FlagOcc:  public T {
 public:
+	typedef typename T::VertType VertType;
    int &Flags() {return CAT< vector_occ<VertType>,int>::Instance()->Get((VertType*)this); }
-   const int Flags() const {return _flags; }
-/*
-private:
-  int  _flags;  */ 
+   const int Flags() const {return CAT< vector_occ<VertType>,int>::Instance()->Get((VertType*)this); }
+	static bool HasFlags() {return true;}	
+	static bool HasFlagsOcc() {return true;}	
+
+
 };
 
 ///*-------------------------- COLOR ----------------------------------*/ 
@@ -104,6 +113,7 @@ private:
 template <class A, class T> class ColorOcc: public T {
 public:
   typedef A ColorType;
+	typedef typename T::VertType VertType;
   ColorType &C() { return CAT< vector_occ<VertType>,ColorType>::Instance()->Get((VertType*)this); }
   static bool HasColor()   { return true; }
 /*private:
@@ -117,6 +127,7 @@ template <class T> class Color4bOcc: public ColorOcc<vcg::Color4b, T> {};
 template <class A, class T> class QualityOcc: public T {
 public:
   typedef A QualityType;
+	typedef typename T::VertType VertType;
   QualityType &Q() { return CAT< vector_occ<VertType>,QualityType>::Instance()->Get((VertType*)this);}
   static bool HasQuality()   { return true; }
 
@@ -128,11 +139,92 @@ template <class T> class QualitysOcc: public QualityOcc<short, T> {};
 template <class T> class QualityfOcc: public QualityOcc<float, T> {};
 template <class T> class QualitydOcc: public QualityOcc<double, T> {};
 //
+
+///*-------------------------- Curvature  ----------------------------------*/ 
+
+template <class A, class TT> class CurvatureOcc: public TT {
+public:
+  typedef Point2<A> CurvatureTypeOcc;
+	typedef typename TT::VertType VertType;
+	typedef typename CurvatureTypeOcc::ScalarType ScalarType;
+
+	ScalarType  &H(){  return CAT< vector_occ<VertType>,CurvatureTypeOcc>::Instance()->Get((VertType*)this)[0];}
+	ScalarType  &K(){  return CAT< vector_occ<VertType>,CurvatureTypeOcc>::Instance()->Get((VertType*)this)[1];}
+	const ScalarType &cH() const { return CAT< vector_occ<VertType>,CurvatureTypeOcc>::Instance()->Get((VertType*)this)[0];}
+	const ScalarType &cK() const { return CAT< vector_occ<VertType>,CurvatureTypeOcc>::Instance()->Get((VertType*)this)[1];}
+
+ 	template <class LeftV>
+	void ImportLocal(const LeftV & leftV){ 
+			CAT< vector_occ<VertType>,CurvatureTypeOcc>::Instance()->Get((VertType*)this)[0] = leftV.cH();
+			CAT< vector_occ<VertType>,CurvatureTypeOcc>::Instance()->Get((VertType*)this)[1] = leftV.cK();
+			TT::ImporLocal(leftV);
+	}
+
+	static bool HasCurvature()   { return true; }
+	static bool HasCurvatureOcc()   { return true; }
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureOcc"));TT::Name(name);}
+
+private:   
+};
+
+template <class T> class CurvaturefOcc: public CurvatureOcc<float, T> {
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvaturefOcc"));T::Name(name);}
+};
+template <class T> class CurvaturedOcc: public CurvatureOcc<double, T> {
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvaturedOcc"));T::Name(name);}
+};
+
+
+/*-------------------------- Curvature Direction ----------------------------------*/ 
+
+template <class S>
+struct CurvatureDirTypeOcc{
+	typedef Point3<S> VecType;
+	typedef  S   ScalarType;
+	CurvatureDirTypeOcc () {}
+	Point3<S>max_dir,min_dir; // max and min curvature direction 
+	S k1,k2;// max and min curvature values
+};
+
+
+template <class A, class TT> class CurvatureDirOcc: public TT {
+public:
+  typedef A CurvatureDirTypeOcc;
+	typedef typename CurvatureDirTypeOcc::VecType VecType;
+	typedef typename CurvatureDirTypeOcc::ScalarType ScalarType;
+	typedef typename TT::VertType VertType;
+
+	VecType &PD1(){ return CAT< vector_occ<VertType>,CurvatureDirTypeOcc>::Instance()->Get((VertType*)this).max_dir;}
+	VecType &PD2(){ return CAT< vector_occ<VertType>,CurvatureDirTypeOcc>::Instance()->Get((VertType*)this).min_dir;}
+	const VecType &cPD1() const {return CAT< vector_occ<VertType>,CurvatureDirTypeOcc>::Instance()->Get((VertType*)this).max_dir;}
+	const VecType &cPD2() const {return CAT< vector_occ<VertType>,CurvatureDirTypeOcc>::Instance()->Get((VertType*)this).min_dir;}
+
+	ScalarType &K1(){ return CAT< vector_occ<VertType>,CurvatureDirTypeOcc>::Instance()->Get((VertType*)this).k1;}
+	ScalarType &K2(){ return CAT< vector_occ<VertType>,CurvatureDirTypeOcc>::Instance()->Get((VertType*)this).k2;}
+	const ScalarType &cK1() const {return CAT< vector_occ<VertType>,CurvatureDirTypeOcc>::Instance()->Get((VertType*)this).k1;}
+	const ScalarType &cK2()const  {return CAT< vector_occ<VertType>,CurvatureDirTypeOcc>::Instance()->Get((VertType*)this).k2;}
+
+  static bool HasCurvatureDir()   { return true; }
+  static bool HasCurvatureDirOcc()   { return true; }
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDir"));TT::Name(name);}
+
+};
+
+
+template <class T> class CurvatureDirfOcc: public CurvatureDirOcc<CurvatureDirTypeOcc<float>, T> {
+public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDirf"));T::Name(name);}
+};
+template <class T> class CurvatureDirdOcc: public CurvatureDirOcc<CurvatureDirTypeOcc<double>, T> {
+public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDird"));T::Name(name);}
+};
+
 ///*----------------------------- VFADJ ------------------------------*/ 
 
 template <class T> class VFAdjOcc: public T {
 public:
-  typename T::FacePointer &Fp() {return CAT< vector_occ<VertType>,T::FacePointer>::Instance()->Get((VertType*)this); }
+	typedef typename T::VertType VertType;
+	typedef typename T::FacePointer FacePointer;	
+ FacePointer &Fp() {return CAT< vector_occ<VertType>,FacePointer>::Instance()->Get((VertType*)this); }
   int &Zp() {return _zp; }
   static bool HasVFAdjacency()   {   return true; }
 private:

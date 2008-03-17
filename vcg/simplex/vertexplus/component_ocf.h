@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2008/03/11 09:22:07  cignoni
+Completed the garbage collecting functions CompactVertexVector and CompactFaceVector.
+
 Revision 1.13  2008/02/05 20:42:43  cignoni
 Other small typos
 
@@ -103,6 +106,8 @@ public:
   ColorEnabled=false;
   NormalEnabled=false;
   VFAdjacencyEnabled=false;
+	CurvatureEnabled = false;
+
   }
   
   // override di tutte le funzioni che possono spostare 
@@ -215,6 +220,30 @@ void DisableVFAdjacency() {
   AV.clear();
 }
 
+ 
+void EnableCurvature() {
+  assert(VALUE_TYPE::HasCurvatureOcf());
+  CurvatureEnabled=true;
+  CuV.resize((*this).size());
+}
+
+void DisableCurvature() {
+  assert(VALUE_TYPE::HasCurvatureOcf());
+  CurvatureEnabled=false;
+  CuV.clear();
+}
+
+void EnableCurvatureDir() {
+  assert(VALUE_TYPE::HasCurvatureDirOcf());
+  CurvatureDirEnabled=true;
+  CuDV.resize((*this).size());
+}
+
+void DisableCurvatureDir() {
+  assert(VALUE_TYPE::HasCurvatureDirOcf());
+  CurvatureDirEnabled=false;
+  CuDV.clear();
+}
 
 
 
@@ -225,6 +254,8 @@ struct VFAdjType {
   
 public:
   std::vector<typename VALUE_TYPE::QualityType> QV;
+  std::vector<typename VALUE_TYPE::CurvatureType> CuV;
+  std::vector<typename VALUE_TYPE::CurvatureDirType> CuDV;
   std::vector<typename VALUE_TYPE::ColorType> CV;
   std::vector<typename VALUE_TYPE::NormalType> NV;
   std::vector<struct VFAdjType> AV;
@@ -233,6 +264,9 @@ public:
   bool ColorEnabled;
   bool NormalEnabled;
   bool VFAdjacencyEnabled;
+  bool CurvatureEnabled;
+  bool CurvatureDirEnabled;
+
 };
 
 
@@ -246,17 +280,17 @@ template <class T> class VFAdjOcf: public T {
 public:
   typename T::FacePointer &VFp() {
     assert((*this).Base().VFAdjacencyEnabled); 
-    return (*this).Base().AV[(*this).Index()()]._fp; 
+    return (*this).Base().AV[(*this).Index()]._fp; 
   }
 
   typename T::FacePointer cVFp() const {
     if(! (*this).Base().VFAdjacencyEnabled ) return 0; 
-    else return (*this).Base().AV[(*this).Index()()]._fp; 
+    else return (*this).Base().AV[(*this).Index()]._fp; 
   }
 
   int &VFi() {
     assert((*this).Base().VFAdjacencyEnabled); 
-    return (*this).Base().AV[(*this).Index()()]._zp; 
+    return (*this).Base().AV[(*this).Index()]._zp; 
   }
 	template <class LeftV>
 	void ImportLocal(const LeftV & leftV){VFp() = NULL; VFi() = -1; T::ImporLocal(leftV);}
@@ -297,8 +331,8 @@ template <class T> class Normal3dOcf: public NormalOcf<vcg::Point3d, T> {};
 template <class A, class T> class ColorOcf: public T {
 public:
   typedef A ColorType;
-  ColorType &C() { assert((*this).Base().NormalEnabled); return (*this).Base().CV[(*this).Index()()]; }
-  const ColorType &cC() const { assert((*this).Base().NormalEnabled); return (*this).Base().CV[(*this).Index()()]; }
+  ColorType &C() { assert((*this).Base().NormalEnabled); return (*this).Base().CV[(*this).Index()]; }
+  const ColorType &cC() const { assert((*this).Base().NormalEnabled); return (*this).Base().CV[(*this).Index()]; }
 	template <class LeftV>
 	void ImportLocal(const LeftV & leftV){ C() = leftV.cC(); T::ImporLocal(leftV);}
   static bool HasColor()   { return true; }
@@ -312,7 +346,7 @@ template <class T> class Color4bOcf: public ColorOcf<vcg::Color4b, T> {};
 template <class A, class T> class QualityOcf: public T {
 public:
   typedef A QualityType;
-  QualityType &Q() { assert((*this).Base().QualityEnabled); return (*this).Base().QV[(*this).Index()()]; }
+  QualityType &Q() { assert((*this).Base().QualityEnabled); return (*this).Base().QV[(*this).Index()]; }
 	template <class LeftV>
 	void ImportLocal(const LeftV & leftV){ Q() = leftV.cQ(); T::ImporLocal(leftV);}
   static bool HasQuality()   { return true; }
@@ -322,6 +356,75 @@ public:
 template <class T> class QualityfOcf: public QualityOcf<float, T> {};
 
 
+///*-------------------------- CURVATURE  ----------------------------------*/ 
+
+template <class A, class TT> class CurvatureOcf: public TT {
+public:
+  typedef Point2<A> CurvatureType;
+	typedef typename CurvatureType::ScalarType ScalarType;
+
+	ScalarType  &H(){  assert((*this).Base().CurvatureEnabled); return (*this).Base().CuV[(*this).Index()][0];}
+	ScalarType  &K(){  assert((*this).Base().CurvatureEnabled); return (*this).Base().CuV[(*this).Index()][1];}
+	const ScalarType &cH() const { assert((*this).Base().CurvatureEnabled); return (*this).Base().CuV[(*this).Index()][0];}
+	const ScalarType &cK() const { assert((*this).Base().CurvatureEnabled); return (*this).Base().CuV[(*this).Index()][1];}
+
+ 	template <class LeftV>
+	void ImportLocal(const LeftV & leftV){ 
+(*this).Base().CuV[(*this).Index()][0] = leftV.cH();
+(*this).Base().CuV[(*this).Index()][1] = leftV.cK(); TT::ImporLocal(leftV);}
+
+	static bool HasCurvatureOcf()   { return true; }
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureOcf"));TT::Name(name);}
+
+private:   
+};
+
+template <class T> class CurvaturefOcf: public CurvatureOcf<float, T> {};
+template <class T> class CurvaturedOcf: public CurvatureOcf<double, T> {};
+
+
+///*-------------------------- CURVATURE DIR ----------------------------------*/ 
+
+template <class S>
+struct CurvatureDirTypeOcf{
+	typedef Point3<S> VecType;
+	typedef  S   ScalarType;
+	CurvatureDirTypeOcf () {}
+	Point3<S>max_dir,min_dir; 
+	S k1,k2;
+};
+
+
+template <class A, class TT> class CurvatureDirOcf: public TT {
+public:
+  typedef A CurvatureDirType;
+	typedef typename CurvatureDirType::VecType VecType;
+	typedef typename CurvatureDirType::ScalarType ScalarType;
+
+	VecType &PD1(){ assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CuDV[(*this).Index()].max_dir;}
+	VecType &PD2(){ assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CuDV[(*this).Index()].max_dir;}
+	const VecType &cPD1() const {assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CuV[(*this).Index()].max_dir;}
+	const VecType &cPD2() const {assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CuV[(*this).Index()].max_dir;}
+
+	ScalarType &K1(){ assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CuDV[(*this).Index()].k1;}
+	ScalarType &K2(){ assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CuDV[(*this).Index()].k2;}
+	const ScalarType &cK1() const {assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CuDV[(*this).Index()].k1;}
+	const ScalarType &cK2()const  {assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CuDV[(*this).Index()].k2;}
+
+  static bool HasCurvatureDirOcf()   { return true; }
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDirOcf"));TT::Name(name);}
+
+private:
+  CurvatureDirType _curv;    
+};
+
+
+template <class T> class CurvatureDirfOcf: public CurvatureDirOcf<CurvatureDirTypeOcf<float>, T> {
+public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDirfOcf"));T::Name(name);}
+};
+template <class T> class CurvatureDirdOcf: public CurvatureDirOcf<CurvatureDirTypeOcf<double>, T> {
+public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDirdOcf"));T::Name(name);}
+};
 ///*-------------------------- InfoOpt  ----------------------------------*/ 
 
 template < class T> class InfoOcf: public T {

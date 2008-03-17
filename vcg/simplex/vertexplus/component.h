@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.25  2008/02/05 10:11:34  cignoni
+A small typo (a T:: instead of TT::)
+
 Revision 1.24  2008/02/04 21:26:49  ganovelli
 added ImportLocal which imports all local attributes into vertexplus and faceplus.
 A local attribute is everything (N(), C(), Q()....) except pointers to other simplices
@@ -72,7 +75,7 @@ Revision 1.11  2005/11/01 18:17:52  cignoni
 Added an assert(0) in all the accesses to empty components
 
 Revision 1.10  2005/10/15 16:24:10  ganovelli
-Working release (compilata solo su MSVC), component_occ è migrato da component_opt
+Working release (compilata solo su MSVC), component_occ ï¿½ migrato da component_opt
 
 Revision 1.9  2005/10/14 13:30:07  cignoni
 Added constant access functions and reflective functions (HasSomething stuff)
@@ -360,6 +363,108 @@ template <class TT> class Qualityf: public Quality<float, TT> {
 };
 template <class TT> class Qualityd: public Quality<double, TT> {
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("Qualityd"));TT::Name(name);}
+};
+
+/*-------------------------- Curvature ----------------------------------*/ 
+
+template <class TT> class EmptyCurvature: public TT {
+public:
+	typedef vcg::Point2<float> CurvatureType;
+
+	float &H() {static float dummy = 0.f; return dummy;;}
+	float &K() { static float dummy = 0.f; return dummy;}
+	const float &cH() const {static float dummy = 0.f; return dummy;;}
+	const float &cK()const  { static float dummy = 0.f; return dummy;}
+	void SetHK(const float & h,const float & k) { }
+
+  static bool HasCurvatureOcc()   { return false; }
+  static bool HasCurvatureOcf()   { return false; }
+  static bool HasCurvature()   { return false; }
+	static void Name(std::vector<std::string> & name){TT::Name(name);}
+};
+
+template <class A, class TT> class Curvature: public TT {
+public:
+  typedef Point2<A> CurvatureType;
+	typedef typename CurvatureType::ScalarType ScalarType;
+	ScalarType  &H(){ return _hk[0];}
+	ScalarType  &K(){ return _hk[1];}
+	const ScalarType &cH() const { return  _hk[0];}
+	const ScalarType &cK() const { return  _hk[1];}
+
+  static bool HasCurvature()   { return true; }
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("Curvature"));TT::Name(name);}
+
+private:
+	Point2<A> _hk;    
+};
+
+
+template <class T> class Curvaturef: public Curvature< float, T> {
+public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("Curvaturef"));T::Name(name);}
+};
+template <class T> class Curvatured: public Curvature<double , T> {
+public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("Curvatured"));T::Name(name);}
+};
+
+/*-------------------------- Curvature Direction ----------------------------------*/ 
+
+template <class S>
+struct CurvatureDirType{
+	typedef Point3<S> VecType;
+	typedef  S   ScalarType;
+	CurvatureDirType () {}
+	Point3<S>max_dir,min_dir; // max and min curvature direction 
+	S k1,k2;// max and min curvature values
+};
+
+template <class TT> class EmptyCurvatureDir: public TT {
+public:
+  typedef CurvatureDirType<float> CurvatureDirType;
+
+	Point3f &PD1(){static Point3f dummy(0,0,0); return dummy;}
+	Point3f &PD2(){static Point3f dummy(0,0,0); return dummy;}
+	const Point3f &cPD1() const {static Point3f dummy(0,0,0); return dummy;}
+	const Point3f &cPD2()const {static Point3f dummy(0,0,0); return dummy;}
+
+	float &K1(){ static float dummy(0);assert(0);return dummy;}
+	float &K2(){ static float dummy(0);assert(0);return dummy;}
+	const float &cK1()const { static float dummy(0);assert(0);return dummy;}
+	const float &cK2()const { static float dummy(0);assert(0);return dummy;}
+
+  static bool HasCurvatureDir()   { return false; }
+	static void Name(std::vector<std::string> & name){TT::Name(name);}
+};
+
+template <class A, class TT> class CurvatureDir: public TT {
+public:
+  typedef A CurvatureDirType;
+	typedef typename CurvatureDirType::VecType VecType;
+	typedef typename CurvatureDirType::ScalarType ScalarType;
+
+	VecType &PD1(){ return _curv.max_dir;}
+	VecType &PD2(){ return _curv.min_dir;}
+	const VecType &cPD1() const {return _curv.max_dir;}
+	const VecType &cPD2() const {return _curv.min_dir;}
+
+	ScalarType &K1(){ return _curv.k1;}
+	ScalarType &K2(){ return _curv.k2;}
+	const ScalarType &cK1() const {return _curv.k1;}
+	const ScalarType &cK2()const  {return _curv.k2;}
+
+  static bool HasCurvatureDir()   { return true; }
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDir"));TT::Name(name);}
+
+private:
+  CurvatureDirType _curv;    
+};
+
+
+template <class T> class CurvatureDirf: public CurvatureDir<CurvatureDirType<float>, T> {
+public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDirf"));T::Name(name);}
+};
+template <class T> class CurvatureDird: public CurvatureDir<CurvatureDirType<double>, T> {
+public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDird"));T::Name(name);}
 };
 
 /*----------------------------- VFADJ ------------------------------*/ 
