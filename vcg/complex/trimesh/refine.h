@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2007/03/27 09:25:14  cignoni
+corrected managment of selected flag when refining the whole mesh flipmesh
+
 Revision 1.16  2007/03/12 15:37:18  tarini
 Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
 
@@ -529,6 +532,10 @@ struct MidPointButterfly : public std::unary_function<face::Pos<typename MESH_TY
 		vl=&he.v->P();
 		he.FlipV();
 		vr=&he.v->P();
+		
+		if( MESH_TYPE::HasPerVertexColor())
+			nv.C().lerp(ep.f->V(ep.z)->C(),ep.f->V1(ep.z)->C(),.5f);
+
 		if(he.IsBorder())
 		{
 			he.NextB();
