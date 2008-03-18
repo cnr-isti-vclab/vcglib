@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.25  2008/03/11 09:22:07  cignoni
+Completed the garbage collecting functions CompactVertexVector and CompactFaceVector.
+
 Revision 1.24  2008/02/28 15:41:17  cignoni
 Added FFpi methods and better init of texture coords
 
@@ -119,6 +122,7 @@ Mainly the trick here is to store a base pointer in each simplex...
 
 #include <vcg/simplex/faceplus/component.h>
 #include <vector>
+#include <limits>
 
 
 namespace vcg {
