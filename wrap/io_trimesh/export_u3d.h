@@ -22,6 +22,7 @@ namespace u3dparametersclasses
 		const QString _converter_loc;
 		const QString _input_file;
 		const QString _output_file;
+		int positionQuality;
 
 		IDTFConverterParameters(const QString& converter_loc,const QString& input_file,const QString& output_file)
 			:_converter_loc(converter_loc),_input_file(input_file),_output_file(output_file)
@@ -70,6 +71,7 @@ namespace u3dparametersclasses
 
 		};
 		CameraParameters* _campar;
+		int positionQuality;
 	};
 }
 
@@ -109,10 +111,11 @@ private:
 		QProcess p;
 		QString convstring = par._converter_loc;
 		#if defined(Q_OS_WIN)
-		convstring =  "\""+convstring + "\" -en 1 -input \"" + par._input_file + "\" -output \"" + par._output_file +"\""; 
+		convstring =  "\""+convstring + "\" -en 1 -rzf 0 -pq "+QString::number(par.positionQuality)+" -input \"" + par._input_file + "\" -output \"" + par._output_file +"\""; 
 		#else
-		convstring =       convstring + " -en 1 -input \"" + par._input_file + "\" -output \"" + par._output_file +"\""; 
+		convstring =       convstring + " -en 1 -rzf 0 -pq "+ QString::number(par.positionQuality)+" -input \"" + par._input_file + "\" -output \"" + par._output_file +"\""; 
 		#endif
+		//QMessageBox::warning(0, QString("Saving Log"), QString("Started conversion executable '%1'").arg(convstring));
 		qDebug("Starting converter %s", qPrintable(convstring));
 		p.setProcessChannelMode(QProcess::MergedChannels);
 		p.start(convstring);
@@ -189,6 +192,7 @@ public:
 
 		vcg::tri::io::ExporterIDTF<SaveMeshType>::Save(m,qPrintable(tmp),mask);
 		u3dparametersclasses::IDTFConverterParameters idtfpar(conv_loc_st,tmp,output_file_st);
+		idtfpar.positionQuality = mov_par.positionQuality;
 		qDebug("conv_loc_st '%s'", qPrintable(conv_loc_st));
 		qDebug("conv_loc '%s'", conv_loc);
 		qDebug("idtfpar._converter_loc '%s'", qPrintable(idtfpar._converter_loc));
