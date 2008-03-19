@@ -223,12 +223,12 @@ public:
 		int capability = 0;
 
 		//vert
-		capability |= Mask::IOM_VERTNORMAL;
-		capability |= vcg::tri::io::Mask::IOM_VERTCOLOR;
+		//capability |= Mask::IOM_VERTNORMAL;
+		//capability |= vcg::tri::io::Mask::IOM_VERTCOLOR;
 
 		////wedg
 		capability |= Mask::IOM_WEDGTEXCOORD;
-		capability |= Mask::IOM_WEDGNORMAL;
+		//capability |= Mask::IOM_WEDGNORMAL;
 
 		return capability;
 	}
