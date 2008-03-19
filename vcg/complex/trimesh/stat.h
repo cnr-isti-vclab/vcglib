@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2007/01/11 10:12:19  cignoni
+Removed useless and conflicting inclusion of face.h
+
 Revision 1.2  2006/05/25 09:39:09  cignoni
 missing std and other gcc detected syntax errors
 
@@ -80,12 +83,38 @@ class Stat
 
       static void ComputePerVertexQualityHistogram( MeshType & m, Histogramf &h)    // V1.0
       {
-        h.Clear();
-        std::pair<float,float> minmax = ComputePerVertexQualityMinMax(m);
-        h.SetRange( minmax.first,minmax.second, 10000);
-        VertexIterator vi;
-        for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
-          if(!(*vi).IsD()) h.Add((*vi).Q());
+				VertexIterator vi;
+				int HistSize=10000;
+				std::pair<float,float> minmax = ComputePerVertexQualityMinMax(m);
+					
+				h.Clear();
+				h.SetRange( minmax.first,minmax.second, HistSize);
+				for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+						if(!(*vi).IsD()) h.Add((*vi).Q());
+						
+				// Sanity check; If some very wrong value has happened in the Q value, 
+				// the histogram is messed. If a significant percentage (20% )of the values are all in a single bin
+				// we should try to solve the problem. No easy solution here.
+				// We choose to compute the get the 1percentile and 99 percentile values as new mixmax ranges 
+				// and just to be sure enlarge the Histogram.
+				
+				if(h.MaxCount() > HistSize/5)
+					{
+						std::vector<float> QV;
+						QV.reserve(m.vn);
+						for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+							if(!(*vi).IsD()) QV.push_back((*vi).Q());
+
+						std::nth_element(QV.begin(),QV.begin()+m.vn/100,QV.end());
+						float newmin=*(QV.begin()+m.vn/100);
+						std::nth_element(QV.begin(),QV.begin()+m.vn-m.vn/100,QV.end());
+						float newmax=*(QV.begin()+m.vn-m.vn/100);
+						
+						h.Clear();
+						h.SetRange(newmin, newmax, HistSize*50);
+						for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+								if(!(*vi).IsD()) h.Add((*vi).Q());
+					}
       }
 
 			static int ComputeEdgeHistogram( MeshType & m, Histogramf &h)    // V1.0
