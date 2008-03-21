@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.1  2008/03/02 16:44:18  benedetti
+moved ActiveCoordinateFrame to its own files
+
 
 ****************************************************************************/
 
@@ -68,7 +71,7 @@ void ActiveCoordinateFrame::Render(QGLWidget* glw)
    
   MovableCoordinateFrame::Render(glw);
   
-  // non devo disegnare
+  // got nothing to draw
   if(!drawmoves && !drawrotations){
     glPopMatrix();
     return;  
@@ -78,7 +81,7 @@ void ActiveCoordinateFrame::Render(QGLWidget* glw)
   bool rotating=(current_mode==rotx)||(current_mode==roty)||(current_mode==rotz);
   bool moving=(current_mode==movx)||(current_mode==movy)||(current_mode==movz);
 
-  //devo disegnare qualcosa
+  // maybe got something to draw
   glPushAttrib(GL_ALL_ATTRIB_BITS);
   glDisable(GL_LIGHTING);
   glDisable(GL_TEXTURE_2D);
@@ -87,7 +90,7 @@ void ActiveCoordinateFrame::Render(QGLWidget* glw)
   glEnable(GL_LINE_SMOOTH);
   glEnable(GL_POINT_SMOOTH);
   
-  QString message("sovrascrivimi");
+  QString message("this should never be seen");
   char axis_name;
   float verse;
   
@@ -98,7 +101,7 @@ void ActiveCoordinateFrame::Render(QGLWidget* glw)
   } else if(current_mode==z_modifier){
     glColor(zcolor); message = QString("move or rotate on Z axis");
   } else 
-  if(rotating && drawrotations){ // devo disegnare una rotazione
+  if(rotating && drawrotations){ // draw a rotation
     Point3f axis, arc_point;
     float angle;
     manipulator->track.rot.ToAxis(angle,axis);
@@ -112,12 +115,12 @@ void ActiveCoordinateFrame::Render(QGLWidget* glw)
     } else if(current_mode==rotz) {
       verse=((axis+z_axis).Norm()<1?-1:1);
       glColor(zcolor); axis_name='z'; arc_point=x_axis*(size*0.8);
-    } else assert(0); // doveva essere una rotazione
-    // normalizzo la rotazione a [-180,180]
+    } else assert(0);
+    // normalizing rotation between -180 and 180 degrees
     float sign = ((angle*verse)<0) ? -1 : 1;
     float abs_angle = (angle<0) ? -angle : angle;
     angle = sign * ( (abs_angle>M_PI) ? 2*M_PI-abs_angle : abs_angle );
-    axis = axis * verse;    
+    axis = axis * verse;
     message = QString("rotated %1 deg around %2")
                       .arg(((angle*180.0)/M_PI),5,'f',3)
                       .arg(axis_name);
@@ -131,19 +134,19 @@ void ActiveCoordinateFrame::Render(QGLWidget* glw)
          glVertex(position+arc_point);
       }
     glEnd(); 
-  } else if(moving && drawmoves){// devo disegnare una traslazione
+  } else if(moving && drawmoves){ // draw a traslation
     Point3f ntra=manipulator->track.tra;
     ntra.Normalize();
     if(current_mode==movx){
-      verse=((ntra+x_axis).Norm()<1?-1:1);      
+      verse=((ntra+x_axis).Norm()<1?-1:1);
       glColor(xcolor); axis_name='x';
     }else if(current_mode==movy){
-      verse=((ntra+y_axis).Norm()<1?-1:1);      
+      verse=((ntra+y_axis).Norm()<1?-1:1);
       glColor(ycolor); axis_name='y';
     }else if(current_mode==movz){
-      verse=((ntra+z_axis).Norm()<1?-1:1);      
+      verse=((ntra+z_axis).Norm()<1?-1:1);
       glColor(zcolor); axis_name='z';
-    }else assert(0); // doveva essere una traslazione
+    }else assert(0);
     message = QString("moved %1 units along %2")
                       .arg(verse*manipulator->track.tra.Norm(),5,'f',3)
                       .arg(axis_name);
@@ -157,19 +160,19 @@ void ActiveCoordinateFrame::Render(QGLWidget* glw)
     glBegin(GL_POINTS);
       glVertex(old_pos);
     glEnd();    
-  } else { // non dovevo disegnare nulla  	
+  } else { // got nothing to draw
     glPopAttrib();
     glPopMatrix();
     return;  
   }
-  // disegno la stringa  
+  // draw message below cursor
   font.setBold(true);
   font.setPixelSize(12);
   QPoint cursor=glw->mapFromGlobal(glw->cursor().pos());
   glw->renderText(cursor.x()+16,cursor.y()+16,message,font);
 
   glPopAttrib();
-  glPopMatrix(); //occhio
+  glPopMatrix();
 }
 
 void ActiveCoordinateFrame::Reset(bool reset_position,bool reset_alignment)
