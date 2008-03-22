@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.38  2007/11/19 16:31:55  ponchio
+loadmask in Open is now written.
+
 Revision 1.37  2007/10/19 22:13:37  cignoni
 added support for per-vertex normal for reading ply point clouds
 
@@ -282,7 +285,7 @@ static const  PropDescriptor &VertDesc(int i)
 
 static const  PropDescriptor &FaceDesc(int i)  
 {		
-	static const 	PropDescriptor qf[12]=
+	static const 	PropDescriptor qf[13]=
 	{
 		{"face", "vertex_indices", ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_UCHAR,ply::T_UCHAR,offsetof(LoadPly_FaceAux,size)   ,0},
 		{"face", "flags",          ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,flags),     0,0,0,0,0  ,0},
@@ -294,8 +297,9 @@ static const  PropDescriptor &FaceDesc(int i)
 		{"face", "green",          ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_FaceAux,g),         0,0,0,0,0  ,0},
 		{"face", "blue" ,          ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_FaceAux,b),         0,0,0,0,0  ,0},
 		{"face", "vertex_index",   ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_UCHAR,ply::T_CHAR,offsetof(LoadPly_FaceAux,size)  ,0},
-		{"face", "vertex_indices", ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_CHAR,ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
-		{"face", "vertex_index",   ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_CHAR,ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
+		{"face", "vertex_indices", ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_CHAR, ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
+		{"face", "vertex_index",   ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_CHAR, ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
+		{"face", "vertex_indices", ply::T_UINT,   ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_UCHAR,ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
 	};
 	return qf[i];
 }
@@ -455,6 +459,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 		if( pf.AddToRead(FaceDesc(9))==-1 ) 
 		if( pf.AddToRead(FaceDesc(10))==-1 ) 
 		if( pf.AddToRead(FaceDesc(11))==-1 ) 
+		if( pf.AddToRead(FaceDesc(12))==-1 ) 
 			if(pf.AddToRead(TristripDesc(0))==-1) // Se fallisce tutto si prova a vedere se ci sono tristrip alla levoy.
 						{ pi.status = PlyInfo::E_NO_FACE;   return pi.status; }
 
