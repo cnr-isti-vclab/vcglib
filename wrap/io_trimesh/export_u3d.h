@@ -113,7 +113,11 @@ private:
 		#if defined(Q_OS_WIN)
 		convstring =  "\""+convstring + "\" -en 1 -rzf 0 -pq "+QString::number(par.positionQuality)+" -input \"" + par._input_file + "\" -output \"" + par._output_file +"\""; 
 		#else
-		convstring =       convstring + " -en 1 -rzf 0 -pq "+ QString::number(par.positionQuality)+" -input \"" + par._input_file + "\" -output \"" + par._output_file +"\""; 
+		QString mac_input=par._input_file;
+		QString mac_output=par._output_file;
+		//mac_input.replace(QString(" "),QString("\\ "));
+		//mac_output.replace(QString(" "),QString("\\ "));
+		convstring =       convstring + " -en 1 -rzf 0 -pq "+ QString::number(par.positionQuality)+" -input \"" + mac_input + "\" -output \"" + mac_output +"\""; 
 		#endif
 		//QMessageBox::warning(0, QString("Saving Log"), QString("Started conversion executable '%1'").arg(convstring));
 		qDebug("Starting converter %s", qPrintable(convstring));
