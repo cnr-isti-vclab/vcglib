@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.4  2008/03/17 11:29:59  ganovelli
+taubin and desbrun estimates added (-> see vcg/simplex/vertexplus/component.h [component_ocf.h|component_occ.h ]
+
 Revision 1.3  2006/02/27 18:02:57  ponchio
 Area -> doublearea/2
 
@@ -110,7 +113,7 @@ public:
 					VertexType* tempV;
 					float totalDoubleAreaSize = 0.0f;
 
-					if (((firstV->P()-central_vertex->P())^(pos.VFlip()->P()-central_vertex->P()))*central_vertex->N()<=0.0f)
+					if (((firstV->cP()-central_vertex->cP())^(pos.VFlip()->cP()-central_vertex->cP()))*central_vertex->cN()<=0.0f)
 					{
 						pos.Set(central_vertex->VFp(), central_vertex);
 						pos.FlipE();
@@ -127,7 +130,7 @@ public:
 
 						v.isBorder = pos.IsBorder();
 						v.vert = tempV;			
-						v.doubleArea = ((pos.F()->V(1)->P() - pos.F()->V(0)->P()) ^ (pos.F()->V(2)->P()- pos.F()->V(0)->P())).Norm();;
+						v.doubleArea = ((pos.F()->V(1)->cP() - pos.F()->V(0)->cP()) ^ (pos.F()->V(2)->cP()- pos.F()->V(0)->cP())).Norm();;
 						totalDoubleAreaSize += v.doubleArea;
 
 						vertices.push_back(v);						
@@ -145,17 +148,17 @@ public:
 
 					Matrix33f Tp;
 					for (int i = 0; i < 3; ++i)
-						Tp[i][i] = 1.0f - powf(central_vertex->N()[i],2);
-					Tp[0][1] = Tp[1][0] = -1.0f * (central_vertex->N()[0] * central_vertex->N()[1]);
-					Tp[1][2] = Tp[2][1] = -1.0f * (central_vertex->N()[1] * central_vertex->N()[2]);
-					Tp[0][2] = Tp[2][0] = -1.0f * (central_vertex->N()[0] * central_vertex->N()[2]);
+						Tp[i][i] = 1.0f - powf(central_vertex->cN()[i],2);
+					Tp[0][1] = Tp[1][0] = -1.0f * (central_vertex->N()[0] * central_vertex->cN()[1]);
+					Tp[1][2] = Tp[2][1] = -1.0f * (central_vertex->cN()[1] * central_vertex->cN()[2]);
+					Tp[0][2] = Tp[2][0] = -1.0f * (central_vertex->cN()[0] * central_vertex->cN()[2]);
 
 					Matrix33f tempMatrix;
 					Matrix33f M;
 					M.SetZero();
 					for (int i = 0; i < vertices.size(); ++i) {
-						Point3f edge = (central_vertex->P() - vertices[i].vert->P());
-						float curvature = (2.0f * (central_vertex->N() * edge) ) / edge.SquaredNorm();
+						Point3f edge = (central_vertex->cP() - vertices[i].vert->cP());
+						float curvature = (2.0f * (central_vertex->cN() * edge) ) / edge.SquaredNorm();
 						Point3f T = (Tp*edge).Normalize();
 						tempMatrix.ExternalProduct(T,T);
 						M += tempMatrix * weights[i] * curvature ;
@@ -163,10 +166,10 @@ public:
 
 					Point3f W;
 					Point3f e1(1.0f,0.0f,0.0f);
-					if ((e1 - central_vertex->N()).SquaredNorm() > (e1 + central_vertex->N()).SquaredNorm())
-						W = e1 - central_vertex->N();
+					if ((e1 - central_vertex->cN()).SquaredNorm() > (e1 + central_vertex->cN()).SquaredNorm())
+						W = e1 - central_vertex->cN();
 					else 
-						W = e1 + central_vertex->N();
+						W = e1 + central_vertex->cN();
 					W.Normalize();
 
 					Matrix33f Q;
@@ -251,9 +254,8 @@ public:
 
 					(*vi).PD1() = Principal_Direction1 ;
 					(*vi).PD2() = Principal_Direction2 ;
-					(*vi).K1() = -Principal_Curvature1;
-					(*vi).K2() = -Principal_Curvature2;
-
+					(*vi).K1() =  Principal_Curvature1;
+					(*vi).K2() =  Principal_Curvature2;
 				}
 			}
 		}
@@ -276,14 +278,18 @@ Discrete Differential-Geometry Operators for Triangulated 2-Manifolds Mark Meyer
       float area0, area1, area2, angle0, angle1, angle2, e01, e12, e20;
 			FaceIterator fi;
       VertexIterator vi;   
+			typename MeshType::CoordType  e01v ,e12v ,e20v;
 
 			SimpleTempData<VertContainer, AreaData> TDAreaPtr(m.vert); TDAreaPtr.Start();
+			SimpleTempData<VertContainer, typename MeshType::CoordType> TDContr(m.vert); TDContr.Start();
 
-      //Calcola AreaMix in H (vale anche per K)
+ 			vcg::tri::UpdateNormals<MeshType>::PerVertexNormalized(m);
+     //Compute AreaMix in H (vale anche per K)
       for(vi=m.vert.begin(); vi!=m.vert.end(); ++vi) if(!(*vi).IsD())
       {
-        (TDAreaPtr)[*vi].A = 0;
-        (*vi).H() = 0;
+        (TDAreaPtr)[*vi].A = 0.0;
+				(TDContr)[*vi]  =typename MeshType::CoordType(0.0,0.0,0.0);
+				(*vi).H() = 0.0;
         (*vi).K() = (float)(2.0 * M_PI);
       }
 
@@ -296,9 +302,9 @@ Discrete Differential-Geometry Operators for Triangulated 2-Manifolds Mark Meyer
         
         if((angle0 < M_PI/2) && (angle1 < M_PI/2) && (angle2 < M_PI/2))  // triangolo non ottuso
         { 
-	        float e01 = SquaredDistance( (*fi).V(1)->P() , (*fi).V(0)->P() );
-	        float e12 = SquaredDistance( (*fi).V(2)->P() , (*fi).V(1)->P() );
-	        float e20 = SquaredDistance( (*fi).V(0)->P() , (*fi).V(2)->P() );
+	        float e01 = SquaredDistance( (*fi).V(1)->cP() , (*fi).V(0)->cP() );
+	        float e12 = SquaredDistance( (*fi).V(2)->cP() , (*fi).V(1)->cP() );
+	        float e20 = SquaredDistance( (*fi).V(0)->cP() , (*fi).V(2)->cP() );
       	
           area0 = ( e20*(1.0/tan(angle1)) + e01*(1.0/tan(angle2)) ) / 8.0;
 	        area1 = ( e01*(1.0/tan(angle2)) + e12*(1.0/tan(angle0)) ) / 8.0;
@@ -309,7 +315,7 @@ Discrete Differential-Geometry Operators for Triangulated 2-Manifolds Mark Meyer
 	        (TDAreaPtr)[(*fi).V(2)].A  += area2;
 
 	      }
-        else // triangolo ottuso
+        else // obtuse
 	      { 
 					(TDAreaPtr)[(*fi).V(0)].A += vcg::DoubleArea<typename MeshType::FaceType>((*fi)) / 6.0;
 	        (TDAreaPtr)[(*fi).V(1)].A += vcg::DoubleArea<typename MeshType::FaceType>((*fi)) / 6.0;
@@ -323,18 +329,14 @@ Discrete Differential-Geometry Operators for Triangulated 2-Manifolds Mark Meyer
         angle1 = math::Abs(Angle(	(*fi).P(0)-(*fi).P(1),(*fi).P(2)-(*fi).P(1) ));
         angle2 = M_PI-(angle0+angle1);
         
-        e01 = ( (*fi).V(1)->P() - (*fi).V(0)->P() ) * (*fi).V(0)->N();
-        e12 = ( (*fi).V(2)->P() - (*fi).V(1)->P() ) * (*fi).V(1)->N();
-        e20 = ( (*fi).V(0)->P() - (*fi).V(2)->P() ) * (*fi).V(2)->N();
+        e01v = ( (*fi).V(1)->cP() - (*fi).V(0)->cP() ) ;
+        e12v = ( (*fi).V(2)->cP() - (*fi).V(1)->cP() ) ;
+        e20v = ( (*fi).V(0)->cP() - (*fi).V(2)->cP() ) ;
         
-        area0 = ( e20 * (1.0/tan(angle1)) + e01 * (1.0/tan(angle2)) ) / 4.0;
-	      area1 = ( e01 * (1.0/tan(angle2)) + e12 * (1.0/tan(angle0)) ) / 4.0;
-	      area2 = ( e12 * (1.0/tan(angle0)) + e20 * (1.0/tan(angle1)) ) / 4.0;
+        TDContr[(*fi).V(0)] += ( e20v * (1.0/tan(angle1)) - e01v * (1.0/tan(angle2)) ) / 4.0;
+	      TDContr[(*fi).V(1)] += ( e01v * (1.0/tan(angle2)) - e12v * (1.0/tan(angle0)) ) / 4.0;
+	      TDContr[(*fi).V(2)] += ( e12v * (1.0/tan(angle0)) - e20v * (1.0/tan(angle1)) ) / 4.0;
           
-        (*fi).V(0)->H()  += area0;
-	      (*fi).V(1)->H()  += area1;
-	      (*fi).V(2)->H()  += area2;
-
         (*fi).V(0)->K() -= angle0;
         (*fi).V(1)->K() -= angle1;
         (*fi).V(2)->K() -= angle2;
@@ -349,10 +351,10 @@ Discrete Differential-Geometry Operators for Triangulated 2-Manifolds Mark Meyer
 				    vcg::face::Pos<FaceType> hp1=hp;
 				    
             hp1.FlipV();
-    	      e1=hp1.v->P() - hp.v->P();
+    	      e1=hp1.v->cP() - hp.v->cP();
 				    hp1.FlipV();
 				    hp1.NextB();
-				    e2=hp1.v->P() - hp.v->P();
+				    e2=hp1.v->cP() - hp.v->cP();
             (*fi).V(i)->K() -= math::Abs(Angle(e1,e2));
 			    }
 	      }
@@ -367,12 +369,13 @@ Discrete Differential-Geometry Operators for Triangulated 2-Manifolds Mark Meyer
         }
         else
         {
-          (*vi).H() /= (TDAreaPtr)[*vi].A;
+					(*vi).H()  = (((TDContr)[*vi]* (*vi).cN()>0)?1.0:-1.0)*((TDContr)[*vi] / (TDAreaPtr) [*vi].A).Norm();
           (*vi).K() /= (TDAreaPtr)[*vi].A;
         }
 			}
 
 			TDAreaPtr.Stop();
+			TDContr.Stop();
 
     }
     
