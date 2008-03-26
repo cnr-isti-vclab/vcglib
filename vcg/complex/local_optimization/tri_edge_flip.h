@@ -167,23 +167,22 @@ public:
 	 */
 	virtual bool IsFeasible()
 	{
-		if( math::ToDeg( Angle( _pos.FFlip()->cN() , _pos.F()->cN() ) )> CoplanarAngleThresholdDeg() ) return false;
+		if( math::ToDeg( Angle(_pos.FFlip()->cN(), _pos.F()->cN()) ) > CoplanarAngleThresholdDeg() )
+			return false;
 
 		CoordType v0, v1, v2, v3;
-		PosType app = _pos;
 		int i = _pos.I();
-		v0 = app.F()->V0(i)->P();
-		v1 = app.F()->V1(i)->P();
-		v2 = app.F()->V2(i)->P();
-		app.FlipF(); app.FlipE(); app.FlipV();
-		v3 = app.V()->P();
+		v0 = _pos.F()->V0(i)->P();
+		v1 = _pos.F()->V1(i)->P();
+		v2 = _pos.F()->V2(i)->P();
+		v3 = _pos.F()->FFp(i)->V2(_pos.F()->FFi(i))->P();
 
 		// Take the parallelogram formed by the adjacent faces of edge
 		// If a corner of the parallelogram on extreme of edge to flip is >= 180
 		// the flip produce two identical faces - avoid this
 		if( (Angle(v2 - v0, v1 - v0) + Angle(v3 - v0, v1 - v0) >= M_PI) ||
 		    (Angle(v2 - v1, v0 - v1) + Angle(v3 - v1, v0 - v1) >= M_PI))
-		return false;
+			return false;
 
 		return vcg::face::CheckFlipEdge(*_pos.f, _pos.z);
 	}
@@ -203,13 +202,11 @@ public:
 	virtual ScalarType ComputePriority()
 	{
 		CoordType v0, v1, v2, v3;
-		PosType app = _pos;
 		int i = _pos.I();
-		v0 = app.F()->V0(i)->P();
-		v1 = app.F()->V1(i)->P();
-		v2 = app.F()->V2(i)->P();
-		app.FlipF(); app.FlipE(); app.FlipV();
-		v3 = app.V()->P();
+		v0 = _pos.F()->V0(i)->P();
+		v1 = _pos.F()->V1(i)->P();
+		v2 = _pos.F()->V2(i)->P();
+		v3 = _pos.F()->FFp(i)->V2(_pos.F()->FFi(i))->P();
 
 		ScalarType Qa = Quality(v0,v1,v2);
 		ScalarType Qb = Quality(v0,v3,v1);
@@ -224,7 +221,8 @@ public:
 		 _priority *= -1;*/
 
 		// < 0 if the average quality of faces improves after flip
-		_priority = ((Qa + Qb) / 2.0) - ((QaAfter + QbAfter) / 2.0);
+		//_priority = ((Qa + Qb) / 2.0) - ((QaAfter + QbAfter) / 2.0);
+		_priority = (Qa + Qb - QaAfter - QbAfter) / 2.0;
 
 		return _priority;
 	}
@@ -284,26 +282,26 @@ public:
 		_pos.F()->V(0)->IMark() = GlobalMark();
 		_pos.F()->V(1)->IMark() = GlobalMark();
 		_pos.F()->V(2)->IMark() = GlobalMark();
-		pos.F()->V(2)->IMark() = GlobalMark();
+		pos.F()->V2(_pos.F()->FFi(_pos.z))->IMark() = GlobalMark();
 
 		PosType poss(_pos.f, _pos.z);
 
 		poss.FlipV(); poss.FlipE();
 		if(!poss.IsBorder())
-		heap.push_back(HeapElem(new MYTYPE(poss, GlobalMark())));
+			heap.push_back(HeapElem(new MYTYPE(poss, GlobalMark())));
 
 		poss.FlipV(); poss.FlipE();
 		if(!poss.IsBorder())
-		heap.push_back(HeapElem(new MYTYPE(poss, GlobalMark())));
+			heap.push_back(HeapElem(new MYTYPE(poss, GlobalMark())));
 
 		poss.FlipV(); poss.FlipE();
 		poss.FlipF(); poss.FlipE();
 		if(!poss.IsBorder())
-		heap.push_back(HeapElem(new MYTYPE(poss, GlobalMark())));
+			heap.push_back(HeapElem(new MYTYPE(poss, GlobalMark())));
 
 		poss.FlipV(); poss.FlipE();
 		if(!poss.IsBorder())
-		heap.push_back(HeapElem(new MYTYPE(poss, GlobalMark())));
+			heap.push_back(HeapElem(new MYTYPE(poss, GlobalMark())));
 
 		std::push_heap(heap.begin(),heap.end());
 	}
@@ -371,23 +369,14 @@ public:
 		     0
 		 */
 		CoordType v0, v1, v2, v3;
-		PosType app = this->_pos;
 		int i = this->_pos.I();
-		v0 = app.F()->V0(i)->P();
-		v1 = app.F()->V1(i)->P();
-		v2 = app.F()->V2(i)->P();
-		app.FlipF(); app.FlipE(); app.FlipV();
-		v3 = app.V()->P();
+		v0 = this->_pos.F()->V0(i)->P();
+		v1 = this->_pos.F()->V1(i)->P();
+		v2 = this->_pos.F()->V2(i)->P();
+		v3 = this->_pos.F()->FFp(i)->V2(this->_pos.F()->FFi(i))->P();
 
 		//CoordType CircumCenter = vcg::Circumcenter(*(app.F()));
 		CoordType circumcenter = vcg::Circumcenter(*(this->_pos.F()));
-
-		/*ScalarType Radius= Distance(v0,CircumCenter);
-		 ScalarType Radius1= Distance(v1,CircumCenter);
-		 ScalarType Radius2= Distance(v2,CircumCenter);
-
-		 assert( fabs(Radius-Radius1) < 0.1 );
-		 assert( fabs(Radius-Radius2) < 0.1 );*/
 
 		ScalarType radius  = Distance(v0, circumcenter);
 		ScalarType radius1 = Distance(v1, circumcenter);
@@ -401,7 +390,6 @@ public:
 		 this->_priority *= -1;*/
 
 		this->_priority = (Distance(v3, circumcenter) - radius2);
-
 		return this->_priority;
 	}
 
