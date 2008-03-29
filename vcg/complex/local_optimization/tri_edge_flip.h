@@ -154,8 +154,8 @@ public:
 	bool IsUpToDate()
 	{
 		int MostRecentVertexMark = _pos.F()->V(0)->IMark();
-		MostRecentVertexMark = vcg::math::Max<ScalarType>(MostRecentVertexMark, _pos.F()->V(1)->IMark());
-		MostRecentVertexMark = vcg::math::Max<ScalarType>(MostRecentVertexMark, _pos.F()->V(2)->IMark());
+		MostRecentVertexMark = vcg::math::Max<int>(MostRecentVertexMark, _pos.F()->V(1)->IMark());
+		MostRecentVertexMark = vcg::math::Max<int>(MostRecentVertexMark, _pos.F()->V(2)->IMark());
 
 		return ( _localMark >= MostRecentVertexMark );
 	}
@@ -172,10 +172,15 @@ public:
 
 		CoordType v0, v1, v2, v3;
 		int i = _pos.I();
-		v0 = _pos.F()->V0(i)->P();
+		/*v0 = _pos.F()->V0(i)->P();
 		v1 = _pos.F()->V1(i)->P();
 		v2 = _pos.F()->V2(i)->P();
-		v3 = _pos.F()->FFp(i)->V2(_pos.F()->FFi(i))->P();
+		v3 = _pos.F()->FFp(i)->V2(_pos.F()->FFi(i))->P();*/
+		
+		v0 = _pos.F()->P0(i);
+		v1 = _pos.F()->P1(i);
+		v2 = _pos.F()->P2(i);
+		v3 = _pos.F()->FFp(i)->P2(_pos.F()->FFi(i));
 
 		// Take the parallelogram formed by the adjacent faces of edge
 		// If a corner of the parallelogram on extreme of edge to flip is >= 180
@@ -203,10 +208,10 @@ public:
 	{
 		CoordType v0, v1, v2, v3;
 		int i = _pos.I();
-		v0 = _pos.F()->V0(i)->P();
-		v1 = _pos.F()->V1(i)->P();
-		v2 = _pos.F()->V2(i)->P();
-		v3 = _pos.F()->FFp(i)->V2(_pos.F()->FFi(i))->P();
+		v0 = _pos.F()->P0(i);
+		v1 = _pos.F()->P1(i);
+		v2 = _pos.F()->P2(i);
+		v3 = _pos.F()->FFp(i)->P2(_pos.F()->FFi(i));
 
 		ScalarType Qa = Quality(v0,v1,v2);
 		ScalarType Qb = Quality(v0,v3,v1);
@@ -238,7 +243,7 @@ public:
 	/*!
 	 * Execute the flipping of the edge
 	 */
-	void Execute(TRIMESH_TYPE &m)
+	void Execute(TRIMESH_TYPE &/*m*/)
 	{
 		int z = _pos.z;
 		vcg::face::FlipEdge(*_pos.f, z);
@@ -249,7 +254,7 @@ public:
 	const char* Info(TRIMESH_TYPE &m)
 	{
 		static char dump[60];
-		sprintf(dump,"%i -> %i %g\n", _pos.F()->V(0)-&m.vert[0], _pos.F()->V(1)-&m.vert[0],-_priority);
+		sprintf(dump,"%ld -> %ld %g\n", _pos.F()->V(0)-&m.vert[0], _pos.F()->V(1)-&m.vert[0],-_priority);
 		return dump;
 	}
 
@@ -370,10 +375,10 @@ public:
 		 */
 		CoordType v0, v1, v2, v3;
 		int i = this->_pos.I();
-		v0 = this->_pos.F()->V0(i)->P();
-		v1 = this->_pos.F()->V1(i)->P();
-		v2 = this->_pos.F()->V2(i)->P();
-		v3 = this->_pos.F()->FFp(i)->V2(this->_pos.F()->FFi(i))->P();
+		v0 = this->_pos.F()->P0(i);
+		v1 = this->_pos.F()->P1(i);
+		v2 = this->_pos.F()->P2(i);
+		v3 = this->_pos.F()->FFp(i)->P2(this->_pos.F()->FFi(i));
 
 		//CoordType CircumCenter = vcg::Circumcenter(*(app.F()));
 		CoordType circumcenter = vcg::Circumcenter(*(this->_pos.F()));
