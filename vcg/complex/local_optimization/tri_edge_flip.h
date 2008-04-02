@@ -42,7 +42,12 @@ namespace tri
  * It flips an edge only if two adjacent faces are coplanar and the 
  * quality of the faces improves after the flip.
  */
-template <class TRIMESH_TYPE, class MYTYPE> class PlanarEdgeFlip :
+template <class TRIMESH_TYPE, class MYTYPE,
+            typename TRIMESH_TYPE::ScalarType (*QualityFunc)(
+            		Point3<typename TRIMESH_TYPE::ScalarType> const &p0,
+            		Point3<typename TRIMESH_TYPE::ScalarType> const & p1, 
+            		Point3<typename TRIMESH_TYPE::ScalarType> const & p2) = Quality>
+class PlanarEdgeFlip :
 	public LocalOptimization< TRIMESH_TYPE>::LocModType
 {
 protected:
@@ -172,10 +177,6 @@ public:
 
 		CoordType v0, v1, v2, v3;
 		int i = _pos.I();
-		/*v0 = _pos.F()->V0(i)->P();
-		v1 = _pos.F()->V1(i)->P();
-		v2 = _pos.F()->V2(i)->P();
-		v3 = _pos.F()->FFp(i)->V2(_pos.F()->FFi(i))->P();*/
 		
 		v0 = _pos.F()->P0(i);
 		v1 = _pos.F()->P1(i);
@@ -213,15 +214,12 @@ public:
 		v2 = _pos.F()->P2(i);
 		v3 = _pos.F()->FFp(i)->P2(_pos.F()->FFi(i));
 
-		ScalarType Qa = Quality(v0,v1,v2);
-		ScalarType Qb = Quality(v0,v3,v1);
+		ScalarType Qa = QualityFunc(v0, v1, v2);
+		ScalarType Qb = QualityFunc(v0, v3, v1);
 
-		ScalarType QaAfter = Quality(v1,v2,v3);
-		ScalarType QbAfter = Quality(v0,v3,v2);
-
-		// higher the quality better the triangle.
-		// swaps that improve the worst quality more are performed before 
-		// (e.g. they have an higher priority)
+		ScalarType QaAfter = QualityFunc(v1, v2, v3);
+		ScalarType QbAfter = QualityFunc(v0, v3, v2);
+		
 		/*_priority = vcg::math::Max<ScalarType>(QaAfter,QbAfter) - vcg::math::Min<ScalarType>(Qa,Qb) ;
 		 _priority *= -1;*/
 
@@ -292,23 +290,29 @@ public:
 		PosType poss(_pos.f, _pos.z);
 
 		poss.FlipV(); poss.FlipE();
-		if(!poss.IsBorder())
+		if(!poss.IsBorder()) {
 			heap.push_back(HeapElem(new MYTYPE(poss, GlobalMark())));
+			std::push_heap(heap.begin(), heap.end());
+		}
 
 		poss.FlipV(); poss.FlipE();
-		if(!poss.IsBorder())
+		if(!poss.IsBorder()) {
 			heap.push_back(HeapElem(new MYTYPE(poss, GlobalMark())));
+			std::push_heap(heap.begin(), heap.end());
+		}
 
 		poss.FlipV(); poss.FlipE();
 		poss.FlipF(); poss.FlipE();
-		if(!poss.IsBorder())
+		if(!poss.IsBorder()) {
 			heap.push_back(HeapElem(new MYTYPE(poss, GlobalMark())));
+			std::push_heap(heap.begin(), heap.end());
+		}
 
 		poss.FlipV(); poss.FlipE();
-		if(!poss.IsBorder())
+		if(!poss.IsBorder()) {
 			heap.push_back(HeapElem(new MYTYPE(poss, GlobalMark())));
-
-		std::push_heap(heap.begin(),heap.end());
+			std::push_heap(heap.begin(), heap.end());
+		}
 	}
 }; // end of PlanarEdgeFlip class
 
