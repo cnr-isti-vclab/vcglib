@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2008/03/17 11:39:15  ganovelli
+added curvature and curvatruredir (compiled .net 2005 and gcc)
+
 Revision 1.14  2008/03/11 09:22:07  cignoni
 Completed the garbage collecting functions CompactVertexVector and CompactFaceVector.
 
@@ -104,18 +107,22 @@ public:
 	vector_ocf():std::vector<VALUE_TYPE>(){
   QualityEnabled=false;
   ColorEnabled=false;
+  MarkEnabled = false;
   NormalEnabled=false;
   VFAdjacencyEnabled=false;
 	CurvatureEnabled = false;
-
-  }
+	}
   
   // override di tutte le funzioni che possono spostare 
 	// l'allocazione in memoria del container
 	void push_back(const VALUE_TYPE & v)
   {
     BaseType::push_back(v);
-	BaseType::back()._ovp = this;
+	  BaseType::back()._ovp = this;
+		if (ColorEnabled)       CV.push_back(vcg::Color4b(vcg::Color4b::White));
+    if (MarkEnabled)        MV.push_back(0);
+    if (NormalEnabled)      NV.push_back(typename VALUE_TYPE::NormalType());
+    if (VFAdjacencyEnabled) AV.push_back(VFAdjType());		
   }
 	void pop_back();
   void resize(const unsigned int & _size) 
@@ -127,15 +134,21 @@ public:
 			advance(firstnew,oldsize);
 			_updateOVP(firstnew,(*this).end());
 		}  
-		if(ColorEnabled) CV.resize(_size);
-    if(NormalEnabled) NV.resize(_size);
+		if (ColorEnabled) CV.resize(_size);
+    if (MarkEnabled)        MV.resize(_size);
+    if (NormalEnabled) NV.resize(_size);
+    if (VFAdjacencyEnabled) AV.resize(_size);
+		
    }
   
 	void reserve(const unsigned int & _size)
   {
     BaseType::reserve(_size);
     if (ColorEnabled) CV.reserve(_size);
+    if (MarkEnabled)        MV.reserve(_size);
     if (NormalEnabled) NV.reserve(_size);
+		if (VFAdjacencyEnabled) AV.reserve(_size);
+    
   }
 
 	void _updateOVP(ThisTypeIterator lbegin, ThisTypeIterator lend)
@@ -150,18 +163,28 @@ void ReorderVert(std::vector<size_t> &newVertIndex )
 {
 	size_t pos=0;
 	size_t i=0;
-	if(ColorEnabled) assert( CV.size() == newVertIndex.size() );
-	if(NormalEnabled) assert( NV.size() == newVertIndex.size() );
+	if (ColorEnabled)       assert( CV.size() == newVertIndex.size() );
+	if (MarkEnabled)        assert( MV.size() == newVertIndex.size() );
+	if (NormalEnabled)      assert( NV.size() == newVertIndex.size() );
+	if (VFAdjacencyEnabled) assert( AV.size() == newVertIndex.size() );
 		
 	for(i=0;i<newVertIndex.size();++i)
 		{
 			if(newVertIndex[i] != std::numeric_limits<size_t>::max() )
 				{
 					assert(newVertIndex[i] <= i);
-					if(ColorEnabled)  CV[newVertIndex[i]] = CV[i];
-					if(NormalEnabled) NV[newVertIndex[i]] = NV[i];;
+					if (ColorEnabled)  CV[newVertIndex[i]] = CV[i];
+					if (MarkEnabled)         MV[newVertIndex[i]] =  MV[i];
+					if (NormalEnabled) NV[newVertIndex[i]] = NV[i];
+					if (VFAdjacencyEnabled)  AV[newVertIndex[i]] =  AV[i];
 				}
 		}
+		
+	if (ColorEnabled)       CV.resize(BaseType::size());
+	if (MarkEnabled)        MV.resize(BaseType::size());
+	if (NormalEnabled)      NV.resize(BaseType::size());
+	if (VFAdjacencyEnabled) AV.resize(BaseType::size());
+	
 }
 
 
@@ -193,6 +216,19 @@ void DisableColor() {
   assert(VALUE_TYPE::HasColorOcf());
   ColorEnabled=false;
   CV.clear();
+}
+
+bool IsMarkEnabled() const {return MarkEnabled;}
+void EnableMark() {
+  assert(VALUE_TYPE::HasFaceMarkOcf());
+  MarkEnabled=true;
+  MV.resize((*this).size());
+}
+
+void DisableMark() {
+  assert(VALUE_TYPE::HasFaceMarkOcf());
+  MarkEnabled=false;
+  MV.clear();
 }
 
 bool IsNormalEnabled() const {return NormalEnabled;}
@@ -259,14 +295,15 @@ public:
   std::vector<typename VALUE_TYPE::ColorType> CV;
   std::vector<typename VALUE_TYPE::NormalType> NV;
   std::vector<struct VFAdjType> AV;
-
+  std::vector<int> MV;
+	
   bool QualityEnabled;
   bool ColorEnabled;
   bool NormalEnabled;
   bool VFAdjacencyEnabled;
   bool CurvatureEnabled;
   bool CurvatureDirEnabled;
-
+	bool MarkEnabled;
 };
 
 
@@ -296,7 +333,7 @@ public:
 	void ImportLocal(const LeftV & leftV){VFp() = NULL; VFi() = -1; T::ImporLocal(leftV);}
 
   static bool HasVFAdjacency()   {   return true; }
-  static bool HasVFAdjacencyOcf()   { return true; }
+  static bool HasVFAdjacencyOcf()   {assert(!T::HasVFAdjacencyOcf()); return true; }
 
 private:
 };
@@ -336,7 +373,7 @@ public:
 	template <class LeftV>
 	void ImportLocal(const LeftV & leftV){ C() = leftV.cC(); T::ImporLocal(leftV);}
   static bool HasColor()   { return true; }
-  static bool HasColorOcf()   { return true; }
+  static bool HasColorOcf()   { assert(!T::HasColorOcf()); return true; }
 };
 
 template <class T> class Color4bOcf: public ColorOcf<vcg::Color4b, T> {};
@@ -350,10 +387,31 @@ public:
 	template <class LeftV>
 	void ImportLocal(const LeftV & leftV){ Q() = leftV.cQ(); T::ImporLocal(leftV);}
   static bool HasQuality()   { return true; }
-  static bool HasQualityOcf()   { return true; }
+  static bool HasQualityOcf()   { assert(!T::HasQualityOcf()); return true; }
 };
 
 template <class T> class QualityfOcf: public QualityOcf<float, T> {};
+
+///*-------------------------- MARK  ----------------------------------*/ 
+
+template <class T> class MarkOcf: public T {
+public:
+  inline int & IMark()       { 
+    assert((*this).Base().MarkEnabled); 
+    return (*this).Base().MV[(*this).Index()]; 
+  }
+ 
+  inline int IMark() const   { 
+    assert((*this).Base().MarkEnabled); 
+    return (*this).Base().MV[(*this).Index()]; 
+  } ;
+
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){IMark() = leftF.cIMark(); T::ImportLocal(leftF);}
+  static bool HasFaceMark()   { return true; }
+  static bool HasFaceMarkOcf()   { return true; }
+  inline void InitIMark()    { IMark() = 0; }
+};
 
 
 ///*-------------------------- CURVATURE  ----------------------------------*/ 
@@ -438,15 +496,20 @@ public:
   } 
 public:
   vector_ocf<typename T::VertType> *_ovp;
+
+	static bool HasQualityOcf()   { return false; }
+	static bool HasVFAdjacencyOcf()   { return false; }
 };
 
 
 } // end namespace vert
 
-template < class, class > class TriMesh;
 
 namespace tri
 {
+
+	template < class, class > class TriMesh;
+
 	template < class VertexType, class FaceContainerType >
     bool HasPerVertexQuality (const TriMesh < vert::vector_ocf< VertexType > , FaceContainerType > & m) 
 	{
