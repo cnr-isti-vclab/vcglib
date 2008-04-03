@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2008/03/17 11:39:14  ganovelli
+added curvature and curvatruredir (compiled .net 2005 and gcc)
+
 Revision 1.11  2008/02/04 21:26:49  ganovelli
 added ImportLocal which imports all local attributes into vertexplus and faceplus.
 A local attribute is everything (N(), C(), Q()....) except pointers to other simplices
@@ -114,14 +117,12 @@ we have to build the type a step a time (deriving from a single ancestor at a ti
 template <class BVT, class BET=DumET, class BFT=DumFT, class BTT=DumTT>
 class VertexBase: public vert::EmptyTexCoord<
                          vert::EmptyVFAdj<
-                         vert::EmptyColor<
-                         vert::EmptyQuality<
-                         vert::EmptyNormal<
+                         vert::EmptyColorQuality<
                          vert::EmptyBitFlags<
-                         vert::EmptyCoord<
+                         vert::EmptyCoordNormal<
 												 vert::EmptyCurvature<
 												 vert::EmptyCurvatureDir<
-													VertexTypeHolder <BVT, BET, BFT, BTT> > > > > > > > > >{
+													VertexTypeHolder <BVT, BET, BFT, BTT> > > > > > > >{
 };
 
 // Metaprogramming Core
@@ -171,6 +172,22 @@ template <class BVT, class BET, typename BFT,class BTT,
 					template <typename> class G, template <typename> class H> 
           class VertexArity8: public H<VertexArity7<BVT,BET,BFT,BTT, A, B, C, D, E, F, G > > {};
 
+template <class BVT, class BET, typename BFT,class BTT,
+          template <typename> class A, template <typename> class B, 
+          template <typename> class C, template <typename> class D,
+          template <typename> class E, template <typename> class F,
+					template <typename> class G, template <typename> class H,
+					template <typename> class I>
+          class VertexArity9: public I<VertexArity8<BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H > > {};
+					
+template <class BVT, class BET, typename BFT,class BTT,
+          template <typename> class A, template <typename> class B, 
+          template <typename> class C, template <typename> class D,
+          template <typename> class E, template <typename> class F,
+					template <typename> class G, template <typename> class H,
+					template <typename> class I, template <typename> class J>
+          class VertexArity10: public J<VertexArity9<BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H, I > > {};
+
 /* The Real Big Vertex class;
 
 The class __VertexArityMax__ is the one that is the Last to be derived,
@@ -188,8 +205,9 @@ template <class BVT, class BET, typename BFT,class BTT,
           template <typename> class C, template <typename> class D, 
           template <typename> class E, template <typename> class F,
           template <typename> class G, template <typename> class H,
-					template <typename> class I> 
-class VertexArityMax: public I<VertexArity8<BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H> > {
+					template <typename> class I, template <typename> class J, 
+					template <typename> class K> 
+class VertexArityMax: public K<VertexArity10<BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H, I, J> > {
 
 // ----- Flags stuff -----
 public:
@@ -315,24 +333,27 @@ template <class BVT, class BET, class BFT, class BTT,
           template <typename> class C = DefaultDeriver, template <typename> class D = DefaultDeriver,
           template <typename> class E = DefaultDeriver, template <typename> class F = DefaultDeriver,
           template <typename> class G = DefaultDeriver, template <typename> class H = DefaultDeriver,
-					template <typename> class I = DefaultDeriver> 
-              class VertexSimp3: public VertexArityMax<BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H, I>  {};
+					template <typename> class I = DefaultDeriver, template <typename> class J = DefaultDeriver,
+					template <typename> class K = DefaultDeriver> 
+              class VertexSimp3: public VertexArityMax<BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H, I, J, K>  {};
 
 template <class BVT, class BET, class BFT, 
           template <typename> class A = DefaultDeriver, template <typename> class B = DefaultDeriver,
           template <typename> class C = DefaultDeriver, template <typename> class D = DefaultDeriver,
           template <typename> class E = DefaultDeriver, template <typename> class F = DefaultDeriver,
           template <typename> class G = DefaultDeriver, template <typename> class H = DefaultDeriver,
-					template <typename> class I = DefaultDeriver> 
-              class VertexSimp2: public VertexArityMax<BVT,BET,BFT,DumTT, A, B, C, D, E, F, G, H, I>  {};
+					template <typename> class I = DefaultDeriver, template <typename> class J = DefaultDeriver,
+					template <typename> class K = DefaultDeriver> 
+              class VertexSimp2: public VertexArityMax<BVT,BET,BFT,DumTT, A, B, C, D, E, F, G, H, I, J, K>  {};
 
 template <class BVT, class BET, 
           template <typename> class A = DefaultDeriver, template <typename> class B = DefaultDeriver,
           template <typename> class C = DefaultDeriver, template <typename> class D = DefaultDeriver,
           template <typename> class E = DefaultDeriver, template <typename> class F = DefaultDeriver,
           template <typename> class G = DefaultDeriver, template <typename> class H = DefaultDeriver,
-					template <typename> class I = DefaultDeriver> 
-                class VertexSimp1: public VertexArityMax<BVT,BET,DumFT,DumTT, A, B, C, D, E, F, G, H, I>  {};
+					template <typename> class I = DefaultDeriver, template <typename> class J = DefaultDeriver,
+					template <typename> class K = DefaultDeriver> 
+                class VertexSimp1: public VertexArityMax<BVT,BET,DumFT,DumTT, A, B, C, D, E, F, G, H, I, J, K>  {};
 
 }// end namespace
 #endif
