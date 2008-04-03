@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.40  2008/03/11 09:22:07  cignoni
+Completed the garbage collecting functions CompactVertexVector and CompactFaceVector.
+
 Revision 1.39  2007/12/11 20:18:55  cignoni
 forgotten required std::
 
@@ -167,11 +170,11 @@ namespace vcg {
 		// Placeholder. 
 		// this one is called by the Compact and overridden by more specialized functions for OCF classes.
 		// that manage also the additional types
-		template <class vector_type>
-			void ReorderFace( std::vector<size_t> &newVertIndex, vector_type &vert)
+		template <class face_type>
+			void ReorderFace( std::vector<size_t> &newVertIndex, std::vector<face_type>  &vert)
 		{}
-		template <class vector_type>
-		void ReorderVert( std::vector<size_t> &newVertIndex, vector_type &vert)
+		template <class vertex_type>
+		void ReorderVert( std::vector<size_t> &newVertIndex, std::vector<vertex_type> &vert)
 		{}
 		
 		/*@{*/
@@ -405,7 +408,7 @@ namespace vcg {
 			
 			// call a templated reordering function that manage any additional data internally stored by the vector 
 			// for the default std::vector no work is needed (some work is typically needed for the OCF stuff) 
-			ReorderVert<typename MeshType::VertContainer>(newVertIndex,m.vert);
+			ReorderVert<typename MeshType::VertexType>(newVertIndex,m.vert);
 			
 			m.vert.resize(m.vn);
 			FaceIterator fi;
