@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.26  2008/03/17 11:39:14  ganovelli
+added curvature and curvatruredir (compiled .net 2005 and gcc)
+
 Revision 1.25  2008/02/05 10:11:34  cignoni
 A small typo (a T:: instead of TT::)
 
@@ -122,8 +125,8 @@ All the Components that can be added to a vertex should be defined in the namesp
 
 */
 
-/*------------------------- COORD -----------------------------------------*/ 
-template <class T> class EmptyCoord: public T {
+/*------------------------- EMPTY COORD & NORMAL -----------------------------------------*/ 
+template <class T> class EmptyCoordNormal: public T {
 public:
   typedef vcg::Point3f CoordType;
   typedef CoordType::ScalarType      ScalarType;
@@ -132,12 +135,19 @@ public:
   const CoordType &P() const { static CoordType coord(0, 0, 0);  assert(0); return coord; }
   const CoordType &cP() const { static CoordType coord(0, 0, 0);  assert(0); return coord; }
   CoordType &UberP() { static CoordType coord(0, 0, 0); return coord; }
+	static bool HasCoord()   { return false; }
+
+  typedef vcg::Point3s NormalType;
+  NormalType &N() { static NormalType dummy_normal(0, 0, 0);  assert(0); return dummy_normal; }
+  const NormalType cN()const { static NormalType dummy_normal(0, 0, 0);  assert(0); return dummy_normal; }
+ 	static bool HasNormal()   { return false; }
+  static bool HasNormalOcc()   { return false; }
 	template < class LeftV>
 	void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); } 
-  static bool HasCoord()   { return false; }
   static void Name(std::vector<std::string> & name){T::Name(name);}
-
 };
+
+/*-------------------------- COORD ----------------------------------------*/ 
 
 template <class A, class T> class Coord: public T {
 public:
@@ -165,18 +175,6 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 
 /*-------------------------- NORMAL ----------------------------------------*/ 
 
-template <class T> class EmptyNormal: public T {
-public:
-  typedef vcg::Point3s NormalType;
-  NormalType &N() { static NormalType dummy_normal(0, 0, 0);  assert(0); return dummy_normal; }
-  const NormalType cN()const { static NormalType dummy_normal(0, 0, 0);  assert(0); return dummy_normal; }
- 	template < class LeftV>
-	void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
-	static bool HasNormal()   { return false; }
-  static bool HasNormalOcc()   { return false; }
-	static void Name(std::vector<std::string> & name){T::Name(name);}
-
-};
 template <class A, class T> class Normal: public T {
 public:
   typedef A NormalType;
@@ -297,18 +295,24 @@ private:
   int  _flags;    
 };
 
-/*-------------------------- COLOR ----------------------------------*/ 
+/*-------------------------- EMPTY COLOR & QUALITY ----------------------------------*/ 
 
-template <class T> class EmptyColor: public T {
+template <class T> class EmptyColorQuality: public T {
 public:
+  typedef float QualityType;
+  QualityType &Q() { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
+	static bool HasQuality()   { return false; }
+
   typedef vcg::Color4b ColorType;
   ColorType &C() { static ColorType dumcolor(vcg::Color4b::White); assert(0); return dumcolor; }
 	template < class LeftV>
 	void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
   static bool HasColor()   { return false; }
 	static void Name(std::vector<std::string> & name){T::Name(name);}
-
 };
+
+/*-------------------------- Color  ----------------------------------*/ 
+
 template <class A, class T> class Color: public T {
 public:
   Color():_color(vcg::Color4b::White) {}
@@ -331,16 +335,6 @@ template <class TT> class Color4b: public vert::Color<vcg::Color4b, TT> {
 
 /*-------------------------- Quality  ----------------------------------*/ 
 
-template <class T> class EmptyQuality: public T {
-public:
-  typedef float QualityType;
-  QualityType &Q() { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
-	template < class LeftV>
-	void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
-  static bool HasQuality()   { return false; }
-	static void Name(std::vector<std::string> & name){T::Name(name);}
-
-};
 template <class A, class TT> class Quality: public TT {
 public:
   typedef A QualityType;
