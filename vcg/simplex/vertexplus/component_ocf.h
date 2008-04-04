@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2008/04/03 23:15:40  cignoni
+added optional mark and cleaned up some nasty type bugs.
+
 Revision 1.15  2008/03/17 11:39:15  ganovelli
 added curvature and curvatruredir (compiled .net 2005 and gcc)
 
@@ -421,15 +424,15 @@ public:
   typedef Point2<A> CurvatureType;
 	typedef typename CurvatureType::ScalarType ScalarType;
 
-	ScalarType  &H(){  assert((*this).Base().CurvatureEnabled); return (*this).Base().CuV[(*this).Index()][0];}
-	ScalarType  &K(){  assert((*this).Base().CurvatureEnabled); return (*this).Base().CuV[(*this).Index()][1];}
-	const ScalarType &cH() const { assert((*this).Base().CurvatureEnabled); return (*this).Base().CuV[(*this).Index()][0];}
-	const ScalarType &cK() const { assert((*this).Base().CurvatureEnabled); return (*this).Base().CuV[(*this).Index()][1];}
+	ScalarType  &Kh(){  assert((*this).Base().CurvatureEnabled); return (*this).Base().CuV[(*this).Index()][0];}
+	ScalarType  &Kg(){  assert((*this).Base().CurvatureEnabled); return (*this).Base().CuV[(*this).Index()][1];}
+	const ScalarType &cKh() const { assert((*this).Base().CurvatureEnabled); return (*this).Base().CuV[(*this).Index()][0];}
+	const ScalarType &cKg() const { assert((*this).Base().CurvatureEnabled); return (*this).Base().CuV[(*this).Index()][1];}
 
  	template <class LeftV>
 	void ImportLocal(const LeftV & leftV){ 
-(*this).Base().CuV[(*this).Index()][0] = leftV.cH();
-(*this).Base().CuV[(*this).Index()][1] = leftV.cK(); TT::ImporLocal(leftV);}
+(*this).Base().CuV[(*this).Index()][0] = leftV.cKh();
+(*this).Base().CuV[(*this).Index()][1] = leftV.cKg(); TT::ImporLocal(leftV);}
 
 	static bool HasCurvatureOcf()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureOcf"));TT::Name(name);}

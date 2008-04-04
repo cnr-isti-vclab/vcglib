@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.27  2008/04/03 23:12:28  cignoni
+compacted two pair of empty components to shorten derivation chains
+
 Revision 1.26  2008/03/17 11:39:14  ganovelli
 added curvature and curvatruredir (compiled .net 2005 and gcc)
 
@@ -365,11 +368,10 @@ template <class TT> class EmptyCurvature: public TT {
 public:
 	typedef vcg::Point2<float> CurvatureType;
 
-	float &H() {static float dummy = 0.f; return dummy;;}
-	float &K() { static float dummy = 0.f; return dummy;}
-	const float &cH() const {static float dummy = 0.f; return dummy;;}
-	const float &cK()const  { static float dummy = 0.f; return dummy;}
-	void SetHK(const float & h,const float & k) { }
+	float &Kh() {static float dummy = 0.f; return dummy;;}
+	float &Kg() { static float dummy = 0.f; return dummy;}
+	const float &cKh() const {static float dummy = 0.f; return dummy;;}
+	const float &cKg()const  { static float dummy = 0.f; return dummy;}
 
   static bool HasCurvatureOcc()   { return false; }
   static bool HasCurvatureOcf()   { return false; }
@@ -381,10 +383,10 @@ template <class A, class TT> class Curvature: public TT {
 public:
   typedef Point2<A> CurvatureType;
 	typedef typename CurvatureType::ScalarType ScalarType;
-	ScalarType  &H(){ return _hk[0];}
-	ScalarType  &K(){ return _hk[1];}
-	const ScalarType &cH() const { return  _hk[0];}
-	const ScalarType &cK() const { return  _hk[1];}
+	ScalarType  &Kh(){ return _hk[0];}
+	ScalarType  &Kg(){ return _hk[1];}
+	const ScalarType &cKh() const { return  _hk[0];}
+	const ScalarType &cKg() const { return  _hk[1];}
 
   static bool HasCurvature()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("Curvature"));TT::Name(name);}

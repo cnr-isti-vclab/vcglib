@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.5  2008/03/25 11:00:56  ganovelli
+fixed  bugs sign of principal direction and mean curvature value
+
 Revision 1.4  2008/03/17 11:29:59  ganovelli
 taubin and desbrun estimates added (-> see vcg/simplex/vertexplus/component.h [component_ocf.h|component_occ.h ]
 
@@ -49,6 +52,7 @@ the vertex
 #include <vcg/simplex/face/pos.h>
 #include <vcg/simplex/face/jumping_pos.h>
 #include <vcg/container/simple_temporary_data.h>
+#include <vcg/complex/trimesh/update/normal.h>
 
 namespace vcg {
 namespace tri {
@@ -289,8 +293,8 @@ Discrete Differential-Geometry Operators for Triangulated 2-Manifolds Mark Meyer
       {
         (TDAreaPtr)[*vi].A = 0.0;
 				(TDContr)[*vi]  =typename MeshType::CoordType(0.0,0.0,0.0);
-				(*vi).H() = 0.0;
-        (*vi).K() = (float)(2.0 * M_PI);
+				(*vi).Kh() = 0.0;
+        (*vi).Kg() = (float)(2.0 * M_PI);
       }
 
       for(fi=m.face.begin();fi!=m.face.end();++fi) if( !(*fi).IsD())
@@ -337,9 +341,9 @@ Discrete Differential-Geometry Operators for Triangulated 2-Manifolds Mark Meyer
 	      TDContr[(*fi).V(1)] += ( e01v * (1.0/tan(angle2)) - e12v * (1.0/tan(angle0)) ) / 4.0;
 	      TDContr[(*fi).V(2)] += ( e12v * (1.0/tan(angle0)) - e20v * (1.0/tan(angle1)) ) / 4.0;
           
-        (*fi).V(0)->K() -= angle0;
-        (*fi).V(1)->K() -= angle1;
-        (*fi).V(2)->K() -= angle2;
+        (*fi).V(0)->Kg() -= angle0;
+        (*fi).V(1)->Kg() -= angle1;
+        (*fi).V(2)->Kg() -= angle2;
 
         
         for(int i=0;i<3;i++)
@@ -355,7 +359,7 @@ Discrete Differential-Geometry Operators for Triangulated 2-Manifolds Mark Meyer
 				    hp1.FlipV();
 				    hp1.NextB();
 				    e2=hp1.v->cP() - hp.v->cP();
-            (*fi).V(i)->K() -= math::Abs(Angle(e1,e2));
+            (*fi).V(i)->Kg() -= math::Abs(Angle(e1,e2));
 			    }
 	      }
       }
@@ -364,13 +368,13 @@ Discrete Differential-Geometry Operators for Triangulated 2-Manifolds Mark Meyer
       {
         if((TDAreaPtr)[*vi].A<=std::numeric_limits<float>::epsilon())
         {
-          (*vi).H() = 0;
-          (*vi).K() = 0;
+          (*vi).Kh() = 0;
+          (*vi).Kg() = 0;
         }
         else
         {
-					(*vi).H()  = (((TDContr)[*vi]* (*vi).cN()>0)?1.0:-1.0)*((TDContr)[*vi] / (TDAreaPtr) [*vi].A).Norm();
-          (*vi).K() /= (TDAreaPtr)[*vi].A;
+					(*vi).Kh()  = (((TDContr)[*vi]* (*vi).cN()>0)?1.0:-1.0)*((TDContr)[*vi] / (TDAreaPtr) [*vi].A).Norm();
+          (*vi).Kg() /= (TDAreaPtr)[*vi].A;
         }
 			}
 
