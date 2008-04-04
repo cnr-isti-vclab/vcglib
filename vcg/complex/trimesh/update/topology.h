@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2007/05/29 00:07:06  ponchio
+VFi++ -> ++VFi
+
 Revision 1.18  2006/02/27 19:26:14  spinelli
 minor bug in Face-Face topology loop fixed
 
@@ -271,9 +274,10 @@ static void TestVertexFace(MeshType &m)
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 	{
 		if (!vi->IsD())
+		if(vi->VFp()!=0) // unreferenced vertices MUST have VF == 0;
 		{
-			//the vertex must be linked to one face
-			assert(vi->VFp()!=0);
+			assert(vi->VFp() >= &*m.face.begin());
+			assert(vi->VFp() <= &m.face.back());
 			VFi.f=vi->VFp();
 			VFi.z=vi->VFi();
 			while (!VFi.End())
@@ -303,9 +307,15 @@ static void TestFaceFace(MeshType &m)
 				int e=Fi->FFi(i);
 				//invariant property of fftopology
 				assert(f->FFp(e)=&(*Fi));
-				//control if the vertex are the same
-				assert(((f->V(e)==Fi->V(i))&&(f->V((e+1)%3)==Fi->V((i+1)%3)))||
-					   ((f->V(e)==Fi->V((i+1)%3))&&(f->V((e+1)%3)==Fi->V(i))));
+				// Test that the two faces shares the same edge
+				VertexPointer v0= Fi->V0(i);
+				VertexPointer v1= Fi->V1(i);
+				assert( (f->V0(e)==v0) || (f->V1(e)==v0) );
+				assert( (f->V0(e)==v1) || (f->V1(e)==v1) );
+				
+// Old unreadable test
+//				assert(((f->V(e) == Fi->V(i))&&(f->V((e+1)%3)==Fi->V((i+1)%3)))||
+//					   ((f->V(e)==Fi->V((i+1)%3))&&(f->V((e+1)%3)==Fi->V(i))));
 			}
 			
 		}
