@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/03/17 16:16:08  cignoni
+removed small gcc compiling issues
+
 Revision 1.6  2005/03/15 11:48:50  cignoni
 Added missing include assert and improved comments and requirements of geodesic quality
 
@@ -203,6 +206,63 @@ static void FaceConstant(MeshType &m, float q)
 	FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi)		
 		(*fi).Q()=q;
+}
+
+
+static void VertexFromGaussianCurvature(MeshType &m)
+{ 
+	VertexIterator vi;
+	for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD()) 
+		(*vi).Q() = (*vi).Kg();
+}
+
+static void VertexFromMeanCurvature(MeshType &m)
+{ 
+	VertexIterator vi;
+	for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD()) 
+		(*vi).Q() = (*vi).Kh();
+}
+
+/*
+ *  Absolute Curvature                     
+ *
+ *                  2|H|                if K >= 0
+ *  |k1| + |k2| = <
+ *                  2 * sqrt(|H|^2-K)   otherwise
+ *
+ * defs and formulas taken from 
+ *     
+ * Improved curvature estimation for watershed segmentation of 3-dimensional meshes
+ * S Pulla, A Razdan, G Farin - Arizona State University, Tech. Rep, 2001
+ * and from
+ * Optimizing 3D triangulations using discrete curvature analysis  
+ * N Dyn, K Hormann, SJ Kim, D Levin - Mathematical Methods for Curves and Surfaces: Oslo, 2000 
+ */
+
+static void VertexFromAbsoluteCurvature(MeshType &m)
+{ 
+	VertexIterator vi;
+	for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD()) 
+	{
+		if((*vi).Kg() >= 0) 
+					(*vi).Q() = math::Abs( 2*(*vi).Kh() );
+		else
+		      (*vi).Q() = 2*math::Sqrt(math::Abs( (*vi).Kh()*(*vi).Kh() - (*vi).Kg())); 
+	}
+}
+
+/*
+ * RMS Curvature =   sqrt(4H^2-2K)
+ * def and formula taken from 
+ *     
+ * Improved curvature estimation for watershed segmentation of 3-dimensional meshes
+ * S Pulla, A Razdan, G Farin - Arizona State University, Tech. Rep, 2001
+ */ 
+static void VertexFromRMSCurvature(MeshType &m)
+{ 
+	VertexIterator vi;
+	for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD()) 
+		(*vi).Q() = math::Sqrt(math::Abs( 4*(*vi).Kh()*(*vi).Kh() - 2*(*vi).Kg())); 
 }
 
 }; //end class
