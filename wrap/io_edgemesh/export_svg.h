@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2007/07/12 11:02:06  andrenucci
+Scale in SingleFile mode changed, it have to be calcolated before draw.
+
 Revision 1.10  2007/07/10 07:48:41  cignoni
 changed a template >> into > >
 
@@ -263,7 +266,7 @@ public:
 		SVGProperties properties;
 		return Save(mp, filename, properties);
 	}
-	static bool Save(vector<EdgeMeshType*> *vp, const char *filename, SVGProperties & pro){
+	static bool Save(std::vector<EdgeMeshType*> *vp, const char *filename, SVGProperties & pro){
 	    //Function that export a vector of EdgeMesh in an unic single SVG file. 
         FILE * o = fopen(filename,"w");  
 	    if (o==NULL)
@@ -286,7 +289,7 @@ public:
 			pmax[0]=max(pmax[0], pma->X());
 			pmax[1]=max(pmax[1], pma->Y());
 		}
-		float maxEdge=max(pmax[0]-pmin[0], pmax[1]-pmin[1]);
+		float maxEdge=std::max(pmax[0]-pmin[0], pmax[1]-pmin[1]);
 		float scl = (pro.getViewBox().V(0)/pro.numCol) /maxEdge ;
 		pro.setScale(scl);
 		pro.setMinPoint(new Point2f(pmin[0],pmin[1]));
@@ -355,7 +358,7 @@ public:
 		v1.Normalize();
 		Point3d v2 = v1 ^ props.projPlane()->Direction();
         //Global points
-	  vector<vector<Point2f> >* glb;
+	  std::vector< std::vector<Point2f> >* glb;
 		std::vector<Point2f> pts;
 	    pts.clear();
 		Point2f pmin(100000000.0f,  100000000.0f);
