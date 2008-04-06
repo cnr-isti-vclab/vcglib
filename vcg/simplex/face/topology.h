@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.30  2007/05/16 15:12:40  fiorin
+Added std:: prefix to swap call
+
 Revision 1.29  2006/12/06 00:08:21  cignoni
 Removed Oldstyle uberZ access to FF adjacency
 
@@ -543,7 +546,7 @@ void VFDetach(FaceType & f, int z)
 template <class FaceType>
 void VFAppend(FaceType* & f, int z)
 {
-	typename FaceType::VerteType *v = f->V(z);
+	typename FaceType::VertexType *v = f->V(z);
 	if (v->VFp()!=0)
 	{
 		FaceType *f0=v->VFp();	
