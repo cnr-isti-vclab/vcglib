@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2008/03/05 11:48:08  pietroni
+correct 1 error on DistancePoint3Box3 (if the point is inside the box return distance to the nearest face instead of zero)
+
 Revision 1.18  2008/02/03 23:50:51  cignoni
 Important Change. Now adding a null bbox to a bbox leave it unchanged (instead of trashing it)
 
@@ -563,6 +566,8 @@ ScalarType DistancePoint3Box3(const Point3<ScalarType> &test,
 
 	//no more cases
 	assert(0);
+	///this is for warnings
+	return(0);
 }
 
 
