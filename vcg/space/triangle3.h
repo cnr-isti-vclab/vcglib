@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2007/12/02 07:39:19  cignoni
+disambiguated sqrt call
+
 Revision 1.20  2007/11/26 14:11:38  ponchio
 Added Mean Ratio metric for triangle quality.
 
@@ -114,6 +117,7 @@ public:
     blah
     blah
 **/
+	Triangle3(){}
 	Triangle3(const CoordType & c0,const CoordType & c1,const CoordType & c2){_v[0]=c0;_v[1]=c1;_v[2]=c2;}
 protected:
 	/// Vector of vertex pointer incident in the face
