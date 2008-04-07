@@ -23,7 +23,6 @@
 
 #include <vcg/complex/local_optimization.h>
 #include <vcg/simplex/face/topology.h>
-//#include <vcg/space/point3.h>
 #include <vcg/space/triangle3.h>
 
 namespace vcg
@@ -189,6 +188,10 @@ public:
 		if( (Angle(v2 - v0, v1 - v0) + Angle(v3 - v0, v1 - v0) >= M_PI) ||
 		    (Angle(v2 - v1, v0 - v1) + Angle(v3 - v1, v0 - v1) >= M_PI))
 			return false;
+		
+		// if any of two faces adj to edge in non writable, the flip is unfeasible
+		if(!_pos.F()->IsW() || !_pos.F()->FFp(i)->IsW())
+			return false;
 
 		return vcg::face::CheckFlipEdge(*_pos.f, _pos.z);
 	}
@@ -243,8 +246,7 @@ public:
 	 */
 	void Execute(TRIMESH_TYPE &/*m*/)
 	{
-		int z = _pos.z;
-		vcg::face::FlipEdge(*_pos.f, z);
+		vcg::face::FlipEdge(*_pos.F(), _pos.I());
 	}
 
 	/*!
@@ -260,7 +262,7 @@ public:
 	 */
 	static void Init(TRIMESH_TYPE &mesh, HeapType &heap)
 	{
-		heap.clear();
+		/*heap.clear();
 		FaceIterator fi;
 		for(fi = mesh.face.begin(); fi != mesh.face.end(); ++fi) {
 			if(!(*fi).IsD() && (*fi).V(0)->IsW() && (*fi).V(1)->IsW() && (*fi).V(2)->IsW()) {
@@ -271,6 +273,19 @@ public:
 					} //endif
 				} //endfor
 			}
+		} //endfor*/
+		
+		heap.clear();
+		FaceIterator fi;
+		for(fi = mesh.face.begin(); fi != mesh.face.end(); ++fi) {
+			if(!(*fi).IsD() && (*fi).IsW()) {
+				for(unsigned int i = 0; i < 3; i++) {
+					if( !(*fi).IsB(i) && (*fi).FFp(i)->IsW() ) {
+						if((*fi).V1(i) - (*fi).V0(i)> 0)
+						heap.push_back( HeapElem( new MYTYPE(PosType(&*fi, i), mesh.IMark() )) );
+					} //endif
+				} //endfor
+			}
 		} //endfor
 	}
 
@@ -278,8 +293,8 @@ public:
 	 */
 	virtual void UpdateHeap(HeapType &heap)
 	{
-		GlobalMark()++;
-		PosType pos(_pos.f, _pos.z);
+		/*GlobalMark()++;
+		PosType pos(_pos);
 		pos.FlipF();
 
 		_pos.F()->V(0)->IMark() = GlobalMark();
@@ -312,7 +327,26 @@ public:
 		if(!poss.IsBorder()) {
 			heap.push_back(HeapElem(new MYTYPE(poss, GlobalMark())));
 			std::push_heap(heap.begin(), heap.end());
-		}
+		}*/
+		
+
+		// the index of new edge in pos.F()
+		int flipped = (_pos.I() + 1) % 3;
+		FacePointer f1 = _pos.F();
+		FacePointer f2 = _pos.F()->FFp(flipped);
+		
+		//PosType pos(_pos.F(), flipped);
+		for(int i = 0; i < 3; i++)
+			if (i != flipped && !vcg::face::IsBorder(*f1, i) && f1->FFp(i)->IsW()) {
+				heap.push_back(HeapElem(new MYTYPE(PosType(f1, i), GlobalMark())));
+				std::push_heap(heap.begin(), heap.end());
+			}
+		
+		for(int i = 0; i < 3; i++)
+			if (i != f1->FFi(flipped) && !vcg::face::IsBorder(*f2, i) && f2->FFp(i)->IsW()) {
+				heap.push_back(HeapElem(new MYTYPE(PosType(f2, i), GlobalMark())));
+				std::push_heap(heap.begin(), heap.end());
+			}
 	}
 }; // end of PlanarEdgeFlip class
 
@@ -322,17 +356,9 @@ class TriEdgeFlip : public PlanarEdgeFlip<TRIMESH_TYPE, MYTYPE>
 {
 protected:
 	typedef typename TRIMESH_TYPE::FaceType FaceType;
-	typedef typename TRIMESH_TYPE::FacePointer FacePointer;
-	typedef typename TRIMESH_TYPE::FaceIterator FaceIterator;
-	typedef typename TRIMESH_TYPE::VertexType VertexType;
-	typedef typename TRIMESH_TYPE::VertexPointer VertexPointer;
 	typedef typename TRIMESH_TYPE::ScalarType ScalarType;
 	typedef typename TRIMESH_TYPE::CoordType CoordType;
 	typedef vcg::face::Pos<FaceType> PosType;
-	typedef typename LocalOptimization<TRIMESH_TYPE>::HeapElem HeapElem;
-	typedef typename LocalOptimization<TRIMESH_TYPE>::HeapType HeapType;
-
-	typedef typename vcg::Triangle3<ScalarType> TriangleType;
 
 public:
 	/*!
@@ -359,12 +385,7 @@ public:
 		this->_localMark = par.GetMark();
 		this->_priority = par.Priority();
 	}
-
-	//only topology check 
-	/*bool IsFeasible()
-	 {
-	 return vcg::face::CheckFlipEdge(*this->_pos.f, this->_pos.z);
-	 }*/
+	
 
 	ScalarType ComputePriority()
 	{
@@ -401,9 +422,208 @@ public:
 		this->_priority = (Distance(v3, circumcenter) - radius2);
 		return this->_priority;
 	}
-
 };
 
-/*! @} */
-}; // end of namespace tri
-}; // end of namespace vcg
+
+// This kind of flip minimize the variance of number of incident faces
+// on the vertices of two faces involved in the flip
+template <class TRIMESH_TYPE, class MYTYPE>
+class TopoEdgeFlip : public PlanarEdgeFlip<TRIMESH_TYPE, MYTYPE>
+{
+protected:
+	typedef typename TRIMESH_TYPE::VertexPointer VertexPointer;
+	
+	typedef typename TRIMESH_TYPE::FaceType FaceType;
+	typedef typename TRIMESH_TYPE::FacePointer FacePointer;
+	typedef typename TRIMESH_TYPE::ScalarType ScalarType;
+	typedef typename TRIMESH_TYPE::CoordType CoordType;
+	typedef vcg::face::Pos<FaceType> PosType;
+
+	typedef typename LocalOptimization<TRIMESH_TYPE>::HeapElem HeapElem;
+	typedef typename LocalOptimization<TRIMESH_TYPE>::HeapType HeapType;
+
+	typedef typename TRIMESH_TYPE::FaceIterator FaceIterator;
+	typedef typename TRIMESH_TYPE::VertexIterator VertexIterator;
+
+public:
+	/*!
+	 *	Default constructor
+	 */
+	inline TopoEdgeFlip() {}
+
+	/*!
+	 *	Constructor with <I>pos</I> type
+	 */
+	inline TopoEdgeFlip(const PosType pos, int mark)
+	{
+		this->_pos = pos;
+		this->_localMark = mark;
+		this->_priority = ComputePriority();
+	}
+
+	/*!
+	 *	Copy Constructor 
+	 */
+	inline TopoEdgeFlip(const TopoEdgeFlip &par)
+	{
+		this->_pos = par.GetPos();
+		this->_localMark = par.GetMark();
+		this->_priority = par.Priority();
+	}
+	
+
+	ScalarType ComputePriority()
+	{
+		/*
+		     1  
+		    /|\
+		   / | \
+		  2  |  3 
+		   \ | /
+		    \|/
+		     0
+		 */
+		VertexPointer v0, v1, v2, v3;
+		int i = this->_pos.I();
+		v0 = this->_pos.F()->V0(i);
+		v1 = this->_pos.F()->V1(i);
+		v2 = this->_pos.F()->V2(i);
+		v3 = this->_pos.F()->FFp(i)->V2(this->_pos.F()->FFi(i));
+		
+		// This kind of flip minimize the variance of number of incident faces
+		// on the vertices of two faces involved in the flip
+		
+		ScalarType avg = (v0->Q() + v1->Q() + v2->Q() + v3->Q()) / 4.0; 
+		
+		ScalarType varbefore = (powf(v0->Q() - avg, 2.0) + 
+		                        powf(v1->Q() - avg, 2.0) + 
+				                powf(v2->Q() - avg, 2.0) + 
+				                powf(v3->Q() - avg, 2.0)) / 4.0;
+		
+		ScalarType varafter = (powf(v0->Q() - 1 - avg, 2.0) +
+                               powf(v1->Q() - 1 - avg, 2.0) +
+		                       powf(v2->Q() + 1 - avg, 2.0) +
+	 	                       powf(v3->Q() + 1 - avg, 2.0)) / 4.0; 
+		
+		this->_priority = varafter - varbefore;
+		return this->_priority;
+	}
+	
+	
+	/*!
+	 * Execute the flipping of the edge
+	 */
+	void Execute(TRIMESH_TYPE &m)
+	{
+		VertexPointer v0, v1, v2, v3;
+		int i = this->_pos.I();
+		v0 = this->_pos.F()->V0(i);
+		v1 = this->_pos.F()->V1(i);
+		v2 = this->_pos.F()->V2(i);
+		v3 = this->_pos.F()->FFp(i)->V2(this->_pos.F()->FFi(i));
+		
+		v0->Q()--;
+		v1->Q()--;
+		v2->Q()++;
+		v3->Q()++;
+		
+		vcg::face::FlipEdge(*this->_pos.F(), this->_pos.I());
+	}
+	
+	
+	static void Init(TRIMESH_TYPE &m, HeapType &heap)
+	{
+		// reset quality field for each vertex
+		VertexIterator vi;
+		for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+			if(!(*vi).IsD())
+				(*vi).Q() = 0;
+		
+		// for each vertex, put the number of incident faces in quality field
+		FaceIterator fi;
+		for(fi = m.face.begin(); fi != m.face.end(); ++fi)
+			if(!(*fi).IsD())
+				for(int i = 0; i < 3; i++)
+					(*fi).V(i)->Q()++;
+		
+		TriEdgeFlip<TRIMESH_TYPE, MYTYPE>::Init(m, heap);
+	}
+	
+	
+	void UpdateHeap(HeapType &heap)
+	{
+		this->GlobalMark()++;
+		
+		VertexPointer v0, v1, v2, v3;
+		int flipped = (this->_pos.I() + 1) % 3;
+		FacePointer f1 = this->_pos.F();
+		FacePointer f2 = this->_pos.F()->FFp(flipped);
+		
+		v0 = f1->V0(flipped);
+		v1 = f1->V1(flipped);
+		v2 = f1->V2(flipped);
+		v3 = f2->V2(f1->FFi(flipped));
+		
+		v0->IMark() = this->GlobalMark();
+		v1->IMark() = this->GlobalMark();
+		v2->IMark() = this->GlobalMark();
+		v3->IMark() = this->GlobalMark();
+		
+		// edges of the first face, except the flipped edge
+		for(int i = 0; i < 3; i++) if(i != flipped) {
+			PosType newpos(f1, i);
+			if(!newpos.IsBorder() && newpos.FFlip()->IsW()) {
+				heap.push_back(HeapElem(new MYTYPE(newpos, this->GlobalMark())));
+				std::push_heap(heap.begin(), heap.end());
+			}
+		}
+
+		// edges of the second face, except the flipped edge
+		for(int i = 0; i < 3; i++) if(i != f1->FFi(flipped)) {
+			PosType newpos(f2, i);
+			if(!newpos.IsBorder() && newpos.FFlip()->IsW()) {
+				heap.push_back(HeapElem(new MYTYPE(newpos, this->GlobalMark())));
+				std::push_heap(heap.begin(), heap.end());
+			}
+		}
+		
+		// every edge with v0, v1 v3 of f1
+		for(int i = 0; i < 3; i++) {
+			PosType startpos(f1, i);
+			PosType pos(startpos);
+			
+			do { // go to the first border (if there is one)
+				pos.NextE();
+			}while(pos != startpos && !pos.IsBorder());
+			
+			do {
+				VertexPointer v = pos.VFlip(); 
+				if(v != v0 && v != v1 && v != v2 && v != v3 && pos.FFlip()->IsW()) {
+					heap.push_back(HeapElem(new MYTYPE(pos, this->GlobalMark())));
+					std::push_heap(heap.begin(), heap.end());
+				}
+				pos.NextE();
+			}while(pos != startpos && !pos.IsBorder());
+		}
+		
+		PosType startpos(f2, f1->FFi(flipped));
+		PosType pos(startpos);
+		
+		do { // go to the first border (if there is one)
+			pos.NextE();
+		}while(pos != pos && !pos.IsBorder());
+		
+		do {
+			VertexPointer v = pos.VFlip();
+			if(v != v0 && v != v1 && v != v2 && v != v3 && pos.FFlip()->IsW()) {
+				heap.push_back(HeapElem(new MYTYPE(pos, this->GlobalMark())));
+				std::push_heap(heap.begin(), heap.end());
+			}
+			pos.NextE();
+		}while(pos != startpos && !pos.IsBorder());
+	}
+};
+
+
+} // end of namespace tri
+} // end of namespace vcg
