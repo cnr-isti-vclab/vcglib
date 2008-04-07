@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2008/04/04 10:27:34  cignoni
+minor changes to the topology correctness checks
+
 Revision 1.19  2007/05/29 00:07:06  ponchio
 VFi++ -> ++VFi
 
@@ -262,6 +265,115 @@ static void VertexFace(MeshType &m)
 		}
 	}
 }
+
+
+
+/// Auxiliairy data structure for computing face face adjacency information. 
+// It identifies and edge storing two vertex pointer and a face pointer where it belong.
+class PEdgeTex
+{
+public:
+	
+	typename FaceType::TexCoordType  v[2];		// the two Vertex pointer are ordered!
+	FacePointer    f;		  // the face where this edge belong
+	int      z;				      // index in [0..2] of the edge of the face
+
+  PEdgeTex() {}
+
+void Set( FacePointer  pf, const int nz )
+{
+	assert(pf!=0);
+	assert(nz>=0);
+	assert(nz<3);
+	
+	v[0] = pf->WT(nz);
+	v[1] = pf->WT((nz+1)%3);
+	assert(v[0] != v[1]); // The face pointed by 'f' is Degenerate (two coincident vertexes)
+
+	if( v[1] < v[0] ) swap(v[0],v[1]);
+	f    = pf;
+	z    = nz;
+}
+
+inline bool operator <  ( const PEdgeTex & pe ) const
+{
+	if( v[0]<pe.v[0] ) return true;
+	else if( pe.v[0]<v[0] ) return false;
+	else return v[1] < pe.v[1];
+}
+inline bool operator == ( const PEdgeTex & pe ) const
+{
+	return (v[0]==pe.v[0]) && (v[1]==pe.v[1]);
+}
+inline bool operator != ( const PEdgeTex & pe ) const
+{
+	return (v[0]!=pe.v[0]) || (v[1]!=pe.v[1]);
+}
+
+};
+
+
+/** Update the Face-Face topological relation by allowing to retrieve for each face what other faces shares their edges.
+*/
+static void FaceFaceFromTexCoord(MeshType &m)
+{
+//  assert(HasFFTopology(m));
+	assert(HasPerWedgeTexCoord(m));
+	
+  std::vector<PEdgeTex> e;
+	FaceIterator pf;
+	typename std::vector<PEdgeTex>::iterator p;
+
+	if( m.fn == 0 ) return;
+
+	e.resize(m.fn*3);								// Alloco il vettore ausiliario
+	p = e.begin();
+	for(pf=m.face.begin();pf!=m.face.end();++pf)			// Lo riempio con i dati delle facce
+		if( ! (*pf).IsD() )
+			for(int j=0;j<3;++j)
+			{
+				(*p).Set(&(*pf),j);
+				++p;
+			}
+	assert(p==e.end());
+	sort(e.begin(), e.end());							// Lo ordino per vertici
+
+	int ne = 0;											// Numero di edge reali
+
+	typename std::vector<PEdgeTex>::iterator pe,ps;
+	ps = e.begin();pe=e.begin();
+	//for(ps = e.begin(),pe=e.begin();pe<=e.end();++pe)	// Scansione vettore ausiliario
+	do
+	{
+		if( pe==e.end() || (*pe) != (*ps) )					// Trovo blocco di edge uguali
+		{
+			typename std::vector<PEdgeTex>::iterator q,q_next;
+			for (q=ps;q<pe-1;++q)						// Scansione facce associate
+			{
+				assert((*q).z>=0);
+				assert((*q).z< 3);
+				q_next = q;
+				++q_next;
+				assert((*q_next).z>=0);
+				assert((*q_next).z< 3);
+				(*q).f->FFp(q->z) = (*q_next).f;				// Collegamento in lista delle facce
+				(*q).f->FFi(q->z) = (*q_next).z;
+			}
+			assert((*q).z>=0);
+			assert((*q).z< 3);
+			(*q).f->FFp((*q).z) = ps->f;
+			(*q).f->FFi((*q).z) = ps->z;
+			ps = pe;
+			++ne;										// Aggiorno il numero di edge
+		}
+		if(pe==e.end()) break;
+		++pe;
+	} while(true);
+}
+
+
+
+
 
 ///test correctness of VFtopology
 static void TestVertexFace(MeshType &m)
