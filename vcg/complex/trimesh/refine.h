@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2008/03/18 10:31:47  cignoni
+added color interpolation to butterfly
+
 Revision 1.17  2007/03/27 09:25:14  cignoni
 corrected managment of selected flag when refining the whole mesh flipmesh
 
@@ -149,6 +152,9 @@ struct MidPoint : public   std::unary_function<face::Pos<typename MESH_TYPE::Fac
 
 		if( MESH_TYPE::HasPerVertexColor())
 			nv.C().lerp(ep.f->V(ep.z)->C(),ep.f->V1(ep.z)->C(),.5f);
+		
+		if( MESH_TYPE::HasPerVertexQuality())
+			nv.Q() = ((ep.f->V(ep.z)->Q()+ep.f->V1(ep.z)->Q())) / 2.0;
 	}
 
 	Color4<typename MESH_TYPE::ScalarType> WedgeInterp(Color4<typename MESH_TYPE::ScalarType> &c0, Color4<typename MESH_TYPE::ScalarType> &c1)
@@ -289,14 +295,14 @@ tutti uguali per tutti i wedge sulla stessa 'vecchia' faccia.
 // la refine usa qt funzione di default: raffina se l'edge^2 e' piu lungo di thr2
 
 
-template <class FLT>
+template <class MESH_TYPE, class FLT>
 class EdgeLen
 {
 	public:
   FLT thr2;
-	bool operator()(const Point3<FLT> &p0, const  Point3<FLT> &p1) const
+	bool operator()(face::Pos<typename MESH_TYPE::FaceType> ep) const
 	{
-		return SquaredDistance(p0,p1)>thr2;
+		return SquaredDistance(ep.f->V(ep.z)->P(), ep.f->V1(ep.z)->P())>thr2;
 	}
 };
 /*
@@ -331,7 +337,7 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep, bool RefineSelectedP=false
 template<class MESH_TYPE,class MIDPOINT>
 bool Refine(MESH_TYPE &m, MIDPOINT mid, typename MESH_TYPE::ScalarType thr=0,bool RefineSelected=false, CallBackPos *cb = 0)
 {
-	EdgeLen <typename MESH_TYPE::ScalarType> ep;
+	EdgeLen <MESH_TYPE, typename MESH_TYPE::ScalarType> ep;
 	ep.thr2=thr*thr;
   return RefineE(m,mid,ep,RefineSelected,cb);
 }
@@ -351,7 +357,7 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
   {
 	 if(cb && (++step%PercStep)==0)(*cb)(step/PercStep,"Refining...");
 	    for(j=0;j<3;j++){
-				if(ep((*fi).P(j),(*fi).P1(j)) && 
+				if(ep(face::Pos<typename MESH_TYPE::FaceType> (&*fi,j)) && 
 					(!RefineSelected || ((*fi).IsS() && (*fi).FFp(j)->IsS())) ){
 					++NewFaceNum;
 					if(  ((*fi).V(j)<(*fi).V1(j))  || 	(*fi).IsB(j)  )  
@@ -370,7 +376,7 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
   {
 	   if(cb && (++step%PercStep)==0)(*cb)(step/PercStep,"Refining...");
      for(j=0;j<3;j++)
-			if(ep((*fi).V(j)->P(),(*fi).V1(j)->P())  && 
+			if(ep(face::Pos<typename MESH_TYPE::FaceType> (&*fi,j))  && 
 					(!RefineSelected || ((*fi).IsS() && (*fi).FFp(j)->IsS())) )
 				if((*fi).V(j)<(*fi).V1(j) || (*fi).IsB(j)){
 						mid( (*lastv), face::Pos<typename MESH_TYPE::FaceType> (&*fi,j));
@@ -417,9 +423,9 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
 				vv[0]=(*fi).V(0);
 				vv[1]=(*fi).V(1);
 				vv[2]=(*fi).V(2);
-				bool e0=ep((*fi).V(0)->P(),(*fi).V(1)->P());
-				bool e1=ep((*fi).V(1)->P(),(*fi).V(2)->P());
-				bool e2=ep((*fi).V(2)->P(),(*fi).V(0)->P());
+				bool e0=ep(face::Pos<typename MESH_TYPE::FaceType> (&*fi,0));
+				bool e1=ep(face::Pos<typename MESH_TYPE::FaceType> (&*fi,1));
+				bool e2=ep(face::Pos<typename MESH_TYPE::FaceType> (&*fi,2));
 
 				if(e0) 
 						if((*fi).V(0)<(*fi).V(1)|| (*fi).IsB(0)) vv[3]=Edge2Vert[ vvpair((*fi).V(0),(*fi).V(1)) ];
