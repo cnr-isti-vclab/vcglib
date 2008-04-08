@@ -309,9 +309,9 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
     }
 
     //test if id is in some border (to return touch
-    for(list<FrontEdge>::iterator k = this->front.begin(); k != this->front.end(); k++)
+		for(std::list<FrontEdge>::iterator k = this->front.begin(); k != this->front.end(); k++)
       if((*k).v0 == id) touch = k;
-    for(list<FrontEdge>::iterator k = this->deads.begin(); k != this->deads.end(); k++)
+		for(std::list<FrontEdge>::iterator k = this->deads.begin(); k != this->deads.end(); k++)
       if((*k).v0 == id) touch = k; 
        
     //mark vertices close to candidate

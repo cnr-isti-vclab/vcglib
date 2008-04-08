@@ -477,9 +477,9 @@ template <class MESH> class AdvancingTest: public AdvancingFront<MESH> {
          vn = i;
          //find the border
          assert(this->mesh.vert[i].IsB());
-         for(list<FrontEdge>::iterator k = this->front.begin(); k != this->front.end(); k++)
+				 for(std::list<FrontEdge>::iterator k = this->front.begin(); k != this->front.end(); k++)
             if((*k).v0 == i) touch = k;
-         for(list<FrontEdge>::iterator k = this->deads.begin(); k != this->deads.end(); k++)
+				 for(std::list<FrontEdge>::iterator k = this->deads.begin(); k != this->deads.end(); k++)
             if((*k).v0 == i) touch = k;              
          break;
        }
