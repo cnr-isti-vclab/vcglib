@@ -299,47 +299,15 @@ public:
 		
 		// after flip, the new edge just created is the next edge
 		int flipped = (_pos.I() + 1) % 3;
-		PosType pos(_pos.F(), flipped);
-
-		pos.F()->V(0)->IMark() = GlobalMark();
-		pos.F()->V(1)->IMark() = GlobalMark();
-		pos.F()->V(2)->IMark() = GlobalMark();
-		pos.F()->FFp(flipped)->V2(pos.F()->FFi(flipped))->IMark() = GlobalMark();
-
-		PosType poss(pos.f, pos.z);
-
-		poss.FlipF(); poss.FlipE();
-		if(!poss.IsBorder() && poss.FFlip()->IsW()) {
-			heap.push_back(HeapElem(new MYTYPE(poss, GlobalMark())));
-			std::push_heap(heap.begin(), heap.end());
-		}
-
-		poss.FlipV(); poss.FlipE();
-		if(!poss.IsBorder() && poss.FFlip()->IsW()) {
-			heap.push_back(HeapElem(new MYTYPE(poss, GlobalMark())));
-			std::push_heap(heap.begin(), heap.end());
-		}
-
-		poss.FlipV(); poss.FlipE();
-		poss.FlipF(); poss.FlipE();
-		if(!poss.IsBorder() && poss.FFlip()->IsW()) {
-			heap.push_back(HeapElem(new MYTYPE(poss, GlobalMark())));
-			std::push_heap(heap.begin(), heap.end());
-		}
-
-		poss.FlipV(); poss.FlipE();
-		if(!poss.IsBorder() && poss.FFlip()->IsW()) {
-			heap.push_back(HeapElem(new MYTYPE(poss, GlobalMark())));
-			std::push_heap(heap.begin(), heap.end());
-		}
 		
-
-		// the index of new edge in pos.F()
-		/*int flipped = (_pos.I() + 1) % 3;
 		FacePointer f1 = _pos.F();
 		FacePointer f2 = _pos.F()->FFp(flipped);
 		
-		//PosType pos(_pos.F(), flipped);
+		f1->V(0)->IMark() = GlobalMark();
+		f1->V(1)->IMark() = GlobalMark();
+		f1->V(2)->IMark() = GlobalMark();
+		f2->V2(f1->FFi(flipped))->IMark() = GlobalMark();
+		
 		for(int i = 0; i < 3; i++) {
 			PosType newpos(f1, i);
 			if (i != flipped && !newpos.IsBorder() && newpos.FFlip()->IsW()) {
@@ -354,7 +322,7 @@ public:
 				heap.push_back(HeapElem(new MYTYPE(newpos, GlobalMark())));
 				std::push_heap(heap.begin(), heap.end());
 			}
-		}*/	
+		}	
 	}
 }; // end of PlanarEdgeFlip class
 
