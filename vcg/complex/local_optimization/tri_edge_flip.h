@@ -171,6 +171,8 @@ public:
 	 */
 	virtual bool IsFeasible()
 	{
+		if(_pos.IsBorder()) return false;
+		
 		if( math::ToDeg( Angle(_pos.FFlip()->cN(), _pos.F()->cN()) ) > CoplanarAngleThresholdDeg() )
 			return false;
 
@@ -224,7 +226,7 @@ public:
 		ScalarType QbAfter = QualityFunc(v0, v3, v2);
 		
 		/*_priority = vcg::math::Max<ScalarType>(QaAfter,QbAfter) - vcg::math::Min<ScalarType>(Qa,Qb) ;
-		 _priority *= -1;*/
+		_priority *= -1;*/
 
 		// < 0 if the average quality of faces improves after flip
 		//_priority = ((Qa + Qb) / 2.0) - ((QaAfter + QbAfter) / 2.0);
@@ -280,9 +282,9 @@ public:
 		for(fi = mesh.face.begin(); fi != mesh.face.end(); ++fi) {
 			if(!(*fi).IsD() && (*fi).IsW()) {
 				for(unsigned int i = 0; i < 3; i++) {
-					if( !(*fi).IsB(i) && (*fi).FFp(i)->IsW() ) {
-						if((*fi).V1(i) - (*fi).V0(i)> 0)
-						heap.push_back( HeapElem( new MYTYPE(PosType(&*fi, i), mesh.IMark() )) );
+					if( !(*fi).IsB(i) && !((*fi).FFp(i)->IsD()) && (*fi).FFp(i)->IsW() ) {
+						if((*fi).V1(i) - (*fi).V0(i) > 0)
+							heap.push_back( HeapElem( new MYTYPE(PosType(&*fi, i), mesh.IMark() )) );
 					} //endif
 				} //endfor
 			}
@@ -293,60 +295,66 @@ public:
 	 */
 	virtual void UpdateHeap(HeapType &heap)
 	{
-		/*GlobalMark()++;
-		PosType pos(_pos);
-		pos.FlipF();
+		GlobalMark()++;
+		
+		// after flip, the new edge just created is the next edge
+		int flipped = (_pos.I() + 1) % 3;
+		PosType pos(_pos.F(), flipped);
 
-		_pos.F()->V(0)->IMark() = GlobalMark();
-		_pos.F()->V(1)->IMark() = GlobalMark();
-		_pos.F()->V(2)->IMark() = GlobalMark();
-		pos.F()->V2(_pos.F()->FFi(_pos.z))->IMark() = GlobalMark();
+		pos.F()->V(0)->IMark() = GlobalMark();
+		pos.F()->V(1)->IMark() = GlobalMark();
+		pos.F()->V(2)->IMark() = GlobalMark();
+		pos.F()->FFp(flipped)->V2(pos.F()->FFi(flipped))->IMark() = GlobalMark();
 
-		PosType poss(_pos.f, _pos.z);
+		PosType poss(pos.f, pos.z);
 
-		poss.FlipV(); poss.FlipE();
-		if(!poss.IsBorder()) {
+		poss.FlipF(); poss.FlipE();
+		if(!poss.IsBorder() && poss.FFlip()->IsW()) {
 			heap.push_back(HeapElem(new MYTYPE(poss, GlobalMark())));
 			std::push_heap(heap.begin(), heap.end());
 		}
 
 		poss.FlipV(); poss.FlipE();
-		if(!poss.IsBorder()) {
+		if(!poss.IsBorder() && poss.FFlip()->IsW()) {
 			heap.push_back(HeapElem(new MYTYPE(poss, GlobalMark())));
 			std::push_heap(heap.begin(), heap.end());
 		}
 
 		poss.FlipV(); poss.FlipE();
 		poss.FlipF(); poss.FlipE();
-		if(!poss.IsBorder()) {
+		if(!poss.IsBorder() && poss.FFlip()->IsW()) {
 			heap.push_back(HeapElem(new MYTYPE(poss, GlobalMark())));
 			std::push_heap(heap.begin(), heap.end());
 		}
 
 		poss.FlipV(); poss.FlipE();
-		if(!poss.IsBorder()) {
+		if(!poss.IsBorder() && poss.FFlip()->IsW()) {
 			heap.push_back(HeapElem(new MYTYPE(poss, GlobalMark())));
 			std::push_heap(heap.begin(), heap.end());
-		}*/
+		}
 		
 
 		// the index of new edge in pos.F()
-		int flipped = (_pos.I() + 1) % 3;
+		/*int flipped = (_pos.I() + 1) % 3;
 		FacePointer f1 = _pos.F();
 		FacePointer f2 = _pos.F()->FFp(flipped);
 		
 		//PosType pos(_pos.F(), flipped);
-		for(int i = 0; i < 3; i++)
-			if (i != flipped && !vcg::face::IsBorder(*f1, i) && f1->FFp(i)->IsW()) {
-				heap.push_back(HeapElem(new MYTYPE(PosType(f1, i), GlobalMark())));
+		for(int i = 0; i < 3; i++) {
+			PosType newpos(f1, i);
+			if (i != flipped && !newpos.IsBorder() && newpos.FFlip()->IsW()) {
+				heap.push_back(HeapElem(new MYTYPE(newpos, GlobalMark())));
 				std::push_heap(heap.begin(), heap.end());
 			}
+		}
 		
-		for(int i = 0; i < 3; i++)
-			if (i != f1->FFi(flipped) && !vcg::face::IsBorder(*f2, i) && f2->FFp(i)->IsW()) {
-				heap.push_back(HeapElem(new MYTYPE(PosType(f2, i), GlobalMark())));
+		for(int i = 0; i < 3; i++) {
+			PosType newpos(f2, i);
+			if (i != f1->FFi(flipped) && !newpos.IsBorder() && newpos.FFlip()->IsW()) {
+				heap.push_back(HeapElem(new MYTYPE(newpos, GlobalMark())));
 				std::push_heap(heap.begin(), heap.end());
 			}
+		}*/	
 	}
 }; // end of PlanarEdgeFlip class
 
@@ -404,8 +412,7 @@ public:
 		v1 = this->_pos.F()->P1(i);
 		v2 = this->_pos.F()->P2(i);
 		v3 = this->_pos.F()->FFp(i)->P2(this->_pos.F()->FFi(i));
-
-		//CoordType CircumCenter = vcg::Circumcenter(*(app.F()));
+		
 		CoordType circumcenter = vcg::Circumcenter(*(this->_pos.F()));
 
 		ScalarType radius  = Distance(v0, circumcenter);
@@ -572,7 +579,7 @@ public:
 		// edges of the first face, except the flipped edge
 		for(int i = 0; i < 3; i++) if(i != flipped) {
 			PosType newpos(f1, i);
-			if(!newpos.IsBorder() && newpos.FFlip()->IsW()) {
+			if(!newpos.IsBorder() && f1->FFp(i)->IsW()) {
 				heap.push_back(HeapElem(new MYTYPE(newpos, this->GlobalMark())));
 				std::push_heap(heap.begin(), heap.end());
 			}
@@ -581,7 +588,7 @@ public:
 		// edges of the second face, except the flipped edge
 		for(int i = 0; i < 3; i++) if(i != f1->FFi(flipped)) {
 			PosType newpos(f2, i);
-			if(!newpos.IsBorder() && newpos.FFlip()->IsW()) {
+			if(!newpos.IsBorder() && f2->FFp(i)->IsW()) {
 				heap.push_back(HeapElem(new MYTYPE(newpos, this->GlobalMark())));
 				std::push_heap(heap.begin(), heap.end());
 			}
@@ -598,7 +605,7 @@ public:
 			
 			do {
 				VertexPointer v = pos.VFlip(); 
-				if(v != v0 && v != v1 && v != v2 && v != v3 && pos.FFlip()->IsW()) {
+				if(v != v0 && v != v1 && v != v2 && v != v3 && pos.F()->FFp(pos.I())->IsW()) {
 					heap.push_back(HeapElem(new MYTYPE(pos, this->GlobalMark())));
 					std::push_heap(heap.begin(), heap.end());
 				}
@@ -615,7 +622,7 @@ public:
 		
 		do {
 			VertexPointer v = pos.VFlip();
-			if(v != v0 && v != v1 && v != v2 && v != v3 && pos.FFlip()->IsW()) {
+			if(v != v0 && v != v1 && v != v2 && v != v3 && pos.F()->FFp(pos.I())->IsW()) {
 				heap.push_back(HeapElem(new MYTYPE(pos, this->GlobalMark())));
 				std::push_heap(heap.begin(), heap.end());
 			}
