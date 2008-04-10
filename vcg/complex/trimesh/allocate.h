@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.41  2008/04/03 22:47:10  cignoni
+template the reorder functions on the vector types (for ocf)
+
 Revision 1.40  2008/03/11 09:22:07  cignoni
 Completed the garbage collecting functions CompactVertexVector and CompactFaceVector.
 
@@ -166,7 +169,16 @@ namespace vcg {
 	namespace tri {
 		/** \addtogroup trimesh */
 		
-		
+		template<class MeshType>
+		size_t Index(MeshType &m, typename MeshType::VertexType &v) {return &v-&*m.vert.begin();}
+		template<class MeshType>
+		size_t Index(MeshType &m, typename MeshType::FaceType &f) {return &f-&*m.face.begin();}
+
+		template<class MeshType>
+		size_t Index(MeshType &m, const typename MeshType::VertexType *vp) {return vp-&*m.vert.begin();}
+		template<class MeshType>
+		size_t Index(MeshType &m, const typename MeshType::FaceType * fp) {return fp-&*m.face.begin();}
+
 		// Placeholder. 
 		// this one is called by the Compact and overridden by more specialized functions for OCF classes.
 		// that manage also the additional types

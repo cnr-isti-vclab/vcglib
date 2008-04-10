@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2008/01/28 08:39:56  cignoni
+added management of normals
+
 Revision 1.6  2007/03/12 15:38:03  tarini
 Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
 
@@ -48,20 +51,11 @@ Initial Release
 #ifndef __VCGLIB_APPEND
 #define __VCGLIB_APPEND
 
+#include <vcg/complex/trimesh/allocate.h>
 #include <vcg/complex/trimesh/update/flag.h>
 
 namespace vcg {
 namespace tri {
-
-template<class MeshType>
-int Index(MeshType &m, typename MeshType::VertexType &v) {return &v-&*m.vert.begin();}
-template<class MeshType>
-int Index(MeshType &m, typename MeshType::FaceType &f) {return &f-&*m.face.begin();}
-
-template<class MeshType>
-int Index(MeshType &m, typename MeshType::VertexPointer &vp) {return vp-&*m.vert.begin();}
-template<class MeshType>
-int Index(MeshType &m, typename MeshType::FacePointer &fp) {return fp-&*m.face.begin();}
 
 template<class MeshLeft, class MeshRight> 
 class Append
