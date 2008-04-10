@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.7  2008/03/14 16:54:34  benedetti
+Added doxygen documentation
+
 Revision 1.6  2008/03/02 16:44:18  benedetti
 moved ActiveCoordinateFrame to its own files
 
@@ -110,11 +113,10 @@ public:
   /// The flag that enables ticks values rendering.
   bool drawvalues;
 
-protected:
-  // functions:
-  void drawTickedLine(const Point3d &, const Point3d &, float, float,float);
-  float calcSlope(const Point3d &, const Point3d &, float, int , double *, double *, GLint *);
-  float niceRound(float);
+  // useful functions:
+  static void drawTickedLine(const Point3d &, const Point3d &, float, float,float);
+  static float calcSlope(const Point3d &, const Point3d &, float, int , double *, double *, GLint *);
+  static float niceRound(float);
 };
 
 /*!
