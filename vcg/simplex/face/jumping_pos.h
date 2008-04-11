@@ -53,12 +53,27 @@ namespace vcg
 			using Pos<FACE_TYPE>::FFlip;
 		public:
 			// Constructors
-			JumpingPos()																																: Pos<FACE_TYPE>()   								{ m_AlreadyJumped = false; }
-			JumpingPos(FaceType * const pFace, int const z, VertexType * const pVertex) : Pos<FACE_TYPE>(pFace, z, pVertex)	{ m_AlreadyJumped = false; }
-			JumpingPos(FaceType * const pFace, int const z)															: Pos<FACE_TYPE>(pFace, z)						{ m_AlreadyJumped = false; }
-			JumpingPos(FaceType * const pFace, VertexType * const pVertex)							: Pos<FACE_TYPE>(pFace, pVertex)			{ m_AlreadyJumped = false; }
+			JumpingPos()																																: Pos<FACE_TYPE>()   								{ }
+			JumpingPos(FaceType * const pFace, int const z, VertexType * const pVertex) : Pos<FACE_TYPE>(pFace, z, pVertex)	{   }
+			JumpingPos(FaceType * const pFace, int const z)															: Pos<FACE_TYPE>(pFace, z)						{  }
+			JumpingPos(FaceType * const pFace, VertexType * const pVertex)							: Pos<FACE_TYPE>(pFace, pVertex)			{  }
 
-
+			bool FindBorder()
+			{
+				PosType startPos=*this;
+				do
+				{
+					if(f==FFlip() ) {
+					PosType::FlipE();
+					return true; // we are on a border
+					}
+					PosType::FlipF();
+					PosType::FlipE();
+				} while(*this != startPos);
+				
+				return false;
+			}
+			
 			/*!
 			* Returns the next edge skipping the border
 			*      _________
@@ -68,25 +83,26 @@ namespace vcg
 			*  /______\|/______\
 			*          v
 			* In this example, if a and d are of-border and the pos is iterating counterclockwise, this method iterate through the faces incident on vertex v,
-			* producing the sequence a, b, c, d, a. 
+			* producing the sequence a, b, c, d, a, b, c, ... 
 			*/
-			void NextE()
+			bool NextFE()
 			{
-				if (face::IsBorder(*f,z) && !m_AlreadyJumped)
+				if ( f==FFlip() ) // we are on a border
 				{
-					do PosType::NextE();
-					while (f!=FFlip());
-					m_AlreadyJumped = true;
+					do {
+					PosType::FlipF();
+					PosType::FlipE();
+					} while (f!=FFlip());
+					PosType::FlipE();
+					return false;
 				}
 				else
 				{
-					PosType::NextE();
-					m_AlreadyJumped = false;
+					PosType::FlipF();
+					PosType::FlipE();
+					return true;
 				}
 			}
-
-		protected:
-			bool m_AlreadyJumped;
 		};
 
 		/*@}*/
