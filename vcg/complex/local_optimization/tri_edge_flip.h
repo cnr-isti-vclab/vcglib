@@ -43,7 +43,7 @@ namespace tri
  */
 template <class TRIMESH_TYPE, class MYTYPE,
             typename TRIMESH_TYPE::ScalarType (*QualityFunc)(
-            		Point3<typename TRIMESH_TYPE::ScalarType> const &p0,
+            		Point3<typename TRIMESH_TYPE::ScalarType> const & p0,
             		Point3<typename TRIMESH_TYPE::ScalarType> const & p1, 
             		Point3<typename TRIMESH_TYPE::ScalarType> const & p2) = Quality>
 class PlanarEdgeFlip :
@@ -157,11 +157,11 @@ public:
 	 */
 	bool IsUpToDate()
 	{
-		int MostRecentVertexMark = _pos.F()->V(0)->IMark();
-		MostRecentVertexMark = vcg::math::Max<int>(MostRecentVertexMark, _pos.F()->V(1)->IMark());
-		MostRecentVertexMark = vcg::math::Max<int>(MostRecentVertexMark, _pos.F()->V(2)->IMark());
+		int lastMark = _pos.F()->V(0)->IMark();
+		lastMark = vcg::math::Max<int>(lastMark, _pos.F()->V(1)->IMark());
+		lastMark = vcg::math::Max<int>(lastMark, _pos.F()->V(2)->IMark());
 
-		return ( _localMark >= MostRecentVertexMark );
+		return ( _localMark >= lastMark );
 	}
 
 	/*!
@@ -171,7 +171,8 @@ public:
 	 */
 	virtual bool IsFeasible()
 	{
-		if(_pos.IsBorder()) return false;
+		if(!vcg::face::CheckFlipEdge(*this->_pos.F(), this->_pos.E()))
+			return false;
 		
 		if( math::ToDeg( Angle(_pos.FFlip()->cN(), _pos.F()->cN()) ) > CoplanarAngleThresholdDeg() )
 			return false;
@@ -194,8 +195,8 @@ public:
 		// if any of two faces adj to edge in non writable, the flip is unfeasible
 		if(!_pos.F()->IsW() || !_pos.F()->FFp(i)->IsW())
 			return false;
-
-		return vcg::face::CheckFlipEdge(*_pos.f, _pos.z);
+		
+		return true;
 	}
 
 	/*!
@@ -225,9 +226,6 @@ public:
 		ScalarType QaAfter = QualityFunc(v1, v2, v3);
 		ScalarType QbAfter = QualityFunc(v0, v3, v2);
 		
-		/*_priority = vcg::math::Max<ScalarType>(QaAfter,QbAfter) - vcg::math::Min<ScalarType>(Qa,Qb) ;
-		_priority *= -1;*/
-
 		// < 0 if the average quality of faces improves after flip
 		//_priority = ((Qa + Qb) / 2.0) - ((QaAfter + QbAfter) / 2.0);
 		_priority = (Qa + Qb - QaAfter - QbAfter) / 2.0;
@@ -246,9 +244,20 @@ public:
 	/*!
 	 * Execute the flipping of the edge
 	 */
-	void Execute(TRIMESH_TYPE &/*m*/)
+	void Execute(TRIMESH_TYPE &m)
 	{
+		int i = _pos.E();
+		int j = _pos.F()->FFi(i);
+		FacePointer f1 = _pos.F();
+		FacePointer f2 = _pos.F()->FFp(i);
+		
 		vcg::face::FlipEdge(*_pos.F(), _pos.E());
+		
+		// avoid texture coordinates swap after flip
+		if(tri::HasPerWedgeTexCoord(m)) {
+			f2->WT((j + 1) % 3) = f1->WT((i + 2) % 3);
+			f1->WT((i + 1) % 3) = f2->WT((j + 2) % 3);
+		}
 	}
 
 	/*!
@@ -264,19 +273,6 @@ public:
 	 */
 	static void Init(TRIMESH_TYPE &mesh, HeapType &heap)
 	{
-		/*heap.clear();
-		FaceIterator fi;
-		for(fi = mesh.face.begin(); fi != mesh.face.end(); ++fi) {
-			if(!(*fi).IsD() && (*fi).V(0)->IsW() && (*fi).V(1)->IsW() && (*fi).V(2)->IsW()) {
-				for(unsigned int i = 0; i < 3; i++) {
-					if( !(*fi).IsB(i) && (*fi).FFp(i)->V2((*fi).FFi(i))->IsW() ) {
-						if((*fi).V1(i) - (*fi).V0(i) > 0)
-							heap.push_back( HeapElem( new MYTYPE(PosType(&*fi, i), mesh.IMark() )) );
-					} //endif
-				} //endfor
-			}
-		} //endfor*/
-		
 		heap.clear();
 		FaceIterator fi;
 		for(fi = mesh.face.begin(); fi != mesh.face.end(); ++fi) {
@@ -300,7 +296,39 @@ public:
 		// after flip, the new edge just created is the next edge
 		int flipped = (_pos.E() + 1) % 3;
 		
-		FacePointer f1 = _pos.F();
+		PosType pos(_pos.F(), flipped);
+
+		pos.F()->V(0)->IMark() = GlobalMark();
+		pos.F()->V(1)->IMark() = GlobalMark();
+		pos.F()->V(2)->IMark() = GlobalMark();
+		pos.F()->FFp(flipped)->V2(pos.F()->FFi(flipped))->IMark() = GlobalMark();
+
+		pos.FlipF(); pos.FlipE();
+		if(!pos.IsBorder() && pos.FFlip()->IsW()) {
+			heap.push_back(HeapElem(new MYTYPE(pos, GlobalMark())));
+			std::push_heap(heap.begin(), heap.end());
+		}
+
+		pos.FlipV(); pos.FlipE();
+		if(!pos.IsBorder() && pos.FFlip()->IsW()) {
+			heap.push_back(HeapElem(new MYTYPE(pos, GlobalMark())));
+			std::push_heap(heap.begin(), heap.end());
+		}
+
+		pos.FlipV(); pos.FlipE();
+		pos.FlipF(); pos.FlipE();
+		if(!pos.IsBorder() && pos.FFlip()->IsW()) {
+			heap.push_back(HeapElem(new MYTYPE(pos, GlobalMark())));
+			std::push_heap(heap.begin(), heap.end());
+		}
+
+		pos.FlipV(); pos.FlipE();
+		if(!pos.IsBorder() && pos.FFlip()->IsW()) {
+			heap.push_back(HeapElem(new MYTYPE(pos, GlobalMark())));
+			std::push_heap(heap.begin(), heap.end());
+		}
+		
+		/*FacePointer f1 = _pos.F();
 		FacePointer f2 = _pos.F()->FFp(flipped);
 		
 		f1->V(0)->IMark() = GlobalMark();
@@ -322,7 +350,7 @@ public:
 				heap.push_back(HeapElem(new MYTYPE(newpos, GlobalMark())));
 				std::push_heap(heap.begin(), heap.end());
 			}
-		}	
+		}*/
 	}
 }; // end of PlanarEdgeFlip class
 
@@ -391,10 +419,7 @@ public:
 		assert( fabs(radius - radius2) < 0.1 );
 
 		///Return the difference of radius and the distance of v3 and the CircumCenter
-		/*this->_priority =  (radius2 - Distance(v3, circumcenter));
-		 this->_priority *= -1;*/
-
-		this->_priority = (Distance(v3, circumcenter) - radius2);
+		this->_priority = (Distance(v3, circumcenter) - radius);
 		return this->_priority;
 	}
 };
@@ -490,19 +515,25 @@ public:
 	 */
 	void Execute(TRIMESH_TYPE &m)
 	{
-		VertexPointer v0, v1, v2, v3;
 		int i = this->_pos.E();
-		v0 = this->_pos.F()->V0(i);
-		v1 = this->_pos.F()->V1(i);
-		v2 = this->_pos.F()->V2(i);
-		v3 = this->_pos.F()->FFp(i)->V2(this->_pos.F()->FFi(i));
+		FacePointer f1 = this->_pos.F();
+		FacePointer f2 = f1->FFp(i);
+		int j = f1->FFi(i);
 		
-		v0->Q()--;
-		v1->Q()--;
-		v2->Q()++;
-		v3->Q()++;
+		// update the number of faces adjacent to vertices
+		f1->V0(i)->Q()--;
+		f1->V1(i)->Q()--;
+		f1->V2(i)->Q()++;
+		f2->V2(j)->Q()++;
 		
+		// do the flip
 		vcg::face::FlipEdge(*this->_pos.F(), this->_pos.E());
+		
+		// avoid texture coordinates swap after flip 
+		if (tri::HasPerWedgeTexCoord(m)) {
+			f2->WT((j + 1) % 3) = f1->WT((i + 2) % 3);
+			f1->WT((i + 1) % 3) = f2->WT((j + 2) % 3);
+		}
 	}
 	
 	
