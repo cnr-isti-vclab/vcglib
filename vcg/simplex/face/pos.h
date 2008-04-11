@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.32  2007/10/17 19:46:50  cignoni
+Added I() access function for the z member to the pos
+
 Revision 1.31  2007/05/28 14:09:41  fiorin
 Added Set method which takes a face pointer and a vertex pointer.
 
@@ -145,7 +148,9 @@ bool IsManifold(FaceType const & f,  const int j );
 
 /**  Templated over the class face, it stores a \em position over a face in a mesh.
 	It contain a pointer to the current face, 
-	the index of one edge and a edge's incident vertex.
+	the index of one edge and a pointer to one of the vertices of the edge.
+	See also the JumpingPos in jumping_pos.h for an iterator that loops
+	around the faces of a vertex without requiring the VF topology.
  */
  
 
@@ -156,10 +161,8 @@ public:
 
 	/// The vertex type
 	typedef typename FaceType::VertexType VertexType;
-	///The HEdgePos type
+	///The Pos type
 	typedef Pos<FaceType> PosType;
-	/// The vector type
-	typedef typename VertexType::CoordType CoordType;
 	/// The scalar type
 	typedef typename VertexType::ScalarType ScalarType;
 	
@@ -187,14 +190,24 @@ public:
 			z = 1;
 	}
 
-	// access functions
-   VertexType *& V(){return v;}
-//	VertexType *& V(const int & i){assert( (i>=0) && (i<3)); return f->UberV( (z +i) %3);}
-	FaceType   *& F(){ return f;}
+	// Official Access functions functions 
+   VertexType *& V(){ return v; }
+	 int         & E(){ return z; }
+	 FaceType   *& F(){ return f; }
 
-	int   & I(){ return z;}
+
+// Returns the face index of the vertex inside the face.
+// Note that this is DIFFERENT from using the z member that denotes the edge index inside the face. 
+// It should holds that Vind != (z+1)%3   &&   Vind == z || Vind = z+2%3
+   int VInd()
+	 {
+		 if(v==f->V(0)) return 0;
+		 if(v==f->V(1)) return 1;
+		 if(v==f->V(2)) return 2;
+		 assert(0);
+	 }
+
   
-
 	/// Operator to compare two half-edge
 	inline bool operator == ( PosType const & p ) const {
 			return (f==p.f && z==p.z && v==p.v);
@@ -275,7 +288,7 @@ public:
 	/// Changes face maintaining the same vertex and the same edge
 	void FlipF()
 	{
-		assert( f->FFp(z)->FFp(f->FFi(z))==f );
+		assert( f->FFp(z)->FFp(f->FFi(z))==f );  // two manifoldness check
 		assert(f->V((z+2)%3)!=v && (f->V((z+1)%3)==v || f->V((z+0)%3)==v));
 		FaceType *nf=f->FFp(z);
 		int nz=f->FFi(z);
@@ -430,13 +443,6 @@ public:
 	{}
 	#endif
 
-	// Controlla la coerenza di orientamento di un hpos con la relativa faccia
-	/// Checks the orientation coherence of a half-edge with the face
-	inline bool Coerent() const
-	{
-		return v == f->V(z);	// e^(ip)+1=0 ovvero E=mc^2
-	}
-
 
 	protected:
 		void CheckIncidentFaces(int & count, bool & on_border)
@@ -467,10 +473,13 @@ public:
 
 /** Class VFIterator.
 	This class is used as an iterator over the VF adjacency. 
-  It allow to easily traverse all the faces around a given vertex;
+  It allow to easily traverse all the faces around a given vertex v;
+  The faces are traversed in no particular order. No Manifoldness requirement.
+
   typical example:
 
-    vcg::face::VFIterator<FaceType> vfi(f,v[1]);	
+    VertexPointer v;
+    vcg::face::VFIterator<FaceType> vfi(v);	
     for (;!vfi.End();++vfi)
 			vfi.F()->ClearV();
 			
@@ -481,6 +490,11 @@ public:
 			vfi.F()->ClearV();
 			++vfi;
 		}
+
+
+	See also the JumpingPos in jumping_pos.h for an iterator that loops
+	around the faces of a vertex using FF topology and without requiring the VF topology.
+
  */ 
 
 template <typename FaceType> 
@@ -524,7 +538,7 @@ public:
   bool End() const {return f==0;}
   VFIFaceType *operator++() {
     FaceType* t = f;
-		f = t->VFp(z);
+		f = f->VFp(z);
 		z = t->VFi(z);
     return f;
   }
