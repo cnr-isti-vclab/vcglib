@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.24  2008/02/22 17:41:48  ponchio
+Changed to reflect quaternion toMatrix inversion.
+
 Revision 1.23  2007/02/06 08:54:07  corsini
 fix names
 
@@ -194,7 +197,7 @@ vcg::Point3<S>  Shot<S>::Axis(const int & i) const
 {	
 	vcg::Matrix44<S> m; 
 	Extrinsics.rot.ToMatrix(m); 
-	vcg::Point3<S> aa = m.GetRow3(i);
+	vcg::Point3<S> aa = m.GetCol3(i);
 	return aa;
 }
 
