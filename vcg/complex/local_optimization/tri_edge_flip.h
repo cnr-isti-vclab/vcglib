@@ -177,7 +177,7 @@ public:
 			return false;
 
 		CoordType v0, v1, v2, v3;
-		int i = _pos.I();
+		int i = _pos.E();
 		
 		v0 = _pos.F()->P0(i);
 		v1 = _pos.F()->P1(i);
@@ -213,7 +213,7 @@ public:
 	virtual ScalarType ComputePriority()
 	{
 		CoordType v0, v1, v2, v3;
-		int i = _pos.I();
+		int i = _pos.E();
 		v0 = _pos.F()->P0(i);
 		v1 = _pos.F()->P1(i);
 		v2 = _pos.F()->P2(i);
@@ -248,7 +248,7 @@ public:
 	 */
 	void Execute(TRIMESH_TYPE &/*m*/)
 	{
-		vcg::face::FlipEdge(*_pos.F(), _pos.I());
+		vcg::face::FlipEdge(*_pos.F(), _pos.E());
 	}
 
 	/*!
@@ -298,7 +298,7 @@ public:
 		GlobalMark()++;
 		
 		// after flip, the new edge just created is the next edge
-		int flipped = (_pos.I() + 1) % 3;
+		int flipped = (_pos.E() + 1) % 3;
 		
 		FacePointer f1 = _pos.F();
 		FacePointer f2 = _pos.F()->FFp(flipped);
@@ -375,7 +375,7 @@ public:
 		     0
 		 */
 		CoordType v0, v1, v2, v3;
-		int i = this->_pos.I();
+		int i = this->_pos.E();
 		v0 = this->_pos.F()->P0(i);
 		v1 = this->_pos.F()->P1(i);
 		v2 = this->_pos.F()->P2(i);
@@ -459,7 +459,7 @@ public:
 		     0
 		 */
 		VertexPointer v0, v1, v2, v3;
-		int i = this->_pos.I();
+		int i = this->_pos.E();
 		v0 = this->_pos.F()->V0(i);
 		v1 = this->_pos.F()->V1(i);
 		v2 = this->_pos.F()->V2(i);
@@ -491,7 +491,7 @@ public:
 	void Execute(TRIMESH_TYPE &m)
 	{
 		VertexPointer v0, v1, v2, v3;
-		int i = this->_pos.I();
+		int i = this->_pos.E();
 		v0 = this->_pos.F()->V0(i);
 		v1 = this->_pos.F()->V1(i);
 		v2 = this->_pos.F()->V2(i);
@@ -502,7 +502,7 @@ public:
 		v2->Q()++;
 		v3->Q()++;
 		
-		vcg::face::FlipEdge(*this->_pos.F(), this->_pos.I());
+		vcg::face::FlipEdge(*this->_pos.F(), this->_pos.E());
 	}
 	
 	
@@ -530,7 +530,7 @@ public:
 		this->GlobalMark()++;
 		
 		VertexPointer v0, v1, v2, v3;
-		int flipped = (this->_pos.I() + 1) % 3;
+		int flipped = (this->_pos.E() + 1) % 3;
 		FacePointer f1 = this->_pos.F();
 		FacePointer f2 = this->_pos.F()->FFp(flipped);
 		
@@ -573,7 +573,7 @@ public:
 			
 			do {
 				VertexPointer v = pos.VFlip(); 
-				if(v != v0 && v != v1 && v != v2 && v != v3 && pos.F()->FFp(pos.I())->IsW()) {
+				if(v != v0 && v != v1 && v != v2 && v != v3 && pos.F()->FFp(pos.E())->IsW()) {
 					heap.push_back(HeapElem(new MYTYPE(pos, this->GlobalMark())));
 					std::push_heap(heap.begin(), heap.end());
 				}
@@ -590,7 +590,7 @@ public:
 		
 		do {
 			VertexPointer v = pos.VFlip();
-			if(v != v0 && v != v1 && v != v2 && v != v3 && pos.F()->FFp(pos.I())->IsW()) {
+			if(v != v0 && v != v1 && v != v2 && v != v3 && pos.F()->FFp(pos.E())->IsW()) {
 				heap.push_back(HeapElem(new MYTYPE(pos, this->GlobalMark())));
 				std::push_heap(heap.begin(), heap.end());
 			}
