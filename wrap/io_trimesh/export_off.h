@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2007/11/06 10:58:25  cignoni
+Changed the return value to the standard 0 in case of success and notzero for failures
+
 Revision 1.12  2007/03/12 16:40:17  tarini
 Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
 
@@ -70,8 +73,8 @@ namespace vcg {
 
 
 					if( m.HasPerVertexNormal()  && (mask & io::Mask::IOM_VERTNORMAL)) 	fprintf(fpout,"N");
-					if( m.HasPerVertexColor()   && (mask & io::Mask::IOM_VERTCOLOR))		fprintf(fpout,"C");
-					if( m.HasPerVertexTexCoord() && (mask & io::Mask::IOM_VERTTEXCOORD))	fprintf(fpout,"ST");
+					if( tri::HasPerVertexColor(m)   && (mask & io::Mask::IOM_VERTCOLOR))		fprintf(fpout,"C");
+					if( tri::HasPerVertexTexCoord(m) && (mask & io::Mask::IOM_VERTTEXCOORD))	fprintf(fpout,"ST");
 					fprintf(fpout,"OFF\n");
 					fprintf(fpout,"%d %d 0\n", m.vn, m.fn); // note that as edge number we simply write zero
           typename SaveMeshType::FaceIterator fi;
@@ -88,15 +91,18 @@ namespace vcg {
             if( ! vp->IsD() )
             {	// ***** ASCII *****
 
-              fprintf(fpout,"%g %g %g\n" ,vp->P()[0],vp->P()[1],vp->P()[2]);
-              if( m.HasPerVertexColor()  && (mask & io::Mask::IOM_VERTCOLOR) )
-                fprintf(fpout,"%d %d %d %d\n",vp->C()[0],vp->C()[1],vp->C()[2],vp->C()[3] );
+              fprintf(fpout,"%g %g %g " ,vp->P()[0],vp->P()[1],vp->P()[2]);
+              if( tri::HasPerVertexColor(m)  && (mask & io::Mask::IOM_VERTCOLOR) )
+                fprintf(fpout,"%d %d %d %d ",vp->C()[0],vp->C()[1],vp->C()[2],vp->C()[3] );
 
               if( m.HasPerVertexNormal()  && (mask & io::Mask::IOM_VERTNORMAL) )
-                fprintf(fpout,"%g %g %g\n", vp->N()[0],vp->N()[1],vp->N()[2]);
+                fprintf(fpout,"%g %g %g ", vp->N()[0],vp->N()[1],vp->N()[2]);
 
               if( m.HasPerVertexTexCoord()  && (mask & io::Mask::IOM_VERTTEXCOORD) )
-                fprintf(fpout,"%g %g\n",vp->T().u(),vp->T().v());
+                fprintf(fpout,"%g %g ",vp->T().u(),vp->T().v());
+								
+								fprintf(fpout,"\n");
+								
 
               vp->UberFlags()=j; // Trucco! Nascondi nei flags l'indice del vertice non deletato!
               j++;

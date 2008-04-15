@@ -24,6 +24,11 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2008/03/13 08:48:10  granzuglia
+added two missing include files:
+1) #include <wrap/callback.h>
+2) #include <wrap/io_trimesh/io_mask.h>
+
 Revision 1.21  2007/12/13 17:57:33  cignoni
 removed harmless gcc warnings
 
@@ -157,17 +162,9 @@ namespace vcg
 				{
 					// To obtain the loading mask all the file must be parsed
 					// to distinguish between per-vertex and per-face color attribute.
-
+          loadmask=0;
 					MESH_TYPE dummyMesh;
-
-					if (Open(dummyMesh, filename, loadmask) == NoError)
-					{
-						dummyMesh.Clear();
-
-						return true;
-					}
-					else
-						return false;
+					return (Open(dummyMesh, filename, loadmask,0,true)==NoError);
 				}
 
 				static int Open(MESH_TYPE &mesh, const char *filename,CallBackPos *cb=0)
@@ -184,10 +181,8 @@ namespace vcg
 				 *  \return             the operation result
 				 */
 				static int Open(MESH_TYPE &mesh, const char *filename, int &loadmask,
-					CallBackPos *cb=0)
+					CallBackPos *cb=0, bool onlyMaskFlag=false )
 				{
-					mesh.Clear();
-
 					std::ifstream stream(filename);
 					if (stream.fail())
 						return CantOpen;
@@ -207,14 +202,10 @@ namespace vcg
 					{
 						for (int u = static_cast<int>(header.rfind("OFF")-1); u>=0; u--)
 						{
-							if (header[u] == 'C')
-								isColorDefined = true;
-							else if (header[u] == 'N')
-								isNormalDefined = true;
-							else if (u>0 && header[u-1] == 'S' && header[u] == 'T')
-								isTexCoordDefined = true;
-							else if (header[u] == '4')
-								homogeneousComponents = true;
+							if      (header[u] == 'C')				isColorDefined = true;
+							else if (header[u] == 'N')				isNormalDefined = true;
+							else if (u>0 && header[u-1] == 'S' && header[u] == 'T') isTexCoordDefined = true;
+							else if (header[u] == '4')				homogeneousComponents = true;
 							else if (header[u] == 'n')
 							{
 								TokenizeNextLine(stream, tokens);
@@ -230,12 +221,16 @@ namespace vcg
 
 					loadmask = Mask::IOM_VERTCOORD | Mask::IOM_FACEINDEX;
 
-					if (isNormalDefined)
-						loadmask |= Mask::IOM_VERTNORMAL;
+					if (isNormalDefined)		loadmask |= Mask::IOM_VERTNORMAL;
+					if (isTexCoordDefined)	loadmask |= Mask::IOM_VERTTEXCOORD;
+					if (isColorDefined)			{ loadmask |= Mask::IOM_VERTCOLOR;loadmask |= Mask::IOM_FACECOLOR;}
 
-					if (isTexCoordDefined)
-						loadmask |= Mask::IOM_VERTTEXCOORD;
 
+          if(onlyMaskFlag) return NoError;
+					
+					
+					mesh.Clear();
+					
 					// check on next 2 lines to detect corrupted files
 					if(tokens.size() < 3)
 						return InvalidFile;
@@ -320,7 +315,7 @@ namespace vcg
 								loadmask |= Mask::IOM_VERTCOLOR;
 
 							// Store color components
-							if (VertexType::HasColor())
+							if (tri::HasPerVertexColor(mesh))
 							{
 								// Read color components
 
@@ -408,7 +403,7 @@ namespace vcg
 								k++;
 
 								// Store texture coordinates
-								if (VertexType::HasTexCoord())
+								if (tri::HasPerWedgeTexCoord(mesh))
 								{
 									//...TODO...
 								}
@@ -488,7 +483,7 @@ namespace vcg
 						// NOTE: It is assumed that colored face takes exactly one text line
 						//       (otherwise it is impossible to parse color information since
 						//        color components can vary)
-						if (isColorDefined)
+						if (isColorDefined && tri::HasPerFaceColor(mesh)) 
 						{
 							size_t color_elements = tokens.size() - vert_per_face-1;
 

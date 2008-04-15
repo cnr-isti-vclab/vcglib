@@ -25,6 +25,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2006/11/04 14:01:00  granzuglia
+fixed bug: &(*filename.end()) ---> &(*filename.rbegin())
+
 Revision 1.5  2006/07/09 05:32:15  cignoni
 Uncommented obj export. Now obj saving is enabled by default
 
@@ -106,7 +109,7 @@ static int Save(OpenMeshType &m, const char *filename, const int mask, CallBackP
   }
   else if(FileExtension(filename,"off"))
   {
-    err = ExporterOFF<OpenMeshType>::Save(m,filename);
+    err = ExporterOFF<OpenMeshType>::Save(m,filename,mask);
     LastType()=KT_OFF;
   }
   else if(FileExtension(filename,"dxf"))
