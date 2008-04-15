@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.31  2008/02/21 17:27:06  cignoni
+Added HasPerVertexColor static function
+
 Revision 1.30  2008/01/28 14:46:03  cignoni
 added hasPerWedgeColor and HasPerWedgeNormal
 
@@ -345,6 +348,8 @@ bool HasPerVertexQuality (const TriMesh < VertContainerType , FaceContainerType>
 template < class VertContainerType, class FaceContainerType >
 bool HasPerVertexColor (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return VertContainerType::value_type::HasColor();}
 
+template < class VertContainerType, class FaceContainerType >
+bool HasPerVertexTexCoord (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return VertContainerType::value_type::HasTexCoord();}
 
 template < class VertContainerType, class FaceContainerType >
 bool HasPerVertexFlags (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return VertContainerType::value_type::HasFlags();}
