@@ -222,14 +222,22 @@ public:
 
 		ScalarType Qa = QualityFunc(v0, v1, v2);
 		ScalarType Qb = QualityFunc(v0, v3, v1);
+		
+		/*ScalarType avgbefore = (Qa + Qb) / 2.0;
+		ScalarType varbefore = (powf((Qa - avgbefore), 2.0) + 
+		                        powf((Qb - avgbefore), 2.0)) / 2.0;*/
 
 		ScalarType QaAfter = QualityFunc(v1, v2, v3);
 		ScalarType QbAfter = QualityFunc(v0, v3, v2);
 		
+		/*ScalarType avgafter = (QaAfter + QbAfter) / 2.0;
+		ScalarType varafter = (powf((QaAfter - avgafter), 2.0) +
+		                       powf((QbAfter - avgafter), 2.0)) / 2.0;*/
+		
 		// < 0 if the average quality of faces improves after flip
 		//_priority = ((Qa + Qb) / 2.0) - ((QaAfter + QbAfter) / 2.0);
 		_priority = (Qa + Qb - QaAfter - QbAfter) / 2.0;
-
+		//_priority = varafter - varbefore;
 		return _priority;
 	}
 
@@ -327,30 +335,6 @@ public:
 			heap.push_back(HeapElem(new MYTYPE(pos, GlobalMark())));
 			std::push_heap(heap.begin(), heap.end());
 		}
-		
-		/*FacePointer f1 = _pos.F();
-		FacePointer f2 = _pos.F()->FFp(flipped);
-		
-		f1->V(0)->IMark() = GlobalMark();
-		f1->V(1)->IMark() = GlobalMark();
-		f1->V(2)->IMark() = GlobalMark();
-		f2->V2(f1->FFi(flipped))->IMark() = GlobalMark();
-		
-		for(int i = 0; i < 3; i++) {
-			PosType newpos(f1, i);
-			if (i != flipped && !newpos.IsBorder() && newpos.FFlip()->IsW()) {
-				heap.push_back(HeapElem(new MYTYPE(newpos, GlobalMark())));
-				std::push_heap(heap.begin(), heap.end());
-			}
-		}
-		
-		for(int i = 0; i < 3; i++) {
-			PosType newpos(f2, i);
-			if (i != f1->FFi(flipped) && !newpos.IsBorder() && newpos.FFlip()->IsW()) {
-				heap.push_back(HeapElem(new MYTYPE(newpos, GlobalMark())));
-				std::push_heap(heap.begin(), heap.end());
-			}
-		}*/
 	}
 }; // end of PlanarEdgeFlip class
 
@@ -409,17 +393,11 @@ public:
 		v2 = this->_pos.F()->P2(i);
 		v3 = this->_pos.F()->FFp(i)->P2(this->_pos.F()->FFi(i));
 		
-		CoordType circumcenter = vcg::Circumcenter(*(this->_pos.F()));
-
-		ScalarType radius  = Distance(v0, circumcenter);
-		ScalarType radius1 = Distance(v1, circumcenter);
-		ScalarType radius2 = Distance(v2, circumcenter);
-
-		assert( fabs(radius - radius1) < 0.1 );
-		assert( fabs(radius - radius2) < 0.1 );
-
-		///Return the difference of radius and the distance of v3 and the CircumCenter
-		this->_priority = (Distance(v3, circumcenter) - radius);
+		// if the sum of angles in v2 e v3 is > 180, then the triangle
+		// pair is not a delaunay triangulation
+		ScalarType alpha = math::Abs(Angle(v0 - v2, v1 - v2));
+		ScalarType beta = math::Abs(Angle(v0 - v3, v1 - v3));
+		this->_priority = 180 - math::ToDeg((alpha + beta));
 		return this->_priority;
 	}
 };
