@@ -85,6 +85,15 @@ protected:
 		return im;
 	}
 	
+	static void Insert(HeapType& heap, PosType& p, int mark)
+	{
+		if(!p.IsBorder() && p.F()->IsW() && p.FFlip()->IsW()) {
+			MYTYPE* newflip = new MYTYPE(p, mark);
+			heap.push_back(HeapElem(newflip));
+			std::push_heap(heap.begin(), heap.end());
+		}
+	}
+	
 public:
 	/*!
 	 *	Default constructor
@@ -287,8 +296,11 @@ public:
 			if(!(*fi).IsD() && (*fi).IsW()) {
 				for(unsigned int i = 0; i < 3; i++) {
 					if( !(*fi).IsB(i) && !((*fi).FFp(i)->IsD()) && (*fi).FFp(i)->IsW() ) {
-						if((*fi).V1(i) - (*fi).V0(i) > 0)
-							heap.push_back( HeapElem( new MYTYPE(PosType(&*fi, i), mesh.IMark() )) );
+						if((*fi).V1(i) - (*fi).V0(i) > 0) {
+							PosType p(&*fi, i);
+							Insert(heap, p, mesh.IMark());
+						}
+							//heap.push_back( HeapElem( new MYTYPE(PosType(&*fi, i), mesh.IMark() )) );
 					} //endif
 				} //endfor
 			}
@@ -312,29 +324,17 @@ public:
 		pos.F()->FFp(flipped)->V2(pos.F()->FFi(flipped))->IMark() = GlobalMark();
 
 		pos.FlipF(); pos.FlipE();
-		if(!pos.IsBorder() && pos.FFlip()->IsW()) {
-			heap.push_back(HeapElem(new MYTYPE(pos, GlobalMark())));
-			std::push_heap(heap.begin(), heap.end());
-		}
+		Insert(heap, pos, GlobalMark());
 
 		pos.FlipV(); pos.FlipE();
-		if(!pos.IsBorder() && pos.FFlip()->IsW()) {
-			heap.push_back(HeapElem(new MYTYPE(pos, GlobalMark())));
-			std::push_heap(heap.begin(), heap.end());
-		}
+		Insert(heap, pos, GlobalMark());
 
 		pos.FlipV(); pos.FlipE();
 		pos.FlipF(); pos.FlipE();
-		if(!pos.IsBorder() && pos.FFlip()->IsW()) {
-			heap.push_back(HeapElem(new MYTYPE(pos, GlobalMark())));
-			std::push_heap(heap.begin(), heap.end());
-		}
+		Insert(heap, pos, GlobalMark());
 
 		pos.FlipV(); pos.FlipE();
-		if(!pos.IsBorder() && pos.FFlip()->IsW()) {
-			heap.push_back(HeapElem(new MYTYPE(pos, GlobalMark())));
-			std::push_heap(heap.begin(), heap.end());
-		}
+		Insert(heap, pos, GlobalMark());
 	}
 }; // end of PlanarEdgeFlip class
 
@@ -537,74 +537,66 @@ public:
 	void UpdateHeap(HeapType &heap)
 	{
 		this->GlobalMark()++;
-		
+
 		VertexPointer v0, v1, v2, v3;
 		int flipped = (this->_pos.E() + 1) % 3;
 		FacePointer f1 = this->_pos.F();
 		FacePointer f2 = this->_pos.F()->FFp(flipped);
-		
+
 		v0 = f1->V0(flipped);
 		v1 = f1->V1(flipped);
 		v2 = f1->V2(flipped);
 		v3 = f2->V2(f1->FFi(flipped));
-		
+
 		v0->IMark() = this->GlobalMark();
 		v1->IMark() = this->GlobalMark();
 		v2->IMark() = this->GlobalMark();
 		v3->IMark() = this->GlobalMark();
-		
+
 		// edges of the first face, except the flipped edge
 		for(int i = 0; i < 3; i++) if(i != flipped) {
 			PosType newpos(f1, i);
-			if(!newpos.IsBorder() && f1->FFp(i)->IsW()) {
-				heap.push_back(HeapElem(new MYTYPE(newpos, this->GlobalMark())));
-				std::push_heap(heap.begin(), heap.end());
-			}
+			Insert(heap, newpos, this->GlobalMark());
 		}
 
 		// edges of the second face, except the flipped edge
 		for(int i = 0; i < 3; i++) if(i != f1->FFi(flipped)) {
 			PosType newpos(f2, i);
-			if(!newpos.IsBorder() && f2->FFp(i)->IsW()) {
-				heap.push_back(HeapElem(new MYTYPE(newpos, this->GlobalMark())));
-				std::push_heap(heap.begin(), heap.end());
-			}
+			Insert(heap, newpos, this->GlobalMark());
 		}
-		
+
 		// every edge with v0, v1 v3 of f1
 		for(int i = 0; i < 3; i++) {
 			PosType startpos(f1, i);
 			PosType pos(startpos);
-			
+
 			do { // go to the first border (if there is one)
 				pos.NextE();
-			}while(pos != startpos && !pos.IsBorder());
-			
+			} while(pos != startpos && !pos.IsBorder());
+
 			do {
-				VertexPointer v = pos.VFlip(); 
-				if(v != v0 && v != v1 && v != v2 && v != v3 && pos.F()->FFp(pos.E())->IsW()) {
-					heap.push_back(HeapElem(new MYTYPE(pos, this->GlobalMark())));
-					std::push_heap(heap.begin(), heap.end());
-				}
+				VertexPointer v = pos.VFlip();
+				if(v != v0 && v != v1 && v != v2 && v != v3)
+				Insert(heap, pos, this->GlobalMark());
+
 				pos.NextE();
-			}while(pos != startpos && !pos.IsBorder());
+			} while(pos != startpos && !pos.IsBorder());
 		}
-		
-		PosType startpos(f2, f1->FFi(flipped));
+
+		PosType startpos(f2, (f1->FFi(flipped) + 2) % 3);
 		PosType pos(startpos);
-		
+
 		do { // go to the first border (if there is one)
 			pos.NextE();
-		}while(pos != pos && !pos.IsBorder());
-		
+		} while(pos != startpos && !pos.IsBorder());
+
 		do {
 			VertexPointer v = pos.VFlip();
-			if(v != v0 && v != v1 && v != v2 && v != v3 && pos.F()->FFp(pos.E())->IsW()) {
-				heap.push_back(HeapElem(new MYTYPE(pos, this->GlobalMark())));
-				std::push_heap(heap.begin(), heap.end());
-			}
+			if(v != v0 && v != v1 && v != v2 && v != v3)
+			Insert(heap, pos, this->GlobalMark());
+
 			pos.NextE();
-		}while(pos != startpos && !pos.IsBorder());
+		} while(pos != startpos && !pos.IsBorder());
 	}
 };
 
