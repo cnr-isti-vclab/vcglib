@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.42  2008/04/10 09:18:57  cignoni
+moved Index function from append to the allocate
+
 Revision 1.41  2008/04/03 22:47:10  cignoni
 template the reorder functions on the vector types (for ocf)
 
@@ -400,6 +403,9 @@ namespace vcg {
 		
 		static void CompactVertexVector( MeshType &m ) 
 		{
+			// If already compacted fast return please!
+			if(m.vn==m.vert.size()) return; 
+			
 			// newVertIndex [ <old_vert_position> ] gives you the new position of the vertex in the vector;
 			std::vector<size_t> newVertIndex(m.vert.size(),std::numeric_limits<size_t>::max() );
 			
@@ -444,6 +450,9 @@ namespace vcg {
 		
 		static void CompactFaceVector( MeshType &m ) 
 		{
+		  // If already compacted fast return please!
+			if(m.fn==m.face.size()) return; 
+			 
 			// newFaceIndex [ <old_face_position> ] gives you the new position of the face in the vector;
 			std::vector<size_t> newFaceIndex(m.face.size(),std::numeric_limits<size_t>::max() );
 			
