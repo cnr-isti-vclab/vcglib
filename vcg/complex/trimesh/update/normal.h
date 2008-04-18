@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2008/02/15 08:08:59  cignoni
+added missing include matrix33
+
 Revision 1.18  2007/12/13 17:57:27  cignoni
 removed harmless gcc warnings
 
@@ -118,13 +121,34 @@ typedef typename MeshType::FaceType       FaceType;
 typedef typename MeshType::FacePointer    FacePointer;
 typedef typename MeshType::FaceIterator   FaceIterator;
 
-/// Calculates the vertex normal (if stored in the current face type)
+/// Calculates the face normal (if stored in the current face type)
 static void PerFace(ComputeMeshType &m)
 {
 	if( !m.HasPerFaceNormal()) return;
 	FaceIterator f;
 	for(f=m.face.begin();f!=m.face.end();++f)
 		if( !(*f).IsD() )	face::ComputeNormal(*f);
+}
+
+/// Calculates the vertex normal. Exploiting or current face normals
+/// The normal of a vertex v is the weigthed average of the normals of the faces incident on v.
+static void PerVertexFromCurrentFaceNormal(ComputeMeshType &m)
+{
+ if( !m.HasPerVertexNormal()) return;
+ 
+ VertexIterator vi;
+ for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+   if( !(*vi).IsD() && (*vi).IsRW() )
+     (*vi).N().Construct(0,0,0);
+
+ FaceIterator fi;
+ for(fi=m.face.begin();fi!=m.face.end();++fi)
+   if( !(*fi).IsD())
+   { 
+    for(int j=0; j<3; ++j)
+			if( !(*fi).V(j)->IsD())  
+					(*fi).V(j)->N() += (*fi).cN();
+   }
 }
 
 
@@ -152,6 +176,7 @@ static void PerVertex(ComputeMeshType &m)
       (*f).V(j)->N() += t;
    }
 }
+
 
 /// Calculates both vertex and face normals.
 /// The normal of a vertex v is the weigthed average of the normals of the faces incident on v.
@@ -186,12 +211,31 @@ static void PerVertexNormalizedPerFace(ComputeMeshType &m)
 		if( !(*vi).IsD() && (*vi).IsRW() ) 
 			(*vi).N().Normalize();
 }
+
+/// Normalize the lenght of the face normals
+static void NormalizeFace(ComputeMeshType &m)
+{
+	FaceIterator fi;
+	for(fi=m.face.begin();fi!=m.face.end();++fi)
+      if( !(*fi).IsD() )	(*fi).N().Normalize();
+}
+
+static void AreaNormalizeFace(ComputeMeshType &m)
+{
+	FaceIterator fi;
+	for(fi=m.face.begin();fi!=m.face.end();++fi)
+      if( !(*fi).IsD() )	
+			{
+				(*fi).N().Normalize();
+				(*fi).N() = (*fi).N() * DoubleArea(*fi);
+			}
+}
+
 static void PerVertexNormalizedPerFaceNormalized(ComputeMeshType &m)
 {
 	PerVertexNormalizedPerFace(m);
-	FaceIterator fi;
-	for(fi=m.face.begin();fi!=m.face.end();++fi)
-      if( !(*fi).IsD() )	(*fi).N().Normalize();}
+	NormalizeFace(m);
+}
 
 static void PerFaceRW(ComputeMeshType &m, bool normalize=false)
 {
