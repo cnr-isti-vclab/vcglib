@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.16  2008/02/07 10:24:51  cignoni
+added a missing IsD() check
+
 Revision 1.15  2007/11/05 23:47:20  cignoni
 added selection to the pasodoble smoothing
 
@@ -666,6 +669,70 @@ void NormalSmoothSB(MESH_TYPE &m,
 	}
 }
 
+
+// Replace the normal of the face with the average of normals of the vertex adijacent faces. 
+// Normals are weighted with face area.
+// It assumes that:
+// Normals are normalized:
+// VF adjacency is present.
+
+template<class MESH_TYPE>
+void FaceNormalSmooth(MESH_TYPE &m)
+{
+	SimpleTempData<typename MESH_TYPE::FaceContainer, PDFaceInfo< typename MESH_TYPE::ScalarType > > TDF(m.face);
+	
+	PDFaceInfo<typename MESH_TYPE::ScalarType> lpzf;
+	lpzf.m=typename MESH_TYPE::CoordType(0,0,0);
+
+	assert(tri::HasVFAdjacency(m));
+	TDF.Start(lpzf);
+	int i;
+	
+	typedef typename MESH_TYPE::CoordType CoordType;
+	typedef typename MESH_TYPE::ScalarType ScalarType;
+	typedef typename vcg::face::VFIterator<typename MESH_TYPE::FaceType> VFLocalIterator;
+  typename MESH_TYPE::FaceIterator fi;
+	
+	tri::UpdateNormals<MESH_TYPE>::AreaNormalizeFace(m);
+
+	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
+	{
+				CoordType bc=Barycenter<typename MESH_TYPE::FaceType>(*fi);
+				// 1) Clear all the visited flag of faces that are vertex-adjacent to fi
+				for(i=0;i<3;++i)
+				{
+					VFLocalIterator ep(&*fi,i);
+					for (;!ep.End();++ep)
+						ep.f->ClearV();
+				}
+
+				// 2) Effectively average the normals
+				CoordType normalSum=(*fi).N();
+				
+				for(i=0;i<3;++i)
+				{
+					VFLocalIterator ep(&*fi,i);
+					for (;!ep.End();++ep)
+					{
+						if(! (*ep.f).IsV() )
+								{
+										 normalSum += ep.f->N(); 
+										 (*ep.f).SetV();
+								}
+					}
+				}
+				normalSum.Normalize();
+				TDF[*fi].m=normalSum;
+	}
+	for(fi=m.face.begin();fi!=m.face.end();++fi) 
+		(*fi).N()=TDF[*fi].m;
+
+	tri::UpdateNormals<MESH_TYPE>::NormalizeFace(m);
+
+	TDF.Stop();
+}
+
+
 /***************************************************************************/
 // Paso Doble Step 1 compute the smoothed normals
 /***************************************************************************/
@@ -675,6 +742,8 @@ void NormalSmoothSB(MESH_TYPE &m,
 // 
 // This is the Normal Smoothing approach bsased on a angle thresholded weighting
 // sigma is in the 0 .. 1 range, it represent the cosine of a threshold angle. 
+// sigma == 0 All the normals are averaged
+// sigma == 1 Nothing is averaged.		
 // Only within the specified range are averaged toghether. The averagin is weighted with the 
 
 template<class MESH_TYPE>
