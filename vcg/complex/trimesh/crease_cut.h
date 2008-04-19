@@ -65,7 +65,9 @@ void CreaseCut(MESH_TYPE &m, float angleRad)
 	
 	tri::Allocator<MESH_TYPE>::CompactVertexVector(m);
 	tri::Allocator<MESH_TYPE>::CompactFaceVector(m);
-	tri::UpdateNormals<MESH_TYPE>::PerFaceNormalized(m);
+	
+	tri::UpdateNormals<MESH_TYPE>::NormalizeFace(m);
+	
 	assert(m.HasFFTopology());
   typename MESH_TYPE::ScalarType cosangle=math::Cos(angleRad);
 
@@ -137,7 +139,7 @@ void CreaseCut(MESH_TYPE &m, float angleRad)
 					(*fi).V(j) = & m.vert[curVertexInd];
 				}
 		}		
-		tri::UpdateNormals<MESH_TYPE>::PerVertexNormalized(m);
+		tri::UpdateNormals<MESH_TYPE>::PerVertexFromCurrentFaceNormal(m);
 }
 
 } // end namespace tri
