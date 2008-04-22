@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2007/09/21 11:34:10  ponchio
+Just a clarification comment
+
 Revision 1.14  2006/06/08 08:52:02  zifnab1974
 gcc 4 needs the extra template keyword
 
@@ -124,6 +127,21 @@ public:
 	  Point4<T>::_v[1] = T(b[1]);
 	  Point4<T>::_v[2] = T(b[2]);
 	  Point4<T>::_v[3] = T(b[3]);
+  }
+
+ template <class Q>  
+	inline void Import(const Point4<Q> & b )
+  { 
+	  Point4<T>::_v[0] = T(b[0]);
+	  Point4<T>::_v[1] = T(b[1]);
+	  Point4<T>::_v[2] = T(b[2]);
+	  Point4<T>::_v[3] = T(b[3]);
+  }
+
+ template <class Q> 
+  static inline Color4 Construct( const Color4<Q> & b )
+  {
+    return Color4(T(b[0]),T(b[1]),T(b[2]),T(b[3]));
   }
 
   //inline void Import(const Color4<float> &b);
@@ -285,6 +303,43 @@ inline void Color4<unsigned char>::Import(const Color4<float> &b)
   this->_v[3]=(unsigned char)(b[3]*255.0f);
 }
 
+#if !defined(__GNUC__) || (__GNUC__ > 3)
+template <> // [Bug c++/14479] enum definition in template class with template methods causes error.
+#endif
+template <>
+inline void Color4<unsigned char>::Import(const Point4<float> &b)
+{
+  this->_v[0]=(unsigned char)(b[0]*255.0f);
+  this->_v[1]=(unsigned char)(b[1]*255.0f);
+  this->_v[2]=(unsigned char)(b[2]*255.0f);
+  this->_v[3]=(unsigned char)(b[3]*255.0f);
+}
+
+#if !defined(__GNUC__) || (__GNUC__ > 3)
+template <>
+#endif
+template <> 
+inline Color4<unsigned char> Color4<unsigned char>::Construct( const Color4<float> & b )
+{
+    return Color4<unsigned char>(
+									(unsigned char)(b[0]*255.0f),
+									(unsigned char)(b[1]*255.0f),
+									(unsigned char)(b[2]*255.0f),
+									(unsigned char)(b[3]*255.0f));
+}
+
+#if !defined(__GNUC__) || (__GNUC__ > 3)
+template <>
+#endif
+template <> 
+inline Color4<float> Color4<float>::Construct( const Color4<unsigned char> & b )
+{
+    return Color4<float>(
+									(float)(b[0])/255.0f,
+									(float)(b[1])/255.0f,
+									(float)(b[2])/255.0f,
+									(float)(b[3])/255.0f);
+}
 
 //template <class T,class S> 
 //inline void Color4<T>::Import(const Color4<S> &b)
