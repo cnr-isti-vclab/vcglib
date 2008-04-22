@@ -25,6 +25,9 @@
   History
 
  $Log: not supported by cvs2svn $
+ Revision 1.7  2007/03/12 16:40:16  tarini
+ Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
+
  Revision 1.6  2006/11/30 22:48:06  cignoni
  Corrected bug in exporting mesh with deleted vertices
 
@@ -156,9 +159,6 @@
 
 	runable from http://lib3ds.sourceforge.net/
 
-	the Lib3ds library must have the following relative path:
-		INCLUDEPATH  += ../../../../code/lib/lib3ds-1.2.0
-		win32:LIBS	 += ../../../../code/lib/lib3ds-1.2.0/lib3ds-120s.lib
 */
 #include <lib3ds/file.h>
 #include <lib3ds/io.h>
