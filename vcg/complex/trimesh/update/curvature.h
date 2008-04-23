@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.6  2008/04/04 10:26:12  cignoni
+Cleaned up names, now Kg() gives back Gaussian Curvature (k1*k2), while Kh() gives back Mean Curvature 1/2(k1+k2)
+
 Revision 1.5  2008/03/25 11:00:56  ganovelli
 fixed  bugs sign of principal direction and mean curvature value
 
@@ -67,13 +70,16 @@ class UpdateCurvature
 {
 
 public:
-		typedef typename MeshType::FaceIterator FaceIterator;
-		typedef typename MeshType::VertexIterator VertexIterator;
-		typedef typename MeshType::VertContainer VertContainer;
-		typedef typename MeshType::VertexType VertexType;
-		typedef typename MeshType::FaceType FaceType;
-		typedef typename MeshType::CoordType CoordType;		
-		typedef typename CoordType::ScalarType ScalarType;
+	typedef typename MeshType::FaceType FaceType;
+	typedef typename MeshType::FacePointer FacePointer;
+	typedef typename MeshType::FaceIterator FaceIterator;
+	typedef typename MeshType::VertexIterator VertexIterator;
+	typedef typename MeshType::VertContainer VertContainer;
+	typedef typename MeshType::VertexType VertexType;
+	typedef typename MeshType::VertexPointer VertexPointer;
+	typedef vcg::face::VFIterator<FaceType> VFIteratorType;
+	typedef typename MeshType::CoordType CoordType;
+	typedef typename CoordType::ScalarType ScalarType;
 
 	
 private:
@@ -94,7 +100,6 @@ public:
   pages =	"902--907",
   URL =  	"http://dx.doi.org/10.1109/ICCV.1995.466840",
   bibsource =	"http://www.visionbib.com/bibliography/describe440.html#TT32253",
-	}
 	*/
 		static void PrincipalDirections(MeshType &m) {
 
@@ -382,7 +387,80 @@ Discrete Differential-Geometry Operators for Triangulated 2-Manifolds Mark Meyer
 			TDContr.Stop();
 
     }
-    
+	
+	
+	/* Update the mean and the gaussian curvature of a vertex, using the
+	 * VF adiacency to walk around the vertex. Return the voronoi area 
+	 * around the vertex.
+	 * if norm == true, the mean and the gaussian curvature are normalized
+	 * based on the paper
+	 * "optimizing 3d triangulations using discrete curvature analysis"
+	 * http://www2.in.tu-clausthal.de/~hormann/papers/Dyn.2001.OTU.pdf 
+	 * */
+	static float VertexCurvature(VertexPointer v, bool norm = true)
+	{
+		// VFAdjacency required!
+		assert(FaceType::HasVFAdjacency());
+		assert(VertexType::HasVFAdjacency());
+		
+		VFIteratorType vfi(v);
+		float A = 0;
+		
+		v->Kh() = 0;
+		v->Kg() = 2 * M_PI;
+
+		while (!vfi.End()) {
+			if (!vfi.F()->IsD()) {
+				FacePointer f = vfi.F();
+				int i = vfi.I();
+				VertexPointer v0 = f->V0(i), v1 = f->V1(i), v2 = f->V2(i);
+				
+				float ang0 = math::Abs(Angle(v1->P() - v0->P(), v2->P() - v0->P() ));
+				float ang1 = math::Abs(Angle(v0->P() - v1->P(), v2->P() - v1->P() ));
+				float ang2 = M_PI - ang0 - ang1;
+
+				float s01 = SquaredDistance(v1->P(), v0->P());
+				float s02 = SquaredDistance(v2->P(), v0->P());
+
+				// voronoi cell of current vertex
+				if (ang0 >= M_PI/2)
+					A += (0.5f * DoubleArea(*f) - (s01 * tan(ang1) + s02 * tan(ang2)) / 8.0 );
+				else if (ang1 >= M_PI/2)
+					A += (s01 * tan(ang0)) / 8.0;
+				else if (ang2 >= M_PI/2)
+					A += (s02 * tan(ang0)) / 8.0;
+				else  // non obctuse triangle
+					A += ((s02 / tan(ang1)) + (s01 / tan(ang2))) / 8.0;
+				
+				// gaussian curvature update
+				v->Kg() -= ang0;
+
+				// mean curvature update
+				ang1 = math::Abs(Angle(f->N(), v1->N()));
+				ang2 = math::Abs(Angle(f->N(), v2->N()));
+				v->Kh() += ( (math::Sqrt(s01) / 2.0) * ang1 + 
+				             (math::Sqrt(s02) / 2.0) * ang2 );
+			}
+			
+			++vfi;
+		}
+		
+		v->Kh() /= 4.0f;
+		
+		if(norm) {
+			if(A <= std::numeric_limits<float>::epsilon()) {
+				v->Kh() = 0;
+				v->Kg() = 0;
+			}
+			else {
+				v->Kh() /= A;
+				v->Kg() /= A;
+			}
+		}
+
+		return A;
+	}
+
 };
 
 
