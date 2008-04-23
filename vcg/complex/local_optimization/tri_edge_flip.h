@@ -231,22 +231,13 @@ public:
 
 		ScalarType Qa = QualityFunc(v0, v1, v2);
 		ScalarType Qb = QualityFunc(v0, v3, v1);
-		
-		/*ScalarType avgbefore = (Qa + Qb) / 2.0;
-		ScalarType varbefore = (powf((Qa - avgbefore), 2.0) + 
-		                        powf((Qb - avgbefore), 2.0)) / 2.0;*/
 
 		ScalarType QaAfter = QualityFunc(v1, v2, v3);
 		ScalarType QbAfter = QualityFunc(v0, v3, v2);
 		
-		/*ScalarType avgafter = (QaAfter + QbAfter) / 2.0;
-		ScalarType varafter = (powf((QaAfter - avgafter), 2.0) +
-		                       powf((QbAfter - avgafter), 2.0)) / 2.0;*/
-		
 		// < 0 if the average quality of faces improves after flip
-		//_priority = ((Qa + Qb) / 2.0) - ((QaAfter + QbAfter) / 2.0);
 		_priority = (Qa + Qb - QaAfter - QbAfter) / 2.0;
-		//_priority = varafter - varbefore;
+		
 		return _priority;
 	}
 
@@ -552,7 +543,7 @@ public:
 		v1->IMark() = this->GlobalMark();
 		v2->IMark() = this->GlobalMark();
 		v3->IMark() = this->GlobalMark();
-
+		
 		// edges of the first face, except the flipped edge
 		for(int i = 0; i < 3; i++) if(i != flipped) {
 			PosType newpos(f1, i);
