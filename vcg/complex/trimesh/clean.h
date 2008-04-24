@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.58  2008/03/11 14:16:40  cignoni
+Added check on deleted faces in RemoveDegenerateFace
+
 Revision 1.57  2008/03/06 08:37:16  cignoni
 added HasConsistentPerWedgeTexCoord
 
@@ -1027,7 +1030,7 @@ private:
         {
 			       face::SwapEdge<FaceType,false>((*fi), 0);
       			 if (HasPerWedgeTexCoord(m))
-			        		swap((*fi).WT(0),(*fi).WT(1));
+			        		std::swap((*fi).WT(0),(*fi).WT(1));
         }
       }
 
