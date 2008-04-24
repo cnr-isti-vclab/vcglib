@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2008/02/15 14:38:32  ganovelli
+added Cylinder(..). the filename platonic.h is lesser and lesser significant...
+
 Revision 1.12  2007/10/19 22:29:36  cignoni
 Re-Wrote basic build function
 
@@ -632,6 +635,7 @@ void Build( MeshType & in, const V & v, const F & f)
 // Build a regular grid mesh as a typical height field mesh
 // x y are the position on the grid scaled by wl and hl (at the end x is in the range 0..wl and y is in 0..hl)
 // z is taken from the <data> array 
+// Once generated the vertex positions it uses the FaceGrid function to generate the faces;
 
 template <class MeshType>
 void Grid(MeshType & in, int w, int h, float wl, float hl, float *data)
@@ -643,7 +647,7 @@ void Grid(MeshType & in, int w, int h, float wl, float hl, float *data)
 
   in.Clear();
 	Allocator<MeshType>::AddVertices(in,w*h);
-  Allocator<MeshType>::AddFaces(in,(w-1)*(h-1)*2);
+
 
   float wld=wl/float(w);
   float hld=hl/float(h);
@@ -651,7 +655,21 @@ void Grid(MeshType & in, int w, int h, float wl, float hl, float *data)
   for(int i=0;i<h;++i)
     for(int j=0;j<w;++j)
       in.vert[i*w+j].P()=CoordType ( j*wld, i*hld, data[i*w+j]);
-  
+ FaceGrid(in,w,h);
+}
+
+
+// Build a regular grid mesh of faces as a typical height field mesh
+// Vertexes are assumed to be already present.
+
+template <class MeshType>
+void FaceGrid(MeshType & in, int w, int h)
+{
+	assert(in.vn == in.vert.size()); // require a compact vertex vector
+	assert(in.vn <= w*h); // the number of vertices should be large enough
+	
+	Allocator<MeshType>::AddFaces(in,(w-1)*(h-1)*2);
+	
 //   i+0,j+0 -- i+0,j+1
 //      |   \     |
 //      |    \    |
