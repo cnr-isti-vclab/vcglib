@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.29  2008/01/24 11:54:23  cignoni
+passed the callback in the save
+
 Revision 1.28  2007/12/13 00:20:34  cignoni
 removed harmless printf cast warnings
 
@@ -180,7 +183,7 @@ static int Save(SaveMeshType &m,  const char * filename, int savemask, CallBackP
   return Save(m,filename,true,pi,cb);
 }
 
-static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &pi, CallBackPos * /* cb=0 */  )	// V1.0
+static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &pi, CallBackPos *cb=0)	// V1.0
 {
 	FILE * fpout;
 	int i;
