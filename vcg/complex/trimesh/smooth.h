@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.17  2008/04/18 17:48:29  cignoni
+added facenormal smoothing
+
 Revision 1.16  2008/02/07 10:24:51  cignoni
 added a missing IsD() check
 
@@ -104,20 +107,20 @@ public:
 	FLT LenSum;
 };
 
-// Scale dependent laplacian smoothing [fujimori 95]
-// Nuova versione, l'idea e'quella di usare anche gli angoli delle facce per pesare lo spostamento.
-// 
-// in pratica si sposta solo lungo la componente che e' parallela alla normale al vertice 
-// (che si suppone esserci!!)
- 
+// This is precisely what curvature flow does.
+// Curvature flow smoothes the surface by moving along the surface
+// normal n with a speed equal to the mean curvature
+template<class MESH_TYPE>
+void LaplacianSmooth_CurvatureFlow(MESH_TYPE &m, int step, typename  MESH_TYPE::ScalarType delta)
+{
+	
+}	
 
-// Non ha bisogno della topologia
-// Non fa assunzioni sull'ordinamento delle facce, ma vuole che i border flag ci siano!
-//
-// 
+// Another Laplacian smoothing variant, 
+// here we sum the baricenter of the faces incidents on each vertex weighting them with the angle 
 
 template<class MESH_TYPE>
-void ScaleLaplacianSmooth(MESH_TYPE &m, int step, typename  MESH_TYPE::ScalarType delta)
+void LaplacianSmooth_AngleWeighted(MESH_TYPE &m, int step, typename  MESH_TYPE::ScalarType delta)
 {
 	SimpleTempData<typename MESH_TYPE::VertContainer, ScaleLaplacianInfo<typename MESH_TYPE::ScalarType> > TD(m.vert);
 	ScaleLaplacianInfo<typename MESH_TYPE::ScalarType> lpz;
@@ -146,7 +149,7 @@ void ScaleLaplacianSmooth(MESH_TYPE &m, int step, typename  MESH_TYPE::ScalarTyp
 			for(int j=0;j<3;++j){
 						typename  MESH_TYPE::CoordType dir= (mp-(*fi).V(j)->P()).Normalize();
 						TD[(*fi).V(j)].PntSum+=dir*a[j];
-						TD[(*fi).V(j)].LenSum+=a[j];
+						TD[(*fi).V(j)].LenSum+=a[j]; // well, it should be named angleSum
 			}
 		}		
 		for(vi=m.vert.begin();vi!=m.vert.end();++vi)
@@ -157,13 +160,18 @@ void ScaleLaplacianSmooth(MESH_TYPE &m, int step, typename  MESH_TYPE::ScalarTyp
 	TD.Stop();
 };
 
-// Scale dependent laplacian smoothing [fujimori 95]
-// Non ha bisogno della topologia
-// Non fa assunzioni sull'ordinamento delle facce, ma vuole che i border flag ci siano!
-//
+// Scale dependent laplacian smoothing [Fujiwara 95]
+// as described in
+// Implicit Fairing of Irregular Meshes using Diffusion and Curvature Flow
+// Mathieu Desbrun, Mark Meyer, Peter Schroeder, Alan H. Barr
+// SIGGRAPH 99
+// REQUIREMENTS: Border Flags.
 // 
+// Note the delta parameter is in a absolute unit
+// it should be a small percentage of the shortest edge.
+
 template<class MESH_TYPE>
-void ScaleLaplacianSmoothOld(MESH_TYPE &m, int step, typename  MESH_TYPE::ScalarType delta)
+void ScaleDependentLaplacianSmooth_Fujiwara(MESH_TYPE &m, int step, typename  MESH_TYPE::ScalarType delta)
 {
 	SimpleTempData<typename MESH_TYPE::VertContainer, ScaleLaplacianInfo<typename MESH_TYPE::ScalarType> > TD(m.vert);
 	ScaleLaplacianInfo<typename MESH_TYPE::ScalarType> lpz;
@@ -212,7 +220,12 @@ void ScaleLaplacianSmoothOld(MESH_TYPE &m, int step, typename  MESH_TYPE::Scalar
 							TD[(*fi).V(j)].LenSum+=len;
 							TD[(*fi).V1(j)].LenSum+=len;
 						}
-
+  // The fundamental part:
+	// We move the new point of a quantity 
+	//        
+	//  L(M) = 1/Sum(edgelen) * Sum(Normalized edges)
+	//         
+	
 			for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 				if(!(*vi).IsD() && TD[*vi].LenSum>0 )
 				 (*vi).P() = (*vi).P() + (TD[*vi].PntSum/TD[*vi].LenSum)*delta;
@@ -286,24 +299,25 @@ void LaplacianSmooth(MESH_TYPE &m, int step, bool SmoothSelected=false, float Qu
 						}
 	
   if(QualityWeight>0)
-  { // quality weighted smoothing
-    // We assume that weights are in the 0..1 range.
-    assert(tri::HasPerVertexQuality(m));
-    for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-		if(!(*vi).IsD() && TD[*vi].cnt>0 )
-			if(!SmoothSelected || (*vi).IsS())
-      {
-        float q=1.0-(*vi).Q();
-				(*vi).P()=(*vi).P()*(1.0-q) + (TD[*vi].sum/TD[*vi].cnt)*q;
-      }
-  }
-
+				{ // quality weighted smoothing
+					// We assume that weights are in the 0..1 range.
+					assert(tri::HasPerVertexQuality(m));
+					for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+					if(!(*vi).IsD() && TD[*vi].cnt>0 )
+						if(!SmoothSelected || (*vi).IsS())
+						{
+							float q=(*vi).Q();
+							(*vi).P()=(*vi).P()*q + (TD[*vi].sum/TD[*vi].cnt)*(1.0-q);
+						}
+				}
 	else
-    for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-		if(!(*vi).IsD() && TD[*vi].cnt>0 )
-			if(!SmoothSelected || (*vi).IsS())
-					(*vi).P()=TD[*vi].sum/TD[*vi].cnt;
-	}
+				{
+					for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+					if(!(*vi).IsD() && TD[*vi].cnt>0 )
+						if(!SmoothSelected || (*vi).IsS())
+								(*vi).P()=TD[*vi].sum/TD[*vi].cnt;
+				}
+	} // end for
 	 	
 	TD.Stop();
 };
@@ -382,9 +396,98 @@ void HCSmooth(MESH_TYPE &m, int step, bool SmoothSelected=false )
 	TD.Stop();
 };
 
-
 // Laplacian smooth of the quality. 
 
+
+class ColorSmoothInfo 
+{
+public:
+	unsigned int r;
+	unsigned int g;
+	unsigned int b;
+	unsigned int a;
+	int cnt;
+};
+
+template<class MESH_TYPE> void LaplacianSmoothColor(MESH_TYPE &m, int step, bool SmoothSelected=false)
+{ 
+	SimpleTempData<typename MESH_TYPE::VertContainer, ColorSmoothInfo> TD(m.vert);
+	ColorSmoothInfo csi;
+	csi.r=0; csi.g=0; csi.b=0; csi.cnt=0;
+
+	TD.Start(csi);
+	for(int i=0;i<step;++i)
+	{
+		typename MESH_TYPE::VertexIterator vi;
+		for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+			TD[*vi]=csi;
+
+		typename MESH_TYPE::FaceIterator fi;
+		for(fi=m.face.begin();fi!=m.face.end();++fi)
+			if(!(*fi).IsD()) 
+				for(int j=0;j<3;++j)
+					if(!(*fi).IsB(j)) 
+					{
+						TD[(*fi).V(j)].r+=(*fi).V1(j)->C()[0];
+						TD[(*fi).V(j)].g+=(*fi).V1(j)->C()[1];
+						TD[(*fi).V(j)].b+=(*fi).V1(j)->C()[2];
+						TD[(*fi).V(j)].a+=(*fi).V1(j)->C()[3];
+
+						TD[(*fi).V1(j)].r+=(*fi).V(j)->C()[0];
+						TD[(*fi).V1(j)].g+=(*fi).V(j)->C()[1];
+						TD[(*fi).V1(j)].b+=(*fi).V(j)->C()[2];		  
+						TD[(*fi).V1(j)].a+=(*fi).V(j)->C()[3];		  
+
+						++TD[(*fi).V(j)].cnt;
+						++TD[(*fi).V1(j)].cnt;
+					}
+
+		// si azzaera i dati per i vertici di bordo
+		for(fi=m.face.begin();fi!=m.face.end();++fi)
+			if(!(*fi).IsD()) 
+				for(int j=0;j<3;++j)
+					if((*fi).IsB(j))
+					{
+						TD[(*fi).V(j)]=csi;
+						TD[(*fi).V1(j)]=csi;
+					}
+
+		// se l'edge j e' di bordo si deve mediare solo con gli adiacenti
+		for(fi=m.face.begin();fi!=m.face.end();++fi)
+			if(!(*fi).IsD()) 
+				for(int j=0;j<3;++j)
+					if((*fi).IsB(j)) 
+					{
+						TD[(*fi).V(j)].r+=(*fi).V1(j)->C()[0];
+						TD[(*fi).V(j)].g+=(*fi).V1(j)->C()[1];
+						TD[(*fi).V(j)].b+=(*fi).V1(j)->C()[2];
+						TD[(*fi).V(j)].a+=(*fi).V1(j)->C()[3];
+
+						TD[(*fi).V1(j)].r+=(*fi).V(j)->C()[0];
+						TD[(*fi).V1(j)].g+=(*fi).V(j)->C()[1];
+						TD[(*fi).V1(j)].b+=(*fi).V(j)->C()[2];		  
+						TD[(*fi).V1(j)].a+=(*fi).V(j)->C()[3];
+
+						++TD[(*fi).V(j)].cnt;
+						++TD[(*fi).V1(j)].cnt;
+					}
+
+		for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+			if(!(*vi).IsD() && TD[*vi].cnt>0 )
+				if(!SmoothSelected || (*vi).IsS())
+				{
+					(*vi).C()[0] = (unsigned int) ceil((double) (TD[*vi].r / TD[*vi].cnt));
+					(*vi).C()[1] = (unsigned int) ceil((double) (TD[*vi].g / TD[*vi].cnt));
+					(*vi).C()[2] = (unsigned int) ceil((double) (TD[*vi].b / TD[*vi].cnt));
+					(*vi).C()[3] = (unsigned int) ceil((double) (TD[*vi].a / TD[*vi].cnt));
+				}
+	}
+			
+	TD.Stop();
+};
+
+
+// Laplacian smooth of the quality. 
 template<class FLT> 
 class QualitySmoothInfo 
 {
