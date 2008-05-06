@@ -8,6 +8,8 @@
 #include <vcg/complex/trimesh/base.h>   
 #include<vcg/complex/trimesh/create/platonic.h>
 
+#include<vcg/complex/trimesh/update/topology.h>
+
 #include <vcg/simplex/face/pos.h> 
 
 class MyEdge;
@@ -47,6 +49,7 @@ int main()
 {
 	MyMesh m;
 	vcg::tri::Tetrahedron(m);
+	vcg::tri::UpdateTopology<MyVCGMesh>::FaceFace(mesh);
 	OneRingNeighborhood(&(*m.face.begin()));
 	OneRingNeighborhoodJP(&(*m.face.begin()));
 	return 0;
