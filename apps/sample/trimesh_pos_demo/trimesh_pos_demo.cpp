@@ -22,11 +22,24 @@ void OneRingNeighborhood( MyFace * f)
 {
 	MyVertex * v = f->V(0);  
 	MyFace* start = f;
-	vcg::face::Pos<MyFace> p(f,0,0);// constructor that takes face, edge and vertex
+	vcg::face::Pos<MyFace> p(f,0,v);// constructor that takes face, edge and vertex
 	do
 	{
 		p.FlipF();
 		p.FlipE();
+	}while(p.f!=start);
+}
+
+#include <vcg/simplex/face/jumping_pos.h> // include the definition of jumping pos
+
+void OneRingNeighborhoodJP( MyFace * f)
+{
+	MyVertex * v = f->V(0);  
+	MyFace* start = f;
+	vcg::face::JumpingPos<MyFace> p(f,0,v);// constructor that takes face, edge and vertex
+	do
+	{
+		p.NextFE();
 	}while(p.f!=start);
 }
 
@@ -35,5 +48,6 @@ int main()
 	MyMesh m;
 	vcg::tri::Tetrahedron(m);
 	OneRingNeighborhood(&(*m.face.begin()));
+	OneRingNeighborhoodJP(&(*m.face.begin()));
 	return 0;
 }
