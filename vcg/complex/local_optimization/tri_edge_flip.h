@@ -564,6 +564,10 @@ public:
 			do { // go to the first border (if there is one)
 				pos.NextE();
 			} while(pos != startpos && !pos.IsBorder());
+			
+			// if a border is reached, set startpos here
+			if(pos.IsBorder())
+				startpos = pos;
 
 			do {
 				VertexPointer v = pos.VFlip();
@@ -580,6 +584,10 @@ public:
 		do { // go to the first border (if there is one)
 			pos.NextE();
 		} while(pos != startpos && !pos.IsBorder());
+		
+		// if a border is reached, set startpos here
+		if(pos.IsBorder())
+			startpos = pos;
 
 		do {
 			VertexPointer v = pos.VFlip();
