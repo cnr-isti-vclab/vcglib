@@ -33,7 +33,7 @@ int main()
 {
 	MyMesh m;
 	vcg::tri::Tetrahedron(m);
-	vcg::tri::UpdateTopology<MyVCGMesh>::FaceFace(mesh);
+	vcg::tri::UpdateTopology<MyVCGMesh>::VertexFace(m);
 	OneRingNeighborhoodVF(&(*m.vert.begin()));
 	return 0;
 }
