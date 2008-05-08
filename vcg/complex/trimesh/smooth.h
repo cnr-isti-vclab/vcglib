@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.18  2008/05/02 09:43:25  cignoni
+Added color smoothing, scale dependent laplacian changed a SD_old into SD fujumori, improved comments.
+
 Revision 1.17  2008/04/18 17:48:29  cignoni
 added facenormal smoothing
 
@@ -497,7 +500,7 @@ public:
 };
 
 template<class MESH_TYPE>
-void LaplacianSmoothQuality(MESH_TYPE &m, int step,bool SmoothSelected=false)
+void VertexQualitySmooth(MESH_TYPE &m, int step=1, bool SmoothSelected=false)
 { 
 	SimpleTempData<typename MESH_TYPE::VertContainer,QualitySmoothInfo<typename MESH_TYPE::ScalarType> > TD(m.vert);
   QualitySmoothInfo<typename MESH_TYPE::ScalarType> lpz;
@@ -772,7 +775,6 @@ void NormalSmoothSB(MESH_TYPE &m,
 	}
 }
 
-
 // Replace the normal of the face with the average of normals of the vertex adijacent faces. 
 // Normals are weighted with face area.
 // It assumes that:
@@ -780,7 +782,7 @@ void NormalSmoothSB(MESH_TYPE &m,
 // VF adjacency is present.
 
 template<class MESH_TYPE>
-void FaceNormalSmooth(MESH_TYPE &m)
+void FaceNormalSmoothVF(MESH_TYPE &m)
 {
 	SimpleTempData<typename MESH_TYPE::FaceContainer, PDFaceInfo< typename MESH_TYPE::ScalarType > > TDF(m.face);
 	
@@ -832,6 +834,50 @@ void FaceNormalSmooth(MESH_TYPE &m)
 
 	tri::UpdateNormals<MESH_TYPE>::NormalizeFace(m);
 
+	TDF.Stop();
+}
+
+// Replace the normal of the face with the average of normals of the face adijacent faces. 
+// Normals are weighted with face area.
+// It assumes that:
+// Normals are normalized:
+// FF adjacency is present.
+
+template<class MESH_TYPE>
+void FaceNormalSmoothFF(MESH_TYPE &m, int step=1, bool SmoothSelected=false )
+{
+	SimpleTempData<typename MESH_TYPE::FaceContainer, PDFaceInfo< typename MESH_TYPE::ScalarType > > TDF(m.face);
+	
+	PDFaceInfo<typename MESH_TYPE::ScalarType> lpzf;
+	lpzf.m=typename MESH_TYPE::CoordType(0,0,0);
+
+	assert(tri::HasFFAdjacency(m));
+	TDF.Start(lpzf);
+	int i;
+	
+	typedef typename MESH_TYPE::CoordType CoordType;
+//	typedef typename MESH_TYPE::ScalarType ScalarType;
+//	typedef typename vcg::face::VFIterator<typename MESH_TYPE::FaceType> VFLocalIterator;
+  typename MESH_TYPE::FaceIterator fi;
+	
+	tri::UpdateNormals<MESH_TYPE>::AreaNormalizeFace(m);
+  for(int i=0;i<step;++i)
+		{
+				for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
+				{
+							CoordType normalSum=(*fi).N();
+
+							for(i=0;i<3;++i)
+										normalSum+=(*fi).FFp(i)->N();
+
+							TDF[*fi].m=normalSum;
+				}
+				for(fi=m.face.begin();fi!=m.face.end();++fi) 
+						if(!SmoothSelected || (*fi).IsS())
+								(*fi).N()=TDF[*fi].m;
+
+				tri::UpdateNormals<MESH_TYPE>::NormalizeFace(m);
+		}
 	TDF.Stop();
 }
 
