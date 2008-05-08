@@ -24,6 +24,11 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2008/04/18 17:52:08  cignoni
+added PerVertexFromCurrentFaceNormal
+AreaNormalizeFace NormalizeFace
+and shortened PerVertexNormalizedPerFaceNormalized
+
 Revision 1.19  2008/02/15 08:08:59  cignoni
 added missing include matrix33
 
@@ -206,6 +211,12 @@ static void PerVertexPerFace(ComputeMeshType &m)
 static void PerVertexNormalizedPerFace(ComputeMeshType &m)
 {
 	PerVertexPerFace(m);
+	NormalizeVertex(m);
+}
+
+/// Normalize the lenght of the face normals
+static void NormalizeVertex(ComputeMeshType &m)
+{
 	VertexIterator vi;
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 		if( !(*vi).IsD() && (*vi).IsRW() ) 
