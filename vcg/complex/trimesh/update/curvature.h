@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.7  2008/04/23 16:37:15  onnis
+VertexCurvature method added.
+
 Revision 1.6  2008/04/04 10:26:12  cignoni
 Cleaned up names, now Kg() gives back Gaussian Curvature (k1*k2), while Kh() gives back Mean Curvature 1/2(k1+k2)
 
@@ -155,45 +158,45 @@ public:
 						assert(weights.back() < 1.0f);
 					}
 
-					Matrix33f Tp;
+					Matrix33<ScalarType> Tp;
 					for (int i = 0; i < 3; ++i)
 						Tp[i][i] = 1.0f - powf(central_vertex->cN()[i],2);
 					Tp[0][1] = Tp[1][0] = -1.0f * (central_vertex->N()[0] * central_vertex->cN()[1]);
 					Tp[1][2] = Tp[2][1] = -1.0f * (central_vertex->cN()[1] * central_vertex->cN()[2]);
 					Tp[0][2] = Tp[2][0] = -1.0f * (central_vertex->cN()[0] * central_vertex->cN()[2]);
 
-					Matrix33f tempMatrix;
-					Matrix33f M;
+					Matrix33<ScalarType> tempMatrix;
+					Matrix33<ScalarType> M;
 					M.SetZero();
 					for (int i = 0; i < vertices.size(); ++i) {
-						Point3f edge = (central_vertex->cP() - vertices[i].vert->cP());
+						CoordType edge = (central_vertex->cP() - vertices[i].vert->cP());
 						float curvature = (2.0f * (central_vertex->cN() * edge) ) / edge.SquaredNorm();
-						Point3f T = (Tp*edge).Normalize();
+						CoordType T = (Tp*edge).Normalize();
 						tempMatrix.ExternalProduct(T,T);
 						M += tempMatrix * weights[i] * curvature ;
 					}
 
-					Point3f W;
-					Point3f e1(1.0f,0.0f,0.0f);
+					CoordType W;
+					CoordType e1(1.0f,0.0f,0.0f);
 					if ((e1 - central_vertex->cN()).SquaredNorm() > (e1 + central_vertex->cN()).SquaredNorm())
 						W = e1 - central_vertex->cN();
 					else 
 						W = e1 + central_vertex->cN();
 					W.Normalize();
 
-					Matrix33f Q;
+					Matrix33<ScalarType> Q;
 					Q.SetIdentity();
 					tempMatrix.ExternalProduct(W,W);
 					Q -= tempMatrix * 2.0f;
 
-					Matrix33f Qt(Q);
+					Matrix33<ScalarType> Qt(Q);
 					Qt.Transpose();
 
-					Matrix33f QtMQ = (Qt * M * Q);
+					Matrix33<ScalarType> QtMQ = (Qt * M * Q);
 
-					Point3f bl = Q.GetColumn(0);
-					Point3f T1 = Q.GetColumn(1);
-					Point3f T2 = Q.GetColumn(2);
+					CoordType bl = Q.GetColumn(0);
+					CoordType T1 = Q.GetColumn(1);
+					CoordType T2 = Q.GetColumn(2);
 
 					float s,c;
 					// Gabriel Taubin hint and Valentino Fiorin impementation
@@ -209,7 +212,7 @@ public:
 
 					float t[2];
 					float best_c, best_s;
-					float min_error = std::numeric_limits<float>::infinity();
+					float min_error = std::numeric_limits<ScalarType>::infinity();
 					for (int i=0; i<2; i++)
 					{
 						delta = sqrtf(powf(h[1], 2) + 4.0f);
@@ -258,13 +261,13 @@ public:
 					float Principal_Curvature1 = (3.0f * StMS[0][0]) - StMS[1][1];
 					float Principal_Curvature2 = (3.0f * StMS[1][1]) - StMS[0][0];
 
-					Point3f Principal_Direction1 = T1 * c - T2 * s;
-					Point3f Principal_Direction2 = T1 * s + T2 * c; 
+					CoordType Principal_Direction1 = T1 * c - T2 * s;
+					CoordType Principal_Direction2 = T1 * s + T2 * c; 
 
-					(*vi).PD1() = Principal_Direction1 ;
-					(*vi).PD2() = Principal_Direction2 ;
+					(*vi).PD1() = Principal_Direction1;
+					(*vi).PD2() = Principal_Direction2;
 					(*vi).K1() =  Principal_Curvature1;
-					(*vi).K2() =  Principal_Curvature2;
+	 				(*vi).K2() =  Principal_Curvature2;
 				}
 			}
 		}
@@ -371,7 +374,7 @@ Discrete Differential-Geometry Operators for Triangulated 2-Manifolds Mark Meyer
          
       for(vi=m.vert.begin(); vi!=m.vert.end(); ++vi) if(!(*vi).IsD() /*&& !(*vi).IsB()*/)
       {
-        if((TDAreaPtr)[*vi].A<=std::numeric_limits<float>::epsilon())
+        if((TDAreaPtr)[*vi].A<=std::numeric_limits<ScalarType>::epsilon())
         {
           (*vi).Kh() = 0;
           (*vi).Kg() = 0;
