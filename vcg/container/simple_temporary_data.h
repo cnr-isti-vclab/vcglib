@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2007/02/02 00:01:54  tarini
+overloaded operator "[]" (once more) to make it possible to index the temp. structure with an iterator
+
 Revision 1.4  2005/07/11 13:12:34  cignoni
 small gcc-related compiling issues (typenames,ending cr, initialization order)
 
@@ -43,14 +46,34 @@ First Working Release (with this comment)
  
 namespace vcg {
 
-template <class STL_CONT, class ATTR_TYPE>
-class SimpleTempData{
+template <class STL_CONT>
+class SimpleTempDataBase{
 public:
+	virtual void Enable()= 0;
+	virtual void Disable()= 0;
+	virtual void Resize(const int & sz) = 0;
+	virtual void Reorder(std::vector<size_t> & newVertIndex)=0;
+};
+
+template <class STL_CONT, class ATTR_TYPE>
+class SimpleTempData:public SimpleTempDataBase<STL_CONT>{
+
+public:
+typedef SimpleTempData<STL_CONT,ATTR_TYPE> SimpTempDataType;
+typedef ATTR_TYPE AttrType;
 
 STL_CONT& c;
 std::vector<ATTR_TYPE> data;
 
-SimpleTempData(STL_CONT  &_c):c(_c){};
+SimpleTempData(STL_CONT  &_c):c(_c){data.reserve(c.capacity());data.resize(c.size());};
+SimpleTempData(STL_CONT  &_c,ATTR_TYPE val):c(_c){
+	data.reserve(c.capacity());data.resize(c.size());
+	typename std::vector<ATTR_TYPE>::iterator i;
+	for(i = data.begin(); i!= data.end(); ++i)
+	*i = val;
+};
+
+~SimpleTempData(){data.clear();}
 
 // access to data
 ATTR_TYPE & operator[](const typename STL_CONT::value_type & v){return data[&v-&*c.begin()];}
@@ -58,20 +81,16 @@ ATTR_TYPE & operator[](const typename STL_CONT::value_type * v){return data[v-&*
 ATTR_TYPE & operator[](const typename STL_CONT::iterator & cont){return data[&(*cont)-&*c.begin()];}
 ATTR_TYPE & operator[](const int & i){return data[i];}
 
-// start temporary attribute
-void Start(){data.reserve(c.capacity());data.resize(c.size());}
+// enable temporary attribute: REMOVED!! The memory is allocated by the contructor
+void Enable(){assert(0);}
 
-// start and initialize temporary attribute
-void Start(ATTR_TYPE val){data.reserve(c.capacity());data.resize(c.size());
-	typename std::vector<ATTR_TYPE>::iterator i;
-	for(i = data.begin(); i!= data.end(); ++i)
-	*i = val;
-}
+// disable and initialize temporary attribute: REMOVED!! The memory is allocated by the contructor
+void Enable(ATTR_TYPE val){assert(0);}
 
-// stop temporary attribute
-void Stop(){data.clear();}
+// stop temporary attribute: REMOVED!! The memory is freed by the distructor
+void Disable(){assert(0);}
 
-// update temproary data size 
+// update temporary data size 
 bool UpdateSize(){
 		if(data.size() != c.size())
 			{
@@ -80,7 +99,21 @@ bool UpdateSize(){
 			}
 		return true;
 	}
+
+void Resize(const int & sz){
+	data.resize(sz);
+}
+
+void Reorder(std::vector<size_t> & newVertIndex){
+	for(unsigned int i = 0 ; i < data.size(); ++i){
+		if( newVertIndex[i] != std::numeric_limits<size_t>::max())
+			data[newVertIndex[i]] = data[i];
+	}
+}
+
 };
+
+
 
 }; // end namespace vcg
 
