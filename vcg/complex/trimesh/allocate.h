@@ -24,6 +24,9 @@
 History
 
 $Log: not supported by cvs2svn $
+Revision 1.43  2008/04/18 17:45:23  cignoni
+fast return for compacting functions if no compacting is needed
+
 Revision 1.42  2008/04/10 09:18:57  cignoni
 moved Index function from append to the allocate
 
@@ -167,6 +170,7 @@ Initial commit
 
 #include <vector>
 #include <assert.h>
+#include <vcg/container/simple_temporary_data.h>
 
 namespace vcg {
 	namespace tri {
@@ -192,6 +196,20 @@ namespace vcg {
 		void ReorderVert( std::vector<size_t> &newVertIndex, std::vector<vertex_type> &vert)
 		{}
 		
+		template <class MeshType, class ATTR_CONT>
+		void ReorderAttribute(ATTR_CONT &c,std::vector<size_t> & newVertIndex, MeshType &m){
+			typename std::set<typename MeshType::HandlesWrapper>::iterator ai;	
+				for(ai = c.begin(); ai != c.end(); ++ai)
+					((typename MeshType::HandlesWrapper)(*ai)).Reorder(newVertIndex);
+		}
+
+		template <class MeshType, class ATTR_CONT>
+		void ResizeAttribute(ATTR_CONT &c,const int & sz, MeshType &m){
+			typename std::set<typename MeshType::HandlesWrapper>::iterator ai;	
+				for(ai =c.begin(); ai != c.end(); ++ai)
+					((typename MeshType::HandlesWrapper)(*ai)).Resize(m.vn);
+		}
+
 		/*@{*/
 		/// Class to safely add vertexes and faces to a mesh updating all the involved pointers.
 		/// It provides static memeber to add either vertex or faces to a trimesh.
@@ -204,9 +222,15 @@ namespace vcg {
 			typedef typename MeshType::VertexType     VertexType;
 			typedef typename MeshType::VertexPointer  VertexPointer;
 			typedef typename MeshType::VertexIterator VertexIterator;
+			typedef typename MeshType::VertContainer VertContainer;
 			typedef typename MeshType::FaceType       FaceType;
 			typedef typename MeshType::FacePointer    FacePointer;
 			typedef typename MeshType::FaceIterator   FaceIterator;
+			typedef typename MeshType::FaceContainer FaceContainer;
+			typedef typename MeshType::HandlesWrapper HandlesWrapper;
+			typedef typename std::set<HandlesWrapper>::iterator HandlesIterator;
+			typedef typename std::set<HandlesWrapper>::const_iterator HandlesConstIterator;
+			typedef typename std::set<HandlesWrapper >::iterator HWIte;
 
 			/** This class is used when allocating new vertexes and faces to update 
 			the pointers that can be changed when resizing the involved vectors of vertex or faces.
@@ -255,6 +279,10 @@ namespace vcg {
 				m.vert.resize(m.vert.size()+n);
 				m.vn+=n;
 
+				typename std::set<typename MeshType::HandlesWrapper>::iterator ai;
+				for(ai = m.vert_attr.begin(); ai != m.vert_attr.end(); ++ai)
+					((typename MeshType::HandlesWrapper)(*ai)).Resize(m.vert.size());
+
 				pu.newBase = &*m.vert.begin();
 				pu.newEnd =  &m.vert.back()+1; 
         if(pu.NeedUpdate())
@@ -267,6 +295,7 @@ namespace vcg {
 							if ((*fi).cV(1)!=0) pu.Update((*fi).V(1));
 							if ((*fi).cV(2)!=0) pu.Update((*fi).V(2));
 						}
+
 
 						// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
 
@@ -329,6 +358,10 @@ namespace vcg {
 
 				m.face.resize(m.face.size()+n);
 				m.fn+=n;
+
+				typename std::set<typename MeshType::HandlesWrapper>::iterator ai;
+				for(ai = m.face_attr.begin(); ai != m.face_attr.end(); ++ai)
+					((typename MeshType::HandlesWrapper)(*ai)).Resize(m.face.size());
 
 				pu.newBase = &*m.face.begin();
         pu.newEnd  = &m.face.back()+1;
@@ -428,7 +461,14 @@ namespace vcg {
 			// for the default std::vector no work is needed (some work is typically needed for the OCF stuff) 
 			ReorderVert<typename MeshType::VertexType>(newVertIndex,m.vert);
 			
+			// reorder the optional atttributes in m.vert_attr to reflect the changes 
+			ReorderAttribute(m.vert_attr,newVertIndex,m);
+
 			m.vert.resize(m.vn);
+
+			// resize the optional atttributes in m.vert_attr to reflect the changes 
+			ResizeAttribute(m.vert_attr,m.vn,m);
+
 			FaceIterator fi;
 			VertexPointer vbase=&m.vert[0];
 			for(fi=m.face.begin();fi!=m.face.end();++fi)
@@ -475,6 +515,9 @@ namespace vcg {
 			// for the default std::vector no work is needed (some work is typically needed for the OCF stuff) 
 		  ReorderFace<typename MeshType::FaceType>(newFaceIndex,m.face);
 					
+			// reorder the optional atttributes in m.face_attr to reflect the changes 
+			ReorderAttribute(m.face_attr,newFaceIndex,m);
+
 			// Loop on the vertices to correct VF relation
 			VertexIterator vi;
 			FacePointer fbase=&m.face[0];
@@ -492,6 +535,9 @@ namespace vcg {
 			
 			// Loop on the faces to correct VF and FF relations
 			m.face.resize(m.fn);
+			// resize the optional atttributes in m.face_attr to reflect the changes 
+			ResizeAttribute(m.face_attr,m.vn,m);
+
 			FaceIterator fi;
 			for(fi=m.face.begin();fi!=m.face.end();++fi)
 				if(!(*fi).IsD())
@@ -514,6 +560,126 @@ namespace vcg {
 											}
 				}
 		}
+
+public:
+	/// Per Vertex Attributes
+	template <class ATTR_TYPE> 
+	static
+	typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>
+	 AddPerVertexAttribute( MeshType & m, std::string name){
+		HWIte i;
+		HandlesWrapper h; 
+		h._name = name;
+		if(!name.empty()){
+			i = m.vert_attr.find(h);
+			assert(i ==m.vert_attr.end() );// an attribute with this name exists
+		}
+		h._handle = (void*) new SimpleTempData<VertContainer,ATTR_TYPE>(m.vert);
+		std::pair < HandlesIterator , bool> res =  m.vert_attr.insert(h);
+		return typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>(res.first->_handle);
+	 }
+
+	template <class ATTR_TYPE> 
+	static
+	typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>
+	 AddPerVertexAttribute( MeshType & m){
+		 return AddPerVertexAttribute<ATTR_TYPE>(m,std::string(""));
+	 }
+
+	template <class ATTR_TYPE> 
+	static
+		typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>
+	 GetPerVertexAttribute( const MeshType & m, const std::string & name){
+		assert(!name.empty());
+		HandlesWrapper h1; h1._name = name;
+		typename std::set<HandlesWrapper > ::const_iterator i;
+
+		i =m.vert_attr.find(h1);
+		if(i!=m.vert_attr.end())
+				return typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>((*i)._handle);
+			else
+				return typename MeshType:: template PerVertexAttributeHandle<ATTR_TYPE>(NULL);
+	}
+
+	template <class ATTR_TYPE> 
+	static
+		void
+	DeletePerVertexAttribute( MeshType & m,typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE> & h){
+		typename std::set<HandlesWrapper > ::iterator i;
+		for( i = m.vert_attr.begin(); i !=  m.vert_attr.end(); ++i)
+			if( (*i)._handle == h._handle ){
+				delete ((SimpleTempData<VertContainer,ATTR_TYPE>*)(*i)._handle);
+				m.vert_attr.erase(i); 
+				return;}
+			assert(0);
+	}
+
+	template <class ATTR_TYPE > 
+	static
+		void	DeletePerVertexAttribute( MeshType & m,  std::string name){
+		HandlesIterator i;
+		HandlesWrapper h1; h1._name = name;
+		i = m.vert_attr.find(h1);
+		assert(i!=m.vert_attr.end());
+		delete ((SimpleTempData<VertContainer,ATTR_TYPE>*)(*i)._handle);
+		m.vert_attr.erase(i);
+	}
+
+	/// Per Face Attributes
+	template <class ATTR_TYPE> 
+	static
+	typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE>
+	 AddPerFaceAttribute( MeshType & m, std::string name){
+		HWIte i;
+		HandlesWrapper h; 
+		h._name = name;
+		if(!name.empty()){
+			i = m.face_attr.find(h);
+			assert(i ==m.face_attr.end() );// an attribute with this name exists
+		}
+		h._handle = (void*) new SimpleTempData<FaceContainer,ATTR_TYPE>(m.face);
+		std::pair < HandlesIterator , bool> res =  m.face_attr.insert(h);
+		return typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE>(res.first->_handle);
+	 }
+	
+	template <class ATTR_TYPE> 
+	static
+		typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE>
+	 GetPerFaceAttribute( const MeshType & m, const std::string & name){
+		assert(!name.empty());
+		HandlesWrapper h1; h1._name = name;
+		typename std::set<HandlesWrapper > ::const_iterator i;
+
+		i =m.face_attr.find(h1);
+		if(i!=m.face_attr.end())
+				return typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE>((*i)._handle);
+			else
+				return typename MeshType:: template PerFaceAttributeHandle<ATTR_TYPE>(NULL);
+	}
+
+	template <class ATTR_TYPE> 
+	static
+		void
+	DeletePerFaceAttribute( MeshType & m,typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE> & h){
+		typename std::set<HandlesWrapper > ::iterator i;
+		for( i = m.face_attr.begin(); i !=  m.face_attr.end(); ++i)
+			if( (*i)._handle == h._handle ){
+				delete ((SimpleTempData<FaceContainer,ATTR_TYPE>*)(*i)._handle);
+				m.face_attr.erase(i); 
+				return;}
+			assert(0);
+	}
+
+	template <class ATTR_TYPE > 
+	static
+		void	DeletePerFaceAttribute( MeshType & m,  std::string name){
+		HandlesIterator i;
+		HandlesWrapper h1; h1._name = name;
+		i = m.face_attr.find(h1);
+		assert(i!=m.face_attr.end());
+		delete ((SimpleTempData<FaceContainer,ATTR_TYPE>*)(*i)._handle);
+		m.face_attr.erase(i);
+	}
 
 }; // end class
 		

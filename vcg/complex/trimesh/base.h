@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.32  2008/04/15 10:34:07  cignoni
+added  HasPerVertexTexCoord ( mesh )
+
 Revision 1.31  2008/02/21 17:27:06  cignoni
 Added HasPerVertexColor static function
 
@@ -126,9 +129,12 @@ Initial commit
 #include <assert.h>
 #include <string>
 #include <vector>
+#include <set>
 #include <vcg/space/box3.h>
 #include <vcg/space/color4.h>
 #include <vcg/math/shot.h>
+
+#include <vcg/container/simple_temporary_data.h>
 
 /*
 People should subclass his vertex class from these one...
@@ -183,6 +189,36 @@ class TriMesh{
   std::vector<std::string> textures;
 	//
   std::vector<std::string> normalmaps;
+
+	class HandlesWrapper{
+	public:
+		void * _handle;	std::string _name;
+		void Resize(const int & sz){((SimpleTempDataBase<VertContainer>*)_handle)->Resize(sz);}
+		void Reorder(std::vector<size_t> & newVertIndex){((SimpleTempDataBase<VertContainer>*)_handle)->Reorder(newVertIndex);}
+		const bool operator<(const  HandlesWrapper    b) const {	return(_name.empty()&&b._name.empty())?(_handle < b._handle):( _name < b._name);}
+	};
+	
+	template <class ATTR_TYPE>
+	class PerVertexAttributeHandle{
+	public:
+		PerVertexAttributeHandle( void *ah):_handle ( (SimpleTempData<VertContainer,ATTR_TYPE> *)ah ){}
+		SimpleTempData<VertContainer,ATTR_TYPE> * _handle;
+		template <class RefType>
+		ATTR_TYPE & operator [](const RefType  & i){return (*_handle)[i];}
+	};
+
+	template <class ATTR_TYPE>
+	class PerFaceAttributeHandle{
+	public:
+		PerFaceAttributeHandle(void *ah):_handle ( (SimpleTempData<FaceContainer,ATTR_TYPE> *)ah ){}
+		SimpleTempData<FaceContainer,ATTR_TYPE> * _handle;
+		template <class RefType>
+		ATTR_TYPE & operator [](const RefType  & i){return (*_handle)[i];}
+	};
+
+
+ 	std::set< HandlesWrapper> vert_attr;
+ 	std::set< HandlesWrapper> face_attr;
 
 		/// La camera
 	Camera<ScalarType> camera; // intrinsic
@@ -389,6 +425,24 @@ bool HasVFAdjacency (const TriMesh < VertContainerType , FaceContainerType> & /*
   assert(FaceContainerType::value_type::HasVFAdjacency() == VertContainerType::value_type::HasVFAdjacency());
   return FaceContainerType::value_type::HasVFAdjacency();
 }
+
+template <class MESH_TYPE>
+bool HasPerVertexAttribute(const MESH_TYPE &m,   std::string   name){
+		typename std::set< typename MESH_TYPE::HandlesWrapper>::const_iterator ai;
+		typename MESH_TYPE::HandlesWrapper h; 
+		h._name = name;
+		ai = m.vert_attr.find(h);
+		return (ai!= m.vert_attr.end() ) ;
+}
+template <class MESH_TYPE>
+bool HasPerFaceAttribute(const MESH_TYPE &m,   std::string   name){
+		typename std::set< typename MESH_TYPE::HandlesWrapper>::const_iterator ai;
+		typename MESH_TYPE::HandlesWrapper h; 
+		h._name = name;
+		ai = m.face_attr.find(h);
+		return (ai!= m.face_attr.end() ) ;
+}
+
 /*@}*/
 /*@}*/
 }	 // end namespace
