@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2007/04/20 10:11:51  cignoni
+Corrected bug in selectionVertexFromFaceStrict
+
 Revision 1.2  2007/02/01 06:37:05  cignoni
 Added FaceFromBorder
 
@@ -230,6 +233,25 @@ static size_t FaceFromBorder(MeshType &m)
     }
   return selCnt;
 } 
+// Select ONLY the vertices whose quality is in the specified closed interval. 
+// 
+static size_t VertexFromQualityRange(MeshType &m,float minq, float maxq)
+{
+  size_t selCnt=0;
+	ClearVertex(m);
+	VertexIterator vi;
+	assert(HasPerVertexQuality(m));
+  for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+      if(!(*vi).IsD()) 
+      {
+        if( (*vi).Q()>=minq &&  (*vi).Q()<=maxq )
+					{
+						(*vi).SetS(); 
+						++selCnt;
+					}
+      }
+  return selCnt;
+}
 
 }; // end class
 
