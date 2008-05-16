@@ -23,6 +23,10 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.19  2008/05/08 23:50:44  cignoni
+renamed vertex quality smoothing
+added face normal smoothing FF (and added a VF to the previous face normal smoothing)
+
 Revision 1.18  2008/05/02 09:43:25  cignoni
 Added color smoothing, scale dependent laplacian changed a SD_old into SD fujumori, improved comments.
 
@@ -101,20 +105,42 @@ first partial porting: compiled gcc,intel and msvc
 
 namespace vcg
 {
+namespace tri
+{
+/// 
+/** \addtogroup trimesh */
+/*@{*/
+/// Class of static functions to smooth and fair meshes and their attributes.
+ 
+template <class SmoothMeshType>
+class Smooth
+{
 
-template<class FLT> 
+public:
+			typedef SmoothMeshType MeshType; 
+			typedef typename MeshType::VertexType     VertexType;
+			typedef typename MeshType::VertexType::CoordType     CoordType;
+			typedef typename MeshType::VertexPointer  VertexPointer;
+			typedef typename MeshType::VertexIterator VertexIterator;
+			typedef	typename MeshType::ScalarType			ScalarType;
+			typedef typename MeshType::FaceType       FaceType;
+			typedef typename MeshType::FacePointer    FacePointer;
+			typedef typename MeshType::FaceIterator   FaceIterator;
+			typedef typename MeshType::FaceContainer  FaceContainer;
+      typedef typename vcg::Box3<ScalarType>  Box3Type;
+    	typedef typename vcg::face::VFIterator<FaceType> VFLocalIterator;
+			
 class ScaleLaplacianInfo 
 {
 public:
-	Point3<FLT> PntSum;
-	FLT LenSum;
+	CoordType PntSum;
+	ScalarType LenSum;
 };
 
 // This is precisely what curvature flow does.
 // Curvature flow smoothes the surface by moving along the surface
 // normal n with a speed equal to the mean curvature
-template<class MESH_TYPE>
-void LaplacianSmooth_CurvatureFlow(MESH_TYPE &m, int step, typename  MESH_TYPE::ScalarType delta)
+void VertexCoordLaplacianCurvatureFlow(MeshType &m, int step, ScalarType delta)
 {
 	
 }	
@@ -122,27 +148,25 @@ void LaplacianSmooth_CurvatureFlow(MESH_TYPE &m, int step, typename  MESH_TYPE::
 // Another Laplacian smoothing variant, 
 // here we sum the baricenter of the faces incidents on each vertex weighting them with the angle 
 
-template<class MESH_TYPE>
-void LaplacianSmooth_AngleWeighted(MESH_TYPE &m, int step, typename  MESH_TYPE::ScalarType delta)
+static void VertexCoordLaplacianAngleWeighted(MeshType &m, int step, ScalarType delta)
 {
-	SimpleTempData<typename MESH_TYPE::VertContainer, ScaleLaplacianInfo<typename MESH_TYPE::ScalarType> > TD(m.vert);
-	ScaleLaplacianInfo<typename MESH_TYPE::ScalarType> lpz;
-	lpz.PntSum=typename  MESH_TYPE::CoordType(0,0,0);
+	ScaleLaplacianInfo lpz;
+	lpz.PntSum=CoordType(0,0,0);
 	lpz.LenSum=0;
-	TD.Start(lpz);
-	typename  MESH_TYPE::FaceIterator fi;
+	SimpleTempData<typename MeshType::VertContainer, ScaleLaplacianInfo > TD(m.vert,lpz);
+	FaceIterator fi;
 	for(int i=0;i<step;++i)
 	{
-		typename  MESH_TYPE::VertexIterator vi;
+		VertexIterator vi;
 		for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 			 TD[*vi]=lpz;
-		typename MESH_TYPE::ScalarType a[3];
+		ScalarType a[3];
 		for(fi=m.face.begin();fi!=m.face.end();++fi)if(!(*fi).IsD())
 		{
-			typename  MESH_TYPE::CoordType  mp=((*fi).V(0)->P() + (*fi).V(1)->P() + (*fi).V(2)->P())/3.0;
-			typename  MESH_TYPE::CoordType  e0=((*fi).V(0)->P() - (*fi).V(1)->P()).Normalize(); 
-			typename  MESH_TYPE::CoordType  e1=((*fi).V(1)->P() - (*fi).V(2)->P()).Normalize();
-			typename  MESH_TYPE::CoordType  e2=((*fi).V(2)->P() - (*fi).V(0)->P()).Normalize();
+			CoordType  mp=((*fi).V(0)->P() + (*fi).V(1)->P() + (*fi).V(2)->P())/3.0;
+			CoordType  e0=((*fi).V(0)->P() - (*fi).V(1)->P()).Normalize(); 
+			CoordType  e1=((*fi).V(1)->P() - (*fi).V(2)->P()).Normalize();
+			CoordType  e2=((*fi).V(2)->P() - (*fi).V(0)->P()).Normalize();
 
 			a[0]=AngleN(-e0,e2);
 			a[1]=AngleN(-e1,e0);
@@ -150,7 +174,7 @@ void LaplacianSmooth_AngleWeighted(MESH_TYPE &m, int step, typename  MESH_TYPE::
 			//assert(fabs(M_PI -a[0] -a[1] -a[2])<0.0000001);
 
 			for(int j=0;j<3;++j){
-						typename  MESH_TYPE::CoordType dir= (mp-(*fi).V(j)->P()).Normalize();
+						CoordType dir= (mp-(*fi).V(j)->P()).Normalize();
 						TD[(*fi).V(j)].PntSum+=dir*a[j];
 						TD[(*fi).V(j)].LenSum+=a[j]; // well, it should be named angleSum
 			}
@@ -160,7 +184,6 @@ void LaplacianSmooth_AngleWeighted(MESH_TYPE &m, int step, typename  MESH_TYPE::
 				 (*vi).P() = (*vi).P() +  (TD[*vi].PntSum/TD[*vi].LenSum ) * delta;
 				
 	}		 			
-	TD.Stop();
 };
 
 // Scale dependent laplacian smoothing [Fujiwara 95]
@@ -173,26 +196,25 @@ void LaplacianSmooth_AngleWeighted(MESH_TYPE &m, int step, typename  MESH_TYPE::
 // Note the delta parameter is in a absolute unit
 // it should be a small percentage of the shortest edge.
 
-template<class MESH_TYPE>
-void ScaleDependentLaplacianSmooth_Fujiwara(MESH_TYPE &m, int step, typename  MESH_TYPE::ScalarType delta)
+static void VertexCoordScaleDependentLaplacian_Fujiwara(MeshType &m, int step, ScalarType delta)
 {
-	SimpleTempData<typename MESH_TYPE::VertContainer, ScaleLaplacianInfo<typename MESH_TYPE::ScalarType> > TD(m.vert);
-	ScaleLaplacianInfo<typename MESH_TYPE::ScalarType> lpz;
-	lpz.PntSum=typename  MESH_TYPE::CoordType(0,0,0);
+	SimpleTempData<typename MeshType::VertContainer, ScaleLaplacianInfo > TD(m.vert);
+	ScaleLaplacianInfo lpz;
+	lpz.PntSum=CoordType(0,0,0);
 	lpz.LenSum=0;
 	TD.Start(lpz);
-	typename  MESH_TYPE::FaceIterator fi;
+	FaceIterator fi;
 	for(int i=0;i<step;++i)
 	{
-			typename  MESH_TYPE::VertexIterator vi;
+			VertexIterator vi;
 			for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 				 TD[*vi]=lpz;
 
 			for(fi=m.face.begin();fi!=m.face.end();++fi)if(!(*fi).IsD())
 				for(int j=0;j<3;++j)
 					if(!(*fi).IsB(j)) {
-						typename  MESH_TYPE::CoordType edge= (*fi).V1(j)->P() -(*fi).V(j)->P();
-						typename MESH_TYPE::ScalarType len=Norm(edge);
+						CoordType edge= (*fi).V1(j)->P() -(*fi).V(j)->P();
+						ScalarType len=Norm(edge);
 						edge/=len;
 						TD[(*fi).V(j)].PntSum+=edge;
 						TD[(*fi).V1(j)].PntSum-=edge;
@@ -204,8 +226,8 @@ void ScaleDependentLaplacianSmooth_Fujiwara(MESH_TYPE &m, int step, typename  ME
 				for(int j=0;j<3;++j)
 					// se l'edge j e' di bordo si riazzera tutto e si riparte
 					if((*fi).IsB(j)) {
-							TD[(*fi).V(j)].PntSum=typename  MESH_TYPE::CoordType(0,0,0);
-							TD[(*fi).V1(j)].PntSum=typename  MESH_TYPE::CoordType(0,0,0);
+							TD[(*fi).V(j)].PntSum=CoordType(0,0,0);
+							TD[(*fi).V1(j)].PntSum=CoordType(0,0,0);
 							TD[(*fi).V(j)].LenSum=0;
 							TD[(*fi).V1(j)].LenSum=0;
 					}
@@ -215,8 +237,8 @@ void ScaleDependentLaplacianSmooth_Fujiwara(MESH_TYPE &m, int step, typename  ME
 					for(int j=0;j<3;++j)
 						if((*fi).IsB(j)) 
 						{ 
-							typename  MESH_TYPE::CoordType edge= (*fi).V1(j)->P() -(*fi).V(j)->P();
-							typename MESH_TYPE::ScalarType len=Norm(edge);
+							CoordType edge= (*fi).V1(j)->P() -(*fi).V(j)->P();
+							ScalarType len=Norm(edge);
 							edge/=len;
 							TD[(*fi).V(j)].PntSum+=edge;
 							TD[(*fi).V1(j)].PntSum-=edge;
@@ -237,33 +259,30 @@ void ScaleDependentLaplacianSmooth_Fujiwara(MESH_TYPE &m, int step, typename  ME
 };
 
 
-template<class FLT> 
 class LaplacianInfo 
 {
 public:
-	Point3<FLT> sum;
-	FLT cnt;
+	CoordType sum;
+	ScalarType cnt;
 };
 
 // Classical Laplacian Smoothing. Each vertex can be moved onto the average of the adjacent vertices.
 // Can smooth only the selected vertices and weight the smoothing according to the quality 
 // In the latter case 0 means that the vertex is not moved and 1 means that the vertex is moved onto the computed position.
 
-template<class MESH_TYPE>
-void LaplacianSmooth(MESH_TYPE &m, int step, bool SmoothSelected=false, float QualityWeight=0)
+static void VertexCoordLaplacian(MeshType &m, int step, bool SmoothSelected=false, float QualityWeight=0)
 {
-	SimpleTempData<typename MESH_TYPE::VertContainer,LaplacianInfo<typename MESH_TYPE::ScalarType> > TD(m.vert);
-  LaplacianInfo<typename MESH_TYPE::ScalarType> lpz;
-	lpz.sum=typename  MESH_TYPE::CoordType(0,0,0);
+  LaplacianInfo lpz;
+	lpz.sum=CoordType(0,0,0);
 	lpz.cnt=1;
-	TD.Start(lpz);
+	SimpleTempData<typename MeshType::VertContainer,LaplacianInfo > TD(m.vert,lpz);
 	for(int i=0;i<step;++i)
 	{
-		typename  MESH_TYPE::VertexIterator vi;
+		VertexIterator vi;
 		for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 			 TD[*vi].sum=(*vi).P();
 
-		typename  MESH_TYPE::FaceIterator fi;
+		FaceIterator fi;
 		for(fi=m.face.begin();fi!=m.face.end();++fi)
 			if(!(*fi).IsD()) 
 				for(int j=0;j<3;++j)
@@ -321,8 +340,6 @@ void LaplacianSmooth(MESH_TYPE &m, int step, bool SmoothSelected=false, float Qu
 								(*vi).P()=TD[*vi].sum/TD[*vi].cnt;
 				}
 	} // end for
-	 	
-	TD.Stop();
 };
 
 /*
@@ -331,26 +348,24 @@ void LaplacianSmooth(MESH_TYPE &m, int step, bool SmoothSelected=false, float Qu
   EUROGRAPHICS Volume 18 (1999), Number 3
 */
 
-template<class FLT> 
 class HCSmoothInfo 
 {
 public:
-	Point3<FLT> dif;
-	Point3<FLT> sum;
+	CoordType dif;
+	CoordType sum;
 	int cnt;
 };
-template<class MESH_TYPE>
-void HCSmooth(MESH_TYPE &m, int step, bool SmoothSelected=false )
+
+static void VertexCoordLaplacianHC(MeshType &m, int step, bool SmoothSelected=false )
 {
-	typename MESH_TYPE::ScalarType beta=0.5;
-	SimpleTempData<typename MESH_TYPE::VertContainer,HCSmoothInfo<typename MESH_TYPE::ScalarType> > TD(m.vert);
-  HCSmoothInfo<typename MESH_TYPE::ScalarType> lpz;
-	lpz.sum=typename  MESH_TYPE::CoordType(0,0,0);
-	lpz.dif=typename  MESH_TYPE::CoordType(0,0,0);
+	ScalarType beta=0.5;
+  HCSmoothInfo lpz;
+	lpz.sum=CoordType(0,0,0);
+	lpz.dif=CoordType(0,0,0);
 	lpz.cnt=0;
-	TD.Start(lpz);
+	SimpleTempData<typename MeshType::VertContainer,HCSmoothInfo > TD(m.vert,lpz);
 	// First Loop compute the laplacian
-	typename  MESH_TYPE::FaceIterator fi;
+	FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi)if(!(*fi).IsD())
 		{
 			for(int j=0;j<3;++j)
@@ -369,7 +384,7 @@ void HCSmooth(MESH_TYPE &m, int step, bool SmoothSelected=false )
 				}
 			}
 		}
-	typename  MESH_TYPE::VertexIterator vi;
+	VertexIterator vi;
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
 		 TD[*vi].sum/=(float)TD[*vi].cnt;
 	
@@ -395,8 +410,6 @@ void HCSmooth(MESH_TYPE &m, int step, bool SmoothSelected=false )
 		 if(!SmoothSelected || (*vi).IsS())
 	      (*vi).P()= TD[*vi].sum - (TD[*vi].sum - (*vi).P())*beta  + (TD[*vi].dif)*(1.f-beta);
 		}
-		 	
-	TD.Stop();
 };
 
 // Laplacian smooth of the quality. 
@@ -412,20 +425,19 @@ public:
 	int cnt;
 };
 
-template<class MESH_TYPE> void LaplacianSmoothColor(MESH_TYPE &m, int step, bool SmoothSelected=false)
+static void VertexColorLaplacian(MeshType &m, int step, bool SmoothSelected=false)
 { 
-	SimpleTempData<typename MESH_TYPE::VertContainer, ColorSmoothInfo> TD(m.vert);
 	ColorSmoothInfo csi;
 	csi.r=0; csi.g=0; csi.b=0; csi.cnt=0;
+	SimpleTempData<typename MeshType::VertContainer, ColorSmoothInfo> TD(m.vert,csi);
 
-	TD.Start(csi);
 	for(int i=0;i<step;++i)
 	{
-		typename MESH_TYPE::VertexIterator vi;
+		VertexIterator vi;
 		for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 			TD[*vi]=csi;
 
-		typename MESH_TYPE::FaceIterator fi;
+		FaceIterator fi;
 		for(fi=m.face.begin();fi!=m.face.end();++fi)
 			if(!(*fi).IsD()) 
 				for(int j=0;j<3;++j)
@@ -485,35 +497,33 @@ template<class MESH_TYPE> void LaplacianSmoothColor(MESH_TYPE &m, int step, bool
 					(*vi).C()[3] = (unsigned int) ceil((double) (TD[*vi].a / TD[*vi].cnt));
 				}
 	}
-			
-	TD.Stop();
 };
 
 
 // Laplacian smooth of the quality. 
-template<class FLT> 
+
 class QualitySmoothInfo 
 {
 public:
-	FLT sum;
+	ScalarType sum;
 	int cnt;
 };
 
-template<class MESH_TYPE>
-void VertexQualitySmooth(MESH_TYPE &m, int step=1, bool SmoothSelected=false)
+
+static void VertexQualityLaplacian(MeshType &m, int step=1, bool SmoothSelected=false)
 { 
-	SimpleTempData<typename MESH_TYPE::VertContainer,QualitySmoothInfo<typename MESH_TYPE::ScalarType> > TD(m.vert);
-  QualitySmoothInfo<typename MESH_TYPE::ScalarType> lpz;
+  QualitySmoothInfo lpz;
 	lpz.sum=0;
 	lpz.cnt=0;
-	TD.Start(lpz);
+	SimpleTempData<typename MeshType::VertContainer,QualitySmoothInfo> TD(m.vert,lpz);
+	//TD.Start(lpz);
 	for(int i=0;i<step;++i)
 	{
-		typename  MESH_TYPE::VertexIterator vi;
+		VertexIterator vi;
 		for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 			 TD[*vi]=lpz;
 
-		typename  MESH_TYPE::FaceIterator fi;
+		FaceIterator fi;
 		for(fi=m.face.begin();fi!=m.face.end();++fi)
 			if(!(*fi).IsD()) 
 				for(int j=0;j<3;++j)
@@ -547,30 +557,30 @@ void VertexQualitySmooth(MESH_TYPE &m, int step=1, bool SmoothSelected=false)
 								++TD[(*fi).V1(j)].cnt;
 						}
 
-	//typename  MESH_TYPE::VertexIterator vi;
+	//VertexIterator vi;
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 		if(!(*vi).IsD() && TD[*vi].cnt>0 )
 			if(!SmoothSelected || (*vi).IsS())
 					(*vi).Q()=TD[*vi].sum/TD[*vi].cnt;
 	}
 		 	
-	TD.Stop();
+	//TD.Stop();
 };
-template<class MESH_TYPE>
-void LaplacianSmoothNormals(MESH_TYPE &m, int step,bool SmoothSelected=false)
+
+static void VertexNormalLaplacian(MeshType &m, int step,bool SmoothSelected=false)
 {
-	SimpleTempData<typename MESH_TYPE::VertContainer,LaplacianInfo<typename MESH_TYPE::ScalarType> > TD(m.vert);
-  LaplacianInfo<typename MESH_TYPE::ScalarType> lpz;
-	lpz.sum=typename  MESH_TYPE::CoordType(0,0,0);
+	SimpleTempData<typename MeshType::VertContainer,LaplacianInfo > TD(m.vert);
+  LaplacianInfo lpz;
+	lpz.sum=CoordType(0,0,0);
 	lpz.cnt=0;
 	TD.Start(lpz);
 	for(int i=0;i<step;++i)
 	{
-		typename  MESH_TYPE::VertexIterator vi;
+		VertexIterator vi;
 		for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 			 TD[*vi]=lpz;
 
-		typename  MESH_TYPE::FaceIterator fi;
+		FaceIterator fi;
 		for(fi=m.face.begin();fi!=m.face.end();++fi)
 			if(!(*fi).IsD()) 
 				for(int j=0;j<3;++j)
@@ -604,7 +614,7 @@ void LaplacianSmoothNormals(MESH_TYPE &m, int step,bool SmoothSelected=false)
 								++TD[(*fi).V1(j)].cnt;
 						}
 
-	//typename  MESH_TYPE::VertexIterator vi;
+	//VertexIterator vi;
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 		if(!(*vi).IsD() && TD[*vi].cnt>0 )
 			if(!SmoothSelected || (*vi).IsS())
@@ -617,31 +627,23 @@ void LaplacianSmoothNormals(MESH_TYPE &m, int step,bool SmoothSelected=false)
 // Smooth solo lungo la direzione di vista
 	// alpha e' compreso fra 0(no smoot) e 1 (tutto smoot)
   // Nota che se smootare il bordo puo far fare bandierine.
-template<class MESH_TYPE>
-void DepthSmooth(MESH_TYPE &m,
-				 const typename  MESH_TYPE::CoordType & viewpoint,
-				 const typename  MESH_TYPE::ScalarType alpha,
+static void VertexCoordViewDepth(MeshType &m,
+				 const CoordType & viewpoint,
+				 const ScalarType alpha,
 				 int step, bool SmoothBorder=false )
 {
-	typedef typename  MESH_TYPE::CoordType v_type;
-	typedef typename MESH_TYPE::ScalarType    s_type;
-
-
-	//const typename  MESH_TYPE::CoordType viewpoint;
-	//const typename MESH_TYPE::ScalarType alpha;
-
-	SimpleTempData<typename MESH_TYPE::VertContainer,LaplacianInfo<typename MESH_TYPE::ScalarType> > TD(m.vert);
-	LaplacianInfo<typename MESH_TYPE::ScalarType> lpz;
-	lpz.sum=typename  MESH_TYPE::CoordType(0,0,0);
+	SimpleTempData<typename MeshType::VertContainer,LaplacianInfo > TD(m.vert);
+	LaplacianInfo lpz;
+	lpz.sum=CoordType(0,0,0);
 	lpz.cnt=0;
 	TD.Start(lpz);
 	for(int i=0;i<step;++i)
 	{
-		typename  MESH_TYPE::VertexIterator vi;
+		VertexIterator vi;
 		for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 			 TD[*vi]=lpz;
 
-		typename  MESH_TYPE::FaceIterator fi;
+		FaceIterator fi;
 		for(fi=m.face.begin();fi!=m.face.end();++fi)
 			if(!(*fi).IsD()) 
 				for(int j=0;j<3;++j)
@@ -679,9 +681,9 @@ void DepthSmooth(MESH_TYPE &m,
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 		if(!(*vi).IsD() && TD[*vi].cnt>0 )
 			{
-				v_type np = TD[*vi].sum/TD[*vi].cnt;
-				v_type d = (*vi).Supervisor_P() - viewpoint; d.Normalize();
-				s_type s = d * ( np - (*vi).Supervisor_P() );
+				CoordType np = TD[*vi].sum/TD[*vi].cnt;
+				CoordType d = (*vi).Supervisor_P() - viewpoint; d.Normalize();
+				ScalarType s = d * ( np - (*vi).Supervisor_P() );
 				(*vi).Supervisor_P() += d * (s*alpha);
 			}
 	}
@@ -700,18 +702,18 @@ void DepthSmooth(MESH_TYPE &m,
 /****************************************************************************************************************/
 /****************************************************************************************************************/
 // Classi di info
-template<class FLT> 
+
 class PDVertInfo 
 {
 public:
-	Point3<FLT> np;
+	CoordType np;
 };
 
-template<class FLT> 
+
 class PDFaceInfo 
 {
 public:
-	Point3<FLT> m;
+	CoordType m;
 };
 /***************************************************************************/
 // Paso Doble Step 1 compute the smoothed normals
@@ -723,16 +725,14 @@ public:
 // This is the Normal Smoothing approach of Shen and Berner
 // Fuzzy Vector Median-Based Surface Smoothing TVCG 2004
 
-template<class MESH_TYPE>
-void NormalSmoothSB(MESH_TYPE &m, 	
-				  SimpleTempData<typename MESH_TYPE::FaceContainer,PDFaceInfo< typename MESH_TYPE::ScalarType > > &TD,
-				  typename MESH_TYPE::ScalarType sigma)
+
+void FaceNormalFuzzyVectorSB(MeshType &m, 	
+				  SimpleTempData<typename MeshType::FaceContainer,PDFaceInfo > &TD,
+				  ScalarType sigma)
 {
 	int i;
 	
-	typedef typename MESH_TYPE::CoordType CoordType;
-	typedef typename MESH_TYPE::ScalarType ScalarType;
-	typename MESH_TYPE::FaceIterator fi;
+	FaceIterator fi;
 
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 	{
@@ -740,7 +740,7 @@ void NormalSmoothSB(MESH_TYPE &m,
     // 1) Clear all the visited flag of faces that are vertex-adjacent to fi
 		for(i=0;i<3;++i)
 		{
-    	vcg::face::VFIterator<typename MESH_TYPE::FaceType> ep(&*fi,i);
+    	vcg::face::VFIterator<FaceType> ep(&*fi,i);
 		  while (!ep.End())
 			{
 				ep.f->ClearV();
@@ -753,7 +753,7 @@ void NormalSmoothSB(MESH_TYPE &m,
 		CoordType mm=CoordType(0,0,0);
 		for(i=0;i<3;++i)
 		{
-		  vcg::face::VFIterator<typename MESH_TYPE::FaceType> ep(&*fi,i);
+		  vcg::face::VFIterator<FaceType> ep(&*fi,i);
 		  while (!ep.End())
 			{
 				if(! (*ep.f).IsV() )
@@ -781,28 +781,24 @@ void NormalSmoothSB(MESH_TYPE &m,
 // Normals are normalized:
 // VF adjacency is present.
 
-template<class MESH_TYPE>
-void FaceNormalSmoothVF(MESH_TYPE &m)
+static void FaceNormalLaplacianVF(MeshType &m)
 {
-	SimpleTempData<typename MESH_TYPE::FaceContainer, PDFaceInfo< typename MESH_TYPE::ScalarType > > TDF(m.face);
+	SimpleTempData<typename MeshType::FaceContainer, PDFaceInfo> TDF(m.face);
 	
-	PDFaceInfo<typename MESH_TYPE::ScalarType> lpzf;
-	lpzf.m=typename MESH_TYPE::CoordType(0,0,0);
+	PDFaceInfo lpzf;
+	lpzf.m=CoordType(0,0,0);
 
 	assert(tri::HasVFAdjacency(m));
 	TDF.Start(lpzf);
 	int i;
 	
-	typedef typename MESH_TYPE::CoordType CoordType;
-	typedef typename MESH_TYPE::ScalarType ScalarType;
-	typedef typename vcg::face::VFIterator<typename MESH_TYPE::FaceType> VFLocalIterator;
-  typename MESH_TYPE::FaceIterator fi;
+  FaceIterator fi;
 	
-	tri::UpdateNormals<MESH_TYPE>::AreaNormalizeFace(m);
+	tri::UpdateNormals<MeshType>::AreaNormalizeFace(m);
 
 	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
 	{
-				CoordType bc=Barycenter<typename MESH_TYPE::FaceType>(*fi);
+				CoordType bc=Barycenter<FaceType>(*fi);
 				// 1) Clear all the visited flag of faces that are vertex-adjacent to fi
 				for(i=0;i<3;++i)
 				{
@@ -832,7 +828,7 @@ void FaceNormalSmoothVF(MESH_TYPE &m)
 	for(fi=m.face.begin();fi!=m.face.end();++fi) 
 		(*fi).N()=TDF[*fi].m;
 
-	tri::UpdateNormals<MESH_TYPE>::NormalizeFace(m);
+	tri::UpdateNormals<MeshType>::NormalizeFace(m);
 
 	TDF.Stop();
 }
@@ -843,24 +839,16 @@ void FaceNormalSmoothVF(MESH_TYPE &m)
 // Normals are normalized:
 // FF adjacency is present.
 
-template<class MESH_TYPE>
-void FaceNormalSmoothFF(MESH_TYPE &m, int step=1, bool SmoothSelected=false )
-{
-	SimpleTempData<typename MESH_TYPE::FaceContainer, PDFaceInfo< typename MESH_TYPE::ScalarType > > TDF(m.face);
-	
-	PDFaceInfo<typename MESH_TYPE::ScalarType> lpzf;
-	lpzf.m=typename MESH_TYPE::CoordType(0,0,0);
 
+static void FaceNormalLaplacianFF(MeshType &m, int step=1, bool SmoothSelected=false )
+{
+	PDFaceInfo lpzf;
+	lpzf.m=CoordType(0,0,0);
+	SimpleTempData<typename MeshType::FaceContainer, PDFaceInfo> TDF(m.face,lpzf);	
 	assert(tri::HasFFAdjacency(m));
-	TDF.Start(lpzf);
-	int i;
-	
-	typedef typename MESH_TYPE::CoordType CoordType;
-//	typedef typename MESH_TYPE::ScalarType ScalarType;
-//	typedef typename vcg::face::VFIterator<typename MESH_TYPE::FaceType> VFLocalIterator;
-  typename MESH_TYPE::FaceIterator fi;
-	
-	tri::UpdateNormals<MESH_TYPE>::AreaNormalizeFace(m);
+
+  FaceIterator fi;
+	tri::UpdateNormals<MeshType>::AreaNormalizeFace(m);
   for(int i=0;i<step;++i)
 		{
 				for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
@@ -876,9 +864,8 @@ void FaceNormalSmoothFF(MESH_TYPE &m, int step=1, bool SmoothSelected=false )
 						if(!SmoothSelected || (*fi).IsS())
 								(*fi).N()=TDF[*fi].m;
 
-				tri::UpdateNormals<MESH_TYPE>::NormalizeFace(m);
+				tri::UpdateNormals<MeshType>::NormalizeFace(m);
 		}
-	TDF.Stop();
 }
 
 
@@ -895,21 +882,19 @@ void FaceNormalSmoothFF(MESH_TYPE &m, int step=1, bool SmoothSelected=false )
 // sigma == 1 Nothing is averaged.		
 // Only within the specified range are averaged toghether. The averagin is weighted with the 
 
-template<class MESH_TYPE>
-void NormalSmooth(MESH_TYPE &m, 	
-				  SimpleTempData<typename MESH_TYPE::FaceContainer,PDFaceInfo< typename MESH_TYPE::ScalarType > > &TD,
-				  typename MESH_TYPE::ScalarType sigma)
+
+static void FaceNormalAngleThreshold(MeshType &m, 	
+				  SimpleTempData<typename MeshType::FaceContainer,PDFaceInfo> &TD,
+				  ScalarType sigma)
 {
 	int i;
 	
-	typedef typename MESH_TYPE::CoordType CoordType;
-	typedef typename MESH_TYPE::ScalarType ScalarType;
-	typedef typename vcg::face::VFIterator<typename MESH_TYPE::FaceType> VFLocalIterator;
-  typename MESH_TYPE::FaceIterator fi;
+
+  FaceIterator fi;
 	
 	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
 	{
-		CoordType bc=Barycenter<typename MESH_TYPE::FaceType>(*fi);
+		CoordType bc=Barycenter<FaceType>(*fi);
     // 1) Clear all the visited flag of faces that are vertex-adjacent to fi
 		for(i=0;i<3;++i)
 		{
@@ -954,19 +939,19 @@ void NormalSmooth(MESH_TYPE &m,
 // Restituisce il gradiente dell'area del triangolo nel punto p.
 // Nota che dovrebbe essere sempre un vettore che giace nel piano del triangolo e perpendicolare al lato opposto al vertice p.
 // Ottimizzato con Maple e poi pesantemente a mano.
-template <class FLT>
-Point3<FLT> TriAreaGradient(Point3<FLT> &p,Point3<FLT> &p0,Point3<FLT> &p1)
+
+CoordType TriAreaGradient(CoordType &p,CoordType &p0,CoordType &p1)
 {
-	Point3<FLT> dd = p1-p0;
-	Point3<FLT> d0 = p-p0;
-	Point3<FLT> d1 = p-p1;
-	Point3<FLT> grad;
+	CoordType dd = p1-p0;
+	CoordType d0 = p-p0;
+	CoordType d1 = p-p1;
+	CoordType grad;
 
-	FLT t16 =  d0[1]* d1[2] - d0[2]* d1[1];
-	FLT t5  = -d0[2]* d1[0] + d0[0]* d1[2];
-	FLT t4  = -d0[0]* d1[1] + d0[1]* d1[0];
+	ScalarType t16 =  d0[1]* d1[2] - d0[2]* d1[1];
+	ScalarType t5  = -d0[2]* d1[0] + d0[0]* d1[2];
+	ScalarType t4  = -d0[0]* d1[1] + d0[1]* d1[0];
 
-	FLT delta= sqrtf(t4*t4 + t5*t5 +t16*t16);
+	ScalarType delta= sqrtf(t4*t4 + t5*t5 +t16*t16);
 
 	grad[0]= (t5  * (-dd[2]) + t4 * ( dd[1]))/delta;
 	grad[1]= (t16 * (-dd[2]) + t4 * (-dd[0]))/delta;
@@ -975,12 +960,12 @@ Point3<FLT> TriAreaGradient(Point3<FLT> &p,Point3<FLT> &p0,Point3<FLT> &p1)
 	return grad;
 }
 
-template <class FLT>
-Point3<FLT> CrossProdGradient(Point3<FLT> &p, Point3<FLT> &p0, Point3<FLT> &p1, Point3<FLT> &m)
+template <class ScalarType>
+CoordType CrossProdGradient(CoordType &p, CoordType &p0, CoordType &p1, CoordType &m)
 {
-	Point3<FLT> grad;
-	Point3<FLT> p00=p0-p;
-	Point3<FLT> p01=p1-p;
+	CoordType grad;
+	CoordType p00=p0-p;
+	CoordType p01=p1-p;
 	grad[0] = (-p00[2] + p01[2])*m[1] + (-p01[1] + p00[1])*m[2];
 	grad[1] = (-p01[2] + p00[2])*m[0] + (-p00[0] + p01[0])*m[2];
 	grad[2] = (-p00[1] + p01[1])*m[0] + (-p01[0] + p00[0])*m[1];
@@ -998,8 +983,8 @@ A(...) (2-2nm)   =
 
 2A  -  2 (p0-p)^(p1-p) * m
 */
-template <class FLT>
-Point3<FLT> FaceErrorGrad(Point3<FLT> &p,Point3<FLT> &p0,Point3<FLT> &p1, Point3<FLT> &m)
+
+CoordType FaceErrorGrad(CoordType &p,CoordType &p0,CoordType &p1, CoordType &m)
 {
 	return     TriAreaGradient(p,p0,p1) *2.0f
 		- CrossProdGradient(p,p0,p1,m) *2.0f ;
@@ -1008,17 +993,15 @@ Point3<FLT> FaceErrorGrad(Point3<FLT> &p,Point3<FLT> &p0,Point3<FLT> &p1, Point3
 // Paso Doble Step 2 Fitta la mesh a un dato insieme di normali
 /***************************************************************************/
 
-template<class MESH_TYPE>
-void FitMesh(MESH_TYPE &m, 
-			 SimpleTempData<typename MESH_TYPE::VertContainer, PDVertInfo<typename MESH_TYPE::ScalarType> > &TDV,
-			 SimpleTempData<typename MESH_TYPE::FaceContainer, PDFaceInfo<typename MESH_TYPE::ScalarType> > &TDF,
+
+void FitMesh(MeshType &m, 
+			 SimpleTempData<typename MeshType::VertContainer, PDVertInfo> &TDV,
+			 SimpleTempData<typename MeshType::FaceContainer, PDFaceInfo> &TDF,
 			 float lambda)
 {
-	//vcg::face::Pos<typename MESH_TYPE::FaceType> ep;
-	vcg::face::VFIterator<typename MESH_TYPE::FaceType> ep;
-	typename MESH_TYPE::VertexIterator vi;
-	typedef typename MESH_TYPE::ScalarType ScalarType;
-	typedef typename MESH_TYPE::CoordType CoordType;
+	//vcg::face::Pos<FaceType> ep;
+	vcg::face::VFIterator<FaceType> ep;
+	VertexIterator vi;
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 	{
 		CoordType ErrGrad=CoordType(0,0,0);
@@ -1040,18 +1023,15 @@ void FitMesh(MESH_TYPE &m,
 /****************************************************************************************************************/
 
 
-template<class MESH_TYPE>
-void FastFitMesh(MESH_TYPE &m, 
-			 SimpleTempData<typename MESH_TYPE::VertContainer, PDVertInfo<typename MESH_TYPE::ScalarType> > &TDV,
-			 SimpleTempData<typename MESH_TYPE::FaceContainer, PDFaceInfo<typename MESH_TYPE::ScalarType> > &TDF,
+
+static void FastFitMesh(MeshType &m, 
+			 SimpleTempData<typename MeshType::VertContainer, PDVertInfo> &TDV,
+			 SimpleTempData<typename MeshType::FaceContainer, PDFaceInfo> &TDF,
 			 bool OnlySelected=false)
 {
-	//vcg::face::Pos<typename MESH_TYPE::FaceType> ep;
-	vcg::face::VFIterator<typename MESH_TYPE::FaceType> ep;
-	typename MESH_TYPE::VertexIterator vi;
-	typedef typename MESH_TYPE::ScalarType ScalarType;
-	typedef typename MESH_TYPE::CoordType CoordType;
-	typedef typename vcg::face::VFIterator<typename MESH_TYPE::FaceType> VFLocalIterator;
+	//vcg::face::Pos<FaceType> ep;
+	vcg::face::VFIterator<FaceType> ep;
+	VertexIterator vi;
 
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 	{
@@ -1060,7 +1040,7 @@ void FastFitMesh(MESH_TYPE &m,
    VFLocalIterator ep(&*vi);
 	 for (;!ep.End();++ep)
 		{
-      CoordType bc=Barycenter<typename MESH_TYPE::FaceType>(*ep.F());
+      CoordType bc=Barycenter<FaceType>(*ep.F());
       Sum += ep.F()->N()*(ep.F()->N()*(bc - (*vi).P()));
       ++cnt;
 		}
@@ -1081,21 +1061,13 @@ void FastFitMesh(MESH_TYPE &m,
 
 
 
-
-
-
-template<class MeshType>
-void PasoDobleSmooth(MeshType &m, int step, typename MeshType::ScalarType Sigma=0, int FitStep=10, typename MeshType::ScalarType FitLambda=0.05)
+static void VertexCoordPasoDoble(MeshType &m, int step, typename MeshType::ScalarType Sigma=0, int FitStep=10, typename MeshType::ScalarType FitLambda=0.05)
 {
-  typedef typename MeshType::ScalarType     ScalarType;
-  typedef typename MeshType::CoordType     CoordType;
-
-
-	SimpleTempData< typename MeshType::VertContainer, PDVertInfo<ScalarType> > TDV(m.vert);
-	SimpleTempData< typename MeshType::FaceContainer, PDFaceInfo<ScalarType> > TDF(m.face);
-	PDVertInfo<ScalarType> lpzv;
+	SimpleTempData< typename MeshType::VertContainer, PDVertInfo> TDV(m.vert);
+	SimpleTempData< typename MeshType::FaceContainer, PDFaceInfo> TDF(m.face);
+	PDVertInfo lpzv;
 	lpzv.np=CoordType(0,0,0);
-	PDFaceInfo<ScalarType> lpzf;
+	PDFaceInfo lpzf;
 	lpzf.m=CoordType(0,0,0);
 
 	assert(m.HasVFTopology());
@@ -1106,9 +1078,9 @@ void PasoDobleSmooth(MeshType &m, int step, typename MeshType::ScalarType Sigma=
 	{
 
 		vcg::tri::UpdateNormals<MeshType>::PerFace(m);
-		NormalSmooth<MeshType>(m,TDF,Sigma);
+		FaceNormalAngleThreshold(m,TDF,Sigma);
 		for(int k=0;k<FitStep;k++)
-			FitMesh<MeshType>(m,TDV,TDF,FitLambda);
+			FitMesh(m,TDV,TDF,FitLambda);
 	}
 
 	TDF.Stop();
@@ -1118,41 +1090,28 @@ void PasoDobleSmooth(MeshType &m, int step, typename MeshType::ScalarType Sigma=
 
 // The sigma parameter affect the normal smoothing step
 
-
-template<class MeshType>
-void PasoDobleSmoothFast(MeshType &m, int step, typename MeshType::ScalarType Sigma=0, int FitStep=50, bool SmoothSelected =false)
+static void VertexCoordPasoDobleFast(MeshType &m, int step, typename MeshType::ScalarType Sigma=0, int FitStep=50, bool SmoothSelected =false)
 {
-  typedef typename MeshType::ScalarType     ScalarType;
-  typedef typename MeshType::CoordType     CoordType;
-
-
-	SimpleTempData< typename MeshType::VertContainer, PDVertInfo<ScalarType> > TDV(m.vert);
-	SimpleTempData< typename MeshType::FaceContainer, PDFaceInfo<ScalarType> > TDF(m.face);
-	PDVertInfo<ScalarType> lpzv;
+	PDVertInfo lpzv;
 	lpzv.np=CoordType(0,0,0);
-	PDFaceInfo<ScalarType> lpzf;
+	PDFaceInfo lpzf;
 	lpzf.m=CoordType(0,0,0);
 
 	assert(m.HasVFTopology());
 	m.HasVFTopology();
-	TDV.Start(lpzv);
-	TDF.Start(lpzf);
+	SimpleTempData< typename MeshType::VertContainer, PDVertInfo> TDV(m.vert,lpzv);
+	SimpleTempData< typename MeshType::FaceContainer, PDFaceInfo> TDF(m.face,lpzf);
 	
   for(int j=0;j<step;++j)
-	   NormalSmooth<MeshType>(m,TDF,Sigma);
+	   FaceNormalAngleThreshold(m,TDF,Sigma);
 		
   for(int j=0;j<FitStep;++j)
-	  FastFitMesh<MeshType>(m,TDV,TDF,SmoothSelected);
-
-	
-
-	TDF.Stop();
-	TDV.Stop();
-
+	  FastFitMesh(m,TDV,TDF,SmoothSelected);
 }
 
+}; //end Smooth class
 
-
+}		// End namespace tri
 }		// End namespace vcg
 
 #endif //  VCG_SMOOTH
