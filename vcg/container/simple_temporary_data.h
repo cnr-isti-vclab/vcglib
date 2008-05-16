@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2008/05/15 16:35:17  ganovelli
+Start() Stop() removed. Allocation on creation, disallocaiton on distruction
+
 Revision 1.5  2007/02/02 00:01:54  tarini
 overloaded operator "[]" (once more) to make it possible to index the temp. structure with an iterator
 
@@ -80,15 +83,6 @@ ATTR_TYPE & operator[](const typename STL_CONT::value_type & v){return data[&v-&
 ATTR_TYPE & operator[](const typename STL_CONT::value_type * v){return data[v-&*c.begin()];}
 ATTR_TYPE & operator[](const typename STL_CONT::iterator & cont){return data[&(*cont)-&*c.begin()];}
 ATTR_TYPE & operator[](const int & i){return data[i];}
-
-// enable temporary attribute: REMOVED!! The memory is allocated by the contructor
-void Enable(){assert(0);}
-
-// disable and initialize temporary attribute: REMOVED!! The memory is allocated by the contructor
-void Enable(ATTR_TYPE val){assert(0);}
-
-// stop temporary attribute: REMOVED!! The memory is freed by the distructor
-void Disable(){assert(0);}
 
 // update temporary data size 
 bool UpdateSize(){
