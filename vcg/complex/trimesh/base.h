@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.33  2008/05/15 16:32:27  ganovelli
+PerVertexAttribute and PerFaceAttribute added to Trimesh
+
 Revision 1.32  2008/04/15 10:34:07  cignoni
 added  HasPerVertexTexCoord ( mesh )
 
@@ -245,6 +248,16 @@ public:
 	{
 		fn = vn = 0;
 		imark = 0;
+	}
+
+	/// destructor
+	~TriMesh()
+	{
+		std::set< HandlesWrapper>::iterator i;
+		for( i = vert_attr.begin(); i != vert_attr.end(); ++i) 
+			delete ((SimpleTempDataBase<VertContainer>*)(*i)._handle);
+		for( i = face_attr.begin(); i != face_attr.end(); ++i) 
+			delete ((SimpleTempDataBase<FaceContainer>*)(*i)._handle);
 	}
 
 	inline int MemUsed() const
