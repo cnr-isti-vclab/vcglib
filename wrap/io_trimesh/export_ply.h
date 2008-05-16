@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.30  2008/04/29 11:51:28  corsini
+set defaut callback (in save) to null
+
 Revision 1.29  2008/01/24 11:54:23  cignoni
 passed the callback in the save
 
@@ -419,15 +422,10 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 	VertexPointer  vp;
 	VertexIterator vi;
 	SimpleTempData<typename SaveMeshType::VertContainer,int> indices(m.vert);
-	if(!m.HasPerVertexFlags())
-			indices.Start();
 
 	for(j=0,vi=m.vert.begin();vi!=m.vert.end();++vi){
 		vp=&(*vi);
-		if(m.HasPerVertexFlags()) 
-				FlagV.push_back(vp->UberFlags()); // Salva in ogni caso flag del vertice
-		else
-			indices[j] = j;
+		indices[j] = j;
 
 		if( !m.HasPerVertexFlags() || !vp->IsD() )
 		{
@@ -504,8 +502,6 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 
 				fprintf(fpout,"\n");
 			}
-		if(m.HasPerVertexFlags()) 
-				vp->UberFlags()=j; // Trucco! Nascondi nei flags l'indice del vertice non deletato!
 			j++;
 		}
 	}
@@ -526,18 +522,9 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 			{ fcnt++;
 				if(binary)
 				{
-						
-						if(m.HasPerVertexFlags()){
-							vv[0]=fp->cV(0)->UberFlags();
-							vv[1]=fp->cV(1)->UberFlags();
-							vv[2]=fp->cV(2)->UberFlags();
-						}
-						else
-						{
-							vv[0]=indices[fp->cV(0)];
-							vv[1]=indices[fp->cV(1)];
-							vv[2]=indices[fp->cV(2)];
-						}
+						vv[0]=indices[fp->cV(0)];
+						vv[1]=indices[fp->cV(1)];
+						vv[2]=indices[fp->cV(2)];
 						fwrite(&c,1,1,fpout);
 						fwrite(vv,sizeof(int),3,fpout);
 
@@ -610,10 +597,6 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 				}
 				else	// ***** ASCII *****
 				{
-				if(m.HasPerVertexFlags()) 
-					fprintf(fpout,"3 %d %d %d ",
-						fp->cV(0)->UberFlags(),	fp->cV(1)->UberFlags(), fp->cV(2)->UberFlags() );
-				else
 					fprintf(fpout,"3 %d %d %d ",
 						indices[fp->cV(0)],	indices[fp->cV(1)], indices[fp->cV(2)] );
 
@@ -691,14 +674,6 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 		}
 	assert(fcnt==m.fn);
 	fclose(fpout); 
-	
-	// Recupera i flag originali
-	if(m.HasPerVertexFlags())
-		for(j=0,vi=m.vert.begin();vi!=m.vert.end();++vi)
-			(*vi).UberFlags()=FlagV[j++]; 
-	else
-			indices.Stop();
-
 	return 0;
 }
 

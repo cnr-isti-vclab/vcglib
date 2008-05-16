@@ -23,6 +23,9 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+Revision 1.8  2008/05/14 10:03:29  ganovelli
+Point3f->Coordtype
+
 Revision 1.7  2008/04/23 16:37:15  onnis
 VertexCurvature method added.
 
@@ -292,8 +295,8 @@ Discrete Differential-Geometry Operators for Triangulated 2-Manifolds Mark Meyer
       VertexIterator vi;   
 			typename MeshType::CoordType  e01v ,e12v ,e20v;
 
-			SimpleTempData<VertContainer, AreaData> TDAreaPtr(m.vert); TDAreaPtr.Start();
-			SimpleTempData<VertContainer, typename MeshType::CoordType> TDContr(m.vert); TDContr.Start();
+			SimpleTempData<VertContainer, AreaData> TDAreaPtr(m.vert); //TDAreaPtr.Start();
+			SimpleTempData<VertContainer, typename MeshType::CoordType> TDContr(m.vert); //TDContr.Start();
 
  			vcg::tri::UpdateNormals<MeshType>::PerVertexNormalized(m);
      //Compute AreaMix in H (vale anche per K)
@@ -386,8 +389,8 @@ Discrete Differential-Geometry Operators for Triangulated 2-Manifolds Mark Meyer
         }
 			}
 
-			TDAreaPtr.Stop();
-			TDContr.Stop();
+//			TDAreaPtr.Stop();
+//			TDContr.Stop();
 
     }
 	
