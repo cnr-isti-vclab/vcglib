@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2008/05/16 08:48:49  ganovelli
+ Enable() and Disable()  removed.  The memory is allocated by the contructor
+
 Revision 1.6  2008/05/15 16:35:17  ganovelli
 Start() Stop() removed. Allocation on creation, disallocaiton on distruction
 
@@ -52,8 +55,8 @@ namespace vcg {
 template <class STL_CONT>
 class SimpleTempDataBase{
 public:
-	virtual void Enable()= 0;
-	virtual void Disable()= 0;
+	virtual ~SimpleTempDataBase() {};
+	SimpleTempDataBase() {};
 	virtual void Resize(const int & sz) = 0;
 	virtual void Reorder(std::vector<size_t> & newVertIndex)=0;
 };
