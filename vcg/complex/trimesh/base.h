@@ -24,6 +24,9 @@
   History
 
 $Log: not supported by cvs2svn $
+Revision 1.34  2008/05/16 10:07:36  ganovelli
+added Trimesh destructor to purge unremoved PerVertex[PerFace]Attribute
+
 Revision 1.33  2008/05/15 16:32:27  ganovelli
 PerVertexAttribute and PerFaceAttribute added to Trimesh
 
@@ -253,7 +256,7 @@ public:
 	/// destructor
 	~TriMesh()
 	{
-		std::set< HandlesWrapper>::iterator i;
+		typename std::set< HandlesWrapper>::iterator i;
 		for( i = vert_attr.begin(); i != vert_attr.end(); ++i) 
 			delete ((SimpleTempDataBase<VertContainer>*)(*i)._handle);
 		for( i = face_attr.begin(); i != face_attr.end(); ++i) 
