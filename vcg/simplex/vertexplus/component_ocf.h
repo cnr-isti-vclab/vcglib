@@ -114,6 +114,8 @@ public:
   NormalEnabled=false;
   VFAdjacencyEnabled=false;
 	CurvatureEnabled = false;
+	CurvatureEnabled= false;
+	CurvatureDirEnabled= false;
 	}
   
   // override di tutte le funzioni che possono spostare 
@@ -126,6 +128,8 @@ public:
     if (MarkEnabled)        MV.push_back(0);
     if (NormalEnabled)      NV.push_back(typename VALUE_TYPE::NormalType());
     if (VFAdjacencyEnabled) AV.push_back(VFAdjType());		
+    if (CurvatureEnabled)   CuV.push_back(typename VALUE_TYPE::CurvatureType());		
+    if (CurvatureDirEnabled) CuDV.push_back(typename VALUE_TYPE::CurvatureDirType());		
   }
 	void pop_back();
   void resize(const unsigned int & _size) 
@@ -141,17 +145,19 @@ public:
     if (MarkEnabled)        MV.resize(_size);
     if (NormalEnabled) NV.resize(_size);
     if (VFAdjacencyEnabled) AV.resize(_size);
-		
+    if (CurvatureEnabled)   CuV.resize(_size);		
+    if (CurvatureDirEnabled) CuDV.resize(_size);		
    }
   
 	void reserve(const unsigned int & _size)
   {
     BaseType::reserve(_size);
-    if (ColorEnabled) CV.reserve(_size);
-    if (MarkEnabled)        MV.reserve(_size);
-    if (NormalEnabled) NV.reserve(_size);
-		if (VFAdjacencyEnabled) AV.reserve(_size);
-    
+    if (ColorEnabled)				 CV.reserve(_size);
+    if (MarkEnabled)         MV.reserve(_size);
+    if (NormalEnabled)			 NV.reserve(_size);
+		if (VFAdjacencyEnabled)  AV.reserve(_size);
+    if (CurvatureEnabled)    CuV.reserve(_size);		
+    if (CurvatureDirEnabled) CuDV.reserve(_size);		
   }
 
 	void _updateOVP(ThisTypeIterator lbegin, ThisTypeIterator lend)
@@ -170,24 +176,29 @@ void ReorderVert(std::vector<size_t> &newVertIndex )
 	if (MarkEnabled)        assert( MV.size() == newVertIndex.size() );
 	if (NormalEnabled)      assert( NV.size() == newVertIndex.size() );
 	if (VFAdjacencyEnabled) assert( AV.size() == newVertIndex.size() );
+	if (CurvatureEnabled)   assert(CuV.size() == newVertIndex.size() );
+	if (CurvatureDirEnabled)assert(CuDV.size() == newVertIndex.size() );
 		
 	for(i=0;i<newVertIndex.size();++i)
 		{
 			if(newVertIndex[i] != std::numeric_limits<size_t>::max() )
 				{
 					assert(newVertIndex[i] <= i);
-					if (ColorEnabled)  CV[newVertIndex[i]] = CV[i];
-					if (MarkEnabled)         MV[newVertIndex[i]] =  MV[i];
-					if (NormalEnabled) NV[newVertIndex[i]] = NV[i];
-					if (VFAdjacencyEnabled)  AV[newVertIndex[i]] =  AV[i];
+					if (ColorEnabled)			     CV[newVertIndex[i]] =  CV[i];
+					if (MarkEnabled)				   MV[newVertIndex[i]] =  MV[i];
+					if (NormalEnabled)         NV[newVertIndex[i]] =  NV[i];
+					if (VFAdjacencyEnabled)    AV[newVertIndex[i]] =  AV[i];
+					if (CurvatureEnabled)     CuV[newVertIndex[i]] = CuV[i];
+					if (CurvatureDirEnabled) CuDV[newVertIndex[i]] =CuDV[i];
 				}
 		}
 		
-	if (ColorEnabled)       CV.resize(BaseType::size());
-	if (MarkEnabled)        MV.resize(BaseType::size());
-	if (NormalEnabled)      NV.resize(BaseType::size());
-	if (VFAdjacencyEnabled) AV.resize(BaseType::size());
-	
+	if (ColorEnabled)          CV.resize(BaseType::size());
+	if (MarkEnabled)           MV.resize(BaseType::size());
+	if (NormalEnabled)         NV.resize(BaseType::size());
+	if (VFAdjacencyEnabled)    AV.resize(BaseType::size());
+	if (CurvatureEnabled)     CuV.resize(BaseType::size());
+	if (CurvatureDirEnabled) CuDV.resize(BaseType::size());
 }
 
 
