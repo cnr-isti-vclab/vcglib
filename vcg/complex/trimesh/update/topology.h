@@ -131,8 +131,8 @@ void Set( FacePointer  pf, const int nz )
 	assert(nz>=0);
 	assert(nz<3);
 	
-	v[0] = pf->V(nz);
-	v[1] = pf->V((nz+1)%3);
+	v[0] = pf->V0(nz);
+	v[1] = pf->V1(nz);
 	assert(v[0] != v[1]); // The face pointed by 'f' is Degenerate (two coincident vertexes)
 
 	if( v[0] > v[1] ) math::Swap(v[0],v[1]);
@@ -147,51 +147,17 @@ inline bool operator <  ( const PEdge & pe ) const
 	else return v[1] < pe.v[1];
 }
 
-inline bool operator <=  ( const PEdge & pe ) const
-{
-	if( v[0]<pe.v[0] ) return true;
-	else if( v[0]>pe.v[0] ) return false;
-	else return v[1] <= pe.v[1];
-}
-
-inline bool operator >  ( const PEdge & pe ) const
-{
-	if( v[0]>pe.v[0] ) return true;
-	else if( v[0]<pe.v[0] ) return false;
-	else return v[1] > pe.v[1];
-}
-
-inline bool operator >=  ( const PEdge & pe ) const
-{
-	if( v[0]>pe.v[0] ) return true;
-	else if( v[0]<pe.v[0] ) return false;
-	else return v[1] >= pe.v[1];
-}
-
 inline bool operator == ( const PEdge & pe ) const
 {
 	return v[0]==pe.v[0] && v[1]==pe.v[1];
 }
 
-inline bool operator != ( const PEdge & pe ) const
-{
-	return v[0]!=pe.v[0] || v[1]!=pe.v[1];
-}
 };
 
-
-/** Update the Face-Face topological relation by allowing to retrieve for each face what other faces shares their edges.
-*/
-static void FaceFace(MeshType &m)
+static void FillEdgeVector(MeshType &m, std::vector<PEdge> &e)
 {
-  if(!m.HasFFTopology()) return;		
-
-  std::vector<PEdge> e;
-	FaceIterator pf;
+		FaceIterator pf;
 	typename std::vector<PEdge>::iterator p;
-
-	if( m.fn == 0 ) return;
-
 	e.resize(m.fn*3);								// Alloco il vettore ausiliario
 	p = e.begin();
 	for(pf=m.face.begin();pf!=m.face.end();++pf)			// Lo riempio con i dati delle facce
@@ -201,7 +167,18 @@ static void FaceFace(MeshType &m)
 				(*p).Set(&(*pf),j);
 				++p;
 			}
-	assert(p==e.end());
+				assert(p==e.end());
+}
+
+/** Update the Face-Face topological relation by allowing to retrieve for each face what other faces shares their edges.
+*/
+static void FaceFace(MeshType &m)
+{
+  if(!m.HasFFTopology()) return;		
+	if( m.fn == 0 ) return;
+
+  std::vector<PEdge> e;
+  FillEdgeVector(m,e);
 	sort(e.begin(), e.end());							// Lo ordino per vertici
 
 	int ne = 0;											// Numero di edge reali
@@ -211,7 +188,7 @@ static void FaceFace(MeshType &m)
 	//for(ps = e.begin(),pe=e.begin();pe<=e.end();++pe)	// Scansione vettore ausiliario
 	do
 	{
-		if( pe==e.end() || *pe != *ps )					// Trovo blocco di edge uguali
+		if( pe==e.end() || !(*pe == *ps) )					// Trovo blocco di edge uguali
 		{
 			typename std::vector<PEdge>::iterator q,q_next;
 			for (q=ps;q<pe-1;++q)						// Scansione facce associate
