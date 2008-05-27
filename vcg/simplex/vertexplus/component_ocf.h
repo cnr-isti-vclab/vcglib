@@ -344,7 +344,7 @@ public:
     return (*this).Base().AV[(*this).Index()]._zp; 
   }
 	template <class LeftV>
-	void ImportLocal(const LeftV & leftV){VFp() = NULL; VFi() = -1; T::ImporLocal(leftV);}
+	void ImportLocal(const LeftV & leftV){VFp() = NULL; VFi() = -1; T::ImportLocal(leftV);}
 
   static bool HasVFAdjacency()   {   return true; }
   static bool HasVFAdjacencyOcf()   {assert(!T::HasVFAdjacencyOcf()); return true; }
@@ -421,7 +421,7 @@ public:
   } ;
 
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){IMark() = leftF.cIMark(); T::ImportLocal(leftF);}
+	void ImportLocal(const LeftF & leftF){IMark() = leftF.IMark(); T::ImportLocal(leftF);}
   static bool HasFaceMark()   { return true; }
   static bool HasFaceMarkOcf()   { return true; }
   inline void InitIMark()    { IMark() = 0; }
@@ -443,7 +443,7 @@ public:
  	template <class LeftV>
 	void ImportLocal(const LeftV & leftV){ 
 (*this).Base().CuV[(*this).Index()][0] = leftV.cKh();
-(*this).Base().CuV[(*this).Index()][1] = leftV.cKg(); TT::ImporLocal(leftV);}
+(*this).Base().CuV[(*this).Index()][1] = leftV.cKg(); TT::ImportLocal(leftV);}
 
 	static bool HasCurvatureOcf()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureOcf"));TT::Name(name);}
