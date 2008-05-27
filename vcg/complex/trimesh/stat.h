@@ -81,6 +81,19 @@ class Stat
         return minmax;
       }
 
+			static ScalarType ComputeMeshArea(MeshType & m)
+			{
+				ScalarType area=0;
+				
+				FaceIterator fi;
+        for(fi = m.face.begin(); fi != m.face.end(); ++fi)
+						if(!(*fi).IsD()) 
+								area += DoubleArea(*fi);
+						
+				return area/ScalarType(2.0);
+			}
+			
+			
       static void ComputePerVertexQualityHistogram( MeshType & m, Histogramf &h)    // V1.0
       {
 				VertexIterator vi;
