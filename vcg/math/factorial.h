@@ -269,7 +269,7 @@ template <> struct MAX_FACTORIAL<long double> 	{enum {value = 170};};
 
 
 template <typename ScalarType>
-ScalarType factorial(unsigned i)
+ScalarType Factorial(unsigned i)
 {
 	assert (i <= MAX_FACTORIAL<ScalarType>::value );
 	return factorial_table<ScalarType>(i);
