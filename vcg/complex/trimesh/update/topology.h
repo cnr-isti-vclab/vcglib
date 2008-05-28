@@ -93,10 +93,11 @@ Initial commit
 #include <vcg/simplex/face/pos.h>
 namespace vcg {
 namespace tri {
-/** \addtogroup trimesh */
-/*@{*/
-/** Generation of per-vertex and per-face topological information.
-**/
+/// \ingroup trimesh 
+
+/// \headerfile topology.h vcg/complex/trimesh/update/topology.h
+
+/// \brief Generation of per-vertex and per-face topological information.
 
 template <class UpdateMeshType>
 class UpdateTopology
@@ -112,9 +113,13 @@ typedef typename MeshType::FacePointer    FacePointer;
 typedef typename MeshType::FaceIterator   FaceIterator;
 
 
+/// \headerfile topology.h vcg/complex/trimesh/update/topology.h
 
-/// Auxiliairy data structure for computing face face adjacency information. 
-// It identifies and edge storing two vertex pointer and a face pointer where it belong.
+/// \brief Auxiliairy data structure for computing face face adjacency information. 
+/** 
+It identifies and edge storing two vertex pointer and a face pointer where it belong.
+*/
+
 class PEdge
 {
 public:
@@ -170,8 +175,7 @@ static void FillEdgeVector(MeshType &m, std::vector<PEdge> &e)
 				assert(p==e.end());
 }
 
-/** Update the Face-Face topological relation by allowing to retrieve for each face what other faces shares their edges.
-*/
+/// \brief Update the Face-Face topological relation by allowing to retrieve for each face what other faces shares their edges.
 static void FaceFace(MeshType &m)
 {
   if(!m.HasFFTopology()) return;		
@@ -215,8 +219,11 @@ static void FaceFace(MeshType &m)
 }
 
 
-/** Update the Vertex-Face topological relation by allowing to retrieve for each vertex the list of faces sharing this vertex..
+/// \brief Update the Vertex-Face topological relation.
+/** 
+The function allows to retrieve for each vertex the list of faces sharing this vertex.
 */
+
 static void VertexFace(MeshType &m)
 {
   if(!m.HasVFTopology()) return;		
@@ -244,9 +251,13 @@ static void VertexFace(MeshType &m)
 }
 
 
+/// \headerfile topology.h vcg/complex/trimesh/update/topology.h
 
-/// Auxiliairy data structure for computing face face adjacency information. 
-// It identifies and edge storing two vertex pointer and a face pointer where it belong.
+/// \brief Auxiliairy data structure for computing face face adjacency information. 
+/** 
+It identifies and edge storing two vertex pointer and a face pointer where it belong.
+*/
+
 class PEdgeTex
 {
 public:
@@ -290,8 +301,12 @@ inline bool operator != ( const PEdgeTex & pe ) const
 };
 
 
-/** Update the Face-Face topological relation by allowing to retrieve for each face what other faces shares their edges.
+/// \brief Update the Face-Face topological relation
+
+/** 
+The function allows to retrieve for each face what other faces shares their edges.
 */
+
 static void FaceFaceFromTexCoord(MeshType &m)
 {
 //  assert(HasFFTopology(m));
@@ -352,7 +367,7 @@ static void FaceFaceFromTexCoord(MeshType &m)
 
 
 
-///test correctness of VFtopology
+/// \brief Test correctness of VFtopology
 static void TestVertexFace(MeshType &m)
 {
 	if(!m.HasVFTopology()) return;		
@@ -379,7 +394,7 @@ static void TestVertexFace(MeshType &m)
 	}
 }
 
-///test correctness of FFtopology
+/// \brief Test correctness of FFtopology
 static void TestFaceFace(MeshType &m)
 {
 	if(!m.HasFFTopology()) return;		
@@ -413,7 +428,6 @@ static void TestFaceFace(MeshType &m)
 
 }; // end class
 
-/*@}*/
 }	// End namespace
 }	// End namespace
 
