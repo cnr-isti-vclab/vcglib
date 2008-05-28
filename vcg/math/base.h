@@ -158,6 +158,10 @@ namespace math {
 #define M_PI 3.14159265358979323846
 #endif
 
+#ifndef SQRT_TWO
+#define SQRT_TWO 1.4142135623730950488
+#endif
+	
 template <class SCALAR> 
 inline SCALAR  Clamp( const SCALAR & val, const SCALAR& minval, const SCALAR& maxval)
 {
