@@ -344,7 +344,15 @@ public:
     return (*this).Base().AV[(*this).Index()]._zp; 
   }
 	template <class LeftV>
-	void ImportLocal(const LeftV & leftV){VFp() = NULL; VFi() = -1; T::ImportLocal(leftV);}
+	void ImportLocal(const LeftV & leftV) 
+	{
+		if((*this).Base().VFAdjacencyEnabled) // init the data only if they are enabled!
+			{ 
+				VFp() = NULL; 
+				VFi() = -1; 
+			} 
+		T::ImportLocal(leftV);
+	}
 
   static bool HasVFAdjacency()   {   return true; }
   static bool HasVFAdjacencyOcf()   {assert(!T::HasVFAdjacencyOcf()); return true; }
@@ -383,9 +391,15 @@ template <class A, class T> class ColorOcf: public T {
 public:
   typedef A ColorType;
   ColorType &C() { assert((*this).Base().NormalEnabled); return (*this).Base().CV[(*this).Index()]; }
-  const ColorType &cC() const { assert((*this).Base().NormalEnabled); return (*this).Base().CV[(*this).Index()]; }
+  const ColorType &cC() const { assert((*this).Base().ColorEnabled); return (*this).Base().CV[(*this).Index()]; }
 	template <class LeftV>
-	void ImportLocal(const LeftV & leftV){ C() = leftV.cC(); T::ImporLocal(leftV);}
+	void ImportLocal(const LeftV & leftV)
+		{			
+			if((*this).Base().ColorEnabled && leftV.Base().ColorEnabled ) // copy the data only if they are enabled in both vertices
+					C() = leftV.cC(); 
+			T::ImporLocal(leftV);
+		}
+	
   static bool HasColor()   { return true; }
   static bool HasColorOcf()   { assert(!T::HasColorOcf()); return true; }
 };
@@ -399,7 +413,12 @@ public:
   typedef A QualityType;
   QualityType &Q() { assert((*this).Base().QualityEnabled); return (*this).Base().QV[(*this).Index()]; }
 	template <class LeftV>
-	void ImportLocal(const LeftV & leftV){ Q() = leftV.cQ(); T::ImporLocal(leftV);}
+	void ImportLocal(const LeftV & leftV)
+		{ 
+			if((*this).Base().QualityEnabled && leftV.Base().QualityEnabled ) // copy the data only if they are enabled in both vertices
+						Q() = leftV.cQ();
+			T::ImporLocal(leftV);
+		}
   static bool HasQuality()   { return true; }
   static bool HasQualityOcf()   { assert(!T::HasQualityOcf()); return true; }
 };
@@ -420,8 +439,13 @@ public:
     return (*this).Base().MV[(*this).Index()]; 
   } ;
 
-	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){IMark() = leftF.IMark(); T::ImportLocal(leftF);}
+	template <class LeftV>
+	void ImportLocal(const LeftV & leftV)
+	{
+		if((*this).Base().MarkEnabled && leftV.Base().MarkEnabled ) // copy the data only if they are enabled in both vertices
+				IMark() = leftV.IMark(); 
+		T::ImportLocal(leftV);
+	}
   static bool HasFaceMark()   { return true; }
   static bool HasFaceMarkOcf()   { return true; }
   inline void InitIMark()    { IMark() = 0; }
@@ -442,8 +466,13 @@ public:
 
  	template <class LeftV>
 	void ImportLocal(const LeftV & leftV){ 
-(*this).Base().CuV[(*this).Index()][0] = leftV.cKh();
-(*this).Base().CuV[(*this).Index()][1] = leftV.cKg(); TT::ImportLocal(leftV);}
+			if((*this).Base().CurvatureEnabled && leftV.Base().CurvatureEnabled ) // copy the data only if they are enabled in both vertices
+				{
+					(*this).Base().CuV[(*this).Index()][0] = leftV.cKh();
+					(*this).Base().CuV[(*this).Index()][1] = leftV.cKg();
+				}
+			TT::ImportLocal(leftV);
+	}
 
 	static bool HasCurvatureOcf()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureOcf"));TT::Name(name);}
