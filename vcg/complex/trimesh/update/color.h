@@ -68,10 +68,15 @@ Changed name from plural to singular (normals->normal)
 
 namespace vcg {
 namespace tri {
-/** \addtogroup trimesh */
-/*@{*/
-/// Generation of per-vertex and per-face colors according to various strategy.
-/// This class is used to compute per face or per vertex color with respect to for example Border (UpdateColor::VertexBorderFlag), Selection (UpdateColor::FaceSelected), Quality .
+
+/// \ingroup trimesh 
+
+/// \headerfile color.h vcg/complex/trimesh/update/color.h
+
+/// \brief Generation of per-vertex and per-face colors according to various strategy.
+/** 
+This class is used to compute per face or per vertex color with respect to for example Border (UpdateColor::VertexBorderFlag), Selection (UpdateColor::FaceSelected), Quality .
+*/
 
 template <class UpdateMeshType>
 class UpdateColor
@@ -85,16 +90,18 @@ typedef typename UpdateMeshType::FaceType       FaceType;
 typedef typename UpdateMeshType::FacePointer    FacePointer;
 typedef typename UpdateMeshType::FaceIterator   FaceIterator;
 
-/** Color the vertexes of the mesh that are on the border
+/// \brief Color the vertexes of the mesh that are on the border
+
+/**
 It uses the information in the Vertex flags, and not any topology. 
 So it just require that you have correctly computed the flags;
 
-    vcg::tri::UpdateTopology<Mesh>::FaceFace(m.cm);
-    vcg::tri::UpdateFlags<Mesh>::FaceBorderFromFF(m.cm);
-    vcg::tri::UpdateFlags<Mesh>::VertexBorderFromFace (m.cm);
-    vcg::tri::UpdateColor<Mesh>::VertexBorderFlag(m.cm);
+   - vcg::tri::UpdateTopology<Mesh>::FaceFace(m.cm);
+   - vcg::tri::UpdateFlags<Mesh>::FaceBorderFromFF(m.cm);
+   - vcg::tri::UpdateFlags<Mesh>::VertexBorderFromFace (m.cm);
+   - vcg::tri::UpdateColor<Mesh>::VertexBorderFlag(m.cm);
 
-**/
+*/
 static void VertexBorderFlag( UpdateMeshType &m, Color4b BorderColor=Color4b::Blue, Color4b InternalColor=Color4b::White)
 {
 	typename UpdateMeshType::VertexIterator vi;
@@ -278,7 +285,7 @@ static void VertexQuality(UpdateMeshType &m)
 }
 
 };
-/*@}*/
+
 }// end namespace
 }// end namespace
 #endif

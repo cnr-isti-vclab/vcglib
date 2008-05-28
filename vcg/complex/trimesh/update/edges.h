@@ -45,10 +45,11 @@ created
 namespace vcg {
 namespace tri {
 
-/** \addtogroup trimesh */
-/*@{*/
+/// \ingroup trimesh 
 
-	/// This class is used to compute or update the precomputed data used to efficiently compute point-face distances..
+	/// \headerfile edges.h vcg/complex/trimesh/update/edges.h
+
+	/// \brief This class is used to compute or update the precomputed data used to efficiently compute point-face distances.
 	template <class ComputeMeshType>
 	class UpdateEdges
 	{

@@ -106,15 +106,18 @@ Initial commit
 namespace vcg {
 namespace tri {
 
-/** \addtogroup trimesh */
-/*@{*/
+/// \ingroup trimesh
 
-/// Management, updating and computation of per-vertex and per-face normals.
-/// This class is used to compute or update the normals that can be stored in the vertex or face component of a mesh.
+/// \headerfile normal.h vcg/complex/trimesh/update/normal.h
+
+/// \brief Management, updating and computation of per-vertex and per-face normals.
+/**
+This class is used to compute or update the normals that can be stored in the vertex or face component of a mesh.
+*/
+
 template <class ComputeMeshType>
 class UpdateNormals
 {
-
 public:
 typedef ComputeMeshType MeshType; 	
 typedef typename MeshType::VertexType     VertexType;
@@ -126,7 +129,8 @@ typedef typename MeshType::FaceType       FaceType;
 typedef typename MeshType::FacePointer    FacePointer;
 typedef typename MeshType::FaceIterator   FaceIterator;
 
-/// Calculates the face normal (if stored in the current face type)
+/// \brief Calculates the face normal (if stored in the current face type)
+
 static void PerFace(ComputeMeshType &m)
 {
 	if( !m.HasPerFaceNormal()) return;
@@ -135,8 +139,10 @@ static void PerFace(ComputeMeshType &m)
 		if( !(*f).IsD() )	face::ComputeNormal(*f);
 }
 
-/// Calculates the vertex normal. Exploiting or current face normals
-/// The normal of a vertex v is the weigthed average of the normals of the faces incident on v.
+/// \brief Calculates the vertex normal. Exploiting or current face normals.
+/**
+	The normal of a vertex v is the weigthed average of the normals of the faces incident on v.
+*/
 static void PerVertexFromCurrentFaceNormal(ComputeMeshType &m)
 {
  if( !m.HasPerVertexNormal()) return;
@@ -157,8 +163,11 @@ static void PerVertexFromCurrentFaceNormal(ComputeMeshType &m)
 }
 
 
-/// Calculates the vertex normal. Without exploiting or touching face normals
-/// The normal of a vertex v is the weigthed average of the normals of the faces incident on v.
+///  \brief Calculates the vertex normal. Without exploiting or touching face normals.
+/**
+ The normal of a vertex v is the weigthed average of the normals of the faces incident on v.
+ */
+ 
 static void PerVertex(ComputeMeshType &m)
 {
  if( !m.HasPerVertexNormal()) return;
@@ -183,8 +192,11 @@ static void PerVertex(ComputeMeshType &m)
 }
 
 
-/// Calculates both vertex and face normals.
-/// The normal of a vertex v is the weigthed average of the normals of the faces incident on v.
+/// \brief Calculates both vertex and face normals.
+/**
+ The normal of a vertex v is the weigthed average of the normals of the faces incident on v.
+*/
+
 static void PerVertexPerFace(ComputeMeshType &m)
 {
  if( !m.HasPerVertexNormal() || !m.HasPerFaceNormal()) return;
@@ -206,15 +218,18 @@ static void PerVertexPerFace(ComputeMeshType &m)
    }
 }
 
-/// Calculates both vertex and face normals.
-/// The normal of a vertex v is the weigthed average of the normals of the faces incident on v.
+/// \brief Calculates both vertex and face normals.
+/**
+ The normal of a vertex v is the weigthed average of the normals of the faces incident on v.
+*/
+
 static void PerVertexNormalizedPerFace(ComputeMeshType &m)
 {
 	PerVertexPerFace(m);
 	NormalizeVertex(m);
 }
 
-/// Normalize the lenght of the face normals
+/// \brief Normalize the lenght of the face normals.
 static void NormalizeVertex(ComputeMeshType &m)
 {
 	VertexIterator vi;
@@ -223,7 +238,7 @@ static void NormalizeVertex(ComputeMeshType &m)
 			(*vi).N().Normalize();
 }
 
-/// Normalize the lenght of the face normals
+/// \brief Normalize the lenght of the face normals.
 static void NormalizeFace(ComputeMeshType &m)
 {
 	FaceIterator fi;
@@ -291,7 +306,7 @@ static void PerFaceNormalized(ComputeMeshType &m)
 }
 
 
-/// Calculates the vertex normal
+/// \brief Calculates the vertex normal.
 static void PerVertexNormalized(ComputeMeshType &m)
 {
   if( !m.HasPerVertexNormal()) return;
@@ -301,7 +316,7 @@ static void PerVertexNormalized(ComputeMeshType &m)
      (*vi).N().Normalize();
 }
 
-/// multiply the vertex normals by the matrix passed. By default, the scale component is removed
+/// \brief Multiply the vertex normals by the matrix passed. By default, the scale component is removed.
 static void PerVertexMatrix(ComputeMeshType &m, const Matrix44<ScalarType> &mat, bool remove_scaling= true){
 	float scale;
 
@@ -321,9 +336,9 @@ static void PerVertexMatrix(ComputeMeshType &m, const Matrix44<ScalarType> &mat,
      (*vi).N()  = mat33*(*vi).N();
 }
 
-/// multiply the face normals by the matrix passed. By default, the scale component is removed
+/// \brief Multiply the face normals by the matrix passed. By default, the scale component is removed.
 static void PerFaceMatrix(ComputeMeshType &m, const Matrix44<ScalarType> &mat, bool remove_scaling= true){
-	float scale;
+	float scale; 
 
 	Matrix33<ScalarType> mat33(mat,3);
 

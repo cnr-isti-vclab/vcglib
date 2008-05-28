@@ -93,10 +93,15 @@ First working version!
 
 namespace vcg {
 namespace tri {
-/** \addtogroup trimesh */
-/*@{*/
-/// Management, updating and computation of per-vertex and per-face flags (like border flags).
-/// This class is used to compute or update some of the flags that can be stored in the mesh components. For now just Border flags (e.g. the flag that tells if a given edge of a face belong to a border of the mesh or not).
+/// \ingroup trimesh 
+
+/// \headerfile flag.h vcg/complex/trimesh/update/flag.h
+
+/// \brief Management, updating and computation of per-vertex and per-face flags (like border flags).
+
+/** 
+This class is used to compute or update some of the flags that can be stored in the mesh components. For now just Border flags (e.g. the flag that tells if a given edge of a face belong to a border of the mesh or not).
+*/
 
 template <class UpdateMeshType>
 class UpdateFlags
@@ -112,8 +117,8 @@ typedef typename MeshType::FaceType       FaceType;
 typedef typename MeshType::FacePointer    FacePointer;
 typedef typename MeshType::FaceIterator   FaceIterator;
 
-/** Reset all the mesh flags (both vertexes and faces) setting everithing to zero (the default value for flags)
-**/
+/// \brief Reset all the mesh flags (both vertexes and faces) setting everithing to zero (the default value for flags)
+
 static void Clear(MeshType &m)
 {
   assert(HasPerFaceFlags(m));
@@ -137,9 +142,11 @@ static void VertexClearV(MeshType &m) { VertexClear(m,VertexType::VISITED);}
 static void VertexClearB(MeshType &m) { VertexClear(m,VertexType::BORDER);}
 
 
-/** Compute the border flags for the faces using the Face-Face Topology. 
-Obviously it assumes that the topology has been correctly computed (see: UpdateTopology::FaceFace )
-**/
+/// \brief Compute the border flags for the faces using the Face-Face Topology. 
+
+/**
+ \warning Obviously it assumes that the topology has been correctly computed (see: UpdateTopology::FaceFace )
+*/
 static void FaceBorderFromFF(MeshType &m)
 {
   assert(HasPerFaceFlags(m));
@@ -358,7 +365,6 @@ static void VertexBorderFromFace(MeshType &m)
 
 }; // end class
 
-/*@}*/
 }	// End namespace tri
 }	// End namespace vcg
 

@@ -40,11 +40,15 @@ First Working Version
 namespace vcg {
 namespace tri {
 
-/** \addtogroup trimesh */
-/*@{*/
+/// \ingroup trimesh 
 
-/// Management, updating and computation of per-vertex and per-face normals.
-/// This class is used to compute or update the normals that can be stored in the vertex or face component of a mesh.
+/// \headerfile selection.h vcg/complex/trimesh/update/selection.h
+
+/// \brief Management, updating and computation of per-vertex and per-face normals.
+/** 
+This class is used to compute or update the normals that can be stored in the vertex or face component of a mesh.
+*/
+
 template <class ComputeMeshType>
 class UpdateSelection
 {
@@ -58,7 +62,6 @@ typedef typename MeshType::FaceType       FaceType;
 typedef typename MeshType::FacePointer    FacePointer;
 typedef typename MeshType::FaceIterator   FaceIterator;
 
-/// 
 static size_t AllVertex(MeshType &m)
 {
 	VertexIterator vi;
@@ -147,7 +150,7 @@ static size_t InvertVertex(MeshType &m)
   return selCnt;
 } 
 
-// Select all the vertices that are touched by at least a single selected faces
+/// \brief Select all the vertices that are touched by at least a single selected faces
 static size_t VertexFromFaceLoose(MeshType &m)
 {
   size_t selCnt=0;
@@ -163,10 +166,10 @@ static size_t VertexFromFaceLoose(MeshType &m)
   return selCnt;
 }
 
-// Select ONLY the vertices that are touched ONLY by selected faces
-// or in other words all the vertices having all the faces incident on them selected.
-// Ambiguity in the def: isolated vertices should be selected? NO.
-//
+/// \brief Select ONLY the vertices that are touched ONLY by selected faces
+/** In other words all the vertices having all the faces incident on them selected.
+ \warning Isolated vertices will not selected.
+*/
 static size_t VertexFromFaceStrict(MeshType &m)
 {
   size_t selCnt=0;
@@ -182,7 +185,7 @@ static size_t VertexFromFaceStrict(MeshType &m)
   return CountVertex(m);
 }
 
-// Select ONLY the faces with ALL the vertices selected 
+/// \brief Select ONLY the faces with ALL the vertices selected 
 static size_t FaceFromVertexStrict(MeshType &m)
 {
   size_t selCnt=0;
@@ -233,8 +236,7 @@ static size_t FaceFromBorder(MeshType &m)
     }
   return selCnt;
 } 
-// Select ONLY the vertices whose quality is in the specified closed interval. 
-// 
+/// \brief Select ONLY the vertices whose quality is in the specified closed interval. 
 static size_t VertexFromQualityRange(MeshType &m,float minq, float maxq)
 {
   size_t selCnt=0;

@@ -37,10 +37,11 @@ Initial commit
 namespace vcg {
 namespace tri {
 
-/** \addtogroup trimesh */
-/*@{*/
+/// \ingroup trimesh 
 
-/// This class is used to update vertex position according to a transformation matrix.
+/// \headerfile position.h vcg/complex/trimesh/update/position.h
+
+/// \brief This class is used to update vertex position according to a transformation matrix.
 template <class ComputeMeshType>
 class UpdatePosition
 {
@@ -55,7 +56,7 @@ typedef typename MeshType::FaceType       FaceType;
 typedef typename MeshType::FacePointer    FacePointer;
 typedef typename MeshType::FaceIterator   FaceIterator;
 
-/// Multiply 
+/// \brief Multiply 
 static void Matrix(ComputeMeshType &m, const Matrix44<ScalarType> &M, bool update_also_normals = true)
 {
 	VertexIterator vi;

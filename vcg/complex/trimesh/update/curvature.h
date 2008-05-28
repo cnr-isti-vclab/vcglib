@@ -66,11 +66,15 @@ the vertex
 namespace vcg {
 namespace tri {
 
-/** \addtogroup trimesh */
-/*@{*/
+/// \ingroup trimesh 
 
-/// Management, updating and computation of per-vertex and per-face normals.
-/// This class is used to compute or update the normals that can be stored in the vertex or face component of a mesh.
+/// \headerfile curvature.h vcg/complex/trimesh/update/curvature.h
+
+/// \brief Management, updating and computation of per-vertex and per-face normals.
+/** 
+This class is used to compute or update the normals that can be stored in the vertex or face component of a mesh.
+*/
+
 template <class MeshType>
 class UpdateCurvature
 {
@@ -95,17 +99,10 @@ private:
 			bool isBorder;
 		};
 public:
-	/*
-	Compute principal direction and magniuto of curvature as describe in the paper:
-	@InProceedings{bb33922,
-  author =	"G. Taubin",
-  title =	"Estimating the Tensor of Curvature of a Surface from a
-		 Polyhedral Approximation",
-  booktitle =	"International Conference on Computer Vision",
-  year = 	"1995",
-  pages =	"902--907",
-  URL =  	"http://dx.doi.org/10.1109/ICCV.1995.466840",
-  bibsource =	"http://www.visionbib.com/bibliography/describe440.html#TT32253",
+	/// \brief Compute principal direction and magniuto of curvature.
+	
+	/** 
+	 Based on the paper  <a href="http://mesh.caltech.edu/taubin/publications/taubin-iccv95b.pdf">  <em> "Estimating the Tensor of Curvature of a Surface from a Polyhedral Approximation" </em> </a>
 	*/
 		static void PrincipalDirections(MeshType &m) {
 
@@ -284,9 +281,12 @@ public:
   };
 
 
- /** computes the discrete gaussian curvature as proposed in 
-Discrete Differential-Geometry Operators for Triangulated 2-Manifolds Mark Meyer,
- Mathieu Desbrun, Peter Schroder, Alan H. Barr VisMath '02, Berlin
+ /// \brief Computes the discrete gaussian curvature. 
+ 
+/** For further details, please, refer to: \n
+
+- <em> Discrete Differential-Geometry Operators for Triangulated 2-Manifolds Mark Meyer,
+ Mathieu Desbrun, Peter Schroder, Alan H. Barr VisMath '02, Berlin </em>
 */   
 	static void MeanAndGaussian(MeshType & m) 
     {
@@ -395,14 +395,14 @@ Discrete Differential-Geometry Operators for Triangulated 2-Manifolds Mark Meyer
     }
 	
 	
-	/* Update the mean and the gaussian curvature of a vertex, using the
-	 * VF adiacency to walk around the vertex. Return the voronoi area 
-	 * around the vertex.
-	 * if norm == true, the mean and the gaussian curvature are normalized
-	 * based on the paper
-	 * "optimizing 3d triangulations using discrete curvature analysis"
-	 * http://www2.in.tu-clausthal.de/~hormann/papers/Dyn.2001.OTU.pdf 
-	 * */
+	/// \brief Update the mean and the gaussian curvature of a vertex.
+	
+	/**
+	The function uses the VF adiacency to walk around the vertex. 
+	\return It will return the voronoi area around the vertex.  If (norm == true) the mean and the gaussian curvature are normalized.
+	 Based on the paper  <a href="http://www2.in.tu-clausthal.de/~hormann/papers/Dyn.2001.OTU.pdf">  <em> "Optimizing 3d triangulations using discrete curvature analysis" </em> </a>
+	  */
+	  
 	static float VertexCurvature(VertexPointer v, bool norm = true)
 	{
 		// VFAdjacency required!

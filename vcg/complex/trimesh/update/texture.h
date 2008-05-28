@@ -34,10 +34,11 @@ $Log: position.h,v $
 namespace vcg {
 namespace tri {
 
-/** \addtogroup trimesh */
-/*@{*/
+/// \ingroup trimesh 
 
-/// This class is used to update vertex position according to a transformation matrix.
+/// \headerfile texture.h vcg/complex/trimesh/update/texture.h
+
+/// \brief This class is used to update vertex position according to a transformation matrix.
 template <class ComputeMeshType>
 class UpdateTexture
 {

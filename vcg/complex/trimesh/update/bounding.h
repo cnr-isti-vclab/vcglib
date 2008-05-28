@@ -54,11 +54,15 @@ Initial commit
 namespace vcg {
 namespace tri {
 
-/** \addtogroup trimesh */
-/*@{*/
+/// \ingroup trimesh 
 
-/// Management, updating and computation of per-vertex and per-face normals.
-/// This class is used to compute or update the normals that can be stored in the vertex or face component of a mesh.
+/// \headerfile bounding.h vcg/complex/trimesh/update/bounding.h
+
+/// \brief Management, updating and computation of per-vertex and per-face normals.
+/** 
+This class is used to compute or update the normals that can be stored in the vertex or face component of a mesh.
+*/
+
 template <class ComputeMeshType>
 class UpdateBounding
 {
@@ -69,8 +73,8 @@ typedef typename MeshType::VertexType     VertexType;
 typedef typename MeshType::VertexPointer  VertexPointer;
 typedef typename MeshType::VertexIterator VertexIterator;
 
-/// Calculates the bounding box of the <ComputeMeshType> m
-/// 
+/// \brief Calculates the bounding box of the \code <ComputeMeshType> \endcode m
+
 static void Box(ComputeMeshType &m)
 {
 	m.bbox.SetNull();
