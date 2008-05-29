@@ -180,6 +180,44 @@ static void Montecarlo(MetroMesh & m, VertexSampler &ps,int sampleNum)
     }
 }
 
+static ScalarType WeightedArea(FaceType f)
+{
+	ScalarType averageQ = ( f.V(0)->Q() + f.V(1)->Q() + f.V(2)->Q() ) /3.0;
+	return DoubleArea(f)*averageQ/2.0;
+}
+
+/// Compute a sampling of the surface that is weighted by the quality
+/// the area of each face is multiplied by the average of the quality of the vertices. 
+/// So the a face with a zero quality on all its vertices is never sampled and a face with average quality 2 get twice the samples of a face with the same area but with an average quality of 1;
+static void WeightedMontecarlo(MetroMesh & m, VertexSampler &ps, int sampleNum)
+{
+	assert(tri::HasPerVertexQuality(m));
+	
+	ScalarType weightedArea = 0;
+	FaceIterator fi;
+	for(fi = m.face.begin(); fi != m.face.end(); ++fi)
+			if(!(*fi).IsD()) 
+						weightedArea += WeightedArea(*fi);
+	
+	ScalarType samplePerAreaUnit = sampleNum/weightedArea;
+	qDebug("samplePerAreaUnit %f",samplePerAreaUnit);
+	// Montecarlo sampling.
+	double  floatSampleNum = 0.0;
+	for(fi=m.face.begin(); fi != m.face.end(); fi++)
+		if(!(*fi).IsD())
+    {
+			// compute # samples in the current face (taking into account of the remainders)
+			floatSampleNum += WeightedArea(*fi) * samplePerAreaUnit;
+			int faceSampleNum   = (int) floatSampleNum;
+			
+			// for every sample p_i in T...
+			for(int i=0; i < faceSampleNum; i++)
+					ps.AddFace(*fi,RandomBaricentric());
+							
+			floatSampleNum -= (double) faceSampleNum; 
+    }
+}
+
 };
 
 } // end namespace tri
