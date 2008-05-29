@@ -1,4 +1,3 @@
-#pragma warning(disable : 4267)
 #include <stdio.h>
 #include <vector>
 #include<vcg/math/base.h>
@@ -6,24 +5,40 @@
 #include<vcg/space/point4.h>
 #include<vcg/space/color4.h>
 #include<vcg/math/matrix44.h>
-#include<vcg/simplex/vertex/with/vn.h>
-#include<vcg/simplex/vertex/with/vcvn.h>
-#include<vcg/simplex/face/with/fn.h>
-#include<vcg/simplex/face/pos.h>
+
+#include <vcg/simplex/vertexplus/base.h>
+#include <vcg/simplex/vertexplus/component.h>
+#include <vcg/simplex/faceplus/base.h>
+#include <vcg/simplex/faceplus/component.h>
+#include <vcg/simplex/faceplus/component_rt.h>
+
 #include<vcg/complex/trimesh/base.h>
 #include<vcg/complex/trimesh/create/platonic.h>
 #include<vcg/complex/trimesh/update/flag.h>
 #include<vcg/complex/trimesh/update/normal.h>
 #include<vcg/complex/trimesh/update/color.h>
 #include<vcg/complex/trimesh/clean.h>
+
 #include<wrap/io_trimesh/import_ply.h>
 #include<wrap/io_trimesh/export_ply.h>
 
 using namespace vcg;
+
+class MyEdge;
+class MyFaceC;
+class MyFace;
+class MyVertexC   : public VertexSimp2<MyVertexC,MyEdge,MyFaceC,vert::Coord3f,vert::Qualityf,vert::Normal3f,vert::BitFlags> {};
+class MyFaceC     : public FaceSimp2< MyVertexC,MyEdge,MyFaceC,face::VertexRef, face::Normal3f,face::BitFlags> {};
+class MyMeshC     : public tri::TriMesh< std::vector<MyVertexC>, std::vector<MyFaceC> > {};
+
+class MyVertex   : public VertexSimp2<MyVertex,MyEdge,MyFace,vert::Coord3f,vert::Qualityf,vert::Normal3f,vert::BitFlags> {};
+class MyFace     : public FaceSimp2<  MyVertex,MyEdge,MyFace,face::VertexRef, face::Normal3f,face::BitFlags> {};
+class MyMesh     : public tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace> > {};
+
 using namespace std;
 using namespace tri;
 
-
+/*
   class MyEdge;
   class MyFace;
   class MyEdgeC;
@@ -36,7 +51,7 @@ using namespace tri;
   class MyVertex:public VertexVN<float,MyEdge,MyFace>{};
   class MyFace :public FaceFN<MyVertex,MyEdge,MyFace>{};
   class MyMesh: public tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace > >{};
-
+*/
 
 //-------------------------------------------------------
 
@@ -415,13 +430,13 @@ int readmesh(FILE* fp)
 
 		if(hascolor && savecolor)
 		{
- 		vcg::tri::UpdateNormals<MyMeshC>::PerFaceNormalized(currentmeshC);
+ 		tri::UpdateNormals<MyMeshC>::PerFaceNormalized(currentmeshC);
 		for(fiC = currentmeshC.face.begin(); fiC != currentmeshC.face.end(); fiC++)
 		if(!(*fiC).IsD())
 			{
 				raggio = -((*fiC).V(0)->P() + (*fiC).V(1)->P() + (*fiC).V(2)->P()) / 3.0;
 				raggio.Normalize();
-				if((raggio * (*fiC).N()) < limit)
+				if(((*fiC).N() * raggio) < limit)
 				{
 				(*fiC).SetD();
 				currentmeshC.fn--;
@@ -484,7 +499,7 @@ int readmesh(FILE* fp)
 }
 
 // save each mesh in a separate file
-dounpack(FILE* fp)
+void dounpack(FILE* fp)
 {
  FILE* outf;
  char namef[128];
@@ -786,7 +801,7 @@ int main(int argc, char *argv[])
 	 {
 	  if(hascolor && savecolor)
 	  {
-	   int plyMask=vcg::ply::PLYMask::PM_VERTCOLOR;
+	   int plyMask=tri::io::Mask::IOM_VERTCOLOR;
        tri::io::ExporterPLY<MyMeshC>::Save(currentmeshC,filename, plyMask);
 	  }
 	  else
