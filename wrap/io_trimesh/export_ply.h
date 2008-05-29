@@ -425,7 +425,7 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 
 	for(j=0,vi=m.vert.begin();vi!=m.vert.end();++vi){
 		vp=&(*vi);
-		indices[j] = j;
+		indices[vi] = j;
 
 		if( !m.HasPerVertexFlags() || !vp->IsD() )
 		{
