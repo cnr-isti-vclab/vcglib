@@ -27,11 +27,11 @@ using namespace vcg;
 class MyEdge;
 class MyFaceC;
 class MyFace;
-class MyVertexC   : public VertexSimp2<MyVertexC,MyEdge,MyFaceC,vert::Coord3f,vert::Qualityf,vert::Normal3f,vert::BitFlags> {};
+class MyVertexC   : public VertexSimp2<MyVertexC,MyEdge,MyFaceC,vert::Coord3f,vert::Color4b,vert::Qualityf,vert::Normal3f,vert::BitFlags> {};
 class MyFaceC     : public FaceSimp2< MyVertexC,MyEdge,MyFaceC,face::VertexRef, face::Normal3f,face::BitFlags> {};
 class MyMeshC     : public tri::TriMesh< std::vector<MyVertexC>, std::vector<MyFaceC> > {};
 
-class MyVertex   : public VertexSimp2<MyVertex,MyEdge,MyFace,vert::Coord3f,vert::Qualityf,vert::Normal3f,vert::BitFlags> {};
+class MyVertex   : public VertexSimp2<MyVertex,MyEdge,MyFace,vert::Coord3f,vert::Normal3f,vert::BitFlags> {};
 class MyFace     : public FaceSimp2<  MyVertex,MyEdge,MyFace,face::VertexRef, face::Normal3f,face::BitFlags> {};
 class MyMesh     : public tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace> > {};
 
@@ -173,6 +173,7 @@ int readmesh(FILE* fp)
 	 (*viC).P()[0]=xx;
 	 (*viC).P()[1]=yy;
 	 (*viC).P()[2]=zz;
+	 (*viC).Q()=rf;
 	 (*viC).C()[0]=rr;
 	 (*viC).C()[1]=gg;
 	 (*viC).C()[2]=bb;
@@ -201,7 +202,8 @@ int readmesh(FILE* fp)
 	  (*viC).P()[0]=xx;
 	  (*viC).P()[1]=yy;
 	  (*viC).P()[2]=zz;
-	  (*viC).C()[0]=rr;
+	  (*viC).Q()=rf;
+		(*viC).C()[0]=rr;
 	  (*viC).C()[1]=gg;
 	  (*viC).C()[2]=bb;
 	  viC++;
@@ -530,7 +532,7 @@ void dounpack(FILE* fp)
  while(!feof(fp))
  {
 
-     sprintf(namef,".\\range%03i.ptx",rnum++);
+     sprintf(namef,"range%03i.ptx",rnum++);
 	 outf = fopen(namef,"w");
 
 	 // write first integer
@@ -780,7 +782,7 @@ int main(int argc, char *argv[])
 	  FILE* outf;
 	  char cbuf;
 
-	  outf = fopen(".\\dump.txt","w");
+	  outf = fopen("dump.txt","w");
 
 	  for(int dit=0; dit<todump; dit++)
 	  {
@@ -796,12 +798,12 @@ int main(int argc, char *argv[])
 	 printf("reading ");
      readmesh(fp);
 
-     sprintf(filename,".\\%s_%03i.ply",modelname,nummeshes);
+     sprintf(filename,"%s_%03i.ply",modelname,nummeshes);
      if(!feof(fp))
 	 {
 	  if(hascolor && savecolor)
 	  {
-	   int plyMask=tri::io::Mask::IOM_VERTCOLOR;
+	   int plyMask=tri::io::Mask::IOM_VERTCOLOR | tri::io::Mask::IOM_VERTQUALITY;
        tri::io::ExporterPLY<MyMeshC>::Save(currentmeshC,filename, plyMask);
 	  }
 	  else
