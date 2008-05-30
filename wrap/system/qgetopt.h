@@ -37,7 +37,7 @@ class GetOpt {
   QString appname;          //application name
   QString help;             //help text
   QStringList args;         //original argument vector
-  QStringList arguments;    //arbitrary long list of arguments are store here if unlimitedArgs is true
+  QStringList arguments;    //arbitrary long list of arguments if unlimitedArgs is true
 
   GetOpt(): unlimitedArgs(false) {}
   GetOpt(int argc, char *argv[] );
@@ -56,16 +56,17 @@ class GetOpt {
   void addOptionalArgument(const QString &name, const QString &description, QString *v);
  
   //allow an unlimited number of optional arguments
-  void allowUnlimitedArguments(bool allow) {
-    unlimitedArgs = allow;
-  }
+  void allowUnlimitedArguments(bool allow) { unlimitedArgs = allow; }
+
   //set help if someone uses -h or --help option
   void setHelp(QString &_help) { help = _help; }
-  
+
+  //parses the command line and fill variables or print an error message and exits
   void parse();
 
   //return usage string
   QString usage();
+
   //return argv[0]
   QString &applicationName();
 
@@ -76,6 +77,7 @@ class GetOpt {
   bool findOption(char c, Option &option);
   //return any named argument
   bool findArg(const QString &name, Option &option);
+  //split desc into n pieces of the right length TODO: check for newlines also
   QString formatDesc(QString desc, int len);
 };
 
