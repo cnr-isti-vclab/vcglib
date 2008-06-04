@@ -62,6 +62,84 @@ void AllVertex(MetroMesh & m, VertexSampler &ps)
 								ps.AddVert(*vi);
 						}
 }
+
+/// Sample the vertices in a weighted way. Each vertex has a probabiltiy of being chosen
+/// that is proportional to its quality. 
+/// It assumes that you are asking a number of vertices smaller than nv;
+/// Algorithm: 
+/// 1) normalize quality so that sum q == 1;
+/// 2) shuffle vertices.
+/// 3) for each vertices choose it if rand > thr;
+ 
+static void VertexWeighted(MetroMesh & m, VertexSampler &ps, int sampleNum)
+{
+	ScalarType qSum = 0;
+	VertexIterator vi;
+	for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+			if(!(*vi).IsD()) 
+						qSum += (*vi).Q();
+	  
+	ScalarType samplePerUnit = sampleNum/qSum;
+	ScalarType floatSampleNum =0;
+	std::vector<VertexPointer> vertVec;
+	FillAndShuffleVertexPointVector(m,vertVec);
+
+	std::vector<bool> vertUsed(m.vn,false);
+	
+	int i=0; int cnt=0;
+	while(cnt < sampleNum)
+		{
+			if(vertUsed[i])
+				{
+						floatSampleNum += vertVec[i]->Q() * samplePerUnit;
+						int vertSampleNum   = (int) floatSampleNum;
+						floatSampleNum -= (float) vertSampleNum; 
+						
+						// for every sample p_i in T...
+						if(vertSampleNum > 1)
+							{
+								ps.AddVert(*vertVec[i]);
+								cnt++;
+								vertUsed[i]=true;
+							}
+				}
+			i = (i+1)%m.vn;				
+		}
+}
+
+/// Sample the vertices in a uniform way. Each vertex has a probabiltiy of being chosen
+/// that is proportional to the area it represent. 
+static void VertexAreaUniform(MetroMesh & m, VertexSampler &ps, int sampleNum)
+{
+	VertexIterator vi;
+	for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+		if(!(*vi).IsD()) 
+						(*vi).Q() = 0;
+
+	FaceIterator fi;
+	for(fi = m.face.begin(); fi != m.face.end(); ++fi)
+		if(!(*fi).IsD()) 
+		{
+			ScalarType areaThird = DoubleArea(*fi)/6.0;
+			(*fi).V(0).Q()+=areaThird;
+			(*fi).V(1).Q()+=areaThird;
+			(*fi).V(2).Q()+=areaThird;
+		}
+	
+	VertexWeighted(m,ps,sampleNum);
+}
+
+static void	FillAndShuffleVertexPointVector(MetroMesh & m, std::vector<VertexPointer> vertVec)
+{
+	VertexIterator vi;
+	for(vi=m.vert.begin();vi!=m.vert.end();++vi) 
+				if(!(*vi).IsD())	vertVec.push_back(&*vi);
+
+	assert(vertVec.size()=m.vn);
+	
+	std::random_shuffle(vertVec.begin(),vertVec.end());
+}
+/// Sample the vertices in a uniform way. Each vertex has the same probabiltiy of being chosen. 
 static void VertexUniform(MetroMesh & m, VertexSampler &ps, int sampleNum)
 {
 	if(sampleNum>=m.vn) 
@@ -71,14 +149,7 @@ static void VertexUniform(MetroMesh & m, VertexSampler &ps, int sampleNum)
 	} 
 	
 	std::vector<VertexPointer> vertVec;
-	
-	VertexIterator vi;
-	for(vi=m.vert.begin();vi!=m.vert.end();++vi) 
-				if(!(*vi).IsD())	vertVec.push_back(&*vi);
-
-	assert(vertVec.size()=m.vn);
-	
-	std::random_shuffle(vertVec.begin(),vertVec.end());
+	FillAndShuffleVertexPointVector(m,vertVec);
 	
 	for(int i =0; i< sampleNum; ++i)
 		ps.AddVert(*vertVec[i]);
