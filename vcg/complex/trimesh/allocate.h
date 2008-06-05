@@ -169,6 +169,7 @@ Initial commit
 #define __VCGLIB_TRIALLOCATOR
 
 #include <vector>
+#include <set>
 #include <assert.h>
 #include <vcg/container/simple_temporary_data.h>
 
