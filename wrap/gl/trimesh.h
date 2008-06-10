@@ -117,6 +117,7 @@ first draft: it includes glew !
 
 //#include <GL/glew.h>
 #include <wrap/gl/space.h>
+#include <wrap/gl/math.h>
 #include <vcg/space/color4.h>
 
 namespace vcg {
@@ -163,7 +164,8 @@ public:
 	};
 	enum HintParamf {
 		HNPCreaseAngle =0,	// crease angle in radians
-		HNPZTwist = 1		// Z offset used in Flatwire and hiddenline modality
+		HNPZTwist = 1,				// Z offset used in Flatwire and hiddenline modality
+		HNPPointSize = 2		// the point size used in point rendering
 	};
 
 	template<class MESH_TYPE>
@@ -218,7 +220,7 @@ public:
     
 		SetHintParamf(HNPCreaseAngle,float(M_PI/5));
 		SetHintParamf(HNPZTwist,0.00005f);
-
+		SetHintParamf(HNPPointSize,1.0f);
 	}
 
 	~GlTrimesh()
@@ -600,8 +602,10 @@ void DrawFill()
 
 }
 
+/// Basic Point drawing fucntion 
+// works also for mesh with deleted vertices
 template<NormalMode nm, ColorMode cm>
-void DrawPoints()
+void DrawPointsBase()
 {
 	typename MESH_TYPE::VertexIterator vi;
 	glBegin(GL_POINTS);
@@ -614,8 +618,59 @@ void DrawPoints()
 			glVertex((*vi).P());			
 	}
 	glEnd();
-}	
+}
 
+/// Utility function that computes in eyespace the current distance between the camera and the center of the bbox of the mesh
+double CameraDistance(){
+	Point3f res;
+	Matrix44f mm;
+	glGetv(GL_MODELVIEW_MATRIX,mm);
+	Point3f c=m->bbox.Center();
+	res=mm*c;
+	return Norm(res);
+}	
+template<NormalMode nm, ColorMode cm>
+void DrawPoints()
+{
+	glPointSize(GetHintParamf(HNPPointSize));
+	
+	float camDist=CameraDistance();
+	float quadratic[] =  { 0.0f, 0.0f, 1.0f/(camDist*camDist) };
+	glPointParameterfv( GL_POINT_DISTANCE_ATTENUATION, quadratic );
+	glPointParameterf( GL_POINT_SIZE_MAX, 16.0f );
+	glPointParameterf( GL_POINT_SIZE_MIN, 1.0f );	
+	
+	if(m->vn!=m->vert.size()) 
+		{
+			DrawPointsBase<nm,cm>();
+			return;
+		}
+	
+	// Perfect case, no deleted stuff,
+	// draw the vertices using vertex arrays
+	if (nm==NMPerVert) 
+			{
+				glEnableClientState (GL_NORMAL_ARRAY);
+				glNormalPointer(GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->N()[0]));
+			}
+	if (cm==CMPerVert)  glEnableClientState (GL_COLOR_ARRAY);
+			{
+				glEnableClientState (GL_COLOR_ARRAY);
+				glColorPointer(4,GL_UNSIGNED_BYTE,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->C()[0]));
+			}
+	
+	glEnableClientState (GL_VERTEX_ARRAY);
+	glVertexPointer(3,GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->P()[0])); 
+	
+	//glDrawElements(GL_POINTS ,m->vn,GL_UNSIGNED_INT, &(*indices.begin()) );
+	glDrawArrays(GL_POINTS,0,m->vn);
+	
+	glDisableClientState (GL_VERTEX_ARRAY);
+	if (nm==NMPerVert)  glDisableClientState (GL_NORMAL_ARRAY);
+	if (cm==CMPerVert)  glDisableClientState (GL_COLOR_ARRAY);
+	
+	return;
+}
 
 void DrawHidden()
 {
