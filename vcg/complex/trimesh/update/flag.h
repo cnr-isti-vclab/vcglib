@@ -110,6 +110,7 @@ class UpdateFlags
 public:
 typedef UpdateMeshType MeshType; 
 typedef vcg::face::Pos<typename UpdateMeshType::FaceType> PosType;
+typedef typename MeshType::ScalarType     ScalarType;
 typedef typename MeshType::VertexType     VertexType;
 typedef typename MeshType::VertexPointer  VertexPointer;
 typedef typename MeshType::VertexIterator VertexIterator;
@@ -292,7 +293,26 @@ static void VertexBorderFromNone(MeshType &m)
 	}
 }
 
-// versione minimale che non calcola i complex flag.
+/// This function fill the flags with the info on what is the best projection direction
+/// for a given face. Used by the point-face distance function when do not exploiting pre-computed 
+/// per-face data (the so called edge component)  
+static void FaceProjection(MeshType &m)
+{
+	FaceIterator fi;
+	for(fi=m.face.begin();fi!=m.face.end();++fi)			// Lo riempio con i dati delle facce
+		if( ! (*fi).IsD() )
+		{
+			ScalarType nx = math::Abs((*fi).cN()[0]);
+			ScalarType ny = math::Abs((*fi).cN()[1]);
+			ScalarType nz = math::Abs((*fi).cN()[2]);
+			if(nx>ny && nx>nz) { (*fi).Flags() |= FaceType::NORMX; }
+			else if(ny>nz)     { (*fi).Flags() |= FaceType::NORMY; }
+			else               { (*fi).Flags() |= FaceType::NORMZ; }
+		}
+}
+
+/// Computes per-face border flags without requiring any kind of topology 
+/// It has a O(fn log fn) complexity. 
 static void FaceBorderFromNone(MeshType &m)
 {
   assert(HasPerFaceFlags(m));
