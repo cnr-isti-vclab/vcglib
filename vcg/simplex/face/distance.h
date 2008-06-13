@@ -263,6 +263,7 @@ namespace vcg {
 													vcg::Point3<typename FaceType::ScalarType> & p )      
 		{
 				typedef typename FaceType::ScalarType ScalarType;
+				// assert(f.cN().SquaredNorm() > 0.9999 && f.cN().SquaredNorm()<1.0001); 
 				Plane3<ScalarType> fPlane;
 				fPlane.Init(f.cP(0),f.cN());
 				const ScalarType EPSILON = ScalarType( 0.000001);
@@ -305,7 +306,7 @@ namespace vcg {
 				{
 					case FaceType::NORMX:
 						scaleFactor= 1/fPlane.Direction()[0];
-						fEdge[0]*=d; fEdge[1]*=d;fEdge[2]*=d;
+						fEdge[0]*=scaleFactor; fEdge[1]*=scaleFactor; fEdge[2]*=scaleFactor;
 						
 						b0 = fEdge[1][1]*(p[2] - f.cP(1)[2]) - fEdge[1][2]*(p[1] - f.cP(1)[1]);
 						if(b0<=0)
@@ -349,7 +350,7 @@ namespace vcg {
 						
 					case FaceType::NORMY:
 						scaleFactor= 1/fPlane.Direction()[1];
-						fEdge[0]*=d; fEdge[1]*=d;fEdge[2]*=d;
+						fEdge[0]*=scaleFactor; fEdge[1]*=scaleFactor; fEdge[2]*=scaleFactor;
 						
 						b0 = fEdge[1][2]*(p[0] - f.cP(1)[0]) - fEdge[1][0]*(p[2] - f.cP(1)[2]);
 						if(b0<=0)
@@ -386,7 +387,7 @@ namespace vcg {
 						
 					case FaceType::NORMZ:
 						scaleFactor= 1/fPlane.Direction()[2];
-						fEdge[0]*=d; fEdge[1]*=d;fEdge[2]*=d;
+						fEdge[0]*=scaleFactor; fEdge[1]*=scaleFactor; fEdge[2]*=scaleFactor;
 						
 						b0 = fEdge[1][0]*(p[1] - f.cP(1)[1]) - fEdge[1][1]*(p[0] - f.cP(1)[0]);
 						if(b0<=0)
