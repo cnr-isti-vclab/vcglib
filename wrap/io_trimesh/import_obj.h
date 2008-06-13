@@ -210,7 +210,7 @@ static const char* ErrorMsg(int error)
   {
 		"No errors",																									//  0
 
-		"Material library file not found, a default white material is used",						//  1
+		"Material library file wrong or not found, a default white material is used",						//  1
 		"Some materials definitions were not found, a default white material is used where no material was available",  // 2
 		"Texture file not found",																			//  3
 		"Identical index vertices found in the same face",						//	4
@@ -819,7 +819,9 @@ static bool LoadMask(const char * filename, int &mask)
 					else
 						first = false;
 					//strcpy(currentMaterial.name, tokens[1].c_str());
-          currentMaterial.materialName=tokens[1];
+          if(tokens.size() < 2) 
+						return false; 
+					currentMaterial.materialName=tokens[1];
 				}
 				else if (header.compare("Ka")==0)
 				{
