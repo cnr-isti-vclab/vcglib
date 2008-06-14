@@ -442,20 +442,20 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 				while (iVertex < vertexesPerFace)  // add other triangles
 				{
 					ObjIndexedFace ffNew=ff;
-          int v4_index;
+          			int v4_index;
 					int vt4_index;
 					int vn4_index;
 
-          SplitToken(tokens[++iVertex], v4_index, vn4_index, vt4_index, oi.mask);
- 
+					SplitToken(tokens[++iVertex], v4_index, vn4_index, vt4_index, oi.mask);
+					if(!GoodObjIndex(v4_index, numVertices))
+						return E_BAD_VERT_INDEX;
+					
 					// assigning wedge texture coordinates
 					// -----------------------------------
 					if( oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD )
 					{
 						// verifying validity of texture coords index
 						// ------------------------------------------
-            if(!GoodObjIndex(v4_index, numVertices))
-              return E_BAD_VERT_INDEX;
             if(!GoodObjIndex(vt4_index,oi.numTexCoords))
               return E_BAD_VERT_TEX_INDEX;
 						
