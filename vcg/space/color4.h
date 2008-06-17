@@ -118,6 +118,7 @@ public:
 	
   inline Color4 ( const T nx, const T ny, const T nz , const T nw ) :Point4<T>(nx,ny,nz,nw) {};
  // inline Color4 ( Color4 &c) :Point4<T>(c) {};
+  inline Color4 ( const Point4<T> &c) :Point4<T>(c) {};
   inline Color4 (){};
   inline Color4 (ColorConstant cc);
   template <class Q>  
@@ -362,6 +363,14 @@ inline Color4<float>::Color4(Color4<float>::ColorConstant cc)
   Import(Color4<unsigned char>((Color4<unsigned char>::ColorConstant)cc)); 
 }
 
+inline Color4<float> Clamp(Color4<float> &c)
+{
+	c[0]=math::Clamp(c[0],0.0f,1.0f);
+	c[1]=math::Clamp(c[1],0.0f,1.0f);
+	c[2]=math::Clamp(c[2],0.0f,1.0f);
+	c[3]=math::Clamp(c[3],0.0f,1.0f);
+	return c;
+}
 
 typedef Color4<unsigned char>  Color4b;
 typedef Color4<float>  Color4f;
