@@ -194,7 +194,7 @@ static void VertexCoordLaplacianAngleWeighted(MeshType &m, int step, ScalarType 
 // REQUIREMENTS: Border Flags.
 // 
 // Note the delta parameter is in a absolute unit
-// it should be a small percentage of the shortest edge.
+// to get stability it should be a small percentage of the shortest edge.
 
 static void VertexCoordScaleDependentLaplacian_Fujiwara(MeshType &m, int step, ScalarType delta)
 {
@@ -202,7 +202,6 @@ static void VertexCoordScaleDependentLaplacian_Fujiwara(MeshType &m, int step, S
 	ScaleLaplacianInfo lpz;
 	lpz.PntSum=CoordType(0,0,0);
 	lpz.LenSum=0;
-	TD.Start(lpz);
 	FaceIterator fi;
 	for(int i=0;i<step;++i)
 	{
@@ -255,7 +254,6 @@ static void VertexCoordScaleDependentLaplacian_Fujiwara(MeshType &m, int step, S
 				if(!(*vi).IsD() && TD[*vi].LenSum>0 )
 				 (*vi).P() = (*vi).P() + (TD[*vi].PntSum/TD[*vi].LenSum)*delta;
 	}		 			
-	TD.Stop();
 };
 
 
@@ -280,8 +278,10 @@ static void VertexCoordLaplacian(MeshType &m, int step, bool SmoothSelected=fals
 	{
 		VertexIterator vi;
 		for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-			 TD[*vi].sum=(*vi).P();
-
+		{
+			TD[*vi].cnt=1;
+			TD[*vi].sum=(*vi).P();
+		}
 		FaceIterator fi;
 		for(fi=m.face.begin();fi!=m.face.end();++fi)
 			if(!(*fi).IsD()) 
@@ -496,7 +496,7 @@ static void VertexColorLaplacian(MeshType &m, int step, bool SmoothSelected=fals
 					(*vi).C()[2] = (unsigned int) ceil((double) (TD[*vi].b / TD[*vi].cnt));
 					(*vi).C()[3] = (unsigned int) ceil((double) (TD[*vi].a / TD[*vi].cnt));
 				}
-	}
+	} // end for step
 };
 
 
