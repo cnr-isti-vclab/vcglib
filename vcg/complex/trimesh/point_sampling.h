@@ -59,9 +59,15 @@ class TrivialSampler
 	{
 		sampleVec.push_back(p.cP());
 	}
-	void AddFace(const CMeshO::FaceType &f, CMeshO::CoordType p) 
+	void AddFace(const FaceType &f, const CMeshO::CoordType &p) 
 	{
 		sampleVec.push_back(f.P(0)*p[0] + f.P(1)*p[1] +f.P(2)*p[2] );
+	}
+	
+	void AddTextureSample(const FaceType &, const CMeshO::CoordType &, const Point2i &)
+	{
+		// Retrieve the colorof the sample from the face f using the barycentric coord p 
+		// and write that color in a texture image at position tp[0],tp[1]
 	}
 }; // end class TrivialSampler
 
@@ -465,93 +471,17 @@ static void FaceSimilar(MetroMesh & m, VertexSampler &ps,int sampleNum)
 }
 
 
-
-
-};
-
-#if 0
-
-template<class S>
-void BaryCoord( const Point2<S> & p,
-			    const Point2<S> & v0, const Point2<S> & v1, const Point2<S> & v2,
-			    S & a, S & b, S & c )
-{
-	S de = v0[0]*v1[1]-v0[0]*v2[1]-v1[0]*v0[1]+v1[0]*v2[1]-v2[0]*v1[1]+v2[0]*v0[1];
-
-	b = -(p[0]*v0[1]-p[0]*v2[1]-v0[0]*p[1]+v0[0]*v2[1]-v2[0]*v0[1]+v2[0]*p[1])/de;
-	a = (-p[1]*v1[0]+v2[0]*p[1]+v1[1]*p[0]-v2[0]*v1[1]+v1[0]*v2[1]-p[0]*v2[1])/de;
-	c = 1-a-b;
-}
-
-
 	// Rasterization fuction
 	// Take a triangle 
 	// T deve essere una classe funzionale che ha l'operatore ()
 	// con due parametri x,y di tipo S esempio:
 	// class Foo { public void operator()(int x, int y ) { ??? } };
 
-template<class S,class T>
-void Raster( const Point2<S> & v0, const Point2<S> & v1, const Point2<S> & v2,
-			 T & op )
+
+
+static void SingleFaceRaster(FaceType &f,  VertexSampler &ps, const Point2<ScalarType> & v0, const Point2<ScalarType> & v1, const Point2<ScalarType> & v2)
 {
-		// Calcolo bounding box
-	Box2i bbox;
-
-	if(v0[0]<v1[0]) { bbox.min[0]=v0[0]; bbox.max[0]=v1[0]; }
-	else            { bbox.min[0]=v1[0]; bbox.max[0]=v0[0]; }
-	if(v0[1]<v1[1]) { bbox.min[1]=v0[1]; bbox.max[1]=v1[1]; }
-	else            { bbox.min[1]=v1[1]; bbox.max[1]=v0[1]; }
-	     if(bbox.min[0]>v2[0]) bbox.min[0]=v2[0];
-	else if(bbox.max[0]<v2[0]) bbox.max[0]=v2[0];
-	     if(bbox.min[1]>v2[1]) bbox.min[1]=v2[1];
-	else if(bbox.max[1]<v2[1]) bbox.max[1]=v2[1];
-
-		// Compute edge vectors 
-	Point2<S> d10 = v1 - v0;
-	Point2<S> d21 = v2 - v1;
-	Point2<S> d02 = v0 - v2;
-
-		// Compute cross products
-	S b0  = (bbox.min[0]-v0[0])*d10[1] - (bbox.min[1]-v0[1])*d10[0];
-	S b1  = (bbox.min[0]-v1[0])*d21[1] - (bbox.min[1]-v1[1])*d21[0];
-	S b2  = (bbox.min[0]-v2[0])*d02[1] - (bbox.min[1]-v2[1])*d02[0];
-		// Compute steps
-	S db0 =  d10[1];
-	S db1 =  d21[1];
-	S db2 =  d02[1];
-		// Compute Signs
-	S dn0 = -d10[0];
-	S dn1 = -d21[0];
-	S dn2 = -d02[0];
-		// Rasterizzazione
-	for(int x=bbox.min[0];x<=bbox.max[0];++x)
-	{
-		bool in = false;
-		S n0  = b0;
-		S n1  = b1;
-		S n2  = b2;
-		for(int y=bbox.min[1];y<=bbox.max[1];++y)
-		{
-			if( (n0>=0 && n1>=0 && n2>=0) || (n0<=0 && n1<=0 && n2<=0) )
-			{
-				op(x,y);
-				in = true;
-			} else if(in) break;
-			n0 += dn0;
-			n1 += dn1;
-			n2 += dn2;
-		}
-		b0 += db0;
-		b1 += db1;
-		b2 += db2;
-	}
-}
-
-
-template<class S,class T>
-void RasterBary( const Point2<S> & v0, const Point2<S> & v1, const Point2<S> & v2,
-			 T & op )
-{
+	typedef ScalarType S;
 		// Calcolo bounding box
 	Box2i bbox;
 
@@ -595,11 +525,12 @@ void RasterBary( const Point2<S> & v0, const Point2<S> & v1, const Point2<S> & v
 		{
 			if( (n0>=0 && n1>=0 && n2>=0) || (n0<=0 && n1<=0 && n2<=0) )
 			{
-				double b = -double( x*v0[1]-x*v2[1]-v0[0]*y+v0[0]*v2[1]-v2[0]*v0[1]+v2[0]*y)/de;
-				double a =  double(-y*v1[0]+v2[0]*y+v1[1]*x-v2[0]*v1[1]+v1[0]*v2[1]-x*v2[1])/de;
-				double c = 1-a-b;
+				CoordType baryCoord;
+				baryCoord[0] =  double(-y*v1[0]+v2[0]*y+v1[1]*x-v2[0]*v1[1]+v1[0]*v2[1]-x*v2[1])/de;
+				baryCoord[1] = -double( x*v0[1]-x*v2[1]-v0[0]*y+v0[0]*v2[1]-v2[0]*v0[1]+v2[0]*y)/de;
+				baryCoord[2] = 1-baryCoord[0]-baryCoord[1];
 
-				op(x,y,a,b,c);
+				ps.AddTextureSample(f, baryCoord, Point2i(x,y));
 				in = true;
 			} else if(in) break;
 			n0 += dn0;
@@ -613,7 +544,26 @@ void RasterBary( const Point2<S> & v0, const Point2<S> & v1, const Point2<S> & v
 }
 
 
-#endif
+//template <class MetroMesh>
+//void Sampling<MetroMesh>::SimilarFaceSampling()
+static void Texture(MetroMesh & m, VertexSampler &ps, int textureSize)
+{
+    FaceIterator fi;
+
+    printf("Similar Triangles face sampling\n");
+    for(fi=m.face.begin(); fi != m.face.end(); fi++)
+				{
+					Point2f ti[3];
+					for(int i=0;i<3;++i)
+							ti[i]=Point2f((*fi).WT(i).U() * textureSize, (*fi).WT(i).V() * textureSize);
+					
+					SingleFaceRaster(*fi,  ps, ti[0],ti[1],ti[2]);
+				}
+}
+
+
+
+}; // end class
 
 
 } // end namespace tri
