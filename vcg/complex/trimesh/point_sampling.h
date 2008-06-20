@@ -39,6 +39,32 @@ namespace vcg
 {
 namespace tri
 {
+
+/// Trivial Sampler, an example sampler object that show the required interface used by the sampling class. 
+/// Most of the sampling classes call the AddFace method with the face containing the sample and its baricentric coord.
+
+
+template <class MeshType>
+class TrivialSampler
+{
+	public:
+		typedef typename MeshType::CoordType			CoordType;
+		typedef typename MeshType::VertexType			VertexType;
+    typedef typename MeshType::FaceType				FaceType;
+
+	TrivialSampler(){};
+	std::vector<CoordType> sampleVec;
+	
+	void AddVert(const VertexType &p) 
+	{
+		sampleVec.push_back(p.cP());
+	}
+	void AddFace(const CMeshO::FaceType &f, CMeshO::CoordType p) 
+	{
+		sampleVec.push_back(f.P(0)*p[0] + f.P(1)*p[1] +f.P(2)*p[2] );
+	}
+}; // end class TrivialSampler
+
 template <class MetroMesh, class VertexSampler>
 class SurfaceSampling
 {
@@ -47,6 +73,7 @@ class SurfaceSampling
 		typedef typename MetroMesh::VertexType			VertexType;
     typedef typename MetroMesh::VertexPointer		VertexPointer;
     typedef typename MetroMesh::VertexIterator	VertexIterator;
+    typedef typename MetroMesh::FacePointer		FacePointer;
     typedef typename MetroMesh::FaceIterator		FaceIterator;
     typedef typename MetroMesh::FaceType				FaceType;
     typedef typename MetroMesh::FaceContainer		FaceContainer;
@@ -129,13 +156,13 @@ static void VertexAreaUniform(MetroMesh & m, VertexSampler &ps, int sampleNum)
 	VertexWeighted(m,ps,sampleNum);
 }
 
-static void	FillAndShuffleVertexPointVector(MetroMesh & m, std::vector<VertexPointer> vertVec)
+static void	FillAndShuffleVertexPointVector(MetroMesh & m, std::vector<VertexPointer> &vertVec)
 {
 	VertexIterator vi;
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi) 
 				if(!(*vi).IsD())	vertVec.push_back(&*vi);
 
-	assert(vertVec.size()=m.vn);
+	assert(vertVec.size()==m.vn);
 	
 	std::random_shuffle(vertVec.begin(),vertVec.end());
 }
@@ -208,7 +235,8 @@ static void AllEdge(MetroMesh & m, VertexSampler &ps)
     }
  */
 
-// Get the baricentric coords of a random point over a single face.
+// Generate the baricentric coords of a random point over a single face, with a uniform distribution over the triangle. 
+// It uses the parallelgoram folding trick. 
 
 static CoordType RandomBaricentric()
 {
@@ -289,305 +317,21 @@ static void WeightedMontecarlo(MetroMesh & m, VertexSampler &ps, int sampleNum)
     }
 }
 
-};
 
-} // end namespace tri
-} // end namespace vcg
+// Subdivision sampling of a single face. 
+// return number of added samples
 
-#endif
-
-
-
-#if 0
-struct SamplingFlags{
-			 enum{
-						VERTEX_SAMPLING									= 0x0002,
-						EDGE_SAMPLING										= 0x0004,
-						FACE_SAMPLING										= 0x0008,
-						MONTECARLO_SAMPLING							= 0x0010,
-						SUBDIVISION_SAMPLING						= 0x0020,
-						SIMILAR_SAMPLING			          = 0x0040,
-						INCLUDE_UNREFERENCED_VERTICES		= 0x0200,
-				};
-	};
-// -----------------------------------------------------------------------------------------------
-template <class MetroMesh>
-class Sampling
-{
-public:
-
-		unsigned int n_samples_per_face    ;
-		float n_samples_edge_to_face_ratio ;
-		float bbox_factor                  ;
-		float inflate_percentage			     ;
-		unsigned int min_size					     ;
-		int n_hist_bins                    ;
-		int print_every_n_elements         ;
-		int referredBit                    ;
-    // parameters
-    double          dist_upper_bound;
-    double					n_samples_per_area_unit;
-    unsigned long   n_samples_target;
-    int             Flags;
-
-    // results
-    unsigned long   n_total_samples;
-    unsigned long   n_total_area_samples;
-    unsigned long   n_total_edge_samples;
-    unsigned long   n_total_vertex_samples;
-    double          max_dist;
-    double          mean_dist;
-    double          RMS_dist;
-    double          volume;
-    double          area_S1;
-
-    // globals
-    int             n_samples;
-
-    // private methods
-    inline double   ComputeMeshArea(MetroMesh & mesh);
-    float           AddSample(const Point3x &p);
-    inline void     AddRandomSample(FaceIterator &T);
-    inline void     SampleEdge(const Point3x & v0, const Point3x & v1, int n_samples_per_edge);
-    void            VertexSampling();
-    void            EdgeSampling();
-    void            FaceSubdiv(const Point3x & v0, const Point3x &v1, const Point3x & v2, int maxdepth);
-    void            SimilarTriangles(const Point3x &v0, const Point3x &v1, const Point3x &v2, int n_samples_per_edge);
-    void            MontecarloFaceSampling();
-    void            SubdivFaceSampling();
-    void            SimilarFaceSampling();
-
-public :
-    // public methods
-    Sampling(MetroMesh &_s1, MetroMesh &_s2);
-		~Sampling();
-
-    double          GetDistVolume()             {return volume;}
-    unsigned long   GetNSamples()               {return n_total_samples;}
-    unsigned long   GetNAreaSamples()           {return n_total_area_samples;}
-    unsigned long   GetNEdgeSamples()           {return n_total_edge_samples;}
-    unsigned long   GetNVertexSamples()         {return n_total_vertex_samples;}
-    double					GetNSamplesPerAreaUnit()    {return n_samples_per_area_unit;}
-    unsigned long   GetNSamplesTarget()         {return n_samples_target;}
-    
-		void            SetFlags(int flags)         {Flags = flags;}
-    void            ClearFlag(int flag)         {Flags &= (flag ^ -1);}
-    void            SetParam(double _n_samp)    {n_samples_target = _n_samp;}
-    void            SetSamplesTarget(unsigned long _n_samp);
-    void            SetSamplesPerAreaUnit(double _n_samp);
-};
-
-// -----------------------------------------------------------------------------------------------
-
-// constructor
-template <class MetroMesh>
-Sampling<MetroMesh>::Sampling(MetroMesh &_s1, MetroMesh &_s2):S1(_s1),S2(_s2)
-{
-    Flags = 0;
-    area_S1 = ComputeMeshArea(_s1);
-		// set default numbers
-		n_samples_per_face             =	10;
-		n_samples_edge_to_face_ratio   = 0.1f;
-		bbox_factor                    = 0.1f;
-		inflate_percentage			       = 0.02f;
-		min_size					             = 125;		/* 125 = 5^3 */
-		n_hist_bins                    = 256;
-		print_every_n_elements         = S1.fn/100;
-
-		if(print_every_n_elements <= 1)
-		  print_every_n_elements = 2;
-
-			referredBit = VertexType::NewBitFlag();
-			// store the unreferred vertices
-			FaceIterator fi; VertexIterator vi; int i;
-			for(fi = _s1.face.begin(); fi!= _s1.face.end(); ++fi)
-				for(i=0;i<3;++i) (*fi).V(i)->SetUserBit(referredBit);
-}
-
-template <class MetroMesh>
-Sampling<MetroMesh>::~Sampling()
-{
-	VertexType::DeleteBitFlag(referredBit);
-}
-
-
-// set sampling parameters
-template <class MetroMesh>
-void Sampling<MetroMesh>::SetSamplesTarget(unsigned long _n_samp)
-{
-    n_samples_target        = _n_samp;
-    n_samples_per_area_unit =  n_samples_target / (double)area_S1;
-}
-
-template <class MetroMesh>
-void Sampling<MetroMesh>::SetSamplesPerAreaUnit(double _n_samp)
-{
-    n_samples_per_area_unit = _n_samp;
-    n_samples_target        = (unsigned long)((double) n_samples_per_area_unit * area_S1);
-}
-
-
-// auxiliary functions
-template <class MetroMesh>
-inline double Sampling<MetroMesh>::ComputeMeshArea(MetroMesh & mesh)
-{
-    FaceIterator    face;
-    double                  area = 0.0;
-
-    for(face=mesh.face.begin(); face != mesh.face.end(); face++)
-			if(!(*face).IsD())
-        area += DoubleArea(*face);
-
-    return area/2.0;
-}
-
-template <class MetroMesh>
-float Sampling<MetroMesh>::AddSample(const Point3x &p )
-{
-	SampleVec.push_back(p);
-}
-
-
-// -----------------------------------------------------------------------------------------------
-// --- Vertex Sampling ---------------------------------------------------------------------------
-
-template <class MetroMesh>
-void Sampling<MetroMesh>::VertexSampling()
-{
-    VertexIterator vi;
-    for(vi=S1.vert.begin();vi!=S1.vert.end();++vi)
-			if(  (*vi).IsUserBit(referredBit) || // it is referred
-					((Flags&SamplingFlags::INCLUDE_UNREFERENCED_VERTICES) != 0) ) //include also unreferred
-						{
-								AddSample((*vi).cP());
-						}
-}
-
-
-// -----------------------------------------------------------------------------------------------
-// --- Edge Sampling -----------------------------------------------------------------------------
-
-template <class MetroMesh>
-inline void Sampling<MetroMesh>::SampleEdge(const Point3x & v0, const Point3x & v1, int n_samples_per_edge)
-{
-    // uniform sampling of the segment v0v1.
-    Point3x     e((v1-v0)/(double)(n_samples_per_edge+1));
-    for(int i=1; i <= n_samples_per_edge; i++)
-    {
-        AddSample(v0 + e*i);
-        n_total_edge_samples++;
-    }
-}
-
-
-template <class MetroMesh>
-void Sampling<MetroMesh>::EdgeSampling()
-{
-    // Edge sampling.
-		typedef std::pair<VertexPointer, VertexPointer> pvv;
-		std::vector< pvv > Edges;
-
-    printf("Edge sampling\n");
-
-    // compute edge list.
-    FaceIterator fi;
-    for(fi=S1.face.begin(); fi != S1.face.end(); fi++)
-        for(int i=0; i<3; ++i)
-        {
-            Edges.push_back(make_pair((*fi).V0(i),(*fi).V1(i)));
-            if(Edges.back().first > Edges.back().second)
-                swap(Edges.back().first, Edges.back().second);
-        }
-    sort(Edges.begin(), Edges.end());
-		typename std::vector< pvv>::iterator edgeend = unique(Edges.begin(), Edges.end());
-    Edges.resize(edgeend-Edges.begin());
-
-    // sample edges.
-		typename std::vector<pvv>::iterator   ei;
-    double                  n_samples_per_length_unit;
-    double                  n_samples_decimal = 0.0;
-    int                     cnt=0;
-		
-    if(Flags & SamplingFlags::FACE_SAMPLING)	n_samples_per_length_unit = sqrt((double)n_samples_per_area_unit);
-															    else        n_samples_per_length_unit = n_samples_per_area_unit;
-																	
-    for(ei=Edges.begin(); ei!=Edges.end(); ++ei)
-    {
-        n_samples_decimal += Distance((*ei).first->cP(),(*ei).second->cP()) * n_samples_per_length_unit;
-        n_samples          = (int) n_samples_decimal;
-        SampleEdge((*ei).first->cP(), (*ei).second->cP(), (int) n_samples);
-        n_samples_decimal -= (double) n_samples;
-    }
-}
-
-
-// -----------------------------------------------------------------------------------------------
-// --- Face Sampling -----------------------------------------------------------------------------
-
-// Montecarlo sampling.
-template <class MetroMesh>
-inline void Sampling<MetroMesh>::AddRandomSample(FaceIterator &T)
-{
-    // random sampling over the input face.
-    double      rnd_1, rnd_2;
-
-    // vertices of the face T.
-    Point3x p0(T->V(0)->cP());
-    Point3x p1(T->V(1)->cP());
-    Point3x p2(T->V(2)->cP());
-    // calculate two edges of T.
-    Point3x v1(p1 - p0);
-    Point3x v2(p2 - p0);
-
-    // choose two random numbers.
-    rnd_1 = (double)rand() / (double)RAND_MAX;
-    rnd_2 = (double)rand() / (double)RAND_MAX;
-    if(rnd_1 + rnd_2 > 1.0)
-    {
-        rnd_1 = 1.0 - rnd_1;
-        rnd_2 = 1.0 - rnd_2;
-    }
-
-    // add a random point on the face T.
-    AddSample (p0 + (v1 * rnd_1 + v2 * rnd_2));
-    n_total_area_samples++;
-}
-
-template <class MetroMesh>
-void Sampling<MetroMesh>::MontecarloFaceSampling()
-{
-    // Montecarlo sampling.
-    int     cnt = 0;
-    double  n_samples_decimal = 0.0;
-    FaceIterator fi;
-
-    for(fi=S1.face.begin(); fi != S1.face.end(); fi++)
-		if(!(*fi).IsD())
-    {
-        // compute # samples in the current face.
-        n_samples_decimal += 0.5*DoubleArea(*fi) * n_samples_per_area_unit;
-        n_samples          = (int) n_samples_decimal;
-
-        // for every sample p_i in T...
-        for(int i=0; i < n_samples; i++)
-            AddRandomSample(fi);
-
-        n_samples_decimal -= (double) n_samples;
-    }
-}
-
-
-// Subdivision sampling.
-template <class MetroMesh>
-void Sampling<MetroMesh>::FaceSubdiv(const Point3x & v0, const Point3x & v1, const Point3x & v2, int maxdepth)
+static int SingleFaceSubdivision(const CoordType & v0, const CoordType & v1, const CoordType & v2, int maxdepth, VertexSampler &ps, FacePointer fp)
 {
     // recursive face subdivision.
     if(maxdepth == 0)
     {
         // ground case.
-        AddSample((v0+v1+v2)/3.0f);
-        n_total_area_samples++;
-        return;
+        CoordType SamplePoint((v0+v1+v2)/3.0f);
+				CoordType SampleBary;
+				InterpolationParameters(*fp,SamplePoint,SampleBary[0],SampleBary[1],SampleBary[2]);
+				ps.AddFace(*fp,SampleBary);
+        return 1;
     }
 
     // compute the longest edge.
@@ -601,104 +345,278 @@ void Sampling<MetroMesh>::FaceSubdiv(const Point3x & v0, const Point3x & v1, con
     else
         if(maxd12 > maxd20)     res = 1;
         else                    res = 2;
-
-    // break the input triangle along the median to the the longest edge.
-    Point3x  pp;
+				
+    int faceSampleNum=0;
+    // break the input triangle along the midpoint of the longest edge.
+    CoordType  pp;
     switch(res)
     {
      case 0 :    pp = (v0+v1)/2;
-                 FaceSubdiv(v0,pp,v2,maxdepth-1);
-                 FaceSubdiv(pp,v1,v2,maxdepth-1);
+                 faceSampleNum+=SingleFaceSubdivision(v0,pp,v2,maxdepth-1,ps,fp);
+                 faceSampleNum+=SingleFaceSubdivision(pp,v1,v2,maxdepth-1,ps,fp);
                  break;
      case 1 :    pp = (v1+v2)/2;
-                 FaceSubdiv(v0,v1,pp,maxdepth-1);
-                 FaceSubdiv(v0,pp,v2,maxdepth-1);
+                 faceSampleNum+=SingleFaceSubdivision(v0,v1,pp,maxdepth-1,ps,fp);
+                 faceSampleNum+=SingleFaceSubdivision(v0,pp,v2,maxdepth-1,ps,fp);
                  break;
      case 2 :    pp = (v2+v0)/2;
-                 FaceSubdiv(v0,v1,pp,maxdepth-1);
-                 FaceSubdiv(pp,v1,v2,maxdepth-1);
+                 faceSampleNum+=SingleFaceSubdivision(v0,v1,pp,maxdepth-1,ps,fp);
+                 faceSampleNum+=SingleFaceSubdivision(pp,v1,v2,maxdepth-1,ps,fp);
                  break;
     }
+		return faceSampleNum;
 }
 
-template <class MetroMesh>
-void Sampling<MetroMesh>::SubdivFaceSampling()
-{
-    // Subdivision sampling.
-    int     cnt = 0, maxdepth;
-    double  n_samples_decimal = 0.0;
-    typename MetroMesh::FaceIterator fi;
 
-    printf("Subdivision face sampling\n");
-    for(fi=S1.face.begin(); fi != S1.face.end(); fi++)
+/// Compute a sampling of the surface where the points are regularly scattered over the face surface using a recursive longest-edge subdivision rule.
+static void FaceSubdivision(MetroMesh & m, VertexSampler &ps,int sampleNum)
+{
+	
+	ScalarType area = Stat<MetroMesh>::ComputeMeshArea(m);
+	ScalarType samplePerAreaUnit = sampleNum/area;
+	qDebug("samplePerAreaUnit %f",samplePerAreaUnit);
+
+	double  floatSampleNum = 0.0;
+	int faceSampleNum;
+    // Subdivision sampling.
+    FaceIterator fi;
+    for(fi=m.face.begin(); fi!=m.face.end(); fi++)
     {
         // compute # samples in the current face.
-        n_samples_decimal += 0.5*DoubleArea(*fi) * n_samples_per_area_unit;
-        n_samples          = (int) n_samples_decimal;
-        if(n_samples)
+        floatSampleNum += 0.5*DoubleArea(*fi) * samplePerAreaUnit;
+        faceSampleNum          = (int) floatSampleNum;
+        if(faceSampleNum>0)
         {
             // face sampling.
-            maxdepth = ((int)(log((double)n_samples)/log(2.0)));
-            n_samples = 0;
-            FaceSubdiv((*fi).V(0)->cP(), (*fi).V(1)->cP(), (*fi).V(2)->cP(), maxdepth);
+            int maxdepth = ((int)(log((double)faceSampleNum)/log(2.0)));
+            faceSampleNum = SingleFaceSubdivision((*fi).V(0)->cP(), (*fi).V(1)->cP(), (*fi).V(2)->cP(), maxdepth,ps,&*fi);
         }
-        n_samples_decimal -= (double) n_samples;
-
-        // print progress information
-        if(!(++cnt % print_every_n_elements))
-            printf("Sampling face %d%%\r", (100 * cnt/S1.fn));
+        floatSampleNum -= (double) faceSampleNum;
     }
-    printf("                     \r");
 }
 
 
 // Similar Triangles sampling.
-template <class MetroMesh>
-void Sampling<MetroMesh>::SimilarTriangles(const Point3x & v0, const Point3x & v1, const Point3x & v2, int n_samples_per_edge)
-{
-    Point3x     V1((v1-v0)/(double)(n_samples_per_edge-1));
-    Point3x     V2((v2-v0)/(double)(n_samples_per_edge-1));
-    int         i, j;
+// Skip vertex and edges
+// Sample per edges includes vertexes, so here we should expect  n_samples_per_edge >=4 
 
-    // face sampling.
+static int SingleFaceSimilar(FacePointer fp, VertexSampler &ps, int n_samples_per_edge)
+{
+		int n_samples=0;
+    int         i, j;
+    float segmentNum=n_samples_per_edge -1 ;
+		float segmentLen = 1.0/segmentNum;
+		// face sampling.
     for(i=1; i < n_samples_per_edge-1; i++)
         for(j=1; j < n_samples_per_edge-1-i; j++)
         {
-            AddSample( v0 + (V1*(double)i + V2*(double)j) );
-            n_total_area_samples++;
+            //AddSample( v0 + (V1*(double)i + V2*(double)j) );
+						CoordType sampleBary(i*segmentLen,j*segmentLen, 1.0 - (i*segmentLen+j*segmentLen) ) ;
             n_samples++;
+						ps.AddFace(*fp,sampleBary);
         }
+	return n_samples;
 }
 
-template <class MetroMesh>
-void Sampling<MetroMesh>::SimilarFaceSampling()
+/// Similar sampling. Each triangle is subdivided into similar triangles following a generalization of the classical 1-to-4 splitting rule of triangles. 
+/// According to the level of subdivision <k> you get 1, 4 , 9, 16 , <k^2> triangles. 
+/// Of these triangles we consider only internal vertices. (to avoid multiple sampling of edges and vertices).
+/// Therefore the number of internal points is ((k-3)*(k-2))/2. where k is the number of point on an edge (vertex included)
+//  e.g. for a k=4 you get (1*2)/2 == 1 e.g. a single point, etc.
+/// So if you want N samples in a triangle i have to solve  k^2 -5k +6 - 2N = 0 
+
+//      5 + sqrt( 1 + 8N ) 
+// k = -------------------  
+//             2
+
+
+
+//template <class MetroMesh>
+//void Sampling<MetroMesh>::SimilarFaceSampling()
+static void FaceSimilar(MetroMesh & m, VertexSampler &ps,int sampleNum)
 {
-    // Similar Triangles sampling.
+	
+		ScalarType area = Stat<MetroMesh>::ComputeMeshArea(m);
+		ScalarType samplePerAreaUnit = sampleNum/area;
+		qDebug("samplePerAreaUnit %f",samplePerAreaUnit);
+
+		// Similar Triangles sampling.
     int     cnt = 0, n_samples_per_edge;
     double  n_samples_decimal = 0.0;
     FaceIterator fi;
 
     printf("Similar Triangles face sampling\n");
-    for(fi=S1.face.begin(); fi != S1.face.end(); fi++)
+    for(fi=m.face.begin(); fi != m.face.end(); fi++)
     {
         // compute # samples in the current face.
-        n_samples_decimal += 0.5*DoubleArea(*fi) * n_samples_per_area_unit;
-        n_samples          = (int) n_samples_decimal;
+        n_samples_decimal += 0.5*DoubleArea(*fi) * samplePerAreaUnit;
+        int n_samples          = (int) n_samples_decimal;
         if(n_samples)
         {
             // face sampling.
             n_samples_per_edge = (int)((sqrt(1.0+8.0*(double)n_samples) +5.0)/2.0);
             n_samples = 0;
-            SimilarTriangles((*fi).V(0)->cP(), (*fi).V(1)->cP(), (*fi).V(2)->cP(), n_samples_per_edge);
+            //SingleFaceSimilar((*fi).V(0)->cP(), (*fi).V(1)->cP(), (*fi).V(2)->cP(), n_samples_per_edge);
+						SingleFaceSimilar(&*fi,ps, n_samples_per_edge);
         }
         n_samples_decimal -= (double) n_samples;
 
-        // print progress information
-        if(!(++cnt % print_every_n_elements))
-            printf("Sampling face %d%%\r", (100 * cnt/S1.fn));
     }
-    printf("                     \r");
 }
 
+
+
+
+};
+
+#if 0
+
+template<class S>
+void BaryCoord( const Point2<S> & p,
+			    const Point2<S> & v0, const Point2<S> & v1, const Point2<S> & v2,
+			    S & a, S & b, S & c )
+{
+	S de = v0[0]*v1[1]-v0[0]*v2[1]-v1[0]*v0[1]+v1[0]*v2[1]-v2[0]*v1[1]+v2[0]*v0[1];
+
+	b = -(p[0]*v0[1]-p[0]*v2[1]-v0[0]*p[1]+v0[0]*v2[1]-v2[0]*v0[1]+v2[0]*p[1])/de;
+	a = (-p[1]*v1[0]+v2[0]*p[1]+v1[1]*p[0]-v2[0]*v1[1]+v1[0]*v2[1]-p[0]*v2[1])/de;
+	c = 1-a-b;
 }
+
+
+	// Rasterization fuction
+	// Take a triangle 
+	// T deve essere una classe funzionale che ha l'operatore ()
+	// con due parametri x,y di tipo S esempio:
+	// class Foo { public void operator()(int x, int y ) { ??? } };
+
+template<class S,class T>
+void Raster( const Point2<S> & v0, const Point2<S> & v1, const Point2<S> & v2,
+			 T & op )
+{
+		// Calcolo bounding box
+	Box2i bbox;
+
+	if(v0[0]<v1[0]) { bbox.min[0]=v0[0]; bbox.max[0]=v1[0]; }
+	else            { bbox.min[0]=v1[0]; bbox.max[0]=v0[0]; }
+	if(v0[1]<v1[1]) { bbox.min[1]=v0[1]; bbox.max[1]=v1[1]; }
+	else            { bbox.min[1]=v1[1]; bbox.max[1]=v0[1]; }
+	     if(bbox.min[0]>v2[0]) bbox.min[0]=v2[0];
+	else if(bbox.max[0]<v2[0]) bbox.max[0]=v2[0];
+	     if(bbox.min[1]>v2[1]) bbox.min[1]=v2[1];
+	else if(bbox.max[1]<v2[1]) bbox.max[1]=v2[1];
+
+		// Compute edge vectors 
+	Point2<S> d10 = v1 - v0;
+	Point2<S> d21 = v2 - v1;
+	Point2<S> d02 = v0 - v2;
+
+		// Compute cross products
+	S b0  = (bbox.min[0]-v0[0])*d10[1] - (bbox.min[1]-v0[1])*d10[0];
+	S b1  = (bbox.min[0]-v1[0])*d21[1] - (bbox.min[1]-v1[1])*d21[0];
+	S b2  = (bbox.min[0]-v2[0])*d02[1] - (bbox.min[1]-v2[1])*d02[0];
+		// Compute steps
+	S db0 =  d10[1];
+	S db1 =  d21[1];
+	S db2 =  d02[1];
+		// Compute Signs
+	S dn0 = -d10[0];
+	S dn1 = -d21[0];
+	S dn2 = -d02[0];
+		// Rasterizzazione
+	for(int x=bbox.min[0];x<=bbox.max[0];++x)
+	{
+		bool in = false;
+		S n0  = b0;
+		S n1  = b1;
+		S n2  = b2;
+		for(int y=bbox.min[1];y<=bbox.max[1];++y)
+		{
+			if( (n0>=0 && n1>=0 && n2>=0) || (n0<=0 && n1<=0 && n2<=0) )
+			{
+				op(x,y);
+				in = true;
+			} else if(in) break;
+			n0 += dn0;
+			n1 += dn1;
+			n2 += dn2;
+		}
+		b0 += db0;
+		b1 += db1;
+		b2 += db2;
+	}
+}
+
+
+template<class S,class T>
+void RasterBary( const Point2<S> & v0, const Point2<S> & v1, const Point2<S> & v2,
+			 T & op )
+{
+		// Calcolo bounding box
+	Box2i bbox;
+
+	if(v0[0]<v1[0]) { bbox.min[0]=v0[0]; bbox.max[0]=v1[0]; }
+	else            { bbox.min[0]=v1[0]; bbox.max[0]=v0[0]; }
+	if(v0[1]<v1[1]) { bbox.min[1]=v0[1]; bbox.max[1]=v1[1]; }
+	else            { bbox.min[1]=v1[1]; bbox.max[1]=v0[1]; }
+	     if(bbox.min[0]>v2[0]) bbox.min[0]=v2[0];
+	else if(bbox.max[0]<v2[0]) bbox.max[0]=v2[0];
+	     if(bbox.min[1]>v2[1]) bbox.min[1]=v2[1];
+	else if(bbox.max[1]<v2[1]) bbox.max[1]=v2[1];
+
+		// Calcolo versori degli spigoli
+	Point2<S> d10 = v1 - v0;
+	Point2<S> d21 = v2 - v1;
+	Point2<S> d02 = v0 - v2;
+
+		// Preparazione prodotti scalari
+	S b0  = (bbox.min[0]-v0[0])*d10[1] - (bbox.min[1]-v0[1])*d10[0];
+	S b1  = (bbox.min[0]-v1[0])*d21[1] - (bbox.min[1]-v1[1])*d21[0];
+	S b2  = (bbox.min[0]-v2[0])*d02[1] - (bbox.min[1]-v2[1])*d02[0];
+		// Preparazione degli steps
+	S db0 =  d10[1];
+	S db1 =  d21[1];
+	S db2 =  d02[1];
+		// Preparazione segni
+	S dn0 = -d10[0];
+	S dn1 = -d21[0];
+	S dn2 = -d02[0];
+		// Rasterizzazione
+
+	double de = v0[0]*v1[1]-v0[0]*v2[1]-v1[0]*v0[1]+v1[0]*v2[1]-v2[0]*v1[1]+v2[0]*v0[1];
+
+	for(int x=bbox.min[0];x<=bbox.max[0];++x)
+	{
+		bool in = false;
+		S n0  = b0;
+		S n1  = b1;
+		S n2  = b2;
+		for(int y=bbox.min[1];y<=bbox.max[1];++y)
+		{
+			if( (n0>=0 && n1>=0 && n2>=0) || (n0<=0 && n1<=0 && n2<=0) )
+			{
+				double b = -double( x*v0[1]-x*v2[1]-v0[0]*y+v0[0]*v2[1]-v2[0]*v0[1]+v2[0]*y)/de;
+				double a =  double(-y*v1[0]+v2[0]*y+v1[1]*x-v2[0]*v1[1]+v1[0]*v2[1]-x*v2[1])/de;
+				double c = 1-a-b;
+
+				op(x,y,a,b,c);
+				in = true;
+			} else if(in) break;
+			n0 += dn0;
+			n1 += dn1;
+			n2 += dn2;
+		}
+		b0 += db0;
+		b1 += db1;
+		b2 += db2;
+	}
+}
+
+
+#endif
+
+
+} // end namespace tri
+} // end namespace vcg
+
 #endif
