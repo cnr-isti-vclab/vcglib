@@ -86,11 +86,11 @@ bool InterpolationParameters(const CoordType & bq, ScalarType &a, ScalarType &b,
 {	
 	const ScalarType EPSILON = ScalarType(0.0001);
 
-	ScalarType AreaGlobal=(P(1) - P(0)) ^ (P(2) - P(0));
+	//ScalarType AreaGlobal=(P(1) - P(0)) ^ (P(2) - P(0));
 	ScalarType Area0=(P(2) - P(1)) ^ (bq - P(1));
 	ScalarType Area1=(P(0) - P(2)) ^ (bq - P(2));
 	ScalarType Area2=(P(1) - P(0)) ^ (bq - P(0));
-
+	ScalarType AreaGlobal=Area0+Area1+Area2;
 	/*if ((Area0>(AreaGlobal+EPSILON))||(Area1>(AreaGlobal+EPSILON))||(Area2>(AreaGlobal+EPSILON)))
 		return false;*/
 	a=Area0/AreaGlobal;
@@ -98,16 +98,25 @@ bool InterpolationParameters(const CoordType & bq, ScalarType &a, ScalarType &b,
 	c=Area2/AreaGlobal;
 
 	///test inside/outside
-	if((a>(ScalarType)1+EPSILON)||(b>(ScalarType)1+EPSILON)||(c>(ScalarType)1+EPSILON))
+	if(((a>(ScalarType)1+EPSILON)||(b>(ScalarType)1+EPSILON)||(c>(ScalarType)1+EPSILON))||
+	  ((a<-EPSILON)||(b<-EPSILON)||(c<-EPSILON)))
 		return false;
 
+	///approximation errors
 	if(a>1)
 		a=(ScalarType)1;
 	if(b>1)
 		b=(ScalarType)1;
 	if(c>1)
 		c=(ScalarType)1;
+	if(a<0)
+		a=(ScalarType)0;
+	if(b<0)
+		b=(ScalarType)0;
+	if(c<0)
+		c=(ScalarType)0;
 
+	
 	return true;
 }
 
