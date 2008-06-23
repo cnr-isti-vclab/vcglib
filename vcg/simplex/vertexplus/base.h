@@ -111,7 +111,7 @@ we have to build the type a step a time (deriving from a single ancestor at a ti
 
 
 */ 
-template <class BVT, class BET=DumET, class BFT=DumFT, class BTT=DumTT>
+template <class BVT, class BET=DumClass, class BFT=DumClass, class BTT=DumClass>
 class VertexBase: public vert::EmptyTexCoord<
                          vert::EmptyVFAdj<
                          vert::EmptyColorQuality<
