@@ -68,16 +68,13 @@ First working version!
 #ifndef __VCG_VERTEX_PLUS
 #define __VCG_VERTEX_PLUS
 
-#include <vcg/space/point3.h>
+//#include <vcg/space/point3.h>
 #include <vcg/space/texcoord2.h>
 #include <vcg/space/color4.h>
 #include <vcg/simplex/vertexplus/component.h>
+#include <vcg/container/derivation_chain.h>
 
 namespace vcg {
-
-  class DumET {};
-  class DumFT {};
-  class DumTT {};
 
 /*------------------------------------------------------------------*/ 
 /* 
@@ -125,68 +122,6 @@ class VertexBase: public vert::EmptyTexCoord<
 													VertexTypeHolder <BVT, BET, BFT, BTT> > > > > > > >{
 };
 
-// Metaprogramming Core
-
-template <class BVT, class BET, class BFT,class BTT,
-          template <typename> class A> 
-          class VertexArity1: public A<VertexBase<BVT,BET,BFT,BTT> > {
-          };
-
-template <class BVT, class BET, typename BFT, class BTT,
-          template <typename> class A, template <typename> class B> 
-          class VertexArity2: public B<VertexArity1<BVT,BET,BFT,BTT, A> > {};
-
-template <class BVT, class BET, typename BFT,class BTT,
-          template <typename> class A, template <typename> class B, 
-          template <typename> class C > 
-          class VertexArity3: public C<VertexArity2<BVT,BET,BFT,BTT, A, B> > {};
-
-template <class BVT, class BET, typename BFT,class BTT,
-          template <typename> class A, template <typename> class B, 
-          template <typename> class C, template <typename> class D> 
-          class VertexArity4: public D<VertexArity3<BVT,BET,BFT,BTT, A, B, C> > {};
-
-template <class BVT, class BET, typename BFT,class BTT,
-          template <typename> class A, template <typename> class B, 
-          template <typename> class C, template <typename> class D,
-          template <typename> class E > 
-          class VertexArity5: public E<VertexArity4<BVT,BET,BFT,BTT, A, B, C, D> > {};
-
-template <class BVT, class BET, typename BFT,class BTT,
-          template <typename> class A, template <typename> class B, 
-          template <typename> class C, template <typename> class D,
-          template <typename> class E, template <typename> class F > 
-          class VertexArity6: public F<VertexArity5<BVT,BET,BFT,BTT, A, B, C, D, E> > {};
-
-template <class BVT, class BET, typename BFT,class BTT,
-          template <typename> class A, template <typename> class B, 
-          template <typename> class C, template <typename> class D,
-          template <typename> class E, template <typename> class F,
-					template <typename> class G> 
-          class VertexArity7: public G<VertexArity6<BVT,BET,BFT,BTT, A, B, C, D, E, F> > {};
-
-template <class BVT, class BET, typename BFT,class BTT,
-          template <typename> class A, template <typename> class B, 
-          template <typename> class C, template <typename> class D,
-          template <typename> class E, template <typename> class F,
-					template <typename> class G, template <typename> class H> 
-          class VertexArity8: public H<VertexArity7<BVT,BET,BFT,BTT, A, B, C, D, E, F, G > > {};
-
-template <class BVT, class BET, typename BFT,class BTT,
-          template <typename> class A, template <typename> class B, 
-          template <typename> class C, template <typename> class D,
-          template <typename> class E, template <typename> class F,
-					template <typename> class G, template <typename> class H,
-					template <typename> class I>
-          class VertexArity9: public I<VertexArity8<BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H > > {};
-					
-template <class BVT, class BET, typename BFT,class BTT,
-          template <typename> class A, template <typename> class B, 
-          template <typename> class C, template <typename> class D,
-          template <typename> class E, template <typename> class F,
-					template <typename> class G, template <typename> class H,
-					template <typename> class I, template <typename> class J>
-          class VertexArity10: public J<VertexArity9<BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H, I > > {};
 
 /* The Real Big Vertex class;
 
@@ -207,7 +142,7 @@ template <class BVT, class BET, typename BFT,class BTT,
           template <typename> class G, template <typename> class H,
 					template <typename> class I, template <typename> class J, 
 					template <typename> class K> 
-class VertexArityMax: public K<VertexArity10<BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H, I, J> > {
+class VertexArityMax: public K<Arity10<VertexBase,BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H, I, J> > {
 
 // ----- Flags stuff -----
 public:
@@ -295,9 +230,6 @@ static inline bool DeleteBitFlag(int bitval)
 
           };
 
-
-template < typename T=int>
-class DefaultDeriver : public T {};
           
 /*
 
@@ -344,7 +276,7 @@ template <class BVT, class BET, class BFT,
           template <typename> class G = DefaultDeriver, template <typename> class H = DefaultDeriver,
 					template <typename> class I = DefaultDeriver, template <typename> class J = DefaultDeriver,
 					template <typename> class K = DefaultDeriver> 
-              class VertexSimp2: public VertexArityMax<BVT,BET,BFT,DumTT, A, B, C, D, E, F, G, H, I, J, K>  {};
+              class VertexSimp2: public VertexArityMax<BVT,BET,BFT,DumClass, A, B, C, D, E, F, G, H, I, J, K>  {};
 
 template <class BVT, class BET, 
           template <typename> class A = DefaultDeriver, template <typename> class B = DefaultDeriver,
@@ -353,7 +285,7 @@ template <class BVT, class BET,
           template <typename> class G = DefaultDeriver, template <typename> class H = DefaultDeriver,
 					template <typename> class I = DefaultDeriver, template <typename> class J = DefaultDeriver,
 					template <typename> class K = DefaultDeriver> 
-                class VertexSimp1: public VertexArityMax<BVT,BET,DumFT,DumTT, A, B, C, D, E, F, G, H, I, J, K>  {};
+                class VertexSimp1: public VertexArityMax<BVT,BET,DumClass,DumClass, A, B, C, D, E, F, G, H, I, J, K>  {};
 
 }// end namespace
 #endif
