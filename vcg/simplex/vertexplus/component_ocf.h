@@ -92,6 +92,7 @@ Mainly the trick here is to store a base pointer in each simplex...
 #define __VCG_VERTEX_PLUS_COMPONENT_OCF
 
 #include <vcg/simplex/vertexplus/component.h>
+
 #include <vector>
 #include <limits>
 
