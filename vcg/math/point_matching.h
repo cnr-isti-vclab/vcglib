@@ -65,7 +65,9 @@ static bool ComputeSimilarityMatchMatrix(		Matrix44x &res,
 	for(size_t i=0;i<( Pmov.size()-1);++i)
 	{
 			scalingFactor += Distance(Pmov[i],Pmov[i+1])/ Distance(Pfix[i],Pfix[i+1]);
-			qDebug("Scaling Factor is %f",scalingFactor/(i+1));
+#ifdef _DEBUG
+			printf("Scaling Factor is %f",scalingFactor/(i+1));
+#endif
 	}
 	scalingFactor/=(Pmov.size()-1);
 
