@@ -78,6 +78,7 @@ First working version!
 #include <vcg/space/texcoord2.h>
 #include <vcg/space/color4.h>
 #include <vcg/simplex/faceplus/component.h>
+#include <vcg/container/derivation_chain.h>
 
 namespace vcg {
 
@@ -133,53 +134,6 @@ class FaceBase: public   face::EmptyVertexRef<
 };
 
 
-
-// Metaprogramming Core
-
-template <class BVT, class BET, class BFT,class BTT,
-          template <typename> class A> 
-          class FaceArity1: public A<FaceBase<BVT,BET,BFT,BTT> > {};
-
-template <class BVT, class BET, typename BFT, class BTT,
-          template <typename> class A, template <typename> class B> 
-          class FaceArity2: public B<FaceArity1<BVT,BET,BFT,BTT, A> > {};
-
-template <class BVT, class BET, typename BFT,class BTT,
-          template <typename> class A, template <typename> class B, 
-          template <typename> class C > 
-          class FaceArity3: public C<FaceArity2<BVT,BET,BFT,BTT, A, B> > {};
-
-template <class BVT, class BET, typename BFT,class BTT,
-          template <typename> class A, template <typename> class B, 
-          template <typename> class C, template <typename> class D> 
-          class FaceArity4: public D<FaceArity3<BVT,BET,BFT,BTT, A, B, C> > {};
-
-template <class BVT, class BET, typename BFT,class BTT,
-          template <typename> class A, template <typename> class B, 
-          template <typename> class C, template <typename> class D,
-          template <typename> class E > 
-          class FaceArity5: public E<FaceArity4<BVT,BET,BFT,BTT, A, B, C, D> > {};
-
-template <class BVT, class BET, typename BFT,class BTT,
-          template <typename> class A, template <typename> class B, 
-          template <typename> class C, template <typename> class D,
-          template <typename> class E, template <typename> class F > 
-          class FaceArity6: public F<FaceArity5<BVT,BET,BFT,BTT, A, B, C, D, E> > {};
-
-template <class BVT, class BET, typename BFT,class BTT,
-          template <typename> class A, template <typename> class B, 
-          template <typename> class C, template <typename> class D,
-          template <typename> class E, template <typename> class F, 
-          template <typename> class G  > 
-          class FaceArity7: public G<FaceArity6<BVT,BET,BFT,BTT, A, B, C, D, E, F> > {};
-
-template <class BVT, class BET, typename BFT,class BTT,
-          template <typename> class A, template <typename> class B, 
-          template <typename> class C, template <typename> class D,
-          template <typename> class E, template <typename> class F, 
-          template <typename> class G, template <typename> class H  > 
-          class FaceArity8: public H<FaceArity7<BVT,BET,BFT,BTT, A, B, C, D, E, F, G> > {};
-
 /* The Real Big Face class;
 
 The class __FaceArityMax__ is the one that is the Last to be derived,
@@ -198,11 +152,11 @@ template <class BVT, class BET, typename BFT,class BTT,
           template <typename> class E, template <typename> class F,
           template <typename> class G, template <typename> class H,
           template <typename> class I  > 
-          class FaceArityMax: public I<FaceArity8<BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H> > {
+          class FaceArityMax: public I<Arity8<FaceBase,BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H> > {
 
 // ----- Flags stuff -----
 public:
-  
+
 	inline int & UberFlags ()
 	{ 
 			return this->Flags();
