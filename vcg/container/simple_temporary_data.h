@@ -59,6 +59,7 @@ public:
 	SimpleTempDataBase() {};
 	virtual void Resize(const int & sz) = 0;
 	virtual void Reorder(std::vector<size_t> & newVertIndex)=0;
+	virtual int SizeOf() const  = 0;
 };
 
 template <class STL_CONT, class ATTR_TYPE>
@@ -108,9 +109,25 @@ void Reorder(std::vector<size_t> & newVertIndex){
 	}
 }
 
+int SizeOf() const {return sizeof(ATTR_TYPE);}
 };
 
+class AttributeBase{
+	public:
+	virtual ~AttributeBase() {};
+	AttributeBase() {};
+	virtual int SizeOf()const  = 0;
+};
 
+template <class ATTR_TYPE>
+class Attribute: public AttributeBase   {
+public:
+typedef ATTR_TYPE AttrType;
+AttrType * attribute;
+Attribute(){attribute = new ATTR_TYPE();}
+~Attribute(){delete attribute;}
+int SizeOf()const {return sizeof(ATTR_TYPE);}
+};
 
 }; // end namespace vcg
 
