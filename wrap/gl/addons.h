@@ -333,7 +333,7 @@ public:
 				vcg::Point3f Direct=(head-tail);
 				float l_body=Direct.Norm()-head_lenght;
 				glPushMatrix();
-				glTranslate(vcg::Point3f(tail.Norm(),0,0));
+				//glTranslate(vcg::Point3f(tail.Norm(),0,0));
 				Cylinder(body_slice,l_body,body_width,useDisplList);
 				glPopMatrix();
 				glTranslate(vcg::Point3f(l_body,0,0));
@@ -361,7 +361,7 @@ public:
 				glMultMatrixf(&tr[0][0]);
 				vcg::Point3f Direct=(head-tail);
 				float l_body=Direct.Norm();
-				glTranslate(vcg::Point3f(tail.Norm(),0,0));
+				//glTranslate(vcg::Point3f(tail.Norm(),0,0));
 				Cone(slice,l_body,width,useDisplList);	
 				glPopMatrix();
 				glPopAttrib();
@@ -384,7 +384,7 @@ public:
 				glMultMatrixf(&tr[0][0]);
 				vcg::Point3f Direct=(head-tail);
 				float l_body=Direct.Norm();
-				glTranslate(vcg::Point3f(tail.Norm(),0,0));
+				//glTranslate(vcg::Point3f(tail.Norm(),0,0));
 				Cylinder(slice,l_body,width,useDisplList);
 				glPopMatrix();
 				glPopAttrib();
