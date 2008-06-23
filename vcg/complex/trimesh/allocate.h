@@ -682,6 +682,61 @@ public:
 		m.face_attr.erase(i);
 	}
 
+	/// Per Mesh Attributes
+	template <class ATTR_TYPE> 
+	static
+	typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE>
+	 AddPerMeshAttribute( MeshType & m, std::string name){
+		HWIte i;
+		HandlesWrapper h; 
+		h._name = name;
+		if(!name.empty()){
+			i = m.mesh_attr.find(h);
+			assert(i ==m.mesh_attr.end() );// an attribute with this name exists
+		}
+		h._handle = (void*) new Attribute<ATTR_TYPE>();
+		std::pair < HandlesIterator , bool> res =  m.mesh_attr.insert(h);
+		return typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE>(res.first->_handle);
+	 }
+	
+	template <class ATTR_TYPE> 
+	static
+		typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE>
+	 GetPerMeshAttribute( const MeshType & m, const std::string & name){
+		assert(!name.empty());
+		HandlesWrapper h1; h1._name = name;
+		typename std::set<HandlesWrapper > ::const_iterator i;
+
+		i =m.mesh_attr.find(h1);
+		if(i!=m.mesh_attr.end())
+				return typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE>((*i)._handle);
+			else
+				return typename MeshType:: template PerMeshAttributeHandle<ATTR_TYPE>(NULL);
+	}
+
+	template <class ATTR_TYPE> 
+	static
+		void
+	DeletePerMeshAttribute( MeshType & m,typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE> & h){
+		typename std::set<HandlesWrapper > ::iterator i;
+		for( i = m.mesh_attr.begin(); i !=  m.mesh_attr.end(); ++i)
+			if( (*i)._handle == h._handle ){
+				delete (( Attribute<ATTR_TYPE> *)(*i)._handle);
+				m.mesh_attr.erase(i); 
+				return;}
+			assert(0);
+	}
+
+	template <class ATTR_TYPE > 
+	static
+		void	DeletePerMeshAttribute( MeshType & m,  std::string name){
+		HandlesIterator i;
+		HandlesWrapper h1; h1._name = name;
+		i = m.mesh_attr.find(h1);
+		assert(i!=m.mesh_attr.end());
+		delete ((Attribute<ATTR_TYPE> *)(*i)._handle);
+		m.mesh_attr.erase(i);
+	}
 }; // end class
 		
 

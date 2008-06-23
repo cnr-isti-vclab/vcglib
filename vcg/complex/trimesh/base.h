@@ -222,9 +222,17 @@ class TriMesh{
 		ATTR_TYPE & operator [](const RefType  & i){return (*_handle)[i];}
 	};
 
+	template <class ATTR_TYPE>
+	class PerMeshAttributeHandle{
+	public:
+		PerMeshAttributeHandle(void *ah):_handle ( (Attribute<ATTR_TYPE> *)ah ){}
+		Attribute<ATTR_TYPE> * _handle;
+		ATTR_TYPE & operator ()(){ return *((Attribute<ATTR_TYPE> *)_handle)->attribute;}
+	};
 
- 	std::set< HandlesWrapper> vert_attr;
- 	std::set< HandlesWrapper> face_attr;
+ 	std::set< HandlesWrapper > vert_attr;
+ 	std::set< HandlesWrapper > face_attr;
+	std::set< HandlesWrapper > mesh_attr;
 
 		/// La camera
 	Camera<ScalarType> camera; // intrinsic
@@ -261,17 +269,26 @@ public:
 			delete ((SimpleTempDataBase<VertContainer>*)(*i)._handle);
 		for( i = face_attr.begin(); i != face_attr.end(); ++i) 
 			delete ((SimpleTempDataBase<FaceContainer>*)(*i)._handle);
+		for( i = mesh_attr.begin(); i != mesh_attr.end(); ++i) 
+			delete ((AttributeBase*)(*i)._handle);
 	}
 
-	inline int MemUsed() const
-	{
-		return sizeof(MeshType)+sizeof(VertexType)*vert.size()+sizeof(FaceType)*face.size();
-	}
+	 int Mem(const int & nv, const int & nf) const  {
+		typename std::set< HandlesWrapper>::const_iterator i;
+		int size = 0;
+		size += sizeof(TriMesh)+sizeof(VertexType)*nv+sizeof(FaceType)*nf;
 
-	inline int MemNeeded() const
-	{
-		return sizeof(MeshType)+sizeof(VertexType)*vn+sizeof(FaceType)*fn;
+		for( i = vert_attr.begin(); i != vert_attr.end(); ++i) 
+			size += ((SimpleTempDataBase<VertContainer>*)(*i)._handle)->SizeOf()*nv;
+		for( i = face_attr.begin(); i != face_attr.end(); ++i) 
+			size +=  ((SimpleTempDataBase<FaceContainer>*)(*i)._handle)->SizeOf()*nf;
+		for( i = mesh_attr.begin(); i != mesh_attr.end(); ++i) 
+			size +=  ((AttributeBase*)(*i)._handle)->SizeOf();
+
+		return size;
 	}
+	int MemUsed() const  {return Mem(vert.size(),face.size());}
+	inline int MemNeeded() const {return Mem(vn,fn);}
 
 
 
@@ -457,6 +474,15 @@ bool HasPerFaceAttribute(const MESH_TYPE &m,   std::string   name){
 		h._name = name;
 		ai = m.face_attr.find(h);
 		return (ai!= m.face_attr.end() ) ;
+}
+
+template <class MESH_TYPE>
+bool HasPerMeshAttribute(const MESH_TYPE &m,   std::string   name){
+		typename std::set< typename MESH_TYPE::HandlesWrapper>::const_iterator ai;
+		typename MESH_TYPE::HandlesWrapper h; 
+		h._name = name;
+		ai = m.mesh_attr.find(h);
+		return (ai!= m.mesh_attr.end() ) ;
 }
 
 /*@}*/
