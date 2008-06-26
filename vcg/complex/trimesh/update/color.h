@@ -102,21 +102,51 @@ So it just require that you have correctly computed the flags;
    - vcg::tri::UpdateColor<Mesh>::VertexBorderFlag(m.cm);
 
 */
-static void VertexBorderFlag( UpdateMeshType &m, Color4b BorderColor=Color4b::Blue, Color4b InternalColor=Color4b::White)
+static void VertexBorderFlag( UpdateMeshType &m, Color4b BorderColor=Color4b::Blue, Color4b InternalColor=Color4b::White, Color4b MixColor=Color4b::Cyan)
 {
-	typename UpdateMeshType::VertexIterator vi;
-	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-		if(!(*vi).IsD())
-			(*vi).C()=InternalColor;
+	Color4b BaseColor = Color4b::Green;
+	
+	VertexConstant(m,BaseColor);	
 
 	typename UpdateMeshType::FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
 		for(int j=0;j<3;++j)
 			if((*fi).IsB(j)){
-				(*fi).V(j)->C() = BorderColor;
-				(*fi).V1(j)->C() = BorderColor;
-				//(*fi).C() = BorderColor;
+				if( (*fi).V(j)->C() == BaseColor)     (*fi).V(j)->C() = BorderColor;
+				if( (*fi).V(j)->C() == InternalColor) (*fi).V(j)->C() = MixColor;
+				if( (*fi).V1(j)->C() == BaseColor)     (*fi).V1(j)->C() = BorderColor;
+				if( (*fi).V1(j)->C() == InternalColor) (*fi).V1(j)->C() = MixColor;
+			} else
+			{
+				if( (*fi).V(j)->C() == BaseColor)     (*fi).V(j)->C() = InternalColor;
+				if( (*fi).V(j)->C() == BorderColor) (*fi).V(j)->C() = MixColor;
+				if( (*fi).V1(j)->C() == BaseColor)     (*fi).V1(j)->C() = InternalColor;
+				if( (*fi).V1(j)->C() == BorderColor) (*fi).V1(j)->C() = MixColor;
 			}
+				
+}
+
+/// This function colores the face of a mesh randomly. 
+/// The feature bit is used to color polygonal faces uniformly
+
+static void MultiFaceRandom( UpdateMeshType &m)
+{
+	FaceIterator fi;
+	Color4b BaseColor = Color4b::Black;
+	FaceConstant(m,BaseColor);	
+	int id=0;
+	for(fi=m.face.begin();fi!=m.face.end();++fi)
+			if(!(*fi).IsD())
+			{
+				id++;
+				if((*fi).C() == BaseColor) (*fi).C() = Color4b::Scatter(50, id%50,.4f,.7f);
+				for(int j=0;j<3;++j)
+					if((*fi).IsF(j)) 
+					{
+						assert(!IsBorder((*fi),j));
+						(*fi).FFp(j)->C()= (*fi).C();
+					}
+			}	
 }
 
 static void FaceBF( UpdateMeshType &m, Color4b vn=Color4b::White, Color4b vb=Color4b::Blue, 
