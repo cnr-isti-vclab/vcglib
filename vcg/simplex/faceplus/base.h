@@ -240,6 +240,15 @@ public:
 	/// This funcion execute the inverse operation of SetS()
 	void ClearB(int i)	{this->Flags() &= (~(BORDER0<<i));}
 	
+	/// This function checks if a given side of the face is a feature/internal edge
+	/// it is used by some importer to mark internal 
+	/// edges of polygonal faces that have been triangulated
+	bool IsF(int i) const {return (this->Flags() & (FEATURE0<<i)) != 0;}
+	/// This function select the face
+	void SetF(int i)		{this->Flags() |=(FEATURE0<<i);}
+	/// This funcion execute the inverse operation of SetS()
+	void ClearF(int i)	{this->Flags() &= (~(FEATURE0<<i));}
+	
 ///  Return the first bit that is not still used
 static int &LastBitFlag()
 		{
