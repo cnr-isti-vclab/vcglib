@@ -162,6 +162,7 @@ struct ObjIndexedFace
   int n[3];
   int t[3];
   int tInd;
+	bool edge[3];
   Color4b c;
 };
 
@@ -376,6 +377,7 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 			else if (header.compare("f")==0)  // face
 			{
 				if (numTokens < 4) return E_LESS_THAN_3VERTINFACE;
+				int vertexesPerFace = static_cast<int>(tokens.size()-1);
 				
 			  std::string vertex;
 			  std::string texcoord;
@@ -415,7 +417,10 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 				// --------------------
 				if( oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR)		
           ff.c = currentColor;
-
+				
+				// by default there are no internal edge
+				ff.edge[0]=ff.edge[1]=ff.edge[2]=false;
+				if(vertexesPerFace>3) ff.edge[2]=true;
 				++numTriangles;
         indexedFaces.push_back(ff);
         	/*
@@ -437,7 +442,6 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 					// triangles, and this may lead to the creation of very thin triangles.
 					*/
 
-				int vertexesPerFace = static_cast<int>(tokens.size()-1);
 				int iVertex = 3;
 				while (iVertex < vertexesPerFace)  // add other triangles
 				{
@@ -478,7 +482,11 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
             ffNew.n[1]=ff.n[2];
             ffNew.n[2]=vn4_index;            
 					}
-
+					// Setting internal edges: edge 1 (the opposite to vertex 0) is always an external edge. 
+          ffNew.edge[0]=true;
+					ffNew.edge[1]=false;
+					if(iVertex < vertexesPerFace) ffNew.edge[2]=true;
+																	else	ffNew.edge[2]=false;
 					++numTriangles;
           ++extraTriangles;
           indexedFaces.push_back(ffNew);
@@ -550,6 +558,9 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
       }
 		  if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
         m.face[i].WN(j).Import(normals[indexedFaces[i].n[j]]);		
+			// set border flags according to internals faces
+			if(indexedFaces[i].edge[j]) m.face[i].SetF(j);
+						else m.face[i].ClearF(j);
     }
 		if ( oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR )
         m.face[i].C()=indexedFaces[i].c;
@@ -558,6 +569,7 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 	    m.face[i].N().Import(m.face[i].WN(0)+m.face[i].WN(1)+m.face[i].WN(2));
     				else	// computing face normal from position of face vertices
 	  	face::ComputeNormalizedNormal(m.face[i]);
+						
   }
 
   return result;
