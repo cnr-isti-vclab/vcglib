@@ -1,5 +1,5 @@
-
 #include <assert.h>
+#include <QtCore/QVariant>
 #include "qgetopt.h"
 
 #include <iostream>
@@ -31,7 +31,7 @@ void GetOpt::addSwitch(char s, const QString &name, const QString &description, 
 }
 
   //add a valued option (v will be left untouched if the option is not given)
-void GetOpt::addOption(char s, const QString &name, const QString &description, QString *v ) {
+void GetOpt::addOption(char s, const QString &name, const QString &description, QVariant *v ) {
   Option option;
   assert(!findOption(s, option));
   assert(!findArg(name, option));
@@ -43,7 +43,7 @@ void GetOpt::addOption(char s, const QString &name, const QString &description, 
   options.push_back(option);
 }
   //add an argument
-void GetOpt::addArgument(const QString &name, const QString &description, QString *v) {
+void GetOpt::addArgument(const QString &name, const QString &description, QVariant *v) {
   Option option;
   assert(!findArg(name, option));
   option.type = Option::ARGUMENT;
@@ -53,7 +53,7 @@ void GetOpt::addArgument(const QString &name, const QString &description, QStrin
   options.push_back(option);
 }
   //add an optional agrument
-void GetOpt::addOptionalArgument(const QString &name, const QString &description, QString *v) {
+void GetOpt::addOptionalArgument(const QString &name, const QString &description, QVariant *v) {
   Option option;
   assert(!findArg(name, option));
   option.type = Option::OPTIONAL;
@@ -173,7 +173,13 @@ bool GetOpt::parse(QString &error) {
         error = "Unknown option: '--" + arg + "'";
         return false;
       }
-      *(o.value) = val;
+      QVariant v(val);
+      if(!v.canConvert(o.value->type()) || !v.convert(o.value->type())) {
+         error = "Error while parsing option " + o.name + ": cannot convert " +
+                  val + " to: " + o.value->typeName();
+        return false;
+      }
+      *(o.value) = v;
 
     //option
     } else if( arg[0] == '-' ) {
@@ -190,12 +196,22 @@ bool GetOpt::parse(QString &error) {
         *(o.b) = true;
       } else { //OPTION
         i++;
+        if(args.size() <= i) {
+          error =  "Missing value for option: " + arg;
+          return false;
+        }
         arg = args[i];
         if(i == args.size() || arg[0] == '-') {
           error = "Missing argument after option '" + arg + "'";
           return false;
         }
-        *(o.value) = arg;
+        QVariant v(arg);
+        if(!v.canConvert(o.value->type()) || !v.convert(o.value->type())) {
+          error = "Error while parsing option " + o.name + ": cannot convert " +
+                  arg + " to: " + o.value->typeName();
+          return false;
+        }
+        *(o.value) = v;
       }
     //argument
     } else {

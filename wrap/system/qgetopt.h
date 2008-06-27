@@ -27,7 +27,7 @@ class GetOpt {
     char o;
     QString name;
     QString description;
-    QString *value;
+    QVariant *value;
     bool *b;
   };
   bool unlimitedArgs;
@@ -47,13 +47,13 @@ class GetOpt {
   void addSwitch(char s, const QString &longname, const QString &description, bool *b );
 
   //add a valued option (v will be left untouched if the option is not given)
-  void addOption(char s, const QString &longname, const QString &description, QString *v );
+  void addOption(char s, const QString &longname, const QString &description, QVariant *v);
 
   //add an argument
-  void addArgument(const QString &name, const QString &description, QString *v);
+  void addArgument(const QString &name, const QString &description, QVariant *v);
 
   //add an optional agrument
-  void addOptionalArgument(const QString &name, const QString &description, QString *v);
+  void addOptionalArgument(const QString &name, const QString &description, QVariant *v);
  
   //allow an unlimited number of optional arguments
   void allowUnlimitedArguments(bool allow) { unlimitedArgs = allow; }
