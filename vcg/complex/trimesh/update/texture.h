@@ -29,7 +29,7 @@ $Log: position.h,v $
 #ifndef __VCG_TRI_UPDATE_TEXTURE
 #define __VCG_TRI_UPDATE_TEXTURE
 
-#include <vcg/space/plane.h>
+//#include <vcg/space/plane.h>
 
 namespace vcg {
 namespace tri {
@@ -56,7 +56,7 @@ typedef typename MeshType::FaceIterator   FaceIterator;
 static void WedgeTexFromPlanar(ComputeMeshType &m, Plane3<ScalarType> &pl)
 {
 	FaceIterator fi;
-	for(fi=m.face.begin();vi!=m.face.end();++vi)
+	for(fi=m.face.begin();fi!=m.face.end();++fi)
 	        if(!(*fi).IsD()) 
 							{
 							
@@ -66,6 +66,34 @@ static void WedgeTexFromPlanar(ComputeMeshType &m, Plane3<ScalarType> &pl)
 static void WedgeTexFromCamera(ComputeMeshType &m, Plane3<ScalarType> &pl)
 {
 	
+}
+
+
+/// Currently texture coords are kept for ALL the triangles of a mesh. The texture id is stored with each face. 
+/// if a given face should not have tex coord it has the default -1 value for texture ID.
+/// This function will add an new fake texture, add that to the list of textures and change all the -1 id to that value.
+static void WedgeTexRemoveNull(ComputeMeshType &m, const std::string &texturename)
+{
+	bool found=false;
+	
+	FaceIterator fi;
+	// first loop lets check that there are -1 indexed textured face
+	for(fi=m.face.begin();fi!=m.face.end();++fi)
+		if(!(*fi).IsD()) if((*fi).WT(0).N()==-1) found = true;
+	
+	if(!found) return;
+	m.textures.push_back(texturename);
+	
+	int nullId=m.textures.size()-1;
+	
+	for(fi=m.face.begin();fi!=m.face.end();++fi)
+		if(!(*fi).IsD()) if((*fi).WT(0).N()==-1)		
+		{
+			(*fi).WT(0).N() = nullId;
+			(*fi).WT(1).N() = nullId;
+			(*fi).WT(2).N() = nullId;			
+		}											
+			
 }
 
 }; // end class
