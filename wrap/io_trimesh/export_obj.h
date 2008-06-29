@@ -249,7 +249,7 @@ namespace io {
 				{
 					int index = Materials<SaveMeshType>::CreateNewMaterial(m,materialVec,material_num,fi);
 					
-					if(index == materialVec.size())//inserts a new element material
+					if(index == (int)materialVec.size())//inserts a new element material
 					{
 						material_num++;
 						fprintf(fp,"\nusemtl material_%d\n",materialVec[index-1].index);

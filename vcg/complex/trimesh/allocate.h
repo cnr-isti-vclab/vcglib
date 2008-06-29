@@ -438,7 +438,7 @@ namespace vcg {
 		static void CompactVertexVector( MeshType &m ) 
 		{
 			// If already compacted fast return please!
-			if(m.vn==m.vert.size()) return; 
+			if(m.vn==(int)m.vert.size()) return; 
 			
 			// newVertIndex [ <old_vert_position> ] gives you the new position of the vertex in the vector;
 			std::vector<size_t> newVertIndex(m.vert.size(),std::numeric_limits<size_t>::max() );
@@ -456,7 +456,7 @@ namespace vcg {
 					++pos;
 				}
 			}
-			assert(pos==m.vn);
+			assert((int)pos==m.vn);
 			
 			// call a templated reordering function that manage any additional data internally stored by the vector 
 			// for the default std::vector no work is needed (some work is typically needed for the OCF stuff) 
@@ -492,7 +492,7 @@ namespace vcg {
 		static void CompactFaceVector( MeshType &m ) 
 		{
 		  // If already compacted fast return please!
-			if(m.fn==m.face.size()) return; 
+			if(m.fn==(int)m.face.size()) return; 
 			 
 			// newFaceIndex [ <old_face_position> ] gives you the new position of the face in the vector;
 			std::vector<size_t> newFaceIndex(m.face.size(),std::numeric_limits<size_t>::max() );
@@ -510,7 +510,7 @@ namespace vcg {
 					++pos;
 				}
 			}
-			assert(pos==m.fn);
+			assert((int)pos==m.fn);
 			
 			// call a templated reordering function that manage any additional data internally stored by the vector 
 			// for the default std::vector no work is needed (some work is typically needed for the OCF stuff) 

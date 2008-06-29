@@ -640,7 +640,7 @@ void DrawPoints()
 	glPointParameterf( GL_POINT_SIZE_MAX, 16.0f );
 	glPointParameterf( GL_POINT_SIZE_MIN, 1.0f );	
 	
-	if(m->vn!=m->vert.size()) 
+	if(m->vn!=(int)m->vert.size()) 
 		{
 			DrawPointsBase<nm,cm>();
 			return;
