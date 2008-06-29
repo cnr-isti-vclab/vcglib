@@ -161,7 +161,7 @@ class Stat
           }
         }
         VertexIterator vi;
-        for(vi = m.cm.vert.begin(); vi != m.cm.vert.end(); ++vi)
+        for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
           (*vi).ClearS();
       return 0;
 	  }
