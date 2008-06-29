@@ -3320,7 +3320,7 @@ void PlyFile::compile( PlyProperty * p )
 				case 1: p->cb = cb_skip_list_bin1; break;
 				case 2: p->cb = cb_skip_list_bin2; break;
 				case 4: p->cb = cb_skip_list_bin4; break;
-				case 8: p->cb = cb_skip_list_bin4; break;
+				case 8: p->cb = cb_skip_list_bin8; break; // before 29/6/08 was p->cb = cb_skip_list_bin4 but by simmetry...
 				default:p->cb = 0; assert(0); break;
 				}
 			}
