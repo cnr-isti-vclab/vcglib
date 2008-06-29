@@ -849,6 +849,7 @@ private:
 		for(typename MESHMODELTYPE::ConstFaceIterator itf = m.face.begin();itf != m.face.end();++itf)
 		{
 			int tmp = itf->cWT(0).N();
+			assert(tmp>=0 && tmp<patches.size());	
 			patches[tmp].push_back(cc);
 			++cc;
 		}
