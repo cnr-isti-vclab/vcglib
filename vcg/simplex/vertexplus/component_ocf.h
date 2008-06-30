@@ -135,7 +135,7 @@ public:
 	void pop_back();
   void resize(const unsigned int & _size) 
   {
-		int oldsize = BaseType::size();
+		const unsigned int oldsize = BaseType::size();
 			BaseType::resize(_size);
 		if(oldsize<_size){
 			ThisTypeIterator firstnew = BaseType::begin();
