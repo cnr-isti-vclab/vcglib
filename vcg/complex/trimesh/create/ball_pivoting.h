@@ -99,7 +99,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
     std::vector<VertexType *> targets;      
     std::vector<Point3x> points;      
     std::vector<ScalarType> dists;
-    while(last_seed++ < (int)(this->mesh.vert.size())) {
+    while(++last_seed < (int)(this->mesh.vert.size())) {
       VertexType &seed = this->mesh.vert[last_seed];
       if(seed.IsD() || seed.IsUserBit(usedBit)) continue;                      
       
