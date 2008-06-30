@@ -959,11 +959,11 @@ public:
 	void ClearB(int i)	{_flags &= (~(BORDER0<<i));}
 
 	/// This function checks if the face is Crease  on side i
-	bool IsFF(int i) const {return (_flags & (FEATURE0<<i)) != 0;}
+	bool IsF(int i) const {return (_flags & (FEATURE0<<i)) != 0;}
 	/// This function select the face flag
-	void SetFF(int i)		{_flags |=(FEATURE0<<i);}
+	void SetF(int i)		{_flags |=(FEATURE0<<i);}
 	/// This funcion execute the inverse operation of Set()
-	void ClearFF(int i)	{_flags &= (~(FEATURE0<<i));}
+	void ClearF(int i)	{_flags &= (~(FEATURE0<<i));}
 
 	/// This function checks if the given user bit is true
 	bool IsUserBit(int userBit){return (_flags & userBit) != 0;}
