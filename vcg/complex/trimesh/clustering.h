@@ -269,7 +269,7 @@ class Clustering
   }
   
   
-  BasicGrid<CellType,ScalarType> Grid;
+  BasicGrid<ScalarType> Grid;
 
 #ifdef _MSC_VER
   STDEXT::hash_set<SimpleTri> TriSet;

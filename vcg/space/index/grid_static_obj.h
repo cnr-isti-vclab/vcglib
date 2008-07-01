@@ -59,7 +59,7 @@ and contains one istance of the template class.
 */
 
 template < class ObjType, class FLT=float  >
-class GridStaticObj : public BasicGrid<ObjType, FLT>
+class GridStaticObj : public BasicGrid<FLT>
 {
  public:
 
