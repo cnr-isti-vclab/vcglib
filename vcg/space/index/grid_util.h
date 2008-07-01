@@ -91,17 +91,15 @@ namespace vcg {
 
 	*/
 
-template <class OBJTYPE, class SCALARTYPE> 
-class BasicGrid:public SpatialIndex<OBJTYPE,SCALARTYPE> 
+template <class SCALARTYPE> 
+class BasicGrid //:public SpatialIndex<SCALARTYPE> 
 {
 public:
 
 	typedef SCALARTYPE ScalarType;
 	typedef Box3<ScalarType> Box3x;
 	typedef Point3<ScalarType> CoordType;
-	typedef OBJTYPE ObjType;
-	typedef OBJTYPE* ObjPtr;
-	typedef BasicGrid<OBJTYPE,SCALARTYPE> GridType;
+	typedef BasicGrid<SCALARTYPE> GridType;
 
 	Box3x bbox;
 
@@ -109,6 +107,17 @@ public:
 	Point3i siz;		/// Number of cells forming the grid
 	CoordType voxel;	/// Dimensions of a single cell
 
+	/*
+	 Derives the right values of Dim and voxel starting
+	 from the current values of siz and bbox
+	*/
+	void ComputeDimAndVoxel()
+		{
+			this->dim  = this->bbox.max - this->bbox.min;
+			this->voxel[0] = this->dim[0]/this->siz[0];
+			this->voxel[1] = this->dim[1]/this->siz[1];
+			this->voxel[2] = this->dim[2]/this->siz[2];			
+		}
 	/* Given a 3D point, returns the coordinates of the cell where the point is
 	 * @param p is a 3D point
 	 * @return integer coordinates of the cell
@@ -144,6 +153,16 @@ public:
 		p += bbox.min;
 	}
 
+	// Same of above but for the case that you just want to transform 
+	// from a space to the other.
+	inline void IPToP(const CoordType & pi, CoordType &p ) const
+	{
+		p[0] = ((ScalarType)pi[0])*voxel[0];
+		p[1] = ((ScalarType)pi[1])*voxel[1];
+		p[2] = ((ScalarType)pi[2])*voxel[2];
+		p += bbox.min;
+	}
+	
 	/* Given a cell in <ScalarType> coordinates, compute the corresponding cell in integer coordinates
 	 * @param b is the cell in <ScalarType> coordinates
 	 * @return ib is the correspondent box in integer coordinates
@@ -167,6 +186,13 @@ public:
 	}
 };
 
+template<class scalar_type>
+void BestDim( const Box3<scalar_type> box, const scalar_type voxel_size, Point3i & dim )
+{
+	Point3<scalar_type> box_size = box.max-box.min;
+	__int64 elem_num = (__int64)(box_size[0]/voxel_size +0.5) *( __int64)(box_size[1]/voxel_size +0.5) * (__int64)(box_size[2]/voxel_size +0.5);
+	BestDim(elem_num,box_size,dim);
+}	
 	/** Calcolo dimensioni griglia.
 	Calcola la dimensione della griglia in funzione
 	della ratio del bounding box e del numero di elementi
