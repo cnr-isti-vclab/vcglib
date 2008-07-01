@@ -1,19 +1,38 @@
+/****************************************************************************
+* VCGLib                                                            o o     *
+* Visual and Computer Graphics Library                            o     o   *
+*                                                                _   O  _   *
+* Copyright(C) 2004                                                \/)\/    *
+* Visual Computing Lab                                            /\/|      *
+* ISTI - Italian National Research Council                           |      *
+*                                                                    \      *
+* All rights reserved.                                                      *
+*                                                                           *
+* This program is free software; you can redistribute it and/or modify      *   
+* it under the terms of the GNU General Public License as published by      *
+* the Free Software Foundation; either version 2 of the License, or         *
+* (at your option) any later version.                                       *
+*                                                                           *
+* This program is distributed in the hope that it will be useful,           *
+* but WITHOUT ANY WARRANTY; without even the implied warranty of            *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
+* GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
+* for more details.                                                         *
+*                                                                           *
+****************************************************************************/
 #ifndef __VCG_MESH_RESAMPLER
 #define __VCG_MESH_RESAMPLER
 
 #include <vcg/complex/trimesh/update/normal.h>
 #include <vcg/complex/trimesh/update/bounding.h>
 #include <vcg/complex/trimesh/update/edges.h>
-//#include <vcg/complex/trimesh/create/extended_marching_cubes.h>
 #include <vcg/complex/trimesh/create/marching_cubes.h>
 #include <vcg/space/index/grid_static_ptr.h>
 #include <vcg/complex/trimesh/closest.h>
 #include <vcg/space/box3.h>
 
-//#include <volume_dataset.h>//debugghe
-
 namespace vcg {
-namespace trimesh {
+namespace tri {
 
 
 /** \addtogroup trimesh */
@@ -25,38 +44,31 @@ namespace trimesh {
 		@param NEW_MESH_TYPE (Template Parameter) Specifies the type of output mesh.
  */
 
-template <class OLD_MESH_TYPE,class NEW_MESH_TYPE>
-class Resampler
+template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT>
+	class Resampler : public BasicGrid<FLT>
 {
-	typedef typename OLD_MESH_TYPE Old_Mesh;
-	typedef typename NEW_MESH_TYPE New_Mesh;
+	typedef OLD_MESH_TYPE Old_Mesh;
+	typedef NEW_MESH_TYPE New_Mesh;
 
-	template <class OLD_MESH_TYPE,class NEW_MESH_TYPE>
-	class Walker
+	//template <class OLD_MESH_TYPE,class NEW_MESH_TYPE>
+	class Walker : BasicGrid<float>
 	{
 	private:
 		typedef int VertexIndex;
-		typedef typename OLD_MESH_TYPE Old_Mesh;
-		typedef typename NEW_MESH_TYPE New_Mesh;
+		typedef  OLD_MESH_TYPE Old_Mesh;
+		typedef  NEW_MESH_TYPE New_Mesh;
 		typedef typename New_Mesh::CoordType NewCoordType;
 		typedef typename New_Mesh::VertexType* VertexPointer;
 		typedef typename Old_Mesh::FaceContainer FaceCont;
 		typedef typename vcg::GridStaticPtr<typename Old_Mesh::FaceType> GridType;
-		typedef typename vcg::Box3<int> BoundingBox;
-		//typedef typename std::pair<vcg::Point3i,vcg::Point3i> PointPair;
-		typedef vcg::tri::Allocator< New_Mesh > Allocator;
 
 	protected:
-		BoundingBox		_bbox;
-		vcg::Point3i	_resolution;
-		vcg::Point3i	_cell_size;
 
+		int SliceSize;
+		int	CurrentSlice;
+		typedef trimesh::FaceTmark<Old_Mesh> MarkerFace;
+		MarkerFace markerFunctor;
 		
-		float dim_diag;
-
-		int _slice_dimension;
-		int	_current_slice;
-  
 	
 		VertexIndex *_x_cs; // indici dell'intersezioni della superficie lungo gli Xedge della fetta corrente
 		VertexIndex	*_y_cs; // indici dell'intersezioni della superficie lungo gli Yedge della fetta corrente
@@ -77,78 +89,32 @@ class Resampler
 		
 	public:
 		float max_dim;
-		/*Walker(Volume_Dataset <short> *Vo,float in,const BoundingBox &bbox,vcg::Point3i &resolution)
+		float offset; // an offset value that is always added to the returned value. Useful for extrarcting isosurface  at a different threshold
+		/*Walker(Volume_Dataset <short> *Vo,float in,const Box3i &bbox,vcg::Point3i &resolution)
 		{*/
 		/*	init=in;
 			Vol=Vo;*/
 
-		void SetBBParameters()
+	
+	
+		Walker(const Box3f &_bbox, Point3i _siz )
 		{
-			_cell_size.X() =_bbox.DimX()/_resolution.X();
-			_cell_size.Y() =_bbox.DimY()/_resolution.Y();
-			_cell_size.Z() =_bbox.DimZ()/_resolution.Z();
-		
-			///extend bb until the box - resolution and cell matches
-			while ((_bbox.DimX()%_cell_size.X())!=0)
-					_bbox.max.X()++;
-
-			while ((_bbox.DimY()%_cell_size.Y())!=0)
-					_bbox.max.Y()++;
-
-			while ((_bbox.DimZ()%_cell_size.Z())!=0)
-					_bbox.max.Z()++;
+			this->bbox= _bbox;
+			this->siz=_siz;
+			ComputeDimAndVoxel();
 			
-			//exetend bb to 1 cell for each side
-			_bbox.max+=_cell_size;
-			_bbox.min-=_cell_size;
+			SliceSize = (this->siz.X()+1)*(this->siz.Z()+1);
+			CurrentSlice = 0;
+			offset=0;
 
-			///resetting resolution values
-			_resolution.X()=_bbox.DimX()/_cell_size.X();
-			_resolution.Y()=_bbox.DimY()/_cell_size.Y();
-			_resolution.Z()=_bbox.DimZ()/_cell_size.Z();
+			_x_cs = new VertexIndex[ SliceSize ];
+			_y_cs = new VertexIndex[ SliceSize ];
+			_z_cs = new VertexIndex[ SliceSize ];
+			_x_ns = new VertexIndex[ SliceSize ];
+			_z_ns = new VertexIndex[ SliceSize ];
 
-			///asserting values
-			assert(_bbox.DimX()%_cell_size.X()==0);
-			assert(_bbox.DimY()%_cell_size.Y()==0);
-			assert(_bbox.DimZ()%_cell_size.Z()==0);
-
-			assert(_cell_size.X()*_resolution.X()==_bbox.DimX());
-			assert(_cell_size.Y()*_resolution.Y()==_bbox.DimY());
-			assert(_cell_size.Z()*_resolution.Z()==_bbox.DimZ());
-
-			_slice_dimension = (_resolution.X()+1)*(_resolution.Z()+1);
-		
-			//Point3f diag=Point3f((float)_cell_size.V(0),(float)_cell_size.V(1),(float)_cell_size.V(2));
-			//max_dim=diag.Norm();///diagonal of a cell
-			//
-			_current_slice = _bbox.min.Y();
-
-			Point3f minD=Point3f((float)_bbox.min.V(0),(float)_bbox.min.V(1),(float)_bbox.min.V(2));
-			Point3f maxD=Point3f((float)_bbox.max.V(0),(float)_bbox.max.V(1),(float)_bbox.max.V(2));
-			/*Point3f d=(maxD-minD);
-			dim_diag=d.Norm();*/
-		}
-
-		Walker(const BoundingBox &bbox,vcg::Point3i &resolution)
-		{
-			assert (resolution.V(0)<=bbox.DimX());
-			assert (resolution.V(1)<=bbox.DimY());
-			assert (resolution.V(2)<=bbox.DimZ());
-
-			_bbox= bbox;
-
-			_resolution = resolution;
-
-			SetBBParameters();
-
-			_x_cs = new VertexIndex[ _slice_dimension ];
-			_y_cs = new VertexIndex[ _slice_dimension ];
-			_z_cs = new VertexIndex[ _slice_dimension ];
-			_x_ns = new VertexIndex[ _slice_dimension ];
-			_z_ns = new VertexIndex[ _slice_dimension ];
-
-			_v_cs= new field_value[(_resolution.X()+1)*(_resolution.Z()+1)];
-			_v_ns= new field_value[(_resolution.X()+1)*(_resolution.Z()+1)];
+			_v_cs= new field_value[(this->siz.X()+1)*(this->siz.Z()+1)];
+			_v_ns= new field_value[(this->siz.X()+1)*(this->siz.Z()+1)];
 			
 		};
 
@@ -156,14 +122,14 @@ class Resampler
 		{}
 
 		
-		float V(Point3i p)
+		float V(const Point3i &p)
 		{
 			return (V(p.V(0),p.V(1),p.V(2)));
 		}
 
 		float V(int x,int y,int z)
 		{
-			assert ((y==_current_slice)||(y==(_current_slice+_cell_size.Y())));
+			assert ((y==CurrentSlice)||(y==(CurrentSlice+1)));
 			
 			//test if it is outside the bb of the mesh
 			//vcg::Point3f test=vcg::Point3f((float)x,(float)y,(float)z);
@@ -171,70 +137,60 @@ class Resampler
 				return (1.f);*/
 			int index=GetSliceIndex(x,z);
 			
-			if (y==_current_slice)
+			if (y==CurrentSlice)
 			{
-				//assert(_v_cs[index]<dim_diag);
-				assert(_v_cs[index].first);
-				return _v_cs[index].second;
+				return _v_cs[index].second+offset;
 			}
 			else
 			{
-				//assert(_v_ns[index]<dim_diag);
-				assert(_v_ns[index].first);
-				return _v_ns[index].second;
+				return _v_ns[index].second+offset;
 			}
 		}
 		///return true if the distance form the mesh is less than maxdim and return distance
-		bool DistanceFromMesh(int x,int y,int z,Old_Mesh *mesh,float &dist)
+		bool DistanceFromMesh(int x,int y,int z,Old_Mesh *mesh, float &dist)
 		{
 
-			Old_Mesh::FaceType *f=NULL;
-			//float distm=max_dim;
-			dist=max_dim;
-			vcg::Point3f test=vcg::Point3f((float)x,(float)y,(float)z);
+			typename Old_Mesh::FaceType *f=NULL;
+			const float max_dist = max_dim;
+			vcg::Point3f testPt;
+			this->IPToP(Point3i(x,y,z),testPt);
 
-			////test if it is outside the bb of the mesh
-			/*if (!_oldM->bbox.IsIn(test))
-			{
-				dist=1.f;
-				return true;
-			}*/
-
-			vcg::Point3f Norm;
-			vcg::Point3f Target;
+			vcg::Point3f closestNorm;
+			vcg::Point3f closestPt;
 			vcg::Point3f pip;
 
-			//vcg::tri::get<Old_Mesh,GridType,float>((*mesh),test,_g,dist,Norm,Target,f,pip);
+			// Note that PointDistanceBaseFunctor does not require the edge and plane precomptued.
+			// while the PointDistanceFunctor requires them. 
 			
-			f= vcg::trimesh::GetClosestFace<Old_Mesh,GridType>( *mesh,_g,test,max_dim,dist,Target,Norm,pip);
-		
-			if (f==NULL)
-					return false;
-			else
-			{
-				assert(!f->IsD());
-				Point3f dir=(test-Target);
+			vcg::face::PointDistanceBaseFunctor PDistFunct;
+			f = _g.GetClosest(PDistFunct,markerFunctor,testPt,max_dist,dist,closestPt);
+			
+			if (f==NULL) return false;
+
+			InterpolationParameters(*f,closestPt, pip[0], pip[1], pip[2]);
+			closestNorm =  (f->V(0)->cN())*pip[0]+ (f->V(1)->cN())*pip[1] + (f->V(2)->cN())*pip[2] ;
+
+			assert(!f->IsD());
+				Point3f dir=(testPt-closestPt);
 			/*	dist=dir.Norm();*/
 
 				dir.Normalize();
 				//direction of normal inside the mesh
-				if ((dir*Norm)<0)
+				if ((dir*closestNorm)<0)
 					dist=-dist;
 				//the intersection exist
 				return true;
-			}
 		}
 
 		///compute the values if an entire slice (per y) distances>dig of a cell are signed with double of
 		/// the distance of the bb
-		void CumputeSliceValues(int slice,field_value *slice_values)
+		void ComputeSliceValues(int slice,field_value *slice_values)
 		{
 			float dist;
-			for (int i=_bbox.min.X(); i<=_bbox.max.X(); i+=_cell_size.X())
+			for (int i=0; i<=this->siz.X(); i++)
 			{
-				for (int k=_bbox.min.Z(); k<=_bbox.max.Z(); k+=_cell_size.Z())
+				for (int k=0; k<=this->siz.Z(); k++)
 					{
-			
 						int index=GetSliceIndex(i,k);
 						if (DistanceFromMesh(i,slice,k,_oldM,dist))///compute the distance,inside volume of the mesh is negative
 						{
@@ -249,137 +205,68 @@ class Resampler
 		}
 
 		template<class EXTRACTOR_TYPE>
-		void ProcessSlice(std::vector<vcg::Point3i> cells,EXTRACTOR_TYPE &extractor)
+		void ProcessSlice(EXTRACTOR_TYPE &extractor)
 		{
-			std::vector<vcg::Point3i>::iterator it;
-
-			for (it=cells.begin();it<cells.end();it++)
+			for (int i=0; i<this->siz.X(); i++)
 			{
-						assert((*it).Y()==_current_slice);
-						assert(V(*it)<=max_dim);
-						assert(_bbox.IsIn(*it));
-						vcg::Point3i p1=(*it)+_cell_size;
-						assert((*it)<_bbox.max);
-						assert(p1<=_bbox.max);
-						extractor.ProcessCell((*it), p1);
+				for (int k=0; k<this->siz.Z(); k++)
+				{
+						Point3i p1(i,CurrentSlice,k);
+						Point3i p2=p1+Point3i(1,1,1);
+						extractor.ProcessCell(p1, p2);
+				}
 			}
-
 		}
 
-		void SetGrid()
-		{	
-			_g.Set(_oldM->face.begin(),_oldM->face.end());
-		}
 
 		template<class EXTRACTOR_TYPE>
-		void BuildMesh(Old_Mesh &old_mesh,New_Mesh &new_mesh,EXTRACTOR_TYPE &extractor)
+		void BuildMesh(Old_Mesh &old_mesh,New_Mesh &new_mesh,EXTRACTOR_TYPE &extractor,vcg::CallBackPos *cb)
 		{
 			_newM=&new_mesh;
 			_oldM=&old_mesh;
 			
-			SetGrid();
+			// the following two steps are required to be sure that the point-face distance without precomputed data works well.
+			tri::UpdateNormals<Old_Mesh>::PerFaceNormalized(old_mesh);
+			tri::UpdateFlags<Old_Mesh>::FaceProjection(old_mesh);
+			
+			_g.Set(_oldM->face.begin(),_oldM->face.end());
+			markerFunctor.SetMesh(&old_mesh);
 
 			_newM->Clear();
 
-			vcg::Point3i p1, p2;
 			Begin();
 			extractor.Initialize();
-			for (int j=_bbox.min.Y(); j<=_bbox.max.Y()-_cell_size.Y(); j+=_cell_size.Y())
+			
+			for (int j=0; j<=this->siz.Y(); j++)
 			{
-				ProcessSlice<EXTRACTOR_TYPE>(FindCells(),extractor);//find cells where there is the isosurface and examine it			
+				cb((100*j)/this->siz.Y(),"Marching ");
+				ProcessSlice<EXTRACTOR_TYPE>(extractor);//find cells where there is the isosurface and examine it			
 				NextSlice();
 			}
 			extractor.Finalize();
-			/*_newM= NULL;*/
+			
+			typename New_Mesh::VertexIterator vi;
+			for(vi=new_mesh.vert.begin();vi!=new_mesh.vert.end();++vi) 
+				if(!(*vi).IsD())
+					{
+						IPToP((*vi).cP(),(*vi).P());
+					}
 		}
 		
 		//return the index of a vertex in slide as it was stored
 		int GetSliceIndex(int x,int z)
 		{
-			int ii = (x - _bbox.min.X())/_cell_size.X();
-			int zz = (z - _bbox.min.Z())/_cell_size.Z();
-			VertexIndex index = ii+zz*(_resolution.X()+1);
+			VertexIndex index = x+z*(this->siz.X()+1);
 			return (index);
 		}
-
-		///return true if exist in the cell one value <0 and another one >0
-		bool FindMinMax(vcg::Point3i min,vcg::Point3i max)
-		{
-			assert((min.X()<max.X())&&(min.Y()<max.Y())&&(min.Z()<max.Z()));
-
-			vcg::Point3i _corners[8];
-			///control for each corner of the 
-			_corners[0].X()=min.X();		_corners[0].Y()=min.Y();		_corners[0].Z()=min.Z();
-			_corners[1].X()=max.X();		_corners[1].Y()=min.Y();		_corners[1].Z()=min.Z();
-			_corners[2].X()=max.X();		_corners[2].Y()=max.Y();		_corners[2].Z()=min.Z();
-			_corners[3].X()=min.X();		_corners[3].Y()=max.Y();		_corners[3].Z()=min.Z();
-			_corners[4].X()=min.X();		_corners[4].Y()=min.Y();		_corners[4].Z()=max.Z();
-			_corners[5].X()=max.X();		_corners[5].Y()=min.Y();		_corners[5].Z()=max.Z();
-			_corners[6].X()=max.X();		_corners[6].Y()=max.Y();		_corners[6].Z()=max.Z();
-			_corners[7].X()=min.X();		_corners[7].Y()=max.Y();		_corners[7].Z()=max.Z();
-
-			float min_value=max_dim;
-			float max_value=-max_dim;
-			field_value value;
-			for (int i=0;i<8;i++)
-			{
-				//if one value is > that bbox.diag this value is not valid
-				//that is the mark
-
-				if (_corners[i].Y()==_current_slice)
-					value=_v_cs[GetSliceIndex(_corners[i].X(),_corners[i].Z())];	
-				else
-					value=_v_ns[GetSliceIndex(_corners[i].X(),_corners[i].Z())];
-
-				if (value.first==false)
-					return false;
-
-				//assign new values of min and max
-				if (value.second<min_value)
-					min_value=value.second;
-				if (value.second>max_value)
-					max_value=value.second;
-			}	
-
-			/////do not test with zero..
-			if ((min_value<=0.f)&&(max_value>=0.f))
-				return true;
-
-			return false;
-		}
-
-		///filter the cells from to_hexamine vector to the ones that 
-		/// min and max of the cell are <0 and >0
-		std::vector<vcg::Point3i> FindCells()
-		{
-			std::vector<vcg::Point3i> res;
-			for (int i=_bbox.min.X(); i<=_bbox.max.X()-_cell_size.X(); i+=_cell_size.X())
-			{
-				for (int k=_bbox.min.Z(); k<=_bbox.max.Z()-_cell_size.Z(); k+=_cell_size.Z())
-				{
-					int x0=i;
-					int y0=_current_slice;
-					int z0=k;
-					int x1=x0+_cell_size.X();
-					int y1=y0+_cell_size.Y();
-					int z1=z0+_cell_size.Z();
-					vcg::Point3i p0=Point3i(x0,y0,z0);
-					vcg::Point3i p1=Point3i(x1,y1,z1);
-					assert(p0<_bbox.max);
-					if (FindMinMax(p0,p1))
-						res.push_back(p0);
-				}
-			}
-			return res;
-		}
-
+	
 		//swap slices , the initial value of distance fields ids set as double of bbox of space
 		void NextSlice() 
 		{
 			
-			memset(_x_cs, -1, _slice_dimension*sizeof(VertexIndex));
-			memset(_y_cs, -1, _slice_dimension*sizeof(VertexIndex));
-			memset(_z_cs, -1, _slice_dimension*sizeof(VertexIndex));
+			memset(_x_cs, -1, SliceSize*sizeof(VertexIndex));
+			memset(_y_cs, -1, SliceSize*sizeof(VertexIndex));
+			memset(_z_cs, -1, SliceSize*sizeof(VertexIndex));
 			
 
 			std::swap(_x_cs, _x_ns);
@@ -387,35 +274,25 @@ class Resampler
 
 			std::swap(_v_cs, _v_ns);
 
-			_current_slice += _cell_size.Y();
+			CurrentSlice ++;
 			
-			//memset(_v_ns, dim_diag*2.f, _slice_dimension*sizeof(float));
-			//memset(_v_ns, field_value(false,0.f), _slice_dimension*sizeof(field_value));
-
-			CumputeSliceValues(_current_slice+ _cell_size.Y(),_v_ns);
+			ComputeSliceValues(CurrentSlice + 1,_v_ns);
 		}
 		
 		//initialize data strucures , the initial value of distance fields ids set as double of bbox of space
 		void Begin()
 		{
 
-			_current_slice = _bbox.min.Y();
+			CurrentSlice = 0;
 
-			memset(_x_cs, -1, _slice_dimension*sizeof(VertexIndex));
-			memset(_y_cs, -1, _slice_dimension*sizeof(VertexIndex));
-			memset(_z_cs, -1, _slice_dimension*sizeof(VertexIndex));
-			memset(_x_ns, -1, _slice_dimension*sizeof(VertexIndex));
-			memset(_z_ns, -1, _slice_dimension*sizeof(VertexIndex));
+			memset(_x_cs, -1, SliceSize*sizeof(VertexIndex));
+			memset(_y_cs, -1, SliceSize*sizeof(VertexIndex));
+			memset(_z_cs, -1, SliceSize*sizeof(VertexIndex));
+			memset(_x_ns, -1, SliceSize*sizeof(VertexIndex));
+			memset(_z_ns, -1, SliceSize*sizeof(VertexIndex));
 
-			/*memset(_v_cs, dim_diag*2.f, _slice_dimension*sizeof(float));
-			memset(_v_ns, dim_diag*2.f, _slice_dimension*sizeof(float));*/
-			
-			/*memset(_v_cs, field_value(false,0.f), _slice_dimension*sizeof(field_value));
-			memset(_v_ns, field_value(false,0.f), _slice_dimension*sizeof(field_value));*/
-
-			CumputeSliceValues(_current_slice,_v_cs);
-			CumputeSliceValues(_current_slice+_cell_size.Y(),_v_ns);
-		
+			ComputeSliceValues(CurrentSlice,_v_cs);
+			ComputeSliceValues(CurrentSlice+1,_v_ns);
 		}
 
 		
@@ -423,15 +300,15 @@ class Resampler
 		
 		bool Exist(const vcg::Point3i &p1, const vcg::Point3i &p2, VertexPointer &v)
 		{ 
-			int i = (p1.X() - _bbox.min.X())/_cell_size.X();
-			int z = (p1.Z() - _bbox.min.Z())/_cell_size.Z();
-			VertexIndex index = i+z*_resolution.X();
+			int i = p1.X();// - _bbox.min.X())/_cell_size.X();
+			int z = p1.Z();// - _bbox.min.Z())/_cell_size.Z();
+			VertexIndex index = i+z*this->siz.X();
 
 			//VertexIndex index =GetSliceIndex(//
 			int v_ind = 0;
 			if (p1.X()!=p2.X()) //intersezione della superficie con un Xedge
 			{
-				if (p1.Y()==_current_slice)
+				if (p1.Y()==CurrentSlice)
 				{
 					if (_x_cs[index]!=-1)
 					{
@@ -474,7 +351,7 @@ class Resampler
 			else if (p1.Z()!=p2.Z())
 			//intersezione della superficie con un Zedge
 			{
-				if (p1.Y()==_current_slice)
+				if (p1.Y()==CurrentSlice)
 				{
 					if ( _z_cs[index]!=-1)
 					{
@@ -516,31 +393,33 @@ class Resampler
 		///if there is a vertex in z axis of a cell return the vertex or create it
 		void GetXIntercept(const vcg::Point3i &p1, const vcg::Point3i &p2, VertexPointer &v) 
 		{ 
-			assert ((p1.Y()==_current_slice)||(p1.Y()==(_current_slice+_cell_size.Y())));
-
-			int i = (p1.X() - _bbox.min.X())/_cell_size.X();
-			int z = (p1.Z() - _bbox.min.Z())/_cell_size.Z();
-			VertexIndex index = i+z*_resolution.X();
+      assert(p1.X()+1 == p2.X());
+			assert(p1.Y()   == p2.Y());
+			assert(p1.Z()   == p2.Z());
+			
+			int i = p1.X();// (p1.X() - _bbox.min.X())/_cell_size.X();
+			int z = p1.Z();//(p1.Z() - _bbox.min.Z())/_cell_size.Z();
+			VertexIndex index = i+z*this->siz.X();
 			VertexIndex pos;
-			if (p1.Y()==_current_slice)
+			if (p1.Y()==CurrentSlice)
 			{
 				if ((pos=_x_cs[index])==-1)
 				{
 					_x_cs[index] = (VertexIndex) _newM->vert.size();
 					pos = _x_cs[index];
-					Allocator::AddVertices( *_newM, 1 );
+					Allocator<New_Mesh>::AddVertices( *_newM, 1 );
 					v = &_newM->vert[pos];
 					v->P()=Interpolate(p1,p2,0);
 					return;
 				}
 			}
-			if (p1.Y()==_current_slice+_cell_size.Y())
+			if (p1.Y()==CurrentSlice+1)
 			{
 				if ((pos=_x_ns[index])==-1)
 				{
 					_x_ns[index] = (VertexIndex) _newM->vert.size();
 					pos = _x_ns[index];
-					Allocator::AddVertices( *_newM, 1 );
+					Allocator<New_Mesh>::AddVertices( *_newM, 1 );
 					v = &_newM->vert[pos];
 					v->P()=Interpolate(p1,p2,0);
 					return;
@@ -552,17 +431,19 @@ class Resampler
 		///if there is a vertex in y axis of a cell return the vertex or create it
 		void GetYIntercept(const vcg::Point3i &p1, const vcg::Point3i &p2, VertexPointer &v) 
 		{
-			assert ((p1.Y()==_current_slice)||(p1.Y()==(_current_slice+_cell_size.Y())));
-
-			int i = (p1.X() - _bbox.min.X())/_cell_size.X();
-			int z = (p1.Z() - _bbox.min.Z())/_cell_size.Z();
-			VertexIndex index = i+z*_resolution.X();
+      assert(p1.X()   == p2.X());
+			assert(p1.Y()+1 == p2.Y());
+			assert(p1.Z()   == p2.Z());
+			
+			int i = p1.X(); // (p1.X() - _bbox.min.X())/_cell_size.X();
+			int z = p1.Z(); // (p1.Z() - _bbox.min.Z())/_cell_size.Z();
+			VertexIndex index = i+z*this->siz.X();
 			VertexIndex pos;
 			if ((pos=_y_cs[index])==-1)
 			{
 				_y_cs[index] = (VertexIndex) _newM->vert.size();
 				pos = _y_cs[index];
-				Allocator::AddVertices( *_newM, 1);
+				Allocator<New_Mesh>::AddVertices( *_newM, 1);
 				v = &_newM->vert[ pos ];
 				v->P()=Interpolate(p1,p2,1);
 			}
@@ -572,32 +453,34 @@ class Resampler
 		///if there is a vertex in z axis of a cell return the vertex or create it
 		void GetZIntercept(const vcg::Point3i &p1, const vcg::Point3i &p2, VertexPointer &v) 
 		{
-			assert ((p1.Y()==_current_slice)||(p1.Y()==(_current_slice+_cell_size.Y())));
-
-			int i = (p1.X() - _bbox.min.X())/_cell_size.X();
-			int z = (p1.Z() - _bbox.min.Z())/_cell_size.Z();
-			VertexIndex index = i+z*_resolution.X();
+      assert(p1.X()   == p2.X());
+			assert(p1.Y()   == p2.Y());
+			assert(p1.Z()+1 == p2.Z());
+			
+			int i = p1.X(); //(p1.X() - _bbox.min.X())/_cell_size.X();
+			int z = p1.Z(); //(p1.Z() - _bbox.min.Z())/_cell_size.Z();
+			VertexIndex index = i+z*this->siz.X();
 
 			VertexIndex pos;
-			if (p1.Y()==_current_slice)
+			if (p1.Y()==CurrentSlice)
 			{
 				if ((pos=_z_cs[index])==-1)
 				{
 					_z_cs[index] = (VertexIndex) _newM->vert.size();
 					pos = _z_cs[index];
-					Allocator::AddVertices( *_newM, 1 );
+					Allocator<New_Mesh>::AddVertices( *_newM, 1 );
 					v = &_newM->vert[pos];
 					v->P()=Interpolate(p1,p2,2);
 					return;
 				}
 			}
-			if (p1.Y()==_current_slice+_cell_size.Y())
+			if (p1.Y()==CurrentSlice+1)
 			{
 				if ((pos=_z_ns[index])==-1)
 				{
 					_z_ns[index] = (VertexIndex) _newM->vert.size();
 					pos = _z_ns[index];
-					Allocator::AddVertices( *_newM, 1 );
+					Allocator<New_Mesh>::AddVertices( *_newM, 1 );
 					v = &_newM->vert[pos];
 					v->P()=Interpolate(p1,p2,2);
 					return;
@@ -610,75 +493,24 @@ class Resampler
 
 public:
 
-typedef typename  Walker< Old_Mesh,New_Mesh> MyWalker;
+typedef Walker  /*< Old_Mesh,New_Mesh>*/  MyWalker;
 
-typedef typename vcg::tri::MarchingCubes<New_Mesh, MyWalker> MarchingCubes;
+typedef vcg::tri::MarchingCubes<New_Mesh, MyWalker> MyMarchingCubes;
 
 ///resample the mesh using marching cube algorithm ,the accuracy is the dimension of one cell the parameter
-static void Resample(Old_Mesh &old_mesh,New_Mesh &new_mesh,vcg::Point3<int> accuracy,float max_dist)
+static void Resample(Old_Mesh &old_mesh,New_Mesh &new_mesh,vcg::Point3<int> accuracy,float max_dist, float thr=0, vcg::CallBackPos *cb )
 {
-	new_mesh.Clear();
-	if (Old_Mesh::HasPerFaceNormal())
-		vcg::tri::UpdateNormals<Old_Mesh>::PerFaceNormalized(old_mesh);
-	if (Old_Mesh::HasPerVertexNormal())
-		vcg::tri::UpdateNormals<Old_Mesh>::PerVertexNormalized(old_mesh);
-		///the mesh must have plane for ugrid
-	if (!Old_Mesh::FaceType::HasEdgePlane())
-		assert(0);
-	else
-		vcg::tri::UpdateEdges<Old_Mesh>::Set(old_mesh);
-
 	///be sure that the bounding box is updated
 	vcg::tri::UpdateBounding<Old_Mesh>::Box(old_mesh);
 	
-	
-	// MARCHING CUBES CALLS
-	Point3i min=Point3i((int)ceil(old_mesh.bbox.min.V(0)),(int)ceil(old_mesh.bbox.min.V(1)),(int)ceil(old_mesh.bbox.min.V(2)));
-	Point3i max=Point3i((int)ceil(old_mesh.bbox.max.V(0)),(int)ceil(old_mesh.bbox.max.V(1)),(int)ceil(old_mesh.bbox.max.V(2)));
+  Box3f volumeBox = old_mesh.bbox;
+	volumeBox.Offset(volumeBox.Diag()/10.0f);
+	MyWalker	walker(volumeBox,accuracy);
 
-	
-	vcg::Box3<int> boxInt=Box3<int>(min,max);
-
-
-	float rx=((float)boxInt.DimX())/(float)accuracy.X();
-	float ry=((float)boxInt.DimY())/(float)accuracy.Y();
-	float rz=((float)boxInt.DimZ())/(float)accuracy.Z();
-
-	int rxi=(int)ceil(rx);
-	int ryi=(int)ceil(ry);
-	int rzi=(int)ceil(rz);
-	
-	Point3i res=Point3i(rxi,ryi,rzi);
-
-	MyWalker	walker(boxInt,res);
-
-	walker.max_dim=max_dist;
-
-	/*new_mesh.vert.reserve(old_mesh.vn*2);
-	new_mesh.face.reserve(old_mesh.fn*2);*/
-
-	/*if (mm==MMarchingCubes)
-	{*/
-		MarchingCubes mc(new_mesh, walker);
-		walker.BuildMesh<MarchingCubes>(old_mesh,new_mesh,mc);
-	/*}*/
-	/*else if (mm==MExtendedMarchingCubes)
-	{
-		ExtendedMarchingCubes mc(new_mesh, walker,30);
-		walker.BuildMesh<ExtendedMarchingCubes>(old_mesh,new_mesh,mc);
-	}*/
-	
-	
-	
-	if (New_Mesh::HasFFTopology())
-		vcg::tri::UpdateTopology<New_Mesh>::FaceFace(new_mesh);
-	if (New_Mesh::HasVFTopology())
-		vcg::tri::UpdateTopology<New_Mesh>::VertexFace(new_mesh);	
-	if (New_Mesh::HasPerFaceNormal())
-		vcg::tri::UpdateNormals<New_Mesh>::PerFaceNormalized(new_mesh);
-	if (New_Mesh::HasPerVertexNormal())
-		vcg::tri::UpdateNormals<New_Mesh>::PerVertexNormalized(new_mesh);
-
+	walker.max_dim=max_dist+fabs(thr);
+	walker.offset = - thr; 
+	MyMarchingCubes mc(new_mesh, walker);
+	walker.BuildMesh(old_mesh,new_mesh,mc,cb);
 }
  
 
