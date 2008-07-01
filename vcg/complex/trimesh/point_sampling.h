@@ -168,7 +168,7 @@ static void	FillAndShuffleVertexPointVector(MetroMesh & m, std::vector<VertexPoi
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi) 
 				if(!(*vi).IsD())	vertVec.push_back(&*vi);
 
-	assert(vertVec.size()==m.vn);
+	assert((int)vertVec.size()==m.vn);
 	
 	std::random_shuffle(vertVec.begin(),vertVec.end());
 }
@@ -212,7 +212,7 @@ static void AllEdge(MetroMesh & m, VertexSampler &ps)
     typename std::vector< SimpleEdge>::iterator newEnd = unique(Edges.begin(), Edges.end());
 		typename std::vector<SimpleEdge>::iterator   ei;
 
-		qDebug("Edges %i (unique %i) ",Edges.size(),newEnd-Edges.begin());
+		qDebug("Edges %i (unique %i) ",(int)Edges.size(), (int)(newEnd-Edges.begin()) );
     Edges.resize(newEnd-Edges.begin());
 		for(ei=Edges.begin(); ei!=Edges.end(); ++ei)
 				{
@@ -447,7 +447,7 @@ static void FaceSimilar(MetroMesh & m, VertexSampler &ps,int sampleNum)
 		qDebug("samplePerAreaUnit %f",samplePerAreaUnit);
 
 		// Similar Triangles sampling.
-    int     cnt = 0, n_samples_per_edge;
+    int n_samples_per_edge;
     double  n_samples_decimal = 0.0;
     FaceIterator fi;
 
@@ -466,7 +466,6 @@ static void FaceSimilar(MetroMesh & m, VertexSampler &ps,int sampleNum)
 						SingleFaceSimilar(&*fi,ps, n_samples_per_edge);
         }
         n_samples_decimal -= (double) n_samples;
-
     }
 }
 
