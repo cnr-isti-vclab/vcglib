@@ -199,7 +199,7 @@ namespace vcg {
 	*/
 
 	template < class OBJTYPE, class FLT=float >
-	class GridStaticPtr: public BasicGrid<OBJTYPE,FLT>
+	class GridStaticPtr: public BasicGrid<FLT>, SpatialIndex<OBJTYPE,FLT>
 	{
 	public:
 		typedef OBJTYPE ObjType;
@@ -209,7 +209,7 @@ namespace vcg {
 		typedef Box3<ScalarType> Box3x;
 		typedef Line3<ScalarType> Line3x;
 		typedef GridStaticPtr<OBJTYPE,FLT> GridPtrType;
-    typedef BasicGrid<OBJTYPE,FLT> BT;
+    typedef BasicGrid<FLT> BT;
 
 		/** Internal class for keeping the first pointer of object.
 		Definizione Link dentro la griglia. Classe di supporto per GridStaticObj.

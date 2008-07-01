@@ -136,7 +136,7 @@ namespace vcg{
 	Matthias Teschner and Bruno Heidelberger and Matthias Muller and Danat Pomeranets and Markus Gross
 	*/
 	template < typename OBJTYPE,class FLT=double>
-	class SpatialHashTable:public BasicGrid<OBJTYPE,FLT>
+	class SpatialHashTable:public BasicGrid<FLT>, SpatialIndex<OBJTYPE,FLT>
 	{
 
 	public:
@@ -145,7 +145,7 @@ namespace vcg{
 		typedef ObjType* ObjPtr;
 		typedef typename ObjType::ScalarType ScalarType;
 		typedef Point3<ScalarType> CoordType;
-        typedef typename BasicGrid<OBJTYPE, FLT>::Box3x Box3x;
+        typedef typename BasicGrid<FLT>::Box3x Box3x;
 
 //		typedef typename SpatialHashTable<ObjType,FLT> SpatialHashType;
         typedef SpatialHashTable SpatialHashType;
