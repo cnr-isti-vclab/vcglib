@@ -72,7 +72,7 @@ template <class SaveMeshType>
 class ExporterSTL
 {
 public:
-static int Save(SaveMeshType &m, const char * filename, const int &mask, CallBackPos *cb=0)
+static int Save(SaveMeshType &m, const char * filename, const int &/*mask*/, CallBackPos *)
 {
  return Save(m,filename,true);
 }
