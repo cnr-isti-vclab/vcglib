@@ -92,10 +92,10 @@ namespace io {
 		inline static int CreateNewMaterial(SaveMeshType &m, std::vector<Material> &materials, unsigned int index, FaceIterator &fi)
 		{			
 			Point3f diffuse(1,1,1);
-      float Tr = 1;
+      float Transp = 1;
       if(HasPerFaceColor(m)){
         diffuse = Point3f((float)((*fi).C()[0])/255.0f,(float)((*fi).C()[1])/255.0f,(float)((*fi).C()[2])/255.0f);//diffuse
-			  (float)((*fi).C()[3])/255.0f;//alpha
+			  Transp = (float)((*fi).C()[3])/255.0f;//alpha
       }
 			
 			int illum = 2; //default not use Ks!
@@ -107,7 +107,7 @@ namespace io {
 			mtl.Ka = Point3f(0.2f,0.2f,0.2f);//ambient
 			mtl.Kd = diffuse;//diffuse
 			mtl.Ks = Point3f(1.0f,1.0f,1.0f);//specular
-			mtl.Tr = Tr;//alpha
+			mtl.Tr = Transp;//alpha
 			mtl.Ns = ns;
 			mtl.illum = illum;//illumination
 			
