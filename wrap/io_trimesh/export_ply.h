@@ -179,11 +179,11 @@ static int Save(SaveMeshType &m, const char * filename, bool binary=true)
   return Save(m,filename,binary,pi);
 }
 
-static int Save(SaveMeshType &m,  const char * filename, int savemask, CallBackPos *cb=0 )
+static int Save(SaveMeshType &m,  const char * filename, int savemask, bool binary = true, CallBackPos *cb=0 )
 {
 	PlyInfo pi;
   pi.mask=savemask;
-  return Save(m,filename,true,pi,cb);
+  return Save(m,filename,binary,pi,cb);
 }
 
 static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &pi, CallBackPos *cb=0)	// V1.0
@@ -427,6 +427,8 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 		vp=&(*vi);
 		indices[vi] = j;
 
+    if(cb && ((j%1000)==0))(*cb)( (100*j)/(m.vn+m.fn), "Saving Vertices");
+
 		if( !m.HasPerVertexFlags() || !vp->IsD() )
 		{
 			if(binary)
@@ -517,6 +519,8 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 	int fcnt=0;
 	for(j=0,fi=m.face.begin();fi!=m.face.end();++fi)
 		{
+		  if(cb && ((j%1000)==0) ) (*cb)( 100*(m.vn+j)/(m.vn+m.fn), "Saving Vertices");
+
 			fp=&(*fi);
 			if( ! fp->IsD() )
 			{ fcnt++;
