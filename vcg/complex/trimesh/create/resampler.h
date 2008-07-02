@@ -498,7 +498,7 @@ typedef Walker  /*< Old_Mesh,New_Mesh>*/  MyWalker;
 typedef vcg::tri::MarchingCubes<New_Mesh, MyWalker> MyMarchingCubes;
 
 ///resample the mesh using marching cube algorithm ,the accuracy is the dimension of one cell the parameter
-static void Resample(Old_Mesh &old_mesh,New_Mesh &new_mesh,vcg::Point3<int> accuracy,float max_dist, float thr=0, vcg::CallBackPos *cb )
+static void Resample(Old_Mesh &old_mesh,New_Mesh &new_mesh,vcg::Point3<int> accuracy,float max_dist, float thr=0, vcg::CallBackPos *cb=0 )
 {
 	///be sure that the bounding box is updated
 	vcg::tri::UpdateBounding<Old_Mesh>::Box(old_mesh);

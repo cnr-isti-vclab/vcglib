@@ -279,7 +279,7 @@ void MovableCoordinateFrame::Rot(float angle_deg,const Point3f axis)
 
 void MovableCoordinateFrame::AlignWith(const Point3f pri,const Point3f secondary,const char c1, const char c2)
 {
-  const float EPSILON=1e-6;
+  const float EPSILON=1e-6f;
   Point3f primary=pri;
 
   if( primary.Norm() < EPSILON*size )
@@ -345,7 +345,7 @@ void MovableCoordinateFrame::Move(const Similarityf track)
 
 void MovableCoordinateFrame::RotateToAlign(const Point3f source, const Point3f dest)
 {
-  const float EPSILON=1e-6;
+  const float EPSILON=1e-6f;
   // source and dest must be versors
   assert( math::Abs(source.Norm() - 1) < EPSILON);
   assert( math::Abs(dest.Norm() - 1) < EPSILON);
