@@ -59,12 +59,12 @@ class TrivialSampler
 	{
 		sampleVec.push_back(p.cP());
 	}
-	void AddFace(const FaceType &f, const CMeshO::CoordType &p) 
+	void AddFace(const FaceType &f, const CoordType &p) 
 	{
 		sampleVec.push_back(f.P(0)*p[0] + f.P(1)*p[1] +f.P(2)*p[2] );
 	}
 	
-	void AddTextureSample(const FaceType &, const CMeshO::CoordType &, const Point2i &)
+	void AddTextureSample(const FaceType &, const CoordType &, const Point2i &)
 	{
 		// Retrieve the colorof the sample from the face f using the barycentric coord p 
 		// and write that color in a texture image at position tp[0],tp[1]
@@ -212,7 +212,7 @@ static void AllEdge(MetroMesh & m, VertexSampler &ps)
     typename std::vector< SimpleEdge>::iterator newEnd = unique(Edges.begin(), Edges.end());
 		typename std::vector<SimpleEdge>::iterator   ei;
 
-		qDebug("Edges %i (unique %i) ",(int)Edges.size(), (int)(newEnd-Edges.begin()) );
+		//qDebug("Edges %i (unique %i) ",(int)Edges.size(), (int)(newEnd-Edges.begin()) );
     Edges.resize(newEnd-Edges.begin());
 		for(ei=Edges.begin(); ei!=Edges.end(); ++ei)
 				{
@@ -264,7 +264,7 @@ static void Montecarlo(MetroMesh & m, VertexSampler &ps,int sampleNum)
 {
 	ScalarType area = Stat<MetroMesh>::ComputeMeshArea(m);
 	ScalarType samplePerAreaUnit = sampleNum/area;
-	qDebug("samplePerAreaUnit %f",samplePerAreaUnit);
+	//qDebug("samplePerAreaUnit %f",samplePerAreaUnit);
 	// Montecarlo sampling.
 	double  floatSampleNum = 0.0;
 	
@@ -305,7 +305,7 @@ static void WeightedMontecarlo(MetroMesh & m, VertexSampler &ps, int sampleNum)
 						weightedArea += WeightedArea(*fi);
 	
 	ScalarType samplePerAreaUnit = sampleNum/weightedArea;
-	qDebug("samplePerAreaUnit %f",samplePerAreaUnit);
+	//qDebug("samplePerAreaUnit %f",samplePerAreaUnit);
 	// Montecarlo sampling.
 	double  floatSampleNum = 0.0;
 	for(fi=m.face.begin(); fi != m.face.end(); fi++)
@@ -380,7 +380,7 @@ static void FaceSubdivision(MetroMesh & m, VertexSampler &ps,int sampleNum)
 	
 	ScalarType area = Stat<MetroMesh>::ComputeMeshArea(m);
 	ScalarType samplePerAreaUnit = sampleNum/area;
-	qDebug("samplePerAreaUnit %f",samplePerAreaUnit);
+	//qDebug("samplePerAreaUnit %f",samplePerAreaUnit);
 
 	double  floatSampleNum = 0.0;
 	int faceSampleNum;
@@ -444,7 +444,7 @@ static void FaceSimilar(MetroMesh & m, VertexSampler &ps,int sampleNum)
 	
 		ScalarType area = Stat<MetroMesh>::ComputeMeshArea(m);
 		ScalarType samplePerAreaUnit = sampleNum/area;
-		qDebug("samplePerAreaUnit %f",samplePerAreaUnit);
+		//qDebug("samplePerAreaUnit %f",samplePerAreaUnit);
 
 		// Similar Triangles sampling.
     int n_samples_per_edge;
