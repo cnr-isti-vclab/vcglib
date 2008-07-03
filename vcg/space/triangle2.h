@@ -84,7 +84,7 @@ public:
 */
 bool InterpolationParameters(const CoordType & bq, ScalarType &a, ScalarType &b, ScalarType &c ) const
 {	
-	const ScalarType EPSILON = ScalarType(0.0001);
+	const ScalarType EPSILON = ScalarType(0.000001);
 
 	//ScalarType AreaGlobal=(P(1) - P(0)) ^ (P(2) - P(0));
 	ScalarType Area0=(P(2) - P(1)) ^ (bq - P(1));
