@@ -265,7 +265,7 @@ public:
 		if(!(*fi).IsD()){
 		   for (int j=0;j<3;j++)
       {
-        EdgeType p=EdgeType::OrderedEdge(&*fi,j,(*fi).V(j));
+        EdgeType p=EdgeType::OrderedEdge((*fi).V(j),(*fi).V((j+1)%3));
         h_ret.push_back(HeapElem(new MYTYPE(p,m.IMark())));
         //printf("Inserting in heap coll %3i ->%3i %f\n",p.V()-&m.vert[0],p.VFlip()-&m.vert[0],h_ret.back().locModPtr->Priority());
       }
