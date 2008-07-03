@@ -212,7 +212,7 @@ public:
 
 		void Execute(TriMeshType &m)
   {	CoordType newPos;
-    if(Params().OptimalPlacement) newPos= ComputeMinimal();
+		if(Params().OptimalPlacement) newPos= static_cast<MYTYPE*>(this)->ComputeMinimal();
     else newPos=this->pos.V(1)->P();
 		//this->pos.V(1)->Qd()+=this->pos.V(0)->Qd();
     QH::Qd(this->pos.V(1))+=QH::Qd(this->pos.V(0));
