@@ -284,10 +284,10 @@ public:
 			Save(ed,o,pro, -2);
 			Point2f* pmi=pro.getminPoint();
 			Point2f* pma=pro.getmaxPoint();
-			pmin[0]=min(pmin[0], pmi->X());
-			pmin[1]=min(pmin[1], pmi->Y());
-			pmax[0]=max(pmax[0], pma->X());
-			pmax[1]=max(pmax[1], pma->Y());
+			pmin[0]=std::min(pmin[0], pmi->X());
+			pmin[1]=std::min(pmin[1], pmi->Y());
+			pmax[0]=std::max(pmax[0], pma->X());
+			pmax[1]=std::max(pmax[1], pma->Y());
 		}
 		float maxEdge=std::max(pmax[0]-pmin[0], pmax[1]-pmin[1]);
 		float scl = (pro.getViewBox().V(0)/pro.numCol) /maxEdge ;
