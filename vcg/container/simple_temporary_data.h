@@ -73,15 +73,17 @@ STL_CONT& c;
 std::vector<ATTR_TYPE> data;
 
 SimpleTempData(STL_CONT  &_c):c(_c){data.reserve(c.capacity());data.resize(c.size());};
-SimpleTempData(STL_CONT  &_c,ATTR_TYPE val):c(_c){
+SimpleTempData(STL_CONT  &_c, const ATTR_TYPE &val):c(_c){
 	data.reserve(c.capacity());data.resize(c.size());
-	typename std::vector<ATTR_TYPE>::iterator i;
-	for(i = data.begin(); i!= data.end(); ++i)
-	*i = val;
+	Init(val);
 };
 
 ~SimpleTempData(){data.clear();}
 
+void Init(const ATTR_TYPE &val)
+{
+	std::fill(data.begin(),data.end(),val);
+}
 // access to data
 ATTR_TYPE & operator[](const typename STL_CONT::value_type & v){return data[&v-&*c.begin()];}
 ATTR_TYPE & operator[](const typename STL_CONT::value_type * v){return data[v-&*c.begin()];}
