@@ -321,13 +321,14 @@ static void AccumulateLaplacianInfo(MeshType &m, SimpleTempData<typename MeshTyp
 			}
 }
 
-static void VertexCoordLaplacian(MeshType &m, int step, bool SmoothSelected=false)
+static void VertexCoordLaplacian(MeshType &m, int step, bool SmoothSelected=false, vcg::CallBackPos * cb=0)
 {
   VertexIterator vi;
 	LaplacianInfo lpz(CoordType(0,0,0),0);
 	SimpleTempData<typename MeshType::VertContainer,LaplacianInfo > TD(m.vert,lpz);
 	for(int i=0;i<step;++i)
 		{
+			if(cb)cb(100*i/step, "Classic Laplacian Smoothing");
 			TD.Init(lpz);
 			AccumulateLaplacianInfo(m,TD);
 			for(vi=m.vert.begin();vi!=m.vert.end();++vi)
@@ -374,18 +375,20 @@ Values of kpb from 0.01 to 0.1 produce good results according to the original pa
 kpb * mu - mu/lambda = 1
 mu = 1/(kpb-1/lambda )
 
-So if lambda == 0.5 -> mu = 1/(0.1 - 2) = -0.53 
-
+So if 
+* lambda == 0.5, kpb==0.1  -> mu = 1/(0.1 - 2)  = -0.526
+* lambda == 0.5, kpb==0.01 -> mu = 1/(0.01 - 2) = -0.502 
 */
 
 
-static void VertexCoordTaubin(MeshType &m, int step, float lambda, float mu, bool SmoothSelected=false)
+static void VertexCoordTaubin(MeshType &m, int step, float lambda, float mu, bool SmoothSelected=false, vcg::CallBackPos * cb=0)
 {
 	LaplacianInfo lpz(CoordType(0,0,0),0);
 	SimpleTempData<typename MeshType::VertContainer,LaplacianInfo > TD(m.vert,lpz);
 	VertexIterator vi;
 	for(int i=0;i<step;++i)
 		{
+		  if(cb) cb(100*i/step, "Taubin Smoothing");
 			TD.Init(lpz);
 			AccumulateLaplacianInfo(m,TD);
 			for(vi=m.vert.begin();vi!=m.vert.end();++vi)
@@ -397,13 +400,15 @@ static void VertexCoordTaubin(MeshType &m, int step, float lambda, float mu, boo
 						(*vi).P() = (*vi).P() + Delta*lambda ;
 					}
 				}
+			TD.Init(lpz);
+			AccumulateLaplacianInfo(m,TD);
 			for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 					if(!(*vi).IsD() && TD[*vi].cnt>0 )
 					{
 						if(!SmoothSelected || (*vi).IsS())
 						{ 
 							CoordType Delta = TD[*vi].sum/TD[*vi].cnt - (*vi).P();
-							(*vi).P() = (*vi).P() - Delta*mu ;
+							(*vi).P() = (*vi).P() + Delta*mu ;
 						}
 					}		
 			} // end for step 
