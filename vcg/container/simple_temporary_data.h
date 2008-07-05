@@ -48,6 +48,7 @@ First Working Release (with this comment)
 #ifndef __VCGLIB_SIMPLE__
 #define __VCGLIB_SIMPLE__
 
+#include <limits>
 #include <vector>
  
 namespace vcg {

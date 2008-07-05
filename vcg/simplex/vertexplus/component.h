@@ -116,6 +116,7 @@ First working version!
 #ifndef __VCG_VERTEX_PLUS_COMPONENT
 #define __VCG_VERTEX_PLUS_COMPONENT
 #include <vector>
+#include <string>
 #include <vcg/space/point3.h>
 #include <vcg/space/texcoord2.h>
 #include <vcg/space/color4.h>
@@ -406,17 +407,17 @@ public:	static void Name(std::vector<std::string> & name){name.push_back(std::st
 /*-------------------------- Curvature Direction ----------------------------------*/ 
 
 template <class S>
-struct CurvatureDirType{
+struct CurvatureDirBaseType{
 	typedef Point3<S> VecType;
 	typedef  S   ScalarType;
-	CurvatureDirType () {}
+	CurvatureDirBaseType () {}
 	Point3<S>max_dir,min_dir; // max and min curvature direction 
 	S k1,k2;// max and min curvature values
 };
 
 template <class TT> class EmptyCurvatureDir: public TT {
 public:
-  typedef CurvatureDirType<float> CurvatureDirType;
+  typedef CurvatureDirBaseType<float> CurvatureDirType;
 
 	Point3f &PD1(){static Point3f dummy(0,0,0); return dummy;}
 	Point3f &PD2(){static Point3f dummy(0,0,0); return dummy;}
@@ -456,10 +457,10 @@ private:
 };
 
 
-template <class T> class CurvatureDirf: public CurvatureDir<CurvatureDirType<float>, T> {
+template <class T> class CurvatureDirf: public CurvatureDir<CurvatureDirBaseType<float>, T> {
 public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDirf"));T::Name(name);}
 };
-template <class T> class CurvatureDird: public CurvatureDir<CurvatureDirType<double>, T> {
+template <class T> class CurvatureDird: public CurvatureDir<CurvatureDirBaseType<double>, T> {
 public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDird"));T::Name(name);}
 };
 
