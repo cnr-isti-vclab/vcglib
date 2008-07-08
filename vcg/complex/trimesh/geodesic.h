@@ -85,7 +85,7 @@ class Geo{
 		};
 
 	typedef SimpleTempData<std::vector<typename MeshType::VertexType>, TempData<MeshType> >  TempDataType;
-	TempDataType  * TD;
+	//TempDataType  * TD;
 	
 	
 	struct pred: public std::binary_function<VertDist,VertDist,bool>{
@@ -94,13 +94,58 @@ class Geo{
 				{return (v0.d > v1.d);}
 		};
 
+	//************** calcolo della distanza di pw in base alle distanze note di pw1 e curr
+	//************** sapendo che (curr,pw,pw1) e'una faccia della mesh
+	//************** (vedi figura in file distance.gif)
+	static typename MeshType::ScalarType Distance(const typename MeshType::VertexPointer &pw,
+										   const typename MeshType::VertexPointer &pw1,
+										   const typename MeshType::VertexPointer &curr,
+										   const typename MeshType::ScalarType &d_pw1,
+										   const typename MeshType::ScalarType &d_curr)
+	{
+		MeshType::ScalarType curr_d=0;
+		Point3<MeshType::ScalarType> w_c = pw->cP()- curr->cP();
+		Point3<MeshType::ScalarType> w_w1 = pw->cP()- pw1->cP();
+		Point3<MeshType::ScalarType> w1_c = pw1->cP()- curr->cP();
+
+		ScalarType ew_c  = (w_c).Norm();
+		ScalarType ew_w1 = (w_w1).Norm();
+		ScalarType ec_w1 = (w1_c).Norm();
+		ScalarType	alpha,alpha_, beta,beta_,theta,h,delta,s,a,b;
+
+		alpha = acos((w_c*w1_c)/(ew_c*ec_w1));
+		s = (d_curr + d_pw1+ec_w1)/2;
+		a = s/ec_w1;
+		b = a*s;
+		alpha_ = 2*acos ( math::Min<ScalarType>(1.0,sqrt(  (b- a* d_pw1)/d_curr)));
+
+		if ( alpha+alpha_ > M_PI){
+			curr_d = d_curr + ew_c;		
+			}else
+			{
+				beta_ = 2*acos ( math::Min<ScalarType>(1.0,sqrt(  (b- a* d_curr)/d_pw1)));
+				beta  = acos((w_w1)*(-w1_c)/(ew_w1*ec_w1));
+
+				if ( beta+beta_ > M_PI)
+					curr_d = d_pw1  + ew_w1;
+				else 
+					{
+					theta	= ScalarType(M_PI)-alpha-alpha_;
+					delta	= cos(theta)* ew_c;
+					h		= sin(theta)* ew_c;
+					curr_d = sqrt( pow(h,2)+ pow(d_curr + delta,2));
+					}
+			}
+		return (curr_d);
+	}
+
 	/*
 	  starting from the seeds, it assign a distance value to each vertex. The distance of a vertex is its 
 	  approximated geodesic distance to the closest seeds.
 	  This is function is not meant to be called (although is not prevented). Instead, it is invoked by 
 	  wrapping function.
 	*/
- 	 typename MeshType::VertexPointer Visit( 
+ 	static  typename MeshType::VertexPointer Visit( 
 		 MeshType & m,
 		 std::vector<VertDist> & _frontier,
 		 ScalarType & max_distance,
@@ -123,8 +168,9 @@ class Geo{
 	assert(m.HasVFTopology());
 	assert(!_frontier.empty());
 
-	TD = new TempDataType(m.vert);
-	TD->Start(TempData<MeshType>(-1.0));
+	TempDataType  * TD;
+	TD = new TempDataType(m.vert,-1.0);
+	//TD->Start(TempData<MeshType>(-1.0));
 
 	for(ifr = _frontier.begin(); ifr != _frontier.end(); ++ifr){
 		(*TD)[(*ifr).v].visited= true;
@@ -142,7 +188,7 @@ class Geo{
 					else     pw = x.f->V2(x.z);
 
 					if((*TD)[pw].d ==-1){
-						(*TD)[pw].d = Distance(pw->cP(),(*ifr).v->cP());
+						(*TD)[pw].d = vcg::Distance(pw->cP(),(*ifr).v->cP());
 						frontier.push_back(VertDist(pw,(*TD)[pw].d));				
 						}
 					}
@@ -194,43 +240,45 @@ class Geo{
 		assert(  (*TD)[pw1].d != -1);
 		assert( (curr!=pw) && (pw!=pw1) && (pw1 != curr));				
 		assert(d_pw1!=-1.0);
+		
+		curr_d=Distance(pw,pw1,curr,d_pw1,d_curr);
 
-		//************** calcolo della distanza di pw in base alle distanze note di pw1 e curr
-		//************** sapendo che (curr,pw,pw1) e'una faccia della mesh
-		//************** (vedi figura in file distance.gif)
-		Point3<MeshType::ScalarType> w_c = pw->cP()- curr->cP();
-		Point3<MeshType::ScalarType> w_w1 = pw->cP()- pw1->cP();
-		Point3<MeshType::ScalarType> w1_c = pw1->cP()- curr->cP();
+		////************** calcolo della distanza di pw in base alle distanze note di pw1 e curr
+		////************** sapendo che (curr,pw,pw1) e'una faccia della mesh
+		////************** (vedi figura in file distance.gif)
+		//Point3<MeshType::ScalarType> w_c = pw->cP()- curr->cP();
+		//Point3<MeshType::ScalarType> w_w1 = pw->cP()- pw1->cP();
+		//Point3<MeshType::ScalarType> w1_c = pw1->cP()- curr->cP();
 
-		ScalarType ew_c  = (w_c).Norm();
-		ScalarType ew_w1 = (w_w1).Norm();
-		ScalarType ec_w1 = (w1_c).Norm();
-		ScalarType	alpha,alpha_, beta,beta_,theta,h,delta,s,a,b;
+		//ScalarType ew_c  = (w_c).Norm();
+		//ScalarType ew_w1 = (w_w1).Norm();
+		//ScalarType ec_w1 = (w1_c).Norm();
+		//ScalarType	alpha,alpha_, beta,beta_,theta,h,delta,s,a,b;
 
-		alpha = acos((w_c*w1_c)/(ew_c*ec_w1));
-		s = (d_curr + d_pw1+ec_w1)/2;
-		a = s/ec_w1;
-		b = a*s;
-		alpha_ = 2*acos ( math::Min<ScalarType>(1.0,sqrt(  (b- a* d_pw1)/d_curr)));
+		//alpha = acos((w_c*w1_c)/(ew_c*ec_w1));
+		//s = (d_curr + d_pw1+ec_w1)/2;
+		//a = s/ec_w1;
+		//b = a*s;
+		//alpha_ = 2*acos ( math::Min<ScalarType>(1.0,sqrt(  (b- a* d_pw1)/d_curr)));
 
-		if ( alpha+alpha_ > M_PI){
-			curr_d = d_curr + ew_c;		
-			}else
-			{
-				beta_ = 2*acos ( math::Min<ScalarType>(1.0,sqrt(  (b- a* d_curr)/d_pw1)));
-				beta  = acos((w_w1)*(-w1_c)/(ew_w1*ec_w1));
+		//if ( alpha+alpha_ > M_PI){
+		//	curr_d = d_curr + ew_c;		
+		//	}else
+		//	{
+		//		beta_ = 2*acos ( math::Min<ScalarType>(1.0,sqrt(  (b- a* d_curr)/d_pw1)));
+		//		beta  = acos((w_w1)*(-w1_c)/(ew_w1*ec_w1));
 
-				if ( beta+beta_ > M_PI)
-					curr_d = d_pw1  + ew_w1;
-				else 
-					{
-					theta	= ScalarType(M_PI)-alpha-alpha_;
-					delta	= cos(theta)* ew_c;
-					h		= sin(theta)* ew_c;
-					curr_d = sqrt( pow(h,2)+ pow(d_curr + delta,2));
-					}
-			}
-		//**************************************************************************************
+		//		if ( beta+beta_ > M_PI)
+		//			curr_d = d_pw1  + ew_w1;
+		//		else 
+		//			{
+		//			theta	= ScalarType(M_PI)-alpha-alpha_;
+		//			delta	= cos(theta)* ew_c;
+		//			h		= sin(theta)* ew_c;
+		//			curr_d = sqrt( pow(h,2)+ pow(d_curr + delta,2));
+		//			}
+		//	}
+		////**************************************************************************************
 		toQueue = ( (*TD)[(pw)].d==-1);
 
 		if(toQueue){// se non e'gia' in coda ce lo mette
@@ -265,7 +313,7 @@ class Geo{
 		(*vi).Q() =  (*TD)[&(*vi)].d; 
 
 
-	(*TD).Stop();
+	//(*TD).Stop();
 
 	delete TD;
 
@@ -280,7 +328,7 @@ public:
 	distance from the cloasest source to all the mesh vertices and returns the pointer to the farthest.
 	Note: update the field Q() of the vertices
 	*/
- void FartestVertex( MeshType & m,
+ static void FartestVertex( MeshType & m,
 									std::vector<typename MeshType::VertexPointer> & fro, 
 									typename MeshType::VertexPointer & farthest,		 
 									ScalarType & distance){					
@@ -297,7 +345,7 @@ public:
 	distance from the vertex-source to all the mesh vertices and returns the pointer to the farthest
 	Note: update the field Q() of the vertices
 	*/
- void FartestVertex( MeshType & m, 
+ static void FartestVertex( MeshType & m, 
 									typename MeshType::VertexPointer seed,
 									typename MeshType::VertexPointer & farthest,		 
 									ScalarType & distance){	
@@ -312,7 +360,7 @@ public:
 	Same as FartestPoint but the returned pointer is to a border vertex
 	Note: update the field Q() of the vertices
 */
- void FartestBVertex(MeshType & m,
+ static void FartestBVertex(MeshType & m,
 										std::vector<typename MeshType::VertexPointer> & fro,  
 										typename MeshType::VertexPointer & farthest,	     
 										ScalarType & distance){
@@ -328,7 +376,7 @@ public:
 	Same as FartestPoint but the returned pointer is to a border vertex
 	Note: update the field Q() of the vertices
 */
- void FartestBVertex( MeshType & m, 
+ static void FartestBVertex( MeshType & m, 
 									typename MeshType::VertexPointer seed,
 									typename MeshType::VertexPointer & farthest,		 
 									ScalarType & distance){	
@@ -343,7 +391,7 @@ public:
 	Assigns to each vertex of the mesh its distance to the closest vertex on the border
 	Note: update the field Q() of the vertices
 */
- void DistanceFromBorder(	MeshType & m,
+ static void DistanceFromBorder(	MeshType & m,
 									  typename MeshType::VertexPointer & v0,	 
 										ScalarType & distance			 
 					){
