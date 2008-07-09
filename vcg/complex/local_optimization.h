@@ -323,7 +323,7 @@ void ClearHeap()
 		}
 		++hi;
 	}
-	//printf("\nReduced heap from %7i to %7i (fn %7i) ",sz,h.size(),m.fn);
+	//qDebug("\nReduced heap from %7i to %7i (fn %7i) ",sz,h.size(),m.fn);
 	make_heap(h.begin(),h.end());
 }
 
@@ -333,6 +333,12 @@ void ClearHeap()
 	template <class LocalModificationType> void Init()
 	{
 		m.InitVertexIMark();
+		
+		// This is a small hack. In case of non-simmertric collapses the average number of 
+		// heap elements is almost the double of the symmetric case so the minium would be 6*face number > the default 5*facenumber;
+		// 9*fn is a good guess that avoid too frequent heap garbage collections.
+		if(!LocalModificationType::IsSymmetric()) HeapSimplexRatio=9;
+		
 		LocalModificationType::Init(m,h);
 		std::make_heap(h.begin(),h.end());
 		if(!h.empty()) currMetric=h.front().pri;
