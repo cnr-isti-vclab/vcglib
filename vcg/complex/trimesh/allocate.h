@@ -477,7 +477,7 @@ namespace vcg {
 					for(i=0;i<3;++i)
 					{
 						size_t oldIndex = (*fi).V(i) - vbase;
-						assert(oldIndex >=0 && oldIndex < newVertIndex.size());
+						assert(vbase <= (*fi).V(i) && oldIndex < newVertIndex.size());
 						(*fi).V(i) = vbase+newVertIndex[oldIndex];
 					}
 				
@@ -529,7 +529,7 @@ namespace vcg {
 									if ((*vi).cVFp()!=0)
 									{
 										size_t oldIndex = (*vi).cVFp() - fbase;
-										assert(oldIndex >=0 && oldIndex < newFaceIndex.size());
+										assert(fbase <= (*vi).cVFp() && oldIndex < newFaceIndex.size());
 										(*vi).VFp() = fbase+newFaceIndex[oldIndex];
 									}
 					}
@@ -548,7 +548,7 @@ namespace vcg {
 								if ((*fi).cVFp(i)!=0)
 									{
 										size_t oldIndex = (*fi).VFp(i) - fbase;
-										assert(oldIndex >=0 && oldIndex < newFaceIndex.size());
+										assert(fbase <= (*fi).VFp(i) && oldIndex < newFaceIndex.size());
 										(*fi).VFp(i) = fbase+newFaceIndex[oldIndex];
 									}
 					if(HasFFAdjacency(m))
@@ -556,7 +556,7 @@ namespace vcg {
 											if ((*fi).cFFp(i)!=0)
 											{
 												size_t oldIndex = (*fi).FFp(i) - fbase;
-												assert(oldIndex >=0 && oldIndex < newFaceIndex.size());
+												assert(fbase <= (*fi).FFp(i) && oldIndex < newFaceIndex.size());
 												(*fi).FFp(i) = fbase+newFaceIndex[oldIndex];
 											}
 				}

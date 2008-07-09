@@ -171,7 +171,6 @@ public:
 // this function is called by the specialized Reorder function, that is called whenever someone call the allocator::CompactVertVector
 void ReorderVert(std::vector<size_t> &newVertIndex )
 {
-	size_t pos=0;
 	size_t i=0;
 	if (ColorEnabled)       assert( CV.size() == newVertIndex.size() );
 	if (MarkEnabled)        assert( MV.size() == newVertIndex.size() );

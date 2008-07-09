@@ -222,7 +222,7 @@ namespace vcg
 				octree_for_plane.GetKClosest
 				(ppdf, dom, kk, iPlane->center, max_distance, nearest_planes, distances, nearest_points, true, false);
 
-				for (int n=0; n<k; n++)
+				for (unsigned int n=0; n<k; n++)
 					if (iPlane->index<nearest_planes[n]->index)
 						riemannian_graph[iPlane->index].push_back( RiemannianEdge( nearest_planes[n],  1.0f - fabs(iPlane->normal * nearest_planes[n]->normal)) );
 			}

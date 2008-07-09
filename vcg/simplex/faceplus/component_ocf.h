@@ -239,7 +239,6 @@ public:
 // this function is called by the specialized Reorder function, that is called whenever someone call the allocator::CompactVertVector
 void ReorderFace(std::vector<size_t> &newFaceIndex )
 {
-	size_t pos=0;
 	size_t i=0;
 	if (ColorEnabled)      assert( CV.size() == newFaceIndex.size() );
 	if (MarkEnabled)       assert( MV.size() == newFaceIndex.size() );

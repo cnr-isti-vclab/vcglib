@@ -137,7 +137,7 @@ protected:
 		inline NodePointer &Son(int /*sonIndex*/)
 		{
 			assert(false);
-			NodePointer p = NULL;
+			static NodePointer p = NULL;
 			return p;
 		}
 

@@ -334,7 +334,7 @@ private:
 				if(m.vert.size()==0 || m.vn==0) return 0;
 
 				std::map<VertexPointer, VertexPointer> mp;
-				int i,j;
+				size_t i,j;
 				VertexIterator vi; 
 				int deleted=0;
 				int k=0;
@@ -489,7 +489,7 @@ private:
 					                  ToDelVec.push_back(&*fi);
 					}
           
-          for(int i=0;i<ToDelVec.size();++i)
+          for(size_t i=0;i<ToDelVec.size();++i)
           {
             if(!ToDelVec[i]->IsD())
             {
