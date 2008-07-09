@@ -148,6 +148,12 @@ public:
   //inline void Import(const Color4<float> &b);
   //inline void Import(const Color4<unsigned char> &b);
 	
+ inline Color4 operator + ( const Color4 & p) const
+	{ 
+		return Color4( this->_v[0]+p._v[0], this->_v[1]+p._v[1], this->_v[2]+p._v[2], this->_v[3]+p._v[3] );
+	}
+	
+	
   inline void lerp(const Color4 &c0, const Color4 &c1, const float x);
 	inline void lerp(const Color4 &c0, const Color4 &c1, const Color4 &c2, const Point3f &ip);
   /// given a float and a range set the corresponding color in the well known red->green->blue color ramp. To reverse the direction of the ramp just swap minf and maxf.
@@ -371,6 +377,18 @@ inline Color4<float> Clamp(Color4<float> &c)
 	c[3]=math::Clamp(c[3],0.0f,1.0f);
 	return c;
 }
+
+template<>
+inline Color4<unsigned char> Color4<unsigned char>::operator + ( const Color4<unsigned char>  & p) const
+{ 
+		return Color4<unsigned char>( 
+									 math::Clamp(int(_v[0])+int(p._v[0]),0,255),
+									 math::Clamp(int(_v[1])+int(p._v[1]),0,255),
+									 math::Clamp(int(_v[2])+int(p._v[2]),0,255),
+									 math::Clamp(int(_v[3])+int(p._v[3]),0,255)
+									 );
+}
+
 
 typedef Color4<unsigned char>  Color4b;
 typedef Color4<float>  Color4f;
