@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -69,12 +69,12 @@ Changed name from plural to singular (normals->normal)
 namespace vcg {
 namespace tri {
 
-/// \ingroup trimesh 
+/// \ingroup trimesh
 
 /// \headerfile color.h vcg/complex/trimesh/update/color.h
 
 /// \brief Generation of per-vertex and per-face colors according to various strategy.
-/** 
+/**
 This class is used to compute per face or per vertex color with respect to for example Border (UpdateColor::VertexBorderFlag), Selection (UpdateColor::FaceSelected), Quality .
 */
 
@@ -82,7 +82,7 @@ template <class UpdateMeshType>
 class UpdateColor
 {
 public:
-typedef  UpdateMeshType MeshType; 
+typedef  UpdateMeshType MeshType;
 typedef typename UpdateMeshType::VertexType     VertexType;
 typedef typename UpdateMeshType::VertexPointer  VertexPointer;
 typedef typename UpdateMeshType::VertexIterator VertexIterator;
@@ -93,7 +93,7 @@ typedef typename UpdateMeshType::FaceIterator   FaceIterator;
 /// \brief Color the vertexes of the mesh that are on the border
 
 /**
-It uses the information in the Vertex flags, and not any topology. 
+It uses the information in the Vertex flags, and not any topology.
 So it just require that you have correctly computed the flags;
 
    - vcg::tri::UpdateTopology<Mesh>::FaceFace(m.cm);
@@ -105,8 +105,8 @@ So it just require that you have correctly computed the flags;
 static void VertexBorderFlag( UpdateMeshType &m, Color4b BorderColor=Color4b::Blue, Color4b InternalColor=Color4b::White, Color4b MixColor=Color4b::Cyan)
 {
 	Color4b BaseColor = Color4b::Green;
-	
-	VertexConstant(m,BaseColor);	
+
+	VertexConstant(m,BaseColor);
 
 	typename UpdateMeshType::FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
@@ -123,17 +123,17 @@ static void VertexBorderFlag( UpdateMeshType &m, Color4b BorderColor=Color4b::Bl
 				if( (*fi).V1(j)->C() == BaseColor)     (*fi).V1(j)->C() = InternalColor;
 				if( (*fi).V1(j)->C() == BorderColor) (*fi).V1(j)->C() = MixColor;
 			}
-				
+
 }
 
-/// This function colores the face of a mesh randomly. 
+/// This function colores the face of a mesh randomly.
 /// The feature bit is used to color polygonal faces uniformly
 
 static void MultiFaceRandom( UpdateMeshType &m)
 {
 	FaceIterator fi;
 	Color4b BaseColor = Color4b::Black;
-	FaceConstant(m,BaseColor);	
+	FaceConstant(m,BaseColor);
 	int id=0;
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 			if(!(*fi).IsD())
@@ -141,15 +141,15 @@ static void MultiFaceRandom( UpdateMeshType &m)
 				id++;
 				if((*fi).C() == BaseColor) (*fi).C() = Color4b::Scatter(50, id%50,.4f,.7f);
 				for(int j=0;j<3;++j)
-					if((*fi).IsF(j)) 
+					if((*fi).IsF(j))
 					{
 						assert(!IsBorder((*fi),j));
 						(*fi).FFp(j)->C()= (*fi).C();
 					}
-			}	
+			}
 }
 
-static void FaceBF( UpdateMeshType &m, Color4b vn=Color4b::White, Color4b vb=Color4b::Blue, 
+static void FaceBF( UpdateMeshType &m, Color4b vn=Color4b::White, Color4b vb=Color4b::Blue,
 						Color4b vc=Color4b::Red, Color4b vs=Color4b::LightBlue)
 {
 	typename UpdateMeshType::FaceIterator fi;
@@ -157,7 +157,7 @@ static void FaceBF( UpdateMeshType &m, Color4b vn=Color4b::White, Color4b vb=Col
 		if(!(*fi).IsD())
 			(*fi).C() = vn;
 
-	for(fi=m.face.begin();fi!=m.face.end();++fi)		
+	for(fi=m.face.begin();fi!=m.face.end();++fi)
 		if(!(*fi).IsD())
 		{
 			if((*fi).IsS())
@@ -169,7 +169,7 @@ static void FaceBF( UpdateMeshType &m, Color4b vn=Color4b::White, Color4b vb=Col
 						if((*fi).IsB(j)){
 							(*fi).C() = vb;
 							(*fi).C() = vb;
-						}	
+						}
 					}
 					else
 					{
@@ -186,7 +186,7 @@ static int FaceSelected(UpdateMeshType &m, Color4b vs=Color4b::LightBlue)
 	int cnt=0;
 	typename UpdateMeshType::FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
-		if(!(*fi).IsD()) 
+		if(!(*fi).IsD())
 			if((*fi).IsS()) { (*fi).C() = vs; ++cnt; }
 			else (*fi).C() = Color4b::White;
 	return cnt;
@@ -211,7 +211,7 @@ static void FaceColorStrip(UpdateMeshType &m, std::vector<FacePointer> &TStripF)
 		else cnt=(cnt+1)%16;
 	//	if(*fi) (**fi).C()=cc[cnt];
   //			else cnt=(cnt+1)%7;
-	
+
 }
 
 
@@ -220,42 +220,42 @@ static int VertexSelected(UpdateMeshType &m, Color4b vs=Color4b::LightBlue)
 	int cnt=0;
 	typename UpdateMeshType::VertexIterator vi;
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-		if(!(*vi).IsD()) 
+		if(!(*vi).IsD())
 			if((*vi).IsS()) {(*vi).C() = vs;  ++cnt; }
 			else (*vi).C() = Color4b::White;
-	
+
 	return cnt;
 }
 
 static void VertexConstant(UpdateMeshType &m, Color4b c=Color4b::White)
 {
 	typename UpdateMeshType::VertexIterator vi;
-	for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD()) 
+	for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
 		(*vi).C()=c;
 }
 
 static void FaceConstant(UpdateMeshType &m, Color4b c=Color4b::White)
 {
 	typename UpdateMeshType::FaceIterator fi;
-	for(fi=m.face.begin();fi!=m.face.end();++fi)		
+	for(fi=m.face.begin();fi!=m.face.end();++fi)
 		(*fi).C()=c;
 }
 
 static void VertexBorderManifoldFlag(UpdateMeshType &m, Color4b vn=Color4b::White, Color4b vb=Color4b::Blue, Color4b vc=Color4b::Red)
 {
 	typename UpdateMeshType::VertexIterator vi;
-	for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD()) 
+	for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
 		(*vi).C()=vn;
 
 	typename UpdateMeshType::FaceIterator fi;
-	for(fi=m.face.begin();fi!=m.face.end();++fi)		
-		if(!(*fi).IsD()) 
+	for(fi=m.face.begin();fi!=m.face.end();++fi)
+		if(!(*fi).IsD())
 		for(int j=0;j<3;++j)
 			if((*fi).IsManifold(j)){
 				if((*fi).IsB(j)){
 				(*fi).V(j)->C()=vb;
 				(*fi).V1(j)->C()=vb;
-				}	
+				}
 			}
 			else
 			{
@@ -273,7 +273,7 @@ static void FaceQuality(UpdateMeshType &m)
 	float minq=m.face[0].Q(),
 				maxq=m.face[0].Q();
 	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
-		if(!(*fi).IsD()) 
+		if(!(*fi).IsD())
 		{
 			minq=min(minq,(*fi).Q());
 			maxq=max(maxq,(*fi).Q());
@@ -286,7 +286,7 @@ static void FaceQuality(UpdateMeshType &m, float minq, float maxq)
 {
 	typename UpdateMeshType::FaceIterator fi;
 
-	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD()) 		
+	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
 		(*fi).C().ColorRamp(minq,maxq,(*fi).Q());
 }
 
@@ -294,8 +294,8 @@ static void VertexQuality(UpdateMeshType &m, float minq, float maxq)
 {
 	typename UpdateMeshType::VertexIterator vi;
 
-	for(vi=m.vert.begin();vi!=m.vert.end();++vi)		
-		if(!(*vi).IsD()) 
+	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+		if(!(*vi).IsD())
 			(*vi).C().ColorRamp(minq,maxq,(*vi).Q());
 }
 
@@ -305,37 +305,205 @@ static void VertexQuality(UpdateMeshType &m)
 	typename UpdateMeshType::VertexIterator vi;
   float minq=std::numeric_limits<float>::max(),
 				maxq=-std::numeric_limits<float>::max();
-	for(vi=m.vert.begin();vi!=m.vert.end();++vi)		
-		if(!(*vi).IsD()) 
-		{	
+	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+		if(!(*vi).IsD())
+		{
 			minq=vcg::math::Min<float>(minq,(*vi).Q());
 			maxq=vcg::math::Max<float>(maxq,(*vi).Q());
 		}
 	VertexQuality(m,minq,maxq);
 }
 
+//Fill the mesh with the selected color.
+static int Filling(UpdateMeshType &m, vcg::Color4b c, const bool ProcessSelected=false)
+{
+  int counter=0;
+  VertexIterator vi;
+  for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
+  {
+    if(!(*vi).IsD()) //if it has not been deleted...
+    {
+      if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+      {
+        (*vi).C() = c;
+        ++counter;
+      }
+    }
+  }
+  return counter;
+}
+
+//Reduces the mesh to two colors according to a treshold.
+static int Tresholding(UpdateMeshType &m, float treshold, Color4b c1 = Color4<unsigned char>::Black, Color4b c2 = Color4<unsigned char>::White, const bool ProcessSelected=false)
+{
+  int counter=0;
+  VertexIterator vi;
+  for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
+  {
+    if(!(*vi).IsD()) //if it has not been deleted...
+    {
+      if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+      {
+        float value = ComputeLightness((*vi).C());
+
+        if(value<=treshold) (*vi).C() = c1;
+        else (*vi).C() = c2;
+        ++counter;
+      }
+    }
+  }
+  return counter;
+}
+
+//Computes the luminance value for a specified color.
+static float ComputeLightness(Color4b c)
+{
+  float min_rgb = math::Min((float)c[0],(float)c[1]);
+  min_rgb = math::Min(min_rgb,(float)c[2]);
+  float max_rgb = math::Max((float)c[0],(float)c[1]);
+  max_rgb = math::Max(max_rgb,(float)c[2]);
+  return (max_rgb + min_rgb)/2;
+}
 
 //Apply the brightness filter, with the given amount, to the mesh.
 static int Brighting(UpdateMeshType &m, int amount, const bool ProcessSelected=false)
 {
 	int counter=0;
-	VertexIterator vi;	
+	VertexIterator vi;
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
 	{
 		if(!(*vi).IsD()) //if it has not been deleted...
 		{
 			if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
-				{
-					(*vi).C() = Color4b(
-															math::Clamp(int((*vi).C()[0])+amount,0,255),
-															math::Clamp(int((*vi).C()[1])+amount,0,255),
-															math::Clamp(int((*vi).C()[2])+amount,0,255),
-															255);
-					++counter;
-				}
-			}
-		}
+      {
+        (*vi).C() = Color4b(
+                            math::Clamp(int((*vi).C()[0])+amount,0,255),
+                            math::Clamp(int((*vi).C()[1])+amount,0,255),
+                            math::Clamp(int((*vi).C()[2])+amount,0,255),
+                            255);
+        ++counter;
+      }
+    }
+  }
 	return counter;
+}
+
+static int Contrast(UpdateMeshType &m, float factor, const bool ProcessSelected=false)
+{
+  int counter=0;
+  VertexIterator vi;
+  for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
+  {
+    if(!(*vi).IsD()) //if it has not been deleted...
+    {
+      if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+      {
+        (*vi).C() = ColorMul((*vi).C(),factor);
+        ++counter;
+      }
+    }
+  }
+  return counter;
+}
+
+//Subtracts a middle value, multiplies the rgb components of the color for a factor,
+//and adds the middle value back.This is used for contrast operation.
+static Color4b ColorMul(Color4b c, float factor)
+{
+  return Color4b( ValueMul(c[0], factor), ValueMul(c[1], factor), ValueMul(c[2], factor), 1);
+}
+
+static int ValueMul(int value, float factor)
+{
+  return math::Clamp<int>((int)((value - 128)*factor + 128), 0, 255);
+}
+
+static int ContrastBrightness(UpdateMeshType &m, float factor, int amount, const bool ProcessSelected=false)
+{
+  int counter=0;
+  VertexIterator vi;
+  for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
+  {
+    if(!(*vi).IsD()) //if it has not been deleted...
+    {
+      if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+      {
+        (*vi).C() = ColorMulAdd((*vi).C(),factor,amount);
+        ++counter;
+      }
+    }
+  }
+  return counter;
+}
+
+//This is a composition of ColorMul() and ColorAdd(), used for Contrast&Brightness operations.
+//The result is clamped just one time after all computations; this get a more accurate result.
+static Color4b ColorMulAdd(Color4b c, float factor, int amount)
+{
+  return Color4b( ValueMulAdd(c[0], factor, amount), ValueMulAdd(c[1], factor, amount), ValueMulAdd(c[2], factor, amount), 1 );
+}
+
+static int ValueMulAdd(int value, float factor, int amount)
+{
+  return math::Clamp<int>((int)((value - 128)*factor + 128 + amount), 0, 255);
+}
+
+//Invert the rgb components of the color.
+static int Invert(UpdateMeshType &m, const bool ProcessSelected=false)
+{
+  int counter=0;
+  VertexIterator vi;
+  for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
+  {
+    if(!(*vi).IsD()) //if it has not been deleted...
+    {
+      if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+      {
+        (*vi).C() = ColorInvert((*vi).C());
+        ++counter;
+      }
+    }
+  }
+  return counter;
+}
+
+//invert the given color
+static Color4b ColorInvert(Color4b c)
+{
+  return Color4b( ValueInvert(c[0]), ValueInvert(c[1]), ValueInvert(c[2]), 1);
+}
+
+static int ValueInvert(int value)
+{
+    return 255-value;
+}
+
+static int Colourisation(UpdateMeshType &m, Color4b c, float intensity, const bool ProcessSelected=false)
+{
+  int counter=0;
+  VertexIterator vi;
+  for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
+  {
+    if(!(*vi).IsD()) //if it has not been deleted...
+    {
+      if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+      {
+        (*vi).C() = ColorApplyDiff((*vi).C(), c, intensity);
+        ++counter;
+      }
+    }
+  }
+  return counter;
+}
+
+static Color4b ColorApplyDiff(Color4b old_color, Color4b new_color, float intensity)
+{
+  return Color4b( ValueApplyDiff(old_color[0],new_color[0],intensity), ValueApplyDiff(old_color[1],new_color[1],intensity), ValueApplyDiff(old_color[2], new_color[2],intensity), 1);
+}
+
+static int ValueApplyDiff(int old_value, int new_value, float intensity)
+{
+  return  math::Clamp<int>((int)(old_value + intensity * (new_value - old_value)), 0, 255);
 }
 
 };
