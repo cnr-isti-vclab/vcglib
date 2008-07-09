@@ -314,6 +314,30 @@ static void VertexQuality(UpdateMeshType &m)
 	VertexQuality(m,minq,maxq);
 }
 
+
+//Apply the brightness filter, with the given amount, to the mesh.
+static int Brighting(UpdateMeshType &m, int amount, const bool ProcessSelected=false)
+{
+	int counter=0;
+	VertexIterator vi;	
+	for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
+	{
+		if(!(*vi).IsD()) //if it has not been deleted...
+		{
+			if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+				{
+					(*vi).C() = Color4b(
+															math::Clamp(int((*vi).C()[0])+amount,0,255),
+															math::Clamp(int((*vi).C()[1])+amount,0,255),
+															math::Clamp(int((*vi).C()[2])+amount,0,255),
+															255);
+					++counter;
+				}
+			}
+		}
+	return counter;
+}
+
 };
 
 }// end namespace
