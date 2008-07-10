@@ -315,7 +315,7 @@ static void VertexQuality(UpdateMeshType &m)
 }
 
 //Fill the mesh with the selected color.
-static int Filling(UpdateMeshType &m, vcg::Color4b c, const bool ProcessSelected=false)
+static int Filling(UpdateMeshType &m, Color4b c, const bool ProcessSelected=false)
 {
   int counter=0;
   VertexIterator vi;
@@ -366,7 +366,7 @@ static float ComputeLightness(Color4b c)
 }
 
 //Apply the brightness filter, with the given amount, to the mesh.
-static int Brighting(UpdateMeshType &m, int amount, const bool ProcessSelected=false)
+static int Brighting(UpdateMeshType &m, float amount, const bool ProcessSelected=false)
 {
 	int counter=0;
 	VertexIterator vi;
@@ -377,9 +377,9 @@ static int Brighting(UpdateMeshType &m, int amount, const bool ProcessSelected=f
 			if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
       {
         (*vi).C() = Color4b(
-                            math::Clamp(int((*vi).C()[0])+amount,0,255),
-                            math::Clamp(int((*vi).C()[1])+amount,0,255),
-                            math::Clamp(int((*vi).C()[2])+amount,0,255),
+                            math::Clamp(int((*vi).C()[0]+amount),0,255),
+                            math::Clamp(int((*vi).C()[1]+amount),0,255),
+                            math::Clamp(int((*vi).C()[2]+amount),0,255),
                             255);
         ++counter;
       }
@@ -418,7 +418,7 @@ static int ValueMul(int value, float factor)
   return math::Clamp<int>((int)((value - 128)*factor + 128), 0, 255);
 }
 
-static int ContrastBrightness(UpdateMeshType &m, float factor, int amount, const bool ProcessSelected=false)
+static int ContrastBrightness(UpdateMeshType &m, float factor, float amount, const bool ProcessSelected=false)
 {
   int counter=0;
   VertexIterator vi;
@@ -438,12 +438,12 @@ static int ContrastBrightness(UpdateMeshType &m, float factor, int amount, const
 
 //This is a composition of ColorMul() and ColorAdd(), used for Contrast&Brightness operations.
 //The result is clamped just one time after all computations; this get a more accurate result.
-static Color4b ColorMulAdd(Color4b c, float factor, int amount)
+static Color4b ColorMulAdd(Color4b c, float factor, float amount)
 {
   return Color4b( ValueMulAdd(c[0], factor, amount), ValueMulAdd(c[1], factor, amount), ValueMulAdd(c[2], factor, amount), 1 );
 }
 
-static int ValueMulAdd(int value, float factor, int amount)
+static int ValueMulAdd(int value, float factor, float amount)
 {
   return math::Clamp<int>((int)((value - 128)*factor + 128 + amount), 0, 255);
 }
@@ -476,6 +476,40 @@ static Color4b ColorInvert(Color4b c)
 static int ValueInvert(int value)
 {
     return 255-value;
+}
+//Apply the gamma correction filter, with the given gamma exponet, to the mesh.
+static int Gamma(UpdateMeshType &m, float gamma, const bool ProcessSelected=false)
+{
+  int counter=0;
+
+  VertexIterator vi;
+  for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
+  {
+    if(!(*vi).IsD()) //if it has not been deleted...
+    {
+      if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+      {
+        (*vi).C() = ColorPow((*vi).C(),gamma);
+        ++counter;
+      }
+    }
+  }
+  return counter;
+}
+
+//computes the gamma transformation on a given color, according to new_val = old_val^gamma
+static Color4b ColorPow(Color4b c, float exponent)
+{
+  return vcg::Color4b(
+                      math::Clamp((int)( ValuePow(float(c[0])/255, exponent)*255), 0, 255),
+                      math::Clamp((int)( ValuePow(float(c[1])/255, exponent)*255), 0, 255),
+                      math::Clamp((int)( ValuePow(float(c[2])/255, exponent)*255), 0, 255),
+                      255);
+}
+
+static float ValuePow(float value, float exponent)
+{
+  return pow((double)value, exponent);
 }
 
 static int Colourisation(UpdateMeshType &m, Color4b c, float intensity, const bool ProcessSelected=false)
