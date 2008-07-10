@@ -338,7 +338,7 @@ public:
 					}	
 	  }
 }
-
+	static float HeapSimplexRatio() {return IsSymmetric()?5.0f:9.0f;}
 	static bool IsSymmetric() {return Params().OptimalPlacement;} 
 	static bool IsVertexStable() {return !Params().OptimalPlacement;}
 	static void SetDefaultParams(){

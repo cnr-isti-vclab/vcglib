@@ -138,6 +138,13 @@ class LocalModification
 	/// perform initialization
 	static void Init(MeshType &m, HeapType&);
 
+	/// An approximation of the size of the heap with respect of the number of simplex
+    /// of the mesh. When this number is exceeded a clear heap purging is performed. 
+    /// so it is should be reasonably larger than the minimum expected size to avoid too frequent clear heap
+    /// For example for symmetric edge collapse a 5 is a good guess. 
+    /// while for non symmetric edge collapse a larger number like 9 is a better choice
+	static float HeapSimplexRatio() {return 6.0f;} ;
+
   virtual const char *Info(MeshType &) {return 0;}
 	/// Update the heap as a consequence of this operation
 	virtual void UpdateHeap(HeapType&)=0;
@@ -334,10 +341,8 @@ void ClearHeap()
 	{
 		m.InitVertexIMark();
 		
-		// This is a small hack. In case of non-simmertric collapses the average number of 
-		// heap elements is almost the double of the symmetric case so the minium would be 6*face number > the default 5*facenumber;
-		// 9*fn is a good guess that avoid too frequent heap garbage collections.
-		if(!LocalModificationType::IsSymmetric()) HeapSimplexRatio=9;
+		// The expected size of heap depends on the type of the local modification we are using..
+		HeapSimplexRatio = LocalModificationType::HeapSimplexRatio();
 		
 		LocalModificationType::Init(m,h);
 		std::make_heap(h.begin(),h.end());
