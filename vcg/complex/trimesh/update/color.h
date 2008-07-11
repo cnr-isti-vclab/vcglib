@@ -489,7 +489,7 @@ static int Gamma(UpdateMeshType &m, float gamma, const bool ProcessSelected=fals
     {
       if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
       {
-        (*vi).C() = ColorPow((*vi).C(),gamma);
+        (*vi).C() = ColorPow((*vi).C(), 1/gamma);
         ++counter;
       }
     }
