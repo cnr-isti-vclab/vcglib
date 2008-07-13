@@ -273,7 +273,7 @@ Quaternionf MovableCoordinateFrame::GetRotation()
 void MovableCoordinateFrame::Rot(float angle_deg,const Point3f axis)
 {
   Similarityf s;
-  s.SetRotate(angle_deg*M_PI/180.0f,(rotation).Rotate(axis));
+	s.SetRotate(math::ToRad(angle_deg),(rotation).Rotate(axis));
   Move(s);
 }
 
