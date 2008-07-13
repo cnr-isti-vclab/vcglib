@@ -367,7 +367,9 @@ namespace io {
 
 		static void ParseRotationMatrix(vcg::Matrix44f& m,const std::vector<QDomNode>& t)
 		{
+			vcg::Matrix44f rotTmp;
 			vcg::Matrix44f tmp;
+			rotTmp.SetIdentity();
 			tmp.SetIdentity();
 			for(unsigned int ii = 0;ii < t.size();++ii)
 			{
@@ -375,10 +377,10 @@ namespace io {
 				QStringList rtl = rt.split(" ");
 				if (rtl.last() == "") rtl.removeLast();
 				assert(rtl.size() == 4);
-				tmp.SetRotate(rtl.at(3).toFloat(),vcg::Point3f(rtl.at(0).toFloat(),rtl.at(1).toFloat(),rtl.at(2).toFloat()));
-				tmp *= tmp;
+				tmp.SetRotateDeg(rtl.at(3).toFloat(),vcg::Point3f(rtl.at(0).toFloat(),rtl.at(1).toFloat(),rtl.at(2).toFloat()));
+				rotTmp = rotTmp*tmp;	
 			}
-			m = m * tmp;
+			m = m * rotTmp;
 		}
 
 		static void AddTranslation(vcg::Matrix44f& m,const QDomNode t)
