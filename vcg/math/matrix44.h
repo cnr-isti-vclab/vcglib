@@ -259,7 +259,8 @@ public:
   Matrix44 &SetShearYZ(const T sx);	
 
   ///use radiants for angle.
-  Matrix44 &SetRotate(T AngleRad, const Point3<T> & axis); 
+  Matrix44 &SetRotateDeg(T AngleDeg, const Point3<T> & axis); 
+  Matrix44 &SetRotateRad(T AngleRad, const Point3<T> & axis); 
 
   T Determinant() const;
 
@@ -543,7 +544,12 @@ template <class T> Matrix44<T> &Matrix44<T>::SetTranslate(const T tx, const T ty
   ElementAt(2, 3) = tz;
   return *this;
 }
-template <class T> Matrix44<T> &Matrix44<T>::SetRotate(T AngleRad, const Point3<T> & axis) {  
+
+template <class T> Matrix44<T> &Matrix44<T>::SetRotateDeg(T AngleDeg, const Point3<T> & axis) {  
+	return SetRotateRad(math::ToRad(AngleDeg),axis);
+}
+
+template <class T> Matrix44<T> &Matrix44<T>::SetRotateRad(T AngleRad, const Point3<T> & axis) {  
   //angle = angle*(T)3.14159265358979323846/180; e' in radianti!
   T c = math::Cos(AngleRad);
   T s = math::Sin(AngleRad);
