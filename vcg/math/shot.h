@@ -197,7 +197,7 @@ vcg::Point3<S>  Shot<S>::Axis(const int & i) const
 {	
 	vcg::Matrix44<S> m; 
 	Extrinsics.rot.ToMatrix(m); 
-	vcg::Point3<S> aa = m.GetColumn3(i);
+	vcg::Point3<S> aa = m.GetRow3(i);
 	return aa;
 }
 
@@ -242,7 +242,6 @@ vcg::Point3<S> Shot<S>::ConvertWorldToCameraCoordinates(const vcg::Point3<S> & p
 {
 	Matrix44<S> rotM;
 	Extrinsics.rot.ToMatrix(rotM);
-  Invert(rotM);
 	vcg::Point3<S> cp = rotM * (p + Extrinsics.tra);
 	cp[2]=-cp[2]; 	// note: camera reference system is right handed
 	return cp;
@@ -256,6 +255,7 @@ vcg::Point3<S> Shot<S>::ConvertCameraToWorldCoordinates(const vcg::Point3<S> & p
 	vcg::Point3<S> cp = p;
 	cp[2]=-cp[2];	// note: World reference system is left handed
 	Extrinsics.rot.ToMatrix(rotM);
+  Invert(rotM);
 	cp = rotM * cp-Extrinsics.tra;
 	return cp;
 }
