@@ -197,7 +197,7 @@ vcg::Point3<S>  Shot<S>::Axis(const int & i) const
 {	
 	vcg::Matrix44<S> m; 
 	Extrinsics.rot.ToMatrix(m); 
-	vcg::Point3<S> aa = m.GetCol3(i);
+	vcg::Point3<S> aa = m.GetColumn3(i);
 	return aa;
 }
 
