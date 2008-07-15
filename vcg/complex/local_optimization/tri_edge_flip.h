@@ -273,7 +273,7 @@ public:
 	const char* Info(TRIMESH_TYPE &m)
 	{
 		static char dump[60];
-		sprintf(dump,"%ld -> %ld %g\n", _pos.F()->V(0)-&m.vert[0], _pos.F()->V(1)-&m.vert[0],-_priority);
+		sprintf(dump,"%d -> %d %g\n", _pos.F()->V(0)-&m.vert[0], _pos.F()->V(1)-&m.vert[0],-_priority);
 		return dump;
 	}
 
