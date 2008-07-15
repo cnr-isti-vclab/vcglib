@@ -26,6 +26,8 @@
 
 #include <wrap/io_trimesh/additionalinfo.h>
 #include <vcg/complex/trimesh/update/normal.h>
+#include <vcg/complex/trimesh/update/position.h>
+#include <vcg/complex/trimesh/append.h>
 #include <vcg/complex/trimesh/allocate.h>
 
 #include <wrap/io_trimesh/io_mask.h>
@@ -252,6 +254,12 @@ namespace io {
 			else return dae_error_msg[error];
 		};
 	protected:
+		// This function take care of removing the standard '#' from the beginning of the url
+		// For example 
+	  // <instance_geometry url="#shape0-lib">
+		// means that you have to search in the <library_geometries> for a node <geometry> with id = "shape0-lib"
+		// you have to call this function to get ther right refernece name
+
 		inline static void referenceToANodeAttribute(const QDomNode n,const QString& attr,QString& url_st)
 		{
 			url_st = n.toElement().attribute(attr);
@@ -299,7 +307,7 @@ namespace io {
 			return isThereTag(n.elementsByTagName(tagname));
 		}
 
-
+    // Very important function that given a <vertices> element find one of the its attribute (like position, color etc)
 		inline static QDomNode attributeSourcePerSimplex(const QDomNode n,const QDomDocument startpoint,const QString& sem)
 		{
 			QDomNodeList vertattr = n.toElement().elementsByTagName("input");
@@ -383,8 +391,9 @@ namespace io {
 			m = m * rotTmp;
 		}
 
-		static void AddTranslation(vcg::Matrix44f& m,const QDomNode t)
+		static void ParseTranslation(vcg::Matrix44f& m,const QDomNode t)
 		{
+			assert(t.toElement().tagName() == "translate");
 			QDomNode tr = t.firstChild();
 			QString coord = tr.nodeValue();
 			QStringList coordlist = coord.split(" ");
@@ -398,6 +407,25 @@ namespace io {
 			m[0][3] = coordlist.at(0).toFloat();
 			m[1][3] = coordlist.at(1).toFloat();
 			m[2][3] = coordlist.at(2).toFloat();
+		}
+		
+		static void ParseMatrixNode(vcg::Matrix44f& m,const QDomNode t)
+		{
+			assert(t.toElement().tagName() == "matrix");
+			QDomNode tr = t.firstChild();
+			QString coord = tr.nodeValue().simplified();
+			qDebug("Parsing matrix node; text value is '%s'",qPrintable(coord));
+			QStringList coordlist = coord.split(" ");
+			if (coordlist.last() == "") 
+				coordlist.removeLast();
+			assert(coordlist.size() == 16);
+			for(int i=0;i<4;++i)
+			{
+				m[i][0] = coordlist.at(i*4+0).toFloat();
+				m[i][1] = coordlist.at(i*4+1).toFloat();
+				m[i][2] = coordlist.at(i*4+2).toFloat();
+				m[i][3] = coordlist.at(i*4+3).toFloat();
+			}
 		}
 
 		static void TransfMatrix(const QDomNode parentnode,const QDomNode presentnode,vcg::Matrix44f& m)
@@ -419,7 +447,7 @@ namespace io {
 				}
 				vcg::Matrix44f tmp;
 				tmp.SetIdentity();
-				if (!trans.isNull()) AddTranslation(tmp,trans);
+				if (!trans.isNull()) ParseTranslation(tmp,trans);
 				ParseRotationMatrix(tmp,rotlist);
 				m = m * tmp;
 				TransfMatrix(parentnode,par,m);

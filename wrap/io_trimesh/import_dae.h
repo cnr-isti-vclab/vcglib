@@ -28,6 +28,10 @@
 
 #include<wrap/dae/util_dae.h>
 
+// uncomment one of the following line to enable the Verbose Trace for Crease
+//#define QDEBUG if(1) ; else printf 
+#define QDEBUG qDebug
+
 namespace vcg {
 namespace tri {
 namespace io {
@@ -225,9 +229,26 @@ namespace io {
 			return E_NOERROR;
 		}
 
-
-		static int LoadMesh(OpenMeshType& m,AdditionalInfoDAE* info,const QDomNode& geo,const vcg::Matrix44f& t, CallBackPos *cb=0)
+		static int LoadControllerMesh(OpenMeshType& m, AdditionalInfoDAE* info, const QDomElement& geo, CallBackPos *cb=0)
 		{
+			assert(geo.tagName() == "controller");
+			QDomNodeList skinList = geo.toElement().elementsByTagName("skin");
+			if(skinList.size()!=1) return E_CANTOPEN;
+			QDomElement skinNode = skinList.at(0).toElement();
+			
+			QString geomNode_url;
+			referenceToANodeAttribute(skinNode,"source",geomNode_url);
+			QDEBUG("Found a controller referencing a skin with url '%s'", qPrintable(geomNode_url));
+			QDomNode refNode = findNodeBySpecificAttributeValue(*(info->dae->doc),"geometry","id",geomNode_url);
+			LoadMesh(m, info, refNode.toElement());
+		}						
+		
+    /*
+		 Basic function that fills a mesh with the coord, norm and tristarting from node that is of kind <geometry>
+		 */
+		static int LoadMesh(OpenMeshType& m, AdditionalInfoDAE* info, const QDomElement& geo, CallBackPos *cb=0)
+		{
+			assert(geo.tagName() == "geometry");
 			if (isThereTag(geo,"mesh"))
 			{
 				if ((cb !=NULL) && (((info->numvert + info->numface)%100)==0) && !(*cb)((100*(info->numvert + info->numface))/(info->numvert + info->numface), "Vertex Loading"))
@@ -236,15 +257,13 @@ namespace io {
 				int geosrc_size = geosrc.size();
 				if (geosrc_size < 1)
 				return E_NOVERTEXPOSITION;*/
-
+        QDEBUG("**** Loading a Geometry Mesh ****");
 				QDomNodeList vertices = geo.toElement().elementsByTagName("vertices");
-				int vertices_size = vertices.size();
-				if (vertices_size != 1)
-					return E_INCOMPATIBLECOLLADA141FORMAT;
+				if (vertices.size() != 1) return E_INCOMPATIBLECOLLADA141FORMAT;
+				QDomElement vertNode = vertices.at(0).toElement();
 
-				QDomNode srcnode = attributeSourcePerSimplex(vertices.at(0),*(info->dae->doc),"POSITION");
-				if (srcnode.isNull())
-					return E_NOVERTEXPOSITION;
+				QDomNode srcnode = attributeSourcePerSimplex(vertNode,*(info->dae->doc),"POSITION");
+				if (srcnode.isNull()) return E_NOVERTEXPOSITION;
 
 				QStringList geosrcposarr;
 				valueStringList(geosrcposarr,srcnode,"float_array");
@@ -275,24 +294,17 @@ namespace io {
 
 					int ii = 0;
 					for(size_t vv = offset;vv < m.vert.size();++vv)
-					{
-						
-						assert((ii * 3 < geosrcposarr_size) && (ii * 3 + 1 < geosrcposarr_size) && (ii * 3 + 2 < geosrcposarr_size));
-						vcg::Point4f tmp = t * vcg::Point4f(geosrcposarr[ii * 3].toFloat(),geosrcposarr[ii * 3 + 1].toFloat(),geosrcposarr[ii * 3 + 2].toFloat(),1.0f);
-						m.vert[vv].P() = vcg::Point3f(tmp.X(),tmp.Y(),tmp.Z());
+					{						
+						Point3f positionCoord(geosrcposarr[ii * 3].toFloat(),geosrcposarr[ii * 3 + 1].toFloat(),geosrcposarr[ii * 3 + 2].toFloat());
+						m.vert[vv].P() = positionCoord;
 
 						if (!srcnodenorm.isNull())
 						{
-							assert((ii * 3 < geosrcvertnorm.size()) && (ii * 3 + 1 < geosrcvertnorm.size()) && (ii * 3 + 2 < geosrcvertnorm.size()));
-							vcg::Matrix44f intr44 = vcg::Inverse(t);
-							vcg::Transpose(intr44);
-							Matrix33f intr33;
-							for(unsigned int rr = 0; rr < 2; ++rr)
-							{
-								for(unsigned int cc = 0;cc < 2;++cc)
-									intr33[rr][cc] = intr44[rr][cc];
-							}
-							m.vert[vv].N() = (intr33 * vcg::Point3f(geosrcvertnorm[ii * 3].toFloat(),geosrcvertnorm[ii * 3 + 1].toFloat(),geosrcvertnorm[ii * 3 + 2].toFloat())).Normalize();
+							Point3f normalCoord(geosrcvertnorm[ii * 3].toFloat(),
+																	geosrcvertnorm[ii * 3 + 1].toFloat(),
+																	geosrcvertnorm[ii * 3 + 2].toFloat());
+							normalCoord.Normalize();
+							m.vert[vv].N() = normalCoord;
 						}
 
 						/*if (!srcnodecolor.isNull())
@@ -351,6 +363,117 @@ namespace io {
 			}
 		}
 
+	// This recursive function add to a mesh the subtree starting from the passed node. 
+	// When you start from a visual_scene, you can find nodes. 
+  // nodes can be directly instanced or referred from the node library.
+		
+		static void AddNodeToMesh(QDomElement node, 
+															OpenMeshType& m, Matrix44f curTr,
+															AdditionalInfoDAE*& info)
+		{
+				QDEBUG("Starting processing <node> with id %s",qPrintable(node.attribute("id")));
+ 
+				curTr = curTr * getTransfMatrixFromNode(node);
+				
+				QDomNodeList geomNodeList = node.elementsByTagName("instance_geometry");
+				for(int ch = 0;ch < geomNodeList.size();++ch) 
+				{
+					QDomElement instGeomNode= geomNodeList.at(ch).toElement();
+					if(instGeomNode.parentNode()==node) // process only direct child
+					{
+						QDEBUG("Found a instance_geometry with url %s",qPrintable(instGeomNode.attribute("url")));
+						
+						QString geomNode_url;
+						referenceToANodeAttribute(instGeomNode,"url",geomNode_url);
+						QDEBUG("Found a instance_geometry with url '%s'", qPrintable(geomNode_url));
+						QDomNode refNode = findNodeBySpecificAttributeValue(*(info->dae->doc),"geometry","id",geomNode_url);
+						
+						OpenMeshType newMesh;
+						LoadMesh(newMesh, info, refNode.toElement());
+						tri::UpdatePosition<OpenMeshType>::Matrix(newMesh,curTr);
+						tri::Append<OpenMeshType,OpenMeshType>::Mesh(m,newMesh);
+					}
+				}
+				
+				QDomNodeList controllerNodeList = node.elementsByTagName("instance_controller");
+				for(int ch = 0;ch < controllerNodeList.size();++ch) 
+				{
+					QDomElement instContrNode= controllerNodeList.at(ch).toElement();
+					if(instContrNode.parentNode()==node) // process only direct child
+					{
+						QDEBUG("Found a instance_controller with url %s",qPrintable(instContrNode.attribute("url")));
+					
+						QString controllerNode_url;
+						referenceToANodeAttribute(instContrNode,"url",controllerNode_url);
+						QDEBUG("Found a instance_controller with url '%s'", qPrintable(controllerNode_url));
+						QDomNode refNode = findNodeBySpecificAttributeValue(*(info->dae->doc),"controller","id",controllerNode_url);
+						
+						OpenMeshType newMesh;
+						LoadControllerMesh(newMesh, info, refNode.toElement());
+						tri::UpdatePosition<OpenMeshType>::Matrix(newMesh,curTr);
+						tri::Append<OpenMeshType,OpenMeshType>::Mesh(m,newMesh);
+					}
+				}
+								
+				QDomNodeList nodeNodeList = node.elementsByTagName("node");
+				for(int ch = 0;ch < nodeNodeList.size();++ch)
+				{
+					if(nodeNodeList.at(ch).parentNode()==node) // process only direct child
+							AddNodeToMesh(nodeNodeList.at(ch).toElement(), m,curTr, info);
+				}
+				
+				QDomNodeList instanceNodeList = node.elementsByTagName("instance_node");
+				for(int ch = 0;ch < instanceNodeList.size();++ch)
+				{
+					if(instanceNodeList.at(ch).parentNode()==node) // process only direct child
+					{
+						QDomElement instanceNode =  instanceNodeList.at(ch).toElement();
+						QString node_url;
+						referenceToANodeAttribute(instanceNode,"url",node_url);
+						QDEBUG("Found a instance_node with url '%s'", qPrintable(node_url));
+						QDomNode refNode = findNodeBySpecificAttributeValue(*(info->dae->doc),"node","id",node_url);
+						if(refNode.isNull()) 
+							QDEBUG("findNodeBySpecificAttributeValue returned a null node for %s",qPrintable(node_url));
+										 
+						AddNodeToMesh(refNode.toElement(), m,curTr, info);
+					}
+				}
+		}
+		
+
+// Retrieve the transformation matrix that is defined in the childs of a node.
+// used during the recursive descent.
+static Matrix44f getTransfMatrixFromNode(const QDomElement parentNode)
+{
+	QDEBUG("getTrans form node with tag %s",qPrintable(parentNode.tagName()));
+	assert(parentNode.tagName() == "node");
+	
+	std::vector<QDomNode> rotationList;
+	QDomNode matrixNode;
+	QDomNode translationNode;
+	for(int ch = 0;ch < parentNode.childNodes().size();++ch)
+		{
+			if (parentNode.childNodes().at(ch).nodeName() == "rotate")    
+				rotationList.push_back(parentNode.childNodes().at(ch));
+			if (parentNode.childNodes().at(ch).nodeName() == "translate")	
+				translationNode = parentNode.childNodes().at(ch);							
+			if (parentNode.childNodes().at(ch).nodeName() == "matrix")	  
+				matrixNode = parentNode.childNodes().at(ch);							
+		}
+
+		Matrix44f rotM;		   rotM.SetIdentity();
+		Matrix44f transM; transM.SetIdentity();
+
+		if (!translationNode.isNull()) ParseTranslation(transM,translationNode);
+		if (!rotationList.empty()) ParseRotationMatrix(rotM,rotationList);
+		if (!matrixNode.isNull()) 
+		{
+			ParseMatrixNode(transM,matrixNode);
+		  return transM;
+		}
+	  return transM*rotM;
+}
+
 	public:
 
 		//merge all meshes in the collada's file in the templeted mesh m
@@ -358,6 +481,7 @@ namespace io {
 		
 		static int Open(OpenMeshType& m,const char* filename,AdditionalInfo*& info, CallBackPos *cb=0)
 		{
+			QDEBUG("----- Starting the processing of %s ------",filename);
 			AdditionalInfoDAE* inf = new AdditionalInfoDAE();
 			inf->dae = new InfoDAE(); 
 			
@@ -374,104 +498,67 @@ namespace io {
 			
 			inf->dae->doc = doc;
 			//GetTexture(*(info->doc),inf);
-
+			
 			//scene->instance_visual_scene
 			QDomNodeList scenes = inf->dae->doc->elementsByTagName("scene");
 			int scn_size = scenes.size();
 			if (scn_size == 0) 
 				return E_NO3DSCENE;
-
+			QDEBUG("File Contains %i Scenes",scenes.size());
 			int problem = E_NOERROR;
 			bool found_a_mesh = false;
 			//Is there geometry in the file? 
 			bool geoinst_found = false;
-			//for each scene in COLLADA FILE
+			
+			// The main loading loop
+			// for each scene in COLLADA FILE
+			/*
+			Some notes on collada structure.
+			the top root is the <scene> that can contains one of more <visual_scene>.
+			<visual_scene> can be directly written there (check!) or instanced from their definition in the <library_visual_scene>
+			each <visual_scene> contains a hierarchy of <node>	
+		  each <node> contains
+				transformation
+				other node
+				instance of geometry 
+				instance of controller
+			*/
 			for(int scn = 0;scn < scn_size;++scn)
 			{
 				QDomNodeList instscenes = scenes.at(scn).toElement().elementsByTagName("instance_visual_scene");
 				int instscn_size = instscenes.size();
-				if (instscn_size == 0) 
-					return E_INCOMPATIBLECOLLADA141FORMAT;
+				QDEBUG("Scene %i contains %i instance_visual_scene ",scn,instscn_size);
+				if (instscn_size == 0)  return E_INCOMPATIBLECOLLADA141FORMAT;
 
 				//for each scene instance in a COLLADA scene
 				for(int instscn = 0;instscn < instscn_size; ++instscn)
 				{
 					QString libscn_url;
 					referenceToANodeAttribute(instscenes.at(instscn),"url",libscn_url);	
+					QDEBUG("instance_visual_scene %i refers %s ",instscn,qPrintable(libscn_url));
+					
 					QDomNode nd = QDomNode(*(inf->dae->doc));
 					QDomNode visscn = findNodeBySpecificAttributeValue(*(inf->dae->doc),"visual_scene","id",libscn_url);
-					if(visscn.isNull())
-						return E_UNREFERENCEBLEDCOLLADAATTRIBUTE;
+					if(visscn.isNull()) return E_UNREFERENCEBLEDCOLLADAATTRIBUTE;
 					
+					//assert (visscn.toElement().Attribute("id") == libscn_url);
 					//for each node in the libscn_url visual scene  
 					QDomNodeList visscn_child = visscn.childNodes();
+					QDEBUG("instance_visual_scene %s has %i children",qPrintable(libscn_url),visscn_child.size());
 					
-					//for each direct child of a libscn_url visual scene find if there is some geometry instance
+					// for each direct child of a visual scene process it
 					for(int chdind = 0; chdind < visscn_child.size();++chdind)
 					{
-						QDomNodeList geoinst = visscn_child.at(chdind).toElement().elementsByTagName("instance_geometry");
-						int geoinst_size = geoinst.size();
-						if (geoinst_size != 0)
-						{
-							
-							geoinst_found |= true;
-							QDomNodeList geolib = inf->dae->doc->elementsByTagName("library_geometries");
-							assert(geolib.size() == 1);
-							//!!!!!!!!!!!!!!!!!here will be the code for geometry transformations!!!!!!!!!!!!!!!!!!!!!!
-							for(int geoinst_ind = 0;geoinst_ind < geoinst_size;++geoinst_ind)
-							{
-								QString geo_url;
-								referenceToANodeAttribute(geoinst.at(geoinst_ind),"url",geo_url);
-								
-								QDomNode geo = findNodeBySpecificAttributeValue(geolib.at(0),"geometry","id",geo_url);
-								if (geo.isNull())
-									return E_UNREFERENCEBLEDCOLLADAATTRIBUTE;
-								vcg::Matrix44f tr;
-								tr.SetIdentity();
-								TransfMatrix(visscn,geoinst.at(geoinst_ind),tr);
-								problem |= LoadMesh(m,inf,geo,tr); 
-								if (problem & E_NOMESH)
-									found_a_mesh |= false;
-								else
-									found_a_mesh = true;
-							}
-						}
-					}
-					//if there is at least a mesh I clean the problem status variable from E_NOMESH ERROR
-				
-					if (((problem & E_NOMESH) || (problem & E_NOPOLYGONALMESH)) && (found_a_mesh))
-					{	
-						if (problem & E_NOMESH) 
-							problem = problem & ~E_NOMESH;
-						if (problem & E_NOPOLYGONALMESH)
-							problem = problem & ~E_NOPOLYGONALMESH;
-					}
-				}
-			}
-
-			if (!geoinst_found)
-			{
-				QDomNodeList geolib = inf->dae->doc->elementsByTagName("library_geometries");
-				assert(geolib.size() == 1);
-				QDomNodeList geochild = geolib.at(0).childNodes();
-				int geochild_size = geochild.size();
-				int problem = 0;
-				for(int chd = 0;chd < geochild_size;++chd)
-				{
-					vcg::Matrix44f tmp;
-					tmp.SetIdentity();
-					problem |= LoadMesh(m,inf,geochild.at(chd),tmp); 
-				}
-			}
-			//if there is at least a mesh I clean the problem status variable from E_NOMESH or E_NOPOLYGONALMESH ERROR
-			if (((problem & E_NOMESH) || (problem & E_NOPOLYGONALMESH)) && (found_a_mesh))
-			{	
-				if (problem & E_NOMESH) 
-					problem = problem & ~E_NOMESH;
-				if (problem & E_NOPOLYGONALMESH)
-					problem = problem & ~E_NOPOLYGONALMESH;
-			}
-			info = inf;
+						QDomElement node=visscn_child.at(chdind).toElement();
+						if(node.isNull()) continue;
+						QDEBUG("Processing Visual Scene child %i - of type '%s'",chdind,qPrintable(node.tagName()));
+						Matrix44f baseTr; baseTr.SetIdentity();
+						
+						if(node.toElement().tagName()=="node")
+							AddNodeToMesh(node.toElement(), m, baseTr,inf);
+					}	// end for each node of a given scene				
+				} // end for each visual scene instance
+			} // end for each scene instance 
 			return problem;
 		}
 
@@ -513,8 +600,7 @@ namespace io {
 			{
 				QDomNodeList instscenes = scenes.at(scn).toElement().elementsByTagName("instance_visual_scene");
 				int instscn_size = instscenes.size();
-				if (instscn_size == 0) 
-					return false;
+				if (instscn_size == 0)  return false;
 
 				//for each scene instance in a COLLADA scene
 				for(int instscn = 0;instscn < instscn_size; ++instscn)
@@ -523,8 +609,7 @@ namespace io {
 					referenceToANodeAttribute(instscenes.at(instscn),"url",libscn_url);	
 					QDomNode nd = QDomNode(*(info->dae->doc));
 					QDomNode visscn = findNodeBySpecificAttributeValue(*(info->dae->doc),"visual_scene","id",libscn_url);
-					if(visscn.isNull())
-						return false;
+					if(visscn.isNull()) 	return false;
 					
 					//for each node in the libscn_url visual scene  
 					//QDomNodeList& visscn_child = visscn.childNodes();
