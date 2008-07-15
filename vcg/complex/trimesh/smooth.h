@@ -340,6 +340,58 @@ static void VertexCoordLaplacian(MeshType &m, int step, bool SmoothSelected=fals
 		}
 }
 
+// Same of above but moves only the vertices that do not change FaceOrientation more that the given threshold
+static void VertexCoordPlanarLaplacian(MeshType &m, int step, float AngleThrRad = math::ToRad(1.0), bool SmoothSelected=false, vcg::CallBackPos * cb=0)
+{
+  VertexIterator vi;
+	FaceIterator fi;
+	LaplacianInfo lpz(CoordType(0,0,0),0);
+	SimpleTempData<typename MeshType::VertContainer,LaplacianInfo > TD(m.vert,lpz);
+	for(int i=0;i<step;++i)
+		{
+		if(cb)cb(100*i/step, "Planar Laplacian Smoothing");
+		TD.Init(lpz);
+		AccumulateLaplacianInfo(m,TD);
+		for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+			if(!(*vi).IsD() && TD[*vi].cnt>0 )
+			{
+				if(!SmoothSelected || (*vi).IsS())
+					TD[*vi].sum = ( (*vi).P() + TD[*vi].sum)/(TD[*vi].cnt+1);
+			}
+		
+		for(fi=m.face.begin();fi!=m.face.end();++fi){
+				if(!(*fi).IsD()){
+					for (int j = 0; j < 3; ++j) {					
+						if(Angle( NormalizedNormal(TD[(*fi).V0(j)].sum, (*fi).P1(j), (*fi).P2(j) ), 
+											NormalizedNormal(   (*fi).P0(j)     , (*fi).P1(j), (*fi).P2(j) ) ) > AngleThrRad )
+							TD[(*fi).V0(j)].sum = (*fi).P0(j);
+					}
+				}
+			}
+			for(fi=m.face.begin();fi!=m.face.end();++fi){
+				if(!(*fi).IsD()){
+					for (int j = 0; j < 3; ++j) {					
+						if(Angle( NormalizedNormal(TD[(*fi).V0(j)].sum, TD[(*fi).V1(j)].sum, (*fi).P2(j) ), 
+											NormalizedNormal(   (*fi).P0(j)     ,    (*fi).P1(j),      (*fi).P2(j) ) ) > AngleThrRad )
+						{
+							TD[(*fi).V0(j)].sum = (*fi).P0(j);
+							TD[(*fi).V1(j)].sum = (*fi).P1(j);
+						}
+					}
+				}
+			}
+				
+			for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+				if(!(*vi).IsD() && TD[*vi].cnt>0 )
+						(*vi).P()= TD[*vi].sum;
+						
+						
+				
+		}// end step
+		
+		
+}
+
 static void VertexCoordLaplacianBlend(MeshType &m, int step, float alpha, bool SmoothSelected=false)
 {
 	VertexIterator vi;
@@ -516,7 +568,7 @@ public:
 	int cnt;
 };
 
-static void VertexColorLaplacian(MeshType &m, int step, bool SmoothSelected=false)
+static void VertexColorLaplacian(MeshType &m, int step, bool SmoothSelected=false, vcg::CallBackPos * cb=0)
 { 
 	ColorSmoothInfo csi;
 	csi.r=0; csi.g=0; csi.b=0; csi.cnt=0;
@@ -524,6 +576,7 @@ static void VertexColorLaplacian(MeshType &m, int step, bool SmoothSelected=fals
 
 	for(int i=0;i<step;++i)
 	{
+		if(cb) cb(100*i/step, "Vertex Color Laplacian Smoothing");
 		VertexIterator vi;
 		for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 			TD[*vi]=csi;
