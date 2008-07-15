@@ -512,6 +512,48 @@ static float ValuePow(float value, float exponent)
   return powf(value, exponent);
 }
 
+static int Levels(UpdateMeshType &m, float gamma, float in_min, float in_max, float out_min, float out_max, unsigned char rgbMask, const bool ProcessSelected=false)
+{
+  int counter=0;
+  VertexIterator vi;
+  for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
+  {
+    if(!(*vi).IsD()) //if it has not been deleted...
+    {
+      if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+      {
+        (*vi).C() = ColorLevels((*vi).C(), gamma, in_min, in_max, out_min, out_max, rgbMask);
+        ++counter;
+      }
+    }
+  }
+  return counter;
+}
+
+enum rgbChMask {ALL_CHANNELS = 7, RED_CHANNEL = 4, GREEN_CHANNEL = 2, BLUE_CHANNEL = 1, NO_CHANNELS = 0 };
+
+static Color4b ColorLevels(Color4b c, float gamma, float in_min, float in_max, float out_min, float out_max, unsigned char rgbMask)
+{
+  unsigned char r = c[0], g = c[1], b = c[2];
+  if(rgbMask & RED_CHANNEL) r = ValueLevels(c[0], gamma, in_min, in_max, out_min, out_max);
+  if(rgbMask & GREEN_CHANNEL) g = ValueLevels(c[1], gamma, in_min, in_max, out_min, out_max);
+  if(rgbMask & BLUE_CHANNEL) b = ValueLevels(c[2], gamma, in_min, in_max, out_min, out_max);
+  return Color4b(r, g, b, 255);
+}
+
+static int ValueLevels(int value, float gamma, float in_min, float in_max, float out_min, float out_max)
+{
+  float fvalue = value/255.0f;
+  // normalize
+  fvalue = math::Clamp<float>(fvalue - in_min, 0.0f, 1.0f) / math::Clamp<float>(in_max - in_min, 1.0f/255.0f, 1.0f);
+  // transform gamma
+  fvalue = pow(fvalue,1/gamma);
+  // rescale range
+  fvalue = fvalue * (out_max - out_min) + out_min;
+  //back in interval [0,255] and clamp
+  return math::Clamp<int>((int)(fvalue * 255), 0, 255);
+}
+
 static int Colourisation(UpdateMeshType &m, Color4b c, float intensity, const bool ProcessSelected=false)
 {
   int counter=0;
