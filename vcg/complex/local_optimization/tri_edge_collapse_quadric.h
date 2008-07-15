@@ -150,6 +150,7 @@ public:
 	bool		ComplexCheck;
 	bool		ScaleIndependent;
 	//***********************
+	bool    QualityQuadric; // During the initialization manage all the edges as border edges adding a set of additional quadrics that are useful mostly for keeping face aspect ratio good.
 	bool		PreserveTopology; 
 	bool		PreserveBoundary; 
 	bool		MarkComplex;
@@ -349,6 +350,7 @@ public:
 		Params().QualityCheck=true;
 		Params().QualityThr=.1;
 		Params().BoundaryWeight=.5;
+		Params().QualityQuadric=false;
 		Params().OptimalPlacement=true;
 		Params().ScaleIndependent=true;
 		Params().ComplexCheck=false;
@@ -549,7 +551,7 @@ static void InitQuadric(TriMeshType &m)
               if( (*pf).V(j)->IsW() )	QH::Qd((*pf).V(j)) += q;				// Sommo la quadrica ai vertici
 						
 						for(j=0;j<3;++j)
-							if( (*pf).IsB(j))				// Bordo!
+							if( (*pf).IsB(j) || Params().QualityQuadric )				// Bordo!
 							{
 								Plane3<ScalarType,false> pb;						// Piano di bordo
 
@@ -558,7 +560,8 @@ static void InitQuadric(TriMeshType &m)
 								// poiche' la pesatura in funzione dell'area e'gia fatta in p.Direction() 
 								// Senza la normalize il bordo e' pesato in funzione della grandezza della mesh (mesh grandi non decimano sul bordo)
 								pb.SetDirection(p.Direction() ^ ( (*pf).V1(j)->cP() - (*pf).V(j)->cP() ).Normalize());
-								pb.SetDirection(pb.Direction()* (ScalarType)Params().BoundaryWeight);  // amplify border planes
+								if(  (*pf).IsB(j) ) pb.SetDirection(pb.Direction()* (ScalarType)Params().BoundaryWeight);        // amplify border planes
+								               else pb.SetDirection(pb.Direction()* (ScalarType)(Params().BoundaryWeight/100.0)); // and consider much less quadric for quality
 								pb.SetOffset(pb.Direction() * (*pf).V(j)->cP());
 								q.ByPlane(pb);
 
