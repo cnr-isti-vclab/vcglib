@@ -509,7 +509,7 @@ static Color4b ColorPow(Color4b c, float exponent)
 
 static float ValuePow(float value, float exponent)
 {
-  return pow((double)value, exponent);
+  return powf(value, exponent);
 }
 
 static int Colourisation(UpdateMeshType &m, Color4b c, float intensity, const bool ProcessSelected=false)
