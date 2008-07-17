@@ -240,7 +240,7 @@ public:
     	  for(vi=m.vert.begin();vi!=m.vert.end();++vi) 
           if(!(*vi).IsD()) (*vi).SetW();
       }
-    	if(Params().FastPreserveBoundary)
+    	if(Params().PreserveBoundary)
       {
         typename 	std::vector<typename TriMeshType::VertexPointer>::iterator wvi;
         for(wvi=WV().begin();wvi!=WV().end();++wvi)
