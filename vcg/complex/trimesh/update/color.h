@@ -601,7 +601,7 @@ static int Desaturation(UpdateMeshType &m, int method, const bool ProcessSelecte
   return counter;
 }
 
-enum DesaturationMethods {M_LIGHTNESS = 0, M_MEAN = 1};
+enum DesaturationMethods {M_LIGHTNESS = 0, M_LUMINANCE = 1, M_MEAN = 2};
 
 static Color4b ColorDesaturate(Color4b c, int method)
 {
@@ -614,6 +614,10 @@ static Color4b ColorDesaturate(Color4b c, int method)
       int val = (int)ComputeMeanLightness(c);
       return Color4b( val, val, val, 255);
     }
+    case M_LUMINANCE:{
+      int val = (int)ComputeLuminance(c);
+      return Color4b( val, val, val, 255);
+    }
     default: assert(0);
   }
 }
@@ -621,6 +625,11 @@ static Color4b ColorDesaturate(Color4b c, int method)
 static float ComputeMeanLightness(Color4b c)
 {
     return float(c[0]+c[1]+c[2])/3.0f;
+}
+
+static float ComputeLuminance(Color4b c)
+{
+    return float(0.2126f*c[0]+0.7152f*c[1]+0.0722f*c[2]);
 }
 
 static int Equalize(UpdateMeshType &m, unsigned int rgbMask, const bool ProcessSelected=false)
