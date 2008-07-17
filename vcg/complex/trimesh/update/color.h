@@ -601,7 +601,7 @@ static int Desaturation(UpdateMeshType &m, int method, const bool ProcessSelecte
   return counter;
 }
 
-enum DesaturationMethods {M_LIGHTNESS = 0, M_LUMINANCE = 1, M_MEAN = 2};
+enum DesaturationMethods {M_LIGHTNESS = 0, M_LUMINOSITY = 1, M_AVERAGE = 2};
 
 static Color4b ColorDesaturate(Color4b c, int method)
 {
@@ -610,24 +610,24 @@ static Color4b ColorDesaturate(Color4b c, int method)
       int val = (int)ComputeLightness(c);
       return Color4b( val, val, val, 255);
     }
-    case M_MEAN:{
-      int val = (int)ComputeMeanLightness(c);
+    case M_AVERAGE:{
+      int val = (int)ComputeAvgLightness(c);
       return Color4b( val, val, val, 255);
     }
-    case M_LUMINANCE:{
-      int val = (int)ComputeLuminance(c);
+    case M_LUMINOSITY:{
+      int val = (int)ComputeLuminosity(c);
       return Color4b( val, val, val, 255);
     }
     default: assert(0);
   }
 }
 
-static float ComputeMeanLightness(Color4b c)
+static float ComputeAvgLightness(Color4b c)
 {
     return float(c[0]+c[1]+c[2])/3.0f;
 }
 
-static float ComputeLuminance(Color4b c)
+static float ComputeLuminosity(Color4b c)
 {
     return float(0.2126f*c[0]+0.7152f*c[1]+0.0722f*c[2]);
 }
@@ -692,6 +692,45 @@ static Color4b ColorEqualize(Color4b c, int cdf_l[256], int cdf_r[256], int cdf_
 static int ValueEqualize(int cdfValue, int cdfMin, int cdfMax)
 {
   return int(float((cdfValue - cdfMin)/float(cdfMax - cdfMin)) * 255.0f);
+}
+
+static int WhiteBalance(UpdateMeshType &m, const bool ProcessSelected=false)
+{
+  int unbalancedWhite = 0;
+  int counter=0;
+  VertexIterator vi;
+  for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
+  {
+    if(!(*vi).IsD()) //if it has not been deleted...
+    {
+      if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+      {
+        unbalancedWhite = (int)math::Max(ComputeLightness((*vi).C()), float(unbalancedWhite));
+      }
+    }
+  }
+
+  for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
+  {
+    if(!(*vi).IsD()) //if it has not been deleted...
+    {
+      if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+      {
+        (*vi).C()=ColorWhiteBalance((*vi).C(),unbalancedWhite);
+        ++counter;
+      }
+    }
+  }
+  return counter;
+}
+
+static Color4b ColorWhiteBalance(Color4b c, int unbalancedWhite)
+{
+  return Color4b(
+                 math::Clamp<int>((int)(c[0]*(255.0f/unbalancedWhite)), 0, 255),
+                 math::Clamp<int>((int)(c[1]*(255.0f/unbalancedWhite)), 0, 255),
+                 math::Clamp<int>((int)(c[2]*(255.0f/unbalancedWhite)), 0, 255),
+                 255);
 }
 
 };
