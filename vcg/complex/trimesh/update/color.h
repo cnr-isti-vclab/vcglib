@@ -65,6 +65,7 @@ Changed name from plural to singular (normals->normal)
 #include <limits>
 #include <math.h>
 #include <vcg/space/color4.h>
+#include <vcg/math/histogram.h>
 
 namespace vcg {
 namespace tri {
@@ -574,12 +575,102 @@ static int Colourisation(UpdateMeshType &m, Color4b c, float intensity, const bo
 
 static Color4b ColorApplyDiff(Color4b old_color, Color4b new_color, float intensity)
 {
-  return Color4b( ValueApplyDiff(old_color[0],new_color[0],intensity), ValueApplyDiff(old_color[1],new_color[1],intensity), ValueApplyDiff(old_color[2], new_color[2],intensity), 1);
+  return Color4b( ValueApplyDiff(old_color[0],new_color[0],intensity), ValueApplyDiff(old_color[1],new_color[1],intensity), ValueApplyDiff(old_color[2], new_color[2],intensity), 255);
 }
 
 static int ValueApplyDiff(int old_value, int new_value, float intensity)
 {
   return  math::Clamp<int>((int)(old_value + intensity * (new_value - old_value)), 0, 255);
+}
+
+static int Desaturation(UpdateMeshType &m, int method, const bool ProcessSelected=false)
+{
+  int counter=0;
+  VertexIterator vi;
+  for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
+  {
+    if(!(*vi).IsD()) //if it has not been deleted...
+    {
+      if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+      {
+        (*vi).C() = ColorDesaturate((*vi).C(), method);
+        ++counter;
+      }
+    }
+  }
+  return counter;
+}
+
+enum DesaturationMethods {M_LIGHTNESS = 0, M_MEAN = 1};
+
+static Color4b ColorDesaturate(Color4b c, int method)
+{
+  switch(method){
+    case M_LIGHTNESS:{
+      int val = (int)ComputeLightness(c);
+      return Color4b( val, val, val, 255);
+    }
+    case M_MEAN:{
+      int val = (int)ComputeMeanLightness(c);
+      return Color4b( val, val, val, 255);
+    }
+    default: assert(0);
+  }
+}
+
+static float ComputeMeanLightness(Color4b c)
+{
+    return float(c[0]+c[1]+c[2])/3.0f;
+}
+
+static int Equalize(UpdateMeshType &m, const bool ProcessSelected=false)
+{
+  int counter=0;
+  VertexIterator vi;
+  //FILE *fp;
+	//fp=fopen("added.txt","a+");
+  Histogramf H;
+  H.Clear();
+	H.SetRange(0, 255, 255);
+
+  for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
+  {
+    if(!(*vi).IsD()) //if it has not been deleted...
+    {
+      if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+      {
+        int v = (int)(ComputeLightness((*vi).C())+0.5);
+        H.Add(v);
+      }
+    }
+  }
+
+	int cdf[256];
+	cdf[0] = H.BinCount(0);
+	for(int i=1; i<256; i++){
+    cdf[i] = H.BinCount(float(i)) + cdf[i-1];
+  }
+
+  for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
+  {
+    if(!(*vi).IsD()) //if it has not been deleted...
+    {
+      if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+      {
+        (*vi).C()=ColorEqualize((*vi).C(), cdf[(int)(ComputeLightness((*vi).C())+0.5)], cdf[0], cdf[255]);
+        ++counter;
+      }
+    }
+  }
+  return counter;
+}
+
+static Color4b ColorEqualize(Color4b c, int cdfValue, int cdfMin, int cdfMax)
+{
+  //int v = (int)ComputeLightness(c);
+  float v = float((cdfValue - cdfMin)/float(cdfMax - cdfMin)) * 255.0f;
+
+  return Color4b( (int)v, (int)v, (int)v, 255);
 }
 
 };
