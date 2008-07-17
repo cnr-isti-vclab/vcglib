@@ -623,15 +623,14 @@ static float ComputeMeanLightness(Color4b c)
     return float(c[0]+c[1]+c[2])/3.0f;
 }
 
-static int Equalize(UpdateMeshType &m, const bool ProcessSelected=false)
+static int Equalize(UpdateMeshType &m, unsigned int rgbMask, const bool ProcessSelected=false)
 {
+  Histogramf Hl, Hr, Hg, Hb;
+  Hl.Clear(); Hr.Clear(); Hg.Clear(); Hb.Clear();
+	Hl.SetRange(0, 255, 255); Hr.SetRange(0, 255, 255); Hg.SetRange(0, 255, 255); Hb.SetRange(0, 255, 255);
+
   int counter=0;
   VertexIterator vi;
-  //FILE *fp;
-	//fp=fopen("added.txt","a+");
-  Histogramf H;
-  H.Clear();
-	H.SetRange(0, 255, 255);
 
   for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
   {
@@ -640,15 +639,18 @@ static int Equalize(UpdateMeshType &m, const bool ProcessSelected=false)
       if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
       {
         int v = (int)(ComputeLightness((*vi).C())+0.5);
-        H.Add(v);
+        Hl.Add(v); Hr.Add((*vi).C()[0]); Hg.Add((*vi).C()[1]); Hb.Add((*vi).C()[2]);
       }
     }
   }
 
-	int cdf[256];
-	cdf[0] = H.BinCount(0);
+	int cdf_l[256], cdf_r[256], cdf_g[256], cdf_b[256];
+	cdf_l[0] = Hl.BinCount(0); cdf_r[0] = Hr.BinCount(0); cdf_g[0] = Hg.BinCount(0); cdf_b[0] = Hb.BinCount(0);
 	for(int i=1; i<256; i++){
-    cdf[i] = H.BinCount(float(i)) + cdf[i-1];
+    cdf_l[i] = Hl.BinCount(float(i)) + cdf_l[i-1];
+    cdf_r[i] = Hr.BinCount(float(i)) + cdf_r[i-1];
+    cdf_g[i] = Hg.BinCount(float(i)) + cdf_g[i-1];
+    cdf_b[i] = Hb.BinCount(float(i)) + cdf_b[i-1];
   }
 
   for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
@@ -657,7 +659,7 @@ static int Equalize(UpdateMeshType &m, const bool ProcessSelected=false)
     {
       if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
       {
-        (*vi).C()=ColorEqualize((*vi).C(), cdf[(int)(ComputeLightness((*vi).C())+0.5)], cdf[0], cdf[255]);
+        (*vi).C()=ColorEqualize((*vi).C(), cdf_l, cdf_r, cdf_g, cdf_b, rgbMask);
         ++counter;
       }
     }
@@ -665,12 +667,22 @@ static int Equalize(UpdateMeshType &m, const bool ProcessSelected=false)
   return counter;
 }
 
-static Color4b ColorEqualize(Color4b c, int cdfValue, int cdfMin, int cdfMax)
+static Color4b ColorEqualize(Color4b c, int cdf_l[256], int cdf_r[256], int cdf_g[256], int cdf_b[256], unsigned int rgbMask)
 {
-  //int v = (int)ComputeLightness(c);
-  float v = float((cdfValue - cdfMin)/float(cdfMax - cdfMin)) * 255.0f;
+  unsigned char r = c[0], g = c[1], b = c[2];
+  if(rgbMask == NO_CHANNELS){
+    int v = ValueEqualize(cdf_l[(int)(ComputeLightness(c)+0.5f)], cdf_l[0], cdf_l[255]);
+    return Color4b(v, v, v, 255);
+  }
+  if(rgbMask & RED_CHANNEL) r = ValueEqualize(cdf_r[c[0]], cdf_r[0], cdf_r[255]);
+  if(rgbMask & GREEN_CHANNEL) g = ValueEqualize(cdf_g[c[1]], cdf_g[0], cdf_g[255]);
+  if(rgbMask & BLUE_CHANNEL) b = ValueEqualize(cdf_b[c[2]], cdf_b[0], cdf_b[255]);
+  return Color4b(r, g, b, 255);
+}
 
-  return Color4b( (int)v, (int)v, (int)v, 255);
+static int ValueEqualize(int cdfValue, int cdfMin, int cdfMax)
+{
+  return int(float((cdfValue - cdfMin)/float(cdfMax - cdfMin)) * 255.0f);
 }
 
 };
