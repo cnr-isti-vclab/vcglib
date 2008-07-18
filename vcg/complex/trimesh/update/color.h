@@ -696,8 +696,8 @@ static int ValueEqualize(int cdfValue, int cdfMin, int cdfMax)
 
 static int WhiteBalance(UpdateMeshType &m, const bool ProcessSelected=false)
 {
-  int unbalancedWhite = 0;
-  int counter=0;
+  Color4b unbalancedWhite;
+  int lightness = 0, counter=0;
   VertexIterator vi;
   for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
   {
@@ -705,7 +705,11 @@ static int WhiteBalance(UpdateMeshType &m, const bool ProcessSelected=false)
     {
       if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
       {
-        unbalancedWhite = (int)math::Max(ComputeLightness((*vi).C()), float(unbalancedWhite));
+        int v = ComputeLightness((*vi).C());
+        if( v > lightness){
+          lightness = v;
+          unbalancedWhite = (*vi).C();
+        }
       }
     }
   }
@@ -724,12 +728,12 @@ static int WhiteBalance(UpdateMeshType &m, const bool ProcessSelected=false)
   return counter;
 }
 
-static Color4b ColorWhiteBalance(Color4b c, int unbalancedWhite)
+static Color4b ColorWhiteBalance(Color4b c, Color4b unbalancedWhite)
 {
   return Color4b(
-                 math::Clamp<int>((int)(c[0]*(255.0f/unbalancedWhite)), 0, 255),
-                 math::Clamp<int>((int)(c[1]*(255.0f/unbalancedWhite)), 0, 255),
-                 math::Clamp<int>((int)(c[2]*(255.0f/unbalancedWhite)), 0, 255),
+                 math::Clamp<int>((int)(c[0]*(255.0f/unbalancedWhite[0])), 0, 255),
+                 math::Clamp<int>((int)(c[1]*(255.0f/unbalancedWhite[1])), 0, 255),
+                 math::Clamp<int>((int)(c[2]*(255.0f/unbalancedWhite[2])), 0, 255),
                  255);
 }
 
