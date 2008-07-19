@@ -102,20 +102,25 @@ static int Open( MESH_TYPE &m, const char * filename, CallBackPos *cb=0,bool tri
     m.Clear();
   
     Point3f pp;
+		float q;
     int cnt=0;
 		int ret;
+		char buf[1024];
     /* Read a single facet from an ASCII .STL file */
     while(!feof(fp))
     {
       if(cb && (++cnt)%1000) cb( (ftell(fp)*100)/fileLen, "ASC Mesh Loading");	
 			if(feof(fp)) break;
-      ret=fscanf(fp, "%f, %f, %f\n", &pp.X(), &pp.Y(), &pp.Z());
-			if(ret!=3) 		return E_UNESPECTEDEOF;
+			fgets(buf,1024,fp);
+			ret=sscanf(buf, "%f, %f, %f, %f\n", &pp.X(), &pp.Y(), &pp.Z(),&q);
+			if(ret<3) 		return E_UNESPECTEDEOF;
       VertexIterator vi=Allocator<MESH_TYPE>::AddVertices(m,1);
 			(*vi).P().Import(pp); 
+			if(ret==4) 	(*vi).Q()=q; 
     }
 		
     fclose(fp);
+		if(!triangulate) return E_NOERROR;
 		// now try to triangulate.
 		// search for the first jump
 		float baseY = m.vert[0].P().Y();
