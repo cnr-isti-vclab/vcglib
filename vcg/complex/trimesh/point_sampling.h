@@ -35,6 +35,8 @@ Each function calls many time the sample object with the sampling point as param
 #ifndef __VCGLIB_POINT_SAMPLING
 #define __VCGLIB_POINT_SAMPLING
 #include <vcg/complex/trimesh/stat.h>
+#include <vcg/complex/trimesh/update/topology.h>
+#include <vcg/space/box2.h>
 namespace vcg
 {
 namespace tri
