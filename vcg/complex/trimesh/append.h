@@ -96,11 +96,10 @@ static void ImportFace(MeshLeft &ml, MeshRight &mr, FaceLeft &fl, FaceRight &fr,
   if(HasPerFaceColor(mr)   && HasPerFaceColor(ml)) fl.C()=fr.C();
   if(HasPerFaceQuality(mr) && HasPerFaceQuality(ml)) fl.Q()=fr.Q();
   if(HasPerWedgeTexCoord(mr) && HasPerWedgeTexCoord(ml)) 
-  {
-    fl.WT(0)=fr.WT(0);
-    fl.WT(1)=fr.WT(1);
-    fl.WT(2)=fr.WT(2);
-  };
+		for(int i=0;i<3;++i){
+				fl.WT(i).P()=fr.WT(i).P();
+				fl.WT(i).N()=fr.WT(i).N()+ml.textures.size();
+		}
 }
 
 static void Mesh(MeshLeft& ml, MeshRight& mr, const bool selected = false)
@@ -135,6 +134,8 @@ static void Mesh(MeshLeft& ml, MeshRight& mr, const bool selected = false)
         ImportFace(ml,mr,(*fp),(*fi),remap);
         ++fp;
     }
+	// At the end concatenate the vector with texture names.
+	 ml.textures.insert(ml.textures.end(),mr.textures.begin(),mr.textures.end());
 }
 
 
