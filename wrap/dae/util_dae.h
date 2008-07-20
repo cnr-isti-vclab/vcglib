@@ -52,46 +52,24 @@
 namespace vcg {
 namespace tri {
 namespace io {
-	class InfoDAE
+	class InfoDAE  : public AdditionalInfo
 	{
 		public:
-
-		InfoDAE()
-		{
+		
+		InfoDAE() :AdditionalInfo(){
 			doc = NULL;
+			textureIdMap.clear();
 		}
 
-		~InfoDAE()
-		{
-			delete doc;
+		~InfoDAE(){
+			if(doc!=NULL) delete doc;
 		}
 
 		QDomDocument* doc;		
-	};
-
-	class AdditionalInfoDAE : public AdditionalInfo
-	{
-	public: 
-		vcg::tri::io::InfoDAE* dae;
-		std::vector<QString> texturefile; 
-
-		AdditionalInfoDAE()
-		:AdditionalInfo()
-		{
-			mask	= 0;
-			numvert = 0;
-			numface = 0;
-		}
-
-		~AdditionalInfoDAE()
-		{
-			delete dae;
-			texturefile.clear();
-		}
+		QMap<QString,int> textureIdMap;
 	};
 
 	class UtilDAE
-
 	{
 	public:
 		enum DAEError 
@@ -482,35 +460,33 @@ namespace io {
 			return offset;
 		}
 
-		inline static QDomNode textureFinder(const QString& textname,const QDomDocument doc)
+		
+		
+		
+		
+		/* Very important procedure 
+			it has the task to finde the name of the image node corresponding to a given material id, 
+			it assuemes that the material name that is passed have already been bound with the current bindings  
+		*/
+		
+		inline static QDomNode textureFinder(QString& boundMaterialName, QString &textureFileName, const QDomDocument doc)
 		{
-			//visual_scene -> instance_material
-			QDomNodeList vis_scn = doc.elementsByTagName("library_visual_scenes");
-			if (vis_scn.size() != 1) 
-				return QDomNode();
-			QDomNode symb = findNodeBySpecificAttributeValue(vis_scn.at(0),QString("instance_material"),QString("symbol"),textname);
-			if (symb.isNull()) 
-				return QDomNode();
-			QString tar = symb.toElement().attribute("target");
-			if (tar.isNull())
-				return QDomNode();
-			tar = tar.remove('#');
-
+			boundMaterialName.remove('#');
 			//library_material -> material -> instance_effect
 			QDomNodeList lib_mat = doc.elementsByTagName("library_materials");
 			if (lib_mat.size() != 1) 
 				return QDomNode();
-			QDomNode material = findNodeBySpecificAttributeValue(lib_mat.at(0),QString("material"),QString("id"),tar);
+			QDomNode material = findNodeBySpecificAttributeValue(lib_mat.at(0),QString("material"),QString("id"),boundMaterialName);
 			if (material.isNull()) 
 				return QDomNode();
 			QDomNodeList in_eff = material.toElement().elementsByTagName("instance_effect");
-			if (vis_scn.size() == 0) 
+			if (in_eff.size() == 0) 
 				return QDomNode();
 			QString url = in_eff.at(0).toElement().attribute("url");
 			if ((url.isNull()) || (url == ""))
 				return QDomNode();
 			url = url.remove('#');
-
+      qDebug("====== searching among library_effects the effect with id '%s' ",qPrintable(url));
 			//library_effects -> effect -> instance_effect
 			QDomNodeList lib_eff = doc.elementsByTagName("library_effects");
 			if (lib_eff.size() != 1) 
@@ -526,13 +502,16 @@ namespace io {
 				return QDomNode();
 			
 			//library_images -> image
-			QDomNodeList lib_img = doc.elementsByTagName("library_images");
-			if (lib_img.size() != 1) 
+			QDomNodeList libraryImageNodeList = doc.elementsByTagName("library_images");
+			qDebug("====== searching among library_images the effect with id '%s' ",qPrintable(img_id));
+			if (libraryImageNodeList.size() != 1) 
 				return QDomNode();
-			QDomNode img = findNodeBySpecificAttributeValue(lib_img.at(0),QString("image"),QString("id"),img_id);
-			if (img.isNull()) 
-				return QDomNode();
-			return img;			
+			QDomNode imageNode = findNodeBySpecificAttributeValue(libraryImageNodeList.at(0),QString("image"),QString("id"),img_id);
+			QDomNodeList initfromNode = imageNode.toElement().elementsByTagName("init_from");
+			textureFileName= initfromNode.at(0).firstChild().nodeValue();
+			qDebug("====== the image '%s' has a %i init_from nodes text '%s'",qPrintable(img_id),initfromNode.size(),qPrintable(textureFileName));
+			
+			return imageNode;			
 		}
 
 		static int indexTextureByImgNode(const QDomDocument doc,const QDomNode node)
