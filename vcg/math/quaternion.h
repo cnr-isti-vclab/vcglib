@@ -138,7 +138,10 @@ public:
   void FromAxis(const S phi, const Point3<S> &a);
   void ToAxis(S &phi, Point3<S> &a ) const;
 
+  ///warning m must be a rotation matrix, result is unpredictable otherwise
   void FromMatrix(const Matrix44<S> &m);
+  void FromMatrix(const Matrix33<S> &m);
+
   void ToMatrix(Matrix44<S> &m) const;
   void ToMatrix(Matrix33<S> &m) const;
 
@@ -150,7 +153,13 @@ public:
   //do no 'see' parent members (unless explicitly specified) 
   const S & V ( const int i ) const	{ assert(i>=0 && i<4); return Point4<S>::V(i); }
   S & V ( const int i )	{ assert(i>=0 && i<4); return Point4<S>::V(i); }
+
+ private:
+  //fills the 3x3 upper portion of the matrix m (must support m[i][j] interface)
 };
+
+/*template<classS, class M> void QuaternionToMatrix(Quaternion<S> &s, M &m);
+template<classS, class M> void MatrixtoQuaternion(M &m, Quaternion<S> &s);*/
 
 template <class S> Quaternion<S> Interpolate(  Quaternion<S>   a,   Quaternion<S>   b, double t);
 template <class S> Quaternion<S> &Invert(Quaternion<S> &q);
@@ -197,13 +206,13 @@ template <class S> Quaternion<S> &Quaternion<S>::operator*=(const Quaternion &q)
   S ww = V(0) * q.V(0) - V(1) * q.V(1) - V(2) * q.V(2) - V(3) * q.V(3);
 	S xx = V(0) * q.V(1) + V(1) * q.V(0) + V(2) * q.V(3) - V(3) * q.V(2);
 	S yy = V(0) * q.V(2) - V(1) * q.V(3) + V(2) * q.V(0) + V(3) * q.V(1);
-	    	
+
 	V(0) = ww; 
   V(1) = xx; 
   V(2) = yy;
   V(3) = V(0) * q.V(3) + V(1) * q.V(2) - V(2) * q.V(1) + V(3) * q.V(0);
 	return *this;
-}	 
+}
 
 template <class S> void Quaternion<S>::Invert() {
 	V(1)*=-1;
@@ -241,101 +250,104 @@ template <class S> Point3<S> Quaternion<S>::Rotate(const Point3<S> p) const {
 		Quaternion<S> co = *this;
 		co.Invert();
 
-    Quaternion<S> tmp(0, p.V(0), p.V(1), p.V(2));		
+    Quaternion<S> tmp(0, p.V(0), p.V(1), p.V(2));
 
 		tmp = (*this) * tmp * co;
 		return 	Point3<S>(tmp.V(1), tmp.V(2), tmp.V(3));
 	}
 
 
+template<class S, class M> void QuaternionToMatrix(const Quaternion<S> &q, M &m) {
+  float x2 = q.V(1) + q.V(1);
+  float y2 = q.V(2) + q.V(2);
+  float z2 = q.V(3) + q.V(3);
+  {
+    float xx2 = q.V(1) * x2;
+    float yy2 = q.V(2) * y2;
+    float zz2 = q.V(3) * z2;
+    m[0][0] = 1.0f - yy2 - zz2;
+    m[1][1] = 1.0f - xx2 - zz2;
+    m[2][2] = 1.0f - xx2 - yy2;
+  }
+  {
+    float yz2 = q.V(2) * z2;
+    float wx2 = q.V(0) * x2;
+    m[1][2] = yz2 - wx2;
+    m[2][1] = yz2 + wx2;
+  }
+  {
+    float xy2 = q.V(1) * y2;
+    float wz2 = q.V(0) * z2;
+    m[0][1] = xy2 - wz2;
+    m[1][0] = xy2 + wz2;
+  }
+  {
+    float xz2 = q.V(1) * z2;
+    float wy2 = q.V(0) * y2;
+    m[2][0] = xz2 - wy2;
+    m[0][2] = xz2 + wy2;
+  }
+}
+
 template <class S> void Quaternion<S>::ToMatrix(Matrix44<S> &m) const	{
-	S q00 = V(1)*V(1);
-	S q01 = V(1)*V(2);
-	S q02 = V(1)*V(3);
-	S q03 = V(1)*V(0);
-	S q11 = V(2)*V(2);
-	S q12 = V(2)*V(3);
-	S q13 = V(2)*V(0);
-	S q22 = V(3)*V(3);
-	S q23 = V(3)*V(0);
-
-	m[0][0] = (S)(1.0-(q11 + q22)*2.0);
-  m[0][1] = (S)((q01 - q23)*2.0);
-  m[0][2] = (S)((q02 + q13)*2.0);
+  QuaternionToMatrix<S, Matrix44<S> >(*this, m);
   m[0][3] = (S)0.0;
-
-  m[1][0] = (S)((q01 + q23)*2.0);
-  m[1][1] = (S)(1.0-(q22 + q00)*2.0);
-  m[1][2] = (S)((q12 - q03)*2.0);
   m[1][3] = (S)0.0;
-
-  m[2][0] = (S)((q02 - q13)*2.0);
-  m[2][1] = (S)((q12 + q03)*2.0);
-  m[2][2] = (S)(1.0-(q11 + q00)*2.0);
   m[2][3] = (S)0.0;
-
   m[3][0] = (S)0.0;
   m[3][1] = (S)0.0;
   m[3][2] = (S)0.0;
   m[3][3] = (S)1.0;
 }
-	
+
 template <class S> void Quaternion<S>::ToMatrix(Matrix33<S> &m) const	{
-	S q00 = V(1)*V(1);
-	S q01 = V(1)*V(2);
-	S q02 = V(1)*V(3);
-	S q03 = V(1)*V(0);
-	S q11 = V(2)*V(2);
-	S q12 = V(2)*V(3);
-	S q13 = V(2)*V(0);
-	S q22 = V(3)*V(3);
-	S q23 = V(3)*V(0);
+  QuaternionToMatrix<S, Matrix33<S> >(*this, m);
 
-	m[0][0] = (S)(1.0-(q11 + q22)*2.0);
-  m[0][1] = (S)((q01 - q23)*2.0);
-  m[0][2] = (S)((q02 + q13)*2.0);
-
-  m[1][0] = (S)((q01 + q23)*2.0);
-  m[1][1] = (S)(1.0-(q22 + q00)*2.0);
-  m[1][2] = (S)((q12 - q03)*2.0);
-
-  m[2][0] = (S)((q02 - q13)*2.0);
-  m[2][1] = (S)((q12 + q03)*2.0);
-  m[2][2] = (S)(1.0-(q11 + q00)*2.0);
+ 
 }
-	
-///warning m deve essere una matrice di rotazione pena il disastro.
-template <class S> void Quaternion<S>::FromMatrix(const Matrix44<S> &m) {		
-	S Sc;
-	S t = (m.V()[0] + m.V()[5] + m.V()[10] + (S)1.0);	
-	if(t > 0) {
-      Sc = (S)0.5 / math::Sqrt(t);
-      V(0) = (S)0.25 / Sc;
-      V(1) = ( m.V()[9] - m.V()[6] ) * Sc;
-      V(2) = ( m.V()[2] - m.V()[8] ) * Sc;
-      V(3) = ( m.V()[4] - m.V()[1] ) * Sc;
-	}	else {	
-		if(m.V()[0] > m.V()[5] && m.V()[0] > m.V()[10]) {
-      Sc  = math::Sqrt( (S)1.0 + m.V()[0] - m.V()[5] - m.V()[10] ) * (S)2.0;
-			V(1) = (S)0.5 / Sc;
-			V(2) = (m.V()[1] + m.V()[4] ) / Sc;
-			V(3) = (m.V()[2] + m.V()[8] ) / Sc;
-			V(0) = (m.V()[6] + m.V()[9] ) / Sc;	
-		}	else if( m.V()[5] > m.V()[10]) {
-      Sc  = math::Sqrt( (S)1.0 + m.V()[5] - m.V()[0] - m.V()[10] ) * (S)2.0;
-			V(1) = (m.V()[1] + m.V()[4] ) / Sc;
-			V(2) = (S)0.5 / Sc;
-			V(3) = (m.V()[6] + m.V()[9] ) / Sc;
-			V(0) = (m.V()[2] + m.V()[8] ) / Sc;
-		}	else {
-      Sc  = math::Sqrt( (S)1.0 + m.V()[10] - m.V()[0] - m.V()[5] ) * (S)2.0;
-			V(1) = (m.V()[2] + m.V()[8] ) / Sc;
-			V(2) = (m.V()[6] + m.V()[9] ) / Sc;
-			V(3) = (S)0.5 / Sc;
-			V(0) = (m.V()[1] + m.V()[4] ) / Sc;
-		}
-	}
+
+
+template<class S, class M> void MatrixToQuaternion(const M &m, Quaternion<S> &q) {
+
+  if ( m[0][0] + m[1][1] + m[2][2] > 0.0f ) {
+    S t =  m[0][0] + m[1][1] + m[2][2] + 1.0f;
+    S s = (S)0.5 / math::Sqrt(t);
+    q.V(0) = s * t;
+    q.V(3) = ( m[1][0] - m[0][1] ) * s;
+    q.V(2) = ( m[0][2] - m[2][0] ) * s;
+    q.V(1) = ( m[2][1] - m[1][2] ) * s;
+  } else if ( m[0][0] > m[1][1] && m[0][0] > m[2][2] ) {
+    S t = m[0][0] - m[1][1] - m[2][2] + 1.0f;
+    S s = (S)0.5 / math::Sqrt(t);
+    q.V(1) = s * t;
+    q.V(2) = ( m[1][0] + m[0][1] ) * s;
+    q.V(3) = ( m[0][2] + m[2][0] ) * s;
+    q.V(0) = ( m[2][1] - m[1][2] ) * s;
+  } else if ( m[1][1] > m[2][2] ) {
+    S t = - m[0][0] + m[1][1] - m[2][2] + 1.0f;
+    S s = (S)0.5 / math::Sqrt(t);
+    q.V(2) = s * t;
+    q.V(1) = ( m[1][0] + m[0][1] ) * s;
+    q.V(0) = ( m[0][2] - m[2][0] ) * s;
+    q.V(3) = ( m[2][1] + m[1][2] ) * s; 
+  } else {
+    S t = - m[0][0] - m[1][1] + m[2][2] + 1.0f;
+    S s = (S)0.5 / math::Sqrt(t);
+    q.V(3) = s * t;
+    q.V(0) = ( m[1][0] - m[0][1] ) * s;
+    q.V(1) = ( m[0][2] + m[2][0] ) * s;
+    q.V(2) = ( m[2][1] + m[1][2] ) * s;
+  }
 }
+
+
+template <class S> void Quaternion<S>::FromMatrix(const Matrix44<S> &m) {	
+  MatrixToQuaternion<S, Matrix44<S> >(m, *this);
+}
+template <class S> void Quaternion<S>::FromMatrix(const Matrix33<S> &m) {	
+  MatrixToQuaternion<S, Matrix33<S> >(m, *this);
+}
+
 
 template<class S>
 void Quaternion<S>::ToEulerAngles(S &alpha, S &beta, S &gamma)
