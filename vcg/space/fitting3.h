@@ -46,7 +46,7 @@ created
 namespace vcg {
 
 template <class S>
-bool PlaneFittingPoints(  std::vector< Point3<S> > & samples,Plane3<S> &p){
+Point3<S> PlaneFittingPoints(  std::vector< Point3<S> > & samples,Plane3<S> &p){
 
 	int j;
 	Matrix44<S> m;m.SetZero();
@@ -73,17 +73,25 @@ bool PlaneFittingPoints(  std::vector< Point3<S> > & samples,Plane3<S> &p){
 	Point3<S> d;
 	Jacobi(m,e,res,n);
 
-	S mx = fabs(e[0]); int mxi=0;
-	for(j=1; j < 3; ++j) if( (fabs(e[j]) < mx) ) {mx=fabs(e[j]); mxi = j;}
-	
-	d[0]=res[0][mxi];
-	d[1]=res[1][mxi];
-	d[2]=res[2][mxi];
+  //Sort eigenvalues (tarinisort)
+  e[0] = fabs(e[0]);
+  e[1] = fabs(e[1]);
+  e[2] = fabs(e[2]);
+  Point3<S> eval;
+	int maxi,mini,medi;
+	if (e[1] > e[0]) { maxi=1; mini=0; } else { maxi=0; mini=1;}
+	if (e[maxi] < e[2]) maxi=2;	else if(e[mini] > e[2]) mini=2;
+  medi = 3 - maxi -mini;
+  eval = Point3<S>(e[mini], e[medi], e[maxi]);
+  
+	d[0]=res[0][mini];
+	d[1]=res[1][mini];
+	d[2]=res[2][mini];
 
 	p.SetOffset(c*d/d.Norm());
 	p.SetDirection(d/d.Norm());
 
-return true;
+  return eval;
 }
 
 template<class S>
