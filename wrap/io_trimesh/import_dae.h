@@ -248,7 +248,7 @@ namespace io {
 			return E_NOERROR;
 		}
 
-		static int LoadControllerMesh(OpenMeshType& m, InfoDAE* info, const QDomElement& geo, CallBackPos *cb=0)
+		static int LoadControllerMesh(OpenMeshType& m, InfoDAE* info, const QDomElement& geo,QMap<QString, QString> materialBindingMap, CallBackPos *cb=0)
 		{
 			assert(geo.tagName() == "controller");
 			QDomNodeList skinList = geo.toElement().elementsByTagName("skin");
@@ -261,7 +261,6 @@ namespace io {
 			QDomNode refNode = findNodeBySpecificAttributeValue(*(info->doc),"geometry","id",geomNode_url);
 			
 			QDomNodeList bindingNodes = skinNode.toElement().elementsByTagName("bind_material");
-			QMap<QString,QString> materialBindingMap;
 			if(	bindingNodes.size()>0) { 
 				QDEBUG("**   skin node of a controller has a material binding");
 				GenerateMaterialBinding(skinNode,materialBindingMap);
@@ -450,8 +449,16 @@ namespace io {
 						QDEBUG("Found a instance_controller with url '%s'", qPrintable(controllerNode_url));
 						QDomNode refNode = findNodeBySpecificAttributeValue(*(info->doc),"controller","id",controllerNode_url);
 						
+						QDomNodeList bindingNodes = instContrNode.toElement().elementsByTagName("bind_material");
+						QMap<QString, QString> materialBindingMap;
+							if(	bindingNodes.size()>0) { 
+							QDEBUG("**   instance_controller node of has a material binding");
+							GenerateMaterialBinding(instContrNode,materialBindingMap);
+						}
+						
 						OpenMeshType newMesh;
-						LoadControllerMesh(newMesh, info, refNode.toElement());
+						newMesh.face.EnableWedgeTex();
+						LoadControllerMesh(newMesh, info, refNode.toElement(),materialBindingMap);
 						tri::UpdatePosition<OpenMeshType>::Matrix(newMesh,curTr);
 						tri::Append<OpenMeshType,OpenMeshType>::Mesh(m,newMesh);
 					}
