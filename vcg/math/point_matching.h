@@ -94,16 +94,6 @@ static bool ComputeRigidMatchMatrix(		Matrix44x &res,
 	return ComputeRigidMatchMatrix(res,Pfix,Pmov,qtmp,tr);
 }
 
-static bool ComputeRigidMatchMatrix(std::vector<ScalarType> weights,
-									Matrix44x &res,
- 									std::vector<Point3x> &Pfix,		// vertici corrispondenti su fix (rossi)
-									std::vector<Point3x> &Pmov) 		// normali scelti su mov (verdi)
-{
-	Quaternionx qtmp;
-	Point3x tr;
-	return ComputeWeightedRigidMatchMatrix(res,Pfix,Pmov,weights,qtmp,tr);
-}
-
 
 /* 
 Calcola la matrice di rototraslazione 
