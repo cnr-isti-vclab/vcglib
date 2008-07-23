@@ -356,7 +356,7 @@ static int Tresholding(UpdateMeshType &m, float treshold, Color4b c1 = Color4<un
   return counter;
 }
 
-//Computes the luminance value for a specified color.
+//Computes the lightness value for a specified color. lightness = 0.5*(Max(R,G,B)+Min(R,G,B))
 static float ComputeLightness(Color4b c)
 {
   float min_rgb = math::Min((float)c[0],(float)c[1]);
@@ -389,6 +389,7 @@ static int Brighting(UpdateMeshType &m, float amount, const bool ProcessSelected
 	return counter;
 }
 
+//Apply Contrast filter to the mesh with the given contrast factor.
 static int Contrast(UpdateMeshType &m, float factor, const bool ProcessSelected=false)
 {
   int counter=0;
@@ -407,8 +408,8 @@ static int Contrast(UpdateMeshType &m, float factor, const bool ProcessSelected=
   return counter;
 }
 
-//Subtracts a middle value, multiplies the rgb components of the color for a factor,
-//and adds the middle value back.This is used for contrast operation.
+//Performs contrast operations on color, i.e expands or compress the histogram around
+//the midpoint value.  NewValue = (OldValue - 128) × factor + 128
 static Color4b ColorMul(Color4b c, float factor)
 {
   return Color4b( ValueMul(c[0], factor), ValueMul(c[1], factor), ValueMul(c[2], factor), 1);
@@ -419,6 +420,7 @@ static int ValueMul(int value, float factor)
   return math::Clamp<int>((int)((value - 128)*factor + 128), 0, 255);
 }
 
+//Apply Contrast and Brightness filter to the mesh, with the given contrast factor and brightness amount.
 static int ContrastBrightness(UpdateMeshType &m, float factor, float amount, const bool ProcessSelected=false)
 {
   int counter=0;
@@ -437,7 +439,7 @@ static int ContrastBrightness(UpdateMeshType &m, float factor, float amount, con
   return counter;
 }
 
-//This is a composition of ColorMul() and ColorAdd(), used for Contrast&Brightness operations.
+//Performs contrast and brightness operations on color, i.e NewValue = (OldValue - 128) × contrast + 128 + amount
 //The result is clamped just one time after all computations; this get a more accurate result.
 static Color4b ColorMulAdd(Color4b c, float factor, float amount)
 {
@@ -449,7 +451,7 @@ static int ValueMulAdd(int value, float factor, float amount)
   return math::Clamp<int>((int)((value - 128)*factor + 128 + amount), 0, 255);
 }
 
-//Invert the rgb components of the color.
+//Invert the colors of the mesh.
 static int Invert(UpdateMeshType &m, const bool ProcessSelected=false)
 {
   int counter=0;
@@ -468,7 +470,7 @@ static int Invert(UpdateMeshType &m, const bool ProcessSelected=false)
   return counter;
 }
 
-//invert the given color
+//Invert the rgb component of the color
 static Color4b ColorInvert(Color4b c)
 {
   return Color4b( ValueInvert(c[0]), ValueInvert(c[1]), ValueInvert(c[2]), 1);
@@ -498,7 +500,7 @@ static int Gamma(UpdateMeshType &m, float gamma, const bool ProcessSelected=fals
   return counter;
 }
 
-//computes the gamma transformation on a given color, according to new_val = old_val^gamma
+//computes the standard gamma transformation on a given color, according to NewVal = OldVal^(1/gamma)
 static Color4b ColorPow(Color4b c, float exponent)
 {
   return vcg::Color4b(
@@ -513,6 +515,12 @@ static float ValuePow(float value, float exponent)
   return powf(value, exponent);
 }
 
+//useful bit masks for RGB channels, used for Levels filter.
+enum rgbChMask {ALL_CHANNELS = 7, RED_CHANNEL = 4, GREEN_CHANNEL = 2, BLUE_CHANNEL = 1, NO_CHANNELS = 0 };
+
+//Adjusts color levels of the mesh. Filter can be applied to all RGB channels or to each channel separately.
+//in_min, gamma and in_max are respectively the black point, the gray point and the white point.
+//out_min and out_max are the output level for black and white respectively.
 static int Levels(UpdateMeshType &m, float gamma, float in_min, float in_max, float out_min, float out_max, unsigned char rgbMask, const bool ProcessSelected=false)
 {
   int counter=0;
@@ -531,8 +539,7 @@ static int Levels(UpdateMeshType &m, float gamma, float in_min, float in_max, fl
   return counter;
 }
 
-enum rgbChMask {ALL_CHANNELS = 7, RED_CHANNEL = 4, GREEN_CHANNEL = 2, BLUE_CHANNEL = 1, NO_CHANNELS = 0 };
-
+//Performs levels transformation on each channel set to 1 in the rgbMask.
 static Color4b ColorLevels(Color4b c, float gamma, float in_min, float in_max, float out_min, float out_max, unsigned char rgbMask)
 {
   unsigned char r = c[0], g = c[1], b = c[2];
@@ -542,19 +549,21 @@ static Color4b ColorLevels(Color4b c, float gamma, float in_min, float in_max, f
   return Color4b(r, g, b, 255);
 }
 
+//Transform on levels
 static int ValueLevels(int value, float gamma, float in_min, float in_max, float out_min, float out_max)
 {
   float fvalue = value/255.0f;
   // normalize
   fvalue = math::Clamp<float>(fvalue - in_min, 0.0f, 1.0f) / math::Clamp<float>(in_max - in_min, 1.0f/255.0f, 1.0f);
   // transform gamma
-  fvalue = pow(fvalue,1/gamma);
+  fvalue = powf(fvalue,1/gamma);
   // rescale range
   fvalue = fvalue * (out_max - out_min) + out_min;
   //back in interval [0,255] and clamp
   return math::Clamp<int>((int)(fvalue * 255), 0, 255);
 }
 
+//Colors the mesh. Color is blended to the mesh with the given intensity.
 static int Colourisation(UpdateMeshType &m, Color4b c, float intensity, const bool ProcessSelected=false)
 {
   int counter=0;
@@ -573,6 +582,7 @@ static int Colourisation(UpdateMeshType &m, Color4b c, float intensity, const bo
   return counter;
 }
 
+//Perform colourisation operation. For each channel C: newC = origC + intensity * (newC - origC)
 static Color4b ColorApplyDiff(Color4b old_color, Color4b new_color, float intensity)
 {
   return Color4b( ValueApplyDiff(old_color[0],new_color[0],intensity), ValueApplyDiff(old_color[1],new_color[1],intensity), ValueApplyDiff(old_color[2], new_color[2],intensity), 255);
@@ -583,6 +593,10 @@ static int ValueApplyDiff(int old_value, int new_value, float intensity)
   return  math::Clamp<int>((int)(old_value + intensity * (new_value - old_value)), 0, 255);
 }
 
+//An useful ENUM to hold all desaturation methods.
+enum DesaturationMethods {M_LIGHTNESS = 0, M_LUMINOSITY = 1, M_AVERAGE = 2};
+
+//Desaturates the mesh according the selected method. Method belongs to DesaturationMethods's ENUM.
 static int Desaturation(UpdateMeshType &m, int method, const bool ProcessSelected=false)
 {
   int counter=0;
@@ -601,8 +615,7 @@ static int Desaturation(UpdateMeshType &m, int method, const bool ProcessSelecte
   return counter;
 }
 
-enum DesaturationMethods {M_LIGHTNESS = 0, M_LUMINOSITY = 1, M_AVERAGE = 2};
-
+//Desature the color. Ausiliary functions to calculate lightness/luminosity/average.
 static Color4b ColorDesaturate(Color4b c, int method)
 {
   switch(method){
@@ -622,11 +635,13 @@ static Color4b ColorDesaturate(Color4b c, int method)
   }
 }
 
+//ausiliary function to compute average lightness. value = (R+G+B)/3
 static float ComputeAvgLightness(Color4b c)
 {
     return float(c[0]+c[1]+c[2])/3.0f;
 }
 
+//ausiliary function to compute luminosity. value = 0.21*R+0.71*G+0.7*B
 static float ComputeLuminosity(Color4b c)
 {
     return float(0.2126f*c[0]+0.7152f*c[1]+0.0722f*c[2]);
@@ -694,21 +709,27 @@ static int ValueEqualize(int cdfValue, int cdfMin, int cdfMax)
   return int(float((cdfValue - cdfMin)/float(cdfMax - cdfMin)) * 255.0f);
 }
 
-static int WhiteBalance(UpdateMeshType &m, const bool ProcessSelected=false)
+static int WhiteBalance(UpdateMeshType &m, bool automatic, Color4b userColor, const bool ProcessSelected=false)
 {
   Color4b unbalancedWhite;
-  int lightness = 0, counter=0;
+  float lightness = 0;
+  int counter=0;
   VertexIterator vi;
-  for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
+
+  if(!automatic) unbalancedWhite = userColor;
+  else
   {
-    if(!(*vi).IsD()) //if it has not been deleted...
+    for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
     {
-      if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+      if(!(*vi).IsD()) //if it has not been deleted...
       {
-        int v = ComputeLightness((*vi).C());
-        if( v > lightness){
-          lightness = v;
-          unbalancedWhite = (*vi).C();
+        if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+        {
+          float v = ComputeLightness((*vi).C());
+          if( v > lightness){
+            lightness = v;
+            unbalancedWhite = (*vi).C();
+          }
         }
       }
     }
