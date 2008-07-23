@@ -99,8 +99,8 @@ static bool ComputeRigidMatchMatrix(std::vector<ScalarType> weights,
  									std::vector<Point3x> &Pfix,		// vertici corrispondenti su fix (rossi)
 									std::vector<Point3x> &Pmov) 		// normali scelti su mov (verdi)
 {
-	Quaterniond qtmp;
-	Point3d tr;
+	Quaternionx qtmp;
+	Point3x tr;
 	return ComputeWeightedRigidMatchMatrix(res,Pfix,Pmov,weights,qtmp,tr);
 }
 
