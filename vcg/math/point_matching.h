@@ -101,7 +101,7 @@ static bool ComputeRigidMatchMatrix(std::vector<ScalarType> weights,
 {
 	Quaterniond qtmp;
 	Point3d tr;
-	return ComputeRigidMatchMatrix(res,Pfix,Pmov,qtmp,tr);
+	return ComputeWeightedRigidMatchMatrix(res,Pfix,Pmov,weights,qtmp,tr);
 }
 
 
@@ -141,7 +141,7 @@ static
 bool ComputeWeightedRigidMatchMatrix(Matrix44x &res,
                   std::vector<Point3x> &Pfix,		
 									std::vector<Point3x> &Pmov,
-									std::vector<double> weights,
+									std::vector<ScalarType> weights,
 									Quaternionx &q,
 									Point3x &tr
 									) 	
@@ -155,20 +155,20 @@ bool ComputeWeightedRigidMatchMatrix(Matrix44x &res,
 
 	cyc=ccm;
 	tmp=ccm;
-	tmp.Trasp();
+	tmp.Transpose();
 	cyc-=tmp;
 
 	Matrix44x QQ;
-	QQ.Zero();
+	QQ.SetZero();
 	Point3x D(cyc[1][2],cyc[2][0],cyc[0][1]);
 
   Matrix33x RM;
-	RM.Zero();
+	RM.SetZero();
 	RM[0][0]=-ccm.Trace();
   RM[1][1]=-ccm.Trace();
   RM[2][2]=-ccm.Trace();
   RM+=ccm;
-	ccm.Trasp();
+	ccm.Transpose();
 	RM+=ccm;
 
 	QQ[0][0] = ccm.Trace();
@@ -185,7 +185,7 @@ bool ComputeWeightedRigidMatchMatrix(Matrix44x &res,
 	Point4d d;
   Matrix44x v;
 	int nrot;
-	QQ.Jacobi(d,v,nrot);
+	Jacobi(QQ,d,v,nrot);
 //	printf("Done %i iterations\n %f %f %f %f\n",nrot,d[0],d[1],d[2],d[3]);
 //	print(v);
 	// Now search the maximum eigenvalue
@@ -199,12 +199,12 @@ bool ComputeWeightedRigidMatchMatrix(Matrix44x &res,
 		}
   // The corresponding eigenvector define the searched rotation,
 		Matrix44x Rot;
-	q.RotMatrix(Rot);
+	q.ToMatrix(Rot);
   // the translation (last row) is simply the difference between the transformed src barycenter and the trg baricenter
-	tr= (bfix - Rot.Apply(bmov));
+	tr= (bfix - Rot *bmov);
 	//res[3][0]=tr[0];res[3][1]=tr[1];res[3][2]=tr[2];
 	Matrix44x Trn;
-	Trn.Translate(tr);
+	Trn.SetTranslate(tr);
 		
 	res=Rot*Trn;
 	return true;
