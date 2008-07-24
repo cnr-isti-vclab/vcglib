@@ -622,10 +622,10 @@ void DrawPointsBase()
 
 /// Utility function that computes in eyespace the current distance between the camera and the center of the bbox of the mesh
 double CameraDistance(){
-	Point3f res;
-	Matrix44f mm;
+	Point3<typename MESH_TYPE::ScalarType> res;
+	Matrix44<typename MESH_TYPE::ScalarType> mm;
 	glGetv(GL_MODELVIEW_MATRIX,mm);
-	Point3f c=m->bbox.Center();
+	Point3<typename MESH_TYPE::ScalarType>  c=m->bbox.Center();
 	res=mm*c;
 	return Norm(res);
 }	
@@ -653,7 +653,7 @@ void DrawPoints()
 				glEnableClientState (GL_NORMAL_ARRAY);
 				glNormalPointer(GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->N()[0]));
 			}
-	if (cm==CMPerVert)  glEnableClientState (GL_COLOR_ARRAY);
+	if (cm==CMPerVert)
 			{
 				glEnableClientState (GL_COLOR_ARRAY);
 				glColorPointer(4,GL_UNSIGNED_BYTE,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->C()[0]));
