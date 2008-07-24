@@ -334,8 +334,8 @@ static int Filling(UpdateMeshType &m, Color4b c, const bool ProcessSelected=fals
   return counter;
 }
 
-//Reduces the mesh to two colors according to a treshold.
-static int Tresholding(UpdateMeshType &m, float treshold, Color4b c1 = Color4<unsigned char>::Black, Color4b c2 = Color4<unsigned char>::White, const bool ProcessSelected=false)
+//Reduces the mesh to two colors according to a threshold.
+static int Thresholding(UpdateMeshType &m, float threshold, Color4b c1 = Color4<unsigned char>::Black, Color4b c2 = Color4<unsigned char>::White, const bool ProcessSelected=false)
 {
   int counter=0;
   VertexIterator vi;
@@ -347,7 +347,7 @@ static int Tresholding(UpdateMeshType &m, float treshold, Color4b c1 = Color4<un
       {
         float value = ComputeLightness((*vi).C());
 
-        if(value<=treshold) (*vi).C() = c1;
+        if(value<=threshold) (*vi).C() = c1;
         else (*vi).C() = c2;
         ++counter;
       }
@@ -647,8 +647,11 @@ static float ComputeLuminosity(Color4b c)
     return float(0.2126f*c[0]+0.7152f*c[1]+0.0722f*c[2]);
 }
 
+//Equalize the histogram of colors. It can equalize any combination of rgb channels or
+//it can work on lightness.
 static int Equalize(UpdateMeshType &m, unsigned int rgbMask, const bool ProcessSelected=false)
 {
+  //declares , resets and set up 4 histograms, for Red, Green, Blue and Lightness
   Histogramf Hl, Hr, Hg, Hb;
   Hl.Clear(); Hr.Clear(); Hg.Clear(); Hb.Clear();
 	Hl.SetRange(0, 255, 255); Hr.SetRange(0, 255, 255); Hg.SetRange(0, 255, 255); Hb.SetRange(0, 255, 255);
@@ -656,18 +659,20 @@ static int Equalize(UpdateMeshType &m, unsigned int rgbMask, const bool ProcessS
   int counter=0;
   VertexIterator vi;
 
+  //Scan the mesh to build the histograms
   for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
   {
     if(!(*vi).IsD()) //if it has not been deleted...
     {
-      if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+      if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, put it in the histograms
       {
-        int v = (int)(ComputeLightness((*vi).C())+0.5);
+        int v = (int)(ComputeLightness((*vi).C())+0.5); //compute and round lightness value
         Hl.Add(v); Hr.Add((*vi).C()[0]); Hg.Add((*vi).C()[1]); Hb.Add((*vi).C()[2]);
       }
     }
   }
 
+  //for each histogram, compute the cumulative distribution function, and build a lookup table
 	int cdf_l[256], cdf_r[256], cdf_g[256], cdf_b[256];
 	cdf_l[0] = Hl.BinCount(0); cdf_r[0] = Hr.BinCount(0); cdf_g[0] = Hg.BinCount(0); cdf_b[0] = Hb.BinCount(0);
 	for(int i=1; i<256; i++){
@@ -677,6 +682,7 @@ static int Equalize(UpdateMeshType &m, unsigned int rgbMask, const bool ProcessS
     cdf_b[i] = Hb.BinCount(float(i)) + cdf_b[i-1];
   }
 
+  //this loop aaplies the transformation to colors
   for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
   {
     if(!(*vi).IsD()) //if it has not been deleted...
@@ -691,24 +697,29 @@ static int Equalize(UpdateMeshType &m, unsigned int rgbMask, const bool ProcessS
   return counter;
 }
 
+//Applies equalization to the components of the color according to rgbmask
 static Color4b ColorEqualize(Color4b c, int cdf_l[256], int cdf_r[256], int cdf_g[256], int cdf_b[256], unsigned int rgbMask)
 {
   unsigned char r = c[0], g = c[1], b = c[2];
-  if(rgbMask == NO_CHANNELS){
+  if(rgbMask == NO_CHANNELS) //in this case, equalization is done on lightness
+  {
     int v = ValueEqualize(cdf_l[(int)(ComputeLightness(c)+0.5f)], cdf_l[0], cdf_l[255]);
-    return Color4b(v, v, v, 255);
+    return Color4b(v, v, v, 255); //return the equalized gray color
   }
-  if(rgbMask & RED_CHANNEL) r = ValueEqualize(cdf_r[c[0]], cdf_r[0], cdf_r[255]);
-  if(rgbMask & GREEN_CHANNEL) g = ValueEqualize(cdf_g[c[1]], cdf_g[0], cdf_g[255]);
-  if(rgbMask & BLUE_CHANNEL) b = ValueEqualize(cdf_b[c[2]], cdf_b[0], cdf_b[255]);
-  return Color4b(r, g, b, 255);
+  if(rgbMask & RED_CHANNEL) r = ValueEqualize(cdf_r[c[0]], cdf_r[0], cdf_r[255]); //Equalizes red
+  if(rgbMask & GREEN_CHANNEL) g = ValueEqualize(cdf_g[c[1]], cdf_g[0], cdf_g[255]); //Equalizes green
+  if(rgbMask & BLUE_CHANNEL) b = ValueEqualize(cdf_b[c[2]], cdf_b[0], cdf_b[255]); //Equalizes blue
+  return Color4b(r, g, b, 255); //return the equalized color
 }
 
+//Compute the equalized value
 static int ValueEqualize(int cdfValue, int cdfMin, int cdfMax)
 {
   return int(float((cdfValue - cdfMin)/float(cdfMax - cdfMin)) * 255.0f);
 }
 
+//applies the white balance filter. It may works with an auto regulation of white, or based on a user
+//color that is supposed to be white.
 static int WhiteBalance(UpdateMeshType &m, bool automatic, Color4b userColor, const bool ProcessSelected=false)
 {
   Color4b unbalancedWhite;
@@ -716,25 +727,27 @@ static int WhiteBalance(UpdateMeshType &m, bool automatic, Color4b userColor, co
   int counter=0;
   VertexIterator vi;
 
-  if(!automatic) unbalancedWhite = userColor;
-  else
+  if(!automatic) unbalancedWhite = userColor;  //no auto regolation required, user has provided a color.
+  else  //else, we need to scan the mesh and pick its lighter color...
   {
     for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
     {
       if(!(*vi).IsD()) //if it has not been deleted...
       {
-        if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+        if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected...
         {
+          //the lighter color is selected with an incremental approach...
           float v = ComputeLightness((*vi).C());
           if( v > lightness){
-            lightness = v;
-            unbalancedWhite = (*vi).C();
+            lightness = v;                //save lightness
+            unbalancedWhite = (*vi).C();  //save the color
           }
         }
       }
     }
   }
 
+  //in this loop the transformation is applied to the mesh
   for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
   {
     if(!(*vi).IsD()) //if it has not been deleted...
@@ -749,8 +762,14 @@ static int WhiteBalance(UpdateMeshType &m, bool automatic, Color4b userColor, co
   return counter;
 }
 
+//Balnce the white of the color, applying a correction factor based on the unbalancedWhite color.
 static Color4b ColorWhiteBalance(Color4b c, Color4b unbalancedWhite)
 {
+  //sanity check to avoid division by zero...
+  if(unbalancedWhite[0]==0) unbalancedWhite[0]=1;
+  if(unbalancedWhite[1]==0) unbalancedWhite[1]=1;
+  if(unbalancedWhite[2]==0) unbalancedWhite[2]=1;
+
   return Color4b(
                  math::Clamp<int>((int)(c[0]*(255.0f/unbalancedWhite[0])), 0, 255),
                  math::Clamp<int>((int)(c[1]*(255.0f/unbalancedWhite[1])), 0, 255),
