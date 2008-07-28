@@ -643,6 +643,43 @@ static void VertexColorLaplacian(MeshType &m, int step, bool SmoothSelected=fals
 	} // end for step
 };
 
+static void FaceColorLaplacian(MeshType &m, int step, bool SmoothSelected=false, vcg::CallBackPos * cb=0)
+{ 
+	ColorSmoothInfo csi;
+	csi.r=0; csi.g=0; csi.b=0; csi.cnt=0;
+	SimpleTempData<typename MeshType::FaceContainer, ColorSmoothInfo> TD(m.face,csi);
+	
+	for(int i=0;i<step;++i)
+	{
+		if(cb) cb(100*i/step, "Face Color Laplacian Smoothing");
+		FaceIterator fi;
+		for(fi=m.face.begin();fi!=m.face.end();++fi)
+			TD[*fi]=csi;
+		
+		for(fi=m.face.begin();fi!=m.face.end();++fi)
+		{
+			if(!(*fi).IsD()) 
+				for(int j=0;j<3;++j)
+					if(!(*fi).IsB(j)) 
+					{
+						TD[*fi].r+=(*fi).FFp(j)->C()[0];
+						TD[*fi].g+=(*fi).FFp(j)->C()[1];
+						TD[*fi].b+=(*fi).FFp(j)->C()[2];
+						TD[*fi].a+=(*fi).FFp(j)->C()[3];
+						++TD[*fi].cnt;
+					}
+		}
+		for(fi=m.face.begin();fi!=m.face.end();++fi)
+			if(!(*fi).IsD() && TD[*fi].cnt>0 )
+				if(!SmoothSelected || (*fi).IsS())
+				{
+					(*fi).C()[0] = (unsigned int) ceil((float) (TD[*fi].r / TD[*fi].cnt));
+					(*fi).C()[1] = (unsigned int) ceil((float) (TD[*fi].g / TD[*fi].cnt));
+					(*fi).C()[2] = (unsigned int) ceil((float) (TD[*fi].b / TD[*fi].cnt));
+					(*fi).C()[3] = (unsigned int) ceil((float) (TD[*fi].a / TD[*fi].cnt));
+				}
+	} // end for step
+};
 
 // Laplacian smooth of the quality. 
 
