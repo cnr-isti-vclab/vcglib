@@ -468,7 +468,7 @@ namespace vcg {
 					{
 
 						Box3i ib;		// Boundig box in voxels
-						BoxToIBox( bb,ib );
+						this->BoxToIBox( bb,ib );
 						int x,y,z;
 						for(z=ib.min[2];z<=ib.max[2];++z)
 						{
