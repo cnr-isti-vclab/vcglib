@@ -270,6 +270,7 @@ namespace vcg {
 			static VertexIterator AddVertices(MeshType &m,int n, PointerUpdater<VertexPointer> &pu)
 			{
 				VertexIterator last;
+				if(n == 0) return m.vert.end();
 				pu.Clear();
 				if(m.vert.empty()) pu.oldBase=0;  // if the vector is empty we cannot find the last valid element
         else {
@@ -309,12 +310,28 @@ namespace vcg {
 				return last;// deve restituire l'iteratore alla prima faccia aggiunta;
 			}
 
+			/** Function to add n vertices to the mesh.
+			First wrapper, with no parameters
+			*/
 			static VertexIterator AddVertices(MeshType &m, int n)
 			{
 				PointerUpdater<VertexPointer> pu;
 				return AddVertices(m, n,pu);
 			}
 
+      /** Function to add n vertices to the mesh.
+			Second Wrapper, with a vector of vertex pointers to be updated.
+			*/
+			static VertexIterator AddVertices(MeshType &m, int n, std::vector<VertexPointer *> &local_vec)
+			{
+				PointerUpdater<VertexPointer> pu;
+				VertexIterator v_ret =  AddVertices(m, n,pu);
+
+				typename std::vector<VertexPointer *>::iterator vi;
+            for(vi=local_vec.begin();vi!=local_vec.end();++vi)
+               pu.Update(**vi);
+				return v_ret;
+			}
 
 	
 
@@ -348,6 +365,7 @@ namespace vcg {
 			static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu)
 			{
 				FaceIterator  last;
+				if(n == 0) return m.face.end();
 				pu.Clear();
 				if(m.face.empty()) {
 					pu.oldBase=0;  // if the vector is empty we cannot find the last valid element
