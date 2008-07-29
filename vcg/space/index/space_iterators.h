@@ -56,7 +56,6 @@ added missing header
 #include <vcg/space/intersection3.h>
 #include <vcg/space/point3.h>
 #include <vcg/space/box3.h>
-//#include <vcg/space/point4.h>
 #include <vcg/space/ray3.h>
 #include <vcg/math/base.h>
 #include <algorithm>
@@ -251,28 +250,18 @@ namespace vcg{
 				}
 			}
 			////then control if there are more than 1 element
-			if (Elems.size()>1)
-				std::sort(Elems.begin(),Elems.end());
-
-			CurrentElem=Elems.end();
-			if (Elems.size() > 0) {
-				CurrentElem--;
-			}
+			std::sort(Elems.begin(),Elems.end());
+			CurrentElem=Elems.rbegin();
 
 			return((Elems.size()==0)||(Dist()>dist));
 		}
 
 		void operator ++()
 		{
-			//if (CurrentElem!=Elems.end())
-			if (Elems.size()>0)
-			{
-				CurrentElem--;
-				//std::pop_heap<ElemIterator>(Elems.begin(),Elems.end());
-				Elems.pop_back();
-			}
-			/*if (CurrentElem==Elems.end())
-			{*/
+			if (!Elems.empty()) Elems.pop_back();
+				
+			CurrentElem = Elems.rbegin();
+
 			if (Dist()>dist)
 			{
 				if (!End())
@@ -296,7 +285,6 @@ namespace vcg{
 			else 
 				return ((ScalarType)FLT_MAX);
 		}
-		//{return ((*CurrentElem).dist);}
 
 		///set the current spatial indexing structure used
 		void SetIndexStructure(Spatial_Idexing &_Si)
@@ -323,14 +311,14 @@ namespace vcg{
 			CoordType intersection;
 		};
 
-		RayType r;				  //ray to find intersections
+		RayType r;							//ray to find intersections
 		Spatial_Idexing &Si;	  //reference to spatial index algorithm
-		bool end;				  //true if the scan is terminated
+		bool end;								//true if the scan is terminated
 		INTFUNCTOR &int_funct;
 		TMARKER tm;
 
 		std::vector<Entry_Type> Elems;					//element loaded from curren cell
-		typedef typename std::vector<Entry_Type>::iterator ElemIterator;
+		typedef typename std::vector<Entry_Type>::reverse_iterator ElemIterator;
 		ElemIterator CurrentElem;	//iterator to current element
 
 		vcg::Point3i CurrentCell;						//current cell
@@ -429,19 +417,6 @@ namespace vcg{
 
 			while ((!End())&& Refresh()&&(!_EndGrid()))
 					_NextShell();
-
-			/////until don't find an element
-			/////that is inside the radius
-			//while ((!End())&&(Dist()>radius))
-			//{
-			//	if ((_NextShell())&&(!_EndGrid()))
-			//		Refresh();
-			//}
-
-			////set to the last element ..the nearest
-			//CurrentElem=Elems.end();
-			//CurrentElem--;
-
 		}
 
 		//return true if the scan is complete
@@ -543,12 +518,12 @@ namespace vcg{
 			CoordType intersection;
 		};
 
-		CoordType p;				  //initial point
+		CoordType p;							//initial point
 		Spatial_Idexing &Si;		  //reference to spatial index algorithm
-		bool end;					  //true if the scan is terminated
+		bool end;									//true if the scan is terminated
 		ScalarType max_dist;		  //max distance when the scan terminate
 		vcg::Box3i explored;		  //current bounding box explored
-		vcg::Box3i to_explore;		  //current bounding box explored
+		vcg::Box3i to_explore;		//current bounding box explored
 		ScalarType radius;			  //curret radius for sphere expansion
 		ScalarType step_size;		  //radius step
 		std::vector<Entry_Type> Elems; //element loaded from the current sphere
