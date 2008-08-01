@@ -40,6 +40,12 @@
 	The vmi image file consists of a header containing the description of the vertex and face type,
 	the length of vectors containing vertices of faces and the memory image of the object mesh as it is when
 	passed to the function Save(SaveMeshType m)
+	NOTE: THIS IS NOT A FILE FORMAT. IT IS ONLY USEFUL FOR DUMPING MESH IMAGES FOR DEBUG PURPOSE.
+	Example of use: say you are running a time consuming mesh processing and you want to save intermediate
+	state, but no file format support all the attributes you need in your vertex/face type. 
+	NOTE2: At the present if you add members to your TriMesh these will NOT be saved. More precisely, this file and
+	import_vmi must be updated to reflect changes in vcg/complex/trimesh/base.h
+
 */
 
 namespace vcg {
@@ -111,14 +117,15 @@ namespace io {
 			fread(&offsetF,sizeof( int),1,f);
 
 			/* read the object mesh */
-			fread(&m,sizeof(OpenMeshType),1,f);
+			fread(&m.camera,sizeof(Camera<OpenMeshType::ScalarType>),1,f);
+			fread(&m.shot,sizeof(Shot<OpenMeshType::ScalarType>),1,f);
+			fread(&m.vn,sizeof(int),1,f);
+			fread(&m.fn,sizeof(int),1,f);
+			fread(&m.imark,sizeof(int),1,f);
+			fread(&m.bbox,sizeof(Box3<OpenMeshType::ScalarType>),1,f);
+			fread(&m.C(),sizeof(Color4b),1,f);
 
-			/* overwrite che container because they could be inconsistent */
-			OpenMeshType::VertContainer tvc;
-			OpenMeshType::FaceContainer tfc;
-			memcpy(&m.vert,&tvc,sizeof(OpenMeshType::VertContainer));
-			memcpy(&m.face,&tfc,sizeof(OpenMeshType::FaceContainer));
-
+			/* resize the vector of vertices */
 			m.vert.resize(vertSize);
 
 			int read;

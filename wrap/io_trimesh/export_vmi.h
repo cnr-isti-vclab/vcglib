@@ -39,8 +39,13 @@
 	VMI VCG Mesh Image.
 	The vmi image file consists of a header containing the description of the vertex and face type,
 	the length of vectors containing vertices of faces and the memory image of the object mesh as it is when
-	passed to the function Save(SaveMeshType m)
-*/
+	passed to the function Save(SaveMeshType m).
+	NOTE: THIS IS NOT A FILE FORMAT. IT IS ONLY USEFUL FOR DUMPING MESH IMAGES FOR DEBUG PURPOSE.
+	Example of use: say you are running a time consuming mesh processing and you want to save intermediate
+	state, but no file format support all the attributes you need in your vertex/face type. 
+	NOTE2: At the present if you add members to your TriMesh these will NOT be saved. More precisely, this file and
+	import_vmi must be updated to reflect changes in vcg/complex/trimesh/base.h
+	*/
 
 namespace vcg {
 namespace tri {
@@ -84,7 +89,13 @@ namespace io {
 			fwrite(&offsetF,sizeof( int),1,f);
 
 			/* save the object mesh */
-			fwrite(&m,sizeof(SaveMeshType),1,f);
+			fwrite(&m.camera,sizeof(Camera<SaveMeshType::ScalarType>),1,f);
+			fwrite(&m.shot,sizeof(Shot<SaveMeshType::ScalarType>),1,f);
+			fwrite(&m.vn,sizeof(int),1,f);
+			fwrite(&m.fn,sizeof(int),1,f);
+			fwrite(&m.imark,sizeof(int),1,f);
+			fwrite(&m.bbox,sizeof(Box3<SaveMeshType::ScalarType>),1,f);
+			fwrite(&m.C(),sizeof(Color4b),1,f);
 
 			int written;
 			/* save the vertices */
