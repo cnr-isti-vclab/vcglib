@@ -63,7 +63,7 @@ namespace io {
 			unsigned int i;
 			int vertSize,faceSize;
 			FILE * f = fopen(filename,"wb");
-			std::vector<string> nameF,nameV;
+			std::vector<std::string> nameF,nameV;
 			SaveMeshType::FaceType::Name(nameF);
 			SaveMeshType::VertexType::Name(nameV);
 			vertSize = m.vert.size();
@@ -89,21 +89,21 @@ namespace io {
 			fwrite(&offsetF,sizeof( int),1,f);
 
 			/* save the object mesh */
-			fwrite(&m.camera,sizeof(Camera<SaveMeshType::ScalarType>),1,f);
-			fwrite(&m.shot,sizeof(Shot<SaveMeshType::ScalarType>),1,f);
+			fwrite(&m.camera,sizeof(Camera<typename SaveMeshType::ScalarType>),1,f);
+			fwrite(&m.shot,sizeof(Shot<typename SaveMeshType::ScalarType>),1,f);
 			fwrite(&m.vn,sizeof(int),1,f);
 			fwrite(&m.fn,sizeof(int),1,f);
 			fwrite(&m.imark,sizeof(int),1,f);
-			fwrite(&m.bbox,sizeof(Box3<SaveMeshType::ScalarType>),1,f);
+			fwrite(&m.bbox,sizeof(Box3<typename SaveMeshType::ScalarType>),1,f);
 			fwrite(&m.C(),sizeof(Color4b),1,f);
 
 			int written;
 			/* save the vertices */
-			written = fwrite((void*)&m.vert[0],sizeof(SaveMeshType::VertexType),m.vert.size(),f);
+			written = fwrite((void*)&m.vert[0],sizeof(typename SaveMeshType::VertexType),m.vert.size(),f);
 			assert(written==m.vert.size());
 
 			/* save the faces */
-			written = fwrite((void*)&m.face[0],sizeof(SaveMeshType::FaceType),m.face.size(),f);
+			written = fwrite((void*)&m.face[0],sizeof(typename SaveMeshType::FaceType),m.face.size(),f);
 			assert(written==m.face.size());
 
 		//	fflush(f);

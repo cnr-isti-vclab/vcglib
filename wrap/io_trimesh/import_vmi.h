@@ -92,10 +92,12 @@ namespace io {
 	}
 		static bool Open(OpenMeshType &m,char * filename){
 			int i;
-			OpenMeshType::FaceIterator fi;
-			OpenMeshType::VertexIterator vi;
+			typedef typename OpenMeshType::VertexType VertexType; 	
+			typedef typename OpenMeshType::FaceType FaceType; 	
+			typename OpenMeshType::FaceIterator fi;
+			typename OpenMeshType::VertexIterator vi;
 			FILE * f = fopen(filename,"rb");
-			std::vector<string> nameF,nameV,fnameF,fnameV;
+			std::vector<std::string> nameF,nameV,fnameF,fnameV;
 			int vertSize,faceSize;
 
 			/* read the header */
@@ -117,12 +119,12 @@ namespace io {
 			fread(&offsetF,sizeof( int),1,f);
 
 			/* read the object mesh */
-			fread(&m.camera,sizeof(Camera<OpenMeshType::ScalarType>),1,f);
-			fread(&m.shot,sizeof(Shot<OpenMeshType::ScalarType>),1,f);
+			fread(&m.camera,sizeof(Camera<typename OpenMeshType::ScalarType>),1,f);
+			fread(&m.shot,sizeof(Shot<typename OpenMeshType::ScalarType>),1,f);
 			fread(&m.vn,sizeof(int),1,f);
 			fread(&m.fn,sizeof(int),1,f);
 			fread(&m.imark,sizeof(int),1,f);
-			fread(&m.bbox,sizeof(Box3<OpenMeshType::ScalarType>),1,f);
+			fread(&m.bbox,sizeof(Box3<typename OpenMeshType::ScalarType>),1,f);
 			fread(&m.C(),sizeof(Color4b),1,f);
 
 			/* resize the vector of vertices */
@@ -130,46 +132,47 @@ namespace io {
 
 			int read;
 			/* load the vertices */
-			read=fread((void*)& m.vert[0],sizeof(OpenMeshType::VertexType),vertSize,f);
+			read=fread((void*)& m.vert[0],sizeof(VertexType),vertSize,f);
 			assert(ferror(f)==0);
 			assert(read==vertSize);
 
 			m.face.resize(faceSize);
 			/* load the faces */
-			read = fread((void*)& m.face[0],sizeof(OpenMeshType::FaceType),faceSize,f);
+			read = fread((void*)& m.face[0],sizeof(FaceType),faceSize,f);
 			assert(ferror(f)==0);
 			assert(!feof(f));
 			assert(read==faceSize);
 			
-			if(OpenMeshType::FaceType::HasVFAdjacency())
+			if(FaceType::HasVFAdjacency())
 				for(vi = m.vert.begin(); vi != m.vert.end(); ++vi){
-					(*vi).VFp() = (*vi).VFp()-(OpenMeshType::FaceType*)offsetF+ &m.face[0];
-					(*vi).VFp() = (*vi).VFp()-(OpenMeshType::FaceType*)offsetF+ &m.face[0];
-					(*vi).VFp() = (*vi).VFp()-(OpenMeshType::FaceType*)offsetF+ &m.face[0];
+					(*vi).VFp() = (*vi).VFp()-(FaceType*)offsetF+ &m.face[0];
+					(*vi).VFp() = (*vi).VFp()-(FaceType*)offsetF+ &m.face[0];
+					(*vi).VFp() = (*vi).VFp()-(FaceType*)offsetF+ &m.face[0];
 				}
 
-			if(OpenMeshType::FaceType::HasVertexRef())
+			if(FaceType::HasVertexRef())
 				for(fi = m.face.begin(); fi != m.face.end(); ++fi){
-					(*fi).V(0) = (*fi).V(0)-(OpenMeshType::VertexType*)offsetV+ &m.vert[0];
-					(*fi).V(1) = (*fi).V(1)-(OpenMeshType::VertexType*)offsetV+ &m.vert[0];
-					(*fi).V(2) = (*fi).V(2)-(OpenMeshType::VertexType*)offsetV+ &m.vert[0];
+					(*fi).V(0) = (*fi).V(0)-(VertexType*)offsetV+ &m.vert[0];
+					(*fi).V(1) = (*fi).V(1)-(VertexType*)offsetV+ &m.vert[0];
+					(*fi).V(2) = (*fi).V(2)-(VertexType*)offsetV+ &m.vert[0];
 				}
 
-			if(OpenMeshType::FaceType::HasFFAdjacency())
+			if(FaceType::HasFFAdjacency())
 				for(fi = m.face.begin(); fi != m.face.end(); ++fi){
-					(*fi).FFp(0) = (*fi).FFp(0)-(OpenMeshType::FaceType*)offsetF+ &m.face[0];
-					(*fi).FFp(1) = (*fi).FFp(1)-(OpenMeshType::FaceType*)offsetF+ &m.face[0];
-					(*fi).FFp(2) = (*fi).FFp(2)-(OpenMeshType::FaceType*)offsetF+ &m.face[0];
+					(*fi).FFp(0) = (*fi).FFp(0)-(FaceType*)offsetF+ &m.face[0];
+					(*fi).FFp(1) = (*fi).FFp(1)-(FaceType*)offsetF+ &m.face[0];
+					(*fi).FFp(2) = (*fi).FFp(2)-(FaceType*)offsetF+ &m.face[0];
 				}
 
-			if(OpenMeshType::FaceType::HasVFAdjacency())
+			if(FaceType::HasVFAdjacency())
 				for(fi = m.face.begin(); fi != m.face.end(); ++fi){
-					(*fi).VFp(0) = (*fi).VFp(0)-(OpenMeshType::FaceType*)offsetF+ &m.face[0];
-					(*fi).VFp(1) = (*fi).VFp(1)-(OpenMeshType::FaceType*)offsetF+ &m.face[0];
-					(*fi).VFp(2) = (*fi).VFp(2)-(OpenMeshType::FaceType*)offsetF+ &m.face[0];
+					(*fi).VFp(0) = (*fi).VFp(0)-(FaceType*)offsetF+ &m.face[0];
+					(*fi).VFp(1) = (*fi).VFp(1)-(FaceType*)offsetF+ &m.face[0];
+					(*fi).VFp(2) = (*fi).VFp(2)-(FaceType*)offsetF+ &m.face[0];
 				}
 
 				fclose(f);
+				return true;
 		}
 
 	}; // end class
