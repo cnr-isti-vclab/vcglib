@@ -340,7 +340,7 @@ namespace vcg {
 			{ 
 				if(TE::IsConcave() == c.IsConcave())
         {
-          return (pow(dihedralRad,DiedralWeight())/aspectRatio) > (pow(c.dihedralRad,DiedralWeight())/c.aspectRatio);
+          return (pow((float)dihedralRad,(float)DiedralWeight())/aspectRatio) > (pow((float)c.dihedralRad,(float)DiedralWeight())/c.aspectRatio);
         }
         if(TE::IsConcave()) return true;
         // assert(c.IsConcave());
@@ -351,8 +351,8 @@ namespace vcg {
 			virtual void ComputeQuality()
 			{
 				//compute quality by (dihedral ancgle, area/sum(edge^2) )
-				Point3f n1=TE::e0.FFlip()->cN();
-        Point3f n2=TE::e1.FFlip()->cN();
+				typename MESH::CoordType  n1=TE::e0.FFlip()->cN();
+        typename MESH::CoordType n2=TE::e1.FFlip()->cN();
         
 				dihedralRad = std::max(Angle(TE::n,n1),Angle(TE::n,n2));
         aspectRatio = QualityFace(*this);
