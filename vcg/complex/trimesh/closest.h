@@ -281,22 +281,22 @@ namespace vcg {
 				(distFunct,mv,_k,_p,_maxDist,_objectPtrs,_distances,_points));
 		}
 
-		//template <class MESH, class GRID, class OBJPTRCONTAINER, class DISTCONTAINER, class POINTCONTAINER>
-		//	unsigned int GetInSphereFace(MESH & mesh,
-		//	GRID & gr,
-		//	const typename GRID::CoordType & _p,
-		//	const typename GRID::ScalarType & _r,
-		//	OBJPTRCONTAINER & _objectPtrs,
-		//	DISTCONTAINER & _distances, 
-		//	POINTCONTAINER & _points)
-		//{
-		//	typedef FaceTmark<MESH> MarkerFace;
-		//	MarkerFace mf;
-		//	mf.SetMesh(&mesh);
-		//	typedef vcg::face::PointDistanceFunctor F DistFunct;
-		//	return (gr.GetInSphere/*<FDistFunct,MarkerFace,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>*/
-		//		(FDistFunct(),mf,_p,_r,_maxDist,_objectPtrs,_distances,_points));
-		//}
+		template <class MESH, class GRID, class OBJPTRCONTAINER, class DISTCONTAINER, class POINTCONTAINER>
+			unsigned int GetInSphereFace(MESH & mesh,
+			GRID & gr,
+			const typename GRID::CoordType & _p,
+			const typename GRID::ScalarType & _r,
+			OBJPTRCONTAINER & _objectPtrs,
+			DISTCONTAINER & _distances, 
+			POINTCONTAINER & _points)
+		{
+			typedef FaceTmark<MESH> MarkerFace;
+			MarkerFace mf;
+			mf.SetMesh(&mesh);
+			typedef vcg::face::PointDistanceFunctor FDistFunct;
+			return (gr.GetInSphere/*<FDistFunct,MarkerFace,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>*/
+				(FDistFunct(),mf,_p,_r,_objectPtrs,_distances,_points));
+		}
 
 		template <class MESH, class GRID, class OBJPTRCONTAINER, class DISTCONTAINER, class POINTCONTAINER>
 			unsigned int GetInSphereVertex(MESH & mesh,
