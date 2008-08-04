@@ -94,6 +94,7 @@ Initial commit
 #define __VCG_TRIANGLE3
 
 #include <vcg/space/box3.h>
+#include <vcg/space/point3.h>
 #include <vcg/space/plane3.h>
 #include <vcg/space/segment3.h>
 
@@ -170,7 +171,7 @@ typename TriangleType::ScalarType QualityFace(const TriangleType &t)
 	@return true se bq appartiene alla faccia, false altrimenti
 */
 template<class TriangleType, class ScalarType>
-bool InterpolationParameters(const TriangleType t,const vcg::Point3<ScalarType> & bq, ScalarType &a, ScalarType &b, ScalarType &_c ) 
+bool InterpolationParameters(const TriangleType t,const Point3<ScalarType> & bq, ScalarType &a, ScalarType &b, ScalarType &_c ) 
 {	
 const ScalarType EPSILON = ScalarType(0.000001);
 #define x1 (t.P(0).X())
