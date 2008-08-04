@@ -334,7 +334,7 @@ private:
 };
 
 template <class TT> class Color4b: public vert::Color<vcg::Color4b, TT> {
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("Color4b"));TT::Name(name);}
+	public: static void Name(std::vector<std::string> & name){name.push_back(std::string("Color4b"));TT::Name(name);}
 };
 
 /*-------------------------- Quality  ----------------------------------*/ 
@@ -354,13 +354,13 @@ private:
 };
 
 template <class TT> class Qualitys: public Quality<short, TT> {
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("Qualitys"));TT::Name(name);}
+public: static void Name(std::vector<std::string> & name){name.push_back(std::string("Qualitys"));TT::Name(name);}
 };
 template <class TT> class Qualityf: public Quality<float, TT> {
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("Qualityf"));TT::Name(name);}
+public: static void Name(std::vector<std::string> & name){name.push_back(std::string("Qualityf"));TT::Name(name);}
 };
 template <class TT> class Qualityd: public Quality<double, TT> {
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("Qualityd"));TT::Name(name);}
+public: static void Name(std::vector<std::string> & name){name.push_back(std::string("Qualityd"));TT::Name(name);}
 };
 
 /*-------------------------- Curvature ----------------------------------*/ 
