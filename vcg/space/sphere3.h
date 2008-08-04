@@ -96,7 +96,9 @@ protected:
 
   int CreateFromBox(int n, const Point3<T> *points);
   //makes 36 iterations over the data... but get good results.
-  int CreateTight(int n, const Point3<T> *points, 
+	int CreateTight(int n, const Point3<T> *points, 
+		  T threshold = 1.01, T speed = 0.6);
+	int CreateTight(const std::vector<Point3<T> > & points, 
 		  T threshold = 1.01, T speed = 0.6);
 };
 
@@ -179,7 +181,6 @@ template <class T> void Sphere3<T>::Intersect(const Sphere3<T> &s) {
    Radius() = (min - max).Norm()/2;
    return 0;
  }
-
  template <class T> int Sphere3<T>::CreateTight(int n, const Point3<T> *points, 
 						T threshold, T speed) { 
    //This is quantized gradient descent... really ugly. But simple :P
@@ -226,7 +227,7 @@ template <class T> void Sphere3<T>::Intersect(const Sphere3<T> &s) {
        Radius() = best_radius;
      }
      step *= speed; 
-     if(step < Radius() * (threshold - 1))
+     if(step <= Radius() * (threshold - 1))
        break;
    }
    Radius() *= 1.01;
@@ -237,6 +238,11 @@ template <class T> void Sphere3<T>::Intersect(const Sphere3<T> &s) {
    
    return count;
  }
+
+template <class T> int Sphere3<T>::CreateTight(const std::vector<Point3<T> > & points,
+																							 T threshold, T speed){
+		return (points.empty())? -1 :CreateTight(points.size(),&(*points.begin()),threshold,speed);
+}
 
 } //namespace
 
