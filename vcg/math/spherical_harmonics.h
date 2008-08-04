@@ -24,7 +24,10 @@
 #ifndef __VCGLIB_SPHERICAL_HARMONICS_H
 #define __VCGLIB_SPHERICAL_HARMONICS_H
 
+#include <climits>
+
 #include "vcg/math/base.h"
+#include "vcg/math/random_generator.h"
 #include "vcg/math/legendre.h"
 #include "vcg/math/factorial.h"
 
