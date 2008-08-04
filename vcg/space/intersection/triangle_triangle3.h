@@ -46,8 +46,9 @@ namespace vcg {
 		Triangle/triangle intersection ,based on the algorithm presented in "A Fast Triangle-Triangle Intersection Test",
 		Journal of Graphics Tools, 2(2), 1997
  */
-
-#define FABS(x) (T(fabs(x)))        
+#ifndef FABS
+#define FABS(x) (T(fabs(x)))  
+#endif
 #define USE_EPSILON_TEST
 #define TRI_TRI_INT_EPSILON 0.000001
 
