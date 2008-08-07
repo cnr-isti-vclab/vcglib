@@ -517,6 +517,30 @@ ScalarType Norm()
 	return (math::Sqrt(SQsum));
 }
 
+
+/* 
+It compute the  covariance matrix of a set of 3d points. Returns the barycenter 
+*/
+template <class STLPOINTCONTAINER >
+void Covariance(const STLPOINTCONTAINER &points, Point3<S> &bp) {
+	assert(!points.empty());
+	typedef typename  STLPOINTCONTAINER::const_iterator PointIte;
+	// first cycle: compute the barycenter
+	bp.Zero();
+	for( PointIte pi = points.begin(); pi != points.end(); ++pi) bp+= (*pi);
+	bp/=points.size();
+	// second cycle: compute the covariance matrix
+	this->SetZero();
+	vcg::Matrix33<ScalarType> A;
+	for( PointIte pi = points.begin(); pi != points.end(); ++pi) {
+			 Point3<S> p = (*pi)-bp;
+			 A.OuterProduct(p,p);
+			(*this)+= A;
+	}
+}
+
+
+
 /* 
 It compute the cross covariance matrix of two set of 3d points P and X;
 it returns also the barycenters of P and X.
