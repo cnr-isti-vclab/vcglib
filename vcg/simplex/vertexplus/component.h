@@ -163,7 +163,7 @@ public:
   CoordType &UberP() { return _coord; }
 
 	template < class LeftV>
-	void ImportLocal(const LeftV  & left ) { P() = left.cP(); T::ImportLocal( left); } 
+	void ImportLocal(const LeftV  & left ) { P().Import(left.cP()); T::ImportLocal( left); } 
   static bool HasCoord()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("Coord"));T::Name(name);}
 
