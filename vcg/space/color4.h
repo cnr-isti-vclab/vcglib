@@ -382,10 +382,10 @@ template<>
 inline Color4<unsigned char> Color4<unsigned char>::operator + ( const Color4<unsigned char>  & p) const
 { 
 		return Color4<unsigned char>( 
-									 math::Clamp(int(_v[0])+int(p._v[0]),0,255),
-									 math::Clamp(int(_v[1])+int(p._v[1]),0,255),
-									 math::Clamp(int(_v[2])+int(p._v[2]),0,255),
-									 math::Clamp(int(_v[3])+int(p._v[3]),0,255)
+									 math::Clamp(int(this->_v[0])+int(p._v[0]),0,255),
+									 math::Clamp(int(this->_v[1])+int(p._v[1]),0,255),
+									 math::Clamp(int(this->_v[2])+int(p._v[2]),0,255),
+									 math::Clamp(int(this->_v[3])+int(p._v[3]),0,255)
 									 );
 }
 
