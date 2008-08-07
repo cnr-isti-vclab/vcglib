@@ -378,7 +378,10 @@ public:
     return (*this).Base().NV[(*this).Index()];  }
 
 	template <class LeftV>
-	void ImportLocal(const LeftV & leftV){ N() = leftV.cN(); T::ImporLocal(leftV);}
+	void ImportLocal(const LeftV & leftV){ 
+			if((*this).Base().NormalEnabled && leftV.Base().NormalEnabled ) // copy the data only if they are enabled in both vertices
+				N().Import(leftV.cN());
+			T::ImporLocal(leftV);}
 };
 
 template <class T> class Normal3sOcf: public NormalOcf<vcg::Point3s, T> {};
