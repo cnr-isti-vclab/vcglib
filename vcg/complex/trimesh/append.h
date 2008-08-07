@@ -78,24 +78,14 @@ public:
  typedef typename MeshRight::FaceIterator   FaceIteratorRight;
  typedef typename MeshRight::FacePointer   FacePointerRight;
 
-static void ImportVertex(VertexLeft &vl, VertexRight &vr)
-{
-  vl.P().Import(vr.P());
-  if(vl.HasNormal()   && vr.HasNormal()) vl.N()=vr.N();
-  if(vl.HasColor()   && vr.HasColor()) vl.C()=vr.C();
-  if(vl.HasQuality() && vr.HasQuality()) vl.Q()=vr.Q();
-  if(vl.HasTexCoord() && vr.HasTexCoord()) vl.T()=vr.T();
-}
-
 static void ImportFace(MeshLeft &ml, MeshRight &mr, FaceLeft &fl, FaceRight &fr, std::vector<int> &remap)
 {
+	fl.ImportLocal(fr);
   fl.V(0)=&ml.vert[remap[ Index(mr,fr.V(0))]];
   fl.V(1)=&ml.vert[remap[ Index(mr,fr.V(1))]];
   fl.V(2)=&ml.vert[remap[ Index(mr,fr.V(2))]];
-	if(HasPerFaceNormal(mr) && HasPerFaceNormal(ml)) fl.N()=fr.N();
-  if(HasPerFaceColor(mr)   && HasPerFaceColor(ml)) fl.C()=fr.C();
-  if(HasPerFaceQuality(mr) && HasPerFaceQuality(ml)) fl.Q()=fr.Q();
-  if(HasPerWedgeTexCoord(mr) && HasPerWedgeTexCoord(ml)) 
+
+	if(HasPerWedgeTexCoord(mr) && HasPerWedgeTexCoord(ml)) 
 		for(int i=0;i<3;++i){
 				fl.WT(i).P()=fr.WT(i).P();
 				fl.WT(i).N()=fr.WT(i).N()+ml.textures.size();
@@ -121,7 +111,7 @@ static void Mesh(MeshLeft& ml, MeshRight& mr, const bool selected = false)
             {
               VertexIteratorLeft vp;
               vp=Allocator<MeshLeft>::AddVertices(ml,1);
-              ImportVertex((*vp),*(*fi).V(i));
+              (*vp).ImportLocal(*(*fi).V(i));
               remap[vind]=Index(ml,*vp);
             }
           }
@@ -176,7 +166,7 @@ static void Mesh(MeshLeft& ml, MeshRight& mr, const bool selected = false)
 
 static void Selected(MeshLeft& ml, MeshRight& mr)
 {
-  Mesh(mr,mr,true);
+  Mesh(ml,mr,true);
 }
 
 }; // end of class Append
