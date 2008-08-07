@@ -112,7 +112,7 @@ private:
 
 	// Plane where to project the edge mesh.
 	Plane3d proj;
-
+	Plane3f projf;
 	// Scale of rdrawing respect coordinates of mesh  
 	float scale;
     
@@ -149,14 +149,17 @@ public:
 
 		// default projection plane (XZ plane)
 		Point3d n(0.0, 1.0, 0.0);
+		Point3f nf(0.0, 1.0, 0.0);
 		proj.SetDirection(n);
 		proj.SetOffset(0.0);
+		projf.SetDirection(nf);
+		projf.SetOffset(0.0);
 
 		scale=0; //scale=0 it means expanded to the boards of the canvas   
         ViewBox=Point2d(1000, 1000); 
 		position=Point2d(0, 0);
-		width=10; //width of the windows
-		height=10; //height of the windows
+		width=15; //width of the windows
+		height=15; //height of the windows
 	    showDetails=true;
 		Xmin=0;
 		Ymin=0;
@@ -199,7 +202,7 @@ public:
 	//! Set the line cap style.
 	void setLineCap(enum StrokeLineCap linecap)
 	{
-		if (linecap == BUTT)						stroke_linecap = "butt";
+		if (linecap == BUTT)				stroke_linecap = "butt";
 		else if (linecap == ROUND)			stroke_linecap = "round";
 		else if (linecap == SQUARE)			stroke_linecap = "square";
 	}
@@ -208,6 +211,12 @@ public:
 	{
 		proj.SetDirection(direction);
 		proj.SetOffset(distance);
+	}
+
+	void setPlanef(float distance, const Point3f &direction)
+	{
+		projf.SetDirection(direction);
+		projf.SetOffset(distance);
 	}
 
 	void setScale(float x){ scale=x; } //Define the scale between 2d coordinate and mesh
@@ -225,6 +234,7 @@ public:
 	const char * lineColor(){return stroke_color.c_str();}
 	const char * lineCapStyle(){return stroke_linecap.c_str();}
 	const Plane3d * projPlane(){return &proj;}
+	const Plane3f * projPlanef(){return &projf;}
 	float getScale(){return scale;}
 	Point2d getViewBox(){return ViewBox;}
 	Point2d getPosition(){return position;}
@@ -241,8 +251,6 @@ public:
 	}
 	Point2f* getminPoint(){return (minPos);}
 	Point2f* getmaxPoint(){return (maxPos);}
-	
-
 };
 	    
 
@@ -300,11 +308,12 @@ public:
 		    ed=(*it);
             
 			pro.setPosition(Point2d((pro.getViewBox().V(0)/pro.numCol)*i,40));
+			//pro.setPosition(Point2d((pro.getViewBox().V(0)/pro.numCol),40));
 			
 			int x=pro.getViewBox().V(0);
 			int y=pro.getViewBox().V(1);
 			/*
-			fprintf(o, "<rect width= \" %d \" height= \" %d \" x=\"%d \" y=\" %d \" style= \" stroke-width:1; fill-opacity:0.0; stroke:rgb(0,0,0)\" /> \n",x/pro.numCol,y,  (x/pro.numCol)*i, 40);
+			fprintf(o, "<rect width= \" %d \" height= \" %d \" x=\"%d \" y=\" %d \" style= \" stroke-width:1; fill-opacity:0.0; stroke:rgb(0,0,0)\" /> 				\n",x/pro.numCol,y,  (x/pro.numCol)*i, 40);
 			*/
 			Save(ed,o,pro, i);
            
@@ -327,7 +336,7 @@ public:
 	
 	  WriteXmlHead(o, props.getWidth(),props.getHeight(), props.getViewBox(), props.getPosition());
 	  		
-        props.setPosition(Point2d(0,40));
+        	
 		Save(mp, o, props, -1);
         fprintf(o, "</svg>");
 		
@@ -338,8 +347,153 @@ public:
 		return true;
 	}
 
-	 static void Save(EdgeMeshType *mp, FILE* o, SVGProperties  props, int numSlice)
-	{ 
+
+
+
+
+
+
+
+/************************************************   Here is my code   ****************************************************/
+/********* I've use the function's surdefinition to build my own Save function, by this way I've changed nothing  ********/ 
+
+/* This is an other WmlHead constructor cause I need to define the width and the height of the svg file in pixels, and not in cms */
+static void WriteXmlhead(FILE *o,int width, int height)
+{
+	fprintf(o, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
+	fprintf(o, "<!-- Created with vcg library -->\n");
+	fprintf(o, "<svg width=\"%d\" height=\"%d\" viewBox=\"0 0 %d %d\" \n \n",width, height, width+100, height+100);
+	fprintf(o, "	xmlns=\"http://www.w3.org/2000/svg\" \n");
+	fprintf(o, "	xmlns:xlink=\"http://www.w3.org/1999/xlink\" \n");
+	fprintf(o, "	xmlns:dc=\"http://purl.org/dc/elements/1.1/\" \n");
+	fprintf(o, "	xmlns:cc=\"http://web.resource.org/cc/\" \n");
+	fprintf(o, "	xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" \n");
+	fprintf(o, "	xmlns:svg=\"http://www.w3.org/2000/svg\" \n \n");
+	fprintf(o, "id=\"svg2\"> \n");
+	fprintf(o, "	<defs id=\"defs4\"/> \n");
+	fprintf(o, "	<metadata id=\"metadata7\"> \n");
+	fprintf(o, "	<rdf:RDF> \n");
+	fprintf(o, "	<cc:Work rdf:about=\"\"> \n");
+	fprintf(o, "	<dc:format>image/svg+xml</dc:format> \n");
+	fprintf(o, "	<dc:type rdf:resource=\"http://purl.org/dc/dcmitype/StillImage\" /> \n");
+	fprintf(o, "	</cc:Work> \n");
+	fprintf(o, "	</rdf:RDF> \n");
+	fprintf(o, "</metadata> \n \n");
+}
+
+
+/* The six float are the bbow parameters used to buiold the framing box. You'll fid them in the two functions*/
+static bool Save(EdgeMeshType *mp, const char *filename, SVGProperties & props, float mix, float miy, float max, float may, float centerx, float centery)
+{
+	FILE * o = fopen(filename,"w");
+	if (o==NULL)
+		return false;
+
+	props.setDimension((max-mix)*props.getScale()-(mix-centerx)*props.getScale(), (may-miy)*props.getScale()-(miy-centery)*props.getScale()); 
+	WriteXmlhead(o, props.getWidth(),props.getHeight());
+	  		
+	Save(mp, o, props, -1, mix, miy, max, may, centerx, centery); 
+        fprintf(o, "</svg>");
+		
+	fclose(o);
+	return true;
+}
+
+
+static void Save(EdgeMeshType *mp, FILE* o, SVGProperties  props, int numSlice, float mix, float miy, float max, float may, float centerx, float centery)
+{ 
+	// build vector basis (n, v1, v2)
+	Point3d p1(0.0,0.0,0.0);
+	Point3d p2(1.0,0.0,0.0);
+
+        Point3d p2less(-1.0,0.0,0.0);
+	Point3d d = props.projPlane()->Direction() - p2;
+        Point3d dless = props.projPlane()->Direction() - p2less;
+	Point3d v1;
+	if ((d.Norm() < 0.5)||(dless.Norm() <0.5))
+			v1 = Point3d(0.0,0.0,1.0) - p1;	
+	else
+			v1 = p2 - p1;
+
+	v1.Normalize();
+	Point3d v2 = v1 ^ props.projPlane()->Direction();
+	
+        //Global points
+	std::vector<Point2f> pts;
+	pts.clear();
+	Point2f pmin(100000000.0f,  100000000.0f);
+	Point2f pmax(-100000000.0f, -100000000.0f);
+        Point3d bbMin;
+	float scale=props.getScale();
+
+	typename EdgeMeshType::EdgeIterator i;
+		
+	for (i = mp->edges.begin(); i != mp->edges.end(); ++i)
+	{
+		Point3<typename EdgeMeshType::ScalarType> p1;
+	    	Point3<typename EdgeMeshType::ScalarType> p2;
+			
+		p1 = (*i).V(0)->P();
+		p2 = (*i).V(1)->P();
+        
+		Point3d p1d(p1[0], p1[1], p1[2]);
+		Point3d p2d(p2[0], p2[1], p2[2]);
+			
+		// Project the line on the reference plane
+		Point3d p1proj = props.projPlane()->Projection(p1d);
+		Point3d p2proj = props.projPlane()->Projection(p2d);
+		
+		// Convert the 3D coordinates of the line to the uv coordinates of the plane
+		Point2f pt1(static_cast<float>(p1proj * v1), static_cast<float>(p1proj * v2));
+		Point2f pt2(static_cast<float>(p2proj * v1), static_cast<float>(p2proj * v2));
+
+		pts.push_back(pt1);
+		pts.push_back(pt2);
+
+		pmin[0]=math::Min(math::Min(pt1[0],pmin[0]), pt2[0]);
+		pmin[1]=math::Min(math::Min(pt1[1],pmin[1]), pt2[1]);
+		pmax[0]=math::Max(math::Max(pt1[0],pmax[0]), pt2[0]);
+		pmax[1]=math::Max(math::Max(pt1[1],pmax[1]), pt2[1]); 
+	}
+	
+			
+	// line settings
+	fprintf(o, "      <g stroke=\"%s\" stroke-linecap=\"%s\" > \n", 
+	props.lineColor(), props.lineCapStyle());
+	fprintf(o, "<svg id = \" %d \">\n", numSlice );
+	int x=props.getViewBox().V(0);
+	int y=props.getViewBox().V(1);
+	fprintf(o, "<rect width= \" %d \" height= \" %d \" x=\"%d \" y=\" %d \" style= \" stroke-width:1; fill-opacity:0.0; stroke:rgb(0,0,0)\" /> \n",x/props.numCol,y,  0, 40);		
+	fprintf(o, "<rect x=\"%f\" y=\"%f\" width=\"%f\" height=\"%f\" fill=\"none\" stroke-width=\"5\" /> \n", 0.0, 0.0, (max-mix)*scale-(mix-centerx)*scale, (may-miy)*scale-(miy-centery)*scale); // Here is the framing box construction
+
+	std::vector<Point2f>::iterator itPoints;
+	for(itPoints = pts.begin(); itPoints != pts.end(); ++itPoints)
+	{
+		Point2f p1 = *itPoints;
+		++itPoints;
+		Point2f p2 = *itPoints;
+		
+		fprintf(o, "        <line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" \n", 
+		((p1[0]-pmin[0]) * scale-0.5*(mix-centerx)*scale), ((p1[1]-pmin[1]) * scale-0.5*(miy-centery)*scale),
+		((p2[0]-pmin[0]) * scale-0.5*(mix-centerx)*scale), ((p2[1]-pmin[1]) * scale -0.5*(miy-centery)*scale));
+		fprintf(o, "          stroke-width = \"%d\" ",props.lineWidth());
+		fprintf(o, "/>\n");
+	}
+        fprintf(o, "</svg>");
+	fprintf(o, "  </g>\n");
+}
+/*********************************************** End of what I've made  *****************************************/
+	
+
+
+
+
+
+
+
+
+static void Save(EdgeMeshType *mp, FILE* o, SVGProperties  props, int numSlice)
+{ 
 		bool preCal=false;
 		
 		if(numSlice==-2) preCal=true; 
@@ -358,9 +512,9 @@ public:
 		v1.Normalize();
 		Point3d v2 = v1 ^ props.projPlane()->Direction();
         //Global points
-	  std::vector< std::vector<Point2f> >* glb;
+	 	std::vector< std::vector<Point2f> >* glb;
 		std::vector<Point2f> pts;
-	    pts.clear();
+	   	pts.clear();
 		Point2f pmin(100000000.0f,  100000000.0f);
 		Point2f pmax(-100000000.0f, -100000000.0f);
         Point3d bbMin;
@@ -418,11 +572,11 @@ public:
 			int x=props.getViewBox().V(0);
 			int y=props.getViewBox().V(1);
 			if(numSlice>=0)
-			fprintf(o, "<rect width= \" %d \" height= \" %d \" x=\"%d \" y=\" %d \" style= \" stroke-width:1; fill-opacity:0.0; stroke:rgb(0,0,0)\" /> \n",x/props.numCol,y,  (x/props.numCol)*numSlice, 40);
+			fprintf(o, "<rect width= \" %d \" height= \" %d \" x=\"%d \" y=\"%d \" style= \" stroke-width:1; fill-opacity:0.0; stroke:rgb(0,0,0)\" /> \n",x/props.numCol,y,  (x/props.numCol)*numSlice, 40);
 			else
 			fprintf(o, "<rect width= \" %d \" height= \" %d \" x=\"%d \" y=\" %d \" style= \" stroke-width:1; fill-opacity:0.0; stroke:rgb(0,0,0)\" /> \n",x/props.numCol,y,  0, 40);
 			
-			
+ 
 			std::vector<Point2f>::iterator itPoints;
 			for(itPoints = pts.begin(); itPoints != pts.end(); ++itPoints)
 			{
@@ -431,15 +585,15 @@ public:
 				Point2f p2 = *itPoints;
 				if(numSlice==-1){
 					fprintf(o, "        <line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" \n", 
-				    pos.X()+((p1[0]-pmin[0]) * scale), pos.Y()+((p1[1]-pmin[1]) * scale),
-				   pos.X()+((p2[0]-pmin[0]) * scale), pos.Y()+((p2[1]-pmin[1]) * scale ));
+				    	(pos.X()+((p1[0]-pmin[0]) * scale)), pos.Y()+((p1[1]-pmin[1]) * scale),
+				   	pos.X()+((p2[0]-pmin[0]) * scale), pos.Y()+((p2[1]-pmin[1]) * scale ));
 					fprintf(o, "          stroke-width = \"%d\" ",props.lineWidth());
 					fprintf(o, "/>\n");
 				}
 				else{
 					fprintf(o, "        <line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" \n", 
-				    pos.X()+((p1[0]-props.getminPoint()->X()) * scale), pos.Y()+((p1[1]-props.getminPoint()->Y()) * scale),
-				   pos.X()+((p2[0]-props.getminPoint()->X()) * scale), pos.Y()+((p2[1]-props.getminPoint()->Y()) * scale ));
+				   	(pos.X()+((p1[0]-props.getminPoint()->X()) * scale)), pos.Y()+((p1[1]-props.getminPoint()->Y()) * scale),
+				   	pos.X()+((p2[0]-props.getminPoint()->X()) * scale), pos.Y()+((p2[1]-props.getminPoint()->Y()) * scale ));
 					fprintf(o, "          stroke-width = \"%d\" ",props.lineWidth());
 					fprintf(o, "/>\n");}
 		}
@@ -456,8 +610,8 @@ public:
 			props.setMinPoint(pmi);
 			props.setMaxPoint(pma);
 
-		}
 	}
+}
 
 	private:
 		
@@ -470,7 +624,7 @@ public:
 	    int nullAss=0;
 		int OffsetXAs=50;
 		float comput= OffsetXAs+(pox*prop.getScale());
-		fprintf(o, "     <line x1=\" %d \" y1=\" %d \" x2=\" %f \" y2=\" %d \" \n",(nullAss+OffsetXAs ),(assY+50),comput, (assY+50) );
+		fprintf(o, "     <line x1=\" %d \" y1=\" %d \" x2=\" %f \" y2=\" %d \" \n",((nullAss+OffsetXAs )),(assY+50),comput, (assY+50) );
 	    fprintf(o, "          stroke-width = \"5\" ");
 		fprintf(o, "/>\n");
 	    fprintf(o,"<text x= \" %d \" y= \" %d \" font-family= \"Verdana \" font-size= \"25 \" >",(nullAss+OffsetXAs), (assY+80));
@@ -479,29 +633,32 @@ public:
 		 fprintf(o,"%d px --  Scale %f : 1 </text>", pox ,prop.getScale());
 		}
 	}
-		static void WriteXmlHead(FILE *o,int width, int height, Point2d viewBox, Point2d position){
+
+static void WriteXmlHead(FILE *o,int width, int height, Point2d viewBox, Point2d position){
 	 
 	   int Vx=viewBox[0];
 		int Vy=viewBox[1];
-	  // initial xml tags
+
+
 		fprintf(o, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
 		fprintf(o, "<!-- Created with vcg library -->\n");
-		fprintf(o, "<svg width=\"%d cm\" height=\"%d cm\" viewBox=\"0 0 %d %d \" \n",width, height, Vx, Vy+100);
-		fprintf(o, "  xmlns:dc=\"http://purl.org/dc/elements/1.1/\" \n");
-		fprintf(o, "  xmlns:cc=\"http://web.resource.org/cc/\" \n");
-		fprintf(o, "  xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" \n");
-		fprintf(o, "  xmlns:svg=\"http://www.w3.org/2000/svg\" \n");
-		fprintf(o, "  xmlns=\"http://www.w3.org/2000/svg\" \n");
-		fprintf(o, "  id=\"svg2\"> \n");
-		fprintf(o, "  <defs id=\"defs4\"/> \n");
-		fprintf(o, "  <metadata id=\"metadata7\"> \n");
-		fprintf(o, "    <rdf:RDF> \n");
-		fprintf(o, "    <cc:Work rdf:about=\"\"> \n");
-		fprintf(o, "    <dc:format>image/svg+xml</dc:format> \n");
-		fprintf(o, "    <dc:type rdf:resource=\"http://purl.org/dc/dcmitype/StillImage\" /> \n");
-		fprintf(o, "    </cc:Work> \n");
-		fprintf(o, "    </rdf:RDF> \n");
-		fprintf(o, "  </metadata> \n");
+		fprintf(o, "<svg width=\"%dcm\" height=\"%dcm\" viewBox=\"0 0 %d %d\" \n \n",width, height, Vx, Vy+100);
+		fprintf(o, "	xmlns=\"http://www.w3.org/2000/svg\" \n");
+		fprintf(o, "	xmlns:xlink=\"http://www.w3.org/1999/xlink\" \n");
+		fprintf(o, "	xmlns:dc=\"http://purl.org/dc/elements/1.1/\" \n");
+		fprintf(o, "	xmlns:cc=\"http://web.resource.org/cc/\" \n");
+		fprintf(o, "	xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" \n");
+		fprintf(o, "	xmlns:svg=\"http://www.w3.org/2000/svg\" \n \n");
+		fprintf(o, "id=\"svg2\"> \n");
+		fprintf(o, "	<defs id=\"defs4\"/> \n");
+		fprintf(o, "	<metadata id=\"metadata7\"> \n");
+		fprintf(o, "	<rdf:RDF> \n");
+		fprintf(o, "	<cc:Work rdf:about=\"\"> \n");
+		fprintf(o, "	<dc:format>image/svg+xml</dc:format> \n");
+		fprintf(o, "	<dc:type rdf:resource=\"http://purl.org/dc/dcmitype/StillImage\" /> \n");
+		fprintf(o, "	</cc:Work> \n");
+		fprintf(o, "	</rdf:RDF> \n");
+		fprintf(o, "</metadata> \n \n");
 	}
 		
 };
