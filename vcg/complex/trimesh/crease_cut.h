@@ -134,8 +134,7 @@ void CreaseCut(MESH_TYPE &m, float angleRad)
 			if(curVertexInd < startVn) assert(curVertexInd == vertInd); 
 			if(curVertexInd >= startVn)
 				{
-					//m.vert[curVertexInd].ImportLocal(*((*fi).V(j)));
-				  tri::Append<CMeshO,CMeshO>::ImportVertex(m.vert[curVertexInd],*((*fi).V(j)));
+				  m.vert[curVertexInd].ImportLocal(*((*fi).V(j)));
 					(*fi).V(j) = & m.vert[curVertexInd];
 				}
 		}		
