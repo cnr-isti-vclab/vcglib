@@ -780,10 +780,18 @@ template <class T> Matrix44<T> &Transpose(Matrix44<T> &m) {
   return m;
 }
 
+/*
+ To invert a matrix you can 
+ either invert the matrix inplace calling
+ 
+ vcg::Invert(yourMatrix);
+ 
+ or get the inverse matrix of a given matrix without touching it:
 
-
-
-template <class T> Matrix44<T> &Invert(Matrix44<T> &m) {        
+ invertedMatrix = vcg::Inverse(untouchedMatrix);
+ 
+*/
+template <class T> Matrix44<T> & Invert(Matrix44<T> &m) {        
   LinearSolve<T> solve(m);
 
   for(int j = 0; j < 4; j++) { //Find inverse by columns.
@@ -793,7 +801,6 @@ template <class T> Matrix44<T> &Invert(Matrix44<T> &m) {
     for(int i = 0; i < 4; i++) 
       m.ElementAt(i, j) = col[i];
   }  
-  return m;
 }
 
 template <class T> Matrix44<T> Inverse(const Matrix44<T> &m) {        
