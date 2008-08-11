@@ -801,6 +801,7 @@ template <class T> Matrix44<T> & Invert(Matrix44<T> &m) {
     for(int i = 0; i < 4; i++) 
       m.ElementAt(i, j) = col[i];
   }  
+	return m;
 }
 
 template <class T> Matrix44<T> Inverse(const Matrix44<T> &m) {        
