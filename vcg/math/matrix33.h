@@ -355,17 +355,18 @@ public:
 		a[6] = row[0];a[7] = row[1];a[8] = row[2];
 	}
 
-	void SetZero()	{
+	Matrix33 & SetZero()	{
 		for(int i=0;i<9;++i) a[i] =0;
+		return (*this);
 	}
-	void SetIdentity()	{
+	Matrix33 & SetIdentity()	{
 		for(int i=0;i<9;++i) a[i] =0;
 		a[0]=a[4]=a[8]=1.0;
+		return (*this);
 	}
 
-	void Rotate(S angle, const Point3<S> & axis )
+	Matrix33 & SetRotateRad(S angle, const Point3<S> & axis )
 	{
-		angle = angle*(S)3.14159265358979323846/180;
 		S c = cos(angle);
 		S s = sin(angle);
 		S q = 1-c;
@@ -380,7 +381,12 @@ public:
 		a[6] = t[2]*t[0]*q -t[1]*s;
 		a[7] = t[2]*t[1]*q +t[0]*s;
 		a[8] = t[2]*t[2]*q +c;
+		return (*this);
 	}
+	Matrix33 & SetRotateDeg(S angle, const Point3<S> & axis ){
+		return RotateRad(math::ToRad(angle),axis);
+	}
+
 	/// Funzione per eseguire la trasposta della matrice
 	Matrix33 & Transpose()
 	{
