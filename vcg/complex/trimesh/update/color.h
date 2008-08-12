@@ -66,6 +66,8 @@ Changed name from plural to singular (normals->normal)
 #include <math.h>
 #include <vcg/space/color4.h>
 #include <vcg/math/histogram.h>
+#include <vcg/complex/trimesh/stat.h>
+
 
 namespace vcg {
 namespace tri {
@@ -291,7 +293,7 @@ static void FaceQuality(UpdateMeshType &m, float minq, float maxq)
 		(*fi).C().ColorRamp(minq,maxq,(*fi).Q());
 }
 
-static void VertexQuality(UpdateMeshType &m, float minq, float maxq)
+static void VertexQualityRamp(UpdateMeshType &m, float minq, float maxq)
 {
 	typename UpdateMeshType::VertexIterator vi;
 
@@ -300,19 +302,25 @@ static void VertexQuality(UpdateMeshType &m, float minq, float maxq)
 			(*vi).C().ColorRamp(minq,maxq,(*vi).Q());
 }
 
-static void VertexQuality(UpdateMeshType &m)
+static void VertexQualityRamp(UpdateMeshType &m)
 {
-	// step 1: find the range
+	std::pair<float,float> minmax = Stat<UpdateMeshType>::ComputePerVertexQualityMinMax( m);
+	VertexQualityRamp(m,minmax.first,minmax.second);
+}
+
+static void VertexQualityGray(UpdateMeshType &m, const float minq, const float maxq)
+{
 	typename UpdateMeshType::VertexIterator vi;
-  float minq=std::numeric_limits<float>::max(),
-				maxq=-std::numeric_limits<float>::max();
+	
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 		if(!(*vi).IsD())
-		{
-			minq=vcg::math::Min<float>(minq,(*vi).Q());
-			maxq=vcg::math::Max<float>(maxq,(*vi).Q());
-		}
-	VertexQuality(m,minq,maxq);
+			(*vi).C().SetGrayShade( ((*vi).Q()-minq)/(maxq-minq));
+}
+
+static void VertexQualityGray(UpdateMeshType &m)
+{
+	std::pair<float,float> minmax = Stat<UpdateMeshType>::ComputePerVertexQualityMinMax( m);
+	VertexQualityGray(m,minmax.first,minmax.second);
 }
 
 //Fill the mesh with the selected color.
