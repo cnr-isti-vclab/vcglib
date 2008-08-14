@@ -384,7 +384,7 @@ public:
 		return (*this);
 	}
 	Matrix33 & SetRotateDeg(S angle, const Point3<S> & axis ){
-		return RotateRad(math::ToRad(angle),axis);
+		return SetRotateRad(math::ToRad(angle),axis);
 	}
 
 	/// Funzione per eseguire la trasposta della matrice
