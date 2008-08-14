@@ -115,51 +115,83 @@ bool Intersect(   GridType & grid,Plane3<ScalarType> plane, std::vector<typename
 	}
 
 /*@}*/
+	template < typename  TriMeshType, typename EdgeMeshType, class ScalarType, class IndexingType >
+	bool Intersection(	/*TriMeshType & m, */
+	Plane3<ScalarType>  pl,
+	EdgeMeshType & em,
+	double& ave_length,
+	IndexingType *grid,
+	typename std::vector< typename IndexingType::Cell* >& cells)
+{
+		typedef typename TriMeshType::FaceContainer FaceContainer;
+		typedef IndexingType GridType;
+		typename EdgeMeshType::VertexIterator vi;
+		typename TriMeshType::FaceIterator fi;
+		std::vector<typename TriMeshType::FaceType*> v;
+		v.clear();
+		Intersect(*grid,pl,cells);
+		Segment3<ScalarType> seg;
+		ave_length = 0.0;
+		typename std::vector<typename GridType::Cell*>::iterator ic;
+		typename GridType::Cell fs,ls;
+		for(ic = cells.begin(); ic != cells.end();++ic)
+		{
+			grid->Grid(*ic,fs,ls);
+			typename GridType::Link * lk = fs;
+			while(lk != ls){
+				typename TriMeshType::FaceType & face = *(lk->Elem());
+				if(!face.IsS())
+				{
+					face.SetS();
+					v.push_back(&face);
+					if(vcg::IntersectionPlaneTriangle(pl,face,seg))// intersezione piano triangolo
+					{
+						face.SetS();
+						// add to em
+						ave_length+=seg.Length();
+						vcg::edge::Allocator<EdgeMeshType>::AddEdges(em,1);
+						vi = vcg::edge::Allocator<EdgeMeshType>::AddVertices(em,2);
+						(*vi).P() = seg.P0();
+						em.edges.back().V(0) = &(*vi); 
+						vi++;
+						(*vi).P() = seg.P1();
+						em.edges.back().V(1) = &(*vi); 
+					}
+				}//endif 
+				lk++;
+			}//end while
+		}
+		ave_length/=em.en;
+		typename std::vector<typename TriMeshType::FaceType*>::iterator v_i;
+    for(v_i=v.begin(); v_i!=v.end(); ++v_i) (*v_i)->ClearS();
+		
+		return true;
+}
 
 /** \addtogroup complex */
 /*@{*/
 /** 
-    Function computing the intersection between  a trimesh and a plane. It returns an EdgeMesh.
+    Basic Function computing the intersection between  a trimesh and a plane. It returns an EdgeMesh without needing anything else.
 		Note: This version always returns a segment for each triangle of the mesh which intersects with the plane. In other
 		words there are 2*n vertices where n is the number of segments fo the mesh. You can run vcg::edge::Unify to unify
 		the vertices closer that a given value epsilon. Note that, due to subtraction error during triangle plane intersection,
 		it is not safe to put epsilon to 0. 
 // TODO si dovrebbe considerare la topologia face-face della trimesh per derivare quella della edge mesh..
 */
-template < typename  TriMeshType, typename EdgeMeshType, class ScalarType, class IndexingType >
-bool Intersection(	/*TriMeshType & m, */
-					Plane3<ScalarType>  pl,
-					EdgeMeshType & em,
-					double& ave_length,
-					IndexingType *grid,
-					typename std::vector< typename IndexingType::Cell* >& cells)
+template < typename  TriMeshType, typename EdgeMeshType, class ScalarType >
+bool Intersection(TriMeshType & m,
+									Plane3<ScalarType>  pl,
+									EdgeMeshType & em)
 {
-	typedef typename TriMeshType::FaceContainer FaceContainer;
-	typedef IndexingType GridType;
 	typename EdgeMeshType::VertexIterator vi;
 	typename TriMeshType::FaceIterator fi;
-  std::vector<typename TriMeshType::FaceType*> v;
-	v.clear();
-	Intersect(*grid,pl,cells);
+  em.Clear();
 	Segment3<ScalarType> seg;
-	ave_length = 0.0;
-	typename std::vector<typename GridType::Cell*>::iterator ic;
-	typename GridType::Cell fs,ls;
-	for(ic = cells.begin(); ic != cells.end();++ic)
+	for(fi=m.face.begin();fi!=m.face.end();++fi) 
+		if(!(*fi).IsD())
 		{
-			grid->Grid(*ic,fs,ls);
-			typename GridType::Link * lk = fs;
-			while(lk != ls){
-				typename TriMeshType::FaceType & face = *(lk->Elem());
-					if(!face.IsS())
-					{
-						face.SetS();
-						v.push_back(&face);
-						if(vcg::IntersectionPlaneTriangle(pl,face,seg))// intersezione piano triangolo
+			if(vcg::IntersectionPlaneTriangle(pl,*fi,seg))// intersezione piano triangolo
 							{
-								face.SetS();
-								// add to em
-								ave_length+=seg.Length();
 								vcg::edge::Allocator<EdgeMeshType>::AddEdges(em,1);
 								vi = vcg::edge::Allocator<EdgeMeshType>::AddVertices(em,2);
 								(*vi).P() = seg.P0();
@@ -168,14 +200,8 @@ bool Intersection(	/*TriMeshType & m, */
 								(*vi).P() = seg.P1();
 								em.edges.back().V(1) = &(*vi); 
 							}
-					}//endif 
-					lk++;
-				}//end while
-		}
-	ave_length/=em.en;
-	typename std::vector<typename TriMeshType::FaceType*>::iterator v_i;
-    for(v_i=v.begin(); v_i!=v.end(); ++v_i) (*v_i)->ClearS();
-
+		 }//end for
+	
 	return true;
 }
 
