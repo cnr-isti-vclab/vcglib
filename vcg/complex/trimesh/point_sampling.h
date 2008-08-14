@@ -463,9 +463,9 @@ static void FaceSimilar(MetroMesh & m, VertexSampler &ps,int sampleNum)
         {
             // face sampling.
             n_samples_per_edge = (int)((sqrt(1.0+8.0*(double)n_samples) +5.0)/2.0);
-            n_samples = 0;
+            //n_samples = 0;
             //SingleFaceSimilar((*fi).V(0)->cP(), (*fi).V(1)->cP(), (*fi).V(2)->cP(), n_samples_per_edge);
-						SingleFaceSimilar(&*fi,ps, n_samples_per_edge);
+						n_samples = SingleFaceSimilar(&*fi,ps, n_samples_per_edge);
         }
         n_samples_decimal -= (double) n_samples;
     }
