@@ -464,6 +464,38 @@ template <class T> class CurvatureDird: public CurvatureDir<CurvatureDirBaseType
 public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDird"));T::Name(name);}
 };
 
+/*----------------------------- VEADJ ------------------------------*/ 
+
+
+template <class T> class EmptyVEAdj: public T {
+public:
+  typename T::EdgePointer &VEp() { static typename T::EdgePointer ep=0;  assert(0); return ep; }
+  typename T::EdgePointer cVEp() { static typename T::EdgePointer ep=0;  assert(0); return ep; }
+  int &VEi(){static int z=0; return z;};
+	template < class LeftV>
+		void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
+  static bool HasVEAdjacency()   {   return false; }
+  static bool HasVEAdjacencyOcc()   {   return false; }
+	static void Name(std::vector<std::string> & name){ T::Name(name);}
+};
+
+template <class T> class VEAdj: public T {
+public:
+  VEAdj(){_ep=0;}
+  typename T::EdgePointer &VEp() {return _ep; }
+  typename T::EdgePointer cVEp() {return _ep; }
+  int &VEi() {return _zp; }
+	template < class LeftV>
+	void ImportLocal(const LeftV  & left ) { VEp() = NULL; T::ImportLocal( left); }
+  static bool HasVEAdjacency()   {   return true; }
+  static bool HasVEAdjacencyOcc()   {   return true; }
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("VEAdj"));T::Name(name);}
+	
+private:
+  typename T::EdgePointer _ep ;    
+  int _zp ;    
+};
+
 /*----------------------------- VFADJ ------------------------------*/ 
 
 
