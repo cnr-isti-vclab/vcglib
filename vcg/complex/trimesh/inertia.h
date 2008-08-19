@@ -77,7 +77,6 @@ class Inertia
 	typedef typename MeshType::FaceIterator   FaceIterator;
 	typedef typename MeshType::FaceContainer  FaceContainer;
 	typedef typename MeshType::CoordType  CoordType;
-	typedef typename MeshType::ScalarType  ScalarType;
 
 private :
 	enum {X=0,Y=1,Z=2};

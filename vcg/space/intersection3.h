@@ -257,7 +257,7 @@ namespace vcg {
 	{
 		typedef SCALAR_TYPE														ScalarType;
 		typedef typename vcg::Point3< ScalarType >		Point3t;
-		typedef typename TRIANGLETYPE Triangle3t;
+		typedef TRIANGLETYPE Triangle3t;
 
 		bool penetration_detected = false;
 

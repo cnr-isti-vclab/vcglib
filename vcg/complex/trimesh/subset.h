@@ -81,7 +81,7 @@ struct InsertedV
   FacePointer f;
   int z;
   
-  const bool operator <(const InsertedV & o)
+  const bool operator < (const InsertedV & o) const
   {
     return (v<o.v);
   }
