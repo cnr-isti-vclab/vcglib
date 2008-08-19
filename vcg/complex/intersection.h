@@ -115,6 +115,10 @@ bool Intersect(   GridType & grid,Plane3<ScalarType> plane, std::vector<typename
 	}
 
 /*@}*/
+/** 
+	Basic Function computing the intersection between  a trimesh and a plane, provided a pointer 
+	to an space indexing data structure (e.g. a grid, an oct-tree..)
+*/
 	template < typename  TriMeshType, typename EdgeMeshType, class ScalarType, class IndexingType >
 	bool Intersection(	/*TriMeshType & m, */
 	Plane3<ScalarType>  pl,
@@ -239,11 +243,9 @@ bool Intersection(Plane3<ScalarType>  pl,
 	return true;
 }
 
-/*****************************************************************/
-/*INTERSECTION    RAY - MESH                                     */
-/*                                                               */
-/* Intersection between a Ray and a Mesh. Returns a 3D Pointset! */
-/*****************************************************************/
+/** 
+	 Computes the intersection between a Ray and a Mesh. Returns a 3D Pointset.  
+*/
 template < typename  TriMeshType, class ScalarType>
 bool IntersectionRayMesh(	
 	/* Input Mesh */		TriMeshType * m, 
@@ -277,6 +279,77 @@ bool IntersectionRayMesh(
 
 	return hit;
 }
+/** 
+    Compute the intersection between a mesh and a ball. 
+		given a mesh return a new mesh made by a copy of all the faces entirely includeded in the ball plus
+		new faces created by refining the ones intersected by the ball border.
+		It works by recursively splitting the triangles that cross the border, as long as their area is greater than
+		a given value tol. If no value is provided, 1/10^5*2*pi*radius is used 
+		NOTE: the returned mesh is a triangle soup 
+*/
+template < typename  TriMeshType, class ScalarType>
+void IntersectionBallMesh(	 TriMeshType & m, const vcg::Sphere3<ScalarType> &ball, TriMeshType & res,
+													float tol = 0){
+
+	typename TriMeshType::VertexIterator v0,v1,v2;
+	typename TriMeshType::FaceIterator fi;
+	std::vector<typename TriMeshType:: FaceType*> closests;
+	vcg::Point3<ScalarType>	witness;
+	std::pair<ScalarType, ScalarType> info;
+
+	if(tol == 0) tol = M_PI * ball.Radius() * ball.Radius() / 10000;
+
+	for(fi = m.face.begin(); fi != m.face.end(); ++fi)
+	if(!(*fi).IsD() && IntersectionSphereTriangle<ScalarType>(ball  ,(*fi), witness , &info))
+		closests.push_back(&(*fi));
+
+	res.Clear();
+	SubSet(res,closests);
+	int i =0;
+	while(i<res.fn){
+		 bool allIn = ( ball.IsIn(res.face[i].P(0)) && ball.IsIn(res.face[i].P(1))&&ball.IsIn(res.face[i].P(2)));
+		if( IntersectionSphereTriangle<ScalarType>(ball  ,res.face[i], witness , &info) && !allIn){
+				if(vcg::DoubleArea(res.face[i]) > tol)
+				{
+				// split the face res.face[i] in four, add the four new faces to the mesh and delete the face res.face[i]
+				v0 = vcg::tri::Allocator<TriMeshType>::AddVertices(res,3);	
+				fi = vcg::tri::Allocator<TriMeshType>::AddFaces(res,4);	
+				
+				v1 = v0; ++v1;
+				v2 = v1; ++v2;
+				(*v0).P() = (res.face[i].P(0) + res.face[i].P(1))*0.5;
+				(*v1).P() = (res.face[i].P(1) + res.face[i].P(2))*0.5;
+				(*v2).P() = (res.face[i].P(2) + res.face[i].P(0))*0.5;
+
+				(*fi).V(0) = res.face[i].V(0);
+				(*fi).V(1) = &(*v0);
+				(*fi).V(2) = &(*v2);	
+				++fi;
+
+				(*fi).V(0) = res.face[i].V(1);
+				(*fi).V(1) = &(*v1);
+				(*fi).V(2) = &(*v0);	
+				++fi;
+
+				(*fi).V(0) = &(*v0);
+				(*fi).V(1) = &(*v1);
+				(*fi).V(2) = &(*v2);	
+				++fi;
+
+				(*fi).V(0) = &(*v2);
+				(*fi).V(1) = &(*v1);
+				(*fi).V(2) = res.face[i].V(2) ;	
+
+				vcg::tri::Allocator<TriMeshType>::DeleteFace(res,res.face[i]);
+			}
+		}// there was no intersection with the boundary
+
+	if(info.first > 0.0) // closest point - radius. If >0 is outside
+		vcg::tri::Allocator<TriMeshType>::DeleteFace(res,res.face[i]);
+	++i;
+	}
+}
+
 /*@}*/
 } // end namespace vcg
 #endif
