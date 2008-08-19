@@ -55,6 +55,7 @@ the vertex
 #ifndef VCGLIB_UPDATE_CURVATURE_
 #define VCGLIB_UPDATE_CURVATURE_
 
+#include <vcg/space/index/grid_static_ptr.h>
 #include <vcg/math/base.h>
 #include <vcg/math/matrix.h>
 #include <vcg/simplex/face/topology.h>
@@ -62,6 +63,12 @@ the vertex
 #include <vcg/simplex/face/jumping_pos.h>
 #include <vcg/container/simple_temporary_data.h>
 #include <vcg/complex/trimesh/update/normal.h>
+#include <vcg/complex/trimesh/point_sampling.h>
+#include <vcg/complex/trimesh/append.h>
+#include <vcg/complex/intersection.h>
+#include <vcg/complex/trimesh/inertia.h>
+
+#include <wrap/io_trimesh/export_PLY.h>
 
 namespace vcg {
 namespace tri {
@@ -80,6 +87,7 @@ class UpdateCurvature
 {
 
 public:
+	typedef typename MeshType  MeshType;
 	typedef typename MeshType::FaceType FaceType;
 	typedef typename MeshType::FacePointer FacePointer;
 	typedef typename MeshType::FaceIterator FaceIterator;
@@ -96,8 +104,10 @@ private:
 		typedef struct AdjVertex {
 			VertexType * vert;
 			float doubleArea;
-			bool isBorder;
+ 			bool isBorder;
 		};
+		
+
 public:
 	/// \brief Compute principal direction and magniuto of curvature.
 	
@@ -109,59 +119,65 @@ public:
 			assert(m.HasVFTopology());
 
 			vcg::tri::UpdateNormals<MeshType>::PerVertexNormalized(m);
+			vcg::tri::UpdateFlags<MeshType>::VertexBorderFromFace(m);
 
-			VertexIterator vi;
+			VertexIterator vi; 
 			for (vi =m.vert.begin(); vi !=m.vert.end(); ++vi) {
 				if ( ! (*vi).IsD() && (*vi).VFp() != NULL) {
 
 					VertexType * central_vertex = &(*vi);
 
 					std::vector<float> weights;
-					std::vector<AdjVertex> vertices;
+					std::vector<AdjVertex> vertices_dup,vertices;
 
+					assert((*vi).VFp() != NULL);
 					vcg::face::JumpingPos<FaceType> pos((*vi).VFp(), central_vertex);
-
-					VertexType* firstV = pos.VFlip();
-					VertexType* tempV;
 					float totalDoubleAreaSize = 0.0f;
 
-					if (((firstV->cP()-central_vertex->cP())^(pos.VFlip()->cP()-central_vertex->cP()))*central_vertex->cN()<=0.0f)
-					{
-						pos.Set(central_vertex->VFp(), central_vertex);
-						pos.FlipE();
-						firstV = pos.VFlip();
-					}	
-					else pos.Set(central_vertex->VFp(), central_vertex);
-
+					FaceType * startf = pos.F();
+					FaceType* tempF;
+					int hh = 0;
 					do 
-					{
-						pos.NextE();
-						tempV = pos.VFlip();
-
+					{ hh++;
 						AdjVertex v;
 
-						v.isBorder = pos.IsBorder();
-						v.vert = tempV;			
-						v.doubleArea = ((pos.F()->V(1)->cP() - pos.F()->V(0)->cP()) ^ (pos.F()->V(2)->cP()- pos.F()->V(0)->cP())).Norm();;
-						totalDoubleAreaSize += v.doubleArea;
+						pos.FlipE();
+						v.vert = pos.VFlip();			
+						v.doubleArea = vcg::DoubleArea(*pos.F());
+						vertices_dup.push_back(v);
 
-						vertices.push_back(v);						
+						pos.FlipE();
+						v.vert = pos.VFlip();			
+						v.doubleArea = vcg::DoubleArea(*pos.F());
+						vertices_dup.push_back(v);
+
+						pos.NextFE();
+						tempF = pos.F();
 					} 
-					while(tempV != firstV);	
+					while(tempF != startf);	
 
-					for (int i = 0; i < vertices.size(); ++i) {
-						if (vertices[i].isBorder) {
-							weights.push_back(vertices[i].doubleArea / totalDoubleAreaSize);
-						} else {
-							weights.push_back(0.5f * (vertices[i].doubleArea + vertices[(i-1)%vertices.size()].doubleArea) / totalDoubleAreaSize);
-						}
-						assert(weights.back() < 1.0f);
+					AdjVertex v;
+					for(int i = 1 ; i <= vertices_dup.size();  )
+					{
+							v.vert = vertices_dup[(i)%vertices_dup.size()].vert;
+							v.doubleArea = vertices_dup[i%vertices_dup.size()].doubleArea ;
+						if( vertices_dup[(i)%vertices_dup.size()].vert == vertices_dup[(i+1)%vertices_dup.size()].vert){
+							v.doubleArea += vertices_dup[(i+1)%vertices_dup.size()].doubleArea;
+							i+=2;
+						}else 
+							++i;
+
+						totalDoubleAreaSize+=v.doubleArea;
+						vertices.push_back(v);
 					}
+
+					for (int i = 0; i < vertices.size(); ++i)  
+							weights.push_back(vertices[i].doubleArea / totalDoubleAreaSize);
 
 					Matrix33<ScalarType> Tp;
 					for (int i = 0; i < 3; ++i)
 						Tp[i][i] = 1.0f - powf(central_vertex->cN()[i],2);
-					Tp[0][1] = Tp[1][0] = -1.0f * (central_vertex->N()[0] * central_vertex->cN()[1]);
+					Tp[0][1] = Tp[1][0] = -1.0f * (central_vertex->cN()[0] * central_vertex->cN()[1]);
 					Tp[1][2] = Tp[2][1] = -1.0f * (central_vertex->cN()[1] * central_vertex->cN()[2]);
 					Tp[0][2] = Tp[2][0] = -1.0f * (central_vertex->cN()[0] * central_vertex->cN()[2]);
 
@@ -171,7 +187,7 @@ public:
 					for (int i = 0; i < vertices.size(); ++i) {
 						CoordType edge = (central_vertex->cP() - vertices[i].vert->cP());
 						float curvature = (2.0f * (central_vertex->cN() * edge) ) / edge.SquaredNorm();
-						CoordType T = (Tp*edge).Normalize();
+						CoordType T = (Tp*edge).Normalize()*(-1.0); // -1.0 useless, just to conform the paper
 						tempMatrix.ExternalProduct(T,T);
 						M += tempMatrix * weights[i] * curvature ;
 					}
@@ -191,7 +207,6 @@ public:
 
 					Matrix33<ScalarType> Qt(Q);
 					Qt.Transpose();
-
 					Matrix33<ScalarType> QtMQ = (Qt * M * Q);
 
 					CoordType bl = Q.GetColumn(0);
@@ -202,6 +217,8 @@ public:
 					// Gabriel Taubin hint and Valentino Fiorin impementation
 					float qt21 = QtMQ[2][1];
 					float qt12 = QtMQ[1][2];
+
+
 					float alpha = QtMQ[1][1]-QtMQ[2][2];
 					float beta  = QtMQ[2][1];
 
@@ -240,35 +257,32 @@ public:
 					c = best_c;
 					s = best_s;
 
-					vcg::ndim::MatrixMNf minor2x2 (2,2);
-					vcg::ndim::MatrixMNf S (2,2);
+					vcg::Matrix33<ScalarType> minor22(QtMQ);
+					// clean up
+					minor22[0][0] = minor22[0][1] = minor22[0][2] = 0.0;
+					minor22[0][0] = minor22[1][0] = minor22[2][0] = 0.0;
 
+					vcg::Matrix33<ScalarType> S; S.SetIdentity();
+					S[1][1] = S[2][2] = c;
+					S[1][2] = s;
+					S[2][1] = -1.0f * s;
 
-					minor2x2[0][0] = QtMQ[1][1];
-					minor2x2[0][1] = QtMQ[1][2];
-					minor2x2[1][0] = QtMQ[2][1];
-					minor2x2[1][1] = QtMQ[2][2];
-
-					S[0][0] = S[1][1] = c;
-					S[0][1] = s;
-					S[1][0] = -1.0f * s;
-
-					vcg::ndim::MatrixMNf St (S);
+					vcg::Matrix33<ScalarType>  St (S);
 					St.Transpose();					
 
-					vcg::ndim::MatrixMNf StMS(St * minor2x2 * S);
+					vcg::Matrix33<ScalarType>  StMS(St * minor22 * S);
 
-					float Principal_Curvature1 = (3.0f * StMS[0][0]) - StMS[1][1];
-					float Principal_Curvature2 = (3.0f * StMS[1][1]) - StMS[0][0];
+					float Principal_Curvature1 = (3.0f * StMS[1][1]) - StMS[2][2];
+					float Principal_Curvature2 = (3.0f * StMS[2][2]) - StMS[1][1];
 
 					CoordType Principal_Direction1 = T1 * c - T2 * s;
 					CoordType Principal_Direction2 = T1 * s + T2 * c; 
 
 					(*vi).PD1() = Principal_Direction1;
 					(*vi).PD2() = Principal_Direction2;
-					(*vi).K1() =  Principal_Curvature1;
-	 				(*vi).K2() =  Principal_Curvature2;
-				}
+					(*vi).K1() = Principal_Curvature1;
+					(*vi).K2() = Principal_Curvature2;
+					}
 			}
 		}
 	 
@@ -280,7 +294,96 @@ public:
     float A;
   };
 
+	/** Curvature meseaure as described in the paper: 
+	Robust principal curvatures on Multiple Scales, Yong-Liang Yang, Yu-Kun Lai, Shi-Min Hu Helmut Pottmann
+	SGP 2004
+	If pointVSfaceInt==true the covariance is computed by montecarlo sampling on the mesh (faster)
+	If pointVSfaceInt==false the covariance is computed by (analytic)integration over the surface (slower)
+	*/
 
+	typedef vcg::GridStaticPtr	<typename MeshType::FaceType, typename MeshType::ScalarType >		MeshGridType;
+	typedef vcg::GridStaticPtr	<typename MeshType::VertexType, typename MeshType::ScalarType >		PointsGridType;
+
+		static void PrincipalDirectionsPCA(MeshType &m, ScalarType r, bool pointVSfaceInt = true) {
+			std::vector<MeshType:: VertexType*> closests;
+			std::vector<MeshType::ScalarType> distances;
+			std::vector<MeshType::CoordType> points;
+			VertexIterator vi;
+			ScalarType area;
+			MeshType tmpM;
+			std::vector<typename MeshType::CoordType>::iterator ii;
+			vcg::tri::TrivialSampler<MeshType> vs;
+
+			MeshGridType mGrid;
+			PointsGridType pGrid;
+
+			// Fill the grid used
+			if(pointVSfaceInt){ 
+					area = Stat<MeshType>::ComputeMeshArea(m);
+					vcg::tri::SurfaceSampling<MeshType,vcg::tri::TrivialSampler<MeshType> >::Montecarlo(m,vs,1000 * area / (2*M_PI*r*r )); 
+					vi = vcg::tri::Allocator<MeshType>::AddVertices(tmpM,m.vert.size());
+					for(int y  = 0; y <   m.vert.size(); ++y,++vi)  (*vi).P() =  m.vert[y].P(); 
+					pGrid.Set(tmpM.vert.begin(),tmpM.vert.end());
+				}	else{	mGrid.Set(m.face.begin(),m.face.end()); }
+
+				for(vi  = m.vert.begin(); vi != m.vert.end(); ++vi){
+						vcg::Matrix33<ScalarType> A,eigenvectors;
+						vcg::Point3<ScalarType> bp,eigenvalues;
+						int nrot;
+
+						// sample the neighborhood
+						if(pointVSfaceInt)
+						{ 
+							vcg::trimesh::GetInSphereVertex<
+								MeshType,
+								PointsGridType,std::vector<MeshType::VertexType*>,
+								std::vector<MeshType::ScalarType>,
+								std::vector<MeshType::CoordType> >(tmpM,pGrid,  (*vi).cP(),r ,closests,distances,points);
+
+							A.Covariance(points,bp);
+							A*=area*area/1000;
+						}
+					else{
+						IntersectionBallMesh<MeshType,ScalarType>( m ,vcg::Sphere3<ScalarType>((*vi).cP(),r),tmpM );
+						vcg::Point3<ScalarType> _bary;
+						vcg::tri::Inertia<MeshType>::Covariance(tmpM,_bary,A);
+					}
+
+					Jacobi(A,  eigenvalues , eigenvectors, nrot); 
+
+					// get the estimate of curvatures from eigenvalues and eigenvectors
+					// find the 2 most tangent eigenvectors (by finding the one closest to the normal)
+					int best = 0; ScalarType bestv = fabs( (*vi).cN() * eigenvectors.GetColumn(0).Normalize());
+					for(int i  = 1 ; i < 3; ++i){
+						ScalarType prod = fabs((*vi).cN() * eigenvectors.GetColumn(i).Normalize());
+						if( prod > bestv){bestv = prod; best = i;}
+					}
+
+					(*vi).PD1()  = eigenvectors.GetColumn( (best+1)%3).Normalize();
+					(*vi).PD2()  = eigenvectors.GetColumn( (best+2)%3).Normalize();
+
+					// project them to the plane identified by the normal
+					vcg::Matrix33<ScalarType> rot;
+					ScalarType angle = acos((*vi).PD1()*(*vi).N());
+					rot.SetRotateRad(  - (M_PI*0.5 - angle),(*vi).PD1()^(*vi).N());
+					(*vi).PD1() = rot*(*vi).PD1();
+					angle = acos((*vi).PD2()*(*vi).N());
+					rot.SetRotateRad(  - (M_PI*0.5 - angle),(*vi).PD2()^(*vi).N());
+					(*vi).PD2() = rot*(*vi).PD2();
+
+
+					// copmutes the curvature values
+					const ScalarType r5 = r*r*r*r*r;
+					const ScalarType r6 = r*r5;
+					(*vi).K1() = (2.0/5.0) * (4.0*M_PI*r5 + 15*eigenvalues[(best+2)%3]-45.0*eigenvalues[(best+1)%3])/(M_PI*r6);
+					(*vi).K2() = (2.0/5.0) * (4.0*M_PI*r5 + 15*eigenvalues[(best+1)%3]-45.0*eigenvalues[(best+2)%3])/(M_PI*r6);
+					if((*vi).K1() < (*vi).K2())	{	std::swap((*vi).K1(),(*vi).K2());
+																				std::swap((*vi).PD1(),(*vi).PD2());
+																			}
+			}
+			
+
+		}
  /// \brief Computes the discrete gaussian curvature. 
  
 /** For further details, please, refer to: \n
@@ -295,8 +398,8 @@ public:
       VertexIterator vi;   
 			typename MeshType::CoordType  e01v ,e12v ,e20v;
 
-			SimpleTempData<VertContainer, AreaData> TDAreaPtr(m.vert); //TDAreaPtr.Start();
-			SimpleTempData<VertContainer, typename MeshType::CoordType> TDContr(m.vert); //TDContr.Start();
+			SimpleTempData<VertContainer, AreaData> TDAreaPtr(m.vert);  
+			SimpleTempData<VertContainer, typename MeshType::CoordType> TDContr(m.vert);  
 
  			vcg::tri::UpdateNormals<MeshType>::PerVertexNormalized(m);
      //Compute AreaMix in H (vale anche per K)
@@ -388,10 +491,6 @@ public:
           (*vi).Kg() /= (TDAreaPtr)[*vi].A;
         }
 			}
-
-//			TDAreaPtr.Stop();
-//			TDContr.Stop();
-
     }
 	
 	
@@ -465,6 +564,12 @@ public:
 		}
 
 		return A;
+	}
+
+	static void VertexCurvature(MeshType & m){
+
+		for(VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+			VertexCurvature(&*vi,false);
 	}
 
 };
