@@ -68,8 +68,6 @@ the vertex
 #include <vcg/complex/intersection.h>
 #include <vcg/complex/trimesh/inertia.h>
 
-#include <wrap/io_trimesh/export_PLY.h>
-
 namespace vcg {
 namespace tri {
 
@@ -87,7 +85,6 @@ class UpdateCurvature
 {
 
 public:
-	typedef typename MeshType  MeshType;
 	typedef typename MeshType::FaceType FaceType;
 	typedef typename MeshType::FacePointer FacePointer;
 	typedef typename MeshType::FaceIterator FaceIterator;
@@ -301,17 +298,17 @@ public:
 	If pointVSfaceInt==false the covariance is computed by (analytic)integration over the surface (slower)
 	*/
 
-	typedef vcg::GridStaticPtr	<typename MeshType::FaceType, typename MeshType::ScalarType >		MeshGridType;
-	typedef vcg::GridStaticPtr	<typename MeshType::VertexType, typename MeshType::ScalarType >		PointsGridType;
+	typedef vcg::GridStaticPtr	<FaceType, ScalarType >		MeshGridType;
+	typedef vcg::GridStaticPtr	<VertexType, ScalarType >		PointsGridType;
 
 		static void PrincipalDirectionsPCA(MeshType &m, ScalarType r, bool pointVSfaceInt = true) {
-			std::vector<MeshType:: VertexType*> closests;
-			std::vector<MeshType::ScalarType> distances;
-			std::vector<MeshType::CoordType> points;
+			std::vector<VertexType*> closests;
+			std::vector<ScalarType> distances;
+			std::vector<CoordType> points;
 			VertexIterator vi;
 			ScalarType area;
 			MeshType tmpM;
-			std::vector<typename MeshType::CoordType>::iterator ii;
+			typename std::vector<CoordType>::iterator ii;
 			vcg::tri::TrivialSampler<MeshType> vs;
 
 			MeshGridType mGrid;
@@ -336,9 +333,9 @@ public:
 						{ 
 							vcg::trimesh::GetInSphereVertex<
 								MeshType,
-								PointsGridType,std::vector<MeshType::VertexType*>,
-								std::vector<MeshType::ScalarType>,
-								std::vector<MeshType::CoordType> >(tmpM,pGrid,  (*vi).cP(),r ,closests,distances,points);
+								PointsGridType,std::vector<VertexType*>,
+								std::vector<ScalarType>,
+								std::vector<CoordType> >(tmpM,pGrid,  (*vi).cP(),r ,closests,distances,points);
 
 							A.Covariance(points,bp);
 							A*=area*area/1000;
