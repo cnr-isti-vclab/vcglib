@@ -36,6 +36,9 @@ First Release (not working!)
 
 Revision 1.13  2005/11/17 00:42:03  cignoni
 ****************************************************************************/
+#ifndef _VCG_INERTIA_
+#define _VCG_INERTIA_
+
 /*
 The algorithm is based on a three step reduction of the volume integrals 
 to successively simpler integrals. The algorithm is designed to minimize 
@@ -73,6 +76,8 @@ class Inertia
 	typedef typename MeshType::FacePointer    FacePointer;
 	typedef typename MeshType::FaceIterator   FaceIterator;
 	typedef typename MeshType::FaceContainer  FaceContainer;
+	typedef typename MeshType::CoordType  CoordType;
+	typedef typename MeshType::ScalarType  ScalarType;
 
 private :
 	enum {X=0,Y=1,Z=2};
@@ -285,9 +290,9 @@ void InertiaTensor(Matrix44<ScalarType> &J )
 }
 
 
-// Calcola autovalori ed autovettori dell'inertia tensor.
-// Gli autovettori fanno una rotmatrix che se applicata mette l'oggetto secondo gli assi id minima/max inerzia.
-
+/** Compute eigenvalues and eigenvectors of inertia tensor.
+		The eigenvectors make a rotation matrix that aligns the mesh along the axes of min/max inertia
+ */
 void InertiaTensorEigen(Matrix44<ScalarType> &EV, Point4<ScalarType> &ev )
 {
 	Matrix44<ScalarType> it;
@@ -300,9 +305,74 @@ void InertiaTensorEigen(Matrix44<ScalarType> &EV, Point4<ScalarType> &ev )
 	ev.Import(evd);
 }
 
+/** Compute covariance matrix of a mesh, i.e. the integral
+		int_{M} { (x-b)(x-b)^T }dx  where b is the barycenter and x spans over the mesh M
+ */
+static void Covariance(MeshType m, vcg::Point3<ScalarType> & bary, vcg::Matrix33<ScalarType> &C){
+	// find the barycenter
+
+	FaceIterator fi;
+	ScalarType area = 0.0;
+	bary.Zero();
+	for(fi = m.face.begin(); fi != m.face.end(); ++fi)
+		if(!(*fi).IsD())
+			{
+				bary += vcg::Barycenter( *fi )* vcg::DoubleArea(*fi);
+				area+=vcg::DoubleArea(*fi);
+			}
+	bary/=area;
+
+	C.SetZero();
+	// C as covariance of triangle (0,0,0)(1,0,0)(0,1,0)
+	vcg::Matrix33<ScalarType> C0;
+	C0.SetZero();
+	C0[0][0] = C0[1][1] = 2.0;
+	C0[0][1] = C0[1][0] = 1.0;
+	C0*=1/24.0;
+
+	// integral of (x,y,0) in the same triangle
+	CoordType X(2/3.0,2/3.0,0);
+	vcg::Matrix33<ScalarType> A,At,DC; // matrix that bring the vertices to (v1-v0,v2-v0,n)
+
+	for(fi = m.face.begin(); fi != m.face.end(); ++fi)
+		if(!(*fi).IsD())
+		{
+		  CoordType  n = (*fi).N().Normalize();
+			const CoordType &P0 = (*fi).P(0);
+			const CoordType &P1 = (*fi).P(1);
+			const CoordType &P2 = (*fi).P(2);
+
+			A.SetColumn(0,P1-P0);
+			A.SetColumn(1,P2-P0);
+			A.SetColumn(2,n);
+
+			CoordType delta = P0 - bary;
+
+			At= A;
+			At.Transpose();
+
+			/* DC is calculated as integral of (A*x+delta) * (A*x+delta)^T over the triangle,
+				 where delta = v0-bary
+			*/
+
+			DC.SetZero();
+			DC+= A*C0*At;
+			vcg::Matrix33<ScalarType> tmp;
+			tmp.OuterProduct(X,delta);
+			DC+= A * tmp;
+			tmp.Transpose();
+			DC+= tmp * At;
+			tmp.OuterProduct(delta,delta);
+			DC+=tmp*0.5;
+			DC*=fabs(A.Determinant()); // the determinant of A is the jacobian of the change of variables A*x+delta
+			C+=DC;
+	}
+
+}
 }; // end class Inertia
 
   } // end namespace tri
 } // end namespace vcg
 
 
+#endif
