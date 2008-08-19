@@ -149,7 +149,8 @@ void SubSet(S_MESH_TYPE & m, STL_CONT & subSet)
   }
   
   typename std::vector< InsertedV<S_MESH_TYPE> >::iterator newE=unique(newVertices.begin(), newVertices.end());
-	vi = vcg::tri::Allocator<S_MESH_TYPE>::AddVertices(m,newVertices.size());
+	
+	vi = vcg::tri::Allocator<S_MESH_TYPE>::AddVertices(m,newE-newVertices.begin());
 		for(curr=newVertices.begin(); curr!=newE; ++curr,++vi)
     (*vi).ImportLocal(*((*curr).v));
   
