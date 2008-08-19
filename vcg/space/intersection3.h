@@ -249,15 +249,15 @@ namespace vcg {
 	*                       while in the second item is stored the penetration depth
 	* \return			true			iff there is an intersection between the sphere and the triangle
 	*/
-	template < class SCALAR_TYPE >
+	template < class SCALAR_TYPE, class TRIANGLETYPE >
 	bool IntersectionSphereTriangle(const vcg::Sphere3	< SCALAR_TYPE >		& sphere  ,
-																	const vcg::Triangle3< SCALAR_TYPE >		& triangle, 
+																	TRIANGLETYPE														triangle, 
 																	vcg::Point3					< SCALAR_TYPE >		& witness ,
 																	std::pair< SCALAR_TYPE, SCALAR_TYPE > * res=NULL)
 	{
 		typedef SCALAR_TYPE														ScalarType;
 		typedef typename vcg::Point3< ScalarType >		Point3t;
-		typedef typename vcg::Triangle3< ScalarType > Triangle3t;
+		typedef typename TRIANGLETYPE Triangle3t;
 
 		bool penetration_detected = false;
 
