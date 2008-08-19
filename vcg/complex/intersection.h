@@ -58,7 +58,7 @@ added vcg header
 #include<vcg/space/segment3.h>
 #include<vcg/space/intersection3.h>
 #include<vcg/complex/edgemesh/allocate.h>
-//#include<vcg/space/index/grid_static_ptr.h>
+#include<vcg/complex/trimesh/subset.h>
 #include<algorithm>
 #include<vcg/complex/trimesh/base.h>
 
