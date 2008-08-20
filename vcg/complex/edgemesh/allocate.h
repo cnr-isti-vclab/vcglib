@@ -198,7 +198,7 @@ namespace vcg {
 							if(!(*vi).IsD())
 							{
 								if(VertexType::HasVEAdjacency())
-									pu.Update((*vi).Ep());
+									pu.Update((*vi).VEp());
 							}
 				}						
 				// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
