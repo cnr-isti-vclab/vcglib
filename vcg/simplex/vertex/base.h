@@ -511,7 +511,7 @@ protected:
 #endif
 
 public:
-inline EdgeType * & Ep()
+inline EdgeType * & VEp()
 	{
 #if ((defined __VCGLIB_VERTEX_EA) || (defined __VCGLIB_VERTEX_EAS))
 		  return _ep;
@@ -521,7 +521,7 @@ inline EdgeType * & Ep()
 #endif
 	}
 
-inline const EdgeType * & Ep() const
+inline const EdgeType * & VEp() const
 	{
 #if ((defined __VCGLIB_VERTEX_EA) || (defined __VCGLIB_VERTEX_EAS))
 		  return _ep;
@@ -531,7 +531,7 @@ inline const EdgeType * & Ep() const
 #endif
 	}
 
-inline int & Ei()
+inline int & VEi()
 	{
 #if ((defined __VCGLIB_VERTEX_EA) || (defined __VCGLIB_VERTEX_EAS))
 
@@ -542,7 +542,7 @@ inline int & Ei()
 #endif
 	}
 
-inline const int & Ei() const
+inline const int & VEi() const
 	{
 #if ((defined __VCGLIB_VERTEX_EA) || (defined __VCGLIB_VERTEX_EAS))
 		  return _ei;
