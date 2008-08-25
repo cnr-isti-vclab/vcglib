@@ -99,26 +99,31 @@ first working version
 #include <vcg/space/triangle3.h>
 
 namespace vcg{
-/* Tabella che codifica le modalita' di split a seconda di quali dei tre edge sono da splittare 
 
-Il primo numero codifica il numero di triangoli, 
-le successive 5 triple codificano i triangoli 
-secondo la seguente convenzione:
- 0..2 vertici originali del triangolo 
- 3..5 mp01, mp12, mp20 midpoints of the three edges
+/* The table which encodes how to subdivide a triangle depending 
+   on the splitted edges is organized as such:
 
-Nel caso "due lati splittati" e' necessario fare la triangolazione del trapezio bene.
-Per cui in questo caso sono specificati 5 triangoli, il primo e' quello ovvio, 
-se dei due lati splittati e' minore il primo va scelta la prima coppia altrimenti la seconda coppia
+    TriNum (the first number):    encodes the number of triangles
+    TV (the following 4 triples): encodes the resulting triangles where
+          0, 1, 2 are the original vertices of the triangles and 3, 4, 5 
+          (mp01, mp12, mp20) are the midpoints of the three edges.
 
-il campo swap codificano le due diagonali da testare per scegliere quale triangolazione usare 
-per il caso con tre triangoli: se diag1<diag2 si swappa la il primo lato dell'ultimo triangolo
-(e.g la seconda diag ha come indici i primi due numeri dell'ultimo triangolo)
+   In the case two edges are splitted the triangle has 2 possible splittings:
+we need to choose a diagonal of the resulting trapezoid.
+'swap' encodes the two diagonals to test: if diag1 < diag2 we swap the diagonal
+like this (140, 504 -> 150, 514) (the second vertex of each triangles is replaced 
+ by the first vertex of the other one).
+            2
+           / \
+          5---4
+         /     \
+        0-------1
+
 */
 
 class Split {
 public:
-	int TriNum;			// numero di triangoli
+	int TriNum;			// number of triangles
 	int TV[4][3];   // The triangles coded as the following convention 
 									//     0..2 vertici originali del triangolo 
 									//     3..5 mp01, mp12, mp20 midpoints of the three edges
@@ -192,7 +197,7 @@ struct MidPointArc : public std::unary_function<face::Pos<typename MESH_TYPE::Fa
 		typename MESH_TYPE::ScalarType d=Distance(ep.f->V(ep.z)->P(),ep.f->V1(ep.z)->P())/2.0;
 
 		typename MESH_TYPE::CoordType  nn = ep.f->V1(ep.z)->N() ^ ep.f->V(ep.z)->N();
-		typename MESH_TYPE::CoordType  np = n ^ d0; // vettore perp al piano edge, normale interpolata
+		typename MESH_TYPE::CoordType  np = n ^ d0; //vector perpendicular to the edge plane, normal is interpolated
 		np.Normalize();
 		double sign=1;
 		if(np*nn<0) sign=-1; // se le normali non divergono sposta il punto nella direzione opposta
@@ -478,7 +483,7 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
 							{ // swap the last two triangles
 								(*nf[2]).V(1)=(*nf[1]).V(0);
 								(*nf[1]).V(1)=(*nf[2]).V(0);
-								if(tri::HasPerWedgeTexCoord(m)){ //analogo ai vertici...
+								if(tri::HasPerWedgeTexCoord(m)){ //swap also textures coordinates
 									(*nf[2]).WT(1)=(*nf[1]).WT(0);
 									(*nf[1]).WT(1)=(*nf[2]).WT(0);
 								}
