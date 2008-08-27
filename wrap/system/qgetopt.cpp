@@ -119,7 +119,7 @@ QString GetOpt::usage() {
       case Option::ARGUMENT:
       case Option::OPTIONAL: line += o.name; break;
       case Option::SWITCH:   line += "-" + QString(o.o) + " --" + o.name; break;
-      case Option::OPTION:   line += "-" + QString(o.o) + " <val> --" + o.name + "=<val>"; break;
+      case Option::OPTION:   line += "-" + QString(o.o) + " <val> --" + o.name + " <val>"; break;
       default: break;
     }
     QString blank = "";
@@ -153,33 +153,32 @@ bool GetOpt::parse(QString &error) {
         error = "'--' feature not supported, yet";
         return false;
       }
-      // split key=value style arguments
-      int equal = arg.indexOf( '=' );
-      QString val;
-      if(equal >= 0) {
-        arg = arg.left(equal);
-        val = arg.mid(equal + 1);
-        if(val.isEmpty()) {
-          error = "Emtpy value for option '--" + arg + "'";
+      Option o;
+      if(!findArg(arg, o)) {
+         error = "Unknown option: '" + arg + "'";
+        return false;
+      }
+      if(o.type == Option::SWITCH) {
+        *(o.b) = true;
+      } else { //OPTION
+        i++;
+        if(args.size() <= i) {
+          error =  "Missing value for option: " + arg;
           return false;
         }
+        arg = args[i];
+        if(i == args.size() || arg[0] == '-') {
+          error = "Missing argument after option '" + arg + "'";
+          return false;
+        }
+        QVariant v(arg);
+        if(!v.canConvert(o.value->type()) || !v.convert(o.value->type())) {
+          error = "Error while parsing option " + o.name + ": cannot convert " +
+                  arg + " to: " + o.value->typeName();
+          return false;
+        }
+        *(o.value) = v;
       }
-      if(arg.isEmpty()) {
-        error = "Option long name missing: '--=" + val + "' is not a valid option";
-        return false;
-      }
-      Option o;
-      if(!findArg(arg, o) || (o.type != Option::OPTION && o.type != Option::SWITCH)) {
-        error = "Unknown option: '--" + arg + "'";
-        return false;
-      }
-      QVariant v(val);
-      if(!v.canConvert(o.value->type()) || !v.convert(o.value->type())) {
-         error = "Error while parsing option " + o.name + ": cannot convert " +
-                  val + " to: " + o.value->typeName();
-        return false;
-      }
-      *(o.value) = v;
 
     //option
     } else if( arg[0] == '-' ) {
