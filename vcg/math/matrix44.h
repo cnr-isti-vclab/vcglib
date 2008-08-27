@@ -914,7 +914,7 @@ template <class T> bool LinearSolve<T>::Decompose() {
     scaling[i] = (T)1.0 / largest; 
   }
 
-  int imax;
+  int imax = 0;
   for(j = 0; j < 4; j++) { 
     for(i = 0; i < j; i++) {
       T sum = this->ElementAt(i,j);
