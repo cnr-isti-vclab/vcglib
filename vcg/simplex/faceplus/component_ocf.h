@@ -392,9 +392,13 @@ public:
   }
 
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){VFp(0) = NULL; VFp(1) = NULL; VFp(2) = NULL;
-																				VFi(0) =   -1; VFi(1) =   -1; VFi(2) =   -1;
-																				T::ImportLocal(leftF);}
+	void ImportLocal(const LeftF & leftF){
+		if(leftF.Base().VFAdjacencyEnabled){
+			VFp(0) = NULL; VFp(1) = NULL; VFp(2) = NULL;
+			VFi(0) =   -1; VFi(1) =   -1; VFi(2) =   -1;
+		}
+		T::ImportLocal(leftF);
+	}
   static bool HasVFAdjacency()   {   return true; }
   static bool HasVFAdjacencyOcf()   { return true; }
 
@@ -431,9 +435,13 @@ public:
 	typename T::FacePointer  const  FFp2( const int j ) const { return FFp((j+2)%3);}
 
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){FFp(0) = NULL; FFp(1) = NULL; FFp(2) = NULL;
-																				FFi(0) =   -1; FFi(1) =   -1; FFi(2) =   -1;
-																				T::ImportLocal(leftF);}
+	void ImportLocal(const LeftF & leftF){
+		if(leftF.Base().FFAdjacencyEnabled) {
+			FFp(0) = NULL; FFp(1) = NULL; FFp(2) = NULL;
+			FFi(0) =   -1; FFi(1) =   -1; FFi(2) =   -1;
+		}
+		T::ImportLocal(leftF);
+	}
   static bool HasFFAdjacency()   {   return true; }
   static bool HasFFAdjacencyOcf()   { return true; }
 
@@ -458,7 +466,11 @@ public:
     return (*this).Base().NV[(*this).Index()];  }
 
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){N() = leftF.cN(); T::ImportLocal(leftF);}
+	void ImportLocal(const LeftF & leftF){
+		if((*this).Base().NormalEnabled && leftF.Base().NormalEnabled)
+			N() = leftF.cN(); 
+		T::ImportLocal(leftF);
+	}
 
 };
 
@@ -481,7 +493,11 @@ public:
   }
 
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){C() = leftF.C(); T::ImportLocal(leftF);}
+	void ImportLocal(const LeftF & leftF){
+		if((*this).Base().ColorEnabled && leftF.Base().ColorEnabled)
+				C() = leftF.C(); 
+		T::ImportLocal(leftF);
+	}
   static bool HasFaceColor()   { return true; }
   static bool HasFaceColorOcf()   { return true; }
 };
@@ -503,7 +519,11 @@ public:
   } ;
 
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){IMark() = leftF.IMark(); T::ImportLocal(leftF);}
+	void ImportLocal(const LeftF & leftF){
+		if((*this).Base().MarkEnabled && leftF.Base().MarkEnabled)
+			IMark() = leftF.IMark(); 
+		T::ImportLocal(leftF);
+	}
   static bool HasFaceMark()   { return true; }
   static bool HasFaceMarkOcf()   { return true; }
   inline void InitIMark()    { IMark() = 0; }
@@ -518,7 +538,11 @@ public:
   TexCoordType &WT(const int i)              { assert((*this).Base().WedgeTexEnabled); return (*this).Base().WTV[(*this).Index()].wt[i]; }
   TexCoordType const &cWT(const int i) const { assert((*this).Base().WedgeTexEnabled); return (*this).Base().WTV[(*this).Index()].wt[i]; }
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){WT(0) = leftF.cWT(0); WT(1) = leftF.cWT(1); WT(2) = leftF.cWT(2); TT::ImportLocal(leftF);}
+	void ImportLocal(const LeftF & leftF){
+		if(this->Base().WedgeTexEnabled && leftF.Base().WedgeTexEnabled) 
+		{ WT(0) = leftF.cWT(0); WT(1) = leftF.cWT(1); WT(2) = leftF.cWT(2); }
+		TT::ImportLocal(leftF);
+	}
   static bool HasWedgeTexCoord()   { return true; }
   static bool HasWedgeTexCoordOcf()   { return true; }
 };
