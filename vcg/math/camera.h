@@ -23,6 +23,10 @@
 /****************************************************************************
   History
 $Log: not supported by cvs2svn $
+
+Revision 1.28  2008/09/09 11:13:27  dellepiane
+new functions to handle distortion: should not affect previous stuff. tested but still error prone...
+
 Revision 1.28  2006/12/21 00:13:27  cignoni
 Corrected a syntax error detected only by gcc.
 Corrected the order of initialization in the constructor to match the declaration order
