@@ -334,14 +334,14 @@ vcg::Point2<S> Camera<S>::LocalTo_neg1_1(const vcg::Point2<S> & p) const
 }
 
 /// transforms an undistorted 2D camera plane point in a distorted 2D camera plane point
-template<class S>
-vcg::Point2<S> Camera<S>::UndistortedToDistorted(vcg::Point2<S>  u) const
+template<class Scalar>
+vcg::Point2<Scalar> Camera<Scalar>::UndistortedToDistorted(vcg::Point2<Scalar>  u) const
 	{
-		vcg::Point2<S> dis;
-		vcg::Point2<S> dc=ViewportPxTo_neg1_1(DistorCenterPx);
-		const S SQRT3 = S(1.732050807568877293527446341505872366943);
-		const S CBRT = S(0.33333333333333333333333);
-		S Ru,Rd,lambda,c,d,Q,R,D,S,T,sinT,cosT;
+		vcg::Point2<Scalar> dis;
+		vcg::Point2<Scalar> dc=ViewportPxTo_neg1_1(DistorCenterPx);
+		const Scalar SQRT3 = Scalar(1.732050807568877293527446341505872366943);
+		const Scalar CBRT = Scalar(0.33333333333333333333333);
+		Scalar Ru,Rd,lambda,c,d,Q,R,D,S,T,sinT,cosT;
 
 		if(((u[0]-dc[0])==0 && (u[1]-dc[1])==0) || k[0] == 0)
 		{
