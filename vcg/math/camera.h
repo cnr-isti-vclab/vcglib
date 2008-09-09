@@ -128,6 +128,8 @@ creation
 #include <vcg/space/point2.h>
 #include <vcg/math/similarity.h>
 
+
+
 namespace vcg{
 
 	enum {
@@ -208,11 +210,20 @@ public:
 	/// transforms vieport (pixel) coords to local plane coords 	
 	inline vcg::Point2<S> ViewportPxToLocal(const vcg::Point2<S> & p) const;
 
+	/// transforms vieport (pixel) coords to [-1 1] coords
+	inline vcg::Point2<S> Camera<S>::ViewportPxTo_neg1_1(const vcg::Point2<S> & p) const;
+
 	/// transforms local plane coords to [0 1] coords
 	inline vcg::Point2<S> LocalTo_0_1(const vcg::Point2<S> & p) const;
 
 	/// transforms local plane coords to [-1 1] coords
 	inline vcg::Point2<S> LocalTo_neg1_1(const vcg::Point2<S> & p) const;
+
+	/// transforms an undistorted 2D camera plane point in a distorted 2D camera plane point
+	vcg::Point2<S> UndistortedToDistorted(vcg::Point2<S> u) const;
+
+	/// transforms a distorted 2D camera plane point in an undistorted 2D camera plane point
+	vcg::Point2<S> DistortedToUndistorted(vcg::Point2<S> d) const;
 	//--------------------------------
 };
 
@@ -223,12 +234,22 @@ template<class S>
 vcg::Point2<S> Camera<S>::Project(const vcg::Point3<S> & p) const
 {
 	vcg::Point2<S> q =  Point2<S>(p[0],p[1]);
+	vcg::Point2<S> d =  Point2<S>(p[0],p[1]);
 
 	if(!IsOrtho())
 	{
 		q[0] *= FocalMm/p.Z();
 		q[1] *= FocalMm/p.Z();
+		
+		if(k[0]!=0)
+		{
+			vcg::Point2<S> d;
+			d=UndistortedToDistorted(q);
+			q=d;
+		}
+	
 	}
+
 
 	return q;
 }
@@ -241,6 +262,14 @@ vcg::Point3<S> Camera<S>::UnProject(const vcg::Point2<S> & p, const S & d) const
 
 	if(!IsOrtho())
 	{
+		if(k[0]!=0)
+		{
+			vcg::Point2<S> d = Point2<S>(p[0], p[1]);
+			vcg::Point2<S> u=DistortedToUndistorted(d);
+			np[0]=u[0];
+			np[1]=u[1];
+		}
+		
 		np[0] /= FocalMm/d;
 		np[1] /= FocalMm/d;
 	}
@@ -270,6 +299,16 @@ vcg::Point2<S> Camera<S>::ViewportPxToLocal(const vcg::Point2<S> & p) const
 	return ps;
 }
 
+/// transforms vieport (pixel) coords to [-1 1] coords
+template<class S>
+vcg::Point2<S> Camera<S>::ViewportPxTo_neg1_1(const vcg::Point2<S> & p) const
+{
+	vcg::Point2<S>  ps;
+	ps[0] = 2.0f * ((p[0]-CenterPx.X()) * PixelSizeMm.X())/ ( PixelSizeMm.X() * (S)ViewportPx[0] );
+	ps[1] = 2.0f * ((p[1]-CenterPx.Y()) * PixelSizeMm.Y())/ ( PixelSizeMm.Y() * (S)ViewportPx[1] );
+	return ps;
+}
+
 /// transforms local plane coords to [0-1] coords
 template<class S>
 vcg::Point2<S> Camera<S>::LocalTo_0_1(const vcg::Point2<S> & p) const
@@ -289,6 +328,85 @@ vcg::Point2<S> Camera<S>::LocalTo_neg1_1(const vcg::Point2<S> & p) const
 	ps[1] = 2.0f * p[1] / ( PixelSizeMm.Y() * (S)ViewportPx[1] );
 	return ps;
 }
+
+/// transforms an undistorted 2D camera plane point in a distorted 2D camera plane point
+template<class S>
+vcg::Point2<S> Camera<S>::UndistortedToDistorted(vcg::Point2<S>  u) const
+	{
+		vcg::Point2<S> dis;
+		vcg::Point2<S> dc=ViewportPxTo_neg1_1(DistorCenterPx);
+		const S SQRT3 = S(1.732050807568877293527446341505872366943);
+		const S CBRT = S(0.33333333333333333333333);
+		S Ru,Rd,lambda,c,d,Q,R,D,S,T,sinT,cosT;
+
+		if(((u[0]-dc[0])==0 && (u[1]-dc[1])==0) || k[0] == 0)
+		{
+			dis[0] = u[0];
+			dis[1] = u[1];
+			return dis;
+		}
+
+		Ru = hypot ((u[0]-dc[0]), (u[1]-dc[1]));	/* SQRT(Xu*Xu+Yu*Yu) */
+		c = 1 / k[0];
+		d = -c * Ru;
+
+		Q = c / 3;
+		R = -d / 2;
+		if (R<0)
+			D = pow(Q,3) + sqrt(-R);
+		else
+			D = pow(Q,3) + sqrt(R);
+
+		if (D >= 0)		/* one real root */
+		{
+			D = sqrt(D);
+			S = pow((R + D),CBRT);
+			if (R>=D)
+				T = pow((R - D),CBRT);
+			else
+				T = - pow(abs(R - D),CBRT);
+			Rd = S + T;
+
+			if (Rd < 0)
+				Rd = sqrt(-1 / (3 * k[0]));	
+		}
+		else			/* three real roots */
+		{
+			D = sqrt(-D);
+			S = pow((hypot (R, D)),CBRT);
+			T = atan2 (D, R) / 3;
+			//SinCos(T, sinT, cosT);
+			sinT=sin(T);
+			cosT=cos(T);
+
+			/* the larger positive root is    2*S*cos(T)                   */
+			/* the smaller positive root is   -S*cos(T) + SQRT(3)*S*sin(T) */
+			/* the negative root is           -S*cos(T) - SQRT(3)*S*sin(T) */
+			Rd = -S * cosT + SQRT3 * S * sinT;	/* use the smaller positive root */
+		}
+
+		lambda = Rd / Ru;
+
+		dis[0] = u[0] * lambda;
+		dis[1] = u[1] * lambda;
+
+		return dis;
+	}
+
+/// transforms a distorted 2D camera plane point in an undistorted 2D camera plane point
+template<class S>
+vcg::Point2<S> Camera<S>::DistortedToUndistorted(vcg::Point2<S> d) const
+	{
+		vcg::Point2<S> u;
+		vcg::Point2<S> dc=ViewportPxTo_neg1_1(DistorCenterPx);
+		S r=sqrt(pow((d[0]-dc[0]),2)+pow((d[1]-dc[1]),2));
+		u[0]=d[0]*(1-k[0]*r*r);
+		u[1]=d[1]*(1-k[0]*r*r);
+
+		return u;
+
+	}
+
 
 //--- basic camera setup (GL-like)
 
