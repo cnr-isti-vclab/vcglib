@@ -75,6 +75,7 @@ class Inertia
 	typedef typename MeshType::FaceType       FaceType;
 	typedef typename MeshType::FacePointer    FacePointer;
 	typedef typename MeshType::FaceIterator   FaceIterator;
+	typedef typename MeshType::ConstFaceIterator   ConstFaceIterator;
 	typedef typename MeshType::FaceContainer  FaceContainer;
 	typedef typename MeshType::CoordType  CoordType;
 
@@ -307,10 +308,10 @@ void InertiaTensorEigen(Matrix44<ScalarType> &EV, Point4<ScalarType> &ev )
 /** Compute covariance matrix of a mesh, i.e. the integral
 		int_{M} { (x-b)(x-b)^T }dx  where b is the barycenter and x spans over the mesh M
  */
-static void Covariance(MeshType m, vcg::Point3<ScalarType> & bary, vcg::Matrix33<ScalarType> &C){
+static void Covariance(const MeshType & m, vcg::Point3<ScalarType> & bary, vcg::Matrix33<ScalarType> &C){
 	// find the barycenter
 
-	FaceIterator fi;
+	ConstFaceIterator fi;
 	ScalarType area = 0.0;
 	bary.Zero();
 	for(fi = m.face.begin(); fi != m.face.end(); ++fi)
@@ -320,7 +321,8 @@ static void Covariance(MeshType m, vcg::Point3<ScalarType> & bary, vcg::Matrix33
 				area+=vcg::DoubleArea(*fi);
 			}
 	bary/=area;
-
+	 
+	
 	C.SetZero();
 	// C as covariance of triangle (0,0,0)(1,0,0)(0,1,0)
 	vcg::Matrix33<ScalarType> C0;
@@ -330,26 +332,26 @@ static void Covariance(MeshType m, vcg::Point3<ScalarType> & bary, vcg::Matrix33
 	C0*=1/24.0;
 
 	// integral of (x,y,0) in the same triangle
-	CoordType X(2/3.0,2/3.0,0);
-	vcg::Matrix33<ScalarType> A,At,DC; // matrix that bring the vertices to (v1-v0,v2-v0,n)
-
+	CoordType X(1/6.0,1/6.0,0);
+	vcg::Matrix33<ScalarType> A, // matrix that bring the vertices to (v1-v0,v2-v0,n)
+												At,DC;
 	for(fi = m.face.begin(); fi != m.face.end(); ++fi)
 		if(!(*fi).IsD())
 		{
-		  CoordType  n = (*fi).N().Normalize();
 			const CoordType &P0 = (*fi).P(0);
 			const CoordType &P1 = (*fi).P(1);
 			const CoordType &P2 = (*fi).P(2);
+			CoordType  n = ((P1-P0)^(P2-P0));
+			const float da = n.Norm();
+			n/=da*da;
 
 			A.SetColumn(0,P1-P0);
 			A.SetColumn(1,P2-P0);
 			A.SetColumn(2,n);
-
 			CoordType delta = P0 - bary;
 
 			At= A;
 			At.Transpose();
-
 			/* DC is calculated as integral of (A*x+delta) * (A*x+delta)^T over the triangle,
 				 where delta = v0-bary
 			*/
@@ -357,13 +359,14 @@ static void Covariance(MeshType m, vcg::Point3<ScalarType> & bary, vcg::Matrix33
 			DC.SetZero();
 			DC+= A*C0*At;
 			vcg::Matrix33<ScalarType> tmp;
-			tmp.OuterProduct(X,delta);
-			DC+= A * tmp;
+			tmp.OuterProduct(A*X,delta);
+			DC+= tmp;
 			tmp.Transpose();
-			DC+= tmp * At;
+			DC+= tmp;
 			tmp.OuterProduct(delta,delta);
 			DC+=tmp*0.5;
-			DC*=fabs(A.Determinant()); // the determinant of A is the jacobian of the change of variables A*x+delta
+// 		DC*=fabs(A.Determinant());	// the determinant of A is the jacobian of the change of variables A*x+delta
+ 			DC*=da;											// the determinant of A is also the double area of *fi
 			C+=DC;
 	}
 
