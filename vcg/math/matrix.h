@@ -67,10 +67,10 @@ namespace vcg{
 	virtual const float operator[](const int & i)const = 0;
 	};
 	template<int N, class S> 
-	class MatrixDiag: public PointBase<N,S>, public MatrixDiagBase{
+	class MatrixDiag: public Point<N,S>, public MatrixDiagBase{
 	public:
 		const int & Dimension() const {return N;}
-		MatrixDiag(const PointBase<N,S>&p):PointBase<N,S>(p){}
+		MatrixDiag(const Point<N,S>&p):Point<N,S>(p){}
 	};
 
 /*!
@@ -505,7 +505,7 @@ namespace vcg{
 			*	\return the matrix product
 			*/
 			template <int N,int M>
-			void DotProduct(PointBase<N,TYPE> &m,PointBase<M,TYPE> &result)
+			void DotProduct(Point<N,TYPE> &m,Point<M,TYPE> &result)
 			{
 				unsigned int i, j,  p,  r;
 				for (i=0, p=0, r=0; i<M; i++)
@@ -535,7 +535,7 @@ namespace vcg{
 			*	Matrix from outer product.
 			*/
 			template <int N, int M>
-			void OuterProduct(const PointBase<N,TYPE> a, const PointBase< M,TYPE> b)
+			void OuterProduct(const Point<N,TYPE> a, const Point< M,TYPE> b)
 			{
 				assert(N == _rows);
 				assert(M == _columns);
@@ -762,7 +762,7 @@ namespace vcg{
 		diag = new  X [m.ColumnsNumber()];
 
 		MatrixType res(m.RowsNumber(),m.ColumnsNumber());
-		vcg::SingularValueDecomposition<MatrixType > (m,&diag[0],res,50 );
+		vcg::SingularValueDecomposition<MatrixType > (m,&diag[0],res,LeaveUnsorted,50 );
 		m.Transpose();		
 		// prodotto per la diagonale
 		unsigned  int i,j;
