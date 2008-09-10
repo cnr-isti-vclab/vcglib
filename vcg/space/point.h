@@ -64,8 +64,8 @@ namespace vcg {
 	namespace ndim{
 	
 
-template <int N, class S> 
-class Point;
+//template <int N, class S> 
+//class Point;
 
 /** \addtogroup space */
 /*@{*/
@@ -77,7 +77,7 @@ class Point;
      */
 
 template <int N, class S> 
-class PointBase 
+class Point
 {
 public:
 	typedef S          ScalarType;
@@ -98,8 +98,8 @@ public:
    No casting operators have been introduced to avoid automatic unattended (and costly) conversion between different PointType types
    **/
 
-  inline PointBase () { };
-//	inline PointBase ( const S nv[N] );
+  inline Point () { };
+//	inline Point ( const S nv[N] );
 	
   /// Padding function: give a default 0 value to all the elements that are not in the [0..2] range. 
   /// Useful for managing in a consistent way object that could have point2 / point3 / point4
@@ -194,16 +194,79 @@ public:
   **/
 
 	/// sets a PointType to Zero
-	inline void Zero();
-	inline PointType operator + ( PointType const & p) const;
-	inline PointType operator - ( PointType const & p) const;
-	inline PointType operator * ( const S s ) const;
-	inline PointType operator / ( const S s ) const;
-	inline PointType & operator += ( PointType const & p);
-	inline PointType & operator -= ( PointType const & p);
-	inline PointType & operator *= ( const S s );
-	inline PointType & operator /= ( const S s );
-	inline PointType operator - () const;
+	inline void Zero()
+	{
+		for(unsigned int ii = 0; ii < Dimension;++ii)
+			V(ii) = S();
+	}
+
+	inline PointType operator + ( PointType const & p) const
+	{
+		PointType res;
+		for(unsigned int ii = 0; ii < Dimension;++ii)
+			res[ii] = V(ii) + p[ii];
+		return res;
+	}
+
+	inline PointType operator - ( PointType const & p) const
+	{
+		PointType res;
+		for(unsigned int ii = 0; ii < Dimension;++ii)
+			res[ii] = V(ii) - p[ii];
+		return res;
+	}
+
+	inline PointType operator * ( const S s ) const
+	{
+		PointType res;
+		for(unsigned int ii = 0; ii < Dimension;++ii)
+			res[ii] = V(ii) * s;
+		return res;
+	}
+
+	inline PointType operator / ( const S s ) const
+	{
+		PointType res;
+		for(unsigned int ii = 0; ii < Dimension;++ii)
+			res[ii] = V(ii) / s;
+		return res;
+	}
+
+	inline PointType & operator += ( PointType const & p)
+	{
+		for(unsigned int ii = 0; ii < Dimension;++ii)
+			V(ii) += p[ii];
+		return *this;
+	}
+
+	inline PointType & operator -= ( PointType const & p)
+	{
+		for(unsigned int ii = 0; ii < Dimension;++ii)
+			V(ii) -= p[ii];
+		return *this;
+	}
+
+	inline PointType & operator *= ( const S s )
+	{
+		for(unsigned int ii = 0; ii < Dimension;++ii)
+			V(ii) *= s;
+		return *this;
+	}
+
+	inline PointType & operator /= ( const S s )
+	{
+		for(unsigned int ii = 0; ii < Dimension;++ii)
+			V(ii) *= s;
+		return *this;
+	}
+	
+	inline PointType operator - () const
+	{
+		PointType res;
+		for(unsigned int ii = 0; ii < Dimension;++ii)
+			res[ii] = - V(ii);
+		return res;
+	}
 //@}
 //@{
 
@@ -310,13 +373,13 @@ public:
 
 
 template <class S> 
-class Point2 : public PointBase<2,S> {
+class Point2 : public Point<2,S> {
 public:	
 	typedef S ScalarType;
 	typedef Point2 PointType;
-	using PointBase<2,S>::_v;
-	using PointBase<2,S>::V;
-	using PointBase<2,S>::W;
+	using Point<2,S>::_v;
+	using Point<2,S>::V;
+	using Point<2,S>::W;
 
 	//@{
   /** @name Special members for 2D points. **/
@@ -477,20 +540,20 @@ public:
 };
 
 template <typename S> 
-class Point3 : public PointBase<3,S> {
+class Point3 : public Point<3,S> {
 public:	
 	typedef S ScalarType;
 	typedef Point3<S>  PointType;
-	using PointBase<3,S>::_v;
-	using PointBase<3,S>::V;
-	using PointBase<3,S>::W;
+	using Point<3,S>::_v;
+	using Point<3,S>::V;
+	using Point<3,S>::W;
 
 
 	//@{
   /** @name Special members for 3D points. **/
 
 	/// default
-	inline Point3 ():PointBase<3,S>(){}
+	inline Point3 ():Point<3,S>(){}
 	  /// yxz constructor
 	inline Point3 ( const S a, const S b,  const S c){
 		_v[0]=a; _v[1]=b; _v[2]=c; };
@@ -638,13 +701,13 @@ public:
 };
 
 template <typename S> 
-class Point4 : public PointBase<4,S> {
+class Point4 : public Point<4,S> {
 public:
 	typedef S ScalarType;
 	typedef Point4<S> PointType;
-	using PointBase<3,S>::_v;
-	using PointBase<3,S>::V;
-	using PointBase<3,S>::W;
+	using Point<3,S>::_v;
+	using Point<3,S>::V;
+	using Point<3,S>::W;
 
 	//@{
   /** @name Special members for 4D points. **/
@@ -901,6 +964,15 @@ typedef Point4<double> Vector4d;
 
 /*@}*/
 
+//added only for backward compatibility
+template<unsigned int N,typename S>
+struct PointBase : Point<N,S>
+{
+	PointBase()
+		:Point<D,S>()
+	{
+	}
+};
 
 } // end namespace ndim
 } // end namespace vcg
