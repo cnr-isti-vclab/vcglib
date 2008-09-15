@@ -324,14 +324,18 @@ static void FaceFaceFromTexCoord(MeshType &m)
 		if( ! (*pf).IsD() )
 			for(int j=0;j<3;++j)
 			{
-				(*p).Set(&(*pf),j);
-				++p;
+				if( (*pf).WT(j) != (*pf).WT((j+1)%3) )
+					 {
+						(*p).Set(&(*pf),j);
+						++p;
+					 }
 			}
+	
+	e.resize(p-e.begin());   // remove from the end of the edge vector the unitiailized ones
 	assert(p==e.end());
-	sort(e.begin(), e.end());							// Lo ordino per vertici
+	sort(e.begin(), e.end());		
 
-	int ne = 0;											// Numero di edge reali
-
+	int ne = 0;											// number of real edges
 	typename std::vector<PEdgeTex>::iterator pe,ps;
 	ps = e.begin();pe=e.begin();
 	//for(ps = e.begin(),pe=e.begin();pe<=e.end();++pe)	// Scansione vettore ausiliario
