@@ -969,7 +969,7 @@ template<unsigned int N,typename S>
 struct PointBase : Point<N,S>
 {
 	PointBase()
-		:Point<D,S>()
+		:Point<N,S>()
 	{
 	}
 };
