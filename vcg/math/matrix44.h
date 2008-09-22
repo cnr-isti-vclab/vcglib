@@ -675,7 +675,7 @@ bool Decompose(Matrix44<T> &M, Point3<T> &ScaleV, Point3<T> &ShearV, Point3<T> &
 	
 	// Second Step Recover Scale and Shearing interleaved 
 	ScaleV[0]=Norm(M.GetColumn3(0));
-	Point3d R[3];
+	Point3<T> R[3];
 	R[0]=M.GetColumn3(0);
 	R[0].Normalize();
 	
