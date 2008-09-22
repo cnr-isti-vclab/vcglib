@@ -30,6 +30,8 @@
 
 #ifndef __VCG_RandomGenerator
 #define __VCG_RandomGenerator
+
+#include <functional>
 namespace vcg {
   namespace math {
 
