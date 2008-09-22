@@ -149,6 +149,7 @@ void Trackball::setDefaultMapping () {
   modes[BUTTON_MIDDLE] = new PanMode ();
   modes[BUTTON_LEFT | KEY_SHIFT] = new ScaleMode ();
   modes[BUTTON_LEFT | KEY_ALT] = new ZMode ();
+  modes[BUTTON_MIDDLE | KEY_ALT] = new SphereMode ();
   modes[WHEEL] = new ScaleMode ();
   SetCurrentAction ();
 }
