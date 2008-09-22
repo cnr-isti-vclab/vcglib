@@ -24,7 +24,7 @@
 #ifndef __VCGLIB_LEGENDRE_H
 #define __VCGLIB_LEGENDRE_H
 
-#include "vcg/math/base.h"
+#include <vcg/math/base.h>
 
 namespace vcg {
 namespace math {
