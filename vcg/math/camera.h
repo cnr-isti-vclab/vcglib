@@ -215,7 +215,7 @@ public:
 	inline vcg::Point2<S> ViewportPxToLocal(const vcg::Point2<S> & p) const;
 
 	/// transforms vieport (pixel) coords to [-1 1] coords
-	inline vcg::Point2<S> Camera<S>::ViewportPxTo_neg1_1(const vcg::Point2<S> & p) const;
+	inline vcg::Point2<S> ViewportPxTo_neg1_1(const vcg::Point2<S> & p) const;
 
 	/// transforms local plane coords to [0 1] coords
 	inline vcg::Point2<S> LocalTo_0_1(const vcg::Point2<S> & p) const;
