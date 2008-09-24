@@ -234,8 +234,13 @@ namespace vcg {
 		return true;
 	}
 
+	template <class S>
 	class PointDistanceFunctor {
 	public:
+		typedef typename S ScalarType;
+		typedef typename Point3<ScalarType> QueryType;
+		static inline const Point3<ScalarType> &  Pos(const QueryType & qt)  {return qt;}
+
 		template <class FACETYPE, class SCALARTYPE>
 		inline bool operator () (const FACETYPE & f, const Point3<SCALARTYPE> & p, SCALARTYPE & minDist, Point3<SCALARTYPE> & q) {
 			const Point3<typename FACETYPE::ScalarType> fp = Point3<typename FACETYPE::ScalarType>::Construct(p);
@@ -430,10 +435,13 @@ namespace vcg {
 				return true;
 		}
 		
-		
-		
-		class PointDistanceBaseFunctor {
+	template <class S>
+	class PointDistanceBaseFunctor {
 public:
+			typedef typename S ScalarType;
+			typedef Point3<ScalarType> QueryType;
+
+ 		  static inline const Point3<ScalarType> & Pos(const Point3<ScalarType> & qt)  {return qt;}
 			template <class FACETYPE, class SCALARTYPE>
 			inline bool operator () (const FACETYPE & f, const Point3<SCALARTYPE> & p, SCALARTYPE & minDist, Point3<SCALARTYPE> & q) {
 				const Point3<typename FACETYPE::ScalarType> fp = Point3<typename FACETYPE::ScalarType>::Construct(p);
