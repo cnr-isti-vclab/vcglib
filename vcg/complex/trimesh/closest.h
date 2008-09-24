@@ -233,7 +233,7 @@ namespace vcg {
 			typedef FaceTmark<MESH> MarkerFace;
 			MarkerFace mf;
 			mf.SetMesh(&mesh);
-			vcg::face::PointDistanceFunctor PDistFunct;
+			vcg::face::PointDistanceFunctor<ScalarType> PDistFunct;
 			_minDist=_maxDist;
 			return (gr.GetClosest(PDistFunct,mf,_p,_maxDist,_minDist,_closestPt));
 		}
@@ -251,7 +251,7 @@ namespace vcg {
 			VDistFunct fn;
 			_minDist=_maxDist;
 			Point3x _closestPt;
-			return (gr.GetClosest/*<VDistFunct,MarkerVert>*/(fn,mv,_p,_maxDist,_minDist,_closestPt));
+			return (gr.template GetClosest<VDistFunct,MarkerVert>(fn,mv,_p,_maxDist,_minDist,_closestPt));
 		}
 
 		template <class MESH, class GRID>
@@ -267,7 +267,7 @@ namespace vcg {
 			VDistFunct fn;
 			_minDist=_maxDist;
 			Point3x _closestPt;
-			return (gr.GetClosest<VDistFunct,MarkerVert>(fn,mv,_p,_maxDist,_minDist,_closestPt));
+			return (gr.template GetClosest <VDistFunct,MarkerVert>(fn,mv,_p,_maxDist,_minDist,_closestPt));
 		}
 
 		template <class MESH, class GRID, class OBJPTRCONTAINER,class DISTCONTAINER, class POINTCONTAINER>
@@ -278,7 +278,7 @@ namespace vcg {
 			typedef FaceTmark<MESH> MarkerFace;
 			MarkerFace mf;
 			mf.SetMesh(&mesh);
-		  vcg::face::PointDistanceFunctor FDistFunct;
+		  vcg::face::PointDistanceFunctor<typename MESH::ScalarType> FDistFunct;
 			return (gr.GetKClosest /*<vcg::face::PointDistanceFunctor, MarkerFace,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>*/
 				(FDistFunct,mf,_k,_p,_maxDist,_objectPtrs,_distances,_points));
 		}
@@ -309,7 +309,7 @@ namespace vcg {
 			typedef FaceTmark<MESH> MarkerFace;
 			MarkerFace mf;
 			mf.SetMesh(&mesh);
-			typedef vcg::face::PointDistanceFunctor FDistFunct;
+			typedef vcg::face::PointDistanceFunctor<typename MESH::ScalarType> FDistFunct;
 			return (gr.GetInSphere/*<FDistFunct,MarkerFace,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>*/
 				(FDistFunct(),mf,_p,_r,_objectPtrs,_distances,_points));
 		}

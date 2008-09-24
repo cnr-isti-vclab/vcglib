@@ -106,7 +106,7 @@ namespace vcg{
 		typedef typename SPATIAL_INDEX::ScalarType ScalarType;
 		typedef typename SPATIAL_INDEX::Box3x Box3x;
 		 
-		Point3<ScalarType> _p = typename OBJPOINTDISTFUNCTOR::Pos(_p_obj);
+		Point3<ScalarType> _p = OBJPOINTDISTFUNCTOR::Pos(_p_obj);
 		// Initialize min_dist with _maxDist to exploit early rejection test.
 		_minDist = _maxDist;
 

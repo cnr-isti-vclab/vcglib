@@ -76,12 +76,12 @@ template <class SCALARTYPE>
 		}
 	};
 
-template <class VERTEXTYPE>
+template <class VERTYPE>
 class PointNormalDistanceFunctor {
 	public:
-		typedef typename VERTEXTYPE QueryType; 
-		typedef typename VERTEXTYPE::ScalarType ScalarType;
-		static inline const Point3<typename VERTEXTYPE::ScalarType> &  Pos(const QueryType & qt)  {return qt.P();}
+		typedef VERTYPE QueryType; 
+		typedef typename VERTYPE::ScalarType ScalarType;
+		static inline const Point3<typename VERTYPE::ScalarType> &  Pos(const QueryType & qt)  {return qt.P();}
 
 		static ScalarType & Alpha(){static ScalarType alpha = 1.0; return alpha;}
 		static ScalarType & Beta(){static ScalarType beta= 1.0; return beta;}

@@ -68,8 +68,8 @@ namespace vcg {
 	namespace face{
 /*
    Point face distance
-   trova il punto <p> sulla faccia piu' vicino a <q>, con possibilità di 
-   rejection veloce su se la distanza trovata è maggiore di <rejdist>
+   trova il punto <p> sulla faccia piu' vicino a <q>, con possibilitï¿½ di 
+   rejection veloce su se la distanza trovata ï¿½ maggiore di <rejdist>
 
  Commenti del 12/11/02
  Funziona solo se la faccia e di quelle di tipo E (con edge e piano per faccia gia' calcolati)
@@ -237,8 +237,8 @@ namespace vcg {
 	template <class S>
 	class PointDistanceFunctor {
 	public:
-		typedef typename S ScalarType;
-		typedef typename Point3<ScalarType> QueryType;
+		typedef S ScalarType;
+		typedef Point3<ScalarType> QueryType;
 		static inline const Point3<ScalarType> &  Pos(const QueryType & qt)  {return qt;}
 
 		template <class FACETYPE, class SCALARTYPE>
@@ -438,7 +438,7 @@ namespace vcg {
 	template <class S>
 	class PointDistanceBaseFunctor {
 public:
-			typedef typename S ScalarType;
+			typedef S ScalarType;
 			typedef Point3<ScalarType> QueryType;
 
  		  static inline const Point3<ScalarType> & Pos(const Point3<ScalarType> & qt)  {return qt;}
