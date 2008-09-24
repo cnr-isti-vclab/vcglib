@@ -520,7 +520,7 @@ namespace vcg {
 
 		template <class OBJPOINTDISTFUNCTOR, class OBJMARKER>
 			ObjPtr  GetClosest(OBJPOINTDISTFUNCTOR & _getPointDistance, OBJMARKER & _marker, 
-			const CoordType & _p, const ScalarType & _maxDist,ScalarType & _minDist, CoordType & _closestPt)
+				const typename OBJPOINTDISTFUNCTOR::QueryType & _p, const ScalarType & _maxDist,ScalarType & _minDist, CoordType & _closestPt)
 		{
 			return (vcg::GridClosest<GridPtrType,OBJPOINTDISTFUNCTOR,OBJMARKER>(*this,_getPointDistance,_marker, _p,_maxDist,_minDist,_closestPt));
 		}
