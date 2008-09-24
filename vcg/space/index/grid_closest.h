@@ -95,7 +95,7 @@ namespace vcg{
 		typename SPATIAL_INDEX::ObjPtr  GridClosest(SPATIAL_INDEX &Si, 
 		OBJPOINTDISTFUNCTOR _getPointDistance,
 		OBJMARKER & _marker, 
-		const typename SPATIAL_INDEX::CoordType  & _p,
+		const typename OBJPOINTDISTFUNCTOR::QueryType  & _p_obj,
 		const typename SPATIAL_INDEX::ScalarType & _maxDist,
 		typename SPATIAL_INDEX::ScalarType & _minDist,
 		typename SPATIAL_INDEX:: CoordType &_closestPt)
@@ -105,7 +105,8 @@ namespace vcg{
 		typedef typename SPATIAL_INDEX::CoordType CoordType;
 		typedef typename SPATIAL_INDEX::ScalarType ScalarType;
 		typedef typename SPATIAL_INDEX::Box3x Box3x;
-
+		 
+		Point3<ScalarType> _p = typename OBJPOINTDISTFUNCTOR::Pos(_p_obj);
 		// Initialize min_dist with _maxDist to exploit early rejection test.
 		_minDist = _maxDist;
 
@@ -126,7 +127,7 @@ namespace vcg{
 				ObjPtr elem=&(**l);
 				if (!elem->IsD())
 				{
-					if (_getPointDistance((**l), _p,_minDist, t_res))  // <-- NEW: use of distance functor
+					if (_getPointDistance((**l), _p_obj,_minDist, t_res))  // <-- NEW: use of distance functor
 					{
 						winner=elem;
 						_closestPt=t_res;
@@ -164,7 +165,7 @@ namespace vcg{
 									{
 										if( ! _marker.IsMarked(elem))
 										{
-											if (_getPointDistance((**l), _p, _minDist, t_res)) 
+											if (_getPointDistance((**l), _p_obj, _minDist, t_res)) 
 											{
 												winner=elem;
 												_closestPt=t_res;
