@@ -40,9 +40,12 @@
 namespace vcg {
 	namespace vertex{
 
+template <class SCALARTYPE>
 	class PointDistanceFunctor {
 	public:
-		template <class VERTEXTYPE, class SCALARTYPE>
+		typedef Point3<SCALARTYPE> QueryType;
+		static inline const Point3<SCALARTYPE> & Pos(const QueryType & qt)  {return qt;}
+		template <class VERTEXTYPE>
 
 		/*
 		 * @param v [IN] is a reference to the current object being tested,
@@ -73,6 +76,34 @@ namespace vcg {
 		}
 	};
 
+template <class VERTEXTYPE>
+class PointNormalDistanceFunctor {
+	public:
+		typedef typename VERTEXTYPE QueryType; 
+		typedef typename VERTEXTYPE::ScalarType ScalarType;
+		static inline const Point3<typename VERTEXTYPE::ScalarType> &  Pos(const QueryType & qt)  {return qt.P();}
+
+		static ScalarType & Alpha(){static ScalarType alpha = 1.0; return alpha;}
+		static ScalarType & Beta(){static ScalarType beta= 1.0; return beta;}
+		static ScalarType & Gamma(){static ScalarType gamma= 1.0; return gamma;}
+		static ScalarType & InterPoint (){static ScalarType interpoint= 1.0; return interpoint;} 
+
+		template <class VERTEXTYPE, class SCALARTYPE>
+		inline bool operator () (const VERTEXTYPE & v, const VERTEXTYPE & vp, SCALARTYPE & minDist, Point3<SCALARTYPE> & q) {
+
+			float  h = vcg::Distance(v.cP(),vp.P())  ;
+			float  dev = InterPoint ()* (  pow((ScalarType) (1-v.cN()*vp.cN()),(ScalarType) Beta())   / (Gamma()*h +0.1));
+			if(h+dev < minDist){
+				minDist = h+dev;
+				q = v.P(); 
+				return true;
+			}
+
+		//	minDist = h +0.0* (1-v.cN()*vp.cN()) / (h + 0.1);
+
+			return false;
+		}
+	};
 
 }	 // end namespace vertex
 	
