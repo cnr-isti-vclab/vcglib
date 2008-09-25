@@ -433,11 +433,11 @@ FourPCS<MeshType>::FindCongruent() { // of base B, on Q, with approximation delt
 	int vi,vj;
 
 	typename PMesh::VertexIterator vii;
-	std::vector<Couple>::iterator bR1,eR1,bR2,eR2,ite,cite;
-	bR1 = std::lower_bound<std::vector<Couple>::iterator,Couple>(R1.begin(),R1.end(),Couple(d1-prs.delta*2.0));
-	eR1 = std::lower_bound<std::vector<Couple>::iterator,Couple>(R1.begin(),R1.end(),Couple(d1+prs.delta*2.0));
-	bR2 = std::lower_bound<std::vector<Couple>::iterator,Couple>(R1.begin(),R1.end(),Couple(d2-prs.delta*2.0));
-	eR2 = std::lower_bound<std::vector<Couple>::iterator,Couple>(R1.begin(),R1.end(),Couple(d2+prs.delta*2.0));
+	typename std::vector<Couple>::iterator bR1,eR1,bR2,eR2,ite,cite;
+	bR1 = std::lower_bound<typename std::vector<Couple>::iterator,Couple>(R1.begin(),R1.end(),Couple(d1-prs.delta*2.0));
+	eR1 = std::lower_bound<typename std::vector<Couple>::iterator,Couple>(R1.begin(),R1.end(),Couple(d1+prs.delta*2.0));
+	bR2 = std::lower_bound<typename std::vector<Couple>::iterator,Couple>(R1.begin(),R1.end(),Couple(d2-prs.delta*2.0));
+	eR2 = std::lower_bound<typename std::vector<Couple>::iterator,Couple>(R1.begin(),R1.end(),Couple(d2+prs.delta*2.0));
 	
 	// in  [bR1,eR1) there are all the pairs ad a distance d1 +- prs.delta
 	// in  [bR1,eR1) there are all the pairs ad a distance d2 +- prs.delta
@@ -456,7 +456,7 @@ FourPCS<MeshType>::FindCongruent() { // of base B, on Q, with approximation delt
 	if(Invr.vert.empty() ) return false;
 
 	// index remaps a vertex of Invr to its corresponding point in R1
- 	PMesh::PerVertexAttributeHandle<int> id = vcg::tri::Allocator<PMesh>::AddPerVertexAttribute<int>(Invr,std::string("index"));
+ 	typename PMesh::template PerVertexAttributeHandle<int> id = vcg::tri::Allocator<PMesh>::template AddPerVertexAttribute<int>(Invr,std::string("index"));
 	i = &(*bR1)-&(*R1.begin());
 	for(vii = Invr.vert.begin(); vii != Invr.vert.end();++vii,++i)  id[vii] = i;
 
@@ -530,7 +530,7 @@ FourPCS<MeshType>::FindCongruent() { // of base B, on Q, with approximation delt
 	 }
 
 	 delete ugrid;
-	 vcg::tri::Allocator<PMesh>::DeletePerVertexAttribute<int>(Invr,id);
+	 vcg::tri::Allocator<PMesh>::DeletePerVertexAttribute(Invr,id);
 	 printf("n_closests %5d = (An %5d ) + ( Tr %5d ) + (OK) %5d\n",n_closests,acf,trf,n_congr); 
 	 
 	 return done;
