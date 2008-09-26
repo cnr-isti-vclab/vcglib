@@ -203,18 +203,18 @@ template <class S,class RotationType> void Similarity<S,RotationType>::FromMatri
  //Computes a t*s*r decomposition
   S det = m.Determinant();
   assert(det > 0);
-  sca = (S)pow(det, 1/3.0);  
+  sca = (S)pow((S)det, (S)(1/3.0));  
   Matrix44<S> t = m*Matrix44<S>().SetScale(1/sca, 1/sca, 1/sca);
+  tra[0] = t.ElementAt(0, 3);t[0][3] = 0.0;
+  tra[1] = t.ElementAt(1, 3);t[1][3] = 0.0;
+  tra[2] = t.ElementAt(2, 3);t[2][3] = 0.0;
   rot.FromMatrix(t);
-  tra[0] = t.ElementAt(0, 3);
-  tra[1] = t.ElementAt(1, 3);
-  tra[2] = t.ElementAt(2, 3);
-//Compute a s*r*t decomposition
-  Quaternion<S> irot = rot;
-  irot.Invert();
-  tra = irot.Rotate(tra); 
-  tra /= sca; 
+
+	Invert(t);	
+	tra = t * tra;
+	tra/= sca;
 }
+
 
 template <class S,class RotationType> Similarity<S,RotationType> &Invert(Similarity<S,RotationType> &a) {  
   a.rot.Invert();
@@ -238,7 +238,9 @@ template <class S,class RotationType> Similarity<S,RotationType> Interpolate(con
 }
 
 template <class S,class RotationType> Point3<S> operator*(const Similarity<S,RotationType> &m, const Point3<S> &p) {
-  Point3<S> r = m.rot.Rotate(p);
+  Matrix44<S> t;
+  m.rot.ToMatrix(t);  
+  Point3<S> r = t*p;
   r *= m.sca;
   r += m.tra;
   return r;
