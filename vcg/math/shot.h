@@ -104,14 +104,27 @@ creation
 
 namespace vcg{
 
-template <class S>
+template <class S, class RotationType = Matrix44<S> >
 class Shot {
 public:
 	typedef Camera<S> CameraType;
 	typedef S ScalarType;
 
-	Camera<S>							Intrinsics;		// the camera that made the shot
-	Similarity<S,vcg::Matrix44<S> >		Extrinsics;		// the position and orientation of the camera 
+	template <class ScalarType, class RotoType >
+	class ReferenceFrame {
+		friend class Shot<ScalarType, RotoType>;
+			RotoType rot;	 // rotation
+			Point3<S> tra; // viewpoint	
+	public:
+			void SetIdentity(){ rot.SetIdentity(); tra = Point3<S>(0.0,0.0,0.0);}
+			void SetTra(const Point3<S> & tr) {tra = tr;}
+			void SetRot(const  RotoType & rt) {rot = rt;}
+			Point3<ScalarType>   Tra() const  { return tra;}
+			RotoType Rot() const  { return rot;}
+	};
+
+	Camera<S>												Intrinsics;		// the camera that made the shot
+	ReferenceFrame<S,RotationType>	Extrinsics;		// the position and orientation of the camera 
 
 
 	Shot(Camera<S> c)
@@ -164,13 +177,28 @@ public:
 // accessors
 public:
 
-	vcg::Similarity<S, vcg::Matrix44<S> > * GetExtrinsics(){return &Extrinsics;}
-	void SetExtrinsics(vcg::Similarity<S, vcg::Matrix44<S> > &m44)
+	/* returns  a matrix which contains the reference frame of the shot
+	  On the first three rows the axes (x,y,z) and on the 4th colum the viewpoint */
+		Matrix44<S> GetExtrinsics() const {
+				Matrix44<S> rotM ;
+				Extrinsics.rot.ToMatrix(rotM);
+				return Matrix44<S>().SetTranslate(Extrinsics.tra) * rotM;
+		}
+
+	/*  multiply the current reference frame for the matrix passed
+	 note: it is up to the caller to check the the matrix passed is a pure rototraslation
+	 */
+ 	void MultMatrix(    vcg::Matrix44<S>    m44)
 	{
-		Extrinsics.tra = m44.tra;
-		Extrinsics.rot.FromMatrix(m44.rot);
-		Extrinsics.sca = m44.sca;
+		Extrinsics.tra = m44 * Extrinsics.tra;
+		m44[0][3] = m44[1][3] = m44[2][3] =  0.0;
+		Extrinsics.rot = m44 * Extrinsics.rot ;
 	}
+
+	/*  multiply the current reference frame for the similarity passed
+	 note: it is up to the caller to check the the matrix passed is a pure rototraslation
+	 */
+	void MultSimilarity( const Similarity<S> & s){ MultMatrix(s.Matrix());}
 
 }; // end class definition
 
@@ -178,22 +206,22 @@ public:
 
 //---
 /// GET the viewpoint
-template <class S>
-const vcg::Point3<S> Shot<S>::GetViewPoint() const 
+template <class S, class RotationType>
+const vcg::Point3<S> Shot<S,RotationType>::GetViewPoint() const 
 {
-	return -Extrinsics.tra;
+	return  Extrinsics.tra;
 }
 /// SET the viewpoint
-template <class S>
-void Shot<S>::SetViewPoint(const vcg::Point3<S> & viewpoint)
+template <class S, class RotationType>
+void Shot<S,RotationType>::SetViewPoint(const vcg::Point3<S> & viewpoint)
 {
-	Extrinsics.tra = -viewpoint;
+	Extrinsics.tra = viewpoint;
 }
 //---
 
 /// GET the i-th axis of the coordinate system of the camera
-template <class S>
-vcg::Point3<S>  Shot<S>::Axis(const int & i) const 
+template <class S, class RotationType>
+vcg::Point3<S>  Shot<S,RotationType>::Axis(const int & i) const 
 {	
 	vcg::Matrix44<S> m; 
 	Extrinsics.rot.ToMatrix(m); 
@@ -202,15 +230,15 @@ vcg::Point3<S>  Shot<S>::Axis(const int & i) const
 }
 
 /// look at (dir+up)
-template <class S>
-void Shot<S>::LookAt(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up)
+template <class S, class RotationType>
+void Shot<S,RotationType>::LookAt(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up)
 {
 	  LookTowards(z_dir-GetViewPoint(),up);
 }
 
 /// look at (opengl-like)
-template <class S>
-void Shot<S>::LookAt(const S & eye_x, const S & eye_y, const S & eye_z,
+template <class S, class RotationType>
+void Shot<S,RotationType>::LookAt(const S & eye_x, const S & eye_y, const S & eye_z,
 					 const S & at_x, const S & at_y, const S & at_z,
 					 const S & up_x,const S & up_y,const S & up_z)
 {
@@ -219,8 +247,8 @@ void Shot<S>::LookAt(const S & eye_x, const S & eye_y, const S & eye_z,
 }
 
 /// look towards
-template <class S>
-void Shot<S>::LookTowards(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up)
+template <class S, class RotationType>
+void Shot<S,RotationType>::LookTowards(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up)
 {
 	vcg::Point3<S> x_dir = up ^-z_dir;
 	vcg::Point3<S> y_dir = -z_dir ^x_dir;
@@ -237,32 +265,32 @@ void Shot<S>::LookTowards(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up
 //--- Space transformation methods
 
 /// convert a 3d point from world to camera coordinates
-template <class S>
-vcg::Point3<S> Shot<S>::ConvertWorldToCameraCoordinates(const vcg::Point3<S> & p) const
+template <class S, class RotationType>
+vcg::Point3<S> Shot<S,RotationType>::ConvertWorldToCameraCoordinates(const vcg::Point3<S> & p) const
 {
 	Matrix44<S> rotM;
 	Extrinsics.rot.ToMatrix(rotM);
-	vcg::Point3<S> cp = rotM * (p + Extrinsics.tra);
+	vcg::Point3<S> cp = rotM * (p - Extrinsics.tra);
 	cp[2]=-cp[2]; 	// note: camera reference system is right handed
 	return cp;
 	}
 
 /// convert a 3d point from camera to world coordinates
-template <class S>
-vcg::Point3<S> Shot<S>::ConvertCameraToWorldCoordinates(const vcg::Point3<S> & p) const
+template <class S, class RotationType>
+vcg::Point3<S> Shot<S,RotationType>::ConvertCameraToWorldCoordinates(const vcg::Point3<S> & p) const
 {
 	Matrix44<S> rotM;
 	vcg::Point3<S> cp = p;
 	cp[2]=-cp[2];	// note: World reference system is left handed
 	Extrinsics.rot.ToMatrix(rotM);
   Invert(rotM);
-	cp = rotM * cp-Extrinsics.tra;
+	cp = rotM * cp+Extrinsics.tra;
 	return cp;
 }
 
 /// project a 3d point from world coordinates to 2d camera viewport (pixel) 
-template <class S>
-vcg::Point2<S> Shot<S>::Project(const vcg::Point3<S> & p) const
+template <class S, class RotationType>
+vcg::Point2<S> Shot<S,RotationType>::Project(const vcg::Point3<S> & p) const
 {
 	Point3<S> cp = ConvertWorldToCameraCoordinates(p);
 	Point2<S> pp = Intrinsics.Project(cp);
@@ -271,8 +299,8 @@ vcg::Point2<S> Shot<S>::Project(const vcg::Point3<S> & p) const
 }
 
 /// inverse projection from 2d camera viewport (pixel) + Zdepth to 3d world coordinates
-template <class S>
-vcg::Point3<S> Shot<S>::UnProject(const vcg::Point2<S> & p, const S & d) const
+template <class S, class RotationType>
+vcg::Point3<S> Shot<S,RotationType>::UnProject(const vcg::Point2<S> & p, const S & d) const
 {
 	Point2<S> lp = Intrinsics.ViewportPxToLocal(p);
 	Point3<S> cp = Intrinsics.UnProject(lp,d);
@@ -281,8 +309,8 @@ vcg::Point3<S> Shot<S>::UnProject(const vcg::Point2<S> & p, const S & d) const
 }
 
 /// returns distance of point p from camera plane (z depth), used for unprojection 
-template <class S>
-S Shot<S>::Depth(const vcg::Point3<S> & p)const 
+template <class S, class RotationType>
+S Shot<S,RotationType>::Depth(const vcg::Point3<S> & p)const 
 {
 	return ConvertWorldToCameraCoordinates(p).Z();
 }
