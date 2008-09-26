@@ -359,18 +359,18 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 		 {
 				float t[17];
 
-				t[ 0] = (float)-m.shot.Extrinsics.tra[0];
-				t[ 1] = (float)-m.shot.Extrinsics.tra[1];
-				t[ 2] = (float)-m.shot.Extrinsics.tra[2];
-				t[ 3] = (float)m.shot.Extrinsics.rot[0][0];
-				t[ 4] = (float)m.shot.Extrinsics.rot[0][1];
-				t[ 5] = (float)m.shot.Extrinsics.rot[0][2];
-				t[ 6] = (float)m.shot.Extrinsics.rot[1][0];
-				t[ 7] = (float)m.shot.Extrinsics.rot[1][1];
-				t[ 8] = (float)m.shot.Extrinsics.rot[1][2];
-				t[ 9] = (float)m.shot.Extrinsics.rot[2][0];
-				t[10] = (float)m.shot.Extrinsics.rot[2][1];
-				t[11] = (float)m.shot.Extrinsics.rot[2][2];
+				t[ 0] = (float)m.shot.Extrinsics.Tra()[0];
+				t[ 1] = (float)m.shot.Extrinsics.Tra()[1];
+				t[ 2] = (float)m.shot.Extrinsics.Tra()[2];
+				t[ 3] = (float)m.shot.Extrinsics.Rot()[0][0];
+				t[ 4] = (float)m.shot.Extrinsics.Rot()[0][1];
+				t[ 5] = (float)m.shot.Extrinsics.Rot()[0][2];
+				t[ 6] = (float)m.shot.Extrinsics.Rot()[1][0];
+				t[ 7] = (float)m.shot.Extrinsics.Rot()[1][1];
+				t[ 8] = (float)m.shot.Extrinsics.Rot()[1][2];
+				t[ 9] = (float)m.shot.Extrinsics.Rot()[2][0];
+				t[10] = (float)m.shot.Extrinsics.Rot()[2][1];
+				t[11] = (float)m.shot.Extrinsics.Rot()[2][2];
 				t[12] = (float)m.shot.Intrinsics.FocalMm;
 				t[13] = (float)m.shot.Intrinsics.PixelSizeMm[0];
 				t[14] = (float)m.shot.Intrinsics.PixelSizeMm[1];
@@ -389,18 +389,18 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 		else
 		{
 			fprintf(fpout,"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %d %d %g %g %g %g\n"
-				,-m.shot.Extrinsics.tra[0]
-				,-m.shot.Extrinsics.tra[1]
-				,-m.shot.Extrinsics.tra[2]
-				,m.shot.Extrinsics.rot[0][0]
-				,m.shot.Extrinsics.rot[0][1]
-				,m.shot.Extrinsics.rot[0][2]
-				,m.shot.Extrinsics.rot[1][0]
-				,m.shot.Extrinsics.rot[1][1]
-				,m.shot.Extrinsics.rot[1][2]
-				,m.shot.Extrinsics.rot[2][0]
-				,m.shot.Extrinsics.rot[2][1]
-				,m.shot.Extrinsics.rot[2][2]
+				,-m.shot.Extrinsics.Tra()[0]
+				,-m.shot.Extrinsics.Tra()[1]
+				,-m.shot.Extrinsics.Tra()[2]
+				,m.shot.Extrinsics.Rot()[0][0]
+				,m.shot.Extrinsics.Rot()[0][1]
+				,m.shot.Extrinsics.Rot()[0][2]
+				,m.shot.Extrinsics.Rot()[1][0]
+				,m.shot.Extrinsics.Rot()[1][1]
+				,m.shot.Extrinsics.Rot()[1][2]
+				,m.shot.Extrinsics.Rot()[2][0]
+				,m.shot.Extrinsics.Rot()[2][1]
+				,m.shot.Extrinsics.Rot()[2][2]
 				,m.shot.Intrinsics.FocalMm
 				,m.shot.Intrinsics.PixelSizeMm[0]
 				,m.shot.Intrinsics.PixelSizeMm[1]

@@ -605,22 +605,23 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				// extrinsic
 				m.shot.Extrinsics.SetIdentity();
 				// view point
-				m.shot.Extrinsics.tra[0] = -ca.view_px;
-				m.shot.Extrinsics.tra[1] = -ca.view_py;
-				m.shot.Extrinsics.tra[2] = -ca.view_pz;
+				m.shot.Extrinsics.SetTra(Point3<ScalarType>( ca.view_px,ca.view_py,ca.view_pz));
 	
-				// axis (i.e. rotation). 
-				m.shot.Extrinsics.rot[0][0] = ca.x_axisx;
-				m.shot.Extrinsics.rot[0][1] = ca.x_axisy;
-				m.shot.Extrinsics.rot[0][2] = ca.x_axisz;
+				// axis (i.e. rotation).
+				Matrix44<ScalarType> rm;
+				rm[0][0] = ca.x_axisx;
+				rm[0][1] = ca.x_axisy;
+				rm[0][2] = ca.x_axisz;
 
-				m.shot.Extrinsics.rot[1][0] = ca.y_axisx;
-				m.shot.Extrinsics.rot[1][1] = ca.y_axisy;
-				m.shot.Extrinsics.rot[1][2] = ca.y_axisz;
+				rm[1][0] = ca.y_axisx;
+				rm[1][1] = ca.y_axisy;
+				rm[1][2] = ca.y_axisz;
 
-				m.shot.Extrinsics.rot[2][0] = ca.z_axisx;
-				m.shot.Extrinsics.rot[2][1] = ca.z_axisy;
-				m.shot.Extrinsics.rot[2][2] = ca.z_axisz;
+				rm[2][0] = ca.z_axisx;
+				rm[2][1] = ca.z_axisy;
+				rm[2][2] = ca.z_axisz;
+
+				m.shot.Extrinsics.SetRot(rm);
 
 				//intrinsic
 				m.shot.Intrinsics.FocalMm        = ca.focal;
