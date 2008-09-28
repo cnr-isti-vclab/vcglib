@@ -154,9 +154,13 @@ First commit...
 
 ****************************************************************************/
 
+#pragma message("[VCGLIB Warning]  this way to define the simplex face is DEPRECATED ") 
+#pragma message("[VCGLIB Warning]  use vcg/simplex/faceplus instead ") 
+
 #ifndef FACE_TYPE 
-#pragma error message("\nYou should never directly include this file\_n")
+#pragma error message("\nYou should never directly include this file\n")
 #else
+
 
 #include <vcg/math/base.h>
 #include <vcg/space/box3.h>
