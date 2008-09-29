@@ -98,6 +98,7 @@ first partial porting: compiled gcc,intel and msvc
 #ifndef __VCGLIB__SMOOTH
 #define __VCGLIB__SMOOTH
 
+#include <wrap/callback.h>
 #include <vcg/space/point3.h>
 #include <vcg/space/line3.h>
 #include <vcg/container/simple_temporary_data.h>
