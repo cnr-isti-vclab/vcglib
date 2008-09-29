@@ -57,7 +57,7 @@ if(argc<4)
   for(int i=0;i<Step;++i)
   {
     tri::UpdateNormals<MyMesh>::PerFaceNormalized(m);
-    PasoDobleSmoothFast(m,atoi(argv[3]),atof(argv[4]),atoi(argv[5]));
+		tri::Smooth<MyMesh>::VertexCoordPasoDobleFast(m,atoi(argv[3]),atof(argv[4]),atoi(argv[5]));
   }
 
   //LaplacianSmooth(m,atoi(argv[2]));

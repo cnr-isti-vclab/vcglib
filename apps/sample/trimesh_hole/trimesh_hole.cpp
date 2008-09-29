@@ -58,14 +58,14 @@ bool NormalTest(typename face::Pos<typename MESH::FaceType> pos)
 {
 	//giro intorno al vertice e controllo le normali
 	float accum=0;
-	MESH::ScalarType thr = 0.0f;
-	MESH::CoordType NdP = Normal<MESH::FaceType>(*pos.f);
-	MESH::CoordType tmp, oop, soglia = MESH::CoordType(thr,thr,thr);
+	typename MESH::ScalarType thr = 0.0f;
+	typename MESH::CoordType NdP = Normal<typename MESH::FaceType>(*pos.f);
+	typename MESH::CoordType tmp, oop, soglia = typename MESH::CoordType(thr,thr,thr);
 	face::Pos<typename MESH::FaceType> aux=pos;
 	do{
 		aux.FlipF(); 
 		aux.FlipE();
-		oop = Abs(tmp - Normal<MESH::FaceType>(*pos.f));
+		oop = Abs(tmp - Normal<typename MESH::FaceType>(*pos.f));
 		if(oop < soglia )return false;
 	}while(aux != pos && !aux.IsBorder());
 	
@@ -278,7 +278,7 @@ int main(int argc,char ** argv){
 		}
 	}
 
-	LaplacianSmooth<MyMesh>(m,1,true);
+	tri::Smooth<MyMesh>::VertexCoordLaplacian(m,1,true);
 
 	printf("\nCompleted. Saving....\n");
   
