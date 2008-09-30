@@ -40,7 +40,7 @@ Revision 1.2  2005/10/18 14:27:22  ganovelli
 EdgePLaneType added (_RT)
 
 Revision 1.1  2005/10/15 16:23:39  ganovelli
-Working release (compilata solo su MSVC), component_occ è migrato da component_opt
+Working release (compilata solo su MSVC), component_occ ï¿½ migrato da component_opt
 
 
 ****************************************************************************/
@@ -67,6 +67,7 @@ namespace vcg {
 	template <class A, class T> class WedgeTexCoordOcc: public T {
 	public:
 		typedef A WedgeTexCoordType;
+		typedef typename T::FaceType FaceType;
 		WedgeTexCoordType &WT(const int&i) {return CAT< vector_occ<FaceType>,WedgeTexCoordType>::Instance()->Get((FaceType*)this);}
 	  static bool HasWedgeTexCoord()   { return true; }
 		static bool HasWedgeTexCoordOcc()   { return true; }
@@ -79,6 +80,7 @@ namespace vcg {
 	template <class A, class T> class InfoOccBase: public T {
 	public:
 		typedef A InfoType;
+		typedef typename T::FaceType FaceType;	
 		InfoType &N() {return CAT< vector_occ<FaceType>,InfoType>::Instance()->Get((FaceType*)this);}
 	  static bool HasInfo()   { return true; }
 		static bool HasInfoOcc()   { return true; }
@@ -91,6 +93,7 @@ namespace vcg {
 	template <class A, class T> class NormalOcc: public T {
 	public:
 		typedef A NormalType;
+		typedef typename T::FaceType FaceType;	
 		NormalType &N() {return CAT< vector_occ<FaceType>,NormalType>::Instance()->Get((FaceType*)this);}
 	  static bool HasFaceNormal()   { return true; }
 		static bool HasFaceNormalOcc()   { return true; }
@@ -105,6 +108,7 @@ namespace vcg {
 	template <class T> class MarkOcc: public T {
 	public:
 		typedef int MarkType;
+		typedef typename T::FaceType FaceType;	
 		int &IMark() {return CAT< vector_occ<FaceType>,MarkType>::Instance()->Get((MarkType*)this);}
 	  static bool HasFaceMark()   { return true; }
 		static bool HasFaceMarkOcc()   { return true; }
@@ -115,10 +119,11 @@ namespace vcg {
 
 template <class A, class T> class ColorOcc: public T {
 public:
-  typedef A ColorType;
-  ColorType &C() { return CAT< vector_occ<FaceType>,ColorType>::Instance()->Get((FaceType*)this); }
-  static bool HasFaceColor()   { return true; }
-  static bool HasfaceColorOcc()   { return true; }
+		typedef A ColorType;
+		typedef typename T::FaceType FaceType;	
+		ColorType &C() { return CAT< vector_occ<FaceType>,ColorType>::Instance()->Get((FaceType*)this); }
+		static bool HasFaceColor()   { return true; }
+		static bool HasfaceColorOcc()   { return true; }
 };
 
 template <class T> class Color4bOcc: public ColorOcc<vcg::Color4b, T> {};
@@ -135,14 +140,18 @@ struct VFAdjTypeSup {
 
 template <class A, class T> class VFAdjOccBase: public T {
 public:
-	typedef A VFAdjType;
-  typename T::FacePointer &VFp(const int j) {
-		return (CAT< vector_occ<FaceType>,VFAdjTypeSup<T::FacePointer> >::Instance()->Get((FaceType*)this))._vfp[j];}
+//	typedef A VFAdjType;
+	typedef VFAdjTypeSup<typename T::VertexPointer> VFAdjType;
+	typedef typename T::FaceType FaceType;	
+	typedef typename T::FacePointer FacePointer;	
 
-  typename T::FacePointer cVFp(const int j) const {
-		return (CAT< vector_occ<FaceType>,VFAdjTypeSup<T::FacePointer> >::Instance()->Get((FaceType*)this))._vfp[j];}
+  	FacePointer &VFp(const int j) {
+		return (CAT< vector_occ<FaceType>,VFAdjTypeSup<FacePointer> >::Instance()->Get((FaceType*)this))._vfp[j];}
 
-  char &VFi(const int j) { return (CAT< vector_occ<FaceType>,VFAdjTypeSup<T::FacePointer> >::Instance()->Get((FaceType*)this))._vfi[j];}
+   	FacePointer cVFp(const int j) const {
+		return (CAT< vector_occ<FaceType>,VFAdjTypeSup<FacePointer> >::Instance()->Get((FaceType*)this))._vfp[j];}
+
+  char &VFi(const int j) { return (CAT< vector_occ<FaceType>,VFAdjTypeSup<FacePointer> >::Instance()->Get((FaceType*)this))._vfi[j];}
 
   static bool HasVFAdjacency()   {   return true; }
   static bool HasVFAdjacencyOcc()   { return true; }
@@ -165,21 +174,23 @@ public:
 	
 //	typedef  A FFAdjType;
 	typedef FFAdjTypeSup<typename T::FacePointer> FFAdjType;
+	typedef typename T::FaceType FaceType;
+	typedef typename T::FacePointer FacePointer;
+	
+  	FacePointer &FFp(const int j) {
+		return (CAT< vector_occ<FaceType>,FFAdjTypeSup<FacePointer> >::Instance()->Get((FaceType*)this))._ffp[j];}
 
-  typename T::FacePointer &FFp(const int j) {
-		return (CAT< vector_occ<FaceType>,FFAdjTypeSup<T::FacePointer> >::Instance()->Get((FaceType*)this))._ffp[j];}
+   	FacePointer const  FFp(const int j) const { 
+		return (CAT< vector_occ<FaceType>,FFAdjTypeSup<FacePointer> >::Instance()->Get((FaceType*)this))._ffp[j];}
 
-  typename T::FacePointer const  FFp(const int j) const { 
-		return (CAT< vector_occ<FaceType>,FFAdjTypeSup<T::FacePointer> >::Instance()->Get((FaceType*)this))._ffp[j];}
-
-  typename T::FacePointer const cFFp(const int j) const {
-    return (CAT< vector_occ<FaceType>,FFAdjTypeSup<T::FacePointer> >::Instance()->Get((FaceType*)this))._ffp[j];}
+	FacePointer const cFFp(const int j) const {
+   		 return (CAT< vector_occ<FaceType>,FFAdjTypeSup<FacePointer> >::Instance()->Get((FaceType*)this))._ffp[j];}
  
-  char &FFi(const int j) {
-   return (CAT< vector_occ<FaceType>,FFAdjTypeSup<T::FacePointer> >::Instance()->Get((FaceType*)this))._ffi[j];}  
+  	char &FFi(const int j) {
+  		 return (CAT< vector_occ<FaceType>,FFAdjTypeSup<FacePointer> >::Instance()->Get((FaceType*)this))._ffi[j];}  
 
-  char cFFi(const int j) const{
-   return (CAT< vector_occ<FaceType>,FFAdjTypeSup<T::FacePointer> >::Instance()->Get((FaceType*)this ))._ffi[j];
+  	char cFFi(const int j) const{
+   		return (CAT< vector_occ<FaceType>,FFAdjTypeSup<FacePointer> >::Instance()->Get((FaceType*)this ))._ffi[j];
 	}  
 
   static bool HasFFAdjacency()   {   return true; }
@@ -191,8 +202,10 @@ template <class T> class FFAdjOcc : public FFAdjOccBase<FFAdjTypeSup<typename T:
 
 template <class T> class VertexRefOcc: public T {
 public:
- // typedef typename T::VertexType VertexType;
- // typedef typename T::VertexType::CoordType CoordType;
+
+  typedef typename T::VertexType VertexType;
+  typedef typename T::FaceType FaceType;
+  typedef typename T::CoordType CoordType;
 
   inline typename T::VertexType *       & V( const int j ) 	     { assert(j>=0 && j<3); 
 		return (CAT< vector_occ<FaceType>,VertexRef<T> >::Instance()->Get((FaceType*)this)).V(j); }
@@ -211,26 +224,26 @@ public:
 	/** Return the pointer to the ((j+1)%3)-th vertex of the face.
 		@param j Index of the face vertex.
 	 */
-	inline       typename T::VertexType *       &  V0( const int j )       { return V(j);}
-	inline       typename T::VertexType *       &  V1( const int j )       { return V((j+1)%3);}
-	inline       typename T::VertexType *       &  V2( const int j )       { return V((j+2)%3);}
-	inline const typename T::VertexType * const &  V0( const int j ) const { return V(j);}
-	inline const typename T::VertexType * const &  V1( const int j ) const { return V((j+1)%3);}
-	inline const typename T::VertexType * const &  V2( const int j ) const { return V((j+2)%3);}
-	inline const typename T::VertexType * const & cV0( const int j ) const { return cV(j);}
-	inline const typename T::VertexType * const & cV1( const int j ) const { return cV((j+1)%3);}
-	inline const typename T::VertexType * const & cV2( const int j ) const { return cV((j+2)%3);}
+	inline		VertexType *       &  V0( const int j )       { return V(j);}
+	inline       	VertexType *       &  V1( const int j )       { return V((j+1)%3);}
+	inline       	VertexType *       &  V2( const int j )       { return V((j+2)%3);}
+	inline const 	VertexType * const &  V0( const int j ) const { return V(j);}
+	inline const 	VertexType * const &  V1( const int j ) const { return V((j+1)%3);}
+	inline const 	VertexType * const &  V2( const int j ) const { return V((j+2)%3);}
+	inline const 	VertexType * const & cV0( const int j ) const { return cV(j);}
+	inline const 	VertexType * const & cV1( const int j ) const { return cV((j+1)%3);}
+	inline const 	VertexType * const & cV2( const int j ) const { return cV((j+2)%3);}
 
 	/// Shortcut per accedere ai punti delle facce
-	inline       typename T::CoordType &  P0( const int j )       { return V(j)->P();}
-	inline       typename T::CoordType &  P1( const int j )       { return V((j+1)%3)->P();}
-	inline       typename T::CoordType &  P2( const int j )       { return V((j+2)%3)->P();}
-	inline const typename T::CoordType &  P0( const int j ) const { return V(j)->P();}
-	inline const typename T::CoordType &  P1( const int j ) const { return V((j+1)%3)->P();}
-	inline const typename T::CoordType &  P2( const int j ) const { return V((j+2)%3)->P();}
-	inline const typename T::CoordType & cP0( const int j ) const { return cV(j)->P();}
-	inline const typename T::CoordType & cP1( const int j ) const { return cV((j+1)%3)->P();}
-	inline const typename T::CoordType & cP2( const int j ) const { return cV((j+2)%3)->P();}
+	inline       	CoordType &  P0( const int j )       { return V(j)->P();}
+	inline       	CoordType &  P1( const int j )       { return V((j+1)%3)->P();}
+	inline       	CoordType &  P2( const int j )       { return V((j+2)%3)->P();}
+	inline const 	CoordType &  P0( const int j ) const { return V(j)->P();}
+	inline const 	CoordType &  P1( const int j ) const { return V((j+1)%3)->P();}
+	inline const 	CoordType &  P2( const int j ) const { return V((j+2)%3)->P();}
+	inline const 	CoordType & cP0( const int j ) const { return cV(j)->P();}
+	inline const 	CoordType & cP1( const int j ) const { return cV((j+1)%3)->P();}
+	inline const 	CoordType & cP2( const int j ) const { return cV((j+2)%3)->P();}
 
 	//inline       typename T::VertexType *       & UberV( const int j )	      { assert(j>=0 && j<3); return v[j]; }
 	//inline const typename T::VertexType * const & UberV( const int j ) const	{ assert(j>=0 && j<3);	return v[j];	}
@@ -242,41 +255,41 @@ public:
 
 	namespace tri
   {
-		template < class VertContainerType, class FaceType >
+/*		template < class VertContainerType, class FaceType >
 			bool HasVFAdjacency (const TriMesh < VertContainerType , vector_occ< FaceType > > & m) 
 		{
-			if(FaceType::HasVFAdjacencyOcc()) return m.face.IsEnabledAttribute<FaceType::VFAdjType >();
-			else return FaceType::FaceType::HasVFAdjacency();
+			if(  FaceType::HasVFAdjacencyOcc()) return m.face.IsEnabledAttribute< typename FaceType::VFAdjType >();
+			else return  FaceType::HasVFAdjacency();
 		}
 
 		template < class VertContainerType, class FaceType >
 			bool HasFFAdjacency (const TriMesh < VertContainerType , vector_occ< FaceType > > & m) 
 		{
-			if(FaceType::HasFFAdjacencyOcc()) return m.face.IsEnabledAttribute<FaceType::FFAdjType >();
-			else return FaceType::FaceType::HasFFAdjacency();
+			if(FaceType::HasFFAdjacencyOcc()) return m.face.IsEnabledAttribute<typename FaceType::FFAdjType >();
+			else return FaceType::HasFFAdjacency();
 		}
 
 		template < class VertContainerType, class FaceType >
 			bool HasPerWedgeTexCoord (const TriMesh < VertContainerType , vector_occ< FaceType > > & m) 
 		{
-			if(FaceType::HasWedgeTexCoordOcc()) return m.face.IsEnabledAttribute<FaceType::WedgeTexCoordType >();
-			else return FaceType::FaceType::HasWedgeTexCoord();
+			if(FaceType::HasWedgeTexCoordOcc()) return m.face.IsEnabledAttribute<typename FaceType::WedgeTexCoordType >();
+			else return FaceType::HasWedgeTexCoord();
 		}
 
 		template < class VertContainerType, class FaceType >
 			bool HasPerFaceColor (const TriMesh < VertContainerType , vector_occ< FaceType > > & m) 
 		{
-			if(FaceType::HasFaceColorOcc()) return m.face.IsEnabledAttribute<FaceType::ColorType>();
-			else return FaceType::FaceType::HasFaceColor();
+			if(FaceType::HasFaceColorOcc()) return m.face.IsEnabledAttribute<typename FaceType::ColorType>();
+			else return FaceType::HasFaceColor();
 		}
 
 		template < class VertContainerType, class FaceType >
 			bool HasPerFaceMark (const TriMesh < VertContainerType , vector_occ< FaceType > > & m) 
 		{
-			if(FaceType::HasFaceMarkOcc()) return m.face.IsEnabledAttribute<FaceType::MarkType>();
-			else return FaceType::FaceType::HasFaceMark();
+			if(FaceType::HasFaceMarkOcc()) return m.face.IsEnabledAttribute<typename FaceType::MarkType>();
+			else return FaceType::HasFaceMark();
 		}
-
+*/
 	}; // end namesace tri
 }// end namespace vcg
 #endif
