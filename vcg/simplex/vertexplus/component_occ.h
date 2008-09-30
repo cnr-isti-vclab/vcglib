@@ -41,7 +41,7 @@ Working release (compilata solo su MSVC), component_occ � migrato da component
 
 
 namespace vcg {
-  namespace vert {
+  namespace vertex {
 /*
 Some naming Rules
 All the Components that can be added to a vertex should be defined in the namespace vert:
