@@ -1054,7 +1054,7 @@ private:
 				{
           (*fi).SetUserBit(referredBit);
 					(*fi).GetBBox(bbox);
-					vcg::trimesh::GetInBoxFace(m, gM, bbox,inBox);
+					vcg::tri::GetInBoxFace(m, gM, bbox,inBox);
 					bool Intersected=false;
           typename std::vector<FaceType*>::iterator fib;
           for(fib=inBox.begin();fib!=inBox.end();++fib)
