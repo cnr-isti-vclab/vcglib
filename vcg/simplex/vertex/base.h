@@ -175,13 +175,13 @@ Edited Comments and GPL license
 
 ****************************************************************************/
 
-#pragma message("[VCGLIB Warning]  This way to define the simplex vertex is DEPRECATED ") 
-#pragma message("[VCGLIB Warning]  use vcg/simplex/vertexplus instead ")
 
 #ifndef VERTEX_TYPE 
-#pragma message("\nYou should never directly include this file\n")
+#pragma message("\nYou should never directly include this file\_n")
 #else
 
+#pragma message("VCGLIB Warning: this way to define the simplex vertex is DEPRECATED ")
+#pragma message("VCGLIB Warning: use vcg/simplex/vertexplus instead ")
 
 #include<vcg/space/point3.h>
 #include<vcg/space/color4.h>
