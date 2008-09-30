@@ -331,7 +331,7 @@ public:
 						// sample the neighborhood
 						if(pointVSfaceInt)
 						{ 
-							vcg::trimesh::GetInSphereVertex<
+							vcg::tri::GetInSphereVertex<
 								MeshType,
 								PointsGridType,std::vector<VertexType*>,
 								std::vector<ScalarType>,
