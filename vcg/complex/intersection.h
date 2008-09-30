@@ -59,7 +59,7 @@ added vcg header
 #include<vcg/space/intersection3.h>
 #include<vcg/complex/edgemesh/allocate.h>
 #include<vcg/complex/trimesh/subset.h>
-#include<algorithm>
+#include<vcg/complex/trimesh/closest.h>
 #include<vcg/complex/trimesh/base.h>
 
 #ifndef __VCGLIB_INTERSECTION_TRI_MESH
@@ -153,8 +153,8 @@ bool Intersect(   GridType & grid,Plane3<ScalarType> plane, std::vector<typename
 						face.SetS();
 						// add to em
 						ave_length+=seg.Length();
-						vcg::edge::Allocator<EdgeMeshType>::AddEdges(em,1);
-						vi = vcg::edge::Allocator<EdgeMeshType>::AddVertices(em,2);
+						vcg::edg::Allocator<EdgeMeshType>::AddEdges(em,1);
+						vi = vcg::edg::Allocator<EdgeMeshType>::AddVertices(em,2);
 						(*vi).P() = seg.P0();
 						em.edges.back().V(0) = &(*vi); 
 						vi++;
@@ -177,7 +177,7 @@ bool Intersect(   GridType & grid,Plane3<ScalarType> plane, std::vector<typename
 /** 
     Basic Function computing the intersection between  a trimesh and a plane. It returns an EdgeMesh without needing anything else.
 		Note: This version always returns a segment for each triangle of the mesh which intersects with the plane. In other
-		words there are 2*n vertices where n is the number of segments fo the mesh. You can run vcg::edge::Unify to unify
+		words there are 2*n vertices where n is the number of segments fo the mesh. You can run vcg::edge:Unify to unify
 		the vertices closer that a given value epsilon. Note that, due to subtraction error during triangle plane intersection,
 		it is not safe to put epsilon to 0. 
 // TODO si dovrebbe considerare la topologia face-face della trimesh per derivare quella della edge mesh..
@@ -196,8 +196,8 @@ bool Intersection(TriMeshType & m,
 		{
 			if(vcg::IntersectionPlaneTriangle(pl,*fi,seg))// intersezione piano triangolo
 							{
-								vcg::edge::Allocator<EdgeMeshType>::AddEdges(em,1);
-								vi = vcg::edge::Allocator<EdgeMeshType>::AddVertices(em,2);
+								vcg::edg::Allocator<EdgeMeshType>::AddEdges(em,1);
+								vi = vcg::edg::Allocator<EdgeMeshType>::AddVertices(em,2);
 								(*vi).P() = seg.P0();
 								em.edges.back().V(0) = &(*vi); 
 								vi++;
@@ -297,11 +297,79 @@ void IntersectionBallMesh(	 TriMeshType & m, const vcg::Sphere3<ScalarType> &bal
 	vcg::Point3<ScalarType>	witness;
 	std::pair<ScalarType, ScalarType> info;
 
-	if(tol == 0) tol = M_PI * ball.Radius() * ball.Radius() / 10000;
+	if(tol == 0) tol = M_PI * ball.Radius() * ball.Radius() / 100000;
 
 	for(fi = m.face.begin(); fi != m.face.end(); ++fi)
 	if(!(*fi).IsD() && IntersectionSphereTriangle<ScalarType>(ball  ,(*fi), witness , &info))
 		closests.push_back(&(*fi));
+
+	res.Clear();
+	SubSet(res,closests);
+	int i =0;
+	while(i<res.fn){
+		 bool allIn = ( ball.IsIn(res.face[i].P(0)) && ball.IsIn(res.face[i].P(1))&&ball.IsIn(res.face[i].P(2)));
+		if( IntersectionSphereTriangle<ScalarType>(ball  ,res.face[i], witness , &info) && !allIn){
+				if(vcg::DoubleArea(res.face[i]) > tol)
+				{
+				// split the face res.face[i] in four, add the four new faces to the mesh and delete the face res.face[i]
+				v0 = vcg::tri::Allocator<TriMeshType>::AddVertices(res,3);	
+				fi = vcg::tri::Allocator<TriMeshType>::AddFaces(res,4);	
+				
+				v1 = v0; ++v1;
+				v2 = v1; ++v2;
+				(*v0).P() = (res.face[i].P(0) + res.face[i].P(1))*0.5;
+				(*v1).P() = (res.face[i].P(1) + res.face[i].P(2))*0.5;
+				(*v2).P() = (res.face[i].P(2) + res.face[i].P(0))*0.5;
+
+				(*fi).V(0) = res.face[i].V(0);
+				(*fi).V(1) = &(*v0);
+				(*fi).V(2) = &(*v2);	
+				++fi;
+
+				(*fi).V(0) = res.face[i].V(1);
+				(*fi).V(1) = &(*v1);
+				(*fi).V(2) = &(*v0);	
+				++fi;
+
+				(*fi).V(0) = &(*v0);
+				(*fi).V(1) = &(*v1);
+				(*fi).V(2) = &(*v2);	
+				++fi;
+
+				(*fi).V(0) = &(*v2);
+				(*fi).V(1) = &(*v1);
+				(*fi).V(2) = res.face[i].V(2) ;	
+
+				vcg::tri::Allocator<TriMeshType>::DeleteFace(res,res.face[i]);
+			}
+		}// there was no intersection with the boundary
+
+	if(info.first > 0.0) // closest point - radius. If >0 is outside
+		vcg::tri::Allocator<TriMeshType>::DeleteFace(res,res.face[i]);
+	++i;
+	}
+}
+
+
+template < typename  TriMeshType, class ScalarType, class IndexingType>
+void IntersectionBallMesh( IndexingType * grid,	 TriMeshType & m, const vcg::Sphere3<ScalarType> &ball, TriMeshType & res,
+													float tol = 0){
+
+	typename TriMeshType::VertexIterator v0,v1,v2;
+	typename std::vector<typename TriMeshType::FacePointer >::iterator  cfi;
+	typename TriMeshType::FaceIterator fi;
+	std::vector<typename TriMeshType:: FaceType*> closestsF,closests;
+	vcg::Point3<ScalarType>	witness;
+	std::vector<vcg::Point3<ScalarType> > witnesses;
+	std::vector<ScalarType>	distances;
+	std::pair<ScalarType, ScalarType> info;
+
+	if(tol == 0) tol = M_PI * ball.Radius() * ball.Radius() / 100000;
+
+	vcg::tri::GetInSphereFace(m,*grid, ball.Center(), ball.Radius(),closestsF,distances,witnesses);
+	for(cfi =closestsF.begin(); cfi != closestsF.end(); ++cfi)
+	if(!(**cfi).IsD() && IntersectionSphereTriangle<ScalarType>(ball  ,(**cfi), witness , &info))
+		closests.push_back(&(**cfi));
 
 	res.Clear();
 	SubSet(res,closests);
