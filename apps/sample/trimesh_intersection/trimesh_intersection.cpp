@@ -3,6 +3,8 @@
 using namespace std;
 
 // VCG headers for triangular mesh processing
+#include<vcg/simplex/edgeplus/base.h>
+#include<vcg/simplex/edgeplus/component.h>
 #include<vcg/simplex/vertexplus/base.h>
 #include<vcg/simplex/faceplus/base.h>
 #include <vcg/complex/trimesh/base.h>
@@ -21,6 +23,7 @@ using namespace std;
 // VCG File Format Importer/Exporter
 #include <wrap/io_trimesh/import.h>
 #include <wrap/io_edgemesh/export_svg.h>
+#include <wrap/io_edgemesh/export_dxf.h>
 
 // VCG Vertex
 
@@ -28,23 +31,13 @@ using namespace std;
 
 using namespace vcg;
 
-/* class MyFace;
-class MyEdge;
-class MyVertex  : public VertexAFVN<float, MyEdge, MyFace> {};
-class MyFace    : public FaceAFAV< MyVertex, MyEdge, MyFace > {};
-class MyEdge    : public vcg::EdgeAE<MyEdge, MyVertex> {};
-class MyMesh    : public vcg::tri::TriMesh< vector<MyVertex>, vector<MyFace> > {};
-class MyEdgeMesh: public vcg::edge::EdgeMesh< vector<MyVertex>, vector<MyEdge> > {};
-
- */
-
-class MyEdge;    // dummy prototype never used
 class MyFace;
-class MyVertex;
-
+class MyEdge;
 class MyVertex  : public VertexSimp2< MyVertex, MyEdge, MyFace, vert::Coord3f, vert::BitFlags, vert::Normal3f, vert::Mark>{};
+class MyEdge    : public EdgeSimp2< MyVertex,MyEdge,  MyFace, edge::VertexRef, edge::EVAdj> {};
 class MyFace    : public FaceSimp2  < MyVertex, MyEdge, MyFace, face::VertexRef,face::FFAdj, face::BitFlags, face::Normal3f> {};
 
+class MyEdgeMesh: public vcg::edg::EdgeMesh< vector<MyVertex>, vector<MyEdge> > {};
 class MyMesh : public tri::TriMesh< vector<MyVertex>, vector<MyFace > >{};
 
 
@@ -110,13 +103,18 @@ int main(int argc,char ** argv)
 		edge_mesh, avg_length, &static_grid, intersected_cells);
 
 	// Compute bounding box
-	vcg::edge::UpdateBounding<MyEdgeMesh>::Box(edge_mesh);
+	vcg::edg::UpdateBounding<MyEdgeMesh>::Box(edge_mesh);
 
 	// export the cross-section
-	if (vcg::edge::io::ExporterSVG<MyEdgeMesh>::Save(&edge_mesh, "out.svg"))
+	vcg::edg::io::SVGProperties pr;
+	pr.setScale(500/(float)edge_mesh.bbox.Diag());
+	pr.setDimension(500,500);
+
+	if (vcg::edg::io::ExporterSVG<MyEdgeMesh>::Save(&edge_mesh, "out.svg",pr))
 		printf("    The cross-intersection has been successfully saved (OUT.SVG).\n");
 	else
 		printf("    The cross-intersection cannot be saved.\n");
+
 
 	return 0;
 }
