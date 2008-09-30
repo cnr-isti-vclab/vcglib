@@ -88,12 +88,12 @@ int  main(int argc, char **argv)
 
   int t0=clock();
   // Initialization
-  tri::Pivot<MyMesh> pivot(m, radius, clustering); 
+  tri::BallPivoting<MyMesh> pivot(m, radius, clustering); 
   printf("Ball radius: %f\nClustering points withing %f radii\n", pivot.radius, clustering);
 
   int t1=clock();
   // the main processing
-  pivot.buildMesh(callback);
+  pivot.BuildMesh(callback);
 
   int t2=clock();
 
