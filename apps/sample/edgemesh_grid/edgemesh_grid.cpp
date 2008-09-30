@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <vcg/space/color4.h>
 #include <vcg/space/index/grid_static_ptr.h>
-#include <vcg/simplex/vertex/with/afvn.h>
-#include <vcg/simplex/edge/with/emef.h>
+#include <vcg/simplex/vertexplus/base.h>
+#include <vcg/simplex/vertexplus/component.h>
+#include <vcg/simplex/edgeplus/base.h>
+#include <vcg/simplex/edgeplus/component.h>
 #include <vcg/complex/edgemesh/base.h>
 #include <vcg/complex/edgemesh/allocate.h>
 #include <vcg/complex/edgemesh/update/bounding.h>
@@ -13,9 +15,9 @@
 //
 class MyFace;
 class MyEdge;
-class MyVertex  : public vcg::VertexAFVN<float,MyEdge, MyFace> {};
-class MyEdge    : public vcg::EdgeEMEF<MyEdge, MyVertex> {};
-class MyEdgeMesh: public vcg::edge::EdgeMesh< std::vector<MyVertex>, std::vector<MyEdge> > {};
+class MyVertex  : public vcg::VertexSimp2<MyVertex,MyEdge, MyFace,vcg::vert::BitFlags,vcg::vert::Coord3f> {};
+class MyEdge    : public vcg::EdgeSimp2<MyVertex,MyEdge, MyVertex,vcg::edge::Mark,vcg::edge::VertexRef,vcg::edge::BitFlags> {};
+class MyEdgeMesh: public vcg::edg::EdgeMesh< std::vector<MyVertex>, std::vector<MyEdge> > {};
 
 typedef vcg::GridStaticPtr<MyEdge, MyEdge::ScalarType> EdgeMeshGrid;
 
@@ -50,7 +52,7 @@ int main(int , char **)
 	e->V(0)=v0;
 	e->V(1)=v1;
   }
-  vcg::edge::UpdateBounding<MyEdgeMesh>::Box(em);
+  vcg::edg::UpdateBounding<MyEdgeMesh>::Box(em);
   EdgeMeshGrid static_grid;
   static_grid.Set(em.edges.begin(), em.edges.end());
   float dist;
