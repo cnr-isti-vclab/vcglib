@@ -95,7 +95,8 @@ public:
 
 	template <class OBJPOINTDISTFUNCTOR, class OBJMARKER>
 	inline ObjPtr GetClosest(
-		OBJPOINTDISTFUNCTOR & _getPointDistance, OBJMARKER & _marker, const CoordType & _p, const ScalarType & _maxDist,
+		OBJPOINTDISTFUNCTOR & _getPointDistance, OBJMARKER & _marker, 
+		const typename OBJPOINTDISTFUNCTOR::QueryType & _p, const ScalarType & _maxDist,
 		ScalarType & _minDist, CoordType & _closestPt) {
 		(void)_marker;
 		return (AABBBinaryTreeClosest<TreeType>::Closest(this->tree, _getPointDistance, _p, _maxDist, _minDist, _closestPt));
