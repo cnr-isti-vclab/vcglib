@@ -97,7 +97,7 @@ Mainly the trick here is to store a base pointer in each simplex...
 #include <limits>
 
 namespace vcg {
-  namespace vert {
+  namespace vertex {
 /*
 All the Components that can be added to a vertex should be defined in the namespace vert:
 
