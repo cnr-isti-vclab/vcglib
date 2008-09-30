@@ -35,7 +35,7 @@ class MyEdge;    // dummy prototype never used
 class MyFace;
 class MyVertex;
 
-class MyVertex  : public VertexSimp2< MyVertex, MyEdge, MyFace, vert::Coord3f, vert::Normal3f, vert::BitFlags  >{};
+class MyVertex  : public VertexSimp2< MyVertex, MyEdge, MyFace, vertex::Coord3f, vertex::Normal3f, vertex::BitFlags  >{};
 class MyFace    : public FaceSimp2  < MyVertex, MyEdge, MyFace, face::FFAdj,  face::VertexRef, face::BitFlags > {};
 class MyMesh    : public vcg::tri::TriMesh< vector<MyVertex>, vector<MyFace> > {};
 

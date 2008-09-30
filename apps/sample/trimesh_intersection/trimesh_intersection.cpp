@@ -33,7 +33,7 @@ using namespace vcg;
 
 class MyFace;
 class MyEdge;
-class MyVertex  : public VertexSimp2< MyVertex, MyEdge, MyFace, vert::Coord3f, vert::BitFlags, vert::Normal3f, vert::Mark>{};
+class MyVertex  : public VertexSimp2< MyVertex, MyEdge, MyFace, vertex::Coord3f, vertex::BitFlags, vertex::Normal3f, vertex::Mark>{};
 class MyEdge    : public EdgeSimp2< MyVertex,MyEdge,  MyFace, edge::VertexRef, edge::EVAdj> {};
 class MyFace    : public FaceSimp2  < MyVertex, MyEdge, MyFace, face::VertexRef,face::FFAdj, face::BitFlags, face::Normal3f> {};
 

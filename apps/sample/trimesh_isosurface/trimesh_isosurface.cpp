@@ -23,7 +23,7 @@ typedef float ScalarType;
 class MyEdge;
 class MyFace;
 
-class MyVertex     : public VertexSimp2< MyVertex,  MyEdge, MyFace, vert::Coord3f>{};
+class MyVertex     : public VertexSimp2< MyVertex,  MyEdge, MyFace, vertex::Coord3f>{};
 class MyFace       : public FaceSimp2< MyVertex,    MyEdge, MyFace, face::VertexRef, face::BitFlags> {};
 
 //class MyVertex  : public vcg::Vertex< ScalarType, MyEdge, MyFace > {};

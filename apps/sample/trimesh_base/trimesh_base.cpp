@@ -13,7 +13,7 @@
 class AFace;
 class AVertex;
 class AEdge;   // dummy prototype never used
-class AVertex  : public vcg::VertexSimp2< AVertex, AEdge, AFace, vcg::vert::Coord3f>{};
+class AVertex  : public vcg::VertexSimp2< AVertex, AEdge, AFace, vcg::vertex::Coord3f>{};
 class AFace    : public vcg::FaceSimp2< AVertex, AEdge, AFace, vcg::face::VertexRef,vcg::face::Color4b,vcg::face::Normal3f> {};
 
 class AMesh : public vcg::tri::TriMesh< std::vector<AVertex>, std::vector<AFace> > {};
@@ -21,7 +21,7 @@ class AMesh : public vcg::tri::TriMesh< std::vector<AVertex>, std::vector<AFace>
 class CFace;
 class CVertex;
 class CEdge;   // dummy prototype never used
-class CVertex  : public vcg::VertexSimp2< CVertex, CEdge, CFace, vcg::vert::Coord3f,vcg::vert::Normal3f>{};
+class CVertex  : public vcg::VertexSimp2< CVertex, CEdge, CFace, vcg::vertex::Coord3f,vcg::vertex::Normal3f>{};
 class CFace    : public vcg::FaceSimp2< CVertex, CEdge, CFace, vcg::face::VertexRef, vcg::face::Normal3f> {};
 
 class CMesh : public vcg::tri::TriMesh< std::vector<CVertex>, std::vector<CFace> > {};

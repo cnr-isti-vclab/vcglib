@@ -32,9 +32,9 @@ class CVertexOcf;
 // OCF Optional Component Fast 
 // OCC Optional Component Compact
 
-class CVertex     : public VertexSimp2< CVertex,    CEdge, CFace,    vert::Coord3f, vert::BitFlags,vert::Normal3f >{};
-class CVertexOcf  : public VertexSimp2< CVertexOcf, CEdge, CFaceOcf, vert::Coord3f, vert::BitFlags,vert::Normal3f >{};
-class CVertexOcc  : public VertexSimp2< CVertexOcc, CEdge, CFaceOcc, vert::Coord3f, vert::BitFlags,vert::Normal3f >{};
+class CVertex     : public VertexSimp2< CVertex,    CEdge, CFace,    vertex::Coord3f, vertex::BitFlags,vertex::Normal3f >{};
+class CVertexOcf  : public VertexSimp2< CVertexOcf, CEdge, CFaceOcf, vertex::Coord3f, vertex::BitFlags,vertex::Normal3f >{};
+class CVertexOcc  : public VertexSimp2< CVertexOcc, CEdge, CFaceOcc, vertex::Coord3f, vertex::BitFlags,vertex::Normal3f >{};
 
 class CFace       : public FaceSimp2< CVertex,    CEdge, CFace,                   face::FFAdj,    face::VertexRef, face::BitFlags, face::Normal3f > {};
 class CFaceOcf    : public FaceSimp2< CVertexOcf, CEdge, CFaceOcf, face::InfoOcf, face::FFAdjOcf, face::VertexRef, face::BitFlags, face::Normal3fOcf > {};
