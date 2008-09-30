@@ -45,8 +45,6 @@
 
 #include <vector>
 
-#include <vcg/simplex/edge/edge.h>
-
 #include <wrap/gl/glu_tesselator.h>
 
 namespace vcg {
