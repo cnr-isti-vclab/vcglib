@@ -53,7 +53,7 @@ name of adhacency function updated
 #define __VCGLIB_EDGEALLOCATOR
 
 namespace vcg {
-	namespace edge {
+	namespace edg {
 		/** \addtogroup edgemesh */
 		/*@{*/
 		/// Class to safely add vertexes and faces to a mesh updating all the involved pointers.
