@@ -27,8 +27,8 @@ using namespace vcg;
 
 class AEdge;
 class AFace;
-class AVertex     : public VertexSimp2< AVertex, AEdge, AFace, vert::Normal3f, vert::Coord3f >{};
-class AFace       : public FaceSimp2<   AVertex, AEdge, AFace, face::VertexRef, face::Normal3f, face::RTInfo, face::BitFlags> {};
+class AVertex     : public VertexSimp2< AVertex, AEdge, AFace, vert::Normal3f, vert::Coord3f,vert::BitFlags >{};
+class AFace       : public FaceSimp2<   AVertex, AEdge, AFace, face::VertexRef, face::Normal3f, face::EdgePlane, face::BitFlags> {};
 
 //class AVertex   : public vcg::Vertex< AScalarType, AEdge, AFace > { };
 //class AFace     : public vcg::FaceRTFMFN< AVertex, AEdge, AFace > { };
@@ -53,8 +53,7 @@ static void SetIndex(void) {
 }
 
 static void TestClosest(void) {
-	vcg::face::PointDistanceFunctor getPtDist;
-	const AIndex::ScalarType x = 0;
+	vcg::face::PointDistanceFunctor<AIndex::ScalarType> getPtDist;
 	const AIndex::CoordType queryPoint((AIndex::ScalarType)0, (AIndex::ScalarType)0, (AIndex::ScalarType)0);
 	const AIndex::ScalarType maxDist = std::numeric_limits<AIndex::ScalarType>::max();
 
@@ -62,7 +61,8 @@ static void TestClosest(void) {
 	AIndex::ScalarType closestDist;
 	AIndex::CoordType closestPoint;
 
-	closestFace = gIndex.GetClosest(getPtDist, vcg::EmptyClass(), queryPoint, maxDist, closestDist, closestPoint);
+	vcg::EmptyClass a;
+	closestFace = gIndex.GetClosest(getPtDist, a, queryPoint, maxDist, closestDist, closestPoint);
 
 	printf("GetClosest Test:\n");
 
@@ -77,7 +77,7 @@ static void TestClosest(void) {
 }
 
 static void TestKClosest(void) {
-	vcg::face::PointDistanceFunctor getPtDist;
+	vcg::face::PointDistanceFunctor<AIndex::ScalarType> getPtDist;
 	const unsigned int k = 10;
 	const AIndex::CoordType queryPoint((AIndex::ScalarType)0, (AIndex::ScalarType)0, (AIndex::ScalarType)0);
 	const AIndex::ScalarType maxDist = std::numeric_limits<AIndex::ScalarType>::max();
@@ -86,7 +86,8 @@ static void TestKClosest(void) {
 	std::vector<AIndex::ScalarType> closestDistances;
 	std::vector<AIndex::CoordType> closestPoints;
 
-	unsigned int rk = gIndex.GetKClosest(getPtDist, vcg::EmptyClass(), k, queryPoint, maxDist, closestObjects, closestDistances, closestPoints);
+	vcg::EmptyClass a;
+	unsigned int rk = gIndex.GetKClosest(getPtDist, a, k, queryPoint, maxDist, closestObjects, closestDistances, closestPoints);
 
 	printf("GetKClosest Test:\n");
 	printf("\tfound %d objects\n", rk);
@@ -105,7 +106,8 @@ static void TestRay(void) {
 	AIndex::ScalarType rayT;
 	AIndex::CoordType isectPt;
 
-	isectFace = gIndex.DoRay(rayIntersector, vcg::EmptyClass(), ray, maxDist, rayT);
+	vcg::EmptyClass a;
+	isectFace = gIndex.DoRay(rayIntersector, a , ray, maxDist, rayT);
 
 	printf("DoRay Test:\n");
 	if (isectFace != 0) {
