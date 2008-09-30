@@ -557,14 +557,14 @@ namespace tri
 	template < class, class > class TriMesh;
 
 	template < class VertexType, class FaceContainerType >
-    bool HasPerVertexQuality (const TriMesh < vert::vector_ocf< VertexType > , FaceContainerType > & m) 
+    bool HasPerVertexQuality (const TriMesh < vertex::vector_ocf< VertexType > , FaceContainerType > & m) 
 	{
 	  if(VertexType::HasQualityOcf()) return m.vert.IsQualityEnabled();
 	  else return VertexType::HasQuality();
 	}
 
 	template < class VertexType >
-	void ReorderVert( std::vector<size_t>  &newVertIndex, vert::vector_ocf< VertexType > &vertVec)
+	void ReorderVert( std::vector<size_t>  &newVertIndex, vertex::vector_ocf< VertexType > &vertVec)
 		{
 			vertVec.ReorderVert(newVertIndex);
 		}
