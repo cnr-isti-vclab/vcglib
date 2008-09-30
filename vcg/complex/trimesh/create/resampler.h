@@ -66,7 +66,7 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT>
 
 		int SliceSize;
 		int	CurrentSlice;
-		typedef trimesh::FaceTmark<Old_Mesh> MarkerFace;
+		typedef tri::FaceTmark<Old_Mesh> MarkerFace;
 		MarkerFace markerFunctor;
 		
 	
@@ -516,6 +516,6 @@ static void Resample(Old_Mesh &old_mesh,New_Mesh &new_mesh,vcg::Point3<int> accu
 
 };//end class resampler
 
-};//end namespace trimesh
+};//end namespace tri
 };//end namespace vcg
 #endif
