@@ -44,12 +44,12 @@ namespace vcg {
 							typename EdgeType::ScalarType & dist, 
 							vcg::Point3<typename EdgeType::ScalarType> & p )
 	{
-		vcg::Segment3<EdgeType::ScalarType> s;
+		vcg::Segment3<typename EdgeType::ScalarType> s;
 		s.P0()=e.V(0)->P();
 		s.P1()=e.V(1)->P();
-		EdgeType::CoordType near;
-		vcg::ClosestPoint<EdgeType::ScalarType>(s,near);
-		EdgeType::ScalarType d=(q-p).Norm();
+		typename EdgeType::CoordType near;
+		vcg::ClosestPoint<typename EdgeType::ScalarType>(s,near);
+		typename EdgeType::ScalarType d=(q-p).Norm();
 		if (d<dist){
 			dist=d;
 			p=near;
@@ -59,8 +59,13 @@ namespace vcg {
 			return false;
 	}
 
+	template <class S>
 	class PointDistanceFunctor {
 	public:
+		typedef S ScalarType;
+		typedef Point3<ScalarType> QueryType;
+		static inline const Point3<ScalarType> &  Pos(const QueryType & qt)  {return qt;}
+	
 		template <class EDGETYPE, class SCALARTYPE>
 		inline bool operator () (const EDGETYPE & e, const Point3<SCALARTYPE> & p, SCALARTYPE & minDist, Point3<SCALARTYPE> & q) {
 			const Point3<typename EDGETYPE::ScalarType> fp = Point3<typename EDGETYPE::ScalarType>::Construct(p);
