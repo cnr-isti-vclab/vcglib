@@ -61,7 +61,7 @@ first working version
 
 namespace vcg 
 {
-	namespace edge 
+	namespace edg 
 	{
 		namespace io 
 		{
