@@ -30,7 +30,7 @@ $Log: not supported by cvs2svn $
 #define __VCG_EDGE_UPDATE_BOUNDING
 
 namespace vcg {
-namespace edge {
+namespace edg {
 
 /** \addtogroup edgemesh */
 /*@{*/
