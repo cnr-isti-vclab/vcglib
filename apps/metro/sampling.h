@@ -308,13 +308,13 @@ float Sampling<MetroMesh>::AddSample(const Point3x &p )
 
     // compute distance between p_i and the mesh S2
     if(Flags & SamplingFlags::USE_AABB_TREE)
-      f=trimesh::GetClosestFace<MetroMesh,MetroMeshAABB>(S2, tS2, p, dist_upper_bound, dist, normf, bestq, ip);
+      f=tri::GetClosestFace<MetroMesh,MetroMeshAABB>(S2, tS2, p, dist_upper_bound, dist, normf, bestq, ip);
     if(Flags & SamplingFlags::USE_HASH_GRID)
-      f=trimesh::GetClosestFace<MetroMesh,MetroMeshHash>(S2, hS2, p, dist_upper_bound, dist, normf, bestq, ip);
+      f=tri::GetClosestFace<MetroMesh,MetroMeshHash>(S2, hS2, p, dist_upper_bound, dist, normf, bestq, ip);
     if(Flags & SamplingFlags::USE_STATIC_GRID)
-      f=trimesh::GetClosestFace<MetroMesh,MetroMeshGrid>(S2, gS2, p, dist_upper_bound, dist, normf, bestq, ip);
+      f=tri::GetClosestFace<MetroMesh,MetroMeshGrid>(S2, gS2, p, dist_upper_bound, dist, normf, bestq, ip);
 		if (Flags & SamplingFlags::USE_OCTREE)
-			f=trimesh::GetClosestFace<MetroMesh,MetroMeshOctree>(S2, oS2, p, dist_upper_bound, dist, normf, bestq, ip);
+			f=tri::GetClosestFace<MetroMesh,MetroMeshOctree>(S2, oS2, p, dist_upper_bound, dist, normf, bestq, ip);
 
     // update distance measures
     if(dist == dist_upper_bound)
