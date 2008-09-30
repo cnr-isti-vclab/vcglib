@@ -137,7 +137,7 @@ header added
 #include <vcg/space/index/space_iterators.h>
 
 namespace vcg {
-	namespace trimesh {
+	namespace tri {
 
 		//**MARKER CLASSES**//
 		template <class MESH_TYPE,class OBJ_TYPE>
@@ -247,7 +247,7 @@ namespace vcg {
 			typedef VertTmark<MESH> MarkerVert;
 			MarkerVert mv;
 			mv.SetMesh(&mesh);
-			typedef vcg::vertex::PointDistanceFunctor<typename MESH::ScalarType> VDistFunct;
+			typedef vcg::vert::PointDistanceFunctor<typename MESH::ScalarType> VDistFunct;
 			VDistFunct fn;
 			_minDist=_maxDist;
 			Point3x _closestPt;
@@ -263,7 +263,7 @@ namespace vcg {
 			typedef VertTmark<MESH> MarkerVert;
 			MarkerVert mv;
 			mv.SetMesh(&mesh);
-			typedef vcg::vertex::PointNormalDistanceFunctor<typename MESH::VertexType> VDistFunct;
+			typedef vcg::vert::PointNormalDistanceFunctor<typename MESH::VertexType> VDistFunct;
 			VDistFunct fn;
 			_minDist=_maxDist;
 			Point3x _closestPt;
@@ -291,7 +291,7 @@ namespace vcg {
 			typedef VertTmark<MESH> MarkerVert;
 			MarkerVert mv;
 			mv.SetMesh(&mesh);			
-			typedef vcg::vertex::PointDistanceFunctor<typename MESH::ScalarType> VDistFunct;
+			typedef vcg::vert::PointDistanceFunctor<typename MESH::ScalarType> VDistFunct;
 			VDistFunct distFunct;
 			return (gr.GetKClosest/* <VDistFunct,MarkerVert,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>*/
 				(distFunct,mv,_k,_p,_maxDist,_objectPtrs,_distances,_points));
@@ -326,7 +326,7 @@ namespace vcg {
 			typedef VertTmark<MESH> MarkerVert;
 			MarkerVert mv;
 			mv.SetMesh(&mesh);
-			typedef vcg::vertex::PointDistanceFunctor<typename MESH::ScalarType> VDistFunct;
+			typedef vcg::vert::PointDistanceFunctor<typename MESH::ScalarType> VDistFunct;
 			VDistFunct fn;
 			return (gr.GetInSphere/*<VDistFunct,MarkerVert,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>*/
 				(fn, mv,_p,_r,_objectPtrs,_distances,_points));
@@ -424,13 +424,13 @@ namespace vcg {
 		};
 
 		template <class GRID,class MESH>
-		class ClosestVertexIterator:public vcg::ClosestIterator<GRID, vcg::vertex::PointDistanceFunctor<typename MESH::ScalarType>, VertTmark<MESH> >
+		class ClosestVertexIterator:public vcg::ClosestIterator<GRID, vcg::vert::PointDistanceFunctor<typename MESH::ScalarType>, VertTmark<MESH> >
 		{
 		public:
 			typedef GRID GridType;
 			typedef MESH MeshType;
 			typedef VertTmark<MESH> MarkerVert;
-			typedef vcg::vertex::PointDistanceFunctor<typename MESH::ScalarType> VDistFunct;
+			typedef vcg::vert::PointDistanceFunctor<typename MESH::ScalarType> VDistFunct;
 			typedef vcg::ClosestIterator<GRID, VDistFunct, VertTmark<MESH> > ClosestBaseType;
             VDistFunct fn;
 			ClosestVertexIterator(GridType &_Si):ClosestBaseType(_Si,fn){}
@@ -460,7 +460,7 @@ namespace vcg {
 
 		};
 
-	}	 // end namespace trimesh
+	}	 // end namespace tri
 }	 // end namespace vcg
 
 #endif
