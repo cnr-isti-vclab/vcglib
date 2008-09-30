@@ -53,7 +53,7 @@ compiling error resolved
 
 namespace vcg {
 	
-	namespace trimesh {
+	namespace tri {
 		
 		template <class FaceSpatialIndexing,class TriMeshType>
 		class Inside
@@ -79,7 +79,7 @@ namespace vcg {
 				{
 					ScalarType dist;
 					CoordType Norm, ip, nearest;
-					FaceType *f = vcg::trimesh::GetClosestFace< TriMeshType, FaceSpatialIndexing >( m, _g_mesh, test, m.bbox.Diag(), dist, nearest, Norm, ip );
+					FaceType *f = vcg::tri::GetClosestFace< TriMeshType, FaceSpatialIndexing >( m, _g_mesh, test, m.bbox.Diag(), dist, nearest, Norm, ip );
 					assert( f != NULL );			/// Check if there is any face in the mesh
 					/// If the point is on the face is considered inside.
 					if( ( test - nearest ).Norm() <= EPSILON ) return true;
@@ -98,7 +98,7 @@ namespace vcg {
 						CoordType bary = vcg::Barycenter< FaceType >(*f);
 						/// Set ray : origin and direction
 						vcg::Ray3<ScalarType> r; r.Set( test, ( bary - test ) ); r.Normalize();
-						FaceType *f1 = vcg::trimesh::DoRay< TriMeshType, FaceSpatialIndexing >( m, _g_mesh, r, m.bbox.Diag(), dist );
+						FaceType *f1 = vcg::tri::DoRay< TriMeshType, FaceSpatialIndexing >( m, _g_mesh, r, m.bbox.Diag(), dist );
 						assert( f1 != NULL );
 						/// In this case normal direction is enough.
 						if( ( f1->N() * ( test - bary ) ) < 0 ) return true;
