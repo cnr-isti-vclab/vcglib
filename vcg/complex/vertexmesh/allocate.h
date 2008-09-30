@@ -32,7 +32,7 @@ $Log: not supported by cvs2svn $
 #define __VCGLIB_VERTEXALLOCATOR
 
 namespace vcg {
-namespace vertex {
+namespace vrt {
 /** \addtogroup vertexmesh */
 /*@{*/
 /// Class to safely add vertexes and faces to a mesh updating all the involved pointers.
