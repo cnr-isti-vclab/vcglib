@@ -122,7 +122,7 @@ First working version!
 #include <vcg/space/color4.h>
 
 namespace vcg {
-  namespace vert {
+  namespace vertex {
 /*
 Some naming Rules
 All the Components that can be added to a vertex should be defined in the namespace vert:
@@ -333,7 +333,7 @@ private:
   ColorType _color;    
 };
 
-template <class TT> class Color4b: public vert::Color<vcg::Color4b, TT> {
+template <class TT> class Color4b: public Color<vcg::Color4b, TT> {
 	public: static void Name(std::vector<std::string> & name){name.push_back(std::string("Color4b"));TT::Name(name);}
 };
 
