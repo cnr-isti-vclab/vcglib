@@ -140,7 +140,7 @@ namespace vcg
 
 				bool lastRound ;
 				if(em.vn){
-					vcg::edge::UpdateBounding<EdgeMeshType>::Box(em);
+					vcg::edg::UpdateBounding<EdgeMeshType>::Box(em);
 					//Grid().SetBBox(em.bbox);
 
 					std::vector<PVertex> pv;
@@ -162,7 +162,7 @@ namespace vcg
 								(*pvi).v->SetD();
 								ScalarType max_dist=em.bbox.Diag();
 								ScalarType min_dist = 0;
-								p =  (vcg::trimesh::GetClosestVertex<EdgeMeshType, GridType>( em, Grid(), vpos, 
+								p =  (vcg::tri::GetClosestVertex<EdgeMeshType, GridType>( em, Grid(), vpos, 
 									max_dist, min_dist))->P();
 
 								//closest  = Grid().GetClosest<BackCompDist,Marker>(vpos, max_dist, BackCompDist(), eps, p,tm);
