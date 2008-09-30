@@ -36,7 +36,7 @@
 #include <vcg/space/index/space_iterators.h>
 
 namespace vcg {
-	namespace vertex {
+	namespace vrt {
 
 		//**MARKER CLASSES**//
 		template <class MESH_TYPE,class OBJ_TYPE>
@@ -97,7 +97,7 @@ namespace vcg {
 			typedef VertTmark<MESH> MarkerVert;
 			MarkerVert mv;
 			mv.SetMesh(&mesh);
-			typedef vcg::vertex::PointDistanceFunctor VDistFunct;
+			typedef vcg::vert::PointDistanceFunctor VDistFunct;
 			return (gr.GetKClosest/*<VDistFunct,MarkerVert,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>*/
 				(VDistFunct(),mv,_k,_p,_maxDist,_objectPtrs,_distances,_points));
 		}
@@ -114,7 +114,7 @@ namespace vcg {
 			typedef VertTmark<MESH> MarkerVert;
 			MarkerVert mv;
 			mv.SetMesh(&mesh);
-			typedef vcg::vertex::PointDistanceFunctor VDistFunct;
+			typedef vcg::vert::PointDistanceFunctor VDistFunct;
 			return (gr.GetInSphere/*<VDistFunct,MarkerVert,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>*/
 				(VDistFunct(),mv,_p,_r,_objectPtrs,_distances,_points));
 		}
@@ -136,13 +136,13 @@ namespace vcg {
 		//**ITERATORS DEFINITION**//
 
 		template <class GRID,class MESH>
-		class ClosestVertexIterator:public vcg::ClosestIterator<GRID,vcg::vertex::PointDistanceFunctor, VertTmark<MESH> >
+		class ClosestVertexIterator:public vcg::ClosestIterator<GRID,vcg::vert::PointDistanceFunctor, VertTmark<MESH> >
 		{
 		public:
 			typedef GRID GridType;
 			typedef MESH MeshType;
 			typedef VertTmark<MESH> MarkerVert;
-			typedef vcg::vertex::PointDistanceFunctor VDistFunct;
+			typedef vcg::vert::PointDistanceFunctor VDistFunct;
 			typedef vcg::ClosestIterator<GRID,VDistFunct, VertTmark<MESH> > ClosestBaseType;
 
 			ClosestVertexIterator(GridType &_Si):ClosestBaseType(_Si,VDistFunct()){}
@@ -152,7 +152,7 @@ namespace vcg {
 		};
 
 
-	}	 // end namespace vertex
+	}	 // end namespace vert
 }	 // end namespace vcg
 
 #endif
