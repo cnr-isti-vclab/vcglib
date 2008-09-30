@@ -79,7 +79,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
       if(f.IsD()) continue;
       for(int k = 0; k < 3; k++) {
         f.V(k)->SetV();
-        int n = trimesh::GetInSphereVertex(this->mesh, grid, f.V(k)->P(), min_edge, targets, dists, points);
+        int n = tri::GetInSphereVertex(this->mesh, grid, f.V(k)->P(), min_edge, targets, dists, points);
         for(int t = 0; t < n; t++) {
           targets[t]->SetUserBit(usedBit);
           assert(targets[t]->IsUserBit(usedBit));
@@ -105,7 +105,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
       
       seed.SetUserBit(usedBit);       
 
-      int n = trimesh::GetInSphereVertex(this->mesh, grid, seed.P(), 2*radius, targets, dists, points);
+      int n = tri::GetInSphereVertex(this->mesh, grid, seed.P(), 2*radius, targets, dists, points);
       if(n < 3) {      
         continue;
       }        
@@ -235,7 +235,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
     std::vector<ScalarType> dists;    
     std::vector<Point3x> points;
     
-    int n = trimesh::GetInSphereVertex(this->mesh, grid, middle, r + radius, targets, dists, points);
+    int n = tri::GetInSphereVertex(this->mesh, grid, middle, r + radius, targets, dists, points);
           
     if(targets.size() == 0) {
       return -1; //this really would be strange but one never knows.
@@ -395,7 +395,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
     std::vector<VertexType *> targets;      
     std::vector<Point3x> points;      
     std::vector<ScalarType> dists;       
-    int n = trimesh::GetInSphereVertex(this->mesh, grid, v->P(), min_edge, targets, dists, points);
+    int n = tri::GetInSphereVertex(this->mesh, grid, v->P(), min_edge, targets, dists, points);
     for(int t = 0; t < n; t++) 
       targets[t]->SetUserBit(usedBit);
     v->SetV();
