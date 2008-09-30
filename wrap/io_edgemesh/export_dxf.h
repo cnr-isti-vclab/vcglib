@@ -42,7 +42,7 @@ export_dxf created
 
 
 namespace vcg {
-	namespace edge {
+	namespace edg {
 		namespace io {
 
 
@@ -78,7 +78,7 @@ public:
 
 	static void Save(EdgeMeshType *mp, FILE* o )
 	{
-		EdgeMeshType::EdgeIterator i;
+		typename EdgeMeshType::EdgeIterator i;
 		for(i=mp->edges.begin(); i!=mp->edges.end();++i)
 		{
 			Point3f p1 = (*i).V(0)->P();
