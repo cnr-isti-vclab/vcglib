@@ -59,7 +59,7 @@ People should subclass his vertex class from these one...
 #define __VCGLIB_EDGEMESH
 
 namespace vcg {
-namespace edge {
+namespace edg {
 /** \addtogroup edgemesh */
 /*@{*/
 
