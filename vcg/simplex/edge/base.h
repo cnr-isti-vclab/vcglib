@@ -62,6 +62,10 @@ created
 #ifndef __VCGLIB__EDGE_TYPE_BASE
 #define __VCGLIB__EDGE_TYPE_BASE
 
+#pragma message("[VCGLIB Warning]  this way to define the simplex edge is DEPRECATED ") 
+#pragma message("[VCGLIB Warning]  use vcg/simplex/edgeplus instead ") 
+
+
 #include <vcg/space/box3.h>
 #include <vcg/space/texcoord2.h>
 
