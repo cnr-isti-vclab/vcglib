@@ -57,7 +57,7 @@ People should subclass his vertex class from these one...
 #define __VCGLIB_VERTEXMESH
 
 namespace vcg {
-namespace vertex {
+namespace vrt {
 /** \addtogroup vertexmesh */
 /*@{*/
 
