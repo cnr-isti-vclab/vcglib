@@ -52,7 +52,7 @@ just color and quality on the vertex
 #include <vcg/simplex/faceplus/component_rt.h>
 class MyEdge;
 class CFace;
-class CVertex   : public vcg::VertexSimp2<CVertex,MyEdge,CFace,vcg::vert::Coord3d,vcg::vert::Qualityf,vcg::vert::Normal3d,vcg::vert::BitFlags> {};
+class CVertex   : public vcg::VertexSimp2<CVertex,MyEdge,CFace,vcg::vert::Coord3d,vcg::vert::Qualityf,vcg::vert::Normal3d,vcg::vert::Color4b,vcg::vert::BitFlags> {};
 class CFace     : public vcg::FaceSimp2< CVertex,MyEdge,CFace,vcg::face::VertexRef, vcg::face::Normal3d, vcg::face::EdgePlane,vcg::face::Color4b,vcg::face::Mark,vcg::face::BitFlags> {};
 class CMesh     : public vcg::tri::TriMesh< std::vector<CVertex>, std::vector<CFace> > {};
 #else
