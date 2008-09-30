@@ -624,7 +624,7 @@ class Pivot {
                              std::vector<float> &dists) {
       std::vector<CVertex *> ptr;
       std::vector<Point3f> points;
-      int n = vcg::trimesh::GetInSphereVertex(mesh, grid, p, distance, ptr, dists, points);
+      int n = vcg::tri::GetInSphereVertex(mesh, grid, p, distance, ptr, dists, points);
       for(int i = 0; i < ptr.size(); i++) 
         results.push_back(ptr[i] - &(mesh.vert[0]));
       return n;
