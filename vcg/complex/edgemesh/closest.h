@@ -76,7 +76,7 @@ namespace vcg {
 			typedef EdgeTmark<MESH> MarkerEdge;
 			MarkerEdge mf;
 			mf.SetMesh(&mesh);
-			vcg::edge::PointDistanceFunctor PDistFunct;
+			vcg::edge::PointDistanceFunctor<ScalarType> PDistFunct;
 			_minDist=_maxDist;
 			return (gr.GetClosest(PDistFunct,mf,_p,_maxDist,_minDist,_closestPt));
 		}
@@ -90,7 +90,7 @@ namespace vcg {
 			typedef VertTmark<MESH> MarkerVert;
 			MarkerVert mv;
 			mv.SetMesh(&mesh);
-			typedef vcg::vertex::PointDistanceFunctor VDistFunct;
+			typedef vcg::vert::PointDistanceFunctor<ScalarType> VDistFunct;
 			_minDist=_maxDist;
 			Point3x _closestPt;
 			return (gr.GetClosest/*<VDistFunct,MarkerVert>*/(VDistFunct(),mv,_p,_maxDist,_minDist,_closestPt));
@@ -101,10 +101,11 @@ namespace vcg {
 			const typename GRID::CoordType & _p, const typename GRID::ScalarType & _maxDist,
 			OBJPTRCONTAINER & _objectPtrs,DISTCONTAINER & _distances, POINTCONTAINER & _points)
 		{
+			typedef typename GRID::ScalarType ScalarType;
 			typedef EdgeTmark<MESH> MarkerEdge;
 			MarkerEdge mf;
 			mf.SetMesh(&mesh);
-		  vcg::face::PointDistanceFunctor FDistFunct;
+		  vcg::face::PointDistanceFunctor<ScalarType> FDistFunct;
 			return (gr.GetKClosest /*<vcg::face::PointDistanceFunctor, MarkerFace,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>*/
 				(FDistFunct,mf,_k,_p,_maxDist,_objectPtrs,_distances,_points));
 		}
@@ -114,10 +115,11 @@ namespace vcg {
 			const typename GRID::CoordType & _p, const typename GRID::ScalarType & _maxDist,
 			OBJPTRCONTAINER & _objectPtrs,DISTCONTAINER & _distances, POINTCONTAINER & _points)
 		{
+			typedef typename GRID::ScalarType ScalarType;
 			typedef VertTmark<MESH> MarkerVert;
 			MarkerVert mv;
 			mv.SetMesh(&mesh);
-			typedef vcg::vertex::PointDistanceFunctor VDistFunct;
+			typedef vcg::vert::PointDistanceFunctor<ScalarType> VDistFunct;
 			return (gr.GetKClosest/* <VDistFunct,MarkerVert,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>*/
 				(VDistFunct(),mv,_k,_p,_maxDist,_objectPtrs,_distances,_points));
 		}
@@ -132,10 +134,11 @@ namespace vcg {
 			DISTCONTAINER & _distances, 
 			POINTCONTAINER & _points)
 		{
+			typedef typename GRID::ScalarType ScalarType;
 			typedef VertTmark<MESH> MarkerVert;
 			MarkerVert mv;
 			mv.SetMesh(&mesh);
-			typedef vcg::vertex::PointDistanceFunctor VDistFunct;
+			typedef vcg::vert::PointDistanceFunctor<ScalarType> VDistFunct;
 			return (gr.GetInSphere/*<VDistFunct,MarkerVert,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>*/
 				(VDistFunct(),mv,_p,_r,_objectPtrs,_distances,_points));
 		}
