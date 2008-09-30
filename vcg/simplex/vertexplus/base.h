@@ -112,14 +112,15 @@ we have to build the type a step a time (deriving from a single ancestor at a ti
 
 */ 
 template <class BVT, class BET=DumClass, class BFT=DumClass, class BTT=DumClass>
-class VertexBase: public vert::EmptyTexCoord<
-                         vert::EmptyVFAdj<
-                         vert::EmptyColorQuality<
-                         vert::EmptyBitFlags<
-                         vert::EmptyCoordNormal<
-												 vert::EmptyCurvature<
-												 vert::EmptyCurvatureDir<
-													VertexTypeHolder <BVT, BET, BFT, BTT> > > > > > > >{
+class VertexBase: public vertex::EmptyTexCoord<
+                         vertex::EmptyVFAdj<
+                         vertex::EmptyVEAdj<
+                         vertex::EmptyColorQuality<
+                         vertex::EmptyBitFlags<
+                         vertex::EmptyCoordNormal<
+												 vertex::EmptyCurvature<
+												 vertex::EmptyCurvatureDir<
+													VertexTypeHolder <BVT, BET, BFT, BTT> > > > > > > > >{
 };
 
 
