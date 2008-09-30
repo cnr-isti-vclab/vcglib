@@ -60,7 +60,7 @@ public:
 	/* mesh only for using spatial indexing functions (to remove) */
 	class PEdge;    // dummy prototype never used
 	class PFace;
-	class PVertex : public vcg::VertexSimp2< PVertex, PEdge, PFace,vcg::vert::BitFlags,vcg::vert::Coord3f ,vcg::vert::Mark>{};
+	class PVertex : public vcg::VertexSimp2< PVertex, PEdge, PFace,vcg::vertex::BitFlags,vcg::vertex::Coord3f ,vcg::vertex::Mark>{};
 	/*same as for the vertes */ 
 	class PFace   : public vcg::FaceSimp2<   PVertex, PEdge, PFace> {};
 	/*the mesh is a container of vertices and a container of faces */ 
@@ -238,7 +238,7 @@ FourPCS<MeshType>:: Init(MeshType &_P,MeshType &_Q){
 			std::vector< CoordType > samples,d_samples;
 			std::vector<ScalarType > dists;
 			std::vector<VertexType* > ress;
-			vcg::trimesh::GetKClosestVertex<
+			vcg::tri::GetKClosestVertex<
 					MeshType,
 					vcg::GridStaticPtr<typename MeshType::VertexType, ScalarType>,
 					std::vector<VertexType*>,
@@ -310,7 +310,7 @@ FourPCS<MeshType>::SelectCoplanarBase(){
 		std::vector<ScalarType> distances;
 		std::vector<CoordType> points;
 
-		 vcg::trimesh::GetInSphereVertex<
+		 vcg::tri::GetInSphereVertex<
 					MeshType,
 					vcg::GridStaticPtr<typename MeshType::VertexType, ScalarType >,
 					std::vector<typename MeshType::VertexType*>,
@@ -348,7 +348,7 @@ FourPCS<MeshType>::SelectCoplanarBase(){
 		std::vector<ScalarType > dists;
 
 		for(int i  = 0 ; i< 4; ++i){
-			vcg::trimesh::GetKClosestVertex<
+			vcg::tri::GetKClosestVertex<
 				MeshType,
 				vcg::GridStaticPtr<typename MeshType::VertexType, ScalarType >,
 				std::vector<VertexType*>,
@@ -487,7 +487,7 @@ FourPCS<MeshType>::FindCongruent() { // of base B, on Q, with approximation delt
 		bb.Add(R2inv[i].pos+vcg::Point3f(prs.delta * 0.1,prs.delta * 0.1 , prs.delta * 0.1 ));
 		bb.Add(R2inv[i].pos-vcg::Point3f(prs.delta * 0.1,prs.delta* 0.1  , prs.delta* 0.1));
 
-		vcg::trimesh::GetInBoxVertex<PMesh,GridType,std::vector<typename PMesh::VertexType*> >
+		vcg::tri::GetInBoxVertex<PMesh,GridType,std::vector<typename PMesh::VertexType*> >
 			 (Invr,*ugrid,bb,closests);
  
 		 n_closests+=closests.size();
@@ -552,14 +552,14 @@ int FourPCS<MeshType>::EvaluateSample(CandiType & fp, CoordType & tp, CoordType 
 				np[0] = np4[0]; np[1] = np4[1]; 	np[2] = np4[2];
  
       v = 0;
-			//v = vcg::trimesh::GetClosestVertex<
+			//v = vcg::tri::GetClosestVertex<
 			//	MeshType,
 			//	vcg::GridStaticPtr<typename MeshType::VertexType, ScalarType >
 			//  >(*Q,ugridQ,tp,radius,  dist  );
 			typename MeshType::VertexType vq;
 			vq.P() = tp;
 			vq.N() = np;
-			v = vcg::trimesh::GetClosestVertexNormal<
+			v = vcg::tri::GetClosestVertexNormal<
 				MeshType,
 				vcg::GridStaticPtr<typename MeshType::VertexType, ScalarType >
 			  >(*Q,ugridQ,vq,radius,  dist  );
