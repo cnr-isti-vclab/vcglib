@@ -33,7 +33,7 @@ Initial commit
 #define __VCG_VERTEX_UPDATE_POSITION
 
 namespace vcg {
-namespace vertex {
+namespace vrt {
 
 /** \addtogroup vertexmesh */
 /*@{*/

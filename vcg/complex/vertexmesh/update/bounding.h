@@ -38,7 +38,7 @@ creation
 #include <vcg/space/box3.h>
 
 namespace vcg {
-namespace vertex {
+namespace vrt {
 
 /** \addtogroup vertexmesh */
 /*@{*/
@@ -74,7 +74,7 @@ class UpdateBounding: public UpdateBoundingBase<typename VMType::VertexContainer
 	}
 };
 
-}	// End namespace vertex
+}	// End namespace vert
 }	// End namespace vcg
 
 
