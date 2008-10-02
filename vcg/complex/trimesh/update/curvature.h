@@ -108,87 +108,96 @@ private:
 public:
 	/// \brief Compute principal direction and magniuto of curvature.
 	
-	/** 
-	 Based on the paper  <a href="http://mesh.caltech.edu/taubin/publications/taubin-iccv95b.pdf">  <em> "Estimating the Tensor of Curvature of a Surface from a Polyhedral Approximation" </em> </a>
+/*
+	Compute principal direction and magniuto of curvature as describe in the paper:
+	@InProceedings{bb33922,
+  author =	"G. Taubin",
+  title =	"Estimating the Tensor of Curvature of a Surface from a
+		 Polyhedral Approximation",
+  booktitle =	"International Conference on Computer Vision",
+  year = 	"1995",
+  pages =	"902--907",
+  URL =  	"http://dx.doi.org/10.1109/ICCV.1995.466840",
+  bibsource =	"http://www.visionbib.com/bibliography/describe440.html#TT32253",
 	*/
 		static void PrincipalDirections(MeshType &m) {
 
 			assert(m.HasVFTopology());
 
 			vcg::tri::UpdateNormals<MeshType>::PerVertexNormalized(m);
-			vcg::tri::UpdateFlags<MeshType>::VertexBorderFromFace(m);
 
-			VertexIterator vi; 
+			VertexIterator vi;
 			for (vi =m.vert.begin(); vi !=m.vert.end(); ++vi) {
 				if ( ! (*vi).IsD() && (*vi).VFp() != NULL) {
 
 					VertexType * central_vertex = &(*vi);
 
 					std::vector<float> weights;
-					std::vector<AdjVertex> vertices_dup,vertices;
+					std::vector<AdjVertex> vertices;
 
-					assert((*vi).VFp() != NULL);
 					vcg::face::JumpingPos<FaceType> pos((*vi).VFp(), central_vertex);
+
+					VertexType* firstV = pos.VFlip();
+					VertexType* tempV;
 					float totalDoubleAreaSize = 0.0f;
 
-					FaceType * startf = pos.F();
-					FaceType* tempF;
-					int hh = 0;
+					if (((firstV->cP()-central_vertex->cP())^(pos.VFlip()->cP()-central_vertex->cP()))*central_vertex->cN()<=0.0f)
+					{
+						pos.Set(central_vertex->VFp(), central_vertex);
+						pos.FlipE();
+						firstV = pos.VFlip();
+					}	
+					else pos.Set(central_vertex->VFp(), central_vertex);
+
+					// compute the area of each triangle around the central vertex as well as their total area 
 					do 
-					{ hh++;
+					{
+						pos.NextE();
+						tempV = pos.VFlip();
+
 						AdjVertex v;
 
-						pos.FlipE();
-						v.vert = pos.VFlip();			
-						v.doubleArea = vcg::DoubleArea(*pos.F());
-						vertices_dup.push_back(v);
+						v.isBorder = pos.IsBorder();
+						v.vert = tempV;			
+						v.doubleArea = ((pos.F()->V(1)->cP() - pos.F()->V(0)->cP()) ^ (pos.F()->V(2)->cP()- pos.F()->V(0)->cP())).Norm();;
+						totalDoubleAreaSize += v.doubleArea;
 
-						pos.FlipE();
-						v.vert = pos.VFlip();			
-						v.doubleArea = vcg::DoubleArea(*pos.F());
-						vertices_dup.push_back(v);
-
-						pos.NextFE();
-						tempF = pos.F();
+						vertices.push_back(v);						
 					} 
-					while(tempF != startf);	
+					while(tempV != firstV);	
 
-					AdjVertex v;
-					for(int i = 1 ; i <= vertices_dup.size();  )
-					{
-							v.vert = vertices_dup[(i)%vertices_dup.size()].vert;
-							v.doubleArea = vertices_dup[i%vertices_dup.size()].doubleArea ;
-						if( vertices_dup[(i)%vertices_dup.size()].vert == vertices_dup[(i+1)%vertices_dup.size()].vert){
-							v.doubleArea += vertices_dup[(i+1)%vertices_dup.size()].doubleArea;
-							i+=2;
-						}else 
-							++i;
-
-						totalDoubleAreaSize+=v.doubleArea;
-						vertices.push_back(v);
+					// compute the weights for the formula computing matrix M
+					for (int i = 0; i < vertices.size(); ++i) {
+						if (vertices[i].isBorder) {
+							weights.push_back(vertices[i].doubleArea / totalDoubleAreaSize);
+						} else {
+							weights.push_back(0.5f * (vertices[i].doubleArea + vertices[(i-1)%vertices.size()].doubleArea) / totalDoubleAreaSize);
+						}
+						assert(weights.back() < 1.0f);
 					}
 
-					for (int i = 0; i < vertices.size(); ++i)  
-							weights.push_back(vertices[i].doubleArea / totalDoubleAreaSize);
-
+					// compute I-NN^t to be used for computing the T_i's
 					Matrix33<ScalarType> Tp;
 					for (int i = 0; i < 3; ++i)
 						Tp[i][i] = 1.0f - powf(central_vertex->cN()[i],2);
-					Tp[0][1] = Tp[1][0] = -1.0f * (central_vertex->cN()[0] * central_vertex->cN()[1]);
+					Tp[0][1] = Tp[1][0] = -1.0f * (central_vertex->N()[0] * central_vertex->cN()[1]);
 					Tp[1][2] = Tp[2][1] = -1.0f * (central_vertex->cN()[1] * central_vertex->cN()[2]);
 					Tp[0][2] = Tp[2][0] = -1.0f * (central_vertex->cN()[0] * central_vertex->cN()[2]);
 
+					// for all neighbors vi compute the directional curvatures k_i and the T_i
+					// compute M by summing all w_i k_i T_i T_i^t
 					Matrix33<ScalarType> tempMatrix;
 					Matrix33<ScalarType> M;
 					M.SetZero();
 					for (int i = 0; i < vertices.size(); ++i) {
 						CoordType edge = (central_vertex->cP() - vertices[i].vert->cP());
 						float curvature = (2.0f * (central_vertex->cN() * edge) ) / edge.SquaredNorm();
-						CoordType T = (Tp*edge).Normalize()*(-1.0); // -1.0 useless, just to conform the paper
+						CoordType T = (Tp*edge).Normalize();
 						tempMatrix.ExternalProduct(T,T);
 						M += tempMatrix * weights[i] * curvature ;
 					}
 
+					// compute vector W for the Householder matrix
 					CoordType W;
 					CoordType e1(1.0f,0.0f,0.0f);
 					if ((e1 - central_vertex->cN()).SquaredNorm() > (e1 + central_vertex->cN()).SquaredNorm())
@@ -197,6 +206,7 @@ public:
 						W = e1 + central_vertex->cN();
 					W.Normalize();
 
+					// compute the Householder matrix I - 2WW^t
 					Matrix33<ScalarType> Q;
 					Q.SetIdentity();
 					tempMatrix.ExternalProduct(W,W);
@@ -204,18 +214,19 @@ public:
 
 					Matrix33<ScalarType> Qt(Q);
 					Qt.Transpose();
+
+					// compute matrix Q^t M Q
 					Matrix33<ScalarType> QtMQ = (Qt * M * Q);
 
 					CoordType bl = Q.GetColumn(0);
 					CoordType T1 = Q.GetColumn(1);
 					CoordType T2 = Q.GetColumn(2);
 
+					// find sin and cos for the Givens rotation
 					float s,c;
 					// Gabriel Taubin hint and Valentino Fiorin impementation
 					float qt21 = QtMQ[2][1];
 					float qt12 = QtMQ[1][2];
-
-
 					float alpha = QtMQ[1][1]-QtMQ[2][2];
 					float beta  = QtMQ[2][1];
 
@@ -229,7 +240,7 @@ public:
 					float min_error = std::numeric_limits<ScalarType>::infinity();
 					for (int i=0; i<2; i++)
 					{
-						delta = sqrtf(powf(h[1], 2) + 4.0f);
+						delta = sqrtf(powf(h[i], 2) + 4.0f);
 						t[0] = (h[i]+delta) / 2.0f;
 						t[1] = (h[i]-delta) / 2.0f;
 
@@ -254,34 +265,40 @@ public:
 					c = best_c;
 					s = best_s;
 
-					vcg::Matrix33<ScalarType> minor22(QtMQ);
-					// clean up
-					minor22[0][0] = minor22[0][1] = minor22[0][2] = 0.0;
-					minor22[0][0] = minor22[1][0] = minor22[2][0] = 0.0;
+					vcg::ndim::MatrixMNf minor2x2 (2,2);
+					vcg::ndim::MatrixMNf S (2,2);
 
-					vcg::Matrix33<ScalarType> S; S.SetIdentity();
-					S[1][1] = S[2][2] = c;
-					S[1][2] = s;
-					S[2][1] = -1.0f * s;
 
-					vcg::Matrix33<ScalarType>  St (S);
+					// diagonalize M
+					minor2x2[0][0] = QtMQ[1][1];
+					minor2x2[0][1] = QtMQ[1][2];
+					minor2x2[1][0] = QtMQ[2][1];
+					minor2x2[1][1] = QtMQ[2][2];
+
+					S[0][0] = S[1][1] = c;
+					S[0][1] = s;
+					S[1][0] = -1.0f * s;
+
+					vcg::ndim::MatrixMNf St (S);
 					St.Transpose();					
 
-					vcg::Matrix33<ScalarType>  StMS(St * minor22 * S);
+					vcg::ndim::MatrixMNf StMS(St * minor2x2 * S);
 
-					float Principal_Curvature1 = (3.0f * StMS[1][1]) - StMS[2][2];
-					float Principal_Curvature2 = (3.0f * StMS[2][2]) - StMS[1][1];
+					// compute curvatures and curvature directions
+					float Principal_Curvature1 = (3.0f * StMS[0][0]) - StMS[1][1];
+					float Principal_Curvature2 = (3.0f * StMS[1][1]) - StMS[0][0];
 
 					CoordType Principal_Direction1 = T1 * c - T2 * s;
 					CoordType Principal_Direction2 = T1 * s + T2 * c; 
 
 					(*vi).PD1() = Principal_Direction1;
 					(*vi).PD2() = Principal_Direction2;
-					(*vi).K1() = Principal_Curvature1;
-					(*vi).K2() = Principal_Curvature2;
-					}
+					(*vi).K1() =  Principal_Curvature1;
+	 				(*vi).K2() =  Principal_Curvature2;
+				}
 			}
 		}
+	 
 	 
 
 
