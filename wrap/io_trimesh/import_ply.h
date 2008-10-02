@@ -383,6 +383,13 @@ static const char *ErrorMsg(int error)
   else return ply_error_msg[error].c_str();
 };
 
+// to check if a given error is critical or not.
+static bool ErrorCritical(int err)
+{ 
+	if(err == PlyInfo::E_NO_FACE) return false;
+	return true;
+}
+	
 
 /// Standard call for reading a mesh
 static int Open( OpenMeshType &m, const char * filename, CallBackPos *cb=0)
@@ -467,7 +474,10 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				for(ii=0;ii< FaceVariantNum;++ii)
 					if( pf.AddToRead(FaceDesc(9+ii))!=-1 ) break;
 				if(ii==FaceVariantNum) if(pf.AddToRead(TristripDesc(0))==-1) // Se fallisce tutto si prova a vedere se ci sono tristrip alla levoy.
-									{ pi.status = PlyInfo::E_NO_FACE;   return pi.status; }
+									{ 
+										pi.status = PlyInfo::E_NO_FACE;   
+										//return pi.status;  no face is not a critical error. let's continue.
+									}
 			}
 		// Descrittori facoltativi dei flags
 	
