@@ -96,7 +96,7 @@ class GridStaticObj : public BasicGrid<FLT>
 	 // Dato un punto ritorna l'indice della cella
 	 inline int GridInd( const Point3<FLT> & p ) const { return GridInd(GridP(p)); 	}
   
-	void Create( Point3i &_siz, const ObjType & init )
+	void Create( const Point3i &_siz, const ObjType & init )
 	{
 		this->siz=_siz;
 	 	this->voxel[0] = this->dim[0]/this->siz[0];
