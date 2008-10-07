@@ -20,66 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.18  2008/03/18 10:31:47  cignoni
-added color interpolation to butterfly
-
-Revision 1.17  2007/03/27 09:25:14  cignoni
-corrected managment of selected flag when refining the whole mesh flipmesh
-
-Revision 1.16  2007/03/12 15:37:18  tarini
-Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
-
-Revision 1.15  2007/01/18 18:15:14  cignoni
-added missing typenames
-
-Revision 1.14  2007/01/17 14:31:47  giec
-Added TrSplit function.
-
-Revision 1.13  2006/10/27 13:26:49  ganovelli
-changed   &*vert.end() to !vert.empty()  -> &vert.back() to comply vs2005 compiler
-
-Revision 1.12  2006/06/18 20:42:01  cignoni
-removed wrong fn setting
-
-Revision 1.11  2006/06/06 14:35:28  zifnab1974
-Changes for compilation on linux AMD64. Some remarks: Linux filenames are case-sensitive. _fileno and _filelength do not exist on linux
-
-Revision 1.10  2006/05/03 21:42:10  cignoni
-HasPerWedgeTexture -> HasPerWedgeTexture(m)
-
-Revision 1.9  2005/12/22 11:24:09  cignoni
-removed div by zero bug in callback of refine (tnx to Mario Latronico)
-
-Revision 1.8  2005/12/13 11:01:01  cignoni
-Added Callback in refine
-
-Revision 1.7  2005/12/02 00:06:37  cignoni
-commented out an old TRACE
-
-Revision 1.6  2005/07/11 13:13:33  cignoni
-small gcc-related compiling issues (typenames,ending cr, initialization order)
-
-Revision 1.5  2005/06/29 15:25:41  callieri
-deleted a wrong declaration "typename typename"
-
-Revision 1.4  2005/06/17 00:48:27  cignoni
-Corrected the type name of wedge tex coords WedgeInterp in RefineE
-
-Revision 1.3  2005/02/25 10:28:04  pietroni
-added #include<vcg/complex/trimesh/update/topology.h> use of update topology in refineE
-
-Revision 1.2  2005/02/02 16:01:13  pietroni
-1 warning corrected
-
-Revision 1.1  2004/10/12 15:42:29  ganovelli
-first working version
-
-
-****************************************************************************/
 
 #ifndef __VCGLIB_REFINE
 #define __VCGLIB_REFINE
@@ -99,6 +39,31 @@ first working version
 #include <vcg/space/triangle3.h>
 
 namespace vcg{
+	
+/* A very short intro about the generic refinement framework,
+	the main fuction is the 
+	
+ template<class MESH_TYPE,class MIDPOINT, class EDGEPRED>
+ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, CallBackPos *cb = 0)
+ 
+ You have to provide two functor objects to this, one for deciding what edge has to be spltted and one to decide position and new values for the attributes of the new point.
+	
+ for example the minimal EDGEPRED is
+ 
+ template <class MESH_TYPE, class FLT> class EdgeLen
+ {
+   public: 
+	 FLT thr2;
+	 bool operator()(face::Pos<typename MESH_TYPE::FaceType> ep) const
+	 {
+			return SquaredDistance(ep.f->V(ep.z)->P(), ep.f->V1(ep.z)->P())>thr2;
+	 }
+ };
+  
+ With a bit of patience you can customize to make also slicing operation.
+ 
+*/
+	
 
 /* The table which encodes how to subdivide a triangle depending 
    on the splitted edges is organized as such:
