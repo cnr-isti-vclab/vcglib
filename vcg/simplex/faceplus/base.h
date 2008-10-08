@@ -108,7 +108,7 @@ class FaceTypeHolder{
 
 
  // prot
- 	const int & VN()  const { return 3;}
+ 	const int VN()  const { return 3;}
 	inline int Prev(const int & i){ return (i+(3-1))%3;}
 	inline int Next(const int & i){ return (i+1)%3;}
 	inline void Alloc(const int & ){}
