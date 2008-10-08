@@ -13,7 +13,8 @@ public:
 	typedef enum
 	{
 		VERTEX,
-		FRAGMENT
+		FRAGMENT,
+		GEOMETRY
 	} ShaderType;
 
 	Shader(void) : GLObject(), Bindable()
@@ -31,6 +32,7 @@ public:
 		{
 			case Shader::VERTEX   : t = GL_VERTEX_SHADER;   break;
 			case Shader::FRAGMENT : t = GL_FRAGMENT_SHADER; break;
+			case Shader::GEOMETRY : t = GL_GEOMETRY_SHADER_EXT; break;
 			default: return;
 		};
 		this->objectID = glCreateShader(t);
@@ -150,6 +152,18 @@ public:
 	ShaderType Type(void) const
 	{
 		return Shader::FRAGMENT;
+	}
+};
+
+class GeometryShader : public Shader
+{
+	GeometryShader(void) : Shader()
+	{
+	}
+
+	ShaderType Type(void) const
+	{
+		return Shader::GEOMETRY;
 	}
 };
 
