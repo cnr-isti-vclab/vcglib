@@ -64,4 +64,4 @@ protected:
 	virtual void DoUnbind(void) = 0;
 };
 
-#endif __GL_OBJECT_H__
+#endif //__GL_OBJECT_H__
