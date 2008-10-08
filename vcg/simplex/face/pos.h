@@ -182,12 +182,8 @@ public:
 	{
 		f = fp;
 		v = vp;
-		if (f->V(0) == v)
-			z = 2;
-		else if (f->V(1) == v)
-			z = 0;
-		else if (f->V(2) == v)
-			z = 1;
+		for(int i = 0; i < f->VN(); ++i)
+			if (f->V(i) == v) { z = f->Prev(i); break;}
 	}
 
 	// Official Access functions functions 
@@ -201,9 +197,7 @@ public:
 // It should holds that Vind != (z+1)%3   &&   Vind == z || Vind = z+2%3
    int VInd()
 	 {
-		 if(v==f->V(0)) return 0;
-		 if(v==f->V(1)) return 1;
-		 if(v==f->V(2)) return 2;
+		 for(int i = 0; i < f->VN(); ++i) if(v==f->V(i)) return i;
 		 assert(0);
 	 }
 
@@ -264,19 +258,19 @@ public:
 	/// It moves on the adjacent face incident to v, via a different edge that j
 	void NextE()
 	{
-		assert( f->V(z)==v || f->V((z+1)%3)==v ); // L'edge j deve contenere v
+		assert( f->V(z)==v || f->V(f->Next(z))==v ); // L'edge j deve contenere v
 		FlipE();
 		FlipF();
-		assert( f->V(z)==v || f->V((z+1)%3)==v ); 
+		assert( f->V(z)==v || f->V(f->Next(z))==v ); 
 	}
 	// Cambia edge mantenendo la stessa faccia e lo stesso vertice
 	/// Changes edge maintaining the same face and the same vertex
 	void FlipE()
 	{
-		assert(f->V((z+2)%3)!=v && (f->V((z+1)%3)==v || f->V((z+0)%3)==v));
-		if(f->V((z+1)%3)==v) z=(z+1)%3;
-		else z=(z-1+3)%3;
-		assert(f->V((z+2)%3)!=v && (f->V((z+1)%3)==v || f->V((z+0)%3)==v));
+		assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V((z+0)%3)==v));
+		if(f->V(f->Next(z))==v) z=f->Next(z);
+		else z= f->Prev(z);
+		assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V((z))==v));
 	}
 
 	// Cambia Faccia mantenendo lo stesso vertice e lo stesso edge
@@ -289,49 +283,49 @@ public:
 	void FlipF()
 	{
 		assert( f->FFp(z)->FFp(f->FFi(z))==f );  // two manifoldness check
-		assert(f->V((z+2)%3)!=v && (f->V((z+1)%3)==v || f->V((z+0)%3)==v));
+		assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V((z))==v));
 		FaceType *nf=f->FFp(z);
 		int nz=f->FFi(z);
-		assert(nf->V((nz+2)%3)!=v && (nf->V((nz+1)%3)==v || nf->V((nz+0)%3)==v));
+		assert(nf->V(f->Prev(nz))!=v && (nf->V(f->Next(nz))==v || nf->V((nz))==v));
 		f=nf;
 		z=nz;
-		assert(f->V((z+2)%3)!=v && (f->V((z+1)%3)==v || f->V((z+0)%3)==v));
+		assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V(z)==v));
 	}
 
 	/// Changes vertex maintaining the same face and the same edge
 	void FlipV()
 	{
-		assert(f->V((z+2)%3)!=v && (f->V((z+1)%3)==v || f->V((z+0)%3)==v));
+		assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V(z)==v));
 		
-		if(f->V((z+1)%3)==v)
-			v=f->V((z+0)%3);
+		if(f->V(f->Next(z))==v)
+			v=f->V(z);
 		else
-			v=f->V((z+1)%3);
+			v=f->V(f->Next(z));
 
-		assert(f->V((z+2)%3)!=v && (f->V((z+1)%3)==v || f->V((z+0)%3)==v));
+		assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V(z)==v));
 	}
 	
 	// return the vertex that it should have if we make FlipV;
 	VertexType *VFlip()
 	{
-		assert(f->V((z+2)%3)!=v && (f->V((z+1)%3)==v || f->V((z+0)%3)==v));
-		if(f->V((z+1)%3)==v)	return f->V((z+0)%3);
-								else			return f->V((z+1)%3);
+		assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V(z)==v));
+		if(f->V(f->Next(z))==v)	return f->V(z);
+								else			return f->V(f->Next(z));
 	}
 
   // return the vertex that it should have if we make FlipV;
 	const VertexType *VFlip() const 
 	{
-		assert(f->cV((z+2)%3)!=v && (f->cV((z+1)%3)==v || f->cV((z+0)%3)==v));
-		if(f->cV((z+1)%3)==v)	return f->cV((z+0)%3);
-								else			return f->cV((z+1)%3);
+		assert(f->cV(f->Prev(z))!=v && (f->cV(f->Next(z))==v || f->cV(z)==v));
+		if(f->cV(f->Next(z))==v)	return f->cV(z);
+								else			return f->cV(f->Next(z));
 	}
 
   // return the face that it should have if we make FlipF;
 	const FaceType *FFlip() const 
 	{
 		assert( f->FFp(z)->FFp(f->FFi(z))==f );
-		assert(f->V((z+2)%3)!=v && (f->V((z+1)%3)==v || f->V((z+0)%3)==v));
+		assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V((z+0)%3)==v));
 		FaceType *nf=f->FFp(z);
 		return nf;
   }
@@ -352,7 +346,7 @@ public:
 	/// Finds the next half-edge border 
 	void NextB( )
 	{
-		assert(f->V((z+2)%3)!=v && (f->V((z+1)%3)==v || f->V((z+0)%3)==v));
+		assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V(z)==v));
 		assert(f->FFp(z)==f); // f is border along j
 	// Si deve cambiare faccia intorno allo stesso vertice v
 	//finche' non si trova una faccia di bordo.
@@ -361,10 +355,10 @@ public:
       while(!IsBorder());
 		
 		// L'edge j e' di bordo e deve contenere v
-		assert(IsBorder() &&( f->V(z)==v || f->V((z+1)%3)==v )); 
+		assert(IsBorder() &&( f->V(z)==v || f->V(f->Next(z))==v )); 
 		
 		FlipV();
-		assert(f->V((z+2)%3)!=v && (f->V((z+1)%3)==v || f->V((z+0)%3)==v));
+		assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V(z)==v));
 		assert(f->FFp(z)==f); // f is border along j
 	}
 
@@ -411,16 +405,14 @@ public:
 	void Set(FaceType  * const fp, int const zp,  VertexType  * const vp)
 	{
 		f=fp;z=zp;v=vp;
-		assert(f->V((z+2)%3)!=v && (f->V((z+1)%3)==v || f->V((z+0)%3)==v));
+		assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V(z)==v));
 	}
 	
 	void Set(FaceType  * const pFace, VertexType  * const pVertex)
 	{
 		f = pFace;
 		v = pVertex;
-		if (f->V(0) == v)			 z = 2;
-		else if (f->V(1) == v) z = 0;
-		else if (f->V(2) == v) z = 1;
+		for(int i  = 0; i < f->VN(); ++i) if(f->V(i) == v ) {z = f->Prev(i);break;}
 	}
 
 	void Assert()

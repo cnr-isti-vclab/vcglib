@@ -78,6 +78,7 @@ First working version!
 #include <vcg/space/texcoord2.h>
 #include <vcg/space/color4.h>
 #include <vcg/simplex/faceplus/component.h>
+#include <vcg/simplex/faceplus/component_polygon.h>
 #include <vcg/container/derivation_chain.h>
 
 namespace vcg {
@@ -103,11 +104,15 @@ class FaceTypeHolder{
   typedef BTT *TetraPointer;
 	template <class LeftF>
 	void ImportLocal(const LeftF & l){}
-  static void Name(std::vector<std::string> & name){}
+	static void Name(std::vector<std::string> & name){}
 
 
  // prot
- 
+ 	const int & VN()  const { return 3;}
+	inline int Prev(const int & i){ return (i+(3-1))%3;}
+	inline int Next(const int & i){ return (i+1)%3;}
+	inline void Alloc(const int & ){}
+	inline void Dealloc(){}
 };
 
 /* The base class form which we start to add our components.
@@ -123,14 +128,16 @@ we have to build the type a step a time (deriving from a single ancestor at a ti
 
 */ 
 template <class BVT, class BET=DumClass, class BFT=DumClass, class BTT=DumClass>
-class FaceBase: public   face::EmptyVertexRef<
+class FaceBase: public   face::EmptyPolyInfo<
+												 face::EmptyVertexRef<
                          face::EmptyAdj<
                          face::EmptyColorQuality<
                          face::EmptyNormal<
                          face::EmptyBitFlags<
                          face::EmptyMark<
                          face::EmptyWedgeTexCoord<
-                         FaceTypeHolder <BVT, BET, BFT, BTT> > > > > > > >{
+                         FaceTypeHolder <BVT, BET, BFT, BTT> > > > > > > > > {
+
 };
 
 

@@ -326,11 +326,15 @@ static void FaceBorderFromNone(MeshType &m)
 	if( m.fn == 0 ) 
 		return;
 
-	e.resize(m.fn*3);								// Alloco il vettore ausiliario
+	FaceIterator fi;
+	int n_edges = 0;
+	for(fi = m.face.begin(); fi != m.face.end(); ++fi) if(! (*fi).IsD()) n_edges+=(*fi).VN();
+	e.resize(n_edges);
+
 	p = e.begin();
 	for(pf=m.face.begin();pf!=m.face.end();++pf)			// Lo riempio con i dati delle facce
 		if( ! (*pf).IsD() )
-			for(int j=0;j<3;++j)
+			for(int j=0;j<(*pf).VN();++j)
 			{
 				(*p).Set(&(*pf),j);
 				(*pf).ClearB(j);
@@ -373,11 +377,11 @@ static void VertexBorderFromFace(MeshType &m)
 	for(f=m.face.begin();f!=m.face.end();++f)
     if(!(*f).IsD())
 	    {
-		    for(int z=0;z<3;++z)
+		    for(int z=0;z<(*f).VN();++z)
 			    if( (*f).IsB(z) )
 			    {
-				    (*f).V0(z)->SetB();
-				    (*f).V1(z)->SetB();
+				    (*f).V(z)->SetB();
+				    (*f).V((*f).Next(z))->SetB();
 			    }
 	    }
 }

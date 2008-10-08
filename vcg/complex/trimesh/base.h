@@ -271,6 +271,9 @@ public:
 			delete ((SimpleTempDataBase<FaceContainer>*)(*i)._handle);
 		for( i = mesh_attr.begin(); i != mesh_attr.end(); ++i) 
 			delete ((AttributeBase*)(*i)._handle);
+
+		FaceIterator fi;
+		for(fi = face.begin(); fi != face.end(); ++fi) (*fi).Dealloc();
 	}
 
 	 int Mem(const int & nv, const int & nf) const  {
@@ -311,6 +314,7 @@ static bool HasPerVertexQuality() { return VertexType::HasQuality(); }
 static bool HasPerVertexTexCoord(){ return VertexType::HasTexCoord(); }
 static bool HasPerVertexFlags()		{ return VertexType::HasFlags(); }
 
+static bool HasPolyInfo()					{ return FaceType::HasPolyInfo() ; }
 static bool HasPerFaceColor()     { return FaceType::HasFaceColor() ; }
 static bool HasPerFaceNormal()    { return FaceType::HasFaceNormal()  ; }
 static bool HasPerFaceMark()      { return FaceType::HasFaceMark()   ; }

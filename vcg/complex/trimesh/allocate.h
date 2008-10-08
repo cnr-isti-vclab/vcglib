@@ -364,7 +364,7 @@ namespace vcg {
 			*/
 			static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu)
 			{
-				FaceIterator  last;
+				FaceIterator  last, fi;
 				if(n == 0) return m.face.end();
 				pu.Clear();
 				if(m.face.empty()) {
@@ -378,6 +378,7 @@ namespace vcg {
 				m.face.resize(m.face.size()+n);
 				m.fn+=n;
 
+
 				typename std::set<typename MeshType::HandlesWrapper>::iterator ai;
 				for(ai = m.face_attr.begin(); ai != m.face_attr.end(); ++ai)
 					((typename MeshType::HandlesWrapper)(*ai)).Resize(m.face.size());
@@ -387,24 +388,22 @@ namespace vcg {
 				
 				if(pu.NeedUpdate())
 				{
-					FaceIterator fi;
-					for (fi=m.face.begin(); fi!=m.face.end(); ++fi)
+					int ii = 0;
+					FaceIterator fi = m.face.begin();
+					while(ii<m.fn-n) // cycle on all the faces wxcept the new ones
+					{
 						if(!(*fi).IsD())
 						{
 							if(HasFFAdjacency(m))
-							{
-								if ((*fi).cFFp(0)!=0) pu.Update((*fi).FFp(0));
-								if ((*fi).cFFp(1)!=0) pu.Update((*fi).FFp(1));
-								if ((*fi).cFFp(2)!=0) pu.Update((*fi).FFp(2));
-							}
+								for(int i  = 0; i < (*fi).VN(); ++i)
+									if ((*fi).cFFp(i)!=0) pu.Update((*fi).FFp(i));
+						
 							if(HasVFAdjacency(m))
-							{
-								//update pointers to chain of face incident in a vertex
-								//update them only if they are different from zero
-								if ((*fi).cVFp(0)!=0) pu.Update((*fi).VFp(0));
-								if ((*fi).cVFp(1)!=0)	pu.Update((*fi).VFp(1));
-								if ((*fi).cVFp(2)!=0)	pu.Update((*fi).VFp(2));
+								for(int i = 0; i < (*fi).VN(); ++i)
+									if ((*fi).cVFp(i)!=0) pu.Update((*fi).VFp(i));
 							}
+						++ii;
+						++fi;
 						}
 						VertexIterator vi;
 						for (vi=m.vert.begin(); vi!=m.vert.end(); ++vi)

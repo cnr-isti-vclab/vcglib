@@ -136,8 +136,8 @@ void Set( FacePointer  pf, const int nz )
 	assert(nz>=0);
 	assert(nz<3);
 	
-	v[0] = pf->V0(nz);
-	v[1] = pf->V1(nz);
+	v[0] = pf->V(nz);
+	v[1] = pf->V(pf->Next(nz));
 	assert(v[0] != v[1]); // The face pointed by 'f' is Degenerate (two coincident vertexes)
 
 	if( v[0] > v[1] ) math::Swap(v[0],v[1]);
@@ -163,11 +163,18 @@ static void FillEdgeVector(MeshType &m, std::vector<PEdge> &e)
 {
 		FaceIterator pf;
 	typename std::vector<PEdge>::iterator p;
-	e.resize(m.fn*3);								// Alloco il vettore ausiliario
+	
+	// Alloco il vettore ausiliario
+	//e.resize(m.fn*3);			
+	FaceIterator fi;
+	int n_edges = 0;
+	for(fi = m.face.begin(); fi != m.face.end(); ++fi) if(! (*fi).IsD()) n_edges+=(*fi).VN();
+	e.resize(n_edges);
+	
 	p = e.begin();
 	for(pf=m.face.begin();pf!=m.face.end();++pf)			// Lo riempio con i dati delle facce
 		if( ! (*pf).IsD() )
-			for(int j=0;j<3;++j)
+			for(int j=0;j<(*pf).VN();++j)
 			{
 				(*p).Set(&(*pf),j);
 				++p;
@@ -198,16 +205,16 @@ static void FaceFace(MeshType &m)
 			for (q=ps;q<pe-1;++q)						// Scansione facce associate
 			{
 				assert((*q).z>=0);
-				assert((*q).z< 3);
+				//assert((*q).z< 3);
 				q_next = q;
 				++q_next;
 				assert((*q_next).z>=0);
-				assert((*q_next).z< 3);
+				assert((*q_next).z< (*q_next).f->VN());
 				(*q).f->FFp(q->z) = (*q_next).f;				// Collegamento in lista delle facce
 				(*q).f->FFi(q->z) = (*q_next).z;
 			}
 			assert((*q).z>=0);
-			assert((*q).z< 3);
+			assert((*q).z< (*q).f->VN());
 			(*q).f->FFp((*q).z) = ps->f;
 			(*q).f->FFi((*q).z) = ps->z;
 			ps = pe;
@@ -240,7 +247,7 @@ static void VertexFace(MeshType &m)
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 	if( ! (*fi).IsD() )
 	{
-		for(int j=0;j<3;++j)
+		for(int j=0;j<(*fi).VN();++j)
 		{
 			(*fi).VFp(j) = (*fi).V(j)->VFp();
 			(*fi).VFi(j) = (*fi).V(j)->VFi();
@@ -275,7 +282,7 @@ void Set( FacePointer  pf, const int nz )
 	assert(nz<3);
 	
 	v[0] = pf->WT(nz);
-	v[1] = pf->WT((nz+1)%3);
+	v[1] = pf->WT(pf->Next(nz));
 	assert(v[0] != v[1]); // The face pointed by 'f' is Degenerate (two coincident vertexes)
 
 	if( v[1] < v[0] ) swap(v[0],v[1]);
@@ -318,13 +325,18 @@ static void FaceFaceFromTexCoord(MeshType &m)
 
 	if( m.fn == 0 ) return;
 
-	e.resize(m.fn*3);								// Alloco il vettore ausiliario
+//	e.resize(m.fn*3);								// Alloco il vettore ausiliario
+	FaceIterator fi;
+	int n_edges = 0;
+	for(fi = m.face.begin(); fi != m.face.end(); ++fi) if(! (*fi).IsD()) n_edges+=(*fi).VN();
+	e.resize(n_edges);
+
 	p = e.begin();
 	for(pf=m.face.begin();pf!=m.face.end();++pf)			// Lo riempio con i dati delle facce
 		if( ! (*pf).IsD() )
-			for(int j=0;j<3;++j)
+			for(int j=0;j<(*pf).VN();++j)
 			{
-				if( (*pf).WT(j) != (*pf).WT((j+1)%3) )
+				if( (*pf).WT(j) != (*pf).WT((*pf).Next(j)))
 					 {
 						(*p).Set(&(*pf),j);
 						++p;
@@ -351,12 +363,12 @@ static void FaceFaceFromTexCoord(MeshType &m)
 				q_next = q;
 				++q_next;
 				assert((*q_next).z>=0);
-				assert((*q_next).z< 3);
+				assert((*q_next).z< (*q_next).f->VN());
 				(*q).f->FFp(q->z) = (*q_next).f;				// Collegamento in lista delle facce
 				(*q).f->FFi(q->z) = (*q_next).z;
 			}
 			assert((*q).z>=0);
-			assert((*q).z< 3);
+			assert((*q).z< (*q).f->VN());
 			(*q).f->FFp((*q).z) = ps->f;
 			(*q).f->FFi((*q).z) = ps->z;
 			ps = pe;
@@ -409,7 +421,7 @@ static void TestFaceFace(MeshType &m)
 	{
 		if (!Fi->IsD())
 		{
-			for (int i=0;i<3;i++)
+			for (int i=0;i<(*Fi).VN();i++)
 			{
 				FaceType *f=Fi->FFp(i);
 				int e=Fi->FFi(i);

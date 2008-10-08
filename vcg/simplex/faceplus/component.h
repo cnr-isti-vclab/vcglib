@@ -123,6 +123,8 @@ public:
 	inline const typename T::CoordType &cP( const int j ) const	{	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF) {T::ImportLocal(leftF);}
+	inline void Alloc(const int & ns){T::Alloc(ns);}
+	inline void Dealloc(){T::Dealloc();}
   static bool HasVertexRef()   { return false; }
 	static void Name(std::vector<std::string> & name){T::Name(name);}
 
@@ -173,6 +175,8 @@ public:
 
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){ V(0) = NULL; V(1) = NULL; V(2) = NULL; T::ImportLocal(leftF);}
+	inline void Alloc(const int & ns){T::Alloc(ns);}
+	inline void Dealloc(){T::Dealloc();}
 
   static bool HasVertexRef()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("VertexRef"));T::Name(name);}
@@ -213,6 +217,8 @@ public:
   NormalType &cN() const { return _norm; }
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){ N() = leftF.cN(); T::ImportLocal(leftF);}
+ 	inline void Alloc(const int & ns){T::Alloc(ns);}
+	inline void Dealloc(){T::Dealloc();}
   static bool HasFaceNormal()   { return true; }
 //  void ComputeNormal() {	_norm = vcg::Normal<typename T::FaceType>(*(static_cast<typename T::FaceType *>(this))); }
 //  void ComputeNormalizedNormal() {	_norm = vcg::NormalizedNormal(*this);}  
@@ -236,6 +242,8 @@ public:
   NormalType cN() const { return _norm; }
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){ N() = leftF.cN(); T::ImportLocal(leftF);}
+ 	inline void Alloc(const int & ns){T::Alloc(ns);}
+	inline void Dealloc(){T::Dealloc();}
   static bool HasFaceNormal()   { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("NormalAbs"));T::Name(name);}
 
@@ -250,7 +258,9 @@ public:
   const NormalType cWN(const int j) const { return _wnorm[j]; }
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){ WN() = leftF.cWN(); T::ImportLocal(leftF);}
-  static bool HasWedgeNormal()   { return true; }
+ 	inline void Alloc(const int & ns){T::Alloc(ns);}
+	inline void Dealloc(){T::Dealloc();}
+	static bool HasWedgeNormal()   { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeNormal"));T::Name(name);}
 
 private:
@@ -271,29 +281,33 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 
 /*-------------------------- TexCoord ----------------------------------------*/ 
 
-template <class TT> class EmptyWedgeTexCoord: public TT {
+template <class T> class EmptyWedgeTexCoord: public T {
 public:
 	typedef int WedgeTexCoordType;
   typedef vcg::TexCoord2<float,1> TexCoordType;
   TexCoordType &WT(const int) { static TexCoordType dummy_texture;  assert(0); return dummy_texture;}
   TexCoordType const &cWT(const int) const { static TexCoordType dummy_texture; return dummy_texture;}
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){ TT::ImportLocal(leftF);}
+	void ImportLocal(const LeftF & leftF){ T::ImportLocal(leftF);}
+	inline void Alloc(const int & ns){T::Alloc(ns);}
+	inline void Dealloc(){T::Dealloc();}
   static bool HasWedgeTexCoord()   { return false; }
   static bool HasWedgeTexCoordOcc()   { return false; }
-  static void Name(std::vector<std::string> & name){TT::Name(name);}
+  static void Name(std::vector<std::string> & name){T::Name(name);}
 
 };
-template <class A, class TT> class WedgeTexCoord: public TT {
+template <class A, class T> class WedgeTexCoord: public T {
 public:
 	typedef int WedgeTexCoordType;
   typedef A TexCoordType;
   TexCoordType &WT(const int i) { return _wt[i]; }
   TexCoordType const &cWT(const int i) const { return _wt[i]; }
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){ WT() = leftF.cWT();TT::ImportLocal(leftF);}
+	void ImportLocal(const LeftF & leftF){ WT() = leftF.cWT();T::ImportLocal(leftF);}
+	inline void Alloc(const int & ns){T::Alloc(ns);}
+	inline void Dealloc(){T::Dealloc();}
   static bool HasWedgeTexCoord()   { return true; }
-  static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeTexCoord"));TT::Name(name);}
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeTexCoord"));T::Name(name);}
 
 private:
   TexCoordType _wt[3];    
@@ -317,6 +331,8 @@ public:
   const int Flags() const { return 0; }
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){ T::ImportLocal(leftF);}
+	inline void Alloc(const int & ns){T::Alloc(ns);}
+	inline void Dealloc(){T::Dealloc();}
   static bool HasFlags()   { return false; }
   static bool HasFlagsOcc()   { return false; }
 	static void Name(std::vector<std::string> & name){T::Name(name);}
@@ -331,6 +347,8 @@ public:
   const int & cFlags() const {return _flags; }
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){ Flags() = leftF.cFlags();T::ImportLocal(leftF);}
+	inline void Alloc(const int & ns){T::Alloc(ns);}
+	inline void Dealloc(){T::Dealloc();}
   static bool HasFlags()   { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("BitFlags"));T::Name(name);}
 
@@ -353,6 +371,10 @@ public:
   static bool HasFaceQuality()   { return false; }
 	static bool HasFaceColorOcc() { return false;}
   static void Name(std::vector<std::string> & name){T::Name(name);}
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){ T::ImportLocal(leftF);}
+	inline void Alloc(const int & ns){T::Alloc(ns);}
+	inline void Dealloc(){T::Dealloc();}
 
 };
 template <class A, class T> class Color: public T {
@@ -363,6 +385,8 @@ public:
   const ColorType &cC() { return _color; }
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){ C() = leftF.cC();T::ImportLocal(leftF);}
+	inline void Alloc(const int & ns){T::Alloc(ns);}
+	inline void Dealloc(){T::Dealloc();}
   static bool HasFaceColor()   { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("Color"));T::Name(name);}
 
@@ -403,6 +427,8 @@ public:
   const QualityType &cQ() const { return _quality; }
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){ Q() = leftF.cQ();T::ImportLocal(leftF);}
+	inline void Alloc(const int & ns){T::Alloc(ns);}
+	inline void Dealloc(){T::Dealloc();}
   static bool HasFaceQuality()   { return true; }
   static bool HasFaceQualityOcc()   { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("Quality"));T::Name(name);}
@@ -431,6 +457,8 @@ public:
   inline const int IMark() const {return 0;}
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){T::ImportLocal(leftF);}
+	inline void Alloc(const int & ns){T::Alloc(ns);}
+	inline void Dealloc(){T::Dealloc();}
   static void Name(std::vector<std::string> & name){T::Name(name);}
 
 };
@@ -466,6 +494,8 @@ public:
   const char &cFFi(const int j){static char z=0; return z;};
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){ T::ImportLocal(leftF);}
+	inline void Alloc(const int & ns){T::Alloc(ns);}
+	inline void Dealloc(){T::Dealloc();}
   static bool HasVFAdjacency()   {   return false; }
   static bool HasFFAdjacency()   {   return false; }
   static bool HasFFAdjacencyOcc()   {   return false; }
@@ -487,6 +517,8 @@ public:
   char &VFi(const int j) {return _vfi[j]; }
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){T::ImportLocal(leftF);}
+	inline void Alloc(const int & ns){T::Alloc(ns);}
+	inline void Dealloc(){T::Dealloc();}
   static bool HasVFAdjacency()      {   return true; }
   static bool HasVFAdjacencyOcc()   {   return false; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("VFAdj"));T::Name(name);}
@@ -518,6 +550,8 @@ public:
 
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){T::ImportLocal(leftF);}
+	inline void Alloc(const int & ns){T::Alloc(ns);}
+	inline void Dealloc(){T::Dealloc();}
   static bool HasFFAdjacency()      {   return true; }
   static bool HasFFAdjacencyOcc()   {   return false; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("FFAdj"));T::Name(name);}
