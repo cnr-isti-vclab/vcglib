@@ -35,12 +35,12 @@ namespace vcg{
 namespace math{
 
 /**
- * Although the Real Spherical Harmonic Function is correctly defined over any 
+ * Although the Real Spherical Harmonic Function is correctly defined over any
  * positive l and any -l <= m <= l, the two internal functions computing the
  * imaginary and real parts of the Complex Spherical Harmonic Functions are defined
  * for positive m only.
  */
-template <typename ScalarType>
+template <typename ScalarType, int MAX_BAND>
 class SphericalHarmonics{
 
 private :
@@ -48,25 +48,25 @@ private :
 	{
 		return Sqrt( ( (2.0*l + 1.0) * Factorial<ScalarType>(l-m) ) / (4.0 * M_PI * Factorial<ScalarType>(l + m)) );;
 	}
-	
+
 	inline static ScalarType complex_spherical_harmonic_re(unsigned l, unsigned m, ScalarType theta, ScalarType phi)
 	{
 		return scaling_factor(l, m) * Legendre<ScalarType>::AssociatedPolynomial(l, m, Cos(theta), Sin(theta)) * Cos(m * phi);
 	}
-	
+
 	inline static ScalarType complex_spherical_harmonic_im(unsigned l, unsigned m, ScalarType theta, ScalarType phi)
 	{
 		return scaling_factor(l, m) * Legendre<ScalarType>::AssociatedPolynomial(l, m, Cos(theta), Sin(theta)) * Sin(m * phi);
 	}
-	
-	ScalarType * coefficients;
-	int max_band;			
-	
+
+	ScalarType coefficients[MAX_BAND * MAX_BAND];
+	static const int max_band = MAX_BAND;
+
 public :
-	
+
 	/**
 	 * Returns the Real Spherical Harmonic Function
-	 * 
+	 *
 	 * l is any positive integer,
 	 * m is such that -l <= m <= l
 	 * theta is inside [0, PI]
@@ -75,46 +75,43 @@ public :
 	static ScalarType Real(unsigned l, int m, ScalarType theta, ScalarType phi)
 	{
 		assert((int)-l <= m && m <= (int)l && theta >= 0 && theta <= M_PI && phi >= 0 && phi <= 2 * M_PI);
-		
+
 		if (m > 0) return SQRT_TWO * complex_spherical_harmonic_re(l, m, theta, phi);
 
 		else if (m == 0) return scaling_factor(l, 0) * Legendre<ScalarType>::Polynomial(l, Cos(theta));
 
 		else return SQRT_TWO * complex_spherical_harmonic_im(l, -m, theta, phi);
 	}
-	
+
 	typedef ScalarType (*PolarFunction) (ScalarType theta, ScalarType phi);
-	
-	static SphericalHarmonics Project(PolarFunction fun, unsigned max_band, unsigned n_samples)
+
+	static SphericalHarmonics Project(PolarFunction fun, unsigned n_samples)
 	{
 		const ScalarType weight = 4 * M_PI;
-		
+
 		unsigned sqrt_n_samples = (unsigned int) Sqrt((int)n_samples);
 		unsigned actual_n_samples = sqrt_n_samples * sqrt_n_samples;
-		unsigned n_coeff = max_band * max_band;
-		
+		unsigned n_coeff = MAX_BAND * MAX_BAND;
+
 		ScalarType one_over_n = 1.0/(ScalarType)sqrt_n_samples;
-		
+
 		RandomGenerator rand;
 		SphericalHarmonics sph;
 
-		sph.coefficients = new ScalarType[n_coeff];
-		sph.max_band = max_band;
-		
 		int i = 0;
-		
+
 		for (unsigned k = 0; k < n_coeff; k++ ) sph.coefficients[k] = 0;
-		
+
 		for (unsigned a = 0; a < sqrt_n_samples; ++a )
 		{
 			for (unsigned b = 0; b < sqrt_n_samples; ++b)
 			{
 				ScalarType x = (a + rand(INT_MAX)/(ScalarType)INT_MAX) * one_over_n;
 				ScalarType y = (b + rand(INT_MAX)/(ScalarType)INT_MAX) * one_over_n;
-				
+
 				ScalarType theta = 2.0 * Acos(Sqrt(1.0 - x));
 				ScalarType phi = 2.0 * M_PI * y;
-				
+
 				for (int l = 0; l < (int)max_band; ++l)
 				{
 					for (int m = -l; m <= l; ++m)
@@ -126,20 +123,20 @@ public :
 				i++;
 			}
 		}
-		
+
 		ScalarType factor = weight / actual_n_samples;
 		for(i = 0; i < (int)n_coeff; ++i)
 		{
 			sph.coefficients[i] *= factor;
 		}
-		
+
 		return sph;
 	}
-	
+
 	ScalarType operator()(ScalarType theta, ScalarType phi)
 	{
 		ScalarType f = 0;
-		
+
 		for (int l = 0; l < max_band; ++l)
 		{
 			for (int m = -l; m <= l; ++m)
@@ -148,7 +145,7 @@ public :
 				f += (coefficients[index] * Real(l, m, theta, phi));
 			}
 		}
-		
+
 		return f;
 	}
 };
