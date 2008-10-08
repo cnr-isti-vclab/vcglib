@@ -1,7 +1,7 @@
 #ifndef COMPONENT_SPH_
 #define COMPONENT_SPH_
 
-#include "spherical_harmonics.h"
+#include <vcg/math/spherical_harmonics.h>
 
 namespace vcg {
 namespace vertex {
