@@ -382,7 +382,7 @@ public:
   typedef A ColorType;
   Color():_color(vcg::Color4b::White) {}
   ColorType &C() { return _color; }
-  const ColorType &cC() { return _color; }
+  const ColorType &cC() const { return _color; }
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){ C() = leftF.cC();T::ImportLocal(leftF);}
 	inline void Alloc(const int & ns){T::Alloc(ns);}
