@@ -157,6 +157,7 @@ public:
 
 class GeometryShader : public Shader
 {
+public:
 	GeometryShader(void) : Shader()
 	{
 	}
