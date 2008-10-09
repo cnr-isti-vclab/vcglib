@@ -80,7 +80,7 @@ public:
 
 static void ImportFace(MeshLeft &ml, MeshRight &mr, FaceLeft &fl, const FaceRight &fr, std::vector<int> &remap)
 {
-	fl.ImportLocal<FaceRight>(fr);
+	fl.template ImportLocal<FaceRight>(fr);
   fl.V(0)=&ml.vert[remap[ Index(mr,fr.V(0))]];
   fl.V(1)=&ml.vert[remap[ Index(mr,fr.V(1))]];
   fl.V(2)=&ml.vert[remap[ Index(mr,fr.V(2))]];
