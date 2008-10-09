@@ -487,6 +487,12 @@ public:
 		glUniform4f(loc, x, y, z, w);
 	}
 
+	void Parameter(GLenum pname, int value)
+	{
+		glProgramParameteriEXT(this->objectID, pname, value);
+	}
+
+
 protected:
 	std::set<Shader *> shaders;
 	bool linked;
