@@ -59,7 +59,7 @@ namespace io {
 			if (!wtsrc.isNull())
 			{
 				indtx = face.at(faceind).toInt();
-				int num = wt.size(); 
+				//int num = wt.size(); 
 				assert(indtx * stride < wt.size());
 				m.face[meshfaceind].WT(component) = vcg::TexCoord2<float>();
 				m.face[meshfaceind].WT(component).U() = wt.at(indtx * stride).toFloat();
@@ -78,7 +78,10 @@ namespace io {
 			{
 				indcl = face.at(faceind).toInt();
 				assert(indcl * 4 < wc.size());
-				m.face[meshfaceind].WC(component) = vcg::Color4b(wc.at(indcl * 4).toFloat(),wc.at(indcl * 4 + 1).toFloat(),wc.at(indcl * 4 + 2).toFloat(),wc.at(indcl * 4 + 3).toFloat());
+				m.face[meshfaceind].WC(component) = vcg::Color4b(	(unsigned char)(wc.at(indcl * 4).toFloat()),
+																													(unsigned char)(wc.at(indcl * 4 + 1).toFloat()),
+																													(unsigned char)(wc.at(indcl * 4 + 2).toFloat()),
+																													(unsigned char)(wc.at(indcl * 4 + 3).toFloat()));
 			}
 			return indcl;
 		}
@@ -556,9 +559,9 @@ static Matrix44f getTransfMatrixFromNode(const QDomElement parentNode)
 				return E_NO3DSCENE;
 			QDEBUG("File Contains %i Scenes",scenes.size());
 			int problem = E_NOERROR;
-			bool found_a_mesh = false;
+			//bool found_a_mesh = false;
 			//Is there geometry in the file? 
-			bool geoinst_found = false;
+			//bool geoinst_found = false;
 			
 			// The main loading loop
 			// for each scene in COLLADA FILE
