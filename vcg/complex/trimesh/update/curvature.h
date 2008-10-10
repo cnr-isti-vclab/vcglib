@@ -137,29 +137,26 @@ public:
 
 					vcg::face::JumpingPos<FaceType> pos((*vi).VFp(), central_vertex);
 
+					// firstV is the first vertex of the 1ring neighboorhood
 					VertexType* firstV = pos.VFlip();
 					VertexType* tempV;
 					float totalDoubleAreaSize = 0.0f;
 
-					if (((firstV->cP()-central_vertex->cP())^(pos.VFlip()->cP()-central_vertex->cP()))*central_vertex->cN()<=0.0f)
-					{
-						pos.Set(central_vertex->VFp(), central_vertex);
-						pos.FlipE();
-						firstV = pos.VFlip();
-					}	
-					else pos.Set(central_vertex->VFp(), central_vertex);
-
 					// compute the area of each triangle around the central vertex as well as their total area 
 					do 
 					{
-						pos.NextE();
-						tempV = pos.VFlip();
+						// this bring the pos to the next triangle  counterclock-wise 
+						pos.FlipF();
+						pos.FlipE();
 
+						// tempV takes the next vertex in the 1ring neighborhood
+						tempV = pos.VFlip();
+						assert(tempV!=central_vertex);
 						AdjVertex v;
 
 						v.isBorder = pos.IsBorder();
 						v.vert = tempV;			
-						v.doubleArea = ((pos.F()->V(1)->cP() - pos.F()->V(0)->cP()) ^ (pos.F()->V(2)->cP()- pos.F()->V(0)->cP())).Norm();;
+						v.doubleArea = vcg::DoubleArea(*pos.F());
 						totalDoubleAreaSize += v.doubleArea;
 
 						vertices.push_back(v);						
