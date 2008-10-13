@@ -67,6 +67,8 @@ the vertex
 #include <vcg/complex/trimesh/append.h>
 #include <vcg/complex/intersection.h>
 #include <vcg/complex/trimesh/inertia.h>
+#include <vcg/math/matrix33.h>
+
 
 namespace vcg {
 namespace tri {
@@ -583,8 +585,83 @@ public:
 			VertexCurvature(&*vi,false);
 	}
 
-};
 
+
+/*
+	Compute principal curvature directions and value with normal cycle:
+	@inproceedings{CohMor03,
+	author = {Cohen-Steiner, David   and Morvan, Jean-Marie  },
+	booktitle = {SCG '03: Proceedings of the nineteenth annual symposium on Computational geometry},
+	title - {Restricted delaunay triangulations and normal cycle}
+	year = {2003}
+}
+	*/
+
+	static void PrincipalDirectionsNormalCycles(MeshType & m){
+		assert(VertexType::HasVFAdjacency());
+		assert(FaceType::HasFFAdjacency());
+		assert(FaceType::HasFaceNormal());
+
+		
+		typename MeshType::VertexIterator vi;
+
+		for(vi = m.vert.begin(); vi != m.vert.end(); ++vi){
+			vcg::Matrix33<ScalarType> m33;m33.SetZero();
+			face::JumpingPos<typename MeshType::FaceType> p((*vi).VFp(),&(*vi));
+
+			typename MeshType::VertexType * firstv = p.VFlip();
+			p.FlipE();
+			assert(p.F()->V(p.VInd())==&(*vi));
+
+
+			do{
+				if( p.F() != p.FFlip()){
+					Point3<ScalarType> normalized_edge = p.F()->V(p.F()->Next(p.VInd()))->cP() - (*vi).P();
+					ScalarType edge_length = normalized_edge.Norm();
+					normalized_edge/=edge_length;
+					Point3<ScalarType> n1 = p.F()->cN();n1.Normalize();
+					Point3<ScalarType> n2 = p.FFlip()->cN();n2.Normalize();
+					ScalarType n1n2 = (n1 ^ n2)* normalized_edge;
+					n1n2 = math::Max<ScalarType>(math::Min<ScalarType> ( 1.0,n1n2),-1.0);
+					ScalarType beta = math::Asin(n1n2);
+					m33[0][0] += beta*edge_length*normalized_edge[0]*normalized_edge[0];
+					m33[0][1] += beta*edge_length*normalized_edge[1]*normalized_edge[0];
+					m33[1][1] += beta*edge_length*normalized_edge[1]*normalized_edge[1];
+					m33[0][2] += beta*edge_length*normalized_edge[2]*normalized_edge[0];
+					m33[1][2] += beta*edge_length*normalized_edge[2]*normalized_edge[1];
+					m33[2][2] += beta*edge_length*normalized_edge[2]*normalized_edge[2];
+				}
+				p.NextE();
+			}while(firstv != p.VFlip());
+
+			if(m33.Determinant()==0.0){ // degenerate case
+				(*vi).K1() = (*vi).K2() = 0.0; continue;}
+
+			m33[1][0] = m33[0][1];
+			m33[2][0] = m33[0][2];
+			m33[2][1] = m33[1][2];
+
+			Point3<ScalarType> lambda;
+			Matrix33<ScalarType> vect;
+			int n_rot;
+			Jacobi(m33,lambda, vect,n_rot);
+
+			vect.Transpose();
+			ScalarType normal = std::numeric_limits<ScalarType>::min();
+			int normI = 0;
+			for(int i = 0; i < 3; ++i)
+				if( fabs((*vi).N().Normalize() * vect.GetRow(i)) > normal ){normal= fabs((*vi).N().Normalize() * vect.GetRow(i)); normI = i;}
+			int maxI = (normI+2)%3;
+			int minI = (normI+1)%3;
+			if(fabs(lambda[maxI]) < fabs(lambda[minI])) swap(maxI,minI);
+
+			(*vi).PD1() = *(Point3<ScalarType>*)(& vect[maxI][0]);
+			(*vi).PD2() = *(Point3<ScalarType>*)(& vect[minI][0]);
+			(*vi).K1() = lambda[maxI];
+			(*vi).K2() = lambda[minI];
+		}
+	}
+};
 
 }
 }
