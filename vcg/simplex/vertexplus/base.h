@@ -118,9 +118,9 @@ class VertexBase: public vertex::EmptyTexCoord<
                          vertex::EmptyColorQuality<
                          vertex::EmptyBitFlags<
                          vertex::EmptyCoordNormal<
-												 vertex::EmptyCurvature<
-												 vertex::EmptyCurvatureDir<
-													VertexTypeHolder <BVT, BET, BFT, BTT> > > > > > > > >{
+												 vertex::EmptyCurvatureData<
+												 vertex::EmptyRadius<
+												 VertexTypeHolder <BVT, BET, BFT, BTT> > > > > > > > >{
 };
 
 
