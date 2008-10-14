@@ -93,6 +93,61 @@ typedef typename UpdateMeshType::FaceType       FaceType;
 typedef typename UpdateMeshType::FacePointer    FacePointer;
 typedef typename UpdateMeshType::FaceIterator   FaceIterator;
 
+	
+	
+	class ColorAvgInfo 
+	{
+	public:
+		unsigned int r;
+		unsigned int g;
+		unsigned int b;
+		unsigned int a;
+		int cnt;
+	};
+	
+	static void VertexFromFace( UpdateMeshType &m)
+	{
+		ColorAvgInfo csi;
+		csi.r=0; csi.g=0; csi.b=0; csi.cnt=0;
+		SimpleTempData<typename UpdateMeshType::VertContainer, ColorAvgInfo> TD(m.vert,csi);
+		
+		FaceIterator fi;
+			for(fi=m.face.begin();fi!=m.face.end();++fi)
+				if(!(*fi).IsD()) 
+					for(int j=0;j<3;++j)
+						{
+							TD[(*fi).V(j)].r+=(*fi).C()[0];
+							TD[(*fi).V(j)].g+=(*fi).C()[1];
+							TD[(*fi).V(j)].b+=(*fi).C()[2];
+							TD[(*fi).V(j)].a+=(*fi).C()[3];
+							++TD[(*fi).V(j)].cnt;
+						}
+		
+		VertexIterator vi;
+		for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+				if(!(*vi).IsD() && TD[*vi].cnt>0 )
+					{
+						(*vi).C()[0] = TD[*vi].r / TD[*vi].cnt;
+						(*vi).C()[1] = TD[*vi].g / TD[*vi].cnt;
+						(*vi).C()[2] = TD[*vi].b / TD[*vi].cnt;
+						(*vi).C()[3] = TD[*vi].a / TD[*vi].cnt;
+					}
+		}
+
+	static void FaceFromVertex( UpdateMeshType &m)
+	{
+		FaceIterator fi;
+		for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD()) 
+		{
+			Color4f avg = (Color4f::Construct((*fi).V(0)->C()) + 
+										 Color4f::Construct((*fi).V(1)->C()) + 
+										 Color4f::Construct((*fi).V(2)->C()) )/ 3.0;
+			(*fi).C().Import(avg);
+		}
+	}
+	
+	
+	
 /// \brief Color the vertexes of the mesh that are on the border
 
 /**
