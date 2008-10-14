@@ -652,7 +652,7 @@ public:
 				if( fabs((*vi).N().Normalize() * vect.GetRow(i)) > normal ){normal= fabs((*vi).N().Normalize() * vect.GetRow(i)); normI = i;}
 			int maxI = (normI+2)%3;
 			int minI = (normI+1)%3;
-			if(fabs(lambda[maxI]) < fabs(lambda[minI])) swap(maxI,minI);
+			if(fabs(lambda[maxI]) < fabs(lambda[minI])) std::swap(maxI,minI);
 
 			(*vi).PD1() = *(Point3<ScalarType>*)(& vect[maxI][0]);
 			(*vi).PD2() = *(Point3<ScalarType>*)(& vect[minI][0]);
