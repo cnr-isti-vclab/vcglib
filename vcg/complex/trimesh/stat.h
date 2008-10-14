@@ -56,31 +56,45 @@ template <class StatMeshType>
 class Stat
 {
   public:
-			typedef StatMeshType MeshType; 
-			typedef typename MeshType::VertexType     VertexType;
-			typedef typename MeshType::VertexPointer  VertexPointer;
-			typedef typename MeshType::VertexIterator VertexIterator;
-			typedef	typename MeshType::ScalarType			ScalarType;
-			typedef typename MeshType::FaceType       FaceType;
-			typedef typename MeshType::FacePointer    FacePointer;
-			typedef typename MeshType::FaceIterator   FaceIterator;
-			typedef typename MeshType::FaceContainer  FaceContainer;
-      typedef typename vcg::Box3<ScalarType>  Box3Type;
-      
-      static std::pair<float,float> ComputePerVertexQualityMinMax( MeshType & m)    // V1.0
-      {
-		  std::pair<float,float> minmax = std::make_pair(std::numeric_limits<float>::max(),-std::numeric_limits<float>::max());
-         
-        VertexIterator vi;
-        for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
-          if(!(*vi).IsD()) 
-          {
-            if( (*vi).Q() < minmax.first) minmax.first=(*vi).Q();
-            if( (*vi).Q() > minmax.second) minmax.second=(*vi).Q();
-          }
-        return minmax;
-      }
+	typedef StatMeshType MeshType; 
+	typedef typename MeshType::VertexType     VertexType;
+	typedef typename MeshType::VertexPointer  VertexPointer;
+	typedef typename MeshType::VertexIterator VertexIterator;
+	typedef	typename MeshType::ScalarType			ScalarType;
+	typedef typename MeshType::FaceType       FaceType;
+	typedef typename MeshType::FacePointer    FacePointer;
+	typedef typename MeshType::FaceIterator   FaceIterator;
+	typedef typename MeshType::FaceContainer  FaceContainer;
+	typedef typename vcg::Box3<ScalarType>  Box3Type;
+	
+	static std::pair<float,float> ComputePerVertexQualityMinMax( MeshType & m)    // V1.0
+	{
+	std::pair<float,float> minmax = std::make_pair(std::numeric_limits<float>::max(),-std::numeric_limits<float>::max());
+		 
+		VertexIterator vi;
+		for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+			if(!(*vi).IsD()) 
+			{
+				if( (*vi).Q() < minmax.first) minmax.first=(*vi).Q();
+				if( (*vi).Q() > minmax.second) minmax.second=(*vi).Q();
+			}
+		return minmax;
+	}
 
+	static std::pair<float,float> ComputePerFaceQualityMinMax( MeshType & m)    // V1.0
+	{
+		std::pair<float,float> minmax = std::make_pair(std::numeric_limits<float>::max(),-std::numeric_limits<float>::max());
+		
+		FaceIterator fi;
+		for(fi = m.face.begin(); fi != m.face.end(); ++fi)
+			if(!(*fi).IsD()) 
+			{
+				if( (*fi).Q() < minmax.first)  minmax.first =(*fi).Q();
+				if( (*fi).Q() > minmax.second) minmax.second=(*fi).Q();
+			}
+		return minmax;
+	}
+	
 			static ScalarType ComputeMeshArea(MeshType & m)
 			{
 				ScalarType area=0;
