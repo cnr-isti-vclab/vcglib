@@ -363,6 +363,35 @@ template <class TT> class Qualityd: public Quality<double, TT> {
 public: static void Name(std::vector<std::string> & name){name.push_back(std::string("Qualityd"));TT::Name(name);}
 };
 
+
+
+template <class TT> class EmptyCurvatureData:public TT {
+public:
+
+	typedef float ScalarType;
+	typedef Point3f VecType;
+	float &Kh() {static float dummy = 0.f; assert(0);return dummy;;}
+	float &Kg() { static float dummy = 0.f; assert(0);return dummy;}
+	const float &cKh() const {static float dummy = 0.f; assert(0);return dummy;;}
+	const float &cKg()const  { static float dummy = 0.f;assert(0); return dummy;}
+
+	VecType &PD1(){static VecType v(0,0,0); assert(0);return v;}
+	VecType &PD2(){static VecType v(0,0,0); assert(0);return v;}
+	const VecType &cPD1() const {static VecType v(0,0,0); assert(0);return v;}
+	const VecType &cPD2() const {static VecType v(0,0,0); assert(0);return v;}
+
+	ScalarType &K1(){ static ScalarType v = 0.0;assert(0);return v;}
+	ScalarType &K2(){ static ScalarType v = 0.0;assert(0);return v;}
+	const ScalarType &cK1() const {static ScalarType v = 0.0;assert(0);return v;}
+	const ScalarType &cK2()const  {static ScalarType v = 0.0;assert(0);return v;}
+
+	static bool HasCurvatureOcc()   { return false; }
+	static bool HasCurvatureOcf()   { return false; }
+	static bool HasCurvature()			{ return false; }
+	static bool HasCurvatureDir()   { return false; }
+	static void Name(std::vector<std::string> & name){TT::Name(name);}
+};
+
 /*-------------------------- Curvature ----------------------------------*/ 
 
 template <class TT> class EmptyCurvature: public TT {
@@ -463,6 +492,24 @@ public:	static void Name(std::vector<std::string> & name){name.push_back(std::st
 template <class T> class CurvatureDird: public CurvatureDir<CurvatureDirBaseType<double>, T> {
 public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDird"));T::Name(name);}
 };
+
+/*-------------------------- Empty Radius ----------------------------------*/ 
+
+template <class T> class EmptyRadius: public T {
+public:
+	
+	typedef float RadiusType;
+	typedef RadiusType ScalarType;
+
+	RadiusType  &R(){ static ScalarType v = 0.0; assert(0); return v; }
+	const RadiusType &cR() const { static const ScalarType  & v = 0.0; assert(0); return v; }
+
+	static bool HasRadius()     { return true; }
+	static bool HasRadiusOcf()  { return true; }
+	static void Name(std::vector<std::string> & name){ T::Name(name);}
+};
+
+
 
 /*----------------------------- VEADJ ------------------------------*/ 
 
