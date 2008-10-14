@@ -279,6 +279,52 @@ bool IntersectionRayMesh(
 
 	return hit;
 }
+
+/** 
+	 Computes the intersection between a Ray and a Mesh. Returns a 3D Pointset, baricentric's coordinates 
+	 and a pointer of intersected face.
+*/
+template < typename  TriMeshType, class ScalarType>
+bool IntersectionRayMesh(	
+	/* Input Mesh */		TriMeshType * m, 
+	/* Ray */				const Line3<ScalarType> & ray,
+	/* Intersect Point */	Point3<ScalarType> & hitPoint,
+	/* Baricentric coord 1*/ ScalarType &bar1,
+	/* Baricentric coord 2*/ ScalarType &bar2,
+	/* Baricentric coord 3*/ ScalarType &bar3,
+	/* FacePointer */ typename TriMeshType::FacePointer fp
+	)
+{
+	//typedef typename TriMeshType::FaceContainer FaceContainer;
+	typename TriMeshType::FaceIterator fi;
+	bool hit=false;
+
+	if(m==0) return false;
+
+	//TriMeshType::FaceIterator fi;
+	//std::vector<TriMeshType::FaceType*>::iterator fi;
+
+	ScalarType dist;
+	Point3<ScalarType> p1;
+	Point3<ScalarType> p2;
+	Point3<ScalarType> p3;
+	for(fi = m->face.begin(); fi != m->face.end(); ++fi)
+	{
+		p1=vcg::Point3<ScalarType>( (*fi).P(0).X() ,(*fi).P(0).Y(),(*fi).P(0).Z() );
+		p2=vcg::Point3<ScalarType>( (*fi).P(1).X() ,(*fi).P(1).Y(),(*fi).P(1).Z() );
+		p3=vcg::Point3<ScalarType>( (*fi).P(2).X() ,(*fi).P(2).Y(),(*fi).P(2).Z() );
+		if(Intersection<ScalarType>(ray,p1,p2,p3,bar1,bar2,dist))
+		{
+			bar3 = (1-bar1-bar2);
+			hitPoint= p1*bar3 + p2*bar1 + p3*bar2;
+			fp = &(*fi);
+			hit=true;
+		}
+	}
+
+	return hit;
+}
+
 /** 
     Compute the intersection between a mesh and a ball. 
 		given a mesh return a new mesh made by a copy of all the faces entirely includeded in the ball plus
