@@ -267,9 +267,20 @@ static void VertexBorderManifoldFlag(UpdateMeshType &m, Color4b vn=Color4b::Whit
 			}
 }
 
+static void FaceQualityGray(UpdateMeshType &m, float minq, float maxq)
+{
+	typename UpdateMeshType::FaceIterator fi;
+	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
+		(*fi).C().SetGrayShade( ((*fi).Q()-minq)/(maxq-minq));
+}
 
+static void FaceQualityGray(UpdateMeshType &m)
+{
+	std::pair<float,float> minmax = Stat<UpdateMeshType>::ComputePerFaceQualityMinMax(m);
+	FaceQualityGray(m,minmax.first,minmax.second);
+}	
 
-static void FaceQuality(UpdateMeshType &m)
+static void FaceQualityRamp(UpdateMeshType &m)
 {
 	// step 1: find the range
 	typename UpdateMeshType::FaceIterator fi;
@@ -282,13 +293,12 @@ static void FaceQuality(UpdateMeshType &m)
 			maxq=max(maxq,(*fi).Q());
 		}
 
-	FaceQuality(m,minq,maxq);
+	FaceQualityRamp(m,minq,maxq);
 }
 
-static void FaceQuality(UpdateMeshType &m, float minq, float maxq)
+static void FaceQualityRamp(UpdateMeshType &m, float minq, float maxq)
 {
 	typename UpdateMeshType::FaceIterator fi;
-
 	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
 		(*fi).C().ColorRamp(minq,maxq,(*fi).Q());
 }
@@ -304,7 +314,7 @@ static void VertexQualityRamp(UpdateMeshType &m, float minq, float maxq)
 
 static void VertexQualityRamp(UpdateMeshType &m)
 {
-	std::pair<float,float> minmax = Stat<UpdateMeshType>::ComputePerVertexQualityMinMax( m);
+	std::pair<float,float> minmax = Stat<UpdateMeshType>::ComputePerVertexQualityMinMax(m);
 	VertexQualityRamp(m,minmax.first,minmax.second);
 }
 
@@ -417,7 +427,7 @@ static int Contrast(UpdateMeshType &m, float factor, const bool ProcessSelected=
 }
 
 //Performs contrast operations on color, i.e expands or compress the histogram around
-//the midpoint value.  NewValue = (OldValue - 128) × factor + 128
+//the midpoint value.  NewValue = (OldValue - 128) â—Š factor + 128
 static Color4b ColorMul(Color4b c, float factor)
 {
   return Color4b( ValueMul(c[0], factor), ValueMul(c[1], factor), ValueMul(c[2], factor), 1);
@@ -447,7 +457,7 @@ static int ContrastBrightness(UpdateMeshType &m, float factor, float amount, con
   return counter;
 }
 
-//Performs contrast and brightness operations on color, i.e NewValue = (OldValue - 128) × contrast + 128 + amount
+//Performs contrast and brightness operations on color, i.e NewValue = (OldValue - 128) â—Š contrast + 128 + amount
 //The result is clamped just one time after all computations; this get a more accurate result.
 static Color4b ColorMulAdd(Color4b c, float factor, float amount)
 {
