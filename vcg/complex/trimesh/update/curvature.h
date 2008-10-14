@@ -608,9 +608,8 @@ public:
 		for(vi = m.vert.begin(); vi != m.vert.end(); ++vi){
 			vcg::Matrix33<ScalarType> m33;m33.SetZero();
 			face::JumpingPos<typename MeshType::FaceType> p((*vi).VFp(),&(*vi));
-
-			typename MeshType::VertexType * firstv = p.VFlip();
 			p.FlipE();
+			typename MeshType::VertexType * firstv = p.VFlip();
 			assert(p.F()->V(p.VInd())==&(*vi));
 
 
@@ -631,7 +630,7 @@ public:
 					m33[1][2] += beta*edge_length*normalized_edge[2]*normalized_edge[1];
 					m33[2][2] += beta*edge_length*normalized_edge[2]*normalized_edge[2];
 				}
-				p.NextE();
+				p.NextFE();
 			}while(firstv != p.VFlip());
 
 			if(m33.Determinant()==0.0){ // degenerate case
