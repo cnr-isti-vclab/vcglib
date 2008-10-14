@@ -612,6 +612,7 @@ public:
   static bool HasWedgeTexCoordOcf()   { return false; }
   static bool HasFFAdjacencyOcf()   { return false; }
   static bool HasVFAdjacencyOcf()   { return false; }
+  //static bool HasFaceQualityOcf()   { return false; }
 
   inline int Index() const {
     typename T::FaceType const *tp=static_cast<typename T::FaceType const *>(this); 
