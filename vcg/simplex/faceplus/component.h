@@ -375,6 +375,7 @@ public:
 	static bool HasFaceColor()   { return false; }
   static bool HasWedgeColor()   { return false; }
   static bool HasFaceQuality()   { return false; }
+	static bool HasFaceQualityOcf() { return false;}
 	static bool HasFaceColorOcc() { return false;}
 	static bool HasMark()   { return false; }
   static bool HasMarkOcc()   { return false; }
