@@ -99,6 +99,27 @@ template <template <typename,typename,typename,typename>
 					template <typename> class I, template <typename> class J>
           class Arity10: public J<Arity9<Base,BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H, I > > {};
 
+template <template <typename,typename,typename,typename>
+          class Base,class BVT, class BET, typename BFT,class BTT,
+          template <typename> class A, template <typename> class B, 
+          template <typename> class C, template <typename> class D,
+          template <typename> class E, template <typename> class F,
+          template <typename> class G, template <typename> class H,
+          template <typename> class I, template <typename> class J,
+          template <typename> class K>
+          class Arity11: public K<Arity10<Base,BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H, I, J> > {};
+
+
+template <template <typename,typename,typename,typename>
+          class Base,class BVT, class BET, typename BFT,class BTT,
+          template <typename> class A, template <typename> class B, 
+          template <typename> class C, template <typename> class D,
+          template <typename> class E, template <typename> class F,
+          template <typename> class G, template <typename> class H,
+          template <typename> class I, template <typename> class J,
+          template <typename> class K, template <typename> class L>
+          class Arity12: public L<Arity11<Base,BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H, I, J, K> > {};
+
 template < typename T=int>
 class DefaultDeriver : public T {};
 class DumClass {};

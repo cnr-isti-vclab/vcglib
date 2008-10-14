@@ -137,13 +137,13 @@ I.e. IsD() that uses the overridden Flags() member must be defined here.
 */
 
 template <class BVT, class BET, typename BFT,class BTT,
-          template <typename> class A, template <typename> class B, 
-          template <typename> class C, template <typename> class D, 
+          template <typename> class A, template <typename> class B,
+          template <typename> class C, template <typename> class D,
           template <typename> class E, template <typename> class F,
           template <typename> class G, template <typename> class H,
-					template <typename> class I, template <typename> class J, 
-					template <typename> class K> 
-class VertexArityMax: public K<Arity10<VertexBase,BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H, I, J> > {
+					template <typename> class I, template <typename> class J,
+					template <typename> class K, template <typename> class L> 
+class VertexArityMax: public Arity12<VertexBase,BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H, I, J, K, L> {
 
 // ----- Flags stuff -----
 public:
@@ -159,7 +159,7 @@ public:
 		SELECTED   = 0x0020,		// This bit can be used to select 
 		BORDER     = 0x0100,    // Border Flag
 		USER0      = 0x0200			// First user bit
-			};
+  };
 
 	inline int & UberFlags () { return this->Flags();	}
 	inline const int UberFlags() const 	{		return this->Flags();	}
@@ -267,8 +267,8 @@ template <class BVT, class BET, class BFT, class BTT,
           template <typename> class E = DefaultDeriver, template <typename> class F = DefaultDeriver,
           template <typename> class G = DefaultDeriver, template <typename> class H = DefaultDeriver,
 					template <typename> class I = DefaultDeriver, template <typename> class J = DefaultDeriver,
-					template <typename> class K = DefaultDeriver> 
-              class VertexSimp3: public VertexArityMax<BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H, I, J, K>  {};
+					template <typename> class K = DefaultDeriver, template <typename> class L = DefaultDeriver>
+              class VertexSimp3: public VertexArityMax<BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H, I, J, K, L>  {};
 
 template <class BVT, class BET, class BFT, 
           template <typename> class A = DefaultDeriver, template <typename> class B = DefaultDeriver,
@@ -276,8 +276,8 @@ template <class BVT, class BET, class BFT,
           template <typename> class E = DefaultDeriver, template <typename> class F = DefaultDeriver,
           template <typename> class G = DefaultDeriver, template <typename> class H = DefaultDeriver,
 					template <typename> class I = DefaultDeriver, template <typename> class J = DefaultDeriver,
-					template <typename> class K = DefaultDeriver> 
-              class VertexSimp2: public VertexArityMax<BVT,BET,BFT,DumClass, A, B, C, D, E, F, G, H, I, J, K>  {};
+					template <typename> class K = DefaultDeriver, template <typename> class L = DefaultDeriver>
+              class VertexSimp2: public VertexArityMax<BVT,BET,BFT,DumClass, A, B, C, D, E, F, G, H, I, J, K, L>  {};
 
 template <class BVT, class BET, 
           template <typename> class A = DefaultDeriver, template <typename> class B = DefaultDeriver,
@@ -285,8 +285,8 @@ template <class BVT, class BET,
           template <typename> class E = DefaultDeriver, template <typename> class F = DefaultDeriver,
           template <typename> class G = DefaultDeriver, template <typename> class H = DefaultDeriver,
 					template <typename> class I = DefaultDeriver, template <typename> class J = DefaultDeriver,
-					template <typename> class K = DefaultDeriver> 
-                class VertexSimp1: public VertexArityMax<BVT,BET,DumClass,DumClass, A, B, C, D, E, F, G, H, I, J, K>  {};
+					template <typename> class K = DefaultDeriver, template <typename> class L = DefaultDeriver> 
+                class VertexSimp1: public VertexArityMax<BVT,BET,DumClass,DumClass, A, B, C, D, E, F, G, H, I, J, K, L>  {};
 
 }// end namespace
 #endif

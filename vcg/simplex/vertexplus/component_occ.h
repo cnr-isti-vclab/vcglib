@@ -218,6 +218,37 @@ template <class T> class CurvatureDirdOcc: public CurvatureDirOcc<CurvatureDirTy
 public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDird"));T::Name(name);}
 };
 
+/*-------------------------- RADIUS ----------------------------------*/
+
+template <class A, class TT> class RadiusOcc: public TT {
+public:
+  typedef A RadiusType;
+  typedef A ScalarType;
+  typedef typename TT::VertType VertType;
+
+  RadiusType  &R(){  return CAT< vector_occ<VertType>,RadiusType>::Instance()->Get((VertType*)this);}
+  const RadiusType &cR() const { return CAT< vector_occ<VertType>,RadiusType>::Instance()->Get((VertType*)this);}
+
+  template <class LeftV>
+  void ImportLocal(const LeftV & leftV){
+    CAT< vector_occ<VertType>,RadiusType>::Instance()->Get((VertType*)this) = leftV.cR();
+    TT::ImporLocal(leftV);
+  }
+
+  static bool HasRadius()     { return true; }
+  static bool HasRadiusOcc()  { return true; }
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("RadiusOcc"));TT::Name(name);}
+
+private:   
+};
+
+template <class T> class RadiusfOcc: public RadiusOcc<float, T> {
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("RadiusfOcc"));T::Name(name);}
+};
+template <class T> class RadiusdOcc: public RadiusOcc<double, T> {
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("RadiusdOcc"));T::Name(name);}
+};
+
 ///*----------------------------- VFADJ ------------------------------*/ 
 
 template <class T> class VFAdjOcc: public T {
