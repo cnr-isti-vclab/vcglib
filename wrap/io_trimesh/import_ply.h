@@ -825,7 +825,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 		{ 
 			// Warning the parsing of tristrips could not work if OCF types are used
 			FaceType tf;  
-			if( FaceType::HasFaceQuality() )  tf.Q()=(typename OpenMeshType::FaceType::QualityType)1.0;
+			if( HasPerFaceQuality(m) )  tf.Q()=(typename OpenMeshType::FaceType::QualityType)1.0;
 			if( FaceType::HasWedgeColor() )   tf.WC(0)=tf.WC(1)=tf.WC(2)=Color4b(Color4b::White);
 			if( HasPerFaceColor(m) )    tf.C()=Color4b(Color4b::White);			
 
