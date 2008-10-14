@@ -131,12 +131,11 @@ template <class BVT, class BET=DumClass, class BFT=DumClass, class BTT=DumClass>
 class FaceBase: public   face::EmptyPolyInfo<
 												 face::EmptyVertexRef<
                          face::EmptyAdj<
-                         face::EmptyColorQuality<
+                         face::EmptyColorMarkQuality<
                          face::EmptyNormal<
                          face::EmptyBitFlags<
-                         face::EmptyMark<
                          face::EmptyWedgeTexCoord<
-                         FaceTypeHolder <BVT, BET, BFT, BTT> > > > > > > > > {
+                         FaceTypeHolder <BVT, BET, BFT, BTT> > > > > > > > {
 
 };
 
@@ -158,8 +157,8 @@ template <class BVT, class BET, typename BFT,class BTT,
           template <typename> class C, template <typename> class D, 
           template <typename> class E, template <typename> class F,
           template <typename> class G, template <typename> class H,
-          template <typename> class I  > 
-          class FaceArityMax: public I<Arity8<FaceBase,BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H> > {
+          template <typename> class I, template <typename> class J > 
+          class FaceArityMax: public I<Arity9<FaceBase,BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H, J> > {
 
 // ----- Flags stuff -----
 public:
@@ -344,16 +343,16 @@ template <class BVT, class BET, class BFT, class BTT,
           template <typename> class C = FaceDefaultDeriver, template <typename> class D = FaceDefaultDeriver,
           template <typename> class E = FaceDefaultDeriver, template <typename> class F = FaceDefaultDeriver,
           template <typename> class G = FaceDefaultDeriver, template <typename> class H = FaceDefaultDeriver,
-          template <typename> class I = FaceDefaultDeriver > 
-              class FaceSimp3: public FaceArityMax<BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H, I>  {};
+          template <typename> class I = FaceDefaultDeriver, template <typename> class J = FaceDefaultDeriver > 
+              class FaceSimp3: public FaceArityMax<BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H, I, J>  {};
 class DumTT;
 template <class BVT, class BET, class BFT, 
           template <typename> class A = FaceDefaultDeriver, template <typename> class B = FaceDefaultDeriver,
           template <typename> class C = FaceDefaultDeriver, template <typename> class D = FaceDefaultDeriver,
           template <typename> class E = FaceDefaultDeriver, template <typename> class F = FaceDefaultDeriver,
           template <typename> class G = FaceDefaultDeriver, template <typename> class H = FaceDefaultDeriver,
-          template <typename> class I = FaceDefaultDeriver > 
-              class FaceSimp2: public FaceArityMax<BVT,BET,BFT,DumTT, A, B, C, D, E, F, G, H, I>  {};
+          template <typename> class I = FaceDefaultDeriver, template <typename> class J = FaceDefaultDeriver > 
+              class FaceSimp2: public FaceArityMax<BVT,BET,BFT,DumTT, A, B, C, D, E, F, G, H, I, J>  {};
 
 
 }// end namespace

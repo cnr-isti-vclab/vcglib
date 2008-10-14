@@ -359,17 +359,26 @@ private:
 
 /*-------------------------- COLOR ----------------------------------*/ 
 
-template <class T> class EmptyColorQuality: public T {
+template <class T> class EmptyColorMarkQuality: public T {
 public:
-    typedef float QualityType;
+	typedef int MarkType;
+  inline void InitIMark()    {  }
+  inline int & IMark()       { assert(0); static int tmp=-1; return tmp;}
+  inline const int IMark() const {return 0;}
+	
+	typedef float QualityType;
   typedef vcg::Color4b ColorType;
   ColorType &C() { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
   ColorType &WC(const int) { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
   QualityType &Q() { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
-  static bool HasFaceColor()   { return false; }
+  
+	static bool HasFaceColor()   { return false; }
   static bool HasWedgeColor()   { return false; }
   static bool HasFaceQuality()   { return false; }
 	static bool HasFaceColorOcc() { return false;}
+	static bool HasMark()   { return false; }
+  static bool HasMarkOcc()   { return false; }
+  
   static void Name(std::vector<std::string> & name){T::Name(name);}
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){ T::ImportLocal(leftF);}
@@ -415,11 +424,6 @@ template <class T> class Color4b: public Color<vcg::Color4b, T> {
 
 /*-------------------------- Quality  ----------------------------------*/ 
 
-template <class T> class EmptyQuality: public T {
-public:
-	static void Name(std::vector<std::string> & name){T::Name(name);}
-
-};
 template <class A, class T> class Quality: public T {
 public:
   typedef A QualityType;
@@ -447,21 +451,6 @@ public:  static void Name(std::vector<std::string> & name){name.push_back(std::s
 };
 /*-------------------------- INCREMENTAL MARK  ----------------------------------------*/ 
 
-template <class T> class EmptyMark: public T {
-public:
-	typedef int MarkType;
-  static bool HasMark()   { return false; }
-  static bool HasMarkOcc()   { return false; }
-  inline void InitIMark()    {  }
-  inline int & IMark()       { assert(0); static int tmp=-1; return tmp;}
-  inline const int IMark() const {return 0;}
-	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){T::ImportLocal(leftF);}
-	inline void Alloc(const int & ns){T::Alloc(ns);}
-	inline void Dealloc(){T::Dealloc();}
-  static void Name(std::vector<std::string> & name){T::Name(name);}
-
-};
 template <class T> class Mark: public T {
 public:
   static bool HasMark()      { return true; }
