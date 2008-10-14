@@ -140,7 +140,8 @@ class vector_ocf: public std::vector<VALUE_TYPE> {
 public:
 	vector_ocf():std::vector<VALUE_TYPE>(){
   ColorEnabled=false;
-  MarkEnabled=false;
+	QualityEnabled=false;
+	MarkEnabled=false;
   NormalEnabled=false;
   WedgeTexEnabled=false;
   VFAdjacencyEnabled=false;
@@ -186,6 +187,7 @@ public:
   {
     BaseType::push_back(v);
 	BaseType::back()._ovp = this;
+    if (QualityEnabled)     QV.push_back(0);
     if (ColorEnabled)       CV.push_back(vcg::Color4b(vcg::Color4b::White));
     if (MarkEnabled)        MV.push_back(0);
     if (NormalEnabled)      NV.push_back(typename VALUE_TYPE::NormalType());
@@ -203,6 +205,7 @@ public:
 		  advance(firstnew,oldsize);
 		  _updateOVP(firstnew,(*this).end());
 	  }  
+    if (QualityEnabled)     QV.resize(_size);
     if (ColorEnabled)       CV.resize(_size);
     if (MarkEnabled)        MV.resize(_size);
     if (NormalEnabled)      NV.resize(_size);
@@ -216,6 +219,7 @@ public:
     ThisTypeIterator oldbegin=(*this).begin();
     BaseType::reserve(_size);
 
+    if (QualityEnabled)     QV.reserve(_size);
     if (ColorEnabled)       CV.reserve(_size);
     if (MarkEnabled)        MV.reserve(_size);
     if (NormalEnabled)      NV.reserve(_size);
@@ -240,6 +244,7 @@ public:
 void ReorderFace(std::vector<size_t> &newFaceIndex )
 {
 	size_t i=0;
+	if (QualityEnabled)    assert( QV.size() == newFaceIndex.size() );
 	if (ColorEnabled)      assert( CV.size() == newFaceIndex.size() );
 	if (MarkEnabled)       assert( MV.size() == newFaceIndex.size() );
 	if (NormalEnabled)     assert( NV.size() == newFaceIndex.size() );
@@ -252,6 +257,7 @@ void ReorderFace(std::vector<size_t> &newFaceIndex )
 			if(newFaceIndex[i] != std::numeric_limits<size_t>::max() )
 				{
 					assert(newFaceIndex[i] <= i);
+					if (QualityEnabled)      QV[newFaceIndex[i]] =  QV[i]; 
 					if (ColorEnabled)        CV[newFaceIndex[i]] =  CV[i]; 
 					if (MarkEnabled)         MV[newFaceIndex[i]] =  MV[i];
 					if (NormalEnabled)       NV[newFaceIndex[i]] =  NV[i];
@@ -261,6 +267,7 @@ void ReorderFace(std::vector<size_t> &newFaceIndex )
 				}
 		}
 	
+	if (QualityEnabled)     QV.resize(BaseType::size());
 	if (ColorEnabled)       CV.resize(BaseType::size());
 	if (MarkEnabled)        MV.resize(BaseType::size());
 	if (NormalEnabled)      NV.resize(BaseType::size());
@@ -271,7 +278,20 @@ void ReorderFace(std::vector<size_t> &newFaceIndex )
 
 ////////////////////////////////////////
 // Enabling Functions
+	
+bool IsQualityEnabled() const {return QualityEnabled;}
+void EnableQuality() {
+	assert(VALUE_TYPE::HasFaceQualityOcf());
+	QualityEnabled=true;
+	QV.resize((*this).size());
+}
 
+void DisableQuality() {
+	assert(VALUE_TYPE::HasFaceQualityOcf());
+	QualityEnabled=false;
+	QV.clear();
+}
+	
 bool IsColorEnabled() const {return ColorEnabled;}
 void EnableColor() {
   assert(VALUE_TYPE::HasFaceColorOcf());
@@ -352,6 +372,7 @@ void DisableWedgeTex() {
 }
 
 public:
+  std::vector<float> QV;
   std::vector<typename VALUE_TYPE::ColorType> CV;
   std::vector<int> MV;
   std::vector<typename VALUE_TYPE::NormalType> NV;
@@ -359,6 +380,7 @@ public:
   std::vector<struct AdjTypePack> AF;
   std::vector<class WedgeTexTypePack> WTV;
 
+  bool QualityEnabled;
   bool ColorEnabled;
   bool MarkEnabled;
   bool NormalEnabled;
@@ -477,6 +499,32 @@ public:
 template <class T> class Normal3sOcf: public NormalOcf<vcg::Point3s, T> {};
 template <class T> class Normal3fOcf: public NormalOcf<vcg::Point3f, T> {};
 template <class T> class Normal3dOcf: public NormalOcf<vcg::Point3d, T> {};
+		
+///*-------------------------- QUALITY ----------------------------------*/ 
+
+template <class A, class T> class QualityOcf: public T {
+public:
+  typedef A QualityType;
+  QualityType &Q() { 
+    assert((*this).Base().QualityEnabled); 
+    return (*this).Base().QV[(*this).Index()]; 
+  }
+  const QualityType  Q() const  { 
+    assert((*this).Base().QualityEnabled); 
+    return (*this).Base().QV[(*this).Index()]; 
+  }
+
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){
+		if((*this).Base().QualityEnabled && leftF.Base().QualityEnabled)
+				Q() = leftF.Q(); 
+		T::ImportLocal(leftF);
+	}
+  static bool HasFaceQuality()   { return true; }
+  static bool HasFaceQualityOcf()   { return true; }
+};
+
+template <class T> class QualityfOcf: public QualityOcf<float, T> {};
 
 ///*-------------------------- COLOR ----------------------------------*/ 
 
@@ -610,7 +658,14 @@ public:
       if(FaceType::HasFaceColorOcf()) return m.face.IsColorEnabled();
       else return FaceType::HasFaceColor();
     }
-
+		
+    template < class VertContainerType, class FaceType >
+		bool HasPerFaceQuality (const TriMesh < VertContainerType , face::vector_ocf< FaceType > > & m) 
+    {
+      if(FaceType::HasFaceQualityOcf()) return m.face.IsQualityEnabled();
+      else return FaceType::HasFaceQuality();
+    }
+		
     template < class VertContainerType, class FaceType >
       bool HasPerFaceMark (const TriMesh < VertContainerType , face::vector_ocf< FaceType > > & m) 
     {
