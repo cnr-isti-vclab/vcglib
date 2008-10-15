@@ -1,8 +1,6 @@
 #ifndef __GL_OBJECT_H__
 #define __GL_OBJECT_H__
 
-#include <GL/gl.h>
-
 class GLObject
 {
 public:
