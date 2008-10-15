@@ -557,7 +557,7 @@ public:
 	typedef A RadiusType;
 	typedef RadiusType ScalarType;
 
-	RadiusType  &R(){  assert((*this).Base().RadiusEnabled); return (*this).Base().RadiusV[(*this).Index()];}
+	RadiusType &R(){  assert((*this).Base().RadiusEnabled); return (*this).Base().RadiusV[(*this).Index()];}
 	const RadiusType &cR() const { assert((*this).Base().RadiusEnabled); return (*this).Base().RadiusV[(*this).Index()];}
 
 	template <class LeftV>

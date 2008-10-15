@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -129,7 +129,7 @@ All the Components that can be added to a vertex should be defined in the namesp
 
 */
 
-/*------------------------- EMPTY COORD & NORMAL -----------------------------------------*/ 
+/*------------------------- EMPTY COORD & NORMAL -----------------------------------------*/
 template <class T> class EmptyCoordNormal: public T {
 public:
   typedef vcg::Point3f CoordType;
@@ -147,11 +147,11 @@ public:
  	static bool HasNormal()   { return false; }
   static bool HasNormalOcc()   { return false; }
 	template < class LeftV>
-	void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); } 
+	void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
   static void Name(std::vector<std::string> & name){T::Name(name);}
 };
 
-/*-------------------------- COORD ----------------------------------------*/ 
+/*-------------------------- COORD ----------------------------------------*/
 
 template <class A, class T> class Coord: public T {
 public:
@@ -163,12 +163,12 @@ public:
   CoordType &UberP() { return _coord; }
 
 	template < class LeftV>
-	void ImportLocal(const LeftV  & left ) { P().Import(left.cP()); T::ImportLocal( left); } 
+	void ImportLocal(const LeftV  & left ) { P().Import(left.cP()); T::ImportLocal( left); }
   static bool HasCoord()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("Coord"));T::Name(name);}
 
 private:
-  CoordType _coord;    
+  CoordType _coord;
 };
 template <class T> class Coord3f: public Coord<vcg::Point3f, T> {
 public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("Coord3f"));T::Name(name);}
@@ -177,7 +177,7 @@ template <class T> class Coord3d: public Coord<vcg::Point3d, T> {
 public: static void Name(std::vector<std::string> & name){name.push_back(std::string("Coord3d"));T::Name(name);}
 };
 
-/*-------------------------- NORMAL ----------------------------------------*/ 
+/*-------------------------- NORMAL ----------------------------------------*/
 
 template <class A, class T> class Normal: public T {
 public:
@@ -190,7 +190,7 @@ public:
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("Normal"));T::Name(name);}
 
 private:
-  NormalType _norm;    
+  NormalType _norm;
 };
 
 template <class T> class Normal3s: public Normal<vcg::Point3s, T> {
@@ -204,7 +204,7 @@ public:	static void Name(std::vector<std::string> & name){name.push_back(std::st
 };
 
 
-/*-------------------------- INCREMENTAL MARK  ----------------------------------------*/ 
+/*-------------------------- INCREMENTAL MARK  ----------------------------------------*/
 
 template <class T> class EmptyMark: public T {
 public:
@@ -228,12 +228,12 @@ public:
 	template < class LeftV>
 	void ImportLocal(const LeftV  & left ) { IMark() = left.IMark(); T::ImportLocal( left); }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("Mark"));T::Name(name);}
-    
+
  private:
 	int _imark;
 };
 
-/*-------------------------- TEXCOORD ----------------------------------------*/ 
+/*-------------------------- TEXCOORD ----------------------------------------*/
 
 template <class TT> class EmptyTexCoord: public TT {
 public:
@@ -256,7 +256,7 @@ public:
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("TexCoord"));TT::Name(name);}
 
 private:
-  TexCoordType _t;    
+  TexCoordType _t;
 };
 
 template <class TT> class TexCoord2s: public TexCoord<TexCoord2<short,1>, TT> {
@@ -270,7 +270,7 @@ template <class TT> class TexCoord2d: public TexCoord<TexCoord2<double,1>, TT> {
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("TexCoord2d"));TT::Name(name);}
 };
 
-/*------------------------- FLAGS -----------------------------------------*/ 
+/*------------------------- FLAGS -----------------------------------------*/
 template <class T> class EmptyBitFlags: public T {
 public:
 	typedef int FlagType;
@@ -296,10 +296,10 @@ public:
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("BitFlags"));T::Name(name);}
 
 private:
-  int  _flags;    
+  int  _flags;
 };
 
-/*-------------------------- EMPTY COLOR & QUALITY ----------------------------------*/ 
+/*-------------------------- EMPTY COLOR & QUALITY ----------------------------------*/
 
 template <class T> class EmptyColorQuality: public T {
 public:
@@ -315,7 +315,7 @@ public:
 	static void Name(std::vector<std::string> & name){T::Name(name);}
 };
 
-/*-------------------------- Color  ----------------------------------*/ 
+/*-------------------------- Color  ----------------------------------*/
 
 template <class A, class T> class Color: public T {
 public:
@@ -330,14 +330,14 @@ public:
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("Color"));T::Name(name);}
 
 private:
-  ColorType _color;    
+  ColorType _color;
 };
 
 template <class TT> class Color4b: public Color<vcg::Color4b, TT> {
 	public: static void Name(std::vector<std::string> & name){name.push_back(std::string("Color4b"));TT::Name(name);}
 };
 
-/*-------------------------- Quality  ----------------------------------*/ 
+/*-------------------------- Quality  ----------------------------------*/
 
 template <class A, class TT> class Quality: public TT {
 public:
@@ -350,7 +350,7 @@ public:
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("Quality"));TT::Name(name);}
 
 private:
-  QualityType _quality;    
+  QualityType _quality;
 };
 
 template <class TT> class Qualitys: public Quality<short, TT> {
@@ -392,7 +392,7 @@ public:
 	static void Name(std::vector<std::string> & name){TT::Name(name);}
 };
 
-/*-------------------------- Curvature ----------------------------------*/ 
+/*-------------------------- Curvature ----------------------------------*/
 
 template <class TT> class EmptyCurvature: public TT {
 public:
@@ -422,7 +422,7 @@ public:
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("Curvature"));TT::Name(name);}
 
 private:
-	Point2<A> _hk;    
+	Point2<A> _hk;
 };
 
 
@@ -433,14 +433,14 @@ template <class T> class Curvatured: public Curvature<double , T> {
 public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("Curvatured"));T::Name(name);}
 };
 
-/*-------------------------- Curvature Direction ----------------------------------*/ 
+/*-------------------------- Curvature Direction ----------------------------------*/
 
 template <class S>
 struct CurvatureDirBaseType{
 	typedef Point3<S> VecType;
 	typedef  S   ScalarType;
 	CurvatureDirBaseType () {}
-	Point3<S>max_dir,min_dir; // max and min curvature direction 
+	Point3<S>max_dir,min_dir; // max and min curvature direction
 	S k1,k2;// max and min curvature values
 };
 
@@ -482,7 +482,7 @@ public:
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDir"));TT::Name(name);}
 
 private:
-  CurvatureDirType _curv;    
+  CurvatureDirType _curv;
 };
 
 
@@ -493,25 +493,25 @@ template <class T> class CurvatureDird: public CurvatureDir<CurvatureDirBaseType
 public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDird"));T::Name(name);}
 };
 
-/*-------------------------- Empty Radius ----------------------------------*/ 
+/*-------------------------- Empty Radius ----------------------------------*/
 
 template <class T> class EmptyRadius: public T {
 public:
-	
+
 	typedef float RadiusType;
 	typedef RadiusType ScalarType;
 
-	RadiusType  &R(){ static ScalarType v = 0.0; assert(0); return v; }
-	const RadiusType &cR() const { static const ScalarType  & v = 0.0; assert(0); return v; }
+	RadiusType  &R(){ static ScalarType v = 0.0; assert(0 && "the radius component is not available"); return v; }
+	const RadiusType &cR() const { static const ScalarType v = 0.0; assert(0 && "the radius component is not available"); return v; }
 
-	static bool HasRadius()     { return true; }
-	static bool HasRadiusOcf()  { return true; }
+	static bool HasRadius()     { return false; }
+	static bool HasRadiusOcf()  { return false; }
 	static void Name(std::vector<std::string> & name){ T::Name(name);}
 };
 
 
 
-/*----------------------------- VEADJ ------------------------------*/ 
+/*----------------------------- VEADJ ------------------------------*/
 
 
 template <class T> class EmptyVEAdj: public T {
@@ -537,13 +537,13 @@ public:
   static bool HasVEAdjacency()   {   return true; }
   static bool HasVEAdjacencyOcc()   {   return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("VEAdj"));T::Name(name);}
-	
+
 private:
-  typename T::EdgePointer _ep ;    
-  int _zp ;    
+  typename T::EdgePointer _ep ;
+  int _zp ;
 };
 
-/*----------------------------- VFADJ ------------------------------*/ 
+/*----------------------------- VFADJ ------------------------------*/
 
 
 template <class T> class EmptyVFAdj: public T {
@@ -571,11 +571,11 @@ public:
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("VFAdj"));T::Name(name);}
 
 private:
-  typename T::FacePointer _fp ;    
-  int _zp ;    
+  typename T::FacePointer _fp ;
+  int _zp ;
 };
 
-/*----------------------------- VTADJ ------------------------------*/ 
+/*----------------------------- VTADJ ------------------------------*/
 
 
 template <class T> class EmptyVTAdj: public T {
@@ -599,8 +599,8 @@ public:
 	static void Name( std::vector< std::string > & name ) { name.push_back( std::string("VTAdj") ); T::Name(name); }
 
 private:
-	typename T::TetraPointer _tp ;    
-	int _zp ;    
+	typename T::TetraPointer _tp ;
+	int _zp ;
 };
 
   } // end namespace vert

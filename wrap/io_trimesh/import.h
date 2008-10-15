@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -75,8 +75,8 @@ namespace vcg {
 namespace tri {
 namespace io {
 
-/** 
-This class encapsulate a filter for automatically importing meshes by guessing 
+/**
+This class encapsulate a filter for automatically importing meshes by guessing
 the right filter according to the extension
 */
 
@@ -151,7 +151,7 @@ static bool ErrorCritical(int error)
     case KT_OBJ : return ImporterOBJ<OpenMeshType>::ErrorCritical(error); break;
   }
 
-  return true;  
+  return true;
 }
 
 static const char *ErrorMsg(int error)
@@ -163,7 +163,7 @@ static const char *ErrorMsg(int error)
     case KT_OFF : return ImporterOFF<OpenMeshType>::ErrorMsg(error); break;
     case KT_OBJ : return ImporterOBJ<OpenMeshType>::ErrorMsg(error); break;
   }
-  return "Unknown type";  
+  return "Unknown type";
 }
 
 static bool LoadMask(const char * filename, int &mask)
@@ -192,7 +192,7 @@ static bool LoadMask(const char * filename, int &mask)
 		err = ImporterOBJ<OpenMeshType>::LoadMask(filename, mask);
 		LastType()=KT_OBJ;
 	}
-	else 
+	else
 	{
 		err = false;
 		LastType()=KT_UNKNOWN;

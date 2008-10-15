@@ -6,6 +6,9 @@
 #include <set>
 
 #include "gl_object.h"
+#include "../../vcg/space/point2.h"
+#include "../../vcg/space/point3.h"
+#include "../../vcg/space/point4.h"
 
 class Shader : public GLObject, public Bindable
 {
@@ -49,6 +52,9 @@ public:
 
 	void SetSource(const char * src)
 	{
+		if (this->objectID==0)
+			Gen();
+
 		this->flags |= SOURCE_DIRTY;
 		this->compiled = false;
 		this->source = src;
@@ -59,6 +65,9 @@ public:
 
 	bool LoadSource(const char * fileName)
 	{
+		if (this->objectID==0)
+			Gen();
+
 		this->flags |= SOURCE_DIRTY;
 		this->compiled = false;
 		FILE * f = fopen(fileName, "rb");
@@ -375,6 +384,8 @@ public:
 
 	void Attach(Shader * shd)
 	{
+		if (this->objectID==0)
+			Gen();
 		this->shaders.insert(shd);
 		this->linked = false;
 		glAttachShader(this->objectID, shd->ObjectID());
@@ -405,14 +416,18 @@ public:
 
 	bool Link(void)
 	{
+		bool ok = true;
 		for (std::set<Shader *>::iterator it=this->shaders.begin(); it!=this->shaders.end(); ++it)
 		{
 			Shader * shd = (*it);
 			if (!shd->IsCompiled())
 			{
-				shd->Compile();
+				ok = shd->Compile() && ok;
 			}
 		}
+
+		if (!ok)
+			return false;
 
 		glLinkProgram(this->objectID);
 
@@ -487,6 +502,24 @@ public:
 		glUniform4f(loc, x, y, z, w);
 	}
 
+	void Uniform(const char * name, const vcg::Point3f& p)
+	{
+		const GLint loc = glGetUniformLocation(this->objectID, name);
+		glUniform2fv(loc, 1, p.V());
+	}
+
+	void Uniform(const char * name, const vcg::Point2f& p)
+	{
+		const GLint loc = glGetUniformLocation(this->objectID, name);
+		glUniform3fv(loc, 1, p.V());
+	}
+
+	void Uniform(const char * name, const vcg::Point4f& p)
+	{
+		const GLint loc = glGetUniformLocation(this->objectID, name);
+		glUniform4fv(loc, 1, p.V());
+	}
+
 	void Parameter(GLenum pname, int value)
 	{
 		glProgramParameteriEXT(this->objectID, pname, value);
@@ -525,18 +558,26 @@ public:
 
 	void SetSources(const char * vsrc, const char * fsrc)
 	{
-		this->vshd.SetSource(vsrc);
-		this->fshd.SetSource(fsrc);
-		this->prog.Attach(&(this->vshd));
-		this->prog.Attach(&(this->fshd));
+		if (vsrc) {
+			this->vshd.SetSource(vsrc);
+			this->prog.Attach(&(this->vshd));
+		}
+		if (fsrc) {
+			this->fshd.SetSource(fsrc);
+			this->prog.Attach(&(this->fshd));
+		}
 	}
 
 	void LoadSources(const char * vfile, const char * ffile)
 	{
-		this->vshd.LoadSource(vfile);
-		this->fshd.LoadSource(ffile);
-		this->prog.Attach(&(this->vshd));
-		this->prog.Attach(&(this->fshd));
+		if (vfile) {
+			this->vshd.LoadSource(vfile);
+			this->prog.Attach(&(this->vshd));
+		}
+		if (ffile) {
+			this->fshd.LoadSource(ffile);
+			this->prog.Attach(&(this->fshd));
+		}
 	}
 
 protected:
