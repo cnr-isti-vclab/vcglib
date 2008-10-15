@@ -649,15 +649,15 @@ void DrawPoints()
 	// Perfect case, no deleted stuff,
 	// draw the vertices using vertex arrays
 	if (nm==NMPerVert) 
-			{
-				glEnableClientState (GL_NORMAL_ARRAY);
-				glNormalPointer(GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->N()[0]));
-			}
+		{
+			glEnableClientState (GL_NORMAL_ARRAY);
+			glNormalPointer(GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->N()[0]));
+		}
 	if (cm==CMPerVert)
-			{
-				glEnableClientState (GL_COLOR_ARRAY);
-				glColorPointer(4,GL_UNSIGNED_BYTE,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->C()[0]));
-			}
+		{
+			glEnableClientState (GL_COLOR_ARRAY);
+			glColorPointer(4,GL_UNSIGNED_BYTE,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->C()[0]));
+		}
 	
 	glEnableClientState (GL_VERTEX_ARRAY);
 	glVertexPointer(3,GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->P()[0])); 

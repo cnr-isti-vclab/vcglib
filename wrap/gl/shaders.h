@@ -502,13 +502,13 @@ public:
 		glUniform4f(loc, x, y, z, w);
 	}
 
-	void Uniform(const char * name, const vcg::Point3f& p)
+	void Uniform(const char * name, const vcg::Point2f& p)
 	{
 		const GLint loc = glGetUniformLocation(this->objectID, name);
 		glUniform2fv(loc, 1, p.V());
 	}
 
-	void Uniform(const char * name, const vcg::Point2f& p)
+	void Uniform(const char * name, const vcg::Point3f& p)
 	{
 		const GLint loc = glGetUniformLocation(this->objectID, name);
 		glUniform3fv(loc, 1, p.V());
