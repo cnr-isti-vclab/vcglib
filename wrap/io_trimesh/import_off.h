@@ -130,7 +130,8 @@ namespace vcg
 
 				// OFF codes
 				enum OFFCodes {NoError=0, CantOpen, InvalidFile,
-					UnsupportedFormat, ErrorNotTriangularFace};
+					InvalidFile_MissingOFF,
+					UnsupportedFormat, ErrorNotTriangularFace,ErrorHighDimension};
 
 				/*!
 				*	Standard call for knowing the meaning of an error code
@@ -142,8 +143,8 @@ namespace vcg
 					static const char* error_msg[] =
 					{
 						"No errors", "Can't open file", "Invalid file",
-							"Unsupported format", "Face with more than 3 vertices"
-					};
+						"Invalid file: OFF file should have in the first line the OFF keyword as a first token",
+							"Unsupported format", "Face with more than 3 vertices","File with high dimensional vertexes are not supported" 					};
 
 					if(message_code>4 || message_code<0)
 						return "Unknown error";
@@ -196,26 +197,50 @@ namespace vcg
 					int dimension = 3;
 					bool homogeneousComponents = false;
 
-					// The "[ST][C][N][4][n]OFF" keyword is optional. Default is "OFF".
-					std::string header = tokens[tokens.size()-1];
+
+					/*
+					 [ST][C][N][4][n]OFF	# Header keyword
+					 [Ndim]		# Space dimension of vertices, present only if nOFF
+					 NVertices  NFaces  NEdges   # NEdges not used or checked
+					 
+					 x[0]  y[0]  z[0]	# Vertices, possibly with normals, colors, and/or texture coordinates, in that order,  if the prefixes N, C, ST are present.
+					 # If 4OFF, each vertex has 4 components including a final homogeneous component.
+					 # If nOFF, each vertex has Ndim components.
+					 # If 4nOFF, each vertex has Ndim+1 components.
+					 ...
+					 x[NVertices-1]  y[NVertices-1]  z[NVertices-1]
+					 
+					 # Faces
+					 # Nv = # vertices on this face
+					 # v[0] ... v[Nv-1]: vertex indices
+					 #		in range 0..NVertices-1
+					 Nv  v[0] v[1] ... v[Nv-1]  colorspec
+					 ...
+					 # colorspec continues past v[Nv-1] to end-of-line; may be 0 to 4 numbers
+					 # nothing: default
+					 # integer: colormap index
+					 # 3 or 4 integers: RGB[A] values 0..255
+					 # 3 or 4 floats: RGB[A] values 0..1				 
+					 */
+					std::string header = tokens[0];
 					if (header.rfind("OFF") != std::basic_string<char>::npos)
-					{
+					{ // the OFF string is in the header go on parsing it.
 						for (int u = static_cast<int>(header.rfind("OFF")-1); u>=0; u--)
 						{
 							if      (header[u] == 'C')				isColorDefined = true;
 							else if (header[u] == 'N')				isNormalDefined = true;
 							else if (u>0 && header[u-1] == 'S' && header[u] == 'T') isTexCoordDefined = true;
 							else if (header[u] == '4')				homogeneousComponents = true;
-							else if (header[u] == 'n')
-							{
-								TokenizeNextLine(stream, tokens);
-								dimension = atoi(tokens[0].c_str());
+							else if (header[u] == 'n') return ErrorHighDimension;
 							}
 						}
+				else return InvalidFile_MissingOFF;
 
-						TokenizeNextLine(stream, tokens);
-					}
-
+        // If the file is slightly malformed and it has nvert and nface AFTER the OFF string instead of in the next line
+				// we manage it here...
+				if(tokens.size()==1) TokenizeNextLine(stream, tokens);
+				else tokens.erase(tokens.begin(),tokens.begin()+1);
+					
 					// Update loading mask
 					///////////////////////////////////////
 
