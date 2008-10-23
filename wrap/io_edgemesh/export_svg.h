@@ -20,42 +20,7 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
 
-$Log: not supported by cvs2svn $
-Revision 1.11  2007/07/12 11:02:06  andrenucci
-Scale in SingleFile mode changed, it have to be calcolated before draw.
-
-Revision 1.10  2007/07/10 07:48:41  cignoni
-changed a template >> into > >
-
-Revision 1.9  2007/07/10 06:58:31  cignoni
-added a missing typename
-
-Revision 1.8  2007/07/09 15:36:40  andrenucci
-fix bug with exporting of translate plans
-
-Revision 1.7  2007/06/13 09:17:14  andrenucci
-Fix problem with scale
-
-Revision 1.5  2007/05/29 10:09:29  cignoni
-Added a const (and reformatted)
-
-Revision 1.4  2007/05/21 13:22:40  cignoni
-Corrected gcc compiling issues
-
-Revision 1.3  2006/02/16 15:16:51  corsini
-Add reference plane support
-
-Revision 1.2  2006/02/15 15:40:06  corsini
-Decouple SVG properties and exporter for simmetry with the other exporter
-
-Revision 1.1  2006/02/13 16:18:09  corsini
-first working version
-
-
-****************************************************************************/
 #ifndef __VCG_LIB_EXPORTER_SVG
 #define __VCG_LIB_EXPORTER_SVG
 
@@ -75,182 +40,63 @@ class SVGProperties
 {
 	// definitions
 public:
-
-	//! Stroke colors.
-	enum StrokeColor 
-	{
-		BLACK, 		SILVER,		GRAY,		WHITE,
-		MAROON,		RED,		PURPLE,		FUCHSIA,
-		GREEN,		LIME,		OLIVE,		YELLOW,
-		NAVY,		BLUE,		TEAL,		AQUA
-	};
-
-	//! Stroke linecap types.
-	enum StrokeLineCap
-	{
-		BUTT,		ROUND,		SQUARE
-	};
-
-	static const int DEFAULT_LINE_WIDTH=2;
 	
-	//in single-file export make the grid of sessiones
+	// When multiple meshes are passed, they are arranged in a grid according these two values.
+	// the default is two column and enough row. If numRow is not sufficient it is automatically enlarged.
 	int numCol;
 	int numRow;
 	
-
-// private data members
-private:
-
-	// Line width.
-	int lwidth;
-
-	// Stroke color (see StrokeColor).
-	std::string stroke_color;
-
-	// Stroke linecap (see StrokeLineCap).
-	std::string stroke_linecap;
-
-	// Plane where to project the edge mesh.
-	Plane3d proj;
-	Plane3f projf;
-	// Scale of rdrawing respect coordinates of mesh  
+	Point2f sizeCm; // The size, in the drawing, of each ViewBox (in cm)
+	
+ 	Point2f marginCm; // how much space between each slice box (in cm)
+  
+	Point2f pageSizeCm() // This is automatically computed from the above values 
+	{ 
+		float xSize = numCol*sizeCm[0] + numCol*marginCm[0] + marginCm[0];
+		float ySize = numRow*sizeCm[1] + numRow*marginCm[1] + marginCm[1];
+		return Point2f(xSize,ySize);
+	}
+	
+	
+	Point3f projDir;	  // Direction of the Projection
+	Point3f projUp;
+	Point3f projCenter; // the 3d point that after projection will fall exactly in the center of the ViewBox.
+	
+	// How the mesh will be scaled. 
+	// if this value is 0 the bounding box of all the passed meshes will be used to compute the scale and center
+	// otherwise it is a scaling factor that is used to place the mesh in a unit cube (-1..1) 
+	// usually it is 2/bbox.Diag
 	float scale;
-    
-	// Dimension of the drawing square
-    Point2d ViewBox;
-
-	int width,height; //Express in cm
-
-	// Position of the drawing square
-	Point2d position;
-    
-	//Text details 
-	bool showDetails;
-    
-    //Starting offset
-	float Xmin, Ymin;
-	Point2f* minPos;
-	Point2f* maxPos;
-
-	
-
-// construction
-public:
-
-	SVGProperties()
-	{
-		lwidth = DEFAULT_LINE_WIDTH;
+  
+	// SVG Style Parameters
+	int lineWidthPt;	// Line width.
+	std::string strokeColor; 	// Stroke color (see StrokeColor).
+	std::string strokeLineCap;// Stroke linecap (see StrokeLineCap).
 		
-		const char * DEFAULT_LINE_COLOR = "black";
-		const char * DEFAULT_LINE_CAP= "round";
+	//Text details 
+	bool showTextDetails;
 
-		stroke_color = DEFAULT_LINE_COLOR;
-		stroke_linecap = DEFAULT_LINE_CAP;
-
-		// default projection plane (XZ plane)
-		Point3d n(0.0, 1.0, 0.0);
-		Point3f nf(0.0, 1.0, 0.0);
-		proj.SetDirection(n);
-		proj.SetOffset(0.0);
-		projf.SetDirection(nf);
-		projf.SetOffset(0.0);
-
-		scale=0; //scale=0 it means expanded to the boards of the canvas   
-        ViewBox=Point2d(1000, 1000); 
-		position=Point2d(0, 0);
-		width=15; //width of the windows
-		height=15; //height of the windows
-	    showDetails=true;
-		Xmin=0;
-		Ymin=0;
-		minPos= new Point2f(0,0);
-		maxPos= new Point2f(0,0);
-	}
-
-// public methods
 public:
 
-	//! Set the line width.
-	void setLineWidth(int width)
+		SVGProperties() 	
 	{
-		lwidth = width;
+		lineWidthPt = 1;
+		strokeColor = "black";
+		strokeLineCap = "round";
+
+		// default projection (XZ plane with the z up)
+		projDir= Point3f(0.0, 1.0, 0.0);
+    projUp = Point3f(0.0, 0.0, 1.0);
+		scale=0; 		
+		//viewBox=Point2f(10, 10); 
+		projCenter=Point3f(0, 0, 0);
+		sizeCm=Point2f(10,10);
+		marginCm=Point2f(1,1);
+		showTextDetails=true;
+		numCol=2;
+		numRow=10;
 	}
 
-	//! Set the stroke color.
-	void setColor(enum StrokeColor color)
-	{
-	  switch (color)
-		{
-			case BLACK  : stroke_color = "black"; break;
-			case SILVER : stroke_color = "silver"; break;
-			case GRAY   : stroke_color = "gray"; break;
-			case WHITE  : stroke_color = "white"; break;
-			case MAROON : stroke_color = "maroon"; break;
-			case RED    : stroke_color = "red"; break;
-			case PURPLE : stroke_color = "purple"; break;
-			case FUCHSIA: stroke_color = "fuchsia"; break;
-			case GREEN  : stroke_color = "green"; break;
-			case OLIVE  : stroke_color = "olive"; break;
-			case LIME   : stroke_color = "lime"; break;
-			case NAVY   : stroke_color = "navy"; break;
-			case TEAL   : stroke_color = "teal"; break;
-			case AQUA   : stroke_color = "aqua"; break;
-			default: assert(0);
-		}
-	}
-
-	//! Set the line cap style.
-	void setLineCap(enum StrokeLineCap linecap)
-	{
-		if (linecap == BUTT)				stroke_linecap = "butt";
-		else if (linecap == ROUND)			stroke_linecap = "round";
-		else if (linecap == SQUARE)			stroke_linecap = "square";
-	}
-
-	void setPlane(double distance, const Point3d &direction)
-	{
-		proj.SetDirection(direction);
-		proj.SetOffset(distance);
-	}
-
-	void setPlanef(float distance, const Point3f &direction)
-	{
-		projf.SetDirection(direction);
-		projf.SetOffset(distance);
-	}
-
-	void setScale(float x){ scale=x; } //Define the scale between 2d coordinate and mesh
-
-	void setViewBox(Point2d x) { ViewBox=x; }//Define the dimension of the square
-
-	void setPosition(Point2d x) { position=x;}//Define the starting position of the canvas
-	void setTextDetails(bool x){showDetails=x;}
-	void setDimension(int width, int height){ this->width=width; this->height=height;}
-
-// accessors
-public:
-
-	int lineWidth(){return lwidth;}
-	const char * lineColor(){return stroke_color.c_str();}
-	const char * lineCapStyle(){return stroke_linecap.c_str();}
-	const Plane3d * projPlane(){return &proj;}
-	const Plane3f * projPlanef(){return &projf;}
-	float getScale(){return scale;}
-	Point2d getViewBox(){return ViewBox;}
-	Point2d getPosition(){return position;}
-	
-	int getWidth(){return width;}
-	bool showTextDetails(){return showDetails;}
-	int getHeight(){return height;}
-	
-	void setMinPoint(Point2f* p){
-		 minPos = p;
-	}
-	void setMaxPoint(Point2f* p){
-		 maxPos = p;
-	}
-	Point2f* getminPoint(){return (minPos);}
-	Point2f* getmaxPoint(){return (maxPos);}
 };
 	    
 
@@ -267,102 +113,40 @@ class ExporterSVG
 {
 
 public:
-
-	//! Save with the default SVG properties.
-	static bool Save(EdgeMeshType *mp, const char *filename)
-	{
-		SVGProperties properties;
-		return Save(mp, filename, properties);
-	}
-	static bool Save(std::vector<EdgeMeshType*> *vp, const char *filename, SVGProperties & pro){
-	    //Function that export a vector of EdgeMesh in an unic single SVG file. 
-        FILE * o = fopen(filename,"w");  
-	    if (o==NULL)
-			return false;
-		int num = (*vp).size(); //number of square to draw
-		WriteXmlHead(o,pro.getWidth(),pro.getHeight(),pro.getViewBox(),Point2d(0,0));
-		float scale= pro.getScale();
-		typename std::vector<EdgeMeshType*>::iterator it;
-        int i=0;
-		Point2f pmin(100000000.0f,  100000000.0f);
-		Point2f pmax(-10000000.0f, -10000000.0f);
-		for(it=(*vp).begin(); it!=(*vp).end(); it++){
-			EdgeMeshType* ed;
-		    ed=(*it);
-			Save(ed,o,pro, -2);
-			Point2f* pmi=pro.getminPoint();
-			Point2f* pma=pro.getmaxPoint();
-			pmin[0]=std::min(pmin[0], pmi->X());
-			pmin[1]=std::min(pmin[1], pmi->Y());
-			pmax[0]=std::max(pmax[0], pma->X());
-			pmax[1]=std::max(pmax[1], pma->Y());
-		}
-		float maxEdge=std::max(pmax[0]-pmin[0], pmax[1]-pmin[1]);
-		float scl = (pro.getViewBox().V(0)/pro.numCol) /maxEdge ;
-		pro.setScale(scl);
-		pro.setMinPoint(new Point2f(pmin[0],pmin[1]));
-		pro.setMaxPoint(new Point2f(pmax[0],pmax[1]));
-		for(it=(*vp).begin(); it!=(*vp).end(); it++){
-            
-			EdgeMeshType* ed;
-		    ed=(*it);
-            
-			pro.setPosition(Point2d((pro.getViewBox().V(0)/pro.numCol)*i,40));
-			//pro.setPosition(Point2d((pro.getViewBox().V(0)/pro.numCol),40));
-			
-			int x=pro.getViewBox().V(0);
-			int y=pro.getViewBox().V(1);
-			/*
-			fprintf(o, "<rect width= \" %d \" height= \" %d \" x=\"%d \" y=\" %d \" style= \" stroke-width:1; fill-opacity:0.0; stroke:rgb(0,0,0)\" /> 				\n",x/pro.numCol,y,  (x/pro.numCol)*i, 40);
-			*/
-			Save(ed,o,pro, i);
-           
-            if(pro.showTextDetails()){
-		    fprintf(o,"<text x= \" %d \" y= \"30 \" font-family= \"Verdana \" font-size= \"30 \" >\n",(x/pro.numCol)*i);
-			fprintf(o,"Slice num:%d </text>\n", i);}
-			i++;
-		}
-		fprintf(o, "</svg>");
-		fclose(o);
-		return true;
-	}
-    //! Save with the given SVG properties.
-	static bool Save(EdgeMeshType *mp, const char *filename, SVGProperties & props )
-	{
-
-	  FILE * o = fopen(filename,"w");
-	  if (o==NULL)
-			return false;
 	
-	  WriteXmlHead(o, props.getWidth(),props.getHeight(), props.getViewBox(), props.getPosition());
-	  		
-        	
-		Save(mp, o, props, -1);
-        fprintf(o, "</svg>");
+	// Standard saving Function
+	// just a wrapper to the below
+	static bool Save(EdgeMeshType &m, const char *filename, SVGProperties & pro)
+	{
+		std::vector<EdgeMeshType*> MeshVec;
+		MeshVec.push_back(&m);
+		return Save(MeshVec,filename,pro);
+	}	
+	
+	
+	// Main saving function
+	// save a Multiple Set of Edge Meshes on a single SVG files
+	static bool Save(std::vector<EdgeMeshType*> &meshVec, const char *filename, SVGProperties & pro)
+	{ 
+		FILE * fpo = fopen(filename,"w");  
+		if (fpo==NULL)			return false;
 		
-
-		// final xml tags
-
-		fclose(o);
+		WriteXmlHead(fpo, pro);
+		for(int i=0;i<meshVec.size();++i)
+		{
+			WriteXmlBody(fpo, *meshVec[i], pro, i );
+		}
+		fprintf(fpo, "</svg>");
+		fclose(fpo);
 		return true;
 	}
 
 
-
-
-
-
-
-
-/************************************************   Here is my code   ****************************************************/
-/********* I've use the function's surdefinition to build my own Save function, by this way I've changed nothing  ********/ 
-
-/* This is an other WmlHead constructor cause I need to define the width and the height of the svg file in pixels, and not in cms */
-static void WriteXmlhead(FILE *o,int width, int height)
+static void WriteXmlHead(FILE *o, SVGProperties & pro)
 {
 	fprintf(o, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
 	fprintf(o, "<!-- Created with vcg library -->\n");
-	fprintf(o, "<svg width=\"%d\" height=\"%d\" viewBox=\"0 0 %d %d\" \n \n",width, height, width+100, height+100);
+	fprintf(o, "<svg width=\"%fcm\" height=\"%fcm\" \n",pro.pageSizeCm()[0], pro.pageSizeCm()[1]);
 	fprintf(o, "	xmlns=\"http://www.w3.org/2000/svg\" \n");
 	fprintf(o, "	xmlns:xlink=\"http://www.w3.org/1999/xlink\" \n");
 	fprintf(o, "	xmlns:dc=\"http://purl.org/dc/elements/1.1/\" \n");
@@ -381,285 +165,46 @@ static void WriteXmlhead(FILE *o,int width, int height)
 	fprintf(o, "</metadata> \n \n");
 }
 
-
-/* The six float are the bbow parameters used to buiold the framing box. You'll fid them in the two functions*/
-static bool Save(EdgeMeshType *mp, const char *filename, SVGProperties & props, float mix, float miy, float max, float may, float centerx, float centery)
-{
-	FILE * o = fopen(filename,"w");
-	if (o==NULL)
-		return false;
-
-	props.setDimension((max-mix)*props.getScale()-(mix-centerx)*props.getScale(), (may-miy)*props.getScale()-(miy-centery)*props.getScale()); 
-	WriteXmlhead(o, props.getWidth(),props.getHeight());
-	  		
-	Save(mp, o, props, -1, mix, miy, max, may, centerx, centery); 
-        fprintf(o, "</svg>");
-		
-	fclose(o);
-	return true;
-}
-
-
-static void Save(EdgeMeshType *mp, FILE* o, SVGProperties  props, int numSlice, float mix, float miy, float max, float may, float centerx, float centery)
+static void WriteXmlBody(FILE* fpo, EdgeMeshType &mp, SVGProperties &pro, int meshIndex)
 { 
-	// build vector basis (n, v1, v2)
-	Point3d p1(0.0,0.0,0.0);
-	Point3d p2(1.0,0.0,0.0);
-
-        Point3d p2less(-1.0,0.0,0.0);
-	Point3d d = props.projPlane()->Direction() - p2;
-        Point3d dless = props.projPlane()->Direction() - p2less;
-	Point3d v1;
-	if ((d.Norm() < 0.5)||(dless.Norm() <0.5))
-			v1 = Point3d(0.0,0.0,1.0) - p1;	
-	else
-			v1 = p2 - p1;
-
-	v1.Normalize();
-	Point3d v2 = v1 ^ props.projPlane()->Direction();
+	int rowInd = meshIndex / pro.numCol;
+	int colInd = meshIndex % pro.numCol;
 	
-        //Global points
-	std::vector<Point2f> pts;
-	pts.clear();
-	Point2f pmin(100000000.0f,  100000000.0f);
-	Point2f pmax(-100000000.0f, -100000000.0f);
-        Point3d bbMin;
-	float scale=props.getScale();
+	fprintf(fpo, "  <rect width= \" %fcm \" height= \" %fcm \" x=\"%fcm \" y=\"%fcm \" "
+					     "        style= \" stroke-width:1pt; fill-opacity:0.0; stroke:rgb(0,0,0)\" /> \n",
+					     pro.sizeCm[0], pro.sizeCm[1], pro.marginCm[0]+colInd*(pro.sizeCm[0]+pro.marginCm[0]), pro.marginCm[1]+rowInd*(pro.sizeCm[1]+pro.marginCm[1]));
+	fprintf(fpo, "<g stroke=\"%s\" stroke-linecap=\"%s\" stroke-width = \"%fpt\" > \n",  pro.strokeColor.c_str(), pro.strokeLineCap.c_str(),pro.lineWidthPt/100.0f);
+  fprintf(fpo, "  <svg id = \"SliceNum%d\" viewBox=\"-1000 -1000 2000 2000\" width=\"%fcm\" height=\"%fcm\" x=\"%fcm\" y=\"%fcm\" >\n", meshIndex,pro.sizeCm[0],pro.sizeCm[1],
+					pro.marginCm[0]+colInd*(pro.sizeCm[0]+pro.marginCm[0]), pro.marginCm[1]+rowInd*(pro.sizeCm[1]+pro.marginCm[1]) );
 
-	typename EdgeMeshType::EdgeIterator i;
-		
-	for (i = mp->edges.begin(); i != mp->edges.end(); ++i)
-	{
-		Point3<typename EdgeMeshType::ScalarType> p1;
-	    	Point3<typename EdgeMeshType::ScalarType> p2;
-			
-		p1 = (*i).V(0)->P();
-		p2 = (*i).V(1)->P();
-        
-		Point3d p1d(p1[0], p1[1], p1[2]);
-		Point3d p2d(p2[0], p2[1], p2[2]);
-			
-		// Project the line on the reference plane
-		Point3d p1proj = props.projPlane()->Projection(p1d);
-		Point3d p2proj = props.projPlane()->Projection(p2d);
-		
-		// Convert the 3D coordinates of the line to the uv coordinates of the plane
-		Point2f pt1(static_cast<float>(p1proj * v1), static_cast<float>(p1proj * v2));
-		Point2f pt2(static_cast<float>(p2proj * v1), static_cast<float>(p2proj * v2));
-
-		pts.push_back(pt1);
-		pts.push_back(pt2);
-
-		pmin[0]=math::Min(math::Min(pt1[0],pmin[0]), pt2[0]);
-		pmin[1]=math::Min(math::Min(pt1[1],pmin[1]), pt2[1]);
-		pmax[0]=math::Max(math::Max(pt1[0],pmax[0]), pt2[0]);
-		pmax[1]=math::Max(math::Max(pt1[1],pmax[1]), pt2[1]); 
-	}
 	
-			
-	// line settings
-	fprintf(o, "      <g stroke=\"%s\" stroke-linecap=\"%s\" > \n", 
-	props.lineColor(), props.lineCapStyle());
-	fprintf(o, "<svg id = \" %d \">\n", numSlice );
-	int x=props.getViewBox().V(0);
-	int y=props.getViewBox().V(1);
-	fprintf(o, "<rect width= \" %d \" height= \" %d \" x=\"%d \" y=\" %d \" style= \" stroke-width:1; fill-opacity:0.0; stroke:rgb(0,0,0)\" /> \n",x/props.numCol,y,  0, 40);		
-	fprintf(o, "<rect x=\"%f\" y=\"%f\" width=\"%f\" height=\"%f\" fill=\"none\" stroke-width=\"5\" /> \n", 0.0, 0.0, (max-mix)*scale-(mix-centerx)*scale, (may-miy)*scale-(miy-centery)*scale); // Here is the framing box construction
-
-	std::vector<Point2f>::iterator itPoints;
-	for(itPoints = pts.begin(); itPoints != pts.end(); ++itPoints)
-	{
-		Point2f p1 = *itPoints;
-		++itPoints;
-		Point2f p2 = *itPoints;
-		
-		fprintf(o, "        <line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" \n", 
-		((p1[0]-pmin[0]) * scale-0.5*(mix-centerx)*scale), ((p1[1]-pmin[1]) * scale-0.5*(miy-centery)*scale),
-		((p2[0]-pmin[0]) * scale-0.5*(mix-centerx)*scale), ((p2[1]-pmin[1]) * scale -0.5*(miy-centery)*scale));
-		fprintf(o, "          stroke-width = \"%d\" ",props.lineWidth());
-		fprintf(o, "/>\n");
-	}
-        fprintf(o, "</svg>");
-	fprintf(o, "  </g>\n");
-}
-/*********************************************** End of what I've made  *****************************************/
-	
-
-
-
-
-
-
-
-
-static void Save(EdgeMeshType *mp, FILE* o, SVGProperties  props, int numSlice)
-{ 
-		bool preCal=false;
-		
-		if(numSlice==-2) preCal=true; 
-		// build vector basis (n, v1, v2)
-		Point3d p1(0.0,0.0,0.0);
-		Point3d p2(1.0,0.0,0.0);
-        Point3d p2less(-1.0,0.0,0.0);
-		Point3d d = props.projPlane()->Direction() - p2;
-        Point3d dless = props.projPlane()->Direction() - p2less;
-		Point3d v1;
-		if ((d.Norm() < 0.5)||(dless.Norm() <0.5))
-			v1 = Point3d(0.0,0.0,1.0) - p1;
-		else
-			v1 = p2 - p1;
-
-		v1.Normalize();
-		Point3d v2 = v1 ^ props.projPlane()->Direction();
-        //Global points
-	 	std::vector< std::vector<Point2f> >* glb;
-		std::vector<Point2f> pts;
-	   	pts.clear();
-		Point2f pmin(100000000.0f,  100000000.0f);
-		Point2f pmax(-100000000.0f, -100000000.0f);
-        Point3d bbMin;
-		
+	// Main loop of edge printing
 		typename EdgeMeshType::EdgeIterator i;
 		
-		for (i = mp->edges.begin(); i != mp->edges.end(); ++i)
+		// XY projection. 
+		// It is a classcial ortho projection 
+		// eg it resolves to a rotation Matrix such that 
+		// - the passed projDir become the z axis
+		// - the passed projUp lie on the upper YZ plane.
+		
+		// First Step align projDir to Z
+		Matrix33f rotM = RotationMatrix(pro.projDir,Point3f(0,0,1),false);
+		Point3f rotatedUp = rotM * pro.projUp;
+		Point3f rotCenter = rotM * pro.projCenter;
+		float scale = pro.scale;
+		if(scale==0) scale = 2.0/mp.bbox.Diag();
+		
+		for (i = mp.edges.begin(); i != mp.edges.end(); ++i)
 		{
-			Point3<typename EdgeMeshType::ScalarType> p1;
-		    Point3<typename EdgeMeshType::ScalarType> p2;
-			
-			p1 = (*i).V(0)->P();
-			p2 = (*i).V(1)->P();
-         
-
-
-			Point3d p1d(p1[0], p1[1], p1[2]);
-			Point3d p2d(p2[0], p2[1], p2[2]);
-			
-			
-			// Project the line on the reference plane
-		   
-			Point3d p1proj = props.projPlane()->Projection(p1d);
-			Point3d p2proj = props.projPlane()->Projection(p2d);
+			Point3f p0 = (-rotCenter + rotM * ((*i).V(0)->P()))*scale*1000;
+			Point3f p1 = (-rotCenter + rotM * ((*i).V(1)->P()))*scale*1000;
+			fprintf(fpo, "        <line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" />\n", p0[0],p0[1],p1[0],p1[1]);
+		}
 		
-         
-			// Convert the 3D coordinates of the line to the uv coordinates of the plane
-			Point2f pt1(static_cast<float>(p1proj * v1), static_cast<float>(p1proj * v2));
-			Point2f pt2(static_cast<float>(p2proj * v1), static_cast<float>(p2proj * v2));
+		fprintf(fpo, "  </svg>\n");
+		fprintf(fpo, "</g>\n");
 
-			pts.push_back(pt1);
-			pts.push_back(pt2);
-
-			pmin[0]=math::Min(math::Min(pt1[0],pmin[0]), pt2[0]);
-			pmin[1]=math::Min(math::Min(pt1[1],pmin[1]), pt2[1]);
-			pmax[0]=math::Max(math::Max(pt1[0],pmax[0]), pt2[0]);
-			pmax[1]=math::Max(math::Max(pt1[1],pmax[1]), pt2[1]); 
-
-		
-		}
-	
-		//Point2f bbp(static_cast<float>(bbMin * v1), static_cast<float>(bbMin * v2));
-		if(!preCal){
-			float scale=props.getScale();
-
-			// line settings
-			Point2d pos=props.getPosition();
-		 
-			fprintf(o, "      <g stroke=\"%s\" stroke-linecap=\"%s\" > \n", 
-			props.lineColor(), props.lineCapStyle());
-			float maxEdges= math::Max((pmax[0]-pmin[0]), (pmax[1]-pmin[1]));
-			if (numSlice==0)
-				Draw_proportions_scale(o,maxEdges, props);
-			fprintf(o, "<svg id = \" %d \">\n", numSlice );
-			int x=props.getViewBox().V(0);
-			int y=props.getViewBox().V(1);
-			if(numSlice>=0)
-			fprintf(o, "<rect width= \" %d \" height= \" %d \" x=\"%d \" y=\"%d \" style= \" stroke-width:1; fill-opacity:0.0; stroke:rgb(0,0,0)\" /> \n",x/props.numCol,y,  (x/props.numCol)*numSlice, 40);
-			else
-			fprintf(o, "<rect width= \" %d \" height= \" %d \" x=\"%d \" y=\" %d \" style= \" stroke-width:1; fill-opacity:0.0; stroke:rgb(0,0,0)\" /> \n",x/props.numCol,y,  0, 40);
-			
- 
-			std::vector<Point2f>::iterator itPoints;
-			for(itPoints = pts.begin(); itPoints != pts.end(); ++itPoints)
-			{
-				Point2f p1 = *itPoints;
-				++itPoints;
-				Point2f p2 = *itPoints;
-				if(numSlice==-1){
-					fprintf(o, "        <line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" \n", 
-				    	(pos.X()+((p1[0]-pmin[0]) * scale)), pos.Y()+((p1[1]-pmin[1]) * scale),
-				   	pos.X()+((p2[0]-pmin[0]) * scale), pos.Y()+((p2[1]-pmin[1]) * scale ));
-					fprintf(o, "          stroke-width = \"%d\" ",props.lineWidth());
-					fprintf(o, "/>\n");
-				}
-				else{
-					fprintf(o, "        <line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" \n", 
-				   	(pos.X()+((p1[0]-props.getminPoint()->X()) * scale)), pos.Y()+((p1[1]-props.getminPoint()->Y()) * scale),
-				   	pos.X()+((p2[0]-props.getminPoint()->X()) * scale), pos.Y()+((p2[1]-props.getminPoint()->Y()) * scale ));
-					fprintf(o, "          stroke-width = \"%d\" ",props.lineWidth());
-					fprintf(o, "/>\n");}
-		}
-        fprintf(o, "</svg>");
-		fprintf(o, "  </g>\n");
-		}
-		else{
-			Point2f* pmi=props.getminPoint();
-			Point2f* pma=props.getmaxPoint();
-			pmi->X()=pmin[0];
-			pmi->Y()=pmin[1];
-			pma->X()=pmax[0];
-			pma->Y()=pmax[1];
-			props.setMinPoint(pmi);
-			props.setMaxPoint(pma);
-
-	}
 }
-
-	private:
-		
-		static void Draw_proportions_scale(FILE *o, float maxEdge,SVGProperties & prop){
-        if(prop.showTextDetails()){ 
-		int num_order=log10(maxEdge);
-		int pox= pow(10.0, num_order);
-		int assX=prop.getViewBox()[0];
-		int assY=prop.getViewBox()[1];
-	    int nullAss=0;
-		int OffsetXAs=50;
-		float comput= OffsetXAs+(pox*prop.getScale());
-		fprintf(o, "     <line x1=\" %d \" y1=\" %d \" x2=\" %f \" y2=\" %d \" \n",((nullAss+OffsetXAs )),(assY+50),comput, (assY+50) );
-	    fprintf(o, "          stroke-width = \"5\" ");
-		fprintf(o, "/>\n");
-	    fprintf(o,"<text x= \" %d \" y= \" %d \" font-family= \"Verdana \" font-size= \"25 \" >",(nullAss+OffsetXAs), (assY+80));
-		
-		 
-		 fprintf(o,"%d px --  Scale %f : 1 </text>", pox ,prop.getScale());
-		}
-	}
-
-static void WriteXmlHead(FILE *o,int width, int height, Point2d viewBox, Point2d position){
-	 
-	   int Vx=viewBox[0];
-		int Vy=viewBox[1];
-
-
-		fprintf(o, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
-		fprintf(o, "<!-- Created with vcg library -->\n");
-		fprintf(o, "<svg width=\"%dcm\" height=\"%dcm\" viewBox=\"0 0 %d %d\" \n \n",width, height, Vx, Vy+100);
-		fprintf(o, "	xmlns=\"http://www.w3.org/2000/svg\" \n");
-		fprintf(o, "	xmlns:xlink=\"http://www.w3.org/1999/xlink\" \n");
-		fprintf(o, "	xmlns:dc=\"http://purl.org/dc/elements/1.1/\" \n");
-		fprintf(o, "	xmlns:cc=\"http://web.resource.org/cc/\" \n");
-		fprintf(o, "	xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" \n");
-		fprintf(o, "	xmlns:svg=\"http://www.w3.org/2000/svg\" \n \n");
-		fprintf(o, "id=\"svg2\"> \n");
-		fprintf(o, "	<defs id=\"defs4\"/> \n");
-		fprintf(o, "	<metadata id=\"metadata7\"> \n");
-		fprintf(o, "	<rdf:RDF> \n");
-		fprintf(o, "	<cc:Work rdf:about=\"\"> \n");
-		fprintf(o, "	<dc:format>image/svg+xml</dc:format> \n");
-		fprintf(o, "	<dc:type rdf:resource=\"http://purl.org/dc/dcmitype/StillImage\" /> \n");
-		fprintf(o, "	</cc:Work> \n");
-		fprintf(o, "	</rdf:RDF> \n");
-		fprintf(o, "</metadata> \n \n");
-	}
 		
 };
 
