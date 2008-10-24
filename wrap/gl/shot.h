@@ -146,7 +146,7 @@ static ScalarType GetFarPlane(vcg::Shot<ScalarType> & shot, vcg::Box3<ScalarType
 	ScalarType farDist;
 
 	vcg::Point3<ScalarType> farcorner;
-    vcg::Point3<ScalarType> campos = shot.Extrinsics.tra;
+    vcg::Point3<ScalarType> campos = shot.Extrinsics.Tra();
 	 
 	 if (abs(campos.X() - bbox.max.X()) > abs(campos.X() - bbox.min.X()))
 		 farcorner.X() = bbox.max.X();
