@@ -169,15 +169,15 @@ public:
 	/// SET the viewpoint
 	void SetViewPoint(const vcg::Point3<S> & viewpoint);
 
-	/// look at (dir+up)
-	void LookAt(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up);
+	/// look at (point+up)
+	void LookAt(const vcg::Point3<S> & point,const vcg::Point3<S> & up);
 
 	/// look at (opengl-like)
 	void LookAt(const S & eye_x,const S & eye_y,const S & eye_z,
 				const S & at_x,const S & at_y,const S & at_z,
 				const S & up_x,const S & up_y,const S & up_z);
 
-	/// look towards
+	/// look towards (dir+up)
 	void LookTowards(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up);
 
 	/// convert a 3d point from world to camera coordinates
@@ -262,7 +262,7 @@ vcg::Point3<S>  Shot<S,RotationType>::Axis(const int & i) const
 	return aa;
 }
 
-/// look at (dir+up)
+/// look at (point+up)
 template <class S, class RotationType>
 void Shot<S,RotationType>::LookAt(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up)
 {
