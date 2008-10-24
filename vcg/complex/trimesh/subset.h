@@ -159,9 +159,9 @@ void SubSet(S_MESH_TYPE & m, STL_CONT & subSet)
   
   for(fi=m.face.begin(); fi!=m.face.end(); ++fi)
   {
-    (*fi).V(0)=redirect[(int)(*fi).V(0)];
-	(*fi).V(1)=redirect[(int)(*fi).V(1)];
-	(*fi).V(2)=redirect[(int)(*fi).V(2)];
+    (*fi).V(0)=redirect[(size_t)(*fi).V(0)];
+	(*fi).V(1)=redirect[(size_t)(*fi).V(1)];
+	(*fi).V(2)=redirect[(size_t)(*fi).V(2)];
   }
   m.vn=(int)m.vert.size();
   m.fn=(int)m.face.size();
