@@ -277,7 +277,7 @@ void DisableVFAdjacency() {
 	AV.clear();
 }
 
-
+bool IsCurvatureEnabled() const {return CurvatureEnabled;}
 void EnableCurvature() {
 	assert(VALUE_TYPE::HasCurvatureOcf());
 	CurvatureEnabled=true;
@@ -290,6 +290,7 @@ void DisableCurvature() {
 	CuV.clear();
 }
 
+bool IsCurvatureDirEnabled() const {return CurvatureDirEnabled;}
 void EnableCurvatureDir() {
 	assert(VALUE_TYPE::HasCurvatureDirOcf());
 	CurvatureDirEnabled=true;
@@ -525,9 +526,9 @@ public:
 	typedef typename CurvatureDirType::ScalarType ScalarType;
 
 	VecType &PD1(){ assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CuDV[(*this).Index()].max_dir;}
-	VecType &PD2(){ assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CuDV[(*this).Index()].max_dir;}
+	VecType &PD2(){ assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CuDV[(*this).Index()].min_dir;}
 	const VecType &cPD1() const {assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CuV[(*this).Index()].max_dir;}
-	const VecType &cPD2() const {assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CuV[(*this).Index()].max_dir;}
+	const VecType &cPD2() const {assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CuV[(*this).Index()].min_dir;}
 
 	ScalarType &K1(){ assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CuDV[(*this).Index()].k1;}
 	ScalarType &K2(){ assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CuDV[(*this).Index()].k2;}
@@ -538,7 +539,6 @@ public:
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDirOcf"));TT::Name(name);}
 
 private:
-	CurvatureDirType _curv;
 };
 
 
@@ -611,6 +611,20 @@ namespace tri
 	{
 		if(VertexType::HasQualityOcf()) return m.vert.IsQualityEnabled();
 		else return VertexType::HasQuality();
+	}
+
+	template < class VertexType, class FaceContainerType >
+		bool HasPerVertexCurvature (const TriMesh < vertex::vector_ocf< VertexType > , FaceContainerType > & m)
+	{
+		if(VertexType::HasCurvatureOcf()) return m.vert.IsCurvatureEnabled();
+		else return VertexType::HasCurvature();
+	}
+
+	template < class VertexType, class FaceContainerType >
+		bool HasPerVertexCurvatureDir (const TriMesh < vertex::vector_ocf< VertexType > , FaceContainerType > & m)
+	{
+		if(VertexType::HasCurvatureDirOcf()) return m.vert.IsCurvatureDirEnabled();
+		else return VertexType::HasCurvatureDir();
 	}
 
 	template < class VertexType >
