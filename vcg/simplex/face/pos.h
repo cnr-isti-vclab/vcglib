@@ -199,6 +199,7 @@ public:
 	 {
 		 for(int i = 0; i < f->VN(); ++i) if(v==f->V(i)) return i;
 		 assert(0);
+		 return -1;
 	 }
 
   
