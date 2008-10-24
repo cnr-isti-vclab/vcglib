@@ -406,6 +406,7 @@ public:
 */   
 	static void MeanAndGaussian(MeshType & m) 
     {
+			assert(HasFFAdjacency(m));
       float area0, area1, area2, angle0, angle1, angle2, e01, e12, e20;
 			FaceIterator fi;
       VertexIterator vi;   
@@ -605,7 +606,8 @@ public:
 		
 		typename MeshType::VertexIterator vi;
 
-		for(vi = m.vert.begin(); vi != m.vert.end(); ++vi){
+		for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+		if(!((*vi).IsD())){
 			vcg::Matrix33<ScalarType> m33;m33.SetZero();
 			face::JumpingPos<typename MeshType::FaceType> p((*vi).VFp(),&(*vi));
 			p.FlipE();
@@ -621,7 +623,7 @@ public:
 					Point3<ScalarType> n1 = p.F()->cN();n1.Normalize();
 					Point3<ScalarType> n2 = p.FFlip()->cN();n2.Normalize();
 					ScalarType n1n2 = (n1 ^ n2)* normalized_edge;
-					n1n2 = math::Max<ScalarType>(math::Min<ScalarType> ( 1.0,n1n2),-1.0);
+					n1n2 = math::Max<ScalarType >(math::Min<ScalarType> ( 1.0,n1n2),-1.0);
 					ScalarType beta = math::Asin(n1n2);
 					m33[0][0] += beta*edge_length*normalized_edge[0]*normalized_edge[0];
 					m33[0][1] += beta*edge_length*normalized_edge[1]*normalized_edge[0];
