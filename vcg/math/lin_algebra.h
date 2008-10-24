@@ -169,23 +169,37 @@ namespace vcg
 	/*!
 	* Given the eigenvectors and the eigenvalues as output from JacobiRotate, sorts the eigenvalues 
 	* into descending order, and rearranges the columns of v correspondinlgy. 
-	/param eigenvalues
-	/param eigenvector (in columns)
+	* \param eigenvalues
+	* \param eigenvector (in columns)
+	* \param absComparison sort according to the absolute values of the eigenvalues.
 	*/
 	template < typename MATRIX_TYPE, typename POINT_TYPE >
-	void SortEigenvaluesAndEigenvectors(POINT_TYPE &eigenvalues, MATRIX_TYPE &eigenvectors)
+	void SortEigenvaluesAndEigenvectors(POINT_TYPE &eigenvalues, MATRIX_TYPE &eigenvectors, bool absComparison = false)
 	{
 		assert(eigenvectors.ColumnsNumber()==eigenvectors.RowsNumber());
 		int dimension = eigenvectors.ColumnsNumber();
 		int i, j, k;
-		float p;
+		float p,q;
 		for (i=0; i<dimension-1; i++) 
 		{
-			p = eigenvalues[ k=i ];
-			
-			for (j=i+1; j<dimension; j++)
-				if (eigenvalues[j] >= p) 
-					p = eigenvalues[ k=j ];
+			if (absComparison)
+			{
+				p = fabs(eigenvalues[k=i]);
+				for (j=i+1; j<dimension; j++)
+					if ((q=fabs(eigenvalues[j])) >= p)
+					{
+						p = q;
+						k = j;
+					}
+				p = eigenvalues[k];
+			}
+			else
+			{
+				p = eigenvalues[ k=i ];
+				for (j=i+1; j<dimension; j++)
+					if (eigenvalues[j] >= p) 
+						p = eigenvalues[ k=j ];
+			}
 			
 			if (k != i) 
 			{
