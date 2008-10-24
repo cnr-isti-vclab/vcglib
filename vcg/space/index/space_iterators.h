@@ -295,7 +295,7 @@ namespace vcg{
 	protected:
 
 		///structure that mantain for the current cell pre-calculated data 
-		typedef struct Entry_Type
+		struct Entry_Type
 		{
 		public:
 
@@ -413,7 +413,7 @@ namespace vcg{
 			radius=0;
 
 			///inflate the bbox until find a valid bbox
-			while ((!_NextShell())&&(!End()));
+			while ((!_NextShell())&&(!End())) {}
 
 			while ((!End())&& Refresh()&&(!_EndGrid()))
 					_NextShell();
@@ -498,7 +498,7 @@ namespace vcg{
 	protected:
 
 		///structure that mantain for the current cell pre-calculated data 
-		typedef struct Entry_Type
+		struct Entry_Type
 		{
 		public:
 
