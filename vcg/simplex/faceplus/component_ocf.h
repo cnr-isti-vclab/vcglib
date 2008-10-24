@@ -415,7 +415,7 @@ public:
 
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){
-		if(leftF.Base().VFAdjacencyEnabled){
+		if(leftF.Base().VFAdjacencyEnabled && this->Base().VFAdjacencyEnabled){
 			VFp(0) = NULL; VFp(1) = NULL; VFp(2) = NULL;
 			VFi(0) =   -1; VFi(1) =   -1; VFi(2) =   -1;
 		}
@@ -458,7 +458,7 @@ public:
 
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){
-		if(leftF.Base().FFAdjacencyEnabled) {
+		if(leftF.Base().FFAdjacencyEnabled && this->Base().FFAdjacencyEnabled) {
 			FFp(0) = NULL; FFp(1) = NULL; FFp(2) = NULL;
 			FFi(0) =   -1; FFi(1) =   -1; FFi(2) =   -1;
 		}
