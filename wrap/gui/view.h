@@ -151,10 +151,10 @@ template <class T> void View<T>::GetView() {
   
   glGetDoublev(GL_PROJECTION_MATRIX, m);
   proj.Import(Matrix44d(m));
-  Transpose(proj);
+  proj = proj.transpose().eval();
 	glGetDoublev(GL_MODELVIEW_MATRIX, m);
   model.Import(Matrix44d(m));
-  Transpose(model);
+  model = model.transpose().eval();
 	
 	glGetIntegerv(GL_VIEWPORT, (GLint*)viewport);
   
@@ -205,14 +205,14 @@ template <class T> Line3<T> View<T>::ViewLineFromWindow(const Point3<T> &p)
 
 template <class T> Point3<T> View<T>::Project(const Point3<T> &p) const {
   Point3<T> r;
-  r = matrix * p;  	
+  r = matrix * p;
   return NormDevCoordToWindowCoord(r);
  }
 
 template <class T> Point3<T> View<T>::UnProject(const Point3<T> &p) const {
   Point3<T> s = WindowCoordToNormDevCoord(p);
   s =  inverse * s ;
-  return s;	    
+  return s;
 }
 
 // Come spiegato nelle glspec

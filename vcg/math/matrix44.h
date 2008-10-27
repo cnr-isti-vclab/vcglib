@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -21,9 +21,9 @@
 *                                                                           *
 ****************************************************************************/
 
-// #ifndef VCG_USE_EIGEN
+#ifndef VCG_USE_EIGEN
 #include "deprecated_matrix44.h"
-// #endif
+#else
 
 #ifndef __VCGLIB_MATRIX44
 #define __VCGLIB_MATRIX44
@@ -83,17 +83,21 @@ for 'column' vectors.
 /** This class represents a 4x4 matrix. T is the kind of element in the matrix.
 	*/
 template<typename _Scalar>
-class Matrix44 : public Eigen::Matrix<_Scalar,4,4,RowMajor> // FIXME col or row major !
+class Matrix44 : public Eigen::Matrix<_Scalar,4,4,Eigen::RowMajor> // FIXME col or row major !
 {
 
-	typedef Eigen::Matrix<_Scalar,Eigen::Dynamic,Eigen::Dynamic> _Base;
+	typedef Eigen::Matrix<_Scalar,4,4,Eigen::RowMajor> _Base;
+	using _Base::coeff;
+	using _Base::coeffRef;
+	using _Base::ElementAt;
+	using _Base::setZero;
 
 public:
 
-	_EIGEN_GENERIC_PUBLIC_INTERFACE(Matrix,_Base);
+	_EIGEN_GENERIC_PUBLIC_INTERFACE(Matrix44,_Base);
 	typedef _Scalar ScalarType;
 
-	VCG_EIGEN_INHERIT_ASSIGNMENT_OPERATORS(Matrix)
+	VCG_EIGEN_INHERIT_ASSIGNMENT_OPERATORS(Matrix44)
 
   /** \name Constructors
     *  No automatic casting and default constructor is empty
@@ -101,50 +105,51 @@ public:
 	Matrix44() : Base() {}
 	~Matrix44() {}
 	Matrix44(const Matrix44 &m) : Base(m) {}
-	Matrix33(const Scalar * v ) : Base(Map<Matrix<Scalar,4,4,RowMajor>(v)) {}
+	Matrix44(const Scalar * v ) : Base(Eigen::Map<Eigen::Matrix<Scalar,4,4,Eigen::RowMajor> >(v)) {}
 
-  Scalar *V() { return Base::data(); }
-  const Scalar *V() const { return Base::data(); }
+	template<typename OtherDerived>
+	Matrix44(const Eigen::MatrixBase<OtherDerived>& other) : Base(other) {}
+
+	const typename Base::RowXpr operator[](int i) const { return Base::row(i); }
+	typename Base::RowXpr operator[](int i) { return Base::row(i); }
 
 	// return a copy of the i-th column
-	typename Base::ColXpr GetColumn4(const int& i) const { return col(i); }
-	Block<Matrix,3,1> GetColumn3(const int& i) const { return block<3,1>(0,i); }
+	typename Base::ColXpr GetColumn4(const int& i) const { return Base::col(i); }
+	const Eigen::Block<Base,3,1> GetColumn3(const int& i) const { return this->template block<3,1>(0,i); }
 
-	typename Base::RowXpr GetRow4(const int& i) const { return col(i); }
-	Block<Matrix,1,3> GetRow3(const int& i) const { return block<1,3>(i,0); }
+	typename Base::RowXpr GetRow4(const int& i) const { return Base::row(i); }
+	Eigen::Block<Base,1,3> GetRow3(const int& i) const { return this->template block<1,3>(i,0); }
 	
   template <class Matrix44Type>
-	void ToMatrix(Matrix44Type & m) const { m = (*this).cast<typename Matrix44Type::Scalar>(); }
+	void ToMatrix(Matrix44Type & m) const { m = (*this).template cast<typename Matrix44Type::Scalar>(); }
 
 	void ToEulerAngles(Scalar &alpha, Scalar &beta, Scalar &gamma);
 
 	template <class Matrix44Type>
-	void FromMatrix(const Matrix44Type & m) { for(int i = 0; i < 16; i++) data()[i] = m.data()[i]; }
+	void FromMatrix(const Matrix44Type & m) { for(int i = 0; i < 16; i++) Base::data()[i] = m.data()[i]; }
 	
-	void FromEulerAngles(T alpha, T beta, T gamma);
-  void SetDiagonal(const T k);
-	Matrix44 &SetScale(const T sx, const T sy, const T sz);	
-	Matrix44 &SetScale(const Point3<T> &t);
-  Matrix44 &SetTranslate(const Point3<T> &t);
-	Matrix44 &SetTranslate(const T sx, const T sy, const T sz);
-  Matrix44 &SetShearXY(const T sz);	
-  Matrix44 &SetShearXZ(const T sy);	
-  Matrix44 &SetShearYZ(const T sx);	
+	void FromEulerAngles(Scalar alpha, Scalar beta, Scalar gamma);
+  void SetDiagonal(const Scalar k);
+	Matrix44 &SetScale(const Scalar sx, const Scalar sy, const Scalar sz);
+	Matrix44 &SetScale(const Point3<Scalar> &t);
+  Matrix44 &SetTranslate(const Point3<Scalar> &t);
+	Matrix44 &SetTranslate(const Scalar sx, const Scalar sy, const Scalar sz);
+  Matrix44 &SetShearXY(const Scalar sz);
+  Matrix44 &SetShearXZ(const Scalar sy);
+  Matrix44 &SetShearYZ(const Scalar sx);
 
   ///use radiants for angle.
-  Matrix44 &SetRotateDeg(T AngleDeg, const Point3<T> & axis); 
-  Matrix44 &SetRotateRad(T AngleRad, const Point3<T> & axis); 
-
-  T Determinant() const;
+  Matrix44 &SetRotateDeg(Scalar AngleDeg, const Point3<Scalar> & axis);
+  Matrix44 &SetRotateRad(Scalar AngleRad, const Point3<Scalar> & axis);
 
   template <class Q> void Import(const Matrix44<Q> &m) {
     for(int i = 0; i < 16; i++) 
-      _a[i] = (T)(m.V()[i]);
+      Base::data()[i] = (Scalar)(m.data()[i]);
   }
 	  template <class Q> 
   static inline Matrix44 Construct( const Matrix44<Q> & b )
   {
-	  Matrix44<T> tmp; tmp.FromMatrix(b);
+	  Matrix44 tmp; tmp.FromMatrix(b);
     return tmp;
   }
 
@@ -173,7 +178,6 @@ protected:
 ///Premultiply 
 template <class T> Point3<T> operator*(const Matrix44<T> &m, const Point3<T> &p);
 
-template <class T> Matrix44<T> &Transpose(Matrix44<T> &m);
 //return NULL matrix if not invertible
 template <class T> Matrix44<T> &Invert(Matrix44<T> &m);   
 template <class T> Matrix44<T> Inverse(const Matrix44<T> &m);   
@@ -184,27 +188,6 @@ typedef Matrix44<float>  Matrix44f;
 typedef Matrix44<double> Matrix44d;
 
 
-
-template <class T> Matrix44<T>::Matrix44(const Matrix44<T> &m) {
-  memcpy((T *)_a, (T *)m._a, 16 * sizeof(T));   
-}
-
-template <class T> Matrix44<T>::Matrix44(const T v[]) {
-  memcpy((T *)_a, v, 16 * sizeof(T));   
-}
-
-template <class T> T &Matrix44<T>::ElementAt(const int row, const int col) {
-  assert(row >= 0 && row < 4);
-  assert(col >= 0 && col < 4);
-  return _a[(row<<2) + col];
-}
-
-template <class T> T Matrix44<T>::ElementAt(const int row, const int col) const {
-  assert(row >= 0 && row < 4);
-  assert(col >= 0 && col < 4);
-  return _a[(row<<2) + col];
-}
-
 //template <class T> T &Matrix44<T>::operator[](const int i) {
 //  assert(i >= 0 && i < 16);
 //  return ((T *)_a)[i];
@@ -214,116 +197,7 @@ template <class T> T Matrix44<T>::ElementAt(const int row, const int col) const 
 //  assert(i >= 0 && i < 16);
 //  return ((T *)_a)[i];
 //} 
-template <class T> T *Matrix44<T>::operator[](const int i) {
-  assert(i >= 0 && i < 4);
-  return _a+i*4;
-}
 
-template <class T> const T *Matrix44<T>::operator[](const int i) const {
-  assert(i >= 0 && i < 4);
-  return _a+i*4;
-}
-template <class T>  T *Matrix44<T>::V()  { return _a;} 
-template <class T> const T *Matrix44<T>::V() const { return _a;} 
-
-
-template <class T> Matrix44<T> Matrix44<T>::operator+(const Matrix44 &m) const {
-  Matrix44<T> ret;
-  for(int i = 0; i < 16; i++) 
-    ret.V()[i] = V()[i] + m.V()[i];  
-  return ret;
-}
-
-template <class T> Matrix44<T> Matrix44<T>::operator-(const Matrix44 &m) const {
-  Matrix44<T> ret;
-  for(int i = 0; i < 16; i++) 
-    ret.V()[i] = V()[i] - m.V()[i];  
-  return ret;
-}
-
-template <class T> Matrix44<T> Matrix44<T>::operator*(const Matrix44 &m) const {
-  Matrix44 ret;       
-  for(int i = 0; i < 4; i++)
-    for(int j = 0; j < 4; j++) {
-      T t = 0.0;
-      for(int k = 0; k < 4; k++)
-        t += ElementAt(i, k) * m.ElementAt(k, j);
-      ret.ElementAt(i, j) = t;
-    }
-  return ret;
-}
-
-template <class T> Matrix44<T> Matrix44<T>::operator*(const Matrix44Diag<T> &m) const {
-  Matrix44 ret = (*this);       
-	for(int i = 0; i < 4; ++i)
- 		for(int j = 0; j < 4; ++j)
-  		  ret[i][j]*=m[i]; 
-  return ret;
-}
-
-template <class T> Point4<T> Matrix44<T>::operator*(const Point4<T> &v) const {
-  Point4<T> ret;     
-  for(int i = 0; i < 4; i++){
-    T t = 0.0;
-    for(int k = 0; k < 4; k++)
-      t += ElementAt(i,k) * v[k];
-    ret[i] = t;
-   }
-   return ret;
-}
-
-
-template <class T> bool Matrix44<T>::operator==(const  Matrix44 &m) const {
-	for(int i = 0; i < 4; ++i)
- 		for(int j = 0; j < 4; ++j)  
-    if(ElementAt(i,j) != m.ElementAt(i,j))
-      return false;
-  return true;
-}
-template <class T> bool Matrix44<T>::operator!=(const  Matrix44 &m) const {
-	for(int i = 0; i < 4; ++i)
- 		for(int j = 0; j < 4; ++j)  
-     if(ElementAt(i,j) != m.ElementAt(i,j))
-      return true;
-  return false;
-}
-
-template <class T> Matrix44<T> Matrix44<T>::operator-() const {
-  Matrix44<T> res;
-  for(int i = 0; i < 16; i++)
-    res.V()[i] = -V()[i];
-  return res;
-}
-
-template <class T> Matrix44<T> Matrix44<T>::operator*(const T k) const {
-  Matrix44<T> res;
-  for(int i = 0; i < 16; i++)
-    res.V()[i] =V()[i] * k;
-  return res;
-}
-
-template <class T> void Matrix44<T>::operator+=(const Matrix44 &m) {
-  for(int i = 0; i < 16; i++)
-    V()[i] += m.V()[i];  
-}
-template <class T> void Matrix44<T>::operator-=(const Matrix44 &m) {
-  for(int i = 0; i < 16; i++)
-    V()[i] -= m.V()[i];
-}
-template <class T> void Matrix44<T>::operator*=( const Matrix44 & m ) {
-  *this = *this *m;
-  
-  /*for(int i = 0; i < 4; i++) { //sbagliato
-    Point4<T> t(0, 0, 0, 0);
-    for(int k = 0; k < 4; k++) {
-      for(int j = 0; j < 4; j++) {
-        t[k] += ElementAt(i, k) * m.ElementAt(k, j);
-      }
-    }
-    for(int l = 0; l < 4; l++)
-      ElementAt(i, l) = t[l];
-  } */
-}
 
 template < class PointType , class T > void operator*=( std::vector<PointType> &vert, const Matrix44<T> & m ) {
   typename std::vector<PointType>::iterator ii;
@@ -331,21 +205,16 @@ template < class PointType , class T > void operator*=( std::vector<PointType> &
     (*ii).P()=m * (*ii).P();
 }
 
-template <class T> void Matrix44<T>::operator*=( const T k ) {
-  for(int i = 0; i < 16; i++)
-      _a[i] *= k;
-}
-
 template <class T>
-void Matrix44<T>::ToEulerAngles(T &alpha, T &beta, T &gamma)
+void Matrix44<T>::ToEulerAngles(Scalar &alpha, Scalar &beta, Scalar &gamma)
 {
-	alpha = atan2(ElementAt(1,2), ElementAt(2,2));
-	beta = asin(-ElementAt(0,2));
-	gamma = atan2(ElementAt(0,1), ElementAt(1,1));
+	alpha = atan2(coeff(1,2), coeff(2,2));
+	beta = asin(-coeff(0,2));
+	gamma = atan2(coeff(0,1), coeff(1,1));
 }
 
 template <class T> 
-void Matrix44<T>::FromEulerAngles(T alpha, T beta, T gamma)
+void Matrix44<T>::FromEulerAngles(Scalar alpha, Scalar beta, Scalar gamma)
 {
 	this->SetZero();
 
@@ -371,28 +240,20 @@ void Matrix44<T>::FromEulerAngles(T alpha, T beta, T gamma)
 	ElementAt(3,3) = 1;
 }
 
-template <class T> void Matrix44<T>::SetZero() {
-  memset((T *)_a, 0, 16 * sizeof(T));
-}
-
-template <class T> void Matrix44<T>::SetIdentity() { 
-  SetDiagonal(1);  
-}
-
-template <class T> void Matrix44<T>::SetDiagonal(const T k) {
-  SetZero();
+template <class T> void Matrix44<T>::SetDiagonal(const Scalar k) {
+  setZero();
   ElementAt(0, 0) = k;
   ElementAt(1, 1) = k;
   ElementAt(2, 2) = k;
-  ElementAt(3, 3) = 1;    
+  ElementAt(3, 3) = 1;
 }
 
-template <class T> Matrix44<T> &Matrix44<T>::SetScale(const Point3<T> &t) {
+template <class T> Matrix44<T> &Matrix44<T>::SetScale(const Point3<Scalar> &t) {
   SetScale(t[0], t[1], t[2]);
   return *this;
 }
-template <class T> Matrix44<T> &Matrix44<T>::SetScale(const T sx, const T sy, const T sz) {
-  SetZero();
+template <class T> Matrix44<T> &Matrix44<T>::SetScale(const Scalar sx, const Scalar sy, const Scalar sz) {
+  setZero();
   ElementAt(0, 0) = sx;
   ElementAt(1, 1) = sy;
   ElementAt(2, 2) = sz;
@@ -400,23 +261,23 @@ template <class T> Matrix44<T> &Matrix44<T>::SetScale(const T sx, const T sy, co
   return *this;
 }
 
-template <class T> Matrix44<T> &Matrix44<T>::SetTranslate(const Point3<T> &t) {
+template <class T> Matrix44<T> &Matrix44<T>::SetTranslate(const Point3<Scalar> &t) {
   SetTranslate(t[0], t[1], t[2]);
   return *this;
 }
-template <class T> Matrix44<T> &Matrix44<T>::SetTranslate(const T tx, const T ty, const T tz) {
-  SetIdentity();
+template <class T> Matrix44<T> &Matrix44<T>::SetTranslate(const Scalar tx, const Scalar ty, const Scalar tz) {
+  Base::setIdentity();
 	ElementAt(0, 3) = tx;
   ElementAt(1, 3) = ty;
   ElementAt(2, 3) = tz;
   return *this;
 }
 
-template <class T> Matrix44<T> &Matrix44<T>::SetRotateDeg(T AngleDeg, const Point3<T> & axis) {  
+template <class T> Matrix44<T> &Matrix44<T>::SetRotateDeg(Scalar AngleDeg, const Point3<Scalar> & axis) {
 	return SetRotateRad(math::ToRad(AngleDeg),axis);
 }
 
-template <class T> Matrix44<T> &Matrix44<T>::SetRotateRad(T AngleRad, const Point3<T> & axis) {  
+template <class T> Matrix44<T> &Matrix44<T>::SetRotateRad(Scalar AngleRad, const Point3<Scalar> & axis) {
   //angle = angle*(T)3.14159265358979323846/180; e' in radianti!
   T c = math::Cos(AngleRad);
   T s = math::Sin(AngleRad);
@@ -436,9 +297,9 @@ template <class T> Matrix44<T> &Matrix44<T>::SetRotateRad(T AngleRad, const Poin
 	ElementAt(2,2) = t[2]*t[2]*q +c;
 	ElementAt(2,3) = 0;
 	ElementAt(3,0) = 0;
-	ElementAt(3,1) = 0;									
+	ElementAt(3,1) = 0;
 	ElementAt(3,2) = 0;
-	ElementAt(3,3) = 1;	
+	ElementAt(3,3) = 1;
   return *this;
 }
 
@@ -461,20 +322,20 @@ template <class T> Matrix44<T> &Matrix44<T>::SetRotateRad(T AngleRad, const Poin
 
  */
 
-	template <class T> Matrix44<T> & Matrix44<T>:: SetShearXY( const T sh)	{// shear the X coordinate as the Y coordinate change 
-		SetIdentity();
+	template <class T> Matrix44<T> & Matrix44<T>::SetShearXY( const Scalar sh)	{// shear the X coordinate as the Y coordinate change
+		Base::setIdentity();
 		ElementAt(0,1) = sh;
     return *this;
 	}
 	
-	template <class T> Matrix44<T> & Matrix44<T>:: SetShearXZ( const T sh)	{// shear the X coordinate as the Z coordinate change 
-		SetIdentity();
+	template <class T> Matrix44<T> & Matrix44<T>::SetShearXZ( const Scalar sh)	{// shear the X coordinate as the Z coordinate change
+		Base::setIdentity();
 		ElementAt(0,2) = sh;
     return *this;
 	}
 	
-	template <class T> Matrix44<T> &Matrix44<T>:: SetShearYZ( const T sh)	{// shear the Y coordinate as the Z coordinate change 
-		SetIdentity();
+	template <class T> Matrix44<T> &Matrix44<T>::SetShearYZ( const Scalar sh)	{// shear the Y coordinate as the Z coordinate change
+		Base::setIdentity();
 		ElementAt(1,2) = sh;
     return *this;
 	}
@@ -546,28 +407,28 @@ bool Decompose(Matrix44<T> &M, Point3<T> &ScaleV, Point3<T> &ShearV, Point3<T> &
 	R[0]=M.GetColumn3(0);
 	R[0].Normalize();
 	
-	ShearV[0]=R[0]*M.GetColumn3(1); // xy shearing 
+	ShearV[0]=R[0].dot(M.GetColumn3(1)); // xy shearing
 	R[1]= M.GetColumn3(1)-R[0]*ShearV[0];
-  assert(math::Abs(R[1]*R[0])<1e-10);
+  assert(math::Abs(R[1].dot(R[0]))<1e-10);
 	ScaleV[1]=Norm(R[1]);   // y scaling 
 	R[1]=R[1]/ScaleV[1];
 	ShearV[0]=ShearV[0]/ScaleV[1]; 
 
-	ShearV[1]=R[0]*M.GetColumn3(2); // xz shearing 
+	ShearV[1]=R[0].dot(M.GetColumn3(2)); // xz shearing
 	R[2]= M.GetColumn3(2)-R[0]*ShearV[1];
-	assert(math::Abs(R[2]*R[0])<1e-10);
+	assert(math::Abs(R[2].dot(R[0]))<1e-10);
 	
-	R[2] = R[2]-R[1]*(R[2]*R[1]);
-	assert(math::Abs(R[2]*R[1])<1e-10);
-	assert(math::Abs(R[2]*R[0])<1e-10);
+	R[2] = R[2]-R[1]*(R[2].dot(R[1]));
+	assert(math::Abs(R[2].dot(R[1]))<1e-10);
+	assert(math::Abs(R[2].dot(R[0]))<1e-10);
 	
 	ScaleV[2]=Norm(R[2]);
 	ShearV[1]=ShearV[1]/ScaleV[2]; 
 	R[2]=R[2]/ScaleV[2];
-	assert(math::Abs(R[2]*R[1])<1e-10);
-	assert(math::Abs(R[2]*R[0])<1e-10);
+	assert(math::Abs(R[2].dot(R[1]))<1e-10);
+	assert(math::Abs(R[2].dot(R[0]))<1e-10);
 	
-	ShearV[2]=R[1]*M.GetColumn3(2); // yz shearing
+	ShearV[2]=R[1].dot(M.GetColumn3(2)); // yz shearing
 	ShearV[2]=ShearV[2]/ScaleV[2];
   int i,j;  
 	for(i=0;i<3;++i)
@@ -608,15 +469,6 @@ bool Decompose(Matrix44<T> &M, Point3<T> &ScaleV, Point3<T> &ShearV, Point3<T> &
 	return true;
 }
 
-
-
-
-template <class T> T Matrix44<T>::Determinant() const {  
-  LinearSolve<T> solve(*this);
-  return solve.Determinant();
-}
-
-
 template <class T> Point3<T> operator*(const Matrix44<T> &m, const Point3<T> &p) {
   T w;
   Point3<T> s;
@@ -628,24 +480,19 @@ template <class T> Point3<T> operator*(const Matrix44<T> &m, const Point3<T> &p)
   return s;
 }
 
-//template <class T> Point3<T> operator*(const Point3<T> &p, const Matrix44<T> &m) {
+
+
+// template <class T> Point3<T> operator*(const Point3<T> &p, const Matrix44<T> &m) {
 //  T w;
 //  Point3<T> s;
 //  s[0] = m.ElementAt(0, 0)*p[0] + m.ElementAt(1, 0)*p[1] + m.ElementAt(2, 0)*p[2] + m.ElementAt(3, 0);
 //  s[1] = m.ElementAt(0, 1)*p[0] + m.ElementAt(1, 1)*p[1] + m.ElementAt(2, 1)*p[2] + m.ElementAt(3, 1);
 //  s[2] = m.ElementAt(0, 2)*p[0] + m.ElementAt(1, 2)*p[1] + m.ElementAt(2, 2)*p[2] + m.ElementAt(3, 2);
 //  w    = m.ElementAt(0, 3)*p[0] + m.ElementAt(1, 3)*p[1] + m.ElementAt(2, 3)*p[2] + m.ElementAt(3, 3);
-//	if(w != 0) s /= w;
+// 	if(w != 0) s /= w;
 //  return s;
-//}
+// }
 
-template <class T> Matrix44<T> &Transpose(Matrix44<T> &m) {
-  for(int i = 1; i < 4; i++)
-    for(int j = 0; j < i; j++) {
-			math::Swap(m.ElementAt(i, j), m.ElementAt(j, i)); 
-    }
-  return m;
-}
 
 /*
  To invert a matrix you can 
@@ -658,194 +505,16 @@ template <class T> Matrix44<T> &Transpose(Matrix44<T> &m) {
  invertedMatrix = vcg::Inverse(untouchedMatrix);
  
 */
-template <class T> Matrix44<T> & Invert(Matrix44<T> &m) {        
-  LinearSolve<T> solve(m);
-
-  for(int j = 0; j < 4; j++) { //Find inverse by columns.
-    Point4<T> col(0, 0, 0, 0);
-    col[j] = 1.0;
-    col = solve.Solve(col);
-    for(int i = 0; i < 4; i++) 
-      m.ElementAt(i, j) = col[i];
-  }  
-	return m;
+template <class T> Matrix44<T> & Invert(Matrix44<T> &m) {
+	return m = m.lu().inverse();
 }
 
-template <class T> Matrix44<T> Inverse(const Matrix44<T> &m) {        
-  LinearSolve<T> solve(m);
-  Matrix44<T> res;
-  for(int j = 0; j < 4; j++) { //Find inverse by columns.
-    Point4<T> col(0, 0, 0, 0);
-    col[j] = 1.0;
-    col = solve.Solve(col);
-    for(int i = 0; i < 4; i++) 
-      res.ElementAt(i, j) = col[i];
-  }  
-  return res;
+template <class T> Matrix44<T> Inverse(const Matrix44<T> &m) {
+	return m.lu().inverse();
 }
 
-
-
-/* LINEAR SOLVE IMPLEMENTATION */
-
-template <class T> LinearSolve<T>::LinearSolve(const Matrix44<T> &m): Matrix44<T>(m) {
-  if(!Decompose()) {
-    for(int i = 0; i < 4; i++)
-      index[i] = i;
-    Matrix44<T>::SetZero();
-  }
-}
-
-
-template <class T> T LinearSolve<T>::Determinant() const {
-  T det = d;
-  for(int j = 0; j < 4; j++) 
-    det *= this-> ElementAt(j, j);   
-  return det;
-}
-
-
-/*replaces a matrix by its LU decomposition of a rowwise permutation.
-d is +or -1 depeneing of row permutation even or odd.*/
-#define TINY 1e-100
-
-template <class T> bool LinearSolve<T>::Decompose() {  
-  
- /* Matrix44<T> A;
-  for(int i = 0; i < 16; i++)
-    A[i] = operator[](i);  
-  SetIdentity();    
-  Point4<T> scale;
-  // Set scale factor, scale(i) = max( |a(i,j)| ), for each row
-  for(int i = 0; i < 4; i++ ) {
-    index[i] = i;			  // Initialize row index list
-    T scalemax = (T)0.0;
-    for(int j = 0; j < 4; j++) 
-      scalemax = (scalemax > math::Abs(A.ElementAt(i,j))) ? scalemax : math::Abs(A.ElementAt(i,j));
-    scale[i] = scalemax;
-  }
-
-  // Loop over rows k = 1, ..., (N-1)
-  int signDet = 1;
-  for(int k = 0; k < 3; k++ ) {
-	  // Select pivot row from max( |a(j,k)/s(j)| )
-    T ratiomax = (T)0.0;
-	  int jPivot = k;
-    for(int i = k; i < 4; i++ ) {
-      T ratio = math::Abs(A.ElementAt(index[i], k))/scale[index[i]];
-      if(ratio > ratiomax) {
-        jPivot = i;
-        ratiomax = ratio;
-      }
-    }
-	  // Perform pivoting using row index list
-	  int indexJ = index[k];
-	  if( jPivot != k ) {	          // Pivot
-      indexJ = index[jPivot];
-      index[jPivot] = index[k];   // Swap index jPivot and k
-      index[k] = indexJ;
-	    signDet *= -1;			  // Flip sign of determinant
-	  }
-	  // Perform forward elimination
-    for(int i=k+1; i < 4; i++ ) {
-      T coeff = A.ElementAt(index[i],k)/A.ElementAt(indexJ,k);
-      for(int j=k+1; j < 4; j++ )
-        A.ElementAt(index[i],j) -= coeff*A.ElementAt(indexJ,j);
-      A.ElementAt(index[i],k) = coeff;
-      //for( j=1; j< 4; j++ ) 
-      //  ElementAt(index[i],j) -= A.ElementAt(index[i], k)*ElementAt(indexJ, j);
-    }
-  }
-  for(int i = 0; i < 16; i++)
-    operator[](i) = A[i];
-
-  d = signDet; 
-  // this = A;
-  return true;  */
-
-  d = 1; //no permutation still
-    
-  T scaling[4];
-  int i,j,k;
-  //Saving the scvaling information per row
-  for(i = 0; i < 4; i++) { 
-    T largest = 0.0;
-    for(j = 0; j < 4; j++) {
-      T t = math::Abs(this->ElementAt(i, j));
-      if (t > largest) largest = t;
-    }
-
-    if (largest == 0.0) { //oooppps there is a zero row!
-      return false;
-    }    
-    scaling[i] = (T)1.0 / largest; 
-  }
-
-  int imax = 0;
-  for(j = 0; j < 4; j++) { 
-    for(i = 0; i < j; i++) {
-      T sum = this->ElementAt(i,j);
-      for(int k = 0; k < i; k++) 
-        sum -= this->ElementAt(i,k)*this->ElementAt(k,j);
-      this->ElementAt(i,j) = sum;
-    }
-    T largest = 0.0; 
-    for(i = j; i < 4; i++) { 
-      T sum = this->ElementAt(i,j);
-      for(k = 0; k < j; k++)
-        sum -= this->ElementAt(i,k)*this->ElementAt(k,j);
-      this->ElementAt(i,j) = sum;
-      T t = scaling[i] * math::Abs(sum);
-      if(t >= largest) { 
-        largest = t;
-        imax = i;
-      }
-    }
-    if (j != imax) { 
-      for (int k = 0; k < 4; k++) { 
-        T dum = this->ElementAt(imax,k);
-        this->ElementAt(imax,k) = this->ElementAt(j,k);
-        this->ElementAt(j,k) = dum;
-      }
-      d = -(d);
-      scaling[imax] = scaling[j]; 
-    }
-    index[j]=imax;
-    if (this->ElementAt(j,j) == 0.0) this->ElementAt(j,j) = (T)TINY;
-    if (j != 3) { 
-      T dum = (T)1.0 / (this->ElementAt(j,j));
-      for (i = j+1; i < 4; i++) 
-        this->ElementAt(i,j) *= dum;
-    }
-  }
-  return true; 
-}
-
-
-template <class T> Point4<T> LinearSolve<T>::Solve(const Point4<T> &b) { 
-  Point4<T> x(b);
-  int first = -1, ip;  
-  for(int i = 0; i < 4; i++) { 
-    ip = index[i];
-    T sum = x[ip];
-    x[ip] = x[i];
-    if(first!= -1)
-      for(int j = first; j <= i-1; j++) 
-        sum -= this->ElementAt(i,j) * x[j];
-    else 
-      if(sum) first = i; 
-    x[i] = sum;
-  }
-  for (int i = 3; i >= 0; i--) { 
-    T sum = x[i];
-    for (int j = i+1; j < 4; j++) 
-      sum -= this->ElementAt(i, j) * x[j];
-    x[i] = sum / this->ElementAt(i, i); 
-  }
-  return x;
-}
 
 } //namespace
 #endif
 
-
+#endif

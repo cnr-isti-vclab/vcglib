@@ -721,12 +721,15 @@ namespace vcg{
 				delete []temp;
 			};
 
+			// for the transistion to eigen
 			Matrix transpose()
 			{
 				Matrix res = *this;
 				res.Transpose();
 				return res;
 			}
+			// for the transistion to eigen
+			const Matrix& eval() { return *this; }
 
 
 			/*!

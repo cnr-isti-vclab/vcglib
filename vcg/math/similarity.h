@@ -191,7 +191,7 @@ template <class S,class RotationType> Matrix44<S> Similarity<S,RotationType>::Ma
   rot.ToMatrix(r);
   Matrix44<S> s = Matrix44<S>().SetScale(sca, sca, sca);
   Matrix44<S> t = Matrix44<S>().SetTranslate(tra[0], tra[1], tra[2]);
-  return s*r*t;  // trans * scale * rot;
+  return Matrix44<S>(s*r*t);  // trans * scale * rot;
 }
 
 template <class S,class RotationType> Matrix44<S> Similarity<S,RotationType>::InverseMatrix() const {

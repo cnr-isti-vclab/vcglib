@@ -72,10 +72,15 @@ EIGEN_DEPRECATED inline unsigned int RowsNumber() const
 *	\param j the column index
 *	\return the element
 */
-EIGEN_DEPRECATED inline Scalar ElementAt(unsigned int i, unsigned int j)
+EIGEN_DEPRECATED inline Scalar ElementAt(unsigned int i, unsigned int j) const
 {
 	return (*this)(i,j);
-};
+}
+
+EIGEN_DEPRECATED inline Scalar& ElementAt(unsigned int i, unsigned int j)
+{
+	return (*this)(i,j);
+}
 
 /*!
 *	\deprecated use *this.determinant() (or *this.lu().determinant() for large matrices)
@@ -148,6 +153,8 @@ EIGEN_DEPRECATED void SwapRows(const unsigned int i, const unsigned int j)
 	row(i).swap(row(j));
 };
 
+Scalar* V() { return derived().data(); }
+const Scalar* V() const { return derived().data(); }
 
 /*!
 *	\deprecated use *this.cwise() += k
@@ -288,6 +295,8 @@ EIGEN_DEPRECATED void SetDiagonal(Scalar *v)
 	diagonal() = Map<Matrix<Scalar,RowsAtCompileTime,1> >(v,cols(),1);
 }
 
+/** \deprecated use trace() */
+EIGEN_DEPRECATED Scalar Trace() const { return trace(); }
 
 /*!
 *	\deprecated use *this = *this.transpose()
@@ -316,4 +325,13 @@ EIGEN_DEPRECATED void Dump()
 	printf("\n");
 }
 
+/** \deprecated use norm() */
+EIGEN_DEPRECATED inline Scalar Norm() const { return norm(); }
+/** \deprecated use squaredNorm() */
+EIGEN_DEPRECATED inline Scalar SquaredNorm() const { return norm2(); }
+/** \deprecated use normalize() or normalized() */
+EIGEN_DEPRECATED inline Derived& Normalize() { normalize(); return derived(); }
+
+/** \deprecated use .cross(p) */
+inline EvalType operator ^ (const Derived& p ) const { return this->cross(p); }
 

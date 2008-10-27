@@ -49,35 +49,31 @@ void RotationalPartByPolarDecomposition( const vcg::Matrix33<S> & m, vcg::Matrix
 	r.SetZero();
 	s.SetZero();
 
-	tmp= m;
-	tmp.Transpose();
-	tmp = m*tmp;
+	tmp = m*m.transpose();
 
 	Matrix33<S> res;
 	Point3<S> e;
 
 	bool ss = SingularValueDecomposition<vcg::Matrix33<S> >(tmp,&e[0],res);
 
-	res.Transpose();
 	e[0]=math::Sqrt(e[0]);
 	e[1]=math::Sqrt(e[1]);
 	e[2]=math::Sqrt(e[2]);
 	#ifdef VCG_USE_EIGEN
-	tmp = tmp*e.asDiagonal()*res;
+	tmp = tmp*e.asDiagonal()*res.transpose();
 	#else
-	tmp = tmp*Matrix33Diag<S>(e)*res;
+	tmp = tmp*Matrix33Diag<S>(e)*res.transpose();
 	#endif
 
-	bool s1 = SingularValueDecomposition<vcg::Matrix33<S> >(tmp,&e[0],res);
-	tmp.Transpose();
+	bool s1 = SingularValueDecomposition<vcg::Matrix33<S> >(tmp,&e[0],res.transpose());
 	e[0]=1/e[0];
 	e[1]=1/e[1];
 	e[2]=1/e[2];
 
 	#ifdef VCG_USE_EIGEN
-	tmp = res*e.asDiagonal()*tmp;
+	tmp = res*e.asDiagonal()*tmp.transpose();
 	#else
-	tmp = res*Matrix33Diag<S>(e)*tmp;
+	tmp = res*Matrix33Diag<S>(e)*tmp.transpose();
 	#endif
 
 	r = m*tmp;

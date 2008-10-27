@@ -141,7 +141,7 @@ public:
 	
   ///Project a point on the plane
   PointType Projection(const PointType &p) const	{
-		ScalarType k = p * _dir - _offset;
+		ScalarType k = p.dot(_dir) - _offset;
 		return p - _dir * k;
 	}
 		
@@ -154,13 +154,13 @@ public:
   void Init(const PointType &p0, const PointType &p1, const PointType &p2) {
     _dir = (p2 - p0) ^ (p1 - p0);
     if(NORM) Normalize();
-    _offset = p0 * _dir;
+    _offset = p0.dot(_dir);
   }
 
   /// Calculates the plane passing through a point and the normal (Rename this method
   inline void Init(const PointType &p0, const PointType &norm) {
 	  _dir = norm;
-	  _offset = p0 * _dir;
+	  _offset = p0.dot(_dir);
   }
 };	// end class Plane3
 
@@ -169,12 +169,12 @@ typedef Plane3<double> Plane3d;
 
 ///Distance plane - point (Move this function to somewhere else)
 template<class T> T Distance(const Plane3<T> &plane, const Point3<T> &point) {   
-	return plane.Direction() * point - plane.Offset();      
+	return plane.Direction().dot(point) - plane.Offset();
 }
 
 	///Distance point-plane (Move this function to somewhere else)
 template<class T> T Distance(const Point3<T> &point, const Plane3<T> &plane) {
-  return plane.Direction() * point - plane.Offset();      
+  return plane.Direction().dot(point) - plane.Offset();
 }
 
 } // end namespace

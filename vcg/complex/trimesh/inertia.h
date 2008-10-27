@@ -334,7 +334,7 @@ static void Covariance(const MeshType & m, vcg::Point3<ScalarType> & bary, vcg::
 	// integral of (x,y,0) in the same triangle
 	CoordType X(1/6.0,1/6.0,0);
 	vcg::Matrix33<ScalarType> A, // matrix that bring the vertices to (v1-v0,v2-v0,n)
-												At,DC;
+												    DC;
 	for(fi = m.face.begin(); fi != m.face.end(); ++fi)
 		if(!(*fi).IsD())
 		{
@@ -350,18 +350,15 @@ static void Covariance(const MeshType & m, vcg::Point3<ScalarType> & bary, vcg::
 			A.SetColumn(2,n);
 			CoordType delta = P0 - bary;
 
-			At= A;
-			At.Transpose();
 			/* DC is calculated as integral of (A*x+delta) * (A*x+delta)^T over the triangle,
 				 where delta = v0-bary
 			*/
 
 			DC.SetZero();
-			DC+= A*C0*At;
+			DC+= A*C0*A.transpose();
 			vcg::Matrix33<ScalarType> tmp;
 			tmp.OuterProduct(A*X,delta);
-			DC+= tmp;
-			tmp.Transpose();
+			DC += tmp + tmp.transpose();
 			DC+= tmp;
 			tmp.OuterProduct(delta,delta);
 			DC+=tmp*0.5;

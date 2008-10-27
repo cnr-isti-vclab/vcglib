@@ -486,8 +486,8 @@ int PathMode::Verse(Point3f reference_point,Point3f current_point,Point3f prev_p
   prev_dir.Normalize();
   next_dir.Normalize();
   float prev_coeff,next_coeff;
-  prev_coeff = prev_dir * reference_dir;
-  next_coeff = next_dir * reference_dir;
+  prev_coeff = prev_dir.dot(reference_dir);
+  next_coeff = next_dir.dot(reference_dir);
   if (prev_coeff < 0.0f)
     prev_coeff = 0.0f;
    if (next_coeff < 0.0f)
@@ -573,8 +573,8 @@ void AreaMode::Init(const std::vector < Point3f > &pts)
   bool pts_not_in_line=false;
   Point3f a,b;
   for(unsigned int i=0;i<onethird;i++){
-   	 a=(pts[(i+   onethird )%npts] - pts[i%npts]).Normalize();
-  	 b=(pts[(i+(2*onethird))%npts] - pts[i%npts]).Normalize();
+   	 a=(pts[(i+   onethird )%npts] - pts[i%npts]).normalized();
+  	 b=(pts[(i+(2*onethird))%npts] - pts[i%npts]).normalized();
      pts_not_in_line = (a ^ b).Norm() > EPSILON;
      if(pts_not_in_line){
      	plane.Init( pts[i%npts],

@@ -147,7 +147,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
             if(d0 < min_edge || d0 > max_edge) continue;
             
             Point3x normal = (p1 - p0)^(p2 - p0);
-            if(normal * (p0 - baricenter) < 0) continue;
+            if(normal.dot(p0 - baricenter) < 0) continue;
 /*            if(use_normals) {             
               if(normal * vv0->N() < 0) continue;
               if(normal * vv1->N() < 0) continue;
@@ -169,7 +169,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
             }
             
             //check on the other side there is not a surface
-            Point3x opposite = center + normal*(((center - p0)*normal)*2/normal.SquaredNorm());            
+            Point3x opposite = center + normal*(((center - p0).dot(normal))*2/normal.SquaredNorm());
             for(t = 0; t < n; t++) {
               VertexType &v = *(targets[t]);
               if((v.IsV()) && (opposite - v.P()).Norm() <= radius) 
@@ -291,7 +291,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
     if(min_angle >= M_PI - 0.1) {
       return -1;
     }
-        
+
     if(candidate == NULL) {
       return -1;
     }
@@ -304,7 +304,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
     assert(id != edge.v0 && id != edge.v1);
     
     Point3x newnormal = ((candidate->P() - v0)^(v1 - v0)).Normalize();
-    if(normal * newnormal < max_angle || this->nb[id] >= 2) {  
+    if(normal.dot(newnormal) < max_angle || this->nb[id] >= 2) {
       return -1;
     }
 
@@ -315,7 +315,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
       if((*k).v0 == id) touch = k; 
        
     //mark vertices close to candidate
-    Mark(candidate);    
+    Mark(candidate);
     return id;
   }
   
@@ -360,9 +360,9 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
     up /= uplen;
     
   
-    ScalarType a11 = q1*q1;
-    ScalarType a12 = q1*q2;
-    ScalarType a22 = q2*q2;
+    ScalarType a11 = q1.dot(q1);
+    ScalarType a12 = q1.dot(q2);
+    ScalarType a22 = q2.dot(q2);
   
     ScalarType m = 4*(a11*a22 - a12*a12);
     ScalarType l1 = 2*(a11*a22 - a22*a12)/m;
@@ -385,8 +385,8 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
     p.Normalize();
     q.Normalize();
     Point3x vec = p^q;
-    ScalarType angle = acos(p*q);
-    if(vec*axis < 0) angle = -angle;
+    ScalarType angle = acos(p.dot(q));
+    if(vec.dot(axis) < 0) angle = -angle;
     if(angle < 0) angle += 2*M_PI;
     return angle;
   }          

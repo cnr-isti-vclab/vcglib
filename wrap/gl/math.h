@@ -72,40 +72,32 @@ namespace vcg {
 
 inline void glMultMatrixE(const Matrix44f &matrix) {
   //glMultMatrixf((const GLfloat *)(matrix[0]));  
-  if(glMultTransposeMatrixf) glMultTransposeMatrixf((const GLfloat *)(matrix[0])); 
+  if(glMultTransposeMatrixf) glMultTransposeMatrixf((const GLfloat *)(matrix.V())); 
   else  {
-    Matrix44f tmp(matrix);
-    Transpose(tmp);
-    glMultMatrixf((const GLfloat *)(tmp[0]));
+    glMultMatrixf((const GLfloat *)(matrix.transpose().eval().V()));
   }
 }
 
 inline void glMultMatrix(const Matrix44f &matrix) {
-    Matrix44f tmp(matrix);
-    Transpose(tmp);
-    glMultMatrixf((const GLfloat *)(tmp[0]));
+    glMultMatrixf((const GLfloat *)(matrix.transpose().eval().V()));
 }
 
 inline void glMultMatrixE(const Matrix44d &matrix) {
-  if(glMultTransposeMatrixd) glMultTransposeMatrixd((const GLdouble *)(matrix[0])); 
+  if(glMultTransposeMatrixd) glMultTransposeMatrixd((const GLdouble *)(matrix.V())); 
   else  {
-    Matrix44d tmp(matrix);
-    Transpose(tmp);
-    glMultMatrixd((const GLdouble *)(tmp[0]));
+    glMultMatrixd((const GLdouble *)(matrix.transpose().eval().V()));
   }
 }
 inline void glMultMatrix(const Matrix44d &matrix) {
-    Matrix44d tmp(matrix);
-    Transpose(tmp);
-    glMultMatrixd((const GLdouble *)(tmp[0]));
+    glMultMatrixd((const GLdouble *)(matrix.transpose().eval().V()));
 }
 
 inline void glMultMatrixDirect(const Matrix44f &matrix) {
-   glMultMatrixf((const GLfloat *)(matrix[0]));
+   glMultMatrixf((const GLfloat *)(matrix.V()));
 }
 
 inline void glMultMatrixDirect(const Matrix44d &matrix) {
-   glMultMatrixd((const GLdouble *)(matrix[0]));
+   glMultMatrixd((const GLdouble *)(matrix.V()));
 }
 
 inline void glMultMatrix(const Similarityf &s) {
@@ -128,21 +120,23 @@ inline void glMultMatrix(const Similarityd &s) {
 }
 
 inline void glGetv(const GLenum  pname, Matrix44f  & m){
-	glGetFloatv(pname,&m[0][0]);
-  Transpose(m);
+	Matrix44f tmp;
+	glGetFloatv(pname,tmp.V());
+  m = tmp.transpose();
 }
 
 inline void glGetv(const GLenum  pname, Matrix44d  & m){
-	glGetDoublev(pname,&m[0][0]);
-  Transpose(m);
+  Matrix44d tmp;
+	glGetDoublev(pname,tmp.V());
+  m = tmp.transpose();
 }
 
 inline void glGetDirectv(const GLenum  pname, Matrix44f  & m){
-	glGetFloatv(pname,&m[0][0]);
+	glGetFloatv(pname,m.V());
 }
 
 inline void glGetDirecv(const GLenum  pname, Matrix44d  & m){
-	glGetDoublev(pname,&m[0][0]);
+	glGetDoublev(pname,m.V());
 }
 
 

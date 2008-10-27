@@ -184,9 +184,9 @@ template <class S> Quaternion<S> Quaternion<S>::operator*(const S &s) const {
  
 template <class S> Quaternion<S> Quaternion<S>::operator*(const Quaternion &q) const {		
 	Point3<S> t1(V(1), V(2), V(3));
-  Point3<S> t2(q.V(1), q.V(2), q.V(3));    
+  Point3<S> t2(q.V(1), q.V(2), q.V(3));
 		
-  S d  = t2 * t1;
+  S d  = t2.dot(t1);
 	Point3<S> t3 = t1 ^ t2;
 		
   t1 *= q.V(0);

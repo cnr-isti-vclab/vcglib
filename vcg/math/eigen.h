@@ -26,8 +26,40 @@
 
 #define EIGEN_MATRIXBASE_PLUGIN <vcg/math/eigen_vcgaddons.h>
 
+#include "../Eigen/LU"
+#include "../Eigen/Geometry"
 #include "../Eigen/Array"
 #include "../Eigen/Core"
+#include "base.h"
+
+namespace Eigen {
+template<> struct NumTraits<unsigned char>
+{
+  typedef unsigned char Real;
+  typedef float FloatingPoint;
+  enum {
+    IsComplex = 0,
+    HasFloatingPoint = 0,
+    ReadCost = 1,
+    AddCost = 1,
+    MulCost = 1
+  };
+};
+
+template<> struct NumTraits<short int>
+{
+  typedef short int Real;
+  typedef float FloatingPoint;
+  enum {
+    IsComplex = 0,
+    HasFloatingPoint = 0,
+    ReadCost = 1,
+    AddCost = 1,
+    MulCost = 1
+  };
+};
+
+}
 
 #define VCG_EIGEN_INHERIT_ASSIGNMENT_OPERATOR(Derived, Op) \
 	template<typename OtherDerived> \
@@ -53,5 +85,47 @@
 	VCG_EIGEN_INHERIT_ASSIGNMENT_OPERATOR(Derived, -=) \
 	VCG_EIGEN_INHERIT_SCALAR_ASSIGNMENT_OPERATOR(Derived, *=) \
 	VCG_EIGEN_INHERIT_SCALAR_ASSIGNMENT_OPERATOR(Derived, /=)
+
+
+namespace vcg {
+
+template<typename Derived1, typename Derived2>
+typename Eigen::ei_traits<Derived1>::Scalar
+Angle(const Eigen::MatrixBase<Derived1>& p1, const Eigen::MatrixBase<Derived2> & p2)
+{
+	EIGEN_STATIC_ASSERT_VECTOR_ONLY(Derived1)
+	EIGEN_STATIC_ASSERT_VECTOR_ONLY(Derived2)
+	EIGEN_STATIC_ASSERT_FIXED_SIZE(Derived1)
+	EIGEN_STATIC_ASSERT_FIXED_SIZE(Derived2)
+	EIGEN_STATIC_ASSERT_SAME_VECTOR_SIZE(Derived1,Derived2)
+	typedef typename Eigen::ei_traits<Derived1>::Scalar Scalar;
+
+	Scalar w = p1.norm()*p2.norm();
+	if(w==0) return Scalar(-1);
+	Scalar t = (p1.dot(p2))/w;
+	if(t>1) t = 1;
+	else if(t<-1) t = -1;
+	return vcg::math::Acos(t);
+}
+
+template<typename Derived1>
+inline typename Eigen::ei_traits<Derived1>::Scalar Norm( const Eigen::MatrixBase<Derived1>& p)
+{ return p.norm(); }
+
+template<typename Derived1>
+inline typename Eigen::ei_traits<Derived1>::Scalar SquaredNorm( const Eigen::MatrixBase<Derived1>& p)
+{ return p.norm2(); }
+
+template<typename Derived1, typename Derived2>
+inline typename Eigen::ei_traits<Derived1>::Scalar
+Distance(const Eigen::MatrixBase<Derived1>& p1, const Eigen::MatrixBase<Derived2> & p2)
+{ return (p1-p2).norm(); }
+
+template<typename Derived1, typename Derived2>
+inline typename Eigen::ei_traits<Derived1>::Scalar
+SquaredDistance(const Eigen::MatrixBase<Derived1>& p1, const Eigen::MatrixBase<Derived2> & p2)
+{ return (p1-p2).norm2(); }
+
+}
 
 #endif

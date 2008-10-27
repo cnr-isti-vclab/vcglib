@@ -103,8 +103,8 @@ Plane3f GetViewPlane (const View < float >&camera, const Point3f & center)
   Point3f vp = camera.ViewPoint ();
   Plane3f pl;
   Point3f plnorm = vp - center;
-  plnorm.Normalize ();
-  pl.Set (plnorm, plnorm * center);
+  plnorm.Normalize();
+  pl.Set(plnorm, plnorm.dot(center));
   return pl;
 }
 
@@ -331,16 +331,16 @@ Point3f HitSphere (Trackball * tb, const Point3f & p)
 std::pair< float, bool > LineLineDistance(const Line3f & P,const Line3f & Q,Point3f & P_s, Point3f & Q_t){
   Point3f p0 = P.Origin (), Vp = P.Direction ();
   Point3f q0 = Q.Origin (), Vq = Q.Direction ();
-  float VPVP = Vp * Vp;
-  float VQVQ = Vq * Vq;
-  float VPVQ = Vp * Vq;
+  float VPVP = Vp.dot(Vp);
+  float VQVQ = Vq.dot(Vq);
+  float VPVQ = Vp.dot(Vq);
   const float det = ( VPVP * VQVQ ) - ( VPVQ * VPVQ );
   const float EPSILON = 0.00001f;
   if ( fabs(det) < EPSILON ) {
   	return std::make_pair(Distance(P,q0), true);
   }
-  float b1= (q0 - p0) * Vp;
-  float b2= (p0 - q0) * Vq;
+  float b1= (q0 - p0).dot(Vp);
+  float b2= (p0 - q0).dot(Vq);
   float s = ( (VQVQ * b1) + (VPVQ * b2) ) / det;
   float t = ( (VPVQ * b1) + (VPVP * b2) ) / det;
   P_s = p0 + (Vp * s);
@@ -367,16 +367,16 @@ std::pair< float, bool > LineLineDistance(const Line3f & P,const Line3f & Q,Poin
 std::pair< float, bool > RayLineDistance(const Ray3f & R,const Line3f & Q,Point3f & R_s, Point3f & Q_t){
   Point3f r0 = R.Origin (), Vr = R.Direction ();
   Point3f q0 = Q.Origin (), Vq = Q.Direction ();
-  float VRVR = Vr * Vr;
-  float VQVQ = Vq * Vq;
-  float VRVQ = Vr * Vq;
+  float VRVR = Vr.dot(Vr);
+  float VQVQ = Vq.dot(Vq);
+  float VRVQ = Vr.dot(Vq);
   const float det = ( VRVR * VQVQ ) - ( VRVQ * VRVQ );
   const float EPSILON = 0.00001f;
   if ( ( det >= 0.0f ? det : -det) < EPSILON ) {
   	return std::make_pair(Distance(Q,r0), true);
   }
-  float b1= (q0 - r0) * Vr;
-  float b2= (r0 - q0) * Vq;
+  float b1= (q0 - r0).dot(Vr);
+  float b2= (r0 - q0).dot(Vq);
   float s = ( (VQVQ * b1) + (VRVQ * b2) ) / det;
   float t = ( (VRVQ * b1) + (VRVR * b2) ) / det;
   if(s<0){
@@ -418,17 +418,17 @@ std::pair< float, bool > SegmentSegmentDistance(const Segment3f & R, const Segme
   	R_s=ClosestPoint(R,Q_t);
   	return std::make_pair(Distance(R_s,Q_t),true);
   }  
-  Point3f r0 = R.P0(), Vr = (R.P1()-R.P0()).Normalize();
-  Point3f q0 = Q.P0(), Vq = (Q.P1()-Q.P0()).Normalize();
-  float VRVR = Vr * Vr;
-  float VQVQ = Vq * Vq;
-  float VRVQ = Vr * Vq;
+  Point3f r0 = R.P0(), Vr = (R.P1()-R.P0()).normalized();
+  Point3f q0 = Q.P0(), Vq = (Q.P1()-Q.P0()).normalized();
+  float VRVR = Vr.dot(Vr);
+  float VQVQ = Vq.dot(Vq);
+  float VRVQ = Vr.dot(Vq);
   const float det = ( VRVR * VQVQ ) - ( VRVQ * VRVQ );
   const float EPSILON = 0.00001f;
   if ( ( det >= 0.0f ? det : -det) < EPSILON ) {
   	Line3f lR(R.P0(),R.P1());
   	float qa=lR.Projection(Q.P0());
-  	float qb=lR.Projection(Q.P1());  	
+  	float qb=lR.Projection(Q.P1());
   	if( (qa<=0.0f) && qb<=(0.0f)){
       R_s=R.P0();
       Q_t=ClosestPoint(Q,R_s);
@@ -453,8 +453,8 @@ std::pair< float, bool > SegmentSegmentDistance(const Segment3f & R, const Segme
   	}  	
 	return std::make_pair(Distance(R_s,Q_t),true);
   }
-  float b1= (q0 - r0) * Vr;
-  float b2= (r0 - q0) * Vq;
+  float b1= (q0 - r0).dot(Vr);
+  float b2= (r0 - q0).dot(Vq);
   float s = ( (VQVQ * b1) + (VRVQ * b2) ) / det;
   float t = ( (VRVQ * b1) + (VRVR * b2) ) / det;
   if( s < 0 ){
@@ -529,7 +529,7 @@ Line3f ProjectLineOnPlane(const Line3f & ln, const Plane3f & pl)
 */
 float signedDistance(Line3f line,Point3f pt,Point3f positive_dir)
 {
-  return Distance(line,pt) * ((((pt-ClosestPoint(line,pt)) * positive_dir) >= 0.0f )? 1.0f: -1.0f);
+  return Distance(line,pt) * ((((pt-ClosestPoint(line,pt)).dot(positive_dir)) >= 0.0f )? 1.0f: -1.0f);
 }
 
 /*!
@@ -557,10 +557,10 @@ template<class T>
   inline bool IntersectionRayPlane( const Plane3<T> & pl, const Ray3<T> & ray, Point3<T> &po){
   const T epsilon = T(1e-8);
 
-  T k = pl.Direction() * ray.Direction(); // Compute 'k' factor
+  T k = pl.Direction().dot(ray.Direction()); // Compute 'k' factor
   if( (k > -epsilon) && (k < epsilon))
     return false;
-  T r = (pl.Offset() - pl.Direction()*ray.Origin())/k;  // Compute ray distance
+  T r = (pl.Offset() - pl.Direction().dot(ray.Origin()))/k;  // Compute ray distance
   if (r < 0)
     return false;
   po = ray.Origin() + ray.Direction()*r;
@@ -887,8 +887,8 @@ void DrawUglyPlaneMode(Trackball * tb,Plane3f plane)
   if(norm == d1 || norm == -d1)
     d1 = Point3f(1,0,0);
   d2=plane.Projection(d1);
-  d1=(d2 - p0).Normalize();  
-  d2=(d1 ^ norm).Normalize();  
+  d1=(d2 - p0).normalized();
+  d2=(d1 ^ norm).normalized();
   glLineWidth(3.0);
   glColor3f(0.2f, 0.2f, 0.9f);
   glBegin(GL_LINES);
@@ -945,8 +945,8 @@ void DrawUglyCylinderMode(Trackball * tb,Line3f axis)
   if(norm == d1 || norm == -d1)
     d1 = Point3f(1,0,0);
   d2=plane.Projection(d1);
-  d1=(d2 - p0).Normalize();  
-  d2=(d1 ^ norm).Normalize();
+  d1=(d2 - p0).normalized();
+  d2=(d1 ^ norm).normalized();
   glLineWidth(1.0);
   glColor3f(0.2f, 0.2f, 0.9f);
   for(int i=-100;i<100;i++){
@@ -1098,8 +1098,8 @@ void DrawUglyAreaMode(Trackball * tb,const std::vector < Point3f > &points,
   if(norm == d1 || norm == -d1)
     d1 = Point3f(1,0,0);
   d2=plane.Projection(d1);
-  d1=(d2 - p0).Normalize();  
-  d2=(d1 ^ norm).Normalize();  
+  d1=(d2 - p0).normalized();
+  d2=(d1 ^ norm).normalized();
   glLineWidth(3.0);
   glColor3f(0.2f, 0.2f, 0.9f);
   glBegin(GL_LINES);

@@ -91,7 +91,7 @@ void CreaseCut(MESH_TYPE &m, float angleRad)
 						if(!isBorderVertex)                        // for internal vertex we search the first crease and start from it  
 								{
 									do {
-												ScalarType dotProd = iPos.FFlip()->cN() * iPos.f->N();
+												ScalarType dotProd = iPos.FFlip()->cN().dot(iPos.f->N());
 												iPos.NextFE();						
 												if(dotProd<cosangle) break;							
 									} while (startPos!=iPos);
@@ -102,7 +102,7 @@ void CreaseCut(MESH_TYPE &m, float angleRad)
 						int curVertexCounter =vertInd;
 						 
 						do {																													// The real Loop
-								ScalarType dotProd=iPos.FFlip()->cN() * iPos.f->N();			// test normal with the next face (fflip)
+								ScalarType dotProd=iPos.FFlip()->cN().dot(iPos.f->N());			// test normal with the next face (fflip)
 								size_t faceInd = Index(m,iPos.f);	
 								indVec[faceInd*3+ iPos.VInd()] = curVertexCounter;				
 								

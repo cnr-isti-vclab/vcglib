@@ -243,9 +243,8 @@ inline void glBoxClip(const Box3<T>  & b)
 		*(Point3<T>*)&m[2][0] = *(Point3<T>*)&v[0];m[2][3]=0;
 		*(Point3<T>*)&m[3][0] = *(Point3<T>*)&c1[0];m[3][3]=1;
 
-		vcg::Transpose(m);
 		glPushMatrix();
-		glMultMatrix(m);
+		glMultMatrix(m.transpose());
 
 		glBegin(GL_QUADS);
 		glNormal(Point3<T>(0,1,0));
@@ -278,6 +277,19 @@ template <class TetraType>
 		glTriangle3(Triangle3<typename TetraType::ScalarType>(c.P(0),c.P(2),c.P(3)));
 		glTriangle3(Triangle3<typename TetraType::ScalarType>(c.P(1),c.P(0),c.P(3)));
 	}
+
+#ifdef VCG_USE_EIGEN
+
+#define _WRAP_EIGEN_XPR(FUNC) template<typename Derived> \
+	inline void FUNC(const Eigen::MatrixBase<Derived>& p) { FUNC(p.eval()); }
+
+_WRAP_EIGEN_XPR(glVertex)
+_WRAP_EIGEN_XPR(glNormal)
+_WRAP_EIGEN_XPR(glTexCoord)
+_WRAP_EIGEN_XPR(glTranslate)
+_WRAP_EIGEN_XPR(glScale)
+
+#endif
 
 }//namespace
 #endif

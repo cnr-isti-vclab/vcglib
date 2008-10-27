@@ -211,11 +211,8 @@ public:
 					tempMatrix.ExternalProduct(W,W);
 					Q -= tempMatrix * 2.0f;
 
-					Matrix33<ScalarType> Qt(Q);
-					Qt.Transpose();
-
 					// compute matrix Q^t M Q
-					Matrix33<ScalarType> QtMQ = (Qt * M * Q);
+					Matrix33<ScalarType> QtMQ = (Q.transpose() * M * Q);
 
 					CoordType bl = Q.GetColumn(0);
 					CoordType T1 = Q.GetColumn(1);
@@ -644,7 +641,7 @@ public:
 			int n_rot;
 			Jacobi(m33,lambda, vect,n_rot);
 
-			vect.Transpose();
+			vect = vect.transpose().eval();
 			ScalarType normal = std::numeric_limits<ScalarType>::min();
 			int normI = 0;
 			for(int i = 0; i < 3; ++i)

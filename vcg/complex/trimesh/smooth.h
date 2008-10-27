@@ -488,7 +488,7 @@ static void VertexCoordLaplacianQuality(MeshType &m, int step, bool SmoothSelect
 
 /*
   Improved Laplacian Smoothing of Noisy Surface Meshes
-  J. Vollmer, R. Mencl, and H. Müller
+  J. Vollmer, R. Mencl, and H. Mï¿½ller
   EUROGRAPHICS Volume 18 (1999), Number 3
 */
 
@@ -1099,7 +1099,7 @@ static void FaceNormalAngleThreshold(MeshType &m,
 			{
 				if(! (*ep.f).IsV() )
 				{ 
-          ScalarType cosang=ep.f->N()*(*fi).N();
+          ScalarType cosang=ep.f->N().dot((*fi).N());
           if(cosang >= sigma) 
           {
             ScalarType w = cosang-sigma;
@@ -1223,7 +1223,7 @@ static void FastFitMesh(MeshType &m,
 	 for (;!ep.End();++ep)
 		{
       CoordType bc=Barycenter<FaceType>(*ep.F());
-      Sum += ep.F()->N()*(ep.F()->N()*(bc - (*vi).P()));
+      Sum += ep.F()->N()*(ep.F()->N().dot(bc - (*vi).P()));
       ++cnt;
 		}
 		TDV[*vi].np=(*vi).P()+ Sum*(1.0/cnt);					

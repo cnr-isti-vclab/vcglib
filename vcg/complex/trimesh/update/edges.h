@@ -74,7 +74,7 @@ namespace tri {
 			f.Edge(2) = f.V(0)->P(); f.Edge(2) -= f.V(2)->P();
 			// Calcolo di plane
 			f.Plane().SetDirection(f.Edge(0)^f.Edge(1));
-			f.Plane().SetOffset(f.Plane().Direction() * f.V(0)->P());
+			f.Plane().SetOffset(f.Plane().Direction().dot(f.V(0)->P()));
 			f.Plane().Normalize();
 			// Calcolo migliore proiezione
 			ScalarType nx = math::Abs(f.Plane().Direction()[0]);

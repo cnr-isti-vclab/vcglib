@@ -137,16 +137,12 @@ bool ComputeWeightedRigidMatchMatrix(Matrix44x &res,
 									) 	
 {
 
-	Matrix33x tmp;
   Matrix33x ccm; 
 	Point3x bfix,bmov; // baricenter of src e trg
 	ccm.WeightedCrossCovariance(weights,Pmov,Pfix,bmov,bfix);
 	Matrix33x cyc; // the cyclic components of the cross covariance matrix.
 
-	cyc=ccm;
-	tmp=ccm;
-	tmp.Transpose();
-	cyc-=tmp;
+	cyc=ccm - ccm.transpose();
 
 	Matrix44x QQ;
 	QQ.SetZero();
@@ -157,9 +153,7 @@ bool ComputeWeightedRigidMatchMatrix(Matrix44x &res,
 	RM[0][0]=-ccm.Trace();
   RM[1][1]=-ccm.Trace();
   RM[2][2]=-ccm.Trace();
-  RM+=ccm;
-	ccm.Transpose();
-	RM+=ccm;
+  RM += ccm + ccm.transpose();
 
 	QQ[0][0] = ccm.Trace();
 	QQ[0][1] = D[0]; QQ[0][2] = D[1]; QQ[0][3] = D[2];
@@ -208,16 +202,12 @@ bool ComputeRigidMatchMatrix(Matrix44x &res,
 							Point3x &tr) 	
 {
 
-	Matrix33x tmp;
   Matrix33x ccm; 
 	Point3x bfix,bmov; // baricenter of src e trg
 	ccm.CrossCovariance(Pmov,Pfix,bmov,bfix);
 	Matrix33x cyc; // the cyclic components of the cross covariance matrix.
 
-	cyc=ccm;
-	tmp=ccm;
-	tmp.Transpose();
-	cyc-=tmp;
+	cyc=ccm-ccm.transpose();
 
 	Matrix44x QQ;
 	QQ.SetZero();
@@ -228,9 +218,7 @@ bool ComputeRigidMatchMatrix(Matrix44x &res,
 	RM[0][0]=-ccm.Trace();
   RM[1][1]=-ccm.Trace();
   RM[2][2]=-ccm.Trace();
-  RM+=ccm;
-	ccm.Transpose();
-	RM+=ccm;
+  RM += ccm + ccm.transpose();
 
 	QQ[0][0] = ccm.Trace();
 	QQ[0][1] = D[0]; QQ[0][2] = D[1]; QQ[0][3] = D[2];
@@ -260,7 +248,7 @@ bool ComputeRigidMatchMatrix(Matrix44x &res,
 			maxv=d[i];
 		}
   // The corresponding eigenvector define the searched rotation,
-		Matrix44x Rot;
+	Matrix44x Rot;
 	q.ToMatrix(Rot);
   // the translation (last row) is simply the difference between the transformed src barycenter and the trg baricenter
 	tr= (bfix - Rot*bmov);

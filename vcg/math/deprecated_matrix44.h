@@ -281,6 +281,16 @@ public:
     return tmp;
   }
 
+	// for the transistion to eigen
+  Matrix44 transpose() const
+	{
+		Matrix44 res = *this;
+		Transpose(res);
+		return res;
+	}
+	// for the transistion to eigen
+	const Matrix44& eval() { return *this; }
+
 
 };
 
@@ -289,7 +299,7 @@ public:
 template <class T> class LinearSolve: public Matrix44<T> {
 public:
   LinearSolve(const Matrix44<T> &m);
-  Point4<T> Solve(const Point4<T> &b); // solve A · x = b 
+  Point4<T> Solve(const Point4<T> &b); // solve A ï¿½ x = b 
   ///If you need to solve some equation you can use this function instead of Matrix44 one for speed.
   T Determinant() const;
 protected:

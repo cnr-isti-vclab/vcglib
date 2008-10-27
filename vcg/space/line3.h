@@ -121,8 +121,8 @@ public:
 	{	return _ori!=p._ori || _dir!=p._dir; }
 		/// Projects a point on the line
 	inline ScalarType Projection( const  PointType &p ) const
-	{ if (NORM) return ScalarType((p-_ori)*_dir); 
-		else      return ScalarType((p-_ori)*_dir/_dir.SquaredNorm()); 
+	{ if (NORM) return ScalarType((p-_ori).dot(_dir));
+		else      return ScalarType((p-_ori).dot(_dir)/_dir.SquaredNorm());
 	}
 	  /// returns wheter this type is normalized or not
 	static bool IsNormalized() {return NORM;};

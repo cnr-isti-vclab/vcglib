@@ -73,7 +73,7 @@ static void UniformCone(int vn, std::vector<Point3<ScalarType > > &NN, ScalarTyp
   ScalarType DotProd = cos(AngleRad);
   for(vi=NNT.begin();vi!=NNT.end();++vi)
   {
-    if(dir*(*vi) >= DotProd) NN.push_back(*vi);
+    if(dir.dot(*vi) >= DotProd) NN.push_back(*vi);
   }
  }
 
@@ -124,7 +124,7 @@ static int BestMatchingNormal(const Point3x &n, std::vector<Point3x> &nv)
 	typename std::vector<Point3x>::iterator ni;
 	for(ni=nv.begin();ni!=nv.end();++ni)
 		{
-			cosang=(*ni)*n;
+			cosang=(*ni).dot(n);
 			if(cosang>bestang) {
 				bestang=cosang;
 				ret=ni-nv.begin();

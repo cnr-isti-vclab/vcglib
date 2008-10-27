@@ -23,8 +23,8 @@
 
 #ifndef VCG_USE_EIGEN
 #include "deprecated_matrix.h"
-#endif
 
+#else
 
 #ifndef MATRIX_VCGLIB
 #define MATRIX_VCGLIB
@@ -69,10 +69,9 @@ public:
  * @param Scalar (Templete Parameter) Specifies the ScalarType field.
  */
 template<class _Scalar>
-class Matrix : public Eigen::Matrix<_Scalar,Eigen::Dynamic,Eigen::Dynamic> // FIXME col or row major ?
+class Matrix : public Eigen::Matrix<_Scalar,Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor> // FIXME col or row major ?
 {
-
-	typedef Eigen::Matrix<_Scalar,Eigen::Dynamic,Eigen::Dynamic> _Base;
+	typedef Eigen::Matrix<_Scalar,Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor> _Base;
 	
 public:
 
@@ -87,7 +86,7 @@ public:
 	*	\param m the number of matrix rows
 	* \param n the number of matrix columns
 	*/
-	Matrix(unsigned int m, unsigned int n)
+	Matrix(int m, int n)
 		: Base(m,n)
 	{
 		memset(Base::data(), 0, m*n*sizeof(Scalar));
@@ -100,10 +99,10 @@ public:
 	* \param n the number of matrix columns
 	*	\param values the values of the matrix elements
 	*/
-	Matrix(unsigned int m, unsigned int n, Scalar *values)
-		: Base(m.n)
+	Matrix(int m, int n, Scalar *values)
+		: Base(m,n)
 	{
-		*this = Eigen::Map<Eigen::Matrix<Scalar,Dynamic,Dynamic,RowMajor> >(values, m , n);
+		*this = Eigen::Map<Eigen::Matrix<Scalar,Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor> >(values, m , n);
 	}
 
 	/*!
@@ -197,3 +196,6 @@ void Invert(MatrixType & m)
 } // end of namespace
 
 #endif
+
+#endif
+

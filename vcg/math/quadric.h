@@ -88,7 +88,7 @@ template< class PlaneType >
 		c    =  (ScalarType)p.Offset()*p.Offset();
 	}
 
-	void Zero()																// Azzera la quadrica
+	void SetZero()																// Azzera la quadrica
 	{
 		a[0] = 0;
 		a[1] = 0;

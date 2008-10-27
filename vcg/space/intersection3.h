@@ -339,10 +339,10 @@ namespace vcg {
     inline bool IntersectionLinePlane( const Plane3<T> & pl, const Line3<T> & li, Point3<T> & po){
     const T epsilon = T(1e-8);
 
-    T k = pl.Direction() * li.Direction();						// Compute 'k' factor
+    T k = pl.Direction().dot(li.Direction());						// Compute 'k' factor
     if( (k > -epsilon) && (k < epsilon))
       return false;
-    T r = (pl.Offset() - pl.Direction()*li.Origin())/k;	// Compute ray distance
+    T r = (pl.Offset() - pl.Direction().dot(li.Origin()))/k;	// Compute ray distance
     po = li.Origin() + li.Direction()*r;
     return true;
   }
