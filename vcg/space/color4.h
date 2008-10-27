@@ -170,20 +170,20 @@ public:
 
 	inline void SetRGB( unsigned char r, unsigned char g, unsigned char b )
 	{
-		Point4<T>::V()[0] = r;
-		Point4<T>::V()[1] = g;
-		Point4<T>::V()[2] = b;
-		Point4<T>::V()[3] = 0;
+		(*this)[0] = r;
+		(*this)[1] = g;
+		(*this)[2] = b;
+		(*this)[3] = 0;
 	}
 
 	void SetHSVColor( float h, float s, float v){
 	float r,g,b;
   if(s==0.0){	// gray color
 		r = g = b = v;
-		Point4<T>::V()[0]=(unsigned char)(255*r);
-        Point4<T>::V()[1]=(unsigned char)(255*g);
-        Point4<T>::V()[2]=(unsigned char)(255*b);
-		Point4<T>::V()[3]=255;
+		(*this)[0]=(unsigned char)(255*r);
+		(*this)[1]=(unsigned char)(255*g);
+		(*this)[2]=(unsigned char)(255*b);
+		(*this)[3]=255;
 		return;
 	}
 	if(h==1.0) h = 0.0;
@@ -255,10 +255,10 @@ inline void Color4<T>::lerp(const Color4<T> &c0, const Color4<T> &c1, const floa
 	assert(x>=0);
 	assert(x<=1);
 
-	Point4<T>::V()[0]=(T)(c1.V()[0]*x + c0.V()[0]*(1.0f-x));
-	Point4<T>::V()[1]=(T)(c1.V()[1]*x + c0.V()[1]*(1.0f-x));
-	Point4<T>::V()[2]=(T)(c1.V()[2]*x + c0.V()[2]*(1.0f-x));
-	Point4<T>::V()[3]=(T)(c1.V()[3]*x + c0.V()[3]*(1.0f-x));
+	(*this)[0]=(T)(c1.V()[0]*x + c0.V()[0]*(1.0f-x));
+	(*this)[1]=(T)(c1.V()[1]*x + c0.V()[1]*(1.0f-x));
+	(*this)[2]=(T)(c1.V()[2]*x + c0.V()[2]*(1.0f-x));
+	(*this)[3]=(T)(c1.V()[3]*x + c0.V()[3]*(1.0f-x));
 }
 
 template <class T>
@@ -266,10 +266,10 @@ inline void Color4<T>::lerp(const Color4<T> &c0, const Color4<T> &c1, const Colo
 {
 	assert(fabs(ip[0]+ip[1]+ip[2]-1)<0.00001);
 	
-	Point4<T>::V()[0]=(T)(c0[0]*ip[0] + c1[0]*ip[1]+ c2[0]*ip[2]);
-	Point4<T>::V()[1]=(T)(c0[1]*ip[0] + c1[1]*ip[1]+ c2[1]*ip[2]);
-	Point4<T>::V()[2]=(T)(c0[2]*ip[0] + c1[2]*ip[1]+ c2[2]*ip[2]);
-	Point4<T>::V()[3]=(T)(c0[3]*ip[0] + c1[3]*ip[1]+ c2[3]*ip[2]);
+	(*this)[0]=(T)(c0[0]*ip[0] + c1[0]*ip[1]+ c2[0]*ip[2]);
+	(*this)[1]=(T)(c0[1]*ip[0] + c1[1]*ip[1]+ c2[1]*ip[2]);
+	(*this)[2]=(T)(c0[2]*ip[0] + c1[2]*ip[1]+ c2[2]*ip[2]);
+	(*this)[3]=(T)(c0[3]*ip[0] + c1[3]*ip[1]+ c2[3]*ip[2]);
 }
 
 
