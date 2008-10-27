@@ -149,7 +149,7 @@ public:
 			_v[0]= p._v[0]; _v[1]= p._v[1]; _v[2]= p._v[2];
 			return *this;
 	}
-	inline void Zero()
+	inline void SetZero()
 	{
 		_v[0] = 0;
 		_v[1] = 0;
