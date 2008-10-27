@@ -604,7 +604,7 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
       if(from!=length)
       {
 				to = from+1;
-				while (to!=length && line[to]!=' ' && line[to]!='\r')
+				while (to!=length && line[to]!=' ' && line[to] != '\t' && line[to]!='\r')
 					to++;
 				tokens.push_back(line.substr(from, to-from).c_str());
 				from = to;
