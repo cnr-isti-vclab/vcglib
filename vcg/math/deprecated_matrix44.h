@@ -20,28 +20,94 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
+/****************************************************************************
+  History
 
-// #ifndef VCG_USE_EIGEN
-#include "deprecated_matrix44.h"
-// #endif
+$Log: not supported by cvs2svn $
+Revision 1.34  2007/07/12 06:42:01  cignoni
+added the missing static Construct() member
+
+Revision 1.33  2007/07/03 16:06:48  corsini
+add DCM to Euler Angles conversion
+
+Revision 1.32  2007/03/08 14:39:27  corsini
+final fix to euler angles transformation
+
+Revision 1.31  2007/02/06 09:57:40  corsini
+fix euler angles computation
+
+Revision 1.30  2007/02/05 14:16:33  corsini
+add from euler angles to rotation matrix conversion
+
+Revision 1.29  2005/12/02 09:46:49  croccia
+Corrected bug in == and != Matrix44 operators
+
+Revision 1.28  2005/06/28 17:42:47  ganovelli
+added Matrix44Diag
+
+Revision 1.27  2005/06/17 05:28:47  cignoni
+Completed Shear Matrix code and comments,
+Added use of swap inside Transpose
+Added more complete comments on the usage of Decompose
+
+Revision 1.26  2005/06/10 15:04:12  cignoni
+Added Various missing functions: SetShearXY, SetShearXZ, SetShearYZ, SetScale for point3 and Decompose
+Completed *=(scalar); made uniform GetRow and GetColumn
+
+Revision 1.25  2005/04/14 11:35:09  ponchio
+*** empty log message ***
+
+Revision 1.24  2005/03/18 00:14:39  cignoni
+removed small gcc compiling issues
+
+Revision 1.23  2005/03/15 11:40:56  cignoni
+Added operator*=( std::vector<PointType> ...) to apply a matrix to a vector of vertexes (replacement of the old style mesh.Apply(tr).
+
+Revision 1.22  2004/12/15 18:45:50  tommyfranken
+*** empty log message ***
+
+Revision 1.21  2004/10/22 14:41:30  ponchio
+return in operator+ added.
+
+Revision 1.20  2004/10/18 15:03:14  fiorin
+Updated interface: all Matrix classes have now the same interface
+
+Revision 1.19  2004/10/07 14:23:57  ganovelli
+added function to take rows and comlumns. Added toMatrix and fromMatrix to comply
+RotationTYpe prototype in Similarity.h
+
+Revision 1.18  2004/05/28 13:01:50  ganovelli
+changed scalar to ScalarType
+
+Revision 1.17  2004/05/26 15:09:32  cignoni
+better comments in set rotate
+
+Revision 1.16  2004/05/07 10:05:50  cignoni
+Corrected abuse of for index variable scope
+
+Revision 1.15  2004/05/04 23:19:41  cignoni
+Clarified initial comment, removed vector*matrix operator (confusing!)
+Corrected translate and Rotate, removed gl stuff.
+
+Revision 1.14  2004/05/04 02:34:03  ganovelli
+wrong use of operator [] corrected
+
+Revision 1.13  2004/04/07 10:45:54  cignoni
+Added: [i][j] access, V() for the raw float values, constructor from T[16]
+
+Revision 1.12  2004/03/25 14:57:49  ponchio
+
+****************************************************************************/
 
 #ifndef __VCGLIB_MATRIX44
 #define __VCGLIB_MATRIX44
 
-#include "eigen.h"
+#include <memory.h>
+#include <vcg/math/base.h>
 #include <vcg/space/point3.h>
 #include <vcg/space/point4.h>
-#include <memory.h>
 #include <vector>
 
-namespace vcg{
-template<class Scalar> class Matrix44;
-}
-
-namespace Eigen{
-template<typename Scalar>
-struct ei_traits<vcg::Matrix44<Scalar> > : ei_traits<Eigen::Matrix<Scalar,4,4,RowMajor> > {};
-}
 
 namespace vcg {
 
@@ -79,49 +145,110 @@ for 'column' vectors.
 
 */
 
-
-/** This class represents a 4x4 matrix. T is the kind of element in the matrix.
-	*/
-template<typename _Scalar>
-class Matrix44 : public Eigen::Matrix<_Scalar,4,4,RowMajor> // FIXME col or row major !
-{
-
-	typedef Eigen::Matrix<_Scalar,Eigen::Dynamic,Eigen::Dynamic> _Base;
-
+	template <class S>
+class Matrix44Diag:public Point4<S>{
 public:
+	/** @name Matrix33
+	Class Matrix33Diag.
+    This is the class for definition of a diagonal matrix 4x4.	
+	@param S (Templete Parameter) Specifies the ScalarType field.
+*/
+	Matrix44Diag(const S & p0,const S & p1,const S & p2,const S & p3):Point4<S>(p0,p1,p2,p3){};
+	Matrix44Diag( const Point4<S> & p ):Point4<S>(p){};
+};
 
-	_EIGEN_GENERIC_PUBLIC_INTERFACE(Matrix,_Base);
-	typedef _Scalar ScalarType;
 
-	VCG_EIGEN_INHERIT_ASSIGNMENT_OPERATORS(Matrix)
+  /** This class represent a 4x4 matrix. T is the kind of element in the matrix.
+    */
+template <class T> class Matrix44 {  
+protected:
+  T _a[16];
 
-  /** \name Constructors
+public:	
+  typedef T ScalarType;
+
+///@{
+
+  /** $name Constructors
     *  No automatic casting and default constructor is empty
     */
-	Matrix44() : Base() {}
-	~Matrix44() {}
-	Matrix44(const Matrix44 &m) : Base(m) {}
-	Matrix33(const Scalar * v ) : Base(Map<Matrix<Scalar,4,4,RowMajor>(v)) {}
+	Matrix44() {};	
+	~Matrix44() {};
+  Matrix44(const Matrix44 &m);
+  Matrix44(const T v[]);
 
-  Scalar *V() { return Base::data(); }
-  const Scalar *V() const { return Base::data(); }
+	///	Number of columns
+	inline unsigned int ColumnsNumber() const
+	{
+		return 4;
+	};
+
+	/// Number of rows
+	inline unsigned int RowsNumber() const
+	{
+		return 4;
+	};
+
+  T &ElementAt(const int row, const int col);
+  T ElementAt(const int row, const int col) const;
+  //T &operator[](const int i);
+  //const T &operator[](const int i) const;
+  T *V();
+  const T *V() const ;
+  
+  T *operator[](const int i);
+  const T *operator[](const int i) const;
 
 	// return a copy of the i-th column
-	typename Base::ColXpr GetColumn4(const int& i) const { return col(i); }
-	Block<Matrix,3,1> GetColumn3(const int& i) const { return block<3,1>(0,i); }
+	Point4<T> GetColumn4(const int& i)const{
+		assert(i>=0 && i<4);
+		return Point4<T>(ElementAt(0,i),ElementAt(1,i),ElementAt(2,i),ElementAt(3,i));
+   //return Point4<T>(_a[i],_a[i+4],_a[i+8],_a[i+12]);
+	}
 
-	typename Base::RowXpr GetRow4(const int& i) const { return col(i); }
-	Block<Matrix,1,3> GetRow3(const int& i) const { return block<1,3>(i,0); }
+  Point3<T> GetColumn3(const int& i)const{
+		assert(i>=0 && i<4);
+		return Point3<T>(ElementAt(0,i),ElementAt(1,i),ElementAt(2,i));
+	}
+
+  Point4<T> GetRow4(const int& i)const{
+		assert(i>=0 && i<4);
+		return Point4<T>(ElementAt(i,0),ElementAt(i,1),ElementAt(i,2),ElementAt(i,3));
+    // return *((Point4<T>*)(&_a[i<<2])); alternativa forse + efficiente
+	}
+  
+  Point3<T> GetRow3(const int& i)const{
+		assert(i>=0 && i<4);
+		return Point3<T>(ElementAt(i,0),ElementAt(i,1),ElementAt(i,2));
+    // return *((Point4<T>*)(&_a[i<<2])); alternativa forse + efficiente
+	}
+
+  Matrix44 operator+(const Matrix44 &m) const;
+  Matrix44 operator-(const Matrix44 &m) const;
+  Matrix44 operator*(const Matrix44 &m) const;
+  Matrix44 operator*(const Matrix44Diag<T> &m) const;
+  Point4<T> operator*(const Point4<T> &v) const;  
+
+  bool operator==(const  Matrix44 &m) const;
+  bool operator!= (const  Matrix44 &m) const;
+
+  Matrix44 operator-() const;			
+  Matrix44 operator*(const T k) const;
+  void operator+=(const Matrix44 &m);
+  void operator-=(const Matrix44 &m);	
+  void operator*=( const Matrix44 & m );	
+  void operator*=( const T k );
 	
   template <class Matrix44Type>
-	void ToMatrix(Matrix44Type & m) const { m = (*this).cast<typename Matrix44Type::Scalar>(); }
+	void ToMatrix(Matrix44Type & m) const {for(int i = 0; i < 16; i++) m.V()[i]=V()[i];}
 
-	void ToEulerAngles(Scalar &alpha, Scalar &beta, Scalar &gamma);
+	void ToEulerAngles(T &alpha, T &beta, T &gamma);
 
 	template <class Matrix44Type>
-	void FromMatrix(const Matrix44Type & m) { for(int i = 0; i < 16; i++) data()[i] = m.data()[i]; }
-	
+	void FromMatrix(const Matrix44Type & m){for(int i = 0; i < 16; i++) V()[i]=m.V()[i];}
 	void FromEulerAngles(T alpha, T beta, T gamma);
+	void SetZero();
+  void SetIdentity();
   void SetDiagonal(const T k);
 	Matrix44 &SetScale(const T sx, const T sy, const T sz);	
 	Matrix44 &SetScale(const Point3<T> &t);
@@ -147,6 +274,12 @@ public:
 	  Matrix44<T> tmp; tmp.FromMatrix(b);
     return tmp;
   }
+	
+  static inline const Matrix44 &Identity( )
+  {
+	  static Matrix44<T> tmp; tmp.SetIdentity();
+    return tmp;
+  }
 
 
 };
@@ -156,7 +289,7 @@ public:
 template <class T> class LinearSolve: public Matrix44<T> {
 public:
   LinearSolve(const Matrix44<T> &m);
-  Point4<T> Solve(const Point4<T> &b); // solve A ï¿½ x = b 
+  Point4<T> Solve(const Point4<T> &b); // solve A · x = b 
   ///If you need to solve some equation you can use this function instead of Matrix44 one for speed.
   T Determinant() const;
 protected:

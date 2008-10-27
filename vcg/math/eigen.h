@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -20,69 +20,38 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
 
-$Log: not supported by cvs2svn $
+#ifndef EIGEN_VCGLIB
+#define EIGEN_VCGLIB
 
+#define EIGEN_MATRIXBASE_PLUGIN <vcg/math/eigen_vcgaddons.h>
 
-****************************************************************************/
-#ifndef POLAR_DECOMPOSITION_VCG
-#define POLAR_DECOMPOSITION_VCG
+#include "../Eigen/Array"
+#include "../Eigen/Core"
 
+#define VCG_EIGEN_INHERIT_ASSIGNMENT_OPERATOR(Derived, Op) \
+	template<typename OtherDerived> \
+	Derived& operator Op(const Eigen::MatrixBase<OtherDerived>& other) \
+	{ \
+		Base::operator Op(other.derived());  return *this;\
+	} \
+	Derived& operator Op(const Derived& other) \
+	{ \
+		Base::operator Op(other); return *this;\
+	}
 
-#include <vcg/math/matrix33.h>
-#include <vcg/math/matrix44.h>
-#include <vcg/math/lin_algebra.h>
+	#define VCG_EIGEN_INHERIT_SCALAR_ASSIGNMENT_OPERATOR(Derived, Op) \
+	template<typename Other> \
+	Derived& operator Op(const Other& scalar) \
+	{ \
+		Base::operator Op(scalar); return *this;\
+	}
 
-namespace vcg{
+#define VCG_EIGEN_INHERIT_ASSIGNMENT_OPERATORS(Derived) \
+	VCG_EIGEN_INHERIT_ASSIGNMENT_OPERATOR(Derived, =) \
+	VCG_EIGEN_INHERIT_ASSIGNMENT_OPERATOR(Derived, +=) \
+	VCG_EIGEN_INHERIT_ASSIGNMENT_OPERATOR(Derived, -=) \
+	VCG_EIGEN_INHERIT_SCALAR_ASSIGNMENT_OPERATOR(Derived, *=) \
+	VCG_EIGEN_INHERIT_SCALAR_ASSIGNMENT_OPERATOR(Derived, /=)
 
-	/** \addtogroup math */
-	/* @{ */
-	/// Extract the rotational part of a matrix by polar decomposition
-	/// m = R*S. Polar decomposition is computed by taking r = m * sqrt(m^t*m)^{-1}
-template <class S>
-void RotationalPartByPolarDecomposition( const vcg::Matrix33<S> & m, vcg::Matrix33<S> &r ){
-
-	vcg::Matrix33<S> tmp,s;
-
-	r.SetZero();
-	s.SetZero();
-
-	tmp= m;
-	tmp.Transpose();
-	tmp = m*tmp;
-
-	Matrix33<S> res;
-	Point3<S> e;
-
-	bool ss = SingularValueDecomposition<vcg::Matrix33<S> >(tmp,&e[0],res);
-
-	res.Transpose();
-	e[0]=math::Sqrt(e[0]);
-	e[1]=math::Sqrt(e[1]);
-	e[2]=math::Sqrt(e[2]);
-	#ifdef VCG_USE_EIGEN
-	tmp = tmp*e.asDiagonal()*res;
-	#else
-	tmp = tmp*Matrix33Diag<S>(e)*res;
-	#endif
-
-	bool s1 = SingularValueDecomposition<vcg::Matrix33<S> >(tmp,&e[0],res);
-	tmp.Transpose();
-	e[0]=1/e[0];
-	e[1]=1/e[1];
-	e[2]=1/e[2];
-
-	#ifdef VCG_USE_EIGEN
-	tmp = res*e.asDiagonal()*tmp;
-	#else
-	tmp = res*Matrix33Diag<S>(e)*tmp;
-	#endif
-
-	r = m*tmp;
-}
-
-/*! @} */
-};
 #endif

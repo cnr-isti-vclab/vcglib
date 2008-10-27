@@ -144,7 +144,7 @@ ScalarType _VolumePreservingError(PosType &pos,CoordType &new_point,int nsteps)
    else
    if ((!ext_v0)&&(!ext_v1))
 	 {/*CoordType g;
-	 g.Zero();
+	 g.SetZero();
 	 g+=ve0->cP();
 	 g+=ve1->cP();
 	 g/=2;*/
@@ -160,7 +160,7 @@ ScalarType _VolumePreservingError(PosType &pos,CoordType &new_point,int nsteps)
       best_error=1000000.f;
       ScalarType alfatemp=step*((ScalarType)i);
 			//CoordType g;
-			// g.Zero();
+			// g.SetZero();
 		 //g+=ve0->cP()*alfatemp;
 		 //g+=ve1->cP()*(1-alfatemp);
 	  //CoordType newPTemp=g;

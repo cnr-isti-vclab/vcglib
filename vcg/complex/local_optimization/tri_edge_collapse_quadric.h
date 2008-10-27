@@ -526,7 +526,7 @@ static void InitQuadric(TriMeshType &m)
 	//	m.ClearFlags();
 	for(pv=m.vert.begin();pv!=m.vert.end();++pv)		// Azzero le quadriche
 		if( ! (*pv).IsD() && (*pv).IsW()) 	
-      QH::Qd(*pv).Zero();
+      QH::Qd(*pv).SetZero();
 
 		
 	for(pf=m.face.begin();pf!=m.face.end();++pf)

@@ -379,7 +379,7 @@ namespace vcg
 				VertexPointer mean_point = &*AllocatorType::AddVertices( *_mesh, 1);
 				mean_point->SetUserBit(_featureFlag);
 				mean_point->P() = point;
-				mean_point->N().Zero();
+				mean_point->N().SetZero();
 				delete []x;
 				delete []points;
 				delete []normals;

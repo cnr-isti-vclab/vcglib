@@ -6,7 +6,7 @@ class ImplicitSphere
 public:
 	ImplicitSphere()
 	{
-		_center.Zero();
+		_center.SetZero();
 		_radius = _sqr_radius = 0.0;
 	};
 

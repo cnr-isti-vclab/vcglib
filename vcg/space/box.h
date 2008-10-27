@@ -311,8 +311,8 @@ public:
 	/// sets a point to Zero
 	inline void Zero()
 	{
-		_min.Zero();
-		_max.Zero();
+		_min.SetZero();
+		_max.SetZero();
 	}
 	inline Box operator + ( Box const & p) const
 	{

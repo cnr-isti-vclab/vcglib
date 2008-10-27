@@ -82,7 +82,7 @@ namespace vcg
 			// Plane structure: identify a plain as a <center, normal> pair
 			struct Plane
 			{
-				Plane() { center.Zero(); normal.Zero();};
+				Plane() { center.SetZero(); normal.SetZero();};
 
 				// Object functor: return the bounding-box enclosing a given plane
 				inline void GetBBox(BoundingBoxType	&bb) { bb.Set(center); };

@@ -52,7 +52,7 @@ Point3<S> PlaneFittingPoints(  std::vector< Point3<S> > & samples,Plane3<S> &p){
 	Matrix44<S> m;m.SetZero();
 	typename std::vector< Point3<S> > ::iterator i;
 	
-	Point3<S> c; c.Zero();
+	Point3<S> c; c.SetZero();
 	for(i = samples.begin(); i != samples.end(); ++i)
 		c+=*i;
 	c/=samples.size();
@@ -147,7 +147,7 @@ bool PlaneFittingPointsOld(  std::vector< Point3<S> > & samples, Plane3<S> & p )
 			m[i][j]=P[i][j];
 
 
-//	Point4<S> s;s.Zero();
+//	Point4<S> s;s.SetZero();
 //
 //	s.Normalize();
 //	printf("\n RES %f %f %f %f \n",s[0],s[1],s[2],s[3]);

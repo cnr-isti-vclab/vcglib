@@ -278,10 +278,7 @@ public:
 					S[0][1] = s;
 					S[1][0] = -1.0f * s;
 
-					vcg::ndim::MatrixMNf St (S);
-					St.Transpose();					
-
-					vcg::ndim::MatrixMNf StMS(St * minor2x2 * S);
+					vcg::ndim::MatrixMNf StMS(S.transpose() * minor2x2 * S);
 
 					// compute curvatures and curvature directions
 					float Principal_Curvature1 = (3.0f * StMS[0][0]) - StMS[1][1];

@@ -1038,7 +1038,7 @@ namespace vcg
 			 { 
 				 object		= NULL;
 				 distance = ScalarType(-1.0);
-				 nearest_point.Zero();
+				 nearest_point.SetZero();
 			 }
 
 			 

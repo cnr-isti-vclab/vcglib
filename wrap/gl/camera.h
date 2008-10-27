@@ -974,7 +974,7 @@ static void SetSubView(vcg::Camera<S> & camera,vcg::Point2<S> p0,S nearDist, S f
 //
 //	//	prendi la matrice di proiezione
 //	Matrix44d P;
-//	P.Zero();
+//	P.SetZero();
 //
 //	if(!IsOrtho())//  prospettica
 //	{
@@ -1047,7 +1047,7 @@ static void SetSubView(vcg::Camera<S> & camera,vcg::Point2<S> p0,S nearDist, S f
 //
 //	//	prendi la matrice di proiezione
 //	Matrix44d P;
-//	P.Zero();
+//	P.SetZero();
 //
 //	if(!IsOrtho())//  prospettica
 //	{

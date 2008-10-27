@@ -313,7 +313,7 @@ static void Covariance(const MeshType & m, vcg::Point3<ScalarType> & bary, vcg::
 
 	ConstFaceIterator fi;
 	ScalarType area = 0.0;
-	bary.Zero();
+	bary.SetZero();
 	for(fi = m.face.begin(); fi != m.face.end(); ++fi)
 		if(!(*fi).IsD())
 			{

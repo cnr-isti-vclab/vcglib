@@ -240,7 +240,7 @@ public:
     #define v1 (f->V1(i)->T().P())
     #define v2 (f->V2(i)->T().P())
 	  for (VertexIterator v=Super::m.vert.begin(); v!=Super::m.vert.end(); v++) {
-		  sum[v].Zero();
+		  sum[v].SetZero();
 	  }
 
 	  ScalarType tot_proj_area=0;
@@ -424,7 +424,7 @@ void SmoothTextureCoords(MESH_TYPE &m){
   sum.Start();
   
 	for (typename MESH_TYPE::VertexIterator v=m.vert.begin(); v!=m.vert.end(); v++) {
-		sum[v].Zero();
+		sum[v].SetZero();
     div[v]=0;
 	}
 
