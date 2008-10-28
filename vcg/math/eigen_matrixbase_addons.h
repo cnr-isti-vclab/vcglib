@@ -22,15 +22,15 @@
 ****************************************************************************/
 
 #warning You are including deprecated math stuff
-/*!
-*	\deprecated use cols()
-*/
+
+
+typedef Scalar ScalarType;
+
+/*! \deprecated use cols() */
 EIGEN_DEPRECATED inline unsigned int ColumnsNumber() const { return cols(); };
 
 
-/*!
-*	\deprecated use rows()
-*/
+/*! \deprecated use rows() */
 EIGEN_DEPRECATED inline unsigned int RowsNumber() const { return rows(); };
 
 /*!
@@ -82,9 +82,6 @@ EIGEN_DEPRECATED void SwapRows(const unsigned int i, const unsigned int j)
 	if (i==j) return;
 	row(i).swap(row(j));
 };
-
-Scalar* V() { return derived().data(); }
-const Scalar* V() const { return derived().data(); }
 
 /*!
 *	\deprecated use *this.cwise() += k

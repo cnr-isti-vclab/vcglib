@@ -26,18 +26,19 @@
 
 // TODO enable the vectorization
 #define EIGEN_DONT_VECTORIZE
-#define EIGEN_MATRIXBASE_PLUGIN <vcg/math/eigen_vcgaddons.h>
+#define EIGEN_MATRIXBASE_PLUGIN <vcg/math/eigen_matrixbase_addons.h>
+#define EIGEN_MATRIX_PLUGIN <vcg/math/eigen_matrix_addons.h>
 
 // forward declarations
 namespace Eigen {
 template<typename Derived1, typename Derived2, int Size> struct ei_lexi_comparison;
 }
 
+#include "base.h"
 #include "../Eigen/LU"
 #include "../Eigen/Geometry"
 #include "../Eigen/Array"
 #include "../Eigen/Core"
-#include "base.h"
 
 // add support for unsigned char and short int
 namespace Eigen {
@@ -238,6 +239,18 @@ template<typename Derived1, typename Derived2>
 inline typename Eigen::ei_traits<Derived1>::Scalar
 SquaredDistance(const Eigen::MatrixBase<Derived1>& p1, const Eigen::MatrixBase<Derived2> & p2)
 { return (p1-p2).norm2(); }
+
+template<typename Derived>
+inline const Eigen::CwiseUnaryOp<Eigen::ei_scalar_abs_op<typename Eigen::ei_traits<Derived>::Scalar>, Derived>
+Abs(const Eigen::MatrixBase<Derived>& p)
+{ return p.cwise().abs(); }
+
+template<typename Derived>
+inline const Eigen::CwiseBinaryOp<Eigen::ei_scalar_max_op<typename Eigen::ei_traits<Derived>::Scalar>,
+																	Derived,
+																	Eigen::NestByValue<typename Derived::ConstantReturnType> >
+LowClampToZero(const Eigen::MatrixBase<Derived>& p)
+{ return p.cwise().max(Derived::Zero().nestByValue()); }
 
 }
 

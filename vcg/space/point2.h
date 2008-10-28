@@ -29,28 +29,37 @@
 #define __VCGLIB_POINT2
 
 #include "../math/eigen.h"
-#include <vcg/math/base.h>
+// #include "point.h"
 
 namespace vcg{
-template<class Scalar> class Point2;
+template<typename Scalar> class Point2;
 }
 
-namespace Eigen{
-template<typename Scalar>
-struct ei_traits<vcg::Point2<Scalar> > : ei_traits<Eigen::Matrix<Scalar,2,1> > {};
+namespace Eigen {
+template<typename Scalar> struct ei_traits<vcg::Point2<Scalar> > : ei_traits<Eigen::Matrix<Scalar,2,1> > {};
 }
 
 namespace vcg {
 
 /** \addtogroup space */
 /*@{*/
-    /**
-        The templated class for representing a point in 2D space.
-        The class is templated over the Scalar class that is used to represent coordinates.
-				All the usual operator overloading (* + - ...) is present.
-     */
+/**
+		The templated class for representing a point in 2D space.
+		The class is templated over the Scalar class that is used to represent coordinates.
+		All the usual operator overloading (* + - ...) is present.
+	*/
 template <class _Scalar> class Point2 : public Eigen::Matrix<_Scalar,2,1>
 {
+//----------------------------------------
+// template typedef part
+// use it as follow: typename Point2<S>::Type instead of simply Point2<S>
+//----------------------------------------
+public:
+	typedef Eigen::Matrix<_Scalar,2,1> Type;
+//----------------------------------------
+// inheritence part
+//----------------------------------------
+private:
 	typedef Eigen::Matrix<_Scalar,2,1> _Base;
 	using _Base::coeff;
 	using _Base::coeffRef;
@@ -61,28 +70,7 @@ template <class _Scalar> class Point2 : public Eigen::Matrix<_Scalar,2,1>
 public:
 
 	_EIGEN_GENERIC_PUBLIC_INTERFACE(Point2,_Base);
-	typedef Scalar ScalarType;
-
 	VCG_EIGEN_INHERIT_ASSIGNMENT_OPERATORS(Point2)
-
-	enum {Dimension = 2};
-
-//@{
-  /** @name Access to Coords.
-   access to coords is done by overloading of [] or explicit naming of coords (X,Y,)
-	 ("p[0]" or "p.X()" are equivalent) **/
-	inline const Scalar &X() const {return data()[0];}
-	inline const Scalar &Y() const {return data()[1];}
-	inline Scalar &X() {return data()[0];}
-	inline Scalar &Y() {return data()[1];}
-
-	// overloaded to return a const reference
-	inline const Scalar & V( const int i ) const
-	{
-		assert(i>=0 && i<2);
-		return data()[i];
-	}
-//@}
 
 	/// empty constructor (does nothing)
 	inline Point2 () { }
@@ -105,7 +93,7 @@ public:
 	{
 		return math::Atan2(data()[1],data()[0]);
 	}
-		/// transform the point in cartesian coords into polar coords
+	/// transform the point in cartesian coords into polar coords
 	inline Point2 & Cartesian2Polar()
 	{
 		Scalar t = Angle();
@@ -113,7 +101,7 @@ public:
 		data()[1] = t;
 		return *this;
 	}
-		/// transform the point in polar coords into cartesian coords
+	/// transform the point in polar coords into cartesian coords
 	inline Point2 & Polar2Cartesian()
 	{
 		Scalar l = data()[0];
@@ -121,7 +109,7 @@ public:
 		data()[1] = (Scalar)(l*math::Sin(data()[1]));
 		return *this;
 	}
-		/// rotates the point of an angle (radiants, counterclockwise)
+	/// rotates the point of an angle (radiants, counterclockwise)
 	inline Point2 & Rotate( const Scalar rad )
 	{
 		Scalar t = data()[0];
@@ -133,25 +121,21 @@ public:
 
 		return *this;
 	}
-
-		/// imports from 2D points of different types
-	template <class T>
-	inline void Import( const Point2<T> & b )
-	{
-		data()[0] = b.X(); data()[1] = b.Y();
-	}
-		/// constructs a 2D points from an existing one of different type
-	template <class T>
-	static Point2 Construct( const Point2<T> & b )
-	{
-    return Point2(b.X(),b.Y());
-	}
 }; // end class definition
 
 typedef Point2<short>  Point2s;
 typedef Point2<int>	   Point2i;
 typedef Point2<float>  Point2f;
 typedef Point2<double> Point2d;
+
+// typedef Eigen::Matrix<short ,2,1> Point2s;
+// typedef Eigen::Matrix<int   ,2,1> Point2i;
+// typedef Eigen::Matrix<float ,2,1> Point2f;
+// typedef Eigen::Matrix<double,2,1> Point2d;
+// typedef Eigen::Matrix<short ,2,1> Vector2s;
+// typedef Eigen::Matrix<int   ,2,1> Vector2i;
+// typedef Eigen::Matrix<float ,2,1> Vector2f;
+// typedef Eigen::Matrix<double,2,1> Vector2d;
 
 /*@}*/
 } // end namespace

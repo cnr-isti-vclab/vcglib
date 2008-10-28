@@ -29,15 +29,14 @@
 #define __VCGLIB_POINT3
 
 #include "../math/eigen.h"
-#include <vcg/math/base.h>
 
 namespace vcg{
-template<class Scalar> class Point3;
+template<typename Scalar> class Point3;
 }
 
 namespace Eigen{
-template<typename Scalar>
-struct ei_traits<vcg::Point3<Scalar> > : ei_traits<Eigen::Matrix<Scalar,3,1> > {};
+
+template<typename Scalar> struct ei_traits<vcg::Point3<Scalar> > : ei_traits<Eigen::Matrix<Scalar,3,1> > {};
 
 template<typename Scalar>
 struct NumTraits<vcg::Point3<Scalar> > : NumTraits<Scalar>
@@ -53,35 +52,32 @@ struct NumTraits<vcg::Point3<Scalar> > : NumTraits<Scalar>
 
 namespace vcg {
 
+template<typename Scalar> class Box3;
+
 /** \addtogroup space */
 /*@{*/
-    /**
-        The templated class for representing a point in 3D space.
-        The class is templated over the ScalarType class that is used to represent coordinates. All the usual
-        operator overloading (* + - ...) is present. 
-     */
-template <class T> class Box3;
-
+/**
+	The templated class for representing a point in 3D space.
+	The class is templated over the ScalarType class that is used to represent coordinates. All the usual
+	operator overloading (* + - ...) is present.
+*/
 template <class _Scalar> class Point3 : public Eigen::Matrix<_Scalar,3,1>
 {
-	typedef Eigen::Matrix<_Scalar,3,1> _Base;
-	using _Base::coeff;
-	using _Base::coeffRef;
-	using _Base::setZero;
-	using _Base::data;
-	using _Base::V;
-
+//----------------------------------------
+// template typedef part
+// use it as follow: typename Point3<S>::Type instead of simply Point3<S>
+//----------------------------------------
 public:
-
+	typedef Eigen::Matrix<_Scalar,3,1> Type;
+//----------------------------------------
+// inheritence part
+//----------------------------------------
+private:
+	typedef Eigen::Matrix<_Scalar,3,1> _Base;
+	using _Base::Construct;
+public:
 	_EIGEN_GENERIC_PUBLIC_INTERFACE(Point3,_Base);
-	typedef Scalar ScalarType;
-
 	VCG_EIGEN_INHERIT_ASSIGNMENT_OPERATORS(Point3)
-	
-	enum {Dimension = 3};
-	
-	
-//@{
 
   /** @name Standard Constructors and Initializers 
    No casting operators have been introduced to avoid automatic unattended (and costly) conversion between different point types
@@ -95,133 +91,15 @@ public:
 	inline Point3(const Eigen::MatrixBase<OtherDerived>& other) : Base(other) {}
 
 
-	template<class OtherDerived>
-	inline void Import( const Eigen::MatrixBase<OtherDerived>& b )
-	{
-		EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(OtherDerived,3);
-		data()[0] = Scalar(b[0]);
-		data()[1] = Scalar(b[1]);
-		data()[2] = Scalar(b[2]);
-	}
-
-  template <class Q> 
-  static inline Point3 Construct( const Point3<Q> & b )
-  {
-    return Point3(Scalar(b[0]),Scalar(b[1]),Scalar(b[2]));
-  }
-
+	// this one is very useless
   template <class Q> 
   static inline Point3 Construct( const Q & P0, const Q & P1, const Q & P2)
   {
     return Point3(Scalar(P0),Scalar(P1),Scalar(P2));
   }
+  vcg::Box3<_Scalar> GetBBox(vcg::Box3<_Scalar> &bb) const;
 
-  static inline Point3 Construct( const Point3<ScalarType> & b )
-  {
-    return b;
-  }
-
-//@}
-
-//@{
-
-  /** @name Data Access. 
-   access to data is done by overloading of [] or explicit naming of coords (x,y,z)**/
-
-  inline const Scalar &X() const { return data()[0]; }
-	inline const Scalar &Y() const { return data()[1]; }
-	inline const Scalar &Z() const { return data()[2]; }
-	inline Scalar &X() { return data()[0]; }
-	inline Scalar &Y() { return data()[1]; }
-	inline Scalar &Z() { return data()[2]; }
-	// overloaded to return a const reference
-	inline const Scalar & V( const int i ) const
-	{
-		assert(i>=0 && i<3);
-		return data()[i];
-	}
-//@}
-//@{
-
-  /** @name Classical overloading of operators 
-  Note   
-  **/
-
-	// Scalatura differenziata
-	inline Point3 & Scale( const Scalar sx, const Scalar sy, const Scalar sz )
-	{
-		data()[0] *= sx;
-		data()[1] *= sy;
-		data()[2] *= sz;
-		return *this;
-	}
-	inline Point3 & Scale( const Point3 & p )
-	{
-		data()[0] *= p.data()[0];
-		data()[1] *= p.data()[1];
-		data()[2] *= p.data()[2];
-		return *this;
-	}
-	
-	/** 
-	 * Convert to polar coordinates from cartesian coordinates.
-	 *
-	 * Theta is the azimuth angle and ranges between [0, 360) degrees.
-	 * Phi is the elevation angle (not the polar angle) and ranges between [-90, 90] degrees.
-	 *
-	 * /note Note that instead of the classical polar angle, which ranges between 
-	 *       0 and 180 degrees we opt for the elevation angle to obtain a more 
-	 *       intuitive spherical coordinate system.
-	 */
-	void ToPolar(Scalar &ro, Scalar &theta, Scalar &phi) const
-	{
-		ro = this->norm();
-		theta = (Scalar)atan2(data()[2], data()[0]);
-		phi   = (Scalar)asin(data()[1]/ro);
-	}
-
-	/**
-	 * Convert from polar coordinates to cartesian coordinates.
-	 *
-	 * Theta is the azimuth angle and ranges between [0, 360) degrees.
-	 * Phi is the elevation angle (not the polar angle) and ranges between [-90, 90] degrees.
-	 *
-	 * \note Note that instead of the classical polar angle, which ranges between 
-	 *       0 and 180 degrees, we opt for the elevation angle to obtain a more 
-	 *       intuitive spherical coordinate system.
-	 */
-  void FromPolar(const Scalar &ro, const Scalar &theta, const Scalar &phi)
-	{
-    data()[0]= ro*cos(theta)*cos(phi);
-    data()[1]= ro*sin(phi);
-    data()[2]= ro*sin(theta)*cos(phi);
-	}
-	
-  Box3<_Scalar> GetBBox(Box3<_Scalar> &bb) const;
-//@}
-
-}; // end class definition
-
-
-// versione uguale alla precedente ma che assume che i due vettori sono unitari
-template <class Scalar>
-inline Scalar AngleN( Point3<Scalar> const & p1, Point3<Scalar> const & p2 )
-{
-	Scalar w = p1*p2;
-	if(w>1) 
-		w = 1;
-	else if(w<-1) 
-		w=-1;
-  return (Scalar) acos(w);
-}
-
-
-template <class Scalar>
-inline Point3<Scalar> & Normalize( Point3<Scalar> & p )
-{
-    p.Normalize();
-    return p;
-}
+}; // end class definition (Point3)
 
 	// Dot product preciso numericamente (solo double!!)
 	// Implementazione: si sommano i prodotti per ordine di esponente
@@ -253,9 +131,7 @@ double stable_dot ( Point3<Scalar> const & p0, Point3<Scalar> const & p1 )
 		else
 			return (k0+k1)+k2;
 	}
-}  
-
-
+}
 
 /// Point(p) Edge(v1-v2) dist, q is the point in v1-v2 with min dist
 template<class Scalar>
@@ -271,7 +147,6 @@ Scalar PSDist( const Point3<Scalar> & p,
 	q = v1+e*t;
     return Distance(p,q);
 }
-
 
 template <class Scalar>
 void GetUV( Point3<Scalar> &n,Point3<Scalar> &u, Point3<Scalar> &v, Point3<Scalar> up=(Point3<Scalar>(0,1,0)) )
@@ -297,23 +172,21 @@ void GetUV( Point3<Scalar> &n,Point3<Scalar> &u, Point3<Scalar> &v, Point3<Scala
 	Point3<Scalar> uv=u^v;
 }
 
-
-template <class SCALARTYPE>
-inline Point3<SCALARTYPE> Abs(const Point3<SCALARTYPE> & p) {
-	return (Point3<SCALARTYPE>(math::Abs(p[0]), math::Abs(p[1]), math::Abs(p[2])));
-}
-// probably a more uniform naming should be defined...
-template <class SCALARTYPE>
-inline Point3<SCALARTYPE> LowClampToZero(const Point3<SCALARTYPE> & p) {
-	return (Point3<SCALARTYPE>(math::Max(p[0], (SCALARTYPE)0), math::Max(p[1], (SCALARTYPE)0), math::Max(p[2], (SCALARTYPE)0)));
-}
+/*@}*/
 
 typedef Point3<short>  Point3s;
 typedef Point3<int>	   Point3i;
 typedef Point3<float>  Point3f;
 typedef Point3<double> Point3d;
 
-/*@}*/
+// typedef Eigen::Matrix<short ,3,1> Point3s;
+// typedef Eigen::Matrix<int   ,3,1> Point3i;
+// typedef Eigen::Matrix<float ,3,1> Point3f;
+// typedef Eigen::Matrix<double,3,1> Point3d;
+// typedef Eigen::Matrix<short ,3,1> Vector3s;
+// typedef Eigen::Matrix<int   ,3,1> Vector3i;
+// typedef Eigen::Matrix<float ,3,1> Vector3f;
+// typedef Eigen::Matrix<double,3,1> Vector3d;
 
 } // end namespace
 

@@ -31,25 +31,35 @@
 #include "../math/eigen.h"
 
 namespace vcg{
-template<class Scalar> class Point4;
+template<typename Scalar> class Point4;
 }
 
-namespace Eigen{
-template<typename Scalar>
-struct ei_traits<vcg::Point4<Scalar> > : ei_traits<Eigen::Matrix<Scalar,4,1> > {};
+namespace Eigen {
+template<typename Scalar> struct ei_traits<vcg::Point4<Scalar> > : ei_traits<Eigen::Matrix<Scalar,4,1> > {};
 }
 
 namespace vcg {
+
+
 /** \addtogroup space */
 /*@{*/
-    /**
-        The templated class for representing a point in 4D space.
-        The class is templated over the ScalarType class that is used to represent coordinates. 
-				All the usual operator (* + - ...) are defined. 
-     */
-
+/**
+		The templated class for representing a point in 4D space.
+		The class is templated over the ScalarType class that is used to represent coordinates.
+		All the usual operator (* + - ...) are defined.
+	*/
 template <class T> class Point4 : public Eigen::Matrix<T,4,1>
 {
+//----------------------------------------
+// template typedef part
+// use it as follow: typename Point4<S>::Type instead of simply Point4<S>
+//----------------------------------------
+public:
+	typedef Eigen::Matrix<T,4,1> Type;
+//----------------------------------------
+// inheritence part
+//----------------------------------------
+private:
 	typedef Eigen::Matrix<T,4,1> _Base;
 	using _Base::coeff;
 	using _Base::coeffRef;
@@ -63,8 +73,6 @@ public:
 	typedef Scalar ScalarType;
 
 	VCG_EIGEN_INHERIT_ASSIGNMENT_OPERATORS(Point4)
-	
-	enum {Dimension = 4};
 
 	inline Point4() : Base() {}
 	inline Point4( const T nx, const T ny, const T nz , const T nw ) : Base(nx,ny,nz,nw) {}
@@ -72,34 +80,10 @@ public:
 	inline Point4(const Point4& p) : Base(p) {}
 	template<typename OtherDerived>
 	inline Point4(const Eigen::MatrixBase<OtherDerived>& other) : Base(other) {}
-	
-
-	/// importer from different Point4 types
-	template <class Q> inline void Import( const Point4<Q> & b ) { *this = b.template cast<T>(); }
-	
-	/// constuctor that imports from different Point4 types
-  template <class Q>
-  static inline Point4 Construct( const Point4<Q> & b ) { return b.template cast<T>(); }
 
 
-//@{
-
-	inline T &X() {return Base::x();}
-	inline T &Y() {return Base::y();}
-	inline T &Z() {return Base::z();}
-	inline T &W() {return Base::w();}
-
-	// overloaded to return a const reference
-	inline const T & V (int i) const
-	{
-		assert(i>=0 && i<4);
-		return data()[i];
-	}
-
-//@}
-	
 	inline Point4 VectProd ( const Point4 &x, const Point4 &z ) const
-	{	
+	{
 		Point4 res;
 		const Point4 &y = *this;
 
@@ -113,7 +97,7 @@ public:
 		          z[2]+y[0]*z[1]*x[2]-x[0]*z[1]*y[2]+z[0]*x[1]*y[2];
 		return res;
 	}
-	
+
 //@{
   /** @name Dot products
   **/
@@ -140,24 +124,33 @@ public:
 		if (exp2>exp3) { math::Swap(k2,k3); math::Swap(exp2,exp3); }
 
 		return ( (k0 + k1) + k2 ) +k3;
-	}  
+	}
 //@}
 
 
 }; // end class definition
 
 
-	/// slower version of dot product, more stable (double precision only)
+typedef Point4<short>  Point4s;
+typedef Point4<int>	   Point4i;
+typedef Point4<float>  Point4f;
+typedef Point4<double> Point4d;
+
+// typedef Eigen::Matrix<short ,4,1> Point4s;
+// typedef Eigen::Matrix<int   ,4,1> Point4i;
+// typedef Eigen::Matrix<float ,4,1> Point4f;
+// typedef Eigen::Matrix<double,4,1> Point4d;
+// typedef Eigen::Matrix<short ,4,1> Vector4s;
+// typedef Eigen::Matrix<int   ,4,1> Vector4i;
+// typedef Eigen::Matrix<float ,4,1> Vector4f;
+// typedef Eigen::Matrix<double,4,1> Vector4d;
+
+/// slower version of dot product, more stable (double precision only)
 template<class T>
 double StableDot ( Point4<T> const & p0, Point4<T> const & p1 )
 {
 	return p0.StableDot(p1);
-}  
-
-typedef Point4<short>  Point4s;
-typedef Point4<int>    Point4i;
-typedef Point4<float>  Point4f;
-typedef Point4<double> Point4d;
+}
 
 /*@}*/
 } // end namespace

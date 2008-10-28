@@ -79,18 +79,13 @@ public:
 	template<typename OtherDerived>
 	Matrix33(const Eigen::MatrixBase<OtherDerived>& other) : Base(other) {}
 
-	/*!
-	* \deprecated use *this.row(i)
-	*/
+	/*! \deprecated use *this.row(i) */
 	inline typename Base::RowXpr operator[](const unsigned int i)
 	{ return Base::row(i); }
 
-	/*!
-	* \deprecated use *this.row(i)
-	*/
+	/*! \deprecated use *this.row(i) */
 	inline const typename Base::RowXpr operator[](const unsigned int i) const
 	{ return Base::row(i); }
-
 
 	/** \deprecated */
 	Matrix33 & SetRotateRad(Scalar angle, const Point3<Scalar> & axis )
@@ -129,7 +124,7 @@ public:
 	*/
 	Scalar Norm() { return Base::cwise().abs2().sum(); }
 // 	{
-// 		// FIXME looks like there is a bug: j is not used !!!
+// 		// FIXME looks like there was a bug: j is not used !!!
 // 		Scalar SQsum=0;
 // 		for(int i=0;i<3;++i)
 // 			for(int j=0;j<3;++j)
@@ -138,8 +133,7 @@ public:
 // 	}
 
 
-	/**
-	It computes the  covariance matrix of a set of 3d points. Returns the barycenter
+	/** Computes the  covariance matrix of a set of 3d points. Returns the barycenter.
 	*/
 	// FIXME should be outside Matrix
 	template <class STLPOINTCONTAINER >
