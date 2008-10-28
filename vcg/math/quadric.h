@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -63,7 +63,7 @@ public:
 	ScalarType a[6];		// Matrice 3x3 simmetrica: a11 a12 a13 a22 a23 a33
 	ScalarType b[3];		// Vettore r3
 	ScalarType c;			// Fattore scalare (se -1 quadrica nulla)
-	
+
 	inline Quadric() { c = -1; }
 
 	// Necessari se si utilizza stl microsoft
@@ -155,14 +155,14 @@ template <class ResultScalarType>
 
 	/* Versione veloce */
 		return ResultScalarType (
-      p[0]*p[0]*a[0] + 2*p[0]*p[1]*a[1] + 2*p[0]*p[2]*a[2] + p[0]*b[0] 
+      p[0]*p[0]*a[0] + 2*p[0]*p[1]*a[1] + 2*p[0]*p[2]*a[2] + p[0]*b[0]
 			               +   p[1]*p[1]*a[3] + 2*p[1]*p[2]*a[4] + p[1]*b[1]
 			                                  +   p[2]*p[2]*a[5] + p[2]*b[2]	+ c);
 
 	}
 
 // spostare..risolve un sistema 3x3
-template<class FLTYPE> 	
+template<class FLTYPE>
 bool Gauss33( FLTYPE x[], FLTYPE C[3][3+1] )
 {
     const FLTYPE keps = (FLTYPE)1e-3;
@@ -227,7 +227,7 @@ bool Gauss33( FLTYPE x[], FLTYPE C[3][3+1] )
 // determina il punto di errore minimo
 template <class ReturnScalarType>
 bool Minimum(Point3<ReturnScalarType> &x)
-{	
+{
 		ReturnScalarType C[3][4];
 		C[0][0]=a[0]; C[0][1]=a[1]; C[0][2]=a[2];
 		C[1][0]=a[1]; C[1][1]=a[3]; C[1][2]=a[4];
@@ -240,10 +240,10 @@ bool Minimum(Point3<ReturnScalarType> &x)
 }
 
 // determina il punto di errore minimo usando le fun di inversione di matrice che usano svd
-// Molto + lento 
+// Molto + lento
 template <class ReturnScalarType>
 bool MinimumSVD(Point3<ReturnScalarType> &x)
-{	
+{
     Matrix33<ReturnScalarType> C;
 		C[0][0]=a[0]; C[0][1]=a[1]; C[0][2]=a[2];
 		C[1][0]=a[1]; C[1][1]=a[3]; C[1][2]=a[4];
@@ -259,7 +259,7 @@ bool MinimumSVD(Point3<ReturnScalarType> &x)
 
 
 bool MinimumNew(Point3<ScalarType> &x) const
-{	
+{
   ScalarType c0=-b[0]/2;
   ScalarType c1=-b[1]/2;
   ScalarType c2=-b[2]/2;
@@ -279,12 +279,12 @@ bool MinimumNew(Point3<ScalarType> &x) const
 }
 // determina il punto di errore minimo vincolato nel segmento (a,b)
 bool Minimum(Point3<ScalarType> &x,Point3<ScalarType> &pa,Point3<ScalarType> &pb){
-ScalarType	t1,t2, t4, t5, t8, t9, 
+ScalarType	t1,t2, t4, t5, t8, t9,
 	t11,t12,t14,t15,t17,t18,t25,t26,t30,t34,t35,
 	t41,t42,t44,t45,t50,t52,t54,
 	t56,t21,t23,t37,t64,lambda;
 
-	  t1 = a[4]*pb.z();      
+	  t1 = a[4]*pb.z();
 	  t2 = t1*pa.y();
       t4 = a[1]*pb.y();
       t5 = t4*pa.x();
@@ -320,14 +320,14 @@ ScalarType	t1,t2, t4, t5, t8, t9,
 
 	  if(lambda<0)  lambda=0;  else	  if(lambda>1)   lambda = 1;
 
-		 x = pa*(1.0-lambda)+pb*lambda;		
+		 x = pa*(1.0-lambda)+pb*lambda;
 		 return true;
 	}
 
   void operator *= ( const ScalarType & w )			// Amplifica una quadirca
 	{
 		assert( IsValid() );
-		
+
 		a[0] *= w;
 		a[1] *= w;
 		a[2] *= w;

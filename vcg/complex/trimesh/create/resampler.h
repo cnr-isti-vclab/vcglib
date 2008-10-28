@@ -176,7 +176,7 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT>
 
 				dir.Normalize();
 				//direction of normal inside the mesh
-				if ((dir*closestNorm)<0)
+				if ((dir.dot(closestNorm))<0)
 					dist=-dist;
 				//the intersection exist
 				return true;

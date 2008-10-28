@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -41,7 +41,7 @@ namespace vcg {
     /**
         This class represents the common interface for any linear objects.
 				It consists (the declaration of) a set of functions and types that
-				each such object mush have. 
+				each such object mush have.
 				Linear have the Zero element (neutral element for sums)
 				moltiplication (for a scalar), and two linear elements of
 				a given type can be summed.
@@ -56,7 +56,7 @@ namespace vcg {
 	class Linear{
 	public:
 		typedef T ScalarType;
-		inline void Zero();
+		inline void SetZero();
 		T operator + ( T const & p) const;
 		T operator - ( T const & p) const;
 		T operator * ( const ScalarType );

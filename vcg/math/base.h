@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -109,16 +109,16 @@ namespace vcg {
 
 namespace math {
 
- template <class SCALAR> 
+ template <class SCALAR>
  class MagnitudoComparer
     {
       public:
 	    inline bool operator() ( const SCALAR a, const SCALAR b ) { return fabs(a)>fabs(b);  }
     };
-  
+
   inline float Sqrt(const short v)   { return sqrtf(v); }
   inline float Sqrt(const int v)   { return sqrtf((float)v); }
-  
+
   inline float Sqrt(const float v)   { return sqrtf(v); }
   inline float Abs(const float v)   { return fabsf(v); }
   inline float Cos(const float v)   { return cosf(v); }
@@ -134,7 +134,9 @@ namespace math {
   inline double Acos(const double v)   { return acos(v); }
   inline double Asin(const double v)   { return asin(v); }
   inline double Atan2(const double v0,const double v1)   { return atan2(v0,v1); }
-  
+
+	template <typename T> inline static T Sqr(T a) { return a*a; }
+
 	template<class T> inline const T & Min(const T &a, const T &b){
 		if (a<b) return a; else return b;
 	}
@@ -151,7 +153,7 @@ namespace math {
 	template<class T> inline void Sort(T &a, T &b, T &c){
 		if (a>b) Swap(a,b);
 		if (b>c) {Swap(b,c); if (a>b) Swap(a,b);}
-	} 
+	}
 
 /* Some <math.h> files do not define M_PI... */
 #ifndef M_PI
@@ -161,8 +163,8 @@ namespace math {
 #ifndef SQRT_TWO
 #define SQRT_TWO 1.4142135623730950488
 #endif
-	
-template <class SCALAR> 
+
+template <class SCALAR>
 inline SCALAR  Clamp( const SCALAR & val, const SCALAR& minval, const SCALAR& maxval)
 {
 	if(val < minval) return minval;
@@ -191,7 +193,7 @@ template<class T> int IsNAN(T t)
          return t != t;
 }
 
-#endif 
+#endif
 }	// End math namespace
 
 /// a type that stands for "void". Useful for Parameter type of a point.

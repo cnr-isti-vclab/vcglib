@@ -70,7 +70,7 @@ public:
 	typedef typename MeshType::CoordType CoordType;
 	typedef typename MeshType::VertexIterator VertexIterator;
 	typedef typename MeshType::VertexType VertexType;
-	typedef vcg::Point4< vcg::Point3<ScalarType> > FourPoints ;
+	typedef vcg::Point4< vcg::Point3<ScalarType> > FourPoints;
 	typedef vcg::GridStaticPtr<typename PMesh::VertexType, ScalarType > GridType; 
 
 	/* class for Parameters */
@@ -110,11 +110,11 @@ private:
 
 
 	/* returns the closest point between to segments x1-x2 and x3-x4.  */
-	void IntersectionLineLine( const CoordType & x1,const CoordType & x2,const CoordType & x3,const CoordType & x4,
-												CoordType&x){
-													CoordType a  = x2-x1, b  = x4-x3, c	 = x3-x1;
-													x = x1 +	  a * ( (c^b)*(a^b))	/ (a^b).SquaredNorm();
-													}
+	void IntersectionLineLine(const CoordType & x1,const CoordType & x2,const CoordType & x3,const CoordType & x4, CoordType&x)
+	{
+		CoordType a = x2-x1, b = x4-x3, c = x3-x1;
+		x = x1 + a * ((c^b).dot(a^b)) / (a^b).SquaredNorm();
+	}
 
  
 
@@ -289,7 +289,7 @@ FourPCS<MeshType>::SelectCoplanarBase(){
 		int id = rand()/(float)RAND_MAX *  (P->vert.size()-1);
 		ScalarType dd = (P->vert[id].P() - B[1]).Norm();
 		if(  ( dd < side + dtol) && (dd > side - dtol)){
-			ScalarType angle =  fabs( ( P->vert[id].P()-B[1]).Normalize() * (B[1]-B[0]).Normalize());
+			ScalarType angle =  fabs( ( P->vert[id].P()-B[1]).normalized().dot((B[1]-B[0]).normalized()));
 			if( angle < bestv){
 				bestv = angle;
 				best = id;
@@ -301,7 +301,7 @@ FourPCS<MeshType>::SelectCoplanarBase(){
 	B[2] = P->vert[best].P();
 //printf("B[2] %d\n",best);
 
-	CoordType n = ((B[0]-B[1]).Normalize() ^ (B[2]-B[1]).Normalize()).Normalize();
+	CoordType n = ((B[0]-B[1]).normalized() ^ (B[2]-B[1]).normalized()).normalized();
 	CoordType B4 = B[1] +  (B[0]-B[1]) + (B[2]-B[1]);
 	VertexType * v =0; 
 	ScalarType dist,radius = dtol*4.0;
@@ -322,7 +322,7 @@ FourPCS<MeshType>::SelectCoplanarBase(){
 			return false;
 	 best = -1;  bestv=std::numeric_limits<float>::max();
 		for(i = 0; i <closests.size(); ++i){
-		 ScalarType angle = fabs((closests[i]->P() - B[1]).Normalize() * n);
+		 ScalarType angle = fabs((closests[i]->P() - B[1]).normalized().dot(n));
 			if( angle < bestv){
 				bestv = angle;
 				best = i;
@@ -337,8 +337,8 @@ FourPCS<MeshType>::SelectCoplanarBase(){
 		std::swap(B[1],B[2]);
  		IntersectionLineLine(B[0],B[1],B[2],B[3],x);
 
-		r1 = (x - B[0])*(B[1]-B[0]) / (B[1]-B[0]).SquaredNorm();
-		r2 = (x - B[2])*(B[3]-B[2]) / (B[3]-B[2]).SquaredNorm();
+		r1 = (x - B[0]).dot(B[1]-B[0]) / (B[1]-B[0]).SquaredNorm();
+		r2 = (x - B[2]).dot(B[3]-B[2]) / (B[3]-B[2]).SquaredNorm();
 
 		if( ((B[0]+(B[1]-B[0])*r1)-(B[2]+(B[3]-B[2])*r2)).Norm() > prs.delta )
 			return false;
@@ -374,10 +374,10 @@ FourPCS<MeshType>::IsTransfCongruent(FourPoints fp,vcg::Matrix44<ScalarType> & m
 		for(int i = 0 ; i < 4; ++i) fix.push_back(fp[i]);
 
 		vcg::Point3<ScalarType> n,p;
-		n = (( B[1]-B[0]).Normalize() ^ ( B[2]- B[0]).Normalize())*( B[1]- B[0]).Norm();
+		n = (( B[1]-B[0]).normalized() ^ ( B[2]- B[0]).normalized())*( B[1]- B[0]).Norm();
 		p =  B[0] + n;
 		mov.push_back(p);
-		n = (( fp[1]-fp[0]).Normalize() ^ (fp[2]- fp[0]).Normalize())*( fp[1]- fp[0]).Norm();
+		n = (( fp[1]-fp[0]).normalized() ^ (fp[2]- fp[0]).normalized())*( fp[1]- fp[0]).Norm();
 		p =  fp[0] + n;
 		fix.push_back(p);
 
@@ -565,7 +565,7 @@ int FourPCS<MeshType>::EvaluateSample(CandiType & fp, CoordType & tp, CoordType 
 			  >(*Q,ugridQ,vq,radius,  dist  );
 		 
 			if(v!=0) 
-				if( v->N() * np -angle >0)  return 1; else return -1;
+				if( v->N().dot(np) -angle >0)  return 1; else return -1;
 	
 }
 

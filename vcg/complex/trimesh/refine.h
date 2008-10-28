@@ -118,7 +118,7 @@ struct MidPoint : public   std::unary_function<face::Pos<typename MESH_TYPE::Fac
 		nv.P()=   (ep.f->V(ep.z)->P()+ep.f->V1(ep.z)->P())/2.0;
 
 		if( MESH_TYPE::HasPerVertexNormal())
-			nv.N()= (ep.f->V(ep.z)->N()+ep.f->V1(ep.z)->N()).Normalize();
+			nv.N()= (ep.f->V(ep.z)->N()+ep.f->V1(ep.z)->N()).normalized();
 
 		if( MESH_TYPE::HasPerVertexColor())
 			nv.C().lerp(ep.f->V(ep.z)->C(),ep.f->V1(ep.z)->C(),.5f);

@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -60,7 +60,7 @@ First working version!
 #ifndef VCG_GL_SPACE_H
 #define VCG_GL_SPACE_H
 
-// Please note that this file assume that you have already included your 
+// Please note that this file assume that you have already included your
 // gl-extension wrapping utility, and that therefore all the extension symbol are already defined.
 
 #include <vcg/space/triangle3.h>
@@ -108,16 +108,16 @@ namespace vcg {
 
   inline void glColor(Color4b const & c)   { glColor4ubv(c.V());}
   inline void glClearColor(Color4b const &c) {	::glClearColor(float(c[0])/255.0f,float(c[1])/255.0f,float(c[2])/255.0f,1.0f);}
-  inline void glLight(GLenum light, GLenum pname,  Color4b const & c)   { 
-    static float cf[4]; 
-    cf[0]=float(cf[0]/255.0); cf[1]=float(c[1]/255.0); cf[2]=float(c[2]/255.0); cf[3]=float(c[3]/255.0); 
+  inline void glLight(GLenum light, GLenum pname,  Color4b const & c)   {
+    static float cf[4];
+    cf[0]=float(cf[0]/255.0); cf[1]=float(c[1]/255.0); cf[2]=float(c[2]/255.0); cf[3]=float(c[3]/255.0);
     glLightfv(light,pname,cf);
   }
 
 
  template <class T>
-   inline void glBoxWire(Box3<T> const & b)   
-{ 
+   inline void glBoxWire(Box3<T> const & b)
+{
 	glPushAttrib(GL_ENABLE_BIT);
 	glDisable(GL_LIGHTING);
 	glBegin(GL_LINE_STRIP);
@@ -137,13 +137,13 @@ namespace vcg {
 	glBegin(GL_LINES);
 	glVertex3f((float)b.min[0],(float)b.min[1],(float)b.min[2]);
 	glVertex3f((float)b.min[0],(float)b.min[1],(float)b.max[2]);
-	
+
 	glVertex3f((float)b.max[0],(float)b.min[1],(float)b.min[2]);
 	glVertex3f((float)b.max[0],(float)b.min[1],(float)b.max[2]);
-	
+
 	glVertex3f((float)b.max[0],(float)b.max[1],(float)b.min[2]);
 	glVertex3f((float)b.max[0],(float)b.max[1],(float)b.max[2]);
-	
+
 	glVertex3f((float)b.min[0],(float)b.max[1],(float)b.min[2]);
 	glVertex3f((float)b.min[0],(float)b.max[1],(float)b.max[2]);
 	glEnd();
@@ -151,7 +151,7 @@ namespace vcg {
 };
 template <class T>
 	/// Funzione di utilita' per la visualizzazione in OpenGL (flat shaded)
-inline void glBoxFlat(Box3<T> const & b)   
+inline void glBoxFlat(Box3<T> const & b)
 {
 	glPushAttrib(GL_SHADE_MODEL);
 	glShadeModel(GL_FLAT);
@@ -190,10 +190,10 @@ inline void glBoxFlat(Box3<T> const & b)
 
 
 template <class T>
-	/// Setta i sei clip planes di opengl a far vedere solo l'interno del box 
-inline void glBoxClip(const Box3<T>  & b)   
+	/// Setta i sei clip planes di opengl a far vedere solo l'interno del box
+inline void glBoxClip(const Box3<T>  & b)
 {
-	double eq[4];	
+	double eq[4];
 	eq[0]= 1; eq[1]= 0; eq[2]= 0; eq[3]=(double)-b.min[0];
 	glClipPlane(GL_CLIP_PLANE0,eq);
 	eq[0]=-1; eq[1]= 0; eq[2]= 0; eq[3]=(double) b.max[0];
@@ -211,8 +211,8 @@ inline void glBoxClip(const Box3<T>  & b)
 	glClipPlane(GL_CLIP_PLANE5,eq);
 }
  template <class T>
-   inline void glBoxWire(const Box2<T>  & b)   
-{ 
+   inline void glBoxWire(const Box2<T>  & b)
+{
 	glPushAttrib(GL_ENABLE_BIT);
 	glDisable(GL_LIGHTING);
 	glBegin(GL_LINE_LOOP);
@@ -222,7 +222,7 @@ inline void glBoxClip(const Box3<T>  & b)
 	  glVertex2f((float)b.max[0],(float)b.max[1]);
 	  glVertex2f((float)b.min[0],(float)b.max[1]);
   glEnd();
-	
+
 	glPopAttrib();
 };
  template <class T>
@@ -280,8 +280,21 @@ template <class TetraType>
 
 #ifdef VCG_USE_EIGEN
 
-#define _WRAP_EIGEN_XPR(FUNC) template<typename Derived> \
-	inline void FUNC(const Eigen::MatrixBase<Derived>& p) { FUNC(p.eval()); }
+template<typename Derived, int Rows=Derived::RowsAtCompileTime, int Cols=Derived::ColsAtCompileTime>
+struct EvalToKnownPointType;
+
+template<typename Derived> struct EvalToKnownPointType<Derived,2,1>
+{ typedef Point2<typename Derived::Scalar> Type; };
+
+template<typename Derived> struct EvalToKnownPointType<Derived,3,1>
+{ typedef Point3<typename Derived::Scalar> Type; };
+
+template<typename Derived> struct EvalToKnownPointType<Derived,4,1>
+{ typedef Point4<typename Derived::Scalar> Type; };
+
+#define _WRAP_EIGEN_XPR(FUNC) template<typename Derived>  \
+	inline void FUNC(const Eigen::MatrixBase<Derived>& p) { \
+		FUNC(typename EvalToKnownPointType<Derived>::Type(p)); }
 
 _WRAP_EIGEN_XPR(glVertex)
 _WRAP_EIGEN_XPR(glNormal)

@@ -197,23 +197,6 @@ EIGEN_DEPRECATED Derived& operator-=(const Scalar k)
 // 	}
 // };
 
-/*!
-*	\deprecated use (*this) * vec.asDiagonal() or (*this) * mat.mark<Diagonal>()
-*	Matrix multiplication by a diagonal matrix
-*/
-// EIGEN_DEPRECATED Matrix<Scalar> operator*(const MatrixDiagBase &m) const
-// {
-// 	assert(_columns == _rows);
-// 	assert(_columns == m.Dimension());
-// 	int i,j;
-// 	Matrix<Scalar> result(_rows, _columns);
-// 
-// 	for (i=0; i<result._rows; i++)
-// 		for (j=0; j<result._columns; j++)
-// 			result[i][j]*= m[j];
-// 
-// 	return result;
-// };
 
 /*!
 *	\deprecated use *this = a * b.transpose()
@@ -268,9 +251,16 @@ EIGEN_DEPRECATED void SetIdentity()
 *	\param j	the column index
 *	\param v	...
 */
-EIGEN_DEPRECATED void SetColumn(const unsigned int j, Scalar* v)
+EIGEN_DEPRECATED void SetColumn(unsigned int j, Scalar* v)
 {
 	col(j) = Map<Matrix<Scalar,RowsAtCompileTime,1> >(v,cols(),1);
+};
+
+/** \deprecated use *this.col(i) = other */
+template<typename OtherDerived>
+EIGEN_DEPRECATED void SetColumn(unsigned int j, const MatrixBase<OtherDerived>& other)
+{
+	col(j) = other;
 };
 
 /*!
@@ -279,9 +269,16 @@ EIGEN_DEPRECATED void SetColumn(const unsigned int j, Scalar* v)
 *	\param i	the row index
 *	\param v	...
 */
-EIGEN_DEPRECATED void SetRow(const unsigned int i, Scalar* v)
+EIGEN_DEPRECATED void SetRow(unsigned int i, Scalar* v)
 {
 	row(i) = Map<Matrix<Scalar,1,ColsAtCompileTime> >(v,1,rows());
+};
+
+/** \deprecated use *this.row(i) = other */
+template<typename OtherDerived>
+EIGEN_DEPRECATED void SetRow(unsigned int j, const MatrixBase<OtherDerived>& other)
+{
+	row(j) = other;
 };
 
 /*!
@@ -333,5 +330,5 @@ EIGEN_DEPRECATED inline Scalar SquaredNorm() const { return norm2(); }
 EIGEN_DEPRECATED inline Derived& Normalize() { normalize(); return derived(); }
 
 /** \deprecated use .cross(p) */
-inline EvalType operator ^ (const Derived& p ) const { return this->cross(p); }
+EIGEN_DEPRECATED inline EvalType operator ^ (const Derived& p ) const { return this->cross(p); }
 

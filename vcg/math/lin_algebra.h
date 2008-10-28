@@ -66,109 +66,109 @@ namespace vcg
 		typename MATRIX_TYPE::ScalarType g=A[i][j];
 		typename MATRIX_TYPE::ScalarType h=A[k][l];
 		A[i][j]=g-s*(h+g*tau);
-		A[k][l]=h+s*(g-h*tau); 
+		A[k][l]=h+s*(g-h*tau);
 	};
 
 	/*!
 	*	Computes all eigenvalues and eigenvectors of a real symmetric matrix .
-	*	On output, elements of the input matrix above the diagonal are destroyed. 
-	* \param d  returns the eigenvalues of a. 
-	* \param v  is a matrix whose columns contain, the normalized eigenvectors 
-	* \param nrot returns the number of Jacobi rotations that were required. 
+	*	On output, elements of the input matrix above the diagonal are destroyed.
+	* \param d  returns the eigenvalues of a.
+	* \param v  is a matrix whose columns contain, the normalized eigenvectors
+	* \param nrot returns the number of Jacobi rotations that were required.
 	*/
 	template <typename MATRIX_TYPE, typename POINT_TYPE>
-	static void Jacobi(MATRIX_TYPE &w, POINT_TYPE &d, MATRIX_TYPE &v, int &nrot) 
-	{ 
+	static void Jacobi(MATRIX_TYPE &w, POINT_TYPE &d, MATRIX_TYPE &v, int &nrot)
+	{
        typedef typename MATRIX_TYPE::ScalarType ScalarType;
 		assert(w.RowsNumber()==w.ColumnsNumber());
 		int dimension = w.RowsNumber();
 
-		int j,iq,ip,i; 
+		int j,iq,ip,i;
 		//assert(w.IsSymmetric());
-		typename MATRIX_TYPE::ScalarType tresh, theta, tau, t, sm, s, h, g, c; 
-		POINT_TYPE b, z; 
+		typename MATRIX_TYPE::ScalarType tresh, theta, tau, t, sm, s, h, g, c;
+		POINT_TYPE b, z;
 
 		v.SetIdentity();
 
-		for (ip=0;ip<dimension;++ip)			//Initialize b and d to the diagonal of a. 
-		{		
-			b[ip]=d[ip]=w[ip][ip]; 
-			z[ip]=ScalarType(0.0);							//This vector will accumulate terms of the form tapq as in equation (11.1.14). 
+		for (ip=0;ip<dimension;++ip)			//Initialize b and d to the diagonal of a.
+		{
+			b[ip]=d[ip]=w[ip][ip];
+			z[ip]=ScalarType(0.0);							//This vector will accumulate terms of the form tapq as in equation (11.1.14).
 		}
-		nrot=0; 
-		for (i=0;i<50;i++) 
-		{ 
-			sm=ScalarType(0.0); 
+		nrot=0;
+		for (i=0;i<50;i++)
+		{
+			sm=ScalarType(0.0);
 			for (ip=0;ip<dimension-1;++ip)		// Sum off diagonal elements
 			{
-				for (iq=ip+1;iq<dimension;++iq) 
-					sm += fabs(w[ip][iq]); 
-			} 
-			if (sm == ScalarType(0.0))					//The normal return, which relies on quadratic convergence to machine underflow. 
-			{				
-				return; 
-			} 
-			if (i < 4) 	
-				tresh=ScalarType(0.2)*sm/(dimension*dimension); //...on the first three sweeps. 
-			else 		
-				tresh=ScalarType(0.0);				//...thereafter. 
-			for (ip=0;ip<dimension-1;++ip) 
-			{  
-				for (iq=ip+1;iq<dimension;iq++) 
-				{ 
-					g=ScalarType(100.0)*fabs(w[ip][iq]); 
-					//After four sweeps, skip the rotation if the off-diagonal element is small. 
-					if(i>4 && (float)(fabs(d[ip])+g) == (float)fabs(d[ip]) && (float)(fabs(d[iq])+g) == (float)fabs(d[iq])) 
-						w[ip][iq]=ScalarType(0.0); 
-					else if (fabs(w[ip][iq]) > tresh) 
-					{ 
-						h=d[iq]-d[ip]; 
-						if ((float)(fabs(h)+g) == (float)fabs(h)) 
-							t=(w[ip][iq])/h; //t =1/(2#) 
-						else 
-						{ 
-							theta=ScalarType(0.5)*h/(w[ip][iq]); //Equation (11.1.10). 
-							t=ScalarType(1.0)/(fabs(theta)+sqrt(ScalarType(1.0)+theta*theta)); 
-							if (theta < ScalarType(0.0)) t = -t; 
-						} 
-						c=ScalarType(1.0)/sqrt(ScalarType(1.0)+t*t); 
-						s=t*c; 
-						tau=s/(ScalarType(1.0)+c); 
-						h=t*w[ip][iq]; 
-						z[ip] -= h; 
-						z[iq] += h; 
-						d[ip] -= h; 
-						d[iq] += h; 
-						w[ip][iq]=ScalarType(0.0); 
-						for (j=0;j<=ip-1;j++) { //Case of rotations 1 <= j < p. 
+				for (iq=ip+1;iq<dimension;++iq)
+					sm += fabs(w[ip][iq]);
+			}
+			if (sm == ScalarType(0.0))					//The normal return, which relies on quadratic convergence to machine underflow.
+			{
+				return;
+			}
+			if (i < 4)
+				tresh=ScalarType(0.2)*sm/(dimension*dimension); //...on the first three sweeps.
+			else
+				tresh=ScalarType(0.0);				//...thereafter.
+			for (ip=0;ip<dimension-1;++ip)
+			{
+				for (iq=ip+1;iq<dimension;iq++)
+				{
+					g=ScalarType(100.0)*fabs(w[ip][iq]);
+					//After four sweeps, skip the rotation if the off-diagonal element is small.
+					if(i>4 && (float)(fabs(d[ip])+g) == (float)fabs(d[ip]) && (float)(fabs(d[iq])+g) == (float)fabs(d[iq]))
+						w[ip][iq]=ScalarType(0.0);
+					else if (fabs(w[ip][iq]) > tresh)
+					{
+						h=d[iq]-d[ip];
+						if ((float)(fabs(h)+g) == (float)fabs(h))
+							t=(w[ip][iq])/h; //t =1/(2#)
+						else
+						{
+							theta=ScalarType(0.5)*h/(w[ip][iq]); //Equation (11.1.10).
+							t=ScalarType(1.0)/(fabs(theta)+sqrt(ScalarType(1.0)+theta*theta));
+							if (theta < ScalarType(0.0)) t = -t;
+						}
+						c=ScalarType(1.0)/sqrt(ScalarType(1.0)+t*t);
+						s=t*c;
+						tau=s/(ScalarType(1.0)+c);
+						h=t*w[ip][iq];
+						z[ip] -= h;
+						z[iq] += h;
+						d[ip] -= h;
+						d[iq] += h;
+						w[ip][iq]=ScalarType(0.0);
+						for (j=0;j<=ip-1;j++) { //Case of rotations 1 <= j < p.
 							JacobiRotate<MATRIX_TYPE>(w,s,tau,j,ip,j,iq) ;
-						} 
-						for (j=ip+1;j<=iq-1;j++) { //Case of rotations p < j < q. 
+						}
+						for (j=ip+1;j<=iq-1;j++) { //Case of rotations p < j < q.
 							JacobiRotate<MATRIX_TYPE>(w,s,tau,ip,j,j,iq);
-						} 
-						for (j=iq+1;j<dimension;j++) { //Case of rotations q< j <= n. 
+						}
+						for (j=iq+1;j<dimension;j++) { //Case of rotations q< j <= n.
 							JacobiRotate<MATRIX_TYPE>(w,s,tau,ip,j,iq,j);
-						} 
-						for (j=0;j<dimension;j++) { 
+						}
+						for (j=0;j<dimension;j++) {
 							JacobiRotate<MATRIX_TYPE>(v,s,tau,j,ip,j,iq);
-						} 
-						++nrot; 
-					} 
-				} 
-			} 
-			for (ip=0;ip<dimension;ip++) 
-			{ 
-				b[ip] += z[ip]; 
-				d[ip]=b[ip]; //Update d with the sum of ta_pq , 
-				z[ip]=0.0; //and reinitialize z. 
-			} 
-		} 
+						}
+						++nrot;
+					}
+				}
+			}
+			for (ip=0;ip<dimension;ip++)
+			{
+				b[ip] += z[ip];
+				d[ip]=b[ip]; //Update d with the sum of ta_pq ,
+				z[ip]=0.0; //and reinitialize z.
+			}
+		}
 	};
 
 
 	/*!
-	* Given the eigenvectors and the eigenvalues as output from JacobiRotate, sorts the eigenvalues 
-	* into descending order, and rearranges the columns of v correspondinlgy. 
+	* Given the eigenvectors and the eigenvalues as output from JacobiRotate, sorts the eigenvalues
+	* into descending order, and rearranges the columns of v correspondinlgy.
 	* \param eigenvalues
 	* \param eigenvector (in columns)
 	* \param absComparison sort according to the absolute values of the eigenvalues.
@@ -180,7 +180,7 @@ namespace vcg
 		int dimension = eigenvectors.ColumnsNumber();
 		int i, j, k;
 		float p,q;
-		for (i=0; i<dimension-1; i++) 
+		for (i=0; i<dimension-1; i++)
 		{
 			if (absComparison)
 			{
@@ -197,16 +197,16 @@ namespace vcg
 			{
 				p = eigenvalues[ k=i ];
 				for (j=i+1; j<dimension; j++)
-					if (eigenvalues[j] >= p) 
+					if (eigenvalues[j] >= p)
 						p = eigenvalues[ k=j ];
 			}
-			
-			if (k != i) 
+
+			if (k != i)
 			{
-				eigenvalues[k] = eigenvalues[i];  // i.e. 
-				eigenvalues[i] = p;								// swaps the value of the elements i-th and k-th 
-				
-				for (j=0; j<dimension; j++) 
+				eigenvalues[k] = eigenvalues[i];  // i.e.
+				eigenvalues[i] = p;								// swaps the value of the elements i-th and k-th
+
+				for (j=0; j<dimension; j++)
 				{
 					p = eigenvectors[j][i];										// i.e.
 					eigenvectors[j][i] = eigenvectors[j][k];	// swaps the eigenvectors stored in the
@@ -216,16 +216,16 @@ namespace vcg
 		}
 	};
 
-	
+
 	// Computes (a^2 + b^2)^(1/2) without destructive underflow or overflow.
 	template <typename TYPE>
 	inline static TYPE pythagora(TYPE a, TYPE b)
 	{
 		TYPE abs_a = fabs(a);
 		TYPE abs_b = fabs(b);
-		if (abs_a > abs_b) 
+		if (abs_a > abs_b)
 			return abs_a*sqrt((TYPE)1.0+sqr(abs_b/abs_a));
-		else 
+		else
 			return (abs_b == (TYPE)0.0 ? (TYPE)0.0 : abs_b*sqrt((TYPE)1.0+sqr(abs_a/abs_b)));
 	};
 
@@ -243,12 +243,12 @@ namespace vcg
 	}
 
 	/*!
-	* 
+	*
 	*/
 	enum SortingStrategy {LeaveUnsorted=0, SortAscending=1, SortDescending=2};
 	template< typename MATRIX_TYPE >
 	void Sort(MATRIX_TYPE &U, typename MATRIX_TYPE::ScalarType W[], MATRIX_TYPE &V, const SortingStrategy sorting) ;
-	
+
 
 	/*!
 	*	Given a matrix <I>A<SUB>mxn</SUB></I>, this routine computes its singular value decomposition,
@@ -258,7 +258,7 @@ namespace vcg
 	*	\param W	the diagonal matrix of singular values <I>W</I>, stored as a vector <I>W[1...N]</I>
 	*	\param V	the matrix <I>V</I> (not the transpose <I>V<SUP>T</SUP></I>)
 	*	\param max_iters	max iteration number (default = 30).
-	*	\return 
+	*	\return
 	*/
 	template <typename MATRIX_TYPE>
 		static bool SingularValueDecomposition(MATRIX_TYPE &A, typename MATRIX_TYPE::ScalarType *W, MATRIX_TYPE &V, const SortingStrategy sorting=LeaveUnsorted, const int max_iters=30)
@@ -271,20 +271,20 @@ namespace vcg
 		bool convergence = true;
 
 		rv1 = new ScalarType[n];
-		g = scale = anorm = 0; 
+		g = scale = anorm = 0;
 		// Householder reduction to bidiagonal form.
-		for (i=0; i<n; i++) 
+		for (i=0; i<n; i++)
 		{
 			l = i+1;
 			rv1[i] = scale*g;
 			g = s = scale = 0.0;
 			if (i < m)
 			{
-				for (k = i; k<m; k++) 
+				for (k = i; k<m; k++)
 					scale += fabs(A[k][i]);
-				if (scale) 
+				if (scale)
 				{
-					for (k=i; k<m; k++) 
+					for (k=i; k<m; k++)
 					{
 						A[k][i] /= scale;
 						s += A[k][i]*A[k][i];
@@ -293,27 +293,27 @@ namespace vcg
 					g = -sign<ScalarType>( sqrt(s), f );
 					h = f*g - s;
 					A[i][i]=f-g;
-					for (j=l; j<n; j++) 
+					for (j=l; j<n; j++)
 					{
-						for (s=0.0, k=i; k<m; k++) 
+						for (s=0.0, k=i; k<m; k++)
 							s += A[k][i]*A[k][j];
 						f = s/h;
-						for (k=i; k<m; k++) 
+						for (k=i; k<m; k++)
 							A[k][j] += f*A[k][i];
 					}
-					for (k=i; k<m; k++) 
+					for (k=i; k<m; k++)
 						A[k][i] *= scale;
 				}
 			}
 			W[i] = scale *g;
 			g = s = scale = 0.0;
-			if (i < m && i != (n-1)) 
+			if (i < m && i != (n-1))
 			{
-				for (k=l; k<n; k++) 
+				for (k=l; k<n; k++)
 					scale += fabs(A[i][k]);
-				if (scale) 
+				if (scale)
 				{
-					for (k=l; k<n; k++) 
+					for (k=l; k<n; k++)
 					{
 						A[i][k] /= scale;
 						s += A[i][k]*A[i][k];
@@ -322,40 +322,40 @@ namespace vcg
 					g = -sign<ScalarType>(sqrt(s),f);
 					h = f*g - s;
 					A[i][l] = f-g;
-					for (k=l; k<n; k++) 
+					for (k=l; k<n; k++)
 						rv1[k] = A[i][k]/h;
-					for (j=l; j<m; j++) 
+					for (j=l; j<m; j++)
 					{
-						for (s=0.0, k=l; k<n; k++) 
+						for (s=0.0, k=l; k<n; k++)
 							s += A[j][k]*A[i][k];
-						for (k=l; k<n; k++) 
+						for (k=l; k<n; k++)
 							A[j][k] += s*rv1[k];
 					}
-					for (k=l; k<n; k++) 
+					for (k=l; k<n; k++)
 						A[i][k] *= scale;
 				}
 			}
 			anorm=math::Max( anorm, (fabs(W[i])+fabs(rv1[i])) );
 		}
 		// Accumulation of right-hand transformations.
-		for (i=(n-1); i>=0; i--) 
-		{ 
+		for (i=(n-1); i>=0; i--)
+		{
 			//Accumulation of right-hand transformations.
-			if (i < (n-1)) 
+			if (i < (n-1))
 			{
-				if (g) 
+				if (g)
 				{
 					for (j=l; j<n;j++) //Double division to avoid possible underflow.
 						V[j][i]=(A[i][j]/A[i][l])/g;
-					for (j=l; j<n; j++) 
+					for (j=l; j<n; j++)
 					{
-						for (s=0.0, k=l; k<n; k++) 
+						for (s=0.0, k=l; k<n; k++)
 							s += A[i][k] * V[k][j];
-						for (k=l; k<n; k++) 
+						for (k=l; k<n; k++)
 							V[k][j] += s*V[k][i];
 					}
 				}
-				for (j=l; j<n; j++) 
+				for (j=l; j<n; j++)
 					V[i][j] = V[j][i] = 0.0;
 			}
 			V[i][i] = 1.0;
@@ -363,60 +363,60 @@ namespace vcg
 			l = i;
 		}
 		// Accumulation of left-hand transformations.
-		for (i=math::Min(m,n)-1; i>=0; i--) 
+		for (i=math::Min(m,n)-1; i>=0; i--)
 		{
 			l = i+1;
 			g = W[i];
-			for (j=l; j<n; j++) 
+			for (j=l; j<n; j++)
 				A[i][j]=0.0;
-			if (g) 
+			if (g)
 			{
 				g = (ScalarType)1.0/g;
-				for (j=l; j<n; j++) 
+				for (j=l; j<n; j++)
 				{
-					for (s=0.0, k=l; k<m; k++) 
+					for (s=0.0, k=l; k<m; k++)
 						s += A[k][i]*A[k][j];
 					f = (s/A[i][i])*g;
-					for (k=i; k<m; k++) 
+					for (k=i; k<m; k++)
 						A[k][j] += f*A[k][i];
 				}
-				for (j=i; j<m; j++) 
+				for (j=i; j<m; j++)
 					A[j][i] *= g;
-			} 
-			else 
-				for (j=i; j<m; j++) 
+			}
+			else
+				for (j=i; j<m; j++)
 					A[j][i] = 0.0;
 			++A[i][i];
 		}
 		// Diagonalization of the bidiagonal form: Loop over
 		// singular values, and over allowed iterations.
-		for (k=(n-1); k>=0; k--) 
-		{ 
-			for (its=1; its<=max_iters; its++) 
+		for (k=(n-1); k>=0; k--)
+		{
+			for (its=1; its<=max_iters; its++)
 			{
 				flag=1;
-				for (l=k; l>=0; l--) 
-				{ 
+				for (l=k; l>=0; l--)
+				{
 					// Test for splitting.
-					nm=l-1; 
+					nm=l-1;
 					// Note that rv1[1] is always zero.
-					if ((double)(fabs(rv1[l])+anorm) == anorm) 
+					if ((double)(fabs(rv1[l])+anorm) == anorm)
 					{
 						flag=0;
 						break;
 					}
-					if ((double)(fabs(W[nm])+anorm) == anorm) 
+					if ((double)(fabs(W[nm])+anorm) == anorm)
 						break;
 				}
-				if (flag) 
+				if (flag)
 				{
 					c=0.0;  //Cancellation of rv1[l], if l > 1.
 					s=1.0;
-					for (i=l ;i<=k; i++) 
+					for (i=l ;i<=k; i++)
 					{
 						f = s*rv1[i];
 						rv1[i] = c*rv1[i];
-						if ((double)(fabs(f)+anorm) == anorm) 
+						if ((double)(fabs(f)+anorm) == anorm)
 							break;
 						g = W[i];
 						h = pythagora<ScalarType>(f,g);
@@ -424,7 +424,7 @@ namespace vcg
 						h = (ScalarType)1.0/h;
 						c = g*h;
 						s = -f*h;
-						for (j=0; j<m; j++) 
+						for (j=0; j<m; j++)
 						{
 							y = A[j][nm];
 							z = A[j][i];
@@ -435,10 +435,10 @@ namespace vcg
 				}
 				z = W[k];
 				if (l == k)  //Convergence.
-				{ 
+				{
 					if (z < 0.0) { // Singular value is made nonnegative.
 						W[k] = -z;
-						for (j=0; j<n; j++) 
+						for (j=0; j<n; j++)
 							V[j][k] = -V[j][k];
 					}
 					break;
@@ -455,9 +455,9 @@ namespace vcg
 				f = ((y-z)*(y+z) + (g-h)*(g+h))/((ScalarType)2.0*h*y);
 				g = pythagora<ScalarType>(f,1.0);
 				f=((x-z)*(x+z) + h*((y/(f+sign(g,f)))-h))/x;
-				c=s=1.0; 
+				c=s=1.0;
 				//Next QR transformation:
-				for (j=l; j<= nm;j++) 
+				for (j=l; j<= nm;j++)
 				{
 					i = j+1;
 					g = rv1[i];
@@ -472,7 +472,7 @@ namespace vcg
 					g = g*c - x*s;
 					h = y*s;
 					y *= c;
-					for (jj=0; jj<n; jj++) 
+					for (jj=0; jj<n; jj++)
 					{
 						x = V[jj][j];
 						z = V[jj][i];
@@ -482,7 +482,7 @@ namespace vcg
 					z = pythagora<ScalarType>(f,h);
 					W[j] = z;
 					// Rotation can be arbitrary if z = 0.
-					if (z) 
+					if (z)
 					{
 						z = (ScalarType)1.0/z;
 						c = f*z;
@@ -490,7 +490,7 @@ namespace vcg
 					}
 					f = c*g + s*y;
 					x = c*y - s*g;
-					for (jj=0; jj<m; jj++) 
+					for (jj=0; jj<m; jj++)
 					{
 						y = A[jj][j];
 						z = A[jj][i];
@@ -518,46 +518,46 @@ namespace vcg
 	*/
 	// TODO modify the last parameter type
 	template< typename MATRIX_TYPE >
-	void Sort(MATRIX_TYPE &U, typename MATRIX_TYPE::ScalarType W[], MATRIX_TYPE &V, const SortingStrategy sorting) 
+	void Sort(MATRIX_TYPE &U, typename MATRIX_TYPE::ScalarType W[], MATRIX_TYPE &V, const SortingStrategy sorting)
 	{
 		typedef typename MATRIX_TYPE::ScalarType ScalarType;
 
 		assert(U.ColumnsNumber()==V.ColumnsNumber());
 
-		int mu = U.RowsNumber(); 
-		int mv = V.RowsNumber(); 
+		int mu = U.RowsNumber();
+		int mv = V.RowsNumber();
 		int n  = U.ColumnsNumber();
-				
-		//ScalarType* u = &U[0][0]; 
+
+		//ScalarType* u = &U[0][0];
 		//ScalarType* v = &V[0][0];
 
 		for (int i=0; i<n; i++)
 		{
-			int  k = i; 
+			int  k = i;
 			ScalarType p = W[i];
 			switch (sorting)
 			{
 			case SortAscending:
 				{
 					for (int j=i+1; j<n; j++)
-					{ 
-						if (W[j] < p) 
-						{ 
-							k = j; 
-							p = W[j]; 
-						} 
+					{
+						if (W[j] < p)
+						{
+							k = j;
+							p = W[j];
+						}
 					}
 					break;
 				}
 			case SortDescending:
 				{
 					for (int j=i+1; j<n; j++)
-					{ 
-						if (W[j] > p) 
-						{ 
-							k = j; 
-							p = W[j]; 
-						} 
+					{
+						if (W[j] > p)
+						{
+							k = j;
+							p = W[j];
+						}
 					}
 					break;
 				}
@@ -572,24 +572,24 @@ namespace vcg
 				//ScalarType* ujk = u + k; // ujk = &U[0][k]
 				//ScalarType* vji = v + i; // vji = &V[0][i]
 				//ScalarType* vjk = v + k; // vjk = &V[0][k]
-				//if (j)									
-				//{												
+				//if (j)
+				//{
 				//	for(;;)									for( ; j!=0; --j, uji+=n, ujk+=n)
 				//	{												{
 				//		p = *uji;								p = *uji;			// i.e.
 				//		*uji = *ujk;						*uji = *ujk;	// swap( U[s][i], U[s][k] )
 				//		*ujk = p;								*ujk = p;			//
 				//		if (!(--j))						}
-				//			break;								
-				//		uji += n;								
-				//		ujk += n;								
-				//	}										
-				//}												
+				//			break;
+				//		uji += n;
+				//		ujk += n;
+				//	}
+				//}
 				for(int s=0; j!=0; ++s, --j)
 					std::swap(U[s][i], U[s][k]);
 
 				j = mv;
-				//if (j!=0) 
+				//if (j!=0)
 				//{
 				//	for(;;)									for ( ; j!=0; --j, vji+=n, ujk+=n)
 				//	{												{
@@ -598,7 +598,7 @@ namespace vcg
 				//		*vjk = p;								*vjk = p;			//
 				//		if (!(--j))						}
 				//			break;
-				//		vji += n; 
+				//		vji += n;
 				//		vjk += n;
 				//	}
 				//}
@@ -610,7 +610,7 @@ namespace vcg
 
 
 	/*!
-	*	Solves AxX = B for a vector X, where A is specified by the matrices <I>U<SUB>mxn</SUB></I>, 
+	*	Solves AxX = B for a vector X, where A is specified by the matrices <I>U<SUB>mxn</SUB></I>,
 	*	<I>W<SUB>nx1</SUB></I> and <I>V<SUB>nxn</SUB></I> as returned by <CODE>SingularValueDecomposition</CODE>.
 	*	No input quantities are destroyed, so the routine may be called sequentially with different bxs.
 	*	\param x	is the output solution vector (<I>x<SUB>nx1</SUB></I>)
@@ -630,20 +630,20 @@ namespace vcg
 		ScalarType s;
 		ScalarType *tmp	=	new ScalarType[columns_number];
 		for (j=0; j<columns_number; j++) //Calculate U^T * B.
-		{			
+		{
 			s = 0;
 			if (W[j]!=0)							//Nonzero result only if wj is nonzero.
-			{ 
-				for (i=0; i<rows_number; i++) 
+			{
+				for (i=0; i<rows_number; i++)
 					s += U[i][j]*b[i];
 				s /= W[j];							//This is the divide by wj .
 			}
 			tmp[j]=s;
 		}
 		for (j=0;j<columns_number;j++)	//Matrix multiply by V to get answer.
-		{			
+		{
 			s = 0;
-			for (jj=0; jj<columns_number; jj++) 
+			for (jj=0; jj<columns_number; jj++)
 				s += V[j][jj]*tmp[jj];
 			x[j]=s;
 		}

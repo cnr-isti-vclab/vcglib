@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -123,8 +123,8 @@ first draft: it includes glew !
 namespace vcg {
 
 
-// classe base di glwrap usata solo per poter usare i vari drawmode, normalmode senza dover 
-// specificare tutto il tipo (a volte lunghissimo) 
+// classe base di glwrap usata solo per poter usare i vari drawmode, normalmode senza dover
+// specificare tutto il tipo (a volte lunghissimo)
 // della particolare classe glwrap usata.
 class GLW
 {
@@ -135,17 +135,17 @@ public:
 	enum TextureMode{TMNone, TMPerVert, TMPerWedge, TMPerWedgeMulti};
 	enum Hint {
 		HNUseTriStrip		  = 0x0001,				// ha bisogno che ci sia la fftopology gia calcolata!
-//		HNUseEdgeStrip		  = 0x0002,			// 
-		HNUseDisplayList	  = 0x0004, 
+//		HNUseEdgeStrip		  = 0x0002,			//
+		HNUseDisplayList	  = 0x0004,
 		HNCacheDisplayList	  = 0x0008,		// Each mode has its dl;
-		HNLazyDisplayList	  = 0x0010,			// Display list are generated only when requested 
-		HNIsTwoManifold		  = 0x0020,			// There is no need to make DetachComplex before . 
-		HNUsePerWedgeNormal	  = 0x0040,		// 
+		HNLazyDisplayList	  = 0x0010,			// Display list are generated only when requested
+		HNIsTwoManifold		  = 0x0020,			// There is no need to make DetachComplex before .
+		HNUsePerWedgeNormal	  = 0x0040,		//
 		HNHasFFTopology       = 0x0080,		// E' l'utente che si preoccupa di tenere aggiornata la topologia ff
 		HNHasVFTopology       = 0x0100,		// E' l'utente che si preoccupa di tenere aggiornata la topologia vf
 		HNHasVertNormal       = 0x0200,		// E' l'utente che si preoccupa di tenere aggiornata le normali per faccia
 		HNHasFaceNormal       = 0x0400,		// E' l'utente che si preoccupa di tenere aggiornata le normali per vertice
-		HNUseVArray           = 0x0800, 
+		HNUseVArray           = 0x0800,
 		HNUseLazyEdgeStrip	  = 0x1000,		// Edge Strip are generated only when requested
 		HNUseVBO              = 0x2000		// Use Vertex Buffer Object
 	};
@@ -160,7 +160,7 @@ public:
 		CHAll			= 0xff
 	};
 	enum HintParami {
-		HNPDisplayListSize =0		
+		HNPDisplayListSize =0
 	};
 	enum HintParamf {
 		HNPCreaseAngle =0,	// crease angle in radians
@@ -181,16 +181,16 @@ public:
 
 	// GL Array Elemet
 	class GLAElem {
-	public : 
+	public :
 		int glmode;
 		int len;
 		int start;
 	};
 
-	
+
 };
 
-template <class MESH_TYPE,  bool partial = false , class FACE_POINTER_CONTAINER = std::vector<typename MESH_TYPE::FacePointer> > 
+template <class MESH_TYPE,  bool partial = false , class FACE_POINTER_CONTAINER = std::vector<typename MESH_TYPE::FacePointer> >
 class GlTrimesh : public GLW
 {
 public:
@@ -207,7 +207,7 @@ public:
 	// The parameters of hints
 	int   HNParami[8];
 	float HNParamf[8];
-		
+
 	MESH_TYPE *m;
 	GlTrimesh()
 	{
@@ -217,7 +217,7 @@ public:
 		cdm=DMNone;
 		ccm=CMNone;
 		cnm=NMNone;
-    
+
 		SetHintParamf(HNPCreaseAngle,float(M_PI/5));
 		SetHintParamf(HNPZTwist,0.00005f);
 		SetHintParamf(HNPPointSize,1.0f);
@@ -228,12 +228,12 @@ public:
 		//Delete the VBOs
 		if(curr_hints&HNUseVBO)
 		{
-			for(int i=0;i<3;++i)		
+			for(int i=0;i<3;++i)
 				if(glIsBuffer(array_buffers[i]))
 					glDeleteBuffersARB(1, (GLuint *)(array_buffers+i));
 		}
 	}
-	
+
 	void SetHintParami(const HintParami hip, const int value)
 	{
 		HNParami[hip]=value;
@@ -250,16 +250,16 @@ public:
 	{
 		return HNParamf[hip];
 	}
-	void SetHint(Hint hn) 
+	void SetHint(Hint hn)
 	{
 		curr_hints |= hn;
 	}
-	void ClearHint(Hint hn) 
+	void ClearHint(Hint hn)
 	{
 		curr_hints&=(~hn);
 	}
 
-	unsigned int dl;  
+	unsigned int dl;
 	std::vector<unsigned int> indices;
 
 	DrawMode cdm; // Current DrawMode
@@ -269,7 +269,7 @@ public:
 void Update(/*Change c=CHAll*/)
 {
 	if(m==0) return;
-		
+
 	if(curr_hints&HNUseVArray || curr_hints&HNUseVBO)
 	{
 		typename MESH_TYPE::FaceIterator fi;
@@ -285,15 +285,15 @@ void Update(/*Change c=CHAll*/)
 		{
 			if(!glIsBuffer(array_buffers[1]))
 				glGenBuffers(2,(GLuint*)array_buffers);
-			glBindBuffer(GL_ARRAY_BUFFER,array_buffers[0]);   
-			glBufferData(GL_ARRAY_BUFFER_ARB, m->vn * sizeof(typename MESH_TYPE::VertexType), 
-				(char *)&(m->vert[0].P()), GL_STATIC_DRAW_ARB); 
+			glBindBuffer(GL_ARRAY_BUFFER,array_buffers[0]);
+			glBufferData(GL_ARRAY_BUFFER_ARB, m->vn * sizeof(typename MESH_TYPE::VertexType),
+				(char *)&(m->vert[0].P()), GL_STATIC_DRAW_ARB);
 
-			glBindBuffer(GL_ARRAY_BUFFER,array_buffers[1]);   
-			glBufferData(GL_ARRAY_BUFFER_ARB, m->vn * sizeof(typename MESH_TYPE::VertexType), 
+			glBindBuffer(GL_ARRAY_BUFFER,array_buffers[1]);
+			glBufferData(GL_ARRAY_BUFFER_ARB, m->vn * sizeof(typename MESH_TYPE::VertexType),
 				(char *)&(m->vert[0].N()), GL_STATIC_DRAW_ARB);
 		}
-		
+
 		glVertexPointer(3,GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),0);
 		glNormalPointer(GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),0);
 	}
@@ -316,12 +316,12 @@ void Update(/*Change c=CHAll*/)
 	//	  if(!(curr_hints&HNHasVFTopology)) m->VFTopology();
 	//		CreaseWN(*m,MESH_TYPE::scalar_type(GetHintParamf(HNPCreaseAngle)));
 	//}
-	//if(C!=0) { // force the recomputation of display list 
+	//if(C!=0) { // force the recomputation of display list
 	//	cdm=DMNone;
 	//	ccm=CMNone;
 	//	cnm=NMNone;
 	//}
-	//if((curr_hints&HNUseVArray) && (curr_hints&HNUseTriStrip)) 
+	//if((curr_hints&HNUseVArray) && (curr_hints&HNUseTriStrip))
 	//	{
 	//	 ConvertTriStrip<MESH_TYPE>(*m,TStrip,TStripF,TStripVED,TStripVEI);
 	//	}
@@ -420,14 +420,14 @@ void DrawFill()
 	typename FACE_POINTER_CONTAINER::iterator fp;
 
 	typename MESH_TYPE::FaceIterator fi;
-	
+
 
 	typename std::vector<typename MESH_TYPE::FaceType*>::iterator fip;
 	short curtexname=-1;
 
 	if(cm == CMPerMesh)
 		glColor(m->C());
-  
+
 	if(tm == TMPerWedge || tm == TMPerWedgeMulti )
 		glDisable(GL_TEXTURE_2D);
 
@@ -441,10 +441,10 @@ void DrawFill()
 
 			if (nm==NMPerVert)
 			{
-				glBindBuffer(GL_ARRAY_BUFFER,array_buffers[1]);   
+				glBindBuffer(GL_ARRAY_BUFFER,array_buffers[1]);
 				glNormalPointer(GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),0);
 			}
-			glBindBuffer(GL_ARRAY_BUFFER,array_buffers[0]);   
+			glBindBuffer(GL_ARRAY_BUFFER,array_buffers[0]);
 			glVertexPointer(3,GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),0);
 
 			glDrawElements(GL_TRIANGLES ,m->fn*3,GL_UNSIGNED_INT, &(*indices.begin()) );
@@ -458,8 +458,8 @@ void DrawFill()
 
 		}
 	}
- 
-	if(curr_hints&HNUseVArray) 
+
+	if(curr_hints&HNUseVArray)
 	{
 		if( (cm==CMNone) || (cm==CMPerMesh) )
 		{
@@ -469,7 +469,7 @@ void DrawFill()
 
 			if (nm==NMPerVert)
 				glNormalPointer(GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->N()[0]));
-			glVertexPointer(3,GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->P()[0])); 
+			glVertexPointer(3,GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->P()[0]));
 
 			glDrawElements(GL_TRIANGLES ,m->fn*3,GL_UNSIGNED_INT, &(*indices.begin()) );
 			glDisableClientState (GL_VERTEX_ARRAY);
@@ -480,8 +480,8 @@ void DrawFill()
 		}
 	}
 	else
-	
- 	if(curr_hints&HNUseTriStrip) 
+
+ 	if(curr_hints&HNUseTriStrip)
 	{
 		//if( (nm==NMPerVert) && ((cm==CMNone) || (cm==CMPerMesh)))
 		//	if(curr_hints&HNUseVArray){
@@ -492,7 +492,7 @@ void DrawFill()
 		//		std::vector<GLAElem>::iterator vi;
 		//		for(vi=TStripVED.begin();vi!=TStripVED.end();++vi)
 		//					glDrawElements(vi->glmode ,vi->len,GL_UNSIGNED_SHORT,&TStripVEI[vi->start] );
-		//					
+		//
 		//		glDisableClientState (GL_NORMAL_ARRAY  );
 		//		glDisableClientState (GL_VERTEX_ARRAY);
 		//		return;
@@ -519,7 +519,7 @@ void DrawFill()
 	}
  	else
 	{
-		if(partial) 
+		if(partial)
 			fp = face_pointers.begin();
 		else
 			fi = m->face.begin();
@@ -537,9 +537,9 @@ void DrawFill()
 				glDisable(GL_TEXTURE_2D);
 			}
 		}
-		
+
 		glBegin(GL_TRIANGLES);
-		
+
 		while( (partial)?(fp!=face_pointers.end()):(fi!=m->face.end()))
 		{
  			typename MESH_TYPE::FaceType & f = (partial)?(*(*fp)): *fi;
@@ -551,7 +551,7 @@ void DrawFill()
 				{
 					curtexname=(*fi).WT(0).n();
 					glEnd();
-					
+
 					if (curtexname >= 0)
 					{
 						glEnable(GL_TEXTURE_2D);
@@ -561,10 +561,10 @@ void DrawFill()
 					{
 						glDisable(GL_TEXTURE_2D);
 					}
-					
+
 					glBegin(GL_TRIANGLES);
 				}
-				
+
 				if(nm == NMPerFace)	glNormal(f.cN());
 				if(nm == NMPerVert)	glNormal(f.V(0)->cN());
 				if(nm == NMPerWedge)glNormal(f.WN(0));
@@ -595,14 +595,14 @@ void DrawFill()
 			else
 				++fi;
 		}
-		
+
 		glEnd();
-			
+
 	}
 
 }
 
-/// Basic Point drawing fucntion 
+/// Basic Point drawing fucntion
 // works also for mesh with deleted vertices
 template<NormalMode nm, ColorMode cm>
 void DrawPointsBase()
@@ -610,12 +610,12 @@ void DrawPointsBase()
 	typename MESH_TYPE::VertexIterator vi;
 	glBegin(GL_POINTS);
 	if(cm==CMPerMesh) glColor(m->C());
-		
+
 	for(vi=m->vert.begin();vi!=m->vert.end();++vi)if(!(*vi).IsD())
 	{
-			if(nm==NMPerVert) glNormal((*vi).cN());			
-			if(cm==CMPerVert) glColor((*vi).C());			
-			glVertex((*vi).P());			
+			if(nm==NMPerVert) glNormal((*vi).cN());
+			if(cm==CMPerVert) glColor((*vi).C());
+			glVertex((*vi).P());
 	}
 	glEnd();
 }
@@ -628,27 +628,27 @@ double CameraDistance(){
 	Point3<typename MESH_TYPE::ScalarType>  c=m->bbox.Center();
 	res=mm*c;
 	return Norm(res);
-}	
+}
 template<NormalMode nm, ColorMode cm>
 void DrawPoints()
 {
 	glPointSize(GetHintParamf(HNPPointSize));
-	
+
 	float camDist=CameraDistance();
 	float quadratic[] =  { 0.0f, 0.0f, 1.0f/(camDist*camDist) };
 	glPointParameterfv( GL_POINT_DISTANCE_ATTENUATION, quadratic );
 	glPointParameterf( GL_POINT_SIZE_MAX, 16.0f );
-	glPointParameterf( GL_POINT_SIZE_MIN, 1.0f );	
-	
-	if(m->vn!=(int)m->vert.size()) 
+	glPointParameterf( GL_POINT_SIZE_MIN, 1.0f );
+
+	if(m->vn!=(int)m->vert.size())
 		{
 			DrawPointsBase<nm,cm>();
 			return;
 		}
-	
+
 	// Perfect case, no deleted stuff,
 	// draw the vertices using vertex arrays
-	if (nm==NMPerVert) 
+	if (nm==NMPerVert)
 		{
 			glEnableClientState (GL_NORMAL_ARRAY);
 			glNormalPointer(GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->N()[0]));
@@ -658,17 +658,17 @@ void DrawPoints()
 			glEnableClientState (GL_COLOR_ARRAY);
 			glColorPointer(4,GL_UNSIGNED_BYTE,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->C()[0]));
 		}
-	
+
 	glEnableClientState (GL_VERTEX_ARRAY);
-	glVertexPointer(3,GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->P()[0])); 
-	
+	glVertexPointer(3,GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->P()[0]));
+
 	//glDrawElements(GL_POINTS ,m->vn,GL_UNSIGNED_INT, &(*indices.begin()) );
 	glDrawArrays(GL_POINTS,0,m->vn);
-	
+
 	glDisableClientState (GL_VERTEX_ARRAY);
 	if (nm==NMPerVert)  glDisableClientState (GL_NORMAL_ARRAY);
 	if (cm==CMPerVert)  glDisableClientState (GL_COLOR_ARRAY);
-	
+
 	return;
 }
 
@@ -709,7 +709,7 @@ void DrawFlatWire()
 	DrawWire<NMPerVert,CMNone>();
 	glPopAttrib();
 	//glDepthRange(0,1.0f);
-}	
+}
 
 template <NormalMode nm, ColorMode cm>
 void DrawRadar()
@@ -720,7 +720,7 @@ void DrawRadar()
 	glDepthMask(0);
 	glDepthRange(ZTWIST,1.0f);
 
-	if (cm == CMNone) 
+	if (cm == CMNone)
 		glColor4f(0.2f, 1.0f, 0.4f, 0.2f);
 //	DrawFill<nm,cm,TMNone>();
 	Draw<DMFlat,CMNone,TMNone>();
@@ -760,12 +760,12 @@ void DrawTexture_NPV_TPW2()
 			glMultiTexCoordARB(GL_TEXTURE1_ARB, (*fi).WT(0).t(0));
 			glNormal((*fi).V(0)->N());
 			glVertex((*fi).V(0)->P());
-			
+
 			glMultiTexCoordARB(GL_TEXTURE0_ARB, (*fi).WT(1).t(0));
 			glMultiTexCoordARB(GL_TEXTURE1_ARB, (*fi).WT(1).t(0));
 			glNormal((*fi).V(1)->N());
 			glVertex((*fi).V(1)->P());
-			
+
 			glMultiTexCoordARB(GL_TEXTURE0_ARB, (*fi).WT(2).t(0));
 			glMultiTexCoordARB(GL_TEXTURE1_ARB, (*fi).WT(2).t(0));
 			glNormal((*fi).V(2)->N());
@@ -799,10 +799,10 @@ void DrawWire()
 			DrawFill<nm,cm,TMNone>();
 			glPopAttrib();
 	//	}
-	//else 
+	//else
 	//	{
 //			if(!HasEdges()) ComputeEdges();
-			
+
 			//if(cm==CMPerMesh)	glColor(m->C());
 			//std::vector< MESH_TYPE::VertexType *>::iterator vi;
 			//glBegin(GL_LINE_STRIP);
@@ -818,7 +818,7 @@ void DrawWire()
 			//		}
 			//}
 			//glEnd();
-	//	}			
+	//	}
 }
 
 void DrawBBox(ColorMode cm)
@@ -838,7 +838,7 @@ la mesh non abbia complex (o se li aveva fossero stati detached)
 Abbia le normali per faccia normalizzate!!
 
 
-Prende una mesh e duplica tutti gli edge le cui normali nelle facce incidenti formano un angolo maggiore 
+Prende una mesh e duplica tutti gli edge le cui normali nelle facce incidenti formano un angolo maggiore
 di <angle> (espresso in rad).
 foreach face
  foreach unvisited vert vi
@@ -859,17 +859,17 @@ void Crease(MESH_TYPE &m, typename MESH_TYPE::scalar_type angleRad)
 	std::vector<GLW::VertToSplit<MESH_TYPE> > SPL;
 	std::vector<typename MESH_TYPE::VertexType> newvert;
 	newvert.reserve(m.fn*3);
-	// indica se un il vertice z della faccia e' stato processato 
-	enum {VISITED_0= MESH_TYPE::FaceType::USER0,      
+	// indica se un il vertice z della faccia e' stato processato
+	enum {VISITED_0= MESH_TYPE::FaceType::USER0,
 				VISITED_1= MESH_TYPE::FaceType::USER0<<1,
 				VISITED_2= MESH_TYPE::FaceType::USER0<<2} ;
-	int vis[3]={VISITED_0,VISITED_1,VISITED_2}; 
-						
+	int vis[3]={VISITED_0,VISITED_1,VISITED_2};
+
 	int _t2=clock();
 	typename MESH_TYPE::FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 		if(!(*fi).IsD())	(*fi).Supervisor_Flags()&= (~(VISITED_0 | VISITED_1 | VISITED_2));
-	
+
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 		if(!(*fi).IsD())
 		 for(int j=0;j<3;++j)
@@ -883,7 +883,7 @@ void Crease(MESH_TYPE &m, typename MESH_TYPE::scalar_type angleRad)
 				GLW::VertToSplit<MESH_TYPE>  spl;
 				spl.newp=false;
 				spl.edge=-1;
-					
+
 				//Primo giro per trovare un bordo da cui partire
 				do {
 					he.FlipF();
@@ -897,15 +897,15 @@ void Crease(MESH_TYPE &m, typename MESH_TYPE::scalar_type angleRad)
 						he.FlipE();
 						nextf=he.f->F(he.z);
 						typename MESH_TYPE::scalar_type ps=nextf->N()*he.f->N();
-						if(ps<cosangle)   break;		
+						if(ps<cosangle)   break;
 						int vz=0;
 						if(he.v == he.f->V(he.z)) vz=he.z;
 						if(he.v == he.f->V((he.z+1)%3)) vz=(he.z+1)%3;
 						assert((he.f->Supervisor_Flags() & vis[vz] )==0);
 					}	while(he!=she);
 				}
-				he.FlipE(); 
-				
+				he.FlipE();
+
 				she=he;
 				newvert.push_back(*(*fi).V(j));
 				typename MESH_TYPE::vertex_pointer curvert=&newvert.back();
@@ -920,14 +920,14 @@ void Crease(MESH_TYPE &m, typename MESH_TYPE::scalar_type angleRad)
 					if(he.v == he.f->V(he.z)) spl.z=he.z;
 					if(he.v == he.f->V((he.z+1)%3)) spl.z=(he.z+1)%3;
 					assert(spl.z>=0);
-					//VCTRACE("     -- spinning face vert %i Adding spl face %i vert %i\n", 
+					//VCTRACE("     -- spinning face vert %i Adding spl face %i vert %i\n",
 					//	he.v-m.vert.begin(),	spl.f-m.face.begin(), spl.z );
 					assert((spl.f->Supervisor_Flags() & vis[spl.z] )==0);
 					spl.f->Supervisor_Flags() |= vis[spl.z];
 					SPL.push_back(spl);
 					spl.newp=false;
 					spl.edge=-1;
-					if(he.IsBorder()) break; 
+					if(he.IsBorder()) break;
 					nextf=he.f->F(he.z);
 					if(nextf==she.f) break;
 					typename MESH_TYPE::scalar_type ps=nextf->N()*he.f->N();
@@ -941,7 +941,7 @@ void Crease(MESH_TYPE &m, typename MESH_TYPE::scalar_type angleRad)
 					he.FlipF();
 					if(spl.newp) spl.edge=he.z;
 					he.FlipE();
-					
+
 				}while(he!=she);
 			 }
 	assert(SPL.size()==m.fn*3);
@@ -952,9 +952,9 @@ void Crease(MESH_TYPE &m, typename MESH_TYPE::scalar_type angleRad)
 			(*vsi).f->V((*vsi).z)=(*vsi).v;
 			if((*vsi).newp){
 				assert((*vsi).edge>=0 && (*vsi).edge<3);
-					if(!(*vsi).f->IsBorder( (*vsi).edge) )      
+					if(!(*vsi).f->IsBorder( (*vsi).edge) )
 						(*vsi).f->Detach((*vsi).edge);
-					
+
 			}
 		}
 
@@ -978,20 +978,20 @@ void CreaseWN(MESH_TYPE &m, typename MESH_TYPE::scalar_type angle)
 		}
 
 	typename MESH_TYPE::scalar_type cosangle=Cos(angle);
-	
+
 	typename MESH_TYPE::FaceIterator fi;
 
 	// Clear the per wedge normals
-	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())	
-		{	
+	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
+		{
 			(*fi).WN(0)=MESH_TYPE::vectorial_type(0,0,0);
 			(*fi).WN(1)=MESH_TYPE::vectorial_type(0,0,0);
 			(*fi).WN(2)=MESH_TYPE::vectorial_type(0,0,0);
 		}
 
 	typename MESH_TYPE::FaceType::vectorial_type nn;
-		
-	for(fi=m.face.begin();fi!=m.face.end();++fi)		 if(!(*fi).IsD())	
+
+	for(fi=m.face.begin();fi!=m.face.end();++fi)		 if(!(*fi).IsD())
 		{
 			nn=(*fi).cN();
 			for(int i=0;i<3;++i)
@@ -1003,9 +1003,9 @@ void CreaseWN(MESH_TYPE &m, typename MESH_TYPE::scalar_type angle)
 						}
 				}
 		}
-	
+
 }*/
 
-} // end namespace 
+} // end namespace
 
  #endif

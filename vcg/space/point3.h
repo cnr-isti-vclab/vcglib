@@ -38,6 +38,17 @@ template<class Scalar> class Point3;
 namespace Eigen{
 template<typename Scalar>
 struct ei_traits<vcg::Point3<Scalar> > : ei_traits<Eigen::Matrix<Scalar,3,1> > {};
+
+template<typename Scalar>
+struct NumTraits<vcg::Point3<Scalar> > : NumTraits<Scalar>
+{
+  enum {
+    ReadCost = 3,
+    AddCost = 3,
+    MulCost = 3
+  };
+};
+
 }
 
 namespace vcg {

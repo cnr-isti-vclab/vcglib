@@ -92,7 +92,7 @@ class PointNormalDistanceFunctor {
 		inline bool operator () (const VERTEXTYPE & v, const VERTEXTYPE & vp, SCALARTYPE & minDist, Point3<SCALARTYPE> & q) {
 
 			float  h = vcg::Distance(v.cP(),vp.P())  ;
-			float  dev = InterPoint ()* (  pow((ScalarType) (1-v.cN()*vp.cN()),(ScalarType) Beta())   / (Gamma()*h +0.1));
+			float  dev = InterPoint() * ( pow((ScalarType) (1-v.cN().dot(vp.cN())), (ScalarType)Beta()) / (Gamma()*h +0.1));
 			if(h+dev < minDist){
 				minDist = h+dev;
 				q = v.P(); 

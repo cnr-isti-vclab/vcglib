@@ -212,7 +212,7 @@ namespace vcg {
 			void ComputeAngle()
 			{       
         angle=Angle(cP(2)-cP(0), cP(1)-cP(0));
-        ScalarType flipAngle = n * e0.v->N();
+        ScalarType flipAngle = n.dot(e0.v->N());
         if(flipAngle<0)		angle = (2.0 *(float)M_PI) - angle;
     	}
 

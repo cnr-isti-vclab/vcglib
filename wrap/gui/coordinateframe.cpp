@@ -352,7 +352,7 @@ void MovableCoordinateFrame::RotateToAlign(const Point3f source, const Point3f d
 
   Point3f axis = dest ^ source;
   float sinangle = axis.Norm();
-  float cosangle = dest * source;
+  float cosangle = dest.dot(source);
   float angle = math::Atan2(sinangle,cosangle);  
 
   if( math::Abs(angle) < EPSILON )    

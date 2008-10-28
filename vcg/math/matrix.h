@@ -50,21 +50,6 @@ namespace ndim{
 /* @{ */
 
 /*!
- * This class represent a diagonal <I>m</I>�<I>m</I> matrix.
- */
-class MatrixDiagBase{public:
-virtual const int & Dimension()const =0;
-virtual const float operator[](const int & i) const = 0;
-};
-
-template<int N, class S>
-class MatrixDiag: public Point<N,S>, public MatrixDiagBase{
-public:
-	const int & Dimension() const {return N;}
-	MatrixDiag(const Point<N,S>&p):Point<N,S>(p){}
-};
-
-/*!
  * This class represent a generic <I>m</I>�<I>n</I> matrix. The class is templated over the scalar type field.
  * @param Scalar (Templete Parameter) Specifies the ScalarType field.
  */
@@ -72,7 +57,7 @@ template<class _Scalar>
 class Matrix : public Eigen::Matrix<_Scalar,Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor> // FIXME col or row major ?
 {
 	typedef Eigen::Matrix<_Scalar,Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor> _Base;
-	
+
 public:
 
 	_EIGEN_GENERIC_PUBLIC_INTERFACE(Matrix,_Base);

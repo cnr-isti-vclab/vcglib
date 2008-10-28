@@ -51,13 +51,22 @@ namespace vcg
 		enum DrawMode  {DMUser,DMWire,DMSolid} ;
 	private:
 
-		///used to find right trasformation in case of rotation 
-		static void XAxis(  vcg::Point3f  zero,  vcg::Point3f  uno, Matrix44f & tr){
+		///used to find right transformation in case of rotation 
+		static void XAxis(vcg::Point3f zero, vcg::Point3f uno, Matrix44f & tr)
+		{
+			#ifndef VCG_USE_EIGEN
 			tr.SetZero();
 			*((vcg::Point3f*)&tr[0][0]) = uno-zero;
 			GetUV(*((vcg::Point3f*)tr[0]),*((vcg::Point3f*)tr[1]),*((vcg::Point3f*)tr[2]));
 			tr[3][3] = 1.0;
 			*((vcg::Point3f*)&tr[3][0]) = zero;
+			#else
+			tr.col(0).start<3>().setZero();
+			tr.row(0).start<3>() = (uno-zero).normalized(); // n
+			tr.row(1).start<3>() = tr.row(0).start<3>().unitOrthogonal(); // u
+			tr.row(2).start<3>() = tr.row(0).start<3>().cross(tr.row(1).start<3>()).normalized(); // v
+			tr.row(3) << zero.transpose(), 1.;
+			#endif
 		}
 
 		//set drawingmode parameters

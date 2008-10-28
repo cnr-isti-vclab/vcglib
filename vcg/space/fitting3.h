@@ -88,7 +88,7 @@ Point3<S> PlaneFittingPoints(  std::vector< Point3<S> > & samples,Plane3<S> &p){
 	d[1]=res[1][mini];
 	d[2]=res[2][mini];
 
-	p.SetOffset(c*d/d.Norm());
+	p.SetOffset(c.dot(d)/d.Norm());
 	p.SetDirection(d/d.Norm());
 
   return eval;

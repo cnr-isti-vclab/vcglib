@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -84,28 +84,28 @@ namespace vcg {
     /**
         The templated class for representing 4 entity color.
         The class is templated over the ScalarType.  class that is used to represent color with float or with unsigned chars. All the usual
-        operator overloading (* + - ...) is present. 
+        operator overloading (* + - ...) is present.
      */
-template <class T> 
+template <class T>
 class Color4 : public Point4<T>
 {
 	typedef Point4<T> Base;
 public:
-  /// Constant for storing standard colors. 
+  /// Constant for storing standard colors.
   /// Each color is stored in a simple in so that the bit pattern match with the one of Color4b.
 	enum ColorConstant  {
 		Black  =0xff000000,
 		Gray		=0xff808080,
 		White  =0xffffffff,
-		
+
     Red    =0xff0000ff,
 	  Green  =0xff00ff00,
 	  Blue   =0xffff0000,
-		
+
     Cyan   =0xffffff00,
 		Yellow =0xff00ffff,
 		Magenta=0xffff00ff,
-		
+
     LightGray		=0xffc0c0c0,
 		LightRed		=0xff8080ff,
 		LightGreen  =0xff80ff80,
@@ -116,7 +116,7 @@ public:
 		DarkGreen   =0xff004000,
 		DarkBlue		=0xff400000
 	};
-	
+
   inline Color4 ( const T nx, const T ny, const T nz , const T nw ) :Point4<T>(nx,ny,nz,nw) {};
  // inline Color4 ( Color4 &c) :Point4<T>(c) {};
   inline Color4 ( const Point4<T> &c) :Point4<T>(c) {};
@@ -129,26 +129,26 @@ public:
   	// TODO make sure the types are the same
   }
   #endif
-  
-  template <class Q>  
+
+  template <class Q>
 	inline void Import(const Color4<Q> & b )
   {
-	  Point4<T>::V()[0] = T(b[0]);
-	  Point4<T>::V()[1] = T(b[1]);
-	  Point4<T>::V()[2] = T(b[2]);
-	  Point4<T>::V()[3] = T(b[3]);
+	  (*this)[0] = T(b[0]);
+	  (*this)[1] = T(b[1]);
+	  (*this)[2] = T(b[2]);
+	  (*this)[3] = T(b[3]);
   }
 
- template <class Q>  
+ template <class Q>
 	inline void Import(const Point4<Q> & b )
-  { 
-	  Point4<T>::V()[0] = T(b[0]);
-	  Point4<T>::V()[1] = T(b[1]);
-	  Point4<T>::V()[2] = T(b[2]);
-	  Point4<T>::V()[3] = T(b[3]);
+  {
+	  (*this)[0] = T(b[0]);
+	  (*this)[1] = T(b[1]);
+	  (*this)[2] = T(b[2]);
+	  (*this)[3] = T(b[3]);
   }
 
- template <class Q> 
+ template <class Q>
   static inline Color4 Construct( const Color4<Q> & b )
   {
     return Color4(T(b[0]),T(b[1]),T(b[2]),T(b[3]));
@@ -156,13 +156,13 @@ public:
 
   //inline void Import(const Color4<float> &b);
   //inline void Import(const Color4<unsigned char> &b);
-	
+
  inline Color4 operator + ( const Color4 & p) const
-	{ 
+	{
 		return Color4( (*this)[0]+p.V()[0], (*this)[1]+p.V()[1], (*this)[2]+p.V()[2], (*this)[3]+p.V()[3] );
 	}
-	
-	
+
+
   inline void lerp(const Color4 &c0, const Color4 &c1, const float x);
 	inline void lerp(const Color4 &c0, const Color4 &c1, const Color4 &c2, const Point3f &ip);
   /// given a float and a range set the corresponding color in the well known red->green->blue color ramp. To reverse the direction of the ramp just swap minf and maxf.
@@ -203,10 +203,10 @@ public:
 			case 4: r=t; g=p; b=v; break;
 			case 5: r=v; g=p; b=q; break;
   }
-		Point4<T>::V()[0]=(unsigned char)(255*r);
-        Point4<T>::V()[1]=(unsigned char)(255*g);
-        Point4<T>::V()[2]=(unsigned char)(255*b);
-		Point4<T>::V()[3]=255;
+		(*this)[0]=(unsigned char)(255*r);
+		(*this)[1]=(unsigned char)(255*g);
+		(*this)[2]=(unsigned char)(255*b);
+		(*this)[3]=255;
 //	V()[0]=r*256;V()[1]=g*256;V()[2]=b*256;
 }
 
@@ -221,9 +221,9 @@ inline void SetGrayShade(float f)
 }
 
 
-/** Given an integer returns a well ordering of colors 
+/** Given an integer returns a well ordering of colors
 // so that every color differs as much as possible form the previous one
-// params: 
+// params:
 //		n is the maximum expected value (max of the range)
 //		v is the requested position
 */
@@ -239,7 +239,7 @@ inline static Color4 Scatter(int n, int a,float Sat=.3f,float Val=.9f)
 				a -= (m+1)>>1;
 				m >>= 1;
 			}
-	else m = (m+1)>>1; 
+	else m = (m+1)>>1;
 	if (r>n-b) r = n-b;
 
 	//TRACE("Scatter range 0..%i, in %i out %i\n",n,a,b);
@@ -265,7 +265,7 @@ template <class T>
 inline void Color4<T>::lerp(const Color4<T> &c0, const Color4<T> &c1, const Color4<T> &c2, const Point3f &ip)
 {
 	assert(fabs(ip[0]+ip[1]+ip[2]-1)<0.00001);
-	
+
 	(*this)[0]=(T)(c0[0]*ip[0] + c1[0]*ip[1]+ c2[0]*ip[2]);
 	(*this)[1]=(T)(c0[1]*ip[0] + c1[1]*ip[1]+ c2[1]*ip[2]);
 	(*this)[2]=(T)(c0[2]*ip[0] + c1[2]*ip[1]+ c2[2]*ip[2]);
@@ -276,7 +276,7 @@ inline void Color4<T>::lerp(const Color4<T> &c0, const Color4<T> &c1, const Colo
 template <class T>
 inline void Color4<T>::ColorRamp(const float &minf,const float  &maxf ,float v )
 {
-  if(minf>maxf) { ColorRamp(maxf,minf,maxf+(minf-v)); return; }  
+  if(minf>maxf) { ColorRamp(maxf,minf,maxf+(minf-v)); return; }
 	if(v <  minf ) { *this=Color4<T>(Color4<T>::Red); return; }
   //the case v > maxf is handled automatically at the end of the function
 
@@ -298,7 +298,7 @@ inline void Color4<T>::ColorRamp(const float &minf,const float  &maxf ,float v )
 #if !defined(__GNUC__) || (__GNUC__ > 3)
 template <>
 #endif
-template <> 
+template <>
 inline void Color4<float>::Import(const Color4<unsigned char> &b)
 {
   (*this)[0]=b[0]/255.0f;
@@ -334,7 +334,7 @@ inline void Color4<unsigned char>::Import(const Point4<float> &b)
 #if !defined(__GNUC__) || (__GNUC__ > 3)
 template <>
 #endif
-template <> 
+template <>
 inline Color4<unsigned char> Color4<unsigned char>::Construct( const Color4<float> & b )
 {
     return Color4<unsigned char>(
@@ -347,7 +347,7 @@ inline Color4<unsigned char> Color4<unsigned char>::Construct( const Color4<floa
 #if !defined(__GNUC__) || (__GNUC__ > 3)
 template <>
 #endif
-template <> 
+template <>
 inline Color4<float> Color4<float>::Construct( const Color4<unsigned char> & b )
 {
     return Color4<float>(
@@ -357,7 +357,7 @@ inline Color4<float> Color4<float>::Construct( const Color4<unsigned char> & b )
 									(float)(b[3])/255.0f);
 }
 
-//template <class T,class S> 
+//template <class T,class S>
 //inline void Color4<T>::Import(const Color4<S> &b)
 //{
 //	V()[0] = T(b[0]);
@@ -369,13 +369,13 @@ inline Color4<float> Color4<float>::Construct( const Color4<unsigned char> & b )
 template<>
 inline Color4<unsigned char>::Color4(Color4<unsigned char>::ColorConstant cc)
 {
-  *((int *)this )= cc; 
+  *((int *)this )= cc;
 }
 
 template<>
 inline Color4<float>::Color4(Color4<float>::ColorConstant cc)
 {
-  Import(Color4<unsigned char>((Color4<unsigned char>::ColorConstant)cc)); 
+  Import(Color4<unsigned char>((Color4<unsigned char>::ColorConstant)cc));
 }
 
 inline Color4<float> Clamp(Color4<float> &c)
@@ -389,8 +389,8 @@ inline Color4<float> Clamp(Color4<float> &c)
 
 template<>
 inline Color4<unsigned char> Color4<unsigned char>::operator + ( const Color4<unsigned char>  & p) const
-{ 
-		return Color4<unsigned char>( 
+{
+		return Color4<unsigned char>(
 									 math::Clamp(int((*this)[0])+int(p[0]),0,255),
 									 math::Clamp(int((*this)[1])+int(p[1]),0,255),
 									 math::Clamp(int((*this)[2])+int(p[2]),0,255),

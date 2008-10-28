@@ -1152,7 +1152,7 @@ static	bool TestIntersection(FaceType *f0,FaceType *f1)
 		//no adiacent faces
 		if ( (f0!=f1) && (!ShareEdge(f0,f1))
 			&& (!ShareVertex(f0,f1)) )
-			return (vcg::Intersection<FaceType>((*f0),(*f1)));
+			return (vcg::Intersection_<FaceType>((*f0),(*f1)));
 		return false;
 	}
 

@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -68,8 +68,8 @@ namespace vcg {
 /*@{*/
     /**
         The templated class for representing a point in 4D space.
-        The class is templated over the ScalarType class that is used to represent coordinates. 
-				All the usual operator (* + - ...) are defined. 
+        The class is templated over the ScalarType class that is used to represent coordinates.
+				All the usual operator (* + - ...) are defined.
      */
 
 template <class T> class Point4
@@ -84,7 +84,7 @@ public:
 
 //@{
 
-  /** @name Standard Constructors and Initializers 
+  /** @name Standard Constructors and Initializers
    No casting operators have been introduced to avoid automatic unattended (and costly) conversion between different point types
    **/
 
@@ -94,15 +94,15 @@ public:
 		_v[0] = nx; _v[1] = ny; _v[2] = nz; _v[3] = nw;
 	}
 	inline Point4 ( const T  p[4] )
-	{   
+	{
 		_v[0] = p[0]; _v[1]= p[1]; _v[2] = p[2]; _v[3]= p[3];
 	}
 	inline Point4 ( const Point4 & p )
-	{   
+	{
 		_v[0]= p._v[0]; _v[1]= p._v[1]; _v[2]= p._v[2]; _v[3]= p._v[3];
 	}
-	inline void Zero()
-	{   
+	inline void SetZero()
+	{
 		_v[0] = _v[1] = _v[2] = _v[3]= 0;
 	}
 	template <class Q>
@@ -114,7 +114,7 @@ public:
 		_v[3] = T(b[3]);
 	}
 	/// constuctor that imports from different Point4 types
-  template <class Q> 
+  template <class Q>
   static inline Point4 Construct( const Point4<Q> & b )
   {
     return Point4(T(b[0]),T(b[1]),T(b[2]),T(b[3]));
@@ -124,7 +124,7 @@ public:
 
 //@{
 
-  /** @name Data Access. 
+  /** @name Data Access.
    access to data is done by overloading of [] or explicit naming of coords (x,y,z,w)
 	**/
 	inline const T & operator [] ( const int i ) const
@@ -155,7 +155,7 @@ public:
 		assert(i>=0 && i<4);
 		return _v[i];
 	}
-		/// Padding function: give a default 0 value to all the elements that are not in the [0..2] range. 
+		/// Padding function: give a default 0 value to all the elements that are not in the [0..2] range.
 		/// Useful for managing in a consistent way object that could have point2 / point3 / point4
 	inline T Ext( const int i ) const
 	{
@@ -163,12 +163,12 @@ public:
 		else             return 0;
 	}
 //@}
-	
+
 //@{
   /** @name Linear operators and the likes
   **/
 	inline Point4 operator + ( const Point4 & p) const
-	{ 
+	{
 		return Point4( _v[0]+p._v[0], _v[1]+p._v[1], _v[2]+p._v[2], _v[3]+p._v[3] );
 	}
 	inline Point4 operator - ( const Point4 & p) const
@@ -208,7 +208,7 @@ public:
 		return Point4( -_v[0], -_v[1], -_v[2], -_v[3] );
 	}
 	inline Point4 VectProd ( const Point4 &x, const Point4 &z ) const
-	{	
+	{
 		Point4 res;
 		const Point4 &y = *this;
 
@@ -223,7 +223,7 @@ public:
 		return res;
 	}
 //@}
-	
+
 //@{
   /** @name Norms and normalizations
   **/
@@ -237,7 +237,7 @@ public:
 	{
 		return _v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2] + _v[3]*_v[3];
 	}
-	/// Euclidian normalization 
+	/// Euclidian normalization
   inline Point4 & Normalize()
 	{
 		T n = sqrt(_v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2] + _v[3]*_v[3] );
@@ -251,14 +251,14 @@ public:
 	};
 
 //@}
-	
+
 //@{
   /** @name Comparison operators (lexicographical order)
   **/
 	inline bool operator == (  const Point4& p ) const
 	{
 		return _v[0]==p._v[0] && _v[1]==p._v[1] && _v[2]==p._v[2] && _v[3]==p._v[3];
-	} 
+	}
 	inline bool operator != ( const Point4 & p ) const
 	{
 		return _v[0]!=p._v[0] || _v[1]!=p._v[1] || _v[2]!=p._v[2] || _v[3]!=p._v[3];
@@ -292,7 +292,7 @@ public:
 				(_v[0]>=p._v[0]);
 	}
 //@}
-	
+
 //@{
   /** @name Dot products
   **/
@@ -326,7 +326,7 @@ public:
 		if (exp2>exp3) { math::Swap(k2,k3); math::Swap(exp2,exp3); }
 
 		return ( (k0 + k1) + k2 ) +k3;
-	}  
+	}
 //@}
 
 
@@ -371,7 +371,7 @@ template<class T>
 double StableDot ( Point4<T> const & p0, Point4<T> const & p1 )
 {
 	return p0.StableDot(p1);
-}  
+}
 
 typedef Point4<short>  Point4s;
 typedef Point4<int>	   Point4i;

@@ -417,7 +417,7 @@ namespace io {
 						{
 							raggio = -((*fi).V(0)->P() + (*fi).V(1)->P() + (*fi).V(2)->P()) / 3.0;
 							raggio.Normalize();
-							if((raggio * (*fi).N()) < limit)
+							if((raggio.dot((*fi).N())) < limit)
 									Allocator<OpenMeshType>::DeleteFace(m,*fi);	
 							
 						}

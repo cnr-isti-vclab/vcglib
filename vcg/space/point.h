@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -62,21 +62,21 @@ Revision 1.1  2004/03/16 03:07:38  tarini
 namespace vcg {
 
 	namespace ndim{
-	
 
-//template <int N, class S> 
+
+//template <int N, class S>
 //class Point;
 
 /** \addtogroup space */
 /*@{*/
     /**
         The templated class for representing a point in R^N space.
-        The class is templated over the ScalarType class that is used to represent coordinates. 
+        The class is templated over the ScalarType class that is used to represent coordinates.
 				PointBase provides the interface and the common operators for points
-				of any dimensionality. 
+				of any dimensionality.
      */
 
-template <int N, class S> 
+template <int N, class S>
 class Point
 {
 public:
@@ -94,14 +94,14 @@ public:
 
 //@{
 
-  /** @name Standard Constructors and Initializers 
+  /** @name Standard Constructors and Initializers
    No casting operators have been introduced to avoid automatic unattended (and costly) conversion between different PointType types
    **/
 
   inline Point () { };
 //	inline Point ( const S nv[N] );
-	
-  /// Padding function: give a default 0 value to all the elements that are not in the [0..2] range. 
+
+  /// Padding function: give a default 0 value to all the elements that are not in the [0..2] range.
   /// Useful for managing in a consistent way object that could have point2 / point3 / point4
 	inline S Ext( const int i ) const
 	{
@@ -127,7 +127,7 @@ public:
     return p;
   }
 
-	  /// importer for homogeneous points 
+	  /// importer for homogeneous points
 	template <class S2>
 	inline void ImportHomo( const Point<N-1,S2> & b )
 	{
@@ -137,7 +137,7 @@ public:
 		_v[N-1] = 1.0;
 	}
 
-		/// constructor for homogeneus point. 
+		/// constructor for homogeneus point.
 	template <int N2, class S2>
   static inline PointType Construct( const Point<N-1,S2> & b )
   {
@@ -149,7 +149,7 @@ public:
 
 //@{
 
-  /** @name Data Access. 
+  /** @name Data Access.
    access to data is done by overloading of [] or explicit naming of coords (x,y,z)**/
 
 	inline S & operator [] ( const int i )
@@ -162,10 +162,10 @@ public:
 		assert(i>=0 && i<N);
 		return _v[i];
 	}
-  inline const S &X() const { return _v[0]; } 
+  inline const S &X() const { return _v[0]; }
 	inline const S &Y() const { return _v[1]; }
 	inline const S &Z() const { static_assert(N>2); return _v[2]; }
-	 /// W is in any case the last coordinate. 
+	 /// W is in any case the last coordinate.
 	 /// (in a 2D point, W() == Y(). In a 3D point, W()==Z()
 	 ///  in a 4D point, W() is a separate component)
 	inline const S &W() const { return _v[N-1]; }
@@ -190,11 +190,11 @@ public:
 //@}
 //@{
 
-  /** @name Linearity for points 
+  /** @name Linearity for points
   **/
 
 	/// sets a PointType to Zero
-	inline void Zero()
+	inline void SetZero()
 	{
 		for(unsigned int ii = 0; ii < Dimension;++ii)
 			V(ii) = S();
@@ -259,7 +259,7 @@ public:
 			V(ii) *= s;
 		return *this;
 	}
-	
+
 	inline PointType operator - () const
 	{
 		PointType res;
@@ -336,7 +336,7 @@ public:
 
 //@{
 
-  /** @name Comparison Operators. 
+  /** @name Comparison Operators.
    Lexicographic order.
    **/
 
@@ -350,10 +350,10 @@ public:
 
 //@{
 
-  /** @name 
-	Glocal to Local and viceversa 
+  /** @name
+	Glocal to Local and viceversa
 	(provided for uniformity with other spatial classes. trivial for points)
-   **/ 
+   **/
 
 	inline PointType LocalToGlobal(ParamType p) const{
 		return *this; }
@@ -372,9 +372,9 @@ public:
 
 
 
-template <class S> 
+template <class S>
 class Point2 : public Point<2,S> {
-public:	
+public:
 	typedef S ScalarType;
 	typedef Point2 PointType;
 	using Point<2,S>::_v;
@@ -435,13 +435,13 @@ public:
 	inline Point2 ( const S nv[2] ){
 		_v[0]=nv[0]; _v[1]=nv[1];   };
 
-	inline Point2 operator + ( Point2 const & p) const { 
+	inline Point2 operator + ( Point2 const & p) const {
 		return Point2( _v[0]+p._v[0], _v[1]+p._v[1]); }
 
-	inline Point2 operator - ( Point2 const & p) const { 
+	inline Point2 operator - ( Point2 const & p) const {
 		return Point2( _v[0]-p._v[0], _v[1]-p._v[1]); }
 
-	inline Point2 operator * ( const S s ) const { 
+	inline Point2 operator * ( const S s ) const {
 		return Point2( _v[0]*s, _v[1]*s  ); }
 
 	inline Point2 operator / ( const S s ) const {
@@ -499,7 +499,7 @@ public:
 	inline Point2 & Normalize() {
 		PointType n = Norm(); if(n!=0.0) { n=1.0/n;	_v[0]*=n;	_v[1]*=n;} return *this;};
 
-	template <class PT>  Point2 & Normalize(const PT &p){		
+	template <class PT>  Point2 & Normalize(const PT &p){
 		PointType n = Norm(); if(n!=0.0) { n=1.0/n;	V(0)*=n;	V(1)*=n; }
 		return *this;};
 
@@ -507,10 +507,10 @@ public:
 		if (_v[2]!=0.0) {	_v[0] /= W(); W()=1.0; } return *this;};
 
 	inline S NormInfinity() const {
-		return math::Max( math::Abs(_v[0]), math::Abs(_v[1]) ); }  
+		return math::Max( math::Abs(_v[0]), math::Abs(_v[1]) ); }
 
 	inline S NormOne() const {
-		return math::Abs(_v[0])+ math::Abs(_v[1]);}  
+		return math::Abs(_v[0])+ math::Abs(_v[1]);}
 
 	inline S operator % ( Point2 const & p ) const {
 		return _v[0] * p._v[1] - _v[1] * p._v[0]; }
@@ -519,10 +519,10 @@ public:
 		return _v[0]+_v[1];}
 
 	inline S Max() const {
-		return math::Max( _v[0], _v[1] ); }  
+		return math::Max( _v[0], _v[1] ); }
 
 	inline S Min() const {
-		return math::Min( _v[0], _v[1] ); }  
+		return math::Min( _v[0], _v[1] ); }
 
 	inline int MaxI() const {
 		return (_v[0] < _v[1]) ? 1:0; };
@@ -539,9 +539,9 @@ public:
 
 };
 
-template <typename S> 
+template <typename S>
 class Point3 : public Point<3,S> {
-public:	
+public:
 	typedef S ScalarType;
 	typedef Point3<S>  PointType;
 	using Point<3,S>::_v;
@@ -576,13 +576,13 @@ public:
 	inline Point3 ( const S nv[3] ){
 		_v[0]=nv[0]; _v[1]=nv[1]; _v[2]=nv[2];  };
 
-	inline Point3 operator + ( Point3 const & p)  const{ 
+	inline Point3 operator + ( Point3 const & p)  const{
 		return Point3( _v[0]+p._v[0], _v[1]+p._v[1], _v[2]+p._v[2]); }
 
-	inline Point3 operator - ( Point3 const & p) const { 
+	inline Point3 operator - ( Point3 const & p) const {
 		return Point3( _v[0]-p._v[0], _v[1]-p._v[1], _v[2]-p._v[2]); }
 
-	inline Point3 operator * ( const S s ) const { 
+	inline Point3 operator * ( const S s ) const {
 		return Point3( _v[0]*s, _v[1]*s , _v[2]*s  ); }
 
 	inline Point3 operator / ( const S s ) const {
@@ -642,13 +642,13 @@ public:
 				    (_v[1]!=p._v[1])?(_v[1]> p._v[1]) : (_v[0]>=p._v[0]); }
 
 	inline PointType & Normalize() {
-		S n = Norm(); 
+		S n = Norm();
 		if(n!=0.0) {
 			n=S(1.0)/n;
 		_v[0]*=n;	_v[1]*=n;	_v[2]*=n; }
 		return *this;};
 
-	template <class PT>  PointType & Normalize(const PT &p){		
+	template <class PT>  PointType & Normalize(const PT &p){
 		S n = Norm(); if(n!=0.0) { n=1.0/n;	V(0)*=n;	V(1)*=n;	V(2)*=n;  }
 		return *this;};
 
@@ -658,10 +658,10 @@ public:
 
 	inline S NormInfinity() const {
 		return math::Max( math::Max( math::Abs(_v[0]), math::Abs(_v[1]) ),
-			                math::Abs(_v[3])  ); }  
+			                math::Abs(_v[3])  ); }
 
 	inline S NormOne() const {
-		return math::Abs(_v[0])+ math::Abs(_v[1])+math::Max(math::Abs(_v[2]));}  
+		return math::Abs(_v[0])+ math::Abs(_v[1])+math::Max(math::Abs(_v[2]));}
 
 	inline S operator % ( PointType const & p ) const {
 		S t = (*this)*p; /* Area, general formula */
@@ -671,10 +671,10 @@ public:
 		return _v[0]+_v[1]+_v[2];}
 
 	inline S Max() const {
-		return math::Max( math::Max( _v[0], _v[1] ),  _v[2] ); }  
+		return math::Max( math::Max( _v[0], _v[1] ),  _v[2] ); }
 
 	inline S Min() const {
-		return math::Min( math::Min( _v[0], _v[1] ),  _v[2] ); }  
+		return math::Min( math::Min( _v[0], _v[1] ),  _v[2] ); }
 
 	inline int MaxI() const {
 		int i= (_v[0] < _v[1]) ? 1:0; if (_v[i] < _v[2]) i=2; return i;};
@@ -691,16 +691,16 @@ public:
 		frexp( double(k0), &exp0 );
 		frexp( double(k1), &exp1 );
 		frexp( double(k2), &exp2 );
-		if( exp0<exp1 ) 
+		if( exp0<exp1 )
 			if(exp0<exp2) return (k1+k2)+k0; else return (k0+k1)+k2;
-		else 
+		else
 			if(exp1<exp2) return (k0+k2)+k1; else return (k0+k1)+k2;
 	}
 	 //@}
 
 };
 
-template <typename S> 
+template <typename S>
 class Point4 : public Point<4,S> {
 public:
 	typedef S ScalarType;
@@ -727,13 +727,13 @@ public:
 	inline Point4 ( const S nv[4] ){
 		_v[0]=nv[0]; _v[1]=nv[1]; _v[2]=nv[2]; _v[3]=nv[3]; };
 
-	inline Point4 operator + ( Point4 const & p) const { 
+	inline Point4 operator + ( Point4 const & p) const {
 		return Point4( _v[0]+p._v[0], _v[1]+p._v[1], _v[2]+p._v[2], _v[3]+p._v[3] ); }
 
-	inline Point4 operator - ( Point4 const & p) const { 
+	inline Point4 operator - ( Point4 const & p) const {
 		return Point4( _v[0]-p._v[0], _v[1]-p._v[1], _v[2]-p._v[2], _v[3]-p._v[3] ); }
 
-	inline Point4 operator * ( const S s ) const { 
+	inline Point4 operator * ( const S s ) const {
 		return Point4( _v[0]*s, _v[1]*s , _v[2]*s , _v[3]*s ); }
 
 	inline PointType operator ^ ( PointType const & p ) const {
@@ -801,7 +801,7 @@ public:
 		PointType n = Norm(); if(n!=0.0) { n=1.0/n;	_v[0]*=n;	_v[1]*=n;	_v[2]*=n; _v[3]*=n; }
 		return *this;};
 
-	template <class PT>  PointType & Normalize(const PT &p){		
+	template <class PT>  PointType & Normalize(const PT &p){
 		PointType n = Norm(); if(n!=0.0) { n=1.0/n;	V(0)*=n;	V(1)*=n;	V(2)*=n; V(3)*=n; }
 		return *this;};
 
@@ -811,10 +811,10 @@ public:
 
 	inline S NormInfinity() const {
 		return math::Max( math::Max( math::Abs(_v[0]), math::Abs(_v[1]) ),
-			                math::Max( math::Abs(_v[2]), math::Abs(_v[3]) ) ); }  
+			                math::Max( math::Abs(_v[2]), math::Abs(_v[3]) ) ); }
 
 	inline S NormOne() const {
-		return math::Abs(_v[0])+ math::Abs(_v[1])+math::Max(math::Abs(_v[2]),math::Abs(_v[3]));}  
+		return math::Abs(_v[0])+ math::Abs(_v[1])+math::Max(math::Abs(_v[2]),math::Abs(_v[3]));}
 
 	inline S operator % ( PointType const & p ) const {
 		S t = (*this)*p; /* Area, general formula */
@@ -824,10 +824,10 @@ public:
 		return _v[0]+_v[1]+_v[2]+_v[3];}
 
 	inline S Max() const {
-		return math::Max( math::Max( _v[0], _v[1] ), math::Max( _v[2], _v[3] )); }  
+		return math::Max( math::Max( _v[0], _v[1] ), math::Max( _v[2], _v[3] )); }
 
 	inline S Min() const {
-		return math::Min( math::Min( _v[0], _v[1] ), math::Min( _v[2], _v[3] )); }  
+		return math::Min( math::Min( _v[0], _v[1] ), math::Min( _v[2], _v[3] )); }
 
 	inline int MaxI() const {
 		int i= (_v[0] < _v[1]) ? 1:0; if (_v[i] < _v[2]) i=2; if (_v[i] < _v[3]) i=3;
@@ -872,9 +872,9 @@ template <class S>
 inline S AngleN( Point3<S>  const & p1, Point3<S>  const & p2 )
 {
 	S w = p1*p2;
-	if(w>1) 
+	if(w>1)
 		w = 1;
-	else if(w<-1) 
+	else if(w<-1)
 		w=-1;
   return (S) acos(w);
 }
@@ -914,14 +914,14 @@ inline S SquaredDistance( Point<N,S> const & p1,Point<N,S> const & p2 )
 
 //template <typename S>
 //struct Point2:public Point<2,S>{
-//	inline Point2(){}; 
+//	inline Point2(){};
 //	inline Point2(Point<2,S> const & p):Point<2,S>(p){} ;
 //	inline Point2( const S a, const S b):Point<2,S>(a,b){};
 //};
 //
 //template <typename S>
 //struct Point3:public Point3<S> {
-//	inline Point3(){}; 
+//	inline Point3(){};
 //	inline Point3(Point3<S>  const & p):Point3<S> (p){}
 //	inline Point3( const S a, const S b,  const S c):Point3<S> (a,b,c){};
 //};
@@ -929,7 +929,7 @@ inline S SquaredDistance( Point<N,S> const & p1,Point<N,S> const & p2 )
 //
 //template <typename S>
 //struct Point4:public Point4<S>{
-//	inline Point4(){}; 
+//	inline Point4(){};
 //	inline Point4(Point4<S> const & p):Point4<S>(p){}
 //	inline Point4( const S a, const S b,  const S c, const S d):Point4<S>(a,b,c,d){};
 //};
@@ -942,7 +942,7 @@ typedef Point2<short>  Vector2s;
 typedef Point2<int>	  Vector2i;
 typedef Point2<float>  Vector2f;
 typedef Point2<double> Vector2d;
-							
+
 typedef Point3<short>  Point3s;
 typedef Point3<int>	  Point3i;
 typedef Point3<float>  Point3f;
@@ -951,8 +951,8 @@ typedef Point3<short>  Vector3s;
 typedef Point3<int>	  Vector3i;
 typedef Point3<float>  Vector3f;
 typedef Point3<double> Vector3d;
-							
-							
+
+
 typedef Point4<short>  Point4s;
 typedef Point4<int>	  Point4i;
 typedef Point4<float>  Point4f;

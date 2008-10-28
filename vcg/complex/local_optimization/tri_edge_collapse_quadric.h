@@ -403,7 +403,7 @@ public:
 			{
 				if(Params().NormalCheck){
 					nn=NormalizedNormal(*x.F());
-					ndiff=nn*on[i++];
+					ndiff=nn.dot(on[i++]);
 					if(ndiff<MinCos) MinCos=ndiff;
 				}
 				if(Params().QualityCheck){
@@ -416,7 +416,7 @@ public:
 			{
 				if(Params().NormalCheck){
 					nn=NormalizedNormal(*x.F());
-					ndiff=nn*on[i++];
+					ndiff=nn.dot(on[i++]);
 					if(ndiff<MinCos) MinCos=ndiff;
 				}
 				if(Params().QualityCheck){
@@ -542,7 +542,7 @@ static void InitQuadric(TriMeshType &m)
 						if(!Params().UseArea)	
 							p.Normalize();
 
-						p.SetOffset( p.Direction() * (*pf).V(0)->cP());
+						p.SetOffset( p.Direction().dot((*pf).V(0)->cP()));
 
 							// Calcolo quadrica	delle facce
 						q.ByPlane(p);
@@ -559,10 +559,10 @@ static void InitQuadric(TriMeshType &m)
 								// Nota che la lunghezza dell'edge DEVE essere Normalizzata 
 								// poiche' la pesatura in funzione dell'area e'gia fatta in p.Direction() 
 								// Senza la normalize il bordo e' pesato in funzione della grandezza della mesh (mesh grandi non decimano sul bordo)
-								pb.SetDirection(p.Direction() ^ ( (*pf).V1(j)->cP() - (*pf).V(j)->cP() ).Normalize());
+								pb.SetDirection(p.Direction() ^ ( (*pf).V1(j)->cP() - (*pf).V(j)->cP() ).normalized());
 								if(  (*pf).IsB(j) ) pb.SetDirection(pb.Direction()* (ScalarType)Params().BoundaryWeight);        // amplify border planes
 								               else pb.SetDirection(pb.Direction()* (ScalarType)(Params().BoundaryWeight/100.0)); // and consider much less quadric for quality
-								pb.SetOffset(pb.Direction() * (*pf).V(j)->cP());
+								pb.SetOffset(pb.Direction().dot((*pf).V(j)->cP()));
 								q.ByPlane(pb);
 
 								if( (*pf).V (j)->IsW() )	QH::Qd((*pf).V (j)) += q;			// Sommo le quadriche

@@ -271,12 +271,12 @@ namespace vcg {
 		Point3t p21 = p2-p1;
 		Point3t p20 = p2-p0;
 
-		ScalarType delta0_p01 =  p10*p1;
-		ScalarType delta1_p01 = -p10*p0;
-		ScalarType delta0_p02 =  p20*p2;
-		ScalarType delta2_p02 = -p20*p0;
-		ScalarType delta1_p12 =  p21*p2;
-		ScalarType delta2_p12 = -p21*p1;
+		ScalarType delta0_p01 =  p10.dot(p1);
+		ScalarType delta1_p01 = -p10.dot(p0);
+		ScalarType delta0_p02 =  p20.dot(p2);
+		ScalarType delta2_p02 = -p20.dot(p0);
+		ScalarType delta1_p12 =  p21.dot(p2);
+		ScalarType delta2_p12 = -p21.dot(p1);
 
 		// the closest point can be one of the vertices of the triangle
 		if			(delta1_p01<=ScalarType(0.0) && delta2_p02<=ScalarType(0.0)) { witness = p0; }
@@ -284,10 +284,10 @@ namespace vcg {
 		else if (delta0_p02<=ScalarType(0.0) && delta1_p12<=ScalarType(0.0)) { witness = p2; }
 		else
 		{
-			ScalarType temp = p10*p2;
+			ScalarType temp = p10.dot(p2);
 			ScalarType delta0_p012 = delta0_p01*delta1_p12 + delta2_p12*temp;
 			ScalarType delta1_p012 = delta1_p01*delta0_p02 - delta2_p02*temp;
-			ScalarType delta2_p012 = delta2_p02*delta0_p01 - delta1_p01*(p20*p1);
+			ScalarType delta2_p012 = delta2_p02*delta0_p01 - delta1_p01*(p20.dot(p1));
 
 			// otherwise, can be a point lying on same edge of the triangle
 			if (delta0_p012<=ScalarType(0.0)) 
@@ -366,10 +366,10 @@ namespace vcg {
     typedef typename SEGMENTTYPE::ScalarType T;
     const T epsilon = T(1e-8);
 
-    T k = pl.Direction() * (sg.P1()-sg.P0());
+    T k = pl.Direction().dot((sg.P1()-sg.P0()));
     if( (k > -epsilon) && (k < epsilon))
       return false;
-    T r = (pl.Offset() - pl.Direction()*sg.P0())/k;	// Compute ray distance
+    T r = (pl.Offset() - pl.Direction().dot(sg.P0()))/k;	// Compute ray distance
     if( (r<0) || (r > 1.0))
       return false;
     po = sg.P0()*(1-r)+sg.P1() * r;
@@ -404,7 +404,7 @@ namespace vcg {
 
   /// intersection between two triangles
   template<typename TRIANGLETYPE> 
-    inline bool Intersection(const TRIANGLETYPE & t0,const TRIANGLETYPE & t1){
+    inline bool Intersection_(const TRIANGLETYPE & t0,const TRIANGLETYPE & t1){
     return NoDivTriTriIsect(t0.P0(0),t0.P0(1),t0.P0(2),
 			    t1.P0(0),t1.P0(1),t1.P0(2));
   }

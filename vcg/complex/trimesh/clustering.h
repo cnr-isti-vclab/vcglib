@@ -8,7 +8,7 @@
  *                                                                    \      *
  * All rights reserved.                                                      *
  *                                                                           *
- * This program is free software; you can redistribute it and/or modify      *   
+ * This program is free software; you can redistribute it and/or modify      *
  * it under the terms of the GNU General Public License as published by      *
  * the Free Software Foundation; either version 2 of the License, or         *
  * (at your option) any later version.                                       *
@@ -101,7 +101,7 @@ class HashedPoint3i : public Point3i
 {
 public:
 
-  const size_t Hash() const 
+  const size_t Hash() const
   {
     return (V(0)*HASH_P0 ^ V(1)*HASH_P1 ^ V(2)*HASH_P2);
   }
@@ -129,9 +129,9 @@ class  AverageCell
     inline void Add(MeshType &m, FaceType &f, int i)
     {
       p+=f.cV(i)->cP();
-      // we prefer to use the un-normalized face normal so small faces facing away are dropped out 
+      // we prefer to use the un-normalized face normal so small faces facing away are dropped out
       // and the resulting average is weighed with the size of the faces falling here.
-      n+=f.cN();      
+      n+=f.cN();
       cnt++;
     }
     AverageCell(): p(0,0,0), n(0,0,0),cnt(0){}
@@ -139,7 +139,7 @@ class  AverageCell
    CoordType n;
    int cnt;
    int id;
-   CoordType Pos() const 
+   CoordType Pos() const
   {
     return p/cnt;
   }
@@ -159,9 +159,9 @@ class  AverageColorCell
       p+=f.cV(i)->cP();
       c+=CoordType(f.cV(i)->C()[0],f.cV(i)->C()[1],f.cV(i)->C()[2]);
 
-      // we prefer to use the un-normalized face normal so small faces facing away are dropped out 
+      // we prefer to use the un-normalized face normal so small faces facing away are dropped out
       // and the resulting average is weighed with the size of the faces falling here.
-      n+=f.cN();      
+      n+=f.cN();
       cnt++;
     }
     AverageColorCell(): p(0,0,0), n(0,0,0), c(0,0,0),cnt(0){}
@@ -170,12 +170,12 @@ class  AverageColorCell
    CoordType c;
    int cnt;
    int id;
-  Color4b Col() const 
+  Color4b Col() const
   {
     return Color4b(c[0]/cnt,c[1]/cnt,c[2]/cnt,255);
   }
 
-   CoordType Pos() const 
+   CoordType Pos() const
   {
     return p/cnt;
   }
@@ -187,7 +187,7 @@ class  AverageColorCell
 */
 template<class MeshType, class CellType, bool Selected=true>
 class Clustering
-{	
+{
  public:
   typedef typename MeshType::ScalarType  ScalarType;
   typedef typename MeshType::CoordType CoordType;
@@ -198,7 +198,7 @@ class Clustering
   typedef typename MeshType::FaceIterator   FaceIterator;
 
   // DuplicateFace == bool means that during the clustering doublesided surface (like a thin shell) that would be clustered to a single surface
-  // will be merged into two identical but opposite faces. 
+  // will be merged into two identical but opposite faces.
   // So in practice:
   // DuplicateFace=true a model with looks ok if you enable backface culling
   // DuplicateFace=false a model with looks ok if you enable doublesided lighting and disable backfaceculling
@@ -207,7 +207,7 @@ class Clustering
 
   class SimpleTri
   {
-  public: 
+  public:
     CellType *v[3];
     const int ii(int i) const {return *((int *)(&(v[i])));}
     bool operator < ( const SimpleTri &p) const {
@@ -218,7 +218,7 @@ class Clustering
 
     // Sort the vertex of the face maintaining the original face orientation (it only ensure that v0 is the minimum)
     void sortOrient()
-    { 
+    {
       if(v[1] < v[0] && v[1] < v[2] ) { std::swap(v[0],v[1]); std::swap(v[1],v[2]); return; } // v1 was the minimum
       if(v[2] < v[0] && v[2] < v[1] ) { std::swap(v[0],v[2]); std::swap(v[1],v[2]); return; } // v2 was the minimum
       return; // v0 was the minimum;
@@ -238,13 +238,13 @@ class Clustering
 
 
   // The init function Take two parameters
-  // _size is the approximate total number of cells composing the grid surrounding the objects (usually a large number) 
+  // _size is the approximate total number of cells composing the grid surrounding the objects (usually a large number)
   //       eg _size==1.000.000 means a 100x100x100 grid
   // _cellsize is the absolute lenght of the edge of the grid cell.
   //       eg _cellsize==2.0 means that all the vertexes in a 2.0x2.0x2.0 cell are clustered togheter
 
   // Notes:
-  // _size is used only if the cell edge IS zero. 
+  // _size is used only if the cell edge IS zero.
   // _cellsize gives you an absolute measure of the maximum error introduced
   //           during the simplification (e.g. half of the cell edge lenght)
 
@@ -267,8 +267,8 @@ class Clustering
 		Grid.voxel[1] = Grid.dim[1]/Grid.siz[1];
 		Grid.voxel[2] = Grid.dim[2]/Grid.siz[2];
   }
-  
-  
+
+
   BasicGrid<ScalarType> Grid;
 
 #ifdef _MSC_VER
@@ -283,7 +283,7 @@ class Clustering
 #endif
 
   STDEXT::hash_map<HashedPoint3i,CellType> GridCell;
-  
+
   void Add(MeshType &m)
   {
     FaceIterator fi;
@@ -300,17 +300,17 @@ class Clustering
         Grid.PToIP((*fi).cV(i)->cP(), pi );
         st.v[i]=&(GridCell[pi]);
         st.v[i]->Add(m,*(fi),i);
-      }        
+      }
       if( (st.v[0]!=st.v[1]) && (st.v[0]!=st.v[2]) && (st.v[1]!=st.v[2]) )
       { // if we allow the duplication of faces we sort the vertex only partially (to maintain the original face orientation)
-        if(DuplicateFaceParam) st.sortOrient();  
+        if(DuplicateFaceParam) st.sortOrient();
                           else st.sort();
         TriSet.insert(st);
       }
     //  printf("Inserted %8i triangles, clustered to %8i tri and %i cells\n",distance(m.face.begin(),fi),TriSet.size(),GridCell.size());
     }
   }
-  
+
   void Extract(MeshType &m)
   {
     m.Clear();
@@ -339,23 +339,23 @@ class Clustering
       m.face[i].V(0)=&(m.vert[(*ti).v[0]->id]);
       m.face[i].V(1)=&(m.vert[(*ti).v[1]->id]);
       m.face[i].V(2)=&(m.vert[(*ti).v[2]->id]);
-      // if we are merging faces even when opposite we choose 
+      // if we are merging faces even when opposite we choose
       // the best orientation according to the averaged normal
-      if(!DuplicateFaceParam) 
+      if(!DuplicateFaceParam)
       {
 		  CoordType N=vcg::Normal(m.face[i]);
       int badOrient=0;
-      if( N*(*ti).v[0]->n <0) ++badOrient;
-      if( N*(*ti).v[1]->n <0) ++badOrient;
-      if( N*(*ti).v[2]->n <0) ++badOrient;
+      if( N.dot((*ti).v[0]->n) <0) ++badOrient;
+      if( N.dot((*ti).v[1]->n) <0) ++badOrient;
+      if( N.dot((*ti).v[2]->n) <0) ++badOrient;
       if(badOrient>2)
           std::swap(m.face[i].V(0),m.face[i].V(1));
       }
       i++;
     }
-    
+
   }
-}; //end class clustering 
+}; //end class clustering
  } // namespace tri
 } // namespace vcg
 

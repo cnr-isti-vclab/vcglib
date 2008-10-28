@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -40,17 +40,17 @@ Revision 1.13  2005/11/17 00:42:03  cignoni
 #define _VCG_INERTIA_
 
 /*
-The algorithm is based on a three step reduction of the volume integrals 
-to successively simpler integrals. The algorithm is designed to minimize 
-the numerical errors that can result from poorly conditioned alignment of 
-polyhedral faces. It is also designed for efficiency. All required volume 
-integrals of a polyhedron are computed together during a single walk over 
-the boundary of the polyhedron; exploiting common subexpressions reduces 
+The algorithm is based on a three step reduction of the volume integrals
+to successively simpler integrals. The algorithm is designed to minimize
+the numerical errors that can result from poorly conditioned alignment of
+polyhedral faces. It is also designed for efficiency. All required volume
+integrals of a polyhedron are computed together during a single walk over
+the boundary of the polyhedron; exploiting common subexpressions reduces
 floating point operations.
 
 For more information, check out:
 
-Brian Mirtich, 
+Brian Mirtich,
 ``Fast and Accurate Computation of Polyhedral Mass Properties,''
 journal of graphics tools, volume 1, number 2, 1996
 
@@ -67,7 +67,7 @@ namespace vcg
 template <class InertiaMeshType>
 class Inertia
 {
-  typedef InertiaMeshType MeshType; 
+  typedef InertiaMeshType MeshType;
 	typedef typename MeshType::VertexType     VertexType;
 	typedef typename MeshType::VertexPointer  VertexPointer;
 	typedef typename MeshType::VertexIterator VertexIterator;
@@ -121,7 +121,7 @@ public:
     db = b1 - b0;
     a0_2 = a0 * a0; a0_3 = a0_2 * a0; a0_4 = a0_3 * a0;
     b0_2 = b0 * b0; b0_3 = b0_2 * b0; b0_4 = b0_3 * b0;
-    a1_2 = a1 * a1; a1_3 = a1_2 * a1; 
+    a1_2 = a1 * a1; a1_3 = a1_2 * a1;
     b1_2 = b1 * b1; b1_3 = b1_2 * b1;
 
     C1 = a1 + a0;
@@ -180,7 +180,7 @@ void CompFaceIntegrals(FaceType &f)
 
   Faaa = k1 * Paaa;
   Fbbb = k1 * Pbbb;
-  Fccc = -k4 * (CUBE(n[A])*Paaa + 3*SQR(n[A])*n[B]*Paab 
+  Fccc = -k4 * (CUBE(n[A])*Paaa + 3*SQR(n[A])*n[B]*Paab
 	   + 3*n[A]*SQR(n[B])*Pabb + CUBE(n[B])*Pbbb
 	   + 3*w*(SQR(n[A])*Paa + 2*n[A]*n[B]*Pab + SQR(n[B])*Pbb)
 	   + w*w*(3*(n[A]*Pa + n[B]*Pb) + w*P1));
@@ -197,13 +197,13 @@ void Compute(MeshType &m)
   tri::UpdateNormals<MeshType>::PerFaceNormalized(m);
   double nx, ny, nz;
 
-  T0 = T1[X] = T1[Y] = T1[Z] 
-     = T2[X] = T2[Y] = T2[Z] 
+  T0 = T1[X] = T1[Y] = T1[Z]
+     = T2[X] = T2[Y] = T2[Z]
      = TP[X] = TP[Y] = TP[Z] = 0;
 	FaceIterator fi;
   for (fi=m.face.begin(); fi!=m.face.end();++fi) if(!(*fi).IsD()) {
 		FaceType &f=(*fi);
-  
+
     nx = fabs(f.N()[0]);
     ny = fabs(f.N()[1]);
     nz = fabs(f.N()[2]);
@@ -233,12 +233,12 @@ void Compute(MeshType &m)
 }
 
 ScalarType Mass()
-{ 
+{
 	return static_cast<ScalarType>(T0);
 }
 
 Point3<ScalarType>  CenterOfMass()
-{ 
+{
 	Point3<ScalarType>  r;
   r[X] = T1[X] / T0;
   r[Y] = T1[Y] / T0;
@@ -261,9 +261,9 @@ void InertiaTensor(Matrix33<ScalarType> &J ){
   J[X][X] -= T0 * (r[Y]*r[Y] + r[Z]*r[Z]);
   J[Y][Y] -= T0 * (r[Z]*r[Z] + r[X]*r[X]);
   J[Z][Z] -= T0 * (r[X]*r[X] + r[Y]*r[Y]);
-  J[X][Y] = J[Y][X] += T0 * r[X] * r[Y]; 
-  J[Y][Z] = J[Z][Y] += T0 * r[Y] * r[Z]; 
-  J[Z][X] = J[X][Z] += T0 * r[Z] * r[X]; 
+  J[X][Y] = J[Y][X] += T0 * r[X] * r[Y];
+  J[Y][Z] = J[Z][Y] += T0 * r[Y] * r[Z];
+  J[Z][X] = J[X][Z] += T0 * r[Z] * r[X];
 }
 
 void InertiaTensor(Matrix44<ScalarType> &J )
@@ -284,9 +284,9 @@ void InertiaTensor(Matrix44<ScalarType> &J )
   J[X][X] -= T0 * (r[Y]*r[Y] + r[Z]*r[Z]);
   J[Y][Y] -= T0 * (r[Z]*r[Z] + r[X]*r[X]);
   J[Z][Z] -= T0 * (r[X]*r[X] + r[Y]*r[Y]);
-  J[X][Y] = J[Y][X] += T0 * r[X] * r[Y]; 
-  J[Y][Z] = J[Z][Y] += T0 * r[Y] * r[Z]; 
-  J[Z][X] = J[X][Z] += T0 * r[Z] * r[X]; 
+  J[X][Y] = J[Y][X] += T0 * r[X] * r[Y];
+  J[Y][Z] = J[Z][Y] += T0 * r[Y] * r[Z];
+  J[Z][X] = J[X][Z] += T0 * r[Z] * r[X];
 }
 
 
@@ -321,8 +321,8 @@ static void Covariance(const MeshType & m, vcg::Point3<ScalarType> & bary, vcg::
 				area+=vcg::DoubleArea(*fi);
 			}
 	bary/=area;
-	 
-	
+
+
 	C.SetZero();
 	// C as covariance of triangle (0,0,0)(1,0,0)(0,1,0)
 	vcg::Matrix33<ScalarType> C0;
@@ -345,9 +345,15 @@ static void Covariance(const MeshType & m, vcg::Point3<ScalarType> & bary, vcg::
 			const float da = n.Norm();
 			n/=da*da;
 
-			A.SetColumn(0,P1-P0);
-			A.SetColumn(1,P2-P0);
-			A.SetColumn(2,n);
+			#ifndef VCG_USE_EIGEN
+			A.SetColumn(0, P1-P0);
+			A.SetColumn(1, P2-P0);
+			A.SetColumn(2, n);
+			#else
+			A.col(0) = P1-P0;
+			A.col(1) = P2-P0;
+			A.col(2) = n;
+			#endif
 			CoordType delta = P0 - bary;
 
 			/* DC is calculated as integral of (A*x+delta) * (A*x+delta)^T over the triangle,

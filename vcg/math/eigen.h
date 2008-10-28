@@ -24,6 +24,8 @@
 #ifndef EIGEN_VCGLIB
 #define EIGEN_VCGLIB
 
+// TODO enable the vectorization
+#define EIGEN_DONT_VECTORIZE
 #define EIGEN_MATRIXBASE_PLUGIN <vcg/math/eigen_vcgaddons.h>
 
 #include "../Eigen/LU"

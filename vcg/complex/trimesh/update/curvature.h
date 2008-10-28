@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -73,12 +73,12 @@ the vertex
 namespace vcg {
 namespace tri {
 
-/// \ingroup trimesh 
+/// \ingroup trimesh
 
 /// \headerfile curvature.h vcg/complex/trimesh/update/curvature.h
 
 /// \brief Management, updating and computation of per-vertex and per-face normals.
-/** 
+/**
 This class is used to compute or update the normals that can be stored in the vertex or face component of a mesh.
 */
 
@@ -98,18 +98,18 @@ public:
 	typedef typename MeshType::CoordType CoordType;
 	typedef typename CoordType::ScalarType ScalarType;
 
-	
+
 private:
 		typedef struct AdjVertex {
 			VertexType * vert;
 			float doubleArea;
  			bool isBorder;
 		};
-		
+
 
 public:
 	/// \brief Compute principal direction and magniuto of curvature.
-	
+
 /*
 	Compute principal direction and magniuto of curvature as describe in the paper:
 	@InProceedings{bb33922,
@@ -144,10 +144,10 @@ public:
 					VertexType* tempV;
 					float totalDoubleAreaSize = 0.0f;
 
-					// compute the area of each triangle around the central vertex as well as their total area 
-					do 
+					// compute the area of each triangle around the central vertex as well as their total area
+					do
 					{
-						// this bring the pos to the next triangle  counterclock-wise 
+						// this bring the pos to the next triangle  counterclock-wise
 						pos.FlipF();
 						pos.FlipE();
 
@@ -157,13 +157,13 @@ public:
 						AdjVertex v;
 
 						v.isBorder = pos.IsBorder();
-						v.vert = tempV;			
+						v.vert = tempV;
 						v.doubleArea = vcg::DoubleArea(*pos.F());
 						totalDoubleAreaSize += v.doubleArea;
 
-						vertices.push_back(v);						
-					} 
-					while(tempV != firstV);	
+						vertices.push_back(v);
+					}
+					while(tempV != firstV);
 
 					// compute the weights for the formula computing matrix M
 					for (int i = 0; i < vertices.size(); ++i) {
@@ -190,8 +190,8 @@ public:
 					M.SetZero();
 					for (int i = 0; i < vertices.size(); ++i) {
 						CoordType edge = (central_vertex->cP() - vertices[i].vert->cP());
-						float curvature = (2.0f * (central_vertex->cN() * edge) ) / edge.SquaredNorm();
-						CoordType T = (Tp*edge).Normalize();
+						float curvature = (2.0f * (central_vertex->cN().dot(edge)) ) / edge.SquaredNorm();
+						CoordType T = (Tp*edge).normalized();
 						tempMatrix.ExternalProduct(T,T);
 						M += tempMatrix * weights[i] * curvature ;
 					}
@@ -201,7 +201,7 @@ public:
 					CoordType e1(1.0f,0.0f,0.0f);
 					if ((e1 - central_vertex->cN()).SquaredNorm() > (e1 + central_vertex->cN()).SquaredNorm())
 						W = e1 - central_vertex->cN();
-					else 
+					else
 						W = e1 + central_vertex->cN();
 					W.Normalize();
 
@@ -282,7 +282,7 @@ public:
 					float Principal_Curvature2 = (3.0f * StMS[1][1]) - StMS[0][0];
 
 					CoordType Principal_Direction1 = T1 * c - T2 * s;
-					CoordType Principal_Direction2 = T1 * s + T2 * c; 
+					CoordType Principal_Direction2 = T1 * s + T2 * c;
 
 					(*vi).PD1() = Principal_Direction1;
 					(*vi).PD2() = Principal_Direction2;
@@ -291,8 +291,8 @@ public:
 				}
 			}
 		}
-	 
-	 
+
+
 
 
   class AreaData
@@ -301,7 +301,7 @@ public:
     float A;
   };
 
-	/** Curvature meseaure as described in the paper: 
+	/** Curvature meseaure as described in the paper:
 	Robust principal curvatures on Multiple Scales, Yong-Liang Yang, Yu-Kun Lai, Shi-Min Hu Helmut Pottmann
 	SGP 2004
 	If pointVSfaceInt==true the covariance is computed by montecarlo sampling on the mesh (faster)
@@ -325,11 +325,11 @@ public:
 			PointsGridType pGrid;
 
 			// Fill the grid used
-			if(pointVSfaceInt){ 
+			if(pointVSfaceInt){
 					area = Stat<MeshType>::ComputeMeshArea(m);
-					vcg::tri::SurfaceSampling<MeshType,vcg::tri::TrivialSampler<MeshType> >::Montecarlo(m,vs,1000 * area / (2*M_PI*r*r )); 
+					vcg::tri::SurfaceSampling<MeshType,vcg::tri::TrivialSampler<MeshType> >::Montecarlo(m,vs,1000 * area / (2*M_PI*r*r ));
 					vi = vcg::tri::Allocator<MeshType>::AddVertices(tmpM,m.vert.size());
-					for(int y  = 0; y <   m.vert.size(); ++y,++vi)  (*vi).P() =  m.vert[y].P(); 
+					for(int y  = 0; y <   m.vert.size(); ++y,++vi)  (*vi).P() =  m.vert[y].P();
 					pGrid.Set(tmpM.vert.begin(),tmpM.vert.end());
 				}	else{	mGrid.Set(m.face.begin(),m.face.end()); }
 
@@ -340,7 +340,7 @@ public:
 
 						// sample the neighborhood
 						if(pointVSfaceInt)
-						{ 
+						{
 							vcg::tri::GetInSphereVertex<
 								MeshType,
 								PointsGridType,std::vector<VertexType*>,
@@ -356,25 +356,25 @@ public:
 						vcg::tri::Inertia<MeshType>::Covariance(tmpM,_bary,A);
 					}
 
-					Jacobi(A,  eigenvalues , eigenvectors, nrot); 
+					Jacobi(A,  eigenvalues , eigenvectors, nrot);
 
 					// get the estimate of curvatures from eigenvalues and eigenvectors
 					// find the 2 most tangent eigenvectors (by finding the one closest to the normal)
-					int best = 0; ScalarType bestv = fabs( (*vi).cN() * eigenvectors.GetColumn(0).Normalize());
+					int best = 0; ScalarType bestv = fabs( (*vi).cN().dot(eigenvectors.GetColumn(0).normalized()) );
 					for(int i  = 1 ; i < 3; ++i){
-						ScalarType prod = fabs((*vi).cN() * eigenvectors.GetColumn(i).Normalize());
+						ScalarType prod = fabs((*vi).cN().dot(eigenvectors.GetColumn(i).normalized()));
 						if( prod > bestv){bestv = prod; best = i;}
 					}
 
-					(*vi).PD1()  = eigenvectors.GetColumn( (best+1)%3).Normalize();
-					(*vi).PD2()  = eigenvectors.GetColumn( (best+2)%3).Normalize();
+					(*vi).PD1()  = eigenvectors.GetColumn( (best+1)%3).normalized();
+					(*vi).PD2()  = eigenvectors.GetColumn( (best+2)%3).normalized();
 
 					// project them to the plane identified by the normal
 					vcg::Matrix33<ScalarType> rot;
-					ScalarType angle = acos((*vi).PD1()*(*vi).N());
+					ScalarType angle = acos((*vi).PD1().dot((*vi).N()));
 					rot.SetRotateRad(  - (M_PI*0.5 - angle),(*vi).PD1()^(*vi).N());
 					(*vi).PD1() = rot*(*vi).PD1();
-					angle = acos((*vi).PD2()*(*vi).N());
+					angle = acos((*vi).PD2().dot((*vi).N()));
 					rot.SetRotateRad(  - (M_PI*0.5 - angle),(*vi).PD2()^(*vi).N());
 					(*vi).PD2() = rot*(*vi).PD2();
 
@@ -388,26 +388,26 @@ public:
 																				std::swap((*vi).PD1(),(*vi).PD2());
 																			}
 			}
-			
+
 
 		}
- /// \brief Computes the discrete gaussian curvature. 
- 
+ /// \brief Computes the discrete gaussian curvature.
+
 /** For further details, please, refer to: \n
 
 - <em> Discrete Differential-Geometry Operators for Triangulated 2-Manifolds Mark Meyer,
  Mathieu Desbrun, Peter Schroder, Alan H. Barr VisMath '02, Berlin </em>
-*/   
-	static void MeanAndGaussian(MeshType & m) 
+*/
+	static void MeanAndGaussian(MeshType & m)
     {
 			assert(HasFFAdjacency(m));
       float area0, area1, area2, angle0, angle1, angle2, e01, e12, e20;
 			FaceIterator fi;
-      VertexIterator vi;   
+      VertexIterator vi;
 			typename MeshType::CoordType  e01v ,e12v ,e20v;
 
-			SimpleTempData<VertContainer, AreaData> TDAreaPtr(m.vert);  
-			SimpleTempData<VertContainer, typename MeshType::CoordType> TDContr(m.vert);  
+			SimpleTempData<VertContainer, AreaData> TDAreaPtr(m.vert);
+			SimpleTempData<VertContainer, typename MeshType::CoordType> TDContr(m.vert);
 
  			vcg::tri::UpdateNormals<MeshType>::PerVertexNormalized(m);
      //Compute AreaMix in H (vale anche per K)
@@ -425,49 +425,49 @@ public:
         angle0 = math::Abs(Angle(	(*fi).P(1)-(*fi).P(0),(*fi).P(2)-(*fi).P(0) ));
         angle1 = math::Abs(Angle(	(*fi).P(0)-(*fi).P(1),(*fi).P(2)-(*fi).P(1) ));
         angle2 = M_PI-(angle0+angle1);
-        
+
         if((angle0 < M_PI/2) && (angle1 < M_PI/2) && (angle2 < M_PI/2))  // triangolo non ottuso
-        { 
+        {
 	        float e01 = SquaredDistance( (*fi).V(1)->cP() , (*fi).V(0)->cP() );
 	        float e12 = SquaredDistance( (*fi).V(2)->cP() , (*fi).V(1)->cP() );
 	        float e20 = SquaredDistance( (*fi).V(0)->cP() , (*fi).V(2)->cP() );
-      	
+
           area0 = ( e20*(1.0/tan(angle1)) + e01*(1.0/tan(angle2)) ) / 8.0;
 	        area1 = ( e01*(1.0/tan(angle2)) + e12*(1.0/tan(angle0)) ) / 8.0;
 	        area2 = ( e12*(1.0/tan(angle0)) + e20*(1.0/tan(angle1)) ) / 8.0;
-      	
+
 	        (TDAreaPtr)[(*fi).V(0)].A  += area0;
 	        (TDAreaPtr)[(*fi).V(1)].A  += area1;
 	        (TDAreaPtr)[(*fi).V(2)].A  += area2;
 
 	      }
         else // obtuse
-	      { 
+	      {
 					(TDAreaPtr)[(*fi).V(0)].A += vcg::DoubleArea<typename MeshType::FaceType>((*fi)) / 6.0;
 	        (TDAreaPtr)[(*fi).V(1)].A += vcg::DoubleArea<typename MeshType::FaceType>((*fi)) / 6.0;
-	        (TDAreaPtr)[(*fi).V(2)].A += vcg::DoubleArea<typename MeshType::FaceType>((*fi)) / 6.0;      
+	        (TDAreaPtr)[(*fi).V(2)].A += vcg::DoubleArea<typename MeshType::FaceType>((*fi)) / 6.0;
 	      }
-      }   
-     
+      }
+
       for(fi=m.face.begin();fi!=m.face.end();++fi) if( !(*fi).IsD() )
-      {    
+      {
         angle0 = math::Abs(Angle(	(*fi).P(1)-(*fi).P(0),(*fi).P(2)-(*fi).P(0) ));
         angle1 = math::Abs(Angle(	(*fi).P(0)-(*fi).P(1),(*fi).P(2)-(*fi).P(1) ));
         angle2 = M_PI-(angle0+angle1);
-        
+
         e01v = ( (*fi).V(1)->cP() - (*fi).V(0)->cP() ) ;
         e12v = ( (*fi).V(2)->cP() - (*fi).V(1)->cP() ) ;
         e20v = ( (*fi).V(0)->cP() - (*fi).V(2)->cP() ) ;
-        
+
         TDContr[(*fi).V(0)] += ( e20v * (1.0/tan(angle1)) - e01v * (1.0/tan(angle2)) ) / 4.0;
 	      TDContr[(*fi).V(1)] += ( e01v * (1.0/tan(angle2)) - e12v * (1.0/tan(angle0)) ) / 4.0;
 	      TDContr[(*fi).V(2)] += ( e12v * (1.0/tan(angle0)) - e20v * (1.0/tan(angle1)) ) / 4.0;
-          
+
         (*fi).V(0)->Kg() -= angle0;
         (*fi).V(1)->Kg() -= angle1;
         (*fi).V(2)->Kg() -= angle2;
 
-        
+
         for(int i=0;i<3;i++)
 		    {
 			    if(vcg::face::IsBorder((*fi), i))
@@ -475,7 +475,7 @@ public:
 				    CoordType e1,e2;
 				    vcg::face::Pos<FaceType> hp(&*fi, i, (*fi).V(i));
 				    vcg::face::Pos<FaceType> hp1=hp;
-				    
+
             hp1.FlipV();
     	      e1=hp1.v->cP() - hp.v->cP();
 				    hp1.FlipV();
@@ -485,7 +485,7 @@ public:
 			    }
 	      }
       }
-         
+
       for(vi=m.vert.begin(); vi!=m.vert.end(); ++vi) if(!(*vi).IsD() /*&& !(*vi).IsB()*/)
       {
         if((TDAreaPtr)[*vi].A<=std::numeric_limits<ScalarType>::epsilon())
@@ -495,30 +495,30 @@ public:
         }
         else
         {
-					(*vi).Kh()  = (((TDContr)[*vi]* (*vi).cN()>0)?1.0:-1.0)*((TDContr)[*vi] / (TDAreaPtr) [*vi].A).Norm();
+					(*vi).Kh()  = (((TDContr)[*vi].dot((*vi).cN())>0)?1.0:-1.0)*((TDContr)[*vi] / (TDAreaPtr) [*vi].A).Norm();
           (*vi).Kg() /= (TDAreaPtr)[*vi].A;
         }
 			}
     }
-	
-	
+
+
 	/// \brief Update the mean and the gaussian curvature of a vertex.
-	
+
 	/**
-	The function uses the VF adiacency to walk around the vertex. 
+	The function uses the VF adiacency to walk around the vertex.
 	\return It will return the voronoi area around the vertex.  If (norm == true) the mean and the gaussian curvature are normalized.
 	 Based on the paper  <a href="http://www2.in.tu-clausthal.de/~hormann/papers/Dyn.2001.OTU.pdf">  <em> "Optimizing 3d triangulations using discrete curvature analysis" </em> </a>
 	  */
-	  
+
 	static float VertexCurvature(VertexPointer v, bool norm = true)
 	{
 		// VFAdjacency required!
 		assert(FaceType::HasVFAdjacency());
 		assert(VertexType::HasVFAdjacency());
-		
+
 		VFIteratorType vfi(v);
 		float A = 0;
-		
+
 		v->Kh() = 0;
 		v->Kg() = 2 * M_PI;
 
@@ -527,7 +527,7 @@ public:
 				FacePointer f = vfi.F();
 				int i = vfi.I();
 				VertexPointer v0 = f->V0(i), v1 = f->V1(i), v2 = f->V2(i);
-				
+
 				float ang0 = math::Abs(Angle(v1->P() - v0->P(), v2->P() - v0->P() ));
 				float ang1 = math::Abs(Angle(v0->P() - v1->P(), v2->P() - v1->P() ));
 				float ang2 = M_PI - ang0 - ang1;
@@ -544,22 +544,22 @@ public:
 					A += (s02 * tan(ang0)) / 8.0;
 				else  // non obctuse triangle
 					A += ((s02 / tan(ang1)) + (s01 / tan(ang2))) / 8.0;
-				
+
 				// gaussian curvature update
 				v->Kg() -= ang0;
 
 				// mean curvature update
 				ang1 = math::Abs(Angle(f->N(), v1->N()));
 				ang2 = math::Abs(Angle(f->N(), v2->N()));
-				v->Kh() += ( (math::Sqrt(s01) / 2.0) * ang1 + 
+				v->Kh() += ( (math::Sqrt(s01) / 2.0) * ang1 +
 				             (math::Sqrt(s02) / 2.0) * ang2 );
 			}
-			
+
 			++vfi;
 		}
-		
+
 		v->Kh() /= 4.0f;
-		
+
 		if(norm) {
 			if(A <= std::numeric_limits<float>::epsilon()) {
 				v->Kh() = 0;
@@ -597,7 +597,7 @@ public:
 		assert(FaceType::HasFFAdjacency());
 		assert(FaceType::HasFaceNormal());
 
-		
+
 		typename MeshType::VertexIterator vi;
 
 		for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
@@ -616,7 +616,7 @@ public:
 					normalized_edge/=edge_length;
 					Point3<ScalarType> n1 = p.F()->cN();n1.Normalize();
 					Point3<ScalarType> n2 = p.FFlip()->cN();n2.Normalize();
-					ScalarType n1n2 = (n1 ^ n2)* normalized_edge;
+					ScalarType n1n2 = (n1 ^ n2).dot(normalized_edge);
 					n1n2 = math::Max<ScalarType >(math::Min<ScalarType> ( 1.0,n1n2),-1.0);
 					ScalarType beta = math::Asin(n1n2);
 					m33[0][0] += beta*edge_length*normalized_edge[0]*normalized_edge[0];
@@ -645,7 +645,11 @@ public:
 			ScalarType normal = std::numeric_limits<ScalarType>::min();
 			int normI = 0;
 			for(int i = 0; i < 3; ++i)
-				if( fabs((*vi).N().Normalize() * vect.GetRow(i)) > normal ){normal= fabs((*vi).N().Normalize() * vect.GetRow(i)); normI = i;}
+				if( fabs((*vi).N().Normalize().dot(vect.GetRow(i))) > normal )
+				{
+					normal= fabs((*vi).N().Normalize().dot(vect.GetRow(i)));
+					normI = i;
+				}
 			int maxI = (normI+2)%3;
 			int minI = (normI+1)%3;
 			if(fabs(lambda[maxI]) < fabs(lambda[minI])) std::swap(maxI,minI);

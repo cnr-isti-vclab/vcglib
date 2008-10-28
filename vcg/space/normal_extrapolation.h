@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -25,7 +25,7 @@
 #define VCG_SPACE_NORMAL_EXTRAPOLATION_H
 
 #include <vcg/math/matrix33.h>
-#include <vcg/math/linear.h> 
+#include <vcg/math/linear.h>
 #include <vcg/math/lin_algebra.h>
 #include <vcg/math/disjoint_set.h>
 #include <vcg/space/box3.h>
@@ -57,7 +57,7 @@ namespace vcg
 		typedef typename vcg::Matrix33<ScalarType>  	 MatrixType;
 
 		enum NormalOrientation {IsCorrect=0, MustBeFlipped=1};
-		
+
 	private:
 				/*************************************************
 			*		Inner class definitions
@@ -68,10 +68,10 @@ namespace vcg
 			// Object functor: compute the distance between a vertex and a point
 			struct VertPointDistanceFunctor
 			{
-				inline bool operator()(const VertexType &v, const CoordType &p, ScalarType &d, CoordType &q) const 
-				{ 
-					ScalarType distance = vcg::Distance(p, v.P()); 
-					if (distance>d) 
+				inline bool operator()(const VertexType &v, const CoordType &p, ScalarType &d, CoordType &q) const
+				{
+					ScalarType distance = vcg::Distance(p, v.P());
+					if (distance>d)
 						return false;
 
 					d = distance;
@@ -95,10 +95,10 @@ namespace vcg
 			// Object functor: compute the distance between a point and the plane
 			struct PlanePointDistanceFunctor
 			{
-				inline bool operator()(const Plane &plane, const CoordType &p, ScalarType &d, CoordType &q) const 
-				{ 
-					ScalarType distance = vcg::Distance(p, plane.center); 
-					if (distance>d) 
+				inline bool operator()(const Plane &plane, const CoordType &p, ScalarType &d, CoordType &q) const
+				{
+					ScalarType distance = vcg::Distance(p, plane.center);
+					if (distance>d)
 						return false;
 
 					d = distance;
@@ -134,7 +134,7 @@ namespace vcg
 				VertexPointer								 vertex;
 				std::vector< MSTNode* >			 sons;
 			};
-			
+
 			typedef 					std::vector< Plane > 			PlaneContainer;
 			typedef typename 	PlaneContainer::iterator 	PlaneIterator;
 
@@ -155,7 +155,7 @@ namespace vcg
 			int percentage;
 			char message[128];
 			sprintf(message, "Locating tangent planes...");
-			std::vector< Plane > tangent_planes(vertex_count);		
+			std::vector< Plane > tangent_planes(vertex_count);
 			vcg::Octree< VertexType, ScalarType > octree_for_planes;
 			octree_for_planes.Set( begin, end );
 
@@ -182,8 +182,8 @@ namespace vcg
 				for (unsigned int n=0; n<k; n++)
 				{
 					diff = nearest_points[n] - plane->center;
-					for (int i=0; i<3; i++) 
-						for (int j=0; j<3; j++) 
+					for (int i=0; i<3; i++)
+						for (int j=0; j<3; j++)
 							covariance_matrix[i][j]+=diff[i]*diff[j];
 				}
 
@@ -195,10 +195,10 @@ namespace vcg
 				for (int d=0; d<3; d++)
 					plane->normal[d] = eigenvectors[d][2];
 				plane->normal.Normalize();
-				iter->N() = plane->normal;				
+				iter->N() = plane->normal;
 				plane->index = int( std::distance(begin, iter) );
 			}
-			
+
 			// Step 2: build the Riemannian graph, i.e. the graph where each point is connected to the k-nearest neigbours.
 			dataset_bb.SetNull();
 			PlaneIterator ePlane = tangent_planes.end();
@@ -215,7 +215,7 @@ namespace vcg
 			for (PlaneIterator iPlane=tangent_planes.begin(); iPlane!=ePlane; iPlane++)
 			{
 				if (callback!=NULL && (++progress%step)==0 && (percentage=int((progress*100)/vertex_count))<100) (callback)(percentage, message);
-			
+
 			unsigned int kk = k;
             PlanePointDistanceFunctor ppdf;
             DummyObjectMarker dom;
@@ -224,7 +224,7 @@ namespace vcg
 
 				for (unsigned int n=0; n<k; n++)
 					if (iPlane->index<nearest_planes[n]->index)
-						riemannian_graph[iPlane->index].push_back( RiemannianEdge( nearest_planes[n],  1.0f - fabs(iPlane->normal * nearest_planes[n]->normal)) );
+						riemannian_graph[iPlane->index].push_back(RiemannianEdge(nearest_planes[n], 1.0f - fabs(iPlane->normal .dot(nearest_planes[n]->normal))));
 			}
 
 			// Step 3: compute the minimum spanning tree (MST) over the Riemannian graph (we use the Kruskal algorithm)
@@ -237,7 +237,7 @@ namespace vcg
 
 			std::sort( E.begin(), E.end() );
 			vcg::DisjointSet<Plane> planeset;
-			
+
 			for (typename std::vector< Plane >::iterator iPlane=tangent_planes.begin(); iPlane!=ePlane; iPlane++)
 				planeset.MakeSet( &*iPlane );
 
@@ -261,7 +261,7 @@ namespace vcg
 			for ( ; iMSTEdge!=eMSTEdge; iMSTEdge++)
 			{
 				if (callback!=NULL && (++progress%step)==0 && (percentage=int((progress*100)/mst_size))<100) (callback)(percentage, message);
-		
+
 				int u_index = int(iMSTEdge->u->index);
 				int v_index = int(iMSTEdge->v->index);
 				incident_edges[ u_index ].push_back( v_index ),
@@ -271,15 +271,15 @@ namespace vcg
 			// Traverse the incident_edges vector and build the MST
 			VertexIterator iCurrentVertex, iSonVertex;
 			std::vector< MSTNode > MST(vertex_count);
-			
+
 			typename std::vector< Plane >::iterator iFirstPlane = tangent_planes.begin();
 			typename std::vector< Plane >::iterator iCurrentPlane, iSonPlane;
-			
+
 			MSTNode *mst_root;
 			int r_index = (root_index!=-1)? root_index : rand()*vertex_count/RAND_MAX;
 			mst_root = &MST[ r_index ];
 			mst_root->parent = mst_root; //the parent of the root is the root itself
-			
+
 			if (orientation==MustBeFlipped)
 			{
 				iCurrentVertex = begin;
@@ -304,7 +304,7 @@ namespace vcg
 					std::advance((iCurrentVertex=begin), current_node_index);	//retrieve the pointer to the correspective vertex
 					current_node->vertex = &*iCurrentVertex;									//and associate it to the MST node
 
-					std::vector< int >::iterator iSon = incident_edges[ current_node_index ].begin(); 
+					std::vector< int >::iterator iSon = incident_edges[ current_node_index ].begin();
 					std::vector< int >::iterator eSon = incident_edges[ current_node_index ].end();
 					for ( ; iSon!=eSon; iSon++)
 					{
@@ -316,7 +316,7 @@ namespace vcg
 							//std::advance((iSonVertex=begin), *iSon);//retrieve the pointer to the Vertex associated to son
 							border.push( *iSon );
 						}
-						maxSize = vcg::math::Max<int>(maxSize, queueSize); 
+						maxSize = vcg::math::Max<int>(maxSize, queueSize);
 					}
 				}
 			}
@@ -337,11 +337,11 @@ namespace vcg
 					for (int s=0; s<int(current_node->sons.size()); s++)
 					{
 						if (callback!=NULL && ((++progress%step)==0) && (percentage=int((maxSize-queueSize)*100/maxSize))<100) (callback)(percentage, message);
-						
-						if (current_node->vertex->N()*current_node->sons[s]->vertex->N()<ScalarType(0.0f))
+
+						if (current_node->vertex->N().dot(current_node->sons[s]->vertex->N())<ScalarType(0.0f))
 							current_node->sons[s]->vertex->N() *= ScalarType(-1.0f);
 						border.push( current_node->sons[s] );
-						maxSize = vcg::math::Max<int>(maxSize, queueSize); 
+						maxSize = vcg::math::Max<int>(maxSize, queueSize);
 					}
 				}
 			}

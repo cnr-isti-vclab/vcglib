@@ -243,7 +243,7 @@ Matrix33<S> RotationMatrix(vcg::Point3<S> v0,vcg::Point3<S> v1,bool normalized=t
 			v0.Normalize();
 			v1.Normalize();
 		}
-		S dot=(v0*v1);
+		S dot=v0.dot(v1);
 		///control if there is no rotation
 		if (dot>((S)1-epsilon))
 		{
