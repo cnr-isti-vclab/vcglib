@@ -772,3 +772,25 @@ void AreaMode::Draw(Trackball * tb)
   DrawSphereIcon(tb,true );
   DrawUglyAreaMode(tb,points,status,old_status,plane,path,rubberband_handle);
 }
+
+// Polar mode implementation.
+void PolarMode::Apply (Trackball * tb, Point3f new_point)
+{
+  Point3f hitOld = HitViewPlane (tb, tb->last_point);
+  Point3f hitNew = HitViewPlane (tb, new_point);
+  float dx = (hitNew.X() - hitOld.X());
+  float dy = (hitNew.Y() - hitOld.Y());
+
+  const float PI2=6.283185307179586232f;
+
+  float anglex =  dx/(tb->radius * PI2);
+  float angley = -dy/(tb->radius * PI2);
+
+  tb->track.rot = Quaternionf (anglex,Point3f(0,1,0)) * Quaternionf (angley,Point3f(1,0,0)) * tb->last_track.rot ;
+
+}
+
+void PolarMode::Draw(Trackball * tb){
+  DrawSphereIcon(tb,true );
+}
+

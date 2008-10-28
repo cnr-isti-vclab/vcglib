@@ -1015,6 +1015,20 @@ private:
 
 };
 
+// Polar mode.
+
+class PolarMode:public TrackMode {
+public:
+   void Apply (Trackball * trackball, Point3f new_point);
+
+  const char *Name () {
+    return "PolarMode";
+  };
+
+ void Draw (Trackball * trackball);
+};
+
+
 }//namespace 
 
 #endif
