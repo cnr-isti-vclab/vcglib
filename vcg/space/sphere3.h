@@ -59,6 +59,7 @@ First version.
 
 #include <assert.h>
 #include <vcg/space/point3.h>
+#include <vector>
 
 namespace vcg {
 
@@ -98,7 +99,7 @@ protected:
   //makes 36 iterations over the data... but get good results.
 	int CreateTight(int n, const Point3<T> *points, 
 		  T threshold = 1.01, T speed = 0.6);
-	int CreateTight(const std::vector<Point3<T> > & points, 
+	int CreateTight(const std::vector<Point3< T> > & points, 
 		  T threshold = 1.01, T speed = 0.6);
 };
 
