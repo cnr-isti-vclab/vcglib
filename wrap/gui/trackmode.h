@@ -1016,16 +1016,22 @@ private:
 };
 
 // Polar mode.
+/* WARNING this mode is not compatible with the other rotation modes */
 
 class PolarMode:public TrackMode {
 public:
+  PolarMode(): alpha(0), beta(0), enda(0), endb(0) {}
    void Apply (Trackball * trackball, Point3f new_point);
 
   const char *Name () {
     return "PolarMode";
   };
-
+  void SetAction();
+  void Reset(); 
  void Draw (Trackball * trackball);
+private:
+ double alpha, beta; //rotation in y and x axis
+ double enda, endb;  //store intermediate values of alpha and beta
 };
 
 

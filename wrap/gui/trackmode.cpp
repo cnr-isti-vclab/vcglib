@@ -781,14 +781,29 @@ void PolarMode::Apply (Trackball * tb, Point3f new_point)
   float dx = (hitNew.X() - hitOld.X());
   float dy = (hitNew.Y() - hitOld.Y());
 
-  const float PI2=6.283185307179586232f;
+  const float scale = 0.5*M_PI; //sensitivity of the mouse
+  const float top = 0.9*M_PI/2; //maximum top view angle
 
-  float anglex =  dx/(tb->radius * PI2);
-  float angley = -dy/(tb->radius * PI2);
-
-  tb->track.rot = Quaternionf (anglex,Point3f(0,1,0)) * Quaternionf (angley,Point3f(1,0,0)) * tb->last_track.rot ;
+  float anglex =  dx/(tb->radius * scale);
+  float angley = -dy/(tb->radius * scale);
+  enda = alpha + anglex;
+  endb = beta + angley;
+  if(endb > top) endb = top;
+  if(endb < -top) endb = -top;
+  tb->track.rot = Quaternionf (endb, Point3f(1,0,0)) * 
+                  Quaternionf (enda, Point3f(0,1,0)) ;
 
 }
+
+void PolarMode::SetAction() {
+  alpha = enda;
+  beta = endb;
+}
+
+void PolarMode::Reset() {
+  alpha = beta = enda = endb = 0;
+}
+
 
 void PolarMode::Draw(Trackball * tb){
   DrawSphereIcon(tb,true );
