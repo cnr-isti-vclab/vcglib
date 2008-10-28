@@ -28,12 +28,18 @@
 #define EIGEN_DONT_VECTORIZE
 #define EIGEN_MATRIXBASE_PLUGIN <vcg/math/eigen_vcgaddons.h>
 
+// forward declarations
+namespace Eigen {
+template<typename Derived1, typename Derived2, int Size> struct ei_lexi_comparison;
+}
+
 #include "../Eigen/LU"
 #include "../Eigen/Geometry"
 #include "../Eigen/Array"
 #include "../Eigen/Core"
 #include "base.h"
 
+// add support for unsigned char and short int
 namespace Eigen {
 template<> struct NumTraits<unsigned char>
 {
@@ -59,6 +65,94 @@ template<> struct NumTraits<short int>
     AddCost = 1,
     MulCost = 1
   };
+};
+
+// WARNING this is a default version provided so that Intersection() stuff can compile.
+// Indeed, the compiler try to instanciate all versions of Intersection() leading to
+// the instanciation of Eigen::Matrix<Face,...> !!!
+template<typename T> struct NumTraits
+{
+	struct wrong_type
+	{
+		wrong_type() { assert(0 && "Eigen: you are using a wrong scalar type" ); }
+	};
+
+	typedef wrong_type Real;
+	typedef wrong_type FloatingPoint;
+	enum {
+		IsComplex = 0,
+		HasFloatingPoint = 0,
+		ReadCost = 0,
+		AddCost = 0,
+		MulCost = 0
+	};
+};
+
+// implementation of Lexicographic order comparison
+// TODO should use meta unrollers
+template<typename Derived1, typename Derived2> struct ei_lexi_comparison<Derived1,Derived2,2>
+{
+	inline static bool less(const Derived1& a, const Derived2& b) {
+		return (a.coeff(1)!=b.coeff(1))?(a.coeff(1)< b.coeff(1)) : (a.coeff(0)<b.coeff(0));
+	}
+
+	inline static bool greater(const Derived1& a, const Derived2& b) {
+		return (a.coeff(1)!=b.coeff(1))?(a.coeff(1)> b.coeff(1)) : (a.coeff(0)>b.coeff(0));
+	}
+
+	inline static bool lessEqual(const Derived1& a, const Derived2& b) {
+		return (a.coeff(1)!=b.coeff(1))?(a.coeff(1)< b.coeff(1)) : (a.coeff(0)<=b.coeff(0));
+	}
+
+	inline static bool greaterEqual(const Derived1& a, const Derived2& b) {
+		return (a.coeff(1)!=b.coeff(1))?(a.coeff(1)> b.coeff(1)) : (a.coeff(0)>=b.coeff(0));
+	}
+};
+
+template<typename Derived1, typename Derived2> struct ei_lexi_comparison<Derived1,Derived2,3>
+{
+	inline static bool less(const Derived1& a, const Derived2& b) {
+		return	(a.coeff(2)!=b.coeff(2))?(a.coeff(2)< b.coeff(2)):
+				    (a.coeff(1)!=b.coeff(1))?(a.coeff(1)< b.coeff(1)) : (a.coeff(0)<b.coeff(0));
+	}
+
+	inline static bool greater(const Derived1& a, const Derived2& b) {
+		return	(a.coeff(2)!=b.coeff(2))?(a.coeff(2)> b.coeff(2)):
+				    (a.coeff(1)!=b.coeff(1))?(a.coeff(1)> b.coeff(1)) : (a.coeff(0)>b.coeff(0));
+	}
+
+	inline static bool lessEqual(const Derived1& a, const Derived2& b) {
+		return	(a.coeff(2)!=b.coeff(2))?(a.coeff(2)< b.coeff(2)):
+				    (a.coeff(1)!=b.coeff(1))?(a.coeff(1)< b.coeff(1)) : (a.coeff(0)<=b.coeff(0));
+	}
+
+	inline static bool greaterEqual(const Derived1& a, const Derived2& b) {
+		return	(a.coeff(2)!=b.coeff(2))?(a.coeff(2)> b.coeff(2)):
+				    (a.coeff(1)!=b.coeff(1))?(a.coeff(1)> b.coeff(1)) : (a.coeff(0)>=b.coeff(0));
+	}
+};
+
+template<typename Derived1, typename Derived2> struct ei_lexi_comparison<Derived1,Derived2,4>
+{
+	inline static bool less(const Derived1& a, const Derived2& b) {
+		return	(a.coeff(3)!=b.coeff(3))?(a.coeff(3)< b.coeff(3)) : (a.coeff(2)!=b.coeff(2))?(a.coeff(2)< b.coeff(2)):
+				    (a.coeff(1)!=b.coeff(1))?(a.coeff(1)< b.coeff(1)) : (a.coeff(0)<b.coeff(0));
+	}
+
+	inline static bool greater(const Derived1& a, const Derived2& b) {
+		return	(a.coeff(3)!=b.coeff(3))?(a.coeff(3)> b.coeff(3)) : (a.coeff(2)!=b.coeff(2))?(a.coeff(2)> b.coeff(2)):
+				    (a.coeff(1)!=b.coeff(1))?(a.coeff(1)> b.coeff(1)) : (a.coeff(0)>b.coeff(0));
+	}
+
+	inline static bool lessEqual(const Derived1& a, const Derived2& b) {
+		return	(a.coeff(3)!=b.coeff(3))?(a.coeff(3)< b.coeff(3)) : (a.coeff(2)!=b.coeff(2))?(a.coeff(2)< b.coeff(2)):
+				    (a.coeff(1)!=b.coeff(1))?(a.coeff(1)< b.coeff(1)) : (a.coeff(0)<=b.coeff(0));
+	}
+
+	inline static bool greaterEqual(const Derived1& a, const Derived2& b) {
+		return	(a.coeff(3)!=b.coeff(3))?(a.coeff(3)> b.coeff(3)) : (a.coeff(2)!=b.coeff(2))?(a.coeff(2)> b.coeff(2)):
+				    (a.coeff(1)!=b.coeff(1))?(a.coeff(1)> b.coeff(1)) : (a.coeff(0)>=b.coeff(0));
+	}
 };
 
 }
@@ -105,6 +199,23 @@ Angle(const Eigen::MatrixBase<Derived1>& p1, const Eigen::MatrixBase<Derived2> &
 	Scalar w = p1.norm()*p2.norm();
 	if(w==0) return Scalar(-1);
 	Scalar t = (p1.dot(p2))/w;
+	if(t>1) t = 1;
+	else if(t<-1) t = -1;
+	return vcg::math::Acos(t);
+}
+
+template<typename Derived1, typename Derived2>
+typename Eigen::ei_traits<Derived1>::Scalar
+AngleN(const Eigen::MatrixBase<Derived1>& p1, const Eigen::MatrixBase<Derived2> & p2)
+{
+	EIGEN_STATIC_ASSERT_VECTOR_ONLY(Derived1)
+	EIGEN_STATIC_ASSERT_VECTOR_ONLY(Derived2)
+	EIGEN_STATIC_ASSERT_FIXED_SIZE(Derived1)
+	EIGEN_STATIC_ASSERT_FIXED_SIZE(Derived2)
+	EIGEN_STATIC_ASSERT_SAME_VECTOR_SIZE(Derived1,Derived2)
+	typedef typename Eigen::ei_traits<Derived1>::Scalar Scalar;
+
+	Scalar t = (p1.dot(p2));
 	if(t>1) t = 1;
 	else if(t<-1) t = -1;
 	return vcg::math::Acos(t);

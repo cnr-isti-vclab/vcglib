@@ -89,24 +89,13 @@ public:
 	inline T &Z() {return Base::z();}
 	inline T &W() {return Base::w();}
 
-	inline const T & V ( const int i ) const
+	// overloaded to return a const reference
+	inline const T & V (int i) const
 	{
 		assert(i>=0 && i<4);
 		return data()[i];
 	}
-	inline T & V ( const int i )
-	{
-		assert(i>=0 && i<4);
-		return data()[i];
-	}
-	
-	/// Padding function: give a default 0 value to all the elements that are not in the [0..2] range.
-	/// Useful for managing in a consistent way object that could have point2 / point3 / point4
-	inline T Ext( const int i ) const
-	{
-		if(i>=0 && i<=3) return data()[i];
-		else             return 0;
-	}
+
 //@}
 	
 	inline Point4 VectProd ( const Point4 &x, const Point4 &z ) const
@@ -124,45 +113,6 @@ public:
 		          z[2]+y[0]*z[1]*x[2]-x[0]*z[1]*y[2]+z[0]*x[1]*y[2];
 		return res;
 	}
-	
-	/// Homogeneous normalization (division by W)
-	inline Point4 & HomoNormalize() {
-		if (data()[3]!=0.0) {	Base::template start<3>() /= coeff(3); coeffRef(3) = 1.0; }
-		return *this;
-	}
-	
-//@{
-  /** @name Comparison operators (lexicographical order)
-  **/
-	inline bool operator <  ( Point4 const & p ) const
-	{
-		return	(data()[3]!=p.data()[3])?(data()[3]<p.data()[3]):
-				(data()[2]!=p.data()[2])?(data()[2]<p.data()[2]):
-				(data()[1]!=p.data()[1])?(data()[1]<p.data()[1]):
-				(data()[0]<p.data()[0]);
-	}
-	inline bool operator >  ( const Point4 & p ) const
-	{
-		return	(data()[3]!=p.data()[3])?(data()[3]>p.data()[3]):
-				(data()[2]!=p.data()[2])?(data()[2]>p.data()[2]):
-				(data()[1]!=p.data()[1])?(data()[1]>p.data()[1]):
-				(data()[0]>p.data()[0]);
-	}
-	inline bool operator <= ( const Point4 & p ) const
-	{
-		return	(data()[3]!=p.data()[3])?(data()[3]< p.data()[3]):
-				(data()[2]!=p.data()[2])?(data()[2]< p.data()[2]):
-				(data()[1]!=p.data()[1])?(data()[1]< p.data()[1]):
-				(data()[0]<=p.data()[0]);
-	}
-	inline bool operator >= ( const Point4 & p ) const
-	{
-		return	(data()[3]!=p.data()[3])?(data()[3]> p.data()[3]):
-				(data()[2]!=p.data()[2])?(data()[2]> p.data()[2]):
-				(data()[1]!=p.data()[1])?(data()[1]> p.data()[1]):
-				(data()[0]>=p.data()[0]);
-	}
-//@}
 	
 //@{
   /** @name Dot products
@@ -205,7 +155,7 @@ double StableDot ( Point4<T> const & p0, Point4<T> const & p1 )
 }  
 
 typedef Point4<short>  Point4s;
-typedef Point4<int>	   Point4i;
+typedef Point4<int>    Point4i;
 typedef Point4<float>  Point4f;
 typedef Point4<double> Point4d;
 

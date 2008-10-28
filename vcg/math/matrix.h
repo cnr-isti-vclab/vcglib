@@ -50,6 +50,7 @@ namespace ndim{
 /* @{ */
 
 /*!
+ * \deprecated use Matrix<Scalar,Rows,Cols> or Matrix<Scalar,Dynamic,Dynamic>
  * This class represent a generic <I>m</I>�<I>n</I> matrix. The class is templated over the scalar type field.
  * @param Scalar (Templete Parameter) Specifies the ScalarType field.
  */
@@ -135,6 +136,7 @@ public:
 	*	\param	reference to the matrix to multiply by
 	*	\return the matrix product
 	*/
+	// FIXME what the hell is that !
 	/*template <int N,int M>
 	void DotProduct(Point<N,Scalar> &m,Point<M,Scalar> &result)
 	{
@@ -147,7 +149,7 @@ public:
 	};*/
 
 	/*!
-	* \deprecated use *this.resize()
+	* \deprecated use *this.resize(); *this.setZero();
 	*	Resize the current matrix.
 	*	\param m the number of matrix rows.
 	* \param n the number of matrix columns.
@@ -159,11 +161,6 @@ public:
 		Base::resize(m,n);
 		memset(Base::data(), 0, m*n*sizeof(Scalar));
 	};
-
-// 	EIGEN_DEPRECATED void Transpose()
-// 	{
-// 		assert(0 && "dangerous use of deprecated Transpose function, please use: m = m.transpose();");
-// 	}
 };
 
 typedef vcg::ndim::Matrix<double> MatrixMNd;

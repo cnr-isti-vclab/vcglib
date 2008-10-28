@@ -404,16 +404,17 @@ namespace vcg {
 
   /// intersection between two triangles
   template<typename TRIANGLETYPE> 
-    inline bool Intersection_(const TRIANGLETYPE & t0,const TRIANGLETYPE & t1){
+    inline bool Intersection(const TRIANGLETYPE & t0,const TRIANGLETYPE & t1){
     return NoDivTriTriIsect(t0.P0(0),t0.P0(1),t0.P0(2),
 			    t1.P0(0),t1.P0(1),t1.P0(2));
   }
+
   template<class T>
     inline bool Intersection(Point3<T> V0,Point3<T> V1,Point3<T> V2,
 			     Point3<T> U0,Point3<T> U1,Point3<T> U2){
     return NoDivTriTriIsect(V0,V1,V2,U0,U1,U2);
   }
-
+#if 0
   template<class T>
     inline bool Intersection(Point3<T> V0,Point3<T> V1,Point3<T> V2,
 			     Point3<T> U0,Point3<T> U1,Point3<T> U2,int *coplanar,
@@ -528,7 +529,8 @@ bool Intersection( const Ray3<T> & ray, const Point3<T> & vert0,
 
   return true;
 }
-
+#endif
+#if 0
 // ray-triangle, gives intersection 3d point and distance along ray
 template<class T>
 bool Intersection( const Line3<T> & ray, const Point3<T> & vert0, 
@@ -577,7 +579,7 @@ bool Intersection( const Line3<T> & ray, const Point3<T> & vert0,
 	inte = vert0 + edge1*a + edge2*b;
   return true;
 }
-
+#endif
 // line-box
 template<class T>
 bool Intersection_Line_Box( const Box3<T> & box, const Line3<T> & r, Point3<T> & coord )

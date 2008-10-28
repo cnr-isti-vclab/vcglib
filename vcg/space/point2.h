@@ -76,11 +76,7 @@ public:
 	inline Scalar &X() {return data()[0];}
 	inline Scalar &Y() {return data()[1];}
 
-	inline Scalar & V( const int i )
-	{
-		assert(i>=0 && i<2);
-		return data()[i];
-	}
+	// overloaded to return a const reference
 	inline const Scalar & V( const int i ) const
 	{
 		assert(i>=0 && i<2);
@@ -98,45 +94,15 @@ public:
 	inline Point2(const Eigen::MatrixBase<OtherDerived>& other) : Base(other) {}
 
 	/// cross product
+	// hm.. this is not really a cross product
 	inline Scalar operator ^ ( Point2 const & p ) const
 	{
 		return data()[0]*p.data()[1] - data()[1]*p.data()[0];
 	}
 
-	inline Point2 & Scale( const Scalar sx, const Scalar sy )
-	{
-		data()[0] *= sx;
-		data()[1] *= sy;
-		return * this;
-	}
-
-	/// lexical ordering
-	inline bool operator <  ( Point2 const & p ) const
-	{
-			return	(data()[1]!=p.data()[1])?(data()[1]<p.data()[1]):
-							(data()[0]<p.data()[0]);
-	}
-	/// lexical ordering
-	inline bool operator >  ( Point2 const & p ) const
-	{
-			return	(data()[1]!=p.data()[1])?(data()[1]>p.data()[1]):
-							(data()[0]>p.data()[0]);
-	}
-	/// lexical ordering
-	inline bool operator <= ( Point2 const & p ) const
-	{
-			return	(data()[1]!=p.data()[1])?(data()[1]< p.data()[1]):
-							(data()[0]<=p.data()[0]);
-	}
-	/// lexical ordering
-	inline bool operator >= ( Point2 const & p ) const
-	{
-			return	(data()[1]!=p.data()[1])?(data()[1]> p.data()[1]):
-							(data()[0]>=p.data()[0]);
-	}
-
 	/// returns the angle with X axis (radiants, in [-PI, +PI] )
-	inline Scalar Angle() const {
+	inline Scalar Angle() const
+	{
 		return math::Atan2(data()[1],data()[0]);
 	}
 		/// transform the point in cartesian coords into polar coords
@@ -168,13 +134,6 @@ public:
 		return *this;
 	}
 
-	/// Questa funzione estende il vettore ad un qualsiasi numero di dimensioni
-	/// paddando gli elementi estesi con zeri
-	inline Scalar Ext( const int i ) const
-	{
-		if(i>=0 && i<2) return data()[i];
-		else            return 0;
-	}
 		/// imports from 2D points of different types
 	template <class T>
 	inline void Import( const Point2<T> & b )
@@ -188,13 +147,6 @@ public:
     return Point2(b.X(),b.Y());
 	}
 }; // end class definition
-
-
-template <class T>
-inline T Angle( Point2<T> const & p0, Point2<T> const & p1 )
-{
-	return p1.Angle() - p0.Angle();
-}
 
 typedef Point2<short>  Point2s;
 typedef Point2<int>	   Point2i;

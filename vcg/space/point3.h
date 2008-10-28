@@ -94,13 +94,6 @@ public:
 	template<typename OtherDerived>
 	inline Point3(const Eigen::MatrixBase<OtherDerived>& other) : Base(other) {}
 
-  /// Padding function: give a default 0 value to all the elements that are not in the [0..2] range. 
-  /// Useful for managing in a consistent way object that could have point2 / point3 / point4
-	inline Scalar Ext( const int i ) const
-	{
-		if(i>=0 && i<=2) return data()[i];
-		else             return 0;
-	}
 
 	template<class OtherDerived>
 	inline void Import( const Eigen::MatrixBase<OtherDerived>& b )
@@ -141,11 +134,7 @@ public:
 	inline Scalar &X() { return data()[0]; }
 	inline Scalar &Y() { return data()[1]; }
 	inline Scalar &Z() { return data()[2]; }
-	inline Scalar & V( const int i )
-	{
-		assert(i>=0 && i<3);
-		return data()[i];
-	}
+	// overloaded to return a const reference
 	inline const Scalar & V( const int i ) const
 	{
 		assert(i>=0 && i<3);
@@ -210,37 +199,6 @@ public:
 	
   Box3<_Scalar> GetBBox(Box3<_Scalar> &bb) const;
 //@}
-//@{
-
-  /** @name Comparison Operators. 
-   Note that the reverse z prioritized ordering, useful in many situations.
-   **/
-
-	inline bool operator <  ( Point3 const & p ) const
-	{
-		return	(data()[2]!=p.data()[2])?(data()[2]<p.data()[2]):
-				(data()[1]!=p.data()[1])?(data()[1]<p.data()[1]):
-						       (data()[0]<p.data()[0]);
-	}
-	inline bool operator >  ( Point3 const & p ) const
-	{
-		return	(data()[2]!=p.data()[2])?(data()[2]>p.data()[2]):
-				(data()[1]!=p.data()[1])?(data()[1]>p.data()[1]):
-							   (data()[0]>p.data()[0]);
-	}
-	inline bool operator <= ( Point3 const & p ) const
-	{
-		return	(data()[2]!=p.data()[2])?(data()[2]< p.data()[2]):
-				(data()[1]!=p.data()[1])?(data()[1]< p.data()[1]):
-							   (data()[0]<=p.data()[0]);
-	}
-	inline bool operator >= ( Point3 const & p ) const
-	{
-		return	(data()[2]!=p.data()[2])?(data()[2]> p.data()[2]):
-				(data()[1]!=p.data()[1])?(data()[1]> p.data()[1]):
-							   (data()[0]>=p.data()[0]);
-	}
- //@}
 
 }; // end class definition
 
