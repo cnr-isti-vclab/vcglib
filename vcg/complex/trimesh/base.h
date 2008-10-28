@@ -207,6 +207,7 @@ class TriMesh{
 	template <class ATTR_TYPE>
 	class PerVertexAttributeHandle{
 	public:
+		PerVertexAttributeHandle(){}
 		PerVertexAttributeHandle( void *ah):_handle ( (SimpleTempData<VertContainer,ATTR_TYPE> *)ah ){}
 		SimpleTempData<VertContainer,ATTR_TYPE> * _handle;
 		template <class RefType>
@@ -216,6 +217,7 @@ class TriMesh{
 	template <class ATTR_TYPE>
 	class PerFaceAttributeHandle{
 	public:
+		PerFaceAttributeHandle(){}
 		PerFaceAttributeHandle(void *ah):_handle ( (SimpleTempData<FaceContainer,ATTR_TYPE> *)ah ){}
 		SimpleTempData<FaceContainer,ATTR_TYPE> * _handle;
 		template <class RefType>
@@ -225,6 +227,7 @@ class TriMesh{
 	template <class ATTR_TYPE>
 	class PerMeshAttributeHandle{
 	public:
+		PerMeshAttributeHandle(){}
 		PerMeshAttributeHandle(void *ah):_handle ( (Attribute<ATTR_TYPE> *)ah ){}
 		Attribute<ATTR_TYPE> * _handle;
 		ATTR_TYPE & operator ()(){ return *((Attribute<ATTR_TYPE> *)_handle)->attribute;}
@@ -412,11 +415,21 @@ ScalarType Volume()
 	return V/6.0;
 }
 
+private:
+	// TriMesh cannot be copied. Use Append (see vcg/complex/trimesh/append.h)
+	TriMesh operator =(const TriMesh &  m){}
+	TriMesh(const TriMesh & ){}
 
 };	// end class Mesh
 
 template < class VertContainerType, class FaceContainerType >
 bool HasPerVertexQuality (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return VertContainerType::value_type::HasQuality();}
+
+template < class VertContainerType, class FaceContainerType >
+bool HasPerVertexCurvature (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return VertContainerType::value_type::HasCurvature();}
+
+template < class VertContainerType, class FaceContainerType >
+bool HasPerVertexCurvatureDir (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return VertContainerType::value_type::HasCurvatureDir();}
 
 template < class VertContainerType, class FaceContainerType >
 bool HasPerVertexColor (const TriMesh < VertContainerType , FaceContainerType> & /*m*/) {return VertContainerType::value_type::HasColor();}
