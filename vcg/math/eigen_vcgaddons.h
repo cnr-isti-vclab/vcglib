@@ -24,46 +24,14 @@
 #warning You are including deprecated math stuff
 /*!
 *	\deprecated use cols()
-*	Number of columns
 */
-EIGEN_DEPRECATED inline unsigned int ColumnsNumber() const
-{
-	return cols();
-};
+EIGEN_DEPRECATED inline unsigned int ColumnsNumber() const { return cols(); };
 
 
 /*!
 *	\deprecated use rows()
-*	Number of rows
 */
-EIGEN_DEPRECATED inline unsigned int RowsNumber() const
-{
-	return rows();
-};
-
-/*
-*	\deprecated use *this.isApprox(m) or *this.cwise() == m
-*	Equality operator.
-*	\param m
-*	\return true iff the matrices have same size and its elements have same values.
-*/
-// template<typename OtherDerived>
-// EIGEN_DEPRECATED bool operator==(const MatrixBase<OtherDerived> &m) const
-// {
-// 	return (this->cwise() == m);
-// }
-
-/*
-*	\deprecated use !*this.isApprox(m) or *this.cwise() != m
-*	Inequality operator
-*	\param m
-*	\return true iff the matrices have different size or if their elements have different values.
-*/
-// template<typename OtherDerived>
-// EIGEN_DEPRECATED bool operator!=(const MatrixBase<OtherDerived> &m) const
-// {
-// 	return (this->cwise() != m);
-// };
+EIGEN_DEPRECATED inline unsigned int RowsNumber() const { return rows(); };
 
 /*!
 *	\deprecated use *this(i,j) (or *this.coeff(i,j))
@@ -72,25 +40,15 @@ EIGEN_DEPRECATED inline unsigned int RowsNumber() const
 *	\param j the column index
 *	\return the element
 */
-EIGEN_DEPRECATED inline Scalar ElementAt(unsigned int i, unsigned int j) const
-{
-	return (*this)(i,j);
-}
-
-EIGEN_DEPRECATED inline Scalar& ElementAt(unsigned int i, unsigned int j)
-{
-	return (*this)(i,j);
-}
+EIGEN_DEPRECATED inline Scalar ElementAt(unsigned int i, unsigned int j) const { return (*this)(i,j); }
+EIGEN_DEPRECATED inline Scalar& ElementAt(unsigned int i, unsigned int j) { return (*this)(i,j); }
 
 /*!
 *	\deprecated use *this.determinant() (or *this.lu().determinant() for large matrices)
 *	Calculate and return the matrix determinant (Laplace)
 *	\return	the matrix determinant
 */
-EIGEN_DEPRECATED Scalar Determinant() const
-{
-	return determinant();
-};
+EIGEN_DEPRECATED Scalar Determinant() const { return determinant(); };
 
 /*!
 *	Return the cofactor <I>A<SUB>i,j</SUB></I> of the <I>a<SUB>i,j</SUB></I> element
@@ -103,53 +61,23 @@ EIGEN_DEPRECATED Scalar Cofactor(unsigned int i, unsigned int j) const
 	return (((i+j)%2==0) ? 1. : -1.) * minor(i,j).determinant();
 };
 
-/*!
-*	\deprecated use *this.col(j)
-*	Get the <I>j</I>-th column on the matrix.
-*	\param j	the column index.
-*	\return		the reference to the column elements. This pointer must be deallocated by the caller.
-*/
-EIGEN_DEPRECATED ColXpr GetColumn(const unsigned int j)
-{
-	return col(j);
-};
+/*! \deprecated use *this.col(j) */
+EIGEN_DEPRECATED ColXpr GetColumn(const unsigned int j) { return col(j); };
 
-/*!
-*	\deprecated use *this.row(i)
-*	Get the <I>i</I>-th row on the matrix.
-*	\param i	the column index.
-*	\return		the reference to the row elements. This pointer must be deallocated by the caller.
-*/
-EIGEN_DEPRECATED RowXpr GetRow(const unsigned int i)
-{
-	return row(i);
-};
+/*! \deprecated use *this.row(i) */
+EIGEN_DEPRECATED RowXpr GetRow(const unsigned int i) { return row(i); };
 
-/*!
-*	\deprecated use m1.col(i).swap(m1.col(j));
-* Swaps the values of the elements between the <I>i</I>-th and the <I>j</I>-th column.
-* \param i the index of the first column
-* \param j the index of the second column
-*/
+/*! \deprecated use m1.col(i).swap(m1.col(j)); */
 EIGEN_DEPRECATED void SwapColumns(const unsigned int i, const unsigned int j)
 {
-	if (i==j)
-		return;
-
+	if (i==j) return;
 	col(i).swap(col(j));
 };
 
-/*!
-*	\deprecated use m1.col(i).swap(m1.col(j))
-* Swaps the values of the elements between the <I>i</I>-th and the <I>j</I>-th row.
-* \param i the index of the first row
-* \param j the index of the second row
-*/
+/*! \deprecated use m1.col(i).swap(m1.col(j)) */
 EIGEN_DEPRECATED void SwapRows(const unsigned int i, const unsigned int j)
 {
-	if (i==j)
-		return;
-
+	if (i==j) return;
 	row(i).swap(row(j));
 };
 
@@ -198,94 +126,44 @@ EIGEN_DEPRECATED Derived& operator-=(const Scalar k)
 // };
 
 
-/*!
-*	\deprecated use *this = a * b.transpose()
-*	Matrix from outer product.
-*/
+/*! \deprecated use *this = a * b.transpose() (or *this = a * b.adjoint() for complexes) */
 template <typename OtherDerived1, typename OtherDerived2>
 EIGEN_DEPRECATED void OuterProduct(const MatrixBase<OtherDerived1>& a, const MatrixBase<OtherDerived2>& b)
-{
-	*this = a * b.transpose();
-}
+{ *this = a * b.adjoint(); }
 
 typedef CwiseUnaryOp<ei_scalar_add_op<Scalar>, Derived> ScalarAddReturnType;
 
-/*!
-*	\deprecated use *this.cwise() + k
-*	Scalar sum.
-*	\param k
-*	\return		the resultant matrix
-*/
+/*! \deprecated use *this.cwise() + k */
 EIGEN_DEPRECATED const ScalarAddReturnType operator+(const Scalar k) { return cwise() + k; }
 
-/*!
-*	\deprecated use *this.cwise() - k
-*	Scalar difference.
-*	\param k
-*	\return		the resultant matrix
-*/
+/*! \deprecated use *this.cwise() - k */
 EIGEN_DEPRECATED const ScalarAddReturnType operator-(const Scalar k) { return cwise() - k; }
 
+/*! \deprecated use *this.setZero() or *this = MatrixType::Zero(rows,cols), etc. */
+EIGEN_DEPRECATED void SetZero() { setZero(); };
 
-/*!
-*	\deprecated use *this.setZero() or *this = MatrixType::Zero(rows,cols), etc.
-*	Set all the matrix elements to zero.
-*/
-EIGEN_DEPRECATED void SetZero()
-{
-	setZero();
-};
+/*! \deprecated use *this.setIdentity() or *this = MatrixType::Identity(rows,cols), etc. */
+EIGEN_DEPRECATED void SetIdentity() { setIdentity(); };
 
-/*!
-*	\deprecated use *this.setIdentity() or *this = MatrixType::Identity(rows,cols), etc.
-*	Set the matrix to identity.
-*/
-EIGEN_DEPRECATED void SetIdentity()
-{
-	setIdentity();
-};
-
-/*!
-*	\deprecated use *this.col(j) = expression
-*	Set the values of <I>j</I>-th column to v[j]
-*	\param j	the column index
-*	\param v	...
-*/
+/*! \deprecated use *this.col(j) = expression */
 EIGEN_DEPRECATED void SetColumn(unsigned int j, Scalar* v)
-{
-	col(j) = Map<Matrix<Scalar,RowsAtCompileTime,1> >(v,cols(),1);
-};
+{ col(j) = Map<Matrix<Scalar,RowsAtCompileTime,1> >(v,cols(),1); };
 
 /** \deprecated use *this.col(i) = other */
 template<typename OtherDerived>
 EIGEN_DEPRECATED void SetColumn(unsigned int j, const MatrixBase<OtherDerived>& other)
-{
-	col(j) = other;
-};
+{ col(j) = other; };
 
-/*!
-*	\deprecated use *this.row(i) = expression
-*	Set the elements of the <I>i</I>-th row to v[j]
-*	\param i	the row index
-*	\param v	...
-*/
+/*! \deprecated use *this.row(i) = expression */
 EIGEN_DEPRECATED void SetRow(unsigned int i, Scalar* v)
-{
-	row(i) = Map<Matrix<Scalar,1,ColsAtCompileTime> >(v,1,rows());
-};
+{ row(i) = Map<Matrix<Scalar,1,ColsAtCompileTime> >(v,1,rows()); };
 
 /** \deprecated use *this.row(i) = other */
 template<typename OtherDerived>
 EIGEN_DEPRECATED void SetRow(unsigned int j, const MatrixBase<OtherDerived>& other)
-{
-	row(j) = other;
-};
+{ row(j) = other; };
 
-/*!
-*	\deprecated use *this.diagonal() = expression
-*	Set the diagonal elements <I>v<SUB>i,i</SUB></I> to v[i]
-*	\param v
-*/
+/*! \deprecated use *this.diagonal() = expression */
 EIGEN_DEPRECATED void SetDiagonal(Scalar *v)
 {
 	assert(rows() == cols());
@@ -295,20 +173,7 @@ EIGEN_DEPRECATED void SetDiagonal(Scalar *v)
 /** \deprecated use trace() */
 EIGEN_DEPRECATED Scalar Trace() const { return trace(); }
 
-/*!
-*	\deprecated use *this = *this.transpose()
-*/
-// Transpose already exist
-// EIGEN_DEPRECATED void Transpose()
-// {
-// 	assert(0 && "dangerous use of deprecated Transpose function, please use: m = m.transpose();");
-// };
-
-
-/*!
-*	\deprecated use ostream << *this or ostream << *this.withFormat(...)
-*	Print all matrix elements
-*/
+/*! \deprecated use ostream << *this or even ostream << *this.withFormat(...) */
 EIGEN_DEPRECATED void Dump()
 {
 	unsigned int i, j;
