@@ -199,8 +199,6 @@ EIGEN_DEPRECATED inline Derived& Normalize() { normalize(); return derived(); };
 /** \deprecated use normalized() */
 EIGEN_DEPRECATED inline const EvalType Normalize() const { return normalized(); };
 
-inline void transposeInPlace() { derived() = derived().transpose().eval(); }
-
 /** \deprecated use .cross(p) */
 EIGEN_DEPRECATED inline EvalType operator ^ (const Derived& p ) const { return this->cross(p); }
 

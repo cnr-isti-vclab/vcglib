@@ -32,6 +32,7 @@
 // forward declarations
 namespace Eigen {
 
+template<typename T> struct ei_traits;
 #include "../Eigen/src/Core/util/Meta.h"
 
 template<typename Derived1, typename Derived2, int Size> struct ei_lexi_comparison;

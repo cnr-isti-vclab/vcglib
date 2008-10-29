@@ -104,7 +104,6 @@ public:
 	using _Base::coeffRef;
 	using _Base::ElementAt;
 	using _Base::setZero;
-	using _Base::operator*;
 
 	_EIGEN_GENERIC_PUBLIC_INTERFACE(Matrix44,_Base);
 	typedef _Scalar ScalarType;
@@ -158,7 +157,7 @@ public:
   // note: this function is defined here because some compilers cannot find the respective declaration
   template<typename OtherDerived>
   inline const typename ei_matrix44_product_impl<OtherDerived>::ResultType
-  operator * (const MatrixBase<OtherDerived> &other) const
+  operator * (const Eigen::MatrixBase<OtherDerived> &other) const
   { return ei_matrix44_product_impl<OtherDerived>::run(*this,other.derived()); }
 
   /** Contatenates two transformations */
