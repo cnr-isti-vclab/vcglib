@@ -21,7 +21,9 @@
 *                                                                           *
 ****************************************************************************/
 
+#ifdef __GNUC__
 #warning You are including deprecated math stuff
+#endif
 
 enum {Dimension = SizeAtCompileTime};
 typedef typename ei_to_vcgtype<Matrix>::type EquivVcgType;

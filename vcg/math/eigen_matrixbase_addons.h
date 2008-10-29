@@ -21,8 +21,9 @@
 *                                                                           *
 ****************************************************************************/
 
+#ifdef __GNUC__
 #warning You are including deprecated math stuff
-
+#endif
 
 typedef Scalar ScalarType;
 
