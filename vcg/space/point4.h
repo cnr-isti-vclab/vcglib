@@ -63,13 +63,11 @@ public:
 //----------------------------------------
 private:
 	typedef Eigen::Matrix<T,4,1> _Base;
+public:
 	using _Base::coeff;
 	using _Base::coeffRef;
 	using _Base::setZero;
 	using _Base::data;
-	using _Base::V;
-
-public:
 
 	_EIGEN_GENERIC_PUBLIC_INTERFACE(Point4,_Base);
 	typedef Scalar ScalarType;

@@ -63,13 +63,12 @@ public:
 //----------------------------------------
 private:
 	typedef Eigen::Matrix<_Scalar,2,1> _Base;
+public:
 	using _Base::coeff;
 	using _Base::coeffRef;
 	using _Base::setZero;
 	using _Base::data;
 	using _Base::V;
-
-public:
 
 	_EIGEN_GENERIC_PUBLIC_INTERFACE(Point2,_Base);
 	VCG_EIGEN_INHERIT_ASSIGNMENT_OPERATORS(Point2)

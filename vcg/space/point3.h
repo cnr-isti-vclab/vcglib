@@ -77,8 +77,9 @@ public:
 //----------------------------------------
 private:
 	typedef Eigen::Matrix<_Scalar,3,1> _Base;
-	using _Base::Construct;
 public:
+
+	using _Base::Construct;
 	_EIGEN_GENERIC_PUBLIC_INTERFACE(Point3,_Base);
 	VCG_EIGEN_INHERIT_ASSIGNMENT_OPERATORS(Point3)
 
