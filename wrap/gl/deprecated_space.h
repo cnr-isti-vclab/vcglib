@@ -57,10 +57,6 @@ First working version!
 
 ****************************************************************************/
 
-#ifndef VCG_USE_EIGEN
-#include "deprecated_space.h"
-#else
-
 #ifndef VCG_GL_SPACE_H
 #define VCG_GL_SPACE_H
 
@@ -77,78 +73,40 @@ First working version!
 
 namespace vcg {
 
-template<typename Derived, int Rows=Derived::RowsAtCompileTime, int Cols=Derived::ColsAtCompileTime>
-struct EvalToKnownPointType;
-
-template<typename Derived> struct EvalToKnownPointType<Derived,2,1>
-{ typedef Point2<typename Derived::Scalar> Type; };
-
-template<typename Derived> struct EvalToKnownPointType<Derived,3,1>
-{ typedef Point3<typename Derived::Scalar> Type; };
-
-template<typename Derived> struct EvalToKnownPointType<Derived,4,1>
-{ typedef Point4<typename Derived::Scalar> Type; };
-
-#define _WRAP_EIGEN_XPR(FUNC) template<typename Derived>  \
-	inline void FUNC(const Eigen::MatrixBase<Derived>& p) { \
-		FUNC(typename EvalToKnownPointType<Derived>::Type(p)); }
-
-_WRAP_EIGEN_XPR(glVertex)
-_WRAP_EIGEN_XPR(glNormal)
-_WRAP_EIGEN_XPR(glTexCoord)
-_WRAP_EIGEN_XPR(glTranslate)
-_WRAP_EIGEN_XPR(glScale)
-
 	inline void glScale(float const & p){ glScalef(p,p,p);}
 	inline void glScale(double const & p){ glScaled(p,p,p);}
 
-	template<typename T> inline void glVertex(const Eigen::Matrix<T,2,1> & p) { assert(0); }
-	template<> inline void glVertex(const Eigen::Matrix<int,2,1> & p)   { glVertex2iv((const GLint*)p.data());}
-	template<> inline void glVertex(const Eigen::Matrix<short,2,1> & p) { glVertex2sv(p.data());}
-	template<> inline void glVertex(const Eigen::Matrix<float,2,1> & p) { glVertex2fv(p.data());}
-	template<> inline void glVertex(const Eigen::Matrix<double,2,1> & p){ glVertex2dv(p.data());}
+	inline void glVertex(Point2<int> const & p)   { glVertex2iv((const GLint*)p.V());}
+	inline void glVertex(Point2<short> const & p) { glVertex2sv(p.V());}
+	inline void glVertex(Point2<float> const & p) { glVertex2fv(p.V());}
+	inline void glVertex(Point2<double> const & p){ glVertex2dv(p.V());}
+	inline void glTexCoord(Point2<int> const & p)   { glTexCoord2iv((const GLint*)p.V());}
+	inline void glTexCoord(Point2<short> const & p) { glTexCoord2sv(p.V());}
+	inline void glTexCoord(Point2<float> const & p) { glTexCoord2fv(p.V());}
+	inline void glTexCoord(Point2<double> const & p){ glTexCoord2dv(p.V());}
+	inline void glTranslate(Point2<float> const & p) { glTranslatef(p[0],p[1],0);}
+	inline void glTranslate(Point2<double> const & p){ glTranslated(p[0],p[1],0);}
+	inline void glScale(Point2<float> const & p) { glScalef(p[0],p[1],1.0);}
+	inline void glScale(Point2<double> const & p){ glScaled(p[0],p[1],1.0);}
 
-	template<typename T> inline void glTexCoord(const Eigen::Matrix<T,2,1> & p) { assert(0); }
-	template<> inline void glTexCoord(const Eigen::Matrix<int,2,1> & p)   { glTexCoord2iv((const GLint*)p.data());}
-	template<> inline void glTexCoord(const Eigen::Matrix<short,2,1> & p) { glTexCoord2sv(p.data());}
-	template<> inline void glTexCoord(const Eigen::Matrix<float,2,1> & p) { glTexCoord2fv(p.data());}
-	template<> inline void glTexCoord(const Eigen::Matrix<double,2,1> & p){ glTexCoord2dv(p.data());}
+  inline void glVertex(Point3<int> const & p)   { glVertex3iv((const GLint*)p.V());}
+	inline void glVertex(Point3<short> const & p) { glVertex3sv(p.V());}
+	inline void glVertex(Point3<float> const & p) { glVertex3fv(p.V());}
+	inline void glVertex(Point3<double> const & p){ glVertex3dv(p.V());}
+	inline void glNormal(Point3<int> const & p)   { glNormal3iv((const GLint*)p.V());}
+	inline void glNormal(Point3<short> const & p) { glNormal3sv(p.V());}
+	inline void glNormal(Point3<float> const & p) { glNormal3fv(p.V());}
+	inline void glNormal(Point3<double> const & p){ glNormal3dv(p.V());}
+	inline void glTexCoord(Point3<int> const & p)   { glTexCoord3iv((const GLint*)p.V());}
+	inline void glTexCoord(Point3<short> const & p) { glTexCoord3sv(p.V());}
+	inline void glTexCoord(Point3<float> const & p) { glTexCoord3fv(p.V());}
+	inline void glTexCoord(Point3<double> const & p){ glTexCoord3dv(p.V());}
+	inline void glTranslate(Point3<float> const & p) { glTranslatef(p[0],p[1],p[2]);}
+	inline void glTranslate(Point3<double> const & p){ glTranslated(p[0],p[1],p[2]);}
+	inline void glScale(Point3<float> const & p) { glScalef(p[0],p[1],p[2]);}
+	inline void glScale(Point3<double> const & p){ glScaled(p[0],p[1],p[2]);}
 
-	template<typename T> inline void glTranslate(const Eigen::Matrix<T,2,1> & p) { assert(0); }
-	template<> inline void glTranslate(const Eigen::Matrix<float,2,1> & p) { glTranslatef(p[0],p[1],0);}
-	template<> inline void glTranslate(const Eigen::Matrix<double,2,1> & p){ glTranslated(p[0],p[1],0);}
-
-	template<typename T> inline void glScale(const Eigen::Matrix<T,2,1> & p) { assert(0); }
-	template<> inline void glScale(const Eigen::Matrix<float,2,1> & p) { glScalef(p[0],p[1],1.f);}
-	template<> inline void glScale(const Eigen::Matrix<double,2,1> & p){ glScaled(p[0],p[1],1.0);}
-
-	template<typename T> inline void glVertex(const Eigen::Matrix<T,3,1> & p) { assert(0); }
-	inline void glVertex(const Eigen::Matrix<int,3,1> & p)   { glVertex3iv((const GLint*)p.data());}
-	inline void glVertex(const Eigen::Matrix<short,3,1> & p) { glVertex3sv(p.data());}
-	inline void glVertex(const Eigen::Matrix<float,3,1> & p) { glVertex3fv(p.data());}
-	inline void glVertex(const Eigen::Matrix<double,3,1> & p){ glVertex3dv(p.data());}
-
-	template<typename T> inline void glNormal(const Eigen::Matrix<T,3,1> & p) { assert(0); }
-	template<> inline void glNormal(const Eigen::Matrix<int,3,1> & p)   { glNormal3iv((const GLint*)p.data());}
-	template<> inline void glNormal(const Eigen::Matrix<short,3,1> & p) { glNormal3sv(p.data());}
-	template<> inline void glNormal(const Eigen::Matrix<float,3,1> & p) { glNormal3fv(p.data());}
-	template<> inline void glNormal(const Eigen::Matrix<double,3,1> & p){ glNormal3dv(p.data());}
-
-	template<typename T> inline void glTexCoord(const Eigen::Matrix<T,3,1> & p) { assert(0); }
-	template<> inline void glTexCoord(const Eigen::Matrix<int,3,1> & p)   { glTexCoord3iv((const GLint*)p.data());}
-	template<> inline void glTexCoord(const Eigen::Matrix<short,3,1> & p) { glTexCoord3sv(p.data());}
-	template<> inline void glTexCoord(const Eigen::Matrix<float,3,1> & p) { glTexCoord3fv(p.data());}
-	template<> inline void glTexCoord(const Eigen::Matrix<double,3,1> & p){ glTexCoord3dv(p.data());}
-
-	template<typename T> inline void glTranslate(const Eigen::Matrix<T,3,1> & p) { assert(0); }
-	template<> inline void glTranslate(const Eigen::Matrix<float,3,1> & p) { glTranslatef(p[0],p[1],p[2]);}
-	template<> inline void glTranslate(const Eigen::Matrix<double,3,1> & p){ glTranslated(p[0],p[1],p[2]);}
-
-	template<typename T> inline void glScale(const Eigen::Matrix<T,3,1> & p) { assert(0); }
-	template<> inline void glScale(const Eigen::Matrix<float,3,1> & p) { glScalef(p[0],p[1],p[2]);}
-	template<> inline void glScale(const Eigen::Matrix<double,3,1> & p){ glScaled(p[0],p[1],p[2]);}
-
-  inline void glColor(Color4b const & c)   { glColor4ubv(c.data());}
+  inline void glColor(Color4b const & c)   { glColor4ubv(c.V());}
   inline void glClearColor(Color4b const &c) {	::glClearColor(float(c[0])/255.0f,float(c[1])/255.0f,float(c[2])/255.0f,1.0f);}
   inline void glLight(GLenum light, GLenum pname,  Color4b const & c)   {
     static float cf[4];
@@ -322,13 +280,29 @@ template <class TetraType>
 
 #ifdef VCG_USE_EIGEN
 
+template<typename Derived, int Rows=Derived::RowsAtCompileTime, int Cols=Derived::ColsAtCompileTime>
+struct EvalToKnownPointType;
 
+template<typename Derived> struct EvalToKnownPointType<Derived,2,1>
+{ typedef Point2<typename Derived::Scalar> Type; };
 
+template<typename Derived> struct EvalToKnownPointType<Derived,3,1>
+{ typedef Point3<typename Derived::Scalar> Type; };
 
+template<typename Derived> struct EvalToKnownPointType<Derived,4,1>
+{ typedef Point4<typename Derived::Scalar> Type; };
+
+#define _WRAP_EIGEN_XPR(FUNC) template<typename Derived>  \
+	inline void FUNC(const Eigen::MatrixBase<Derived>& p) { \
+		FUNC(typename EvalToKnownPointType<Derived>::Type(p)); }
+
+_WRAP_EIGEN_XPR(glVertex)
+_WRAP_EIGEN_XPR(glNormal)
+_WRAP_EIGEN_XPR(glTexCoord)
+_WRAP_EIGEN_XPR(glTranslate)
+_WRAP_EIGEN_XPR(glScale)
 
 #endif
 
 }//namespace
-#endif
-
 #endif
