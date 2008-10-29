@@ -26,13 +26,19 @@
 
 #include <climits>
 
-#include "vcg/math/base.h"
-#include "vcg/math/random_generator.h"
-#include "vcg/math/legendre.h"
-#include "vcg/math/factorial.h"
+#include <vcg/math/base.h>
+#include <vcg/math/random_generator.h>
+#include <vcg/math/legendre.h>
+#include <vcg/math/factorial.h>
 
 namespace vcg{
 namespace math{
+
+template <typename ScalarType>
+class PolarFunctor{
+	public:
+		virtual ScalarType operator()(ScalarType theta, ScalarType phi) = 0;
+};
 
 /**
  * Although the Real Spherical Harmonic Function is correctly defined over any
@@ -40,7 +46,7 @@ namespace math{
  * imaginary and real parts of the Complex Spherical Harmonic Functions are defined
  * for positive m only.
  */
-template <typename ScalarType, int MAX_BAND>
+template <typename ScalarType, int MAX_BAND = 4>
 class SphericalHarmonics{
 
 private :
@@ -83,9 +89,7 @@ public :
 		else return SQRT_TWO * complex_spherical_harmonic_im(l, -m, theta, phi);
 	}
 
-	typedef ScalarType (*PolarFunction) (ScalarType theta, ScalarType phi);
-
-	static SphericalHarmonics Project(PolarFunction fun, unsigned n_samples)
+	static SphericalHarmonics Project(PolarFunctor<ScalarType> * fun, unsigned n_samples)
 	{
 		const ScalarType weight = 4 * M_PI;
 
@@ -117,7 +121,7 @@ public :
 					for (int m = -l; m <= l; ++m)
 					{
 						int index = l * (l+1) + m;
-						sph.coefficients[index] += fun(theta, phi) * Real(l, m, theta, phi);
+						sph.coefficients[index] += (*fun)(theta, phi) * Real(l, m, theta, phi);
 					}
 				}
 				i++;
