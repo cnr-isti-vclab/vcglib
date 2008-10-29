@@ -27,7 +27,7 @@ enum {Dimension = SizeAtCompileTime};
 typedef typename ei_to_vcgtype<Matrix>::type EquivVcgType;
 typedef vcg::VoidType   ParamType;
 typedef Matrix          PointType;
-using Base::V;
+// using Base::V;
 
 // automatic conversion to similar vcg types
 // the otherway round is implicit because they inherits this Matrix tyoe
@@ -77,6 +77,9 @@ inline Scalar &Z() { assert(SizeAtCompileTime>2); return data()[2]; }
 inline Scalar& W() { return data()[SizeAtCompileTime-1]; }
 /** note, W always returns the last entry */
 inline const Scalar& W() const { return data()[SizeAtCompileTime-1]; }
+
+EIGEN_DEPRECATED inline Scalar V(int i) const { return (*this)[i]; };
+EIGEN_DEPRECATED inline Scalar& V(int i) { return (*this)[i]; };
 
 /** \deprecated use .data() */
 EIGEN_DEPRECATED Scalar* V() { return data(); }

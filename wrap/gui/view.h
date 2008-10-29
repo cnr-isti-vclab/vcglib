@@ -84,6 +84,7 @@ y is upward!
 #include <vcg/space/plane3.h>
 #include <vcg/space/line3.h>
 #include <vcg/math/matrix44.h>
+#include <wrap/gl/math.h>
 
 #ifdef WIN32
 #include <windows.h>
@@ -148,13 +149,9 @@ template <class T> void View<T>::GetView() {
   
   // Use standard routines, and transpose manually.
   // some 10^-20 seconds slower, but a lot safer
-  
-  glGetDoublev(GL_PROJECTION_MATRIX, m);
-  proj.Import(Matrix44d(m));
-  proj = proj.transpose().eval();
-	glGetDoublev(GL_MODELVIEW_MATRIX, m);
-  model.Import(Matrix44d(m));
-  model = model.transpose().eval();
+
+  glGetv(GL_PROJECTION_MATRIX,proj);
+  glGetv(GL_MODELVIEW_MATRIX,model);
 	
 	glGetIntegerv(GL_VIEWPORT, (GLint*)viewport);
   

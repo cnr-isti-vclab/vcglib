@@ -464,7 +464,7 @@ int readmesh(FILE* fp)
 		}
 	}
 
-	currtrasf = currtrasf.transpose().eval();
+	currtrasf.transposeInPlace();
 
 	// apply tranformation
 	if(hascolor && savecolor)

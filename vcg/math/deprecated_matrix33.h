@@ -403,8 +403,7 @@ public:
 		res.Transpose();
 		return res;
 	}
-	// for the transistion to eigen
-	const Matrix33& eval() { return *this; }
+	void transposeInPlace() { this->Transpose(); }
 
 	/// Funzione per costruire una matrice diagonale dati i tre elem.
 	Matrix33 & SetDiagonal(S *v)

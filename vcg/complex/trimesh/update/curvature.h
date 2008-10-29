@@ -641,7 +641,7 @@ public:
 			int n_rot;
 			Jacobi(m33,lambda, vect,n_rot);
 
-			vect = vect.transpose().eval();
+			vect.transposeInPlace();
 			ScalarType normal = std::numeric_limits<ScalarType>::min();
 			int normI = 0;
 			for(int i = 0; i < 3; ++i)

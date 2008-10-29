@@ -230,7 +230,7 @@ namespace io {
 			else  return false;
 			
 			// PTX transformation matrix is transposed
-			currtrasf = currtrasf.transpose().eval();
+			currtrasf.transposeInPlace();
 			
 			// allocating vertex space
 			int vn = rownum*colnum;

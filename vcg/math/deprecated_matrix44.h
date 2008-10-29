@@ -289,8 +289,7 @@ public:
 		Transpose(res);
 		return res;
 	}
-	// for the transistion to eigen
-	const Matrix44& eval() { return *this; }
+	void transposeInPlace() { Transpose(*this); }
 
 	void print() {
 				unsigned int i, j, p;

@@ -32,7 +32,7 @@
 #include <vcg/math/base.h>
 #include <vcg/space/space.h>
 
-namespace vcg{
+namespace vcg {
 template<typename Scalar> class Point2;
 template<typename Scalar> class Point3;
 template<typename Scalar> class Point4;

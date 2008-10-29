@@ -74,22 +74,22 @@ inline void glMultMatrixE(const Matrix44f &matrix) {
   //glMultMatrixf((const GLfloat *)(matrix[0]));  
   if(glMultTransposeMatrixf) glMultTransposeMatrixf((const GLfloat *)(matrix.V())); 
   else  {
-    glMultMatrixf((const GLfloat *)(matrix.transpose().eval().V()));
+    glMultMatrixf((const GLfloat *)(matrix.transpose().V()));
   }
 }
 
 inline void glMultMatrix(const Matrix44f &matrix) {
-    glMultMatrixf((const GLfloat *)(matrix.transpose().eval().V()));
+    glMultMatrixf((const GLfloat *)(matrix.transpose().V()));
 }
 
 inline void glMultMatrixE(const Matrix44d &matrix) {
   if(glMultTransposeMatrixd) glMultTransposeMatrixd((const GLdouble *)(matrix.V())); 
   else  {
-    glMultMatrixd((const GLdouble *)(matrix.transpose().eval().V()));
+    glMultMatrixd((const GLdouble *)(matrix.transpose().V()));
   }
 }
 inline void glMultMatrix(const Matrix44d &matrix) {
-    glMultMatrixd((const GLdouble *)(matrix.transpose().eval().V()));
+    glMultMatrixd((const GLdouble *)(matrix.transpose().V()));
 }
 
 inline void glMultMatrixDirect(const Matrix44f &matrix) {

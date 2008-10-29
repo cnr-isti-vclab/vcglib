@@ -186,14 +186,19 @@ EIGEN_DEPRECATED void Dump()
 	printf("\n");
 }
 
+// norm2 will be renamed squaredNorm() in Eigen
+inline Scalar squaredNorm() const { return norm2(); };
+
 /** \deprecated use norm() */
 EIGEN_DEPRECATED inline Scalar Norm() const { return norm(); };
 /** \deprecated use squaredNorm() */
-EIGEN_DEPRECATED inline Scalar SquaredNorm() const { return norm2(); };
+EIGEN_DEPRECATED inline Scalar SquaredNorm() const { return squaredNorm(); };
 /** \deprecated use normalize() or normalized() */
 EIGEN_DEPRECATED inline Derived& Normalize() { normalize(); return derived(); };
 /** \deprecated use normalized() */
 EIGEN_DEPRECATED inline const EvalType Normalize() const { return normalized(); };
+
+inline void transposeInPlace() { derived() = derived().transpose().eval(); }
 
 /** \deprecated use .cross(p) */
 EIGEN_DEPRECATED inline EvalType operator ^ (const Derived& p ) const { return this->cross(p); }

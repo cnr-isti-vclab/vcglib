@@ -728,9 +728,8 @@ namespace vcg{
 				res.Transpose();
 				return res;
 			}
+			void transposeInPlace() { Transpose(); }
 			// for the transistion to eigen
-			const Matrix& eval() { return *this; }
-
 
 			/*!
 			*	Print all matrix elements
