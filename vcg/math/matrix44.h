@@ -149,43 +149,15 @@ public:
 
 	/** taken from Eigen::Transform
 	* \returns the product between the transform \c *this and a matrix expression \a other
-  *
-  * The right hand side \a other might be either:
-  * \li a matrix expression with 4 rows
-  * \li a 3D vector/point
-  */
-  // note: this function is defined here because some compilers cannot find the respective declaration
-  template<typename OtherDerived>
-  inline const typename ei_matrix44_product_impl<OtherDerived>::ResultType
-  operator * (const Eigen::MatrixBase<OtherDerived> &other) const
-  { return ei_matrix44_product_impl<OtherDerived>::run(*this,other.derived()); }
-
-  /** Contatenates two transformations */
-  inline const typename Eigen::ProductReturnType<Matrix44,Matrix44>::Type
-  operator * (const Matrix44& other) const
-  { return (*this) * other; }
-
-// 	template <class T> Point3<T> operator*(const Point3<T> &p) {
-// 		T w;
-// 		Point3<T> s;
-// 		s[0] = m.ElementAt(0, 0)*p[0] + m.ElementAt(0, 1)*p[1] + m.ElementAt(0, 2)*p[2] + m.ElementAt(0, 3);
-// 		s[1] = m.ElementAt(1, 0)*p[0] + m.ElementAt(1, 1)*p[1] + m.ElementAt(1, 2)*p[2] + m.ElementAt(1, 3);
-// 		s[2] = m.ElementAt(2, 0)*p[0] + m.ElementAt(2, 1)*p[1] + m.ElementAt(2, 2)*p[2] + m.ElementAt(2, 3);
-// 			w = m.ElementAt(3, 0)*p[0] + m.ElementAt(3, 1)*p[1] + m.ElementAt(3, 2)*p[2] + m.ElementAt(3, 3);
-// 		if(w!= 0) s /= w;
-// 		return s;
-// 	}
-
-	//Eigen::Matrix<Scalar,3,1> operator * (const Eigen::Matrix<Scalar,3,1>& p) const {
-	//	Scalar w;
-	//	Eigen::Matrix<Scalar,3,1> s;
-	//	s[0] = ElementAt(0, 0)*p[0] + ElementAt(0, 1)*p[1] + ElementAt(0, 2)*p[2] + ElementAt(0, 3);
-	//	s[1] = ElementAt(1, 0)*p[0] + ElementAt(1, 1)*p[1] + ElementAt(1, 2)*p[2] + ElementAt(1, 3);
-	//	s[2] = ElementAt(2, 0)*p[0] + ElementAt(2, 1)*p[1] + ElementAt(2, 2)*p[2] + ElementAt(2, 3);
-	//	   w = ElementAt(3, 0)*p[0] + ElementAt(3, 1)*p[1] + ElementAt(3, 2)*p[2] + ElementAt(3, 3);
-	//	if(w!= 0) s /= w;
-	//	return s;
-	//}
+	*
+	* The right hand side \a other might be either:
+	* \li a matrix expression with 4 rows
+	* \li a 3D vector/point
+	*/
+	template<typename OtherDerived>
+	inline const typename ei_matrix44_product_impl<OtherDerived>::ResultType
+	operator * (const Eigen::MatrixBase<OtherDerived> &other) const
+	{ return ei_matrix44_product_impl<OtherDerived>::run(*this,other.derived()); }
 
 	void print() {std::cout << *this << "\n\n";}
 
@@ -491,28 +463,28 @@ template <class T> Matrix44<T> Inverse(const Matrix44<T> &m) {
 template<typename Other,int OtherCols>
 struct ei_matrix44_product_impl<Other, 4,OtherCols>
 {
-  typedef typename Other::Scalar Scalar;
-  typedef typename Eigen::ProductReturnType<Matrix44<Scalar>,Other>::Type ResultType;
-  static ResultType run(const Matrix44<Scalar>& tr, const Other& other)
-  { return tr * other; }
+	typedef typename Other::Scalar Scalar;
+	typedef typename Eigen::ProductReturnType<Matrix44<Scalar>,Other>::Type ResultType;
+	static ResultType run(const Matrix44<Scalar>& tr, const Other& other)
+	{ return tr * other; }
 };
 
 template<typename Other>
 struct ei_matrix44_product_impl<Other, 3,1>
 {
-  typedef typename Other::Scalar Scalar;
-  typedef Eigen::Matrix<Scalar,3,1> ResultType;
-  static ResultType run(const Matrix44<Scalar>& tr, const Other& p)
-  {
-	  Scalar w;
+	typedef typename Other::Scalar Scalar;
+	typedef Eigen::Matrix<Scalar,3,1> ResultType;
+	static ResultType run(const Matrix44<Scalar>& tr, const Other& p)
+	{
+		Scalar w;
 		Eigen::Matrix<Scalar,3,1> s;
 		s[0] = tr.ElementAt(0, 0)*p[0] + tr.ElementAt(0, 1)*p[1] + tr.ElementAt(0, 2)*p[2] + tr.ElementAt(0, 3);
 		s[1] = tr.ElementAt(1, 0)*p[0] + tr.ElementAt(1, 1)*p[1] + tr.ElementAt(1, 2)*p[2] + tr.ElementAt(1, 3);
 		s[2] = tr.ElementAt(2, 0)*p[0] + tr.ElementAt(2, 1)*p[1] + tr.ElementAt(2, 2)*p[2] + tr.ElementAt(2, 3);
-		   w = tr.ElementAt(3, 0)*p[0] + tr.ElementAt(3, 1)*p[1] + tr.ElementAt(3, 2)*p[2] + tr.ElementAt(3, 3);
+			w = tr.ElementAt(3, 0)*p[0] + tr.ElementAt(3, 1)*p[1] + tr.ElementAt(3, 2)*p[2] + tr.ElementAt(3, 3);
 		if(w!= 0) s /= w;
 		return s;
-  }
+	}
 };
 
 } //namespace
