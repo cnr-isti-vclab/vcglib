@@ -123,10 +123,10 @@ _WRAP_EIGEN_XPR(glScale)
 	template<> inline void glScale(const Eigen::Matrix<double,2,1> & p){ glScaled(p[0],p[1],1.0);}
 
 	template<typename T> inline void glVertex(const Eigen::Matrix<T,3,1> & p) { assert(0); }
-	inline void glVertex(const Eigen::Matrix<int,3,1> & p)   { glVertex3iv((const GLint*)p.data());}
-	inline void glVertex(const Eigen::Matrix<short,3,1> & p) { glVertex3sv(p.data());}
-	inline void glVertex(const Eigen::Matrix<float,3,1> & p) { glVertex3fv(p.data());}
-	inline void glVertex(const Eigen::Matrix<double,3,1> & p){ glVertex3dv(p.data());}
+	template<> inline void glVertex(const Eigen::Matrix<int,3,1> & p)   { glVertex3iv((const GLint*)p.data());}
+	template<> inline void glVertex(const Eigen::Matrix<short,3,1> & p) { glVertex3sv(p.data());}
+	template<> inline void glVertex(const Eigen::Matrix<float,3,1> & p) { glVertex3fv(p.data());}
+	template<> inline void glVertex(const Eigen::Matrix<double,3,1> & p){ glVertex3dv(p.data());}
 
 	template<typename T> inline void glNormal(const Eigen::Matrix<T,3,1> & p) { assert(0); }
 	template<> inline void glNormal(const Eigen::Matrix<int,3,1> & p)   { glNormal3iv((const GLint*)p.data());}
@@ -319,14 +319,6 @@ template <class TetraType>
 		glTriangle3(Triangle3<typename TetraType::ScalarType>(c.P(0),c.P(2),c.P(3)));
 		glTriangle3(Triangle3<typename TetraType::ScalarType>(c.P(1),c.P(0),c.P(3)));
 	}
-
-#ifdef VCG_USE_EIGEN
-
-
-
-
-
-#endif
 
 }//namespace
 #endif
