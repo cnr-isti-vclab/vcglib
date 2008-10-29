@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -37,6 +37,9 @@ template<typename Scalar> class Point3;
 namespace Eigen{
 
 template<typename Scalar> struct ei_traits<vcg::Point3<Scalar> > : ei_traits<Eigen::Matrix<Scalar,3,1> > {};
+
+template<typename XprType> struct ei_to_vcgtype<XprType,3,1,0,3,1>
+{ typedef vcg::Point3<typename XprType::Scalar> type; };
 
 template<typename Scalar>
 struct NumTraits<vcg::Point3<Scalar> > : NumTraits<Scalar>
@@ -79,7 +82,7 @@ public:
 	_EIGEN_GENERIC_PUBLIC_INTERFACE(Point3,_Base);
 	VCG_EIGEN_INHERIT_ASSIGNMENT_OPERATORS(Point3)
 
-  /** @name Standard Constructors and Initializers 
+  /** @name Standard Constructors and Initializers
    No casting operators have been introduced to avoid automatic unattended (and costly) conversion between different point types
    **/
 
@@ -92,7 +95,7 @@ public:
 
 
 	// this one is very useless
-  template <class Q> 
+  template <class Q>
   static inline Point3 Construct( const Q & P0, const Q & P1, const Q & P2)
   {
     return Point3(Scalar(P0),Scalar(P1),Scalar(P2));

@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -93,9 +93,9 @@ creation
 
 ****************************************************************************/
 
-/** class Shot  
+/** class Shot
 The shot is made of two things:
-* the Instrinsics paramaters, which are stored as a Camera type (check vcg/math/camera) and that 
+* the Instrinsics paramaters, which are stored as a Camera type (check vcg/math/camera) and that
 determines how a point in the frame of the camera is projected in the 2D projection plane
 
 * the Extrinsics parameters, which are stored in the class Shot (che the type ReferenceFrame)
@@ -103,7 +103,7 @@ and that tell viewpoint and view direction.
 
 The Extrinsics parameters are kept as a rotation matrix "rot" and a translation vector "tra"
 NOTE: the translation matrix "tra" corresponds   to  -viewpoint  while the rotation matrix
-"rot" corresponds to the axis of the reference frame by row, i.e. 
+"rot" corresponds to the axis of the reference frame by row, i.e.
 rot[0][0|1|2] == X axis
 rot[1][0|1|2] == Y axis
 rot[2][0|1|2] == Z axis
@@ -136,7 +136,7 @@ public:
 	class ReferenceFrame {
 		friend class Shot<ScalarType, RotoType>;
 			RotoType rot;	 // rotation
-			Point3<S> tra; // viewpoint	
+			Point3<S> tra; // viewpoint
 	public:
 			void SetIdentity(){ rot.SetIdentity(); tra = Point3<S>(0.0,0.0,0.0);}
 			void SetTra(const Point3<S> & tr) {tra = tr;}
@@ -146,7 +146,7 @@ public:
 	};
 
 	Camera<S>												Intrinsics;		// the camera that made the shot
-	ReferenceFrame<S,RotationType>	Extrinsics;		// the position and orientation of the camera 
+	ReferenceFrame<S,RotationType>	Extrinsics;		// the position and orientation of the camera
 
 
 	Shot(Camera<S> c)
@@ -186,13 +186,13 @@ public:
 	/// convert a 3d point from camera to world coordinates
 	vcg::Point3<S>  ConvertCameraToWorldCoordinates(const vcg::Point3<S> & p) const;
 
-	/// project a 3d point from world coordinates to 2d camera viewport (pixel) 
+	/// project a 3d point from world coordinates to 2d camera viewport (pixel)
 	vcg::Point2<S> Project(const vcg::Point3<S> & p) const;
 
 	/// inverse projection from 2d camera viewport (pixel) + Zdepth to 3d world coordinates
 	vcg::Point3<S> UnProject(const vcg::Point2<S> & p, const S & d) const;
 
-	/// returns distance of point p from camera plane (z depth), used for unprojection 
+	/// returns distance of point p from camera plane (z depth), used for unprojection
 	S Depth(const vcg::Point3<S> & p)const;
 
 
@@ -205,8 +205,7 @@ public:
 		Matrix44<S> GetExtrinsicsToWorldMatrix() const {
 				Matrix44<S> rotM ;
 				Extrinsics.rot.ToMatrix(rotM);
-				Transpose(rotM);
-				return Matrix44<S>().SetTranslate(Extrinsics.tra) * rotM;
+				return Matrix44<S>().SetTranslate(Extrinsics.tra) * rotM.transpose();
 		}
 
 	/* Returns the matrix M such that
@@ -240,7 +239,7 @@ public:
 //---
 /// GET the viewpoint
 template <class S, class RotationType>
-const vcg::Point3<S> Shot<S,RotationType>::GetViewPoint() const 
+const vcg::Point3<S> Shot<S,RotationType>::GetViewPoint() const
 {
 	return  Extrinsics.tra;
 }
@@ -254,10 +253,10 @@ void Shot<S,RotationType>::SetViewPoint(const vcg::Point3<S> & viewpoint)
 
 /// GET the i-th axis of the coordinate system of the camera
 template <class S, class RotationType>
-vcg::Point3<S>  Shot<S,RotationType>::Axis(const int & i) const 
-{	
-	vcg::Matrix44<S> m; 
-	Extrinsics.rot.ToMatrix(m); 
+vcg::Point3<S>  Shot<S,RotationType>::Axis(const int & i) const
+{
+	vcg::Matrix44<S> m;
+	Extrinsics.rot.ToMatrix(m);
 	vcg::Point3<S> aa = m.GetRow3(i);
 	return aa;
 }
@@ -285,7 +284,7 @@ void Shot<S,RotationType>::LookTowards(const vcg::Point3<S> & z_dir,const vcg::P
 {
 	vcg::Point3<S> x_dir = up ^-z_dir;
 	vcg::Point3<S> y_dir = -z_dir ^x_dir;
-	
+
 	Matrix44<S> m;
 	m.SetIdentity();
 	*(vcg::Point3<S> *)&m[0][0] =  x_dir/x_dir.Norm();
@@ -316,12 +315,11 @@ vcg::Point3<S> Shot<S,RotationType>::ConvertCameraToWorldCoordinates(const vcg::
 	vcg::Point3<S> cp = p;
 	cp[2]=-cp[2];	// note: World reference system is left handed
 	Extrinsics.rot.ToMatrix(rotM);
-  Transpose(rotM);
-	cp = rotM * cp+ GetViewPoint();
+	cp = rotM.transpose() * cp + GetViewPoint();
 	return cp;
 }
 
-/// project a 3d point from world coordinates to 2d camera viewport (pixel) 
+/// project a 3d point from world coordinates to 2d camera viewport (pixel)
 template <class S, class RotationType>
 vcg::Point2<S> Shot<S,RotationType>::Project(const vcg::Point3<S> & p) const
 {
@@ -341,9 +339,9 @@ vcg::Point3<S> Shot<S,RotationType>::UnProject(const vcg::Point2<S> & p, const S
 	return wp;
 }
 
-/// returns distance of point p from camera plane (z depth), used for unprojection 
+/// returns distance of point p from camera plane (z depth), used for unprojection
 template <class S, class RotationType>
-S Shot<S,RotationType>::Depth(const vcg::Point3<S> & p)const 
+S Shot<S,RotationType>::Depth(const vcg::Point3<S> & p)const
 {
 	return ConvertWorldToCameraCoordinates(p).Z();
 }

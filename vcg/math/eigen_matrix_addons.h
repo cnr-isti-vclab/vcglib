@@ -24,27 +24,30 @@
 #warning You are including deprecated math stuff
 
 enum {Dimension = SizeAtCompileTime};
+typedef typename ei_to_vcgtype<Matrix>::type EquivVcgType;
 typedef vcg::VoidType   ParamType;
 typedef Matrix          PointType;
 using Base::V;
 
+// automatic conversion to similar vcg types
+// the otherway round is implicit because they inherits this Matrix tyoe
+operator EquivVcgType& () { return *reinterpret_cast<EquivVcgType*>(this); }
+operator const EquivVcgType& () const { return *reinterpret_cast<const EquivVcgType*>(this); }
+
+/** \deprecated use m.cast<NewScalar>() */
 /// importer for points with different scalar type and-or dimensionality
 // FIXME the Point3/Point4 specialization were only for same sizes ??
 // while the Point version was generic like this one
 template<typename OtherDerived>
 inline void Import(const MatrixBase<OtherDerived>& b)
 {
-	EIGEN_STATIC_ASSERT_VECTOR_ONLY(Matrix);
-	EIGEN_STATIC_ASSERT_FIXED_SIZE(Matrix);
-	EIGEN_STATIC_ASSERT_VECTOR_ONLY(OtherDerived);
-	EIGEN_STATIC_ASSERT_FIXED_SIZE(OtherDerived);
-	enum { OtherSize = OtherDerived::SizeAtCompileTime };
-	assert(SizeAtCompileTime<=4 && OtherSize<=4);
-	data()[0] = Scalar(b[0]);
-	if (SizeAtCompileTime>1) { if (OtherSize>1) data()[1] = Scalar(b[1]); else data()[1] = 0; }
-	if (SizeAtCompileTime>2) { if (OtherSize>2) data()[2] = Scalar(b[2]); else data()[2] = 0; }
-	if (SizeAtCompileTime>3) { if (OtherSize>3) data()[3] = Scalar(b[3]); else data()[3] = 0; }
+	ei_import_selector<Matrix,OtherDerived>::run(*this,b.derived());
 }
+
+/// constructor for points with different scalar type and-or dimensionality
+template<typename OtherDerived>
+static inline Matrix Construct(const MatrixBase<OtherDerived>& b)
+{ Matrix p; p.Import(b); return p; }
 
 /// importer for homogeneous points
 template<typename OtherDerived>
@@ -53,26 +56,15 @@ inline void ImportHomo(const MatrixBase<OtherDerived>& b)
 	EIGEN_STATIC_ASSERT_VECTOR_ONLY(Matrix);
 	EIGEN_STATIC_ASSERT_FIXED_SIZE(Matrix);
 	EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(OtherDerived,SizeAtCompileTime-1);
-	
+
 	this->template start<SizeAtCompileTime-1> = b;
 	data()[SizeAtCompileTime-1] = Scalar(1.0);
 }
 
-/// constructor for points with different scalar type and-or dimensionality
-template<typename OtherDerived>
-static inline Matrix Construct(const MatrixBase<OtherDerived>& b)
-{
-	Matrix p; p.Import(b);
-	return p;
-}
-
-	/// constructor for homogeneus point.
+/// constructor for homogeneus point.
 template<typename OtherDerived>
 static inline Matrix ConstructHomo(const MatrixBase<OtherDerived>& b)
-{
-	Matrix p; p.ImportHomo(b);
-	return p;
-}
+{ Matrix p; p.ImportHomo(b); return p; }
 
 inline const Scalar &X() const { return data()[0]; }
 inline const Scalar &Y() const { return data()[1]; }
@@ -81,15 +73,19 @@ inline Scalar &X() { return data()[0]; }
 inline Scalar &Y() { return data()[1]; }
 inline Scalar &Z() { assert(SizeAtCompileTime>2); return data()[2]; }
 
-// note, W always returns the last entry
+/** note, W always returns the last entry */
 inline Scalar& W() { return data()[SizeAtCompileTime-1]; }
+/** note, W always returns the last entry */
 inline const Scalar& W() const { return data()[SizeAtCompileTime-1]; }
 
-Scalar* V() { return data(); }
-const Scalar* V() const { return data(); }
+/** \deprecated use .data() */
+EIGEN_DEPRECATED Scalar* V() { return data(); }
+/** \deprecated use .data() */
+EIGEN_DEPRECATED const Scalar* V() const { return data(); }
 
+/** \deprecated use m.coeff(i) or m[i] or m(i) */
 // overloaded to return a const reference
-inline const Scalar& V( const int i ) const
+EIGEN_DEPRECATED inline const Scalar& V( const int i ) const
 {
 	assert(i>=0 && i<SizeAtCompileTime);
 	return data()[i];
@@ -106,7 +102,7 @@ inline Matrix LocalToGlobal(ParamType p) const { return *this; }
   * (provided for uniformity with other spatial classes. trivial for points) */
 inline ParamType GlobalToLocal(PointType /*p*/) const { return ParamType(); }
 
-/** 
+/**
 	* Convert to polar coordinates from cartesian coordinates.
 	*
 	* Theta is the azimuth angle and ranges between [0, 360) degrees.

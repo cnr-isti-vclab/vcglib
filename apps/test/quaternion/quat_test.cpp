@@ -47,13 +47,13 @@ ostream &operator<<(ostream &o, Matrix44f &m) {
   return o;
 }
 
-bool verify(Quaternionf &q){ 
+bool verify(Quaternionf &q){
   cout << "Quaternion: " << q << endl;
   Matrix33f m;
   q.ToMatrix(m);
   cout << "To Matrix: " << m << endl;
-  cout << "Row norms: " << m.GetRow(0).Norm() << " " 
-                        << m.GetRow(1).Norm() << " " 
+  cout << "Row norms: " << m.GetRow(0).Norm() << " "
+                        << m.GetRow(1).Norm() << " "
                         << m.GetRow(2).Norm() << endl;
   Point3f p(3, 4, 5);
   Point3f qp = q.Rotate(p);
@@ -68,14 +68,13 @@ bool verify(Quaternionf &q){
 bool verify(Matrix33f &m) {
   cout << "Matrix: " << m << endl;
   cout << "Det: " << m.Determinant() << endl;
-  cout << "Row norms: " << m.GetRow(0).Norm() << " " 
-                        << m.GetRow(1).Norm() << " " 
+  cout << "Row norms: " << m.GetRow(0).Norm() << " "
+                        << m.GetRow(1).Norm() << " "
                         << m.GetRow(2).Norm() << endl;
-  cout << "Column norms: " << m.GetColumn(0).Norm() << " " 
-                        << m.GetColumn(1).Norm() << " " 
+  cout << "Column norms: " << m.GetColumn(0).Norm() << " "
+                        << m.GetColumn(1).Norm() << " "
                         << m.GetColumn(2).Norm() << endl;
-  Matrix33f im = m;
-  im.Transpose();
+  Matrix33f im = m.transpose() * m;
   im = im*m;
   cout << "Check ortonormality: " <<  im << endl;
   Quaternionf q;
@@ -87,7 +86,7 @@ bool verify(Matrix33f &m) {
   cout << "Norm: " << axis.SquaredNorm() + q[0]*q[0] << endl;
   axis.Normalize();
   cout << "angle: " << 2*acos(q[0]) << " Axis: " << axis << endl;
-  
+
   Point3f p(3, 4, 5);
   Point3f qp = q.Rotate(p);
   Point3f mp = m*p;
@@ -112,8 +111,8 @@ int main() {
   verify(q);
 
   Matrix33f m;
-  m[0][0] =  0.70145;  m[0][1] = 0.372035; m[0][2] = 0.607913; 
-  m[1][0] = -0.628023; m[1][1] = 0.725922; m[1][2] = 0.2804;   
+  m[0][0] =  0.70145;  m[0][1] = 0.372035; m[0][2] = 0.607913;
+  m[1][0] = -0.628023; m[1][1] = 0.725922; m[1][2] = 0.2804;
   m[2][0] = -0.336978; m[2][1] = -0.57847; m[2][2] =  0.742845;
 
   cout << "verify matrix: " << endl;
@@ -129,7 +128,7 @@ int main() {
   //Matrix33f m;
 
   cout << "matrix: " <<  m << endl;
-	
+
 Point3f p(3, 4, 5);
   //test this matrix:
   cout << "norms: " << m.GetRow(0).Norm() << " " << m.GetRow(1).Norm() << " " << m.GetRow(2).Norm() << endl;
@@ -143,14 +142,14 @@ Point3f p(3, 4, 5);
     }
     cout << endl;
   }
-  cout << endl; 
+  cout << endl;
 
   cout << "Point: " << p[0] << " " << p[1] << " " << p[2] << endl;
 
   Point3f r = q.Rotate(p);
   cout << "Rotated by q: " << r[0] << " " << r[1] << " " << r[2] << endl;
   r = m*p;
-  cout << "Rotated by m: " << r[0] << " " << r[1] << " " << r[2] << endl; 
+  cout << "Rotated by m: " << r[0] << " " << r[1] << " " << r[2] << endl;
 
   q.FromMatrix(m);
   cout << "quaternion: " << q[0] << " " << q[1] << " " << q[2] << " " << q[3] <<endl;

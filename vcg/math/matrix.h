@@ -41,6 +41,8 @@ template<class Scalar> class Matrix;
 namespace Eigen{
 template<typename Scalar>
 struct ei_traits<vcg::ndim::Matrix<Scalar> > : ei_traits<Eigen::Matrix<Scalar,Dynamic,Dynamic> > {};
+template<typename XprType> struct ei_to_vcgtype<XprType,Dynamic,Dynamic,RowMajor,Dynamic,Dynamic>
+{ typedef vcg::ndim::Matrix<typename XprType::Scalar> type; };
 }
 
 namespace vcg{
@@ -50,7 +52,7 @@ namespace ndim{
 /* @{ */
 
 /*!
- * \deprecated use Matrix<Scalar,Rows,Cols> or Matrix<Scalar,Dynamic,Dynamic>
+ * \deprecated use Matrix<Scalar,Rows,Cols> or Matrix<Scalar,Dynamic,Dynamic> or any typedef
  * This class represent a generic <I>m</I>�<I>n</I> matrix. The class is templated over the scalar type field.
  * @param Scalar (Templete Parameter) Specifies the ScalarType field.
  */
@@ -63,7 +65,6 @@ public:
 
 	_EIGEN_GENERIC_PUBLIC_INTERFACE(Matrix,_Base);
 	typedef _Scalar ScalarType;
-
 	VCG_EIGEN_INHERIT_ASSIGNMENT_OPERATORS(Matrix)
 
 	/*!

@@ -37,6 +37,8 @@ template<typename Scalar> class Point2;
 
 namespace Eigen {
 template<typename Scalar> struct ei_traits<vcg::Point2<Scalar> > : ei_traits<Eigen::Matrix<Scalar,2,1> > {};
+template<typename XprType> struct ei_to_vcgtype<XprType,2,1,0,2,1>
+{ typedef vcg::Point2<typename XprType::Scalar> type; };
 }
 
 namespace vcg {

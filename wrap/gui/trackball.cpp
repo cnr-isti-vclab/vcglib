@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -124,12 +124,12 @@ Transform::Transform() {
 }
 
 Trackball::Trackball(): current_button(0), current_mode(NULL), inactive_mode(NULL),
-			dragging(false), spinnable(true), spinning(false), 
+			dragging(false), spinnable(true), spinning(false),
 			history_size(10){
   setDefaultMapping ();
 }
 
-Trackball::~Trackball() 
+Trackball::~Trackball()
 {
 	std::map<int, TrackMode *>::iterator it;
   for(it = modes.begin(); it != modes.end(); it++)
@@ -167,7 +167,7 @@ void Trackball::GetView() {
 }
 
 // the drawing code has been moved to the trackmodes
-void Trackball::DrawPostApply() { 
+void Trackball::DrawPostApply() {
 	if(current_mode !=NULL){
 		current_mode->Draw(this);
 	}else{
@@ -177,12 +177,12 @@ void Trackball::DrawPostApply() {
 }
 
 void Trackball::Apply () {
-  glTranslate (center);
+  glTranslate (center);track.Matrix().print();
   glMultMatrix (track.Matrix());
   glTranslate (-center);
 }
 
-void Trackball::Apply(bool ToDraw) { 
+void Trackball::Apply(bool ToDraw) {
   Apply();
   if(ToDraw){
     DrawPostApply();
@@ -190,7 +190,7 @@ void Trackball::Apply(bool ToDraw) {
 }
 
 
-void Trackball::ApplyInverse() { 
+void Trackball::ApplyInverse() {
   glTranslate(center);
   glMultMatrix(track.InverseMatrix());
   glTranslate(-center);
@@ -242,15 +242,15 @@ void Trackball::DrawPlane() {
 
 void Trackball::ToAscii(char* result){
   float * f = (float*) &track;
-  sprintf(result, "trackball(%f,%f,%f,%f,%f,%f,%f,%f,%f)", 
+  sprintf(result, "trackball(%f,%f,%f,%f,%f,%f,%f,%f,%f)",
                   f[0],f[1],f[2],f[3],f[4],f[5],f[6],f[7],f[8] );
 }
 
 bool Trackball::SetFromAscii(const char * st){
   float * f = (float*) &track;
-  int res=  sscanf(st, "trackball(%f,%f,%f,%f,%f,%f,%f,%f,%f)", 
+  int res=  sscanf(st, "trackball(%f,%f,%f,%f,%f,%f,%f,%f,%f)",
                   f+0,f+1,f+2,f+3,f+4,f+5,f+6,f+7,f+8 );
-                  
+
   return (res==9);
 
 }
@@ -279,7 +279,7 @@ void Trackball::DrawPlaneHandle() {
 
 void Trackball::DrawIcon() {
   glPushMatrix();
-  
+
   glScale(radius);
   /// Here start the real drawing stuff
   float amb[4] ={.3f,.3f,.3f,1.0f};
@@ -287,31 +287,31 @@ void Trackball::DrawIcon() {
   //float col2[4]={.9f,.9f,1.0f,1.0f};
   glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_CURRENT_BIT | GL_LIGHTING_BIT);
 
- 
+
   if(current_mode == NULL ) glLineWidth(DH.LineWidthStill);
                        else glLineWidth(DH.LineWidthMoving);
-  
+
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
   glEnable(GL_LINE_SMOOTH);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glColor(DH.color);
-  
+
   glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,amb);
   glMaterialfv(GL_FRONT_AND_BACK,GL_DIFFUSE,col);
   glPushMatrix();
     DrawCircle();
     glPushMatrix();
-  
+
       glRotatef(90,1,0,0);
       DrawCircle();
       glRotatef(90,0,1,0);
       DrawCircle();
-      
+
     glPopMatrix();
   glPopMatrix();
-		
+
   //glColor4f(1.0,.8f,.8f,1.0f);
 
   glPopAttrib();
@@ -336,36 +336,36 @@ void Trackball::Reset() {
 //interface
 void Trackball::MouseDown(int button) {
   undo_track = track;
-  current_button |= button;  
+  current_button |= button;
   SetCurrentAction();
   Hits.clear();
 }
 void Trackball::MouseDown(int x, int y, int button) {
   undo_track = track;
-  current_button |= button;  
+  current_button |= button;
   SetCurrentAction();
   last_point = Point3f((float)x, (float)y, 0);
   Hits.clear();
 }
 
-void Trackball::MouseMove(int x, int y) {  
-  if(current_mode == NULL) return;  
+void Trackball::MouseMove(int x, int y) {
+  if(current_mode == NULL) return;
   if(last_point[2] == -1) { //changed mode in the middle of moving
     last_point = Point3f((float)x, (float)y, 0);
     return;
   }
   undo_track = track;
   current_mode->Apply(this, Point3f(float(x), float(y), 0));
-} 
+}
 
-void Trackball::MouseUp(int /* x */, int /* y */, int button) { 
+void Trackball::MouseUp(int /* x */, int /* y */, int button) {
   undo_track = track;
   current_button &= (~button);
   SetCurrentAction();
-} 
+}
 
 // it assumes that a notch of 1.0 is a single step of the wheel
-void Trackball::MouseWheel(float notch) 
+void Trackball::MouseWheel(float notch)
 {
   undo_track = track;
 	int buttons = current_button;
@@ -375,7 +375,7 @@ void Trackball::MouseWheel(float notch)
   {
     ScaleMode scalemode;
     scalemode.Apply (this, notch);
-  } 
+  }
 	else
 	{
     current_mode->Apply(this, notch);
@@ -405,7 +405,7 @@ void Trackball::ButtonDown(Trackball::Button button) {
   if ( ( modes.count (current_button) ) && ( modes[current_button] != NULL ) ) {
 	old_sticky = modes[current_button]->isSticky();
   }
-  current_button |= button;  
+  current_button |= button;
    if ( ( modes.count (current_button) ) && ( modes[current_button] != NULL ) ) {
 	new_sticky = modes[current_button]->isSticky();
   }
@@ -414,13 +414,13 @@ void Trackball::ButtonDown(Trackball::Button button) {
   SetCurrentAction();
 }
 
-void Trackball::ButtonUp(Trackball::Button button) { 
+void Trackball::ButtonUp(Trackball::Button button) {
   bool old_sticky=false, new_sticky=false;
   assert ( modes.count (0) );
   if ( ( modes.count (current_button) ) && ( modes[current_button] != NULL ) ) {
 	old_sticky = modes[current_button]->isSticky();
   }
-  current_button &= (~button);  
+  current_button &= (~button);
   if ( ( modes.count (current_button) ) && ( modes[current_button] != NULL ) ) {
 	new_sticky = modes[current_button]->isSticky();
   }
@@ -440,12 +440,12 @@ void Trackball::Undo(){
 void Trackball::SetSpinnable(bool /* on*/ ){}
 bool Trackball::IsSpinnable() {
   return spinnable;
-}  
+}
 void Trackball::SetSpinning(Quaternionf &/* spin*/){}
 void Trackball::StopSpinning(){}
 bool Trackball::IsSpinning() {
   return spinning;
-}  
+}
 
 //navigation interface:
 void Trackball::Back(){}
@@ -469,14 +469,14 @@ void Trackball::SetCurrentAction ()
 }
 
 ////return center of trackball in Window coordinates.
-//Point3f Trackball::ScreenOrigin() { 
-//  return camera.Project(ModelOrigin());	
+//Point3f Trackball::ScreenOrigin() {
+//  return camera.Project(ModelOrigin());
 //}
 
 
 //return center of trackball in Model coordinates
 //Point3f Trackball::ModelOrigin() {
-//  return center;     
+//  return center;
 //}
 
 //Matrix44f Trackball::ScreenToModel() {

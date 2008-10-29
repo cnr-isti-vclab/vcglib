@@ -43,7 +43,7 @@ using namespace tri;
   class MyFace;
   class MyEdgeC;
   class MyFaceC;
-  
+
   class MyVertexC:public VertexVCVN<float,MyEdgeC,MyFace>{};
   class MyFaceC :public FaceFN<MyVertexC,MyEdgeC,MyFaceC>{};
   class MyMeshC: public tri::TriMesh< std::vector<MyVertexC>, std::vector<MyFaceC > >{};
@@ -148,11 +148,11 @@ int readmesh(FILE* fp)
 
 	if(hascolor && savecolor)
 	{
-	 viC = Allocator<MyMeshC>::AddVertices(currentmeshC,(rownum*colnum)); 
+	 viC = Allocator<MyMeshC>::AddVertices(currentmeshC,(rownum*colnum));
 	}
 	else
 	{
-	 vi = Allocator<MyMesh>::AddVertices(currentmesh,(rownum*colnum)); 
+	 vi = Allocator<MyMesh>::AddVertices(currentmesh,(rownum*colnum));
 	}
 
 	// parse the first line....
@@ -360,7 +360,7 @@ int readmesh(FILE* fp)
 
 		if(hascolor && savecolor)
 		printf("\nV: %8i F: %8i \n", currentmeshC.vn, currentmeshC.fn);
-		else 
+		else
 		printf("\nV: %8i F: %8i \n", currentmesh.vn, currentmesh.fn);
 	}
 
@@ -419,7 +419,7 @@ int readmesh(FILE* fp)
 
 		if(hascolor && savecolor)
 		printf("V: %8i F: %8i \n", currentmeshC.vn, currentmeshC.fn);
-		else 
+		else
 		printf("V: %8i F: %8i \n", currentmesh.vn, currentmesh.fn);
 
 
@@ -464,7 +464,7 @@ int readmesh(FILE* fp)
 		}
 	}
 
-	Transpose(currtrasf);
+	currtrasf = currtrasf.transpose().eval();
 
 	// apply tranformation
 	if(hascolor && savecolor)
@@ -496,7 +496,7 @@ int readmesh(FILE* fp)
 	 if(! onlypoints)
 		int unref =  tri::Clean<MyMesh>::RemoveUnreferencedVertex(currentmesh);
 	}
-	
+
 	return 0;
 }
 
@@ -568,7 +568,7 @@ void dounpack(FILE* fp)
 
 }
 
-// skip a mesh 
+// skip a mesh
 int skipmesh(FILE* fp)
 {
 	int colnum;
@@ -595,7 +595,7 @@ int skipmesh(FILE* fp)
 	 fread(&linebuf,1,1,fp);
 	 while(linebuf != '\n')
        fread(&linebuf,1,1,fp);
-	} 
+	}
 
 	return 0;
 }
@@ -643,17 +643,17 @@ void parseparams(int argn, char** argvect)
 		dumpit = true;
 		printf("dumping # %i chars\n",todump);
 	  }
-	  if(argvect[pit][1] == 'u')	// unpack the file in different 
+	  if(argvect[pit][1] == 'u')	// unpack the file in different
 	  {
 		unpack = true;
 		printf("UNPACKING \n");
 	  }
-	  if(argvect[pit][1] == 'c')	// save color if present 
+	  if(argvect[pit][1] == 'c')	// save color if present
 	  {
 		savecolor = true;
 		printf("saving color \n");
 	  }
-	  if(argvect[pit][1] == 'k')	// keep all 
+	  if(argvect[pit][1] == 'k')	// keep all
 	  {
 		saveall = true;
 		printf("keeping all elements \n");
@@ -673,7 +673,7 @@ void parseparams(int argn, char** argvect)
 		switchside = true;
 		printf("swapped triangulation \n");
 	  }
-	
+
 
   }
  }
@@ -750,19 +750,19 @@ int main(int argc, char *argv[])
   dumpit = false;
   unpack = false;
   savecolor = false;
-  saveall = false;	
+  saveall = false;
   flipfaces = false;
   onlypoints = false;
-  switchside = false;	
+  switchside = false;
 
 
   if(argc < 2)
-   printhelp();  
+   printhelp();
 
 
   //--
   parseparams(argc, argv);
-  
+
   strcpy(modelname,argv[1]);
   modelname[strlen(argv[1])-4] = '\0';
 
@@ -794,7 +794,7 @@ int main(int argc, char *argv[])
 	  fclose(fp);
 	  exit(0);
 	 }
-	 
+
 	 printf("reading ");
      readmesh(fp);
 

@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *
+* This program is free software; you can redistribute it and/or modify      *   
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -57,14 +57,10 @@ Revision 1.1  2004/03/31 15:27:17  ponchio
 
 ****************************************************************************/
 
-#ifndef VCG_USE_EIGEN
-#include "deprecated_math.h"
-#else
-
 #ifndef VCG_GL_MATH_H
 #define VCG_GL_MATH_H
 
-// Please note that this file assume that you have already included your
+// Please note that this file assume that you have already included your 
 // gl-extension wrapping utility, and that therefore all the extension symbol are already defined.
 
 #include <vcg/math/matrix44.h>
@@ -74,41 +70,44 @@ Revision 1.1  2004/03/31 15:27:17  ponchio
 
 namespace vcg {
 
-inline void glLoadMatrix(const Eigen::Matrix<float,4,4>& matrix) { glLoadMatrixf(matrix.data()); }
-inline void glLoadMatrix(const Eigen::Matrix<float,4,4,Eigen::RowMajor>& matrix) {
-	Eigen::Matrix4f tmp(matrix);
-	glLoadMatrixf(tmp.data());
+inline void glMultMatrixE(const Matrix44f &matrix) {
+  //glMultMatrixf((const GLfloat *)(matrix[0]));  
+  if(glMultTransposeMatrixf) glMultTransposeMatrixf((const GLfloat *)(matrix.V())); 
+  else  {
+    glMultMatrixf((const GLfloat *)(matrix.transpose().eval().V()));
+  }
 }
-inline void glLoadMatrix(const Eigen::Matrix<double,4,4>& matrix) { glLoadMatrixd(matrix.data()); }
-inline void glLoadMatrix(const Eigen::Matrix<double,4,4,Eigen::RowMajor>& matrix) {
-	Eigen::Matrix4d tmp(matrix);
-	glLoadMatrixd(tmp.data());
-}
-template<typename Scalar>
-inline void glLoadMatrix(const Eigen::Transform<Scalar,3>& t) { glLoadMatrix(t.matrix()); }
 
-
-inline void glMultMatrix(const Eigen::Matrix<float,4,4>& matrix) { glMultMatrixf(matrix.data()); }
-inline void glMultMatrix(const Eigen::Matrix<float,4,4,Eigen::RowMajor>& matrix) {
-	Eigen::Matrix<float,4,4> tmp(matrix);
-	glMultMatrixf(tmp.data());
+inline void glMultMatrix(const Matrix44f &matrix) {
+    glMultMatrixf((const GLfloat *)(matrix.transpose().eval().V()));
 }
-inline void glMultMatrix(const Eigen::Matrix<double,4,4>& matrix) { glMultMatrixd(matrix.data()); }
-inline void glMultMatrix(const Eigen::Matrix<double,4,4,Eigen::RowMajor>& matrix) {
-	Eigen::Matrix<double,4,4> tmp(matrix);
-	glMultMatrixd(tmp.data());
-}
-template<typename Scalar>
-inline void glMultMatrix(const Eigen::Transform<Scalar,3>& t) { glMultMatrix(t.matrix()); }
 
+inline void glMultMatrixE(const Matrix44d &matrix) {
+  if(glMultTransposeMatrixd) glMultTransposeMatrixd((const GLdouble *)(matrix.V())); 
+  else  {
+    glMultMatrixd((const GLdouble *)(matrix.transpose().eval().V()));
+  }
+}
+inline void glMultMatrix(const Matrix44d &matrix) {
+    glMultMatrixd((const GLdouble *)(matrix.transpose().eval().V()));
+}
+
+inline void glMultMatrixDirect(const Matrix44f &matrix) {
+   glMultMatrixf((const GLfloat *)(matrix.V()));
+}
+
+inline void glMultMatrixDirect(const Matrix44d &matrix) {
+   glMultMatrixd((const GLdouble *)(matrix.V()));
+}
 
 inline void glMultMatrix(const Similarityf &s) {
   glTranslatef(s.tra[0], s.tra[1], s.tra[2]);
   glScalef(s.sca, s.sca, s.sca);
   float alpha;
   Point3f axis;
-  s.rot.ToAxis(alpha, axis);
-  glRotatef(math::ToDeg(alpha), axis[0], axis[1], axis[2]);
+  s.rot.ToAxis(alpha, axis);    
+  glRotatef(math::ToDeg(alpha), axis[0], axis[1], axis[2]);    
+  
 }
 
 inline void glMultMatrix(const Similarityd &s) {
@@ -120,27 +119,26 @@ inline void glMultMatrix(const Similarityd &s) {
   glScaled(s.sca, s.sca, s.sca);
 }
 
-inline void glGetv(const GLenum  pname, Eigen::Matrix<float,4,4>& matrix){
-	glGetFloatv(pname,matrix.data());
+inline void glGetv(const GLenum  pname, Matrix44f  & m){
+	Matrix44f tmp;
+	glGetFloatv(pname,tmp.V());
+  m = tmp.transpose();
 }
-inline void glGetv(const GLenum pname, Eigen::Matrix<double,4,4>& matrix){
-	glGetDoublev(pname,matrix.data());
+
+inline void glGetv(const GLenum  pname, Matrix44d  & m){
+  Matrix44d tmp;
+	glGetDoublev(pname,tmp.V());
+  m = tmp.transpose();
 }
-inline void glGetv(const GLenum pname, Eigen::Matrix<float,4,4,Eigen::RowMajor>& matrix){
-	Eigen::Matrix4f tmp;
-	glGetFloatv(pname,tmp.data());
-	matrix = tmp;
+
+inline void glGetDirectv(const GLenum  pname, Matrix44f  & m){
+	glGetFloatv(pname,m.V());
 }
-inline void glGetv(const GLenum pname, Eigen::Matrix<double,4,4,Eigen::RowMajor>& matrix){
-	Eigen::Matrix4d tmp;
-	glGetDoublev(pname,tmp.data());
-	matrix = tmp;
+
+inline void glGetDirecv(const GLenum  pname, Matrix44d  & m){
+	glGetDoublev(pname,m.V());
 }
-template<typename Scalar>
-inline void glGetv(const GLenum pname, const Eigen::Transform<Scalar,3>& t)
-{ glGetv(pname,t.matrix()); }
+
 
 }//namespace
-#endif
-
 #endif

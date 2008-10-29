@@ -41,6 +41,8 @@ template<class Scalar> class Matrix44;
 namespace Eigen{
 template<typename Scalar>
 struct ei_traits<vcg::Matrix44<Scalar> > : ei_traits<Eigen::Matrix<Scalar,4,4,RowMajor> > {};
+template<typename XprType> struct ei_to_vcgtype<XprType,4,4,RowMajor,4,4>
+{ typedef vcg::Matrix44<typename XprType::Scalar> type; };
 }
 
 namespace vcg {
@@ -140,17 +142,6 @@ public:
 	Matrix44 &SetRotateDeg(Scalar AngleDeg, const Point3<Scalar> & axis);
 	Matrix44 &SetRotateRad(Scalar AngleRad, const Point3<Scalar> & axis);
 
-	template <class Q> void Import(const Matrix44<Q> &m) {
-		for(int i = 0; i < 16; i++)
-			Base::data()[i] = (Scalar)(m.data()[i]);
-	}
-		template <class Q>
-	static inline Matrix44 Construct( const Matrix44<Q> & b )
-	{
-		Matrix44 tmp; tmp.FromMatrix(b);
-		return tmp;
-	}
-
 // 	template <class T> Point3<T> operator*(const Point3<T> &p) {
 // 		T w;
 // 		Point3<T> s;
@@ -173,29 +164,9 @@ public:
 		return s;
 	}
 
+	void print() {std::cout << *this << "\n\n";}
+
 };
-
-
-/** Class for solving A * x = b. */
-template <class T> class LinearSolve: public Matrix44<T> {
-public:
-	LinearSolve(const Matrix44<T> &m);
-	Point4<T> Solve(const Point4<T> &b); // solve A � x = b
-	///If you need to solve some equation you can use this function instead of Matrix44 one for speed.
-	T Determinant() const;
-protected:
-	///Holds row permutation.
-	int index[4]; //hold permutation
-	///Hold sign of row permutation (used for determinant sign)
-	T d;
-	bool Decompose();
-};
-
-/*** Postmultiply */
-//template <class T> Point3<T> operator*(const Point3<T> &p, const Matrix44<T> &m);
-
-///Premultiply
-// template <class T> Point3<T> operator*(const Matrix44<T> &m, const Point3<T> &p);
 
 //return NULL matrix if not invertible
 template <class T> Matrix44<T> &Invert(Matrix44<T> &m);
@@ -205,18 +176,6 @@ typedef Matrix44<short>  Matrix44s;
 typedef Matrix44<int>    Matrix44i;
 typedef Matrix44<float>  Matrix44f;
 typedef Matrix44<double> Matrix44d;
-
-
-//template <class T> T &Matrix44<T>::operator[](const int i) {
-//  assert(i >= 0 && i < 16);
-//  return ((T *)_a)[i];
-//}
-//
-//template <class T> const T &Matrix44<T>::operator[](const int i) const {
-//  assert(i >= 0 && i < 16);
-//  return ((T *)_a)[i];
-//}
-
 
 template < class PointType , class T > void operator*=( std::vector<PointType> &vert, const Matrix44<T> & m ) {
 	typename std::vector<PointType>::iterator ii;
@@ -486,22 +445,6 @@ bool Decompose(Matrix44<T> &M, Point3<T> &ScaleV, Point3<T> &ShearV, Point3<T> &
 
 	return true;
 }
-
-
-
-
-
-// template <class T> Point3<T> operator*(const Point3<T> &p, const Matrix44<T> &m) {
-//  T w;
-//  Point3<T> s;
-//  s[0] = m.ElementAt(0, 0)*p[0] + m.ElementAt(1, 0)*p[1] + m.ElementAt(2, 0)*p[2] + m.ElementAt(3, 0);
-//  s[1] = m.ElementAt(0, 1)*p[0] + m.ElementAt(1, 1)*p[1] + m.ElementAt(2, 1)*p[2] + m.ElementAt(3, 1);
-//  s[2] = m.ElementAt(0, 2)*p[0] + m.ElementAt(1, 2)*p[1] + m.ElementAt(2, 2)*p[2] + m.ElementAt(3, 2);
-//  w    = m.ElementAt(0, 3)*p[0] + m.ElementAt(1, 3)*p[1] + m.ElementAt(2, 3)*p[2] + m.ElementAt(3, 3);
-// 	if(w != 0) s /= w;
-//  return s;
-// }
-
 
 /*
 To invert a matrix you can

@@ -31,7 +31,24 @@
 
 // forward declarations
 namespace Eigen {
+
+#include "../Eigen/src/Core/util/Meta.h"
+
 template<typename Derived1, typename Derived2, int Size> struct ei_lexi_comparison;
+
+template<typename Derived1, typename Derived2,
+	bool SameType = ei_is_same_type<Derived1,Derived2>::ret,
+	bool SameSize = Derived1::SizeAtCompileTime==Derived2::SizeAtCompileTime>
+struct ei_import_selector;
+
+template<typename XprType,
+	int Rows = XprType::RowsAtCompileTime,
+	int Cols = XprType::ColsAtCompileTime,
+	int StorageOrder = XprType::Flags&1,
+	int MRows = XprType::MaxRowsAtCompileTime,
+	int MCols = XprType::MaxColsAtCompileTime>
+struct ei_to_vcgtype;
+
 }
 
 #include "base.h"
@@ -155,6 +172,46 @@ template<typename Derived1, typename Derived2> struct ei_lexi_comparison<Derived
 				    (a.coeff(1)!=b.coeff(1))?(a.coeff(1)> b.coeff(1)) : (a.coeff(0)>=b.coeff(0));
 	}
 };
+
+// implementation of Import
+template<typename Derived1, typename Derived2>
+struct ei_import_selector<Derived1,Derived2,true,true>
+{
+	static void run(Derived1& a, const Derived2& b) { a = b; }
+};
+
+template<typename Derived1, typename Derived2>
+struct ei_import_selector<Derived1,Derived2,false,true>
+{
+	static void run(Derived1& a, const Derived2& b)
+	{ a = b.template cast<typename Derived1::Scalar>(); }
+};
+
+template<typename Derived1, typename Derived2>
+struct ei_import_selector<Derived1,Derived2,false,false>
+{
+	static void run(Derived1& a, const Derived2& b)
+	{
+		EIGEN_STATIC_ASSERT_VECTOR_ONLY(Derived1);
+		EIGEN_STATIC_ASSERT_FIXED_SIZE(Derived1);
+		EIGEN_STATIC_ASSERT_VECTOR_ONLY(Derived2);
+		EIGEN_STATIC_ASSERT_FIXED_SIZE(Derived2);
+		enum {
+			Size1 = Derived1::SizeAtCompileTime,
+			Size2 = Derived2::SizeAtCompileTime
+		};
+		assert(Size1<=4 && Size2<=4);
+		a.coeffRef(0) = Scalar(b.coeff(0));
+		if (Size1>1) { if (Size2>1) a.coeffRef(1) = Scalar(b.coeff(1)); else a.coeffRef(1) = 0; }
+		if (Size1>2) { if (Size2>2) a.coeffRef(2) = Scalar(b.coeff(2)); else a.coeffRef(2) = 0; }
+		if (Size1>3) { if (Size2>3) a.coeffRef(3) = Scalar(b.coeff(3)); else a.coeffRef(3) = 0; }
+	}
+};
+
+// default implementation of ei_to_vcgtype
+// the specialization are with
+template<typename XprType,int Rows,int Cols,int StorageOrder,int MRows,int MCols>
+struct ei_to_vcgtype { typedef Matrix<typename XprType::Scalar,Rows,Cols,StorageOrder,MRows,MCols> type; };
 
 }
 
