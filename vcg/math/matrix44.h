@@ -91,13 +91,13 @@ class Matrix44 : public Eigen::Matrix<_Scalar,4,4,Eigen::RowMajor> // FIXME col 
 {
 
 	typedef Eigen::Matrix<_Scalar,4,4,Eigen::RowMajor> _Base;
+public:
+
 	using _Base::coeff;
 	using _Base::coeffRef;
 	using _Base::ElementAt;
 	using _Base::setZero;
 	using _Base::operator*;
-
-public:
 
 	_EIGEN_GENERIC_PUBLIC_INTERFACE(Matrix44,_Base);
 	typedef _Scalar ScalarType;

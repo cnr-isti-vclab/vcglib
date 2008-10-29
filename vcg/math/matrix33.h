@@ -55,11 +55,11 @@ class Matrix33 : public Eigen::Matrix<_Scalar,3,3,Eigen::RowMajor> // FIXME col 
 {
 
 	typedef Eigen::Matrix<_Scalar,3,3,Eigen::RowMajor> _Base;
+public:
+
 	using _Base::coeff;
 	using _Base::coeffRef;
 	using _Base::setZero;
-
-public:
 
 	_EIGEN_GENERIC_PUBLIC_INTERFACE(Matrix33,_Base);
 	typedef _Scalar ScalarType;
