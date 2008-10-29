@@ -81,6 +81,13 @@ for 'column' vectors.
 
 */
 
+// Note that we have to pass Dim and HDim because it is not allowed to use a template
+// parameter to define a template specialization. To be more precise, in the following
+// specializations, it is not allowed to use Dim+1 instead of HDim.
+template< typename Other,
+		  int OtherRows=Eigen::ei_traits<Other>::RowsAtCompileTime,
+          int OtherCols=Eigen::ei_traits<Other>::ColsAtCompileTime>
+struct ei_matrix44_product_impl;
 
 /** \deprecated use Eigen::Matrix<Scalar,4,4> (or the typedef) you want a real 4x4 matrix, or use Eigen::Transform<Scalar,3> if you want a transformation matrix for a 3D space (a Eigen::Transform<Scalar,3> is internally a 4x4 col-major matrix)
   *
@@ -101,7 +108,6 @@ public:
 
 	_EIGEN_GENERIC_PUBLIC_INTERFACE(Matrix44,_Base);
 	typedef _Scalar ScalarType;
-
 	VCG_EIGEN_INHERIT_ASSIGNMENT_OPERATORS(Matrix44)
 
 	Matrix44() : Base() {}
@@ -142,6 +148,24 @@ public:
 	Matrix44 &SetRotateDeg(Scalar AngleDeg, const Point3<Scalar> & axis);
 	Matrix44 &SetRotateRad(Scalar AngleRad, const Point3<Scalar> & axis);
 
+	/** taken from Eigen::Transform
+	* \returns the product between the transform \c *this and a matrix expression \a other
+  *
+  * The right hand side \a other might be either:
+  * \li a matrix expression with 4 rows
+  * \li a 3D vector/point
+  */
+  // note: this function is defined here because some compilers cannot find the respective declaration
+  template<typename OtherDerived>
+  inline const typename ei_matrix44_product_impl<OtherDerived>::ResultType
+  operator * (const MatrixBase<OtherDerived> &other) const
+  { return ei_matrix44_product_impl<OtherDerived>::run(*this,other.derived()); }
+
+  /** Contatenates two transformations */
+  inline const typename Eigen::ProductReturnType<Matrix44,Matrix44>::Type
+  operator * (const Matrix44& other) const
+  { return (*this) * other; }
+
 // 	template <class T> Point3<T> operator*(const Point3<T> &p) {
 // 		T w;
 // 		Point3<T> s;
@@ -153,16 +177,16 @@ public:
 // 		return s;
 // 	}
 
-	Eigen::Matrix<Scalar,3,1> operator * (const Eigen::Matrix<Scalar,3,1>& p) const {
-		Scalar w;
-		Eigen::Matrix<Scalar,3,1> s;
-		s[0] = ElementAt(0, 0)*p[0] + ElementAt(0, 1)*p[1] + ElementAt(0, 2)*p[2] + ElementAt(0, 3);
-		s[1] = ElementAt(1, 0)*p[0] + ElementAt(1, 1)*p[1] + ElementAt(1, 2)*p[2] + ElementAt(1, 3);
-		s[2] = ElementAt(2, 0)*p[0] + ElementAt(2, 1)*p[1] + ElementAt(2, 2)*p[2] + ElementAt(2, 3);
-		   w = ElementAt(3, 0)*p[0] + ElementAt(3, 1)*p[1] + ElementAt(3, 2)*p[2] + ElementAt(3, 3);
-		if(w!= 0) s /= w;
-		return s;
-	}
+	//Eigen::Matrix<Scalar,3,1> operator * (const Eigen::Matrix<Scalar,3,1>& p) const {
+	//	Scalar w;
+	//	Eigen::Matrix<Scalar,3,1> s;
+	//	s[0] = ElementAt(0, 0)*p[0] + ElementAt(0, 1)*p[1] + ElementAt(0, 2)*p[2] + ElementAt(0, 3);
+	//	s[1] = ElementAt(1, 0)*p[0] + ElementAt(1, 1)*p[1] + ElementAt(1, 2)*p[2] + ElementAt(1, 3);
+	//	s[2] = ElementAt(2, 0)*p[0] + ElementAt(2, 1)*p[1] + ElementAt(2, 2)*p[2] + ElementAt(2, 3);
+	//	   w = ElementAt(3, 0)*p[0] + ElementAt(3, 1)*p[1] + ElementAt(3, 2)*p[2] + ElementAt(3, 3);
+	//	if(w!= 0) s /= w;
+	//	return s;
+	//}
 
 	void print() {std::cout << *this << "\n\n";}
 
@@ -465,6 +489,32 @@ template <class T> Matrix44<T> Inverse(const Matrix44<T> &m) {
 	return m.lu().inverse();
 }
 
+template<typename Other,int OtherCols>
+struct ei_matrix44_product_impl<Other, 4,OtherCols>
+{
+  typedef typename Other::Scalar Scalar;
+  typedef typename Eigen::ProductReturnType<Matrix44<Scalar>,Other>::Type ResultType;
+  static ResultType run(const Matrix44<Scalar>& tr, const Other& other)
+  { return tr * other; }
+};
+
+template<typename Other>
+struct ei_matrix44_product_impl<Other, 3,1>
+{
+  typedef typename Other::Scalar Scalar;
+  typedef Eigen::Matrix<Scalar,3,1> ResultType;
+  static ResultType run(const Matrix44<Scalar>& tr, const Other& p)
+  {
+	  Scalar w;
+		Eigen::Matrix<Scalar,3,1> s;
+		s[0] = tr.ElementAt(0, 0)*p[0] + tr.ElementAt(0, 1)*p[1] + tr.ElementAt(0, 2)*p[2] + tr.ElementAt(0, 3);
+		s[1] = tr.ElementAt(1, 0)*p[0] + tr.ElementAt(1, 1)*p[1] + tr.ElementAt(1, 2)*p[2] + tr.ElementAt(1, 3);
+		s[2] = tr.ElementAt(2, 0)*p[0] + tr.ElementAt(2, 1)*p[1] + tr.ElementAt(2, 2)*p[2] + tr.ElementAt(2, 3);
+		   w = tr.ElementAt(3, 0)*p[0] + tr.ElementAt(3, 1)*p[1] + tr.ElementAt(3, 2)*p[2] + tr.ElementAt(3, 3);
+		if(w!= 0) s /= w;
+		return s;
+  }
+};
 
 } //namespace
 #endif

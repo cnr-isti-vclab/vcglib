@@ -42,11 +42,11 @@ template<typename Derived1, typename Derived2,
 struct ei_import_selector;
 
 template<typename XprType,
-	int Rows = XprType::RowsAtCompileTime,
-	int Cols = XprType::ColsAtCompileTime,
-	int StorageOrder = XprType::Flags&1,
-	int MRows = XprType::MaxRowsAtCompileTime,
-	int MCols = XprType::MaxColsAtCompileTime>
+	int Rows = ei_traits<XprType>::RowsAtCompileTime,
+	int Cols = ei_traits<XprType>::ColsAtCompileTime,
+	int StorageOrder = ei_traits<XprType>::Flags&1,
+	int MRows = ei_traits<XprType>::MaxRowsAtCompileTime,
+	int MCols = ei_traits<XprType>::MaxColsAtCompileTime>
 struct ei_to_vcgtype;
 
 }
