@@ -145,7 +145,7 @@ public:
 	 * @param integer coordinates pi of the cell
 	 * @return p is a 3D point representing the lower corner of the cell
 	 */
-	inline void IPToP(const Point3i & pi, CoordType &p ) const
+	inline void IPiToPf(const Point3i & pi, CoordType &p ) const
 	{
 		p[0] = ((ScalarType)pi[0])*voxel[0];
 		p[1] = ((ScalarType)pi[1])*voxel[1];
@@ -155,7 +155,7 @@ public:
 
 	// Same of above but for the case that you just want to transform 
 	// from a space to the other.
-	inline void IPToP(const CoordType & pi, CoordType &p ) const
+	inline void IPfToPf(const CoordType & pi, CoordType &p ) const
 	{
 		p[0] = ((ScalarType)pi[0])*voxel[0];
 		p[1] = ((ScalarType)pi[1])*voxel[1];

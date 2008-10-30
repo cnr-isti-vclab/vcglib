@@ -153,7 +153,7 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT>
 			typename Old_Mesh::FaceType *f=NULL;
 			const float max_dist = max_dim;
 			vcg::Point3f testPt;
-			this->IPToP(Point3i(x,y,z),testPt);
+			this->IPiToPf(Point3i(x,y,z),testPt);
 
 			vcg::Point3f closestNorm;
 			vcg::Point3f closestPt;
@@ -249,7 +249,7 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT>
 			for(vi=new_mesh.vert.begin();vi!=new_mesh.vert.end();++vi) 
 				if(!(*vi).IsD())
 					{
-						IPToP((*vi).cP(),(*vi).P());
+						IPfToPf((*vi).cP(),(*vi).P());
 					}
 		}
 		

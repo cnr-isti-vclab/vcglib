@@ -77,12 +77,12 @@ class GridStaticObj : public BasicGrid<FLT>
 
 
 	 /// Date le coordinate ritorna la cella
-	 inline ObjType & Grid( const int x, const int y, const int z ) {return grid[GridInd(Point3i(x,y,z))]; }
+	 inline ObjType & Grid( const int x, const int y, const int z ) {return grid[GridIndI(Point3i(x,y,z))]; }
 
 	 // Dato un punto ritorna la cella  
-	 inline ObjType & Grid( const Point3<FLT> & p )                 {				return grid[GridInd(p)];		}
+	 inline ObjType & Grid( const Point3<FLT> & p )                 {				return grid[GridIndF(p)];		}
 
-	 inline int GridInd( const Point3i & pi ) const
+	 inline int GridIndI( const Point3i & pi ) const
 	 {
 #ifndef NDEBUG
 		 if ( pi[0]<0 || pi[0]>=this->siz[0] || pi[1]<0 || pi[1]>=this->siz[1] || pi[2]<0 || pi[2]>=this->siz[2] )
@@ -94,7 +94,7 @@ class GridStaticObj : public BasicGrid<FLT>
 	 }
 
 	 // Dato un punto ritorna l'indice della cella
-	 inline int GridInd( const Point3<FLT> & p ) const { return GridInd(GridP(p)); 	}
+	 inline int GridIndF( const Point3<FLT> & p ) const { return GridIndI(GridP(p)); 	}
   
 	void Create( const Point3i &_siz, const ObjType & init )
 	{
