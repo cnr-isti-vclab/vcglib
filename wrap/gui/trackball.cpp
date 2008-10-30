@@ -177,7 +177,7 @@ void Trackball::DrawPostApply() {
 }
 
 void Trackball::Apply () {
-  glTranslate (center);track.Matrix().print();
+  glTranslate (center);
   glMultMatrix (track.Matrix());
   glTranslate (-center);
 }

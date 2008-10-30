@@ -134,30 +134,13 @@ public:
 };
 
 template <class T> void View<T>::GetView() {
-  double m[16];
-
-  // Don't use GL_TRANSPOSE_*_MATRIX_ARB
-  // they are veeeery evil! 
-  // On many OpenGL implementation they just don't work, causing endless hours of debugging!
-
-  /*  
-  glGetDoublev(GL_TRANSPOSE_PROJECTION_MATRIX_ARB, m);
-  proj.Import(Matrix44d(m));
-  glGetDoublev(GL_TRANSPOSE_MODELVIEW_MATRIX_ARB, m);
-  model.Import(Matrix44d(m));
-  */
-  
-  // Use standard routines, and transpose manually.
-  // some 10^-20 seconds slower, but a lot safer
-
-  glGetv(GL_PROJECTION_MATRIX,proj);
-  glGetv(GL_MODELVIEW_MATRIX,model);
-	
+	glGetv(GL_PROJECTION_MATRIX,proj);
+	glGetv(GL_MODELVIEW_MATRIX,model);
 	glGetIntegerv(GL_VIEWPORT, (GLint*)viewport);
-  
-  matrix = proj*model;
-  inverse = matrix;
-  Invert(inverse);
+
+	matrix = proj*model;
+	inverse = matrix;
+	Invert(inverse);
 }
 
 template <class T> void View<T>::SetView() {
