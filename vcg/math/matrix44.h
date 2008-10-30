@@ -464,9 +464,9 @@ template<typename Other,int OtherCols>
 struct ei_matrix44_product_impl<Other, 4,OtherCols>
 {
 	typedef typename Other::Scalar Scalar;
-	typedef typename Eigen::ProductReturnType<Matrix44<Scalar>,Other>::Type ResultType;
+	typedef typename Eigen::ProductReturnType<typename Matrix44<Scalar>::Base,Other>::Type ResultType;
 	static ResultType run(const Matrix44<Scalar>& tr, const Other& other)
-	{ return tr * other; }
+	{ return (static_cast<const typename Matrix44<Scalar>::Base&>(tr)) * other; }
 };
 
 template<typename Other>

@@ -133,14 +133,12 @@ inline void glGetv(const GLenum pname, Eigen::Matrix<double,4,4>& matrix){
 	glGetDoublev(pname,matrix.data());
 }
 inline void glGetv(const GLenum pname, Eigen::Matrix<float,4,4,Eigen::RowMajor>& matrix){
-	Eigen::Matrix4f tmp;
-	glGetFloatv(pname,tmp.data());
-	matrix = tmp;
+	glGetFloatv(pname,matrix.data());
+	matrix.transposeInPlace();
 }
 inline void glGetv(const GLenum pname, Eigen::Matrix<double,4,4,Eigen::RowMajor>& matrix){
-	Eigen::Matrix4d tmp;
-	glGetDoublev(pname,tmp.data());
-	matrix = tmp;
+	glGetDoublev(pname,matrix.data());
+	matrix.transposeInPlace();
 }
 template<typename Scalar>
 inline void glGetv(const GLenum pname, const Eigen::Transform<Scalar,3>& t)
