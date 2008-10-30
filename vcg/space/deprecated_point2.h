@@ -140,7 +140,8 @@ public:
 	{
 			return ( _v[0]*p._v[0] + _v[1]*p._v[1] );
 	}
-	  /// cross product
+	inline ScalarType dot( const Point2 & p ) const { return (*this) * p; }
+  /// cross product
 	inline ScalarType operator ^ ( Point2 const & p ) const
 	{
 			return _v[0]*p._v[1] - _v[1]*p._v[0];
