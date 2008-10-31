@@ -669,7 +669,7 @@ void Sampling<MetroMesh>::Hausdorff()
 
     // compute vertex colour
     if(Flags & SamplingFlags::SAVE_ERROR)
-      vcg::tri::UpdateColor<MetroMesh>::VertexQuality(S1);
+      vcg::tri::UpdateColor<MetroMesh>::VertexQualityRamp(S1);
 
     // compute statistics
     n_samples_per_area_unit = (double) n_total_samples / area_S1;

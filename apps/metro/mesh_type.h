@@ -44,7 +44,6 @@ just color and quality on the vertex
 #include <vcg/complex/trimesh/base.h>
 
 // Vertex, Face, Mesh and Grid definitions.
-#ifdef _PLUS_TYPES_
 #include <vcg/simplex/vertexplus/base.h>
 #include <vcg/simplex/vertexplus/component.h>
 #include <vcg/simplex/faceplus/base.h>
@@ -52,17 +51,8 @@ just color and quality on the vertex
 #include <vcg/simplex/faceplus/component_rt.h>
 class MyEdge;
 class CFace;
-class CVertex   : public vcg::VertexSimp2<CVertex,MyEdge,CFace,vcg::vert::Coord3d,vcg::vert::Qualityf,vcg::vert::Normal3d,vcg::vert::Color4b,vcg::vert::BitFlags> {};
+class CVertex   : public vcg::VertexSimp2<CVertex,MyEdge,CFace,vcg::vertex::Coord3d,vcg::vertex::Qualityf,vcg::vertex::Normal3d,vcg::vertex::Color4b,vcg::vertex::BitFlags> {};
 class CFace     : public vcg::FaceSimp2< CVertex,MyEdge,CFace,vcg::face::VertexRef, vcg::face::Normal3d, vcg::face::EdgePlane,vcg::face::Color4b,vcg::face::Mark,vcg::face::BitFlags> {};
 class CMesh     : public vcg::tri::TriMesh< std::vector<CVertex>, std::vector<CFace> > {};
-#else
-#include <vcg/simplex/vertex/with/vcvq.h>
-#include <vcg/simplex/face/with/rtfcfmfn.h>
-class MyEdge;
-class CFace;
-class CVertex   : public vcg::VertexVCVQ< double,MyEdge,CFace > {};
-class CFace     : public vcg::FaceRTFCFMFN< CVertex,MyEdge,CFace > {};
-class CMesh     : public vcg::tri::TriMesh< std::vector<CVertex>, std::vector<CFace> > {};
-#endif
 
 #endif
