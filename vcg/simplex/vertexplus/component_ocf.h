@@ -303,6 +303,7 @@ void DisableCurvatureDir() {
 	CuDV.clear();
 }
 
+bool IsRadiusEnabled() const {return RadiusEnabled;}
 void EnableRadius() {
 	assert(VALUE_TYPE::HasRadiusOcf());
 	RadiusEnabled=true;
@@ -606,6 +607,13 @@ namespace tri
 
 	template < class, class > class TriMesh;
 
+	template < class VertexType, class FaceContainerType >
+	bool HasPerVertexRadius (const TriMesh < vertex::vector_ocf< VertexType > , FaceContainerType > & m)
+	{
+		if(VertexType::HasRadiusOcf()) return m.vert.IsRadiusEnabled();
+		else return VertexType::HasRadius();
+	}
+	
 	template < class VertexType, class FaceContainerType >
 		bool HasPerVertexQuality (const TriMesh < vertex::vector_ocf< VertexType > , FaceContainerType > & m)
 	{
