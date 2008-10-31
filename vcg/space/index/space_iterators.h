@@ -63,7 +63,7 @@ added missing header
 #include <limits>
 
 namespace vcg{
-	template <class Spatial_Idexing,class INTFUNCTOR,class TMARKER> 
+	template <class Spatial_Idexing,class INTFUNCTOR,class TMARKER>
 	class RayIterator
 	{
 	public:
@@ -84,7 +84,7 @@ namespace vcg{
 				vcg::Point3i dim=Si.siz;
 				if (CurrentCell.V(i)<0)
 					CurrentCell.V(i) = 0;
-				else 
+				else
 					if (CurrentCell.V(i)>=dim.V(i))
 						CurrentCell.V(i)=dim.V(i)-1;
 			}
@@ -98,16 +98,16 @@ namespace vcg{
 			///da verificare se vanno oltre ai limiti
 			vcg::Point3i ip;
 			Si.PToIP(start,ip);
-			Si.IPToP(ip,goal);
+			Si.IPiToPf(ip,goal);
 			for (int i=0;i<3;i++)
-				if(r.Direction().V(i)>0.0) 
+				if(r.Direction().V(i)>0.0)
 					goal.V(i)+=Si.voxel.V(i);
 
 			ScalarType gx=goal.X();
 			ScalarType gy=goal.Y();
 			ScalarType gz=goal.Z();
 
-			dist=(r.Origin()-goal).Norm(); 
+			dist=(r.Origin()-goal).Norm();
 
       const float LocalMaxScalar = (std::numeric_limits<float>::max)();
 			const float	EPSILON = 1e-50f;
@@ -115,19 +115,19 @@ namespace vcg{
 			/* Parametri della linea */
 			ScalarType tx,ty,tz;
 
-			if(	fabs(r.Direction().X())>EPSILON	) 
+			if(	fabs(r.Direction().X())>EPSILON	)
 				tx = (gx-r.Origin().X())/r.Direction().X();
-			else 
+			else
 				tx	=LocalMaxScalar;
 
 			if(	fabs(r.Direction().Y())>EPSILON	)
 				ty = (gy-r.Origin().Y())/r.Direction().Y();
-			else 
+			else
 				ty	=LocalMaxScalar;
 
-			if(	fabs(r.Direction().Z())>EPSILON	) 
+			if(	fabs(r.Direction().Z())>EPSILON	)
 				tz = (gz-r.Origin().Z())/r.Direction().Z();
-			else 
+			else
 				tz	=LocalMaxScalar;
 
 			t=CoordType(tx,ty,tz);
@@ -144,8 +144,8 @@ namespace vcg{
 			assert(!end);
 			vcg::Box3<ScalarType> bb_current;
 
-			Si.IPToP(CurrentCell,bb_current.min);
-			Si.IPToP(CurrentCell+vcg::Point3i(1,1,1),bb_current.max);
+			Si.IPiToPf(CurrentCell,bb_current.min);
+			Si.IPiToPf(CurrentCell+vcg::Point3i(1,1,1),bb_current.max);
 
 			CoordType inters;
 			Intersection_Ray_Box(bb_current,r,inters);
@@ -157,20 +157,20 @@ namespace vcg{
 			{
 			if( t.X()<t.Y() && t.X()<t.Z() )
 			{
-				if(r.Direction().X()<0.0) 
+				if(r.Direction().X()<0.0)
 				{goal.X() -= Si.voxel.X(); --CurrentCell.X();}
-				else 
+				else
 				{goal.X() += Si.voxel.X(); ++CurrentCell.X();}
 				t.X() = (goal.X()-r.Origin().X())/r.Direction().X();
-			} 
+			}
 			else if( t.Y()<t.Z() ){
-				if(r.Direction().Y()<0.0) 
+				if(r.Direction().Y()<0.0)
 				{goal.Y() -= Si.voxel.Y(); --CurrentCell.Y();}
-				else  
+				else
 				{goal.Y() += Si.voxel.Y(); ++CurrentCell.Y();}
 				t.Y() = (goal.Y()-r.Origin().Y())/r.Direction().Y();
 			} else {
-				if(r.Direction().Z()<0.0) 
+				if(r.Direction().Z()<0.0)
 				{ goal.Z() -= Si.voxel.Z(); --CurrentCell.Z();}
 				else
 				{ goal.Z() += Si.voxel.Z(); ++CurrentCell.Z();}
@@ -193,8 +193,8 @@ namespace vcg{
 		{
 			max_dist=_max_dist;
 		};
-		
-		void SetMarker(TMARKER _tm)
+
+		void SetMarker(TMARKER & _tm)
 		{
 			tm=_tm;
 		}
@@ -220,14 +220,14 @@ namespace vcg{
 				//go to first intersection
 				while ((!End())&& Refresh())
 					_NextCell();
-			
+
 		}
 
 		bool End()
 		{return end;}
 
 
-		///refresh current cell intersection , return false if there are 
+		///refresh current cell intersection , return false if there are
 		///at lest 1 intersection
 		bool Refresh()
 		{
@@ -259,7 +259,7 @@ namespace vcg{
 		void operator ++()
 		{
 			if (!Elems.empty()) Elems.pop_back();
-				
+
 			CurrentElem = Elems.rbegin();
 
 			if (Dist()>dist)
@@ -282,7 +282,7 @@ namespace vcg{
 		{
 			if (Elems.size()>0)
 				return ((*CurrentElem).dist);
-			else 
+			else
 				return ((ScalarType)FLT_MAX);
 		}
 
@@ -294,7 +294,7 @@ namespace vcg{
 
 	protected:
 
-		///structure that mantain for the current cell pre-calculated data 
+		///structure that mantain for the current cell pre-calculated data
 		struct Entry_Type
 		{
 		public:
@@ -305,7 +305,7 @@ namespace vcg{
 				dist=_dist;
 				intersection=_intersection;
 			}
-			inline bool operator <  ( const Entry_Type & l ) const{return (dist > l.dist); } 
+			inline bool operator <  ( const Entry_Type & l ) const{return (dist > l.dist); }
 			ObjType* elem;
 			ScalarType dist;
 			CoordType intersection;
@@ -315,7 +315,7 @@ namespace vcg{
 		Spatial_Idexing &Si;	  //reference to spatial index algorithm
 		bool end;								//true if the scan is terminated
 		INTFUNCTOR &int_funct;
-		TMARKER tm;
+		TMARKER& tm;
 
 		std::vector<Entry_Type> Elems;					//element loaded from curren cell
 		typedef typename std::vector<Entry_Type>::reverse_iterator ElemIterator;
@@ -325,16 +325,16 @@ namespace vcg{
 
 		//used for raterization
 		CoordType start;
-		CoordType goal;	
+		CoordType goal;
 		ScalarType dist;
 		CoordType t;
 
 	};
- 
 
-	template <class Spatial_Idexing,class DISTFUNCTOR,class TMARKER> 
+
+	template <class Spatial_Idexing,class DISTFUNCTOR,class TMARKER>
 	class ClosestIterator
-	{	
+	{
 		typedef typename Spatial_Idexing::ObjType ObjType;
 		typedef typename Spatial_Idexing::ScalarType ScalarType;
 		typedef typename vcg::Point3<ScalarType>  CoordType;
@@ -375,7 +375,7 @@ namespace vcg{
 			if (!to_explore.IsNull())
 			{
 				assert(!( to_explore.min.X()<0 || to_explore.max.X()>=Si.siz[0] ||
-					to_explore.min.Y()<0 || to_explore.max.Y()>=Si.siz[1] ||  to_explore.min.Z()<0 
+					to_explore.min.Y()<0 || to_explore.max.Y()>=Si.siz[1] ||  to_explore.min.Z()<0
 					|| to_explore.max.Z()>=Si.siz[2] ));
 				return true;
 			}
@@ -423,7 +423,7 @@ namespace vcg{
 		bool End()
 		{return end;}
 
-		///refresh Object found	also considering current shere radius, 
+		///refresh Object found	also considering current shere radius,
 		//and object comes from	previos	that are already in	the	stack
 		//return false if no elements find
 		bool Refresh()
@@ -435,7 +435,7 @@ namespace vcg{
 					{
 						// this test is to avoid to re-process already analyzed cells.
 						if((explored.IsNull())||
-							(ix<explored.min[0] || ix>explored.max[0] ||  
+							(ix<explored.min[0] || ix>explored.max[0] ||
 							iy<explored.min[1] || iy>explored.max[1] ||
 							iz<explored.min[2] || iz>explored.max[2] ))
 						{
@@ -472,23 +472,23 @@ namespace vcg{
 		void operator ++()
 		{
 			if (!Elems.empty()) Elems.pop_back();
-				
+
 			CurrentElem = Elems.rbegin();
 
 			if ((!End())&& ToUpdate())
 			while ((!End())&& Refresh()&&(!_EndGrid()))
 					_NextShell();
 		}
-		
+
 		ObjType &operator *(){return *((*CurrentElem).elem);}
 
-		//return distance of the element form the point if no element 
+		//return distance of the element form the point if no element
 		//are in the vector then return max dinstance
 		ScalarType Dist()
 		{
 			if (Elems.size()>0)
 				return ((*CurrentElem).dist);
-			else 
+			else
 				return ((ScalarType)FLT_MAX);
 		}
 
@@ -497,7 +497,7 @@ namespace vcg{
 
 	protected:
 
-		///structure that mantain for the current cell pre-calculated data 
+		///structure that mantain for the current cell pre-calculated data
 		struct Entry_Type
 		{
 		public:
@@ -509,9 +509,9 @@ namespace vcg{
 				intersection=_intersection;
 			}
 
-			inline bool operator <  ( const Entry_Type & l ) const{return (dist > l.dist); } 
+			inline bool operator <  ( const Entry_Type & l ) const{return (dist > l.dist); }
 
-			inline bool operator ==  ( const Entry_Type & l ) const{return (elem == l.elem); } 
+			inline bool operator ==  ( const Entry_Type & l ) const{return (elem == l.elem); }
 
 			ObjType* elem;
 			ScalarType dist;
