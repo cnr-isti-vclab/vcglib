@@ -114,7 +114,7 @@ Microerror. ($LOG$ ->
 
 namespace vcg {
 
-	/** Classe quaternion.
+	/** Class quaternion.
 	    A quaternion is a point in the unit sphere in four dimension: all
 			rotations in three-dimensional space can be represented by a quaternion.
 		*/
@@ -131,6 +131,7 @@ public:
   Quaternion operator*(const Quaternion &q) const;
   Quaternion &operator*=(const Quaternion &q);
   void Invert();
+	Quaternion<S> Inverse() const;
   
 	
 	void SetIdentity();
@@ -145,17 +146,17 @@ public:
   void ToMatrix(Matrix44<S> &m) const;
   void ToMatrix(Matrix33<S> &m) const;
 
-	void ToEulerAngles(S &alpha, S &beta, S &gamma);
+	void ToEulerAngles(S &alpha, S &beta, S &gamma) const;
 	void FromEulerAngles(S alpha, S beta, S gamma);
   
   Point3<S> Rotate(const Point3<S> vec) const; 
+  
   //duplicated ... because of gcc new confoming to ISO template derived classes
   //do no 'see' parent members (unless explicitly specified) 
   const S & V ( const int i ) const	{ assert(i>=0 && i<4); return Point4<S>::V(i); }
   S & V ( const int i )	{ assert(i>=0 && i<4); return Point4<S>::V(i); }
 
  private:
-  //fills the 3x3 upper portion of the matrix m (must support m[i][j] interface)
 };
 
 /*template<classS, class M> void QuaternionToMatrix(Quaternion<S> &s, M &m);
@@ -220,6 +221,9 @@ template <class S> void Quaternion<S>::Invert() {
 	V(3)*=-1;
 }
 
+template <class S> Quaternion<S> Quaternion<S>::Inverse() const{
+	return Quaternion<S>( V(0), -V(1), -V(2), -V(3) );
+}
 
 template <class S> void Quaternion<S>::FromAxis(const S phi, const Point3<S> &a) {
   Point3<S> b = a;
@@ -350,20 +354,26 @@ template <class S> void Quaternion<S>::FromMatrix(const Matrix33<S> &m) {
 
 
 template<class S>
-void Quaternion<S>::ToEulerAngles(S &alpha, S &beta, S &gamma)
+void Quaternion<S>::ToEulerAngles(S &alpha, S &beta, S &gamma) const
 {
-	//...TODO...
+#define P(a,b,c,d) (2*(V(a)*V(b)+V(c)*V(d)))
+#define M(a,b,c,d) (2*(V(a)*V(b)-V(c)*V(d)))
+	alpha = math::Atan2( P(0,1,2,3) , 1-P(1,1,2,2) );
+	beta  = math::Asin ( M(0,2,3,1) );
+	gamma = math::Atan2( P(0,3,1,2) , 1-P(2,2,3,3) );
+#undef P
+#undef M
 }
 
 template<class S>
 void Quaternion<S>::FromEulerAngles(S alpha, S beta, S gamma)
 {
-	S cosalpha = cos(alpha / 2.0);
-	S cosbeta = cos(beta / 2.0);
-	S cosgamma = cos(gamma / 2.0);
-	S sinalpha = sin(alpha / 2.0);
-	S sinbeta = sin(beta / 2.0);
-	S singamma = sin(gamma / 2.0);
+	S cosalpha = math::Cos(alpha / 2.0);
+	S cosbeta = math::Cos(beta / 2.0);
+	S cosgamma = math::Cos(gamma / 2.0);
+	S sinalpha = math::Sin(alpha / 2.0);
+	S sinbeta = math::Sin(beta / 2.0);
+	S singamma = math::Sin(gamma / 2.0);
 
 	V(0) = cosalpha * cosbeta * cosgamma + sinalpha * sinbeta * singamma;
 	V(1) = sinalpha * cosbeta * cosgamma - cosalpha * sinbeta * singamma;
