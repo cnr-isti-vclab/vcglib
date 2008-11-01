@@ -117,7 +117,7 @@ static void VertexWeighted(MetroMesh & m, VertexSampler &ps, int sampleNum)
 	ScalarType samplePerUnit = sampleNum/qSum;
 	ScalarType floatSampleNum =0;
 	std::vector<VertexPointer> vertVec;
-	FillAndShuffleVertexPointVector(m,vertVec);
+	FillAndShuffleVertexPointerVector(m,vertVec);
 
 	std::vector<bool> vertUsed(m.vn,false);
 	
@@ -163,8 +163,18 @@ static void VertexAreaUniform(MetroMesh & m, VertexSampler &ps, int sampleNum)
 	
 	VertexWeighted(m,ps,sampleNum);
 }
-
-static void	FillAndShuffleVertexPointVector(MetroMesh & m, std::vector<VertexPointer> &vertVec)
+	
+static void	FillAndShuffleFacePointerVector(MetroMesh & m, std::vector<FacePointer> &faceVec)
+{
+	FaceIterator fi;
+	for(fi=m.face.begin();fi!=m.face.end();++fi) 
+		if(!(*fi).IsD())	faceVec.push_back(&*fi);
+	
+	assert((int)faceVec.size()==m.fn);
+	
+	std::random_shuffle(faceVec.begin(),faceVec.end());
+}
+static void	FillAndShuffleVertexPointerVector(MetroMesh & m, std::vector<VertexPointer> &vertVec)
 {
 	VertexIterator vi;
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi) 
@@ -184,7 +194,7 @@ static void VertexUniform(MetroMesh & m, VertexSampler &ps, int sampleNum)
 	} 
 	
 	std::vector<VertexPointer> vertVec;
-	FillAndShuffleVertexPointVector(m,vertVec);
+	FillAndShuffleVertexPointerVector(m,vertVec);
 	
 	for(int i =0; i< sampleNum; ++i)
 		ps.AddVert(*vertVec[i]);
@@ -262,7 +272,7 @@ static CoordType RandomBaricentric()
 		return interp;
 }
 
-static void Montecarlo(MetroMesh & m, VertexSampler &ps,int sampleNum)
+static void StratifiedMontecarlo(MetroMesh & m, VertexSampler &ps,int sampleNum)
 {
 	ScalarType area = Stat<MetroMesh>::ComputeMeshArea(m);
 	ScalarType samplePerAreaUnit = sampleNum/area;
@@ -281,12 +291,38 @@ static void Montecarlo(MetroMesh & m, VertexSampler &ps,int sampleNum)
 			// for every sample p_i in T...
 			for(int i=0; i < faceSampleNum; i++)
 					ps.AddFace(*fi,RandomBaricentric());
-				
-			
 			floatSampleNum -= (double) faceSampleNum; 
     }
 }
-
+static void Montecarlo(MetroMesh & m, VertexSampler &ps,int sampleNum)
+{
+	typedef  std::pair<ScalarType, FacePointer> IntervalType;
+	std::vector< IntervalType > intervals (m.fn+1);
+	FaceIterator fi;	
+	int i=0;
+	intervals[i]=std::make_pair(0,FacePointer(0));
+	// First loop: build a sequence of consective segments proportional to the triangle areas.
+	for(fi=m.face.begin(); fi != m.face.end(); fi++)
+		if(!(*fi).IsD())
+    {
+			intervals[i+1]=std::make_pair(intervals[i].first+0.5*DoubleArea(*fi), &*fi);
+			++i;
+		}
+	ScalarType meshArea = intervals.back().first;
+	for(i=0;i<sampleNum;++i)
+		{
+			ScalarType val = meshArea * (double)rand() / (double)RAND_MAX;
+			// lower_bound returns the furthermost iterator i in [first, last) such that, for every iterator j in [first, i), *j < value.
+			// E.g. An iterator pointing to the first element "not less than" val, or end() if every element is less than val.
+			typename std::vector<IntervalType>::iterator it = lower_bound(intervals.begin(),intervals.end(),make_pair(val,FacePointer(0)) );
+			assert(it != intervals.end());
+			assert(it != intervals.begin());
+			assert( (*(it-1)).first <val );
+			assert( (*(it)).first >= val);
+			ps.AddFace( *(*it).second, RandomBaricentric() );
+		}
+}
+	
 static ScalarType WeightedArea(FaceType f)
 {
 	ScalarType averageQ = ( f.V(0)->Q() + f.V(1)->Q() + f.V(2)->Q() ) /3.0;
@@ -329,19 +365,33 @@ static void WeightedMontecarlo(MetroMesh & m, VertexSampler &ps, int sampleNum)
 // Subdivision sampling of a single face. 
 // return number of added samples
 
-static int SingleFaceSubdivision(const CoordType & v0, const CoordType & v1, const CoordType & v2, int maxdepth, VertexSampler &ps, FacePointer fp)
+static int SingleFaceSubdivision(int sampleNum, const CoordType & v0, const CoordType & v1, const CoordType & v2, VertexSampler &ps, FacePointer fp, bool randSample)
 {
     // recursive face subdivision.
-    if(maxdepth == 0)
+    if(sampleNum == 1)
     {
         // ground case.
-        CoordType SamplePoint((v0+v1+v2)/3.0f);
-				CoordType SampleBary;
-				InterpolationParameters(*fp,SamplePoint,SampleBary[0],SampleBary[1],SampleBary[2]);
-				ps.AddFace(*fp,SampleBary);
-        return 1;
+			CoordType SamplePoint;
+			if(randSample) 
+			{
+				CoordType rb=RandomBaricentric();
+				SamplePoint=v0*rb[0]+v1*rb[1]+v2*rb[2];
+			}
+			else SamplePoint=((v0+v1+v2)/3.0f);
+			
+			CoordType SampleBary;
+			InterpolationParameters(*fp,SamplePoint,SampleBary[0],SampleBary[1],SampleBary[2]);
+			ps.AddFace(*fp,SampleBary);
+			return 1;
     }
 
+		int s0 = sampleNum /2;
+		int s1 = sampleNum-s0;
+		assert(s0>0);
+		assert(s1>0);
+	
+	  ScalarType w0 = ScalarType(s1)/ScalarType(sampleNum);
+		ScalarType w1 = 1.0-w0;
     // compute the longest edge.
     double  maxd01 = SquaredDistance(v0,v1);
     double  maxd12 = SquaredDistance(v1,v2);
@@ -359,17 +409,17 @@ static int SingleFaceSubdivision(const CoordType & v0, const CoordType & v1, con
     CoordType  pp;
     switch(res)
     {
-     case 0 :    pp = (v0+v1)/2;
-                 faceSampleNum+=SingleFaceSubdivision(v0,pp,v2,maxdepth-1,ps,fp);
-                 faceSampleNum+=SingleFaceSubdivision(pp,v1,v2,maxdepth-1,ps,fp);
+     case 0 :    pp = v0*w0 + v1*w1;
+                 faceSampleNum+=SingleFaceSubdivision(s0,v0,pp,v2,ps,fp,randSample);
+                 faceSampleNum+=SingleFaceSubdivision(s1,pp,v1,v2,ps,fp,randSample);
                  break;
-     case 1 :    pp = (v1+v2)/2;
-                 faceSampleNum+=SingleFaceSubdivision(v0,v1,pp,maxdepth-1,ps,fp);
-                 faceSampleNum+=SingleFaceSubdivision(v0,pp,v2,maxdepth-1,ps,fp);
+     case 1 :    pp =  v1*w0 + v2*w1;
+                 faceSampleNum+=SingleFaceSubdivision(s0,v0,v1,pp,ps,fp,randSample);
+                 faceSampleNum+=SingleFaceSubdivision(s1,v0,pp,v2,ps,fp,randSample);
                  break;
-     case 2 :    pp = (v2+v0)/2;
-                 faceSampleNum+=SingleFaceSubdivision(v0,v1,pp,maxdepth-1,ps,fp);
-                 faceSampleNum+=SingleFaceSubdivision(pp,v1,v2,maxdepth-1,ps,fp);
+     case 2 :    pp = v0*w0 + v2*w1;
+                 faceSampleNum+=SingleFaceSubdivision(s0,v0,v1,pp,ps,fp,randSample);
+                 faceSampleNum+=SingleFaceSubdivision(s1,pp,v1,v2,ps,fp,randSample);
                  break;
     }
 		return faceSampleNum;
@@ -377,28 +427,26 @@ static int SingleFaceSubdivision(const CoordType & v0, const CoordType & v1, con
 
 
 /// Compute a sampling of the surface where the points are regularly scattered over the face surface using a recursive longest-edge subdivision rule.
-static void FaceSubdivision(MetroMesh & m, VertexSampler &ps,int sampleNum)
+static void FaceSubdivision(MetroMesh & m, VertexSampler &ps,int sampleNum, bool randSample)
 {
 	
 	ScalarType area = Stat<MetroMesh>::ComputeMeshArea(m);
 	ScalarType samplePerAreaUnit = sampleNum/area;
 	//qDebug("samplePerAreaUnit %f",samplePerAreaUnit);
+	std::vector<FacePointer> faceVec;
+	FillAndShuffleFacePointerVector(m,faceVec);
 
 	double  floatSampleNum = 0.0;
 	int faceSampleNum;
     // Subdivision sampling.
-    FaceIterator fi;
-    for(fi=m.face.begin(); fi!=m.face.end(); fi++)
+	typename std::vector<FacePointer>::iterator fi;
+    for(fi=faceVec.begin(); fi!=faceVec.end(); fi++)
     {
         // compute # samples in the current face.
-        floatSampleNum += 0.5*DoubleArea(*fi) * samplePerAreaUnit;
+        floatSampleNum += 0.5*DoubleArea(**fi) * samplePerAreaUnit;
         faceSampleNum          = (int) floatSampleNum;
         if(faceSampleNum>0)
-        {
-            // face sampling.
-            int maxdepth = ((int)(log((double)faceSampleNum)/log(2.0)));
-            faceSampleNum = SingleFaceSubdivision((*fi).V(0)->cP(), (*fi).V(1)->cP(), (*fi).V(2)->cP(), maxdepth,ps,&*fi);
-        }
+            faceSampleNum = SingleFaceSubdivision(faceSampleNum,(**fi).V(0)->cP(), (**fi).V(1)->cP(), (**fi).V(2)->cP(),ps,*fi,randSample);
         floatSampleNum -= (double) faceSampleNum;
     }
 }
