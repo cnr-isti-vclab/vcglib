@@ -194,7 +194,7 @@ namespace vcg{
 			max_dist=_max_dist;
 		};
 
-		void SetMarker(TMARKER & _tm)
+		void SetMarker(TMARKER  _tm)
 		{
 			tm=_tm;
 		}
@@ -315,7 +315,7 @@ namespace vcg{
 		Spatial_Idexing &Si;	  //reference to spatial index algorithm
 		bool end;								//true if the scan is terminated
 		INTFUNCTOR &int_funct;
-		TMARKER& tm;
+		TMARKER tm;
 
 		std::vector<Entry_Type> Elems;					//element loaded from curren cell
 		typedef typename std::vector<Entry_Type>::reverse_iterator ElemIterator;
