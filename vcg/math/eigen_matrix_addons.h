@@ -92,8 +92,6 @@ EIGEN_DEPRECATED inline const Scalar& V( const int i ) const
 	assert(i>=0 && i<SizeAtCompileTime);
 	return data()[i];
 }
-// // redefined because gcc 4.0.1 does not handle using Base::V
-// EIGEN_DEPRECATED inline Scalar& V(int i) { return (*this)[i]; };
 
 //--------------------------------------------------------------------------------
 // SPACE

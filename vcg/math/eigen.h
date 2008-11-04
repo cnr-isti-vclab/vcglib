@@ -303,6 +303,12 @@ inline const Eigen::CwiseUnaryOp<Eigen::ei_scalar_abs_op<typename Eigen::ei_trai
 Abs(const Eigen::MatrixBase<Derived>& p)
 { return p.cwise().abs(); }
 
+/** \deprecated use transposeInPlace() or transpose() */
+template<typename Scalar,int Size,int StorageOrder>
+EIGEN_DEPRECATED inline Eigen::Matrix<Scalar,Size,Size,StorageOrder>&
+Transpose(const Eigen::Matrix<Scalar,Size,Size,StorageOrder>& m)
+{ return m.transposeInPlace(); return m; }
+
 template<typename Derived>
 inline const Eigen::CwiseBinaryOp<Eigen::ei_scalar_max_op<typename Eigen::ei_traits<Derived>::Scalar>,
 																	Derived,

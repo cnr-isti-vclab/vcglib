@@ -188,7 +188,7 @@ EIGEN_DEPRECATED void Dump()
 }
 
 // norm2 will be renamed squaredNorm() in Eigen
-inline Scalar squaredNorm() const { return norm2(); };
+// inline Scalar squaredNorm() const { return norm2(); };
 
 /** \deprecated use norm() */
 EIGEN_DEPRECATED inline Scalar Norm() const { return norm(); };
@@ -198,6 +198,11 @@ EIGEN_DEPRECATED inline Scalar SquaredNorm() const { return squaredNorm(); };
 EIGEN_DEPRECATED inline Derived& Normalize() { normalize(); return derived(); };
 /** \deprecated use normalized() */
 EIGEN_DEPRECATED inline const EvalType Normalize() const { return normalized(); };
+
+/** \deprecated use transposeInPlace() or transpose() */
+EIGEN_DEPRECATED inline Derived& Transpose() { transposeInPlace(); return derived(); };
+/** \deprecated use transpose() */
+EIGEN_DEPRECATED inline const Eigen::Transpose<Derived> Transpose() const { return transpose(); };
 
 /** \deprecated use .cross(p) */
 EIGEN_DEPRECATED inline EvalType operator ^ (const Derived& p ) const { return this->cross(p); }
@@ -245,13 +250,13 @@ EIGEN_DEPRECATED inline int MaxI() const { EIGEN_STATIC_ASSERT_VECTOR_ONLY(Deriv
 EIGEN_DEPRECATED inline int MinI() const { EIGEN_STATIC_ASSERT_VECTOR_ONLY(Derived); int i; minCoeff(&i,0); return i; }
 
 
-/// Padding function: give a default 0 value to all the elements that are not in the [0..2] range. 
+/// Padding function: give a default 0 value to all the elements that are not in the [0..2] range.
 /// Useful for managing in a consistent way object that could have point2 / point3 / point4
 inline Scalar Ext( const int i ) const
 {
 	EIGEN_STATIC_ASSERT_VECTOR_ONLY(Derived);
 	EIGEN_STATIC_ASSERT_FIXED_SIZE(Derived);
-	
+
 	if(i>=0 && i<SizeAtCompileTime)
 		return coeff(i);
 	else
