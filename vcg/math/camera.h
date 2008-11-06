@@ -157,7 +157,9 @@ public:
 		CenterPx(vcg::Point2<S>(0.0,0.0)),
 		DistorCenterPx(vcg::Point2<S>(0.0,0.0)),
 		cameraType(0)
-		{}
+		{
+      k[0] = k[1] = k[2] = k[3] = 0;
+    }
 
 	//------ camera intrinsics
 	ScalarType	FocalMm;			/// Focal Distance: the distance between focal center and image plane. Expressed in mm
