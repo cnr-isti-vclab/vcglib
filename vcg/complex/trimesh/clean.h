@@ -227,6 +227,7 @@ Initial Release
 #include <vcg/space/index/grid_static_ptr.h>
 #include<vcg/complex/trimesh/allocate.h>
 #include<vcg/complex/trimesh/update/selection.h>
+#include<vcg/complex/trimesh/update/flag.h>
 
 
 namespace vcg {
