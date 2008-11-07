@@ -226,6 +226,7 @@ Initial Release
 #include <vcg/complex/trimesh/closest.h>
 #include <vcg/space/index/grid_static_ptr.h>
 #include<vcg/complex/trimesh/allocate.h>
+#include<vcg/complex/trimesh/update/selection.h>
 
 
 namespace vcg {
@@ -474,6 +475,22 @@ private:
 				return count_fd;
 			}
 			
+			static int RemoveNonManifoldVertex(MeshType& m)
+			{
+				int count_vd = CountNonManifoldVertexFF(m,true);
+				int count_fd = UpdateSelection<MeshType>::FaceFromVertexLoose(m);
+				FaceIterator fi;
+				for(fi=m.face.begin(); fi!=m.face.end();++fi)
+					if(!(*fi).IsD() && (*fi).IsS()) 
+						Allocator<MeshType>::DeleteFace(m,*fi);
+				VertexIterator vi;
+				for(vi=m.vert.begin(); vi!=m.vert.end();++vi)
+					if(!(*vi).IsD() && (*vi).IsS()) 
+						Allocator<MeshType>::DeleteVertex(m,*vi);
+				
+			}
+			
+			
       static int RemoveNonManifoldFace(MeshType& m)
       {
 				FaceIterator fi;
@@ -628,41 +645,85 @@ private:
 				}
         return flagManifold;
       }
-
-			static bool IsTwoManifoldVertex( MeshType & m ) 
+			
+			static int CountNonManifoldVertexFF( MeshType & m, bool select = true ) 
 			{
-				VertexIterator vi;
-				bool flagManifold = true;
-				assert(m.HasVFTopology());
+				assert(tri::HasFFAdjacency(m));
+				int nonManifoldCnt=0;
+				SimpleTempData<typename MeshType::VertContainer, int > TD(m.vert,0);
+			
+				// primo loop, si conta quanti facce incidono su ogni vertice...
+				FaceIterator fi;
+				for (fi = m.face.begin(); fi != m.face.end(); ++fi)	if (!fi->IsD())
+				{
+					TD[(*fi).V(0)]++;
+					TD[(*fi).V(1)]++;
+					TD[(*fi).V(2)]++;
+				}
+				tri::UpdateFlags<MeshType>::VertexClearV(m);
+				
+				for (fi = m.face.begin(); fi != m.face.end(); ++fi)	if (!fi->IsD())
+				{
+					for(int i=0;i<3;i++) if(!(*fi).V(i)->IsV()){
+						(*fi).V(i)->SetV();
+						face::Pos<FaceType> pos(&(*fi),i);
+						
+						int starSizeFF = pos.NumberOfIncidentFaces();
 
-					face::VFIterator<FaceType> vfi;
-					int starSizeFF;
-					int starSizeVF;
-					for (vi = m.vert.begin(); vi != m.vert.end(); ++vi)
-					{
-						if (!vi->IsD())
+						if (starSizeFF != TD[(*fi).V(i)])
 						{
-							face::VFIterator<FaceType> vfi(&*vi);
-							face::Pos<FaceType> pos((*vi).VFp(), &*vi);
-
-							starSizeFF = pos.NumberOfIncidentFaces();
-
-							starSizeVF = 0;
-							while(!vfi.End())
-							{
-								++vfi;
-								starSizeVF++;
-							}
-
-							if (starSizeFF != starSizeVF)
-							{
-								flagManifold = false;
-								break;
-							}
+							if(select) (*fi).V(i)->SetS();
+							nonManifoldCnt++;
 						}
 					}
-
-				return flagManifold;
+				}
+				
+				return nonManifoldCnt;				
+			}
+			
+				
+			static int CountNonManifoldVertexFFVF( MeshType & m, bool select = true ) 
+			{
+				int nonManifoldCnt=0;
+				VertexIterator vi;
+				bool flagManifold = true;
+				assert(tri::HasVFAdjacency(m));
+				assert(tri::HasFFAdjacency(m));
+				
+				face::VFIterator<FaceType> vfi;
+				int starSizeFF;
+				int starSizeVF;
+				for (vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+				{
+					if (!vi->IsD())
+					{
+						face::VFIterator<FaceType> vfi(&*vi);
+						face::Pos<FaceType> pos((*vi).VFp(), &*vi);
+						
+						starSizeFF = pos.NumberOfIncidentFaces();
+						
+						starSizeVF = 0;
+						while(!vfi.End())
+						{
+							++vfi;
+							starSizeVF++;
+						}
+						
+						if (starSizeFF != starSizeVF)
+						{
+							flagManifold = false;
+							if(select) (*vi).SetS();
+							nonManifoldCnt++;
+						}
+					}
+				}
+				
+				return nonManifoldCnt;				
+			}
+			
+			static bool IsTwoManifoldVertex( MeshType & m ) 
+			{
+				return CountNonManifoldVertex(m,false) == 0 ;
 			}
 
 			static void CountEdges( MeshType & m, int &count_e, int &boundary_e ) 
