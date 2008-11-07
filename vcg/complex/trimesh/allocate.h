@@ -169,6 +169,7 @@ Initial commit
 #define __VCGLIB_TRIALLOCATOR
 
 #include <vector>
+#include <string>
 #include <set>
 #include <assert.h>
 #include <vcg/container/simple_temporary_data.h>
@@ -401,8 +402,8 @@ namespace vcg {
 							if(HasVFAdjacency(m))
 								for(int i = 0; i < (*fi).VN(); ++i)
 									if ((*fi).cVFp(i)!=0) pu.Update((*fi).VFp(i));
-							}
-						++ii;
+						  ++ii;
+						}
 						++fi;
 						}
 						VertexIterator vi;
