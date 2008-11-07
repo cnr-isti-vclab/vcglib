@@ -168,6 +168,29 @@ static ScalarType GetFarPlane(vcg::Shot<ScalarType> & shot, vcg::Box3<ScalarType
 	return farDist;
 }
 
+
+/// given a shot and the mesh bounding box, return near and far plane (exact)
+static void GetNearFarPlanes(vcg::Shot<ScalarType> & shot, vcg::Box3<ScalarType> bbox, ScalarType &nr, ScalarType &fr)
+{
+  vcg::Point3<ScalarType> zaxis = shot.Axis(2); 
+  ScalarType offset = zaxis * shot.GetViewPoint();
+  bool first = true;
+  for(int i = 0; i < 8; i++) {
+    vcg::Point3<ScalarType> c = bbox.P(i);
+    ScalarType d = -(zaxis * c - offset);
+    if(first || d < nr) { 
+      nr = d;
+      first = false;
+    }
+    if(first || d > fr) { 
+      fr = d;
+      first = false;
+    }
+  }
+}
+
+
+
 static void SetSubView(vcg::Shot<ScalarType> & shot,
 					   vcg::Point2<ScalarType> p1,
 					   vcg::Point2<ScalarType> p2)
