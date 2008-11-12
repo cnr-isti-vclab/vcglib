@@ -369,6 +369,7 @@ public:
 	typedef float QualityType;
   typedef vcg::Color4b ColorType;
   ColorType &C() { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
+  const ColorType &cC() const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
   ColorType &WC(const int) { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
   QualityType &Q() { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
   
@@ -478,6 +479,8 @@ public:
   typename T::FacePointer const cVFp(const int) const { static typename T::FacePointer const fp=0; return fp; }
   typename T::FacePointer       &FFp(const int)       { static typename T::FacePointer fp=0;  assert(0); return fp; }
   typename T::FacePointer const cFFp(const int) const { static typename T::FacePointer const fp=0; return fp; }
+  typename T::EdgePointer       &FEp(const int)       { static typename T::EdgePointer fp=0;  assert(0); return fp; }
+  typename T::EdgePointer const cFEp(const int) const { static typename T::EdgePointer const fp=0; return fp; }
   char &VFi(const int j){static char z=0;  assert(0); return z;};
   char &FFi(const int j){static char z=0;  assert(0); return z;};
   const char &cVFi(const int j){static char z=0; return z;};
@@ -488,8 +491,12 @@ public:
 	inline void Dealloc(){T::Dealloc();}
   static bool HasVFAdjacency()   {   return false; }
   static bool HasFFAdjacency()   {   return false; }
+  static bool HasFEAdjacency()   {   return false; }
+
   static bool HasFFAdjacencyOcc()   {   return false; }
   static bool HasVFAdjacencyOcc()   {   return false; }
+  static bool HasFEAdjacencyOcc()   {   return false; }
+
   static void Name(std::vector<std::string> & name){T::Name(name);}
 
 };
@@ -517,8 +524,8 @@ private:
   typename T::FacePointer _vfp[3] ;    
   char _vfi[3] ;    
 };
-/*----------------------------- FFADJ ------------------------------*/ 
 
+/*----------------------------- FFADJ ------------------------------*/ 
 
 template <class T> class FFAdj: public T {
 public:
@@ -551,6 +558,39 @@ private:
   char _ffi[3] ;    
 };
 
-  } // end namespace vert
+
+/*----------------------------- FEADJ ------------------------------*/ 
+
+template <class T> class FEAdj: public T {
+public:
+	FEAdj(){
+		_fep[0]=0;
+		_fep[1]=0;
+		_fep[2]=0;
+	}
+  typename T::FacePointer       &FEp(const int j)        { assert(j>=0 && j<3);  return _fep[j]; }
+  typename T::FacePointer const  FEp(const int j) const  { assert(j>=0 && j<3);  return _fep[j]; }
+  typename T::FacePointer const cFEp(const int j) const  { assert(j>=0 && j<3);  return _fep[j]; }
+  char        &FEi(const int j)       { return _fei[j]; }
+  const char &cFEi(const int j) const { return _fei[j]; }
+
+  typename T::FacePointer        &FEp1( const int j )       { return FEp((j+1)%3);}
+	typename T::FacePointer        &FEp2( const int j )       { return FEp((j+2)%3);}
+	typename T::FacePointer  const  FEp1( const int j ) const { return FEp((j+1)%3);}
+	typename T::FacePointer  const  FEp2( const int j ) const { return FEp((j+2)%3);}
+
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){T::ImportLocal(leftF);}
+	inline void Alloc(const int & ns){T::Alloc(ns);}
+	inline void Dealloc(){T::Dealloc();}
+  static bool HasFEAdjacency()      {   return true; }
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("FEAdj"));T::Name(name);}
+
+private:
+  typename T::FacePointer _fep[3] ;    
+  char _fei[3] ;    
+};
+
+  } // end namespace face
 }// end namespace vcg
 #endif
