@@ -63,6 +63,8 @@ public:
 	*/
 		static bool HasPolyInfo()   { return true; }
 		inline const int &  VN() const { return _ns;}
+		inline int Prev(const int & i){ return (i+(VN()-1))%VN();}
+		inline int Next(const int & i){ return (i+1)%VN();}
 		inline void Alloc(const int & ns){};
 		inline void Dealloc(){};
 private:
@@ -140,7 +142,7 @@ public:
 													T::Dealloc();
 	}
 
-  static bool HasFVAdj()   { return true; }
+  static bool HasFVAdjacency()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("PFVAdj"));T::Name(name);}
 
   private:
@@ -212,8 +214,8 @@ private:
   typename T::FacePointer *_vfpP ;    
   char *_vfiP ;    
 };
-/*----------------------------- FFADJ ------------------------------*/ 
 
+/*----------------------------- FFADJ ------------------------------*/ 
 
 template <class T> class PFFAdj: public T {
 public:
@@ -229,7 +231,7 @@ public:
 	void ImportLocal(const LeftF & leftF){T::ImportLocal(leftF);}
 	inline void Alloc(const int & ns) {
 	if( _ffpP == NULL){	
-		this->SetNV(ns);
+		this->SetVN(ns);
 		_ffpP = new  FaceType*[this->VN()]; 
 		_ffiP = new  char[this->VN()];
 		for(int i = 0; i < this->VN(); ++i) {_ffpP[i] = 0;_ffiP[i] = 0;}
@@ -251,6 +253,35 @@ public:
   char *_ffiP ;    
 };
 
-  } // end namespace vert
+/*----------------------------- PFEADJ ------------------------------*/ 
+
+template <class T> class PFEAdj: public T {
+public:
+ typedef typename T::FaceType FaceType;
+	PFEAdj(){_fepP = NULL;  }
+	typename T::FacePointer       &FEp(const int j)        { assert(j>=0 && j<this->VN());  return _fepP[j]; }
+  typename T::FacePointer const  FEp(const int j) const  { assert(j>=0 && j<this->VN());  return _fepP[j]; }
+  typename T::FacePointer const cFEp(const int j) const  { assert(j>=0 && j<this->VN());  return _fepP[j]; }
+	
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){T::ImportLocal(leftF);}
+	inline void Alloc(const int & ns) {
+	if( _fepP == NULL){	
+		this->SetVN(ns);
+		_fepP = new  FaceType*[this->VN()]; 
+		for(int i = 0; i < this->VN(); ++i) {_fepP[i] = 0;}
+		T::Alloc(ns);									}
+	}
+	inline void Dealloc() {	if(_fepP!=NULL) delete [] _fepP; T::Dealloc();}
+
+	static bool HasFEAdjacency()      {   return true; }
+	static bool HasFEAdjacencyOcc()   {   return false; }
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("PFEAdj"));T::Name(name);}
+
+//private:
+  typename T::FacePointer *_fepP ;    
+};
+
+  } // end namespace face
 }// end namespace vcg
 #endif
