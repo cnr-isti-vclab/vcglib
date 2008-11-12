@@ -80,6 +80,7 @@ Adding copyright.
 #ifndef TRACKBALL_H
 #define TRACKBALL_H
 
+#include <time.h>
 #include <vcg/math/similarity.h>
 #include <vcg/space/color4.h>
 #include <wrap/gui/view.h>
@@ -165,13 +166,9 @@ mesh->Render();
 */
 class Trackball: public Transform {
 public:
-// the drawing code has been moved to the trackmodes
-//  class DrawingHint {
-
-// DrawingHint DH;
 
   /// The componibile states of the manipulator system.
-  enum Button { BUTTON_NONE   = 0x0000, ///< No mouse button pressed.
+  enum Button { BUTTON_NONE   = 0x0000, ///< No button or key pressed.
                 BUTTON_LEFT   = 0x0001, ///< Left mouse button pressed.
                 BUTTON_MIDDLE = 0x0002, ///< Middle mouse button pressed.
                 BUTTON_RIGHT  = 0x0004, ///< Right mouse button pressed.
@@ -179,7 +176,14 @@ public:
                 KEY_SHIFT     = 0x0010, ///< Shift key pressed.
                 KEY_CTRL      = 0x0020, ///< Ctrl key pressed.
                 KEY_ALT       = 0x0040, ///< Alt key pressed.
-                HANDLE        = 0x0080  ///< Application-defined state activated.
+                HANDLE        = 0x0080, ///< Application-defined state activated.
+								MODIFIER_MASK = 0x00FF, ///< (mask to get modifiers only)
+								KEY_UP        = 0x0100, ///< Up directional key
+								KEY_DOWN      = 0x0200, ///< Down directional key
+								KEY_LEFT      = 0x0400, ///< Left directional key
+								KEY_RIGHT     = 0x0800, ///< Right directional key
+								KEY_PGUP      = 0x1000, ///< PageUp directional key
+								KEY_PGDOWN    = 0x2000, ///< PageDown directional key
               };
 
   /*!
@@ -331,7 +335,7 @@ public:
 
     @param button the new state.
   */
-  void ButtonDown(Button button);
+  void ButtonDown(Button button, unsigned int msec=0);
   /*!
     @brief Undo function for manipulator system.
 
@@ -348,19 +352,23 @@ public:
   */
   void SetSensitivity(float s);
 
-  //spinning interface
-  /*!
-    @brief Currently not in use.
-
-    @param on Currently not in use.
-  */
   void SetSpinnable(bool on);
+
+	
+	// returns if it is animating or not
+	// 
+	bool IsAnimating(unsigned int msec=0);
+
+	// Animate: either takes an absolute time (if default not specified, then it is automeasured)
+	// or a fixed delta
+	void Animate(unsigned int msec=0);
+
   /*!
     @brief Currently not in use.
 
     @return A meaningless boolean value.
   */
-  bool IsSpinnable();
+	bool IsSpinnable();
   /*!
     @brief Currently not in use.
 
@@ -441,14 +449,16 @@ public:
     This function is called automatically when an user action begins.
   */
   void SetCurrentAction();
-  /// Current state composition.
+	/// Current state composition. Note: mask with MODIFIERS to get modifier buttons only
   int current_button;
   /// The selected manipulator.
   TrackMode *current_mode;
 
-  /// The inactive manipulator. It is drawed when Trackball is inactive.
+  /// The inactive manipulator. It is drawn when Trackball is inactive.
   TrackMode *inactive_mode;
-
+  
+  // The manipulator to deal with timer events and key events
+  TrackMode *idle_and_keys_mode; 
   /*!
     @brief Reset modes to default mapping.
 
@@ -482,6 +492,8 @@ public:
   /// Currently not in use.
   int button_mask;
 
+	unsigned int last_time;
+
   /// Currently not in use.
   Quaternionf spin;
   /// Currently not in use.
@@ -494,8 +506,17 @@ public:
   /// Currently not in use.
   int history_size;
 
+
+	void SetFixedTimesteps(bool mode){
+		fixedTimestepMode=mode;
+	}
+
   /// Manipulators needs full access to this class.
   friend class TrackMode;
+private:
+	void Sync(unsigned int msec);
+	bool fixedTimestepMode; // if true, animations occurs at fixed time steps
+
 };
 
 

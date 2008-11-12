@@ -125,7 +125,7 @@ Transform::Transform() {
 
 Trackball::Trackball(): current_button(0), current_mode(NULL), inactive_mode(NULL),
 			dragging(false), spinnable(true), spinning(false),
-			history_size(10){
+			history_size(10), last_time(0), fixedTimestepMode(false) {
   setDefaultMapping ();
 }
 
@@ -141,17 +141,24 @@ Trackball::~Trackball()
 
 
 void Trackball::setDefaultMapping () {
+  idle_and_keys_mode = NULL;
+  
   inactive_mode = new InactiveMode ();
   modes.clear ();
   modes[0] = NULL;
+  
+  modes[BUTTON_MIDDLE | KEY_ALT] = 
   modes[BUTTON_LEFT] = new SphereMode ();
+  
   modes[BUTTON_LEFT | KEY_CTRL] = new PanMode ();
+  
   modes[BUTTON_MIDDLE] = new PanMode ();
+  
+  modes[WHEEL] = 
   modes[BUTTON_LEFT | KEY_SHIFT] = new ScaleMode ();
+  
   modes[BUTTON_LEFT | KEY_ALT] = new ZMode ();
-  modes[BUTTON_MIDDLE | KEY_ALT] = new SphereMode ();
-  modes[WHEEL] = new ScaleMode ();
-  SetCurrentAction ();
+
 }
 
 void Trackball::SetIdentity() {
@@ -171,9 +178,8 @@ void Trackball::DrawPostApply() {
 	if(current_mode !=NULL){
 		current_mode->Draw(this);
 	}else{
-		assert(inactive_mode != NULL);
- 		inactive_mode->Draw(this);
-  	}
+		if (inactive_mode != NULL) inactive_mode->Draw(this);
+  }
 }
 
 void Trackball::Apply () {
@@ -329,8 +335,7 @@ void Trackball::Reset() {
    if(mode!=NULL)
      mode->Reset();
   }
-  assert(inactive_mode != NULL);
-  inactive_mode->Reset();
+  if (inactive_mode != NULL) inactive_mode->Reset();
  }
 
 //interface
@@ -358,10 +363,40 @@ void Trackball::MouseMove(int x, int y) {
   current_mode->Apply(this, Point3f(float(x), float(y), 0));
 }
 
+bool Trackball::IsAnimating(unsigned int msec){
+	bool res;
+	if(idle_and_keys_mode == NULL) res=false; else res=idle_and_keys_mode->IsAnimating(this);
+
+	if (!fixedTimestepMode)	{
+  	if (msec==0) msec = clock()*1000/CLOCKS_PER_SEC;
+	  if (!res) {
+  	  last_time = msec;
+	  }
+	}
+	return res;
+}
+
+void Trackball::Sync(unsigned int msec) {
+	if (!fixedTimestepMode)	Animate(msec);
+}
+
+void Trackball::Animate(unsigned int msec){
+	unsigned int delta;
+	if (fixedTimestepMode) delta=msec;
+	else {
+		if (msec==0) msec = clock()*1000/CLOCKS_PER_SEC;
+    delta = msec -last_time;
+	  last_time = msec;
+	}
+	if(idle_and_keys_mode == NULL) return;
+	idle_and_keys_mode->Animate(delta,this);
+}
+
 void Trackball::MouseUp(int /* x */, int /* y */, int button) {
   undo_track = track;
-  current_button &= (~button);
-  SetCurrentAction();
+	ButtonUp(vcg::Trackball::Button(button));
+  //current_button &= (~button);
+  //SetCurrentAction();
 }
 
 // it assumes that a notch of 1.0 is a single step of the wheel
@@ -373,8 +408,8 @@ void Trackball::MouseWheel(float notch)
 	SetCurrentAction();
   if (current_mode == NULL)
   {
-    ScaleMode scalemode;
-    scalemode.Apply (this, notch);
+    //ScaleMode scalemode;
+    //scalemode.Apply (this, notch);
   }
 	else
 	{
@@ -399,34 +434,34 @@ void Trackball::MouseWheel(float notch, int button)
   SetCurrentAction ();
 }
 
-void Trackball::ButtonDown(Trackball::Button button) {
+void Trackball::ButtonDown(Trackball::Button button, unsigned int msec) {
+	Sync(msec);
   bool old_sticky=false, new_sticky=false;
   assert (modes.count (0));
-  if ( ( modes.count (current_button) ) && ( modes[current_button] != NULL ) ) {
-	old_sticky = modes[current_button]->isSticky();
-  }
+
+	Button b=Button(current_button & MODIFIER_MASK);
+  if ( ( modes.count (b) ) && ( modes[b] != NULL ) ) old_sticky = modes[b]->isSticky();
+ 
   current_button |= button;
-   if ( ( modes.count (current_button) ) && ( modes[current_button] != NULL ) ) {
-	new_sticky = modes[current_button]->isSticky();
-  }
-  if ( old_sticky || new_sticky)
-    return;
-  SetCurrentAction();
+	b=Button(current_button & MODIFIER_MASK);
+	if ( ( modes.count (b) ) && ( modes[b] != NULL ) ) new_sticky = modes[b]->isSticky();
+  
+  if ( !old_sticky && !new_sticky) SetCurrentAction();
+
 }
 
 void Trackball::ButtonUp(Trackball::Button button) {
   bool old_sticky=false, new_sticky=false;
-  assert ( modes.count (0) );
-  if ( ( modes.count (current_button) ) && ( modes[current_button] != NULL ) ) {
-	old_sticky = modes[current_button]->isSticky();
-  }
+  assert (modes.count (0));
+
+	Button b=Button(current_button & MODIFIER_MASK);
+  if ( ( modes.count (b) ) && ( modes[b] != NULL ) ) old_sticky = modes[b]->isSticky();
+ 
   current_button &= (~button);
-  if ( ( modes.count (current_button) ) && ( modes[current_button] != NULL ) ) {
-	new_sticky = modes[current_button]->isSticky();
-  }
-  if ( old_sticky || new_sticky)
-    return;
-  SetCurrentAction();
+	b=Button(current_button & MODIFIER_MASK);
+	if ( ( modes.count (b) ) && ( modes[b] != NULL ) ) new_sticky = modes[b]->isSticky();
+  
+  if ( !old_sticky && !new_sticky) SetCurrentAction();
 }
 
 void Trackball::Undo(){
@@ -457,10 +492,10 @@ void Trackball::SetCurrentAction ()
 {
   //I use strict matching.
   assert (modes.count (0));
-  if (!modes.count (current_button)) {
+  if (!modes.count (current_button & MODIFIER_MASK)) {
     current_mode = NULL;
   } else {
-    current_mode = modes[current_button];
+    current_mode = modes[current_button & MODIFIER_MASK];
     if(current_mode != NULL)
       current_mode->SetAction();
   }
