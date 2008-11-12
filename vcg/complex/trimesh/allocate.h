@@ -225,6 +225,12 @@ namespace vcg {
 			typedef typename MeshType::VertexPointer  VertexPointer;
 			typedef typename MeshType::VertexIterator VertexIterator;
 			typedef typename MeshType::VertContainer VertContainer;
+
+			typedef typename MeshType::EdgeType     EdgeType;
+			typedef typename MeshType::EdgePointer  EdgePointer;
+			typedef typename MeshType::EdgeIterator EdgeIterator;
+			typedef typename MeshType::EdgeContainer EdgeContainer;
+
 			typedef typename MeshType::FaceType       FaceType;
 			typedef typename MeshType::FacePointer    FacePointer;
 			typedef typename MeshType::FaceIterator   FaceIterator;
@@ -288,20 +294,21 @@ namespace vcg {
 
 				pu.newBase = &*m.vert.begin();
 				pu.newEnd =  &m.vert.back()+1; 
-        if(pu.NeedUpdate())
-				{
+		      if(pu.NeedUpdate())
+					{
 					FaceIterator fi;
 					for (fi=m.face.begin(); fi!=m.face.end(); ++fi)
 						if(!(*fi).IsD())
+							for(int i=0; i < (*fi).VN(); ++i)
+								if ((*fi).cV(i)!=0) pu.Update((*fi).V(i));
+					EdgeIterator ei;
+					for (ei=m.edge.begin(); ei!=m.edge.end(); ++ei)
+						if(!(*ei).IsD())
 						{
-							if ((*fi).cV(0)!=0) pu.Update((*fi).V(0));
-							if ((*fi).cV(1)!=0) pu.Update((*fi).V(1));
-							if ((*fi).cV(2)!=0) pu.Update((*fi).V(2));
+							//update edge to vertex pointers (TODO)
 						}
 
-
 						// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
-
 				}
 				unsigned int siz=(unsigned int)m.vert.size()-n;	
 			
@@ -320,7 +327,7 @@ namespace vcg {
 				return AddVertices(m, n,pu);
 			}
 
-      /** Function to add n vertices to the mesh.
+			/** Function to add n vertices to the mesh.
 			Second Wrapper, with a vector of vertex pointers to be updated.
 			*/
 			static VertexIterator AddVertices(MeshType &m, int n, std::vector<VertexPointer *> &local_vec)
@@ -334,7 +341,80 @@ namespace vcg {
 				return v_ret;
 			}
 
-	
+			/** Function to add n edges to the mesh. The second parameter hold a vector of 
+			pointers to pointer to elements of the mesh that should be updated after a 
+			possible vector realloc. 
+			@param n number of edges to be added
+			@param local_var vector of pointers to pointers to edges to be updated.
+			return an iterator to the first element added
+			*/
+			static EdgeIterator AddEdges(MeshType &m,int n, PointerUpdater<EdgePointer> &pu)
+			{
+				EdgeIterator last;
+				if(n == 0) return m.edge.end();
+				pu.Clear();
+				if(m.edge.empty()) pu.oldBase=0;  // if the vector is empty we cannot find the last valid element
+        else {
+          pu.oldBase=&*m.edge.begin(); 
+  				pu.oldEnd=&m.edge.back()+1; 
+        }
+
+				m.edge.resize(m.edge.size()+n);
+				m.en+=n;
+
+				//typename std::set<typename MeshType::HandlesWrapper>::iterator ai;
+				//for(ai = m.vert_attr.begin(); ai != m.vert_attr.end(); ++ai)
+				//	((typename MeshType::HandlesWrapper)(*ai)).Resize(m.vert.size());
+
+				pu.newBase = &*m.edge.begin();
+				pu.newEnd =  &m.edge.back()+1; 
+		      if(pu.NeedUpdate())
+					{
+					FaceIterator fi;
+					for (fi=m.face.begin(); fi!=m.face.end(); ++fi)
+						if(!(*fi).IsD())
+							for(int i=0; i < (*fi).VN(); ++i)
+								if ((*fi).cFEp(i)!=0) pu.Update((*fi).FEp(i));
+					EdgeIterator ei;
+					for (ei=m.edge.begin(); ei!=m.edge.end(); ++ei)
+						if(!(*ei).IsD())
+						{
+							//update edge to vertex pointers (TODO)
+						}
+
+						// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
+				}
+				unsigned int siz=(unsigned int)m.edge.size()-n;	
+			
+				last = m.edge.begin(); 
+				advance(last,siz);
+			
+				return last;// deve restituire l'iteratore alla prima faccia aggiunta;
+			}
+
+			/** Function to add n vertices to the mesh.
+			First wrapper, with no parameters
+			*/
+			static EdgeIterator AddEdges(MeshType &m, int n)
+			{
+				PointerUpdater<EdgePointer> pu;
+				return AddEdges(m, n,pu);
+			}
+
+      /** Function to add n vertices to the mesh.
+			Second Wrapper, with a vector of vertex pointers to be updated.
+			*/
+			static EdgeIterator AddEdges(MeshType &m, int n, std::vector<EdgePointer *> &local_vec)
+			{
+				PointerUpdater<EdgePointer> pu;
+				EdgeIterator v_ret =  AddEdges(m, n,pu);
+
+				typename std::vector<EdgePointer *>::iterator ei;
+            for(ei=local_vec.begin();ei!=local_vec.end();++ei)
+               pu.Update(**ei);
+				return v_ret;
+			}
+
 
 			/** Function to add n faces to the mesh.
 			First wrapper, with no parameters
@@ -385,7 +465,7 @@ namespace vcg {
 					((typename MeshType::HandlesWrapper)(*ai)).Resize(m.face.size());
 
 				pu.newBase = &*m.face.begin();
-        pu.newEnd  = &m.face.back()+1;
+				pu.newEnd  = &m.face.back()+1;
 				
 				if(pu.NeedUpdate())
 				{
@@ -418,6 +498,19 @@ namespace vcg {
 								//  pu.Update((FaceType*)(*vi).VFp()); compiles on old gcc and borland
 								//  pu.Update((*vi).VFp());            compiles on .net and newer gcc
 							}
+						EdgeIterator ei;
+						for (ei=m.edge.begin(); ei!=m.edge.end(); ++ei)
+							if(!(*ei).IsD())
+							{
+								if(HasEFAdjacency(m))
+									if ((*ei).cEFp()!=0)
+										pu.Update((FaceType * &)(*ei).EFp());
+								// Note the above cast is probably not useful if you have correctly defined 
+								// your vertex type with the correct name of the facetype as a template argument; 
+								//  pu.Update((FaceType*)(*vi).VFp()); compiles on old gcc and borland
+								//  pu.Update((*vi).VFp());            compiles on .net and newer gcc
+							}
+	
 							// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
 
 				}
@@ -446,7 +539,17 @@ namespace vcg {
 			v.SetD();
 			--m.vn;
 		}
-				
+
+		/** Function to delete an edge from the mesh. 
+			NOTE: THIS FUNCTION ALSO UPDATE en
+		*/
+		static void DeleteVertex(MeshType &m, EdgeType &e)
+		{
+			assert(!e.IsD());
+			e.SetD();
+			--m.en;
+		}
+			
 		/* 
 		Function to compact all the vertices that have been deleted and put them to the end of the vector. 
 		after this pass the isD test in the scanning of vertex vector, is no more strongly necessary.
@@ -642,6 +745,62 @@ public:
 		assert(i!=m.vert_attr.end());
 		delete ((SimpleTempData<VertContainer,ATTR_TYPE>*)(*i)._handle);
 		m.vert_attr.erase(i);
+	}
+
+	/// Per Edge Attributes
+	template <class ATTR_TYPE> 
+	static
+	typename MeshType::template PerEdgeAttributeHandle<ATTR_TYPE>
+	 AddPerEdgeAttribute( MeshType & m, std::string name){
+		HWIte i;
+		HandlesWrapper h; 
+		h._name = name;
+		if(!name.empty()){
+			i = m.edge_attr.find(h);
+			assert(i ==m.edge_attr.end() );// an attribute with this name exists
+		}
+		h._handle = (void*) new SimpleTempData<EdgeContainer,ATTR_TYPE>(m.edge);
+		std::pair < HandlesIterator , bool> res =  m.edge_attr.insert(h);
+		return typename MeshType::template PerEdgeAttributeHandle<ATTR_TYPE>(res.first->_handle);
+	 }
+	
+	template <class ATTR_TYPE> 
+	static
+		typename MeshType::template PerEdgeAttributeHandle<ATTR_TYPE>
+	 GetPerEdgeAttribute( const MeshType & m, const std::string & name){
+		assert(!name.empty());
+		HandlesWrapper h1; h1._name = name;
+		typename std::set<HandlesWrapper > ::const_iterator i;
+
+		i =m.edge_attr.find(h1);
+		if(i!=m.edge_attr.end())
+				return typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE>((*i)._handle);
+			else
+				return typename MeshType:: template PerFaceAttributeHandle<ATTR_TYPE>(NULL);
+	}
+
+	template <class ATTR_TYPE> 
+	static
+		void
+	DeletePerEdgeAttribute( MeshType & m,typename MeshType::template PerEdgeAttributeHandle<ATTR_TYPE> & h){
+		typename std::set<HandlesWrapper > ::iterator i;
+		for( i = m.edge_attr.begin(); i !=  m.edge_attr.end(); ++i)
+			if( (*i)._handle == h._handle ){
+				delete ((SimpleTempData<FaceContainer,ATTR_TYPE>*)(*i)._handle);
+				m.edge_attr.erase(i); 
+				return;}
+			assert(0);
+	}
+
+	template <class ATTR_TYPE > 
+	static
+		void	DeletePerEdgeAttribute( MeshType & m,  std::string name){
+		HandlesIterator i;
+		HandlesWrapper h1; h1._name = name;
+		i = m.edge_attr.find(h1);
+		assert(i!=m.edge_attr.end());
+		delete ((SimpleTempData<EdgeContainer,ATTR_TYPE>*)(*i)._handle);
+		m.edge_attr.erase(i);
 	}
 
 	/// Per Face Attributes
