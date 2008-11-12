@@ -15,7 +15,8 @@ SUBDIRS       = trimesh_base  \
                 trimesh_ball_pivoting \
                 trimesh_hole \
                 aabb_binary_tree \
-                edgemesh_grid
+                edgemesh_grid \
+		    trimesh_attribute
 
 sources.files = *.pro
 sources.path = .
