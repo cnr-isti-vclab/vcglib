@@ -75,7 +75,7 @@ class CFace;
 /* define a vertex passing the attributes you want it to have. Each attributes has its own class.
 Check vcg/simplex/vertexplus/component.h to find out the existing attributes. Note: then you could 
 also personalized attributes */
-class CVertex : public VertexSimp2< CVertex, CEdge, CFace, vert::Coord3f, vert::Normal3f >{};
+class CVertex : public VertexSimp2< CVertex, CEdge, CFace, vertex::Coord3f, vertex::Normal3f >{};
 
 /*same as for the vertes */ 
 class CFace   : public FaceSimp2<   CVertex, CEdge, CFace, face::VertexRef, face::Normal3f > {};
