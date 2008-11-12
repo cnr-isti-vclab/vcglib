@@ -480,15 +480,18 @@ private:
 			{
 				int count_vd = CountNonManifoldVertexFF(m,true);
 				int count_fd = UpdateSelection<MeshType>::FaceFromVertexLoose(m);
+				int count_removed = 0;
 				FaceIterator fi;
 				for(fi=m.face.begin(); fi!=m.face.end();++fi)
 					if(!(*fi).IsD() && (*fi).IsS()) 
 						Allocator<MeshType>::DeleteFace(m,*fi);
 				VertexIterator vi;
 				for(vi=m.vert.begin(); vi!=m.vert.end();++vi)
-					if(!(*vi).IsD() && (*vi).IsS()) 
+					if(!(*vi).IsD() && (*vi).IsS()) {
+						++count_removed;
 						Allocator<MeshType>::DeleteVertex(m,*vi);
-				
+					}
+					return count_removed;
 			}
 			
 			
