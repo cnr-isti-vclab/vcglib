@@ -155,6 +155,13 @@ void TrackMode::SetAction (){}
 
 void TrackMode::Reset (){}
 
+bool TrackMode::IsAnimating(const Trackball *){ 
+	return false;
+}
+
+void TrackMode::Animate(unsigned int, Trackball *){
+}
+
 bool TrackMode::isSticky() {
   return false;
 }
@@ -300,7 +307,7 @@ void CylinderMode::Apply (Trackball * tb, Point3f new_point)
     angle= (distNew-distOld) / tb->radius;
   }
   if(snap>0.0){
-    angle = ((angle<0)?-1:1)* floor((((angle<0)?-angle:angle)/snap)+0.5)*snap;
+    angle = ((angle<0)?-1:1)* floor((((angle<0)?-angle:angle)/snap)+0.5f)*snap;
   }
 //  tb->track.rot = tb->last_track.rot * Quaternionf (angle,axis.Direction());
   tb->track.rot = Quaternionf (-angle,axis.Direction()) * tb->last_track.rot;
@@ -781,8 +788,8 @@ void PolarMode::Apply (Trackball * tb, Point3f new_point)
   float dx = (hitNew.X() - hitOld.X());
   float dy = (hitNew.Y() - hitOld.Y());
 
-  const float scale = 0.5*M_PI; //sensitivity of the mouse
-  const float top = 0.9*M_PI/2; //maximum top view angle
+  const float scale = float(0.5*M_PI); //sensitivity of the mouse
+  const float top = float(0.9*M_PI/2); //maximum top view angle
 
   float anglex =  dx/(tb->radius * scale);
   float angley = -dy/(tb->radius * scale);
@@ -809,3 +816,148 @@ void PolarMode::Draw(Trackball * tb){
   DrawSphereIcon(tb,true );
 }
 
+
+// Navigator WASD implementation
+
+NavigatorWasdMode::NavigatorWasdMode() { 
+  _flipH=1; _flipV=1;
+  SetTopSpeedsAndAcc(1,1,4);
+	step_height = step_length = 0;
+  Reset(); 
+};
+
+void NavigatorWasdMode::Reset() {
+  alpha=0;
+	beta=0;
+	current_speed.SetZero();
+	step_x=0.0f;
+
+	step_current = step_last = 0.0;
+}
+
+void NavigatorWasdMode::FlipH(){
+ _flipH*=-1;
+}
+
+void NavigatorWasdMode::FlipV(){
+ _flipV*=-1;
+}
+
+
+void NavigatorWasdMode::SetAction() {
+  
+}
+
+bool NavigatorWasdMode::IsAnimating(const Trackball * tb){
+	const unsigned int MOVEMENT_KEY_MASK = ~Trackball::MODIFIER_MASK;
+	if (tb->current_button & MOVEMENT_KEY_MASK) return true;
+	if (current_speed!=Point3f(0,0,0)) return true;
+	if (step_current>0.0) return true;
+	return false;
+}
+
+void NavigatorWasdMode::Animate(unsigned int msec, Trackball * tb){
+	vcg::Point3f acc(0,0,0);
+	
+	float sa = sin(-alpha);
+	float ca = cos(-alpha);
+	if (tb->current_button & Trackball::KEY_UP    ) acc += vcg::Point3f( sa,0,ca)*(accY*_flipH);
+	if (tb->current_button & Trackball::KEY_DOWN  ) acc -= vcg::Point3f( sa,0,ca)*(accY*_flipH);
+	if (tb->current_button & Trackball::KEY_LEFT  ) acc -= vcg::Point3f(-ca,0,sa)*accX;
+	if (tb->current_button & Trackball::KEY_RIGHT ) acc += vcg::Point3f(-ca,0,sa)*accX;
+	if (tb->current_button & Trackball::KEY_PGUP  ) acc -= vcg::Point3f(  0,1, 0)*accZ;
+	if (tb->current_button & Trackball::KEY_PGDOWN) acc += vcg::Point3f(  0,1, 0)*accZ;
+	
+	float sec = msec/1.0f;
+	current_speed += acc*sec;
+	tb->track.tra+=current_speed*sec;
+	
+	// compute step height.
+	Point3f current_speed_h = current_speed;
+	current_speed_h[1]=0;
+	float vel = current_speed_h.Norm(); 
+	if (vel<topSpeedH*0.05) { 
+    // stopped: decrease step heigth to zero
+		step_current*=pow(dumping,sec); 
+    if (step_current<step_height*0.06) { step_current=0; step_x=0.0f;}
+  } else {
+    // running: rise step heigth
+    vel = current_speed.Norm();
+		step_x += vel*sec;
+	  float step_current_min = (float)fabs(sin( step_x*M_PI / step_length ))*step_height;
+		if (step_current<step_current_min); step_current=step_current_min;
+	}
+
+	current_speed*=pow(dumping,sec);
+	if (current_speed.Norm()<topSpeedH*0.005) current_speed.SetZero(); // full stop
+
+  tb->track.tra[1]+=step_last;
+  tb->track.tra[1]-=step_current;
+	step_last=step_current;
+	
+  //tb->track.tra[1]+=0.01;
+}
+
+void NavigatorWasdMode::Apply (Trackball * tb, Point3f new_point)
+{
+  Point3f hitOld = tb->last_point;
+  Point3f hitNew = new_point;
+	tb->last_point=new_point;
+  float dx = (hitNew.X() - hitOld.X());
+  float dy = (hitNew.Y() - hitOld.Y());
+
+  const float scale = float(150*M_PI); //sensitivity of the mouse
+  const float top = float(0.9f*M_PI/2); //maximum top view angle
+
+  float anglex =  dx/(tb->radius * scale);
+  float angley = -dy/(tb->radius * scale * 0.5f);
+  alpha+= anglex*_flipH;
+  beta += angley*_flipV;
+  if(beta > +top) beta = +top;
+  if(beta < -top) beta = -top;
+
+  Point3f viewpoint = tb->track.InverseMatrix()*Point3f(0,0,0);
+	tb->track.tra = tb->track.rot.Inverse().Rotate(tb->track.tra + viewpoint ) ;
+  tb->track.rot = Quaternionf (beta , Point3f(1,0,0)) * 
+                  Quaternionf (alpha, Point3f(0,1,0)) ;
+	tb->track.tra = tb->track.rot.Rotate(tb->track.tra)  - viewpoint ;
+
+	tb->track.tra[1]+=step_last;
+  tb->track.tra[1]-=step_current;
+	
+	step_last=step_current;
+
+}
+
+void NavigatorWasdMode::SetTopSpeedsAndAcc(float hspeed, float vspeed, float acc){
+  // conversion to msec
+  hspeed /= 1000;
+  vspeed /= 1000;
+  acc /= 1000000;
+  
+  accX = accY = acc;
+  dumping = hspeed / ( hspeed + acc );
+  accZ = ( vspeed  / dumping ) - vspeed;
+  if (acc==0) {
+    accX = accY = hspeed;
+    accZ = vspeed;
+    dumping=0.0;
+  }
+  topSpeedH = hspeed;  topSpeedV=vspeed;
+  
+}
+
+void NavigatorWasdMode::SetStepOnWalk(float width, float height){
+  step_length  = width; 
+  step_height = height;
+}
+
+void NavigatorWasdMode::Apply (Trackball * tb, float WheelNotch)
+{
+  tb->Translate(Point3f(0,topSpeedV,0)*(-WheelNotch*100));
+}
+
+
+bool NavigatorWasdMode::isSticky(){
+	return false;
+}

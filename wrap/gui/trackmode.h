@@ -164,6 +164,9 @@ public:
     This default implementation does nothing.
   */
   virtual void Undo();
+
+	virtual bool IsAnimating(const Trackball *tb);
+	virtual void Animate(unsigned int msec, Trackball *tb);
 }; 
 
 /*!
@@ -1030,10 +1033,48 @@ public:
   void Reset(); 
  void Draw (Trackball * trackball);
 private:
- double alpha, beta; //rotation in y and x axis
- double enda, endb;  //store intermediate values of alpha and beta
+ float alpha, beta; //rotation in y and x axis
+ float enda, endb;  //store intermediate values of alpha and beta
 };
 
+class NavigatorWasdMode:public TrackMode {
+public:
+  NavigatorWasdMode();
+  
+	void Apply (Trackball * trackball, Point3f new_point);
+
+  const char *Name () {
+    return "NavigatorWasdMode";
+  };
+  //void SetAction();
+  void Reset(); 
+  //void Draw (Trackball * trackball);  
+	
+	bool isSticky();
+	bool IsAnimating(const Trackball *tb);
+	void Animate(unsigned int msec, Trackball *tb);
+	void SetAction ();
+	
+	/// specific option setup methods for this mode
+	void FlipH(), FlipV(); // flips mouse controls
+	
+	void SetTopSpeedsAndAcc(float speed_h, float speed_v, float acc=0.0); // (top) speed is in units on sec
+                             // Acc is in units on sec^2, if 0 then no-inertia
+                             
+	void SetStepOnWalk(float width, float height); // optionally, set step-on-walk effects
+
+  void Apply (Trackball * trackball, float WheelNotch);
+
+private:
+  float alpha, beta; //rotation in y and x axis
+	Point3f current_speed;
+	float step_current, step_last, step_x;
+
+	int _flipH, _flipV;
+	
+	float accX, accY, accZ, dumping, topSpeedH, topSpeedV;
+	float step_height, step_length; // height of steps
+};
 
 }//namespace 
 
