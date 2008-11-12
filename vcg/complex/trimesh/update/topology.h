@@ -91,6 +91,7 @@ Initial commit
 #include <algorithm>
 #include <vector>
 #include <vcg/simplex/face/pos.h>
+#include <vcg/complex/trimesh/base.h>
 namespace vcg {
 namespace tri {
 /// \ingroup trimesh 
@@ -185,7 +186,7 @@ static void FillEdgeVector(MeshType &m, std::vector<PEdge> &e)
 /// \brief Update the Face-Face topological relation by allowing to retrieve for each face what other faces shares their edges.
 static void FaceFace(MeshType &m)
 {
-  if(!m.HasFFTopology()) return;		
+	assert(HasFFAdjacency(m));
 	if( m.fn == 0 ) return;
 
   std::vector<PEdge> e;
