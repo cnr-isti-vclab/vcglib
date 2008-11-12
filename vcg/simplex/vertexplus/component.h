@@ -309,7 +309,9 @@ public:
 
   typedef vcg::Color4b ColorType;
   ColorType &C() { static ColorType dumcolor(vcg::Color4b::White); assert(0); return dumcolor; }
-	template < class LeftV>
+  const ColorType &cC() const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
+
+template < class LeftV>
 	void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
   static bool HasColor()   { return false; }
 	static void Name(std::vector<std::string> & name){T::Name(name);}
