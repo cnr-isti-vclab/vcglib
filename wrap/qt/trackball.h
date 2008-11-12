@@ -46,10 +46,37 @@ static vcg::Trackball::Button QT2VCG (Qt::MouseButton qtbt, Qt::KeyboardModifier
   return vcg::Trackball::Button (vcgbt);
 }
 
-/// Takes some QT KeyboardModifiers and returns the mouse wheel related Trackball::Button
+/// Takes a QT ket and QT KeyboardModifiers and returns the mouse wheel related Trackball::Button
 static vcg::Trackball::Button QTWheel2VCG (Qt::KeyboardModifiers modifiers)
 {
   int vcgbt = vcg::Trackball::WHEEL;
+
+  if (modifiers & Qt::ShiftModifier)		vcgbt |= vcg::Trackball::KEY_SHIFT;
+  if (modifiers & Qt::ControlModifier)	vcgbt |= vcg::Trackball::KEY_CTRL;
+  if (modifiers & Qt::AltModifier)			vcgbt |= vcg::Trackball::KEY_ALT;
+
+  return vcg::Trackball::Button (vcgbt);
+}
+
+/// Takes some QT KeyboardModifiers and returns the mouse wheel related Trackball::Button
+static vcg::Trackball::Button QTKey2VCG (int key, Qt::KeyboardModifiers modifiers)
+{
+  int vcgbt = 0;
+	switch (key) {
+		case Qt::Key_W    :
+		case Qt::Key_Up   : vcgbt = vcg::Trackball::KEY_UP   ; break;
+		case Qt::Key_A    :
+		case Qt::Key_Left : vcgbt = vcg::Trackball::KEY_LEFT ; break;
+		case Qt::Key_S    :
+		case Qt::Key_Down : vcgbt = vcg::Trackball::KEY_DOWN ; break;
+		case Qt::Key_D    :
+		case Qt::Key_Right: vcgbt = vcg::Trackball::KEY_RIGHT; break;
+		case Qt::Key_R    :
+		case Qt::Key_PageUp: vcgbt = vcg::Trackball::KEY_PGUP ; break;
+		case Qt::Key_F    :
+		case Qt::Key_PageDown: vcgbt = vcg::Trackball::KEY_PGDOWN; break;
+		default           : vcgbt = 0;
+	}
 
   if (modifiers & Qt::ShiftModifier)		vcgbt |= vcg::Trackball::KEY_SHIFT;
   if (modifiers & Qt::ControlModifier)	vcgbt |= vcg::Trackball::KEY_CTRL;
