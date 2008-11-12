@@ -605,31 +605,31 @@ public:
 namespace tri
 {
 
-	template < class, class > class TriMesh;
+	template < class, class,class > class TriMesh;
 
-	template < class VertexType, class FaceContainerType >
-	bool HasPerVertexRadius (const TriMesh < vertex::vector_ocf< VertexType > , FaceContainerType > & m)
+	template < class VertexType, class FaceContainerType, class EdgeContainerType >
+	bool HasPerVertexRadius (const TriMesh < vertex::vector_ocf< VertexType > , FaceContainerType, EdgeContainerType > & m)
 	{
 		if(VertexType::HasRadiusOcf()) return m.vert.IsRadiusEnabled();
 		else return VertexType::HasRadius();
 	}
 	
-	template < class VertexType, class FaceContainerType >
-		bool HasPerVertexQuality (const TriMesh < vertex::vector_ocf< VertexType > , FaceContainerType > & m)
+	template < class VertexType, class FaceContainerType, class EdgeContainerType >
+		bool HasPerVertexQuality (const TriMesh < vertex::vector_ocf< VertexType > , FaceContainerType , EdgeContainerType> & m)
 	{
 		if(VertexType::HasQualityOcf()) return m.vert.IsQualityEnabled();
 		else return VertexType::HasQuality();
 	}
 
-	template < class VertexType, class FaceContainerType >
-		bool HasPerVertexCurvature (const TriMesh < vertex::vector_ocf< VertexType > , FaceContainerType > & m)
+	template < class VertexType, class FaceContainerType, class EdgeContainerType >
+		bool HasPerVertexCurvature (const TriMesh < vertex::vector_ocf< VertexType > , FaceContainerType, EdgeContainerType > & m)
 	{
 		if(VertexType::HasCurvatureOcf()) return m.vert.IsCurvatureEnabled();
 		else return VertexType::HasCurvature();
 	}
 
-	template < class VertexType, class FaceContainerType >
-		bool HasPerVertexCurvatureDir (const TriMesh < vertex::vector_ocf< VertexType > , FaceContainerType > & m)
+	template < class VertexType, class FaceContainerType, class EdgeContainerType >
+		bool HasPerVertexCurvatureDir (const TriMesh < vertex::vector_ocf< VertexType > , FaceContainerType, EdgeContainerType > & m)
 	{
 		if(VertexType::HasCurvatureDirOcf()) return m.vert.IsCurvatureDirEnabled();
 		else return VertexType::HasCurvatureDir();
