@@ -105,7 +105,7 @@ namespace vcg
 			std::vector<typename TriMeshType::VertexPointer> vs;// vertices of the polygon
 			std::vector<typename TriMeshType::FacePointer> fs;// triangle faces corresponding to the polygon
 
-			int pvi = 0; // number of vertices of the polygon
+
 			// find a non tagged edge
 			int se = 0;
 			for(;se < 3;++se) if (!(*tfi).IsF(se)) break;
