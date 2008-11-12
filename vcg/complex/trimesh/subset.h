@@ -118,21 +118,16 @@ void SubSet(S_MESH_TYPE & m, STL_CONT & subSet)
   for(pfi=subSet.begin(); pfi!=subSet.end(); ++pfi)
   {		
 		assert(!(*pfi)->IsD());
-	//	m.face.push_back(*(*pfi));
 		(*fi).ImportLocal(**pfi);
-		(*fi).V(0) = (S_VertexType*)(void*)(*pfi)->V(0);
-		(*fi).V(1) = (S_VertexType*)(void*)(*pfi)->V(1);
-		(*fi).V(2) = (S_VertexType*)(void*)(*pfi)->V(2);
+		for(int ii = 0 ; ii < (*fi).VN(); ++ii)
+			(*fi).V(ii) = (S_VertexType*)(void*)(*pfi)->V(ii);
 		++fi;
   }
   
 
   for(fi=m.face.begin(); fi!=m.face.end(); ++fi)
-  {
-		newVertices.push_back(InsertedV<S_MESH_TYPE>((*fi).V(0), &(*fi),0));
-		newVertices.push_back(InsertedV<S_MESH_TYPE>((*fi).V(1), &(*fi),1));
-		newVertices.push_back(InsertedV<S_MESH_TYPE>((*fi).V(2), &(*fi),2));
-  }
+	 for(int ii = 0 ; ii < (*fi).VN(); ++ii)
+		newVertices.push_back(InsertedV<S_MESH_TYPE>((*fi).V(ii), &(*fi),ii));
   
   sort(newVertices.begin(), newVertices.end());
   
@@ -151,20 +146,19 @@ void SubSet(S_MESH_TYPE & m, STL_CONT & subSet)
   typename std::vector< InsertedV<S_MESH_TYPE> >::iterator newE=unique(newVertices.begin(), newVertices.end());
 	
 	vi = vcg::tri::Allocator<S_MESH_TYPE>::AddVertices(m,newE-newVertices.begin());
-		for(curr=newVertices.begin(); curr!=newE; ++curr,++vi)
-    (*vi).ImportLocal(*((*curr).v));
-  
-  for(vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
-    redirect.push_back(&(*vi));
-  
-  for(fi=m.face.begin(); fi!=m.face.end(); ++fi)
-  {
-    (*fi).V(0)=redirect[(size_t)(*fi).V(0)];
-	(*fi).V(1)=redirect[(size_t)(*fi).V(1)];
-	(*fi).V(2)=redirect[(size_t)(*fi).V(2)];
-  }
-  m.vn=(int)m.vert.size();
-  m.fn=(int)m.face.size();
+	for(curr=newVertices.begin(); curr!=newE; ++curr,++vi)
+		(*vi).ImportLocal(*((*curr).v));
+
+	for(vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
+		redirect.push_back(&(*vi));
+
+	for(fi=m.face.begin(); fi!=m.face.end(); ++fi)
+		{		
+		  for(int ii = 0 ; ii < (*fi).VN(); ++ii)
+			(*fi).V(ii)=redirect[(size_t)(*fi).V(ii)];
+		}
+	m.vn=(int)m.vert.size();
+	m.fn=(int)m.face.size();
 }
 
 
