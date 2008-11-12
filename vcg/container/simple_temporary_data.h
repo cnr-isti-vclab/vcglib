@@ -63,56 +63,95 @@ public:
 	virtual int SizeOf() const  = 0;
 };
 
+template <class TYPE>
+struct VectorNBW: public std::vector<TYPE> {};
+
+template <>
+class VectorNBW<bool>{
+public:
+	VectorNBW():data(0),datasize(0),datareserve(0){}
+	bool * data ;
+
+	void reserve (const int & sz)	{ 
+		if(sz<=datareserve) return;
+		bool * newdataLoc = new bool[ sz ];
+		if(datasize!=0) memcpy(newdataLoc,data,sizeof(datasize));
+		std::swap(data,newdataLoc);
+		if(newdataLoc != 0) delete newdataLoc;
+		datareserve = sz;
+	}
+
+	void resize  (const int & sz)	{
+		int oldDatasize = datasize;
+		datasize = sz;
+		if(datasize <= oldDatasize) return;
+		if(datasize > datareserve) 
+			reserve(datasize);
+		memset(&data[oldDatasize],0,datasize-oldDatasize);
+		}
+	void push_back(const bool & v)	{ resize(datasize+1); data[datasize] = v;} 
+
+	void clear(){ datasize = 0;}
+
+	const unsigned int &  size() const { return datasize;}
+
+	bool  & operator [](const int & i){return data[i];}
+
+private:
+	int datasize;
+	int datareserve;
+};
+
 template <class STL_CONT, class ATTR_TYPE>
 class SimpleTempData:public SimpleTempDataBase<STL_CONT>{
 
-public:
-typedef SimpleTempData<STL_CONT,ATTR_TYPE> SimpTempDataType;
-typedef ATTR_TYPE AttrType;
+	public:
+	typedef SimpleTempData<STL_CONT,ATTR_TYPE> SimpTempDataType;
+	typedef ATTR_TYPE AttrType;
 
-STL_CONT& c;
-std::vector<ATTR_TYPE> data;
+	STL_CONT& c;
+	VectorNBW<ATTR_TYPE> data;
 
-SimpleTempData(STL_CONT  &_c):c(_c){data.reserve(c.capacity());data.resize(c.size());};
-SimpleTempData(STL_CONT  &_c, const ATTR_TYPE &val):c(_c){
-	data.reserve(c.capacity());data.resize(c.size());
-	Init(val);
-};
+	SimpleTempData(STL_CONT  &_c):c(_c){data.reserve(c.capacity());data.resize(c.size());};
+	SimpleTempData(STL_CONT  &_c, const ATTR_TYPE &val):c(_c){
+		data.reserve(c.capacity());data.resize(c.size());
+		Init(val);
+	};
 
-~SimpleTempData(){data.clear();}
+	~SimpleTempData(){data.clear();}
 
-void Init(const ATTR_TYPE &val)
-{
-	std::fill(data.begin(),data.end(),val);
-}
-// access to data
-ATTR_TYPE & operator[](const typename STL_CONT::value_type & v){return data[&v-&*c.begin()];}
-ATTR_TYPE & operator[](const typename STL_CONT::value_type * v){return data[v-&*c.begin()];}
-ATTR_TYPE & operator[](const typename STL_CONT::iterator & cont){return data[&(*cont)-&*c.begin()];}
-ATTR_TYPE & operator[](const int & i){return data[i];}
+	void Init(const ATTR_TYPE &val)
+	{
+		std::fill(data.begin(),data.end(),val);
+	}
+	// access to data
+	ATTR_TYPE & operator[](const typename STL_CONT::value_type & v){return data[&v-&*c.begin()];}
+	ATTR_TYPE & operator[](const typename STL_CONT::value_type * v){return data[v-&*c.begin()];}
+	ATTR_TYPE & operator[](const typename STL_CONT::iterator & cont){return data[&(*cont)-&*c.begin()];}
+	ATTR_TYPE & operator[](const int & i){return data[i];}
 
-// update temporary data size 
-bool UpdateSize(){
-		if(data.size() != c.size())
-			{
-				data.resize(c.size());
-				return false;
-			}
-		return true;
+	// update temporary data size 
+	bool UpdateSize(){
+			if(data.size() != c.size())
+				{
+					data.resize(c.size());
+					return false;
+				}
+			return true;
+		}
+
+	void Resize(const int & sz){
+		data.resize(sz);
 	}
 
-void Resize(const int & sz){
-	data.resize(sz);
-}
-
-void Reorder(std::vector<size_t> & newVertIndex){
-	for(unsigned int i = 0 ; i < data.size(); ++i){
-		if( newVertIndex[i] != std::numeric_limits<size_t>::max())
-			data[newVertIndex[i]] = data[i];
+	void Reorder(std::vector<size_t> & newVertIndex){
+		for(unsigned int i = 0 ; i < data.size(); ++i){
+			if( newVertIndex[i] != std::numeric_limits<size_t>::max())
+				data[newVertIndex[i]] = data[i];
+		}
 	}
-}
 
-int SizeOf() const {return sizeof(ATTR_TYPE);}
+	int SizeOf() const {return sizeof(ATTR_TYPE);}
 };
 
 class AttributeBase{
