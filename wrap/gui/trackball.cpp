@@ -111,6 +111,7 @@ Adding copyright.
 
 #include <GL/glew.h>
 #include "trackball.h"
+#include<set>
 
 #include <wrap/gl/math.h>
 #include <wrap/gl/space.h>
@@ -131,12 +132,16 @@ Trackball::Trackball(): current_button(0), current_mode(NULL), inactive_mode(NUL
 
 Trackball::~Trackball()
 {
+	// Note: people ofter maps different keys to the same modes. 
+	// so we should avoid double deletion of these double referenced modes.
+	std::set<TrackMode *> goodModes;
 	std::map<int, TrackMode *>::iterator it;
   for(it = modes.begin(); it != modes.end(); it++)
-	{
-		if ((*it).second)
-			delete (*it).second;
-	}
+		if ((*it).second) goodModes.insert( (*it).second);
+	
+	std::set<TrackMode *>::iterator its;
+		for(its = goodModes.begin(); its != goodModes.end(); its++)
+			delete *its;
 }
 
 

@@ -199,6 +199,11 @@ public:
     @warning The destructor <b>does not</b> deallocate the memory allocated by setDefaultMapping(), because the application can change the modes map. This can lead to small memory leaks, so please explicitally delete any manipulator in the modes map if you are going to repeatly allocate and deallocate Trackball instances.
   */
   ~Trackball();
+	
+	private:
+	// TriMesh cannot be copied. Use Append (see vcg/complex/trimesh/append.h)
+	Trackball operator =(const Trackball &  m){}
+	public:
   /*!
     @brief Reset the trackball.
 
