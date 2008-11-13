@@ -159,11 +159,10 @@ namespace tri {
 		@param VertContainerType (Template Parameter) Specifies the type of the vertices container any the vertex type.
 		@param FaceContainerType (Template Parameter) Specifies the type of the faces container any the face type.
  */
-	
+  class DummyEdge;
 
 	template < class VertContainerType, class FaceContainerType, 
-			   class EdgeContainerType = std::vector<vcg::EdgeSimp2<typename VertContainerType::value_type,typename,typename FaceContainerType::value_type> >
-			   >
+			   class EdgeContainerType = 		std::vector< vcg::EdgeSimp2<typename VertContainerType::value_type, DummyEdge, typename FaceContainerType::value_type> >	   >
 class TriMesh{
 	public:
 	typedef TriMesh<VertContainerType, FaceContainerType> MeshType;

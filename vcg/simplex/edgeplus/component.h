@@ -272,7 +272,7 @@ public:
   typename T::VertexPointer			&	HEVp() {return _vp ; }
   const typename T::VertexPointer cHEVp() const {return _vp ; }
 	template < class LeftV>
-	void ImportLocal(const LeftV  & left ) { V() = NULL; T::ImportLocal( left); }
+	void ImportLocal(const LeftV  & left ) { this->V() = NULL; T::ImportLocal( left); }
   static bool HasHEVAdjacency()   {   return true; }
   static bool HasHEVAdjacencyOcc()   {   return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("HEVAdj"));T::Name(name);}
@@ -363,7 +363,7 @@ public:
   typename T::EdgePointer &HENp() {return _nep; }
   typename T::EdgePointer cHENp() {return _nep; }
 	template < class LeftV>
-	void ImportLocal(const LeftV  & left ) { EEp() = NULL; T::ImportLocal( left); }
+	void ImportLocal(const LeftV  & left ) { this->EEp() = NULL; T::ImportLocal( left); }
   static bool HasHENextAdjacency()   {   return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("HENextAdj"));T::Name(name);}
 	
@@ -390,7 +390,7 @@ public:
   typename T::EdgePointer &HEOp() {return _oep; }
   typename T::EdgePointer cHEOp() {return _oep; }
 	template < class LeftV>
-	void ImportLocal(const LeftV  & left ) { EEp() = NULL; T::ImportLocal( left); }
+	void ImportLocal(const LeftV  & left ) { this->EEp() = NULL; T::ImportLocal( left); }
   static bool HasHEOppAdjacency()   {   return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("HEOpptAdj"));T::Name(name);}
 	
@@ -416,9 +416,9 @@ public:
   HEPrevAdj(){_pep=0;}
   typename T::EdgePointer &HEPp() {return _pep; }
   typename T::EdgePointer cHEPp() {return _pep; }
-  int &EEi(const int & i) {return _nei[i]; }
+  int &EEi(const int & i) {return this->_nei[i]; }
 	template < class LeftV>
-	void ImportLocal(const LeftV  & left ) { EEp() = NULL; T::ImportLocal( left); }
+	void ImportLocal(const LeftV  & left ) { this->EEp() = NULL; T::ImportLocal( left); }
   static bool HasHEPrevAdjacency()   {   return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("HEPrevAdj"));T::Name(name);}
 	
@@ -446,7 +446,7 @@ public:
   typename T::FacePointer cEFp() {return _fp; }
   int &EFi() {return _zp; }
 	template < class LeftV>
-	void ImportLocal(const LeftV  & left ) { EFp() = NULL; T::ImportLocal( left); }
+	void ImportLocal(const LeftV  & left ) { this->EFp() = NULL; T::ImportLocal( left); }
   static bool HasEFAdjacency()   {   return true; }
   static bool HasEFAdjacencyOcc()   {   return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("EFAdj"));T::Name(name);}
@@ -469,12 +469,12 @@ class HEdgeData : public	EFAdj<			// pointer to the face
 							T > > > >{
 
 	// functions to make the half edge user confortable
-	typename T::VertexPointer & Vertex()					{ return HEVp();}
-	const typename T::VertexPointer &  cVertex()	const	{ return cHEVp();}
-	typename T::EdgePointer Opposite()						{ return &HEOp();}
-	const typename T::EdgePointer & cOpposite()		const	{ return cHEOp();}
-	typename T::EdgePointer & Next()						{ return HENp();}
-	const typename T::EdgePointer &  Next()			const 	{ return HENp();}
+	typename T::VertexPointer & Vertex()					{ return this->HEVp();}
+	const typename T::VertexPointer &  cVertex()	const	{ return this->cHEVp();}
+	typename T::EdgePointer Opposite()						{ return &this->HEOp();}
+	const typename T::EdgePointer & cOpposite()		const	{ return this->cHEOp();}
+	typename T::EdgePointer & Next()						{ return this->HENp();}
+	const typename T::EdgePointer &  Next()			const 	{ return this->HENp();}
 
 };
 
