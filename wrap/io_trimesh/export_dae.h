@@ -60,18 +60,14 @@ namespace io
 			//capability |= MeshModel::IOM_CAMERA;
 
 			//vert
-			capability |= MeshModel::IOM_VERTNORMAL;
-			capability |= MeshModel::IOM_VERTTEXCOORD;
-			capability |= MeshModel::IOM_VERTCOLOR;
-			//capability |= MeshModel::
-			////face
-			////capability |= MeshModel::IOM_FACEFLAGS;
-			////capability |= MeshModel::IOM_FACECOLOR;
-			//capability |= MeshModel::IOM_FACENORMAL;
+			capability |= Mask::IOM_VERTNORMAL;
+			capability |= Mask::IOM_VERTTEXCOORD;
+			capability |= Mask::IOM_VERTCOLOR;
+			//face
 
 			////wedg
-			capability |= MeshModel::IOM_WEDGTEXCOORD;
-			capability |= MeshModel::IOM_WEDGNORMAL;
+			capability |= Mask::IOM_WEDGTEXCOORD;
+			capability |= Mask::IOM_WEDGNORMAL;
 
 			return capability;
 		}

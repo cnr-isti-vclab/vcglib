@@ -239,19 +239,19 @@ namespace io {
 			int capability = 0;
 
 			//camera
-			//capability |= MeshModel::IOM_CAMERA;
+			//capability |= vcg::tri::io::Mask::IOM_CAMERA;
 
 			//vert
-			//capability |= MeshModel::IOM_VERTTEXCOORD;
+			//capability |= vcg::tri::io::Mask::IOM_VERTTEXCOORD;
 
 			//face
-			//capability |= MeshModel::IOM_FACEFLAGS;
-			capability |= MeshModel::IOM_FACECOLOR;
-			capability |= MeshModel::IOM_FACENORMAL;
+			//capability |= vcg::tri::io::Mask::IOM_FACEFLAGS;
+			capability |= Mask::IOM_FACECOLOR;
+			capability |= Mask::IOM_FACENORMAL;
 
 			//wedg
-			capability |= MeshModel::IOM_WEDGTEXCOORD;
-			capability |= MeshModel::IOM_WEDGNORMAL;
+			capability |= Mask::IOM_WEDGTEXCOORD;
+			capability |= Mask::IOM_WEDGNORMAL;
 
 			return capability;
 		}
@@ -359,7 +359,7 @@ namespace io {
 
 			int number_vertex_to_duplicate = 0;
 			
-			if(HasPerWedgeTexCoord(m) && (mask & MeshModel::IOM_WEDGTEXCOORD ))
+			if(HasPerWedgeTexCoord(m) && (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD ))
 				number_vertex_to_duplicate = (count-1) - m.vn;
 
 			Lib3dsFile *file = lib3ds_file_new();//creates new file
@@ -379,7 +379,7 @@ namespace io {
 			int v_index = 0;
 			VertexIterator vi;
 			//saves vert
-			if(HasPerWedgeTexCoord(m) && (mask & MeshModel::IOM_WEDGTEXCOORD ))
+			if(HasPerWedgeTexCoord(m) && (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD ))
 			{
 				for(unsigned int i=0; i< VectorOfVertexType.size();i++)
 				{
@@ -426,7 +426,7 @@ namespace io {
 				int i0 = GetIndexVertex(m, (*fi).V(0));
 				int i1 = GetIndexVertex(m, (*fi).V(1));
 				int i2 = GetIndexVertex(m, (*fi).V(2));
-				if(HasPerWedgeTexCoord(m) && (mask & MeshModel::IOM_WEDGTEXCOORD ) )
+				if(HasPerWedgeTexCoord(m) && (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD ) )
 				{
 					t0 = (*fi).WT(0);
 					t1 = (*fi).WT(1);
@@ -434,7 +434,7 @@ namespace io {
 				}
 
 				Lib3dsFace face;
-				if(HasPerWedgeTexCoord(m) && (mask & MeshModel::IOM_WEDGTEXCOORD ))
+				if(HasPerWedgeTexCoord(m) && (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD ))
 				{
 					face.points[0] = GetIndexDuplexVertex(ListOfDuplexVert,Key(i0,t0));
 					face.points[1] = GetIndexDuplexVertex(ListOfDuplexVert,Key(i1,t1));
@@ -448,7 +448,7 @@ namespace io {
 				}
 				
 				//saves coord textures
-				if(HasPerWedgeTexCoord(m) && (mask & MeshModel::IOM_WEDGTEXCOORD ) )
+				if(HasPerWedgeTexCoord(m) && (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD ) )
 				{
 					mesh->texelL[face.points[0]][0] = t0.u();
 					mesh->texelL[face.points[0]][1] = t0.v();
@@ -458,19 +458,19 @@ namespace io {
 					mesh->texelL[face.points[2]][1] = t2.v();
 				}
 
-				if(mask & MeshModel::IOM_FACEFLAGS)
+				if(mask & vcg::tri::io::Mask::IOM_FACEFLAGS)
 					face.flags = 0;
 				
 				face.smoothing = 10;
 
-				if((mask & MeshModel::IOM_FACENORMAL) | (mask & MeshModel::IOM_WEDGNORMAL) )
+				if((mask & vcg::tri::io::Mask::IOM_FACENORMAL) | (mask & vcg::tri::io::Mask::IOM_WEDGNORMAL) )
 				{
 					face.normal[0] = (*fi).N()[0];
 					face.normal[1] = (*fi).N()[1];
 					face.normal[2] = (*fi).N()[2];
 				}
 
-				if((mask & MeshModel::IOM_FACECOLOR) | (mask & MeshModel::IOM_WEDGTEXCOORD))
+				if((mask & vcg::tri::io::Mask::IOM_FACECOLOR) | (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD))
 				{
 					int material_index = vcg::tri::io::Materials<SaveMeshType>::CreateNewMaterial(m, materials, 0, fi);
 					if(material_index == materials.size())
@@ -480,7 +480,7 @@ namespace io {
 						std::string name = qnamematerial.arg(material_index-1).toStdString();
 						strcpy(material->name,name.c_str());//copy new name of material
 
-						if(mask & MeshModel::IOM_FACECOLOR)
+						if(mask & vcg::tri::io::Mask::IOM_FACECOLOR)
 						{
 							//ambient
 							material->ambient[0] = materials[materials.size()-1].Ka[0];
@@ -505,7 +505,7 @@ namespace io {
 						}
 											
 						//texture
-				    if(HasPerWedgeTexCoord(m) && (mask & MeshModel::IOM_WEDGTEXCOORD ) )
+				    if(HasPerWedgeTexCoord(m) && (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD ) )
 							strcpy(material->texture1_map.name,materials[materials.size()-1].map_Kd.c_str());
 
 						lib3ds_file_insert_material(file,material);//inserts the material inside the file

@@ -290,11 +290,11 @@ namespace vcg {
 		int capability = 0;
 
 		//vert
-		capability |= MeshModel::IOM_VERTCOLOR;
+		capability |= Mask::IOM_VERTCOLOR;
 		
 		//wedg
-		capability |= MeshModel::IOM_WEDGTEXCOORD;
-		capability |= MeshModel::IOM_WEDGCOLOR;
+		capability |= Mask::IOM_WEDGTEXCOORD;
+		capability |= Mask::IOM_WEDGCOLOR;
 
 		return capability;
 	}
