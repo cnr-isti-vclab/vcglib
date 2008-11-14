@@ -595,7 +595,7 @@ static void SingleFaceRaster(FaceType &f,  VertexSampler &ps, const Point2<Scala
 
 //template <class MetroMesh>
 //void Sampling<MetroMesh>::SimilarFaceSampling()
-static void Texture(MetroMesh & m, VertexSampler &ps, int textureSize)
+static void Texture(MetroMesh & m, VertexSampler &ps, int textureWidth, int textureHeight)
 {
     FaceIterator fi;
 
@@ -604,7 +604,7 @@ static void Texture(MetroMesh & m, VertexSampler &ps, int textureSize)
 				{
 					Point2f ti[3];
 					for(int i=0;i<3;++i)
-							ti[i]=Point2f((*fi).WT(i).U() * textureSize, (*fi).WT(i).V() * textureSize);
+							ti[i]=Point2f((*fi).WT(i).U() * textureWidth, (*fi).WT(i).V() * textureHeight);
 					
 					SingleFaceRaster(*fi,  ps, ti[0],ti[1],ti[2]);
 				}
