@@ -592,15 +592,35 @@ static void SingleFaceRaster(FaceType &f,  VertexSampler &ps, const Point2<Scala
 	}
 }
 
+/// Compute a Poisson-disk sampling of the surface
+/// The radius of the disk is computed according to the estimated sampling density.
+static void Poissondisk(MetroMesh &m, VertexSampler &ps, int sampleNum)
+{
+	FaceIterator fi;
+
+	// first of all computed r
+	ScalarType meshArea = Stat<MetroMesh>::ComputeMeshArea(m);
+	ScalarType r = sqrt(meshArea / (0.7 * 3.1415 * sampleNum)); // 0.7 is a density factor
+
+	for (fi = m.face.begin(); fi != m.face.end(); fi++)
+	{
+		ps.AddFace(*fi, RandomBaricentric());
+	}
+
+	for (int i = 0; i < sampleNum; i++)
+	{
+		//...TODO...
+	}
+}
 
 //template <class MetroMesh>
 //void Sampling<MetroMesh>::SimilarFaceSampling()
 static void Texture(MetroMesh & m, VertexSampler &ps, int textureWidth, int textureHeight)
 {
-    FaceIterator fi;
+		FaceIterator fi;
 
-    printf("Similar Triangles face sampling\n");
-    for(fi=m.face.begin(); fi != m.face.end(); fi++)
+		printf("Similar Triangles face sampling\n");
+		for(fi=m.face.begin(); fi != m.face.end(); fi++)
 				{
 					Point2f ti[3];
 					for(int i=0;i<3;++i)
