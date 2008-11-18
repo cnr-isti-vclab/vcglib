@@ -55,7 +55,7 @@ class CEdge;
 class CFace;
 
 /// compositing wanted proprieties
-class CVertex : public vcg::VertexSimp2< CVertex, CEdge, CFace, vcg::vert::Coord3f, vcg::vert::Normal3f, vcg::vert::BitFlags>{};
+class CVertex : public vcg::VertexSimp2< CVertex, CEdge, CFace, vcg::vertex::Coord3f, vcg::vertex::Normal3f, vcg::vertex::BitFlags>{};
 class CFace   : public vcg::FaceSimp2<   CVertex, CEdge, CFace, vcg::face::VertexRef, vcg::face::Normal3f, vcg::face::BitFlags > {};
 class CMesh   : public vcg::tri::TriMesh< std::vector<CVertex>, std::vector<CFace> > {};
 
