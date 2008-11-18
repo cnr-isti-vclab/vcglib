@@ -217,15 +217,15 @@ class glu_tesselator
 		static void do_tesselation(const std::vector< std::vector<point_type> > & outlines, tess_prim_data_vec & t_data)
 		{
 			GLUtesselator * tess = gluNewTess();
-#ifdef __APPLE__
-			gluTessCallback(tess, GLU_TESS_BEGIN_DATA,  (GLvoid (CALLBACK *)(...))(this_type::begin_cb));
-			gluTessCallback(tess, GLU_TESS_END_DATA,    (GLvoid (CALLBACK *)(...))(this_type::end_cb));
-			gluTessCallback(tess, GLU_TESS_VERTEX_DATA, (GLvoid (CALLBACK *)(...))(this_type::vertex_cb));
-#else
+//#ifdef __APPLE__
+//			gluTessCallback(tess, GLU_TESS_BEGIN_DATA,  (GLvoid (CALLBACK *)(...))(this_type::begin_cb));
+//			gluTessCallback(tess, GLU_TESS_END_DATA,    (GLvoid (CALLBACK *)(...))(this_type::end_cb));
+//			gluTessCallback(tess, GLU_TESS_VERTEX_DATA, (GLvoid (CALLBACK *)(...))(this_type::vertex_cb));
+//#else
 			gluTessCallback(tess, GLU_TESS_BEGIN_DATA,  (GLvoid (CALLBACK *)())(this_type::begin_cb));
 			gluTessCallback(tess, GLU_TESS_END_DATA,    (GLvoid (CALLBACK *)())(this_type::end_cb));
 			gluTessCallback(tess, GLU_TESS_VERTEX_DATA, (GLvoid (CALLBACK *)())(this_type::vertex_cb));
-#endif
+//#endif
 			void * polygon_data = (void *)(&t_data);
 
 			GLdouble vertex[3];
