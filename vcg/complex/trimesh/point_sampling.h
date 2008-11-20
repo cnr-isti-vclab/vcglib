@@ -314,7 +314,7 @@ static void Montecarlo(MetroMesh & m, VertexSampler &ps,int sampleNum)
 			ScalarType val = meshArea * (double)rand() / (double)RAND_MAX;
 			// lower_bound returns the furthermost iterator i in [first, last) such that, for every iterator j in [first, i), *j < value.
 			// E.g. An iterator pointing to the first element "not less than" val, or end() if every element is less than val.
-			typename std::vector<IntervalType>::iterator it = lower_bound(intervals.begin(),intervals.end(),make_pair(val,FacePointer(0)) );
+			typename std::vector<IntervalType>::iterator it = lower_bound(intervals.begin(),intervals.end(),std::make_pair(val,FacePointer(0)) );
 			assert(it != intervals.end());
 			assert(it != intervals.begin());
 			assert( (*(it-1)).first <val );
