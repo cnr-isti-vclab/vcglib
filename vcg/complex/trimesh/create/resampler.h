@@ -45,7 +45,7 @@ namespace tri {
 		@param NEW_MESH_TYPE (Template Parameter) Specifies the type of output mesh.
  */
 
-template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT>
+template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR = vcg::face::PointDistanceBaseFunctor<typename OLD_MESH_TYPE::ScalarType > >
 	class Resampler : public BasicGrid<FLT>
 {
 	typedef OLD_MESH_TYPE Old_Mesh;
@@ -163,7 +163,7 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT>
 			// Note that PointDistanceBaseFunctor does not require the edge and plane precomptued.
 			// while the PointDistanceFunctor requires them. 
 			
-			vcg::face::PointDistanceBaseFunctor<typename Old_Mesh::ScalarType > PDistFunct;
+			DISTFUNCTOR PDistFunct;
 			f = _g.GetClosest(PDistFunct,markerFunctor,testPt,max_dist,dist,closestPt);
 			
 			if (f==NULL) return false;
