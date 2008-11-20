@@ -142,7 +142,7 @@ static void VertexWeighted(MetroMesh & m, VertexSampler &ps, int sampleNum)
 		}
 }
 
-/// Sample the vertices in a uniform way. Each vertex has a probabiltiy of being chosen
+/// Sample the vertices in a uniform way. Each vertex has a probability of being chosen
 /// that is proportional to the area it represent. 
 static void VertexAreaUniform(MetroMesh & m, VertexSampler &ps, int sampleNum)
 {
