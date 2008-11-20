@@ -24,6 +24,7 @@
 #define __VCG_MESH_RESAMPLER
 
 #include <vcg/complex/trimesh/update/normal.h>
+#include <vcg/complex/trimesh/update/flag.h>
 #include <vcg/complex/trimesh/update/bounding.h>
 #include <vcg/complex/trimesh/update/edges.h>
 #include <vcg/complex/trimesh/create/marching_cubes.h>
