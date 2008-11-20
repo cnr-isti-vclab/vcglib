@@ -66,7 +66,6 @@ private :
 	}
 
 	ScalarType coefficients[MAX_BAND * MAX_BAND];
-	static const int max_band = MAX_BAND;
 
 public :
 
@@ -116,7 +115,7 @@ public :
 				ScalarType theta = 2.0 * Acos(Sqrt(1.0 - x));
 				ScalarType phi = 2.0 * M_PI * y;
 
-				for (int l = 0; l < (int)max_band; ++l)
+				for (int l = 0; l < (int)MAX_BAND; ++l)
 				{
 					for (int m = -l; m <= l; ++m)
 					{
@@ -141,7 +140,7 @@ public :
 	{
 		ScalarType f = 0;
 
-		for (int l = 0; l < max_band; ++l)
+		for (int l = 0; l < MAX_BAND; ++l)
 		{
 			for (int m = -l; m <= l; ++m)
 			{
