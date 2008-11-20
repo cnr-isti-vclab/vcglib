@@ -37,7 +37,7 @@ template <class T> class Sph36f: public Sph<vcg::math::SphericalHarmonics<float,
 	public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("Sph36f"));T::Name(name);}
 };
 
-template <class T> class Sph9d: public Sph<vcg::math::SphericalHarmonics<double, 9>, T> {
+template <class T> class Sph9d: public Sph<vcg::math::SphericalHarmonics<double, 3>, T> {
 	public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("Sph9d"));T::Name(name);}
 };
 
