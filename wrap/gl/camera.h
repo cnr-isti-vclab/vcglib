@@ -147,8 +147,16 @@ static void GetFrustum(vcg::Camera<S> & intrinsics, S & sx,S & dx,S & bt,S & tp,
 /// set the OpenGL PROJECTION matrix to match the camera (intrinsics). requires near and far plane
 static void TransformGL(vcg::Camera<S> & camera, S nearDist, S farDist ) 
 {
-	S sx,dx,bt,tp,nr,fr;
-	camera.GetFrustum(sx,dx,bt,tp,nr);	
+	S sx,dx,bt,tp,nr;
+	camera.GetFrustum(sx,dx,bt,tp,nr);
+
+  if(camera.cameraType == vcg::PERSPECTIVE) {
+    S ratio = nearDist/nr;
+    sx *= ratio;
+    dx *= ratio;
+    bt *= ratio;
+    tp *= ratio;
+  }
 
 	assert(glGetError()==0);
 	
