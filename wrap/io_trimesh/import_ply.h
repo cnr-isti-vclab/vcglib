@@ -727,6 +727,8 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 					  return pi.status;
           }
 				}
+				
+				if(m.HasPolyInfo()) (*fi).Alloc(3);
 
 				if(m.HasPerFaceFlags() &&( pi.mask & Mask::IOM_FACEFLAGS) )
 				{
