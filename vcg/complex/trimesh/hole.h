@@ -551,8 +551,9 @@ template<class EAR>
         H.pop_back();
 				if(BestEar.IsUpToDate() && !BestEar.IsDegen(nmBit))	
 				{				 
+						if((*f).HasPolyInfo()) (*f).Alloc(3);
 						if(BestEar.Close(ep0,ep1,&*f))
-						{
+						{ 
 							if(!ep0.IsNull()){
 								H.push_back(EAR(ep0));
 								push_heap( H.begin(), H.end());
