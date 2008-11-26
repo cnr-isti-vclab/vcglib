@@ -57,11 +57,14 @@ namespace vcg
 			// the vertices are the same, simply import them
 			typename PolyMeshType::VertexIterator vi;
 			typename TriMeshType::FaceIterator tfi,tfib ;
-			typename TriMeshType ::VertexIterator tvi = Allocator<TriMeshType>::AddVertices(tm,pm.vn);
-			for(tvi = tm.vert.begin(),vi = pm.vert.begin(); tvi != tm.vert.end(); ++tvi,++vi)(*tvi).ImportLocal(*vi);
+			typename TriMeshType ::VertexIterator tvi = Allocator<TriMeshType>::AddVertices(tm,pm.vert.size());
+			int cnt = 0;
+			for(tvi = tm.vert.begin(),vi = pm.vert.begin(); tvi != tm.vert.end(); ++tvi,++vi,++cnt)
+				if(!(*vi).IsD()) (*tvi).ImportLocal(*vi); else vcg::tri::Allocator<TriMeshType>::DeleteVertex(tm,(*tvi));
 
 			typename PolyMeshType::FaceIterator fi;
-			for(fi = pm.face.begin(); fi != pm.face.end(); ++fi){
+			for(fi = pm.face.begin(); fi != pm.face.end(); ++fi)
+			if(!((*fi).IsD())){
 			points.clear();
 				for(int i  = 0; i < (*fi).VN(); ++i) {
 					typename	PolyMeshType::VertexType * v = (*fi).V(i);
@@ -91,10 +94,11 @@ namespace vcg
 		static void ImportFromTriMesh( PolyMeshType & pm,  TriMeshType & tm){
 
 		// the vertices are the same, simply import them
-			int cnt = 0;
+		int cnt = 0;
 		typename TriMeshType ::ConstVertexIterator tvi;
 		typename PolyMeshType::VertexIterator vi  = vcg::tri::Allocator<PolyMeshType>::AddVertices(pm,tm.vert.size());
-		for(tvi = tm.vert.begin(); tvi != tm.vert.end(); ++tvi,++vi,++cnt) if(!(*tvi).IsD())(*vi).ImportLocal(*tvi);
+		for(tvi = tm.vert.begin(); tvi != tm.vert.end(); ++tvi,++vi,++cnt) 
+			if(!(*tvi).IsD())(*vi).ImportLocal(*tvi); else vcg::tri::Allocator<PolyMeshType> ::DeleteVertex(pm,(*vi));
 
 		// convert the faces
 		typename TriMeshType::FaceIterator tfi;
