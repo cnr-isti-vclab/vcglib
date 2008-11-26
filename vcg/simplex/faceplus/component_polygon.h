@@ -133,10 +133,11 @@ public:
 		if(_vpoly == NULL){this->SetVN(ns);
 			_vpoly = new   typename T::VertexType*[this->VN()]; 
 				for(int i = 0; i < this->VN(); ++i) _vpoly[i] = 0;
-				T::Alloc(ns);}
+		}
+		T::Alloc(ns);
 	}
 	inline void Dealloc() {	if(_vpoly!=NULL){
-														delete [] _vpoly;
+														delete [] _vpoly; 
 														_vpoly = NULL;
 														}
 													T::Dealloc();
@@ -196,12 +197,13 @@ public:
 			_vfpP = new  FaceType*[this->VN()]; 
 			_vfiP = new  char[this->VN()];
 			for(int i = 0; i < this->VN(); ++i) {_vfpP[i] = 0;_vfiP = -1;}
-													T::Alloc(ns);
-													}
+		}
+		T::Alloc(ns);
+													
 	}
 	inline void Dealloc() {	if(_vfpP!=NULL){
-														delete [] _vfpP;
-														delete [] _vfpP;
+														delete [] _vfpP; _vfpP = NULL;
+														delete [] _vfiP; _vfiP = NULL;
 													}
 													T::Dealloc();
 	}
@@ -230,16 +232,17 @@ public:
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){T::ImportLocal(leftF);}
 	inline void Alloc(const int & ns) {
-	if( _ffpP == NULL){	
-		this->SetVN(ns);
-		_ffpP = new  FaceType*[this->VN()]; 
-		_ffiP = new  char[this->VN()];
-		for(int i = 0; i < this->VN(); ++i) {_ffpP[i] = 0;_ffiP[i] = 0;}
-		T::Alloc(ns);									}
+		if( _ffpP == NULL){	
+			this->SetVN(ns);
+			_ffpP = new  FaceType*[this->VN()]; 
+			_ffiP = new  char[this->VN()];
+			for(int i = 0; i < this->VN(); ++i) {_ffpP[i] = 0;_ffiP[i] = 0;}
+		}
+		T::Alloc(ns);									
 	}
 	inline void Dealloc() {	if(_ffpP!=NULL){
-														delete [] _ffpP; 
-														delete [] _ffiP;
+														delete [] _ffpP; _ffpP = NULL;
+														delete [] _ffiP; _ffiP = NULL;
 													}
 													T::Dealloc();
 	}
@@ -257,30 +260,55 @@ public:
 
 template <class T> class PFEAdj: public T {
 public:
- typedef typename T::FaceType FaceType;
+ typedef typename T::EdgeType EdgeType;
 	PFEAdj(){_fepP = NULL;  }
-	typename T::FacePointer       &FEp(const int j)        { assert(j>=0 && j<this->VN());  return _fepP[j]; }
-  typename T::FacePointer const  FEp(const int j) const  { assert(j>=0 && j<this->VN());  return _fepP[j]; }
-  typename T::FacePointer const cFEp(const int j) const  { assert(j>=0 && j<this->VN());  return _fepP[j]; }
+	typename T::EdgePointer       &FEp(const int j)        { assert(j>=0 && j<this->VN());  return _fepP[j]; }
+  typename T::EdgePointer const  FEp(const int j) const  { assert(j>=0 && j<this->VN());  return _fepP[j]; }
+  typename T::EdgePointer const cFEp(const int j) const  { assert(j>=0 && j<this->VN());  return _fepP[j]; }
 	
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){T::ImportLocal(leftF);}
 	inline void Alloc(const int & ns) {
 	if( _fepP == NULL){	
 		this->SetVN(ns);
-		_fepP = new  FaceType*[this->VN()]; 
+		_fepP = new  EdgeType *[this->VN()]; 
 		for(int i = 0; i < this->VN(); ++i) {_fepP[i] = 0;}
-		T::Alloc(ns);									}
 	}
-	inline void Dealloc() {	if(_fepP!=NULL) delete [] _fepP; T::Dealloc();}
+		T::Alloc(ns);									
+	}
+	inline void Dealloc() {	if(_fepP!=NULL) {delete [] _fepP; _fepP = NULL;} T::Dealloc();}
 
 	static bool HasFEAdjacency()      {   return true; }
 	static bool HasFEAdjacencyOcc()   {   return false; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("PFEAdj"));T::Name(name);}
 
 //private:
-  typename T::FacePointer *_fepP ;    
+  typename T::EdgePointer *_fepP ;    
 };
+
+/*----------------------------- PFEADJ ------------------------------*/ 
+
+template <class T> class PFHEAdj: public T {
+public:
+ typedef typename T::EdgeType EdgeType;
+	PFHEAdj(){_fhepP = NULL;  }
+	typename T::EdgePointer       &FHEp()        {  return _fhepP; }
+  typename T::EdgePointer const  FHEp() const  {  return _fhepP; }
+  typename T::EdgePointer const cFHEp() const  {  return _fhepP; }
+	
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){T::ImportLocal(leftF);}
+	inline void Alloc(const int & ns) {T::Alloc(ns);}
+	inline void Dealloc() {	 T::Dealloc();}
+
+	static bool HasFHEAdjacency()      {   return true; }
+	static bool HasFHEAdjacencyOcc()   {   return false; }
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("PFHEAdj"));T::Name(name);}
+
+//private:
+  typename T::EdgePointer  _fhepP ;    
+};
+
 
   } // end namespace face
 }// end namespace vcg
