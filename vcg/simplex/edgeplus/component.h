@@ -228,8 +228,8 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 /*----------------------------- EVADJ ------------------------------*/ 
 template <class T> class EmptyEVAdj: public T {
 public:
-  typename T::EdgePointer &EVp() { static typename T::EdgePointer ep=0;  assert(0); return ep; }
-  typename T::EdgePointer cEVp() { static typename T::EdgePointer ep=0;  assert(0); return ep; }
+  typename T::VertexPointer &V(const int &) { static typename T::VertexPointer ep=0;  assert(0); return ep; }
+  typename T::VertexPointer cV(const int &) { static typename T::VertexPointer ep=0;  assert(0); return ep; }
   int &EVi(){static int z=0; return z;};
 	template < class LeftV>
 		void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
@@ -256,8 +256,8 @@ private:
 /*----------------------------- HEVADJ ------------------------------*/ 
 template <class T> class EmptyHEVAdj: public T {
 public:
-  typename T::EdgePointer &HEVp() { static typename T::EdgePointer ep=0;  assert(0); return ep; }
-  typename T::EdgePointer cHEVp() { static typename T::EdgePointer ep=0;  assert(0); return ep; }
+  typename T::VertexPointer &HEVp() { static typename T::VertexPointer ep=0;  assert(0); return ep; }
+  typename T::VertexPointer cHEVp() { static typename T::VertexPointer ep=0;  assert(0); return ep; }
   int &EVi(){static int z=0; return z;};
 	template < class LeftV>
 		void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
@@ -305,9 +305,6 @@ public:
   static bool HasEEAdjacency()   {   return true; }
   static bool HasEEAdjacencyOcc()   {   return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("EEAdj"));T::Name(name);}
-
-  typename T::EdgePointer &HENp() { return _ep[1]; }
-  typename T::EdgePointer &HEPp() { return _ep[0]; }
 
 private:
   typename T::EdgePointer _ep[2] ;    
@@ -401,8 +398,8 @@ private:
 /*----------------------------- HEPrevADJ ------------------------------*/ 
 template <class T> class EmptyHEPrevAdj: public T {
 public:
-  typename T::EdgePointer &HENp(const int & i ) { static typename T::EdgePointer ep=0;  assert(0); return ep; }
-  typename T::EdgePointer cHEp(const int & i) { static typename T::EdgePointer ep=0;  assert(0); return ep; }
+  typename T::EdgePointer &HEPp() { static typename T::EdgePointer ep=0;  assert(0); return ep; }
+  typename T::EdgePointer cHPp() { static typename T::EdgePointer ep=0;  assert(0); return ep; }
   int &EEi(){static int z=0; return z;};
 	template < class LeftV>
 		void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
@@ -461,6 +458,15 @@ private:
 /**
  HEdgeData keep all the data for the half edge
 */
+template <class T> 
+class EmptyHEdgeData : public	EmptyEFAdj<		// pointer to the face
+							EmptyHEOppAdj <		// pointer to the opposite half edge
+							EmptyHENextAdj <	// pointer to the next half edge along the face
+							EmptyHEVAdj <		// pointer to the vertex
+							EmptyHEPrevAdj<
+							T > > > > >{};
+
+
 template <class T> 
 class HEdgeData : public	EFAdj<			// pointer to the face
 							HEOppAdj <		// pointer to the opposite half edge
