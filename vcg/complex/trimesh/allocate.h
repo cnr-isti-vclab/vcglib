@@ -172,6 +172,7 @@ Initial commit
 #include <string>
 #include <set>
 #include <assert.h>
+#include <vcg/complex/trimesh/base.h>
 #include <vcg/container/simple_temporary_data.h>
 
 namespace vcg {
@@ -305,7 +306,8 @@ namespace vcg {
 					for (ei=m.edge.begin(); ei!=m.edge.end(); ++ei)
 						if(!(*ei).IsD())
 						{
-							//update edge to vertex pointers (TODO)
+							if(HasEVAdjacency (m)) { pu.Update((*ei).V(0));pu.Update((*ei).V(1));}
+							if(HasHEVAdjacency(m))   pu.Update((*ei).HEVp());
 						}
 
 						// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
@@ -354,10 +356,10 @@ namespace vcg {
 				if(n == 0) return m.edge.end();
 				pu.Clear();
 				if(m.edge.empty()) pu.oldBase=0;  // if the vector is empty we cannot find the last valid element
-        else {
-          pu.oldBase=&*m.edge.begin(); 
-  				pu.oldEnd=&m.edge.back()+1; 
-        }
+				else {
+					pu.oldBase=&*m.edge.begin(); 
+					pu.oldEnd=&m.edge.back()+1; 
+				}
 
 				m.edge.resize(m.edge.size()+n);
 				m.en+=n;
@@ -370,17 +372,32 @@ namespace vcg {
 				pu.newEnd =  &m.edge.back()+1; 
 		      if(pu.NeedUpdate())
 					{
+					int ii = 0;
 					FaceIterator fi;
-					for (fi=m.face.begin(); fi!=m.face.end(); ++fi)
+					for (fi=m.face.begin(); fi!=m.face.end(); ++fi){
+						if(HasFHEAdjacency(m))
+							pu.Update((*fi).FHEp());
 						if(!(*fi).IsD())
 							for(int i=0; i < (*fi).VN(); ++i)
 								if ((*fi).cFEp(i)!=0) pu.Update((*fi).FEp(i));
-					EdgeIterator ei;
-					for (ei=m.edge.begin(); ei!=m.edge.end(); ++ei)
+					}
+
+					VertexIterator vi;
+					for (vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
+						if(!(*vi).IsD())
+								if ((*vi).cVEp()!=0) pu.Update((*vi).VEp());
+
+					EdgeIterator ei = m.edge.begin();
+					while(ii < m.en - n){// cycle on all the faces except the new ones
 						if(!(*ei).IsD())
 						{
-							//update edge to vertex pointers (TODO)
+							if(HasHENextAdjacency(m)) pu.Update((*ei).HENp());
+							if(HasHEPrevAdjacency(m)) pu.Update((*ei).HEPp());
+							if(HasHEOppAdjacency(m)) pu.Update((*ei).HEOp());
+							++ii;
 						}
+						++ei;
+					}
 
 						// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
 				}
@@ -404,7 +421,7 @@ namespace vcg {
       /** Function to add n vertices to the mesh.
 			Second Wrapper, with a vector of vertex pointers to be updated.
 			*/
-			static EdgeIterator AddEdges(MeshType &m, int n, std::vector<EdgePointer *> &local_vec)
+			static EdgeIterator AddEdges(MeshType &m, int n, std::vector<EdgePointer*> &local_vec)
 			{
 				PointerUpdater<EdgePointer> pu;
 				EdgeIterator v_ret =  AddEdges(m, n,pu);
@@ -471,7 +488,7 @@ namespace vcg {
 				{
 					int ii = 0;
 					FaceIterator fi = m.face.begin();
-					while(ii<m.fn-n) // cycle on all the faces wxcept the new ones
+					while(ii<m.fn-n) // cycle on all the faces except the new ones
 					{
 						if(!(*fi).IsD())
 						{
@@ -543,7 +560,7 @@ namespace vcg {
 		/** Function to delete an edge from the mesh. 
 			NOTE: THIS FUNCTION ALSO UPDATE en
 		*/
-		static void DeleteVertex(MeshType &m, EdgeType &e)
+		static void DeleteEdge(MeshType &m, EdgeType &e)
 		{
 			assert(!e.IsD());
 			e.SetD();
