@@ -73,6 +73,13 @@ private:
 	unsigned long mt[N]; // the array for the state vector
 	int mti;
 
+// construction
+public:
+
+	// ctor
+	RandomGenerator(){}
+
+
 // public methods
 public:
 
@@ -222,13 +229,6 @@ public:
 	{
 		return (((double)generateWithImprovedMarsenneTwister()) + 0.5)*(1.0/4294967296.0);
 	}
-
-
-// construction
-public:
-
-	// ctor
-	RandomGenerator(){}
 
 };
 
