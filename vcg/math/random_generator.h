@@ -50,7 +50,7 @@ namespace vcg {
  *   http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html
  *
  */
-class RandomGenerator :
+class RandomGenerator
 {
 
 // definitions (used by the improved Marsenne-Twister algorithm)
@@ -133,7 +133,7 @@ public:
 	void initializeImprovedMarsenneTwister(unsigned long init_key[], int key_length)
 	{
 		int i, j, k;
-		seed(19650218UL);
+		initializeImprovedMarsenneTwister(19650218UL);
 		i=1; j=0;
 		k = (N>key_length ? N : key_length);
 		for (; k; k--) 
