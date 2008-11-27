@@ -80,9 +80,9 @@ private:
 public:
 
 	// ctor
-	SubtractiveRingRNG()
+	SubtractiveRingRNG(int default_seed=161803398u)
 	{
-		initialize(161803398u);
+		initialize(default_seed);
 	}
 
 
