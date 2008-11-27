@@ -120,8 +120,8 @@ typedef FILE * GZFILE;
 class PropDescriptor
 {
 public:
-	char * elemname;			// Nome dell'elemento
-	char * propname;			// Nome della propieta'
+	const char * elemname;			// Nome dell'elemento
+	const char * propname;			// Nome della propieta'
 	int	stotype1;				// Tipo dell'elemento su file    (se lista tipo degli elementi della lista)
 	int memtype1;				// Tipo dell'elemento in memoria (se lista tipo degli elementi della lista)
 	size_t offset1;				// Offset del valore in memoria
