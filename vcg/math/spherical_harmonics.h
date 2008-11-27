@@ -101,6 +101,8 @@ public :
 		RandomGenerator rand;
 		SphericalHarmonics sph;
 
+		rand.initializeImprovedMarsenneTwister();
+
 		int i = 0;
 
 		for (unsigned k = 0; k < n_coeff; k++ ) sph.coefficients[k] = 0;
@@ -109,8 +111,8 @@ public :
 		{
 			for (unsigned b = 0; b < sqrt_n_samples; ++b)
 			{
-				ScalarType x = (a + rand(INT_MAX)/(ScalarType)INT_MAX) * one_over_n;
-				ScalarType y = (b + rand(INT_MAX)/(ScalarType)INT_MAX) * one_over_n;
+				ScalarType x = (a + ScalarType(rand.generateDoubleWithImprovedMT())) * one_over_n;
+				ScalarType y = (b + ScalarType(rand.generateDoubleWithImprovedMT())) * one_over_n;
 
 				ScalarType theta = 2.0 * Acos(Sqrt(1.0 - x));
 				ScalarType phi = 2.0 * M_PI * y;
