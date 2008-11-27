@@ -71,9 +71,10 @@ we have to build the type a step a time (deriving from a single ancestor at a ti
 */ 
 template <class BVT, class BET=DumClass, class BFT=DumClass, class BTT=DumClass>
 class EdgeBase: public		edge::EmptyEVAdj<
+							edge::EmptyEEAdj<
 							edge::EmptyHEdgeData<	
 							edge::EmptyBitFlags<
-							EdgeTypeHolder <BVT, BET, BFT, BTT> >  > > {
+							EdgeTypeHolder <BVT, BET, BFT, BTT> >  > > > {
 };
 
 
