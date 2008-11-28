@@ -885,7 +885,7 @@ void NavigatorWasdMode::Animate(unsigned int msec, Trackball * tb){
     vel = current_speed.Norm();
 		step_x += vel*sec;
 	  float step_current_min = (float)fabs(sin( step_x*M_PI / step_length ))*step_height;
-		if (step_current<step_current_min); step_current=step_current_min;
+		if (step_current<step_current_min) step_current=step_current_min;
 	}
 
 	current_speed*=pow(dumping,sec);

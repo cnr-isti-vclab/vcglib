@@ -125,8 +125,8 @@ Transform::Transform() {
 }
 
 Trackball::Trackball(): current_button(0), current_mode(NULL), inactive_mode(NULL),
-			dragging(false), spinnable(true), spinning(false),
-			history_size(10), last_time(0), fixedTimestepMode(false) {
+			dragging(false), last_time(0), spinnable(true), spinning(false),
+			history_size(10), fixedTimestepMode(false) {
   setDefaultMapping ();
 }
 

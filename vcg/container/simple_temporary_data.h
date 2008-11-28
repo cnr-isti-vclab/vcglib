@@ -93,7 +93,7 @@ public:
 
 	void clear(){ datasize = 0;}
 
-	const unsigned int &  size() const { return datasize;}
+	const unsigned int  size() const { return datasize;}
 
 	bool  & operator [](const int & i){return data[i];}
 

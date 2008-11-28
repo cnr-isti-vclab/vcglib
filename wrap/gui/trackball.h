@@ -201,8 +201,8 @@ public:
   ~Trackball();
 	
 	private:
-	// TriMesh cannot be copied. Use Append (see vcg/complex/trimesh/append.h)
-	Trackball operator =(const Trackball &  m){}
+	// Trackball must not be copied. Use Append (see vcg/complex/trimesh/append.h)
+	Trackball operator =(const Trackball &  /*m*/){ assert(0); return *this; }
 	public:
   /*!
     @brief Reset the trackball.
