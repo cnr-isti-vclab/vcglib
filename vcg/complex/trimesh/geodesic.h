@@ -61,8 +61,13 @@ class Geo{
 
 	public:
 
+	typedef typename MeshType::VertexType VertexType;
+	typedef typename MeshType::VertexIterator VertexIterator;
 	typedef typename MeshType::VertexPointer VertexPointer;
+	typedef typename MeshType::FaceType  FaceType;
+	typedef typename MeshType::CoordType  CoordType;
 	typedef typename MeshType::ScalarType  ScalarType;
+	
 
 	/* Auxiliary class for keeping the heap of vertices to visit and their estimated distance
 	*/
@@ -76,7 +81,6 @@ class Geo{
 
 	/* Temporary data to associate to all the vertices: estimated distance and boolean flag
 	*/
-	template <class MeshType>
 	struct TempData{
 		TempData(){}
 		TempData(const ScalarType & d_){d=d_;visited=false;}
@@ -84,7 +88,7 @@ class Geo{
 		bool visited;
 		};
 
-	typedef SimpleTempData<std::vector<typename MeshType::VertexType>, TempData<MeshType> >  TempDataType;
+	typedef SimpleTempData<std::vector<VertexType>, TempData >  TempDataType;
 	//TempDataType  * TD;
 	
 	
@@ -97,16 +101,16 @@ class Geo{
 	//************** calcolo della distanza di pw in base alle distanze note di pw1 e curr
 	//************** sapendo che (curr,pw,pw1) e'una faccia della mesh
 	//************** (vedi figura in file distance.gif)
-	static typename MeshType::ScalarType Distance(const typename MeshType::VertexPointer &pw,
-										   const typename MeshType::VertexPointer &pw1,
-										   const typename MeshType::VertexPointer &curr,
-										   const typename MeshType::ScalarType &d_pw1,
-										   const typename MeshType::ScalarType &d_curr)
+	static ScalarType Distance(const VertexPointer &pw,
+										   const VertexPointer &pw1,
+										   const VertexPointer &curr,
+										   const ScalarType &d_pw1,
+										   const ScalarType &d_curr)
 	{
-		MeshType::ScalarType curr_d=0;
-		Point3<MeshType::ScalarType> w_c = pw->cP()- curr->cP();
-		Point3<MeshType::ScalarType> w_w1 = pw->cP()- pw1->cP();
-		Point3<MeshType::ScalarType> w1_c = pw1->cP()- curr->cP();
+		ScalarType curr_d=0;
+		CoordType w_c = pw->cP()- curr->cP();
+		CoordType w_w1 = pw->cP()- pw1->cP();
+		CoordType w1_c = pw1->cP()- curr->cP();
 
 		ScalarType ew_c  = (w_c).Norm();
 		ScalarType ew_w1 = (w_w1).Norm();
@@ -145,7 +149,7 @@ class Geo{
 	  This is function is not meant to be called (although is not prevented). Instead, it is invoked by 
 	  wrapping function.
 	*/
- 	static  typename MeshType::VertexPointer Visit( 
+ 	static  VertexPointer Visit( 
 		 MeshType & m,
 		 std::vector<VertDist> & _frontier,
 		 ScalarType & max_distance,
@@ -154,15 +158,15 @@ class Geo{
 {
 	bool isLeaf,toQueue;
 	std::vector<VertDist> frontier;
-	MeshType::VertexIterator ii;
-	std::list<typename MeshType::VertexPointer> children;
-	typename MeshType::VertexPointer curr,farthest,pw1;	
-	std::list<typename MeshType::VertexPointer>::iterator is;
-	std::deque<typename MeshType::VertexPointer> leaves;
-	std::vector <std::pair<typename MeshType::VertexPointer,typename MeshType::ScalarType> > expansion;
-	std::vector <VertDist >::iterator ifr;
-	face::VFIterator<typename MeshType::FaceType> x;int k;
-	typename MeshType::VertexPointer pw;
+	VertexIterator ii;
+	std::list<VertexPointer> children;
+	VertexPointer curr,farthest,pw1;	
+	typename std::list<VertexPointer>::iterator is;
+	std::deque<VertexPointer> leaves;
+	std::vector <std::pair<VertexPointer,ScalarType> > expansion;
+	typename std::vector <VertDist >::iterator ifr;
+	face::VFIterator<FaceType> x;int k;
+	VertexPointer pw;
 
 	//Requirements
 	assert(m.HasVFTopology());
@@ -197,7 +201,7 @@ class Geo{
 		make_heap(frontier.begin(),frontier.end(),pred());	
 		ScalarType curr_d,d_curr = 0.0;
 		max_distance=0.0;
-		std::vector<VertDist >:: iterator iv;
+		typename std::vector<VertDist >:: iterator iv;
 
  		while(!frontier.empty())
 			{ //printf("size: %d\n", frontier.size());
@@ -211,7 +215,7 @@ class Geo{
 
 				isLeaf = (!fartestOnBorder || curr->IsB());
 
-			face::VFIterator<typename MeshType::FaceType> x;int k;
+			face::VFIterator<FaceType> x;int k;
 
 			
 				for( x.f = curr->VFp(), x.z = curr->VFi(); x.f!=0; ++x )
@@ -232,7 +236,7 @@ class Geo{
 					{
 					if( (*TD)[pw].d == -1){
 								curr_d =  (*TD)[curr].d + (pw->P()-curr->P()).Norm();
-								expansion.push_back(std::pair<typename MeshType::VertexPointer,typename MeshType::ScalarType>(pw,curr_d));
+								expansion.push_back(std::pair<VertexPointer,ScalarType>(pw,curr_d));
 					}
 					continue;
 					}
@@ -282,7 +286,7 @@ class Geo{
 		toQueue = ( (*TD)[(pw)].d==-1);
 
 		if(toQueue){// se non e'gia' in coda ce lo mette
-			expansion.push_back(std::pair<typename MeshType::VertexPointer,typename MeshType::ScalarType>(pw,curr_d));
+			expansion.push_back(std::pair<VertexPointer,ScalarType>(pw,curr_d));
 			}else
 			{
 				if(   (*TD)[(pw)].d > curr_d )
@@ -298,7 +302,7 @@ class Geo{
 
 
 				}
-		std::vector <std::pair<typename MeshType::VertexPointer,typename MeshType::ScalarType> > ::iterator i;
+		typename std::vector <std::pair<VertexPointer,ScalarType> > ::iterator i;
 		for(i = expansion.begin(); i!= expansion.end(); ++i)
 				{
 					(*TD)[(*i).first].d = (*i).second;
@@ -308,7 +312,7 @@ class Geo{
 	}// end while
 
 	// scrivi le distanze sul campo qualita' (nn: farlo parametrico)
-	MeshType::VertexIterator vi;
+	VertexIterator vi;
 	for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
 		(*vi).Q() =  (*TD)[&(*vi)].d; 
 
@@ -329,11 +333,11 @@ public:
 	Note: update the field Q() of the vertices
 	*/
  static void FartestVertex( MeshType & m,
-									std::vector<typename MeshType::VertexPointer> & fro, 
-									typename MeshType::VertexPointer & farthest,		 
+									std::vector<VertexPointer> & fro, 
+									VertexPointer & farthest,		 
 									ScalarType & distance){					
 
-									std::vector<typename MeshType::VertexPointer>::iterator fi; 
+									typename std::vector<VertexPointer>::iterator fi; 
 									std::vector<VertDist>fr;
 
 									for( fi  = fro.begin(); fi != fro.end() ; ++fi)
@@ -346,12 +350,12 @@ public:
 	Note: update the field Q() of the vertices
 	*/
  static void FartestVertex( MeshType & m, 
-									typename MeshType::VertexPointer seed,
-									typename MeshType::VertexPointer & farthest,		 
+									VertexPointer seed,
+									VertexPointer & farthest,		 
 									ScalarType & distance){	
-	std::vector<typename MeshType::VertexPointer>  fro;
+	std::vector<VertexPointer>  fro;
 	fro.push_back( seed );
-	typename MeshType::VertexPointer v0;
+	VertexPointer v0;
 	FartestVertex(m,fro,v0,distance);
 	farthest = v0;
 }
@@ -361,11 +365,11 @@ public:
 	Note: update the field Q() of the vertices
 */
  static void FartestBVertex(MeshType & m,
-										std::vector<typename MeshType::VertexPointer> & fro,  
-										typename MeshType::VertexPointer & farthest,	     
+										std::vector<VertexPointer> & fro,  
+										VertexPointer & farthest,	     
 										ScalarType & distance){
 
-	std::vector<typename MeshType::VertexPointer>::iterator fi; 
+	typename std::vector<VertexPointer>::iterator fi; 
 	std::vector<VertDist>fr;
 
 	for( fi  = fro.begin(); fi != fro.end() ; ++fi)
@@ -377,12 +381,12 @@ public:
 	Note: update the field Q() of the vertices
 */
  static void FartestBVertex( MeshType & m, 
-									typename MeshType::VertexPointer seed,
-									typename MeshType::VertexPointer & farthest,		 
+									VertexPointer seed,
+									VertexPointer & farthest,		 
 									ScalarType & distance){	
-	std::vector<typename MeshType::VertexPointer>  fro;
+	std::vector<VertexPointer>  fro;
 	fro.push_back( seed );
-	typename MeshType::VertexPointer v0;
+	VertexPointer v0;
 	FartestBVertex(m,fro,v0,distance);
 	farthest = v0;
  }
@@ -392,12 +396,12 @@ public:
 	Note: update the field Q() of the vertices
 */
  static void DistanceFromBorder(	MeshType & m,
-									  typename MeshType::VertexPointer & v0,	 
+									  VertexPointer & v0,	 
 										ScalarType & distance			 
 					){
-	std::vector<typename MeshType::VertexPointer> fro;
-	MeshType::VertexIterator vi;
-	MeshType::VertexPointer farthest;
+	std::vector<VertexPointer> fro;
+	VertexIterator vi;
+	VertexPointer farthest;
 	for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
 		if( (*vi).IsB())
 			fro.push_back(&(*vi));
