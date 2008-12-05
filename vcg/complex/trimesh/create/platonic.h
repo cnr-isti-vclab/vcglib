@@ -598,7 +598,6 @@ void Build( MeshType & in, const V & v, const F & f)
 	typename V::const_iterator vi;
 
 	typename MeshType::VertexType tv;
-//	tv.Supervisor_Flags()=0;
 	
 	for(int i=0;i<v.size();++i)
 	{
@@ -660,13 +659,13 @@ void Grid(MeshType & in, int w, int h, float wl, float hl, float *data)
 
 
 // Build a regular grid mesh of faces as a typical height field mesh
-// Vertexes are assumed to be already present.
+// Vertexes are assumed to be already be allocated.
 
 template <class MeshType>
 void FaceGrid(MeshType & in, int w, int h)
 {
-	assert(in.vn == in.vert.size()); // require a compact vertex vector
-	assert(in.vn <= w*h); // the number of vertices should be large enough
+	assert(in.vn == (int)in.vert.size()); // require a compact vertex vector
+	assert(in.vn >= w*h); // the number of vertices should match the number of expected grid vertices
 	
 	Allocator<MeshType>::AddFaces(in,(w-1)*(h-1)*2);
 	
