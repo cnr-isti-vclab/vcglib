@@ -139,6 +139,14 @@ static void VertexClear(MeshType &m, unsigned int FlagMask = 0xffffffff)
 		if(!(*vi).IsD()) (*vi).Flags() &= andMask ;
 }
 
+static void VertexSet(MeshType &m, unsigned int FlagMask)
+{
+	VertexIterator vi;
+	for(vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
+		if(!(*vi).IsD()) (*vi).Flags() |= FlagMask ;
+}
+
+
 static void VertexClearV(MeshType &m) { VertexClear(m,VertexType::VISITED);}
 static void VertexClearB(MeshType &m) { VertexClear(m,VertexType::BORDER);}
 
