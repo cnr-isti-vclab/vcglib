@@ -477,6 +477,9 @@ private:
 template < class VertContainerType, class FaceContainerType , class EdgeContainerType>
 bool HasPerVertexQuality (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return VertContainerType::value_type::HasQuality();}
 
+template < class VertContainerType, class FaceContainerType , class EdgeContainerType>
+bool HasPerVertexMark (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return VertContainerType::value_type::HasMark();}
+
 template < class VertContainerType, class FaceContainerType, class EdgeContainerType >
 bool HasPerVertexCurvature (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return VertContainerType::value_type::HasCurvature();}
 
