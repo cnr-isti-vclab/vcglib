@@ -110,7 +110,10 @@ const Split SplitTab[8]={
 /*  1   1   1 */	{4, {{3,4,5},{0,3,5},{3,1,4},{5,4,2}}, {{0,0},{0,0}},  {{3,3,3},{0,3,2},{0,1,3},{3,1,2}} },
 };
 
-// Classe di suddivisione base. Taglia il lato esattamente a meta'.
+// Basic subdivision class
+// This class must provide methods for finding the position of the newly created vertices
+// In this implemenation we simply put the new vertex in the MidPoint position.
+// Color and TexCoords are interpolated accordingly.
 template<class MESH_TYPE>
 struct MidPoint : public   std::unary_function<face::Pos<typename MESH_TYPE::FaceType> ,  typename MESH_TYPE::CoordType >
 {
@@ -244,90 +247,67 @@ struct MidPointArcNaive : public std::unary_function< face::Pos<typename MESH_TY
 };
 
 
-
-/*
-
-A partire da una mesh raffina una volta tutti i lati dei triangoli minore di thr 
-Se RefineSelected == true allora raffina SOLO le facce selezionate 
-i cui edge sono piu'corti di thr.
-
-I nuovi vertici e facce della mesh sono aggiunte in fondo 
-Requirement: Topologia (in effetti se non si usa la il raffinamento per selezione non servirebbe)
-
-Restituisce false se non raffina nemmeno una faccia.
-
-Si assume che se la mesh ha dati per wedge la funzione di midpoint interpoli i nuovi wedge
-tutti uguali per tutti i wedge sulla stessa 'vecchia' faccia.
-
-*/
-
-// binary predicate che dice quando splittare un edge 
-// la refine usa qt funzione di default: raffina se l'edge^2 e' piu lungo di thr2
-
+// Basic Predicate that tells if a given edge must be splitted.
+// the constructure requires the threshold. 
+// VERY IMPORTANT REQUIREMENT: this function must be symmetric
+// e.g. it must return the same value if the Pos is VFlipped.
+// If this function is not symmetric the Refine can crash.
 
 template <class MESH_TYPE, class FLT>
 class EdgeLen
 {
-	public:
-  FLT thr2;
+    FLT squaredThr;
+public:
+	EdgeLen(){}; 
+	EdgeLen(FLT threshold) {setThr(threshold);}
+	void setThr(FLT threshold) {squaredThr = threshold*threshold; }
 	bool operator()(face::Pos<typename MESH_TYPE::FaceType> ep) const
 	{
-		return SquaredDistance(ep.f->V(ep.z)->P(), ep.f->V1(ep.z)->P())>thr2;
+		return SquaredDistance(ep.V()->P(), ep.VFlip()->P())>squaredThr;
 	}
 };
-/*
-template<class MESH_TYPE, class MIDPOINT>
-bool Refine(MESH_TYPE &m, MIDPOINT mid, typename MESH_TYPE::ScalarType thr=0,bool RefineSelectedP=false)
-{
-	volatile RefineW<MESH_TYPE,MIDPOINT,EdgeLen<typename MESH_TYPE::ScalarType>,true> RT;
-	volatile RefineW<MESH_TYPE,MIDPOINT,EdgeLen<typename MESH_TYPE::ScalarType>,false> RF;
 
-	bool retval;
-	if(RefineSelectedP)   retval=RT.RefineT(m,mid,thr);
-	if(!RefineSelectedP)	retval=RF.RefineT(m,mid,thr);
-	return retval;
-}
-
-template<class MESH_TYPE, class MIDPOINT, class EDGEPRED>
-bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep, bool RefineSelectedP=false)
-{
-	RefineW<MESH_TYPE,MIDPOINT,EDGEPRED,true> RT;
-	RefineW<MESH_TYPE,MIDPOINT,EDGEPRED,false> RF;
-
-	bool retval;
-	if(RefineSelectedP)   retval=RT.RefineT(m,mid,ep);
-	if(!RefineSelectedP)	retval=RF.RefineT(m,mid,ep);
-	return retval;
-}
-*/
 /*********************************************************/
-/*********************************************************/
-/*********************************************************/
+/*********************************************************
 
-template<class MESH_TYPE,class MIDPOINT>
-bool Refine(MESH_TYPE &m, MIDPOINT mid, typename MESH_TYPE::ScalarType thr=0,bool RefineSelected=false, CallBackPos *cb = 0)
-{
-	EdgeLen <MESH_TYPE, typename MESH_TYPE::ScalarType> ep;
-	ep.thr2=thr*thr;
-  return RefineE(m,mid,ep,RefineSelected,cb);
-}
+Given a mesh the following function refines it according to two functor objects:
+
+- a predicate that tells if a given edge must be splitted
+
+- a functor that gives you the new poistion of the created vertices (starting from an edge)
+
+If RefineSelected is true only selected faces are taken into account for being splitted.
+
+Requirement: FF Adjacency and Manifoldness
+
+**********************************************************/
+/*********************************************************/
 
 template<class MESH_TYPE,class MIDPOINT, class EDGEPRED>
 bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, CallBackPos *cb = 0)
 {
+	// common typenames
+	typedef typename MESH_TYPE::VertexIterator VertexIterator;
+	typedef typename MESH_TYPE::FaceIterator FaceIterator;
+	typedef typename MESH_TYPE::VertexPointer VertexPointer;
+	typedef typename MESH_TYPE::FacePointer FacePointer;
+	typedef typename MESH_TYPE::FaceType::TexCoordType TexCoordType;
+	
+	typedef face::Pos<typename MESH_TYPE::FaceType>  PosType;
+
 	int j,NewVertNum=0,NewFaceNum=0;
-	typedef std::pair<typename MESH_TYPE::VertexPointer,typename MESH_TYPE::VertexPointer> vvpair;
-	std::map<vvpair,typename MESH_TYPE::VertexPointer> Edge2Vert;
+	typedef std::pair<VertexPointer,VertexPointer> vvpair;
+	std::map<vvpair,VertexPointer> Edge2Vert;
 	
 	// First Loop: We analyze the mesh to compute the number of the new faces and new vertices 
-	typename MESH_TYPE::FaceIterator fi;
+	FaceIterator fi;
   int step=0,PercStep=m.fn/33;
   if(PercStep==0) PercStep=1;
 	for(fi=m.face.begin(),j=0;fi!=m.face.end();++fi) if(!(*fi).IsD())
   {
 	 if(cb && (++step%PercStep)==0)(*cb)(step/PercStep,"Refining...");
 	    for(j=0;j<3;j++){
-				if(ep(face::Pos<typename MESH_TYPE::FaceType> (&*fi,j)) && 
+				if(ep(PosType(&*fi,j)) && 
 					(!RefineSelected || ((*fi).IsS() && (*fi).FFp(j)->IsS())) ){
 					++NewFaceNum;
 					if(  ((*fi).V(j)<(*fi).V1(j))  || 	(*fi).IsB(j)  )  
@@ -336,67 +316,62 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
 		}
   } // end face loop
 	if(NewVertNum==0) return false;
-	typename MESH_TYPE::VertexIterator lastv = tri::Allocator<MESH_TYPE>::AddVertices(m,NewVertNum);
-//	typename MESH_TYPE::VertexIterator lastv=m.AddVertices(NewVertNum);
+	VertexIterator lastv = tri::Allocator<MESH_TYPE>::AddVertices(m,NewVertNum);
+		
+	// Secondo loop: We initialize a edge->vertex map 
 	
-	// Secondo Ciclo si inizializza la mappa da edge a vertici
-	// e la posizione dei nuovi vertici
-	//j=0;
-  for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
+	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
   {
 	   if(cb && (++step%PercStep)==0)(*cb)(step/PercStep,"Refining...");
      for(j=0;j<3;j++)
-			if(ep(face::Pos<typename MESH_TYPE::FaceType> (&*fi,j))  && 
+			if(ep(PosType (&*fi,j))  && 
 					(!RefineSelected || ((*fi).IsS() && (*fi).FFp(j)->IsS())) )
 				if((*fi).V(j)<(*fi).V1(j) || (*fi).IsB(j)){
-						mid( (*lastv), face::Pos<typename MESH_TYPE::FaceType> (&*fi,j));
-						//(*lastv).P()=((*fi).V(j)->P()+(*fi).V1(j)->P())/2;
+						mid( (*lastv), PosType (&*fi,j));
 						Edge2Vert[ vvpair((*fi).V(j),(*fi).V1(j)) ] = &*lastv;
 						++lastv;
 				}
   }
 	assert(lastv==m.vert.end());
-
-	typename MESH_TYPE::FaceIterator lastf = tri::Allocator<MESH_TYPE>::AddFaces(m,NewFaceNum);
-//	MESH_TYPE::FaceIterator lastf = m.AddFaces(NewFaceNum);
-//    int ddd=0; distance(m.face.begin(),lastf,ddd);
-	typename MESH_TYPE::FaceIterator oldendf=lastf; 
+	
+	FaceIterator lastf = tri::Allocator<MESH_TYPE>::AddFaces(m,NewFaceNum);
+	FaceIterator oldendf = lastf; 
 	
 /*
-          v0
+                v0
 
    
-          f0
+                f0
 
-    mp01      mp02
+				mp01    f3      mp02
+             
+					
+         f1             f2
 
-          f3
-      f1       f2
-
- v1      mp12       v2
+ v1            mp12                v2
 
 */
 
-	typename MESH_TYPE::VertexPointer vv[6]; // i sei vertici in gioco 
-																		//     0..2 vertici originali del triangolo 
-																		//     3..5 mp01, mp12, mp20 midpoints of the three edges
-	typename MESH_TYPE::FacePointer nf[4];   // le quattro facce in gioco.
+	VertexPointer vv[6];	// The six vertices that arise in the single triangle splitting 
+												//     0..2 Original triangle vertices  
+												//     3..5 mp01, mp12, mp20 midpoints of the three edges
+	FacePointer nf[4];   // The (up to) four faces that are created.
 
-  typename MESH_TYPE::FaceType::TexCoordType wtt[6];  // per ogni faccia sono al piu' tre i nuovi valori 
+  TexCoordType wtt[6];  // per ogni faccia sono al piu' tre i nuovi valori 
 																							 // di texture per wedge (uno per ogni edge) 
-
+  
 	int fca=0,fcn =0;
 	for(fi=m.face.begin();fi!=oldendf;++fi) if(!(*fi).IsD())
 		{
-	      if(cb && (++step%PercStep)==0)(*cb)(step/PercStep,"Refining...");
+				if(cb && (++step%PercStep)==0)(*cb)(step/PercStep,"Refining...");
         fcn++;
 				vv[0]=(*fi).V(0);
 				vv[1]=(*fi).V(1);
 				vv[2]=(*fi).V(2);
-				bool e0=ep(face::Pos<typename MESH_TYPE::FaceType> (&*fi,0));
-				bool e1=ep(face::Pos<typename MESH_TYPE::FaceType> (&*fi,1));
-				bool e2=ep(face::Pos<typename MESH_TYPE::FaceType> (&*fi,2));
-
+				bool e0=ep(PosType(&*fi,0));
+				bool e1=ep(PosType(&*fi,1));
+				bool e2=ep(PosType(&*fi,2));
+				
 				if(e0) 
 						if((*fi).V(0)<(*fi).V(1)|| (*fi).IsB(0)) vv[3]=Edge2Vert[ vvpair((*fi).V(0),(*fi).V(1)) ];
 																										 else vv[3]=Edge2Vert[ vvpair((*fi).V(1),(*fi).V(0)) ];
@@ -461,7 +436,6 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
 		}
 	
     // m.fn= m.face.size();
-
 	assert(lastf==m.face.end());	
 	assert(!m.vert.empty());
 	 for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD()){
@@ -471,6 +445,16 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
 	 }
 	vcg::tri::UpdateTopology<MESH_TYPE>::FaceFace(m);	
 	return true;
+}
+
+/*************************************************************************/
+// simple wrapper of the base refine for lazy coder that do not need a edge predicate
+
+template<class MESH_TYPE,class MIDPOINT>
+bool Refine(MESH_TYPE &m, MIDPOINT mid, typename MESH_TYPE::ScalarType thr=0,bool RefineSelected=false, CallBackPos *cb = 0)
+{
+	EdgeLen <MESH_TYPE, typename MESH_TYPE::ScalarType> ep(thr);
+  return RefineE(m,mid,ep,RefineSelected,cb);
 }
 /*************************************************************************/
 
