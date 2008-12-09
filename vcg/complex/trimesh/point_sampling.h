@@ -534,14 +534,14 @@ static void SingleFaceRaster(FaceType &f,  VertexSampler &ps, const Point2<Scala
 		// Calcolo bounding box
 	Box2i bbox;
 
-	if(v0[0]<v1[0]) { bbox.min[0]=v0[0]; bbox.max[0]=v1[0]; }
-	else            { bbox.min[0]=v1[0]; bbox.max[0]=v0[0]; }
-	if(v0[1]<v1[1]) { bbox.min[1]=v0[1]; bbox.max[1]=v1[1]; }
-	else            { bbox.min[1]=v1[1]; bbox.max[1]=v0[1]; }
-	     if(bbox.min[0]>v2[0]) bbox.min[0]=v2[0];
-	else if(bbox.max[0]<v2[0]) bbox.max[0]=v2[0];
-	     if(bbox.min[1]>v2[1]) bbox.min[1]=v2[1];
-	else if(bbox.max[1]<v2[1]) bbox.max[1]=v2[1];
+	if(v0[0]<v1[0]) { bbox.min[0]=int(v0[0]); bbox.max[0]=int(v1[0]); }
+	else            { bbox.min[0]=int(v1[0]); bbox.max[0]=int(v0[0]); }
+	if(v0[1]<v1[1]) { bbox.min[1]=int(v0[1]); bbox.max[1]=int(v1[1]); }
+	else            { bbox.min[1]=int(v1[1]); bbox.max[1]=int(v0[1]); }
+	     if(bbox.min[0]>int(v2[0])) bbox.min[0]=int(v2[0]);
+	else if(bbox.max[0]<int(v2[0])) bbox.max[0]=int(v2[0]);
+	     if(bbox.min[1]>int(v2[1])) bbox.min[1]=int(v2[1]);
+	else if(bbox.max[1]<int(v2[1])) bbox.max[1]=int(v2[1]);
 
 		// Calcolo versori degli spigoli
 	Point2<S> d10 = v1 - v0;
