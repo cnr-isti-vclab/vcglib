@@ -121,6 +121,7 @@ class UpdateNormals
 public:
 typedef ComputeMeshType MeshType; 	
 typedef typename MeshType::VertexType     VertexType;
+typedef typename MeshType::CoordType     CoordType;
 typedef typename VertexType::NormalType     NormalType;
 typedef typename VertexType::ScalarType ScalarType;
 typedef typename MeshType::VertexPointer  VertexPointer;
@@ -150,7 +151,7 @@ static void PerVertexFromCurrentFaceNormal(ComputeMeshType &m)
  VertexIterator vi;
  for(vi=m.vert.begin();vi!=m.vert.end();++vi)
    if( !(*vi).IsD() && (*vi).IsRW() )
-     (*vi).N().Construct(0,0,0);
+     (*vi).N()=CoordType(0,0,0);
 
  FaceIterator fi;
  for(fi=m.face.begin();fi!=m.face.end();++fi)
