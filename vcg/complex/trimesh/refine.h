@@ -332,7 +332,8 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
 						++lastv;
 				}
   }
-	assert(lastv==m.vert.end());
+	
+	assert(lastv==m.vert.end()); // critical assert: we MUST have used all the vertex that we forecasted we need
 	
 	FaceIterator lastf = tri::Allocator<MESH_TYPE>::AddFaces(m,NewFaceNum);
 	FaceIterator oldendf = lastf; 
@@ -435,8 +436,7 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
 							}
 		}
 	
-    // m.fn= m.face.size();
-	assert(lastf==m.face.end());	
+	assert(lastf==m.face.end());	 // critical assert: we MUST have used all the faces that we forecasted we need and that we previously allocated.
 	assert(!m.vert.empty());
 	 for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD()){
 			assert((*fi).V(0)>=&*m.vert.begin() && (*fi).V(0)<=&m.vert.back() );
