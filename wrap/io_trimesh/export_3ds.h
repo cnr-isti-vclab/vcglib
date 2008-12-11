@@ -272,17 +272,17 @@ namespace io {
 			/*
 				<<concetto:>>
 				si tiene in considerazione una mappa ListOfDuplexVert<Key,int>, alla quale gli viene associato il seguente significato:
-					Key:è una coppia (int,TexCoord) formata da un int che rappresenta l'indice del vettore nella mesh originale e la sua 
-						coordinata di texture. tale coppia rappresenta una chiave, essendo univoca in tutta la mesh. Non è possibile che 
+					Key:e' una coppia (int,TexCoord) formata da un int che rappresenta l'indice del vettore nella mesh originale e la sua 
+						coordinata di texture. tale coppia rappresenta una chiave, essendo univoca in tutta la mesh. Non e' possibile che 
 						si incontrino due vertici che hanno solito indice di vertice e solite coordinate di texture, se un vertice di 
 						questo tipo esistesse allora i due vertici rappresenterebbero lo stesso vertice.
-					int:è l'indice del vertice inserito all'interno del vettore VectorOfVertexType<VertexType>
+					int:e' l'indice del vertice inserito all'interno del vettore VectorOfVertexType<VertexType>
 					
 					Nel vertice VectorOfVertexType vengono inseriti tutti i vertici appartenenti alla mesh + i k vertici dublicati. la scelta 
 					di tali vertici va in base alla seguente regola:
-						se un vertice con indice x(originale) ha più di una coordinata di texture allora tale vertice viene duplicato e 
+						se un vertice con indice x(originale) ha piu' di una coordinata di texture allora tale vertice viene duplicato e 
 						inserito in ListOfDuplexVert e in VectorOfVertexType(in VectorOfVertexType, l'inserimento del doppio vertice non 
-						sarebbe necessario, però viene fatto per comodità, in caso contrario dovremmo cercare il vertice dentro il vettore).
+						sarebbe necessario, pero' viene fatto per comodita', in caso contrario dovremmo cercare il vertice dentro il vettore).
 
 					rappresentazione grafica:
 
@@ -311,11 +311,11 @@ namespace io {
 				<<code:>>
 				questo pezzo di codice itera su tutte le facce della mesh per riempire la mappa e il vettore.
 				per ogni faccia e per ogni vertice di faccia costruisce la coppia (indice,texture), controlla se
-				all'interno di ListOfDuplexVert esiste già in tal caso non fa niente, in caso contrario aggiunte la
+				all'interno di ListOfDuplexVert esiste gia' in tal caso non fa niente, in caso contrario aggiunte la
 				coppia in ListOfDuplexVert e l'oggetto VertexType in VectorOfVertexType associando al valore della
 				chiave (indice,texture) l'indice del vertice a cui punta.
 
-				alla fine vengono duplicati solamente quei vertici che hanno più coordinate di texture.
+				alla fine vengono duplicati solamente quei vertici che hanno piu' coordinate di texture.
 
 				c'e' da tenere presente che il codice appena descritto viene eseguito SOLAMENTE se la mesh contiene texture e
 				se dalla dialog di exporter viene spuntato il salvataggio delle texture. In caso contrario non esegue niente e tratta
@@ -418,7 +418,7 @@ namespace io {
 
 			lib3ds_mesh_new_face_list (mesh, m.face.size());//set number of faces
 			int f_index = 0;//face index
-			int t_index = 0;//texture index
+			//int t_index = 0;//texture index
 			FaceIterator fi;
 			for(fi=m.face.begin(); fi!=m.face.end(); ++fi) if( !(*fi).IsD() )
 			{
@@ -473,7 +473,7 @@ namespace io {
 				if((mask & vcg::tri::io::Mask::IOM_FACECOLOR) | (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD))
 				{
 					int material_index = vcg::tri::io::Materials<SaveMeshType>::CreateNewMaterial(m, materials, 0, fi);
-					if(material_index == materials.size())
+					if(material_index == (int)materials.size())
 					{
 						Lib3dsMaterial *material = lib3ds_material_new();//creates a new material
 						
