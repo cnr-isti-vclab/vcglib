@@ -102,7 +102,7 @@ private:
 		Couple(const int & i, const int & j, float d):std::pair<int,int>(i,j),dist(d){}
 		Couple(float d):std::pair<int,int>(0,0),dist(d){}
 		float dist;
-		const bool & operator <(const   Couple & o) const{return dist < o.dist;}
+		const bool operator < (const   Couple & o) const {return dist < o.dist;}
 		int & operator[](const int &i){return (i==0)? first : second;}
 	};
 
@@ -265,7 +265,7 @@ FourPCS<MeshType>::SelectCoplanarBase(){
 	ScalarType dtol = side*0.1; //rough implementation
 
 	//choose the first two points
-	int i = 0,j,ch;bool good;
+	int i = 0,ch;
 		
 	// first point random
 	ch = (rand()/(float)RAND_MAX)*(P->vert.size()-2);
@@ -304,7 +304,7 @@ FourPCS<MeshType>::SelectCoplanarBase(){
 	CoordType n = ((B[0]-B[1]).normalized() ^ (B[2]-B[1]).normalized()).normalized();
 	CoordType B4 = B[1] +  (B[0]-B[1]) + (B[2]-B[1]);
 	VertexType * v =0; 
-	ScalarType dist,radius = dtol*4.0;
+	ScalarType radius = dtol*4.0;
 
 		std::vector<typename MeshType::VertexType*> closests;
 		std::vector<ScalarType> distances;
@@ -383,7 +383,7 @@ FourPCS<MeshType>::IsTransfCongruent(FourPoints fp,vcg::Matrix44<ScalarType> & m
 
 		vcg::PointMatching<ScalarType>::ComputeRigidMatchMatrix(mat,fix,mov);
 		
-		ScalarType err = 0.0,derr;
+		ScalarType err = 0.0;
 		for(int i = 0; i < 4; ++i) err+= (mat * mov[i] - fix[i]).SquaredNorm();
 		
 		trerr = vcg::math::Sqrt(err);
@@ -430,7 +430,7 @@ FourPCS<MeshType>::FindCongruent() { // of base B, on Q, with approximation delt
 	d2 = (B[3]-B[2]).Norm();
 
 	int start = clock();
-	int vi,vj;
+	//int vi,vj;
 
 	typename PMesh::VertexIterator vii;
 	typename std::vector<Couple>::iterator bR1,eR1,bR2,eR2,ite,cite;
@@ -475,7 +475,7 @@ FourPCS<MeshType>::FindCongruent() { // of base B, on Q, with approximation delt
 
 	n_closests = 0; n_congr = 0; ac =0 ; acf = 0; tr = 0; trf = 0;
 	//	fprintf(db,"R2Inv.size  = %d \n",R2inv.size());
-   for(int i = 0 ; i < R2inv.size() ; ++i){
+   for(uint i = 0 ; i < R2inv.size() ; ++i){
 		
 		std::vector<typename PMesh::VertexType*> closests;
 		std::vector<ScalarType> distances;
@@ -491,7 +491,7 @@ FourPCS<MeshType>::FindCongruent() { // of base B, on Q, with approximation delt
 			 (Invr,*ugrid,bb,closests);
  
 		 n_closests+=closests.size();
-		 for(int ip = 0; ip < closests.size(); ++ip){
+		 for(uint ip = 0; ip < closests.size(); ++ip){
 				FourPoints p;
 				p[0] = Q->vert[R1[id[closests[ip]]][0]].P();
 				p[1] = Q->vert[R1[id[closests[ip]]][1]].P();
@@ -575,7 +575,7 @@ void
 FourPCS<MeshType>::EvaluateAlignment(CandiType  & fp){
  		int n_delta_close = 0;
 		for(int i  = 0 ; i< 4; ++i) {
-			for(int j = 0; j < ExtB[i].size();++j){
+			for(uint j = 0; j < ExtB[i].size();++j){
 				CoordType np = ExtB[i][j]->cN();;
 				CoordType tp  = ExtB[i][j]->P();
 				n_delta_close+=EvaluateSample(fp,tp,np,0.9);
@@ -587,11 +587,9 @@ FourPCS<MeshType>::EvaluateAlignment(CandiType  & fp){
 template <class MeshType>
 void
 FourPCS<MeshType>::TestAlignment(CandiType  & fp){
-	VertexType*   v;
-		ScalarType   dist ;
 		radius = prs.delta;
 		int n_delta_close = 0;
-		for(int j = 0; j < subsetP.size();++j){
+		for(uint j = 0; j < subsetP.size();++j){
 				CoordType np = subsetP[j]->N();
 				CoordType tp  = subsetP[j]->P();
 				n_delta_close+=EvaluateSample(fp,tp,np,0.6);
