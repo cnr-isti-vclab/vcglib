@@ -180,7 +180,7 @@ Edited Comments and GPL license
 #pragma message("\nYou should never directly include this file\_n")
 #else
 
-#pragma message("VCGLIB Warning: this way to define the simplex vertex is DEPRECATED ")
+#pragma message("VCGLIB Warning: this way to define the simplex vertex is DEPRECATED  and no more SUPPORTED")
 #pragma message("VCGLIB Warning: use vcg/simplex/vertexplus instead ")
 
 #include<vcg/space/point3.h>

@@ -62,7 +62,7 @@ created
 #ifndef __VCGLIB__EDGE_TYPE_BASE
 #define __VCGLIB__EDGE_TYPE_BASE
 
-#pragma message("[VCGLIB Warning]  this way to define the simplex edge is DEPRECATED ") 
+#pragma message("[VCGLIB Warning]  this way to define the simplex edge is DEPRECATED  and no more SUPPORTED") 
 #pragma message("[VCGLIB Warning]  use vcg/simplex/edgeplus instead ") 
 
 
