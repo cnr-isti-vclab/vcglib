@@ -154,7 +154,7 @@ First commit...
 
 ****************************************************************************/
 
-#pragma message("[VCGLIB Warning]  this way to define the simplex face is DEPRECATED ") 
+#pragma message("[VCGLIB Warning]  this way to define the simplex face is DEPRECATED and no more SUPPORTED") 
 #pragma message("[VCGLIB Warning]  use vcg/simplex/faceplus instead ") 
 
 #ifndef FACE_TYPE 
