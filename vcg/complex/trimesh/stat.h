@@ -117,8 +117,11 @@ class Stat
 				h.Clear();
 				h.SetRange( minmax.first,minmax.second, HistSize);
 				for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
-						if(!(*vi).IsD()) h.Add((*vi).Q());
-						
+						if(!(*vi).IsD())
+							{
+								assert(!math::IsNAN((*vi).Q()));
+								h.Add((*vi).Q());
+							}						
 				// Sanity check; If some very wrong value has happened in the Q value, 
 				// the histogram is messed. If a significant percentage (20% )of the values are all in a single bin
 				// we should try to solve the problem. No easy solution here.
