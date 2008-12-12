@@ -454,6 +454,9 @@ public:
         angle0 = math::Abs(Angle(	(*fi).P(1)-(*fi).P(0),(*fi).P(2)-(*fi).P(0) ));
         angle1 = math::Abs(Angle(	(*fi).P(0)-(*fi).P(1),(*fi).P(2)-(*fi).P(1) ));
         angle2 = M_PI-(angle0+angle1);
+				
+				// Skip degenerate triangles.
+				if(angle0==0 || angle1==0 || angle1==0) continue; 
 
         e01v = ( (*fi).V(1)->cP() - (*fi).V(0)->cP() ) ;
         e12v = ( (*fi).V(2)->cP() - (*fi).V(1)->cP() ) ;
