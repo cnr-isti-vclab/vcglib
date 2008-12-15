@@ -98,10 +98,8 @@ public :
 
 		ScalarType one_over_n = 1.0/(ScalarType)sqrt_n_samples;
 
-		RandomGenerator rand;
+		MarsenneTwisterRNG rand;
 		SphericalHarmonics sph;
-
-		rand.initializeImprovedMarsenneTwister();
 
 		int i = 0;
 
@@ -111,8 +109,8 @@ public :
 		{
 			for (unsigned b = 0; b < sqrt_n_samples; ++b)
 			{
-				ScalarType x = (a + ScalarType(rand.generateDoubleWithImprovedMT())) * one_over_n;
-				ScalarType y = (b + ScalarType(rand.generateDoubleWithImprovedMT())) * one_over_n;
+				ScalarType x = (a + ScalarType(rand.generate01())) * one_over_n;
+				ScalarType y = (b + ScalarType(rand.generate01())) * one_over_n;
 
 				ScalarType theta = 2.0 * Acos(Sqrt(1.0 - x));
 				ScalarType phi = 2.0 * M_PI * y;
