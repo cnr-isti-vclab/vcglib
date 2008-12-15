@@ -35,9 +35,9 @@ namespace vcg{
 namespace math{
 
 template <typename ScalarType>
-class PolarFunctor{
+class DummyPolarFunctor{
 	public:
-		virtual ScalarType operator()(ScalarType theta, ScalarType phi) = 0;
+		inline ScalarType operator()(ScalarType theta, ScalarType phi) {return ScalarType(0);}
 };
 
 /**
@@ -88,7 +88,8 @@ public :
 		else return SQRT_TWO * complex_spherical_harmonic_im(l, -m, theta, phi);
 	}
 
-	static SphericalHarmonics Project(PolarFunctor<ScalarType> * fun, unsigned n_samples)
+	template <typename PolarFunctor>
+	static SphericalHarmonics Project(PolarFunctor * fun, unsigned n_samples)
 	{
 		const ScalarType weight = 4 * M_PI;
 
