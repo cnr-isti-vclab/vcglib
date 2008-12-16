@@ -379,7 +379,7 @@ vcg::Point2<Scalar> Camera<Scalar>::UndistortedToDistorted(vcg::Point2<Scalar>  
 		else			/* three real roots */
 		{
 			D = sqrt(-D);
-			S = pow((hypot (R, D)),CBRT);
+			S = pow((Scalar)(hypot (R, D)),(Scalar)CBRT);
 			T = atan2 (D, R) / 3;
 			//SinCos(T, sinT, cosT);
 			sinT=sin(T);
