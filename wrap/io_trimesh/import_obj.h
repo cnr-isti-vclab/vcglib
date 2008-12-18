@@ -158,12 +158,13 @@ public:
 //};
 struct ObjIndexedFace
 { 
-  int v[3];
-  int n[3];
-  int t[3];
-  int tInd;
-	bool edge[3];
-  Color4b c;
+	void set(const int & num){v.resize(num);n.resize(num); t.resize(num);}
+	std::vector<int> v;
+	std::vector<int> n;
+	std::vector<int> t;
+	int tInd;
+	bool  edge[3];// useless if the face is a polygon, no need to have variable length array
+	Color4b c;
 };
 
 struct ObjTexCoord
@@ -378,7 +379,69 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 			{
 				if (numTokens < 4) return E_LESS_THAN_3VERTINFACE;
 				int vertexesPerFace = static_cast<int>(tokens.size()-1);
+
+				if( (vertexesPerFace>3) && OpenMeshType::FaceType::HasPolyInfo() ){
+			//_BEGIN___ if  you are loading a GENERIC POLYGON mesh 
+		  
+					ff.set(vertexesPerFace);
+
+					std::string vertex;
+					std::string texcoord;
+					std::string normal;
+					for(int i=0;i<vertexesPerFace;++i) // remember index starts from 1 instead of 0
+					  SplitToken(tokens[i+1], ff.v[i], ff.n[i], ff.t[i], oi.mask);
+
+		 if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD )
+				{
+					// verifying validity of texture coords indices
+		          for(int i=0;i<vertexesPerFace;i++)
+				  if(!GoodObjIndex(ff.t[i],oi.numTexCoords)) 
+				   return E_BAD_VERT_TEX_INDEX;
+
+					ff.tInd=materials[currentMaterialIdx].index;
+				}
 				
+				// verifying validity of vertex indices
+				vector<int> tmp = ff.v;
+				std::sort(tmp.begin(),tmp.end());
+				std::unique(tmp.begin(),tmp.end());
+				if(tmp.size() != ff.v.size())
+					result = E_VERTICES_WITH_SAME_IDX_IN_FACE;
+
+        for(int i=0;i<vertexesPerFace;i++)
+            if(!GoodObjIndex(ff.v[i],numVertices))
+              return E_BAD_VERT_INDEX;
+					
+				// assigning face normal
+				// ---------------------
+				if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
+				{
+					// verifying validity of vertex normal indices
+					// -------------------------------------------
+          for(int i=0;i<vertexesPerFace;i++)
+            if(!GoodObjIndex(ff.n[i],numVNormals)) return E_BAD_VERT_NORMAL_INDEX;
+				}
+
+				// assigning face color
+				// --------------------
+				if( oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR)		
+					 ff.c = currentColor;
+				
+				++numTriangles;
+		        indexedFaces.push_back(ff);
+   
+				
+				// callback invocation, abort loading process if the call returns false
+				if ((cb !=NULL)&& (((numTriangles + numVertices)%100)==0) )
+					{
+					  if (!(*cb)( (100*(numTriangles +numVertices))/ numVerticesPlusFaces, "Face Loading"))
+					  return E_ABORTED;
+					}
+			//_END  ___ if  you are loading a GENERIC POLYGON mesh 
+				}else
+				{
+			//_BEGIN___ if  you are loading a  TRIMESH mesh 
+				ff.set(3);	
 			  std::string vertex;
 			  std::string texcoord;
 				std::string normal;
@@ -495,10 +558,13 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 				
 				// callback invocation, abort loading process if the call returns false
 				if ((cb !=NULL)&& (((numTriangles + numVertices)%100)==0) )
-        {
+					{
 					  if (!(*cb)( (100*(numTriangles +numVertices))/ numVerticesPlusFaces, "Face Loading"))
 					  return E_ABORTED;
-        }
+					}
+			//_END___ if  you are loading a  TRIMESH mesh 
+
+				}
 			}
 			else if (header.compare("mtllib")==0)	// material library
 			{
@@ -547,7 +613,8 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
   for(int i=0;i<numTriangles;++i)
   {
     assert(m.face.size()==size_t(m.fn));
-    for(int j=0;j<3;++j)
+	m.face[i].Alloc(indexedFaces[i].v.size()); // it does not do anything if it is a trimesh
+    for(int j=0;j<indexedFaces[i].v.size();++j)
     {
       m.face[i].V(j)=&(m.vert[indexedFaces[i].v[j]]);
       if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD ) {
