@@ -135,7 +135,7 @@ void Set( FacePointer  pf, const int nz )
 {
 	assert(pf!=0);
 	assert(nz>=0);
-	assert(nz<3);
+	assert(nz<pf->VN());
 	
 	v[0] = pf->V(nz);
 	v[1] = pf->V(pf->Next(nz));
