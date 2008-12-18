@@ -112,7 +112,7 @@ public:
 	}
 
 	/// Return a random number in the given range (limit) using the Subtractive Ring method.
-	unsigned int generate(unsigned int limit)
+	unsigned int generate(unsigned int limit= 0xffffffffu)
 	{
 		_M_index1 = (_M_index1 + 1) % 55;
 		_M_index2 = (_M_index2 + 1) % 55;
@@ -123,7 +123,7 @@ public:
 	/// Return a random number in the [0,1) real interval using the Subtractive Ring method.
 	double generate01()
 	{
-		unsigned int lmt = 0xffffffffu;
+		const unsigned int lmt = 0xffffffffu;
 		unsigned int number = generate(lmt);
 		return static_cast<double>(number) / static_cast<double>(lmt);
 	}
