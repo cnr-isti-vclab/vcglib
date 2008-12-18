@@ -162,8 +162,23 @@ static void PerVertexFromCurrentFaceNormal(ComputeMeshType &m)
 					(*fi).V(j)->N() += (*fi).cN();
    }
 }
-
-
+/// \brief Calculates the vertex normal. Exploiting or current face normals.
+/**
+	The normal of a face f is the average of the normals of the vertices of f.
+*/
+static void PerFaceFromCurrentVertexNormal(ComputeMeshType &m)
+{
+	for (FaceIterator fi=m.face.begin(); fi!=m.face.end(); ++fi)
+   if( !(*fi).IsD())
+	 	{
+		NormalType n;
+		n.SetZero();
+		for(int j=0; j<3; ++j)
+			n += fi->V(j)->cN();
+		n.Normalize();
+		fi->N() = n;
+	}
+}
 ///  \brief Calculates the vertex normal. Without exploiting or touching face normals.
 /**
  The normal of a vertex v is the weigthed average of the normals of the faces incident on v.
