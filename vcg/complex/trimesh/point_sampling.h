@@ -34,6 +34,8 @@ Each function calls many time the sample object with the sampling point as param
 ****************************************************************************/
 #ifndef __VCGLIB_POINT_SAMPLING
 #define __VCGLIB_POINT_SAMPLING
+
+#include <vcg/math/random_generator.h>
 #include <vcg/complex/trimesh/stat.h>
 #include <vcg/complex/trimesh/update/topology.h>
 #include <vcg/space/box2.h>
@@ -86,9 +88,16 @@ class SurfaceSampling
     typedef typename MetroMesh::FaceType				FaceType;
     typedef typename MetroMesh::FaceContainer		FaceContainer;
 	public:
+	
+static math::SubtractiveRingRNG &SamplingRandomGenerator() 
+{
+	static math::SubtractiveRingRNG rnd;
+	return rnd;
+}
 
-static 
-void AllVertex(MetroMesh & m, VertexSampler &ps)
+static unsigned int RandomInt(unsigned int i) { return SamplingRandomGenerator().generate(i); }
+
+static void AllVertex(MetroMesh & m, VertexSampler &ps)
 {
     VertexIterator vi;
     for(vi=m.vert.begin();vi!=m.vert.end();++vi) 
@@ -172,7 +181,8 @@ static void	FillAndShuffleFacePointerVector(MetroMesh & m, std::vector<FacePoint
 	
 	assert((int)faceVec.size()==m.fn);
 	
-	std::random_shuffle(faceVec.begin(),faceVec.end());
+	unsigned int (*p_myrandom)(unsigned int) = RandomInt;
+	std::random_shuffle(faceVec.begin(),faceVec.end(), p_myrandom);
 }
 static void	FillAndShuffleVertexPointerVector(MetroMesh & m, std::vector<VertexPointer> &vertVec)
 {
@@ -182,13 +192,14 @@ static void	FillAndShuffleVertexPointerVector(MetroMesh & m, std::vector<VertexP
 
 	assert((int)vertVec.size()==m.vn);
 	
-	std::random_shuffle(vertVec.begin(),vertVec.end());
+	unsigned int (*p_myrandom)(unsigned int) = RandomInt;
+	std::random_shuffle(vertVec.begin(),vertVec.end(), p_myrandom);
 }
+
 /// Sample the vertices in a uniform way. Each vertex has the same probabiltiy of being chosen. 
 static void VertexUniform(MetroMesh & m, VertexSampler &ps, int sampleNum)
 {
-	if(sampleNum>=m.vn) 
-	{
+	if(sampleNum>=m.vn) {
 	  AllVertex(m,ps);
 		return;
 	} 
@@ -200,6 +211,20 @@ static void VertexUniform(MetroMesh & m, VertexSampler &ps, int sampleNum)
 		ps.AddVert(*vertVec[i]);
 }
 
+
+static void FaceUniform(MetroMesh & m, VertexSampler &ps, int sampleNum)
+{
+	if(sampleNum>=m.fn) {
+	  AllFace(m,ps);
+		return;
+	} 
+
+	std::vector<FacePointer> faceVec;
+	FillAndShuffleFacePointerVector(m,faceVec);
+
+	for(int i =0; i< sampleNum; ++i)
+		ps.AddFace(*faceVec[i],Barycenter(*faceVec[i]));
+}
 
 static void AllFace(MetroMesh & m, VertexSampler &ps)
 {
