@@ -26,6 +26,7 @@
 
 #include <vector>
 #include <vcg/complex/trimesh/allocate.h>
+#include <vcg/complex/trimesh/clean.h>
 #include <vcg/complex/trimesh/update/topology.h>
 #include <vcg/complex/trimesh/base.h>
 
@@ -60,6 +61,14 @@ namespace vcg
 				VertexPointer v0,v1;
 				EdgePointer ep;
 			};
+			struct FacePtrInt{
+				FacePtrInt ( FaceType * _f,int _i):f(_f),i(_i){}
+				FaceType * f;
+				int i;
+			};
+
+			typedef std::vector<bool> BitVector;
+
 			/**
 			build a half-edge data structure from an indexed data structure. Note that the half-edges are allocated here for the first time.
 			If you have a mesh where there are already edges, they will be removed and the data lost, so do not use this function
@@ -70,16 +79,31 @@ namespace vcg
 				assert(MeshType::EdgeType::HasHENextAdjacency());
 				assert(MeshType::EdgeType::HasHEOppAdjacency());			
 
+				MeshType::PerFaceAttributeHandle<BitVector> flagVisited = 
+					vcg::tri::Allocator<MeshType>:: AddPerFaceAttribute<BitVector>(m,"");
+				std::vector<FacePtrInt > borderEdges;
+
 				// allocate all new half edges
 				FaceIterator fi;
 				int n_edges = 0;
-				for(fi = m.face.begin(); fi != m.face.end(); ++fi) if(! (*fi).IsD()) n_edges+=(*fi).VN();		
+
+				// count how many half edge to allocate
+				for(fi = m.face.begin(); fi != m.face.end(); ++fi) if(! (*fi).IsD()) 
+				{n_edges+=(*fi).VN();	
+				 for(int i = 0; i < (*fi).VN(); ++i)
+					 if(vcg::face::IsBorder<FaceType>((*fi),(i)))
+						++n_edges;
+				}
+
+				// allocate the half edges
 				typename MeshType::EdgeIterator ei = vcg::tri::Allocator<MeshType>::AddEdges(m,n_edges);
 				
 				std::vector<VertexPairEdgePtr> all;
 				int firstEdge = 0;
 				for(fi = m.face.begin(); fi != m.face.end(); ++fi)if(!(*fi).IsD()){
 					assert((*fi).VN()>2);
+					if(flagVisited[*fi].empty()) {flagVisited[*fi].resize((*fi).VN());}
+
 					for(int i  = 0; i < (*fi).VN(); ++i,++ei)
 					{
 						(*ei).HEVp()	= (*fi).V(i);
@@ -93,11 +117,44 @@ namespace vcg
 						if(HasVEAdjacency(m))
 							(*ei).HEVp()->VEp() = &(*ei);
 						all.push_back(VertexPairEdgePtr((*fi).V(i), (*fi).V((*fi).Next(i)),&(*ei)));// it will be used to link the hedges
+
+						if(  vcg::face::IsBorder<FaceType>((*fi),(i)))
+							borderEdges.push_back(FacePtrInt(&(*fi),i));
 					}
 					firstEdge += (*fi).VN();
 				}
-				
 
+				// add all the border edges
+				int borderLength; 
+				std::vector<FacePtrInt >::iterator ebi;
+				for( ebi = borderEdges.begin(); ebi != borderEdges.end(); ++ebi)
+					if( !flagVisited[(*ebi).f][(*ebi).i])// not already inserted
+					{
+						 
+						borderLength = 0;
+						vcg::face::Pos<FaceType> bp((*ebi).f,(*ebi).i);
+						FaceType * start = (*ebi).f;
+						do{
+							all.push_back( VertexPairEdgePtr ( bp.f->V( bp.f->Next(bp.z) ),bp.f->V( bp.z ),&(*ei)));
+							(*ei).HEVp()	=  bp.f->V(bp.f->Next(bp.z)) ;
+							flagVisited[bp.f][bp.z] = true;
+							++ei;
+							bp.NextB();
+							++borderLength;
+							}while (bp.f != start);
+				 
+						// run over the border edges to link the adjacencies
+						for(int be = 0; be < borderLength; ++be){
+							if(MeshType::EdgeType::HasEFAdjacency()) 
+								m.edge[firstEdge + be].EFp() = NULL;
+							if(MeshType::EdgeType::HasHEPrevAdjacency())
+								m.edge[firstEdge + be].HEPp()	= &m.edge[firstEdge + (be +borderLength-1) % borderLength];
+							m.edge[firstEdge + be].HENp()	= &m.edge[firstEdge + (be +1) % borderLength];
+						}
+						firstEdge+=borderLength;
+				}
+				vcg::tri::Allocator<MeshType>:: DeletePerFaceAttribute<BitVector>(m,flagVisited );
+				
 				std::sort(all.begin(),all.end());
 				assert(all.size() == n_edges);
 				for(int i = 0 ; i < all.size(); )
@@ -143,8 +200,10 @@ namespace vcg
 				// it is assumed the the edget2face pointer (HEFp) are correct
 				// and the faces are allocated
 					for ( ei = m.edge.begin(); ei != m.edge.end(); ++ei)
-						if(!(*ei).IsD())
-  					if(!hV[(*ei)] )// has not be visited yet
+					if(!(*ei).IsD())								// it has not been deleted
+					if(!hasHEF || ( hasHEF &&  (*ei).EFp()!=NULL))	// if it has a pointer to the face it is 
+																	// not null (i.e. it is not a border edge)
+					if(!hV[(*ei)] )									// it has not be visited yet
 					{
 						if(!hasHEF)// if it has 
 							fp = &(* Allocator<MeshType>::AddFaces(m,1));
