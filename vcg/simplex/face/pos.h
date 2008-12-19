@@ -268,7 +268,7 @@ public:
 	/// Changes edge maintaining the same face and the same vertex
 	void FlipE()
 	{
-		assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V((z+0)%3)==v));
+		assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V((z+0)%f->VN())==v));
 		if(f->V(f->Next(z))==v) z=f->Next(z);
 		else z= f->Prev(z);
 		assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V((z))==v));
@@ -326,7 +326,7 @@ public:
 	const FaceType *FFlip() const 
 	{
 		assert( f->FFp(z)->FFp(f->FFi(z))==f );
-		assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V((z+0)%3)==v));
+		assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V((z+0)%f->VN())==v));
 		FaceType *nf=f->FFp(z);
 		return nf;
   }
