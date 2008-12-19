@@ -1,8 +1,8 @@
 #include <vector>
 #include <iostream>
 
-#include<vcg/simplex/vertexplus/base.h>
-#include<vcg/simplex/faceplus/base.h>
+#include<vcg/simplex/vertex/base.h>
+#include<vcg/simplex/face/base.h>
 #include<vcg/simplex/face/topology.h>
 #include<vcg/complex/trimesh/base.h>
 #include<vcg/complex/trimesh/hole.h>

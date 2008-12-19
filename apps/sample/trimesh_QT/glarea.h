@@ -38,8 +38,8 @@ Initial release.
 #include <QtOpenGL/QGLWidget>
 
 /// vcg imports
-#include <vcg/simplex/vertexplus/base.h>
-#include <vcg/simplex/faceplus/base.h>
+#include <vcg/simplex/vertex/base.h>
+#include <vcg/simplex/face/base.h>
 #include <vcg/complex/trimesh/base.h>
 #include <vcg/complex/trimesh/update/bounding.h>
 #include <vcg/complex/trimesh/update/normal.h>

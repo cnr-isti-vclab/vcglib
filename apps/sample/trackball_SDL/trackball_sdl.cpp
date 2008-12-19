@@ -28,8 +28,8 @@ the object rather than rotate it in front of the camera.
 #include <vector>
 
 /*include the base definition for the vertex, face, and meshes */
-#include <vcg/simplex/vertexplus/base.h>
-#include <vcg/simplex/faceplus/base.h>
+#include <vcg/simplex/vertex/base.h>
+#include <vcg/simplex/face/base.h>
 #include <vcg/complex/trimesh/base.h>
 
 /*include the algorihm that update bounding box and normals*/

@@ -43,10 +43,10 @@ Initial Relase
 #include <vector>
 
 /*include the base definition for the vertex */
-#include <vcg/simplex/vertexplus/base.h>
+#include <vcg/simplex/vertex/base.h>
 
 /*include the base definition for the face */
-#include <vcg/simplex/faceplus/base.h>
+#include <vcg/simplex/face/base.h>
 
 /*include the base definition for the trimesh*/
 #include <vcg/complex/trimesh/base.h>
@@ -73,7 +73,7 @@ class CEdge;    // dummy prototype never used
 class CFace;
 
 /* define a vertex passing the attributes you want it to have. Each attributes has its own class.
-Check vcg/simplex/vertexplus/component.h to find out the existing attributes. Note: then you could 
+Check vcg/simplex/vertex/component.h to find out the existing attributes. Note: then you could 
 also personalized attributes */
 class CVertex : public VertexSimp2< CVertex, CEdge, CFace, vertex::Coord3f, vertex::Normal3f >{};
 

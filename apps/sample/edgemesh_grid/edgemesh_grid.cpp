@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <vcg/space/color4.h>
 #include <vcg/space/index/grid_static_ptr.h>
-#include <vcg/simplex/vertexplus/base.h>
-#include <vcg/simplex/vertexplus/component.h>
-#include <vcg/simplex/edgeplus/base.h>
-#include <vcg/simplex/edgeplus/component.h>
+#include <vcg/simplex/vertex/base.h>
+#include <vcg/simplex/vertex/component.h>
+#include <vcg/simplex/edge/base.h>
+#include <vcg/simplex/edge/component.h>
 #include <vcg/complex/edgemesh/base.h>
 #include <vcg/complex/edgemesh/allocate.h>
 #include <vcg/complex/edgemesh/update/bounding.h>
@@ -15,7 +15,7 @@
 //
 class MyFace;
 class MyEdge;
-class MyVertex  : public vcg::VertexSimp2<MyVertex,MyEdge, MyFace,vcg::vert::BitFlags,vcg::vert::Coord3f> {};
+class MyVertex  : public vcg::VertexSimp2<MyVertex,MyEdge, MyFace,vcg::vertex::BitFlags,vcg::vertex::Coord3f> {};
 class MyEdge    : public vcg::EdgeSimp2<MyVertex,MyEdge, MyVertex,vcg::edge::Mark,vcg::edge::VertexRef,vcg::edge::BitFlags> {};
 class MyEdgeMesh: public vcg::edg::EdgeMesh< std::vector<MyVertex>, std::vector<MyEdge> > {};
 

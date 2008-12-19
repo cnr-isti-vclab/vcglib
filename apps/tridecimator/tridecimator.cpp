@@ -7,8 +7,8 @@
 using namespace std;
 
 // stuff to define the mesh
-#include <vcg/simplex/vertexplus/base.h>
-#include <vcg/simplex/faceplus/base.h>
+#include <vcg/simplex/vertex/base.h>
+#include <vcg/simplex/face/base.h>
 #include <vcg/simplex/edge/edge.h>
 #include <vcg/complex/trimesh/base.h>
 

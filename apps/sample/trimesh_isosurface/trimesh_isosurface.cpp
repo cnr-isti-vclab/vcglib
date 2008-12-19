@@ -3,8 +3,8 @@
 #include <vcg/space/point3.h>
 #include <vcg/space/box3.h>
 #include <vcg/math/perlin_noise.h>
-#include <vcg/simplex/vertexplus/base.h>
-#include <vcg/simplex/faceplus/base.h>
+#include <vcg/simplex/vertex/base.h>
+#include <vcg/simplex/face/base.h>
 #include <vcg/complex/trimesh/base.h>
 #include <vcg/complex/trimesh/allocate.h>
 #include <vcg/complex/trimesh/create/marching_cubes.h>

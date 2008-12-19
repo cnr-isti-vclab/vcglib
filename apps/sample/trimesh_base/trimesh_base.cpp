@@ -1,51 +1,52 @@
-#include<iostream>
+#include <vector>
 
-#include<vcg/complex/trimesh/base.h>
-#include<vcg/simplex/vertexplus/base.h>
-#include<vcg/simplex/vertexplus/component.h>
-#include<vcg/simplex/faceplus/base.h>
-#include<vcg/simplex/faceplus/component.h>
-#include<vcg/complex/trimesh/update/normal.h>
-#include<vcg/complex/trimesh/create/platonic.h>
+#include<vcg/simplex/vertex/base.h>//
+#include<vcg/simplex/vertex/component.h>
+#include<vcg/simplex/face/base.h>//
+#include<vcg/simplex/face/component.h>
+#include<vcg/simplex/face/topology.h>//
+#include<vcg/complex/trimesh/base.h>//
 
-#include<vcg/space/color4.h>
+// input output
+#include<wrap/io_trimesh/import.h>
+#include<wrap/io_trimesh/export.h>//just in case
 
-class AFace;
-class AVertex;
-class AEdge;   // dummy prototype never used
-class AVertex  : public vcg::VertexSimp2< AVertex, AEdge, AFace, vcg::vertex::Coord3f>{};
-class AFace    : public vcg::FaceSimp2< AVertex, AEdge, AFace, vcg::face::VertexRef,vcg::face::Color4b,vcg::face::Normal3f> {};
+// topology computation
+#include<vcg/complex/trimesh/update/topology.h>//
+#include<vcg/complex/trimesh/update/flag.h>//
 
-class AMesh : public vcg::tri::TriMesh< std::vector<AVertex>, std::vector<AFace> > {};
+// half edge iterators
+//#include<vcg/simplex/face/pos.h>
 
-class CFace;
-class CVertex;
-class CEdge;   // dummy prototype never used
-class CVertex  : public vcg::VertexSimp2< CVertex, CEdge, CFace, vcg::vertex::Coord3f,vcg::vertex::Normal3f>{};
-class CFace    : public vcg::FaceSimp2< CVertex, CEdge, CFace, vcg::face::VertexRef, vcg::face::Normal3f> {};
+// normals and curvature
+#include<vcg/complex/trimesh/update/normal.h> //class UpdateNormals 
+#include<vcg/complex/trimesh/update/curvature.h> //class curvature
 
-class CMesh : public vcg::tri::TriMesh< std::vector<CVertex>, std::vector<CFace> > {};
+using namespace vcg;
+using namespace std;
 
-int main(int , char **)
+class MyEdge; // dummy prototype
+class MyFace;
+class MyVertex;
+
+class MyVertex  : public VertexSimp2< MyVertex, MyEdge, MyFace, vertex::Coord3f, vertex::Normal3f, vertex::BitFlags  >{};
+class MyFace    : public FaceSimp2  < MyVertex, MyEdge, MyFace, face::FFAdj,  face::VertexRef, face::BitFlags > {};
+class MyMesh    : public vcg::tri::TriMesh< vector<MyVertex>, vector<MyFace> > {};
+
+int main( int argc, char **argv ) {
+MyMesh m;
+// this is the section with problems
+if(vcg::tri::io::ImporterPLY<MyMesh>::Open(m,argv[1])!=0)
 {
-  AMesh am;
-  CMesh cm;
-	vcg::tri::Tetrahedron(cm);
-	vcg::tri::Tetrahedron(am);
-  
-	std::cout << "Generated mesh has " << cm.vn << " vertices and " << cm.fn << " triangular faces" << std::endl;
-  
-  /// Calculates both vertex and face normals.
-  /// The normal of a vertex v is the weigthed average of the normals of the faces incident on v.
-  /// normals are not normalized
-	vcg::tri::UpdateNormals<CMesh>::PerVertexPerFace(cm);
-	std::cout << "[cm mesh] Normal of face 0 is [" << cm.face[0].N()[0] << "," << cm.face[0].N()[1] << ","  << cm.face[0].N()[2] << "]" << std::endl;
-	std::cout << "[cm mesh] Normal of vertex 0 is [" << cm.vert[0].N()[0] << "," << cm.vert[0].N()[1] << ","  << cm.vert[0].N()[2] << "]" << std::endl;
-  
-	/// Calculates face normals.
-  /// normals are not normalized
-	vcg::tri::UpdateNormals<AMesh>::PerFace(am); 
-	std::cout << "[am mesh] Normal of face 0 is [" << cm.face[0].N()[0] << "," << cm.face[0].N()[1] << ","  << cm.face[0].N()[2] << "]" << std::endl;
+printf("Error reading file  %s\n",argv[1]);
+exit(0);
+} // from here no problems
 
-  return 0;
+vcg::tri::UpdateTopology<MyMesh>::FaceFace(m);
+vcg::tri::UpdateFlags<MyMesh>::FaceBorderFromFF(m);
+vcg::tri::UpdateNormals<MyMesh>::PerVertexNormalized(m);
+printf("Input mesh  vn:%i fn:%i\n",m.vn,m.fn);
+printf( "Mesh has %i vert and %i faces\n", m.vn, m.fn );
+
+return 0;
 }

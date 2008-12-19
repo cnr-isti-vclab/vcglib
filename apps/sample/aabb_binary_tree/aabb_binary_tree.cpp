@@ -7,9 +7,9 @@
 // vcg headers
 //#include<vcg/simplex/vertex/vertex.h>
 //#include<vcg/simplex/face/with/rtfmfn.h>
-#include<vcg/simplex/vertexplus/base.h>
-#include<vcg/simplex/faceplus/base.h>
-#include<vcg/simplex/faceplus/component_rt.h>
+#include<vcg/simplex/vertex/base.h>
+#include<vcg/simplex/face/base.h>
+#include<vcg/simplex/face/component_rt.h>
 
 #include<vcg/simplex/face/distance.h>
 #include<vcg/complex/trimesh/base.h>

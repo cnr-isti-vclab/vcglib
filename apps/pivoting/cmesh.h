@@ -1,8 +1,8 @@
 #ifndef CLOTH_MESH_H
 #define CLOTH_MESH_H
 
-#include <vcg/simplex/vertexplus/base.h>
-#include <vcg/simplex/faceplus/base.h>
+#include <vcg/simplex/vertex/base.h>
+#include <vcg/simplex/face/base.h>
 #include <vcg/simplex/face/pos.h>
 #include <vcg/simplex/face/topology.h>
 #include <vcg/complex/trimesh/base.h>

@@ -30,9 +30,9 @@ first draft. Working but  ugly interface. right mouse of the button to place a p
 */
 #pragma once
 /** the definition of vertex */
-#include<vcg/simplex/vertexplus/base.h>						
+#include<vcg/simplex/vertex/base.h>						
 /** the definition of face */
-#include<vcg/simplex/faceplus/base.h>
+#include<vcg/simplex/face/base.h>
 /** definition of triangle mesh */
 #include<vcg/complex/trimesh/base.h>
 

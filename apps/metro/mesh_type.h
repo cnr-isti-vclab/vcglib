@@ -44,11 +44,11 @@ just color and quality on the vertex
 #include <vcg/complex/trimesh/base.h>
 
 // Vertex, Face, Mesh and Grid definitions.
-#include <vcg/simplex/vertexplus/base.h>
-#include <vcg/simplex/vertexplus/component.h>
-#include <vcg/simplex/faceplus/base.h>
-#include <vcg/simplex/faceplus/component.h>
-#include <vcg/simplex/faceplus/component_rt.h>
+#include <vcg/simplex/vertex/base.h>
+#include <vcg/simplex/vertex/component.h>
+#include <vcg/simplex/face/base.h>
+#include <vcg/simplex/face/component.h>
+#include <vcg/simplex/face/component_rt.h>
 class MyEdge;
 class CFace;
 class CVertex   : public vcg::VertexSimp2<CVertex,MyEdge,CFace,vcg::vertex::Coord3d,vcg::vertex::Qualityf,vcg::vertex::Normal3d,vcg::vertex::Color4b,vcg::vertex::BitFlags> {};

@@ -3,10 +3,10 @@
 using namespace std;
 
 // VCG headers for triangular mesh processing
-#include<vcg/simplex/edgeplus/base.h>
-#include<vcg/simplex/edgeplus/component.h>
-#include<vcg/simplex/vertexplus/base.h>
-#include<vcg/simplex/faceplus/base.h>
+#include<vcg/simplex/edge/base.h>
+#include<vcg/simplex/edge/component.h>
+#include<vcg/simplex/vertex/base.h>
+#include<vcg/simplex/face/base.h>
 #include <vcg/complex/trimesh/base.h>
 #include <vcg/complex/trimesh/update/topology.h>
 #include <vcg/complex/trimesh/update/edges.h>
