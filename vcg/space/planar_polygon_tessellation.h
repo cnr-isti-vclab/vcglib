@@ -116,12 +116,12 @@ namespace vcg {
 		typedef typename Point3x::ScalarType S;
 		Point3x n;
 
-		math::RandomGenerator rg;
+		math::SubtractiveRingRNG rg;
 		int i12[2];
 		S bestsn = -1.0;
 		Point3x bestn,u,v;
 		for(int i  =0; i < points.size();++i){
-			for(int j = 0; j < 2; ++j){ i12[j] = i; while(i12[j]==i) i12[j] = rg(points.size()-1);}
+			for(int j = 0; j < 2; ++j){ i12[j] = i; while(i12[j]==i) i12[j] = rg.generate(points.size()-1);}
 			n = (points[i12[0]]-points[i])^(points[i12[1]]-points[i]);
 			S sn = n.SquaredNorm();
 			if(sn > bestsn){ bestsn = sn; bestn = n;} 
