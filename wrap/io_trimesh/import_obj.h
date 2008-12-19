@@ -402,7 +402,7 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 				}
 				
 				// verifying validity of vertex indices
-				vector<int> tmp = ff.v;
+				std::vector<int> tmp = ff.v;
 				std::sort(tmp.begin(),tmp.end());
 				std::unique(tmp.begin(),tmp.end());
 				if(tmp.size() != ff.v.size())
