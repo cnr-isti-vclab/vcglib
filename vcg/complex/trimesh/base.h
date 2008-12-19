@@ -141,7 +141,7 @@ Initial commit
 #include <vcg/math/shot.h>
 
 #include <vcg/container/simple_temporary_data.h>
-#include <vcg/simplex/edgeplus/base.h>
+#include <vcg/simplex/edge/base.h>
 /*
 People should subclass his vertex class from these one...
 */

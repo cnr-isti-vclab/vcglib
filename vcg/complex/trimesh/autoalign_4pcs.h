@@ -41,8 +41,8 @@ used in the paper pseudocode.
 #include <vcg/complex/trimesh/closest.h>
 #include <vcg/complex/trimesh/update/bounding.h>
 
-#include <vcg/simplex/vertexplus/base.h>
-#include <vcg/simplex/faceplus/base.h>
+#include <vcg/simplex/vertex/base.h>
+#include <vcg/simplex/face/base.h>
 #include <vcg/complex/trimesh/base.h>
 #include <vcg/complex/trimesh/stat.h>
 #include <wrap/io_trimesh/export_ply.h>

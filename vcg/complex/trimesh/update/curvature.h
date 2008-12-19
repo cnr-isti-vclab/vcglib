@@ -36,7 +36,7 @@ Revision 1.5  2008/03/25 11:00:56  ganovelli
 fixed  bugs sign of principal direction and mean curvature value
 
 Revision 1.4  2008/03/17 11:29:59  ganovelli
-taubin and desbrun estimates added (-> see vcg/simplex/vertexplus/component.h [component_ocf.h|component_occ.h ]
+taubin and desbrun estimates added (-> see vcg/simplex/vertex/component.h [component_ocf.h|component_occ.h ]
 
 Revision 1.3  2006/02/27 18:02:57  ponchio
 Area -> doublearea/2
