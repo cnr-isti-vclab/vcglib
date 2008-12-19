@@ -14,6 +14,7 @@ SUBDIRS       = trimesh_base  \
                 trimesh_intersection \
                 trimesh_ball_pivoting \
                 trimesh_hole \
+                polygonmesh_base \
                 aabb_binary_tree \
                 edgemesh_grid \
 		    trimesh_attribute
