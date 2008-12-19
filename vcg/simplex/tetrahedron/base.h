@@ -24,138 +24,229 @@
   History
 
 $Log: not supported by cvs2svn $
-Revision 1.15  2006/07/06 12:46:19  ganovelli
-added GeometicType e SmallestEnclosingSphere
+Revision 1.1  2007/05/09 10:31:53  ganovelli
+added
 
-Revision 1.14  2005/12/12 11:10:36  ganovelli
-modifications to compile with gcc
-
-Revision 1.13  2004/10/04 17:07:58  pietroni
-changed Q() function
-
-Revision 1.12  2004/09/01 12:18:39  pietroni
-minor changes to comply gcc compiler (typename's )
-
-Revision 1.11  2004/08/26 13:15:23  pietroni
-added IsS() function
-
-Revision 1.10  2004/07/09 10:13:00  ganovelli
-C() ,Q() ,hastetracolor(),hasqualityt()....
-plus some misuse of tetra3 corrected
-
-Revision 1.9  2004/07/08 08:43:22  pietroni
-changed functions used to compute the aspect ratio
-
-Revision 1.8  2004/05/20 13:04:23  pietroni
-modified setBorderV function
-
-Revision 1.7  2004/05/14 11:48:43  pietroni
-templated with also tetratype...
-
-Revision 1.6  2004/05/14 11:07:36  turini
-Changed swap in std::swap.
-
-Revision 1.5  2004/05/06 15:29:42  pietroni
-changed names to topology functions
-
-Revision 1.4  2004/04/28 11:37:14  pietroni
-*** empty log message ***
-
-Revision 1.3  2004/04/26 09:38:54  pietroni
-*** empty log message ***
-
-Revision 1.2  2004/04/20 12:42:37  pietroni
-*** empty log message ***
-
-Revision 1.1  2004/04/15 08:54:20  pietroni
-*** empty log message ***
 
 
 ****************************************************************************/
+#ifndef __VCG_TETRA_PLUS
+#define __VCG_TETRA_PLUS
 
-#ifndef TETRA_TYPE 
-#pragma message("\nYou should never directly include this file\_n")
-#else
-
-#include<vcg/space/point3.h>
-#include<vcg/space/tetra3.h>
-#include<vcg/space/sphere3.h>
+#include <vcg/space/point3.h>
+#include <vcg/space/texcoord2.h>
+#include <vcg/space/color4.h>
+#include <vcg/simplex/tetrahedronplus/component.h>
 
 namespace vcg {
-/**
-    \ingroup tetrahedron
-    @name Tetrahedron
-    Class Tetrahedron.
-    This is the base class for definition of a Tetrahedron of the mesh.
-	@param VTYPE (Template Parameter) Specifies the type for the vertex.
- */
 
-template < class VTYPE, class TTYPE >
-class TETRA_TYPE{
+/*------------------------------------------------------------------*/ 
+/* 
+The base class of all the recusive definition chain. It is just a container of the typenames of the various simplexes.
+These typenames must be known form all the derived classes.
+*/
 
-public:
-
-  ///	The base type of the face
-	typedef TETRA_TYPE BaseTetraType;
-	/// The vertex type 
-	typedef  VTYPE VertexType;
-  /// The coordinate type used to represent the point (i.e. Point3f, Point3d, ...)
+template <class BVT, class BET, class BFT, class BTT>
+class TetraTypeHolder{
+  public:
+  typedef BVT VertexType;
   typedef typename VertexType::CoordType CoordType;
-  /// The scalar type used to represent coords (i.e. float, double, ...)
-	typedef typename VertexType::ScalarType ScalarType;
-	/// The geometric type of the tetrahedron
-	typedef Tetra3<ScalarType> GeometricType;
+  typedef typename VertexType::ScalarType ScalarType;
+  typedef BET EdgeType;
+  typedef BFT FaceType;
+  typedef BTT TetraType;
+  typedef BVT *VertPointer;
+  typedef BET *EdgePointer;
+  typedef BFT *FacePointer;
+  typedef BTT *TetraPointer;
+  static void Name(std::vector<std::string> & name){}
 
+
+ // prot
  
-/***********************************************/
-/** @name Tetrahedron Flags
-For each Tetrahedron we store a set of boolean values packed in a int. 
-The default value for each flag is 0. Most commonly used flags are the \a deleted and the \a selected ones. 
-Users can ask and dispose for a bit for their own purposes with the  vcg::TetrahedronFull::NewUserBit() and vcg::TetrahedronFull::DeleteUserBit() functions. 
-The value returned by these functions has to be passed to the 
-vcg::TetrahedronFull::SetUserBit() vcg::TetrahedronFull::ClearUserBit() and vcg::TetrahedronFull::IsUserBit() functions to check and modify the obtained bit flag.
+};
 
-**/
-//@{
+/* The base class form which we start to add our components.
+it has the empty definition for all the standard members (coords, color flags)
+Note:
+in order to avoid both virtual classes and ambiguous definitions all 
+the subsequent overrides must be done in a sequence of derivation.
 
-/// This are the flags of tetrahedron, the default value is 0
-	int  _flags;
- 
-  enum {
-	DELETED     = 0x00000001,	 // deleted tetrahedron flag
-	SELECTED		= 0x00000002,	 // Selection flag
-	BORDERF0    = 0x00000004,  // Border flag, Face 0
-	BORDERF1    = 0x00000008,  // Border flag, Face 1
-	BORDERF2    = 0x00000010,  // Border flag, Face 2
-  BORDERF3    = 0x00000020,  // Border flag, Face 3
-  BORDERE0    = 0x00000040,  // Border flag, Edge 0
-	BORDERE1    = 0x00000080,  // Border flag, Edge 1
-	BORDERE2    = 0x00000100,  // Border flag, Edge 2
-  BORDERE3    = 0x00000200,  // Border flag, Edge 3
-  BORDERE4    = 0x00000400,  // Border flag, Edge 4
-  BORDERE5    = 0x00000800,  // Border flag, Edge 5
-	USER0				= 0x00001000,  // new flag for user
-	};
+In other words we cannot derive and add in a single derivation step 
+(with multiple ancestor), both the real (non-empty) normal and color but 
+we have to build the type a step a time (deriving from a single ancestor at a time). 
 
+
+*/ 
+template <class BVT, class BET=DumET, class BFT=DumFT, class BTT=DumTT>
+class TetraBase: public  tetra::EmptyVertexRef<
+                         tetra::EmptyAdj<
+                         TetraTypeHolder <BVT, BET, BFT, BTT> > > {
+};
+
+
+
+// Metaprogramming Core
+
+template <class BVT, class BET, class BFT,class BTT,
+          template <typename> class A> 
+          class TetraArity1: public A<TetraBase<BVT,BET,BFT,BTT> > {};
+
+template <class BVT, class BET, typename BFT, class BTT,
+          template <typename> class A, template <typename> class B> 
+          class TetraArity2: public B<TetraArity1<BVT,BET,BFT,BTT, A> > {};
+
+template <class BVT, class BET, typename BFT,class BTT,
+          template <typename> class A, template <typename> class B, 
+          template <typename> class C > 
+          class TetraArity3: public C<TetraArity2<BVT,BET,BFT,BTT, A, B> > {};
+
+template <class BVT, class BET, typename BFT,class BTT,
+          template <typename> class A, template <typename> class B, 
+          template <typename> class C, template <typename> class D> 
+          class TetraArity4: public D<TetraArity3<BVT,BET,BFT,BTT, A, B, C> > {};
+
+template <class BVT, class BET, typename BFT,class BTT,
+          template <typename> class A, template <typename> class B, 
+          template <typename> class C, template <typename> class D,
+          template <typename> class E > 
+          class TetraArity5: public E<TetraArity4<BVT,BET,BFT,BTT, A, B, C, D> > {};
+
+template <class BVT, class BET, typename BFT,class BTT,
+          template <typename> class A, template <typename> class B, 
+          template <typename> class C, template <typename> class D,
+          template <typename> class E, template <typename> class F > 
+          class TetraArity6: public F<TetraArity5<BVT,BET,BFT,BTT, A, B, C, D, E> > {};
+
+template <class BVT, class BET, typename BFT,class BTT,
+          template <typename> class A, template <typename> class B, 
+          template <typename> class C, template <typename> class D,
+          template <typename> class E, template <typename> class F, 
+          template <typename> class G  > 
+          class TetraArity7: public G<TetraArity6<BVT,BET,BFT,BTT, A, B, C, D, E, F> > {};
+
+template <class BVT, class BET, typename BFT,class BTT,
+          template <typename> class A, template <typename> class B, 
+          template <typename> class C, template <typename> class D,
+          template <typename> class E, template <typename> class F, 
+          template <typename> class G, template <typename> class H  > 
+          class TetraArity8: public H<TetraArity7<BVT,BET,BFT,BTT, A, B, C, D, E, F, G> > {};
+
+/* The Real Big Face class;
+
+The class __FaceArityMax__ is the one that is the Last to be derived,
+and therefore is the only one to know the real members 
+(after the many overrides) so all the functions with common behaviour 
+using the members defined in the various Empty/nonEmpty component classes 
+MUST be defined here. 
+
+I.e. IsD() that uses the overridden Flags() member must be defined here.
+
+*/
+
+template <class BVT, class BET, typename BFT,class BTT,
+          template <typename> class A, template <typename> class B, 
+          template <typename> class C, template <typename> class D, 
+          template <typename> class E, template <typename> class F,
+          template <typename> class G, template <typename> class H,
+          template <typename> class I  > 
+          class TetraArityMax: public I<TetraArity8<BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H> > {
+
+// ----- Flags stuff -----
 public:
-  	/// Return the vector of _flags
-	inline int & Flags ()
-	{
-			assert( (_flags & DELETED) == 0 );
-			return _flags;
+  
+	inline int & UberFlags ()
+	{ 
+			return this->Flags();
 	}
+	inline const int UberFlags() const
+	{
+		return this->Flags();
+	}
+   	enum { 
+		
+		DELETED     = 0x00000001,		// Face is deleted from the mesh
+		NOTREAD     = 0x00000002,		// Face of the mesh is not readable
+		NOTWRITE    = 0x00000004,		// Face of the mesh is not writable
+    VISITED     = 0x00000010,		// Face has been visited. Usualy this is a per-algorithm used bit. 
+		SELECTED    = 0x00000020,		// Face is selected. Algorithms should try to work only on selected face (if explicitly requested)
+		// Border _flags, it is assumed that BORDERi = BORDER0<<i 
+		BORDER0     = 0x00000040,
+		BORDER1     = 0x00000080,
+		BORDER2     = 0x00000100,
+		BORDER3     = 0x00000200,
+		// Crease _flags,  it is assumed that FEATUREi = FEATURE0<<i 
+		// First user bit
+		USER0       = 0x00004000
+			};
 
+ 
+ 	///  checks if the Face is deleted
+	bool IsD() const {return (this->Flags() & DELETED) != 0;}
+	///  checks if the Face is readable
+	bool IsR() const {return (this->Flags() & NOTREAD) == 0;}
+	///  checks if the Face is modifiable
+	bool IsW() const {return (this->Flags() & NOTWRITE)== 0;}
+	/// This funcion checks whether the Face is both readable and modifiable
+	bool IsRW() const {return (this->Flags() & (NOTREAD | NOTWRITE)) == 0;}
+	///  checks if the Face is Modified
+	bool IsS() const {return (this->Flags() & SELECTED) != 0;}
+	///  checks if the Face is Modified
+	bool IsV() const {return (this->Flags() & VISITED) != 0;}
+	
+	/** Set the flag value
+		@param flagp Valore da inserire nel flag
+	*/
+	void SetFlags(int flagp) {this->Flags()=flagp;}
+
+	/** Set the flag value
+		@param flagp Valore da inserire nel flag
+	*/
+	void ClearFlags() {this->Flags()=0;}
+
+	///  deletes the Face from the mesh
+	void SetD() {this->Flags() |=DELETED;}
+	///  un-delete a Face
+	void ClearD() {this->Flags() &=(~DELETED);}
+	///  marks the Face as readable
+	void SetR() {this->Flags() &=(~NOTREAD);}
+	///  marks the Face as not readable
+	void ClearR() {this->Flags() |=NOTREAD;}
+	///  marks the Face as writable
+	void SetW() {this->Flags() &=(~NOTWRITE);}
+	///  marks the Face as notwritable
+	void ClearW() {this->Flags() |=NOTWRITE;}
+	///  select the Face
+	void SetS()		{this->Flags() |=SELECTED;}
+	/// Un-select a Face
+  void ClearS()	{this->Flags() &= ~SELECTED;}
+	///  select the Face
+	void SetV()		{this->Flags() |=VISITED;}
+	/// Un-select a Face
+  void ClearV()	{this->Flags() &= ~VISITED;}
+	
+	/// This function checks if the face is selected
+	bool IsB(int i) const {return (this->Flags() & (BORDER0<<i)) != 0;}
+	/// This function select the face
+  void SetB(int i)		{this->Flags() |=(BORDER0<<i);}
+	/// This funcion execute the inverse operation of SetS()
+	void ClearB(int i)	{this->Flags() &= (~(BORDER0<<i));}
+	
+///  Return the first bit that is not still used
 static int &LastBitFlag()
 		{
 			static int b =USER0;
 			return b;
 		}
-static inline int NewBitFlag()
-		{
-			LastBitFlag()=LastBitFlag()<<1;
-			return LastBitFlag();
-		}
-static inline bool DeleteBitFlag(int bitval)
+
+    /// allocate a bit among the flags that can be used by user.
+    static inline int NewBitFlag()
+		    {
+			    LastBitFlag()=LastBitFlag()<<1;
+			    return LastBitFlag();
+		    }
+    // de-allocate a bit among the flags that can be used by user.
+    static inline bool DeleteBitFlag(int bitval)
 		{	
 			if(LastBitFlag()==bitval) {
 					LastBitFlag()= LastBitFlag()>>1;
@@ -164,381 +255,72 @@ static inline bool DeleteBitFlag(int bitval)
 			assert(0);
 			return false;
 		}
+	/// This function checks if the given user bit is true
+	bool IsUserBit(int userBit){return (this->Flags() & userBit) != 0;}
+	/// This function set  the given user bit 
+	void SetUserBit(int userBit){this->Flags() |=userBit;}
+	/// This function clear the given user bit 
+	void ClearUserBit(int userBit){this->Flags() &= (~userBit);}
 
-	/// Get the flags without any control
-	inline int & UberFlags()
-	{
-		return _flags;
-	}
-
-/// This function checks if the given user bit is true.
-bool IsUserBit(int userBit){return (_flags & userBit) != 0;}
-/// This function set  the given user bit.
-void SetUserBit(int userBit){_flags |=userBit;}
-/// This function clear the given user bit.
-void ClearUserBit(int userBit){_flags &= (~userBit);}
-/// This function checks if the tetrahedron is deleted.
-bool IsD() const {return (_flags & DELETED) != 0;}
-/// This function mark the tetrahedron as deleted.
-void SetD()		{_flags |=DELETED;}
-/// This function mark the tetrahedron as not deleted.
-void ClearD() {_flags &=~DELETED;}
-/// This answer true if a tetrahedron is selected
-bool IsS() const {return (_flags & SELECTED) != 0;}
-/// This function mark the tetrahedron as selected.
-void SetS() {_flags |=SELECTED;}
-/// This function mark the tetrahedron as not selected.
-void ClearS() {_flags &=~SELECTED;}
-/// This function return true if one face is extern.
-bool HaveBorderF() {return ((_flags & (BORDERF0 | BORDERF1 | BORDERF2 | BORDERF3)) != 0);}
-/// This function return true if the face is extern.
-bool IsBorderF(int face) {
-  assert ((face<4)&&(face>-1));
-  return (this->TTp(face) == this);
-}
- //@}
-
-/***********************************************/
-/** @name Vertex Pointers
-For each Tetrahedron we store 4 pointers to vertex
-**/
-//@{
- /// The 4 vertices of the tetrahedron
-protected:
-	VertexType *_v[4];
-public:
- 
-/** Return the pointer to the j-th vertex of the terahedron.
-		@param j Index of the tetrahedron's vertex.
-	 */
-	inline VertexType * & V( const int j )
-	{	
-		assert( (_flags & DELETED) == 0 );
-		assert(j >= 0);
-		assert(j <  4);
-		return _v[j];
-	}
-
-	inline const VertexType * const & V( const int j ) const
-	{
-		assert( (_flags & DELETED) == 0 );
-		assert(j>=0);
-		assert(j<4);
-		return _v[j];
-	}
-  
-	inline const VertexType * const & cV( const int j ) const
-	{
-		assert( (_flags & DELETED) == 0 );
-		assert(j>=0);
-		assert(j<4);
-		return _v[j];
-	}
-
-	inline CoordType & P( const int j ) { return V(j)->P();}
-	inline const CoordType & cP( const int j ) const { return V(j)->cP();}
-
-
-/***********************************************/
-/** @name Topology Structures
-For each Tetrahedron we store 2 array for Tatrahedron - Tetrahedron topology ( sharing Face)
-and 2 array to implement the list of Vertex - Tetrahedron Topology (List of Tetrahedron sharing a vertex).
-**/
-//@{
-
-
-#ifdef __VCGLIB_TETRA_AT
-protected:
-  ///pointers to tetrahedron for tetrahedron-tetrahedron topology (sharing same face)
-	TTYPE *_ttp[4];
-  ///index of face for tetrahedron-tetrahedron topology (sharing same face)
-	int _tti[4]; 
-public:
-  ///Function to access the Tetrahedron that share the index-face (extern face returns a pointer to himself)
-  	TTYPE *&TTp(const int &index)
-	{
-		return _ttp[index];
-	}
-  ///Function to see the index of the face as seen from the other tetrahedron (extern face returns -1)
-	int &TTi(const int &index)
-	{
-		return _tti[index];
-	}
-#endif 
-
-#ifdef __VCGLIB_TETRA_AV
-protected:
-	///pointers to tetrahedron for vertex-tetrahedron topology (sharing same vertex)
-	TTYPE *_tvp[4];
-  ///index of vertex for vertex-tetrahedron topology (sharing same vertex)
-	short int _tvi[4];
-public:
-  ///Function to access the Next Tetrahedron of the list that share the index-face (end of list is Null)
-  	TTYPE *&TVp(const int &index)
-	{
-		return _tvp[index];
-	}
-  ///Function to see the index of the Vertex as seen from the next tetrahedron of the list ( end of list is -1)
-	short int &TVi(const int &index)
-	{
-		return _tvi[index];
-	}
-#endif
-//@}
-
-/***********************************************/
-/** @Default Tatrahedron Functions**/
-//@{
-public:
-
-  ///Constructor
-	TETRA_TYPE()
-	{	
-		_flags=0;
-	}
-  ///initialize default parameters of tetrahedron
-	virtual 	void Init(VertexType * p0,VertexType * p1,VertexType * p2,VertexType * p3)
-				{
-					_flags = 0;
-					_v[0]=p0;
-					_v[1]=p1;
-					_v[2]=p2;
-					_v[3]=p3;
-
-					if(vcg::ComputeVolume(*this)<0 )
-						std::swap(_v[1],_v[2]);
-
-#ifdef		__VCGLIB_TETRA_TA
-					_z[0]=_z[1]=_z[2]=_z[3]=-1;
-					_t[0]=_t[1]=_t[2]=_t[3]=NULL;
-#endif
-#ifdef		__VCGLIB_TETRA_TV
-					_zv[0]=_zv[1]=_zv[2]=_zv[3]=-1;
-					_tv[0]=_tv[1]=_tv[2]=_tv[3]=NULL;
-#endif					
-
-#ifdef __VCGLIB_TETRA_TQ
-          ComputeAspectRatio();
-#endif
-
-			}
- ///set border vertices using TT-topology
-#ifdef __VCGLIB_TETRA_AT
-	void setBorderV()
-	{	
-		int i;
-    for (i=0;i<4;i++)
-			if (TTp(i)==this)
-			{
-        V(Tetra::VofF(i,0))->SetB();
-				V(Tetra::VofF(i,1))->SetB();
-				V(Tetra::VofF(i,2))->SetB();
-			}  
+ template<class BoxType>
+  void GetBBox( BoxType & bb ) const
+  {
+	  bb.Set(this->P(0));
+	  bb.Add(this->P(1));
+	  bb.Add(this->P(2));
   }
-#endif
-//@}
-
-/***********************************************/
-/** @Generic geometric and quality funtions of a tetrahedron**/
-//@{
-#ifdef __VCGLIB_TETRA_TN
-private:
-  CoordType _n[4];
-public:
-#endif
-
-///return the normal of a face of the tetrahedron
-  CoordType N(const int &i){
-    assert((i>=0)&&(i<4));
-  #ifdef __VCGLIB_TETRA_TN		
-      return _n[i];
-    #else	  
- /* Tetra3<ScalarType> T=Tetra3<ScalarType>();
-   T.P0(0)=V(0)->P();
-   T.P1(0)=V(1)->P();
-   T.P2(0)=V(2)->P();
-   T.P3(0)=V(3)->P();*/
-
-  return (Normal(*this,i));
-  #endif
-		}	
-
- /// Calculate the normal to all the faces of a tetrahedron, the value is store in a position of vecton _n for each face
-void ComputeNormal() 
-{
-#ifdef __VCGLIB_TETRA_TN
-   Tetra3<ScalarType> T=Tetra3<ScalarType>();
-   T.P0(0)=V(0)->P();
-   T.P1(0)=V(1)->P();
-   T.P2(0)=V(2)->P();
-   T.P3(0)=V(3)->P();
-   
-	for (int i=0;i<4;i++)
-      _n[i]=(Normal<Tetra3<ScalarType> >(T,i));
-#else
-	assert(0);
-#endif
-}
-//@}
-
-/***********************************************/
-/** @Generic geometric and quality funtions of a tetrahedron**/
-//@{
-
-#ifdef __VCGLIB_TETRA_TQ
-		ScalarType _volume;	
-		ScalarType _aspect_ratio;
-		ScalarType _q;
-#endif
-
-		ScalarType & Q(){
-#ifdef __VCGLIB_TETRA_TQ
-          return _q;
-#else
-			assert(0);
-			return *(ScalarType*)(&_flags);
-#endif
-		}
-
-const 		ScalarType & Q()const{
-#ifdef __VCGLIB_TETRA_TQ
-          return _q;
-#else
-			assert(0);
-			return *(ScalarType*)(&_flags);
-#endif
-		}
-
- 	ScalarType ComputeVolume(){
-      #ifdef __VCGLIB_TETRA_TQ
-			_volume = vcg::ComputeVolume<BaseTetraType>(*this);
-      return _volume;
-      #else
-			return vcg::ComputeVolume<BaseTetraType>(*this);
-      #endif
-		}
-
-	///return the volume of the tetrahedron
-	const ScalarType & Volume(){
-#ifdef __VCGLIB_TETRA_TQ
-		return _volume;
-#else
-		return (( V(2)->cP()-V(0)->cP())^(V(1)->cP()-V(0)->cP() ))*(V(3)->cP()-V(0)->cP())/6.0;
-#endif
-		}	
-  ///return aspect ratio of the tetrahedron
-	ScalarType AspectRatio(){
-#ifdef __VCGLIB_TETRA_TQ
-		return _aspect_ratio;
-#else
-		return ComputeAspectRatio();
-#endif
-		}
-
-///set if exist local value of aspect ratio
-ScalarType ComputeAspectRatio(){
-
-    //Tetra3<ScalarType> T=Tetra3<ScalarType>();
-    //T.P0(0)=V(0)->cP();
-    //T.P1(0)=V(1)->cP();
-    //T.P2(0)=V(2)->cP();
-    //T.P3(0)=V(3)->cP();
-
-	
-#ifdef __VCGLIB_TETRA_TQ
-		 _aspect_ratio= ( (Tetra3<ScalarType>* ) this) -> ComputeAspectRatio();
-     return(_aspect_ratio);
-#else
-		return (( (Tetra3<ScalarType> *) this) -> ComputeAspectRatio());
-#endif
-		}
-
-CoordType Barycenter() const
-{
-	return (V(0)->cP()+V(1)->cP()+V(2)->cP()+V(3)->cP())/ScalarType(4.0);
-}
-
-Sphere3<ScalarType> SmallestEnclosingSphere()const 
-{
-	return SmallestEnclosing::SphereOfTetra(*this);
-}
-
-//@}
 
 
-/***********************************************/
- /** @name Color 
- **/
- //@{
-#ifdef __VCGLIB_TETRA_TC
-		Color4b c;
+};
+
+template < typename T=int>
+class TetraDefaultDeriver : public T {};
+          
+/*
+
+These are the three main classes that are used by the library user to define its own Facees.
+The user MUST specify the names of all the type involved in a generic complex.
+so for example when defining a Face of a trimesh you must know the name of the type of the edge and of the face.
+Typical usage example:
+
+A Face with coords, flags and normal for use in a standard trimesh:
+
+class MyFaceNf   : public FaceSimp2< VertProto, EdgeProto, MyFaceNf, face::Flag, face::Normal3f  > {};
+
+
+A Face with coords, and normal for use in a tetrahedral mesh AND in a standard trimesh:
+
+class TetraFace   : public FaceSimp3< VertProto, EdgeProto, TetraFace, TetraProto, face::Coord3d, face::Normal3f  > {};
+
+
+A summary of the components that can be added to a face (see components.h for details):
+          
+VertexRef
+Mark                                            //Incremental mark (int)
+VTAdj                                           //Topology vertex face adjacency
+                                                 (pointers to next face in the ring of the vertex
+TTAdj                                           //topology: face face adj
+                                                  pointers to adjacent faces
+
+*/
+
+template <class BVT, class BET, class BFT, class BTT,
+          template <typename> class A = TetraDefaultDeriver, template <typename> class B = TetraDefaultDeriver,
+          template <typename> class C = TetraDefaultDeriver, template <typename> class D = TetraDefaultDeriver,
+          template <typename> class E = TetraDefaultDeriver, template <typename> class F = TetraDefaultDeriver,
+          template <typename> class G = TetraDefaultDeriver, template <typename> class H = TetraDefaultDeriver,
+          template <typename> class I = TetraDefaultDeriver > 
+              class TetraSimp3: public TetraArityMax<BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H, I>  {};
+class DumTT;
+template <class BVT, class BET, class BFT, 
+          template <typename> class A = TetraDefaultDeriver, template <typename> class B = TetraDefaultDeriver,
+          template <typename> class C = TetraDefaultDeriver, template <typename> class D = TetraDefaultDeriver,
+          template <typename> class E = TetraDefaultDeriver, template <typename> class F = TetraDefaultDeriver,
+          template <typename> class G = TetraDefaultDeriver, template <typename> class H = TetraDefaultDeriver,
+          template <typename> class I = TetraDefaultDeriver > 
+              class TetraSimp2: public TetraArityMax<BVT,BET,BFT,DumTT, A, B, C, D, E, F, G, H, I>  {};
+
+
+}// end namespace
 #endif
 
-		Color4b & C(){
-#ifdef __VCGLIB_TETRA_TC
-          return _c;
-#else
-			assert(0);
-			return (*new Color4b());
-#endif
-		}
-//@}
-
-
- /***********************************************/
- /** @name Reflection Functions 
- Static functions  that give information about the current tetra type.
-Reflection is a mechanism making it possible to investigate yourself. Reflection is used to investigate format of objects at runtime, invoke methods and access fields of these objects. Here we provide static const functions that are resolved at compile time and they give information about the data supported by the current tetra type.
- **/
- //@{
-
-static bool HasTetraNormal()  { 
-#ifdef __VCGLIB_TETRA_TN 
-  return true;
-#else
-  return false;
-#endif
-}
-static bool HasTetraMark()  { 
-#ifdef __VCGLIB_TETRA_TM
-  return true;
-#else
-  return false;
-#endif
-}
-static bool HasTetraQuality()  { 
-#ifdef __VCGLIB_TETRA_TQ 
-  return true;
-#else
-  return false;
-#endif
-}
-
-static bool HasTetraColor()  { 
-#ifdef __VCGLIB_TETRA_TC 
-  return true;
-#else
-  return false;
-#endif
-}
-
-static bool HasTTAdjacency()  { 
-#if (defined(__VCGLIB_TETRA_AT) || defined(__VCGLIB_TETRA_SAT))
-  return true;
-#else
-  return false;
-#endif
-}
-static bool HasVTAdjacency()  { 
-#if (defined(__VCGLIB_TETRA_AV) || defined(__VCGLIB_TETRA_SAT))
-  return true;
-#else
-  return false;
-#endif
-}
-
-//@}
-};//end class
-
-}//end namespace
-#endif
