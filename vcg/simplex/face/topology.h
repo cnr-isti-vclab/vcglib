@@ -559,6 +559,32 @@ void VFAppend(FaceType* & f, int z)
 	v->VFi()=z;
 }
 
+/*!
+* Compute the set of vertices adjacent to a given vertex using VF adjacency. 
+*	\param vp	pointer to the vertex whose star has to be computed.
+*	\param starVec a std::vector of Vertex pointer that is filled with the adjacent vertices.
+*
+*/
+
+template <class FaceType>
+void VVStarVF( typename FaceType::VertexType* vp, std::vector<typename FaceType::VertexType *> &starVec)
+{
+	typedef typename FaceType::VertexType* VertexPointer;
+	starVec.clear();
+	face::VFIterator<FaceType> vfi(vp);
+	while(!vfi.End())
+			{
+				starVec.push_back(vfi.F()->V1(vfi.I()));
+				starVec.push_back(vfi.F()->V2(vfi.I()));
+				++vfi;
+			}
+				
+	std::sort(starVec.begin(),starVec.end());
+	typename std::vector<VertexPointer>::iterator new_end = std::unique(starVec.begin(),starVec.end());
+	starVec.resize(new_end-starVec.begin());
+	
+}
+
 /*@}*/
 }	 // end namespace
 }	 // end namespace
