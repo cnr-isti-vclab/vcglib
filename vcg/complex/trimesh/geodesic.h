@@ -154,7 +154,7 @@ class Geo{
 		 MeshType & m,
 		 std::vector<VertDist> & _frontier,
 		 ScalarType & max_distance,
-		 bool fartestOnBorder = false
+		 bool farthestOnBorder = false
 		 )
 {
 	bool isLeaf,toQueue;
@@ -214,7 +214,7 @@ class Geo{
 				(*TD)[curr].visited = true;
 
 
-				isLeaf = (!fartestOnBorder || curr->IsB());
+				isLeaf = (!farthestOnBorder || curr->IsB());
 
 			face::VFIterator<FaceType> x;int k;
 
@@ -333,7 +333,7 @@ public:
 	distance from the cloasest source to all the mesh vertices and returns the pointer to the farthest.
 	Note: update the field Q() of the vertices
 	*/
- static void FartestVertex( MeshType & m,
+ static void FarthestVertex( MeshType & m,
 									std::vector<VertexPointer> & fro, 
 									VertexPointer & farthest,		 
 									ScalarType & distance){					
@@ -350,22 +350,22 @@ public:
 	distance from the vertex-source to all the mesh vertices and returns the pointer to the farthest
 	Note: update the field Q() of the vertices
 	*/
- static void FartestVertex( MeshType & m, 
+ static void FarthestVertex( MeshType & m, 
 									VertexPointer seed,
 									VertexPointer & farthest,		 
 									ScalarType & distance){	
 	std::vector<VertexPointer>  fro;
 	fro.push_back( seed );
 	VertexPointer v0;
-	FartestVertex(m,fro,v0,distance);
+	FarthestVertex(m,fro,v0,distance);
 	farthest = v0;
 }
 
 /* 
-	Same as FartestPoint but the returned pointer is to a border vertex
+	Same as FarthestPoint but the returned pointer is to a border vertex
 	Note: update the field Q() of the vertices
 */
- static void FartestBVertex(MeshType & m,
+ static void FarthestBVertex(MeshType & m,
 										std::vector<VertexPointer> & fro,  
 										VertexPointer & farthest,	     
 										ScalarType & distance){
@@ -378,17 +378,17 @@ public:
 	farthest =  Visit(m,fr,distance,true); 
 }
 /* 
-	Same as FartestPoint but the returned pointer is to a border vertex
+	Same as FarthestPoint but the returned pointer is to a border vertex
 	Note: update the field Q() of the vertices
 */
- static void FartestBVertex( MeshType & m, 
+ static void FarthestBVertex( MeshType & m, 
 									VertexPointer seed,
 									VertexPointer & farthest,		 
 									ScalarType & distance){	
 	std::vector<VertexPointer>  fro;
 	fro.push_back( seed );
 	VertexPointer v0;
-	FartestBVertex(m,fro,v0,distance);
+	FarthestBVertex(m,fro,v0,distance);
 	farthest = v0;
  }
 
@@ -405,7 +405,7 @@ public:
 	for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
 		if( (*vi).IsB())
 			fro.push_back(&(*vi));
-	FartestVertex(m,fro,farthest,distance);
+	FarthestVertex(m,fro,farthest,distance);
 }
 
  };
