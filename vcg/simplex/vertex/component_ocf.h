@@ -241,13 +241,13 @@ void DisableColor() {
 
 bool IsMarkEnabled() const {return MarkEnabled;}
 void EnableMark() {
-	assert(VALUE_TYPE::HasFaceMarkOcf());
+	assert(VALUE_TYPE::HasMarkOcf());
 	MarkEnabled=true;
 	MV.resize((*this).size());
 }
 
 void DisableMark() {
-	assert(VALUE_TYPE::HasFaceMarkOcf());
+	assert(VALUE_TYPE::HasMarkOcf());
 	MarkEnabled=false;
 	MV.clear();
 }
@@ -470,8 +470,8 @@ public:
 				IMark() = leftV.IMark();
 		T::ImportLocal(leftV);
 	}
-	static bool HasFaceMark()   { return true; }
-	static bool HasFaceMarkOcf()   { return true; }
+	static bool HasMark()   { return true; }
+	static bool HasMarkOcf()   { return true; }
 	inline void InitIMark()    { IMark() = 0; }
 };
 
