@@ -56,6 +56,7 @@ basic example: farthest vertex from a specified one
 
 */
 namespace vcg{
+namespace tri{
 template <class MeshType>
 class Geo{
 
@@ -396,7 +397,6 @@ public:
 	Note: update the field Q() of the vertices
 */
  static void DistanceFromBorder(	MeshType & m,
-									  VertexPointer & v0,	 
 										ScalarType & distance			 
 					){
 	std::vector<VertexPointer> fro;
@@ -409,4 +409,5 @@ public:
 }
 
  };
-};// end namespace
+};// end namespace tri
+};// end namespace vcg
