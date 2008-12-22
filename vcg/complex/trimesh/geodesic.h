@@ -37,6 +37,7 @@
 #include <assert.h>
 #include <vcg/container/simple_temporary_data.h>
 #include <vcg/simplex/face/pos.h>
+#include <vcg/simplex/face/topology.h>
 #include <vcg/math/base.h>
 #include <deque>
 #include <vector>
@@ -98,6 +99,11 @@ class Geo{
 			bool operator()(const VertDist& v0, const VertDist& v1) const
 				{return (v0.d > v1.d);}
 		};
+	struct pred_addr: public std::binary_function<VertDist,VertDist,bool>{
+		pred_addr(){};
+			bool operator()(const VertDist& v0, const VertDist& v1) const
+				{return (v0.v > v1.v);}
+		};
 
 	//************** calcolo della distanza di pw in base alle distanze note di pw1 e curr
 	//************** sapendo che (curr,pw,pw1) e'una faccia della mesh
@@ -152,7 +158,7 @@ class Geo{
 	*/
  	static  VertexPointer Visit( 
 		 MeshType & m,
-		 std::vector<VertDist> & _frontier,
+		 std::vector<VertDist> & _inputfrontier,
 		 ScalarType & max_distance,
 		 bool farthestOnBorder = false
 		 )
@@ -164,6 +170,8 @@ class Geo{
 	VertexPointer curr,farthest,pw1;	
 	typename std::list<VertexPointer>::iterator is;
 	std::deque<VertexPointer> leaves;
+	std::vector<VertDist> _frontier;
+
 	std::vector <std::pair<VertexPointer,ScalarType> > expansion;
 	typename std::vector <VertDist >::iterator ifr;
 	face::VFIterator<FaceType> x;int k;
@@ -171,145 +179,119 @@ class Geo{
 
 	//Requirements
 	assert(m.HasVFTopology());
-	assert(!_frontier.empty());
+	assert(!_inputfrontier.empty());
 
+	ScalarType unreached  = std::numeric_limits<ScalarType>::max();
 	TempDataType  * TD;
-	TD = new TempDataType(m.vert,-1.0);
-	//TD->Start(TempData<MeshType>(-1.0));
+	TD = new TempDataType(m.vert,unreached);
 
-	for(ifr = _frontier.begin(); ifr != _frontier.end(); ++ifr){
-		(*TD)[(*ifr).v].visited= true;
+	bool singleSource = _inputfrontier.size() ==1;
+	for(ifr = _inputfrontier.begin(); ifr != _inputfrontier.end(); ++ifr){
 		(*TD)[(*ifr).v].d = 0.0;	
 		(*ifr).d = 0.0;
-		}
-
-	for(ifr = _frontier.begin(); ifr != _frontier.end(); ++ifr)
-		{	
-			// determina la distanza dei vertici della fan
-			for( x.f = (*ifr).v->VFp(), x.z = (*ifr).v->VFi(); x.f!=0; ++x )
-				for(k=0;k<2;++k)
-					{
-					if(k==0) pw = x.f->V1(x.z);
-					else     pw = x.f->V2(x.z);
-
-					if((*TD)[pw].d ==-1){
-						(*TD)[pw].d = vcg::Distance(pw->cP(),(*ifr).v->cP());
-						frontier.push_back(VertDist(pw,(*TD)[pw].d));				
-						}
-					}
+		frontier.push_back(VertDist((*ifr).v,0.0));
 		}
 		// initialize Heap
 		make_heap(frontier.begin(),frontier.end(),pred());	
-		ScalarType curr_d,d_curr = 0.0;
+
+	//	for(ifr = frontier.begin(); ifr != frontier.end(); ++ifr)
+	//		printf("%d %f\n",(*ifr).v,(*ifr).d);
+
+
+		ScalarType curr_d,d_curr = 0.0,d_heap;
 		max_distance=0.0;
 		typename std::vector<VertDist >:: iterator iv;
 
  		while(!frontier.empty())
 			{ //printf("size: %d\n", frontier.size());
-				expansion.clear();
+				 
 				pop_heap(frontier.begin(),frontier.end(),pred());
 				curr = (frontier.back()).v;
+				d_heap = (frontier.back()).d;
 				frontier.pop_back();
+
+				float fff = (*TD)[curr].d;
+				bool vis = (*TD)[curr].visited;
+
+				assert((*TD)[curr].d <= d_heap); 
+
+				if((*TD)[curr].d < d_heap )
+					continue; 
+				assert((*TD)[curr].d == d_heap); 
+
+			//	printf("extracted %d %f\n",curr,fff);
 				d_curr =  (*TD)[curr].d;
+
 				(*TD)[curr].visited = true;
-
-
 				isLeaf = (!farthestOnBorder || curr->IsB());
 
-			face::VFIterator<FaceType> x;int k;
+				face::VFIterator<FaceType> x;int k;
 
 			
 				for( x.f = curr->VFp(), x.z = curr->VFi(); x.f!=0; ++x )
 					for(k=0;k<2;++k)
-						{
-						if(k==0) {
-							pw = x.f->V1(x.z);
-							pw1=x.f->V2(x.z);
-							}
-						else {
-							pw = x.f->V2(x.z);
-							pw1=x.f->V1(x.z);
-							}
-				
-				const ScalarType & d_pw1  =  (*TD)[pw1].d;
-
-				if((! (*TD)[pw1].visited ) || d_curr == 0.0)
 					{
-					if( (*TD)[pw].d == -1){
-								curr_d =  (*TD)[curr].d + (pw->P()-curr->P()).Norm();
-								expansion.push_back(std::pair<VertexPointer,ScalarType>(pw,curr_d));
+					if(k==0) {
+						pw = x.f->V1(x.z);
+						pw1=x.f->V2(x.z);
+						}
+					else {
+						pw = x.f->V2(x.z);
+						pw1=x.f->V1(x.z);
+						}
+
+					if(singleSource){
+						const ScalarType & d_pw1  =  (*TD)[pw1].d;
+
+						if((*TD)[curr].d==0.0)// numerical 
+							curr_d = (pw->P()-curr->P()).Norm();
+						else
+						if(d_pw1==0.0)// numerical 
+							curr_d = (pw->P()-pw1->P()).Norm();
+						else
+						if(  (*TD)[pw1].d == unreached ){
+						 		curr_d =  d_curr + (pw->P()-curr->P()).Norm();
+						}
+						else{
+
+							ScalarType inter  = (curr->P() - pw1->P()).Norm();
+
+							if (	(inter + d_curr < d_pw1 + 0.01 ) ||
+									(inter + d_pw1  < d_curr + 0.01 ) ||
+									(d_curr + d_pw1  < inter + 0.01 ))
+								curr_d = d_curr + (pw->P()-pw1->P()).Norm();// triangular inequality
+							else{
+								//curr_d = d_pw1 + (pw->P()-pw1->P()).Norm();
+								curr_d = Distance(pw,pw1,curr,d_pw1,d_curr);
+			
+							}
+							
+						}
+					}else{
+							curr_d = d_curr + (pw->P()-pw1->P()).Norm();
 					}
-					continue;
+
+					//printf("%f %f \n",
+					//	curr_d,
+					//	d_curr);
+					// queue if the estimation is lower or if it is its first
+					toQueue = ((*TD)[(pw)].d > curr_d) ;
+				 
+					if(toQueue ){
+	//					printf("push: %d %f\n",pw,curr_d);
+							(*TD)[(pw)].d = curr_d; 
+						//	printf("from %f estim. %f\n",d_curr,curr_d);
+							frontier.push_back(VertDist(pw,curr_d));
+							push_heap(frontier.begin(),frontier.end(),pred());
+							  
+			 			} 
+					if(isLeaf){
+						if(d_curr > max_distance){
+							max_distance = d_curr;
+							farthest = curr;
+							}
+						}
 					}
-
-		assert(  (*TD)[pw1].d != -1);
-		assert( (curr!=pw) && (pw!=pw1) && (pw1 != curr));				
-		assert(d_pw1!=-1.0);
-		
-		curr_d=Distance(pw,pw1,curr,d_pw1,d_curr);
-
-		////************** calcolo della distanza di pw in base alle distanze note di pw1 e curr
-		////************** sapendo che (curr,pw,pw1) e'una faccia della mesh
-		////************** (vedi figura in file distance.gif)
-		//Point3<MeshType::ScalarType> w_c = pw->cP()- curr->cP();
-		//Point3<MeshType::ScalarType> w_w1 = pw->cP()- pw1->cP();
-		//Point3<MeshType::ScalarType> w1_c = pw1->cP()- curr->cP();
-
-		//ScalarType ew_c  = (w_c).Norm();
-		//ScalarType ew_w1 = (w_w1).Norm();
-		//ScalarType ec_w1 = (w1_c).Norm();
-		//ScalarType	alpha,alpha_, beta,beta_,theta,h,delta,s,a,b;
-
-		//alpha = acos((w_c*w1_c)/(ew_c*ec_w1));
-		//s = (d_curr + d_pw1+ec_w1)/2;
-		//a = s/ec_w1;
-		//b = a*s;
-		//alpha_ = 2*acos ( math::Min<ScalarType>(1.0,sqrt(  (b- a* d_pw1)/d_curr)));
-
-		//if ( alpha+alpha_ > M_PI){
-		//	curr_d = d_curr + ew_c;		
-		//	}else
-		//	{
-		//		beta_ = 2*acos ( math::Min<ScalarType>(1.0,sqrt(  (b- a* d_curr)/d_pw1)));
-		//		beta  = acos((w_w1)*(-w1_c)/(ew_w1*ec_w1));
-
-		//		if ( beta+beta_ > M_PI)
-		//			curr_d = d_pw1  + ew_w1;
-		//		else 
-		//			{
-		//			theta	= ScalarType(M_PI)-alpha-alpha_;
-		//			delta	= cos(theta)* ew_c;
-		//			h		= sin(theta)* ew_c;
-		//			curr_d = sqrt( pow(h,2)+ pow(d_curr + delta,2));
-		//			}
-		//	}
-		////**************************************************************************************
-		toQueue = ( (*TD)[(pw)].d==-1);
-
-		if(toQueue){// se non e'gia' in coda ce lo mette
-			expansion.push_back(std::pair<VertexPointer,ScalarType>(pw,curr_d));
-			}else
-			{
-				if(   (*TD)[(pw)].d > curr_d )
-						(*TD)[(pw)].d = curr_d;
-			}
-				
-		if(isLeaf){
-			if(d_curr > max_distance){
-				max_distance = d_curr;
-				farthest = curr;
-				}
-			}
-
-
-				}
-		typename std::vector <std::pair<VertexPointer,ScalarType> > ::iterator i;
-		for(i = expansion.begin(); i!= expansion.end(); ++i)
-				{
-					(*TD)[(*i).first].d = (*i).second;
-					frontier.push_back(VertDist((*i).first,(*TD)[(*i).first].d));
-					push_heap(frontier.begin(),frontier.end(),pred());
-						} // end for
 	}// end while
 
 	// scrivi le distanze sul campo qualita' (nn: farlo parametrico)
@@ -317,12 +299,8 @@ class Geo{
 	for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
 		(*vi).Q() =  (*TD)[&(*vi)].d; 
 
-
-	//(*TD).Stop();
-
 	delete TD;
-
-	return farthest;
+ 	return farthest;
 
  }
 	
