@@ -84,7 +84,7 @@ namespace vcg {
 						);					
 
 					// Tranche principale
-					double ss = 8.0/m.bbox.Diag();					
+					//double ss = 8.0/m.bbox.Diag();					
 					
 					fprintf(fp,
 					"Transform {\n"

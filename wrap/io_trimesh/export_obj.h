@@ -235,7 +235,7 @@ namespace io {
 			}
       assert(numvert == m.vn);
 
-			fprintf(fp,"# %d vertices, %d vertices normals\n\n",m.vn,NormalVertex.size());
+			fprintf(fp,"# %d vertices, %d vertices normals\n\n",m.vn,int(NormalVertex.size()));
 			
 			//faces + texture coords
 			FaceIterator fi;
@@ -304,7 +304,7 @@ namespace io {
         }
 
 			}//for
-			fprintf(fp,"# %d faces, %d coords texture\n\n",m.face.size(),CoordIndexTexture.size());
+			fprintf(fp,"# %d faces, %d coords texture\n\n",m.fn,int(CoordIndexTexture.size()));
 			
 			fprintf(fp,"# End of File");
 			fclose(fp);
@@ -342,7 +342,7 @@ namespace io {
 		/*
 			returns index of the vertex normal
 		*/
-		inline static int GetIndexVertexNormal(SaveMeshType &m, std::map<Point3f,int> &mapNormToInt, const Point3f &norm )
+		inline static int GetIndexVertexNormal(SaveMeshType &/*m*/, std::map<Point3f,int> &mapNormToInt, const Point3f &norm )
 		{
 		  std::map<Point3f,int>::iterator iter= mapNormToInt.find(norm);
 			if(iter != mapNormToInt.end()) return (*iter).second;

@@ -89,7 +89,7 @@ static int Save(SaveMeshType &m, const char * filename , bool binary =true, cons
 	if(binary)
 	{
 		// Write Header
-		char *header="VCG                                                                                                  ";
+		char header[128]="VCG                                                                                                  ";
 		if(objectname)	strncpy(header,objectname,80);
 		fwrite(header,80,1,fp);
 		// write number of facets
