@@ -85,9 +85,10 @@ class Geo{
 	*/
 	struct TempData{
 		TempData(){}
-		TempData(const ScalarType & d_){d=d_;visited=false;}
+		TempData(const ScalarType & d_){d=d_;source = NULL;}
 		ScalarType d;
-		bool visited;
+		VertexPointer source;//closest source
+
 		};
 
 	typedef SimpleTempData<std::vector<VertexType>, TempData >  TempDataType;
@@ -163,7 +164,7 @@ class Geo{
 		 bool farthestOnBorder = false
 		 )
 {
-	bool isLeaf,toQueue;
+	bool isLeaf;
 	std::vector<VertDist> frontier;
 	VertexIterator ii;
 	std::list<VertexPointer> children;
@@ -171,6 +172,7 @@ class Geo{
 	typename std::list<VertexPointer>::iterator is;
 	std::deque<VertexPointer> leaves;
 	std::vector<VertDist> _frontier;
+	ScalarType unreached  = std::numeric_limits<ScalarType>::max();
 
 	std::vector <std::pair<VertexPointer,ScalarType> > expansion;
 	typename std::vector <VertDist >::iterator ifr;
@@ -181,52 +183,42 @@ class Geo{
 	assert(m.HasVFTopology());
 	assert(!_inputfrontier.empty());
 
-	ScalarType unreached  = std::numeric_limits<ScalarType>::max();
 	TempDataType  * TD;
 	TD = new TempDataType(m.vert,unreached);
 
-	bool singleSource = _inputfrontier.size() ==1;
 	for(ifr = _inputfrontier.begin(); ifr != _inputfrontier.end(); ++ifr){
 		(*TD)[(*ifr).v].d = 0.0;	
 		(*ifr).d = 0.0;
+		(*TD)[(*ifr).v].source  = (*ifr).v;
 		frontier.push_back(VertDist((*ifr).v,0.0));
 		}
 		// initialize Heap
 		make_heap(frontier.begin(),frontier.end(),pred());	
 
-	//	for(ifr = frontier.begin(); ifr != frontier.end(); ++ifr)
-	//		printf("%d %f\n",(*ifr).v,(*ifr).d);
-
-
 		ScalarType curr_d,d_curr = 0.0,d_heap;
+		VertexPointer curr_s = NULL;
 		max_distance=0.0;
 		typename std::vector<VertDist >:: iterator iv;
 
  		while(!frontier.empty())
-			{ //printf("size: %d\n", frontier.size());
-				 
+			{  
 				pop_heap(frontier.begin(),frontier.end(),pred());
 				curr = (frontier.back()).v;
+				curr_s = (*TD)[curr].source;
 				d_heap = (frontier.back()).d;
 				frontier.pop_back();
 
-				float fff = (*TD)[curr].d;
-				bool vis = (*TD)[curr].visited;
-
 				assert((*TD)[curr].d <= d_heap); 
-
-				if((*TD)[curr].d < d_heap )
+				assert(curr_s != NULL);
+				if((*TD)[curr].d < d_heap )// a vertex whose distance has been improved after it was inserted in the queue
 					continue; 
 				assert((*TD)[curr].d == d_heap); 
 
-			//	printf("extracted %d %f\n",curr,fff);
 				d_curr =  (*TD)[curr].d;
 
-				(*TD)[curr].visited = true;
 				isLeaf = (!farthestOnBorder || curr->IsB());
 
 				face::VFIterator<FaceType> x;int k;
-
 			
 				for( x.f = curr->VFp(), x.z = curr->VFi(); x.f!=0; ++x )
 					for(k=0;k<2;++k)
@@ -240,50 +232,27 @@ class Geo{
 						pw1=x.f->V1(x.z);
 						}
 
-					if(singleSource){
 						const ScalarType & d_pw1  =  (*TD)[pw1].d;
-
-						if((*TD)[curr].d==0.0)// numerical 
-							curr_d = (pw->P()-curr->P()).Norm();
-						else
-						if(d_pw1==0.0)// numerical 
-							curr_d = (pw->P()-pw1->P()).Norm();
-						else
-						if(  (*TD)[pw1].d == unreached ){
-						 		curr_d =  d_curr + (pw->P()-curr->P()).Norm();
-						}
-						else{
+						{
 
 							ScalarType inter  = (curr->P() - pw1->P()).Norm();
 
-							if (	(inter + d_curr < d_pw1 + 0.01 ) ||
-									(inter + d_pw1  < d_curr + 0.01 ) ||
-									(d_curr + d_pw1  < inter + 0.01 ))
-								curr_d = d_curr + (pw->P()-pw1->P()).Norm();// triangular inequality
-							else{
-								//curr_d = d_pw1 + (pw->P()-pw1->P()).Norm();
+							if (	((*TD)[pw1].source != (*TD)[curr].source)||// not the same source
+									(inter + d_curr < d_pw1    ) ||
+									(inter + d_pw1  < d_curr   ) ||
+									(d_curr + d_pw1  < inter   )   // triangular inequality
+									 )  
+								curr_d = d_curr + (pw->P()-curr->P()).Norm();
+							else
 								curr_d = Distance(pw,pw1,curr,d_pw1,d_curr);
-			
-							}
 							
 						}
-					}else{
-							curr_d = d_curr + (pw->P()-pw1->P()).Norm();
-					}
-
-					//printf("%f %f \n",
-					//	curr_d,
-					//	d_curr);
-					// queue if the estimation is lower or if it is its first
-					toQueue = ((*TD)[(pw)].d > curr_d) ;
 				 
-					if(toQueue ){
-	//					printf("push: %d %f\n",pw,curr_d);
+					if((*TD)[(pw)].d > curr_d){
 							(*TD)[(pw)].d = curr_d; 
-						//	printf("from %f estim. %f\n",d_curr,curr_d);
+							(*TD)[pw].source = curr_s;
 							frontier.push_back(VertDist(pw,curr_d));
 							push_heap(frontier.begin(),frontier.end(),pred());
-							  
 			 			} 
 					if(isLeaf){
 						if(d_curr > max_distance){
