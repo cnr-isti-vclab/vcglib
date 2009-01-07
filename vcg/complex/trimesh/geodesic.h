@@ -161,7 +161,8 @@ class Geo{
 		 MeshType & m,
 		 std::vector<VertDist> & _inputfrontier,
 		 ScalarType & max_distance,
-		 bool farthestOnBorder = false
+		 bool farthestOnBorder = false,
+		 typename MeshType::PerVertexAttributeHandle<VertexPointer> * sources = NULL
 		 )
 {
 	bool isLeaf;
@@ -205,6 +206,8 @@ class Geo{
 				pop_heap(frontier.begin(),frontier.end(),pred());
 				curr = (frontier.back()).v;
 				curr_s = (*TD)[curr].source;
+				if(sources!=NULL) 
+ 					(*sources)[curr] = curr_s;
 				d_heap = (frontier.back()).d;
 				frontier.pop_back();
 
@@ -235,12 +238,13 @@ class Geo{
 						const ScalarType & d_pw1  =  (*TD)[pw1].d;
 						{
 
-							ScalarType inter  = (curr->P() - pw1->P()).Norm();
+							const ScalarType inter  = (curr->P() - pw1->P()).Norm();
+							const ScalarType tol = (inter + d_curr + d_pw1)*.0001f;
 
 							if (	((*TD)[pw1].source != (*TD)[curr].source)||// not the same source
-									(inter + d_curr < d_pw1    ) ||
-									(inter + d_pw1  < d_curr   ) ||
-									(d_curr + d_pw1  < inter   )   // triangular inequality
+									(inter + d_curr < d_pw1  +tol   ) ||
+									(inter + d_pw1  < d_curr +tol  ) ||
+									(d_curr + d_pw1  < inter +tol  )   // triangular inequality
 									 )  
 								curr_d = d_curr + (pw->P()-curr->P()).Norm();
 							else
@@ -283,14 +287,15 @@ public:
  static void FarthestVertex( MeshType & m,
 									std::vector<VertexPointer> & fro, 
 									VertexPointer & farthest,		 
-									ScalarType & distance){					
+									ScalarType & distance,
+									typename MeshType::PerVertexAttributeHandle<VertexPointer> * sources = NULL){					
 
 									typename std::vector<VertexPointer>::iterator fi; 
 									std::vector<VertDist>fr;
 
 									for( fi  = fro.begin(); fi != fro.end() ; ++fi)
-										fr.push_back(VertDist(*fi,-1));
-									farthest = Visit(m,fr,distance,false); 
+										fr.push_back(VertDist(*fi,0.0));
+									farthest = Visit(m,fr,distance,false,sources); 
 					  }
 	/*
 	Given a mesh and  a  pointers to a vertex-source (source), assigns the approximated geodesic
@@ -315,27 +320,30 @@ public:
  static void FarthestBVertex(MeshType & m,
 										std::vector<VertexPointer> & fro,  
 										VertexPointer & farthest,	     
-										ScalarType & distance){
+										ScalarType & distance,
+										typename MeshType::PerVertexAttributeHandle<VertexPointer> * sources = NULL
+										){
 
 	typename std::vector<VertexPointer>::iterator fi; 
 	std::vector<VertDist>fr;
 
 	for( fi  = fro.begin(); fi != fro.end() ; ++fi)
 		fr.push_back(VertDist(*fi,-1));
-	farthest =  Visit(m,fr,distance,true); 
+	farthest =  Visit(m,fr,distance,true,sources); 
 }
 /* 
 	Same as FarthestPoint but the returned pointer is to a border vertex
 	Note: update the field Q() of the vertices
 */
- static void FarthestBVertex( MeshType & m, 
-									VertexPointer seed,
-									VertexPointer & farthest,		 
-									ScalarType & distance){	
+ static void FarthestBVertex(	MeshType & m, 
+								VertexPointer seed,
+								VertexPointer & farthest,		 
+								ScalarType & distance,
+								typename MeshType::PerVertexAttributeHandle<VertexPointer> * sources = NULL){	
 	std::vector<VertexPointer>  fro;
 	fro.push_back( seed );
 	VertexPointer v0;
-	FarthestBVertex(m,fro,v0,distance);
+	FarthestBVertex(m,fro,v0,distance,sources);
 	farthest = v0;
  }
 
@@ -344,7 +352,8 @@ public:
 	Note: update the field Q() of the vertices
 */
  static void DistanceFromBorder(	MeshType & m,
-										ScalarType & distance			 
+									ScalarType & distance,
+									typename MeshType::PerVertexAttributeHandle<VertexPointer> * sources = NULL
 					){
 	std::vector<VertexPointer> fro;
 	VertexIterator vi;
@@ -352,7 +361,7 @@ public:
 	for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
 		if( (*vi).IsB())
 			fro.push_back(&(*vi));
-	FarthestVertex(m,fro,farthest,distance);
+	FarthestVertex(m,fro,farthest,distance,sources);
 }
 
  };
