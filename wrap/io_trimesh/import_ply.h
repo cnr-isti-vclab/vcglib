@@ -312,7 +312,7 @@ static const  PropDescriptor &FaceDesc(int i)
 /* 16 */			{"face", "vertex_indices", ply::T_UINT,  ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_INT,  ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
 /* 17 */			{"face", "vertex_indices", ply::T_SHORT, ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_CHAR, ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
 /* 18 */			{"face", "vertex_indices", ply::T_SHORT, ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_UCHAR,ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
-/* 18 */			{"face", "vertex_indices", ply::T_SHORT, ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_INT,  ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
+/* 19 */			{"face", "vertex_indices", ply::T_SHORT, ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_INT,  ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0}
 	};
 	return qf[i];
 }
@@ -478,7 +478,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 	if( pf.AddToRead(FaceDesc(0))==-1 ) // Se fallisce si prova anche la sintassi di rapidform con index al posto di indices
 			{
 				int ii; 
-				for(int ii=_FACEDESC_FIRST_;ii< _FACEDESC_LAST_;++ii)
+				for(ii=_FACEDESC_FIRST_;ii< _FACEDESC_LAST_;++ii)
 					if( pf.AddToRead(FaceDesc(ii))!=-1 ) break;
 					
 			  if(ii==_FACEDESC_LAST_) if(pf.AddToRead(TristripDesc(0))==-1) // Se fallisce tutto si prova a vedere se ci sono tristrip alla levoy.
