@@ -614,7 +614,7 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
   {
     assert(m.face.size()==size_t(m.fn));
 	m.face[i].Alloc(indexedFaces[i].v.size()); // it does not do anything if it is a trimesh
-    for(uint j=0;j<indexedFaces[i].v.size();++j)
+    for(unsigned int j=0;j<indexedFaces[i].v.size();++j)
     {
       m.face[i].V(j)=&(m.vert[indexedFaces[i].v[j]]);
       if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD ) {
