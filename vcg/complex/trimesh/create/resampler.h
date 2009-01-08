@@ -89,15 +89,9 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 		GridType _g;
 		
 	public:
-		float max_dim;
-		float offset; // an offset value that is always added to the returned value. Useful for extrarcting isosurface  at a different threshold
-		/*Walker(Volume_Dataset <short> *Vo,float in,const Box3i &bbox,vcg::Point3i &resolution)
-		{*/
-		/*	init=in;
-			Vol=Vo;*/
-
-	
-	
+		float max_dim; // the limit value of the search (that takes into account of the offset)
+		float offset;    // an offset value that is always added to the returned value. Useful for extrarting isosurface  at a different threshold
+		bool DiscretizeFlag; // if the extracted surface should be discretized or not.
 		Walker(const Box3f &_bbox, Point3i _siz )
 		{
 			this->bbox= _bbox;
@@ -107,6 +101,7 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 			SliceSize = (this->siz.X()+1)*(this->siz.Z()+1);
 			CurrentSlice = 0;
 			offset=0;
+			DiscretizeFlag=false;
 
 			_x_cs = new VertexIndex[ SliceSize ];
 			_y_cs = new VertexIndex[ SliceSize ];
@@ -125,10 +120,11 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 		
 		float V(const Point3i &p)
 		{
-			return (V(p.V(0),p.V(1),p.V(2)));
+			return V(p.V(0),p.V(1),p.V(2));
 		}
 
-		float V(int x,int y,int z)
+		
+		std::pair<bool,float> VV(int x,int y,int z)
 		{
 			assert ((y==CurrentSlice)||(y==(CurrentSlice+1)));
 			
@@ -138,14 +134,14 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 				return (1.f);*/
 			int index=GetSliceIndex(x,z);
 			
-			if (y==CurrentSlice)
-			{
-				return _v_cs[index].second+offset;
-			}
-			else
-			{
-				return _v_ns[index].second+offset;
-			}
+			if (y==CurrentSlice) return _v_cs[index];
+		                 	else return _v_ns[index];			
+		}
+		
+		float V(int x,int y,int z)
+		{
+    	if(DiscretizeFlag) return VV(x,y,z).second+offset<0?-1:1;
+			return VV(x,y,z).second+offset;
 		}
 		///return true if the distance form the mesh is less than maxdim and return distance
 		bool DistanceFromMesh(int x,int y,int z,Old_Mesh *mesh, float &dist)
@@ -156,9 +152,9 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 			vcg::Point3f testPt;
 			this->IPiToPf(Point3i(x,y,z),testPt);
 
-			vcg::Point3f closestNorm;
+			vcg::Point3f closestNormV,closestNormF;
 			vcg::Point3f closestPt;
-			vcg::Point3f pip;
+			vcg::Point3f pip(-1,-1,-1);
 
 			// Note that PointDistanceBaseFunctor does not require the edge and plane precomptued.
 			// while the PointDistanceFunctor requires them. 
@@ -167,23 +163,38 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 			f = _g.GetClosest(PDistFunct,markerFunctor,testPt,max_dist,dist,closestPt);
 			
 			if (f==NULL) return false;
-
-			InterpolationParameters(*f,closestPt, pip[0], pip[1], pip[2]);
-			closestNorm =  (f->V(0)->cN())*pip[0]+ (f->V(1)->cN())*pip[1] + (f->V(2)->cN())*pip[2] ;
-
 			assert(!f->IsD());
-				Point3f dir=(testPt-closestPt);
-			/*	dist=dir.Norm();*/
+			bool retIP;
+	
+			// To compute the interpolated normal we use the more robust function that require to know what is the most orhogonal direction of the face. 
+			if((*f).Flags() & Old_Mesh::FaceType::NORMX)	retIP=InterpolationParameters(*f,0,closestPt, pip);
+			else if((*f).Flags() & Old_Mesh::FaceType::NORMY)	retIP=InterpolationParameters(*f,1,closestPt, pip);
+			else if((*f).Flags() & Old_Mesh::FaceType::NORMZ)	retIP=InterpolationParameters(*f,2,closestPt, pip);
+			else assert(0);
+			assert(retIP); // this should happen only if the starting mesh has degenerate faces.
+			
+			closestNormV =  (f->V(0)->cN())*pip[0] + (f->V(1)->cN())*pip[1] + (f->V(2)->cN())*pip[2] ;
+			closestNormF =  f->cN() ;
 
-				dir.Normalize();
-				//direction of normal inside the mesh
-				if ((dir.dot(closestNorm))<0)
-					dist=-dist;
-				//the intersection exist
-				return true;
+			Point3f dir=(testPt-closestPt).Normalize();
+
+			// Compute test if the point see the surface normal from inside or outside
+			// Surface normal for improved robustness is computed both by face and interpolated from vertices.
+			float signV =  dir.dot(closestNormV) ;
+			float signF =  dir.dot(closestNormF) ;
+			
+			// Note that the two sings could be discordant. 
+			// Always choose the best one according to the magnitude.
+			float signBest;
+			if(fabs(signV) > fabs(signF)) signBest = signV;
+			else signBest = signF;
+			
+			if(signBest<0) dist=-dist;
+			
+			return true;
 		}
 
-		///compute the values if an entire slice (per y) distances>dig of a cell are signed with double of
+		/// compute the values if an entire slice (per y) distances>dig of a cell are signed with double of
 		/// the distance of the bb
 		void ComputeSliceValues(int slice,field_value *slice_values)
 		{
@@ -200,11 +211,60 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 							//end putting values
 						}
 						else
-							slice_values[index]=field_value(false,dist);
+							slice_values[index]=field_value(false,0);
 					}
 			}
+			//ComputeConsensus(slice,slice_values);
 		}
-
+		
+		/*
+		For some reasons it can happens that the sign of the computed distance is not correct. 
+		*/
+		void ComputeConsensus(int slice, field_value *slice_values)
+		{
+			float max_dist = min(min(this->voxel[0],this->voxel[1]),this->voxel[2]);
+			int flippedCnt=0;
+			int flippedTot=0;
+			int flippedTimes=0;
+			do
+			{
+				flippedCnt=0;
+				for (int i=0; i<=this->siz.X(); i++)
+				{
+					for (int k=0; k<=this->siz.Z(); k++)
+						{
+							int goodCnt=0;
+							int badCnt=0;
+							int index=GetSliceIndex(i,k);
+							int index_l,index_r,index_u,index_d;
+							if(slice_values[index].first)
+							{
+								float curVal= slice_values[index].second;
+								if(i > 0             ) index_l=GetSliceIndex(i-1,k); else index_l = index;
+								if(i < this->siz.X() ) index_r=GetSliceIndex(i+1,k); else index_r = index;
+								if(k > 0             ) index_d=GetSliceIndex(i,k-1); else index_d = index;
+								if(k < this->siz.Z() ) index_u=GetSliceIndex(i,k+1); else index_u = index;
+								
+								if(slice_values[index_l].first) { goodCnt++; if(fabs(slice_values[index_l].second - curVal) > max_dist) badCnt++; }
+								if(slice_values[index_r].first) { goodCnt++; if(fabs(slice_values[index_r].second - curVal) > max_dist) badCnt++; }
+								if(slice_values[index_u].first) { goodCnt++; if(fabs(slice_values[index_u].second - curVal) > max_dist) badCnt++; }
+								if(slice_values[index_d].first) { goodCnt++; if(fabs(slice_values[index_d].second - curVal) > max_dist) badCnt++; }
+								
+								if(badCnt >= goodCnt)  {
+									slice_values[index].second *=-1.0f;
+									//slice_values[index].first = false;
+									flippedCnt++;
+								}																																					
+							}
+						}
+				}
+				flippedTot+=flippedCnt;
+				flippedTimes++;
+			}	while(flippedCnt>0);
+			
+			if(flippedTot>0)  
+			 qDebug("Flipped %i values in %i times",flippedTot,flippedTimes);
+	}
 		template<class EXTRACTOR_TYPE>
 		void ProcessSlice(EXTRACTOR_TYPE &extractor)
 		{
@@ -212,9 +272,15 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 			{
 				for (int k=0; k<this->siz.Z(); k++)
 				{
+						bool goodCell=true;
 						Point3i p1(i,CurrentSlice,k);
 						Point3i p2=p1+Point3i(1,1,1);
-						extractor.ProcessCell(p1, p2);
+					  for(int ii=0;ii<2;++ii)
+							for(int jj=0;jj<2;++jj)
+								for(int kk=0;kk<2;++kk)
+									goodCell &= VV(p1[0]+ii,p1[1]+jj,p1[2]+kk).first;
+									
+						if(goodCell) extractor.ProcessCell(p1, p2);
 				}
 			}
 		}
@@ -227,24 +293,33 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 			_oldM=&old_mesh;
 			
 			// the following two steps are required to be sure that the point-face distance without precomputed data works well.
-			tri::UpdateNormals<Old_Mesh>::PerFaceNormalized(old_mesh);
+			tri::UpdateNormals<Old_Mesh>::PerVertexNormalizedPerFaceNormalized(old_mesh);
 			tri::UpdateFlags<Old_Mesh>::FaceProjection(old_mesh);
+			int _size=(int)old_mesh.fn*100;
 			
-			_g.Set(_oldM->face.begin(),_oldM->face.end());
+			_g.Set(_oldM->face.begin(),_oldM->face.end(),_size);
 			markerFunctor.SetMesh(&old_mesh);
 
 			_newM->Clear();
 
 			Begin();
 			extractor.Initialize();
-			
+			int computeTime =0;
+			int extractTime =0;
+			int t0,t1,t2;
 			for (int j=0; j<=this->siz.Y(); j++)
 			{
 				cb((100*j)/this->siz.Y(),"Marching ");
+				t0 = clock();
 				ProcessSlice<EXTRACTOR_TYPE>(extractor);//find cells where there is the isosurface and examine it			
+				t1 = clock();
 				NextSlice();
+				t2 = clock();
+				computeTime += t1-t0;
+				extractTime += t2-t1;
 			}
 			extractor.Finalize();
+			qDebug("Extract %i, Compute %i",t1-t0,t2-t1);
 			
 			typename New_Mesh::VertexIterator vi;
 			for(vi=new_mesh.vert.begin();vi!=new_mesh.vert.end();++vi) 
@@ -499,7 +574,7 @@ typedef Walker  /*< Old_Mesh,New_Mesh>*/  MyWalker;
 typedef vcg::tri::MarchingCubes<New_Mesh, MyWalker> MyMarchingCubes;
 
 ///resample the mesh using marching cube algorithm ,the accuracy is the dimension of one cell the parameter
-static void Resample(Old_Mesh &old_mesh,New_Mesh &new_mesh,vcg::Point3<int> accuracy,float max_dist, float thr=0, vcg::CallBackPos *cb=0 )
+static void Resample(Old_Mesh &old_mesh,New_Mesh &new_mesh,vcg::Point3<int> accuracy,float max_dist, float thr=0, bool DiscretizeFlag=false, vcg::CallBackPos *cb=0 )
 {
 	///be sure that the bounding box is updated
 	vcg::tri::UpdateBounding<Old_Mesh>::Box(old_mesh);
@@ -510,6 +585,7 @@ static void Resample(Old_Mesh &old_mesh,New_Mesh &new_mesh,vcg::Point3<int> accu
 
 	walker.max_dim=max_dist+fabs(thr);
 	walker.offset = - thr; 
+	walker.DiscretizeFlag = DiscretizeFlag;
 	MyMarchingCubes mc(new_mesh, walker);
 	walker.BuildMesh(old_mesh,new_mesh,mc,cb);
 }
