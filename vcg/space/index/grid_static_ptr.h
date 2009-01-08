@@ -371,7 +371,7 @@ namespace vcg {
 		}
 
 		template <class OBJITER>
-		inline void Set(const OBJITER & _oBegin, const OBJITER & _oEnd)
+		inline void Set(const OBJITER & _oBegin, const OBJITER & _oEnd, int _size=0)
 		{
 			Box3<FLT> _bbox;
 			Box3<FLT> b;
@@ -382,7 +382,9 @@ namespace vcg {
 				_bbox.Add(b);				
 			}
 			///inflate the bb calculated
-			int _size=(int)std::distance<OBJITER>(_oBegin,_oEnd);
+			if(_size ==0) 
+					_size=(int)std::distance<OBJITER>(_oBegin,_oEnd);
+					
 			ScalarType infl=_bbox.Diag()/_size;
 			_bbox.min-=vcg::Point3<FLT>(infl,infl,infl);
 			_bbox.max+=vcg::Point3<FLT>(infl,infl,infl);
