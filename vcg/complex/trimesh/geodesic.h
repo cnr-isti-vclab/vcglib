@@ -162,7 +162,7 @@ class Geo{
 		 std::vector<VertDist> & _inputfrontier,
 		 ScalarType & max_distance,
 		 bool farthestOnBorder = false,
-		 typename MeshType::PerVertexAttributeHandle<VertexPointer> * sources = NULL
+		 typename MeshType::template PerVertexAttributeHandle<VertexPointer> * sources = NULL
 		 )
 {
 	bool isLeaf;
@@ -288,7 +288,7 @@ public:
 									std::vector<VertexPointer> & fro, 
 									VertexPointer & farthest,		 
 									ScalarType & distance,
-									typename MeshType::PerVertexAttributeHandle<VertexPointer> * sources = NULL){					
+									typename MeshType::template PerVertexAttributeHandle<VertexPointer> * sources = NULL){					
 
 									typename std::vector<VertexPointer>::iterator fi; 
 									std::vector<VertDist>fr;
@@ -321,7 +321,7 @@ public:
 										std::vector<VertexPointer> & fro,  
 										VertexPointer & farthest,	     
 										ScalarType & distance,
-										typename MeshType::PerVertexAttributeHandle<VertexPointer> * sources = NULL
+										typename MeshType::template PerVertexAttributeHandle<VertexPointer> * sources = NULL
 										){
 
 	typename std::vector<VertexPointer>::iterator fi; 
@@ -339,7 +339,7 @@ public:
 								VertexPointer seed,
 								VertexPointer & farthest,		 
 								ScalarType & distance,
-								typename MeshType::PerVertexAttributeHandle<VertexPointer> * sources = NULL){	
+								typename MeshType::template PerVertexAttributeHandle<VertexPointer> * sources = NULL){	
 	std::vector<VertexPointer>  fro;
 	fro.push_back( seed );
 	VertexPointer v0;
@@ -353,7 +353,7 @@ public:
 */
  static void DistanceFromBorder(	MeshType & m,
 									ScalarType & distance,
-									typename MeshType::PerVertexAttributeHandle<VertexPointer> * sources = NULL
+									typename MeshType::template PerVertexAttributeHandle<VertexPointer> * sources = NULL
 					){
 	std::vector<VertexPointer> fro;
 	VertexIterator vi;
