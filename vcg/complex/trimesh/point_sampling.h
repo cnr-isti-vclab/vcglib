@@ -89,25 +89,43 @@ class SurfaceSampling
     typedef typename MetroMesh::FaceContainer		FaceContainer;
 	public:
 	
-static math::SubtractiveRingRNG &SamplingRandomGenerator() 
+static math::MarsenneTwisterRNG &SamplingRandomGenerator() 
 {
-	static math::SubtractiveRingRNG rnd;
+	static math::MarsenneTwisterRNG rnd;
 	return rnd;
 }
 
-static unsigned int RandomInt(unsigned int i) { return SamplingRandomGenerator().generate(i); }
+// Returns an integer random number in the [0,i-1] interval using the improve Marsenne-Twister method.
+static unsigned int RandomInt(unsigned int i)
+{
+	return (SamplingRandomGenerator().generate(0) % i);
+}
+
+// Returns a random number in the [0,1) real interval using the improved Marsenne-Twister method.
+static double RandomDouble01()
+{
+	return SamplingRandomGenerator().generate01();
+}
+
+// Returns a random number in the [0,1] real interval using the improved Marsenne-Twister.
+static double RandomDouble01closed()
+{
+	return SamplingRandomGenerator().generate01closed();
+}
 
 static void AllVertex(MetroMesh & m, VertexSampler &ps)
 {
-    VertexIterator vi;
-    for(vi=m.vert.begin();vi!=m.vert.end();++vi) 
-				if(!(*vi).IsD())
-						{
-								ps.AddVert(*vi);
-						}
+	VertexIterator vi;
+	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+	{
+		if(!(*vi).IsD())
+		{
+			ps.AddVert(*vi);
+		}
+	}
 }
 
-/// Sample the vertices in a weighted way. Each vertex has a probabiltiy of being chosen
+/// Sample the vertices in a weighted way. Each vertex has a probability of being chosen
 /// that is proportional to its quality. 
 /// It assumes that you are asking a number of vertices smaller than nv;
 /// Algorithm: 
@@ -278,23 +296,23 @@ static void AllEdge(MetroMesh & m, VertexSampler &ps)
     }
  */
 
-// Generate the baricentric coords of a random point over a single face, with a uniform distribution over the triangle. 
-// It uses the parallelgoram folding trick. 
-
+// Generate the barycentric coords of a random point over a single face, 
+// with a uniform distribution over the triangle. 
+// It uses the parallelogram folding trick. 
 static CoordType RandomBaricentric()
 {
-		CoordType interp;
-    interp[1] = (double)rand() / (double)RAND_MAX;
-    interp[2] = (double)rand() / (double)RAND_MAX;
-    if(interp[1] + interp[2] > 1.0)
-			{
-        interp[1] = 1.0 - interp[1];
-        interp[2] = 1.0 - interp[2];
-			}
-		
-		assert(interp[1] + interp[2] <= 1.0);
-		interp[0]=1.0-(interp[1] + interp[2]);
-		return interp;
+	CoordType interp;
+	interp[1] = RandomDouble01();
+	interp[2] = RandomDouble01();
+	if(interp[1] + interp[2] > 1.0)
+	{
+		interp[1] = 1.0 - interp[1];
+		interp[2] = 1.0 - interp[2];
+		}
+	
+	assert(interp[1] + interp[2] <= 1.0);
+	interp[0]=1.0-(interp[1] + interp[2]);
+	return interp;
 }
 
 static void StratifiedMontecarlo(MetroMesh & m, VertexSampler &ps,int sampleNum)
@@ -308,7 +326,7 @@ static void StratifiedMontecarlo(MetroMesh & m, VertexSampler &ps,int sampleNum)
 	FaceIterator fi;	
 	for(fi=m.face.begin(); fi != m.face.end(); fi++)
 		if(!(*fi).IsD())
-    {
+		{
 			// compute # samples in the current face (taking into account of the remainders)
 			floatSampleNum += 0.5*DoubleArea(*fi) * samplePerAreaUnit;
 			int faceSampleNum   = (int) floatSampleNum;
@@ -317,7 +335,7 @@ static void StratifiedMontecarlo(MetroMesh & m, VertexSampler &ps,int sampleNum)
 			for(int i=0; i < faceSampleNum; i++)
 					ps.AddFace(*fi,RandomBaricentric());
 			floatSampleNum -= (double) faceSampleNum; 
-    }
+		}
 }
 static void Montecarlo(MetroMesh & m, VertexSampler &ps,int sampleNum)
 {
@@ -326,17 +344,17 @@ static void Montecarlo(MetroMesh & m, VertexSampler &ps,int sampleNum)
 	FaceIterator fi;	
 	int i=0;
 	intervals[i]=std::make_pair(0,FacePointer(0));
-	// First loop: build a sequence of consective segments proportional to the triangle areas.
+	// First loop: build a sequence of consecutive segments proportional to the triangle areas.
 	for(fi=m.face.begin(); fi != m.face.end(); fi++)
 		if(!(*fi).IsD())
-    {
+		{
 			intervals[i+1]=std::make_pair(intervals[i].first+0.5*DoubleArea(*fi), &*fi);
 			++i;
 		}
 	ScalarType meshArea = intervals.back().first;
 	for(i=0;i<sampleNum;++i)
 		{
-			ScalarType val = meshArea * (double)rand() / (double)RAND_MAX;
+			ScalarType val = meshArea * RandomDouble01();
 			// lower_bound returns the furthermost iterator i in [first, last) such that, for every iterator j in [first, i), *j < value.
 			// E.g. An iterator pointing to the first element "not less than" val, or end() if every element is less than val.
 			typename std::vector<IntervalType>::iterator it = lower_bound(intervals.begin(),intervals.end(),std::make_pair(val,FacePointer(0)) );
