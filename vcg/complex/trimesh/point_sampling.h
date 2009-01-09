@@ -36,6 +36,8 @@ Each function calls many time the sample object with the sampling point as param
 #define __VCGLIB_POINT_SAMPLING
 
 #include <vcg/math/random_generator.h>
+#include <vcg/complex/trimesh/closest.h>
+#include <vcg/space/index/spatial_hashing.h>
 #include <vcg/complex/trimesh/stat.h>
 #include <vcg/complex/trimesh/update/topology.h>
 #include <vcg/space/box2.h>
@@ -337,6 +339,7 @@ static void StratifiedMontecarlo(MetroMesh & m, VertexSampler &ps,int sampleNum)
 			floatSampleNum -= (double) faceSampleNum; 
 		}
 }
+
 static void Montecarlo(MetroMesh & m, VertexSampler &ps,int sampleNum)
 {
 	typedef  std::pair<ScalarType, FacePointer> IntervalType;
@@ -641,19 +644,15 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, int sampleNum)
 {
 	FaceIterator fi;
 
-	// first of all computed r
+	// first of all computed radius
 	ScalarType meshArea = Stat<MetroMesh>::ComputeMeshArea(m);
 	ScalarType r = sqrt(meshArea / (0.7 * 3.1415 * sampleNum)); // 0.7 is a density factor
 
-	for (fi = m.face.begin(); fi != m.face.end(); fi++)
-	{
-		ps.AddFace(*fi, RandomBaricentric());
-	}
+	// setup initial grid
+	Point3<ScalarType> C = m.bbox.Center();
 
-	for (int i = 0; i < sampleNum; i++)
-	{
-		//...TODO...
-	}
+	ScalarType maxdim;  // max(dimx,dimy,dimz)
+	maxdim = std::max(m.bbox.DimX(), std::max(m.bbox.DimY(), m.bbox.DimZ()));
 }
 
 //template <class MetroMesh>
