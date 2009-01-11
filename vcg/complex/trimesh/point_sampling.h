@@ -47,9 +47,7 @@ namespace tri
 {
 
 /// Trivial Sampler, an example sampler object that show the required interface used by the sampling class. 
-/// Most of the sampling classes call the AddFace method with the face containing the sample and its baricentric coord.
-
-
+/// Most of the sampling classes call the AddFace method with the face containing the sample and its barycentric coord.
 template <class MeshType>
 class TrivialSampler
 {
@@ -72,7 +70,7 @@ class TrivialSampler
 	
 	void AddTextureSample(const FaceType &, const CoordType &, const Point2i &)
 	{
-		// Retrieve the colorof the sample from the face f using the barycentric coord p 
+		// Retrieve the color of the sample from the face f using the barycentric coord p 
 		// and write that color in a texture image at position tp[0],tp[1]
 	}
 }; // end class TrivialSampler
@@ -80,17 +78,43 @@ class TrivialSampler
 template <class MetroMesh, class VertexSampler>
 class SurfaceSampling
 {
-	  typedef typename MetroMesh::CoordType				CoordType;
-    typedef typename MetroMesh::ScalarType			ScalarType;
+		typedef typename MetroMesh::CoordType			CoordType;
+		typedef typename MetroMesh::ScalarType			ScalarType;
 		typedef typename MetroMesh::VertexType			VertexType;
-    typedef typename MetroMesh::VertexPointer		VertexPointer;
-    typedef typename MetroMesh::VertexIterator	VertexIterator;
-    typedef typename MetroMesh::FacePointer		FacePointer;
-    typedef typename MetroMesh::FaceIterator		FaceIterator;
-    typedef typename MetroMesh::FaceType				FaceType;
-    typedef typename MetroMesh::FaceContainer		FaceContainer;
+		typedef typename MetroMesh::VertexPointer		VertexPointer;
+		typedef typename MetroMesh::VertexIterator		VertexIterator;
+		typedef typename MetroMesh::FacePointer			FacePointer;
+		typedef typename MetroMesh::FaceIterator		FaceIterator;
+		typedef typename MetroMesh::FaceType			FaceType;
+		typedef typename MetroMesh::FaceContainer		FaceContainer;
+
+private:
+
+	/// Cell for Poisson Disk sampling.
+	class Cell
+	{
 	public:
+		Point3<ScalarType> center;      // center of the cell
+		double halfedge;                // size (half) of the cell
+		bool isempty;                   // false if contains almost one sample
+
+		// ctor
+		Cell() :
+			center(0.0,0.0,0.0),
+			halfedge(0.0),
+			isempty(true)
+		{
+		}
+
+		vcg::Box3<ScalarType> convertToBBox()
+		{
+			vcg::Box<ScalarType> box3(center, halfedge);
+			return box3;
+		}
+	}; // end class Cell
 	
+public:
+
 static math::MarsenneTwisterRNG &SamplingRandomGenerator() 
 {
 	static math::MarsenneTwisterRNG rnd;
@@ -638,21 +662,101 @@ static void SingleFaceRaster(FaceType &f,  VertexSampler &ps, const Point2<Scala
 	}
 }
 
-/// Compute a Poisson-disk sampling of the surface
-/// The radius of the disk is computed according to the estimated sampling density.
-static void Poissondisk(MetroMesh &m, VertexSampler &ps, int sampleNum)
+static void subdivideCell(std::vector<Cell *> &activeCellList, Cell *cell)
 {
-	FaceIterator fi;
+	ScalarType he = cell->halfedge / 2.0;
 
-	// first of all computed radius
+	int coeffs[24] = {
+		+1,+1,+1,
+		+1,+1,-1,
+		+1,-1,+1,
+		+1,-1,-1,
+		-1,+1,+1,
+		-1,+1,-1,
+		-1,-1,+1,
+		-1,-1,-1
+	};
+
+	for (int i = 0; i < 8; i++)
+	{
+		Cell *newcell = new Cell();
+		newcell->center[0] = cell->center[0] + coeffs[i*3] * he;
+		newcell->center[1] = cell->center[1] + coeffs[i*3+1] * he;
+		newcell->center[2] = cell->center[2] + coeffs[i*3+2] * he;
+		newcell->halfedge = he;
+
+		// discard the cell if it not contains faces
+		// TODO...
+
+		// discard the cell if it is too near to another sample (?!)
+		// TODO...
+	}
+}
+
+/** Compute a Poisson-disk sampling of the surface.
+ *  The radius of the disk is computed according to the estimated sampling density.
+ *
+ * This algorithm is an adaptation of the algorithm of White et al. :
+ *
+ * "Poisson Disk Point Set by Hierarchical Dart Throwing" 
+ * K. B. White, D. Cline, P. K. Egbert,
+ * IEEE Symposium on Interactive Ray Tracing, 2007,
+ * 10-12 Sept. 2007, pp. 129-132.
+ */
+static void Poissondisk(MetroMesh &m, VertexSampler &ps, int sampleNum, int version)
+{
+	// active cell list (max 10 levels of subdivisions)
+	std::vector<Cell *> activeCells[10];
+	
+	// just in case...
+	for (int i = 0; i < 10; i++)
+		activeCells[i].clear();
+
+	// first of all, radius is estimated
 	ScalarType meshArea = Stat<MetroMesh>::ComputeMeshArea(m);
 	ScalarType r = sqrt(meshArea / (0.7 * 3.1415 * sampleNum)); // 0.7 is a density factor
 
-	// setup initial grid
+	// setup initial grid (initial active cells)
 	Point3<ScalarType> C = m.bbox.Center();
 
 	ScalarType maxdim;  // max(dimx,dimy,dimz)
 	maxdim = std::max(m.bbox.DimX(), std::max(m.bbox.DimY(), m.bbox.DimZ()));
+
+	ScalarType cellsize = r / sqrt(2.0);
+
+	Cell *cell;
+	ScalarType xx,yy,zz;
+	for (zz = m.bbox.min[2]; zz < m.bbox.min[2]; zz += r)
+		for (yy = m.bbox.min[1]; yy < m.bbox.min[1]; yy += r)
+			for (xx = m.bbox.min[0]; xx < m.bbox.min[0]; xx += r)
+			{
+				cell = new Cell();
+				cell->center[0] = xx + r/2.0;
+				cell->center[1] = yy + r/2.0;
+				cell->center[2] = zz + r/2.0;
+				cell->halfedge = r/2.0;
+				activeCells[0].push_back(cell);
+			}
+
+	// sampling algorithm (version 1)
+	// ------------------------------
+	//
+	// - extract a cell (C) from the active cell list (proportional to cell's volume)
+	// - generate a sample inside C and project it on the mesh
+	//   - if the sample violated the radius constrain discard it, subdivide the cell in eight cells 
+	//     and added them to the active cell list
+	// - iterate until the active cell list is empty or a pre-defined number of subdivisions is reached
+	//
+	//
+	// sampling algorithm (version 2)
+	// ------------------------------
+	//
+	// - extract a cell (C) from the active cell list (proportional to the cell's volume)
+	// - generate a sample on the triangles inside C
+	//   - if the sample violated the radius constrain discard it, subdivide the cell in eight cells
+	//     and added them to the active cell list
+	// - iterate until the active cell list is empty or a pre-defined number of subdivisions is reached
+
 }
 
 //template <class MetroMesh>
