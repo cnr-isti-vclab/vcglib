@@ -21,16 +21,16 @@
 *                                                                           *
 ****************************************************************************/
 /****************************************************************************
-  History
-
-$Log: sampling.h,v $
-
 
 The sampling Class has a set of static functions, that you can call to sample the surface of a mesh.
 Each function is templated on the mesh and on a Sampler object s. 
 Each function calls many time the sample object with the sampling point as parameter.
  
-
+Sampler Classes and Sampling algorithmns are independent. 
+Sampler classes exploits the sample that are generated with various algorithms.
+So for example you can compute hausdorf distance (that is a sampler) using various 
+sampling strategies (montcarlo, stratified etc)
+ 
 ****************************************************************************/
 #ifndef __VCGLIB_POINT_SAMPLING
 #define __VCGLIB_POINT_SAMPLING
@@ -108,7 +108,7 @@ private:
 
 		vcg::Box3<ScalarType> convertToBBox()
 		{
-			vcg::Box<ScalarType> box3(center, halfedge);
+			vcg::Box3<ScalarType> box3(center, halfedge);
 			return box3;
 		}
 	}; // end class Cell
@@ -676,7 +676,7 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, int sampleNum, int vers
 {
 	// active cell list (max 10 levels of subdivisions)
 	std::vector<Cell *> activeCells[10];
-	std::vector<Cell *>::iterator cellIt;
+	typename std::vector<Cell *>::iterator cellIt;
 	
 	// just in case...
 	for (int i = 0; i < 10; i++)
@@ -712,10 +712,10 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, int sampleNum, int vers
 	// sampling algorithm (version 1 - "Projection-based")
 	// ---------------------------------------------------
 	//
-	// - extract a cell (C) from the active cell list (proportional to cell's volume)
-	// - generate a sample inside C and project it on the mesh
-	//   - if the sample violated the radius constrain discard it, subdivide the cell in eight cells 
-	//     and added them to the active cell list
+	// - extract a cell (C) from the active cell list (with probability proportional to cell's volume)
+	// - with a probability proportional to the intersection between the surface and the cell, generate a sample inside C and project it on the mesh 
+	//   - if the sample violates the radius constrain discard it, subdivide the cell in eight cells 
+	//     and add them to the active cell list
 	// - iterate until the active cell list is empty or a pre-defined number of subdivisions is reached
 	//
 
