@@ -26,10 +26,10 @@ The sampling Class has a set of static functions, that you can call to sample th
 Each function is templated on the mesh and on a Sampler object s. 
 Each function calls many time the sample object with the sampling point as parameter.
  
-Sampler Classes and Sampling algorithmns are independent. 
+Sampler Classes and Sampling algorithms are independent. 
 Sampler classes exploits the sample that are generated with various algorithms.
-So for example you can compute hausdorf distance (that is a sampler) using various 
-sampling strategies (montcarlo, stratified etc)
+For example, you can compute Hausdorff distance (that is a sampler) using various 
+sampling strategies (montecarlo, stratified etc).
  
 ****************************************************************************/
 #ifndef __VCGLIB_POINT_SAMPLING
