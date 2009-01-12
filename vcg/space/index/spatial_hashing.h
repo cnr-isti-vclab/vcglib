@@ -20,93 +20,14 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-History
-
-$Log: not supported by cvs2svn $
-Revision 1.24  2006/12/06 17:47:50  marfr960
-end() replaced by pointer lastPlusOne
-
-Revision 1.23  2006/10/02 09:25:49  ganovelli
-reverted to version 1.20 for critical bug
-
-Revision 1.20  2006/07/26 08:12:56  pietroni
-added InitEmpty Function
-
-Revision 1.19  2006/07/10 12:43:13  turini
-explicit cast in _IsInHtable() to resolve a warning
-
-Revision 1.18  2006/04/20 08:30:27  cignoni
-small GCC compiling issues
-
-Revision 1.17  2006/01/23 21:26:57  ponchio
-gcc compatibility (templates mostly)
-bbox -> this->bbox
-More consistent use of Box3x and such.
-
-Revision 1.16  2006/01/23 15:26:31  ponchio
-P1 --> HASH_P1
-Old definition was conflicting with functions in segment.h
-
-Revision 1.15  2005/11/23 15:55:35  pietroni
-1 warning corrected
-
-Revision 1.14  2005/11/07 14:15:36  pietroni
-added dynamic spatial hashing class for dynamic updating of entries (and relative functions)
-
-Revision 1.13  2005/10/05 17:04:18  pietroni
-corrected bug on Set Function .... bbox must be exetended in order to have'nt any object on his borde
-
-Revision 1.12  2005/10/03 13:58:21  pietroni
-added GetInSphere and GetInBox functions
-
-Revision 1.11  2005/10/03 10:05:26  pietroni
-changed Set functions, added possibility to pass the bbox as parameter
-
-Revision 1.10  2005/09/30 13:14:59  pietroni
-added wrapping to functions defined in GridClosest:
-- GetClosest
-- GetKClosest
-- DoRay
-
-Revision 1.9  2005/09/21 14:22:49  pietroni
-Added DynamicSpatialHAshTable class
-
-Revision 1.8  2005/09/19 13:35:45  pietroni
-use of standard grid interface
-use of vector instead of map inside the cell
-removed closest iterator
-
-Revision 1.7  2005/06/15 11:44:47  pietroni
-minor changes
-
-Revision 1.6  2005/06/01 13:47:59  pietroni
-resolved hash code conflicts
-
-Revision 1.5  2005/03/15 09:50:44  ganovelli
-there was a debug line, now removed
-
-Revision 1.4  2005/03/14 15:11:18  ganovelli
-ClosestK added and other minor changes
-
-Revision 1.3  2005/03/11 15:25:29  ganovelli
-added ClosersIterator and other minor changes. Not compatible with the previous version.
-Still other modifications to do (temporary commit)
-
-Revision 1.2  2005/02/21 12:13:25  ganovelli
-added vcg header
-
-
-
-****************************************************************************/
 
 #ifndef VCGLIB_SPATIAL_HASHING
 #define VCGLIB_SPATIAL_HASHING
 
 
-#define HASH_P0 73856093
-#define HASH_P1 19349663
-#define HASH_P2 83492791
+#define HASH_P0 73856093u
+#define HASH_P1 19349663u
+#define HASH_P2 83492791u
 
 #include <vcg/space/index/grid_util.h>
 #include <vcg/space/index/grid_closest.h>
@@ -129,190 +50,64 @@ added vcg header
 
 namespace vcg{
 
+		// hashing function
+		struct HashFunctor : public unary_function<Point3i, size_t>
+    {
+      size_t operator()(const Point3i &p) const
+			{
+				return size_t(p.V(0))*HASH_P0 ^  size_t(p.V(1))*HASH_P1 ^  size_t(p.V(2))*HASH_P2;
+			}
+    };
+
 
 	/** Spatial Hash Table
 	Spatial Hashing as described in
 	"Optimized Spatial Hashing for Coll	ision Detection of Deformable Objects",
 	Matthias Teschner and Bruno Heidelberger and Matthias Muller and Danat Pomeranets and Markus Gross
 	*/
-	template < typename OBJTYPE,class FLT=double>
-	class SpatialHashTable:public BasicGrid<FLT>, SpatialIndex<OBJTYPE,FLT>
+	template < typename ObjType,class FLT=double>
+	class SpatialHashTable:public BasicGrid<FLT>, SpatialIndex<ObjType,FLT>
 	{
 
 	public:
-
-		typedef OBJTYPE ObjType;
+		typedef SpatialHashTable SpatialHashType;
 		typedef ObjType* ObjPtr;
 		typedef typename ObjType::ScalarType ScalarType;
 		typedef Point3<ScalarType> CoordType;
-        typedef typename BasicGrid<FLT>::Box3x Box3x;
+		typedef typename BasicGrid<FLT>::Box3x Box3x;
 
-//		typedef typename SpatialHashTable<ObjType,FLT> SpatialHashType;
-        typedef SpatialHashTable SpatialHashType;
-		//typedef typename SpatialHashTable<ObjType,FLT> GridType;
+		// Hash table definition
+		// the hash index directly the grid structure. 
+		// We use a MultiMap because we need to store many object (faces) inside each cell of the grid. 
 
-		//type of container of pointer to object in a Cell
-		//typedef typename std::pair<ObjType*,int> EntryType ;
-		class  EntryType : public std::pair<ObjType*,int>
-		{
-		public:
-			EntryType(ObjType* sim,const int  &_tempMark)
-			{
-				this->first=sim;
-				this->second=_tempMark;
-			}
-
-			ObjType& operator *(){return (*this->first);}
-		};
-
-		typedef typename std::vector<EntryType> CellContainerType;
-		typedef typename CellContainerType::iterator IteMap;
-		typedef EntryType* CellIterator;
-
-		//This Class Identify the cell
-		struct Cell
-		{
-		protected:
-
-			Point3i cell_n;//cell number
-
-		public:
-
-			//elements
-			CellContainerType _entries;
-
-			Cell()
-			{}
-
-			Cell(ObjType* sim,Point3i _cell,const int  &_tempMark)
-			{
-				_entries.push_back(EntryType(sim,_tempMark));
-				cell_n=_cell;
-			}
-
-
-			///return the number of elements stored in the cell
-			int Size()
-			{return (int)(_entries.size());}
-
-			///find the simplex into the cell
-			bool Find(ObjType* sim,IteMap &I)
-			{
-				for (I=_entries.begin();I<_entries.end();I++)
-					if ((*I).first==sim)
-						return true;
-				return false;
-			}
-
-			///update or insert an element into a cell
-			void Update(ObjType* sim, const int & _tempMark)
-			{
-				IteMap I;
-				if (Find(sim,I))
-					(*I).second=_tempMark;
-				else
-					_entries.push_back(EntryType(sim,_tempMark));
-			}
-
-			Point3i CellN()
-			{return cell_n;}
-
-			bool operator ==(const Cell &h)
-			{return (cell_n==h.CellN());}
-
-			bool operator !=(const Cell &h)
-			{return ((cell_n!=h.CellN()));}
-
-		}; // end struct Cell
-
-		//hash table definition
-		typedef typename STDEXT::hash_multimap<int,Cell> Htable;
-		//record of the hash table
-		typedef typename std::pair<int,Cell> HRecord;
-		//iterator to the hash table
-		typedef typename Htable::iterator IteHtable;
-
-		SpatialHashTable(){HashSpace=1000;};//default value for hash_space
-		~SpatialHashTable(){};
-
-		int tempMark;
-
+		typedef typename STDEXT::hash_multimap<Point3i, ObjType *, HashFunctor> HashType;
+		typedef typename HashType::iterator HashIterator;
+		HashType hash_table;
+		std::vector<Point3i> AllocatedCells;
+		
+	// Class to abstract a HashIterator (that stores also the key, 
+	// while the interface of the generic spatial indexing need only simple object (face) pointers.
+	
+	struct CellIterator
+	{
+		CellIterator(){}
+		HashIterator t;
+		ObjPtr &operator *(){return t->second;}
+		bool operator != (const CellIterator & p) {return t!=p.t;}
+		void operator ++() {t++;}
+	};
+	
 	protected:
 
-		Htable hash_table;
-
-		///number of possible hash code [0...HashSpace]
-		int HashSpace;
-
-		///number of conflicts created
-		int conflicts;
-
 		///insert a new cell
-		void _InsertNewHentry(ObjType* s,Point3i cell)
+		void InsertObject(ObjType* s,Point3i cell)
 		{
-			int h=Hash(cell);
-			hash_table.insert(HRecord(h,Cell(s,cell,tempMark)));
-		}
-
-		///return true and return the iterator to the cell if exist
-		bool _IsInHtable(Point3i cell,IteHtable &result)
-		{
-			int h=Hash(cell);
-			int count = (int) hash_table.count(h);
-			if (count==0)///in this case there is no entry for that key
-				return false;
-			else
-			{
-				std::pair<IteHtable, IteHtable> p =hash_table.equal_range(h);
-				IteHtable i = p.first;
-
-				while((i != p.second)&&((*i).second.CellN()!=cell))++i;
-
-				if (i==p.second)///the scan is terminated and we have not found the right cell
-				{
-					conflicts++;
-					return false;
-				}
-				else	///we have found the right cell
-				{
-					result=i;
-					return true;
-				}
-			}
-		}
-
-		virtual void _UpdateHMark(ObjType* s){(void)s;}
-
-		///insert an element in a specified cell if the cell doesn't exist than
-		///create it.
-		void _InsertInCell(ObjType* s,Point3i cell)
-		{
-			IteHtable I;
-			if (!_IsInHtable(cell,I))
-				_InsertNewHentry(s,cell);
-			else///there is the entry specified by the iterator I so update only the temporary mark
-				(*I).second.Update(s,tempMark);
-		}
-
-		// hashing
-		const int Hash(Point3i p) const
-		{
-			return ((p.V(0)*HASH_P0 ^ p.V(1)*HASH_P1 ^ p.V(2)*HASH_P2)%HashSpace);
+			if(hash_table.count(cell)==0) AllocatedCells.push_back(cell);
+			hash_table.insert(typename HashType::value_type(cell, s));
 		}
 
 
 	public:
-
-		/////We need some extra space for numerical precision.
-		//template <class Box3Type>
-		// void SetBBox( const Box3Type & b )
-		//{
-		//	bbox.Import( b );
-		//	ScalarType t = bbox.Diag()/100.0;
-		//	if(t == 0) t = ScalarType(1e20);  // <--- Some doubts on this (Cigno 5/1/04)
-		//	bbox.Offset(t);
-		//	dim  = bbox.max - bbox.min;
-		//}
 
 		vcg::Box3i Add( ObjType* s)
 		{
@@ -324,9 +119,8 @@ namespace vcg{
 			for (int i=bb.min.X();i<=bb.max.X();i++)
 				for (int j=bb.min.Y();j<=bb.max.Y();j++)
 					for (int k=bb.min.Z();k<=bb.max.Z();k++)
-						_InsertInCell(s,vcg::Point3i(i,j,k));
+						InsertObject(s,vcg::Point3i(i,j,k));
 
-			_UpdateHMark(s);
 			return bb;
 		}
 
@@ -393,7 +187,6 @@ namespace vcg{
 		///return the simplexes of the cell that contain p
 		void Grid( const Point3d & p, CellIterator & first, CellIterator & last )
 		{
-			IteHtable I;
 			vcg::Point3i _c;
 			this->PToIP(p,_c);
 			Grid(_c,first,last);
@@ -408,44 +201,21 @@ namespace vcg{
 		///return the simplexes on a specified cell
 		void Grid( const Point3i & _c, CellIterator & first, CellIterator & end )
 		{
-			IteHtable I;
-			if (_IsInHtable(_c,I))//if there is the cell then
-			{	///return pointers to first and last element cell elems
-				first = &*(*I).second._entries.begin();
-				end =  &((*I).second._entries.back()) + 1;
-			}
-			else
-			{	///return 2 equals pointers
-				first = 0;
-				end   = 0;
-			}
+			pair<HashIterator,HashIterator> CellRange = hash_table.equal_range(_c);
+			first.t=CellRange.first;
+			end.t=CellRange.second;
 		}
 
-		///return the number of elemnts in the cell and the iterator to the cell
-		///if the cell exist
-		int numElemCell(Point3i _c,IteHtable &I)
-		{
-			if (_IsInHtable(_c,I))
-				return ((*I).second.Size());
-			else
-				return 0;
-		}
 
 		///return the number of cell created
 		int CellNumber()
 		{return (hash_table.size());}
 
-		int Conflicts()
-		{return conflicts;}
-
 		void Clear()
-		{hash_table.clear();}
-
-		void SetHashKeySpace(int n)
-		{HashSpace=n;}
-
-		void UpdateTmark()
-		{tempMark++;}
+		{
+			hash_table.clear();
+			AllocatedCells.clear();
+		}
 
 
 		template <class OBJPOINTDISTFUNCTOR, class OBJMARKER>
@@ -527,6 +297,8 @@ namespace vcg{
 		}
 
 	};
+
+
 
 
 
