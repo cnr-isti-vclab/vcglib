@@ -662,37 +662,6 @@ static void SingleFaceRaster(FaceType &f,  VertexSampler &ps, const Point2<Scala
 	}
 }
 
-static void subdivideCell(std::vector<Cell *> &activeCellList, Cell *cell)
-{
-	ScalarType he = cell->halfedge / 2.0;
-
-	int coeffs[24] = {
-		+1,+1,+1,
-		+1,+1,-1,
-		+1,-1,+1,
-		+1,-1,-1,
-		-1,+1,+1,
-		-1,+1,-1,
-		-1,-1,+1,
-		-1,-1,-1
-	};
-
-	for (int i = 0; i < 8; i++)
-	{
-		Cell *newcell = new Cell();
-		newcell->center[0] = cell->center[0] + coeffs[i*3] * he;
-		newcell->center[1] = cell->center[1] + coeffs[i*3+1] * he;
-		newcell->center[2] = cell->center[2] + coeffs[i*3+2] * he;
-		newcell->halfedge = he;
-
-		// discard the cell if it not contains faces
-		// TODO...
-
-		// discard the cell if it is too near to another sample (?!)
-		// TODO...
-	}
-}
-
 /** Compute a Poisson-disk sampling of the surface.
  *  The radius of the disk is computed according to the estimated sampling density.
  *
@@ -707,6 +676,7 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, int sampleNum, int vers
 {
 	// active cell list (max 10 levels of subdivisions)
 	std::vector<Cell *> activeCells[10];
+	std::vector<Cell *>::iterator cellIt;
 	
 	// just in case...
 	for (int i = 0; i < 10; i++)
@@ -726,20 +696,21 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, int sampleNum, int vers
 
 	Cell *cell;
 	ScalarType xx,yy,zz;
+	ScalarType cubehalfsize = r/2.0;
 	for (zz = m.bbox.min[2]; zz < m.bbox.min[2]; zz += r)
 		for (yy = m.bbox.min[1]; yy < m.bbox.min[1]; yy += r)
 			for (xx = m.bbox.min[0]; xx < m.bbox.min[0]; xx += r)
 			{
 				cell = new Cell();
-				cell->center[0] = xx + r/2.0;
-				cell->center[1] = yy + r/2.0;
-				cell->center[2] = zz + r/2.0;
-				cell->halfedge = r/2.0;
+				cell->center[0] = xx + cubehalfsize;
+				cell->center[1] = yy + cubehalfsize;
+				cell->center[2] = zz + cubehalfsize;
+				cell->halfedge = cubehalfsize;
 				activeCells[0].push_back(cell);
 			}
 
-	// sampling algorithm (version 1)
-	// ------------------------------
+	// sampling algorithm (version 1 - "Projection-based")
+	// ---------------------------------------------------
 	//
 	// - extract a cell (C) from the active cell list (proportional to cell's volume)
 	// - generate a sample inside C and project it on the mesh
@@ -747,15 +718,92 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, int sampleNum, int vers
 	//     and added them to the active cell list
 	// - iterate until the active cell list is empty or a pre-defined number of subdivisions is reached
 	//
-	//
-	// sampling algorithm (version 2)
-	// ------------------------------
+
+	// sampling algorithm (version 2 - "Surface-based")
+	// ------------------------------------------------
 	//
 	// - extract a cell (C) from the active cell list (proportional to the cell's volume)
 	// - generate a sample on the triangles inside C
 	//   - if the sample violated the radius constrain discard it, subdivide the cell in eight cells
 	//     and added them to the active cell list
 	// - iterate until the active cell list is empty or a pre-defined number of subdivisions is reached
+	//
+
+	int subdivcoeffs[24] = {
+		+1,+1,+1,
+		+1,+1,-1,
+		+1,-1,+1,
+		+1,-1,-1,
+		-1,+1,+1,
+		-1,+1,-1,
+		-1,-1,+1,
+		-1,-1,-1
+	};
+
+	Cell *currentCell;
+	int level;
+	int index;
+
+	do
+	{
+		// extract a cell (C) from the active cell list (proportional to cell's volume)
+		currentCell = NULL;
+		level = 0;
+		do 
+		{
+			if (activeCells[level].size() > 0)
+			{
+				index = RandomInt(activeCells[level].size());
+				cellIt = activeCells[level].begin();
+				cellIt += index;
+				currentCell = *cellIt;
+				activeCells[level].erase(cellIt);
+			}
+			else
+				level++;
+		} while (currentCell == NULL && level < 10);
+
+		// generate a sample inside C and project it on the mesh
+		if (currentCell)
+		{
+			ScalarType he = cell->halfedge;
+
+			ScalarType newpx = currentCell->center[0] + RandomDouble01() * he;
+			ScalarType newpy = currentCell->center[1] + RandomDouble01() * he;
+			ScalarType newpz = currentCell->center[2] + RandomDouble01() * he;
+
+			Point3<ScalarType> newp(newpx,newpy,newpz);
+			
+			if (ps.addCell())
+			{
+				// Nothing to do yet...
+			}
+			else
+			{
+				// cell subdivision
+				he /= 2.0;
+
+				for (int i = 0; i < 8; i++)
+				{
+					Cell *newcell = new Cell();
+					newcell->center[0] = cell->center[0] + subdivcoeffs[i*3] * he;
+					newcell->center[1] = cell->center[1] + subdivcoeffs[i*3+1] * he;
+					newcell->center[2] = cell->center[2] + subdivcoeffs[i*3+2] * he;
+					newcell->halfedge = he;
+
+					// discard the cell if it not contains faces
+					// TODO...
+
+					// discard the cell if it is too near to another sample (?!)
+					// TODO...
+
+					activeCells[level+1].push_back(newcell);
+				}
+			}
+		}
+
+	} while(currentCell == NULL && level < 10);
+
 
 }
 
