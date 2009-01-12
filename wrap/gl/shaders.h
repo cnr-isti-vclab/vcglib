@@ -525,6 +525,29 @@ public:
 		glProgramParameteriEXT(this->objectID, pname, value);
 	}
 
+	void Attribute(const char * name, GLfloat x)
+	{
+		const GLint loc = glGetAttribLocation(this->objectID, name);
+		glVertexAttrib1f(loc, x);
+	}
+
+	void Attribute(const char * name, GLfloat x, GLfloat y)
+	{
+		const GLint loc = glGetAttribLocation(this->objectID, name);
+		glVertexAttrib2f(loc, x, y);
+	}
+
+	void Attribute(const char * name, GLfloat x, GLfloat y, GLfloat z)
+	{
+		const GLint loc = glGetAttribLocation(this->objectID, name);
+		glVertexAttrib3f(loc, x, y, z);
+	}
+	void Attribute(const char * name, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+	{
+		const GLint loc = glGetAttribLocation(this->objectID, name);
+		glVertexAttrib4f(loc, x, y, z, w);
+	}
+
 
 protected:
 	std::set<Shader *> shaders;
