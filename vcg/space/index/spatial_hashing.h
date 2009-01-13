@@ -48,7 +48,7 @@ namespace vcg{
 
 
 	// hashing function
-	struct HashFunctor : public unary_function<Point3i, size_t>
+	struct HashFunctor : public std::unary_function<Point3i, size_t>
 	{
 		size_t operator()(const Point3i &p) const
 		{
@@ -202,7 +202,7 @@ namespace vcg{
 		///return the simplexes on a specified cell
 		void Grid( const Point3i & _c, CellIterator & first, CellIterator & end )
 		{
-			pair<HashIterator,HashIterator> CellRange = hash_table.equal_range(_c);
+			std::pair<HashIterator,HashIterator> CellRange = hash_table.equal_range(_c);
 			first.t=CellRange.first;
 			end.t=CellRange.second;
 		}
