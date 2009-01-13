@@ -774,11 +774,11 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, int sampleNum, int vers
 
 			Point3<ScalarType> newp(newpx,newpy,newpz);
 			
-			if (ps.addCell())
+			/*if (ps.addCell())
 			{
 				// Nothing to do yet...
 			}
-			else
+			else */
 			{
 				// cell subdivision
 				he /= 2.0;
