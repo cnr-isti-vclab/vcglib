@@ -52,11 +52,11 @@ namespace vcg{
 	{
 		size_t operator()(const Point3i &p) const
 		{
-			static const size_t HASH_P0=73856093u;
-			static const size_t HASH_P1=19349663u;
-			static const size_t HASH_P2=83492791u;
+			const size_t _HASH_P0 = 73856093u;
+			const size_t _HASH_P1 = 19349663u;
+			const size_t _HASH_P2 = 83492791u;
 
-			return size_t(p.V(0))*HASH_P0 ^  size_t(p.V(1))*HASH_P1 ^  size_t(p.V(2))*HASH_P2;
+			return size_t(p.V(0))*_HASH_P0 ^  size_t(p.V(1))*_HASH_P1 ^  size_t(p.V(2))*_HASH_P2;
 		}
 	};
 
@@ -299,9 +299,5 @@ namespace vcg{
 
 
 }// end namespace
-
-#undef HASH_P0
-#undef HASH_P1
-#undef HASH_P2
 
 #endif
