@@ -160,9 +160,12 @@ inline bool operator == ( const PEdge & pe ) const
 
 };
 
+// Fill a vector with all the edges of the mesh.
+// each edge is stored in the vector the number of times that it appears in the mesh, with the referring face. 
+
 static void FillEdgeVector(MeshType &m, std::vector<PEdge> &e)
 {
-		FaceIterator pf;
+	FaceIterator pf;
 	typename std::vector<PEdge>::iterator p;
 	
 	// Alloco il vettore ausiliario
@@ -181,6 +184,17 @@ static void FillEdgeVector(MeshType &m, std::vector<PEdge> &e)
 				++p;
 			}
 				assert(p==e.end());
+}
+
+static void FillUniqueEdgeVector(MeshType &m, std::vector<PEdge> &Edges)
+{
+	FillEdgeVector(m,Edges);
+	sort(Edges.begin(), Edges.end());		// Lo ordino per vertici
+
+	typename std::vector< PEdge>::iterator newEnd = std::unique(Edges.begin(), Edges.end());
+	typename std::vector<PEdge>::iterator   ei;
+
+	Edges.resize(newEnd-Edges.begin());
 }
 
 /// \brief Update the Face-Face topological relation by allowing to retrieve for each face what other faces shares their edges.
