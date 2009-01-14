@@ -29,7 +29,7 @@
 //#include <map>
 #include <vector>
 #include <algorithm>
-#ifdef WIN32
+#ifdef _WIN32
  #ifndef __MINGW32__
   #include <hash_map>
   #define STDEXT stdext
