@@ -282,6 +282,17 @@ Requirement: FF Adjacency and Manifoldness
 
 **********************************************************/
 /*********************************************************/
+template <class VertexPointer> 
+class RefinedFaceData	
+	{
+		public:
+		RefinedFaceData(){
+			ep[0]=0;ep[1]=0;ep[2]=0;
+			vp[0]=0;vp[1]=0;vp[2]=0;		
+		}
+		bool ep[3];
+		VertexPointer vp[3];
+	};
 
 template<class MESH_TYPE,class MIDPOINT, class EDGEPRED>
 bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, CallBackPos *cb = 0)
@@ -291,46 +302,87 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
 	typedef typename MESH_TYPE::FaceIterator FaceIterator;
 	typedef typename MESH_TYPE::VertexPointer VertexPointer;
 	typedef typename MESH_TYPE::FacePointer FacePointer;
+	typedef typename MESH_TYPE::FaceType FaceType;	
 	typedef typename MESH_TYPE::FaceType::TexCoordType TexCoordType;
 	
-	typedef face::Pos<typename MESH_TYPE::FaceType>  PosType;
+	typedef face::Pos<FaceType>  PosType;
 
 	int j,NewVertNum=0,NewFaceNum=0;
-	typedef std::pair<VertexPointer,VertexPointer> vvpair;
-	std::map<vvpair,VertexPointer> Edge2Vert;
+
+	typedef RefinedFaceData<VertexPointer> RFD;
+	typedef typename MESH_TYPE :: template PerFaceAttributeHandle<RFD> HandleType;
+	HandleType RD  = tri::Allocator<CMeshO>::AddPerFaceAttribute<RFD> (m,std::string("RefineData"));
+
+	// Callback stuff
+	int step=0;
+	int PercStep=max(1,m.fn/33);
 	
 	// First Loop: We analyze the mesh to compute the number of the new faces and new vertices 
 	FaceIterator fi;
-  int step=0,PercStep=m.fn/33;
-  if(PercStep==0) PercStep=1;
-	for(fi=m.face.begin(),j=0;fi!=m.face.end();++fi) if(!(*fi).IsD())
-  {
-	 if(cb && (++step%PercStep)==0)(*cb)(step/PercStep,"Refining...");
-	    for(j=0;j<3;j++){
-				if(ep(PosType(&*fi,j)) && 
-					(!RefineSelected || ((*fi).IsS() && (*fi).FFp(j)->IsS())) ){
-					++NewFaceNum;
-					if(  ((*fi).V(j)<(*fi).V1(j))  || 	(*fi).IsB(j)  )  
-						++NewVertNum;
-				}
-		}
-  } // end face loop
-	if(NewVertNum==0) return false;
-	VertexIterator lastv = tri::Allocator<MESH_TYPE>::AddVertices(m,NewVertNum);
+  for(fi=m.face.begin(),j=0;fi!=m.face.end();++fi) if(!(*fi).IsD())
+	{
+		if(cb && (++step%PercStep)==0) (*cb)(step/PercStep,"Refining...");
+		// skip unselected faces if necessary
+		if(RefineSelected && !(*fi).IsS()) continue;
 		
+		for(j=0;j<3;j++)
+			{
+				if(RD[fi].ep[j]) continue;
+				
+				PosType edgeCur(&*fi,j);
+				if(RefineSelected && ! edgeCur.FFlip()->IsS()) continue;
+				if(!ep(edgeCur)) continue;
+								
+				RD[edgeCur.F()].ep[edgeCur.E()]=true;
+				++NewFaceNum;
+				++NewVertNum;
+				assert(edgeCur.IsManifold());
+				if(!edgeCur.IsBorder()) 
+				{
+					edgeCur.FlipF();
+					edgeCur.F()->SetV();
+					RD[edgeCur.F()].ep[edgeCur.E()]=true;
+					++NewFaceNum;
+				}
+			}
+		
+  } // end face loop
+	
+	if(NewVertNum ==0 ) 
+		{	
+			tri::Allocator<MESH_TYPE> :: template DeletePerFaceAttribute<RefinedFaceData<VertexPointer> >  (m,RD);
+			return false;
+		}
+	VertexIterator lastv = tri::Allocator<MESH_TYPE>::AddVertices(m,NewVertNum);
+	
 	// Secondo loop: We initialize a edge->vertex map 
 	
 	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
   {
 	   if(cb && (++step%PercStep)==0)(*cb)(step/PercStep,"Refining...");
      for(j=0;j<3;j++)
-			if(ep(PosType (&*fi,j))  && 
-					(!RefineSelected || ((*fi).IsS() && (*fi).FFp(j)->IsS())) )
-				if((*fi).V(j)<(*fi).V1(j) || (*fi).IsB(j)){
-						mid( (*lastv), PosType (&*fi,j));
-						Edge2Vert[ vvpair((*fi).V(j),(*fi).V1(j)) ] = &*lastv;
+		 {
+				// skip unselected faces if necessary
+				if(RefineSelected && !(*fi).IsS()) continue;
+				for(j=0;j<3;j++)
+				{
+					PosType edgeCur(&*fi,j);
+					if(RefineSelected && ! edgeCur.FFlip()->IsS()) continue;
+					
+					if( RD[edgeCur.F()].ep[edgeCur.E()] &&  RD[edgeCur.F()].vp[edgeCur.E()] ==0 )
+					{
+						RD[edgeCur.F()].vp[edgeCur.E()] = &*lastv;
+						mid(*lastv,edgeCur);
+						if(!edgeCur.IsBorder()) 
+						{
+							edgeCur.FlipF();
+							assert(RD[edgeCur.F()].ep[edgeCur.E()]);
+							RD[edgeCur.F()].vp[edgeCur.E()] = &*lastv;
+						}
 						++lastv;
+					}				
 				}
+		 }
   }
 	
 	assert(lastv==m.vert.end()); // critical assert: we MUST have used all the vertex that we forecasted we need
@@ -369,22 +421,13 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
 				vv[0]=(*fi).V(0);
 				vv[1]=(*fi).V(1);
 				vv[2]=(*fi).V(2);
-				bool e0=ep(PosType(&*fi,0));
-				bool e1=ep(PosType(&*fi,1));
-				bool e2=ep(PosType(&*fi,2));
-				
-				if(e0) 
-						if((*fi).V(0)<(*fi).V(1)|| (*fi).IsB(0)) vv[3]=Edge2Vert[ vvpair((*fi).V(0),(*fi).V(1)) ];
-																										 else vv[3]=Edge2Vert[ vvpair((*fi).V(1),(*fi).V(0)) ];
-				else vv[3]=0;
-				if(e1)
-						if((*fi).V(1)<(*fi).V(2)|| (*fi).IsB(1)) vv[4]=Edge2Vert[ vvpair((*fi).V(1),(*fi).V(2)) ];
-																										 else vv[4]=Edge2Vert[ vvpair((*fi).V(2),(*fi).V(1)) ];
-				else vv[4]=0;
-				if(e2)
-						if((*fi).V(2)<(*fi).V(0)|| (*fi).IsB(2)) vv[5]=Edge2Vert[ vvpair((*fi).V(2),(*fi).V(0)) ];
-																										 else vv[5]=Edge2Vert[ vvpair((*fi).V(0),(*fi).V(2)) ];
-				else vv[5]=0;
+				bool e0=RD[fi].ep[0];
+				bool e1=RD[fi].ep[1];
+				bool e2=RD[fi].ep[2];
+        vv[3] = RD[fi].vp[0];
+        vv[4] = RD[fi].vp[1];
+        vv[5] = RD[fi].vp[2];
+
 				int ind=((&*vv[3])?1:0)+((&*vv[4])?2:0)+((&*vv[5])?4:0);
 				
 				nf[0]=&*fi;
@@ -443,7 +486,10 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
 			assert((*fi).V(1)>=&*m.vert.begin() && (*fi).V(1)<=&m.vert.back() );
 			assert((*fi).V(2)>=&*m.vert.begin() && (*fi).V(2)<=&m.vert.back() );
 	 }
-	vcg::tri::UpdateTopology<MESH_TYPE>::FaceFace(m);	
+	tri::UpdateTopology<MESH_TYPE>::FaceFace(m);	
+	
+	tri::Allocator<MESH_TYPE> :: template DeletePerFaceAttribute<RefinedFaceData<VertexPointer> >  (m,RD);
+
 	return true;
 }
 
