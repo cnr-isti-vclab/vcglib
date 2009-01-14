@@ -286,15 +286,9 @@ static void AllEdge(MetroMesh & m, VertexSampler &ps)
     // Edge sampling.
 		typedef typename UpdateTopology<MetroMesh>::PEdge SimpleEdge;
 		std::vector< SimpleEdge > Edges;
-    UpdateTopology<MetroMesh>::FillEdgeVector(m,Edges);
+		typename std::vector< SimpleEdge >::iterator ei;
+    UpdateTopology<MetroMesh>::FillUniqueEdgeVector(m,Edges);
 
-		sort(Edges.begin(), Edges.end());							// Lo ordino per vertici
-
-    typename std::vector< SimpleEdge>::iterator newEnd = unique(Edges.begin(), Edges.end());
-		typename std::vector<SimpleEdge>::iterator   ei;
-
-		//qDebug("Edges %i (unique %i) ",(int)Edges.size(), (int)(newEnd-Edges.begin()) );
-    Edges.resize(newEnd-Edges.begin());
 		for(ei=Edges.begin(); ei!=Edges.end(); ++ei)
 				{
 					Point3f interp(0,0,0);
@@ -303,6 +297,39 @@ static void AllEdge(MetroMesh & m, VertexSampler &ps)
 					ps.AddFace(*(*ei).f,interp);
 				}
 }
+
+static void EdgeUniform(MetroMesh & m, VertexSampler &ps,int sampleNum)
+{
+    // Edge sampling.
+		typedef typename UpdateTopology<MetroMesh>::PEdge SimpleEdge;
+		std::vector< SimpleEdge > Edges;
+    UpdateTopology<MetroMesh>::FillUniqueEdgeVector(m,Edges);
+    // First loop compute total edge lenght;
+		float edgeSum=0;
+		typename std::vector< SimpleEdge >::iterator ei;
+		for(ei=Edges.begin(); ei!=Edges.end(); ++ei)
+					edgeSum+=Distance((*ei).v[0]->P(),(*ei).v[1]->P());
+					
+		qDebug("Edges %i  edge sum %f",Edges.size(),edgeSum);			
+		float sampleLen = edgeSum/sampleNum;
+		qDebug("EdgesSamples %i  Sampling Len %f",sampleNum,sampleLen);			
+		float rest=0;
+		for(ei=Edges.begin(); ei!=Edges.end(); ++ei)
+				{
+					float len = Distance((*ei).v[0]->P(),(*ei).v[1]->P());
+					float samplePerEdge = floor((len+rest)/sampleLen);
+					rest = (len+rest) - samplePerEdge * sampleLen;
+					float step = 1.0/(samplePerEdge+1);
+					for(int i=0;i<samplePerEdge;++i)
+					{
+						Point3f interp(0,0,0);
+						interp[ (*ei).z     ]=step*(i+1); 
+						interp[((*ei).z+1)%3]=1.0-step*(i+1);
+						ps.AddFace(*(*ei).f,interp);
+					}
+				}
+}
+
 /*
     // sample edges.
 		typename std::vector<pvv>::iterator   ei;
