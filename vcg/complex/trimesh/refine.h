@@ -315,7 +315,7 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
 
 	// Callback stuff
 	int step=0;
-	int PercStep=max(1,m.fn/33);
+	int PercStep=std::max(1,m.fn/33);
 	
 	// First Loop: We analyze the mesh to compute the number of the new faces and new vertices 
 	FaceIterator fi;
