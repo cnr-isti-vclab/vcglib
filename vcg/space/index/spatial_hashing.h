@@ -50,6 +50,12 @@ namespace vcg{
 	// hashing function
 	struct HashFunctor : public std::unary_function<Point3i, size_t>
 	{
+		enum
+		  { // parameters for hash table
+				bucket_size = 4, // 0 < bucket_size
+				min_buckets = 8
+			};
+
 		size_t operator()(const Point3i &p) const
 		{
 			const size_t _HASH_P0 = 73856093u;
@@ -58,7 +64,14 @@ namespace vcg{
 
 			return size_t(p.V(0))*_HASH_P0 ^  size_t(p.V(1))*_HASH_P1 ^  size_t(p.V(2))*_HASH_P2;
 		}
+
+		bool operator()(const Point3i &s1, const Point3i &s2) const
+		{ // test if s1 ordered before s2
+			return (s1 < s2);
+		}
 	};
+
+
 
 
 	/** Spatial Hash Table
