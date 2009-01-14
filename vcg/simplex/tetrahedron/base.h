@@ -36,7 +36,7 @@ added
 #include <vcg/space/point3.h>
 #include <vcg/space/texcoord2.h>
 #include <vcg/space/color4.h>
-#include <vcg/simplex/tetrahedronplus/component.h>
+#include <vcg/simplex/tetrahedron/component.h>
 
 namespace vcg {
 
