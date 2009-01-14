@@ -689,6 +689,31 @@ static void SingleFaceRaster(FaceType &f,  VertexSampler &ps, const Point2<Scala
 	}
 }
 
+// check the radius constrain
+static bool checkPoissonDisk(vcg::SpatialHashTable<VertexType> sht, Point3<ScalarType> p, ScalarType radius) 
+{
+	vcg::SpatialHashTable<VertexType, ScalarType>::CellIterator itBegin;
+	vcg::SpatialHashTable<VertexType, ScalarType>::CellIterator itEnd;
+	vcg::SpatialHashTable<VertexType, ScalarType>::CellIterator it;
+
+	// get the samples closest to the given one
+	sht.Grid(p, itBegin, itEnd);
+
+	VertexType *v;
+	VertexType d;
+
+	for (it = itBegin; it != itEnd; it++)
+	{
+		v = *it;
+
+		d = (v->P() - p)
+		if (d.Norm() < radius)
+			return false;
+	}
+
+	return true;
+}
+
 /** Compute a Poisson-disk sampling of the surface.
  *  The radius of the disk is computed according to the estimated sampling density.
  *
@@ -701,135 +726,112 @@ static void SingleFaceRaster(FaceType &f,  VertexSampler &ps, const Point2<Scala
  */
 static void Poissondisk(MetroMesh &m, VertexSampler &ps, int sampleNum, int version)
 {
-	// active cell list (max 10 levels of subdivisions)
-	std::vector<Cell *> activeCells[10];
-	typename std::vector<Cell *>::iterator cellIt;
-	
-	// just in case...
-	for (int i = 0; i < 10; i++)
-		activeCells[i].clear();
+	const int MAXLEVELS = 10; // maximum level of subdivision
 
-	// first of all, radius is estimated
+	// spatial index of mesh face - used to search where to place the samples
+	vcg::SpatialHashTable<FaceType, ScalarType> searchSHT;
+	vcg::SpatialHashTable<FaceType, ScalarType>::CellIterator cellIt;
+
+	// spatial hash table of the generated samples - used to check the radius constrain
+	vcg::SpatialHashTable<VertexType, ScalarType> checkSHT;
+
+	// initialize spatial hash table for searching
 	ScalarType meshArea = Stat<MetroMesh>::ComputeMeshArea(m);
 	ScalarType r = sqrt(meshArea / (0.7 * 3.1415 * sampleNum)); // 0.7 is a density factor
 
-	// setup initial grid (initial active cells)
-	Point3<ScalarType> C = m.bbox.Center();
-
-	ScalarType maxdim;  // max(dimx,dimy,dimz)
-	maxdim = std::max(m.bbox.DimX(), std::max(m.bbox.DimY(), m.bbox.DimZ()));
-
 	ScalarType cellsize = r / sqrt(2.0);
 
-	Cell *cell;
-	ScalarType xx,yy,zz;
-	ScalarType cubehalfsize = r/2.0;
-	for (zz = m.bbox.min[2]; zz < m.bbox.min[2]; zz += r)
-		for (yy = m.bbox.min[1]; yy < m.bbox.min[1]; yy += r)
-			for (xx = m.bbox.min[0]; xx < m.bbox.min[0]; xx += r)
-			{
-				cell = new Cell();
-				cell->center[0] = xx + cubehalfsize;
-				cell->center[1] = yy + cubehalfsize;
-				cell->center[2] = zz + cubehalfsize;
-				cell->halfedge = cubehalfsize;
-				activeCells[0].push_back(cell);
-			}
+	int sizeX = m.bbox.DimX() / r;
+	int sizeY = m.bbox.DimY() / r;
+	int sizeZ = m.bbox.DimZ() / r;
+
+	Point3i gridsize(sizeX, sizeY, sizeZ);
+	searchSHT.InitEmpty(m.bbox, gridsize);
+	FaceIterator fi;
+	for (fi = m.face.begin(); fi != m.face.end(); fi++)
+		searchSHT.Add(&(*fi));
+
+	// initialize spatial hash table for checking
+	checkSHT.InitEmpty(m.bbox, gridsize);
 
 	// sampling algorithm (version 1 - "Projection-based")
 	// ---------------------------------------------------
 	//
 	// - extract a cell (C) from the active cell list (with probability proportional to cell's volume)
-	// - with a probability proportional to the intersection between the surface and the cell, generate a sample inside C and project it on the mesh 
-	//   - if the sample violates the radius constrain discard it, subdivide the cell in eight cells 
-	//     and add them to the active cell list
+	// - with a probability proportional to the intersection between the surface and the cell
+	//   generate a sample inside C and project it on the mesh 
+	//   - if the sample violates the radius constrain discard it, and add the cell to the cells-to-subdivide list
 	// - iterate until the active cell list is empty or a pre-defined number of subdivisions is reached
 	//
 
 	// sampling algorithm (version 2 - "Surface-based")
 	// ------------------------------------------------
 	//
-	// - extract a cell (C) from the active cell list (proportional to the cell's volume)
-	// - generate a sample on the triangles inside C
-	//   - if the sample violated the radius constrain discard it, subdivide the cell in eight cells
-	//     and added them to the active cell list
+	// - extract a cell (C) from the active cell list (with probability proportional to the cell's volume)
+	// - with a probability proportional to the intersection between the surface and the cell 
+	//   generate a sample on the triangles inside C
+	//   - if the sample violated the radius constrain discard it, and add the cell to the cells-to-subdivide list
 	// - iterate until the active cell list is empty or a pre-defined number of subdivisions is reached
 	//
 
-	int subdivcoeffs[24] = {
-		+1,+1,+1,
-		+1,+1,-1,
-		+1,-1,+1,
-		+1,-1,-1,
-		-1,+1,+1,
-		-1,+1,-1,
-		-1,-1,+1,
-		-1,-1,-1
-	};
-
-	Cell *currentCell;
-	int level;
-	int index;
+	std::vector<Point3i *> activeCells;
+	std::vector<Point3i *> cellsToSubdivide;
+	std::vector<FaceType *> faceToSubdivide;
+	std::vector<FaceType *>::iterator faceToSubdivideIterator;
+	std::vector<Point3i>::iterator it;
+	int level = 0;
 
 	do
 	{
-		// extract a cell (C) from the active cell list (proportional to cell's volume)
-		currentCell = NULL;
-		level = 0;
-		do 
+		// extract a cell (C) from the active cell list (with probability proportional to cell's volume)
+		///////////////////////////////////////////////////////////////////////////////////////////////////
+
+		// create active cell list
+		for (it = searchSHT.AllocatedCells.begin(); it != searchSHT.AllocatedCells.end(); it++)
 		{
-			if (activeCells[level].size() > 0)
-			{
-				index = RandomInt(activeCells[level].size());
-				cellIt = activeCells[level].begin();
-				cellIt += index;
-				currentCell = *cellIt;
-				activeCells[level].erase(cellIt);
-			}
-			else
-				level++;
-		} while (currentCell == NULL && level < 10);
-
-		// generate a sample inside C and project it on the mesh
-		if (currentCell)
-		{
-			ScalarType he = cell->halfedge;
-
-			ScalarType newpx = currentCell->center[0] + RandomDouble01() * he;
-			ScalarType newpy = currentCell->center[1] + RandomDouble01() * he;
-			ScalarType newpz = currentCell->center[2] + RandomDouble01() * he;
-
-			Point3<ScalarType> newp(newpx,newpy,newpz);
-			
-			/*if (ps.addCell())
-			{
-				// Nothing to do yet...
-			}
-			else */
-			{
-				// cell subdivision
-				he /= 2.0;
-
-				for (int i = 0; i < 8; i++)
-				{
-					Cell *newcell = new Cell();
-					newcell->center[0] = cell->center[0] + subdivcoeffs[i*3] * he;
-					newcell->center[1] = cell->center[1] + subdivcoeffs[i*3+1] * he;
-					newcell->center[2] = cell->center[2] + subdivcoeffs[i*3+2] * he;
-					newcell->halfedge = he;
-
-					// discard the cell if it not contains faces
-					// TODO...
-
-					// discard the cell if it is too near to another sample (?!)
-					// TODO...
-
-					activeCells[level+1].push_back(newcell);
-				}
-			}
+			activeCells.push_back(&(*it));
 		}
 
-	} while(currentCell == NULL && level < 10);
+		cellsToSubdivide.clear();
+		faceToSubdivide.clear();
+
+		// shuffle active cells
+		int ncell = static_cast<int>(activeCells.size());
+		int index,index2;
+		Point3i *temp;
+		for (int i = 0; i < 100000; i++)
+		{
+			index = RandomInt(ncell);
+			index2 =  RandomInt(ncell);
+			temp = activeCells[index];
+			activeCells[index] = temp;
+			activeCells[index2] = temp;
+		}
+
+		// with a probability proportional to the intersection between the surface and the cell 
+		// generate a sample inside C and project it on the mesh
+		//////////////////////////////////////////////////////////////////////////////////////////
+
+		for (int i = 0; i < ncell; i++)
+		{
+			//...TODO...
+		}
+
+		
+		activeCells.clear();
+
+		// proceed to the next level of subdivision
+		searchSHT.Clear();
+		gridsize[0] *= 2;
+		gridsize[1] *= 2;
+		gridsize[2] *= 2;
+		searchSHT.InitEmpty(m.bbox, gridsize);
+//		for (fi = faceToSubdivide.begin(); fi != faceToSubdivide.end(); fi++)
+//			searchSHT.Add(*fi);
+
+		level++;
+
+	} while(level < 10);
 
 
 }
