@@ -679,9 +679,9 @@ static vcg::Point3<ScalarType> naiveProjection(vcg::Box3<ScalarType> box, std::v
 {
 	vcg::Point3<ScalarType> p;
 
-	p = RandomBox(box);
+	//p = RandomBox(box);
 
-	FaceIterator
+	//FaceIterator
 
 	return p;
 }
@@ -759,7 +759,7 @@ static bool checkPoissonDisk(vcg::SpatialHashTable<VertexType, ScalarType> sht, 
 	VertexType *v;
 	VertexType d;
 
-	for (it = itBegin; it != itEnd; it++)
+	for (it = itBegin; it != itEnd; ++it)
 	{
 		v = *it;
 		if (Distance(v->P(),p) < radius)
@@ -883,7 +883,7 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, int sampleNum, int vers
 			searchSHT.IPiToBox(*currentCell, currentBox);
 
 			faces.clear();
-			for (cellIt = cellBegin; cellIt != cellEnd; cellIt++)
+			for (cellIt = cellBegin; cellIt != cellEnd; ++cellIt)
 			{
 				faces.push_back(*cellIt);
 			}
