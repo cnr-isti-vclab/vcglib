@@ -199,7 +199,7 @@ namespace vcg{
 
 
 		///return the simplexes of the cell that contain p
-		void Grid( const Point3d & p, CellIterator & first, CellIterator & last )
+		void Grid( const Point3<ScalarType> & p, CellIterator & first, CellIterator & last )
 		{
 			vcg::Point3i _c;
 			this->PToIP(p,_c);
