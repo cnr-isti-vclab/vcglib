@@ -49,6 +49,7 @@ Added initial disclaimer
 #ifndef __VCGLIB_LINALGEBRA_H
 #define __VCGLIB_LINALGEBRA_H
 
+#include <vcg/math/base.h>
 #include <vcg/math/matrix44.h>
 #include <algorithm>
 
@@ -102,7 +103,7 @@ namespace vcg
 			for (ip=0;ip<dimension-1;++ip)		// Sum off diagonal elements
 			{
 				for (iq=ip+1;iq<dimension;++iq)
-					sm += fabs(w[ip][iq]);
+					sm += math::Abs(w[ip][iq]);
 			}
 			if (sm == ScalarType(0.0))					//The normal return, which relies on quadratic convergence to machine underflow.
 			{
@@ -335,7 +336,7 @@ namespace vcg
 						A[i][k] *= scale;
 				}
 			}
-			anorm=math::Max( anorm, (fabs(W[i])+fabs(rv1[i])) );
+			anorm=math::Max( anorm, (math::Abs(W[i])+math::Abs(rv1[i])) );
 		}
 		// Accumulation of right-hand transformations.
 		for (i=(n-1); i>=0; i--)
