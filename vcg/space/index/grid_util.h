@@ -116,7 +116,7 @@ public:
 			this->dim  = this->bbox.max - this->bbox.min;
 			this->voxel[0] = this->dim[0]/this->siz[0];
 			this->voxel[1] = this->dim[1]/this->siz[1];
-			this->voxel[2] = this->dim[2]/this->siz[2];			
+			this->voxel[2] = this->dim[2]/this->siz[2];
 		}
 	/* Given a 3D point, returns the coordinates of the cell where the point is
 	 * @param p is a 3D point
@@ -151,6 +151,21 @@ public:
 		p[1] = ((ScalarType)pi[1])*voxel[1];
 		p[2] = ((ScalarType)pi[2])*voxel[2];
 		p += bbox.min;
+	}
+
+	/* Given a cell index return the corresponding box
+	 * @param integer coordinates pi of the cell
+	 * @return b is the corresponding box in <ScalarType> coordinates
+	 */
+	inline void IPiToBox(const Point3i & pi, Box3x & b ) const
+	{
+		CoordType p;
+		p[0] = ((ScalarType)pi[0])*voxel[0];
+		p[1] = ((ScalarType)pi[1])*voxel[1];
+		p[2] = ((ScalarType)pi[2])*voxel[2];
+		p += bbox.min;
+		b.min = p;
+		b.max = (p + voxel);
 	}
 
 	// Same of above but for the case that you just want to transform 
