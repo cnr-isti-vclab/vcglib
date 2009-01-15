@@ -154,12 +154,24 @@ static void VertexSet(MeshType &m, unsigned int FlagMask)
 		if(!(*vi).IsD()) (*vi).Flags() |= FlagMask ;
 }
 
+static void FaceSet(MeshType &m, unsigned int FlagMask)
+{
+	FaceIterator fi;
+	for(fi=m.vert.begin(); fi!=m.vert.end(); ++fi)
+		if(!(*fi).IsD()) (*fi).Flags() |= FlagMask ;
+}
+
+
 
 static void VertexClearV(MeshType &m) { VertexClear(m,VertexType::VISITED);}
 static void VertexClearB(MeshType &m) { VertexClear(m,VertexType::BORDER);}
 static void FaceClearV(MeshType &m) { FaceClear(m,FaceType::VISITED);}
 static void FaceClearB(MeshType &m) { FaceClear(m,FaceType::BORDER);}
 
+static void VertexSetV(MeshType &m) { VertexSet(m,VertexType::VISITED);}
+static void VertexSetB(MeshType &m) { VertexSet(m,VertexType::BORDER);}
+static void FaceSetV(MeshType &m) { FaceSet(m,FaceType::VISITED);}
+static void FaceSetB(MeshType &m) { FaceSet(m,FaceType::BORDER);}
 
 /// \brief Compute the border flags for the faces using the Face-Face Topology. 
 
