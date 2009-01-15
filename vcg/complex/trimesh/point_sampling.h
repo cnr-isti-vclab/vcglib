@@ -298,9 +298,12 @@ static void AllEdge(MetroMesh & m, VertexSampler &ps)
 				}
 }
 
+// Regular Uniform Edge sampling
+// Each edge is subdivided in a number of pieces proprtional to its lenght
+// Sample are choosen without touching the vertices.
+
 static void EdgeUniform(MetroMesh & m, VertexSampler &ps,int sampleNum)
 {
-    // Edge sampling.
 		typedef typename UpdateTopology<MetroMesh>::PEdge SimpleEdge;
 		std::vector< SimpleEdge > Edges;
     UpdateTopology<MetroMesh>::FillUniqueEdgeVector(m,Edges);
@@ -329,25 +332,6 @@ static void EdgeUniform(MetroMesh & m, VertexSampler &ps,int sampleNum)
 					}
 				}
 }
-
-/*
-    // sample edges.
-		typename std::vector<pvv>::iterator   ei;
-    double                  n_samples_per_length_unit;
-    double                  n_samples_decimal = 0.0;
-    int                     cnt=0;
-		
-    if(Flags & SamplingFlags::FACE_SAMPLING)	n_samples_per_length_unit = sqrt((double)n_samples_per_area_unit);
-															    else        n_samples_per_length_unit = n_samples_per_area_unit;
-																	
-    for(ei=Edges.begin(); ei!=Edges.end(); ++ei)
-    {
-        n_samples_decimal += Distance((*ei).first->cP(),(*ei).second->cP()) * n_samples_per_length_unit;
-        n_samples          = (int) n_samples_decimal;
-        SampleEdge((*ei).first->cP(), (*ei).second->cP(), (int) n_samples);
-        n_samples_decimal -= (double) n_samples;
-    }
- */
 
 // Generate the barycentric coords of a random point over a single face, 
 // with a uniform distribution over the triangle. 
