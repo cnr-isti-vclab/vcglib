@@ -253,6 +253,8 @@ public:
   void SetDiagonal(const T k);
 	Matrix44 &SetScale(const T sx, const T sy, const T sz);
 	Matrix44 &SetScale(const Point3<T> &t);
+	Matrix44<T>& SetColumn(const unsigned int ii,const Point4<T> &t); 
+	Matrix44<T>& SetColumn(const unsigned int ii,const Point3<T> &t); 
   Matrix44 &SetTranslate(const Point3<T> &t);
 	Matrix44 &SetTranslate(const T sx, const T sy, const T sz);
   Matrix44 &SetShearXY(const T sz);
@@ -566,6 +568,24 @@ template <class T> Matrix44<T> &Matrix44<T>::SetTranslate(const T tx, const T ty
   ElementAt(2, 3) = tz;
   return *this;
 }
+
+template <class T> Matrix44<T> &Matrix44<T>::SetColumn(const unsigned int ii,const Point3<T> &t) {
+	assert((ii >= 0) && (ii < 4));
+	ElementAt(0, ii) = t.X();
+	ElementAt(1, ii) = t.Y();
+	ElementAt(2, ii) = t.Z();
+	return *this;
+}
+
+template <class T> Matrix44<T> &Matrix44<T>::SetColumn(const unsigned int ii,const Point4<T> &t) {
+	assert((ii >= 0) && (ii < 4));
+	ElementAt(0, ii) = t.X();
+	ElementAt(1, ii) = t.Y();
+	ElementAt(2, ii) = t.Z();
+	ElementAt(3, ii) = t.W();
+	return *this;
+}
+
 
 template <class T> Matrix44<T> &Matrix44<T>::SetRotateDeg(T AngleDeg, const Point3<T> & axis) {
 	return SetRotateRad(math::ToRad(AngleDeg),axis);
