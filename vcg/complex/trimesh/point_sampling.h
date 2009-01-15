@@ -660,34 +660,40 @@ static CoordType RandomBox(vcg::Box3<ScalarType> box)
 
 // naive projection generates a sample inside the given box, and project it in the
 // faces intersected by this box. It always returns a valid sample.
-static vcg::Point3<ScalarType> naiveProjection(vcg::Box3<ScalarType> box, std::vector<FaceType *> faces)
+static vcg::Point3<ScalarType> naiveProjection(vcg::Box3<ScalarType> box,
+                                               MetroMesh &mesh,
+                                               vcg::SpatialHashTable<FaceType, ScalarType> & sht)
 {
 	vcg::Point3<ScalarType> p;
 
-	//p = RandomBox(box);
+	p = RandomBox(box);
 
-<<<<<<< .mine
-	// projection on the faces..
-	//...TODO...
-=======
-	//FaceIterator
->>>>>>> .r3201
+	// projection on the faces
+	CoordType closestp = p;
+	ScalarType maxdist = box.DimX();
+	ScalarType mindist;
 
-	return p;
+	// THIS NOT WORK...
+	//vcg::tri::GetClosestFace<MetroMesh, vcg::SpatialHashTable<FaceType, ScalarType> >(
+	//	mesh, sht, p, maxdist, mindist, closestp);
+
+/* THIS NOT WORK...
+	typedef vcg::tri::FaceTmark<MetroMesh> Marker;
+	Marker markerFunctor;
+	markerFunctor.SetMesh(&mesh);
+	FaceType  *nearestF=0;
+	vcg::face::PointDistanceBaseFunctor<ScalarType> PDistFunct;
+	nearestF = sht.GetClosest(PDistFunct,markerFunctor,p,maxdist,mindist,closestp);
+*/
+	return closestp;
 }
 
 // Montecarlo "reduced" generates a sample on the faces intersected by the given box
-static vcg::Point3<ScalarType> naiveMontecarloReduced(vcg::Box3<ScalarType> box, std::vector<FaceType *> faces)
+static vcg::Point3<ScalarType> naiveMontecarloReduced(vcg::Box3<ScalarType> box, 
+                                                      std::vector<FaceType *> faces)
 {
 	vcg::Point3<ScalarType> p;
-
-	int size = faces.size();
-
-	assert(size >= 1);
-
-	int index = RandomInt(size);
-	RandomBaricentric();
-
+	//...TODO...
 	return p;
 }
 
@@ -695,14 +701,24 @@ static vcg::Point3<ScalarType> naiveMontecarloReduced(vcg::Box3<ScalarType> box,
 // faces intersected by this box. If the projected point lies outside the box
 // the sample is re-generated. 
 // false is returned if the maximum number of attempts has been reached.
-static bool naiveProjectionInside(vcg::Box3<ScalarType> box, std::vector<FaceType *> faces, 
-                                int maxattemps, vcg::Point3<ScalarType> &p)
+static bool naiveProjectionInside(vcg::Box3<ScalarType> box, 
+                                  MetroMesh &mesh,
+                                  vcg::SpatialHashTable<FaceType, ScalarType> & sht,
+                                  int maxattemps, vcg::Point3<ScalarType> &p)
 {
+	bool flaginside = false;
+	int k=1;
 	do 
 	{
+		p = naiveProjection(box, mesh, sht);
 		
-	} while(false);
-	return true;
+		// check if p is inside the box
+		flaginside = box.IsIn(p);
+		k++;
+
+	} while (!flaginside && k < maxattemps);
+	
+	return flaginside;
 }
 
 // naive surface generation generates a sample on the faces intersected by the given box
@@ -711,10 +727,7 @@ static bool naiveProjectionInside(vcg::Box3<ScalarType> box, std::vector<FaceTyp
 static bool naiveMontecarloReducedInside(vcg::Box3<ScalarType> box, std::vector<FaceType *> faces, 
                                          int maxattemps, vcg::Point3<ScalarType> &p)
 {
-	do 
-	{
-		
-	} while(false);
+	//...TODO...
 	return true;
 }
 
@@ -723,6 +736,7 @@ static bool naiveMontecarloReducedInside(vcg::Box3<ScalarType> box, std::vector<
 static vcg::Point3<ScalarType> perfectProjection(vcg::Box3<ScalarType> box, std::vector<FaceType *> faces)
 {
 	vcg::Point3<ScalarType> p;
+	//...TODO...
 	return p;
 }
 
@@ -731,6 +745,7 @@ static vcg::Point3<ScalarType> perfectProjection(vcg::Box3<ScalarType> box, std:
 static vcg::Point3<ScalarType> perfectMontecarloReduced(vcg::Box3<ScalarType> box, std::vector<FaceType *> faces)
 {
 	vcg::Point3<ScalarType> p;
+	//...TODO...
 	return p;
 }
 
@@ -883,7 +898,7 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, int sampleNum, int vers
 			if (version == 0)
 			{
 				// naive projection method (unsafe)
-				s = naiveProjection(currentBox, faces);
+				s = naiveProjection(currentBox, m, searchSHT);
 			}
 			else if (version == 1)
 			{
@@ -893,7 +908,7 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, int sampleNum, int vers
 			else if (version == 2)
 			{
 				// naive projection method (safer, but still not perfect)
-				validsample = naiveProjectionInside(currentBox, faces, 10, s);
+				validsample = naiveProjectionInside(currentBox, m, searchSHT, 10, s);
 			}
 			else if (version == 3)
 			{
@@ -907,7 +922,7 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, int sampleNum, int vers
 			}
 			else if (version == 5)
 			{
-				// perfect montercalo reduced
+				// perfect montecarlo reduced
 				s = perfectMontecarloReduced(currentBox, faces);
 			}
 
