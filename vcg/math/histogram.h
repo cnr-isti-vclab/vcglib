@@ -96,6 +96,82 @@ Initial Release
 
 namespace vcg {
 
+template <class ScalarType> 
+class Distribution 
+{	
+private:
+	std::vector<ScalarType> vec;
+	bool dirty; 
+	double avg;
+	double rms;
+	double min_v;
+	double max_v;
+	
+	
+public:
+
+	Distribution() { Clear(); }
+
+	void Clear()
+	{
+		vec.clear();
+		dirty=true;
+		min_v =  std::numeric_limits<float>::max();
+		max_v = -std::numeric_limits<float>::max();
+	}
+	
+	void Add(const ScalarType v)
+	{
+		vec.push_back(v);
+		dirty=true;
+		if(v<min_v) min_v=v;
+		if(v>max_v) max_v=v;
+		}
+	
+	 ScalarType Min() { return min_v; }	
+	 ScalarType Max() { return max_v; }
+
+	ScalarType Avg(){ DirtyCheck(); return avg;}
+		//! Returns the Root Mean Square of the data.
+	ScalarType RMS(){ DirtyCheck(); return rms;}
+	
+	//! Returns the variance of the data.
+	ScalarType Variance(){ return fabs(rms-avg*avg);}
+	
+	//! Returns the standard deviation of the data.
+	ScalarType StandardDeviation(){ return sqrt(Variance());}
+
+	void DirtyCheck()
+	{
+		if(!dirty) return;
+		std::sort(vec.begin(),vec.end());
+		avg=0;
+		rms=0;
+		typename std::vector<ScalarType>::iterator vi;
+		for(vi=vec.begin();vi!=vec.end();++vi)
+			{
+				avg += double(*vi);
+				rms += double(*vi)*double(*vi);
+			}
+		rms = sqrt(rms/double(vec.size()));
+		avg = avg/double(vec.size());
+		dirty=false;
+	}
+	
+	ScalarType Percentile(ScalarType perc)
+	{
+	  assert(perc>=0 && perc<=1);
+		DirtyCheck();
+		int index = vec.size() *perc -1;
+		
+		if(index< 0 ) index = 0;
+		
+		return vec[index];
+	}
+};
+
+
+
 /**
  * Histogram.
  *
