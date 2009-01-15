@@ -676,9 +676,9 @@ static void SingleFaceRaster(FaceType &f,  VertexSampler &ps, const Point2<Scala
 // check the radius constrain
 static bool checkPoissonDisk(vcg::SpatialHashTable<VertexType> sht, Point3<ScalarType> p, ScalarType radius) 
 {
-	vcg::SpatialHashTable<VertexType, ScalarType>::CellIterator itBegin;
-	vcg::SpatialHashTable<VertexType, ScalarType>::CellIterator itEnd;
-	vcg::SpatialHashTable<VertexType, ScalarType>::CellIterator it;
+	typename vcg::SpatialHashTable<VertexType, ScalarType>::CellIterator itBegin;
+	typename vcg::SpatialHashTable<VertexType, ScalarType>::CellIterator itEnd;
+	typename vcg::SpatialHashTable<VertexType, ScalarType>::CellIterator it;
 
 	// get the samples closest to the given one
 	sht.Grid(p, itBegin, itEnd);
@@ -689,9 +689,7 @@ static bool checkPoissonDisk(vcg::SpatialHashTable<VertexType> sht, Point3<Scala
 	for (it = itBegin; it != itEnd; it++)
 	{
 		v = *it;
-
-		d = (v->P() - p)
-		if (d.Norm() < radius)
+		if (Distance(v->P(),p) < radius)
 			return false;
 	}
 
@@ -714,7 +712,7 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, int sampleNum, int vers
 
 	// spatial index of mesh face - used to search where to place the samples
 	vcg::SpatialHashTable<FaceType, ScalarType> searchSHT;
-	vcg::SpatialHashTable<FaceType, ScalarType>::CellIterator cellIt;
+	typename vcg::SpatialHashTable<FaceType, ScalarType>::CellIterator cellIt;
 
 	// spatial hash table of the generated samples - used to check the radius constrain
 	vcg::SpatialHashTable<VertexType, ScalarType> checkSHT;
@@ -761,8 +759,8 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, int sampleNum, int vers
 	std::vector<Point3i *> activeCells;
 	std::vector<Point3i *> cellsToSubdivide;
 	std::vector<FaceType *> faceToSubdivide;
-	std::vector<FaceType *>::iterator faceToSubdivideIterator;
-	std::vector<Point3i>::iterator it;
+	typename std::vector<FaceType *>::iterator faceToSubdivideIterator;
+	typename std::vector<Point3i>::iterator it;
 	int level = 0;
 
 	do
