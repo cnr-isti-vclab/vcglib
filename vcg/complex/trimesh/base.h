@@ -236,20 +236,33 @@ class TriMesh: public TriMeshEdgeHolder<VertContainerType,FaceContainerType,Edge
 	//
   std::vector<std::string> normalmaps;
 
+	int attrn;	// total numer of attribute created
+
 	class HandlesWrapper{
 	public:
 		void * _handle;	std::string _name;
+		int n_attr;
 		void Resize(const int & sz){((SimpleTempDataBase<VertContainer>*)_handle)->Resize(sz);}
 		void Reorder(std::vector<size_t> & newVertIndex){((SimpleTempDataBase<VertContainer>*)_handle)->Reorder(newVertIndex);}
 		const bool operator<(const  HandlesWrapper    b) const {	return(_name.empty()&&b._name.empty())?(_handle < b._handle):( _name < b._name);}
 	};
 	
+	std::set< HandlesWrapper > vert_attr;
+ 	std::set< HandlesWrapper > edge_attr;
+ 	std::set< HandlesWrapper > face_attr;
+	std::set< HandlesWrapper > mesh_attr;
+
 	template <class ATTR_TYPE>
 	class PerVertexAttributeHandle{
 	public:
-		PerVertexAttributeHandle(){}
-		PerVertexAttributeHandle( void *ah):_handle ( (SimpleTempData<VertContainer,ATTR_TYPE> *)ah ){}
+		PerVertexAttributeHandle(){_handle=NULL;}
+		PerVertexAttributeHandle( void *ah,const int & n):_handle ( (SimpleTempData<VertContainer,ATTR_TYPE> *)ah ),n_attr(n){}
+		PerVertexAttributeHandle operator = ( const PerVertexAttributeHandle & pva){ 
+			(SimpleTempData<VertContainer,ATTR_TYPE> *)pva._handle;
+			n_attr = pva.n_attr;
+		}
 		SimpleTempData<VertContainer,ATTR_TYPE> * _handle;
+		int n_attr; // its attribute number
 		template <class RefType>
 		ATTR_TYPE & operator [](const RefType  & i){return (*_handle)[i];}
 	};
@@ -257,9 +270,14 @@ class TriMesh: public TriMeshEdgeHolder<VertContainerType,FaceContainerType,Edge
 	template <class ATTR_TYPE>
 	class PerFaceAttributeHandle{
 	public:
-		PerFaceAttributeHandle(){}
-		PerFaceAttributeHandle(void *ah):_handle ( (SimpleTempData<FaceContainer,ATTR_TYPE> *)ah ){}
+		PerFaceAttributeHandle(){_handle=NULL;}
+		PerFaceAttributeHandle(void *ah,const int & n):_handle ( (SimpleTempData<FaceContainer,ATTR_TYPE> *)ah ),n_attr(n){}
+		PerFaceAttributeHandle operator = ( const PerFaceAttributeHandle & pva){ 
+			(SimpleTempData<FaceContainer,ATTR_TYPE> *)pva._handle;
+			n_attr = pva.n_attr;
+		}
 		SimpleTempData<FaceContainer,ATTR_TYPE> * _handle;
+		int n_attr; // its attribute number
 		template <class RefType>
 		ATTR_TYPE & operator [](const RefType  & i){return (*_handle)[i];}
 	};
@@ -267,9 +285,14 @@ class TriMesh: public TriMeshEdgeHolder<VertContainerType,FaceContainerType,Edge
 	template <class ATTR_TYPE>
 	class PerEdgeAttributeHandle{
 	public:
-		PerEdgeAttributeHandle(){}
-		PerEdgeAttributeHandle(void *ah):_handle ( (SimpleTempData<EdgeContainer,ATTR_TYPE> *)ah ){}
+		PerEdgeAttributeHandle(){_handle=NULL;}
+		PerEdgeAttributeHandle(void *ah,const int & n):_handle ( (SimpleTempData<EdgeContainer,ATTR_TYPE> *)ah ),n_attr(n){}
+		PerEdgeAttributeHandle operator = ( const PerEdgeAttributeHandle & pva){ 
+			(SimpleTempData<EdgeContainer,ATTR_TYPE> *)pva._handle;
+			n_attr = pva.n_attr;
+		}
 		SimpleTempData<EdgeContainer,ATTR_TYPE> * _handle;
+		int n_attr; // its attribute number
 		template <class RefType>
 		ATTR_TYPE & operator [](const RefType  & i){return (*(SimpleTempData<EdgeContainer,ATTR_TYPE>*)_handle)[i];}
 	};
@@ -277,16 +300,17 @@ class TriMesh: public TriMeshEdgeHolder<VertContainerType,FaceContainerType,Edge
 	template <class ATTR_TYPE>
 	class PerMeshAttributeHandle{
 	public:
-		PerMeshAttributeHandle(){}
-		PerMeshAttributeHandle(void *ah):_handle ( (Attribute<ATTR_TYPE> *)ah ){}
+		PerMeshAttributeHandle(){_handle=NULL;}
+		PerMeshAttributeHandle(void *ah,const int & n):_handle ( (Attribute<ATTR_TYPE> *)ah ),n_attr(n){}
+		PerMeshAttributeHandle operator = ( const PerMeshAttributeHandle & pva){ 
+			(Attribute<ATTR_TYPE> *)pva._handle;
+			n_attr = pva.n_attr;
+		}
 		Attribute<ATTR_TYPE> * _handle;
+		int n_attr;
 		ATTR_TYPE & operator ()(){ return *((Attribute<ATTR_TYPE> *)_handle)->attribute;}
 	};
 
- 	std::set< HandlesWrapper > vert_attr;
- 	std::set< HandlesWrapper > edge_attr;
- 	std::set< HandlesWrapper > face_attr;
-	std::set< HandlesWrapper > mesh_attr;
 
 		/// La camera
 	Camera<ScalarType> camera; // intrinsic
@@ -313,6 +337,7 @@ public:
 	{
 		fn = vn = 0;
 		imark = 0;
+		attrn = 0;
 	}
 
 	/// destructor

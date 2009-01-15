@@ -701,7 +701,17 @@ namespace vcg {
 		}
 
 public:
+
 	/// Per Vertex Attributes
+	template <class ATTR_TYPE>
+	static 
+	bool IsValidHandle( MeshType & m,  const typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE> & a){
+		 
+		for(HandlesIterator i = m.vert_attr.begin(); i!=m.vert_attr.end();++i)
+			if ( (*i).n_attr == a.n_attr ) return true;
+		return false;
+	}
+
 	template <class ATTR_TYPE> 
 	static
 	typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>
@@ -714,8 +724,10 @@ public:
 			assert(i ==m.vert_attr.end() );// an attribute with this name exists
 		}
 		h._handle = (void*) new SimpleTempData<VertContainer,ATTR_TYPE>(m.vert);
+		m.attrn++;
+		h.n_attr = m.attrn;
 		std::pair < HandlesIterator , bool> res =  m.vert_attr.insert(h);
-		return typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>(res.first->_handle);
+		return typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>(res.first->_handle,res.first->n_attr );
 	 }
 
 	template <class ATTR_TYPE> 
@@ -735,9 +747,9 @@ public:
 
 		i =m.vert_attr.find(h1);
 		if(i!=m.vert_attr.end())
-				return typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>((*i)._handle);
+				return typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>((*i)._handle,(*i).n_attr);
 			else
-				return typename MeshType:: template PerVertexAttributeHandle<ATTR_TYPE>(NULL);
+				return typename MeshType:: template PerVertexAttributeHandle<ATTR_TYPE>(NULL,0);
 	}
 
 	template <class ATTR_TYPE> 
@@ -765,6 +777,14 @@ public:
 	}
 
 	/// Per Edge Attributes
+	template <class ATTR_TYPE>
+	static 
+	bool IsValidHandle( MeshType & m,  const typename MeshType::template PerEdgeAttributeHandle<ATTR_TYPE> & a){
+		for(HandlesIterator i = m.edge_attr.begin(); i!=m.edge_attr.end();++i)
+			if ( (*i).n_attr == a.n_attr ) return true;
+		return false;
+	}
+
 	template <class ATTR_TYPE> 
 	static
 	typename MeshType::template PerEdgeAttributeHandle<ATTR_TYPE>
@@ -777,8 +797,17 @@ public:
 			assert(i ==m.edge_attr.end() );// an attribute with this name exists
 		}
 		h._handle = (void*) new SimpleTempData<EdgeContainer,ATTR_TYPE>(m.edge);
+ 		m.attrn++;
+		h.n_attr = m.attrn;
 		std::pair < HandlesIterator , bool> res =  m.edge_attr.insert(h);
-		return typename MeshType::template PerEdgeAttributeHandle<ATTR_TYPE>(res.first->_handle);
+		return typename MeshType::template PerEdgeAttributeHandle<ATTR_TYPE>(res.first->_handle,res.first->n_attr);
+	 }
+
+	template <class ATTR_TYPE> 
+	static
+	typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>
+	 AddPerEdgeAttribute( MeshType & m){
+		 return AddPerEdgeAttribute<ATTR_TYPE>(m,std::string(""));
 	 }
 	
 	template <class ATTR_TYPE> 
@@ -791,9 +820,9 @@ public:
 
 		i =m.edge_attr.find(h1);
 		if(i!=m.edge_attr.end())
-				return typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE>((*i)._handle);
+				return typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE>((*i)._handle,(*i).n_attr);
 			else
-				return typename MeshType:: template PerFaceAttributeHandle<ATTR_TYPE>(NULL);
+				return typename MeshType:: template PerFaceAttributeHandle<ATTR_TYPE>(NULL,0);
 	}
 
 	template <class ATTR_TYPE> 
@@ -821,6 +850,14 @@ public:
 	}
 
 	/// Per Face Attributes
+	template <class ATTR_TYPE>
+	static 
+	bool IsValidHandle( MeshType & m,  const typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE> & a){
+		for(HandlesIterator i = m.face_attr.begin(); i!=m.face_attr.end();++i)
+			if ( (*i).n_attr == a.n_attr ) return true;
+		return false;
+	}
+
 	template <class ATTR_TYPE> 
 	static
 	typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE>
@@ -833,10 +870,19 @@ public:
 			assert(i ==m.face_attr.end() );// an attribute with this name exists
 		}
 		h._handle = (void*) new SimpleTempData<FaceContainer,ATTR_TYPE>(m.face);
+		m.attrn++;
+		h.n_attr = m.attrn;
 		std::pair < HandlesIterator , bool> res =  m.face_attr.insert(h);
-		return typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE>(res.first->_handle);
+		return typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE>(res.first->_handle,res.first->n_attr);
 	 }
-	
+
+	template <class ATTR_TYPE> 
+	static
+	typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE>
+	 AddPerFaceAttribute( MeshType & m){
+		 return AddPerFaceAttribute<ATTR_TYPE>(m,std::string(""));
+	 }
+		
 	template <class ATTR_TYPE> 
 	static
 		typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE>
@@ -847,9 +893,9 @@ public:
 
 		i =m.face_attr.find(h1);
 		if(i!=m.face_attr.end())
-				return typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE>((*i)._handle);
+				return typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE>((*i)._handle,(*i).n_attr);
 			else
-				return typename MeshType:: template PerFaceAttributeHandle<ATTR_TYPE>(NULL);
+				return typename MeshType:: template PerFaceAttributeHandle<ATTR_TYPE>(NULL,0);
 	}
 
 	template <class ATTR_TYPE> 
@@ -877,6 +923,14 @@ public:
 	}
 
 	/// Per Mesh Attributes
+	template <class ATTR_TYPE>
+	static 
+	bool IsValidHandle( MeshType & m,  const typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE> & a){
+		for(HandlesIterator i = m.mesh_attr.begin(); i!=m.mesh_attr.end();++i)
+			if ( (*i).n_attr == a.n_attr ) return true;
+		return false;
+	}
+
 	template <class ATTR_TYPE> 
 	static
 	typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE>
@@ -889,8 +943,10 @@ public:
 			assert(i ==m.mesh_attr.end() );// an attribute with this name exists
 		}
 		h._handle = (void*) new Attribute<ATTR_TYPE>();
+		m.attrn++;
+		h.n_attr = m.attrn;
 		std::pair < HandlesIterator , bool> res =  m.mesh_attr.insert(h);
-		return typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE>(res.first->_handle);
+		return typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE>(res.first->_handle,res.first->n_attr);
 	 }
 	
 	template <class ATTR_TYPE> 
@@ -903,9 +959,9 @@ public:
 
 		i =m.mesh_attr.find(h1);
 		if(i!=m.mesh_attr.end())
-				return typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE>((*i)._handle);
+				return typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE>((*i)._handle,(*i).n_attr);
 			else
-				return typename MeshType:: template PerMeshAttributeHandle<ATTR_TYPE>(NULL);
+				return typename MeshType:: template PerMeshAttributeHandle<ATTR_TYPE>(NULL,0);
 	}
 
 	template <class ATTR_TYPE> 
