@@ -88,31 +88,6 @@ class SurfaceSampling
 		typedef typename MetroMesh::FaceType			FaceType;
 		typedef typename MetroMesh::FaceContainer		FaceContainer;
 
-private:
-
-	/// Cell for Poisson Disk sampling.
-	class Cell
-	{
-	public:
-		Point3<ScalarType> center;      // center of the cell
-		double halfedge;                // size (half) of the cell
-		bool isempty;                   // false if contains almost one sample
-
-		// ctor
-		Cell() :
-			center(0.0,0.0,0.0),
-			halfedge(0.0),
-			isempty(true)
-		{
-		}
-
-		vcg::Box3<ScalarType> convertToBBox()
-		{
-			vcg::Box3<ScalarType> box3(center, halfedge);
-			return box3;
-		}
-	}; // end class Cell
-	
 public:
 
 static math::MarsenneTwisterRNG &SamplingRandomGenerator() 
@@ -673,6 +648,16 @@ static void SingleFaceRaster(FaceType &f,  VertexSampler &ps, const Point2<Scala
 	}
 }
 
+// Generate a random point in volume defined by a box with uniform distribution
+static CoordType RandomBox(vcg::Box3<ScalarType> box)
+{
+	CoordType p = box.min;
+	p[0] += box.Dim()[0] * RandomDouble01();
+	p[1] += box.Dim()[1] * RandomDouble01();
+	p[2] += box.Dim()[2] * RandomDouble01();
+	return p;
+}
+
 // naive projection generates a sample inside the given box, and project it in the
 // faces intersected by this box. It always returns a valid sample.
 static vcg::Point3<ScalarType> naiveProjection(vcg::Box3<ScalarType> box, std::vector<FaceType *> faces)
@@ -681,7 +666,12 @@ static vcg::Point3<ScalarType> naiveProjection(vcg::Box3<ScalarType> box, std::v
 
 	//p = RandomBox(box);
 
+<<<<<<< .mine
+	// projection on the faces..
+	//...TODO...
+=======
 	//FaceIterator
+>>>>>>> .r3201
 
 	return p;
 }
@@ -832,8 +822,8 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, int sampleNum, int vers
 	//
 
 	std::vector<Point3i *> activeCells;
-	std::vector<FaceType *> nextFaces; // faces to add to the next level of subdivision
-	typename std::vector<FaceType *>::iterator nextFacesIt;
+	std::set<FaceType *> nextFaces; // faces to add to the next level of subdivision
+	typename std::set<FaceType *>::iterator nextFacesIt;
 	typename std::vector<Point3i>::iterator it;
 	Point3i *currentCell;
 	vcg::Box3<ScalarType> currentBox;
@@ -841,6 +831,7 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, int sampleNum, int vers
 	int level = 0;
 	bool validsample;
 	bool acceptedsample;
+	int counter[10];    // cells used for each level
 
 	do
 	{
@@ -859,7 +850,7 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, int sampleNum, int vers
 		int ncell = static_cast<int>(activeCells.size());
 		int index,index2;
 		Point3i *temp;
-		for (int i = 0; i < 100000; i++)
+		for (int i = 0; i < 129248; i++)
 		{
 			index = RandomInt(ncell);
 			index2 =  RandomInt(ncell);
@@ -942,7 +933,7 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, int sampleNum, int vers
 			{
 				// add these faces to the faces for the next level of subdivision
 				for (facesIt = faces.begin(); facesIt != faces.end(); facesIt++)
-					nextFaces.push_back(*facesIt);
+					nextFaces.insert(*facesIt);
 			}
 		}
 
@@ -955,17 +946,15 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, int sampleNum, int vers
 		gridsize[1] *= 2;
 		gridsize[2] *= 2;
 
-		std::cout << nextFaces.size() << std::endl;
-
 		searchSHT.InitEmpty(m.bbox, gridsize);
 		for (nextFacesIt = nextFaces.begin(); nextFacesIt != nextFaces.end(); nextFacesIt++)
 			searchSHT.Add(*nextFacesIt);
 
 		level++;
 
-	} while(level < 10);
+	} while(level < 2);
 
-
+	
 }
 
 //template <class MetroMesh>
