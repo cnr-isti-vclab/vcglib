@@ -92,6 +92,7 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 		float max_dim; // the limit value of the search (that takes into account of the offset)
 		float offset;    // an offset value that is always added to the returned value. Useful for extrarting isosurface  at a different threshold
 		bool DiscretizeFlag; // if the extracted surface should be discretized or not.
+		bool MultiSampleFlag;
 		Walker(const Box3f &_bbox, Point3i _siz )
 		{
 			this->bbox= _bbox;
@@ -102,6 +103,7 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 			CurrentSlice = 0;
 			offset=0;
 			DiscretizeFlag=false;
+			MultiSampleFlag=false;
 
 			_x_cs = new VertexIndex[ SliceSize ];
 			_y_cs = new VertexIndex[ SliceSize ];
@@ -144,13 +146,13 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 			return VV(x,y,z).second+offset;
 		}
 		///return true if the distance form the mesh is less than maxdim and return distance
-		bool DistanceFromMesh(int x,int y,int z,Old_Mesh *mesh, float &dist)
+		field_value DistanceFromMesh(Point3f &pp,Old_Mesh *mesh)
 		{
-
+      float dist;
 			typename Old_Mesh::FaceType *f=NULL;
 			const float max_dist = max_dim;
 			vcg::Point3f testPt;
-			this->IPiToPf(Point3i(x,y,z),testPt);
+			this->IPfToPf(pp,testPt);
 
 			vcg::Point3f closestNormV,closestNormF;
 			vcg::Point3f closestPt;
@@ -162,7 +164,7 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 			DISTFUNCTOR PDistFunct;
 			f = _g.GetClosest(PDistFunct,markerFunctor,testPt,max_dist,dist,closestPt);
 			
-			if (f==NULL) return false;
+			if (f==NULL) return field_value(false,0);
 			assert(!f->IsD());
 			bool retIP;
 	
@@ -183,7 +185,7 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 			float signV =  dir.dot(closestNormV) ;
 			float signF =  dir.dot(closestNormF) ;
 			
-			// Note that the two sings could be discordant. 
+			// Note that the two signs could be discordant. 
 			// Always choose the best one according to the magnitude.
 			float signBest;
 			if(fabs(signV) > fabs(signF)) signBest = signV;
@@ -191,34 +193,54 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 			
 			if(signBest<0) dist=-dist;
 			
-			return true;
+			return field_value(true,dist);
+		}
+
+		field_value MultiDistanceFromMesh(Point3f &pp,Old_Mesh *mesh)
+		{
+			float distSum=0;
+			int posCnt=0; // positive results counter
+			const int MultiSample=7;
+			const Point3f   delta[7]={Point3f(0,0,0),
+						Point3f( 0.2,  -0.01, -0.02),
+						Point3f(-0.2,   0.01,  0.02), 
+						Point3f( 0.01,  0.2,   0.01), 
+						Point3f( 0.03, -0.2,  -0.03), 
+						Point3f(-0.02, -0.03,  0.2 ),
+						Point3f(-0.01,  0.01, -0.2 )};
+
+			for(int qq=0;qq<MultiSample;++qq)
+			{
+				Point3f pp2=pp+delta[qq]; 
+				field_value ff= DistanceFromMesh(pp2,_oldM);
+				if(ff.first==false) return field_value(false,0);
+				distSum += fabs(ff.second);
+				if(ff.second>0) posCnt ++;
+			}
+      if(posCnt<=MultiSample/2) distSum = -distSum;			
+			return field_value(true, distSum/MultiSample);
 		}
 
 		/// compute the values if an entire slice (per y) distances>dig of a cell are signed with double of
 		/// the distance of the bb
 		void ComputeSliceValues(int slice,field_value *slice_values)
 		{
-			float dist;
 			for (int i=0; i<=this->siz.X(); i++)
 			{
 				for (int k=0; k<=this->siz.Z(); k++)
 					{
 						int index=GetSliceIndex(i,k);
-						if (DistanceFromMesh(i,slice,k,_oldM,dist))///compute the distance,inside volume of the mesh is negative
-						{
-							//put computed values in the slice values matrix
-							slice_values[index]=field_value(true,dist);
-							//end putting values
-						}
-						else
-							slice_values[index]=field_value(false,0);
+						Point3f pp(i,slice,k);
+						if(this->MultiSampleFlag) slice_values[index] = MultiDistanceFromMesh(pp,_oldM);
+																else	slice_values[index] = DistanceFromMesh(pp,_oldM);
 					}
 			}
 			//ComputeConsensus(slice,slice_values);
 		}
 		
 		/*
-		For some reasons it can happens that the sign of the computed distance is not correct. 
+			For some reasons it can happens that the sign of the computed distance could not correct. 
+			this function tries to correct these issues by flipping the isolated voxels with discordant sign
 		*/
 		void ComputeConsensus(int slice, field_value *slice_values)
 		{
@@ -574,18 +596,17 @@ typedef Walker  /*< Old_Mesh,New_Mesh>*/  MyWalker;
 typedef vcg::tri::MarchingCubes<New_Mesh, MyWalker> MyMarchingCubes;
 
 ///resample the mesh using marching cube algorithm ,the accuracy is the dimension of one cell the parameter
-static void Resample(Old_Mesh &old_mesh,New_Mesh &new_mesh,vcg::Point3<int> accuracy,float max_dist, float thr=0, bool DiscretizeFlag=false, vcg::CallBackPos *cb=0 )
+static void Resample(Old_Mesh &old_mesh,New_Mesh &new_mesh,  Box3f volumeBox, vcg::Point3<int> accuracy,float max_dist, float thr=0, bool DiscretizeFlag=false, bool MultiSampleFlag=false, vcg::CallBackPos *cb=0 )
 {
 	///be sure that the bounding box is updated
 	vcg::tri::UpdateBounding<Old_Mesh>::Box(old_mesh);
 	
-  Box3f volumeBox = old_mesh.bbox;
-	volumeBox.Offset(volumeBox.Diag()/10.0f);
 	MyWalker	walker(volumeBox,accuracy);
 
 	walker.max_dim=max_dist+fabs(thr);
 	walker.offset = - thr; 
 	walker.DiscretizeFlag = DiscretizeFlag;
+	walker.MultiSampleFlag = MultiSampleFlag;
 	MyMarchingCubes mc(new_mesh, walker);
 	walker.BuildMesh(old_mesh,new_mesh,mc,cb);
 }
