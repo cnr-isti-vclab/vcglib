@@ -676,7 +676,21 @@ static bool generatePoissonDiskSample(Point3i *cell, MontecarloSHT & samplepool,
 	p = (*cellBegin)->P();
 	return true;
 }
+			// Object functor: compute the distance between a vertex and a point
+			struct VertPointDistanceFunctor
+			{
+				inline bool operator()(const VertexType &v, const CoordType &p, ScalarType &d, CoordType &q) const
+				{
+					ScalarType distance = vcg::Distance(p, v.P());
+					if (distance>d)
+						return false;
 
+					d = distance;
+					q = v.P();
+					return true;
+				}
+			};
+			
 // check the radius constrain
 static bool checkPoissonDisk(SampleSHT & sht, Point3<ScalarType> p, ScalarType radius) 
 {
@@ -685,7 +699,23 @@ static bool checkPoissonDisk(SampleSHT & sht, Point3<ScalarType> p, ScalarType r
 	SampleSHTIterator it;
 
 	// get the samples closest to the given one
-	sht.Grid(p, itBegin, itEnd);
+	
+		ScalarType dist;
+
+		std::vector<VertexType*> closests;
+		std::vector<ScalarType> distances;
+		std::vector<CoordType> points;
+		ScalarType distance;
+		CoordType point;
+
+		typedef typename tri::VertTmark<MetroMesh> MarkerVertex;
+		MarkerVertex mv;
+		//typedef typename vcg::face::PointDistanceFunctor<ScalarType> VDistFunct; 
+		VertPointDistanceFunctor vdf;
+		//sht.GetInSphere (vdf , mv,  p ,radius,closests,distances,points);
+
+	//sht.GetInSphere();
+	//sht.Grid(p, itBegin, itEnd);
 
 	VertexType *v;
 	VertexType d;
@@ -852,7 +882,7 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 
 				montecarloSHT.Grid(*currentCell, ptBegin, ptEnd);
 
-				for (ptIt = ptBegin; ptIt != ptEnd; ptIt++)
+				for (ptIt = ptBegin; ptIt != ptEnd; ++ptIt)
 				{
 					nextPoints.push_back(*ptIt);
 				}
