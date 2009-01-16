@@ -88,6 +88,13 @@ class SurfaceSampling
 		typedef typename MetroMesh::FaceType			FaceType;
 		typedef typename MetroMesh::FaceContainer		FaceContainer;
 
+		typedef typename vcg::SpatialHashTable<FaceType, ScalarType> MeshSHT;
+		typedef typename vcg::SpatialHashTable<FaceType, ScalarType>::CellIterator MeshSHTIterator;
+		typedef typename vcg::SpatialHashTable<VertexType, ScalarType> MontecarloSHT;
+		typedef typename vcg::SpatialHashTable<VertexType, ScalarType>::CellIterator MontecarloSHTIterator;
+		typedef typename vcg::SpatialHashTable<VertexType, ScalarType> SampleSHT;
+		typedef typename vcg::SpatialHashTable<VertexType, ScalarType>::CellIterator SampleSHTIterator;
+
 public:
 
 static math::MarsenneTwisterRNG &SamplingRandomGenerator() 
@@ -658,105 +665,33 @@ static CoordType RandomBox(vcg::Box3<ScalarType> box)
 	return p;
 }
 
-// naive projection generates a sample inside the given box, and project it in the
-// faces intersected by this box. It always returns a valid sample.
-static vcg::Point3<ScalarType> naiveProjection(vcg::Box3<ScalarType> box,
-                                               MetroMesh &mesh,
-                                               vcg::SpatialHashTable<FaceType, ScalarType> & sht)
+static bool generatePoissonDiskSample(Point3i *cell, MontecarloSHT samplepool, vcg::Point3<ScalarType> & p)
 {
-	vcg::Point3<ScalarType> p;
+	MontecarloSHTIterator cellBegin;
+	MontecarloSHTIterator cellEnd;
+	MontecarloSHTIterator cellIt;
+	samplepool.Grid(*cell, cellBegin, cellEnd);
 
-	p = RandomBox(box);
+	std::vector<VertexType *> samples;
+	for (cellIt = cellBegin; cellIt != cellEnd; cellIt++)
+		samples.push_back(*cellIt);
 
-	// projection on the faces
-	CoordType closestp = p;
-	ScalarType maxdist = box.DimX();
-	ScalarType mindist;
-
-	// THIS NOT WORK...
-	//vcg::tri::GetClosestFace<MetroMesh, vcg::SpatialHashTable<FaceType, ScalarType> >(
-	//	mesh, sht, p, maxdist, mindist, closestp);
-
-/* THIS NOT WORK...
-	typedef vcg::tri::FaceTmark<MetroMesh> Marker;
-	Marker markerFunctor;
-	markerFunctor.SetMesh(&mesh);
-	FaceType  *nearestF=0;
-	vcg::face::PointDistanceBaseFunctor<ScalarType> PDistFunct;
-	nearestF = sht.GetClosest(PDistFunct,markerFunctor,p,maxdist,mindist,closestp);
-*/
-	return closestp;
-}
-
-// Montecarlo "reduced" generates a sample on the faces intersected by the given box
-static vcg::Point3<ScalarType> naiveMontecarloReduced(vcg::Box3<ScalarType> box, 
-                                                      std::vector<FaceType *> faces)
-{
-	vcg::Point3<ScalarType> p;
-	//...TODO...
-	return p;
-}
-
-// naive projection generates a sample inside the given box, and project it on the
-// faces intersected by this box. If the projected point lies outside the box
-// the sample is re-generated. 
-// false is returned if the maximum number of attempts has been reached.
-static bool naiveProjectionInside(vcg::Box3<ScalarType> box, 
-                                  MetroMesh &mesh,
-                                  vcg::SpatialHashTable<FaceType, ScalarType> & sht,
-                                  int maxattemps, vcg::Point3<ScalarType> &p)
-{
-	bool flaginside = false;
-	int k=1;
-	do 
+	if (samples.size() >= 1)
 	{
-		p = naiveProjection(box, mesh, sht);
-		
-		// check if p is inside the box
-		flaginside = box.IsIn(p);
-		k++;
-
-	} while (!flaginside && k < maxattemps);
-	
-	return flaginside;
+		int index = RandomInt(samples.size());
+		p = samples[index]->P();
+		return true;
+	}
+	else
+		return false;
 }
-
-// naive surface generation generates a sample on the faces intersected by the given box
-// if the point lies outside the box the sample is re-generated.
-// false is returned if the maximum number of attempts has been reached.
-static bool naiveMontecarloReducedInside(vcg::Box3<ScalarType> box, std::vector<FaceType *> faces, 
-                                         int maxattemps, vcg::Point3<ScalarType> &p)
-{
-	//...TODO...
-	return true;
-}
-
-// [erfect projection generates a sample inside the given box, and project it 
-// on the surface inside this box. It always returns a valid sample.
-static vcg::Point3<ScalarType> perfectProjection(vcg::Box3<ScalarType> box, std::vector<FaceType *> faces)
-{
-	vcg::Point3<ScalarType> p;
-	//...TODO...
-	return p;
-}
-
-// perfect Montecarlo Reduced generates a sample on the faces contained in the given box.
-// Intersecting faces are treated properly. It always returns a valid sample.
-static vcg::Point3<ScalarType> perfectMontecarloReduced(vcg::Box3<ScalarType> box, std::vector<FaceType *> faces)
-{
-	vcg::Point3<ScalarType> p;
-	//...TODO...
-	return p;
-}
-
-
 
 // check the radius constrain
-static bool checkPoissonDisk(vcg::SpatialHashTable<VertexType, ScalarType> sht, Point3<ScalarType> p, ScalarType radius) 
+static bool checkPoissonDisk(SampleSHT sht, Point3<ScalarType> p, ScalarType radius) 
 {
-	typename vcg::SpatialHashTable<VertexType, ScalarType>::CellIterator itBegin;
-	typename vcg::SpatialHashTable<VertexType, ScalarType>::CellIterator itEnd;
-	typename vcg::SpatialHashTable<VertexType, ScalarType>::CellIterator it;
+	SampleSHTIterator itBegin;
+	SampleSHTIterator itEnd;
+	SampleSHTIterator it;
 
 	// get the samples closest to the given one
 	sht.Grid(p, itBegin, itEnd);
@@ -784,18 +719,18 @@ static bool checkPoissonDisk(vcg::SpatialHashTable<VertexType, ScalarType> sht, 
  * IEEE Symposium on Interactive Ray Tracing, 2007,
  * 10-12 Sept. 2007, pp. 129-132.
  */
-static void Poissondisk(MetroMesh &m, VertexSampler &ps, int sampleNum, int version)
+static void Poissondisk(MetroMesh &m, VertexSampler &ps, MetroMesh & montecarloMesh, int sampleNum)
 {
 	const int MAXLEVELS = 10; // maximum level of subdivision
 
 	// spatial index of mesh face - used to search where to place the samples
-	vcg::SpatialHashTable<FaceType, ScalarType> searchSHT;
-	typename vcg::SpatialHashTable<FaceType, ScalarType>::CellIterator cellBegin;
-	typename vcg::SpatialHashTable<FaceType, ScalarType>::CellIterator cellEnd;
-	typename vcg::SpatialHashTable<FaceType, ScalarType>::CellIterator cellIt;
+	//MeshSHT searchSHT;
+
+	// spatial index of montecarlo samples - used to choose a new sample to insert
+	MontecarloSHT montecarloSHT;
 
 	// spatial hash table of the generated samples - used to check the radius constrain
-	vcg::SpatialHashTable<VertexType, ScalarType> checkSHT;
+	SampleSHT checkSHT;
 
 	// initialize spatial hash table for searching
 	ScalarType meshArea = Stat<MetroMesh>::ComputeMeshArea(m);
@@ -806,37 +741,37 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, int sampleNum, int vers
 	int sizeX = m.bbox.DimX() / r;
 	int sizeY = m.bbox.DimY() / r;
 	int sizeZ = m.bbox.DimZ() / r;
-
 	Point3i gridsize(sizeX, sizeY, sizeZ);
+/*
 	searchSHT.InitEmpty(m.bbox, gridsize);
 	FaceIterator fi;
 	for (fi = m.face.begin(); fi != m.face.end(); fi++)
 		searchSHT.Add(&(*fi));
+*/
+	// initialize spatial hash to index pre-generated samples
+	VertexIterator vi;
+	montecarloSHT.InitEmpty(m.bbox, gridsize);
+	for (vi = m.vert.begin(); vi != m.vert.end(); vi++)
+		montecarloSHT.Add(&(*vi));
 
-	// initialize spatial hash table for checking
+	// initialize spatial hash table for check poisson-disk radius constrain
 	checkSHT.InitEmpty(m.bbox, gridsize);
 
-	// sampling algorithm ("Projection-based")
-	// ---------------------------------------------------
+	// sampling algorithm
+	// ------------------
 	//
+	// - generate millions of samples using montecarlo algorithm
 	// - extract a cell (C) from the active cell list (with probability proportional to cell's volume)
 	// - with a probability proportional to the intersection between the surface and the cell
-	//   generate a sample inside C and project it on the mesh 
+	//   generate a sample inside C by choosing one of the contained pre-generated samples
 	//   - if the sample violates the radius constrain discard it, and add the cell to the cells-to-subdivide list
 	// - iterate until the active cell list is empty or a pre-defined number of subdivisions is reached
 	//
 
-	// sampling algorithm ("Surface-based")
-	// ------------------------------------------------
-	//
-	// - extract a cell (C) from the active cell list (with probability proportional to the cell's volume)
-	// - with a probability proportional to the intersection between the surface and the cell 
-	//   generate a sample on the triangles inside C
-	//   - if the sample violated the radius constrain discard it, and add the cell to the cells-to-subdivide list
-	// - iterate until the active cell list is empty or a pre-defined number of subdivisions is reached
-	//
-
 	std::vector<Point3i *> activeCells;
+	std::vector<Point3i *> cellsToSubdivide;
+	typename std::vector<Point3i *>::iterator cellIt;
+
 	std::set<FaceType *> nextFaces; // faces to add to the next level of subdivision
 	typename std::set<FaceType *>::iterator nextFacesIt;
 	typename std::vector<Point3i>::iterator it;
@@ -854,7 +789,7 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, int sampleNum, int vers
 		///////////////////////////////////////////////////////////////////////////////////////////////////
 
 		// create active cell list
-		for (it = searchSHT.AllocatedCells.begin(); it != searchSHT.AllocatedCells.end(); it++)
+		for (it = montecarloSHT.AllocatedCells.begin(); it != montecarloSHT.AllocatedCells.end(); it++)
 		{
 			activeCells.push_back(&(*it));
 		}
@@ -865,7 +800,7 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, int sampleNum, int vers
 		int ncell = static_cast<int>(activeCells.size());
 		int index,index2;
 		Point3i *temp;
-		for (int i = 0; i < 129248; i++)
+		for (int i = 0; i < ncell/2; i++)
 		{
 			index = RandomInt(ncell);
 			index2 =  RandomInt(ncell);
@@ -884,47 +819,8 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, int sampleNum, int vers
 		{
 			currentCell = activeCells[i];
 
-			// calculate box and contained faces
-			searchSHT.Grid(*currentCell, cellBegin, cellEnd);
-			searchSHT.IPiToBox(*currentCell, currentBox);
-
-			faces.clear();
-			for (cellIt = cellBegin; cellIt != cellEnd; ++cellIt)
-			{
-				faces.push_back(*cellIt);
-			}
-
-			validsample = true;
-			if (version == 0)
-			{
-				// naive projection method (unsafe)
-				s = naiveProjection(currentBox, m, searchSHT);
-			}
-			else if (version == 1)
-			{
-				// naive montecarlo reduced (unsafe)
-				s = naiveMontecarloReduced(currentBox, faces);
-			}
-			else if (version == 2)
-			{
-				// naive projection method (safer, but still not perfect)
-				validsample = naiveProjectionInside(currentBox, m, searchSHT, 10, s);
-			}
-			else if (version == 3)
-			{
-				// naive montecarlo reduced (safer, but still not perfect)
-				validsample = naiveMontecarloReducedInside(currentBox, faces, 10, s);
-			}
-			else if (version == 4)
-			{
-				// perfect projection method
-				s = perfectProjection(currentBox, faces);
-			}
-			else if (version == 5)
-			{
-				// perfect montecarlo reduced
-				s = perfectMontecarloReduced(currentBox, faces);
-			}
+			// generate a sample chosen from the pre-generated one
+			validsample = generatePoissonDiskSample(currentCell, montecarloSHT, s);
 
 			if (validsample)
 			{
@@ -946,30 +842,52 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, int sampleNum, int vers
 			}
 			else
 			{
-				// add these faces to the faces for the next level of subdivision
-				for (facesIt = faces.begin(); facesIt != faces.end(); facesIt++)
-					nextFaces.insert(*facesIt);
+				// subdivide this cell
+				cellsToSubdivide.push_back(currentCell);
 			}
 		}
 
-		
 		activeCells.clear();
 
 		// proceed to the next level of subdivision
-		searchSHT.Clear();
+		///////////////////////////////////////////////////////////////////////////
+
+		// cleaning spatial index data structures
+		//searchSHT.Clear();
+		montecarloSHT.Clear();
+
+		// increase grid resolution
 		gridsize[0] *= 2;
 		gridsize[1] *= 2;
 		gridsize[2] *= 2;
 
-		searchSHT.InitEmpty(m.bbox, gridsize);
-		for (nextFacesIt = nextFaces.begin(); nextFacesIt != nextFaces.end(); nextFacesIt++)
-			searchSHT.Add(*nextFacesIt);
+		//searchSHT.InitEmpty(m.bbox, gridsize);
+		montecarloSHT.InitEmpty(m.bbox, gridsize);
 
+		for (cellIt = cellsToSubdivide.begin(); cellIt != cellsToSubdivide.end(); cellIt++)
+		{
+			MeshSHTIterator faceBegin,faceEnd,faceIt;
+			MontecarloSHTIterator ptBegin,ptEnd,ptIt;
+
+			Point3i *cell = *cellIt;
+
+			// pre-generated samples for the next level of subdivision
+			montecarloSHT.Grid(*cell, ptBegin, ptEnd);
+			for (ptIt = ptBegin; ptIt != ptEnd; ptIt++)
+				montecarloSHT.Add(*ptIt);
+
+/*
+			// faces of the mesh for the next level of subdivision
+			searchSHT.Grid(*cell, faceBegin, faceEnd);
+			for (faceIt = faceBegin; faceIt != faceEnd; faceIt++)
+				searchSHT.Add(*faceIt);
+*/
+		}
+		
 		level++;
 
-	} while(level < 2);
+	} while(level < 1);
 
-	
 }
 
 //template <class MetroMesh>
