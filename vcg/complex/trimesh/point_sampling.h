@@ -665,29 +665,20 @@ static CoordType RandomBox(vcg::Box3<ScalarType> box)
 	return p;
 }
 
-static bool generatePoissonDiskSample(Point3i *cell, MontecarloSHT samplepool, vcg::Point3<ScalarType> & p)
+static bool generatePoissonDiskSample(Point3i *cell, MontecarloSHT & samplepool, vcg::Point3<ScalarType> & p)
 {
 	MontecarloSHTIterator cellBegin;
 	MontecarloSHTIterator cellEnd;
-	MontecarloSHTIterator cellIt;
 	samplepool.Grid(*cell, cellBegin, cellEnd);
 
-	std::vector<VertexType *> samples;
-	for (cellIt = cellBegin; cellIt != cellEnd; cellIt++)
-		samples.push_back(*cellIt);
+	assert(cellBegin != cellEnd);
 
-	if (samples.size() >= 1)
-	{
-		int index = RandomInt(samples.size());
-		p = samples[index]->P();
-		return true;
-	}
-	else
-		return false;
+	p = (*cellBegin)->P();
+	return true;
 }
 
 // check the radius constrain
-static bool checkPoissonDisk(SampleSHT sht, Point3<ScalarType> p, ScalarType radius) 
+static bool checkPoissonDisk(SampleSHT & sht, Point3<ScalarType> p, ScalarType radius) 
 {
 	SampleSHTIterator itBegin;
 	SampleSHTIterator itEnd;
@@ -719,12 +710,24 @@ static bool checkPoissonDisk(SampleSHT sht, Point3<ScalarType> p, ScalarType rad
  * IEEE Symposium on Interactive Ray Tracing, 2007,
  * 10-12 Sept. 2007, pp. 129-132.
  */
-static void Poissondisk(MetroMesh &m, VertexSampler &ps, MetroMesh & montecarloMesh, int sampleNum)
+static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &montecarloMesh, int sampleNum)
 {
-	const int MAXLEVELS = 10; // maximum level of subdivision
+	int cellusedcounter[20];          // cells used for each level
+	int cellstosubdividecounter[20];  // cells to subdivide for each level
+	int samplesgenerated[20];         // samples generated for each level
+	int samplesaccepted[20];          // samples accepted for each level
+	int verticescounter[20];          // vertices added to the spatial hash table
 
-	// spatial index of mesh face - used to search where to place the samples
-	//MeshSHT searchSHT;
+	for (int i = 0; i < 20; i++)
+	{
+		cellusedcounter[i] = 0;
+		cellstosubdividecounter[i] = 0;
+		samplesgenerated[i] = 0;
+		samplesaccepted[i] = 0;
+		verticescounter[i] = 0;
+	}
+
+	const int MAXLEVELS = 5; // maximum level of subdivision
 
 	// spatial index of montecarlo samples - used to choose a new sample to insert
 	MontecarloSHT montecarloSHT;
@@ -733,29 +736,27 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, MetroMesh & montecarloM
 	SampleSHT checkSHT;
 
 	// initialize spatial hash table for searching
-	ScalarType meshArea = Stat<MetroMesh>::ComputeMeshArea(m);
+	ScalarType meshArea = Stat<MetroMesh>::ComputeMeshArea(origMesh);
 	ScalarType r = sqrt(meshArea / (0.7 * 3.1415 * sampleNum)); // 0.7 is a density factor
 
-	ScalarType cellsize = r / sqrt(2.0);
+	ScalarType cellsize = r / (2.0 * sqrt(2.0));
 
-	int sizeX = m.bbox.DimX() / r;
-	int sizeY = m.bbox.DimY() / r;
-	int sizeZ = m.bbox.DimZ() / r;
+	int sizeX = origMesh.bbox.DimX() / cellsize;
+	int sizeY = origMesh.bbox.DimY() / cellsize;
+	int sizeZ = origMesh.bbox.DimZ() / cellsize;
 	Point3i gridsize(sizeX, sizeY, sizeZ);
-/*
-	searchSHT.InitEmpty(m.bbox, gridsize);
-	FaceIterator fi;
-	for (fi = m.face.begin(); fi != m.face.end(); fi++)
-		searchSHT.Add(&(*fi));
-*/
+
 	// initialize spatial hash to index pre-generated samples
 	VertexIterator vi;
-	montecarloSHT.InitEmpty(m.bbox, gridsize);
-	for (vi = m.vert.begin(); vi != m.vert.end(); vi++)
+	montecarloSHT.InitEmpty(origMesh.bbox, gridsize);
+	for (vi = montecarloMesh.vert.begin(); vi != montecarloMesh.vert.end(); vi++)
+	{
 		montecarloSHT.Add(&(*vi));
+		verticescounter[0]++;
+	}
 
 	// initialize spatial hash table for check poisson-disk radius constrain
-	checkSHT.InitEmpty(m.bbox, gridsize);
+	checkSHT.InitEmpty(origMesh.bbox, gridsize);
 
 	// sampling algorithm
 	// ------------------
@@ -769,11 +770,9 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, MetroMesh & montecarloM
 	//
 
 	std::vector<Point3i *> activeCells;
-	std::vector<Point3i *> cellsToSubdivide;
-	typename std::vector<Point3i *>::iterator cellIt;
+	std::vector<VertexType *> nextPoints;
+	typename std::vector<VertexType *>::iterator nextPointsIt;
 
-	std::set<FaceType *> nextFaces; // faces to add to the next level of subdivision
-	typename std::set<FaceType *>::iterator nextFacesIt;
 	typename std::vector<Point3i>::iterator it;
 	Point3i *currentCell;
 	vcg::Box3<ScalarType> currentBox;
@@ -781,7 +780,6 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, MetroMesh & montecarloM
 	int level = 0;
 	bool validsample;
 	bool acceptedsample;
-	int counter[10];    // cells used for each level
 
 	do
 	{
@@ -794,10 +792,9 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, MetroMesh & montecarloM
 			activeCells.push_back(&(*it));
 		}
 
-		nextFaces.clear();
-
 		// shuffle active cells
 		int ncell = static_cast<int>(activeCells.size());
+		cellusedcounter[level] = ncell;
 		int index,index2;
 		Point3i *temp;
 		for (int i = 0; i < ncell/2; i++)
@@ -805,7 +802,7 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, MetroMesh & montecarloM
 			index = RandomInt(ncell);
 			index2 =  RandomInt(ncell);
 			temp = activeCells[index];
-			activeCells[index] = temp;
+			activeCells[index] = activeCells[index2];
 			activeCells[index2] = temp;
 		}
 
@@ -813,22 +810,23 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, MetroMesh & montecarloM
 		// generate a sample inside C and project it on the mesh
 		//////////////////////////////////////////////////////////////////////////////////////////
 
-		std::vector<FaceType *> faces;
-		typename std::vector<FaceType *>::iterator facesIt;
 		for (int i = 0; i < ncell; i++)
 		{
 			currentCell = activeCells[i];
 
 			// generate a sample chosen from the pre-generated one
 			validsample = generatePoissonDiskSample(currentCell, montecarloSHT, s);
+			samplesgenerated[level]++;
 
 			if (validsample)
 			{
 				// sample is valid
 				acceptedsample = checkPoissonDisk(checkSHT, s, r);
 			}
-			else 
+			else
+			{
 				acceptedsample = false;
+			}
 
 			if (acceptedsample)
 			{
@@ -839,11 +837,27 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, MetroMesh & montecarloM
 
 				// add to control spatial index
 				checkSHT.Add(v);
+
+				samplesaccepted[level]++;
 			}
 			else
 			{
 				// subdivide this cell
-				cellsToSubdivide.push_back(currentCell);
+				///////////////////////////////////////////////////////////////////////
+
+				// pre-generated samples for the next level of subdivision
+				MontecarloSHTIterator ptBegin;
+				MontecarloSHTIterator ptEnd;
+				MontecarloSHTIterator ptIt;
+
+				montecarloSHT.Grid(*currentCell, ptBegin, ptEnd);
+
+				for (ptIt = ptBegin; ptIt != ptEnd; ptIt++)
+				{
+					nextPoints.push_back(*ptIt);
+				}
+
+				cellstosubdividecounter[level]++;
 			}
 		}
 
@@ -853,7 +867,6 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, MetroMesh & montecarloM
 		///////////////////////////////////////////////////////////////////////////
 
 		// cleaning spatial index data structures
-		//searchSHT.Clear();
 		montecarloSHT.Clear();
 
 		// increase grid resolution
@@ -861,32 +874,44 @@ static void Poissondisk(MetroMesh &m, VertexSampler &ps, MetroMesh & montecarloM
 		gridsize[1] *= 2;
 		gridsize[2] *= 2;
 
-		//searchSHT.InitEmpty(m.bbox, gridsize);
-		montecarloSHT.InitEmpty(m.bbox, gridsize);
+		montecarloSHT.InitEmpty(montecarloMesh.bbox, gridsize);
 
-		for (cellIt = cellsToSubdivide.begin(); cellIt != cellsToSubdivide.end(); cellIt++)
+		for (nextPointsIt = nextPoints.begin(); nextPointsIt != nextPoints.end(); nextPointsIt++)
 		{
-			MeshSHTIterator faceBegin,faceEnd,faceIt;
-			MontecarloSHTIterator ptBegin,ptEnd,ptIt;
-
-			Point3i *cell = *cellIt;
-
-			// pre-generated samples for the next level of subdivision
-			montecarloSHT.Grid(*cell, ptBegin, ptEnd);
-			for (ptIt = ptBegin; ptIt != ptEnd; ptIt++)
-				montecarloSHT.Add(*ptIt);
-
-/*
-			// faces of the mesh for the next level of subdivision
-			searchSHT.Grid(*cell, faceBegin, faceEnd);
-			for (faceIt = faceBegin; faceIt != faceEnd; faceIt++)
-				searchSHT.Add(*faceIt);
-*/
+			montecarloSHT.Add(*nextPointsIt);
+			verticescounter[level+1]++;
 		}
+
+		nextPoints.clear();
 		
 		level++;
 
-	} while(level < 1);
+	} while(level < MAXLEVELS);
+
+
+	// write some statistics
+	QFile data("C:/temp/poissondisk_statistics.txt");
+	if (data.open(QFile::WriteOnly | QFile::Truncate)) 
+	{
+		QTextStream out(&data);
+
+		for (int k = 0; k < MAXLEVELS; k++)
+			out << "Cells used for level " << k << ": " << cellusedcounter[k] << endl;
+
+		for (int k = 0; k < MAXLEVELS; k++)
+			out << "Cells to subdivide for level " << k << ": " << cellstosubdividecounter[k] << endl;
+
+		for (int k = 0; k < MAXLEVELS; k++)
+			out << "Vertices counter for level " << k << ": " << verticescounter[k] << endl;
+
+		for (int k = 0; k < MAXLEVELS; k++)
+			out << "Samples generated for level " << k << ": " << samplesgenerated[k] << endl;
+
+		for (int k = 0; k < MAXLEVELS; k++)
+			out << "Samples accepted for level " << k << ": " << samplesaccepted[k] << endl;
+
+
+	}
 
 }
 
