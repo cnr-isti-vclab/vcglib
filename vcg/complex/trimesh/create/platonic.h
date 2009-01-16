@@ -415,6 +415,7 @@ void Sphere(MeshType &in, const int subdiv = 3 )
 		vi->P().Normalize();
 
 	tri::UpdateFlags<MeshType>::FaceBorderFromNone(in);
+	tri::UpdateTopology<MyMesh>::FaceFace(in);
 
 	size_t lastsize = 0;
 	for(int i = 0 ; i < subdiv; ++i)
