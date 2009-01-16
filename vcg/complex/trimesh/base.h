@@ -257,7 +257,7 @@ class TriMesh: public TriMeshEdgeHolder<VertContainerType,FaceContainerType,Edge
 	public:
 		PerVertexAttributeHandle(){_handle=NULL;}
 		PerVertexAttributeHandle( void *ah,const int & n):_handle ( (SimpleTempData<VertContainer,ATTR_TYPE> *)ah ),n_attr(n){}
-		PerVertexAttributeHandle operator = ( const PerVertexAttributeHandle & pva){ 
+		void operator = ( const PerVertexAttributeHandle & pva){ 
 			(SimpleTempData<VertContainer,ATTR_TYPE> *)pva._handle;
 			n_attr = pva.n_attr;
 		}
