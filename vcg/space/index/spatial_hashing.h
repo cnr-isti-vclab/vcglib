@@ -80,7 +80,7 @@ namespace vcg{
 	Matthias Teschner and Bruno Heidelberger and Matthias Muller and Danat Pomeranets and Markus Gross
 	*/
 	template < typename ObjType,class FLT=double>
-	class SpatialHashTable:public BasicGrid<FLT>, SpatialIndex<ObjType,FLT>
+	class SpatialHashTable:public BasicGrid<FLT>, public SpatialIndex<ObjType,FLT>
 	{
 
 	public:
