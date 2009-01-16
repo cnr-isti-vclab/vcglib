@@ -158,8 +158,17 @@ namespace vcg {
 		{};
 
 		template <class MESH_TYPE>
-		class VertTmark:public Tmark<MESH_TYPE,typename MESH_TYPE::VertexType>
-		{};
+		class VertTmark
+		{
+		public:
+		typedef typename  MESH_TYPE::VertexType VertexType;
+		
+			VertTmark(){}
+			void UnMarkAll(){}
+			bool IsMarked(VertexType*) { return false; }
+			void Mark(VertexType*){}
+			void SetMesh(void *m=0) {}
+		};
 
 		//**CLOSEST FUNCTION DEFINITION**//
 
