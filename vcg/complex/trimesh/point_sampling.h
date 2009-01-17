@@ -99,7 +99,7 @@ public:
 
 static math::MarsenneTwisterRNG &SamplingRandomGenerator() 
 {
-	static math::MarsenneTwisterRNG rnd;
+	static math::MarsenneTwisterRNG rnd();
 	return rnd;
 }
 
@@ -665,6 +665,7 @@ static CoordType RandomBox(vcg::Box3<ScalarType> box)
 	return p;
 }
 
+// generate Poisson-disk sample using a set of pre-generated samples (with the Montecarlo algorithm)
 static bool generatePoissonDiskSample(Point3i *cell, MontecarloSHT & samplepool, vcg::Point3<ScalarType> & p)
 {
 	MontecarloSHTIterator cellBegin;
@@ -676,58 +677,20 @@ static bool generatePoissonDiskSample(Point3i *cell, MontecarloSHT & samplepool,
 	p = (*cellBegin)->P();
 	return true;
 }
-			// Object functor: compute the distance between a vertex and a point
-			struct VertPointDistanceFunctor
-			{
-				inline bool operator()(const VertexType &v, const CoordType &p, ScalarType &d, CoordType &q) const
-				{
-					ScalarType distance = vcg::Distance(p, v.P());
-					if (distance>d)
-						return false;
 
-					d = distance;
-					q = v.P();
-					return true;
-				}
-			};
-			
 // check the radius constrain
-static bool checkPoissonDisk(SampleSHT & sht, Point3<ScalarType> p, ScalarType radius) 
+static bool checkPoissonDisk(MetroMesh & vmesh, SampleSHT & sht, Point3<ScalarType> & p, ScalarType radius) 
 {
-	SampleSHTIterator itBegin;
-	SampleSHTIterator itEnd;
-	SampleSHTIterator it;
-
 	// get the samples closest to the given one
-	
-		ScalarType dist;
+	std::vector<VertexType*> closests;
+	std::vector<ScalarType> distances;
+	std::vector<CoordType> points;
 
-		std::vector<VertexType*> closests;
-		std::vector<ScalarType> distances;
-		std::vector<CoordType> points;
-		ScalarType distance;
-		CoordType point;
-
-		typedef typename tri::VertTmark<MetroMesh> MarkerVertex;
-		MarkerVertex mv;
-		//typedef typename vcg::face::PointDistanceFunctor<ScalarType> VDistFunct; 
-		VertPointDistanceFunctor vdf;
-		//sht.GetInSphere (vdf , mv,  p ,radius,closests,distances,points);
-
-	//sht.GetInSphere();
-	//sht.Grid(p, itBegin, itEnd);
-
-	VertexType *v;
-	VertexType d;
-
-	for (it = itBegin; it != itEnd; ++it)
-	{
-		v = *it;
-		if (Distance(v->P(),p) < radius)
-			return false;
-	}
-
-	return true;
+	unsigned int nsamples = vcg::tri::GetInSphereVertex(vmesh, sht, p ,radius,closests,distances,points);
+	if (nsamples > 0)
+		return false;
+	else
+		return true;
 }
 
 /** Compute a Poisson-disk sampling of the surface.
@@ -769,7 +732,7 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 	ScalarType meshArea = Stat<MetroMesh>::ComputeMeshArea(origMesh);
 	ScalarType r = sqrt(meshArea / (0.7 * 3.1415 * sampleNum)); // 0.7 is a density factor
 
-	ScalarType cellsize = r / (2.0 * sqrt(2.0));
+	ScalarType cellsize = r / sqrt(3.0);
 
 	int sizeX = origMesh.bbox.DimX() / cellsize;
 	int sizeY = origMesh.bbox.DimY() / cellsize;
@@ -788,6 +751,42 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 	// initialize spatial hash table for check poisson-disk radius constrain
 	checkSHT.InitEmpty(origMesh.bbox, gridsize);
 
+
+
+	// write some statistics
+	QFile data("C:/temp/performances.txt");
+	if (data.open(QFile::WriteOnly | QFile::Truncate)) 
+	{
+		QTextStream out(&data);
+
+		int t1 = clock();
+
+		for (int k = 0; k < 100; k++)
+		{
+			VertexType *v = new VertexType; 
+			v->P() = RandomBox(origMesh.bbox);
+			ps.AddVert(*v);
+			checkSHT.Add(v);
+		}
+
+		int t2 = clock();
+
+		for (int k = 0; k < 100; k++)
+		{
+			Point3<ScalarType> p = RandomBox(origMesh.bbox);
+			checkPoissonDisk(*ps.m, checkSHT, p, r);
+		}
+
+		int t3 = clock();
+
+		out << t2-t1 << endl;
+		out << t3-t2 << endl;
+	}
+
+	data.close();
+
+	exit(2);
+
 	// sampling algorithm
 	// ------------------
 	//
@@ -800,8 +799,8 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 	//
 
 	std::vector<Point3i *> activeCells;
-	std::vector<VertexType *> nextPoints;
-	typename std::vector<VertexType *>::iterator nextPointsIt;
+	std::set<VertexType *> nextPoints;
+	typename std::set<VertexType *>::iterator nextPointsIt;
 
 	typename std::vector<Point3i>::iterator it;
 	Point3i *currentCell;
@@ -836,8 +835,8 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 			activeCells[index2] = temp;
 		}
 
-		// with a probability proportional to the intersection between the surface and the cell 
-		// generate a sample inside C and project it on the mesh
+		// with a probability proportional to the intersection between the surface and the cell
+		// generate a sample inside C by choosing one of the contained pre-generated samples
 		//////////////////////////////////////////////////////////////////////////////////////////
 
 		for (int i = 0; i < ncell; i++)
@@ -851,7 +850,7 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 			if (validsample)
 			{
 				// sample is valid
-				acceptedsample = checkPoissonDisk(checkSHT, s, r);
+				acceptedsample = checkPoissonDisk(*ps.m, checkSHT, s, r);
 			}
 			else
 			{
@@ -884,7 +883,7 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 
 				for (ptIt = ptBegin; ptIt != ptEnd; ++ptIt)
 				{
-					nextPoints.push_back(*ptIt);
+					nextPoints.insert(*ptIt);
 				}
 
 				cellstosubdividecounter[level]++;
@@ -904,7 +903,7 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 		gridsize[1] *= 2;
 		gridsize[2] *= 2;
 
-		montecarloSHT.InitEmpty(montecarloMesh.bbox, gridsize);
+		montecarloSHT.InitEmpty(origMesh.bbox, gridsize);
 
 		for (nextPointsIt = nextPoints.begin(); nextPointsIt != nextPoints.end(); nextPointsIt++)
 		{
@@ -920,8 +919,8 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 
 
 	// write some statistics
-	QFile data("C:/temp/poissondisk_statistics.txt");
-	if (data.open(QFile::WriteOnly | QFile::Truncate)) 
+	QFile outfile("C:/temp/poissondisk_statistics.txt");
+	if (outfile.open(QFile::WriteOnly | QFile::Truncate)) 
 	{
 		QTextStream out(&data);
 
@@ -939,10 +938,9 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 
 		for (int k = 0; k < MAXLEVELS; k++)
 			out << "Samples accepted for level " << k << ": " << samplesaccepted[k] << endl;
-
-
 	}
 
+	outfile.close();
 }
 
 //template <class MetroMesh>
