@@ -92,6 +92,7 @@ Initial Release
 #include <assert.h>
 #include <string>
 #include <limits>
+#include <vcg/math/base.h>
 
 
 namespace vcg {
@@ -136,7 +137,7 @@ public:
 	ScalarType RMS(){ DirtyCheck(); return rms;}
 	
 	//! Returns the variance of the data.
-	ScalarType Variance(){ return fabs(rms-avg*avg);}
+	ScalarType Variance(){ return math::Abs(rms-avg*avg);}
 	
 	//! Returns the standard deviation of the data.
 	ScalarType StandardDeviation(){ return sqrt(Variance());}
@@ -153,7 +154,7 @@ public:
 				avg += double(*vi);
 				rms += double(*vi)*double(*vi);
 			}
-		rms = sqrt(rms/double(vec.size()));
+		rms = math::Sqrt(rms/double(vec.size()));
 		avg = avg/double(vec.size());
 		dirty=false;
 	}
