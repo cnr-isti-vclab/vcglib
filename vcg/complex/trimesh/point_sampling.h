@@ -99,7 +99,7 @@ public:
 
 static math::MarsenneTwisterRNG &SamplingRandomGenerator() 
 {
-	static math::MarsenneTwisterRNG rnd();
+	static math::MarsenneTwisterRNG rnd;
 	return rnd;
 }
 
@@ -720,6 +720,13 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 		verticescounter[i] = 0;
 	}
 
+
+	// create a support mesh with markers for vertices and enable vertex marker for all the meshes
+	MetroMesh supportMesh;
+	supportMesh.vert.EnableMark();
+	ps.m->vert.EnableMark();
+	montecarloMesh.vert.EnableMark();
+
 	const int MAXLEVELS = 5; // maximum level of subdivision
 
 	// spatial index of montecarlo samples - used to choose a new sample to insert
@@ -751,41 +758,6 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 	// initialize spatial hash table for check poisson-disk radius constrain
 	checkSHT.InitEmpty(origMesh.bbox, gridsize);
 
-
-
-	// write some statistics
-	QFile data("C:/temp/performances.txt");
-	if (data.open(QFile::WriteOnly | QFile::Truncate)) 
-	{
-		QTextStream out(&data);
-
-		int t1 = clock();
-
-		for (int k = 0; k < 100; k++)
-		{
-			VertexType *v = new VertexType; 
-			v->P() = RandomBox(origMesh.bbox);
-			ps.AddVert(*v);
-			checkSHT.Add(v);
-		}
-
-		int t2 = clock();
-
-		for (int k = 0; k < 100; k++)
-		{
-			Point3<ScalarType> p = RandomBox(origMesh.bbox);
-			checkPoissonDisk(*ps.m, checkSHT, p, r);
-		}
-
-		int t3 = clock();
-
-		out << t2-t1 << endl;
-		out << t3-t2 << endl;
-	}
-
-	data.close();
-
-	exit(2);
 
 	// sampling algorithm
 	// ------------------
@@ -860,12 +832,12 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 			if (acceptedsample)
 			{
 				// add sample
-				VertexType *v = new VertexType; 
-				v->P() = s;
-				ps.AddVert(*v);
+				tri::Allocator<MetroMesh>::AddVertices(supportMesh,1);
+				supportMesh.vert.back().P() = s;
+				ps.AddVert(supportMesh.vert.back());
 
 				// add to control spatial index
-				checkSHT.Add(v);
+				checkSHT.Add(&supportMesh.vert.back());
 
 				samplesaccepted[level]++;
 			}
@@ -922,7 +894,7 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 	QFile outfile("C:/temp/poissondisk_statistics.txt");
 	if (outfile.open(QFile::WriteOnly | QFile::Truncate)) 
 	{
-		QTextStream out(&data);
+		QTextStream out(&outfile);
 
 		for (int k = 0; k < MAXLEVELS; k++)
 			out << "Cells used for level " << k << ": " << cellusedcounter[k] << endl;
