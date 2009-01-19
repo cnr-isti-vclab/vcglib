@@ -255,11 +255,12 @@ class TriMesh: public TriMeshEdgeHolder<VertContainerType,FaceContainerType,Edge
 	template <class ATTR_TYPE>
 	class PerVertexAttributeHandle{
 	public:
-		PerVertexAttributeHandle(){_handle=NULL;}
+		PerVertexAttributeHandle(){_handle=(SimpleTempData<VertContainer,ATTR_TYPE> *)NULL;}
 		PerVertexAttributeHandle( void *ah,const int & n):_handle ( (SimpleTempData<VertContainer,ATTR_TYPE> *)ah ),n_attr(n){}
-		void operator = ( const PerVertexAttributeHandle & pva){ 
-			(SimpleTempData<VertContainer,ATTR_TYPE> *)pva._handle;
+		PerVertexAttributeHandle operator = ( const PerVertexAttributeHandle & pva){ 
+			_handle = (SimpleTempData<VertContainer,ATTR_TYPE> *)pva._handle;
 			n_attr = pva.n_attr;
+			return (*this);
 		}
 		SimpleTempData<VertContainer,ATTR_TYPE> * _handle;
 		int n_attr; // its attribute number
@@ -273,8 +274,9 @@ class TriMesh: public TriMeshEdgeHolder<VertContainerType,FaceContainerType,Edge
 		PerFaceAttributeHandle(){_handle=NULL;}
 		PerFaceAttributeHandle(void *ah,const int & n):_handle ( (SimpleTempData<FaceContainer,ATTR_TYPE> *)ah ),n_attr(n){}
 		PerFaceAttributeHandle operator = ( const PerFaceAttributeHandle & pva){ 
-			(SimpleTempData<FaceContainer,ATTR_TYPE> *)pva._handle;
+			_handle = (SimpleTempData<FaceContainer,ATTR_TYPE> *)pva._handle;
 			n_attr = pva.n_attr;
+			return (*this);
 		}
 		SimpleTempData<FaceContainer,ATTR_TYPE> * _handle;
 		int n_attr; // its attribute number
@@ -288,8 +290,9 @@ class TriMesh: public TriMeshEdgeHolder<VertContainerType,FaceContainerType,Edge
 		PerEdgeAttributeHandle(){_handle=NULL;}
 		PerEdgeAttributeHandle(void *ah,const int & n):_handle ( (SimpleTempData<EdgeContainer,ATTR_TYPE> *)ah ),n_attr(n){}
 		PerEdgeAttributeHandle operator = ( const PerEdgeAttributeHandle & pva){ 
-			(SimpleTempData<EdgeContainer,ATTR_TYPE> *)pva._handle;
+			_handle = (SimpleTempData<EdgeContainer,ATTR_TYPE> *)pva._handle;
 			n_attr = pva.n_attr;
+			return (*this);
 		}
 		SimpleTempData<EdgeContainer,ATTR_TYPE> * _handle;
 		int n_attr; // its attribute number
@@ -303,8 +306,9 @@ class TriMesh: public TriMeshEdgeHolder<VertContainerType,FaceContainerType,Edge
 		PerMeshAttributeHandle(){_handle=NULL;}
 		PerMeshAttributeHandle(void *ah,const int & n):_handle ( (Attribute<ATTR_TYPE> *)ah ),n_attr(n){}
 		PerMeshAttributeHandle operator = ( const PerMeshAttributeHandle & pva){ 
-			(Attribute<ATTR_TYPE> *)pva._handle;
+			_handle = (Attribute<ATTR_TYPE> *)pva._handle;
 			n_attr = pva.n_attr;
+			return (*this);
 		}
 		Attribute<ATTR_TYPE> * _handle;
 		int n_attr;
