@@ -295,9 +295,9 @@ static void EdgeUniform(MetroMesh & m, VertexSampler &ps,int sampleNum)
 		for(ei=Edges.begin(); ei!=Edges.end(); ++ei)
 					edgeSum+=Distance((*ei).v[0]->P(),(*ei).v[1]->P());
 					
-		qDebug("Edges %i  edge sum %f",Edges.size(),edgeSum);			
+		//qDebug("Edges %i  edge sum %f",Edges.size(),edgeSum);			
 		float sampleLen = edgeSum/sampleNum;
-		qDebug("EdgesSamples %i  Sampling Len %f",sampleNum,sampleLen);			
+		//qDebug("EdgesSamples %i  Sampling Len %f",sampleNum,sampleLen);			
 		float rest=0;
 		for(ei=Edges.begin(); ei!=Edges.end(); ++ei)
 				{
@@ -686,11 +686,24 @@ static bool checkPoissonDisk(MetroMesh & vmesh, SampleSHT & sht, Point3<ScalarTy
 	std::vector<ScalarType> distances;
 	std::vector<CoordType> points;
 
-	unsigned int nsamples = vcg::tri::GetInSphereVertex(vmesh, sht, p ,radius,closests,distances,points);
-	if (nsamples > 0)
-		return false;
-	else
-		return true;
+	typedef VertTmark<MetroMesh> MarkerVert;
+	MarkerVert mv;
+	mv.SetMesh(&vmesh);
+	typedef vcg::vertex::PointDistanceFunctor<ScalarType> VDistFunct;
+	VDistFunct fn;
+/*	int nsamples = sht.GetInSphere/*<VDistFunct,MarkerVert,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>
+				                              (fn, mv,p,radius,closests,distances,points);
+
+	*/
+	Box3f bb(p-Point3f(radius,radius,radius),p+Point3f(radius,radius,radius));
+	int nsamples = GridGetInBox(sht, mv, bb, closests);
+
+	ScalarType r2 = radius*radius;
+	int badSamples=0;
+	for(int i=0;i<closests.size();++i)
+			if(SquaredDistance(p,closests[i]->cP())<r2) ++badSamples;
+	return badSamples==0; // return true if the disk is ok
+	
 }
 
 /** Compute a Poisson-disk sampling of the surface.
@@ -746,6 +759,8 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 	int sizeZ = origMesh.bbox.DimZ() / cellsize;
 	Point3i gridsize(sizeX, sizeY, sizeZ);
 
+	qDebug("PDS: radius %f Grid:(%i %i %i) ",r,sizeX,sizeY,sizeZ);
+
 	// initialize spatial hash to index pre-generated samples
 	VertexIterator vi;
 	montecarloSHT.InitEmpty(origMesh.bbox, gridsize);
@@ -755,6 +770,7 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 		verticescounter[0]++;
 	}
 
+	qDebug("PDS: Completed montercarloSHT, inserted %i vertex in %i cells", montecarloMesh.vn, montecarloSHT.AllocatedCells.size());
 	// initialize spatial hash table for check poisson-disk radius constrain
 	checkSHT.InitEmpty(origMesh.bbox, gridsize);
 
@@ -807,6 +823,7 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 			activeCells[index2] = temp;
 		}
 
+		supportMesh.vert.reserve(montecarloMesh.vn);
 		// with a probability proportional to the intersection between the surface and the cell
 		// generate a sample inside C by choosing one of the contained pre-generated samples
 		//////////////////////////////////////////////////////////////////////////////////////////
@@ -884,7 +901,7 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 		}
 
 		nextPoints.clear();
-		
+		qDebug("PDS: Completed Level %i, added %i samples",level,samplesaccepted[level]);	
 		level++;
 
 	} while(level < MAXLEVELS);
