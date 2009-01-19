@@ -109,7 +109,8 @@ namespace vcg{
 	{
 		CellIterator(){}
 		HashIterator t;
-		ObjPtr &operator *(){return t->second;}
+		ObjPtr &operator *(){return (t->second); }
+		ObjPtr operator *() const {return (t->second); }
 		bool operator != (const CellIterator & p) const {return t!=p.t;}
 		void operator ++() {t++;}
 	};
