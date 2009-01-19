@@ -267,7 +267,7 @@ namespace vcg{
 		template <class SPATIALINDEXING,class OBJMARKER, class OBJPTRCONTAINER>
 			unsigned int GridGetInBox(SPATIALINDEXING &_Si,
 			OBJMARKER & _marker, 
-			const vcg::Box3<typename SPATIALINDEXING::ScalarType> _bbox,
+			const vcg::Box3<typename SPATIALINDEXING::ScalarType> &_bbox,
 			OBJPTRCONTAINER & _objectPtrs) 
 		{
 			typename SPATIALINDEXING::CellIterator first,last,l;
