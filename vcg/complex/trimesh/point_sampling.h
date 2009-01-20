@@ -666,16 +666,13 @@ static CoordType RandomBox(vcg::Box3<ScalarType> box)
 }
 
 // generate Poisson-disk sample using a set of pre-generated samples (with the Montecarlo algorithm)
-static bool generatePoissonDiskSample(Point3i *cell, MontecarloSHT & samplepool, vcg::Point3<ScalarType> & p)
+// It always return a point.
+static vcg::Point3<ScalarType> generatePoissonDiskSample(Point3i *cell, MontecarloSHT & samplepool)
 {
 	MontecarloSHTIterator cellBegin;
 	MontecarloSHTIterator cellEnd;
 	samplepool.Grid(*cell, cellBegin, cellEnd);
-
-	assert(cellBegin != cellEnd);
-
-	p = (*cellBegin)->P();
-	return true;
+	return (*cellBegin)->P();
 }
 
 // check the radius constrain
@@ -795,8 +792,6 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 	vcg::Box3<ScalarType> currentBox;
 	vcg::Point3<ScalarType > s; // current sample
 	int level = 0;
-	bool validsample;
-	bool acceptedsample;
 
 	do
 	{
@@ -833,20 +828,10 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 			currentCell = activeCells[i];
 
 			// generate a sample chosen from the pre-generated one
-			validsample = generatePoissonDiskSample(currentCell, montecarloSHT, s);
+			s = generatePoissonDiskSample(currentCell, montecarloSHT);
 			samplesgenerated[level]++;
 
-			if (validsample)
-			{
-				// sample is valid
-				acceptedsample = checkPoissonDisk(*ps.m, checkSHT, s, r);
-			}
-			else
-			{
-				acceptedsample = false;
-			}
-
-			if (acceptedsample)
+			if (checkPoissonDisk(*ps.m, checkSHT, s, r))
 			{
 				// add sample
 				tri::Allocator<MetroMesh>::AddVertices(supportMesh,1);
