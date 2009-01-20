@@ -311,7 +311,7 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
 
 	typedef RefinedFaceData<VertexPointer> RFD;
 	typedef typename MESH_TYPE :: template PerFaceAttributeHandle<RFD> HandleType;
-	HandleType RD  = tri::Allocator<MESH_TYPE>::AddPerFaceAttribute<RFD> (m,std::string("RefineData"));
+	HandleType RD  = tri::Allocator<MESH_TYPE>:: template AddPerFaceAttribute<RFD> (m,std::string("RefineData"));
 
 	// Callback stuff
 	int step=0;
