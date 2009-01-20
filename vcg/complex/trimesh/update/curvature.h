@@ -442,12 +442,28 @@ public:
 
 	      }
         else // obtuse
-	      {
-					(TDAreaPtr)[(*fi).V(0)].A += vcg::DoubleArea<typename MeshType::FaceType>((*fi)) / 6.0;
-	        (TDAreaPtr)[(*fi).V(1)].A += vcg::DoubleArea<typename MeshType::FaceType>((*fi)) / 6.0;
-	        (TDAreaPtr)[(*fi).V(2)].A += vcg::DoubleArea<typename MeshType::FaceType>((*fi)) / 6.0;
-	      }
-      }
+		{
+		if(angle0 >= M_PI/2) 
+			{ 
+			(TDAreaPtr)[(*fi).V(0)].A += vcg::DoubleArea<typename MeshType::FaceType>((*fi)) / 4.0; 
+			(TDAreaPtr)[(*fi).V(1)].A += vcg::DoubleArea<typename MeshType::FaceType>((*fi)) / 8.0; 
+			(TDAreaPtr)[(*fi).V(2)].A += vcg::DoubleArea<typename MeshType::FaceType>((*fi)) / 8.0; 
+			} 
+			else if(angle1 >= M_PI/2) 
+			{ 
+			(TDAreaPtr)[(*fi).V(0)].A += vcg::DoubleArea<typename MeshType::FaceType>((*fi)) / 8.0; 
+			(TDAreaPtr)[(*fi).V(1)].A += vcg::DoubleArea<typename MeshType::FaceType>((*fi)) / 4.0; 
+			(TDAreaPtr)[(*fi).V(2)].A += vcg::DoubleArea<typename MeshType::FaceType>((*fi)) / 8.0; 
+			} 
+			else 
+			{ 
+			(TDAreaPtr)[(*fi).V(0)].A += vcg::DoubleArea<typename MeshType::FaceType>((*fi)) / 8.0; 
+			(TDAreaPtr)[(*fi).V(1)].A += vcg::DoubleArea<typename MeshType::FaceType>((*fi)) / 8.0; 
+			(TDAreaPtr)[(*fi).V(2)].A += vcg::DoubleArea<typename MeshType::FaceType>((*fi)) / 4.0; 
+			}
+			}
+		}
+
 
       for(fi=m.face.begin();fi!=m.face.end();++fi) if( !(*fi).IsD() )
       {
