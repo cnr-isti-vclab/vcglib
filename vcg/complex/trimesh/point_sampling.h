@@ -778,21 +778,28 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 	//
 	// - generate millions of samples using montecarlo algorithm
 	// - extract a cell (C) from the active cell list (with probability proportional to cell's volume)
-	// - with a probability proportional to the intersection between the surface and the cell
-	//   generate a sample inside C by choosing one of the contained pre-generated samples
+	// - generate a sample inside C by choosing one of the contained pre-generated samples
 	//   - if the sample violates the radius constrain discard it, and add the cell to the cells-to-subdivide list
 	// - iterate until the active cell list is empty or a pre-defined number of subdivisions is reached
 	//
 
 	std::vector<Point3i *> activeCells;
-	std::set<VertexType *> nextPoints;
-	typename std::set<VertexType *>::iterator nextPointsIt;
+	std::vector<VertexType *> nextPoints;
+	typename std::vector<VertexType *>::iterator nextPointsIt;
 
+	MontecarloSHTIterator ptBegin;
+	MontecarloSHTIterator ptEnd;
+	MontecarloSHTIterator ptIt;
 	typename std::vector<Point3i>::iterator it;
 	Point3i *currentCell;
 	vcg::Box3<ScalarType> currentBox;
 	vcg::Point3<ScalarType > s; // current sample
 	int level = 0;
+
+	// variable radius (guided by given quality) - for demonstration purposes
+	double vr;
+	double qmin = origMesh.bbox.max[0];
+	double qmax = origMesh.bbox.min[0];
 
 	do
 	{
@@ -821,7 +828,6 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 			activeCells[index2] = temp;
 		}
 
-		// with a probability proportional to the intersection between the surface and the cell
 		// generate a sample inside C by choosing one of the contained pre-generated samples
 		//////////////////////////////////////////////////////////////////////////////////////////
 
@@ -833,7 +839,10 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 			s = generatePoissonDiskSample(currentCell, montecarloSHT);
 			samplesgenerated[level]++;
 
-			if (checkPoissonDisk(*ps.m, checkSHT, s, r))
+			// vr spans between 3.0*r and r / 4.0 according to vertex quality
+			vr = r / (0.333 + 4.0 * (s[0] - qmin) / (qmax - qmin));
+
+			if (checkPoissonDisk(*ps.m, checkSHT, s, vr))
 			{
 				// add sample
 				tri::Allocator<MetroMesh>::AddVertices(supportMesh,1);
@@ -852,15 +861,11 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 				///////////////////////////////////////////////////////////////////////
 
 				// pre-generated samples for the next level of subdivision
-				MontecarloSHTIterator ptBegin;
-				MontecarloSHTIterator ptEnd;
-				MontecarloSHTIterator ptIt;
-
 				montecarloSHT.Grid(*currentCell, ptBegin, ptEnd);
 
 				for (ptIt = ptBegin; ptIt != ptEnd; ++ptIt)
 				{
-					nextPoints.insert(*ptIt);
+					nextPoints.push_back(*ptIt);
 				}
 
 				cellstosubdividecounter[level]++;
