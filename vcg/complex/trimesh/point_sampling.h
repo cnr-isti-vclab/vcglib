@@ -688,19 +688,16 @@ static bool checkPoissonDisk(MetroMesh & vmesh, SampleSHT & sht, Point3<ScalarTy
 	mv.SetMesh(&vmesh);
 	typedef vcg::vertex::PointDistanceFunctor<ScalarType> VDistFunct;
 	VDistFunct fn;
-/*	int nsamples = sht.GetInSphere/*<VDistFunct,MarkerVert,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>
-				                              (fn, mv,p,radius,closests,distances,points);
 
-	*/
 	Box3f bb(p-Point3f(radius,radius,radius),p+Point3f(radius,radius,radius));
 	int nsamples = GridGetInBox(sht, mv, bb, closests);
 
 	ScalarType r2 = radius*radius;
-	int badSamples=0;
-	for(int i=0;i<closests.size();++i)
-			if(SquaredDistance(p,closests[i]->cP())<r2) ++badSamples;
-	return badSamples==0; // return true if the disk is ok
-	
+	for(int i=0; i<closests.size(); ++i)
+		if(SquaredDistance(p,closests[i]->cP()) < r2)
+			return false;
+
+	return true;
 }
 
 /** Compute a Poisson-disk sampling of the surface.
@@ -751,6 +748,10 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 
 	ScalarType cellsize = r / sqrt(3.0);
 
+	// inflating
+	origMesh.bbox.min -= Point3<ScalarType>(cellsize, cellsize, cellsize);
+	origMesh.bbox.max += Point3<ScalarType>(cellsize, cellsize, cellsize);
+
 	int sizeX = origMesh.bbox.DimX() / cellsize;
 	int sizeY = origMesh.bbox.DimY() / cellsize;
 	int sizeZ = origMesh.bbox.DimZ() / cellsize;
@@ -798,6 +799,8 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 		// extract a cell (C) from the active cell list (with probability proportional to cell's volume)
 		///////////////////////////////////////////////////////////////////////////////////////////////////
 
+		supportMesh.vert.reserve(montecarloMesh.vn);
+
 		// create active cell list
 		for (it = montecarloSHT.AllocatedCells.begin(); it != montecarloSHT.AllocatedCells.end(); it++)
 		{
@@ -818,7 +821,6 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 			activeCells[index2] = temp;
 		}
 
-		supportMesh.vert.reserve(montecarloMesh.vn);
 		// with a probability proportional to the intersection between the surface and the cell
 		// generate a sample inside C by choosing one of the contained pre-generated samples
 		//////////////////////////////////////////////////////////////////////////////////////////
@@ -842,6 +844,7 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 				checkSHT.Add(&supportMesh.vert.back());
 
 				samplesaccepted[level]++;
+
 			}
 			else
 			{
