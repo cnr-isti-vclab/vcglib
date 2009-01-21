@@ -93,6 +93,7 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 		float offset;    // an offset value that is always added to the returned value. Useful for extrarting isosurface  at a different threshold
 		bool DiscretizeFlag; // if the extracted surface should be discretized or not.
 		bool MultiSampleFlag;
+		bool AbsDistFlag; // if true the Distance Field computed is no more a signed one. 
 		Walker(const Box3f &_bbox, Point3i _siz )
 		{
 			this->bbox= _bbox;
@@ -104,6 +105,7 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 			offset=0;
 			DiscretizeFlag=false;
 			MultiSampleFlag=false;
+			AbsDistFlag=false;
 
 			_x_cs = new VertexIndex[ SliceSize ];
 			_y_cs = new VertexIndex[ SliceSize ];
@@ -163,8 +165,8 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 			
 			DISTFUNCTOR PDistFunct;
 			f = _g.GetClosest(PDistFunct,markerFunctor,testPt,max_dist,dist,closestPt);
-			
 			if (f==NULL) return field_value(false,0);
+			if(AbsDistFlag) return field_value(true,dist); 
 			assert(!f->IsD());
 			bool retIP;
 	
@@ -199,7 +201,7 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 		field_value MultiDistanceFromMesh(Point3f &pp,Old_Mesh *mesh)
 		{
 			float distSum=0;
-			int posCnt=0; // positive results counter
+			int positiveCnt=0; // positive results counter
 			const int MultiSample=7;
 			const Point3f   delta[7]={Point3f(0,0,0),
 						Point3f( 0.2,  -0.01, -0.02),
@@ -215,9 +217,9 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 				field_value ff= DistanceFromMesh(pp2,_oldM);
 				if(ff.first==false) return field_value(false,0);
 				distSum += fabs(ff.second);
-				if(ff.second>0) posCnt ++;
+				if(ff.second>0) positiveCnt ++;
 			}
-      if(posCnt<=MultiSample/2) distSum = -distSum;			
+      if(positiveCnt<=MultiSample/2) distSum = -distSum;			
 			return field_value(true, distSum/MultiSample);
 		}
 
@@ -596,7 +598,7 @@ typedef Walker  /*< Old_Mesh,New_Mesh>*/  MyWalker;
 typedef vcg::tri::MarchingCubes<New_Mesh, MyWalker> MyMarchingCubes;
 
 ///resample the mesh using marching cube algorithm ,the accuracy is the dimension of one cell the parameter
-static void Resample(Old_Mesh &old_mesh,New_Mesh &new_mesh,  Box3f volumeBox, vcg::Point3<int> accuracy,float max_dist, float thr=0, bool DiscretizeFlag=false, bool MultiSampleFlag=false, vcg::CallBackPos *cb=0 )
+static void Resample(Old_Mesh &old_mesh,New_Mesh &new_mesh,  Box3f volumeBox, vcg::Point3<int> accuracy,float max_dist, float thr=0, bool DiscretizeFlag=false, bool MultiSampleFlag=false, bool AbsDistFlag=false, vcg::CallBackPos *cb=0 )
 {
 	///be sure that the bounding box is updated
 	vcg::tri::UpdateBounding<Old_Mesh>::Box(old_mesh);
@@ -607,6 +609,7 @@ static void Resample(Old_Mesh &old_mesh,New_Mesh &new_mesh,  Box3f volumeBox, vc
 	walker.offset = - thr; 
 	walker.DiscretizeFlag = DiscretizeFlag;
 	walker.MultiSampleFlag = MultiSampleFlag;
+	walker.AbsDistFlag = AbsDistFlag;
 	MyMarchingCubes mc(new_mesh, walker);
 	walker.BuildMesh(old_mesh,new_mesh,mc,cb);
 }
