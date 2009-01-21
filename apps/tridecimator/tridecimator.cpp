@@ -9,7 +9,7 @@ using namespace std;
 // stuff to define the mesh
 #include <vcg/simplex/vertex/base.h>
 #include <vcg/simplex/face/base.h>
-#include <vcg/simplex/edge/edge.h>
+#include <vcg/simplex/edge/base.h>
 #include <vcg/complex/trimesh/base.h>
 
 #include <vcg/math/quadric.h>
@@ -51,21 +51,22 @@ class MyFace;
 
 
 class MyVertex  : public VertexSimp2< MyVertex, MyEdge, MyFace, 
-  vert::VFAdj, 
-  vert::Coord3f, 
-  vert::Normal3f, 
-  vert::Mark, 
-  vert::BitFlags  >{
+  vertex::VFAdj, 
+  vertex::Coord3f, 
+  vertex::Normal3f, 
+  vertex::Mark, 
+  vertex::BitFlags  >{
 public: 
   vcg::math::Quadric<double> &Qd() {return q;}
 private:
   math::Quadric<double> q;
   };
-  
-class MyEdge : public Edge<MyEdge,MyVertex> {
+
+class DummyType; 
+class MyEdge : public EdgeSimp2<MyVertex,MyEdge,DummyType,edge::VertexRef> {
 public:
   inline MyEdge() {};
-  inline MyEdge( MyVertex * v0, MyVertex * v1):Edge<MyEdge,MyVertex>(v0,v1){};
+  inline MyEdge( MyVertex * v0, MyVertex * v1){V(0) = v0; V(1) = v1; };
 	  static inline MyEdge OrderedEdge(MyVertex* v0,MyVertex* v1){
    if(v0<v1) return MyEdge(v0,v1);
    else return MyEdge(v1,v0);
