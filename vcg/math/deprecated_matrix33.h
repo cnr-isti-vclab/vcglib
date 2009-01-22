@@ -397,12 +397,13 @@ public:
 	}
 
 	// for the transistion to eigen
-	Matrix33 transpose()
+	Matrix33 transpose() const
 	{
 		Matrix33 res = *this;
 		res.Transpose();
 		return res;
 	}
+
 	void transposeInPlace() { this->Transpose(); }
 
 	/// Funzione per costruire una matrice diagonale dati i tre elem.
