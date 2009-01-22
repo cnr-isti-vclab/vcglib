@@ -25,7 +25,7 @@
 #define EIGEN_VCGLIB
 
 // TODO enable the vectorization
-#define EIGEN_DONT_VECTORIZE
+//#define EIGEN_DONT_VECTORIZE
 #define EIGEN_MATRIXBASE_PLUGIN <vcg/math/eigen_matrixbase_addons.h>
 #define EIGEN_MATRIX_PLUGIN <vcg/math/eigen_matrix_addons.h>
 
@@ -33,7 +33,7 @@
 namespace Eigen {
 
 template<typename T> struct ei_traits;
-#include "../Eigen/src/Core/util/Meta.h"
+template<typename A,typename B> struct ei_is_same_type;
 
 template<typename Derived1, typename Derived2, int Size> struct ei_lexi_comparison;
 

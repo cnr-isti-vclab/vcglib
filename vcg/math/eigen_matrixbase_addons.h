@@ -197,7 +197,7 @@ EIGEN_DEPRECATED inline Scalar SquaredNorm() const { return squaredNorm(); };
 /** \deprecated use normalize() or normalized() */
 EIGEN_DEPRECATED inline Derived& Normalize() { normalize(); return derived(); };
 /** \deprecated use normalized() */
-EIGEN_DEPRECATED inline const EvalType Normalize() const { return normalized(); };
+EIGEN_DEPRECATED inline const PlainMatrixType Normalize() const { return normalized(); };
 
 /** \deprecated use transposeInPlace() or transpose() */
 EIGEN_DEPRECATED inline Derived& Transpose() { transposeInPlace(); return derived(); };
@@ -205,7 +205,7 @@ EIGEN_DEPRECATED inline Derived& Transpose() { transposeInPlace(); return derive
 EIGEN_DEPRECATED inline const Eigen::Transpose<Derived> Transpose() const { return transpose(); };
 
 /** \deprecated use .cross(p) */
-EIGEN_DEPRECATED inline EvalType operator ^ (const Derived& p ) const { return this->cross(p); }
+EIGEN_DEPRECATED inline PlainMatrixType operator ^ (const Derived& p ) const { return this->cross(p); }
 
 /// Homogeneous normalization (division by W)
 inline Derived& HomoNormalize()
@@ -226,9 +226,9 @@ inline Derived& HomoNormalize()
 	return *this;
 }
 
-inline const EvalType HomoNormalize() const
+inline const PlainMatrixType HomoNormalize() const
 {
-	EvalType res = derived();
+	PlainMatrixType res = derived();
 	return res.HomoNormalize();
 }
 
