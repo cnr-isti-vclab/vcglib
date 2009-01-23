@@ -25,7 +25,7 @@
 #define EIGEN_VCGLIB
 
 // TODO enable the vectorization
-//#define EIGEN_DONT_VECTORIZE
+#define EIGEN_DONT_VECTORIZE
 #define EIGEN_MATRIXBASE_PLUGIN <vcg/math/eigen_matrixbase_addons.h>
 #define EIGEN_MATRIX_PLUGIN <vcg/math/eigen_matrix_addons.h>
 
@@ -286,7 +286,7 @@ inline typename Eigen::ei_traits<Derived1>::Scalar Norm( const Eigen::MatrixBase
 
 template<typename Derived1>
 inline typename Eigen::ei_traits<Derived1>::Scalar SquaredNorm( const Eigen::MatrixBase<Derived1>& p)
-{ return p.norm2(); }
+{ return p.squaredNorm(); }
 
 template<typename Derived1, typename Derived2>
 inline typename Eigen::ei_traits<Derived1>::Scalar
@@ -296,7 +296,7 @@ Distance(const Eigen::MatrixBase<Derived1>& p1, const Eigen::MatrixBase<Derived2
 template<typename Derived1, typename Derived2>
 inline typename Eigen::ei_traits<Derived1>::Scalar
 SquaredDistance(const Eigen::MatrixBase<Derived1>& p1, const Eigen::MatrixBase<Derived2> & p2)
-{ return (p1-p2).norm2(); }
+{ return (p1-p2).squaredNorm(); }
 
 template<typename Derived>
 inline const Eigen::CwiseUnaryOp<Eigen::ei_scalar_abs_op<typename Eigen::ei_traits<Derived>::Scalar>, Derived>

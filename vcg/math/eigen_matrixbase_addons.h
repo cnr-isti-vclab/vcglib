@@ -187,9 +187,6 @@ EIGEN_DEPRECATED void Dump()
 	printf("\n");
 }
 
-// norm2 will be renamed squaredNorm() in Eigen
-// inline Scalar squaredNorm() const { return norm2(); };
-
 /** \deprecated use norm() */
 EIGEN_DEPRECATED inline Scalar Norm() const { return norm(); };
 /** \deprecated use squaredNorm() */

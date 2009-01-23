@@ -125,7 +125,7 @@ class Geo{
 		ScalarType ec_w1 = (w1_c).Norm();
 		ScalarType	alpha,alpha_, beta,beta_,theta,h,delta,s,a,b;
 
-		alpha = acos((w_c*w1_c)/(ew_c*ec_w1));
+		alpha = acos((w_c.dot(w1_c))/(ew_c*ec_w1));
 		s = (d_curr + d_pw1+ec_w1)/2;
 		a = s/ec_w1;
 		b = a*s;
@@ -136,7 +136,7 @@ class Geo{
 			}else
 			{
 				beta_ = 2*acos ( math::Min<ScalarType>(1.0,sqrt(  (b- a* d_curr)/d_pw1)));
-				beta  = acos((w_w1)*(-w1_c)/(ew_w1*ec_w1));
+				beta  = acos((w_w1).dot(-w1_c)/(ew_w1*ec_w1));
 
 				if ( beta+beta_ > M_PI)
 					curr_d = d_pw1  + ew_w1;
