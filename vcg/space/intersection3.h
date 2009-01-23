@@ -507,6 +507,18 @@ bool IntersectionLineTriangle( const Line3<T> & line, const Point3<T> & vert0,
    return 1;
 }
 
+template<class T>
+bool IntersectionRayTriangle( const Ray3<T> & ray, const Point3<T> & vert0, 
+				  const Point3<T> & vert1, const Point3<T> & vert2,
+				  T & t ,T & u, T & v)
+{
+	Line3<T> line(ray.Origin(), ray.Direction());
+	if (IntersectionLineTriangle(line, vert0, vert1, vert2, t, u, v))
+	{
+		if (t <= 0) return 0;
+		else return 1; 
+	}else return 0;
+}
 
 // line-box
 template<class T>
@@ -843,20 +855,18 @@ public:
 	template <class TRIANGLETYPE, class SCALARTYPE>
 	inline bool operator () (const TRIANGLETYPE & f, const Ray3<SCALARTYPE> & ray, SCALARTYPE & t) {
 		typedef SCALARTYPE ScalarType;
-		ScalarType a;
-		ScalarType b;
+		ScalarType u;
+		ScalarType v;
 
-		bool bret = Intersection(ray, Point3<SCALARTYPE>::Construct(f.P(0)), Point3<SCALARTYPE>::Construct(f.P(1)), Point3<SCALARTYPE>::Construct(f.P(2)), a, b, t);
+		bool bret = IntersectionRayTriangle(ray, Point3<SCALARTYPE>::Construct(f.P(0)), Point3<SCALARTYPE>::Construct(f.P(1)), Point3<SCALARTYPE>::Construct(f.P(2)), t, u, v);
 		if (BACKFACETEST) {
 			if (!bret) {
-				bret = Intersection(ray, Point3<SCALARTYPE>::Construct(f.P(0)), Point3<SCALARTYPE>::Construct(f.P(2)), Point3<SCALARTYPE>::Construct(f.P(1)), a, b, t);
+				bret = IntersectionRayTriangle(ray, Point3<SCALARTYPE>::Construct(f.P(0)), Point3<SCALARTYPE>::Construct(f.P(2)), Point3<SCALARTYPE>::Construct(f.P(1)), t, u, v);
 			}
 		}
 		return (bret);
 	}
 };
-
-
 
 
 /*@}*/
