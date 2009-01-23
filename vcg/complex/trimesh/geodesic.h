@@ -58,7 +58,18 @@ basic example: farthest vertex from a specified one
 */
 namespace vcg{
 namespace tri{
+
 template <class MeshType>
+struct EuclideanDistance{
+	typedef typename MeshType::VertexType VertexType;
+	typedef typename MeshType::ScalarType  ScalarType;
+
+	EuclideanDistance(){}
+	ScalarType operator()(const VertexType * v0, const VertexType * v1) const
+	{return vcg::Distance(v0->cP(),v1->cP());}
+};
+
+template <class MeshType, class DistanceFunctor = EuclideanDistance<MeshType> >
 class Geo{
 
 	public:
@@ -70,6 +81,7 @@ class Geo{
 	typedef typename MeshType::CoordType  CoordType;
 	typedef typename MeshType::ScalarType  ScalarType;
 	
+
 
 	/* Auxiliary class for keeping the heap of vertices to visit and their estimated distance
 	*/
@@ -116,13 +128,14 @@ class Geo{
 										   const ScalarType &d_curr)
 	{
 		ScalarType curr_d=0;
-		CoordType w_c = pw->cP()- curr->cP();
-		CoordType w_w1 = pw->cP()- pw1->cP();
-		CoordType w1_c = pw1->cP()- curr->cP();
 
-		ScalarType ew_c  = (w_c).Norm();
-		ScalarType ew_w1 = (w_w1).Norm();
-		ScalarType ec_w1 = (w1_c).Norm();
+		ScalarType ew_c  = DistanceFunctor()(pw,curr);
+		ScalarType ew_w1 = DistanceFunctor()(pw,pw1);
+		ScalarType ec_w1 = DistanceFunctor()(pw1,curr);
+		CoordType w_c =  (pw->cP()-curr->cP()).Normalize() * ew_c;
+		CoordType w_w1 = (pw->cP() - pw1->cP()).Normalize() * ew_w1;
+		CoordType w1_c =  (pw1->cP() - curr->cP()).Normalize() * ec_w1;
+
 		ScalarType	alpha,alpha_, beta,beta_,theta,h,delta,s,a,b;
 
 		alpha = acos((w_c.dot(w1_c))/(ew_c*ec_w1));
@@ -238,7 +251,7 @@ class Geo{
 						const ScalarType & d_pw1  =  (*TD)[pw1].d;
 						{
 
-							const ScalarType inter  = (curr->P() - pw1->P()).Norm();
+							const ScalarType inter  = DistanceFunctor()(curr,pw1);//(curr->P() - pw1->P()).Norm();
 							const ScalarType tol = (inter + d_curr + d_pw1)*.0001f;
 
 							if (	((*TD)[pw1].source != (*TD)[curr].source)||// not the same source
@@ -246,7 +259,7 @@ class Geo{
 									(inter + d_pw1  < d_curr +tol  ) ||
 									(d_curr + d_pw1  < inter +tol  )   // triangular inequality
 									 )  
-								curr_d = d_curr + (pw->P()-curr->P()).Norm();
+								curr_d = d_curr + DistanceFunctor()(pw,curr);//(pw->P()-curr->P()).Norm();
 							else
 								curr_d = Distance(pw,pw1,curr,d_pw1,d_curr);
 							
