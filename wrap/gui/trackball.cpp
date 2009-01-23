@@ -142,6 +142,7 @@ Trackball::~Trackball()
 	std::set<TrackMode *>::iterator its;
 		for(its = goodModes.begin(); its != goodModes.end(); its++)
 			delete *its;
+	delete  inactive_mode;
 }
 
 
