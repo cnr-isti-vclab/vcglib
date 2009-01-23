@@ -525,29 +525,15 @@ public:
 		glProgramParameteriEXT(this->objectID, pname, value);
 	}
 
-	void Attribute(const char * name, GLfloat x)
+	void Attribute(int index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 	{
-		const GLint loc = glGetAttribLocation(this->objectID, name);
-		glVertexAttrib1f(loc, x);
+		glVertexAttrib4f(index, x, y, z, w);
 	}
 
-	void Attribute(const char * name, GLfloat x, GLfloat y)
+	void BindAttribute(int index, const char * name)
 	{
-		const GLint loc = glGetAttribLocation(this->objectID, name);
-		glVertexAttrib2f(loc, x, y);
+		glBindAttribLocation(this->objectID, index, name);
 	}
-
-	void Attribute(const char * name, GLfloat x, GLfloat y, GLfloat z)
-	{
-		const GLint loc = glGetAttribLocation(this->objectID, name);
-		glVertexAttrib3f(loc, x, y, z);
-	}
-	void Attribute(const char * name, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
-	{
-		const GLint loc = glGetAttribLocation(this->objectID, name);
-		glVertexAttrib4f(loc, x, y, z, w);
-	}
-
 
 protected:
 	std::set<Shader *> shaders;
