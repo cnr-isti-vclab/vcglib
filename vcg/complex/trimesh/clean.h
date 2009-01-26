@@ -725,9 +725,13 @@ private:
 				return nonManifoldCnt;				
 			}
 			
-			static bool IsTwoManifoldVertex( MeshType & m ) 
+			static bool IsTwoManifoldVertexFF( MeshType & m ) 
 			{
-				return CountNonManifoldVertex(m,false) == 0 ;
+				return CountNonManifoldVertexFF(m,false) == 0 ;
+			}
+			static bool IsTwoManifoldVertexFFVF( MeshType & m ) 
+			{
+				return CountNonManifoldVertexFFVF(m,false) == 0 ;
 			}
 
 			static void CountEdges( MeshType & m, int &count_e, int &boundary_e ) 
