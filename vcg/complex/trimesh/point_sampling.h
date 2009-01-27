@@ -667,16 +667,16 @@ static CoordType RandomBox(vcg::Box3<ScalarType> box)
 
 // generate Poisson-disk sample using a set of pre-generated samples (with the Montecarlo algorithm)
 // It always return a point.
-static vcg::Point3<ScalarType> generatePoissonDiskSample(Point3i *cell, MontecarloSHT & samplepool)
+static VertexPointer getPrecomputedMontecarloSample(Point3i *cell, MontecarloSHT & samplepool)
 {
 	MontecarloSHTIterator cellBegin;
 	MontecarloSHTIterator cellEnd;
 	samplepool.Grid(*cell, cellBegin, cellEnd);
-	return (*cellBegin)->P();
+	return *cellBegin;
 }
 
 // check the radius constrain
-static bool checkPoissonDisk(MetroMesh & vmesh, SampleSHT & sht, Point3<ScalarType> & p, ScalarType radius) 
+static bool checkPoissonDisk(MetroMesh & vmesh, SampleSHT & sht, const Point3<ScalarType> & p, ScalarType radius) 
 {
 	// get the samples closest to the given one
 	std::vector<VertexType*> closests;
@@ -700,6 +700,18 @@ static bool checkPoissonDisk(MetroMesh & vmesh, SampleSHT & sht, Point3<ScalarTy
 	return true;
 }
 
+struct PoissonDiskParam
+{
+	PoissonDiskParam()
+	{
+		adaptiveRadiusFlag = false;
+		MAXLEVELS = 5;
+	}
+	bool adaptiveRadiusFlag;
+  int MAXLEVELS;
+};
+
+
 /** Compute a Poisson-disk sampling of the surface.
  *  The radius of the disk is computed according to the estimated sampling density.
  *
@@ -710,7 +722,7 @@ static bool checkPoissonDisk(MetroMesh & vmesh, SampleSHT & sht, Point3<ScalarTy
  * IEEE Symposium on Interactive Ray Tracing, 2007,
  * 10-12 Sept. 2007, pp. 129-132.
  */
-static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &montecarloMesh, int sampleNum)
+static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &montecarloMesh, int sampleNum, const struct PoissonDiskParam pp=PoissonDiskParam())
 {
 	int cellusedcounter[20];          // cells used for each level
 	int cellstosubdividecounter[20];  // cells to subdivide for each level
@@ -728,12 +740,7 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 	}
 
 
-	// create a support mesh with markers for vertices and enable vertex marker for all the meshes
 	MetroMesh supportMesh;
-	supportMesh.vert.EnableMark();
-	ps.m->vert.EnableMark();
-	montecarloMesh.vert.EnableMark();
-
 	const int MAXLEVELS = 5; // maximum level of subdivision
 
 	// spatial index of montecarlo samples - used to choose a new sample to insert
@@ -744,20 +751,19 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 
 	// initialize spatial hash table for searching
 	ScalarType meshArea = Stat<MetroMesh>::ComputeMeshArea(origMesh);
-	ScalarType r = sqrt(meshArea / (0.7 * 3.1415 * sampleNum)); // 0.7 is a density factor
+	ScalarType diskRadius = sqrt(meshArea / (0.7 * 3.1415 * sampleNum)); // 0.7 is a density factor
 
-	ScalarType cellsize = r / sqrt(3.0);
+	ScalarType cellsize = diskRadius / sqrt(3.0);
 
 	// inflating
-	origMesh.bbox.min -= Point3<ScalarType>(cellsize, cellsize, cellsize);
-	origMesh.bbox.max += Point3<ScalarType>(cellsize, cellsize, cellsize);
+	origMesh.bbox.Offset(cellsize);
 
-	int sizeX = origMesh.bbox.DimX() / cellsize;
-	int sizeY = origMesh.bbox.DimY() / cellsize;
-	int sizeZ = origMesh.bbox.DimZ() / cellsize;
+	int sizeX = max(1.0f,origMesh.bbox.DimX() / cellsize);
+	int sizeY = max(1.0f,origMesh.bbox.DimY() / cellsize);
+	int sizeZ = max(1.0f,origMesh.bbox.DimZ() / cellsize);
 	Point3i gridsize(sizeX, sizeY, sizeZ);
 
-	qDebug("PDS: radius %f Grid:(%i %i %i) ",r,sizeX,sizeY,sizeZ);
+	qDebug("PDS: radius %f Grid:(%i %i %i) ",diskRadius,sizeX,sizeY,sizeZ);
 
 	// initialize spatial hash to index pre-generated samples
 	VertexIterator vi;
@@ -787,19 +793,10 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 	std::vector<VertexType *> nextPoints;
 	typename std::vector<VertexType *>::iterator nextPointsIt;
 
-	MontecarloSHTIterator ptBegin;
-	MontecarloSHTIterator ptEnd;
-	MontecarloSHTIterator ptIt;
 	typename std::vector<Point3i>::iterator it;
 	Point3i *currentCell;
 	vcg::Box3<ScalarType> currentBox;
-	vcg::Point3<ScalarType > s; // current sample
 	int level = 0;
-
-	// variable radius (guided by given quality) - for demonstration purposes
-	double vr;
-	double qmin = origMesh.bbox.max[0];
-	double qmax = origMesh.bbox.min[0];
 
 	do
 	{
@@ -814,19 +811,23 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 			activeCells.push_back(&(*it));
 		}
 
-		// shuffle active cells
 		int ncell = static_cast<int>(activeCells.size());
 		cellusedcounter[level] = ncell;
-		int index,index2;
-		Point3i *temp;
-		for (int i = 0; i < ncell/2; i++)
-		{
-			index = RandomInt(ncell);
-			index2 =  RandomInt(ncell);
-			temp = activeCells[index];
-			activeCells[index] = activeCells[index2];
-			activeCells[index2] = temp;
-		}
+		// shuffle active cells
+//		int index,index2;
+//		Point3i *temp;
+//		for (int i = 0; i < ncell/2; i++)
+//		{
+//			index = RandomInt(ncell);
+//			index2 =  RandomInt(ncell);
+//			temp = activeCells[index];
+//			activeCells[index] = activeCells[index2];
+//			activeCells[index2] = temp;
+//		}
+		
+		unsigned int (*p_myrandom)(unsigned int) = RandomInt;
+		std::random_shuffle(activeCells.begin(),activeCells.end(), p_myrandom);
+
 
 		// generate a sample inside C by choosing one of the contained pre-generated samples
 		//////////////////////////////////////////////////////////////////////////////////////////
@@ -834,33 +835,35 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 		for (int i = 0; i < ncell; i++)
 		{
 			currentCell = activeCells[i];
+			//vcg::Point3<ScalarType > s; // current sample
 
 			// generate a sample chosen from the pre-generated one
-			s = generatePoissonDiskSample(currentCell, montecarloSHT);
+			VertexPointer sp = getPrecomputedMontecarloSample(currentCell, montecarloSHT);
 			samplesgenerated[level]++;
-
+		
 			// vr spans between 3.0*r and r / 4.0 according to vertex quality
-			vr = r / (0.333 + 4.0 * (s[0] - qmin) / (qmax - qmin));
+			ScalarType sampleRadius = diskRadius;
+			if(pp.adaptiveRadiusFlag)  sampleRadius = diskRadius * sp->Q();
 
-			if (checkPoissonDisk(*ps.m, checkSHT, s, vr))
+			if (checkPoissonDisk(*ps.m, checkSHT, sp->cP(), sampleRadius))
 			{
 				// add sample
 				tri::Allocator<MetroMesh>::AddVertices(supportMesh,1);
-				supportMesh.vert.back().P() = s;
+				supportMesh.vert.back().P() = sp->P();
+				supportMesh.vert.back().Q() = sampleRadius;
 				ps.AddVert(supportMesh.vert.back());
 
 				// add to control spatial index
 				checkSHT.Add(&supportMesh.vert.back());
 
 				samplesaccepted[level]++;
-
 			}
 			else
 			{
 				// subdivide this cell
 				///////////////////////////////////////////////////////////////////////
-
 				// pre-generated samples for the next level of subdivision
+				MontecarloSHTIterator ptBegin, ptEnd, ptIt;
 				montecarloSHT.Grid(*currentCell, ptBegin, ptEnd);
 
 				for (ptIt = ptBegin; ptIt != ptEnd; ++ptIt)
