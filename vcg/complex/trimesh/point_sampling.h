@@ -783,9 +783,9 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 	// inflating
 	origMesh.bbox.Offset(cellsize);
 
-	int sizeX = max(1.0f,origMesh.bbox.DimX() / cellsize);
-	int sizeY = max(1.0f,origMesh.bbox.DimY() / cellsize);
-	int sizeZ = max(1.0f,origMesh.bbox.DimZ() / cellsize);
+	int sizeX = vcg::math::max(1.0f,origMesh.bbox.DimX() / cellsize);
+	int sizeY = vcg::math::max(1.0f,origMesh.bbox.DimY() / cellsize);
+	int sizeZ = vcg::math::max(1.0f,origMesh.bbox.DimZ() / cellsize);
 	Point3i gridsize(sizeX, sizeY, sizeZ);
 
 	qDebug("PDS: radius %f Grid:(%i %i %i) ",diskRadius,sizeX,sizeY,sizeZ);
