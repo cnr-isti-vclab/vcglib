@@ -705,12 +705,41 @@ struct PoissonDiskParam
 	PoissonDiskParam()
 	{
 		adaptiveRadiusFlag = false;
+		radiusVariance =1;
 		MAXLEVELS = 5;
 	}
 	bool adaptiveRadiusFlag;
+	float radiusVariance;
   int MAXLEVELS;
 };
 
+static ScalarType ComputePoissonDiskRadius(MetroMesh &origMesh, int sampleNum)
+{
+	ScalarType meshArea = Stat<MetroMesh>::ComputeMeshArea(origMesh);
+	ScalarType diskRadius = sqrt(meshArea / (0.7 * M_PI * sampleNum)); // 0.7 is a density factor
+	return diskRadius;
+}
+
+static int ComputePoissonSampleNum(MetroMesh &origMesh, ScalarType diskRadius)
+{
+	ScalarType meshArea = Stat<MetroMesh>::ComputeMeshArea(origMesh);
+	int sampleNum = meshArea /  (diskRadius*diskRadius *M_PI *0.7)  ; // 0.7 is a density factor
+	return sampleNum;
+}
+
+static void ComputePoissonSampleRadii(MetroMesh &sampleMesh, ScalarType diskRadius, ScalarType radiusVariance)
+{
+	VertexIterator vi;
+	std::pair<float,float> minmax = tri::Stat<MetroMesh>::ComputePerVertexQualityMinMax( sampleMesh);
+	float minRad = diskRadius / radiusVariance;
+	float maxRad = diskRadius * radiusVariance;
+	float deltaQ = minmax.second-minmax.first;
+	float deltaRad = maxRad-minRad;
+	for (vi = sampleMesh.vert.begin(); vi != sampleMesh.vert.end(); vi++)
+	{
+	 (*vi).Q() = minRad + deltaRad*((*vi).Q() - minmax.first/deltaQ);
+	}
+}
 
 /** Compute a Poisson-disk sampling of the surface.
  *  The radius of the disk is computed according to the estimated sampling density.
@@ -722,7 +751,7 @@ struct PoissonDiskParam
  * IEEE Symposium on Interactive Ray Tracing, 2007,
  * 10-12 Sept. 2007, pp. 129-132.
  */
-static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &montecarloMesh, int sampleNum, const struct PoissonDiskParam pp=PoissonDiskParam())
+static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &montecarloMesh, ScalarType diskRadius, const struct PoissonDiskParam pp=PoissonDiskParam())
 {
 	int cellusedcounter[20];          // cells used for each level
 	int cellstosubdividecounter[20];  // cells to subdivide for each level
@@ -741,7 +770,6 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 
 
 	MetroMesh supportMesh;
-	const int MAXLEVELS = 5; // maximum level of subdivision
 
 	// spatial index of montecarlo samples - used to choose a new sample to insert
 	MontecarloSHT montecarloSHT;
@@ -750,9 +778,6 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 	SampleSHT checkSHT;
 
 	// initialize spatial hash table for searching
-	ScalarType meshArea = Stat<MetroMesh>::ComputeMeshArea(origMesh);
-	ScalarType diskRadius = sqrt(meshArea / (0.7 * 3.1415 * sampleNum)); // 0.7 is a density factor
-
 	ScalarType cellsize = diskRadius / sqrt(3.0);
 
 	// inflating
@@ -797,7 +822,11 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 	Point3i *currentCell;
 	vcg::Box3<ScalarType> currentBox;
 	int level = 0;
-
+	
+  // if we are doing variable density sampling we have to prepare the random samples quality with the correct expected radii.
+	if(pp.adaptiveRadiusFlag) 
+			ComputePoissonSampleRadii(montecarloMesh, diskRadius, pp.radiusVariance);
+	
 	do
 	{
 		// extract a cell (C) from the active cell list (with probability proportional to cell's volume)
@@ -843,7 +872,7 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 		
 			// vr spans between 3.0*r and r / 4.0 according to vertex quality
 			ScalarType sampleRadius = diskRadius;
-			if(pp.adaptiveRadiusFlag)  sampleRadius = diskRadius * sp->Q();
+			if(pp.adaptiveRadiusFlag)  sampleRadius = sp->Q();
 
 			if (checkPoissonDisk(*ps.m, checkSHT, sp->cP(), sampleRadius))
 			{
@@ -900,7 +929,7 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 		qDebug("PDS: Completed Level %i, added %i samples",level,samplesaccepted[level]);	
 		level++;
 
-	} while(level < MAXLEVELS);
+	} while(level < pp.MAXLEVELS);
 
 
 	// write some statistics
@@ -909,19 +938,19 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 	{
 		QTextStream out(&outfile);
 
-		for (int k = 0; k < MAXLEVELS; k++)
+		for (int k = 0; k < pp.MAXLEVELS; k++)
 			out << "Cells used for level " << k << ": " << cellusedcounter[k] << endl;
 
-		for (int k = 0; k < MAXLEVELS; k++)
+		for (int k = 0; k < pp.MAXLEVELS; k++)
 			out << "Cells to subdivide for level " << k << ": " << cellstosubdividecounter[k] << endl;
 
-		for (int k = 0; k < MAXLEVELS; k++)
+		for (int k = 0; k < pp.MAXLEVELS; k++)
 			out << "Vertices counter for level " << k << ": " << verticescounter[k] << endl;
 
-		for (int k = 0; k < MAXLEVELS; k++)
+		for (int k = 0; k < pp.MAXLEVELS; k++)
 			out << "Samples generated for level " << k << ": " << samplesgenerated[k] << endl;
 
-		for (int k = 0; k < MAXLEVELS; k++)
+		for (int k = 0; k < pp.MAXLEVELS; k++)
 			out << "Samples accepted for level " << k << ": " << samplesaccepted[k] << endl;
 	}
 
