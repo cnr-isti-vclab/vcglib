@@ -787,9 +787,9 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 	int sizeY = vcg::math::Max(1.0f,origMesh.bbox.DimY() / cellsize);
 	int sizeZ = vcg::math::Max(1.0f,origMesh.bbox.DimZ() / cellsize);
 	Point3i gridsize(sizeX, sizeY, sizeZ);
-
+#ifndef NO_QT
 	qDebug("PDS: radius %f Grid:(%i %i %i) ",diskRadius,sizeX,sizeY,sizeZ);
-
+#endif
 	// initialize spatial hash to index pre-generated samples
 	VertexIterator vi;
 	montecarloSHT.InitEmpty(origMesh.bbox, gridsize);
@@ -798,8 +798,9 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 		montecarloSHT.Add(&(*vi));
 		verticescounter[0]++;
 	}
-
+#ifndef NO_QT
 	qDebug("PDS: Completed montercarloSHT, inserted %i vertex in %i cells", montecarloMesh.vn, montecarloSHT.AllocatedCells.size());
+#endif
 	// initialize spatial hash table for check poisson-disk radius constrain
 	checkSHT.InitEmpty(origMesh.bbox, gridsize);
 
@@ -926,12 +927,14 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 		}
 
 		nextPoints.clear();
+#ifndef NO_QT
 		qDebug("PDS: Completed Level %i, added %i samples",level,samplesaccepted[level]);	
+#endif
 		level++;
 
 	} while(level < pp.MAXLEVELS);
 
-
+#ifndef NO_QT
 	// write some statistics
 	QFile outfile("C:/temp/poissondisk_statistics.txt");
 	if (outfile.open(QFile::WriteOnly | QFile::Truncate)) 
@@ -955,6 +958,7 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 	}
 
 	outfile.close();
+#endif
 }
 
 //template <class MetroMesh>
