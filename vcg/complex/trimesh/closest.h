@@ -146,6 +146,7 @@ namespace vcg {
 			MESH_TYPE *m;
 		public:
 			Tmark(){}
+			Tmark(	MESH_TYPE *m) {SetMesh(m);}
 			void UnMarkAll(){m->UnMarkAll();}
 			bool IsMarked(OBJ_TYPE* obj){return (m->IsMarked(obj));}
 			void Mark(OBJ_TYPE* obj){m->Mark(obj);}
@@ -155,7 +156,11 @@ namespace vcg {
 
 		template <class MESH_TYPE>
 		class FaceTmark:public Tmark<MESH_TYPE,typename MESH_TYPE::FaceType>
-		{};
+		{
+		public:
+			FaceTmark() {}
+			FaceTmark(MESH_TYPE *m) {this->SetMesh(m);}
+		};
 
 		template <class MESH_TYPE>
 		class VertTmark
@@ -164,6 +169,7 @@ namespace vcg {
 		typedef typename  MESH_TYPE::VertexType VertexType;
 		
 			VertTmark(){}
+			VertTmark(MESH_TYPE *){}
 			void UnMarkAll(){}
 			bool IsMarked(VertexType*) { return false; }
 			void Mark(VertexType*){}
@@ -195,8 +201,7 @@ namespace vcg {
 			typedef Point3<ScalarType> Point3x;
 
 			typedef FaceTmark<MESH> MarkerFace;
-			MarkerFace mf;
-			mf.SetMesh(&mesh);
+			MarkerFace mf(&mesh);
 			vcg::face::PointDistanceFunctor<ScalarType> FDistFunct;
 			_minDist=_maxDist;
 			typename MESH::FaceType* bestf= gr.GetClosest(FDistFunct, mf, _p, _maxDist, _minDist, _closestPt);
