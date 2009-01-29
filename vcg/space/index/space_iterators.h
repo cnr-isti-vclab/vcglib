@@ -476,8 +476,8 @@ namespace vcg{
 			CurrentElem = Elems.rbegin();
 
 			if ((!End())&& ToUpdate())
-			while ((!End())&& Refresh()&&(!_EndGrid()))
-					_NextShell();
+				do{_NextShell();}
+					while (Refresh()&&(!_EndGrid()));
 		}
 
 		ObjType &operator *(){return *((*CurrentElem).elem);}
