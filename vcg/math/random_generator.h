@@ -24,6 +24,8 @@
 #ifndef __VCG_RandomGenerator
 #define __VCG_RandomGenerator
 
+#include <vcg/math/base.h>
+
 namespace vcg {
 namespace math {
 
@@ -40,6 +42,9 @@ public:
 
 	RandomGenerator(){}
 
+	virtual ~RandomGenerator()
+	{}
+
 // public methods
 public:
 
@@ -51,6 +56,12 @@ public:
 
 	/// Return a random number in the [0,1) real interval.
 	virtual double generate01()=0;
+
+	/// Returns a random number in the [0,1] real interval.
+	virtual double generate01closed()=0;
+
+	/// Generates a random number in the (0,1) real interval.
+	virtual double generate01open()=0;
 };
 
 /**
@@ -85,6 +96,8 @@ public:
 		initialize(default_seed);
 	}
 
+	virtual ~SubtractiveRingRNG()
+	{}
 
 // public methods
 public:
@@ -127,6 +140,23 @@ public:
 		unsigned int number = generate(lmt);
 		return static_cast<double>(number) / static_cast<double>(lmt);
 	}
+
+	/// Returns a random number in the [0,1] real interval using the Subtractive Ring method.
+	double generate01closed()
+	{
+		const unsigned int lmt = 0xffffffffu;
+		unsigned int number = generate(lmt);
+		return static_cast<double>(number) / static_cast<double>(0xfffffffEu);
+	}
+
+	/// Generates a random number in the (0,1) real interval using the Subtractive Ring method.
+	double generate01open()
+	{
+		const unsigned int lmt = 0xffffffffu;
+		unsigned int number = generate(lmt);
+		return (static_cast<double>(number) + 0.5) * (1.0/static_cast<double>(lmt));
+	}
+
 };
 
 /**
@@ -167,6 +197,9 @@ public:
 	{
 		initialize(5489u);
 	}
+
+	virtual ~MarsenneTwisterRNG()
+	{}
 
 
 // public methods
@@ -235,7 +268,7 @@ public:
 	 * 
 	 * NOTE: Limit is not considered, the interval is fixed.
 	 */
-	unsigned int generate(unsigned int limit)
+	unsigned int generate(unsigned int /*limit*/)
 	{
 		unsigned int y;
 		static unsigned int mag01[2]={0x0u, MATRIX_A};
@@ -294,6 +327,38 @@ public:
 
 };
 
+
+/* boxmuller
+ * Implements the Polar form of the Box-Muller Transformation
+ *  (c) Copyright 1994, Everett F. Carter Jr.
+ *  Permission is granted by the author to use this software for any
+ *  application provided this copyright notice is preserved.
+ */
+inline double box_muller(RandomGenerator &generator, double m, double s) /* normal random variate generator */
+{ /* mean m, standard deviation s */
+  double x1, x2, w, y1;
+  static double y2;
+  static int use_last = 0;
+  static RandomGenerator *last_generator = 0;
+  if(last_generator != &generator)
+    use_last = 0;
+  last_generator = &generator;
+  if (use_last){ /* use value from previous call */
+    y1 = y2;
+    use_last = 0;
+  } else {
+    do {
+	  x1 = 2.0 * generator.generate01closed() - 1.0;
+	  x2 = 2.0 * generator.generate01closed() - 1.0;
+	  w = x1 * x1 + x2 * x2;
+	} while ( w >= 1.0 );
+    w = sqrt( (-2.0 * log( w ) ) / w );
+    y1 = x1 * w;
+    y2 = x2 * w;
+   use_last = 1;
+  }
+  return( m + y1 * s );
+}
 } // end namespace math
 } // end namespace vcg
 
