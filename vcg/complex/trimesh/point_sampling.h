@@ -737,7 +737,7 @@ static void ComputePoissonSampleRadii(MetroMesh &sampleMesh, ScalarType diskRadi
 	float deltaRad = maxRad-minRad;
 	for (vi = sampleMesh.vert.begin(); vi != sampleMesh.vert.end(); vi++)
 	{
-	 (*vi).Q() = minRad + deltaRad*((*vi).Q() - minmax.first/deltaQ);
+	 (*vi).Q() = minRad + deltaRad*(((*vi).Q() - minmax.first)/deltaQ);
 	}
 }
 
