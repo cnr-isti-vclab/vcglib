@@ -690,6 +690,52 @@ void FaceGrid(MeshType & in, int w, int h)
     }
 }
 
+
+// Build a regular grid mesh of faces as a typical height field mesh
+// Vertexes are assumed to be already be allocated, but not oll the grid vertexes are present.
+// For this purpos a grid of indexes is also passed. negative indexes means that there is no vertex.
+
+template <class MeshType>
+void FaceGrid(MeshType & in, std::vector<int> &grid, int w, int h)
+{
+	assert(in.vn == (int)in.vert.size()); // require a compact vertex vector
+	assert(in.vn <= w*h); // the number of vertices should match the number of expected grid vertices
+	
+//	    V0       V1
+//   i+0,j+0 -- i+0,j+1
+//      |   \     |
+//      |    \    |
+//      |     \   |
+//      |      \  |
+//   i+1,j+0 -- i+1,j+1
+//     V2        V3
+
+
+  for(int i=0;i<h-1;++i)
+    for(int j=0;j<w-1;++j)
+    {
+			int V0i= grid[(i+0)*w+j+0];
+			int V1i= grid[(i+0)*w+j+1];
+			int V2i= grid[(i+1)*w+j+0];
+			int V3i= grid[(i+1)*w+j+1];
+			
+			if(V0i>=0 && V2i>=0 && V3i>=0 )
+			{
+				typename MeshType::FaceIterator f= Allocator<MeshType>::AddFaces(in,1);
+				f->V(0)=&(in.vert[V0i]);
+				f->V(1)=&(in.vert[V3i]);
+				f->V(2)=&(in.vert[V2i]);
+			}
+			if(V0i>=0 && V1i>=0 && V3i>=0 )
+			{
+				typename MeshType::FaceIterator f= Allocator<MeshType>::AddFaces(in,1);
+				f->V(0)=&(in.vert[V0i]);
+				f->V(1)=&(in.vert[V1i]);
+				f->V(2)=&(in.vert[V3i]);
+			}
+    }
+}
+
 template <class MeshType>
 void Cylinder(const int &slices, const int &stacks, MeshType & m){
 	float rad_step = M_PI / (float)stacks;
