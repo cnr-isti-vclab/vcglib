@@ -154,6 +154,7 @@ Initial commit
 #include<wrap/io_trimesh/io_mask.h>
 #include<wrap/io_trimesh/io_ply.h>
 #include<vcg/complex/trimesh/allocate.h>
+#include<vcg/complex/trimesh/create/platonic.h>
 #include<vcg/space/color4.h>
 #include <vector>
 
@@ -220,6 +221,15 @@ struct LoadPly_TristripAux
 	int *v;
 	unsigned char data[MAX_USER_DATA];  
 };
+
+
+// Yet another auxiliary data structure for loading some strange ply files 
+// the original stanford range data...
+struct LoadPly_RangeGridAux {
+      unsigned char num_pts;
+      int pts[5];
+    };
+
 
 // Struttura ausiliaria per la lettura del file ply
 template<class S>
@@ -323,6 +333,16 @@ static const  PropDescriptor &TristripDesc(int i)
 		{"tristrips","vertex_indices", ply::T_INT,  ply::T_INT,  offsetof(LoadPly_TristripAux,v),		  1,1,ply::T_INT,ply::T_INT,offsetof(LoadPly_TristripAux,size) ,0},				
 	};
 	return qf[i];
+}
+
+// Descriptor for the Stanford Data Repository Range Maps.
+// In practice a grid with some invalid elements. Coords are saved only for good elements
+static const  PropDescriptor &RangeDesc(int i)  
+{		
+	static const PropDescriptor range_props[1] = {
+      {"range_grid","vertex_indices", ply::T_INT, ply::T_INT, offsetof(LoadPly_RangeGridAux,pts), 1, 0, ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_RangeGridAux,num_pts)},
+    };
+	return range_props[i];
 }
 
 
@@ -429,6 +449,12 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 	LoadPly_TristripAux tsa;
 	LoadPly_VertAux<ScalarType> va;
   
+	LoadPly_RangeGridAux rga;
+	std::vector<int> RangeGridAuxVec;
+	int RangeGridCols=0;
+	int RangeGridRows=0;
+	
+	
 	pi.mask = 0;
 	bool multit = false; // true if texture has a per face int spec the texture index
 
@@ -481,11 +507,14 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				for(ii=_FACEDESC_FIRST_;ii< _FACEDESC_LAST_;++ii)
 					if( pf.AddToRead(FaceDesc(ii))!=-1 ) break;
 					
-			  if(ii==_FACEDESC_LAST_) if(pf.AddToRead(TristripDesc(0))==-1) // Se fallisce tutto si prova a vedere se ci sono tristrip alla levoy.
+			  if(ii==_FACEDESC_LAST_) 
+					if(pf.AddToRead(TristripDesc(0))==-1) // Se fallisce tutto si prova a vedere se ci sono tristrip alla levoy.
+						if(pf.AddToRead(RangeDesc(0))==-1) // Se fallisce tutto si prova a vedere se ci sono rangemap alla levoy.
 									{ 
 										pi.status = PlyInfo::E_NO_FACE;   
 										//return pi.status;  no face is not a critical error. let's continue.
 									}
+									
 			}
 		// Descrittori facoltativi dei flags
 	
@@ -874,6 +903,55 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 					m.face.push_back( tf );
 				}
 			}
+		}
+		else if( !strcmp( pf.ElemName(i),"range_grid") )//////////////////// LETTURA RANGEMAP DI STANFORD
+		{
+			//qDebug("Starting Reading of Range Grid");
+			if(RangeGridCols==0) // not initialized. 
+			{
+				for(int co=0;co<int(pf.comments.size());++co)
+				{
+					std::string num_cols = "num_cols";
+					std::string num_rows = "num_rows";
+					std::string &c = pf.comments[co];
+					std::string bufstr,bufclean;
+					int i,n;
+					if( num_cols == c.substr(0,num_cols.length()) ) 
+					{
+						bufstr = c.substr(num_cols.length()+1);
+						RangeGridCols = atoi(bufstr.c_str());
+					}
+					if( num_rows == c.substr(0,num_cols.length()) ) 
+					{
+						bufstr = c.substr(num_rows.length()+1);
+						RangeGridRows = atoi(bufstr.c_str());
+					}
+				}
+				//qDebug("Rows %i Cols %i",RangeGridRows,RangeGridCols);
+			}
+			int totPnt = RangeGridCols*RangeGridRows;
+			int nullCnt=0;
+			// standard reading;
+			pf.SetCurElement(i);
+			for(int j=0;j<totPnt;++j)
+			{
+				if(pi.cb && (j%1000)==0) pi.cb(50+j*50/totPnt,"RangeMap Face Loading");
+				if( pf.Read(&rga)==-1 )
+				{
+					//qDebug("Error after loading %i elements",j);
+					pi.status = PlyInfo::E_SHORTFILE;
+					return pi.status;
+				}
+				else 
+				{
+					if(rga.num_pts == 0)
+						RangeGridAuxVec.push_back(-1);
+					else 
+						RangeGridAuxVec.push_back(rga.pts[0]);
+				}
+			} 
+			//qDebug("Completed the reading of %i indexes",RangeGridAuxVec.size());
+			tri::FaceGrid(m, RangeGridAuxVec, RangeGridCols,RangeGridRows);
 		}
 		else
 		{
