@@ -128,6 +128,9 @@ struct MidPoint : public   std::unary_function<face::Pos<typename MESH_TYPE::Fac
 		
 		if( MESH_TYPE::HasPerVertexQuality())
 			nv.Q() = ((ep.f->V(ep.z)->Q()+ep.f->V1(ep.z)->Q())) / 2.0;
+
+		if( MESH_TYPE::HasPerVertexTexCoord())
+			nv.T().P() = ((ep.f->V(ep.z)->T().P()+ep.f->V1(ep.z)->T().P())) / 2.0;
 	}
 
 	Color4<typename MESH_TYPE::ScalarType> WedgeInterp(Color4<typename MESH_TYPE::ScalarType> &c0, Color4<typename MESH_TYPE::ScalarType> &c1)
