@@ -29,6 +29,7 @@
 #define __VCG_TRIANGLE2
 #include <vcg/space/triangle3.h>
 #include <vcg/space/point2.h>
+#include <vcg/space/segment2.h>
 #include <float.h>
 
 namespace vcg {
@@ -86,11 +87,11 @@ bool InterpolationParameters(const CoordType & bq, ScalarType &a, ScalarType &b,
 {	
 	const ScalarType EPSILON = ScalarType(0.000001);
 
-	//ScalarType AreaGlobal=(P(1) - P(0)) ^ (P(2) - P(0));
-	ScalarType Area0=(P(2) - P(1)) ^ (bq - P(1));
-	ScalarType Area1=(P(0) - P(2)) ^ (bq - P(2));
-	ScalarType Area2=(P(1) - P(0)) ^ (bq - P(0));
-	ScalarType AreaGlobal=Area0+Area1+Area2;
+	ScalarType AreaGlobal=(P(1) - P(0)) ^ (P(2) - P(0));
+	ScalarType Area0=((P(2) - P(1)) ^ (bq - P(1)));
+	ScalarType Area1=((P(0) - P(2)) ^ (bq - P(2)));
+	ScalarType Area2=((P(1) - P(0)) ^ (bq - P(0)));
+	//ScalarType AreaGlobal=Area0+Area1+Area2;
 	/*if ((Area0>(AreaGlobal+EPSILON))||(Area1>(AreaGlobal+EPSILON))||(Area2>(AreaGlobal+EPSILON)))
 		return false;*/
 	a=Area0/AreaGlobal;
