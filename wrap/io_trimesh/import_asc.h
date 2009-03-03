@@ -86,12 +86,13 @@ static const char *ErrorMsg(int error)
 *	\param lineskip  	number of lines to be skipped at the begin of the file
 *	\return				the operation result
 */
-static int Open( MESH_TYPE &m, const char * filename, CallBackPos *cb=0,bool triangulate=false)
+static int Open( MESH_TYPE &m, const char * filename, CallBackPos *cb=0, bool triangulate=false, int lineskip=0)
 {
     FILE *fp;
     fp = fopen(filename, "r");
     if(fp == NULL)
     {
+			qDebug("Failed opening of %s",filename);
       return E_CANTOPEN;
     }
 		long currentPos = ftell(fp);
@@ -106,6 +107,11 @@ static int Open( MESH_TYPE &m, const char * filename, CallBackPos *cb=0,bool tri
     int cnt=0;
 		int ret;
 		char buf[1024];
+
+		// skip the first <lineskip> lines
+		for(int i=0;i<lineskip;++i)
+				fgets(buf,1024,fp);
+
     /* Read a single facet from an ASCII .STL file */
     while(!feof(fp))
     {
@@ -113,10 +119,12 @@ static int Open( MESH_TYPE &m, const char * filename, CallBackPos *cb=0,bool tri
 			if(feof(fp)) break;
 			fgets(buf,1024,fp);
 			ret=sscanf(buf, "%f, %f, %f, %f\n", &pp.X(), &pp.Y(), &pp.Z(),&q);
-			if(ret<3) 		return E_UNESPECTEDEOF;
-      VertexIterator vi=Allocator<MESH_TYPE>::AddVertices(m,1);
-			(*vi).P().Import(pp); 
-			if(ret==4) 	(*vi).Q()=q; 
+			if(ret>=3)
+				{
+					VertexIterator vi=Allocator<MESH_TYPE>::AddVertices(m,1);
+					(*vi).P().Import(pp); 
+					if(ret==4) 	(*vi).Q()=q; 
+				}			
     }
 		
     fclose(fp);
