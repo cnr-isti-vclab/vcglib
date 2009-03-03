@@ -340,7 +340,7 @@ static const  PropDescriptor &TristripDesc(int i)
 static const  PropDescriptor &RangeDesc(int i)  
 {		
 	static const PropDescriptor range_props[1] = {
-      {"range_grid","vertex_indices", ply::T_INT, ply::T_INT, offsetof(LoadPly_RangeGridAux,pts), 1, 0, ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_RangeGridAux,num_pts)},
+      {"range_grid","vertex_indices", ply::T_INT, ply::T_INT, offsetof(LoadPly_RangeGridAux,pts), 1, 0, ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_RangeGridAux,num_pts),0},
     };
 	return range_props[i];
 }
@@ -915,7 +915,6 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 					std::string num_rows = "num_rows";
 					std::string &c = pf.comments[co];
 					std::string bufstr,bufclean;
-					int i,n;
 					if( num_cols == c.substr(0,num_cols.length()) ) 
 					{
 						bufstr = c.substr(num_cols.length()+1);
@@ -930,7 +929,6 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				//qDebug("Rows %i Cols %i",RangeGridRows,RangeGridCols);
 			}
 			int totPnt = RangeGridCols*RangeGridRows;
-			int nullCnt=0;
 			// standard reading;
 			pf.SetCurElement(i);
 			for(int j=0;j<totPnt;++j)

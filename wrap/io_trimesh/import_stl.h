@@ -222,7 +222,7 @@ static int OpenBinary( OpenMeshType &m, const char * filename, CallBackPos *cb=0
     m.Clear();
   
     /* Skip the first line of the file */
-    while(getc(fp) != '\n');
+    while(getc(fp) != '\n') { }
 
     STLFacet f;
     int cnt=0;
