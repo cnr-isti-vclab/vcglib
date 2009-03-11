@@ -70,8 +70,8 @@ Adding copyright.
 
 ****************************************************************************/
 
-#ifndef VCG_CAMERA_H
-#define VCG_CAMERA_H
+#ifndef __VCGLIB_WRAP_GUI_VIEW_H
+#define __VCGLIB_WRAP_GUI_VIEW_H
 
 /**********************
 WARNING
@@ -101,6 +101,9 @@ namespace vcg {
 This class represent the viewing parameters under opengl. 
 Mainly it stores the projection and modelview matrix and the viewport
 and it is used to simply project back and forth points, computing line of sight, planes etc.
+
+Note: mainly it is used only by the TrackBall.
+
 */
 
 template <class T> class View {
