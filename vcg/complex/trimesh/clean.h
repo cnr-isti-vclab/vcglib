@@ -228,6 +228,8 @@ Initial Release
 #include<vcg/complex/trimesh/allocate.h>
 #include<vcg/complex/trimesh/update/selection.h>
 #include<vcg/complex/trimesh/update/flag.h>
+#include <vcg/complex/trimesh/update/topology.h>
+#include <vcg/space/triangle3.h>
 
 
 namespace vcg {
@@ -245,6 +247,7 @@ class ConnectedIterator
 			typedef typename MeshType::FacePointer    FacePointer;
 			typedef typename MeshType::FaceIterator   FaceIterator;
 			typedef typename MeshType::FaceContainer  FaceContainer;
+
       typedef typename vcg::Box3<ScalarType>  Box3Type;
 
 public:
@@ -1102,6 +1105,92 @@ private:
 			        		std::swap((*fi).WT(0),(*fi).WT(1));
         }
       }
+
+	static int RemoveTVertexByFlip(MeshType &m, float threshold=40, bool repeat=true)
+	{
+        assert(m.HasFFTopology());
+		assert(m.HasPerVertexMark());
+        //Counters for logging and convergence
+        int count, total = 0;
+
+        do {
+            tri::UpdateTopology<CMeshO>::FaceFace(m);
+            m.UnMarkAll();
+            count = 0;
+
+            //detection stage
+            for(unsigned int index = 0 ; index < m.face.size(); ++index )
+            {
+                CMeshO::FacePointer f = &(m.face[index]);    float sides[3]; Point3<float> dummy;
+                sides[0] = Distance(f->P(0), f->P(1)); sides[1] = Distance(f->P(1), f->P(2)); sides[2] = Distance(f->P(2), f->P(0));
+                int i = std::find(sides, sides+3, std::max( std::max(sides[0],sides[1]), sides[2])) - (sides);
+                if( m.IsMarked(f->V2(i) )) continue;
+
+                if( PSDist(f->P2(i),f->P(i),f->P1(i),dummy)*threshold <= sides[i] )
+                {
+                    m.Mark(f->V2(i));
+                    if(face::CheckFlipEdge<CMeshO::FaceType>( *f, i ))  {
+                        // Check if EdgeFlipping improves quality
+                        CMeshO::FacePointer g = f->FFp(i); int k = f->FFi(i);
+                        Triangle3<float> t1(f->P(i), f->P1(i), f->P2(i)), t2(g->P(k), g->P1(k), g->P2(k)),
+                                         t3(f->P(i), g->P2(k), f->P2(i)), t4(g->P(k), f->P2(i), g->P2(k));
+
+                        if ( std::min( t1.QualityFace(), t2.QualityFace() ) < std::min( t3.QualityFace(), t4.QualityFace() ))
+                        {
+                            face::FlipEdge<CMeshO::FaceType>( *f, i );
+                            ++count; ++total;
+                        }
+                    }
+                    
+                }
+            }
+
+            tri::UpdateNormals<CMeshO>::PerFace(m);
+        }
+        while( repeat && count );
+
+        return total;
+    }
+
+	static int RemoveTVertexByCollapse(MeshType &m, float threshold=40, bool repeat=true)
+	{
+        assert(m.HasPerVertexMark());
+        //Counters for logging and convergence
+        int count, total = 0;
+
+        do {
+            m.UnMarkAll();
+            count = 0;
+
+            //detection stage
+            for(unsigned int index = 0 ; index < m.face.size(); ++index )
+            {
+                CMeshO::FacePointer f = &(m.face[index]);    float sides[3]; Point3<float> dummy;
+                sides[0] = Distance(f->P(0), f->P(1)); sides[1] = Distance(f->P(1), f->P(2)); sides[2] = Distance(f->P(2), f->P(0));
+                int i = std::find(sides, sides+3, std::max( std::max(sides[0],sides[1]), sides[2])) - (sides);
+                if( m.IsMarked(f->V2(i) )) continue;
+
+                if( PSDist(f->P2(i),f->P(i),f->P1(i),dummy)*threshold <= sides[i] )
+                {
+                    m.Mark(f->V2(i));
+                    
+                    int j = Distance(dummy,f->P(i))<Distance(dummy,f->P1(i))?i:(i+1)%3;
+                    f->P2(i) = f->P(j);  m.Mark(f->V(j));
+                    ++count; ++total;
+                }
+            }
+
+        
+            tri::Clean<CMeshO>::RemoveDuplicateVertex(m);
+            tri::Allocator<CMeshO>::CompactFaceVector(m);
+            tri::Allocator<CMeshO>::CompactVertexVector(m);
+        
+
+        }
+        while( repeat && count );
+
+        return total;
+    }
 
       static bool SelfIntersections(MeshType &m, std::vector<FaceType*> &ret)
 			{
