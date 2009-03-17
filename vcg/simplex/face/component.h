@@ -257,7 +257,7 @@ public:
   NormalType &WN(const int j) { return _wnorm[j]; }
   const NormalType cWN(const int j) const { return _wnorm[j]; }
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){ WN() = leftF.cWN(); T::ImportLocal(leftF);}
+	void ImportLocal(const LeftF & leftF){ for (int i=0; i<3; ++i) { WN(i) = leftF.cWN(i); } T::ImportLocal(leftF);}
  	inline void Alloc(const int & ns){T::Alloc(ns);}
 	inline void Dealloc(){T::Dealloc();}
 	static bool HasWedgeNormal()   { return true; }
@@ -303,7 +303,7 @@ public:
   TexCoordType &WT(const int i) { return _wt[i]; }
   TexCoordType const &cWT(const int i) const { return _wt[i]; }
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){ WT() = leftF.cWT();T::ImportLocal(leftF);}
+	void ImportLocal(const LeftF & leftF){ for (int i=0; i<3; ++i) { WT(i) = leftF.cWT(i); } T::ImportLocal(leftF);}
 	inline void Alloc(const int & ns){T::Alloc(ns);}
 	inline void Dealloc(){T::Dealloc();}
   static bool HasWedgeTexCoord()   { return true; }
