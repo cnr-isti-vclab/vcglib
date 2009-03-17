@@ -680,8 +680,8 @@ bool Intersection_Segment_Triangle( const vcg::Segment3<ScalarType> & seg,
 	ray.Set(seg.P0(),dir);
 
 	//then control for each direction the intersection with triangle
-	if ((Intersection<ScalarType>(ray,vert0,vert1,vert2,a,b,dist))
-		||(Intersection<ScalarType>(ray,vert1,vert0,vert2,b,a,dist)))
+	if ((IntersectionRayTriangle<ScalarType>(ray,vert0,vert1,vert2,dist,a,b))
+		||(IntersectionRayTriangle<ScalarType>(ray,vert1,vert0,vert2,dist,b,a)))
 		return (dist<(seg.P1()-seg.P0()).Norm());
 	else
 		return(false);
