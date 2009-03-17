@@ -107,7 +107,7 @@ template <class S_MESH_TYPE, class STL_CONT>
 void SubSet(S_MESH_TYPE & m, STL_CONT & subSet)
 {
   std::vector< InsertedV<S_MESH_TYPE> > newVertices;
-  typename STL_CONT::iterator pfi;
+  typename STL_CONT::const_iterator pfi;
   typename S_MESH_TYPE::VertexIterator vi;
   typename S_MESH_TYPE::FaceIterator fi;
   typedef typename S_MESH_TYPE::VertexType S_VertexType;
