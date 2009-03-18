@@ -510,7 +510,25 @@ public:
 	static bool HasRadiusOcf()  { return false; }
 	static void Name(std::vector<std::string> & name){ T::Name(name);}
 };
+/*-------------------------- Radius  ----------------------------------*/
 
+template <class A, class TT> class Radius: public TT {
+public:
+  typedef A RadiusType;
+  RadiusType &R() { return _radius; }
+  const RadiusType & cR() const {return _radius; }
+	template < class LeftV>
+	void ImportLocal(const LeftV  & left ) { R() = left.cR(); TT::ImportLocal( left); }
+  static bool HasRadius()   { return true; }
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("Radius"));TT::Name(name);}
+
+private:
+  RadiusType _radius;
+};
+
+template <class TT> class Radiusf: public Radius<float, TT> {
+public: static void Name(std::vector<std::string> & name){name.push_back(std::string("Radiusf"));TT::Name(name);}
+};
 
 
 /*----------------------------- VEADJ ------------------------------*/
