@@ -243,6 +243,8 @@ struct LoadPly_VertAux
 	unsigned char g;
 	unsigned char b;
 	unsigned char data[MAX_USER_DATA];  
+	float radius;
+	float u,v,w;
 };
 
 // Struttura ausiliaria caricamento camera
@@ -273,9 +275,10 @@ struct LoadPly_Camera
 	float k4;
 };
 
+#define _VERTDESC_LAST_  19
 static const  PropDescriptor &VertDesc(int i)  
 {
-	static const PropDescriptor pv[15]={
+	static const PropDescriptor pv[_VERTDESC_LAST_]={
 /*00*/ {"vertex", "x",         ply::T_FLOAT, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p),0,0,0,0,0  ,0},
 /*01*/ {"vertex", "y",         ply::T_FLOAT, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p) + sizeof(ScalarType),0,0,0,0,0  ,0},
 /*02*/ {"vertex", "z",         ply::T_FLOAT, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p) + 2*sizeof(ScalarType),0,0,0,0,0  ,0},
@@ -288,9 +291,13 @@ static const  PropDescriptor &VertDesc(int i)
 /*09*/ {"vertex", "diffuse_green",     ply::T_UCHAR, ply::T_UCHAR,         offsetof(LoadPly_VertAux<ScalarType>,g),0,0,0,0,0  ,0},
 /*10*/ {"vertex", "diffuse_blue" ,     ply::T_UCHAR, ply::T_UCHAR,         offsetof(LoadPly_VertAux<ScalarType>,b),0,0,0,0,0  ,0},
 /*11*/ {"vertex", "confidence",ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,q),0,0,0,0,0  ,0},
-/*12*/ {"vertex", "nx",         ply::T_FLOAT, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,n),0,0,0,0,0  ,0},
-/*13*/ {"vertex", "ny",         ply::T_FLOAT, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,n) + sizeof(ScalarType),0,0,0,0,0  ,0},
+/*12*/ {"vertex", "nx",         ply::T_FLOAT, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,n)                       ,0,0,0,0,0  ,0},
+/*13*/ {"vertex", "ny",         ply::T_FLOAT, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,n) + 1*sizeof(ScalarType),0,0,0,0,0  ,0},
 /*14*/ {"vertex", "nz",         ply::T_FLOAT, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,n) + 2*sizeof(ScalarType),0,0,0,0,0  ,0},
+/*15*/ {"vertex", "radius",     ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,radius),0,0,0,0,0  ,0},
+/*16*/ {"vertex", "texture_u",    ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,u),0,0,0,0,0  ,0},
+/*17*/ {"vertex", "texture_v",    ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,v),0,0,0,0,0  ,0},
+/*18*/ {"vertex", "texture_w",    ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,w),0,0,0,0,0  ,0},
 	};
 	return pv[i];
 }
@@ -551,7 +558,11 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 			pi.mask |= Mask::IOM_VERTCOLOR;
 		}
 	}
-
+	if( VertexType::HasRadius() )
+	{
+		pf.AddToRead(VertDesc(15));
+		pi.mask |= Mask::IOM_VERTRADIUS;
+	}
 			// se ci sono i flag per vertice ci devono essere anche i flag per faccia
 	if( pf.AddToRead(FaceDesc(1))!=-1 )
 		pi.mask |= Mask::IOM_FACEFLAGS;
@@ -726,6 +737,8 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 					(*vi).C()[2] = va.b;
 					(*vi).C()[3] = 255;
 				}
+				if( pi.mask & Mask::IOM_VERTRADIUS )
+						(*vi).R() = va.radius; 
 
 				
 				for(int k=0;k<pi.vdn;k++)	
@@ -1123,7 +1136,8 @@ static bool LoadMask(const char * filename, int &mask, PlyInfo &pi)
 
 	if( pf.AddToRead(VertDesc(3))!=-1 )		mask |= Mask::IOM_VERTFLAGS;
 	if( pf.AddToRead(VertDesc(4))!=-1 )		mask |= Mask::IOM_VERTQUALITY;
-	if( pf.AddToRead(VertDesc(11))!=-1 )		mask |= Mask::IOM_VERTQUALITY;
+	if( pf.AddToRead(VertDesc(11))!=-1 )	mask |= Mask::IOM_VERTQUALITY;
+	if( pf.AddToRead(VertDesc(15))!=-1 )	mask |= Mask::IOM_VERTRADIUS;
 	if( ( pf.AddToRead(VertDesc(5))!=-1 ) && 
 		  ( pf.AddToRead(VertDesc(6))!=-1 ) &&
 			( pf.AddToRead(VertDesc(7))!=-1 )  )  mask |= Mask::IOM_VERTCOLOR;

@@ -294,6 +294,13 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 		);
 	}
 
+	if( tri::HasPerVertexRadius(m) && (pi.mask & Mask::IOM_VERTRADIUS) )
+	{
+		fprintf(fpout,
+			"property float radius\n"
+		);
+	}
+
 	for(i=0;i<pi.vdn;i++)
 			fprintf(fpout,"property %s %s\n",pi.VertexData[i].stotypename(),pi.VertexData[i].propname);
 	
@@ -454,6 +461,9 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 				if( m.HasPerVertexQuality() && (pi.mask & Mask::IOM_VERTQUALITY) )
 					fwrite(&( vp->Q() ),sizeof(float),1,fpout);
 
+				if( HasPerVertexRadius(m) && (pi.mask & Mask::IOM_VERTRADIUS) )
+					fwrite(&( vp->R() ),sizeof(float),1,fpout);
+
 
 				for(i=0;i<pi.vdn;i++)
 				{
@@ -485,6 +495,9 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 
 				if( m.HasPerVertexQuality() && (pi.mask & Mask::IOM_VERTQUALITY) )
 					fprintf(fpout,"%g ",vp->Q());
+
+				if( HasPerVertexRadius(m) && (pi.mask & Mask::IOM_VERTRADIUS) )
+					fprintf(fpout,"%g ",vp->R());
 
 				for(i=0;i<pi.vdn;i++)
 				{
@@ -722,6 +735,7 @@ static const char *ErrorMsg(int error)
 	  capability |= vcg::tri::io::Mask::IOM_VERTCOLOR    ;
 	  capability |= vcg::tri::io::Mask::IOM_VERTQUALITY  ;
 	  capability |= vcg::tri::io::Mask::IOM_VERTNORMAL   ;
+	  capability |= vcg::tri::io::Mask::IOM_VERTRADIUS   ;
 	  capability |= vcg::tri::io::Mask::IOM_VERTTEXCOORD ;
 	  capability |= vcg::tri::io::Mask::IOM_FACEINDEX    ;
 	  capability |= vcg::tri::io::Mask::IOM_FACEFLAGS    ;
