@@ -145,6 +145,10 @@ public:
 	{
 		return _v;
 	}
+	inline T * V()
+	{
+		return _v;
+	}
 	inline const T & V ( const int i ) const
 	{
 		assert(i>=0 && i<4);
