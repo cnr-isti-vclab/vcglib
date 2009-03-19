@@ -558,10 +558,11 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 			pi.mask |= Mask::IOM_VERTCOLOR;
 		}
 	}
-	if( VertexType::HasRadius() )
+
+    if(tri::HasPerVertexRadius(m))
 	{
-		pf.AddToRead(VertDesc(15));
-		pi.mask |= Mask::IOM_VERTRADIUS;
+		if( pf.AddToRead(VertDesc(15))!=-1 )
+				pi.mask |= Mask::IOM_VERTRADIUS;
 	}
 			// se ci sono i flag per vertice ci devono essere anche i flag per faccia
 	if( pf.AddToRead(FaceDesc(1))!=-1 )
