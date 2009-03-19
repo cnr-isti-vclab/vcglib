@@ -89,7 +89,11 @@ public:
 	inline const ScalarType &Y() const {return _v[1];}
 	inline ScalarType &X() {return _v[0];}
 	inline ScalarType &Y() {return _v[1];}
-  inline const ScalarType * V() const
+	inline const ScalarType * V() const
+	{
+		return _v;
+	}
+	inline ScalarType * V()
 	{
 		return _v;
 	}
