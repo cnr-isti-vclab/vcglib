@@ -536,47 +536,94 @@ static int SingleFaceSimilar(FacePointer fp, VertexSampler &ps, int n_samples_pe
         }
 	return n_samples;
 }
+static int SingleFaceSimilarDual(FacePointer fp, VertexSampler &ps, int n_samples_per_edge, bool randomFlag)
+{
+		int n_samples=0;
+    float         i, j;
+    float segmentNum=n_samples_per_edge -1 ;
+		float segmentLen = 1.0/segmentNum;
+		// face sampling.
+    for(i=0; i < n_samples_per_edge-1; i++)
+        for(j=0; j < n_samples_per_edge-1-i; j++)
+        {
+            //AddSample( v0 + (V1*(double)i + V2*(double)j) );
+						CoordType V0((i+0)*segmentLen,(j+0)*segmentLen, 1.0 - ((i+0)*segmentLen+(j+0)*segmentLen) ) ;
+						CoordType V1((i+1)*segmentLen,(j+0)*segmentLen, 1.0 - ((i+1)*segmentLen+(j+0)*segmentLen) ) ;
+						CoordType V2((i+0)*segmentLen,(j+1)*segmentLen, 1.0 - ((i+0)*segmentLen+(j+1)*segmentLen) ) ;
+						n_samples++;
+						if(randomFlag) 	{
+											CoordType rb=RandomBaricentric();
+											ps.AddFace(*fp, V0*rb[0]+V1*rb[1]+V2*rb[2]);
+							} else  ps.AddFace(*fp,(V0+V1+V2)/3.0);
 
-/// Similar sampling. Each triangle is subdivided into similar triangles following a generalization of the classical 1-to-4 splitting rule of triangles. 
-/// According to the level of subdivision <k> you get 1, 4 , 9, 16 , <k^2> triangles. 
-/// Of these triangles we consider only internal vertices. (to avoid multiple sampling of edges and vertices).
-/// Therefore the number of internal points is ((k-3)*(k-2))/2. where k is the number of point on an edge (vertex included)
-//  e.g. for a k=4 you get (1*2)/2 == 1 e.g. a single point, etc.
-/// So if you want N samples in a triangle i have to solve  k^2 -5k +6 - 2N = 0 
+				if( j < n_samples_per_edge-i-2 )
+							{
+									CoordType V3((i+1)*segmentLen,(j+1)*segmentLen, 1.0 - ((i+1)*segmentLen+(j+1)*segmentLen) ) ;
+									n_samples++;
+									if(randomFlag) 	{
+														CoordType rb=RandomBaricentric();
+														ps.AddFace(*fp, V3*rb[0]+V1*rb[1]+V2*rb[2]);
+										} else  ps.AddFace(*fp,(V3+V1+V2)/3.0);								
+							}
+        }
+	return n_samples;
+}
 
+// Similar sampling 
+// Each triangle is subdivided into similar triangles following a generalization of the classical 1-to-4 splitting rule of triangles. 
+// According to the level of subdivision <k> you get 1, 4 , 9, 16 , <k^2> triangles. 
+// Depending on the kind of the sampling strategies we can have two different approach to choosing the sample points. 
+// 1) you have already sampled both edges and vertices
+// 2) you are not going to take samples on edges and vertices. 
+// 
+// In the first case you have to consider only internal vertices of the subdivided triangles (to avoid multiple sampling of edges and vertices).
+// Therefore the number of internal points is ((k-3)*(k-2))/2. where k is the number of points on an edge (vertex included)
+// E.g. for k=4 you get 3 segments on each edges and the original triangle is subdivided 
+// into 9 smaller triangles and you get (1*2)/2 == 1 only a single internal point.
+// So if you want N samples in a triangle you have to solve  k^2 -5k +6 - 2N = 0 
+// from which you get:
+//
 //      5 + sqrt( 1 + 8N ) 
 // k = -------------------  
 //             2
+//
+// In the second case if you are not interested to skip the sampling on edges and vertices you have to consider as sample number the number of triangles. 
+// So if you want N samples in a triangle, the number <k> of points on  an edge (vertex included) should be simply:
+//      k = 1 + sqrt(N)  
+// examples: 
+// N = 4 -> k = 3
+// N = 9 -> k = 4 
 
 
 
 //template <class MetroMesh>
 //void Sampling<MetroMesh>::SimilarFaceSampling()
-static void FaceSimilar(MetroMesh & m, VertexSampler &ps,int sampleNum)
-{
-	
+static void FaceSimilar(MetroMesh & m, VertexSampler &ps,int sampleNum, bool dualFlag, bool randomFlag)
+{	
 		ScalarType area = Stat<MetroMesh>::ComputeMeshArea(m);
 		ScalarType samplePerAreaUnit = sampleNum/area;
-		//qDebug("samplePerAreaUnit %f",samplePerAreaUnit);
 
 		// Similar Triangles sampling.
     int n_samples_per_edge;
     double  n_samples_decimal = 0.0;
     FaceIterator fi;
 
-    printf("Similar Triangles face sampling\n");
     for(fi=m.face.begin(); fi != m.face.end(); fi++)
     {
         // compute # samples in the current face.
         n_samples_decimal += 0.5*DoubleArea(*fi) * samplePerAreaUnit;
         int n_samples          = (int) n_samples_decimal;
-        if(n_samples)
+        if(n_samples>0)
         {
             // face sampling.
-            n_samples_per_edge = (int)((sqrt(1.0+8.0*(double)n_samples) +5.0)/2.0);
-            //n_samples = 0;
-            //SingleFaceSimilar((*fi).V(0)->cP(), (*fi).V(1)->cP(), (*fi).V(2)->cP(), n_samples_per_edge);
-						n_samples = SingleFaceSimilar(&*fi,ps, n_samples_per_edge);
+            if(dualFlag) 
+							{	
+									n_samples_per_edge = (int)((sqrt(1.0+8.0*(double)n_samples) +5.0)/2.0); // original for non dual case
+									n_samples = SingleFaceSimilar(&*fi,ps, n_samples_per_edge);
+							} else {	
+									n_samples_per_edge = (int)(sqrt(n_samples) +1.0);
+									n_samples = SingleFaceSimilarDual(&*fi,ps, n_samples_per_edge,randomFlag);
+						}
         }
         n_samples_decimal -= (double) n_samples;
     }
@@ -787,7 +834,7 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 	int sizeY = vcg::math::Max(1.0f,origMesh.bbox.DimY() / cellsize);
 	int sizeZ = vcg::math::Max(1.0f,origMesh.bbox.DimZ() / cellsize);
 	Point3i gridsize(sizeX, sizeY, sizeZ);
-#ifndef NO_QT
+#ifdef QT_VERSION
 	qDebug("PDS: radius %f Grid:(%i %i %i) ",diskRadius,sizeX,sizeY,sizeZ);
 #endif
 	// initialize spatial hash to index pre-generated samples
@@ -798,7 +845,7 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 		montecarloSHT.Add(&(*vi));
 		verticescounter[0]++;
 	}
-#ifndef NO_QT
+#ifdef QT_VERSION
 	qDebug("PDS: Completed montercarloSHT, inserted %i vertex in %i cells", montecarloMesh.vn, montecarloSHT.AllocatedCells.size());
 #endif
 	// initialize spatial hash table for check poisson-disk radius constrain
@@ -927,14 +974,14 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 		}
 
 		nextPoints.clear();
-#ifndef NO_QT
+#ifdef QT_VERSION
 		qDebug("PDS: Completed Level %i, added %i samples",level,samplesaccepted[level]);	
 #endif
 		level++;
 
 	} while(level < pp.MAXLEVELS);
 
-#ifndef NO_QT
+#ifdef DEBUG_DUMP_STAT
 	// write some statistics
 	QFile outfile("C:/temp/poissondisk_statistics.txt");
 	if (outfile.open(QFile::WriteOnly | QFile::Truncate)) 
@@ -987,3 +1034,4 @@ static void Texture(MetroMesh & m, VertexSampler &ps, int textureWidth, int text
 } // end namespace vcg
 
 #endif
+	
