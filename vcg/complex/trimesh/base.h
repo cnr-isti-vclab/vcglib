@@ -528,6 +528,9 @@ template < class VertContainerType, class FaceContainerType, class EdgeContainer
 bool HasPerVertexNormal (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return VertContainerType::value_type::HasNormal();}
 
 template < class VertContainerType, class FaceContainerType, class EdgeContainerType >
+bool HasPerVertexRadius (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return VertContainerType::value_type::HasRadius();}
+
+template < class VertContainerType, class FaceContainerType, class EdgeContainerType >
 bool HasPerWedgeTexCoord (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return FaceContainerType::value_type::HasWedgeTexCoord();}
 
 template < class VertContainerType, class FaceContainerType, class EdgeContainerType >
