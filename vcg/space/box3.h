@@ -382,7 +382,7 @@ ScalarType DistancePoint3Box3(const Point3<ScalarType> &p,
 							  const Box3<ScalarType> &b)
 {
 	///if fall inside return distance to a face
-	if (bbox.IsIn(test))
+	if (b.IsIn(p))
 	{
 		const ScalarType dx = std::min<ScalarType>(b.max.X()-p.X(), p.X()-b.min.X());
 		const ScalarType dy = std::min<ScalarType>(b.max.Y()-p.Y(), p.Y()-b.min.Y());
