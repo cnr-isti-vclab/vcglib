@@ -395,7 +395,8 @@ static bool HasPerVertexColor()   { return VertexType::HasColor()  ; }
 static bool HasPerVertexMark()    { return VertexType::HasMark()   ; }
 static bool HasPerVertexQuality() { return VertexType::HasQuality(); }
 static bool HasPerVertexTexCoord(){ return VertexType::HasTexCoord(); }
-static bool HasPerVertexFlags()		{ return VertexType::HasFlags(); }
+static bool HasPerVertexRadius()  { return VertexType::HasRadius(); }
+static bool HasPerVertexFlags()   { return VertexType::HasFlags(); }
 
 static bool HasPolyInfo()					{ return FaceType::HasPolyInfo() ; }
 static bool HasPerFaceColor()     { return FaceType::HasFaceColor() ; }
