@@ -378,196 +378,31 @@ template <class T> Box3<T> Point3<T>::GetBBox(Box3<T> &bb) const {
  
 
 template <class ScalarType> 
-ScalarType DistancePoint3Box3(const Point3<ScalarType> &test,
-							  const Box3<ScalarType> &bbox)
+ScalarType DistancePoint3Box3(const Point3<ScalarType> &p,
+							  const Box3<ScalarType> &b)
 {
 	///if fall inside return distance to a face
 	if (bbox.IsIn(test))
 	{
-		ScalarType dx=std::min<ScalarType>(bbox.max.X()-test.X(),test.X()-bbox.min.X());
-		ScalarType dy=std::min<ScalarType>(bbox.max.Y()-test.Y(),test.Y()-bbox.min.Y());
-		ScalarType dz=std::min<ScalarType>(bbox.max.Z()-test.Z(),test.Z()-bbox.min.Z());
-		return std::min<ScalarType>(dx,std::min<ScalarType>(dy,dz));
+		const ScalarType dx = std::min<ScalarType>(b.max.X()-p.X(), p.X()-b.min.X());
+		const ScalarType dy = std::min<ScalarType>(b.max.Y()-p.Y(), p.Y()-b.min.Y());
+		const ScalarType dz = std::min<ScalarType>(b.max.Z()-p.Z(), p.Z()-b.min.Z());
+
+		return std::min<ScalarType>(dx, std::min<ScalarType>(dy, dz));
 	}
 
-	///find the right quandrant 
-	bool XM=(test.X()>=bbox.max.X());
-	bool Xm=(test.X()<=bbox.min.X());
-	bool YM=(test.Y()>=bbox.max.Y());
-	bool Ym=(test.Y()<=bbox.min.Y());
-	bool ZM=(test.Z()>=bbox.max.Z());
-	bool Zm=(test.Z()<=bbox.min.Z());
-	
+	{
+		ScalarType sq_dist = ScalarType(0);
+		for (int i=0; i<3; ++i)
+		{
+			ScalarType delta = ScalarType(0);
+			if       (p[i] < b.min[i])  delta = p[i] - b.min[i];
+			else if  (p[i] > b.max[i])  delta = p[i] - b.max[i];
+			sq_dist += delta * delta;
+		}
 
-	///VERTICES CASES
-	if ((Xm)&&(Ym)&&(Zm))
-		return ((test-bbox.P(0)).Norm());
-	if ((Ym)&&(Zm)&&(XM))
-		return ((test-bbox.P(1)).Norm());
-	if ((Xm)&&(Zm)&&(YM))
-		return ((test-bbox.P(2)).Norm());
-	if ((XM)&&(YM)&&(Zm))
-		return ((test-bbox.P(3)).Norm());
-	if ((Xm)&&(Ym)&&(ZM))
-		return ((test-bbox.P(4)).Norm());
-	if ((XM)&&(ZM)&&(Ym))
-		return ((test-bbox.P(5)).Norm());
-	if ((YM)&&(ZM)&&(Xm))
-		return ((test-bbox.P(6)).Norm());
-	if ((XM)&&(YM)&&(ZM))
-		return ((test-bbox.P(7)).Norm());
-	
-	bool Xin=((test.X()>=bbox.min.X())&&(test.X()<=bbox.max.X()));
-	bool Yin=((test.Y()>=bbox.min.Y())&&(test.Y()<=bbox.max.Y()));
-	bool Zin=((test.Z()>=bbox.min.Z())&&(test.Z()<=bbox.max.Z()));
-	
-
-	///EDGES CASES
-	///edge case 0
-	if ((Xin) &&(Ym)&&(Zm))
-	{
-		vcg::Line3<ScalarType> edge;
-		vcg::Point3<ScalarType> dir=bbox.P(1)-bbox.P(0);
-		dir.Normalize();
-		edge.Set(bbox.P(0),dir);
-		vcg::Point3<ScalarType> clos=vcg::ClosestPoint<ScalarType,true>(edge,test);
-		return ((test-clos).Norm());
+		return Sqrt(sq_dist);
 	}
-	///edge case 1
-	if ((Zin)&&(XM)&&(Ym))
-	{
-		vcg::Line3<ScalarType> edge;
-		vcg::Point3<ScalarType> dir=bbox.P(5)-bbox.P(1);
-		dir.Normalize();
-		edge.Set(bbox.P(1),dir);
-		vcg::Point3<ScalarType> clos=vcg::ClosestPoint<ScalarType,true>(edge,test);
-		return ((test-clos).Norm());
-	}
-	///edge case 2
-	if ((Xin)&&(Ym)&&(ZM))
-	{
-		vcg::Line3<ScalarType> edge;
-		vcg::Point3<ScalarType> dir=bbox.P(5)-bbox.P(4);
-		dir.Normalize();
-		edge.Set(bbox.P(4),dir);
-		vcg::Point3<ScalarType> clos=vcg::ClosestPoint<ScalarType,true>(edge,test);
-		return ((test-clos).Norm());
-	}
-	///edge case 3
-	if ((Zin)&&(Xm)&&(Ym))
-	{
-		vcg::Line3<ScalarType> edge;
-		vcg::Point3<ScalarType> dir=bbox.P(4)-bbox.P(0);
-		dir.Normalize();
-		edge.Set(bbox.P(0),dir);
-		vcg::Point3<ScalarType> clos=vcg::ClosestPoint<ScalarType,true>(edge,test);
-		return ((test-clos).Norm());
-	}
-	///edge case 4
-	if ((Xin)&&(YM)&&(Zm))
-	{
-		vcg::Line3<ScalarType> edge;
-		vcg::Point3<ScalarType> dir=bbox.P(3)-bbox.P(2);
-		dir.Normalize();
-		edge.Set(bbox.P(2),dir);
-		vcg::Point3<ScalarType> clos=vcg::ClosestPoint<ScalarType,true>(edge,test);
-		return ((test-clos).Norm());
-	}
-	///edge case 5
-	if ((Zin)&&(XM)&&(YM))
-	{
-		vcg::Line3<ScalarType> edge;
-		vcg::Point3<ScalarType> dir=bbox.P(7)-bbox.P(3);
-		dir.Normalize();
-		edge.Set(bbox.P(3),dir);
-		vcg::Point3<ScalarType> clos=vcg::ClosestPoint<ScalarType,true>(edge,test);
-		return ((test-clos).Norm());
-	}
-	///edge case 6
-	if ((Xin)&&(ZM)&&(YM))
-	{
-		vcg::Line3<ScalarType> edge;
-		vcg::Point3<ScalarType> dir=bbox.P(7)-bbox.P(6);
-		dir.Normalize();
-		edge.Set(bbox.P(6),dir);
-		vcg::Point3<ScalarType> clos=vcg::ClosestPoint<ScalarType,true>(edge,test);
-		return ((test-clos).Norm());
-	}
-	///edge case 7
-	if ((Zin)&&(Xm)&&(YM))
-	{
-		vcg::Line3<ScalarType> edge;
-		vcg::Point3<ScalarType> dir=bbox.P(6)-bbox.P(2);
-		dir.Normalize();
-		edge.Set(bbox.P(2),dir);
-		vcg::Point3<ScalarType> clos=vcg::ClosestPoint<ScalarType,true>(edge,test);
-		return ((test-clos).Norm());
-	}
-	///edge case 8
-	if ((Yin)&&(Xm)&&(Zm))
-	{
-		vcg::Line3<ScalarType> edge;
-		vcg::Point3<ScalarType> dir=bbox.P(2)-bbox.P(0);
-		dir.Normalize();
-		edge.Set(bbox.P(0),dir);
-		vcg::Point3<ScalarType> clos=vcg::ClosestPoint<ScalarType,true>(edge,test);
-		return ((test-clos).Norm());
-	}
-	///edge case 9
-	if ((Yin)&&(XM)&&(Zm))
-	{
-		vcg::Line3<ScalarType> edge;
-		vcg::Point3<ScalarType> dir=bbox.P(3)-bbox.P(1);
-		dir.Normalize();
-		edge.Set(bbox.P(1),dir);
-		vcg::Point3<ScalarType> clos=vcg::ClosestPoint<ScalarType,true>(edge,test);
-		return ((test-clos).Norm());
-	}
-	///edge case 10
-	if ((Yin)&&(XM)&&(ZM))
-	{
-		vcg::Line3<ScalarType> edge;
-		vcg::Point3<ScalarType> dir=bbox.P(7)-bbox.P(5);
-		dir.Normalize();
-		edge.Set(bbox.P(5),dir);
-		vcg::Point3<ScalarType> clos=vcg::ClosestPoint<ScalarType,true>(edge,test);
-		return ((test-clos).Norm());
-	}
-	///edge case 11
-	if ((Yin)&&(Xm)&&(ZM))
-	{
-		vcg::Line3<ScalarType> edge;
-		vcg::Point3<ScalarType> dir=bbox.P(6)-bbox.P(4);
-		dir.Normalize();
-		edge.Set(bbox.P(4),dir);
-		vcg::Point3<ScalarType> clos=vcg::ClosestPoint<ScalarType,true>(edge,test);
-		return ((test-clos).Norm());
-	}
-
-	///FACES CASES
-	//face 0
-	if ((Xin)&&(Zin)&&(Ym))
-		return (fabs(bbox.min.Y()-test.Y()));
-	//face 1
-	if ((Xin)&&(Zin)&&(YM))
-		return (fabs(bbox.min.Y()-test.Y()));
-	//face 2
-	if ((Xin)&&(Yin)&&(Zm))
-		return (fabs(bbox.min.Z()-test.Z()));
-	//face 3
-	if ((Xin)&&(Yin)&&(ZM))
-		return (fabs(bbox.min.Z()-test.Z()));
-	//face 4
-	if ((Yin)&&(Zin)&&(Xm))
-		return (fabs(bbox.min.X()-test.X()));
-	//face 5
-	if ((Yin)&&(Zin)&&(XM))
-		return (fabs(bbox.min.X()-test.X()));
-
-	//no more cases
-	assert(0);
-	///this is for warnings
-	return(0);
 }
 
 
