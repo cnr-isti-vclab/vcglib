@@ -22,6 +22,8 @@ float Irradiance(MyMesh::VertexType v){
 
 int main()
 {
+
+
   MyMesh m;
   //...here m is filled
   
@@ -34,6 +36,9 @@ int main()
   // add a per-vertex attribute with type bool and no name specified
   MyMesh::PerVertexAttributeHandle<bool> blocked_h = vcg::tri::Allocator<MyMesh>::AddPerVertexAttribute<bool> (m); 
   
+  // add a per-vertex attribute with type bool and no name specified
+  MyMesh::PerFaceAttributeHandle<bool> blocked_hf = vcg::tri::Allocator<MyMesh>::AddPerFaceAttribute<bool> (m); 
+
   MyMesh::VertexIterator vi; int i = 0;
   for(vi   = m.vert.begin(); vi != m.vert.end(); ++vi,++i){
    ih[vi]  = Irradiance(*vi);  // [] operator takes a iterator
@@ -49,8 +54,19 @@ int main()
   bool hasRadiosity = vcg::tri::HasPerVertexAttribute(m,"Radiosity");
 
   // you can delete an attibute by name
-  vcg::tri::Allocator<MyMesh>::DeletePerVertexAttribute<float>(m,"Radiosity");
+  vcg::tri::Allocator<MyMesh>::DeletePerVertexAttribute(m,"Radiosity");
 
   // you can delete an attibute by handle
-  vcg::tri::Allocator<MyMesh>::DeletePerVertexAttribute<bool>(m,blocked_h);
+  vcg::tri::Allocator<MyMesh>::DeletePerVertexAttribute(m,blocked_h);
+
+  bool res ;
+ 
+  res = vcg::tri::Allocator<MyMesh>::IsValidHandle(m,ih);printf("%d\n",res);
+  res = vcg::tri::Allocator<MyMesh>::IsValidHandle(m,blocked_hf);printf("%d\n",res);
+  vcg::tri::Allocator<MyMesh>::DeletePerVertexAttribute(m,ih);
+  vcg::tri::Allocator<MyMesh>::DeletePerFaceAttribute(m,blocked_hf);
+  res = vcg::tri::Allocator<MyMesh>::IsValidHandle(m,ih);printf("%d\n",res);
+  res = vcg::tri::Allocator<MyMesh>::IsValidHandle(m,blocked_hf);printf("%d\n",res);
+
+ 
 }
