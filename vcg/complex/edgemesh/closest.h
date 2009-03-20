@@ -90,7 +90,7 @@ namespace vcg {
 			typedef VertTmark<MESH> MarkerVert;
 			MarkerVert mv;
 			mv.SetMesh(&mesh);
-			typedef vcg::vert::PointDistanceFunctor<ScalarType> VDistFunct;
+			typedef vcg::vertex::PointDistanceFunctor<ScalarType> VDistFunct;
 			_minDist=_maxDist;
 			Point3x _closestPt;
 			return (gr.GetClosest/*<VDistFunct,MarkerVert>*/(VDistFunct(),mv,_p,_maxDist,_minDist,_closestPt));
@@ -119,7 +119,7 @@ namespace vcg {
 			typedef VertTmark<MESH> MarkerVert;
 			MarkerVert mv;
 			mv.SetMesh(&mesh);
-			typedef vcg::vert::PointDistanceFunctor<ScalarType> VDistFunct;
+			typedef vcg::vertex::PointDistanceFunctor<ScalarType> VDistFunct;
 			return (gr.GetKClosest/* <VDistFunct,MarkerVert,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>*/
 				(VDistFunct(),mv,_k,_p,_maxDist,_objectPtrs,_distances,_points));
 		}
@@ -138,7 +138,7 @@ namespace vcg {
 			typedef VertTmark<MESH> MarkerVert;
 			MarkerVert mv;
 			mv.SetMesh(&mesh);
-			typedef vcg::vert::PointDistanceFunctor<ScalarType> VDistFunct;
+			typedef vcg::vertex::PointDistanceFunctor<ScalarType> VDistFunct;
 			return (gr.GetInSphere/*<VDistFunct,MarkerVert,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>*/
 				(VDistFunct(),mv,_p,_r,_objectPtrs,_distances,_points));
 		}
