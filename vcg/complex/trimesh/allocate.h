@@ -765,14 +765,13 @@ public:
 			assert(0);
 	}
 
-	template <class ATTR_TYPE > 
 	static
 		void	DeletePerVertexAttribute( MeshType & m,  std::string name){
 		HandlesIterator i;
 		HandlesWrapper h1; h1._name = name;
 		i = m.vert_attr.find(h1);
 		assert(i!=m.vert_attr.end());
-		delete ((SimpleTempData<VertContainer,ATTR_TYPE>*)(*i)._handle);
+		delete ((SimpleTempDataBase<VertContainer>*)(*i)._handle);
 		m.vert_attr.erase(i);
 	}
 
@@ -838,14 +837,13 @@ public:
 			assert(0);
 	}
 
-	template <class ATTR_TYPE > 
 	static
 		void	DeletePerEdgeAttribute( MeshType & m,  std::string name){
 		HandlesIterator i;
 		HandlesWrapper h1; h1._name = name;
 		i = m.edge_attr.find(h1);
 		assert(i!=m.edge_attr.end());
-		delete ((SimpleTempData<EdgeContainer,ATTR_TYPE>*)(*i)._handle);
+		delete ((SimpleTempDataBase<EdgeContainer>*)(*i)._handle);
 		m.edge_attr.erase(i);
 	}
 
@@ -911,14 +909,13 @@ public:
 			assert(0);
 	}
 
-	template <class ATTR_TYPE > 
 	static
 		void	DeletePerFaceAttribute( MeshType & m,  std::string name){
 		HandlesIterator i;
 		HandlesWrapper h1; h1._name = name;
 		i = m.face_attr.find(h1);
 		assert(i!=m.face_attr.end());
-		delete ((SimpleTempData<FaceContainer,ATTR_TYPE>*)(*i)._handle);
+		delete ((SimpleTempDataBase<FaceContainer>*)(*i)._handle);
 		m.face_attr.erase(i);
 	}
 
@@ -977,14 +974,13 @@ public:
 			assert(0);
 	}
 
-	template <class ATTR_TYPE > 
 	static
 		void	DeletePerMeshAttribute( MeshType & m,  std::string name){
 		HandlesIterator i;
 		HandlesWrapper h1; h1._name = name;
 		i = m.mesh_attr.find(h1);
 		assert(i!=m.mesh_attr.end());
-		delete ((Attribute<ATTR_TYPE> *)(*i)._handle);
+		delete ((AttributeBase  *)(*i)._handle);
 		m.mesh_attr.erase(i);
 	}
 }; // end class
