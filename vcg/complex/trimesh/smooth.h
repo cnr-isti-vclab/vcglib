@@ -814,11 +814,10 @@ static void VertexCoordViewDepth(MeshType &m,
 				 const ScalarType alpha,
 				 int step, bool SmoothBorder=false )
 {
-	SimpleTempData<typename MeshType::VertContainer,LaplacianInfo > TD(m.vert);
 	LaplacianInfo lpz;
 	lpz.sum=CoordType(0,0,0);
 	lpz.cnt=0;
-	TD.Start(lpz);
+	SimpleTempData<typename MeshType::VertContainer,LaplacianInfo > TD(m.vert,lpz);
 	for(int i=0;i<step;++i)
 	{
 		VertexIterator vi;
@@ -831,8 +830,8 @@ static void VertexCoordViewDepth(MeshType &m,
 				for(int j=0;j<3;++j)
 					if(!(*fi).IsB(j)) 
 						{
-							TD[(*fi).V(j)].sum+=(*fi).V1(j)->Supervisor_P();
-							TD[(*fi).V1(j)].sum+=(*fi).V(j)->Supervisor_P();
+							TD[(*fi).V(j)].sum+=(*fi).V1(j)->cP();
+							TD[(*fi).V1(j)].sum+=(*fi).V(j)->cP();
 							++TD[(*fi).V(j)].cnt;
 							++TD[(*fi).V1(j)].cnt;
 					}
@@ -854,8 +853,8 @@ static void VertexCoordViewDepth(MeshType &m,
 					for(int j=0;j<3;++j)
 						if((*fi).IsB(j)) 
 							{
-								TD[(*fi).V(j)].sum+=(*fi).V1(j)->Supervisor_P();
-								TD[(*fi).V1(j)].sum+=(*fi).V(j)->Supervisor_P();
+								TD[(*fi).V(j)].sum+=(*fi).V1(j)->cP();
+								TD[(*fi).V1(j)].sum+=(*fi).V(j)->cP();
 								++TD[(*fi).V(j)].cnt;
 								++TD[(*fi).V1(j)].cnt;
 						}
@@ -864,13 +863,11 @@ static void VertexCoordViewDepth(MeshType &m,
 		if(!(*vi).IsD() && TD[*vi].cnt>0 )
 			{
 				CoordType np = TD[*vi].sum/TD[*vi].cnt;
-				CoordType d = (*vi).Supervisor_P() - viewpoint; d.Normalize();
-				ScalarType s = d * ( np - (*vi).Supervisor_P() );
-				(*vi).Supervisor_P() += d * (s*alpha);
+				CoordType d = (*vi).cP() - viewpoint; d.Normalize();
+				ScalarType s = d * ( np - (*vi).cP() );
+				(*vi).P() += d * (s*alpha);
 			}
 	}
-	 	
-	TD.Stop();
 }
 
 
