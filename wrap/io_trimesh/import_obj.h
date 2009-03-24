@@ -815,6 +815,7 @@ static bool LoadMask(const char * filename, Info &oi)
     if (length == 0) return false;
 
     bool bHasPerFaceColor			= false;
+	bool bHasNormals = false;
 
     oi.numVertices=0;
     oi.numFaces=0;
@@ -835,6 +836,7 @@ static bool LoadMask(const char * filename, Info &oi)
         {
           if(line[1]==' ') oi.numVertices++;
           if(line[1]=='t') oi.numTexCoords++;
+		  if(line[1]=='n') bHasNormals = true;
         } 
         else 
          if(line[0]=='f') oi.numFaces++;
@@ -850,7 +852,7 @@ static bool LoadMask(const char * filename, Info &oi)
 				oi.mask |= vcg::tri::io::Mask::IOM_FACECOLOR; 
 			}
   if(bHasPerFaceColor) 				oi.mask |= vcg::tri::io::Mask::IOM_FACECOLOR; 
-
+	if (bHasNormals) oi.mask |= vcg::tri::io::Mask::IOM_WEDGNORMAL;
 
   return true;
 }
