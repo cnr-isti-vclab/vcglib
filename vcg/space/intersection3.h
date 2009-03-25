@@ -515,7 +515,7 @@ bool IntersectionRayTriangle( const Ray3<T> & ray, const Point3<T> & vert0,
 	Line3<T> line(ray.Origin(), ray.Direction());
 	if (IntersectionLineTriangle(line, vert0, vert1, vert2, t, u, v))
 	{
-		if (t <= 0) return 0;
+		if (t < 0) return 0;
 		else return 1; 
 	}else return 0;
 }
