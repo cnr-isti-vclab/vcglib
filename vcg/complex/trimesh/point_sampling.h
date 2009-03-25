@@ -754,9 +754,11 @@ struct PoissonDiskParam
 		adaptiveRadiusFlag = false;
 		radiusVariance =1;
 		MAXLEVELS = 5;
+		invertQuality = false;
 	}
 	bool adaptiveRadiusFlag;
 	float radiusVariance;
+	bool invertQuality;
   int MAXLEVELS;
 };
 
@@ -774,7 +776,7 @@ static int ComputePoissonSampleNum(MetroMesh &origMesh, ScalarType diskRadius)
 	return sampleNum;
 }
 
-static void ComputePoissonSampleRadii(MetroMesh &sampleMesh, ScalarType diskRadius, ScalarType radiusVariance)
+static void ComputePoissonSampleRadii(MetroMesh &sampleMesh, ScalarType diskRadius, ScalarType radiusVariance, bool invert)
 {
 	VertexIterator vi;
 	std::pair<float,float> minmax = tri::Stat<MetroMesh>::ComputePerVertexQualityMinMax( sampleMesh);
@@ -784,7 +786,7 @@ static void ComputePoissonSampleRadii(MetroMesh &sampleMesh, ScalarType diskRadi
 	float deltaRad = maxRad-minRad;
 	for (vi = sampleMesh.vert.begin(); vi != sampleMesh.vert.end(); vi++)
 	{
-	 (*vi).Q() = minRad + deltaRad*(((*vi).Q() - minmax.first)/deltaQ);
+	 (*vi).Q() = minRad + deltaRad*((invert ? minmax.second - (*vi).Q() : (*vi).Q() - minmax.first )/deltaQ);
 	}
 }
 
@@ -873,7 +875,7 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 	
   // if we are doing variable density sampling we have to prepare the random samples quality with the correct expected radii.
 	if(pp.adaptiveRadiusFlag) 
-			ComputePoissonSampleRadii(montecarloMesh, diskRadius, pp.radiusVariance);
+			ComputePoissonSampleRadii(montecarloMesh, diskRadius, pp.radiusVariance, pp.invertQuality);
 	
 	do
 	{
