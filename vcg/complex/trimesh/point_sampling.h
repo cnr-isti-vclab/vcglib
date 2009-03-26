@@ -930,7 +930,8 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 				tri::Allocator<MetroMesh>::AddVertices(supportMesh,1);
 				supportMesh.vert.back().P() = sp->P();
 				supportMesh.vert.back().Q() = sampleRadius;
-				ps.AddVert(supportMesh.vert.back());
+				//ps.AddVert(supportMesh.vert.back()); Small change, we should call the sampler class with the input mesh. 
+				ps.AddVert(*sp);
 
 				// add to control spatial index
 				checkSHT.Add(&supportMesh.vert.back());
