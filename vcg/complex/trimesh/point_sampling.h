@@ -765,7 +765,15 @@ struct PoissonDiskParam
 static ScalarType ComputePoissonDiskRadius(MetroMesh &origMesh, int sampleNum)
 {
 	ScalarType meshArea = Stat<MetroMesh>::ComputeMeshArea(origMesh);
-	ScalarType diskRadius = sqrt(meshArea / (0.7 * M_PI * sampleNum)); // 0.7 is a density factor
+	// Manage approximately the PointCloud Case, use the half a area of the bbox. 
+	// TODO: If you had the radius a much better approximation could be done.
+	if(meshArea ==0) 
+		{
+					meshArea = (origMesh.bbox.DimX()*origMesh.bbox.DimY() +
+											origMesh.bbox.DimX()*origMesh.bbox.DimZ() +
+											origMesh.bbox.DimY()*origMesh.bbox.DimZ()); 	
+		}
+	ScalarType diskRadius = sqrt(meshArea / (0.7 * M_PI * sampleNum)); // 0.7 is a density factor										
 	return diskRadius;
 }
 
