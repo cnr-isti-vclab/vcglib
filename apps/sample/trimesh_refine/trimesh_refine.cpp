@@ -1,8 +1,5 @@
 	
 // mesh definition 
-//#include <vcg/simplex/vertex/with/vn.h>
-//#include <vcg/simplex/face/with/af.h>
-//#include <vcg/complex/trimesh/base.h>
 
 #include<vcg/simplex/vertex/base.h>
 #include<vcg/simplex/face/base.h>

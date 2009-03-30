@@ -75,8 +75,6 @@ int main(int argc,char ** argv)
 	if (dup > 0 || unref > 0)
 		printf("Removed %i duplicate and %i unreferenced vertices from mesh %s\n",dup,unref,argv[1]);
 
-	printf("");
-
 	// Compute cross-intersection with the given plane
 	/////////////////////////////////////////////////////////
 
@@ -106,11 +104,8 @@ int main(int argc,char ** argv)
 	vcg::edg::UpdateBounding<MyEdgeMesh>::Box(edge_mesh);
 
 	// export the cross-section
-	vcg::edg::io::SVGProperties pr;
-	pr.setScale(500/(float)edge_mesh.bbox.Diag());
-	pr.setDimension(500,500);
-
-	if (vcg::edg::io::ExporterSVG<MyEdgeMesh>::Save(&edge_mesh, "out.svg",pr))
+  edg::io::SVGProperties pro;
+  if (edg::io::ExporterSVG<MyEdgeMesh>::Save(edge_mesh, "out.svg",pro))
 		printf("    The cross-intersection has been successfully saved (OUT.SVG).\n");
 	else
 		printf("    The cross-intersection cannot be saved.\n");

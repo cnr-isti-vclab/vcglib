@@ -8,4 +8,4 @@ DEPENDPATH += .
 INCLUDEPATH += . ../../..
 CONFIG += console stl
 TEMPLATE = app
-SOURCES += trimesh_base.cpp
+SOURCES += trimesh_base.cpp ../../../wrap/ply/plylib.cpp

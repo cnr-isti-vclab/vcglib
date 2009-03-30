@@ -82,9 +82,11 @@ Initial commit
 
 #ifdef WIN32
 #define assert ASSERT
-#pragma warning( disable : 4267 )
 #else
 #include <assert.h>
+#endif
+#ifdef _MSC_VER
+#pragma warning( disable : 4267 )
 #endif
 
 #ifdef WIN32

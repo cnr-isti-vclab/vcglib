@@ -20,32 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.4  2006/12/04 11:11:07  ganovelli
-add const to IsEnabledAttribute
-
-Revision 1.3  2006/12/03 18:01:01  ganovelli
-versione compliant vs2005
-
-Revision 1.2  2006/06/08 20:28:38  ganovelli
-Corretto IsEnabledAttribute
-
-Revision 1.1  2005/10/15 16:21:49  ganovelli
-Working release (compilata solo su MSVC), vector_occ � migrato da component_opt
-
-Revision 1.5  2005/07/07 13:33:52  ganovelli
-some comment
-
-Revision 1.4  2004/04/05 18:20:08  ganovelli
-Aggiunto typename
-
-Revision 1.3  2004/03/31 22:36:44  ganovelli
-First Working Release (with this comment)
-
-/****************************************************************************/
 
 #ifndef __VCGLIB_TRACED_VECTOR__
 #define __VCGLIB_TRACED_VECTOR__ 

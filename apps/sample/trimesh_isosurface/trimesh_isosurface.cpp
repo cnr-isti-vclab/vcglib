@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <wrap/io_trimesh/export_ply.h>
 #include <vcg/space/point3.h>
 #include <vcg/space/box3.h>
 #include <vcg/math/perlin_noise.h>
@@ -9,6 +8,7 @@
 #include <vcg/complex/trimesh/allocate.h>
 #include <vcg/complex/trimesh/create/marching_cubes.h>
 #include <vcg/complex/trimesh/create/extended_marching_cubes.h>
+#include <wrap/io_trimesh/export_ply.h>
 
 
 #include "simple_volume.h"

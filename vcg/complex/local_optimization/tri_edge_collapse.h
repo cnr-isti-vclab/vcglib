@@ -163,9 +163,7 @@ public:
   inline void Execute(TriMeshType &m)
   {	
     CoordType MidPoint=(pos.V(0)->P()+pos.V(1)->P())/2.0;
-	  int FaceDel=DoCollapse(m, pos, MidPoint);
-    //m.fn-=FaceDel;
-    //--m.vn;
+    /* int FaceDel = */ DoCollapse(m, pos, MidPoint);
   }
   
   static bool IsSymmetric() { return true;}

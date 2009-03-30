@@ -195,7 +195,7 @@ void Dodecahedron(DodMeshType & in)
   Allocator<DodMeshType>::AddVertices(in,20+12); 
   Allocator<DodMeshType>::AddFaces(in, 5*12); // five pentagons, each made by 5 tri
 
-	int h,i,j,k=0,m=0;
+  int h,i,j,m=0;
 
 	bool used[N_points];
 	for (i=0; i<N_points; i++) used[i]=false;

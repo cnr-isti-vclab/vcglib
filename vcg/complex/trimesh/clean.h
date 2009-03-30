@@ -225,9 +225,10 @@ Initial Release
 #include <vcg/complex/trimesh/base.h>
 #include <vcg/complex/trimesh/closest.h>
 #include <vcg/space/index/grid_static_ptr.h>
-#include<vcg/complex/trimesh/allocate.h>
-#include<vcg/complex/trimesh/update/selection.h>
-#include<vcg/complex/trimesh/update/flag.h>
+#include <vcg/complex/trimesh/allocate.h>
+#include <vcg/complex/trimesh/update/selection.h>
+#include <vcg/complex/trimesh/update/flag.h>
+#include <vcg/complex/trimesh/update/normal.h>
 #include <vcg/complex/trimesh/update/topology.h>
 #include <vcg/space/triangle3.h>
 
