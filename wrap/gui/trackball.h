@@ -275,6 +275,11 @@ public:
   void ApplyInverse();
   // DrawIcon() has been moved to trackutils.h
   //void DrawIcon();
+  
+  // T(c) S R T(t) T(-c) => S R T(S^(-1) R^(-1)(c) + t - c)
+  Matrix44f Matrix() const;
+  Matrix44f InverseMatrix() const;
+
   /*!
     @brief Reset the transformation and every mapped manipulator.
   */

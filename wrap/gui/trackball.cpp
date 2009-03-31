@@ -208,6 +208,20 @@ void Trackball::ApplyInverse() {
   glTranslate(-center);
 }
 
+// T(c) S R T(t) T(-c) => S R T(S^(-1) R^(-1)(c) + t - c)
+Matrix44f Trackball::Matrix() const{
+  Matrix44f r; track.rot.ToMatrix(r);
+  Matrix44f sr    = Matrix44f().SetScale(track.sca, track.sca, track.sca) * r;
+  Matrix44f s_inv = Matrix44f().SetScale(1/track.sca, 1/track.sca, 1/track.sca);
+  Matrix44f t     = Matrix44f().SetTranslate(s_inv*Transposed(r)*center + track.tra - center);
+
+  return Matrix44f(sr*t);
+}
+
+Matrix44f Trackball::InverseMatrix() const{
+  return Inverse(Matrix());
+}
+
 void Trackball::Scale(const float s)
 {
   track.sca*=s;
@@ -254,17 +268,16 @@ void Trackball::DrawPlane() {
 
 void Trackball::ToAscii(char* result){
   float * f = (float*) &track;
-  sprintf(result, "trackball(%f,%f,%f,%f,%f,%f,%f,%f,%f)",
-                  f[0],f[1],f[2],f[3],f[4],f[5],f[6],f[7],f[8] );
+  sprintf(result, "trackball(%f,%f,%f,%f,%f,%f,%f,%f)",
+                  f[0],f[1],f[2],f[3],f[4],f[5],f[6],f[7] );
 }
 
 bool Trackball::SetFromAscii(const char * st){
   float * f = (float*) &track;
-  int res=  sscanf(st, "trackball(%f,%f,%f,%f,%f,%f,%f,%f,%f)",
-                  f+0,f+1,f+2,f+3,f+4,f+5,f+6,f+7,f+8 );
+  int res=  sscanf(st, "trackball(%f,%f,%f,%f,%f,%f,%f,%f)",
+                  f+0,f+1,f+2,f+3,f+4,f+5,f+6,f+7 );
 
-  return (res==9);
-
+  return (res==8);
 }
 
 // DrawPlaneHandle() e DrawIcon() have been moved to trackutils.h
