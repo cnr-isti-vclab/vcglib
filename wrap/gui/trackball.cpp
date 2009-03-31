@@ -213,7 +213,7 @@ Matrix44f Trackball::Matrix() const{
   Matrix44f r; track.rot.ToMatrix(r);
   Matrix44f sr    = Matrix44f().SetScale(track.sca, track.sca, track.sca) * r;
   Matrix44f s_inv = Matrix44f().SetScale(1/track.sca, 1/track.sca, 1/track.sca);
-  Matrix44f t     = Matrix44f().SetTranslate(s_inv*Transposed(r)*center + track.tra - center);
+  Matrix44f t     = Matrix44f().SetTranslate(s_inv*r.transpose()*center + track.tra - center);
 
   return Matrix44f(sr*t);
 }
