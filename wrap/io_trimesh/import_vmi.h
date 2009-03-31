@@ -130,15 +130,18 @@ namespace io {
 			/* resize the vector of vertices */
 			m.vert.resize(vertSize);
 
-			int read;
+			int read = 0;
 			/* load the vertices */
-			read=fread((void*)& m.vert[0],sizeof(VertexType),vertSize,f);
+			if(vertSize>0)
+				read=fread((void*)& m.vert[0],sizeof(VertexType),vertSize,f);
 			assert(ferror(f)==0);
 			assert(read==vertSize);
 
+			read = 0;
 			m.face.resize(faceSize);
-			/* load the faces */
-			read = fread((void*)& m.face[0],sizeof(FaceType),faceSize,f);
+			if(faceSize>0)
+				/* load the faces */
+				read = fread((void*)& m.face[0],sizeof(FaceType),faceSize,f);
 			assert(ferror(f)==0);
 			assert(!feof(f));
 			assert(read==faceSize);
