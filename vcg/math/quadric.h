@@ -88,6 +88,26 @@ template< class PlaneType >
 		c    =  (ScalarType)p.Offset()*p.Offset();
 	}
 
+/* Initializes the quadric as the squared distance from a given line.
+   Notice that this code also works for a vcg::Ray<T>, even though the (squared) distance
+   from a ray is different "before" its origin.
+ */
+ template< class LineType >
+  void ByLine( const LineType & r ) // Init dato un raggio
+  {
+    ScalarType K = (ScalarType)(r.Origin()*r.Direction());
+    a[0] = (ScalarType)1.0-r.Direction()[0]*r.Direction()[0]; // a11
+    a[1] = (ScalarType)-r.Direction()[0]*r.Direction()[1]; // a12 (=a21)
+    a[2] = (ScalarType)-r.Direction()[0]*r.Direction()[2]; // a13 (=a31)
+    a[3] = (ScalarType)1.0-r.Direction()[1]*r.Direction()[1]; // a22
+    a[4] = (ScalarType)-r.Direction()[1]*r.Direction()[2]; // a23 (=a32)
+    a[5] = (ScalarType)1.0-r.Direction()[2]*r.Direction()[2]; // a33
+    b[0] = (ScalarType)2.0*(r.Direction()[0]*K - r.Origin()[0]);
+    b[1] = (ScalarType)2.0*(r.Direction()[1]*K - r.Origin()[1]);
+    b[2] = (ScalarType)2.0*(r.Direction()[2]*K - r.Origin()[2]);
+    c = -K*K + (ScalarType)(r.Origin()*r.Origin());
+  }
+
 	void SetZero()																// Azzera la quadrica
 	{
 		a[0] = 0;
