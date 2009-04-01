@@ -129,8 +129,43 @@ public:
 		return result.size();
 	}
 
-
-
+ // Same of above but it also assumes that you want only visible faces.
+ // Visibility is computed according to the current depth buffer. 
+	static int PickFaceVisible(int x, int y, MESH_TYPE &m, std::vector<FacePointer> &resultZ, int width=4, int height=4, bool sorted=true)
+	{
+		// First step 
+		
+		double mm[16];
+		double mp[16];
+		GLint vp[4];
+		glGetIntegerv(GL_VIEWPORT,vp);
+		glGetDoublev(GL_MODELVIEW_MATRIX ,mm);
+		glGetDoublev(GL_PROJECTION_MATRIX ,mp);
+		int screenW = 		vp[2]-vp[0];
+		int screenH = 		vp[3]-vp[1];
+		
+		GLfloat *buffer = new GLfloat[screenW*screenH];
+		glReadPixels(vp[0],vp[1],vp[2],vp[3],GL_DEPTH_COMPONENT,GL_FLOAT,buffer);
+		
+		std::vector<FacePointer> result;
+		PickFace(x,y,m,result,width,height,sorted);
+		float LocalEpsilon = 0.001f;
+		for(int i =0;i<result.size();++i)
+		{	
+			Point3f v=Barycenter(*(result[i]));
+			GLdouble tx,ty,tz;
+			gluProject(v.X(),v.Y(),v.Z(), mm,mp,vp, &tx,&ty,&tz);
+			if(tx >=0 && tx<screenW && ty >=0 && ty<screenH)
+			{
+					float bufZ = buffer[int(tx)+int(ty)*screenW]; 
+					//qDebug("face %i txyz (%f %f %f)  bufz %f",i,tx,ty,tz,bufZ);
+					if(bufZ + LocalEpsilon >= tz)
+								resultZ.push_back(result[i]);
+			}
+		}
+		
+		delete [] buffer;
+	}
 
 };
 
