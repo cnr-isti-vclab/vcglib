@@ -236,6 +236,40 @@ static size_t FaceFromBorder(MeshType &m)
     }
   return selCnt;
 } 
+/// \brief This function expand current selection to cover the whole connected component. 
+static size_t FaceConnectedFF(MeshType &m)
+{
+	// it also assumes that the FF adjacency is well computed. 
+	assert (HasFFAdjacency(m));
+	UpdateFlags<MeshType>::FaceClearV(m);
+	
+	std::deque<FacePointer> visitStack;
+  size_t selCnt=0;
+  FaceIterator fi;
+	for(fi = m.face.begin(); fi != m.face.end(); ++fi)
+		if( (*fi).IsS() && !(*fi).IsV() )	
+				visitStack.push_back(&*fi);
+				
+	while(!visitStack.empty())
+    {
+			FacePointer fp = visitStack.front();
+			visitStack.pop_front();
+			assert(!fp->IsV());
+			fp->SetV();
+			for(int i=0;i<3;++i) { 
+				FacePointer ff = fp->FFp(i);
+        if(! ff->IsS()) 
+						{
+							ff->SetS();
+							++selCnt;
+							visitStack.push_back(ff);
+							assert(!ff->IsV());
+						}
+      }
+    }
+  return selCnt;
+} 
+
 /// \brief Select ONLY the vertices whose quality is in the specified closed interval. 
 static size_t VertexFromQualityRange(MeshType &m,float minq, float maxq)
 {
