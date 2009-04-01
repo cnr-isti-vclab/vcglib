@@ -285,6 +285,11 @@ public:
   */
   void Reset();
 
+  /*!
+    @brief clear the modes map. Taking the right care of not doubledeleting anything.
+  */
+  void ClearModes();
+
   // DrawCircle (), DrawPlane(), DrawPlaneHandle() has been moved to trackutils.h
   // the drawing code has been moved to the trackmodes
   // void DrawCircle ();

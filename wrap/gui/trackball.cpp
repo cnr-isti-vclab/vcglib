@@ -132,6 +132,12 @@ Trackball::Trackball(): current_button(0), current_mode(NULL), inactive_mode(NUL
 
 Trackball::~Trackball()
 {
+	ClearModes();
+	delete  inactive_mode;
+}
+
+void Trackball::ClearModes()
+{
 	// Note: people ofter maps different keys to the same modes. 
 	// so we should avoid double deletion of these double referenced modes.
 	std::set<TrackMode *> goodModes;
@@ -140,17 +146,17 @@ Trackball::~Trackball()
 		if ((*it).second) goodModes.insert( (*it).second);
 	
 	std::set<TrackMode *>::iterator its;
-		for(its = goodModes.begin(); its != goodModes.end(); its++)
+	for(its = goodModes.begin(); its != goodModes.end(); its++)
 			delete *its;
-	delete  inactive_mode;
+			
+	modes.clear();
 }
-
 
 void Trackball::setDefaultMapping () {
   idle_and_keys_mode = NULL;
   
   inactive_mode = new InactiveMode ();
-  modes.clear ();
+	ClearModes();
   modes[0] = NULL;
   
   modes[BUTTON_MIDDLE | KEY_ALT] = 

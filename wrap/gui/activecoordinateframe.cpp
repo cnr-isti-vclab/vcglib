@@ -264,13 +264,7 @@ void ActiveCoordinateFrame::Update()
   y_axis=r.Rotate(Point3f(0,1,0));
   z_axis=r.Rotate(Point3f(0,0,1));
   
-  std::map<int, TrackMode *>::iterator it;
-  for(it = manipulator->modes.begin(); it != manipulator->modes.end(); it++)
-  {
-    if ((*it).second)
-      delete (*it).second;
-  }
-  manipulator->modes.clear();
+  manipulator->ClearModes();
   manipulator->modes[0] = NULL;    
   manipulator->modes[movx] = new AxisMode(p,x_axis);
   manipulator->modes[movy] = new AxisMode(p,y_axis);
