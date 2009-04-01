@@ -55,8 +55,8 @@ namespace vcg
 
 			struct VertexPairEdgePtr{
 				VertexPairEdgePtr(VertexPointer _v0,VertexPointer _v1,EdgePointer _ep):v0(_v0),v1(_v1),ep(_ep){if(v0>v1) std::swap(v0,v1);}
-				const bool operator <(const VertexPairEdgePtr &o){return (v0 == o.v0)? (v1<o.v1):(v0<o.v0);}
-				const bool operator ==(const VertexPairEdgePtr &o){return (v0 == o.v0)&& (v1==o.v1);}
+                                const bool operator <(const VertexPairEdgePtr &o) const {return (v0 == o.v0)? (v1<o.v1):(v0<o.v0);}
+                                const bool operator ==(const VertexPairEdgePtr &o) const {return (v0 == o.v0)&& (v1==o.v1);}
 
 				VertexPointer v0,v1;
 				EdgePointer ep;
@@ -79,8 +79,8 @@ namespace vcg
 				assert(MeshType::EdgeType::HasHENextAdjacency());
 				assert(MeshType::EdgeType::HasHEOppAdjacency());			
 
-				MeshType::PerFaceAttributeHandle<BitVector> flagVisited = 
-					vcg::tri::Allocator<MeshType>:: AddPerFaceAttribute<BitVector>(m,"");
+                                typename MeshType::template PerFaceAttributeHandle<BitVector> flagVisited =
+                                        vcg::tri::Allocator<MeshType>::template AddPerFaceAttribute<BitVector>(m,"");
 				std::vector<FacePtrInt > borderEdges;
 
 				// allocate all new half edges
@@ -126,7 +126,7 @@ namespace vcg
 
 				// add all the border edges
 				int borderLength; 
-				std::vector<FacePtrInt >::iterator ebi;
+                                typename std::vector<FacePtrInt >::iterator ebi;
 				for( ebi = borderEdges.begin(); ebi != borderEdges.end(); ++ebi)
 					if( !flagVisited[(*ebi).f][(*ebi).i])// not already inserted
 					{
@@ -153,7 +153,7 @@ namespace vcg
 						}
 						firstEdge+=borderLength;
 				}
-				vcg::tri::Allocator<MeshType>:: DeletePerFaceAttribute<BitVector>(m,flagVisited );
+                                vcg::tri::Allocator<MeshType>:: template DeletePerFaceAttribute<BitVector>(m,flagVisited );
 				
 				std::sort(all.begin(),all.end());
 				assert(all.size() == n_edges);
