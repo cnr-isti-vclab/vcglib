@@ -152,7 +152,7 @@ public:
 		float LocalEpsilon = 0.001f;
 		for(int i =0;i<result.size();++i)
 		{	
-			Point3f v=Barycenter(*(result[i]));
+			typename VertexType::CoordType v=Barycenter(*(result[i]));
 			GLdouble tx,ty,tz;
 			gluProject(v.X(),v.Y(),v.Z(), mm,mp,vp, &tx,&ty,&tz);
 			if(tx >=0 && tx<screenW && ty >=0 && ty<screenH)
