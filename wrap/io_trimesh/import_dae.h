@@ -70,7 +70,24 @@ namespace io {
 			}
 			return indtx;
 		}
-
+		
+		// this one is used for the polylist nodes
+		static int WedgeTextureAttribute(typename OpenMeshType::FaceType::TexCoordType & WT, const QStringList faceIndexList, int ind_txt, const QStringList wt, const QDomNode wtsrc,const int faceind,const int stride = 2)
+		{
+			int indtx = -1;
+			if (!wtsrc.isNull())
+			{
+				indtx = faceIndexList.at(faceind).toInt();
+				//int num = wt.size(); 
+				assert(indtx * stride < wt.size());
+				WT = vcg::TexCoord2<float>();
+				WT.U() = wt.at(indtx * stride).toFloat();
+				WT.V() = wt.at(indtx * stride + 1).toFloat();				
+				WT.N() = ind_txt;
+			}
+			return indtx;
+		}
+		
 		static int WedgeColorAttribute(OpenMeshType& m,const QStringList face,const QStringList wc,const QDomNode wcsrc,const int meshfaceind,const int faceind,const int component)
 		{
 			int indcl;
@@ -117,7 +134,119 @@ namespace io {
 			return E_NOERROR;
 		}
 
-		static DAEError	LoadPolygonalListMesh(QDomNodeList& polylist,OpenMeshType& m,const size_t offset,InfoDAE* info)
+		static DAEError	LoadPolygonalListMesh(QDomNodeList& polylist,OpenMeshType& m,const size_t offset,InfoDAE* info,QMap<QString,QString> &materialBinding)
+		{
+			if(polylist.isEmpty()) return E_NOERROR; 
+			QDEBUG("****** LoadPolygonalListMesh (initial mesh size %i %i)",m.vert.size(),m.fn);
+			for(int tript = 0; tript < polylist.size();++tript)
+			{
+				QString materialId =  polylist.at(tript).toElement().attribute(QString("material"));
+				QDEBUG("******    material id '%s' -> '%s'",qPrintable(materialId),qPrintable(materialBinding[materialId]));
+				
+				QString textureFilename;
+				QDomNode img_node = textureFinder(materialBinding[materialId],textureFilename,*(info->doc));
+				if(img_node.isNull())
+				{
+					QDEBUG("******   but we were not able to find the corresponding image node");
+				}
+				
+				int ind_txt = -1;
+				if (!img_node.isNull())
+				{
+					if(info->textureIdMap.contains(textureFilename))
+						 ind_txt=info->textureIdMap[textureFilename];
+					else
+					{
+						QDEBUG("Found use of Texture %s, adding it to texutres",qPrintable(textureFilename));
+						info->textureIdMap[textureFilename]=m.textures.size();
+						m.textures.push_back(qPrintable(textureFilename));
+						ind_txt=info->textureIdMap[textureFilename];
+					}
+				}
+				// number of the attributes associated to each vertex of a face (vert, normal, tex etc)
+				int faceAttributeNum = polylist.at(tript).toElement().elementsByTagName("input").size();
+
+				// the list of indexes composing the size of each polygon. 
+				// The size of this list is the number of the polygons.
+				QStringList faceSizeList; 				
+				valueStringList(faceSizeList,polylist.at(tript),"vcount");
+
+				// The long list of indexes composing the various polygons. 
+				// for each polygon there are numvert*numattrib indexes.
+				QStringList faceIndexList; 
+				valueStringList(faceIndexList,polylist.at(tript),"p");
+
+				int offsetface = (int)m.face.size();
+				if (faceIndexList.size() != 0 && faceSizeList.size() != 0 ) 
+				{	
+					WedgeAttribute wa;
+					FindStandardWedgeAttributes(wa,polylist.at(tript),*(info->doc));
+					QDEBUG("*******                 Start Reading faces. Attributes Offsets: offtx %i - offnm %i - offcl %i",wa.offtx,wa.offnm,wa.offcl);
+					
+          int faceIndexCnt=0;
+					int jj = 0;	
+					for(int ff = 0; ff < (int) faceSizeList.size();++ff) // for each polygon
+					{ 
+						int curFaceVertNum = faceSizeList.at(ff).toInt();
+						
+						MyPolygon<typename OpenMeshType::VertexType>  polyTemp(curFaceVertNum);						
+						for(unsigned int tt = 0;tt < curFaceVertNum ;++tt)  // for each vertex of the polygon
+						{
+							int indvt = faceIndexList.at(faceIndexCnt).toInt();
+							QDEBUG("*******                 Reading face[%3i].V(%i) = %4i  (%i-th of the index list) (face has %i vertices)",ff,tt,indvt,faceIndexCnt,curFaceVertNum);
+							assert(indvt + offset < m.vert.size());
+							polyTemp._pv[tt] = &(m.vert[indvt + offset]);
+							faceIndexCnt +=faceAttributeNum;
+							
+							WedgeTextureAttribute(polyTemp._txc[tt],faceIndexList,ind_txt, wa.wt ,wa.wtsrc, jj + wa.offtx,wa.stride);
+
+							/****************
+						
+							if(tri::HasPerWedgeNormal(m)) WedgeNormalAttribute(m,face,wa.wn,wa.wnsrc,ff,jj + wa.offnm,tt);
+							if(tri::HasPerWedgeColor(m)) 	WedgeColorAttribute(m,face,wa.wc,wa.wcsrc,ff,jj + wa.offcl,tt);
+
+							if(tri::HasPerWedgeTexCoord(m) && ind_txt != -1)
+							{
+															WedgeTextureAttribute(m,face,ind_txt,wa.wt,wa.wtsrc,ff,jj + wa.offtx,tt,wa.stride);
+							}
+									****************/
+
+							jj += faceAttributeNum;
+						}
+						
+						AddPolygonToMesh(polyTemp,m);
+					}
+				} 
+			
+			}
+			QDEBUG("****** LoadPolygonalListMesh (final  mesh size vn %i vertsize %i - fn %i facesize %i)",m.vn,m.vert.size(),m.fn,m.face.size());
+			return E_NOERROR;
+		}
+
+    static DAEError AddPolygonToMesh(MyPolygon<typename OpenMeshType::VertexType>  &polyTemp, OpenMeshType& m)
+		{
+			int vertNum=polyTemp._pv.size();
+			int triNum= vertNum -2;
+			typename OpenMeshType::FaceIterator fp=vcg::tri::Allocator<OpenMeshType>::AddFaces(m,triNum);
+			// Very simple fan triangulation of the polygon.
+			for(int i=0;i<triNum;++i)
+			{
+				assert(fp!=m.face.end());
+				(*fp).V(0)=polyTemp._pv[0];
+				(*fp).WT(0)=polyTemp._txc[0];
+								
+				(*fp).V(1) =polyTemp._pv [i+1];
+				(*fp).WT(1)=polyTemp._txc[i+1];
+				
+				(*fp).V(2) =polyTemp._pv[i+2];
+				(*fp).WT(2)=polyTemp._txc[i+2];
+				
+				++fp;
+			}
+			assert(fp==m.face.end());
+		}
+		
+		static DAEError	OldLoadPolygonalListMesh(QDomNodeList& polylist,OpenMeshType& m,const size_t offset,InfoDAE* info)
 		{
 			typedef PolygonalMesh< MyPolygon<typename OpenMeshType::VertexType> > PolyMesh;
 			PolyMesh pm;
@@ -186,6 +315,7 @@ namespace io {
 		 */
 		static DAEError LoadTriangularMesh(QDomNodeList& triNodeList, OpenMeshType& m, const size_t offset, InfoDAE* info,QMap<QString,QString> &materialBinding)
 		{
+			if(triNodeList.isEmpty()) return E_NOERROR; 
 			QDEBUG("****** LoadTriangularMesh (initial mesh size %i %i)",m.vn,m.fn);
 			for(int tript = 0; tript < triNodeList.size();++tript)
 			{
@@ -379,7 +509,8 @@ namespace io {
 					DAEError err = E_NOERROR;
 					err = LoadTriangularMesh(tripatch,m,offset,info,materialBinding);
 					//err = LoadPolygonalMesh(polypatch,m,offset,info);
-					//err = LoadPolygonalListMesh(polylist,m,offset,info);
+			//					err = OldLoadPolygonalListMesh(polylist,m,offset,info);
+					err = LoadPolygonalListMesh(polylist,m,offset,info,materialBinding);
 					if (err != E_NOERROR) 
 						return err;
 				}
@@ -434,7 +565,7 @@ namespace io {
 						newMesh.face.EnableWedgeTex();
 						LoadGeometry(newMesh, info, refNode.toElement(),materialBindingMap);
 						tri::UpdatePosition<OpenMeshType>::Matrix(newMesh,curTr);
-						tri::Append<OpenMeshType,OpenMeshType>::Mesh(m,newMesh);
+						tri::Append<OpenMeshType,OpenMeshType>::Mesh(m,newMesh,false,true);
 						QDEBUG("** instance_geometry with url %s (final mesh size %i %i - %i %i)",qPrintable(instGeomNode.attribute("url")),m.vn,m.vert.size(),m.fn,m.face.size());						
 					}
 				}
@@ -567,16 +698,26 @@ static Matrix44f getTransfMatrixFromNode(const QDomElement parentNode)
 			// for each scene in COLLADA FILE
 			/*
 			Some notes on collada structure.
-			the top root is the <scene> that can contains one of more <visual_scene>.
+			top level nodes are :
+			<asset>
+			<library_images>
+			<library_materials>
+			<library_effects>
+			<library_geometries>
+			<library_visual_scene>
+			<scene>
+			
+			The REAL top root is the <scene> that can contains one of more (instance of) <visual_scene>.
 			<visual_scene> can be directly written there (check!) or instanced from their definition in the <library_visual_scene>
 			each <visual_scene> contains a hierarchy of <node>	
 		  each <node> contains
 				transformation
-				other nodes
+				other nodes (to build up a hierarchy)
 				instance of geometry 
 				instance of controller
-			 
-			 
+			instance can be direct or refers name of stuff described in a library. 
+			An instance of geometry node should contain the <mesh> node and as a son of the <instance geometry> the material node (again referenced from a library)
+			-- structure of the geometry node -- 
 			*/
 			for(int scn = 0;scn < scn_size;++scn)
 			{

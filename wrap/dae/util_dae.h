@@ -86,7 +86,9 @@ namespace io {
 		};
 
 		
-
+		// These two classes is used for temporary storing of the
+		// collected data of the polgons during the reading of files. 
+		
 		template<typename VERTEX_TYPE>
 		class MyPolygon 
 		{
@@ -299,6 +301,7 @@ namespace io {
 			return QDomNode();
 		}
 
+		// This function is used to build up a list of strings that are scalar values.
 		inline static void valueStringList(QStringList& res,const QDomNode srcnode,const QString& tag) 
 		{
 			QDomNodeList list = srcnode.toElement().elementsByTagName(tag);
