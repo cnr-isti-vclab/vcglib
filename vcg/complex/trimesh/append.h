@@ -92,11 +92,29 @@ static void ImportFace(MeshLeft &ml, MeshRight &mr, FaceLeft &fl, const FaceRigh
 		}
 }
 
-static void Mesh(MeshLeft& ml, MeshRight& mr, const bool selected = false)
+// Append Right Mesh to the Left Mesh
+// Append::Mesh(ml, mr) is equivalent to ml += mr. 
+// Note MeshRigth could be costant...
+static void Mesh(MeshLeft& ml, MeshRight& mr, const bool selected = false, const bool copyUnrefFlag=false)
 {
  // remap[i] keep where the position of where the i-th vertex of meshright has landed in meshleft
   std::vector<int> remap(mr.vert.size(),-1); 
  
+ if(copyUnrefFlag) // copy ALL the vertices of MR onto ML
+ {
+	VertexIteratorRight vi;
+	for(vi=mr.vert.begin();vi!=mr.vert.end();++vi)
+	{
+	 int vind=Index(mr,*vi);
+		if(remap[vind]==-1)
+			{
+				VertexIteratorLeft vp;
+				vp=Allocator<MeshLeft>::AddVertices(ml,1);
+				(*vp).ImportLocal(*(vi));
+				remap[vind]=Index(ml,*vp);
+			}
+	}
+ } 
  // first loop to find the referenced vertices and copy them preparing the remap vector
  FaceIteratorRight fi;
  int FaceToAdd=0;
