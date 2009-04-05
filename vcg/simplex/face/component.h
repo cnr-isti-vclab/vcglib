@@ -372,6 +372,7 @@ public:
   const ColorType &cC() const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
   ColorType &WC(const int) { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
   QualityType &Q() { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
+  const QualityType &cQ() const { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
   
 	static bool HasFaceColor()   { return false; }
   static bool HasWedgeColor()   { return false; }
