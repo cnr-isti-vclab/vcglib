@@ -415,7 +415,8 @@ public:
 
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){
-		if(leftF.Base().VFAdjacencyEnabled && this->Base().VFAdjacencyEnabled){
+		//if(leftF.Base().VFAdjacencyEnabled && this->Base().VFAdjacencyEnabled)// WRONG I do not know anything about leftV!
+		if(this->Base().VFAdjacencyEnabled){
 			VFp(0) = NULL; VFp(1) = NULL; VFp(2) = NULL;
 			VFi(0) =   -1; VFi(1) =   -1; VFi(2) =   -1;
 		}
@@ -458,7 +459,8 @@ public:
 
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){
-		if(leftF.Base().FFAdjacencyEnabled && this->Base().FFAdjacencyEnabled) {
+//		if(leftF.Base().FFAdjacencyEnabled && this->Base().FFAdjacencyEnabled) // WRONG I do not know anything about leftV!
+		if(this->Base().FFAdjacencyEnabled) {
 			FFp(0) = NULL; FFp(1) = NULL; FFp(2) = NULL;
 			FFi(0) =   -1; FFi(1) =   -1; FFi(2) =   -1;
 		}
@@ -516,8 +518,9 @@ public:
 
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){
-		if((*this).Base().QualityEnabled && leftF.Base().QualityEnabled)
-				Q() = leftF.Q(); 
+		//if((*this).Base().QualityEnabled && leftF.Base().QualityEnabled)// WRONG I do not know anything about leftV!
+		if((*this).Base().QualityEnabled)
+				Q() = leftF.cQ(); 
 		T::ImportLocal(leftF);
 	}
   static bool HasFaceQuality()   { return true; }
@@ -542,8 +545,9 @@ public:
 
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){
-		if((*this).Base().ColorEnabled && leftF.Base().ColorEnabled)
-				C() = leftF.C(); 
+		//if((*this).Base().ColorEnabled && leftF.Base().ColorEnabled)// WRONG I do not know anything about leftV!
+		if((*this).Base().ColorEnabled )
+				C() = leftF.cC(); 
 		T::ImportLocal(leftF);
 	}
   static bool HasFaceColor()   { return true; }
@@ -568,7 +572,8 @@ public:
 
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){
-		if((*this).Base().MarkEnabled && leftF.Base().MarkEnabled)
+		//if((*this).Base().MarkEnabled && leftF.Base().MarkEnabled)// WRONG I do not know anything about leftV!
+		if((*this).Base().MarkEnabled)
 			IMark() = leftF.IMark(); 
 		T::ImportLocal(leftF);
 	}
@@ -587,7 +592,8 @@ public:
   TexCoordType const &cWT(const int i) const { assert((*this).Base().WedgeTexEnabled); return (*this).Base().WTV[(*this).Index()].wt[i]; }
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){
-		if(this->Base().WedgeTexEnabled && leftF.Base().WedgeTexEnabled) 
+		//if(this->Base().WedgeTexEnabled && leftF.Base().WedgeTexEnabled)  // WRONG I do not know anything about leftV!
+		if(this->Base().WedgeTexEnabled)
 		{ WT(0) = leftF.cWT(0); WT(1) = leftF.cWT(1); WT(2) = leftF.cWT(2); }
 		TT::ImportLocal(leftF);
 	}

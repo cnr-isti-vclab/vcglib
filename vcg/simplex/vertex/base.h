@@ -115,7 +115,7 @@ template <class BVT, class BET=DumClass, class BFT=DumClass, class BTT=DumClass>
 class VertexBase: public vertex::EmptyTexCoord<
                          vertex::EmptyVFAdj<
                          vertex::EmptyVEAdj<
-                         vertex::EmptyColorQuality<
+                         vertex::EmptyColorMarkQuality<
                          vertex::EmptyBitFlags<
                          vertex::EmptyCoordNormal<
 												 vertex::EmptyCurvatureData<

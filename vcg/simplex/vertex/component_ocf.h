@@ -466,7 +466,8 @@ public:
 	template <class LeftV>
 	void ImportLocal(const LeftV & leftV)
 	{
-		if((*this).Base().MarkEnabled && leftV.Base().MarkEnabled ) // copy the data only if they are enabled in both vertices
+		//if((*this).Base().MarkEnabled && leftV.Base().MarkEnabled ) // WRONG I do not know anything about leftV!
+		if((*this).Base().MarkEnabled) // copy the data only if they are enabled in both vertices
 				IMark() = leftV.IMark();
 		T::ImportLocal(leftV);
 	}
@@ -490,7 +491,8 @@ public:
 
 	template <class LeftV>
 	void ImportLocal(const LeftV & leftV){
-		if((*this).Base().CurvatureEnabled && leftV.Base().CurvatureEnabled ) // copy the data only if they are enabled in both vertices
+//		if((*this).Base().CurvatureEnabled && leftV.Base().CurvatureEnabled ) // WRONG I do not know anything about leftV!
+		if((*this).Base().CurvatureEnabled) 
 			{
 				(*this).Base().CuV[(*this).Index()][0] = leftV.cKh();
 				(*this).Base().CuV[(*this).Index()][1] = leftV.cKg();
@@ -564,7 +566,8 @@ public:
 	template <class LeftV>
 	void ImportLocal(const LeftV & leftV)
 	{
-		if ((*this).Base().RadiusEnabled && leftV.Base().RadiusEnabled )
+		//if ((*this).Base().RadiusEnabled && leftV.Base().RadiusEnabled ) // WRONG I do not know anything about leftV!
+		if ((*this).Base().RadiusEnabled) 
 			(*this).Base().RadiusV[(*this).Index()] = leftV.cR();
 		TT::ImportLocal(leftV);
 	}

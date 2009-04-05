@@ -163,7 +163,7 @@ public:
   CoordType &UberP() { return _coord; }
 
 	template < class LeftV>
-	void ImportLocal(const LeftV  & left ) { P().Import(left.cP()); T::ImportLocal( left); }
+	void ImportLocal(const LeftV  & left ) { if(LeftV::HasCoord()) P().Import(left.cP()); T::ImportLocal( left); }
   static bool HasCoord()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("Coord"));T::Name(name);}
 
@@ -185,7 +185,7 @@ public:
   NormalType &N() { return _norm; }
   const NormalType &cN() const { return _norm; }
 	template < class LeftV>
-	void ImportLocal(const LeftV  & left ) { N() = left.cN(); T::ImportLocal( left); }
+	void ImportLocal(const LeftV  & left ) { if(LeftV::HasNormal()) N() = left.cN(); T::ImportLocal( left); }
   static bool HasNormal()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("Normal"));T::Name(name);}
 
@@ -206,27 +206,16 @@ public:	static void Name(std::vector<std::string> & name){name.push_back(std::st
 
 /*-------------------------- INCREMENTAL MARK  ----------------------------------------*/
 
-template <class T> class EmptyMark: public T {
-public:
-  static bool HasMark()   { return false; }
-  static bool HasMarkOcc()   { return false; }
-  inline void InitIMark()    {  }
-  inline int & IMark()       { assert(0); static int tmp=-1; return tmp;}
-  inline const int & IMark() const {return 0;}
-	template < class LeftV>
-	void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
-	static void Name(std::vector<std::string> & name){T::Name(name);}
-
-};
 template <class T> class Mark: public T {
 public:
   static bool HasMark()      { return true; }
   static bool HasMarkOcc()   { return true; }
   inline void InitIMark()    { _imark = 0; }
+  inline const int & cIMark() const { return _imark;}
   inline int & IMark()       { return _imark;}
   inline const int & IMark() const {return _imark;}
 	template < class LeftV>
-	void ImportLocal(const LeftV  & left ) { IMark() = left.IMark(); T::ImportLocal( left); }
+	void ImportLocal(const LeftV  & left ) { if(LeftV::HasMark())  IMark() = left.IMark(); T::ImportLocal( left); }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("Mark"));T::Name(name);}
 
  private:
@@ -251,7 +240,7 @@ public:
   TexCoordType &T() { return _t; }
   const TexCoordType &cT()  const { return _t; }
 	template < class LeftV>
-	void ImportLocal(const LeftV  & left ) { T() = left.cT(); TT::ImportLocal( left); }
+	void ImportLocal(const LeftV  & left ) { if(LeftV::HasTexCoord())  T() = left.cT(); TT::ImportLocal( left); }
   static bool HasTexCoord()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("TexCoord"));TT::Name(name);}
 
@@ -291,7 +280,7 @@ public:
   int &Flags() {return _flags; }
   const int Flags() const {return _flags; }
 	template < class LeftV>
-	void ImportLocal(const LeftV  & left ) { Flags() = left.Flags(); T::ImportLocal( left); }
+	void ImportLocal(const LeftV  & left ) { if(LeftV::HasFlags()) Flags() = left.Flags(); T::ImportLocal( left); }
   static bool HasFlags()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("BitFlags"));T::Name(name);}
 
@@ -301,15 +290,23 @@ private:
 
 /*-------------------------- EMPTY COLOR & QUALITY ----------------------------------*/
 
-template <class T> class EmptyColorQuality: public T {
+template <class T> class EmptyColorMarkQuality: public T {
 public:
   typedef float QualityType;
   QualityType &Q() { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
+  const QualityType &cQ() const { static QualityType dummyQuality(0);  assert(0); return dummyQuality; } const 
 	static bool HasQuality()   { return false; }
 
   typedef vcg::Color4b ColorType;
   ColorType &C() { static ColorType dumcolor(vcg::Color4b::White); assert(0); return dumcolor; }
   const ColorType &cC() const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
+
+  static bool HasMark()   { return false; }
+  static bool HasMarkOcc()   { return false; }
+  inline void InitIMark()    {  }
+  inline const int & cIMark() const { assert(0); static int tmp=-1; return tmp;}
+  inline int & IMark()       { assert(0); static int tmp=-1; return tmp;}
+  inline const int & IMark() const {return 0;}
 
 template < class LeftV>
 	void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
@@ -327,7 +324,7 @@ public:
   const ColorType &C() const { return _color; }
   const ColorType &cC() const { return _color; }
 	template < class LeftV>
-	void ImportLocal(const LeftV  & left ) { C() = left.cC(); T::ImportLocal( left); }
+	void ImportLocal(const LeftV  & left ) { if(LeftV::HasColor()) C() = left.cC();  T::ImportLocal( left); }
   static bool HasColor()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("Color"));T::Name(name);}
 
@@ -347,7 +344,7 @@ public:
   QualityType &Q() { return _quality; }
   const QualityType & cQ() const {return _quality; }
 	template < class LeftV>
-	void ImportLocal(const LeftV  & left ) { Q() = left.cQ(); TT::ImportLocal( left); }
+	void ImportLocal(const LeftV  & left ) { if(LeftV::HasQuality()) Q() = left.cQ(); TT::ImportLocal( left); }
   static bool HasQuality()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("Quality"));TT::Name(name);}
 
@@ -518,7 +515,7 @@ public:
   RadiusType &R() { return _radius; }
   const RadiusType & cR() const {return _radius; }
 	template < class LeftV>
-	void ImportLocal(const LeftV  & left ) { R() = left.cR(); TT::ImportLocal( left); }
+	void ImportLocal(const LeftV  & left ) { if(LeftV::HasRadius()) R() = left.cR(); TT::ImportLocal( left); }
   static bool HasRadius()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("Radius"));TT::Name(name);}
 
