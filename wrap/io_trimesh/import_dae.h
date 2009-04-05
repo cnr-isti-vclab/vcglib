@@ -28,8 +28,8 @@
 
 #include<wrap/dae/util_dae.h>
 
-// uncomment one of the following line to enable the Verbose Trace for Crease
-//#define QDEBUG if(1) ; else printf 
+// uncomment one of the following line to enable the Verbose debugging for the parsing
+//#define QDEBUG if(1) ; else {assert(0);} 
 #define QDEBUG qDebug
 
 namespace vcg {
@@ -41,7 +41,34 @@ namespace io {
 	{
 
 	private:
-		static int WedgeNormalAttribute(OpenMeshType& m,const QStringList face,const QStringList wn,const QDomNode wnsrc,const int meshfaceind,const int faceind,const int component)
+	
+class ColladaEdge;
+class ColladaFace;
+class ColladaVertex;
+
+class ColladaVertex  : public vcg::VertexSimp2< ColladaVertex, ColladaEdge, ColladaFace,
+  vcg::vertex::Coord3f,           /* 12b */
+  vcg::vertex::BitFlags,          /*  4b */
+  vcg::vertex::Normal3f,          /* 12b */
+  vcg::vertex::Color4b           /*  4b */
+  > {};
+
+
+class ColladaFace    : public vcg::FaceSimp2<  ColladaVertex, ColladaEdge, ColladaFace,
+      vcg::face::VertexRef,            /*12b */
+      vcg::face::BitFlags,             /* 4b */
+      vcg::face::Normal3f,             /*12b */
+      vcg::face::Color4b,           /* 0b */
+      vcg::face::WedgeTexCoord2f     /* 0b */
+    > {};
+
+class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std::vector<ColladaFace> > {};
+
+
+	
+	
+	
+		static int WedgeNormalAttribute(ColladaMesh& m,const QStringList face,const QStringList wn,const QDomNode wnsrc,const int meshfaceind,const int faceind,const int component)
 		{
 			int indnm = -1;
 			if (!wnsrc.isNull())
@@ -53,7 +80,7 @@ namespace io {
 			return indnm;
 		}
 
-		static int WedgeTextureAttribute(OpenMeshType& m,const QStringList face,int ind_txt,const QStringList wt,const QDomNode wtsrc,const int meshfaceind,const int faceind,const int component,const int stride = 2)
+		static int WedgeTextureAttribute(ColladaMesh& m,const QStringList face,int ind_txt,const QStringList wt,const QDomNode wtsrc,const int meshfaceind,const int faceind,const int component,const int stride = 2)
 		{
 			int indtx = -1;
 			if (!wtsrc.isNull())
@@ -72,7 +99,7 @@ namespace io {
 		}
 		
 		// this one is used for the polylist nodes
-		static int WedgeTextureAttribute(typename OpenMeshType::FaceType::TexCoordType & WT, const QStringList faceIndexList, int ind_txt, const QStringList wt, const QDomNode wtsrc,const int faceind,const int stride = 2)
+		static int WedgeTextureAttribute(typename ColladaMesh::FaceType::TexCoordType & WT, const QStringList faceIndexList, int ind_txt, const QStringList wt, const QDomNode wtsrc,const int faceind,const int stride = 2)
 		{
 			int indtx = -1;
 			if (!wtsrc.isNull())
@@ -88,7 +115,7 @@ namespace io {
 			return indtx;
 		}
 		
-		static int WedgeColorAttribute(OpenMeshType& m,const QStringList face,const QStringList wc,const QDomNode wcsrc,const int meshfaceind,const int faceind,const int component)
+		static int WedgeColorAttribute(ColladaMesh& m,const QStringList face,const QStringList wc,const QDomNode wcsrc,const int meshfaceind,const int faceind,const int component)
 		{
 			int indcl;
 			if (!wcsrc.isNull())
@@ -129,12 +156,12 @@ namespace io {
 			wed.offcl = findStringListAttribute(wed.wc,wed.wcsrc,nd,doc,"COLOR"); 
 		}
 	
-		static DAEError LoadPolygonalMesh(QDomNodeList& polypatch,OpenMeshType& m,const size_t offset,InfoDAE* info)
+		static DAEError LoadPolygonalMesh(QDomNodeList& polypatch,ColladaMesh& m,const size_t offset,InfoDAE* info)
 		{
 			return E_NOERROR;
 		}
 
-		static DAEError	LoadPolygonalListMesh(QDomNodeList& polylist,OpenMeshType& m,const size_t offset,InfoDAE* info,QMap<QString,QString> &materialBinding)
+		static DAEError	LoadPolygonalListMesh(QDomNodeList& polylist,ColladaMesh& m,const size_t offset,InfoDAE* info,QMap<QString,QString> &materialBinding)
 		{
 			if(polylist.isEmpty()) return E_NOERROR; 
 			QDEBUG("****** LoadPolygonalListMesh (initial mesh size %i %i)",m.vert.size(),m.fn);
@@ -189,7 +216,7 @@ namespace io {
 					{ 
 						int curFaceVertNum = faceSizeList.at(ff).toInt();
 						
-						MyPolygon<typename OpenMeshType::VertexType>  polyTemp(curFaceVertNum);						
+						MyPolygon<typename ColladaMesh::VertexType>  polyTemp(curFaceVertNum);						
 						for(unsigned int tt = 0;tt < curFaceVertNum ;++tt)  // for each vertex of the polygon
 						{
 							int indvt = faceIndexList.at(faceIndexCnt).toInt();
@@ -223,11 +250,11 @@ namespace io {
 			return E_NOERROR;
 		}
 
-    static DAEError AddPolygonToMesh(MyPolygon<typename OpenMeshType::VertexType>  &polyTemp, OpenMeshType& m)
+    static DAEError AddPolygonToMesh(MyPolygon<typename ColladaMesh::VertexType>  &polyTemp, ColladaMesh& m)
 		{
 			int vertNum=polyTemp._pv.size();
 			int triNum= vertNum -2;
-			typename OpenMeshType::FaceIterator fp=vcg::tri::Allocator<OpenMeshType>::AddFaces(m,triNum);
+			typename ColladaMesh::FaceIterator fp=vcg::tri::Allocator<ColladaMesh>::AddFaces(m,triNum);
 			// Very simple fan triangulation of the polygon.
 			for(int i=0;i<triNum;++i)
 			{
@@ -246,13 +273,13 @@ namespace io {
 			assert(fp==m.face.end());
 		}
 		
-		static DAEError	OldLoadPolygonalListMesh(QDomNodeList& polylist,OpenMeshType& m,const size_t offset,InfoDAE* info)
+		static DAEError	OldLoadPolygonalListMesh(QDomNodeList& polylist,ColladaMesh& m,const size_t offset,InfoDAE* info)
 		{
-			typedef PolygonalMesh< MyPolygon<typename OpenMeshType::VertexType> > PolyMesh;
+			typedef PolygonalMesh< MyPolygon<typename ColladaMesh::VertexType> > PolyMesh;
 			PolyMesh pm;
 			
 			//copying vertices 
-			for(typename OpenMeshType::VertexIterator itv = m.vert.begin();itv != m.vert.end();++itv)
+			for(typename ColladaMesh::VertexIterator itv = m.vert.begin();itv != m.vert.end();++itv)
 			{	
 				vcg::Point3f p(itv->P().X(),itv->P().Y(),itv->P().Z());
 				typename PolyMesh::VertexType v;
@@ -313,7 +340,7 @@ namespace io {
 		/*
 		 Called to load into a given mesh 
 		 */
-		static DAEError LoadTriangularMesh(QDomNodeList& triNodeList, OpenMeshType& m, const size_t offset, InfoDAE* info,QMap<QString,QString> &materialBinding)
+		static DAEError LoadTriangularMesh(QDomNodeList& triNodeList, ColladaMesh& m, const size_t offset, InfoDAE* info,QMap<QString,QString> &materialBinding)
 		{
 			if(triNodeList.isEmpty()) return E_NOERROR; 
 			QDEBUG("****** LoadTriangularMesh (initial mesh size %i %i)",m.vn,m.fn);
@@ -350,7 +377,7 @@ namespace io {
 				int offsetface = (int)m.face.size();
 				if (face.size() != 0) 
 				{	
-					vcg::tri::Allocator<OpenMeshType>::AddFaces(m,face.size() / (faceAttributeNum * 3));
+					vcg::tri::Allocator<ColladaMesh>::AddFaces(m,face.size() / (faceAttributeNum * 3));
 					WedgeAttribute wa;
 					FindStandardWedgeAttributes(wa,triNodeList.at(tript),*(info->doc));
 
@@ -381,7 +408,7 @@ namespace io {
 			return E_NOERROR;
 		}
 
-		static int LoadControllerMesh(OpenMeshType& m, InfoDAE* info, const QDomElement& geo,QMap<QString, QString> materialBindingMap, CallBackPos *cb=0)
+		static int LoadControllerMesh(ColladaMesh& m, InfoDAE* info, const QDomElement& geo,QMap<QString, QString> materialBindingMap, CallBackPos *cb=0)
 		{
 			assert(geo.tagName() == "controller");
 			QDomNodeList skinList = geo.toElement().elementsByTagName("skin");
@@ -426,7 +453,7 @@ namespace io {
 		 
 		 */
 		
-		static int LoadGeometry(OpenMeshType& m, InfoDAE* info, const QDomElement& geo, QMap<QString,QString> &materialBinding, CallBackPos *cb=0)
+		static int LoadGeometry(ColladaMesh& m, InfoDAE* info, const QDomElement& geo, QMap<QString,QString> &materialBinding, CallBackPos *cb=0)
 		{
 			assert(geo.tagName() == "geometry");
 			if (!isThereTag(geo,"mesh")) return E_NOMESH;
@@ -451,7 +478,7 @@ namespace io {
 			size_t offset = m.vert.size();
 			if (geosrcposarr_size != 0)
 			{
-					vcg::tri::Allocator<OpenMeshType>::AddVertices(m,nvert);
+					vcg::tri::Allocator<ColladaMesh>::AddVertices(m,nvert);
 
 					QDomNode srcnodenorm = attributeSourcePerSimplex(vertices.at(0),*(info->doc),"NORMAL");
 					QStringList geosrcvertnorm;
@@ -536,7 +563,7 @@ namespace io {
   // nodes can be directly instanced or referred from the node library.
 		
 		static void AddNodeToMesh(QDomElement node, 
-															OpenMeshType& m, Matrix44f curTr,
+															ColladaMesh& m, Matrix44f curTr,
 															InfoDAE*& info)
 		{
 				QDEBUG("Starting processing <node> with id %s",qPrintable(node.attribute("id")));
@@ -561,11 +588,11 @@ namespace io {
 							GenerateMaterialBinding(instGeomNode,materialBindingMap);
 						}
 						
-						OpenMeshType newMesh;
-						newMesh.face.EnableWedgeTex();
+						ColladaMesh newMesh;
+//						newMesh.face.EnableWedgeTex();
 						LoadGeometry(newMesh, info, refNode.toElement(),materialBindingMap);
-						tri::UpdatePosition<OpenMeshType>::Matrix(newMesh,curTr);
-						tri::Append<OpenMeshType,OpenMeshType>::Mesh(m,newMesh,false,true);
+						tri::UpdatePosition<ColladaMesh>::Matrix(newMesh,curTr);
+						tri::Append<ColladaMesh,ColladaMesh>::Mesh(m,newMesh,false,true);
 						QDEBUG("** instance_geometry with url %s (final mesh size %i %i - %i %i)",qPrintable(instGeomNode.attribute("url")),m.vn,m.vert.size(),m.fn,m.face.size());						
 					}
 				}
@@ -590,11 +617,10 @@ namespace io {
 							GenerateMaterialBinding(instContrNode,materialBindingMap);
 						}
 						
-						OpenMeshType newMesh;
-						newMesh.face.EnableWedgeTex();
+						ColladaMesh newMesh;
 						LoadControllerMesh(newMesh, info, refNode.toElement(),materialBindingMap);
-						tri::UpdatePosition<OpenMeshType>::Matrix(newMesh,curTr);
-						tri::Append<OpenMeshType,OpenMeshType>::Mesh(m,newMesh);
+						tri::UpdatePosition<ColladaMesh>::Matrix(newMesh,curTr);
+						tri::Append<ColladaMesh,ColladaMesh>::Mesh(m,newMesh);
 					}
 				}
 								
@@ -751,7 +777,11 @@ static Matrix44f getTransfMatrixFromNode(const QDomElement parentNode)
 						Matrix44f baseTr; baseTr.SetIdentity();
 						
 						if(node.toElement().tagName()=="node")
-							AddNodeToMesh(node.toElement(), m, baseTr,info);
+						{
+							ColladaMesh newMesh;
+							AddNodeToMesh(node.toElement(), newMesh, baseTr,info);
+							tri::Append<OpenMeshType,ColladaMesh>::Mesh(m,newMesh,false,true);
+						}
 					}	// end for each node of a given scene				
 				} // end for each visual scene instance
 			} // end for each scene instance 
