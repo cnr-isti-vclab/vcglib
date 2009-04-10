@@ -179,14 +179,81 @@ static void PerFaceFromCurrentVertexNormal(ComputeMeshType &m)
 		fi->N() = n;
 	}
 }
+
+
 ///  \brief Calculates the vertex normal. Without exploiting or touching face normals.
 /**
- The normal of a vertex v is the weigthed average of the normals of the faces incident on v.
+ The normal of a vertex v computed as a weighted sum f the incident face normals. 
+ The weight is simlply the angle of the involved wedge.  Described in:
+ 
+G. Thurmer, C. A. Wuthrich 
+"Computing vertex normals from polygonal facets"
+Journal of Graphics Tools, 1998
+ */
+ 
+static void PerVertexAngleWeighted(ComputeMeshType &m)
+{
+	assert(HasPerVertexNormal(m));
+	VertexIterator vi;
+	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+		 if( !(*vi).IsD() && (*vi).IsRW() )
+				 (*vi).N() = NormalType((ScalarType)0,(ScalarType)0,(ScalarType)0);
+
+ FaceIterator f;
+ for(f=m.face.begin();f!=m.face.end();++f)
+   if( !(*f).IsD() && (*f).IsR() )
+   {
+    typename FaceType::NormalType t = vcg::NormalizedNormal(*f);
+		NormalType e0 = ((*f).V1(0)->cP()-(*f).V0(0)->cP()).Normalize();
+		NormalType e1 = ((*f).V1(1)->cP()-(*f).V0(1)->cP()).Normalize();
+		NormalType e2 = ((*f).V1(2)->cP()-(*f).V0(2)->cP()).Normalize();
+		
+		(*f).V(0)->N() += t*AngleN(e0,-e2);
+		(*f).V(1)->N() += t*AngleN(-e0,e1);
+		(*f).V(2)->N() += t*AngleN(-e1,e2);
+   }
+}
+
+///  \brief Calculates the vertex normal. Without exploiting or touching face normals.
+/**
+ The normal of a vertex v is computed according to the formula described by Nelson Max in 
+ Max, N., "Weights for Computing Vertex Normals from Facet Normals", Journal of Graphics Tools, 4(2) (1999)
+ 
+ The weight for each wedge is the cross product of the two edge over the product of the square of the two edge lengths. 
+ According to the original paper it is perfect only for spherical surface, but it should perform well...
+ */
+static void PerVertexWeighted(ComputeMeshType &m)
+{
+ assert(HasPerVertexNormal(m));
+  VertexIterator vi;
+ for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+   if( !(*vi).IsD() && (*vi).IsRW() )
+     (*vi).N() = NormalType((ScalarType)0,(ScalarType)0,(ScalarType)0);
+
+ FaceIterator f;
+
+ for(f=m.face.begin();f!=m.face.end();++f)
+   if( !(*f).IsD() && (*f).IsR() )
+   {
+    typename FaceType::NormalType t = vcg::Normal(*f);
+		ScalarType e0 = SquaredDistance((*f).V0(0)->cP(),(*f).V1(0)->cP());
+		ScalarType e1 = SquaredDistance((*f).V0(1)->cP(),(*f).V1(1)->cP());
+		ScalarType e2 = SquaredDistance((*f).V0(2)->cP(),(*f).V1(2)->cP());
+		
+		(*f).V(0)->N() += t/(e0*e2);
+		(*f).V(1)->N() += t/(e0*e1);
+		(*f).V(2)->N() += t/(e1*e2);
+   }
+}
+
+///  \brief Calculates the vertex normal. Without exploiting or touching face normals.
+/**
+ The normal of a vertex v is the classical area weigthed average of the normals of the faces incident on v.
  */
  
 static void PerVertex(ComputeMeshType &m)
 {
- if( !m.HasPerVertexNormal()) return;
+ assert(HasPerVertexNormal(m));
  
  VertexIterator vi;
  for(vi=m.vert.begin();vi!=m.vert.end();++vi)
