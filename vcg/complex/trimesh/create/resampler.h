@@ -177,21 +177,31 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 			else assert(0);
 			assert(retIP); // this should happen only if the starting mesh has degenerate faces.
 
-			closestNormV =  (f->V(0)->cN())*pip[0] + (f->V(1)->cN())*pip[1] + (f->V(2)->cN())*pip[2] ;
-			closestNormF =  f->cN() ;
-
+			const float InterpolationEpsilon = 0.00001f;
+			int zeroCnt=0;  
+			if(pip[0]<InterpolationEpsilon) ++zeroCnt;
+			if(pip[1]<InterpolationEpsilon) ++zeroCnt;
+			if(pip[2]<InterpolationEpsilon) ++zeroCnt;
+			assert(zeroCnt<3);
+						 
 			Point3f dir=(testPt-closestPt).Normalize();
 
+			// Note that the two signs could be discordant.
+			// Always choose the best one according to where the nearest point falls.
+			float signBest;
+			
 			// Compute test if the point see the surface normal from inside or outside
 			// Surface normal for improved robustness is computed both by face and interpolated from vertices.
-			float signV =  dir.dot(closestNormV) ;
-			float signF =  dir.dot(closestNormF) ;
-
-			// Note that the two signs could be discordant.
-			// Always choose the best one according to the magnitude.
-			float signBest;
-			if(fabs(signV) > fabs(signF)) signBest = signV;
-			else signBest = signF;
+			if(zeroCnt>0) // we Not are in the middle of the face so the face normal is NOT reliable.
+			{	
+				closestNormV =  (f->V(0)->cN())*pip[0] + (f->V(1)->cN())*pip[1] + (f->V(2)->cN())*pip[2] ;
+				signBest =  dir.dot(closestNormV) ;
+			}
+			else
+			{
+				closestNormF =  f->cN() ;
+				signBest =  dir.dot(closestNormF) ;
+			}
 
 			if(signBest<0) dist=-dist;
 
@@ -320,7 +330,8 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 			_oldM=&old_mesh;
 
 			// the following two steps are required to be sure that the point-face distance without precomputed data works well.
-			tri::UpdateNormals<Old_Mesh>::PerVertexNormalizedPerFaceNormalized(old_mesh);
+			tri::UpdateNormals<Old_Mesh>::PerFaceNormalized(old_mesh);
+			tri::UpdateNormals<Old_Mesh>::PerVertexAngleWeighted(old_mesh);
 			tri::UpdateFlags<Old_Mesh>::FaceProjection(old_mesh);
 			int _size=(int)old_mesh.fn*100;
 
