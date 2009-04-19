@@ -268,7 +268,13 @@ namespace vcg {
 													vcg::Point3<typename FaceType::ScalarType> & p )      
 		{
 				typedef typename FaceType::ScalarType ScalarType;
-				// assert(f.cN().SquaredNorm() > 0.9999 && f.cN().SquaredNorm()<1.0001); 
+				// remember that the macro NDEBUG is defined when you want to optimize a lot. 
+				#ifndef NDEBUG
+				static int staticCnt=0; // small piece of code that sometime check that face normals are really normalized
+				if((staticCnt++%100)==0) 
+						assert(f.cN().SquaredNorm() > 0.9999 && f.cN().SquaredNorm()<1.0001); // if you get this assert you have forgot to make a UpdateNormals::PerFaceNormalized(m)
+
+				#endif		
 				Plane3<ScalarType> fPlane;
 				fPlane.Init(f.cP(0),f.cN());
 				const ScalarType EPSILON = ScalarType( 0.000001);
@@ -427,7 +433,8 @@ namespace vcg {
 								else return false;
 							}
 							break;
-						
+						default: assert(0); // if you get this assert it means that you forgot to set the required UpdateFlags<MeshType>::FaceProjection(m);
+
 				}
 				
 				dist = ScalarType(fabs(d));
