@@ -225,6 +225,7 @@ Initial Release
 #include <vcg/complex/trimesh/base.h>
 #include <vcg/complex/trimesh/closest.h>
 #include <vcg/space/index/grid_static_ptr.h>
+#include <vcg/space/index/spatial_hashing.h>
 #include <vcg/complex/trimesh/allocate.h>
 #include <vcg/complex/trimesh/update/selection.h>
 #include <vcg/complex/trimesh/update/flag.h>
@@ -1338,6 +1339,46 @@ static	bool ShareVertex(FaceType *f0,FaceType *f1)
 		return(false);
 	}
 
+
+/**
+      This function merge all the vertices that are closer than the given radius
+*/
+static int MergeCloseVertex(MeshType &m, const ScalarType radius)
+	{
+			typedef vcg::SpatialHashTable<VertexType, ScalarType> SampleSHT;
+			SampleSHT sht;
+			tri::VertTmark<MeshType> markerFunctor;
+			typedef vcg::vertex::PointDistanceFunctor<ScalarType> VDistFunct;
+			std::vector<VertexType*> closests;
+			int mergedCnt=0;
+			VDistFunct distFunctor;
+			Point3f closestPt;
+			sht.Set(m.vert.begin(), m.vert.end());
+			UpdateFlags<MeshType>::VertexClearV(m);
+			for(VertexIterator viv = m.vert.begin(); viv!= m.vert.end(); ++viv) 
+				if(!(*viv).IsD() && !(*viv).IsV())
+					{
+						(*viv).SetV();
+						Point3f p = viv->cP();
+						Box3f bb(p-Point3f(radius,radius,radius),p+Point3f(radius,radius,radius));
+						GridGetInBox(sht, markerFunctor, bb, closests);
+						// qDebug("Vertex %i has %i closest", &*viv - &*m.vert.begin(),closests.size());
+						for(int i=0; i<closests.size(); ++i)
+						{
+							float dist = Distance(p,closests[i]->cP());
+							if(dist < radius && !closests[i]->IsV())
+												{
+													mergedCnt++;
+													closests[i]->SetV();
+													closests[i]->P()=p;
+													closests[i]->C()=Color4b::Green;
+												}
+						}
+					}
+					
+			RemoveDuplicateVertex(m,true);
+			return mergedCnt;
+	}
 
 		}; // end class
 		/*@}*/
