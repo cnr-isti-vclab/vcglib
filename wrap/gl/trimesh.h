@@ -634,11 +634,13 @@ void DrawPoints()
 {
 	glPointSize(GetHintParamf(HNPPointSize));
 
-	float camDist=CameraDistance();
-	float quadratic[] =  { 0.0f, 0.0f, 1.0f/(camDist*camDist) };
-	glPointParameterfv( GL_POINT_DISTANCE_ATTENUATION, quadratic );
-	glPointParameterf( GL_POINT_SIZE_MAX, 16.0f );
-	glPointParameterf( GL_POINT_SIZE_MIN, 1.0f );
+	if (glPointParameterfv) {
+  	float camDist = CameraDistance();
+	  float quadratic[] = { 0.0f, 0.0f, 1.0f/(camDist*camDist) , 0.0f };
+	  glPointParameterfv( GL_POINT_DISTANCE_ATTENUATION, quadratic );
+	  glPointParameterf( GL_POINT_SIZE_MAX, 16.0f );
+	  glPointParameterf( GL_POINT_SIZE_MIN, 1.0f );
+  }
 
 	if(m->vn!=(int)m->vert.size())
 		{
