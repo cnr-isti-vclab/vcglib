@@ -186,12 +186,16 @@ public:
 		NORMX				= 0x00000200,
 		NORMY				= 0x00000400,
 		NORMZ				= 0x00000800,
-		// Crease _flags,  it is assumed that FEATUREi = FEATURE0<<i 
-		FEATURE0    = 0x00008000,
-		FEATURE1    = 0x00010000,
-		FEATURE2    = 0x00020000,
+		// Crease _flags,  it is assumed that CREASEi = CREASE0<<i 
+		CREASE0    = 0x00008000,
+		CREASE1    = 0x00010000,
+		CREASE2    = 0x00020000,
+		// Faux edges. (semantics: when a mesh is polygonal, edges which are inside a polygonal face are "faux"
+		FAUX0       = 0x00040000,
+		FAUX1       = 0x00080000,
+		FAUX2       = 0x00100000,
 		// First user bit
-		USER0       = 0x00040000
+		USER0       = 0x00200000
 			};
 
  
@@ -249,11 +253,11 @@ public:
 	/// This function checks if a given side of the face is a feature/internal edge
 	/// it is used by some importer to mark internal 
 	/// edges of polygonal faces that have been triangulated
-	bool IsF(int i) const {return (this->Flags() & (FEATURE0<<i)) != 0;}
+	bool IsF(int i) const {return (this->Flags() & (FAUX0<<i)) != 0;}
 	/// This function select the face
-	void SetF(int i)		{this->Flags() |=(FEATURE0<<i);}
+	void SetF(int i)		{this->Flags() |=(FAUX0<<i);}
 	/// This funcion execute the inverse operation of SetS()
-	void ClearF(int i)	{this->Flags() &= (~(FEATURE0<<i));}
+	void ClearF(int i)	{this->Flags() &= (~(FAUX0<<i));}
 	
 ///  Return the first bit that is not still used
 static int &LastBitFlag()
