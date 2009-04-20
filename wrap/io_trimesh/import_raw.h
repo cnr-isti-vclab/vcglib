@@ -419,28 +419,35 @@ static int Open( MESH_TYPE &m, const char * filename, bool triangulate=false, in
     int trinum = (rownumber-1) * (colnumber-1) * 2;
 
     FaceIterator fi=Allocator<MESH_TYPE>::AddFaces(m,trinum);
-
+    FaceIterator fi2 = fi;
 	m.fn = trinum;
 	for(cc=0; cc<colnumber-1; cc++)
 	for(rr=0; rr<rownumber-1; rr++)
 	 {
 		// upper tri
-		(*fi).V(2) = &(m.vert[(cc  ) + ((rr  ) * colnumber)]);
-		(*fi).V(1) = &(m.vert[(cc+1) + ((rr  ) * colnumber)]);
-		(*fi).V(0) = &(m.vert[(cc  ) + ((rr+1) * colnumber)]);
+		(*fi).V(0) = &(m.vert[(cc+1) + ((rr  ) * colnumber)]);
+		(*fi).V(1) = &(m.vert[(cc  ) + ((rr  ) * colnumber)]);
+		(*fi).V(2) = &(m.vert[(cc  ) + ((rr+1) * colnumber)]);
 
 
 		 fi++;
 
 		// lower tri
-		(*fi).V(2) = &(m.vert[(cc+1) + ((rr  ) * colnumber)]);
-		(*fi).V(1) = &(m.vert[(cc+1) + ((rr+1) * colnumber)]);
 		(*fi).V(0) = &(m.vert[(cc  ) + ((rr+1) * colnumber)]);
-
+		(*fi).V(1) = &(m.vert[(cc+1) + ((rr+1) * colnumber)]);
+		(*fi).V(2) = &(m.vert[(cc+1) + ((rr  ) * colnumber)]);
 
 		 fi++;
 	 
 	 }
+	 
+	 // tag faux faces
+   if (m.HasPerFaceFlags()) {
+     for (; fi2!=m.face.end(); fi2++) {
+       (*fi2).SetF(2);
+     }
+   }
+
 	 
 	
   }

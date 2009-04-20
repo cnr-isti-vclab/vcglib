@@ -625,7 +625,7 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
       }
 		  if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
         m.face[i].WN(j).Import(normals[indexedFaces[i].n[j]]);		
-			// set border flags according to internals faces
+			// set faux edge flags according to internals faces
 			if(indexedFaces[i].edge[j]) m.face[i].SetF(j);
 						else m.face[i].ClearF(j);
     }

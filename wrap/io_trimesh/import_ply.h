@@ -840,38 +840,49 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 					(*fi).V(k) = index[ fa.v[k] ];
 				}
 
+        // tag faux vertices of first face
+        if (fa.size>3) fi->SetF(2); 
+
 				for(k=0;k<pi.fdn;k++)	
 					memcpy((char *)(&(*fi)) + pi.FaceData[k].offset1,
 								 (char *)(&fa) + FPV[k].offset1, 
 									FPV[k].memtypesize());
+
+
         ++fi;
     
         // Non Triangular Faces Loop
         // It performs a simple fan triangulation.
         if(fa.size>3)
         {
-        int curpos=int(fi-m.face.begin());
+          int curpos=int(fi-m.face.begin());
           Allocator<OpenMeshType>::AddFaces(m,fa.size-3);
 				  fi=m.face.begin()+curpos;
+
         }     
         for(int qq=0;qq<fa.size-3;++qq)
         {
           (*fi).V(0) = index[ fa.v[0] ];
-            for(k=1;k<3;++k)
-				    {
-					    if( fa.v[2+qq]<0 || fa.v[2+qq]>=m.vn )
-					    {
-						    pi.status = PlyInfo::E_BAD_VERT_INDEX;
-						    return pi.status;
-					    }
-					    (*fi).V(k) = index[ fa.v[1+qq+k] ];
-				    }
+          for(k=1;k<3;++k)
+				  {
+					  if( fa.v[2+qq]<0 || fa.v[2+qq]>=m.vn )
+					  {
+					    pi.status = PlyInfo::E_BAD_VERT_INDEX;
+					    return pi.status;
+					  }
+					  (*fi).V(k) = index[ fa.v[1+qq+k] ];
+					  
+				  }
   
-				for(k=0;k<pi.fdn;k++)	
-					memcpy((char *)(&(*fi)) + pi.FaceData[k].offset1,
-								 (char *)(&fa) + FPV[k].offset1, FPV[k].memtypesize());
-        ++fi;
-       }
+				  // tag faux vertices of extra faces
+				  fi->SetF(0);
+ 				  if (qq!=fa.size-3) fi->SetF(2);
+				  
+				  for(k=0;k<pi.fdn;k++)	
+					  memcpy((char *)(&(*fi)) + pi.FaceData[k].offset1,
+						  		 (char *)(&fa) + FPV[k].offset1, FPV[k].memtypesize());
+          ++fi;
+        }
 
       }
 		}else if( !strcmp( pf.ElemName(i),"tristrips") )//////////////////// LETTURA TRISTRIP DI STANFORD
@@ -1168,3 +1179,4 @@ static bool LoadMask(const char * filename, int &mask, PlyInfo &pi)
 } // end namespace vcg
 
 #endif
+

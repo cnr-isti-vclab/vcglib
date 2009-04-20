@@ -499,6 +499,12 @@ namespace vcg
 								mesh.face[f+j].V(0) = &(mesh.vert[ vertIndices[0  ] ]);
 								mesh.face[f+j].V(1) = &(mesh.vert[ vertIndices[1+j] ]);
 								mesh.face[f+j].V(2) = &(mesh.vert[ vertIndices[2+j] ]);
+								if (tri::HasPerFaceFlags(mesh)) {
+  								// tag internal polygnal edges as "faux"
+								  if (j>0) mesh.face[f+j].SetF(0);
+								  if (j<vert_per_face-3) mesh.face[f+j].SetF(2);
+                  loadmask |= Mask::IOM_FACEFLAGS;
+                }
 							}
 
 							f+=trigs;
