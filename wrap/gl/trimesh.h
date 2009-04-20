@@ -147,7 +147,8 @@ public:
 		HNHasFaceNormal       = 0x0400,		// E' l'utente che si preoccupa di tenere aggiornata le normali per vertice
 		HNUseVArray           = 0x0800,
 		HNUseLazyEdgeStrip	  = 0x1000,		// Edge Strip are generated only when requested
-		HNUseVBO              = 0x2000		// Use Vertex Buffer Object
+		HNUseVBO              = 0x2000,		// Use Vertex Buffer Object
+		HNIsPolygonal         = 0x4000    // In wireframe modes, hide faux edges
 	};
 
 	enum Change {
@@ -414,6 +415,7 @@ void Draw()
 /*********************************************************************************************/
 /*********************************************************************************************/
 
+
 template <NormalMode nm, ColorMode cm, TextureMode tm>
 void DrawFill()
 {
@@ -599,7 +601,89 @@ void DrawFill()
 		glEnd();
 
 	}
+}
 
+// A draw wireframe that hides faux edges
+template <NormalMode nm, ColorMode cm>
+void DrawWirePolygonal()
+{
+
+	typename MESH_TYPE::FaceIterator fi;
+
+
+  typename FACE_POINTER_CONTAINER::iterator fp;
+
+	typename std::vector<typename MESH_TYPE::FaceType*>::iterator fip;
+	short curtexname=-1;
+
+	if(cm == CMPerMesh)
+		glColor(m->C());
+
+	{
+		if(partial)
+			fp = face_pointers.begin();
+		else
+			fi = m->face.begin();
+
+		glBegin(GL_LINES);
+
+		while( (partial)?(fp!=face_pointers.end()):(fi!=m->face.end()))
+		{
+ 			typename MESH_TYPE::FaceType & f = (partial)?(*(*fp)): *fi;
+
+			if(!f.IsD())
+			{
+
+				if(nm == NMPerFace)	glNormal(f.cN());
+				if(cm == CMPerFace)	glColor(f.C());
+				
+				if (!f.IsF(0)) {
+				  if(nm == NMPerVert)	glNormal(f.V(0)->cN());
+          if(nm == NMPerWedge)glNormal(f.WN(0));
+				  if(cm == CMPerVert)	glColor(f.V(0)->C());
+				  glVertex(f.V(0)->P());
+
+				  if(nm == NMPerVert)	glNormal(f.V(1)->cN());
+				  if(nm == NMPerWedge)glNormal(f.WN(1));
+				  if(cm == CMPerVert)	glColor(f.V(1)->C());
+				  glVertex(f.V(1)->P());
+        }
+
+				if (!f.IsF(1)) {
+				  if(nm == NMPerVert)	glNormal(f.V(1)->cN());
+          if(nm == NMPerWedge)glNormal(f.WN(1));
+				  if(cm == CMPerVert)	glColor(f.V(1)->C());
+				  glVertex(f.V(1)->P());
+
+				  if(nm == NMPerVert)	glNormal(f.V(2)->cN());
+				  if(nm == NMPerWedge)glNormal(f.WN(2));
+				  if(cm == CMPerVert)	glColor(f.V(2)->C());
+				  glVertex(f.V(2)->P());
+        }
+
+				if (!f.IsF(2)) {
+				  if(nm == NMPerVert)	glNormal(f.V(2)->cN());
+          if(nm == NMPerWedge)glNormal(f.WN(2));
+				  if(cm == CMPerVert)	glColor(f.V(2)->C());
+				  glVertex(f.V(2)->P());
+
+				  if(nm == NMPerVert)	glNormal(f.V(0)->cN());
+				  if(nm == NMPerWedge)glNormal(f.WN(0));
+				  if(cm == CMPerVert)	glColor(f.V(0)->C());
+				  glVertex(f.V(0)->P());
+        }
+
+			}
+
+			if(partial)
+				++fp;
+			else
+				++fi;
+		}
+
+		glEnd();
+
+	}
 }
 
 /// Basic Point drawing fucntion
@@ -795,13 +879,17 @@ template <NormalMode nm, ColorMode cm>
 void DrawWire()
 {
 	//if(!(curr_hints & (HNUseEdgeStrip | HNUseLazyEdgeStrip) ) )
-	//	{
+  if ( curr_hints & !HNIsPolygonal ) 
+    {
 			glPushAttrib(GL_POLYGON_BIT);
 			glPolygonMode(GL_FRONT_AND_BACK ,GL_LINE);
 			DrawFill<nm,cm,TMNone>();
 			glPopAttrib();
-	//	}
-	//else
+    }
+	else 
+	  {
+      DrawWirePolygonal<nm,cm>();
+    }
 	//	{
 //			if(!HasEdges()) ComputeEdges();
 
