@@ -218,7 +218,7 @@ void Dodecahedron(DodMeshType & in)
 				used[h]=true;
 				reindex[ h ] = m++;
 			}
-		};
+		}
 		(*vi).P()=CoordType( sx/5.0, sy/5.0, sz/5.0 ); 	vi++;
 		added[ i ] = m++;
 	}
@@ -231,13 +231,18 @@ void Dodecahedron(DodMeshType & in)
 
 	for (i=0; i<12; i++) {
 		for (j=0; j<5; j++){
-	    (*fi).V(0)=index[reindex[penta[i*9 + order[j      ] ] -1 ] ]; 
-	    (*fi).V(1)=index[reindex[penta[i*9 + order[(j+1)%5] ] -1 ] ];  
-		  (*fi).V(2)=index[added[i] ];
+		  (*fi).V(0)=index[added[i] ];
+	    (*fi).V(1)=index[reindex[penta[i*9 + order[j      ] ] -1 ] ]; 
+	    (*fi).V(2)=index[reindex[penta[i*9 + order[(j+1)%5] ] -1 ] ];  
+	    if (in.HasPerFaceFlags()) {
+  	    // tag faux edges
+        (*fi).SetF(0);
+        (*fi).SetF(2);
+      }
 		  fi++;
 		}
-	};
-};
+	}
+}
 
 template <class OctMeshType>
 void Octahedron(OctMeshType &in)
@@ -369,32 +374,47 @@ void Hexahedron(MeshType &in)
  (*fi).V(0)=ivp[2];  (*fi).V(1)=ivp[3]; (*fi).V(2)=ivp[6]; ++fi;
  (*fi).V(0)=ivp[7];  (*fi).V(1)=ivp[3]; (*fi).V(2)=ivp[5]; ++fi;
  (*fi).V(0)=ivp[1];  (*fi).V(1)=ivp[5]; (*fi).V(2)=ivp[3]; 
+ 
+  if (in.HasPerFaceFlags()) {
+    FaceIterator fi=in.face.begin();
+    for (int k=0; k<12; k++) {
+      (*fi).SetF(1); fi++;
+    }
+  }
+
 }
 
 template <class MeshType>
 void Square(MeshType &in)
 {
- typedef typename MeshType::ScalarType ScalarType;
- typedef typename MeshType::CoordType CoordType;
- typedef typename MeshType::VertexPointer  VertexPointer;
- typedef typename MeshType::VertexIterator VertexIterator;
- typedef typename MeshType::FaceIterator   FaceIterator;
+  typedef typename MeshType::ScalarType ScalarType;
+  typedef typename MeshType::CoordType CoordType;
+  typedef typename MeshType::VertexPointer  VertexPointer;
+  typedef typename MeshType::VertexIterator VertexIterator;
+  typedef typename MeshType::FaceIterator   FaceIterator;
 
- in.Clear();
- Allocator<MeshType>::AddVertices(in,4);
- Allocator<MeshType>::AddFaces(in,2);
+  in.Clear();
+  Allocator<MeshType>::AddVertices(in,4);
+  Allocator<MeshType>::AddFaces(in,2);
 
- VertexPointer ivp[4];
+  VertexPointer ivp[4];
 
- VertexIterator vi=in.vert.begin();
- ivp[0]=&*vi;(*vi).P()=CoordType ( 1, 0, 0); ++vi;
- ivp[1]=&*vi;(*vi).P()=CoordType ( 0, 1, 0); ++vi;
- ivp[2]=&*vi;(*vi).P()=CoordType (-1, 0, 0); ++vi;
- ivp[3]=&*vi;(*vi).P()=CoordType ( 0,-1, 0); 
+  VertexIterator vi=in.vert.begin();
+  ivp[0]=&*vi;(*vi).P()=CoordType ( 1, 0, 0); ++vi;
+  ivp[1]=&*vi;(*vi).P()=CoordType ( 0, 1, 0); ++vi;
+  ivp[2]=&*vi;(*vi).P()=CoordType (-1, 0, 0); ++vi;
+  ivp[3]=&*vi;(*vi).P()=CoordType ( 0,-1, 0); 
 
- FaceIterator fi=in.face.begin();
- (*fi).V(0)=ivp[0];  (*fi).V(1)=ivp[1]; (*fi).V(2)=ivp[2]; ++fi;
- (*fi).V(0)=ivp[0];  (*fi).V(1)=ivp[2]; (*fi).V(2)=ivp[3]; 
+  FaceIterator fi=in.face.begin();
+  (*fi).V(0)=ivp[0];  (*fi).V(1)=ivp[1]; (*fi).V(2)=ivp[2]; ++fi;
+  (*fi).V(0)=ivp[2];  (*fi).V(1)=ivp[3]; (*fi).V(2)=ivp[0]; 
+
+  if (in.HasPerFaceFlags()) {
+    FaceIterator fi=in.face.begin();
+    for (int k=0; k<2; k++) {
+      (*fi).SetF(2); fi++;
+    }
+  }
 }
 
 // this function build a sphere starting from a eventually not empty mesh.
@@ -577,6 +597,14 @@ void Box(MeshType &in, const typename MeshType::BoxType & bb )
  (*fi).V(0)=ivp[2];  (*fi).V(1)=ivp[3]; (*fi).V(2)=ivp[6]; ++fi;
  (*fi).V(0)=ivp[7];  (*fi).V(1)=ivp[3]; (*fi).V(2)=ivp[5]; ++fi;
  (*fi).V(0)=ivp[1];  (*fi).V(1)=ivp[5]; (*fi).V(2)=ivp[3]; 
+ 
+ if (in.HasPerFaceFlags()) {
+    FaceIterator fi=in.face.begin();
+    for (int k=0; k<12; k++) {
+      (*fi).SetF(1); fi++;
+    }
+  }
+
 }
 
 
@@ -680,14 +708,21 @@ void FaceGrid(MeshType & in, int w, int h)
   for(int i=0;i<h-1;++i)
     for(int j=0;j<w-1;++j)
     {
-      in.face[2*(i*(w-1)+j)+0].V(0) = &(in.vert[(i+0)*w+j+0]);
-      in.face[2*(i*(w-1)+j)+0].V(1) = &(in.vert[(i+1)*w+j+1]);
-      in.face[2*(i*(w-1)+j)+0].V(2) = &(in.vert[(i+0)*w+j+1]);
+      in.face[2*(i*(w-1)+j)+0].V(0) = &(in.vert[(i+1)*w+j+1]);
+      in.face[2*(i*(w-1)+j)+0].V(1) = &(in.vert[(i+0)*w+j+1]);
+      in.face[2*(i*(w-1)+j)+0].V(2) = &(in.vert[(i+0)*w+j+0]);
   
       in.face[2*(i*(w-1)+j)+1].V(0) = &(in.vert[(i+0)*w+j+0]);
       in.face[2*(i*(w-1)+j)+1].V(1) = &(in.vert[(i+1)*w+j+0]);
       in.face[2*(i*(w-1)+j)+1].V(2) = &(in.vert[(i+1)*w+j+1]);
     }
+    
+  if (in.HasPerFaceFlags()) {
+    for (int k=0; k<(h-1)*(w-1)*2; k++) {
+      in.face[k].SetF(2);
+    }
+  }
+
 }
 
 
@@ -696,7 +731,7 @@ void FaceGrid(MeshType & in, int w, int h)
 // For this purpos a grid of indexes is also passed. negative indexes means that there is no vertex.
 
 template <class MeshType>
-void FaceGrid(MeshType & in, std::vector<int> &grid, int w, int h)
+void FaceGrid(MeshType & in, const std::vector<int> &grid, int w, int h)
 {
 	assert(in.vn == (int)in.vert.size()); // require a compact vertex vector
 	assert(in.vn <= w*h); // the number of vertices should match the number of expected grid vertices
@@ -714,17 +749,22 @@ void FaceGrid(MeshType & in, std::vector<int> &grid, int w, int h)
   for(int i=0;i<h-1;++i)
     for(int j=0;j<w-1;++j)
     {
-			int V0i= grid[(i+0)*w+j+0];
+      int V0i= grid[(i+0)*w+j+0];
 			int V1i= grid[(i+0)*w+j+1];
 			int V2i= grid[(i+1)*w+j+0];
 			int V3i= grid[(i+1)*w+j+1];
 			
+			int ndone=0;
+			bool quad = (V0i>=0 && V1i>=0 && V2i>=0 && V3i>=0 ) && in.HasPerFaceFlags();
+			
 			if(V0i>=0 && V2i>=0 && V3i>=0 )
 			{
 				typename MeshType::FaceIterator f= Allocator<MeshType>::AddFaces(in,1);
-				f->V(0)=&(in.vert[V0i]);
-				f->V(1)=&(in.vert[V3i]);
-				f->V(2)=&(in.vert[V2i]);
+				f->V(0)=&(in.vert[V3i]);
+				f->V(1)=&(in.vert[V2i]);
+				f->V(2)=&(in.vert[V0i]);
+				if (quad) f->SetF(2);
+				ndone++;
 			}
 			if(V0i>=0 && V1i>=0 && V3i>=0 )
 			{
@@ -732,60 +772,92 @@ void FaceGrid(MeshType & in, std::vector<int> &grid, int w, int h)
 				f->V(0)=&(in.vert[V0i]);
 				f->V(1)=&(in.vert[V1i]);
 				f->V(2)=&(in.vert[V3i]);
+				if (quad) f->SetF(2);
+				ndone++;
 			}
+			
+			if (ndone==0) { // try diag the other way
+  		 if(V2i>=0 && V0i>=0 && V1i>=0 )
+	  		{
+				typename MeshType::FaceIterator f= Allocator<MeshType>::AddFaces(in,1);
+				f->V(0)=&(in.vert[V2i]);
+				f->V(1)=&(in.vert[V0i]);
+				f->V(2)=&(in.vert[V1i]);
+				ndone++;
+			 }
+			 if(V1i>=0 && V3i>=0 && V2i>=0 )
+			 {
+				typename MeshType::FaceIterator f= Allocator<MeshType>::AddFaces(in,1);
+				f->V(0)=&(in.vert[V1i]);
+				f->V(1)=&(in.vert[V3i]);
+				f->V(2)=&(in.vert[V2i]);
+				ndone++;
+			 }
+      }
+      
+      
     }
 }
 
 template <class MeshType>
-void Cylinder(const int &slices, const int &stacks, MeshType & m){
-	float rad_step = M_PI / (float)stacks;
-	float sli_step = 1.0 / (float)slices;
-  float angle = 0,heigth = 0;
+void Cylinder(int slices, int stacks, MeshType & m){
 
-	float x,y,h;
-	typename MeshType::VertexIterator vi = vcg::tri::Allocator<MeshType>::AddVertices(m,slices*stacks);
-	for ( int j = 0; j < slices; ++j)
-		for ( int i = 0; i < stacks; ++i){
+	typename MeshType::VertexIterator vi = vcg::tri::Allocator<MeshType>::AddVertices(m,slices*(stacks+1));
+	for ( int i = 0; i < stacks+1; ++i)
+  	for ( int j = 0; j < slices; ++j)
+    {
+      	float x,y,h;
+				x = cos(	2.0 * M_PI / slices * j);
+				y = sin(	2.0 * M_PI / slices * j);
+				h = 2 * i / (float)(stacks) - 1;
 
-				x = cos(	2.0 * M_PI / stacks * i);
-				y = sin(	2.0 * M_PI / stacks * i);
-				h = j / (float)slices;
-
-				(*vi).P() = MeshType::CoordType(x,y,h);
+				(*vi).P() = typename MeshType::CoordType(x,h,y);
 				++vi;
-			}
+		}
 
 	typename MeshType::FaceIterator fi ;
-	for ( int j = 0; j < slices-1; ++j)
-		for ( int i = 0; i < stacks; ++i){
-
+	for ( int j = 0; j < stacks; ++j)
+		for ( int i = 0; i < slices; ++i)
+    {
+       int a,b,c,d;
+       a =  (j+0)*slices + i;
+       b =  (j+1)*slices + i;
+       c =  (j+1)*slices + (i+1)%slices;
+       d =  (j+0)*slices + (i+1)%slices;
 			 if(((i+j)%2) == 0){
 				fi = vcg::tri::Allocator<MeshType>::AddFaces(m,1);
-				(*fi).V(0) = &m.vert[j    *stacks+ i];
-				(*fi).V(1) = &m.vert[j    *stacks+(i+1)%stacks];
-				(*fi).V(2) = &m.vert[(j+1)*stacks+(i+1)%stacks];
+				(*fi).V(0) = &m.vert[ a ];
+				(*fi).V(1) = &m.vert[ b ];
+				(*fi).V(2) = &m.vert[ c ];
 
 			 	fi = vcg::tri::Allocator<MeshType>::AddFaces(m,1);
-			 	(*fi).V(0) = &m.vert[j    *stacks+i];
-			 	(*fi).V(1) = &m.vert[(j+1)*stacks+(i+1)%stacks];
-			 	(*fi).V(2) = &m.vert[(j+1)*stacks+i];
+			 	(*fi).V(0) = &m.vert[ c ];
+			 	(*fi).V(1) = &m.vert[ d ];
+			 	(*fi).V(2) = &m.vert[ a ];
 			 }
 			 else{
 				fi = vcg::tri::Allocator<MeshType>::AddFaces(m,1);
-				(*fi).V(0) = &m.vert[(j+1)    *stacks+i];
-				(*fi).V(1) = &m.vert[ j      *stacks+i];
-				(*fi).V(2) = &m.vert[ j      *stacks+(i+1)%stacks];
+				(*fi).V(0) = &m.vert[ b ];
+				(*fi).V(1) = &m.vert[ c ];
+				(*fi).V(2) = &m.vert[ d ];
 
 			 	fi = vcg::tri::Allocator<MeshType>::AddFaces(m,1);
-				(*fi).V(0) = &m.vert[(j+1)    *stacks+i];
-				(*fi).V(1) = &m.vert[ j       *stacks+(i+1)%stacks];
-				(*fi).V(2) = &m.vert[ (j+1)   *stacks+(i+1)%stacks];
+				(*fi).V(0) = &m.vert[ d ];
+				(*fi).V(1) = &m.vert[ a ];
+				(*fi).V(2) = &m.vert[ b ];
 
 			 }
+    }
+    
+   if (m.HasPerFaceFlags()) {
+     for (typename MeshType::FaceIterator fi=m.face.begin(); fi!=m.face.end(); fi++) {
+       (*fi).SetF(2);
+     }
+   }
+
 
 }
 
-	}
 //@}
 
 } // End Namespace TriMesh
