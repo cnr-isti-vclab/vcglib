@@ -185,8 +185,7 @@ static void VertexBorderFlag( UpdateMeshType &m, Color4b BorderColor=Color4b::Bl
 }
 
 /// This function colores the face of a mesh randomly.
-/// The feature bit is used to color polygonal faces uniformly
-
+/// The faux bit is used to color polygonal faces uniformly
 static void MultiFaceRandom( UpdateMeshType &m)
 {
 	FaceIterator fi;
