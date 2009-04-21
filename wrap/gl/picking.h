@@ -75,6 +75,7 @@ int Pick(	const int & x, const int &y,
 
 		GLint viewport[4];
 		glGetIntegerv(GL_VIEWPORT,viewport);
+		glPushAttrib(GL_TRANSFORM_BIT);
 		glMatrixMode(GL_PROJECTION);
 		glGetDoublev(GL_PROJECTION_MATRIX ,mp);
 		glPushMatrix();
@@ -114,7 +115,7 @@ int Pick(	const int & x, const int &y,
 			std::advance(ei ,H[ii].second);
 			result[ii]=&*ei;
 		}
-
+		glPopAttrib();
 		delete [] selectBuf;
 		return int(result.size());
 	}

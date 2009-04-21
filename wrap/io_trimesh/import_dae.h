@@ -271,6 +271,7 @@ class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std
 				++fp;
 			}
 			assert(fp==m.face.end());
+			return E_NOERROR;
 		}
 		
 		static DAEError	OldLoadPolygonalListMesh(QDomNodeList& polylist,ColladaMesh& m,const size_t offset,InfoDAE* info)
