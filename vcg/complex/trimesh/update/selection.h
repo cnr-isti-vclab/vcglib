@@ -249,7 +249,7 @@ static size_t FaceConnectedFF(MeshType &m)
   size_t selCnt=0;
   FaceIterator fi;
 	for(fi = m.face.begin(); fi != m.face.end(); ++fi)
-		if( (*fi).IsS() && !(*fi).IsV() )	
+		if( !(*fi).IsD() && (*fi).IsS() && !(*fi).IsV() )	
 				visitStack.push_back(&*fi);
 				
 	while(!visitStack.empty())
