@@ -792,7 +792,7 @@ void DrawFlatWire()
 	glColorMaterial(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE);
 	//glColorMaterial(GL_FRONT,GL_DIFFUSE);
   glColor3f(.3f,.3f,.3f);
-	DrawWire<NMPerVert,CMNone>();
+	DrawWire<nm,CMNone>();
 	glPopAttrib();
 	//glDepthRange(0,1.0f);
 }
