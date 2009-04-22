@@ -165,7 +165,7 @@ public:
 		}
 		
 		delete [] buffer;
-		return result.size();
+		return resultZ.size();
 	}
 
 };
