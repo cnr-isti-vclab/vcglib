@@ -21,6 +21,9 @@
  *                                                                           *
  ****************************************************************************/
 
+#ifndef __VCG_DECIMATION_TRIFLIP
+#define __VCG_DECIMATION_TRIFLIP
+
 #include <vcg/complex/local_optimization.h>
 #include <vcg/simplex/face/topology.h>
 #include <vcg/space/triangle3.h>
@@ -602,3 +605,5 @@ public:
 
 } // end of namespace tri
 } // end of namespace vcg
+
+#endif
