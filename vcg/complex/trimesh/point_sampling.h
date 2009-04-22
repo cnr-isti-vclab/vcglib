@@ -1036,8 +1036,74 @@ static void Texture(MetroMesh & m, VertexSampler &ps, int textureWidth, int text
 				}
 }
 
+typedef GridStaticPtr<FaceType, ScalarType > TriMeshGrid;
 
+class RRParam
+{
+public:
+float offset;
+float minDiag;
+tri::FaceTmark<MetroMesh> markerFunctor;
+TriMeshGrid gM;
+};
 
+static void RegularRecursiveOffset(MetroMesh & m, std::vector<Point3f> &pvec, ScalarType offset, float minDiag)
+{
+	Box3<ScalarType> bb=m.bbox;
+	bb.Offset(offset*2.0);
+  
+	RRParam rrp;
+
+	rrp.markerFunctor.SetMesh(&m);
+
+	rrp.gM.Set(m.face.begin(),m.face.end(),bb);
+	
+
+	rrp.offset=offset;
+	rrp.minDiag=minDiag;
+	SubdivideAndSample(m, pvec, bb, rrp, bb.Diag());
+}
+
+static void SubdivideAndSample(MetroMesh & m, std::vector<Point3f> &pvec, const Box3<ScalarType> bb, RRParam &rrp, float curDiag)
+{
+	Point3f startPt = bb.Center();
+	ScalarType bound; 
+	
+	ScalarType dist; 
+	// Compute mesh point nearest to bb center	
+	FaceType   *nearestF=0;
+	float dist_upper_bound = curDiag+rrp.offset;
+	Point3f closestPt;
+	vcg::face::PointDistanceBaseFunctor<ScalarType> PDistFunct;
+	dist=dist_upper_bound;
+	nearestF =  rrp.gM.GetClosest(PDistFunct,rrp.markerFunctor,startPt,dist_upper_bound,dist,closestPt);
+  curDiag /=2;
+	if(dist < dist_upper_bound) 
+		{
+			if(curDiag/3 < rrp.minDiag) //store points only for the last level of recursion (?)
+				{
+					if(rrp.offset==0) 
+							pvec.push_back(closestPt);
+					else 
+						{
+							if(dist>rrp.offset) // points below the offset threshold cannot be displaced at the right offset distance, we can only make points nearer.
+							{
+								Point3f delta = startPt-closestPt;
+								pvec.push_back(closestPt+delta*(rrp.offset/dist));
+							}
+						}
+				}
+			if(curDiag < rrp.minDiag) return;
+			Point3f hs = (bb.max-bb.min)/2;
+			for(int i=0;i<2;i++)
+				for(int j=0;j<2;j++)
+					for(int k=0;k<2;k++)
+						SubdivideAndSample(m,pvec,
+																			Box3f(Point3f( bb.min[0]+i*hs[0], bb.min[1]+j*hs[1], bb.min[2]+k*hs[2]),
+																						Point3f(startPt[0]+i*hs[0],startPt[1]+j*hs[1],startPt[2]+k*hs[2])),rrp,curDiag);
+																			
+		}
+} 
 }; // end class
 
 
