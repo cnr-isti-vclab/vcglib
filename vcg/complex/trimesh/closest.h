@@ -173,7 +173,7 @@ namespace vcg {
 			void UnMarkAll(){}
 			bool IsMarked(VertexType*) { return false; }
 			void Mark(VertexType*){}
-			void SetMesh(void *m=0) {}
+			void SetMesh(void * /*m=0*/) {}
 		};
 
 		//**CLOSEST FUNCTION DEFINITION**//
