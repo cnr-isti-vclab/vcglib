@@ -389,7 +389,65 @@ private:
 				return deleted;
       }
 
+      class SortedTriple
+			{ 
+			public:
+			 SortedTriple() {}
+				 SortedTriple(unsigned int v0, unsigned int v1, unsigned int v2,FacePointer _fp)
+				{
+					v[0]=v0;v[1]=v1;v[2]=v2;
+					fp=_fp;
+					std::sort(v,v+3);
+				}
+				bool operator < (const SortedTriple &p) const 
+				{
+					return (v[2]!=p.v[2])?(v[2]<p.v[2]):
+							(v[1]!=p.v[1])?(v[1]<p.v[1]):
+						       (v[0]<p.v[0]);				}
 
+				bool operator == (const SortedTriple &s) const 
+				{
+				 if( (v[0]==s.v[0]) && (v[1]==s.v[1]) && (v[2]==s.v[2]) ) return true;
+				 return false;
+				}
+
+				unsigned int v[3];
+				FacePointer fp;
+			};
+			 
+			
+			/** This function removes all duplicate faces of the mesh by looking only at their vertex reference. 
+			So it should be called after unification of vertices.
+			Note that it does not update any topology relation that could be affected by this like the VT or TT relation.
+			the reason this function is usually performed BEFORE building any topology information.
+			*/
+			static int RemoveDuplicateFace( MeshType & m)    // V1.0
+			{
+				FaceIterator fi;
+				std::vector<SortedTriple> fvec;
+				for(fi=m.face.begin();fi!=m.face.end();++fi)
+					if(!(*fi).IsD())
+						{
+						 fvec.push_back(SortedTriple(	tri::Index(m,(*fi).V(0)),  
+																					tri::Index(m,(*fi).V(1)),  
+																					tri::Index(m,(*fi).V(2)),  
+																																										&*fi));
+						}
+				assert (m.fn == fvec.size());
+				//for(int i=0;i<fvec.size();++i) qDebug("fvec[%i] = (%i %i %i)(%i)",i,fvec[i].v[0],fvec[i].v[1],fvec[i].v[2],tri::Index(m,fvec[i].fp));
+				std::sort(fvec.begin(),fvec.end());
+				int total=0;
+				for(int i=0;i<fvec.size()-1;++i) 
+				{
+					if(fvec[i]==fvec[i+1])
+					{ 
+						total++;
+						tri::Allocator<MeshType>::DeleteFace(m, *(fvec[i].fp) );
+						//qDebug("deleting face %i (pos in fvec %i)",tri::Index(m,fvec[i].fp) ,i);
+					}
+				}
+				return total;
+			}
 			/** This function removes that are not referenced by any face. The function updates the vn counter.
 			@param m The mesh
 			@return The number of removed vertices
@@ -1351,7 +1409,6 @@ static int MergeCloseVertex(MeshType &m, const ScalarType radius)
 			typedef vcg::vertex::PointDistanceFunctor<ScalarType> VDistFunct;
 			std::vector<VertexType*> closests;
 			int mergedCnt=0;
-			VDistFunct distFunctor;
 			Point3f closestPt;
 			sht.Set(m.vert.begin(), m.vert.end());
 			UpdateFlags<MeshType>::VertexClearV(m);
