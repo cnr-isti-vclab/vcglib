@@ -879,6 +879,7 @@ static bool LoadMask(const char * filename, int &mask)
 	
 		materials.clear();
 		Material currentMaterial;
+		currentMaterial.index = -1;
 		
 		bool first = true;
 		while (!stream.eof())
@@ -897,6 +898,7 @@ static bool LoadMask(const char * filename, int &mask)
 					{
 						materials.push_back(currentMaterial);
 						currentMaterial = Material();
+						currentMaterial.index = -1;
 					}
 					else
 						first = false;
