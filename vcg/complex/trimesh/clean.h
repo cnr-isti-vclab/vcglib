@@ -248,6 +248,7 @@ class ConnectedIterator
 			typedef typename MeshType::FaceType       FaceType;
 			typedef typename MeshType::FacePointer    FacePointer;
 			typedef typename MeshType::FaceIterator   FaceIterator;
+			typedef typename MeshType::ConstFaceIterator   ConstFaceIterator;
 			typedef typename MeshType::FaceContainer  FaceContainer;
 
       typedef typename vcg::Box3<ScalarType>  Box3Type;
@@ -310,6 +311,7 @@ private:
 			typedef typename MeshType::FaceType       FaceType;
 			typedef typename MeshType::FacePointer    FacePointer;
 			typedef typename MeshType::FaceIterator   FaceIterator;
+			typedef typename MeshType::ConstFaceIterator   ConstFaceIterator;
 			typedef typename MeshType::FaceContainer  FaceContainer;
       typedef typename vcg::Box3<ScalarType>  Box3Type;
 
@@ -713,6 +715,19 @@ private:
         return flagManifold;
       }
 			
+			static bool IsPolygonal(const MeshType &m) 
+			{
+        if (!m.HasPerFaceFlags()) return false;
+				for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) {
+          if (
+            !fi->IsD() 
+            && 
+            (fi->Flags() & (MeshType::FaceType::FAUX0|MeshType::FaceType::FAUX1|MeshType::FaceType::FAUX2)  ) 
+          ) return true;
+        }
+        return false;
+      }
+      
 			static int CountNonManifoldVertexFF( MeshType & m, bool select = true ) 
 			{
 				assert(tri::HasFFAdjacency(m));
