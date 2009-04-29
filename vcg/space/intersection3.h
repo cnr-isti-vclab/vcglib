@@ -349,13 +349,12 @@ namespace vcg {
 	
    /// intersection between segment and plane
   template<class T>
-    inline bool IntersectionSegmentPlane( const Plane3<T> & pl, const Segment3<T> & s, Point3<T> & po){
-	vcg::Line3<T> l;
-	l.Set(s.P0(),s.P1()-s.P0());
-	l.Normalize();
-	if (IntersectionLinePlane(pl,l,po))
-		return((po-s.P0()).Norm()<=(s.P0()-s.P1()).Norm());
-    return false;
+    inline bool IntersectionSegmentPlane( const Plane3<T> & pl, const Segment3<T> & s, Point3<T> & p0){
+		T p1_proj = s.P1()*pl.Direction()-pl.Offset();
+		T p0_proj = s.P0()*pl.Direction()-pl.Offset();
+		if ( (p1_proj>0)-(p0_proj<0)) return false;
+		p0 =  s.P0() + (s.P1()-s.P0()) * fabs(p0_proj/(p1_proj-p0_proj));
+		return true;
   }
 
   /// intersection between segment and plane
@@ -867,7 +866,7 @@ public:
 		return (bret);
 	}
 };
-
+	
 
 /*@}*/
 
