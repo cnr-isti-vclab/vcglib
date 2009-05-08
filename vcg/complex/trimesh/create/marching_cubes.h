@@ -707,7 +707,9 @@ namespace vcg
 						default: { assert(false); /* Invalid edge identifier */ }
 						} // end of switch
 
-						assert((vp - &_mesh->vert[0])>=0 && vertices_idx[vert]<_mesh->vert.size());
+						// Note that vp can be zero if we are in case 12 and that vertices_idx is surely >0 so the following assert has to be corrected as below.
+						// assert((vp - &_mesh->vert[0])>=0 && vertices_idx[vert]<_mesh->vert.size());
+						assert(vertices_idx[vert]<_mesh->vert.size());
 					} // end for (int vert=0 ...)
 
 					_mesh->face[face_idx].V(0) = &_mesh->vert[vertices_idx[0]];
