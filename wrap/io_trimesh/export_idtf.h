@@ -7,6 +7,8 @@
 #include <ostream>
 #include <vcg/complex/trimesh/update/bounding.h>
 #include <wrap/io_trimesh/io_mask.h>
+#include <QString>
+#include <QFile>
 
 
 class TextUtility
@@ -133,8 +135,15 @@ public:
 		tga.ystart = (short) im.offset().y();
 		tga.height = (short) im.height();
 		tga.width =  (short) im.width();
+		
 
-		std::ofstream file(qPrintable(outfile),std::ofstream::binary);
+		//QString moutfile = QString("C:/Users/Guido/AppData/Local/Temp/duckCM.tga");
+
+		QFile file(qPrintable(outfile));
+		file.setPermissions(QFile::WriteOther);
+		file.open(QIODevice::WriteOnly);
+		QString err = file.errorString();
+		//bool val = file.failbit;
 		unsigned char* tmpchan;
 		int totbyte;
 		if (im.hasAlphaChannel())
@@ -178,8 +187,8 @@ public:
 			}
 		}
 
-		file.write((char *) &tga,sizeof(tga));
-		file.write(reinterpret_cast<const char*>(tmpchan),totbyte);
+		file.write((char *) &tga,qint64(sizeof(tga)));
+		file.write(reinterpret_cast<const char*>(tmpchan),qint64(totbyte));
 		file.close();
 	}
 	
@@ -190,6 +199,7 @@ public:
 		{
 			QString qtmp(m.textures[ii].c_str());
 			QString ext = QtUtilityFunctions::fileExtension(qtmp);
+			QString filename = QtUtilityFunctions::fileNameFromPath(qtmp);
 			if (ext.toLower() != "tga")
 			{
 				QImage img(qtmp);
@@ -198,10 +208,10 @@ public:
 					stmp = file_path + QString("/");
 				else
 					stmp = file_path;
-				qtmp = stmp + qtmp.remove(ext) + "tga";
-				m.textures[ii] = qtmp.toStdString();
-				TGA_Exporter::convert(qtmp,img);
-				conv_file.push_back(qtmp);
+				filename = stmp + filename.remove(ext) + "tga";
+				m.textures[ii] = filename.toStdString();
+				TGA_Exporter::convert(filename,img);
+				conv_file.push_back(filename);
 			}
 		}
 	}
