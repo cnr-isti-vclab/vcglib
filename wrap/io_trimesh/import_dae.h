@@ -554,7 +554,12 @@ class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std
 				QDomNodeList nlst = txlst.at(0).childNodes().at(img).toElement().elementsByTagName("init_from");
 				if (nlst.size() > 0)
 				{
-					texturefile.push_back(nlst.at(0).firstChild().nodeValue());
+                                    QString texname = nlst.at(0).firstChild().nodeValue();
+
+                                    if (!texname.isNull() && texname.at(0) != '/')
+                                        texname.insert(0,"./");
+
+                                    texturefile.push_back(texname);
 				}
 			}
 		}
