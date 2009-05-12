@@ -510,6 +510,8 @@ namespace io {
 			QDomNode imageNode = findNodeBySpecificAttributeValue(libraryImageNodeList.at(0),QString("image"),QString("id"),img_id);
 			QDomNodeList initfromNode = imageNode.toElement().elementsByTagName("init_from");
 			textureFileName= initfromNode.at(0).firstChild().nodeValue();
+			if (!textureFileName.isNull() && textureFileName.at(0) != '/')
+				textureFileName.insert(0,"./");
 			qDebug("====== the image '%s' has a %i init_from nodes text '%s'",qPrintable(img_id),initfromNode.size(),qPrintable(textureFileName));
 			
 			return imageNode;			
