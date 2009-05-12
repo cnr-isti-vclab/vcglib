@@ -538,7 +538,7 @@ class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std
 					err = LoadTriangularMesh(tripatch,m,offset,info,materialBinding);
 					//err = LoadPolygonalMesh(polypatch,m,offset,info);
 			//					err = OldLoadPolygonalListMesh(polylist,m,offset,info);
-					err = LoadPolygonalListMesh(polylist,m,offset,info,materialBinding);
+                                        err = LoadPolygonalListMesh(polylist,m,offset,info,materialBinding);
 					if (err != E_NOERROR) 
 						return err;
 				}
@@ -554,12 +554,7 @@ class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std
 				QDomNodeList nlst = txlst.at(0).childNodes().at(img).toElement().elementsByTagName("init_from");
 				if (nlst.size() > 0)
 				{
-                                    QString texname = nlst.at(0).firstChild().nodeValue();
-
-                                    if (!texname.isNull() && texname.at(0) != '/')
-                                        texname.insert(0,"./");
-
-                                    texturefile.push_back(texname);
+                                    texturefile.push_back( nlst.at(0).firstChild().nodeValue());
 				}
 			}
 		}
