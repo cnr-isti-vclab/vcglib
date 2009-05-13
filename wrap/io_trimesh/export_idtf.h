@@ -440,8 +440,8 @@ typedef typename SaveMeshType::CoordType CoordType;
 			for(FaceIterator fit = m.face.begin();fit != m.face.end();++fit)  
 			{
 				idtf.write(4,TextUtility::nmbToStr(nn) + " " +
-					TextUtility::nmbToStr(nn + 2) + " " + 
-					TextUtility::nmbToStr(nn + 1));
+					TextUtility::nmbToStr(nn + 1) + " " + 
+					TextUtility::nmbToStr(nn + 2));
 				nn += 3;
 			}
 			idtf.write(3,"}");
