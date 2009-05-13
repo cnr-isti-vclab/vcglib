@@ -506,9 +506,12 @@ typedef typename SaveMeshType::CoordType CoordType;
 			for(FaceIterator vit = m.face.begin();vit != m.face.end();++vit)  
 			{
 				for (unsigned int ii =0; ii <3;++ii)
-					idtf.write(4,TextUtility::nmbToStr((int) vit->V(ii)->C().X()) + " " +
-						TextUtility::nmbToStr((int) vit->V(ii)->C().Y()) + " " + 
-						TextUtility::nmbToStr((int) vit->V(ii)->C().Z()) + " 0");
+				{
+					vcg::Color4b cc = vit->V(ii)->C();
+					idtf.write(4,TextUtility::nmbToStr(float(cc.X()) / 255.0f) + " " +
+						TextUtility::nmbToStr(float(cc.Y()) / 255.0f) + " " + 
+						TextUtility::nmbToStr(float(cc.Z()) / 255.0f) + " " + TextUtility::nmbToStr(float(cc.W()) / 255.0f));
+				}
 			}
 			idtf.write(3,"}");
 		}
@@ -524,29 +527,58 @@ typedef typename SaveMeshType::CoordType CoordType;
 			idtf.write(1,"RESOURCE 0 {");
 			idtf.write(2,"RESOURCE_NAME \"VcgMesh010\"");
 			idtf.write(2,"ATTRIBUTE_USE_VERTEX_COLOR \"TRUE\"");
+			idtf.write(2,"SHADER_MATERIAL_NAME \"Mat01\"");
 			idtf.write(2,"SHADER_ACTIVE_TEXTURE_COUNT 0");
+			idtf.write(1,"}");
+			idtf.write(0,"}");
+			
+			idtf.write(0,"RESOURCE_LIST \"MATERIAL\" {");
+			idtf.write(1,"RESOURCE_COUNT 1");
+			idtf.write(1,"RESOURCE 0 {");
+			idtf.write(2,"RESOURCE_NAME \"Mat01\"");
+			idtf.write(2,"MATERIAL_AMBIENT 0.2 0.2 0.2");
+			idtf.write(2,"MATERIAL_DIFFUSE 0.8 0.8 0.8");
+			idtf.write(2,"MATERIAL_SPECULAR 0.0 0.0 0.0");
+			idtf.write(2,"MATERIAL_EMISSIVE 0.0 0.0 0.0");
+			idtf.write(2,"MATERIAL_REFLECTIVITY 0.0");
+			idtf.write(2,"MATERIAL_OPACITY 1.000000");
 			idtf.write(1,"}");
 			idtf.write(0,"}");
 		}
 
-		if (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD)
+		if ((mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD) | (mask & vcg::tri::io::Mask::IOM_VERTCOLOR))
 		{
 			idtf.write(0,"");
 			idtf.write(0,"MODIFIER \"SHADING\" {");
 			idtf.write(1,"MODIFIER_NAME \"VcgMesh01\"");
 			idtf.write(1,"PARAMETERS {");
-			idtf.write(2,"SHADER_LIST_COUNT " + TextUtility::nmbToStr(m.textures.size()));
-			idtf.write(2,"SHADING_GROUP {");
-			for(unsigned int ii = 0; ii < m.textures.size();++ii)
+			if (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD)
 			{
-				idtf.write(3,"SHADER_LIST " +  TextUtility::nmbToStr(ii) + "{");
+				idtf.write(2,"SHADER_LIST_COUNT " + TextUtility::nmbToStr(m.textures.size()));
+				idtf.write(2,"SHADING_GROUP {");
+				for(unsigned int ii = 0; ii < m.textures.size();++ii)
+				{
+					idtf.write(3,"SHADER_LIST " +  TextUtility::nmbToStr(ii) + "{");
+					idtf.write(4,"SHADER_COUNT 1");
+					idtf.write(4,"SHADER_NAME_LIST {");
+					idtf.write(5,"SHADER 0 NAME: \"ModelShader" + TextUtility::nmbToStr(ii) + "\"");
+					idtf.write(4,"}");
+					idtf.write(3,"}");
+				}
+				idtf.write(2,"}");
+			}
+			else
+			{
+				idtf.write(2,"SHADER_LIST_COUNT 1");
+				idtf.write(2,"SHADER_LIST_LIST {");
+				idtf.write(3,"SHADER_LIST 0 {");
 				idtf.write(4,"SHADER_COUNT 1");
 				idtf.write(4,"SHADER_NAME_LIST {");
-				idtf.write(5,"SHADER 0 NAME: \"ModelShader" + TextUtility::nmbToStr(ii) + "\"");
+				idtf.write(5,"SHADER 0 NAME: \"VcgMesh010\"");
 				idtf.write(4,"}");
 				idtf.write(3,"}");
+				idtf.write(2,"}");
 			}
-			idtf.write(2,"}");
 			idtf.write(1,"}");
 			idtf.write(0,"}");
 		}
