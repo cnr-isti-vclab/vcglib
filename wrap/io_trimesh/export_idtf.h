@@ -5,6 +5,7 @@
 #include <sstream>
 #include <fstream>
 #include <ostream>
+#include <vcg/space/color4.h>
 #include <vcg/complex/trimesh/update/bounding.h>
 #include <wrap/io_trimesh/io_mask.h>
 #include <QString>
