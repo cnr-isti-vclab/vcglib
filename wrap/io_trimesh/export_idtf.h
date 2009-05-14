@@ -5,6 +5,7 @@
 #include <sstream>
 #include <fstream>
 #include <ostream>
+#include <string>
 #include <vcg/space/color4.h>
 #include <vcg/complex/trimesh/update/bounding.h>
 #include <wrap/io_trimesh/io_mask.h>
@@ -367,7 +368,7 @@ typedef typename SaveMeshType::CoordType CoordType;
 		idtf.write(3,"FACE_COUNT " + TextUtility::nmbToStr(m.face.size()));
 		idtf.write(3,"MODEL_POSITION_COUNT " + TextUtility::nmbToStr(m.vert.size()));
 		idtf.write(3,"MODEL_NORMAL_COUNT " + TextUtility::nmbToStr(m.face.size() * 3));
-		if (mask & vcg::tri::io::Mask::IOM_VERTCOLOR)
+		if ((mask & vcg::tri::io::Mask::IOM_VERTCOLOR) | (mask & vcg::tri::io::Mask::IOM_FACECOLOR))
 			idtf.write(3,"MODEL_DIFFUSE_COLOR_COUNT " + TextUtility::nmbToStr(m.face.size() * 3));
 		else 
 			idtf.write(3,"MODEL_DIFFUSE_COLOR_COUNT 0");
@@ -434,7 +435,7 @@ typedef typename SaveMeshType::CoordType CoordType;
 		}
 		idtf.write(3,"}");
 
-		if (mask & vcg::tri::io::Mask::IOM_VERTCOLOR) 
+		if ((mask & vcg::tri::io::Mask::IOM_VERTCOLOR) | (mask & vcg::tri::io::Mask::IOM_FACECOLOR))
 		{
 			idtf.write(3,"MESH_FACE_DIFFUSE_COLOR_LIST {");
 			nn = 0;
@@ -499,16 +500,21 @@ typedef typename SaveMeshType::CoordType CoordType;
 			idtf.write(3,"}");
 		}
 
-		if (mask & vcg::tri::io::Mask::IOM_VERTCOLOR)
+		if ((mask & vcg::tri::io::Mask::IOM_VERTCOLOR) | (mask & vcg::tri::io::Mask::IOM_FACECOLOR))
 		{
 			idtf.write(3,"MODEL_DIFFUSE_COLOR_LIST {");
 			//ScalarType diag = m.bbox.Diag();
 			//CoordType center = m.bbox.Center();
 			for(FaceIterator vit = m.face.begin();vit != m.face.end();++vit)  
 			{
+				
 				for (unsigned int ii =0; ii <3;++ii)
 				{
-					vcg::Color4b cc = vit->V(ii)->C();
+					vcg::Color4b cc;
+					if (mask & vcg::tri::io::Mask::IOM_VERTCOLOR)
+						cc = vit->V(ii)->C();
+					else
+						cc = vit->C();
 					idtf.write(4,TextUtility::nmbToStr(float(cc.X()) / 255.0f) + " " +
 						TextUtility::nmbToStr(float(cc.Y()) / 255.0f) + " " + 
 						TextUtility::nmbToStr(float(cc.Z()) / 255.0f) + " " + TextUtility::nmbToStr(float(cc.W()) / 255.0f));
@@ -521,13 +527,23 @@ typedef typename SaveMeshType::CoordType CoordType;
 		idtf.write(1,"}");
 		idtf.write(0,"}");
 
-		if (mask & vcg::tri::io::Mask::IOM_VERTCOLOR)
+		if ((mask & vcg::tri::io::Mask::IOM_VERTCOLOR) | (mask & vcg::tri::io::Mask::IOM_FACECOLOR))
 		{
 			idtf.write(0,"RESOURCE_LIST \"SHADER\" {");
 			idtf.write(1,"RESOURCE_COUNT 1");
 			idtf.write(1,"RESOURCE 0 {");
 			idtf.write(2,"RESOURCE_NAME \"VcgMesh010\"");
-			idtf.write(2,"ATTRIBUTE_USE_VERTEX_COLOR \"TRUE\"");
+			
+
+			//WARNING! IF VERTEX COLOR AND FACE COLOR ARE BOTH CHECKED THE FILTER SAVE ONLY VERTEX COLOR! THIS IS A DESIGN CHOICE A NOT A BUG!
+
+			std::string vertcol;
+			if (mask & vcg::tri::io::Mask::IOM_VERTCOLOR)
+				vertcol = "TRUE";
+			else
+				vertcol = "FALSE";
+			
+			idtf.write(2,"ATTRIBUTE_USE_VERTEX_COLOR \"" + vertcol + "\"");
 			idtf.write(2,"SHADER_MATERIAL_NAME \"Mat01\"");
 			idtf.write(2,"SHADER_ACTIVE_TEXTURE_COUNT 0");
 			idtf.write(1,"}");
@@ -547,7 +563,7 @@ typedef typename SaveMeshType::CoordType CoordType;
 			idtf.write(0,"}");
 		}
 
-		if ((mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD) | (mask & vcg::tri::io::Mask::IOM_VERTCOLOR))
+		if ((mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD) | (mask & vcg::tri::io::Mask::IOM_VERTCOLOR) | (mask & vcg::tri::io::Mask::IOM_FACECOLOR))
 		{
 			idtf.write(0,"");
 			idtf.write(0,"MODIFIER \"SHADING\" {");
@@ -594,6 +610,9 @@ typedef typename SaveMeshType::CoordType CoordType;
 		//vert
 		capability |= vcg::tri::io::Mask::IOM_VERTNORMAL;
 		capability |= vcg::tri::io::Mask::IOM_VERTCOLOR;
+
+		//face
+		capability |= vcg::tri::io::Mask::IOM_FACECOLOR;
 
 		////wedg
 		capability |= vcg::tri::io::Mask::IOM_WEDGTEXCOORD;

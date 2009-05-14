@@ -230,6 +230,9 @@ public:
 		//capability |= Mask::IOM_VERTNORMAL;
 		capability |= vcg::tri::io::Mask::IOM_VERTCOLOR;
 		//capability |= vcg::tri::io::Mask::IOM_VERTCOLOR;
+		
+		//face
+		capability |= vcg::tri::io::Mask::IOM_FACECOLOR;
 
 		////wedg
 		capability |= Mask::IOM_WEDGTEXCOORD;
