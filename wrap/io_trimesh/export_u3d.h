@@ -37,7 +37,7 @@ namespace u3dparametersclasses
 			_campar = NULL;
 		}
 
-		//WARNING: in movie15 y-axis and z-axis have been inverted!!!
+		//WARNING: in movie15 y-axis and z-axis has been inverted!!!
 		class CameraParameters
 		{ 
 		public:
