@@ -8,10 +8,10 @@
 #include <vcg/complex/trimesh/allocate.h>
 #include <vcg/complex/trimesh/create/marching_cubes.h>
 #include <vcg/complex/trimesh/create/extended_marching_cubes.h>
+#include <vcg/complex/trimesh/create/mc_trivial_walker.h>
 #include <wrap/io_trimesh/export_ply.h>
 
 
-#include "trivial_walker.h"
 
 using namespace std;
 using namespace vcg;
