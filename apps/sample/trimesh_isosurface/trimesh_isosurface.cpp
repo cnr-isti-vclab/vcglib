@@ -11,7 +11,6 @@
 #include <wrap/io_trimesh/export_ply.h>
 
 
-#include "simple_volume.h"
 #include "trivial_walker.h"
 
 using namespace std;
