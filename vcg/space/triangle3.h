@@ -228,7 +228,7 @@ bool InterpolationParameters2(const Point2<ScalarType> &V1,
 template<class TriangleType, class ScalarType>
 bool InterpolationParameters(const TriangleType t,const Point3<ScalarType> & bq, ScalarType &a, ScalarType &b, ScalarType &_c ) 
 {	
-const ScalarType EPSILON = ScalarType(0.000001);
+const ScalarType _EPSILON = ScalarType(0.000001);
 #define x1 (t.P(0).X())
 #define y1 (t.P(0).Y())
 #define z1 (t.P(0).Z())
@@ -253,7 +253,7 @@ const ScalarType EPSILON = ScalarType(0.000001);
      ScalarType t10 = y1*x2;
      ScalarType t11 = y1*x3;
      ScalarType t13 = t8-t9-t10+t11+t5-t6;
-     if(fabs(t13)>=EPSILON)
+     if(fabs(t13)>=_EPSILON)
 	 {
          ScalarType t15 = px*y1;
          ScalarType t16 = py*x1;
@@ -274,7 +274,7 @@ const ScalarType EPSILON = ScalarType(0.000001);
      t10 = z1*x2;
      t11 = z1*x3;
      t13 = t8-t9-t10+t11+t5-t6;
-     if(fabs(t13)>=EPSILON)
+     if(fabs(t13)>=_EPSILON)
 	 {
 		ScalarType t15 = px*z1;
 		ScalarType t16 = pz*x1;
@@ -290,7 +290,7 @@ const ScalarType EPSILON = ScalarType(0.000001);
      t8  = z1*y2; t9  = z1*y3;
      t10 = y1*z2; t11 = y1*z3;
      t13 = t8-t9-t10+t11+t5-t6;
-     if(fabs(t13)>=EPSILON)
+     if(fabs(t13)>=_EPSILON)
 	 {
          ScalarType t15 = pz*y1;
          ScalarType t16 = py*z1;
