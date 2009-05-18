@@ -2,6 +2,7 @@
 #include <QtCore/QVariant>
 #include "qgetopt.h"
 
+#include <stdlib.h>
 #include <iostream>
 using namespace std;
 
