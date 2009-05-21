@@ -315,10 +315,9 @@ class TriMesh: public TriMeshEdgeHolder<VertContainerType,FaceContainerType,Edge
 		ATTR_TYPE & operator ()(){ return *((Attribute<ATTR_TYPE> *)_handle)->attribute;}
 	};
 
-
-		/// La camera
-	Camera<ScalarType> camera; // intrinsic
-	Shot<ScalarType> shot;		// extrinsic
+	// the camera member (that should keep the intrinsics) is no more needed since 2006, when intrisncs moved into the Shot structure
+	//Camera<ScalarType> camera; // intrinsic
+	Shot<ScalarType> shot;		// intrinsic && extrinsic
 
 		/// Il colore della mesh
 private:
@@ -337,7 +336,7 @@ public:
 
 
 	/// Default constructor
-	TriMesh():shot(camera)
+	TriMesh()
 	{
 		fn = vn = 0;
 		imark = 0;
