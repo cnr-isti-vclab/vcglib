@@ -614,7 +614,6 @@ void DrawWirePolygonal()
   typename FACE_POINTER_CONTAINER::iterator fp;
 
 	typename std::vector<typename MESH_TYPE::FaceType*>::iterator fip;
-	short curtexname=-1;
 
 	if(cm == CMPerMesh)
 		glColor(m->C());
@@ -879,16 +878,16 @@ template <NormalMode nm, ColorMode cm>
 void DrawWire()
 {
 	//if(!(curr_hints & (HNUseEdgeStrip | HNUseLazyEdgeStrip) ) )
-  if ( curr_hints & !HNIsPolygonal ) 
+  if ( (curr_hints & HNIsPolygonal) ) 
+	  {
+      DrawWirePolygonal<nm,cm>();
+    }
+	else 
     {
 			glPushAttrib(GL_POLYGON_BIT);
 			glPolygonMode(GL_FRONT_AND_BACK ,GL_LINE);
 			DrawFill<nm,cm,TMNone>();
 			glPopAttrib();
-    }
-	else 
-	  {
-      DrawWirePolygonal<nm,cm>();
     }
 	//	{
 //			if(!HasEdges()) ComputeEdges();
