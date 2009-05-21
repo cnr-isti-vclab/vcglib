@@ -231,6 +231,11 @@ public:
 	 note: it is up to the caller to check the the matrix passed is a pure rototraslation
 	 */
 	void MultSimilarity( const Similarity<S> & s){ MultMatrix(s.Matrix());}
+	
+	bool IsValid() const 
+	{
+		return Intrinsics.PixelSizeMm[0]>0 && Intrinsics.PixelSizeMm[1]>0;
+	}
 
 }; // end class definition
 
