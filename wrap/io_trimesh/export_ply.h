@@ -746,6 +746,7 @@ static const char *ErrorMsg(int error)
 	  capability |= vcg::tri::io::Mask::IOM_WEDGTEXCOORD ;
 	  capability |= vcg::tri::io::Mask::IOM_WEDGTEXMULTI ;
     capability |= vcg::tri::io::Mask::IOM_WEDGNORMAL   ;
+		capability |= vcg::tri::io::Mask::IOM_CAMERA   ;
 	  return capability;
   }
 
