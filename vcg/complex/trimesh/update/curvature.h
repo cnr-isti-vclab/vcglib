@@ -50,7 +50,7 @@ Revision 1.1  2005/02/22 16:40:29  ganovelli
 created. This version writes the gaussian curvature on the Q() member of
 the vertex
 
-/****************************************************************************/
+****************************************************************************/
 
 #ifndef VCGLIB_UPDATE_CURVATURE_
 #define VCGLIB_UPDATE_CURVATURE_
@@ -401,7 +401,7 @@ public:
 	static void MeanAndGaussian(MeshType & m)
     {
 			assert(HasFFAdjacency(m));
-      float area0, area1, area2, angle0, angle1, angle2, e01, e12, e20;
+      float area0, area1, area2, angle0, angle1, angle2;
 			FaceIterator fi;
       VertexIterator vi;
 			typename MeshType::CoordType  e01v ,e12v ,e20v;

@@ -246,7 +246,7 @@ private:
 				return;
 			}
 		}
-    assert(pos >=0 && pos< _mesh->vert.size());
+    assert(pos >=0 && size_t(pos)< _mesh->vert.size());
 		v = &_mesh->vert[pos];
 	}
 	void GetYIntercept(const vcg::Point3i &p1, const vcg::Point3i &p2, VertexPointer &v) 

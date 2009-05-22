@@ -174,7 +174,6 @@ static size_t VertexFromFaceLoose(MeshType &m)
 */
 static size_t VertexFromFaceStrict(MeshType &m)
 {
-  size_t selCnt=0;
 	VertexFromFaceLoose(m);
   FaceIterator fi;
 	for(fi = m.face.begin(); fi != m.face.end(); ++fi)
