@@ -253,6 +253,43 @@ namespace vcg {
 		}
 	};
 
+
+
+	template <class S>
+	class PointNormalDistanceFunctor {
+	public:
+		typedef typename S::ScalarType ScalarType;
+		typedef S QueryType;
+		static inline const Point3<ScalarType> &  Pos(const QueryType & qt)  {return qt.P();}
+
+
+		static ScalarType & Alpha(){static ScalarType alpha = 1.0; return alpha;}
+		static ScalarType & Beta (){static ScalarType beta  = 1.0; return beta;}
+		static ScalarType & Gamma(){static ScalarType gamma = 1.0; return gamma;}
+		static ScalarType & InterPoint(){static ScalarType interpoint= 1.0; return interpoint;} 
+
+
+		template <class FACETYPE, class SCALARTYPE>
+		inline bool operator () (const FACETYPE &f, const typename FACETYPE::VertexType &p, 
+			SCALARTYPE & minDist,Point3<SCALARTYPE> & q)
+		{		
+			const Point3<typename FACETYPE::ScalarType> fp = Point3<typename FACETYPE::ScalarType>::Construct(p.cP());
+			const Point3<typename FACETYPE::ScalarType> fn = Point3<typename FACETYPE::ScalarType>::Construct(p.cN());
+			Point3<typename FACETYPE::ScalarType> fq;
+			typename FACETYPE::ScalarType md = (typename FACETYPE::ScalarType)(minDist);
+			const bool ret=PointDistance(f,fp,md,fq);
+
+			SCALARTYPE  dev=InterPoint()*(pow((ScalarType)(1-f.cN().dot(fn)),(ScalarType)Beta())/(Gamma()*md+0.1));
+
+			if (md+dev < minDist){
+				minDist = (SCALARTYPE)(md+dev);
+				q = Point3<SCALARTYPE>::Construct(fq);
+				//q.N() = f.N();
+				return (ret);
+			}
+			return false;
+		}
+	};
 		
 		/// BASIC VERSION of the Point-face distance that does not require the EdgePlane Additional data.
 		/// Given a face and a point, returns the closest point of the face to p.
