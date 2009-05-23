@@ -253,6 +253,22 @@ namespace vcg {
 		}
 
 		template <class MESH, class GRID>
+		typename MESH::FaceType * GetClosestFaceNormal(MESH & mesh,GRID & gr,const typename MESH::VertexType & _p, 
+			const typename GRID::ScalarType & _maxDist,typename GRID::ScalarType & _minDist,
+			typename GRID::CoordType &_closestPt)
+		{
+			typedef typename GRID::ScalarType ScalarType;
+			typedef FaceTmark<MESH> MarkerFace;
+			MarkerFace mf;
+			mf.SetMesh(&mesh);
+			typedef vcg::face::PointNormalDistanceFunctor<typename MESH::VertexType> PDistFunct;
+			PDistFunct fn;
+			_minDist=_maxDist;
+			//return (gr.GetClosest(PDistFunct,mf,_p,_maxDist,_minDist,_closestPt.P()));
+			return (gr.template GetClosest <PDistFunct,MarkerFace>(fn,mf,_p,_maxDist,_minDist,_closestPt));
+		}
+
+		template <class MESH, class GRID>
 			typename MESH::VertexType * GetClosestVertex( MESH & mesh,GRID & gr,const typename GRID::CoordType & _p, 
 			const typename GRID::ScalarType & _maxDist,typename GRID::ScalarType & _minDist )
 		{
