@@ -33,8 +33,8 @@ namespace vcg {
 
 	public:
 		
-		Matrix44f m;			// a matrix to go in OB space
-		Matrix44f mi;		  // inverse of m: from OB space to World
+		Matrix44<T> m;			// a matrix to go in OB space
+		Matrix44<T> mi;		  // inverse of m: from OB space to World
 
 		/// The bounding box constructor
 		inline  Obox3():Box3<T>(){}
@@ -54,7 +54,7 @@ namespace vcg {
 		}
 		//Verifica se un punto appartiene ad un oriented bounding box.
 		bool IsIn( Point3<T> const &p) const{
-			vcg::Point3f mod= m*p;
+			vcg::Point3<T> mod= m*p;
 			return Box3::IsIn(mod);
 		}
 		/// The bounding box distructor
