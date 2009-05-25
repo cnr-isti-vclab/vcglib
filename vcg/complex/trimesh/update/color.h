@@ -492,8 +492,8 @@ static int ValueMul(int value, float factor)
   return math::Clamp<int>((int)((value - 128)*factor + 128), 0, 255);
 }
 
-//Apply Contrast and Brightness filter to the mesh, with the given contrast factor and brightness amount.
-static int ContrastBrightness(UpdateMeshType &m, float factor, float amount, const bool ProcessSelected=false)
+//Apply  Brightness and Contrast  filter to the mesh, with the given contrast factor and brightness amount.
+static int BrightnessContrast(UpdateMeshType &m, float brightness, float contrast, const bool ProcessSelected=false)
 {
   int counter=0;
   VertexIterator vi;
@@ -503,7 +503,7 @@ static int ContrastBrightness(UpdateMeshType &m, float factor, float amount, con
     {
       if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
       {
-        (*vi).C() = ColorMulAdd((*vi).C(),factor,amount);
+        (*vi).C() = ColorBrightnessContrast((*vi).C(),brightness,contrast);
         ++counter;
       }
     }
@@ -513,14 +513,21 @@ static int ContrastBrightness(UpdateMeshType &m, float factor, float amount, con
 
 //Performs contrast and brightness operations on color, i.e NewValue = (OldValue - 128) ◊ contrast + 128 + amount
 //The result is clamped just one time after all computations; this get a more accurate result.
-static Color4b ColorMulAdd(Color4b c, float factor, float amount)
+// The formula used here is the one of GIMP.
+static Color4b ColorBrightnessContrast(Color4b c, float brightness, float contrast)
 {
-  return Color4b( ValueMulAdd(c[0], factor, amount), ValueMulAdd(c[1], factor, amount), ValueMulAdd(c[2], factor, amount), 1 );
+  return Color4b( ValueBrightnessContrast(c[0], brightness, contrast),
+									ValueBrightnessContrast(c[1], brightness, contrast),
+									ValueBrightnessContrast(c[2], brightness, contrast), 1 );
 }
 
-static int ValueMulAdd(int value, float factor, float amount)
+static int ValueBrightnessContrast(unsigned char ivalue, float brightness, float contrast)
 {
-  return math::Clamp<int>((int)((value - 128)*factor + 128 + amount), 0, 255);
+	float value = float(ivalue)/255.0f;
+  if (brightness < 0.0)  value = value * ( 1.0 + brightness);
+                    else value = value + ((1.0 - value) * brightness);
+	value = (value - 0.5) * (tan ((contrast + 1) * M_PI/4) ) + 0.5;
+	return math::Clamp<int>(255.0*value, 0, 255);
 }
 
 //Invert the colors of the mesh.
