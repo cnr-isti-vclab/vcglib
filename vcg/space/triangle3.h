@@ -420,6 +420,15 @@ typename TriangleType::ScalarType DoubleArea(const TriangleType &t)
 }
 
 template<class TriangleType>
+typename TriangleType::ScalarType CosWedge(const TriangleType &t, int k)
+{
+  typename TriangleType::CoordType 
+    e0 = t.P((k+1)%3) - t.P(k),
+    e1 = t.P((k+2)%3) - t.P(k);
+  return (e0*e1)/(e0.Norm()*e1.Norm());
+}
+
+template<class TriangleType>
 Point3<typename TriangleType::ScalarType> Barycenter(const TriangleType &t) 
 {
 	return ((t.P(0)+t.P(1)+t.P(2))/(typename TriangleType::ScalarType) 3.0);
