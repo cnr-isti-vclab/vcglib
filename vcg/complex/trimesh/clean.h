@@ -715,18 +715,122 @@ private:
         return flagManifold;
       }
 			
-			static bool IsPolygonal(const MeshType &m) 
-			{
+			/**
+			 * Is the mesh only composed by quadrilaterals?
+			 */
+			static bool IsBitQuadOnly(const MeshType &m) 
+      {
+        typedef typename MeshType::FaceType F;
         if (!m.HasPerFaceFlags()) return false;
+				for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) if (!fi->IsD()) {
+          unsigned int tmp = fi->Flags()&(F::FAUX0|F::FAUX1|F::FAUX2);
+          if ( tmp != F::FAUX0 && tmp != F::FAUX1 && tmp != F::FAUX2) return false;
+        }
+        return true;
+      }
+      
+
+      /**
+			 * Is the mesh only composed by triangles? (non polygonal faces)
+			 */
+      static bool IsBitTriOnly(const MeshType &m) 
+			{
+        if (!m.HasPerFaceFlags()) return true;
 				for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) {
           if (
-            !fi->IsD() 
-            && 
-            (fi->Flags() & (MeshType::FaceType::FAUX0|MeshType::FaceType::FAUX1|MeshType::FaceType::FAUX2)  ) 
-          ) return true;
+            !fi->IsD()  &&  fi->IsAnyF()  
+          ) return false;
         }
-        return false;
+        return true;
       }
+      
+      static bool IsBitPolygonal(const MeshType &m){
+        return !IsBitTriOnly(m);
+      }
+      
+      /**
+			 * Is the mesh only composed by quadrilaterals and triangles? (no pentas, etc)
+			 */
+			static bool IsBitTriQuadOnly(const MeshType &m) 
+      {
+        typedef typename MeshType::FaceType F;
+        if (!m.HasPerFaceFlags()) return false;
+				for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) if (!fi->IsD()) {
+          unsigned int tmp = fi->Flags()&(F::FAUX0|F::FAUX1|F::FAUX2);
+          if ( tmp!=F::FAUX0 && tmp!=F::FAUX1 && tmp!=F::FAUX2 && tmp!=0 ) return false;
+        }
+        return true;
+      }
+      
+			/**
+			 * How many quadrilaterals?
+			 */
+			static int CountBitQuads(const MeshType &m) 
+      {
+        if (!m.HasPerFaceFlags()) return 0;
+        typedef typename MeshType::FaceType F;
+        int count=0;
+				for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) if (!fi->IsD()) {
+          unsigned int tmp = fi->Flags()&(F::FAUX0|F::FAUX1|F::FAUX2);
+          if ( tmp==F::FAUX0 || tmp==F::FAUX1 || tmp==F::FAUX2) count++;
+        }
+        return count / 2;
+      }
+
+			/**
+			 * How many triangles? (non polygonal faces)
+			 */
+			static int CountBitTris(const MeshType &m) 
+      {
+        if (!m.HasPerFaceFlags()) return m.fn;
+        int count=0;
+				for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) if (!fi->IsD()) {
+          if (!(fi->IsAnyF())) count++;
+        }
+        return count;
+      }		
+
+			/**
+			 * How many polygons of any kind? (including triangles)
+			 */
+			static int CountBitPolygons(const MeshType &m) 
+			{
+        if (!m.HasPerFaceFlags()) return m.fn;
+        typedef typename MeshType::FaceType F;
+        int count = 0;
+				for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) if (!fi->IsD())  {
+          if (fi->IsF(0)) count++;
+          if (fi->IsF(1)) count++;
+          if (fi->IsF(2)) count++;
+        }
+        return m.fn - count/2;
+      }
+      
+
+      /**
+			 * Checks that the mesh has consistent per-face faux edges
+			 * (the ones that merges triangles into larger polygons).
+			 * A border edge should never be faux, and faux edges should always be
+			 * reciprocated by another faux edges.
+			 * Requires FF adjiacency.
+			 */
+      static bool HasConsistentPerFaceFauxFlag(const MeshType &m)
+      {
+        assert(m.HasPerFaceFlags());
+        assert(m.HasFFTopology()); // todo: remove this constraint
+        
+        for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
+          if(!(*fi).IsD()) 
+            for (int k=0; k<3; k++) 
+				      if( fi->IsF(k) != fi->cFFp(k)->IsF(fi->cFFi(k)) ) {
+                return false; 
+              }
+              // non-reciprocal faux edge! 
+              // (OR: border faux edge, which is likewise inconsistent)
+          
+        return true;
+      }
+      
       
 			static int CountNonManifoldVertexFF( MeshType & m, bool select = true ) 
 			{
