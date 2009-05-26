@@ -35,10 +35,11 @@
 
 
 #include <assert.h>
+#include <vcg/math/base.h>
 #include <vcg/container/simple_temporary_data.h>
 #include <vcg/simplex/face/pos.h>
 #include <vcg/simplex/face/topology.h>
-#include <vcg/math/base.h>
+#include <vcg/complex/trimesh/update/quality.h>
 #include <deque>
 #include <vector>
 #include <list>
@@ -297,7 +298,7 @@ public:
 	distance from the cloasest source to all the mesh vertices and returns the pointer to the farthest.
 	Note: update the field Q() of the vertices
 	*/
- static void FarthestVertex( MeshType & m,
+ static bool FarthestVertex( MeshType & m,
 									std::vector<VertexPointer> & fro, 
 									VertexPointer & farthest,		 
 									ScalarType & distance,
@@ -305,10 +306,12 @@ public:
 
 									typename std::vector<VertexPointer>::iterator fi; 
 									std::vector<VertDist>fr;
-
+									if(fro.empty())	return false;
+										
 									for( fi  = fro.begin(); fi != fro.end() ; ++fi)
 										fr.push_back(VertDist(*fi,0.0));
 									farthest = Visit(m,fr,distance,false,sources); 
+									return true;
 					  }
 	/*
 	Given a mesh and  a  pointers to a vertex-source (source), assigns the approximated geodesic
@@ -364,7 +367,7 @@ public:
 	Assigns to each vertex of the mesh its distance to the closest vertex on the border
 	Note: update the field Q() of the vertices
 */
- static void DistanceFromBorder(	MeshType & m,
+ static bool DistanceFromBorder(	MeshType & m,
 									ScalarType & distance,
 									typename MeshType::template PerVertexAttributeHandle<VertexPointer> * sources = NULL
 					){
@@ -374,7 +377,11 @@ public:
 	for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
 		if( (*vi).IsB())
 			fro.push_back(&(*vi));
-	FarthestVertex(m,fro,farthest,distance,sources);
+	if(fro.empty()) return false;
+	
+	tri::UpdateQuality<CMeshO>::VertexConstant(m,0);
+		
+	return FarthestVertex(m,fro,farthest,distance,sources);
 }
 
  };
