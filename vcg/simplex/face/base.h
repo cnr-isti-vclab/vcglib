@@ -194,6 +194,7 @@ public:
 		FAUX0       = 0x00040000,
 		FAUX1       = 0x00080000,
 		FAUX2       = 0x00100000,
+		FAUX012     = FAUX0 | FAUX1 | FAUX2 ,
 		// First user bit
 		USER0       = 0x00200000
 			};
@@ -253,11 +254,13 @@ public:
 	/// This function checks if a given side of the face is a feature/internal edge
 	/// it is used by some importer to mark internal 
 	/// edges of polygonal faces that have been triangulated
-	bool IsF(int i) const {return (this->Flags() & (FAUX0<<i)) != 0;}
+	bool IsF(int i) const {return (this->Flags() & (FAUX0<<i) ) != 0;}
+	bool IsAnyF() const {return (this->Flags() & (FAUX0|FAUX1|FAUX2)) != 0;}
 	/// This function select the face
 	void SetF(int i)		{this->Flags() |=(FAUX0<<i);}
 	/// This funcion execute the inverse operation of SetS()
 	void ClearF(int i)	{this->Flags() &= (~(FAUX0<<i));}
+	bool ClearAllF() { this->Flags() &= (~(FAUX0|FAUX1|FAUX2)); }
 	
 ///  Return the first bit that is not still used
 static int &LastBitFlag()
