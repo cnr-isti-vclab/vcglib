@@ -260,7 +260,7 @@ public:
 	void SetF(int i)		{this->Flags() |=(FAUX0<<i);}
 	/// This funcion execute the inverse operation of SetS()
 	void ClearF(int i)	{this->Flags() &= (~(FAUX0<<i));}
-	bool ClearAllF() { this->Flags() &= (~(FAUX0|FAUX1|FAUX2)); }
+	void ClearAllF() { this->Flags() &= (~(FAUX0|FAUX1|FAUX2)); }
 	
 ///  Return the first bit that is not still used
 static int &LastBitFlag()
