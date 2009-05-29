@@ -26,7 +26,7 @@
 
 //importer for collada's files
 
-#include<wrap/dae/util_dae.h>
+#include <wrap/dae/util_dae.h>
 
 // uncomment one of the following line to enable the Verbose debugging for the parsing
 //#define QDEBUG if(1) ; else {assert(0);} 
@@ -203,7 +203,7 @@ class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std
 				QStringList faceIndexList; 
 				valueStringList(faceIndexList,polylist.at(tript),"p");
 
-				int offsetface = (int)m.face.size();
+				//int offsetface = (int)m.face.size();
 				if (faceIndexList.size() != 0 && faceSizeList.size() != 0 ) 
 				{	
 					WedgeAttribute wa;
@@ -217,7 +217,7 @@ class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std
 						int curFaceVertNum = faceSizeList.at(ff).toInt();
 						
 						MyPolygon<typename ColladaMesh::VertexType>  polyTemp(curFaceVertNum);						
-						for(unsigned int tt = 0;tt < curFaceVertNum ;++tt)  // for each vertex of the polygon
+						for(int tt = 0;tt < curFaceVertNum ;++tt)  // for each vertex of the polygon
 						{
 							int indvt = faceIndexList.at(faceIndexCnt).toInt();
 							QDEBUG("*******                 Reading face[%3i].V(%i) = %4i  (%i-th of the index list) (face has %i vertices)",ff,tt,indvt,faceIndexCnt,curFaceVertNum);
@@ -426,8 +426,8 @@ class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std
 				QDEBUG("**   skin node of a controller has a material binding");
 				GenerateMaterialBinding(skinNode,materialBindingMap);
 			}
-			LoadGeometry(m, info, refNode.toElement(),materialBindingMap);
-		}						
+			return LoadGeometry(m, info, refNode.toElement(),materialBindingMap);
+		}
 		
 		/* before instancing a geometry you can make a binding that allow you to substitute next material names with other names. 
 		this is very useful for instancing the same geometry with different materials. therefore when you encounter a material name in a mesh, this name can be a 'symbol' that you have to bind.
