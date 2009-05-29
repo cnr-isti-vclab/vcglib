@@ -452,7 +452,7 @@ namespace io {
 
 		inline static int findStringListAttribute(QStringList& list,const QDomNode node,const QDomNode poly,const QDomDocument startpoint,const char* token)
 		{
-			int offset;
+			int offset = 0;
 			if (!node.isNull())
 			{
 				offset = node.toElement().attribute("offset").toInt();
