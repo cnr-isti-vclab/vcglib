@@ -114,10 +114,10 @@ class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std
 			}
 			return indtx;
 		}
-		
+
 		static int WedgeColorAttribute(ColladaMesh& m,const QStringList face,const QStringList wc,const QDomNode wcsrc,const int meshfaceind,const int faceind,const int component)
 		{
-			int indcl;
+			int indcl = -1;
 			if (!wcsrc.isNull())
 			{
 				indcl = face.at(faceind).toInt();
