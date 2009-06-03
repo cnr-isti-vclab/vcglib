@@ -265,7 +265,7 @@ public:
 	typedef int FlagType;
   /// Return the vector of Flags(), senza effettuare controlli sui bit
   int &Flags() { static int dummyflags(0);  assert(0); return dummyflags; }
-  const int Flags() const { return 0; }
+  int Flags() const { return 0; }
 	template < class LeftV>
 	void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
   static bool HasFlags()   { return false; }
@@ -278,7 +278,7 @@ public:
 	BitFlags(){_flags=0;}
   typedef int FlagType;
   int &Flags() {return _flags; }
-  const int Flags() const {return _flags; }
+  int Flags() const {return _flags; }
 	template < class LeftV>
 	void ImportLocal(const LeftV  & left ) { if(LeftV::HasFlags()) Flags() = left.Flags(); T::ImportLocal( left); }
   static bool HasFlags()   { return true; }
@@ -294,8 +294,8 @@ template <class T> class EmptyColorMarkQuality: public T {
 public:
   typedef float QualityType;
   QualityType &Q() { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
-  const QualityType &cQ() const { static QualityType dummyQuality(0);  assert(0); return dummyQuality; } const 
-	static bool HasQuality()   { return false; }
+  const QualityType &cQ() const { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
+  static bool HasQuality()   { return false; }
 
   typedef vcg::Color4b ColorType;
   ColorType &C() { static ColorType dumcolor(vcg::Color4b::White); assert(0); return dumcolor; }

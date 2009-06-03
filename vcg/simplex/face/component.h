@@ -117,8 +117,8 @@ public:
  // typedef typename T::CoordType CoordType;
   inline typename T::VertexType *       & V( const int j ) 	    {	assert(0);		static typename T::VertexType *vp=0; return vp; }
   inline typename T::VertexType * const & V( const int j ) const {	assert(0);		static typename T::VertexType *vp=0; return vp; }
-	inline typename T::VertexType * const  cV( const int j ) const {	assert(0);		static typename T::VertexType *vp=0; return vp;	}
-	inline       typename T::CoordType & P( const int j ) 	    {	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
+        inline typename T::VertexType * cV( const int j ) const {	assert(0);		static typename T::VertexType *vp=0; return vp;	}
+        inline       typename T::CoordType & P( const int j ) 	    {	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
 	inline const typename T::CoordType & P( const int j ) const {	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
 	inline const typename T::CoordType &cP( const int j ) const	{	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
 	template <class LeftF>
@@ -139,7 +139,7 @@ public:
 
   inline typename T::VertexType *       & V( const int j ) 	     { assert(j>=0 && j<3); return v[j]; }
   inline typename T::VertexType * const & V( const int j ) const { assert(j>=0 && j<3); return v[j]; }
-	inline typename T::VertexType * const  cV( const int j ) const { assert(j>=0 && j<3);	return v[j]; }
+        inline typename T::VertexType *  cV( const int j ) const { assert(j>=0 && j<3);	return v[j]; }
 
 	// Shortcut per accedere ai punti delle facce
 	inline       typename T::CoordType & P( const int j ) 	    {	assert(j>=0 && j<3);		return v[j]->P();	}
@@ -328,7 +328,7 @@ template <class T> class EmptyBitFlags: public T {
 public:
 	/// Return the vector of Flags(), senza effettuare controlli sui bit
   int &Flags() { static int dummyflags(0);  assert(0); return dummyflags; }
-  const int Flags() const { return 0; }
+  int Flags() const { return 0; }
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){ T::ImportLocal(leftF);}
 	inline void Alloc(const int & ns){T::Alloc(ns);}
@@ -343,7 +343,7 @@ template <class T> class BitFlags:  public T {
 public:
   BitFlags(){_flags=0;}
    int &Flags() {return _flags; }
-  const int Flags() const {return _flags; }
+  int Flags() const {return _flags; }
   const int & cFlags() const {return _flags; }
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){ Flags() = leftF.cFlags();T::ImportLocal(leftF);}
@@ -364,7 +364,7 @@ public:
 	typedef int MarkType;
   inline void InitIMark()    {  }
   inline int & IMark()       { assert(0); static int tmp=-1; return tmp;}
-  inline const int IMark() const {return 0;}
+  inline int IMark() const {return 0;}
 	
 	typedef float QualityType;
   typedef vcg::Color4b ColorType;

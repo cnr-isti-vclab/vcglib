@@ -78,7 +78,7 @@ public:
  // typedef typename T::CoordType CoordType;
   inline typename T::VertexType *       & V( const int j ) 	    {	assert(0);		static typename T::VertexType *vp=0; return vp; }
   inline typename T::VertexType * const & V( const int j ) const {	assert(0);		static typename T::VertexType *vp=0; return vp; }
-	inline typename T::VertexType * const  cV( const int j ) const {	assert(0);		static typename T::VertexType *vp=0; return vp;	}
+        inline typename T::VertexType * cV( const int j ) const {	assert(0);		static typename T::VertexType *vp=0; return vp;	}
 	inline       typename T::CoordType & P( const int j ) 	    {	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
 	inline const typename T::CoordType & P( const int j ) const {	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
 	inline const typename T::CoordType &cP( const int j ) const	{	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
@@ -95,7 +95,7 @@ public:
 	PFVAdj(){_vpoly = NULL;}
  	inline typename T::VertexType *       & V( const int j ) 	     { assert(j>=0 && j<this->VN()); return  _vpoly[j]; }
 	inline typename T::VertexType * const & V( const int j ) const { assert(j>=0 && j<this->VN()); return  _vpoly[j]; }
-	inline typename T::VertexType * const  cV( const int j ) const { assert(j>=0 && j<this->VN());	return _vpoly[j]; }
+        inline typename T::VertexType *        cV( const int j ) const { assert(j>=0 && j<this->VN());	return _vpoly[j]; }
 
 
 	/** Return the pointer to the ((j+1)%3)-th vertex of the face.

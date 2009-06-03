@@ -68,10 +68,10 @@ public:
 	inline const T & V(const int i) const { assert(i>0 && i<NMAX); return _t[i][1]; }
   
 	inline short     & N() { return _n[0]; }
-	inline const short N() const { return _n[0]; }
+        inline short N() const { return _n[0]; }
   
 	inline short     & N(const int i) { assert(i>0 && i<NMAX); return _n[i]; }
-	inline const short N(const int i) const { assert(i>0 && i<NMAX); return _n[i]; }
+        inline short N(const int i) const { assert(i>0 && i<NMAX); return _n[i]; }
 	
   
   /* <OLD_METHODS> (lowercase ones). DEPRECATED. TO BE REMOVED SOON.*/
@@ -85,10 +85,10 @@ public:
 	/**/inline const T & v(const int i) const { return _t[i][1]; }
   /**/
 	/**/inline short     & n() { return _n[0]; }
-	/**/inline const short n() const { return _n[0]; }
+        /**/inline short n() const { return _n[0]; }
   /**/
 	/**/inline short     & n(const int i) { return _n[i]; }
-	/**/inline const short n(const int i) const { return _n[i]; }
+        /**/inline short n(const int i) const { return _n[i]; }
 	/**/
 	/**/inline Point2<T> & t(const int i) { return _t[i]; }
 	/**/inline Point2<T> t(const int i) const { return _t[i]; }

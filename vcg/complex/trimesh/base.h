@@ -244,7 +244,7 @@ class TriMesh: public TriMeshEdgeHolder<VertContainerType,FaceContainerType,Edge
 		int n_attr;
 		void Resize(const int & sz){((SimpleTempDataBase<VertContainer>*)_handle)->Resize(sz);}
 		void Reorder(std::vector<size_t> & newVertIndex){((SimpleTempDataBase<VertContainer>*)_handle)->Reorder(newVertIndex);}
-		const bool operator<(const  HandlesWrapper    b) const {	return(_name.empty()&&b._name.empty())?(_handle < b._handle):( _name < b._name);}
+                bool operator<(const  HandlesWrapper    b) const {	return(_name.empty()&&b._name.empty())?(_handle < b._handle):( _name < b._name);}
 	};
 	
 	std::set< HandlesWrapper > vert_attr;

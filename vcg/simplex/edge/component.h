@@ -44,7 +44,7 @@ public:
  // typedef typename T::CoordType CoordType;
   inline typename T::VertexType *       & V( const int j ) 	    {	assert(0);		static typename T::VertexType *vp=0; return vp; }
   inline typename T::VertexType * const & V( const int j ) const {	assert(0);		static typename T::VertexType *vp=0; return vp; }
-	inline typename T::VertexType * const  cV( const int j ) const {	assert(0);		static typename T::VertexType *vp=0; return vp;	}
+        inline typename T::VertexType *  cV( const int j ) const {	assert(0);		static typename T::VertexType *vp=0; return vp;	}
 	inline       typename T::CoordType & P( const int j ) 	    {	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
 	inline const typename T::CoordType & P( const int j ) const {	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
 	inline const typename T::CoordType &cP( const int j ) const	{	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
@@ -63,7 +63,7 @@ public:
 
   inline typename T::VertexType *       & V( const int j ) 	     { assert(j>=0 && j<2); return v[j]; }
   inline typename T::VertexType * const & V( const int j ) const { assert(j>=0 && j<2); return v[j]; }
-	inline typename T::VertexType * const  cV( const int j ) const { assert(j>=0 && j<2);	return v[j]; }
+        inline typename T::VertexType *  cV( const int j ) const { assert(j>=0 && j<2);	return v[j]; }
 
 	// Shortcut per accedere ai punti delle facce
 	inline       typename T::CoordType & P( const int j ) 	    {	assert(j>=0 && j<2);		return v[j]->P();	}
@@ -138,7 +138,7 @@ public:
 	typedef int FlagType;
   /// Return the vector of Flags(), senza effettuare controlli sui bit
   int &Flags() { static int dummyflags(0);  assert(0); return dummyflags; }
-  const int Flags() const { return 0; }
+  int Flags() const { return 0; }
 	template < class LeftV>
 	void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
   static bool HasFlags()   { return false; }
@@ -151,7 +151,7 @@ public:
 	BitFlags(){_flags=0;}
   typedef int FlagType;
   int &Flags() {return _flags; }
-  const int Flags() const {return _flags; }
+  int Flags() const {return _flags; }
 	template < class LeftV>
 	void ImportLocal(const LeftV  & left ) { Flags() = left.Flags(); T::ImportLocal( left); }
   static bool HasFlags()   { return true; }
