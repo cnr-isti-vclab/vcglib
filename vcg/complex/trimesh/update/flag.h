@@ -166,7 +166,7 @@ static void FaceSet(MeshType &m, unsigned int FlagMask)
 static void VertexClearV(MeshType &m) { VertexClear(m,VertexType::VISITED);}
 static void VertexClearB(MeshType &m) { VertexClear(m,VertexType::BORDER);}
 static void FaceClearV(MeshType &m) { FaceClear(m,FaceType::VISITED);}
-static void FaceClearB(MeshType &m) { FaceClear(m,FaceType::BORDER);}
+static void FaceClearB(MeshType &m) { FaceClear(m,FaceType::BORDER012);}
 
 static void VertexSetV(MeshType &m) { VertexSet(m,VertexType::VISITED);}
 static void VertexSetB(MeshType &m) { VertexSet(m,VertexType::BORDER);}

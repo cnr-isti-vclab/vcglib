@@ -182,6 +182,7 @@ public:
 		BORDER0     = 0x00000040,
 		BORDER1     = 0x00000080,
 		BORDER2     = 0x00000100,
+		BORDER012     = BORDER0 | BORDER1 | BORDER2 ,
 		// Face Orientation Flags, used efficiently compute point face distance  
 		NORMX				= 0x00000200,
 		NORMY				= 0x00000400,
