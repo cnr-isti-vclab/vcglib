@@ -252,52 +252,39 @@ class TriMesh: public TriMeshEdgeHolder<VertContainerType,FaceContainerType,Edge
  	std::set< HandlesWrapper > face_attr;
 	std::set< HandlesWrapper > mesh_attr;
 
-	template <class ATTR_TYPE>
-	class PerVertexAttributeHandle{
+
+	template <class ATTR_TYPE, class CONT>
+	class AttributeHandle{
 	public:
-		PerVertexAttributeHandle(){_handle=(SimpleTempData<VertContainer,ATTR_TYPE> *)NULL;}
-		PerVertexAttributeHandle( void *ah,const int & n):_handle ( (SimpleTempData<VertContainer,ATTR_TYPE> *)ah ),n_attr(n){}
-		PerVertexAttributeHandle operator = ( const PerVertexAttributeHandle & pva){ 
-			_handle = (SimpleTempData<VertContainer,ATTR_TYPE> *)pva._handle;
+		AttributeHandle(){_handle=(SimpleTempData<CONT,ATTR_TYPE> *)NULL;}
+		AttributeHandle( void *ah,const int & n):_handle ( (SimpleTempData<CONT,ATTR_TYPE> *)ah ),n_attr(n){}
+		AttributeHandle operator = ( const CONT & pva){ 
+			_handle = (SimpleTempData<CONT,ATTR_TYPE> *)pva._handle;
 			n_attr = pva.n_attr;
 			return (*this);
 		}
-		SimpleTempData<VertContainer,ATTR_TYPE> * _handle;
+		SimpleTempData<CONT,ATTR_TYPE> * _handle;
 		int n_attr; // its attribute number
 		template <class RefType>
 		ATTR_TYPE & operator [](const RefType  & i){return (*_handle)[i];}
 	};
 
 	template <class ATTR_TYPE>
-	class PerFaceAttributeHandle{
-	public:
-		PerFaceAttributeHandle(){_handle=NULL;}
-		PerFaceAttributeHandle(void *ah,const int & n):_handle ( (SimpleTempData<FaceContainer,ATTR_TYPE> *)ah ),n_attr(n){}
-		PerFaceAttributeHandle operator = ( const PerFaceAttributeHandle & pva){ 
-			_handle = (SimpleTempData<FaceContainer,ATTR_TYPE> *)pva._handle;
-			n_attr = pva.n_attr;
-			return (*this);
-		}
-		SimpleTempData<FaceContainer,ATTR_TYPE> * _handle;
-		int n_attr; // its attribute number
-		template <class RefType>
-		ATTR_TYPE & operator [](const RefType  & i){return (*_handle)[i];}
+	class PerVertexAttributeHandle: public AttributeHandle<ATTR_TYPE,VertContainer>{
+		PerVertexAttributeHandle():AttributeHandle<ATTR_TYPE,VertContainer>(){}
+	public: PerVertexAttributeHandle( void *ah,const int & n):AttributeHandle(ah,n){};
 	};
 
 	template <class ATTR_TYPE>
-	class PerEdgeAttributeHandle{
-	public:
-		PerEdgeAttributeHandle(){_handle=NULL;}
-		PerEdgeAttributeHandle(void *ah,const int & n):_handle ( (SimpleTempData<EdgeContainer,ATTR_TYPE> *)ah ),n_attr(n){}
-		PerEdgeAttributeHandle operator = ( const PerEdgeAttributeHandle & pva){ 
-			_handle = (SimpleTempData<EdgeContainer,ATTR_TYPE> *)pva._handle;
-			n_attr = pva.n_attr;
-			return (*this);
-		}
-		SimpleTempData<EdgeContainer,ATTR_TYPE> * _handle;
-		int n_attr; // its attribute number
-		template <class RefType>
-		ATTR_TYPE & operator [](const RefType  & i){return (*(SimpleTempData<EdgeContainer,ATTR_TYPE>*)_handle)[i];}
+	class PerFaceAttributeHandle: public AttributeHandle<ATTR_TYPE,FaceContainer>{
+		PerFaceAttributeHandle():AttributeHandle<ATTR_TYPE,FaceContainer>(){}
+	public: PerFaceAttributeHandle( void *ah,const int & n):AttributeHandle(ah,n){};
+	};
+
+	template <class ATTR_TYPE>
+	class PerEdgeAttributeHandle:  public AttributeHandle<ATTR_TYPE,EdgeContainer>{
+		PerEdgeAttributeHandle():AttributeHandle<ATTR_TYPE,EdgeContainer>(){}
+	public: PerEdgeAttributeHandle( void *ah,const int & n):AttributeHandle(ah,n){};
 	};
 
 	template <class ATTR_TYPE>
