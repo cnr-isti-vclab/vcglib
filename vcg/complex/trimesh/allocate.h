@@ -706,7 +706,7 @@ public:
 	template <class ATTR_TYPE>
 	static 
 	bool IsValidHandle( MeshType & m,  const typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE> & a){
-		 
+		if(a._handle == NULL) return false;
 		for(HandlesIterator i = m.vert_attr.begin(); i!=m.vert_attr.end();++i)
 			if ( (*i).n_attr == a.n_attr ) return true;
 		return false;
@@ -779,6 +779,7 @@ public:
 	template <class ATTR_TYPE>
 	static 
 	bool IsValidHandle( MeshType & m,  const typename MeshType::template PerEdgeAttributeHandle<ATTR_TYPE> & a){
+		if(a._handle == NULL) return false;
 		for(HandlesIterator i = m.edge_attr.begin(); i!=m.edge_attr.end();++i)
 			if ( (*i).n_attr == a.n_attr ) return true;
 		return false;
@@ -851,6 +852,7 @@ public:
 	template <class ATTR_TYPE>
 	static 
 	bool IsValidHandle( MeshType & m,  const typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE> & a){
+		if(a._handle == NULL) return false;
 		for(HandlesIterator i = m.face_attr.begin(); i!=m.face_attr.end();++i)
 			if ( (*i).n_attr == a.n_attr ) return true;
 		return false;
@@ -923,6 +925,7 @@ public:
 	template <class ATTR_TYPE>
 	static 
 	bool IsValidHandle( MeshType & m,  const typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE> & a){
+		if(a._handle == NULL) return false;
 		for(HandlesIterator i = m.mesh_attr.begin(); i!=m.mesh_attr.end();++i)
 			if ( (*i).n_attr == a.n_attr ) return true;
 		return false;
