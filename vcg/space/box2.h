@@ -139,6 +139,24 @@ public:
 			if(max.Y() < p.Y()) max.Y() = p.Y();
 		}
 	}
+
+		/** Varia le dimensioni del bounding box scalandole rispetto al parametro scalare.
+			@param s Valore scalare che indica di quanto deve variare il bounding box
+		*/
+	void Offset(const BoxScalarType s)
+	{
+		Offset(Point2<BoxScalarType>(s, s));
+	}
+
+		/** Varia le dimensioni del bounding box del valore fornito attraverso il parametro.
+			@param delta Point in 3D space
+		*/
+	void Offset(const Point2<BoxScalarType> & delta)
+	{
+		min -= delta;
+		max += delta;
+	}
+
 		/** Calcola l'intersezione tra due bounding box. Al bounding box viene assegnato il valore risultante.
 			@param b Il bounding box con il quale si vuole effettuare l'intersezione
 		*/
