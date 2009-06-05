@@ -272,19 +272,19 @@ class TriMesh: public TriMeshEdgeHolder<VertContainerType,FaceContainerType,Edge
 	template <class ATTR_TYPE>
 	class PerVertexAttributeHandle: public AttributeHandle<ATTR_TYPE,VertContainer>{
 		PerVertexAttributeHandle():AttributeHandle<ATTR_TYPE,VertContainer>(){}
-	public: PerVertexAttributeHandle( void *ah,const int & n):AttributeHandle(ah,n){};
+  public: PerVertexAttributeHandle( void *ah,const int & n):AttributeHandle<ATTR_TYPE,VertContainer>(ah,n){};
 	};
 
 	template <class ATTR_TYPE>
 	class PerFaceAttributeHandle: public AttributeHandle<ATTR_TYPE,FaceContainer>{
 		PerFaceAttributeHandle():AttributeHandle<ATTR_TYPE,FaceContainer>(){}
-	public: PerFaceAttributeHandle( void *ah,const int & n):AttributeHandle(ah,n){};
+  public: PerFaceAttributeHandle( void *ah,const int & n):AttributeHandle<ATTR_TYPE,FaceContainer>(ah,n){};
 	};
 
 	template <class ATTR_TYPE>
 	class PerEdgeAttributeHandle:  public AttributeHandle<ATTR_TYPE,EdgeContainer>{
 		PerEdgeAttributeHandle():AttributeHandle<ATTR_TYPE,EdgeContainer>(){}
-	public: PerEdgeAttributeHandle( void *ah,const int & n):AttributeHandle(ah,n){};
+  public: PerEdgeAttributeHandle( void *ah,const int & n):AttributeHandle<ATTR_TYPE,EdgeContainer>(ah,n){};
 	};
 
 	template <class ATTR_TYPE>
