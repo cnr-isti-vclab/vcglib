@@ -621,7 +621,7 @@ static void FaceSimilar(MetroMesh & m, VertexSampler &ps,int sampleNum, bool dua
 									n_samples_per_edge = (int)((sqrt(1.0+8.0*(double)n_samples) +5.0)/2.0); // original for non dual case
 									n_samples = SingleFaceSimilar(&*fi,ps, n_samples_per_edge);
 							} else {	
-									n_samples_per_edge = (int)(sqrt(n_samples) +1.0);
+									n_samples_per_edge = (int)(sqrt((double)n_samples) +1.0);
 									n_samples = SingleFaceSimilarDual(&*fi,ps, n_samples_per_edge,randomFlag);
 						}
         }
