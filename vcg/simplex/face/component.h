@@ -371,6 +371,7 @@ public:
   ColorType &C() { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
   const ColorType &cC() const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
   ColorType &WC(const int) { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
+  const ColorType &cWC(const int) { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
   QualityType &Q() { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
   const QualityType &cQ() const { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
   
@@ -411,6 +412,7 @@ public:
   typedef A ColorType;
   ColorType &WC(const int i) { return _color[i]; }
   const ColorType &WC(const int i) const { return _color[i]; }
+  const ColorType &cWC(const int i) const { return _color[i]; }
 
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){ WC() = leftF.cWC();T::ImportLocal(leftF);}
@@ -419,6 +421,14 @@ public:
 
 private:
   ColorType _color[3];    
+};
+
+template <class T> class WedgeColor4b: public WedgeColor<vcg::Color4b, T> {
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeColor4b"));T::Name(name);}
+};
+
+template <class T> class WedgeColor4f: public WedgeColor<vcg::Color4f, T> {
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeColor4f"));T::Name(name);}
 };
 
 template <class T> class Color4b: public Color<vcg::Color4b, T> {
