@@ -77,7 +77,7 @@ void CreaseCut(MESH_TYPE &m, float angleRad)
 	int creaseCounter=0;
 	int startVn=m.vn;
 	FaceIterator fi;
-	const FaceType * nextf;
+	//const FaceType * nextf;
 	for(fi=m.face.begin();fi!=m.face.end();++fi) 
 		 for(int j=0;j<3;++j) 
 				if(!(*fi).V(j)->IsV() )  // foreach unvisited vertex we loop around it searching for creases.
@@ -131,7 +131,7 @@ void CreaseCut(MESH_TYPE &m, float angleRad)
 			int curVertexInd = indVec[faceInd*3+ j];
 			assert(curVertexInd != -1);
 			assert(curVertexInd < m.vn);
-			if(curVertexInd < startVn) assert(curVertexInd == vertInd); 
+			if(curVertexInd < startVn) assert(size_t(curVertexInd) == vertInd); 
 			if(curVertexInd >= startVn)
 				{
 				  m.vert[curVertexInd].ImportLocal(*((*fi).V(j)));

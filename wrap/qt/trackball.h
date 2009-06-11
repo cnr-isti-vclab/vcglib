@@ -47,7 +47,7 @@ static vcg::Trackball::Button QT2VCG (Qt::MouseButton qtbt, Qt::KeyboardModifier
 }
 
 /// Takes a QT ket and QT KeyboardModifiers and returns the mouse wheel related Trackball::Button
-static vcg::Trackball::Button QTWheel2VCG (Qt::KeyboardModifiers modifiers)
+inline vcg::Trackball::Button QTWheel2VCG (Qt::KeyboardModifiers modifiers)
 {
   int vcgbt = vcg::Trackball::WHEEL;
 
@@ -59,7 +59,7 @@ static vcg::Trackball::Button QTWheel2VCG (Qt::KeyboardModifiers modifiers)
 }
 
 /// Takes some QT KeyboardModifiers and returns the mouse wheel related Trackball::Button
-static vcg::Trackball::Button QTKey2VCG (int key, Qt::KeyboardModifiers modifiers)
+inline vcg::Trackball::Button QTKey2VCG (int key, Qt::KeyboardModifiers modifiers)
 {
   int vcgbt = 0;
 	switch (key) {

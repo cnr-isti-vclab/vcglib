@@ -425,7 +425,7 @@ ScalarType Histogram<ScalarType>::Percentile(ScalarType frac) const
 	assert(frac >= 0 && frac <= 1);
 	
 	ScalarType sum=0,partsum=0;
-	int i;
+	size_t i;
 
 	// useless summation just to be sure 
 	for(i=0;i<H.size();i++) sum+=H[i]; 
