@@ -507,53 +507,56 @@ static void VertexCoordLaplacianHC(MeshType &m, int step, bool SmoothSelected=fa
 	lpz.sum=CoordType(0,0,0);
 	lpz.dif=CoordType(0,0,0);
 	lpz.cnt=0;
-	SimpleTempData<typename MeshType::VertContainer,HCSmoothInfo > TD(m.vert,lpz);
-	// First Loop compute the laplacian
-	FaceIterator fi;
-	for(fi=m.face.begin();fi!=m.face.end();++fi)if(!(*fi).IsD())
+		for(int i=0;i<step;++i)
 		{
-			for(int j=0;j<3;++j)
-			{
-				TD[(*fi).V(j)].sum+=(*fi).V1(j)->P();
-				TD[(*fi).V1(j)].sum+=(*fi).V(j)->P();
-				++TD[(*fi).V(j)].cnt;
-				++TD[(*fi).V1(j)].cnt;
-				// se l'edge j e' di bordo si deve sommare due volte
-				if((*fi).IsB(j)) 
-				{ 
-					TD[(*fi).V(j)].sum+=(*fi).V1(j)->P(); 
-					TD[(*fi).V1(j)].sum+=(*fi).V(j)->P(); 
-					++TD[(*fi).V(j)].cnt;
-					++TD[(*fi).V1(j)].cnt;
+			SimpleTempData<typename MeshType::VertContainer,HCSmoothInfo > TD(m.vert,lpz);
+			// First Loop compute the laplacian
+			FaceIterator fi;
+			for(fi=m.face.begin();fi!=m.face.end();++fi)if(!(*fi).IsD())
+				{
+					for(int j=0;j<3;++j)
+					{
+						TD[(*fi).V(j)].sum+=(*fi).V1(j)->P();
+						TD[(*fi).V1(j)].sum+=(*fi).V(j)->P();
+						++TD[(*fi).V(j)].cnt;
+						++TD[(*fi).V1(j)].cnt;
+						// se l'edge j e' di bordo si deve sommare due volte
+						if((*fi).IsB(j)) 
+						{ 
+							TD[(*fi).V(j)].sum+=(*fi).V1(j)->P(); 
+							TD[(*fi).V1(j)].sum+=(*fi).V(j)->P(); 
+							++TD[(*fi).V(j)].cnt;
+							++TD[(*fi).V1(j)].cnt;
+						}
+					}
 				}
-			}
-		}
-	VertexIterator vi;
-	for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
-		 TD[*vi].sum/=(float)TD[*vi].cnt;
-	
-	// Second Loop compute average difference
-	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
-		{
-			for(int j=0;j<3;++j)
-			{
-				TD[(*fi).V(j)].dif +=TD[(*fi).V1(j)].sum-(*fi).V1(j)->P();
-				TD[(*fi).V1(j)].dif+=TD[(*fi).V(j)].sum-(*fi).V(j)->P();
-				// se l'edge j e' di bordo si deve sommare due volte
-				if((*fi).IsB(j)) 
-				{ 
-					TD[(*fi).V(j)].dif +=TD[(*fi).V1(j)].sum-(*fi).V1(j)->P();
-					TD[(*fi).V1(j)].dif+=TD[(*fi).V(j)].sum-(*fi).V(j)->P();
+			VertexIterator vi;
+			for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
+				 TD[*vi].sum/=(float)TD[*vi].cnt;
+			
+			// Second Loop compute average difference
+			for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
+				{
+					for(int j=0;j<3;++j)
+					{
+						TD[(*fi).V(j)].dif +=TD[(*fi).V1(j)].sum-(*fi).V1(j)->P();
+						TD[(*fi).V1(j)].dif+=TD[(*fi).V(j)].sum-(*fi).V(j)->P();
+						// se l'edge j e' di bordo si deve sommare due volte
+						if((*fi).IsB(j)) 
+						{ 
+							TD[(*fi).V(j)].dif +=TD[(*fi).V1(j)].sum-(*fi).V1(j)->P();
+							TD[(*fi).V1(j)].dif+=TD[(*fi).V(j)].sum-(*fi).V(j)->P();
+						}
+					}
 				}
-			}
-		}
 
-	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-		{
-		 TD[*vi].dif/=(float)TD[*vi].cnt;
-		 if(!SmoothSelected || (*vi).IsS())
-	      (*vi).P()= TD[*vi].sum - (TD[*vi].sum - (*vi).P())*beta  + (TD[*vi].dif)*(1.f-beta);
-		}
+			for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+				{
+				 TD[*vi].dif/=(float)TD[*vi].cnt;
+				 if(!SmoothSelected || (*vi).IsS())
+						(*vi).P()= TD[*vi].sum - (TD[*vi].sum - (*vi).P())*beta  + (TD[*vi].dif)*(1.f-beta);
+				}
+		} // end for step
 };
 
 // Laplacian smooth of the quality. 
@@ -1097,6 +1100,9 @@ static void FaceNormalAngleThreshold(MeshType &m,
 				if(! (*ep.f).IsV() )
 				{ 
           ScalarType cosang=ep.f->N().dot((*fi).N());
+					// Note that if two faces form an angle larger than 90 deg, their contribution should be very very small.
+					// Without this clamping 
+					cosang = math::Clamp(cosang,0.0001f,1.f); 
           if(cosang >= sigma) 
           {
             ScalarType w = cosang-sigma;
@@ -1269,19 +1275,18 @@ static void VertexCoordPasoDoble(MeshType &m, int step, typename MeshType::Scala
 
 // The sigma parameter affect the normal smoothing step
 
-static void VertexCoordPasoDobleFast(MeshType &m, int step, typename MeshType::ScalarType Sigma=0, int FitStep=50, bool SmoothSelected =false)
+static void VertexCoordPasoDobleFast(MeshType &m, int NormalSmoothStep, typename MeshType::ScalarType Sigma=0, int FitStep=50, bool SmoothSelected =false)
 {
 	PDVertInfo lpzv;
 	lpzv.np=CoordType(0,0,0);
 	PDFaceInfo lpzf;
 	lpzf.m=CoordType(0,0,0);
 
-	assert(m.HasVFTopology());
-	m.HasVFTopology();
+	assert(HasVFAdjacency(m));
 	SimpleTempData< typename MeshType::VertContainer, PDVertInfo> TDV(m.vert,lpzv);
 	SimpleTempData< typename MeshType::FaceContainer, PDFaceInfo> TDF(m.face,lpzf);
 	
-  for(int j=0;j<step;++j)
+  for(int j=0;j<NormalSmoothStep;++j)
 	   FaceNormalAngleThreshold(m,TDF,Sigma);
 		
   for(int j=0;j<FitStep;++j)
