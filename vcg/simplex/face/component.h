@@ -415,7 +415,7 @@ public:
   const ColorType &cWC(const int i) const { return _color[i]; }
 
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){ WC() = leftF.cWC();T::ImportLocal(leftF);}
+	void ImportLocal(const LeftF & leftF){ for (int i=0; i<3; ++i) { WC(i) = leftF.cWC(i); } T::ImportLocal(leftF);}
   static bool HasFaceColor()   { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeColor"));T::Name(name);}
 
