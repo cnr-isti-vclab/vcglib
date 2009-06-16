@@ -119,8 +119,6 @@ namespace io {
 			fread(&offsetF,sizeof( int),1,f);
 
 			/* read the object mesh */
-			fread(&m.camera,sizeof(Camera<typename OpenMeshType::ScalarType>),1,f);
-			fread(&m.shot,sizeof(Shot<typename OpenMeshType::ScalarType>),1,f);
 			fread(&m.vn,sizeof(int),1,f);
 			fread(&m.fn,sizeof(int),1,f);
 			fread(&m.imark,sizeof(int),1,f);
