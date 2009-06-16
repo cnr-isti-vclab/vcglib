@@ -67,7 +67,8 @@ Changed name from plural to singular (normals->normal)
 #include <vcg/space/color4.h>
 #include <vcg/math/histogram.h>
 #include <vcg/complex/trimesh/stat.h>
-
+#include <vcg/math/perlin_noise.h>
+#include <vcg/math/random_generator.h>
 
 namespace vcg {
 namespace tri {
@@ -854,6 +855,39 @@ static Color4b ColorWhiteBalance(Color4b c, Color4b unbalancedWhite)
                  math::Clamp<int>((int)(c[1]*(255.0f/unbalancedWhite[1])), 0, 255),
                  math::Clamp<int>((int)(c[2]*(255.0f/unbalancedWhite[2])), 0, 255),
                  255);
+}
+
+static void PerlinColor(MeshType& m, Box3f bbox, float freq, Point3i channelOffsets)
+{
+    typedef typename MeshType::ScalarType ScalarType;
+
+    Point3<ScalarType> p;
+    for(VertexIterator vi = m.vert.begin(); vi!=m.vert.end(); ++vi)
+    {
+        if(!(*vi).IsD()){
+            p = bbox.GlobalToLocal(m.Tr * (*vi).P());   //actual vertex position scaled to bbox
+            (*vi).C() = Color4b( int(255*math::Perlin::Noise(channelOffsets[0]+p[0]*freq,channelOffsets[0]+p[1]*freq,channelOffsets[0]+p[2]*freq)),
+                                 int(255*math::Perlin::Noise(channelOffsets[1]+p[0]*freq,channelOffsets[1]+p[1]*freq,channelOffsets[1]+p[2]*freq)),
+                                 int(255*math::Perlin::Noise(channelOffsets[2]+p[0]*freq,channelOffsets[2]+p[1]*freq,channelOffsets[2]+p[2]*freq)),
+                                 255 );
+        }
+    }
+}
+
+static void ColorNoise(MeshType& m, int noiseBits)
+{
+    if(noiseBits>8) noiseBits = 8;
+    if(noiseBits<1) return;
+
+    math::SubtractiveRingRNG randomGen = math::SubtractiveRingRNG(time(NULL));
+    for(VertexIterator vi = m.vert.begin(); vi!=m.vert.end(); ++vi)
+    {
+        if(!(*vi).IsD()){
+            (*vi).C()[0] = math::Clamp<int>((*vi).C()[0] + randomGen.generate(int(2*pow(2.0f,noiseBits))) - int(pow(2.0f,noiseBits)),0,255);
+            (*vi).C()[1] = math::Clamp<int>((*vi).C()[1] + randomGen.generate(int(2*pow(2.0f,noiseBits))) - int(pow(2.0f,noiseBits)),0,255);
+            (*vi).C()[2] = math::Clamp<int>((*vi).C()[2] + randomGen.generate(int(2*pow(2.0f,noiseBits))) - int(pow(2.0f,noiseBits)),0,255);
+        }
+    }
 }
 
 };
