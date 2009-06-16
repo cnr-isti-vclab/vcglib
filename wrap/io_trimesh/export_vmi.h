@@ -89,6 +89,7 @@ namespace io {
 			fwrite(&offsetF,sizeof( int),1,f);
 
 			/* save the object mesh */
+			fwrite(&m.shot,sizeof(Shot<typename SaveMeshType::ScalarType>),1,f);
 			fwrite(&m.vn,sizeof(int),1,f);
 			fwrite(&m.fn,sizeof(int),1,f);
 			fwrite(&m.imark,sizeof(int),1,f);
