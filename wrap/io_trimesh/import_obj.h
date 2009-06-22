@@ -344,8 +344,10 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 				
 				// assigning vertex color
 				// ----------------------
-				if( oi.mask & vcg::tri::io::Mask::IOM_VERTCOLOR)
+				if (((oi.mask & vcg::tri::io::Mask::IOM_VERTCOLOR) != 0) && (m.HasPerVertexColor()))
+				{
 					(*vi).C() = currentColor;
+				}
 
 				++vi;  // move to next vertex iterator
 
@@ -610,37 +612,62 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 
 	FaceIterator   fi = Allocator<OpenMeshType>::AddFaces(m,numTriangles);
   //-------------------------------------------------------------------------------
-	// Now the final pass to convert indexes into pointers for face to vert/norm/tex references
-  for(int i=0;i<numTriangles;++i)
-  {
-    assert(m.face.size()==size_t(m.fn));
-	m.face[i].Alloc(indexedFaces[i].v.size()); // it does not do anything if it is a trimesh
-    for(unsigned int j=0;j<indexedFaces[i].v.size();++j)
-    {
-      m.face[i].V(j)=&(m.vert[indexedFaces[i].v[j]]);
-      if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD ) {
-          ObjTexCoord t = texCoords[indexedFaces[i].t[j]];
-			    m.face[i].WT(j).u() = t.u;
-			    m.face[i].WT(j).v() = t.v;
-			    m.face[i].WT(j).n() = indexedFaces[i].tInd;
-      }
-		  if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
-        m.face[i].WN(j).Import(normals[indexedFaces[i].n[j]]);		
-			// set faux edge flags according to internals faces
-			if(indexedFaces[i].edge[j]) m.face[i].SetF(j);
-						else m.face[i].ClearF(j);
-    }
-		if ( oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR )
-        m.face[i].C()=indexedFaces[i].c;
-		if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
-    					// face normal is computed as an average of wedge normals
-	    m.face[i].N().Import(m.face[i].WN(0)+m.face[i].WN(1)+m.face[i].WN(2));
-    				else	// computing face normal from position of face vertices
-	  	face::ComputeNormalizedNormal(m.face[i]);
-						
-  }
 
-  return result;
+	// Now the final pass to convert indexes into pointers for face to vert/norm/tex references
+	for(int i=0; i<numTriangles; ++i)
+	{
+		assert(m.face.size() == size_t(m.fn));
+		m.face[i].Alloc(indexedFaces[i].v.size()); // it does not do anything if it is a trimesh
+
+		for(unsigned int j=0;j<indexedFaces[i].v.size();++j)
+		{
+			m.face[i].V(j) = &(m.vert[indexedFaces[i].v[j]]);
+
+			if (((oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD) != 0) && (m.HasPerWedgeTexCoord()))
+			{
+				ObjTexCoord t = texCoords[indexedFaces[i].t[j]];
+				m.face[i].WT(j).u() = t.u;
+				m.face[i].WT(j).v() = t.v;
+				m.face[i].WT(j).n() = indexedFaces[i].tInd;
+			}
+
+			if (((oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL) != 0) && (m.HasPerWedgeNormal()))
+			{
+				m.face[i].WN(j).Import(normals[indexedFaces[i].n[j]]);
+			}
+
+			// set faux edge flags according to internals faces
+			if (indexedFaces[i].edge[j])
+			{
+				m.face[i].SetF(j);
+			}
+			else
+			{
+				m.face[i].ClearF(j);
+			}
+		}
+
+		if (((oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR) != 0) && (m.HasPerFaceColor()))
+		{
+			m.face[i].C() = indexedFaces[i].c;
+		}
+
+		if (((oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL) != 0) && (m.HasPerWedgeNormal()))
+		{
+			// face normal is computed as an average of wedge normals
+			m.face[i].N().Import(m.face[i].WN(0)+m.face[i].WN(1)+m.face[i].WN(2));
+		}
+		else
+		{
+			// computing face normal from position of face vertices
+			if (m.HasPerFaceNormal())
+			{
+				face::ComputeNormalizedNormal(m.face[i]);
+			}
+		}
+	}
+
+	return result;
 } // end of Open
 
 
