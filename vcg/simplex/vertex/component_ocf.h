@@ -176,13 +176,14 @@ public:
 void ReorderVert(std::vector<size_t> &newVertIndex )
 {
 	size_t i=0;
-	if (ColorEnabled)       assert( CV.size() == newVertIndex.size() );
-	if (MarkEnabled)        assert( MV.size() == newVertIndex.size() );
-	if (NormalEnabled)      assert( NV.size() == newVertIndex.size() );
-	if (VFAdjacencyEnabled) assert( AV.size() == newVertIndex.size() );
-	if (CurvatureEnabled)   assert(CuV.size() == newVertIndex.size() );
-	if (CurvatureDirEnabled)assert(CuDV.size() == newVertIndex.size() );
-	assert( (!RadiusEnabled) || RadiusV.size() == newVertIndex.size() );
+	assert( (!ColorEnabled)         || ( CV.size() == newVertIndex.size() ) );
+	assert( (!MarkEnabled)          || ( MV.size() == newVertIndex.size() ) );
+	assert( (!NormalEnabled)        || ( NV.size() == newVertIndex.size() ) );
+	assert( (!VFAdjacencyEnabled)   || ( AV.size() == newVertIndex.size() ) );
+	assert( (!CurvatureEnabled)     || ( CuV.size() == newVertIndex.size() ) );
+	assert( (!CurvatureDirEnabled)  || ( CuDV.size() == newVertIndex.size() ) );
+	assert( (!RadiusEnabled)        || ( RadiusV.size() == newVertIndex.size() ) );
+	assert( (!TexCoordEnabled)       || ( TV.size() == newVertIndex.size() ) );
 
 	for(i=0;i<newVertIndex.size();++i)
 		{
@@ -196,6 +197,7 @@ void ReorderVert(std::vector<size_t> &newVertIndex )
 					if (CurvatureEnabled)     CuV[newVertIndex[i]] = CuV[i];
 					if (CurvatureDirEnabled)  CuDV[newVertIndex[i]] =CuDV[i];
 					if (RadiusEnabled)        RadiusV[newVertIndex[i]] = RadiusV[i];
+					if (TexCoordEnabled)        TV[newVertIndex[i]] = TV[i];
 				}
 		}
 
@@ -206,6 +208,7 @@ void ReorderVert(std::vector<size_t> &newVertIndex )
 	if (CurvatureEnabled)     CuV.resize(BaseType::size());
 	if (CurvatureDirEnabled)  CuDV.resize(BaseType::size());
 	if (RadiusEnabled)  RadiusV.resize(BaseType::size());
+	if (TexCoordEnabled)  TV.resize(BaseType::size());
 }
 
 
@@ -316,6 +319,19 @@ void DisableRadius() {
 	RadiusV.clear();
 }
 
+
+bool IsTexCoordEnabled() const {return TexCoordEnabled;}
+void EnableTexCoord() {
+	assert(VALUE_TYPE::HasTexCoordOcf());
+	TexCoordEnabled=true;
+	TV.resize((*this).size());
+}
+
+void DisableTexCoord() {
+	assert(VALUE_TYPE::HasTexCoordOcf());
+	TexCoordEnabled=false;
+	TV.clear();
+}
 struct VFAdjType {
 	typename VALUE_TYPE::FacePointer _fp ;
 	int _zp ;
@@ -328,12 +344,14 @@ public:
 	std::vector<typename VALUE_TYPE::RadiusType> RadiusV;
 	std::vector<typename VALUE_TYPE::ColorType> CV;
 	std::vector<typename VALUE_TYPE::NormalType> NV;
+	std::vector<typename VALUE_TYPE::TexCoordType> TV;
 	std::vector<struct VFAdjType> AV;
 	std::vector<int> MV;
 
 	bool QualityEnabled;
 	bool ColorEnabled;
 	bool NormalEnabled;
+	bool TexCoordEnabled;
 	bool VFAdjacencyEnabled;
 	bool CurvatureEnabled;
 	bool CurvatureDirEnabled;
@@ -448,6 +466,28 @@ public:
 };
 
 template <class T> class QualityfOcf: public QualityOcf<float, T> {};
+
+
+///*-------------------------- TEXTURE  ----------------------------------*/
+
+template <class A, class TT> class TexCoordOcf: public TT {
+public:
+  typedef A TexCoordType;
+  TexCoordType &T() {  assert((*this).Base().TexCoordEnabled); return (*this).Base().TV[(*this).Index()]; }
+  const TexCoordType &cT() const {  assert((*this).Base().TexCoordEnabled); return (*this).Base().TV[(*this).Index()]; }
+	template < class LeftV>
+	void ImportLocal(const LeftV & leftV)
+		{
+			//if((*this).Base().TexCoordEnabled && leftV.Base().TexCoordEnabled ) // WRONG I do not know anything about leftV!
+		if((*this).Base().TexCoordEnabled) // copy the data only if they are enabled in both vertices
+						T() = leftV.cT();
+			TT::ImportLocal(leftV);
+		}
+	static bool HasTexCoord()   { return true; }
+	static bool HasTexCoordOcf()   { assert(!TT::HasTexCoordOcf()); return true; }
+};
+
+template <class T> class TexCoordfOcf: public TexCoordOcf<TexCoord2<float,1>, T> {};
 
 ///*-------------------------- MARK  ----------------------------------*/
 
@@ -598,6 +638,7 @@ public:
 	vector_ocf<typename T::VertType> *_ovp;
 
 	static bool HasQualityOcf()   { return false; }
+	static bool HasTexCoordOcf()   { return false; }
 	static bool HasVFAdjacencyOcf()   { return false; }
 };
 

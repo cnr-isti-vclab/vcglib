@@ -228,6 +228,7 @@ template <class TT> class EmptyTexCoord: public TT {
 public:
   typedef vcg::TexCoord2<float,1> TexCoordType;
   TexCoordType &T() { static TexCoordType dummy_texcoord;  assert(0); return dummy_texcoord; }
+  const TexCoordType &cT() const { static TexCoordType dummy_texcoord;  assert(0); return dummy_texcoord; }
 	template < class LeftV>
 	void ImportLocal(const LeftV  & left ) { TT::ImportLocal( left); }
   static bool HasTexCoord()   { return false; }
