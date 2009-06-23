@@ -309,8 +309,8 @@ class TriMesh: public TriMeshEdgeHolder<VertContainerType,FaceContainerType,Edge
 	//Camera<ScalarType> camera; // intrinsic
 	Shot<ScalarType> shot;		// intrinsic && extrinsic
 
-		/// Il colore della mesh
 private:
+	/// The per-mesh color. Not very useful and meaningful...
 	Color4b c;
 public:
 
@@ -331,6 +331,7 @@ public:
 		fn = vn = 0;
 		imark = 0;
 		attrn = 0;
+		C()=Color4b::Gray;
 	}
 
 	/// destructor
