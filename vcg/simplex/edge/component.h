@@ -284,8 +284,8 @@ private:
 /*----------------------------- EEADJ ------------------------------*/ 
 template <class T> class EmptyEEAdj: public T {
 public:
-  typename T::EdgePointer &EEp(const int & i ) { static typename T::EdgePointer ep=0;  assert(0); return ep; }
-  typename T::EdgePointer cEEp(const int & i) { static typename T::EdgePointer ep=0;  assert(0); return ep; }
+  typename T::EdgePointer &EEp(const int &  ) { static typename T::EdgePointer ep=0;  assert(0); return ep; }
+  typename T::EdgePointer cEEp(const int & ) { static typename T::EdgePointer ep=0;  assert(0); return ep; }
   int &EEi(){static int z=0; return z;};
 	template < class LeftV>
 		void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
