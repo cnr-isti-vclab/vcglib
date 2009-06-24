@@ -664,6 +664,13 @@ namespace tri
 		if(VertexType::HasQualityOcf()) return m.vert.IsQualityEnabled();
 		else return VertexType::HasQuality();
 	}
+	
+	template < class VertexType, class FaceContainerType, class EdgeContainerType >
+		bool HasPerVertexTexCoord (const TriMesh < vertex::vector_ocf< VertexType > , FaceContainerType , EdgeContainerType> & m)
+	{
+		if(VertexType::HasTexCoordOcf()) return m.vert.IsTexCoordEnabled();
+		else return VertexType::HasTexCoord();
+	}
 
 	template < class VertexType, class FaceContainerType, class EdgeContainerType >
 		bool HasPerVertexCurvature (const TriMesh < vertex::vector_ocf< VertexType > , FaceContainerType, EdgeContainerType > & m)
