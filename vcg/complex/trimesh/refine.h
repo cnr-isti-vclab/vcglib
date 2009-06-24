@@ -117,7 +117,12 @@ const Split SplitTab[8]={
 template<class MESH_TYPE>
 struct MidPoint : public   std::unary_function<face::Pos<typename MESH_TYPE::FaceType> ,  typename MESH_TYPE::CoordType >
 {
+	 MidPoint(MESH_TYPE *_mp) { mp=_mp; }
+	 
+	 MESH_TYPE *mp;
+	 
 	void operator()(typename MESH_TYPE::VertexType &nv, face::Pos<typename MESH_TYPE::FaceType>  ep){
+		assert(mp);
 		nv.P()=   (ep.f->V(ep.z)->P()+ep.f->V1(ep.z)->P())/2.0;
 
 		if( MESH_TYPE::HasPerVertexNormal())
@@ -129,7 +134,7 @@ struct MidPoint : public   std::unary_function<face::Pos<typename MESH_TYPE::Fac
 		if( MESH_TYPE::HasPerVertexQuality())
 			nv.Q() = ((ep.f->V(ep.z)->Q()+ep.f->V1(ep.z)->Q())) / 2.0;
 
-		if( MESH_TYPE::HasPerVertexTexCoord())
+		if( tri::HasPerVertexTexCoord(*mp))
 			nv.T().P() = ((ep.f->V(ep.z)->T().P()+ep.f->V1(ep.z)->T().P())) / 2.0;
 	}
 
