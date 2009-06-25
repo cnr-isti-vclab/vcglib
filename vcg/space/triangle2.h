@@ -40,13 +40,12 @@ namespace vcg {
 		Templated class for storing a generic triangle in a 2D space.
     Note the relation with the Face class of TriMesh complex, both classes provide the P(i) access functions to their points and therefore they share the algorithms on it (e.g. area, normal etc...)
  */
-template <class SCALAR_TRIANGLE_TYPE> class Triangle2
+template <class SCALAR_TYPE> class Triangle2
 {
 public:
-  typedef SCALAR_TRIANGLE_TYPE ScalarTriangleType;
-  typedef ScalarTriangleType ScalarType;
+  typedef SCALAR_TYPE ScalarType;
   typedef Point2< ScalarType > CoordType;
-  typedef typename Triangle2<ScalarType> TriangleType;
+  typedef Triangle2<ScalarType> TriangleType;
 
 protected:
 	/// Vector of vertex pointer incident in the face
@@ -123,8 +122,8 @@ bool InterpolationParameters(const CoordType & bq, ScalarType &a, ScalarType &b,
 
 ///return the distance to the point q and neighors point p
 void PointDistance(const CoordType & q,
-				   typename ScalarType & dist, 
-				   typename CoordType & p ) const
+				    ScalarType & dist, 
+				    CoordType & p ) const
 {
 	dist=FLT_MAX;
 	///find distance to each segment and take minimum

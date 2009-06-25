@@ -1073,7 +1073,7 @@ private:
 					if(!((*fi).IsD()) && !(*fi).IsS())
 					{
 						(*fi).SetS();
-						CCV.push_back(make_pair(0,&*fi));
+						CCV.push_back(std::make_pair(0,&*fi));
 						sf.push(&*fi);
 						while (!sf.empty())
 						{
