@@ -63,6 +63,7 @@ enum RAWError {
 		// Error open
 	E_CANTOPEN,				// 1
 	E_UNESPECTEDEOF,        // 2
+	E_NO_POINTS,				//3
 };
 
 static const char *ErrorMsg(int error)
@@ -72,9 +73,10 @@ static const char *ErrorMsg(int error)
 	"No errors",
 	"Can't open file",
 	"Premature End of file",
+	"Failed to import any point. Use simple ascii files with just x y z coords."
 	};
 
-  if(error>2 || error<0) return "Unknown error";
+  if(error>3 || error<0) return "Unknown error";
   else return raw_error_msg[error];
 };
 
@@ -112,13 +114,16 @@ static int Open( MESH_TYPE &m, const char * filename, CallBackPos *cb=0, bool tr
 		for(int i=0;i<lineskip;++i)
 				fgets(buf,1024,fp);
 
-    /* Read a single facet from an ASCII .STL file */
+    /* Read a single triplet of coords from an ASCII file of coords*/
     while(!feof(fp))
     {
       if(cb && (++cnt)%1000) cb( (ftell(fp)*100)/fileLen, "ASC Mesh Loading");	
 			if(feof(fp)) break;
 			fgets(buf,1024,fp);
 			ret=sscanf(buf, "%f, %f, %f, %f\n", &pp.X(), &pp.Y(), &pp.Z(),&q);
+			if(ret==1) // lets try also non comma separated values
+				ret=sscanf(buf, "%f %f %f %f\n", &pp.X(), &pp.Y(), &pp.Z(),&q);
+			
 			if(ret>=3)
 				{
 					VertexIterator vi=Allocator<MESH_TYPE>::AddVertices(m,1);
@@ -128,6 +133,7 @@ static int Open( MESH_TYPE &m, const char * filename, CallBackPos *cb=0, bool tr
     }
 		
     fclose(fp);
+		if(m.vn==0) return E_NO_POINTS;
 		if(!triangulate) return E_NOERROR;
 		// now try to triangulate.
 		// search for the first jump
