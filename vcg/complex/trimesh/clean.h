@@ -1555,6 +1555,61 @@ static int MergeCloseVertex(MeshType &m, const ScalarType radius)
 			RemoveDuplicateVertex(m,true);
 			return mergedCnt;
 	}
+	
+	
+static std::pair<int,int>  RemoveSmallConnectedComponentsSize(MeshType &m, int maxCCSize)
+{
+  std::vector< std::pair<int, typename MeshType::FacePointer> > CCV;
+      int TotalCC=ConnectedComponents(m, CCV); 
+			int DeletedCC=0; 
+      
+      ConnectedIterator<MeshType> ci;
+      for(unsigned int i=0;i<CCV.size();++i)
+      {
+        std::vector<typename MeshType::FacePointer> FPV;
+        if(CCV[i].first<maxCCSize)
+        {
+					DeletedCC++;
+          for(ci.start(m,CCV[i].second);!ci.completed();++ci)
+            FPV.push_back(*ci);
+          
+          typename std::vector<typename MeshType::FacePointer>::iterator fpvi;
+          for(fpvi=FPV.begin(); fpvi!=FPV.end(); ++fpvi)
+						Allocator<MeshType>::DeleteFace(m,(**fpvi));
+        }
+      }
+			return std::make_pair<int,int>(TotalCC,DeletedCC);
+}
+
+/// Remove the connected components smaller than a given diameter
+// it returns a pair with the number of connected components and the number of deleted ones.
+static std::pair<int,int> RemoveSmallConnectedComponentsDiameter(MeshType &m, ScalarType maxDiameter)
+{
+  std::vector< std::pair<int, typename MeshType::FacePointer> > CCV;
+      int TotalCC=ConnectedComponents(m, CCV); 
+      int DeletedCC=0; 
+      tri::ConnectedIterator<MeshType> ci;
+      for(unsigned int i=0;i<CCV.size();++i)
+      {
+        Box3f bb;
+        std::vector<typename MeshType::FacePointer> FPV;
+        for(ci.start(m,CCV[i].second);!ci.completed();++ci)
+        {
+            FPV.push_back(*ci);
+            bb.Add((*ci)->P(0));
+            bb.Add((*ci)->P(1));
+            bb.Add((*ci)->P(2));
+        } 
+        if(bb.Diag()<maxDiameter)
+        {
+					DeletedCC++;
+          typename std::vector<typename MeshType::FacePointer>::iterator fpvi;
+          for(fpvi=FPV.begin(); fpvi!=FPV.end(); ++fpvi)
+						tri::Allocator<MeshType>::DeleteFace(m,(**fpvi));
+        }
+      }
+			return std::make_pair<int,int>(TotalCC,DeletedCC);
+}
 
 		}; // end class
 		/*@}*/
