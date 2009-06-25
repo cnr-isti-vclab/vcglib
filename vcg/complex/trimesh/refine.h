@@ -440,8 +440,11 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
 				for(i=1;i<SplitTab[ind].TriNum;++i){
 						nf[i]=&*lastf; ++lastf; fca++;
 						if(RefineSelected || (*fi).IsS()) (*nf[i]).SetS();
+						if(tri::HasPerFaceColor(m))
+											nf[i]->C()=(*fi).cC();
 				}
         
+				 					
         if(tri::HasPerWedgeTexCoord(m))
 					for(i=0;i<3;++i)	{
 						wtt[i]=(*fi).WT(i);

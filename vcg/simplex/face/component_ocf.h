@@ -538,7 +538,11 @@ public:
     assert((*this).Base().ColorEnabled); 
     return (*this).Base().CV[(*this).Index()]; 
   }
-  const ColorType  C() const  { 
+	const ColorType  C() const  { 
+    assert((*this).Base().ColorEnabled); 
+    return (*this).Base().CV[(*this).Index()]; 
+  }
+  const ColorType  cC() const  { 
     assert((*this).Base().ColorEnabled); 
     return (*this).Base().CV[(*this).Index()]; 
   }

@@ -440,7 +440,7 @@ void Sphere(MeshType &in, const int subdiv = 3 )
 	size_t lastsize = 0;
 	for(int i = 0 ; i < subdiv; ++i)
 	{
-		Refine< MeshType, MidPoint<MeshType> >(in, MidPoint<MeshType>(), 0);
+		Refine< MeshType, MidPoint<MeshType> >(in, MidPoint<MeshType>(&in), 0);
 
 		for(vi = in.vert.begin() + lastsize; vi != in.vert.end(); ++vi)
 			vi->P().Normalize();
