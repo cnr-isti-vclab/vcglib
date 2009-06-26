@@ -85,7 +85,7 @@ enum {
 	IOM_WEDGTEXMULTI = 0x02000, // when textrue index is explicit
 	IOM_WEDGNORMAL   = 0x04000,
 
-	IOM_BITPOLYGONAL = 0x10000, // loads explicit polygonal mesh
+	IOM_BITPOLYGONAL = 0x20000, // loads explicit polygonal mesh
 
 	IOM_CAMERA       = 0x08000,
 
