@@ -307,6 +307,7 @@ private:
 			typedef typename MeshType::VertexType     VertexType;
 			typedef typename MeshType::VertexPointer  VertexPointer;
 			typedef typename MeshType::VertexIterator VertexIterator;
+			typedef typename MeshType::ConstVertexIterator ConstVertexIterator;
 			typedef	typename MeshType::ScalarType			ScalarType;
 			typedef typename MeshType::FaceType       FaceType;
 			typedef typename MeshType::FacePointer    FacePointer;
@@ -806,13 +807,60 @@ private:
         return m.fn - count/2;
       }
       
+		/**
+			* The number of polygonal faces is 
+			*  FN - EN_f (each faux edge hides exactly one triangular face or in other words a polygon of n edges has n-3 faux edges.)
+			* In the general case where a The number of polygonal faces is 
+			*	 FN - EN_f + VN_f 
+			*	where: 
+			*	 EN_f is the number of faux edges.
+			*	 VN_f is the number of faux vertices (e.g vertices completely surrounded by faux edges)
+      * as a intuitive proof think to a internal vertex that is collapsed onto a border of a polygon:
+			* it deletes 2 faces, 1 faux edges and 1 vertex so to keep the balance you have to add back the removed vertex.
+			*/
+			static int CountBitLargePolygons(MeshType &m) 
+			{
+			
+				UpdateFlags<MeshType>::VertexSetV(m);
+				// First loop Clear all referenced vertices
+				for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) 
+						if (!fi->IsD())  
+								for(int i=0;i<3;++i) fi->V(i)->ClearV();
 
+				
+        // Second Loop, count (twice) faux edges and mark all vertices touched by non faux edges (e.g vertexes on the boundary of a polygon) 
+				if (!m.HasPerFaceFlags()) return m.fn;
+        typedef typename MeshType::FaceType F;
+        int countE = 0;
+				for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) 
+						if (!fi->IsD())  {
+								for(int i=0;i<3;++i)
+								{
+									if (fi->IsF(i)) 
+											countE++;
+									else
+									{
+											fi->V0(i)->SetV();
+											fi->V1(i)->SetV();
+									}
+								}
+				}
+				// Third Loop, count the number of referenced vertexes that are completely surrounded by faux edges.
+
+        int countV = 0; 
+				for (VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi) 
+						if (!vi->IsD() && !vi->IsV()) countV++;
+				
+        return m.fn - countE/2 + countV ;
+      }
+      
+			
       /**
 			 * Checks that the mesh has consistent per-face faux edges
 			 * (the ones that merges triangles into larger polygons).
 			 * A border edge should never be faux, and faux edges should always be
 			 * reciprocated by another faux edges.
-			 * Requires FF adjiacency.
+			 * It requires FF adjacency.
 			 */
       static bool HasConsistentPerFaceFauxFlag(const MeshType &m)
       {
