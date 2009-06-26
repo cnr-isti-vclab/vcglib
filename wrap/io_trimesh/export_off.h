@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <wrap/io_trimesh/io_mask.h>
 #include <vcg/complex/trimesh/polygon_support.h>
+#include <vcg/complex/trimesh/clean.h>
 
 
 namespace vcg {
@@ -107,12 +108,12 @@ namespace vcg {
           
           if (mask &io::Mask::IOM_BITPOLYGONAL) {
             
-            vector<VertexPointer> polygon;
+			std::vector<VertexPointer> polygon;
             for(fi=m.face.begin();fi!=m.face.end();++fi) if (!fi->IsD()) fi->ClearV();
             for(fi=m.face.begin();fi!=m.face.end();++fi) if (!fi->IsD()) if (!fi->IsV()) {
               vcg::tri::PolygonSupport<SaveMeshType,SaveMeshType>::ExtractPolygon(&*fi,polygon);
               fprintf(fpout,"%d ", polygon.size() );
-              for (int i=0; i<polygon.size(); i++) fprintf(fpout,"%d ", polygon[i]->UberFlags() );
+			  for (size_t i=0; i<polygon.size(); i++) fprintf(fpout,"%d ", polygon[i]->UberFlags() );
               fprintf(fpout,"\n");
             }
           }
