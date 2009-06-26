@@ -31,8 +31,8 @@
 
 #include <stdio.h>
 #include <wrap/io_trimesh/io_mask.h>
-#include <vcg/complex/trimesh/polygon_support.h>
 #include <vcg/complex/trimesh/clean.h>
+#include <vcg/complex/trimesh/polygon_support.h>
 
 
 namespace vcg {
@@ -66,9 +66,9 @@ namespace vcg {
 					fprintf(fpout,"OFF\n");
 					
 					int polynumber;
-					if (mask &io::Mask::IOM_BITPOLYGONAL) polynumber = vcg::tri::Clean<SaveMeshType>::CountBitPolygons(m); 
-					else 
-          polynumber = m.fn;
+					if (mask &io::Mask::IOM_BITPOLYGONAL) 
+								 polynumber = tri::Clean<SaveMeshType>::CountBitLargePolygons(m); 
+						else polynumber = m.fn;
 					
 					fprintf(fpout,"%d %d 0\n", m.vn, polynumber); // note that as edge number we simply write zero
           typename SaveMeshType::FaceIterator fi;
@@ -108,12 +108,13 @@ namespace vcg {
           
           if (mask &io::Mask::IOM_BITPOLYGONAL) {
             
-			std::vector<VertexPointer> polygon;
+            std::vector<VertexPointer> polygon;
             for(fi=m.face.begin();fi!=m.face.end();++fi) if (!fi->IsD()) fi->ClearV();
             for(fi=m.face.begin();fi!=m.face.end();++fi) if (!fi->IsD()) if (!fi->IsV()) {
+						  assert(tri::HasFFAdjacency(m)); 
               vcg::tri::PolygonSupport<SaveMeshType,SaveMeshType>::ExtractPolygon(&*fi,polygon);
-              fprintf(fpout,"%d ", polygon.size() );
-			  for (size_t i=0; i<polygon.size(); i++) fprintf(fpout,"%d ", polygon[i]->UberFlags() );
+              fprintf(fpout,"%d ", int(polygon.size()) );
+              for (size_t i=0; i<polygon.size(); i++) fprintf(fpout,"%d ", polygon[i]->UberFlags() );
               fprintf(fpout,"\n");
             }
           }
@@ -159,6 +160,7 @@ namespace vcg {
 	        capability |= vcg::tri::io::Mask::IOM_VERTCOORD;
 	        capability |= vcg::tri::io::Mask::IOM_VERTCOLOR;
           capability |= vcg::tri::io::Mask::IOM_FACEINDEX;
+          capability |= vcg::tri::io::Mask::IOM_BITPOLYGONAL;
 	        return capability;
         }
 
