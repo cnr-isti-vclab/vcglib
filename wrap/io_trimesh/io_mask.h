@@ -79,11 +79,13 @@ enum {
 	IOM_FACECOLOR    = 0x00100,
 	IOM_FACEQUALITY  = 0x00200,
 	IOM_FACENORMAL   = 0x00400,
-
+	
 	IOM_WEDGCOLOR    = 0x00800,
 	IOM_WEDGTEXCOORD = 0x01000,
-	IOM_WEDGTEXMULTI = 0x02000, // Se ha anche l'indice di texture esplicito
+	IOM_WEDGTEXMULTI = 0x02000, // when textrue index is explicit
 	IOM_WEDGNORMAL   = 0x04000,
+
+	IOM_BITPOLYGONAL = 0x10000, // loads explicit polygonal mesh
 
 	IOM_CAMERA       = 0x08000,
 

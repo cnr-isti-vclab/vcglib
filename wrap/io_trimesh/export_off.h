@@ -20,20 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.13  2007/11/06 10:58:25  cignoni
-Changed the return value to the standard 0 in case of success and notzero for failures
-
-Revision 1.12  2007/03/12 16:40:17  tarini
-Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
-
-Revision 1.11  2006/12/07 00:37:58  cignoni
-Corrected bug in the management of deleted vertices
-
-****************************************************************************/
 
 /**
 @name Save in OFF format
@@ -45,6 +31,7 @@ Corrected bug in the management of deleted vertices
 
 #include <stdio.h>
 #include <wrap/io_trimesh/io_mask.h>
+#include <vcg/complex/trimesh/polygon_support.h>
 
 
 namespace vcg {
@@ -76,7 +63,13 @@ namespace vcg {
 					if( tri::HasPerVertexColor(m)   && (mask & io::Mask::IOM_VERTCOLOR))		fprintf(fpout,"C");
 					if( tri::HasPerVertexTexCoord(m) && (mask & io::Mask::IOM_VERTTEXCOORD))	fprintf(fpout,"ST");
 					fprintf(fpout,"OFF\n");
-					fprintf(fpout,"%d %d 0\n", m.vn, m.fn); // note that as edge number we simply write zero
+					
+					int polynumber;
+					if (mask &io::Mask::IOM_BITPOLYGONAL) polynumber = vcg::tri::Clean<SaveMeshType>::CountBitPolygons(m); 
+					else 
+          polynumber = m.fn;
+					
+					fprintf(fpout,"%d %d 0\n", m.vn, polynumber); // note that as edge number we simply write zero
           typename SaveMeshType::FaceIterator fi;
 					
 							//vertices
@@ -87,7 +80,7 @@ namespace vcg {
 					for(j=0,vi=m.vert.begin();vi!=m.vert.end();++vi)
 					{
 						vp=&(*vi);
-            FlagV.push_back(vp->UberFlags()); // Salva in ogni caso flag del vertice
+            FlagV.push_back(vp->UberFlags()); // Save vertex flags
             if( ! vp->IsD() )
             {	// ***** ASCII *****
 
@@ -110,26 +103,34 @@ namespace vcg {
 					}
 
           assert(j==m.vn);
-					FacePointer fp;
-//					int vv[3];
-
-					int fcnt=0;
-					for(j=0,fi=m.face.begin();fi!=m.face.end();++fi)
-					{
-						fp=&(*fi);
-						if( ! fp->IsD() )
-						{ fcnt++;
-
-
-						fprintf(fpout,"3 %d %d %d\n",
-							fp->cV(0)->UberFlags(),	fp->cV(1)->UberFlags(), fp->cV(2)->UberFlags() );
-						}
-					}
+					
+          
+          if (mask &io::Mask::IOM_BITPOLYGONAL) {
+            
+            vector<VertexPointer> polygon;
+            for(fi=m.face.begin();fi!=m.face.end();++fi) if (!fi->IsD()) fi->ClearV();
+            for(fi=m.face.begin();fi!=m.face.end();++fi) if (!fi->IsD()) if (!fi->IsV()) {
+              vcg::tri::PolygonSupport<SaveMeshType,SaveMeshType>::ExtractPolygon(&*fi,polygon);
+              fprintf(fpout,"%d ", polygon.size() );
+              for (int i=0; i<polygon.size(); i++) fprintf(fpout,"%d ", polygon[i]->UberFlags() );
+              fprintf(fpout,"\n");
+            }
+          }
+          else {
+					  for(fi=m.face.begin();fi!=m.face.end();++fi)
+				  	{
+						  FacePointer fp=&(*fi);
+						  if( ! fp->IsD() )
+						  { fprintf(fpout,"3 %d %d %d\n",
+						  	  fp->cV(0)->UberFlags(),	fp->cV(1)->UberFlags(), fp->cV(2)->UberFlags() );
+						  }
+					  }
+          }
 
 
 					fclose(fpout);
 					// Recupera i flag originali
-					for(j=0,vi=m.vert.begin();vi!=m.vert.end();++vi)
+					for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 						(*vi).UberFlags()=FlagV[j++]; 
 
 					return 0;
