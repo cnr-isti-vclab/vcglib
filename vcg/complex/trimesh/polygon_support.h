@@ -141,7 +141,38 @@ namespace vcg
 
 		}
 	} 
-		};
-} // end namespace vcg
-}
+	
+	static void ExtractPolygon(typename TriMeshType::FacePointer tfi, std::vector<typename TriMeshType::VertexPointer> &vs){
+      vs.clear();
+			// find a non tagged edge
+			int se = -1;
+			for(int i=0; i<3; i++) if (!( tfi->IsF(i))) { se = i; break;}
+			
+			assert(se!=-1); // else, all faux edges!
+			
+			// initialize a pos on the first non faux edge
+			typename TriMeshType::VertexPointer v0 = tfi->V(se);
+			
+			vcg::face::JumpingPos<typename TriMeshType::FaceType> p;
+			
+			p.F() = tfi;
+			p.E() = se;
+			p.V() = p.F()->V(p.F()->Next(se));
+			p.FlipE();
+
+			vs.push_back(p.F()->V(se));
+	
+	    int guard = 0;
+			do{
+				while(p.F()->IsF(p.E())) {  p.FlipF(); p.FlipE(); p.F()->SetV(); if (guard++>10) break;} 
+				if (guard++>10) break;
+				vs.push_back(p.F()->V(p.E()));
+				p.FlipV();
+				p.FlipE();
+			} while( p.V() != v0 );
+  }
+
+}; // end of struct
+}} // end namespace vcg::tri
+
 #endif // __VCGLIB_TRI_CLIP
