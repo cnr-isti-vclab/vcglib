@@ -41,7 +41,7 @@ Revision 1.3  2004/03/31 22:36:44  ganovelli
 First Working Release (with this comment)
 
 
-/****************************************************************************/ 
+****************************************************************************/
 #ifndef __VCGLIB_ENTRIES__
 #define __VCGLIB_ENTRIES__
 
