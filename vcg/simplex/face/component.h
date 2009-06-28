@@ -267,6 +267,31 @@ private:
   NormalType _wnorm[3];    
 };
 
+template <class A, class T> class WedgeRealNormal: public T {
+public:
+  typedef A NormalType;
+  NormalType &WN(const int i) { return _wn[i]; }
+  NormalType const &cWN(const int i) const { return _wn[i]; }
+	template <class LeftF>
+	void ImportLocal(const LeftF & leftF){ for (int i=0; i<3; ++i) { WN(i) = leftF.cWN(i); } T::ImportLocal(leftF);}
+	inline void Alloc(const int & ns){T::Alloc(ns);}
+	inline void Dealloc(){T::Dealloc();}
+  static bool HasWedgeNormal()   { return true; }
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeRealNormal"));T::Name(name);}
+
+private:
+  NormalType _wn[3];
+};
+
+template <class TT> class WedgeRealNormal3s: public WedgeRealNormal<vcg::Point3s, TT> {
+public:  static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeRealNormal2s"));TT::Name(name);}};
+
+template <class TT> class WedgeRealNormal3f: public WedgeRealNormal<vcg::Point3f, TT> {
+public:  static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeRealNormal2f"));TT::Name(name);}};
+
+template <class TT> class WedgeRealNormal3d: public WedgeRealNormal<vcg::Point3d, TT> {
+public:  static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeRealNormal2d"));TT::Name(name);}};
+
 
 template <class T> class Normal3s: public NormalAbs<vcg::Point3s, T> {
 public:static void Name(std::vector<std::string> & name){name.push_back(std::string("Normal3s"));T::Name(name);}
@@ -371,7 +396,7 @@ public:
   ColorType &C() { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
   const ColorType &cC() const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
   ColorType &WC(const int) { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
-  const ColorType &cWC(const int) { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
+  const ColorType &cWC(const int) const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
   QualityType &Q() { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
   const QualityType &cQ() const { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
   
