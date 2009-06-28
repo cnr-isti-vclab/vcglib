@@ -416,6 +416,11 @@ public:
 		assert((*this).Base().NormalEnabled);
 		return (*this).Base().NV[(*this).Index()];  }
 
+	const NormalType &cN() const {
+		// you cannot use Normals before enabling them with: yourmesh.vert.EnableNormal()
+		assert((*this).Base().NormalEnabled);
+		return (*this).Base().NV[(*this).Index()];  }
+
 	template <class LeftV>
 	void ImportLocal(const LeftV & leftV){
 			if((*this).Base().NormalEnabled && leftV.Base().NormalEnabled ) // copy the data only if they are enabled in both vertices
@@ -432,7 +437,7 @@ template <class T> class Normal3dOcf: public NormalOcf<vcg::Point3d, T> {};
 template <class A, class T> class ColorOcf: public T {
 public:
 	typedef A ColorType;
-	ColorType &C() { assert((*this).Base().NormalEnabled); return (*this).Base().CV[(*this).Index()]; }
+	ColorType &C() { assert((*this).Base().ColorEnabled); return (*this).Base().CV[(*this).Index()]; }
 	const ColorType &cC() const { assert((*this).Base().ColorEnabled); return (*this).Base().CV[(*this).Index()]; }
 	template <class LeftV>
 	void ImportLocal(const LeftV & leftV)
