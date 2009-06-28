@@ -313,6 +313,7 @@ public:
 template < class LeftV>
 	void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
   static bool HasColor()   { return false; }
+  static bool HasColorOcf() { return false; }
 	static void Name(std::vector<std::string> & name){T::Name(name);}
 };
 
