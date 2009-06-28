@@ -678,6 +678,20 @@ namespace tri
 	}
 
 	template < class VertexType, class FaceContainerType, class EdgeContainerType >
+		bool HasPerVertexNormal (const TriMesh < vertex::vector_ocf< VertexType > , FaceContainerType , EdgeContainerType> & m)
+	{
+		if(VertexType::HasNormalOcf()) return m.vert.IsNormalEnabled();
+		else return VertexType::HasNormal();
+	}
+
+	template < class VertexType, class FaceContainerType, class EdgeContainerType >
+		bool HasPerVertexColor (const TriMesh < vertex::vector_ocf< VertexType > , FaceContainerType , EdgeContainerType> & m)
+	{
+		if(VertexType::HasColorOcf()) return m.vert.IsColorEnabled();
+		else return VertexType::HasColor();
+	}
+
+	template < class VertexType, class FaceContainerType, class EdgeContainerType >
 		bool HasPerVertexCurvature (const TriMesh < vertex::vector_ocf< VertexType > , FaceContainerType, EdgeContainerType > & m)
 	{
 		if(VertexType::HasCurvatureOcf()) return m.vert.IsCurvatureEnabled();
