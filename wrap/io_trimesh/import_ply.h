@@ -472,9 +472,10 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
   // init defaults
 	VertexType tv;
 	//tv.ClearFlags();
-	if( VertexType::HasQuality() ) tv.Q()=(typename OpenMeshType::VertexType::QualityType)1.0;
-	if( VertexType::HasColor() )     tv.C()=Color4b(Color4b::White);
-	
+
+	if (vcg::tri::HasPerVertexQuality(m)) tv.Q() = (typename OpenMeshType::VertexType::QualityType)1.0;
+	if (vcg::tri::HasPerVertexColor  (m)) tv.C() = Color4b(Color4b::White);
+
 	// Descrittori delle strutture
 
   //bool isvflags = false;	// Il file contiene i flags 
