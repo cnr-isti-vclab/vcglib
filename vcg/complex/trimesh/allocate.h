@@ -250,7 +250,8 @@ namespace vcg {
 			class PointerUpdater
 			{
 			public:
-				void Clear(){newBase=oldBase=newEnd=oldEnd=0;preventUpdateFlag=false;};
+				PointerUpdater(void) : newBase(0), oldBase(0), newEnd(0), oldEnd(0), preventUpdateFlag(false) { ; }
+				void Clear(){newBase=oldBase=newEnd=oldEnd=0;};
 				void Update(SimplexPointerType &vp)
 				{
 					if(vp>=newBase && vp<newEnd) return;
