@@ -113,6 +113,7 @@ public:
 		ColorEnabled = false;
 		MarkEnabled = false;
 		NormalEnabled = false;
+		TexCoordEnabled = false;
 		VFAdjacencyEnabled = false;
 		CurvatureEnabled = false;
 		CurvatureEnabled = false;
@@ -129,6 +130,7 @@ public:
 		if (ColorEnabled)         CV.push_back(vcg::Color4b(vcg::Color4b::White));
 		if (MarkEnabled)          MV.push_back(0);
 		if (NormalEnabled)        NV.push_back(typename VALUE_TYPE::NormalType());
+		if (TexCoordEnabled)      TV.push_back(typename VALUE_TYPE::TexCoordType());
 		if (VFAdjacencyEnabled)   AV.push_back(VFAdjType());
 		if (CurvatureEnabled)     CuV.push_back(typename VALUE_TYPE::CurvatureType());
 		if (CurvatureDirEnabled)  CuDV.push_back(typename VALUE_TYPE::CurvatureDirType());
@@ -147,6 +149,7 @@ public:
 		if (ColorEnabled)         CV.resize(_size);
 		if (MarkEnabled)          MV.resize(_size);
 		if (NormalEnabled)        NV.resize(_size);
+		if (TexCoordEnabled)      TV.resize(_size);
 		if (VFAdjacencyEnabled)   AV.resize(_size);
 		if (CurvatureEnabled)     CuV.resize(_size);
 		if (CurvatureDirEnabled)  CuDV.resize(_size);
@@ -156,9 +159,10 @@ public:
 	void reserve(const unsigned int & _size)
 	{
 		BaseType::reserve(_size);
-		if (ColorEnabled)				 CV.reserve(_size);
+		if (ColorEnabled)        CV.reserve(_size);
 		if (MarkEnabled)         MV.reserve(_size);
-		if (NormalEnabled)			 NV.reserve(_size);
+		if (NormalEnabled)       NV.reserve(_size);
+		if (TexCoordEnabled)     TV.reserve(_size);
 		if (VFAdjacencyEnabled)  AV.reserve(_size);
 		if (CurvatureEnabled)    CuV.reserve(_size);
 		if (CurvatureDirEnabled) CuDV.reserve(_size);
