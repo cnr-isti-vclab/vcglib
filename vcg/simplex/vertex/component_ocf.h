@@ -429,7 +429,7 @@ public:
 	void ImportLocal(const LeftV & leftV){
 			if((*this).Base().NormalEnabled && leftV.Base().NormalEnabled ) // copy the data only if they are enabled in both vertices
 				N().Import(leftV.cN());
-			T::ImporLocal(leftV);}
+			T::ImportLocal(leftV);}
 };
 
 template <class T> class Normal3sOcf: public NormalOcf<vcg::Point3s, T> {};
@@ -448,7 +448,7 @@ public:
 		{
 			if((*this).Base().ColorEnabled && leftV.Base().ColorEnabled ) // copy the data only if they are enabled in both vertices
 					C() = leftV.cC();
-			T::ImporLocal(leftV);
+			T::ImportLocal(leftV);
 		}
 
 	static bool HasColor()   { return true; }
@@ -468,7 +468,7 @@ public:
 		{
 			if((*this).Base().QualityEnabled && leftV.Base().QualityEnabled ) // copy the data only if they are enabled in both vertices
 						Q() = leftV.cQ();
-			T::ImporLocal(leftV);
+			T::ImportLocal(leftV);
 		}
 	static bool HasQuality()   { return true; }
 	static bool HasQualityOcf()   { assert(!T::HasQualityOcf()); return true; }
