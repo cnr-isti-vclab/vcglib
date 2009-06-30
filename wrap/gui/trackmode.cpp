@@ -670,7 +670,7 @@ Point3f AreaMode::Move(Point3f start,Point3f end)
     bool hit=false;
     
     Point3f pside(0,0,0),phit(0,0,0);
-    bool slide=false,mid_inside;
+    bool slide=false,mid_inside=false;
     
     int np = int(points.size()), i, j;
     for (i = 0, j = np-1; i < np; j = i++) {
@@ -849,7 +849,7 @@ void NavigatorWasdMode::SetAction() {
 }
 
 bool NavigatorWasdMode::IsAnimating(const Trackball * tb){
-	const unsigned int MOVEMENT_KEY_MASK = ~Trackball::MODIFIER_MASK;
+	const unsigned int MOVEMENT_KEY_MASK = (const unsigned int)(~Trackball::MODIFIER_MASK);
 	if (tb->current_button & MOVEMENT_KEY_MASK) return true;
 	if (current_speed!=Point3f(0,0,0)) return true;
 	if (step_current>0.0) return true;
