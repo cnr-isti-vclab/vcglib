@@ -2364,7 +2364,7 @@ static bool cb_read_list_inin( GZFILE fp, void * mem, PropDescriptor * d )
 {
 //	uchar n,i; prima del 5/9/03 era cosi'
 // if( pb_fread(&n,1,1,fp)==0 ) return false;
-	int n,i;
+	int n=0,i;
 	switch(d->stotype2)
 	{ 
 	case T_CHAR : { char val; if( ReadCharB(fp,&val,d->format)==0 ) return false; n=val; } break;
@@ -2372,7 +2372,7 @@ static bool cb_read_list_inin( GZFILE fp, void * mem, PropDescriptor * d )
 	case T_SHORT : { short val; if( ReadShortB(fp,&val,d->format)==0 ) return false; n=val; } break;
 	case T_UINT : { uint val; if( ReadUIntB(fp,&val,d->format)==0 ) return false; n=val; } break;
 	case T_INT : { int val; if( ReadIntB(fp,&val,d->format)==0 ) return false; n=val; } break;
-	default: assert(0);
+	default: assert(0); break;
 	}
 	char * store;
 	StoreInt( ((char *)mem)+d->offset2, d->memtype2, int(n));
