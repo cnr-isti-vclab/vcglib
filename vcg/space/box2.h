@@ -260,7 +260,7 @@ ScalarType DistancePoint2Box2(const Point2<ScalarType> &test,
 							  const Box2<ScalarType> &bbox)
 {
 	///test possible position respect to bounding box
-	if (!bbox.IsIN(test)){
+	if (!bbox.IsIn(test)){
 		if ((test.X()<=bbox.min.X())&&(test.Y()<=bbox.min.Y()))
 			return ((test-bbox.min).Norm());
 		else
