@@ -67,7 +67,7 @@ inline bool LineLineIntersection(const vcg::Line2<SCALAR_TYPE> & l0,
 								 const vcg::Line2<SCALAR_TYPE> & l1,
 								 Point2<SCALAR_TYPE> &p)
 {
-	const SCALAR_TYPE EPSILON= SCALAR_TYPE(1e-8);
+	const SCALAR_TYPE Eps= SCALAR_TYPE(1e-8);
 	///first line
 	SCALAR_TYPE x1=l0.Origin().X();
 	SCALAR_TYPE y1=l0.Origin().Y(); 
@@ -84,7 +84,7 @@ inline bool LineLineIntersection(const vcg::Line2<SCALAR_TYPE> & l0,
 
 	///denominator
 	SCALAR_TYPE den=((x1-x2)*(y3-y4))-((y1-y2)*(x3-x4));
-	if (fabs(den)<EPSILON)
+	if (fabs(den)<Eps)
 		return false;
 
 	SCALAR_TYPE d0=(x1*y2)-(y1*x2);
@@ -165,32 +165,34 @@ inline bool SegmentSegmentIntersection(const vcg::Segment2<SCALAR_TYPE> &seg0,
 									   const vcg::Segment2<SCALAR_TYPE> &seg1,
 									   Point2<SCALAR_TYPE> &p_inters)
 {
-  ///test intersection of bbox
-  vcg::Box2<SCALAR_TYPE> bb0,bb1;
-  bb0.Add(seg0.P0());
-  bb0.Add(seg0.P1());
-  bb1.Add(seg1.P0());
-  bb1.Add(seg1.P1());
-  if (!bb0.Collide(bb1))
-	  return false;
-  else
-  {
-	///first compute intersection between lines
-	vcg::Line2<SCALAR_TYPE> l0,l1;
+		vcg::Line2<SCALAR_TYPE> l0,l1;
 
-	l0.SetOrigin(seg0.P0());
-	vcg::Point2<SCALAR_TYPE> dir0=seg0.P1()-seg0.P0();
-	dir0.Normalize();
-	l0.SetDirection(dir0);
-	l1.SetOrigin(seg1.P0());
-	vcg::Point2<SCALAR_TYPE> dir1=seg1.P1()-seg1.P0();
-	dir1.Normalize();
-	l1.SetDirection(dir1);
-	return ((LineSegmentIntersection<SCALAR_TYPE>(l0,seg1,p_inters))&&
-			(LineSegmentIntersection<SCALAR_TYPE>(l1,seg0,p_inters)));
-  }
+		l0.SetOrigin(seg0.P0());
+		vcg::Point2<SCALAR_TYPE> dir0=seg0.P1()-seg0.P0();
+		dir0.Normalize();
+		l0.SetDirection(dir0);
+
+		l1.SetOrigin(seg1.P0());
+		vcg::Point2<SCALAR_TYPE> dir1=seg1.P1()-seg1.P0();
+		dir1.Normalize();
+		l1.SetDirection(dir1);
+		bool b=LineLineIntersection(l0,l1,p_inters);
+		SCALAR_TYPE len0=seg0.Length();
+		SCALAR_TYPE len1=seg1.Length();
+		SCALAR_TYPE d0=(seg0.P0()-p_inters).Norm();
+		SCALAR_TYPE d1=(seg1.P0()-p_inters).Norm();
+
+		if ((d0>len0)||(d1>len1))
+			return false;
+
+		vcg::Point2<SCALAR_TYPE> dir2=p_inters-seg0.P0();
+		vcg::Point2<SCALAR_TYPE> dir3=p_inters-seg1.P0();
+		if (((dir2*dir0)<0)||((dir3*dir1)<0))
+			return false;
+
+		return true;
+
 }
-
 /// interseciton between point and triangle
 template<class SCALAR_TYPE>
     inline bool IsInsideTrianglePoint( const Triangle2<SCALAR_TYPE> & t,const Point2<SCALAR_TYPE> & p)
