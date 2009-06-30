@@ -517,10 +517,10 @@ public:
   typename T::FacePointer const cFFp(const int) const { static typename T::FacePointer const fp=0; return fp; }
   typename T::EdgePointer       &FEp(const int)       { static typename T::EdgePointer fp=0;  assert(0); return fp; }
   typename T::EdgePointer const cFEp(const int) const { static typename T::EdgePointer const fp=0; return fp; }
-  char &VFi(const int j){static char z=0;  assert(0); return z;};
-  char &FFi(const int j){static char z=0;  assert(0); return z;};
-  const char &cVFi(const int j){static char z=0; return z;};
-  const char &cFFi(const int j){static char z=0; return z;};
+  char &VFi(const int j){(void)j; static char z=0;  assert(0); return z;};
+  char &FFi(const int j){(void)j; static char z=0;  assert(0); return z;};
+  const char &cVFi(const int j){(void)j; static char z=0; return z;};
+  const char &cFFi(const int j){(void)j; static char z=0; return z;};
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){ T::ImportLocal(leftF);}
 	inline void Alloc(const int & ns){T::Alloc(ns);}
