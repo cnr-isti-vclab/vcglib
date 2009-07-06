@@ -469,12 +469,16 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 
   pi.status = ::vcg::ply::E_NOERROR;
 
-  // init defaults
+	/*
+	// TO BE REMOVED: tv not used AND "spurious" vertex declaration causes error if ocf
+
+	// init defaults
 	VertexType tv;
 	//tv.ClearFlags();
 
 	if (vcg::tri::HasPerVertexQuality(m)) tv.Q() = (typename OpenMeshType::VertexType::QualityType)1.0;
 	if (vcg::tri::HasPerVertexColor  (m)) tv.C() = Color4b(Color4b::White);
+	*/
 
 	// Descrittori delle strutture
 
