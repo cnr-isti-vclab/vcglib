@@ -14,15 +14,23 @@
    void RemoveDoublet(Face &f, int wedge, Mesh& m)
     - identifies and removed "Doublets" (pair of quads sharing two consecutive edges)
 
+   bool IsSinglet(const Face& f, int wedge)
+   void RemoveSinglet(Face &f, int wedge, Mesh& m)
+
    void FlipBitQuadDiag(Face &f)
-    - rotates the faux edge of a quad
+    - rotates the faux edge of a quad (quad only change internally)
+
+   bool RotateBitQuadEdge(Face& f, int w0a);
+    - rotate a quad edge (clockwise or counterclockwise, specified via template)
+   
+   bool RotateBitQuadVertex(FaceType &f, int w0)
+    - rotate around a quad vertex ("wind-mill" operation)
 
    void CollapseQuadDiag(Face &f, ... p , Mesh& m)
     - collapses a quad on its diagonal. 
     - p identifies the pos of collapsed point 
       (as either the parametric pos on the diagonal, or a fresh coordtype)
-      
-   
+     
 
    [ helper functions: ]
 
@@ -96,7 +104,8 @@ given a quad edge, retruns:
    0 if that edge should not be rotated
   +1 if it should be rotated clockwise (+1)
   -1 if it should be rotated counterclockwise (-1)
-Uses the notion of quad-quailty
+Currently an edge is rotated iff it is shortened by that rotations
+(shortcut criterion)
 */
 template <class Face>
 int TestBitQuadEdgeRotation(const Face &f, int w0)
@@ -149,6 +158,8 @@ int TestBitQuadEdgeRotation(const Face &f, int w0)
   if (q1<=q2) return 1;
   return -1;
 }
+
+
 
 template <class Face, bool verse>
 bool RotateBitQuadEdge(Face& f, int w0a){
@@ -215,7 +226,134 @@ void FlipBitQuadDiag(Face &f){
   }
 }
 
-// flips the edge of a quad
+
+// given a vertex (i.e. a face and a wedge), 
+// this function tells us how the average edge lenght around a vertex would change
+// if that vertex is rotated
+template <class Face>
+typename Face::ScalarType AvgBitQuadEdgeLenghtVariationIfVertexRotated(const Face &f, int w0)
+{
+  assert(!f.IsD());
+  typedef typename Face::ScalarType ScalarType;
+  
+  ScalarType 
+    before=0, // sum of quad edges (originating from v)
+    after=0;  // sum of quad diag (orginating from v)
+  int guard = 0;
+
+  // rotate arond vertex
+  const Face* pf = &f;
+  int pi = w0;
+  int n = 0; // vertex valency
+  int na = 0; 
+  do {
+    ScalarType triEdge = (pf->P0(pi) - pf->P1(pi) ).Norm();
+    if (pf->IsF(pi)) { after += triEdge; na++;}
+    else { before+= triEdge; n++; }
+    if ( pf->IsF((pi+1)%3)) { after += CounterDiag( pf ).Norm(); na++; }
+    
+    const Face *t = pf;
+    t = pf->FFp( pi );
+    if (pf == t ) return std::numeric_limits<ScalarType>::max(); // it's a mesh border! flee!
+    pi = pf->cFFi( pi );
+    pi = (pi+1)%3; // Face::Next( pf->FFi( pi ) );
+    pf = t;
+    assert(guard++<100);
+  } while (pf != &f);
+  assert (na == n);
+  return (after-before)/n;
+}
+
+/*
+  const Face* pf = &f;
+  int pi = wedge;
+  int res = 0, guard=0;
+  do {
+    if (!pf->IsAnyF()) return false; // there's a triangle!
+    if (!pf->IsF(pi)) res++;
+    const Face *t = pf;
+    t = pf->FFp( pi );
+    if (pf == t ) return false;
+    pi = pf->cFFi( pi );
+    pi = (pi+1)%3; // Face::Next( pf->FFi( pi ) );
+    pf = t;
+    assert(guard++<100);
+  } while (pf != &f);
+*/
+
+// given a vertex (i.e. a face and a wedge), 
+// this function tells us if it should be rotated or not
+// (currently, we should iff it is shortened)
+template <class Face>
+bool TestBitQuadVertexRotation(const Face &f, int w0)
+{
+  assert(!f.IsD());
+  // rotate quad IFF this way edges become shorter:
+  return AvgBitQuadEdgeLenghtVariationIfVertexRotated(f,w0)<0;
+}
+
+
+template <class FaceType>
+bool RotateBitQuadVertex(FaceType &f, int w0)
+{
+  typedef typename FaceType::ScalarType ScalarType;
+  
+  int guard = 0;
+
+  FaceType* pf = &f;
+  int pi = w0;
+  int n = 0; // vertex valency
+  
+  if (pf->IsF((pi+2) % 3)) { 
+      pi = (pi+2)%3;
+      // do one step back
+      int tmp = pf->FFi(pi); pf = pf->FFp(pi); pi = tmp;  // flipF 
+  }
+  
+  const FaceType* stopA = pf;
+  const FaceType* stopB = pf->FFp(FauxIndex(pf));
+
+  // rotate around vertex, flipping diagonals if necessary,
+  do {
+    bool mustFlip;
+    if (pf->IsF(pi)) { 
+      // if next edge is faux, move on other side of quad
+      int tmp = (pf->FFi(pi)+1)%3; pf = pf->FFp(pi); pi = tmp;  // flipF 
+      mustFlip = false;
+    }
+    else {
+      mustFlip = true;
+    }
+
+    FaceType *lastF = pf;
+    
+    int tmp = (pf->FFi(pi)+1)%3; pf = pf->FFp(pi); pi = tmp;  // flipF
+        
+    if (mustFlip) {
+      if (!CheckFlipBitQuadDiag(*lastF)) assert(0); //return false; // cannot flip??
+      FlipBitQuadDiag(*lastF);
+    }
+    
+  } while (pf != stopA && pf!= stopB);
+  
+  // last pass: rotate arund vertex again, changing faux status
+  stopA=pf;
+  do {
+    int j = pi;
+    if (pf->IsF(j)) pf->ClearF(j); else pf->SetF(j);
+    j = (j+2)%3;
+    if (pf->IsF(j)) pf->ClearF(j); else pf->SetF(j);
+    int tmp = (pf->FFi(pi)+1)%3; pf = pf->FFp(pi); pi = tmp;  // flipF flipV
+  } while (pf != stopA );
+
+  return true;
+}
+
+
+
+
+
+// flips the faux edge of a quad
 template <class Face>
 void FlipBitQuadEdge(Face &f, int k){
   assert(!f.IsF(k));
@@ -444,6 +582,54 @@ void CollapseQuadDiag(typename Mesh::FaceType &f, typename Mesh::ScalarType k, M
 }
 
 template <class Mesh>
+bool CollapseQuadEdgeDirect(typename Mesh::FaceType &f, int w0, Mesh& m){
+  typename Mesh::FaceType * f0 = &f;
+
+  assert( !f0->IsF(w0) );
+  
+  typename Mesh::VertexType *v0, *v1;
+  v0 = f0->V0(w0);
+  v1 = f0->V1(w0);
+  
+  if (!RotateBitQuadVertex(*f0,w0)) return false;
+  
+  
+  // quick hack: recover original wedge
+  if      (f0->V(0) == v0) w0 = 0;
+  else if (f0->V(1) == v0) w0 = 1;
+  else if (f0->V(2) == v0) w0 = 2; 
+  else assert(0);
+  
+  assert( f0->V1(w0) == v1 );
+  assert( f0->IsF(w0) );
+  
+  CollapseQuadDiag(*f0,PosOnDiag(*f0,false), m);
+  return true;
+}
+
+template <class Mesh>
+bool CollapseQuadEdge(typename Mesh::FaceType &f, int w0, Mesh& m){
+  typedef typename Mesh::FaceType * FaceTypeP;
+  FaceTypeP f0 = &f;
+  
+  assert(!f0->IsF(w0)); // don't use this to collapse diag.
+  
+  FaceTypeP f1 = f0->FFp(w0); 
+  int w1 = f0->FFi(w0); 
+  
+  assert(f0!=f1); // can't collapse border edges!
+  
+  // choose: rotate around V0 or around V1?
+  if (
+    AvgBitQuadEdgeLenghtVariationIfVertexRotated(*f0,w0)
+    <
+    AvgBitQuadEdgeLenghtVariationIfVertexRotated(*f1,w1)
+  )    return CollapseQuadEdgeDirect(*f0,w0,m); 
+  else return CollapseQuadEdgeDirect(*f1,w1,m);
+}
+
+
+template <class Mesh>
 void CollapseQuadDiag(typename Mesh::FaceType &f, const typename Mesh::CoordType &p, Mesh& m){
   
   typedef typename Mesh::FaceType Face;
@@ -486,7 +672,7 @@ void CollapseQuadDiag(typename Mesh::FaceType &f, const typename Mesh::CoordType
       pf = t;
     } while (pf!=fb);
   }
-  
+    
   // update FF, delete faces
   _CollapseQuadDiagHalf(*fb, fauxb, m);
   _CollapseQuadDiagHalf(*fa, fauxa, m);
@@ -511,5 +697,32 @@ void CollapseQuadCounterDiag(typename Mesh::FaceType &f, const typename Mesh::Co
 }
 
 
+// helper function: find a good position on a diag to collapse a point
+// currently, it is point in the middle, 
+//    unless a mixed border-non border edge is collapsed, then it is an exreme
+template <class Face>
+typename Face::ScalarType PosOnDiag(const Face& f, bool counterDiag){
+  bool b0, b1, b2, b3; // which side of the quads are border
+  
+  const Face* fa=&f;
+  int ia = FauxIndex(fa);
+  const Face* fb=fa->cFFp(ia); 
+  int ib = fa->cFFi(ia);
+  
+  b0 = fa->FFp((ia+1)%3) == fa;
+  b1 = fa->FFp((ia+2)%3) == fa;
+  b2 = fb->FFp((ib+1)%3) == fb;
+  b3 = fb->FFp((ib+2)%3) == fb;
+  
+  if (counterDiag) {
+    if (  (b0||b1) && !(b2||b3) ) return 0;
+    if ( !(b0||b1) &&  (b2||b3) ) return 1;
+  } else {
+    if (  (b1||b2) && !(b3||b0) ) return 0;
+    if ( !(b1||b2) &&  (b3||b0) ) return 1;
+  }
+  //if (f->FF( FauxIndex(f) )->IsB(
+  return 0.5f;
+}
 
 }} // end namespace vcg::tri
