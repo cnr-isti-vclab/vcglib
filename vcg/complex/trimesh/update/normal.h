@@ -388,6 +388,22 @@ static void PerFaceNormalized(ComputeMeshType &m)
       if( !(*f).IsD() )	face::ComputeNormalizedNormal(*f);
 }
 
+static void PerBitQuadFaceNormalized(ComputeMeshType &m)
+{
+	if( !m.HasPerFaceNormal()) return;
+	PerFace(m);
+
+	FaceIterator f;
+	for(f=m.face.begin();f!=m.face.end();++f) {
+      if( !(*f).IsD() )	{
+        for (int k=0; k<3; k++) if (f->IsF(k)) 
+        if (&*f < f->FFp(k)) {
+          f->N() = f->FFp(k)->N() = (f->FFp(k)->N() + f->N()).Normalize();
+        }
+      }
+  }
+}
+
 
 /// \brief Calculates the vertex normal.
 static void PerVertexNormalized(ComputeMeshType &m)
