@@ -261,8 +261,8 @@ namespace vcg {
 				}
 				bool NeedUpdate() {if(oldBase && newBase!=oldBase && !preventUpdateFlag) return true; else return false;}
 
-				SimplexPointerType oldBase;
 				SimplexPointerType newBase;
+				SimplexPointerType oldBase;
 				SimplexPointerType newEnd;
 				SimplexPointerType oldEnd;
 				bool preventUpdateFlag; /// when true no update is considered necessary.
