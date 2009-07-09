@@ -45,7 +45,10 @@ public:
 	// the default is two column and enough row. If numRow is not sufficient it is automatically enlarged.
 	int numCol;
 	int numRow;
-	
+
+	bool crossHairs; //toggle crossHairs printing
+	float crossHairRad; //crossHair radius in cm
+
 	Point2f sizeCm; // The size, in the drawing, of each ViewBox (in cm)
 	
  	Point2f marginCm; // how much space between each slice box (in cm)
@@ -93,8 +96,11 @@ public:
 		sizeCm=Point2f(10,10);
 		marginCm=Point2f(1,1);
 		showTextDetails=true;
-		numCol=2;
+		numCol=2; 
 		numRow=10;
+
+		crossHairs=true;
+		crossHairRad=.25f;
 	}
 
 };
@@ -173,10 +179,66 @@ static void WriteXmlBody(FILE* fpo, EdgeMeshType &mp, SVGProperties &pro, int me
 	fprintf(fpo, "  <rect width= \" %fcm \" height= \" %fcm \" x=\"%fcm \" y=\"%fcm \" "
 					     "        style= \" stroke-width:1pt; fill-opacity:0.0; stroke:rgb(0,0,0)\" /> \n",
 					     pro.sizeCm[0], pro.sizeCm[1], pro.marginCm[0]+colInd*(pro.sizeCm[0]+pro.marginCm[0]), pro.marginCm[1]+rowInd*(pro.sizeCm[1]+pro.marginCm[1]));
+	
+	// write crosshairs
+	if (pro.crossHairs){
+ 	  // WriteCrossHairs(fpo);
+		float r=pro.crossHairRad;
+		//ch1
+		fprintf(fpo, "  <svg id = \"ch1%d\" viewBox=\"0,0,100,100\"  x=\"%fcm\" y=\"%fcm\" width=\"%fcm\" height=\"%fcm\" >\n",meshIndex,
+			pro.marginCm[0]+colInd*(pro.sizeCm[0]+pro.marginCm[0]), 
+			pro.marginCm[1]+rowInd*(pro.sizeCm[1]+pro.marginCm[1]),
+			r*2,r*2
+			);
+		fprintf(fpo,"    <ellipse cx=\"50\" cy=\"50\" rx=\"50\" ry=\"50\" style= \" stroke-width:1pt; fill-opacity:0.0; stroke:rgb(0,0,0)\" />");
+		fprintf(fpo,"    <line x1=\"50\" y1=\"0\" x2=\"50\" y2=\"100\" style= \" stroke-width:1pt; fill-opacity:0.0; stroke:rgb(0,0,0)\" />");
+		fprintf(fpo,"    <line x1=\"0\" y1=\"50\" x2=\"100\" y2=\"50\" style= \" stroke-width:1pt; fill-opacity:0.0; stroke:rgb(0,0,0)\" />");
+		fprintf(fpo,"  </svg>");
+	
+		//ch2
+		fprintf(fpo, "  <svg id = \"ch1%d\" viewBox=\"0,0,100,100\"  x=\"%fcm\" y=\"%fcm\" width=\"%fcm\" height=\"%fcm\" >\n",meshIndex,
+			pro.marginCm[0]+(colInd+1)*(pro.sizeCm[0]+pro.marginCm[0])-r*2-pro.marginCm[0], 
+			pro.marginCm[1]+(rowInd+1)*(pro.sizeCm[1]+pro.marginCm[1])-r*2-pro.marginCm[1],			
+			r*2,r*2
+			);
+		fprintf(fpo,"    <ellipse cx=\"50\" cy=\"50\" rx=\"50\" ry=\"50\" style= \" stroke-width:1pt; fill-opacity:0.0; stroke:rgb(0,0,0)\" />");
+		fprintf(fpo,"    <line x1=\"50\" y1=\"0\" x2=\"50\" y2=\"100\" style= \" stroke-width:1pt; fill-opacity:0.0; stroke:rgb(0,0,0)\" />");
+		fprintf(fpo,"    <line x1=\"0\" y1=\"50\" x2=\"100\" y2=\"50\" style= \" stroke-width:1pt; fill-opacity:0.0; stroke:rgb(0,0,0)\" />");
+		fprintf(fpo,"  </svg>");
+
+	//ch3
+		fprintf(fpo, "  <svg id = \"ch1%d\" viewBox=\"0,0,100,100\"  x=\"%fcm\" y=\"%fcm\" width=\"%fcm\" height=\"%fcm\" >\n",meshIndex,
+			pro.marginCm[0]+colInd*(pro.sizeCm[0]+pro.marginCm[0]), 
+			pro.marginCm[1]+(rowInd+1)*(pro.sizeCm[1]+pro.marginCm[1])-pro.marginCm[1]-2*r,			
+			r*2,r*2
+			);
+		fprintf(fpo,"    <ellipse cx=\"50\" cy=\"50\" rx=\"50\" ry=\"50\" style= \" stroke-width:1pt; fill-opacity:0.0; stroke:rgb(0,0,0)\" />");
+		fprintf(fpo,"    <line x1=\"50\" y1=\"0\" x2=\"50\" y2=\"100\" style= \" stroke-width:1pt; fill-opacity:0.0; stroke:rgb(0,0,0)\" />");
+		fprintf(fpo,"    <line x1=\"0\" y1=\"50\" x2=\"100\" y2=\"50\" style= \" stroke-width:1pt; fill-opacity:0.0; stroke:rgb(0,0,0)\" />");
+		fprintf(fpo,"  </svg>");
+
+		//ch3
+		fprintf(fpo, "  <svg id = \"ch1%d\" viewBox=\"0,0,100,100\"  x=\"%fcm\" y=\"%fcm\" width=\"%fcm\" height=\"%fcm\" >\n",meshIndex,
+			pro.marginCm[0]+(colInd+1)*(pro.sizeCm[0]+pro.marginCm[0])-pro.marginCm[0]-2*r, 
+			pro.marginCm[1]+rowInd*(pro.sizeCm[1]+pro.marginCm[1]),			
+			r*2,r*2
+			);
+		fprintf(fpo,"    <ellipse cx=\"50\" cy=\"50\" rx=\"50\" ry=\"50\" style= \" stroke-width:1pt; fill-opacity:0.0; stroke:rgb(0,0,0)\" />");
+		fprintf(fpo,"    <line x1=\"50\" y1=\"0\" x2=\"50\" y2=\"100\" style= \" stroke-width:1pt; fill-opacity:0.0; stroke:rgb(0,0,0)\" />");
+		fprintf(fpo,"    <line x1=\"0\" y1=\"50\" x2=\"100\" y2=\"50\" style= \" stroke-width:1pt; fill-opacity:0.0; stroke:rgb(0,0,0)\" />");
+		fprintf(fpo,"  </svg>");
+    
+	}
+
 	fprintf(fpo, "<g stroke=\"%s\" stroke-linecap=\"%s\" stroke-width = \"%fpt\" > \n",  pro.strokeColor.c_str(), pro.strokeLineCap.c_str(),pro.lineWidthPt/100.0f);
+	
+	
   fprintf(fpo, "  <svg id = \"SliceNum%d\" viewBox=\"-1000 -1000 2000 2000\" width=\"%fcm\" height=\"%fcm\" x=\"%fcm\" y=\"%fcm\" >\n", meshIndex,pro.sizeCm[0],pro.sizeCm[1],
 					pro.marginCm[0]+colInd*(pro.sizeCm[0]+pro.marginCm[0]), pro.marginCm[1]+rowInd*(pro.sizeCm[1]+pro.marginCm[1]) );
 
+	
+	
+	
 	
 	// Main loop of edge printing
 		typename EdgeMeshType::EdgeIterator i;
@@ -205,7 +267,9 @@ static void WriteXmlBody(FILE* fpo, EdgeMeshType &mp, SVGProperties &pro, int me
 		fprintf(fpo, "</g>\n");
 
 }
-		
+
+
+
 };
 
 
