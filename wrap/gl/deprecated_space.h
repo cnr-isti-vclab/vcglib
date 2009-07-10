@@ -107,8 +107,12 @@ namespace vcg {
 	inline void glScale(Point3<double> const & p){ glScaled(p[0],p[1],p[2]);}
 
   inline void glColor(Color4b const & c)   { glColor4ubv(c.V());}
-  inline void glClearColor(Color4b const &c) {	::glClearColor(float(c[0])/255.0f,float(c[1])/255.0f,float(c[2])/255.0f,1.0f);}
-  inline void glLight(GLenum light, GLenum pname,  Color4b const & c)   {
+  inline void glColor(Color4f const & c)   { glColor4fv (c.V());}
+  inline void glColor(Color4d const & c)   { glColor4dv (c.V());}
+  inline void glClearColor(Color4b const &c) { ::glClearColor(float(c[0])/255.0f,float(c[1])/255.0f,float(c[2])/255.0f,1.0f);}
+  inline void glClearColor(Color4f const &c) { ::glClearColor(c[0],c[1],c[2],c[3]); }
+  inline void glClearColor(Color4d const &c) { ::glClearColor(float(c[0]),float(c[1]),float(c[2]),float(c[3])); }
+  inline void glLight(GLenum light, GLenum pname,  Color4b const & c) {
     static float cf[4];
     cf[0]=float(cf[0]/255.0); cf[1]=float(c[1]/255.0); cf[2]=float(c[2]/255.0); cf[3]=float(c[3]/255.0);
     glLightfv(light,pname,cf);
