@@ -156,7 +156,14 @@ public:
   const S & V ( const int i ) const	{ assert(i>=0 && i<4); return Point4<S>::V(i); }
   S & V ( const int i )	{ assert(i>=0 && i<4); return Point4<S>::V(i); }
 
- private:
+  /// constuctor that imports from different Quaternion types
+  template <class Q>
+  static inline Quaternion Construct( const Quaternion<Q> & b )
+  {
+    return Quaternion(S(b[0]),S(b[1]),S(b[2]),S(b[3]));
+  }
+
+private:
 };
 
 /*template<classS, class M> void QuaternionToMatrix(Quaternion<S> &s, M &m);
