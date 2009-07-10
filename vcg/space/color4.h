@@ -401,6 +401,7 @@ inline Color4<unsigned char> Color4<unsigned char>::operator + ( const Color4<un
 
 typedef Color4<unsigned char>  Color4b;
 typedef Color4<float>  Color4f;
+typedef Color4<double>  Color4d;
 
 /*@}*/
 
