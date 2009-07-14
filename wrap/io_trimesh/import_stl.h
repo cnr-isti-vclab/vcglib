@@ -226,13 +226,13 @@ static int OpenBinary( OpenMeshType &m, const char * filename, CallBackPos *cb=0
 
     STLFacet f;
     int cnt=0;
+		int lineCnt=0;
 		int ret;
     /* Read a single facet from an ASCII .STL file */
     while(!feof(fp))
     {
-      if((++cnt)%1000) cb( (ftell(fp)*100)/fileLen, "STL Mesh Loading");	
-
-      ret=fscanf(fp, "%*s %*s %f %f %f\n", &f.n.X(), &f.n.Y(), &f.n.Z());
+      if((++cnt)%1000) cb( int(double(ftell(fp))*100.0/fileLen), "STL Mesh Loading");	
+	    ret=fscanf(fp, "%*s %*s %f %f %f\n", &f.n.X(), &f.n.Y(), &f.n.Z()); // --> "facet normal 0 0 0"
 			if(ret!=3) 
 			{
 				// we could be in the case of a multiple solid object, where after a endfaced instead of another facet we have to skip two lines:
@@ -241,20 +241,22 @@ static int OpenBinary( OpenMeshType &m, const char * filename, CallBackPos *cb=0
 				//endsolid     <- continue on ret==0 will skip this line
 				//solid ascii  <- and this one.
 				//   facet normal 0.000000e+000 7.700727e-001 -6.379562e-001
+				lineCnt++;
 				continue; 
 			}
-      ret=fscanf(fp, "%*s %*s");
-      ret=fscanf(fp, "%*s %f %f %f\n", &f.v[0].X(),  &f.v[0].Y(),  &f.v[0].Z());
+      ret=fscanf(fp, "%*s %*s"); // --> "outer loop"
+      ret=fscanf(fp, "%*s %f %f %f\n", &f.v[0].X(),  &f.v[0].Y(),  &f.v[0].Z()); // --> "vertex x y z"
 			if(ret!=3) 
 				return E_UNESPECTEDEOF;
-      ret=fscanf(fp, "%*s %f %f %f\n", &f.v[1].X(),  &f.v[1].Y(),  &f.v[1].Z());
+      ret=fscanf(fp, "%*s %f %f %f\n", &f.v[1].X(),  &f.v[1].Y(),  &f.v[1].Z()); // --> "vertex x y z"
 			if(ret!=3) 
 				return E_UNESPECTEDEOF;
-      ret=fscanf(fp, "%*s %f %f %f\n", &f.v[2].X(),  &f.v[2].Y(),  &f.v[2].Z());
+      ret=fscanf(fp, "%*s %f %f %f\n", &f.v[2].X(),  &f.v[2].Y(),  &f.v[2].Z()); // --> "vertex x y z"
 			if(ret!=3) 
 				return E_UNESPECTEDEOF;
-      ret=fscanf(fp, "%*s"); // end loop
-      ret=fscanf(fp, "%*s"); // end facet
+      ret=fscanf(fp, "%*s"); // --> "endloop"
+      ret=fscanf(fp, "%*s"); // --> "endfacet"
+			lineCnt+=7;
       if(feof(fp)) break;
       FaceIterator fi=Allocator<OpenMeshType>::AddFaces(m,1);
       VertexIterator vi=Allocator<OpenMeshType>::AddVertices(m,3);
