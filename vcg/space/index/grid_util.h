@@ -168,7 +168,17 @@ public:
 		b.max = (p + voxel);
 	}
 
-	// Same of above but for the case that you just want to transform 
+	/* Given a cell index return the center of the cell itself
+	 * @param integer coordinates pi of the cell
+	 * @return b is the corresponding box in <ScalarType> coordinates
+	 */inline void IPiToBoxCenter(const Point3i & pi, CoordType & c ) const
+	{
+		CoordType p;
+		IPiToPf(pi,p);
+		c = p + voxel/ScalarType(2.0);
+	}
+
+	// Same of IPiToPf but for the case that you just want to transform 
 	// from a space to the other.
 	inline void IPfToPf(const CoordType & pi, CoordType &p ) const
 	{
