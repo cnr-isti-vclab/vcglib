@@ -1595,7 +1595,6 @@ static int MergeCloseVertex(MeshType &m, const ScalarType radius)
 													mergedCnt++;
 													closests[i]->SetV();
 													closests[i]->P()=p;
-													closests[i]->C()=Color4b::Green;
 												}
 						}
 					}
