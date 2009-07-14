@@ -119,7 +119,7 @@ class Stat
 				for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
 						if(!(*vi).IsD())
 							{
-								assert(!math::IsNAN((*vi).Q()));
+								assert(!math::IsNAN((*vi).Q()) && "You should never try to compute Histogram with Invalid Floating points numbers (NaN)");
 								h.Add((*vi).Q());
 							}						
 				// Sanity check; If some very wrong value has happened in the Q value, 
