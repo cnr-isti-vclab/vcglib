@@ -239,7 +239,7 @@ public:
 		ScalarType QbAfter = QualityFunc(v0, v3, v2);
 		
 		// < 0 if the average quality of faces improves after flip
-		_priority = (Qa + Qb - QaAfter - QbAfter) / 2.0;
+		_priority = (Qa + Qb - QaAfter - QbAfter) / (ScalarType)2.0;
 		
 		return _priority;
 	}
