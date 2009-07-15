@@ -99,8 +99,9 @@ namespace vcg {
 	{
 		typedef typename FaceType::ScalarType ScalarType;
 		
-		const ScalarType EPSILON = ScalarType( 0.000001);
-		//const ScalarType EPSILON = 0.00000001;
+                const ScalarType EPS = ScalarType( 0.000001);
+
+                //const ScalarType EPSILON = 0.00000001;
 		ScalarType b,b0,b1,b2;
 			// Calcolo distanza punto piano
 		ScalarType d = Distance( f.cPlane(), q );
@@ -146,13 +147,13 @@ namespace vcg {
 			// vicini (come prodotto vettore)
 			// Nota: si potrebbe rendere un pochino piu' veloce sostituendo Area()
 			// con il prodotto vettore dei due edge in 2d lungo il piano migliore.
-			if( (b=vcg::math::Min<ScalarType>(b0,vcg::math::Min<ScalarType>(b1,b2))) < EPSILON*DoubleArea(f)) 
+                        if( (b=vcg::math::Min<ScalarType>(b0,vcg::math::Min<ScalarType>(b1,b2))) < EPS*DoubleArea(f))
       {
 				ScalarType bt;
 				if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
 				else if(b==b1) 	bt = PSDist(q,f.V(2)->cP(),f.V(0)->cP(),p);
 				else if(b==b2) 	bt = PSDist(q,f.V(0)->cP(),f.V(1)->cP(),p);
-				//printf("Warning area:%g %g %g %g thr:%g bt:%g\n",Area(), b0,b1,b2,EPSILON*Area(),bt);
+                                //printf("Warning area:%g %g %g %g thr:%g bt:%g\n",Area(), b0,b1,b2,EPS*Area(),bt);
 				if(dist>bt) { dist = bt; return true; }
 				else return false;
 			}
@@ -180,7 +181,7 @@ namespace vcg {
 				if(dist>b2) { dist = b2; return true; }
 				else return false;
 			}
-			if( (b=vcg::math::Min<ScalarType>(b0,vcg::math::Min<ScalarType>(b1,b2))) < EPSILON*DoubleArea(f)) 
+                        if( (b=vcg::math::Min<ScalarType>(b0,vcg::math::Min<ScalarType>(b1,b2))) < EPS*DoubleArea(f))
       {
 				ScalarType bt;
 				if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
@@ -214,7 +215,7 @@ namespace vcg {
 				if(dist>b2) { dist = b2; return true; }
 				else return false;
 			}
-			if( (b=vcg::math::Min<ScalarType>(b0,vcg::math::Min<ScalarType>(b1,b2))) < EPSILON*DoubleArea(f)) 
+                        if( (b=vcg::math::Min<ScalarType>(b0,vcg::math::Min<ScalarType>(b1,b2))) < EPS*DoubleArea(f))
       {
 				ScalarType bt;
 				if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
@@ -314,7 +315,7 @@ namespace vcg {
 				#endif		
 				Plane3<ScalarType> fPlane;
 				fPlane.Init(f.cP(0),f.cN());
-				const ScalarType EPSILON = ScalarType( 0.000001);
+                                const ScalarType EPS = ScalarType( 0.000001);
 				ScalarType b,b0,b1,b2;
 				// Calcolo distanza punto piano
 				ScalarType d = Distance( fPlane, q );
@@ -384,7 +385,7 @@ namespace vcg {
 							// vicini (come prodotto vettore)
 							// Nota: si potrebbe rendere un pochino piu' veloce sostituendo Area()
 							// con il prodotto vettore dei due edge in 2d lungo il piano migliore.
-							if( (b=vcg::math::Min<ScalarType>(b0,vcg::math::Min<ScalarType>(b1,b2))) < EPSILON*DoubleArea(f)) 
+                                                        if( (b=vcg::math::Min<ScalarType>(b0,vcg::math::Min<ScalarType>(b1,b2))) < EPS*DoubleArea(f))
 							{
 								ScalarType bt;
 								if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
@@ -421,7 +422,7 @@ namespace vcg {
 							if(dist>b2) { dist = b2; return true; }
 							else return false;
 						}
-							if( (b=vcg::math::Min<ScalarType>(b0,vcg::math::Min<ScalarType>(b1,b2))) < EPSILON*DoubleArea(f)) 
+                                                        if( (b=vcg::math::Min<ScalarType>(b0,vcg::math::Min<ScalarType>(b1,b2))) < EPS*DoubleArea(f))
 							{
 								ScalarType bt;
 								if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
@@ -458,7 +459,7 @@ namespace vcg {
 							if(dist>b2) { dist = b2; return true; }
 							else return false;
 						}
-							if( (b=vcg::math::Min<ScalarType>(b0,vcg::math::Min<ScalarType>(b1,b2))) < EPSILON*DoubleArea(f)) 
+                                                        if( (b=vcg::math::Min<ScalarType>(b0,vcg::math::Min<ScalarType>(b1,b2))) < EPS*DoubleArea(f))
 							{
 								ScalarType bt;
 								if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
