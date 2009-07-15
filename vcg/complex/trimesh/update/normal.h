@@ -102,6 +102,7 @@ Initial commit
 
 #include <vcg/space/triangle3.h>
 #include <vcg/math/matrix33.h>
+#include <vcg/simplex/face/component.h>
 
 namespace vcg {
 namespace tri {
