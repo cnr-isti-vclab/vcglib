@@ -56,8 +56,8 @@ namespace vcg {
 template<class SCALAR_TYPE>
     inline bool Convex(const Point2<SCALAR_TYPE> & p0,const Point2<SCALAR_TYPE> & p1,const Point2<SCALAR_TYPE> & p2)
 {
-  const SCALAR_TYPE EPSILON= SCALAR_TYPE(1e-8);
-  return (((p0-p1)^(p2-p1))<=EPSILON);
+  const SCALAR_TYPE EPS= SCALAR_TYPE(1e-8);
+  return (((p0-p1)^(p2-p1))<=EPS);
 }
 
 ///return if exist the intersection point
