@@ -110,22 +110,22 @@ namespace vcg{
 			dist=(r.Origin()-goal).Norm();
 
       const float LocalMaxScalar = (std::numeric_limits<float>::max)();
-			const float	EPSILON = 1e-50f;
+                        const float	EPS = 1e-50f;
 
 			/* Parametri della linea */
 			ScalarType tx,ty,tz;
 
-			if(	fabs(r.Direction().X())>EPSILON	)
+                        if(	fabs(r.Direction().X())>EPS	)
 				tx = (gx-r.Origin().X())/r.Direction().X();
 			else
 				tx	=LocalMaxScalar;
 
-			if(	fabs(r.Direction().Y())>EPSILON	)
+                        if(	fabs(r.Direction().Y())>EPS)
 				ty = (gy-r.Origin().Y())/r.Direction().Y();
 			else
 				ty	=LocalMaxScalar;
 
-			if(	fabs(r.Direction().Z())>EPSILON	)
+                        if(	fabs(r.Direction().Z())>EPS	)
 				tz = (gz-r.Origin().Z())/r.Direction().Z();
 			else
 				tz	=LocalMaxScalar;
