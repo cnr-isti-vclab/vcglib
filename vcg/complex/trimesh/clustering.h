@@ -123,11 +123,11 @@ public:
 template<class MeshType  >
 class  NearestToCenter
 {
-  typedef typename MeshType::ScalarType ScalarType;
-  typedef typename MeshType::CoordType CoordType;
-	typedef typename MeshType::VertexType  VertexType;
-	typedef typename MeshType::FaceType  FaceType;
-	typedef BasicGrid<typename MeshType::ScalarType> GridType;
+    typedef typename MeshType::ScalarType ScalarType;
+    typedef typename MeshType::CoordType CoordType;
+    typedef typename MeshType::VertexType  VertexType;
+    typedef typename MeshType::FaceType  FaceType;
+    typedef BasicGrid<typename MeshType::ScalarType> GridType;
 
   public:
     inline void AddVertex(MeshType &m, GridType &g, Point3i &pi, VertexType &v)
@@ -352,7 +352,9 @@ class Clustering
 			//  printf("Inserted %8i triangles, clustered to %8i tri and %i cells\n",distance(m.face.begin(),fi),TriSet.size(),GridCell.size());
 			}
   }
-	//
+
+  int CountPointSet() {return GridCell.size(); }
+
   void SelectPointSet(MeshType &m)
   {
 		typename STDEXT::hash_map<HashedPoint3i,CellType>::iterator gi;
@@ -382,8 +384,8 @@ class Clustering
     }
  
   }
-	
-	void ExtractMesh(MeshType &m)
+
+  void ExtractMesh(MeshType &m)
   {
     m.Clear();
 

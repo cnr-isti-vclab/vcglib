@@ -108,7 +108,7 @@ class Stat
 			}
 			
 			
-      static void ComputePerVertexQualityHistogram( MeshType & m, Histogramf &h)    // V1.0
+      static void ComputePerVertexQualityHistogram( MeshType & m, Histogramf &h, bool selectionOnly = false)    // V1.0
       {
 				VertexIterator vi;
 				int HistSize=10000;
@@ -117,7 +117,7 @@ class Stat
 				h.Clear();
 				h.SetRange( minmax.first,minmax.second, HistSize);
 				for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
-						if(!(*vi).IsD())
+                                                if(!(*vi).IsD() &&  ((!selectionOnly) || (*vi).IsS()) )
 							{
 								assert(!math::IsNAN((*vi).Q()) && "You should never try to compute Histogram with Invalid Floating points numbers (NaN)");
 								h.Add((*vi).Q());
@@ -143,7 +143,8 @@ class Stat
 						h.Clear();
 						h.SetRange(newmin, newmax, HistSize*50);
 						for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
-								if(!(*vi).IsD()) h.Add((*vi).Q());
+                                                                if(!(*vi).IsD() && ((!selectionOnly) || (*vi).IsS()) )
+                                                                    h.Add((*vi).Q());
 					}
       }
 
