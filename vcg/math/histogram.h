@@ -93,7 +93,7 @@ Initial Release
 #include <string>
 #include <limits>
 #include <vcg/math/base.h>
-
+#include <stdio.h>
 
 namespace vcg {
 
