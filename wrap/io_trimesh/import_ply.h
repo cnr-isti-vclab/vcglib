@@ -238,7 +238,8 @@ struct LoadPly_VertAux
 	S p[3];
 	S n[3];
 	int flags;
-	float q;
+	float q; // the confidence
+	float intensity;
 	unsigned char r;
 	unsigned char g;
 	unsigned char b;
@@ -275,7 +276,7 @@ struct LoadPly_Camera
 	float k4;
 };
 
-#define _VERTDESC_LAST_  19
+#define _VERTDESC_LAST_  20
 static const  PropDescriptor &VertDesc(int i)  
 {
 	static const PropDescriptor pv[_VERTDESC_LAST_]={
@@ -298,6 +299,8 @@ static const  PropDescriptor &VertDesc(int i)
 /*16*/ {"vertex", "texture_u",    ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,u),0,0,0,0,0  ,0},
 /*17*/ {"vertex", "texture_v",    ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,v),0,0,0,0,0  ,0},
 /*18*/ {"vertex", "texture_w",    ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,w),0,0,0,0,0  ,0},
+/*19*/ {"vertex", "intensity",    ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,intensity),0,0,0,0,0  ,0},
+
 	};
 	return pv[i];
 }
@@ -463,6 +466,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 	
 	
 	pi.mask = 0;
+	bool hasIntensity = false; // the intensity is a strange way to code single channel color used sometimes in rangemap. it is a kind of color. so it do not need another entry in the IOM mask.
 	bool multit = false; // true if texture has a per face int spec the texture index
 
 	va.flags = 42;
@@ -562,13 +566,19 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 			pf.AddToRead(VertDesc(10));
 			pi.mask |= Mask::IOM_VERTCOLOR;
 		}
+		if( pf.AddToRead(VertDesc(19))!=-1 )
+		{
+		  hasIntensity = true; 
+			pi.mask |= Mask::IOM_VERTCOLOR;
+		}
+
 	}
 
     if(tri::HasPerVertexRadius(m))
-	{
-		if( pf.AddToRead(VertDesc(15))!=-1 )
-				pi.mask |= Mask::IOM_VERTRADIUS;
-	}
+			{
+				if( pf.AddToRead(VertDesc(15))!=-1 )
+						pi.mask |= Mask::IOM_VERTRADIUS;
+			}
 			// se ci sono i flag per vertice ci devono essere anche i flag per faccia
 	if( pf.AddToRead(FaceDesc(1))!=-1 )
 		pi.mask |= Mask::IOM_FACEFLAGS;
@@ -737,12 +747,17 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 					}
 				
 				if( pi.mask & Mask::IOM_VERTCOLOR )
-				{
-					(*vi).C()[0] = va.r;
-					(*vi).C()[1] = va.g;
-					(*vi).C()[2] = va.b;
-					(*vi).C()[3] = 255;
-				}
+					{
+						if(hasIntensity)
+								(*vi).C().SetGrayShade(va.intensity);
+						else
+							{
+								(*vi).C()[0] = va.r;
+								(*vi).C()[1] = va.g;
+								(*vi).C()[2] = va.b;
+								(*vi).C()[3] = 255;
+							}
+					}
 				if( pi.mask & Mask::IOM_VERTRADIUS )
 						(*vi).R() = va.radius; 
 
@@ -1155,9 +1170,13 @@ static bool LoadMask(const char * filename, int &mask, PlyInfo &pi)
 	if( pf.AddToRead(VertDesc(4))!=-1 )		mask |= Mask::IOM_VERTQUALITY;
 	if( pf.AddToRead(VertDesc(11))!=-1 )	mask |= Mask::IOM_VERTQUALITY;
 	if( pf.AddToRead(VertDesc(15))!=-1 )	mask |= Mask::IOM_VERTRADIUS;
-	if( ( pf.AddToRead(VertDesc(5))!=-1 ) && 
-		  ( pf.AddToRead(VertDesc(6))!=-1 ) &&
-			( pf.AddToRead(VertDesc(7))!=-1 )  )  mask |= Mask::IOM_VERTCOLOR;
+	if( ( pf.AddToRead(VertDesc( 5))!=-1 ) && 
+		  ( pf.AddToRead(VertDesc( 6))!=-1 ) &&
+			( pf.AddToRead(VertDesc( 7))!=-1 )  )  mask |= Mask::IOM_VERTCOLOR;
+	if( ( pf.AddToRead(VertDesc( 8))!=-1 ) && 
+		  ( pf.AddToRead(VertDesc( 9))!=-1 ) &&
+			( pf.AddToRead(VertDesc(10))!=-1 )  )  mask |= Mask::IOM_VERTCOLOR;
+	if(   pf.AddToRead(VertDesc(19))!=-1 )     mask |= Mask::IOM_VERTCOLOR;
 	
 	if( pf.AddToRead(FaceDesc(0))!=-1 ) mask |= Mask::IOM_FACEINDEX;
 	if( pf.AddToRead(FaceDesc(1))!=-1 ) mask |= Mask::IOM_FACEFLAGS;
