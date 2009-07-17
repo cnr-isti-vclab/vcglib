@@ -954,7 +954,7 @@ void Crease(MESH_TYPE &m, typename MESH_TYPE::scalar_type angleRad)
 				VISITED_2= MESH_TYPE::FaceType::USER0<<2} ;
 	int vis[3]={VISITED_0,VISITED_1,VISITED_2};
 
-	int _t2=clock();
+        //int _t2=clock();
 	typename MESH_TYPE::FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 		if(!(*fi).IsD())	(*fi).Supervisor_Flags()&= (~(VISITED_0 | VISITED_1 | VISITED_2));
