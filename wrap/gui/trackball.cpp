@@ -138,37 +138,37 @@ Trackball::~Trackball()
 
 void Trackball::ClearModes()
 {
-	// Note: people ofter maps different keys to the same modes. 
+	// Note: people ofter maps different keys to the same modes.
 	// so we should avoid double deletion of these double referenced modes.
 	std::set<TrackMode *> goodModes;
 	std::map<int, TrackMode *>::iterator it;
   for(it = modes.begin(); it != modes.end(); it++)
 		if ((*it).second) goodModes.insert( (*it).second);
-	
+
 	std::set<TrackMode *>::iterator its;
 	for(its = goodModes.begin(); its != goodModes.end(); its++)
 			delete *its;
-			
+
 	modes.clear();
 }
 
 void Trackball::setDefaultMapping () {
   idle_and_keys_mode = NULL;
-  
+
   inactive_mode = new InactiveMode ();
 	ClearModes();
   modes[0] = NULL;
-  
-  modes[BUTTON_MIDDLE | KEY_ALT] = 
+
+  modes[BUTTON_MIDDLE | KEY_ALT] =
   modes[BUTTON_LEFT] = new SphereMode ();
-  
+
   modes[BUTTON_LEFT | KEY_CTRL] = new PanMode ();
-  
+
   modes[BUTTON_MIDDLE] = new PanMode ();
-  
-  modes[WHEEL] = 
+
+  modes[WHEEL] =
   modes[BUTTON_LEFT | KEY_SHIFT] = new ScaleMode ();
-  
+
   modes[BUTTON_LEFT | KEY_ALT] = new ZMode ();
 
 }
@@ -216,12 +216,18 @@ void Trackball::ApplyInverse() {
 
 // T(c) S R T(t) T(-c) => S R T(S^(-1) R^(-1)(c) + t - c)
 Matrix44f Trackball::Matrix() const{
+  #ifndef VCG_USE_EIGEN
   Matrix44f r; track.rot.ToMatrix(r);
   Matrix44f sr    = Matrix44f().SetScale(track.sca, track.sca, track.sca) * r;
   Matrix44f s_inv = Matrix44f().SetScale(1/track.sca, 1/track.sca, 1/track.sca);
   Matrix44f t     = Matrix44f().SetTranslate(s_inv*r.transpose()*center + track.tra - center);
 
   return Matrix44f(sr*t);
+  #else
+  Eigen::Quaternionf rot(track.rot);
+  Eigen::Translation3f tr( (1/track.sca) * (rot.inverse() * center) + track.tra - center );
+  return ( Eigen::Scaling3f(track.sca) * (rot * tr) ).matrix();
+  #endif
 }
 
 Matrix44f Trackball::InverseMatrix() const{
@@ -466,11 +472,11 @@ void Trackball::ButtonDown(Trackball::Button button, unsigned int msec) {
 
 	Button b=Button(current_button & MODIFIER_MASK);
   if ( ( modes.count (b) ) && ( modes[b] != NULL ) ) old_sticky = modes[b]->isSticky();
- 
+
   current_button |= button;
 	b=Button(current_button & MODIFIER_MASK);
 	if ( ( modes.count (b) ) && ( modes[b] != NULL ) ) new_sticky = modes[b]->isSticky();
-  
+
   if ( !old_sticky && !new_sticky) SetCurrentAction();
 
 }
@@ -481,11 +487,11 @@ void Trackball::ButtonUp(Trackball::Button button) {
 
 	Button b=Button(current_button & MODIFIER_MASK);
   if ( ( modes.count (b) ) && ( modes[b] != NULL ) ) old_sticky = modes[b]->isSticky();
- 
+
   current_button &= (~button);
 	b=Button(current_button & MODIFIER_MASK);
 	if ( ( modes.count (b) ) && ( modes[b] != NULL ) ) new_sticky = modes[b]->isSticky();
-  
+
   if ( !old_sticky && !new_sticky) SetCurrentAction();
 }
 
