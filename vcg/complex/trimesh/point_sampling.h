@@ -48,6 +48,15 @@ namespace tri
 
 /// Trivial Sampler, an example sampler object that show the required interface used by the sampling class. 
 /// Most of the sampling classes call the AddFace method with the face containing the sample and its barycentric coord.
+/// Beside being an example of how to write a sampler it provides a simple way to use the various sampling classes. 
+// For example if you just want to get a vector with positions over the surface You have just to write
+//
+// vector<Point3f> myVec;
+// TrivialSampler<MyMesh> ts(myVec) 
+// SurfaceSampling<MyMesh, TrivialSampler<MyMesh> >::Montecarlo(M, ts, SampleNum);
+// 
+//
+
 template <class MeshType>
 class TrivialSampler
 {
@@ -56,16 +65,36 @@ class TrivialSampler
 		typedef typename MeshType::VertexType			VertexType;
     typedef typename MeshType::FaceType				FaceType;
 
-	TrivialSampler(){};
-	std::vector<CoordType> sampleVec;
+	TrivialSampler()
+	{
+		sampleVec = new std::vector<CoordType>();
+		vectorOwner=true;
+	};
+
+	TrivialSampler(std::vector<CoordType> &Vec)
+	{
+		sampleVec = &Vec;
+		sampleVec->clear();
+		vectorOwner=false;
+	};
+
+	~TrivialSampler()
+	{
+		if(vectorOwner) delete sampleVec;
+	}
+	
+	private:
+		std::vector<CoordType> *sampleVec;
+		bool vectorOwner;
+	public:
 	
 	void AddVert(const VertexType &p) 
 	{
-		sampleVec.push_back(p.cP());
+		sampleVec->push_back(p.cP());
 	}
 	void AddFace(const FaceType &f, const CoordType &p) 
 	{
-		sampleVec.push_back(f.P(0)*p[0] + f.P(1)*p[1] +f.P(2)*p[2] );
+		sampleVec->push_back(f.P(0)*p[0] + f.P(1)*p[1] +f.P(2)*p[2] );
 	}
 	
 	void AddTextureSample(const FaceType &, const CoordType &, const Point2i &)
