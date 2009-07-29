@@ -201,16 +201,16 @@ namespace vcg {
 		
 		template <class MeshType, class ATTR_CONT>
 		void ReorderAttribute(ATTR_CONT &c,std::vector<size_t> & newVertIndex, MeshType &m){
-			typename std::set<typename MeshType::HandlesWrapper>::iterator ai;	
+			typename std::set<typename MeshType::PointerToAttribute>::iterator ai;	
 				for(ai = c.begin(); ai != c.end(); ++ai)
-					((typename MeshType::HandlesWrapper)(*ai)).Reorder(newVertIndex);
+					((typename MeshType::PointerToAttribute)(*ai)).Reorder(newVertIndex);
 		}
 
 		template <class MeshType, class ATTR_CONT>
 		void ResizeAttribute(ATTR_CONT &c,const int & sz, MeshType &m){
-			typename std::set<typename MeshType::HandlesWrapper>::iterator ai;	
+			typename std::set<typename MeshType::PointerToAttribute>::iterator ai;	
 				for(ai =c.begin(); ai != c.end(); ++ai)
-					((typename MeshType::HandlesWrapper)(*ai)).Resize(m.vn);
+					((typename MeshType::PointerToAttribute)(*ai)).Resize(m.vn);
 		}
 
 		/*@{*/
@@ -236,10 +236,10 @@ namespace vcg {
 			typedef typename MeshType::FacePointer    FacePointer;
 			typedef typename MeshType::FaceIterator   FaceIterator;
 			typedef typename MeshType::FaceContainer FaceContainer;
-			typedef typename MeshType::HandlesWrapper HandlesWrapper;
-			typedef typename std::set<HandlesWrapper>::iterator HandlesIterator;
-			typedef typename std::set<HandlesWrapper>::const_iterator HandlesConstIterator;
-			typedef typename std::set<HandlesWrapper >::iterator HWIte;
+			typedef typename MeshType::PointerToAttribute PtrToAttr;
+			typedef typename std::set<PtrToAttr>::iterator AttrIterator;
+			typedef typename std::set<PtrToAttr>::const_iterator AttrConstIterator;
+			typedef typename std::set<PtrToAttr >::iterator PAIte;
 
 			/** This class is used when allocating new vertexes and faces to update 
 			the pointers that can be changed when resizing the involved vectors of vertex or faces.
@@ -290,9 +290,9 @@ namespace vcg {
 				m.vert.resize(m.vert.size()+n);
 				m.vn+=n;
 
-				typename std::set<typename MeshType::HandlesWrapper>::iterator ai;
+				typename std::set<PtrToAttr>::iterator ai;
 				for(ai = m.vert_attr.begin(); ai != m.vert_attr.end(); ++ai)
-					((typename MeshType::HandlesWrapper)(*ai)).Resize(m.vert.size());
+					((PtrToAttr)(*ai)).Resize(m.vert.size());
 
 				pu.newBase = &*m.vert.begin();
 				pu.newEnd =  &m.vert.back()+1; 
@@ -365,9 +365,9 @@ namespace vcg {
 				m.edge.resize(m.edge.size()+n);
 				m.en+=n;
 
-				//typename std::set<typename MeshType::HandlesWrapper>::iterator ai;
-				//for(ai = m.vert_attr.begin(); ai != m.vert_attr.end(); ++ai)
-				//	((typename MeshType::HandlesWrapper)(*ai)).Resize(m.vert.size());
+				typename std::set<typename MeshType::PtrToAttr>::iterator ai;
+				for(ai = m.edge_attr.begin(); ai != m.edge_attr.end(); ++ai)
+					((typename MeshType::PtrToAttr)(*ai)).Resize(m.edge.size());
 
 				pu.newBase = &*m.edge.begin();
 				pu.newEnd =  &m.edge.back()+1; 
@@ -478,9 +478,9 @@ namespace vcg {
 				m.fn+=n;
 
 
-				typename std::set<typename MeshType::HandlesWrapper>::iterator ai;
+				typename std::set<PtrToAttr>::iterator ai;
 				for(ai = m.face_attr.begin(); ai != m.face_attr.end(); ++ai)
-					((typename MeshType::HandlesWrapper)(*ai)).Resize(m.face.size());
+					((PtrToAttr)(*ai)).Resize(m.face.size());
 
 				pu.newBase = &*m.face.begin();
 				pu.newEnd  = &m.face.back()+1;
@@ -708,7 +708,7 @@ public:
 	static 
 	bool IsValidHandle( MeshType & m,  const typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE> & a){
 		if(a._handle == NULL) return false;
-		for(HandlesIterator i = m.vert_attr.begin(); i!=m.vert_attr.end();++i)
+		for(AttrIterator i = m.vert_attr.begin(); i!=m.vert_attr.end();++i)
 			if ( (*i).n_attr == a.n_attr ) return true;
 		return false;
 	}
@@ -717,17 +717,19 @@ public:
 	static
 	typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>
 	 AddPerVertexAttribute( MeshType & m, std::string name){
-		HWIte i;
-		HandlesWrapper h; 
+		PAIte i;
+		PtrToAttr h; 
 		h._name = name;
 		if(!name.empty()){
 			i = m.vert_attr.find(h);
 			assert(i ==m.vert_attr.end() );// an attribute with this name exists
 		}
+		h._sizeof = sizeof(ATTR_TYPE);
+		h._padding = 0;
 		h._handle = (void*) new SimpleTempData<VertContainer,ATTR_TYPE>(m.vert);
 		m.attrn++;
 		h.n_attr = m.attrn;
-		std::pair < HandlesIterator , bool> res =  m.vert_attr.insert(h);
+		std::pair < AttrIterator , bool> res =  m.vert_attr.insert(h);
 		return typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>(res.first->_handle,res.first->n_attr );
 	 }
 
@@ -741,23 +743,35 @@ public:
 	template <class ATTR_TYPE> 
 	static
 		typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>
-	 GetPerVertexAttribute( const MeshType & m, const std::string & name){
+	 GetPerVertexAttribute( MeshType & m, const std::string & name){
 		assert(!name.empty());
-		HandlesWrapper h1; h1._name = name;
-		typename std::set<HandlesWrapper > ::const_iterator i;
+		PtrToAttr h1; h1._name = name;
+		typename std::set<PtrToAttr > :: iterator i;
 
 		i =m.vert_attr.find(h1);
-		if(i!=m.vert_attr.end())
-				return typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>((*i)._handle,(*i).n_attr);
+		if(i!=m.vert_attr.end()){
+			if(	(*i)._padding != 0 ){
+					PtrToAttr attr = (*i);						// copy the PointerToAttribute
+					m.vert_attr.erase(i);						// remove it from the set
+					FixPaddedPerVertexAttribute<ATTR_TYPE>(m,attr);				
+					std::pair<AttrIterator,bool> new_i = m.vert_attr.insert(attr);	// insert the modified PointerToAttribute
+					assert(new_i.second);
+					i = new_i.first;				
+				}
+
+			return typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>((*i)._handle,(*i).n_attr);
+
+		}
 			else
 				return typename MeshType:: template PerVertexAttributeHandle<ATTR_TYPE>(NULL,0);
+		
 	}
 
 	template <class ATTR_TYPE> 
 	static
 		void
 	DeletePerVertexAttribute( MeshType & m,typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE> & h){
-		typename std::set<HandlesWrapper > ::iterator i;
+		typename std::set<PtrToAttr > ::iterator i;
 		for( i = m.vert_attr.begin(); i !=  m.vert_attr.end(); ++i)
 			if( (*i)._handle == h._handle ){
 				delete ((SimpleTempData<VertContainer,ATTR_TYPE>*)(*i)._handle);
@@ -768,20 +782,22 @@ public:
 
 	static
 		void	DeletePerVertexAttribute( MeshType & m,  std::string name){
-		HandlesIterator i;
-		HandlesWrapper h1; h1._name = name;
+		AttrIterator i;
+		PtrToAttr h1; h1._name = name;
 		i = m.vert_attr.find(h1);
 		assert(i!=m.vert_attr.end());
 		delete ((SimpleTempDataBase<VertContainer>*)(*i)._handle);
 		m.vert_attr.erase(i);
 	}
 
+
+
 	/// Per Edge Attributes
 	template <class ATTR_TYPE>
 	static 
 	bool IsValidHandle( MeshType & m,  const typename MeshType::template PerEdgeAttributeHandle<ATTR_TYPE> & a){
 		if(a._handle == NULL) return false;
-		for(HandlesIterator i = m.edge_attr.begin(); i!=m.edge_attr.end();++i)
+		for(AttrIterator i = m.edge_attr.begin(); i!=m.edge_attr.end();++i)
 			if ( (*i).n_attr == a.n_attr ) return true;
 		return false;
 	}
@@ -790,8 +806,8 @@ public:
 	static
 	typename MeshType::template PerEdgeAttributeHandle<ATTR_TYPE>
 	 AddPerEdgeAttribute( MeshType & m, std::string name){
-		HWIte i;
-		HandlesWrapper h; 
+		PAIte i;
+		PtrToAttr h; 
 		h._name = name;
 		if(!name.empty()){
 			i = m.edge_attr.find(h);
@@ -800,7 +816,7 @@ public:
 		h._handle = (void*) new SimpleTempData<EdgeContainer,ATTR_TYPE>(m.edge);
  		m.attrn++;
 		h.n_attr = m.attrn;
-		std::pair < HandlesIterator , bool> res =  m.edge_attr.insert(h);
+		std::pair < AttrIterator , bool> res =  m.edge_attr.insert(h);
 		return typename MeshType::template PerEdgeAttributeHandle<ATTR_TYPE>(res.first->_handle,res.first->n_attr);
 	 }
 
@@ -816,8 +832,8 @@ public:
 		typename MeshType::template PerEdgeAttributeHandle<ATTR_TYPE>
 	 GetPerEdgeAttribute( const MeshType & m, const std::string & name){
 		assert(!name.empty());
-		HandlesWrapper h1; h1._name = name;
-		typename std::set<HandlesWrapper > ::const_iterator i;
+		PtrToAttr h1; h1._name = name;
+		typename std::set<PtrToAttr > ::const_iterator i;
 
 		i =m.edge_attr.find(h1);
 		if(i!=m.edge_attr.end())
@@ -830,7 +846,7 @@ public:
 	static
 		void
 	DeletePerEdgeAttribute( MeshType & m,typename MeshType::template PerEdgeAttributeHandle<ATTR_TYPE> & h){
-		typename std::set<HandlesWrapper > ::iterator i;
+		typename std::set<PtrToAttr > ::iterator i;
 		for( i = m.edge_attr.begin(); i !=  m.edge_attr.end(); ++i)
 			if( (*i)._handle == h._handle ){
 				delete ((SimpleTempData<FaceContainer,ATTR_TYPE>*)(*i)._handle);
@@ -841,8 +857,8 @@ public:
 
 	static
 		void	DeletePerEdgeAttribute( MeshType & m,  std::string name){
-		HandlesIterator i;
-		HandlesWrapper h1; h1._name = name;
+		AttrIterator i;
+		PtrToAttr h1; h1._name = name;
 		i = m.edge_attr.find(h1);
 		assert(i!=m.edge_attr.end());
 		delete ((SimpleTempDataBase<EdgeContainer>*)(*i)._handle);
@@ -854,7 +870,7 @@ public:
 	static 
 	bool IsValidHandle( MeshType & m,  const typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE> & a){
 		if(a._handle == NULL) return false;
-		for(HandlesIterator i = m.face_attr.begin(); i!=m.face_attr.end();++i)
+		for(AttrIterator i = m.face_attr.begin(); i!=m.face_attr.end();++i)
 			if ( (*i).n_attr == a.n_attr ) return true;
 		return false;
 	}
@@ -863,8 +879,8 @@ public:
 	static
 	typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE>
 	 AddPerFaceAttribute( MeshType & m, std::string name){
-		HWIte i;
-		HandlesWrapper h; 
+		PAIte i;
+		PtrToAttr h; 
 		h._name = name;
 		if(!name.empty()){
 			i = m.face_attr.find(h);
@@ -873,7 +889,7 @@ public:
 		h._handle = (void*) new SimpleTempData<FaceContainer,ATTR_TYPE>(m.face);
 		m.attrn++;
 		h.n_attr = m.attrn;
-		std::pair < HandlesIterator , bool> res =  m.face_attr.insert(h);
+		std::pair < AttrIterator , bool> res =  m.face_attr.insert(h);
 		return typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE>(res.first->_handle,res.first->n_attr);
 	 }
 
@@ -889,8 +905,8 @@ public:
 		typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE>
 	 GetPerFaceAttribute( const MeshType & m, const std::string & name){
 		assert(!name.empty());
-		HandlesWrapper h1; h1._name = name;
-		typename std::set<HandlesWrapper > ::const_iterator i;
+		PtrToAttr h1; h1._name = name;
+		typename std::set<PtrToAttr > ::const_iterator i;
 
 		i =m.face_attr.find(h1);
 		if(i!=m.face_attr.end())
@@ -903,7 +919,7 @@ public:
 	static
 		void
 	DeletePerFaceAttribute( MeshType & m,typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE> & h){
-		typename std::set<HandlesWrapper > ::iterator i;
+		typename std::set<PtrToAttr > ::iterator i;
 		for( i = m.face_attr.begin(); i !=  m.face_attr.end(); ++i)
 			if( (*i)._handle == h._handle ){
 				delete ((SimpleTempData<FaceContainer,ATTR_TYPE>*)(*i)._handle);
@@ -914,8 +930,8 @@ public:
 
 	static
 		void	DeletePerFaceAttribute( MeshType & m,  std::string name){
-		HandlesIterator i;
-		HandlesWrapper h1; h1._name = name;
+		AttrIterator i;
+		PtrToAttr h1; h1._name = name;
 		i = m.face_attr.find(h1);
 		assert(i!=m.face_attr.end());
 		delete ((SimpleTempDataBase<FaceContainer>*)(*i)._handle);
@@ -927,7 +943,7 @@ public:
 	static 
 	bool IsValidHandle( MeshType & m,  const typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE> & a){
 		if(a._handle == NULL) return false;
-		for(HandlesIterator i = m.mesh_attr.begin(); i!=m.mesh_attr.end();++i)
+		for(AttrIterator i = m.mesh_attr.begin(); i!=m.mesh_attr.end();++i)
 			if ( (*i).n_attr == a.n_attr ) return true;
 		return false;
 	}
@@ -936,8 +952,8 @@ public:
 	static
 	typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE>
 	 AddPerMeshAttribute( MeshType & m, std::string name){
-		HWIte i;
-		HandlesWrapper h; 
+		PAIte i;
+		PtrToAttr h; 
 		h._name = name;
 		if(!name.empty()){
 			i = m.mesh_attr.find(h);
@@ -946,7 +962,7 @@ public:
 		h._handle = (void*) new Attribute<ATTR_TYPE>();
 		m.attrn++;
 		h.n_attr = m.attrn;
-		std::pair < HandlesIterator , bool> res =  m.mesh_attr.insert(h);
+		std::pair < AttrIterator , bool> res =  m.mesh_attr.insert(h);
 		return typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE>(res.first->_handle,res.first->n_attr);
 	 }
 	
@@ -955,8 +971,8 @@ public:
 		typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE>
 	 GetPerMeshAttribute( const MeshType & m, const std::string & name){
 		assert(!name.empty());
-		HandlesWrapper h1; h1._name = name;
-		typename std::set<HandlesWrapper > ::const_iterator i;
+		PtrToAttr h1; h1._name = name;
+		typename std::set<PtrToAttr > ::const_iterator i;
 
 		i =m.mesh_attr.find(h1);
 		if(i!=m.mesh_attr.end())
@@ -969,7 +985,7 @@ public:
 	static
 		void
 	DeletePerMeshAttribute( MeshType & m,typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE> & h){
-		typename std::set<HandlesWrapper > ::iterator i;
+		typename std::set<PtrToAttr > ::iterator i;
 		for( i = m.mesh_attr.begin(); i !=  m.mesh_attr.end(); ++i)
 			if( (*i)._handle == h._handle ){
 				delete (( Attribute<ATTR_TYPE> *)(*i)._handle);
@@ -980,12 +996,38 @@ public:
 
 	static
 		void	DeletePerMeshAttribute( MeshType & m,  std::string name){
-		HandlesIterator i;
-		HandlesWrapper h1; h1._name = name;
+		AttrIterator i;
+		PtrToAttr h1; h1._name = name;
 		i = m.mesh_attr.find(h1);
 		assert(i!=m.mesh_attr.end());
 		delete ((AttributeBase  *)(*i)._handle);
 		m.mesh_attr.erase(i);
+	}
+
+	template <class ATTR_TYPE>
+	static 
+		void FixPaddedPerVertexAttribute ( MeshType & m,PtrToAttr & pa){
+
+			// create the container of the right type
+			SimpleTempData<VertContainer,ATTR_TYPE>* _handle =  new SimpleTempData<VertContainer,ATTR_TYPE>(m.vert);
+
+			// copy the padded container in the new one
+			_handle->Resize(m.vert.size());
+			for(int i  = 0; i < m.vert.size(); ++i){
+				ATTR_TYPE * dest = &(*_handle)[i];
+				char * ptr = (char*)( ((SimpleTempDataBase<VertContainer> *)pa._handle)->DataBegin());
+				memcpy((void*)dest ,  
+				(void*) &(ptr[i * pa._sizeof + pa._padding]) ,sizeof(ATTR_TYPE));
+			}
+
+			// remove the padded container 
+			delete ((SimpleTempDataBase<VertContainer>*) pa._handle);
+
+			// update the pointer to data
+			pa._handle = _handle;
+
+			// zero the padding 
+			pa._padding = 0;
 	}
 }; // end class
 		

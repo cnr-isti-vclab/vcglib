@@ -238,19 +238,23 @@ class TriMesh: public TriMeshEdgeHolder<VertContainerType,FaceContainerType,Edge
 
 	int attrn;	// total numer of attribute created
 
-	class HandlesWrapper{
+	class PointerToAttribute{
 	public:
-		void * _handle;	std::string _name;
-		int n_attr;
+		void * _handle;			// pointer to the SimpleTempData that stores the attribute
+		std::string _name;		// name of the attribute
+ 		int _sizeof;			// size of the attribute type (used only with VMI loading)	
+		int _padding;			// padding 	(used only with VMI loading)
+
+		int n_attr;				// unique ID of the attribute
 		void Resize(const int & sz){((SimpleTempDataBase<VertContainer>*)_handle)->Resize(sz);}
 		void Reorder(std::vector<size_t> & newVertIndex){((SimpleTempDataBase<VertContainer>*)_handle)->Reorder(newVertIndex);}
-                bool operator<(const  HandlesWrapper    b) const {	return(_name.empty()&&b._name.empty())?(_handle < b._handle):( _name < b._name);}
+                bool operator<(const  PointerToAttribute    b) const {	return(_name.empty()&&b._name.empty())?(_handle < b._handle):( _name < b._name);}
 	};
 	
-	std::set< HandlesWrapper > vert_attr;
- 	std::set< HandlesWrapper > edge_attr;
- 	std::set< HandlesWrapper > face_attr;
-	std::set< HandlesWrapper > mesh_attr;
+	std::set< PointerToAttribute > vert_attr;
+ 	std::set< PointerToAttribute > edge_attr;
+ 	std::set< PointerToAttribute > face_attr;
+	std::set< PointerToAttribute > mesh_attr;
 
 
 	template <class ATTR_TYPE, class CONT>
@@ -263,8 +267,14 @@ class TriMesh: public TriMeshEdgeHolder<VertContainerType,FaceContainerType,Edge
 			n_attr = pva.n_attr;
 			return (*this);
 		}
+
+		//pointer to the SimpleTempData that stores the attribute
 		SimpleTempData<CONT,ATTR_TYPE> * _handle;
-		int n_attr; // its attribute number
+
+		// its attribute number
+		int n_attr; 
+
+		// access function
 		template <class RefType>
 		ATTR_TYPE & operator [](const RefType  & i){return (*_handle)[i];}
 	};
@@ -337,7 +347,7 @@ public:
 	/// destructor
 	~TriMesh()
 	{
-		typename std::set< HandlesWrapper>::iterator i;
+		typename std::set< PointerToAttribute>::iterator i;
 		for( i = vert_attr.begin(); i != vert_attr.end(); ++i) 
 			delete ((SimpleTempDataBase<VertContainer>*)(*i)._handle);
 		for( i = face_attr.begin(); i != face_attr.end(); ++i) 
@@ -350,7 +360,7 @@ public:
 	}
 
 	 int Mem(const int & nv, const int & nf) const  {
-		typename std::set< HandlesWrapper>::const_iterator i;
+		typename std::set< PointerToAttribute>::const_iterator i;
 		int size = 0;
 		size += sizeof(TriMesh)+sizeof(VertexType)*nv+sizeof(FaceType)*nf;
 
@@ -583,16 +593,16 @@ bool HasVFAdjacency (const TriMesh < VertContainerType , FaceContainerType,   Ed
 
 template <class MESH_TYPE>
 bool HasPerVertexAttribute(const MESH_TYPE &m,   std::string   name){
-		typename std::set< typename MESH_TYPE::HandlesWrapper>::const_iterator ai;
-		typename MESH_TYPE::HandlesWrapper h; 
+		typename std::set< typename MESH_TYPE::PointerToAttribute>::const_iterator ai;
+		typename MESH_TYPE::PointerToAttribute h; 
 		h._name = name;
 		ai = m.vert_attr.find(h);
 		return (ai!= m.vert_attr.end() ) ;
 }
 template <class MESH_TYPE>
 bool HasPerFaceAttribute(const MESH_TYPE &m,   std::string   name){
-		typename std::set< typename MESH_TYPE::HandlesWrapper>::const_iterator ai;
-		typename MESH_TYPE::HandlesWrapper h; 
+		typename std::set< typename MESH_TYPE::PointerToAttribute>::const_iterator ai;
+		typename MESH_TYPE::PointerToAttribute h; 
 		h._name = name;
 		ai = m.face_attr.find(h);
 		return (ai!= m.face_attr.end() ) ;
@@ -600,8 +610,8 @@ bool HasPerFaceAttribute(const MESH_TYPE &m,   std::string   name){
 
 template <class MESH_TYPE>
 bool HasPerMeshAttribute(const MESH_TYPE &m,   std::string   name){
-		typename std::set< typename MESH_TYPE::HandlesWrapper>::const_iterator ai;
-		typename MESH_TYPE::HandlesWrapper h; 
+		typename std::set< typename MESH_TYPE::PointerToAttribute>::const_iterator ai;
+		typename MESH_TYPE::PointerToAttribute h; 
 		h._name = name;
 		ai = m.mesh_attr.find(h);
 		return (ai!= m.mesh_attr.end() ) ;
