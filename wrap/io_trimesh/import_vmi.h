@@ -34,7 +34,7 @@
 
 #ifndef __VCGLIB_IMPORT_VMI
 #define __VCGLIB_IMPORT_VMI
-
+ 
 /*
 	VMI VCG Mesh Image.
 	The vmi image file consists of a header containing the description of the vertex and face type,
@@ -52,8 +52,102 @@ namespace vcg {
 namespace tri {
 namespace io {
 
-	template <class OpenMeshType>
-	class ImporterVMI
+	/* derivation chain */
+	template <int N> struct DummyType{ char placeholder[N]; };
+
+	template <class MeshType, class A, class T>
+	struct Der:public T{
+		typedef typename std::set<typename MeshType::PointerToAttribute >::iterator HWIte;
+		static void AddAttrib(MeshType &m, char * name, int s, void * data){
+			if(s == sizeof(A)){
+				 typename MeshType::template PerVertexAttributeHandle<A> h = vcg::tri::Allocator<MeshType>:: template AddPerVertexAttribute<A>(m,name);
+				for(int i  = 0; i < m.vert.size(); ++i)
+					memcpy(&h[i], (void*) &((A*)data)[i],sizeof(A)); // we don't want the type conversion
+			}
+			else
+				T::AddAttrib(m,name,s,data);
+		}
+	};
+	template <class MeshType, class A, class T>
+	struct DerK:public T{
+		typedef typename std::set<typename MeshType::PointerToAttribute >::iterator HWIte;
+		static void AddAttrib(MeshType &m, char * name, int s, void * data){
+			if(s == sizeof(A)){
+				typename MeshType::template PerVertexAttributeHandle<A> h = vcg::tri::Allocator<MeshType>::template AddPerVertexAttribute<A>(m,name);
+				for(unsigned int i  = 0; i < m.vert.size(); ++i)
+					memcpy((void*) &(h[i]), (void*) &((A*)data)[i],sizeof(A)); // we don't want the type conversion
+			}
+			else
+				if(s < sizeof(A)){
+					// padding
+					int padd = sizeof(A) - s;
+					typename MeshType::template PerVertexAttributeHandle<A> h = vcg::tri::Allocator<MeshType>::template AddPerVertexAttribute<A>(m,name);
+					for(unsigned int i  = 0; i < m.vert.size(); ++i){
+						char * dest =  &((char*)(&h[i]))[padd];
+						memcpy( (void *)dest , (void*) &((A*)data)[i],s); // we don't want the type conversion
+					}
+					typename MeshType::PointerToAttribute pa;
+					pa._name = std::string(name);
+					HWIte res = m.vert_attr.find(pa);
+					pa = *res;
+					m.vert_attr.erase(res);
+					pa._padding = padd;
+					std::pair<HWIte,bool > new_pa = m.vert_attr.insert(pa);
+					assert(new_pa.second);
+				}
+				else
+ 					T::AddAttrib(m,name,s,data);
+		}
+	};
+
+
+	template <class MeshType>	struct K	{
+		static void AddAttrib(MeshType &m, char * name, int s, void * data){
+
+			assert(0);		
+		}
+	};
+
+	template <class MeshType, class B0 >																												struct K0	: public DerK<  MeshType, B0,	K<MeshType> > {};
+	template <class MeshType, class B0, class B1 >																										struct K1	: public DerK<  MeshType, B1,	K0<MeshType, B0> > {};
+	template <class MeshType, class B0, class B1, class B2 >																							struct K2	: public DerK<  MeshType, B2,	K1<MeshType, B0, B1> > {};
+	template <class MeshType, class B0, class B1, class B2,class B3>																					struct K3	: public DerK<  MeshType, B3,	K2<MeshType, B0, B1, B2> > {};
+	template <class MeshType, class B0, class B1, class B2,class B3,class B4>																			struct K4	: public DerK<  MeshType, B4,	K3<MeshType, B0, B1, B2, B3> > {};
+	template <class MeshType, class B0, class B1, class B2,class B3,class B4,class B5>																	struct K5	: public DerK<  MeshType, B5,	K4<MeshType, B0, B1, B2, B3, B4> > {};
+	template <class MeshType, class B0, class B1, class B2,class B3,class B4,class B5,class B6>															struct K6	: public DerK<  MeshType, B6,	K5<MeshType, B0, B1, B2, B3, B4, B5> > {};
+	template <class MeshType, class B0, class B1, class B2,class B3,class B4,class B5,class B6,class B7>												struct K7	: public DerK<  MeshType, B7,	K6<MeshType, B0, B1, B2, B3, B4, B5, B6> > {};
+	template <class MeshType, class B0, class B1, class B2,class B3,class B4,class B5,class B6,class B7,class B8>										struct K8	: public DerK<  MeshType, B8,	K7<MeshType, B0, B1, B2, B3, B4, B5, B6, B7> > {};
+	template <class MeshType, class B0, class B1, class B2,class B3,class B4,class B5,class B6,class B7,class B8,class B9>								struct K9	: public DerK<  MeshType, B9,	K8<MeshType, B0, B1, B2, B3, B4, B5, B6, B7, B8> > {};
+	template <class MeshType, class B0, class B1, class B2,class B3,class B4,class B5,class B6,class B7,class B8,class B9,class B10>					struct K10	: public DerK<  MeshType, B10,	K9<MeshType, B0, B1, B2, B3, B4, B5, B6, B7, B8, B9> > {};
+	template <class MeshType, class B0, class B1, class B2,class B3,class B4,class B5,class B6,class B7,class B8,class B9,class B10,class B11>			struct K11	: public DerK<  MeshType, B11,	K10<MeshType, B0, B1, B2, B3, B4, B5, B6, B7, B8, B9, B11 > > {};
+	template <class MeshType, class B0, class B1, class B2,class B3,class B4,class B5,class B6,class B7,class B8,class B9,class B10,class B11,class B12>struct K12	: public DerK<  MeshType, B12,	K11<MeshType, B0, B1, B2, B3, B4, B5, B6, B7, B8, B9, B11, B12 > > {};
+
+	template <class MeshType, class A0, 
+		class B0  = DummyType<1048576>,
+		class B1  = DummyType<2048>,
+		class B2  = DummyType<1024>,
+		class B3  = DummyType<512>,
+		class B4  = DummyType<256>, 
+		class B5  = DummyType<128>,
+		class B6  = DummyType<64>,
+		class B7  = DummyType<32>, 
+		class B8  = DummyType<16>, 
+		class B9  = DummyType<8>, 
+		class B10 = DummyType<4>, 
+		class B11 = DummyType<2>, 
+		class B12 = DummyType<1> 
+	>	struct C0		: public DerK<  MeshType, A0,    K12<MeshType, B0, B1, B2, B3, B4,B5,B6,B7,B8,B9,B10,B11,B12> > {};
+
+	template <class MeshType, class A0, class A1>											struct C1		: public Der<  MeshType, A1,	C0<MeshType, A0> > {};
+	template <class MeshType, class A0, class A1, class A2>	 								struct C2		: public Der<  MeshType, A2,	C1<MeshType, A0, A1> > {};
+	template <class MeshType, class A0, class A1, class A2,class A3>	 					struct C3		: public Der<  MeshType, A3,	C2<MeshType, A0, A1, A2> > {};
+	template <class MeshType, class A0, class A1, class A2,class A3,class A4>				struct AttrAll	: public Der<  MeshType, A4,	C3<MeshType, A0, A1, A2, A3> > {};
+
+
+	/* end derivation chain */
+ 	 
+	template <class OpenMeshType,class A0 = long, class A1 = double, class A2 = int,class A3 = short, class A4 = char > 
+	class ImporterVMI: public AttrAll<OpenMeshType,A0,A1,A2,A3,A4>
 	{
 	public:	
 		typedef typename OpenMeshType::FaceIterator FaceIterator;
@@ -90,8 +184,9 @@ namespace io {
 				return GetHeader(f,nameV, nameF, vertSize, faceSize);
 				fclose(f);
 	}
+
 		static bool Open(OpenMeshType &m,char * filename){
-			int i;
+			
 			typedef typename OpenMeshType::VertexType VertexType; 	
 			typedef typename OpenMeshType::FaceType FaceType; 	
 			typename OpenMeshType::FaceIterator fi;
@@ -112,11 +207,14 @@ namespace io {
 			if(fnameF != nameF) return false;
 
 			 int offsetV,offsetF;
-			/* read the address of the first vertex */
-			fread(&offsetV,sizeof( int),1,f);
 
-			/* read the address of the first face */
-			fread(&offsetF,sizeof( int),1,f);
+			 if(vertSize!=0)
+				/* read the address of the first vertex */
+				fread(&offsetV,sizeof( int),1,f);
+
+			 if(faceSize!=0)
+				/* read the address of the first face */
+				fread(&offsetF,sizeof( int),1,f);
 
 			/* read the object mesh */
 			fread(&m.shot,sizeof(Shot<typename OpenMeshType::ScalarType>),1,f);
@@ -126,8 +224,10 @@ namespace io {
 			fread(&m.bbox,sizeof(Box3<typename OpenMeshType::ScalarType>),1,f);
 			fread(&m.C(),sizeof(Color4b),1,f);
 
+
 			/* resize the vector of vertices */
 			m.vert.resize(vertSize);
+
 
 			int read = 0;
 			/* load the vertices */
@@ -144,7 +244,22 @@ namespace io {
 			assert(ferror(f)==0);
 			assert(!feof(f));
 			assert(read==faceSize);
-			
+		
+
+			/* load the per vertex attributes */
+			char _string[65536],_trash[65536];
+			int n,sz;
+	
+			fscanf(f,"%s %d",&_trash[0],&n);
+			for(int ia = 0 ; ia < n; ++ia){
+				fscanf(f,"%s %s",&_trash[0],&_string[0]);
+				fscanf(f,"%s %d",&_trash[0],&sz);
+				void * data = malloc(sz*m.vert.size());
+				fread(data,sz,m.vert.size(),f);
+				AddAttrib(m,_string,sz,data);
+				free(data);
+			}
+
 			if(FaceType::HasVFAdjacency())
 				for(vi = m.vert.begin(); vi != m.vert.end(); ++vi){
 					(*vi).VFp() = (*vi).VFp()-(FaceType*)offsetF+ &m.face[0];

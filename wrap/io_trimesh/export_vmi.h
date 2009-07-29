@@ -51,6 +51,8 @@ namespace vcg {
 namespace tri {
 namespace io {
 
+ 	template <int N> struct PlaceHolderType{ char A[N];};
+
 	template <class SaveMeshType>
 	class ExporterVMI
 	{
@@ -58,6 +60,7 @@ namespace io {
 		typedef typename SaveMeshType::FaceIterator FaceIterator;
 		typedef typename SaveMeshType::VertexIterator VertexIterator;
 		typedef typename SaveMeshType::VertexType VertexType;
+		typedef SimpleTempDataBase<typename SaveMeshType::VertContainer> STDB;
 
 		static void Save(const SaveMeshType &m,char * filename){
 			unsigned int i;
@@ -80,14 +83,17 @@ namespace io {
 			fprintf(f,"end_header\n");
 
 
-			unsigned int offsetV = (unsigned int) &m.vert[0];
-			/* write the address of the first vertex */
-			fwrite(&offsetV,sizeof(unsigned int),1,f);
+			if(vertSize!=0){
+				unsigned int offsetV = (unsigned int) &m.vert[0];
+				/* write the address of the first vertex */
+				fwrite(&offsetV,sizeof(unsigned int),1,f);
+			}
 
-			 int offsetF= ( int) &m.face[0];
-			/* write the address of the first face */
-			fwrite(&offsetF,sizeof( int),1,f);
-
+			if(faceSize!=0){
+				 int offsetF= ( int) &m.face[0];
+				/* write the address of the first face */
+				fwrite(&offsetF,sizeof( int),1,f);
+			}
 			/* save the object mesh */
 			fwrite(&m.shot,sizeof(Shot<typename SaveMeshType::ScalarType>),1,f);
 			fwrite(&m.vn,sizeof(int),1,f);
@@ -97,15 +103,52 @@ namespace io {
 			fwrite(&m.C(),sizeof(Color4b),1,f);
 
 			int written;
-			/* save the vertices */
-			written = fwrite((void*)&m.vert[0],sizeof(typename SaveMeshType::VertexType),m.vert.size(),f);
-			assert(written==m.vert.size());
 
-			/* save the faces */
-			written = fwrite((void*)&m.face[0],sizeof(typename SaveMeshType::FaceType),m.face.size(),f);
-			assert(written==m.face.size());
+			if(vertSize!=0){
+				/* save the vertices */
+				written = fwrite((void*)&m.vert[0],sizeof(typename SaveMeshType::VertexType),m.vert.size(),f);
+				assert(written==m.vert.size());
+			}
 
-		//	fflush(f);
+			if(faceSize!=0){
+				/* save the faces */
+				written = fwrite((void*)&m.face[0],sizeof(typename SaveMeshType::FaceType),m.face.size(),f);
+				assert(written==m.face.size());
+			}
+
+			/* save the attribtues */
+			typename std::set< SaveMeshType::PointerToAttribute>::const_iterator ai;
+
+			/* save the per vertex attributes */
+			fprintf(f,"N_PER_VERTEX_ATTRIBUTES %d \n",m.vert_attr.size());
+			for(ai = m.vert_attr.begin(); ai != m.vert_attr.end(); ++ai){
+				STDB * stdb = (STDB *) (*ai)._handle;
+				fprintf(f,"PER_VERTEX_ATTR_NAME %s \n",(*ai)._name.c_str());
+				fprintf(f,"PER_VERTEX_ATTR_SIZE %d \n",stdb->SizeOf()  );
+				fwrite(stdb->DataBegin(),m.vert.size(),stdb->SizeOf(),f);
+ 			}
+
+			///* save the per face attributes */
+			//fprintf(f,"N_PER_FACE_ATTRIBUTES %d\n",m.face_attr.size());		 
+			//for(ai = m.face_attr.begin(); ai != m.face_attr.end(); ++ai){
+			//	SimpleTempDataBase<SaveMeshType::FaceContainer>* handle;
+			//	fprintf(f,"PER_FACE_ATTR_NAME %s\n",(*ai)._name.c_str());
+			//	fprintf(f,"PER_FACE_ATTR_SIZE %d\n",(*ai)._handle->SizeOf()  );
+			//	fwrite((*ai)._handle->DataBegin(),m.face.size(),(*ai)._handle->SizeOf(),f);
+ 		//	}
+
+			///* save the per mesh attributes */
+			//fprintf(f,"N_PER_MESH_ATTRIBUTES %d\n",m.mesh_attr.size());			 
+			//for(ai = m.mesh_attr.begin(); ai != m.mesh_attr.end(); ++ai){
+			//	AttributeBase  *    handle =  (AttributeBase  *)   (*ai)._handle ;
+			//	fprintf(f,"PER_MESH_ATTR_NAME %s\n",(*ai)._name.c_str());
+			//	fprintf(f,"PER_MESH_ATTR_SIZE %d\n",(*ai)._handle->SizeOf()  );
+			//	fwrite((*ai)._handle->DataBegin(),1,(*ai)._handle->SizeOf(),f);
+ 		//	}
+
+
+
+			//	fflush(f);
 			fclose(f);
 		}
 
