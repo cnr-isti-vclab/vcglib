@@ -61,6 +61,9 @@ public:
 	virtual void Resize(const int & sz) = 0;
 	virtual void Reorder(std::vector<size_t> & newVertIndex)=0;
 	virtual int SizeOf() const  = 0;
+	virtual void * DataBegin() = 0; 
+	 
+	//virtual void CopyTo(void * ) = 0;
 };
 
 template <class TYPE>
@@ -83,17 +86,21 @@ public:
 
 	void resize  (const int & sz)	{
 		int oldDatasize = datasize;
+		if(sz <= oldDatasize) return;
+		if(sz > datareserve) 
+			reserve(sz);
 		datasize = sz;
-		if(datasize <= oldDatasize) return;
-		if(datasize > datareserve) 
-			reserve(datasize);
 		memset(&data[oldDatasize],0,datasize-oldDatasize);
 		}
 	void push_back(const bool & v)	{ resize(datasize+1); data[datasize] = v;} 
 
 	void clear(){ datasize = 0;}
 
-        unsigned int  size() const { return datasize;}
+    unsigned int  size() const { return datasize;}
+
+	bool empty() const {return datasize==0;}
+
+	bool * begin() const {return data;}
 
 	bool  & operator [](const int & i){return data[i];}
 
@@ -111,8 +118,9 @@ class SimpleTempData:public SimpleTempDataBase<STL_CONT>{
 
 	STL_CONT& c;
 	VectorNBW<ATTR_TYPE> data;
+	int padding;
 
-	SimpleTempData(STL_CONT  &_c):c(_c){data.reserve(c.capacity());data.resize(c.size());};
+	SimpleTempData(STL_CONT  &_c):c(_c),padding(0){data.reserve(c.capacity());data.resize(c.size());};
 	SimpleTempData(STL_CONT  &_c, const ATTR_TYPE &val):c(_c){
 		data.reserve(c.capacity());data.resize(c.size());
 		Init(val);
@@ -152,6 +160,18 @@ class SimpleTempData:public SimpleTempDataBase<STL_CONT>{
 	}
 
 	int SizeOf() const {return sizeof(ATTR_TYPE);}
+	void * DataBegin() {return data.empty()?NULL:&(*data.begin());} 
+
+	//template <typename ATTR_TYPE>
+	//void CopyTo(void * dest) {
+	//	SimpleTempData<STL_CONT,ATTR_TYPE> * destination = (SimpleTempData<STL_CONT,ATTR_TYPE> *)dest;
+	//	destination->Resize(data.size());
+	//	for(int i  = 0; i < data.size(); ++i)
+	//		memcpy((void*)(*destination)[i] , (void*) &( ((char*)( (*this)[i] ))[padding]),sizeof(ATTR_TYPE));
+	//}
+
+	 
+
 };
 
 class AttributeBase{
@@ -159,6 +179,8 @@ class AttributeBase{
 	virtual ~AttributeBase() {};
 	AttributeBase() {};
 	virtual int SizeOf()const  = 0;
+	virtual void * DataBegin() = 0; 
+
 };
 
 template <class ATTR_TYPE>
@@ -169,6 +191,7 @@ AttrType * attribute;
 Attribute(){attribute = new ATTR_TYPE();}
 ~Attribute(){delete attribute;}
 int SizeOf()const {return sizeof(ATTR_TYPE);}
+void * DataBegin(){return attribute;}
 };
 
 }; // end namespace vcg
