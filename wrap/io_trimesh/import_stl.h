@@ -231,7 +231,7 @@ static int OpenBinary( OpenMeshType &m, const char * filename, CallBackPos *cb=0
     /* Read a single facet from an ASCII .STL file */
     while(!feof(fp))
     {
-      if((++cnt)%1000) cb( int(double(ftell(fp))*100.0/fileLen), "STL Mesh Loading");	
+      if(cb && (++cnt)%1000)   cb( int(double(ftell(fp))*100.0/fileLen), "STL Mesh Loading");	
 	    ret=fscanf(fp, "%*s %*s %f %f %f\n", &f.n.X(), &f.n.Y(), &f.n.Z()); // --> "facet normal 0 0 0"
 			if(ret!=3) 
 			{
