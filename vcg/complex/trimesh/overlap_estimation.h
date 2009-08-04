@@ -35,8 +35,14 @@
 using namespace std;
 using namespace vcg;
 
-/**
- * \brief This class provides a strategy to estimate the overlap percentage of two range maps/point clouds.
+/** \brief This class provides a strategy to estimate the overlap percentage of two range maps/point clouds.
+ *
+ * This class can be used, for exemple, into an automatic alignment process to check the quality of the
+ * transformation found; the idea is that bad alignments should have a small overlap. Two points are
+ * considered 'overlapping in the righ way' if they are close (i.e distance is less then \c consensusDist)
+ * and at the same time points' normals match quite well (i.e the angle between them is less then
+ *  \c consensusNormalsAngle). The test to compute the overlap is perfomed on a given number of points
+ * (2500 is the default) sampled in a normal equalized way (default) or uniformly.
  * \author Francesco Tonarelli
  */
 template<class MESH_TYPE> class OverlapEstimation
@@ -78,13 +84,13 @@ template<class MESH_TYPE> class OverlapEstimation
     class Parameters
     {
         public:
-        int samples;                                    ///< Number of samples.
-        int bestScore;                                  ///< Score to overcome to paint \c mMov . Used inside loop to paint only the best result.
-        float consensusDist;                            ///< Consensus distance.
-        float consensusNormalsAngle;                    ///< Holds the the consensus angle for normals, in gradients.
-        float threshold;                                ///< Consensus percentage requested to win consensus.
-        bool normalEqualization;                        ///< Allows to use normal equalization sampling in consensus
-        bool paint;                                     ///< Allows painting of \c mMov according to consensus.
+        int samples;                                    ///< Number of samples to check to compute the overlap. Higher values get more accurancy but requires more time.
+        int bestScore;                                  ///< Score to overcome to paint \c mMov . If overlap estimation is called many times inside a loop, you can set this value in each iteration to paint \c mMov and see only the best overlap achived.
+        float consensusDist;                            ///< Consensus distance. Lower values should gat more accurancy; high values can lead to performance hit.
+        float consensusNormalsAngle;                    ///< Holds the the consensus angle for normals, in gradients. Lower values decrease accurancy, particulary for range maps with many peaks and high frequencies.
+        float threshold;                                ///< Consensus percentage requested to win consensus. Used to paint \c mMov. If the overlap overcames the \c threshold (and \c bestScore), \c mMov is painted.
+        bool normalEqualization;                        ///< Allows to use normal equalization sampling in consensus. If set to \c false uniform sampling is used instead. Uniform sampling is faster but less accurate.
+        bool paint;                                     ///< Allows painting of \c mMov according to consensus. See Paint() for details.
         void (*log)(int level, const char * f, ... );   ///< Pointer to a log function.
 
         /** Constructor with default values. */
