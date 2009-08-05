@@ -27,6 +27,7 @@
 #include <QString>
 #include <QStringList>
 #include <QMap>
+#include <QVariant>
 
 /* Example usage: 
 
