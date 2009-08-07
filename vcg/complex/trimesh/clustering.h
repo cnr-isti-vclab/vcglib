@@ -346,7 +346,7 @@ class Clustering
 				if( (st.v[0]!=st.v[1]) && (st.v[0]!=st.v[2]) && (st.v[1]!=st.v[2]) )
 				{ // if we allow the duplication of faces we sort the vertex only partially (to maintain the original face orientation)
 					if(DuplicateFaceParam) st.sortOrient();
-														else st.sort();
+                                        else st.sort();
 					TriSet.insert(st);
 				}
 			//  printf("Inserted %8i triangles, clustered to %8i tri and %i cells\n",distance(m.face.begin(),fi),TriSet.size(),GridCell.size());
@@ -358,7 +358,7 @@ class Clustering
   void SelectPointSet(MeshType &m)
   {
 		typename STDEXT::hash_map<HashedPoint3i,CellType>::iterator gi;
-		UpdateSelection<CMeshO>::ClearVertex(m);
+                UpdateSelection<MeshType>::ClearVertex(m);
 		for(gi=GridCell.begin();gi!=GridCell.end();++gi)
     {
       VertexType *ptr=(*gi).second.Ptr();
