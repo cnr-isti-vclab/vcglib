@@ -119,7 +119,8 @@ static int Open( MESH_TYPE &m, const char * filename, CallBackPos *cb=0, bool tr
     {
       if(cb && (++cnt)%1000) cb( (ftell(fp)*100)/fileLen, "ASC Mesh Loading");	
 			if(feof(fp)) break;
-			fgets(buf,1024,fp);
+            bool fgetOut=fgets(buf,1024,fp);
+            if( fgetOut == 0 ) continue;
 			ret=sscanf(buf, "%f, %f, %f, %f\n", &pp.X(), &pp.Y(), &pp.Z(),&q);
 			if(ret==1) // lets try also non comma separated values
 				ret=sscanf(buf, "%f %f %f %f\n", &pp.X(), &pp.Y(), &pp.Z(),&q);
