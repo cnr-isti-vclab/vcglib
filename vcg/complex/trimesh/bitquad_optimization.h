@@ -270,11 +270,12 @@ int BitQuadMarkVertexRotations(Mesh &m)
       if (TestBitQuadVertexRotation(*fi,k)) {
         res++;
         fi->V(k)->SetV();
-        if (!perform)
-          MarkVertex(&*fi, k, m); //fi->Q()=0;
+        if (!perform) {
+          res++; MarkVertex(&*fi, k, m); //fi->Q()=0;
+        }
         else {
-          RotateBitQuadVertex(*fi, k); //fi->Q()=0;
-          return 1;
+          if (RotateBitQuadVertex(*fi, k)) res++; //fi->Q()=0;
+          //if (res>1) return res; // uncomment for only one rotation
         }
       }
     }
