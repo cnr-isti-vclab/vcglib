@@ -330,7 +330,7 @@ bool RotateBitQuadVertex(FaceType &f, int w0)
     int tmp = (pf->FFi(pi)+1)%3; pf = pf->FFp(pi); pi = tmp;  // flipF
         
     if (mustFlip) {
-      if (!CheckFlipBitQuadDiag(*lastF)) assert(0); //return false; // cannot flip??
+      if (!CheckFlipBitQuadDiag(*lastF)) return false; // cannot flip??
       FlipBitQuadDiag(*lastF);
     }
     
@@ -723,6 +723,20 @@ typename Face::ScalarType PosOnDiag(const Face& f, bool counterDiag){
   }
   //if (f->FF( FauxIndex(f) )->IsB(
   return 0.5f;
+}
+
+template <class Mesh>
+void UpdateQualityAsBitQuadValency(Mesh& m){
+  typedef typename Mesh::FaceIterator FaceIterator;
+  typedef typename Mesh::VertexIterator VertexIterator;
+  for (VertexIterator vi = m.vert.begin();  vi!=m.vert.end(); vi++) if (!vi->IsD()) {
+     vi->Q() = 0; 
+  }
+
+  for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
+     for (int w=0; w<3; w++) 
+       fi->V(w)->Q() += (fi->IsF(w)||fi->IsF((w+2)%3) )? 0.5f:1; 
+  }
 }
 
 }} // end namespace vcg::tri
