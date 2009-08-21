@@ -498,7 +498,7 @@ void Matrix44<T>::ToEulerAngles(T &alpha, T &beta, T &gamma)
 {
 	alpha = atan2(ElementAt(1,2), ElementAt(2,2));
 	beta = asin(-ElementAt(0,2));
-	gamma = atan2(ElementAt(0,1), ElementAt(1,1));
+  gamma = atan2(ElementAt(0,1), ElementAt(0,0));
 }
 
 template <class T>
