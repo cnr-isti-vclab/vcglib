@@ -71,13 +71,16 @@ The stl format is quite simple and rather un-flexible. It just stores, in ascii 
 template <class SaveMeshType>
 class ExporterSTL
 {
-public:
+public:    
+typedef typename SaveMeshType::FaceType FaceType;
+typedef unsigned short CallBackSTLFaceAttribute(const SaveMeshType &m, const FaceType &f);
+
 static int Save(SaveMeshType &m, const char * filename, const int &/*mask*/, CallBackPos *)
 {
  return Save(m,filename,true);
 }
 
-static int Save(SaveMeshType &m, const char * filename , bool binary =true, const char *objectname=0)
+static int Save(SaveMeshType &m, const char * filename , bool binary =true, const char *objectname=0, CallBackSTLFaceAttribute *faceAttributeCallback = NULL)
 {
   typedef typename SaveMeshType::FaceIterator FaceIterator;
 	FILE *fp;
@@ -107,6 +110,9 @@ static int Save(SaveMeshType &m, const char * filename , bool binary =true, cons
 			for(int k=0;k<3;++k){
 				p.Import((*fi).V(k)->P());
 				fwrite(p.V(),3,sizeof(float),fp);
+			}
+			if (faceAttributeCallback != NULL) {
+                attributes = (*faceAttributeCallback)(m, *fi);                
 			}
 			fwrite(&attributes,1,sizeof(short),fp);
 		}
