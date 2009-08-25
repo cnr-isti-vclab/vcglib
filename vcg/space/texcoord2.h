@@ -196,6 +196,9 @@ public:
 	enum { n_coords=1};
 
 };
+typedef TexCoord2<float>  TexCoord2f;
+typedef TexCoord2<double> TexCoord2d;
+
 
 /*@}*/
 
