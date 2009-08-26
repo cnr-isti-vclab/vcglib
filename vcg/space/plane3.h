@@ -99,6 +99,13 @@ public:
   /// The (distance, direction) constructor
   Plane3(const ScalarType &dist, const PointType &dir) { Set(dist, dir); }
 
+	template <class Q>
+	inline void Import( const Plane3<Q,false> & b )
+	{
+		_offset = ScalarType(b.Offset());
+		_dir = Point3<T>::Construct(b.Direction());
+	}
+
 //@{
 	 /** @name Members to access the distance or direction
 	   Direction() cannot be assigned directly.
