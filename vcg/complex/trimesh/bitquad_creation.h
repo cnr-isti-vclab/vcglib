@@ -3,7 +3,7 @@
 
 /** BIT-QUAD creation support:
     a collection of methods that,
-    starting from a triangular mesh, will create your quad-only or quad-domainant mesh.
+    starting from a triangular mesh, will create your quad-pure or quad-domainant mesh.
     
     They all require:
       - per face Q, and FF connectivity, 2-manyfold meshes, 
@@ -12,37 +12,37 @@
 
 [ list of available methods: ]
   
-void MakeBitQuadOnlyByRefine(Mesh &m) 
+void MakePureByRefine(Mesh &m) 
    - adds a vertex for each tri or quad present
    - thus, miminal complexity increase is the mesh is quad-dominant already
    - old non-border edges are made faux
    - never fails
 
-void MakeBitQuadOnlyByCatmullClark(Mesh &m) 
+void MakePureByCatmullClark(MeshType &m) 
    - adds a vertex in each (non-faux) edge. 
    - twice complexity increase w.r.t. "ByRefine" method.
    - preserves edges: old edges are still edges 
    - never fails
       
-bool MakeBitQuadOnlyByFlip(Mesh &m [, int maxdist] )  
+bool MakePureByFlip(MeshType &m [, int maxdist] )  
    - does not increase # vertices, just flips edges
    - call in a loop until it returns true  (temporary hack)
    - fails if number of triangle is odd (only happens in open meshes)
    - add "StepByStep" to method name if you want it to make a single step (debugging purposes)
 
-bool MakeTriEvenBySplit(Mesh& m)
-bool MakeTriEvenByDelete(Mesh& m)
+bool MakeTriEvenBySplit(MeshType& m)
+bool MakeTriEvenByDelete(MeshType& m)
    - two simple variants that either delete or split *at most one* border face
      so that the number of tris will be made even. Return true if it did it.
    - useful to use the previous method, when mesh is still all triangle
 
-void MakeBitQuadDominant(Mesh &m, int level)
+void MakeDominant(MeshType &m, int level)
    - just merges traingle pairs into quads, trying its best
    - various heuristic available, see descr. for parameter "level"
    - provides good starting point for make-Quad-Only methods
    - uses an ad-hoc measure for "quad quality" (which is hard-wired, for now)
 
-void MakeBitTriOnly(Mesh &m)
+void MakeBitTriOnly(MeshType &m)
    - inverse process: returns to tri-only mesh
 
    
@@ -52,14 +52,28 @@ void MakeBitTriOnly(Mesh &m)
 
 namespace vcg{namespace tri{
 
+template <class _MeshType>
+class BitQuadCreation{
+  
+public:
+  
+typedef _MeshType MeshType;
+typedef typename MeshType::ScalarType ScalarType;
+typedef typename MeshType::CoordType CoordType;
+typedef typename MeshType::FaceType FaceType;
+typedef typename MeshType::FaceType* FaceTypeP;
+typedef typename MeshType::VertexType VertexType;
+typedef typename MeshType::FaceIterator FaceIterator;
+typedef typename MeshType::VertexIterator VertexIterator;
 
+typedef BitQuad<MeshType> BQ; // static class to make basic quad operations
+
+  
 // helper function:
 // given a triangle, merge it with its best neightboord to form a quad
-template <class Face, bool override>
-static void selectBestQuadDiag(Face *fi){
+template <bool override>
+static void selectBestDiag(FaceType *fi){
   
-  typedef typename Face::ScalarType ScalarType;
-  typedef typename Face::VertexType VertexType;
   if (!override) {
     if (fi->IsAnyF()) return;
   }
@@ -79,7 +93,7 @@ static void selectBestQuadDiag(Face *fi){
     }
     if (fi->FFp(k)==fi) continue; // never make a border faux
     
-    ScalarType score = quadQuality( &*fi, k );
+    ScalarType score = BQ::quadQuality( &*fi, k );
     if (override) {
       // don't override anyway iff other face has a better match
       if (score < fi->FFp(k)->Q()) continue; 
@@ -129,33 +143,27 @@ static void selectBestQuadDiag(Face *fi){
 
 // helper funcion:
 // a pass though all triangles to merge triangle pairs into quads
-template <class Mesh, bool override> // override previous decisions?
-static void MakeQuadDominantPass(Mesh &m){
-  typedef typename Mesh::FaceType Face;
-  typedef typename Mesh::FaceIterator FaceIterator;
+template <bool override> // override previous decisions?
+static void MakeDominantPass(MeshType &m){
   
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
-    selectBestQuadDiag<Face,override>(&(*fi));
+    selectBestDiag<override>(&(*fi));
   }
   
 }
 
 // make tri count even by splitting a single triangle...
-template <class Mesh>
-bool MakeTriEvenBySplit(Mesh& m){
+static bool MakeTriEvenBySplit(MeshType& m){
   if (m.fn%2==0) return false; // it's already Even
   assert(0); // todo!
 }
 
 // make tri count even by delete...
-template <class Mesh>
-bool MakeTriEvenByDelete(Mesh& m)
+static bool MakeTriEvenByDelete(MeshType& m)
 {
   
   if (m.fn%2==0) return false; // it's already Even
   
-  typedef typename Mesh::FaceIterator FaceIterator;
-  typedef typename Mesh::FaceType Face;
   
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) {
     for (int k=0; k<3; k++) {
@@ -165,7 +173,7 @@ bool MakeTriEvenByDelete(Mesh& m)
         for (int h=1; h<3; h++) {
           int kh=(k+h)%3;
           int j = fi->FFi( kh );
-          Face *f = fi->FFp(kh);
+          FaceType *f = fi->FFp(kh);
           if (f != &* fi) {
             f->FFp( j ) = f;
             f->FFi( j ) = j;
@@ -174,7 +182,7 @@ bool MakeTriEvenByDelete(Mesh& m)
         }
         
         // delete found face
-        Allocator<Mesh>::DeleteFace(m,*fi);
+        Allocator<MeshType>::DeleteFace(m,*fi);
         return true;
       }
     }
@@ -187,9 +195,7 @@ bool MakeTriEvenByDelete(Mesh& m)
 /** 
   Given a mesh, makes it bit trianglular (makes all edges NOT faux)
 */
-template <class Mesh>
-void MakeBitTriOnly(Mesh &m){
-  typedef typename Mesh::FaceIterator FaceIterator;
+static void MakeBitTriOnly(MeshType &m){
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) {
     fi->ClearAllF();
   }
@@ -201,17 +207,13 @@ void MakeBitTriOnly(Mesh &m){
  * Updates: per wedge attributes, if any
  * Other connectivity structures, and per edge and per wedge flags are ignored
  */
-template <class Mesh>
-bool MakeBitTriQuadConventional(Mesh &m){
+static bool MakeBitTriQuadConventional(MeshType &m){
   assert(0); // todo
 }
 
 /* returns true if mesh is a "conventional" quad mesh.
    I.e. if it is all quads, with third edge faux fora all triangles*/
-template <class Mesh>
-bool IsBitTriQuadConventional(Mesh &m){
-  typedef typename Mesh::FaceIterator FaceIterator;
-  typedef typename Mesh::FaceType FaceType;
+static bool IsBitTriQuadConventional(MeshType &m){
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
     if (fi->IsAnyF())
     if ( fi->Flags() & ( FaceType::FAUX012 ) != FaceType::FAUX2 ) {
@@ -226,16 +228,10 @@ bool IsBitTriQuadConventional(Mesh &m){
  previous diags
  requires that the mesh is made only of quads and tris.
 */
-template <class Mesh> 
-void MakeBitQuadOnlyByRefine(Mesh &m){
+static void MakePureByRefine(MeshType &m){
   
   // todo: update VF connectivity if present
 
-
-  typedef typename Mesh::FaceIterator FaceIterator;
-  typedef typename Mesh::VertexIterator VertexIterator;
-  typedef typename Mesh::FaceType Face;
-  typedef typename Mesh::VertexType Vert;
   
   int ev = 0; // EXTRA vertices (times 2)
   int ef = 0; // EXTRA faces  
@@ -269,8 +265,8 @@ void MakeBitQuadOnlyByRefine(Mesh &m){
   ev/=2; // I was counting each of them twice
 
   int originalFaceNum = m.fn;
-  FaceIterator nfi = tri::Allocator<Mesh>::AddFaces(m,ef); 
-  VertexIterator nvi = tri::Allocator<Mesh>::AddVertices(m,ev); 
+  FaceIterator nfi = tri::Allocator<MeshType>::AddFaces(m,ef); 
+  VertexIterator nvi = tri::Allocator<MeshType>::AddVertices(m,ev); 
 
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD())  fi->ClearV();
 
@@ -291,12 +287,12 @@ void MakeBitQuadOnlyByRefine(Mesh &m){
       if (k==0) // add a vertex in the center of the face, splitting it in 3
       {
         assert(nvi!=m.vert.end());
-        Vert *nv = &*nvi; nvi++;
+        VertexType *nv = &*nvi; nvi++;
         *nv = *fi->V0( 0 ); // lazy: copy everything from the old vertex
         nv->P() = ( fi->V(0)->P() + fi->V(1)->P() + fi->V(2)->P() )  /3.0;
-        Face *fa = &*fi;
-        Face *fb = &*nfi; nfi++;
-        Face *fc = &*nfi; nfi++;
+        FaceType *fa = &*fi;
+        FaceType *fb = &*nfi; nfi++;
+        FaceType *fc = &*nfi; nfi++;
         *fb = *fc = *fa;  // lazy: copy everything from the old faces
         fa->V(0) = nv;
         fb->V(1) = nv;
@@ -342,9 +338,9 @@ void MakeBitQuadOnlyByRefine(Mesh &m){
     }
     else {      
       // assuming is a part of quad (not a penta, etc), i.e. only one faux
-      Face *fa = &*fi;
-      int ea2 = FauxIndex(fa); // index of the only faux edge
-      Face *fb = fa->FFp(ea2);
+      FaceType *fa = &*fi;
+      int ea2 = BQ::FauxIndex(fa); // index of the only faux edge
+      FaceType *fb = fa->FFp(ea2);
       int eb2 = fa->FFi(ea2);
       assert(fb->FFp(eb2)==fa) ;
       assert(fa->IsF(ea2));
@@ -357,15 +353,15 @@ void MakeBitQuadOnlyByRefine(Mesh &m){
 
       // create new vert in center of faux edge
       assert(nvi!=m.vert.end());
-      Vert *nv = &*nvi; nvi++;
+      VertexType *nv = &*nvi; nvi++;
       *nv = * fa->V0( ea2 );
       nv->P() = ( fa->V(ea2)->P() + fa->V(ea0)->P() ) /2.0;
           
       // split faces: add 2 faces (one per side)
       assert(nfi!=m.face.end());
-      Face *fc = &*nfi; nfi++;
+      FaceType *fc = &*nfi; nfi++;
       assert(nfi!=m.face.end());
-      Face *fd = &*nfi; nfi++;
+      FaceType *fd = &*nfi; nfi++;
       *fc = *fa;
       *fd = *fb;
           
@@ -443,10 +439,10 @@ void MakeBitQuadOnlyByRefine(Mesh &m){
   
   // last pass: add vertex on faux border faces... (if any)
   if (nsplit>0) { 
-    FaceIterator nfi = tri::Allocator<Mesh>::AddFaces(m,nsplit); 
-    VertexIterator nvi = tri::Allocator<Mesh>::AddVertices(m,nsplit); 
+    FaceIterator nfi = tri::Allocator<MeshType>::AddFaces(m,nsplit); 
+    VertexIterator nvi = tri::Allocator<MeshType>::AddVertices(m,nsplit); 
     for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
-      Face* fa = &*fi;
+      FaceType* fa = &*fi;
       int ea2 = -1; // border and faux face (if any)
       if (fa->FFp(0)==fa &&  fa->IsF(0) ) ea2=0;
       if (fa->FFp(1)==fa &&  fa->IsF(1) ) ea2=1;
@@ -458,12 +454,12 @@ void MakeBitQuadOnlyByRefine(Mesh &m){
         int ea1 = (ea2+2) %3;        
         
         // create new vert in center of faux edge
-        Vert *nv = &*nvi; nvi++;
+        VertexType *nv = &*nvi; nvi++;
         *nv = * fa->V0( ea2 );
         nv->P() = ( fa->V(ea2)->P() + fa->V(ea0)->P() ) /2.0;
           
         // split face: add 1 face
-        Face *fc = &*nfi; nfi++;
+        FaceType *fc = &*nfi; nfi++;
         *fc = *fa;
           
         fa->V(ea2) = fc->V(ea0) = nv ;
@@ -502,38 +498,33 @@ void MakeBitQuadOnlyByRefine(Mesh &m){
 
 // uses Catmull Clark to enforce quad only meshes
 // each old edge (but not faux) is split in two.
-template <class Mesh> 
-void MakeBitQuadOnlyByCatmullClark(Mesh &m){
-  MakeBitQuadOnlyByRefine(m);
-  MakeBitQuadOnlyByRefine(m);
+static void MakePureByCatmullClark(MeshType &m){
+  MakePureByRefine(m);
+  MakePureByRefine(m);
   // et-voilà!!!
 }
 
 // Helper funcion:
 // marks edge distance froma a given face.
 // Stops at maxDist or at the distance when a triangle is found
-template <class Mesh>
-typename Mesh::FaceType * MarkEdgeDistance(Mesh &m, typename Mesh::FaceType *f, int maxDist){
-  typedef typename Mesh::FaceType Face;
-  typedef typename Mesh::FaceIterator FaceIterator;
-  typedef typename Mesh::VertexIterator VertexIterator;
-  assert(Mesh::HasPerFaceQuality());
+static FaceType * MarkEdgeDistance(MeshType &m, FaceType *f, int maxDist){
+  assert(MeshType::HasPerFaceQuality());
   
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++)  if (!f->IsD()) {
     fi->Q()=maxDist;
   }
 
-  Face * firstTriangleFound = NULL;
+  FaceType * firstTriangleFound = NULL;
   
   f->Q() =  0;
-  std::vector<Face*> stack;
+  std::vector<FaceType*> stack;
   int stackPos=0;
   stack.push_back(f);
 
   while ( stackPos<stack.size() ) {
-    Face *f = stack[stackPos++];
+    FaceType *f = stack[stackPos++];
     for (int k=0; k<3; k++) {
-      Face *fk = f->FFp(k);
+      FaceType *fk = f->FFp(k);
       int fq = int(f->Q()) + ( ! f->IsF(k) );
       if (fk->Q()> fq && fq <= maxDist) {
         if (!fk->IsAnyF()) { firstTriangleFound = fk; maxDist = fq;}
@@ -556,13 +547,9 @@ typename Mesh::FaceType * MarkEdgeDistance(Mesh &m, typename Mesh::FaceType *f, 
   
   maxdist is the maximal edge distance where to look for a companion triangle
 */
-template <class Mesh>
-int MakeBitQuadOnlyByFlipStepByStep(Mesh &m, int maxdist=10000, int restart=false){
-  typedef typename Mesh::FaceType Face;
-  typedef typename Mesh::FaceIterator FaceIterator;
-  typedef typename Mesh::VertexIterator VertexIterator;
+static int MakePureByFlipStepByStep(MeshType &m, int maxdist=10000, int restart=false){
   
-  static Face *ta, *tb; // faces to be matched into a quad
+  static FaceType *ta, *tb; // faces to be matched into a quad
   
   static int step = 0; // hack
   
@@ -595,18 +582,18 @@ if (step==0) {
     for (int k=0; k<3; k++) {
       if (tb->FFp(k) == tb) continue; // border
       
-      Face* tbk = tb->FFp(k);
+      FaceType* tbk = tb->FFp(k);
       
       if (!tbk->IsAnyF()) {done=true; marriageEdge=k; break; } // found my match
       
       int back = tb->FFi(k);
-      int faux = FauxIndex(tbk);
+      int faux = BQ::FauxIndex(tbk);
       int other = 3-back-faux;
       
       int scoreA = int(tbk->FFp(other)->Q());
       
-      Face* tbh = tbk->FFp(faux);
-      int fauxh = FauxIndex(tbh);
+      FaceType* tbh = tbk->FFp(faux);
+      int fauxh = BQ::FauxIndex(tbh);
       
       int scoreB = int(tbh->FFp( (fauxh+1)%3 )->Q());
       int scoreC = int(tbh->FFp( (fauxh+2)%3 )->Q());
@@ -623,10 +610,10 @@ if (step==0) {
     
     // use that edge to proceed
     if (mustDoFlip) {
-      FlipBitQuadDiag( *(tb->FFp(edge)) );
+      BQ::FlipDiag( *(tb->FFp(edge)) );
     }
     
-    Face* next = tb->FFp(edge)->FFp( FauxIndex(tb->FFp(edge))  );
+    FaceType* next = tb->FFp(edge)->FFp( BQ::FauxIndex(tb->FFp(edge))  );
     
     // create new edge
     next->ClearAllF();
@@ -660,12 +647,11 @@ break;
   - maxdist is the maximal edge distance where to look for a companion triangle
   - retunrs true if all triangles are merged (always, unless they are odd, or maxdist not enough).
 */
-template <class Mesh>
-bool MakeBitQuadOnlyByFlip(Mesh &m, int maxdist=10000)
+static bool MakePureByFlip(MeshType &m, int maxdist=10000)
 {
-  MakeBitQuadOnlyByFlipStepByStep(m, maxdist, true); // restart
+  MakePureByFlipStepByStep(m, maxdist, true); // restart
   int res=-1;
-  while (res==-1) res = MakeBitQuadOnlyByFlipStepByStep(m, maxdist);
+  while (res==-1) res = MakePureByFlipStepByStep(m, maxdist);
   return res==0;
 }
 
@@ -676,23 +662,22 @@ bool MakeBitQuadOnlyByFlip(Mesh &m, int maxdist=10000)
       level = 1: smarter: leaves more triangles, but makes better quality quads
       level = 2: even more so (marginally)
 */
-template <class Mesh>
-void MakeBitQuadDominant(Mesh &m, int level){
+static void MakeDominant(MeshType &m, int level){
   
-  assert(Mesh::HasPerFaceQuality());
-  assert(Mesh::HasPerFaceFlags());
+  assert(MeshType::HasPerFaceQuality());
+  assert(MeshType::HasPerFaceFlags());
   
-  typedef typename Mesh::FaceIterator FaceIterator;
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) {
     fi->ClearAllF();
     fi->Q() = 0;
   }
   
 
-  MakeQuadDominantPass<Mesh, false> (m);
-  if (level>0)  MakeQuadDominantPass<Mesh, true> (m);
-  if (level>1)  MakeQuadDominantPass<Mesh, true> (m);
-  if (level>0)  MakeQuadDominantPass<Mesh, false> (m);
+  MakeDominantPass<false> (m);
+  if (level>0)  MakeDominantPass<true> (m);
+  if (level>1)  MakeDominantPass<true> (m);
+  if (level>0)  MakeDominantPass<false> (m);
 }
 
+};
 }} // end namespace vcg::tri

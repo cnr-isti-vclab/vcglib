@@ -1,12 +1,26 @@
 
 namespace vcg{namespace tri{
 
-// helper function: mark a quadface, setting Q at 0, and neight at .75, 0.5...
-template <class Mesh>
-void MarkFace(typename Mesh::FaceType* f, Mesh &m){
-  typedef typename Mesh::FaceIterator FaceIterator;
-  typedef typename Mesh::FaceType FaceType;
+template <class BQ>
+class BitQuadOptimization{
+  
+typedef typename BQ::MeshType MeshType;
 
+typedef typename MeshType::ScalarType ScalarType;
+typedef typename MeshType::CoordType CoordType;
+typedef typename MeshType::FaceType FaceType;
+typedef typename MeshType::FaceType* FaceTypeP;
+typedef typename MeshType::VertexType VertexType;
+typedef typename MeshType::FaceIterator FaceIterator;
+typedef typename MeshType::VertexIterator VertexIterator;
+
+//typedef BitQuad<MeshType> BQ; // static class to make basic quad operatins
+
+public:
+
+// helper function: mark a quadface, setting Q at 0, and neight at .75, 0.5...
+static void MarkFace(FaceType* f, MeshType &m){
+  
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
      fi->Q() = 1; 
   }
@@ -22,11 +36,8 @@ void MarkFace(typename Mesh::FaceType* f, Mesh &m){
 }
 
 // helper function: mark a quadface, setting Q at 0, and neight at .75, 0.5...
-template <class Mesh>
-void MarkVertex(typename Mesh::FaceType* f, int wedge, Mesh &m){
-  typedef typename Mesh::FaceIterator FaceIterator;
-  typedef typename Mesh::FaceType FaceType;
-  typedef typename Mesh::VertexType VertexType;
+static void MarkVertex(FaceType* f, int wedge, MeshType &m){
+
   VertexType *v = f->V(wedge);
   
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
@@ -36,12 +47,8 @@ void MarkVertex(typename Mesh::FaceType* f, int wedge, Mesh &m){
   
 }
 
-template <class Mesh>
-bool MarkSmallestEdge(Mesh &m, bool perform)
+static bool MarkSmallestEdge(MeshType &m, bool perform)
 {
-  typedef typename Mesh::FaceIterator FaceIterator;
-  typedef typename Mesh::FaceType FaceType;
-  typedef typename Mesh::ScalarType ScalarType;
   ScalarType min = std::numeric_limits<ScalarType>::max();
   
   FaceType *fa=NULL; int w=0;
@@ -64,7 +71,7 @@ bool MarkSmallestEdge(Mesh &m, bool perform)
   }
   if (fa) {
     if (perform) {
-      return CollapseQuadEdge(*fa,w,m);
+      return BQ::CollapseEdge(*fa,w,m);
     } else {
       fa->Q()=0.0;
       fa->FFp(w)->Q()=0.0;
@@ -75,12 +82,8 @@ bool MarkSmallestEdge(Mesh &m, bool perform)
 }
 
 // returns: 0 if fail. 1 if edge. 2 if diag.
-template <class Mesh>
-int MarkSmallestEdgeOrDiag(Mesh &m, typename Mesh::ScalarType edgeMult, bool perform)
+static int MarkSmallestEdgeOrDiag(MeshType &m, ScalarType edgeMult, bool perform)
 {
-  typedef typename Mesh::FaceIterator FaceIterator;
-  typedef typename Mesh::FaceType FaceType;
-  typedef typename Mesh::ScalarType ScalarType;
   ScalarType min = std::numeric_limits<ScalarType>::max();
   
   FaceType *fa=NULL; int w=0; bool counterDiag = false;
@@ -104,7 +107,7 @@ int MarkSmallestEdgeOrDiag(Mesh &m, typename Mesh::ScalarType edgeMult, bool per
     }
     
     if (f->IsF(k)) { // for diag faces, test counterdiag too
-      score = CounterDiag(f).Norm();
+      score = BQ::CounterDiag(f).Norm();
       if (score<min) {
         min=score; 
         fa = f;
@@ -120,12 +123,12 @@ int MarkSmallestEdgeOrDiag(Mesh &m, typename Mesh::ScalarType edgeMult, bool per
     if (perform) {
       if (fa->IsF(w)) {
         if (counterDiag) {
-          CollapseQuadCounterDiag(*fa, PosOnDiag(*fa,true), m ); return 2;
+          BQ::CollapseCounterDiag(*fa, BQ::PosOnDiag(*fa,true), m ); return 2;
         } else {
-          CollapseQuadDiag(*fa, PosOnDiag(*fa,false), m ); return 2;
+          BQ::CollapseDiag(*fa, BQ::PosOnDiag(*fa,false), m ); return 2;
         }
       } else {
-        if  (CollapseQuadEdge(*fa,w,m)) return 1;
+        if  (BQ::CollapseEdge(*fa,w,m)) return 1;
       }
     } else {
       fa->Q()=0.0;
@@ -137,12 +140,8 @@ int MarkSmallestEdgeOrDiag(Mesh &m, typename Mesh::ScalarType edgeMult, bool per
 }
 
 
-template <class Mesh>
-void MarkSmallestDiag(Mesh &m)
+static void MarkSmallestDiag(MeshType &m)
 {
-  typedef typename Mesh::FaceIterator FaceIterator;
-  typedef typename Mesh::FaceType FaceType;
-  typedef typename Mesh::ScalarType ScalarType;
   ScalarType min = std::numeric_limits<ScalarType>::max();
   
   FaceType *fa=NULL; 
@@ -151,13 +150,13 @@ void MarkSmallestDiag(Mesh &m)
     
     ScalarType score;
 
-    score = Diag(f).Norm();
+    score = BQ::Diag(f).Norm();
     if (score<min) {
       min=score; 
       fa = f;
     }
     
-    score = CounterDiag(f).Norm();
+    score = BQ::CounterDiag(f).Norm();
     if (score<min) {
       min=score; 
       fa = f;
@@ -166,16 +165,12 @@ void MarkSmallestDiag(Mesh &m)
   }
   if (fa) {
     fa->Q()=0.0;
-    fa->FFp(FauxIndex(fa))->Q()=0.0;
+    fa->FFp(BQ::FauxIndex(fa))->Q()=0.0;
   }
 
 }
 
-template <class Mesh>
-bool IdentifyAndCollapseSmallestDiag(Mesh &m){
-  typedef typename Mesh::FaceIterator FaceIterator;
-  typedef typename Mesh::FaceType FaceType;
-  typedef typename Mesh::ScalarType ScalarType;
+static bool IdentifyAndCollapseSmallestDiag(MeshType &m){
   ScalarType min = std::numeric_limits<ScalarType>::max();
   
   FaceType *fa=NULL; bool flip;
@@ -184,14 +179,14 @@ bool IdentifyAndCollapseSmallestDiag(Mesh &m){
     
     ScalarType score;
     
-    score = Diag(f).Norm();
+    score = BQ::Diag(f).Norm();
     if (score<min) {
       min=score; 
       fa = f;
       flip = false;
     }
     
-    score = CounterDiag(f).Norm();
+    score = BQ::CounterDiag(f).Norm();
     if (score<min) {
       min=score; 
       fa = f;
@@ -201,22 +196,22 @@ bool IdentifyAndCollapseSmallestDiag(Mesh &m){
   }
   if (!fa) return false;
   
-  if (TestAndRemoveDoublet(*fa,0,m)) { return true; }
-  if (TestAndRemoveDoublet(*fa,1,m)) { return true; }
-  if (TestAndRemoveDoublet(*fa,2,m)) { return true; }
-  int k = FauxIndex(fa);
-  if (TestAndRemoveDoublet( *fa->FFp(k),(fa->FFi(k)+2)%3, m )) return true;
+  if (BQ::TestAndRemoveDoublet(*fa,0,m)) { return true; }
+  if (BQ::TestAndRemoveDoublet(*fa,1,m)) { return true; }
+  if (BQ::TestAndRemoveDoublet(*fa,2,m)) { return true; }
+  int k = BQ::FauxIndex(fa);
+  if (BQ::TestAndRemoveDoublet( *fa->FFp(k),(fa->FFi(k)+2)%3, m )) return true;
 
   if (flip) {
-    if (!CheckFlipBitQuadDiag(*fa) ) {
+    if (!BQ::CheckFlipDiag(*fa) ) {
       // I can't collapse (why?)
       MarkFace(fa,m);
       return false;
     } else 
-    CollapseQuadCounterDiag(*fa, PosOnDiag(*fa,true), m );
+    BQ::CollapseCounterDiag(*fa, BQ::PosOnDiag(*fa,true), m );
   }
   else  {
-    CollapseQuadDiag(*fa, PosOnDiag(*fa,false), m );
+    BQ::CollapseDiag(*fa, BQ::PosOnDiag(*fa,false), m );
   }
   return true;
 }
@@ -228,18 +223,15 @@ seeks and removes all doublets (a pair of quads sharing two consecutive edges)
 by merging them into a single quad (thus removing one vertex and two tri faces)-
 Returns number of removed Doublets
 */
-template <class Mesh>
-int BitQuadRemoveDoublets(Mesh &m)
+static int RemoveDoublets(MeshType &m)
 {
   int res=0;
-  typedef typename Mesh::FaceIterator FaceIterator;
-  typedef typename Mesh::FaceType FaceType;
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
     fi->Q()=1;
     for (int k=0; k<3; k++) {
-      if ( IsDoublet(*fi,k) ){
+      if ( BQ::IsDoublet(*fi,k) ){
         res++;
-        RemoveDoublet(*fi,k,m);
+        BQ::RemoveDoublet(*fi,k,m);
         if (fi->IsD()) break; // break wedge circle, if face disappeard
       }
     }
@@ -251,14 +243,10 @@ int BitQuadRemoveDoublets(Mesh &m)
 marks (Quality=0) and approx. counts profitable vertex rotations
 (vertex rotations which make edge shorter
 */
-template <class Mesh, bool perform>
-int BitQuadMarkVertexRotations(Mesh &m)
+template <bool perform>
+static int MarkVertexRotations(MeshType &m)
 {
   int res=0;
-  typedef typename Mesh::VertexIterator VertexIterator;
-  typedef typename Mesh::VertexType VertexType;
-  typedef typename Mesh::FaceIterator FaceIterator;
-  typedef typename Mesh::FaceType FaceType;
   for (VertexIterator vi = m.vert.begin();  vi!=m.vert.end(); vi++) if (!vi->IsD()) vi->ClearV();
   if (!perform)
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) fi->Q()=1.0;
@@ -267,14 +255,14 @@ int BitQuadMarkVertexRotations(Mesh &m)
     
     for (int k=0; k<3; k++) {
       if (fi->V(k)->IsV()) continue;
-      if (TestBitQuadVertexRotation(*fi,k)) {
+      if (BQ::TestVertexRotation(*fi,k)) {
         res++;
         fi->V(k)->SetV();
         if (!perform) {
           res++; MarkVertex(&*fi, k, m); //fi->Q()=0;
         }
         else {
-          if (RotateBitQuadVertex(*fi, k)) res++; //fi->Q()=0;
+          if (BQ::RotateVertex(*fi, k)) res++; //fi->Q()=0;
           //if (res>1) return res; // uncomment for only one rotation
         }
       }
@@ -285,12 +273,10 @@ int BitQuadMarkVertexRotations(Mesh &m)
 
 // mark (and count) all edges that are worth rotating
 // if perform == true, actually rotate them
-template <class Mesh, bool perform>
-int BitQuadMarkEdgeRotations(Mesh &m)
+template <bool perform>
+static int MarkEdgeRotations(MeshType &m)
 {
   int count = 0;
-  typedef typename Mesh::FaceIterator FaceIterator;
-  typedef typename Mesh::FaceType FaceType;
   
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) fi->Q()=1;
   
@@ -299,10 +285,10 @@ int BitQuadMarkEdgeRotations(Mesh &m)
     for (int k=0; k<3; k++) {
       if (fi->IsF(k)) continue;
       if (fi->FFp(k)<= &*fi) continue; // only once per real (non faux) edge, and only for non border ones
-      int best = TestBitQuadEdgeRotation(*fi, k);
+      int best = BQ::TestEdgeRotation(*fi, k);
       if (perform) {
-        if (best==+1) if (RotateBitQuadEdge<FaceType, true>(*fi, k)) count++;
-        if (best==-1) if (RotateBitQuadEdge<FaceType,false>(*fi, k)) count++;
+        if (best==+1) if (BQ::template RotateEdge< true>(*fi, k)) count++;
+        if (best==-1) if (BQ::template RotateEdge<false>(*fi, k)) count++;
       }
       else {
         if (best!=0) { fi->Q()=0; fi->FFp(k)->Q()=0; count++; }
@@ -316,16 +302,13 @@ int BitQuadMarkEdgeRotations(Mesh &m)
 /*
 marks (Quality=0) and approx. counts doublets (a pair of quads sharing two consecutive edges)
 */
-template <class Mesh>
-int BitQuadMarkDoublets(Mesh &m)
+static int MarkDoublets(MeshType &m)
 {
   int res=0;
-  typedef typename Mesh::FaceIterator FaceIterator;
-  typedef typename Mesh::FaceType FaceType;
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
     fi->Q()=1;
     for (int k=0; k<3; k++) {
-      if ( IsDoublet(*fi,k) ){
+      if ( BQ::IsDoublet(*fi,k) ){
         res++;
         if (fi->IsF((k+1)%3)) res++; // counts for a quad
         fi->Q()=0;
@@ -339,16 +322,13 @@ int BitQuadMarkDoublets(Mesh &m)
 /*
 marks (Quality=0) and counts singlets (vertex B in an A-B-A-C quad)
 */
-template <class Mesh>
-int BitQuadMarkSinglets(Mesh &m)
+static int MarkSinglets(MeshType &m)
 {
   int res=0;
-  typedef typename Mesh::FaceIterator FaceIterator;
-  typedef typename Mesh::FaceType FaceType;
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
     fi->Q()=1;
     for (int k=0; k<3; k++) {
-      if ( IsSinglet(*fi,k) ){
+      if ( BQ::IsSinglet(*fi,k) ){
         res++;
         fi->Q()=0;
       }
@@ -361,17 +341,14 @@ int BitQuadMarkSinglets(Mesh &m)
 /*
 deletes singlets, reutrns number of
 */
-template <class Mesh>
-int BitQuadRemoveSinglets(Mesh &m)
+static int RemoveSinglets(MeshType &m)
 {
   int res=0;
-  typedef typename Mesh::FaceIterator FaceIterator;
-  typedef typename Mesh::FaceType FaceType;
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
     for (int k=0; k<3; k++) {
-      if ( IsSinglet(*fi,k) ){
+      if ( BQ::IsSinglet(*fi,k) ){
         res++;
-        RemoveSinglet(*fi,k,m);
+        BQ::RemoveSinglet(*fi,k,m);
         return res;
         break;
       }
@@ -383,19 +360,17 @@ int BitQuadRemoveSinglets(Mesh &m)
 
 /* returns average quad quality, and assigns it to triangle quality
 */
-template <class Mesh>
-typename Mesh::ScalarType MeasureBitQuadQuality(Mesh &m)
+static ScalarType MeasureQuality(MeshType &m)
 {
-  assert(Mesh::HasPerFaceFlags());
-  typename Mesh::ScalarType res = 0;
+  assert(MeshType::HasPerFaceFlags());
+  ScalarType res = 0;
   int div = 0;
-  typedef typename Mesh::FaceIterator FaceIterator;
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
     if (fi->IsAnyF()) {
       
-      typename Mesh::ScalarType q = quadQuality( &*fi, FauxIndex(&*fi) );
+      ScalarType q = BQ::quadQuality( &*fi, BQ::FauxIndex(&*fi) );
       
-      if (Mesh::HasPerFaceQuality()) fi->Q() = q;
+      if (MeshType::HasPerFaceQuality()) fi->Q() = q;
       res += q;
       div++;
     }
@@ -403,4 +378,5 @@ typename Mesh::ScalarType MeasureBitQuadQuality(Mesh &m)
   if (!div) return 0; else return res / div;
 }
 
+};
 }} // end namespace vcg::tri
