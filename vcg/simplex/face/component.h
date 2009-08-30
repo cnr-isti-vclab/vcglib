@@ -468,7 +468,7 @@ public:
   QualityType &Q() { return _quality; }
   const QualityType &cQ() const { return _quality; }
 	template <class RightF>
-	void ImportLocal(const RightF & rightF){ Q() = rightF.cQ();T::ImportLocal(rightF);}
+	void ImportLocal(const RightF & rightF){ if(RightF::HasFaceQuality()) Q() = rightF.cQ();T::ImportLocal(rightF);}
 	inline void Alloc(const int & ns){T::Alloc(ns);}
 	inline void Dealloc(){T::Dealloc();}
   static bool HasFaceQuality()   { return true; }

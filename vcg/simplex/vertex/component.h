@@ -392,6 +392,8 @@ public:
 	static bool HasCurvatureOcf()   { return false; }
 	static bool HasCurvature()			{ return false; }
 	static bool HasCurvatureDir()   { return false; }
+	template < class LeftV>
+		void ImportLocal(const LeftV  & left ) { TT::ImportLocal( left); }
 	static void Name(std::vector<std::string> & name){TT::Name(name);}
 };
 
@@ -409,6 +411,8 @@ public:
   static bool HasCurvatureOcc()   { return false; }
   static bool HasCurvatureOcf()   { return false; }
   static bool HasCurvature()   { return false; }
+	template < class LeftV>
+		void ImportLocal(const LeftV  & left ) { TT::ImportLocal( left); }
 	static void Name(std::vector<std::string> & name){TT::Name(name);}
 };
 
@@ -462,6 +466,8 @@ public:
 	const float &cK2()const { static float dummy(0);assert(0);return dummy;}
 
   static bool HasCurvatureDir()   { return false; }
+	template < class LeftV>
+		void ImportLocal(const LeftV  & left ) { TT::ImportLocal( left); }
 	static void Name(std::vector<std::string> & name){TT::Name(name);}
 };
 
@@ -509,6 +515,8 @@ public:
 
 	static bool HasRadius()     { return false; }
 	static bool HasRadiusOcf()  { return false; }
+	template < class LeftV>
+		void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
 	static void Name(std::vector<std::string> & name){ T::Name(name);}
 };
 /*-------------------------- Radius  ----------------------------------*/
