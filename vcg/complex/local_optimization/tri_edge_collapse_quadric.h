@@ -148,7 +148,7 @@ public:
 	bool		QualityCheck;
 	bool		OptimalPlacement;
 	bool		MemoryLess;
-	bool		ComplexCheck;
+	bool		QualityWeight;
 	bool		ScaleIndependent;
 	//***********************
 	bool    QualityQuadric; // During the initialization manage all the edges as border edges adding a set of additional quadrics that are useful mostly for keeping face aspect ratio good.
@@ -354,7 +354,7 @@ public:
 		Params().QualityQuadric=false;
 		Params().OptimalPlacement=true;
 		Params().ScaleIndependent=true;
-		Params().ComplexCheck=false;
+		Params().QualityWeight=false;
 		Params().QuadricEpsilon =1e-15;
 		Params().ScaleFactor=1.0;
 
@@ -549,7 +549,12 @@ static void InitQuadric(TriMeshType &m)
 						q.ByPlane(p);
 
 						for(j=0;j<3;++j)
-              if( (*pf).V(j)->IsW() )	QH::Qd((*pf).V(j)) += q;				// Sommo la quadrica ai vertici
+              if( (*pf).V(j)->IsW() )	
+								{
+									if(Params().QualityWeight) 
+												q*=(*pf).V(j)->Q();
+									QH::Qd((*pf).V(j)) += q;				// Sommo la quadrica ai vertici
+								}
 						
 						for(j=0;j<3;++j)
 							if( (*pf).IsB(j) || Params().QualityQuadric )				// Bordo!
@@ -580,24 +585,7 @@ static void InitQuadric(TriMeshType &m)
 		//Params().ScaleFactor *=Params().ScaleFactor ;
 		//printf("Scale factor =%f\n",Params().ScaleFactor );
 		//printf("bb (%5.2f %5.2f %5.2f)-(%5.2f %5.2f %5.2f) Diag %f\n",m.bbox.min[0],m.bbox.min[1],m.bbox.min[2],m.bbox.max[0],m.bbox.max[1],m.bbox.max[2],m.bbox.Diag());
-	}		
-		
-
-	if(Params().ComplexCheck)
-	{
-		// secondo loop per diminuire quadriche complex (se non c'erano i complex si poteva fare in un giro solo)
-		//for(pf=m.face.begin();pf!=m.face.end();++pf)
-		//if( !(*pf).IsD() && (*pf).IsR() )
-		//	if((*pf).V(0)->IsR() &&(*pf).V(1)->IsR() &&(*pf).V(2)->IsR())
-		//			{
-		//				for(j=0;j<3;++j)
-		//				if((*pf).IsCF(j))				// Complex!
-		//				{
-		//					if( (*pf).V (j)->IsW() )	(*pf).V (j)->q *= 0.01;			// Scalo le quadriche
-		//					if( (*pf).V1(j)->IsW() )	(*pf).V1(j)->q *= 0.01;
-		//				}
-		//		}
-	}
+	}				
 }
 
 
