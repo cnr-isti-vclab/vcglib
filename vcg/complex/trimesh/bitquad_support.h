@@ -86,6 +86,7 @@ typedef typename MeshType::FaceIterator FaceIterator;
 typedef typename MeshType::VertexIterator VertexIterator;
 
 
+
 template <bool verse>
 static bool RotateEdge(FaceType& f, int w0a){
   FaceType *fa = &f;
@@ -647,20 +648,6 @@ static void UpdateQualityAsValency(MeshType& m){
   }
 }
 
-private:
-  
-// helper function:
-// cos of angle abc. This should probably go elsewhere
-static ScalarType Cos(const CoordType &a, const CoordType &b, const CoordType &c )
-{
-  CoordType 
-    e0 = b - a,
-    e1 = b - c;
-  ScalarType d =  (e0.Norm()*e1.Norm());
-  if (d==0) return 0.0;
-  return (e0*e1)/d;
-}
-
 // helper function:
 // returns quality of a quad formed by points a,b,c,d
 // quality is computed as "how squared angles are"
@@ -746,6 +733,25 @@ static int TestEdgeRotation(const FaceType &f, int w0)
   if (q1<=q2) return 1;
   return -1;
 }
+private:
+  
+// helper function:
+// cos of angle abc. This should probably go elsewhere
+static ScalarType Cos(const CoordType &a, const CoordType &b, const CoordType &c )
+{
+  CoordType 
+    e0 = b - a,
+    e1 = b - c;
+  ScalarType d =  (e0.Norm()*e1.Norm());
+  if (d==0) return 0.0;
+  return (e0*e1)/d;
+}
+
+
+
+
+
+
 
 
 };
