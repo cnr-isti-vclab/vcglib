@@ -85,6 +85,14 @@ typedef typename MeshType::VertexType VertexType;
 typedef typename MeshType::FaceIterator FaceIterator;
 typedef typename MeshType::VertexIterator VertexIterator;
 
+static void MarkFaceF(FaceType *f){
+  f->V(0)->SetS();
+  f->V(1)->SetS();
+  f->V(2)->SetS();
+  int i=FauxIndex(f);
+  f->FFp( i )->V2( f->FFi(i) )->SetS();
+
+}
 
 
 template <bool verse>
@@ -100,6 +108,10 @@ static bool RotateEdge(FaceType& f, int w0a){
   int w2a = (w0a+2)%3;
 
   FaceType *fb = fa->FFp(w0a);
+  
+  MarkFaceF(fa);
+  MarkFaceF(fb);
+  
   int w0b = fa->FFi(w0a);
   int w1b = (w0b+1)%3;
   int w2b = (w0b+2)%3;
@@ -252,6 +264,8 @@ static bool RotateVertex(FaceType &f, int w0)
       if (!CheckFlipDiag(*lastF)) return false; // cannot flip??
       FlipDiag(*lastF);
     }
+    MarkFaceF(pf);
+
     
   } while (pf != stopA && pf!= stopB);
   
@@ -259,7 +273,11 @@ static bool RotateVertex(FaceType &f, int w0)
   stopA=pf;
   do {
     int j = pi;
-    if (pf->IsF(j)) pf->ClearF(j); else pf->SetF(j);
+    if (pf->IsF(j)) 
+      { pf->ClearF(j); IncreaseValency(pf->V(j)); } 
+    else 
+      { pf->SetF(j); DecreaseValency(pf->V(j)); }
+
     j = (j+2)%3;
     if (pf->IsF(j)) pf->ClearF(j); else pf->SetF(j);
     int tmp = (pf->FFi(pi)+1)%3; pf = pf->FFp(pi); pi = tmp;  // flipF flipV
@@ -283,6 +301,11 @@ static void FlipEdge(FaceType &f, int k){
   FaceType* fa2 = fa->FFp( FauxIndex(fa) );
   FaceType* fb2 = fb->FFp( FauxIndex(fb) );
 
+  IncreaseValency( fa->V2(k) );
+  IncreaseValency( fb->V2(f.FFi(k)) );
+  DecreaseValency( fa->V0(k) );
+  DecreaseValency( fa->V1(k) );
+
   vcg::face::FlipEdge(*fa, k);
   
   // ripristinate faux flags
@@ -294,6 +317,7 @@ static void FlipEdge(FaceType &f, int k){
     if (fa->FFp(k)->IsF( fa->FFi(k) )) fa->SetF(k);
     if (fb->FFp(k)->IsF( fb->FFi(k) )) fb->SetF(k);
   }
+  
 }
 
 // check if a quad diagonal can be topologically flipped
@@ -322,14 +346,21 @@ static void _CollapseDiagHalf(FaceType &f, int faux, MeshType& m)
   int faux1 = (faux+1)%3;
   int faux2 = (faux+2)%3;
   
+  DecreaseValency(f.V2(faux)); // update valency 
+  
   FaceType* fA = f.FFp( faux1 );
   FaceType* fB = f.FFp( faux2 );
+  
+  MarkFaceF(fA);
+  MarkFaceF(fB);
+
   int iA = f.FFi( faux1 );
   int iB = f.FFi( faux2 );
   
   if (fA==&f && fB==&f) { 
     // both non-faux edges are borders: tri-face disappears, just remove the vertex
     if (DELETE_VERTICES)
+    if (GetValency(f.V(faux2))==0)
       Allocator<MeshType>::DeleteVertex(m,*(f.V(faux2))); 
   } else {
     if (fA==&f) {
@@ -378,6 +409,18 @@ static void RemoveSinglet(FaceType &f, int wedge, MeshType& m){
   int wb1 = (wb0+1)%3 ; 
   int wb2 = (wb0+2)%3 ;
   assert (fb == fa->FFp( wa2 ) ); // otherwise, not a singlet
+  
+  // valency decrease
+  DecreaseValency(fa->V(wa1));
+  DecreaseValency(fa->V(wa2));
+  if (fa->IsF(wa0)) {
+    DecreaseValency(fa->V(wa2)); // double decrease of valency
+  } else {
+    DecreaseValency(fa->V(wa1)); // double decrease of valency
+  }
+  
+  // no need to MarkFaceF !
+  
   fc = fa->FFp(wa1);
   fd = fb->FFp(wb1);
   int wc = fa->FFi(wa1);
@@ -389,10 +432,13 @@ static void RemoveSinglet(FaceType &f, int wedge, MeshType& m){
   // faux status of survivors: unchanged
   assert( ! ( fc->IsF( wc) ) );
   assert( ! ( fd->IsF( wd) ) );
+  
   Allocator<MeshType>::DeleteFace( m,*fa );
   Allocator<MeshType>::DeleteFace( m,*fb );
-  if (DELETE_VERTICES)
-  Allocator<MeshType>::DeleteVertex( m,*fa->V(wedge) );
+  
+  DecreaseValency(fa->V(wedge) );
+  if (DELETE_VERTICES) 
+  if (GetValency(fa->V(wedge))==0) Allocator<MeshType>::DeleteVertex( m,*fa->V(wedge) );
 }
 
 
@@ -410,10 +456,6 @@ static bool TestAndRemoveSinglet(FaceType &f, int wedge, MeshType& m){
      return true;
   }
   return false;
-}
-
-template <int verse>
-static void RotateEdge(const FaceType& f, int wedge){
 }
 
 // given a face and a wedge, counts its valency in terms of quads (and triangles)
@@ -436,7 +478,7 @@ static int CountBitPolygonInternalValency(const FaceType& f, int wedge){
 
 // given a face and a wedge, returns if it host a doubet
 // assumes tri and quad only. uses FF topology only.
-static bool IsDoublet(const FaceType& f, int wedge){
+static bool IsDoubletFF(const FaceType& f, int wedge){
   const FaceType* pf = &f;
   int pi = wedge;
   int res = 0, guard=0;
@@ -454,7 +496,14 @@ static bool IsDoublet(const FaceType& f, int wedge){
   return (res == 2);
 }
 
-static bool IsSinglet(const FaceType& f, int wedge){
+// version that uses vertex valency
+static bool IsDoublet(const FaceType& f, int wedge){
+  return (GetValency( f.V(wedge)) == 2) && (!f.V(wedge)->IsB() ) ;
+}
+
+// given a face and a wedge, returns if it host a singlets
+// assumes tri and quad only. uses FF topology only.
+static bool IsSingletFF(const FaceType& f, int wedge){
   const FaceType* pf = &f;
   int pi = wedge;
   int res = 0, guard=0;
@@ -472,6 +521,10 @@ static bool IsSinglet(const FaceType& f, int wedge){
   return (res == 1);
 }
 
+// version that uses vertex valency
+static bool IsSinglet(const FaceType& f, int wedge){
+  return (GetValency( f.V(wedge) ) == 1) && (!f.V(wedge)->IsB() ) ;
+}
 
 static bool CollapseEdgeDirect(FaceType &f, int w0, MeshType& m){
   FaceType * f0 = &f;
@@ -483,8 +536,7 @@ static bool CollapseEdgeDirect(FaceType &f, int w0, MeshType& m){
   v1 = f0->V1(w0);
   
   if (!RotateVertex(*f0,w0)) return false;
-  
-  
+
   // quick hack: recover original wedge
   if      (f0->V(0) == v0) w0 = 0;
   else if (f0->V(1) == v0) w0 = 1;
@@ -501,7 +553,7 @@ static bool CollapseEdgeDirect(FaceType &f, int w0, MeshType& m){
 static bool CollapseEdge(FaceType &f, int w0, MeshType& m){
   FaceTypeP f0 = &f;
   
-  assert(!f0->IsF(w0)); // don't use this to collapse diag.
+  assert(!f0->IsF(w0)); // don't use this method to collapse diag.
   
   FaceTypeP f1 = f0->FFp(w0); 
   int w1 = f0->FFi(w0); 
@@ -596,15 +648,10 @@ static void CollapseDiag(FaceType &f, ScalarType interpol, MeshType& m){
   _CollapseDiagHalf(*fb, fauxb, m);
   _CollapseDiagHalf(*fa, fauxa, m);
   
+  SetValency(va, GetValency(vb)+GetValency(va)-2);
+  SetValency(vb, GetValency(vb)+GetValency(va)-2);
   if (DELETE_VERTICES) Allocator<MeshType>::DeleteVertex(m,*vb);
   
-  
-
-  // for diagonals
-    
-  // for counterdiagonals
-  //Inpterpolator::Apply( *(f.V2(fauxa)), *(f.FFp( fauxa )->V2(fauxa)), interpol, va);
-  //va->P() = p;
 }      
 
 
@@ -637,17 +684,70 @@ static ScalarType PosOnDiag(const FaceType& f, bool counterDiag){
   return 0.5f;
 }
 
-static void UpdateQualityAsValency(MeshType& m){
+// trick! hide valency in flags
+typedef enum { VALENCY_FLAGS = 24 } ___; // this bit and the 4 successive one are devoted to store valency
+
+static void SetValency(VertexType *v, int n){
+  //v->Q() = n;
+  assert(n>=0 && n<=31);
+  v->Flags()&= ~(31<<VALENCY_FLAGS);
+  v->Flags()|= n<<VALENCY_FLAGS;
+}
+
+static int GetValency(const VertexType *v){
+  //return (int)(v->cQ());
+  return ( v->Flags() >> (VALENCY_FLAGS) ) & 31;
+}
+
+static void IncreaseValency(VertexType *v, int dv=1){
+#ifdef NDEBUG
+  v->Flags() += dv<<VALENCY_FLAGS;
+#else
+  SetValency( v, GetValency(v)+dv );
+#endif
+}
+
+static int DecreaseValency(VertexType *v, int dv=1){
+#ifdef NDEBUG
+  v->Flags() -= dv<<VALENCY_FLAGS;
+#else
+  SetValency( v, GetValency(v)-dv );
+#endif
+}
+
+static void UpdateValencyInFlags(MeshType& m){
+  for (VertexIterator vi = m.vert.begin();  vi!=m.vert.end(); vi++) if (!vi->IsD()) {
+    SetValency(&*vi,0);
+  }
+  for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
+     for (int w=0; w<3; w++) 
+     if (!fi->IsF(w))
+       IncreaseValency( fi->V(w)); 
+  }
+}
+
+static void UpdateValencyInQuality(MeshType& m){
   for (VertexIterator vi = m.vert.begin();  vi!=m.vert.end(); vi++) if (!vi->IsD()) {
      vi->Q() = 0; 
   }
 
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
      for (int w=0; w<3; w++) 
-       fi->V(w)->Q() += (fi->IsF(w)||fi->IsF((w+2)%3) )? 0.5f:1; 
+         fi->V(w)->Q() += (fi->IsF(w)||fi->IsF((w+2)%3) )? 0.5f:1; 
   }
 }
 
+static bool HasConsistentValencyFlag(MeshType &m) {
+  UpdateValencyInFlags(m);
+  UpdateValencyInQuality(m);
+  for (VertexIterator vi = m.vert.begin();  vi!=m.vert.end(); vi++) if (!vi->IsD()) {
+    if (GetValency(&*vi)!=vi->Q()) return false;
+  }
+  return true;
+}
+
+private:
+  
 // helper function:
 // returns quality of a quad formed by points a,b,c,d
 // quality is computed as "how squared angles are"
