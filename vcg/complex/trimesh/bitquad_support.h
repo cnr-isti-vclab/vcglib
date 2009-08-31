@@ -91,7 +91,10 @@ static void MarkFaceF(FaceType *f){
   f->V(2)->SetS();
   int i=FauxIndex(f);
   f->FFp( i )->V2( f->FFi(i) )->SetS();
-
+  f->V(0)->SetV();
+  f->V(1)->SetV();
+  f->V(2)->SetV();
+  f->FFp( i )->V2( f->FFi(i) )->SetV();
 }
 
 
@@ -478,7 +481,7 @@ static int CountBitPolygonInternalValency(const FaceType& f, int wedge){
 
 // given a face and a wedge, returns if it host a doubet
 // assumes tri and quad only. uses FF topology only.
-static bool IsDoubletFF(const FaceType& f, int wedge){
+static bool IsDoublet(const FaceType& f, int wedge){
   const FaceType* pf = &f;
   int pi = wedge;
   int res = 0, guard=0;
@@ -497,13 +500,13 @@ static bool IsDoubletFF(const FaceType& f, int wedge){
 }
 
 // version that uses vertex valency
-static bool IsDoublet(const FaceType& f, int wedge){
+static bool IsDoubletVal(const FaceType& f, int wedge){
   return (GetValency( f.V(wedge)) == 2) && (!f.V(wedge)->IsB() ) ;
 }
 
 // given a face and a wedge, returns if it host a singlets
 // assumes tri and quad only. uses FF topology only.
-static bool IsSingletFF(const FaceType& f, int wedge){
+static bool IsSinglet(const FaceType& f, int wedge){
   const FaceType* pf = &f;
   int pi = wedge;
   int res = 0, guard=0;
@@ -522,7 +525,7 @@ static bool IsSingletFF(const FaceType& f, int wedge){
 }
 
 // version that uses vertex valency
-static bool IsSinglet(const FaceType& f, int wedge){
+static bool IsSingletVal(const FaceType& f, int wedge){
   return (GetValency( f.V(wedge) ) == 1) && (!f.V(wedge)->IsB() ) ;
 }
 
@@ -707,7 +710,7 @@ static void IncreaseValency(VertexType *v, int dv=1){
 #endif
 }
 
-static int DecreaseValency(VertexType *v, int dv=1){
+static void DecreaseValency(VertexType *v, int dv=1){
 #ifdef NDEBUG
   v->Flags() -= dv<<VALENCY_FLAGS;
 #else
@@ -744,20 +747,6 @@ static bool HasConsistentValencyFlag(MeshType &m) {
     if (GetValency(&*vi)!=vi->Q()) return false;
   }
   return true;
-}
-
-private:
-  
-// helper function:
-// returns quality of a quad formed by points a,b,c,d
-// quality is computed as "how squared angles are"
-static ScalarType quadQuality(const CoordType &a, const CoordType &b, const CoordType &c, const CoordType &d){
-  ScalarType score = 0;
-  score += 1 - math::Abs( Cos( a,b,c) );
-  score += 1 - math::Abs( Cos( b,c,d) );
-  score += 1 - math::Abs( Cos( c,d,a) );
-  score += 1 - math::Abs( Cos( d,a,b) );
-  return score / 4;
 }
 
 // helper function:
@@ -833,6 +822,24 @@ static int TestEdgeRotation(const FaceType &f, int w0)
   if (q1<=q2) return 1;
   return -1;
 }
+
+private:
+  
+// helper function:
+// returns quality of a quad formed by points a,b,c,d
+// quality is computed as "how squared angles are"
+static ScalarType quadQuality(const CoordType &a, const CoordType &b, const CoordType &c, const CoordType &d){
+  ScalarType score = 0;
+  score += 1 - math::Abs( Cos( a,b,c) );
+  score += 1 - math::Abs( Cos( b,c,d) );
+  score += 1 - math::Abs( Cos( c,d,a) );
+  score += 1 - math::Abs( Cos( d,a,b) );
+  return score / 4;
+}
+
+
+
+
 private:
   
 // helper function:
