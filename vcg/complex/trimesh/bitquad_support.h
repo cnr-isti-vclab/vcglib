@@ -1,3 +1,5 @@
+#ifndef VCG_BITQUAD_SUPPORT
+#define VCG_BITQUAD_SUPPORT
 #include <vector>
 #include <vcg/complex/trimesh/subset.h>
 #include <vcg/simplex/face/jumping_pos.h>
@@ -902,12 +904,7 @@ static ScalarType Cos(const CoordType &a, const CoordType &b, const CoordType &c
   return (e0*e1)/d;
 }
 
-
-
-
-
-
-
-
 };
 }} // end namespace vcg::tri
+
+#endif
