@@ -21,6 +21,7 @@
 *                                                                           *
 ****************************************************************************/
 
+#include <stdlib.h>
 #include <assert.h>
 #include <QtCore/QVariant>
 #include "qgetopt.h"
