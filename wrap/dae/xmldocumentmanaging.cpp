@@ -44,7 +44,7 @@ XMLLeafNode::~XMLLeafNode()
 }
 
 
-void XMLLeafNode::applyProcedure(Visitor& v)
+void XMLLeafNode::applyProcedure(XMLVisitor& v)
 {
 	v(*this);
 }
@@ -71,7 +71,7 @@ XMLInteriorNode::~XMLInteriorNode()
 		delete (*it);
 }
 
-void XMLInteriorNode::applyProcedure(Visitor& v)
+void XMLInteriorNode::applyProcedure(XMLVisitor& v)
 {
 	v(*this);
 }

@@ -66,7 +66,7 @@ public:
 
 class XMLDocumentWriter;
 
-class Visitor;
+class XMLVisitor;
 
 class XMLNode
 {
@@ -74,7 +74,7 @@ public:
 	XMLNode(XMLTag* tag);
 	virtual ~XMLNode();
 
-	virtual void applyProcedure(Visitor& v) = 0;
+	virtual void applyProcedure(XMLVisitor& v) = 0;
 
 	XMLTag* _tag;
 };
@@ -88,7 +88,7 @@ public:
 
 	QVector< XMLNode* > sons();
 
-	void applyProcedure(Visitor& v);
+	void applyProcedure(XMLVisitor& v);
 
 	~XMLInteriorNode();
 
@@ -100,7 +100,7 @@ class XMLLeafNode : public XMLNode
 public:
 	XMLLeafNode(XMLLeafTag* leaftag);
 
-	void applyProcedure(Visitor& v);
+	void applyProcedure(XMLVisitor& v);
 	virtual ~XMLLeafNode();
 };
 
@@ -121,7 +121,7 @@ public:
 };
 
 
-class Visitor
+class XMLVisitor
 {
 public:
 	virtual void operator()(XMLLeafNode& leaf) = 0;
@@ -129,7 +129,7 @@ public:
 };
 
 
-class XMLDocumentWriter : public Visitor
+class XMLDocumentWriter : public XMLVisitor
 {
 private:
 	QXmlStreamWriter _stream;
