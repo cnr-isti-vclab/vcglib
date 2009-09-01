@@ -84,6 +84,7 @@ typedef typename MeshType::FaceType* FaceTypeP;
 typedef typename MeshType::VertexType VertexType;
 typedef typename MeshType::FaceIterator FaceIterator;
 typedef typename MeshType::VertexIterator VertexIterator;
+typedef typename face::Pos<FaceType> Pos;
 
 static void MarkFaceF(FaceType *f){
   f->V(0)->SetS();
@@ -553,10 +554,16 @@ static bool CollapseEdgeDirect(FaceType &f, int w0, MeshType& m){
   return true;
 }
 
-static bool CollapseEdge(FaceType &f, int w0, MeshType& m){
+// collapses an edge. Optional output pos can be iterated around to find affected faces
+static bool CollapseEdge(FaceType &f, int w0, MeshType& m, Pos *affected =NULL){
   FaceTypeP f0 = &f;
-  
   assert(!f0->IsF(w0)); // don't use this method to collapse diag.
+
+  if (affected) {
+    int w1 = 3-w0-FauxIndex(f0); // the edge whihc is not the collapsed one nor the faux
+    affected->F() = f0->FFp(w1);
+    affected->E() = f0->FFi(w1);
+  }
   
   FaceTypeP f1 = f0->FFp(w0); 
   int w1 = f0->FFi(w0); 
@@ -581,13 +588,15 @@ static bool CollapseEdge(FaceType &f, int w0, MeshType& m){
    if k == 0.5, new vertex in the middle, etc
 */
 
-static void CollapseCounterDiag(FaceType &f, ScalarType interpol, MeshType& m){
+static bool CollapseCounterDiag(FaceType &f, ScalarType interpol, MeshType& m, Pos* affected=NULL){
   //CoordType p;
   //int fauxa = FauxIndex(&f);
   //p = f.V(fauxa)->P()*(1-k) + f.V( (fauxa+1)%3 )->P()*(k);
   
+  if (!CheckFlipDiag(f)) return false;
+
   FlipDiag(f);
-  CollapseDiag(f,interpol,m);
+  return CollapseDiag(f,interpol,m,affected);
 }
 
 /*
@@ -604,11 +613,49 @@ static void CollapseCounterDiag(FaceType &f, ScalarType k, MeshType& m){
 //  CollapseDiag(f,p,m);
 //}
 
+// rotates around vertex
+class Iterator{
+private:
+  Pos start, cur;
+  bool over;
+public:
+  Iterator(Pos& pos){
+    start = cur = Pos(pos.F(), pos.E());
+    over = false;
+  }
+  bool End() const {
+    return over;
+  }
+  void operator ++ () {
+    if (cur.F()->IsF(cur.E())) {
+      // jump over faux diag
+      int i = cur.F()->FFi( cur.E() ); 
+      cur.F() = cur.F()->FFp( cur.E() );
+      cur.E() = (i+2)%3;
+    }
+    // jump over real edge
+    FaceType *f =cur.F()->FFp( cur.E() );
+    if (f==cur.F()) over=true; // border found
+    cur.E() = (cur.F()->FFi( cur.E() ) +2 )%3; 
+    cur.F() = f;
 
-static void CollapseDiag(FaceType &f, ScalarType interpol, MeshType& m){
+    if (cur.F()==start.F()) over=true;
+
+  }
+  Pos GetPos(){
+    return cur;
+  }  
+};
+
+static bool CollapseDiag(FaceType &f, ScalarType interpol, MeshType& m, Pos* affected =NULL){
     
   FaceType* fa = &f;
   int fauxa = FauxIndex(fa);
+  if (affected) {
+    int w1 = 2-fauxa; // any edge but not the faux
+    affected->F() = fa->FFp(w1);
+    affected->E() = fa->FFi(w1);
+  }
   FaceType* fb = fa->FFp(fauxa);
   assert (fb!=fa);
   int fauxb = FauxIndex(fb);
@@ -655,6 +702,7 @@ static void CollapseDiag(FaceType &f, ScalarType interpol, MeshType& m){
   SetValency(vb, GetValency(vb)+GetValency(va)-2);
   if (DELETE_VERTICES) Allocator<MeshType>::DeleteVertex(m,*vb);
   
+  return true;
 }      
 
 
@@ -741,7 +789,7 @@ static void UpdateValencyInQuality(MeshType& m){
 }
 
 static bool HasConsistentValencyFlag(MeshType &m) {
-  UpdateValencyInFlags(m);
+  //UpdateValencyInFlags(m);
   UpdateValencyInQuality(m);
   for (VertexIterator vi = m.vert.begin();  vi!=m.vert.end(); vi++) if (!vi->IsD()) {
     if (GetValency(&*vi)!=vi->Q()) return false;
