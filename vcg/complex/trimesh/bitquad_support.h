@@ -562,9 +562,10 @@ static bool CollapseEdge(FaceType &f, int w0, MeshType& m, Pos *affected =NULL){
   assert(!f0->IsF(w0)); // don't use this method to collapse diag.
 
   if (affected) {
+    VertexType *p = f0->V(w0);
     int w1 = 3-w0-FauxIndex(f0); // the edge whihc is not the collapsed one nor the faux
     affected->F() = f0->FFp(w1);
-    affected->E() = f0->FFi(w1);
+    affected->E() = (f0->FFi(w1)+4+w1-FauxIndex(f0))%3;
   }
   
   FaceTypeP f1 = f0->FFp(w0); 
@@ -589,31 +590,11 @@ static bool CollapseEdge(FaceType &f, int w0, MeshType& m, Pos *affected =NULL){
    if k == 1, new vertex is in b
    if k == 0.5, new vertex in the middle, etc
 */
-
-static bool CollapseCounterDiag(FaceType &f, ScalarType interpol, MeshType& m, Pos* affected=NULL){
-  //CoordType p;
-  //int fauxa = FauxIndex(&f);
-  //p = f.V(fauxa)->P()*(1-k) + f.V( (fauxa+1)%3 )->P()*(k);
-  
+static bool CollapseCounterDiag(FaceType &f, ScalarType interpol, MeshType& m, Pos* affected=NULL){  
   if (!CheckFlipDiag(f)) return false;
-
   FlipDiag(f);
   return CollapseDiag(f,interpol,m,affected);
 }
-
-/*
-static void CollapseCounterDiag(FaceType &f, ScalarType k, MeshType& m){
-  CoordType p;
-  int fauxa = FauxIndex(&f);
-  p = f.P2(fauxa)*(1-k) + f.FFp( fauxa )->P2( f.FFi( fauxa ) )*(k);
-  CollapseCounterDiag(f,p,m);
-}
-*/
-
-//static void CollapseCounterDiag(FaceType &f, const CoordType &p, MeshType& m){
-//  FlipDiag(f);
-//  CollapseDiag(f,p,m);
-//}
 
 // rotates around vertex
 class Iterator{
@@ -624,7 +605,7 @@ public:
   Iterator(Pos& pos){
     start =Pos(pos.F(), pos.E());
 	
-	while((start.F()->IsD())||(!start.F()->IsF(start.E())))
+	while((start.F()->IsD())||(start.F()->IsF((start.E()+1)%3)))
 	{
 		int i = start.F()->FFi( start.E() ); 
 		start.F() = start.F()->FFp( start.E() );
@@ -653,27 +634,6 @@ public:
 
   }
 
-  // void operator ++ () {
-  //  int i = cur.F()->FFi( cur.E() ); 
-  //  cur.F() = cur.F()->FFp( cur.E() );
-  //  cur.E() = (i+2)%3;
-  //  if (cur.F()->IsF(cur.E())) {
-  //    //// jump over faux diag
-  //    int i = cur.F()->FFi( cur.E() ); 
-  //    cur.F() = cur.F()->FFp( cur.E() );
-  //    cur.E() = (i+2)%3;
-	 // 
-  //  }
-  //  // jump over real edge
-  //  //FaceType *f =cur.F()->FFp( cur.E() );
-  //  //if (f==cur.F()) over=true; // border found
-  //  //cur.E() = (cur.F()->FFi( cur.E() ) +2 )%3; 
-  //  //cur.F() = f;
-	
-  //  if (cur.F()==start.F()) over=true;
-
-  //}
-
   Pos GetPos(){
     return cur;
   }  
@@ -684,7 +644,7 @@ static bool CollapseDiag(FaceType &f, ScalarType interpol, MeshType& m, Pos* aff
   FaceType* fa = &f;
   int fauxa = FauxIndex(fa);
   if (affected) {
-    int w1 = 2-fauxa; // any edge but not the faux
+    int w1 = (fauxa+1)%3; // any edge but not the faux
     affected->F() = fa->FFp(w1);
     affected->E() = fa->FFi(w1);
   }
