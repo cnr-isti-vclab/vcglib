@@ -123,9 +123,9 @@ static int MarkSmallestEdgeOrDiag(MeshType &m, ScalarType edgeMult, bool perform
     if (perform) {
       if (fa->IsF(w)) {
         if (counterDiag) {
-          BQ::CollapseCounterDiag(*fa, BQ::PosOnDiag(*fa,true), m ); return 2;
+          if (BQ::CollapseCounterDiag(*fa, BQ::PosOnDiag(*fa,true), m )) return 2;
         } else {
-          BQ::CollapseDiag(*fa, BQ::PosOnDiag(*fa,false), m ); return 2;
+          if (BQ::CollapseDiag(*fa, BQ::PosOnDiag(*fa,false), m )) return 2;
         }
       } else {
         if  (BQ::CollapseEdge(*fa,w,m)) return 1;
