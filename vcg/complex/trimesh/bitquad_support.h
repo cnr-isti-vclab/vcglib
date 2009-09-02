@@ -64,7 +64,7 @@ class GeometricInterpolator{
 public:
   typedef typename VertexType::ScalarType ScalarType;
   static void Apply( const VertexType &a,  const VertexType &b, ScalarType t, VertexType &res){
-    assert (&a != &b);
+    /*assert (&a != &b);*/
     res.P() = a.P()*(1-t) + b.P()*(t);
   }
 };
@@ -622,7 +622,15 @@ private:
   bool over;
 public:
   Iterator(Pos& pos){
-    start = cur = Pos(pos.F(), pos.E());
+    start =Pos(pos.F(), pos.E());
+	
+	while((start.F()->IsD())||(!start.F()->IsF(start.E())))
+	{
+		int i = start.F()->FFi( start.E() ); 
+		start.F() = start.F()->FFp( start.E() );
+		start.E() = (i+2)%3;
+	}
+	cur=start;
     over = false;
   }
   bool End() const {
@@ -644,6 +652,28 @@ public:
     if (cur.F()==start.F()) over=true;
 
   }
+
+  // void operator ++ () {
+  //  int i = cur.F()->FFi( cur.E() ); 
+  //  cur.F() = cur.F()->FFp( cur.E() );
+  //  cur.E() = (i+2)%3;
+  //  if (cur.F()->IsF(cur.E())) {
+  //    //// jump over faux diag
+  //    int i = cur.F()->FFi( cur.E() ); 
+  //    cur.F() = cur.F()->FFp( cur.E() );
+  //    cur.E() = (i+2)%3;
+	 // 
+  //  }
+  //  // jump over real edge
+  //  //FaceType *f =cur.F()->FFp( cur.E() );
+  //  //if (f==cur.F()) over=true; // border found
+  //  //cur.E() = (cur.F()->FFi( cur.E() ) +2 )%3; 
+  //  //cur.F() = f;
+	
+  //  if (cur.F()==start.F()) over=true;
+
+  //}
+
   Pos GetPos(){
     return cur;
   }  
@@ -742,9 +772,9 @@ typedef enum { VALENCY_FLAGS = 24 } ___; // this bit and the 4 successive one ar
 
 static void SetValency(VertexType *v, int n){
   //v->Q() = n;
-  assert(n>=0 && n<=31);
+ /* assert(n>=0 && n<=31);
   v->Flags()&= ~(31<<VALENCY_FLAGS);
-  v->Flags()|= n<<VALENCY_FLAGS;
+  v->Flags()|= n<<VALENCY_FLAGS;*/
 }
 
 static int GetValency(const VertexType *v){
@@ -753,19 +783,19 @@ static int GetValency(const VertexType *v){
 }
 
 static void IncreaseValency(VertexType *v, int dv=1){
-#ifdef NDEBUG
-  v->Flags() += dv<<VALENCY_FLAGS;
-#else
-  SetValency( v, GetValency(v)+dv );
-#endif
+//#ifdef NDEBUG
+//  v->Flags() += dv<<VALENCY_FLAGS;
+//#else
+//  SetValency( v, GetValency(v)+dv );
+//#endif
 }
 
 static void DecreaseValency(VertexType *v, int dv=1){
-#ifdef NDEBUG
-  v->Flags() -= dv<<VALENCY_FLAGS;
-#else
-  SetValency( v, GetValency(v)-dv );
-#endif
+//#ifdef NDEBUG
+//  v->Flags() -= dv<<VALENCY_FLAGS;
+//#else
+//  SetValency( v, GetValency(v)-dv );
+//#endif
 }
 
 static void UpdateValencyInFlags(MeshType& m){
