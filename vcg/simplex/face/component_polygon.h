@@ -162,7 +162,7 @@ public:
   char &VFi(const int j){static char z=0;  assert(0); return z;};
   char &FFi(const int j){static char z=0;  assert(0); return z;};
   const char &cVFi(const int j){static char z=0; return z;};
-  const char &cFFi(const int j){static char z=0; return z;};
+  const char &cFFi(const int j) const {static char z=0; return z;};
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){ T::ImportLocal(leftF);}
 	void Alloc(const int & ns){T::Alloc(ns);}
