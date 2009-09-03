@@ -520,7 +520,7 @@ public:
   char &VFi(const int j){(void)j; static char z=0;  assert(0); return z;};
   char &FFi(const int j){(void)j; static char z=0;  assert(0); return z;};
   const char &cVFi(const int j){(void)j; static char z=0; return z;};
-  const char &cFFi(const int j){(void)j; static char z=0; return z;};
+  const char &cFFi(const int j) const {(void)j; static char z=0; return z;};
 	template <class RightF>
 	void ImportLocal(const RightF & rightF){ T::ImportLocal(rightF);}
 	inline void Alloc(const int & ns){T::Alloc(ns);}
