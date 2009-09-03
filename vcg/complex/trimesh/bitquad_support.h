@@ -66,6 +66,7 @@ public:
   static void Apply( const VertexType &a,  const VertexType &b, ScalarType t, VertexType &res){
     /*assert (&a != &b);*/
     res.P() = a.P()*(1-t) + b.P()*(t);
+    if (a.IsB()||b.IsB()) res.SetB();
   }
 };
 
@@ -271,8 +272,6 @@ static bool RotateVertex(FaceType &f, int w0)
       FlipDiag(*lastF);
     }
     MarkFaceF(pf);
-
-    
   } while (pf != stopA && pf!= stopB);
   
   // last pass: rotate arund vertex again, changing faux status
@@ -280,9 +279,9 @@ static bool RotateVertex(FaceType &f, int w0)
   do {
     int j = pi;
     if (pf->IsF(j)) 
-      { pf->ClearF(j); IncreaseValency(pf->V(j)); } 
+      { pf->ClearF(j); IncreaseValency(pf->V1(j));  } 
     else 
-      { pf->SetF(j); DecreaseValency(pf->V(j)); }
+      { pf->SetF(j); DecreaseValency(pf->V1(j)); }
 
     j = (j+2)%3;
     if (pf->IsF(j)) pf->ClearF(j); else pf->SetF(j);
@@ -386,7 +385,7 @@ static void _CollapseDiagHalf(FaceType &f, int faux, MeshType& m)
 
 }
 
-static void RemoveDoublet(FaceType &f, int wedge, MeshType& m){
+static void RemoveDoublet(FaceType &f, int wedge, MeshType& m, Pos* affected=NULL){
   if (f.IsF((wedge+1)%3) ) {
     VertexType *v = f.V(wedge);
     FlipDiag(f);
@@ -399,11 +398,12 @@ static void RemoveDoublet(FaceType &f, int wedge, MeshType& m){
     }
   }
   ScalarType k=(f.IsF(wedge))?1:0;
-  CollapseDiag(f, k, m);
+  CollapseDiag(f, k, m, affected);
   VertexType *v = f.V(wedge);
 }
 
-static void RemoveSinglet(FaceType &f, int wedge, MeshType& m){
+static void RemoveSinglet(FaceType &f, int wedge, MeshType& m, Pos* affected=NULL){
+  if (affected) affected->F() = NULL; // singlets leave nothing to update behind
   FaceType *fa, *fb; // these will die
   FaceType *fc, *fd; // their former neight
   fa = & f;
@@ -484,7 +484,7 @@ static int CountBitPolygonInternalValency(const FaceType& f, int wedge){
 
 // given a face and a wedge, returns if it host a doubet
 // assumes tri and quad only. uses FF topology only.
-static bool IsDoublet(const FaceType& f, int wedge){
+static bool IsDoubletFF(const FaceType& f, int wedge){
   const FaceType* pf = &f;
   int pi = wedge;
   int res = 0, guard=0;
@@ -503,13 +503,24 @@ static bool IsDoublet(const FaceType& f, int wedge){
 }
 
 // version that uses vertex valency
-static bool IsDoubletVal(const FaceType& f, int wedge){
+static bool IsDoublet(const FaceType& f, int wedge){
   return (GetValency( f.V(wedge)) == 2) && (!f.V(wedge)->IsB() ) ;
+}
+
+static bool IsDoubletOrSinglet(const FaceType& f, int wedge){
+  return (GetValency( f.V(wedge)) <= 2) && (!f.V(wedge)->IsB() ) ;
+}
+
+static bool RemoveDoubletOrSinglet(FaceType& f, int wedge, MeshType& m, Pos* affected=NULL){
+ if (GetValency( f.V(wedge)) == 2) { RemoveDoublet(f,wedge,m,affected) ; return true; }
+ assert (GetValency( f.V(wedge)) == 1) ;
+ RemoveSinglet(f,wedge,m,affected) ;
+ return true;
 }
 
 // given a face and a wedge, returns if it host a singlets
 // assumes tri and quad only. uses FF topology only.
-static bool IsSinglet(const FaceType& f, int wedge){
+static bool IsSingletFF(const FaceType& f, int wedge){
   const FaceType* pf = &f;
   int pi = wedge;
   int res = 0, guard=0;
@@ -528,7 +539,7 @@ static bool IsSinglet(const FaceType& f, int wedge){
 }
 
 // version that uses vertex valency
-static bool IsSingletVal(const FaceType& f, int wedge){
+static bool IsSinglet(const FaceType& f, int wedge){
   return (GetValency( f.V(wedge) ) == 1) && (!f.V(wedge)->IsB() ) ;
 }
 
@@ -552,20 +563,21 @@ static bool CollapseEdgeDirect(FaceType &f, int w0, MeshType& m){
   assert( f0->V1(w0) == v1 );
   assert( f0->IsF(w0) );
   
-  CollapseDiag(*f0,PosOnDiag(*f0,false), m);
-  return true;
+  return CollapseDiag(*f0,PosOnDiag(*f0,false), m);
 }
 
 // collapses an edge. Optional output pos can be iterated around to find affected faces
-static bool CollapseEdge(FaceType &f, int w0, MeshType& m, Pos *affected =NULL){
+static bool CollapseEdge(FaceType &f, int w0, MeshType& m, Pos *affected=NULL){
   FaceTypeP f0 = &f;
   assert(!f0->IsF(w0)); // don't use this method to collapse diag.
+  
+  if (IsDoubletOrSinglet(f,w0)) { RemoveDoubletOrSinglet(f,w0,m, affected); return true;}
+  if (IsDoubletOrSinglet(f,(w0+1)%3)) { RemoveDoubletOrSinglet(f,(w0+1)%3,m, affected); return true;}
 
   if (affected) {
-    VertexType *p = f0->V(w0);
     int w1 = 3-w0-FauxIndex(f0); // the edge whihc is not the collapsed one nor the faux
     affected->F() = f0->FFp(w1);
-    affected->E() = (f0->FFi(w1)+4+w1-FauxIndex(f0))%3;
+    affected->E() = (f0->FFi(w1)+2+w1-FauxIndex(f0))%3;
   }
   
   FaceTypeP f1 = f0->FFp(w0); 
@@ -603,15 +615,16 @@ private:
   bool over;
 public:
   Iterator(Pos& pos){
+    if (pos.F()==NULL) {over = true; return; }
     start =Pos(pos.F(), pos.E());
-	
-	while((start.F()->IsD())||(start.F()->IsF((start.E()+1)%3)))
-	{
-		int i = start.F()->FFi( start.E() ); 
-		start.F() = start.F()->FFp( start.E() );
-		start.E() = (i+2)%3;
-	}
-	cur=start;
+    assert(!start.F()->IsD());
+    if (start.F()->IsF((start.E()+2)%3))
+    {
+		  int i = start.F()->FFi( start.E() ); 
+		  start.F() = start.F()->FFp( start.E() );
+		  start.E() = (i+1)%3;
+    }
+	  cur=start;
     over = false;
   }
   bool End() const {
@@ -622,12 +635,12 @@ public:
       // jump over faux diag
       int i = cur.F()->FFi( cur.E() ); 
       cur.F() = cur.F()->FFp( cur.E() );
-      cur.E() = (i+2)%3;
+      cur.E() = (i+1)%3;
     }
     // jump over real edge
     FaceType *f =cur.F()->FFp( cur.E() );
     if (f==cur.F()) over=true; // border found
-    cur.E() = (cur.F()->FFi( cur.E() ) +2 )%3; 
+    cur.E() = (cur.F()->FFi( cur.E() ) +1 )%3; 
     cur.F() = f;
 
     if (cur.F()==start.F()) over=true;
@@ -639,14 +652,27 @@ public:
   }  
 };
 
-static bool CollapseDiag(FaceType &f, ScalarType interpol, MeshType& m, Pos* affected =NULL){
+static bool CollapseDiag(FaceType &f, ScalarType interpol, MeshType& m, Pos* affected=NULL){
     
   FaceType* fa = &f;
+  
+
   int fauxa = FauxIndex(fa);
+
+  //if (IsDoubletOrSinglet(f,fauxa)) { RemoveDoubletOrSinglet(f,fauxa,m, affected); return true;}
+//  if (IsDoubletOrSinglet(f,(fauxa+2)%3)) { RemoveDoubletOrSinglet(f,(fauxa+2)%3,m, affected); return true;}
+  if (IsDoubletOrSinglet(f,(fauxa+2)%3)) return false;
+  if (IsDoubletOrSinglet(*(f.FFp(fauxa)),(f.FFi(fauxa)+2)%3)) return false;
+
   if (affected) {
-    int w1 = (fauxa+1)%3; // any edge but not the faux
+    int w1 = (fauxa+2)%3; // any edge but not the faux
     affected->F() = fa->FFp(w1);
     affected->E() = fa->FFi(w1);
+    if (affected->F() == fa){
+      int w1 = (fauxa+1)%3; // any edge but not the faux
+      affected->F() = fa->FFp(w1);
+      affected->E() = (fa->FFi(w1)+2)%3;
+    }
   }
   FaceType* fb = fa->FFp(fauxa);
   assert (fb!=fa);
@@ -732,9 +758,9 @@ typedef enum { VALENCY_FLAGS = 24 } ___; // this bit and the 4 successive one ar
 
 static void SetValency(VertexType *v, int n){
   //v->Q() = n;
- /* assert(n>=0 && n<=31);
+  assert(n>=0 && n<=31);
   v->Flags()&= ~(31<<VALENCY_FLAGS);
-  v->Flags()|= n<<VALENCY_FLAGS;*/
+  v->Flags()|= n<<VALENCY_FLAGS;
 }
 
 static int GetValency(const VertexType *v){
@@ -743,19 +769,19 @@ static int GetValency(const VertexType *v){
 }
 
 static void IncreaseValency(VertexType *v, int dv=1){
-//#ifdef NDEBUG
-//  v->Flags() += dv<<VALENCY_FLAGS;
-//#else
-//  SetValency( v, GetValency(v)+dv );
-//#endif
+#ifdef NDEBUG
+  v->Flags() += dv<<VALENCY_FLAGS;
+#else
+  SetValency( v, GetValency(v)+dv );
+#endif
 }
 
 static void DecreaseValency(VertexType *v, int dv=1){
-//#ifdef NDEBUG
-//  v->Flags() -= dv<<VALENCY_FLAGS;
-//#else
-//  SetValency( v, GetValency(v)-dv );
-//#endif
+#ifdef NDEBUG
+  v->Flags() -= dv<<VALENCY_FLAGS;
+#else
+  SetValency( v, GetValency(v)-dv );
+#endif
 }
 
 static void UpdateValencyInFlags(MeshType& m){
@@ -781,10 +807,11 @@ static void UpdateValencyInQuality(MeshType& m){
 }
 
 static bool HasConsistentValencyFlag(MeshType &m) {
-  //UpdateValencyInFlags(m);
+  //(m);
   UpdateValencyInQuality(m);
-  for (VertexIterator vi = m.vert.begin();  vi!=m.vert.end(); vi++) if (!vi->IsD()) {
-    if (GetValency(&*vi)!=vi->Q()) return false;
+  for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
+    for (int k=0; k<3; k++)
+    if (GetValency(fi->V(k))!=fi->V(k)->Q()) return false;
   }
   return true;
 }

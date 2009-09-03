@@ -5,6 +5,7 @@ template <class BQ>
 class BitQuadOptimization{
   
 typedef typename BQ::MeshType MeshType;
+typedef typename BQ::Pos Pos;
 
 typedef typename MeshType::ScalarType ScalarType;
 typedef typename MeshType::CoordType CoordType;
@@ -82,7 +83,7 @@ static bool MarkSmallestEdge(MeshType &m, bool perform)
 }
 
 // returns: 0 if fail. 1 if edge. 2 if diag.
-static int MarkSmallestEdgeOrDiag(MeshType &m, ScalarType edgeMult, bool perform)
+static int MarkSmallestEdgeOrDiag(MeshType &m, ScalarType edgeMult, bool perform, Pos* affected=NULL)
 {
   ScalarType min = std::numeric_limits<ScalarType>::max();
   
@@ -123,12 +124,12 @@ static int MarkSmallestEdgeOrDiag(MeshType &m, ScalarType edgeMult, bool perform
     if (perform) {
       if (fa->IsF(w)) {
         if (counterDiag) {
-          if (BQ::CollapseCounterDiag(*fa, BQ::PosOnDiag(*fa,true), m )) return 2;
+          if (BQ::CollapseCounterDiag(*fa, BQ::PosOnDiag(*fa,true), m , affected)) return 2;
         } else {
-          if (BQ::CollapseDiag(*fa, BQ::PosOnDiag(*fa,false), m )) return 2;
+          if (BQ::CollapseDiag(*fa, BQ::PosOnDiag(*fa,false), m ,affected)) return 2;
         }
       } else {
-        if  (BQ::CollapseEdge(*fa,w,m)) return 1;
+        if  (BQ::CollapseEdge(*fa,w,m, affected)) return 1;
       }
     } else {
       fa->Q()=0.0;
