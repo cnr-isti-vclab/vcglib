@@ -117,7 +117,7 @@ namespace io {
 			}
 
 			/* save the attribtues */
-			typename std::set< SaveMeshType::PointerToAttribute>::const_iterator ai;
+                        typename std::set< typename SaveMeshType::PointerToAttribute>::const_iterator ai;
 
 			/* save the per vertex attributes */
 			fprintf(f,"N_PER_VERTEX_ATTRIBUTES %d \n",m.vert_attr.size());
