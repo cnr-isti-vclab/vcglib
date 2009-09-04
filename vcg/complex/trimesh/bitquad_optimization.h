@@ -1,3 +1,5 @@
+#ifndef _BITQUAD_OPTIMIZATION
+#define _BITQUAD_OPTIMIZATION
 
 namespace vcg{namespace tri{
 
@@ -381,3 +383,5 @@ static ScalarType MeasureQuality(MeshType &m)
 
 };
 }} // end namespace vcg::tri
+
+#endif
