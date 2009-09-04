@@ -226,7 +226,7 @@ seeks and removes all doublets (a pair of quads sharing two consecutive edges)
 by merging them into a single quad (thus removing one vertex and two tri faces)-
 Returns number of removed Doublets
 */
-static int RemoveDoublets(MeshType &m)
+static int RemoveDoublets(MeshType &m, Pos *p=NULL)
 {
   int res=0;
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
@@ -234,8 +234,9 @@ static int RemoveDoublets(MeshType &m)
     for (int k=0; k<3; k++) {
       if ( BQ::IsDoublet(*fi,k) ){
         res++;
-        BQ::RemoveDoublet(*fi,k,m);
+        BQ::RemoveDoublet(*fi,k,m,p);
         if (fi->IsD()) break; // break wedge circle, if face disappeard
+        if (p) return res;
       }
     }
   }
@@ -247,7 +248,7 @@ marks (Quality=0) and approx. counts profitable vertex rotations
 (vertex rotations which make edge shorter
 */
 template <bool perform>
-static int MarkVertexRotations(MeshType &m)
+static int MarkVertexRotations(MeshType &m, Pos *p=NULL)
 {
   int res=0;
   for (VertexIterator vi = m.vert.begin();  vi!=m.vert.end(); vi++) if (!vi->IsD()) vi->ClearV();
@@ -265,8 +266,8 @@ static int MarkVertexRotations(MeshType &m)
           res++; MarkVertex(&*fi, k, m); //fi->Q()=0;
         }
         else {
-          if (BQ::RotateVertex(*fi, k)) res++; //fi->Q()=0;
-          //if (res>1) return res; // uncomment for only one rotation
+          if (BQ::RotateVertex(*fi, k, p)) res++; //fi->Q()=0;
+          if (p) return res; // uncomment for only one rotation
         }
       }
     }
@@ -277,7 +278,7 @@ static int MarkVertexRotations(MeshType &m)
 // mark (and count) all edges that are worth rotating
 // if perform == true, actually rotate them
 template <bool perform>
-static int MarkEdgeRotations(MeshType &m)
+static int MarkEdgeRotations(MeshType &m, Pos *p=NULL)
 {
   int count = 0;
   
@@ -290,8 +291,9 @@ static int MarkEdgeRotations(MeshType &m)
       if (fi->FFp(k)<= &*fi) continue; // only once per real (non faux) edge, and only for non border ones
       int best = BQ::TestEdgeRotation(*fi, k);
       if (perform) {
-        if (best==+1) if (BQ::template RotateEdge< true>(*fi, k)) count++;
-        if (best==-1) if (BQ::template RotateEdge<false>(*fi, k)) count++;
+        if (best==+1) if (BQ::template RotateEdge< true>(*fi, k, p)) count++;
+        if (best==-1) if (BQ::template RotateEdge<false>(*fi, k, p)) count++;
+        if (p) if (count>0) return count;
       }
       else {
         if (best!=0) { fi->Q()=0; fi->FFp(k)->Q()=0; count++; }
@@ -344,15 +346,15 @@ static int MarkSinglets(MeshType &m)
 /*
 deletes singlets, reutrns number of
 */
-static int RemoveSinglets(MeshType &m)
+static int RemoveSinglets(MeshType &m, Pos *p=NULL)
 {
   int res=0;
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
     for (int k=0; k<3; k++) {
       if ( BQ::IsSinglet(*fi,k) ){
         res++;
-        BQ::RemoveSinglet(*fi,k,m);
-        return res;
+        BQ::RemoveSinglet(*fi,k,m, p);
+        if (p) return res;
         break;
       }
     }

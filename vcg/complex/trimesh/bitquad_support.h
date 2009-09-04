@@ -87,7 +87,21 @@ typedef typename MeshType::FaceType* FaceTypeP;
 typedef typename MeshType::VertexType VertexType;
 typedef typename MeshType::FaceIterator FaceIterator;
 typedef typename MeshType::VertexIterator VertexIterator;
-typedef typename face::Pos<FaceType> Pos;
+
+class Pos{
+  FaceType *f;
+  int e;
+public:  
+  enum{ PAIR, AROUND , NOTHING } mode;
+  FaceType* &F(){return f;}
+  FaceType* F() const {return f;}
+  int& E(){return e;}
+  int E() const {return e;}
+  VertexType* V() {return f->V(e);}
+  Pos(){ f=NULL; e=0; mode=AROUND;}
+};
+
+
 
 static void MarkFaceF(FaceType *f){
   f->V(0)->SetS();
@@ -103,7 +117,7 @@ static void MarkFaceF(FaceType *f){
 
 
 template <bool verse>
-static bool RotateEdge(FaceType& f, int w0a){
+static bool RotateEdge(FaceType& f, int w0a, Pos *affected=NULL){
   FaceType *fa = &f;
   assert(! fa->IsF(w0a) );
 
@@ -141,6 +155,11 @@ static bool RotateEdge(FaceType& f, int w0a){
   
   if (!CheckFlipEdge(*fa,w0a)) return false;
   FlipEdge(*fa,w0a);
+  if (affected) {
+    affected->F() = fa;
+    affected->E() = (FauxIndex(fa)+2)%3;
+    affected->mode = Pos::PAIR;
+  }
   return true;
 }
 
@@ -233,7 +252,7 @@ static bool TestVertexRotation(const FaceType &f, int w0)
 }
 
 
-static bool RotateVertex(FaceType &f, int w0)
+static bool RotateVertex(FaceType &f, int w0, Pos *affected=NULL)
 {
   
   int guard = 0;
@@ -288,6 +307,10 @@ static bool RotateVertex(FaceType &f, int w0)
     int tmp = (pf->FFi(pi)+1)%3; pf = pf->FFp(pi); pi = tmp;  // flipF flipV
   } while (pf != stopA );
 
+  if (affected) {
+    affected->F() = pf;
+    affected->E()=pi;
+  }
   return true;
 }
 
@@ -351,8 +374,6 @@ static void _CollapseDiagHalf(FaceType &f, int faux, MeshType& m)
   int faux1 = (faux+1)%3;
   int faux2 = (faux+2)%3;
   
-  DecreaseValency(f.V2(faux)); // update valency 
-  
   FaceType* fA = f.FFp( faux1 );
   FaceType* fB = f.FFp( faux2 );
   
@@ -364,9 +385,8 @@ static void _CollapseDiagHalf(FaceType &f, int faux, MeshType& m)
   
   if (fA==&f && fB==&f) { 
     // both non-faux edges are borders: tri-face disappears, just remove the vertex
-    if (DELETE_VERTICES)
-    if (GetValency(f.V(faux2))==0)
-      Allocator<MeshType>::DeleteVertex(m,*(f.V(faux2))); 
+    //if (DELETE_VERTICES)
+    //if (GetValency(f.V(faux2))==0) Allocator<MeshType>::DeleteVertex(m,*(f.V(faux2))); 
   } else {
     if (fA==&f) {
       fB->FFp(iB) = fB;  fB->FFi(iB) = iB;
@@ -380,6 +400,8 @@ static void _CollapseDiagHalf(FaceType &f, int faux, MeshType& m)
       fA->FFp(iA) = fB;  fA->FFi(iA) = iB;
     }
   }
+
+  DecreaseValencyMaybeRemove(f.V(faux2),1,m); // update valency 
   
   Allocator<MeshType>::DeleteFace(m,f);
 
@@ -403,7 +425,7 @@ static void RemoveDoublet(FaceType &f, int wedge, MeshType& m, Pos* affected=NUL
 }
 
 static void RemoveSinglet(FaceType &f, int wedge, MeshType& m, Pos* affected=NULL){
-  if (affected) affected->F() = NULL; // singlets leave nothing to update behind
+  if (affected) affected->mode = Pos::NOTHING; // singlets leave nothing to update behind
   FaceType *fa, *fb; // these will die
   FaceType *fc, *fd; // their former neight
   fa = & f;
@@ -442,9 +464,9 @@ static void RemoveSinglet(FaceType &f, int wedge, MeshType& m, Pos* affected=NUL
   Allocator<MeshType>::DeleteFace( m,*fa );
   Allocator<MeshType>::DeleteFace( m,*fb );
   
-  DecreaseValency(fa->V(wedge) );
-  if (DELETE_VERTICES) 
-  if (GetValency(fa->V(wedge))==0) Allocator<MeshType>::DeleteVertex( m,*fa->V(wedge) );
+  DecreaseValencyMaybeRemove(fa->V(wedge),1,m );
+  //if (DELETE_VERTICES) 
+  //if (GetValency(fa->V(wedge))==0) Allocator<MeshType>::DeleteVertex( m,*fa->V(wedge) );
 }
 
 
@@ -611,18 +633,21 @@ static bool CollapseCounterDiag(FaceType &f, ScalarType interpol, MeshType& m, P
 // rotates around vertex
 class Iterator{
 private:
-  Pos start, cur;
+  typedef typename face::Pos<FaceType> FPos;
+  Pos  start, cur;
   bool over;
 public:
   Iterator(Pos& pos){
-    if (pos.F()==NULL) {over = true; return; }
-    start =Pos(pos.F(), pos.E());
+    if (pos.mode==Pos::NOTHING) {over = true; return; }
+    start = pos; //FPos(pos.F(), pos.E());
     assert(!start.F()->IsD());
-    if (start.F()->IsF((start.E()+2)%3))
-    {
-		  int i = start.F()->FFi( start.E() ); 
-		  start.F() = start.F()->FFp( start.E() );
-		  start.E() = (i+1)%3;
+    if (pos.mode==Pos::AROUND) {
+      if (start.F()->IsF((start.E()+2)%3))
+      {
+	  	  int i = start.F()->FFi( start.E() ); 
+		    start.F() = start.F()->FFp( start.E() );
+		    start.E() = (i+1)%3;
+      }
     }
 	  cur=start;
     over = false;
@@ -631,20 +656,25 @@ public:
     return over;
   }
   void operator ++ () {
-    if (cur.F()->IsF(cur.E())) {
-      // jump over faux diag
-      int i = cur.F()->FFi( cur.E() ); 
-      cur.F() = cur.F()->FFp( cur.E() );
-      cur.E() = (i+1)%3;
+    if (start.mode==Pos::PAIR)  {
+      if (cur.F()!=start.F()) over=true;
+      int i = (cur.E()+2)%3;
+      cur.E() = (cur.F()->FFi( i )+1)%3;
+      cur.F() = cur.F()->FFp( i );
+    } else {
+      if (cur.F()->IsF(cur.E())) {
+        // jump over faux diag
+        int i = cur.F()->FFi( cur.E() ); 
+        cur.F() = cur.F()->FFp( cur.E() );
+        cur.E() = (i+1)%3;
+      }
+      // jump over real edge
+      FaceType *f =cur.F()->FFp( cur.E() );
+      if (f==cur.F()) over=true; // border found
+      cur.E() = (cur.F()->FFi( cur.E() ) +1 )%3; 
+      cur.F() = f;
+      if (cur.F()==start.F()) over=true;
     }
-    // jump over real edge
-    FaceType *f =cur.F()->FFp( cur.E() );
-    if (f==cur.F()) over=true; // border found
-    cur.E() = (cur.F()->FFi( cur.E() ) +1 )%3; 
-    cur.F() = f;
-
-    if (cur.F()==start.F()) over=true;
-
   }
 
   Pos GetPos(){
@@ -654,9 +684,7 @@ public:
 
 static bool CollapseDiag(FaceType &f, ScalarType interpol, MeshType& m, Pos* affected=NULL){
     
-  FaceType* fa = &f;
-  
-
+  FaceType* fa = &f; // fa lives
   int fauxa = FauxIndex(fa);
 
   //if (IsDoubletOrSinglet(f,fauxa)) { RemoveDoubletOrSinglet(f,fauxa,m, affected); return true;}
@@ -674,8 +702,9 @@ static bool CollapseDiag(FaceType &f, ScalarType interpol, MeshType& m, Pos* aff
       affected->E() = (fa->FFi(w1)+2)%3;
     }
   }
-  FaceType* fb = fa->FFp(fauxa);
-  assert (fb!=fa);
+
+  FaceType* fb = fa->FFp(fauxa);  // fb dies
+  assert (fb!=fa); // otherwise, its a singlet
   int fauxb = FauxIndex(fb);
   
   VertexType* va = fa->V(fauxa); // va lives
@@ -683,22 +712,26 @@ static bool CollapseDiag(FaceType &f, ScalarType interpol, MeshType& m, Pos* aff
   
   Interpolator::Apply( *(f.V0(fauxa)), *(f.V1(fauxa)), interpol, *va);
 
-  // update FV...
   bool border = false;
-  int pi = fauxb;
-  FaceType* pf = fb; /* pf, pi could be a Pos<FaceType> p(pf, pi) */
+  int val =0; // number of faces around vb, which dies
+
+  // update FV...
+
   // rotate around vb, (same-sense-as-face)-wise
+  int pi = fauxb;
+  FaceType* pf = fb; /* pf, pi could be put in a Pos<FaceType> p(pb, fauxb) */
   do {
     pf->V(pi) = va;
     
     pi=(pi+2)%3;
     FaceType *t = pf->FFp(pi);
     if (t==pf) { border= true; break; }
+    if (!pf->IsF(pi)) val++;
     pi = pf->FFi(pi);
     pf = t;
   } while (pf!=fb);
   
-  // rotate around va, (counter-sense-as-face)-wise
+  // of found a border, also rotate around vb, (counter-sense-as-face)-wise
   if (border) {
     int pi = fauxa;
     FaceType* pf = fa; /* pf, pi could be a Pos<FaceType> p(pf, pi) */
@@ -707,6 +740,7 @@ static bool CollapseDiag(FaceType &f, ScalarType interpol, MeshType& m, Pos* aff
       pf->V(pi) = va;
       FaceType *t = pf->FFp(pi);
       if (t==pf) break;
+      if (!pf->IsF(pi)) val++;
       pi = pf->FFi(pi);
       pf = t;
     } while (pf!=fb);
@@ -716,9 +750,10 @@ static bool CollapseDiag(FaceType &f, ScalarType interpol, MeshType& m, Pos* aff
   _CollapseDiagHalf(*fb, fauxb, m);
   _CollapseDiagHalf(*fa, fauxa, m);
   
-  SetValency(va, GetValency(vb)+GetValency(va)-2);
-  SetValency(vb, GetValency(vb)+GetValency(va)-2);
-  if (DELETE_VERTICES) Allocator<MeshType>::DeleteVertex(m,*vb);
+  assert(val == GetValency(vb));
+  SetValency(va, GetValency(va)+val-2);
+  DecreaseValencyMaybeRemove(vb, val, m);
+  //if (DELETE_VERTICES) Allocator<MeshType>::DeleteVertex(m,*vb);
   
   return true;
 }      
@@ -782,6 +817,13 @@ static void DecreaseValency(VertexType *v, int dv=1){
 #else
   SetValency( v, GetValency(v)-dv );
 #endif
+}
+
+static void DecreaseValencyMaybeRemove(VertexType *v, int dv, MeshType &m){
+  int val = GetValency(v)-dv ;
+  SetValency( v, val );
+  if (DELETE_VERTICES)
+  if (val==0) Allocator<MeshType>::DeleteVertex(m,*v); 
 }
 
 static void UpdateValencyInFlags(MeshType& m){
