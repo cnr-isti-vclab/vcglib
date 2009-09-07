@@ -95,10 +95,20 @@ public:
   enum{ PAIR, AROUND , NOTHING } mode;
   FaceType* &F(){return f;}
   FaceType* F() const {return f;}
+  VertexType* V() {return f->V(e);}
+  const VertexType* cV() const {return f->V(e);}
   int& E(){return e;}
   int E() const {return e;}
-  VertexType* V() {return f->V(e);}
+  
+  
   Pos(){ f=NULL; e=0; mode=AROUND;}
+  
+  Pos(FaceType* _f, int _e){f=_f; e=_e;}
+  Pos NextE()const {return Pos(f, (e+1)%3); }
+  Pos PrevE(){return Pos(f, (e+2)%3); }
+  bool IsF(){return f->IsF(e);}
+  Pos FlipF(){return Pos(f->FFp(e), f->FFi(e)); }
+  
 };
 
 
@@ -117,7 +127,7 @@ static void MarkFaceF(FaceType *f){
 
 
 template <bool verse>
-static bool RotateEdge(FaceType& f, int w0a, Pos *affected=NULL){
+static bool RotateEdge(FaceType& f, int w0a, MeshType &m, Pos *affected=NULL){
   FaceType *fa = &f;
   assert(! fa->IsF(w0a) );
 
@@ -154,7 +164,7 @@ static bool RotateEdge(FaceType& f, int w0a, Pos *affected=NULL){
   }
   
   if (!CheckFlipEdge(*fa,w0a)) return false;
-  FlipEdge(*fa,w0a);
+  FlipEdge(*fa,w0a,m);
   if (affected) {
     affected->F() = fa;
     affected->E() = (FauxIndex(fa)+2)%3;
@@ -252,7 +262,7 @@ static bool TestVertexRotation(const FaceType &f, int w0)
 }
 
 
-static bool RotateVertex(FaceType &f, int w0, Pos *affected=NULL)
+static bool RotateVertex(FaceType &f, int w0, MeshType &m, Pos *affected=NULL)
 {
   
   int guard = 0;
@@ -300,7 +310,7 @@ static bool RotateVertex(FaceType &f, int w0, Pos *affected=NULL)
     if (pf->IsF(j)) 
       { pf->ClearF(j); IncreaseValency(pf->V1(j));  } 
     else 
-      { pf->SetF(j); DecreaseValency(pf->V1(j)); }
+      { pf->SetF(j); DecreaseValency(pf, (j+1)%3, m); }
 
     j = (j+2)%3;
     if (pf->IsF(j)) pf->ClearF(j); else pf->SetF(j);
@@ -319,7 +329,7 @@ static bool RotateVertex(FaceType &f, int w0, Pos *affected=NULL)
 
 
 // flips the faux edge of a quad
-static void FlipEdge(FaceType &f, int k){
+static void FlipEdge(FaceType &f, int k, MeshType &m){
   assert(!f.IsF(k));
   FaceType* fa = &f;
   FaceType* fb = f.FFp(k);
@@ -331,8 +341,11 @@ static void FlipEdge(FaceType &f, int k){
 
   IncreaseValency( fa->V2(k) );
   IncreaseValency( fb->V2(f.FFi(k)) );
-  DecreaseValency( fa->V0(k) );
-  DecreaseValency( fa->V1(k) );
+  //DecreaseValency( fa->V0(k) );
+  //DecreaseValency( fa->V1(k) );
+  DecreaseValency(fa, k ,m);
+  DecreaseValency(fa,(k+1)%3,m );
+
 
   vcg::face::FlipEdge(*fa, k);
   
@@ -401,7 +414,8 @@ static void _CollapseDiagHalf(FaceType &f, int faux, MeshType& m)
     }
   }
 
-  DecreaseValencyMaybeRemove(f.V(faux2),1,m); // update valency 
+  //DecreaseValencyMaybeRemove(f.V(faux2),1,m); // update valency 
+  DecreaseValency(&f,faux2,m); // update valency 
   
   Allocator<MeshType>::DeleteFace(m,f);
 
@@ -426,6 +440,9 @@ static void RemoveDoublet(FaceType &f, int wedge, MeshType& m, Pos* affected=NUL
 
 static void RemoveSinglet(FaceType &f, int wedge, MeshType& m, Pos* affected=NULL){
   if (affected) affected->mode = Pos::NOTHING; // singlets leave nothing to update behind
+  
+  if (f.V(wedge)->IsB()) return; // hack: lets detect
+  
   FaceType *fa, *fb; // these will die
   FaceType *fc, *fd; // their former neight
   fa = & f;
@@ -439,12 +456,12 @@ static void RemoveSinglet(FaceType &f, int wedge, MeshType& m, Pos* affected=NUL
   assert (fb == fa->FFp( wa2 ) ); // otherwise, not a singlet
   
   // valency decrease
-  DecreaseValency(fa->V(wa1));
-  DecreaseValency(fa->V(wa2));
+  DecreaseValency(fa, wa1, m);
+  DecreaseValency(fa, wa2, m);
   if (fa->IsF(wa0)) {
-    DecreaseValency(fa->V(wa2)); // double decrease of valency
+    DecreaseValency(fa,wa2,m); // double decrease of valency on wa2
   } else {
-    DecreaseValency(fa->V(wa1)); // double decrease of valency
+    DecreaseValency(fa,wa1,m); // double decrease of valency on wa1
   }
   
   // no need to MarkFaceF !
@@ -464,7 +481,7 @@ static void RemoveSinglet(FaceType &f, int wedge, MeshType& m, Pos* affected=NUL
   Allocator<MeshType>::DeleteFace( m,*fa );
   Allocator<MeshType>::DeleteFace( m,*fb );
   
-  DecreaseValencyMaybeRemove(fa->V(wedge),1,m );
+  DecreaseValency(fa,wedge,m );
   //if (DELETE_VERTICES) 
   //if (GetValency(fa->V(wedge))==0) Allocator<MeshType>::DeleteVertex( m,*fa->V(wedge) );
 }
@@ -574,7 +591,7 @@ static bool CollapseEdgeDirect(FaceType &f, int w0, MeshType& m){
   v0 = f0->V0(w0);
   v1 = f0->V1(w0);
   
-  if (!RotateVertex(*f0,w0)) return false;
+  if (!RotateVertex(*f0,w0,m)) return false;
 
   // quick hack: recover original wedge
   if      (f0->V(0) == v0) w0 = 0;
@@ -733,6 +750,7 @@ static bool CollapseDiag(FaceType &f, ScalarType interpol, MeshType& m, Pos* aff
   
   // of found a border, also rotate around vb, (counter-sense-as-face)-wise
   if (border) {
+    val++;
     int pi = fauxa;
     FaceType* pf = fa; /* pf, pi could be a Pos<FaceType> p(pf, pi) */
     do {
@@ -750,10 +768,20 @@ static bool CollapseDiag(FaceType &f, ScalarType interpol, MeshType& m, Pos* aff
   _CollapseDiagHalf(*fb, fauxb, m);
   _CollapseDiagHalf(*fa, fauxa, m);
   
-  assert(val == GetValency(vb));
+  //assert(val == GetValency(vb));
   SetValency(va, GetValency(va)+val-2);
-  DecreaseValencyMaybeRemove(vb, val, m);
-  //if (DELETE_VERTICES) Allocator<MeshType>::DeleteVertex(m,*vb);
+
+  DecreaseValencyNoSingletTest(vb, val, m); 
+  // note: don't directly kill vb. In non-twomanifold, it could still be referecned
+  // but: don't hunt for doublets either. 
+
+  assert(GetValency(vb)!=1 || vb->IsB()); 
+  // if this asserts, you are in trouble. 
+  // It means  that the vertex that was supposed to die is still attached 
+  // somewhere else (non-twomanifold)
+  // BUT in its other attachments it is a singlet, and that singlet cannot be
+  // found now (would require VF)
+  
   
   return true;
 }      
@@ -811,6 +839,7 @@ static void IncreaseValency(VertexType *v, int dv=1){
 #endif
 }
 
+/*
 static void DecreaseValency(VertexType *v, int dv=1){
 #ifdef NDEBUG
   v->Flags() -= dv<<VALENCY_FLAGS;
@@ -818,9 +847,21 @@ static void DecreaseValency(VertexType *v, int dv=1){
   SetValency( v, GetValency(v)-dv );
 #endif
 }
+*/
 
-static void DecreaseValencyMaybeRemove(VertexType *v, int dv, MeshType &m){
-  int val = GetValency(v)-dv ;
+// decrease valency, kills singlets on sight, remove unreferenced vertices too...
+static void DecreaseValency(FaceType *f, int wedge, MeshType &m){
+  VertexType *v = f->V(wedge);
+  int val = GetValency(v)-1;
+  SetValency( v, val );
+  if (val==0) Allocator<MeshType>::DeleteVertex(m,*v); 
+  if (val==1) // singlet!
+    RemoveSinglet(*f,wedge,m); // this could be recursive...
+}
+
+// decrease valency, remove unreferenced vertices too, but don't check for singlets...
+static void DecreaseValencyNoSingletTest(VertexType *v, int dv,  MeshType &m){
+  int val = GetValency(v)-dv;
   SetValency( v, val );
   if (DELETE_VERTICES)
   if (val==0) Allocator<MeshType>::DeleteVertex(m,*v); 
