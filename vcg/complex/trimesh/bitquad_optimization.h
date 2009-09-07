@@ -248,7 +248,7 @@ marks (Quality=0) and approx. counts profitable vertex rotations
 (vertex rotations which make edge shorter
 */
 template <bool perform>
-static int MarkVertexRotations(MeshType &m, Pos *p=NULL)
+static int MarkVertexRotations(MeshType &m, Pos *affected=NULL)
 {
   int res=0;
   for (VertexIterator vi = m.vert.begin();  vi!=m.vert.end(); vi++) if (!vi->IsD()) vi->ClearV();
@@ -266,8 +266,8 @@ static int MarkVertexRotations(MeshType &m, Pos *p=NULL)
           res++; MarkVertex(&*fi, k, m); //fi->Q()=0;
         }
         else {
-          if (BQ::RotateVertex(*fi, k, p)) res++; //fi->Q()=0;
-          if (p) return res; // uncomment for only one rotation
+          if (BQ::RotateVertex(*fi, k, m, affected)) res++; //fi->Q()=0;
+          if (affected) return res; // uncomment for only one rotation
         }
       }
     }
@@ -291,8 +291,8 @@ static int MarkEdgeRotations(MeshType &m, Pos *p=NULL)
       if (fi->FFp(k)<= &*fi) continue; // only once per real (non faux) edge, and only for non border ones
       int best = BQ::TestEdgeRotation(*fi, k);
       if (perform) {
-        if (best==+1) if (BQ::template RotateEdge< true>(*fi, k, p)) count++;
-        if (best==-1) if (BQ::template RotateEdge<false>(*fi, k, p)) count++;
+        if (best==+1) if (BQ::template RotateEdge< true>(*fi, k, m, p)) count++;
+        if (best==-1) if (BQ::template RotateEdge<false>(*fi, k, m, p)) count++;
         if (p) if (count>0) return count;
       }
       else {

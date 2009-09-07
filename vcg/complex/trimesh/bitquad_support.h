@@ -150,12 +150,9 @@ static bool RotateEdge(FaceType& f, int w0a, MeshType &m, Pos *affected=NULL){
   if (fa->IsF(w2a) == verse) {
     if (!CheckFlipDiag(*fa)) return false;
     FlipDiag(*fa);
-    // recover edge index, so that (f, w0a) identifies the same edge as before
-    FaceType *fc = fa->FFp(FauxIndex(fa));
-    for (int i=0; i<3; i++){
-      if ( v0==fa->V0(i) && v1==fa->V1(i) ) w0a = i;
-      if ( v0==fc->V0(i) && v1==fc->V1(i) ) { fa = fc; w0a = i; }
-    }
+    // hack: recover edge index, so that (f, w0a) identifies the same edge as before
+    fa = fb->FFp(w0b);
+    w0a = fb->FFi(w0b);
   }
   
   if (fb->IsF(w2b) == verse) {
