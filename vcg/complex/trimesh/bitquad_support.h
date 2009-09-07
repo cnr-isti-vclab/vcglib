@@ -200,9 +200,9 @@ static void FlipDiag(FaceType &f){
 
 
 // given a vertex (i.e. a face and a wedge), 
-// this function tells us how the average edge lenght around a vertex would change
+// this function tells us how the totale edge lenght around a vertex would change
 // if that vertex is rotated
-static ScalarType AvgEdgeLenghtVariationIfVertexRotated(const FaceType &f, int w0)
+static ScalarType EdgeLenghtVariationIfVertexRotated(const FaceType &f, int w0)
 {
   assert(!f.IsD());
   
@@ -231,7 +231,7 @@ static ScalarType AvgEdgeLenghtVariationIfVertexRotated(const FaceType &f, int w
     assert(guard++<100);
   } while (pf != &f);
   assert (na == n);
-  return (after-before)/n;
+  return (after-before);
 }
 
 /*
@@ -258,7 +258,7 @@ static bool TestVertexRotation(const FaceType &f, int w0)
 {
   assert(!f.IsD());
   // rotate quad IFF this way edges become shorter:
-  return AvgEdgeLenghtVariationIfVertexRotated(f,w0)<0;
+  return EdgeLenghtVariationIfVertexRotated(f,w0)<0;
 }
 
 
@@ -626,9 +626,9 @@ static bool CollapseEdge(FaceType &f, int w0, MeshType& m, Pos *affected=NULL){
   
   // choose: rotate around V0 or around V1?
   if (
-    AvgEdgeLenghtVariationIfVertexRotated(*f0,w0)
+    EdgeLenghtVariationIfVertexRotated(*f0,w0)
     <
-    AvgEdgeLenghtVariationIfVertexRotated(*f1,w1)
+    EdgeLenghtVariationIfVertexRotated(*f1,w1)
   )    return CollapseEdgeDirect(*f0,w0,m); 
   else return CollapseEdgeDirect(*f1,w1,m);
 }
@@ -922,7 +922,7 @@ given a quad edge, retruns:
 Currently an edge is rotated iff it is shortened by that rotations
 (shortcut criterion)
 */
-static int TestEdgeRotation(const FaceType &f, int w0)
+static int TestEdgeRotation(const FaceType &f, int w0, ScalarType *gain=NULL)
 {
   const FaceType *fa = &f;
   assert(! fa->IsF(w0) );
@@ -968,9 +968,16 @@ static int TestEdgeRotation(const FaceType &f, int w0)
   q0 = (v0 - v3).SquaredNorm();
   q1 = (v1 - v4).SquaredNorm();
   q2 = (v5 - v2).SquaredNorm();
-  if (q0<=q1 && q0<=q2) return 0;
-  if (q1<=q2) return 1;
-  return -1;
+  if (q0<=q1 && q0<=q2) 
+    return 0;
+    
+  if (q1<=q2) { 
+    if (gain) *gain = q0-q1;
+    return 1;
+  } else {
+    if (gain) *gain = q0-q2;
+    return -1;
+  }
 }
 
 private:
