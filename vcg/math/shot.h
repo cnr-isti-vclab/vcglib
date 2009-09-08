@@ -186,11 +186,19 @@ public:
 	/// convert a 3d point from camera to world coordinates
 	vcg::Point3<S>  ConvertCameraToWorldCoordinates(const vcg::Point3<S> & p) const;
 
+	/// convert a 3d point from camera to world coordinates, uses inverse instead of trranspose 
+	/// for non-exactly-rigid rotation matrices (such as calculated by tsai and garcia)
+	vcg::Point3<S> ConvertCameraToWorldCoordinates_Substitute(const vcg::Point3<S> & p) const;
+
 	/// project a 3d point from world coordinates to 2d camera viewport (pixel)
 	vcg::Point2<S> Project(const vcg::Point3<S> & p) const;
 
 	/// inverse projection from 2d camera viewport (pixel) + Zdepth to 3d world coordinates
 	vcg::Point3<S> UnProject(const vcg::Point2<S> & p, const S & d) const;
+
+	/// inverse projection from 2d camera viewport (pixel) + Zdepth to 3d world coordinates, uses inverse instead of trranspose 
+	/// for non-exactly-rigid rotation matrices (such as calculated by tsai and garcia)
+	vcg::Point3<S> UnProject_Substitute(const vcg::Point2<S> & p, const S & d) const;
 
 	/// returns distance of point p from camera plane (z depth), used for unprojection
 	S Depth(const vcg::Point3<S> & p)const;
@@ -324,6 +332,19 @@ vcg::Point3<S> Shot<S,RotationType>::ConvertCameraToWorldCoordinates(const vcg::
 	return cp;
 }
 
+/// convert a 3d point from camera to world coordinates, uses inverse instead of trranspose 
+/// for non-exactly-rigid rotation matrices (such as calculated by tsai and garcia)
+template <class S, class RotationType>
+vcg::Point3<S> Shot<S,RotationType>::ConvertCameraToWorldCoordinates_Substitute(const vcg::Point3<S> & p) const
+{
+	Matrix44<S> rotM;
+	vcg::Point3<S> cp = p;
+	cp[2]=-cp[2];	// note: World reference system is left handed
+	Extrinsics.rot.ToMatrix(rotM);
+	cp = Inverse(rotM) * cp + GetViewPoint(); // use invert istead of transpose to dela with non-rigid cases
+	return cp;
+}
+
 /// project a 3d point from world coordinates to 2d camera viewport (pixel)
 template <class S, class RotationType>
 vcg::Point2<S> Shot<S,RotationType>::Project(const vcg::Point3<S> & p) const
@@ -341,6 +362,17 @@ vcg::Point3<S> Shot<S,RotationType>::UnProject(const vcg::Point2<S> & p, const S
 	Point2<S> lp = Intrinsics.ViewportPxToLocal(p);
 	Point3<S> cp = Intrinsics.UnProject(lp,d);
 	Point3<S> wp = ConvertCameraToWorldCoordinates(cp);
+	return wp;
+}
+
+/// inverse projection from 2d camera viewport (pixel) + Zdepth to 3d world coordinates, uses inverse instead of trranspose 
+/// for non-exactly-rigid rotation matrices (such as calculated by tsai and garcia)
+template <class S, class RotationType>
+vcg::Point3<S> Shot<S,RotationType>::UnProject_Substitute(const vcg::Point2<S> & p, const S & d) const
+{
+	Point2<S> lp = Intrinsics.ViewportPxToLocal(p);
+	Point3<S> cp = Intrinsics.UnProject(lp,d);
+	Point3<S> wp = ConvertCameraToWorldCoordinates_Substitute(cp);
 	return wp;
 }
 
