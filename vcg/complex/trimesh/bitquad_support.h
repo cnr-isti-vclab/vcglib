@@ -607,8 +607,8 @@ static bool CollapseEdge(FaceType &f, int w0, MeshType& m, Pos *affected=NULL){
   FaceTypeP f0 = &f;
   assert(!f0->IsF(w0)); // don't use this method to collapse diag.
   
-  if (IsDoubletOrSinglet(f,w0)) { RemoveDoubletOrSinglet(f,w0,m, affected); return true;}
-  if (IsDoubletOrSinglet(f,(w0+1)%3)) { RemoveDoubletOrSinglet(f,(w0+1)%3,m, affected); return true;}
+  if (IsDoubletOrSinglet(f,w0)) return false; //{ RemoveDoubletOrSinglet(f,w0,m, affected); return true;}
+  if (IsDoubletOrSinglet(f,(w0+1)%3)) return false; //{ RemoveDoubletOrSinglet(f,(w0+1)%3,m, affected); return true;}
 
   if (affected) {
     int w1 = 3-w0-FauxIndex(f0); // the edge whihc is not the collapsed one nor the faux
@@ -654,6 +654,7 @@ public:
   Iterator(Pos& pos){
     if (pos.mode==Pos::NOTHING) {over = true; return; }
     start = pos; //FPos(pos.F(), pos.E());
+    if (start.F()->IsD()) { over = true; return;}
     assert(!start.F()->IsD());
     if (pos.mode==Pos::AROUND) {
       if (start.F()->IsF((start.E()+2)%3))
@@ -965,15 +966,39 @@ static int TestEdgeRotation(const FaceType &f, int w0, ScalarType *gain=NULL)
   q0 = (v0 - v3).SquaredNorm();
   q1 = (v1 - v4).SquaredNorm();
   q2 = (v5 - v2).SquaredNorm();
-  if (q0<=q1 && q0<=q2) 
-    return 0;
-    
+
+  if (q0<=q1 && q0<=q2) return 0; // there's no rotation shortening this edge
+
+  //static int stop=0;
+  //static int go=0;
+  //if ((stop+go)%100==99) printf("Stop: %4.1f%%\n",(stop*100.0/(stop+go)) );
+
   if (q1<=q2) { 
-    if (gain) *gain = q0-q1;
+    if (gain) *gain = sqrt(q1)-sqrt(q0);
+    // test: two diagonals should become shorter (the other two reamin the same)
+    if ( 
+      (v0-v2).SquaredNorm() < (v4-v2).SquaredNorm() ||
+      (v3-v5).SquaredNorm() < (v1-v5).SquaredNorm() 
+    ) {
+      //stop++;
+      return 0;
+    }
+    //go++;
     return 1;
-  } else {
-    if (gain) *gain = q0-q2;
-    return -1;
+  } 
+  
+  {
+    if (gain) *gain = sqrt(q2)-sqrt(q0);
+    // diagonal test, as above:
+    if ( 
+      (v0-v4).SquaredNorm() < (v2-v4).SquaredNorm() ||
+      (v3-v1).SquaredNorm() < (v5-v1).SquaredNorm() 
+    ) {
+      //stop++;
+      return 0;
+    }
+    //go++;
+    return -1; 
   }
 }
 
