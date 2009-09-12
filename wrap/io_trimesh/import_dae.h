@@ -220,7 +220,7 @@ class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std
 						for(int tt = 0;tt < curFaceVertNum ;++tt)  // for each vertex of the polygon
 						{
 							int indvt = faceIndexList.at(faceIndexCnt).toInt();
-							QDEBUG("*******                 Reading face[%3i].V(%i) = %4i  (%i-th of the index list) (face has %i vertices)",ff,tt,indvt,faceIndexCnt,curFaceVertNum);
+							if(faceSizeList.size()<100) QDEBUG("*******                 Reading face[%3i].V(%i) = %4i  (%i-th of the index list) (face has %i vertices)",ff,tt,indvt,faceIndexCnt,curFaceVertNum);
 							assert(indvt + offset < m.vert.size());
 							polyTemp._pv[tt] = &(m.vert[indvt + offset]);
 							faceIndexCnt +=faceAttributeNum;

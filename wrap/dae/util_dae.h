@@ -308,9 +308,14 @@ namespace io {
 			QDomNodeList list = srcnode.toElement().elementsByTagName(tag);
 			assert(list.size() == 1);
 			QString nd = list.at(0).firstChild().nodeValue();
-			res = nd.split(" ");
+			res = nd.simplified().split(" ",QString::SkipEmptyParts);
 			if (res.last() == "")
 				res.removeLast();
+			
+//			int emptyCount = res.removeAll(QString(""));
+//			if(emptyCount>0) qDebug("- - - - - - - - valueStringList: Removed %i null strings when parsing tag %s",emptyCount,qPrintable(tag));
+//			for(int i =0;i<res.size();++i)
+//				qDebug("- - - - - - - - - - - - %3i = '%s'",i,qPrintable(res.at(i)));
 		
 		}
 
