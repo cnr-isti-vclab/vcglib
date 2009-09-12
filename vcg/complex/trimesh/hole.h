@@ -581,24 +581,25 @@ template<class EAR>
 	}
 
 	template<class EAR>
-	static void EarCuttingFill(MESH &m, int sizeHole,bool Selected = false, CallBackPos *cb=0)
+	static int EarCuttingFill(MESH &m, int sizeHole,bool Selected = false, CallBackPos *cb=0)
 		{
 			std::vector< Info > vinfo;
 			int UBIT = GetInfo(m, Selected,vinfo);
 
 			typename std::vector<Info >::iterator ith;
 			//Info app;
-			int ind=0;
-
+			int indCb=0;
+      int holeCnt=0;
 			std::vector<FacePointer *> vfp;
 			for(ith = vinfo.begin(); ith!= vinfo.end(); ++ith)
 					vfp.push_back( &(*ith).p.f );
 			
 			for(ith = vinfo.begin(); ith!= vinfo.end(); ++ith)
 			{
-				ind++;
-        if(cb) (*cb)(ind*100/vinfo.size(),"Closing Holes");
+				indCb++;
+        if(cb) (*cb)(indCb*10/vinfo.size(),"Closing Holes");
         if((*ith).size < sizeHole){		
+					holeCnt++;
 					FillHoleEar< EAR >(m, *ith,UBIT,vfp);
 				}
 			}
@@ -609,10 +610,13 @@ template<class EAR>
 				if(!(*fi).IsD())
 					(*fi).ClearUserBit(UBIT);
 			}
+			return holeCnt;
 		}
 
+// it returns the number of created holes.
+
 template<class EAR>
-	static void EarCuttingIntersectionFill(MESH &m, int sizeHole,bool Selected = false)
+	static int EarCuttingIntersectionFill(MESH &m, int sizeHole, bool Selected = false, CallBackPos *cb=0)
 		{
 			std::vector<Info > vinfo;
 			int UBIT = GetInfo(m, Selected,vinfo);
@@ -626,12 +630,15 @@ template<class EAR>
 			for(ith = vinfo.begin(); ith!= vinfo.end(); ++ith)
 					vfpOrig.push_back( &(*ith).p.f );
 	
-      
+      int indCb=0;
+      int holeCnt=0;
 			for(ith = vinfo.begin(); ith!= vinfo.end(); ++ith)
 			{
+				indCb++;
+        if(cb) (*cb)(indCb*10/vinfo.size(),"Closing Holes");
 				if((*ith).size < sizeHole){		
           std::vector<FacePointer *> vfp;
-          
+          holeCnt++;
           vfp=vfpOrig;
           EAR::AdjacencyRing().clear();
 					//Loops around the hole to collect the races .
@@ -662,6 +669,7 @@ template<class EAR>
 				if(!(*fi).IsD())
 					(*fi).ClearUserBit(UBIT);
 			}
+			return holeCnt;
 		}
 
 
