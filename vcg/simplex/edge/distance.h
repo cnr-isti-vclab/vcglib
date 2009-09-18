@@ -48,8 +48,8 @@ namespace vcg {
 		s.P0()=e.V(0)->P();
 		s.P1()=e.V(1)->P();
 		typename EdgeType::CoordType near;
-		vcg::ClosestPoint<typename EdgeType::ScalarType>(s,near);
-		typename EdgeType::ScalarType d=(q-p).Norm();
+		near=vcg::ClosestPoint<typename EdgeType::ScalarType>(s,q);
+		typename EdgeType::ScalarType d=(q-near).Norm();
 		if (d<dist){
 			dist=d;
 			p=near;
