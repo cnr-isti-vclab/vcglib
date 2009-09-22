@@ -107,6 +107,16 @@ class Stat
 				return area/ScalarType(2.0);
 			}
 			
+			static void ComputePerVertexQualityDistribution( MeshType & m, Distribution<float> &h, bool selectionOnly = false)    // V1.0
+      {
+				VertexIterator vi;
+				for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+						if(!(*vi).IsD() &&  ((!selectionOnly) || (*vi).IsS()) )
+							{
+								assert(!math::IsNAN((*vi).Q()) && "You should never try to compute Histogram with Invalid Floating points numbers (NaN)");
+								h.Add((*vi).Q());
+							}						
+			}
 			
       static void ComputePerVertexQualityHistogram( MeshType & m, Histogramf &h, bool selectionOnly = false)    // V1.0
       {
