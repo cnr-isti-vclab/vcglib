@@ -1074,27 +1074,6 @@ private:
 				return static_cast<int>(holes.size());
 			}
 
-			static int BorderEdges( MeshType & m, int numholes)
-			{
-				int BEdges = 0;
-				for(int i=0; i<numholes; i++)
-				{
-					if(i==numholes-1) 
-						BEdges++;
-					else 
-						BEdges++;
-				}
-				return BEdges;
-
-			}
-
- 
-      static int DeleteConnectedComponent(MeshType &m,FacePointer fp)
-      {
-        int deleted=0;
-        return deleted;
-      }
-      
       /*
   Compute the set of connected components of a given mesh
   it fills a vector of pair < int , faceptr > with, for each connecteed component its size and a represnant
