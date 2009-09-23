@@ -378,8 +378,11 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 
 				numVNormals++;
 			}
-			else if (header.compare("f")==0)  // face
+			else if( (header.compare("f")==0) || (header.compare("q")==0) )  // face
 			{
+				bool QuadFlag = false; // QOBJ format by Silva et al for simply storing quadrangular meshes.				
+				if(header.compare("q")==0) { QuadFlag=true; assert(numTokens == 5); }
+				
 				if (numTokens < 4) return E_LESS_THAN_3VERTINFACE;
 				int vertexesPerFace = static_cast<int>(tokens.size()-1);
 
@@ -448,9 +451,11 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 			  std::string vertex;
 			  std::string texcoord;
 				std::string normal;
-        for(int i=0;i<3;++i) // remember index starts from 1 instead of 0
+        for(int i=0;i<3;++i)
+				{		// remember index starts from 1 instead of 0
            SplitToken(tokens[i+1], ff.v[i], ff.n[i], ff.t[i], oi.mask);
-
+					 if(QuadFlag) { ff.v[i]+=1; }
+				}
         if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD )
 				{
 					// verifying validity of texture coords indices
@@ -512,11 +517,12 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 				while (iVertex < vertexesPerFace)  // add other triangles
 				{
 					ObjIndexedFace ffNew=ff;
-          			int v4_index;
+					int v4_index;
 					int vt4_index;
 					int vn4_index;
 
 					SplitToken(tokens[++iVertex], v4_index, vn4_index, vt4_index, oi.mask);
+					if(QuadFlag) { v4_index+=1; }
 					if(!GoodObjIndex(v4_index, numVertices))
 						return E_BAD_VERT_INDEX;
 					
@@ -867,7 +873,7 @@ static bool LoadMask(const char * filename, Info &oi)
 		  if(line[1]=='n') bHasNormals = true;
         } 
         else 
-         if(line[0]=='f') oi.numFaces++;
+         if((line[0]=='f') || (line[0]=='q')) oi.numFaces++;
 				 else 
 				 if(line[0]=='u' && line[1]=='s') bHasPerFaceColor = true; // there is a usematerial so add per face color
       }
