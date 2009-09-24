@@ -411,10 +411,9 @@ static void _CollapseDiagHalf(FaceType &f, int faux, MeshType& m)
     }
   }
 
-  //DecreaseValencyMaybeRemove(f.V(faux2),1,m); // update valency 
-  DecreaseValency(&f,faux2,m); // update valency 
   
-  Allocator<MeshType>::DeleteFace(m,f);
+  //DecreaseValency(&f,faux2,m); // update valency 
+  //Allocator<MeshType>::DeleteFace(m,f);
 
 }
 
@@ -766,6 +765,11 @@ static bool CollapseDiag(FaceType &f, ScalarType interpol, MeshType& m, Pos* aff
   _CollapseDiagHalf(*fb, fauxb, m);
   _CollapseDiagHalf(*fa, fauxa, m);
   
+  DecreaseValency(fb,(fauxb+2)%3,m); // update valency 
+  DecreaseValency(fa,(fauxa+2)%3,m); // update valency 
+  Allocator<MeshType>::DeleteFace(m,*fa);
+  Allocator<MeshType>::DeleteFace(m,*fb);
+
   //assert(val == GetValency(vb));
   SetValency(va, GetValency(va)+val-2);
 
@@ -888,7 +892,6 @@ static void UpdateValencyInQuality(MeshType& m){
 }
 
 static bool HasConsistentValencyFlag(MeshType &m) {
-  //(m);
   UpdateValencyInQuality(m);
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
     for (int k=0; k<3; k++)
