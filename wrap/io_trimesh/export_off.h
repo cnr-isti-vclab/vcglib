@@ -132,6 +132,7 @@ namespace vcg {
 
 					fclose(fpout);
 					// Recupera i flag originali
+					j=0;
 					for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 						(*vi).UberFlags()=FlagV[j++]; 
 
