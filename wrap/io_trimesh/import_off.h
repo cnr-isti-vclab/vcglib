@@ -452,7 +452,7 @@ namespace vcg
 
 						TokenizeNextLine(stream, tokens);
 						int vert_per_face = atoi(tokens[0].c_str());
-
+						assert(vert_per_face >=3);
 						k = 1;
 						if (vert_per_face == 3)
 						{
@@ -503,7 +503,7 @@ namespace vcg
   								// tag internal polygnal edges as "faux"
 								  if (j>0) mesh.face[f+j].SetF(0);
 								  if (j<vert_per_face-3) mesh.face[f+j].SetF(2);
-                  loadmask |= Mask::IOM_FACEFLAGS;
+                  loadmask |= Mask::IOM_BITPOLYGONAL;
                 }
 							}
 
@@ -610,12 +610,12 @@ namespace vcg
 					tokens.clear();
 					do
 					{
-						while ( (line[from]==' ' || line[from] == '\t') && from!=length)
+						while ( (line[from]==' ' || line[from] == '\t'  || line[from] == '\r') && from!=length)
 							from++;
 						if(from!=length)
 						{
 							to = from+1;
-							while ( (line[to]!=' ' && line[to] != '\t') && to!=length)
+							while ( (line[to]!=' ' && line[to] != '\t'  || line[to] == '\r') && to!=length)
 								to++;
 							tokens.push_back(line.substr(from, to-from).c_str());
 							from = to;
