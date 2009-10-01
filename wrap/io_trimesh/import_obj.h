@@ -516,6 +516,7 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 				int iVertex = 3;
 				while (iVertex < vertexesPerFace)  // add other triangles
 				{
+					oi.mask |= Mask::IOM_BITPOLYGONAL;
 					ObjIndexedFace ffNew=ff;
 					int v4_index;
 					int vt4_index;
