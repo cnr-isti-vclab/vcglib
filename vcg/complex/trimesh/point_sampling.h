@@ -313,12 +313,12 @@ static void AllEdge(MetroMesh & m, VertexSampler &ps)
 // Each edge is subdivided in a number of pieces proprtional to its lenght
 // Sample are choosen without touching the vertices.
 
-static void EdgeUniform(MetroMesh & m, VertexSampler &ps,int sampleNum)
+static void EdgeUniform(MetroMesh & m, VertexSampler &ps,int sampleNum, bool sampleFauxEdge=true)
 {
 		typedef typename UpdateTopology<MetroMesh>::PEdge SimpleEdge;
 		std::vector< SimpleEdge > Edges;
-    UpdateTopology<MetroMesh>::FillUniqueEdgeVector(m,Edges);
-    // First loop compute total edge lenght;
+    UpdateTopology<MetroMesh>::FillUniqueEdgeVector(m,Edges,sampleFauxEdge);
+		// First loop compute total edge lenght;
 		float edgeSum=0;
 		typename std::vector< SimpleEdge >::iterator ei;
 		for(ei=Edges.begin(); ei!=Edges.end(); ++ei)
