@@ -162,8 +162,9 @@ inline bool operator == ( const PEdge & pe ) const
 
 // Fill a vector with all the edges of the mesh.
 // each edge is stored in the vector the number of times that it appears in the mesh, with the referring face. 
+// optionally it can skip the faux edges (to retrieve only the real edges of a triangulated polygonal mesh)
 
-static void FillEdgeVector(MeshType &m, std::vector<PEdge> &e)
+static void FillEdgeVector(MeshType &m, std::vector<PEdge> &e, bool includeFauxEdge=true)
 {
 	FaceIterator pf;
 	typename std::vector<PEdge>::iterator p;
@@ -176,19 +177,22 @@ static void FillEdgeVector(MeshType &m, std::vector<PEdge> &e)
 	e.resize(n_edges);
 	
 	p = e.begin();
-	for(pf=m.face.begin();pf!=m.face.end();++pf)			// Lo riempio con i dati delle facce
+	for(pf=m.face.begin();pf!=m.face.end();++pf)		
 		if( ! (*pf).IsD() )
 			for(int j=0;j<(*pf).VN();++j)
-			{
-				(*p).Set(&(*pf),j);
-				++p;
-			}
-				assert(p==e.end());
+			if(includeFauxEdge || !(*pf).IsF(j))
+				{
+					(*p).Set(&(*pf),j);
+					++p;
+				}
+			
+	if(includeFauxEdge) assert(p==e.end());
+	else e.resize(p-e.begin());
 }
 
-static void FillUniqueEdgeVector(MeshType &m, std::vector<PEdge> &Edges)
+static void FillUniqueEdgeVector(MeshType &m, std::vector<PEdge> &Edges, bool includeFauxEdge=true)
 {
-	FillEdgeVector(m,Edges);
+	FillEdgeVector(m,Edges,includeFauxEdge);
 	sort(Edges.begin(), Edges.end());		// Lo ordino per vertici
 
 	typename std::vector< PEdge>::iterator newEnd = std::unique(Edges.begin(), Edges.end());
