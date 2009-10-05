@@ -46,52 +46,61 @@ created
 namespace vcg {
 
 template <class S>
-Point3<S> PlaneFittingPoints(  std::vector< Point3<S> > & samples,Plane3<S> &p){
-
-	int j;
+Point3<S> PlaneFittingPoints(const std::vector< Point3<S> > & samples, Plane3<S> & p, Point4<S> & eval, Matrix44<S> & evec)
+{
 	Matrix44<S> m;m.SetZero();
-	typename std::vector< Point3<S> > ::iterator i;
-	
-	Point3<S> c; c.SetZero();
-	for(i = samples.begin(); i != samples.end(); ++i)
-		c+=*i;
-	c/=samples.size();
+	typename std::vector< Point3<S> >::const_iterator it;
 
-	for(i = samples.begin(); i != samples.end(); ++i){	
-	Point3<S> p = (*i)-c;
-	for(j = 0 ; j < 3;++j)
-				*(Point3<S>*)&m[j][0] += p * p[j];
+	Point3<S> c; c.SetZero();
+	for(it = samples.begin(); it != samples.end(); ++it)
+	{
+		c += *it;
+	}
+	c /= samples.size();
+
+	for(it = samples.begin(); it != samples.end(); ++it)
+	{
+		Point3<S> p = (*it) - c;
+		for(int j = 0 ; j < 3;++j)
+			*(Point3<S>*)&m[j][0] += p * p[j];
 	}
 
-	m[0][3]=	m[1][3]=m[2][3]=0.0;
-	m[3][3]= 1.0;
-	m[3][0]=	m[3][1]=m[3][2]=0.0;
+	m[0][3] = m[1][3] = m[2][3] = S(0);
+	m[3][3] = S(1);
+	m[3][0] = m[3][1] = m[3][2] = S(0);
 
 	int n;
-	Matrix44<S> res;
-	Point4<S> e;
 	Point3<S> d;
-	Jacobi(m,e,res,n);
+	Jacobi(m, eval, evec, n);
 
-  //Sort eigenvalues (tarinisort)
-  e[0] = fabs(e[0]);
-  e[1] = fabs(e[1]);
-  e[2] = fabs(e[2]);
-  Point3<S> eval;
-	int maxi,mini,medi;
-	if (e[1] > e[0]) { maxi=1; mini=0; } else { maxi=0; mini=1;}
-	if (e[maxi] < e[2]) maxi=2;	else if(e[mini] > e[2]) mini=2;
-  medi = 3 - maxi -mini;
-  eval = Point3<S>(e[mini], e[medi], e[maxi]);
-  
-	d[0]=res[0][mini];
-	d[1]=res[1][mini];
-	d[2]=res[2][mini];
+	//Sort eigenvalues (tarinisort)
+	Point4<S> e;
+	e[0] = S(fabs(eval[0]));
+	e[1] = S(fabs(eval[1]));
+	e[2] = S(fabs(eval[2]));
 
-	p.SetOffset(c.dot(d)/d.Norm());
-	p.SetDirection(d/d.Norm());
+	int maxi, mini, medi;
+	if (e[1]    > e[0]) { maxi = 1; mini = 0; } else { maxi = 0; mini = 1;}
+	if (e[maxi] < e[2]) { maxi = 2;           } else if (e[mini] > e[2]) { mini = 2; };
+	medi = 3 - maxi -mini;
 
-  return eval;
+	d[0] = evec[0][mini];
+	d[1] = evec[1][mini];
+	d[2] = evec[2][mini];
+
+	const S norm = d.Norm();
+	p.SetOffset(c.dot(d)/norm);
+	p.SetDirection(d/norm);
+
+	return Point3<S>(e[mini], e[medi], e[maxi]);
+}
+
+template <class S>
+Point3<S> PlaneFittingPoints(const std::vector< Point3<S> > & samples, Plane3<S> & p)
+{
+	Point4<S>   eval;
+	Matrix44<S> evec;
+	return PlaneFittingPoints(samples, p, eval, evec);
 }
 
 template<class S>
