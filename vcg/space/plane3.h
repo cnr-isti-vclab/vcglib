@@ -174,14 +174,26 @@ public:
 typedef Plane3<float>  Plane3f;
 typedef Plane3<double> Plane3d;
 
-///Distance plane - point (Move this function to somewhere else)
-template<class T> T Distance(const Plane3<T> &plane, const Point3<T> &point) {   
+///Distance plane - point and vv. (Move these function to somewhere else)
+template<class T> T Distance(const Plane3<T> & plane, const Point3<T> & point)
+{
 	return plane.Direction().dot(point) - plane.Offset();
 }
 
-	///Distance point-plane (Move this function to somewhere else)
-template<class T> T Distance(const Point3<T> &point, const Plane3<T> &plane) {
-  return plane.Direction().dot(point) - plane.Offset();
+template<class T> T SquaredDistance(const Plane3<T> & plane, const Point3<T> & point)
+{
+	const T d = Distance(plane, point);
+	return (d * d);
+}
+
+template<class T> T Distance(const Point3<T> & point, const Plane3<T> & plane)
+{
+	return Distance(plane, point);
+}
+
+template<class T> T SquaredDistance(const Point3<T> & point, const Plane3<T> & plane)
+{
+	return SquaredDistance(plane, point);
 }
 
 } // end namespace
