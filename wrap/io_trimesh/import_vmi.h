@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is Free software; you can redistribute it and/or modify      *   
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -52,58 +52,149 @@ namespace vcg {
 namespace tri {
 namespace io {
 
-	/* derivation chain */
 	template <int N> struct DummyType{ char placeholder[N]; };
 
+	/* ------------------------- derivation chain for the vertex attribute ---------------------------*/
+
+	/** this class is for testing only the equality with the type optionally provided by the user when calling Open
+	*/
 	template <class MeshType, class A, class T>
 	struct Der:public T{
 		typedef typename std::set<typename MeshType::PointerToAttribute >::iterator HWIte;
-		static void AddAttrib(MeshType &m, char * name, int s, void * data){
-			if(s == sizeof(A)){
-				 typename MeshType::template PerVertexAttributeHandle<A> h = vcg::tri::Allocator<MeshType>:: template AddPerVertexAttribute<A>(m,name);
-				for(int i  = 0; i < m.vert.size(); ++i)
-					memcpy(&h[i], (void*) &((A*)data)[i],sizeof(A)); // we don't want the type conversion
+
+		template <int VoF>
+		static void AddAttrib(MeshType &m, const char * name, unsigned int s, void * data){
+			switch(VoF)
+			{
+			case 0: if(s == sizeof(A)){
+					typename MeshType::template PerVertexAttributeHandle<A> h = vcg::tri::Allocator<MeshType>:: template AddPerVertexAttribute<A>(m,name);
+					for(unsigned int i  = 0; i < m.vert.size(); ++i)
+						memcpy(&h[i], (void*) &((A*)data)[i],sizeof(A)); // we don't want the type conversion
+						}
+					else
+						T::template AddAttrib<0>(m,name,s,data);
+				break;
+			case 1: if(s == sizeof(A)){
+					typename MeshType::template PerFaceAttributeHandle<A> h = vcg::tri::Allocator<MeshType>:: template AddPerFaceAttribute<A>(m,name);
+					for(unsigned int i  = 0; i < m.face.size(); ++i)
+						memcpy(&h[i], (void*) &((A*)data)[i],sizeof(A)); // we don't want the type conversion
+					}
+					else
+						T::template AddAttrib<0>(m,name,s,data);
+				break;
+			case 2: 
+				if(s == sizeof(A)){
+					typename MeshType::template PerMeshAttributeHandle<A> h = vcg::tri::Allocator<MeshType>:: template AddPerMeshAttribute<A>(m,name);
+						memcpy(&h(), (void*) ((A*)data),sizeof(A)); // we don't want the type conversion
+				}
+					else
+						T::template AddAttrib<2>(m,name,s,data);
+				break;
+
+			default:break;
 			}
-			else
-				T::AddAttrib(m,name,s,data);
 		}
 	};
+
+	/** this class is for testing the list of increasing size types until one is larger than the size of the unknown type
+	*/
 	template <class MeshType, class A, class T>
 	struct DerK:public T{
 		typedef typename std::set<typename MeshType::PointerToAttribute >::iterator HWIte;
-		static void AddAttrib(MeshType &m, char * name, int s, void * data){
-			if(s == sizeof(A)){
-				typename MeshType::template PerVertexAttributeHandle<A> h = vcg::tri::Allocator<MeshType>::template AddPerVertexAttribute<A>(m,name);
-				for(unsigned int i  = 0; i < m.vert.size(); ++i)
-					memcpy((void*) &(h[i]), (void*) &((A*)data)[i],sizeof(A)); // we don't want the type conversion
-			}
-			else
-				if(s < sizeof(A)){
-					// padding
-					int padd = sizeof(A) - s;
-					typename MeshType::template PerVertexAttributeHandle<A> h = vcg::tri::Allocator<MeshType>::template AddPerVertexAttribute<A>(m,name);
-					for(unsigned int i  = 0; i < m.vert.size(); ++i){
-						char * dest =  &((char*)(&h[i]))[padd];
-						memcpy( (void *)dest , (void*) &((A*)data)[i],s); // we don't want the type conversion
+		template <int VoF>
+		static void AddAttrib(MeshType &m, const char * name, unsigned int s, void * data){
+			switch(VoF){
+					case 0:
+					if(s == sizeof(A)){
+						typename MeshType::template PerVertexAttributeHandle<A> h = vcg::tri::Allocator<MeshType>::template AddPerVertexAttribute<A>(m,name);
+						for(unsigned int i  = 0; i < m.vert.size(); ++i)
+							memcpy((void*) &(h[i]), (void*) &((A*)data)[i],sizeof(A)); // we don't want the type conversion
 					}
-					typename MeshType::PointerToAttribute pa;
-					pa._name = std::string(name);
-					HWIte res = m.vert_attr.find(pa);
-					pa = *res;
-					m.vert_attr.erase(res);
-					pa._padding = padd;
-					std::pair<HWIte,bool > new_pa = m.vert_attr.insert(pa);
-					assert(new_pa.second);
-				}
-				else
- 					T::AddAttrib(m,name,s,data);
+					else
+						if(s < sizeof(A)){
+							// padding
+							int padd = sizeof(A) - s;
+							typename MeshType::template PerVertexAttributeHandle<A> h = vcg::tri::Allocator<MeshType>::template AddPerVertexAttribute<A>(m,name);
+							for(unsigned int i  = 0; i < m.vert.size(); ++i){
+								char * dest =  &((char*)(&h[i]))[0];
+								memcpy( (void *)dest , (void*) &((A*)data)[i],s); // we don't want the type conversion
+							}
+							typename MeshType::PointerToAttribute pa;
+							pa._name = std::string(name);
+							HWIte res = m.vert_attr.find(pa);
+							pa = *res;
+							m.vert_attr.erase(res);
+							pa._padding = padd;
+							std::pair<HWIte,bool > new_pa = m.vert_attr.insert(pa);
+							assert(new_pa.second);
+						}
+						else
+ 							T::template AddAttrib<0>(m,name,s,data);
+					break;
+					case 1:	
+						if(s == sizeof(A)){
+							typename MeshType::template PerVertexAttributeHandle<A> h = vcg::tri::Allocator<MeshType>::template AddPerVertexAttribute<A>(m,name);
+							for(unsigned int i  = 0; i < m.vert.size(); ++i)
+							memcpy((void*) &(h[i]), (void*) &((A*)data)[i],sizeof(A)); // we don't want the type conversion
+							}
+						else
+							if(s < sizeof(A)){
+								// padding
+								int padd = sizeof(A) - s;
+								typename MeshType::template PerFaceAttributeHandle<A> h = vcg::tri::Allocator<MeshType>::template AddPerFaceAttribute<A>(m,name);
+								for(unsigned int i  = 0; i < m.face.size(); ++i){
+									char * dest =  &((char*)(&h[i]))[0];
+									memcpy( (void *)dest , (void*) &((A*)data)[i],s); // we don't want the type conversion
+								}
+								typename MeshType::PointerToAttribute pa;
+								pa._name = std::string(name);
+								HWIte res = m.face_attr.find(pa);
+								pa = *res;
+								m.face_attr.erase(res);
+								pa._padding = padd;
+								std::pair<HWIte,bool > new_pa = m.face_attr.insert(pa);
+								assert(new_pa.second);
+							}
+						else
+ 							T::template AddAttrib<1>(m,name,s,data);
+						break;
+					case 2:
+						if(s == sizeof(A)){
+							typename MeshType::template PerMeshAttributeHandle<A> h = vcg::tri::Allocator<MeshType>::template AddPerMeshAttribute<A>(m,name);
+								memcpy((void*)&h(), (void*)((A*)data),sizeof(A)); // we don't want the type conversion
+							}
+						else
+							if(s < sizeof(A)){
+								// padding
+								int padd = sizeof(A) - s;
+								typename MeshType::template PerMeshAttributeHandle<A> h = vcg::tri::Allocator<MeshType>::template AddPerMeshAttribute<A>(m,name);
+								char * dest =  & ((char*)(&h()))[0];
+								memcpy( (void *)dest , (void*)((A*)data),s); // we don't want the type conversion
+								
+								typename MeshType::PointerToAttribute pa;
+								pa._name = std::string(name);
+								HWIte res = m.mesh_attr.find(pa);
+								pa = *res;
+								m.mesh_attr.erase(res);
+								pa._padding = padd;
+								std::pair<HWIte,bool > new_pa = m.mesh_attr.insert(pa);
+								assert(new_pa.second);
+							}
+						else
+ 							T::template AddAttrib<2>(m,name,s,data);
+						break;
+					default: assert(0);break;
+			}
 		}
 	};
 
-
+	/**
+	This is the templated derivation  chain
+	*/
 	template <class MeshType>	struct K	{
-		static void AddAttrib(MeshType &m, char * name, int s, void * data){
-
+		template <int VoF>
+		static void AddAttrib(MeshType &m, const char * name, unsigned int s, void * data){
+			// if yohu got this your attribute is larger than	1048576. Honestly...
 			assert(0);		
 		}
 	};
@@ -144,38 +235,49 @@ namespace io {
 	template <class MeshType, class A0, class A1, class A2,class A3,class A4>				struct AttrAll	: public Der<  MeshType, A4,	C3<MeshType, A0, A1, A2, A3> > {};
 
 
-	/* end derivation chain */
- 	 
+
+
+
+
 	template <class OpenMeshType,class A0 = long, class A1 = double, class A2 = int,class A3 = short, class A4 = char > 
 	class ImporterVMI: public AttrAll<OpenMeshType,A0,A1,A2,A3,A4>
 	{
 	public:	
+		struct ReadString{	ReadString(FILE * f,std::string & out){ 
+															unsigned int l; fread(&l,4,1,f); 
+															char * buf = new char[l+1];
+															fread(buf,1,l,f);buf[l]='\0';
+															out = std::string(buf);
+															delete [] buf;
+															}
+		};
+		struct ReadInt{ ReadInt(FILE *f, unsigned int & i){ fread(&i,1,4,f);}};
+		
+		static void * Malloc(unsigned int n){ return (n)?malloc(n):0;}
+		static void Free(void * ptr){ if(ptr) free (ptr);}
+
+
 		typedef typename OpenMeshType::FaceIterator FaceIterator;
 		typedef typename OpenMeshType::VertexIterator VertexIterator;
 		typedef typename OpenMeshType::VertexType VertexType;
 
-		static bool GetHeader(FILE * f,std::vector<std::string>& fnameV, std::vector<std::string>& fnameF, int & vertSize, int &faceSize){
-			char name[100];
-			char buf[4096];
-			int nameFsize,nameVsize,i;
-			fgets(buf,4096,f);
-			sscanf(buf,"%s %d",&name[0],&nameFsize);
-			for(i=0; i < nameFsize; ++i) {
-				fgets(buf,4096,f);
-				sscanf(buf,"%s ",&name[0]);fnameF.push_back(std::string(name));
-			}
-			fgets(buf,4096,f);
-			sscanf(buf,"%s %d",&name[0],&faceSize);
+		static bool GetHeader(FILE * f,std::vector<std::string>& fnameV, std::vector<std::string>& fnameF, unsigned int & vertSize, unsigned int &faceSize){
+			std::string name;
+			unsigned int nameFsize,nameVsize,i;
 
-			fgets(buf,4096,f);
-			sscanf(buf,"%s %d",&name[0],&nameVsize);
-			for(i=0; i < nameVsize; ++i) {
-				fgets(buf,4096,f);
-				sscanf(buf,"%s ",&name[0]);fnameV.push_back(std::string(name));}
-			fgets(buf,4096,f);
-			sscanf(buf,"%s %d",&name[0],&vertSize);
-			fgets(buf,4096,f);
-			assert(strstr(buf,"end_header")!=NULL);
+			ReadString(f,name); ReadInt(f,nameFsize);
+
+			for(i=0; i < nameFsize; ++i)  
+				{ReadString(f, name);fnameF.push_back( name );}
+ 
+			ReadString(f,name); ReadInt(f , faceSize);
+			ReadString(f, name); ReadInt(f,nameVsize);
+
+			for(i=0; i < nameVsize; ++i) 
+				{ReadString(f, name) ;fnameV.push_back( name);}
+			ReadString(f,name); ReadInt(f,vertSize);
+			ReadString(f,name);
+			assert(strstr( name.c_str(),"end_header")!=NULL);
 			return true;
 		}
 
@@ -193,7 +295,7 @@ namespace io {
 			typename OpenMeshType::VertexIterator vi;
 			FILE * f = fopen(filename,"rb");
 			std::vector<std::string> nameF,nameV,fnameF,fnameV;
-			int vertSize,faceSize;
+			unsigned int vertSize,faceSize;
 
 			/* read the header */
 			GetHeader(f,fnameV, fnameF, vertSize, faceSize);
@@ -247,19 +349,43 @@ namespace io {
 		
 
 			/* load the per vertex attributes */
-			char _string[65536],_trash[65536];
-			int n,sz;
+			std::string _string,_trash;
+			unsigned int n,sz;
 	
-			fscanf(f,"%s %d",&_trash[0],&n);
+			ReadString(f,_trash); ReadInt(f,n);
+
 			for(int ia = 0 ; ia < n; ++ia){
-				fscanf(f,"%s %s",&_trash[0],&_string[0]);
-				fscanf(f,"%s %d",&_trash[0],&sz);
-				void * data = malloc(sz*m.vert.size());
+				ReadString(f,_trash); ReadString(f,_string);
+				ReadString(f,_trash); ReadInt(f,sz);
+
+				void * data = Malloc(sz*m.vert.size());
 				fread(data,sz,m.vert.size(),f);
-				AddAttrib(m,_string,sz,data);
-				free(data);
+				AttrAll<OpenMeshType,A0,A1,A2,A3,A4>::template AddAttrib<0>(m,_string.c_str(),sz,data);
+				Free(data);
 			}
 
+			/* load the per face attributes */
+			ReadString(f,_trash); ReadInt(f,n);
+			for(int ia = 0 ; ia < n; ++ia){
+				ReadString(f,_trash); ReadString(f,_string);
+				ReadString(f,_trash); ReadInt(f,sz);
+				void * data = Malloc(sz*m.face.size());
+				fread(data,sz,m.face.size(),f);
+				AttrAll<OpenMeshType,A0,A1,A2,A3,A4>::template AddAttrib<1>(m,_string.c_str(),sz,data);
+				Free(data);
+			}
+
+			/* load the per mesh attributes */
+			ReadString(f,_trash); ReadInt(f,n);
+			for(int ia = 0 ; ia < n; ++ia){
+				ReadString(f,_trash); ReadString(f,_string);
+				ReadString(f,_trash); ReadInt(f,sz);
+				void * data = Malloc(sz);
+				fread(data,1,sz,f);
+				AttrAll<OpenMeshType,A0,A1,A2,A3,A4>::template AddAttrib<2>(m,_string.c_str(),sz,data);
+				Free(data);
+			}
+	
 			if(FaceType::HasVFAdjacency())
 				for(vi = m.vert.begin(); vi != m.vert.end(); ++vi){
 					(*vi).VFp() = (*vi).VFp()-(FaceType*)offsetF+ &m.face[0];
