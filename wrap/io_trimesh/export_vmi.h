@@ -35,6 +35,7 @@
 #ifndef __VCGLIB_EXPORT_VMI
 #define __VCGLIB_EXPORT_VMI
 
+ 
 /*
 	VMI VCG Mesh Image.
 	The vmi image file consists of a header containing the description of the vertex and face type,
@@ -57,10 +58,15 @@ namespace io {
 	class ExporterVMI
 	{
 	public:	
+		struct WriteString{	WriteString(FILE * f,const char * in){ unsigned int l = strlen(in); fwrite(&l,4,1,f); fwrite(in,1,l,f);}};
+		struct WriteInt{ WriteInt(FILE *f, unsigned int i){ fwrite(&i,1,4,f);}};
+
 		typedef typename SaveMeshType::FaceIterator FaceIterator;
 		typedef typename SaveMeshType::VertexIterator VertexIterator;
 		typedef typename SaveMeshType::VertexType VertexType;
-		typedef SimpleTempDataBase<typename SaveMeshType::VertContainer> STDB;
+		typedef SimpleTempDataBase<typename SaveMeshType::VertContainer> STDBv;
+		typedef SimpleTempDataBase<typename SaveMeshType::FaceContainer> STDBf;
+	//	typedef typename SaveMeshType::Attribute <SaveMeshType::FaceContainer> STDBm;
 
 		static void Save(const SaveMeshType &m,char * filename){
 			unsigned int i;
@@ -73,15 +79,22 @@ namespace io {
 			faceSize = m.face.size();
 
 			/* write header */
-			fprintf(f,"FACE_TYPE %d\n",nameF.size());
-			for(i=0; i < nameF.size(); ++i) fprintf(f,"%s\n",nameF[i].c_str());
-			fprintf(f,"SIZE_VECTOR_FACES %d\n",faceSize);
+			WriteString(f,"FACE_TYPE");
+			WriteInt(f,nameF.size());
 
-			fprintf(f,"VERTEX_TYPE %d\n",nameV.size());
-			for(i=0; i < nameV.size(); ++i) fprintf(f,"%s\n",nameV[i].c_str());
-			fprintf(f,"SIZE_VECTOR_VERTS %d\n",vertSize);
-			fprintf(f,"end_header\n");
+			for(i=0; i < nameF.size(); ++i) WriteString(f,nameF[i].c_str());
+			WriteString(f,"SIZE_VECTOR_FACES");
+			WriteInt(f,faceSize);
 
+			WriteString(f,"VERTEX_TYPE");
+			WriteInt(f,nameV.size());
+
+			for(i=0; i < nameV.size(); ++i) WriteString(f,nameV[i].c_str());
+
+			WriteString(f,"SIZE_VECTOR_VERTS");
+			WriteInt(f,vertSize);
+
+			WriteString(f,"end_header");
 
 			if(vertSize!=0){
 				unsigned int offsetV = (unsigned int) &m.vert[0];
@@ -102,7 +115,7 @@ namespace io {
 			fwrite(&m.bbox,sizeof(Box3<typename SaveMeshType::ScalarType>),1,f);
 			fwrite(&m.C(),sizeof(Color4b),1,f);
 
-			int written;
+			unsigned int written;
 
 			if(vertSize!=0){
 				/* save the vertices */
@@ -116,37 +129,77 @@ namespace io {
 				assert(written==m.face.size());
 			}
 
+ 
 			/* save the attribtues */
-                        typename std::set< typename SaveMeshType::PointerToAttribute>::const_iterator ai;
+            typename std::set< typename SaveMeshType::PointerToAttribute>::const_iterator ai;
+ 
 
 			/* save the per vertex attributes */
-			fprintf(f,"N_PER_VERTEX_ATTRIBUTES %d \n",m.vert_attr.size());
-			for(ai = m.vert_attr.begin(); ai != m.vert_attr.end(); ++ai){
-				STDB * stdb = (STDB *) (*ai)._handle;
-				fprintf(f,"PER_VERTEX_ATTR_NAME %s \n",(*ai)._name.c_str());
-				fprintf(f,"PER_VERTEX_ATTR_SIZE %d \n",stdb->SizeOf()  );
-				fwrite(stdb->DataBegin(),m.vert.size(),stdb->SizeOf(),f);
- 			}
+			{
+				typename std::set< typename SaveMeshType::PointerToAttribute>::const_iterator ai;
+				unsigned int n_named_attr = 0;
+				for(ai = m.vert_attr.begin(); ai != m.vert_attr.end(); ++ai) n_named_attr+=!(*ai)._name.empty();
 
-			///* save the per face attributes */
-			//fprintf(f,"N_PER_FACE_ATTRIBUTES %d\n",m.face_attr.size());		 
-			//for(ai = m.face_attr.begin(); ai != m.face_attr.end(); ++ai){
-			//	SimpleTempDataBase<SaveMeshType::FaceContainer>* handle;
-			//	fprintf(f,"PER_FACE_ATTR_NAME %s\n",(*ai)._name.c_str());
-			//	fprintf(f,"PER_FACE_ATTR_SIZE %d\n",(*ai)._handle->SizeOf()  );
-			//	fwrite((*ai)._handle->DataBegin(),m.face.size(),(*ai)._handle->SizeOf(),f);
- 		//	}
+				WriteString(f,"N_PER_VERTEX_ATTRIBUTES"); WriteInt(f,n_named_attr);
+				for(ai = m.vert_attr.begin(); ai != m.vert_attr.end(); ++ai)
+					if(!(*ai)._name.empty())
+						{
+							STDBv * stdb = (STDBv *) (*ai)._handle;
+
+							WriteString(f,"PER_VERTEX_ATTR_NAME"); 
+							WriteString(f,(*ai)._name.c_str() ); 
+
+							WriteString(f,"PER_VERTEX_ATTR_SIZE");  
+							WriteInt(f,stdb->SizeOf());
+
+							fwrite(stdb->DataBegin(),m.vert.size(),stdb->SizeOf(),f);
+ 						}
+			}
+
+			/* save the per face attributes */
+			{
+				typename std::set< typename SaveMeshType::PointerToAttribute>::const_iterator ai;
+				unsigned int n_named_attr = 0;
+				for(ai = m.face_attr.begin(); ai != m.face_attr.end(); ++ai) n_named_attr+=!(*ai)._name.empty();
+
+				WriteString(f,"N_PER_FACE_ATTRIBUTES");
+				WriteInt(f,n_named_attr);
+
+				for(ai = m.face_attr.begin(); ai != m.face_attr.end(); ++ai)
+					if(!(*ai)._name.empty())
+						{
+							STDBf * stdb = (STDBf *) (*ai)._handle;
+
+							WriteString(f,"PER_FACE_ATTR_NAME");
+							WriteString(f,(*ai)._name.c_str());
+
+							WriteString(f,"PER_FACE_ATTR_SIZE");
+							WriteInt(f,stdb->SizeOf());
+
+							fwrite(stdb->DataBegin(),m.face.size(),stdb->SizeOf(),f);
+ 						}
+			}
 
 			///* save the per mesh attributes */
-			//fprintf(f,"N_PER_MESH_ATTRIBUTES %d\n",m.mesh_attr.size());			 
-			//for(ai = m.mesh_attr.begin(); ai != m.mesh_attr.end(); ++ai){
-			//	AttributeBase  *    handle =  (AttributeBase  *)   (*ai)._handle ;
-			//	fprintf(f,"PER_MESH_ATTR_NAME %s\n",(*ai)._name.c_str());
-			//	fprintf(f,"PER_MESH_ATTR_SIZE %d\n",(*ai)._handle->SizeOf()  );
-			//	fwrite((*ai)._handle->DataBegin(),1,(*ai)._handle->SizeOf(),f);
- 		//	}
+			{
+				typename std::set< typename SaveMeshType::PointerToAttribute>::const_iterator ai;
+				unsigned int n_named_attr = 0;
+				for(ai = m.mesh_attr.begin(); ai != m.mesh_attr.end(); ++ai) n_named_attr+=!(*ai)._name.empty();
+				WriteString(f,"N_PER_MESH_ATTRIBUTES"); WriteInt(f,n_named_attr);			 
+				for(ai = m.mesh_attr.begin(); ai != m.mesh_attr.end(); ++ai)
+					if(!(*ai)._name.empty())
+						{
+							AttributeBase  *    handle =  (AttributeBase  *)   (*ai)._handle ;
+	
+							WriteString(f,"PER_MESH_ATTR_NAME");
+							WriteString(f,(*ai)._name.c_str());
 
+							WriteString(f,"PER_MESH_ATTR_SIZE");
+							WriteInt(f,handle->SizeOf());
 
+							fwrite(handle->DataBegin(),1,handle->SizeOf(),f);
+ 						}
+			}
 
 			//	fflush(f);
 			fclose(f);
