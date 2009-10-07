@@ -886,6 +886,7 @@ public:
 			i = m.face_attr.find(h);
 			assert(i ==m.face_attr.end() );// an attribute with this name exists
 		}
+		h._sizeof = sizeof(ATTR_TYPE);
 		h._handle = (void*) new SimpleTempData<FaceContainer,ATTR_TYPE>(m.face);
 		m.attrn++;
 		h.n_attr = m.attrn;
@@ -903,14 +904,23 @@ public:
 	template <class ATTR_TYPE> 
 	static
 		typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE>
-	 GetPerFaceAttribute( const MeshType & m, const std::string & name){
+	 GetPerFaceAttribute( MeshType & m, const std::string & name){
 		assert(!name.empty());
 		PtrToAttr h1; h1._name = name;
-		typename std::set<PtrToAttr > ::const_iterator i;
+		typename std::set<PtrToAttr > ::iterator i;
 
 		i =m.face_attr.find(h1);
-		if(i!=m.face_attr.end())
+		if(i!=m.face_attr.end()){
+				if(	(*i)._padding != 0 ){
+					PtrToAttr attr = (*i);											// copy the PointerToAttribute
+					m.face_attr.erase(i);											// remove it from the set
+					FixPaddedPerFaceAttribute<ATTR_TYPE>(m,attr);				
+					std::pair<AttrIterator,bool> new_i = m.face_attr.insert(attr);	// insert the modified PointerToAttribute
+					assert(new_i.second);
+					i = new_i.first;				
+				}
 				return typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE>((*i)._handle,(*i).n_attr);
+		}
 			else
 				return typename MeshType:: template PerFaceAttributeHandle<ATTR_TYPE>(NULL,0);
 	}
@@ -959,24 +969,35 @@ public:
 			i = m.mesh_attr.find(h);
 			assert(i ==m.mesh_attr.end() );// an attribute with this name exists
 		}
+		h._sizeof = sizeof(ATTR_TYPE);
 		h._handle = (void*) new Attribute<ATTR_TYPE>();
 		m.attrn++;
 		h.n_attr = m.attrn;
 		std::pair < AttrIterator , bool> res =  m.mesh_attr.insert(h);
 		return typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE>(res.first->_handle,res.first->n_attr);
 	 }
-	
+		
 	template <class ATTR_TYPE> 
 	static
 		typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE>
-	 GetPerMeshAttribute( const MeshType & m, const std::string & name){
+	 GetPerMeshAttribute( MeshType & m, const std::string & name){
 		assert(!name.empty());
 		PtrToAttr h1; h1._name = name;
-		typename std::set<PtrToAttr > ::const_iterator i;
+		typename std::set<PtrToAttr > ::iterator i;
 
 		i =m.mesh_attr.find(h1);
-		if(i!=m.mesh_attr.end())
+		if(i!=m.mesh_attr.end()){
+				if(	(*i)._padding != 0 ){
+					PtrToAttr attr = (*i);											// copy the PointerToAttribute
+		 			m.mesh_attr.erase(i);											// remove it from the set
+					FixPaddedPerMeshAttribute<ATTR_TYPE>(m,attr);				
+					std::pair<AttrIterator,bool> new_i = m.mesh_attr.insert(attr);	// insert the modified PointerToAttribute
+					assert(new_i.second);
+					i = new_i.first;				
+				}
+
 				return typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE>((*i)._handle,(*i).n_attr);
+		}
 			else
 				return typename MeshType:: template PerMeshAttributeHandle<ATTR_TYPE>(NULL,0);
 	}
@@ -1013,15 +1034,73 @@ public:
 
 			// copy the padded container in the new one
 			_handle->Resize(m.vert.size());
-			for(int i  = 0; i < m.vert.size(); ++i){
+			for(unsigned int i  = 0; i < m.vert.size(); ++i){
 				ATTR_TYPE * dest = &(*_handle)[i];
 				char * ptr = (char*)( ((SimpleTempDataBase<VertContainer> *)pa._handle)->DataBegin());
 				memcpy((void*)dest ,  
-				(void*) &(ptr[i * pa._sizeof + pa._padding]) ,sizeof(ATTR_TYPE));
+				(void*) &(ptr[i *  pa._sizeof ]) ,sizeof(ATTR_TYPE));
 			}
 
 			// remove the padded container 
 			delete ((SimpleTempDataBase<VertContainer>*) pa._handle);
+
+			// update the pointer to data
+			pa._sizeof = sizeof(ATTR_TYPE);
+
+			// update the pointer to data
+			pa._handle = _handle;
+
+			// zero the padding 
+			pa._padding = 0;
+	}
+	
+	template <class ATTR_TYPE>
+	static 
+		void FixPaddedPerFaceAttribute ( MeshType & m,PtrToAttr & pa){
+
+			// create the container of the right type
+			SimpleTempData<FaceContainer,ATTR_TYPE>* _handle =  new SimpleTempData<FaceContainer,ATTR_TYPE>(m.face);
+
+			// copy the padded container in the new one
+			_handle->Resize(m.face.size());
+			for(unsigned int i  = 0; i < m.face.size(); ++i){
+				ATTR_TYPE * dest = &(*_handle)[i];
+				char * ptr = (char*)( ((SimpleTempDataBase<FaceContainer> *)pa._handle)->DataBegin());
+				memcpy((void*)dest ,  
+				(void*) &(ptr[i * pa._sizeof ]) ,sizeof(ATTR_TYPE));
+			}
+
+			// remove the padded container 
+			delete ((SimpleTempDataBase<FaceContainer>*) pa._handle);
+
+			// update the pointer to data
+			pa._sizeof = sizeof(ATTR_TYPE);
+
+			// update the pointer to data
+			pa._handle = _handle;
+
+			// zero the padding 
+			pa._padding = 0;
+	}
+
+	
+	template <class ATTR_TYPE>
+	static 
+		void FixPaddedPerMeshAttribute ( MeshType & m,PtrToAttr & pa){
+
+			// create the container of the right type
+			Attribute<ATTR_TYPE> * _handle =  new Attribute<ATTR_TYPE>();
+
+			// copy the padded container in the new one
+			ATTR_TYPE * dest = _handle->attribute;
+			char * ptr = (char*)( ((Attribute<ATTR_TYPE> *)pa._handle)->DataBegin());
+			memcpy((void*)_handle->attribute ,(void*) &(ptr[0]) ,sizeof(ATTR_TYPE));
+
+			// remove the padded container 
+			delete ( (Attribute<ATTR_TYPE> *) pa._handle);
+
+			// update the pointer to data
+			pa._sizeof = sizeof(ATTR_TYPE);
 
 			// update the pointer to data
 			pa._handle = _handle;
