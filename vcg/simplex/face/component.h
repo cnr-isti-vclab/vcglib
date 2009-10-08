@@ -205,6 +205,8 @@ public:
   static bool HasFaceNormal()   { return false; }
   static bool HasWedgeNormalOcc()   { return false; }
   static bool HasFaceNormalOcc()   { return false; }
+  static bool HasWedgeNormalOcf()   { return false; }
+  static bool HasFaceNormalOcf()   { return false; }
 //  void ComputeNormal() {assert(0);}
 //  void ComputeNormalizedNormal() {assert(0);}
 	static void Name(std::vector<std::string> & name){ T::Name(name);}
@@ -387,28 +389,36 @@ private:
 template <class T> class EmptyColorMarkQuality: public T {
 public:
 	typedef int MarkType;
-  inline void InitIMark()    {  }
-  inline int & IMark()       { assert(0); static int tmp=-1; return tmp;}
-  inline int IMark() const {return 0;}
-	
+	inline void InitIMark()    {  }
+	inline int & IMark()       { assert(0); static int tmp=-1; return tmp;}
+	inline int IMark() const {return 0;}
+
 	typedef float QualityType;
-  typedef vcg::Color4b ColorType;
-  ColorType &C() { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
-  const ColorType &cC() const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
-  ColorType &WC(const int) { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
-  const ColorType &cWC(const int) const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
-  QualityType &Q() { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
-  const QualityType &cQ() const { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
+	typedef vcg::Color4b ColorType;
+	ColorType &C() { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
+	const ColorType &cC() const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
+	ColorType &WC(const int) { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
+	const ColorType &cWC(const int) const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
+	QualityType &Q() { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
+	const QualityType &cQ() const { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
   
 	static bool HasFaceColor()   { return false; }
-  static bool HasWedgeColor()   { return false; }
-  static bool HasFaceQuality()   { return false; }
-	static bool HasFaceQualityOcf() { return false;}
 	static bool HasFaceColorOcc() { return false;}
+	static bool HasFaceColorOcf() { return false;}
+
+	static bool HasWedgeColor()   { return false; }
+	static bool HasWedgeColorOcc()   { return false; }
+	static bool HasWedgeColorOcf()   { return false; }
+
+	static bool HasFaceQuality()   { return false; }
+	static bool HasFaceQualityOcc()   { return false; }
+	static bool HasFaceQualityOcf() { return false;}
+
 	static bool HasMark()   { return false; }
-  static bool HasMarkOcc()   { return false; }
+	static bool HasMarkOcc()   { return false; }
+	static bool HasMarkOcfb()   { return false; }
   
-  static void Name(std::vector<std::string> & name){T::Name(name);}
+	static void Name(std::vector<std::string> & name){T::Name(name);}
 	template <class RightF>
 	void ImportLocal(const RightF & rightF){ T::ImportLocal(rightF);}
 	inline void Alloc(const int & ns){T::Alloc(ns);}
