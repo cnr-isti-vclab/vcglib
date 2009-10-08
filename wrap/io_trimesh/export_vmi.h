@@ -48,6 +48,11 @@
 	import_vmi must be updated to reflect changes in vcg/complex/trimesh/base.h
 	*/
 
+#include <vcg/simplex/face/component.h>
+#include <vcg/simplex/face/component_ocf.h>
+#include <vcg/simplex/vertex/component.h>
+#include <vcg/simplex/vertex/component_ocf.h>
+
 namespace vcg {
 namespace tri {
 namespace io {
@@ -58,20 +63,150 @@ namespace io {
 	class ExporterVMI
 	{
 	public:	
-		struct WriteString{	WriteString(FILE * f,const char * in){ unsigned int l = strlen(in); fwrite(&l,4,1,f); fwrite(in,1,l,f);}};
-		struct WriteInt{ WriteInt(FILE *f, unsigned int i){ fwrite(&i,1,4,f);}};
+		static FILE *& F(){static FILE * f; return f;}
+		struct WriteString	{	WriteString	(const char * in)		{ unsigned int l = strlen(in); fwrite(&l,4,1,F()); fwrite(in,1,l,F());}};
+		struct WriteInt		{	WriteInt	(const unsigned int i)	{ fwrite(&i,1,4,F());} };
 
+		typedef typename SaveMeshType::FaceContainer FaceContainer;
 		typedef typename SaveMeshType::FaceIterator FaceIterator;
+		typedef typename SaveMeshType::VertContainer VertContainer;
 		typedef typename SaveMeshType::VertexIterator VertexIterator;
 		typedef typename SaveMeshType::VertexType VertexType;
+		typedef typename SaveMeshType::FaceType FaceType;
 		typedef SimpleTempDataBase<typename SaveMeshType::VertContainer> STDBv;
 		typedef SimpleTempDataBase<typename SaveMeshType::FaceContainer> STDBf;
 	//	typedef typename SaveMeshType::Attribute <SaveMeshType::FaceContainer> STDBm;
+		
+		/* save Ocf Components */ 
+
+		/* save Ocf Vertex Components */
+		template <typename CONT>
+		struct SaveVertexOcf{
+			SaveVertexOcf(const CONT & vert){
+				// do nothing, it is a std::vector
+			}
+		};
+
+		/* partial specialization for vector_ocf */
+		template <>
+		struct SaveVertexOcf< vertex::vector_ocf<VertexType> >{
+			SaveVertexOcf(const vertex::vector_ocf<VertexType> & vert){
+
+				if( VertexType::HasVertexQualityOcf() && vert.IsQualityEnabled()){
+					WriteString("HAS_VERTEX_QUALITY_OCF");
+					fwrite(&vert.QV[0],sizeof(VertexType::QualityType),vert.size(),F());
+				}else WriteString("NOT_HAS_VERTEX_QUALITY_OCF");
+
+				if( VertexType::HasVertexColorOcf() && vert.IsColorEnabled()){
+					WriteString("HAS_VERTEX_COLOR_OCF");
+					fwrite(&vert.CV[0],sizeof(VertexType::ColorType),vert.size(),F());
+				}else WriteString("NOT_HAS_VERTEX_COLOR_OCF");
+
+				if( VertexType::HasVertexNormalOcf() && vert.IsNormalEnabled()){
+					WriteString("HAS_VERTEX_NORMAL_OCF");
+					fwrite(&vert.NV[0],sizeof(VertexType::NormalType),vert.size(),F());
+				}else WriteString("NOT_HAS_VERTEX_NORMAL_OCF");
+
+				if( VertexType::HasVertexMarkOcf() && vert.IsMarkEnabled()){
+					WriteString("HAS_VERTEX_MARK_OCF");
+					fwrite(&vert.MV[0],sizeof(VertexType::MarkType),vert.size(),F());
+				}else WriteString("NOT_HAS_VERTEX_MARK_OCF");
+
+				if( VertexType::HasTexCoordOcf() && vert.IsTexCoordEnabled()){
+					WriteString("HAS_VERTEX_TEXCOORD_OCF");
+					fwrite(&vert.TV[0],sizeof(vertex::vector_ocf<VertexType>::TexCoordType),vert.size(),F());
+				}else WriteString("NOT_HAS_VERTEX_TEXCOORD_OCF");
+
+				if( VertexType::HasVFAdjacencyOcf() && vert.IsVFAdjacencyEnabled()){
+					WriteString("HAS_VERTEX_VFADJACENCY_OCF");
+					fwrite(&vert.AV[0],sizeof(vertex::vector_ocf<VertexType>::VFAdjType),vert.size(),F());
+				}else WriteString("NOT_HAS_VERTEX_VFADJACENCY_OCF");
+
+				if( VertexType::HasCurvatureOcf() && vert.IsCurvatureEnabled()){
+					WriteString("HAS_VERTEX_CURVATURE_OCF");
+					fwrite(&vert.CuV[0],sizeof(VertexType::CurvatureType),vert.size(),F());
+				}else WriteString("NOT_HAS_VERTEX_CURVATURE_OCF");
+
+				if( VertexType::HasCurvatureDirOcf() && vert.IsCurvatureDirEnabled()){
+					WriteString("HAS_VERTEX_CURVATUREDIR_OCF");
+					fwrite(&vert.CuDV[0],sizeof(VertexType::CurvatureDirType),vert.size(),F());
+				}else WriteString("NOT_HAS_VERTEX_CURVATUREDIR_OCF");
+
+				if( VertexType::HasRadiusOcf() && vert.IsRadiusEnabled()){
+					WriteString("HAS_VERTEX_RADIUS_OCF");
+					fwrite(&vert.RadiusV[0],sizeof(vertex::vector_ocf<VertexType>::RadiusType),vert.size(),F());
+				}else WriteString("NOT_HAS_VERTEX_RADIUS_OCF");
+
+			}
+		};
+
+
+		/* save Ocf Face Components */
+		template <typename CONT>
+		struct SaveFaceOcf{
+			SaveFaceOcf(const CONT & face){
+				// do nothing, it is a std::vector
+			}
+		};
+
+		/* partial specialization for vector_ocf */
+		template <>
+		struct SaveFaceOcf< face::vector_ocf<FaceType> >{
+			SaveFaceOcf(const face::vector_ocf<FaceType> & face){
+
+				if( FaceType::HasFaceQualityOcf() && face.IsQualityEnabled()){
+					WriteString("HAS_FACE_QUALITY_OCF");
+					fwrite(&face.QV[0],sizeof(FaceType::QualityType),face.size(),F());
+				}else WriteString("NOT_HAS_FACE_QUALITY_OCF");
+
+				if( FaceType::HasFaceColorOcf() && face.IsColorEnabled()){
+					WriteString("HAS_FACE_COLOR_OCF");
+					fwrite(&face.CV[0],sizeof(FaceType::ColorType),face.size(),F());
+				}else WriteString("NOT_HAS_FACE_COLOR_OCF");
+
+				if( FaceType::HasFaceNormalOcf() && face.IsNormalEnabled()){
+					WriteString("HAS_FACE_NORMAL_OCF");
+					fwrite(&face.NV[0],sizeof(FaceType::NormalType),face.size(),F());
+				}else WriteString("NOT_HAS_FACE_NORMAL_OCF");
+
+				if( FaceType::HasFaceMarkOcf() && face.IsMarkEnabled()){
+					WriteString("HAS_FACE_MARK_OCF");
+					fwrite(&face.MV[0],sizeof(FaceType::MarkType),face.size(),F());
+				}else WriteString("NOT_HAS_FACE_MARK_OCF");
+
+				if( FaceType::HasWedgeTexCoordOcf() && face.IsWedgeTexEnabled()){
+					WriteString("HAS_FACE_WEDGETEXCOORD_OCF");
+					fwrite(&face.WTV[0],sizeof(FaceType::WedgeTexCoordType),face.size(),F());
+				}else WriteString("NOT_HAS_FACE_WEDGETEXCOORD_OCF");
+
+				if( FaceType::HasFFAdjacencyOcf() && face.IsFFAdjacencyEnabled()){
+					WriteString("HAS_FACE_FFADJACENCY_OCF");
+					fwrite(&face.AF[0],sizeof(face::vector_ocf<FaceType>::AdjTypePack),face.size(),F());
+				}else WriteString("NOT_HAS_FACE_FFADJACENCY_OCF");
+
+				if( FaceType::HasVFAdjacencyOcf() && face.IsVFAdjacencyEnabled()){
+					WriteString("HAS_FACE_VFADJACENCY_OCF");
+					fwrite(&face.AV[0],sizeof(face::vector_ocf<FaceType>::AdjTypePack),face.size(),F());
+				}else WriteString("NOT_HAS_FACE_VFADJACENCY_OCF");
+
+				if( FaceType::HasWedgeColorOcf() && face.IsWedgeColorEnabled()){
+					WriteString("HAS_FACE_WEDGECOLOR_OCF");
+					fwrite(&face.WCV[0],sizeof(face::vector_ocf<FaceType>::WedgeColorTypePack),face.size(),F());
+				}else WriteString("NOT_HAS_FACE_WEDGECOLOR_OCF");
+		
+				if( FaceType::HasWedgeNormalOcf() && face.IsWedgeNormalEnabled()){
+					WriteString("HAS_FACE_WEDGENORMAL_OCF");
+					fwrite(&face.WNV[0],sizeof(face::vector_ocf<FaceType>::WedgeNormalTypePack),face.size(),F());
+				}else WriteString("NOT_HAS_FACE_WEDGENORMAL_OCF");
+			}
+		};
+
+
 
 		static void Save(const SaveMeshType &m,char * filename){
 			unsigned int i;
-			int vertSize,faceSize;
-			FILE * f = fopen(filename,"wb");
+			unsigned int vertSize,faceSize;
+			F() = fopen(filename,"wb");
 			std::vector<std::string> nameF,nameV;
 			SaveMeshType::FaceType::Name(nameF);
 			SaveMeshType::VertexType::Name(nameV);
@@ -79,58 +214,64 @@ namespace io {
 			faceSize = m.face.size();
 
 			/* write header */
-			WriteString(f,"FACE_TYPE");
-			WriteInt(f,nameF.size());
+			WriteString("FACE_TYPE");
+			WriteInt(nameF.size());
 
-			for(i=0; i < nameF.size(); ++i) WriteString(f,nameF[i].c_str());
-			WriteString(f,"SIZE_VECTOR_FACES");
-			WriteInt(f,faceSize);
+			for(i=0; i < nameF.size(); ++i) WriteString(nameF[i].c_str());
+			WriteString("SIZE_VECTOR_FACES");
+			WriteInt A0( faceSize );
 
-			WriteString(f,"VERTEX_TYPE");
-			WriteInt(f,nameV.size());
+			WriteString("VERTEX_TYPE");
+			WriteInt(nameV.size());
 
-			for(i=0; i < nameV.size(); ++i) WriteString(f,nameV[i].c_str());
+			for(i=0; i < nameV.size(); ++i) WriteString(nameV[i].c_str());
 
-			WriteString(f,"SIZE_VECTOR_VERTS");
-			WriteInt(f,vertSize);
+			WriteString("SIZE_VECTOR_VERTS");
+			WriteInt A1(vertSize);
 
-			WriteString(f,"end_header");
+			WriteString("end_header");
 
 			if(vertSize!=0){
 				unsigned int offsetV = (unsigned int) &m.vert[0];
 				/* write the address of the first vertex */
-				fwrite(&offsetV,sizeof(unsigned int),1,f);
+				fwrite(&offsetV,sizeof(unsigned int),1,F());
 			}
 
 			if(faceSize!=0){
 				 int offsetF= ( int) &m.face[0];
 				/* write the address of the first face */
-				fwrite(&offsetF,sizeof( int),1,f);
+				fwrite(&offsetF,sizeof( int),1,F());
 			}
 			/* save the object mesh */
-			fwrite(&m.shot,sizeof(Shot<typename SaveMeshType::ScalarType>),1,f);
-			fwrite(&m.vn,sizeof(int),1,f);
-			fwrite(&m.fn,sizeof(int),1,f);
-			fwrite(&m.imark,sizeof(int),1,f);
-			fwrite(&m.bbox,sizeof(Box3<typename SaveMeshType::ScalarType>),1,f);
-			fwrite(&m.C(),sizeof(Color4b),1,f);
+			fwrite(&m.shot,sizeof(Shot<typename SaveMeshType::ScalarType>),1,F());
+			fwrite(&m.vn,sizeof(int),1,F());
+			fwrite(&m.fn,sizeof(int),1,F());
+			fwrite(&m.imark,sizeof(int),1,F());
+			fwrite(&m.bbox,sizeof(Box3<typename SaveMeshType::ScalarType>),1,F());
+			fwrite(&m.C(),sizeof(Color4b),1,F());
 
 			unsigned int written;
 
+
 			if(vertSize!=0){
 				/* save the vertices */
-				written = fwrite((void*)&m.vert[0],sizeof(typename SaveMeshType::VertexType),m.vert.size(),f);
+				written = fwrite((void*)&m.vert[0],sizeof(typename SaveMeshType::VertexType),m.vert.size(),F());
 				assert(written==m.vert.size());
+				SaveVertexOcf<VertContainer>(m.vert);
 			}
 
 			if(faceSize!=0){
 				/* save the faces */
-				written = fwrite((void*)&m.face[0],sizeof(typename SaveMeshType::FaceType),m.face.size(),f);
+				written = fwrite((void*)&m.face[0],sizeof(typename SaveMeshType::FaceType),faceSize,F());
 				assert(written==m.face.size());
+
+				SaveFaceOcf<FaceContainer>(m.face);
+
 			}
 
+
  
-			/* save the attribtues */
+			/* save the attributes */
             typename std::set< typename SaveMeshType::PointerToAttribute>::const_iterator ai;
  
 
@@ -140,19 +281,19 @@ namespace io {
 				unsigned int n_named_attr = 0;
 				for(ai = m.vert_attr.begin(); ai != m.vert_attr.end(); ++ai) n_named_attr+=!(*ai)._name.empty();
 
-				WriteString(f,"N_PER_VERTEX_ATTRIBUTES"); WriteInt(f,n_named_attr);
+				WriteString("N_PER_VERTEX_ATTRIBUTES"); WriteInt A2(n_named_attr);
 				for(ai = m.vert_attr.begin(); ai != m.vert_attr.end(); ++ai)
 					if(!(*ai)._name.empty())
 						{
 							STDBv * stdb = (STDBv *) (*ai)._handle;
 
-							WriteString(f,"PER_VERTEX_ATTR_NAME"); 
-							WriteString(f,(*ai)._name.c_str() ); 
+							WriteString("PER_VERTEX_ATTR_NAME"); 
+							WriteString((*ai)._name.c_str() ); 
 
-							WriteString(f,"PER_VERTEX_ATTR_SIZE");  
-							WriteInt(f,stdb->SizeOf());
+							WriteString("PER_VERTEX_ATTR_SIZE");  
+							WriteInt(stdb->SizeOf());
 
-							fwrite(stdb->DataBegin(),m.vert.size(),stdb->SizeOf(),f);
+							fwrite(stdb->DataBegin(),m.vert.size(),stdb->SizeOf(),F());
  						}
 			}
 
@@ -162,21 +303,21 @@ namespace io {
 				unsigned int n_named_attr = 0;
 				for(ai = m.face_attr.begin(); ai != m.face_attr.end(); ++ai) n_named_attr+=!(*ai)._name.empty();
 
-				WriteString(f,"N_PER_FACE_ATTRIBUTES");
-				WriteInt(f,n_named_attr);
+				WriteString("N_PER_FACE_ATTRIBUTES");
+				WriteInt A3(n_named_attr);
 
 				for(ai = m.face_attr.begin(); ai != m.face_attr.end(); ++ai)
 					if(!(*ai)._name.empty())
 						{
 							STDBf * stdb = (STDBf *) (*ai)._handle;
 
-							WriteString(f,"PER_FACE_ATTR_NAME");
-							WriteString(f,(*ai)._name.c_str());
+							WriteString("PER_FACE_ATTR_NAME");
+							WriteString((*ai)._name.c_str());
 
-							WriteString(f,"PER_FACE_ATTR_SIZE");
-							WriteInt(f,stdb->SizeOf());
+							WriteString("PER_FACE_ATTR_SIZE");
+							WriteInt(stdb->SizeOf());
 
-							fwrite(stdb->DataBegin(),m.face.size(),stdb->SizeOf(),f);
+							fwrite(stdb->DataBegin(),m.face.size(),stdb->SizeOf(),F());
  						}
 			}
 
@@ -185,24 +326,24 @@ namespace io {
 				typename std::set< typename SaveMeshType::PointerToAttribute>::const_iterator ai;
 				unsigned int n_named_attr = 0;
 				for(ai = m.mesh_attr.begin(); ai != m.mesh_attr.end(); ++ai) n_named_attr+=!(*ai)._name.empty();
-				WriteString(f,"N_PER_MESH_ATTRIBUTES"); WriteInt(f,n_named_attr);			 
+				WriteString("N_PER_MESH_ATTRIBUTES"); WriteInt A4(n_named_attr);			 
 				for(ai = m.mesh_attr.begin(); ai != m.mesh_attr.end(); ++ai)
 					if(!(*ai)._name.empty())
 						{
 							AttributeBase  *    handle =  (AttributeBase  *)   (*ai)._handle ;
 	
-							WriteString(f,"PER_MESH_ATTR_NAME");
-							WriteString(f,(*ai)._name.c_str());
+							WriteString("PER_MESH_ATTR_NAME");
+							WriteString((*ai)._name.c_str());
 
-							WriteString(f,"PER_MESH_ATTR_SIZE");
-							WriteInt(f,handle->SizeOf());
+							WriteString("PER_MESH_ATTR_SIZE");
+							WriteInt(handle->SizeOf());
 
-							fwrite(handle->DataBegin(),1,handle->SizeOf(),f);
+							fwrite(handle->DataBegin(),1,handle->SizeOf(),F());
  						}
 			}
 
-			//	fflush(f);
-			fclose(f);
+			//	fflush(F());
+			fclose(F());
 		}
 
 	}; // end class
