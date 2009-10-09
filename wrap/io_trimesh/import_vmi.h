@@ -236,7 +236,179 @@ namespace io {
 
 
 
+				struct ReadString{	ReadString(FILE * f,std::string & out){
+					unsigned int l; fread(&l,4,1,f);
+					char * buf = new char[l+1];
+					fread(buf,1,l,f);buf[l]='\0';
+					out = std::string(buf);
+					delete [] buf;
+					}
+				};
+				struct ReadInt{ ReadInt(FILE *f, unsigned int & i){ fread(&i,1,4,f);}};
 
+
+        template <typename OpenMeshType, typename CONT>
+                struct LoadVertexOcf{
+                        LoadVertexOcf(FILE*f,const CONT & vert){
+                                // do nothing, it is a std::vector
+                        }
+                };
+
+
+
+        template <typename OpenMeshType>
+        struct
+        LoadVertexOcf<OpenMeshType,vertex::vector_ocf<typename OpenMeshType::VertexType> >{
+						typedef typename OpenMeshType::VertexType VertexType;
+            LoadVertexOcf( FILE * f, vertex::vector_ocf<typename OpenMeshType::VertexType> & vert){
+            std::string s;
+
+                // vertex quality
+                ReadString(f,s);
+                if( s == std::string("HAS_VERTEX_QUALITY_OCF")) {
+                        vert.EnableQuality();
+                        fread((void*)&vert.QV[0],sizeof(VertexType::QualityType),vert.size(),f);
+                }
+
+                // vertex color
+                ReadString(f,s);
+                if( s == std::string("HAS_VERTEX_COLOR_OCF")) {
+                        vert.EnableColor();
+                        fread((void*)&vert.CV[0],sizeof(VertexType::ColorType),vert.size(),f);
+                }
+
+                // vertex normal
+                ReadString(f,s);
+                if( s == std::string("HAS_VERTEX_NORMAL_OCF")) {
+                        vert.EnableNormal();
+                        fread((void*)&vert.NV[0],sizeof(VertexType::NormalType),vert.size(),f);
+                }
+
+                // vertex mark
+                ReadString(f,s);
+                if( s == std::string("HAS_VERTEX_MARK_OCF")) {
+                        vert.EnableMark();
+                        fread((void*)&vert.MV[0],sizeof(VertexType::MarkType),vert.size(),f);
+                }
+
+                // vertex texcoord
+                ReadString(f,s);
+                if( s == std::string("HAS_VERTEX_TEXCOORD_OCF")) {
+                        vert.EnableTexCoord();
+                        fread((void*)&vert.TV[0],sizeof(vertex::vector_ocf<VertexType>::TexCoordType),vert.size(),f);
+                }
+
+                // vertex-face adjacency
+                ReadString(f,s);
+                if( s == std::string("HAS_VERTEX_VFADJACENCY_OCF")) {
+                        vert.EnableVFAdjacency();
+                        fread((void*)&vert.AV[0],sizeof(vertex::vector_ocf<VertexType>::VFAdjType),vert.size(),f);
+                }
+
+                // vertex curvature
+                ReadString(f,s);
+                if( s == std::string("HAS_VERTEX_CURVATURE_OCF")) {
+                        vert.EnableCurvature();
+                        fread((void*)&vert.CuV[0],sizeof(VertexType::CurvatureType),vert.size(),f);
+                }
+
+                // vertex curvature dir
+                ReadString(f,s);
+                if( s == std::string("HAS_VERTEX_CURVATUREDIR_OCF")) {
+                        vert.EnableCurvatureDir();
+                        fread((void*)&vert.CuDV[0],sizeof(VertexType::CurvatureDirType),vert.size(),f);
+                }
+
+                // vertex radius
+                ReadString(f,s);
+                if( s == std::string("HAS_VERTEX_RADIUS_OCF")) {
+                        vert.EnableRadius();
+                        fread((void*)&vert.RadiusV[0],sizeof(vertex::vector_ocf<VertexType>::RadiusType),vert.size(),f);
+                }
+
+                        }
+                };
+
+                template <typename OpenMeshType, typename CONT>
+                struct LoadFaceOcf{
+                        LoadFaceOcf(FILE * f, const CONT & face){
+                                // do nothing, it is a std::vector
+                        }
+                };
+
+
+                /* partial specialization for vector_ocf */
+                template <typename OpenMeshType>
+								struct LoadFaceOcf< OpenMeshType, face::vector_ocf<typename OpenMeshType::FaceType> >{
+												typedef typename OpenMeshType::FaceType FaceType;
+                        LoadFaceOcf( FILE * f, face::vector_ocf<FaceType> & face){
+                                std::string s;
+
+                                // face quality
+                                ReadString(f,s);
+                                if( s == std::string("HAS_FACE_QUALITY_OCF")) {
+                                        face.EnableQuality();
+                                        fread((void*)&face.QV[0],sizeof(FaceType::QualityType),face.size(),f);
+                                }
+
+                                // face color
+                                ReadString(f,s);
+                                if( s == std::string("HAS_FACE_COLOR_OCF")) {
+                                        face.EnableColor();
+                                        fread((void*)&face.CV[0],sizeof(FaceType::ColorType),face.size(),f);
+                                }
+
+                                // face normal
+                                ReadString(f,s);
+                                if( s == std::string("HAS_FACE_NORMAL_OCF")) {
+                                        face.EnableNormal();
+                                        fread((void*)&face.NV[0],sizeof(FaceType::NormalType),face.size(),f);
+                                }
+
+                                // face mark
+                                ReadString(f,s);
+                                if( s == std::string("HAS_FACE_MARK_OCF")) {
+                                        face.EnableMark();
+                                        fread((void*)&face.MV[0],sizeof(FaceType::MarkType),face.size(),f);
+                                }
+
+                                // face wedgetexcoord
+                                ReadString(f,s);
+                                if( s == std::string("HAS_FACE_WEDGETEXCOORD_OCF")) {
+                                        face.EnableWedgeTex();
+                                        fread((void*)&face.WTV[0],sizeof(FaceType::WedgeTexCoordType),face.size(),f);
+                                }
+
+
+                                // face-face adjacency
+                                ReadString(f,s);
+                                if( s == std::string("HAS_FACE_FFADJACENCY_OCF")) {
+                                        face.EnableFFAdjacency();
+                                        fread((void*)&face.AF[0],sizeof(face::vector_ocf<FaceType>::AdjTypePack),face.size(),f);
+                                }
+
+                                // vertex-face adjacency
+                                ReadString(f,s);
+                                if( s == std::string("HAS_FACE_VFADJACENCY_OCF")) {
+                                        face.EnableVFAdjacency();
+                                        fread((void*)&face.AV[0],sizeof(face::vector_ocf<FaceType>::AdjTypePack),face.size(),f);
+                                }
+
+                                // face WedgeColor
+                                ReadString(f,s);
+                                if( s == std::string("HAS_FACE_WEDGECOLOR_OCF")) {
+                                        face.EnableWedgeColor();
+                                        fread((void*)&face.WCV[0],sizeof(face::vector_ocf<FaceType>::WedgeColorTypePack),face.size(),f);
+                                }
+
+                                // face WedgeNormal
+                                ReadString(f,s);
+                                if( s == std::string("HAS_FACE_WEDGENORMAL_OCF")) {
+                                        face.EnableWedgeNormal();
+                                        fread((void*)&face.WNV[0],sizeof(face::vector_ocf<FaceType>::WedgeNormalTypePack),face.size(),f);
+                                }
+                        }
+                };
 
 
 	template <class OpenMeshType,class A0 = long, class A1 = double, class A2 = int,class A3 = short, class A4 = char > 
@@ -245,15 +417,6 @@ namespace io {
 	public:	
 		static FILE *& F(){static FILE * f; return f;}
 
-		struct ReadString{	ReadString(FILE * f,std::string & out){ 
-															unsigned int l; fread(&l,4,1,f); 
-															char * buf = new char[l+1];
-															fread(buf,1,l,F());buf[l]='\0';
-															out = std::string(buf);
-															delete [] buf;
-															}
-		};
-		struct ReadInt{ ReadInt(FILE *f, unsigned int & i){ fread(&i,1,4,f);}};
 		
 		static void * Malloc(unsigned int n){ return (n)?malloc(n):0;}
 		static void Free(void * ptr){ if(ptr) free (ptr);}
@@ -288,172 +451,17 @@ namespace io {
 		}
 
 		static bool GetHeader(char * filename,std::vector<std::string>& nameV, std::vector<std::string>& nameF, int & vertSize, int &faceSize){
-				FILE * F() = fopen(filename,"rb");
+				F() = fopen(filename,"rb");
 				return GetHeader(F(),nameV, nameF, vertSize, faceSize);
 				fclose(F());
 	}
 
 	
 
-		template <typename CONT>
-		struct LoadVertexOcf{
-			LoadVertexOcf(const CONT & vert){
-				// do nothing, it is a std::vector
-			}
-		};
-
-		/* partial specialization for vector_ocf */
-		template <>
-		struct LoadVertexOcf< vertex::vector_ocf<VertexType> >{
-			LoadVertexOcf(  vertex::vector_ocf<VertexType> & vert){
-				std::string s;
-
-				// vertex quality
-				ReadString(F(),s);
-				if( s == std::string("HAS_VERTEX_QUALITY_OCF")) {
-					vert.EnableQuality(); 
-					fread((void*)&vert.QV[0],sizeof(VertexType::QualityType),vert.size(),F());
-				}
-					 
-				// vertex color
-				ReadString(F(),s);
-				if( s == std::string("HAS_VERTEX_COLOR_OCF")) {
-					vert.EnableColor(); 
-					fread((void*)&vert.CV[0],sizeof(VertexType::ColorType),vert.size(),F());
-				}
-
-				// vertex normal
-				ReadString(F(),s);
-				if( s == std::string("HAS_VERTEX_NORMAL_OCF")) {
-					vert.EnableNormal(); 
-					fread((void*)&vert.NV[0],sizeof(VertexType::NormalType),vert.size(),F());
-				}
-
-				// vertex mark
-				ReadString(F(),s);
-				if( s == std::string("HAS_VERTEX_MARK_OCF")) {
-					vert.EnableMark(); 
-					fread((void*)&vert.MV[0],sizeof(VertexType::MarkType),vert.size(),F());
-				}
-
-				// vertex texcoord  
-				ReadString(F(),s);
-				if( s == std::string("HAS_VERTEX_TEXCOORD_OCF")) {
-					vert.EnableTexCoord(); 
-					fread((void*)&vert.TV[0],sizeof(vertex::vector_ocf<VertexType>::TexCoordType),vert.size(),F());
-				}
-
-				// vertex-face adjacency
-				ReadString(F(),s);
-				if( s == std::string("HAS_VERTEX_VFADJACENCY_OCF")) {
-					vert.EnableVFAdjacency(); 
-					fread((void*)&vert.AV[0],sizeof(vertex::vector_ocf<VertexType>::VFAdjType),vert.size(),F());
-				}
-
-				// vertex curvature 
-				ReadString(F(),s);
-				if( s == std::string("HAS_VERTEX_CURVATURE_OCF")) {
-					vert.EnableCurvature(); 
-					fread((void*)&vert.CuV[0],sizeof(VertexType::CurvatureType),vert.size(),F());
-				}
-
-				// vertex curvature dir
-				ReadString(F(),s);
-				if( s == std::string("HAS_VERTEX_CURVATUREDIR_OCF")) {
-					vert.EnableCurvatureDir(); 
-					fread((void*)&vert.CuDV[0],sizeof(VertexType::CurvatureDirType),vert.size(),F());
-				}
-
-				// vertex radius
-				ReadString(F(),s);
-				if( s == std::string("HAS_VERTEX_RADIUS_OCF")) {
-					vert.EnableRadius(); 
-					fread((void*)&vert.RadiusV[0],sizeof(vertex::vector_ocf<VertexType>::RadiusType),vert.size(),F());
-				}
-
-			}
-		};
 
 
 		
-		template <typename CONT>
-		struct LoadFaceOcf{
-			LoadFaceOcf(const CONT & face){
-				// do nothing, it is a std::vector
-			}
-		};
 
-		/* partial specialization for vector_ocf */
-		template <>
-		struct LoadFaceOcf< face::vector_ocf<FaceType> >{
-			LoadFaceOcf(  face::vector_ocf<FaceType> & face){
-				std::string s;
-
-				// face quality
-				ReadString(F(),s);
-				if( s == std::string("HAS_FACE_QUALITY_OCF")) {
-					face.EnableQuality(); 
-					fread((void*)&face.QV[0],sizeof(FaceType::QualityType),face.size(),F());
-				}
-					 
-				// face color
-				ReadString(F(),s);
-				if( s == std::string("HAS_FACE_COLOR_OCF")) {
-					face.EnableColor(); 
-					fread((void*)&face.CV[0],sizeof(FaceType::ColorType),face.size(),F());
-				}
-
-				// face normal
-				ReadString(F(),s);
-				if( s == std::string("HAS_FACE_NORMAL_OCF")) {
-					face.EnableNormal(); 
-					fread((void*)&face.NV[0],sizeof(FaceType::NormalType),face.size(),F());
-				}
-
-				// face mark
-				ReadString(F(),s);
-				if( s == std::string("HAS_FACE_MARK_OCF")) {
-					face.EnableMark(); 
-					fread((void*)&face.MV[0],sizeof(FaceType::MarkType),face.size(),F());
-				}
-
-				// face wedgetexcoord
-				ReadString(F(),s);
-				if( s == std::string("HAS_FACE_WEDGETEXCOORD_OCF")) {
-					face.EnableWedgeTex(); 
-					fread((void*)&face.WTV[0],sizeof(FaceType::WedgeTexCoordType),face.size(),F());
-				}
-
-
-				// face-face adjacency
-				ReadString(F(),s);
-				if( s == std::string("HAS_FACE_FFADJACENCY_OCF")) {
-					face.EnableFFAdjacency(); 
-					fread((void*)&face.AF[0],sizeof(face::vector_ocf<FaceType>::AdjTypePack),face.size(),F());
-				}
-
-				// vertex-face adjacency
-				ReadString(F(),s);
-				if( s == std::string("HAS_FACE_VFADJACENCY_OCF")) {
-					face.EnableVFAdjacency(); 
-					fread((void*)&face.AV[0],sizeof(face::vector_ocf<FaceType>::AdjTypePack),face.size(),F());
-				}
-
-				// face WedgeColor 
-				ReadString(F(),s);
-				if( s == std::string("HAS_FACE_WEDGECOLOR_OCF")) {
-					face.EnableWedgeColor(); 
-					fread((void*)&face.WCV[0],sizeof(face::vector_ocf<FaceType>::WedgeColorTypePack),face.size(),F());
-				}
-
-				// face WedgeNormal 
-				ReadString(F(),s);
-				if( s == std::string("HAS_FACE_WEDGENORMAL_OCF")) {
-					face.EnableWedgeNormal(); 
-					fread((void*)&face.WNV[0],sizeof(face::vector_ocf<FaceType>::WedgeNormalTypePack),face.size(),F());
-				}
-			}
-		};
 
 
 
@@ -507,7 +515,7 @@ namespace io {
 				read=fread((void*)& m.vert[0],sizeof(VertexType),vertSize,F());
 				assert(ferror(F())==0);
 				assert(read==vertSize);
-		 		LoadVertexOcf<VertContainer>(m.vert);
+				 LoadVertexOcf<OpenMeshType,VertContainer>(F(),m.vert);
 			}
 
 			read = 0;
@@ -518,7 +526,7 @@ namespace io {
 				assert(ferror(F())==0);
 				assert(!feof(F()));
 				assert(read==faceSize);
-			 	LoadFaceOcf<FaceContainer>(m.face);
+				LoadFaceOcf<OpenMeshType,FaceContainer>(F(),m.face);
 			}
 		
 
@@ -551,7 +559,7 @@ namespace io {
 
 			/* load the per mesh attributes */
 			ReadString(F(),_trash); ReadInt(F(),n);
-			for(int ia = 0 ; ia < n; ++ia){
+			for(unsigned int ia = 0 ; ia < n; ++ia){
 				ReadString(F(),_trash); ReadString(F(),_string);
 				ReadString(F(),_trash); ReadInt(F(),sz);
 				void * data = Malloc(sz);
@@ -593,6 +601,7 @@ namespace io {
 		}
 
 	}; // end class
+
 
 } // end Namespace tri
 } // end Namespace io
