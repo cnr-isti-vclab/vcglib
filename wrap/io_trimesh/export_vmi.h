@@ -60,8 +60,8 @@ namespace io {
  	template <int N> struct PlaceHolderType{ char A[N];};
 
 
-		struct WriteString	{	WriteString	(FILE *f,const char * in)		{ unsigned int l = strlen(in); fwrite(&l,4,1,f); fwrite(in,1,l,f);}};
-		struct WriteInt		{	WriteInt	(FILE *f,const unsigned int i)	{ fwrite(&i,1,4,f);} };
+		void WriteString(FILE *f,const char * in)		{ unsigned int l = strlen(in); fwrite(&l,4,1,f); fwrite(in,1,l,f);} 
+		void  WriteInt(FILE *f,const unsigned int i)	{ fwrite(&i,1,4,f);}  
 
 		/* save Ocf Vertex Components */
 		template <typename OpenMeshType,typename CONT>
@@ -193,8 +193,6 @@ namespace io {
 	{
 	public:	
 		static FILE *& F(){static FILE * f; return f;}
-		struct WriteString	{	WriteString	(const char * in)		{ WriteString A = (F(),in);}};
-		struct WriteInt		{	WriteInt	(const unsigned int i)	{ WriteInt A = (F(),i);} };
 
 		typedef typename SaveMeshType::FaceContainer FaceContainer;
 		typedef typename SaveMeshType::FaceIterator FaceIterator;
@@ -221,22 +219,22 @@ namespace io {
 			faceSize = m.face.size();
 
 			/* write header */
-			WriteString("FACE_TYPE");
-			WriteInt(nameF.size());
+			WriteString(F(),"FACE_TYPE");
+			WriteInt(F(),nameF.size());
 
-			for(i=0; i < nameF.size(); ++i) WriteString(nameF[i].c_str());
-			WriteString("SIZE_VECTOR_FACES");
-			WriteInt A0( faceSize );
+			for(i=0; i < nameF.size(); ++i) WriteString(F(),nameF[i].c_str());
+			WriteString(F(),"SIZE_VECTOR_FACES");
+			WriteInt(F(), faceSize );
 
-			WriteString("VERTEX_TYPE");
-			WriteInt(nameV.size());
+			WriteString(F(),"VERTEX_TYPE");
+			WriteInt(F(),nameV.size());
 
-			for(i=0; i < nameV.size(); ++i) WriteString(nameV[i].c_str());
+			for(i=0; i < nameV.size(); ++i) WriteString(F(),nameV[i].c_str());
 
-			WriteString("SIZE_VECTOR_VERTS");
-			WriteInt A1(vertSize);
+			WriteString(F(),"SIZE_VECTOR_VERTS");
+			WriteInt(F(),vertSize);
 
-			WriteString("end_header");
+			WriteString(F(),"end_header");
 
 			if(vertSize!=0){
 				unsigned int offsetV = (unsigned int) &m.vert[0];
@@ -288,17 +286,17 @@ namespace io {
 				unsigned int n_named_attr = 0;
 				for(ai = m.vert_attr.begin(); ai != m.vert_attr.end(); ++ai) n_named_attr+=!(*ai)._name.empty();
 
-				WriteString("N_PER_VERTEX_ATTRIBUTES"); WriteInt A2(n_named_attr);
+				WriteString(F(),"N_PER_VERTEX_ATTRIBUTES"); WriteInt (F(),n_named_attr);
 				for(ai = m.vert_attr.begin(); ai != m.vert_attr.end(); ++ai)
 					if(!(*ai)._name.empty())
 						{
 							STDBv * stdb = (STDBv *) (*ai)._handle;
 
-							WriteString("PER_VERTEX_ATTR_NAME"); 
-							WriteString((*ai)._name.c_str() ); 
+							WriteString(F(),"PER_VERTEX_ATTR_NAME"); 
+							WriteString(F(),(*ai)._name.c_str() ); 
 
-							WriteString("PER_VERTEX_ATTR_SIZE");  
-							WriteInt(stdb->SizeOf());
+							WriteString(F(),"PER_VERTEX_ATTR_SIZE");  
+							WriteInt(F(),stdb->SizeOf());
 
 							fwrite(stdb->DataBegin(),m.vert.size(),stdb->SizeOf(),F());
  						}
@@ -310,19 +308,19 @@ namespace io {
 				unsigned int n_named_attr = 0;
 				for(ai = m.face_attr.begin(); ai != m.face_attr.end(); ++ai) n_named_attr+=!(*ai)._name.empty();
 
-				WriteString("N_PER_FACE_ATTRIBUTES");
-				WriteInt A3(n_named_attr);
+				WriteString(F(),"N_PER_FACE_ATTRIBUTES");
+				WriteInt (F(),n_named_attr);
 
 				for(ai = m.face_attr.begin(); ai != m.face_attr.end(); ++ai)
 					if(!(*ai)._name.empty())
 						{
 							STDBf * stdb = (STDBf *) (*ai)._handle;
 
-							WriteString("PER_FACE_ATTR_NAME");
-							WriteString((*ai)._name.c_str());
+							WriteString(F(),"PER_FACE_ATTR_NAME");
+							WriteString(F(),(*ai)._name.c_str());
 
-							WriteString("PER_FACE_ATTR_SIZE");
-							WriteInt(stdb->SizeOf());
+							WriteString(F(),"PER_FACE_ATTR_SIZE");
+							WriteInt(F(),stdb->SizeOf());
 
 							fwrite(stdb->DataBegin(),m.face.size(),stdb->SizeOf(),F());
  						}
@@ -333,17 +331,17 @@ namespace io {
 				typename std::set< typename SaveMeshType::PointerToAttribute>::const_iterator ai;
 				unsigned int n_named_attr = 0;
 				for(ai = m.mesh_attr.begin(); ai != m.mesh_attr.end(); ++ai) n_named_attr+=!(*ai)._name.empty();
-				WriteString("N_PER_MESH_ATTRIBUTES"); WriteInt A4(n_named_attr);			 
+				WriteString(F(),"N_PER_MESH_ATTRIBUTES"); WriteInt(F(),n_named_attr);			 
 				for(ai = m.mesh_attr.begin(); ai != m.mesh_attr.end(); ++ai)
 					if(!(*ai)._name.empty())
 						{
 							AttributeBase  *    handle =  (AttributeBase  *)   (*ai)._handle ;
 	
-							WriteString("PER_MESH_ATTR_NAME");
-							WriteString((*ai)._name.c_str());
+							WriteString(F(),"PER_MESH_ATTR_NAME");
+							WriteString(F(),(*ai)._name.c_str());
 
-							WriteString("PER_MESH_ATTR_SIZE");
-							WriteInt(handle->SizeOf());
+							WriteString(F(),"PER_MESH_ATTR_SIZE");
+							WriteInt(F(),handle->SizeOf());
 
 							fwrite(handle->DataBegin(),1,handle->SizeOf(),F());
  						}

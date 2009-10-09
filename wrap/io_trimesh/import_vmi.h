@@ -236,15 +236,15 @@ namespace io {
 
 
 
-				struct ReadString{	ReadString(FILE * f,std::string & out){
-					unsigned int l; fread(&l,4,1,f);
-					char * buf = new char[l+1];
-					fread(buf,1,l,f);buf[l]='\0';
-					out = std::string(buf);
-					delete [] buf;
-					}
-				};
-				struct ReadInt{ ReadInt(FILE *f, unsigned int & i){ fread(&i,1,4,f);}};
+		void ReadString(FILE * f,std::string & out){
+			unsigned int l; fread(&l,4,1,f);
+			char * buf = new char[l+1];
+			fread(buf,1,l,f);buf[l]='\0';
+			out = std::string(buf);
+			delete [] buf;
+			}
+		 
+		void ReadInt(FILE *f, unsigned int & i){ fread(&i,1,4,f);} 
 
 
         template <typename OpenMeshType, typename CONT>
