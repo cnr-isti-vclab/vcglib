@@ -50,10 +50,14 @@
   
 */
 
-// this must become a parameter in the corresponding class
-#define DELETE_VERTICES 0
-// let's not remove them after all...
-// since TwoManyfold is weak, the vertex could still be used elsewhere...
+// these should become a parameter in the corresponding class
+#define DELETE_VERTICES 1
+// Reason not to delete vertices:
+// if not vertex TwoManyfold, the vertex could still be used elsewhere...
+
+// if one, use length to determine if rotations are profitable
+// if zero, maximize conformal quality
+#define LENGTH_CRITERION 1
 
 namespace vcg{namespace tri{
 
@@ -231,6 +235,59 @@ static ScalarType EdgeLenghtVariationIfVertexRotated(const FaceType &f, int w0)
   return (after-before);
 }
 
+// given a vertex (i.e. a face and a wedge), 
+// this function tells us how the totale edge lenght around a vertex would change
+// if that vertex is rotated
+static ScalarType QuadQualityVariationIfVertexRotated(const FaceType &f, int w0)
+{
+  assert(!f.IsD());
+  
+  ScalarType 
+    before=0, // sum of quad quality around v
+    after=0;  // same after the collapse
+  int guard = 0;
+
+  // rotate arond vertex
+  const FaceType* pf = &f;
+  int pi = w0;
+  int nb = 0; // vertex valency
+  int na = 0; 
+  vector<const VertexType *> s; // 1 star around v
+  do {    
+    // ScalarType triEdge = (pf->P0(pi) - pf->P1(pi) ).Norm();
+    if (!pf->IsF(pi)) {
+      if ( pf->IsF((pi+1)%3)) {
+        s.push_back(pf->cFFp((pi+1)%3)->V2( pf->cFFi((pi+1)%3) ));
+      } else {
+        s.push_back( pf->V2(pi) );  
+      }
+          
+      s.push_back( pf->V1(pi) );  
+    }
+    
+    const FaceType *t = pf;
+    t = pf->FFp( pi );
+    if (pf == t ) return std::numeric_limits<ScalarType>::max(); // it's a mesh border! flee!
+    pi = pf->cFFi( pi );
+    pi = (pi+1)%3; // FaceType::Next( pf->FFi( pi ) );
+    pf = t;
+    assert(guard++<100);
+  } while (pf != &f);
+  
+  assert(s.size()%2==0);
+  int N = s.size();
+  for (int i=0; i<N; i+=2) {
+    int h = (i+N-1)%N;
+    int j = (i  +1)%N;
+    int k = (i  +2)%N;
+    before+=   quadQuality( s[i]->P(),s[j]->P(),s[k]->P(),f.P(w0) );
+    after+=quadQuality( s[h]->P(),s[i]->P(),s[j]->P(),f.P(w0) );
+  }
+
+  assert (na == nb);
+  return (after-before);
+}
+
 /*
   const FaceType* pf = &f;
   int pi = wedge;
@@ -254,8 +311,14 @@ static ScalarType EdgeLenghtVariationIfVertexRotated(const FaceType &f, int w0)
 static bool TestVertexRotation(const FaceType &f, int w0)
 {
   assert(!f.IsD());
-  // rotate quad IFF this way edges become shorter:
+  
+#if (LENGTH_CRITERION)
+  // rotate vertex IFF this way edges become shorter:  
   return EdgeLenghtVariationIfVertexRotated(f,w0)<0;
+#else 
+  // rotate vertex IFF overall Quality increase
+#endif
+  return QuadQualityVariationIfVertexRotated(f,w0)<0;
 }
 
 
@@ -823,14 +886,14 @@ typedef enum { VALENCY_FLAGS = 24 } ___; // this bit and the 4 successive one ar
 
 static void SetValency(VertexType *v, int n){
   //v->Q() = n;
-  assert(n>=0 && n<=31);
-  v->Flags()&= ~(31<<VALENCY_FLAGS);
+  assert(n>=0 && n<=255);
+  v->Flags()&= ~(255<<VALENCY_FLAGS);
   v->Flags()|= n<<VALENCY_FLAGS;
 }
 
 static int GetValency(const VertexType *v){
   //return (int)(v->cQ());
-  return ( v->Flags() >> (VALENCY_FLAGS) ) & 31;
+  return ( v->Flags() >> (VALENCY_FLAGS) ) & 255;
 }
 
 static void IncreaseValency(VertexType *v, int dv=1){
@@ -956,15 +1019,17 @@ static int TestEdgeRotation(const FaceType &f, int w0, ScalarType *gain=NULL)
     v5 = fb->cFFp(w1)->V2( fb->cFFi(w1) )->P();
   }
   
-  /*
-  //  max overall quality criterion:
+  
+#if (!LENGTH_CRITERION)
+  //  max overall CONFORMAL quality criterion:
   q0 = quadQuality(v0,v1,v2,v3) +  quadQuality(v3,v4,v5,v0); // keep as is?
   q1 = quadQuality(v1,v2,v3,v4) +  quadQuality(v4,v5,v0,v1); // rotate CW?
   q2 = quadQuality(v5,v0,v1,v2) +  quadQuality(v2,v3,v4,v5); // rotate CCW?
   
   if (q0>=q1 && q0>=q2) return 0;
-  if (q1>=q2) return 1;*/
+  if (q1>=q2) return 1;
   
+#else
   // min distance (shortcut criterion)
   q0 = (v0 - v3).SquaredNorm();
   q1 = (v1 - v4).SquaredNorm();
@@ -989,7 +1054,7 @@ static int TestEdgeRotation(const FaceType &f, int w0, ScalarType *gain=NULL)
     //go++;
     return 1;
   } 
-  
+
   {
     if (gain) *gain = sqrt(q2)-sqrt(q0);
     // diagonal test, as above:
@@ -1003,6 +1068,7 @@ static int TestEdgeRotation(const FaceType &f, int w0, ScalarType *gain=NULL)
     //go++;
     return -1; 
   }
+#endif
 }
 
 private:
