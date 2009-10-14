@@ -405,7 +405,20 @@ static void FaceFaceFromTexCoord(MeshType &m)
 /// \brief Test correctness of VFtopology
 static void TestVertexFace(MeshType &m)
 {
+	SimpleTempData<typename MeshType::VertContainer, int > numVertex(m.vert,0);
+
 	if(!m.HasVFTopology()) return;		
+	
+	FaceIterator fi;
+	for(fi=m.face.begin();fi!=m.face.end();++fi)
+	{
+		if (!(*fi).IsD())
+		{
+			numVertex[(*fi).V0(0)]++;
+			numVertex[(*fi).V1(0)]++;
+			numVertex[(*fi).V2(0)]++;
+		}
+	}
 
 	VertexIterator vi;
 	vcg::face::VFIterator<FaceType> VFi;
@@ -415,16 +428,21 @@ static void TestVertexFace(MeshType &m)
 		if (!vi->IsD())
 		if(vi->VFp()!=0) // unreferenced vertices MUST have VF == 0;
 		{
+			int num=0;
 			assert(vi->VFp() >= &*m.face.begin());
 			assert(vi->VFp() <= &m.face.back());
 			VFi.f=vi->VFp();
 			VFi.z=vi->VFi();
 			while (!VFi.End())
 			{
+				num++;
 				assert(!VFi.F()->IsD());
 				assert((VFi.F()->V(VFi.I()))==&(*vi));
 				++VFi;
 			}
+			int num1=numVertex[&(*vi)];
+			assert(num==num1);
+			/*assert(num>1);*/
 		}
 	}
 }
