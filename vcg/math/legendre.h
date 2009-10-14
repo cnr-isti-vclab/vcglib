@@ -37,7 +37,7 @@ namespace math {
 template <typename ScalarType>
 class Legendre {
 
-private :
+protected :
 		
 	/**
 	 * Legendre Polynomial three term Recurrence Relation
@@ -161,6 +161,78 @@ public :
 	{
 		assert (m <= l && cos_theta <= 1 && cos_theta >= -1 && sin_theta <= 1 && sin_theta >= -1);
 		return legendre_P_l_m(l, m, cos_theta, Abs(sin_theta));
+	}
+};
+
+
+template <typename ScalarType, int MAX_L>
+class DynamicLegendre : public Legendre<ScalarType>
+{
+
+private:
+	ScalarType matrix[MAX_L][MAX_L]; //dynamic table
+	ScalarType _x; //table is conserved only across consistent x invocations
+	ScalarType _sin_theta;
+
+	void generate(ScalarType cos_theta, ScalarType sin_theta)
+	{	
+		//generate all 'l's with m = 0
+
+		matrix[0][0] = 1;
+		matrix[0][1] = cos_theta;
+
+		for (unsigned l = 2; l < MAX_L; ++l)
+		{
+			matrix[0][l] = legendre_next(l-1, matrix[0][l-1], matrix[0][l-2], cos_theta);
+		}
+
+		for(unsigned l = 1; l < MAX_L; ++l)
+		{
+			for (unsigned m = 1; m <= l; ++m)
+			{
+				if (l == m) matrix[m][m] = legendre_P_m_m(m, sin_theta);
+				else if (l == m + 1) matrix[m][l] = legendre_P_m_mplusone(m, matrix[m][m], cos_theta);
+				else{
+					matrix[m][l] = legendre_next(l-1, m, matrix[m][l-1], matrix[m][l-2], cos_theta);
+				}
+			}
+		}
+
+		_x = cos_theta;
+	}
+
+public :
+
+	DynamicLegendre() : _x(2), _sin_theta(2) {}
+
+	double AssociatedPolynomial(unsigned l, unsigned m, ScalarType x)
+	{
+		assert (m <= l && x <= 1 && x >= -1);
+		if (x != _x){
+			_sin_theta = Sqrt(1.0 - x * x);
+			generate(x, _sin_theta);
+		}
+		return matrix[m][l];
+	}
+
+	double AssociatedPolynomial(unsigned l, unsigned m, ScalarType cos_theta, ScalarType sin_theta)
+	{
+		assert (m <= l && cos_theta <= 1 && cos_theta >= -1 && sin_theta <= 1 && sin_theta >= -1);
+		if (cos_theta != _x){
+			_sin_theta = sin_theta;
+			generate(cos_theta, _sin_theta);
+		}
+		return matrix[m][l];
+	}
+
+	double Polynomial(unsigned l, ScalarType x)
+	{
+		assert (x <= 1 && x >= -1);
+		if (x != _x){
+			_sin_theta = Sqrt(1.0 - x * x);
+			generate(x, _sin_theta);
+		}
+		return matrix[0][l];
 	}
 };
 
