@@ -372,8 +372,19 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 
 
 
+template <class S>
+struct CurvatureDirBaseType{
+	typedef Point3<S> VecType;
+	typedef  S   ScalarType;
+	CurvatureDirBaseType () {}
+	Point3<S>max_dir,min_dir; // max and min curvature direction
+	S k1,k2;// max and min curvature values
+};
+
 template <class TT> class EmptyCurvatureData:public TT {
 public:
+	typedef vcg::Point2<float> CurvatureType;
+	typedef CurvatureDirBaseType<float> CurvatureDirType;
 
 	typedef float ScalarType;
 	typedef Point3f VecType;
@@ -446,14 +457,6 @@ public:	static void Name(std::vector<std::string> & name){name.push_back(std::st
 
 /*-------------------------- Curvature Direction ----------------------------------*/
 
-template <class S>
-struct CurvatureDirBaseType{
-	typedef Point3<S> VecType;
-	typedef  S   ScalarType;
-	CurvatureDirBaseType () {}
-	Point3<S>max_dir,min_dir; // max and min curvature direction
-	S k1,k2;// max and min curvature values
-};
 
 template <class TT> class EmptyCurvatureDir: public TT {
 public:
