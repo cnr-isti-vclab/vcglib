@@ -243,7 +243,12 @@ public:
   NormalType &N() { return _norm; }
   NormalType cN() const { return _norm; }
 	template <class RightF>
-	void ImportLocal(const RightF & rightF){ N() = rightF.cN(); T::ImportLocal(rightF);}
+	void ImportLocal(const RightF & rightF)
+	{		
+		N().Import(rightF.cN());
+		T::ImportLocal( rightF); 
+	}
+
  	inline void Alloc(const int & ns){T::Alloc(ns);}
 	inline void Dealloc(){T::Dealloc();}
   static bool HasFaceNormal()   { return true; }
