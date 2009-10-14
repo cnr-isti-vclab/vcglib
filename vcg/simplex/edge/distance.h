@@ -47,12 +47,12 @@ namespace vcg {
 		vcg::Segment3<typename EdgeType::ScalarType> s;
 		s.P0()=e.V(0)->P();
 		s.P1()=e.V(1)->P();
-		typename EdgeType::CoordType near;
-		near=vcg::ClosestPoint<typename EdgeType::ScalarType>(s,q);
-		typename EdgeType::ScalarType d=(q-near).Norm();
+		typename EdgeType::CoordType nearest;
+		nearest=vcg::ClosestPoint<typename EdgeType::ScalarType>(s,q);
+		typename EdgeType::ScalarType d=(q-nearest).Norm();
 		if (d<dist){
 			dist=d;
-			p=near;
+			p=nearest;
 			return true;
 		}
 		else 
@@ -71,7 +71,7 @@ namespace vcg {
 			const Point3<typename EDGETYPE::ScalarType> fp = Point3<typename EDGETYPE::ScalarType>::Construct(p);
 			Point3<typename EDGETYPE::ScalarType> fq;
 			typename EDGETYPE::ScalarType md = (typename EDGETYPE::ScalarType)(minDist);
-			const bool ret = PointDistance(e, fp, md, fq);
+			const bool ret = vcg::edge::PointDistance(e, fp, md, fq);
 			minDist = (SCALARTYPE)(md);
 			q = Point3<SCALARTYPE>::Construct(fq);
 			return (ret);
