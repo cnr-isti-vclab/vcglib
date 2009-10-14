@@ -40,6 +40,33 @@ class DummyPolarFunctor{
 		inline ScalarType operator()(ScalarType theta, ScalarType phi) {return ScalarType(0);}
 };
 
+
+template <typename ScalarType, int MAX_BAND = 4>
+class ScalingFactor
+{
+private :
+
+	ScalarType k_factor[MAX_BAND][MAX_BAND];
+
+	static ScalingFactor sf;
+
+	ScalingFactor()
+	{
+		for (unsigned l = 0; l < MAX_BAND; ++l)
+			for (unsigned m = 0; m <= l; ++m)
+				k_factor[l][m] = Sqrt( ( (2.0*l + 1.0) * Factorial<ScalarType>(l-m) ) / (4.0 * M_PI * Factorial<ScalarType>(l + m)) );
+	}
+
+public :
+	static ScalarType K(unsigned l, unsigned m)
+	{
+		return sf.k_factor[l][m];
+	}
+};
+
+template <typename ScalarType, int MAX_BAND>
+ScalingFactor<ScalarType, MAX_BAND> ScalingFactor<ScalarType, MAX_BAND>::sf;
+
 /**
  * Although the Real Spherical Harmonic Function is correctly defined over any
  * positive l and any -l <= m <= l, the two internal functions computing the
@@ -50,19 +77,22 @@ template <typename ScalarType, int MAX_BAND = 4>
 class SphericalHarmonics{
 
 private :
-	inline static ScalarType scaling_factor(unsigned l, unsigned m)
+
+	static DynamicLegendre<ScalarType, MAX_BAND> legendre;
+
+	static ScalarType scaling_factor(unsigned l, unsigned m)
 	{
-		return Sqrt( ( (2.0*l + 1.0) * Factorial<ScalarType>(l-m) ) / (4.0 * M_PI * Factorial<ScalarType>(l + m)) );;
+		return ScalingFactor<ScalarType, MAX_BAND>::K(l,m);
 	}
 
 	inline static ScalarType complex_spherical_harmonic_re(unsigned l, unsigned m, ScalarType theta, ScalarType phi)
 	{
-		return scaling_factor(l, m) * Legendre<ScalarType>::AssociatedPolynomial(l, m, Cos(theta), Sin(theta)) * Cos(m * phi);
+		return scaling_factor(l, m) * legendre.AssociatedPolynomial(l, m, Cos(theta), Sin(theta)) * Cos(m * phi);
 	}
 
 	inline static ScalarType complex_spherical_harmonic_im(unsigned l, unsigned m, ScalarType theta, ScalarType phi)
 	{
-		return scaling_factor(l, m) * Legendre<ScalarType>::AssociatedPolynomial(l, m, Cos(theta), Sin(theta)) * Sin(m * phi);
+		return scaling_factor(l, m) * legendre.AssociatedPolynomial(l, m, Cos(theta), Sin(theta)) * Sin(m * phi);
 	}
 
 	ScalarType coefficients[MAX_BAND * MAX_BAND];
@@ -83,7 +113,7 @@ public :
 
 		if (m > 0) return SQRT_TWO * complex_spherical_harmonic_re(l, m, theta, phi);
 
-		else if (m == 0) return scaling_factor(l, 0) * Legendre<ScalarType>::Polynomial(l, Cos(theta));
+		else if (m == 0) return scaling_factor(l, 0) * legendre.Polynomial(l, Cos(theta));
 
 		else return SQRT_TWO * complex_spherical_harmonic_im(l, -m, theta, phi);
 	}
@@ -153,6 +183,9 @@ public :
 		return f;
 	}
 };
+
+template <typename ScalarType, int MAX_BAND>
+DynamicLegendre<ScalarType, MAX_BAND> SphericalHarmonics<ScalarType, MAX_BAND>::legendre;
 
 }} //namespace vcg::math
 
