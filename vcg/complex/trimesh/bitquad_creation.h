@@ -1,5 +1,4 @@
-
-//#include <vcg/complex/trimesh/bitquad_support.h>
+#include <vcg/complex/trimesh/bitquad_support.h>
 
 /** BIT-QUAD creation support:
     a collection of methods that,
@@ -49,10 +48,13 @@ void MakeBitTriOnly(MeshType &m)
 (more info in comments before each method)
 
 */
+#ifndef VCG_BITQUAD_CRE
+#define VCG_BITQUAD_CRE
 
 namespace vcg{namespace tri{
 
-template <class _MeshType>
+template <class _MeshType,
+					class Interpolator = GeometricInterpolator<typename _MeshType::VertexType> > 
 class BitQuadCreation{
   
 public:
@@ -288,21 +290,15 @@ static void MakePureByRefine(MeshType &m){
       {
         assert(nvi!=m.vert.end());
         VertexType *nv = &*nvi; nvi++;
-        nv->ImportLocal(*(fi->V0( 0 ))); // lazy: copy everything from the old vertex
+        *nv = *fi->V0( 0 ); // lazy: copy everything from the old vertex
         nv->P() = ( fi->V(0)->P() + fi->V(1)->P() + fi->V(2)->P() )  /3.0;
         FaceType *fa = &*fi;
         FaceType *fb = &*nfi; nfi++;
         FaceType *fc = &*nfi; nfi++;
-				
-        fb->ImportLocal(*fi);
-				fc->ImportLocal(*fi);
-				
-				fb->V(1) = nv; fb->V(0)=fa->V(0);  fb->V(2)=fa->V(2);
-        fc->V(2) = nv; fc->V(0)=fa->V(0);  fc->V(1)=fa->V(1);
-				fa->V(0) = nv;
-        
-				fb->FFp(2)=fa->FFp(2); fb->FFi(2)=fa->FFi(2); 
-				fc->FFp(0)=fa->FFp(0); fc->FFi(0)=fa->FFi(0); 
+        *fb = *fc = *fa;  // lazy: copy everything from the old faces
+        fa->V(0) = nv;
+        fb->V(1) = nv;
+        fc->V(2) = nv;
         
         assert( fa->FFp(1)->FFp(fa->FFi(1)) == fa );
         /*    */fb->FFp(2)->FFp(fb->FFi(2)) =  fb;
@@ -361,8 +357,8 @@ static void MakePureByRefine(MeshType &m){
       assert(nvi!=m.vert.end());
       VertexType *nv = &*nvi; nvi++;
       *nv = * fa->V0( ea2 );
-      nv->P() = ( fa->V(ea2)->P() + fa->V(ea0)->P() ) /2.0;
-          
+      //nv->P() = ( fa->V(ea2)->P() + fa->V(ea0)->P() ) /2.0;
+      Interpolator::Apply(*(fa->V(ea2)),*(fa->V(ea0)),0.5,*nv);
       // split faces: add 2 faces (one per side)
       assert(nfi!=m.face.end());
       FaceType *fc = &*nfi; nfi++;
@@ -463,7 +459,7 @@ static void MakePureByRefine(MeshType &m){
         VertexType *nv = &*nvi; nvi++;
         *nv = * fa->V0( ea2 );
         nv->P() = ( fa->V(ea2)->P() + fa->V(ea0)->P() ) /2.0;
-          
+        Interpolator::Apply(*(fa->V(ea2)),*(fa->V(ea0)),0.5,*nv);
         // split face: add 1 face
         FaceType *fc = &*nfi; nfi++;
         *fc = *fa;
@@ -507,7 +503,7 @@ static void MakePureByRefine(MeshType &m){
 static void MakePureByCatmullClark(MeshType &m){
   MakePureByRefine(m);
   MakePureByRefine(m);
-  // et-voilâ€¡!!!
+  // et-voilà!!!
 }
 
 // Helper funcion:
@@ -687,3 +683,4 @@ static void MakeDominant(MeshType &m, int level){
 
 };
 }} // end namespace vcg::tri
+#endif
