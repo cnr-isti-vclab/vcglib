@@ -85,7 +85,8 @@ static bool MarkSmallestEdge(MeshType &m, bool perform)
 }
 
 static ScalarType Importance(const CoordType  &p){
-  return ::proceduralImportance(p);
+  //return ::proceduralImportance(p);
+	return 1;
 }
 
 // returns: 0 if fail. 1 if edge. 2 if diag.
