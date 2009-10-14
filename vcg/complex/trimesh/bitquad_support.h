@@ -370,7 +370,7 @@ static bool RotateVertex(FaceType &f, int w0, MeshType &m, Pos *affected=NULL)
     if (pf->IsF(j)) 
       { pf->ClearF(j); IncreaseValency(pf->V1(j));  } 
     else 
-      { pf->SetF(j); DecreaseValency(pf, (j+1)%3, m); }
+      { pf->SetF(j); DecreaseValencySimple(pf->V1(j),1); }
 
     j = (j+2)%3;
     if (pf->IsF(j)) pf->ClearF(j); else pf->SetF(j);
@@ -797,6 +797,21 @@ static bool CollapseDiag(FaceType &f, ScalarType interpol, MeshType& m, Pos* aff
   // rotate around vb, (same-sense-as-face)-wise
   int pi = fauxb;
   FaceType* pf = fb; /* pf, pi could be put in a Pos<FaceType> p(pb, fauxb) */
+	 do {
+    //pf->V(pi) = va;
+    if (((pf->V2(pi) == va)||(pf->V1(pi) == va))
+			&&(pf!=fa)&&(pf!=fb))
+			return false;
+    pi=(pi+2)%3;
+    FaceType *t = pf->FFp(pi);
+    if (t==pf) { border= true; break; }
+    pi = pf->FFi(pi);
+    pf = t;
+  } while ((pf!=fb));
+
+	pi = fauxb;
+	pf = fb;
+
   do {
     pf->V(pi) = va;
     
@@ -827,14 +842,15 @@ static bool CollapseDiag(FaceType &f, ScalarType interpol, MeshType& m, Pos* aff
   // update FF, delete faces
   _CollapseDiagHalf(*fb, fauxb, m);
   _CollapseDiagHalf(*fa, fauxa, m);
-  
+
+  SetValency(va, GetValency(va)+val-2);
   DecreaseValency(fb,(fauxb+2)%3,m); // update valency 
   DecreaseValency(fa,(fauxa+2)%3,m); // update valency 
   Allocator<MeshType>::DeleteFace(m,*fa);
   Allocator<MeshType>::DeleteFace(m,*fb);
 
   //assert(val == GetValency(vb));
-  SetValency(va, GetValency(va)+val-2);
+
 
   DecreaseValencyNoSingletTest(vb, val, m); 
   // note: don't directly kill vb. In non-twomanifold, it could still be referecned
@@ -932,6 +948,11 @@ static void DecreaseValencyNoSingletTest(VertexType *v, int dv,  MeshType &m){
   if (val==0) Allocator<MeshType>::DeleteVertex(m,*v); 
 }
 
+static void DecreaseValencySimple(VertexType *v, int dv){
+  int val = GetValency(v)-dv;
+  SetValency( v, val );
+}
+
 static void UpdateValencyInFlags(MeshType& m){
   for (VertexIterator vi = m.vert.begin();  vi!=m.vert.end(); vi++) if (!vi->IsD()) {
     SetValency(&*vi,0);
@@ -956,11 +977,15 @@ static void UpdateValencyInQuality(MeshType& m){
 
 static bool HasConsistentValencyFlag(MeshType &m) {
   UpdateValencyInQuality(m);
+	bool isok=true;
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
     for (int k=0; k<3; k++)
-    if (GetValency(fi->V(k))!=fi->V(k)->Q()) return false;
+			if (GetValency(fi->V(k))!=fi->V(k)->Q()){
+				MarkFaceF(&*fi);
+				isok=false;
+			}
   }
-  return true;
+  return isok;
 }
 
 // helper function:
