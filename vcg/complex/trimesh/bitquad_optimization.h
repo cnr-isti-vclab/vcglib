@@ -84,6 +84,10 @@ static bool MarkSmallestEdge(MeshType &m, bool perform)
   return false;
 }
 
+static ScalarType Importance(const CoordType  &p){
+  return ::proceduralImportance(p);
+}
+
 // returns: 0 if fail. 1 if edge. 2 if diag.
 static int MarkSmallestEdgeOrDiag(MeshType &m, ScalarType edgeMult, bool perform, Pos* affected=NULL)
 {
@@ -100,7 +104,13 @@ static int MarkSmallestEdgeOrDiag(MeshType &m, ScalarType edgeMult, bool perform
 
     score = (f->P0(k) - f->P1(k)).Norm();
     
+    ScalarType imp = Importance( (f->P0(k) + f->P1(k))/2 );
+    
+    score /= imp;
+    
     if (!f->IsF(k)) score*=edgeMult; // edges are supposed to be smaller!
+    
+    
     
     if (score<min) {
       min=score; 
@@ -111,6 +121,8 @@ static int MarkSmallestEdgeOrDiag(MeshType &m, ScalarType edgeMult, bool perform
     
     if (f->IsF(k)) { // for diag faces, test counterdiag too
       score = BQ::CounterDiag(f).Norm();
+      score /= imp;
+
       if (score<min) {
         min=score; 
         fa = f;
@@ -172,6 +184,8 @@ static void MarkSmallestDiag(MeshType &m)
   }
 
 }
+
+
 
 static bool IdentifyAndCollapseSmallestDiag(MeshType &m){
   ScalarType min = std::numeric_limits<ScalarType>::max();
