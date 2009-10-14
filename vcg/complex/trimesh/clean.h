@@ -879,7 +879,23 @@ private:
         return true;
       }
       
-      
+      static bool HasConsistentEdges(const MeshType &m)
+      {
+        assert(m.HasPerFaceFlags());
+        
+        for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
+          if(!(*fi).IsD()) 
+            for (int k=0; k<3; k++) 
+						{
+				      VertexType *v0=(*fi).V(0);
+							VertexType *v1=(*fi).V(1);
+							VertexType *v2=(*fi).V(2);
+							if ((v0==v1)||(v0==v2)||(v1==v2))
+								return false;
+             }
+          
+        return true;
+      }
 			static int CountNonManifoldVertexFF( MeshType & m, bool select = true ) 
 			{
 				assert(tri::HasFFAdjacency(m));
