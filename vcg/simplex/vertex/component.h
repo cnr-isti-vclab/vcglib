@@ -185,7 +185,11 @@ public:
   NormalType &N() { return _norm; }
   const NormalType &cN() const { return _norm; }
 	template < class LeftV>
-	void ImportLocal(const LeftV  & left ) { if(LeftV::HasNormal()) N() = left.cN(); T::ImportLocal( left); }
+	void ImportLocal(const LeftV  & left ){
+		if(LeftV::HasNormal())
+			N().Import(left.cN());
+		T::ImportLocal( left); 
+	}
   static bool HasNormal()   { return true; }
   static bool HasNormalOcf() { return false; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("Normal"));T::Name(name);}
