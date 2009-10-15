@@ -252,7 +252,7 @@ static ScalarType QuadQualityVariationIfVertexRotated(const FaceType &f, int w0)
   int pi = w0;
   int nb = 0; // vertex valency
   int na = 0; 
-  vector<const VertexType *> s; // 1 star around v
+  std::vector<const VertexType *> s; // 1 star around v
   do {    
     // ScalarType triEdge = (pf->P0(pi) - pf->P1(pi) ).Norm();
     if (!pf->IsF(pi)) {
