@@ -972,7 +972,7 @@ static bool LoadMask(const char * filename, int &mask)
 				}
 				else if (header.compare("Ns")==0)  // shininess        
 				{
-					currentMaterial.Ns = atoi(tokens[1].c_str());
+					currentMaterial.Ns = float(atoi(tokens[1].c_str()));
 				}
 				else if (header.compare("illum")==0)	// specular illumination on/off
 				{
