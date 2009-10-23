@@ -160,7 +160,9 @@ class AttributeSeam
 			typedef typename dst_trimesh_t::FaceIterator         dst_face_i;
 
 			typedef vcg::tri::Allocator<dst_trimesh_t>           dst_mesh_allocator_t;
-			typedef dst_mesh_allocator_t::PointerUpdater<typename dst_trimesh_t::VertexPointer> dst_pointer_updater_t;
+
+			/* GCC gets in troubles and need some hints ("template") to parse the following line */
+			typedef typename dst_mesh_allocator_t :: template PointerUpdater<typename dst_trimesh_t::VertexPointer> dst_pointer_updater_t;
 
 			if (reinterpret_cast<const void *>(&src) == reinterpret_cast<const void *>(&dst))
 			{
