@@ -212,7 +212,7 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 		,h
 	);
 
-	if( pi.mask & Mask::IOM_WEDGTEXCOORD )
+	if (((pi.mask & Mask::IOM_WEDGTEXCOORD) != 0) || ((pi.mask & Mask::IOM_VERTTEXCOORD) != 0))
 	{
 		const char * TFILE = "TextureFile";
 
