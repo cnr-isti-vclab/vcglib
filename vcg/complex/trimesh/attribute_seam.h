@@ -68,54 +68,52 @@ class AttributeSeam
 			typedef typename src_trimesh_t::VertexIterator  src_vertex_i;
 			typedef typename src_trimesh_t::FaceType        src_face_t;
 			typedef typename src_trimesh_t::FaceIterator    src_face_i;
+			typedef typename src_trimesh_t::VertContainer   src_vertex_container_t;
 
 			typedef vcg::tri::Allocator<src_trimesh_t>      src_mesh_allocator_t;
+			typedef typename src_mesh_allocator_t :: template PointerUpdater<typename src_trimesh_t::VertexPointer> src_pointer_updater_t;
 
 			if ((src.vn <= 0) || (src.fn <= 0))
 			{
 				return true;
 			}
 
+			src_pointer_updater_t pt_upd;
+			src_vertex_i   vi  = src_mesh_allocator_t::AddVertices(src, 1, pt_upd);
+			src_vertex_t * vtx = &(*vi);
+			src_vertex_t * vtxbase = &(src.vert[0]);
+
 			const size_t vertex_count     = src.vert.size();
 			const size_t vertex_pool_size = vertex_count;
-
-			const src_vertex_t * vtxbase = &(src.vert[0]);
 
 			std::vector<int> vloc;
 			vloc.reserve(vertex_pool_size);
 			vloc.resize(vertex_count, -2);
 
-			std::vector<src_vertex_t> & new_vertices = src.vert;
-
-			src_vertex_t vtx;
-			int vcount = int(new_vertices.size());
+			int vcount = int(src.vert.size());
 			int idx    = 0;
-
-			src_vertex_i vi;
 
 			for (src_face_i it=src.face.begin(); it!=src.face.end(); ++it)
 			{
 				src_face_t & f = (*it);
-
 				if (f.IsD()) continue;
 
 				for (int k=0; k<3; ++k)
 				{
 					idx = (f.cV(k) - vtxbase);
-
-					v_extract(src, f, k, src, vtx);
+					v_extract(src, f, k, src, *vtx);
 
 					if (vloc[idx] == -2)
 					{
 						vloc[idx] = -1;
-						new_vertices[idx] = vtx;
+						src.vert[idx].ImportLocal(*vtx);
 					}
 					else
 					{
 						int vidx = idx;
 						do
 						{
-							if (v_compare(src, new_vertices[vidx], vtx)) break;
+							if (v_compare(src, src.vert[vidx], *vtx)) break;
 							vidx = vloc[vidx];
 						} while (vidx >= 0);
 
@@ -124,10 +122,11 @@ class AttributeSeam
 							vloc.push_back(vloc[idx]);
 							vloc[idx] = vcount;
 
-							vi = src_mesh_allocator_t::AddVertices(src, 1);
-							*vi = vtx;
+							vi = src_mesh_allocator_t::AddVertices(src, 1, pt_upd);
+							pt_upd.Update(vtx);
+							pt_upd.Update(vtxbase);
 
-							vtxbase = &(src.vert[0]);
+							(*vi).ImportLocal(*vtx);
 
 							idx = vcount;
 							vcount++;
@@ -141,6 +140,8 @@ class AttributeSeam
 					f.V(k) = &(src.vert[idx]);
 				}
 			}
+
+			src_mesh_allocator_t::DeleteVertex(src, *vtx);
 
 			return true;
 		}
@@ -176,11 +177,6 @@ class AttributeSeam
 				return true;
 			}
 
-			dst_trimesh_t dummy_mesh;
-			dummy_mesh.vert = dst.vert;
-			dst_mesh_allocator_t::AddVertices(dummy_mesh, 1);
-			dst_vertex_t & vtx = dummy_mesh.vert[0];
-
 			const size_t vertex_count     = src.vert.size();
 			const size_t vertex_pool_size = vertex_count;
 
@@ -193,8 +189,8 @@ class AttributeSeam
 			dst_vertex_i vv;
 			dst_pointer_updater_t pt_upd;
 			pt_upd.preventUpdateFlag = true;
-
-			dst_mesh_allocator_t::AddVertices(dst, int(vertex_count), pt_upd);
+			dst_mesh_allocator_t::AddVertices(dst, 1 + int(vertex_count), pt_upd);
+			dst_vertex_t * vtx = &(dst.vert[0]);
 
 			dst_face_i fbase = dst_mesh_allocator_t::AddFaces(dst, src.fn);
 			dst_face_i fi    = fbase;
@@ -205,7 +201,6 @@ class AttributeSeam
 			for (src_face_ci it=src.face.begin(); it!=src.face.end(); ++it)
 			{
 				const src_face_t & wf = (*it);
-
 				if (wf.IsD()) continue;
 
 				dst_face_t & vf = (*fi);
@@ -214,19 +209,19 @@ class AttributeSeam
 				{
 					idx = (wf.cV(k) - vtxbase);
 
-					v_extract(src, wf, k, dst, vtx);
+					v_extract(src, wf, k, dst, *vtx);
 
 					if (vloc[idx] == -2)
 					{
 						vloc[idx] = -1;
-						v_copy(dst, vtx, dst.vert[idx]);
+						v_copy(dst, *vtx, dst.vert[idx]);
 					}
 					else
 					{
 						int vidx = idx;
 						do
 						{
-							if (v_compare(dst, dst.vert[vidx], vtx)) break;
+							if (v_compare(dst, dst.vert[vidx], *vtx)) break;
 							vidx = vloc[vidx];
 						} while (vidx >= 0);
 
@@ -236,7 +231,8 @@ class AttributeSeam
 							vloc[idx] = vcount;
 
 							vv = dst_mesh_allocator_t::AddVertices(dst, 1, pt_upd);
-							v_copy(dst, vtx, *vv);
+							pt_upd.Update(vtx);
+							v_copy(dst, *vtx, *vv);
 
 							idx = vcount;
 							vcount++;
@@ -268,6 +264,8 @@ class AttributeSeam
 				vf.V(1) = vstart + reinterpret_cast<const int>(vf.V(1));
 				vf.V(2) = vstart + reinterpret_cast<const int>(vf.V(2));
 			}
+
+			dst_mesh_allocator_t::DeleteVertex(dst, *vtx);
 
 			return true;
 		}
