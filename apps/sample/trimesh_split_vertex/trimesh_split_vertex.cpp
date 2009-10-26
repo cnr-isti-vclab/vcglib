@@ -1,7 +1,9 @@
 #include <vector>
 
 #include <vcg/simplex/vertex/base.h>
+#include <vcg/simplex/vertex/component_ocf.h>
 #include <vcg/simplex/face/base.h>
+#include <vcg/simplex/face/component_ocf.h>
 #include <vcg/complex/trimesh/base.h>
 #include <vcg/complex/trimesh/attribute_seam.h>
 
@@ -13,12 +15,43 @@
   during the process new vertices could be created.
 */
 
+#define TEST_IN_PLACE_SPLIT
+
+#ifdef TEST_IN_PLACE_SPLIT
+
+class SrcVertex;
+class SrcEdge;
+class SrcFace;
+
+class SrcVertex : public vcg::VertexSimp2
+<	SrcVertex, SrcEdge, SrcFace,
+	vcg::vertex::InfoOcf,
+	vcg::vertex::Coord3f,
+	vcg::vertex::TexCoordfOcf,
+	vcg::vertex::BitFlags
+> { };
+
+class SrcFace : public vcg::FaceSimp2
+<	SrcVertex, SrcEdge, SrcFace,
+	vcg::face::InfoOcf,
+	vcg::face::VertexRef,
+	vcg::face::WedgeTexCoordfOcf
+> { };
+
+class SrcMesh : public vcg::tri::TriMesh  <vcg::vertex::vector_ocf<SrcVertex>, vcg::face::vector_ocf<SrcFace> > { };
+
+typedef SrcVertex DstVertex;
+typedef SrcFace   DstFace;
+typedef SrcMesh   DstMesh;
+
+#else
+
 // source mesh type: per-wedge texture coordinates
 class SrcVertex;
 class SrcEdge;
 class SrcFace;
 
-class SrcVertex : public vcg::VertexSimp2   <SrcVertex, SrcEdge, SrcFace, vcg::vertex::Coord3f> { };
+class SrcVertex : public vcg::VertexSimp2   <SrcVertex, SrcEdge, SrcFace, vcg::vertex::Coord3f, vcg::vertex::TexCoord2f, vcg::vertex::BitFlags> { };
 class SrcFace   : public vcg::FaceSimp2     <SrcVertex, SrcEdge, SrcFace, vcg::face::VertexRef, vcg::face::WedgeTexCoord2f> { };
 class SrcMesh   : public vcg::tri::TriMesh  <std::vector<SrcVertex>, std::vector<SrcFace> > { };
 
@@ -28,9 +61,11 @@ class DstVertex;
 class DstEdge;
 class DstFace;
 
-class DstVertex : public vcg::VertexSimp2   <DstVertex, DstEdge, DstFace, vcg::vertex::Coord3f, vcg::vertex::TexCoord2f> { };
+class DstVertex : public vcg::VertexSimp2   <DstVertex, DstEdge, DstFace, vcg::vertex::Coord3f, vcg::vertex::TexCoord2f, vcg::vertex::BitFlags> { };
 class DstFace   : public vcg::FaceSimp2     <DstVertex, DstEdge, DstFace, vcg::face::VertexRef> { };
 class DstMesh   : public vcg::tri::TriMesh  <std::vector<DstVertex>, std::vector<DstFace> > { };
+
+#endif
 
 // extract wedge attributes functor.
 // given a source face and a wedge index, this functor extracts all the relevant attributes from the wedge
@@ -83,30 +118,43 @@ int main(int argc, char ** argv)
 	}
 
 	SrcMesh srcMesh;
+#ifdef TEST_IN_PLACE_SPLIT
+	srcMesh.face.EnableWedgeTex();
+#endif
 	vcg::tri::io::ImporterPLY<SrcMesh>::Open(srcMesh, argv[1]);
 	if ((srcMesh.vn <= 0) || (srcMesh.fn <= 0))
 	{
 		printf("invalid source mesh file.\n");
 		return -1;
 	}
+	const int srcVN = srcMesh.vn;
+	const int srcFN = srcMesh.fn;
 	printf("source mesh succesfully loaded.\n");
 
+#ifdef TEST_IN_PLACE_SPLIT
+	DstMesh & dstMesh = srcMesh;
+	dstMesh.vert.EnableTexCoord();
+	vcg::tri::AttributeSeam::SplitVertex(dstMesh, ExtractVertex, CompareVertex);
+#else
 	DstMesh dstMesh;
 	vcg::tri::AttributeSeam::SplitVertex(srcMesh, dstMesh, ExtractVertex, CompareVertex, CopyVertex);
 	dstMesh.textures = srcMesh.textures;
+#endif
 	if (vcg::tri::io::ExporterPLY<DstMesh>::Save(dstMesh, argv[2], vcg::tri::io::Mask::IOM_VERTCOORD | vcg::tri::io::Mask::IOM_VERTTEXCOORD) != 0)
 	{
 		printf("cannot save destination mesh file.\n");
 		return -1;
 	}
 	printf("destination mesh succesfully saved.\n");
+	const int dstVN = dstMesh.vn;
+	const int dstFN = dstMesh.fn;
 
 	printf("\n");
 	printf("statistics:\n");
-	printf("  input mesh vertices count    : %d\n", srcMesh.vn);
-	printf("  input mesh faces count       : %d\n", srcMesh.fn);
-	printf("  splitted mesh vertices count : %d\n", dstMesh.vn);
-	printf("  splitted mesh faces count    : %d\n", dstMesh.fn);
+	printf("  input mesh vertices count    : %d\n", srcVN);
+	printf("  input mesh faces count       : %d\n", srcFN);
+	printf("  splitted mesh vertices count : %d\n", dstVN);
+	printf("  splitted mesh faces count    : %d\n", dstFN);
 	printf("\n");
 
 	return 0;
