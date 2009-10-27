@@ -160,7 +160,8 @@ bool CheckCacheTime( const char * fname, const char * cname )
 
 // restituisce true se il file con la cache del bbox della mesh e' piu' recente del file ply
 // se fname2 != 0, allora deve essere piu recente anche di fname2.
-static bool CheckBBoxCache( const char * fname, Box3d & box, const char *fname2=0 )
+template<class ScalarType>
+        static bool CheckBBoxCache( const char * fname, Box3<ScalarType> & box, const char *fname2=0 )
 {
 	char d[MAXBPATH];
 	char n[MAXBPATH];
@@ -259,8 +260,8 @@ struct PlyPoint3d
 
 
 	// Calcola il bbox di un file ply
-
-bool ScanBBox( const char * fname, Box3d & box, bool use_cache=true )
+template <class ScalarType>
+bool ScanBBox( const char * fname, Box3<ScalarType> & box, bool use_cache=true )
 {
 
 	if(use_cache)
@@ -304,7 +305,7 @@ bool ScanBBox( const char * fname, Box3d & box, bool use_cache=true )
 				PlyPoint3d t;
 
 				pf.Read( (void *)(&t) );
-				box.Add( Point3d(t.x,t.y,t.z) );
+				box.Add( Point3<ScalarType>(t.x,t.y,t.z) );
 			}
 		}
 		else
