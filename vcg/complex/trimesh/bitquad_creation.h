@@ -290,16 +290,23 @@ static void MakePureByRefine(MeshType &m){
       {
         assert(nvi!=m.vert.end());
         VertexType *nv = &*nvi; nvi++;
-        *nv = *fi->V0( 0 ); // lazy: copy everything from the old vertex
+        //*nv = *fi->V0( 0 ); // lazy: copy everything from the old vertex
+				nv->ImportLocal(*(fi->V0( 0 ))); // lazy: copy everything from the old vertex
+
         nv->P() = ( fi->V(0)->P() + fi->V(1)->P() + fi->V(2)->P() )  /3.0;
         FaceType *fa = &*fi;
         FaceType *fb = &*nfi; nfi++;
         FaceType *fc = &*nfi; nfi++;
-        *fb = *fc = *fa;  // lazy: copy everything from the old faces
+       
+				fb->ImportLocal(*fi);
+				fc->ImportLocal(*fi);
+				fb->V(1) = nv; fb->V(0)=fa->V(0);  fb->V(2)=fa->V(2);
+				fc->V(2) = nv; fc->V(0)=fa->V(0);  fc->V(1)=fa->V(1);
+
         fa->V(0) = nv;
-        fb->V(1) = nv;
-        fc->V(2) = nv;
-        
+        fb->FFp(2)=fa->FFp(2); fb->FFi(2)=fa->FFi(2);
+				fc->FFp(0)=fa->FFp(0); fc->FFi(0)=fa->FFi(0);
+
         assert( fa->FFp(1)->FFp(fa->FFi(1)) == fa );
         /*    */fb->FFp(2)->FFp(fb->FFi(2)) =  fb;
         /*    */fc->FFp(0)->FFp(fc->FFi(0)) =  fc;
@@ -503,7 +510,7 @@ static void MakePureByRefine(MeshType &m){
 static void MakePureByCatmullClark(MeshType &m){
   MakePureByRefine(m);
   MakePureByRefine(m);
-  // et-voilà!!!
+  // done
 }
 
 // Helper funcion:
