@@ -276,7 +276,7 @@ struct LoadPly_Camera
 	float k4;
 };
 
-#define _VERTDESC_LAST_  20
+#define _VERTDESC_LAST_  22
 static const  PropDescriptor &VertDesc(int i)  
 {
 	static const PropDescriptor pv[_VERTDESC_LAST_]={
@@ -300,6 +300,8 @@ static const  PropDescriptor &VertDesc(int i)
 /*17*/ {"vertex", "texture_v",    ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,v),0,0,0,0,0  ,0},
 /*18*/ {"vertex", "texture_w",    ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,w),0,0,0,0,0  ,0},
 /*19*/ {"vertex", "intensity",    ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,intensity),0,0,0,0,0  ,0},
+/*20*/ {"vertex", "s",    ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,u),0,0,0,0,0  ,0},
+/*21*/ {"vertex", "t",    ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,v),0,0,0,0,0  ,0},
 
 	};
 	return pv[i];
@@ -573,7 +575,17 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 		}
 
 	}
-
+	if( tri::HasPerVertexTexCoord(m) )
+	{
+		if(( pf.AddToRead(VertDesc(20))!=-1 )&&  (pf.AddToRead(VertDesc(21))!=-1))
+		{
+			pi.mask |= Mask::IOM_VERTTEXCOORD;
+		}
+		if(( pf.AddToRead(VertDesc(16))!=-1 )&&  (pf.AddToRead(VertDesc(17))!=-1))
+		{
+			pi.mask |= Mask::IOM_VERTTEXCOORD;
+		}
+	}
     if(tri::HasPerVertexRadius(m))
 			{
 				if( pf.AddToRead(VertDesc(15))!=-1 )
@@ -878,7 +890,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
           int curpos=int(fi-m.face.begin());
           Allocator<OpenMeshType>::AddFaces(m,fa.size-3);
 				  fi=m.face.begin()+curpos;
-
+					pi.mask |= Mask::IOM_BITPOLYGONAL;
         }     
         for(int qq=0;qq<fa.size-3;++qq)
         {
@@ -1178,6 +1190,12 @@ static bool LoadMask(const char * filename, int &mask, PlyInfo &pi)
 			( pf.AddToRead(VertDesc(10))!=-1 )  )  mask |= Mask::IOM_VERTCOLOR;
 	if(   pf.AddToRead(VertDesc(19))!=-1 )     mask |= Mask::IOM_VERTCOLOR;
 	
+	if(( pf.AddToRead(VertDesc(20))!=-1 ) &&  (pf.AddToRead(VertDesc(21))!=-1))
+		 mask |= Mask::IOM_VERTTEXCOORD;
+		 
+	if(( pf.AddToRead(VertDesc(16))!=-1 ) &&  (pf.AddToRead(VertDesc(17))!=-1))
+		 mask |= Mask::IOM_VERTTEXCOORD;
+		
 	if( pf.AddToRead(FaceDesc(0))!=-1 ) mask |= Mask::IOM_FACEINDEX;
 	if( pf.AddToRead(FaceDesc(1))!=-1 ) mask |= Mask::IOM_FACEFLAGS;
 
