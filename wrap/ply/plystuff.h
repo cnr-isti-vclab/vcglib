@@ -227,10 +227,13 @@ bool GetCacheName( const char * fname, const char * ext_name, char * cname )
 }
 
 
-static bool SaveBBoxCache( const char * fname, const Box3d & box )
+template <class ScalarType>
+static bool SaveBBoxCache( const char * fname, const Box3<ScalarType> & boxOut )
 {
 	char d[MAXBPATH];
 
+    Box3d box;
+    box.Import(boxOut);
 	if( !GetCacheName(fname,bboxcacheext,d) )
 		return false;
 
@@ -327,7 +330,8 @@ bool ScanBBox( const char * fname, Box3<ScalarType> & box, bool use_cache=true )
 // Come la precedente ma applica la matrice m ai punti prima di calcolare il bbox.
 // Visto che la matrice di solito e' tenuta in un qualche file, se si vuole usare la cache 
 // si puo' passare anche un'altro filename da controllare
-bool ScanBBox( const char * fname, Box3d & box, const Matrix44d & m, bool use_cache, const char *matrixfname)
+template <class ScalarType>
+bool ScanBBox( const char * fname, Box3<ScalarType> & box, const Matrix44<ScalarType> & m, bool use_cache, const char *matrixfname)
 {
 
 	if(use_cache)
@@ -370,7 +374,7 @@ bool ScanBBox( const char * fname, Box3d & box, const Matrix44d & m, bool use_ca
 				PlyPoint3d t;
 
 				pf.Read( (void *)(&t) );
-				box.Add( m*Point3d(t.x,t.y,t.z) );
+                box.Add( m*Point3<ScalarType>(t.x,t.y,t.z) );
 			}
 		}
 		else
