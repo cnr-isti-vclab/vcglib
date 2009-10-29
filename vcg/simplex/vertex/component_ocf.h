@@ -272,6 +272,7 @@ void DisableNormal() {
 	NV.clear();
 }
 
+bool IsVFAdjacencyEnabled() const {return VFAdjacencyEnabled;}
 void EnableVFAdjacency() {
 	assert(VALUE_TYPE::HasVFAdjacencyOcf());
 	VFAdjacencyEnabled=true;
@@ -502,6 +503,7 @@ template <class T> class TexCoordfOcf: public TexCoordOcf<TexCoord2<float,1>, T>
 
 template <class T> class MarkOcf: public T {
 public:
+    typedef int MarkType;
 	inline int & IMark()       {
 		assert((*this).Base().MarkEnabled);
 		return (*this).Base().MV[(*this).Index()];
