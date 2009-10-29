@@ -184,6 +184,7 @@ template<class ScalarType>
 		 (fname2==0 || CheckCacheTime(fname2,d)) )
 	{
 			// Lettura bbox e controllo
+        Box3d readBB;
 		FILE * fp = fopen(d,"rb");
 		if(fp==0) return false;
 		if( fread(h,1,8,fp)!=8 )
@@ -191,12 +192,13 @@ template<class ScalarType>
 			fclose(fp);
 			return false;
 		}
-		if( fread(&box,sizeof(Box3d),1,fp)!=1 )
+        if( fread(&readBB,sizeof(Box3d),1,fp)!=1 )
 		{
 			fclose(fp);
 			return false;
 		}
 		fclose(fp);
+        box.Import(readBB);
 		if( strncmp(h,bboxheader,8) )
 			return false;
 		else
