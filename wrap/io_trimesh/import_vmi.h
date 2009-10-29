@@ -34,7 +34,8 @@
 
 #ifndef __VCGLIB_IMPORT_VMI
 #define __VCGLIB_IMPORT_VMI
- 
+#include<vcg/simplex/vertex/component_ocf.h>
+#include<vcg/simplex/face/component_ocf.h>
 /*
 	VMI VCG Mesh Image.
 	The vmi image file consists of a header containing the description of the vertex and face type,
@@ -465,7 +466,7 @@ namespace io {
 
 
 
-		static bool Open(OpenMeshType &m,char * filename){
+        static bool Open(OpenMeshType &m, const char * filename, int &/*mask*/, CallBackPos *cb=0){
 			
 			typedef typename OpenMeshType::VertexType VertexType; 	
 			typedef typename OpenMeshType::FaceType FaceType; 	
