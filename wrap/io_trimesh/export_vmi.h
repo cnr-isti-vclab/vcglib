@@ -77,49 +77,49 @@ namespace io {
 			typedef typename MeshType::VertexType VertexType;
 			SaveVertexOcf(FILE * f,const vertex::vector_ocf<VertexType> & vert){
 
-				if( VertexType::HasVertexQualityOcf() && vert.IsQualityEnabled()){
+                if( VertexType::HasQualityOcf() && vert.IsQualityEnabled()){
 					WriteString(f,"HAS_VERTEX_QUALITY_OCF");
-					fwrite(&vert.QV[0],sizeof(VertexType::QualityType),vert.size(),f);
+                    fwrite(&vert.QV[0],sizeof(typename VertexType::QualityType),vert.size(),f);
 				}else WriteString(f,"NOT_HAS_VERTEX_QUALITY_OCF");
 
-				if( VertexType::HasVertexColorOcf() && vert.IsColorEnabled()){
+                if( VertexType::HasColorOcf() && vert.IsColorEnabled()){
 					WriteString(f,"HAS_VERTEX_COLOR_OCF");
-					fwrite(&vert.CV[0],sizeof(VertexType::ColorType),vert.size(),f);
+                    fwrite(&vert.CV[0],sizeof(typename VertexType::ColorType),vert.size(),f);
 				}else WriteString(f,"NOT_HAS_VERTEX_COLOR_OCF");
 
-				if( VertexType::HasVertexNormalOcf() && vert.IsNormalEnabled()){
+                if( VertexType::HasNormalOcf() && vert.IsNormalEnabled()){
 					WriteString(f,"HAS_VERTEX_NORMAL_OCF");
-					fwrite(&vert.NV[0],sizeof(VertexType::NormalType),vert.size(),f);
+                    fwrite(&vert.NV[0],sizeof(typename VertexType::NormalType),vert.size(),f);
 				}else WriteString(f,"NOT_HAS_VERTEX_NORMAL_OCF");
 
-				if( VertexType::HasVertexMarkOcf() && vert.IsMarkEnabled()){
+                if( VertexType::HasMarkOcf() && vert.IsMarkEnabled()){
 					WriteString(f,"HAS_VERTEX_MARK_OCF");
-					fwrite(&vert.MV[0],sizeof(VertexType::MarkType),vert.size(),f);
+                    fwrite(&vert.MV[0],sizeof(typename VertexType::MarkType),vert.size(),f);
 				}else WriteString(f,"NOT_HAS_VERTEX_MARK_OCF");
 
 				if( VertexType::HasTexCoordOcf() && vert.IsTexCoordEnabled()){
 					WriteString(f,"HAS_VERTEX_TEXCOORD_OCF");
-					fwrite(&vert.TV[0],sizeof(vertex::vector_ocf<VertexType>::TexCoordType),vert.size(),f);
+                    fwrite(&vert.TV[0],sizeof(typename VertexType::TexCoordType),vert.size(),f);
 				}else WriteString(f,"NOT_HAS_VERTEX_TEXCOORD_OCF");
 
 				if( VertexType::HasVFAdjacencyOcf() && vert.IsVFAdjacencyEnabled()){
 					WriteString(f,"HAS_VERTEX_VFADJACENCY_OCF");
-					fwrite(&vert.AV[0],sizeof(vertex::vector_ocf<VertexType>::VFAdjType),vert.size(),f);
+                    fwrite(&vert.AV[0],sizeof(typename vertex::vector_ocf<VertexType>::VFAdjType),vert.size(),f);
 				}else WriteString(f,"NOT_HAS_VERTEX_VFADJACENCY_OCF");
 
 				if( VertexType::HasCurvatureOcf() && vert.IsCurvatureEnabled()){
 					WriteString(f,"HAS_VERTEX_CURVATURE_OCF");
-					fwrite(&vert.CuV[0],sizeof(VertexType::CurvatureType),vert.size(),f);
+                    fwrite(&vert.CuV[0],sizeof(typename VertexType::CurvatureType),vert.size(),f);
 				}else WriteString(f,"NOT_HAS_VERTEX_CURVATURE_OCF");
 
 				if( VertexType::HasCurvatureDirOcf() && vert.IsCurvatureDirEnabled()){
 					WriteString(f,"HAS_VERTEX_CURVATUREDIR_OCF");
-					fwrite(&vert.CuDV[0],sizeof(VertexType::CurvatureDirType),vert.size(),f);
+                    fwrite(&vert.CuDV[0],sizeof(typename VertexType::CurvatureDirType),vert.size(),f);
 				}else WriteString(f,"NOT_HAS_VERTEX_CURVATUREDIR_OCF");
 
 				if( VertexType::HasRadiusOcf() && vert.IsRadiusEnabled()){
 					WriteString(f,"HAS_VERTEX_RADIUS_OCF");
-					fwrite(&vert.RadiusV[0],sizeof(vertex::vector_ocf<VertexType>::RadiusType),vert.size(),f);
+                    fwrite(&vert.RadiusV[0],sizeof(typename VertexType::RadiusType),vert.size(),f);
 				}else WriteString(f,"NOT_HAS_VERTEX_RADIUS_OCF");
 
 			}
@@ -142,47 +142,47 @@ namespace io {
 
 				if( FaceType::HasFaceQualityOcf() && face.IsQualityEnabled()){
 					WriteString(f,"HAS_FACE_QUALITY_OCF");
-					fwrite(&face.QV[0],sizeof(FaceType::QualityType),face.size(),f);
+                    fwrite(&face.QV[0],sizeof(typename FaceType::QualityType),face.size(),f);
 				}else WriteString(f,"NOT_HAS_FACE_QUALITY_OCF");
 
 				if( FaceType::HasFaceColorOcf() && face.IsColorEnabled()){
 					WriteString(f,"HAS_FACE_COLOR_OCF");
-					fwrite(&face.CV[0],sizeof(FaceType::ColorType),face.size(),f);
+                    fwrite(&face.CV[0],sizeof(typename FaceType::ColorType),face.size(),f);
 				}else WriteString(f,"NOT_HAS_FACE_COLOR_OCF");
 
 				if( FaceType::HasFaceNormalOcf() && face.IsNormalEnabled()){
 					WriteString(f,"HAS_FACE_NORMAL_OCF");
-					fwrite(&face.NV[0],sizeof(FaceType::NormalType),face.size(),f);
+                    fwrite(&face.NV[0],sizeof(typename FaceType::NormalType),face.size(),f);
 				}else WriteString(f,"NOT_HAS_FACE_NORMAL_OCF");
 
 				if( FaceType::HasFaceMarkOcf() && face.IsMarkEnabled()){
 					WriteString(f,"HAS_FACE_MARK_OCF");
-					fwrite(&face.MV[0],sizeof(FaceType::MarkType),face.size(),f);
+                    fwrite(&face.MV[0],sizeof(typename FaceType::MarkType),face.size(),f);
 				}else WriteString(f,"NOT_HAS_FACE_MARK_OCF");
 
 				if( FaceType::HasWedgeTexCoordOcf() && face.IsWedgeTexEnabled()){
 					WriteString(f,"HAS_FACE_WEDGETEXCOORD_OCF");
-					fwrite(&face.WTV[0],sizeof(FaceType::WedgeTexCoordType),face.size(),f);
+                    fwrite(&face.WTV[0],sizeof(typename FaceType::WedgeTexCoordType),face.size(),f);
 				}else WriteString(f,"NOT_HAS_FACE_WEDGETEXCOORD_OCF");
 
 				if( FaceType::HasFFAdjacencyOcf() && face.IsFFAdjacencyEnabled()){
 					WriteString(f,"HAS_FACE_FFADJACENCY_OCF");
-					fwrite(&face.AF[0],sizeof(face::vector_ocf<FaceType>::AdjTypePack),face.size(),f);
+                    fwrite(&face.AF[0],sizeof(typename face::vector_ocf<FaceType>::AdjTypePack),face.size(),f);
 				}else WriteString(f,"NOT_HAS_FACE_FFADJACENCY_OCF");
 
 				if( FaceType::HasVFAdjacencyOcf() && face.IsVFAdjacencyEnabled()){
 					WriteString(f,"HAS_FACE_VFADJACENCY_OCF");
-					fwrite(&face.AV[0],sizeof(face::vector_ocf<FaceType>::AdjTypePack),face.size(),f);
+                    fwrite(&face.AV[0],sizeof(typename face::vector_ocf<FaceType>::AdjTypePack),face.size(),f);
 				}else WriteString(f,"NOT_HAS_FACE_VFADJACENCY_OCF");
 
 				if( FaceType::HasWedgeColorOcf() && face.IsWedgeColorEnabled()){
 					WriteString(f,"HAS_FACE_WEDGECOLOR_OCF");
-					fwrite(&face.WCV[0],sizeof(face::vector_ocf<FaceType>::WedgeColorTypePack),face.size(),f);
+                    fwrite(&face.WCV[0],sizeof(typename face::vector_ocf<FaceType>::WedgeColorTypePack),face.size(),f);
 				}else WriteString(f,"NOT_HAS_FACE_WEDGECOLOR_OCF");
 
 				if( FaceType::HasWedgeNormalOcf() && face.IsWedgeNormalEnabled()){
 					WriteString(f,"HAS_FACE_WEDGENORMAL_OCF");
-					fwrite(&face.WNV[0],sizeof(face::vector_ocf<FaceType>::WedgeNormalTypePack),face.size(),f);
+                    fwrite(&face.WNV[0],sizeof(typename face::vector_ocf<FaceType>::WedgeNormalTypePack),face.size(),f);
 				}else WriteString(f,"NOT_HAS_FACE_WEDGENORMAL_OCF");
 			}
 		};
