@@ -38,6 +38,7 @@
 #include <vcg/simplex/vertex/component_ocf.h>
 #include <vcg/simplex/face/component_ocf.h>
 #include <wrap/io_trimesh/io_mask.h>
+#include <wrap/callback.h>
 /*
 	VMI VCG Mesh Image.
 	The vmi image file consists of a header containing the description of the vertex and face type,
@@ -615,7 +616,7 @@ namespace io {
 			return true;
 		}
 	
-		static int Open(OpenMeshType &m, const char * filename, int & mask, CallBackPos  * cb = 0 ){
+                static int Open(OpenMeshType &m, const char * filename, int & mask,CallBackPos  * cb = 0 ){
 			
 			typedef typename OpenMeshType::VertexType VertexType; 	
 			typedef typename OpenMeshType::FaceType FaceType; 	
