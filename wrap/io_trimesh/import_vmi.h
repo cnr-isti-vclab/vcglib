@@ -544,12 +544,12 @@ namespace io {
 		typedef typename OpenMeshType::VertexType VertexType;
 
 	public:
-   enum VMIErrorCodes {
-            NO_ERROR=0,
-            INCOMPATIBLE_VERTEX_TYPE,
-            INCOMPATIBLE_FACE_TYPE,
-            FAILED_OPEN
-        };
+	   enum VMIErrorCodes { 
+				VMI_NO_ERROR = 0,
+				VMI_INCOMPATIBLE_VERTEX_TYPE,
+				VMI_INCOMPATIBLE_FACE_TYPE,
+				VMI_FAILED_OPEN
+	   };
 
         /*!
          *	Standard call for knowing the meaning of an error code
@@ -622,7 +622,7 @@ namespace io {
 			typename OpenMeshType::FaceIterator fi;
 			typename OpenMeshType::VertexIterator vi;
 			F() = fopen(filename,"rb");
-            if(!F()) return FAILED_OPEN;
+            if(!F()) return VMI_FAILED_OPEN;
 			std::vector<std::string> nameF,nameV,fnameF,fnameV;
 			unsigned int vertSize,faceSize;
 
@@ -634,8 +634,8 @@ namespace io {
 			OpenMeshType::VertexType::Name(nameV);
 
 			/* check if the type is the very same, otherwise return */
-            if(fnameV != nameV) return INCOMPATIBLE_VERTEX_TYPE;
-            if(fnameF != nameF) return INCOMPATIBLE_FACE_TYPE;
+            if(fnameV != nameV) return VMI_INCOMPATIBLE_VERTEX_TYPE;
+            if(fnameF != nameF) return VMI_INCOMPATIBLE_FACE_TYPE;
 
 			 int offsetV,offsetF;
 
@@ -748,7 +748,7 @@ namespace io {
 				}
 
 				fclose(F());
-                return NO_ERROR; // zero is the standard (!) code of success
+                return VMI_NO_ERROR; // zero is the standard (!) code of success
 		} 
 
 	}; // end class
