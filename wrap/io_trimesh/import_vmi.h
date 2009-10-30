@@ -431,6 +431,34 @@ namespace io {
 		typedef typename OpenMeshType::VertexIterator VertexIterator;
 		typedef typename OpenMeshType::VertexType VertexType;
 
+         enum VMIErrorCodes {
+            NO_ERROR=0,
+            INCOMPATIBLE_VERTEX_TYPE,
+            INCOMPATIBLE_FACE_TYPE,
+            FAILED_OPEN
+        };
+
+        /*!
+         *	Standard call for knowing the meaning of an error code
+         * \param message_code	The code returned by <CODE>Open</CODE>
+         *	\return							The string describing the error code
+         */
+        static const char* ErrorMsg(int message_code)
+        {
+            static const char* error_msg[] =
+            {
+                "No errors",
+                "The file has a incompatible vertex signature",
+                "The file has a incompatible Face signature",
+                "General failure of the file opening"
+            };
+
+            if(message_code>4 || message_code<0)
+                return "Unknown error";
+            else
+                return error_msg[message_code];
+        };
+
 		static bool GetHeader(std::vector<std::string>& fnameV, std::vector<std::string>& fnameF, unsigned int & vertSize, unsigned int &faceSize){
 			std::string name;
 			unsigned int nameFsize,nameVsize,i;
@@ -466,13 +494,14 @@ namespace io {
 
 
 
-        static bool Open(OpenMeshType &m, const char * filename, int &/*mask*/, CallBackPos *cb=0){
+        static int Open(OpenMeshType &m, const char * filename, int &/*mask*/, CallBackPos *cb=0){
 			
 			typedef typename OpenMeshType::VertexType VertexType; 	
 			typedef typename OpenMeshType::FaceType FaceType; 	
 			typename OpenMeshType::FaceIterator fi;
 			typename OpenMeshType::VertexIterator vi;
 			F() = fopen(filename,"rb");
+            if(!F()) return FAILED_OPEN;
 			std::vector<std::string> nameF,nameV,fnameF,fnameV;
 			unsigned int vertSize,faceSize;
 
@@ -484,8 +513,8 @@ namespace io {
 			OpenMeshType::VertexType::Name(nameV);
 
 			/* check if the type is the very same, otherwise return */
-			if(fnameV != nameV) return false;
-			if(fnameF != nameF) return false;
+            if(fnameV != nameV) return INCOMPATIBLE_VERTEX_TYPE;
+            if(fnameF != nameF) return INCOMPATIBLE_FACE_TYPE;
 
 			 int offsetV,offsetF;
 
@@ -598,8 +627,8 @@ namespace io {
 				}
 
 				fclose(F());
-				return true;
-		}
+                return NO_ERROR; // zero is the standard (!) code of success
+		} 
 
 	}; // end class
 
