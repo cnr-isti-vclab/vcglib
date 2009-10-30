@@ -239,7 +239,11 @@ namespace io {
 
 
 
-		void ReadString(FILE * f,std::string & out){
+	template <class OpenMeshType,class A0 = long, class A1 = double, class A2 = int,class A3 = short, class A4 = char > 
+	class ImporterVMI: public AttrAll<OpenMeshType,A0,A1,A2,A3,A4>
+	{
+		
+		static void ReadString(FILE * f,std::string & out){
 			unsigned int l; fread(&l,4,1,f);
 			char * buf = new char[l+1];
 			fread(buf,1,l,f);buf[l]='\0';
@@ -247,10 +251,10 @@ namespace io {
 			delete [] buf;
 			}
 		 
-		void ReadInt(FILE *f, unsigned int & i){ fread(&i,1,4,f);} 
+		static void ReadInt(FILE *f, unsigned int & i){ fread(&i,1,4,f);} 
 
  
-         int   LoadVertexOcfMask( FILE * f){
+         static int   LoadVertexOcfMask( FILE * f){
 			int mask  =0;
             std::string s;
 
@@ -383,7 +387,7 @@ namespace io {
                 };
 				 
 												 
-                 int  LoadFaceOcfMask( FILE * f){
+                 static int  LoadFaceOcfMask( FILE * f){
 					 int mask;
                     std::string s;
 
@@ -500,7 +504,7 @@ namespace io {
                         }
                 };
 
-	int  FaceMaskBitFromString(std::string s){
+	static int  FaceMaskBitFromString(std::string s){
 		if( s.find("Color",0) != std::string::npos )			return Mask::IOM_FACECOLOR;			else
 		if( s.find("BitFlags",0) != std::string::npos )			return Mask::IOM_FACEFLAGS;			else
 		if( s.find("VertexRef",0) != std::string::npos )		return Mask::IOM_FACEINDEX;			else
@@ -512,7 +516,7 @@ namespace io {
 		if( s.find("WedgeTexCoord",0) != std::string::npos)		return Mask::IOM_WEDGTEXCOORD;		else
 		return 0;
 	}
-	int  VertexMaskBitFromString(std::string s){
+	static int  VertexMaskBitFromString(std::string s){
 		if( s.find("Color",0) != std::string::npos )		return Mask::IOM_VERTCOLOR;		else
 		if( s.find("Coord",0) != std::string::npos )		return Mask::IOM_VERTCOORD;		else
 		if( s.find("BitFlags",0) != std::string::npos )		return Mask::IOM_VERTFLAGS;		else
@@ -523,9 +527,7 @@ namespace io {
 			return 0;
 	}
 
-	template <class OpenMeshType,class A0 = long, class A1 = double, class A2 = int,class A3 = short, class A4 = char > 
-	class ImporterVMI: public AttrAll<OpenMeshType,A0,A1,A2,A3,A4>
-	{
+
 		static FILE *& F(){static FILE * f; return f;}
 
 		
@@ -613,7 +615,7 @@ namespace io {
 			return true;
 		}
 	
-		static bool Open(OpenMeshType &m,char * filename){
+		static int Open(OpenMeshType &m,char * filename){
 			
 			typedef typename OpenMeshType::VertexType VertexType; 	
 			typedef typename OpenMeshType::FaceType FaceType; 	

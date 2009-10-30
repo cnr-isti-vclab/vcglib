@@ -60,8 +60,12 @@ namespace io {
  	template <int N> struct PlaceHolderType{ char A[N];};
 
 
-		void WriteString(FILE *f,const char * in)		{ unsigned int l = strlen(in); fwrite(&l,4,1,f); fwrite(in,1,l,f);} 
-		void  WriteInt(FILE *f,const unsigned int i)	{ fwrite(&i,1,4,f);}  
+	template <class SaveMeshType>
+	class ExporterVMI
+	{
+		
+		static void WriteString(FILE *f,const char * in)		{ unsigned int l = strlen(in); fwrite(&l,4,1,f); fwrite(in,1,l,f);} 
+		static void  WriteInt(FILE *f,const unsigned int i)	{ fwrite(&i,1,4,f);}  
 
 		/* save Ocf Vertex Components */
 		template <typename OpenMeshType,typename CONT>
@@ -210,9 +214,7 @@ namespace io {
 		};
 
 
-	template <class SaveMeshType>
-	class ExporterVMI
-	{
+
 		static FILE *& F(){static FILE * f; return f;}
 
 		typedef typename SaveMeshType::FaceContainer FaceContainer;
