@@ -194,7 +194,7 @@ namespace io {
 	*/
 	template <class MeshType>	struct K	{
 		template <int VoF>
-		static void AddAttrib(MeshType &m, const char * name, unsigned int s, void * data){
+        static void AddAttrib(MeshType &/*m*/, const char * /*name*/, unsigned int /*s*/, void * /*data*/){
 			// if yohu got this your attribute is larger than	1048576. Honestly...
 			assert(0);		
 		}

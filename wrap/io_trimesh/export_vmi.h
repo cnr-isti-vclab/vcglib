@@ -208,7 +208,7 @@ namespace io {
 
 
 
-		static void Save(const SaveMeshType &m,char * filename){
+		static void Save(const SaveMeshType &m,const char * filename){
 			unsigned int i;
 			unsigned int vertSize,faceSize;
 			F() = fopen(filename,"wb");
