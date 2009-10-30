@@ -615,7 +615,7 @@ namespace io {
 			return true;
 		}
 	
-		static int Open(OpenMeshType &m,char * filename){
+		static int Open(OpenMeshType &m, const char * filename, int & mask, CallBackPos  * cb = 0 ){
 			
 			typedef typename OpenMeshType::VertexType VertexType; 	
 			typedef typename OpenMeshType::FaceType FaceType; 	
@@ -627,7 +627,6 @@ namespace io {
 			unsigned int vertSize,faceSize;
 
 			/* read the header */
-			int mask = 0;
 			GetHeader(fnameV, fnameF, vertSize, faceSize,mask);
 
 			/* read the mesh type */
