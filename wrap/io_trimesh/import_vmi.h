@@ -297,7 +297,7 @@ namespace io {
 			return mask;
        }
 
-        template <typename OpenMeshType, typename CONT>
+        template <typename MeshType, typename CONT>
                 struct LoadVertexOcf{
                         LoadVertexOcf(FILE*f,const CONT & vert){
                                 // do nothing, it is a std::vector
@@ -306,9 +306,9 @@ namespace io {
 
 
 
-        template <typename OpenMeshType>
+        template <typename MeshType>
         struct
-        LoadVertexOcf<OpenMeshType,vertex::vector_ocf<typename OpenMeshType::VertexType> >{
+        LoadVertexOcf<MeshType,vertex::vector_ocf<typename OpenMeshType::VertexType> >{
 						typedef typename OpenMeshType::VertexType VertexType;
             LoadVertexOcf( FILE * f, vertex::vector_ocf<typename OpenMeshType::VertexType> & vert){
             std::string s;
@@ -379,7 +379,7 @@ namespace io {
                         }
                 };
 
-                template <typename OpenMeshType, typename CONT>
+                template <typename MeshType, typename CONT>
                 struct LoadFaceOcf{
                         LoadFaceOcf(FILE * f, const CONT & face){
                                 // do nothing, it is a std::vector
@@ -432,8 +432,8 @@ namespace io {
                
 
                 /* partial specialization for vector_ocf */
-                template <typename OpenMeshType>
-								struct LoadFaceOcf< OpenMeshType, face::vector_ocf<typename OpenMeshType::FaceType> >{
+                template <typename MeshType>
+                                                                struct LoadFaceOcf< MeshType, face::vector_ocf<typename OpenMeshType::FaceType> >{
 												typedef typename OpenMeshType::FaceType FaceType;
                         LoadFaceOcf( FILE * f, face::vector_ocf<FaceType> & face){
                                 std::string s;
@@ -610,8 +610,8 @@ namespace io {
 		static bool LoadMask(FILE * f, int & mask){
 			std::vector<std::string>  nameV;
 			std::vector<std::string>  nameF;
-			int   vertSize, faceSize,  mask;
-			GetHeader(f,nameV,namef,vertSize, faceSize,  mask);
+                        int   vertSize, faceSize;
+                        GetHeader(f,nameV,nameF,vertSize, faceSize,  mask);
 			return true;
 		}
 	
