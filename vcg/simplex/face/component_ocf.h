@@ -587,6 +587,10 @@ public:
     assert((*this).Base().QualityEnabled); 
     return (*this).Base().QV[(*this).Index()]; 
   }
+  const QualityType  cQ() const  { 
+    assert((*this).Base().QualityEnabled); 
+    return (*this).Base().QV[(*this).Index()]; 
+  }
 
 	template <class LeftF>
 	void ImportLocal(const LeftF & leftF){
