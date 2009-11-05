@@ -9,16 +9,14 @@ namespace vcg
 	class ColorConverter
 	{
 	public:
-		template<typename T>
-		static vcg::Color4<T> convertQColorToColor4(const QColor& col)
+		inline static vcg::Color4b ToColor4b(const QColor& col)
 		{
-			return vcg::Color4<T>(T(col.red()),T(col.green()),T(col.blue()),T(col.alpha()));
+			return vcg::Color4b(col.red(),col.green(),col.blue(),col.alpha());
 		}
 
-		template<typename T>
-		static QColor convertColor4ToQColor(const vcg::Color4<T>& col)
+		inline static QColor ToQColor(const vcg::Color4b& col) 
 		{
-			return QColor(int(col.X()),int(col.Y()),int(col.Z()),int(col.W()));
+			return QColor(col[0],col[1],col[2],col[3]);
 		}
 	};
 }
