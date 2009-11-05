@@ -127,7 +127,7 @@ class Quadric
         return 2.0*c();
     }
 
-    static Quadric fit(vector<CoordType> VV)
+    static Quadric fit(std::vector<CoordType> VV)
     {
         assert(VV.size() >= 5);
         Eigen::MatrixXf A(VV.size(),5);
@@ -160,7 +160,7 @@ class Quadric
     }
 
 
-    static vector<CoordType> computeReferenceFrames(VertexTypeP vi)
+    static std::vector<CoordType> computeReferenceFrames(VertexTypeP vi)
     {
           vcg::face::VFIterator<FaceType> vfi(vi);
 
@@ -171,7 +171,7 @@ class Quadric
 
 	  assert(fabs(x * vi->N()) < 0.1);
 	  
-	  vector<CoordType> res(3);
+	  std::vector<CoordType> res(3);
 	  
 	  res[0] = x;
           res[1] = (vi->N() ^ res[0]).Normalize();
@@ -180,10 +180,10 @@ class Quadric
 	  return res;
     }
 
-    static set<CoordType> getSecondRing(VertexTypeP v)
+    static std::set<CoordType> getSecondRing(VertexTypeP v)
     {
-        set<VertexTypeP> ris;
-        set<CoordType> coords;
+        std::set<VertexTypeP> ris;
+        std::set<CoordType> coords;
 
         vcg::face::VFIterator<FaceType> vvi(v);
         for(;!vvi.End();++vvi)
@@ -194,22 +194,22 @@ class Quadric
                 ris.insert(vvi2.F()->V((vvi2.I()+1)%3));
             }
         }
-
-        for(typename set<VertexTypeP>::iterator it = ris.begin(); it != ris.end(); ++it)
+				typename std::set<VertexTypeP>::iterator it;
+        for(it = ris.begin(); it != ris.end(); ++it)
             coords.insert((*it)->P());
 
         return coords;
     }
 
-    static Quadric fitQuadric(VertexTypeP v, vector<CoordType>& ref)
+    static Quadric fitQuadric(VertexTypeP v, std::vector<CoordType>& ref)
     {
-        set<CoordType> ring = getSecondRing(v);
+        std::set<CoordType> ring = getSecondRing(v);
         if (ring.size() < 5)
             return Quadric(1,1,1,1,1);
-        vector<CoordType> points;
+        std::vector<CoordType> points;
 
-        typename set<CoordType>::iterator b = ring.begin();
-        typename set<CoordType>::iterator e = ring.end();
+        typename std::set<CoordType>::iterator b = ring.begin();
+        typename std::set<CoordType>::iterator e = ring.end();
 
         while(b != e)
         {
@@ -229,11 +229,9 @@ class Quadric
     static void computeCurvature(MeshType & m)
     {
 
-	assert(VertexType::HasVFAdjacency());
-	assert(FaceType::HasFFAdjacency());
-	assert(FaceType::HasFaceNormal());
+				assert(vcg::tri::HasVFAdjacency(m));
 
-        UpdateTopology<MeshType>::VertexFace(m);
+        vcg::tri::UpdateTopology<MeshType>::VertexFace(m);
 
         vcg::tri::UpdateNormals<MeshType>::PerVertexAngleWeighted(m);
         vcg::tri::UpdateNormals<MeshType>::NormalizeVertex(m);
@@ -242,7 +240,7 @@ class Quadric
         VertexIterator vi;
         for(vi = m.vert.begin(); vi!=m.vert.end(); ++vi )
         {
-            vector<CoordType> ref = computeReferenceFrames(&*vi);
+            std::vector<CoordType> ref = computeReferenceFrames(&*vi);
 
             Quadric q = fitQuadric(&*vi,ref);
             double a = q.a();
