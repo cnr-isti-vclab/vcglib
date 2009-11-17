@@ -95,7 +95,7 @@ class VertexTypeHolder{
   typedef BTT *TetraPointer;
 	template < class LeftV>
 	void ImportLocal(const LeftV  & /* left */ ) { } 
-	static void Name(std::vector<std::string> & name){}
+    static void Name(std::vector<std::string> & /* name */){}
 
 };
 

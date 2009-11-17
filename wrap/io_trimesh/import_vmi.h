@@ -300,7 +300,7 @@ namespace io {
 
         template <typename MeshType, typename CONT>
                 struct LoadVertexOcf{
-                        LoadVertexOcf(FILE*f,const CONT & vert){
+                        LoadVertexOcf(FILE* /*f*/,const CONT & /*vert*/){
                                 // do nothing, it is a std::vector
                         }
                 };
@@ -382,7 +382,7 @@ namespace io {
 
                 template <typename MeshType, typename CONT>
                 struct LoadFaceOcf{
-                        LoadFaceOcf(FILE * f, const CONT & face){
+                        LoadFaceOcf(FILE * /* f */ , const CONT & /* face */){
                                 // do nothing, it is a std::vector
                         }
                 };
@@ -398,7 +398,7 @@ namespace io {
 
                     // face color
                     ReadString(f,s);
-                    if( s == std::string("HAS_FACE_COLOR_OCF"))		mask	|=   Mask::IOM_FACECOLOR;			
+                         if( s == std::string("HAS_FACE_COLOR_OCF"))		mask	|=   Mask::IOM_FACECOLOR;
 
                     // face normal
                     ReadString(f,s);
@@ -616,7 +616,7 @@ namespace io {
 			return true;
 		}
 	
-                static int Open(OpenMeshType &m, const char * filename, int & mask,CallBackPos  * cb = 0 ){
+            static int Open(OpenMeshType &m, const char * filename, int & mask,CallBackPos  * /*cb*/ = 0 ){
 			
 			typedef typename OpenMeshType::VertexType VertexType; 	
 			typedef typename OpenMeshType::FaceType FaceType; 	
@@ -661,7 +661,7 @@ namespace io {
 			m.vert.resize(vertSize);
 
 
-			int read = 0;
+            size_t read = 0;
 			/* load the vertices */
 			if(vertSize>0){
 				read=fread((void*)& m.vert[0],sizeof(VertexType),vertSize,F());
@@ -688,7 +688,7 @@ namespace io {
 	
 			ReadString(F(),_trash); ReadInt(F(),n);
 
-			for(int ia = 0 ; ia < n; ++ia){
+            for(size_t ia = 0 ; ia < n; ++ia){
 				ReadString(F(),_trash); ReadString(F(),_string);
 				ReadString(F(),_trash); ReadInt(F(),sz);
 
@@ -700,7 +700,7 @@ namespace io {
 
 			/* load the per face attributes */
 			ReadString(F(),_trash); ReadInt(F(),n);
-			for(int ia = 0 ; ia < n; ++ia){
+            for(size_t ia = 0 ; ia < n; ++ia){
 				ReadString(F(),_trash); ReadString(F(),_string);
 				ReadString(F(),_trash); ReadInt(F(),sz);
 				void * data = Malloc(sz*m.face.size());

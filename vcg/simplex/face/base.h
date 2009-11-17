@@ -104,7 +104,7 @@ class FaceTypeHolder{
   typedef BTT *TetraPointer;
 	template <class LeftF>
 	void ImportLocal(const LeftF & ){}
-	static void Name(std::vector<std::string> & name){}
+    static void Name(std::vector<std::string> & /* name */){}
 
 
  // prot

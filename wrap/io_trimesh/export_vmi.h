@@ -70,7 +70,7 @@ namespace io {
 		/* save Ocf Vertex Components */
 		template <typename OpenMeshType,typename CONT>
 		struct SaveVertexOcf{
-			SaveVertexOcf(FILE*f, const CONT & vert, bool only_header){
+            SaveVertexOcf(FILE*f, const CONT & /*vert*/, bool only_header){
 				// do nothing, it is a std::vector
 				if(only_header){
 					WriteString(f,"NOT_HAS_VERTEX_QUALITY_OCF");
@@ -144,7 +144,7 @@ namespace io {
 		/* save Ocf Face Components */
 		template <typename MeshType,typename CONT>
 		struct SaveFaceOcf{
-			SaveFaceOcf(FILE * f,const CONT & face, bool only_header){
+            SaveFaceOcf(FILE * f,const CONT & /*face*/, bool only_header){
 				// it is a std::vector
 				if(only_header){
 					WriteString(f,"NOT_HAS_FACE_QUALITY_OCF");
