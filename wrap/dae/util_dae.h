@@ -309,6 +309,11 @@ namespace io {
 			assert(list.size() == 1);
 			QString nd = list.at(0).firstChild().nodeValue();
 			res = nd.simplified().split(" ",QString::SkipEmptyParts);
+            if(res.empty())
+                {
+                    qDebug("Warning valueStringList returned and emtpy list. nothing inside element with tag '%s'", qPrintable(tag));
+                    return;
+                }
 			if (res.last() == "")
 				res.removeLast();
 			
