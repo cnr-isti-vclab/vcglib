@@ -276,13 +276,14 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 	int result = E_NOERROR;
 
 	m.Clear();
-		CallBackPos *cb = oi.cb;
+	CallBackPos *cb = oi.cb;
 
 	// if LoadMask has not been called yet, we call it here
 	if (oi.mask == -1)
 		LoadMask(filename, oi);
-  
-  Mask::ClampMask<OpenMeshType>(m,oi.mask);
+
+	const int inputMask = oi.mask;
+	Mask::ClampMask<OpenMeshType>(m,oi.mask);
 
 	if (oi.numVertices == 0)
 		return E_NO_VERTEX;
@@ -298,14 +299,14 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 	std::vector<Material>	materials;  // materials vector
 	std::vector<ObjTexCoord>	texCoords;  // texture coordinates
 	std::vector<CoordType>  normals;		// vertex normals
-  std::vector<ObjIndexedFace> indexedFaces;
+	std::vector<ObjIndexedFace> indexedFaces;
 	std::vector< std::string > tokens;
 	std::string	header;
 
 	short currentMaterialIdx = 0;			// index of current material into materials vector
-  Color4b currentColor=Color4b::LightGray;	// we declare this outside code block since other 
-				     										// triangles of this face will share the same color
-				
+	Color4b currentColor=Color4b::LightGray;	// we declare this outside code block since other 
+	// triangles of this face will share the same color
+
 	Material defaultMaterial;					// default material: white
 	materials.push_back(defaultMaterial);
 
@@ -315,18 +316,18 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 	int numVNormals	 = 0;  // stores the number of vertex normals been read till now
 
 	int numVerticesPlusFaces = oi.numVertices + oi.numFaces;
-  int extraTriangles=0;
+	int extraTriangles=0;
 	// vertices and faces allocatetion
 	VertexIterator vi = Allocator<OpenMeshType>::AddVertices(m,oi.numVertices);
 	//FaceIterator   fi = Allocator<OpenMeshType>::AddFaces(m,oi.numFaces);
-  
-  ObjIndexedFace	ff; 
+
+	ObjIndexedFace	ff; 
 
 	while (!stream.eof())
 	{
 		tokens.clear();
 		TokenizeNextLine(stream, tokens);
-		
+
 		unsigned int numTokens = static_cast<unsigned int>(tokens.size());
 		if (numTokens > 0)
 		{
@@ -341,7 +342,7 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 				(*vi).P()[1] = (ScalarType) atof(tokens[2].c_str());
 				(*vi).P()[2] = (ScalarType) atof(tokens[3].c_str());
 				++numVertices;
-				
+
 				// assigning vertex color
 				// ----------------------
 				if (((oi.mask & vcg::tri::io::Mask::IOM_VERTCOLOR) != 0) && (m.HasPerVertexColor()))
@@ -363,7 +364,7 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 				t.u = static_cast<float>(atof(tokens[1].c_str()));
 				t.v = static_cast<float>(atof(tokens[2].c_str()));
 				texCoords.push_back(t);
-				
+
 				numTexCoords++;
 			}
 			else if (header.compare("vn")==0)  // vertex normal
@@ -382,119 +383,120 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 			{
 				bool QuadFlag = false; // QOBJ format by Silva et al for simply storing quadrangular meshes.				
 				if(header.compare("q")==0) { QuadFlag=true; assert(numTokens == 5); }
-				
+
 				if (numTokens < 4) return E_LESS_THAN_3VERTINFACE;
 				int vertexesPerFace = static_cast<int>(tokens.size()-1);
 
 				if( (vertexesPerFace>3) && OpenMeshType::FaceType::HasPolyInfo() ){
-			//_BEGIN___ if  you are loading a GENERIC POLYGON mesh 
-		  
+					//_BEGIN___ if  you are loading a GENERIC POLYGON mesh 
+
 					ff.set(vertexesPerFace);
 
 					std::string vertex;
 					std::string texcoord;
 					std::string normal;
 					for(int i=0;i<vertexesPerFace;++i) // remember index starts from 1 instead of 0
-					  SplitToken(tokens[i+1], ff.v[i], ff.n[i], ff.t[i], oi.mask);
+						SplitToken(tokens[i+1], ff.v[i], ff.n[i], ff.t[i], inputMask);
 
-		 if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD )
-				{
-					// verifying validity of texture coords indices
-		          for(int i=0;i<vertexesPerFace;i++)
-				  if(!GoodObjIndex(ff.t[i],oi.numTexCoords)) 
-				   return E_BAD_VERT_TEX_INDEX;
-
-					ff.tInd=materials[currentMaterialIdx].index;
-				}
-				
-				// verifying validity of vertex indices
-				std::vector<int> tmp = ff.v;
-				std::sort(tmp.begin(),tmp.end());
-				std::unique(tmp.begin(),tmp.end());
-				if(tmp.size() != ff.v.size())
-					result = E_VERTICES_WITH_SAME_IDX_IN_FACE;
-
-        for(int i=0;i<vertexesPerFace;i++)
-            if(!GoodObjIndex(ff.v[i],numVertices))
-              return E_BAD_VERT_INDEX;
-					
-				// assigning face normal
-				// ---------------------
-				if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
-				{
-					// verifying validity of vertex normal indices
-					// -------------------------------------------
-          for(int i=0;i<vertexesPerFace;i++)
-            if(!GoodObjIndex(ff.n[i],numVNormals)) return E_BAD_VERT_NORMAL_INDEX;
-				}
-
-				// assigning face color
-				// --------------------
-				if( oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR)		
-					 ff.c = currentColor;
-				
-				++numTriangles;
-		        indexedFaces.push_back(ff);
-   
-				
-				// callback invocation, abort loading process if the call returns false
-				if ((cb !=NULL)&& (((numTriangles + numVertices)%100)==0) )
+					if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD )
 					{
-					  if (!(*cb)( (100*(numTriangles +numVertices))/ numVerticesPlusFaces, "Face Loading"))
-					  return E_ABORTED;
+						// verifying validity of texture coords indices
+						for(int i=0;i<vertexesPerFace;i++)
+							if(!GoodObjIndex(ff.t[i],oi.numTexCoords)) 
+								return E_BAD_VERT_TEX_INDEX;
+
+						ff.tInd=materials[currentMaterialIdx].index;
 					}
-			//_END  ___ if  you are loading a GENERIC POLYGON mesh 
+
+					// verifying validity of vertex indices
+					std::vector<int> tmp = ff.v;
+					std::sort(tmp.begin(),tmp.end());
+					std::unique(tmp.begin(),tmp.end());
+					if(tmp.size() != ff.v.size())
+						result = E_VERTICES_WITH_SAME_IDX_IN_FACE;
+
+					for(int i=0;i<vertexesPerFace;i++)
+						if(!GoodObjIndex(ff.v[i],numVertices))
+							return E_BAD_VERT_INDEX;
+
+					// assigning face normal
+					// ---------------------
+					if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
+					{
+						// verifying validity of vertex normal indices
+						// -------------------------------------------
+						for(int i=0;i<vertexesPerFace;i++)
+							if(!GoodObjIndex(ff.n[i],numVNormals)) return E_BAD_VERT_NORMAL_INDEX;
+					}
+
+					// assigning face color
+					// --------------------
+					if( oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR)		
+						ff.c = currentColor;
+
+					++numTriangles;
+					indexedFaces.push_back(ff);
+
+
+					// callback invocation, abort loading process if the call returns false
+					if ((cb !=NULL)&& (((numTriangles + numVertices)%100)==0) )
+					{
+						if (!(*cb)( (100*(numTriangles +numVertices))/ numVerticesPlusFaces, "Face Loading"))
+							return E_ABORTED;
+					}
+					//_END  ___ if  you are loading a GENERIC POLYGON mesh 
 				}else
 				{
-			//_BEGIN___ if  you are loading a  TRIMESH mesh 
-				ff.set(3);	
-			  std::string vertex;
-			  std::string texcoord;
-				std::string normal;
-        for(int i=0;i<3;++i)
-				{		// remember index starts from 1 instead of 0
-           SplitToken(tokens[i+1], ff.v[i], ff.n[i], ff.t[i], oi.mask);
-					 if(QuadFlag) { ff.v[i]+=1; }
-				}
-        if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD )
-				{
-					// verifying validity of texture coords indices
-          for(int i=0;i<3;i++)
-            if(!GoodObjIndex(ff.t[i],oi.numTexCoords)) 
-              return E_BAD_VERT_TEX_INDEX;
+					//_BEGIN___ if  you are loading a  TRIMESH mesh 
+					ff.set(3);	
+					std::string vertex;
+					std::string texcoord;
+					std::string normal;
+					for(int i=0;i<3;++i)
+					{		// remember index starts from 1 instead of 0
+						SplitToken(tokens[i+1], ff.v[i], ff.n[i], ff.t[i], inputMask);
+						if(QuadFlag) { ff.v[i]+=1; }
+					}
+					if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD )
+					{
+						// verifying validity of texture coords indices
+						for(int i=0;i<3;i++)
+							if(!GoodObjIndex(ff.t[i],oi.numTexCoords)) 
+								return E_BAD_VERT_TEX_INDEX;
 
-					ff.tInd=materials[currentMaterialIdx].index;
-				}
-				
-				// verifying validity of vertex indices
-				if ((ff.v[0] == ff.v[1]) || (ff.v[0] == ff.v[2]) || (ff.v[1] == ff.v[2]))
-					       result = E_VERTICES_WITH_SAME_IDX_IN_FACE;
+						ff.tInd=materials[currentMaterialIdx].index;
+					}
 
-        for(int i=0;i<3;i++)
-            if(!GoodObjIndex(ff.v[i],numVertices))
-              return E_BAD_VERT_INDEX;
-					
-				// assigning face normal
-				// ---------------------
-				if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
-				{
-					// verifying validity of vertex normal indices
-					// -------------------------------------------
-          for(int i=0;i<3;i++)
-            if(!GoodObjIndex(ff.n[i],numVNormals)) return E_BAD_VERT_NORMAL_INDEX;
-				}
+					// verifying validity of vertex indices
+					if ((ff.v[0] == ff.v[1]) || (ff.v[0] == ff.v[2]) || (ff.v[1] == ff.v[2]))
+						result = E_VERTICES_WITH_SAME_IDX_IN_FACE;
 
-				// assigning face color
-				// --------------------
-				if( oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR)		
-          ff.c = currentColor;
-				
-				// by default there are no internal edge
-				ff.edge[0]=ff.edge[1]=ff.edge[2]=false;
-				if(vertexesPerFace>3) ff.edge[2]=true;
-				++numTriangles;
-        indexedFaces.push_back(ff);
-        	/*
+					for(int i=0;i<3;i++)
+						if(!GoodObjIndex(ff.v[i],numVertices))
+							return E_BAD_VERT_INDEX;
+
+					// assigning face normal
+					// ---------------------
+					if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
+					{
+						// verifying validity of vertex normal indices
+						// -------------------------------------------
+						for(int i=0;i<3;i++)
+							if(!GoodObjIndex(ff.n[i],numVNormals))
+								return E_BAD_VERT_NORMAL_INDEX;
+					}
+
+					// assigning face color
+					// --------------------
+					if( oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR)		
+						ff.c = currentColor;
+
+					// by default there are no internal edge
+					ff.edge[0]=ff.edge[1]=ff.edge[2]=false;
+					if(vertexesPerFace>3) ff.edge[2]=true;
+					++numTriangles;
+					indexedFaces.push_back(ff);
+					/*
 					// A face polygon composed of more than three vertices is triangulated
 					// according to the following schema:
 					//                     v5
@@ -513,66 +515,66 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 					// triangles, and this may lead to the creation of very thin triangles.
 					*/
 
-				int iVertex = 3;
-				while (iVertex < vertexesPerFace)  // add other triangles
-				{
-					oi.mask |= Mask::IOM_BITPOLYGONAL;
-					ObjIndexedFace ffNew=ff;
-					int v4_index;
-					int vt4_index;
-					int vn4_index;
-
-					SplitToken(tokens[++iVertex], v4_index, vn4_index, vt4_index, oi.mask);
-					if(QuadFlag) { v4_index+=1; }
-					if(!GoodObjIndex(v4_index, numVertices))
-						return E_BAD_VERT_INDEX;
-					
-					// assigning wedge texture coordinates
-					// -----------------------------------
-					if( oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD )
+					int iVertex = 3;
+					while (iVertex < vertexesPerFace)  // add other triangles
 					{
-						// verifying validity of texture coords index
-						// ------------------------------------------
-            if(!GoodObjIndex(vt4_index,oi.numTexCoords))
-              return E_BAD_VERT_TEX_INDEX;
-						
-				    if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
-                if(!GoodObjIndex(vn4_index,numVNormals))
-                  return E_BAD_VERT_NORMAL_INDEX;
-            
-         		ffNew.t[1]=ff.t[2];
-            ffNew.t[2]=vt4_index;            
-					}
-					
-					if ((ff.v[0] == v4_index) || (ff.v[2] == v4_index)) result = E_VERTICES_WITH_SAME_IDX_IN_FACE;
-					ffNew.v[1]=ff.v[2];
-          ffNew.v[2]=v4_index;            
+						oi.mask |= Mask::IOM_BITPOLYGONAL;
+						ObjIndexedFace ffNew=ff;
+						int v4_index;
+						int vt4_index;
+						int vn4_index;
 
-					// assigning face normal
-					// ---------------------
-					if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
-					{									  
-            ffNew.n[1]=ff.n[2];
-            ffNew.n[2]=vn4_index;            
+						SplitToken(tokens[++iVertex], v4_index, vn4_index, vt4_index, inputMask);
+						if(QuadFlag) { v4_index+=1; }
+						if(!GoodObjIndex(v4_index, numVertices))
+							return E_BAD_VERT_INDEX;
+
+						// assigning wedge texture coordinates
+						// -----------------------------------
+						if( oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD )
+						{
+							// verifying validity of texture coords index
+							// ------------------------------------------
+							if(!GoodObjIndex(vt4_index,oi.numTexCoords))
+								return E_BAD_VERT_TEX_INDEX;
+
+							if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
+								if(!GoodObjIndex(vn4_index,numVNormals))
+									return E_BAD_VERT_NORMAL_INDEX;
+
+							ffNew.t[1]=ff.t[2];
+							ffNew.t[2]=vt4_index;            
+						}
+
+						if ((ff.v[0] == v4_index) || (ff.v[2] == v4_index)) result = E_VERTICES_WITH_SAME_IDX_IN_FACE;
+						ffNew.v[1]=ff.v[2];
+						ffNew.v[2]=v4_index;            
+
+						// assigning face normal
+						// ---------------------
+						if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
+						{									  
+							ffNew.n[1]=ff.n[2];
+							ffNew.n[2]=vn4_index;            
+						}
+						// Setting internal edges: edge 1 (the opposite to vertex 0) is always an external edge. 
+						ffNew.edge[0]=true;
+						ffNew.edge[1]=false;
+						if(iVertex < vertexesPerFace) ffNew.edge[2]=true;
+						else	ffNew.edge[2]=false;
+						++numTriangles;
+						++extraTriangles;
+						indexedFaces.push_back(ffNew);
+						ff.v[2] = v4_index;
 					}
-					// Setting internal edges: edge 1 (the opposite to vertex 0) is always an external edge. 
-          ffNew.edge[0]=true;
-					ffNew.edge[1]=false;
-					if(iVertex < vertexesPerFace) ffNew.edge[2]=true;
-																	else	ffNew.edge[2]=false;
-					++numTriangles;
-          ++extraTriangles;
-          indexedFaces.push_back(ffNew);
-					ff.v[2] = v4_index;
-				}
-				
-				// callback invocation, abort loading process if the call returns false
-				if ((cb !=NULL)&& (((numTriangles + numVertices)%100)==0) )
+
+					// callback invocation, abort loading process if the call returns false
+					if ((cb !=NULL)&& (((numTriangles + numVertices)%100)==0) )
 					{
-					  if (!(*cb)( (100*(numTriangles +numVertices))/ numVerticesPlusFaces, "Face Loading"))
-					  return E_ABORTED;
+						if (!(*cb)( (100*(numTriangles +numVertices))/ numVerticesPlusFaces, "Face Loading"))
+							return E_ABORTED;
 					}
-			//_END___ if  you are loading a  TRIMESH mesh 
+					//_END___ if  you are loading a  TRIMESH mesh 
 
 				}
 			}
@@ -594,13 +596,13 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 					if (currentMaterialName == materialName)
 					{
 						currentMaterialIdx = i;
-					  Material &material = materials[currentMaterialIdx];
-					  Point3f diffuseColor = material.Kd;
-					  unsigned char r			= (unsigned char) (diffuseColor[0] * 255.0);
-					  unsigned char g			= (unsigned char) (diffuseColor[1] * 255.0);
-					  unsigned char b			= (unsigned char) (diffuseColor[2] * 255.0);
-					  unsigned char alpha = (unsigned char) (material.Tr  * 255.0);
-					  currentColor= Color4b(r, g, b, alpha);
+						Material &material = materials[currentMaterialIdx];
+						Point3f diffuseColor = material.Kd;
+						unsigned char r			= (unsigned char) (diffuseColor[0] * 255.0);
+						unsigned char g			= (unsigned char) (diffuseColor[1] * 255.0);
+						unsigned char b			= (unsigned char) (diffuseColor[2] * 255.0);
+						unsigned char alpha = (unsigned char) (material.Tr  * 255.0);
+						currentColor= Color4b(r, g, b, alpha);
 						found = true;
 					}
 					++i;
@@ -618,7 +620,7 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 	assert((numTriangles +numVertices) == numVerticesPlusFaces+extraTriangles);
 
 	FaceIterator   fi = Allocator<OpenMeshType>::AddFaces(m,numTriangles);
-  //-------------------------------------------------------------------------------
+	//-------------------------------------------------------------------------------
 
 	// Now the final pass to convert indexes into pointers for face to vert/norm/tex references
 	for(int i=0; i<numTriangles; ++i)
@@ -678,157 +680,158 @@ static int Open( OpenMeshType &m, const char * filename, Info &oi)
 } // end of Open
 
 
-	/*!
-	* Read the next valid line and parses it into "tokens", allowing
-	*	the tokens to be read one at a time.
-	* \param stream	The object providing the input stream
-	*	\param tokens	The "tokens" in the next line
-	*/
-	inline static const void TokenizeNextLine(std::ifstream &stream, std::vector< std::string > &tokens)
-	{
-		if(stream.eof()) return;
-		std::string line;
-		do
-			std::getline(stream, line);
-		while ((line[0] == '#' || line.length()==0) && !stream.eof());  // skip comments and empty lines
-		
-		if ((line[0] == '#') || (line.length() == 0))  // can be true only on last line of file
-			return;
+/*!
+* Read the next valid line and parses it into "tokens", allowing
+*	the tokens to be read one at a time.
+* \param stream	The object providing the input stream
+*	\param tokens	The "tokens" in the next line
+*/
+inline static const void TokenizeNextLine(std::ifstream &stream, std::vector< std::string > &tokens)
+{
+	if(stream.eof()) return;
+	std::string line;
+	do
+	std::getline(stream, line);
+	while ((line[0] == '#' || line.length()==0) && !stream.eof());  // skip comments and empty lines
 
-		size_t from		= 0; 
-		size_t to			= 0;
-		size_t length = line.size();
-		tokens.clear();
-		do
+	if ((line[0] == '#') || (line.length() == 0))  // can be true only on last line of file
+		return;
+
+	size_t from		= 0; 
+	size_t to			= 0;
+	size_t length = line.size();
+	tokens.clear();
+	do
+	{
+		while (from!=length && (line[from]==' ' || line[from]=='\t' || line[from]=='\r') )
+			from++;
+		if(from!=length)
 		{
-			while (from!=length && (line[from]==' ' || line[from]=='\t' || line[from]=='\r') )
-				from++;
-      if(from!=length)
-      {
-				to = from+1;
-				while (to!=length && line[to]!=' ' && line[to] != '\t' && line[to]!='\r')
-					to++;
-				tokens.push_back(line.substr(from, to-from).c_str());
-				from = to;
-      }
+			to = from+1;
+			while (to!=length && line[to]!=' ' && line[to] != '\t' && line[to]!='\r')
+				to++;
+			tokens.push_back(line.substr(from, to-from).c_str());
+			from = to;
 		}
-		while (from<length);
-	} // end TokenizeNextLine
+	}
+	while (from<length);
+} // end TokenizeNextLine
 
 inline static const void SplitToken(std::string token, int &vId, int &nId, int &tId, int mask)
 {
-  		  std::string vertex;
-			  std::string texcoord;
-				std::string normal;
- 				if( ( mask & Mask::IOM_WEDGTEXCOORD ) && (mask & Mask::IOM_WEDGNORMAL) )   SplitVVTVNToken(token, vertex, texcoord, normal);
- 				if(!( mask & Mask::IOM_WEDGTEXCOORD ) && (mask & Mask::IOM_WEDGNORMAL) )   SplitVVNToken(token, vertex, normal);
- 				if( ( mask & Mask::IOM_WEDGTEXCOORD ) &&!(mask & Mask::IOM_WEDGNORMAL) )   SplitVVTToken(token, vertex, texcoord);
- 				if(!( mask & Mask::IOM_WEDGTEXCOORD ) &&!(mask & Mask::IOM_WEDGNORMAL) )   SplitVToken(token, vertex);
+	std::string vertex;
+	std::string texcoord;
+	std::string normal;
 
-          vId	= atoi(vertex.c_str())-1;
-          if(mask & Mask::IOM_WEDGTEXCOORD) tId = atoi(texcoord.c_str())-1;
-					if(mask & Mask::IOM_WEDGNORMAL)   nId= atoi(normal.c_str())-1;
+	if( ( mask & Mask::IOM_WEDGTEXCOORD ) && (mask & Mask::IOM_WEDGNORMAL) )   SplitVVTVNToken(token, vertex, texcoord, normal);
+	if(!( mask & Mask::IOM_WEDGTEXCOORD ) && (mask & Mask::IOM_WEDGNORMAL) )   SplitVVNToken(token, vertex, normal);
+	if( ( mask & Mask::IOM_WEDGTEXCOORD ) &&!(mask & Mask::IOM_WEDGNORMAL) )   SplitVVTToken(token, vertex, texcoord);
+	if(!( mask & Mask::IOM_WEDGTEXCOORD ) &&!(mask & Mask::IOM_WEDGNORMAL) )   SplitVToken(token, vertex);
+
+	vId = atoi(vertex.c_str()) - 1;
+	if(mask & Mask::IOM_WEDGTEXCOORD) tId = atoi(texcoord.c_str()) - 1;
+	if(mask & Mask::IOM_WEDGNORMAL)   nId = atoi(normal.c_str())   - 1;
 }
 
 inline static const void SplitVToken(std::string token, std::string &vertex) 
 {
-  vertex=token; 
+	vertex = token; 
 }
 
-	inline static const void SplitVVTToken(std::string token, std::string &vertex, std::string &texcoord)
+inline static const void SplitVVTToken(std::string token, std::string &vertex, std::string &texcoord)
+{
+	vertex.clear();
+	texcoord.clear();
+
+	size_t from   = 0; 
+	size_t to     = 0;
+	size_t length = token.size();
+
+	if(from!=length)
 	{
-		vertex.clear();
-		texcoord.clear();
+		char c = token[from];
+		vertex.push_back(c);
 
-		size_t from		= 0; 
-		size_t to			= 0;
-		size_t length = token.size();
-		
-		if(from!=length)
-    {
-			char c = token[from];
+		to = from+1;
+		while (to!=length && ((c = token[to]) !='/'))
+		{
 			vertex.push_back(c);
-
-			to = from+1;
-			while (to!=length && ((c = token[to]) !='/'))
-			{
-				vertex.push_back(c);
-				++to;
-			}
 			++to;
-			while (to!=length && ((c = token[to]) !=' '))
-			{
-				texcoord.push_back(c);
-				++to;
-			}
 		}
-	}	// end of SplitVVTToken
+		++to;
+		while (to!=length && ((c = token[to]) !=' '))
+		{
+			texcoord.push_back(c);
+			++to;
+		}
+	}
+}	// end of SplitVVTToken
 
-	inline static const void SplitVVNToken(std::string token, std::string &vertex, std::string &normal)
+inline static const void SplitVVNToken(std::string token, std::string &vertex, std::string &normal)
+{
+	vertex.clear();
+	normal.clear();
+
+	size_t from   = 0; 
+	size_t to     = 0;
+	size_t length = token.size();
+
+	if(from!=length)
 	{
-		vertex.clear();
-		normal.clear();
+		char c = token[from];
+		vertex.push_back(c);
 
-		size_t from		= 0; 
-		size_t to			= 0;
-		size_t length = token.size();
-		
-		if(from!=length)
-    {
-			char c = token[from];
+		to = from+1;
+		while (to!=length && ((c = token[to]) !='/'))
+		{
 			vertex.push_back(c);
-
-			to = from+1;
-			while (to!=length && ((c = token[to]) !='/'))
-			{
-				vertex.push_back(c);
-				++to;
-			}
 			++to;
-			++to;  // should be the second '/'
-			while (to!=length && ((c = token[to]) !=' '))
-			{
-				normal.push_back(c);
-				++to;
-			}
 		}
-	}	// end of SplitVVNToken
+		++to;
+		++to;  // should be the second '/'
+		while (to!=length && ((c = token[to]) !=' '))
+		{
+			normal.push_back(c);
+			++to;
+		}
+	}
+}	// end of SplitVVNToken
 
-	inline static const void SplitVVTVNToken(std::string token, std::string &vertex, std::string &texcoord, std::string &normal)
+inline static const void SplitVVTVNToken(std::string token, std::string &vertex, std::string &texcoord, std::string &normal)
+{
+	vertex.clear();
+	texcoord.clear();
+	normal.clear();
+
+	size_t from   = 0; 
+	size_t to     = 0;
+	size_t length = token.size();
+
+	if(from!=length)
 	{
-		vertex.clear();
-		texcoord.clear();
-		normal.clear();
-		
-		size_t from		= 0; 
-		size_t to			= 0;
-		size_t length = token.size();
-		
-		if(from!=length)
-    {
-			char c = token[from];
-			vertex.push_back(c);
+		char c = token[from];
+		vertex.push_back(c);
 
-			to = from+1;
-			while (to!=length && ((c = token[to]) !='/'))
-			{
-				vertex.push_back(c);
-				++to;
-			}
+		to = from+1;
+		while (to!=length && ((c = token[to]) !='/'))
+		{
+			vertex.push_back(c);
 			++to;
-			while (to!=length && ((c = token[to]) !='/'))
-			{
-				texcoord.push_back(c);
-				++to;
-			}
-			++to;
-			while (to!=length && ((c = token[to]) !=' '))
-			{
-				normal.push_back(c);
-				++to;
-			}
 		}
-	}	// end of SplitVVTVNToken
+		++to;
+		while (to!=length && ((c = token[to]) !='/'))
+		{
+			texcoord.push_back(c);
+			++to;
+		}
+		++to;
+		while (to!=length && ((c = token[to]) !=' '))
+		{
+			normal.push_back(c);
+			++to;
+		}
+	}
+}	// end of SplitVVTVNToken
 
 	/*!
 	* Retrieves infos about kind of data stored into the file and fills a mask appropriately
