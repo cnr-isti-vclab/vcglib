@@ -156,12 +156,12 @@ class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std
 			wed.offcl = findStringListAttribute(wed.wc,wed.wcsrc,nd,doc,"COLOR"); 
 		}
 	
-		static DAEError LoadPolygonalMesh(QDomNodeList& polypatch,ColladaMesh& m,const size_t offset,InfoDAE* info)
+        static DAEError LoadPolygonalMesh(QDomNodeList& polypatch,ColladaMesh& m,const size_t offset,InfoDAE & info)
 		{
 			return E_NOERROR;
 		}
 
-		static DAEError	LoadPolygonalListMesh(QDomNodeList& polylist,ColladaMesh& m,const size_t offset,InfoDAE* info,QMap<QString,QString> &materialBinding)
+        static DAEError	LoadPolygonalListMesh(QDomNodeList& polylist,ColladaMesh& m,const size_t offset,InfoDAE& info,QMap<QString,QString> &materialBinding)
 		{
 			if(polylist.isEmpty()) return E_NOERROR; 
 			QDEBUG("****** LoadPolygonalListMesh (initial mesh size %i %i)",m.vert.size(),m.fn);
@@ -171,7 +171,7 @@ class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std
 				QDEBUG("******    material id '%s' -> '%s'",qPrintable(materialId),qPrintable(materialBinding[materialId]));
 				
 				QString textureFilename;
-				QDomNode img_node = textureFinder(materialBinding[materialId],textureFilename,*(info->doc));
+                QDomNode img_node = textureFinder(materialBinding[materialId],textureFilename,*(info.doc));
 				if(img_node.isNull())
 				{
 					QDEBUG("******   but we were not able to find the corresponding image node");
@@ -180,14 +180,14 @@ class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std
 				int ind_txt = -1;
 				if (!img_node.isNull())
 				{
-					if(info->textureIdMap.contains(textureFilename))
-						 ind_txt=info->textureIdMap[textureFilename];
+                    if(info.textureIdMap.contains(textureFilename))
+                         ind_txt=info.textureIdMap[textureFilename];
 					else
 					{
 						QDEBUG("Found use of Texture %s, adding it to texutres",qPrintable(textureFilename));
-						info->textureIdMap[textureFilename]=m.textures.size();
+                        info.textureIdMap[textureFilename]=m.textures.size();
 						m.textures.push_back(qPrintable(textureFilename));
-						ind_txt=info->textureIdMap[textureFilename];
+                        ind_txt=info.textureIdMap[textureFilename];
 					}
 				}
 				// number of the attributes associated to each vertex of a face (vert, normal, tex etc)
@@ -207,7 +207,7 @@ class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std
 				if (faceIndexList.size() != 0 && faceSizeList.size() != 0 ) 
 				{	
 					WedgeAttribute wa;
-					FindStandardWedgeAttributes(wa,polylist.at(tript),*(info->doc));
+                    FindStandardWedgeAttributes(wa,polylist.at(tript),*(info.doc));
 					QDEBUG("*******                 Start Reading faces. Attributes Offsets: offtx %i - offnm %i - offcl %i",wa.offtx,wa.offnm,wa.offcl);
 					
           int faceIndexCnt=0;
@@ -274,7 +274,7 @@ class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std
 			return E_NOERROR;
 		}
 		
-		static DAEError	OldLoadPolygonalListMesh(QDomNodeList& polylist,ColladaMesh& m,const size_t offset,InfoDAE* info)
+        static DAEError	OldLoadPolygonalListMesh(QDomNodeList& polylist,ColladaMesh& m,const size_t offset,InfoDAE& info)
 		{
 			typedef PolygonalMesh< MyPolygon<typename ColladaMesh::VertexType> > PolyMesh;
 			PolyMesh pm;
@@ -293,14 +293,14 @@ class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std
 			{ 
 				QString mat =  polylist.at(pl).toElement().attribute(QString("material"));
 				QString textureFilename;
-				QDomNode txt_node = textureFinder(mat,textureFilename,*(info->doc));
+                QDomNode txt_node = textureFinder(mat,textureFilename,*(info.doc));
 				int ind_txt = -1;
 				if (!txt_node.isNull())
-					ind_txt = indexTextureByImgNode(*(info->doc),txt_node);
+                    ind_txt = indexTextureByImgNode(*(info.doc),txt_node);
 
 				//PolyMesh::PERWEDGEATTRIBUTETYPE att = PolyMesh::NONE;
 				WedgeAttribute wa;
-				FindStandardWedgeAttributes(wa,polylist.at(pl),*(info->doc));
+                FindStandardWedgeAttributes(wa,polylist.at(pl),*(info.doc));
 				QStringList vertcount;
 				valueStringList(vertcount,polylist.at(pl),"vcount");
 				int indforpol = findOffSetForASingleSimplex(polylist.at(pl));
@@ -341,7 +341,7 @@ class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std
 		/*
 		 Called to load into a given mesh 
 		 */
-		static DAEError LoadTriangularMesh(QDomNodeList& triNodeList, ColladaMesh& m, const size_t offset, InfoDAE* info,QMap<QString,QString> &materialBinding)
+        static DAEError LoadTriangularMesh(QDomNodeList& triNodeList, ColladaMesh& m, const size_t offset, InfoDAE& info,QMap<QString,QString> &materialBinding)
 		{
 			if(triNodeList.isEmpty()) return E_NOERROR; 
 			QDEBUG("****** LoadTriangularMesh (initial mesh size %i %i)",m.vn,m.fn);
@@ -351,7 +351,7 @@ class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std
 				QDEBUG("******    material id '%s' -> '%s'",qPrintable(materialId),qPrintable(materialBinding[materialId]));
 				
 				QString textureFilename;
-				QDomNode img_node = textureFinder(materialBinding[materialId],textureFilename,*(info->doc));
+                QDomNode img_node = textureFinder(materialBinding[materialId],textureFilename,*(info.doc));
 				if(img_node.isNull())
 				{
 					QDEBUG("******   but we were not able to find the corresponding image node");
@@ -360,16 +360,16 @@ class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std
 				int ind_txt = -1;
 				if (!img_node.isNull())
 				{
-					if(info->textureIdMap.contains(textureFilename))
-						 ind_txt=info->textureIdMap[textureFilename];
+                    if(info.textureIdMap.contains(textureFilename))
+                         ind_txt=info.textureIdMap[textureFilename];
 					else
 					{
 						QDEBUG("Found use of Texture %s, adding it to texutres",qPrintable(textureFilename));
-						info->textureIdMap[textureFilename]=m.textures.size();
+                        info.textureIdMap[textureFilename]=m.textures.size();
 						m.textures.push_back(qPrintable(textureFilename));
-						ind_txt=info->textureIdMap[textureFilename];
+                        ind_txt=info.textureIdMap[textureFilename];
 					}
-				//	ind_txt = indexTextureByImgNode(*(info->doc),txt_node);
+                //	ind_txt = indexTextureByImgNode(*(info.doc),txt_node);
 				}
 				int faceAttributeNum = triNodeList.at(tript).toElement().elementsByTagName("input").size();
 
@@ -380,7 +380,7 @@ class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std
 				{	
 					vcg::tri::Allocator<ColladaMesh>::AddFaces(m,face.size() / (faceAttributeNum * 3));
 					WedgeAttribute wa;
-					FindStandardWedgeAttributes(wa,triNodeList.at(tript),*(info->doc));
+                    FindStandardWedgeAttributes(wa,triNodeList.at(tript),*(info.doc));
 
 					int jj = 0;	
 					for(int ff = offsetface;ff < (int) m.face.size();++ff)
@@ -409,7 +409,7 @@ class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std
 			return E_NOERROR;
 		}
 
-		static int LoadControllerMesh(ColladaMesh& m, InfoDAE* info, const QDomElement& geo,QMap<QString, QString> materialBindingMap, CallBackPos *cb=0)
+        static int LoadControllerMesh(ColladaMesh& m, InfoDAE& info, const QDomElement& geo,QMap<QString, QString> materialBindingMap, CallBackPos *cb=0)
 		{
 			assert(geo.tagName() == "controller");
 			QDomNodeList skinList = geo.toElement().elementsByTagName("skin");
@@ -419,7 +419,7 @@ class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std
 			QString geomNode_url;
 			referenceToANodeAttribute(skinNode,"source",geomNode_url);
 			QDEBUG("Found a controller referencing a skin with url '%s'", qPrintable(geomNode_url));
-			QDomNode refNode = findNodeBySpecificAttributeValue(*(info->doc),"geometry","id",geomNode_url);
+            QDomNode refNode = findNodeBySpecificAttributeValue(*(info.doc),"geometry","id",geomNode_url);
 			
 			QDomNodeList bindingNodes = skinNode.toElement().elementsByTagName("bind_material");
 			if(	bindingNodes.size()>0) { 
@@ -454,19 +454,19 @@ class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std
 		 
 		 */
 		
-		static int LoadGeometry(ColladaMesh& m, InfoDAE* info, const QDomElement& geo, QMap<QString,QString> &materialBinding, CallBackPos *cb=0)
+        static int LoadGeometry(ColladaMesh& m, InfoDAE& info, const QDomElement& geo, QMap<QString,QString> &materialBinding, CallBackPos *cb=0)
 		{
 			assert(geo.tagName() == "geometry");
 			if (!isThereTag(geo,"mesh")) return E_NOMESH;
 			
-			if ((cb !=NULL) && (((info->numvert + info->numface)%100)==0) && !(*cb)((100*(info->numvert + info->numface))/(info->numvert + info->numface), "Vertex Loading"))
+            if ((cb !=NULL) && (((info.numvert + info.numface)%100)==0) && !(*cb)((100*(info.numvert + info.numface))/(info.numvert + info.numface), "Vertex Loading"))
 					return E_CANTOPEN;
 			QDEBUG("**** Loading a Geometry Mesh **** (initial mesh size %i %i)",m.vn,m.fn);
 			QDomNodeList vertices = geo.toElement().elementsByTagName("vertices");
 			if (vertices.size() != 1) return E_INCOMPATIBLECOLLADA141FORMAT;
 			QDomElement vertNode = vertices.at(0).toElement();
 
-			QDomNode positionNode = attributeSourcePerSimplex(vertNode,*(info->doc),"POSITION");
+            QDomNode positionNode = attributeSourcePerSimplex(vertNode,*(info.doc),"POSITION");
 			if (positionNode.isNull()) return E_NOVERTEXPOSITION;
 
 			QStringList geosrcposarr;
@@ -481,17 +481,17 @@ class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std
 			{
 					vcg::tri::Allocator<ColladaMesh>::AddVertices(m,nvert);
 
-					QDomNode srcnodenorm = attributeSourcePerSimplex(vertices.at(0),*(info->doc),"NORMAL");
+                    QDomNode srcnodenorm = attributeSourcePerSimplex(vertices.at(0),*(info.doc),"NORMAL");
 					QStringList geosrcvertnorm;
 					if (!srcnodenorm.isNull())
 						valueStringList(geosrcvertnorm,srcnodenorm,"float_array");
 
-					QDomNode srcnodetext = attributeSourcePerSimplex(vertices.at(0),*(info->doc),"TEXCOORD");
+                    QDomNode srcnodetext = attributeSourcePerSimplex(vertices.at(0),*(info.doc),"TEXCOORD");
 					QStringList geosrcverttext;
 					if (!srcnodetext.isNull())
 						valueStringList(geosrcverttext,srcnodetext,"float_array");
 
-					QDomNode srcnodecolor = attributeSourcePerSimplex(vertices.at(0),*(info->doc),"COLOR");
+                    QDomNode srcnodecolor = attributeSourcePerSimplex(vertices.at(0),*(info.doc),"COLOR");
 					QStringList geosrcvertcol;
 					if (!srcnodecolor.isNull())
 						valueStringList(geosrcvertcol,srcnodecolor,"float_array");
@@ -565,7 +565,7 @@ class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std
 		
 		static void AddNodeToMesh(QDomElement node, 
 															ColladaMesh& m, Matrix44f curTr,
-															InfoDAE*& info)
+                                                            InfoDAE& info)
 		{
 				QDEBUG("Starting processing <node> with id %s",qPrintable(node.attribute("id")));
  
@@ -581,7 +581,7 @@ class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std
 						//assert(m.textures.size()>0 == HasPerWedgeTexCoord(m));
 						QString geomNode_url;
 						referenceToANodeAttribute(instGeomNode,"url",geomNode_url);
-						QDomNode refNode = findNodeBySpecificAttributeValue(*(info->doc),"geometry","id",geomNode_url);
+                        QDomNode refNode = findNodeBySpecificAttributeValue(*(info.doc),"geometry","id",geomNode_url);
 						QDomNodeList bindingNodes = instGeomNode.toElement().elementsByTagName("bind_material");
 						QMap<QString,QString> materialBindingMap;
 						if(	bindingNodes.size()>0) { 
@@ -609,7 +609,7 @@ class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std
 						QString controllerNode_url;
 						referenceToANodeAttribute(instContrNode,"url",controllerNode_url);
 						QDEBUG("Found a instance_controller with url '%s'", qPrintable(controllerNode_url));
-						QDomNode refNode = findNodeBySpecificAttributeValue(*(info->doc),"controller","id",controllerNode_url);
+                        QDomNode refNode = findNodeBySpecificAttributeValue(*(info.doc),"controller","id",controllerNode_url);
 						
 						QDomNodeList bindingNodes = instContrNode.toElement().elementsByTagName("bind_material");
 						QMap<QString, QString> materialBindingMap;
@@ -641,7 +641,7 @@ class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std
 						QString node_url;
 						referenceToANodeAttribute(instanceNode,"url",node_url);
 						QDEBUG("Found a instance_node with url '%s'", qPrintable(node_url));
-						QDomNode refNode = findNodeBySpecificAttributeValue(*(info->doc),"node","id",node_url);
+                        QDomNode refNode = findNodeBySpecificAttributeValue(*(info.doc),"node","id",node_url);
 						if(refNode.isNull()) 
 							QDEBUG("findNodeBySpecificAttributeValue returned a null node for %s",qPrintable(node_url));
 										 
@@ -689,14 +689,15 @@ static Matrix44f getTransfMatrixFromNode(const QDomElement parentNode)
 		//merge all meshes in the collada's file in the templeted mesh m
 		//I assume the mesh 
 		
-		static int Open(OpenMeshType& m,const char* filename,InfoDAE*& info, CallBackPos *cb=0)
+        static int Open(OpenMeshType& m,const char* filename, InfoDAE& info, CallBackPos *cb=0)
 		{
 			QDEBUG("----- Starting the processing of %s ------",filename);
-			//AdditionalInfoDAE* inf = new AdditionalInfoDAE();
-			info = new InfoDAE(); 
+            //AdditionalInfoDAE& inf = new AdditionalInfoDAE();
+            //info = new InfoDAE();
 			
 			QDomDocument* doc = new QDomDocument(filename);
-			QFile file(filename);
+            info.doc = doc;
+            QFile file(filename);
 			if (!file.open(QIODevice::ReadOnly))
 				return E_CANTOPEN;
 			if (!doc->setContent(&file)) 
@@ -706,12 +707,11 @@ static Matrix44f getTransfMatrixFromNode(const QDomElement parentNode)
 			}
 			file.close();
 			
-			info->doc = doc;
-			//GetTexture(*(info->doc),inf);
+            //GetTexture(*(info.doc),inf);
 			
 //			GenerateMaterialToTextureMap(info);
 			//scene->instance_visual_scene
-			QDomNodeList scenes = info->doc->elementsByTagName("scene");
+            QDomNodeList scenes = info.doc->elementsByTagName("scene");
 			int scn_size = scenes.size();
 			if (scn_size == 0) 
 				return E_NO3DSCENE;
@@ -761,7 +761,7 @@ static Matrix44f getTransfMatrixFromNode(const QDomElement parentNode)
 					QDEBUG("instance_visual_scene %i refers %s ",instscn,qPrintable(libscn_url));
 					
 //					QDomNode nd = QDomNode(*(inf->doc));
-					QDomNode visscn = findNodeBySpecificAttributeValue(*(info->doc),"visual_scene","id",libscn_url);
+                    QDomNode visscn = findNodeBySpecificAttributeValue(*(info.doc),"visual_scene","id",libscn_url);
 					if(visscn.isNull()) return E_UNREFERENCEBLEDCOLLADAATTRIBUTE;
 					
 					//assert (visscn.toElement().Attribute("id") == libscn_url);
@@ -789,7 +789,7 @@ static Matrix44f getTransfMatrixFromNode(const QDomElement parentNode)
 			return problem;
 		}
 
-		static bool LoadMask(const char * filename, InfoDAE*& addinfo)
+        static bool LoadMask(const char * filename, InfoDAE& info)
 		{
 			bool bHasPerWedgeTexCoord = false;
 			bool bHasPerWedgeNormal		= false;
@@ -798,8 +798,7 @@ static Matrix44f getTransfMatrixFromNode(const QDomElement parentNode)
 			bool bHasPerVertexNormal = false;
 			bool bHasPerVertexText = false;
 			
-			InfoDAE* info = new InfoDAE();
-			QDomDocument* doc = new QDomDocument(filename);
+            QDomDocument* doc = new QDomDocument(filename);
 			QFile file(filename);
 			if (!file.open(QIODevice::ReadOnly))
 				return false;
@@ -811,9 +810,9 @@ static Matrix44f getTransfMatrixFromNode(const QDomElement parentNode)
 			file.close();
 			
 			QStringList textureFileList;
-			info->doc = doc;
-			GetTexCoord(*(info->doc),textureFileList);
-			QDomNodeList scenes = info->doc->elementsByTagName("scene");
+            info.doc = doc;
+            GetTexCoord(*(info.doc),textureFileList);
+            QDomNodeList scenes = info.doc->elementsByTagName("scene");
 			int scn_size = scenes.size();
 			
 
@@ -831,8 +830,8 @@ static Matrix44f getTransfMatrixFromNode(const QDomElement parentNode)
 				{
 					QString libscn_url;
 					referenceToANodeAttribute(instscenes.at(instscn),"url",libscn_url);	
-					QDomNode nd = QDomNode(*(info->doc));
-					QDomNode visscn = findNodeBySpecificAttributeValue(*(info->doc),"visual_scene","id",libscn_url);
+                    QDomNode nd = QDomNode(*(info.doc));
+                    QDomNode visscn = findNodeBySpecificAttributeValue(*(info.doc),"visual_scene","id",libscn_url);
 					if(visscn.isNull()) 	return false;
 					
 					//for each node in the libscn_url visual scene  
@@ -849,11 +848,11 @@ static Matrix44f getTransfMatrixFromNode(const QDomElement parentNode)
 						{
 							
 							geoinst_found |= true;
-							QDomNodeList geolib = info->doc->elementsByTagName("library_geometries");
+                            QDomNodeList geolib = info.doc->elementsByTagName("library_geometries");
 							assert(geolib.size() == 1);
 							//!!!!!!!!!!!!!!!!!here will be the code for geometry transformations!!!!!!!!!!!!!!!!!!!!!!
-							info->numvert = 0;
-							info->numface = 0;
+                            info.numvert = 0;
+                            info.numface = 0;
 							for(int geoinst_ind = 0;geoinst_ind < geoinst_size;++geoinst_ind)
 							{
 								QString geo_url;
@@ -874,7 +873,7 @@ static Matrix44f getTransfMatrixFromNode(const QDomElement parentNode)
 									no = findNodeBySpecificAttributeValue(geo,"source","id",srcurl);
 									QDomNodeList fa = no.toElement().elementsByTagName("float_array");
 									assert(fa.size() == 1);
-									info->numvert += (fa.at(0).toElement().attribute("count").toInt() / 3);
+                                    info.numvert += (fa.at(0).toElement().attribute("count").toInt() / 3);
 									no = findNodeBySpecificAttributeValue(vertlist.at(vert),"input","semantic","COLOR");									
 									if (!no.isNull()) 
 										bHasPerVertexColor = true;
@@ -893,7 +892,7 @@ static Matrix44f getTransfMatrixFromNode(const QDomElement parentNode)
 									QDomNodeList facelist = geo.toElement().elementsByTagName(arr[tt]);
 									for(int face = 0;face < facelist.size();++face)
 									{
-										info->numface += facelist.at(face).toElement().attribute("count").toInt() ;
+                                        info.numface += facelist.at(face).toElement().attribute("count").toInt() ;
 										QDomNode no;
 										no = findNodeBySpecificAttributeValue(facelist.at(face),"input","semantic","NORMAL");
 										if (!no.isNull()) 
@@ -911,12 +910,12 @@ static Matrix44f getTransfMatrixFromNode(const QDomElement parentNode)
 			
 			if (!geoinst_found)
 			{
-				QDomNodeList geolib = info->doc->elementsByTagName("library_geometries");
+                QDomNodeList geolib = info.doc->elementsByTagName("library_geometries");
 				assert(geolib.size() == 1);
 				QDomNodeList geochild = geolib.at(0).toElement().elementsByTagName("geometry");
 				//!!!!!!!!!!!!!!!!!here will be the code for geometry transformations!!!!!!!!!!!!!!!!!!!!!!
-				info->numvert = 0;
-				info->numface = 0;
+                info.numvert = 0;
+                info.numface = 0;
 				for(int geoinst_ind = 0;geoinst_ind < geochild.size();++geoinst_ind)
 				{
 					QDomNodeList vertlist = geochild.at(geoinst_ind).toElement().elementsByTagName("vertices");
@@ -930,7 +929,7 @@ static Matrix44f getTransfMatrixFromNode(const QDomElement parentNode)
 						no = findNodeBySpecificAttributeValue(geochild.at(geoinst_ind),"source","id",srcurl);
 						QDomNodeList fa = no.toElement().elementsByTagName("float_array");
 						assert(fa.size() == 1);
-						info->numvert += (fa.at(0).toElement().attribute("count").toInt() / 3);
+                        info.numvert += (fa.at(0).toElement().attribute("count").toInt() / 3);
 						no = findNodeBySpecificAttributeValue(vertlist.at(vert),"input","semantic","COLOR");									
 						if (!no.isNull()) 
 							bHasPerVertexColor = true;
@@ -945,7 +944,7 @@ static Matrix44f getTransfMatrixFromNode(const QDomElement parentNode)
 					QDomNodeList facelist = geochild.at(geoinst_ind).toElement().elementsByTagName("triangles");
 					for(int face = 0;face < facelist.size();++face)
 					{
-						info->numface += facelist.at(face).toElement().attribute("count").toInt() ;
+                        info.numface += facelist.at(face).toElement().attribute("count").toInt() ;
 						QDomNode no;
 						no = findNodeBySpecificAttributeValue(facelist.at(face),"input","semantic","NORMAL");
 						if (!no.isNull()) 
@@ -957,26 +956,26 @@ static Matrix44f getTransfMatrixFromNode(const QDomElement parentNode)
 				}
 			}
 
-			info->mask = 0;
+            info.mask = 0;
 		
 			if (bHasPerWedgeTexCoord) 
-				info->mask |= vcg::tri::io::Mask::IOM_WEDGTEXCOORD;
+                info.mask |= vcg::tri::io::Mask::IOM_WEDGTEXCOORD;
 			if (bHasPerWedgeNormal) 
-				info->mask |= vcg::tri::io::Mask::IOM_WEDGNORMAL;
+                info.mask |= vcg::tri::io::Mask::IOM_WEDGNORMAL;
 			if (bHasPerVertexColor)	
-				info->mask |= vcg::tri::io::Mask::IOM_VERTCOLOR;
+                info.mask |= vcg::tri::io::Mask::IOM_VERTCOLOR;
 			if (bHasPerFaceColor) 
-				info->mask |= vcg::tri::io::Mask::IOM_FACECOLOR;
+                info.mask |= vcg::tri::io::Mask::IOM_FACECOLOR;
 			if (bHasPerVertexNormal) 
-				info->mask |= vcg::tri::io::Mask::IOM_VERTNORMAL;
+                info.mask |= vcg::tri::io::Mask::IOM_VERTNORMAL;
 			if (bHasPerVertexText) 
-				info->mask |= vcg::tri::io::Mask::IOM_VERTTEXCOORD;
+                info.mask |= vcg::tri::io::Mask::IOM_VERTTEXCOORD;
 			
 			
 
-			delete (info->doc);
-			info->doc = NULL;
-			addinfo = info;
+            delete (info.doc);
+            info.doc = NULL;
+            //addinfo = info;
 			return true;
 		}
 	};
