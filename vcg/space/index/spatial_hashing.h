@@ -115,7 +115,12 @@ namespace vcg{
 		void operator ++() {t++;}
 	};
 	
-	protected:
+
+    size_t CellSize(const Point3i &cell)
+    {
+        return hash_table.count(cell);
+    }
+protected:
 
 	///insert a new cell
 	void InsertObject(ObjType* s, const Point3i &cell)
@@ -124,6 +129,27 @@ namespace vcg{
 		hash_table.insert(typename HashType::value_type(cell, s));
 	}
 
+    ///remove all the objects in a cell
+    void RemoveCell(const Point3i &cell)
+    {
+    }
+
+    ///insert a new cell
+    bool RemoveObject(ObjType* s, const Point3i &cell)
+    {
+        std::pair<HashIterator,HashIterator> CellRange = hash_table.equal_range(cell);
+        CellIterator first; first.t=CellRange.first;
+        CellIterator end; end.t=CellRange.second;
+        for(CellIterator ci = first; ci!=end;++ci)
+        {
+            if (*ci == s)
+               {
+                   hash_table.erase(ci.t);
+                   return true;
+               }
+        }
+        return false;
+    }
 
 	public:
 
@@ -142,6 +168,18 @@ namespace vcg{
 			return bb;
 		}
 
+        void Remove( ObjType* s)
+        {
+            Box3<ScalarType> b;
+            s->GetBBox(b);
+            vcg::Box3i bb;
+            BoxToIBox(b,bb);
+            //then remove the obj from all the cell of bb
+            for (int i=bb.min.X();i<=bb.max.X();i++)
+                for (int j=bb.min.Y();j<=bb.max.Y();j++)
+                    for (int k=bb.min.Z();k<=bb.max.Z();k++)
+                        RemoveObject(s,vcg::Point3i(i,j,k));
+        }
 		
 		/// set an empty spatial hash table
 		void InitEmpty(const Box3x &_bbox, vcg::Point3i grid_size)
@@ -200,7 +238,7 @@ namespace vcg{
 
 
 		///return the simplexes of the cell that contain p
-		void Grid( const Point3<ScalarType> & p, CellIterator & first, CellIterator & last )
+		void GridReal( const Point3<ScalarType> & p, CellIterator & first, CellIterator & last )
 		{
 			vcg::Point3i _c;
 			this->PToIP(p,_c);
@@ -210,7 +248,7 @@ namespace vcg{
 		///return the simplexes on a specified cell
 		void Grid( int x,int y,int z, CellIterator & first, CellIterator & last )
 		{
-			Grid(vcg::Point3i(x,y,z),first,last);
+			this->Grid(vcg::Point3i(x,y,z),first,last);
 		}
 
 		///return the simplexes on a specified cell
