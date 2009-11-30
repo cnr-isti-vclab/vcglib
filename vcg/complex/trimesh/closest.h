@@ -167,13 +167,12 @@ namespace vcg {
 		{
 		public:
 		typedef typename  MESH_TYPE::VertexType VertexType;
-		
-			VertTmark(){}
-			VertTmark(MESH_TYPE *){}
-			void UnMarkAll(){}
-			bool IsMarked(VertexType*) { return false; }
-			void Mark(VertexType*){}
-			void SetMesh(void * /*m=0*/) {}
+			inline VertTmark(){}
+			inline VertTmark(MESH_TYPE *){}
+			inline void UnMarkAll() const {}
+			inline bool IsMarked(VertexType*) const { return false; }
+			inline void Mark(VertexType*) const {}
+			inline void SetMesh(void * /*m=0*/) const {}
 		};
 
 		//**CLOSEST FUNCTION DEFINITION**//
