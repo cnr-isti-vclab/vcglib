@@ -120,12 +120,28 @@ namespace vcg{
     {
         return hash_table.count(cell);
     }
+		
+		inline bool EmptyCell(const Point3i &cell) const
+		{
+		 return hash_table.find(cell) == hash_table.end();
+		}
+		
+		void UpdateAllocatedCells()
+		{
+			AllocatedCells.clear();
+			if(hash_table.empty()) return;
+			AllocatedCells.push_back(hash_table.begin()->first);
+			for(HashIterator fi=hash_table.begin();fi!=hash_table.end();++fi)
+			{
+				if(AllocatedCells.back()!=fi->first) AllocatedCells.push_back(fi->first);				
+			}
+		}
 protected:
 
 	///insert a new cell
 	void InsertObject(ObjType* s, const Point3i &cell)
 	{
-		if(hash_table.count(cell)==0) AllocatedCells.push_back(cell);
+		//if(hash_table.count(cell)==0) AllocatedCells.push_back(cell);
 		hash_table.insert(typename HashType::value_type(cell, s));
 	}
 
@@ -167,6 +183,50 @@ protected:
 
 			return bb;
 		}
+
+
+int RemoveInSphere(const Point3<ScalarType> &p, const ScalarType radius)
+{
+    Box3x b(p-Point3f(radius,radius,radius),p+Point3f(radius,radius,radius));
+		vcg::Box3i bb;
+		BoxToIBox(b,bb);
+		ScalarType r2=radius*radius;
+		int cnt=0;
+
+			for (int i=bb.min.X();i<=bb.max.X();i++)
+				for (int j=bb.min.Y();j<=bb.max.Y();j++)
+					for (int k=bb.min.Z();k<=bb.max.Z();k++)
+					{
+						std::pair<HashIterator,HashIterator> CellRange = hash_table.equal_range(Point3i(i,j,k));
+            for(HashIterator hi = CellRange.first; hi!=CellRange.second;++hi)
+            {
+							if(SquaredDistance(p,hi->second->cP()) <= r2)
+							{ 
+							cnt++;
+												hash_table.erase(hi);
+												}
+            }						
+					}					
+					return cnt;
+}
+
+		// Thsi version of the removal is specialized for the case where
+		// an object has a pointshaped box and using the generic bbox interface is just a waste of time.
+		
+		void RemovePunctual( ObjType *s)
+        {
+            Point3i pi;
+            PToIP(s->cP(),pi);
+            std::pair<HashIterator,HashIterator> CellRange = hash_table.equal_range(pi);
+            for(HashIterator hi = CellRange.first; hi!=CellRange.second;++hi)
+            {
+                if (hi->second == s)
+                   {
+                       hash_table.erase(hi);
+                       return;
+                   }
+            }
+        }
 
         void Remove( ObjType* s)
         {
