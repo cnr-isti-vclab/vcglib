@@ -255,14 +255,13 @@ private:
 };
 
 template <class TT> class TexCoord2s: public TexCoord<TexCoord2<short,1>, TT> {
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("TexCoord2s"));TT::Name(name);}
-
+public: static void Name(std::vector<std::string> & name){name.push_back(std::string("TexCoord2s"));TT::Name(name);}
 };
 template <class TT> class TexCoord2f: public TexCoord<TexCoord2<float,1>, TT> {
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("TexCoord2f"));TT::Name(name);}
+public: static void Name(std::vector<std::string> & name){name.push_back(std::string("TexCoord2f"));TT::Name(name);}
 };
 template <class TT> class TexCoord2d: public TexCoord<TexCoord2<double,1>, TT> {
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("TexCoord2d"));TT::Name(name);}
+public: static void Name(std::vector<std::string> & name){name.push_back(std::string("TexCoord2d"));TT::Name(name);}
 };
 
 /*------------------------- FLAGS -----------------------------------------*/
