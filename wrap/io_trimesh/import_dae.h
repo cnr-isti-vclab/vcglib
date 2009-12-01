@@ -691,6 +691,8 @@ static Matrix44f getTransfMatrixFromNode(const QDomElement parentNode)
 		
         static int Open(OpenMeshType& m,const char* filename, InfoDAE& info, CallBackPos *cb=0)
 		{
+			(void)cb;
+
 			QDEBUG("----- Starting the processing of %s ------",filename);
             //AdditionalInfoDAE& inf = new AdditionalInfoDAE();
             //info = new InfoDAE();

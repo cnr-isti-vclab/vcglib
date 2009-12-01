@@ -638,7 +638,7 @@ namespace io {
             if(fnameV != nameV) return VMI_INCOMPATIBLE_VERTEX_TYPE;
             if(fnameF != nameF) return VMI_INCOMPATIBLE_FACE_TYPE;
 
-			 int offsetV,offsetF;
+			 int offsetV=0,offsetF=0;
 
 			 if(vertSize!=0)
 				/* read the address of the first vertex */
