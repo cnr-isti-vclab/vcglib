@@ -304,7 +304,7 @@ void Set( FacePointer  pf, const int nz )
 	v[1] = pf->WT(pf->Next(nz));
 	assert(v[0] != v[1]); // The face pointed by 'f' is Degenerate (two coincident vertexes)
 
-	if( v[1] < v[0] ) swap(v[0],v[1]);
+    if( v[1] < v[0] ) std::swap(v[0],v[1]);
 	f    = pf;
 	z    = nz;
 }
