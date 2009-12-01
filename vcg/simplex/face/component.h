@@ -464,15 +464,15 @@ private:
 };
 
 template <class T> class WedgeColor4b: public WedgeColor<vcg::Color4b, T> {
-  static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeColor4b"));T::Name(name);}
+public: static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeColor4b"));T::Name(name);}
 };
 
 template <class T> class WedgeColor4f: public WedgeColor<vcg::Color4f, T> {
-  static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeColor4f"));T::Name(name);}
+public: static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeColor4f"));T::Name(name);}
 };
 
 template <class T> class Color4b: public Color<vcg::Color4b, T> { public:
-  static void Name(std::vector<std::string> & name){name.push_back(std::string("Color4b"));T::Name(name);}
+public: static void Name(std::vector<std::string> & name){name.push_back(std::string("Color4b"));T::Name(name);}
 };
 
 /*-------------------------- Quality  ----------------------------------*/ 
