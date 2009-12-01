@@ -754,12 +754,11 @@ static void VertexQualityLaplacian(MeshType &m, int step=1, bool SmoothSelected=
 
 static void VertexNormalLaplacian(MeshType &m, int step,bool SmoothSelected=false)
 {
-	SimpleTempData<typename MeshType::VertContainer,LaplacianInfo > TD(m.vert);
-  LaplacianInfo lpz;
-	lpz.sum=CoordType(0,0,0);
-	lpz.cnt=0;
-	TD.Start(lpz);
-	for(int i=0;i<step;++i)
+    LaplacianInfo lpz;
+      lpz.sum=CoordType(0,0,0);
+      lpz.cnt=0;
+    SimpleTempData<typename MeshType::VertContainer,LaplacianInfo > TD(m.vert,lpz);
+    for(int i=0;i<step;++i)
 	{
 		VertexIterator vi;
 		for(vi=m.vert.begin();vi!=m.vert.end();++vi)
@@ -806,7 +805,6 @@ static void VertexNormalLaplacian(MeshType &m, int step,bool SmoothSelected=fals
 					(*vi).N()=TD[*vi].sum/TD[*vi].cnt;
 	}
 
-	TD.Stop();
 };
 
 // Smooth solo lungo la direzione di vista
