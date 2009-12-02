@@ -150,7 +150,7 @@ protected:
     {
     }
 
-    ///insert a new cell
+
     bool RemoveObject(ObjType* s, const Point3i &cell)
     {
         std::pair<HashIterator,HashIterator> CellRange = hash_table.equal_range(cell);
@@ -184,31 +184,45 @@ protected:
 			return bb;
 		}
 
+        ///Remove all the objects contained in the cell containing s
+        // it removes s too.
+        bool RemoveCell(ObjType* s)
+        {
+            Point3i pi;
+            PToIP(s->cP(),pi);
+            std::pair<HashIterator,HashIterator> CellRange = hash_table.equal_range(pi);
+            hash_table.erase(CellRange.first,CellRange.second);
+            return true;
+        }    ///insert a new cell
 
-int RemoveInSphere(const Point3<ScalarType> &p, const ScalarType radius)
-{
-    Box3x b(p-Point3f(radius,radius,radius),p+Point3f(radius,radius,radius));
-		vcg::Box3i bb;
-		BoxToIBox(b,bb);
-		ScalarType r2=radius*radius;
-		int cnt=0;
+        int RemoveInSphere(const Point3<ScalarType> &p, const ScalarType radius)
+        {
+            Box3x b(p-Point3f(radius,radius,radius),p+Point3f(radius,radius,radius));
+            vcg::Box3i bb;
+            BoxToIBox(b,bb);
+            ScalarType r2=radius*radius;
+            int cnt=0;
+            std::vector<HashIterator> toDel;
 
 			for (int i=bb.min.X();i<=bb.max.X();i++)
 				for (int j=bb.min.Y();j<=bb.max.Y();j++)
 					for (int k=bb.min.Z();k<=bb.max.Z();k++)
 					{
-						std::pair<HashIterator,HashIterator> CellRange = hash_table.equal_range(Point3i(i,j,k));
-            for(HashIterator hi = CellRange.first; hi!=CellRange.second;++hi)
-            {
-							if(SquaredDistance(p,hi->second->cP()) <= r2)
-							{ 
-							cnt++;
-												hash_table.erase(hi);
-												}
-            }						
-					}					
-					return cnt;
-}
+                std::pair<HashIterator,HashIterator> CellRange = hash_table.equal_range(Point3i(i,j,k));
+                for(HashIterator hi = CellRange.first; hi!=CellRange.second;++hi)
+                {
+                    if(SquaredDistance(p,hi->second->cP()) <= r2)
+                    {
+                        cnt++;
+                        toDel.push_back(hi);
+                    }
+                }
+            }
+            for(std::vector<HashIterator>::iterator vi=toDel.begin(); vi!=toDel.end();++vi)
+                hash_table.erase(*vi);
+
+            return cnt;
+        }
 
 		// Thsi version of the removal is specialized for the case where
 		// an object has a pointshaped box and using the generic bbox interface is just a waste of time.
@@ -259,6 +273,7 @@ int RemoveInSphere(const Point3<ScalarType> &p, const ScalarType radius)
 			voxel[0] = dim[0]/siz[0];
 			voxel[1] = dim[1]/siz[1];
 			voxel[2] = dim[2]/siz[2];
+            hash_table.clear();
 		}
 
 		/// Insert a mesh in the grid.
