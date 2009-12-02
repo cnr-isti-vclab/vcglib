@@ -756,14 +756,9 @@ static bool checkPoissonDisk(MetroMesh & vmesh, SampleSHT & sht, const Point3<Sc
 {
 	// get the samples closest to the given one
 	std::vector<VertexType*> closests;
-	std::vector<ScalarType> distances;
-	std::vector<CoordType> points;
 
 	typedef VertTmark<MetroMesh> MarkerVert;
-	MarkerVert mv;
-	mv.SetMesh(&vmesh);
-	typedef vcg::vertex::PointDistanceFunctor<ScalarType> VDistFunct;
-	VDistFunct fn;
+    static MarkerVert mv;
 
 	Box3f bb(p-Point3f(radius,radius,radius),p+Point3f(radius,radius,radius));
 	int nsamples = GridGetInBox(sht, mv, bb, closests);
@@ -827,31 +822,59 @@ static void ComputePoissonSampleRadii(MetroMesh &sampleMesh, ScalarType diskRadi
 	}
 }
 
-static int removeUselessSample(MontecarloSHT &montecarloSHT, VertexType *vp, ScalarType radius)
+// Trivial approach that puts all the samples in a UG and removes all the ones that surely do not fit the
+static void PoissonDiskPruning(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &montecarloMesh, ScalarType diskRadius, const struct PoissonDiskParam pp=PoissonDiskParam())
 {
-	return montecarloSHT.RemoveInSphere(vp->cP(),radius);
-}
-static int oldremoveUselessSample(MontecarloSHT &montecarloSHT, VertexType *vp, ScalarType radius)
-{
-    // get the samples closest to the given one
-    std::vector<VertexType*> closests;
+    // spatial index of montecarlo samples - used to choose a new sample to insert
+    MontecarloSHT montecarloSHT;
+    // initialize spatial hash table for searching
+    // radius is the radius of empty disk centered over the samples (e.g. twice of the empty space disk)
+    // This radius implies that when we pick a sample in a cell all that cell will not be touched again.
+    ScalarType cellsize = 2.0f* diskRadius / sqrt(3.0);
 
-    typedef VertTmark<MetroMesh> MarkerVert;
-    MarkerVert mv;
-		int cnt=0;
+    // inflating
+    origMesh.bbox.Offset(cellsize);
 
-    Box3f bb(vp->cP()-Point3f(radius,radius,radius),vp->cP()+Point3f(radius,radius,radius));
-    int nsamples = GridGetInBox(montecarloSHT, mv, bb, closests);
-    ScalarType r2 = radius*radius;
-    for(int i=0; i<closests.size(); ++i)
+    int sizeX = vcg::math::Max(1.0f,origMesh.bbox.DimX() / cellsize);
+    int sizeY = vcg::math::Max(1.0f,origMesh.bbox.DimY() / cellsize);
+    int sizeZ = vcg::math::Max(1.0f,origMesh.bbox.DimZ() / cellsize);
+    Point3i gridsize(sizeX, sizeY, sizeZ);
+#ifdef QT_VERSION
+    qDebug("PDS: radius %f Grid:(%i %i %i) ",diskRadius,sizeX,sizeY,sizeZ);
+    QTime tt; tt.start();
+#endif
+
+
+    montecarloSHT.InitEmpty(origMesh.bbox, gridsize);
+
+    for (VertexIterator vi = montecarloMesh.vert.begin(); vi != montecarloMesh.vert.end(); vi++)
+        montecarloSHT.Add(&(*vi));
+
+    montecarloSHT.UpdateAllocatedCells();
+
+
+    unsigned int (*p_myrandom)(unsigned int) = RandomInt;
+    std::random_shuffle(montecarloSHT.AllocatedCells.begin(),montecarloSHT.AllocatedCells.end(), p_myrandom);
+
+#ifdef QT_VERSION
+    qDebug("PDS: Completed creation of activeCells, %i cells (%i msec)", montecarloSHT.AllocatedCells.size(), tt.restart());
+#endif
+    while(!montecarloSHT.AllocatedCells.empty())
     {
-        if(SquaredDistance(vp->cP(),closests[i]->cP()) <= r2)
+        int removedCnt=0;
+        for (size_t i = 0; i < montecarloSHT.AllocatedCells.size(); i++)
         {
-           montecarloSHT.Remove(closests[i]);
-					 cnt++;
-				}
+            if( montecarloSHT.EmptyCell(montecarloSHT.AllocatedCells[i])  ) continue;
+            VertexPointer sp = getPrecomputedMontecarloSample(montecarloSHT.AllocatedCells[i], montecarloSHT);
+            ps.AddVert(*sp);
+            removedCnt += montecarloSHT.RemoveInSphere(sp->cP(),diskRadius);
+        }
+
+#ifdef QT_VERSION
+        qDebug("Removed %i samples in %i",removedCnt,tt.restart());
+#endif
+        montecarloSHT.UpdateAllocatedCells();
     }
-		return cnt;
 }
 
 /** Compute a Poisson-disk sampling of the surface.
@@ -864,31 +887,13 @@ static int oldremoveUselessSample(MontecarloSHT &montecarloSHT, VertexType *vp, 
  * IEEE Symposium on Interactive Ray Tracing, 2007,
  * 10-12 Sept. 2007, pp. 129-132.
  */
-static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &montecarloMesh, ScalarType diskRadius, const struct PoissonDiskParam pp=PoissonDiskParam())
+static void PoissonDisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &montecarloMesh, ScalarType diskRadius, const struct PoissonDiskParam pp=PoissonDiskParam())
 {
-	int cellusedcounter[20];          // cells used for each level
-	int cellstosubdividecounter[20];  // cells to subdivide for each level
-	int samplesgenerated[20];         // samples generated for each level
-	int samplesaccepted[20];          // samples accepted for each level
-	int verticescounter[20];          // vertices added to the spatial hash table
-
-	for (int i = 0; i < 20; i++)
-	{
-		cellusedcounter[i] = 0;
-		cellstosubdividecounter[i] = 0;
-		samplesgenerated[i] = 0;
-		samplesaccepted[i] = 0;
-		verticescounter[i] = 0;
-	}
-
-
-	MetroMesh supportMesh;
 
 	// spatial index of montecarlo samples - used to choose a new sample to insert
-	MontecarloSHT montecarloSHT;
+    MontecarloSHT montecarloSHTVec[5];
 
-	// spatial hash table of the generated samples - used to check the radius constrain
-	SampleSHT checkSHT;
+
 
 	// initialize spatial hash table for searching
     // radius is the radius of empty disk centered over the samples (e.g. twice of the empty space disk)
@@ -906,20 +911,10 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 	qDebug("PDS: radius %f Grid:(%i %i %i) ",diskRadius,sizeX,sizeY,sizeZ);
 	QTime tt; tt.start();
 #endif
-	// initialize spatial hash to index pre-generated samples
-	montecarloSHT.InitEmpty(origMesh.bbox, gridsize);
-	for (VertexIterator vi = montecarloMesh.vert.begin(); vi != montecarloMesh.vert.end(); vi++)
-	{
-		montecarloSHT.Add(&(*vi));
-		verticescounter[0]++;
-	}
-	
-#ifdef QT_VERSION
-    int t1=clock();
-    qDebug("PDS: Completed montercarloSHT, inserted %i vertex in %i cells (%i)", montecarloMesh.vn, montecarloSHT.AllocatedCells.size(), tt.restart());
-#endif
-	// initialize spatial hash table for check poisson-disk radius constrain
-	checkSHT.InitEmpty(origMesh.bbox, gridsize);
+
+    // spatial hash table of the generated samples - used to check the radius constrain
+    SampleSHT checkSHT;
+    checkSHT.InitEmpty(origMesh.bbox, gridsize);
 
 
 	// sampling algorithm
@@ -931,138 +926,81 @@ static void Poissondisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 	//   - if the sample violates the radius constrain discard it, and add the cell to the cells-to-subdivide list
 	// - iterate until the active cell list is empty or a pre-defined number of subdivisions is reached
 	//
-	typename std::vector<Point3i>::iterator it;
 
-	vcg::Box3<ScalarType> currentBox;
 	int level = 0;
 	
+    // initialize spatial hash to index pre-generated samples
+    montecarloSHTVec[0].InitEmpty(origMesh.bbox, gridsize);
+    // create active cell list
+    for (VertexIterator vi = montecarloMesh.vert.begin(); vi != montecarloMesh.vert.end(); vi++)
+        montecarloSHTVec[0].Add(&(*vi));
+    montecarloSHTVec[0].UpdateAllocatedCells();
+
   // if we are doing variable density sampling we have to prepare the random samples quality with the correct expected radii.
 	if(pp.adaptiveRadiusFlag) 
 			ComputePoissonSampleRadii(montecarloMesh, diskRadius, pp.radiusVariance, pp.invertQuality);
 	
 	do
 	{
-		// extract a cell (C) from the active cell list (with probability proportional to cell's volume)
-		///////////////////////////////////////////////////////////////////////////////////////////////////
-		
-		//supportMesh.vert.reserve(montecarloMesh.vn);
+        MontecarloSHT &montecarloSHT = montecarloSHTVec[level];
 
-		// create active cell list
-		montecarloSHT.UpdateAllocatedCells();		
-
-		int ncell = static_cast<int>(montecarloSHT.AllocatedCells.size());
-		cellusedcounter[level] = ncell;
+        if(level>0)
+        {// initialize spatial hash with the remaining points
+            montecarloSHT.InitEmpty(origMesh.bbox, gridsize);
+            // create active cell list
+            for (typename MontecarloSHT::HashIterator hi = montecarloSHTVec[level-1].hash_table.begin(); hi != montecarloSHTVec[level-1].hash_table.end(); hi++)
+                montecarloSHT.Add((*hi).second);
+            montecarloSHT.UpdateAllocatedCells();
+        }
 		// shuffle active cells
-		
 		unsigned int (*p_myrandom)(unsigned int) = RandomInt;
 		std::random_shuffle(montecarloSHT.AllocatedCells.begin(),montecarloSHT.AllocatedCells.end(), p_myrandom);
 #ifdef QT_VERSION
-    qDebug("PDS: Completed creation of activeCells, %i cells (%i msec)", montecarloSHT.AllocatedCells.size(), tt.restart());
+    qDebug("PDS: Init of Hashing grid %i cells and %i samples (%i msec)", montecarloSHT.AllocatedCells.size(), montecarloSHT.hash_table.size(), tt.restart());
 #endif
-
 
 		// generate a sample inside C by choosing one of the contained pre-generated samples
 		//////////////////////////////////////////////////////////////////////////////////////////
-		int removedCnt=0;
-		for (int i = 0; i < ncell; i++)
+    int removedCnt=montecarloSHT.hash_table.size();
+    int addedCnt=checkSHT.hash_table.size();
+        for (int i = 0; i < montecarloSHT.AllocatedCells.size(); i++)
 		{
-			if( montecarloSHT.EmptyCell(montecarloSHT.AllocatedCells[i])  ) continue;
+            for(int j=0;j<4;j++)
+            {
+                if( montecarloSHT.EmptyCell(montecarloSHT.AllocatedCells[i])  ) continue;
 
 			// generate a sample chosen from the pre-generated one
-			VertexPointer sp = getPrecomputedMontecarloSample(montecarloSHT.AllocatedCells[i], montecarloSHT);
-			samplesgenerated[level]++;
-		
+            typename MontecarloSHT::HashIterator hi = montecarloSHT.hash_table.find(montecarloSHT.AllocatedCells[i]);
+
+            if(hi==montecarloSHT.hash_table.end()) {break;}
+            VertexPointer sp = (*hi).second;
 			// vr spans between 3.0*r and r / 4.0 according to vertex quality
 			ScalarType sampleRadius = diskRadius;
 			if(pp.adaptiveRadiusFlag)  sampleRadius = sp->Q();
-            //if (checkPoissonDisk(*ps.m, checkSHT, sp->cP(), sampleRadius))
+            if (checkPoissonDisk(*ps.m, checkSHT, sp->cP(), sampleRadius))
             {
-							// add sample
-							tri::Allocator<MetroMesh>::AddVertices(supportMesh,1);
-							supportMesh.vert.back().P() = sp->P();
-							supportMesh.vert.back().Q() = sampleRadius;
-							//ps.AddVert(supportMesh.vert.back()); Small change, we should call the sampler class with the input mesh. 
-							ps.AddVert(*sp);
-
-							removedCnt += removeUselessSample(montecarloSHT,sp,sampleRadius);
-
-				// add to control spatial index
-				//checkSHT.Add(&supportMesh.vert.back());
-
-							samplesaccepted[level]++;
-						}
-//			else
-//			{
-//				// subdivide this cell
-//				///////////////////////////////////////////////////////////////////////
-//				// pre-generated samples for the next level of subdivision
-//				MontecarloSHTIterator ptBegin, ptEnd, ptIt;
-//				montecarloSHT.Grid(*currentCell, ptBegin, ptEnd);
-//
-//				for (ptIt = ptBegin; ptIt != ptEnd; ++ptIt)
-//				{
-//					nextPoints.push_back(*ptIt);
-//				}
-//
-//				cellstosubdividecounter[level]++;
-//			}
+               ps.AddVert(*sp);
+               montecarloSHT.RemoveCell(sp);
+               checkSHT.Add(sp);
+               break;
+            }
+            else
+                montecarloSHT.RemovePunctual(sp);
+        }
 		}
-		
-#ifdef QT_VERSION
-		qDebug("Removed %i samples",removedCnt);
-#endif
-	  montecarloSHT.UpdateAllocatedCells();
-	
+        addedCnt = checkSHT.hash_table.size()-addedCnt;
+        removedCnt = removedCnt-montecarloSHT.hash_table.size();
+
 		// proceed to the next level of subdivision
-		///////////////////////////////////////////////////////////////////////////
+        // increase grid resolution
+        gridsize *= 2;
 
-		// cleaning spatial index data structures
-		//montecarloSHT.Clear();
-
-		// increase grid resolution
-		//gridsize *= 2;
-
-		//montecarloSHT.InitEmpty(origMesh.bbox, gridsize);
-
-//		for (nextPointsIt = nextPoints.begin(); nextPointsIt != nextPoints.end(); nextPointsIt++)
-//		{
-//			montecarloSHT.Add(*nextPointsIt);
-//			verticescounter[level+1]++;
-//		}
-//
-//		nextPoints.clear();
+        //
 #ifdef QT_VERSION
-		qDebug("PDS: Completed Level %i, added %i samples (%i msec)",level,samplesaccepted[level],tt.elapsed());	
+        qDebug("PDS: Pruning %i added %i and removed %i samples (%i msec)",level,addedCnt, removedCnt,tt.restart());
 #endif
 		level++;
-
-	} while(level < pp.MAXLEVELS);
-
-#ifdef DEBUG_DUMP_STAT
-	// write some statistics
-	QFile outfile("C:/temp/poissondisk_statistics.txt");
-	if (outfile.open(QFile::WriteOnly | QFile::Truncate)) 
-	{
-		QTextStream out(&outfile);
-
-		for (int k = 0; k < pp.MAXLEVELS; k++)
-			out << "Cells used for level " << k << ": " << cellusedcounter[k] << endl;
-
-		for (int k = 0; k < pp.MAXLEVELS; k++)
-			out << "Cells to subdivide for level " << k << ": " << cellstosubdividecounter[k] << endl;
-
-		for (int k = 0; k < pp.MAXLEVELS; k++)
-			out << "Vertices counter for level " << k << ": " << verticescounter[k] << endl;
-
-		for (int k = 0; k < pp.MAXLEVELS; k++)
-			out << "Samples generated for level " << k << ": " << samplesgenerated[k] << endl;
-
-		for (int k = 0; k < pp.MAXLEVELS; k++)
-			out << "Samples accepted for level " << k << ": " << samplesaccepted[k] << endl;
-	}
-
-	outfile.close();
-#endif
+    } while(level < 5);
 }
 
 //template <class MetroMesh>
