@@ -56,7 +56,7 @@ template <class SCALARTYPE>
 		 * @remarks The operator returns true if the closest distance is less than input reject distance.
 		 *
 		 */
-		inline bool operator () (const VERTEXTYPE & v, const Point3<SCALARTYPE> & p, SCALARTYPE & minDist, Point3<SCALARTYPE> & q) 
+        inline bool operator ()  (const VERTEXTYPE & v, const Point3<SCALARTYPE> & p, SCALARTYPE & minDist, Point3<SCALARTYPE> & q) const
 		{
 			// convert the coordinates of p from SCALARTYPE to VERTEXTYPE::ScalarType type
 			const Point3<typename VERTEXTYPE::ScalarType> fp = Point3<typename VERTEXTYPE::ScalarType>::Construct(p);
