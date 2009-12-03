@@ -218,7 +218,7 @@ protected:
                     }
                 }
             }
-            for(std::vector<HashIterator>::iterator vi=toDel.begin(); vi!=toDel.end();++vi)
+            for(typename std::vector<HashIterator>::iterator vi=toDel.begin(); vi!=toDel.end();++vi)
                 hash_table.erase(*vi);
 
             return cnt;
