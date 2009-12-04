@@ -166,7 +166,12 @@ typename TriangleType::ScalarType QualityFace(const TriangleType &t)
 
 // More robust function to computing barycentric coords of a point inside a triangle.
 // it requires the knowledge of what is the direction that is more orthogonal to the face plane. 
-// Usually this info can be stored in a bit of the face flags (see updateFlags class members)
+// Usually this info can be stored in a bit of the face flags (see updateFlags::FaceProjection(MeshType &m) )
+// and accessing the field with
+//        if(fp->Flags() & FaceType::NORMX )   axis = 0;
+//        else if(fp->Flags() & FaceType::NORMY )   axis = 1;
+//        else axis =2;
+//        InterpolationParameters(*fp,axis,Point,Bary);
 // This direction is used to project the triangle in 2D and solve the problem in 2D where it is well defined.
 
 template<class TriangleType, class ScalarType>
