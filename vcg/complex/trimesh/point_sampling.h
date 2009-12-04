@@ -463,58 +463,56 @@ static int SingleFaceSubdivision(int sampleNum, const CoordType & v0, const Coor
     if(sampleNum == 1)
     {
         // ground case.
-			CoordType SamplePoint;
-			if(randSample) 
-			{
-				CoordType rb=RandomBaricentric();
-				SamplePoint=v0*rb[0]+v1*rb[1]+v2*rb[2];
-			}
-			else SamplePoint=((v0+v1+v2)/3.0f);
-			
-			CoordType SampleBary;
-			InterpolationParameters(*fp,SamplePoint,SampleBary[0],SampleBary[1],SampleBary[2]);
-			ps.AddFace(*fp,SampleBary);
-			return 1;
-    }
+        CoordType SamplePoint;
+        if(randSample) 
+        {
+            CoordType rb=RandomBaricentric();
+            SamplePoint=v0*rb[0]+v1*rb[1]+v2*rb[2];
+        }
+        else SamplePoint=((v0+v1+v2)*(1.0f/3.0f));
 
-		int s0 = sampleNum /2;
-		int s1 = sampleNum-s0;
-		assert(s0>0);
-		assert(s1>0);
+        ps.AddFace(*fp,SamplePoint);
+        return 1;
+    }
+    
+    int s0 = sampleNum /2;
+    int s1 = sampleNum-s0;
+    assert(s0>0);
+    assert(s1>0);
 	
-	  ScalarType w0 = ScalarType(s1)/ScalarType(sampleNum);
-		ScalarType w1 = 1.0-w0;
+    ScalarType w0 = ScalarType(s1)/ScalarType(sampleNum);
+    ScalarType w1 = 1.0-w0;
     // compute the longest edge.
-    double  maxd01 = SquaredDistance(v0,v1);
-    double  maxd12 = SquaredDistance(v1,v2);
-    double  maxd20 = SquaredDistance(v2,v0);
+    ScalarType  maxd01 = SquaredDistance(v0,v1);
+    ScalarType  maxd12 = SquaredDistance(v1,v2);
+    ScalarType  maxd20 = SquaredDistance(v2,v0);
     int     res;
     if(maxd01 > maxd12)
         if(maxd01 > maxd20)     res = 0;
-        else                    res = 2;
+    else                    res = 2;
     else
         if(maxd12 > maxd20)     res = 1;
-        else                    res = 2;
-				
+    else                    res = 2;
+    
     int faceSampleNum=0;
     // break the input triangle along the midpoint of the longest edge.
     CoordType  pp;
     switch(res)
     {
-     case 0 :    pp = v0*w0 + v1*w1;
-                 faceSampleNum+=SingleFaceSubdivision(s0,v0,pp,v2,ps,fp,randSample);
-                 faceSampleNum+=SingleFaceSubdivision(s1,pp,v1,v2,ps,fp,randSample);
-                 break;
-     case 1 :    pp =  v1*w0 + v2*w1;
-                 faceSampleNum+=SingleFaceSubdivision(s0,v0,v1,pp,ps,fp,randSample);
-                 faceSampleNum+=SingleFaceSubdivision(s1,v0,pp,v2,ps,fp,randSample);
-                 break;
-     case 2 :    pp = v0*w0 + v2*w1;
-                 faceSampleNum+=SingleFaceSubdivision(s0,v0,v1,pp,ps,fp,randSample);
-                 faceSampleNum+=SingleFaceSubdivision(s1,pp,v1,v2,ps,fp,randSample);
-                 break;
+    case 0 :    pp = v0*w0 + v1*w1;
+        faceSampleNum+=SingleFaceSubdivision(s0,v0,pp,v2,ps,fp,randSample);
+        faceSampleNum+=SingleFaceSubdivision(s1,pp,v1,v2,ps,fp,randSample);
+        break;
+    case 1 :    pp =  v1*w0 + v2*w1;
+        faceSampleNum+=SingleFaceSubdivision(s0,v0,v1,pp,ps,fp,randSample);
+        faceSampleNum+=SingleFaceSubdivision(s1,v0,pp,v2,ps,fp,randSample);
+        break;
+    case 2 :    pp = v0*w0 + v2*w1;
+        faceSampleNum+=SingleFaceSubdivision(s0,v0,v1,pp,ps,fp,randSample);
+        faceSampleNum+=SingleFaceSubdivision(s1,pp,v1,v2,ps,fp,randSample);
+        break;
     }
-		return faceSampleNum;
+    return faceSampleNum;
 }
 
 
@@ -527,11 +525,113 @@ static void FaceSubdivision(MetroMesh & m, VertexSampler &ps,int sampleNum, bool
 	//qDebug("samplePerAreaUnit %f",samplePerAreaUnit);
 	std::vector<FacePointer> faceVec;
 	FillAndShuffleFacePointerVector(m,faceVec);
-
+    tri::UpdateNormals<MetroMesh>::PerFaceNormalized(m);
+    tri::UpdateFlags<MetroMesh>::FaceProjection(m);
 	double  floatSampleNum = 0.0;
 	int faceSampleNum;
     // Subdivision sampling.
 	typename std::vector<FacePointer>::iterator fi;
+    for(fi=faceVec.begin(); fi!=faceVec.end(); fi++)
+    {
+        const CoordType b0(1.0, 0.0, 0.0);
+        const CoordType b1(0.0, 1.0, 0.0);
+        const CoordType b2(0.0, 0.0, 1.0);
+        // compute # samples in the current face.
+        floatSampleNum += 0.5*DoubleArea(**fi) * samplePerAreaUnit;
+        faceSampleNum          = (int) floatSampleNum;
+        if(faceSampleNum>0)
+            faceSampleNum = SingleFaceSubdivision(faceSampleNum,b0,b1,b2,ps,*fi,randSample);
+        floatSampleNum -= (double) faceSampleNum;
+    }
+}
+//---------
+// Subdivision sampling of a single face.
+// return number of added samples
+
+static int SingleFaceSubdivisionOld(int sampleNum, const CoordType & v0, const CoordType & v1, const CoordType & v2, VertexSampler &ps, FacePointer fp, bool randSample)
+{
+    // recursive face subdivision.
+    if(sampleNum == 1)
+    {
+        // ground case.
+        CoordType SamplePoint;
+        if(randSample)
+        {
+            CoordType rb=RandomBaricentric();
+            SamplePoint=v0*rb[0]+v1*rb[1]+v2*rb[2];
+        }
+        else SamplePoint=((v0+v1+v2)*(1.0f/3.0f));
+
+        CoordType SampleBary;
+//        int axis;
+//        if(fp->Flags() & FaceType::NORMX )   axis = 0;
+//        else if(fp->Flags() & FaceType::NORMY )   axis = 1;
+//        else {
+//            assert(fp->Flags() & FaceType::NORMZ) ;
+//            axis =2;
+//        }
+//        InterpolationParameters(*fp,axis,SamplePoint,SampleBary);
+                InterpolationParameters(*fp,SamplePoint,SampleBary[0],SampleBary[1],SampleBary[2]);
+        ps.AddFace(*fp,SampleBary);
+        return 1;
+    }
+
+    int s0 = sampleNum /2;
+    int s1 = sampleNum-s0;
+    assert(s0>0);
+    assert(s1>0);
+
+    ScalarType w0 = ScalarType(s1)/ScalarType(sampleNum);
+    ScalarType w1 = 1.0-w0;
+    // compute the longest edge.
+    ScalarType  maxd01 = SquaredDistance(v0,v1);
+    ScalarType  maxd12 = SquaredDistance(v1,v2);
+    ScalarType  maxd20 = SquaredDistance(v2,v0);
+    int     res;
+    if(maxd01 > maxd12)
+        if(maxd01 > maxd20)     res = 0;
+    else                    res = 2;
+    else
+        if(maxd12 > maxd20)     res = 1;
+    else                    res = 2;
+
+    int faceSampleNum=0;
+    // break the input triangle along the midpoint of the longest edge.
+    CoordType  pp;
+    switch(res)
+    {
+    case 0 :    pp = v0*w0 + v1*w1;
+        faceSampleNum+=SingleFaceSubdivision(s0,v0,pp,v2,ps,fp,randSample);
+        faceSampleNum+=SingleFaceSubdivision(s1,pp,v1,v2,ps,fp,randSample);
+        break;
+    case 1 :    pp =  v1*w0 + v2*w1;
+        faceSampleNum+=SingleFaceSubdivision(s0,v0,v1,pp,ps,fp,randSample);
+        faceSampleNum+=SingleFaceSubdivision(s1,v0,pp,v2,ps,fp,randSample);
+        break;
+    case 2 :    pp = v0*w0 + v2*w1;
+        faceSampleNum+=SingleFaceSubdivision(s0,v0,v1,pp,ps,fp,randSample);
+        faceSampleNum+=SingleFaceSubdivision(s1,pp,v1,v2,ps,fp,randSample);
+        break;
+    }
+    return faceSampleNum;
+}
+
+
+/// Compute a sampling of the surface where the points are regularly scattered over the face surface using a recursive longest-edge subdivision rule.
+static void FaceSubdivisionOld(MetroMesh & m, VertexSampler &ps,int sampleNum, bool randSample)
+{
+
+    ScalarType area = Stat<MetroMesh>::ComputeMeshArea(m);
+    ScalarType samplePerAreaUnit = sampleNum/area;
+    //qDebug("samplePerAreaUnit %f",samplePerAreaUnit);
+    std::vector<FacePointer> faceVec;
+    FillAndShuffleFacePointerVector(m,faceVec);
+    tri::UpdateNormals<MetroMesh>::PerFaceNormalized(m);
+    tri::UpdateFlags<MetroMesh>::FaceProjection(m);
+    double  floatSampleNum = 0.0;
+    int faceSampleNum;
+    // Subdivision sampling.
+    typename std::vector<FacePointer>::iterator fi;
     for(fi=faceVec.begin(); fi!=faceVec.end(); fi++)
     {
         // compute # samples in the current face.
@@ -543,6 +643,8 @@ static void FaceSubdivision(MetroMesh & m, VertexSampler &ps,int sampleNum, bool
     }
 }
 
+
+//---------
 
 // Similar Triangles sampling.
 // Skip vertex and edges
