@@ -200,14 +200,14 @@ namespace vcg {
 		{}
 		
 		template <class MeshType, class ATTR_CONT>
-		void ReorderAttribute(ATTR_CONT &c,std::vector<size_t> & newVertIndex, MeshType &m){
+		void ReorderAttribute(ATTR_CONT &c,std::vector<size_t> & newVertIndex, MeshType & /* m */){
 			typename std::set<typename MeshType::PointerToAttribute>::iterator ai;	
 				for(ai = c.begin(); ai != c.end(); ++ai)
 					((typename MeshType::PointerToAttribute)(*ai)).Reorder(newVertIndex);
 		}
 
 		template <class MeshType, class ATTR_CONT>
-		void ResizeAttribute(ATTR_CONT &c,const int & sz, MeshType &m){
+		void ResizeAttribute(ATTR_CONT &c,const int & /* sz */, MeshType &m){
 			typename std::set<typename MeshType::PointerToAttribute>::iterator ai;	
 				for(ai =c.begin(); ai != c.end(); ++ai)
 					((typename MeshType::PointerToAttribute)(*ai)).Resize(m.vn);
@@ -567,6 +567,47 @@ namespace vcg {
 			e.SetD();
 			--m.en;
 		}
+		
+		/*
+			Function to rearrange the vertex vector according to a given index permutation
+			the permutation is vector such that after calling this function
+			
+							m.vert[ newVertIndex[i] ] = m.vert[i];
+			
+			e.g. newVertIndex[i] is the new index of the vertex i
+			
+		*/
+		static void PermutateVertexVector(MeshType &m, std::vector<size_t> &newVertIndex ) 
+		{
+			for(unsigned int i=0;i<m.vert.size();++i)
+			{
+				if(newVertIndex[i]<size_t(m.vn))
+						m.vert[ newVertIndex[i] ]=m.vert[i];
+			}
+			
+			// call a templated reordering function that manage any additional data internally stored by the vector 
+			// for the default std::vector no work is needed (some work is typically needed for the OCF stuff) 
+			ReorderVert<typename MeshType::VertexType>(newVertIndex,m.vert);
+			
+			// reorder the optional atttributes in m.vert_attr to reflect the changes 
+			ReorderAttribute(m.vert_attr,newVertIndex,m);
+
+			m.vert.resize(m.vn);
+
+			// resize the optional atttributes in m.vert_attr to reflect the changes 
+			ResizeAttribute(m.vert_attr,m.vn,m);
+
+			FaceIterator fi;
+			VertexPointer vbase=&m.vert[0];
+			for(fi=m.face.begin();fi!=m.face.end();++fi)
+				if(!(*fi).IsD())
+					for(unsigned int i=0;i<3;++i)
+					{
+						size_t oldIndex = (*fi).V(i) - vbase;
+						assert(vbase <= (*fi).V(i) && oldIndex < newVertIndex.size());
+						(*fi).V(i) = vbase+newVertIndex[oldIndex];
+					}
+		}
 			
 		/* 
 		Function to compact all the vertices that have been deleted and put them to the end of the vector. 
@@ -589,37 +630,12 @@ namespace vcg {
 			{
 				if(!m.vert[i].IsD())
 				{
-					if(pos!=i)
-						m.vert[pos]=m.vert[i];
 					newVertIndex[i]=pos;
 					++pos;
 				}
 			}
 			assert((int)pos==m.vn);
-			
-			// call a templated reordering function that manage any additional data internally stored by the vector 
-			// for the default std::vector no work is needed (some work is typically needed for the OCF stuff) 
-			ReorderVert<typename MeshType::VertexType>(newVertIndex,m.vert);
-			
-			// reorder the optional atttributes in m.vert_attr to reflect the changes 
-			ReorderAttribute(m.vert_attr,newVertIndex,m);
-
-			m.vert.resize(m.vn);
-
-			// resize the optional atttributes in m.vert_attr to reflect the changes 
-			ResizeAttribute(m.vert_attr,m.vn,m);
-
-			FaceIterator fi;
-			VertexPointer vbase=&m.vert[0];
-			for(fi=m.face.begin();fi!=m.face.end();++fi)
-				if(!(*fi).IsD())
-					for(i=0;i<3;++i)
-					{
-						size_t oldIndex = (*fi).V(i) - vbase;
-						assert(vbase <= (*fi).V(i) && oldIndex < newVertIndex.size());
-						(*fi).V(i) = vbase+newVertIndex[oldIndex];
-					}
-				
+			PermutateVertexVector(m,newVertIndex);
 		}
 
 		/* 
