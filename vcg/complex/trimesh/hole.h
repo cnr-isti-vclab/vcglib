@@ -201,7 +201,7 @@ namespace vcg {
 				assert(e0.IsBorder());
 				e1=e0;
 				e1.NextB();
-                                n=vcg::Normal<CoordType>(*this);
+                                n=vcg::Normal<TrivialEar>(*this);
 				ComputeQuality();
 				ComputeAngle();
 			}
