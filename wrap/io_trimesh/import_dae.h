@@ -402,6 +402,11 @@ class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std
 
 							jj += faceAttributeNum;
 						}
+						if( ! ( (m.face[ff].V(0) != m.face[ff].V(1)) &&  
+										(m.face[ff].V(0) != m.face[ff].V(2)) &&  
+										(m.face[ff].V(1) != m.face[ff].V(2)) )  )
+										QDEBUG("********* WARNING face %i, (%i %i %i) is a DEGENERATE FACE!",ff, m.face[ff].V(0) - &m.vert.front(), m.face[ff].V(1) - &m.vert.front(), m.face[ff].V(2) - &m.vert.front());
+
 					}
 				}
 			}
