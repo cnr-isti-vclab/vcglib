@@ -37,6 +37,7 @@ First Working Version
 #ifndef __VCG_TRI_UPDATE_SELECTION
 #define __VCG_TRI_UPDATE_SELECTION
 
+#include <queue>
 #include <vcg/complex/trimesh/update/flag.h>
 
 namespace vcg {
