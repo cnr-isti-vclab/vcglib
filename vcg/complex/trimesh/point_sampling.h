@@ -40,6 +40,8 @@ sampling strategies (montecarlo, stratified etc).
 #include <vcg/space/index/spatial_hashing.h>
 #include <vcg/complex/trimesh/stat.h>
 #include <vcg/complex/trimesh/update/topology.h>
+#include <vcg/complex/trimesh/update/normal.h>
+#include <vcg/complex/trimesh/update/flag.h>
 #include <vcg/space/box2.h>
 namespace vcg
 {
