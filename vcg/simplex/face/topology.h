@@ -481,13 +481,13 @@ static void FlipEdge(FaceType &f, const int z)
 	f.V1(z) = g->V2(w);
 	g->V1(w) = f.V2(z);
 	
-	f.FFp(z)				= g->FFp1(w);
+    f.FFp(z)				= g->FFp((w+1)%3);
 	f.FFi(z)				= g->FFi((w+1)%3);
-	g->FFp(w)				= f.FFp1(z);
+    g->FFp(w)				= f.FFp((z+1)%3);
 	g->FFi(w)				= f.FFi((z+1)%3);
-	f.FFp1(z)				= g;
+    f.FFp((z+1)%3)				= g;
 	f.FFi((z+1)%3)	= (w+1)%3;
-	g->FFp1(w)			= &f;
+    g->FFp((w+1)%3)			= &f;
 	g->FFi((w+1)%3) = (z+1)%3;
 
 	if(f.FFp(z)==g)
