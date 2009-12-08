@@ -244,9 +244,10 @@ static int FaceSelected(UpdateMeshType &m, Color4b vs=Color4b::LightBlue)
 	int cnt=0;
 	typename UpdateMeshType::FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
-		if(!(*fi).IsD())
+            if(!(*fi).IsD()){
 			if((*fi).IsS()) { (*fi).C() = vs; ++cnt; }
 			else (*fi).C() = Color4b::White;
+                    }
 	return cnt;
 }
 
@@ -278,10 +279,10 @@ static int VertexSelected(UpdateMeshType &m, Color4b vs=Color4b::LightBlue)
 	int cnt=0;
 	typename UpdateMeshType::VertexIterator vi;
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-		if(!(*vi).IsD())
+            if(!(*vi).IsD()){
 			if((*vi).IsS()) {(*vi).C() = vs;  ++cnt; }
 			else (*vi).C() = Color4b::White;
-
+                    }
 	return cnt;
 }
 

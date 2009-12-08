@@ -110,7 +110,7 @@ namespace vcg{
 			dist=(r.Origin()-goal).Norm();
 
       const float LocalMaxScalar = (std::numeric_limits<float>::max)();
-                        const float	EPS = 1e-50f;
+                        const float	EPS = std::numeric_limits<float>::min;
 
 			/* Parametri della linea */
 			ScalarType tx,ty,tz;
