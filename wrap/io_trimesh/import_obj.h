@@ -21,69 +21,6 @@
 *                                                                           *
 ****************************************************************************/
 
-/****************************************************************************
-History
-
-$Log: not supported by cvs2svn $
-Revision 1.19  2008/01/17 18:02:02  cignoni
-added missing cast for normal assignments
-
-Revision 1.18  2007/12/13 17:57:33  cignoni
-removed harmless gcc warnings
-
-Revision 1.17  2007/10/17 09:49:50  cignoni
-correct management of point only files
-
-Revision 1.16  2007/07/20 14:49:46  cignoni
-Added in load mask the face color bit when there is a generic material used
-
-Revision 1.15  2007/07/05 14:47:04  cignoni
-Added face coloring when there is a texture (and therefore a material)
-
-Revision 1.14  2007/04/18 13:33:11  cignoni
-resolved issue related to the parsing of CR LF under *nixes
-
-Revision 1.13  2007/04/18 07:01:26  cignoni
-Added managment of map_Ka textures (and not only map_Kd)
-
-Revision 1.12  2006/12/21 00:36:17  cignoni
-Removed a bug in the managment of non triangular faces
-
-Revision 1.11  2006/12/12 02:47:12  cignoni
-Removed use of tellg that is broken in current version of mingw
-
-Revision 1.10  2006/11/21 10:56:41  cignoni
-ReWrote loadMask. Now shorter and faster.
-
-Revision 1.9  2006/10/09 19:58:08  cignoni
-Added casts to remove warnings
-
-Revision 1.8  2006/07/09 05:41:17  cignoni
-Major rewrite. Now shorter and more robust.
-
-Revision 1.7  2006/06/21 04:26:26  cignoni
-added initial test on end of file in the tokenize
-
-Revision 1.6  2006/05/21 07:01:04  cignoni
-Added mask clamping to the effective capabilities of the mesh
-
-Revision 1.5  2006/04/11 09:48:00  zifnab1974
-changes needed for compilation on linux 64b with gcc 3.4.5
-
-Revision 1.4  2006/03/29 09:27:07  cignoni
-Added managemnt of non critical errors
-
-Revision 1.3  2006/03/29 08:51:16  corsini
-reset to zero warnings
-
-Revision 1.2  2006/03/27 07:18:22  cignoni
-added missing std::
-
-Revision 1.1  2006/03/07 13:19:29  cignoni
-First Release with OBJ import support
-
-Initial Working version coded by Buzzelli.
-****************************************************************************/
 
 #ifndef __VCGLIB_IMPORT_OBJ
 #define __VCGLIB_IMPORT_OBJ
@@ -92,6 +29,9 @@ Initial Working version coded by Buzzelli.
 #include <vcg/complex/trimesh/allocate.h>
 #include <wrap/io_trimesh/io_mask.h>
 #include <wrap/io_trimesh/io_material.h>
+#ifdef __gl_h_
+#include <wrap/gl/glu_tesselator.h>
+#endif
 #include <vcg/space/color4.h>
 
 #include <fstream>
@@ -388,14 +328,9 @@ public:
 					int vertexesPerFace = static_cast<int>(tokens.size()-1);
 
 					if( (vertexesPerFace>3) && OpenMeshType::FaceType::HasPolyInfo() ){
-						//_BEGIN___ if  you are loading a GENERIC POLYGON mesh 
-
+            //_BEGIN___ if  you are loading a GENERIC POLYGON mesh
 						ff.set(vertexesPerFace);
-
-						std::string vertex;
-						std::string texcoord;
-						std::string normal;
-						for(int i=0;i<vertexesPerFace;++i) // remember index starts from 1 instead of 0
+                        for(int i=0;i<vertexesPerFace;++i) // remember index starts from 1 instead of 0
 							SplitToken(tokens[i+1], ff.v[i], ff.n[i], ff.t[i], inputMask);
 
 						if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD )
@@ -420,23 +355,19 @@ public:
 								return E_BAD_VERT_INDEX;
 
 						// assigning face normal
-						// ---------------------
-						if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
+                        if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
 						{
 							// verifying validity of vertex normal indices
-							// -------------------------------------------
-							for(int i=0;i<vertexesPerFace;i++)
+                            for(int i=0;i<vertexesPerFace;i++)
 								if(!GoodObjIndex(ff.n[i],numVNormals)) return E_BAD_VERT_NORMAL_INDEX;
 						}
 
 						// assigning face color
-						// --------------------
-						if( oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR)		
+                        if( oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR)
 							ff.c = currentColor;
 
 						++numTriangles;
 						indexedFaces.push_back(ff);
-
 
 						// callback invocation, abort loading process if the call returns false
 						if ((cb !=NULL)&& (((numTriangles + numVertices)%100)==0) )
@@ -446,13 +377,92 @@ public:
 						}
 						//_END  ___ if  you are loading a GENERIC POLYGON mesh 
 					}else
+#ifdef __gl_h_
 					{
 						//_BEGIN___ if  you are loading a  TRIMESH mesh 
-						ff.set(3);	
-						std::string vertex;
-						std::string texcoord;
-						std::string normal;
-						for(int i=0;i<3;++i)
+                        std::vector<std::vector<vcg::Point3f> > polygonVect(1); // it is a vector of polygon loops
+                        polygonVect[0].resize(vertexesPerFace);
+                        std::vector<int> indexVVect(vertexesPerFace);
+                        std::vector<int> indexNVect(vertexesPerFace);
+                        std::vector<int> indexTVect(vertexesPerFace);
+                        std::vector<int> indexTriangulatedVect;
+
+                        for(int pi=0;pi<vertexesPerFace;++pi)
+                        {
+                            SplitToken(tokens[pi+1], indexVVect[pi],indexNVect[pi],indexTVect[pi], inputMask);
+                            GoodObjIndex(indexVVect[pi],numVertices);
+                            GoodObjIndex(indexTVect[pi],oi.numTexCoords);
+                           polygonVect[0][pi]=m.vert[indexVVect[pi]].cP();
+                        }
+
+                        vcg::glu_tesselator::tesselate<vcg::Point3f>(polygonVect, indexTriangulatedVect);
+                        extraTriangles+=((indexTriangulatedVect.size()/3) -1);
+                        if( (indexTriangulatedVect.size()/3) != vertexesPerFace-2)
+                        {
+                            qDebug("Warning there is a degenerate poligon of %i verteces that was triangulated into %i triangles",vertexesPerFace,indexTriangulatedVect.size()/3);
+                            for(int qq=0;qq<polygonVect[0].size();++qq)
+                                qDebug("      (%f %f %f)",polygonVect[0][qq][0],polygonVect[0][qq][1],polygonVect[0][qq][2]);
+                             for(int qq=0;qq<tokens.size();++qq) qDebug("<%s>",tokens[qq].c_str());
+                        }
+
+                        //qDebug("Triangulated a face of %i vertexes into %i triangles",polygonVect[0].size(),indexTriangulatedVect.size());
+
+                        for(int pi=0;pi<indexTriangulatedVect.size();pi+=3)
+                        {
+                            int i0= indexTriangulatedVect [pi+0];
+                            int i1= indexTriangulatedVect [pi+1];
+                            int i2= indexTriangulatedVect [pi+2];
+                            //qDebug("Triangle %i (%i %i %i)",pi/3,i0,i1,i2);
+
+                            ff.set(3);
+                            ff.v[0]= indexVVect[i0];
+                            ff.v[1]= indexVVect[i1];
+                            ff.v[2]= indexVVect[i2];
+                            ff.t[0]= indexTVect[i0];
+                            ff.t[1]= indexTVect[i1];
+                            ff.t[2]= indexTVect[i2];
+
+                            // Setting internal edges: only edges formed by consecutive edges are external.
+                            if( (i0+1)%vertexesPerFace == i1) ff.edge[0]=false;
+                            else ff.edge[0]=true;
+                            if( (i1+1)%vertexesPerFace == i2) ff.edge[1]=false;
+                            else ff.edge[1]=true;
+                            if( (i2+1)%vertexesPerFace == i0) ff.edge[2]=false;
+                            else ff.edge[2]=true;
+
+                            if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD )
+                            { // verifying validity of texture coords indices
+                                for(int i=0;i<3;i++)
+                                    if(!GoodObjIndex(ff.t[i],oi.numTexCoords))  return E_BAD_VERT_TEX_INDEX;
+                                ff.tInd=materials[currentMaterialIdx].index;
+                            }
+
+                            // verifying validity of vertex indices
+                            if ((ff.v[0] == ff.v[1]) || (ff.v[0] == ff.v[2]) || (ff.v[1] == ff.v[2]))
+                                result = E_VERTICES_WITH_SAME_IDX_IN_FACE;
+
+                            for(int i=0;i<3;i++)
+                                if(!GoodObjIndex(ff.v[i],numVertices)) return E_BAD_VERT_INDEX;
+
+                            // assigning face normal
+                            if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
+                            {   // verifying validity of vertex normal indices
+                                for(int i=0;i<3;i++)
+                                    if(!GoodObjIndex(ff.n[i],numVNormals))	return E_BAD_VERT_NORMAL_INDEX;
+                            }
+
+                            // assigning face color
+                            if( oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR) ff.c = currentColor;
+
+                            ++numTriangles;
+                            indexedFaces.push_back(ff);
+                        }
+
+                    }
+#else
+                    {
+                        ff.set(3);
+                        for(int i=0;i<3;++i)
 						{		// remember index starts from 1 instead of 0
 							SplitToken(tokens[i+1], ff.v[i], ff.n[i], ff.t[i], inputMask);
 							if(QuadFlag) { ff.v[i]+=1; }
@@ -476,14 +486,10 @@ public:
 								return E_BAD_VERT_INDEX;
 
 						// assigning face normal
-						// ---------------------
-						if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
-						{
-							// verifying validity of vertex normal indices
-							// -------------------------------------------
+                        if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
+                        {   // verifying validity of vertex normal indices
 							for(int i=0;i<3;i++)
-								if(!GoodObjIndex(ff.n[i],numVNormals))
-									return E_BAD_VERT_NORMAL_INDEX;
+                                if(!GoodObjIndex(ff.n[i],numVNormals))	return E_BAD_VERT_NORMAL_INDEX;
 						}
 
 						// assigning face color
@@ -567,17 +573,15 @@ public:
 							indexedFaces.push_back(ffNew);
 							ff.v[2] = v4_index;
 						}
-
 						// callback invocation, abort loading process if the call returns false
 						if ((cb !=NULL)&& (((numTriangles + numVertices)%100)==0) )
 						{
 							if (!(*cb)( (100*(numTriangles +numVertices))/ numVerticesPlusFaces, "Face Loading"))
 								return E_ABORTED;
-						}
-						//_END___ if  you are loading a  TRIMESH mesh 
-
-					}
-				}
+						}						
+                    }//_END___ if  you are loading a  TRIMESH mesh
+#endif
+                }
 				else if (header.compare("mtllib")==0)	// material library
 				{
 					// obtain the name of the file containing materials library
@@ -753,13 +757,13 @@ public:
 			vertex.push_back(c);
 
 			to = from+1;
-			while (to!=length && ((c = token[to]) !='/'))
+            while (to<length && ((c = token[to]) !='/'))
 			{
 				vertex.push_back(c);
 				++to;
 			}
 			++to;
-			while (to!=length && ((c = token[to]) !=' '))
+            while (to<length && ((c = token[to]) !=' '))
 			{
 				texcoord.push_back(c);
 				++to;
