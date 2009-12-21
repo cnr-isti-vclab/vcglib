@@ -271,7 +271,7 @@ bool IntersectionRayMesh(
 		p1=vcg::Point3<ScalarType>( (*fi).P(0).X() ,(*fi).P(0).Y(),(*fi).P(0).Z() );
 		p2=vcg::Point3<ScalarType>( (*fi).P(1).X() ,(*fi).P(1).Y(),(*fi).P(1).Z() );
 		p3=vcg::Point3<ScalarType>( (*fi).P(2).X() ,(*fi).P(2).Y(),(*fi).P(2).Z() );
-		if(Intersection<ScalarType>(ray,p1,p2,p3,bar1,bar2,dist))
+		if(IntersectionLineTriangle<ScalarType>(ray,p1,p2,p3,bar1,bar2,dist))
 		{
 			hitPoint= p1*(1-bar1-bar2) + p2*bar1 + p3*bar2;
 			hit=true;
@@ -314,7 +314,7 @@ bool IntersectionRayMesh(
 		p1=vcg::Point3<ScalarType>( (*fi).P(0).X() ,(*fi).P(0).Y(),(*fi).P(0).Z() );
 		p2=vcg::Point3<ScalarType>( (*fi).P(1).X() ,(*fi).P(1).Y(),(*fi).P(1).Z() );
 		p3=vcg::Point3<ScalarType>( (*fi).P(2).X() ,(*fi).P(2).Y(),(*fi).P(2).Z() );
-		if(Intersection<ScalarType>(ray,p1,p2,p3,bar1,bar2,dist))
+		if(IntersectionLineTriangle<ScalarType>(ray,p1,p2,p3,bar1,bar2,dist))
 		{
 			bar3 = (1-bar1-bar2);
 			hitPoint= p1*bar3 + p2*bar1 + p3*bar2;
