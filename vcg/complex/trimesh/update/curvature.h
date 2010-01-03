@@ -166,7 +166,7 @@ public:
 					while(tempV != firstV);
 
 					// compute the weights for the formula computing matrix M
-					for (int i = 0; i < vertices.size(); ++i) {
+                    for (size_t i = 0; i < vertices.size(); ++i) {
 						if (vertices[i].isBorder) {
 							weights.push_back(vertices[i].doubleArea / totalDoubleAreaSize);
 						} else {
@@ -188,7 +188,7 @@ public:
 					Matrix33<ScalarType> tempMatrix;
 					Matrix33<ScalarType> M;
 					M.SetZero();
-					for (int i = 0; i < vertices.size(); ++i) {
+                    for (size_t i = 0; i < vertices.size(); ++i) {
 						CoordType edge = (central_vertex->cP() - vertices[i].vert->cP());
 						float curvature = (2.0f * (central_vertex->cN().dot(edge)) ) / edge.SquaredNorm();
 						CoordType T = (Tp*edge).normalized();
@@ -221,9 +221,7 @@ public:
 					// find sin and cos for the Givens rotation
 					float s,c;
 					// Gabriel Taubin hint and Valentino Fiorin impementation
-					float qt21 = QtMQ[2][1];
-					float qt12 = QtMQ[1][2];
-					float alpha = QtMQ[1][1]-QtMQ[2][2];
+                    float alpha = QtMQ[1][1]-QtMQ[2][2];
 					float beta  = QtMQ[2][1];
 
 					float h[2];
@@ -329,7 +327,7 @@ public:
 					area = Stat<MeshType>::ComputeMeshArea(m);
 					vcg::tri::SurfaceSampling<MeshType,vcg::tri::TrivialSampler<MeshType> >::Montecarlo(m,vs,1000 * area / (2*M_PI*r*r ));
 					vi = vcg::tri::Allocator<MeshType>::AddVertices(tmpM,m.vert.size());
-					for(int y  = 0; y <   m.vert.size(); ++y,++vi)  (*vi).P() =  m.vert[y].P();
+                    for(size_t y  = 0; y <   m.vert.size(); ++y,++vi)  (*vi).P() =  m.vert[y].P();
 					pGrid.Set(tmpM.vert.begin(),tmpM.vert.end());
 				}	else{	mGrid.Set(m.face.begin(),m.face.end()); }
 
