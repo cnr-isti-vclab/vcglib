@@ -20,96 +20,12 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.30  2007/05/16 15:12:40  fiorin
-Added std:: prefix to swap call
-
-Revision 1.29  2006/12/06 00:08:21  cignoni
-Removed Oldstyle uberZ access to FF adjacency
-
-Revision 1.28  2006/11/09 17:28:42  cignoni
-Corrected Detach; added FFCorrectness; Corrected ComplexSize, Dissemination of a lot of assert()
-
-Revision 1.27  2006/05/03 21:38:57  cignoni
-Added possibility of not updating the topology during a SwapEdge
-
-Revision 1.26  2005/12/19 13:47:26  corsini
-Rewrite SwapEdge to fix problems with borders
-
-Revision 1.25  2005/12/16 11:01:26  corsini
-Remove trivial warnings
-
-Revision 1.24  2005/12/16 10:47:48  corsini
-Add further comment to FlipEdge
-
-Revision 1.23  2005/12/16 10:43:23  corsini
-Fix one bug
-
-Revision 1.22  2005/12/16 10:29:10  corsini
-Add CheckOrientation
-Reimplement SwapEdge function
-
-Revision 1.21  2005/12/01 23:54:59  cignoni
-Removed excess ';' from end of template functions, for gcc compiling
-
-Revision 1.20  2005/11/23 13:04:26  ganovelli
-changed IsBOrder
-
-Revision 1.19  2005/11/10 15:49:32  cignoni
-Made IsManifold Constant
-
-Revision 1.18  2005/10/13 08:34:19  cignoni
-Removed reference to IsBorder() member of face and substituted with the face templated function version.
-
-Revision 1.17  2005/04/11 09:17:24  pietroni
-Changed detach to FFdetach , compiled tested in manifold cases
-
-Revision 1.16  2005/03/18 16:35:53  fiorin
-minor changes to comply gcc compiler
-
-Revision 1.15  2004/10/22 13:41:06  fiorin
-Added CheckFlipEdge and FlipEdge
-
-Revision 1.14  2004/10/18 17:15:45  ganovelli
-minor change
-
-Revision 1.13  2004/08/06 01:47:57  pietroni
-corrected errors on vfappend
-
-Revision 1.12  2004/08/05 22:27:00  pietroni
-added VFAppend funtion
-
-Revision 1.10  2004/07/27 09:49:23  cignoni
-Removed warning about postfix incremnet of VFIterator
-
-Revision 1.9  2004/07/15 12:03:07  ganovelli
-minor changes
-
-Revision 1.8  2004/07/15 11:26:48  ganovelli
-VFDetach corrected
-
-Revision 1.7  2004/05/12 12:23:23  cignoni
-Conformed C++ syntax to GCC requirements
-
-Revision 1.6  2004/05/11 16:03:18  ganovelli
-changed from "thi" to "&f" in Vfdetach
-
-Revision 1.5  2004/05/10 15:20:49  cignoni
-Updated names of POS and adj functions to the new standards for many functions
-
-Revision 1.4  2004/03/18 16:00:10  cignoni
-minor changes
-
-
-****************************************************************************/
 
 #ifndef _VCG_FACE_TOPOLOGY
 #define _VCG_FACE_TOPOLOGY
 
 #include <vcg/simplex/face/pos.h>
+#include <vcg/complex/trimesh/allocate.h>
 #include <algorithm>
 
 namespace vcg {
@@ -232,7 +148,33 @@ bool FFCorrectness(FaceType & f, const int e)
 }
 
 
+/** This function detach the face from the adjacent face via the edge e.
+    It's possible to use  this function it ONLY in non-two manifold situation.
+        The function cannot be applicated if the adjacencies among faces aren't defined.
+        @param f the face to be detached
+        @param e Index of the edge to be detached
+*/
+template <class FaceType>
+void FFDetachManifold(FaceType & f, const int e)
+{
+    assert(FFCorrectness(f,e));
+    assert(!IsBorder<FaceType>(f,e));  // Never try to detach a border edge!
+    FaceType *ffp = f.FFp(e);
+    int ffi=f.FFp(e);
 
+    f.FFp(e)=&f;
+    f.FFi(e)=e;
+    ffp->FFp(ffi)=ffp;
+    ffp->FFi(ffi)=ffi;
+
+    f.SetB(e);
+    f.ClearF(e);
+    ffp->SetB(ffi);
+    ffp->ClearF(ffi);
+
+    assert(FFCorrectness(f,e));
+    assert(FFCorrectness(ffp,ffi));
+}
 
 /** This function detach the face from the adjacent face via the edge e. 
     It's possible to use it also in non-two manifold situation.
@@ -244,46 +186,46 @@ bool FFCorrectness(FaceType & f, const int e)
 template <class FaceType>
 void FFDetach(FaceType & f, const int e)
 {
-  assert(FFCorrectness(f,e));        
-  assert(!IsBorder<FaceType>(f,e));  // Never try to detach a border edge!
-  int complexity;
-  assert(complexity=ComplexSize(f,e));
+    assert(FFCorrectness(f,e));
+    assert(!IsBorder<FaceType>(f,e));  // Never try to detach a border edge!
+    int complexity;
+    assert(complexity=ComplexSize(f,e));
 
-  Pos< FaceType > FirstFace(&f,e);  // Build the half edge
+    Pos< FaceType > FirstFace(&f,e);  // Build the half edge
 	Pos< FaceType > LastFace(&f,e);  // Build the half edge
 	FirstFace.NextF(); 
-  LastFace.NextF(); 
+    LastFace.NextF();
 	int cnt=0;
-  
-	///then in case of non manifold face continue to advance LastFace
-  // until I find it become the one that
-	///preceed the face I want to erase
+
+    // then in case of non manifold face continue to advance LastFace
+    // until I find it become the one that
+    // preceed the face I want to erase
 
 	while ( LastFace.f->FFp(LastFace.z) != &f)
 	{ 
-    assert(ComplexSize(*LastFace.f,LastFace.z)==complexity);
+        assert(ComplexSize(*LastFace.f,LastFace.z)==complexity);
 		assert(!LastFace.IsManifold());   // We enter in this loop only if we are on a non manifold edge
 		assert(!LastFace.IsBorder());
 		LastFace.NextF();
 		cnt++;
-    assert(cnt<100);
+        assert(cnt<100);
 	}
 
 	assert(LastFace.f->FFp(LastFace.z)==&f);
-  assert(f.FFp(e)== FirstFace.f);
+    assert(f.FFp(e)== FirstFace.f);
 
 	// Now we link the last one to the first one, skipping the face to be detached;
-  LastFace.f->FFp(LastFace.z) = FirstFace.f;
-	LastFace.f->FFi(LastFace.z) = FirstFace.z;
-  assert(ComplexSize(*LastFace.f,LastFace.z)==complexity-1);
-	  
-  // At the end selfconnect the chosen edge to make a border.
-  f.FFp(e) = &f;
-	f.FFi(e) = e;
-  assert(ComplexSize(f,e)==1); 
+    LastFace.f->FFp(LastFace.z) = FirstFace.f;
+    LastFace.f->FFi(LastFace.z) = FirstFace.z;
+    assert(ComplexSize(*LastFace.f,LastFace.z)==complexity-1);
 
-  assert(FFCorrectness(*LastFace.f,LastFace.z));
-  assert(FFCorrectness(f,e));
+    // At the end selfconnect the chosen edge to make a border.
+    f.FFp(e) = &f;
+	f.FFi(e) = e;
+    assert(ComplexSize(f,e)==1);
+
+    assert(FFCorrectness(*LastFace.f,LastFace.z));
+    assert(FFCorrectness(f,e));
 }
 
 
@@ -359,6 +301,7 @@ bool CheckOrientation(FaceType &f, int z)
 			return false;
 	}
 }
+
 
 /** 
  * This function change the orientation of the face by inverting the index of two vertex.
