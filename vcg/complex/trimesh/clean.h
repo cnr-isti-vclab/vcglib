@@ -948,6 +948,9 @@ private:
 					if (!vi->IsD())
 					{
 						face::VFIterator<FaceType> vfi(&*vi);
+                        if(vfi.End()) // if the vertex has no incident face (e.g. the iterator is at the end)
+                            continue;
+
 						face::Pos<FaceType> pos((*vi).VFp(), &*vi);
 						
 						starSizeFF = pos.NumberOfIncidentFaces();
@@ -982,7 +985,8 @@ private:
 
 			static void CountEdges( MeshType & m, int &count_e, int &boundary_e ) 
 			{
-				FaceIterator fi;
+                UpdateFlags<MeshType>::FaceClearV(m);
+                FaceIterator fi;
 				vcg::face::Pos<FaceType> he;
 				vcg::face::Pos<FaceType> hei;
 				bool counted =false;
@@ -990,7 +994,7 @@ private:
 				{
 					if(!((*fi).IsD()))
 					{
-					(*fi).SetS();
+                    (*fi).SetV();
 					count_e +=3; //assume that we have to increase the number of edges with three
 					for(int j=0; j<3; j++)
 					{
@@ -998,7 +1002,7 @@ private:
 							boundary_e++; // then increase the number of boundary edges
 						else if (IsManifold(*fi,j))//If this edge is manifold
 						{
-							if((*fi).FFp(j)->IsS()) //If the face on the other side of the edge is already selected
+                            if((*fi).FFp(j)->IsV()) //If the face on the other side of the edge is already selected
 								count_e--; // we counted one edge twice
 						}
 						else//We have a non-manifold edge
@@ -1008,7 +1012,7 @@ private:
 							he.NextF();
 							while (he.f!=hei.f)// so we have to iterate all faces that are connected to this edge
 							{
-								if (he.f->IsS())// if one of the other faces was already visited than this edge was counted already.
+                                if (he.f->IsV())// if one of the other faces was already visited than this edge was counted already.
 								{
 									counted=true;
 									break;
