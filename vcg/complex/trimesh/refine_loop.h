@@ -222,8 +222,7 @@ bool RefineOddEvenE(MESH_TYPE &m, ODD_VERT odd, EVEN_VERT even, PREDICATE edgePr
 
 
 	int j = 0;
-	typename MESH_TYPE::FaceType::ColorType color[6];  // per ogni faccia sono al piu' tre i nuovi valori
-	// di texture per wedge (uno per ogni edge)
+    // di texture per wedge (uno per ogni edge)
 
 	typename MESH_TYPE::VertexIterator vi;
 	typename MESH_TYPE::FaceIterator fi;

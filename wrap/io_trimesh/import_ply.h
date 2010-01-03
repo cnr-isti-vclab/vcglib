@@ -695,6 +695,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 	
 				// axis (i.e. rotation).
 				Matrix44<ScalarType> rm;
+                rm.SetIdentity();
 				rm[0][0] = ca.x_axisx;
 				rm[0][1] = ca.x_axisy;
 				rm[0][2] = ca.x_axisz;
