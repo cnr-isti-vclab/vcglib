@@ -1,4 +1,5 @@
 #include <vcg/complex/trimesh/bitquad_support.h>
+#include <vcg/complex/trimesh/allocate.h>
 
 /** BIT-QUAD creation support:
     a collection of methods that,
@@ -153,37 +154,107 @@ static void MakeDominantPass(MeshType &m){
   }
   
 }
+/**
+ * This function split a face along the specified border edge it does not compute any property of the new vertex. It only do the topological work.
+ * @param edge Index of the edge
+ */
+//                         V2(e) ------------- v2
+//  V0 -------------V2 V2(e)  \               /
+//  |             /     |  \    \  newF     /
+//  |           /       |    \    \       / e
+//  |   f     /         |      \    \   /
+//  |       / e         | f   V1(e)=newV =
+//  |     /             |      /
+//  |   /               |    /
+//  | /                 |  /
+//  V1                  V0(e)
+//
 
+static std::pair<typename MeshType::FaceType *, typename MeshType::VertexType *> FaceSplitBorderEdge(MeshType &m, typename MeshType::FaceType &f, int edge, typename MeshType::FaceType *newFace, typename MeshType::VertexType *newVert )
+{
+    assert(tri::HasFFAdjacency(m));
+    assert(face::IsBorder(f,edge));
+    qDebug("OldFacePRE  %i %i %i",tri::Index(m,f.V(0)),tri::Index(m,f.V(1)),tri::Index(m,f.V(2)));
+    if(newFace==0) newFace=&*tri::Allocator<MeshType>::AddFaces(m,1);
+    if(newVert==0) {
+        newVert=&*tri::Allocator<MeshType>::AddVertices(m,1);
+        newVert->P()=(f.P0(edge)+f.P1(edge))/2.0;
+    }
+    newFace->V0(edge)=newVert;
+    newFace->V1(edge)=f.V1(edge);
+    newFace->V2(edge)=f.V2(edge);
+
+    f.V1(edge)=newVert;
+
+    qDebug("NewFace %i %i %i",tri::Index(m,newFace->V(0)),tri::Index(m,newFace->V(1)),tri::Index(m,newFace->V(2)));
+    qDebug("OldFace %i %i %i",tri::Index(m,f.V(0)),tri::Index(m,f.V(1)),tri::Index(m,f.V(2)));
+
+   // Topology
+
+    newFace->FFp((edge+2)%3) = &f;
+    newFace->FFi((edge+2)%3) = (edge+1)%3;
+
+    newFace->FFp((edge+0)%3) = newFace;
+    newFace->FFi((edge+0)%3) = (edge+0)%3;
+
+    newFace->FFp((edge+2)%3) = f.FFp((edge+1)%3);
+    newFace->FFi((edge+2)%3) = f.FFi((edge+1)%3);
+
+    f.FFp((edge+1)%3) = newFace;
+    f.FFi((edge+1)%3) = (edge+2)%3;
+
+
+    assert(face::IsBorder(f,edge));
+    assert(face::IsBorder(*newFace,edge));
+
+    return std::make_pair(newFace,newVert);
+}
 // make tri count even by splitting a single triangle...
+//
+//  V0 -------V2    V0 --------V2
+//  |       /       |  \ Fnew /
+//  |     /         |    Vnew
+//  |   /           |    /
+//  | /             |  /
+//  V1              V1
+//
+
 static bool MakeTriEvenBySplit(MeshType& m){
   if (m.fn%2==0) return false; // it's already Even
-  assert(0); // todo!
+  // Search for a triangle on the border
+  for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++)
+  {
+      if(!(*fi).IsD())
+      {
+          for (int k=0; k<3; k++) {
+              if (face::IsBorder(*fi,k)){
+                  // We have found a face with a border
+                  int index=tri::Index(m,*fi);
+                  VertexIterator vnew=tri::Allocator<MeshType>::AddVertices(m,1);
+                  (*vnew).P()=((*fi).P0(k)+(*fi).P1(k))/2.0;
+
+                  FaceIterator fnew=tri::Allocator<MeshType>::AddFaces(m,1);
+
+                  FaceSplitBorderEdge(m,m.face[index],k,&*fnew,&*vnew);
+                     return true;
+              }
+          }
+      }
+
+  }
+     return true;
 }
 
 // make tri count even by delete...
 static bool MakeTriEvenByDelete(MeshType& m)
-{
-  
+{  
   if (m.fn%2==0) return false; // it's already Even
-  
-  
+    
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) {
     for (int k=0; k<3; k++) {
-      if (fi->FFp(k) == &* fi) {
-        
-        // mark the two old neight as border and not faux
-        for (int h=1; h<3; h++) {
-          int kh=(k+h)%3;
-          int j = fi->FFi( kh );
-          FaceType *f = fi->FFp(kh);
-          if (f != &* fi) {
-            f->FFp( j ) = f;
-            f->FFi( j ) = j;
-            f->ClearF(j);
-          }
-        }
-        
-        // delete found face
+      if (face::IsBorder(*fi,k) ) {
+        FFDetachManifold(*fi,(k+1)%3);
+        FFDetachManifold(*fi,(k+2)%3);
         Allocator<MeshType>::DeleteFace(m,*fi);
         return true;
       }
@@ -224,7 +295,12 @@ static bool IsBitTriQuadConventional(MeshType &m){
   }
   return true;
 }
-
+static void CopyTopology(FaceType *fnew, FaceType * fold)
+{
+    fnew->FFp(0)=fold->FFp(0); fnew->FFi(0)=fold->FFi(0);
+    fnew->FFp(1)=fold->FFp(1); fnew->FFi(1)=fold->FFi(1);
+    fnew->FFp(2)=fold->FFp(2); fnew->FFi(2)=fold->FFi(2);
+}
 /**
  makes any mesh quad only by refining it so that a quad is created over all
  previous diags
@@ -240,11 +316,11 @@ static void MakePureByRefine(MeshType &m){
     
   // first pass: count triangles to be added
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
-    int k=0; // number of borders
-    if (fi->FFp(0) == &*fi) k++; 
-    if (fi->FFp(1) == &*fi) k++;
-    if (fi->FFp(2) == &*fi) k++;
-
+    
+    int k=0;
+     if (face::IsBorder(*fi,0)) k++;
+      if (face::IsBorder(*fi,1)) k++;
+      if (face::IsBorder(*fi,2)) k++;
     if (!fi->IsAnyF()) { 
       // it's a triangle
       if (k==0) // add a vertex in the center of the face, splitting it in 3
@@ -270,8 +346,7 @@ static void MakePureByRefine(MeshType &m){
   FaceIterator nfi = tri::Allocator<MeshType>::AddFaces(m,ef); 
   VertexIterator nvi = tri::Allocator<MeshType>::AddVertices(m,ev); 
 
-  for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD())  fi->ClearV();
-
+  tri::UpdateFlags<MeshType>::FaceClearV(m);
 
   // second pass: add faces and vertices
   int nsplit=0; // spits to be done on border in the third pass
@@ -283,23 +358,24 @@ static void MakePureByRefine(MeshType &m){
       // it's a triangle
       
       int k=0; // number of borders
-      if (fi->FFp(0) == &*fi) k++; 
-      if (fi->FFp(1) == &*fi) k++;
-      if (fi->FFp(2) == &*fi) k++;
+      if (face::IsBorder(*fi,0)) k++;
+      if (face::IsBorder(*fi,1)) k++;
+      if (face::IsBorder(*fi,2)) k++;
+
       if (k==0) // add a vertex in the center of the face, splitting it in 3
       {
         assert(nvi!=m.vert.end());
         VertexType *nv = &*nvi; nvi++;
         //*nv = *fi->V0( 0 ); // lazy: copy everything from the old vertex
-				nv->ImportLocal(*(fi->V0( 0 ))); // lazy: copy everything from the old vertex
+        nv->ImportLocal(*(fi->V0( 0 ))); // lazy: copy everything from the old vertex
 
         nv->P() = ( fi->V(0)->P() + fi->V(1)->P() + fi->V(2)->P() )  /3.0;
         FaceType *fa = &*fi;
         FaceType *fb = &*nfi; nfi++;
         FaceType *fc = &*nfi; nfi++;
        
-				fb->ImportLocal(*fi);
-				fc->ImportLocal(*fi);
+                fb->ImportLocal(*fi);// CopyTopology(fb,&*fi);
+                fc->ImportLocal(*fi);// CopyTopology(fc,&*fi);
 				fb->V(1) = nv; fb->V(0)=fa->V(0);  fb->V(2)=fa->V(2);
 				fc->V(2) = nv; fc->V(0)=fa->V(0);  fc->V(1)=fa->V(1);
 
@@ -363,7 +439,8 @@ static void MakePureByRefine(MeshType &m){
       // create new vert in center of faux edge
       assert(nvi!=m.vert.end());
       VertexType *nv = &*nvi; nvi++;
-      *nv = * fa->V0( ea2 );
+      // *nv = * fa->V0( ea2 );
+      nv->ImportLocal(*(fa->V0( ea2 ) )); // lazy: copy everything from the old vertex
       //nv->P() = ( fa->V(ea2)->P() + fa->V(ea0)->P() ) /2.0;
       Interpolator::Apply(*(fa->V(ea2)),*(fa->V(ea0)),0.5,*nv);
       // split faces: add 2 faces (one per side)
@@ -373,7 +450,12 @@ static void MakePureByRefine(MeshType &m){
       FaceType *fd = &*nfi; nfi++;
       *fc = *fa;
       *fd = *fb;
-          
+      //fc->ImportLocal(*fa ); CopyTopology(fc,fa); // lazy: copy everything from the old vertex
+      //fd->ImportLocal(*fb ); CopyTopology(fd,fb);// lazy: copy everything from the old vertex
+
+
+
+
       fa->V(ea2) = fc->V(ea0) = 
       fb->V(eb2) = fd->V(eb0) = nv ;
         
@@ -464,13 +546,15 @@ static void MakePureByRefine(MeshType &m){
         
         // create new vert in center of faux edge
         VertexType *nv = &*nvi; nvi++;
-        *nv = * fa->V0( ea2 );
+        //*nv = * fa->V0( ea2 );
+        nv->ImportLocal(*(fa->V0( ea2 ) )); // lazy: copy everything from the old vertex
         nv->P() = ( fa->V(ea2)->P() + fa->V(ea0)->P() ) /2.0;
         Interpolator::Apply(*(fa->V(ea2)),*(fa->V(ea0)),0.5,*nv);
         // split face: add 1 face
         FaceType *fc = &*nfi; nfi++;
         *fc = *fa;
-          
+        //fc->ImportLocal(*fa);CopyTopology(fc,fa); // lazy: copy everything from the old vertex
+
         fa->V(ea2) = fc->V(ea0) = nv ;
         
         fc->FFp(ea2) = fc;
@@ -517,7 +601,7 @@ static void MakePureByCatmullClark(MeshType &m){
 // marks edge distance froma a given face.
 // Stops at maxDist or at the distance when a triangle is found
 static FaceType * MarkEdgeDistance(MeshType &m, FaceType *f, int maxDist){
-  assert(MeshType::HasPerFaceQuality());
+    assert(tri::HasPerFaceQuality(m));
   
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++)  if (!f->IsD()) {
     fi->Q()=maxDist;
@@ -530,7 +614,7 @@ static FaceType * MarkEdgeDistance(MeshType &m, FaceType *f, int maxDist){
   int stackPos=0;
   stack.push_back(f);
 
-  while ( stackPos<stack.size() ) {
+  while ( stackPos<int(stack.size())) {
     FaceType *f = stack[stackPos++];
     for (int k=0; k<3; k++) {
       FaceType *fk = f->FFp(k);
