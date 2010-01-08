@@ -167,6 +167,13 @@ public :
 		return sph;
 	}
 
+	static SphericalHarmonics Wrap(ScalarType * _coefficients)
+	{
+		SphericalHarmonics sph;
+		for(i = 0; i < (int) MAX_BAND *  MAX_BAND; ++i) sph.coefficients[i] = _coefficients[i];
+		return sph;
+	}
+
 	ScalarType operator()(ScalarType theta, ScalarType phi)
 	{
 		ScalarType f = 0;
