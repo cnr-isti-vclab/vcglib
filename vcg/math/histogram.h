@@ -102,8 +102,11 @@ class Distribution
 {	
 private:
 	std::vector<ScalarType> vec;
-	bool dirty; 
+	bool dirty;
+	double valSum;
+	double sqrdValSum; 
 	double avg;
+	double sqrdAvg;
 	double rms;
 	double min_v;
 	double max_v;
@@ -137,25 +140,26 @@ public:
 	ScalarType RMS(){ DirtyCheck(); return rms;}
 	
 	//! Returns the variance of the data.
-	ScalarType Variance(){ return math::Abs(rms-avg*avg);}
+	// the average of the squares less the square of the average.
+	ScalarType Variance(){ DirtyCheck(); return sqrdAvg - avg*avg ;}
 	
 	//! Returns the standard deviation of the data.
-	ScalarType StandardDeviation(){ return sqrt(Variance());}
-
+	ScalarType StandardDeviation(){ DirtyCheck(); return sqrt( Variance() );}
 	void DirtyCheck()
 	{
 		if(!dirty) return;
 		std::sort(vec.begin(),vec.end());
-		avg=0;
-		rms=0;
+		valSum=0;
+		sqrdValSum=0;
 		typename std::vector<ScalarType>::iterator vi;
 		for(vi=vec.begin();vi!=vec.end();++vi)
 			{
-				avg += double(*vi);
-				rms += double(*vi)*double(*vi);
+				valSum += double(*vi);
+				sqrdValSum += double(*vi)*double(*vi);
 			}
-		rms = math::Sqrt(rms/double(vec.size()));
-		avg = avg/double(vec.size());
+		avg = valSum/double(vec.size());
+		sqrdAvg = sqrdValSum/double(vec.size());
+		rms = math::Sqrt(sqrdAvg);
 		dirty=false;
 	}
 	
@@ -232,8 +236,11 @@ public:
 
   int MaxCount() const;
 	int BinCount(ScalarType v);
+    int BinCountInd(int index) {return H[index];}
 	int BinCount(ScalarType v, ScalarType width);
-	int RangeCount(ScalarType rangeMin, ScalarType rangeMax);
+    ScalarType BinLowerBound(int index) {return R[index];}
+    ScalarType BinUpperBound(int index) {return R[index+1];};
+    int RangeCount(ScalarType rangeMin, ScalarType rangeMax);
 	ScalarType BinWidth(ScalarType v); 
 
 	/** 
