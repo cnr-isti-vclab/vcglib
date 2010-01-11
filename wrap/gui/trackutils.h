@@ -443,7 +443,7 @@ std::pair< float, bool > SegmentSegmentDistance(const Segment3f & R, const Segme
         Q_t=Q.P1();
         R_s=ClosestPoint(R,Q_t);
       } else {
-        if( ((qa<=0.0f)&&(qb>=1.0f) ||((qb<=0.0f)&&(qa>=1.0f)))){
+        if( ( ((qa<=0.0f)&&(qb>=1.0f)) || (((qb<=0.0f)&&(qa>=1.0f))))){
            R_s=R.P0();
            Q_t=ClosestPoint(Q,R_s);
         }else{
