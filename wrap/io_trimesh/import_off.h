@@ -458,12 +458,10 @@ namespace vcg
 						{
 							for (int j = 0; j < 3; j++)
 							{
-								// Go to next line when needed
-								if (k == tokens.size())   // if EOL
+                                if (k == tokens.size())   // if EOL 		// Go to next line when needed
 								{
 									TokenizeNextLine(stream, tokens);
-									if (tokens.size() == 0) // if EOF
-										return InvalidFile;
+                                    if (tokens.size() == 0) return InvalidFile; // if EOF
 									k = 0;
 								}
 							
@@ -477,38 +475,58 @@ namespace vcg
 							unsigned int trigs = vert_per_face-3; // number of extra faces to add
 							nFaces += trigs;
 							Allocator<MESH_TYPE>::AddFaces(mesh, trigs);
-							int *vertIndices = new int[vert_per_face];
-
+                            std::vector<int> vertIndices(vert_per_face);
 							for (int j=0; j < vert_per_face; j++)
 							{
-								// Go to next line when needed
-								if (k == tokens.size())   // if EOL
+                                if (k == tokens.size())   // if EOL // Go to next line when needed
 								{
 									TokenizeNextLine(stream, tokens);
-									if (tokens.size() == 0) // if EOF
-										return InvalidFile;
-									k = 0;
+                                    if (tokens.size() == 0) return InvalidFile; // if EOF
+                                    k = 0;
 								}
-
 								vertIndices[j] = atoi(tokens[k].c_str());
 								k++;
 							}
+                            if(vert_per_face==4)
+                            {   // To well triangulate the quad:
+                                // if the quad is flat and convex we use the shortest diag ,
+                                // else we should use the diag that makes the smallest                                
+                                
+                                const CoordType &P0=mesh.vert[vertIndices[0]].cP();
+                                const CoordType &P1=mesh.vert[vertIndices[1]].cP();
+                                const CoordType &P2=mesh.vert[vertIndices[2]].cP();
+                                const CoordType &P3=mesh.vert[vertIndices[3]].cP();
 
-							for (int j=0; j<=vert_per_face-3; j++)
-							{
-								mesh.face[f+j].V(0) = &(mesh.vert[ vertIndices[0  ] ]);
-								mesh.face[f+j].V(1) = &(mesh.vert[ vertIndices[1+j] ]);
-								mesh.face[f+j].V(2) = &(mesh.vert[ vertIndices[2+j] ]);
-								if (tri::HasPerFaceFlags(mesh)) {
-  								// tag internal polygnal edges as "faux"
-								  if (j>0) mesh.face[f+j].SetF(0);
-								  if (j<vert_per_face-3) mesh.face[f+j].SetF(2);
-                  loadmask |= Mask::IOM_BITPOLYGONAL;
-                }
-							}
+                                CoordType N00 = Normal(P0,P1,P2);
+                                CoordType N01 = Normal(P0,P2,P3);
+                                CoordType N10 = Normal(P1,P2,P3);
+                                CoordType N11 = Normal(P1,P3,P0);
 
-							f+=trigs;
-							delete [] vertIndices;
+                                ScalarType Angle0Rad=Angle(N00,N01);
+                                ScalarType Angle1Rad=Angle(N10,N11);
+
+                                // QualityRadii is inradius/circumradius; bad when close to zero. 
+                                // swap diagonal if the worst triangle improve. 
+                                bool qualityImprove = std::min(QualityRadii(P0,P1,P2),QualityRadii(P0,P2,P3)) < std::min(QualityRadii(P1,P2,P3),QualityRadii(P1,P3,P0));
+                                bool swapCauseFlip = (Angle1Rad > M_PI/2.0) && (Angle0Rad <M_PI/2.0);
+                                if(qualityImprove && ! swapCauseFlip)
+                                        std::rotate(vertIndices.begin(), vertIndices.begin()+1, vertIndices.end());
+
+                            }
+                            // standard fan triangulation (we hope the polygon is convex...)
+                            for (int j=0; j<=vert_per_face-3; j++)
+                            {
+                                mesh.face[f+j].V(0) = &(mesh.vert[ vertIndices[0  ] ]);
+                                mesh.face[f+j].V(1) = &(mesh.vert[ vertIndices[1+j] ]);
+                                mesh.face[f+j].V(2) = &(mesh.vert[ vertIndices[2+j] ]);
+                                if (tri::HasPerFaceFlags(mesh)) {
+                                // tag internal polygonal edges as "faux"
+                                  if (j>0) mesh.face[f+j].SetF(0);
+                                  if (j<vert_per_face-3) mesh.face[f+j].SetF(2);
+                                  loadmask |= Mask::IOM_BITPOLYGONAL;
+                              }
+                            }
+                            f+=trigs;
 						}
 
 						// NOTE: It is assumed that colored face takes exactly one text line
