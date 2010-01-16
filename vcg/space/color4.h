@@ -201,8 +201,8 @@ public:
 			case 2: r=p; g=v; b=t; break;
 			case 3: r=p; g=q; b=v; break;
 			case 4: r=t; g=p; b=v; break;
- default:
 			case 5: r=v; g=p; b=q; break;
+			default: r=0;g=0;b=0; assert(0);break;
   }
 		(*this)[0]=(unsigned char)(255*r);
 		(*this)[1]=(unsigned char)(255*g);
