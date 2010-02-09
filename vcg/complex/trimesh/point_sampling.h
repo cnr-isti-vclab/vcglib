@@ -43,6 +43,7 @@ sampling strategies (montecarlo, stratified etc).
 #include <vcg/complex/trimesh/update/normal.h>
 #include <vcg/complex/trimesh/update/flag.h>
 #include <vcg/space/box2.h>
+#include <vcg/space/segment2.h>
 namespace vcg
 {
 namespace tri
@@ -99,10 +100,11 @@ class TrivialSampler
 		sampleVec->push_back(f.P(0)*p[0] + f.P(1)*p[1] +f.P(2)*p[2] );
 	}
 	
-	void AddTextureSample(const FaceType &, const CoordType &, const Point2i &)
+        void AddTextureSample(const FaceType &, const CoordType &, const Point2i &, float )
 	{
 		// Retrieve the color of the sample from the face f using the barycentric coord p 
-		// and write that color in a texture image at position tp[0],tp[1]
+                // and write that color in a texture image at position <tp[0], texHeight-tp[1]>
+                // if edgeDist is > 0 then the corrisponding point is affecting face color even if outside the face area (in texture space)
 	}
 }; // end class TrivialSampler
 
@@ -527,8 +529,8 @@ static void FaceSubdivision(MetroMesh & m, VertexSampler &ps,int sampleNum, bool
 	//qDebug("samplePerAreaUnit %f",samplePerAreaUnit);
 	std::vector<FacePointer> faceVec;
 	FillAndShuffleFacePointerVector(m,faceVec);
-    tri::UpdateNormals<MetroMesh>::PerFaceNormalized(m);
-    tri::UpdateFlags<MetroMesh>::FaceProjection(m);
+	vcg::tri::UpdateNormals<MetroMesh>::PerFaceNormalized(m);
+    vcg::tri::UpdateFlags<MetroMesh>::FaceProjection(m);
 	double  floatSampleNum = 0.0;
 	int faceSampleNum;
     // Subdivision sampling.
@@ -769,70 +771,140 @@ static void FaceSimilar(MetroMesh & m, VertexSampler &ps,int sampleNum, bool dua
 	// con due parametri x,y di tipo S esempio:
 	// class Foo { public void operator()(int x, int y ) { ??? } };
 
+// This function does rasterization with a safety buffer area, thus accounting some points actually outside triangle area
+// The safety area samples are generated according to face flag BORDER which should be true for texture space border edges
+// Use correctSafePointsBaryCoords = true to map safety texels to closest point barycentric coords (on edge).
+    static void SingleFaceRaster(typename MetroMesh::FaceType &f,  VertexSampler &ps,
+                            const Point2<typename MetroMesh::ScalarType> & v0,
+                            const Point2<typename MetroMesh::ScalarType> & v1,
+                            const Point2<typename MetroMesh::ScalarType> & v2,
+                            bool correctSafePointsBaryCoords=true)
+    {
+    typedef typename MetroMesh::ScalarType S;
+    // Calcolo bounding box
+    Box2i bbox;
+
+    if(v0[0]<v1[0]) { bbox.min[0]=int(v0[0]); bbox.max[0]=int(v1[0]); }
+    else            { bbox.min[0]=int(v1[0]); bbox.max[0]=int(v0[0]); }
+    if(v0[1]<v1[1]) { bbox.min[1]=int(v0[1]); bbox.max[1]=int(v1[1]); }
+    else            { bbox.min[1]=int(v1[1]); bbox.max[1]=int(v0[1]); }
+    if(bbox.min[0]>int(v2[0])) bbox.min[0]=int(v2[0]);
+    else if(bbox.max[0]<int(v2[0])) bbox.max[0]=int(v2[0]);
+    if(bbox.min[1]>int(v2[1])) bbox.min[1]=int(v2[1]);
+    else if(bbox.max[1]<int(v2[1])) bbox.max[1]=int(v2[1]);
 
 
-static void SingleFaceRaster(FaceType &f,  VertexSampler &ps, const Point2<ScalarType> & v0, const Point2<ScalarType> & v1, const Point2<ScalarType> & v2)
-{
-	typedef ScalarType S;
-		// Calcolo bounding box
-	Box2i bbox;
+    // Calcolo versori degli spigoli
+    Point2<S> d10 = v1 - v0;
+    Point2<S> d21 = v2 - v1;
+    Point2<S> d02 = v0 - v2;
 
-	if(v0[0]<v1[0]) { bbox.min[0]=int(v0[0]); bbox.max[0]=int(v1[0]); }
-	else            { bbox.min[0]=int(v1[0]); bbox.max[0]=int(v0[0]); }
-	if(v0[1]<v1[1]) { bbox.min[1]=int(v0[1]); bbox.max[1]=int(v1[1]); }
-	else            { bbox.min[1]=int(v1[1]); bbox.max[1]=int(v0[1]); }
-	     if(bbox.min[0]>int(v2[0])) bbox.min[0]=int(v2[0]);
-	else if(bbox.max[0]<int(v2[0])) bbox.max[0]=int(v2[0]);
-	     if(bbox.min[1]>int(v2[1])) bbox.min[1]=int(v2[1]);
-	else if(bbox.max[1]<int(v2[1])) bbox.max[1]=int(v2[1]);
+    // Preparazione prodotti scalari
+    S b0  = (bbox.min[0]-v0[0])*d10[1] - (bbox.min[1]-v0[1])*d10[0];
+    S b1  = (bbox.min[0]-v1[0])*d21[1] - (bbox.min[1]-v1[1])*d21[0];
+    S b2  = (bbox.min[0]-v2[0])*d02[1] - (bbox.min[1]-v2[1])*d02[0];
+    // Preparazione degli steps
+    S db0 = d10[1];
+    S db1 = d21[1];
+    S db2 = d02[1];
+    // Preparazione segni
+    S dn0 = -d10[0];
+    S dn1 = -d21[0];
+    S dn2 = -d02[0];
 
-		// Calcolo versori degli spigoli
-	Point2<S> d10 = v1 - v0;
-	Point2<S> d21 = v2 - v1;
-	Point2<S> d02 = v0 - v2;
+    //Calculating orientation
+    bool flipped = !(d02 * vcg::Point2<S>(-d10[1], d10[0]) >= 0);
 
-		// Preparazione prodotti scalari
-	S b0  = (bbox.min[0]-v0[0])*d10[1] - (bbox.min[1]-v0[1])*d10[0];
-	S b1  = (bbox.min[0]-v1[0])*d21[1] - (bbox.min[1]-v1[1])*d21[0];
-	S b2  = (bbox.min[0]-v2[0])*d02[1] - (bbox.min[1]-v2[1])*d02[0];
-		// Preparazione degli steps
-	S db0 =  d10[1];
-	S db1 =  d21[1];
-	S db2 =  d02[1];
-		// Preparazione segni
-	S dn0 = -d10[0];
-	S dn1 = -d21[0];
-	S dn2 = -d02[0];
-		// Rasterizzazione
+    // Calculating border edges
+    Segment2<S> borderEdges[3];
+    S edgeLength[3];
+    unsigned char edgeMask = 0;
 
-	double de = v0[0]*v1[1]-v0[0]*v2[1]-v1[0]*v0[1]+v1[0]*v2[1]-v2[0]*v1[1]+v2[0]*v0[1];
+    if (f.IsB(0)) {
+        borderEdges[0] = Segment2<S>(v0, v1);
+        edgeLength[0] = borderEdges[0].Length();
+        edgeMask |= 1;
+    }
+    if (f.IsB(1)) {
+        borderEdges[1] = Segment2<S>(v1, v2);
+        edgeLength[1] = borderEdges[1].Length();
+        edgeMask |= 2;
+    }
+    if (f.IsB(2)) {
+        borderEdges[2] = Segment2<S>(v2, v0);
+        edgeLength[2] = borderEdges[2].Length();
+        edgeMask |= 4;
+    }
 
-	for(int x=bbox.min[0];x<=bbox.max[0];++x)
-	{
-		bool in = false;
-		S n0  = b0;
-		S n1  = b1;
-		S n2  = b2;
-		for(int y=bbox.min[1];y<=bbox.max[1];++y)
-		{
-			if( (n0>=0 && n1>=0 && n2>=0) || (n0<=0 && n1<=0 && n2<=0) )
-			{
-				CoordType baryCoord;
-				baryCoord[0] =  double(-y*v1[0]+v2[0]*y+v1[1]*x-v2[0]*v1[1]+v1[0]*v2[1]-x*v2[1])/de;
-				baryCoord[1] = -double( x*v0[1]-x*v2[1]-v0[0]*y+v0[0]*v2[1]-v2[0]*v0[1]+v2[0]*y)/de;
-				baryCoord[2] = 1-baryCoord[0]-baryCoord[1];
+    // Rasterizzazione
+    double de = v0[0]*v1[1]-v0[0]*v2[1]-v1[0]*v0[1]+v1[0]*v2[1]-v2[0]*v1[1]+v2[0]*v0[1];
 
-				ps.AddTextureSample(f, baryCoord, Point2i(x,y));
-				in = true;
-			} else if(in) break;
-			n0 += dn0;
-			n1 += dn1;
-			n2 += dn2;
-		}
-		b0 += db0;
-		b1 += db1;
-		b2 += db2;
-	}
+    for(int x=bbox.min[0]-1;x<=bbox.max[0]+1;++x)
+    {
+        bool in = false;
+        S n[3]  = { b0-db0-dn0, b1-db1-dn1, b2-db2-dn2};
+        for(int y=bbox.min[1]-1;y<=bbox.max[1]+1;++y)
+        {
+            if((n[0]>=0 && n[1]>=0 && n[2]>=0) || (n[0]<=0 && n[1]<=0 && n[2]<=0))
+            {
+                typename MetroMesh::CoordType baryCoord;
+                baryCoord[0] =  double(-y*v1[0]+v2[0]*y+v1[1]*x-v2[0]*v1[1]+v1[0]*v2[1]-x*v2[1])/de;
+                baryCoord[1] = -double( x*v0[1]-x*v2[1]-v0[0]*y+v0[0]*v2[1]-v2[0]*v0[1]+v2[0]*y)/de;
+                baryCoord[2] = 1-baryCoord[0]-baryCoord[1];
+
+                ps.AddTextureSample(f, baryCoord, Point2i(x,y), 0);
+                in = true;
+            } else {
+                // Check whether a pixel outside (on a border edge side) triangle affects color inside it
+                Point2<S> px(x, y);
+                Point2<S> closePoint;
+                int closeEdge = -1;
+                S minDst = FLT_MAX;
+
+                // find the closest point (on some edge) that lies on the 2x2 squared neighborhood of the considered point
+                for (int i=0, t=0; t<2 && i<3 && (edgeMask>>i)%2 ; ++i)
+                {
+                    Point2<S> close;
+                    S dst;
+                    if ( (!flipped && n[i]<0 || flipped && n[i]>0) &&
+                         (dst = ((close = ClosestPoint(borderEdges[i], px)) - px).Norm()) < minDst &&
+                         close.X() > px.X()-1 && close.X() < px.X()+1 &&
+                         close.Y() > px.Y()-1 && close.Y() < px.Y()+1)
+                    {
+                        minDst = dst;
+                        closePoint = close;
+                        closeEdge = i;
+                        ++t;
+                    }
+                }
+
+                if (closeEdge >= 0)
+                {
+                    typename MetroMesh::CoordType baryCoord;
+                    if (correctSafePointsBaryCoords)
+                    {
+                        // Add x,y sample with closePoint barycentric coords (on edge)
+                        baryCoord[closeEdge] = (closePoint - borderEdges[closeEdge].P(1)).Norm()/edgeLength[closeEdge];
+                        baryCoord[(closeEdge+1)%3] = 1 - baryCoord[closeEdge];
+                        baryCoord[(closeEdge+2)%3] = 0;
+                    } else {
+                        // Add x,y sample with his own barycentric coords (off edge)
+                        baryCoord[0] =  double(-y*v1[0]+v2[0]*y+v1[1]*x-v2[0]*v1[1]+v1[0]*v2[1]-x*v2[1])/de;
+                        baryCoord[1] = -double( x*v0[1]-x*v2[1]-v0[0]*y+v0[0]*v2[1]-v2[0]*v0[1]+v2[0]*y)/de;
+                        baryCoord[2] = 1-baryCoord[0]-baryCoord[1];
+                    }
+                    ps.AddTextureSample(f, baryCoord, Point2i(x,y), minDst);
+                    in = true;
+                } else if (in) break;
+            }
+            n[0] += dn0;
+            n[1] += dn1;
+            n[2] += dn2;
+        }
+        b0 += db0;
+        b1 += db1;
+        b2 += db2;
+    }
 }
 
 // Generate a random point in volume defined by a box with uniform distribution
@@ -1109,7 +1181,18 @@ static void PoissonDisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 
 //template <class MetroMesh>
 //void Sampling<MetroMesh>::SimilarFaceSampling()
-static void Texture(MetroMesh & m, VertexSampler &ps, int textureWidth, int textureHeight)
+
+// This function also generates samples outside faces if those affects faces in texture space.
+// Use correctSafePointsBaryCoords = true to map safety texels to closest point barycentric coords (on edge)
+// otherwise obtained samples will map to barycentric coord actually outside face
+//
+// If you don't need to get those extra points clear faces Border Flags
+// vcg::tri::UpdateFlags<Mesh>::FaceClearB(m);
+//
+// Else make sure to update border flags from texture space FFadj
+// vcg::tri::UpdateTopology<Mesh>::FaceFaceFromTexCoord(m);
+// vcg::tri::UpdateFlags<Mesh>::FaceBorderFromFF(m);
+static void Texture(MetroMesh & m, VertexSampler &ps, int textureWidth, int textureHeight, bool correctSafePointsBaryCoords=true)
 {
 		FaceIterator fi;
 
@@ -1118,9 +1201,9 @@ static void Texture(MetroMesh & m, VertexSampler &ps, int textureWidth, int text
 				{
 					Point2f ti[3];
 					for(int i=0;i<3;++i)
-							ti[i]=Point2f((*fi).WT(i).U() * textureWidth, (*fi).WT(i).V() * textureHeight);
-					
-					SingleFaceRaster(*fi,  ps, ti[0],ti[1],ti[2]);
+                                            ti[i]=Point2f((*fi).WT(i).U() * textureWidth - 0.5, (*fi).WT(i).V() * textureHeight + 0.5);
+                                            // +/- 0.5 constants are used to obtain correct texture mapping
+                                        SingleFaceRaster(*fi,  ps, ti[0],ti[1],ti[2], correctSafePointsBaryCoords);
 				}
 }
 
