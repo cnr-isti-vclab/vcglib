@@ -638,7 +638,13 @@ template <class T> class RadiusdOcf: public RadiusOcf<double, T> {};
 
 template < class T> class InfoOcf: public T {
 public:
-	vector_ocf<typename T::VertType> &Base() const { return *_ovp;}
+    // You should never ever try to copy a vertex that has OCF stuff.
+    // use ImportLocal function.
+    inline InfoOcf &operator=(const InfoOcf &other) {
+        assert(0); return *this;
+    }
+
+    vector_ocf<typename T::VertType> &Base() const { return *_ovp;}
 
 	inline int Index() const {
 		typename  T::VertType const *tp=static_cast<typename T::VertType const*>(this);

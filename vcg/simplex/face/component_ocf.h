@@ -731,6 +731,13 @@ template <class T> class WedgeNormal3dOcf: public WedgeNormalOcf<vcg::Point3d, T
 
 template < class T> class InfoOcf: public T {
 public:
+    // You should never ever try to copy a vertex that has OCF stuff.
+    // use ImportLocal function.
+    inline InfoOcf &operator=(const InfoOcf &other) {
+        assert(0); return *this;
+    }
+
+
   vector_ocf<typename T::FaceType> &Base() const { return *_ovp;}
 
 	template <class LeftF>
