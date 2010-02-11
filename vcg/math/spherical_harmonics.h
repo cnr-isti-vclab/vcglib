@@ -109,7 +109,7 @@ public :
 	 */
 	static ScalarType Real(unsigned l, int m, ScalarType theta, ScalarType phi)
 	{
-		assert((int)-l <= m && m <= (int)l && theta >= 0 && theta <= M_PI && phi >= 0 && phi <= 2 * M_PI);
+		assert((int)-l <= m && m <= (int)l && theta >= 0.0 && theta <= (ScalarType)M_PI && phi >= 0.0 && phi <= (ScalarType)(2.0 * M_PI));
 
 		if (m > 0) return SQRT_TWO * complex_spherical_harmonic_re(l, m, theta, phi);
 
@@ -170,7 +170,7 @@ public :
 	static SphericalHarmonics Wrap(ScalarType * _coefficients)
 	{
 		SphericalHarmonics sph;
-		for(i = 0; i < (int) MAX_BAND *  MAX_BAND; ++i) sph.coefficients[i] = _coefficients[i];
+                for(int i = 0; i < (int) MAX_BAND *  MAX_BAND; ++i) sph.coefficients[i] = _coefficients[i];
 		return sph;
 	}
 
