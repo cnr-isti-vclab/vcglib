@@ -97,50 +97,111 @@ void GLArea::resizeGL (int w, int h)
   initializeGL();
  }
 
+vcg::Point3f EP_right_shoulder(float s_dx, float r, float r1, unsigned int N ,unsigned int i){
+    float delta = (r-r1)*0.5/N;
+    if(i<N/2){
+        float x = s_dx-delta*i;
+        return vcg::Point3f(x,0,-sqrt(1.f-x*x/(r*r*0.25))*r1*0.5);}
+    else{
+        float x = -r/2+delta*i;
+        return vcg::Point3f(x,0,sqrt(1.f-x*x/(r*r*0.25))*r1*0.5);}
+    }
+}
+
+vcg::Point3f CP_right_shoulder(float r, unsigned int N ,unsigned int i){
+    float ang = M_PI/N*i;
+    return vcg::Point3f(r*vcg::math::Cos(ang),0,-r*vcg::math::Sin(ang))
+}
+
+void DrawHE(float r, float r1, float sg=1.0){
+   const float delta = 100.f;
+    glBegin(GL_LINE_STRIP);
+    for(float x = -r/2.f; x < r/2.f+r/(delta-1.f); x+=r/delta)
+        glVertex3f(x,0,sg*sqrt(1.f-x*x/(r*r*0.25))*r1*0.5);
+    glEnd();
+}
+void DrawShoulder_d(float dx,float dy,float rad){
+    glPushMatrix();
+    glTranslatef(dx,dy,0.f);
+    gluSphere(gluNewQuadric(),rad,100,100);
+    glPopMatrix();
+}
+
+void DrawE(float n_r1, float n_r2){
+    DrawHE(n_r1,n_r2,1.0);
+    DrawHE(n_r1,n_r2,-1.0);
+
+}
+void  DrawNeck(float ne_x, float ne_y, float angle, float n_r1, float n_r2){
+
+    glPushMatrix();
+    glTranslatef(ne_x,ne_y,0.0);
+    glRotatef(angle,1,0,0);
+
+    DrawE(n_r1,n_r2);
+    glTranslatef(0,3,0);
+    DrawE(n_r1,n_r2);
+    glPopMatrix();
+}
+
+void DrawBody(){
+    DrawHE(50,40,1.0);      // petto basso
+    DrawHE(50,20,-1.0);     // schiena basso
+
+    float rad = 4;
+    float     s_dx = -15.f,s_dy = 10.f;
+    float     s_sx =  15.f,s_sy = 10.f;
+    DrawShoulder_d(s_dx,s_dy,rad);
+    DrawShoulder_d(s_sx,s_sy,rad);
+
+    float delta_neck = 3.f;
+    float ne_x = (s_dx+s_sx)*0.5;
+    float ne_y = (s_dy+s_sy+2*rad)*0.5+delta_neck;
+    float angle = 10.f;
+    float n_r1 = 10.f;
+    float n_r2 = 12.f;
+
+    DrawNeck(ne_x,ne_y, angle,n_r1,n_r2);
+
+    // FRR
+    float delta_low = (s_dx-r/2)/20;
+    for(float x = -r/2; r <= s_dx;r=r+delta_low){
+        glVertex(EP(r,r1,1.0,x));
+        glVertex(EP(r,r1,1.0,x+delta_low));
+        glVertex(CP(r,1.0,x+delta_high));
+
+    }
+
+
+
+
+
+
+
+}
 void GLArea::paintGL ()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(40, GLArea::width()/(float)GLArea::height(), 0.1, 100);
+    gluPerspective(40, GLArea::width()/(float)GLArea::height(), 0.1, 200);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(0,0,5,   0,0,0,   0,1,0);
+    gluLookAt(0,0,100,   0,0,0,   0,1,0);
     track.center=vcg::Point3f(0, 0, 0);
-    track.radius= 1;
+    track.radius= 30;
 	track.GetView();
     track.Apply(false);
     glPushMatrix();
-    float d=1.0f/mesh.bbox.Diag();
-    vcg::glScale(d);
-	glTranslate(-glWrap.m->bbox.Center());	
-	// the trimesh drawing calls
-	switch(drawmode)
-	{
-	  case SMOOTH: 
-	  	glWrap.Draw<vcg::GLW::DMSmooth,   vcg::GLW::CMNone,vcg::GLW::TMNone> ();
-	  	break;
-	  case POINTS: 
-	  	glWrap.Draw<vcg::GLW::DMPoints,   vcg::GLW::CMNone,vcg::GLW::TMNone> ();
-	  	break;
-	  case WIRE: 
-	    glWrap.Draw<vcg::GLW::DMWire,     vcg::GLW::CMNone,vcg::GLW::TMNone> ();
-	    break;
-	  case FLATWIRE: 
-	  	glWrap.Draw<vcg::GLW::DMFlatWire, vcg::GLW::CMNone,vcg::GLW::TMNone> ();
-	  	break;
-	  case HIDDEN: 
-	  	glWrap.Draw<vcg::GLW::DMHidden,   vcg::GLW::CMNone,vcg::GLW::TMNone> ();
-	  	break;
-	  case FLAT: 
-	  	glWrap.Draw<vcg::GLW::DMFlat,     vcg::GLW::CMNone,vcg::GLW::TMNone> ();
-	  	break;
-	  default: 
-	  	break;
-	}
+    glPolygonMode(GL_FRONT,GL_LINE);
+
+
+    // disegna il modello
+    glDisable(GL_LIGHTING);
+    DrawBody();
 
     glPopMatrix();
-    track.DrawPostApply();
+   // track.DrawPostApply();
 } 
 
 void GLArea::keyReleaseEvent (QKeyEvent * e)
