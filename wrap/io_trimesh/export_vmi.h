@@ -231,11 +231,12 @@ namespace io {
 
 
 	public:
-		static void Save(const SaveMeshType &m,const char * filename){
+        static int Save(const SaveMeshType &m,const char * filename){
 			unsigned int i;
 			unsigned int vertSize,faceSize;
 			F() = fopen(filename,"wb");
-			std::vector<std::string> nameF,nameV;
+            if(F()==NULL)	return 1; // 1 is the error code for cant'open, see the ErrorMsg function
+            std::vector<std::string> nameF,nameV;
 			SaveMeshType::FaceType::Name(nameF);
 			SaveMeshType::VertexType::Name(nameV);
 			vertSize = m.vert.size();
@@ -375,8 +376,21 @@ namespace io {
 
 			//	fflush(F());
 			fclose(F());
+            return 0;
 		}
+        static const char *ErrorMsg(int error)
+        {
+          static std::vector<std::string> off_error_msg;
+          if(off_error_msg.empty())
+          {
+            off_error_msg.resize(2 );
+            off_error_msg[0]="No errors";
+              off_error_msg[1]="Can't open file";
+            }
 
+          if(error>1 || error<0) return "Unknown error";
+          else return off_error_msg[error].c_str();
+        }
 	}; // end class
 
 } // end Namespace tri
