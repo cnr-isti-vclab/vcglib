@@ -67,6 +67,8 @@ namespace io {
 		static void WriteString(FILE *f,const char * in)		{ unsigned int l = strlen(in); fwrite(&l,4,1,f); fwrite(in,1,l,f);} 
 		static void  WriteInt(FILE *f,const unsigned int i)	{ fwrite(&i,1,4,f);}  
 
+		static void  WriteFloat(FILE *f,const float v)	{ fwrite(&v,1,sizeof(float),f);}
+
 		/* save Ocf Vertex Components */
 		template <typename OpenMeshType,typename CONT>
 		struct SaveVertexOcf{
@@ -259,6 +261,11 @@ namespace io {
 
 			WriteString(F(),"SIZE_VECTOR_VERTS");
 			WriteInt(F(),vertSize);
+
+			WriteString(F(),"BOUNDING_BOX");
+			float float_value;
+			for(unsigned int i =0; i < 2; ++i){float_value = m.bbox.min[i]; WriteFloat(F(),float_value);}
+			for(unsigned int i =0; i < 2; ++i){float_value = m.bbox.max[i]; WriteFloat(F(),float_value);}
 
 			WriteString(F(),"end_header");
 			/* end header */

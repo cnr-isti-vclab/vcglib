@@ -253,6 +253,7 @@ namespace io {
 			}
 		 
 		static void ReadInt(FILE *f, unsigned int & i){ fread(&i,1,4,f);} 
+		static void ReadFloat(FILE *f, float & v){ fread(&v,1,sizeof(float),f);}
 
  
          static int   LoadVertexOcfMask( FILE * f){
@@ -443,35 +444,35 @@ namespace io {
                                 ReadString(f,s);
                                 if( s == std::string("HAS_FACE_QUALITY_OCF")) {
                                         face.EnableQuality();
-                                        fread((void*)&face.QV[0],sizeof(FaceType::QualityType),face.size(),f);
+										fread((void*)&face.QV[0],sizeof(typename FaceType::QualityType),face.size(),f);
                                 }
 
                                 // face color
                                 ReadString(f,s);
                                 if( s == std::string("HAS_FACE_COLOR_OCF")) {
                                         face.EnableColor();
-                                        fread((void*)&face.CV[0],sizeof(FaceType::ColorType),face.size(),f);
+										fread((void*)&face.CV[0],sizeof(typename FaceType::ColorType),face.size(),f);
                                 }
 
                                 // face normal
                                 ReadString(f,s);
                                 if( s == std::string("HAS_FACE_NORMAL_OCF")) {
                                         face.EnableNormal();
-                                        fread((void*)&face.NV[0],sizeof(FaceType::NormalType),face.size(),f);
+										fread((void*)&face.NV[0],sizeof(typename FaceType::NormalType),face.size(),f);
                                 }
 
                                 // face mark
                                 ReadString(f,s);
                                 if( s == std::string("HAS_FACE_MARK_OCF")) {
                                         face.EnableMark();
-                                        fread((void*)&face.MV[0],sizeof(FaceType::MarkType),face.size(),f);
+										fread((void*)&face.MV[0],sizeof(typename FaceType::MarkType),face.size(),f);
                                 }
 
                                 // face wedgetexcoord
                                 ReadString(f,s);
                                 if( s == std::string("HAS_FACE_WEDGETEXCOORD_OCF")) {
                                         face.EnableWedgeTex();
-                                        fread((void*)&face.WTV[0],sizeof(FaceType::WedgeTexCoordType),face.size(),f);
+										fread((void*)&face.WTV[0],sizeof(typename FaceType::WedgeTexCoordType),face.size(),f);
                                 }
 
 
@@ -479,28 +480,28 @@ namespace io {
                                 ReadString(f,s);
                                 if( s == std::string("HAS_FACE_FFADJACENCY_OCF")) {
                                         face.EnableFFAdjacency();
-                                        fread((void*)&face.AF[0],sizeof(face::vector_ocf<FaceType>::AdjTypePack),face.size(),f);
+										fread((void*)&face.AF[0],sizeof(typename  face::vector_ocf<FaceType>::AdjTypePack),face.size(),f);
                                 }
 
                                 // vertex-face adjacency
                                 ReadString(f,s);
                                 if( s == std::string("HAS_FACE_VFADJACENCY_OCF")) {
                                         face.EnableVFAdjacency();
-                                        fread((void*)&face.AV[0],sizeof(face::vector_ocf<FaceType>::AdjTypePack),face.size(),f);
+										fread((void*)&face.AV[0],sizeof(typename  face::vector_ocf<FaceType>::AdjTypePack),face.size(),f);
                                 }
 
                                 // face WedgeColor
                                 ReadString(f,s);
                                 if( s == std::string("HAS_FACE_WEDGECOLOR_OCF")) {
                                         face.EnableWedgeColor();
-                                        fread((void*)&face.WCV[0],sizeof(face::vector_ocf<FaceType>::WedgeColorTypePack),face.size(),f);
+										fread((void*)&face.WCV[0],sizeof(typename  face::vector_ocf<FaceType>::WedgeColorTypePack),face.size(),f);
                                 }
 
                                 // face WedgeNormal
                                 ReadString(f,s);
                                 if( s == std::string("HAS_FACE_WEDGENORMAL_OCF")) {
                                         face.EnableWedgeNormal();
-                                        fread((void*)&face.WNV[0],sizeof(face::vector_ocf<FaceType>::WedgeNormalTypePack),face.size(),f);
+										fread((void*)&face.WNV[0],sizeof(typename  face::vector_ocf<FaceType>::WedgeNormalTypePack),face.size(),f);
                                 }
                         }
                 };
@@ -573,11 +574,15 @@ namespace io {
                 return error_msg[message_code];
         };
 
-	private:
+		/* Read the info about the mesh. Note: in the header the bounding box is always written/readed
+		   as a vcg::Box3f, even if the scalar type is not float. The bounding box of the mesh will
+		   be set properly on loading.
+		  */
 		static bool GetHeader(	std::vector<std::string>& fnameV, 
 								std::vector<std::string>& fnameF, 
 								unsigned int & vertSize, 
 								unsigned int &faceSize,
+								vcg::Box3f & bbox,
 								int & mask){
 			std::string name;
 			unsigned int nameFsize,nameVsize,i;
@@ -592,18 +597,25 @@ namespace io {
 			ReadString(F(), name); ReadInt(F(),nameVsize);
 
 			for(i=0; i < nameVsize; ++i) 
-				{ReadString(F(), name) ;fnameV.push_back( name);;mask |= VertexMaskBitFromString(name);}
+				{ReadString(F(), name) ;fnameV.push_back( name);mask |= VertexMaskBitFromString(name);}
 			mask |= LoadVertexOcfMask(F());
 
 			ReadString(F(),name); ReadInt(F(),vertSize);
+
+			ReadString(F(),name);
+			float float_value;
+			for(unsigned int i =0; i < 2; ++i){ReadFloat(F(),float_value); bbox.min[i]=float_value;}
+			for(unsigned int i =0; i < 2; ++i){ReadFloat(F(),float_value); bbox.max[i]=float_value;}
+
 			ReadString(F(),name);
 			assert(strstr( name.c_str(),"end_header")!=NULL);
 			return true;
 		}
 
-		static bool GetHeader(char * filename,std::vector<std::string>& nameV, std::vector<std::string>& nameF, int & vertSize, int &faceSize,int & mask){
+
+		static bool GetHeader(char * filename,std::vector<std::string>& nameV, std::vector<std::string>& nameF, unsigned int & vertSize, unsigned int &faceSize,vcg::Box3f & bbox,int & mask){
 				F() = fopen(filename,"rb");
-				return GetHeader(F(),nameV, nameF, vertSize, faceSize,mask);
+				return GetHeader(nameV, nameF, vertSize, faceSize,bbox,mask);
 				fclose(F());
 	}
 
@@ -611,8 +623,9 @@ namespace io {
 		static bool LoadMask(FILE * f, int & mask){
 			std::vector<std::string>  nameV;
 			std::vector<std::string>  nameF;
-                        int   vertSize, faceSize;
-                        GetHeader(f,nameV,nameF,vertSize, faceSize,  mask);
+			int   vertSize, faceSize;
+			vcg::Box3f bbox;
+				GetHeader(f,nameV,nameF,vertSize, faceSize, bbox, mask);
 			return true;
 		}
 	
@@ -628,7 +641,7 @@ namespace io {
 			unsigned int vertSize,faceSize;
 
 			/* read the header */
-			GetHeader(fnameV, fnameF, vertSize, faceSize,mask);
+			GetHeader(fnameV, fnameF, vertSize, faceSize,m.bbox,mask);
 
 			/* read the mesh type */
 			OpenMeshType::FaceType::Name(nameF);	
