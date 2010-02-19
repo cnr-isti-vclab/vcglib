@@ -173,6 +173,9 @@ public:
 	inline       typename T::VertexType *       & UberV( const int j )	      { assert(j>=0 && j<3); return v[j]; }
 	inline const typename T::VertexType * const & UberV( const int j ) const	{ assert(j>=0 && j<3);	return v[j];	}
 
+    // Small comment about the fact that the pointers are zero filled.
+    // The importLocal is meant for copyng stuff between very different meshes, so copying the pointers would be meaningless.
+    // if you are using ImportLocal for copying internally simplex you have to set up all the pointers by hand.
 	template <class RightF>
 	void ImportLocal(const RightF & rightF){ V(0) = NULL; V(1) = NULL; V(2) = NULL; T::ImportLocal(rightF);}
 	inline void Alloc(const int & ns){T::Alloc(ns);}

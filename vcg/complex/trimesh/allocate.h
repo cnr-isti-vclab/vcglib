@@ -193,7 +193,7 @@ namespace vcg {
 		// this one is called by the Compact and overridden by more specialized functions for OCF classes.
 		// that manage also the additional types
 		template <class face_type>
-			void ReorderFace( std::vector<size_t> &newVertIndex, std::vector<face_type>  &vert)
+            void ReorderFace( std::vector<size_t> & /*newVertIndex*/, std::vector<face_type>  & /*vert*/)
 		{}
 		template <class vertex_type>
 		void ReorderVert( std::vector<size_t> &newVertIndex, std::vector<vertex_type> &vert)
@@ -582,7 +582,7 @@ namespace vcg {
 			for(unsigned int i=0;i<m.vert.size();++i)
 			{
 				if(newVertIndex[i]<size_t(m.vn))
-						m.vert[ newVertIndex[i] ]=m.vert[i];
+                        m.vert[ newVertIndex[i] ].ImportLocal(m.vert[i]);
 			}
 			
 			// call a templated reordering function that manage any additional data internally stored by the vector 
@@ -660,7 +660,12 @@ namespace vcg {
 				if(!m.face[i].IsD())
 				{
 					if(pos!=i)
-						m.face[pos]=m.face[i];
+                    {
+                        m.face[pos].ImportLocal(m.face[i]);
+                        m.face[pos].V(0) = m.face[i].V(0);
+                        m.face[pos].V(1) = m.face[i].V(1);
+                        m.face[pos].V(2) = m.face[i].V(2);
+                    }
 					newFaceIndex[i]=pos;
 					++pos;
 				}
