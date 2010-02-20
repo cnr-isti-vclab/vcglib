@@ -319,63 +319,63 @@ namespace io {
                 ReadString(f,s);
                 if( s == std::string("HAS_VERTEX_QUALITY_OCF")) {
                         vert.EnableQuality();
-                        fread((void*)&vert.QV[0],sizeof(VertexType::QualityType),vert.size(),f);
+                        fread((void*)&vert.QV[0],sizeof(typename VertexType::QualityType),vert.size(),f);
                 }
 
                 // vertex color
                 ReadString(f,s);
                 if( s == std::string("HAS_VERTEX_COLOR_OCF")) {
                         vert.EnableColor();
-                        fread((void*)&vert.CV[0],sizeof(VertexType::ColorType),vert.size(),f);
+                        fread((void*)&vert.CV[0],sizeof(typename VertexType::ColorType),vert.size(),f);
                 }
 
                 // vertex normal
                 ReadString(f,s);
                 if( s == std::string("HAS_VERTEX_NORMAL_OCF")) {
                         vert.EnableNormal();
-                        fread((void*)&vert.NV[0],sizeof(VertexType::NormalType),vert.size(),f);
+                        fread((void*)&vert.NV[0],sizeof(typename VertexType::NormalType),vert.size(),f);
                 }
 
                 // vertex mark
                 ReadString(f,s);
                 if( s == std::string("HAS_VERTEX_MARK_OCF")) {
                         vert.EnableMark();
-                        fread((void*)&vert.MV[0],sizeof(VertexType::MarkType),vert.size(),f);
+                        fread((void*)&vert.MV[0],sizeof(typename VertexType::MarkType),vert.size(),f);
                 }
 
                 // vertex texcoord
                 ReadString(f,s);
                 if( s == std::string("HAS_VERTEX_TEXCOORD_OCF")) {
                         vert.EnableTexCoord();
-                        fread((void*)&vert.TV[0],sizeof(vertex::vector_ocf<VertexType>::TexCoordType),vert.size(),f);
+                        fread((void*)&vert.TV[0],sizeof(typename VertexType::TexCoordType),vert.size(),f);
                 }
 
                 // vertex-face adjacency
                 ReadString(f,s);
                 if( s == std::string("HAS_VERTEX_VFADJACENCY_OCF")) {
                         vert.EnableVFAdjacency();
-                        fread((void*)&vert.AV[0],sizeof(vertex::vector_ocf<VertexType>::VFAdjType),vert.size(),f);
+                        fread((void*)&vert.AV[0],sizeof(typename vertex::vector_ocf<VertexType>::VFAdjType),vert.size(),f);
                 }
 
                 // vertex curvature
                 ReadString(f,s);
                 if( s == std::string("HAS_VERTEX_CURVATURE_OCF")) {
                         vert.EnableCurvature();
-                        fread((void*)&vert.CuV[0],sizeof(VertexType::CurvatureType),vert.size(),f);
+                        fread((void*)&vert.CuV[0],sizeof(typename VertexType::CurvatureType),vert.size(),f);
                 }
 
                 // vertex curvature dir
                 ReadString(f,s);
                 if( s == std::string("HAS_VERTEX_CURVATUREDIR_OCF")) {
                         vert.EnableCurvatureDir();
-                        fread((void*)&vert.CuDV[0],sizeof(VertexType::CurvatureDirType),vert.size(),f);
+                        fread((void*)&vert.CuDV[0],sizeof(typename VertexType::CurvatureDirType),vert.size(),f);
                 }
 
                 // vertex radius
                 ReadString(f,s);
                 if( s == std::string("HAS_VERTEX_RADIUS_OCF")) {
                         vert.EnableRadius();
-                        fread((void*)&vert.RadiusV[0],sizeof(vertex::vector_ocf<VertexType>::RadiusType),vert.size(),f);
+                        fread((void*)&vert.RadiusV[0],sizeof(typename VertexType::RadiusType),vert.size(),f);
                 }
 
                         }
@@ -613,22 +613,22 @@ namespace io {
 		}
 
 
-		static bool GetHeader(char * filename,std::vector<std::string>& nameV, std::vector<std::string>& nameF, unsigned int & vertSize, unsigned int &faceSize,vcg::Box3f & bbox,int & mask){
+        static bool GetHeader(const char * filename,std::vector<std::string>& nameV, std::vector<std::string>& nameF, unsigned int & vertSize, unsigned int &faceSize,vcg::Box3f & bbox,int & mask){
 				F() = fopen(filename,"rb");
 				return GetHeader(nameV, nameF, vertSize, faceSize,bbox,mask);
 				fclose(F());
 	}
 
 	public:
-		static bool LoadMask(FILE * f, int & mask){
+        static bool LoadMask(const char * f, int & mask){
 			std::vector<std::string>  nameV;
 			std::vector<std::string>  nameF;
-			int   vertSize, faceSize;
+            unsigned int   vertSize, faceSize;
 			vcg::Box3f bbox;
 				GetHeader(f,nameV,nameF,vertSize, faceSize, bbox, mask);
 			return true;
 		}
-	
+
             static int Open(OpenMeshType &m, const char * filename, int & mask,CallBackPos  * /*cb*/ = 0 ){
 			
 			typedef typename OpenMeshType::VertexType VertexType; 	
