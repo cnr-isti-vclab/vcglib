@@ -733,7 +733,7 @@ template < class T> class InfoOcf: public T {
 public:
     // You should never ever try to copy a vertex that has OCF stuff.
     // use ImportLocal function.
-    inline InfoOcf &operator=(const InfoOcf &other) {
+    inline InfoOcf &operator=(const InfoOcf & /*other*/) {
         assert(0); return *this;
     }
 

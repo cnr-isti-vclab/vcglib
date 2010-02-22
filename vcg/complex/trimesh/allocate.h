@@ -20,150 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-History
-
-$Log: not supported by cvs2svn $
-Revision 1.43  2008/04/18 17:45:23  cignoni
-fast return for compacting functions if no compacting is needed
-
-Revision 1.42  2008/04/10 09:18:57  cignoni
-moved Index function from append to the allocate
-
-Revision 1.41  2008/04/03 22:47:10  cignoni
-template the reorder functions on the vector types (for ocf)
-
-Revision 1.40  2008/03/11 09:22:07  cignoni
-Completed the garbage collecting functions CompactVertexVector and CompactFaceVector.
-
-Revision 1.39  2007/12/11 20:18:55  cignoni
-forgotten required std::
-
-Revision 1.38  2007/12/11 11:35:50  cignoni
-Added the CompactVertexVector garbage collecting function.
-
-Revision 1.37  2007/10/16 16:46:53  cignoni
-Added Allocator::DeleteFace and Allocator::DeleteVertex; Now the use of SetD() should be deprecated.
-
-Revision 1.36  2007/01/11 10:24:25  cignoni
-Added test in AddVertices  to do not update un-initalized vert references (for newly allocated faces)
-
-Revision 1.35  2006/11/29 15:58:50  cignoni
-Added check with the new end and avoided dangerous updating of already updated pointers
-
-Revision 1.34  2006/11/28 22:34:28  cignoni
-Added default constructor with null initialization to adjacency members.
-AddFaces and AddVertices NEED to know if the topology is correctly computed to update it.
-
-Revision 1.33  2006/11/13 13:12:27  ponchio
-Removed a couple of useless assert.
-
-Revision 1.32  2006/10/27 11:06:29  ganovelli
-the calls to  HasFFAdjacency e HasVFAdjacency have been changed to override them for the optional attributes (see vcg/complex/trimesh/base.h)
-
-Revision 1.31  2006/10/17 06:54:14  fiorin
-Added #include <assert.h>
-
-Revision 1.30  2006/10/02 09:31:47  ponchio
-usual typename missing
-
-Revision 1.29  2006/09/29 15:11:41  giec
-Fixed a few bug.
-
-Revision 1.28  2006/09/29 14:40:22  cignoni
-Removed a useless, wrong version of AddFaces
-
-Revision 1.27  2006/02/28 12:22:48  spinelli
-fix bug end iterator++
-
-Revision 1.26  2006/02/28 12:13:49  spinelli
-fix bug end iterator++
-
-Revision 1.25  2005/11/10 15:37:58  cignoni
-Removed flags clearing (now it should be in the constructor of face and vertex)
-
-Revision 1.24  2005/10/13 09:32:11  cignoni
-Re-inserted the cFFp and cVFp access. If only the const version of the member function exists, the compiler will call it
-when a non-const object invokes that function
-
-Revision 1.23  2005/10/12 17:26:19  ponchio
-cFFp doesn not exist -> FFp (there is the const version...)
-same for cVFp.
-
-Revision 1.22  2005/10/12 10:47:21  cignoni
-Removed clearing of flags of added faces. Now the flag component has a constructor that clear it.
-FF and VF adjacency are updated only if they are present and consistent (e.g. only if VFp(k) != 0 or FFp(k)!=0)
-
-Revision 1.21  2005/07/01 11:22:00  cignoni
-Corrected for the fourth time line a cast to Facetype at line 341.
-Read the notes there before changing it again
-
-Revision 1.20  2005/06/09 14:14:29  ganovelli
-two warnings on type cast
-
-Revision 1.19  2005/04/27 16:08:39  callieri
-in addfaces, added casting for face* returned from vertex.VFp() [borland]
-
-Revision 1.18  2005/03/23 13:22:57  turini
-Wrong left parenthesis removed.
-
-Revision 1.17  2005/03/23 11:29:49  ganovelli
-cast int->iterator corrected
-
-Revision 1.16  2005/02/19 10:43:11  ponchio
-reverted tarini mod
-
-Revision 1.15  2005/02/08 17:14:28  tarini
-aggiunto un typecast a (FaceType*) per farlo compilare under Mingw comp
-
-Revision 1.14  2004/10/14 15:08:04  pietroni
-added #include <vector>
-
-Revision 1.13  2004/09/07 07:36:32  fasano
-Replaced some typename definitions
-
-Revision 1.12  2004/08/25 15:15:26  ganovelli
-minor changes to comply gcc compiler (typename's and stuff)
-
-Revision 1.11  2004/08/07 17:38:00  pietroni
-solved errors on AddFaces relative to VFp pointers of faces
-
-Revision 1.10  2004/08/07 16:16:32  pietroni
-corrected errors in AddFaces ( must be updated pointers to chain of faces of VFTopology)
-
-Revision 1.9  2004/08/05 16:44:06  pietroni
-added addafaces funtion with local values
-
-Revision 1.8  2004/07/15 11:40:34  ganovelli
-VFb to VFp
-
-Revision 1.7  2004/05/11 14:12:13  ganovelli
-general comment: minor modifications to compile with g++. Almost all
-insertions of "typename" keyword and new line at the end of file
-
-Revision 1.6  2004/05/10 13:24:21  cignoni
-Updated names of adj functions and added ending newline
-
-Revision 1.5  2004/04/21 14:06:10  ganovelli
-#ifndef added
-
-Revision 1.4  2004/03/31 14:43:56  cignoni
-bug in update of VF adj
-
-Revision 1.3  2004/03/12 15:25:29  cignoni
-Corrected bug on the return of a wrong iterator
-
-Revision 1.2  2004/03/03 15:35:52  cignoni
-Yet another cr lf mismatch
-
-Revision 1.1  2004/02/24 21:36:42  cignoni
-grouped documentation, changed typenames and reflection mechanism
-
-Revision 1.1  2004/02/19 13:11:06  cignoni
-Initial commit
-
-
-****************************************************************************/
 
 #ifndef __VCGLIB_TRIALLOCATOR
 #define __VCGLIB_TRIALLOCATOR
@@ -582,7 +438,16 @@ namespace vcg {
 			for(unsigned int i=0;i<m.vert.size();++i)
 			{
 				if(newVertIndex[i]<size_t(m.vn))
-                        m.vert[ newVertIndex[i] ].ImportLocal(m.vert[i]);
+                {
+                    assert(!m.vert[i].IsD());
+                    m.vert[ newVertIndex[i] ].ImportLocal(m.vert[i]);
+                    if(HasVFAdjacency(m))
+                      if (m.vert[i].cVFp()!=0)
+                        {
+                            m.vert[ newVertIndex[i] ].VFp() = m.vert[i].cVFp();
+                            m.vert[ newVertIndex[i] ].VFi() = m.vert[i].cVFi();
+                        }
+                }
 			}
 			
 			// call a templated reordering function that manage any additional data internally stored by the vector 
@@ -665,6 +530,18 @@ namespace vcg {
                         m.face[pos].V(0) = m.face[i].V(0);
                         m.face[pos].V(1) = m.face[i].V(1);
                         m.face[pos].V(2) = m.face[i].V(2);
+                        if(HasVFAdjacency(m))
+                            for(int j=0;j<3;++j)
+                                 if (m.face[i].cVFp(j)!=0) {
+                                        m.face[pos].VFp(j) = m.face[i].cVFp(j);
+                                        m.face[pos].VFi(j) = m.face[i].cVFi(j);
+                                    }
+                        if(HasFFAdjacency(m))
+                            for(int j=0;j<3;++j)
+                                 if (m.face[i].cFFp(j)!=0) {
+                                        m.face[pos].FFp(j) = m.face[i].cFFp(j);
+                                        m.face[pos].FFi(j) = m.face[i].cFFi(j);
+                                    }
                     }
 					newFaceIndex[i]=pos;
 					++pos;

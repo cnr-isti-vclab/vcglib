@@ -383,11 +383,15 @@ public:
 		else return (*this).Base().AV[(*this).Index()]._fp;
 	}
 
-	int &VFi() {
-		assert((*this).Base().VFAdjacencyEnabled);
-		return (*this).Base().AV[(*this).Index()]._zp;
-	}
-	template <class LeftV>
+    int &VFi() {
+        assert((*this).Base().VFAdjacencyEnabled);
+        return (*this).Base().AV[(*this).Index()]._zp;
+    }
+    int cVFi() const {
+        if(! (*this).Base().VFAdjacencyEnabled ) return -1;
+        return (*this).Base().AV[(*this).Index()]._zp;
+    }
+    template <class LeftV>
 	void ImportLocal(const LeftV & leftV)
 	{
 		if((*this).Base().VFAdjacencyEnabled) // init the data only if they are enabled!
@@ -640,7 +644,7 @@ template < class T> class InfoOcf: public T {
 public:
     // You should never ever try to copy a vertex that has OCF stuff.
     // use ImportLocal function.
-    inline InfoOcf &operator=(const InfoOcf &other) {
+    inline InfoOcf &operator=(const InfoOcf & /*other*/) {
         assert(0); return *this;
     }
 
