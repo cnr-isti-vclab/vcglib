@@ -157,10 +157,11 @@ bool FFCorrectness(FaceType & f, const int e)
 template <class FaceType>
 void FFDetachManifold(FaceType & f, const int e)
 {
-    assert(FFCorrectness(f,e));
+    assert(FFCorrectness<FaceType>(f,e));
     assert(!IsBorder<FaceType>(f,e));  // Never try to detach a border edge!
     FaceType *ffp = f.FFp(e);
-    int ffi=f.FFp(e);
+    //int ffi=f.FFp(e);
+	int ffi=f.FFi(e);
 
     f.FFp(e)=&f;
     f.FFi(e)=e;
@@ -172,8 +173,8 @@ void FFDetachManifold(FaceType & f, const int e)
     ffp->SetB(ffi);
     ffp->ClearF(ffi);
 
-    assert(FFCorrectness(f,e));
-    assert(FFCorrectness(ffp,ffi));
+    assert(FFCorrectness<FaceType>(f,e));
+    assert(FFCorrectness<FaceType>(*ffp,ffi));
 }
 
 /** This function detach the face from the adjacent face via the edge e. 
@@ -186,7 +187,7 @@ void FFDetachManifold(FaceType & f, const int e)
 template <class FaceType>
 void FFDetach(FaceType & f, const int e)
 {
-    assert(FFCorrectness(f,e));
+    assert(FFCorrectness<FaceType>(f,e));
     assert(!IsBorder<FaceType>(f,e));  // Never try to detach a border edge!
     int complexity;
     assert(complexity=ComplexSize(f,e));
@@ -224,8 +225,8 @@ void FFDetach(FaceType & f, const int e)
 	f.FFi(e) = e;
     assert(ComplexSize(f,e)==1);
 
-    assert(FFCorrectness(*LastFace.f,LastFace.z));
-    assert(FFCorrectness(f,e));
+    assert(FFCorrectness<FaceType>(*LastFace.f,LastFace.z));
+    assert(FFCorrectness<FaceType>(f,e));
 }
 
 
