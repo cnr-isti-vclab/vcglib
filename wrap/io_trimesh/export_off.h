@@ -159,7 +159,8 @@ namespace vcg {
         {
 	        int capability = 0;			
 	        capability |= vcg::tri::io::Mask::IOM_VERTCOORD;
-	        capability |= vcg::tri::io::Mask::IOM_VERTCOLOR;
+          capability |= vcg::tri::io::Mask::IOM_VERTCOLOR;
+          capability |= vcg::tri::io::Mask::IOM_VERTTEXCOORD;
           capability |= vcg::tri::io::Mask::IOM_FACEINDEX;
           capability |= vcg::tri::io::Mask::IOM_BITPOLYGONAL;
 	        return capability;

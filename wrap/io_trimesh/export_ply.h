@@ -300,7 +300,13 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 			"property float radius\n"
 		);
 	}
-
+  if( ( m.HasPerVertexTexCoord() && pi.mask & Mask::IOM_VERTTEXCOORD ) )
+  {
+      fprintf(fpout,
+              "property float texture_u\n"
+              "property float texture_v\n"
+              );
+  }
 	for(i=0;i<pi.vdn;i++)
 			fprintf(fpout,"property %s %s\n",pi.VertexData[i].stotypename(),pi.VertexData[i].propname);
 	
@@ -310,15 +316,14 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 		,m.fn
 	);
 
-	if(m.HasPerFaceFlags()   && (pi.mask & Mask::IOM_FACEFLAGS) )
+  if(HasPerFaceFlags(m)   && (pi.mask & Mask::IOM_FACEFLAGS) )
 	{
 		fprintf(fpout,
 			"property int flags\n"
 		);
 	}
 
-	if( ( m.HasPerVertexTexCoord() && pi.mask & Mask::IOM_VERTTEXCOORD ) ||
-	    ( m.HasPerWedgeTexCoord() && pi.mask & Mask::IOM_WEDGTEXCOORD ) )
+  if( (HasPerWedgeTexCoord(m) || HasPerVertexTexCoord(m) ) && pi.mask & Mask::IOM_WEDGTEXCOORD ) // Note that you can save VT as WT if you really want it...
 	{
 		fprintf(fpout,
 			"property list uchar float texcoord\n"
@@ -330,7 +335,7 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 			);
 	}
 
-	if( m.HasPerFaceColor() && (pi.mask & Mask::IOM_FACECOLOR) )
+  if( HasPerFaceColor(m) && (pi.mask & Mask::IOM_FACECOLOR) )
 	{
 		fprintf(fpout,
 			"property uchar red\n"
@@ -340,14 +345,14 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 		);
 	}
 	
-	if ( m.HasPerWedgeColor() && (pi.mask & Mask::IOM_WEDGCOLOR)  )
+  if ( HasPerWedgeColor(m) && (pi.mask & Mask::IOM_WEDGCOLOR)  )
 	{
 		fprintf(fpout,
 			"property list uchar float color\n"
 		);
 	}
 
-	if( m.HasPerFaceQuality() && (pi.mask & Mask::IOM_FACEQUALITY) )
+  if( HasPerFaceQuality(m) && (pi.mask & Mask::IOM_FACEQUALITY) )
 	{
 		fprintf(fpout,
 			"property float quality\n"
@@ -464,6 +469,11 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 				if( HasPerVertexRadius(m) && (pi.mask & Mask::IOM_VERTRADIUS) )
 					fwrite(&( vp->R() ),sizeof(float),1,fpout);
 
+        if( HasPerVertexTexCoord(m) && (pi.mask & Mask::IOM_VERTTEXCOORD) )
+        {
+          t = float(vp->T().u()); fwrite(&t,sizeof(float),1,fpout);
+          t = float(vp->T().v()); fwrite(&t,sizeof(float),1,fpout);
+        }
 
 				for(i=0;i<pi.vdn;i++)
 				{
@@ -498,6 +508,9 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 
 				if( HasPerVertexRadius(m) && (pi.mask & Mask::IOM_VERTRADIUS) )
 					fprintf(fpout,"%g ",vp->R());
+
+        if( HasPerVertexTexCoord(m) && (pi.mask & Mask::IOM_VERTTEXCOORD) )
+          fprintf(fpout,"%g %g",vp->T().u(),vp->T().v());
 
 				for(i=0;i<pi.vdn;i++)
 				{
@@ -548,7 +561,7 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 					if(m.HasPerFaceFlags()&&( pi.mask & Mask::IOM_FACEFLAGS) )
 						fwrite(&(fp->Flags()),sizeof(int),1,fpout);
 
-					if( m.HasPerVertexTexCoord() && (pi.mask & Mask::IOM_VERTTEXCOORD) )
+          if( m.HasPerVertexTexCoord() && (pi.mask & Mask::IOM_WEDGTEXCOORD) ) // you can save VT as WT if you really want it...
 					{
 						fwrite(&b6,sizeof(char),1,fpout);
 						float t[6];
@@ -620,7 +633,7 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 					if(m.HasPerFaceFlags()&&( pi.mask & Mask::IOM_FACEFLAGS ))
 						fprintf(fpout,"%d ",fp->Flags());
 
-					if( m.HasPerVertexTexCoord() && (pi.mask & Mask::IOM_VERTTEXCOORD) )
+          if( m.HasPerVertexTexCoord() && (pi.mask & Mask::IOM_WEDGTEXCOORD) ) // you can save VT as WT if you really want it...
 					{
 						fprintf(fpout,"6 ");
 						for(int k=0;k<3;++k)
