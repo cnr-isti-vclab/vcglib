@@ -584,9 +584,10 @@ private:
 template <class T> class EmptyVFAdj: public T {
 public:
   typename T::FacePointer &VFp() { static typename T::FacePointer fp=0;  assert(0); return fp; }
-  typename T::FacePointer cVFp() { static typename T::FacePointer fp=0;  assert(0); return fp; }
+  typename T::FacePointer cVFp() const { static typename T::FacePointer fp=0;  assert(0); return fp; }
   int &VFi(){static int z=0; return z;};
-	template < class LeftV>
+  int cVFi() const {static int z=0; return z;};
+  template < class LeftV>
 	void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
   static bool HasVFAdjacency()   {   return false; }
   static bool HasVFAdjacencyOcc()   {   return false; }
