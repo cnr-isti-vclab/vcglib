@@ -641,8 +641,9 @@ namespace io {
 			unsigned int vertSize,faceSize;
 
 			/* read the header */
-			GetHeader(fnameV, fnameF, vertSize, faceSize,m.bbox,mask);
-
+      vcg::Box3f lbbox;
+      GetHeader(fnameV, fnameF, vertSize, faceSize,lbbox,mask);
+      m.bbox.Import(lbbox);
 			/* read the mesh type */
 			OpenMeshType::FaceType::Name(nameF);	
 			OpenMeshType::VertexType::Name(nameV);
