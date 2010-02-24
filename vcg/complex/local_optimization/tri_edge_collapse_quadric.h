@@ -227,7 +227,7 @@ public:
   
     
     // Final Clean up after the end of the simplification process
-    static void Finalize(TriMeshType &m,HeapType&h_ret)
+    static void Finalize(TriMeshType &m, HeapType& /*h_ret*/)
     {
       // if the mesh was prepared with precomputed borderflags 
       // correctly set them again.

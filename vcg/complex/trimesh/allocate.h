@@ -52,7 +52,7 @@ namespace vcg {
             void ReorderFace( std::vector<size_t> & /*newVertIndex*/, std::vector<face_type>  & /*vert*/)
 		{}
 		template <class vertex_type>
-		void ReorderVert( std::vector<size_t> &newVertIndex, std::vector<vertex_type> &vert)
+    void ReorderVert( std::vector<size_t> &/*newVertIndex*/, std::vector<vertex_type> &/*vert*/)
 		{}
 		
 		template <class MeshType, class ATTR_CONT>
