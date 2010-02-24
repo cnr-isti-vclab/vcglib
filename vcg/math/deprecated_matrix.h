@@ -288,7 +288,7 @@ namespace vcg{
 			*/
 			inline TYPE* operator[](const unsigned int i)
 			{
-				assert(i>=0 && i<_rows);
+        assert(i<_rows);
 				return _data + i*_columns;
 			};
 

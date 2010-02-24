@@ -544,8 +544,10 @@ private:
 			
 			static int RemoveNonManifoldVertex(MeshType& m)
 			{
-				int count_vd = CountNonManifoldVertexFF(m,true);
-				int count_fd = UpdateSelection<MeshType>::FaceFromVertexLoose(m);
+        /*int count_vd = */
+        CountNonManifoldVertexFF(m,true);
+        /*int count_fd = */
+        UpdateSelection<MeshType>::FaceFromVertexLoose(m);
 				int count_removed = 0;
 				FaceIterator fi;
 				for(fi=m.face.begin(); fi!=m.face.end();++fi)
@@ -1143,7 +1145,7 @@ private:
 						Compindex++;
 					}
 				}
-        assert(CCV.size()==Compindex);
+        assert(int(CCV.size())==Compindex);
 				return Compindex;
 			}
 
@@ -1472,8 +1474,8 @@ private:
         for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
           if((*fi).IsD()) DeletedFaceNum++;
 
-        if(m.vn+DeletedVertexNum != m.vert.size()) return false;
-        if(m.fn+DeletedFaceNum != m.face.size()) return false;
+        if(size_t(m.vn+DeletedVertexNum) != m.vert.size()) return false;
+        if(size_t(m.fn+DeletedFaceNum) != m.face.size()) return false;
 
         return true;
       }
@@ -1586,7 +1588,7 @@ static int MergeCloseVertex(MeshType &m, const ScalarType radius)
 						Box3f bb(p-Point3f(radius,radius,radius),p+Point3f(radius,radius,radius));
 						GridGetInBox(sht, markerFunctor, bb, closests);
 						// qDebug("Vertex %i has %i closest", &*viv - &*m.vert.begin(),closests.size());
-						for(int i=0; i<closests.size(); ++i)
+            for(size_t i=0; i<closests.size(); ++i)
 						{
 							float dist = Distance(p,closests[i]->cP());
 							if(dist < radius && !closests[i]->IsV())

@@ -174,7 +174,7 @@ static std::pair<typename MeshType::FaceType *, typename MeshType::VertexType *>
 {
     assert(tri::HasFFAdjacency(m));
     assert(face::IsBorder(f,edge));
-    qDebug("OldFacePRE  %i %i %i",tri::Index(m,f.V(0)),tri::Index(m,f.V(1)),tri::Index(m,f.V(2)));
+    //qDebug("OldFacePRE  %i %i %i",tri::Index(m,f.V(0)),tri::Index(m,f.V(1)),tri::Index(m,f.V(2)));
     if(newFace==0) newFace=&*tri::Allocator<MeshType>::AddFaces(m,1);
     if(newVert==0) {
         newVert=&*tri::Allocator<MeshType>::AddVertices(m,1);
@@ -186,8 +186,8 @@ static std::pair<typename MeshType::FaceType *, typename MeshType::VertexType *>
 
     f.V1(edge)=newVert;
 
-    qDebug("NewFace %i %i %i",tri::Index(m,newFace->V(0)),tri::Index(m,newFace->V(1)),tri::Index(m,newFace->V(2)));
-    qDebug("OldFace %i %i %i",tri::Index(m,f.V(0)),tri::Index(m,f.V(1)),tri::Index(m,f.V(2)));
+    //qDebug("NewFace %i %i %i",tri::Index(m,newFace->V(0)),tri::Index(m,newFace->V(1)),tri::Index(m,newFace->V(2)));
+    //qDebug("OldFace %i %i %i",tri::Index(m,f.V(0)),tri::Index(m,f.V(1)),tri::Index(m,f.V(2)));
 
    // Topology
 
