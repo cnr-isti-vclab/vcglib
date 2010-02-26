@@ -271,7 +271,7 @@ namespace vcg {
 					if(m.textures.size())
 					{
 						fprintf(fp,
-							"        texture ImageTexture { url \"  %s  \" }\n"
+							"        texture ImageTexture { url \"%s\" }\n"
 							,m.textures[0].c_str()
 							);
 					}
