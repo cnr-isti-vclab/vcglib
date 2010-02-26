@@ -41,8 +41,10 @@ template <class MESH_TYPE>
 class GLPickTri
 {
 	typedef typename MESH_TYPE::FaceIterator FaceIterator;
-	typedef typename MESH_TYPE::FacePointer  FacePointer;
-	typedef typename MESH_TYPE::VertexType  VertexType;
+  typedef typename MESH_TYPE::VertexIterator VertexIterator;
+  typedef typename MESH_TYPE::FacePointer  FacePointer;
+  typedef typename MESH_TYPE::VertexPointer  VertexPointer;
+  typedef typename MESH_TYPE::VertexType  VertexType;
 
 public:
 
@@ -58,7 +60,68 @@ public:
 		fi=NULL;
 		return false; 
 	}
+  static int PickVert(int x, int y, MESH_TYPE &m, std::vector<VertexPointer> &result, int width=4, int height=4,bool sorted=true)
+  {
+      result.clear();
+      if(width==0 ||height==0) return 0;
+      long hits;
+      int sz=m.vert.size()*5;
+      GLuint *selectBuf =new GLuint[sz];
+      glSelectBuffer(sz, selectBuf);
+      glRenderMode(GL_SELECT);
+      glInitNames();
 
+      /* Because LoadName() won't work with no names on the stack */
+      glPushName(-1);
+      double mp[16];
+
+      GLint viewport[4];
+      glGetIntegerv(GL_VIEWPORT,viewport);
+      glMatrixMode(GL_PROJECTION);
+      glGetDoublev(GL_PROJECTION_MATRIX ,mp);
+      glPushMatrix();
+      glLoadIdentity();
+      gluPickMatrix(x, y, width, height, viewport);
+      glMultMatrixd(mp);
+
+      glMatrixMode(GL_MODELVIEW);
+      glPushMatrix();
+      int vcnt=0;
+      VertexIterator vi;
+      for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+      {
+        if(!(*vi).IsD())
+        {
+          glLoadName(vcnt);
+          glBegin(GL_POINTS);
+            glVertex( (*vi).P() );
+          glEnd();
+        }
+        vcnt++; // the counter should advance even for deleted faces!
+      }
+
+      glPopMatrix();
+      glMatrixMode(GL_PROJECTION);
+      glPopMatrix();
+      glMatrixMode(GL_MODELVIEW);
+      hits = glRenderMode(GL_RENDER);
+      std::vector< std::pair<double,unsigned int> > H;
+      for(long ii=0;ii<hits;ii++){
+        H.push_back( std::pair<double,unsigned int>(selectBuf[ii*4+1]/4294967295.0,selectBuf[ii*4+3]));
+      }
+      if(sorted)
+        std::sort(H.begin(),H.end());
+      result.resize(H.size());
+      for(long ii=0;ii<hits;ii++){
+        VertexIterator vi=m.vert.begin();
+        advance(vi ,H[ii].second);
+        result[ii]=&*vi;
+      }
+
+      delete [] selectBuf;
+      return result.size();
+  }
+  
 	static int PickFace(int x, int y, MESH_TYPE &m, std::vector<FacePointer> &result, int width=4, int height=4,bool sorted=true)
 	{
 		result.clear();
@@ -150,7 +213,7 @@ public:
 		std::vector<FacePointer> result;
 		PickFace(x,y,m,result,width,height,sorted);
 		float LocalEpsilon = 0.001f;
-		for(int i =0;i<result.size();++i)
+    for(size_t i =0;i<result.size();++i)
 		{	
 			typename VertexType::CoordType v=Barycenter(*(result[i]));
 			GLdouble tx,ty,tz;
