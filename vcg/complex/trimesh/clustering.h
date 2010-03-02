@@ -176,7 +176,7 @@ class  AverageColorCell
 	typedef BasicGrid<typename MeshType::ScalarType> GridType;
 
   public:
-    inline void AddFaceVertex(MeshType &m, FaceType &f, int i)
+    inline void AddFaceVertex(MeshType &/*m*/, FaceType &f, int i)
     {
       p+=f.cV(i)->cP();
       c+=CoordType(f.cV(i)->C()[0],f.cV(i)->C()[1],f.cV(i)->C()[2]);

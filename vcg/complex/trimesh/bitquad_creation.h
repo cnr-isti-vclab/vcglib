@@ -342,7 +342,7 @@ static void MakePureByRefine(MeshType &m){
   assert(ev%2==0); // should be even by now 
   ev/=2; // I was counting each of them twice
 
-  int originalFaceNum = m.fn;
+  //int originalFaceNum = m.fn;
   FaceIterator nfi = tri::Allocator<MeshType>::AddFaces(m,ef); 
   VertexIterator nvi = tri::Allocator<MeshType>::AddVertices(m,ev); 
 

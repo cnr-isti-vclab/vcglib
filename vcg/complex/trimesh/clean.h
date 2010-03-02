@@ -1382,7 +1382,7 @@ private:
 
 	static int RemoveTVertexByCollapse(MeshType &m, float threshold=40, bool repeat=true)
 	{
-        assert(m.HasPerVertexMark());
+      assert(tri::HasPerVertexMark(m));
         //Counters for logging and convergence
         int count, total = 0;
 

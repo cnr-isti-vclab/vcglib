@@ -192,12 +192,12 @@ static void MultiFaceRandom( UpdateMeshType &m)
 	FaceIterator fi;
 	Color4b BaseColor = Color4b::Black;
 	FaceConstant(m,BaseColor);
-	int id=0;
+    int id_num=0;
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 			if(!(*fi).IsD())
 			{
-				id++;
-				if((*fi).C() == BaseColor) (*fi).C() = Color4b::Scatter(50, id%50,.4f,.7f);
+                id_num++;
+                if((*fi).C() == BaseColor) (*fi).C() = Color4b::Scatter(50, id_num%50,.4f,.7f);
 				for(int j=0;j<3;++j)
 					if((*fi).IsF(j))
 					{
