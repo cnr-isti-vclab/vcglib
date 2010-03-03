@@ -447,9 +447,9 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 			{
 				float t;
 
-				t = float(vp->UberP()[0]); fwrite(&t,sizeof(float),1,fpout);
-				t = float(vp->UberP()[1]); fwrite(&t,sizeof(float),1,fpout);
-				t = float(vp->UberP()[2]); fwrite(&t,sizeof(float),1,fpout);
+        t = float(vp->P()[0]); fwrite(&t,sizeof(float),1,fpout);
+        t = float(vp->P()[1]); fwrite(&t,sizeof(float),1,fpout);
+        t = float(vp->P()[2]); fwrite(&t,sizeof(float),1,fpout);
 				
         if( HasPerVertexNormal(m) && (pi.mask & Mask::IOM_VERTNORMAL) )
 				{
