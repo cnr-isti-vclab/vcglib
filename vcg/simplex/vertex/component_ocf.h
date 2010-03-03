@@ -402,8 +402,9 @@ public:
 		T::ImportLocal(leftV);
 	}
 
-	static bool HasVFAdjacency()   {   return true; }
-	static bool HasVFAdjacencyOcf()   {assert(!T::HasVFAdjacencyOcf()); return true; }
+  static bool HasVFAdjacency()   {   return true; }
+  static bool HasVFAdjacencyOcf()   {   return true; }
+  static bool IsVFAdjacencyEnabled(const typename T::VertType *vp)   {return vp->Base().VFAdjacencyEnabled;}
 
 private:
 };
@@ -471,7 +472,8 @@ public:
 	template <class LeftV>
 	void ImportLocal(const LeftV & leftV)
 		{
-			if((*this).Base().QualityEnabled && leftV.Base().QualityEnabled ) // copy the data only if they are enabled in both vertices
+//			if((*this).Base().QualityEnabled && leftV.Base().QualityEnabled ) // copy the data only if they are enabled in both vertices
+      if((*this).Base().QualityEnabled && leftV.HasQuality() ) // copy the data only if they are enabled in both vertices
 						Q() = leftV.cQ();
 			T::ImportLocal(leftV);
 		}
@@ -547,13 +549,16 @@ public:
 	template <class LeftV>
 	void ImportLocal(const LeftV & leftV){
 //		if((*this).Base().CurvatureEnabled && leftV.Base().CurvatureEnabled ) // WRONG I do not know anything about leftV!
-		if((*this).Base().CurvatureEnabled) 
+      if((*this).Base().CurvatureEnabled && LeftV::IsCurvatureEnabled(&leftV))
 			{
 				(*this).Base().CuV[(*this).Index()][0] = leftV.cKh();
 				(*this).Base().CuV[(*this).Index()][1] = leftV.cKg();
 			}
 		TT::ImportLocal(leftV);
 	}
+
+  static bool HasCurvature() { return true; }
+  static bool IsCurvatureEnabled(const typename TT::VertType *v)   { return v->Base().CurvatureEnabled; }
 
 	static bool HasCurvatureOcf()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureOcf"));TT::Name(name);}
@@ -585,16 +590,29 @@ public:
 
 	VecType &PD1(){ assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CuDV[(*this).Index()].max_dir;}
 	VecType &PD2(){ assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CuDV[(*this).Index()].min_dir;}
-	const VecType &cPD1() const {assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CuV[(*this).Index()].max_dir;}
-	const VecType &cPD2() const {assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CuV[(*this).Index()].min_dir;}
+  const VecType &cPD1() const {assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CuDV[(*this).Index()].max_dir;}
+  const VecType &cPD2() const {assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CuDV[(*this).Index()].min_dir;}
 
 	ScalarType &K1(){ assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CuDV[(*this).Index()].k1;}
 	ScalarType &K2(){ assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CuDV[(*this).Index()].k2;}
 	const ScalarType &cK1() const {assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CuDV[(*this).Index()].k1;}
 	const ScalarType &cK2()const  {assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CuDV[(*this).Index()].k2;}
 
-	static bool HasCurvatureDirOcf()   { return true; }
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDirOcf"));TT::Name(name);}
+  template <class LeftV>
+  void ImportLocal(const LeftV & leftV){
+//		if((*this).Base().CurvatureEnabled && leftV.Base().CurvatureEnabled ) // WRONG I do not know anything about leftV!
+    if((*this).Base().CurvatureDirEnabled && LeftV::IsCurvatureDirEnabled(&leftV))
+      {
+        (*this).PD1() = leftV.cPD1();
+        (*this).PD2() = leftV.cPD2();
+        (*this).K1() = leftV.cK1();
+        (*this).K2() = leftV.cK2();
+      }
+    TT::ImportLocal(leftV);
+  }
+  static bool HasCurvatureDir()  { return true; }
+  static bool HasCurvatureDirOcf()  { return true; }
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDirOcf"));TT::Name(name);}
 
 private:
 };
