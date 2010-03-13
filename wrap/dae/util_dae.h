@@ -316,7 +316,7 @@ namespace io {
                 }
 			if (res.last() == "")
 				res.removeLast();
-			
+		
 //			int emptyCount = res.removeAll(QString(""));
 //			if(emptyCount>0) qDebug("- - - - - - - - valueStringList: Removed %i null strings when parsing tag %s",emptyCount,qPrintable(tag));
 //			for(int i =0;i<res.size();++i)

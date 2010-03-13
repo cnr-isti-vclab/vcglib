@@ -704,7 +704,7 @@ static Matrix44f getTransfMatrixFromNode(const QDomElement parentNode)
 			
 			QDomDocument* doc = new QDomDocument(filename);
             info.doc = doc;
-            QFile file(filename);
+			QFile file(filename);
 			if (!file.open(QIODevice::ReadOnly))
 				return E_CANTOPEN;
 			if (!doc->setContent(&file)) 
@@ -805,7 +805,7 @@ static Matrix44f getTransfMatrixFromNode(const QDomElement parentNode)
 			bool bHasPerVertexNormal = false;
 			bool bHasPerVertexText = false;
 			
-            QDomDocument* doc = new QDomDocument(filename);
+			QDomDocument* doc = new QDomDocument(filename);
 			QFile file(filename);
 			if (!file.open(QIODevice::ReadOnly))
 				return false;

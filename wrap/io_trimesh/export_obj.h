@@ -165,6 +165,7 @@ namespace io {
 			
 			//vert
 			capability |= vcg::tri::io::Mask::IOM_VERTNORMAL;
+      capability |= vcg::tri::io::Mask::IOM_VERTTEXCOORD;
 
 			//face
 			capability |= vcg::tri::io::Mask::IOM_FACECOLOR;
@@ -181,7 +182,16 @@ namespace io {
 		*/
 		static int Save(SaveMeshType &m, const char * filename, int mask, CallBackPos *cb=0)	
 		{
-			if(m.vn == 0)	return E_NOTVEXTEXVALID;
+      // texture coord and normal: cannot be saved BOTH per vertex and per wedge
+      if (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD &&
+          mask & vcg::tri::io::Mask::IOM_VERTTEXCOORD ) {
+        mask &= ~vcg::tri::io::Mask::IOM_VERTTEXCOORD;
+      }
+      if (mask & vcg::tri::io::Mask::IOM_WEDGCOLOR &&
+          mask & vcg::tri::io::Mask::IOM_VERTCOLOR ) {
+        mask &= ~vcg::tri::io::Mask::IOM_VERTCOLOR;
+      }
+      if(m.vn == 0)	return E_NOTVEXTEXVALID;
 			// Commented out this control. You should be allowed to save a point cloud.
 			// if(m.fn == 0)	return E_NOTFACESVALID;
 
@@ -216,7 +226,7 @@ namespace io {
 			{
         VertexId[vi-m.vert.begin()]=numvert;
 				//saves normal per vertex
-				if((mask & Mask::IOM_VERTNORMAL) || (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD) )
+        if (mask & Mask::IOM_WEDGNORMAL )
 				{
 					if(AddNewNormalVertex(NormalVertex,(*vi).N(),curNormalIndex))
 					{
@@ -224,7 +234,16 @@ namespace io {
 						curNormalIndex++;
 					}
 				}
-				
+        if (mask & Mask::IOM_VERTNORMAL ) {
+          fprintf(fp,"vn %f %f %f\n",(*vi).N()[0],(*vi).N()[1],(*vi).N()[2]);
+        }
+        if (mask & Mask::IOM_VERTTEXCOORD ) {
+          fprintf(fp,"vt %f %f\n",(*vi).T().P()[0],(*vi).T().P()[1]);
+        }
+        //if (mask & Mask::IOM_VERTCOLOR ) {
+        //  fprintf(fp,"vc %f %f %f\n",(*vi).T().P()[0],(*vi).T().P()[1]);
+        //}
+
 				//saves vertex
 				fprintf(fp,"v %f %f %f\n",(*vi).P()[0],(*vi).P()[1],(*vi).P()[2]);
 
@@ -265,10 +284,10 @@ namespace io {
 					}
 				}
 
-				//saves texture coord
-				for(unsigned int k=0;k<3;k++)
+        //saves texture coord x wedge
+        if(HasPerWedgeTexCoord(m) && (mask & Mask::IOM_WEDGTEXCOORD))
+        for(unsigned int k=0;k<3;k++)
 				{
-					if(HasPerWedgeTexCoord(m) && (mask & Mask::IOM_WEDGTEXCOORD))
 					{
 						if(AddNewTextureCoord(CoordIndexTexture,(*fi).WT(k),curTexCoordIndex))
 						{
@@ -277,6 +296,7 @@ namespace io {
 						}
 					}
 				}
+
 
 				fprintf(fp,"f ");
 				for(unsigned int k=0;k<3;k++)
@@ -289,10 +309,14 @@ namespace io {
 					int vt = -1;
 					if(mask & Mask::IOM_WEDGTEXCOORD)
 						vt = GetIndexVertexTexture(CoordIndexTexture,(*fi).WT(k));//index of vertex texture per face
+          if (mask & Mask::IOM_VERTTEXCOORD)
+            vt = vInd;
 
 					int vn = -1;
-					if((mask & Mask::IOM_VERTNORMAL) || (mask & Mask::IOM_WEDGNORMAL) )
+          if(mask & Mask::IOM_WEDGNORMAL )
 						vn = GetIndexVertexNormal(m, NormalVertex, (*fi).V(k)->cN());//index of vertex normal per face.
+          if (mask & Mask::IOM_VERTNORMAL)
+            vn = vInd;
 
 					//writes elements on file obj
 					WriteFacesElement(fp,vInd,vt,vn);

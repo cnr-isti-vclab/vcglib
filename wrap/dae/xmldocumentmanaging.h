@@ -207,7 +207,7 @@ public:
 		_stream.setAutoFormatting(autoformatting);
 	}
 
-	~XMLDocumentWriter()
+  virtual ~XMLDocumentWriter()
 	{
 		_file.close();
 	}

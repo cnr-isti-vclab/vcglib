@@ -28,6 +28,9 @@
 #include <QtGui/QImage>
 #include <QtCore/QVector>
 
+#include <QDateTime>
+
+
 
 template<typename POINTTYPE>
            struct CoordNumber{public:	static unsigned int coord()	{		return 0; 	}};
@@ -761,8 +764,6 @@ namespace Tags
 		{
 		}
 	};
-
-	#include <QDateTime>
 
 	class CreatedTag : public XMLLeafTag//added
 	{
