@@ -39,7 +39,7 @@ Initial Relase
 
 ****************************************************************************/
 #include <SDL.h>
-#include <gl/glew.h>
+#include <GL/glew.h>
 #include <vector>
 
 /*include the base definition for the vertex */
@@ -69,16 +69,19 @@ otherwise you'll get linking errors */
 using namespace vcg;
 using namespace std;
 
-class CEdge;    // dummy prototype never used
+
 class CFace;
+class CVertex;
+struct MyUsedTypes : public UsedTypes<	Use<CVertex>		::AsVertexType,
+																				Use<CFace>			::AsFaceType>{};
 
 /* define a vertex passing the attributes you want it to have. Each attributes has its own class.
 Check vcg/simplex/vertex/component.h to find out the existing attributes. Note: then you could 
 also personalized attributes */
-class CVertex : public VertexSimp2< CVertex, CEdge, CFace, vertex::Coord3f, vertex::Normal3f >{};
+class CVertex : public Vertex< MyUsedTypes, vertex::Coord3f, vertex::Normal3f >{};
 
 /*same as for the vertes */ 
-class CFace   : public FaceSimp2<   CVertex, CEdge, CFace, face::VertexRef, face::Normal3f > {};
+class CFace   : public Face<   MyUsedTypes, face::VertexRef, face::Normal3f > {};
 
 /*the mesh is a container of vertices and a container of faces */ 
 class CMesh   : public vcg::tri::TriMesh< vector<CVertex>, vector<CFace> > {};

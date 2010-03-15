@@ -6,11 +6,15 @@
 #include<vcg/complex/trimesh/base.h>
 #include<vcg/complex/trimesh/allocate.h>
 
+
+class MyEdge;
 class MyFace;
 class MyVertex;
-class MyEdge;   // dummy prototype never used
-class MyVertex  : public vcg::VertexSimp2< MyVertex, MyEdge, MyFace, vcg::vertex::Coord3f,vcg::vertex::Normal3f>{};
-class MyFace    : public vcg::FaceSimp2< MyVertex, MyEdge, MyFace, vcg::face::VertexRef, vcg::face::Normal3f> {};
+struct MyUsedTypes : public vcg::UsedTypes<	vcg::Use<MyVertex>		::AsVertexType,
+											vcg::Use<MyFace>			::AsFaceType>{};
+
+class MyVertex  : public vcg::Vertex< MyUsedTypes, vcg::vertex::Coord3f,vcg::vertex::Normal3f>{};
+class MyFace    : public vcg::Face< MyUsedTypes, vcg::face::VertexRef, vcg::face::Normal3f> {};
 
 class MyMesh : public vcg::tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace> > {};
 

@@ -16,12 +16,14 @@
 
 using namespace vcg;
 
-class MyEdge;    // dummy prototype never used
+class MyEdge;
 class MyFace;
 class MyVertex;
+struct MyUsedTypes : public UsedTypes<	Use<MyVertex>::AsVertexType,
+																				Use<MyFace>::AsFaceType>{};
 
-class MyVertex  : public VertexSimp2< MyVertex, MyEdge, MyFace, vertex::Coord3f, vertex::BitFlags  >{};
-class MyFace    : public FaceSimp2  < MyVertex, MyEdge, MyFace, face::VertexRef,face::FFAdj, face::Mark, face::BitFlags > {};
+class MyVertex  : public Vertex< MyUsedTypes, vertex::Coord3f, vertex::BitFlags  >{};
+class MyFace    : public Face  < MyUsedTypes, face::VertexRef,face::FFAdj, face::Mark, face::BitFlags > {};
 
 
 //class MyVertex:public Vertex<float,MyEdge,MyFace>{};

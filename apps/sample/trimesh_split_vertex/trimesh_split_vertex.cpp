@@ -14,25 +14,28 @@
   this sample shows how to transfer per wedge attributes from wedges to vertices.
   during the process new vertices could be created.
 */
+using namespace vcg;
 
 #define TEST_IN_PLACE_SPLIT
 
 #ifdef TEST_IN_PLACE_SPLIT
 
 class SrcVertex;
-class SrcEdge;
 class SrcFace;
 
-class SrcVertex : public vcg::VertexSimp2
-<	SrcVertex, SrcEdge, SrcFace,
+struct ScrUsedTypes : public UsedTypes<	Use<SrcVertex>::AsVertexType,
+																				Use<SrcFace>::AsFaceType>{};
+
+class SrcVertex : public vcg::Vertex
+<	ScrUsedTypes,
 	vcg::vertex::InfoOcf,
 	vcg::vertex::Coord3f,
 	vcg::vertex::TexCoordfOcf,
 	vcg::vertex::BitFlags
 > { };
 
-class SrcFace : public vcg::FaceSimp2
-<	SrcVertex, SrcEdge, SrcFace,
+class SrcFace : public vcg::Face
+<	ScrUsedTypes,
 	vcg::face::InfoOcf,
 	vcg::face::VertexRef,
 	vcg::face::WedgeTexCoordfOcf
@@ -48,21 +51,26 @@ typedef SrcMesh   DstMesh;
 
 // source mesh type: per-wedge texture coordinates
 class SrcVertex;
-class SrcEdge;
 class SrcFace;
 
-class SrcVertex : public vcg::VertexSimp2   <SrcVertex, SrcEdge, SrcFace, vcg::vertex::Coord3f, vcg::vertex::TexCoord2f, vcg::vertex::BitFlags> { };
-class SrcFace   : public vcg::FaceSimp2     <SrcVertex, SrcEdge, SrcFace, vcg::face::VertexRef, vcg::face::WedgeTexCoord2f> { };
+
+struct SrcUsedTypes : public UsedTypes<	Use<SrcVertex>::AsVertexType,
+																				Use<SrcFace>::AsFaceType>{};
+
+class SrcVertex : public vcg::Vertex   <SrcUsedTypes, vcg::vertex::Coord3f, vcg::vertex::TexCoord2f, vcg::vertex::BitFlags> { };
+class SrcFace   : public vcg::Face     <SrcUsedTypes, vcg::face::VertexRef, vcg::face::WedgeTexCoord2f> { };
 class SrcMesh   : public vcg::tri::TriMesh  <std::vector<SrcVertex>, std::vector<SrcFace> > { };
 
 
 // destination mesh type: per-vertex texture coordinates
-class DstVertex;
-class DstEdge;
+class DstVertex; 
 class DstFace;
 
-class DstVertex : public vcg::VertexSimp2   <DstVertex, DstEdge, DstFace, vcg::vertex::Coord3f, vcg::vertex::TexCoord2f, vcg::vertex::BitFlags> { };
-class DstFace   : public vcg::FaceSimp2     <DstVertex, DstEdge, DstFace, vcg::face::VertexRef> { };
+struct DstUsedTypes : public UsedTypes<	Use<SrcVertex>::AsVertexType,
+																				Use<SrcFace>::AsFaceType>{};
+
+class DstVertex : public vcg::Vertex   <DstUsedTypes, vcg::vertex::Coord3f, vcg::vertex::TexCoord2f, vcg::vertex::BitFlags> { };
+class DstFace   : public vcg::Face     <DstUsedTypes, vcg::face::VertexRef> { };
 class DstMesh   : public vcg::tri::TriMesh  <std::vector<DstVertex>, std::vector<DstFace> > { };
 
 #endif

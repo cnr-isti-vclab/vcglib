@@ -25,10 +25,14 @@ typedef float AScalarType;
 
 using namespace vcg;
 
-class AEdge;
+class AVertex;
 class AFace;
-class AVertex     : public VertexSimp2< AVertex, AEdge, AFace, vertex::Normal3f, vertex::Coord3f,vertex::BitFlags >{};
-class AFace       : public FaceSimp2<   AVertex, AEdge, AFace, face::VertexRef, face::Normal3f, face::EdgePlane, face::BitFlags> {};
+
+struct MyUsedTypes : public vcg::UsedTypes<	vcg::Use<AVertex>		::AsVertexType,
+											vcg::Use<AFace>			::AsFaceType>{};
+
+class AVertex     : public Vertex< MyUsedTypes, vertex::Normal3f, vertex::Coord3f,vertex::BitFlags >{};
+class AFace       : public Face<   MyUsedTypes, face::VertexRef, face::Normal3f, face::EdgePlane, face::BitFlags> {};
 
 //class AVertex   : public vcg::Vertex< AScalarType, AEdge, AFace > { };
 //class AFace     : public vcg::FaceRTFMFN< AVertex, AEdge, AFace > { };

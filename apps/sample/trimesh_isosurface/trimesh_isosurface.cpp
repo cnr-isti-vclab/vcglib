@@ -19,11 +19,14 @@ using namespace vcg;
 
 typedef float ScalarType;
 
-class MyEdge;
 class MyFace;
+class MyVertex;
 
-class MyVertex     : public VertexSimp2< MyVertex,  MyEdge, MyFace, vertex::Coord3f>{};
-class MyFace       : public FaceSimp2< MyVertex,    MyEdge, MyFace, face::VertexRef, face::BitFlags> {};
+struct MyUsedTypes : public UsedTypes<	Use<MyVertex>		::AsVertexType,
+																				Use<MyFace>			::AsFaceType>{};
+
+class MyVertex     : public Vertex< MyUsedTypes, vertex::Coord3f>{};
+class MyFace       : public Face< MyUsedTypes, face::VertexRef, face::BitFlags> {};
 
 //class MyVertex  : public vcg::Vertex< ScalarType, MyEdge, MyFace > {};
 //class MyFace		: public vcg::Face< MyVertex, MyEdge, MyFace> {};

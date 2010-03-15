@@ -69,15 +69,19 @@ class CEdge;
 class DummyEdge;
 class MyPolyVertex;
 
+struct CUsedTypes: public vcg::UsedTypes< vcg::Use<CVertex>::AsVertexType, vcg::Use<CFace>::AsFaceType >{};
+
+
+
 /* Definition of a mesh of triangles
 */
-class CVertex : public VertexSimp2< CVertex, DummyEdge, CFace, 
+class CVertex : public Vertex< CUsedTypes,
 	vertex::BitFlags,
 	vertex::Coord3f, 
 	vertex::Normal3f,
 	vertex::Mark >{};
 
-class CFace   : public FaceSimp2<   CVertex, DummyEdge, CFace,
+class CFace   : public Face<   CUsedTypes,
 	face::VertexRef,	// three pointers to vertices
 	face::Normal3f,		// normal	
 	face::BitFlags,		// flags
@@ -91,15 +95,20 @@ class CMesh   : public vcg::tri::TriMesh< vector<CVertex>, vector<CFace> > {};
 /* Definition of a mesh of polygons that also supports half-edges
 */
 class MyPolyFace;
+class MyPolyVertex;
+struct PolyUsedTypes: public vcg::UsedTypes<		vcg::Use<MyPolyVertex>::AsVertexType,
+																								vcg::Use<CEdge>::AsEdgeType,
+																								vcg::Use<MyPolyFace>::AsFaceType >{};
 
-class MyPolyVertex:public vcg::VertexSimp2<MyPolyVertex , CEdge,MyPolyFace, 
+
+class MyPolyVertex:public vcg::Vertex<PolyUsedTypes,
 	vcg::vertex::Coord3f,
 	vcg::vertex::Normal3f,
 	vcg::vertex::Mark,
 	vcg::vertex::BitFlags, 
 	vcg::vertex::VEAdj>{} ;
 
-class CEdge : public EdgeSimp2< MyPolyVertex, CEdge, MyPolyFace, edge::BitFlags,
+class CEdge : public Edge< PolyUsedTypes, edge::BitFlags,
 	//edge::EFAdj,		// pointer to the face
 	//edge::HEOppAdj,	// pointer to the opposite edge
 	//edge::HEVAdj,		// pointer to the vertex
@@ -108,10 +117,8 @@ class CEdge : public EdgeSimp2< MyPolyVertex, CEdge, MyPolyFace, edge::BitFlags,
 	//,edge::HEPrevAdj	// pointer to the previous halfedge
 >{};
 
-class MyPolyFace:public vcg::FaceSimp2<
-	 MyPolyVertex
-	,CEdge  
-	,MyPolyFace 
+class MyPolyFace:public vcg::Face<
+	 PolyUsedTypes
 	,vcg::face::PolyInfo // this is necessary  if you use component in vcg/simplex/face/component_polygon.h
 						 // It says "this class is a polygon and the memory for its components (e.g. pointer to its vertices
 						 // will be allocated dynamically")	

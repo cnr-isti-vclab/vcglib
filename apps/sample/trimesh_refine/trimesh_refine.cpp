@@ -32,8 +32,11 @@ class MyEdge;    // dummy prototype never used
 class MyFace;
 class MyVertex;
 
-class MyVertex  : public VertexSimp2< MyVertex, MyEdge, MyFace, vertex::Coord3f, vertex::Normal3f, vertex::BitFlags  >{};
-class MyFace    : public FaceSimp2  < MyVertex, MyEdge, MyFace, face::FFAdj,  face::VertexRef, face::BitFlags > {};
+struct MyUsedTypes : public UsedTypes<	Use<MyVertex>::AsVertexType,
+																				Use<MyFace>::AsFaceType>{};
+
+class MyVertex  : public Vertex< MyUsedTypes, vertex::Coord3f, vertex::Normal3f, vertex::BitFlags  >{};
+class MyFace    : public Face  < MyUsedTypes, face::FFAdj,  face::VertexRef, face::BitFlags > {};
 class MyMesh    : public vcg::tri::TriMesh< vector<MyVertex>, vector<MyFace> > {};
 
 
@@ -90,7 +93,7 @@ int  main(int argc, char **argv)
   for(i=0;i < n_steps;++i)			
   {
     switch(RefMode){
-			case FLAT:      Refine<MyMesh, MidPoint<MyMesh> >(m,MidPoint<MyMesh>(),length); 					break;
+			case FLAT:      Refine<MyMesh, MidPoint<MyMesh> >(m,MidPoint<MyMesh>(&m),length); 					break;
 			case BUTTERFLY: Refine<MyMesh, MidPointButterfly<MyMesh> >(m,MidPointButterfly<MyMesh>(),length); break;
     }					
   }

@@ -32,12 +32,15 @@
 using namespace vcg;
 using namespace std;
 
-class MyEdge;    // dummy prototype never used
+
 class MyFace;
 class MyVertex;
 
-class MyVertex  : public VertexSimp2< MyVertex, MyEdge, MyFace, vertex::Coord3f, vertex::BitFlags, vertex::Normal3f, vertex::Mark, vertex::Color4b >{};
-class MyFace    : public FaceSimp2  < MyVertex, MyEdge, MyFace, face::VertexRef,face::FFAdj, face::Mark, face::BitFlags, face::Normal3f> {};
+struct MyUsedTypes : public UsedTypes<	Use<MyVertex>		::AsVertexType,
+																				Use<MyFace>			::AsFaceType>{};
+
+class MyVertex  : public Vertex< MyUsedTypes, vertex::Coord3f, vertex::BitFlags, vertex::Normal3f, vertex::Mark, vertex::Color4b >{};
+class MyFace    : public Face  < MyUsedTypes, face::VertexRef,face::FFAdj, face::Mark, face::BitFlags, face::Normal3f> {};
 
 class MyMesh : public tri::TriMesh< vector<MyVertex>, vector<MyFace > >{};
 

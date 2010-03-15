@@ -1,17 +1,8 @@
 #include <stdio.h>
 #include <time.h>
 
-#include<vcg/simplex/vertex/base.h>
-#include<vcg/simplex/face/base.h>
-#include<vcg/simplex/face/topology.h>
-
-#include<vcg/simplex/vertex/component_ocf.h>
-#include<vcg/simplex/face/component_ocf.h>
-
-#include<vcg/simplex/vertex/component_occ.h>
-#include<vcg/simplex/face/component_occ.h>
-
-#include<vcg/complex/trimesh/base.h>
+#include "mesh_definition.h"
+#include<vcg/complex/trimesh/allocate.h>
 #include<vcg/complex/trimesh/create/platonic.h>
 #include<vcg/complex/trimesh/update/topology.h>
 #include<vcg/complex/trimesh/update/flag.h>
@@ -21,36 +12,23 @@
 using namespace vcg;
 using namespace std;
 
-class CEdge;    // dummy prototype never used
-class CFace;
-class CFaceOcf;
-class CFaceOcc;
-class CVertex;
-class CVertexOcf;
-
-// Optional stuff has two suffixes:
-// OCF Optional Component Fast 
-// OCC Optional Component Compact
-
-class CVertex     : public VertexSimp2< CVertex,    CEdge, CFace,    vertex::Coord3f, vertex::BitFlags,vertex::Normal3f >{};
-class CVertexOcf  : public VertexSimp2< CVertexOcf, CEdge, CFaceOcf, vertex::Coord3f, vertex::BitFlags,vertex::Normal3f >{};
-class CVertexOcc  : public VertexSimp2< CVertexOcc, CEdge, CFaceOcc, vertex::Coord3f, vertex::BitFlags,vertex::Normal3f >{};
-
-class CFace       : public FaceSimp2< CVertex,    CEdge, CFace,                   face::FFAdj,    face::VertexRef, face::BitFlags, face::Normal3f > {};
-class CFaceOcf    : public FaceSimp2< CVertexOcf, CEdge, CFaceOcf, face::InfoOcf, face::FFAdjOcf, face::VertexRef, face::BitFlags, face::Normal3fOcf > {};
-class CFaceOcc    : public FaceSimp2< CVertexOcc, CEdge, CFaceOcc,                face::FFAdjOcc, face::VertexRef, face::BitFlags, face::Normal3fOcc > {};
-
-class CMesh       : public vcg::tri::TriMesh<     vector<CVertex   >,           vector<CFace   > > {};
-class CMeshOcf    : public vcg::tri::TriMesh<     vector<CVertexOcf>, face::vector_ocf<CFaceOcf> > {};
-class CMeshOcc    : public vcg::tri::TriMesh< vector_occ<CVertexOcc>,       vector_occ<CFaceOcc  > > {};
-
-
-
 int main(int , char **)
 {
-  CMesh cm;
-  CMeshOcf cmof;
- 	CMeshOcc cmoc;
+
+	vcg::tri::Allocator<CMesh>::NameTypeScope bounds;
+	vcg::tri::Allocator<CMesh>::AddNameTypeBound<float>(bounds,"myfloat");
+
+
+	CMesh cm;
+	CMeshOcf cmof;
+	CMeshOcc cmoc;
+
+	CMesh::VertexPointer v = cm.face[0].V(0);
+
+
+	cmoc.face.EnableAttribute<CFaceOcc::NormalType>();
+	CMeshOcc::FaceIterator fi = vcg::tri::Allocator<CMeshOcc>::AddFaces(cmoc,1);
+	(*fi).N() = vcg::Point3f(9,9,9);
 
 
   tri::Tetrahedron(cm);

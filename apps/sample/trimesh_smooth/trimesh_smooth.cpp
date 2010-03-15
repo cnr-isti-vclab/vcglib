@@ -21,12 +21,13 @@ using namespace vcg;
 using namespace std;
 
 
-class MyEdge;    // dummy prototype never used
 class MyFace;
 class MyVertex;
+struct MyUsedTypes : public UsedTypes<	Use<MyVertex>::AsVertexType,
+																				Use<MyFace>::AsFaceType>{};
 
-class MyVertex  : public VertexSimp2< MyVertex, MyEdge, MyFace, vertex::VFAdj, vertex::Coord3f, vertex::Normal3f, vertex::BitFlags  >{};
-class MyFace    : public FaceSimp2  < MyVertex, MyEdge, MyFace, face::VFAdj, face::Normal3f, face::VertexRef, face::BitFlags > {};
+class MyVertex  : public Vertex< MyUsedTypes, vertex::VFAdj, vertex::Coord3f, vertex::Normal3f, vertex::BitFlags  >{};
+class MyFace    : public Face  < MyUsedTypes, face::VFAdj, face::Normal3f, face::VertexRef, face::BitFlags > {};
 class MyMesh    : public vcg::tri::TriMesh<vector<MyVertex>, vector<MyFace> > {};
 
 int main(int argc,char ** argv)

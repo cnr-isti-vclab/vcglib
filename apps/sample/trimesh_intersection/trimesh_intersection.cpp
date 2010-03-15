@@ -33,9 +33,16 @@ using namespace vcg;
 
 class MyFace;
 class MyEdge;
-class MyVertex  : public VertexSimp2< MyVertex, MyEdge, MyFace, vertex::Coord3f, vertex::BitFlags, vertex::Normal3f, vertex::Mark>{};
-class MyEdge    : public EdgeSimp2< MyVertex,MyEdge,  MyFace, edge::VertexRef, edge::EVAdj> {};
-class MyFace    : public FaceSimp2  < MyVertex, MyEdge, MyFace, face::VertexRef,face::FFAdj, face::BitFlags, face::Normal3f> {};
+class MyVertex;
+
+struct MyUsedTypes : public UsedTypes<	Use<MyVertex>		::AsVertexType,
+																				Use<MyEdge>			::AsEdgeType,
+																				Use<MyFace>			::AsFaceType>{};
+
+
+class MyVertex  : public Vertex< MyUsedTypes, vertex::Coord3f, vertex::BitFlags, vertex::Normal3f, vertex::Mark>{};
+class MyEdge    : public Edge< MyUsedTypes, edge::VertexRef, edge::EVAdj> {};
+class MyFace    : public Face  <MyUsedTypes, face::VertexRef,face::FFAdj, face::BitFlags, face::Normal3f> {};
 
 class MyEdgeMesh: public vcg::edg::EdgeMesh< vector<MyVertex>, vector<MyEdge> > {};
 class MyMesh : public tri::TriMesh< vector<MyVertex>, vector<MyFace > >{};
