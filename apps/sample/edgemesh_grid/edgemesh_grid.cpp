@@ -9,14 +9,21 @@
 #include <vcg/complex/edgemesh/allocate.h>
 #include <vcg/complex/edgemesh/update/bounding.h>
 #include <vcg/complex/edgemesh/closest.h>
+#include <vcg/complex/trimesh/closest.h>
+#include <vcg/complex/used_types.h>
 
 //
 //using namespace std;
 //
 class MyFace;
 class MyEdge;
-class MyVertex  : public vcg::VertexSimp2<MyVertex,MyEdge, MyFace,vcg::vertex::BitFlags,vcg::vertex::Coord3f> {};
-class MyEdge    : public vcg::EdgeSimp2<MyVertex,MyEdge, MyVertex,vcg::edge::Mark,vcg::edge::VertexRef,vcg::edge::BitFlags> {};
+class MyVertex;
+struct MyUsedTypes : public vcg::UsedTypes<	vcg::Use<MyVertex>		::AsVertexType,
+											vcg::Use<MyEdge>		::AsEdgeType,
+											vcg::Use<MyFace>		::AsFaceType>{};
+
+class MyVertex  : public vcg::Vertex<MyUsedTypes,vcg::vertex::BitFlags,vcg::vertex::Coord3f> {};
+class MyEdge    : public vcg::Edge<MyUsedTypes,vcg::edge::Mark,vcg::edge::VertexRef,vcg::edge::BitFlags> {};
 class MyEdgeMesh: public vcg::edg::EdgeMesh< std::vector<MyVertex>, std::vector<MyEdge> > {};
 
 typedef vcg::GridStaticPtr<MyEdge, MyEdge::ScalarType> EdgeMeshGrid;
