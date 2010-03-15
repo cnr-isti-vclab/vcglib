@@ -28,97 +28,97 @@ namespace vcg{
 /*------------------------------------------------------------------*/ 
 
 // Metaprogramming Core
-template <template <typename,typename,typename,typename>
-					class Base,class BVT, class BET, class BFT,class BTT,
+template <
+					class Base,
           template <typename> class A> 
-          class Arity1: public A<Base<BVT,BET,BFT,BTT> > {
+					class Arity1: public A<Base > {
           };
 
-template <template <typename,typename,typename,typename>
-					class Base,class BVT, class BET, typename BFT, class BTT,
+template <
+					class Base,
           template <typename> class A, template <typename> class B> 
-          class Arity2: public B<Arity1<Base,BVT,BET,BFT,BTT, A> > {};
+					class Arity2: public B<Arity1<Base, A> > {};
 
-template <template <typename,typename,typename,typename>
-					class Base,class BVT, class BET, typename BFT,class BTT,
+template <
+					class Base,
           template <typename> class A, template <typename> class B, 
           template <typename> class C > 
-          class Arity3: public C<Arity2<Base,BVT,BET,BFT,BTT, A, B> > {};
+					class Arity3: public C<Arity2<Base, A, B> > {};
 
-template <template <typename,typename,typename,typename>
-					class Base,class BVT, class BET, typename BFT,class BTT,
+template <
+					class Base,
           template <typename> class A, template <typename> class B, 
           template <typename> class C, template <typename> class D> 
-          class Arity4: public D<Arity3<Base,BVT,BET,BFT,BTT, A, B, C> > {};
+					class Arity4: public D<Arity3<Base, A, B, C> > {};
 
-template <template <typename,typename,typename,typename>
-					class Base,class BVT, class BET, typename BFT,class BTT,
+template <
+					class Base,
           template <typename> class A, template <typename> class B, 
           template <typename> class C, template <typename> class D,
           template <typename> class E > 
-          class Arity5: public E<Arity4<Base,BVT,BET,BFT,BTT, A, B, C, D> > {};
+					class Arity5: public E<Arity4<Base, A, B, C, D> > {};
 
-template <template <typename,typename,typename,typename>
-					class Base,class BVT, class BET, typename BFT,class BTT,
+template <
+					class Base,
           template <typename> class A, template <typename> class B, 
           template <typename> class C, template <typename> class D,
           template <typename> class E, template <typename> class F > 
-          class Arity6: public F<Arity5<Base,BVT,BET,BFT,BTT, A, B, C, D, E> > {};
+					class Arity6: public F<Arity5<Base, A, B, C, D, E> > {};
 
-template <template <typename,typename,typename,typename>
-					class Base,class BVT, class BET, typename BFT,class BTT,
+template <
+					class Base,
           template <typename> class A, template <typename> class B, 
           template <typename> class C, template <typename> class D,
           template <typename> class E, template <typename> class F,
 					template <typename> class G> 
-          class Arity7: public G<Arity6<Base,BVT,BET,BFT,BTT, A, B, C, D, E, F> > {};
+					class Arity7: public G<Arity6<Base, A, B, C, D, E, F> > {};
 
-template <template <typename,typename,typename,typename>
-					class Base,class BVT, class BET, typename BFT,class BTT,
+template <
+					class Base,
           template <typename> class A, template <typename> class B, 
           template <typename> class C, template <typename> class D,
           template <typename> class E, template <typename> class F,
 					template <typename> class G, template <typename> class H> 
-          class Arity8: public H<Arity7<Base,BVT,BET,BFT,BTT, A, B, C, D, E, F, G > > {};
+					class Arity8: public H<Arity7<Base, A, B, C, D, E, F, G > > {};
 
-template <template <typename,typename,typename,typename>
-					class Base,class BVT, class BET, typename BFT,class BTT,
+template <
+					class Base,
           template <typename> class A, template <typename> class B, 
           template <typename> class C, template <typename> class D,
           template <typename> class E, template <typename> class F,
 					template <typename> class G, template <typename> class H,
 					template <typename> class I>
-          class Arity9: public I<Arity8<Base,BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H > > {};
+					class Arity9: public I<Arity8<Base, A, B, C, D, E, F, G, H > > {};
 					
-template <template <typename,typename,typename,typename>
-					class Base,class BVT, class BET, typename BFT,class BTT,
+template <
+					class Base,
           template <typename> class A, template <typename> class B, 
           template <typename> class C, template <typename> class D,
           template <typename> class E, template <typename> class F,
 					template <typename> class G, template <typename> class H,
 					template <typename> class I, template <typename> class J>
-          class Arity10: public J<Arity9<Base,BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H, I > > {};
+					class Arity10: public J<Arity9<Base, A, B, C, D, E, F, G, H, I > > {};
 
-template <template <typename,typename,typename,typename>
-          class Base,class BVT, class BET, typename BFT,class BTT,
+template <
+					class Base,
           template <typename> class A, template <typename> class B, 
           template <typename> class C, template <typename> class D,
           template <typename> class E, template <typename> class F,
           template <typename> class G, template <typename> class H,
           template <typename> class I, template <typename> class J,
           template <typename> class K>
-          class Arity11: public K<Arity10<Base,BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H, I, J> > {};
+					class Arity11: public K<Arity10<Base, A, B, C, D, E, F, G, H, I, J> > {};
 
 
-template <template <typename,typename,typename,typename>
-          class Base,class BVT, class BET, typename BFT,class BTT,
+template <
+					class Base,
           template <typename> class A, template <typename> class B, 
           template <typename> class C, template <typename> class D,
           template <typename> class E, template <typename> class F,
           template <typename> class G, template <typename> class H,
           template <typename> class I, template <typename> class J,
           template <typename> class K, template <typename> class L>
-          class Arity12: public L<Arity11<Base,BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H, I, J, K> > {};
+					class Arity12: public L<Arity11<Base, A, B, C, D, E, F, G, H, I, J, K> > {};
 
 template < typename T=int>
 class DefaultDeriver : public T {};
