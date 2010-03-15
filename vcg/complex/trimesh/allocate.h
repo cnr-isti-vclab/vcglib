@@ -24,7 +24,9 @@
 #ifndef __VCGLIB_TRIALLOCATOR
 #define __VCGLIB_TRIALLOCATOR
 
+#include <typeinfo>
 #include <vector>
+#include <map>
 #include <string>
 #include <set>
 #include <assert.h>
@@ -92,10 +94,10 @@ namespace vcg {
 			typedef typename MeshType::FacePointer    FacePointer;
 			typedef typename MeshType::FaceIterator   FaceIterator;
 			typedef typename MeshType::FaceContainer FaceContainer;
-			typedef typename MeshType::PointerToAttribute PtrToAttr;
-			typedef typename std::set<PtrToAttr>::iterator AttrIterator;
-			typedef typename std::set<PtrToAttr>::const_iterator AttrConstIterator;
-			typedef typename std::set<PtrToAttr >::iterator PAIte;
+			typedef typename MeshType::PointerToAttribute PointerToAttribute;
+			typedef typename std::set<PointerToAttribute>::iterator AttrIterator;
+			typedef typename std::set<PointerToAttribute>::const_iterator AttrConstIterator;
+			typedef typename std::set<PointerToAttribute >::iterator PAIte;
 
 			/** This class is used when allocating new vertexes and faces to update 
 			the pointers that can be changed when resizing the involved vectors of vertex or faces.
@@ -146,9 +148,9 @@ namespace vcg {
 				m.vert.resize(m.vert.size()+n);
 				m.vn+=n;
 
-				typename std::set<PtrToAttr>::iterator ai;
+				typename std::set<PointerToAttribute>::iterator ai;
 				for(ai = m.vert_attr.begin(); ai != m.vert_attr.end(); ++ai)
-					((PtrToAttr)(*ai)).Resize(m.vert.size());
+					((PointerToAttribute)(*ai)).Resize(m.vert.size());
 
 				pu.newBase = &*m.vert.begin();
 				pu.newEnd =  &m.vert.back()+1; 
@@ -221,9 +223,9 @@ namespace vcg {
 				m.edge.resize(m.edge.size()+n);
 				m.en+=n;
 
-				typename std::set<typename MeshType::PtrToAttr>::iterator ai;
+				typename std::set<typename MeshType::PointerToAttribute>::iterator ai;
 				for(ai = m.edge_attr.begin(); ai != m.edge_attr.end(); ++ai)
-					((typename MeshType::PtrToAttr)(*ai)).Resize(m.edge.size());
+					((typename MeshType::PointerToAttribute)(*ai)).Resize(m.edge.size());
 
 				pu.newBase = &*m.edge.begin();
 				pu.newEnd =  &m.edge.back()+1; 
@@ -334,9 +336,9 @@ namespace vcg {
 				m.fn+=n;
 
 
-				typename std::set<PtrToAttr>::iterator ai;
+				typename std::set<PointerToAttribute>::iterator ai;
 				for(ai = m.face_attr.begin(); ai != m.face_attr.end(); ++ai)
-					((PtrToAttr)(*ai)).Resize(m.face.size());
+					((PointerToAttribute)(*ai)).Resize(m.face.size());
 
 				pu.newBase = &*m.face.begin();
 				pu.newEnd  = &m.face.back()+1;
@@ -616,7 +618,7 @@ public:
 	typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>
 	 AddPerVertexAttribute( MeshType & m, std::string name){
 		PAIte i;
-		PtrToAttr h; 
+		PointerToAttribute h;
 		h._name = name;
 		if(!name.empty()){
 			i = m.vert_attr.find(h);
@@ -643,13 +645,13 @@ public:
 		typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>
 	 GetPerVertexAttribute( MeshType & m, const std::string & name){
 		assert(!name.empty());
-		PtrToAttr h1; h1._name = name;
-		typename std::set<PtrToAttr > :: iterator i;
+		PointerToAttribute h1; h1._name = name;
+		typename std::set<PointerToAttribute > :: iterator i;
 
 		i =m.vert_attr.find(h1);
 		if(i!=m.vert_attr.end()){
 			if(	(*i)._padding != 0 ){
-					PtrToAttr attr = (*i);						// copy the PointerToAttribute
+					PointerToAttribute attr = (*i);						// copy the PointerToAttribute
 					m.vert_attr.erase(i);						// remove it from the set
 					FixPaddedPerVertexAttribute<ATTR_TYPE>(m,attr);				
 					std::pair<AttrIterator,bool> new_i = m.vert_attr.insert(attr);	// insert the modified PointerToAttribute
@@ -669,7 +671,7 @@ public:
 	static
 		void
 	DeletePerVertexAttribute( MeshType & m,typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE> & h){
-		typename std::set<PtrToAttr > ::iterator i;
+		typename std::set<PointerToAttribute > ::iterator i;
 		for( i = m.vert_attr.begin(); i !=  m.vert_attr.end(); ++i)
 			if( (*i)._handle == h._handle ){
 				delete ((SimpleTempData<VertContainer,ATTR_TYPE>*)(*i)._handle);
@@ -681,7 +683,7 @@ public:
 	static
 		void	DeletePerVertexAttribute( MeshType & m,  std::string name){
 		AttrIterator i;
-		PtrToAttr h1; h1._name = name;
+		PointerToAttribute h1; h1._name = name;
 		i = m.vert_attr.find(h1);
 		assert(i!=m.vert_attr.end());
 		delete ((SimpleTempDataBase<VertContainer>*)(*i)._handle);
@@ -705,7 +707,7 @@ public:
 	typename MeshType::template PerEdgeAttributeHandle<ATTR_TYPE>
 	 AddPerEdgeAttribute( MeshType & m, std::string name){
 		PAIte i;
-		PtrToAttr h; 
+		PointerToAttribute h;
 		h._name = name;
 		if(!name.empty()){
 			i = m.edge_attr.find(h);
@@ -730,8 +732,8 @@ public:
 		typename MeshType::template PerEdgeAttributeHandle<ATTR_TYPE>
 	 GetPerEdgeAttribute( const MeshType & m, const std::string & name){
 		assert(!name.empty());
-		PtrToAttr h1; h1._name = name;
-		typename std::set<PtrToAttr > ::const_iterator i;
+		PointerToAttribute h1; h1._name = name;
+		typename std::set<PointerToAttribute > ::const_iterator i;
 
 		i =m.edge_attr.find(h1);
 		if(i!=m.edge_attr.end())
@@ -744,7 +746,7 @@ public:
 	static
 		void
 	DeletePerEdgeAttribute( MeshType & m,typename MeshType::template PerEdgeAttributeHandle<ATTR_TYPE> & h){
-		typename std::set<PtrToAttr > ::iterator i;
+		typename std::set<PointerToAttribute > ::iterator i;
 		for( i = m.edge_attr.begin(); i !=  m.edge_attr.end(); ++i)
 			if( (*i)._handle == h._handle ){
 				delete ((SimpleTempData<FaceContainer,ATTR_TYPE>*)(*i)._handle);
@@ -756,7 +758,7 @@ public:
 	static
 		void	DeletePerEdgeAttribute( MeshType & m,  std::string name){
 		AttrIterator i;
-		PtrToAttr h1; h1._name = name;
+		PointerToAttribute h1; h1._name = name;
 		i = m.edge_attr.find(h1);
 		assert(i!=m.edge_attr.end());
 		delete ((SimpleTempDataBase<EdgeContainer>*)(*i)._handle);
@@ -778,7 +780,7 @@ public:
 	typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE>
 	 AddPerFaceAttribute( MeshType & m, std::string name){
 		PAIte i;
-		PtrToAttr h; 
+		PointerToAttribute h;
 		h._name = name;
 		if(!name.empty()){
 			i = m.face_attr.find(h);
@@ -804,13 +806,13 @@ public:
 		typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE>
 	 GetPerFaceAttribute( MeshType & m, const std::string & name){
 		assert(!name.empty());
-		PtrToAttr h1; h1._name = name;
-		typename std::set<PtrToAttr > ::iterator i;
+		PointerToAttribute h1; h1._name = name;
+		typename std::set<PointerToAttribute > ::iterator i;
 
 		i =m.face_attr.find(h1);
 		if(i!=m.face_attr.end()){
 				if(	(*i)._padding != 0 ){
-					PtrToAttr attr = (*i);											// copy the PointerToAttribute
+					PointerToAttribute attr = (*i);											// copy the PointerToAttribute
 					m.face_attr.erase(i);											// remove it from the set
 					FixPaddedPerFaceAttribute<ATTR_TYPE>(m,attr);				
 					std::pair<AttrIterator,bool> new_i = m.face_attr.insert(attr);	// insert the modified PointerToAttribute
@@ -827,7 +829,7 @@ public:
 	static
 		void
 	DeletePerFaceAttribute( MeshType & m,typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE> & h){
-		typename std::set<PtrToAttr > ::iterator i;
+		typename std::set<PointerToAttribute > ::iterator i;
 		for( i = m.face_attr.begin(); i !=  m.face_attr.end(); ++i)
 			if( (*i)._handle == h._handle ){
 				delete ((SimpleTempData<FaceContainer,ATTR_TYPE>*)(*i)._handle);
@@ -839,7 +841,7 @@ public:
 	static
 		void	DeletePerFaceAttribute( MeshType & m,  std::string name){
 		AttrIterator i;
-		PtrToAttr h1; h1._name = name;
+		PointerToAttribute h1; h1._name = name;
 		i = m.face_attr.find(h1);
 		assert(i!=m.face_attr.end());
 		delete ((SimpleTempDataBase<FaceContainer>*)(*i)._handle);
@@ -861,7 +863,7 @@ public:
 	typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE>
 	 AddPerMeshAttribute( MeshType & m, std::string name){
 		PAIte i;
-		PtrToAttr h; 
+		PointerToAttribute h;
 		h._name = name;
 		if(!name.empty()){
 			i = m.mesh_attr.find(h);
@@ -880,13 +882,13 @@ public:
 		typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE>
 	 GetPerMeshAttribute( MeshType & m, const std::string & name){
 		assert(!name.empty());
-		PtrToAttr h1; h1._name = name;
-		typename std::set<PtrToAttr > ::iterator i;
+		PointerToAttribute h1; h1._name = name;
+		typename std::set<PointerToAttribute > ::iterator i;
 
 		i =m.mesh_attr.find(h1);
 		if(i!=m.mesh_attr.end()){
 				if(	(*i)._padding != 0 ){
-					PtrToAttr attr = (*i);											// copy the PointerToAttribute
+					PointerToAttribute attr = (*i);											// copy the PointerToAttribute
 		 			m.mesh_attr.erase(i);											// remove it from the set
 					FixPaddedPerMeshAttribute<ATTR_TYPE>(m,attr);				
 					std::pair<AttrIterator,bool> new_i = m.mesh_attr.insert(attr);	// insert the modified PointerToAttribute
@@ -904,7 +906,7 @@ public:
 	static
 		void
 	DeletePerMeshAttribute( MeshType & m,typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE> & h){
-		typename std::set<PtrToAttr > ::iterator i;
+		typename std::set<PointerToAttribute > ::iterator i;
 		for( i = m.mesh_attr.begin(); i !=  m.mesh_attr.end(); ++i)
 			if( (*i)._handle == h._handle ){
 				delete (( Attribute<ATTR_TYPE> *)(*i)._handle);
@@ -916,7 +918,7 @@ public:
 	static
 		void	DeletePerMeshAttribute( MeshType & m,  std::string name){
 		AttrIterator i;
-		PtrToAttr h1; h1._name = name;
+		PointerToAttribute h1; h1._name = name;
 		i = m.mesh_attr.find(h1);
 		assert(i!=m.mesh_attr.end());
 		delete ((AttributeBase  *)(*i)._handle);
@@ -925,7 +927,7 @@ public:
 
 	template <class ATTR_TYPE>
 	static 
-		void FixPaddedPerVertexAttribute ( MeshType & m,PtrToAttr & pa){
+		void FixPaddedPerVertexAttribute ( MeshType & m,PointerToAttribute & pa){
 
 			// create the container of the right type
 			SimpleTempData<VertContainer,ATTR_TYPE>* _handle =  new SimpleTempData<VertContainer,ATTR_TYPE>(m.vert);
@@ -954,7 +956,7 @@ public:
 	
 	template <class ATTR_TYPE>
 	static 
-		void FixPaddedPerFaceAttribute ( MeshType & m,PtrToAttr & pa){
+		void FixPaddedPerFaceAttribute ( MeshType & m,PointerToAttribute & pa){
 
 			// create the container of the right type
 			SimpleTempData<FaceContainer,ATTR_TYPE>* _handle =  new SimpleTempData<FaceContainer,ATTR_TYPE>(m.face);
@@ -984,7 +986,7 @@ public:
 	
 	template <class ATTR_TYPE>
 	static 
-		void FixPaddedPerMeshAttribute ( MeshType & m,PtrToAttr & pa){
+		void FixPaddedPerMeshAttribute ( MeshType & m,PointerToAttribute & pa){
 
 			// create the container of the right type
 			Attribute<ATTR_TYPE> * _handle =  new Attribute<ATTR_TYPE>();
@@ -1006,6 +1008,95 @@ public:
 			// zero the padding 
 			pa._padding = 0;
 	}
+
+
+	/* This section enables the calling of all allocating/deallocating functions by attribute name
+	*/
+
+	// base class of all name type bound
+	struct NameTypeBound_Base{
+		virtual  std::string  Name()  = 0;
+		virtual  std::string TypeID() = 0;
+	};
+
+
+	typedef typename std::map<std::string,NameTypeBound_Base*>::iterator BindersIterator;
+	typedef std::pair<std::string,NameTypeBound_Base*> TypeBound;
+	typedef  std::map<std::string,NameTypeBound_Base*> NameTypeScope;
+
+
+
+	template <class TYPE>
+			struct NameTypeBound: public NameTypeBound_Base{
+				NameTypeBound(){}
+				NameTypeBound(std::string   name){_name =  name ;}
+				std::string  Name()   {return _name;}
+				bool operator ==(const NameTypeBound & o ) const {return Name()==o.Name();}
+				
+                                std::string TypeID(){ return typeid(TYPE).name();}
+				
+				void AddPerVertexAttribute(MeshType & m){Allocator::AddPerVertexAttribute<TYPE>	(m,_name);}
+				void AddPerFaceAttribute(MeshType & m)	{Allocator::AddPerFaceAttribute<TYPE>	(m,_name);}
+				void AddPerEdgeAttribute(MeshType & m)	{Allocator::AddPerEdgeAttribute<TYPE>	(m,_name);}
+			 private:
+				std::string _name;
+	};
+
+        // check if a given name has already been bound to a type in the scope passed
+	bool CheckNameIsBound(NameTypeScope binders,std::string name){ return (binders.find(name)!=binders.end()); }
+
+        // add a bound name-type to the passed scope
+	template <class TYPE>
+	static void AddNameTypeBound(NameTypeScope binders,std::string  name){
+		assert(!name.empty()); // you cannot bound a type to an empty string
+		BindersIterator bi = binders.find(name);
+		if(bi!=binders.end())
+                        assert(typeid(TYPE).name() == ((*bi).second)->TypeID()); // the name was previously bound to a dirrefent type
+		else{
+			NameTypeBound<TYPE> * newbound = new NameTypeBound<TYPE>();
+			binders.insert( TypeBound(name,newbound));
+		}
+	}
+
+        // remove a previously added  name-type bound  to the passed scope
+        void RemoveTypeBind(NameTypeScope binders,std::string name){
+		BindersIterator bi = binders.find(name);
+		if(bi!=binders.end()) binders.erase(bi);
+	}
+
+        // add a PerVertexAttribute without knowing its type
+	void AddPerVertexAttribute(NameTypeScope binders, MeshType & m, std::string name){
+		BindersIterator bi = binders.find(name);
+		assert(bi != binders.end() ); // the name MUST have been already bound to a type
+		(*bi).second->AddPerVertexAttribute(m);
+	}
+
+        // add a PerEdgeAttribute without knowing its type
+        void AddPerEdgeAttribute(NameTypeScope binders, MeshType & m, std::string name){
+		BindersIterator bi = binders.find(name);
+		assert(bi != binders.end() ); // the name MUST have been already bound to a type
+		(*bi).second->AddPerEdgeAttribute(m);
+	}
+
+        // add a PerFaceAttribute without knowing its type
+        void AddPerFaceAttribute( NameTypeScope binders,MeshType & m, std::string name){
+		BindersIterator bi = binders.find(name);
+		assert(bi != binders.end() ); // the name MUST have been already bound to a type
+		(*bi).second->AddPerFaceAttribute(m);
+	}
+
+	/* return the name of a previouly bound type */
+	template <typename TYPE>
+	std::string NameOf(NameTypeScope binders){
+		TYPE t;
+		BindersIterator bi;
+		for(bi = binders.begin(); bi != binders.end(); ++bi)
+			if (typdeid(t).name() == ((*bi).second->TypeID()))
+				return (*bi).second->Name();
+		return std::string("");
+	}
+
+
 }; // end class
 		
 
