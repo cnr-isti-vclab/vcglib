@@ -36,6 +36,42 @@ All the Components that can be added to a vertex should be defined in the namesp
 
 */
 
+			/*-------------------------- Curvature   ----------------------------------*/
+
+			template <class S>
+			struct CurvatureDirBaseType{
+				typedef Point3<S> VecType;
+				typedef  S   ScalarType;
+				CurvatureDirBaseType () {}
+				Point3<S>max_dir,min_dir; // max and min curvature direction
+				S k1,k2;// max and min curvature values
+			};
+
+			template <class A, class TT> class Curvature: public TT {
+			public:
+				typedef Point2<A> CurvatureType;
+				typedef typename CurvatureType::ScalarType ScalarType;
+				ScalarType  &Kh(){ return _hk[0];}
+				ScalarType  &Kg(){ return _hk[1];}
+				const ScalarType &cKh() const { return  _hk[0];}
+				const ScalarType &cKg() const { return  _hk[1];}
+
+				static bool HasCurvature()   { return true; }
+				static bool IsCurvatureEnabled(typename TT::VertexType *)   { return true; }
+				static void Name(std::vector<std::string> & name){name.push_back(std::string("Curvature"));TT::Name(name);}
+
+			private:
+				Point2<A> _hk;
+			};
+
+
+			template <class T> class Curvaturef: public Curvature< float, T> {
+			public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("Curvaturef"));T::Name(name);}
+			};
+			template <class T> class Curvatured: public Curvature<double , T> {
+			public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("Curvatured"));T::Name(name);}
+			};
+
 /*------------------------- EMPTY CORE COMPONENTS -----------------------------------------*/
 
 template <class TT> class EmptyCore: public TT {
@@ -63,14 +99,14 @@ public:
   const QualityType &cQ() const { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
   static bool HasQuality()   { return false; }
   static bool HasQualityOcf()   { return false; }
-  static bool IsQualityEnabled(const typename TT::VertType *)   { return false; }
+	static bool IsQualityEnabled(const typename TT::VertexType *)   { return false; }
 
   typedef vcg::Color4b ColorType;
   ColorType &C() { static ColorType dumcolor(vcg::Color4b::White); assert(0); return dumcolor; }
   const ColorType &cC() const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
   static bool HasColor()   { return false; }
   static bool HasColorOcf()   { return false; }
-  static bool IsColorEnabled(const typename TT::VertType *) { return false; }
+	static bool IsColorEnabled(const typename TT::VertexType *) { return false; }
 
   inline void InitIMark()    {  }
   inline const int & cIMark() const { assert(0); static int tmp=-1; return tmp;}
@@ -78,20 +114,20 @@ public:
   inline int IMark() const {return 0;}
   static bool HasMark()   { return false; }
   static bool HasMarkOcf()   { return false; }
-  static bool IsMarkEnabled(const typename TT::VertType *)   { return false; }
+	static bool IsMarkEnabled(const typename TT::VertexType *)   { return false; }
 
   typedef ScalarType RadiusType;
   RadiusType  &R(){ static ScalarType v = 0.0; assert(0 && "the radius component is not available"); return v; }
   const RadiusType &cR() const { static const ScalarType v = 0.0; assert(0 && "the radius component is not available"); return v; }
   static bool HasRadius()     { return false; }
   static bool HasRadiusOcf()     { return false; }
-  static bool IsRadiusEnabled(const typename TT::VertType *)  { return false; }
+	static bool IsRadiusEnabled(const typename TT::VertexType *)  { return false; }
 
   typedef vcg::TexCoord2<float,1> TexCoordType;
   TexCoordType &T() { static TexCoordType dummy_texcoord;  assert(0); return dummy_texcoord; }
   const TexCoordType &cT() const { static TexCoordType dummy_texcoord;  assert(0); return dummy_texcoord; }
   static bool HasTexCoord()   { return false; }
-  static bool IsTexCoordEnabled(const typename TT::VertType *)  { return false; }
+	static bool IsTexCoordEnabled(const typename TT::VertexType *)  { return false; }
 
   typename TT::TetraPointer &VTp() { static typename TT::TetraPointer tp = 0;  assert(0); return tp; }
   typename TT::TetraPointer cVTp() { static typename TT::TetraPointer tp = 0;  assert(0); return tp; }
@@ -109,12 +145,15 @@ public:
   int &VEi(){static int z=0; return z;};
   static bool HasVEAdjacency()   {   return false; }
 
+
   typedef Point3f VecType;
-  float &Kh() { static float dummy = 0.f; assert(0);return dummy;}
+	typedef Point2f CurvatureType;
+	float &Kh() { static float dummy = 0.f; assert(0);return dummy;}
   float &Kg() { static float dummy = 0.f; assert(0);return dummy;}
   const float &cKh() const { static float dummy = 0.f; assert(0); return dummy;}
   const float &cKg() const { static float dummy = 0.f; assert(0); return dummy;}
 
+	typedef CurvatureDirBaseType<float> CurvatureDirType;
   VecType &PD1(){static VecType v(0,0,0); assert(0);return v;}
   VecType &PD2(){static VecType v(0,0,0); assert(0);return v;}
   const VecType &cPD1() const {static VecType v(0,0,0); assert(0);return v;}
@@ -126,9 +165,9 @@ public:
   const ScalarType &cK2()const  {static ScalarType v = 0.0;assert(0);return v;}
 
   static bool HasCurvature()			{ return false; }
-  static bool IsCurvatureEnabled(const typename TT::VertType *)   { return false; }
+	static bool IsCurvatureEnabled(const typename TT::VertexType *)   { return false; }
   static bool HasCurvatureDir()			{ return false; }
-  static bool IsCurvatureDirEnabled(const typename TT::VertType *)   { return false; }
+	static bool IsCurvatureDirEnabled(const typename TT::VertexType *)   { return false; }
 
 
   template < class LeftV>
@@ -269,7 +308,7 @@ public:
 	template < class LeftV>
 	void ImportLocal(const LeftV  & left ) { if(LeftV::HasColor()) C() = left.cC();  T::ImportLocal( left); }
   static bool HasColor()   { return true; }
-  static bool IsColorEnabled(typename T::VertType *)   { return true; }
+	static bool IsColorEnabled(typename T::VertexType *)   { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("Color"));T::Name(name);}
 
 private:
@@ -306,41 +345,6 @@ template <class TT> class Qualityd: public Quality<double, TT> {
 public: static void Name(std::vector<std::string> & name){name.push_back(std::string("Qualityd"));TT::Name(name);}
 };
 
-
-
-template <class S>
-struct CurvatureDirBaseType{
-	typedef Point3<S> VecType;
-	typedef  S   ScalarType;
-	CurvatureDirBaseType () {}
-	Point3<S>max_dir,min_dir; // max and min curvature direction
-	S k1,k2;// max and min curvature values
-};
-
-template <class A, class TT> class Curvature: public TT {
-public:
-  typedef Point2<A> CurvatureType;
-	typedef typename CurvatureType::ScalarType ScalarType;
-	ScalarType  &Kh(){ return _hk[0];}
-	ScalarType  &Kg(){ return _hk[1];}
-	const ScalarType &cKh() const { return  _hk[0];}
-	const ScalarType &cKg() const { return  _hk[1];}
-
-  static bool HasCurvature()   { return true; }
-  static bool IsCurvatureEnabled(typename TT::VertType *)   { return true; }
-  static void Name(std::vector<std::string> & name){name.push_back(std::string("Curvature"));TT::Name(name);}
-
-private:
-	Point2<A> _hk;
-};
-
-
-template <class T> class Curvaturef: public Curvature< float, T> {
-public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("Curvaturef"));T::Name(name);}
-};
-template <class T> class Curvatured: public Curvature<double , T> {
-public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("Curvatured"));T::Name(name);}
-};
 
 /*-------------------------- Curvature Direction ----------------------------------*/
 

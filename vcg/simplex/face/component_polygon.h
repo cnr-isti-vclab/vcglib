@@ -147,7 +147,7 @@ public:
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("PFVAdj"));T::Name(name);}
 
   private:
-  typename T::VertPointer *_vpoly;
+	typename T::VertexPointer *_vpoly;
 };
 
 /*----------------------------- PVFADJ ------------------------------*/ 

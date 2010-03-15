@@ -142,6 +142,8 @@ Initial commit
 
 #include <vcg/container/simple_temporary_data.h>
 #include <vcg/simplex/edge/base.h>
+#include <vcg/complex/used_types.h>
+
 /*
 People should subclass his vertex class from these one...
 */
@@ -175,18 +177,24 @@ class TriMeshEdgeHolder{
 	};
 
 	// a dummy class is used  to provide the interface of a stl container
-	class DummyClass:public std::vector<int>{};
+	class DummyClass:public std::vector<int>{
+	};
 	// If the DummyClass is passed it provides the interfaces to compile
-template < class VertContainerType, class FaceContainerType >
-class TriMeshEdgeHolder<VertContainerType,FaceContainerType,DummyClass>{
-	public:
-	class EdgeType: public EdgeSimp2<	typename VertContainerType::value_type,EdgeType,typename FaceContainerType::value_type >{};
-	typedef typename FaceContainerType::value_type::EdgeType EdgeTypeExternal;
-	struct EdgePointer {};	
-	struct ConstEdgePointer {};	
+ template < class VertContainerType, class FaceContainerType >
+ class TriMeshEdgeHolder<VertContainerType,FaceContainerType,DummyClass>{
+		public:
+
+		struct OthersTypes : public UsedTypes<	Use<typename VertContainerType::value_type>::template AsVertexType,
+																						Use<typename FaceContainerType::value_type>::template AsFaceType
+																						>{};
+
+	class EdgeType: public Edge<	OthersTypes >{};
+
+	struct EdgePointer {};
+	struct ConstEdgePointer {};
 	typedef std::vector< EdgeType > EdgeContainerType;
 	typedef typename std::vector< EdgeType > EdgeContainer;
-};
+ };
 
 
 

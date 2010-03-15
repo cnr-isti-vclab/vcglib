@@ -404,7 +404,7 @@ public:
 
   static bool HasVFAdjacency()   {   return true; }
   static bool HasVFAdjacencyOcf()   {   return true; }
-  static bool IsVFAdjacencyEnabled(const typename T::VertType *vp)   {return vp->Base().VFAdjacencyEnabled;}
+	static bool IsVFAdjacencyEnabled(const typename T::VertexType *vp)   {return vp->Base().VFAdjacencyEnabled;}
 
 private:
 };
@@ -558,7 +558,7 @@ public:
 	}
 
   static bool HasCurvature() { return true; }
-  static bool IsCurvatureEnabled(const typename TT::VertType *v)   { return v->Base().CurvatureEnabled; }
+	static bool IsCurvatureEnabled(const typename TT::VertexType *v)   { return v->Base().CurvatureEnabled; }
 
 	static bool HasCurvatureOcf()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureOcf"));TT::Name(name);}
@@ -666,15 +666,15 @@ public:
         assert(0); return *this;
     }
 
-    vector_ocf<typename T::VertType> &Base() const { return *_ovp;}
+		vector_ocf<typename T::VertexType> &Base() const { return *_ovp;}
 
 	inline int Index() const {
-		typename  T::VertType const *tp=static_cast<typename T::VertType const*>(this);
+		typename  T::VertexType const *tp=static_cast<typename T::VertexType const*>(this);
 		int tt2=tp- &*(_ovp->begin());
 		return tt2;
 	}
 public:
-	vector_ocf<typename T::VertType> *_ovp;
+	vector_ocf<typename T::VertexType> *_ovp;
 
 	static bool HasQualityOcf()   { return false; }
 	static bool HasTexCoordOcf()   { return false; }

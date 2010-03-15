@@ -89,19 +89,10 @@ The base class of all the recusive definition chain. It is just a container of t
 These typenames must be known form all the derived classes.
 */
 
-template <class BVT, class BET, class BFT, class BTT>
-class FaceTypeHolder{
+template <class UserTypes>
+				class FaceTypeHolder: public UserTypes {
   public:
-  typedef BVT VertexType;
-  typedef typename VertexType::CoordType CoordType;
-  typedef typename VertexType::ScalarType ScalarType;
-  typedef BET EdgeType;
-  typedef BFT FaceType;
-  typedef BTT TetraType;
-  typedef BVT *VertPointer;
-  typedef BET *EdgePointer;
-  typedef BFT *FacePointer;
-  typedef BTT *TetraPointer;
+
 	template <class LeftF>
 	void ImportLocal(const LeftF & ){}
     static void Name(std::vector<std::string> & /* name */){}
@@ -127,7 +118,7 @@ we have to build the type a step a time (deriving from a single ancestor at a ti
 
 
 */ 
-template <class BVT, class BET=DumClass, class BFT=DumClass, class BTT=DumClass>
+template <class UserTypes>
 class FaceBase: public   face::EmptyPolyInfo<
 						 face::EmptyVertexRef<
                          face::EmptyAdj<
@@ -135,7 +126,7 @@ class FaceBase: public   face::EmptyPolyInfo<
                          face::EmptyNormal<
                          face::EmptyBitFlags<
                          face::EmptyWedgeTexCoord<
-                         FaceTypeHolder <BVT, BET, BFT, BTT> > > > > > > > {
+												 FaceTypeHolder <UserTypes> > > > > > > > {
 
 };
 
@@ -152,13 +143,13 @@ I.e. IsD() that uses the overridden Flags() member must be defined here.
 
 */
 
-template <class BVT, class BET, typename BFT,class BTT,
+template < class UserTypes,
           template <typename> class A, template <typename> class B, 
           template <typename> class C, template <typename> class D, 
           template <typename> class E, template <typename> class F,
           template <typename> class G, template <typename> class H,
           template <typename> class I, template <typename> class J > 
-          class FaceArityMax: public I<Arity9<FaceBase,BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H, J> > {
+					class FaceArityMax: public J<Arity9<FaceBase<UserTypes>, A, B, C, D, E, F, G, H, I> > {
 
 // ----- Flags stuff -----
 public:
@@ -346,21 +337,13 @@ FFAdj                                           //topology: face face adj
 
 */
 
-template <class BVT, class BET, class BFT, class BTT,
+template <class UserTypes,
           template <typename> class A = FaceDefaultDeriver, template <typename> class B = FaceDefaultDeriver,
           template <typename> class C = FaceDefaultDeriver, template <typename> class D = FaceDefaultDeriver,
           template <typename> class E = FaceDefaultDeriver, template <typename> class F = FaceDefaultDeriver,
           template <typename> class G = FaceDefaultDeriver, template <typename> class H = FaceDefaultDeriver,
           template <typename> class I = FaceDefaultDeriver, template <typename> class J = FaceDefaultDeriver > 
-              class FaceSimp3: public FaceArityMax<BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H, I, J>  {};
-class DumTT;
-template <class BVT, class BET, class BFT, 
-          template <typename> class A = FaceDefaultDeriver, template <typename> class B = FaceDefaultDeriver,
-          template <typename> class C = FaceDefaultDeriver, template <typename> class D = FaceDefaultDeriver,
-          template <typename> class E = FaceDefaultDeriver, template <typename> class F = FaceDefaultDeriver,
-          template <typename> class G = FaceDefaultDeriver, template <typename> class H = FaceDefaultDeriver,
-          template <typename> class I = FaceDefaultDeriver, template <typename> class J = FaceDefaultDeriver > 
-              class FaceSimp2: public FaceArityMax<BVT,BET,BFT,DumTT, A, B, C, D, E, F, G, H, I, J>  {};
+							class Face: public FaceArityMax<UserTypes, A, B, C, D, E, F, G, H, I, J>  {};
 
 
 }// end namespace

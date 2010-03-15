@@ -519,7 +519,7 @@ public:
     assert((*this).Base().FFAdjacencyEnabled); 
     return (*this).Base().AF[(*this).Index()]._zp[j]; 
   }
-  const char cFFi(const int j) const {
+  char cFFi(const int j) const {
     assert((*this).Base().FFAdjacencyEnabled); 
     return (*this).Base().AF[(*this).Index()]._zp[j]; 
   }
