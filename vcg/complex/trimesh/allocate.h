@@ -1035,9 +1035,9 @@ public:
 				
                                 std::string TypeID(){ return typeid(TYPE).name();}
 				
-				void AddPerVertexAttribute(MeshType & m){Allocator::AddPerVertexAttribute<TYPE>	(m,_name);}
-				void AddPerFaceAttribute(MeshType & m)	{Allocator::AddPerFaceAttribute<TYPE>	(m,_name);}
-				void AddPerEdgeAttribute(MeshType & m)	{Allocator::AddPerEdgeAttribute<TYPE>	(m,_name);}
+        void AddPerVertexAttribute(MeshType & m){Allocator::template AddPerVertexAttribute<TYPE>	(m,_name);}
+        void AddPerFaceAttribute(MeshType & m)	{Allocator::template AddPerFaceAttribute<TYPE>	(m,_name);}
+        void AddPerEdgeAttribute(MeshType & m)	{Allocator::template AddPerEdgeAttribute<TYPE>	(m,_name);}
 			 private:
 				std::string _name;
 	};
