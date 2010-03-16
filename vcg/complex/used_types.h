@@ -22,9 +22,9 @@ struct DummyTypes{
 		typedef TetraType * TetraPointer	;
 		typedef HEdgeType * HEdgePointer	;
 
-		static void Name(std::vector<std::string> & name){}
+    static void Name(std::vector<std::string> & /*name*/){}
 		template < class LeftV>
-		void ImportLocal(const LeftV  & left ) {}
+    void ImportLocal(const LeftV  & /*left*/ ) {}
 };
 
 template <template <typename> class A = DefaultDeriver, template <typename> class B = DefaultDeriver,
