@@ -986,14 +986,13 @@ public:
 	
 	template <class ATTR_TYPE>
 	static 
-		void FixPaddedPerMeshAttribute ( MeshType & m,PointerToAttribute & pa){
+    void FixPaddedPerMeshAttribute ( MeshType & /*m*/,PointerToAttribute & pa){
 
 			// create the container of the right type
 			Attribute<ATTR_TYPE> * _handle =  new Attribute<ATTR_TYPE>();
 
 			// copy the padded container in the new one
-			ATTR_TYPE * dest = _handle->attribute;
-			char * ptr = (char*)( ((Attribute<ATTR_TYPE> *)pa._handle)->DataBegin());
+      char * ptr = (char*)( ((Attribute<ATTR_TYPE> *)pa._handle)->DataBegin());
 			memcpy((void*)_handle->attribute ,(void*) &(ptr[0]) ,sizeof(ATTR_TYPE));
 
 			// remove the padded container 

@@ -562,7 +562,8 @@ namespace vcg
 					}
 					break;
 				}
-			}
+      case LeaveUnsorted: // nothing to do.
+      }
 			if (k != i)
 			{
 				W[k] = W[i];  // i.e.
