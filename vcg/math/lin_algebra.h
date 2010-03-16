@@ -562,7 +562,7 @@ namespace vcg
 					}
 					break;
 				}
-      case LeaveUnsorted: // nothing to do.
+      case LeaveUnsorted: break; // nothing to do.
       }
 			if (k != i)
 			{
