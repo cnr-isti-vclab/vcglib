@@ -58,11 +58,18 @@ template <class MeshType>
 class FourPCS {
 public:
 	/* mesh only for using spatial indexing functions (to remove) */
-	class PEdge;    // dummy prototype never used
-	class PFace;
-	class PVertex : public vcg::VertexSimp2< PVertex, PEdge, PFace,vcg::vertex::BitFlags,vcg::vertex::Coord3f ,vcg::vertex::Mark>{};
+  class PVertex;    // dummy prototype never used
+  class PEdge;    // dummy prototype never used
+  class PFace;
+
+  class PUsedTypes: public vcg::UsedTypes < vcg::Use<PVertex>::template AsVertexType,
+                                            vcg::Use<PEdge  >::template AsEdgeType,
+                                            vcg::Use<PFace  >::template AsFaceType >{};
+
+
+  class PVertex : public vcg::Vertex< PUsedTypes,vcg::vertex::BitFlags,vcg::vertex::Coord3f ,vcg::vertex::Mark>{};
 	/*same as for the vertes */ 
-	class PFace   : public vcg::FaceSimp2<   PVertex, PEdge, PFace> {};
+  class PFace   : public vcg::Face<   PUsedTypes> {};
 	/*the mesh is a container of vertices and a container of faces */ 
 	class PMesh   : public vcg::tri::TriMesh< std::vector<PVertex>, std::vector<PFace> > {};
 
@@ -127,7 +134,7 @@ private:
 		ScalarType err;
 		int score;
 		int base; // debug: for which base
-		const bool & operator <(const CandiType & o) const {return score > o.score;}
+		inline bool operator <(const CandiType & o) const {return score > o.score;}
 	};
 
 
