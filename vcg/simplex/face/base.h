@@ -288,7 +288,7 @@ static int &LastBitFlag()
 	void ClearUserBit(int userBit){this->Flags() &= (~userBit);}
 
 
-  void GetBBox(Box3<typename ParentType::ScalarType>& bb )
+  void GetBBox(Box3<typename ParentType::ScalarType>& bb ) const
   {
     if(this->IsD()) {
         bb.SetNull();
