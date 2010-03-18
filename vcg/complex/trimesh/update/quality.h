@@ -207,6 +207,15 @@ static void VertexConstant(MeshType &m, float q)
 		(*vi).Q()=q;
 }
 
+/** Clamp each vertex of the mesh with a range of values.
+*/
+static void VertexClamp(MeshType &m, float qmin, float qmax)
+{
+  VertexIterator vi;
+  for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
+    (*vi).Q()=std::min(qmax, std::max(qmin,(*vi).Q()));
+}
+
 /** Assign to each face of the mesh a constant quality value. Useful for initialization.
 */
 static void FaceConstant(MeshType &m, float q)
