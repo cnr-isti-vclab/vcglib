@@ -20,136 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-History
-
-$Log: not supported by cvs2svn $
-Revision 1.37  2007/07/16 15:13:39  cignoni
-Splitted initialiazation functions of grid to add flexibility in the creation
-
-Revision 1.36  2005/12/02 00:43:31  cignoni
-Forgotten a base deferencing like the previous one
-Note also the different possible sintax with this-> instead of the base class name
-
-Revision 1.35  2005/12/02 00:25:13  cignoni
-Added and removed typenames for gcc compiling.
-Added base class qualifier for referencing the elemntes of the templated base class (BasicGrid)
-it seems to be needed by the standard
-
-Revision 1.34  2005/11/30 16:01:25  m_di_benedetto
-Added std:: namespace for max() and min().
-
-Revision 1.33  2005/11/30 10:32:44  m_di_benedetto
-Added (int) cast to std::distance to prevent compiler warning message.
-
-Revision 1.32  2005/11/10 15:44:17  cignoni
-Added casts to remove warnings
-
-Revision 1.31  2005/10/07 13:27:22  turini
-Minor changes in Set method: added use of template scalar type computing BBox.
-
-Revision 1.30  2005/10/05 17:05:08  pietroni
-corrected bug on Set Function .... bbox must be exetended in order to have'nt any object on his borde
-
-Revision 1.29  2005/10/03 13:57:56  pietroni
-added GetInSphere and GetInBox functions
-
-Revision 1.28  2005/10/02 23:15:26  cignoni
-Inveted the boolean sign of an assert in Grid()
-
-Revision 1.27  2005/09/30 15:07:28  cignoni
-Reordered grid access functions
-Added possibility of setting BBox explicitly in Set(...)
-
-Revision 1.26  2005/09/30 13:15:21  pietroni
-added wrapping to functions defined in GridClosest:
-- GetClosest
-- GetKClosest
-- DoRay
-
-Revision 1.25  2005/09/21 09:22:51  pietroni
-removed closest functions. Closest function is now on index\\Closest.h
-Users must use trimesh\\closest.h to perform spatial query.
-
-Revision 1.24  2005/09/16 11:57:15  cignoni
-Removed two wrong typenames
-
-Revision 1.23  2005/09/15 13:16:42  spinelli
-fixed bugs
-
-Revision 1.22  2005/09/15 11:14:39  pietroni
-minor changes
-
-Revision 1.21  2005/09/14 13:27:38  spinelli
-minor changes
-
-Revision 1.20  2005/09/14 12:57:52  pietroni
-canged template parameters for Closest Function (use of TempMark class)
-
-Revision 1.19  2005/09/14 09:05:32  pietroni
-added * operator to Link
-modified getClosest in order to use Temporary mark
-corrected bug on functor calling compilation
-
-Revision 1.18  2005/09/09 11:29:21  m_di_benedetto
-Modified old GetClosest() to respect old min_dist semantic (in/out) and removed #included <limits>
-
-Revision 1.17  2005/09/09 11:11:15  m_di_benedetto
-#included <limits> for std::numeric_limits<ScalarType>::max() and corrected parameters bug in old GetClosest();
-
-Revision 1.16  2005/09/09 11:01:02  m_di_benedetto
-Modified GetClosest(): now it uses a functor for distance calculation.
-Added comments and a GetClosest() method with backward compatibility.
-
-Revision 1.15  2005/08/26 09:27:58  cignoni
-Added a templated version of SetBBox
-
-Revision 1.14  2005/08/02 11:18:36  pietroni
-exetended form BasicGrid, changed type of t in class Link (from Iterator to Pointer to the object)
-
-Revision 1.13  2005/04/14 17:23:08  ponchio
-*** empty log message ***
-
-Revision 1.12  2005/03/15 11:43:18  cignoni
-Removed BestDim function from the grid_static_ptr class and moved to a indipendent file (grid_util.h) for sake of generality.
-
-Revision 1.11  2005/01/03 11:21:26  cignoni
-Added some casts
-
-Revision 1.10  2004/09/28 10:25:05  ponchio
-SetBox minimal change.
-
-Revision 1.9  2004/09/23 14:29:42  ponchio
-Small bugs fixed.
-
-Revision 1.8  2004/09/23 13:44:25  ponchio
-Removed SetSafeBBox. SetBBox is now safe enough.
-
-Revision 1.7  2004/09/09 12:44:39  fasano
-included stdio.h
-
-Revision 1.6  2004/09/09 08:39:29  ganovelli
-minor changes for gcc
-
-Revision 1.5  2004/06/25 18:34:23  ganovelli
-added Grid to return all the cells sharing a specified edge
-
-Revision 1.4  2004/06/23 15:49:03  ponchio
-Added some help and inndentation
-
-Revision 1.3  2004/05/12 18:50:58  ganovelli
-changed calls to Dist
-
-Revision 1.2  2004/05/11 14:33:46  ganovelli
-changed to grid_static_obj to grid_static_ptr
-
-Revision 1.1  2004/05/10 14:44:13  ganovelli
-created
-
-Revision 1.1  2004/03/08 09:21:31  cignoni
-Initial commit
-
-****************************************************************************/
 
 #ifndef __VCGLIB_UGRID
 #define __VCGLIB_UGRID
@@ -456,10 +326,10 @@ namespace vcg {
 			this->voxel[1] = this->dim[1]/this->siz[1];
 			this->voxel[2] = this->dim[2]/this->siz[2];			
 			
-				// "Alloca" la griglia: +1 per la sentinella
+        // Allocate the grid (add one more for the final sentinel)
 				grid.resize( this->siz[0]*this->siz[1]*this->siz[2]+1 );
 
-				// Ciclo inserimento dei tetraedri: creazione link
+        // Insert all the objects into the grid
 				links.clear();
 				for(i=_oBegin; i!=_oEnd; ++i)
 				{
