@@ -399,17 +399,18 @@ public:
 
                         vcg::glu_tesselator::tesselate<vcg::Point3f>(polygonVect, indexTriangulatedVect);
                         extraTriangles+=((indexTriangulatedVect.size()/3) -1);
-                        if( (indexTriangulatedVect.size()/3) != vertexesPerFace-2)
+#ifdef QT_VERSION
+                        if( int(indexTriangulatedVect.size()/3) != vertexesPerFace-2)
                         {
-                            qDebug("Warning there is a degenerate poligon of %i verteces that was triangulated into %i triangles",vertexesPerFace,indexTriangulatedVect.size()/3);
-                            for(int qq=0;qq<polygonVect[0].size();++qq)
+                            qDebug("Warning there is a degenerate poligon of %i verteces that was triangulated into %i triangles",vertexesPerFace,int(indexTriangulatedVect.size()/3));
+                            for(size_t qq=0;qq<polygonVect[0].size();++qq)
                                 qDebug("      (%f %f %f)",polygonVect[0][qq][0],polygonVect[0][qq][1],polygonVect[0][qq][2]);
-                             for(int qq=0;qq<tokens.size();++qq) qDebug("<%s>",tokens[qq].c_str());
+                             for(size_t qq=0;qq<tokens.size();++qq) qDebug("<%s>",tokens[qq].c_str());
                         }
-
+#endif
                         //qDebug("Triangulated a face of %i vertexes into %i triangles",polygonVect[0].size(),indexTriangulatedVect.size());
 
-                        for(int pi=0;pi<indexTriangulatedVect.size();pi+=3)
+                        for(size_t pi=0;pi<indexTriangulatedVect.size();pi+=3)
                         {
                             int i0= indexTriangulatedVect [pi+0];
                             int i1= indexTriangulatedVect [pi+1];
