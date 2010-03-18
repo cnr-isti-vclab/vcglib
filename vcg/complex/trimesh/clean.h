@@ -1038,10 +1038,8 @@ private:
 
 			static int CountHoles( MeshType & m)
 			{
-				int numholes=0;
-				int numholev=0;
-				int BEdges=0;
-				FaceIterator fi;
+        int numholev=0;
+        FaceIterator fi;
 				FaceIterator gi;
 				vcg::face::Pos<FaceType> he;
 				vcg::face::Pos<FaceType> hei;
