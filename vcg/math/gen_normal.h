@@ -130,7 +130,7 @@ static int BestMatchingNormal(const Point3x &n, std::vector<Point3x> &nv)
 				ret=ni-nv.begin();
 			}
 		}
-	assert(ret>=0 && ret <nv.size());
+  assert(ret>=0 && ret <int(nv.size()));
 	return ret;
 }
 
