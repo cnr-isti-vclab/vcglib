@@ -151,8 +151,11 @@ template < class UserTypes,
           template <typename> class I, template <typename> class J > 
 					class FaceArityMax: public J<Arity9<FaceBase<UserTypes>, A, B, C, D, E, F, G, H, I> > {
 
-// ----- Flags stuff -----
 public:
+  typedef typename J<Arity9<FaceBase<UserTypes>, A, B, C, D, E, F, G, H, I> >::ScalarType ParentScalarType;
+  typedef J<Arity9<FaceBase<UserTypes>, A, B, C, D, E, F, G, H, I> > ParentType;
+
+// ----- Flags stuff -----
 
 	inline int & UberFlags ()
 	{ 
@@ -284,25 +287,22 @@ static int &LastBitFlag()
 	/// This function clear the given user bit 
 	void ClearUserBit(int userBit){this->Flags() &= (~userBit);}
 
- template<class BoxType>
-  void GetBBox( BoxType & bb ) const
+
+  void GetBBox(Box3<typename ParentType::ScalarType>& bb )
   {
-	  if(this->IsD()) 
-			{
-				bb.SetNull();
-				return;
-			}
-	  bb.Set(this->P(0));
-	  bb.Add(this->P(1));
-	  bb.Add(this->P(2));
+    if(this->IsD()) {
+        bb.SetNull();
+        return;
+      }
+        bb.Set(this->cP(0));
+        bb.Add(this->cP(1));
+        bb.Add(this->cP(2));
   }
 
 
 };
 
-template < typename T=int>
-class FaceDefaultDeriver : public T {};
-          
+
 /*
 
 These are the three main classes that are used by the library user to define its own Facees.
@@ -338,11 +338,11 @@ FFAdj                                           //topology: face face adj
 */
 
 template <class UserTypes,
-          template <typename> class A = FaceDefaultDeriver, template <typename> class B = FaceDefaultDeriver,
-          template <typename> class C = FaceDefaultDeriver, template <typename> class D = FaceDefaultDeriver,
-          template <typename> class E = FaceDefaultDeriver, template <typename> class F = FaceDefaultDeriver,
-          template <typename> class G = FaceDefaultDeriver, template <typename> class H = FaceDefaultDeriver,
-          template <typename> class I = FaceDefaultDeriver, template <typename> class J = FaceDefaultDeriver > 
+          template <typename> class A = DefaultDeriver, template <typename> class B = DefaultDeriver,
+          template <typename> class C = DefaultDeriver, template <typename> class D = DefaultDeriver,
+          template <typename> class E = DefaultDeriver, template <typename> class F = DefaultDeriver,
+          template <typename> class G = DefaultDeriver, template <typename> class H = DefaultDeriver,
+          template <typename> class I = DefaultDeriver, template <typename> class J = DefaultDeriver >
 							class Face: public FaceArityMax<UserTypes, A, B, C, D, E, F, G, H, I, J>  {};
 
 

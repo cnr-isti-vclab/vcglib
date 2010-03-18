@@ -183,13 +183,13 @@ public:
 class WedgeColorTypePack {
 public:
   WedgeColorTypePack() {
-	typedef typename VALUE_TYPE::ColorType::ScalarType ScalarType;
+  typedef typename VALUE_TYPE::ColorType::ScalarType WedgeColorScalarType;
 	for (int i=0; i<3; ++i)
 	{
-		wc[i][0] = ScalarType(255);
-		wc[i][1] = ScalarType(255);
-		wc[i][2] = ScalarType(255);
-		wc[i][3] = ScalarType(255);
+    wc[i][0] = WedgeColorScalarType(255);
+    wc[i][1] = WedgeColorScalarType(255);
+    wc[i][2] = WedgeColorScalarType(255);
+    wc[i][3] = WedgeColorScalarType(255);
 	}
   }
 
@@ -199,12 +199,12 @@ public:
 class WedgeNormalTypePack {
 public:
   WedgeNormalTypePack() {
-	typedef typename VALUE_TYPE::NormalType::ScalarType ScalarType;
+  typedef typename VALUE_TYPE::NormalType::ScalarType WedgeNormalScalarType;
 	for (int i=0; i<3; ++i)
 	{
-		wn[i][0] = ScalarType(0);
-		wn[i][1] = ScalarType(0);
-		wn[i][2] = ScalarType(1);
+    wn[i][0] = WedgeNormalScalarType(0);
+    wn[i][1] = WedgeNormalScalarType(0);
+    wn[i][2] = WedgeNormalScalarType(1);
 	}
   }
 

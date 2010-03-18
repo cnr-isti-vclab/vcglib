@@ -62,7 +62,7 @@ namespace tri {
 		typedef typename MeshType::FaceType       FaceType;
 		typedef typename MeshType::FacePointer    FacePointer;
 		typedef typename MeshType::FaceIterator   FaceIterator;
-		typedef typename MeshType::FaceType::ScalarType     ScalarType;
+    typedef typename MeshType::FaceType::CoordType::ScalarType     ScalarType;
 
 		static void Set(FaceType &f)
 		{

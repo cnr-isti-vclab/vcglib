@@ -182,7 +182,7 @@ public:
 template <class A, class T> class Coord: public T {
 public:
   typedef A CoordType;
-  typedef typename CoordType::ScalarType      ScalarType;
+  typedef typename A::ScalarType      ScalarType;
   CoordType &P() { return _coord; }
   const CoordType &P() const { return _coord; }
   const CoordType &cP() const { return _coord; }
