@@ -20,72 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.13  2008/02/15 14:38:32  ganovelli
-added Cylinder(..). the filename platonic.h is lesser and lesser significant...
-
-Revision 1.12  2007/10/19 22:29:36  cignoni
-Re-Wrote basic build function
-
-Revision 1.11  2007/02/01 06:38:27  cignoni
-Added small comment to grid function
-
-Revision 1.10  2007/01/27 13:14:34  marfr960
-Removed unuseful CoordType test
-
-Revision 1.9  2006/08/23 15:29:44  marfr960
-*** empty log message ***
-
-Revision 1.8  2006/03/27 04:18:35  cignoni
-Double->Scalar in dodecahedron
-
-Revision 1.7  2006/01/30 08:09:05  cignoni
-Corrected Grid
-
-Revision 1.6  2006/01/22 17:10:15  cignoni
-Added Grid function (to build range map meshes...)
-
-Revision 1.5  2005/07/11 13:16:34  cignoni
-small gcc-related compiling issues (typenames,ending cr, initialization order)
-
-Revision 1.4  2005/07/01 11:17:06  cignoni
-Added option of passing a base mesh to Sphere for spherifying it
-
-Revision 1.3  2005/06/17 00:49:29  cignoni
-Added missing Sphere function
-
-Revision 1.2  2005/02/25 11:41:08  pietroni
-Fixed bug in Square
-
-Revision 1.1  2005/01/19 15:43:15  fiorin
-Moved from vcg/complex/trimesh to vcg/complex/trimesh/create
-
-Revision 1.10  2004/10/28 00:54:34  cignoni
-Better Doxygen documentation
-
-Revision 1.9  2004/09/24 10:14:38  fiorin
-Corrected bug in cone
-
-Revision 1.8  2004/09/22 15:12:38  fiorin
-Corrected bug in hexahedron
-
-Revision 1.7  2004/07/09 15:34:29  tarini
-Dodecahedron added! (and doxigened a little bit)
-
-Revision 1.6  2004/05/13 21:08:00  cignoni
-Conformed C++ syntax to GCC requirements
-
-Revision 1.5  2004/03/18 15:29:07  cignoni
-Completed Octahedron and Icosahedron
-
-Revision 1.2  2004/03/03 16:11:46  cignoni
-First working version (tetrahedron!)
-
-
-****************************************************************************/
 
 #ifndef __VCGLIB_PLATONIC
 #define __VCGLIB_PLATONIC
@@ -455,7 +389,8 @@ template <class MeshType>
 void Cone( MeshType& in,
 		  const typename MeshType::ScalarType r1,
 		  const typename MeshType::ScalarType r2,
-		  const typename MeshType::ScalarType h  )
+          const typename MeshType::ScalarType h,
+          const int SubDiv = 36  )
 {
  typedef typename MeshType::ScalarType ScalarType;
  typedef typename MeshType::CoordType CoordType;
@@ -463,16 +398,15 @@ void Cone( MeshType& in,
  typedef typename MeshType::VertexIterator VertexIterator;
  typedef typename MeshType::FaceIterator   FaceIterator;
 
- const int D = 24;
-	int i,b1,b2;
+    int i,b1,b2;
   in.Clear();
   int VN,FN;
 	if(r1==0 || r2==0) {
-		VN=D+2;
-		FN=D*2;
+        VN=SubDiv+2;
+        FN=SubDiv*2;
 	}	else {
-		VN=D*2+2;
-		FN=D*4;
+        VN=SubDiv*2+2;
+        FN=SubDiv*4;
 	}
 
   Allocator<MeshType>::AddVertices(in,VN);
@@ -480,80 +414,65 @@ void Cone( MeshType& in,
 	VertexPointer  *ivp = new VertexPointer[VN];
 
   VertexIterator vi=in.vert.begin();
-  ivp[0]=&*vi;(*vi).P()=CoordType ( 0,-h/2,0 ); ++vi;
-  ivp[1]=&*vi;(*vi).P()=CoordType ( 0, h/2,0 ); ++vi;
+  ivp[0]=&*vi;(*vi).P()=CoordType ( 0,-h/2.0,0 ); ++vi;
+  ivp[1]=&*vi;(*vi).P()=CoordType ( 0, h/2.0,0 ); ++vi;
  
 	b1 = b2 = 2;
  int cnt=2;
 	if(r1!=0)
 	{
-		for(i=0;i<D;++i)
+        for(i=0;i<SubDiv;++i)
 		{
-			double a = i*3.14159265358979323846*2/D;
-			double s = sin(a);
-			double c = cos(a);
-			double x,y,z;
-			x = r1*c;
-			z = r1*s;
-			y = -h/2;
-			
-      ivp[cnt]=&*vi; (*vi).P()= CoordType( x,y,z ); ++vi;++cnt;
+            double a = math::ToRad(i*360.0/SubDiv);
+            ivp[cnt]=&*vi; (*vi).P()= CoordType(r1*cos(a), -h/2.0, r1*sin(a)); ++vi;++cnt;
 		}
-		b2 += D;
+        b2 += SubDiv;
 	}
 
 	if(r2!=0)
 	{
-		for(i=0;i<D;++i)
+        for(i=0;i<SubDiv;++i)
 		{
-			double a = i*3.14159265358979323846*2/D;
-			double s = sin(a);
-			double c = cos(a);
-			double x,y,z;
-			x = r2*c;
-			z = r2*s;
-			y =  h/2;
-			
-      ivp[cnt]=&*vi; (*vi).P()= CoordType( x,y,z ); ++vi;++cnt;
+            double a = math::ToRad(i*360.0/SubDiv);
+            ivp[cnt]=&*vi; (*vi).P()= CoordType( r2*cos(a), h/2.0, r2*sin(a)); ++vi;++cnt;
   		}
 	}
 	
   FaceIterator fi=in.face.begin();
  
-  if(r1!=0) for(i=0;i<D;++i,++fi)	{
+  if(r1!=0) for(i=0;i<SubDiv;++i,++fi)	{
       (*fi).V(0)=ivp[0];
       (*fi).V(1)=ivp[b1+i]; 
-      (*fi).V(2)=ivp[b1+(i+1)%D]; 
+      (*fi).V(2)=ivp[b1+(i+1)%SubDiv];
 		}
 
-	if(r2!=0) for(i=0;i<D;++i,++fi) {
+    if(r2!=0) for(i=0;i<SubDiv;++i,++fi) {
       (*fi).V(0)=ivp[1];
       (*fi).V(2)=ivp[b2+i]; 
-      (*fi).V(1)=ivp[b2+(i+1)%D]; 
+      (*fi).V(1)=ivp[b2+(i+1)%SubDiv];
 		}
 
-	if(r1==0) for(i=0;i<D;++i,++fi)
+    if(r1==0) for(i=0;i<SubDiv;++i,++fi)
 		{
       (*fi).V(0)=ivp[0];
       (*fi).V(1)=ivp[b2+i]; 
-      (*fi).V(2)=ivp[b2+(i+1)%D]; 
-			//in.face.push_back(*fi);
+      (*fi).V(2)=ivp[b2+(i+1)%SubDiv];
 		}
-  if(r2==0)	for(i=0;i<D;++i,++fi){
+  if(r2==0)	for(i=0;i<SubDiv;++i,++fi){
       (*fi).V(0)=ivp[1];
       (*fi).V(2)=ivp[b1+i]; 
-      (*fi).V(1)=ivp[b1+(i+1)%D];
+      (*fi).V(1)=ivp[b1+(i+1)%SubDiv];
 		}
 	
-	if(r1!=0 && r2!=0)for(i=0;i<D;++i)
+    if(r1!=0 && r2!=0)for(i=0;i<SubDiv;++i)
 		{
       (*fi).V(0)=ivp[b1+i];
       (*fi).V(1)=ivp[b2+i]; 
-      (*fi).V(2)=ivp[b2+(i+1)%D]; 
+      (*fi).V(2)=ivp[b2+(i+1)%SubDiv];
       ++fi;
       (*fi).V(0)=ivp[b1+i]; 
-      (*fi).V(1)=ivp[b2+(i+1)%D]; 
-      (*fi).V(2)=ivp[b1+(i+1)%D]; 
+      (*fi).V(1)=ivp[b2+(i+1)%SubDiv];
+      (*fi).V(2)=ivp[b1+(i+1)%SubDiv];
       ++fi;
 		}		
 }
