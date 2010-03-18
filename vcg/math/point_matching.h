@@ -268,10 +268,10 @@ static bool ComputeMatchMatrix(		Matrix44x &res,
 						std::vector<Point3x> &Pt)		// vertici scelti su trg (verdi) 
 //						vector<Point3x> &Nt) 		// normali scelti su trg (verdi)
 {
-	int sz=Ps.size();
   assert(0);
   // Da qui in poi non compila che ha bisogno dei minimiquadrati
 #if 0
+  int sz=Ps.size();
 
 	Matrix<double> A(sz,12);
 	Vector<double> b(sz);
