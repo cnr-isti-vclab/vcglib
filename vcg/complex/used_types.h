@@ -13,8 +13,8 @@ struct DummyTypes{
 		typedef char TetraType;
 		typedef char HEdgeType; 		// connector types
 
-		typedef vcg::Point3f CoordType; 		// connector types
-		typedef float ScalarType;						// connector types
+    typedef vcg::Point3<bool> CoordType; 		// connector types
+    typedef char ScalarType;						// connector types
 
 		typedef VertexType * VertexPointer;
 		typedef EdgeType *	EdgePointer		;
