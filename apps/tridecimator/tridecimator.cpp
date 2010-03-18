@@ -49,8 +49,9 @@ class MyVertex;
 class MyEdge;    
 class MyFace;
 
+struct MyUsedTypes: public UsedTypes<Use<MyVertex>::AsVertexType,Use<MyEdge>::AsEdgeType,Use<MyFace>::AsFaceType>{};
 
-class MyVertex  : public VertexSimp2< MyVertex, MyEdge, MyFace, 
+class MyVertex  : public Vertex< MyUsedTypes,
   vertex::VFAdj, 
   vertex::Coord3f, 
   vertex::Normal3f, 
@@ -63,7 +64,7 @@ private:
   };
 
 class DummyType; 
-class MyEdge : public EdgeSimp2<MyVertex,MyEdge,DummyType,edge::VertexRef> {
+class MyEdge : public Edge<MyUsedTypes,edge::VertexRef> {
 public:
   inline MyEdge() {};
   inline MyEdge( MyVertex * v0, MyVertex * v1){V(0) = v0; V(1) = v1; };
@@ -76,7 +77,7 @@ public:
 };
 
 
-class MyFace    : public FaceSimp2  < MyVertex, MyEdge, MyFace, 
+class MyFace    : public Face< MyUsedTypes,
   face::VFAdj, 
   face::VertexRef, 
   face::BitFlags > {};
