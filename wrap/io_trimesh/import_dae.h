@@ -35,34 +35,40 @@
 namespace vcg {
 namespace tri {
 namespace io {
-
 	template<typename OpenMeshType>
 	class ImporterDAE : public UtilDAE
 	{
+  public:
+    class ColladaEdge;
+    class ColladaFace;
+    class ColladaVertex;
+
+    class ColladaTypes: public vcg::UsedTypes < vcg::Use<ColladaVertex>::template AsVertexType,
+                                              vcg::Use<ColladaEdge   >::template AsEdgeType,
+                                              vcg::Use<ColladaFace  >::template AsFaceType >{};
+
+    class ColladaVertex  : public vcg::Vertex< ColladaTypes,
+      vcg::vertex::Coord3f,           /* 12b */
+      vcg::vertex::BitFlags,          /*  4b */
+      vcg::vertex::Normal3f,          /* 12b */
+      vcg::vertex::Color4b           /*  4b */
+      > {};
+
+
+    class ColladaFace    : public vcg::Face<  ColladaTypes,
+          vcg::face::VertexRef,            /*12b */
+          vcg::face::BitFlags,             /* 4b */
+          vcg::face::Normal3f,             /*12b */
+          vcg::face::Color4b,           /* 0b */
+          vcg::face::WedgeTexCoord2f     /* 0b */
+        > {};
+
+    class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std::vector<ColladaFace> > {};
+
+
 
 	private:
-	
-class ColladaEdge;
-class ColladaFace;
-class ColladaVertex;
 
-class ColladaVertex  : public vcg::VertexSimp2< ColladaVertex, ColladaEdge, ColladaFace,
-  vcg::vertex::Coord3f,           /* 12b */
-  vcg::vertex::BitFlags,          /*  4b */
-  vcg::vertex::Normal3f,          /* 12b */
-  vcg::vertex::Color4b           /*  4b */
-  > {};
-
-
-class ColladaFace    : public vcg::FaceSimp2<  ColladaVertex, ColladaEdge, ColladaFace,
-      vcg::face::VertexRef,            /*12b */
-      vcg::face::BitFlags,             /* 4b */
-      vcg::face::Normal3f,             /*12b */
-      vcg::face::Color4b,           /* 0b */
-      vcg::face::WedgeTexCoord2f     /* 0b */
-    > {};
-
-class ColladaMesh    : public vcg::tri::TriMesh< std::vector<ColladaVertex>, std::vector<ColladaFace> > {};
 
 
 	
