@@ -13,8 +13,8 @@ struct DummyTypes{
 		typedef char TetraType;
 		typedef char HEdgeType; 		// connector types
 
-    typedef vcg::Point3<bool> CoordType; 		// connector types
-    typedef char ScalarType;						// connector types
+		typedef vcg::Point3<bool> CoordType; 		 
+		typedef char ScalarType;						 
 
 		typedef VertexType * VertexPointer;
 		typedef EdgeType *	EdgePointer		;
@@ -27,13 +27,21 @@ struct DummyTypes{
     void ImportLocal(const LeftV  & /*left*/ ) {}
 };
 
+struct AllTypes{
+		struct AVertexType {};
+		struct AEdgeType {};
+		struct AFaceType {};
+		struct AHEdgeType {};
+};
+
 template <template <typename> class A = DefaultDeriver, template <typename> class B = DefaultDeriver,
 					template <typename> class C = DefaultDeriver, template <typename> class D = DefaultDeriver,
 					template <typename> class E = DefaultDeriver, template <typename> class F = DefaultDeriver,
 					template <typename> class G = DefaultDeriver, template <typename> class H = DefaultDeriver,
 					template <typename> class I = DefaultDeriver, template <typename> class J = DefaultDeriver,
 					template <typename> class K = DefaultDeriver, template <typename> class L = DefaultDeriver>
-					class UsedTypes: public Arity12<DummyTypes, A, B, C, D, E, F, G, H, I, J, K, L>  {};
+					class UsedTypes: public Arity12<DummyTypes, A, B, C, D, E, F, G, H, I, J, K, L>  {
+};
 
 
 template <class A>
