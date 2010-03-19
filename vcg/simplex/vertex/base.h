@@ -72,6 +72,7 @@ First working version!
 #include <vcg/space/texcoord2.h>
 #include <vcg/space/color4.h>
 #include <vcg/simplex/vertex/component.h>
+#include <vcg/complex/used_types.h>
 #include <vcg/container/derivation_chain.h>
 
 namespace vcg {
@@ -139,7 +140,8 @@ class VertexArityMax: public Arity12<vertex::EmptyCore<UserTypes>, A, B, C, D, E
 
 // ----- Flags stuff -----
 public:
-  
+
+
 
  	enum { 
 		
@@ -260,7 +262,8 @@ template <class UserTypes,
           template <typename> class G = DefaultDeriver, template <typename> class H = DefaultDeriver,
 					template <typename> class I = DefaultDeriver, template <typename> class J = DefaultDeriver,
 					template <typename> class K = DefaultDeriver, template <typename> class L = DefaultDeriver>
-							class Vertex: public VertexArityMax<UserTypes, A, B, C, D, E, F, G, H, I, J, K, L>  {};
+							class Vertex: public VertexArityMax<UserTypes, A, B, C, D, E, F, G, H, I, J, K, L>  {
+			 public: typedef AllTypes::AVertexType IAm; typedef UserTypes TypesPool;};
 
 }// end namespace
 #endif
