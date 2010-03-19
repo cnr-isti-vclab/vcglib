@@ -93,9 +93,10 @@ public:
 template <class T> class PFVAdj: public T {
 public:
 	PFVAdj(){_vpoly = NULL;}
+	typedef typename T::VertexType::CoordType::ScalarType ScalarType;
  	inline typename T::VertexType *       & V( const int j ) 	     { assert(j>=0 && j<this->VN()); return  _vpoly[j]; }
 	inline typename T::VertexType * const & V( const int j ) const { assert(j>=0 && j<this->VN()); return  _vpoly[j]; }
-        inline typename T::VertexType *        cV( const int j ) const { assert(j>=0 && j<this->VN());	return _vpoly[j]; }
+    inline typename T::VertexType *        cV( const int j ) const { assert(j>=0 && j<this->VN());	return _vpoly[j]; }
 
 
 	/** Return the pointer to the ((j+1)%3)-th vertex of the face.
