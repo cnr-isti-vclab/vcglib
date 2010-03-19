@@ -20,115 +20,7 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
 
-$Log: not supported by cvs2svn $
-Revision 1.34  2008/05/16 10:07:36  ganovelli
-added Trimesh destructor to purge unremoved PerVertex[PerFace]Attribute
-
-Revision 1.33  2008/05/15 16:32:27  ganovelli
-PerVertexAttribute and PerFaceAttribute added to Trimesh
-
-Revision 1.32  2008/04/15 10:34:07  cignoni
-added  HasPerVertexTexCoord ( mesh )
-
-Revision 1.31  2008/02/21 17:27:06  cignoni
-Added HasPerVertexColor static function
-
-Revision 1.30  2008/01/28 14:46:03  cignoni
-added hasPerWedgeColor and HasPerWedgeNormal
-
-Revision 1.29  2008/01/28 08:42:07  cignoni
-added HasPerFaceNormal and HasPerVertexNormal
-
-Revision 1.28  2007/03/12 15:38:03  tarini
-Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
-
-Revision 1.27  2007/02/22 09:18:41  cignoni
-Added guards on msvc pragmas
-
-Revision 1.26  2007/02/14 15:31:41  ganovelli
-Added HasPerVertexFlag
-
-Revision 1.25  2006/11/28 22:35:29  cignoni
-Added Consistency check in the HasVFAdj static function
-
-Revision 1.24  2006/11/07 11:29:23  cignoni
-Corrected some errors in the reflections Has*** functions
-
-Revision 1.23  2006/10/27 11:08:18  ganovelli
-added override to HasFFAdjacency , HasVFAdjacency for the optional attributes (see also complex/trimesh/allocate.h)
-
-Revision 1.22  2006/07/10 14:26:22  cignoni
-Minor. Added a disambiguating this at the constructor of trimesh
-
-Revision 1.21  2006/05/25 04:40:57  cignoni
-Updated HasPerFaceColor/Quality to the new style with mesh param.
-
-Revision 1.20  2006/05/03 21:35:31  cignoni
-Added new style HasPerFaceColor(m) and HasPerFaceMark(m)
-
-Revision 1.19  2005/12/02 00:05:34  cignoni
-Added HasFlags and a couple of missing include files
-
-Revision 1.18  2005/11/26 00:16:03  cignoni
-added  HasPerWedgeTexture  taking mesh as input. (needed for optional components)
-
-Revision 1.17  2005/11/16 22:35:47  cignoni
-Added missing includes (color and assert)
-Added texture name members
-
-Revision 1.16  2005/11/15 12:09:17  rita_borgo
-Changed Volume Routine, before was returning negative values
-
-Revision 1.15  2005/10/03 16:00:08  rita_borgo
-Minor changes
-
-Revision 1.14  2005/03/18 16:37:46  fiorin
-Minor changes
-
-Revision 1.13  2005/01/28 17:56:57  pietroni
-changed HasVFTopology function... control if both vertex and face define the vf topology
-
-Revision 1.12  2004/10/28 00:54:34  cignoni
-Better Doxygen documentation
-
-Revision 1.11  2004/10/07 14:25:38  ganovelli
-added camera and shot
-
-Revision 1.10  2004/09/08 15:15:05  ganovelli
-changes for gcc
-
-Revision 1.9  2004/07/15 12:03:50  ganovelli
-access to imark added
-
-Revision 1.8  2004/07/15 11:39:24  ganovelli
-IsDeleted to IsD
-
-Revision 1.7  2004/07/09 10:18:19  ganovelli
-added access functions to vn and fn
-
-Revision 1.6  2004/05/04 02:29:54  ganovelli
-removed  Const from ConstFacePointer and ConstVertexPointer in the arguement function Mark, which are meant to be changed
-
-Revision 1.5  2004/03/18 16:00:10  cignoni
-minor changes
-
-Revision 1.4  2004/03/10 00:57:44  cignoni
-minor changes
-
-Revision 1.3  2004/03/07 21:54:56  cignoni
-some more reflection functions
-
-Revision 1.2  2004/03/04 00:08:15  cignoni
-First working version!
-
-Revision 1.1  2004/02/19 13:11:06  cignoni
-Initial commit
-
-
-****************************************************************************/
 #if defined(_MSC_VER)
 #pragma warning( disable : 4804 )
 #endif
@@ -141,8 +33,11 @@ Initial commit
 #include <vcg/math/shot.h>
 
 #include <vcg/container/simple_temporary_data.h>
+#include <vcg/simplex/vertex/base.h>
 #include <vcg/simplex/edge/base.h>
+#include <vcg/simplex/face/base.h>
 #include <vcg/complex/used_types.h>
+#include <vcg/container/derivation_chain.h>
 
 /*
 People should subclass his vertex class from these one...
@@ -162,65 +57,128 @@ namespace tri {
 		@param FaceContainerType (Template Parameter) Specifies the type of the faces container any the face type.
  */
 
-	// awful series of tricks to make the edge container as default parameter
-	
 
-	// TriMeshEdgeHolder is used to declare everything is needed for the edge type
-	// If a real container of edge is passed then it simply  makes the handy  declarations
-template < class VertContainerType, class FaceContainerType, class EdgeContainerType>
-class TriMeshEdgeHolder{
+ /* MeshTypeHolder is a class which is used to define the types in the mesh
+*/
+
+		template <class TYPESPOOL>
+		struct BaseMeshTypeHolder{
+
+				typedef bool ScalarType;
+				typedef std::vector< Vertex<TYPESPOOL> >	CONTV;
+				typedef std::vector< Edge<TYPESPOOL> >		CONTE;
+				typedef std::vector< Face<TYPESPOOL> >		CONTF;
+//				typedef std::vector< HEdge<TYPESPOOL> >		CONTHE;
+
+				typedef CONTV														VertContainer;
+				typedef Vertex<TYPESPOOL>								VertexType;
+				typedef VertexType *										VertexPointer;
+				typedef const VertexType *							ConstVertexPointer;
+				typedef bool														CoordType;
+				typedef typename CONTV::iterator				VertexIterator;
+				typedef typename CONTV::const_iterator	ConstVertexIterator;
+
+				typedef CONTE														EdgeContainer;
+				typedef typename CONTE::value_type			EdgeType;
+				typedef typename CONTE::value_type*			EdgePointer;
+				typedef typename CONTE::iterator				EdgeIterator;
+				typedef typename CONTE::const_iterator	ConstEdgeIterator;
+
+				typedef CONTF														FaceContainer;
+				typedef typename CONTF::value_type			FaceType;
+				typedef typename CONTF::const_iterator	ConstFaceIterator;
+				typedef typename CONTF::iterator				FaceIterator;
+				typedef typename CONTF::value_type*			FacePointer;
+				typedef const typename CONTF::value_type*ConstFacePointer;
+
+				//typedef CONTHE													HEdgeContainer;
+				//typedef typename CONTHE::value_type			HEdgeType;
+				//typedef typename CONTHE::value_type*		HEdgePointer;
+				//typedef typename CONTHE::iterator				HEdgeIterator;
+				//typedef typename CONTHE::const_iterator	ConstHEdgeIterator;
+
+
+		};
+
+
+
+		template <class T, typename CONT, class TRAIT >
+						struct MeshTypeHolder: public T {};
+
+		template <class T, typename CONT>
+						struct MeshTypeHolder<T, CONT, AllTypes::AVertexType>: public T {
+								typedef CONT VertContainer;
+								typedef typename VertContainer::value_type VertexType;
+								typedef VertexType * VertexPointer;
+								typedef const VertexType * ConstVertexPointer;
+								typedef typename VertexType::ScalarType ScalarType;
+								typedef typename VertexType::CoordType CoordType;
+								typedef typename VertContainer::iterator VertexIterator;
+								typedef typename VertContainer::const_iterator ConstVertexIterator;
+		};
+
+
+	template <typename T, class CONT>
+					struct MeshTypeHolder< T, CONT, AllTypes::AEdgeType>: public T{
+								typedef CONT EdgeContainer;
+								typedef typename EdgeContainer::value_type EdgeType;
+								typedef typename EdgeContainer::value_type *  EdgePointer;
+								typedef typename EdgeContainer::iterator EdgeIterator;
+								typedef typename EdgeContainer::const_iterator ConstEdgeIterator;
+};
+
+	template <typename T, class CONT>
+					struct MeshTypeHolder< T, CONT,  AllTypes::AFaceType>:public T {
+								typedef CONT FaceContainer;
+								typedef typename FaceContainer::value_type FaceType;
+								typedef typename FaceContainer::const_iterator ConstFaceIterator;
+								typedef typename FaceContainer::iterator FaceIterator;
+								typedef FaceType * FacePointer;
+								typedef const FaceType * ConstFacePointer;
+				};
+
+
+/*struct DummyContainer {};
+template <class CONT> struct Deriver: public MeshTypeHolder<CONT, typename CONT::value_type::IAm>{};
+template <> struct Deriver<DummyContainer>{}*/;
+
+template <typename T, typename CONT> struct Der: public MeshTypeHolder<T,CONT, typename CONT::value_type::IAm>{};
+struct DummyContainer{struct value_type{ typedef int IAm;}; };
+
+template < class Container0 = DummyContainer, class Container1 = DummyContainer, class Container2 = DummyContainer/*, class Container3 = DummyContainer*/ >
+class TriMesh
+		: public  MArity3<   BaseMeshTypeHolder<typename Container0::value_type::TypesPool>, Container0, Der ,Container1, Der, Container2, Der/*, Container3, Der*/>{
 	public:
-		typedef EdgeContainerType EdgeContainer;
-		typedef typename EdgeContainer::value_type EdgeType;
-		typedef EdgeType*  EdgePointer;
-		typedef const EdgeType * ConstEdgePointer;
-	};
 
-	// a dummy class is used  to provide the interface of a stl container
-	class DummyClass:public std::vector<int>{
-	};
-	// If the DummyClass is passed it provides the interfaces to compile
- template < class VertContainerType, class FaceContainerType >
- class TriMeshEdgeHolder<VertContainerType,FaceContainerType,DummyClass>{
-		public:
+		typedef typename TriMesh::ScalarType ScalarType;
+		typedef typename TriMesh::VertContainer VertContainer;
+		typedef typename TriMesh::EdgeContainer EdgeContainer;
+		typedef typename TriMesh::FaceContainer FaceContainer;
 
-		struct OthersTypes : public UsedTypes<	Use<typename VertContainerType::value_type>::template AsVertexType,
-																						Use<typename FaceContainerType::value_type>::template AsFaceType
-																						>{};
+		// types for vertex
+		typedef typename TriMesh::VertexType VertexType;
+		typedef typename TriMesh::VertexPointer VertexPointer;
+		typedef typename TriMesh::ConstVertexPointer ConstVertexPointer;
+		typedef typename TriMesh::CoordType CoordType;
+		typedef typename TriMesh::VertexIterator VertexIterator;
+		typedef typename TriMesh::ConstVertexIterator ConstVertexIterator;
 
-	class EdgeType: public Edge<	OthersTypes >{};
+		// types for edge
+		typedef typename TriMesh::EdgeType EdgeType;
+		typedef typename TriMesh::EdgePointer EdgePointer;
+		typedef typename TriMesh::EdgeIterator EdgeIterator;
+		typedef typename TriMesh::ConstEdgeIterator ConstEdgeIterator;
 
-	struct EdgePointer {};
-	struct ConstEdgePointer {};
-	typedef std::vector< EdgeType > EdgeContainerType;
-	typedef typename std::vector< EdgeType > EdgeContainer;
- };
-
-
-
-template < class VertContainerType, class FaceContainerType, class EdgeConts = DummyClass >
-class TriMesh: public TriMeshEdgeHolder<VertContainerType,FaceContainerType,EdgeConts>{
-	public:
-	typedef typename TriMeshEdgeHolder<VertContainerType,FaceContainerType,EdgeConts>::EdgeContainer EdgeContainer;
+		//types for face
+		typedef typename TriMesh::FaceType FaceType;
+		typedef typename TriMesh::ConstFaceIterator ConstFaceIterator;
+		typedef typename TriMesh::FaceIterator FaceIterator;
+		typedef typename TriMesh::FacePointer FacePointer;
+		typedef typename TriMesh::ConstFacePointer ConstFacePointer;
 
 
-	typedef TriMesh<VertContainerType, FaceContainerType> MeshType;
-	typedef FaceContainerType FaceContainer;
-	typedef VertContainerType VertContainer;
-	typedef typename VertContainer::value_type VertexType;
-	typedef typename FaceContainer::value_type FaceType;
-	typedef typename VertexType::ScalarType ScalarType;
-	typedef typename VertexType::CoordType CoordType;
-	typedef typename VertContainer::iterator VertexIterator;
-	typedef typename EdgeContainer::iterator EdgeIterator;
-	typedef typename FaceContainer::iterator FaceIterator;
-	typedef typename VertContainer::const_iterator ConstVertexIterator;
-	typedef typename EdgeContainer::const_iterator ConstEdgeIterator;
-	typedef typename FaceContainer::const_iterator ConstFaceIterator;
-	typedef VertexType * VertexPointer;
-	typedef const VertexType * ConstVertexPointer;
-	typedef FaceType * FacePointer;
-	typedef const FaceType * ConstFacePointer;
+	typedef TriMesh<Container0, Container1,Container2/*,Container3*/> MeshType;
+
 	typedef Box3<ScalarType> BoxType;
 
 	/// Set of vertices 
@@ -426,51 +384,8 @@ static bool HasTopology()         { return HasFFTopology() || HasVFTopology(); }
 int & SimplexNumber(){ return fn;}
 int & VertexNumber(){ return vn;}
 
-/// Initialize the imark-system of the faces
-void InitFaceIMark()
-{
-	FaceIterator f;
-	
-	for(f=face.begin();f!=face.end();++f)
-		if( !(*f).IsD() && (*f).IsR() && (*f).IsW() )
-			(*f).InitIMark();
-}
-
-/// Initialize the imark-system of the vertices
-void InitVertexIMark()
-{
-	VertexIterator vi;
-
-	for(vi=vert.begin();vi!=vert.end();++vi)
-		if( !(*vi).IsD() && (*vi).IsRW() )
-			(*vi).InitIMark();
-}
-
 /// The incremental mark
 int imark;
-/** Access function to the incremental mark. 
-*/
-inline int & IMark(){return imark;}
-/** Check if the vertex incremental mark matches the one of the mesh. 
-	@param v Vertex pointer
-*/
-inline bool IsMarked( ConstVertexPointer  v ) const { return v->IMark() == imark; }
-/** Check if the face incremental mark matches the one of the mesh. 
-	@param v Face pointer
-*/
-inline bool IsMarked( ConstFacePointer f ) const { return f->IMark() == imark; }
-/** Set the vertex incremental mark of the vertex to the one of the mesh.
-	@param v Vertex pointer
-*/
-inline void Mark( VertexPointer v ) const { v->IMark() = imark; }
-/** Set the face incremental mark of the vertex to the one of the mesh.
-	@param v Vertex pointer
-*/
-inline void Mark( FacePointer f ) const { f->IMark() = imark; }
-/// Unmark the mesh
-inline void UnMarkAll() { ++imark; }
-
-
 
 /// Calcolo del volume di una mesh chiusa
 ScalarType Volume()
@@ -510,6 +425,49 @@ private:
 	TriMesh(const TriMesh & ){}
 
 };	// end class Mesh
+
+/// Initialize the imark-system of the faces
+template <class MeshType> inline  void InitFaceIMark(MeshType & m)
+{
+	typename MeshType::FaceIterator f;
+	
+	for(f=m.face.begin();f!=m.face.end();++f)
+		if( !(*f).IsD() && (*f).IsR() && (*f).IsW() )
+			(*f).InitIMark();
+}
+
+/// Initialize the imark-system of the vertices
+template <class MeshType> inline  void InitVertexIMark(MeshType & m)
+{
+	typename MeshType::VertexIterator vi;
+
+	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+		if( !(*vi).IsD() && (*vi).IsRW() )
+			(*vi).InitIMark();
+}
+/** Access function to the incremental mark. 
+*/
+template <class MeshType> inline int & IMark(MeshType & m){return m.imark;}
+
+/** Check if the vertex incremental mark matches the one of the mesh. 
+	@param v Vertex pointer
+*/
+template <class MeshType> inline bool IsMarked(MeshType & m, typename MeshType::ConstVertexPointer  v )  { return v->IMark() == m.imark; }
+/** Check if the face incremental mark matches the one of the mesh. 
+	@param v Face pointer
+*/
+template <class MeshType> inline bool IsMarked( MeshType & m,typename MeshType::ConstFacePointer f )  { return f->IMark() == m.imark; }
+/** Set the vertex incremental mark of the vertex to the one of the mesh.
+	@param v Vertex pointer
+*/
+template <class MeshType> inline void Mark(MeshType & m, typename MeshType::VertexPointer v )  { v->IMark() = m.imark; }
+/** Set the face incremental mark of the vertex to the one of the mesh.
+	@param v Vertex pointer
+*/
+template <class MeshType> inline void Mark(MeshType & m, typename MeshType::FacePointer f )  { f->IMark() = m.imark; }
+/// Unmark the mesh
+template <class MeshType> inline void UnMarkAll(MeshType & m) { ++m.imark; }
+
 
 
 template < class VertContainerType, class FaceContainerType , class EdgeContainerType>
