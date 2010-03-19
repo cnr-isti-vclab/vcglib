@@ -27,6 +27,7 @@
 //#include <vcg/space/point3.h>
 //#include <vcg/space/texcoord2.h>
 //#include <vcg/space/color4.h>
+#include <vcg/complex/used_types.h>
 #include <vcg/simplex/edge/component.h>
 #include <vcg/container/derivation_chain.h>
 
@@ -216,7 +217,8 @@ template <class UserTypes,
           template <typename> class G = DefaultDeriver, template <typename> class H = DefaultDeriver,
 					template <typename> class I = DefaultDeriver, template <typename> class J = DefaultDeriver,
 					template <typename> class K = DefaultDeriver> 
-							class Edge: public EdgeArityMax<UserTypes, A, B, C, D, E, F, G, H, I, J, K>  {};
+							class Edge: public EdgeArityMax<UserTypes, A, B, C, D, E, F, G, H, I, J, K>  {
+						public: typedef AllTypes::AEdgeType IAm; typedef UserTypes TypesPool;};
 
 }// end namespace
 #endif
