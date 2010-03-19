@@ -28,6 +28,9 @@ namespace vcg{
 /*------------------------------------------------------------------*/ 
 
 // Metaprogramming Core
+template < typename T=int>
+class DefaultDeriver : public T {};
+
 template <
 					class Base,
           template <typename> class A> 
@@ -120,8 +123,47 @@ template <
           template <typename> class K, template <typename> class L>
 					class Arity12: public L<Arity11<Base, A, B, C, D, E, F, G, H, I, J, K> > {};
 
-template < typename T=int>
-class DefaultDeriver : public T {};
+
+// chain with 2 template arguments on the derivers
+template <
+					class Base,
+					class TA,
+					template <typename,typename> class A >
+					class MArity1: public A<  Base, TA  > {
+					};
+
+template <
+					class Base,
+					class TA,
+					template <typename,typename> class A,
+					class TB,
+					template <typename,typename> class B>
+					class MArity2: public B< MArity1<Base, TA, A>,TB > {};
+
+template <
+					class Base,
+					class TA,
+					template <typename,typename> class A,
+					class TB,
+					template <typename,typename> class B,
+					class TC,
+					template <typename,typename> class C >
+					class MArity3: public C<MArity2<Base, TA,A,TB, B>,TC > {};
+
+template <
+					class Base,
+					class TA,
+					template <typename,typename> class A,
+					class TB,
+					template <typename,typename> class B,
+					class TC,
+					template <typename,typename> class C,
+					class TD,
+					template <typename,typename> class D>
+					class MArity4: public D<MArity3<Base, TA,A,TB, B, TC,C>,TD > {};
+
+
+
 class DumClass {};
 
 }// end namespace vcg
