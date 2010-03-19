@@ -326,14 +326,14 @@ public:
 				if(!(*vi).IsD() && (*vi).IsRW())
 					{
 						vcg::face::VFIterator<FaceType> x;
-						m.UnMarkAll();
+						UnMarkAll(m);
 						for( x.F() = (*vi).VFp(), x.I() = (*vi).VFi(); x.F()!=0; ++ x)
 						{
 							assert(x.F()->V(x.I())==&(*vi));
-							if(x.V()->IsRW() && x.V1()->IsRW() && !m.IsMarked(x.F()->V1(x.I()))){
+							if(x.V()->IsRW() && x.V1()->IsRW() && !IsMarked(m,x.F()->V1(x.I()))){
 										h_ret.push_back( HeapElem( new MYTYPE( EdgeType (x.V(),x.V1()),TriEdgeCollapse< TriMeshType,MYTYPE>::GlobalMark())));
 										}
-							if(x.V()->IsRW() && x.V2()->IsRW() && !m.IsMarked(x.F()->V2(x.I()))){
+							if(x.V()->IsRW() && x.V2()->IsRW() && !IsMarked(m,x.F()->V2(x.I()))){
 										h_ret.push_back( HeapElem( new MYTYPE( EdgeType (x.V(),x.V2()),TriEdgeCollapse< TriMeshType,MYTYPE>::GlobalMark())));
 									}
 						}

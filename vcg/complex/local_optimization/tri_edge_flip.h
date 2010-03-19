@@ -292,7 +292,7 @@ public:
 					if( !(*fi).IsB(i) && !((*fi).FFp(i)->IsD()) && (*fi).FFp(i)->IsW() ) {
 						if((*fi).V1(i) - (*fi).V0(i) > 0) {
 							PosType p(&*fi, i);
-							Insert(heap, p, mesh.IMark());
+							Insert(heap, p,  IMark(mesh));
 						}
 							//heap.push_back( HeapElem( new MYTYPE(PosType(&*fi, i), mesh.IMark() )) );
 					} //endif
