@@ -147,9 +147,9 @@ namespace vcg {
 		public:
 			Tmark(){}
 			Tmark(	MESH_TYPE *m) {SetMesh(m);}
-			void UnMarkAll(){m->UnMarkAll();}
-			bool IsMarked(OBJ_TYPE* obj){return (m->IsMarked(obj));}
-			void Mark(OBJ_TYPE* obj){m->Mark(obj);}
+			void UnMarkAll(){ vcg::tri::UnMarkAll(*m);}
+			bool IsMarked(OBJ_TYPE* obj){return (vcg::tri::IsMarked(*m,obj));}
+			void Mark(OBJ_TYPE* obj){ vcg::tri::Mark(*m,obj);}
 			void SetMesh(MESH_TYPE *_m)
 			{m=_m;}
 		};
