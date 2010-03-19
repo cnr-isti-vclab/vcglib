@@ -95,6 +95,7 @@
 #include<algorithm>
 #include<time.h>
 #include<math.h>
+#include<vcg/complex/trimesh/base.h>
 
 namespace vcg{
 
@@ -339,7 +340,7 @@ void ClearHeap()
 	///of local modification. 
 	template <class LocalModificationType> void Init()
 	{
-		m.InitVertexIMark();
+		vcg::tri::InitVertexIMark(m);
 		
 		// The expected size of heap depends on the type of the local modification we are using..
 		HeapSimplexRatio = LocalModificationType::HeapSimplexRatio();
