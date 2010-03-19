@@ -152,9 +152,7 @@ template < class UserTypes,
 					class FaceArityMax: public J<Arity9<FaceBase<UserTypes>, A, B, C, D, E, F, G, H, I> > {
 
 public:
-  typedef typename J<Arity9<FaceBase<UserTypes>, A, B, C, D, E, F, G, H, I> >::ScalarType ParentScalarType;
-  typedef J<Arity9<FaceBase<UserTypes>, A, B, C, D, E, F, G, H, I> > ParentType;
-
+	typedef typename  FaceArityMax::ScalarType ScalarType;
 // ----- Flags stuff -----
 
 	inline int & UberFlags ()
@@ -288,7 +286,7 @@ static int &LastBitFlag()
 	void ClearUserBit(int userBit){this->Flags() &= (~userBit);}
 
 
-  void GetBBox(Box3<typename ParentType::ScalarType>& bb ) const
+  void GetBBox(Box3<ScalarType>& bb ) const
   {
     if(this->IsD()) {
         bb.SetNull();
@@ -343,7 +341,8 @@ template <class UserTypes,
           template <typename> class E = DefaultDeriver, template <typename> class F = DefaultDeriver,
           template <typename> class G = DefaultDeriver, template <typename> class H = DefaultDeriver,
           template <typename> class I = DefaultDeriver, template <typename> class J = DefaultDeriver >
-							class Face: public FaceArityMax<UserTypes, A, B, C, D, E, F, G, H, I, J>  {};
+							class Face: public FaceArityMax<UserTypes, A, B, C, D, E, F, G, H, I, J>  {
+							public: typedef AllTypes::AFaceType IAm; typedef UserTypes TypesPool;};
 
 
 }// end namespace
