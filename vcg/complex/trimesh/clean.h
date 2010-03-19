@@ -262,9 +262,9 @@ public:
 		if( !face::IsBorder(*fpt,j) )
 			{
 				FacePointer l=fpt->FFp(j);
-				if( !mp->IsMarked(l) )
+        if( !tri::IsMarked(*mp,l) )
 				{
-					mp->Mark(l);
+          tri::Mark(*mp,l);
 					sf.push(l);
 				}
 			}
@@ -274,10 +274,10 @@ public:
  {
   mp=&m;
   while(!sf.empty()) sf.pop();
-  mp->UnMarkAll();
+  UnMarkAll(m);
   assert(p);
   assert(!p->IsD());
-	mp->Mark(p);
+  tri::Mark(m,p);
 	sf.push(p);
  }
  bool completed() {
@@ -1341,7 +1341,7 @@ private:
 
         do {
             tri::UpdateTopology<MeshType>::FaceFace(m);
-            m.UnMarkAll();
+            tri::UnMarkAll(m);
             count = 0;
 
             //detection stage
@@ -1350,11 +1350,11 @@ private:
                 FacePointer f = &(m.face[index]);    float sides[3]; Point3<float> dummy;
                 sides[0] = Distance(f->P(0), f->P(1)); sides[1] = Distance(f->P(1), f->P(2)); sides[2] = Distance(f->P(2), f->P(0));
                 int i = std::find(sides, sides+3, std::max( std::max(sides[0],sides[1]), sides[2])) - (sides);
-                if( m.IsMarked(f->V2(i) )) continue;
+                if( tri::IsMarked(m,f->V2(i) )) continue;
 
                 if( PSDist(f->P2(i),f->P(i),f->P1(i),dummy)*threshold <= sides[i] )
                 {
-                    m.Mark(f->V2(i));
+                    tri::Mark(m,f->V2(i));
                     if(face::CheckFlipEdge<FaceType>( *f, i ))  {
                         // Check if EdgeFlipping improves quality
                         FacePointer g = f->FFp(i); int k = f->FFi(i);
@@ -1385,7 +1385,7 @@ private:
         int count, total = 0;
 
         do {
-            m.UnMarkAll();
+            tri::UnMarkAll(m);
             count = 0;
 
             //detection stage
@@ -1394,14 +1394,14 @@ private:
                 FacePointer f = &(m.face[index]);    float sides[3]; Point3<float> dummy;
                 sides[0] = Distance(f->P(0), f->P(1)); sides[1] = Distance(f->P(1), f->P(2)); sides[2] = Distance(f->P(2), f->P(0));
                 int i = std::find(sides, sides+3, std::max( std::max(sides[0],sides[1]), sides[2])) - (sides);
-                if( m.IsMarked(f->V2(i) )) continue;
+                if( tri::IsMarked(m,f->V2(i) )) continue;
 
                 if( PSDist(f->P2(i),f->P(i),f->P1(i),dummy)*threshold <= sides[i] )
                 {
-                    m.Mark(f->V2(i));
+                    tri::Mark(m,f->V2(i));
                     
                     int j = Distance(dummy,f->P(i))<Distance(dummy,f->P1(i))?i:(i+1)%3;
-                    f->P2(i) = f->P(j);  m.Mark(f->V(j));
+                    f->P2(i) = f->P(j);  tri::Mark(m,f->V(j));
                     ++count; ++total;
                 }
             }
