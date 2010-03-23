@@ -157,7 +157,7 @@ static void VertexSet(MeshType &m, unsigned int FlagMask)
 static void FaceSet(MeshType &m, unsigned int FlagMask)
 {
 	FaceIterator fi;
-	for(fi=m.vert.begin(); fi!=m.vert.end(); ++fi)
+  for(fi=m.face.begin(); fi!=m.face.end(); ++fi)
 		if(!(*fi).IsD()) (*fi).Flags() |= FlagMask ;
 }
 
@@ -167,11 +167,13 @@ static void VertexClearV(MeshType &m) { VertexClear(m,VertexType::VISITED);}
 static void VertexClearB(MeshType &m) { VertexClear(m,VertexType::BORDER);}
 static void FaceClearV(MeshType &m) { FaceClear(m,FaceType::VISITED);}
 static void FaceClearB(MeshType &m) { FaceClear(m,FaceType::BORDER012);}
+static void FaceClearF(MeshType &m) { FaceClear(m,FaceType::FAUX012);}
 
 static void VertexSetV(MeshType &m) { VertexSet(m,VertexType::VISITED);}
 static void VertexSetB(MeshType &m) { VertexSet(m,VertexType::BORDER);}
 static void FaceSetV(MeshType &m) { FaceSet(m,FaceType::VISITED);}
 static void FaceSetB(MeshType &m) { FaceSet(m,FaceType::BORDER);}
+static void FaceSetF(MeshType &m) { FaceSet(m,FaceType::FAUX012);}
 
 /// \brief Compute the border flags for the faces using the Face-Face Topology. 
 
@@ -415,7 +417,32 @@ static void VertexBorderFromFace(MeshType &m)
 			    }
 	    }
 }
+//
+static void FaceFauxCrease(MeshType &m,float AngleRad)
+{
+  assert(HasPerFaceFlags(m));
+  assert(HasFFAdjacency(m));
 
+  typename MeshType::FaceIterator f;
+
+  //initially everything is faux (e.g all internal)
+  FaceSetF(m);
+  for(f=m.face.begin();f!=m.face.end();++f)
+  {
+    if(!(*f).IsD())
+    {
+      for(int z=0;z<(*f).VN();++z)
+      {
+        if( face::IsBorder(*f,z) )  (*f).ClearF(z);
+        else
+        {
+          if(Angle((*f).N(), (*f).FFp(z)->N()) > AngleRad)
+            (*f).ClearF(z);
+        }
+      }
+    }
+  }
+}
 
 }; // end class
 
