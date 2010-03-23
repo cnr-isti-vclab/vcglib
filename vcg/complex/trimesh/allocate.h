@@ -986,7 +986,7 @@ public:
 	
 	template <class ATTR_TYPE>
 	static 
-    void FixPaddedPerMeshAttribute ( MeshType & /*m*/,PointerToAttribute & pa){
+		void FixPaddedPerMeshAttribute ( MeshType & m,PointerToAttribute & pa){
 
 			// create the container of the right type
 			Attribute<ATTR_TYPE> * _handle =  new Attribute<ATTR_TYPE>();
@@ -1016,6 +1016,12 @@ public:
 	struct NameTypeBound_Base{
 		virtual  std::string  Name()  = 0;
 		virtual  std::string TypeID() = 0;
+
+		virtual void AddPerVertexAttribute(MeshType & m) = 0;
+		virtual void AddPerFaceAttribute(MeshType & m)	 = 0;
+		virtual void AddPerEdgeAttribute(MeshType & m)	 = 0;
+		virtual void AddPerMeshAttribute(MeshType & m)	 = 0;
+
 	};
 
 
@@ -1032,56 +1038,57 @@ public:
 				std::string  Name()   {return _name;}
 				bool operator ==(const NameTypeBound & o ) const {return Name()==o.Name();}
 				
-                                std::string TypeID(){ return typeid(TYPE).name();}
+				std::string TypeID(){ return typeid(TYPE).name();}
 				
-        void AddPerVertexAttribute(MeshType & m){Allocator::template AddPerVertexAttribute<TYPE>	(m,_name);}
-        void AddPerFaceAttribute(MeshType & m)	{Allocator::template AddPerFaceAttribute<TYPE>	(m,_name);}
-        void AddPerEdgeAttribute(MeshType & m)	{Allocator::template AddPerEdgeAttribute<TYPE>	(m,_name);}
+				void AddPerVertexAttribute(MeshType & m){Allocator::AddPerVertexAttribute<TYPE>	(m,_name);}
+				void AddPerFaceAttribute(MeshType & m)	{Allocator::AddPerFaceAttribute<TYPE>	(m,_name);}
+				void AddPerEdgeAttribute(MeshType & m)	{Allocator::AddPerEdgeAttribute<TYPE>	(m,_name);}
+				void AddPerMeshAttribute(MeshType & m)	{Allocator::AddPerMeshAttribute<TYPE>	(m,_name);}
 			 private:
 				std::string _name;
 	};
 
-        // check if a given name has already been bound to a type in the scope passed
 	bool CheckNameIsBound(NameTypeScope binders,std::string name){ return (binders.find(name)!=binders.end()); }
 
-        // add a bound name-type to the passed scope
 	template <class TYPE>
-	static void AddNameTypeBound(NameTypeScope binders,std::string  name){
+	static void AddNameTypeBound(NameTypeScope & binders,std::string  name){
 		assert(!name.empty()); // you cannot bound a type to an empty string
 		BindersIterator bi = binders.find(name);
 		if(bi!=binders.end())
-                        assert(typeid(TYPE).name() == ((*bi).second)->TypeID()); // the name was previously bound to a dirrefent type
+			assert(typeid(TYPE).name() == ((*bi).second)->TypeID()); // the name was previously bound to a dirrefent type
 		else{
-			NameTypeBound<TYPE> * newbound = new NameTypeBound<TYPE>();
+			NameTypeBound<TYPE> * newbound = new NameTypeBound<TYPE>(name);
 			binders.insert( TypeBound(name,newbound));
 		}
 	}
 
-        // remove a previously added  name-type bound  to the passed scope
-        void RemoveTypeBind(NameTypeScope binders,std::string name){
+	static void RemoveTypeBind(NameTypeScope binders,std::string name){
 		BindersIterator bi = binders.find(name);
 		if(bi!=binders.end()) binders.erase(bi);
 	}
 
-        // add a PerVertexAttribute without knowing its type
-	void AddPerVertexAttribute(NameTypeScope binders, MeshType & m, std::string name){
+	static void AddPerVertexAttribute(NameTypeScope binders, MeshType & m, std::string name){
 		BindersIterator bi = binders.find(name);
 		assert(bi != binders.end() ); // the name MUST have been already bound to a type
 		(*bi).second->AddPerVertexAttribute(m);
 	}
 
-        // add a PerEdgeAttribute without knowing its type
-        void AddPerEdgeAttribute(NameTypeScope binders, MeshType & m, std::string name){
+	static void AddPerEdgeAttribute(NameTypeScope binders, MeshType & m, std::string name){
 		BindersIterator bi = binders.find(name);
 		assert(bi != binders.end() ); // the name MUST have been already bound to a type
 		(*bi).second->AddPerEdgeAttribute(m);
 	}
 
-        // add a PerFaceAttribute without knowing its type
-        void AddPerFaceAttribute( NameTypeScope binders,MeshType & m, std::string name){
+	static void AddPerFaceAttribute( NameTypeScope binders,MeshType & m, std::string name){
 		BindersIterator bi = binders.find(name);
 		assert(bi != binders.end() ); // the name MUST have been already bound to a type
 		(*bi).second->AddPerFaceAttribute(m);
+	}
+
+	static void AddPerMeshAttribute( NameTypeScope binders,MeshType & m, std::string name){
+		BindersIterator bi = binders.find(name);
+		assert(bi != binders.end() ); // the name MUST have been already bound to a type
+		(*bi).second->AddPerMeshAttribute(m);
 	}
 
 	/* return the name of a previouly bound type */
