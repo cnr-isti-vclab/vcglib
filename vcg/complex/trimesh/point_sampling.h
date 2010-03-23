@@ -955,10 +955,14 @@ struct PoissonDiskParam
 		radiusVariance =1;
 		MAXLEVELS = 5;
 		invertQuality = false;
-	}
+    preGenFlag = false;
+    preGenMesh = NULL;
+  }
 	bool adaptiveRadiusFlag;
 	float radiusVariance;
 	bool invertQuality;
+  bool preGenFlag;   // when generating a poisson distribution, you can initialize the set pof omputed points with ALL the vertices of another mesh. Usefull for building progressive refinements.
+  MetroMesh *preGenMesh;
   int MAXLEVELS;
 };
 
@@ -1035,9 +1039,23 @@ static void PoissonDiskPruning(MetroMesh &origMesh, VertexSampler &ps, MetroMesh
 #ifdef QT_VERSION
     qDebug("PDS: Completed creation of activeCells, %i cells (%i msec)", montecarloSHT.AllocatedCells.size(), tt.restart());
 #endif
+int removedCnt=0;
+    if(pp.preGenFlag)
+    {
+      // Initial pass for pruning the Hashed grid with the an eventual pre initialized set of samples
+      for(VertexIterator vi =pp.preGenMesh->vert.begin(); vi!=pp.preGenMesh->vert.end();++vi)
+      {
+        ps.AddVert(*vi);
+        removedCnt += montecarloSHT.RemoveInSphere(vi->cP(),diskRadius);
+      }
+      montecarloSHT.UpdateAllocatedCells();
+#ifdef QT_VERSION
+        qDebug("Removed %i samples in %i",removedCnt,tt.restart());
+#endif
+      }
     while(!montecarloSHT.AllocatedCells.empty())
     {
-        int removedCnt=0;
+        removedCnt=0;
         for (size_t i = 0; i < montecarloSHT.AllocatedCells.size(); i++)
         {
             if( montecarloSHT.EmptyCell(montecarloSHT.AllocatedCells[i])  ) continue;
