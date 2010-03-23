@@ -1026,6 +1026,7 @@ public:
 
 
 	typedef typename std::map<std::string,NameTypeBound_Base*>::iterator BindersIterator;
+	typedef typename std::map<std::string,NameTypeBound_Base*>::const_iterator CBindersIterator;
 	typedef std::pair<std::string,NameTypeBound_Base*> TypeBound;
 	typedef  std::map<std::string,NameTypeBound_Base*> NameTypeScope;
 
@@ -1048,7 +1049,7 @@ public:
 				std::string _name;
 	};
 
-	bool CheckNameIsBound(NameTypeScope binders,std::string name){ return (binders.find(name)!=binders.end()); }
+	static bool CheckNameIsBound(const NameTypeScope & binders,std::string name){ return (binders.find(name)!=binders.end()); }
 
 	template <class TYPE>
 	static void AddNameTypeBound(NameTypeScope & binders,std::string  name){
@@ -1062,45 +1063,47 @@ public:
 		}
 	}
 
-	static void RemoveTypeBind(NameTypeScope binders,std::string name){
+	static void RemoveTypeBound(  NameTypeScope&  binders,std::string name){
 		BindersIterator bi = binders.find(name);
-		if(bi!=binders.end()) binders.erase(bi);
+		if(bi!=binders.end()) {delete(*bi).second; binders.erase(bi);}
 	}
 
-	static void AddPerVertexAttribute(NameTypeScope binders, MeshType & m, std::string name){
+	/* return the name of all the attributes of a given type */
+	template <typename TYPE>
+	static std::vector<std::string> NamesWithType(const NameTypeScope &  binders){
+		std::vector<std::string> res;
+		CBindersIterator bi;
+		for(bi = binders.begin(); bi != binders.end(); ++bi)
+			if (typeid(TYPE).name() == ((*bi).second->TypeID()))
+				res.push_back( (*bi).second->Name());
+		return res;
+	}
+
+	static void AddPerVertexAttribute(const NameTypeScope & binders, MeshType & m, std::string name){
 		BindersIterator bi = binders.find(name);
 		assert(bi != binders.end() ); // the name MUST have been already bound to a type
 		(*bi).second->AddPerVertexAttribute(m);
 	}
 
-	static void AddPerEdgeAttribute(NameTypeScope binders, MeshType & m, std::string name){
+	static void AddPerEdgeAttribute(const NameTypeScope & binders, MeshType & m, std::string name){
 		BindersIterator bi = binders.find(name);
 		assert(bi != binders.end() ); // the name MUST have been already bound to a type
 		(*bi).second->AddPerEdgeAttribute(m);
 	}
 
-	static void AddPerFaceAttribute( NameTypeScope binders,MeshType & m, std::string name){
+	static void AddPerFaceAttribute(const  NameTypeScope & binders,MeshType & m, std::string name){
 		BindersIterator bi = binders.find(name);
 		assert(bi != binders.end() ); // the name MUST have been already bound to a type
 		(*bi).second->AddPerFaceAttribute(m);
 	}
 
-	static void AddPerMeshAttribute( NameTypeScope binders,MeshType & m, std::string name){
-		BindersIterator bi = binders.find(name);
+	static void AddPerMeshAttribute( const NameTypeScope &  binders,MeshType & m, std::string name){
+		CBindersIterator bi = binders.find(name);
 		assert(bi != binders.end() ); // the name MUST have been already bound to a type
 		(*bi).second->AddPerMeshAttribute(m);
 	}
 
-	/* return the name of a previouly bound type */
-	template <typename TYPE>
-	std::string NameOf(NameTypeScope binders){
-		TYPE t;
-		BindersIterator bi;
-		for(bi = binders.begin(); bi != binders.end(); ++bi)
-			if (typdeid(t).name() == ((*bi).second->TypeID()))
-				return (*bi).second->Name();
-		return std::string("");
-	}
+
 
 
 }; // end class
