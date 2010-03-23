@@ -1024,6 +1024,9 @@ static void PoissonDiskPruning(MetroMesh &origMesh, VertexSampler &ps, MetroMesh
     QTime tt; tt.start();
 #endif
 
+    // if we are doing variable density sampling we have to prepare the random samples quality with the correct expected radii.
+    if(pp.adaptiveRadiusFlag)
+        ComputePoissonSampleRadii(montecarloMesh, diskRadius, pp.radiusVariance, pp.invertQuality);
 
     montecarloSHT.InitEmpty(origMesh.bbox, gridsize);
 
@@ -1061,7 +1064,9 @@ int removedCnt=0;
             if( montecarloSHT.EmptyCell(montecarloSHT.AllocatedCells[i])  ) continue;
             VertexPointer sp = getPrecomputedMontecarloSample(montecarloSHT.AllocatedCells[i], montecarloSHT);
             ps.AddVert(*sp);
-            removedCnt += montecarloSHT.RemoveInSphere(sp->cP(),diskRadius);
+            ScalarType sampleRadius = diskRadius;
+            if(pp.adaptiveRadiusFlag)  sampleRadius = sp->Q();
+            removedCnt += montecarloSHT.RemoveInSphere(sp->cP(),sampleRadius);
         }
 
 #ifdef QT_VERSION
