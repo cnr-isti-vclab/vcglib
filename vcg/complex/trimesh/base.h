@@ -36,6 +36,7 @@
 #include <vcg/simplex/vertex/base.h>
 #include <vcg/simplex/edge/base.h>
 #include <vcg/simplex/face/base.h>
+#include <vcg/connectors/hedge.h>
 #include <vcg/complex/used_types.h>
 #include <vcg/container/derivation_chain.h>
 
@@ -54,7 +55,7 @@ namespace tri {
 /** Class Mesh.
     This is class for definition of a mesh.
 		@param VertContainerType (Template Parameter) Specifies the type of the vertices container any the vertex type.
-		@param FaceContainerType (Template Parameter) Specifies the type of the faces container any the face type.
+		@param FaceContainer (Template Parameter) Specifies the type of the faces container any the face type.
  */
 
 
@@ -68,7 +69,7 @@ namespace tri {
 				typedef std::vector< Vertex<TYPESPOOL> >	CONTV;
 				typedef std::vector< Edge<TYPESPOOL> >		CONTE;
 				typedef std::vector< Face<TYPESPOOL> >		CONTF;
-//				typedef std::vector< HEdge<TYPESPOOL> >		CONTHE;
+				typedef std::vector< HEdge<TYPESPOOL> >		CONTH;
 
 				typedef CONTV														VertContainer;
 				typedef Vertex<TYPESPOOL>								VertexType;
@@ -91,11 +92,11 @@ namespace tri {
 				typedef typename CONTF::value_type*			FacePointer;
 				typedef const typename CONTF::value_type*ConstFacePointer;
 
-				//typedef CONTHE													HEdgeContainer;
-				//typedef typename CONTHE::value_type			HEdgeType;
-				//typedef typename CONTHE::value_type*		HEdgePointer;
-				//typedef typename CONTHE::iterator				HEdgeIterator;
-				//typedef typename CONTHE::const_iterator	ConstHEdgeIterator;
+				typedef CONTH														HEdgeContainer;
+				typedef typename CONTH::value_type			HEdgeType;
+				typedef typename CONTH::value_type*			HEdgePointer;
+				typedef typename CONTH::iterator				HEdgeIterator;
+				typedef typename CONTH::const_iterator	ConstHEdgeIterator;
 
 
 		};
@@ -137,6 +138,15 @@ namespace tri {
 								typedef const FaceType * ConstFacePointer;
 				};
 
+	template <typename T, class CONT>
+					struct MeshTypeHolder< T, CONT, AllTypes::AHEdgeType>: public T{
+								typedef CONT HEdgeContainer;
+								typedef typename HEdgeContainer::value_type			HEdgeType;
+								typedef typename HEdgeContainer::value_type *		HEdgePointer;
+								typedef typename HEdgeContainer::iterator				HEdgeIterator;
+								typedef typename HEdgeContainer::const_iterator ConstHEdgeIterator;
+};
+
 
 /*struct DummyContainer {};
 template <class CONT> struct Deriver: public MeshTypeHolder<CONT, typename CONT::value_type::IAm>{};
@@ -145,39 +155,45 @@ template <> struct Deriver<DummyContainer>{}*/;
 template <typename T, typename CONT> struct Der: public MeshTypeHolder<T,CONT, typename CONT::value_type::IAm>{};
 struct DummyContainer{struct value_type{ typedef int IAm;}; };
 
-template < class Container0 = DummyContainer, class Container1 = DummyContainer, class Container2 = DummyContainer/*, class Container3 = DummyContainer*/ >
+template < class Container0 = DummyContainer, class Container1 = DummyContainer, class Container2 = DummyContainer, class Container3 = DummyContainer >
 class TriMesh
 		: public  MArity3<   BaseMeshTypeHolder<typename Container0::value_type::TypesPool>, Container0, Der ,Container1, Der, Container2, Der/*, Container3, Der*/>{
 	public:
 
-		typedef typename TriMesh::ScalarType ScalarType;
+		typedef typename TriMesh::ScalarType		ScalarType;
 		typedef typename TriMesh::VertContainer VertContainer;
 		typedef typename TriMesh::EdgeContainer EdgeContainer;
 		typedef typename TriMesh::FaceContainer FaceContainer;
 
 		// types for vertex
-		typedef typename TriMesh::VertexType VertexType;
-		typedef typename TriMesh::VertexPointer VertexPointer;
-		typedef typename TriMesh::ConstVertexPointer ConstVertexPointer;
-		typedef typename TriMesh::CoordType CoordType;
-		typedef typename TriMesh::VertexIterator VertexIterator;
-		typedef typename TriMesh::ConstVertexIterator ConstVertexIterator;
+		typedef typename TriMesh::VertexType						VertexType;
+		typedef typename TriMesh::VertexPointer					VertexPointer;
+		typedef typename TriMesh::ConstVertexPointer		ConstVertexPointer;
+		typedef typename TriMesh::CoordType							CoordType;
+		typedef typename TriMesh::VertexIterator				VertexIterator;
+		typedef typename TriMesh::ConstVertexIterator		ConstVertexIterator;
 
 		// types for edge
-		typedef typename TriMesh::EdgeType EdgeType;
-		typedef typename TriMesh::EdgePointer EdgePointer;
-		typedef typename TriMesh::EdgeIterator EdgeIterator;
-		typedef typename TriMesh::ConstEdgeIterator ConstEdgeIterator;
+		typedef typename TriMesh::EdgeType							EdgeType;
+		typedef typename TriMesh::EdgePointer						EdgePointer;
+		typedef typename TriMesh::EdgeIterator					EdgeIterator;
+		typedef typename TriMesh::ConstEdgeIterator			ConstEdgeIterator;
 
 		//types for face
-		typedef typename TriMesh::FaceType FaceType;
-		typedef typename TriMesh::ConstFaceIterator ConstFaceIterator;
-		typedef typename TriMesh::FaceIterator FaceIterator;
-		typedef typename TriMesh::FacePointer FacePointer;
-		typedef typename TriMesh::ConstFacePointer ConstFacePointer;
+		typedef typename TriMesh::FaceType							FaceType;
+		typedef typename TriMesh::ConstFaceIterator			ConstFaceIterator;
+		typedef typename TriMesh::FaceIterator					FaceIterator;
+		typedef typename TriMesh::FacePointer						FacePointer;
+		typedef typename TriMesh::ConstFacePointer			ConstFacePointer;
 
+		// types for hedge
+		typedef typename TriMesh::HEdgeType							HEdgeType;
+		typedef typename TriMesh::HEdgePointer					HEdgePointer;
+		typedef typename TriMesh::HEdgeIterator					HEdgeIterator;
+		typedef typename TriMesh::HEdgeContainer				HEdgeContainer;
+		typedef typename TriMesh::ConstHEdgeIterator		ConstHEdgeIterator;
 
-	typedef TriMesh<Container0, Container1,Container2/*,Container3*/> MeshType;
+	typedef TriMesh<Container0, Container1,Container2,Container3> MeshType;
 
 	typedef Box3<ScalarType> BoxType;
 
@@ -191,8 +207,12 @@ class TriMesh
 	int fn;
 	/// Set of edges
 	EdgeContainer edge;
-	/// Actual number of faces
+	/// Actual number of edges
 	int en;
+	/// Set of hedges
+	HEdgeContainer hedge;
+	/// Actual number of hedges
+	int hn;
 	/// Bounding box of the mesh
 	Box3<ScalarType> bbox;
 	
@@ -470,91 +490,104 @@ template <class MeshType> inline void UnMarkAll(MeshType & m) { ++m.imark; }
 
 
 
-template < class VertContainerType, class FaceContainerType , class EdgeContainerType>
-bool HasPerVertexQuality (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return VertContainerType::value_type::HasQuality();}
+template < class ContainerType0, class ContainerType1 , class ContainerType2, class ContainerType3>
+bool HasPerVertexQuality (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::VertContainer::value_type::HasQuality();}
 
-template < class VertContainerType, class FaceContainerType , class EdgeContainerType>
-bool HasPerVertexMark (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return VertContainerType::value_type::HasMark();}
+template < class ContainerType0, class ContainerType1 , class ContainerType2, class ContainerType3>
+bool HasPerVertexMark (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::VertContainer::value_type::HasMark();}
 
-template < class VertContainerType, class FaceContainerType, class EdgeContainerType >
-bool HasPerVertexCurvature (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return VertContainerType::value_type::HasCurvature();}
+template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
+bool HasPerVertexCurvature (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::VertContainer::value_type::HasCurvature();}
 
-template < class VertContainerType, class FaceContainerType , class EdgeContainerType>
-bool HasPerVertexCurvatureDir (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return VertContainerType::value_type::HasCurvatureDir();}
+template < class ContainerType0, class ContainerType1 , class ContainerType2, class ContainerType3>
+bool HasPerVertexCurvatureDir (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::VertContainer::value_type::HasCurvatureDir();}
 
-template < class VertContainerType, class FaceContainerType , class EdgeContainerType>
-bool HasPerVertexColor (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return VertContainerType::value_type::HasColor();}
+template < class ContainerType0, class ContainerType1 , class ContainerType2, class ContainerType3>
+bool HasPerVertexColor (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::VertContainer::value_type::HasColor();}
 
-template < class VertContainerType, class FaceContainerType, class EdgeContainerType >
-bool HasPerVertexTexCoord (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return VertContainerType::value_type::HasTexCoord();}
+template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
+bool HasPerVertexTexCoord (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::VertContainer::value_type::HasTexCoord();}
 
-template < class VertContainerType, class FaceContainerType, class EdgeContainerType >
-bool HasPerVertexFlags (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return VertContainerType::value_type::HasFlags();}
+template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
+bool HasPerVertexFlags (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::VertContainer::value_type::HasFlags();}
 
-template < class VertContainerType, class FaceContainerType, class EdgeContainerType >
-bool HasPerVertexNormal (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return VertContainerType::value_type::HasNormal();}
+template < class ContainerType0, class ContainerType1, class ContainerType2, class ContainerType3 >
+bool HasPerVertexNormal (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::VertContainer::value_type::HasNormal();}
 
-template < class VertContainerType, class FaceContainerType, class EdgeContainerType >
-bool HasPerVertexRadius (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return VertContainerType::value_type::HasRadius();}
+template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
+bool HasPerVertexRadius (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::VertContainer::value_type::HasRadius();}
 
-template < class VertContainerType, class FaceContainerType, class EdgeContainerType >
-bool HasPerWedgeTexCoord (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return FaceContainerType::value_type::HasWedgeTexCoord();}
+template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
+bool HasPerWedgeTexCoord (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::FaceContainer::value_type::HasWedgeTexCoord();}
 
-template < class VertContainerType, class FaceContainerType, class EdgeContainerType >
-bool HasPerWedgeNormal (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return FaceContainerType::value_type::HasWedgeNormal();}
+template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
+bool HasPerWedgeNormal (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::FaceContainer::value_type::HasWedgeNormal();}
 
-template < class VertContainerType, class FaceContainerType, class EdgeContainerType >
-bool HasPerWedgeColor (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return FaceContainerType::value_type::HasWedgeColor();}
+template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
+bool HasPerWedgeColor (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::FaceContainer::value_type::HasWedgeColor();}
 
-template < class VertContainerType, class FaceContainerType, class EdgeContainerType >
-bool HasPerFaceFlags (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return FaceContainerType::value_type::HasFlags();}
+template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
+bool HasPerFaceFlags (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::FaceContainer::value_type::HasFlags();}
 
-template < class VertContainerType, class FaceContainerType, class EdgeContainerType >
-bool HasPerFaceNormal (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return FaceContainerType::value_type::HasFaceNormal();}
+template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
+bool HasPerFaceNormal (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::FaceContainer::value_type::HasFaceNormal();}
 
-template < class VertContainerType, class FaceContainerType, class EdgeContainerType >
-bool HasPerFaceColor (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return FaceContainerType::value_type::HasFaceColor();}
+template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
+bool HasPerFaceColor (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::FaceContainer::value_type::HasFaceColor();}
 
-template < class VertContainerType, class FaceContainerType, class EdgeContainerType >
-bool HasPerFaceMark (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return FaceContainerType::value_type::HasMark();}
+template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
+bool HasPerFaceMark (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::FaceContainer::value_type::HasMark();}
 
-template < class VertContainerType, class FaceContainerType, class EdgeContainerType >
-bool HasPerFaceQuality (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return FaceContainerType::value_type::HasFaceQuality();}
+template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
+bool HasPerFaceQuality (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::FaceContainer::value_type::HasFaceQuality();}
 
-template < class VertContainerType, class FaceContainerType, class EdgeContainerType >
-bool HasFFAdjacency (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return FaceContainerType::value_type::HasFFAdjacency();}
+template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
+bool HasFFAdjacency (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::FaceContainer::value_type::HasFFAdjacency();}
 
-template < class VertContainerType, class FaceContainerType, class EdgeContainerType >
-bool HasFVAdjacency (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return FaceContainerType::value_type::HasFVAdjacency();}
+template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
+bool HasFVAdjacency (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::FaceContainer::value_type::HasFVAdjacency();}
 
-template < class VertContainerType, class FaceContainerType, class EdgeContainerType >
-bool HasVEAdjacency (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return VertContainerType::value_type::HasVEAdjacency();}
+template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
+bool HasVEAdjacency (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::VertContainer::value_type::HasVEAdjacency();}
 
-template < class VertContainerType, class FaceContainerType, class EdgeContainerType >
-bool HasEVAdjacency (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return TriMesh < VertContainerType , FaceContainerType, EdgeContainerType>::EdgeType::HasEVAdjacency();}
+template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
+bool HasVHAdjacency (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::VertContainer::value_type::HasVHAdjacency();}
 
-template < class VertContainerType, class FaceContainerType, class EdgeContainerType >
-bool HasEFAdjacency (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return TriMesh < VertContainerType , FaceContainerType, EdgeContainerType>::EdgeType::HasEFAdjacency();}
+template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
+bool HasEVAdjacency (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::EdgeType::HasEVAdjacency();}
 
-template < class VertContainerType, class FaceContainerType, class EdgeContainerType >
-bool HasFHEAdjacency (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return TriMesh < VertContainerType , FaceContainerType, EdgeContainerType>::FaceType::HasFHEAdjacency();}
+template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
+bool HasEFAdjacency (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::EdgeType::HasEFAdjacency();}
 
-template < class VertContainerType, class FaceContainerType, class EdgeContainerType >
-bool HasHEVAdjacency (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return TriMesh < VertContainerType , FaceContainerType, EdgeContainerType>::EdgeType::HasHEVAdjacency();}
+template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
+bool HasFHAdjacency (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::FaceType::HasFHAdjacency();}
 
-template < class VertContainerType, class FaceContainerType, class EdgeContainerType >
-bool HasHENextAdjacency (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return EdgeContainerType::value_type::HasHENextAdjacency();}
+template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
+bool HasHVAdjacency (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::HEdgeType::HasHVAdjacency();}
 
-template < class VertContainerType, class FaceContainerType, class EdgeContainerType >
-bool HasHEPrevAdjacency (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return EdgeContainerType::value_type::HasHEPrevAdjacency();}
+template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
+bool HasHEAdjacency (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::HEdgeType::HasHEAdjacency();}
 
-template < class VertContainerType, class FaceContainerType, class EdgeContainerType >
-bool HasHEOppAdjacency (const TriMesh < VertContainerType , FaceContainerType, EdgeContainerType> & /*m*/) {return EdgeContainerType::value_type::HasHEOppAdjacency();}
+template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
+bool HasHFAdjacency (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::HEdgeType::HasHFAdjacency();}
 
-template < class VertContainerType, class FaceContainerType , class EdgeContainerType>
-bool HasVFAdjacency (const TriMesh < VertContainerType , FaceContainerType,   EdgeContainerType> & /*m*/) {
-  assert(FaceContainerType::value_type::HasVFAdjacency() == VertContainerType::value_type::HasVFAdjacency());
-  return FaceContainerType::value_type::HasVFAdjacency();
+template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
+bool HasHNextAdjacency (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh< ContainerType0,   ContainerType1,   ContainerType2 ,  ContainerType3>::HEdgeType::HasHNextAdjacency();}
+
+template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
+bool HasHPrevAdjacency (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh< ContainerType0,   ContainerType1,   ContainerType2 , ContainerType3>::HEdgeType::HasHPrevAdjacency();}
+
+template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
+bool HasHOppAdjacency (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/)  {return TriMesh< ContainerType0,   ContainerType1,   ContainerType2 ,  ContainerType3>::HEdgeType::HasHOppAdjacency();}
+
+template < class ContainerType0, class ContainerType1 , class ContainerType2, class ContainerType3>
+bool HasVFAdjacency (const TriMesh < ContainerType0 , ContainerType1,   ContainerType2, ContainerType3> & /*m*/) {
+		// gcc 4.4: if the expressions assigned to a1 and a2 are replaced in the assert we get a compilation error
+		// for the macro assert
+		bool a1 =  TriMesh < ContainerType0 , ContainerType1,   ContainerType2, ContainerType3>::FaceContainer::value_type::HasVFAdjacency();
+		bool a2 =  TriMesh < ContainerType0 , ContainerType1,   ContainerType2, ContainerType3>::VertContainer::value_type::HasVFAdjacency();
+		assert(a1==a2);
+		return TriMesh < ContainerType0 , ContainerType1,   ContainerType2, ContainerType3>::FaceContainer::value_type::HasVFAdjacency();
 }
 
 template <class MESH_TYPE>
