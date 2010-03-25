@@ -103,6 +103,7 @@ First Really Working version
 #include <vcg/space/color4.h>
 
 namespace vcg {
+				
   namespace face {
 /*
 Some naming Rules
@@ -538,7 +539,9 @@ public:
   typename T::FacePointer const cFFp(const int) const { static typename T::FacePointer const fp=0; return fp; }
   typename T::EdgePointer       &FEp(const int)       { static typename T::EdgePointer fp=0;  assert(0); return fp; }
   typename T::EdgePointer const cFEp(const int) const { static typename T::EdgePointer const fp=0; return fp; }
-  char &VFi(const int j){(void)j; static char z=0;  assert(0); return z;};
+	typename T::HEdgePointer       &FHp(const int)       { static typename T::HEdgePointer fp=0;  assert(0); return fp; }
+	typename T::HEdgePointer const cFHp(const int) const { static typename T::HEdgePointer const fp=0; return fp; }
+	char &VFi(const int j){(void)j; static char z=0;  assert(0); return z;};
   char &FFi(const int j){(void)j; static char z=0;  assert(0); return z;};
   const char &cVFi(const int j){(void)j; static char z=0; return z;};
   const char &cFFi(const int j) const {(void)j; static char z=0; return z;};
@@ -549,10 +552,12 @@ public:
   static bool HasVFAdjacency()   {   return false; }
   static bool HasFFAdjacency()   {   return false; }
   static bool HasFEAdjacency()   {   return false; }
+	static bool HasFHAdjacency()   {   return false; }
 
   static bool HasFFAdjacencyOcc()   {   return false; }
   static bool HasVFAdjacencyOcc()   {   return false; }
   static bool HasFEAdjacencyOcc()   {   return false; }
+	static bool HasFHAdjacencyOcc()   {   return false; }
 
   static void Name(std::vector<std::string> & name){T::Name(name);}
 
@@ -648,6 +653,25 @@ private:
   char _fei[3] ;    
 };
 
+
+/*----------------------------- FHADJ ------------------------------*/
+
+template <class T> class FHAdj: public T {
+public:
+	FHAdj(){_fh=0;}
+	typename T::HEdgePointer       &FHp( )        { return _fh; }
+	typename T::HEdgePointer const cFHp( ) const  { return _fh; }
+
+	template <class RightF>
+	void ImportLocal(const RightF & rightF){T::ImportLocal(rightF);}
+	inline void Alloc(const int & ns){T::Alloc(ns);}
+	inline void Dealloc(){T::Dealloc();}
+	static bool HasFHAdjacency()      {   return true; }
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("FHAdj"));T::Name(name);}
+
+private:
+	typename T::FacePointer _fh ;
+};
   } // end namespace face
 }// end namespace vcg
 #endif

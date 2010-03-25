@@ -769,43 +769,45 @@ public:
 
   namespace tri
   {
-	template < class VertContainerType, class FaceType, class EdgeContainerType >
-	  bool HasVFAdjacency (const TriMesh < VertContainerType , face::vector_ocf< FaceType >, EdgeContainerType > & m) 
+
+
+	template < class VertContainerType, class FaceType, class Container1, class Container2  >
+		bool HasVFAdjacency (const TriMesh < VertContainerType , face::vector_ocf< FaceType >, Container1, Container2 > & m)
 	{
 	  if(FaceType::HasVFAdjacencyOcf()) return m.face.IsVFAdjacencyEnabled();
 	  else return FaceType::FaceType::HasVFAdjacency();
 	}
 
-	template < class VertContainerType, class FaceType, class EdgeContainerType>
-	  bool HasFFAdjacency (const TriMesh < VertContainerType , face::vector_ocf< FaceType >, EdgeContainerType  > & m) 
+	template < class VertContainerType, class FaceType, class Container1, class Container2 >
+		bool HasFFAdjacency (const TriMesh < VertContainerType , face::vector_ocf< FaceType >, Container1, Container2  > & m)
 	{
 	  if(FaceType::HasFFAdjacencyOcf()) return m.face.IsFFAdjacencyEnabled();
 	  else return FaceType::FaceType::HasFFAdjacency();
 	}
 
-	template < class VertContainerType, class FaceType, class EdgeContainerType >
-      bool HasPerWedgeTexCoord (const TriMesh < VertContainerType , face::vector_ocf< FaceType >, EdgeContainerType  > & m) 
+	template < class VertContainerType, class FaceType, class Container1, class Container2  >
+			bool HasPerWedgeTexCoord (const TriMesh < VertContainerType , face::vector_ocf< FaceType >, Container1, Container2  > & m)
     {
       if(FaceType::HasWedgeTexCoordOcf()) return m.face.IsWedgeTexEnabled();
       else return FaceType::HasWedgeTexCoord();
     }
 
-    template < class VertContainerType, class FaceType, class EdgeContainerType >
-      bool HasPerFaceColor (const TriMesh < VertContainerType , face::vector_ocf< FaceType >, EdgeContainerType  > & m) 
+		template < class VertContainerType, class FaceType, class Container1, class Container2  >
+			bool HasPerFaceColor (const TriMesh < VertContainerType , face::vector_ocf< FaceType >, Container1, Container2  > & m)
     {
       if(FaceType::HasFaceColorOcf()) return m.face.IsColorEnabled();
       else return FaceType::HasFaceColor();
     }
 		
-    template < class VertContainerType, class FaceType, class EdgeContainerType >
-		bool HasPerFaceQuality (const TriMesh < VertContainerType , face::vector_ocf< FaceType >, EdgeContainerType  > & m) 
+		template < class VertContainerType, class FaceType, class Container1, class Container2  >
+		bool HasPerFaceQuality (const TriMesh < VertContainerType , face::vector_ocf< FaceType >, Container1, Container2  > & m)
     {
       if(FaceType::HasFaceQualityOcf()) return m.face.IsQualityEnabled();
       else return FaceType::HasFaceQuality();
     }
 		
-    template < class VertContainerType, class FaceType, class EdgeContainerType >
-      bool HasPerFaceMark (const TriMesh < VertContainerType , face::vector_ocf< FaceType >, EdgeContainerType  > & m) 
+		template < class VertContainerType, class FaceType, class Container1, class Container2  >
+			bool HasPerFaceMark (const TriMesh < VertContainerType , face::vector_ocf< FaceType >, Container1, Container2  > & m)
     {
       if(FaceType::HasFaceMarkOcf()) return m.face.IsMarkEnabled();
       else return FaceType::HasFaceMark();

@@ -145,6 +145,11 @@ public:
   int &VEi(){static int z=0; return z;};
   static bool HasVEAdjacency()   {   return false; }
 
+	typename TT::HEdgePointer &VHp() { static typename TT::HEdgePointer ep=0;  assert(0); return ep; }
+	typename TT::HEdgePointer cVHp() { static typename TT::HEdgePointer ep=0;  assert(0); return ep; }
+	int &VHi(){static int z=0; return z;};
+	static bool HasVHAdjacency()   {   return false; }
+
 
   typedef Point3f VecType;
 	typedef Point2f CurvatureType;
@@ -457,6 +462,25 @@ public:
 private:
   typename T::FacePointer _fp ;
   int _zp ;
+};
+
+/*----------------------------- VHADJ ------------------------------*/
+
+template <class T> class VHAdj: public T {
+public:
+	VHAdj(){_hp=0;}
+	typename T::HEdgePointer &VHp() {return _hp; }
+	typename T::HEdgePointer cVHp() {return _hp; }
+	int &VHi() {return _zp; }
+	template < class LeftV>
+	void ImportLocal(const LeftV  & left ) { VHp() = NULL; T::ImportLocal( left); }
+	static bool HasVHAdjacency()   {   return true; }
+	static bool HasVHAdjacencyOcc()   {   return true; }
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("VHAdj"));T::Name(name);}
+
+private:
+	typename T::HEdgePointer _hp ;
+	int _zp ;
 };
 
 /*----------------------------- VTADJ ------------------------------*/

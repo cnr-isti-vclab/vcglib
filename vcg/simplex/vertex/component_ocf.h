@@ -688,52 +688,52 @@ public:
 namespace tri
 {
 
-	template < class, class,class > class TriMesh;
+	template < class, class,class, class> class TriMesh;
 
-	template < class VertexType, class FaceContainerType, class EdgeContainerType >
-	bool HasPerVertexRadius (const TriMesh < vertex::vector_ocf< VertexType > , FaceContainerType, EdgeContainerType > & m)
+	template < class VertexType, class ContainerType0, class ContainerType1 ,class ContainerType2 >
+	bool HasPerVertexRadius (const TriMesh < vertex::vector_ocf< VertexType > , ContainerType0,   ContainerType1,  ContainerType2 > & m)
 	{
 		if(VertexType::HasRadiusOcf()) return m.vert.IsRadiusEnabled();
 		else return VertexType::HasRadius();
 	}
 	
-	template < class VertexType, class FaceContainerType, class EdgeContainerType >
-		bool HasPerVertexQuality (const TriMesh < vertex::vector_ocf< VertexType > , FaceContainerType , EdgeContainerType> & m)
+	template < class VertexType, class ContainerType0, class ContainerType1 ,class ContainerType2>
+		bool HasPerVertexQuality (const TriMesh < vertex::vector_ocf< VertexType > , ContainerType0,   ContainerType1,  ContainerType2> & m)
 	{
 		if(VertexType::HasQualityOcf()) return m.vert.IsQualityEnabled();
 		else return VertexType::HasQuality();
 	}
 	
-	template < class VertexType, class FaceContainerType, class EdgeContainerType >
-		bool HasPerVertexTexCoord (const TriMesh < vertex::vector_ocf< VertexType > , FaceContainerType , EdgeContainerType> & m)
+	template < class VertexType, class ContainerType0, class ContainerType1 ,class ContainerType2 >
+		bool HasPerVertexTexCoord (const TriMesh < vertex::vector_ocf< VertexType > , ContainerType0,   ContainerType1,  ContainerType2> & m)
 	{
 		if(VertexType::HasTexCoordOcf()) return m.vert.IsTexCoordEnabled();
 		else return VertexType::HasTexCoord();
 	}
 
-	template < class VertexType, class FaceContainerType, class EdgeContainerType >
-		bool HasPerVertexNormal (const TriMesh < vertex::vector_ocf< VertexType > , FaceContainerType , EdgeContainerType> & m)
+	template < class VertexType, class ContainerType0, class ContainerType1 ,class ContainerType2 >
+		bool HasPerVertexNormal (const TriMesh < vertex::vector_ocf< VertexType > , ContainerType0,   ContainerType1,  ContainerType2> & m)
 	{
 		if(VertexType::HasNormalOcf()) return m.vert.IsNormalEnabled();
 		else return VertexType::HasNormal();
 	}
 
-	template < class VertexType, class FaceContainerType, class EdgeContainerType >
-		bool HasPerVertexColor (const TriMesh < vertex::vector_ocf< VertexType > , FaceContainerType , EdgeContainerType> & m)
+	template < class VertexType, class ContainerType0, class ContainerType1 ,class ContainerType2>
+		bool HasPerVertexColor (const TriMesh < vertex::vector_ocf< VertexType > , ContainerType0,   ContainerType1,  ContainerType2> & m)
 	{
 		if(VertexType::HasColorOcf()) return m.vert.IsColorEnabled();
 		else return VertexType::HasColor();
 	}
 
-	template < class VertexType, class FaceContainerType, class EdgeContainerType >
-		bool HasPerVertexCurvature (const TriMesh < vertex::vector_ocf< VertexType > , FaceContainerType, EdgeContainerType > & m)
+	template < class VertexType, class ContainerType0, class ContainerType1 ,class ContainerType2 >
+		bool HasPerVertexCurvature (const TriMesh < vertex::vector_ocf< VertexType > , ContainerType0,   ContainerType1,  ContainerType2 > & m)
 	{
 		if(VertexType::HasCurvatureOcf()) return m.vert.IsCurvatureEnabled();
 		else return VertexType::HasCurvature();
 	}
 
-	template < class VertexType, class FaceContainerType, class EdgeContainerType >
-		bool HasPerVertexCurvatureDir (const TriMesh < vertex::vector_ocf< VertexType > , FaceContainerType, EdgeContainerType > & m)
+	template < class VertexType, class ContainerType0, class ContainerType1 ,class ContainerType2>
+		bool HasPerVertexCurvatureDir (const TriMesh < vertex::vector_ocf< VertexType > , ContainerType0,   ContainerType1,  ContainerType2 > & m)
 	{
 		if(VertexType::HasCurvatureDirOcf()) return m.vert.IsCurvatureDirEnabled();
 		else return VertexType::HasCurvatureDir();

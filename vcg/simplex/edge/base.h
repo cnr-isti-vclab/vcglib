@@ -62,12 +62,12 @@ we have to build the type a step a time (deriving from a single ancestor at a ti
 
 */ 
 template <class UserTypes>
-class EdgeBase: public		edge::EmptyEVAdj<
-							edge::EmptyEEAdj<
-							edge::EmptyHEdgeData<	
-							edge::EmptyBitFlags<
-							EdgeTypeHolder < UserTypes> >  > > > {
-};
+				class EdgeBase: public		  edge::EmptyEFAdj<
+																		edge::EmptyEVAdj<
+																		edge::EmptyEEAdj<
+																		edge::EmptyEHAdj<
+																		edge::EmptyBitFlags<
+																		EdgeTypeHolder < UserTypes> >  > > > >{};
 
 
 /* The Real Big Edge class;
