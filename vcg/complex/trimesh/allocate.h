@@ -94,6 +94,13 @@ namespace vcg {
 			typedef typename MeshType::FacePointer    FacePointer;
 			typedef typename MeshType::FaceIterator   FaceIterator;
 			typedef typename MeshType::FaceContainer FaceContainer;
+
+			typedef typename MeshType::HEdgeType     HEdgeType;
+			typedef typename MeshType::HEdgePointer  HEdgePointer;
+			typedef typename MeshType::HEdgeIterator HEdgeIterator;
+			typedef typename MeshType::HEdgeContainer HEdgeContainer;
+
+
 			typedef typename MeshType::PointerToAttribute PointerToAttribute;
 			typedef typename std::set<PointerToAttribute>::iterator AttrIterator;
 			typedef typename std::set<PointerToAttribute>::const_iterator AttrConstIterator;
@@ -166,7 +173,7 @@ namespace vcg {
 						if(!(*ei).IsD())
 						{
 							if(HasEVAdjacency (m)) { pu.Update((*ei).V(0));pu.Update((*ei).V(1));}
-							if(HasHEVAdjacency(m))   pu.Update((*ei).HEVp());
+//							if(HasEVAdjacency(m))   pu.Update((*ei).EVp());
 						}
 
 						// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
@@ -202,6 +209,7 @@ namespace vcg {
 				return v_ret;
 			}
 
+			/* ++++++++++ edges +++++++++++++
 			/** Function to add n edges to the mesh. The second parameter hold a vector of 
 			pointers to pointer to elements of the mesh that should be updated after a 
 			possible vector realloc. 
@@ -246,19 +254,6 @@ namespace vcg {
 						if(!(*vi).IsD())
 								if ((*vi).cVEp()!=0) pu.Update((*vi).VEp());
 
-					EdgeIterator ei = m.edge.begin();
-					while(ii < m.en - n){// cycle on all the faces except the new ones
-						if(!(*ei).IsD())
-						{
-							if(HasHENextAdjacency(m)) pu.Update((*ei).HENp());
-							if(HasHEPrevAdjacency(m)) pu.Update((*ei).HEPp());
-							if(HasHEOppAdjacency(m)) pu.Update((*ei).HEOp());
-							++ii;
-						}
-						++ei;
-					}
-
-						// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
 				}
 				unsigned int siz=(unsigned int)m.edge.size()-n;	
 			
@@ -288,6 +283,97 @@ namespace vcg {
 				typename std::vector<EdgePointer *>::iterator ei;
             for(ei=local_vec.begin();ei!=local_vec.end();++ei)
                pu.Update(**ei);
+				return v_ret;
+			}
+
+
+			/* ++++++++++ hedges +++++++++++++
+			/** Function to add n edges to the mesh. The second parameter hold a vector of
+			pointers to pointer to elements of the mesh that should be updated after a
+			possible vector realloc.
+			@param n number of edges to be added
+			@param local_var vector of pointers to pointers to edges to be updated.
+			return an iterator to the first element added
+			*/
+			static HEdgeIterator AddHEdges(MeshType &m,int n, PointerUpdater<HEdgePointer> &pu)
+			{
+				HEdgeIterator last;
+				if(n == 0) return m.hedge.end();
+				pu.Clear();
+				if(m.hedge.empty()) pu.oldBase=0;  // if the vector is empty we cannot find the last valid element
+				else {
+					pu.oldBase=&*m.hedge.begin();
+					pu.oldEnd=&m.hedge.back()+1;
+				}
+
+				m.hedge.resize(m.hedge.size()+n);
+				m.hn+=n;
+
+				pu.newBase = &*m.hedge.begin();
+				pu.newEnd =  &m.hedge.back()+1;
+					if(pu.NeedUpdate())
+					{
+					int ii = 0;
+					FaceIterator fi;
+					for (fi=m.face.begin(); fi!=m.face.end(); ++fi){
+						if(HasFHAdjacency(m))
+							pu.Update((*fi).FHp());
+							}
+
+					{
+					VertexIterator vi;
+					for (vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
+						if(!(*vi).IsD())
+								if ((*vi).cVHp()!=0) pu.Update((*vi).VHp());
+					}
+					{
+					EdgeIterator ei;
+					for (ei=m.edge.begin(); ei!=m.edge.end(); ++ei)
+						if(!(*ei).IsD())
+								if ((*ei).cEHp()!=0) pu.Update((*ei).EHp());
+					}
+					{
+					HEdgeIterator hi = m.hedge.begin();
+					while(ii < m.hn - n){// cycle on all the faces except the new ones
+						if(!(*hi).IsD())
+						{
+							if(HasHNextAdjacency(m)) pu.Update((*hi).HNp());
+							if(HasHPrevAdjacency(m)) pu.Update((*hi).HPp());
+							if(HasHOppAdjacency(m)) pu.Update((*hi).HOp());
+							++ii;
+						}
+						++hi;
+					}
+					}
+				}
+				unsigned int siz=(unsigned int)m.hedge.size()-n;
+
+				last = m.hedge.begin();
+				advance(last,siz);
+
+				return last;// deve restituire l'iteratore alla prima faccia aggiunta;
+			}
+
+			/** Function to add n vertices to the mesh.
+			First wrapper, with no parameters
+			*/
+			static HEdgeIterator AddHEdges(MeshType &m, int n)
+			{
+				PointerUpdater<HEdgePointer> pu;
+				return AddHEdges(m, n,pu);
+			}
+
+			/** Function to add n vertices to the mesh.
+			Second Wrapper, with a vector of vertex pointers to be updated.
+			*/
+			static HEdgeIterator AddHEdges(MeshType &m, int n, std::vector<HEdgePointer*> &local_vec)
+			{
+				PointerUpdater<HEdgePointer> pu;
+				HEdgeIterator v_ret =  AddHEdges(m, n,pu);
+
+				typename std::vector<HEdgePointer *>::iterator ei;
+						for(ei=local_vec.begin();ei!=local_vec.end();++ei)
+							 pu.Update(**ei);
 				return v_ret;
 			}
 
@@ -387,7 +473,18 @@ namespace vcg {
 								//  pu.Update((*vi).VFp());            compiles on .net and newer gcc
 							}
 	
-							// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
+						HEdgeIterator hi;
+						for (hi=m.hedge.begin(); hi!=m.hedge.end(); ++hi)
+							if(!(*hi).IsD())
+							{
+								if(HasHFAdjacency(m))
+									if ((*hi).cHFp()!=0)
+										pu.Update((FaceType * &)(*hi).HFp());
+								// Note the above cast is probably not useful if you have correctly defined 
+								// your vertex type with the correct name of the facetype as a template argument; 
+								//  pu.Update((FaceType*)(*vi).VFp()); compiles on old gcc and borland
+								//  pu.Update((*vi).VFp());            compiles on .net and newer gcc
+							}
 
 				}
 				unsigned int siz=(unsigned int)m.face.size()-n;	
@@ -416,14 +513,24 @@ namespace vcg {
 			--m.vn;
 		}
 
-		/** Function to delete an edge from the mesh. 
+		/** Function to delete an edge from the mesh.
 			NOTE: THIS FUNCTION ALSO UPDATE en
 		*/
-		static void DeleteEdge(MeshType &m, EdgeType &e)
+		static void DeleteHEdge(MeshType &m, EdgeType &e)
 		{
 			assert(!e.IsD());
 			e.SetD();
-			--m.en;
+			--m.hn;
+		}
+
+		/** Function to delete a hedge from the mesh.
+			NOTE: THIS FUNCTION ALSO UPDATE en
+		*/
+		static void DeleteHEdge(MeshType &m, HEdgeType &e)
+		{
+			assert(!e.IsD());
+			e.SetD();
+			--m.hn;
 		}
 		
 		/*
