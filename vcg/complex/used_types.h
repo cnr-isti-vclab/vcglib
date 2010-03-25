@@ -1,6 +1,7 @@
 #ifndef VCG_USED_TYPES_H
 #define VCG_USED_TYPES_H
 
+#include <string>
 #include <vcg/space/point3.h>
 #include <vcg/container/derivation_chain.h>
 
