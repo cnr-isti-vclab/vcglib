@@ -30,7 +30,7 @@
 #include <vcg/simplex/face/base.h>
 
 /*include the base definition for the edge */
-#include <vcg/simplex/edge/base.h>
+#include <vcg/connectors/hedge.h>
 
 /*include the base definition for the trimesh*/
 #include <vcg/complex/trimesh/base.h>
@@ -56,7 +56,7 @@
 #include <vcg/simplex/face/component_polygon.h>
 
 /* include the support for half edges */
-#include <vcg/complex/trimesh/edge_support.h>
+#include <vcg/complex/trimesh/update/halfedge_indexed.h>
 
 
 using namespace vcg;
@@ -65,7 +65,7 @@ using namespace std;
 // forward declarations
 class CFace;
 class CVertex;
-class CEdge;
+class CHEdge;
 class DummyEdge;
 class MyPolyVertex;
 
@@ -96,25 +96,26 @@ class CMesh   : public vcg::tri::TriMesh< vector<CVertex>, vector<CFace> > {};
 */
 class MyPolyFace;
 class MyPolyVertex;
-struct PolyUsedTypes: public vcg::UsedTypes<		vcg::Use<MyPolyVertex>::AsVertexType,
-																								vcg::Use<CEdge>::AsEdgeType,
-																								vcg::Use<MyPolyFace>::AsFaceType >{};
+struct PolyUsedTypes: public vcg::UsedTypes<vcg::Use<MyPolyVertex>	::AsVertexType,
+																						vcg::Use<CHEdge>				::AsHEdgeType,
+																						vcg::Use<MyPolyFace>		::AsFaceType
+																						>{};
 
 
-class MyPolyVertex:public vcg::Vertex<PolyUsedTypes,
-	vcg::vertex::Coord3f,
-	vcg::vertex::Normal3f,
-	vcg::vertex::Mark,
-	vcg::vertex::BitFlags, 
-	vcg::vertex::VEAdj>{} ;
+class MyPolyVertex:public vcg::Vertex<	PolyUsedTypes,
+										vcg::vertex::Coord3f,
+										vcg::vertex::Normal3f,
+										vcg::vertex::Mark,
+										vcg::vertex::BitFlags, 
+										vcg::vertex::VHAdj>{} ;
 
-class CEdge : public Edge< PolyUsedTypes, edge::BitFlags,
-	//edge::EFAdj,		// pointer to the face
-	//edge::HEOppAdj,	// pointer to the opposite edge
-	//edge::HEVAdj,		// pointer to the vertex
-	//edge::HENextAdj,	// pointer to the next halfedge
-	edge::HEdgeData		// the previous 4 components (just more handy, you can comment this and uncomment the previous four lines)
-	//,edge::HEPrevAdj	// pointer to the previous halfedge
+class CHEdge : public HEdge< PolyUsedTypes, hedge::BitFlags,
+	//hedge::HFAdj,		// pointer to the face
+	//hedge::HOppAdj,	// pointer to the opposite edge
+	//hedge::HVAdj,		// pointer to the vertex
+	//hedge::HNextAdj,	// pointer to the next halfedge
+	hedge::HEdgeData		// the previous 4 components (just more handy, you can comment this and uncomment the previous four lines)
+	//,hedge::HPrevAdj	// pointer to the previous halfedge
 >{};
 
 class MyPolyFace:public vcg::Face<
@@ -123,8 +124,9 @@ class MyPolyFace:public vcg::Face<
 						 // It says "this class is a polygon and the memory for its components (e.g. pointer to its vertices
 						 // will be allocated dynamically")	
 	,vcg::face::PFVAdj	 // Pointer to the vertices (just like FVAdj )
+	,vcg::face::PFVAdj
 	,vcg::face::PFFAdj	 // Pointer to edge-adjacent face (just like FFAdj )
-	,vcg::face::PFHEAdj	 // Pointer its half -edges  ( you may need this if you use half edges)
+	,vcg::face::PFHAdj	 // Pointer its half -edges  ( you may need this if you use half edges)
 	,vcg::face::BitFlags // bit flags
 	,vcg::face::Normal3f // normal
 > {};
@@ -132,7 +134,7 @@ class MyPolyFace:public vcg::Face<
 class MyPolyMesh: public 
 	vcg::tri::TriMesh< std::vector<MyPolyVertex>,	// the vector of vertices
 	std::vector<MyPolyFace >,						// the vector of faces	
-	std::vector<CEdge>								// the vector of edges 
+	std::vector<CHEdge>								// the vector of edges
 	>{};
 
 MyPolyMesh pm;
@@ -142,15 +144,13 @@ MyPolyMesh pm;
 // Globals: the mesh, the OpenGL wrapper to draw the mesh and the trackball.
 CMesh mesh,mesh1;
 
-
-
-
 int main(int argc, char *argv[]) {
 
 	int loadmask;
 	
 	vcg::tri::io::PlyInfo pi;
 
+//	pm.hedge.reserve(100000);
 if(false){
 	/*
 	first way: 
@@ -186,45 +186,47 @@ else
 
 
 	// compute the half edges because I'm a half-edge programmer
-	vcg::tri::EdgeSupport<MyPolyMesh>::ComputeHalfEdgeFromIndexed(pm);
+	vcg::tri::UpdateHalfEdges<MyPolyMesh>::FromIndexed(pm);
 
 	// .... my half edge based code ......
 
 	// check for consistency
-	assert(vcg::tri::EdgeSupport<MyPolyMesh>::CheckConsistency(pm));
+	assert(vcg::tri::UpdateHalfEdges<MyPolyMesh>::CheckConsistency(pm));
 
 	int size =  pm.face.size();
 
 	// add a face to each face with more than 3 vertices ( just one pass)
+	 
 	for(int i = 0; i < size; ++i)
 		if(!(pm.face[i].IsD()))
 		if(pm.face[i].VN()>3){
- 			MyPolyMesh::EdgePointer ef =  pm.face[i].FHEp();
-			MyPolyMesh::EdgePointer ef1 = ef -> HENp();
-			ef1 = ef1->HENp();
-			vcg::tri::EdgeSupport<MyPolyMesh>::AddEdge(pm, ef, ef1 );
+			MyPolyMesh::HEdgePointer ef =  pm.face[i].FHp();
+			MyPolyMesh::HEdgePointer ef1 = ef -> HNp();
+			ef1 = ef1->HNp();
+			vcg::tri::UpdateHalfEdges<MyPolyMesh>::AddHEdge(pm, ef, ef1 );
  		}
-	assert(vcg::tri::EdgeSupport<MyPolyMesh>::CheckConsistency(pm));
+	assert(vcg::tri::UpdateHalfEdges<MyPolyMesh>::CheckConsistency(pm));
 	size =  pm.face.size();
 
 	// remove an edge for each face
+	 
 	for(int i = 0; i < size; ++i)
 		if(!(pm.face[i].IsD() ))
 		{
- 			MyPolyMesh::EdgePointer ef =  pm.face[i].FHEp();
-			if( ef->HEOp()->EFp() !=NULL){
-				vcg::tri::EdgeSupport<MyPolyMesh>::RemoveEdge(pm,ef);
+			MyPolyMesh::HEdgePointer ef =  pm.face[i].FHp();
+			if( ef->HOp()->HFp() !=NULL){
+				vcg::tri::UpdateHalfEdges<MyPolyMesh>::RemoveHEdge(pm,ef);
 			}
  		}
 
 	// check for consistency
-	assert(vcg::tri::EdgeSupport<MyPolyMesh>::CheckConsistency(pm));
+	assert(vcg::tri::UpdateHalfEdges<MyPolyMesh>::CheckConsistency(pm));
 
 	// recompute indexed data structure from the half edge data structure
-	vcg::tri::EdgeSupport<MyPolyMesh>::ComputeIndexedFromHalfEdge(pm );
+	vcg::tri::UpdateIndexed<MyPolyMesh>::FromHalfEdges(pm );
  
 	// create a triangle mesh from a polygon mesh
-  	vcg::tri::PolygonSupport<CMesh,MyPolyMesh>::ImportFromPolyMesh(mesh1,pm);
+	vcg::tri::PolygonSupport<CMesh,MyPolyMesh>::ImportFromPolyMesh(mesh1,pm);
 
 	// write out the triangle mesh
 	vcg::tri::io::ExporterPLY<CMesh>::Save(mesh1,"converted_out.ply",true,pi);
