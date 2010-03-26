@@ -447,32 +447,33 @@ static void TestVertexFace(MeshType &m)
 	}
 }
 
-/// \brief Test correctness of FFtopology
+/// \brief Test correctness of FFtopology (only for 2Manifold Meshes!)
 static void TestFaceFace(MeshType &m)
 {
 	if(!m.HasFFTopology()) return;		
 
-	FaceIterator Fi;
-	
-	for(Fi=m.face.begin();Fi!=m.face.end();++Fi)
+  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
 	{
-		if (!Fi->IsD())
+    if (!fi->IsD())
 		{
-			for (int i=0;i<(*Fi).VN();i++)
+      for (int i=0;i<(*fi).VN();i++)
 			{
-				FaceType *f=Fi->FFp(i);
-				int e=Fi->FFi(i);
-				//invariant property of fftopology
-				assert(f->FFp(e)=&(*Fi));
-				// Test that the two faces shares the same edge
-				VertexPointer v0= Fi->V0(i);
-				VertexPointer v1= Fi->V1(i);
-				assert( (f->V0(e)==v0) || (f->V1(e)==v0) );
-				assert( (f->V0(e)==v1) || (f->V1(e)==v1) );
-				
-// Old unreadable test
-//				assert(((f->V(e) == Fi->V(i))&&(f->V((e+1)%3)==Fi->V((i+1)%3)))||
-//					   ((f->V(e)==Fi->V((i+1)%3))&&(f->V((e+1)%3)==Fi->V(i))));
+        FaceType *ffpi=fi->FFp(i);
+        int e=fi->FFi(i);
+        //invariant property of FF topology for two manifold meshes
+        assert(ffpi->FFp(e) == &(*fi));
+        assert(ffpi->FFi(e) == i);
+
+        // Test that the two faces shares the same edge
+        // Vertices of the i-th edges of the first face
+        VertexPointer v0i= fi->V0(i);
+        VertexPointer v1i= fi->V1(i);
+        // Vertices of the corresponding edge on the other face
+        VertexPointer ffv0i= ffpi->V0(e);
+        VertexPointer ffv1i= ffpi->V1(e);
+
+        assert( (ffv0i==v0i) || (ffv0i==v1i) );
+        assert( (ffv1i==v0i) || (ffv1i==v1i) );
 			}
 			
 		}
