@@ -1040,7 +1040,7 @@ static void PoissonDiskPruning(MetroMesh &origMesh, VertexSampler &ps, MetroMesh
     std::random_shuffle(montecarloSHT.AllocatedCells.begin(),montecarloSHT.AllocatedCells.end(), p_myrandom);
 
 #ifdef QT_VERSION
-    qDebug("PDS: Completed creation of activeCells, %i cells (%i msec)", montecarloSHT.AllocatedCells.size(), tt.restart());
+    qDebug("PDS: Completed creation of activeCells, %i cells (%i msec)", (int)montecarloSHT.AllocatedCells.size(), tt.restart());
 #endif
 int removedCnt=0;
     if(pp.preGenFlag)
@@ -1261,7 +1261,6 @@ static void RegularRecursiveOffset(MetroMesh & m, std::vector<Point3f> &pvec, Sc
 static void SubdivideAndSample(MetroMesh & m, std::vector<Point3f> &pvec, const Box3<ScalarType> bb, RRParam &rrp, float curDiag)
 {
 	Point3f startPt = bb.Center();
-	ScalarType bound; 
 	
 	ScalarType dist; 
 	// Compute mesh point nearest to bb center	

@@ -209,7 +209,7 @@ namespace vcg {
 				return v_ret;
 			}
 
-			/* ++++++++++ edges +++++++++++++
+      /* ++++++++++ edges +++++++++++++ */
 			/** Function to add n edges to the mesh. The second parameter hold a vector of 
 			pointers to pointer to elements of the mesh that should be updated after a 
 			possible vector realloc. 
@@ -287,7 +287,7 @@ namespace vcg {
 			}
 
 
-			/* ++++++++++ hedges +++++++++++++
+      /* ++++++++++ hedges +++++++++++++ */
 			/** Function to add n edges to the mesh. The second parameter hold a vector of
 			pointers to pointer to elements of the mesh that should be updated after a
 			possible vector realloc.

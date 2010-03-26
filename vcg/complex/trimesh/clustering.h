@@ -130,7 +130,7 @@ class  NearestToCenter
     typedef BasicGrid<typename MeshType::ScalarType> GridType;
 
   public:
-    inline void AddVertex(MeshType &m, GridType &g, Point3i &pi, VertexType &v)
+    inline void AddVertex(MeshType &/*m*/, GridType &g, Point3i &pi, VertexType &v)
 		{
 			CoordType c;
 			g.IPiToBoxCenter(pi,c);
@@ -186,7 +186,7 @@ class  AverageColorCell
       n+=f.cN();
       cnt++;
     }
-		inline void AddVertex(MeshType &m, GridType &g, Point3i &pi, VertexType &v)
+    inline void AddVertex(MeshType &/*m*/, GridType &/*g*/, Point3i &/*pi*/, VertexType &v)
 		{
 		  p+=v.cP();
       n+=v.cN();

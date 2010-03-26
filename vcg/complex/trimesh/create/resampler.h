@@ -148,7 +148,7 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 			return VV(x,y,z).second+offset;
 		}
 		///return true if the distance form the mesh is less than maxdim and return distance
-		field_value DistanceFromMesh(Point3f &pp,Old_Mesh *mesh)
+    field_value DistanceFromMesh(Point3f &pp,Old_Mesh */*mesh*/)
 		{
       float dist;
 			typename Old_Mesh::FaceType *f=NULL;
@@ -208,7 +208,7 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 			return field_value(true,dist);
 		}
 
-		field_value MultiDistanceFromMesh(Point3f &pp,Old_Mesh *mesh)
+    field_value MultiDistanceFromMesh(Point3f &pp, Old_Mesh */*mesh*/)
 		{
 			float distSum=0;
 			int positiveCnt=0; // positive results counter

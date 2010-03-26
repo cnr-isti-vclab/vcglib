@@ -89,9 +89,9 @@ protected:
 			this->level		= (char) level;
 		}
 
-		inline virtual NodePointer &Son(int sonIndex) = 0;
+    virtual NodePointer &Son(int sonIndex) = 0;
 
-		inline virtual bool	IsLeaf() = 0;
+    virtual bool	IsLeaf() = 0;
 
 		// The position of the center of the node in integer coords in the 0..2^(2*sz) -1 range
 		// The root has position (lsz/2,lsz/2,lsz/2)

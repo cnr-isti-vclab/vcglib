@@ -191,7 +191,7 @@ class Geo{
 
 	std::vector <std::pair<VertexPointer,ScalarType> > expansion;
 	typename std::vector <VertDist >::iterator ifr;
-	face::VFIterator<FaceType> x;int k;
+  face::VFIterator<FaceType> x;
 	VertexPointer pw;
 
 	//Requirements
