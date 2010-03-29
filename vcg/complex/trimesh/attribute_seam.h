@@ -60,6 +60,97 @@ class AttributeSeam
 
 		typedef AttributeSeam ThisType;
 
+		enum ASMask
+		{
+			POSITION_PER_VERTEX = (1 << 0),
+
+			NORMAL_PER_VERTEX   = (1 << 1),
+			NORMAL_PER_WEDGE    = (1 << 2),
+			NORMAL_PER_FACE     = (1 << 3),
+
+			COLOR_PER_VERTEX    = (1 << 4),
+			COLOR_PER_WEDGE     = (1 << 5),
+			COLOR_PER_FACE      = (1 << 6),
+
+			TEXCOORD_PER_VERTEX = (1 << 7),
+			TEXCOORD_PER_WEDGE  = (1 << 8)
+		};
+
+		template <typename src_trimesh_t, typename dst_trimesh_t>
+		struct ASExtract
+		{
+			const unsigned int mask;
+
+			ASExtract(unsigned int vmask = 0) : mask(vmask)
+			{
+				;
+			}
+
+			void operator () (const src_trimesh_t & sm, const typename src_trimesh_t::FaceType & f, int k, const dst_trimesh_t & dm, typename dst_trimesh_t::VertexType & v) const
+			{
+				(void)sm;
+				(void)dm;
+
+				const unsigned int m = this->mask;
+				const typename src_trimesh_t::VertexType & u = *(f.cV(k));
+
+				if ((m & AttributeSeam::POSITION_PER_VERTEX) != 0) v.P() = f.cP (k);
+
+				if ((m & AttributeSeam::NORMAL_PER_VERTEX)   != 0) v.N() = u.cN ( );
+				if ((m & AttributeSeam::NORMAL_PER_WEDGE)    != 0) v.N() = f.cWN(k);
+				if ((m & AttributeSeam::NORMAL_PER_FACE)     != 0) v.N() = f.cN ( );
+
+				if ((m & AttributeSeam::COLOR_PER_VERTEX)    != 0) v.C() = u.cC ( );
+				if ((m & AttributeSeam::COLOR_PER_WEDGE)     != 0) v.C() = f.cWC(k);
+				if ((m & AttributeSeam::COLOR_PER_FACE)      != 0) v.C() = f.cC ( );
+
+				if ((m & AttributeSeam::TEXCOORD_PER_VERTEX) != 0) v.T() = u.cT ( );
+				if ((m & AttributeSeam::TEXCOORD_PER_WEDGE)  != 0) v.T() = f.cWT(k);
+			}
+		};
+
+		template <typename dst_trimesh_t>
+		struct ASCompare
+		{
+			const unsigned int mask;
+
+			ASCompare(unsigned int vmask = 0) : mask(vmask)
+			{
+				;
+			}
+
+			bool operator () (const dst_trimesh_t & sm, const typename dst_trimesh_t::VertexType & u, const typename dst_trimesh_t::VertexType & v) const
+			{
+				(void)sm;
+
+				const unsigned int m = this->mask;
+
+				/*
+				if ((m & (AttributeSeam::POSITION_PER_VERTEX)) != 0)
+				{
+					if (u.cP() != v.cP()) return false;
+				}
+				*/
+
+				if ((m & (AttributeSeam::NORMAL_PER_VERTEX | AttributeSeam::NORMAL_PER_WEDGE | AttributeSeam::NORMAL_PER_FACE)) != 0)
+				{
+					if (u.cN() != v.cN()) return false;
+				}
+
+				if ((m & (AttributeSeam::COLOR_PER_VERTEX | AttributeSeam::COLOR_PER_WEDGE | AttributeSeam::COLOR_PER_FACE)) != 0)
+				{
+					if (u.cC() != v.cC()) return false;
+				}
+
+				if ((m & (AttributeSeam::TEXCOORD_PER_VERTEX | AttributeSeam::TEXCOORD_PER_WEDGE)) != 0)
+				{
+					if (u.cT() != v.cT()) return false;
+				}
+
+				return true;
+			}
+		};
+
 		// in-place version
 		template <typename src_trimesh_t, typename extract_wedge_attribs_t, typename compare_vertex_attribs_t>
 		static inline bool SplitVertex(src_trimesh_t & src, extract_wedge_attribs_t v_extract, compare_vertex_attribs_t & v_compare)
