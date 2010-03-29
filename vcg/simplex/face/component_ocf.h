@@ -765,7 +765,7 @@ public:
 
   } // end namespace face
   
-  template < class, class,class > class TriMesh;
+  template < class, class,class,class > class TriMesh;
 
   namespace tri
   {
