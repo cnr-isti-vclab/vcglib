@@ -219,6 +219,9 @@ public:
 	/// transforms vieport (pixel) coords to [-1 1] coords
 	inline vcg::Point2<S> ViewportPxTo_neg1_1(const vcg::Point2<S> & p) const;
 
+	/// transforms [-1 1] coords to vieport (pixel) coords MICHELE IO
+	inline vcg::Point2<S> Neg1_1ToViewportPx(const vcg::Point2<S> & p) const;
+
 	/// transforms local plane coords to [0 1] coords
 	inline vcg::Point2<S> LocalTo_0_1(const vcg::Point2<S> & p) const;
 
@@ -315,6 +318,16 @@ vcg::Point2<S> Camera<S>::ViewportPxTo_neg1_1(const vcg::Point2<S> & p) const
 	return ps;
 }
 
+/// transforms [-1 1] coords to vieport (pixel) coords MICHELE IO
+template<class S>
+vcg::Point2<S> Camera<S>::Neg1_1ToViewportPx(const vcg::Point2<S> & p) const
+{
+	vcg::Point2<S>  ps;
+	ps[0] = ((PixelSizeMm.X() * (S)ViewportPx[0] *p[0])/(2.0f * PixelSizeMm.X()))+CenterPx.X();
+	ps[1] = ((PixelSizeMm.Y() * (S)ViewportPx[1] *p[1])/(2.0f * PixelSizeMm.Y()))+CenterPx.Y();
+	return ps;
+}
+
 /// transforms local plane coords to [0-1] coords
 template<class S>
 vcg::Point2<S> Camera<S>::LocalTo_0_1(const vcg::Point2<S> & p) const
@@ -370,7 +383,7 @@ vcg::Point2<Scalar> Camera<Scalar>::UndistortedToDistorted(vcg::Point2<Scalar>  
 			if (R>=D)
 				T = pow((R - D),CBRT);
 			else
-				T = - pow(abs(R - D),CBRT);
+                                T = - pow(abs((int)(R - D)),CBRT); //MODIFICATO DA ME
 			Rd = S + T;
 
 			if (Rd < 0)
