@@ -573,21 +573,21 @@ void DrawFill()
 
 				if(cm == CMPerFace)	glColor(f.C());
 				if(cm == CMPerVert)	glColor(f.V(0)->C());
-//				if(tm==TMPerVert) glTexCoord(f.V(0)->T());
+				if(tm==TMPerVert) glTexCoord(f.V(0)->T().P());
 				if( (tm==TMPerWedge)||(tm==TMPerWedgeMulti) )glTexCoord(f.WT(0).t(0));
 				glVertex(f.V(0)->P());
 
 				if(nm == NMPerVert)	glNormal(f.V(1)->cN());
 				if(nm == NMPerWedge)glNormal(f.WN(1));
 				if(cm == CMPerVert)	glColor(f.V(1)->C());
-//				if(tm==TMPerVert) glTexCoord(f.V(1)->T());
+				if(tm==TMPerVert) glTexCoord(f.V(1)->T().P());
 				if( (tm==TMPerWedge)|| (tm==TMPerWedgeMulti)) glTexCoord(f.WT(1).t(0));
 				glVertex(f.V(1)->P());
 
 				if(nm == NMPerVert)	glNormal(f.V(2)->cN());
 				if(nm == NMPerWedge)glNormal(f.WN(2));
 				if(cm == CMPerVert) glColor(f.V(2)->C());
-	//			if(tm==TMPerVert) glTexCoord(f.V(2)->T());
+				if(tm==TMPerVert) glTexCoord(f.V(2)->T().P());
 				if( (tm==TMPerWedge)|| (tm==TMPerWedgeMulti)) glTexCoord(f.WT(2).t(0));
 				glVertex(f.V(2)->P());
 			}
@@ -718,7 +718,7 @@ void DrawPoints()
 	glPointSize(GetHintParamf(HNPPointSize));
 
 	if (glPointParameterfv) {
-  	float camDist = CameraDistance();
+  	float camDist = (float)CameraDistance();
 	  float quadratic[] = { 0.0f, 0.0f, 1.0f/(camDist*camDist) , 0.0f };
 	  glPointParameterfv( GL_POINT_DISTANCE_ATTENUATION, quadratic );
 	  glPointParameterf( GL_POINT_SIZE_MAX, 16.0f );
