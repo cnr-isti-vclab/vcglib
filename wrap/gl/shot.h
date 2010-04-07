@@ -224,7 +224,7 @@ static void FromTrackball(const vcg::Trackball & tr,
 	vcg::Point3<ScalarType>		tra; tra.Import(tr.track.tra);
 	vcg::Matrix44<ScalarType>	trM; trM.FromMatrix(tr.track.Matrix());
 
-	vcg::Point3<ScalarType>		vp = Inverse(trM)*(sShot.GetViewPoint()-cen) +cen +tra;
+	vcg::Point3<ScalarType>		vp = Inverse(trM)*(sShot.GetViewPoint()-cen) +cen;// +tra;
 
 	shot.SetViewPoint(vp);
 	shot.Extrinsics.SetRot(sShot.Extrinsics.Rot()*trM);
