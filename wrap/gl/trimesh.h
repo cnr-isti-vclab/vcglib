@@ -540,6 +540,12 @@ void DrawFill()
 			}
 		}
 
+    if(tm==TMPerVert && !TMId.empty()) // in the case of per vertex tex coord we assume that we have a SINGLE texture.
+    {
+        curtexname = 0;
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D,TMId[curtexname]);
+    }
 		glBegin(GL_TRIANGLES);
 
 		while( (partial)?(fp!=face_pointers.end()):(fi!=m->face.end()))
