@@ -762,7 +762,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
         if( pi.mask & Mask::IOM_VERTTEXCOORD )
           {
             (*vi).T().P().X() = va.u;
-            (*vi).T().P().Y() = 1.0-va.v; // because "v" attr comes from "t"
+            (*vi).T().P().Y() = va.v;
           }
 				
 				if( pi.mask & Mask::IOM_VERTCOLOR )
