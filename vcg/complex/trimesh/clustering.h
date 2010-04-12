@@ -362,7 +362,7 @@ class Clustering
 		for(gi=GridCell.begin();gi!=GridCell.end();++gi)
     {
       VertexType *ptr=(*gi).second.Ptr();
-			if(ptr && ( ptr >= &*m.vert.begin() )  &&  ( ptr < &*m.vert.end() )  )
+			if(ptr && ( ptr >= &*m.vert.begin() )  &&  ( ptr <= &*(m.vert.end() - 1) )  )
 					ptr->SetS();
     }
 	}
