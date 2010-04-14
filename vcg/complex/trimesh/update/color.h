@@ -336,27 +336,29 @@ static void FaceQualityGray(UpdateMeshType &m)
 	FaceQualityGray(m,minmax.first,minmax.second);
 }	
 
-static void FaceQualityRamp(UpdateMeshType &m)
+static void FaceQualityRamp(UpdateMeshType &m,bool selected=false)
 {
-	// step 1: find the range
+  // step 1: find the range
 	typename UpdateMeshType::FaceIterator fi;
-	float minq=m.face[0].Q(),
-				maxq=m.face[0].Q();
-	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
-		if(!(*fi).IsD())
-		{
+  float minq=std::numeric_limits<float>::max(),
+        maxq=-std::numeric_limits<float>::max();
+
+  for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
+  if(!selected || (*fi).IsS())
+    {
 			minq=min(minq,(*fi).Q());
 			maxq=max(maxq,(*fi).Q());
 		}
 
-	FaceQualityRamp(m,minq,maxq);
+  FaceQualityRamp(m,minq,maxq,selected);
 }
 
-static void FaceQualityRamp(UpdateMeshType &m, float minq, float maxq)
+static void FaceQualityRamp(UpdateMeshType &m, float minq, float maxq,bool selected=false)
 {
 	typename UpdateMeshType::FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
-		(*fi).C().ColorRamp(minq,maxq,(*fi).Q());
+    if(!selected || (*fi).IsS())
+      (*fi).C().ColorRamp(minq,maxq,(*fi).Q());
 }
 
 static void VertexQualityRamp(UpdateMeshType &m, float minq, float maxq)
