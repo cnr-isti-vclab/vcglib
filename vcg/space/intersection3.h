@@ -438,12 +438,16 @@ namespace vcg {
 	/*
 	* Function computing the intersection between a line and a triangle.
 	* from: 
-	* Tomas Möller and Ben Trumbore,  
+	* Tomas Moller and Ben Trumbore,  
 	* ``Fast, Minimum Storage Ray-Triangle Intersection'',	
 	* journal of graphics tools, vol. 2, no. 1, pp. 21-28, 1997
 	* @param[in]	line				 
 	* @param[in]	triangle vertices			 
-	* @param[out]	intersection  the intersection point, meaningful only if the line intersects the triangle
+	* @param[out]=(t,u,v)	the intersection point, meaningful only if the line intersects the triangle
+	*            t is the line parameter and
+	*            (u,v) are the baricentric coords of the intersection point
+	*
+	*                 Line.Orig + t * Line.Dir = (1-u-v) * Vert0 + u * Vert1 +v * Vert2 
 	*
 	*/
 
