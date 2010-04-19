@@ -131,7 +131,7 @@ namespace vcg
 				// OFF codes
 				enum OFFCodes {NoError=0, CantOpen, InvalidFile,
 					InvalidFile_MissingOFF,
-					UnsupportedFormat, ErrorNotTriangularFace,ErrorHighDimension};
+          UnsupportedFormat, ErrorNotTriangularFace,ErrorHighDimension,ErrorDegenerateFace};
 
 				/*!
 				*	Standard call for knowing the meaning of an error code
@@ -144,9 +144,9 @@ namespace vcg
 					{
 						"No errors", "Can't open file", "Invalid file",
 						"Invalid file: OFF file should have in the first line the OFF keyword as a first token",
-							"Unsupported format", "Face with more than 3 vertices","File with high dimensional vertexes are not supported" 					};
+              "Unsupported format", "Face with more than 3 vertices","File with high dimensional vertexes are not supported", "Error Degenerate Face with less than 3 vertices"				};
 
-					if(message_code>4 || message_code<0)
+          if(message_code>6 || message_code<0)
 						return "Unknown error";
 					else
 						return error_msg[message_code];
@@ -452,7 +452,8 @@ namespace vcg
 
 						TokenizeNextLine(stream, tokens);
 						int vert_per_face = atoi(tokens[0].c_str());
-						assert(vert_per_face >=3);
+            if(vert_per_face < 3)
+              return ErrorDegenerateFace;
 						k = 1;
 						if (vert_per_face == 3)
 						{
