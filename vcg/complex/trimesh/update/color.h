@@ -346,8 +346,8 @@ static void FaceQualityRamp(UpdateMeshType &m,bool selected=false)
   for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
   if(!selected || (*fi).IsS())
     {
-			minq=min(minq,(*fi).Q());
-			maxq=max(maxq,(*fi).Q());
+    minq=std::min(minq,(*fi).Q());
+    maxq=std::max(maxq,(*fi).Q());
 		}
 
   FaceQualityRamp(m,minq,maxq,selected);
