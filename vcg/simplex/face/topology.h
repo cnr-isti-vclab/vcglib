@@ -529,8 +529,63 @@ void VVStarVF( typename FaceType::VertexType* vp, std::vector<typename FaceType:
 	std::sort(starVec.begin(),starVec.end());
 	typename std::vector<VertexPointer>::iterator new_end = std::unique(starVec.begin(),starVec.end());
 	starVec.resize(new_end-starVec.begin());
-	
 }
+
+/*!
+* Check if two faces share and edge through the FF topology.
+*	\param f0,f1 the two face to be checked
+* \param i0,i1 the index of the shared edge;
+*/
+
+template <class FaceType>
+bool ShareEdgeFF(FaceType *f0,FaceType *f1, int *i0=0, int *i1=0)
+{
+  assert((!f0->IsD())&&(!f1->IsD()));
+  for (int i=0;i<3;i++)
+      if (f0->FFp(i)==f1)
+      {
+        if((i0!=0) && (i1!=0)) {
+          *i0=i;
+          *i1=f0->FFi(i);
+        }
+        return true;
+      }
+  return false;
+}
+
+/*!
+* Count the number of vertices shared between two faces.
+*	\param f0,f1 the two face to be checked
+* ;
+*/
+template <class FaceType>
+int CountSharedVertex(FaceType *f0,FaceType *f1)
+{
+  int sharedCnt=0;
+  for (int i=0;i<3;i++)
+      for (int j=0;j<3;j++)
+          if (f0->V(i)==f1->V(j)) {
+                  sharedCnt++;
+              }
+  return sharedCnt;
+}
+
+/*!
+* find the first shared vertex between two faces.
+*	\param f0,f1 the two face to be checked
+* \param i,j the indexes of the shared vertex in the two faces. Meaningful only if there is one single shared vertex
+* ;
+*/
+template <class FaceType>
+bool SharedVertex(FaceType *f0,FaceType *f1, int &i, int &j)
+{
+  for (i=0;i<3;i++)
+      for (j=0;j<3;j++)
+          if (f0->V(i)==f1->V(j)) return true;
+
+  return false;
+}
+
 
 /*@}*/
 }	 // end namespace
