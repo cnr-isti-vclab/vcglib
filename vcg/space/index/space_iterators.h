@@ -210,7 +210,7 @@ namespace vcg{
 			if (Si.bbox.IsIn(r.Origin()))
 				start=r.Origin();
 			else
-			if (!(vcg::Intersection_Ray_Box<ScalarType>(Si.bbox,r,start))){
+      if (!(vcg::IntersectionRayBox<ScalarType>(Si.bbox,r,start))){
 				end=true;
 				return;
 			}
