@@ -251,7 +251,6 @@ class ConnectedIterator
 			typedef typename MeshType::ConstFaceIterator   ConstFaceIterator;
 			typedef typename MeshType::FaceContainer  FaceContainer;
 
-      typedef typename vcg::Box3<ScalarType>  Box3Type;
 
 public:
  void operator ++()
@@ -547,7 +546,7 @@ private:
         /*int count_vd = */
         CountNonManifoldVertexFF(m,true);
         /*int count_fd = */
-        UpdateSelection<MeshType>::FaceFromVertexLoose(m);
+        tri::UpdateSelection<MeshType>::FaceFromVertexLoose(m);
 				int count_removed = 0;
 				FaceIterator fi;
 				for(fi=m.face.begin(); fi!=m.face.end();++fi)
@@ -663,60 +662,6 @@ private:
         return RemoveFaceOutOfRangeEdgeSel<false>(m,MinEdgeThr,MaxEdgeThr);
       }
 
-
-
-
-
-			static int ClipWithBox( MeshType & m, Box3Type &bb) 
-      {
-        FaceIterator fi;
-        VertexIterator vi;
-
-				for (vi = m.vert.begin(); vi != m.vert.end(); ++vi) if(!(*vi).IsD())
-        {
-          if(!bb.IsIn((*vi).P()) ) Allocator<MeshType>::DeleteVertex(m,*vi);
-				}
-				for (fi = m.face.begin(); fi != m.face.end(); ++fi) if(!(*fi).IsD())
-        {
-          if( (*fi).V(0)->IsD() || 
-              (*fi).V(1)->IsD() || 
-              (*fi).V(2)->IsD() ) Allocator<MeshType>::DeleteFace(m,*fi);
-                        }
-        return m.vn;
-      }
-
-
-			/**
-			 * Check if the mesh is a manifold.
-			 *
-			 * First of all, for each face the FF condition is checked.
-			 * Then, a second test is performed: for each vertex the 
-			 * number of face found have to be the same of the number of 
-			 * face found with the VF walk trough.
-			 */
-			static bool IsTwoManifoldFace( MeshType & m ) 
-			{
-				bool flagManifold = true;
-
-				FaceIterator fi;
-
-				// First Test
-				assert(m.HasFFTopology());
-				for (fi = m.face.begin(); fi != m.face.end(); ++fi)
-				{
-					if (!fi->IsD())
-					{
-						if ((!IsManifold(*fi,0))||
-								(!IsManifold(*fi,1))||
-								(!IsManifold(*fi,2)))
-						{
-							flagManifold = false;
-							break;
-						}
-					}
-				}
-        return flagManifold;
-      }
 			
 			/**
 			 * Is the mesh only composed by quadrilaterals?
@@ -898,13 +843,76 @@ private:
           
         return true;
       }
-			static int CountNonManifoldVertexFF( MeshType & m, bool select = true ) 
+
+
+
+      /**
+       * Count the number of non manifold edges in a mesh, e.g. the edges where there are more than 2 incident faces.
+       *
+       * Note that this test is not enough to say that a mesh is two manifold,
+       * you have to count also the non manifold vertexes.
+       */
+      static int CountNonManifoldEdgeFF( MeshType & m, bool SelectFlag=false)
+      {
+        int nmfBit[3];
+        nmfBit[0]= FaceType::NewBitFlag();
+        nmfBit[1]= FaceType::NewBitFlag();
+        nmfBit[2]= FaceType::NewBitFlag();
+
+
+        UpdateFlags<MeshType>::FaceClear(m,nmfBit[0]+nmfBit[1]+nmfBit[2]);
+
+        if(SelectFlag){
+          UpdateSelection<MeshType>::ClearVertex(m);
+          UpdateSelection<MeshType>::ClearFace(m);
+        }
+        assert(tri::HasFFAdjacency(m));
+
+        int edgeCnt = 0;
+        for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
+        {
+          if (!fi->IsD())
+          {
+            for(int i=0;i<3;++i)
+            if(!IsManifold(*fi,i))
+              {
+                if(!(*fi).IsUserBit(nmfBit[i]))
+                  {
+                      ++edgeCnt;
+                      if(SelectFlag)
+                      {
+                        (*fi).V0(i)->SetS();
+                        (*fi).V1(i)->SetS();
+                      }
+                      // follow the ring of faces incident on edge i;
+                      face::Pos<FaceType> nmf(&*fi,i);
+                      do
+                      {
+                        if(SelectFlag) nmf.F()->SetS();
+                        nmf.F()->SetUserBit(nmfBit[nmf.E()]);
+                        nmf.NextF();
+                      }
+                      while(nmf.f != &*fi);
+                  }
+              }
+            }
+          }
+        return edgeCnt;
+      }
+
+      /** Count (and eventually select) non 2-Manifold vertexes of a mesh
+       * e.g. the vertices with a non 2-manif. neighbourhood but that do not belong to not 2-manif edges.
+       * typical situation two cones connected by one vertex.
+       */
+      static int CountNonManifoldVertexFF( MeshType & m, bool selectVert = true )
 			{
-				assert(tri::HasFFAdjacency(m));
+        assert(tri::HasFFAdjacency(m));
+        UpdateSelection<MeshType>::ClearVertex(m);
+
 				int nonManifoldCnt=0;
 				SimpleTempData<typename MeshType::VertContainer, int > TD(m.vert,0);
 			
-				// primo loop, si conta quanti facce incidono su ogni vertice...
+        // First Loop, just count how many faces are incident on a vertex and store it in the TemporaryData Counter.
 				FaceIterator fi;
 				for (fi = m.face.begin(); fi != m.face.end(); ++fi)	if (!fi->IsD())
 				{
@@ -912,8 +920,20 @@ private:
 					TD[(*fi).V(1)]++;
 					TD[(*fi).V(2)]++;
 				}
+
 				tri::UpdateFlags<MeshType>::VertexClearV(m);
-				
+        // Second Loop.
+        // mark out of the game the vertexes that are incident on non manifold edges.
+        for (fi = m.face.begin(); fi != m.face.end(); ++fi) if (!fi->IsD())
+          {
+            for(int i=0;i<3;++i)
+              if (!IsManifold(*fi,i))  {
+                  (*fi).V0(i)->SetV();
+                  (*fi).V1(i)->SetV();
+            }
+          }
+        // Third Loop, for safe vertexes, check that the number of faces that you can reach starting
+        // from it and using FF is the same of the previously counted.
 				for (fi = m.face.begin(); fi != m.face.end(); ++fi)	if (!fi->IsD())
 				{
 					for(int i=0;i<3;i++) if(!(*fi).V(i)->IsV()){
@@ -924,67 +944,14 @@ private:
 
 						if (starSizeFF != TD[(*fi).V(i)])
 						{
-							if(select) (*fi).V(i)->SetS();
+              if(selectVert) (*fi).V(i)->SetS();
 							nonManifoldCnt++;
 						}
 					}
 				}
-				
 				return nonManifoldCnt;				
 			}
 			
-				
-			static int CountNonManifoldVertexFFVF( MeshType & m, bool select = true ) 
-			{
-				int nonManifoldCnt=0;
-				VertexIterator vi;
-				bool flagManifold = true;
-				assert(tri::HasVFAdjacency(m));
-				assert(tri::HasFFAdjacency(m));
-				
-				face::VFIterator<FaceType> vfi;
-				int starSizeFF;
-				int starSizeVF;
-				for (vi = m.vert.begin(); vi != m.vert.end(); ++vi)
-				{
-					if (!vi->IsD())
-					{
-						face::VFIterator<FaceType> vfi(&*vi);
-                        if(vfi.End()) // if the vertex has no incident face (e.g. the iterator is at the end)
-                            continue;
-
-						face::Pos<FaceType> pos((*vi).VFp(), &*vi);
-						
-						starSizeFF = pos.NumberOfIncidentFaces();
-						
-						starSizeVF = 0;
-						while(!vfi.End())
-						{
-							++vfi;
-							starSizeVF++;
-						}
-						
-						if (starSizeFF != starSizeVF)
-						{
-							flagManifold = false;
-							if(select) (*vi).SetS();
-							nonManifoldCnt++;
-						}
-					}
-				}
-				
-				return nonManifoldCnt;				
-			}
-			
-			static bool IsTwoManifoldVertexFF( MeshType & m ) 
-			{
-				return CountNonManifoldVertexFF(m,false) == 0 ;
-			}
-			static bool IsTwoManifoldVertexFFVF( MeshType & m ) 
-			{
-				return CountNonManifoldVertexFFVF(m,false) == 0 ;
-			}
-
 			static void CountEdges( MeshType & m, int &count_e, int &boundary_e ) 
 			{
                 UpdateFlags<MeshType>::FaceClearV(m);
@@ -1098,11 +1065,12 @@ private:
   Compute the set of connected components of a given mesh
   it fills a vector of pair < int , faceptr > with, for each connecteed component its size and a represnant
  */
-			static int ConnectedComponents(MeshType &m)
+      static int CountConnectedComponents(MeshType &m)
       {
         std::vector< std::pair<int,FacePointer> > CCV;
         return ConnectedComponents(m,CCV);
       }
+
       static int ConnectedComponents(MeshType &m, std::vector< std::pair<int,FacePointer> > &CCV)
 			{
 				FaceIterator fi;
@@ -1410,8 +1378,6 @@ private:
             tri::Clean<MeshType>::RemoveDuplicateVertex(m);
             tri::Allocator<MeshType>::CompactFaceVector(m);
             tri::Allocator<MeshType>::CompactVertexVector(m);
-        
-
         }
         while( repeat && count );
 
@@ -1420,17 +1386,14 @@ private:
 
       static bool SelfIntersections(MeshType &m, std::vector<FaceType*> &ret)
 			{
-        //assert(FaceType::HasMark()); // Needed by the UG
         assert(HasPerFaceMark(m));// Needed by the UG
 				Box3< ScalarType> bbox;
 				TriMeshGrid   gM;
         ret.clear();
 				FaceIterator fi;
 	      int referredBit = FaceType::NewBitFlag();
+        tri::UpdateFlags<MeshType>::FaceClear(m,referredBit);
 
-				for(fi=m.face.begin();fi!=m.face.end();++fi)
-					(*fi).ClearUserBit(referredBit);
-				
 				std::vector<FaceType*> inBox;
 				gM.Set(m.face.begin(),m.face.end());
 				
@@ -1529,39 +1492,28 @@ private:
 		}
 
 
-	//test real intersection between faces
-static	bool TestIntersection(FaceType *f0,FaceType *f1)
+  /**
+        This function test if two face intersect.
+        We assume that the two faces are different.
+        if the faces share an edge no test is done.
+        if the faces share only a vertex, the opposite edge is tested against the face
+  */
+  static	bool TestIntersection(FaceType *f0,FaceType *f1)
 	{
-		assert((!f0->IsD())&&(!f1->IsD()));
-		//no adiacent faces
-		if ( (f0!=f1) && (!ShareEdge(f0,f1))
-			&& (!ShareVertex(f0,f1)) )
-			return (vcg::Intersection<FaceType>((*f0),(*f1)));
+    assert(f0!=f1);
+    int sv = face::CountSharedVertex(f0,f1);
+    if(sv==0) return (vcg::IntersectionTriangleTriangle<FaceType>((*f0),(*f1)));
+    //  if the faces share only a vertex, the opposite edge is tested against the face
+    if(sv==1)
+    {
+      int i0,i1; ScalarType t,a,b;
+      face::SharedVertex(f0,f1,i0,i1);
+      if(vcg::IntersectionSegmentTriangle(Segment3<ScalarType>((*f0).V1(i0)->P(),(*f0).V2(i0)->P()), *f1, t, a, b) )  return true;
+      if(vcg::IntersectionSegmentTriangle(Segment3<ScalarType>((*f1).V1(i1)->P(),(*f1).V2(i1)->P()), *f0, t, a, b) )  return true;
+     }
 		return false;
 	}
 
-			//control if two faces share an edge
-static	bool ShareEdge(FaceType *f0,FaceType *f1)
-	{
-		assert((!f0->IsD())&&(!f1->IsD()));
-		for (int i=0;i<3;i++)
-				if (f0->FFp(i)==f1)
-					return (true);
-
-		return(false);
-	}
-
-	//control if two faces share a vertex
-static	bool ShareVertex(FaceType *f0,FaceType *f1)
-	{
-		assert((!f0->IsD())&&(!f1->IsD()));
-		for (int i=0;i<3;i++)
-			for (int j=0;j<3;j++)
-				if (f0->V(i)==f1->V(j))
-					return (true);
-
-		return(false);
-	}
 
 
 /**

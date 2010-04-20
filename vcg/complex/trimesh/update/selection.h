@@ -58,12 +58,14 @@ class UpdateSelection
 
 public:
 typedef ComputeMeshType MeshType; 
+typedef	typename MeshType::ScalarType			ScalarType;
 typedef typename MeshType::VertexType     VertexType;
 typedef typename MeshType::VertexPointer  VertexPointer;
 typedef typename MeshType::VertexIterator VertexIterator;
 typedef typename MeshType::FaceType       FaceType;
 typedef typename MeshType::FacePointer    FacePointer;
 typedef typename MeshType::FaceIterator   FaceIterator;
+typedef typename vcg::Box3<ScalarType>  Box3Type;
 
 static size_t AllVertex(MeshType &m)
 {
@@ -222,7 +224,25 @@ static size_t FaceFromVertexLoose(MeshType &m)
   return selCnt;
 }
 
-static size_t FaceFromBorder(MeshType &m)
+static size_t VertexFromBorderFlag(MeshType &m)
+{
+  size_t selCnt=0;
+  ClearVertex(m);
+  VertexIterator vi;
+  for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+    if( !(*vi).IsD() )
+    {
+      if((*vi).IsB() )
+      {
+        (*vi).SetS();
+        ++selCnt;
+      }
+    }
+  return selCnt;
+}
+
+
+static size_t FaceFromBorderFlag(MeshType &m)
 {
   size_t selCnt=0;
 	ClearFace(m);
@@ -289,6 +309,35 @@ static size_t VertexFromQualityRange(MeshType &m,float minq, float maxq)
 					}
       }
   return selCnt;
+}
+
+static int VertexInBox( MeshType & m, const Box3Type &bb)
+{
+  int selCnt=0;
+  for (VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi) if(!(*vi).IsD())
+  {
+    if(bb.IsIn((*vi).cP()) ) {
+      (*vi).SetS();
+      ++selCnt;
+    }
+  }
+  return selCnt;
+}
+
+
+void VertexNonManifoldEdges(MeshType &m)
+{
+  assert(HasFFTopology(m));
+
+  VertexClear(m);
+  for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)	if (!fi->IsD())
+    {
+      for(int i=0;i<3;++i)
+      if(!IsManifold(*fi,i)){
+        (*fi).V0(i)->SetS();
+        (*fi).V1(i)->SetS();
+        }
+    }
 }
 
 }; // end class
