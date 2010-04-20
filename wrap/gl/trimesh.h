@@ -721,6 +721,7 @@ double CameraDistance(){
 template<NormalMode nm, ColorMode cm>
 void DrawPoints()
 {
+  glPushAttrib(GL_ENABLE_BIT | GL_POINT_BIT);
 	glPointSize(GetHintParamf(HNPPointSize));
 
 	if (glPointParameterfv) {
@@ -734,32 +735,32 @@ void DrawPoints()
 	if(m->vn!=(int)m->vert.size())
 		{
 			DrawPointsBase<nm,cm>();
-			return;
 		}
+  else
+  {
+    // Perfect case, no deleted stuff,
+    // draw the vertices using vertex arrays
+    if (nm==NMPerVert)
+      {
+        glEnableClientState (GL_NORMAL_ARRAY);
+        glNormalPointer(GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->N()[0]));
+      }
+    if (cm==CMPerVert)
+      {
+        glEnableClientState (GL_COLOR_ARRAY);
+        glColorPointer(4,GL_UNSIGNED_BYTE,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->C()[0]));
+      }
 
-	// Perfect case, no deleted stuff,
-	// draw the vertices using vertex arrays
-	if (nm==NMPerVert)
-		{
-			glEnableClientState (GL_NORMAL_ARRAY);
-			glNormalPointer(GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->N()[0]));
-		}
-	if (cm==CMPerVert)
-		{
-			glEnableClientState (GL_COLOR_ARRAY);
-			glColorPointer(4,GL_UNSIGNED_BYTE,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->C()[0]));
-		}
+    glEnableClientState (GL_VERTEX_ARRAY);
+    glVertexPointer(3,GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->P()[0]));
 
-	glEnableClientState (GL_VERTEX_ARRAY);
-	glVertexPointer(3,GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->P()[0]));
+    glDrawArrays(GL_POINTS,0,m->vn);
 
-	//glDrawElements(GL_POINTS ,m->vn,GL_UNSIGNED_INT, &(*indices.begin()) );
-	glDrawArrays(GL_POINTS,0,m->vn);
-
-	glDisableClientState (GL_VERTEX_ARRAY);
-	if (nm==NMPerVert)  glDisableClientState (GL_NORMAL_ARRAY);
-	if (cm==CMPerVert)  glDisableClientState (GL_COLOR_ARRAY);
-
+    glDisableClientState (GL_VERTEX_ARRAY);
+    if (nm==NMPerVert)  glDisableClientState (GL_NORMAL_ARRAY);
+    if (cm==CMPerVert)  glDisableClientState (GL_COLOR_ARRAY);
+  }
+  glPopAttrib();
 	return;
 }
 
