@@ -109,7 +109,7 @@ Note: mainly it is used only by the TrackBall.
 template <class T> class View {
 public:
   void GetView();
-  void SetView();                      
+  void SetView(const float *_proj, const float *_modelview, const int *_viewport);
   Point3<T> Project(const Point3<T> &p) const;
   Point3<T> UnProject(const Point3<T> &p) const;
   Point3<T> ViewPoint() const;
@@ -146,8 +146,19 @@ template <class T> void View<T>::GetView() {
 	Invert(inverse);
 }
 
-template <class T> void View<T>::SetView() {
-  
+template <class T> void View<T>::SetView(const float *_proj = NULL,
+                                         const float *_modelview = NULL,
+                                         const int *_viewport = NULL) {
+  for(int i = 0; i < 4; i++) {
+    for(int k =0; k < 4; k++) {
+      proj[i][k] = _proj[4*i+k];
+      model[i][k] = _modelview[4*i+k];
+    }
+    viewport[i] = _viewport[i];
+  }
+  matrix = proj*model;
+  inverse = matrix;
+  Invert(inverse);
 }
 
 template <class T> Point3<T> View<T>::ViewPoint() const {

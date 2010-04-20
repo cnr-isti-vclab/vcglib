@@ -65,7 +65,8 @@ namespace vcg {
 
 template <class T> class Frustum: public View<T> {
 public:                                            
-  void GetView();  
+  void GetView();
+  void SetView(const float *_proj, const float *_modelview, const int *_viewport);
   Point3<T> ViewPoint();
   T Resolution(float dist = 1);
   bool IsOutside(Point3<T> &point);
@@ -76,7 +77,8 @@ public:
 protected:
   T resolution;  
   Plane3<T> planes[6];  
-  Point3<T> view_point;  
+  Point3<T> view_point;
+  void UpdateView();
 };
 
 
@@ -137,7 +139,16 @@ template <class T> T Frustum<T>::Distance(Point3<T> &point, int plane) {
 
 template <class T> void Frustum<T>::GetView() {
   View<T>::GetView();
-  
+  UpdateView();
+}
+template <class T> void Frustum<T>::SetView(const float *_proj = NULL,
+                                            const float *_modelview = NULL,
+                                            const int *_viewport = NULL) {
+  View<T>::SetView(_proj, _modelview, _viewport);
+  UpdateView();
+}
+
+template <class T> void Frustum<T>::UpdateView() {
   float t = (float)(View<T>::viewport[1] +View<T>:: viewport[3]);
   float b = (float)View<T>::viewport[1];
   float r = (float)(View<T>::viewport[0] + View<T>::viewport[2]);
