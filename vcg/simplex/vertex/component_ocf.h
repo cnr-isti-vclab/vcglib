@@ -109,16 +109,15 @@ class vector_ocf: public std::vector<VALUE_TYPE> {
 
 public:
 	vector_ocf():std::vector<VALUE_TYPE>(){
-		QualityEnabled = false;
 		ColorEnabled = false;
-		MarkEnabled = false;
+    CurvatureEnabled = false;
+    CurvatureDirEnabled = false;
+    MarkEnabled = false;
 		NormalEnabled = false;
-		TexCoordEnabled = false;
+    QualityEnabled = false;
+    RadiusEnabled = false;
+    TexCoordEnabled = false;
 		VFAdjacencyEnabled = false;
-		CurvatureEnabled = false;
-		CurvatureEnabled = false;
-		CurvatureDirEnabled = false;
-		RadiusEnabled = false;
 	}
 
 	// override di tutte le funzioni che possono spostare
@@ -343,25 +342,25 @@ struct VFAdjType {
 	};
 
 public:
-	std::vector<typename VALUE_TYPE::QualityType> QV;
-	std::vector<typename VALUE_TYPE::CurvatureType> CuV;
+  std::vector<typename VALUE_TYPE::ColorType> CV;
+  std::vector<typename VALUE_TYPE::CurvatureType> CuV;
 	std::vector<typename VALUE_TYPE::CurvatureDirType> CuDV;
+  std::vector<int> MV;
+  std::vector<typename VALUE_TYPE::NormalType> NV;
+  std::vector<typename VALUE_TYPE::QualityType> QV;
 	std::vector<typename VALUE_TYPE::RadiusType> RadiusV;
-	std::vector<typename VALUE_TYPE::ColorType> CV;
-	std::vector<typename VALUE_TYPE::NormalType> NV;
 	std::vector<typename VALUE_TYPE::TexCoordType> TV;
 	std::vector<struct VFAdjType> AV;
-	std::vector<int> MV;
 
-	bool QualityEnabled;
-	bool ColorEnabled;
-	bool NormalEnabled;
-	bool TexCoordEnabled;
-	bool VFAdjacencyEnabled;
+  bool ColorEnabled;
 	bool CurvatureEnabled;
 	bool CurvatureDirEnabled;
-	bool MarkEnabled;
+  bool MarkEnabled;
+  bool NormalEnabled;
+  bool QualityEnabled;
 	bool RadiusEnabled;
+  bool TexCoordEnabled;
+  bool VFAdjacencyEnabled;
 };
 
 
