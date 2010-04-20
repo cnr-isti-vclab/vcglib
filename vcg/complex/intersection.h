@@ -99,7 +99,7 @@ bool Intersect(   GridType & grid,Plane3<ScalarType> plane, std::vector<typename
 							seg.P1()[axis0] = grid.bbox.min[axis0]+ (i+0.01) * grid.voxel[axis0];
 							seg.P0()[axis1] = grid.bbox.min[axis1]+ (j+0.01) * grid.voxel[axis1];
 							seg.P1()[axis1] = grid.bbox.min[axis1]+ (j+0.01) * grid.voxel[axis1];
-							if ( Intersection(pl,seg,p))
+              if ( IntersectionPlaneSegmentEpsilon(pl,seg,p))
 								{
 									pi[axis] =	std::min(std::max(0,(int)floor((p[axis ]-grid.bbox.min[axis])/grid.voxel[axis])),grid.siz[axis]);
 									pi[axis0] = i;

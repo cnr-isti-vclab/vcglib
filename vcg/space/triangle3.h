@@ -460,6 +460,15 @@ Point3<typename TriangleType::ScalarType> Circumcenter(const TriangleType &t)
    return c;
 }
 
+/**
+ * @brief Computes the distance between a triangle and a point.
+ *
+ * @param t         reference to the triangle
+ * @param q         point location
+ * @param dist      distance from p to t
+ * @param closest   perpendicular projection of p onto t
+ */
+
 template<class TriangleType>
 void TrianglePointDistance(const  TriangleType &t,
 							const typename TriangleType::CoordType & q,
