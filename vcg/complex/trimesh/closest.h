@@ -448,7 +448,7 @@ namespace vcg {
 			ScalarType theta_init;
 			ScalarType phi_init;
 			ScalarType ro;
-			GRID::CoordType dir0=_ray.Direction();
+      typename GRID::CoordType dir0=_ray.Direction();
 			dir0.ToPolar(ro,theta_init,phi_init);
 			for (int x=-n_samples;x<=n_samples;x++)
 				for (int y=-n_samples;y<=n_samples;y++)
@@ -458,16 +458,16 @@ namespace vcg {
 						theta=360-theta;
 
 					ScalarType phi=phi_init+x*delta_phi;
-					GRID::CoordType dir;
+          typename GRID::CoordType dir;
 					dir.FromPolar(ro,theta,phi);
 					dir.Normalize();
 					Ray3<typename GRID::ScalarType> curr_ray(_ray.Origin(),dir);
-					GRID::ScalarType _t;
-					GRID::ObjPtr f=NULL;
+          typename GRID::ScalarType _t;
+          typename GRID::ObjPtr f=NULL;
 					f=DoRay(mesh,gr,curr_ray,_maxDist,_t);
 					if (f!=NULL)
 					{
-						GRID::CoordType pos=curr_ray.Origin()+curr_ray.Direction()*_t;
+            typename GRID::CoordType pos=curr_ray.Origin()+curr_ray.Direction()*_t;
 						_objectPtrs.push_back(f);
 						_pos.push_back(pos);	
 					}
