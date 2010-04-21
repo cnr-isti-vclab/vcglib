@@ -430,6 +430,50 @@ namespace vcg {
 			return f;
 		}
 
+		///Iteratively Do Ray sampling on spherical coordinates 
+		///sampling along the two angles
+		template <class MESH, class GRID, class OBJPTRCONTAINER, class COORDCONTAINER>
+			void RaySpherical(MESH & mesh,GRID & gr, const Ray3<typename GRID::ScalarType> & _ray,
+											   const typename GRID::ScalarType & _maxDist,
+										   	   const typename GRID::ScalarType & _theta_interval,
+											   const typename GRID::ScalarType & _phi_interval,
+										 	   const int &n_samples,
+											   OBJPTRCONTAINER & _objectPtrs,
+											   COORDCONTAINER & _pos) 
+		{
+			typedef typename MESH::FaceType FaceType;
+			typedef typename MESH::ScalarType ScalarType;
+			ScalarType delta_theta=_theta_interval/(ScalarType)(n_samples*2);
+			ScalarType delta_phi=_phi_interval/(ScalarType)(n_samples*2);
+			ScalarType theta_init;
+			ScalarType phi_init;
+			ScalarType ro;
+			GRID::CoordType dir0=_ray.Direction();
+			dir0.ToPolar(ro,theta_init,phi_init);
+			for (int x=-n_samples;x<=n_samples;x++)
+				for (int y=-n_samples;y<=n_samples;y++)
+				{
+					ScalarType theta=theta_init+x*delta_theta;
+					if (theta<0)
+						theta=360-theta;
+
+					ScalarType phi=phi_init+x*delta_phi;
+					GRID::CoordType dir;
+					dir.FromPolar(ro,theta,phi);
+					dir.Normalize();
+					Ray3<typename GRID::ScalarType> curr_ray(_ray.Origin(),dir);
+					GRID::ScalarType _t;
+					GRID::ObjPtr f=NULL;
+					f=DoRay(mesh,gr,curr_ray,_maxDist,_t);
+					if (f!=NULL)
+					{
+						GRID::CoordType pos=curr_ray.Origin()+curr_ray.Direction()*_t;
+						_objectPtrs.push_back(f);
+						_pos.push_back(pos);	
+					}
+				}
+			}
+
 		//**ITERATORS DEFINITION**//
 
 		template <class GRID,class MESH>
