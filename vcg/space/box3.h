@@ -401,7 +401,7 @@ ScalarType DistancePoint3Box3(const Point3<ScalarType> &p,
 			sq_dist += delta * delta;
 		}
 
-		return Sqrt(sq_dist);
+    return math::Sqrt(sq_dist);
 	}
 }
 
