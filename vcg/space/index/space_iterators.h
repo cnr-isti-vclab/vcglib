@@ -148,7 +148,7 @@ namespace vcg{
 			Si.IPiToPf(CurrentCell+vcg::Point3i(1,1,1),bb_current.max);
 
 			CoordType inters;
-			Intersection_Ray_Box(bb_current,r,inters);
+			IntersectionRayBox(bb_current,r,inters);
 			ScalarType testmax_dist=(inters-r.Origin()).Norm();
 
 			if (testmax_dist>max_dist)
