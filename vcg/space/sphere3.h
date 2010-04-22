@@ -89,6 +89,7 @@ protected:
 	bool IsEmpty() const { return _radius < 0; }
   ///return true if @param p - Center() <= Radius() 
   bool IsIn(const Point3<T> &p) const;
+  bool IsIn(const Sphere3<T> &p) const;
 
   void Add(const Point3<T> &p);
   void Add(const Sphere3 &sphere);
@@ -128,16 +129,23 @@ template <class T> void Sphere3<T>::Add(const Sphere3<T> &sphere) {
 		}
 		Point3<T> dist = sphere.Center() - _center;
     float distance = dist.Norm();
-		float fartest = distance + sphere.Radius();
-
+    float fartest = sphere.Radius() + distance;
 		if(fartest <= _radius) 
       return;
-    if(distance == 0) 
-      _radius = sphere.Radius();
-    else {
-	    _center += dist * ((fartest - _radius) / (dist.Norm() * 2));
-		  _radius = (_radius + fartest)/2;
+
+    float nearest = sphere.Radius() - distance;
+    if(nearest >= _radius) {
+      *this = sphere;
+      return;
     }
+
+    if(distance < 0.001*(_radius + sphere.Radius())) {
+      _radius += distance;
+      return;
+    }
+
+    _center += dist * ((fartest - _radius) / (distance * 2));
+    _radius = (_radius + fartest)/2;
 }
 
 template <class T> void Sphere3<T>::Add(const Point3<T> &p) {
@@ -156,6 +164,13 @@ template <class T> bool Sphere3<T>::IsIn(const Point3<T> &p) const {
   if(IsEmpty()) return false;
   Point3<T> dist = p - _center;
   return dist.SquaredNorm() <= _radius*_radius;
+}
+
+template <class T> bool Sphere3<T>::IsIn(const Sphere3<T> &p) const {
+  if(IsEmpty()) return false;
+  Point3<T> dist = p.Center() - _center;
+  float distance = dist.Norm();
+  return distance + p.Radius() < _radius;
 }
 
 template <class T> void Sphere3<T>::Intersect(const Sphere3<T> &s) {
@@ -191,7 +206,6 @@ template <class T> void Sphere3<T>::Intersect(const Sphere3<T> &s) {
    Radius() *= 1.0001;
 
    Point3<T> center;
-   T radius;
    //Test with 6 directions
 
    Point3f pert[6];
@@ -207,20 +221,20 @@ template <class T> void Sphere3<T>::Intersect(const Sphere3<T> &s) {
      pert[4] = Point3f(0, 0, step);
      pert[5] = -pert[4];
 
-     unsigned int best = 6;
+     int best = 6;
      T best_radius = Radius()/threshold;
 
-     for(unsigned int k = 0; k < 6; k++) {
+     for(int k = 0; k < 6; k++) {
        center = Center() + pert[k];
        radius = 0;
-       for(unsigned int i = 0; i < n; i++) {
-	 float r = Distance(center, points[i]);
-	 if(r > radius)
-	   radius = r;
+       for(int i = 0; i < n; i++) {
+         float r = Distance(center, points[i]);
+         if(r > radius)
+           radius = r;
        }
        if(radius < best_radius) {
-	 best = k;
-	 best_radius = radius;
+         best = k;
+         best_radius = radius;
        }
      }
      if(best != 6) {
