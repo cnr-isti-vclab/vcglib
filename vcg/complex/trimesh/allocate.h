@@ -161,7 +161,7 @@ namespace vcg {
 
 				pu.newBase = &*m.vert.begin();
 				pu.newEnd =  &m.vert.back()+1; 
-		      if(pu.NeedUpdate())
+                                if(pu.NeedUpdate())
 					{
 					FaceIterator fi;
 					for (fi=m.face.begin(); fi!=m.face.end(); ++fi)
@@ -175,6 +175,15 @@ namespace vcg {
 							if(HasEVAdjacency (m)) { pu.Update((*ei).V(0));pu.Update((*ei).V(1));}
 //							if(HasEVAdjacency(m))   pu.Update((*ei).EVp());
 						}
+                                        HEdgeIterator hi;
+                                        for (hi=m.hedge.begin(); hi!=m.hedge.end(); ++hi)
+                                                if(!(*hi).IsD())
+                                                {
+                                                        if(HasHVAdjacency (m))
+                                                        {
+                                                            pu.Update((*hi).HVp());
+                                                        }
+                                                }
 
 						// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
 				}
@@ -237,22 +246,31 @@ namespace vcg {
 
 				pu.newBase = &*m.edge.begin();
 				pu.newEnd =  &m.edge.back()+1; 
-		      if(pu.NeedUpdate())
+                                 if(pu.NeedUpdate())
 					{
 					int ii = 0;
 					FaceIterator fi;
 					for (fi=m.face.begin(); fi!=m.face.end(); ++fi){
-						if(HasFHEAdjacency(m))
-							pu.Update((*fi).FHEp());
+                                                //if(HasFHEAdjacency(m))
+                                                //        pu.Update((*fi).FHEp());
 						if(!(*fi).IsD())
 							for(int i=0; i < (*fi).VN(); ++i)
 								if ((*fi).cFEp(i)!=0) pu.Update((*fi).FEp(i));
 					}
 
 					VertexIterator vi;
-					for (vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
+                                        if(HasVEAdjacency(m))
+                                            for (vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
 						if(!(*vi).IsD())
-								if ((*vi).cVEp()!=0) pu.Update((*vi).VEp());
+                                                        if ((*vi).cVEp()!=0) pu.Update((*vi).VEp());
+
+                                        HEdgeIterator hi;
+                                        if(HasHEAdjacency(m))
+                                            for (hi=m.hedge.begin(); hi!=m.hedge.end(); ++hi)
+                                                if(!(*hi).IsD())
+                                                        if ((*hi).cHEp()!=0) pu.Update((*hi).HEp());
+
+
 
 				}
 				unsigned int siz=(unsigned int)m.edge.size()-n;	
@@ -311,42 +329,53 @@ namespace vcg {
 
 				pu.newBase = &*m.hedge.begin();
 				pu.newEnd =  &m.hedge.back()+1;
-					if(pu.NeedUpdate())
-					{
-					int ii = 0;
-					FaceIterator fi;
-					for (fi=m.face.begin(); fi!=m.face.end(); ++fi){
-						if(HasFHAdjacency(m))
-							pu.Update((*fi).FHp());
-							}
 
-					{
-					VertexIterator vi;
-					for (vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
-						if(!(*vi).IsD())
-								if ((*vi).cVHp()!=0) pu.Update((*vi).VHp());
-					}
-					{
-					EdgeIterator ei;
-					for (ei=m.edge.begin(); ei!=m.edge.end(); ++ei)
-						if(!(*ei).IsD())
-								if ((*ei).cEHp()!=0) pu.Update((*ei).EHp());
-					}
-					{
-					HEdgeIterator hi = m.hedge.begin();
-					while(ii < m.hn - n){// cycle on all the faces except the new ones
-						if(!(*hi).IsD())
-						{
-							if(HasHNextAdjacency(m)) pu.Update((*hi).HNp());
-							if(HasHPrevAdjacency(m)) pu.Update((*hi).HPp());
-							if(HasHOppAdjacency(m)) pu.Update((*hi).HOp());
-							++ii;
-						}
-						++hi;
-					}
-					}
+                                if(pu.NeedUpdate())
+                                {
+                                    int ii = 0;
+                                    FaceIterator fi;
+                                    for (fi=m.face.begin(); fi!=m.face.end(); ++fi)
+                                    {
+                                        if(HasFHAdjacency(m))
+                                            if(!(*fi).IsD() && (*fi).FHp())
+                                                pu.Update((*fi).FHp());
+                                    }
+
+                                    {
+                                    VertexIterator vi;
+                                    for (vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
+                                        if(HasVHAdjacency(m))
+                                            if(!(*vi).IsD())
+                                                if ((*vi).cVHp()!=0)
+                                                    pu.Update((*vi).VHp());
+                                    }
+
+                                    {
+                                    EdgeIterator ei;
+                                    for (ei=m.edge.begin(); ei!=m.edge.end(); ++ei)
+                                        if(HasEHAdjacency(m))
+                                            if(!(*ei).IsD())
+                                                if ((*ei).cEHp()!=0)
+                                                    pu.Update((*ei).EHp());
+                                    }
+
+                                    {
+                                    HEdgeIterator hi = m.hedge.begin();
+                                    while(ii < m.hn - n)// cycle on all the faces except the new ones
+                                    {
+                                        if(!(*hi).IsD())
+                                        {
+                                            if(HasHNextAdjacency(m)) pu.Update((*hi).HNp());
+                                            if(HasHPrevAdjacency(m)) pu.Update((*hi).HPp());
+                                            if(HasHOppAdjacency(m)) pu.Update((*hi).HOp());
+                                            ++ii;
+                                        }
+
+                                    ++hi;
+                                    }
+                                    }
 				}
-				unsigned int siz=(unsigned int)m.hedge.size()-n;
+                                unsigned int siz = (unsigned int)m.hedge.size()-n;
 
 				last = m.hedge.begin();
 				advance(last,siz);
@@ -516,20 +545,20 @@ namespace vcg {
 		/** Function to delete an edge from the mesh.
 			NOTE: THIS FUNCTION ALSO UPDATE en
 		*/
-		static void DeleteHEdge(MeshType &m, EdgeType &e)
+                static void DeleteEdge(MeshType &m, EdgeType &e)
 		{
 			assert(!e.IsD());
 			e.SetD();
-			--m.hn;
+                        --m.en;
 		}
 
 		/** Function to delete a hedge from the mesh.
 			NOTE: THIS FUNCTION ALSO UPDATE en
 		*/
-		static void DeleteHEdge(MeshType &m, HEdgeType &e)
+                static void DeleteHEdge(MeshType &m, HEdgeType &h)
 		{
-			assert(!e.IsD());
-			e.SetD();
+                        assert(!h.IsD());
+                        h.SetD();
 			--m.hn;
 		}
 		
