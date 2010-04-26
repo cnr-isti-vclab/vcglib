@@ -161,12 +161,12 @@ private:
   int  _flags;    
 };
 
-/*----------------------------- HEVADJ ------------------------------*/ 
+/*----------------------------- HVADJ ------------------------------*/
 template <class T> class EmptyHVAdj: public T {
 public:
 	typename T::VertexPointer &HVp() { static typename T::VertexPointer ep=0;  assert(0); return ep; }
 	typename T::VertexPointer cHVp() { static typename T::VertexPointer ep=0;  assert(0); return ep; }
-	int &HVi(){static int z=0; return z;};
+        int &HVi(){static int z=0; return z;}
 	template < class LeftV>
 		void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
 	static bool HasHVAdjacency()   {   return false; }
@@ -189,12 +189,40 @@ private:
    typename T::VertexPointer	 _vp ;    
 };
 
+/*----------------------------- HEADJ ------------------------------*/
+template <class T> class EmptyHEAdj: public T {
+public:
+        typename T::EdgePointer &HEp() { static typename T::EdgePointer ep=0;  assert(0); return ep; }
+        typename T::EdgePointer cHEp() { static typename T::EdgePointer ep=0;  assert(0); return ep; }
+        template < class LeftV>
+                void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
+        static bool HasHEAdjacency()   {   return false; }
+        static bool HasHEAdjacencyOcc()   {   return false; }
+        static void Name(std::vector<std::string> & name){ T::Name(name);}
+};
+
+template <class T> class HEAdj: public T {
+public:
+        HEAdj(){_ep =0;}
+        typename T::EdgePointer &HEp() {return _ep ; }
+        const typename T::EdgePointer cHEp() const {return _ep ; }
+        template < class LeftV>
+        void ImportLocal(const LeftV  & left ) { this->V() = NULL; T::ImportLocal( left); }
+        static bool HasHEAdjacency()   {   return true; }
+        static bool HasHEAdjacencyOcc()   {   return true; }
+        static void Name(std::vector<std::string> & name){name.push_back(std::string("HEAdj"));T::Name(name);}
+
+private:
+   typename T::EdgePointer	 _ep ;
+};
+
+
 /*----------------------------- HHADJ ------------------------------*/
 template <class T> class EmptyHHAdj: public T {
 public:
 	typename T::HEdgePointer &HHp(const int &  ) { static typename T::EdgePointer ep=0;  assert(0); return ep; }
 	typename T::HEdgePointer cHHp(const int & ) { static typename T::EdgePointer ep=0;  assert(0); return ep; }
-	int &HHi(){static int z=0; return z;};
+        int &HHi(){static int z=0; return z;}
 	template < class LeftV>
 		void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
 	static bool HasHHAdjacency()   {   return false; }
@@ -253,7 +281,7 @@ template <class T> class EmptyHOppAdj: public T {
 public:
 	typename T::HEdgePointer &HOp(const int & i ) { static typename T::HEdgePointer ep=0;  assert(0); return ep; }
 	typename T::HEdgePointer cHOp(const int & i) { static typename T::HEdgePointer ep=0;  assert(0); return ep; }
-  int &EEi(){static int z=0; return z;};
+  int &EEi(){static int z=0; return z;}
 	template < class LeftV>
 		void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
 	static bool HasHOppAdjacency()   {   return false; }
@@ -275,12 +303,12 @@ private:
 	typename T::HEdgePointer _oep ;
  
 };
-/*----------------------------- HEPrevADJ ------------------------------*/ 
+/*----------------------------- HPrevADJ ------------------------------*/
 template <class T> class EmptyHPrevAdj: public T {
 public:
 	typename T::HEdgePointer &HPp() { static typename T::HEdgePointer ep=0;  assert(0); return ep; }
 	typename T::HEdgePointer cHPp() { static typename T::HEdgePointer ep=0;  assert(0); return ep; }
-  int &EEi(){static int z=0; return z;};
+  int &EEi(){static int z=0; return z;}
 	template < class LeftV>
 		void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
 	static bool HasHPrevAdjacency()   {   return false; }
@@ -291,8 +319,8 @@ public:
 template <class T> class HPrevAdj: public T {
 public:
 	HPrevAdj(){_pep=0;}
-	typename T::EdgePointer &HPp() {return _pep; }
-	typename T::EdgePointer cHPp() {return _pep; }
+        typename T::HEdgePointer &HPp() {return _pep; }
+        typename T::HEdgePointer cHPp() {return _pep; }
   int &EEi(const int & i) {return this->_nei[i]; }
 	template < class LeftV>
 	void ImportLocal(const LeftV  & left ) { this->EEp() = NULL; T::ImportLocal( left); }
@@ -300,7 +328,7 @@ public:
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("HPrevAdj"));T::Name(name);}
 	
 private:
-  typename T::EdgePointer _pep ;    
+  typename T::HEdgePointer _pep ;
 };
 /*----------------------------- HFADJ ------------------------------*/
 
@@ -308,7 +336,7 @@ template <class T> class EmptyHFAdj: public T {
 public:
 	typename T::FacePointer &HFp() { static typename T::FacePointer fp=0;  assert(0); return fp; }
 	typename T::FacePointer cHFp() { static typename T::FacePointer fp=0;  assert(0); return fp; }
-  int &EFi(){static int z=0; return z;};
+  int &EFi(){static int z=0; return z;}
 	template < class LeftV>
 	void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
 	static bool HasHFAdjacency()   {   return false; }
@@ -343,8 +371,9 @@ class EmptyHEdgeData : public	EmptyHFAdj<		// pointer to the face
 							EmptyHOppAdj <		// pointer to the opposite half edge
 							EmptyHNextAdj <	// pointer to the next half edge along the face
 							EmptyHVAdj <		// pointer to the vertex
+                                                        EmptyHEAdj <		// pointer to the edge
 							EmptyHPrevAdj<
-							T > > > > >{};
+                                                        T > > > > > > {};
 
 
 template <class T> 
@@ -352,15 +381,17 @@ class HEdgeData : public	HFAdj<			// pointer to the face
 							HOppAdj <		// pointer to the opposite half edge
 							HNextAdj <		// pointer to the next half edge along the face
 							HVAdj <		// pointer to the vertex
-							T > > > >{
+                                                        HEAdj <         // pointer to the edge
+                                                        T > > > > > {
 
+    public:
 	// functions to make the half edge user confortable
-	typename T::VertexPointer & Vertex()					{ return this->HVp();}
-	const typename T::VertexPointer &  cVertex()	const	{ return this->cHVp();}
-	typename T::HEdgePointer Opposite()						{ return &this->HOp();}
-	const typename T::HEdgePointer & cOpposite()		const	{ return this->cHOp();}
-	typename T::HEdgePointer & Next()						{ return this->HNp();}
-	const typename T::HEdgePointer &  cNext()			const 	{ return this->HNp();}
+        typename T::VertexPointer & Vertex()                    { return this->HVp();}
+        const typename T::VertexPointer &  cVertex()    const   { return this->cHVp();}
+        typename T::HEdgePointer Opposite()                     { return this->HOp();}
+        const typename T::HEdgePointer & cOpposite()    const   { return this->cHOp();}
+        typename T::HEdgePointer & Next()                       { return this->HNp();}
+        const typename T::HEdgePointer &  cNext()       const   { return this->HNp();}
 
 };
 
