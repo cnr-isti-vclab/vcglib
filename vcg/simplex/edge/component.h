@@ -311,7 +311,7 @@ public:
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("EHAdj"));T::Name(name);}
 
 private:
-  typename T::EdgePointer _hp ;        
+  typename T::HEdgePointer _hp ;
 };
 
 /*----------------------------- ETADJ ------------------------------*/ 
