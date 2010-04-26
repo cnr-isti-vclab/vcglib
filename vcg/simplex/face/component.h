@@ -670,7 +670,7 @@ public:
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("FHAdj"));T::Name(name);}
 
 private:
-	typename T::FacePointer _fh ;
+        typename T::HEdgePointer _fh ;
 };
   } // end namespace face
 }// end namespace vcg
