@@ -560,6 +560,9 @@ template < class  ContainerType0, class ContainerType1, class ContainerType2 , c
 bool HasEFAdjacency (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::EdgeType::HasEFAdjacency();}
 
 template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
+bool HasEHAdjacency (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::EdgeType::HasEHAdjacency();}
+
+template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
 bool HasFHAdjacency (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::FaceType::HasFHAdjacency();}
 
 template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
