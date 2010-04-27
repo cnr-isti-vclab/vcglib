@@ -419,10 +419,10 @@ void Draw()
 template <NormalMode nm, ColorMode cm, TextureMode tm>
 void DrawFill()
 {
+  if(m->fn==0) return;
 	typename FACE_POINTER_CONTAINER::iterator fp;
 
 	typename MESH_TYPE::FaceIterator fi;
-
 
 	typename std::vector<typename MESH_TYPE::FaceType*>::iterator fip;
 	short curtexname=-1;
