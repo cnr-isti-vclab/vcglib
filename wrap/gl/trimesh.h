@@ -738,6 +738,9 @@ void DrawPoints()
 		}
   else
   {
+    if(cm==CMPerMesh)
+      glColor(m->C());
+
     // Perfect case, no deleted stuff,
     // draw the vertices using vertex arrays
     if (nm==NMPerVert)
