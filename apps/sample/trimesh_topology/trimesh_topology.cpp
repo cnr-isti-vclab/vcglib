@@ -24,11 +24,6 @@ struct MyUsedTypes : public UsedTypes<	Use<MyVertex>::AsVertexType,
 
 class MyVertex  : public Vertex< MyUsedTypes, vertex::Coord3f, vertex::BitFlags  >{};
 class MyFace    : public Face  < MyUsedTypes, face::VertexRef,face::FFAdj, face::Mark, face::BitFlags > {};
-
-
-//class MyVertex:public Vertex<float,MyEdge,MyFace>{};
-//class MyFace : public FaceAFFM<MyVertex,MyEdge,MyFace>{};
-
 class MyMesh : public tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace > >{};
 
 
@@ -62,23 +57,23 @@ int main(int ,char ** ){
 
   // Now a simple search and trace of all the border of the mesh
   MyMesh::FaceIterator fi; 
-  m.UnMarkAll();
+  UnMarkAll(m);
   int BorderEdgeNum=0;
   int HoleNum=0;
   for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
 			{	
 				for(int j=0;j<3;j++)
 				{
-					if ( face::IsBorder(*fi,j) && !m.IsMarked(&*fi))
+          if ( face::IsBorder(*fi,j) && tri::IsMarked(m,&*fi))
             {
-              m.Mark(&*fi);
+              tri::Mark(m,&*fi);
               hei.Set(&*fi,j,fi->V(j));
 							he=hei;
 							do
 							{
                 BorderEdgeNum++;	
 								he.NextB(); // next edge along a border 
-								m.Mark(he.f);
+                tri::Mark(m,he.f);
        				}
 							while (he.f!=hei.f);
 							HoleNum++;
