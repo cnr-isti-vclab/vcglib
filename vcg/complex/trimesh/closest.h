@@ -422,10 +422,10 @@ namespace vcg {
 			typename GRID::ScalarType alfa,beta,gamma;
 			if (f!=NULL)
 			{
-				f->InterpolationParameters(int_point, alfa, beta, gamma);
+				InterpolationParameters<FaceType,ScalarType>(*f,int_point, alfa, beta, gamma);
 				_normf =  (f->V(0)->cN())*alfa+
-						  (f->V(1)->cN())*beta+
-						  (f->V(2)->cN())*gamma ;
+									(f->V(1)->cN())*beta+
+									(f->V(2)->cN())*gamma ;
 			}
 			return f;
 		}
@@ -439,7 +439,8 @@ namespace vcg {
 											   const typename GRID::ScalarType & _phi_interval,
 										 	   const int &n_samples,
 											   OBJPTRCONTAINER & _objectPtrs,
-											   COORDCONTAINER & _pos) 
+											   COORDCONTAINER & _pos,
+												 COORDCONTAINER & _norm) 
 		{
 			typedef typename MESH::FaceType FaceType;
 			typedef typename MESH::ScalarType ScalarType;
@@ -469,7 +470,15 @@ namespace vcg {
 					{
             typename GRID::CoordType pos=curr_ray.Origin()+curr_ray.Direction()*_t;
 						_objectPtrs.push_back(f);
-						_pos.push_back(pos);	
+						_pos.push_back(pos);
+
+						///find the normal
+						typename GRID::ScalarType alfa,beta,gamma;
+						InterpolationParameters<FaceType,ScalarType>(*f,pos, alfa, beta, gamma);
+						typename GRID::CoordType norm =  (f->V(0)->cN())*alfa+
+																						 (f->V(1)->cN())*beta+
+																						 (f->V(2)->cN())*gamma ;
+						_norm.push_back(norm);
 					}
 				}
 			}
