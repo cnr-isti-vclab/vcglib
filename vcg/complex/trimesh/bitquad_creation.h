@@ -300,6 +300,9 @@ static void CopyTopology(FaceType *fnew, FaceType * fold)
     fnew->FFp(0)=fold->FFp(0); fnew->FFi(0)=fold->FFi(0);
     fnew->FFp(1)=fold->FFp(1); fnew->FFi(1)=fold->FFi(1);
     fnew->FFp(2)=fold->FFp(2); fnew->FFi(2)=fold->FFi(2);
+    fnew->V(0) = fold->V(0);
+    fnew->V(1) = fold->V(1);
+    fnew->V(2) = fold->V(2);
 }
 /**
  makes any mesh quad only by refining it so that a quad is created over all
@@ -316,7 +319,6 @@ static void MakePureByRefine(MeshType &m){
     
   // first pass: count triangles to be added
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
-    
     int k=0;
      if (face::IsBorder(*fi,0)) k++;
       if (face::IsBorder(*fi,1)) k++;
@@ -350,7 +352,7 @@ static void MakePureByRefine(MeshType &m){
 
   // second pass: add faces and vertices
   int nsplit=0; // spits to be done on border in the third pass
-  for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD() && !fi->IsV() ) {
+  for (FaceIterator fi = m.face.begin(), fend = nfi;  fi!=fend; fi++) if (!fi->IsD() && !fi->IsV() ) {
 
     fi->SetV();
     
@@ -373,13 +375,14 @@ static void MakePureByRefine(MeshType &m){
         FaceType *fa = &*fi;
         FaceType *fb = &*nfi; nfi++;
         FaceType *fc = &*nfi; nfi++;
-       
-                fb->ImportLocal(*fi);// CopyTopology(fb,&*fi);
-                fc->ImportLocal(*fi);// CopyTopology(fc,&*fi);
-				fb->V(1) = nv; fb->V(0)=fa->V(0);  fb->V(2)=fa->V(2);
-				fc->V(2) = nv; fc->V(0)=fa->V(0);  fc->V(1)=fa->V(1);
+
+        fb->ImportLocal(*fa); CopyTopology(fb,fa);
+        fc->ImportLocal(*fa); CopyTopology(fc,fa);
 
         fa->V(0) = nv;
+        fb->V(1) = nv;
+        fc->V(2) = nv;
+
         fb->FFp(2)=fa->FFp(2); fb->FFi(2)=fa->FFi(2);
 				fc->FFp(0)=fa->FFp(0); fc->FFi(0)=fa->FFi(0);
 
@@ -448,13 +451,9 @@ static void MakePureByRefine(MeshType &m){
       FaceType *fc = &*nfi; nfi++;
       assert(nfi!=m.face.end());
       FaceType *fd = &*nfi; nfi++;
-      *fc = *fa;
-      *fd = *fb;
-      //fc->ImportLocal(*fa ); CopyTopology(fc,fa); // lazy: copy everything from the old vertex
-      //fd->ImportLocal(*fb ); CopyTopology(fd,fb);// lazy: copy everything from the old vertex
 
-
-
+      fc->ImportLocal(*fa ); CopyTopology(fc,fa); // lazy: copy everything from the old vertex
+      fd->ImportLocal(*fb ); CopyTopology(fd,fb);// lazy: copy everything from the old vertex
 
       fa->V(ea2) = fc->V(ea0) = 
       fb->V(eb2) = fd->V(eb0) = nv ;
@@ -527,12 +526,13 @@ static void MakePureByRefine(MeshType &m){
   assert(nvi==m.vert.end());
   
   // now and there are no tris left, but there can be faces with ONE edge border & faux ()
-  
+
+
   // last pass: add vertex on faux border faces... (if any)
   if (nsplit>0) { 
-    FaceIterator nfi = tri::Allocator<MeshType>::AddFaces(m,nsplit); 
+    FaceIterator nfi = tri::Allocator<MeshType>::AddFaces(m,nsplit);
     VertexIterator nvi = tri::Allocator<MeshType>::AddVertices(m,nsplit); 
-    for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
+    for (FaceIterator fi = m.face.begin(), fend = nfi;  fi!=fend; fi++) if (!fi->IsD()) {
       FaceType* fa = &*fi;
       int ea2 = -1; // border and faux face (if any)
       if (fa->FFp(0)==fa &&  fa->IsF(0) ) ea2=0;
@@ -552,8 +552,8 @@ static void MakePureByRefine(MeshType &m){
         Interpolator::Apply(*(fa->V(ea2)),*(fa->V(ea0)),0.5,*nv);
         // split face: add 1 face
         FaceType *fc = &*nfi; nfi++;
-        *fc = *fa;
-        //fc->ImportLocal(*fa);CopyTopology(fc,fa); // lazy: copy everything from the old vertex
+
+        fc->ImportLocal(*fa);CopyTopology(fc,fa); // lazy: copy everything from the old vertex
 
         fa->V(ea2) = fc->V(ea0) = nv ;
         
