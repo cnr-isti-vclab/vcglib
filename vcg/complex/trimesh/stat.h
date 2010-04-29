@@ -107,17 +107,27 @@ class Stat
 				return area/ScalarType(2.0);
 			}
 			
-			static void ComputePerVertexQualityDistribution( MeshType & m, Distribution<float> &h, bool selectionOnly = false)    // V1.0
+      static void ComputePerVertexQualityDistribution( MeshType & m, Distribution<float> &h, bool selectionOnly = false)    // V1.0
       {
-				VertexIterator vi;
-				for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
-						if(!(*vi).IsD() &&  ((!selectionOnly) || (*vi).IsS()) )
-							{
-								assert(!math::IsNAN((*vi).Q()) && "You should never try to compute Histogram with Invalid Floating points numbers (NaN)");
-								h.Add((*vi).Q());
-							}						
-			}
-			
+        VertexIterator vi;
+        for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+            if(!(*vi).IsD() &&  ((!selectionOnly) || (*vi).IsS()) )
+              {
+                assert(!math::IsNAN((*vi).Q()) && "You should never try to compute Histogram with Invalid Floating points numbers (NaN)");
+                h.Add((*vi).Q());
+              }
+      }
+
+      static void ComputePerFaceQualityDistribution( MeshType & m, Distribution<float> &h, bool selectionOnly = false)    // V1.0
+      {
+        FaceIterator fi;
+        for(fi = m.face.begin(); fi != m.face.end(); ++fi)
+            if(!(*fi).IsD() &&  ((!selectionOnly) || (*fi).IsS()) )
+              {
+                assert(!math::IsNAN((*fi).Q()) && "You should never try to compute Histogram with Invalid Floating points numbers (NaN)");
+                h.Add((*fi).Q());
+              }
+      }
       static void ComputePerVertexQualityHistogram( MeshType & m, Histogramf &h, bool selectionOnly = false)    // V1.0
       {
 				VertexIterator vi;
