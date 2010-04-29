@@ -74,20 +74,21 @@ template <class MESH> class AdvancingFront {
   virtual ScalarType radi() { return 0; }
                         
   void BuildMesh(CallBackPos call = NULL, int interval = 512) {        
-    while(1) {
-      if(call) call(0, "Advancing front");
+    float finalfacesext = mesh.vert.size() * 2.0f;
+	if(call) call(0, "Advancing front");
+	while(1) {
+	  
       for(int i = 0; i < interval; i++) {
         if(!front.size() && !SeedFace()) return;
         AddFace();
 		if(call) 
 		{
-			float rap = float(i) / float(interval);
+			float rap = float(mesh.face.size()) / finalfacesext;
 			int perc = (int) (100.0f * rap);
-			(*call)(perc,"Ball Pivoting Rolling: Adding Faces");
+			(*call)(perc,"Adding Faces");
 		}
       }
     }
-	if (call) (*call)(100,"Complete");
   }                          
   
 protected:
