@@ -200,7 +200,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
   }
   
   //select a new vertex, mark as Visited and mark as usedBit all neighbours (less than min_edge)
-  int Place(FrontEdge &edge, std::list<FrontEdge>::iterator &touch) {
+  int Place(FrontEdge &edge, ResultIterator &touch) {
     Point3x v0 = this->mesh.vert[edge.v0].P();
     Point3x v1 = this->mesh.vert[edge.v1].P();  
     Point3x v2 = this->mesh.vert[edge.v2].P();  
@@ -310,9 +310,21 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
 
     //test if id is in some border (to return touch
 		for(std::list<FrontEdge>::iterator k = this->front.begin(); k != this->front.end(); k++)
-      if((*k).v0 == id) touch = k;
+		{
+			if((*k).v0 == id) 
+			{
+				touch.first = FRONT;
+				touch.second = k;
+			}
+		}
 		for(std::list<FrontEdge>::iterator k = this->deads.begin(); k != this->deads.end(); k++)
-      if((*k).v0 == id) touch = k; 
+		{
+			if((*k).v0 == id)
+			{
+				touch.first = DEADS;
+				touch.second = k; 
+			}
+		}
        
     //mark vertices close to candidate
     Mark(candidate);

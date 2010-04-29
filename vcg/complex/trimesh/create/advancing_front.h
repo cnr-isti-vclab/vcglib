@@ -6,6 +6,7 @@
 #include <wrap/callback.h>
 #include <vcg/complex/trimesh/update/topology.h>
 #include <vcg/complex/trimesh/update/flag.h>
+#include <map>
 
 namespace vcg {
   namespace tri {
@@ -26,6 +27,11 @@ class FrontEdge {
              v0(_v0), v1(_v1), v2(_v2), face(_face), active(true) {
                assert(v0 != v1 && v1 != v2 && v0 != v2);
   }
+  
+	const bool operator==(const FrontEdge& f) const
+	{
+		return ((v0 == f.v0) && (v1 == f.v1) && (v2 == f.v2) && (face == f.face)); 
+	}
 };  
 
 template <class MESH> class AdvancingFront {
@@ -36,6 +42,10 @@ template <class MESH> class AdvancingFront {
   typedef typename MESH::ScalarType     ScalarType;
   typedef typename MESH::VertexType::CoordType   Point3x;
       
+  //class FrontEdgeLists
+  //{
+
+  //};
   
 
 // protected:
@@ -69,14 +79,23 @@ template <class MESH> class AdvancingFront {
       for(int i = 0; i < interval; i++) {
         if(!front.size() && !SeedFace()) return;
         AddFace();
+		if(call) 
+		{
+			float rap = float(i) / float(interval);
+			int perc = (int) (100.0f * rap);
+			(*call)(perc,"Ball Pivoting Rolling: Adding Faces");
+		}
       }
     }
+	if (call) (*call)(100,"Complete");
   }                          
   
 protected:
-  //Implement these functions in your subclass          
+  //Implement these functions in your subclass    
+  enum ListID {FRONT,DEADS};
+  typedef std::pair< ListID,std::list<FrontEdge>::iterator > ResultIterator;
   virtual bool Seed(int &v0, int &v1, int &v2) = 0;
-  virtual int Place(FrontEdge &e, std::list<FrontEdge>::iterator &touch) = 0;  
+  virtual int Place(FrontEdge &e, ResultIterator &touch) = 0;  
 
   bool CheckFrontEdge(int v0, int v1) {
     int tot = 0;
@@ -185,7 +204,9 @@ public:
     int v0 = current.v0, v1 = current.v1;
     assert(nb[v0] < 10 && nb[v1] < 10);
         
-    std::list<FrontEdge>::iterator touch = front.end();
+    ResultIterator touch;
+	touch.first = FRONT;
+	touch.second = front.end();
     int v2 = Place(current, touch);
 
     if(v2 == -1) {
@@ -194,8 +215,11 @@ public:
     }
     
     assert(v2 != v0 && v2 != v1);  
-        
-    if(touch != front.end()) {  
+      
+    if ((touch.first == FRONT) && (touch.second != front.end()) ||
+		(touch.first == DEADS) && (touch.second != deads.end()))
+
+	{  
       //check for orientation and manifoldness    
       
       //touch == current.previous?  
@@ -267,8 +291,8 @@ public:
                       /         V
                  ----v0 - - - > v1---------
                         current                         */           
-        std::list<FrontEdge>::iterator left = touch;
-        std::list<FrontEdge>::iterator right = (*touch).previous;      
+        std::list<FrontEdge>::iterator left = touch.second;
+        std::list<FrontEdge>::iterator right = (*touch.second).previous;      
         
         //this would be a really bad join
         if(v1 == (*right).v0 || v0 == (*left).v1) {
@@ -296,7 +320,10 @@ public:
       }                         
               
       
-    } else {
+    } 
+	else if ((touch.first == FRONT) && (touch.second == front.end()) || 
+		     (touch.first == DEADS) && (touch.second == deads.end()))
+	{
 //        assert(CheckEdge(v0, v2));
 //        assert(CheckEdge(v2, v1));
         /*  adding a new vertex
@@ -387,9 +414,19 @@ protected:
   }     
   
   //move an Edge among the dead ones
-  void KillEdge(std::list<FrontEdge>::iterator e) {
-    (*e).active = false;
-    deads.splice(deads.end(), front, e);
+  void KillEdge(std::list<FrontEdge>::iterator e) 
+  {
+    if (e->active)
+	{
+		(*e).active = false;
+		//std::list<FrontEdge>::iterator res = std::find(front.begin(),front.end(),e);
+		FrontEdge tmp = *e;
+		deads.splice(deads.end(), front, e);
+		std::list<FrontEdge>::iterator newe = std::find(deads.begin(),deads.end(),tmp);
+		tmp.previous->next = newe;
+		tmp.next->previous = newe;
+	}
+
   }
   
   void Erase(std::list<FrontEdge>::iterator e) {
@@ -464,7 +501,8 @@ template <class MESH> class AdvancingTest: public AdvancingFront<MESH> {
     return true;
   }
   
-  int Place(FrontEdge &e, std::list<FrontEdge>::iterator &touch) {
+  int Place(FrontEdge &e, ResultIterator &touch) 
+  {
      Point3f p[3];
      p[0] = this->mesh.vert[e.v0].P();
      p[1] = this->mesh.vert[e.v1].P();
@@ -472,16 +510,28 @@ template <class MESH> class AdvancingTest: public AdvancingFront<MESH> {
      Point3f point = p[0] + p[1] - p[2];
 
      int vn = this->mesh.vert.size();
-     for(int i = 0; i < this->mesh.vert.size(); i++) {
-       if((this->mesh.vert[i].P() - point).Norm() < 0.1) {
-         vn = i;
-         //find the border
-         assert(this->mesh.vert[i].IsB());
-				 for(std::list<FrontEdge>::iterator k = this->front.begin(); k != this->front.end(); k++)
-            if((*k).v0 == i) touch = k;
-				 for(std::list<FrontEdge>::iterator k = this->deads.begin(); k != this->deads.end(); k++)
-            if((*k).v0 == i) touch = k;              
-         break;
+     for(int i = 0; i < this->mesh.vert.size(); i++) 
+	 {
+       if((this->mesh.vert[i].P() - point).Norm() < 0.1) 
+	   {
+			vn = i;
+			//find the border
+			assert(this->mesh.vert[i].IsB());
+			for(std::list<FrontEdge>::iterator k = this->front.begin(); k != this->front.end(); k++)
+				if((*k).v0 == i) 
+				{
+					touch.first = FRONT;
+					touch.second = k;
+				}
+
+			for(std::list<FrontEdge>::iterator k = this->deads.begin(); k != this->deads.end(); k++)
+				if((*k).v0 == i)
+					if((*k).v0 == i) 
+					{
+						touch.first = DEADS;
+						touch.second = k;
+					}
+			break;
        }
      }
      if(vn == this->mesh.vert.size()) {       
