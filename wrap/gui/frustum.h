@@ -181,8 +181,8 @@ template <class T> void Frustum<T>::UpdateView() {
   planes[5].Init(SW, SE, NE);   
 
   //compute resolution: sizeo of a pixel unitary distance from view_point
-  resolution = ((ne + NE) - (nw + NW)).Norm() /
-               (View<T>::viewport[2] * ((ne + NE) - view_point).Norm());
+  resolution = ((ne + NE)/2 - (nw + NW)/2).Norm() /
+               (View<T>::viewport[2] * ((ne + NE + nw + NW)/4 - view_point).Norm());
 }
 
 }//namespace
