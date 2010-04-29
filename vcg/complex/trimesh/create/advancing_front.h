@@ -502,7 +502,7 @@ template <class MESH> class AdvancingTest: public AdvancingFront<MESH> {
     return true;
   }
   
-  int Place(FrontEdge &e, ResultIterator &touch) 
+  int Place(FrontEdge &e, typename AdvancingFront<MESH>::ResultIterator &touch)
   {
      Point3f p[3];
      p[0] = this->mesh.vert[e.v0].P();
@@ -521,7 +521,7 @@ template <class MESH> class AdvancingTest: public AdvancingFront<MESH> {
 			for(std::list<FrontEdge>::iterator k = this->front.begin(); k != this->front.end(); k++)
 				if((*k).v0 == i) 
 				{
-					touch.first = FRONT;
+                                        touch.first = AdvancingFront<MESH>::FRONT;
 					touch.second = k;
 				}
 
@@ -529,7 +529,7 @@ template <class MESH> class AdvancingTest: public AdvancingFront<MESH> {
 				if((*k).v0 == i)
 					if((*k).v0 == i) 
 					{
-						touch.first = DEADS;
+                                                touch.first = AdvancingFront<MESH>::FRONT;
 						touch.second = k;
 					}
 			break;
