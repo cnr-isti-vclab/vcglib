@@ -15,7 +15,7 @@
 
 // input output
 #include <wrap/io_trimesh/import_ply.h>
-#include <wrap/io_trimesh/export_ply.h>
+#include <wrap/io_trimesh/export.h>
 
 // std
 #include <vector>
@@ -41,6 +41,7 @@ class MyMesh    : public vcg::tri::TriMesh< vector<MyVertex>, face::vector_ocf<M
 #define LOOP	1
 #define CATMULL	2
 #define BUTTERFLY 3
+#define ONE_QUAD_X_EDGE 4
 
 int  main(int argc, char **argv)
 {
@@ -49,16 +50,20 @@ int  main(int argc, char **argv)
 		printf(
 		"\n                  PlyRefine ("__DATE__")\n"
 			"						Visual Computing Group I.S.T.I. C.N.R.\n"
-      "Usage: PlyRefine filein.ply fileout.ply ref_step [opt] \n"
+      "Usage: PlyRefine filein.ply fileout.[ply|off|obj|...] ref_step [opt] \n"
 			"Commands: \n"
 			" Refinement rules:\n"
       "     -m  use simple midpoint subdivision (default) \n"
       "     -b  use butterfly subdivision scheme \n"
-      "     -l  use butterfly subdivision scheme \n"
-      "     -c  use butterfly subdivision scheme \n"
+      "     -l  use loop subdivision scheme \n"
+      "     -o  use one-quad-per-edge schema (*) \n"
+      "     -c  use Catmull-Clark (*) \n"
       "     -e# refine only if the the edge is longer than #(default 0.0)\n"
-			);
-		exit(0);
+      "Info:\n"
+      "     (*) produces quad-only meshes, but updates topology only, \n"
+      "         and leaves geometry unaffected \n"
+      );
+    exit(2);
 	}
 
 	int RefMode = FLAT	;
@@ -66,13 +71,14 @@ int  main(int argc, char **argv)
 	while(i<argc)
 		{
 			if(argv[i][0]!='-')
-				{printf("Error unable to parse option '%s'\n",argv[i]); exit(0);}
+        {printf("Error unable to parse option '%s'\n",argv[i]); exit(5);}
 			switch(argv[i][1])
 			{				
 				case 'm' :	RefMode=FLAT; break;
 				case 'b' :	RefMode=BUTTERFLY; break;
-      case 'l' :	RefMode=LOOP; break;
-      case 'c' :	RefMode=CATMULL; break;
+        case 'l' :	RefMode=LOOP; break;
+        case 'c' :	RefMode=CATMULL; break;
+        case 'o' :	RefMode=ONE_QUAD_X_EDGE; break;
         case 'e' :	length=(float)atof(argv[i]+2); break;
 				default : {printf("Error unable to parse option '%s'\n",argv[i]); exit(0);}
 			}
@@ -80,11 +86,12 @@ int  main(int argc, char **argv)
 		}
 
 	MyMesh m;
-  if(tri::io::ImporterPLY<MyMesh>::Open(m,argv[1])!=0)
-		{
+
+  if(tri::io::ImporterPLY<MyMesh>::Open(m,argv[1])!=0) {
       printf("Error reading file  %s\n",argv[1]);
-			exit(0);
-		}
+      exit(1);
+  }
+
   m.face.EnableFFAdjacency();
   tri::UpdateTopology<MyMesh>::FaceFace(m);
   tri::UpdateFlags<MyMesh>::FaceBorderFromFF(m);
@@ -104,9 +111,10 @@ int  main(int argc, char **argv)
       tri::RefineOddEven<MyMesh, tri::OddPointLoop<MyMesh>, tri::EvenPointLoop<MyMesh> >(m, tri::OddPointLoop<MyMesh>(), tri::EvenPointLoop<MyMesh>(), length);
       break;
     case CATMULL:
-      tri::BitQuadCreation<MyMesh>::MakePureByRefine(m);
-      assert(tri::BitQuadCreation<MyMesh>::IsBitTriQuadConventional(m));
-      tri::UpdateTopology<MyMesh>::FaceFace(m);
+      tri::BitQuadCreation<MyMesh>::MakePureByCatmullClark(m);
+      tri::UpdateNormals<MyMesh>::PerBitQuadFaceNormalized(m);
+      break;      
+    case   ONE_QUAD_X_EDGE:
       tri::BitQuadCreation<MyMesh>::MakePureByRefine(m);
       tri::UpdateNormals<MyMesh>::PerBitQuadFaceNormalized(m);
       break;
@@ -117,8 +125,9 @@ int  main(int argc, char **argv)
   }
   
   printf("Output mesh vn:%i fn:%i\n",m.vn,m.fn);
-	
+
   vcg::tri::io::PlyInfo pi;
-	vcg::tri::io::ExporterPLY<MyMesh>::Save(m,argv[2],pi.mask);
-	return 0;
-	}
+  pi.mask|=vcg::tri::io::Mask::IOM_BITPOLYGONAL;
+  vcg::tri::io::Exporter<MyMesh>::Save(m,argv[2],pi.mask);
+  return 0;
+}
