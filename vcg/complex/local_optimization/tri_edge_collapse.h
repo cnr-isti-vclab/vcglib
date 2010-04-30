@@ -163,11 +163,16 @@ public:
   inline void Execute(TriMeshType &m)
   {	
     CoordType MidPoint=(pos.V(0)->P()+pos.V(1)->P())/2.0;
-    /* int FaceDel = */ DoCollapse(m, pos, MidPoint);
+    DoCollapse(m, pos, MidPoint);
   }
   
   static bool IsSymmetric() { return true;}
   
+
+  // This function is called after an action to re-add in the heap elements whose priority could have been changed.
+  // in the plain case we just put again in the heap all the edges around the vertex resulting from the previous collapse: v[1].
+  // if the collapse is not symmetric you should add also backward edges (because v0->v1 collapse could be different from v1->v0)
+
   inline  void UpdateHeap(HeapType & h_ret)
   {
 		GlobalMark()++; int nn=0;
@@ -176,16 +181,16 @@ public:
 		v[1]->IMark() = GlobalMark();
 
 		// First loop around the remaining vertex to unmark visited flags
-    vcg::face::VFIterator<FaceType> vfi(v[1]->VFp(),v[1]->VFi());	
+    vcg::face::VFIterator<FaceType> vfi(v[1]);
 		while (!vfi.End()){
 			vfi.V1()->ClearV();
 			vfi.V2()->ClearV();
 			++vfi;
 		}
 
-    // Second Loop 
-		vfi.F() = v[1]->VFp();
-		vfi.I() = v[1]->VFi();	
+    // Second Loop: add all the outgoing edges around v[1]
+    // for each face add the two edges outgoing from v[1] and not visited.
+    vfi = face::VFIterator<FaceType>(v[1]);
     while (!vfi.End())
     {
 			assert(!vfi.F()->IsD());
@@ -193,25 +198,33 @@ public:
 			{
 				if( !(vfi.V1()->IsV()) && (vfi.V1()->IsRW()))
 				{
-				vfi.F()->V1(vfi.I())->SetV();
-        h_ret.push_back(HeapElem(new MYTYPE(EdgeType::OrderedEdge( vfi.V(),vfi.V1() ),GlobalMark())));
-				std::push_heap(h_ret.begin(),h_ret.end());
-				if(this->IsSymmetric()){				
-					h_ret.push_back(HeapElem(new MYTYPE(EdgeType::OrderedEdge( vfi.V1(),vfi.V()),GlobalMark())));
-					std::push_heap(h_ret.begin(),h_ret.end());
-				}
-      }
+          vfi.V1()->SetV();
+          h_ret.push_back(HeapElem(new MYTYPE(EdgeType( vfi.V(),vfi.V1() ),GlobalMark())));
+          std::push_heap(h_ret.begin(),h_ret.end());
+          if(! this->IsSymmetric()){
+            h_ret.push_back(HeapElem(new MYTYPE(EdgeType( vfi.V1(),vfi.V()),GlobalMark())));
+            std::push_heap(h_ret.begin(),h_ret.end());
+          }
+        }
 				if(  !(vfi.V2()->IsV()) && (vfi.V2()->IsRW()))
 				{
 					vfi.V2()->SetV();
-				h_ret.push_back(HeapElem(new MYTYPE(EdgeType::OrderedEdge(vfi.F()->V(vfi.I()),vfi.F()->V2(vfi.I())),GlobalMark())));
-				std::push_heap(h_ret.begin(),h_ret.end());
-				//if(false){				
-				//	h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.F()->V1(vfi.I()),vfi.F()->V(vfi.I())),GlobalMark())));
-				//	std::push_heap(h_ret.begin(),h_ret.end());
-				//	}
-      }
-
+          h_ret.push_back(HeapElem(new MYTYPE(EdgeType(vfi.F()->V(vfi.I()),vfi.F()->V2(vfi.I())),GlobalMark())));
+          std::push_heap(h_ret.begin(),h_ret.end());
+          if(! this->IsSymmetric()){
+            h_ret.push_back(HeapElem(new MYTYPE(EdgeType (vfi.F()->V1(vfi.I()),vfi.F()->V(vfi.I())),GlobalMark())));
+            std::push_heap(h_ret.begin(),h_ret.end());
+          }
+        }
+        //        if(vfi.V1()->IsRW() && vfi.V2()->IsRW() )
+//        {
+//          h_ret.push_back(HeapElem(new MYTYPE(EdgeType(vfi.V1(),vfi.V2()),this->GlobalMark())));
+//          std::push_heap(h_ret.begin(),h_ret.end());
+//          if(IsSymmetric()){
+//            h_ret.push_back(HeapElem(new MYTYPE(EdgeType(vfi.V2(),vfi.V1()), this->GlobalMark())));
+//            std::push_heap(h_ret.begin(),h_ret.end());
+//          }
+//        }
 
 			}
       ++vfi;nn++;
