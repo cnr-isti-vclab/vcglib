@@ -47,7 +47,7 @@ int  main(int argc, char **argv)
       "Usage: PlyRefine filein.ply fileout.ply [opt] \n"
       "options: \n"
       "-k cellnum     approx number of cluster that should be defined; (default 10e5)\n"
-			"-s size        in absolute units the size of the clustering cell\n"
+      "-s size        in absolute units the size of the clustering cell (override the previous param)\n"
 			"-d             enable the duplication of faces for double surfaces\n"
 			);
 		exit(0);
@@ -81,10 +81,9 @@ int  main(int argc, char **argv)
 			exit(0);
 		}
   vcg::tri::UpdateBounding<MyMesh>::Box(m);
-  //vcg::tri::UpdateNormals<MyMesh>::PerVertexNormalized(m);
   vcg::tri::UpdateNormals<MyMesh>::PerFace(m);
   printf("Input mesh  vn:%i fn:%i\n",m.vn,m.fn);
-  vcg::tri::Clustering<MyMesh, vcg::tri::AverageCell<MyMesh> > Grid;
+  vcg::tri::Clustering<MyMesh, vcg::tri::AverageColorCell<MyMesh> > Grid;
   Grid.DuplicateFaceParam=DupFace;
   Grid.Init(m.bbox,CellNum,CellSize);
   
@@ -93,9 +92,9 @@ int  main(int argc, char **argv)
   printf("with cells size of %.2f x %.2f x %.2f units\n",Grid.Grid.voxel[0],Grid.Grid.voxel[1],Grid.Grid.voxel[2]);
   
   int t0=clock();
-  Grid.Add(m);
+  Grid.AddMesh(m);
   int t1=clock();
-  Grid.Extract(m);
+  Grid.ExtractMesh(m);
   int t2=clock();
   printf("Output mesh vn:%i fn:%i\n",m.vn,m.fn);
   printf("Simplified in :%i msec (%i+%i)\n",t2-t0,t1-t0,t2-t1);
