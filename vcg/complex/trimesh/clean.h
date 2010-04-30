@@ -20,196 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-History
-
-$Log: not supported by cvs2svn $
-Revision 1.58  2008/03/11 14:16:40  cignoni
-Added check on deleted faces in RemoveDegenerateFace
-
-Revision 1.57  2008/03/06 08:37:16  cignoni
-added HasConsistentPerWedgeTexCoord
-
-Revision 1.56  2008/01/24 11:52:05  cignoni
-corrected small bug in RemoveDuplicateVertex
-
-Revision 1.55  2007/10/29 11:32:46  cignoni
-Added a missing IsD() test
-
-Revision 1.54  2007/10/16 16:46:53  cignoni
-Added Allocator::DeleteFace and Allocator::DeleteVertex; Now the use of SetD() should be deprecated.
-
-Revision 1.53  2007/07/24 07:09:49  cignoni
-Added remove degenerate vertex to manage vertex with NAN coords
-
-Revision 1.52  2007/06/04 06:45:05  fiorin
-Replaced call to old StarSize method with NumberOfIncidentFaces
-
-Revision 1.51  2007/03/27 09:23:32  cignoni
-added honoring of selected flag for flipmesh
-
-Revision 1.50  2007/03/12 15:38:03  tarini
-Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
-
-Revision 1.49  2007/02/27 15:17:17  marfr960
-std::numeric_limits<ScalarType>::max() -> (std::numeric_limits<ScalarType>::max)()
-to avoid annoying misunderstaindings on msvc8
-
-Revision 1.48  2007/01/11 10:12:19  cignoni
-Removed useless and conflicting inclusion of face.h
-
-Revision 1.47  2006/12/01 21:26:14  cignoni
-Corrected bug in the IsFFAdjacencyConsistent the Topology checking function.
-
-Revision 1.46  2006/12/01 08:12:30  cignoni
-Added a function for FF topology consistency check
-
-Revision 1.45  2006/12/01 00:00:56  cignoni
-Corrected IsOrientedMesh. After the templating of the swapedge it did not worked any more....
-Added Texture management to the FlipMesh
-
-Revision 1.44  2006/11/27 10:36:35  cignoni
-Added IsSizeConsistent
-
-Revision 1.43  2006/11/09 17:26:24  cignoni
-Corrected RemoveNonManifoldFace
-
-Revision 1.42  2006/10/15 07:31:22  cignoni
-typenames and qualifiers for gcc compliance
-
-Revision 1.41  2006/10/09 20:06:46  cignoni
-Added Remove NonManifoldFace
-
-Revision 1.40  2006/05/25 09:41:09  cignoni
-missing std and other gcc detected syntax errors
-
-Revision 1.39  2006/05/16 21:51:07  cignoni
-Redesigned the function for the removal of faces according to their area and edge lenght
-
-Revision 1.38  2006/05/03 21:40:27  cignoni
-Changed HasMark to HasPerFaceMark(m) and commented some unused internal vars of the class
-
-Revision 1.37  2006/04/18 07:01:22  zifnab1974
-added a ; how could this ever compile?
-
-Revision 1.36  2006/04/12 15:08:51  cignoni
-Added ConnectedIterator (should be moved somewhere else)
-Cleaned ConnectedComponents
-
-Revision 1.35  2006/02/28 16:51:29  ponchio
-Added typename
-
-Revision 1.34  2006/02/01 15:27:00  cignoni
-Added IsD() test in SelfIntersection
-
-Revision 1.33  2006/01/27 09:55:25  corsini
-fix signed/unsigned mismatch
-
-Revision 1.32  2006/01/23 13:33:54  cignoni
-Added a missing vcg::
-
-Revision 1.31  2006/01/22 17:06:27  cignoni
-vi/fi mismatch in ClipWithBox
-
-Revision 1.30  2006/01/22 10:07:42  cignoni
-Corrected use of Area with the unambiguous DoubleArea
-Added ClipWithBox function
-
-Revision 1.29  2006/01/11 15:40:14  cignoni
-Added RemoveDegenerateFace and added its automatic invocation at the end of RemoveDuplicateVertex
-
-Revision 1.28  2006/01/02 09:49:36  cignoni
-Added some missing std::
-
-Revision 1.27  2005/12/29 12:27:37  cignoni
-Splitted IsComplexManifold in IsTwoManifoldFace and IsTwoManifoldVertex
-
-Revision 1.26  2005/12/21 14:15:03  corsini
-Remove printf
-
-Revision 1.25  2005/12/21 13:09:03  corsini
-Modify genus computation
-
-Revision 1.24  2005/12/19 15:13:06  corsini
-Fix IsOrientedMesh
-
-Revision 1.23  2005/12/16 13:13:44  cignoni
-Reimplemented SelfIntersection
-
-Revision 1.22  2005/12/16 10:54:59  corsini
-Reimplement isOrientedMesh
-
-Revision 1.21  2005/12/16 10:53:39  corsini
-Take account for deletion in isComplexManifold
-
-Revision 1.20  2005/12/16 10:51:43  corsini
-Take account for deletion in isRegularMesh
-
-Revision 1.19  2005/12/15 13:53:13  corsini
-Reimplement isComplexManifold
-Reimplement isRegular
-
-Revision 1.18  2005/12/14 14:04:35  corsini
-Fix genus computation
-
-Revision 1.17  2005/12/12 12:11:40  cignoni
-Removed unuseful detectunreferenced
-
-Revision 1.16  2005/12/04 00:25:00  cignoni
-Changed DegeneratedFaces -> RemoveZeroAreaFaces
-
-Revision 1.15  2005/12/03 22:34:25  cignoni
-Added  missing include and sdt:: (tnx to Mario Latronico)
-
-Revision 1.14  2005/12/02 00:14:43  cignoni
-Removed some pointer vs iterator issues that prevented gcc compilation
-
-Revision 1.13  2005/11/22 14:04:10  rita_borgo
-Completed and tested self-intersection routine
-
-Revision 1.12  2005/11/17 00:41:07  cignoni
-Removed Initialize use updateflags::Clear() instead.
-
-Revision 1.11  2005/11/16 16:33:23  rita_borgo
-Changed ComputeSelfintersection
-
-Revision 1.10  2005/11/15 12:16:34  rita_borgo
-Changed DegeneratedFaces, sets the D flags for each faces
-that is found to be degenerated.
-CounEdges and ConnectedComponents check now if a face IsD()
-else for degenerated faces many asserts fail.
-
-Revision 1.9  2005/11/14 09:28:18  cignoni
-changed access to face functions (border, area)
-removed some typecast warnings
-
-Revision 1.8  2005/10/11 16:03:40  rita_borgo
-Added new functions belonging to triMeshInfo
-Started the Self-Intersection routine
-
-Revision 1.7  2005/10/03 15:57:53  rita_borgo
-Alligned with TriMeshInfo Code
-
-Revision 1.6  2005/01/28 11:59:35  cignoni
-Add std:: to stl containers
-
-Revision 1.5  2004/09/20 08:37:57  cignoni
-Better Doxygen docs
-
-Revision 1.4  2004/08/25 15:15:26  ganovelli
-minor changes to comply gcc compiler (typename's and stuff)
-
-Revision 1.3  2004/07/18 06:55:37  cignoni
-NewUserBit -> NewBitFlag
-
-Revision 1.2  2004/07/09 15:48:37  tarini
-Added an include (<algorithm>)
-
-Revision 1.1  2004/06/24 08:03:59  cignoni
-Initial Release
-
-
-****************************************************************************/
 
 #ifndef __VCGLIB_CLEAN
 #define __VCGLIB_CLEAN
@@ -1299,6 +1109,58 @@ private:
 			        		std::swap((*fi).WT(0),(*fi).WT(1));
         }
       }
+      // Search and remove small single triangle folds
+      // - a face has normal opposite to all other faces
+      // - choose the edge that brings to the face f1 containing the vertex opposite to that edge.
+      static int RemoveFaceFoldByFlip(MeshType &m, float normalThresholdDeg=175, bool repeat=true)
+      {
+            assert(m.HasFFTopology());
+            assert(m.HasPerVertexMark());
+            //Counters for logging and convergence
+            int count, total = 0;
+
+            do {
+                tri::UpdateTopology<MeshType>::FaceFace(m);
+                tri::UnMarkAll(m);
+                count = 0;
+
+                ScalarType NormalThrRad = math::ToRad(normalThresholdDeg);
+                ScalarType eps = 0.0001; // this epsilon value is in absolute value. It is a distance from edge in baricentric coords.
+                //detection stage
+                for(FaceIterator fi=m.face.begin();fi!= m.face.end();++fi ) if(!(*fi).IsV())
+                { Point3<ScalarType> NN = vcg::NormalizedNormal((*fi));
+                  if( vcg::Angle(NN,vcg::NormalizedNormal(*(*fi).FFp(0))) > NormalThrRad &&
+                      vcg::Angle(NN,vcg::NormalizedNormal(*(*fi).FFp(1))) > NormalThrRad &&
+                      vcg::Angle(NN,vcg::NormalizedNormal(*(*fi).FFp(2))) > NormalThrRad )
+                  {
+                    (*fi).SetS();
+                    //(*fi).C()=Color4b(Color4b::Red);
+                    // now search the best edge to flip
+                    for(int i=0;i<3;i++)
+                    {
+                      Point3<ScalarType> &p=(*fi).P2(i);
+                      Point3<ScalarType> L;
+                      bool ret = vcg::InterpolationParameters((*(*fi).FFp(i)),vcg::Normal(*(*fi).FFp(i)),p,L);
+                      if(ret && L[0]>eps && L[1]>eps && L[2]>eps)
+                      {
+                        (*fi).FFp(i)->SetS();
+                        (*fi).FFp(i)->SetV();
+                        //(*fi).FFp(i)->C()=Color4b(Color4b::Green);
+                        if(face::CheckFlipEdge<FaceType>( *fi, i ))  {
+                                face::FlipEdge<FaceType>( *fi, i );
+                                ++count; ++total;
+                            }
+                      }
+                    }
+                  }
+                }
+
+                // tri::UpdateNormals<MeshType>::PerFace(m);
+            }
+            while( repeat && count );
+            return total;
+        }
+
 
 	static int RemoveTVertexByFlip(MeshType &m, float threshold=40, bool repeat=true)
 	{
@@ -1316,7 +1178,10 @@ private:
             for(unsigned int index = 0 ; index < m.face.size(); ++index )
             {
                 FacePointer f = &(m.face[index]);    float sides[3]; Point3<float> dummy;
-                sides[0] = Distance(f->P(0), f->P(1)); sides[1] = Distance(f->P(1), f->P(2)); sides[2] = Distance(f->P(2), f->P(0));
+                sides[0] = Distance(f->P(0), f->P(1));
+                sides[1] = Distance(f->P(1), f->P(2));
+                sides[2] = Distance(f->P(2), f->P(0));
+                // Find largest triangle side
                 int i = std::find(sides, sides+3, std::max( std::max(sides[0],sides[1]), sides[2])) - (sides);
                 if( tri::IsMarked(m,f->V2(i) )) continue;
 
@@ -1339,10 +1204,9 @@ private:
                 }
             }
 
-            tri::UpdateNormals<MeshType>::PerFace(m);
+            // tri::UpdateNormals<MeshType>::PerFace(m);
         }
         while( repeat && count );
-
         return total;
     }
 
