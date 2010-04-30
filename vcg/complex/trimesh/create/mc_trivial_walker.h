@@ -163,7 +163,7 @@ private:
 	{_thr=0;}
   
 	template<class EXTRACTOR_TYPE>
-	void BuildMesh(MeshType &mesh, VolumeType &volume, EXTRACTOR_TYPE &extractor, const float threshold)
+  void BuildMesh(MeshType &mesh, VolumeType &volume, EXTRACTOR_TYPE &extractor, const float threshold, vcg::CallBackPos * cb=0)
 	{
     Init(volume);
 		_volume = &volume;
@@ -175,7 +175,9 @@ private:
 		Begin();
 		extractor.Initialize();
 		for (int j=_bbox.min.Y(); j<(_bbox.max.Y()-1)-1; j+=1)
-		{		 if((j%10)==0) 	printf("Marching volume z %i (%i ..%i)\r",j,_bbox.min.Y(),_bbox.max.Y());
+    {
+
+      if(cb && ((j%10)==0) ) 	cb(j*_bbox.DimY()/100.0,"Marching volume");
 
 			for (int i=_bbox.min.X(); i<(_bbox.max.X()-1)-1; i+=1)
 			{
