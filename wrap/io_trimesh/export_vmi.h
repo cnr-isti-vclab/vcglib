@@ -271,15 +271,15 @@ namespace io {
 			/* end header */
 
 			if(vertSize!=0){
-				unsigned int offsetV = (unsigned int) &m.vert[0];
+                                size_t offsetV = (size_t) &m.vert[0];
 				/* write the address of the first vertex */
-				fwrite(&offsetV,sizeof(unsigned int),1,F());
+                                fwrite(&offsetV,sizeof(size_t),1,F());
 			}
 
 			if(faceSize!=0){
-				 int offsetF= ( int) &m.face[0];
+                                 size_t offsetF= ( size_t) &m.face[0];
 				/* write the address of the first face */
-				fwrite(&offsetF,sizeof( int),1,F());
+                                fwrite(&offsetF,sizeof( size_t),1,F());
 			}
 			/* save the object mesh */
 			fwrite(&m.shot,sizeof(Shot<typename SaveMeshType::ScalarType>),1,F());
