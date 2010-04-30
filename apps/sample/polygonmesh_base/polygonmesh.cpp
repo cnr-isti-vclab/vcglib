@@ -66,7 +66,7 @@ using namespace std;
 class CFace;
 class CVertex;
 class CHEdge;
-class DummyEdge;
+class CEdge;
 class MyPolyVertex;
 
 struct CUsedTypes: public vcg::UsedTypes< vcg::Use<CVertex>::AsVertexType, vcg::Use<CFace>::AsFaceType >{};
@@ -97,11 +97,12 @@ class CMesh   : public vcg::tri::TriMesh< vector<CVertex>, vector<CFace> > {};
 class MyPolyFace;
 class MyPolyVertex;
 struct PolyUsedTypes: public vcg::UsedTypes<vcg::Use<MyPolyVertex>	::AsVertexType,
-																						vcg::Use<CHEdge>				::AsHEdgeType,
-																						vcg::Use<MyPolyFace>		::AsFaceType
-																						>{};
+	 										vcg::Use<CEdge>			::AsEdgeType,
+											vcg::Use<CHEdge>		::AsHEdgeType,
+											vcg::Use<MyPolyFace>	::AsFaceType
+											>{};
 
-
+//class DummyEdge: public vcg::Edge<PolyUsedTypes>{};
 class MyPolyVertex:public vcg::Vertex<	PolyUsedTypes,
 										vcg::vertex::Coord3f,
 										vcg::vertex::Normal3f,
@@ -109,6 +110,7 @@ class MyPolyVertex:public vcg::Vertex<	PolyUsedTypes,
 										vcg::vertex::BitFlags, 
 										vcg::vertex::VHAdj>{} ;
 
+class CEdge : public Edge<PolyUsedTypes>{};
 class CHEdge : public HEdge< PolyUsedTypes, hedge::BitFlags,
 	//hedge::HFAdj,		// pointer to the face
 	//hedge::HOppAdj,	// pointer to the opposite edge
@@ -132,9 +134,11 @@ class MyPolyFace:public vcg::Face<
 > {};
 
 class MyPolyMesh: public 
-	vcg::tri::TriMesh< std::vector<MyPolyVertex>,	// the vector of vertices
-	std::vector<MyPolyFace >,						// the vector of faces	
-	std::vector<CHEdge>								// the vector of edges
+	vcg::tri::TriMesh< 
+	std::vector<MyPolyVertex>,	// the vector of vertices
+	std::vector<MyPolyFace >, 						// the vector of faces
+	std::vector<CHEdge>		,						// the vector of edges
+ 	std::vector<CEdge> 								// the vector of edges
 	>{};
 
 MyPolyMesh pm;
@@ -144,7 +148,7 @@ MyPolyMesh pm;
 // Globals: the mesh, the OpenGL wrapper to draw the mesh and the trackball.
 CMesh mesh,mesh1;
 
-int main(int argc, char *argv[]) {
+int			main(int argc, char *argv[]) {
 
 	int loadmask;
 	
@@ -166,8 +170,9 @@ if(false){
 	vcg::tri::UpdateTopology<CMesh>::FaceFace(mesh);
 	vcg::tri::Clean<CMesh>::RemoveNonManifoldFace(mesh);
 	vcg::tri::UpdateTopology<CMesh>::FaceFace(mesh);
-	assert(vcg::tri::Clean<CMesh>::IsTwoManifoldFace(mesh));
-	
+	assert(vcg::tri::Clean<CMesh>::CountNonManifoldEdgeFF(mesh)==0);
+	assert(vcg::tri::Clean<CMesh>::CountNonManifoldVertexFF(mesh)==0);
+
 	// create a polygon meshe from a trimesh with tagged faces
 	vcg::tri::PolygonSupport<CMesh,MyPolyMesh>::ImportFromTriMesh(pm,mesh);
 }
@@ -180,7 +185,7 @@ else
 	vcg::tri::UpdateTopology<MyPolyMesh>::FaceFace(pm);
 	vcg::tri::Clean<MyPolyMesh>::RemoveNonManifoldFace(pm);
 	vcg::tri::UpdateTopology<MyPolyMesh>::FaceFace(pm);
-	assert(vcg::tri::Clean<MyPolyMesh>::IsTwoManifoldFace(pm));
+	assert(vcg::tri::Clean<MyPolyMesh>::CountNonManifoldEdgeFF(pm));
 
 }
 
