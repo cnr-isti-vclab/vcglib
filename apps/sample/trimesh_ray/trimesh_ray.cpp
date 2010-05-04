@@ -39,7 +39,9 @@ class MyFace    : public Face  <MyUsedTypes, face::VertexRef,face::BitFlags,face
 
 class MyMesh : public tri::TriMesh< vector<MyVertex>, vector<MyFace > >{};
 
+// Uncomment only one of the two following lines to test different data structures
 typedef vcg::GridStaticPtr<MyMesh::FaceType, MyMesh::ScalarType> TriMeshGrid;
+//typedef vcg::SpatialHashTable<MyMesh::FaceType, MyMesh::ScalarType> TriMeshGrid;
 
 int main(int argc,char ** argv)
 {
@@ -56,29 +58,27 @@ int main(int argc,char ** argv)
 	}
 
 	MyMesh m;
-
+ int t0=clock();
 	// open a mesh
 	int err = tri::io::Importer<MyMesh>::Open(m,argv[1]);
-	if(err) 
-	{
+  if(err) {
 		printf("Error in reading %s: '%s'\n",argv[1],tri::io::Importer<MyMesh>::ErrorMsg(err));
 		exit(-1);  
 	}
-// the other parameters
+ // the other parameters
   float widenessRad = math::ToRad(20.0);
 
   if(argc>2) {
     widenessRad = math::ToRad(atof(argv[2]));
     printf("Setting wideness to %f degree\n",atof(argv[2]));
   }
-
   int n_samples=2;
-  if(argc>3) {
-    n_samples = atoi(argv[3]);
-    printf("Setting oversampling to %i \n",n_samples);
-  }
+  if(argc>3) n_samples = atoi(argv[3]);
+  int samplePerVert = (n_samples*2+ 1)*(n_samples*2+ 1);
+  printf("Using oversampling to %i  (%i sample per vertex)\n",n_samples,samplePerVert);
 
-	// some cleaning to get rid of bad file formats like stl that duplicate vertexes..
+
+  // some cleaning to get rid of bad stuff
 	int dup = tri::Clean<MyMesh>::RemoveDuplicateVertex(m);
 	int unref =  tri::Clean<MyMesh>::RemoveUnreferencedVertex(m);
 
@@ -94,17 +94,18 @@ int main(int argc,char ** argv)
 	// Create a static grid (for fast indexing) and fill it
 	TriMeshGrid static_grid;
 	static_grid.Set(m.face.begin(), m.face.end());
-	std::vector<TriMeshGrid::Cell *> intersected_cells;
-  typedef MyMesh::ScalarType ScalarType;
 
+  typedef MyMesh::ScalarType ScalarType;
+  int t1=clock();
   float t;
   MyMesh::FaceType *rf;
   MyMesh::VertexIterator vi;
   float maxDist=m.bbox.Diag();
   float offset= maxDist / 10000.0;
-
+  int totRay=0;
 
   ScalarType deltaRad=widenessRad/(ScalarType)(n_samples*2);
+  if(n_samples==0) deltaRad=0;
 
   tri::UpdateQuality<MyMesh>::VertexConstant(m,0);
   for(vi=m.vert.begin();vi!=m.vert.end();++vi)
@@ -135,12 +136,19 @@ int main(int argc,char ** argv)
           cnt++;
         }
       }
-    if(cnt>0)
+    if(cnt>0){
       (*vi).Q()/=cnt;
+      totRay+=cnt;
+    }
   }
+  int t2 = clock();
   tri::UpdateColor<MyMesh>::VertexQualityRamp(m);
-  tri::io::ExporterPLY<MyMesh>::Save(m,"Pippo.ply",tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
+  tri::io::ExporterPLY<MyMesh>::Save(m,"SDF.ply",tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
 
-	return 0;
+  printf("Initializated in %i msec\n",t1-t0);
+  printf("Completed in %i msec\n",t2-t1);
+  printf("Shoot %i rays and found %i intersections\n",m.vn*samplePerVert,totRay);
+
+return 0;
 }
 
