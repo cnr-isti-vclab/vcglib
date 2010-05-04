@@ -300,18 +300,33 @@ namespace vcg {
 			return (gr.template GetClosest <VDistFunct,MarkerVert>(fn,mv,_p,_maxDist,_minDist,_closestPt));
 		}
 
-		template <class MESH, class GRID, class OBJPTRCONTAINER,class DISTCONTAINER, class POINTCONTAINER>
-			unsigned int GetKClosestFace(MESH & mesh,GRID & gr, const unsigned int _k, 
-			const typename GRID::CoordType & _p, const typename GRID::ScalarType & _maxDist,
-			OBJPTRCONTAINER & _objectPtrs,DISTCONTAINER & _distances, POINTCONTAINER & _points)
-		{
-			typedef FaceTmark<MESH> MarkerFace;
-			MarkerFace mf;
-			mf.SetMesh(&mesh);
-		  vcg::face::PointDistanceFunctor<typename MESH::ScalarType> FDistFunct;
-			return (gr.GetKClosest /*<vcg::face::PointDistanceFunctor, MarkerFace,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>*/
-				(FDistFunct,mf,_k,_p,_maxDist,_objectPtrs,_distances,_points));
-		}
+    template <class MESH, class GRID, class OBJPTRCONTAINER,class DISTCONTAINER, class POINTCONTAINER>
+      unsigned int GetKClosestFace(MESH & mesh,GRID & gr, const unsigned int _k,
+      const typename GRID::CoordType & _p, const typename GRID::ScalarType & _maxDist,
+      OBJPTRCONTAINER & _objectPtrs,DISTCONTAINER & _distances, POINTCONTAINER & _points)
+    {
+      typedef FaceTmark<MESH> MarkerFace;
+      MarkerFace mf;
+      mf.SetMesh(&mesh);
+      vcg::face::PointDistanceFunctor<typename MESH::ScalarType> FDistFunct;
+      return (gr.GetKClosest /*<vcg::face::PointDistanceFunctor, MarkerFace,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>*/
+        (FDistFunct,mf,_k,_p,_maxDist,_objectPtrs,_distances,_points));
+    }
+
+    // This version does not require that the face type has the
+    // EdgePlane component and use a less optimized (but more memory efficient) point-triangle distance
+    template <class MESH, class GRID, class OBJPTRCONTAINER,class DISTCONTAINER, class POINTCONTAINER>
+      unsigned int GetKClosestFaceBase(MESH & mesh,GRID & gr, const unsigned int _k,
+      const typename GRID::CoordType & _p, const typename GRID::ScalarType & _maxDist,
+      OBJPTRCONTAINER & _objectPtrs,DISTCONTAINER & _distances, POINTCONTAINER & _points)
+    {
+      typedef FaceTmark<MESH> MarkerFace;
+      MarkerFace mf;
+      mf.SetMesh(&mesh);
+      vcg::face::PointDistanceBaseFunctor<typename MESH::ScalarType> FDistFunct;
+      return (gr.GetKClosest /*<vcg::face::PointDistanceFunctor, MarkerFace,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>*/
+        (FDistFunct,mf,_k,_p,_maxDist,_objectPtrs,_distances,_points));
+    }
 
 		template <class MESH, class GRID, class OBJPTRCONTAINER,class DISTCONTAINER, class POINTCONTAINER>
 			unsigned int GetKClosestVertex(MESH & mesh,GRID & gr, const unsigned int _k, 
@@ -398,7 +413,8 @@ namespace vcg {
 			Ray3<typename GRID::ScalarType> _ray1=_ray;
 			_ray1.Normalize();
 			typedef vcg::RayTriangleIntersectionFunctor<true> FintFunct;
-			return(gr.DoRay(FintFunct(),mf,_ray1,_maxDist,_t));
+      FintFunct ff;
+      return(gr.DoRay(ff,mf,_ray1,_maxDist,_t));
 		}
 		
 		template <class MESH, class GRID>
@@ -445,22 +461,19 @@ namespace vcg {
 			typedef typename MESH::FaceType FaceType;
 			typedef typename MESH::ScalarType ScalarType;
 			ScalarType delta_theta=_theta_interval/(ScalarType)(n_samples*2);
-			ScalarType delta_phi=_phi_interval/(ScalarType)(n_samples*2);
-			ScalarType theta_init;
-			ScalarType phi_init;
-			ScalarType ro;
+      ScalarType delta_phi  =_phi_interval/(ScalarType)(n_samples*2);
+      ScalarType theta_init,phi_init,ro;
       typename GRID::CoordType dir0=_ray.Direction();
-			dir0.ToPolar(ro,theta_init,phi_init);
+      dir0.ToPolarRad(ro,theta_init,phi_init);
 			for (int x=-n_samples;x<=n_samples;x++)
 				for (int y=-n_samples;y<=n_samples;y++)
 				{
 					ScalarType theta=theta_init+x*delta_theta;
-					if (theta<0)
-						theta=360-theta;
+          if (theta<0) theta=2.0*M_PI-theta;
+          ScalarType phi=phi_init+y*delta_phi;
 
-					ScalarType phi=phi_init+x*delta_phi;
           typename GRID::CoordType dir;
-					dir.FromPolar(ro,theta,phi);
+          dir.FromxPolar(ro,theta,phi);
 					dir.Normalize();
 					Ray3<typename GRID::ScalarType> curr_ray(_ray.Origin(),dir);
           typename GRID::ScalarType _t;
