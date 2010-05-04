@@ -162,6 +162,7 @@ private:
 		std::string u3d_final =  QtUtilityFunctions::fileNameFromTrimmedPath(file_trim).toStdString();
 		latex.write(0,"\\documentclass[a4paper]{article}");
 		latex.write(0,"\\usepackage[3D]{movie15}");
+                latex.write(0,"\usepackage{hyperref}");
 		latex.write(0,"\\usepackage[UKenglish]{babel}");
 		latex.write(0,"\\begin{document}");
 		latex.write(0,"\\includemovie[");
