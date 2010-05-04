@@ -337,14 +337,14 @@ public:
 	/** 
 	 * Convert to polar coordinates from cartesian coordinates.
 	 *
-	 * Theta is the azimuth angle and ranges between [0, 360) degrees.
-	 * Phi is the elevation angle (not the polar angle) and ranges between [-90, 90] degrees.
+	 * Theta is the azimuth angle and ranges between [0, 2PI) degrees.
+	 * Phi is the elevation angle (not the polar angle) and ranges between [-PI/2, PI/2] degrees.
 	 *
 	 * /note Note that instead of the classical polar angle, which ranges between 
-	 *       0 and 180 degrees we opt for the elevation angle to obtain a more 
+	 *       0 and PI degrees we opt for the elevation angle to obtain a more 
 	 *       intuitive spherical coordinate system.
 	 */
-	void ToPolar(P3ScalarType &ro, P3ScalarType &theta, P3ScalarType &phi) const
+	void ToPolarRad(P3ScalarType &ro, P3ScalarType &theta, P3ScalarType &phi) const
 	{
 		ro = Norm();
 		theta = (P3ScalarType)atan2(_v[2], _v[0]);
@@ -354,14 +354,14 @@ public:
 	/**
 	 * Convert from polar coordinates to cartesian coordinates.
 	 *
-	 * Theta is the azimuth angle and ranges between [0, 360) degrees.
+	 * Theta is the azimuth angle and ranges between [0, 2PI) degrees.
 	 * Phi is the elevation angle (not the polar angle) and ranges between [-90, 90] degrees.
 	 *
 	 * \note Note that instead of the classical polar angle, which ranges between 
-	 *       0 and 180 degrees, we opt for the elevation angle to obtain a more 
+	 *       0 and PI degrees, we opt for the elevation angle to obtain a more 
 	 *       intuitive spherical coordinate system.
 	 */
-  void FromPolar(const P3ScalarType &ro, const P3ScalarType &theta, const P3ScalarType &phi)
+  void FromPolarRad(const P3ScalarType &ro, const P3ScalarType &theta, const P3ScalarType &phi)
 	{
     _v[0]= ro*cos(theta)*cos(phi);
     _v[1]= ro*sin(phi);
