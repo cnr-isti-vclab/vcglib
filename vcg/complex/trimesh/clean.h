@@ -764,8 +764,10 @@ private:
 			
 			static void CountEdges( MeshType & m, int &count_e, int &boundary_e ) 
 			{
-                UpdateFlags<MeshType>::FaceClearV(m);
-                FaceIterator fi;
+				count_e=0;
+				boundary_e=0;
+        		UpdateFlags<MeshType>::FaceClearV(m);
+       			FaceIterator fi;
 				vcg::face::Pos<FaceType> he;
 				vcg::face::Pos<FaceType> hei;
 				bool counted =false;
