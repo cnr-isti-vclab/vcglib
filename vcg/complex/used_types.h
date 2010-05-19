@@ -5,14 +5,26 @@
 #include <vcg/space/point3.h>
 #include <vcg/container/derivation_chain.h>
 
+#include <vcg/simplex/vertex/base.h>
+#include <vcg/simplex/face/base.h>
+#include <vcg/simplex/edge/base.h>
+#include <vcg/connectors/hedge.h>
+
 namespace vcg{
 
+// dummy mesh
+
+struct _Vertex;
+struct _Edge  ;
+struct _Face  ;
+struct _HEdge ;
+
 struct DummyTypes{
-		typedef char VertexType; 		// simplex types
-		typedef char EdgeType;
-		typedef char FaceType;
-		typedef char TetraType;
-		typedef char HEdgeType; 		// connector types
+		typedef _Vertex VertexType; 		// simplex types
+		typedef _Edge EdgeType;
+		typedef _Face FaceType;
+	 	typedef char TetraType;
+		typedef _HEdge HEdgeType; 		// connector types
 
 		typedef vcg::Point3<bool> CoordType; 		 
 		typedef char ScalarType;						 
@@ -28,12 +40,6 @@ struct DummyTypes{
     void ImportLocal(const LeftV  & /*left*/ ) {}
 };
 
-struct AllTypes{
-		struct AVertexType {};
-		struct AEdgeType {};
-		struct AFaceType {};
-		struct AHEdgeType {};
-};
 
 template <template <typename> class A = DefaultDeriver, template <typename> class B = DefaultDeriver,
 					template <typename> class C = DefaultDeriver, template <typename> class D = DefaultDeriver,
@@ -53,6 +59,19 @@ template <class A>
 		template <class T> struct AsTetraType: public T{typedef A TetraType;		typedef TetraType * TetraPointer		;};
 		template <class T> struct AsHEdgeType: public T{typedef A HEdgeType;		typedef HEdgeType * HEdgePointer		;};
 };
+
+	
+struct _UsedTypes: public UsedTypes< 
+	Use<_Vertex>::AsVertexType,
+	Use<_Edge  >::AsEdgeType,
+	Use<_Face  >::AsFaceType,
+	Use<_HEdge >::AsHEdgeType
+>{};
+
+struct _Vertex: public  Vertex<_UsedTypes>{};
+struct _Edge  : public  Edge<_UsedTypes>{};
+struct _Face  : public  Face<_UsedTypes>{};
+struct _HEdge : public  HEdge<_UsedTypes>{};
 
 };
 
