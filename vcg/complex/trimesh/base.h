@@ -157,7 +157,7 @@ struct DummyContainer{struct value_type{ typedef int IAm;}; };
 
 template < class Container0 = DummyContainer, class Container1 = DummyContainer, class Container2 = DummyContainer, class Container3 = DummyContainer >
 class TriMesh
-		: public  MArity3<   BaseMeshTypeHolder<typename Container0::value_type::TypesPool>, Container0, Der ,Container1, Der, Container2, Der/*, Container3, Der*/>{
+		: public  MArity4<   BaseMeshTypeHolder<typename Container0::value_type::TypesPool>, Container0, Der ,Container1, Der, Container2, Der, Container3, Der>{
 	public:
 
 		typedef typename TriMesh::ScalarType		ScalarType;
