@@ -71,8 +71,9 @@ First working version!
 //#include <vcg/space/point3.h>
 #include <vcg/space/texcoord2.h>
 #include <vcg/space/color4.h>
+#include <vcg/complex/all_types.h>
 #include <vcg/simplex/vertex/component.h>
-#include <vcg/complex/used_types.h>
+//#include <vcg/complex/used_types.h>
 #include <vcg/container/derivation_chain.h>
 
 namespace vcg {
