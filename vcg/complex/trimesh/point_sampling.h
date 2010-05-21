@@ -783,17 +783,16 @@ static void FaceSimilar(MetroMesh & m, VertexSampler &ps,int sampleNum, bool dua
     typedef typename MetroMesh::ScalarType S;
     // Calcolo bounding box
     Box2i bbox;
-
-    if(v0[0]<v1[0]) { bbox.min[0]=int(v0[0]); bbox.max[0]=int(v1[0]); }
-    else            { bbox.min[0]=int(v1[0]); bbox.max[0]=int(v0[0]); }
-    if(v0[1]<v1[1]) { bbox.min[1]=int(v0[1]); bbox.max[1]=int(v1[1]); }
-    else            { bbox.min[1]=int(v1[1]); bbox.max[1]=int(v0[1]); }
-    if(bbox.min[0]>int(v2[0])) bbox.min[0]=int(v2[0]);
-    else if(bbox.max[0]<int(v2[0])) bbox.max[0]=int(v2[0]);
-    if(bbox.min[1]>int(v2[1])) bbox.min[1]=int(v2[1]);
-    else if(bbox.max[1]<int(v2[1])) bbox.max[1]=int(v2[1]);
-
-
+	Box2<S> bboxf;
+	bboxf.Add(v0);
+	bboxf.Add(v1);
+	bboxf.Add(v2);
+	
+	bbox.min[0] = floor(bboxf.min[0]);
+	bbox.min[1] = floor(bboxf.min[1]);
+	bbox.max[0] = ceil(bboxf.max[0]);
+	bbox.max[1] = ceil(bboxf.max[1]);
+	
     // Calcolo versori degli spigoli
     Point2<S> d10 = v1 - v0;
     Point2<S> d21 = v2 - v1;
@@ -825,7 +824,7 @@ static void FaceSimilar(MetroMesh & m, VertexSampler &ps,int sampleNum, bool dua
         edgeLength[0] = borderEdges[0].Length();
         edgeMask |= 1;
     }
-    if (f.IsB(1)) {
+	if (f.IsB(1)) {
         borderEdges[1] = Segment2<S>(v1, v2);
         edgeLength[1] = borderEdges[1].Length();
         edgeMask |= 2;
@@ -842,7 +841,7 @@ static void FaceSimilar(MetroMesh & m, VertexSampler &ps,int sampleNum, bool dua
     for(int x=bbox.min[0]-1;x<=bbox.max[0]+1;++x)
     {
         bool in = false;
-        S n[3]  = { b0-db0-dn0, b1-db1-dn1, b2-db2-dn2};
+		S n[3]  = { b0-db0-dn0, b1-db1-dn1, b2-db2-dn2};
         for(int y=bbox.min[1]-1;y<=bbox.max[1]+1;++y)
         {
             if((n[0]>=0 && n[1]>=0 && n[2]>=0) || (n[0]<=0 && n[1]<=0 && n[2]<=0))
@@ -862,20 +861,22 @@ static void FaceSimilar(MetroMesh & m, VertexSampler &ps,int sampleNum, bool dua
                 S minDst = FLT_MAX;
 
                 // find the closest point (on some edge) that lies on the 2x2 squared neighborhood of the considered point
-                for (int i=0, t=0; t<2 && i<3 && (edgeMask>>i)%2 ; ++i)
+               	for (int i=0; i<3; ++i)
                 {
-                    Point2<S> close;
-                    S dst;
-                    if ( (!flipped && n[i]<0 || flipped && n[i]>0) &&
-                         (dst = ((close = ClosestPoint(borderEdges[i], px)) - px).Norm()) < minDst &&
-                         close.X() > px.X()-1 && close.X() < px.X()+1 &&
-                         close.Y() > px.Y()-1 && close.Y() < px.Y()+1)
-                    {
-                        minDst = dst;
-                        closePoint = close;
-                        closeEdge = i;
-                        ++t;
-                    }
+					if (edgeMask & (1 << i))
+					{
+						Point2<S> close;
+						S dst;
+						if ( (!flipped && n[i]<0 || flipped && n[i]>0) &&
+							 (dst = ((close = ClosestPoint(borderEdges[i], px)) - px).Norm()) < minDst &&
+							 close.X() > px.X()-1 && close.X() < px.X()+1 &&
+							 close.Y() > px.Y()-1 && close.Y() < px.Y()+1)
+						{
+							minDst = dst;
+							closePoint = close;
+							closeEdge = i;
+						}
+					}
                 }
 
                 if (closeEdge >= 0)
@@ -895,7 +896,7 @@ static void FaceSimilar(MetroMesh & m, VertexSampler &ps,int sampleNum, bool dua
                     }
                     ps.AddTextureSample(f, baryCoord, Point2i(x,y), minDst);
                     in = true;
-                } else if (in) break;
+                }
             }
             n[0] += dn0;
             n[1] += dn1;
@@ -1224,7 +1225,7 @@ static void Texture(MetroMesh & m, VertexSampler &ps, int textureWidth, int text
 				{
 					Point2f ti[3];
 					for(int i=0;i<3;++i)
-                                            ti[i]=Point2f((*fi).WT(i).U() * textureWidth - 0.5, (*fi).WT(i).V() * textureHeight + 0.5);
+                                            ti[i]=Point2f((*fi).WT(i).U() * textureWidth - 0.5, (*fi).WT(i).V() * textureHeight - 0.5);
                                             // +/- 0.5 constants are used to obtain correct texture mapping
                                         SingleFaceRaster(*fi,  ps, ti[0],ti[1],ti[2], correctSafePointsBaryCoords);
 				}
