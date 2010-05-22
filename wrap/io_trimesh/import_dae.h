@@ -422,6 +422,8 @@ namespace io {
 
         static int LoadControllerMesh(ColladaMesh& m, InfoDAE& info, const QDomElement& geo,QMap<QString, QString> materialBindingMap, CallBackPos *cb=0)
 		{
+			(void)cb;
+
 			assert(geo.tagName() == "controller");
 			QDomNodeList skinList = geo.toElement().elementsByTagName("skin");
 			if(skinList.size()!=1) return E_CANTOPEN;

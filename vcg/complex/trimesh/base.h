@@ -589,6 +589,9 @@ bool HasVFAdjacency (const TriMesh < ContainerType0 , ContainerType1,   Containe
 		// for the macro assert
 		bool a1 =  TriMesh < ContainerType0 , ContainerType1,   ContainerType2, ContainerType3>::FaceContainer::value_type::HasVFAdjacency();
 		bool a2 =  TriMesh < ContainerType0 , ContainerType1,   ContainerType2, ContainerType3>::VertContainer::value_type::HasVFAdjacency();
+		// a1 and a2 are still evaluated but not referenced, this causes a warning
+		(void)a1;
+		(void)a2;
 		assert(a1==a2);
 		return TriMesh < ContainerType0 , ContainerType1,   ContainerType2, ContainerType3>::FaceContainer::value_type::HasVFAdjacency();
 }
