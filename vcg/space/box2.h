@@ -58,9 +58,12 @@ Initial commit
 
 namespace vcg {
 
+
+// needed prototype;
+template <class SegScalarType> class Segment2;
+
 /** \addtogroup space */
 /*@{*/
-
 /**
 	Templated class for a 2D bounding box. It is stored just as two Point2	
 	@param BoxScalarType (Template Parameter) Specifies the scalar field.
