@@ -211,7 +211,7 @@ namespace vcg {
 				// f=bestf;
 				typename MESH::ScalarType alfa, beta, gamma;
 				//calcolo normale con interpolazione trilineare
-				InterpolationParameters(*bestf,_closestPt, alfa, beta, gamma);
+				InterpolationParameters(*bestf,bestf->N(),_closestPt, alfa, beta, gamma);
 				_normf =  (bestf->V(0)->cN())*alfa+
 					(bestf->V(1)->cN())*beta+
 					(bestf->V(2)->cN())*gamma ;
@@ -438,7 +438,7 @@ namespace vcg {
 			typename GRID::ScalarType alfa,beta,gamma;
 			if (f!=NULL)
 			{
-				InterpolationParameters<FaceType,ScalarType>(*f,int_point, alfa, beta, gamma);
+				InterpolationParameters<FaceType,ScalarType>(*f,f->N(),int_point, alfa, beta, gamma);
 				_normf =  (f->V(0)->cN())*alfa+
 									(f->V(1)->cN())*beta+
 									(f->V(2)->cN())*gamma ;
@@ -487,7 +487,7 @@ namespace vcg {
 
 						///find the normal
 						typename GRID::ScalarType alfa,beta,gamma;
-						InterpolationParameters<FaceType,ScalarType>(*f,pos, alfa, beta, gamma);
+						InterpolationParameters<FaceType,ScalarType>(*f,*f.N(),pos, alfa, beta, gamma);
 						typename GRID::CoordType norm =  (f->V(0)->cN())*alfa+
 																						 (f->V(1)->cN())*beta+
 																						 (f->V(2)->cN())*gamma ;
