@@ -251,94 +251,103 @@ bool InterpolationParameters2(const Point2<ScalarType> &V1,
 	@return true se bq appartiene alla faccia, false altrimenti
 */
 template<class TriangleType, class ScalarType>
-bool InterpolationParameters(const TriangleType t,const Point3<ScalarType> & bq, ScalarType &a, ScalarType &b, ScalarType &_c ) 
+bool InterpolationParameters(const TriangleType t,const Point3<ScalarType> & N,const Point3<ScalarType> & bq, ScalarType &a, ScalarType &b, ScalarType &c ) 
 {	
-const ScalarType _EPSILON = ScalarType(0.000001);
-#define x1 (t.P(0).X())
-#define y1 (t.P(0).Y())
-#define z1 (t.P(0).Z())
-#define x2 (t.P(1).X())
-#define y2 (t.P(1).Y())
-#define z2 (t.P(1).Z())
-#define x3 (t.P(2).X())
-#define y3 (t.P(2).Y())
-#define z3 (t.P(2).Z())
-#define px (bq[0])
-#define py (bq[1])
-#define pz (bq[2])
-
-     ScalarType t1  = px*y2;
-     ScalarType t2  = px*y3;
-     ScalarType t3  = py*x2;
-     ScalarType t4  = py*x3;
-     ScalarType t5  = x2*y3;
-     ScalarType t6  = x3*y2;
-     ScalarType t8  = x1*y2;
-     ScalarType t9  = x1*y3;
-     ScalarType t10 = y1*x2;
-     ScalarType t11 = y1*x3;
-     ScalarType t13 = t8-t9-t10+t11+t5-t6;
-     if(fabs(t13)>=_EPSILON)
-	 {
-         ScalarType t15 = px*y1;
-         ScalarType t16 = py*x1;
-         a =  (t1 -t2-t3 +t4+t5-t6 )/t13;
-         b = -(t15-t2-t16+t4+t9-t11)/t13;
-         _c =  (t15-t1-t16+t3+t8-t10)/t13;
-		return true;
-     }
-
-     t1  = px*z2;
-     t2  = px*z3;
-     t3  = pz*x2;
-     t4  = pz*x3;
-     t5  = x2*z3;
-     t6  = x3*z2;
-     t8  = x1*z2;
-     t9  = x1*z3;
-     t10 = z1*x2;
-     t11 = z1*x3;
-     t13 = t8-t9-t10+t11+t5-t6;
-     if(fabs(t13)>=_EPSILON)
-	 {
-		ScalarType t15 = px*z1;
-		ScalarType t16 = pz*x1;
-		a =  (t1 -t2-t3 +t4+t5-t6 )/t13;
-		b = -(t15-t2-t16+t4+t9-t11)/t13;
-		_c =  (t15-t1-t16+t3+t8-t10)/t13;
-		return true;
-     }
-
-     t1  = pz*y2; t2  = pz*y3;
-     t3  = py*z2; t4  = py*z3;
-     t5  = z2*y3; t6  = z3*y2;
-     t8  = z1*y2; t9  = z1*y3;
-     t10 = y1*z2; t11 = y1*z3;
-     t13 = t8-t9-t10+t11+t5-t6;
-     if(fabs(t13)>=_EPSILON)
-	 {
-         ScalarType t15 = pz*y1;
-         ScalarType t16 = py*z1;
-         a =  (t1 -t2-t3 +t4+t5-t6 )/t13;
-         b = -(t15-t2-t16+t4+t9-t11)/t13;
-         _c =  (t15-t1-t16+t3+t8-t10)/t13;
-		return true;
-     }
-	 
-#undef x1
-#undef y1
-#undef z1
-#undef x2
-#undef y2
-#undef z2
-#undef x3
-#undef y3
-#undef z3
-#undef px
-#undef py
-#undef pz
-
-     return false;
+	Point3<ScalarType> bary;
+	bool done= InterpolationParameters(t,N,bq,bary);
+	a=bary[0];
+	b=bary[1];
+	c=bary[2];
+	return done;
+//        else if(fp->Flags() & FaceType::NORMY )   axis = 1;
+//        else axis =2;
+//        InterpolationParameters(*fp,axis,Point,Bary);
+//const ScalarType _EPSILON = ScalarType(0.000001);
+//#define x1 (t.P(0).X())
+//#define y1 (t.P(0).Y())
+//#define z1 (t.P(0).Z())
+//#define x2 (t.P(1).X())
+//#define y2 (t.P(1).Y())
+//#define z2 (t.P(1).Z())
+//#define x3 (t.P(2).X())
+//#define y3 (t.P(2).Y())
+//#define z3 (t.P(2).Z())
+//#define px (bq[0])
+//#define py (bq[1])
+//#define pz (bq[2])
+//
+//     ScalarType t1  = px*y2;
+//     ScalarType t2  = px*y3;
+//     ScalarType t3  = py*x2;
+//     ScalarType t4  = py*x3;
+//     ScalarType t5  = x2*y3;
+//     ScalarType t6  = x3*y2;
+//     ScalarType t8  = x1*y2;
+//     ScalarType t9  = x1*y3;
+//     ScalarType t10 = y1*x2;
+//     ScalarType t11 = y1*x3;
+//     ScalarType t13 = t8-t9-t10+t11+t5-t6;
+//     if(fabs(t13)>=_EPSILON)
+//	 {
+//         ScalarType t15 = px*y1;
+//         ScalarType t16 = py*x1;
+//         a =  (t1 -t2-t3 +t4+t5-t6 )/t13;
+//         b = -(t15-t2-t16+t4+t9-t11)/t13;
+//         _c =  (t15-t1-t16+t3+t8-t10)/t13;
+//		return true;
+//     }
+//
+//     t1  = px*z2;
+//     t2  = px*z3;
+//     t3  = pz*x2;
+//     t4  = pz*x3;
+//     t5  = x2*z3;
+//     t6  = x3*z2;
+//     t8  = x1*z2;
+//     t9  = x1*z3;
+//     t10 = z1*x2;
+//     t11 = z1*x3;
+//     t13 = t8-t9-t10+t11+t5-t6;
+//     if(fabs(t13)>=_EPSILON)
+//	 {
+//		ScalarType t15 = px*z1;
+//		ScalarType t16 = pz*x1;
+//		a =  (t1 -t2-t3 +t4+t5-t6 )/t13;
+//		b = -(t15-t2-t16+t4+t9-t11)/t13;
+//		_c =  (t15-t1-t16+t3+t8-t10)/t13;
+//		return true;
+//     }
+//
+//     t1  = pz*y2; t2  = pz*y3;
+//     t3  = py*z2; t4  = py*z3;
+//     t5  = z2*y3; t6  = z3*y2;
+//     t8  = z1*y2; t9  = z1*y3;
+//     t10 = y1*z2; t11 = y1*z3;
+//     t13 = t8-t9-t10+t11+t5-t6;
+//     if(fabs(t13)>=_EPSILON)
+//	 {
+//         ScalarType t15 = pz*y1;
+//         ScalarType t16 = py*z1;
+//         a =  (t1 -t2-t3 +t4+t5-t6 )/t13;
+//         b = -(t15-t2-t16+t4+t9-t11)/t13;
+//         _c =  (t15-t1-t16+t3+t8-t10)/t13;
+//		return true;
+//     }
+//	 
+//#undef x1
+//#undef y1
+//#undef z1
+//#undef x2
+//#undef y2
+//#undef z2
+//#undef x3
+//#undef y3
+//#undef z3
+//#undef px
+//#undef py
+//#undef pz
+//
+//     return false;
 }
 
 
