@@ -254,7 +254,7 @@ public:
 	  /// returns the suqared distance to another point p
 	inline ScalarType SquaredDistance( Point2 const & p ) const
 	{
-			return Norm2(*this-p);
+      return (*this-p).SquaredNorm();
 	}
 	  /// returns the angle with X axis (radiants, in [-PI, +PI] )
 	inline ScalarType Angle() const {
