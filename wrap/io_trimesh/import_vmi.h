@@ -390,7 +390,7 @@ namespace io {
 				 
 												 
                  static int  LoadFaceOcfMask( FILE * f){
-					 int mask;
+                int mask=0;
                     std::string s;
 
                 // face quality
