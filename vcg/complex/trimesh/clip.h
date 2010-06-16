@@ -32,13 +32,72 @@ $Log: not supported by cvs2svn $
 #define __VCGLIB_TRI_CLIP
 
 #include <vector>
-#include <hash_map>
 
+#ifdef _WIN32
+ #ifndef __MINGW32__
+  #include <hash_map>
+  #define STDEXT stdext
+ #else
+  #include <ext/hash_map>
+  #define STDEXT __gnu_cxx
+ #endif
+#else
+ #include <ext/hash_map>
+ #define STDEXT __gnu_cxx
+#endif
 namespace vcg
 {
 namespace tri
 {
 
+  template <typename MESH_TYPE>
+  class GenericVertexInterpolator
+  {
+  public:
+    typedef typename MESH_TYPE::VertexType VertexType;
+    typedef GenericVertexInterpolator<MESH_TYPE> ClassType;
+    typedef typename VertexType::CoordType CoordType;
+    typedef typename CoordType::ScalarType ScalarType;
+    GenericVertexInterpolator(MESH_TYPE &_m) : m(_m) {}
+  private:
+    MESH_TYPE &m;
+  public:
+    inline void operator () (const VertexType & v0, const VertexType & v1, const VertexType & v2, const ScalarType & a, const ScalarType & b, VertexType & r) const
+    {
+      // position
+      r.P() = v0.P() + (v1.P() - v0.P()) * a + (v2.P() - v0.P()) * b;
+
+      // normal
+      if (tri::HasPerVertexNormal(m))
+      {
+        r.N() = v0.cN() + (v1.cN() - v0.cN()) * a + (v2.cN() - v0.cN()) * b;
+      }
+
+      // color
+      if (tri::HasPerVertexColor(m))
+      {
+        vcg::Point4<ScalarType> vc[3];
+        vc[0].Import(v0.cC());
+        vc[1].Import(v1.cC());
+        vc[2].Import(v2.cC());
+        const vcg::Point4<ScalarType> rc = (vc[0] + (vc[1] - vc[0]) * a + (vc[2] - vc[0]) * b);
+        r.C()[0] = (typename vcg::Color4b::ScalarType)(rc[0]);
+        r.C()[1] = (typename vcg::Color4b::ScalarType)(rc[1]);
+        r.C()[2] = (typename vcg::Color4b::ScalarType)(rc[2]);
+        r.C()[3] = (typename vcg::Color4b::ScalarType)(rc[3]);
+      }
+
+      // texcoord
+      if (tri::HasPerVertexTexCoord(m))
+      {
+        const short nt = 1; //typename VertexType::TextureType::N();
+        for (short i=0; i<nt; ++i)
+        {
+          r.T().t(i) = v0.cT().t(i) + (v1.cT().t(i) - v0.cT().t(i)) * a + (v2.cT().t(i) - v0.cT().t(i)) * b;
+        }
+      }
+    }
+  };
 template <typename TRIMESHTYPE>
 class TriMeshClipper
 {
@@ -71,6 +130,35 @@ public:
 				   r.N() = v0.N() + a * (v1.N() - v0.N()) + b * (v2.N() - v0.N());  // interpolate normal
 				   ...    // interpolate other vertex attributes
 	*/
+  template <class ScalarType>
+      class VertexClipInfo
+  {
+  public:
+//			typedef VertexClipInfo ClassType;
+
+    ScalarType fU;
+    ScalarType fV;
+    unsigned int idx;
+    unsigned int tref;
+  };
+  typedef typename std::vector< VertexClipInfo<ScalarType> > VertexClipInfoVec;
+  class TriangleInfo
+  {
+  public:
+    typedef TriangleInfo ClassType;
+
+    unsigned int v[3];
+    unsigned int idx;
+  };
+
+  typedef std::vector<TriangleInfo> TriangleInfoVec;
+
+  class EdgeIsect
+  {
+  public:
+    CoordType p;
+    unsigned int idx;
+  };
 
 	template <typename VERTEXINTEPOLATOR>
 	static inline void Box(const Box3<ScalarType> & b, VERTEXINTEPOLATOR & vInterp, TriMeshType & m)
@@ -83,6 +171,28 @@ public:
 		}
 	}
 
+  class EdgeIntersections
+  {
+  public:
+    unsigned int n;
+    EdgeIsect isects[6];
+
+    EdgeIntersections(void)
+    {
+      this->n = 0;
+    }
+  };
+
+  typedef STDEXT::hash_map<unsigned int, EdgeIntersections> UIntHMap;
+  typedef typename UIntHMap::iterator UIntHMap_i;
+  typedef typename UIntHMap::value_type UIntHMap_v;
+
+  typedef STDEXT::hash_map<unsigned int, UIntHMap> EdgeMap;
+  typedef typename EdgeMap::iterator EdgeMap_i;
+  typedef typename EdgeMap::value_type EdgeMap_v;
+
+  typedef typename TriMeshType::FaceIterator FaceIterator;
+
 	template <typename VERTEXINTEPOLATOR, typename FACEINDEXCONTAINER>
 	static inline void Box(const Box3<ScalarType> & b, VERTEXINTEPOLATOR & vInterp, TriMeshType & m, FACEINDEXCONTAINER & facesToDelete)
 	{
@@ -91,61 +201,8 @@ public:
 			return;
 		}
 
-		class VertexInfo
-		{
-		public:
-			typedef VertexInfo ClassType;
-
-			ScalarType fU;
-			ScalarType fV;
-			unsigned int idx;
-			unsigned int tref;
-		};
-
-		typedef std::vector<VertexInfo> VertexInfoVec;
-
-		class TriangleInfo
-		{
-		public:
-			typedef TriangleInfo ClassType;
-
-			unsigned int v[3];
-			unsigned int idx;
-		};
-
-		typedef std::vector<TriangleInfo> TriangleInfoVec;
-
-		class EdgeIsect
-		{
-		public:
-			CoordType p;
-			unsigned int idx;
-		};
-
-		class EdgeIntersections
-		{
-		public:
-			unsigned int n;
-			EdgeIsect isects[6];
-
-			EdgeIntersections(void)
-			{
-				this->n = 0;
-			}
-		};
-
-		typedef stdext::hash_map<unsigned int, EdgeIntersections> UIntHMap;
-		typedef typename UIntHMap::iterator UIntHMap_i;
-		typedef typename UIntHMap::value_type UIntHMap_v;
-
-		typedef stdext::hash_map<unsigned int, UIntHMap> EdgeMap;
-		typedef typename EdgeMap::iterator EdgeMap_i;
-		typedef typename EdgeMap::value_type EdgeMap_v;
-
-		typedef typename TriMeshType::FaceIterator FaceIterator;
-
 		EdgeMap edges;
-		VertexInfoVec vInfos;
+    VertexClipInfoVec vInfos;
 		TriangleInfoVec tInfos;
 
 		CoordType vTriangle[4];
@@ -250,7 +307,7 @@ public:
 
 				size_t vBegin = vInfos.size();
 
-				VertexInfo vnfo;
+        VertexClipInfo<ScalarType> vnfo;
 				TriangleInfo tnfo;
 
 				unsigned int vmin[3];
@@ -476,10 +533,10 @@ public:
 			return;
 		}
 
-		class VertexInfo
+    class VertexClipInfo
 		{
 		public:
-			typedef VertexInfo ClassType;
+      typedef VertexClipInfo ClassType;
 
 			ScalarType fU;
 			ScalarType fV;
@@ -487,7 +544,7 @@ public:
 			unsigned int tref;
 		};
 
-		typedef std::vector<VertexInfo> VertexInfoVec;
+    typedef std::vector<VertexClipInfo> VertexClipInfoVec;
 
 		class TriangleInfo
 		{
@@ -519,22 +576,22 @@ public:
 			}
 		};
 
-		typedef stdext::hash_map<unsigned int, EdgeIntersections> UIntHMap;
+    typedef STDEXT::hash_map<unsigned int, EdgeIntersections> UIntHMap;
 		typedef typename UIntHMap::iterator UIntHMap_i;
 		typedef typename UIntHMap::value_type UIntHMap_v;
 
-		typedef stdext::hash_map<unsigned int, UIntHMap> EdgeMap;
+    typedef STDEXT::hash_map<unsigned int, UIntHMap> EdgeMap;
 		typedef typename EdgeMap::iterator EdgeMap_i;
 		typedef typename EdgeMap::value_type EdgeMap_v;
 
-		typedef stdext::hash_map<unsigned int, unsigned int> UIHMap;
+    typedef STDEXT::hash_map<unsigned int, unsigned int> UIHMap;
 		typedef typename UIHMap::iterator UIHMap_i;
 
 		typedef typename TriMeshType::ConstFaceIterator ConstFaceIterator;
 
 		UIHMap origVertsMap;
 		EdgeMap edges;
-		VertexInfoVec vInfos;
+    VertexClipInfoVec vInfos;
 		TriangleInfoVec tInfos;
 
 		CoordType vTriangle[4];
@@ -580,7 +637,7 @@ public:
 			if ((cc[0] | cc[1] | cc[2]) == 0)
 			{
 				TriangleInfo tnfo;
-				VertexInfo vnfo;
+        VertexClipInfo vnfo;
 
 				tnfo.idx = tIdx++;
 
@@ -660,7 +717,7 @@ public:
 
 				size_t vBegin = vInfos.size();
 
-				VertexInfo vnfo;
+        VertexClipInfo vnfo;
 				TriangleInfo tnfo;
 
 				unsigned int vmin[3];
