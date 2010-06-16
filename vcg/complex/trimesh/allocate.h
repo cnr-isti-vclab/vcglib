@@ -41,11 +41,19 @@ namespace vcg {
 		size_t Index(MeshType &m, typename MeshType::VertexType &v) {return &v-&*m.vert.begin();}
 		template<class MeshType>
 		size_t Index(MeshType &m, typename MeshType::FaceType &f) {return &f-&*m.face.begin();}
+		template<class MeshType>
+		size_t Index(MeshType &m, typename MeshType::EdgeType &e) {return &e-&*m.edge.begin();}
+		template<class MeshType>
+		size_t Index(MeshType &m, typename MeshType::HEdgeType &h) {return &h-&*m.hedge.begin();}
 
 		template<class MeshType>
 		size_t Index(MeshType &m, const typename MeshType::VertexType *vp) {return vp-&*m.vert.begin();}
 		template<class MeshType>
 		size_t Index(MeshType &m, const typename MeshType::FaceType * fp) {return fp-&*m.face.begin();}
+		template<class MeshType>
+		size_t Index(MeshType &m, typename MeshType::EdgeType*  e) {return e-&*m.edge.begin();}
+		template<class MeshType>
+		size_t Index(MeshType &m, typename MeshType::HEdgeType*  h) {return h-&*m.hedge.begin();}
 
 		// Placeholder. 
 		// this one is called by the Compact and overridden by more specialized functions for OCF classes.
@@ -172,7 +180,7 @@ namespace vcg {
 					for (ei=m.edge.begin(); ei!=m.edge.end(); ++ei)
 						if(!(*ei).IsD())
 						{
-							if(HasEVAdjacency (m)) { pu.Update((*ei).V(0));pu.Update((*ei).V(1));}
+							if(HasEVAdjacency (m)) { pu.Update((*ei).EVp(0));pu.Update((*ei).EVp(1));}
 //							if(HasEVAdjacency(m))   pu.Update((*ei).EVp());
 						}
                                         HEdgeIterator hi;
@@ -338,7 +346,7 @@ namespace vcg {
                                     {
                                         if(HasFHAdjacency(m))
                                             if(!(*fi).IsD() && (*fi).FHp())
-                                                pu.Update((*fi).FHp());
+																								pu.Update((*fi).FHp());
                                     }
 
                                     {
@@ -578,7 +586,7 @@ namespace vcg {
 				if(newVertIndex[i]<size_t(m.vn))
                 {
                     assert(!m.vert[i].IsD());
-                    m.vert[ newVertIndex[i] ].ImportLocal(m.vert[i]);
+										m.vert[ newVertIndex[i] ].ImportData(m.vert[i]);
                     if(HasVFAdjacency(m))
                       if (m.vert[i].cVFp()!=0)
                         {
@@ -664,7 +672,7 @@ namespace vcg {
 				{
 					if(pos!=i)
                     {
-                        m.face[pos].ImportLocal(m.face[i]);
+												m.face[pos].ImportData(m.face[i]);
                         m.face[pos].V(0) = m.face[i].V(0);
                         m.face[pos].V(1) = m.face[i].V(1);
                         m.face[pos].V(2) = m.face[i].V(2);
@@ -760,6 +768,7 @@ public:
 			i = m.vert_attr.find(h);
 			assert(i ==m.vert_attr.end() );// an attribute with this name exists
 		}
+		h._typename = typeid(ATTR_TYPE).name();
 		h._sizeof = sizeof(ATTR_TYPE);
 		h._padding = 0;
 		h._handle = (void*) new SimpleTempData<VertContainer,ATTR_TYPE>(m.vert);
@@ -785,22 +794,30 @@ public:
 		typename std::set<PointerToAttribute > :: iterator i;
 
 		i =m.vert_attr.find(h1);
-		if(i!=m.vert_attr.end()){
-			if(	(*i)._padding != 0 ){
-					PointerToAttribute attr = (*i);						// copy the PointerToAttribute
-					m.vert_attr.erase(i);						// remove it from the set
-					FixPaddedPerVertexAttribute<ATTR_TYPE>(m,attr);				
-					std::pair<AttrIterator,bool> new_i = m.vert_attr.insert(attr);	// insert the modified PointerToAttribute
-					assert(new_i.second);
-					i = new_i.first;				
-				}
+		if(i!=m.vert_attr.end())
+				if((*i)._typename == typeid(ATTR_TYPE).name() ){
+						if(	(*i)._padding != 0 ){
+								PointerToAttribute attr = (*i);						// copy the PointerToAttribute
+								m.vert_attr.erase(i);						// remove it from the set
+								FixPaddedPerVertexAttribute<ATTR_TYPE>(m,attr);
+								std::pair<AttrIterator,bool> new_i = m.vert_attr.insert(attr);	// insert the modified PointerToAttribute
+								assert(new_i.second);
+								i = new_i.first;
+								}
 
-			return typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>((*i)._handle,(*i).n_attr);
-
+					return typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>((*i)._handle,(*i).n_attr);
 		}
-			else
-				return typename MeshType:: template PerVertexAttributeHandle<ATTR_TYPE>(NULL,0);
+
+		return typename MeshType:: template PerVertexAttributeHandle<ATTR_TYPE>(NULL,0);
 		
+	}
+
+	template <class ATTR_TYPE>
+	static void GetAllPerVertexAttribute(const MeshType & m, std::vector<std::string> &all){
+		typename std::set<PointerToAttribute > :: iterator i;
+		for(i = m.vert_attr.begin(); i != m.vert_attr.end(); ++i )
+				if((*i)._typename == typeid(ATTR_TYPE).name())
+						all.push_back((*i)._name);
 	}
 
 	template <class ATTR_TYPE> 
@@ -849,6 +866,8 @@ public:
 			i = m.edge_attr.find(h);
 			assert(i ==m.edge_attr.end() );// an attribute with this name exists
 		}
+		h._sizeof = sizeof(ATTR_TYPE);
+		h._typename = typeid(ATTR_TYPE).name();
 		h._handle = (void*) new SimpleTempData<EdgeContainer,ATTR_TYPE>(m.edge);
  		m.attrn++;
 		h.n_attr = m.attrn;
@@ -872,10 +891,20 @@ public:
 		typename std::set<PointerToAttribute > ::const_iterator i;
 
 		i =m.edge_attr.find(h1);
+
 		if(i!=m.edge_attr.end())
-				return typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE>((*i)._handle,(*i).n_attr);
-			else
-				return typename MeshType:: template PerFaceAttributeHandle<ATTR_TYPE>(NULL,0);
+				if((*i)._typename == typeid(ATTR_TYPE).name() )
+						return typename MeshType:: template PerVertexAttributeHandle<ATTR_TYPE>(NULL,0);
+
+		return typename MeshType:: template PerFaceAttributeHandle<ATTR_TYPE>(NULL,0);
+	}
+
+	template <class ATTR_TYPE>
+	static void GetAllPerEdgeAttribute(const MeshType & m, std::vector<std::string> &all){
+		typename std::set<PointerToAttribute > :: iterator i;
+		for(i = m.edge_attr.begin(); i != m.edge_attr.end(); ++i )
+				if((*i)._typename == typeid(ATTR_TYPE).name())
+						all.push_back((*i)._name);
 	}
 
 	template <class ATTR_TYPE> 
@@ -922,6 +951,7 @@ public:
 			i = m.face_attr.find(h);
 			assert(i ==m.face_attr.end() );// an attribute with this name exists
 		}
+		h._typename = typeid(ATTR_TYPE).name();
 		h._sizeof = sizeof(ATTR_TYPE);
 		h._handle = (void*) new SimpleTempData<FaceContainer,ATTR_TYPE>(m.face);
 		m.attrn++;
@@ -946,19 +976,27 @@ public:
 		typename std::set<PointerToAttribute > ::iterator i;
 
 		i =m.face_attr.find(h1);
-		if(i!=m.face_attr.end()){
-				if(	(*i)._padding != 0 ){
-					PointerToAttribute attr = (*i);											// copy the PointerToAttribute
-					m.face_attr.erase(i);											// remove it from the set
-					FixPaddedPerFaceAttribute<ATTR_TYPE>(m,attr);				
-					std::pair<AttrIterator,bool> new_i = m.face_attr.insert(attr);	// insert the modified PointerToAttribute
-					assert(new_i.second);
-					i = new_i.first;				
+		if(i!=m.face_attr.end())
+				if((*i)._typename == typeid(ATTR_TYPE).name() ){
+						if(	(*i)._padding != 0 ){
+						PointerToAttribute attr = (*i);											// copy the PointerToAttribute
+						m.face_attr.erase(i);											// remove it from the set
+						FixPaddedPerFaceAttribute<ATTR_TYPE>(m,attr);
+						std::pair<AttrIterator,bool> new_i = m.face_attr.insert(attr);	// insert the modified PointerToAttribute
+						assert(new_i.second);
+						i = new_i.first;
+						}
+						return typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE>((*i)._handle,(*i).n_attr);
 				}
-				return typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE>((*i)._handle,(*i).n_attr);
-		}
-			else
-				return typename MeshType:: template PerFaceAttributeHandle<ATTR_TYPE>(NULL,0);
+		return typename MeshType:: template PerFaceAttributeHandle<ATTR_TYPE>(NULL,0);
+	}
+
+	template <class ATTR_TYPE>
+	static void GetAllPerFaceAttribute(const MeshType & m, std::vector<std::string> &all){
+		typename std::set<PointerToAttribute > :: iterator i;
+		for(i = m.face_attr.begin(); i != m.face_attr.end(); ++i )
+				if((*i)._typename == typeid(ATTR_TYPE).name())
+						all.push_back((*i)._name);
 	}
 
 	template <class ATTR_TYPE> 
@@ -1005,6 +1043,7 @@ public:
 			i = m.mesh_attr.find(h);
 			assert(i ==m.mesh_attr.end() );// an attribute with this name exists
 		}
+		h._typename = typeid(ATTR_TYPE).name();
 		h._sizeof = sizeof(ATTR_TYPE);
 		h._handle = (void*) new Attribute<ATTR_TYPE>();
 		m.attrn++;
@@ -1022,20 +1061,29 @@ public:
 		typename std::set<PointerToAttribute > ::iterator i;
 
 		i =m.mesh_attr.find(h1);
-		if(i!=m.mesh_attr.end()){
-				if(	(*i)._padding != 0 ){
-					PointerToAttribute attr = (*i);											// copy the PointerToAttribute
-		 			m.mesh_attr.erase(i);											// remove it from the set
-					FixPaddedPerMeshAttribute<ATTR_TYPE>(m,attr);				
-					std::pair<AttrIterator,bool> new_i = m.mesh_attr.insert(attr);	// insert the modified PointerToAttribute
-					assert(new_i.second);
-					i = new_i.first;				
-				}
+		if(i!=m.mesh_attr.end())
+				if((*i)._typename == typeid(ATTR_TYPE).name() ){
+						if(	(*i)._padding != 0 ){
+						PointerToAttribute attr = (*i);											// copy the PointerToAttribute
+						m.mesh_attr.erase(i);											// remove it from the set
+						FixPaddedPerMeshAttribute<ATTR_TYPE>(m,attr);
+						std::pair<AttrIterator,bool> new_i = m.mesh_attr.insert(attr);	// insert the modified PointerToAttribute
+						assert(new_i.second);
+						i = new_i.first;
+						}
 
-				return typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE>((*i)._handle,(*i).n_attr);
+						return typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE>((*i)._handle,(*i).n_attr);
 		}
-			else
-				return typename MeshType:: template PerMeshAttributeHandle<ATTR_TYPE>(NULL,0);
+
+		return typename MeshType:: template PerMeshAttributeHandle<ATTR_TYPE>(NULL,0);
+	}
+
+	template <class ATTR_TYPE>
+	static void GetAllPerMeshAttribute(const MeshType & m, std::vector<std::string> &all){
+		typename std::set<PointerToAttribute > :: iterator i;
+		for(i = m.mesh_attr.begin(); i != m.mesh_attr.end(); ++i )
+				if((*i)._typename == typeid(ATTR_TYPE).name())
+						all.push_back((*i)._name);
 	}
 
 	template <class ATTR_TYPE> 
@@ -1145,7 +1193,8 @@ public:
 	}
 
 
-	/* This section enables the calling of all allocating/deallocating functions by attribute name
+	/* This section enables the calling of all allocating/deallocating functions just by attribute name,
+		 without knowing the type
 	*/
 
 	// base class of all name type bound
