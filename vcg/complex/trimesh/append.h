@@ -75,7 +75,7 @@ public:
 		 // Vertex to Face Adj
 		 if(vcg::tri::HasVFAdjacency(ml) && vcg::tri::HasVFAdjacency(mr)){
 				size_t i = Index(mr,vr.cVFp());
-				vl.VFp() = ((i<0) || (i>ml.edge.size()))? 0 :&ml.face[remap.face[i]];
+				vl.VFp() = ((i<0) || (i>ml.face.size()))? 0 :&ml.face[remap.face[i]];
 				vl.VFi() = vr.VFi();
 		 }
 
@@ -105,7 +105,8 @@ public:
 
 		 // Edge to Face  Adj
 		 if(vcg::tri::HasEFAdjacency(ml) && vcg::tri::HasEFAdjacency(mr)){
-				 el.EFp() = &ml.face[remap.face[Index(mr,er.cEFp())]];
+				 size_t i = Index(mr,er.cEFp());
+				 el.EFp() = ((i<0) || (i>ml.face.size()))? 0 :&ml.face[remap.face[i]];
 				 el.EFi() = er.cEFi();
 		 }
 
@@ -136,7 +137,8 @@ public:
 		 if(vcg::tri::HasFFAdjacency(ml) && vcg::tri::HasFFAdjacency(mr)){
 				 assert(fl.VN() == fr.VN());
 				 for(unsigned int i = 0; i < fl.VN(); ++i ){
-						 fl.FFp(i) = &ml.face[remap.face[Index(mr,fr.cFFp(i))]];
+						 size_t i = Index(mr,fr.cFFp(i));
+						 fl.FFp(i) = ((i<0) || (i>ml.face.size()))? 0 :&ml.face[remap.face[i]];
 						 fl.FFi(i) = fr.cFFi(i);
 				 }
 		 }
@@ -158,8 +160,10 @@ public:
 			}
 
 		 // HEdge to Face  Adj
-		 if(vcg::tri::HasHFAdjacency(ml) && vcg::tri::HasHFAdjacency(mr))
-					hl.HFp() = &ml.face[remap.face[Index(mr,hr.cHFp())]];
+		 if(vcg::tri::HasHFAdjacency(ml) && vcg::tri::HasHFAdjacency(mr)){
+				 size_t i = Index(mr,hr.cHFp());
+				 hl.HFp() = ((i<0) || (i>ml.face.size()))? 0 :&ml.face[remap.face[i]];
+			}
 
 
 		 // HEdge to Opposite HEdge  Adj
