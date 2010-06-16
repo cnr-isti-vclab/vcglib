@@ -49,7 +49,7 @@ private:
 	short     _n[NMAX];
 public:
   
-  TexCoord2(T u, T v) { _t[0][0]=u; _t[0][1]=v; };
+  TexCoord2(T u, T v) { if(NMAX>0) _n[0]=0; _t[0][0]=u; _t[0][1]=v; };
   TexCoord2() {  };
   
   inline const PointType &P() const { return _t[0]; }; 	
