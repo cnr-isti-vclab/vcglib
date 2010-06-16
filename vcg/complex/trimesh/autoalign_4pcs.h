@@ -59,11 +59,9 @@ class FourPCS {
 public:
 	/* mesh only for using spatial indexing functions (to remove) */
   class PVertex;    // dummy prototype never used
-  class PEdge;    // dummy prototype never used
   class PFace;
 
   class PUsedTypes: public vcg::UsedTypes < vcg::Use<PVertex>::template AsVertexType,
-                                            vcg::Use<PEdge  >::template AsEdgeType,
                                             vcg::Use<PFace  >::template AsFaceType >{};
 
 

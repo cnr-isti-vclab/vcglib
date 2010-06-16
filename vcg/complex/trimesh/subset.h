@@ -81,17 +81,17 @@ struct InsertedV
   FacePointer f;
   int z;
   
-  const bool operator < (const InsertedV & o) const
+  bool operator < (const InsertedV & o) const
   {
     return (v<o.v);
   }
   
-  const bool operator ==(const InsertedV & o)
+  bool operator ==(const InsertedV & o)
   {
     return (v==o.v);
   }
   
-  const bool operator !=(const InsertedV & o)
+  bool operator !=(const InsertedV & o)
   {
     return (v!=o.v);
   }
@@ -118,7 +118,7 @@ void SubSet(S_MESH_TYPE & m, STL_CONT & subSet)
   for(pfi=subSet.begin(); pfi!=subSet.end(); ++pfi)
   {		
 		assert(!(*pfi)->IsD());
-		(*fi).ImportLocal(**pfi);
+		(*fi).ImportData(**pfi);
 		for(int ii = 0 ; ii < (*fi).VN(); ++ii)
 			(*fi).V(ii) = (S_VertexType*)(void*)(*pfi)->V(ii);
 		++fi;
@@ -147,7 +147,7 @@ void SubSet(S_MESH_TYPE & m, STL_CONT & subSet)
 	
 	vi = vcg::tri::Allocator<S_MESH_TYPE>::AddVertices(m,newE-newVertices.begin());
 	for(curr=newVertices.begin(); curr!=newE; ++curr,++vi)
-		(*vi).ImportLocal(*((*curr).v));
+		(*vi).ImportData(*((*curr).v));
 
 	for(vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
 		redirect.push_back(&(*vi));
