@@ -20,41 +20,12 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.7  2005/03/17 16:16:08  cignoni
-removed small gcc compiling issues
-
-Revision 1.6  2005/03/15 11:48:50  cignoni
-Added missing include assert and improved comments and requirements of geodesic quality
-
-Revision 1.5  2004/07/15 00:13:39  cignoni
-Better doxigen documentation
-
-Revision 1.4  2004/07/06 06:29:53  cignoni
-removed assumption of a using namespace std and added a missing include
-
-Revision 1.3  2004/06/24 15:15:12  cignoni
-Better Doxygen documentation
-
-Revision 1.2  2004/05/10 13:43:00  cignoni
-Added use of VFIterator in VertexGeodesicFromBorder
-
-Revision 1.1  2004/03/31 14:59:14  cignoni
-First working version!
-
-Revision 1.2  2004/03/29 14:26:57  cignoni
-First working version!
-
-****************************************************************************/
-
 #ifndef __VCG_TRI_UPDATE_QUALITY
 #define __VCG_TRI_UPDATE_QUALITY
 #include <vcg/simplex/face/pos.h>
 #include <algorithm>
 #include <vector>
+#include <stack>
 #include <assert.h>
 
 namespace vcg {
@@ -281,6 +252,73 @@ static void VertexFromRMSCurvature(MeshType &m)
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD()) 
 		(*vi).Q() = math::Sqrt(math::Abs( 4*(*vi).Kh()*(*vi).Kh() - 2*(*vi).Kg())); 
 }
+
+
+
+/*
+  Saturate the vertex quality so that for each vertex the gradient of the quality is lower than the given threshold value (in absolute value)
+  The saturation is done in a conservative way (quality is always decreased and never increased)
+
+  Note: requires VF adjacency.
+  */
+static void VertexSaturate(MeshType &m, ScalarType gradientThr=1.0)
+{
+  UpdateFlags<MeshType>::VertexClearV(m);
+  std::stack<VertexPointer> st;
+
+  st.push(&*m.vert.begin());
+
+  while(!st.empty())
+    {
+     VertexPointer vc = st.top();  // the center
+     //printf("Stack size %i\n",st.size());
+     //printf("Pop elem %i %f\n",st.top() - &*m.vert.begin(), st.top()->Q());
+     st.pop();
+     vc->SetV();
+     std::vector<VertexPointer> star;
+     typename std::vector<VertexPointer>::iterator vvi;
+     face::VVStarVF<FaceType>(vc,star);
+     for(vvi=star.begin();vvi!=star.end();++vvi )
+     {
+       float &qi = (*vvi)->Q();
+       float distGeom = Distance((*vvi)->cP(),vc->cP()) / gradientThr;
+       // Main test if the quality varies more than the geometric displacement we have to lower something.
+       if( distGeom < fabs(qi - vc->Q()))
+       {
+         // center = 0  other=10 -> other =
+         // center = 10 other=0
+         if(vc->Q() > qi)  // first case: the center of the star has to be lowered (and re-inserted in the queue).
+         {
+           //printf("Reinserting center %i \n",vc - &*m.vert.begin());
+           vc->Q() = qi+distGeom-0.00001f;
+           assert( distGeom > fabs(qi - vc->Q()));
+           st.push(vc);
+           break;
+         }
+         else
+         {
+           // second case: you have to lower qi, the vertex under examination.
+           assert( distGeom < fabs(qi - vc->Q()));
+           assert(vc->Q() < qi);
+           float newQi = vc->Q() + distGeom -0.00001f;
+           assert(newQi <= qi);
+           assert(vc->Q() < newQi);
+           assert( distGeom > fabs(newQi - vc->Q()) );
+//             printf("distGeom %f, qi %f, vc->Q() %f, fabs(qi - vc->Q()) %f\n",distGeom,qi,vc->Q(),fabs(qi - vc->Q()));
+           qi = newQi;
+           (*vvi)->ClearV();
+         }
+       }
+       if(!(*vvi)->IsV())
+       {
+         st.push( *vvi);
+//         printf("Reinserting side %i \n",*vvi - &*m.vert.begin());
+         (*vvi)->SetV();
+       }
+     }
+    }
+  }
+
 
 }; //end class
 } // end namespace
