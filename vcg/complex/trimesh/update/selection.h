@@ -20,20 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.3  2007/04/20 10:11:51  cignoni
-Corrected bug in selectionVertexFromFaceStrict
-
-Revision 1.2  2007/02/01 06:37:05  cignoni
-Added FaceFromBorder
-
-Revision 1.1  2006/10/16 08:50:58  cignoni
-First Working Version
-
-****************************************************************************/
 #ifndef __VCG_TRI_UPDATE_SELECTION
 #define __VCG_TRI_UPDATE_SELECTION
 
@@ -258,6 +244,31 @@ static size_t FaceFromBorderFlag(MeshType &m)
     }
   return selCnt;
 } 
+
+/// \brief This function select the faces that have an edge outside the given range.
+static size_t FaceOutOfRangeEdge(MeshType &m, ScalarType MinEdgeThr=0, ScalarType MaxEdgeThr=(std::numeric_limits<ScalarType>::max)())
+{
+  FaceIterator fi;
+  size_t count_fd = 0;
+  MinEdgeThr=MinEdgeThr*MinEdgeThr;
+  MaxEdgeThr=MaxEdgeThr*MaxEdgeThr;
+  for(fi=m.face.begin(); fi!=m.face.end();++fi)
+    if(!(*fi).IsD())
+      {
+        for(unsigned int i=0;i<3;++i)
+        {
+          const ScalarType squaredEdge=SquaredDistance((*fi).V0(i)->cP(),(*fi).V1(i)->cP());
+          if((squaredEdge<=MinEdgeThr) || (squaredEdge>=MaxEdgeThr) )
+          {
+            count_fd++;
+            (*fi).SetS();
+            break; // skip the rest of the edges of the tri
+          }
+        }
+      }
+      return count_fd;
+}
+
 /// \brief This function expand current selection to cover the whole connected component. 
 static size_t FaceConnectedFF(MeshType &m)
 {

@@ -434,30 +434,6 @@ private:
               }
 				return count_fd;
 			}
-      template<bool Selected>  
-        static int RemoveFaceOutOfRangeEdgeSel( MeshType& m, ScalarType MinEdgeThr=0, ScalarType MaxEdgeThr=(std::numeric_limits<ScalarType>::max)())
-      {
-        FaceIterator fi;
-        int count_fd = 0;
-        MinEdgeThr=MinEdgeThr*MinEdgeThr;
-        MaxEdgeThr=MaxEdgeThr*MaxEdgeThr;
-        for(fi=m.face.begin(); fi!=m.face.end();++fi)
-          if(!(*fi).IsD())
-            if(!Selected || (*fi).IsS())
-            {
-              for(unsigned int i=0;i<3;++i)
-              {
-                const ScalarType squaredEdge=SquaredDistance((*fi).V0(i)->cP(),(*fi).V1(i)->cP());
-                if((squaredEdge<=MinEdgeThr) || (squaredEdge>=MaxEdgeThr) )
-                {
-                  count_fd++;
-                  Allocator<MeshType>::DeleteFace(m,*fi);
-									break; // skip the rest of the edges of the tri
-                }
-              }
-            }
-            return count_fd;
-      }
 
       	// alias for the old style. Kept for backward compatibility
       static int RemoveZeroAreaFace(MeshType& m) { return RemoveFaceOutOfRangeArea(m);}
@@ -467,11 +443,6 @@ private:
       {
         return RemoveFaceOutOfRangeAreaSel<false>(m,MinAreaThr,MaxAreaThr);
       }
-      static int RemoveFaceOutOfRangeEdge(MeshType& m, ScalarType MinEdgeThr=0, ScalarType MaxEdgeThr=(std::numeric_limits<ScalarType>::max)())
-      {
-        return RemoveFaceOutOfRangeEdgeSel<false>(m,MinEdgeThr,MaxEdgeThr);
-      }
-
 			
 			/**
 			 * Is the mesh only composed by quadrilaterals?
