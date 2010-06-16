@@ -40,9 +40,7 @@
 #include <vcg/complex/used_types.h>
 #include <vcg/container/derivation_chain.h>
 
-/*
-People should subclass his vertex class from these one...
-*/
+
 
 #ifndef __VCG_MESH
 #define __VCG_MESH
@@ -66,35 +64,35 @@ namespace tri {
 		struct BaseMeshTypeHolder{
 
 				typedef bool ScalarType;
-				typedef std::vector< Vertex<TYPESPOOL> >	CONTV;
-				typedef std::vector< Edge<TYPESPOOL> >		CONTE;
-				typedef std::vector< Face<TYPESPOOL> >		CONTF;
-				typedef std::vector< HEdge<TYPESPOOL> >		CONTH;
+				typedef std::vector< typename TYPESPOOL::VertexType  >	CONTV;
+				typedef std::vector< typename TYPESPOOL::EdgeType  >		CONTE;
+				typedef std::vector< typename TYPESPOOL::FaceType >		CONTF;
+				typedef std::vector< typename TYPESPOOL::HEdgeType  >		CONTH;
 
-				typedef CONTV														VertContainer;
-				typedef Vertex<TYPESPOOL>								VertexType;
-				typedef VertexType *										VertexPointer;
-				typedef const VertexType *							ConstVertexPointer;
-				typedef bool														CoordType;
+				typedef CONTV									VertContainer;
+				typedef _Vertex 								VertexType;
+				typedef typename TYPESPOOL::VertexPointer		VertexPointer;
+				typedef const typename TYPESPOOL::VertexPointer ConstVertexPointer;
+				typedef bool									CoordType;
 				typedef typename CONTV::iterator				VertexIterator;
 				typedef typename CONTV::const_iterator	ConstVertexIterator;
 
-				typedef CONTE														EdgeContainer;
-				typedef typename CONTE::value_type			EdgeType;
-				typedef typename CONTE::value_type*			EdgePointer;
+				typedef CONTE										EdgeContainer;
+				typedef typename CONTE::value_type					EdgeType;
+				typedef typename  TYPESPOOL::EdgePointer	EdgePointer;
 				typedef typename CONTE::iterator				EdgeIterator;
 				typedef typename CONTE::const_iterator	ConstEdgeIterator;
 
 				typedef CONTF														FaceContainer;
-				typedef typename CONTF::value_type			FaceType;
-				typedef typename CONTF::const_iterator	ConstFaceIterator;
-				typedef typename CONTF::iterator				FaceIterator;
-				typedef typename CONTF::value_type*			FacePointer;
-				typedef const typename CONTF::value_type*ConstFacePointer;
+				typedef typename CONTF::value_type					FaceType;
+				typedef typename CONTF::const_iterator				ConstFaceIterator;
+				typedef typename CONTF::iterator					FaceIterator;
+				typedef typename TYPESPOOL::FacePointer	FacePointer;
+				typedef const typename TYPESPOOL::FacePointer		ConstFacePointer;
 
 				typedef CONTH														HEdgeContainer;
 				typedef typename CONTH::value_type			HEdgeType;
-				typedef typename CONTH::value_type*			HEdgePointer;
+				typedef typename TYPESPOOL::HEdgePointer					HEdgePointer;
 				typedef typename CONTH::iterator				HEdgeIterator;
 				typedef typename CONTH::const_iterator	ConstHEdgeIterator;
 
@@ -157,7 +155,7 @@ struct DummyContainer{struct value_type{ typedef int IAm;}; };
 
 template < class Container0 = DummyContainer, class Container1 = DummyContainer, class Container2 = DummyContainer, class Container3 = DummyContainer >
 class TriMesh
-		: public  MArity4<   BaseMeshTypeHolder<typename Container0::value_type::TypesPool>, Container0, Der ,Container1, Der, Container2, Der, Container3, Der>{
+	: public  MArity4<   BaseMeshTypeHolder<typename Container0::value_type::TypesPool>, Container0, Der ,Container1, Der, Container2, Der, Container3, Der>{
 	public:
 
 		typedef typename TriMesh::ScalarType		ScalarType;
@@ -226,10 +224,11 @@ class TriMesh
 
 	class PointerToAttribute{
 	public:
-		void * _handle;			// pointer to the SimpleTempData that stores the attribute
-		std::string _name;		// name of the attribute
- 		int _sizeof;			// size of the attribute type (used only with VMI loading)	
-		int _padding;			// padding 	(used only with VMI loading)
+		void * _handle;					// pointer to the SimpleTempData that stores the attribute
+		std::string _name;			// name of the attribute
+		std::string _typename;	// name as returned by the rtti
+		int _sizeof;						// size of the attribute type (used only with VMI loading)
+		int _padding;						// padding 	(used only with VMI loading)
 
 		int n_attr;				// unique ID of the attribute
 		void Resize(const int & sz){((SimpleTempDataBase<VertContainer>*)_handle)->Resize(sz);}
@@ -336,7 +335,9 @@ public:
 		typename std::set< PointerToAttribute>::iterator i;
 		for( i = vert_attr.begin(); i != vert_attr.end(); ++i) 
 			delete ((SimpleTempDataBase<VertContainer>*)(*i)._handle);
-		for( i = face_attr.begin(); i != face_attr.end(); ++i) 
+		for( i = edge_attr.begin(); i != edge_attr.end(); ++i)
+			delete ((SimpleTempDataBase<EdgeContainer>*)(*i)._handle);
+		for( i = face_attr.begin(); i != face_attr.end(); ++i)
 			delete ((SimpleTempDataBase<FaceContainer>*)(*i)._handle);
 		for( i = mesh_attr.begin(); i != mesh_attr.end(); ++i) 
 			delete ((AttributeBase*)(*i)._handle);
@@ -352,7 +353,9 @@ public:
 
 		for( i = vert_attr.begin(); i != vert_attr.end(); ++i) 
 			size += ((SimpleTempDataBase<VertContainer>*)(*i)._handle)->SizeOf()*nv;
-		for( i = face_attr.begin(); i != face_attr.end(); ++i) 
+		for( i = edge_attr.begin(); i != edge_attr.end(); ++i)
+			size += ((SimpleTempDataBase<EdgeContainer>*)(*i)._handle)->SizeOf()*en;
+		for( i = face_attr.begin(); i != face_attr.end(); ++i)
 			size +=  ((SimpleTempDataBase<FaceContainer>*)(*i)._handle)->SizeOf()*nf;
 		for( i = mesh_attr.begin(); i != mesh_attr.end(); ++i) 
 			size +=  ((AttributeBase*)(*i)._handle)->SizeOf();
@@ -545,6 +548,9 @@ template < class  ContainerType0, class ContainerType1, class ContainerType2 , c
 bool HasFFAdjacency (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::FaceContainer::value_type::HasFFAdjacency();}
 
 template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
+bool HasFEAdjacency (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::FaceContainer::value_type::HasFEAdjacency();}
+
+template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
 bool HasFVAdjacency (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::FaceContainer::value_type::HasFVAdjacency();}
 
 template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
@@ -555,6 +561,9 @@ bool HasVHAdjacency (const TriMesh < ContainerType0, ContainerType1, ContainerTy
 
 template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
 bool HasEVAdjacency (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::EdgeType::HasEVAdjacency();}
+
+template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
+bool HasEEAdjacency (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::EdgeType::HasEEAdjacency();}
 
 template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
 bool HasEFAdjacency (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::EdgeType::HasEFAdjacency();}
