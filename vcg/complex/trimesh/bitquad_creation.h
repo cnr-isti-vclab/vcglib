@@ -369,15 +369,15 @@ static void MakePureByRefine(MeshType &m){
         assert(nvi!=m.vert.end());
         VertexType *nv = &*nvi; nvi++;
         //*nv = *fi->V0( 0 ); // lazy: copy everything from the old vertex
-        nv->ImportLocal(*(fi->V0( 0 ))); // lazy: copy everything from the old vertex
+				nv->ImportData(*(fi->V0( 0 ))); // lazy: copy everything from the old vertex
 
         nv->P() = ( fi->V(0)->P() + fi->V(1)->P() + fi->V(2)->P() )  /3.0;
         FaceType *fa = &*fi;
         FaceType *fb = &*nfi; nfi++;
         FaceType *fc = &*nfi; nfi++;
 
-        fb->ImportLocal(*fa); CopyTopology(fb,fa);
-        fc->ImportLocal(*fa); CopyTopology(fc,fa);
+				fb->ImportData(*fa); CopyTopology(fb,fa);
+				fc->ImportData(*fa); CopyTopology(fc,fa);
 
         fa->V(0) = nv;
         fb->V(1) = nv;
@@ -443,7 +443,7 @@ static void MakePureByRefine(MeshType &m){
       assert(nvi!=m.vert.end());
       VertexType *nv = &*nvi; nvi++;
       // *nv = * fa->V0( ea2 );
-      nv->ImportLocal(*(fa->V0( ea2 ) )); // lazy: copy everything from the old vertex
+			nv->ImportData(*(fa->V0( ea2 ) )); // lazy: copy everything from the old vertex
       //nv->P() = ( fa->V(ea2)->P() + fa->V(ea0)->P() ) /2.0;
       Interpolator::Apply(*(fa->V(ea2)),*(fa->V(ea0)),0.5,*nv);
       // split faces: add 2 faces (one per side)
@@ -452,8 +452,8 @@ static void MakePureByRefine(MeshType &m){
       assert(nfi!=m.face.end());
       FaceType *fd = &*nfi; nfi++;
 
-      fc->ImportLocal(*fa ); CopyTopology(fc,fa); // lazy: copy everything from the old vertex
-      fd->ImportLocal(*fb ); CopyTopology(fd,fb);// lazy: copy everything from the old vertex
+			fc->ImportData(*fa ); CopyTopology(fc,fa); // lazy: copy everything from the old vertex
+			fd->ImportData(*fb ); CopyTopology(fd,fb);// lazy: copy everything from the old vertex
 
       fa->V(ea2) = fc->V(ea0) = 
       fb->V(eb2) = fd->V(eb0) = nv ;
@@ -547,13 +547,13 @@ static void MakePureByRefine(MeshType &m){
         // create new vert in center of faux edge
         VertexType *nv = &*nvi; nvi++;
         //*nv = * fa->V0( ea2 );
-        nv->ImportLocal(*(fa->V0( ea2 ) )); // lazy: copy everything from the old vertex
+				nv->ImportData(*(fa->V0( ea2 ) )); // lazy: copy everything from the old vertex
         nv->P() = ( fa->V(ea2)->P() + fa->V(ea0)->P() ) /2.0;
         Interpolator::Apply(*(fa->V(ea2)),*(fa->V(ea0)),0.5,*nv);
         // split face: add 1 face
         FaceType *fc = &*nfi; nfi++;
 
-        fc->ImportLocal(*fa);CopyTopology(fc,fa); // lazy: copy everything from the old vertex
+				fc->ImportData(*fa);CopyTopology(fc,fa); // lazy: copy everything from the old vertex
 
         fa->V(ea2) = fc->V(ea0) = nv ;
         

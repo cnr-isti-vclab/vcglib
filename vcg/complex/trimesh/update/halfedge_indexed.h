@@ -202,7 +202,7 @@ namespace vcg
                         {
                             if((*ei).HEp() == NULL)
                             {
-                                (*ei).HEp() = &(*edge_i);
+								(*ei).HEp() = &(*edge_i);
                                 (*ei).HOp()->HEp() = &(*edge_i);
 
                                 (*edge_i).EHp() = &(*ei);
@@ -337,7 +337,7 @@ namespace vcg
                             }
                         }
 
-                        if( HasHEAdjacency(m) )
+												if( HasHEAdjacency(m) && (m.en!=0))
                         {
                             if( ! ep->HEp())
                                 return false; //halfedge must point to an edge
@@ -363,6 +363,7 @@ namespace vcg
                         if( ep->HNp()->IsD())
                             return false; //
 
+												if(hasHP)
                         if( ep->HNp()->HPp() != ep)
                             return false; //
 
