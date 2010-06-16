@@ -422,7 +422,7 @@ namespace io {
 			FaceIterator fi;
 			for(fi=m.face.begin(); fi!=m.face.end(); ++fi) if( !(*fi).IsD() )
 			{
-				vcg::TexCoord2<float> t0,t1,t2;
+        vcg::TexCoord2<float> t0(0,0),t1(0,0),t2(0,0);
 				int i0 = GetIndexVertex(m, (*fi).V(0));
 				int i1 = GetIndexVertex(m, (*fi).V(1));
 				int i2 = GetIndexVertex(m, (*fi).V(2));
