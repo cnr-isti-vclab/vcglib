@@ -154,7 +154,7 @@ public:
 	const ScalarType &cK() const { return CAT< vector_occ<VertType>,CurvatureTypeOcc>::Instance()->Get((VertType*)this)[1];}
 
  	template <class LeftV>
-	void ImportLocal(const LeftV & leftV){ 
+	void ImportData(const LeftV & leftV){
 			CAT< vector_occ<VertType>,CurvatureTypeOcc>::Instance()->Get((VertType*)this)[0] = leftV.cH();
 			CAT< vector_occ<VertType>,CurvatureTypeOcc>::Instance()->Get((VertType*)this)[1] = leftV.cK();
 			TT::ImporLocal(leftV);
@@ -230,7 +230,7 @@ public:
   const RadiusType &cR() const { return CAT< vector_occ<VertType>,RadiusType>::Instance()->Get((VertType*)this);}
 
   template <class LeftV>
-  void ImportLocal(const LeftV & leftV){
+	void ImportData(const LeftV & leftV){
     CAT< vector_occ<VertType>,RadiusType>::Instance()->Get((VertType*)this) = leftV.cR();
     TT::ImporLocal(leftV);
   }

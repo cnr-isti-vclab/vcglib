@@ -20,94 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.25  2008/03/11 09:22:07  cignoni
-Completed the garbage collecting functions CompactVertexVector and CompactFaceVector.
-
-Revision 1.24  2008/02/28 15:41:17  cignoni
-Added FFpi methods and better init of texture coords
-
-Revision 1.23  2008/02/05 10:11:34  cignoni
-A small typo (a T:: instead of TT::)
-
-Revision 1.22  2008/02/04 21:26:45  ganovelli
-added ImportLocal which imports all local attributes into vertexplus and faceplus.
-A local attribute is everything (N(), C(), Q()....) except pointers to other simplices
-(i.e. FFAdj, VFAdj, VertexRef) which are set to NULL.
-Added some function for const attributes
-
-Revision 1.21  2007/10/09 12:03:13  corsini
-remove signed/unsigned warning
-
-Revision 1.20  2007/03/12 15:37:19  tarini
-Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
-
-Revision 1.19  2006/11/28 22:34:28  cignoni
-Added default constructor with null initialization to adjacency members.
-AddFaces and AddVertices NEED to know if the topology is correctly computed to update it.
-
-Revision 1.18  2006/11/07 11:29:24  cignoni
-Corrected some errors in the reflections Has*** functions
-
-Revision 1.17  2006/10/31 16:02:18  ganovelli
-vesione 2005 compliant
-
-Revision 1.16  2006/10/27 14:15:10  ganovelli
-added overrides to HasFFAddAdjacency and HasVFAddAdjacency
-
-Revision 1.15  2006/10/16 08:49:29  cignoni
-Better managment of resize overloading when reducing the size of a vector
-
-Revision 1.14  2006/10/09 20:20:55  cignoni
-Added some missing Add***Ocf() for the default case.
-
-Revision 1.13  2006/05/25 09:39:09  cignoni
-missing std and other gcc detected syntax errors
-
-Revision 1.12  2006/05/03 21:37:02  cignoni
-Added Optional Mark
-
-Revision 1.11  2006/02/28 11:59:39  ponchio
-g++ compliance:
-
-begin() -> (*this).begin() and for end(), size(), Base(), Index()
-
-Revision 1.10  2006/01/30 08:47:40  cignoni
-Corrected HasPerWedgeTexture
-
-Revision 1.9  2006/01/05 15:46:06  cignoni
-Removed a syntax error (double >) in HasPerWedgeTexture/HasPerFaceColor
-
-Revision 1.8  2006/01/04 18:46:25  cignoni
-Corrected push_back (did not worked at all!)
-added missing cFFi
-
-Revision 1.7  2006/01/03 10:54:21  cignoni
-Corrected HasPerFaceColor and HasPerWedgeTexture to comply gcc
-
-Revision 1.6  2005/12/12 11:17:32  cignoni
-Corrected update function, now only the needed simplexes should be updated.
-
-Revision 1.5  2005/11/26 00:16:44  cignoni
-Corrected a lot of bugs about the use of enabled entities
-
-Revision 1.4  2005/11/21 21:46:20  cignoni
-Changed HasColor -> HasFaceColor and HasNormal ->HasFaceNormal
-
-Revision 1.3  2005/11/16 22:43:36  cignoni
-Added WedgeTexture component
-
-Revision 1.2  2005/10/22 13:16:46  cignoni
-Added a missing ';' in  FFAdjOcf (thanks to Mario Latronico).
-
-Revision 1.1  2005/10/14 15:07:58  cignoni
-First Really Working version
-
-
-****************************************************************************/
 
 /* 
 Note
@@ -486,13 +398,8 @@ public:
   }
 
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){
-		//if(leftF.Base().VFAdjacencyEnabled && this->Base().VFAdjacencyEnabled)// WRONG I do not know anything about leftV!
-		if(this->Base().VFAdjacencyEnabled){
-			VFp(0) = NULL; VFp(1) = NULL; VFp(2) = NULL;
-			VFi(0) =   -1; VFi(1) =   -1; VFi(2) =   -1;
-		}
-		T::ImportLocal(leftF);
+	void ImportData(const LeftF & leftF){
+		T::ImportData(leftF);
 	}
   static bool HasVFAdjacency()   {   return true; }
   static bool HasVFAdjacencyOcf()   { return true; }
@@ -530,13 +437,8 @@ public:
 	typename T::FacePointer  const  FFp2( const int j ) const { return FFp((j+2)%3);}
 
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){
-//		if(leftF.Base().FFAdjacencyEnabled && this->Base().FFAdjacencyEnabled) // WRONG I do not know anything about leftV!
-		if(this->Base().FFAdjacencyEnabled) {
-			FFp(0) = NULL; FFp(1) = NULL; FFp(2) = NULL;
-			FFi(0) =   -1; FFi(1) =   -1; FFi(2) =   -1;
-		}
-		T::ImportLocal(leftF);
+	void ImportData(const LeftF & leftF){
+		T::ImportData(leftF);
 	}
   static bool HasFFAdjacency()   {   return true; }
   static bool HasFFAdjacencyOcf()   { return true; }
@@ -562,10 +464,10 @@ public:
     return (*this).Base().NV[(*this).Index()];  }
 
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){
+	void ImportData(const LeftF & leftF){
 		if((*this).Base().NormalEnabled && leftF.Base().NormalEnabled)
 			N() = leftF.cN(); 
-		T::ImportLocal(leftF);
+		T::ImportData(leftF);
 	}
 
 };
@@ -593,11 +495,11 @@ public:
   }
 
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){
+	void ImportData(const LeftF & leftF){
 		//if((*this).Base().QualityEnabled && leftF.Base().QualityEnabled)// WRONG I do not know anything about leftV!
 		if((*this).Base().QualityEnabled)
 				Q() = leftF.cQ(); 
-		T::ImportLocal(leftF);
+		T::ImportData(leftF);
 	}
   static bool HasFaceQuality()   { return true; }
   static bool HasFaceQualityOcf()   { return true; }
@@ -624,11 +526,11 @@ public:
   }
 
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){
+	void ImportData(const LeftF & leftF){
 		//if((*this).Base().ColorEnabled && leftF.Base().ColorEnabled)// WRONG I do not know anything about leftV!
 		if((*this).Base().ColorEnabled )
 				C() = leftF.cC(); 
-		T::ImportLocal(leftF);
+		T::ImportData(leftF);
 	}
   static bool HasFaceColor()   { return true; }
   static bool HasFaceColorOcf()   { return true; }
@@ -651,11 +553,11 @@ public:
   } ;
 
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){
+	void ImportData(const LeftF & leftF){
 		//if((*this).Base().MarkEnabled && leftF.Base().MarkEnabled)// WRONG I do not know anything about leftV!
 		if((*this).Base().MarkEnabled)
 			IMark() = leftF.IMark(); 
-		T::ImportLocal(leftF);
+		T::ImportData(leftF);
 	}
   static bool HasFaceMark()   { return true; }
   static bool HasFaceMarkOcf()   { return true; }
@@ -671,11 +573,11 @@ public:
   TexCoordType &WT(const int i)              { assert((*this).Base().WedgeTexEnabled); return (*this).Base().WTV[(*this).Index()].wt[i]; }
   TexCoordType const &cWT(const int i) const { assert((*this).Base().WedgeTexEnabled); return (*this).Base().WTV[(*this).Index()].wt[i]; }
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){
+	void ImportData(const LeftF & leftF){
 		//if(this->Base().WedgeTexEnabled && leftF.Base().WedgeTexEnabled)  // WRONG I do not know anything about leftV!
 		if(this->Base().WedgeTexEnabled)
 		{ WT(0) = leftF.cWT(0); WT(1) = leftF.cWT(1); WT(2) = leftF.cWT(2); }
-		TT::ImportLocal(leftF);
+		TT::ImportData(leftF);
 	}
   static bool HasWedgeTexCoord()   { return true; }
   static bool HasWedgeTexCoordOcf()   { return true; }
@@ -692,11 +594,11 @@ public:
   ColorType &WC(const int i)              { assert((*this).Base().WedgeColorEnabled); return (*this).Base().WCV[(*this).Index()].wc[i]; }
   const ColorType & cWC(const int i) const { assert((*this).Base().WedgeColorEnabled); return (*this).Base().WCV[(*this).Index()].wc[i]; }
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){
+	void ImportData(const LeftF & leftF){
 		//if(this->Base().WedgeColorEnabled && leftF.Base().WedgeColorEnabled)  // WRONG I do not know anything about leftV!
 		if(this->Base().WedgeColorEnabled)
 		{ WC(0) = leftF.cWC(0); WC(1) = leftF.cWC(1); WC(2) = leftF.cWC(2); }
-		TT::ImportLocal(leftF);
+		TT::ImportData(leftF);
 	}
   static bool HasWedgeColor()   { return true; }
   static bool HasWedgeColorOcf()   { return true; }
@@ -713,11 +615,11 @@ public:
   NormalType &WN(const int i)              { assert((*this).Base().WedgeNormalEnabled); return (*this).Base().WNV[(*this).Index()].wn[i]; }
   NormalType const &cWN(const int i) const { assert((*this).Base().WedgeNormalEnabled); return (*this).Base().WNV[(*this).Index()].wn[i]; }
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){
+	void ImportData(const LeftF & leftF){
 		//if(this->Base().WedgeNormalEnabled && leftF.Base().WedgeNormalEnabled)  // WRONG I do not know anything about leftV!
 		if(this->Base().WedgeNormalEnabled)
 		{ WN(0) = leftF.cWN(0); WN(1) = leftF.cWN(1); WN(2) = leftF.cWN(2); }
-		TT::ImportLocal(leftF);
+		TT::ImportData(leftF);
 	}
   static bool HasWedgeNormal()   { return true; }
   static bool HasWedgeNormalOcf()   { return true; }
@@ -732,7 +634,7 @@ template <class T> class WedgeNormal3dOcf: public WedgeNormalOcf<vcg::Point3d, T
 template < class T> class InfoOcf: public T {
 public:
     // You should never ever try to copy a vertex that has OCF stuff.
-    // use ImportLocal function.
+		// use ImportData function.
     inline InfoOcf &operator=(const InfoOcf & /*other*/) {
         assert(0); return *this;
     }
@@ -741,7 +643,7 @@ public:
   vector_ocf<typename T::FaceType> &Base() const { return *_ovp;}
 
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){T::ImportLocal(leftF);}
+	void ImportData(const LeftF & leftF){T::ImportData(leftF);}
 
   static bool HasFaceColorOcf()   { return false; }
   static bool HasFaceNormalOcf()   { return false; }

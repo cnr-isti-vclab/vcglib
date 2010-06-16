@@ -54,8 +54,8 @@ public:
 		inline void Dealloc(){T::Dealloc();};// it should be useless
 
 		// EmptyPFHAdj
-		HEdgePointer       &FHp(const int)       { static typename T::HEdgePointer fp=0;  assert(0); return fp; }
-		HEdgePointer const cFHp(const int) const { static typename T::HEdgePointer const fp=0; return fp; }
+		HEdgePointer       &FHp( )       { static typename T::HEdgePointer fp=0;  assert(0); return fp; }
+		HEdgePointer const cFHp( ) const { static typename T::HEdgePointer const fp=0; return fp; }
 		static bool HasFHAdjacency()   {   return false; }
 };
 

@@ -25,7 +25,7 @@
 
 $Log: not supported by cvs2svn $
 Revision 1.21  2008/02/04 21:26:45  ganovelli
-added ImportLocal which imports all local attributes into vertexplus and faceplus.
+added ImportData which imports all local attributes into vertexplus and faceplus.
 A local attribute is everything (N(), C(), Q()....) except pointers to other simplices
 (i.e. FFAdj, VFAdj, VertexRef) which are set to NULL.
 Added some function for const attributes
@@ -119,14 +119,20 @@ public:
   inline typename T::VertexType *       & V( const int ) 	    {	assert(0);		static typename T::VertexType *vp=0; return vp; }
   inline typename T::VertexType * const & V( const int ) const {	assert(0);		static typename T::VertexType *vp=0; return vp; }
   inline typename T::VertexType * cV( const int ) const {	assert(0);		static typename T::VertexType *vp=0; return vp;	}
+
+	inline typename T::VertexType *       & FVp( const int i )				{	return this->V(i); }
+	inline typename T::VertexType * const & FVp( const int i) const		{	return this->V(i); }
+	inline typename T::VertexType * cFVp( const int i ) const					{	return this->cV(i); }
+
   inline typename T::CoordType & P( const int ) 	    {	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
   inline const typename T::CoordType & P( const int ) const {	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
   inline const typename T::CoordType &cP( const int ) const	{	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
 	template <class RightF>
-	void ImportLocal(const RightF & rightF) {T::ImportLocal(rightF);}
+	void ImportData(const RightF & rightF) {T::ImportData(rightF);}
 	inline void Alloc(const int & ns){T::Alloc(ns);}
 	inline void Dealloc(){T::Dealloc();}
   static bool HasVertexRef()   { return false; }
+	static bool HasFVAdjacency()   { return false; }
 	static void Name(std::vector<std::string> & name){T::Name(name);}
 
 };
@@ -143,7 +149,7 @@ public:
 
   inline typename T::VertexType *       & V( const int j ) 	     { assert(j>=0 && j<3); return v[j]; }
   inline typename T::VertexType * const & V( const int j ) const { assert(j>=0 && j<3); return v[j]; }
-        inline typename T::VertexType *  cV( const int j ) const { assert(j>=0 && j<3);	return v[j]; }
+	inline typename T::VertexType *  cV( const int j ) const { assert(j>=0 && j<3);	return v[j]; }
 
 	// Shortcut per accedere ai punti delle facce
   inline       CoordType & P( const int j ) 	    {	assert(j>=0 && j<3);		return v[j]->P();	}
@@ -179,13 +185,15 @@ public:
 
     // Small comment about the fact that the pointers are zero filled.
     // The importLocal is meant for copyng stuff between very different meshes, so copying the pointers would be meaningless.
-    // if you are using ImportLocal for copying internally simplex you have to set up all the pointers by hand.
+		// if you are using ImportData for copying internally simplex you have to set up all the pointers by hand.
 	template <class RightF>
-	void ImportLocal(const RightF & rightF){ V(0) = NULL; V(1) = NULL; V(2) = NULL; T::ImportLocal(rightF);}
+	void ImportData(const RightF & rightF){  T::ImportData(rightF);}
 	inline void Alloc(const int & ns){T::Alloc(ns);}
 	inline void Dealloc(){T::Dealloc();}
 
   static bool HasVertexRef()   { return true; }
+	static bool HasFVAdjacency()   { return true; }
+
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("VertexRef"));T::Name(name);}
 
 
@@ -207,7 +215,7 @@ public:
   const NormalType cWN(int) const { static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
 
 	template <class RightF>
-	void ImportLocal(const RightF & rightF){ T::ImportLocal(rightF);}
+	void ImportData(const RightF & rightF){ T::ImportData(rightF);}
   static bool HasWedgeNormal()   { return false; }
   static bool HasFaceNormal()   { return false; }
   static bool HasWedgeNormalOcc()   { return false; }
@@ -225,7 +233,7 @@ public:
   NormalType &N() { return _norm; }
   NormalType &cN() const { return _norm; }
 	template <class RightF>
-	void ImportLocal(const RightF & rightF){ N() = rightF.cN(); T::ImportLocal(rightF);}
+	void ImportData(const RightF & rightF){ N() = rightF.cN(); T::ImportData(rightF);}
  	inline void Alloc(const int & ns){T::Alloc(ns);}
 	inline void Dealloc(){T::Dealloc();}
   static bool HasFaceNormal()   { return true; }
@@ -250,10 +258,10 @@ public:
   NormalType &N() { return _norm; }
   NormalType cN() const { return _norm; }
 	template <class RightF>
-	void ImportLocal(const RightF & rightF)
+	void ImportData(const RightF & rightF)
 	{		
 		N().Import(rightF.cN());
-		T::ImportLocal( rightF); 
+		T::ImportData( rightF);
 	}
 
  	inline void Alloc(const int & ns){T::Alloc(ns);}
@@ -271,7 +279,7 @@ public:
   NormalType &WN(const int j) { return _wnorm[j]; }
   const NormalType cWN(const int j) const { return _wnorm[j]; }
 	template <class RightF>
-	void ImportLocal(const RightF & rightF){ for (int i=0; i<3; ++i) { WN(i) = rightF.cWN(i); } T::ImportLocal(rightF);}
+	void ImportData(const RightF & rightF){ for (int i=0; i<3; ++i) { WN(i) = rightF.cWN(i); } T::ImportData(rightF);}
  	inline void Alloc(const int & ns){T::Alloc(ns);}
 	inline void Dealloc(){T::Dealloc();}
 	static bool HasWedgeNormal()   { return true; }
@@ -287,7 +295,7 @@ public:
   NormalType &WN(const int i) { return _wn[i]; }
   NormalType const &cWN(const int i) const { return _wn[i]; }
 	template <class RightF>
-	void ImportLocal(const RightF & rightF){ for (int i=0; i<3; ++i) { WN(i) = rightF.cWN(i); } T::ImportLocal(rightF);}
+	void ImportData(const RightF & rightF){ for (int i=0; i<3; ++i) { WN(i) = rightF.cWN(i); } T::ImportData(rightF);}
 	inline void Alloc(const int & ns){T::Alloc(ns);}
 	inline void Dealloc(){T::Dealloc();}
   static bool HasWedgeNormal()   { return true; }
@@ -327,7 +335,7 @@ public:
   TexCoordType &WT(const int) { static TexCoordType dummy_texture;  assert(0); return dummy_texture;}
   TexCoordType const &cWT(const int) const { static TexCoordType dummy_texture; return dummy_texture;}
 	template <class RightF>
-	void ImportLocal(const RightF & rightF){ T::ImportLocal(rightF);}
+	void ImportData(const RightF & rightF){ T::ImportData(rightF);}
 	inline void Alloc(const int & ns){T::Alloc(ns);}
 	inline void Dealloc(){T::Dealloc();}
   static bool HasWedgeTexCoord()   { return false; }
@@ -342,7 +350,7 @@ public:
   TexCoordType &WT(const int i) { return _wt[i]; }
   TexCoordType const &cWT(const int i) const { return _wt[i]; }
 	template <class RightF>
-	void ImportLocal(const RightF & rightF){ for (int i=0; i<3; ++i) { WT(i) = rightF.cWT(i); } T::ImportLocal(rightF);}
+	void ImportData(const RightF & rightF){ for (int i=0; i<3; ++i) { WT(i) = rightF.cWT(i); } T::ImportData(rightF);}
 	inline void Alloc(const int & ns){T::Alloc(ns);}
 	inline void Dealloc(){T::Dealloc();}
   static bool HasWedgeTexCoord()   { return true; }
@@ -369,7 +377,7 @@ public:
   int &Flags() { static int dummyflags(0);  assert(0); return dummyflags; }
   int Flags() const { return 0; }
 	template <class RightF>
-	void ImportLocal(const RightF & rightF){ T::ImportLocal(rightF);}
+	void ImportData(const RightF & rightF){ T::ImportData(rightF);}
 	inline void Alloc(const int & ns){T::Alloc(ns);}
 	inline void Dealloc(){T::Dealloc();}
   static bool HasFlags()   { return false; }
@@ -385,7 +393,7 @@ public:
   int Flags() const {return _flags; }
   const int & cFlags() const {return _flags; }
 	template <class RightF>
-	void ImportLocal(const RightF & rightF){ Flags() = rightF.cFlags();T::ImportLocal(rightF);}
+	void ImportData(const RightF & rightF){ Flags() = rightF.cFlags();T::ImportData(rightF);}
 	inline void Alloc(const int & ns){T::Alloc(ns);}
 	inline void Dealloc(){T::Dealloc();}
   static bool HasFlags()   { return true; }
@@ -432,7 +440,7 @@ public:
   
 	static void Name(std::vector<std::string> & name){T::Name(name);}
 	template <class RightF>
-	void ImportLocal(const RightF & rightF){ T::ImportLocal(rightF);}
+	void ImportData(const RightF & rightF){ T::ImportData(rightF);}
 	inline void Alloc(const int & ns){T::Alloc(ns);}
 	inline void Dealloc(){T::Dealloc();}
 
@@ -444,7 +452,7 @@ public:
   ColorType &C() { return _color; }
   const ColorType &cC() const { return _color; }
 	template <class RightF>
-	void ImportLocal(const RightF & rightF){ C() = rightF.cC();T::ImportLocal(rightF);}
+	void ImportData(const RightF & rightF){ C() = rightF.cC();T::ImportData(rightF);}
 	inline void Alloc(const int & ns){T::Alloc(ns);}
 	inline void Dealloc(){T::Dealloc();}
   static bool HasFaceColor()   { return true; }
@@ -462,7 +470,7 @@ public:
   const ColorType &cWC(const int i) const { return _color[i]; }
 
 	template <class RightF>
-	void ImportLocal(const RightF & rightF){ if (RightF::HasWedgeColor()) { for (int i=0; i<3; ++i) { WC(i) = rightF.cWC(i); } T::ImportLocal(rightF); } }
+	void ImportData(const RightF & rightF){ if (RightF::HasWedgeColor()) { for (int i=0; i<3; ++i) { WC(i) = rightF.cWC(i); } T::ImportData(rightF); } }
   static bool HasWedgeColor()   { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeColor"));T::Name(name);}
 
@@ -490,7 +498,7 @@ public:
   QualityType &Q() { return _quality; }
   const QualityType &cQ() const { return _quality; }
 	template <class RightF>
-	void ImportLocal(const RightF & rightF){ if(RightF::HasFaceQuality()) Q() = rightF.cQ();T::ImportLocal(rightF);}
+	void ImportData(const RightF & rightF){ if(RightF::HasFaceQuality()) Q() = rightF.cQ();T::ImportData(rightF);}
 	inline void Alloc(const int & ns){T::Alloc(ns);}
 	inline void Dealloc(){T::Dealloc();}
   static bool HasFaceQuality()   { return true; }
@@ -519,7 +527,7 @@ public:
   inline int & IMark()       { return _imark;}
   inline const int & IMark() const {return _imark;}
 	template <class RightF>
-	void ImportLocal(const RightF & rightF){ IMark() = rightF.IMark();T::ImportLocal(rightF);}
+	void ImportData(const RightF & rightF){ IMark() = rightF.IMark();T::ImportData(rightF);}
   static void Name(std::vector<std::string> & name){name.push_back(std::string("Mark"));T::Name(name);}
     
  private:
@@ -539,14 +547,14 @@ public:
   typename T::FacePointer const cFFp(const int) const { static typename T::FacePointer const fp=0; return fp; }
   typename T::EdgePointer       &FEp(const int)       { static typename T::EdgePointer fp=0;  assert(0); return fp; }
   typename T::EdgePointer const cFEp(const int) const { static typename T::EdgePointer const fp=0; return fp; }
-	typename T::HEdgePointer       &FHp(const int)       { static typename T::HEdgePointer fp=0;  assert(0); return fp; }
-	typename T::HEdgePointer const cFHp(const int) const { static typename T::HEdgePointer const fp=0; return fp; }
+	typename T::HEdgePointer       &FHp()       { static typename T::HEdgePointer fp=0;  assert(0); return fp; }
+	typename T::HEdgePointer const cFHp() const { static typename T::HEdgePointer const fp=0; assert(0);return fp; }
 	char &VFi(const int j){(void)j; static char z=0;  assert(0); return z;};
   char &FFi(const int j){(void)j; static char z=0;  assert(0); return z;};
   const char &cVFi(const int j){(void)j; static char z=0; return z;};
   const char &cFFi(const int j) const {(void)j; static char z=0; return z;};
 	template <class RightF>
-	void ImportLocal(const RightF & rightF){ T::ImportLocal(rightF);}
+	void ImportData(const RightF & rightF){ T::ImportData(rightF);}
 	inline void Alloc(const int & ns){T::Alloc(ns);}
 	inline void Dealloc(){T::Dealloc();}
   static bool HasVFAdjacency()   {   return false; }
@@ -575,7 +583,7 @@ public:
   typename T::FacePointer const cVFp(const int j) const  { assert(j>=0 && j<3);  return _vfp[j]; }
   char &VFi(const int j) {return _vfi[j]; }
 	template <class RightF>
-	void ImportLocal(const RightF & rightF){T::ImportLocal(rightF);}
+	void ImportData(const RightF & rightF){T::ImportData(rightF);}
 	inline void Alloc(const int & ns){T::Alloc(ns);}
 	inline void Dealloc(){T::Dealloc();}
   static bool HasVFAdjacency()      {   return true; }
@@ -608,7 +616,7 @@ public:
 	typename T::FacePointer  const  FFp2( const int j ) const { return FFp((j+2)%3);}
 
 	template <class RightF>
-	void ImportLocal(const RightF & rightF){T::ImportLocal(rightF);}
+	void ImportData(const RightF & rightF){T::ImportData(rightF);}
 	inline void Alloc(const int & ns){T::Alloc(ns);}
 	inline void Dealloc(){T::Dealloc();}
   static bool HasFFAdjacency()      {   return true; }
@@ -642,7 +650,7 @@ public:
 	typename T::FacePointer  const  FEp2( const int j ) const { return FEp((j+2)%3);}
 
 	template <class RightF>
-	void ImportLocal(const RightF & rightF){T::ImportLocal(rightF);}
+	void ImportData(const RightF & rightF){T::ImportData(rightF);}
 	inline void Alloc(const int & ns){T::Alloc(ns);}
 	inline void Dealloc(){T::Dealloc();}
   static bool HasFEAdjacency()      {   return true; }
@@ -663,7 +671,7 @@ public:
 	typename T::HEdgePointer const cFHp( ) const  { return _fh; }
 
 	template <class RightF>
-	void ImportLocal(const RightF & rightF){T::ImportLocal(rightF);}
+	void ImportData(const RightF & rightF){T::ImportData(rightF);}
 	inline void Alloc(const int & ns){T::Alloc(ns);}
 	inline void Dealloc(){T::Dealloc();}
 	static bool HasFHAdjacency()      {   return true; }

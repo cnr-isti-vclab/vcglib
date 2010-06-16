@@ -13,8 +13,8 @@ public:
 	SphType &SH() { return _harmonics; }
 	const SphType &cSH() const { return _harmonics; }
 	template < class LeftV>
-	//	void ImportLocal(const LeftV  & left ) { SH() = left.cSH(); T::ImportLocal( left); }
-	void ImportLocal(const LeftV  & left ) { T::ImportLocal( left); }
+	//	void ImportData(const LeftV  & left ) { SH() = left.cSH(); T::ImportData( left); }
+	void ImportData(const LeftV  & left ) { T::ImportData( left); }
 	static bool HasSH()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("Spherical Harmonics"));T::Name(name);}
 

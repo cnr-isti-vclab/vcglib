@@ -28,7 +28,7 @@ Revision 1.12  2008/03/17 11:39:14  ganovelli
 added curvature and curvatruredir (compiled .net 2005 and gcc)
 
 Revision 1.11  2008/02/04 21:26:49  ganovelli
-added ImportLocal which imports all local attributes into vertexplus and faceplus.
+added ImportData which imports all local attributes into vertexplus and faceplus.
 A local attribute is everything (N(), C(), Q()....) except pointers to other simplices
 (i.e. FFAdj, VFAdj, VertexRef) which are set to NULL.
 Added some function for const attributes
@@ -96,7 +96,7 @@ These typenames must be known form all the derived classes.
 //  typedef BFT *FacePointer;
 //  typedef BTT *TetraPointer;
 //	template < class LeftV>
-//	void ImportLocal(const LeftV  & /* left */ ) { }
+//	void ImportData(const LeftV  & /* left */ ) { }
 //    static void Name(std::vector<std::string> & /* name */){}
 //
 //};

@@ -20,57 +20,7 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
 
-$Log: not supported by cvs2svn $
-Revision 1.13  2008/02/03 23:49:42  cignoni
-Important Change. Now GetBBox return a null bbox if called on a deleted face (instead of crashing)
-
-Revision 1.12  2007/05/04 16:40:11  ganovelli
-changes to comply "plus" types
-
-Revision 1.11  2007/03/27 09:22:11  cignoni
-Added Visited flags
-
-Revision 1.10  2007/03/12 15:37:19  tarini
-Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
-
-Revision 1.9  2007/02/12 19:01:23  ganovelli
-added Name(std:vector<std::string>& n) that fills n with the names of the attribute of the face type
-
-Revision 1.8  2006/10/09 20:20:18  cignoni
-Increased the maximum number of possible template args from 8  to 9
-
-Revision 1.7  2006/02/27 17:58:11  ponchio
-Added some documentation
-
-Revision 1.6  2005/12/16 13:28:09  cignoni
-Increased the maximum number of possible template args from 7  to 8
-
-Revision 1.5  2005/12/02 00:41:38  cignoni
-Added and removed typenames for gcc compiling.
-Added this-> qualifier for referencing the elemntes of the templated base class
-(e.g. to refer the possibly overridden flags())  it seems to be needed by the standard
-
-Revision 1.4  2005/11/16 22:56:32  cignoni
-Added EmptyMark to base class
-Standardized name of flags. It is plural becouse each simplex has many flag.
-
-Revision 1.3  2005/11/12 18:42:18  cignoni
-Added ClearS and GetBBox
-
-Revision 1.2  2005/10/14 13:26:57  cignoni
-First Really Working version
-
-Revision 1.2  2004/04/03 13:33:55  cignoni
-Missing include
-
-Revision 1.1  2004/03/29 08:36:26  cignoni
-First working version!
-
-
-****************************************************************************/
 #ifndef __VCG_FACE_PLUS
 #define __VCG_FACE_PLUS
 
@@ -95,7 +45,7 @@ template <class UserTypes>
   public:
 
 	template <class LeftF>
-	void ImportLocal(const LeftF & ){}
+	void ImportData(const LeftF & ){}
     static void Name(std::vector<std::string> & /* name */){}
 
 
