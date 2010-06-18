@@ -256,7 +256,6 @@ namespace vcg {
 				pu.newEnd =  &m.edge.back()+1; 
                                  if(pu.NeedUpdate())
 					{
-					int ii = 0;
 					FaceIterator fi;
 					for (fi=m.face.begin(); fi!=m.face.end(); ++fi){
                                                 //if(HasFHEAdjacency(m))
