@@ -298,7 +298,7 @@ void InertiaTensorEigen(Matrix44<ScalarType> &EV, Point4<ScalarType> &ev )
 	Matrix44<ScalarType> it;
 	InertiaTensor(it);
 	Matrix44d EVd,ITd;ITd.Import(it);
-	Point4d evd; evd.Import(ev);
+  Point4d evd;
 	int n;
 	Jacobi(ITd,evd,EVd,n);
 	EV.Import(EVd);
