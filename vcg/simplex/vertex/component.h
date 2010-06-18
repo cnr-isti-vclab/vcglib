@@ -176,7 +176,7 @@ public:
 
 
   template < class LeftV>
-	void ImportData(const LeftV  & left ) {
+  void ImportData(const LeftV  & /*left*/ ) {
 //			TT::ImportData( left);
   }
   static void Name(std::vector<std::string> & name){TT::Name(name);}
