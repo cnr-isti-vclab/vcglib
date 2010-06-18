@@ -37,19 +37,8 @@ struct DummyTypes{
 
     static void Name(std::vector<std::string> & /*name*/){}
 		template < class LeftV>
-    void ImportLocal(const LeftV  & /*left*/ ) {}
+		void ImportData(const LeftV  & /*left*/ ) {}
 };
-
-
-template <template <typename> class A = DefaultDeriver, template <typename> class B = DefaultDeriver,
-					template <typename> class C = DefaultDeriver, template <typename> class D = DefaultDeriver,
-					template <typename> class E = DefaultDeriver, template <typename> class F = DefaultDeriver,
-					template <typename> class G = DefaultDeriver, template <typename> class H = DefaultDeriver,
-					template <typename> class I = DefaultDeriver, template <typename> class J = DefaultDeriver,
-					template <typename> class K = DefaultDeriver, template <typename> class L = DefaultDeriver>
-					class UsedTypes: public Arity12<DummyTypes, A, B, C, D, E, F, G, H, I, J, K, L>  {
-};
-
 
 template <class A>
 	struct Use{
@@ -59,6 +48,22 @@ template <class A>
 		template <class T> struct AsTetraType: public T{typedef A TetraType;		typedef TetraType * TetraPointer		;};
 		template <class T> struct AsHEdgeType: public T{typedef A HEdgeType;		typedef HEdgeType * HEdgePointer		;};
 };
+
+template <template <typename> class A = DefaultDeriver, template <typename> class B = DefaultDeriver,
+					template <typename> class C = DefaultDeriver, template <typename> class D = DefaultDeriver,
+					template <typename> class E = DefaultDeriver, template <typename> class F = DefaultDeriver,
+					template <typename> class G = DefaultDeriver, template <typename> class H = DefaultDeriver >
+					class UsedTypes: public Arity12<DummyTypes, 
+								Use<  Vertex	<UsedTypes< A, B, C, D , E, F, G, H > > > :: template AsVertexType,
+								Use<  Edge		<UsedTypes< A, B, C, D , E, F, G, H > > > :: template AsEdgeType,
+								Use<  Face		<UsedTypes< A, B, C, D , E, F, G, H > > > :: template AsFaceType,
+								Use<  HEdge	  <UsedTypes< A, B, C, D , E, F, G, H > > > :: template AsHEdgeType,
+							A, B, C, D, E, F, G, H    
+					>  {
+};
+
+
+
 
 	
 struct _UsedTypes: public UsedTypes< 
