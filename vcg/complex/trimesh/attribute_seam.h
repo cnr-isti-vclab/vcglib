@@ -197,7 +197,7 @@ class AttributeSeam
 					if (vloc[idx] == -2)
 					{
 						vloc[idx] = -1;
-						src.vert[idx].ImportLocal(*vtx);
+						src.vert[idx].ImportData(*vtx);
 					}
 					else
 					{
@@ -217,7 +217,7 @@ class AttributeSeam
 							pt_upd.Update(vtx);
 							pt_upd.Update(vtxbase);
 
-							(*vi).ImportLocal(*vtx);
+							(*vi).ImportData(*vtx);
 
 							idx = vcount;
 							vcount++;
