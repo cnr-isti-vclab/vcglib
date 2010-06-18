@@ -39,13 +39,11 @@ namespace io {
 	class ImporterDAE : public UtilDAE
 	{
   public:
-    class ColladaEdge;
     class ColladaFace;
     class ColladaVertex;
 
     class ColladaTypes: public vcg::UsedTypes < vcg::Use<ColladaVertex>::template AsVertexType,
-                                              vcg::Use<ColladaEdge   >::template AsEdgeType,
-                                              vcg::Use<ColladaFace  >::template AsFaceType >{};
+																								vcg::Use<ColladaFace  >::template AsFaceType >{};
 
     class ColladaVertex  : public vcg::Vertex< ColladaTypes,
       vcg::vertex::Coord3f,           /* 12b */
@@ -606,7 +604,7 @@ namespace io {
 //						newMesh.face.EnableWedgeTex();
 						LoadGeometry(newMesh, info, refNode.toElement(),materialBindingMap);
 						tri::UpdatePosition<ColladaMesh>::Matrix(newMesh,curTr);
-						tri::Append<ColladaMesh,ColladaMesh>::Mesh(m,newMesh,false,true);
+						tri::Append<ColladaMesh,ColladaMesh>::Mesh(m,newMesh);
 						QDEBUG("** instance_geometry with url %s (final mesh size %i %i - %i %i)",qPrintable(instGeomNode.attribute("url")),m.vn,m.vert.size(),m.fn,m.face.size());						
 					}
 				}
@@ -796,7 +794,7 @@ static Matrix44f getTransfMatrixFromNode(const QDomElement parentNode)
 						{
 							ColladaMesh newMesh;
 							AddNodeToMesh(node.toElement(), newMesh, baseTr,info);
-							tri::Append<OpenMeshType,ColladaMesh>::Mesh(m,newMesh,false,true);
+							tri::Append<OpenMeshType,ColladaMesh>::Mesh(m,newMesh);
 						}
 					}	// end for each node of a given scene				
 				} // end for each visual scene instance
