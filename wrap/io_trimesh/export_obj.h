@@ -21,80 +21,7 @@
 *                                                                           *
 ****************************************************************************/
 
-/****************************************************************************
-  History
 
- $Log: not supported by cvs2svn $
- Revision 1.10  2007/10/17 09:49:50  cignoni
- correct management of point only files
-
- Revision 1.9  2007/03/12 16:40:16  tarini
- Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
-
- Revision 1.8  2007/03/08 11:27:52  ganovelli
- added  include to tcoord2
-
- Revision 1.7  2007/02/16 21:12:13  m_di_benedetto
- Commented out strange abort in WriteMaterials()
-
- Revision 1.6  2006/12/07 00:37:58  cignoni
- Corrected bug in the management of deleted vertices
-
- Revision 1.5  2006/10/09 19:58:08  cignoni
- Added casts to remove warnings
-
- Revision 1.4  2006/09/18 12:14:38  cignoni
- Removed bug in the creation of the material filename
-
- Revision 1.3  2006/03/07 13:19:29  cignoni
- First Release with OBJ import support
-
- Revision 1.2  2006/02/28 14:38:09  corsini
- remove qt include
-
- Revision 1.1  2006/02/16 19:28:36  fmazzant
- transfer of Export_3ds.h, Export_obj.h, Io_3ds_obj_material.h from Meshlab to vcg
-
- Revision 1.7  2006/02/06 11:04:40  fmazzant
- added file material.h. it include struct Material, CreateNewMaterial(...) and MaterialsCompare(...)
-
- Revision 1.6  2006/02/04 10:18:46  fmazzant
- clean code
-
- Revision 1.5  2006/02/03 10:04:41  fmazzant
- no significant updated
-
- Revision 1.4  2006/01/30 14:02:05  fmazzant
- bug-fix
-
- Revision 1.3  2006/01/29 23:52:43  fmazzant
- correct a small bug
-
- Revision 1.2  2006/01/29 18:33:42  fmazzant
- added some comment to the code
-
- Revision 1.1  2006/01/29 16:33:03  fmazzant
- moved export_obj and export_3ds from test/io into meshio/
-
- Revision 1.34  2006/01/22 23:59:01  fmazzant
- changed default value of diffuse. 1.0 -> 0.8
-
- Revision 1.33  2006/01/19 09:36:29  fmazzant
- cleaned up history log
-
- Revision 1.32  2006/01/18 00:45:56  fmazzant
- added control on face's diffuse
-
- Revision 1.31  2006/01/17 13:48:54  fmazzant
- added capability mask on export file format
-
- Revision 1.30  2006/01/15 00:45:40  fmazzant
- extend mask exporter for all type file format +
-
- Revision 1.29  2006/01/14 00:03:26  fmazzant
- added more controls
-
-****************************************************************************/
 
 #ifndef __VCGLIB_EXPORT_OBJ
 #define __VCGLIB_EXPORT_OBJ
@@ -286,7 +213,7 @@ namespace io {
 
         //saves texture coord x wedge
         if(HasPerWedgeTexCoord(m) && (mask & Mask::IOM_WEDGTEXCOORD))
-        for(unsigned int k=0;k<3;k++)
+				for(unsigned int k=0;k<(*fi).VN();k++)
 				{
 					{
 						if(AddNewTextureCoord(CoordIndexTexture,(*fi).WT(k),curTexCoordIndex))
@@ -299,7 +226,7 @@ namespace io {
 
 
 				fprintf(fp,"f ");
-				for(unsigned int k=0;k<3;k++)
+				for(unsigned int k=0;k<(*fi).VN();k++)
 				{
 				if(k!=0) fprintf(fp," ");	
 					int vInd = -1; 
