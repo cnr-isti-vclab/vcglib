@@ -62,7 +62,7 @@ public:
 
 	/// this function enable the use of an optional attribute (see...)
 	template <class ATTR_TYPE>
-		void EnableAttribute(){
+		void Enable(){
 			CAT<ThisType,ATTR_TYPE> * cat = CAT<ThisType,ATTR_TYPE>::New();
 			cat->Insert(*this);
 			attributes.push_back(cat);
@@ -71,7 +71,7 @@ public:
 	/// this function returns true if the attribute in the template parameter is enabled
   /// Note: once an attribute is disabled, its data is lost (the memory freed)
 	template <class ATTR_TYPE>
-		bool IsEnabledAttribute() const{
+		bool IsEnabled() const{
 				typename std::list < CATBase<ThisType> * >::const_iterator ia; 
 				for(ia = attributes.begin(); ia != attributes.end(); ++ia)
 					if((*ia)->Id() == CAT<ThisType,ATTR_TYPE>::Id())
@@ -83,7 +83,7 @@ public:
 	/// this function disable the use of an optional attribute (see...)
   /// Note: once an attribute is disabled, its data is lost (the memory freed)
 	template <class ATTR_TYPE>
-		void DisableAttribute(){
+		void Disable(){
 				typename std::list < CATBase<ThisType> * >::iterator ia; 
 				for(ia = attributes.begin(); ia != attributes.end(); ++ia)
 					if((*ia)->Id() == CAT<ThisType,ATTR_TYPE>::Id())
@@ -94,39 +94,6 @@ public:
 							break;
 						}
 				}
-
-	/// this function create a new attribute of type ATTR_TYPE and return an handle to
-  /// access the value of the attribute. Ex:
-  /// vector_occ<float> tv;
-  /// TempData<TVect,int> handle =  tv.NewTempData<int>();
-  /// // now handle[&tv[123]] is the value of integer attribute associate with the position 123 on the vector
-  /// // NOTE: it works also if you do some push_back, resize, pop_back, reserve that cause the relocation
-  /// // of the vector_occ
-	template <class ATTR_TYPE>
-		TempData<ThisType,ATTR_TYPE> NewTempData(){
-			typedef typename CATEntry<ThisType,EntryCATMulti<ThisType> >::EntryType EntryTypeMulti;
-			CATEntry<ThisType,EntryTypeMulti>::Insert(*this);
-			EntryTypeMulti	entry = CATEntry<ThisType,EntryTypeMulti >::GetEntry(Pointer2begin());
-			entry.Data().push_back(new Wrap< ATTR_TYPE>);
-
-			((Wrap<ATTR_TYPE>*)entry.Data().back())->reserve(TT::capacity());
-			((Wrap<ATTR_TYPE>*)entry.Data().back())->resize(TT::size());
-
-			return TempData<ThisType,ATTR_TYPE>((Wrap<ATTR_TYPE>*) entry.Data().back());
-			}
-
-	/// reciprocal of NewTempData
-	template <class ATTR_TYPE>
-		void DeleteTempData(TempData<ThisType,ATTR_TYPE> & td){
-			typedef typename CATEntry<ThisType,EntryCATMulti<ThisType> >::EntryType EntryTypeMulti;
-			CATEntry<ThisType,EntryTypeMulti >::RemoveIfEmpty(*this);
-			EntryTypeMulti
-				entry = CATEntry<ThisType,EntryCATMulti<ThisType> >::GetEntry(Pointer2begin);
-
-			entry.Data().remove((Wrap<ATTR_TYPE>*)td.Item());
-			delete ((Wrap<ATTR_TYPE>*)td.Item());
-			}
-
 
 private:	
 	VALUE_TYPE * old_start;

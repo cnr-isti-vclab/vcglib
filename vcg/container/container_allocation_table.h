@@ -20,34 +20,7 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
 
-$Log: not supported by cvs2svn $
-Revision 1.9  2006/12/03 18:01:01  ganovelli
-versione compliant vs2005
-
-Revision 1.8  2006/06/08 20:28:57  ganovelli
-aggiunto qualche const sui parametri
-
-Revision 1.7  2005/10/15 16:21:48  ganovelli
-Working release (compilata solo su MSVC), vector_occ � migrato da component_opt
-
-Revision 1.6  2005/07/07 13:33:51  ganovelli
-some comment
-
-Revision 1.5  2005/07/06 15:28:10  ganovelli
-aggiornamento di alcuni path
-
-Revision 1.4  2004/04/05 18:20:50  ganovelli
-Aggiunto typename
-Eliminata bug di ricorsione nell'istanzazione dei template
-
-Revision 1.3  2004/03/31 22:36:44  ganovelli
-First Working Release (with this comment)
-
-
-****************************************************************************/
   
 #ifndef __VCGLIB_CAT__
 #define __VCGLIB_CAT__
@@ -346,25 +319,6 @@ New(){
 	return Instance();
 	}
 
-
-//---------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------
-// TempData implements a handle to one of the vector od data stored in EntryCATMulti
-template <class STL_CONT, class ATTR_TYPE>
-class TempData{
-public:
-	TempData(std::vector<ATTR_TYPE>  *d):item(d){};
-		typedef ATTR_TYPE attr_type;
-
-		std::vector<ATTR_TYPE>  * Item(){return item;};
-		std::vector<ATTR_TYPE>  * item;
-		ATTR_TYPE & operator []( typename STL_CONT::value_type * v)
-			{
-				int pos = CATEntry<STL_CONT, EntryCATMulti<STL_CONT> >::Ord(v);
-				return (*item)[pos];
-			}
-	};
-//----------------------------------------------------------------------------------
 
 };//end namespace vcg
 
