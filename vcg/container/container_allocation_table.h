@@ -26,14 +26,20 @@
 #define __VCGLIB_CAT__
 
 #include <vector>
+#include <map>
+#include <string>
 #include <list>
 #include <algorithm>
 #include <assert.h>
 #include <vcg/container/entries_allocation_table.h>
 
-
 namespace vcg {
 	/*@{*/
+
+
+
+
+
 /*!
  * CATBase is the abstract class for all the allocation tables. These table keep track of
  * where the traced vector (see traced_ector.h) are kept in memory.
@@ -42,8 +48,14 @@ namespace vcg {
  * 
  */
 
+		struct CATBaseBase{
+
+		};
+
+
+
 template <typename STL_CONT>
-class CATBase{
+				class CATBase: public CATBaseBase{
 public:
 typedef  typename STL_CONT::value_type ValueType;
 
@@ -304,17 +316,34 @@ ATTR_TYPE & CAT<STL_CONT,ATTR_TYPE>::
 Get(const ValueType * pt)
 {
 int ord = Ord(pt);
-//int ord = pt-  &(*  ((*AT().begin()).C()->begin())); se AT() contiene un solo elemento funziona anche cos
 return TT::Curr()->Data()[ord];
 }
 
+struct Env{
+
+		static std::map< std::string,CATBaseBase *> & TypeNameBounds(){
+				static std::map< std::string,CATBaseBase *>  ntb; return ntb;}
+
+		template <class TYPE_1,class TYPE_2>
+				static CAT<TYPE_1,TYPE_2> *  newCAT(){
+				std::string n = std::string(typeid(TYPE_1).name())+std::string(typeid(TYPE_2).name());
+				std::map< std::string,CATBaseBase *>::iterator ti = TypeNameBounds().find(n);
+				if(ti == TypeNameBounds().end()){
+						CAT<TYPE_1,TYPE_2> * res = new CAT<TYPE_1,TYPE_2>();
+						TypeNameBounds().insert(std::pair<std::string,CATBaseBase*>(n,res));
+						return res;
+				}
+				else (CAT<TYPE_1,TYPE_2> *) (*ti).second;
+		}
+};
+
 template <typename STL_CONT, class ATTR_TYPE>
 CAT<STL_CONT,ATTR_TYPE> * CAT<STL_CONT,ATTR_TYPE>::
-
 New(){
 	if(Instance()==NULL) 
 		{
-		 Instance() =  new CAT<STL_CONT,ATTR_TYPE>();
+//		 Instance() =  new CAT<STL_CONT,ATTR_TYPE>();
+			Instance() = Env::newCAT<STL_CONT,ATTR_TYPE>();
 		}
 	return Instance();
 	}
