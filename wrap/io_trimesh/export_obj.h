@@ -213,7 +213,7 @@ namespace io {
 
         //saves texture coord x wedge
         if(HasPerWedgeTexCoord(m) && (mask & Mask::IOM_WEDGTEXCOORD))
-				for(unsigned int k=0;k<(*fi).VN();k++)
+        for(int k=0;k<(*fi).VN();k++)
 				{
 					{
 						if(AddNewTextureCoord(CoordIndexTexture,(*fi).WT(k),curTexCoordIndex))
@@ -226,7 +226,7 @@ namespace io {
 
 
 				fprintf(fp,"f ");
-				for(unsigned int k=0;k<(*fi).VN();k++)
+        for(int k=0;k<(*fi).VN();k++)
 				{
 				if(k!=0) fprintf(fp," ");	
 					int vInd = -1; 
