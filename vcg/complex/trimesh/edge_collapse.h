@@ -183,8 +183,8 @@ class EdgeCollapse
       {
         ++ VertCnt[vfi.V1()];
         ++ VertCnt[vfi.V2()];
-        if(vfi.V1()<vfi.V2()) ++EdgeCnt[make_pair(vfi.V1(),vfi.V2())];
-                         else ++EdgeCnt[make_pair(vfi.V2(),vfi.V1())];
+        if(vfi.V1()<vfi.V2()) ++EdgeCnt[std::make_pair(vfi.V1(),vfi.V2())];
+                         else ++EdgeCnt[std::make_pair(vfi.V2(),vfi.V1())];
       }
       // Now a loop to add dummy stuff: add the dummy vertex and two dummy edges
       // (and remember to increase the counters for the two boundary vertexes involved)
