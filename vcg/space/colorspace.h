@@ -1463,11 +1463,8 @@ public:
 
 	static void RGBtoHSV(double R, double G, double B, double &H, double &S, double &V)
 	{
-		double v = std::min(R, G);
-		double v_min = std::min(v, B);  // Min value of RGB
-
-		double v2 = std::max(R, G);
-		double v_max = std::max(v2, B);  // Max value of RGB
+    double v_min = std::min(std::min(R, G), B);  // Min value of RGB
+    double v_max = std::max(std::max(R, G), B);  // Max value of RGB
 
 		double delta = v_max - v_min;   //Delta RGB value
 
@@ -1492,12 +1489,10 @@ public:
 				H = (1.0 / 3.0) + deltaR - deltaB;
 			else if (B == v_max) 
 				H = (2.0 / 3.0) + deltaG - deltaR;
+      else H = 0; // this final branch should never happen...
 
-			if ( H < 0 )
-				H += 1.0;
-
-			if ( H > 1 )
-				H -= 1.0;
+      if ( H < 0 ) H += 1.0;
+      if ( H > 1 ) H -= 1.0;
 		}
 	}
 
