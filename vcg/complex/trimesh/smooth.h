@@ -1280,7 +1280,7 @@ static void VertexCoordPasoDobleFast(MeshType &m, int NormalSmoothStep, typename
 	PDFaceInfo lpzf;
 	lpzf.m=CoordType(0,0,0);
 
-	assert(HasVFAdjacency(m));
+	assert(HasPerVertexVFAdjacency(m) && HasPerFaceVFAdjacency(m));
 	SimpleTempData< typename MeshType::VertContainer, PDVertInfo> TDV(m.vert,lpzv);
 	SimpleTempData< typename MeshType::FaceContainer, PDFaceInfo> TDF(m.face,lpzf);
 
