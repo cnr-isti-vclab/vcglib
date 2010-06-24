@@ -229,7 +229,7 @@ class Quadric
     static void computeCurvature(MeshType & m)
     {
 
-				assert(vcg::tri::HasVFAdjacency(m));
+				assert(tri::HasPerVertexVFAdjacency(m) && tri::HasPerFaceVFAdjacency(m) );
 
         vcg::tri::UpdateTopology<MeshType>::VertexFace(m);
 

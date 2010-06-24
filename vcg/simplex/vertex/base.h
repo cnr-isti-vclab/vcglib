@@ -57,7 +57,7 @@ Standardized name of flags. It is plural becouse each simplex has many flag.
 Revision 1.3  2005/11/12 18:36:51  cignoni
 Added 'Visited' flag functions
 
-Revision 1.2  2004/04/03 13:33:55  cignoni
+Revision 1.2  lags2004/04/03 13:33:55  cignoni
 Missing include
 
 Revision 1.1  2004/03/29 08:36:26  cignoni

@@ -674,7 +674,7 @@ public:
 
 
 	template < class VertContainerType, class FaceType, class Container1, class Container2  >
-		bool HasVFAdjacency (const TriMesh < VertContainerType , face::vector_ocf< FaceType >, Container1, Container2 > & m)
+		bool HasPerFaceVFAdjacency (const TriMesh < VertContainerType , face::vector_ocf< FaceType >, Container1, Container2 > & m)
 	{
 	  if(FaceType::HasVFAdjacencyOcf()) return m.face.IsVFAdjacencyEnabled();
 	  else return FaceType::FaceType::HasVFAdjacency();

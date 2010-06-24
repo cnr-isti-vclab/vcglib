@@ -968,7 +968,7 @@ static void FaceNormalLaplacianVF(MeshType &m)
 	PDFaceInfo lpzf;
 	lpzf.m=CoordType(0,0,0);
 
-	assert(tri::HasVFAdjacency(m));
+	assert(tri::HasPerVertexVFAdjacency(m) && tri::HasPerFaceVFAdjacency(m) );
 	TDF.Start(lpzf);
 	int i;
 

@@ -477,7 +477,7 @@ namespace vcg {
 								for(int i  = 0; i < (*fi).VN(); ++i)
 									if ((*fi).cFFp(i)!=0) pu.Update((*fi).FFp(i));
 						
-							if(HasVFAdjacency(m))
+							if(HasPerVertexVFAdjacency(m) && HasPerFaceVFAdjacency(m))
 								for(int i = 0; i < (*fi).VN(); ++i)
 									if ((*fi).cVFp(i)!=0) pu.Update((*fi).VFp(i));
 						  ++ii;
@@ -488,7 +488,7 @@ namespace vcg {
 						for (vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
 							if(!(*vi).IsD())
 							{
-								if(HasVFAdjacency(m))
+								if(HasPerVertexVFAdjacency(m) && HasPerFaceVFAdjacency(m))
 									if ((*vi).cVFp()!=0)
 										pu.Update((FaceType * &)(*vi).VFp());
 								// Note the above cast is probably not useful if you have correctly defined 
@@ -586,7 +586,7 @@ namespace vcg {
                 {
                     assert(!m.vert[i].IsD());
 										m.vert[ newVertIndex[i] ].ImportData(m.vert[i]);
-                    if(HasVFAdjacency(m))
+										if(HasPerVertexVFAdjacency(m) &&HasPerFaceVFAdjacency(m) )
                       if (m.vert[i].cVFp()!=0)
                         {
                             m.vert[ newVertIndex[i] ].VFp() = m.vert[i].cVFp();
@@ -675,7 +675,7 @@ namespace vcg {
                         m.face[pos].V(0) = m.face[i].V(0);
                         m.face[pos].V(1) = m.face[i].V(1);
                         m.face[pos].V(2) = m.face[i].V(2);
-                        if(HasVFAdjacency(m))
+												if(HasPerVertexVFAdjacency(m) && HasPerFaceVFAdjacency(m))
                             for(int j=0;j<3;++j)
                                  if (m.face[i].cVFp(j)!=0) {
                                         m.face[pos].VFp(j) = m.face[i].cVFp(j);
@@ -707,7 +707,7 @@ namespace vcg {
 			for (vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
 					if(!(*vi).IsD())
 					{
-						if(HasVFAdjacency(m))
+						if(HasPerVertexVFAdjacency(m) &&HasPerFaceVFAdjacency(m)  )
 									if ((*vi).cVFp()!=0)
 									{
 										size_t oldIndex = (*vi).cVFp() - fbase;
@@ -725,7 +725,7 @@ namespace vcg {
 			for(fi=m.face.begin();fi!=m.face.end();++fi)
 				if(!(*fi).IsD())
 				{
-					if(HasVFAdjacency(m))
+					if(HasPerVertexVFAdjacency(m) &&HasPerFaceVFAdjacency(m) )
 								for(i=0;i<3;++i)
 								if ((*fi).cVFp(i)!=0)
 									{

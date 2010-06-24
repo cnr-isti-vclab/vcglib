@@ -684,6 +684,13 @@ namespace tri
 
 	template < class, class,class, class> class TriMesh;
 
+	template < class VertexType, class ContainerType0, class Container1, class Container2  >
+		bool HasPerVertexVFAdjacency (const TriMesh < vertex::vector_ocf< VertexType > , ContainerType0, Container1, Container2 > & m)
+	{
+		if(VertexType::HasVFAdjacencyOcf()) return m.vert.IsVFAdjacencyEnabled();
+		else return VertexType::HasVFAdjacency();
+	}
+
 	template < class VertexType, class ContainerType0, class ContainerType1 ,class ContainerType2 >
 	bool HasPerVertexRadius (const TriMesh < vertex::vector_ocf< VertexType > , ContainerType0,   ContainerType1,  ContainerType2 > & m)
 	{

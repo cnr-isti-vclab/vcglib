@@ -211,7 +211,7 @@ namespace vcg {
 				// f=bestf;
 				typename MESH::ScalarType alfa, beta, gamma;
 				//calcolo normale con interpolazione trilineare
-				InterpolationParameters(*bestf,bestf->N(),_closestPt, alfa, beta, gamma);
+				InterpolationParameters<typename MESH::FaceType,typename MESH::ScalarType>(*bestf,bestf->N(),_closestPt, alfa, beta, gamma);
 				_normf =  (bestf->V(0)->cN())*alfa+
 					(bestf->V(1)->cN())*beta+
 					(bestf->V(2)->cN())*gamma ;

@@ -494,6 +494,9 @@ template <class MeshType> inline void UnMarkAll(MeshType & m) { ++m.imark; }
 
 
 template < class ContainerType0, class ContainerType1 , class ContainerType2, class ContainerType3>
+bool HasPerVertexVFAdjacency (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::VertContainer::value_type::HasVFAdjacency();}
+
+template < class ContainerType0, class ContainerType1 , class ContainerType2, class ContainerType3>
 bool HasPerVertexQuality (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::VertContainer::value_type::HasQuality();}
 
 template < class ContainerType0, class ContainerType1 , class ContainerType2, class ContainerType3>
@@ -528,6 +531,9 @@ bool HasPerWedgeNormal (const TriMesh < ContainerType0, ContainerType1, Containe
 
 template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
 bool HasPerWedgeColor (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::FaceContainer::value_type::HasWedgeColor();}
+
+template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
+bool HasPerFaceVFAdjacency (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::FaceContainer::value_type::HasVFAdjacency();}
 
 template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
 bool HasPerFaceFlags (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/) {return TriMesh < ContainerType0 , ContainerType1, ContainerType2, ContainerType3>::FaceContainer::value_type::HasFlags();}
@@ -592,18 +598,20 @@ bool HasHPrevAdjacency (const TriMesh < ContainerType0, ContainerType1, Containe
 template < class  ContainerType0, class ContainerType1, class ContainerType2 , class ContainerType3>
 bool HasHOppAdjacency (const TriMesh < ContainerType0, ContainerType1, ContainerType2, ContainerType3> & /*m*/)  {return TriMesh< ContainerType0,   ContainerType1,   ContainerType2 ,  ContainerType3>::HEdgeType::HasHOppAdjacency();}
 
-template < class ContainerType0, class ContainerType1 , class ContainerType2, class ContainerType3>
-bool HasVFAdjacency (const TriMesh < ContainerType0 , ContainerType1,   ContainerType2, ContainerType3> & /*m*/) {
-		// gcc 4.4: if the expressions assigned to a1 and a2 are replaced in the assert we get a compilation error
-		// for the macro assert
-		bool a1 =  TriMesh < ContainerType0 , ContainerType1,   ContainerType2, ContainerType3>::FaceContainer::value_type::HasVFAdjacency();
-		bool a2 =  TriMesh < ContainerType0 , ContainerType1,   ContainerType2, ContainerType3>::VertContainer::value_type::HasVFAdjacency();
-		// a1 and a2 are still evaluated but not referenced, this causes a warning
-		(void)a1;
-		(void)a2;
-		assert(a1==a2);
-		return TriMesh < ContainerType0 , ContainerType1,   ContainerType2, ContainerType3>::FaceContainer::value_type::HasVFAdjacency();
-}
+//template < class ContainerType0, class ContainerType1 , class ContainerType2, class ContainerType3>
+//bool HasVFAdjacency (const TriMesh < ContainerType0 , ContainerType1,   ContainerType2, ContainerType3> &  m ) {
+//		// gcc 4.4: if the expressions assigned to a1 and a2 are replaced in the assert we get a compilation error
+//		// for the macro assert
+//		bool a1 =  TriMesh < ContainerType0 , ContainerType1,   ContainerType2, ContainerType3>::FaceContainer::value_type::HasVFAdjacency();
+//		bool a2 =  TriMesh < ContainerType0 , ContainerType1,   ContainerType2, ContainerType3>::VertContainer::value_type::HasVFAdjacency();
+//		// a1 and a2 are still evaluated but not referenced, this causes a warning
+//		(void)a1;
+//		(void)a2;
+//		assert(a1==a2);
+//
+//		return   vcg::tri::HasPerVertexVFAdjacency<   ContainerType0,   ContainerType1 ,   ContainerType2,   ContainerType3>(m) &&
+//						 vcg::tri::HasPerFaceVFAdjacency<   ContainerType0,   ContainerType1 ,   ContainerType2,   ContainerType3>(m) ;
+//}
 
 template <class MESH_TYPE>
 bool HasPerVertexAttribute(const MESH_TYPE &m,   std::string   name){
