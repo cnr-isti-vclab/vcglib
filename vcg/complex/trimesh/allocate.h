@@ -813,7 +813,7 @@ public:
 
 	template <class ATTR_TYPE>
 	static void GetAllPerVertexAttribute(const MeshType & m, std::vector<std::string> &all){
-		typename std::set<PointerToAttribute > :: iterator i;
+		typename std::set<PointerToAttribute > ::const_iterator i;
 		for(i = m.vert_attr.begin(); i != m.vert_attr.end(); ++i )
 				if((*i)._typename == typeid(ATTR_TYPE).name())
 						all.push_back((*i)._name);
@@ -992,7 +992,7 @@ public:
 
 	template <class ATTR_TYPE>
 	static void GetAllPerFaceAttribute(const MeshType & m, std::vector<std::string> &all){
-		typename std::set<PointerToAttribute > :: iterator i;
+		typename std::set<PointerToAttribute > :: const_iterator i;
 		for(i = m.face_attr.begin(); i != m.face_attr.end(); ++i )
 				if((*i)._typename == typeid(ATTR_TYPE).name())
 						all.push_back((*i)._name);
