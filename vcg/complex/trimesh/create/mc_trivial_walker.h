@@ -22,7 +22,7 @@
 ****************************************************************************/
 #ifndef __VCG_TRIVIAL_WALKER
 #define __VCG_TRIVIAL_WALKER
-#include <vcg/callback.h>
+#include <wrap/callback.h>
 
 namespace vcg {
 
