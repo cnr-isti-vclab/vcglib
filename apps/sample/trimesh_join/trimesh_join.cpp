@@ -8,6 +8,7 @@
 #include<vcg/complex/trimesh/allocate.h>
 #include<vcg/complex/trimesh/append.h>
 #include<vcg/complex/trimesh/clean.h>
+#include<vcg/complex/trimesh/clip.h>
 #include<vcg/complex/trimesh/update/bounding.h>
 
 
@@ -85,7 +86,8 @@ int main(int argc,char **argv )
       printf("Input mesh %3i           vn:%9i fn:%9i\n",i, mr.vn, mr.fn);
       if(ClipFlag) 
       { 
-        tri::Clean<MyMesh>::ClipWithBox(mr,ClipBB);
+        tri::GenericVertexInterpolator<MyMesh> interp(mr);
+        tri::TriMeshClipper<MyMesh>::Box(ClipBB,interp,mr);
         printf("              clipped to vn:%9i fn:%9i\n", mr.vn, mr.fn);
       }
       tri::UpdateBounding<MyMesh>::Box(mr);
