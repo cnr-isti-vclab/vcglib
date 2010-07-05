@@ -13,6 +13,7 @@ using namespace std;
 #include <vcg/complex/trimesh/update/quality.h>
 #include <vcg/complex/trimesh/update/color.h>
 #include <vcg/complex/trimesh/update/flag.h>
+#include <vcg/complex/trimesh/stat.h>
 #include <vcg/complex/trimesh/clean.h>
 #include <vcg/complex/intersection.h>
 #include <vcg/space/index/grid_static_ptr.h>
