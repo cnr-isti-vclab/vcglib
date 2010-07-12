@@ -429,9 +429,10 @@ namespace vcg {
 			MarkerFace mf;
 			mf.SetMesh(&mesh);
 			typedef vcg::RayTriangleIntersectionFunctor<true> FintFunct;
+            FintFunct fintfunct;
 			Ray3<typename GRID::ScalarType> _ray1=_ray;
 			_ray1.Normalize();
-			FaceType *f=gr.DoRay(FintFunct(),mf,_ray1,_maxDist,_t);
+            FaceType *f=gr.DoRay(fintfunct,mf,_ray1,_maxDist,_t);
 			typename GRID::CoordType dir=_ray.Direction();
 			dir.Normalize();
 			typename GRID::CoordType int_point=_ray.Origin()+_ray1.Direction()*_t;
