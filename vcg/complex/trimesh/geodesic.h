@@ -183,7 +183,7 @@ class Geo{
 	std::vector<VertDist> frontier;
 	VertexIterator ii;
 	std::list<VertexPointer> children;
-	VertexPointer curr,farthest,pw1;	
+  VertexPointer curr,farthest=0,pw1;
 	typename std::list<VertexPointer>::iterator is;
 	std::deque<VertexPointer> leaves;
 	std::vector<VertDist> _frontier;
@@ -287,6 +287,7 @@ class Geo{
 		(*vi).Q() =  (*TD)[&(*vi)].d; 
 
 	delete TD;
+  assert(farthest);
  	return farthest;
 
  }

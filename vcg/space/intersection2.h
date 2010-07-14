@@ -176,7 +176,7 @@ inline bool SegmentSegmentIntersection(const vcg::Segment2<SCALAR_TYPE> &seg0,
 		vcg::Point2<SCALAR_TYPE> dir1=seg1.P1()-seg1.P0();
 		dir1.Normalize();
 		l1.SetDirection(dir1);
-		bool b=LineLineIntersection(l0,l1,p_inters);
+    LineLineIntersection(l0,l1,p_inters);
 		SCALAR_TYPE len0=seg0.Length();
 		SCALAR_TYPE len1=seg1.Length();
 		SCALAR_TYPE d0=(seg0.P0()-p_inters).Norm();

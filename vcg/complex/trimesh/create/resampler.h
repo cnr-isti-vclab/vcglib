@@ -342,24 +342,13 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 
 			Begin();
 			extractor.Initialize();
-			int computeTime =0;
-			int extractTime =0;
-			int t0,t1,t2;
-			for (int j=0; j<=this->siz.Y(); j++)
+      for (int j=0; j<=this->siz.Y(); j++)
 			{
 				cb((100*j)/this->siz.Y(),"Marching ");
-				t0 = clock();
 				ProcessSlice<EXTRACTOR_TYPE>(extractor);//find cells where there is the isosurface and examine it
-				t1 = clock();
-				NextSlice();
-				t2 = clock();
-				computeTime += t1-t0;
-				extractTime += t2-t1;
+        NextSlice();
 			}
 			extractor.Finalize();
-#ifndef NO_QT
-			qDebug("Extract %i, Compute %i",t1-t0,t2-t1);
-#endif
 			typename New_Mesh::VertexIterator vi;
 			for(vi=new_mesh.vert.begin();vi!=new_mesh.vert.end();++vi)
 				if(!(*vi).IsD())
@@ -515,7 +504,7 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 			int i = p1.X();// (p1.X() - _bbox.min.X())/_cell_size.X();
 			int z = p1.Z();//(p1.Z() - _bbox.min.Z())/_cell_size.Z();
 			VertexIndex index = i+z*this->siz.X();
-			VertexIndex pos;
+      VertexIndex pos=-1;
 			if (p1.Y()==CurrentSlice)
 			{
 				if ((pos=_x_cs[index])==-1)
@@ -540,6 +529,7 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 					return;
 				}
 			}
+      assert(pos>=0);
 			v = &_newM->vert[pos];
 		}
 
@@ -553,7 +543,7 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 			int i = p1.X(); // (p1.X() - _bbox.min.X())/_cell_size.X();
 			int z = p1.Z(); // (p1.Z() - _bbox.min.Z())/_cell_size.Z();
 			VertexIndex index = i+z*this->siz.X();
-			VertexIndex pos;
+      VertexIndex pos=-1;
 			if ((pos=_y_cs[index])==-1)
 			{
 				_y_cs[index] = (VertexIndex) _newM->vert.size();
@@ -562,7 +552,8 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 				v = &_newM->vert[ pos ];
 				v->P()=Interpolate(p1,p2,1);
 			}
-			v = &_newM->vert[pos];
+      assert(pos>=0);
+      v = &_newM->vert[pos];
 		}
 
 		///if there is a vertex in z axis of a cell return the vertex or create it
@@ -576,7 +567,7 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 			int z = p1.Z(); //(p1.Z() - _bbox.min.Z())/_cell_size.Z();
 			VertexIndex index = i+z*this->siz.X();
 
-			VertexIndex pos;
+      VertexIndex pos=-1;
 			if (p1.Y()==CurrentSlice)
 			{
 				if ((pos=_z_cs[index])==-1)
@@ -601,6 +592,7 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 					return;
 				}
 			}
+      assert(pos>=0);
 			v = &_newM->vert[pos];
 		}
 
