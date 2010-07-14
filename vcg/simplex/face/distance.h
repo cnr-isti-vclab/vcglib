@@ -148,12 +148,14 @@ namespace vcg {
 			// vicini (come prodotto vettore)
 			// Nota: si potrebbe rendere un pochino piu' veloce sostituendo Area()
 			// con il prodotto vettore dei due edge in 2d lungo il piano migliore.
-                        if( (b=vcg::math::Min<ScalarType>(b0,vcg::math::Min<ScalarType>(b1,b2))) < EPS*DoubleArea(f))
+      if( (b=std::min(b0,std::min(b1,b2)) ) < EPS*DoubleArea(f))
       {
 				ScalarType bt;
 				if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
 				else if(b==b1) 	bt = PSDist(q,f.V(2)->cP(),f.V(0)->cP(),p);
-				else if(b==b2) 	bt = PSDist(q,f.V(0)->cP(),f.V(1)->cP(),p);
+        else {          assert(b==b2);
+                        bt = PSDist(q,f.V(0)->cP(),f.V(1)->cP(),p);
+                      }
                                 //printf("Warning area:%g %g %g %g thr:%g bt:%g\n",Area(), b0,b1,b2,EPS*Area(),bt);
 				if(dist>bt) { dist = bt; return true; }
 				else return false;
@@ -187,7 +189,9 @@ namespace vcg {
 				ScalarType bt;
 				if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
 				else if(b==b1) 	bt = PSDist(q,f.V(2)->cP(),f.V(0)->cP(),p);
-				else if(b==b2) 	bt = PSDist(q,f.V(0)->cP(),f.V(1)->cP(),p);
+        else { assert(b==b2);
+                        bt = PSDist(q,f.V(0)->cP(),f.V(1)->cP(),p);
+        }
 				//printf("Warning area:%g %g %g %g thr:%g bt:%g\n",Area(), b0,b1,b2,EPSILON*Area(),bt);
 				if(dist>bt) { dist = bt; return true; }
 				else return false;
@@ -221,7 +225,9 @@ namespace vcg {
 				ScalarType bt;
 				if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
 				else if(b==b1) 	bt = PSDist(q,f.V(2)->cP(),f.V(0)->cP(),p);
-				else if(b==b2) 	bt = PSDist(q,f.V(0)->cP(),f.V(1)->cP(),p);
+        else { assert(b==b2);
+                        bt = PSDist(q,f.V(0)->cP(),f.V(1)->cP(),p);
+        }
 				//printf("Warning area:%g %g %g %g thr:%g bt:%g\n",Area(), b0,b1,b2,EPSILON*Area(),bt);
 				
 				if(dist>bt) { dist = bt; return true; }
