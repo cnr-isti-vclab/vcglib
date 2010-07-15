@@ -539,6 +539,9 @@ void DrawFill()
 				glDisable(GL_TEXTURE_2D);
 			}
 		}
+		
+		if(tm==TMPerWedge)
+			glEnable(GL_TEXTURE_2D);
 
     if(tm==TMPerVert && !TMId.empty()) // in the case of per vertex tex coord we assume that we have a SINGLE texture.
     {
