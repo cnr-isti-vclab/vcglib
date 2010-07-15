@@ -47,7 +47,7 @@ First Commit.
 //#include <GL/glu.h>
 
 #ifndef CALLBACK
-#ifdef WIN32
+#ifdef _WIN32
 #define CALLBACK __stdcall
 #else
 #define CALLBACK 
