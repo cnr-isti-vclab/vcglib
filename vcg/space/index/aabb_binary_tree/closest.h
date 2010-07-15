@@ -128,21 +128,21 @@ public:
 		ScalarType closestDist = math::Sqrt(minMaxDist) + std::numeric_limits<ScalarType>::epsilon();
 		ScalarType closestDistSq = closestDist * closestDist;
 
+
 		for (NodePtrVector_ci ci=leaves.begin(); ci!=leaves.end(); ++ci) {
 			if ((*ci)->ScalarValue() < closestDistSq) {
 				for (typename TreeType::ObjPtrVectorConstIterator si=(*ci)->oBegin; si!=(*ci)->oEnd; ++si) {
 					if (getPointDistance(*(*si), p, closestDist, closestPoint)) {
 						closestDistSq = closestDist * closestDist;
 						closestObject = (*si);
+            q = closestPoint;
+            minDist = closestDist;
 					}
 				}
 			}
 		}
 
 		leaves.clear();
-
-		q = closestPoint;
-		minDist = closestDist;
 
 		return (closestObject);
 	}
