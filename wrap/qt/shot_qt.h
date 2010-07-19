@@ -9,7 +9,7 @@
 template <class ShotType>
     bool ReadShotFromQDomNode(
         ShotType &shot, /// the shot that will contain the read node
-        const QDomNode &node /// The XML node to be read)
+        const QDomNode &node) /// The XML node to be read
 {
   if(QString::compare(node.nodeName(),"CamParam")==0)
   {
