@@ -169,6 +169,9 @@ public:
 	/// SET the viewpoint
 	void SetViewPoint(const vcg::Point3<S> & viewpoint);
 
+	/// GET fov from focal
+	float GetFovFromFocal();
+
 	/// look at (point+up)
 	void LookAt(const vcg::Point3<S> & point,const vcg::Point3<S> & up);
 
@@ -262,6 +265,16 @@ void Shot<S,RotationType>::SetViewPoint(const vcg::Point3<S> & viewpoint)
 {
 	Extrinsics.SetTra( viewpoint );
 }
+//---
+
+/// GET fov from focal
+template <class S, class RotationType>
+float Shot<S,RotationType>::GetFovFromFocal()
+{
+	double viewportYMm= Intrinsics.PixelSizeMm[1]* Intrinsics.ViewportPx[1];
+	return 2*(vcg::math::ToDeg(atanf(viewportYMm/(2*Intrinsics.FocalMm))));
+}
+
 //---
 
 /// GET the i-th axis of the coordinate system of the camera
