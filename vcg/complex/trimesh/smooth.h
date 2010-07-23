@@ -103,6 +103,7 @@ first partial porting: compiled gcc,intel and msvc
 #include <vcg/space/line3.h>
 #include <vcg/container/simple_temporary_data.h>
 #include <vcg/complex/trimesh/update/normal.h>
+#include <vcg/complex/trimesh/update/halfedge_topology.h>
 
 namespace vcg
 {
@@ -1289,6 +1290,110 @@ static void VertexCoordPasoDobleFast(MeshType &m, int NormalSmoothStep, typename
 
   for(int j=0;j<FitStep;++j)
 	  FastFitMesh(m,TDV,TDF,SmoothSelected);
+}
+
+//! Laplacian smoothing with a reprojection on a target surface.
+// grid must be a spatial index that contains all triangular faces of the target mesh gridmesh
+template<class GRID, class MeshTypeTri>
+static void VertexCoordLaplacianReproject(MeshType& m, GRID& grid, MeshTypeTri& gridmesh)
+{
+    typename MeshType::VertexIterator vi;
+    for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+    {
+        if(! (*vi).IsD())
+            VertexCoordLaplacianReproject(m,grid,gridmesh,&*vi);
+    }
+}
+
+
+template<class GRID, class MeshTypeTri>
+static void VertexCoordLaplacianReproject(MeshType& m, GRID& grid, MeshTypeTri& gridmesh, typename MeshType::VertexType* vp)
+{
+        assert(MeshType::EdgeType::HasEHAdjacency());
+        assert(MeshType::HEdgeType::HasHEAdjacency());
+        assert(MeshType::HEdgeType::HasHVAdjacency());
+
+    // compute barycenter
+    typedef std::vector<VertexPointer> VertexSet;
+    VertexSet verts;
+    verts = HalfEdgeTopology<MeshType>::getVertices(vp);
+
+    typename MeshType::CoordType ct(0,0,0);
+    for(typename VertexSet::iterator it = verts.begin(); it != verts.end(); ++it)
+    {
+        ct += (*it)->P();
+    }
+    ct /= verts.size();
+
+    // move vertex
+    vp->P() = ct;
+
+
+    vector<FacePointer> faces2 = HalfEdgeTopology<MeshType>::get_incident_faces(vp);
+
+    // estimate normal
+    typename MeshType::CoordType avgn(0,0,0);
+
+    for(unsigned int i = 0;i< faces2.size();i++)
+        if(faces2[i])
+        {
+            vector<VertexPointer> vertices = HalfEdgeTopology<MeshType>::getVertices(faces2[i]);
+
+            assert(vertices.size() == 4);
+
+            avgn += vcg::Normal<typename MeshType::CoordType>(vertices[0]->cP(), vertices[1]->cP(), vertices[2]->cP());
+            avgn += vcg::Normal<typename MeshType::CoordType>(vertices[2]->cP(), vertices[3]->cP(), vertices[0]->cP());
+
+        }
+    avgn.Normalize();
+
+    // reproject
+    ScalarType diag = m.bbox.Diag();
+    typename MeshType::CoordType raydir = avgn;
+    Ray3<typename MeshType::ScalarType> ray;
+
+    ray.SetOrigin(vp->P());
+    ScalarType t;
+    typename MeshTypeTri::FaceType* f = 0;
+    typename MeshTypeTri::FaceType* fr = 0;
+
+    vector<typename MeshTypeTri::CoordType> closests;
+    vector<typename MeshTypeTri::ScalarType> minDists;
+    vector<typename MeshTypeTri::FaceType*> faces;
+    ray.SetDirection(-raydir);
+    f = vcg::tri::DoRay<MeshTypeTri,GRID>(gridmesh, grid, ray, diag/4.0, t);
+
+    if (f)
+    {
+      closests.push_back(ray.Origin() + ray.Direction()*t);
+      minDists.push_back(fabs(t));
+      faces.push_back(f);
+    }
+    ray.SetDirection(raydir);
+    fr = vcg::tri::DoRay<MeshTypeTri,GRID>(gridmesh, grid, ray, diag/4.0, t);
+    if (fr)
+    {
+      closests.push_back(ray.Origin() + ray.Direction()*t);
+      minDists.push_back(fabs(t));
+      faces.push_back(fr);
+    }
+
+    if (fr) if (fr->N()*raydir<0) fr=0; // discard: inverse normal;
+    typename MeshType::CoordType newPos;
+    if (minDists.size() == 0)
+    {
+        newPos = vp->P();
+        f = 0;
+    }
+    else
+    {
+        int minI = std::min_element(minDists.begin(),minDists.end()) - minDists.begin();
+        newPos = closests[minI];
+        f = faces[minI];
+    }
+
+    if (f)
+        vp->P() = newPos;
 }
 
 }; //end Smooth class
