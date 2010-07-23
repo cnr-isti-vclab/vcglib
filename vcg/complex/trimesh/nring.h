@@ -28,9 +28,6 @@
 #include <vcg/complex/trimesh/allocate.h>
 #include <vcg/complex/trimesh/update/flag.h>
 #include <vector>
-#include <set>
-
-using namespace std;
 
 namespace vcg
 {
@@ -56,11 +53,11 @@ public:
     typedef typename MeshType::CoordType CoordType;
 
 
-    vector<VertexType*> allV;
-    vector<FaceType*> allF;
+    std::vector<VertexType*> allV;
+    std::vector<FaceType*> allF;
 
-    vector<VertexType*> lastV;
-    vector<FaceType*> lastF;
+    std::vector<VertexType*> lastV;
+    std::vector<FaceType*> lastF;
 
     MeshType* m;
 
@@ -80,11 +77,11 @@ public:
     {
         insertAndFlag(v);
 
-        typename vcg::face::Pos<FaceType> p(v->VFp(),v);
+        typename face::Pos<FaceType> p(v->VFp(),v);
         assert(p.V() == v);
 
         int count = 0;
-        vcg::face::Pos<FaceType> ori = p;
+        face::Pos<FaceType> ori = p;
         do
         {
             insertAndFlag(p.F());
@@ -121,8 +118,8 @@ public:
 
     static void clearFlags(MeshType* m)
     {
-        vcg::tri::UpdateFlags<MeshType>::VertexClearV(*m);
-        vcg::tri::UpdateFlags<MeshType>::FaceClearV(*m);
+        tri::UpdateFlags<MeshType>::VertexClearV(*m);
+        tri::UpdateFlags<MeshType>::FaceClearV(*m);
     }
 
     void clear()
@@ -138,12 +135,12 @@ public:
 
     void expand()
     {
-        vector<VertexType*> lastVtemp = lastV;
+      std::vector<VertexType*> lastVtemp = lastV;
 
         lastV.clear();
         lastF.clear();
 
-        for(typename vector<VertexType*>::iterator it = lastVtemp.begin(); it != lastVtemp.end(); ++it)
+        for(typename std::vector<VertexType*>::iterator it = lastVtemp.begin(); it != lastVtemp.end(); ++it)
         {
             insertAndFlag1Ring(*it);
         }
