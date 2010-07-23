@@ -61,14 +61,14 @@ public:
 
     MeshType* m;
 
-    RingWalker(VertexType* v, MeshType* m) : m(m)
+    Nring(VertexType* v, MeshType* m) : m(m)
     {
         assert((v - &*m->vert.begin()) < m->vert.size());
         insertAndFlag(v);
 
     }
 	
-    ~RingWalker()
+    ~Nring()
     {
 		clear();
     }
