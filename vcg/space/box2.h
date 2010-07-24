@@ -20,34 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.8  2007/07/02 10:01:00  corsini
-fix area
-
-Revision 1.7  2006/10/07 16:50:26  m_di_benedetto
-Added Dim() method.
-
-Revision 1.6  2005/06/14 13:46:20  ponchio
-Minibug: Box2f -> Box2 in the template.
-
-Revision 1.5  2005/05/06 14:02:37  croccia
-replaced all the occurences of min.v[0] with min.X(), max.v[0] with max.X() etc.
-
-Revision 1.3  2005/05/05 10:20:24  croccia
-changed  #include <vcg/space/point3>  to #include <vcg/space/point2.h>
-croccia
-
-Revision 1.2  2004/03/10 21:38:39  cignoni
-Written some documentation and added to the space module
-
-Revision 1.1  2004/02/15 23:34:04  cignoni
-Initial commit
-
-
-****************************************************************************/
 
 #ifndef __VCGLIB_BOX2
 #define __VCGLIB_BOX2
@@ -74,11 +46,12 @@ class Box2
 public:
 		/// The scalar type
 	typedef BoxScalarType ScalarType;
+  typedef typename Point2<BoxScalarType> PointType ;
 
 		/// min coordinate point
-    Point2<BoxScalarType> min;
+  PointType min;
 		/// max coordinate point
-    Point2<BoxScalarType> max;
+  PointType max;
 		/// Standard constructor
 	inline  Box2() { min.X()= 1; max.X()= -1; min.Y()= 1; max.Y()= -1; }
 		/// Copy constructor
@@ -91,12 +64,12 @@ public:
 		return min==p.min && max==p.max;
 	}
 			/// Initializing the bounding box with a point
-	void Set( const Point2<BoxScalarType> & p )
+	void Set( const PointType & p )
 	{
 		min = max = p;
 	}
 		// Initializing with the values
-	inline void Set( BoxScalarType minx, BoxScalarType miny, BoxScalarType maxx, BoxScalarType maxy )
+	inline void Set( ScalarType minx, ScalarType miny, ScalarType maxx, ScalarType maxy )
 	{
 		min[0] = minx;
 		min[1] = miny;
@@ -109,7 +82,8 @@ public:
 		 min.X()= 1; max.X()= -1; min.Y()= 1; max.Y()= -1;
 	}
 		/** Function to add two bounding box
-			@param b Il bounding box che si vuole aggiungere
+        the bounding box expand to include the other bounding box (if necessary)
+      @param b The bounding box to be added
 		*/
 	void Add( Box2 const & b )
 	{
@@ -127,11 +101,11 @@ public:
 			if(max.Y() < b.max.Y()) max.Y() = b.max.Y();
 		}
 	}
-		/** Funzione per aggiungere un punto al bounding box. Il bounding box viene modificato se il punto
-			cade fuori da esso.
+    /** Adds a point to the bouning box.
+      the bounding box expand to include the new point (if necessary)
 			@param p The point 2D
 		*/
-	void Add( const Point2<BoxScalarType> & p )
+	void Add( const PointType & p )
 	{
 		if(IsNull()) Set(p);
 		else 
@@ -144,25 +118,25 @@ public:
 		}
 	}
 
-		/** Varia le dimensioni del bounding box scalandole rispetto al parametro scalare.
-			@param s Valore scalare che indica di quanto deve variare il bounding box
-		*/
-	void Offset(const BoxScalarType s)
+  /** Varies the dimension of the bounding box.
+    @param delta The size delta (if positive, box is enlarged)
+  */
+  void Offset(const ScalarType s)
 	{
-		Offset(Point2<BoxScalarType>(s, s));
+		Offset(PointType(s, s));
 	}
 
-		/** Varia le dimensioni del bounding box del valore fornito attraverso il parametro.
-			@param delta Point in 3D space
+    /** Varies the dimension of the bounding box.
+      @param delta The size delta (if positive, box is enlarged)
 		*/
-	void Offset(const Point2<BoxScalarType> & delta)
+	void Offset(const PointType & delta)
 	{
 		min -= delta;
 		max += delta;
 	}
 
-		/** Calcola l'intersezione tra due bounding box. Al bounding box viene assegnato il valore risultante.
-			@param b Il bounding box con il quale si vuole effettuare l'intersezione
+    /** Computes intersection between this and another  bounding box
+      @param b The other bounding box
 		*/
 	void Intersect( const Box2 & b )
 	{
@@ -175,40 +149,40 @@ public:
 		if(min.X()>max.X() || min.Y()>max.Y()) SetNull();
 	}
 
-		/** Trasla il bounding box di un valore definito dal parametro.
-			@param p Il bounding box trasla sulla x e sulla y in base alle coordinate del parametro
+    /** Traslate the bounding box by a vectore
+      @param p The transolation vector
 		*/
-	void Translate( const Point2<BoxScalarType> & p )
+	void Translate( const PointType & p )
 	{
 		min += p;
 		max += p;
 	}
-		/** Verifica se un punto appartiene ad un bounding box.
+    /** Checks whether a 2D point p is inside the box
 			@param p The point 2D
-			@return True se p appartiene al bounding box, false altrimenti
+      @return True iff p inside
 		*/
-	bool IsIn( Point2<BoxScalarType> const & p ) const
+	bool IsIn( PointType const & p ) const
 	{
 		return (
 			min.X() <= p.X() && p.X() <= max.X() &&
 			min.Y() <= p.Y() && p.Y() <= max.Y()
 		);
 	}
-		/** Verifica se un punto appartiene ad un bounding box aperto sul max.
-			@param p The point 2D
-			@return True se p appartiene al bounding box, false altrimenti
+    /** Checks whether a 2D point p is inside the box, closed at min but open at max
+      @param p The point in 2D
+      @return True iff p inside
 		*/
-	bool IsInEx( Point2<BoxScalarType> const & p ) const
+	bool IsInEx( PointType const & p ) const
 	{
 		return  (
 			min.X() <= p.X() && p.X() < max.X() &&
 			min.Y() <= p.Y() && p.Y() < max.Y() 
 		);
 	}
-		/** Verifica se due bounding box collidono cioe' se hanno una intersezione non vuota. Per esempio
-			due bounding box adiacenti non collidono.
+  /** Check bbox collision.
+      Note: just adjiacent bbox won't collide
 			@param b A bounding box
-			@return True se collidoo, false altrimenti
+      @return True iff collision
 		*/
 	bool Collide( Box2 const &b )
 	{
@@ -216,47 +190,74 @@ public:
 		bb.Intersect(b);
 		return bb.IsValid();
 	}
-		/** Controlla se il bounding box e' nullo.
-			@return True se il bounding box e' nullo, false altrimenti
+    /** Check if emptry.
+      @return True iff empty
 		*/
 	inline bool IsNull() const { return min.X()>max.X() || min.Y()>max.Y(); }
-		/** Controlla se il bounding box e' consistente.
-			@return True se il bounding box e' consistente, false altrimenti
+
+    /** Check consistency.
+      @return True iff consistent
 		*/
 	inline bool IsValid() const { return min.X()<max.X() && min.Y()<max.Y(); }
-		/** Controlla se il bounding box e' vuoto.
-			@return True se il bounding box e' vuoto, false altrimenti
+
+    /** Check if emptry.
+      @return True iff empty
 		*/
 	inline bool IsEmpty() const { return min==max; }
-		/// Restituisce la lunghezza della diagonale del bounding box.
-	BoxScalarType Diag() const
+	
+    /// Computes lenght of diagonal
+	ScalarType Diag() const
 	{
 		return Distance(min,max);
 	}
-		/// Calcola il centro del bounding box.
-	Point2<BoxScalarType> Center() const
+    /// Computes box center
+	PointType Center() const
 	{
 		return (min+max)/2;
 	}
-		/// Calcola l'area del Bounding box.
-	inline BoxScalarType Area() const
+    /// Computes area
+	inline ScalarType Area() const
 	{
 		return (max[0]-min[0])*(max[1]-min[1]);
 	}
-		/// Calcola la dimensione del bounding box sulla x.
-	inline BoxScalarType DimX() const { return max.X()-min.X(); }
-	/// Calcola la dimensione del bounding box sulla y.
-	inline BoxScalarType DimY() const { return max.Y()-min.Y(); }
+    /// computes dimension on X axis.
+	inline ScalarType DimX() const { return max.X()-min.X(); }
+    /// computes dimension on Y axis.
+	inline ScalarType DimY() const { return max.Y()-min.Y(); }
 
-	/// Calcola la dimensione del bounding box.
-	inline Point2<BoxScalarType> Dim() const { return max-min; }
+  /// Computes sizes (as a vector)
+	inline PointType Dim() const { return max-min; }
 
-	inline void Normalize( Point2<BoxScalarType> & p )
+  /// Deprecated: use GlobalToLocal
+	inline void Normalize( PointType & p )
 	{
 		p -= min;
 		p[0] /= max[0]-min[0];
 		p[1] /= max[1]-min[1];
 	}
+	
+      /// Returns global coords of a local point expressed in [0..1]^2
+	PointType LocalToGlobal(PointType const & p) const{
+		return PointType( 
+			min[0] + p[0]*(max[0]-min[0]), 
+			min[1] + p[1]*(max[1]-min[1]));
+	}
+    /// Returns local coords expressed in [0..1]^2 of a point in R^2
+	PointType GlobalToLocal(PointType const & p) const{
+		return PointType( 
+		  (p[0]-min[0])/(max[0]-min[0]), 
+		  (p[1]-min[1])/(max[1]-min[1])
+			);
+	}
+	
+   /// Turns the bounding box into a square (conservatively)
+	void MakeSquare(){
+    ScalarType radius = max( DimX(), DimY() ) / 2;
+    PointType c = Center();
+    max = c + PointType(radius, radius);
+    min = c - PointType(radius, radius);
+  }
+	
 }; // end class definition
 
 template <class ScalarType> 
