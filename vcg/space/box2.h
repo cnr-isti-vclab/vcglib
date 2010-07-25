@@ -46,7 +46,7 @@ class Box2
 public:
 		/// The scalar type
 	typedef BoxScalarType ScalarType;
-  typedef typename Point2<BoxScalarType> PointType ;
+  typedef Point2<BoxScalarType> PointType ;
 
 		/// min coordinate point
   PointType min;
@@ -127,7 +127,7 @@ public:
 	}
 
     /** Varies the dimension of the bounding box.
-      @param delta The size delta (if positive, box is enlarged)
+      @param delta The size delta per dimension (if positive, box is enlarged)
 		*/
 	void Offset(const PointType & delta)
 	{
