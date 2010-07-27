@@ -210,60 +210,52 @@ static void Mesh(MeshLeft& ml, MeshRight& mr, const bool selected = false){
 		remap.vert.resize(mr.vert.size(),-1);
 		VertexIteratorRight vi;
 		for(vi=mr.vert.begin();vi!=mr.vert.end();++vi)
-				if(!selected || (*vi).IsS())
-				{
-				 int ind=Index(mr,*vi);
-						if(remap.vert[ind]==-1){
-								VertexIteratorLeft vp;
-								vp=Allocator<MeshLeft>::AddVertices(ml,1);
-								(*vp).ImportData(*(vi));
-								remap.vert[ind]=Index(ml,*vp);
-						}
-				}
+				if(!selected || (*vi).IsS()){
+						int ind=Index(mr,*vi);
+						assert(remap.vert[ind]==-1);
+						VertexIteratorLeft vp;
+						vp=Allocator<MeshLeft>::AddVertices(ml,1);
+						(*vp).ImportData(*(vi));
+						remap.vert[ind]=Index(ml,*vp);
+					}
 
 		// edge
 		remap.edge.resize(mr.edge.size(),-1);
 		EdgeIteratorRight ei;
 		for(ei=mr.edge.begin(); ei!=mr.edge.end();++ei)
-				if(!selected || (*ei).IsS())
-				{
-				 int ind=Index(mr,*ei);
-						if(remap.edge[ind]==-1){
-								EdgeIteratorLeft ep;
-								ep=Allocator<MeshLeft>::AddEdges(ml,1);
-								(*ep).ImportData(*(ei));
-								remap.edge[ind]=Index(ml,*ep);
-						}
+				if(!selected || (*ei).IsS()){
+						int ind=Index(mr,*ei);
+						assert(remap.edge[ind]==-1);
+						EdgeIteratorLeft ep;
+						ep=Allocator<MeshLeft>::AddEdges(ml,1);
+						(*ep).ImportData(*(ei));
+						remap.edge[ind]=Index(ml,*ep);
 				}
 
 		// face
 		remap.face.resize(mr.face.size(),-1);
 		FaceIteratorRight fi;
 		for(fi=mr.face.begin();fi!=mr.face.end();++fi)
-				if(!selected || (*fi).IsS())
-				{
-				 int ind=Index(mr,*fi);
-						if(remap.face[ind]==-1){
-								FaceIteratorLeft fp;
-								fp=Allocator<MeshLeft>::AddFaces(ml,1);
-								(*fp).ImportData(*(fi));
-								remap.face[ind]=Index(ml,*fp);
-						}
+				if(!selected || (*fi).IsS()){
+						int ind=Index(mr,*fi);
+						assert(remap.face[ind]==-1);
+						FaceIteratorLeft fp;
+						fp=Allocator<MeshLeft>::AddFaces(ml,1);
+						(*fp).ImportData(*(fi));
+						remap.face[ind]=Index(ml,*fp);
 				}
 
 		// hedge
 		remap.hedge.resize(mr.hedge.size(),-1);
 		HEdgeIteratorRight hi;
 		for(hi=mr.hedge.begin();hi!=mr.hedge.end();++hi)
-				if(!selected || (*hi).IsS())
-				{
-				 int ind=Index(mr,*hi);
-						if(remap.hedge[ind]==-1){
-								HEdgeIteratorLeft hp;
-								hp=Allocator<MeshLeft>::AddHEdges(ml,1);
-								(*hp).ImportData(*(hi));
-								remap.hedge[ind]=Index(ml,*hp);
-						}
+				if(!selected || (*hi).IsS()){
+						int ind=Index(mr,*hi);
+						assert(remap.hedge[ind]==-1); 
+						HEdgeIteratorLeft hp;
+						hp=Allocator<MeshLeft>::AddHEdges(ml,1);
+						(*hp).ImportData(*(hi));
+						remap.hedge[ind]=Index(ml,*hp);
 				}
 
 		// phase 2.
