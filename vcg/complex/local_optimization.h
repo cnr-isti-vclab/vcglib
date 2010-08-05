@@ -103,7 +103,8 @@ template<class MeshType>
 class LocalOptimization;
 
 enum ModifierType{	TetraEdgeCollapseOp, TriEdgeSwapOp, TriVertexSplitOp,
-				TriEdgeCollapseOp,TetraEdgeSpliOpt,TetraEdgeSwapOp, TriEdgeFlipOp};
+				TriEdgeCollapseOp,TetraEdgeSpliOpt,TetraEdgeSwapOp, TriEdgeFlipOp,
+				QuadDiagCollapseOp, QuadEdgeCollapseOp};
 /** \addtogroup tetramesh */
 /*@{*/
 /// This abstract class define which functions  a local modification to be used in the LocalOptimization.
