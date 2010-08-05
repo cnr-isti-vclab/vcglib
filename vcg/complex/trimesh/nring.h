@@ -63,7 +63,7 @@ public:
 
     Nring(VertexType* v, MeshType* m) : m(m)
     {
-        assert((v - &*m->vert.begin()) < m->vert.size());
+        assert((unsigned)(v - &*m->vert.begin()) < m->vert.size());
         insertAndFlag(v);
 
     }
@@ -124,9 +124,9 @@ public:
 
     void clear()
     {
-        for(int i=0; i< allV.size(); ++i)
+        for(unsigned i=0; i< allV.size(); ++i)
             allV[i]->ClearV();
-        for(int i=0; i< allF.size(); ++i)
+        for(unsigned i=0; i< allF.size(); ++i)
             allF[i]->ClearV();
 
         allV.clear();
