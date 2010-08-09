@@ -188,34 +188,34 @@ class Stat
         ScalarType Diag = m.bbox.Diag();
         h.Clear();
         h.SetRange( 0, Diag, 10000);
-        FaceIterator fi;
+        FaceIterator fi;VertexIterator vi;
+        for(vi = m.vert.begin(); vi != m.vert.end(); ++vi) (*vi).ClearV();
         for(fi = m.face.begin(); fi != m.face.end(); ++fi)
         {
           if(!(*fi).IsD())
           {
-            if( !(*fi).V(0)->IsS() && !(*fi).V(1)->IsS()  )
+            if( !(*fi).V(0)->IsV() && !(*fi).V(1)->IsV()  )
             {
               h.Add(Distance<float>((*fi).V(0)->P(),(*fi).V(1)->P()));
-              (*fi).V(0)->SetS();
-              (*fi).V(1)->SetS();
+              (*fi).V(0)->SetV();
+              (*fi).V(1)->SetV();
             }
-            if( !(*fi).V(1)->IsS() && !(*fi).V(2)->IsS())
+            if( !(*fi).V(1)->IsV() && !(*fi).V(2)->IsV())
             {
               h.Add(Distance<float>((*fi).V(1)->P(),(*fi).V(2)->P()));
-              (*fi).V(2)->SetS();
-              (*fi).V(1)->SetS();
+              (*fi).V(2)->SetV();
+              (*fi).V(1)->SetV();
             }
-            if( !(*fi).V(2)->IsS() && !(*fi).V(0)->IsS())
+            if( !(*fi).V(2)->IsV() && !(*fi).V(0)->IsV())
             {
               h.Add(Distance<float>((*fi).V(2)->P(),(*fi).V(0)->P()));
-              (*fi).V(0)->SetS();
-              (*fi).V(2)->SetS();
+              (*fi).V(0)->SetV();
+              (*fi).V(2)->SetV();
             }
           }
         }
-        VertexIterator vi;
-        for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
-          (*vi).ClearS();
+
+        for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)(*vi).ClearV();
       return 0;
 	  }
 }; // end class
