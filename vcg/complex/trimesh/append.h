@@ -64,7 +64,7 @@ public:
 		std::vector<int> vert,face,edge, hedge;
  };
 
- static void ImportVertexAdj(MeshLeft &ml, MeshRight &mr, VertexLeft &vl,   VertexRight &vr, Remap &remap){
+ static void ImportVertexAdj(MeshLeft &ml, MeshRight &mr, VertexLeft &vl,   VertexRight &vr, Remap &remap, bool sel ){
 		 // Vertex to Edge Adj
 		 if(vcg::tri::HasVEAdjacency(ml) && vcg::tri::HasVEAdjacency(mr)){
 				 size_t i = Index(mr,vr.cVEp());
@@ -72,23 +72,25 @@ public:
 				 vl.VEi() = vr.VEi();
 		 }
 
-		 // Vertex to Face Adj
-		 if(vcg::tri::HasPerVertexVFAdjacency(ml) && vcg::tri::HasPerVertexVFAdjacency(mr) &&
-				vcg::tri::HasPerFaceVFAdjacency(ml) && vcg::tri::HasPerFaceVFAdjacency(mr)
-				){
-				size_t i = Index(mr,vr.cVFp());
-        vl.VFp() = (i>ml.face.size())? 0 :&ml.face[remap.face[i]];
-				vl.VFi() = vr.VFi();
-		 }
+		 if(!sel){
+			 // Vertex to Face Adj
+			 if(vcg::tri::HasPerVertexVFAdjacency(ml) && vcg::tri::HasPerVertexVFAdjacency(mr) &&
+					vcg::tri::HasPerFaceVFAdjacency(ml) && vcg::tri::HasPerFaceVFAdjacency(mr)
+					){
+					size_t i = Index(mr,vr.cVFp());
+			vl.VFp() = (i>ml.face.size())? 0 :&ml.face[remap.face[i]];
+					vl.VFi() = vr.VFi();
+			 }
 
-		 // Vertex to HEdge Adj
-		 if(vcg::tri::HasVHAdjacency(ml) && vcg::tri::HasVHAdjacency(mr)){
-				vl.VHp() = &ml.hedge[remap.hedge[Index(mr,vr.cVHp())]];
-				vl.VHi() = vr.VHi();
+			 // Vertex to HEdge Adj
+			 if(vcg::tri::HasVHAdjacency(ml) && vcg::tri::HasVHAdjacency(mr)){
+					vl.VHp() = &ml.hedge[remap.hedge[Index(mr,vr.cVHp())]];
+					vl.VHi() = vr.VHi();
+			 }
 		 }
  }
 
- static void ImportEdgeAdj(MeshLeft &ml, MeshRight &mr, EdgeLeft &el, const EdgeRight &er, Remap &remap){
+ static void ImportEdgeAdj(MeshLeft &ml, MeshRight &mr, EdgeLeft &el, const EdgeRight &er, Remap &remap, bool sel ){
 
 		 // Edge to Vertex  Adj
 		 if(vcg::tri::HasEVAdjacency(ml) && vcg::tri::HasEVAdjacency(mr)){
@@ -96,61 +98,65 @@ public:
 				 el.EVp(1) = &ml.vert[remap.vert[Index(mr,er.cEVp(1))]];
 		 }
 
-		 // Edge to Edge  Adj
-		 if(vcg::tri::HasEEAdjacency(ml) && vcg::tri::HasEEAdjacency(mr))
-         for(unsigned int vi = 0; vi < 2; ++vi)
-				 {
-             size_t i = Index(mr,er.cEEp(vi));
-             el.EEp(i) = (i>ml.edge.size())? 0 : &ml.edge[remap.edge[i]];
-						 el.EEi(i) = er.cEEi(i);
-				 }
+		 if(!sel){
+			 // Edge to Edge  Adj
+			 if(vcg::tri::HasEEAdjacency(ml) && vcg::tri::HasEEAdjacency(mr))
+			 for(unsigned int vi = 0; vi < 2; ++vi)
+					 {
+				 size_t i = Index(mr,er.cEEp(vi));
+				 el.EEp(i) = (i>ml.edge.size())? 0 : &ml.edge[remap.edge[i]];
+							 el.EEi(i) = er.cEEi(i);
+					 }
 
-		 // Edge to Face  Adj
-		 if(vcg::tri::HasEFAdjacency(ml) && vcg::tri::HasEFAdjacency(mr)){
-				 size_t i = Index(mr,er.cEFp());
-         el.EFp() = (i>ml.face.size())? 0 :&ml.face[remap.face[i]];
-				 el.EFi() = er.cEFi();
+			 // Edge to Face  Adj
+			 if(vcg::tri::HasEFAdjacency(ml) && vcg::tri::HasEFAdjacency(mr)){
+					 size_t i = Index(mr,er.cEFp());
+			 el.EFp() = (i>ml.face.size())? 0 :&ml.face[remap.face[i]];
+					 el.EFi() = er.cEFi();
+			 }
+
+			 // Edge to HEdge   Adj
+			 if(vcg::tri::HasEHAdjacency(ml) && vcg::tri::HasEHAdjacency(mr))
+					 el.EHp() = &ml.hedge[remap.hedge[Index(mr,er.cEHp())]];
 		 }
-
-		 // Edge to HEdge   Adj
-		 if(vcg::tri::HasEHAdjacency(ml) && vcg::tri::HasEHAdjacency(mr))
-				 el.EHp() = &ml.hedge[remap.hedge[Index(mr,er.cEHp())]];
  }
 
 
- static void ImportFaceAdj(MeshLeft &ml, MeshRight &mr, FaceLeft &fl, const FaceRight &fr, Remap &remap){
+ static void ImportFaceAdj(MeshLeft &ml, MeshRight &mr, FaceLeft &fl, const FaceRight &fr, Remap &remap, bool sel ){
 		 // Face to Vertex  Adj
 		 if(vcg::tri::HasFVAdjacency(ml) && vcg::tri::HasFVAdjacency(mr)){
 				 assert(fl.VN() == fr.VN());
-				 for( int i = 0; i < fl.VN(); ++i )
+				 for( int i = 0; i < fl.VN(); ++i ) 
 						 fl.V(i) = &ml.vert[remap.vert[Index(mr,fr.V(i))]];
 		 }
 
-		 // Face to Edge  Adj
-		 if(vcg::tri::HasFEAdjacency(ml) && vcg::tri::HasFEAdjacency(mr)){
-				 assert(fl.VN() == fr.VN());
-				 for( int vi = 0; vi < fl.VN(); ++vi ){
-             size_t i = Index(mr,fr.cFEp(vi));
-             fl.FEp(i) = (i>ml.edge.size())? 0 : &ml.edge[remap.edge[i]];
-				 }
-		 }
+		 if(!sel){
+			 // Face to Edge  Adj
+			 if(vcg::tri::HasFEAdjacency(ml) && vcg::tri::HasFEAdjacency(mr)){
+					 assert(fl.VN() == fr.VN());
+					 for( int vi = 0; vi < fl.VN(); ++vi ){
+				 size_t i = Index(mr,fr.cFEp(vi));
+				 fl.FEp(i) = (i>ml.edge.size())? 0 : &ml.edge[remap.edge[i]];
+					 }
+			 }
 
-		 // Face to Face  Adj
-		 if(vcg::tri::HasFFAdjacency(ml) && vcg::tri::HasFFAdjacency(mr)){
-				 assert(fl.VN() == fr.VN());
-				 for( int vi = 0; vi < fl.VN(); ++vi ){
-             size_t i = Index(mr,fr.cFFp(vi));
-						 fl.FFp(vi) = (i>ml.face.size()) ? 0 :&ml.face[remap.face[i]];
-						 fl.FFi(vi) = fr.cFFi(vi);
-				 }
-		 }
+			 // Face to Face  Adj
+			 if(vcg::tri::HasFFAdjacency(ml) && vcg::tri::HasFFAdjacency(mr)){
+					 assert(fl.VN() == fr.VN());
+					 for( int vi = 0; vi < fl.VN(); ++vi ){
+				 size_t i = Index(mr,fr.cFFp(vi));
+							 fl.FFp(vi) = (i>ml.face.size()) ? 0 :&ml.face[remap.face[i]];
+							 fl.FFi(vi) = fr.cFFi(vi);
+					 }
+			 }
 
-		 // Face to HEedge  Adj
-		 if(vcg::tri::HasFHAdjacency(ml) && vcg::tri::HasFHAdjacency(mr))
-						 fl.FHp() = &ml.hedge[remap.hedge[Index(mr,fr.cFHp())]];
+			 // Face to HEedge  Adj
+			 if(vcg::tri::HasFHAdjacency(ml) && vcg::tri::HasFHAdjacency(mr))
+							 fl.FHp() = &ml.hedge[remap.hedge[Index(mr,fr.cFHp())]];
+		 }
  }
 
- static void ImportHEdgeAdj(MeshLeft &ml, MeshRight &mr, HEdgeLeft &hl, const HEdgeRight &hr, Remap &remap){
+ static void ImportHEdgeAdj(MeshLeft &ml, MeshRight &mr, HEdgeLeft &hl, const HEdgeRight &hr, Remap &remap, bool sel ){
 		 // HEdge to Vertex  Adj
 		 if(vcg::tri::HasHVAdjacency(ml) && vcg::tri::HasHVAdjacency(mr))
 					hl.HVp() = &ml.vert[remap.vert[Index(mr,hr.cHVp())]];
@@ -252,28 +258,28 @@ static void Mesh(MeshLeft& ml, MeshRight& mr, const bool selected = false){
 		for(vi=mr.vert.begin();vi!=mr.vert.end();++vi)
 				if( !(*vi).IsD() && (!selected || (*vi).IsS())){
 				 ml.vert[remap.vert[Index(mr,*vi)]].ImportData(*vi);
-				 ImportVertexAdj(ml,mr,ml.vert[remap.vert[Index(mr,*vi)]],*vi,remap);
+				 ImportVertexAdj(ml,mr,ml.vert[remap.vert[Index(mr,*vi)]],*vi,remap,selected);
 		}
 
 		// edge
 		for(ei=mr.edge.begin();ei!=mr.edge.end();++ei)
 				if(!(*ei).IsD() && (!selected || (*ei).IsS())){
 				 ml.edge[remap.edge[Index(mr,*ei)]].ImportData(*ei);
-				 ImportEdgeAdj(ml,mr,ml.edge[remap.edge[Index(mr,*ei)]],*ei,remap);
+				 ImportEdgeAdj(ml,mr,ml.edge[remap.edge[Index(mr,*ei)]],*ei,remap,selected);
 		}
 
 		// face
 		for(fi=mr.face.begin();fi!=mr.face.end();++fi)
 				if(!(*fi).IsD() && (!selected || (*fi).IsS())){
 				 ml.face[remap.face[Index(mr,*fi)]].ImportData(*fi);
-				 ImportFaceAdj(ml,mr,ml.face[remap.face[Index(mr,*fi)]],*fi,remap);
+				 ImportFaceAdj(ml,mr,ml.face[remap.face[Index(mr,*fi)]],*fi,remap,selected);
 		}
 
 		// hedge
 		for(hi=mr.hedge.begin();hi!=mr.hedge.end();++hi)
 				if(!(*hi).IsD() && (!selected || (*hi).IsS())){
 				 ml.hedge[remap.hedge[Index(mr,*hi)]].ImportData(*hi);
-				 ImportHEdgeAdj(ml,mr,ml.hedge[remap.hedge[Index(mr,*hi)]],*hi,remap);
+				 ImportHEdgeAdj(ml,mr,ml.hedge[remap.hedge[Index(mr,*hi)]],*hi,remap,selected);
 		}
 
 		// phase 3.
