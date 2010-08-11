@@ -181,20 +181,6 @@ public:
 					hl.HPp() = &ml.hedge[remap.hedge[Index(mr,hr.cHPp())]];
  }
 
-//static void ImportFace(MeshLeft &ml, MeshRight &mr, FaceLeft &fl, const FaceRight &fr, std::vector<int> &remap)
-//{
-//	fl.template ImportData<FaceRight>(fr);
-//  fl.V(0)=&ml.vert[remap[ Index(mr,fr.V(0))]];
-//  fl.V(1)=&ml.vert[remap[ Index(mr,fr.V(1))]];
-//  fl.V(2)=&ml.vert[remap[ Index(mr,fr.V(2))]];
-//
-//	if(HasPerWedgeTexCoord(mr) && HasPerWedgeTexCoord(ml))
-//		for(int i=0;i<3;++i){
-//				fl.WT(i).P()=fr.cWT(i).P();
-//				fl.WT(i).N()=fr.cWT(i).N()+ml.textures.size();
-//		}
-//}
-
 // Append Right Mesh to the Left Mesh
 // Append::Mesh(ml, mr) is equivalent to ml += mr. 
 // Note MeshRigth could be costant...
@@ -210,7 +196,7 @@ static void Mesh(MeshLeft& ml, MeshRight& mr, const bool selected = false){
 		remap.vert.resize(mr.vert.size(),-1);
 		VertexIteratorRight vi;
 		for(vi=mr.vert.begin();vi!=mr.vert.end();++vi)
-				if(!selected || (*vi).IsS()){
+				if(!(*vi).IsD() && (!selected || (*vi).IsS())){
 						int ind=Index(mr,*vi);
 						assert(remap.vert[ind]==-1);
 						VertexIteratorLeft vp;
@@ -223,7 +209,7 @@ static void Mesh(MeshLeft& ml, MeshRight& mr, const bool selected = false){
 		remap.edge.resize(mr.edge.size(),-1);
 		EdgeIteratorRight ei;
 		for(ei=mr.edge.begin(); ei!=mr.edge.end();++ei)
-				if(!selected || (*ei).IsS()){
+				if(!(*ei).IsD() && (!selected || (*ei).IsS())){
 						int ind=Index(mr,*ei);
 						assert(remap.edge[ind]==-1);
 						EdgeIteratorLeft ep;
@@ -233,10 +219,11 @@ static void Mesh(MeshLeft& ml, MeshRight& mr, const bool selected = false){
 				}
 
 		// face
+		vcg::tri::Allocator<MeshRight>::CompactFaceVector(mr);
 		remap.face.resize(mr.face.size(),-1);
 		FaceIteratorRight fi;
 		for(fi=mr.face.begin();fi!=mr.face.end();++fi)
-				if(!selected || (*fi).IsS()){
+				if(!(*fi).IsD() && (!selected || (*fi).IsS())){
 						int ind=Index(mr,*fi);
 						assert(remap.face[ind]==-1);
 						FaceIteratorLeft fp;
@@ -249,7 +236,7 @@ static void Mesh(MeshLeft& ml, MeshRight& mr, const bool selected = false){
 		remap.hedge.resize(mr.hedge.size(),-1);
 		HEdgeIteratorRight hi;
 		for(hi=mr.hedge.begin();hi!=mr.hedge.end();++hi)
-				if(!selected || (*hi).IsS()){
+				if(!(*hi).IsD() && (!selected || (*hi).IsS())){
 						int ind=Index(mr,*hi);
 						assert(remap.hedge[ind]==-1); 
 						HEdgeIteratorLeft hp;
@@ -263,28 +250,28 @@ static void Mesh(MeshLeft& ml, MeshRight& mr, const bool selected = false){
 
 		// vertex
 		for(vi=mr.vert.begin();vi!=mr.vert.end();++vi)
-				if(!selected || (*vi).IsS()){
+				if( !(*vi).IsD() && (!selected || (*vi).IsS())){
 				 ml.vert[remap.vert[Index(mr,*vi)]].ImportData(*vi);
 				 ImportVertexAdj(ml,mr,ml.vert[remap.vert[Index(mr,*vi)]],*vi,remap);
 		}
 
 		// edge
 		for(ei=mr.edge.begin();ei!=mr.edge.end();++ei)
-				if(!selected || (*ei).IsS()){
+				if(!(*ei).IsD() && (!selected || (*ei).IsS())){
 				 ml.edge[remap.edge[Index(mr,*ei)]].ImportData(*ei);
 				 ImportEdgeAdj(ml,mr,ml.edge[remap.edge[Index(mr,*ei)]],*ei,remap);
 		}
 
 		// face
 		for(fi=mr.face.begin();fi!=mr.face.end();++fi)
-				if(!selected || (*fi).IsS()){
+				if(!(*fi).IsD() && (!selected || (*fi).IsS())){
 				 ml.face[remap.face[Index(mr,*fi)]].ImportData(*fi);
 				 ImportFaceAdj(ml,mr,ml.face[remap.face[Index(mr,*fi)]],*fi,remap);
 		}
 
 		// hedge
 		for(hi=mr.hedge.begin();hi!=mr.hedge.end();++hi)
-				if(!selected || (*hi).IsS()){
+				if(!(*hi).IsD() && (!selected || (*hi).IsS())){
 				 ml.hedge[remap.hedge[Index(mr,*hi)]].ImportData(*hi);
 				 ImportHEdgeAdj(ml,mr,ml.hedge[remap.hedge[Index(mr,*hi)]],*hi,remap);
 		}
