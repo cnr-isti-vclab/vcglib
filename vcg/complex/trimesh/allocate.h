@@ -866,7 +866,8 @@ public:
 			assert(i ==m.edge_attr.end() );// an attribute with this name exists
 		}
 		h._sizeof = sizeof(ATTR_TYPE);
-		h._typename = typeid(ATTR_TYPE).name();
+                h._padding = 0;
+                h._typename = typeid(ATTR_TYPE).name();
 		h._handle = (void*) new SimpleTempData<EdgeContainer,ATTR_TYPE>(m.edge);
  		m.attrn++;
 		h.n_attr = m.attrn;
@@ -952,7 +953,8 @@ public:
 		}
 		h._typename = typeid(ATTR_TYPE).name();
 		h._sizeof = sizeof(ATTR_TYPE);
-		h._handle = (void*) new SimpleTempData<FaceContainer,ATTR_TYPE>(m.face);
+                h._padding = 0;
+                h._handle = (void*) new SimpleTempData<FaceContainer,ATTR_TYPE>(m.face);
 		m.attrn++;
 		h.n_attr = m.attrn;
 		std::pair < AttrIterator , bool> res =  m.face_attr.insert(h);
@@ -1044,6 +1046,7 @@ public:
 		}
 		h._typename = typeid(ATTR_TYPE).name();
 		h._sizeof = sizeof(ATTR_TYPE);
+                h._padding = 0;
 		h._handle = (void*) new Attribute<ATTR_TYPE>();
 		m.attrn++;
 		h.n_attr = m.attrn;
