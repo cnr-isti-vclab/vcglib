@@ -4,9 +4,8 @@
 #include <vcg/connectors/halfedge_pos.h>
 #include <vcg/complex/trimesh/allocate.h>
 
-#include <vcg/complex/trimesh/update/halfedge_indexed.h>
-
 #include <vector>
+#include <set>
 #include <algorithm>
 #include <cstring>
 
@@ -163,102 +162,6 @@ namespace vcg
                     return diagonal_collapse( m, fp, vp );
                 }
 
-
-                static void print(MeshType &m, FacePointer fp1)
-                {
-                    cout << "Face: " << fp1-&m.face[0] << endl;
-                    HEdgePointer hp = fp1->FHp();
-                    cout << "Hedge: " << endl;
-                    for(int i=0; i<4; i++)
-                    {
-                        cout << hp-&m.hedge[0] << " ";
-                        hp = hp->HNp();
-                    }
-                    cout << endl;
-
-
-                    assert(hp = fp1->FHp());
-                    cout << "IsD : " << endl;
-                    for(int i=0; i<4; i++)
-                    {
-                        cout << hp->IsD() << " ";
-                        hp = hp->HNp();
-                    }
-                    cout << endl;
-
-                    assert(hp = fp1->FHp());
-                    cout << "Hopp : " << endl;
-                    for(int i=0; i<4; i++)
-                    {
-                        cout << hp->HOp()-&m.hedge[0] << " ";
-                        hp = hp->HNp();
-                    }
-                    cout << endl;
-
-                    assert(hp = fp1->FHp());
-                    cout << "IsD : " << endl;
-                    for(int i=0; i<4; i++)
-                    {
-                        cout << hp->HOp()->IsD() << " ";
-                        hp = hp->HNp();
-                    }
-                    cout << endl;
-
-                    assert(hp = fp1->FHp());
-                    cout << "Hopp faces: " << endl;
-                    for(int i=0; i<4; i++)
-                    {
-                        cout << hp->HOp()->HFp()-&m.face[0] << " ";
-                        hp = hp->HNp();
-                    }
-                    cout << endl;
-
-                    assert(hp = fp1->FHp());
-                    cout << "IsD : " << endl;
-                    for(int i=0; i<4; i++)
-                    {
-                        cout << hp->HOp()->HFp()->IsD() << " ";
-                        hp = hp->HNp();
-                    }
-                    cout << endl;
-
-                    assert(hp = fp1->FHp());
-                    cout << "Vert : " << endl;
-                    for(int i=0; i<4; i++)
-                    {
-                        cout << hp->HVp()-&m.vert[0] << " ";
-                        hp = hp->HNp();
-                    }
-                    cout << endl;
-
-
-                    assert(hp = fp1->FHp());
-                    cout << "Valences: " << endl;
-                    for(int i=0; i<4; i++)
-                    {
-                        cout << vertex_valence(hp->HVp()) << " ";
-                        hp = hp->HNp();
-                    }
-                    cout << endl;
-
-
-
-                    assert(hp = fp1->FHp());
-                    cout << "Hedges ring: " << endl;
-                    for(int i=0; i<4; i++)
-                    {
-                        vector<HEdgePointer> hedges = get_incident_hedges(hp->HVp());
-                        for(int j=0; j<hedges.size(); j++)
-                        {
-                          cout << hedges[j]-&m.hedge[0] << " ";
-                        }
-                        hp = hp->HNp();
-                        cout << endl;
-                    }
-                    cout << endl;
-                }
-
-
                 /*!
                   * Collpases a diagonal in a quad.
                   *
@@ -295,6 +198,12 @@ namespace vcg
                     vector<VertexPointer> vps = getVertices(fp);
 
                     assert(vps.size()==4);
+
+                    for(unsigned int i = 0; i< vps.size(); i++)
+                    {
+                        // all vertices must be different
+                        assert( count(vps.begin(), vps.end(), vps[i]) == 1 );
+                    }
 
                     hp = fp->FHp();
 
@@ -383,7 +292,7 @@ namespace vcg
                     Allocator<MeshType>::DeleteHEdge(m, *(hps[2]) );
                     Allocator<MeshType>::DeleteHEdge(m, *(hps[3]) );
 
-                    assert( !is_nonManifold_vertex(vp) );
+//                    assert( !is_nonManifold_vertex(m, vp) );
 
                     return vp;
 
@@ -507,29 +416,6 @@ namespace vcg
 
                     for(typename vector<HEdgePointer>::iterator hi = int_hedges.begin(); hi != int_hedges.end();++hi)
                         Allocator<MeshType>::DeleteHEdge( m, *(*hi) );
-
-//                    do
-//                    {
-//                        Allocator<MeshType>::DeleteHEdge( m, *(p.HE()) );
-//
-//                        if(p.HE()->HOp()->HFp() != fp)
-//                            hedges.push_back(p.HE()->HOp());
-//
-//                        else
-//                        {
-//                            if(vertex_valence(p.V()) == 1)
-//                            {
-//                                Allocator<MeshType>::DeleteVertex( m, *(p.V()) );
-//                                Allocator<MeshType>::DeleteEdge( m, *(p.E()) );
-//                            }
-//
-//                        }
-//
-//                        p.FlipV();
-//                        p.FlipE();
-//
-//                    }while(p.HE() != fp->FHp());
-
 
                     assert(ext_hedges.size() == 2);
 
@@ -1420,6 +1306,14 @@ namespace vcg
                     return true;
                 }
 
+                /*!
+                  * Checks if a diagonal can be collapsed
+                  *
+                  * \param vp Hedge whose vertex is one of the two vertices of the diagonal
+                  *
+                  * \retval true if diagonal can be collapsed
+                  * \retval false if diagonal cannot be collapsed
+                  */
                 static bool can_collapse_diagonal(HEdgePointer hp)
                 {
 
@@ -1482,6 +1376,44 @@ namespace vcg
                     return true;
                 }
 
+                /*!
+                  * Checks if a vertex is non-manifold, comparing local and global information (slow)
+                  *
+                  * \param vp Vertex to check
+                  *
+                  * \retval true if vertex is non-manifold
+                  * \retval false if verex is manifold
+                  */
+                static bool is_nonManifold_vertex(MeshType &m, VertexPointer vp)
+                {
+                    assert(vp);
+                    assert(!vp->IsD());
+
+                    set<HEdgePointer> set1;
+                    for(HEdgeIterator hi = m.hedge.begin(); hi != m.hedge.end(); ++hi)
+                    {
+                        if(!(*hi).IsD() && (*hi).HVp() == vp)
+                          set1.insert(&(*hi));
+                    }
+
+
+                    vector<HEdgePointer> vect2 = get_incident_hedges(vp);
+
+                    set<HEdgePointer> set2;
+                    set2.insert(vect2.begin(), vect2.end());
+
+                    return !equal(set1.begin(), set1.end(), set2.begin());
+
+                }
+
+                /*!
+                  * Checks if a vertex is non-manifold, ased only on local informations
+                  *
+                  * \param vp Vertex to check
+                  *
+                  * \retval true if vertex is non-manifold
+                  * \retval false if verex is manifold
+                  */
                 static bool is_nonManifold_vertex(VertexPointer vp)
                 {
                     assert(vp);
@@ -1510,12 +1442,26 @@ namespace vcg
 
                 }
 
+                /*!
+                  * Shortcut to get the second vertex of an edge
+                  *
+                  * \param hp Hedge
+                  *
+                  * \return Opposite vertex
+                  */
                 static VertexPointer opp_vert(HEdgePointer hp)
                 {
                     return hp->HOp()->HVp();
                 }
 
-                static  vector<VertexPointer> getVertices(VertexPointer vp)
+                /*!
+                  * Gets vertices on the 1-ring of a vertex
+                  *
+                  * \param vp Vertex
+                  *
+                  * \return Vector containing vertices
+                  */
+                static vector<VertexPointer> getVertices(VertexPointer vp)
                 {
                     assert(vp);
                     assert(!vp->IsD());
@@ -1531,10 +1477,8 @@ namespace vcg
 
                     do
                     {
-
                         if(p.F())
                         {
-
                             assert(!p.F()->IsD());
 
                             ret.push_back( opp_vert( p.HE() ) );
@@ -1551,6 +1495,40 @@ namespace vcg
                     return ret;
                 }
 
+                /*!
+                  * Gets facees on the 1-ring of a vertex
+                  *
+                  * \param vp Vertex
+                  *
+                  * \return Set containing faces
+                  */
+                static set<FacePointer> getFaces(VertexPointer vp)
+                {
+                    assert(vp);
+                    assert(!vp->IsD());
+
+                    set<FacePointer> ret;
+
+                    vector<VertexPointer> vertices = getVertices(vp);
+
+                    for(typename vector<VertexPointer>::iterator vi = vertices.begin(); vi!= vertices.end(); ++vi)
+                    {
+                        vector<FacePointer> incident_faces = get_incident_faces(*vi);
+                        ret.insert(incident_faces.begin(), incident_faces.end());
+                    }
+
+                    return ret;
+
+                }
+
+                /*!
+                  * Checks if a face is a singlet
+                  *
+                  * \param fp Face to check
+                  *
+                  * \retval true if face is a singlet
+                  * \retval false if face isn't a singlet
+                  */
                 static bool is_singlet(FacePointer fp)
                 {
                     assert(fp);
@@ -1651,15 +1629,16 @@ namespace vcg
 
                 }
 
+            public:
+
                 /*!
                   * Gets all faces incident to a vertex
                   *
-                  * \param fp Vertex
+                  * \param vp Vertex
                   * \param starting_he A hedge from which to start
                   *
                   * \return Vector containing the incident faces
                   */
-            public:
                 static vector<FacePointer> get_incident_faces(VertexPointer vp, HEdgePointer starting_he = NULL)
                 {
                     assert(vp);
@@ -1677,7 +1656,6 @@ namespace vcg
 
                     Pos<MeshType> p( starting_he, true );
 
-
                     do
                     {
                         ret.push_back( p.F() );
@@ -1691,6 +1669,14 @@ namespace vcg
 
                 }
 
+                /*!
+                  * Gets all hedges incident to a vertex
+                  *
+                  * \param vp Vertex
+                  * \param starting_he A hedge from which to start navigation
+                  *
+                  * \return Vector containing the incident hedges
+                  */
                 static vector<HEdgePointer> get_incident_hedges(VertexPointer vp, HEdgePointer starting_he = NULL)
                 {
                     assert(vp);
@@ -1724,11 +1710,26 @@ namespace vcg
 
                 }
 
+                /*!
+                  * Checks if a face has doublets
+                  *
+                  * \param fp Face to check
+                  *
+                  * \retval true if face has at least a doublet
+                  * \retval false if face hasn't any doublet
+                  */
                 static bool has_doublet(FacePointer fp)
                 {
                     return ( !find_doublet_hedges(fp).empty() );
                 }
 
+                /*!
+                  * Gets all hedges whose vertex is into a doublet
+                  *
+                  * \param fp Face to check
+                  *
+                  * \return Vector containing the hedges
+                  */
                 static vector<HEdgePointer> find_doublet_hedges(FacePointer fp)
                 {
                     assert(fp);
@@ -1756,6 +1757,14 @@ namespace vcg
 
                 }
 
+                /*!
+                  * Checks if a vertex is a border vertex
+                  *
+                  * \param vp Vertex to check
+                  *
+                  * \retval true if vertex is a border vertex
+                  * \retval false if vertex isn't a border vertex
+                  */
                 static bool isBorderVertex(VertexPointer vp)
                 {
                     assert(vp);
@@ -1779,6 +1788,13 @@ namespace vcg
                     return false;
                 }
 
+                /*!
+                  * Computes valence of a vertex
+                  *
+                  * \param vp Vertex
+                  *
+                  * \return Vertex valence
+                  */
                 static int vertex_valence(VertexPointer vp)
                 {
                     assert(vp);
