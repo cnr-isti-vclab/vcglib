@@ -36,6 +36,7 @@ struct MyUsedTypes : public UsedTypes<	Use<MyVertex>		::AsVertexType,
 
 
 class MyVertex  : public Vertex< MyUsedTypes, vertex::Coord3f, vertex::BitFlags, vertex::Normal3f, vertex::Mark,vertex::Color4b, vertex::Qualityf>{};
+class MyEdge    : public Edge<MyUsedTypes>{};
 class MyFace    : public Face  <MyUsedTypes, face::VertexRef,face::BitFlags,face::Mark, face::Normal3f> {};
 
 class MyMesh : public tri::TriMesh< vector<MyVertex>, vector<MyFace > >{};
