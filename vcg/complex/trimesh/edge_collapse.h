@@ -206,14 +206,14 @@ class EdgeCollapse
       }
     }
 
-    // Final loop to find cardinality of lk( V0-V1 )
+    // Final loop to find cardinality of Lk( V0-V1 )
     // Note that Lk(edge) is only a set of vertices.
     std::vector<VertexPointer> LkEdge;
 
     for( vfi = VFIterator(pos.V(0)); !vfi.End(); ++vfi)
     {
-      if(vfi.V1() == pos.V(1) ) LkEdge.push_back(pos.V(2));
-      if(vfi.V2() == pos.V(1) ) LkEdge.push_back(pos.V(1));
+      if(vfi.V1() == pos.V(1) ) LkEdge.push_back(vfi.V2());
+      if(vfi.V2() == pos.V(1) ) LkEdge.push_back(vfi.V1());
     }
 
     // if the collapsing edge was a boundary edge, we must add the dummy vertex.
