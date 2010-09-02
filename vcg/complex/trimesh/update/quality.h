@@ -23,6 +23,8 @@
 #ifndef __VCG_TRI_UPDATE_QUALITY
 #define __VCG_TRI_UPDATE_QUALITY
 #include <vcg/simplex/face/pos.h>
+#include <vcg/simplex/face/topology.h>
+#include <vcg/complex/trimesh/update/flag.h>
 #include <algorithm>
 #include <vector>
 #include <stack>
