@@ -794,7 +794,7 @@ public:
 
 		i =m.vert_attr.find(h1);
 		if(i!=m.vert_attr.end())
-				if((*i)._typename == typeid(ATTR_TYPE).name() ){
+                                if((*i)._sizeof == sizeof(ATTR_TYPE) ){
 						if(	(*i)._padding != 0 ){
 								PointerToAttribute attr = (*i);						// copy the PointerToAttribute
 								m.vert_attr.erase(i);						// remove it from the set
@@ -978,7 +978,7 @@ public:
 
 		i =m.face_attr.find(h1);
 		if(i!=m.face_attr.end())
-				if((*i)._typename == typeid(ATTR_TYPE).name() ){
+                                if((*i)._sizeof == sizeof(ATTR_TYPE) ){
 						if(	(*i)._padding != 0 ){
 						PointerToAttribute attr = (*i);											// copy the PointerToAttribute
 						m.face_attr.erase(i);											// remove it from the set
@@ -1064,7 +1064,7 @@ public:
 
 		i =m.mesh_attr.find(h1);
 		if(i!=m.mesh_attr.end())
-				if((*i)._typename == typeid(ATTR_TYPE).name() ){
+                                if((*i)._sizeof == sizeof(ATTR_TYPE)  ){
 						if(	(*i)._padding != 0 ){
 						PointerToAttribute attr = (*i);											// copy the PointerToAttribute
 						m.mesh_attr.erase(i);											// remove it from the set
@@ -1084,7 +1084,7 @@ public:
 	static void GetAllPerMeshAttribute(const MeshType & m, std::vector<std::string> &all){
 		typename std::set<PointerToAttribute > :: iterator i;
 		for(i = m.mesh_attr.begin(); i != m.mesh_attr.end(); ++i )
-				if((*i)._typename == typeid(ATTR_TYPE).name())
+                                if((*i)._sizeof == sizeof(ATTR_TYPE))
 						all.push_back((*i)._name);
 	}
 
