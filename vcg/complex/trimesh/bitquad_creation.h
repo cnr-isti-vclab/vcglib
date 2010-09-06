@@ -158,7 +158,8 @@ static void MakeDominantPass(MeshType &m){
  * This function split a face along the specified border edge it does not compute any property of the new vertex. It only do the topological work.
  * @param edge Index of the edge
  */
-//                         V2(e) ------------- v2
+//                                  sideF
+//          sideF         V2(e) ------------- v2
 //  V0 -------------V2 V2(e)  \               /
 //  |             /     |  \    \  newF     /
 //  |           /       |    \    \       / e
@@ -172,6 +173,10 @@ static void MakeDominantPass(MeshType &m){
 
 static std::pair<typename MeshType::FaceType *, typename MeshType::VertexType *> FaceSplitBorderEdge(MeshType &m, typename MeshType::FaceType &f, int edge, typename MeshType::FaceType *newFace, typename MeshType::VertexType *newVert )
 {
+
+    typename MeshType::FaceType *sideFFp;
+    int sideFFi;
+
     assert(tri::HasFFAdjacency(m));
     assert(face::IsBorder(f,edge));
     //qDebug("OldFacePRE  %i %i %i",tri::Index(m,f.V(0)),tri::Index(m,f.V(1)),tri::Index(m,f.V(2)));
@@ -197,12 +202,17 @@ static std::pair<typename MeshType::FaceType *, typename MeshType::VertexType *>
     newFace->FFp((edge+0)%3) = newFace;
     newFace->FFi((edge+0)%3) = (edge+0)%3;
 
-    newFace->FFp((edge+2)%3) = f.FFp((edge+1)%3);
-    newFace->FFi((edge+2)%3) = f.FFi((edge+1)%3);
+    newFace->FFp((edge+1)%3) = f.FFp((edge+1)%3);
+    newFace->FFi((edge+1)%3) = f.FFi((edge+1)%3);
+
+    sideFFp = f.FFp((edge+1)%3);
+    sideFFi = f.FFi((edge+1)%3);
 
     f.FFp((edge+1)%3) = newFace;
     f.FFi((edge+1)%3) = (edge+2)%3;
 
+    sideFFp->FFp(sideFFi)=newFace;
+    sideFFp->FFi(sideFFi)=(edge+1)%3;
 
     assert(face::IsBorder(f,edge));
     assert(face::IsBorder(*newFace,edge));
@@ -600,23 +610,24 @@ static void MakePureByCatmullClark(MeshType &m){
 // Helper funcion:
 // marks edge distance froma a given face.
 // Stops at maxDist or at the distance when a triangle is found
-static FaceType * MarkEdgeDistance(MeshType &m, FaceType *f, int maxDist){
+static FaceType * MarkEdgeDistance(MeshType &m, FaceType *startF, int maxDist){
     assert(tri::HasPerFaceQuality(m));
   
-  for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++)  if (!f->IsD()) {
+  for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++)  if (!fi->IsD()) {
     fi->Q()=maxDist;
   }
 
   FaceType * firstTriangleFound = NULL;
   
-  f->Q() =  0;
+  startF->Q() =  0;
   std::vector<FaceType*> stack;
   int stackPos=0;
-  stack.push_back(f);
+  stack.push_back(startF);
 
   while ( stackPos<int(stack.size())) {
     FaceType *f = stack[stackPos++];
     for (int k=0; k<3; k++) {
+      assert(FFCorrectness(*f,k));
       FaceType *fk = f->FFp(k);
       int fq = int(f->Q()) + ( ! f->IsF(k) );
       if (fk->Q()> fq && fq <= maxDist) {
