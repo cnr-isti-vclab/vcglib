@@ -154,6 +154,122 @@ static double RandomDouble01closed()
 	return SamplingRandomGenerator().generate01closed();
 }
 
+#define FAK_LEN 1024
+static double LnFac(int n) {
+   // Tabled log factorial function. gives natural logarithm of n!
+
+   // define constants
+   static const double                 // coefficients in Stirling approximation
+      C0 =  0.918938533204672722,      // ln(sqrt(2*pi))
+      C1 =  1./12.,
+      C3 = -1./360.;
+   // C5 =  1./1260.,                  // use r^5 term if FAK_LEN < 50
+   // C7 = -1./1680.;                  // use r^7 term if FAK_LEN < 20
+   // static variables
+   static double fac_table[FAK_LEN];   // table of ln(n!):
+   static bool initialized = false;         // remember if fac_table has been initialized
+
+
+   if (n < FAK_LEN) {
+      if (n <= 1) {
+         if (n < 0) assert(0);//("Parameter negative in LnFac function");
+         return 0;
+      }
+      if (!initialized) {              // first time. Must initialize table
+         // make table of ln(n!)
+         double sum = fac_table[0] = 0.;
+         for (int i=1; i<FAK_LEN; i++) {
+            sum += log(double(i));
+            fac_table[i] = sum;
+         }
+         initialized = true;
+      }
+      return fac_table[n];
+   }
+   // not found in table. use Stirling approximation
+   double  n1, r;
+   n1 = n;  r  = 1. / n1;
+   return (n1 + 0.5)*log(n1) - n1 + C0 + r*(C1 + r*r*C3);
+}
+
+static int  PoissonRatioUniforms(double L) {
+   /*
+
+   This subfunction generates a integer with the poisson
+   distribution using the ratio-of-uniforms rejection method (PRUAt).
+   This approach is STABLE even for large L (e.g. it does not suffer from the overflow limit of the classical Knuth implementation)
+   Execution time does not depend on L, except that it matters whether
+   is within the range where ln(n!) is tabulated.
+
+   Reference:
+
+   E. Stadlober
+   "The ratio of uniforms approach for generating discrete random variates".
+   Journal of Computational and Applied Mathematics,
+   vol. 31, no. 1, 1990, pp. 181-189.
+
+   Partially adapted/inspired from some subfunctions of the Agner Fog stocc library ( www.agner.org/random )
+   Same licensing scheme.
+
+   */
+  // constants
+
+  const double SHAT1 = 2.943035529371538573;    // 8/e
+  const double SHAT2 = 0.8989161620588987408;   // 3-sqrt(12/e)
+  double u;                                          // uniform random
+  double lf;                                         // ln(f(x))
+  double x;                                          // real sample
+  int32_t k;                                         // integer sample
+
+  double   pois_a = L + 0.5;                               // hat center
+  int mode = (int)L;                      // mode
+  double   pois_g  = log(L);
+  double    pois_f0 = mode * pois_g - LnFac(mode);          // value at mode
+  double   pois_h = sqrt(SHAT1 * (L+0.5)) + SHAT2;         // hat width
+  double   pois_bound = (int32_t)(pois_a + 6.0 * pois_h);  // safety-bound
+
+  while(1) {
+      u = RandomDouble01();
+      if (u == 0) continue;                           // avoid division by 0
+      x = pois_a + pois_h * (RandomDouble01() - 0.5) / u;
+      if (x < 0 || x >= pois_bound) continue;         // reject if outside valid range
+      k = (int32_t)(x);
+      lf = k * pois_g - LnFac(k) - pois_f0;
+      if (lf >= u * (4.0 - u) - 3.0) break;           // quick acceptance
+      if (u * (u - lf) > 1.0) continue;               // quick rejection
+      if (2.0 * log(u) <= lf) break;                  // final acceptance
+   }
+   return k;
+}
+
+
+/**
+  algorithm poisson random number (Knuth):
+    init:
+         Let L ← e^−λ, k ← 0 and p ← 1.
+    do:
+         k ← k + 1.
+         Generate uniform random number u in [0,1] and let p ← p × u.
+    while p > L.
+    return k − 1.
+
+  */
+static int Poisson(double lambda)
+{
+  if(lambda>50) return PoissonRatioUniforms(lambda);
+  double L = exp(-lambda);
+  int k =0;
+  double p = 1.0;
+  do
+  {
+    k = k+1;
+    p = p*RandomDouble01();
+  } while (p>L);
+
+  return k -1;
+}
+
+
 static void AllVertex(MetroMesh & m, VertexSampler &ps)
 {
 	VertexIterator vi;
@@ -389,6 +505,43 @@ static void StratifiedMontecarlo(MetroMesh & m, VertexSampler &ps,int sampleNum)
 			floatSampleNum -= (double) faceSampleNum; 
 		}
 }
+
+/**
+  This function compute montecarlo distribution with an approximate number of samples exploiting the poisson distribution approximation of the binomial distribution.
+
+  For a given triangle t of area a_t, in a Mesh of area A,
+  if we take n_s sample over the mesh, the number of samples that falls in t
+  follows the poisson distribution of P(lambda ) with lambda = n_s * (a_t/A).
+
+  To approximate the Binomial we use a Poisson distribution with parameter \lambda = np can be used as an approximation to B(n,p) (it works if n is sufficiently large and p is sufficiently small).
+
+  */
+
+
+static void MontecarloPoisson(MetroMesh & m, VertexSampler &ps,int sampleNum)
+{
+  ScalarType area = Stat<MetroMesh>::ComputeMeshArea(m);
+  ScalarType samplePerAreaUnit = sampleNum/area;
+
+  FaceIterator fi;
+  for(fi=m.face.begin(); fi != m.face.end(); fi++)
+    if(!(*fi).IsD())
+    {
+      float areaT=DoubleArea(*fi) * 0.5f;
+      int faceSampleNum = Poisson(areaT*samplePerAreaUnit);
+
+      // for every sample p_i in T...
+      for(int i=0; i < faceSampleNum; i++)
+          ps.AddFace(*fi,RandomBaricentric());
+//      SampleNum -= (double) faceSampleNum;
+    }
+}
+
+/**
+  This function computes a montecarlo distribution with an EXACT number of samples.
+  it works by generating a sequence of consecutive segments proportional to the triangle areas
+  and actually shooting sample over this line
+  */
 
 static void Montecarlo(MetroMesh & m, VertexSampler &ps,int sampleNum)
 {
