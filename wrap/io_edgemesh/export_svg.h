@@ -132,7 +132,7 @@ public:
 		if (fpo==NULL)			return false;
 		
 		WriteXmlHead(fpo, pro);
-		for(int i=0;i<meshVec.size();++i)
+    for(size_t i=0;i<meshVec.size();++i)
 		{
 			WriteXmlBody(fpo, *meshVec[i], pro, i );
 		}
