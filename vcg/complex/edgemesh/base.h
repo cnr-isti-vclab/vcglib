@@ -20,36 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.7  2007/03/12 15:38:02  tarini
-Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
-
-Revision 1.6  2005/09/14 14:09:16  spinelli
-ConstVertexPointer --> VertexPointer
-ConstEdgePointer --> EdgePointer
-
-Revision 1.5  2005/05/17 21:19:37  ganovelli
-some std::and typename  missing  (CRS4)
-
-Revision 1.4  2004/10/28 00:47:42  cignoni
-Better Doxygen documentation
-
-Revision 1.3  2004/09/20 09:30:03  cignoni
-Better Doxygen docs
-
-Revision 1.2  2004/05/10 14:41:45  ganovelli
-name of adhacency function updated
-
-Revision 1.1  2004/04/26 19:10:04  ganovelli
-created
-
-
-****************************************************************************/
-
-#pragma warning( disable : 4804 )
 
 /*
 People should subclass his vertex class from these one...

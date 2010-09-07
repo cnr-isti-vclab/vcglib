@@ -156,7 +156,7 @@ public:
 		 }
  }
 
- static void ImportHEdgeAdj(MeshLeft &ml, MeshRight &mr, HEdgeLeft &hl, const HEdgeRight &hr, Remap &remap, bool sel ){
+ static void ImportHEdgeAdj(MeshLeft &ml, MeshRight &mr, HEdgeLeft &hl, const HEdgeRight &hr, Remap &remap, bool /*sel*/ ){
 		 // HEdge to Vertex  Adj
 		 if(vcg::tri::HasHVAdjacency(ml) && vcg::tri::HasHVAdjacency(mr))
 					hl.HVp() = &ml.vert[remap.vert[Index(mr,hr.cHVp())]];
