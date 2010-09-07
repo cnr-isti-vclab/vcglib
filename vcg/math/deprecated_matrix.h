@@ -278,7 +278,7 @@ namespace vcg{
 					s+=(_rows-1);
 				}
 				Matrix<TYPE> temp(_rows-1, _columns-1, values);
-				return (pow(-1, i+j)*temp.Determinant());
+        return (pow(TYPE(-1.0), TYPE(i+j))*temp.Determinant());
 			};
 
 			/*!
