@@ -302,6 +302,24 @@ static size_t FaceConnectedFF(MeshType &m)
     }
   return selCnt;
 } 
+/// \brief Select ONLY the faces whose quality is in the specified closed interval.
+static size_t FaceFromQualityRange(MeshType &m,float minq, float maxq)
+{
+  size_t selCnt=0;
+  ClearFace(m);
+  FaceIterator fi;
+  assert(HasPerFaceQuality(m));
+  for(fi=m.face.begin();fi!=m.face.end();++fi)
+      if(!(*fi).IsD())
+      {
+        if( (*fi).Q()>=minq &&  (*fi).Q()<=maxq )
+          {
+            (*fi).SetS();
+            ++selCnt;
+          }
+      }
+  return selCnt;
+}
 
 /// \brief Select ONLY the vertices whose quality is in the specified closed interval. 
 static size_t VertexFromQualityRange(MeshType &m,float minq, float maxq)
