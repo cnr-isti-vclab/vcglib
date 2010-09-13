@@ -129,25 +129,22 @@ class Stat
               }
       }
 
-      static void ComputePerFaceQualityHistogram( MeshType & m, Histogramf &h, bool selectionOnly=false )
+      static void ComputePerFaceQualityHistogram( MeshType & m, Histogramf &h, bool selectionOnly=false,int HistSize=10000 )
       {
-        FaceIterator fi;
-        int HistSize=10000;
         std::pair<float,float> minmax = tri::Stat<MeshType>::ComputePerFaceQualityMinMax(m);
         h.Clear();
         h.SetRange( minmax.first,minmax.second, HistSize );
-        for(fi = m.face.begin(); fi != m.face.end(); ++fi)
+        for(FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
           if(!(*fi).IsD() &&  ((!selectionOnly) || (*fi).IsS()) ){
             assert(!math::IsNAN((*fi).Q()) && "You should never try to compute Histogram with Invalid Floating points numbers (NaN)");
           h.Add((*fi).Q());
         }
       }
 
-      static void ComputePerVertexQualityHistogram( MeshType & m, Histogramf &h, bool selectionOnly = false)    // V1.0
+      static void ComputePerVertexQualityHistogram( MeshType & m, Histogramf &h, bool selectionOnly = false, int HistSize=10000 )    // V1.0
       {
 				VertexIterator vi;
-				int HistSize=10000;
-				std::pair<float,float> minmax = ComputePerVertexQualityMinMax(m);
+        std::pair<float,float> minmax = ComputePerVertexQualityMinMax(m);
 					
 				h.Clear();
 				h.SetRange( minmax.first,minmax.second, HistSize);
