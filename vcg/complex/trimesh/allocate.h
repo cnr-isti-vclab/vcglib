@@ -1172,7 +1172,7 @@ public:
 	
 	template <class ATTR_TYPE>
 	static 
-		void FixPaddedPerMeshAttribute ( MeshType & m,PointerToAttribute & pa){
+    void FixPaddedPerMeshAttribute ( MeshType & /* m */,PointerToAttribute & pa){
 
 			// create the container of the right type
 			Attribute<ATTR_TYPE> * _handle =  new Attribute<ATTR_TYPE>();
