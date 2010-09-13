@@ -187,7 +187,7 @@ class Histogram
 {
 
 // public data members
-private:
+protected:
 
 	std::vector <int> H; 	//! Counters for bins.
   std::vector <ScalarType> R; 	//! Range for bins.
@@ -235,6 +235,7 @@ public:
 	void Add(ScalarType v);
 
   int MaxCount() const;
+  int BinNum() const {return n;};
 	int BinCount(ScalarType v);
     int BinCountInd(int index) {return H[index];}
 	int BinCount(ScalarType v, ScalarType width);
