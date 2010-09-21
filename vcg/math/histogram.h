@@ -189,7 +189,7 @@ class Histogram
 // public data members
 protected:
 
-	std::vector <int> H; 	//! Counters for bins.
+  std::vector <ScalarType> H; 	//! Counters for bins.
   std::vector <ScalarType> R; 	//! Range for bins.
 	ScalarType minv; 	//! Minimum value.
 	ScalarType maxv;	//! Maximum value.
@@ -197,7 +197,7 @@ protected:
 
 
   /// incrementally updated values
-	int cnt;	//! Number of accumulated samples.
+  ScalarType cnt;	//! Number of accumulated samples.
 	ScalarType avg;	//! Average.
 	ScalarType rms; 	//! Root mean square.
 
@@ -232,7 +232,7 @@ public:
 	 * The statistics related to the histogram data (average, RMS, etc.) are 
 	 * also updated.
 	 */
-	void Add(ScalarType v);
+  void Add(ScalarType v, ScalarType increment=ScalarType(1.0));
 
   int MaxCount() const;
   int BinNum() const {return n;};
@@ -358,15 +358,15 @@ asking for 4    lower bound will return an iterator pointing to R[3]==4; and wil
 
 */
 template <class ScalarType> 
-void Histogram<ScalarType>::Add(ScalarType v)
+void Histogram<ScalarType>::Add(ScalarType v, ScalarType increment)
 {
 	int pos=BinIndex(v);
   if(pos>=0 && pos<=n)
 	{
-		++H[pos];
-		++cnt;
-		avg+=v;
-		rms += v*v;
+    H[pos]+=increment;
+    cnt+=increment;
+    avg+=v*increment;
+    rms += (v*v)*increment;
 	}
 }
 
