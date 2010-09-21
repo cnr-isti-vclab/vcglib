@@ -138,12 +138,24 @@ namespace math {
 
 	template <typename T> inline static T Sqr(T a) { return a*a; }
 
-	template<class T> inline const T & Min(const T &a, const T &b){
-		if (a<b) return a; else return b;
+  template<class T> inline const T & Min(const T &a, const T &b,const T &c){
+    if (a<b) {
+      if(a<c) return a;
+         else return c;
+      } else {
+      if(b<c) return b;
+      else return c;
+      }
 	}
-	template<class T> inline const T & Max(const T &a, const T &b){
-		if (a<b) return b; else return a;
-	}
+  template<class T> inline const T & Max(const T &a, const T &b, const T &c){
+    if (a>b) {
+      if(a>c) return a;
+         else return c; // if c<a then c is smaller than b...
+      } else {
+      if(b>c) return b;
+      else return c;
+      }
+  }
 
 	template<class T> inline void Swap(T &a, T &b){
 		T tmp=a; a=b; b=tmp;
