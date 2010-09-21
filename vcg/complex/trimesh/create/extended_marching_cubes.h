@@ -291,7 +291,7 @@ namespace vcg
 				for (i=0; i<vertices_num; i++)
 				{
 					points[i]		= _mesh->vert[ vertices_idx[i] ].P();
-					normals[i]	= _mesh->vert[ vertices_idx[i] ].N();
+                    normals[i].Import(_mesh->vert[ vertices_idx[i] ].N());
 				}
 
 				// move barycenter of points into (0, 0, 0)
@@ -329,7 +329,7 @@ namespace vcg
 					if (c < minC)  minC = c;
 					if (c > maxC)  maxC = c;
 				}
-				c = vcg::math::Max< double >(fabs(minC), fabs(maxC));
+        c = std::max< double >(fabs(minC), fabs(maxC));
 				c = sqrt(1.0-c*c);
 				rank = (c > cos(_featureAngle) ? 2 : 3);
 
@@ -354,7 +354,7 @@ namespace vcg
 				{
 					double        smin   = DBL_MAX; // the max value, as defined in <float.h>
 					unsigned int  sminid = 0;
-					unsigned int  srank  = vcg::math::Min< unsigned int >(vertices_num, 3u);
+          unsigned int  srank  = std::min< unsigned int >(vertices_num, 3u);
 
 					for (i=0; i<srank; ++i)
 					{

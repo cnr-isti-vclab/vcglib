@@ -1169,9 +1169,9 @@ static void PoissonDiskPruning(MetroMesh &origMesh, VertexSampler &ps, MetroMesh
     // inflating
     origMesh.bbox.Offset(cellsize);
 
-    int sizeX = vcg::math::Max(1.0f,origMesh.bbox.DimX() / cellsize);
-    int sizeY = vcg::math::Max(1.0f,origMesh.bbox.DimY() / cellsize);
-    int sizeZ = vcg::math::Max(1.0f,origMesh.bbox.DimZ() / cellsize);
+    int sizeX = std::max(1.0f,origMesh.bbox.DimX() / cellsize);
+    int sizeY = std::max(1.0f,origMesh.bbox.DimY() / cellsize);
+    int sizeZ = std::max(1.0f,origMesh.bbox.DimZ() / cellsize);
     Point3i gridsize(sizeX, sizeY, sizeZ);
 #ifdef QT_VERSION
     qDebug("PDS: radius %f Grid:(%i %i %i) ",diskRadius,sizeX,sizeY,sizeZ);
@@ -1256,9 +1256,9 @@ static void PoissonDisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 	// inflating
 	origMesh.bbox.Offset(cellsize);
 
-	int sizeX = vcg::math::Max(1.0f,origMesh.bbox.DimX() / cellsize);
-	int sizeY = vcg::math::Max(1.0f,origMesh.bbox.DimY() / cellsize);
-	int sizeZ = vcg::math::Max(1.0f,origMesh.bbox.DimZ() / cellsize);
+  int sizeX = std::max(1.0f,origMesh.bbox.DimX() / cellsize);
+  int sizeY = std::max(1.0f,origMesh.bbox.DimY() / cellsize);
+  int sizeZ = std::max(1.0f,origMesh.bbox.DimZ() / cellsize);
 	Point3i gridsize(sizeX, sizeY, sizeZ);
 #ifdef QT_VERSION
 	qDebug("PDS: radius %f Grid:(%i %i %i) ",diskRadius,sizeX,sizeY,sizeZ);

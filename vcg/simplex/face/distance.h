@@ -184,7 +184,7 @@ namespace vcg {
 				if(dist>b2) { dist = b2; return true; }
 				else return false;
 			}
-                        if( (b=vcg::math::Min<ScalarType>(b0,vcg::math::Min<ScalarType>(b1,b2))) < EPS*DoubleArea(f))
+                        if( (b=math::Min<ScalarType>(b0,b1,b2)) < EPS*DoubleArea(f))
       {
 				ScalarType bt;
 				if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
@@ -220,7 +220,7 @@ namespace vcg {
 				if(dist>b2) { dist = b2; return true; }
 				else return false;
 			}
-                        if( (b=vcg::math::Min<ScalarType>(b0,vcg::math::Min<ScalarType>(b1,b2))) < EPS*DoubleArea(f))
+                        if( (b=math::Min<ScalarType>(b0,b1,b2)) < EPS*DoubleArea(f))
       {
 				ScalarType bt;
 				if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
@@ -406,7 +406,7 @@ namespace vcg {
 							// vicini (come prodotto vettore)
 							// Nota: si potrebbe rendere un pochino piu' veloce sostituendo Area()
 							// con il prodotto vettore dei due edge in 2d lungo il piano migliore.
-              if( (b=vcg::math::Min<ScalarType>(b0,vcg::math::Min<ScalarType>(b1,b2))) < EPS*DoubleArea(f))
+              if( (b=vcg::math::Min<ScalarType>(b0,b1,b2)) < EPS*DoubleArea(f))
 							{
 								ScalarType bt;
 								if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
@@ -443,7 +443,7 @@ namespace vcg {
 							if(dist>b2) { dist = b2; return true; }
 							else return false;
 						}
-            if( (b=vcg::math::Min<ScalarType>(b0,vcg::math::Min<ScalarType>(b1,b2))) < EPS*DoubleArea(f))
+            if( (b=vcg::math::Min<ScalarType>(b0,b1,b2)) < EPS*DoubleArea(f))
 							{
 								ScalarType bt;
 								if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
@@ -480,7 +480,7 @@ namespace vcg {
 							if(dist>b2) { dist = b2; return true; }
 							else return false;
 						}
-            if( (b=vcg::math::Min<ScalarType>(b0,vcg::math::Min<ScalarType>(b1,b2))) < EPS*DoubleArea(f))
+            if( (b=vcg::math::Min<ScalarType>(b0,b1,b2)) < EPS*DoubleArea(f))
 							{
 								ScalarType bt;
 								if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);

@@ -336,7 +336,7 @@ namespace vcg
 						A[i][k] *= scale;
 				}
 			}
-			anorm=math::Max( anorm, (math::Abs(W[i])+math::Abs(rv1[i])) );
+      anorm=std::max( anorm, (math::Abs(W[i])+math::Abs(rv1[i])) );
 		}
 		// Accumulation of right-hand transformations.
 		for (i=(n-1); i>=0; i--)
@@ -364,7 +364,7 @@ namespace vcg
 			l = i;
 		}
 		// Accumulation of left-hand transformations.
-		for (i=math::Min(m,n)-1; i>=0; i--)
+    for (i=std::min(m,n)-1; i>=0; i--)
 		{
 			l = i+1;
 			g = W[i];

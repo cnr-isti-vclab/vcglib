@@ -143,13 +143,13 @@ class Geo{
 		s = (d_curr + d_pw1+ec_w1)/2;
 		a = s/ec_w1;
 		b = a*s;
-		alpha_ = 2*acos ( math::Min<ScalarType>(1.0,sqrt(  (b- a* d_pw1)/d_curr)));
+    alpha_ = 2*acos ( std::min<ScalarType>(1.0,sqrt(  (b- a* d_pw1)/d_curr)));
 
 		if ( alpha+alpha_ > M_PI){
 			curr_d = d_curr + ew_c;		
 			}else
 			{
-				beta_ = 2*acos ( math::Min<ScalarType>(1.0,sqrt(  (b- a* d_curr)/d_pw1)));
+        beta_ = 2*acos ( std::min<ScalarType>(1.0,sqrt(  (b- a* d_curr)/d_pw1)));
 				beta  = acos((w_w1).dot(-w1_c)/(ew_w1*ec_w1));
 
 				if ( beta+beta_ > M_PI)

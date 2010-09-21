@@ -316,7 +316,7 @@ namespace vcg
 							//std::advance((iSonVertex=begin), *iSon);//retrieve the pointer to the Vertex associated to son
 							border.push( *iSon );
 						}
-						maxSize = vcg::math::Max<int>(maxSize, queueSize);
+            maxSize = std::max<int>(maxSize, queueSize);
 					}
 				}
 			}
@@ -341,7 +341,7 @@ namespace vcg
 						if (current_node->vertex->N().dot(current_node->sons[s]->vertex->N())<ScalarType(0.0f))
 							current_node->sons[s]->vertex->N() *= ScalarType(-1.0f);
 						border.push( current_node->sons[s] );
-						maxSize = vcg::math::Max<int>(maxSize, queueSize);
+            maxSize = std::max<int>(maxSize, queueSize);
 					}
 				}
 			}

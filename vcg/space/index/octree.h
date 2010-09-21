@@ -249,7 +249,7 @@ public:
 			CoordType offset = bounding_box.Dim()*Octree::EXPANSION_FACTOR;
 			CoordType center = bounding_box.Center();
 			resulting_bb.Offset(offset);
-			ScalarType longest_side = vcg::math::Max( resulting_bb.DimX(), vcg::math::Max(resulting_bb.DimY(), resulting_bb.DimZ()) )/2.0f;
+      ScalarType longest_side = vcg::math::Max( resulting_bb.DimX(), resulting_bb.DimY(), resulting_bb.DimZ())/2.0f;
 			resulting_bb.Set(center);
 			resulting_bb.Offset(longest_side);
 			TemplatedOctree::boundingBox = resulting_bb;
@@ -428,7 +428,7 @@ OBJECT_RETRIEVER:
 			NeighbourIterator first = neighbors.begin();
 			NeighbourIterator last	= neighbors.end();
 
-			object_count = vcg::math::Min(k, object_count);
+      object_count = std::min(k, object_count);
 			if (sort_per_distance)  std::partial_sort< NeighbourIterator >(first, first+object_count, last );
 			else										std::nth_element < NeighbourIterator >(first, first+object_count, last );
 			

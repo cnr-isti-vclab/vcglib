@@ -170,8 +170,8 @@ public:
 	bool IsUpToDate()
 	{
 		int lastMark = _pos.F()->V(0)->IMark();
-		lastMark = vcg::math::Max<int>(lastMark, _pos.F()->V(1)->IMark());
-		lastMark = vcg::math::Max<int>(lastMark, _pos.F()->V(2)->IMark());
+    lastMark = std::max<int>(lastMark, _pos.F()->V(1)->IMark());
+    lastMark = std::max<int>(lastMark, _pos.F()->V(2)->IMark());
 
 		return ( _localMark >= lastMark );
 	}

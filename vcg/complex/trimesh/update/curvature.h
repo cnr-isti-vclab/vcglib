@@ -634,7 +634,7 @@ public:
 					Point3<ScalarType> n1 = p.F()->cN();n1.Normalize();
 					Point3<ScalarType> n2 = p.FFlip()->cN();n2.Normalize();
 					ScalarType n1n2 = (n1 ^ n2).dot(normalized_edge);
-					n1n2 = math::Max<ScalarType >(math::Min<ScalarType> ( 1.0,n1n2),-1.0);
+          n1n2 = std::max(std::min( ScalarType(1.0),n1n2),ScalarType(-1.0));
 					ScalarType beta = math::Asin(n1n2);
 					m33[0][0] += beta*edge_length*normalized_edge[0]*normalized_edge[0];
 					m33[0][1] += beta*edge_length*normalized_edge[1]*normalized_edge[0];

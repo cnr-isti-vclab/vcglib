@@ -435,10 +435,8 @@ static int Thresholding(UpdateMeshType &m, float threshold, Color4b c1 = Color4<
 //Computes the lightness value for a specified color. lightness = 0.5*(Max(R,G,B)+Min(R,G,B))
 static float ComputeLightness(Color4b c)
 {
-  float min_rgb = math::Min((float)c[0],(float)c[1]);
-  min_rgb = math::Min(min_rgb,(float)c[2]);
-  float max_rgb = math::Max((float)c[0],(float)c[1]);
-  max_rgb = math::Max(max_rgb,(float)c[2]);
+  float min_rgb = (float)math::Min(c[0],c[1],c[2]);
+  float max_rgb = (float)math::Max(c[0],c[1],c[2]);
   return (max_rgb + min_rgb)/2;
 }
 
@@ -749,8 +747,8 @@ static int Equalize(UpdateMeshType &m, unsigned int rgbMask, const bool ProcessS
     {
       if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, put it in the histograms
       {
-        int v = (int)(ComputeLightness((*vi).C())+0.5); //compute and round lightness value
-        Hl.Add(v); Hr.Add((*vi).C()[0]); Hg.Add((*vi).C()[1]); Hb.Add((*vi).C()[2]);
+        float v = ComputeLightness((*vi).C())+0.5; //compute and round lightness value
+        Hl.Add(v); Hr.Add((float)(*vi).C()[0]); Hg.Add((float)(*vi).C()[1]); Hb.Add((float)(*vi).C()[2]);
       }
     }
   }

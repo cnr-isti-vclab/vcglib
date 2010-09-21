@@ -224,7 +224,7 @@ namespace vcg {
 		int solution_count = 0;
 		if (ScalarType(0.0)<=lambda1 && lambda1<=ScalarType(1.0))
 		{
-			ScalarType t_enter = vcg::math::Max< ScalarType >(lambda1, ScalarType(0.0));
+      ScalarType t_enter = std::max< ScalarType >(lambda1, ScalarType(0.0));
 			t0 = segment.P0() + r*t_enter;
 			solution_count++;
 		}
@@ -232,7 +232,7 @@ namespace vcg {
 		if (ScalarType(0.0)<=lambda2 && lambda2<=ScalarType(1.0))
 		{
 			Point3t *pt = (solution_count>0) ? &t1 : &t0;
-			ScalarType t_exit  = vcg::math::Min< ScalarType >(lambda2, ScalarType(1.0));
+      ScalarType t_exit  = std::min< ScalarType >(lambda2, ScalarType(1.0));
 			*pt = segment.P0() + r*t_exit;
 			solution_count++;
 		}
@@ -325,8 +325,8 @@ namespace vcg {
 		if (res!=NULL)
 		{
 			ScalarType witness_norm = witness.Norm();
-			res->first  = vcg::math::Max< ScalarType >( witness_norm-radius, ScalarType(0.0) );
-			res->second = vcg::math::Max< ScalarType >( radius-witness_norm, ScalarType(0.0) );
+      res->first  = std::max< ScalarType >( witness_norm-radius, ScalarType(0.0) );
+      res->second = std::max< ScalarType >( radius-witness_norm, ScalarType(0.0) );
 		}
 		penetration_detected = (witness.SquaredNorm() <= (radius*radius));
 		witness += center;

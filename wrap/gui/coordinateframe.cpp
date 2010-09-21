@@ -188,10 +188,8 @@ float CoordinateFrame::calcSlope(const Point3d &a,const Point3d &b,float dim,int
 
   float tickNum = spacing/Distance(p2,p1);// pxl spacing
   float slope = dim*tickNum;
-  float nslope = math::Min(
-          math::Min(niceRound(slope), 0.5f*niceRound(2.0f*slope)), 
-                                      0.2f*niceRound(5.0f*slope));
-  nslope = math::Max<float>(niceRound(dim*.001f),nslope); // prevent too small slope
+  float nslope = math::Min(niceRound(slope), 0.5f*niceRound(2.0f*slope), 0.2f*niceRound(5.0f*slope));
+  nslope = std::max(niceRound(dim*.001f),nslope); // prevent too small slope
   return nslope;
 }
 
