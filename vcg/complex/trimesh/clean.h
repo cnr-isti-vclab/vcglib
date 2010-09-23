@@ -1358,6 +1358,14 @@ private:
 */
 static int MergeCloseVertex(MeshType &m, const ScalarType radius)
 	{
+			int mergedCnt=0;
+                        mergedCnt = ClusterVertex(m,radius);
+			RemoveDuplicateVertex(m,true);
+			return mergedCnt;
+	}
+	
+static int ClusterVertex(MeshType &m, const ScalarType radius)
+	{
 			typedef vcg::SpatialHashTable<VertexType, ScalarType> SampleSHT;
 			SampleSHT sht;
 			tri::VertTmark<MeshType> markerFunctor;
@@ -1380,18 +1388,17 @@ static int MergeCloseVertex(MeshType &m, const ScalarType radius)
 							float dist = Distance(p,closests[i]->cP());
 							if(dist < radius && !closests[i]->IsV())
 												{
+													printf("%f %f \n",dist,radius);
 													mergedCnt++;
 													closests[i]->SetV();
 													closests[i]->P()=p;
 												}
 						}
 					}
-					
-			RemoveDuplicateVertex(m,true);
 			return mergedCnt;
 	}
-	
-	
+
+
 static std::pair<int,int>  RemoveSmallConnectedComponentsSize(MeshType &m, int maxCCSize)
 {
   std::vector< std::pair<int, typename MeshType::FacePointer> > CCV;
