@@ -26,7 +26,8 @@
 
 #include <vcg/space/triangle3.h>
 #include <vcg/math/matrix33.h>
-#include <vcg/simplex/face/component.h>
+#include <vcg/complex/trimesh/update/flag.h>
+
 
 namespace vcg {
 namespace tri {
@@ -54,6 +55,28 @@ typedef typename MeshType::VertexIterator VertexIterator;
 typedef typename MeshType::FaceType       FaceType;
 typedef typename MeshType::FacePointer    FacePointer;
 typedef typename MeshType::FaceIterator   FaceIterator;
+
+/**
+ Set to zero all the normals. Usued by all the face averaging algorithms.
+ by default it does not clear the normals of unreferenced vertices because they could be still useful
+ */
+static void PerVertexClear(ComputeMeshType &m, bool ClearAllVertNormal=false)
+{
+  assert(HasPerVertexNormal(m));
+  if(ClearAllVertNormal)
+    UpdateFlags<ComputeMeshType>::VertexClearV(m);
+  else
+  {
+    UpdateFlags<ComputeMeshType>::VertexSetV(m);
+    for(FaceIterator f=m.face.begin();f!=m.face.end();++f)
+     if( !(*f).IsD() )
+       for(int i=0;i<3;++i) (*f).V(i)->ClearV();
+   }
+  VertexIterator vi;
+  for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+     if( !(*vi).IsD() && (*vi).IsRW() && (!(*vi).IsV()) )
+         (*vi).N() = NormalType((ScalarType)0,(ScalarType)0,(ScalarType)0);
+}
 
 /// \brief Calculates the face normal (if stored in the current face type)
 
@@ -119,11 +142,7 @@ Journal of Graphics Tools, 1998
 static void PerVertexAngleWeighted(ComputeMeshType &m)
 {
 	assert(HasPerVertexNormal(m));
-	VertexIterator vi;
-	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-		 if( !(*vi).IsD() && (*vi).IsRW() )
-				 (*vi).N() = NormalType((ScalarType)0,(ScalarType)0,(ScalarType)0);
-
+  PerVertexClear(m);
  FaceIterator f;
  for(f=m.face.begin();f!=m.face.end();++f)
    if( !(*f).IsD() && (*f).IsR() )
@@ -150,13 +169,10 @@ static void PerVertexAngleWeighted(ComputeMeshType &m)
 static void PerVertexWeighted(ComputeMeshType &m)
 {
  assert(HasPerVertexNormal(m));
-  VertexIterator vi;
- for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-   if( !(*vi).IsD() && (*vi).IsRW() )
-     (*vi).N() = NormalType((ScalarType)0,(ScalarType)0,(ScalarType)0);
+
+ PerVertexClear(m);
 
  FaceIterator f;
-
  for(f=m.face.begin();f!=m.face.end();++f)
    if( !(*f).IsD() && (*f).IsR() )
    {
@@ -180,13 +196,9 @@ static void PerVertex(ComputeMeshType &m)
 {
  assert(HasPerVertexNormal(m));
  
- VertexIterator vi;
- for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-   if( !(*vi).IsD() && (*vi).IsRW() )
-     (*vi).N() = NormalType((ScalarType)0,(ScalarType)0,(ScalarType)0);
+ PerVertexClear(m);
 
  FaceIterator f;
-
  for(f=m.face.begin();f!=m.face.end();++f)
    if( !(*f).IsD() && (*f).IsR() )
    {
@@ -210,10 +222,7 @@ static void PerVertexPerFace(ComputeMeshType &m)
  if( !m.HasPerVertexNormal() || !m.HasPerFaceNormal()) return;
  
  PerFace(m);
- VertexIterator vi;
- for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-   if( !(*vi).IsD() && (*vi).IsRW() )
-     (*vi).N() = NormalType((ScalarType)0,(ScalarType)0,(ScalarType)0);
+ PerVertexClear(m);
 
  FaceIterator f;
 
