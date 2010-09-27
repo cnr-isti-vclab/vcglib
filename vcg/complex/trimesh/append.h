@@ -269,10 +269,15 @@ static void Mesh(MeshLeft& ml, MeshRight& mr, const bool selected = false){
 		}
 
 		// face
+		bool wedgetexcoord = vcg::tri::HasPerWedgeTexCoord(mr); 
 		for(fi=mr.face.begin();fi!=mr.face.end();++fi)
 				if(!(*fi).IsD() && (!selected || (*fi).IsS())){
+				 if(wedgetexcoord)
+					 for(int i = 0; i < (*fi).VN(); ++i)
+						 (*fi).WT(i).n() += ml.textures.size();
 				 ml.face[remap.face[Index(mr,*fi)]].ImportData(*fi);
 				 ImportFaceAdj(ml,mr,ml.face[remap.face[Index(mr,*fi)]],*fi,remap,selected);
+
 		}
 
 		// hedge
