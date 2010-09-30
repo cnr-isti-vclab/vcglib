@@ -39,7 +39,7 @@ Rubberband::Rubberband(Color4b c)
 start(0,0,0),end(0,0,0),have_to_pick(false),font()
 {
   font.setFamily("Helvetica");
-  font.setPixelSize(10);
+  font.setPixelSize(13);
 }
 
 void Rubberband::Render(QGLWidget* gla)
@@ -134,7 +134,7 @@ void Rubberband::Render(QGLWidget* gla)
 
 void Rubberband::Drag(QPoint p)
 {
-  if(currentphase==RUBBER_DRAGGING);
+  if(currentphase==RUBBER_DRAGGING)
     qt_cursor=p;
 }
 
@@ -192,6 +192,7 @@ void Rubberband::RenderLabel(QString text,QGLWidget* gla)
   glPushAttrib(GL_CURRENT_BIT | GL_DEPTH_BUFFER_BIT | GL_ENABLE_BIT | GL_LINE_BIT );
   glDisable(GL_LIGHTING);
   glDisable(GL_TEXTURE_2D);
+  glDisable(GL_DEPTH_TEST);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 
@@ -219,6 +220,7 @@ void Rubberband::RenderLabel(QString text,QGLWidget* gla)
   glEnd();
   glColor3f(1,1,1);
   gla->renderText(x,y,0.99f,text,font);
+  glGetError();//Due to buggy glrenderText()
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
   glMatrixMode(GL_MODELVIEW);

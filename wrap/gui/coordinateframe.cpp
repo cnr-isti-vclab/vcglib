@@ -153,7 +153,7 @@ void CoordinateFrame::Render(QGLWidget* glw)
       glw->renderText(0,0,-i,QString("-%1").arg(i,3,'f',1),font);
     }
   }
-  
+  glGetError(); // Patch to buggy qt rendertext;
   glPopAttrib();
   assert(!glGetError());  
 }
