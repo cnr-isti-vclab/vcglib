@@ -94,6 +94,28 @@ class Stat
 			}
 		return minmax;
 	}
+
+  /**
+    \short compute the barycenter of the surface thin-shell.
+    E.g. it assume a 'empty' model where all the mass is located on the surface and compute the barycenter of that thinshell.
+    Works for any triangulated model (no problem with open, nonmanifold selfintersecting models).
+    Useful for computing the barycenter of 2D planar figures.
+    */
+  static Point3<ScalarType> ComputeShellBarycenter(MeshType & m)
+  {
+    Point3<ScalarType> barycenter(0,0,0);
+    ScalarType areaSum=0;
+    FaceIterator fi;
+    for(fi = m.face.begin(); fi != m.face.end(); ++fi)
+        if(!(*fi).IsD())
+        {
+            ScalarType area=DoubleArea(*fi);
+            barycenter += Barycenter(*fi)*area;
+            areaSum+=area;
+         }
+    return barycenter/areaSum;
+  }
+
 	
 			static ScalarType ComputeMeshArea(MeshType & m)
 			{
