@@ -37,6 +37,7 @@
 #include <vcg/complex/trimesh/update/normal.h>
 #include <vcg/complex/trimesh/update/topology.h>
 #include <vcg/complex/trimesh/allocate.h>
+#include <vcg/complex/trimesh/clean.h>
 #include <vcg/space/point3.h>
 #include "emc_lookup_table.h"
 
@@ -94,10 +95,11 @@ namespace vcg
 			typedef typename TRIMESH_TYPE::CoordType			CoordType;
 			typedef typename TRIMESH_TYPE::CoordType*			CoordPointer;
 
-			typedef struct
+      struct LightEdge
 			{
+        LightEdge(size_t _face, size_t _edge):face(_face), edge(_edge) { }
 				size_t face, edge;
-			} LightEdge;
+      };
 
 			/*!
 			*	Constructor
@@ -132,7 +134,7 @@ namespace vcg
 			void Finalize()
 			{
 				assert(_initialized && !_finalized);
-				FlipEdges();
+        FlipEdges();
 
 				VertexIterator v_iter = _mesh->vert.begin();
 				VertexIterator v_end	= _mesh->vert.end();
@@ -399,30 +401,17 @@ namespace vcg
 				FaceIterator f_end  = _mesh->face.end();
 				for (i=0; f_iter!=f_end; f_iter++, i++)
 				{
-					if (f_iter->V(1) > f_iter->V(0))
-					{
-						LightEdge le;
-						le.face = i;
-						le.edge = 0;
-						edges.push_back( le );
-					}
-					if (f_iter->V(2) > f_iter->V(1)) 
-					{
-						LightEdge le;
-						le.face = i;
-						le.edge = 1;
-						edges.push_back( LightEdge(le));
-					}
-					if (f_iter->V(0) > f_iter->V(2)) 
-					{
-						LightEdge le;
-						le.face = i;
-						le.edge = 2;
-						edges.push_back( le );
-					}
+          if (f_iter->V(1) > f_iter->V(0)) edges.push_back( LightEdge(i,0) );
+          if (f_iter->V(2) > f_iter->V(1)) edges.push_back( LightEdge(i,1) );
+          if (f_iter->V(0) > f_iter->V(2)) edges.push_back( LightEdge(i,2) );
 				}
-				vcg::tri::UpdateTopology< TRIMESH_TYPE >::VertexFace( *_mesh );
-				vcg::tri::UpdateTopology< TRIMESH_TYPE >::FaceFace( *_mesh );
+        vcg::tri::UpdateTopology< TRIMESH_TYPE >::FaceFace( *_mesh );
+
+        // Select all the triangles that has a vertex shared with a non manifold edge.
+        int nonManifEdge = tri::Clean< TRIMESH_TYPE >::CountNonManifoldEdgeFF(*_mesh,true);
+        if(nonManifEdge >0)
+          tri::UpdateSelection< TRIMESH_TYPE >::FaceFromVertexLoose(*_mesh);
+        //qDebug("Got %i non manif edges",nonManifEdge);
 
 				typename std::vector< LightEdge >::iterator e_it		= edges.begin();
 				typename std::vector< LightEdge >::iterator e_end	= edges.end();
@@ -434,7 +423,11 @@ namespace vcg
 					f = &_mesh->face[e_it->face];
 					z = (int) e_it->edge;
 
-					if (vcg::face::CheckFlipEdge< FaceType >(*f, z))
+//          v2------v1    swap the diagonal only if v2 and v3 are feature and v0 and v1 are not.
+//          |     /  |
+//          |  /     |
+//          v0------v3
+          if (!(f->IsS()) && vcg::face::CheckFlipEdge< FaceType >(*f, z))
 					{
 						VertexPointer v0, v1, v2, v3;
 						v0 = f->V(z);
@@ -444,12 +437,12 @@ namespace vcg
 						w = f->FFi(z);
 						v3 = g->V2(w);
 						bool b0, b1, b2, b3;
-						b0 = !v0->IsUserBit(_featureFlag);
-						b1 = !v1->IsUserBit(_featureFlag);
-						b2 =	v2->IsUserBit(_featureFlag);
-						b3 =	v3->IsUserBit(_featureFlag);
+            b0 = !v0->IsUserBit(_featureFlag) ;
+            b1 = !v1->IsUserBit(_featureFlag) ;
+            b2 =	v2->IsUserBit(_featureFlag) ;
+            b3 =	v3->IsUserBit(_featureFlag) ;
 						if( b0 && b1 && b2 && b3)
-							vcg::face::FlipEdge< FaceType >(*f, z);
+                  vcg::face::FlipEdge< FaceType >(*f, z);
 
 					} // end if (vcg::face::CheckFlipEdge< _Face >(*f, z))
 				} // end for( ; e_it!=e_end; e_it++)
