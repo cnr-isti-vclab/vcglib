@@ -193,7 +193,9 @@ protected:
   std::vector <ScalarType> R; 	//! Range for bins.
 	ScalarType minv; 	//! Minimum value.
 	ScalarType maxv;	//! Maximum value.
-	int n;	//! Number of vaild intervals stored between minv and maxv.
+  ScalarType minElem; 	//! Minimum value.
+  ScalarType maxElem;	//! Maximum value.
+  int n;	//! Number of vaild intervals stored between minv and maxv.
 
 
   /// incrementally updated values
@@ -222,9 +224,11 @@ public:
 	void SetRange(ScalarType _minv, ScalarType _maxv, int _n,ScalarType gamma=1.0 );
 
 	ScalarType MinV() {return minv;}; 	//! Minimum value.
-	ScalarType MaxV() {return maxv;}; 	//! Minimum value.
+  ScalarType MaxV() {return maxv;}; 	//! Maximum value.
 
   
+  ScalarType MinElem() {return minElem;}; 	//! Minimum element added to the histogram. It could be < or > than MinV;.
+  ScalarType MaxElem() {return maxElem;}; 	//! Maximum element added to the histogram. It could be < or > than MinV;..
 
 	/** 
 	 * Add a new value to the histogram.
@@ -234,14 +238,14 @@ public:
 	 */
   void Add(ScalarType v, ScalarType increment=ScalarType(1.0));
 
-  int MaxCount() const;
+  ScalarType MaxCount() const;
   int BinNum() const {return n;};
-	int BinCount(ScalarType v);
-    int BinCountInd(int index) {return H[index];}
-	int BinCount(ScalarType v, ScalarType width);
+  ScalarType BinCount(ScalarType v);
+    ScalarType BinCountInd(int index) {return H[index];}
+  ScalarType BinCount(ScalarType v, ScalarType width);
     ScalarType BinLowerBound(int index) {return R[index];}
     ScalarType BinUpperBound(int index) {return R[index+1];};
-    int RangeCount(ScalarType rangeMin, ScalarType rangeMax);
+    ScalarType RangeCount(ScalarType rangeMin, ScalarType rangeMax);
 	ScalarType BinWidth(ScalarType v); 
 
 	/** 
@@ -281,6 +285,8 @@ void Histogram<ScalarType>::Clear()
 	n=0;
 	minv=0;
 	maxv=1;
+  minElem = std::numeric_limits<ScalarType>::max();
+  maxElem = -std::numeric_limits<ScalarType>::max();
 }
 
 /*
@@ -361,8 +367,11 @@ template <class ScalarType>
 void Histogram<ScalarType>::Add(ScalarType v, ScalarType increment)
 {
 	int pos=BinIndex(v);
+  if(v<minElem) minElem=v;
+  if(v>maxElem) maxElem=v;
   if(pos>=0 && pos<=n)
 	{
+
     H[pos]+=increment;
     cnt+=increment;
     avg+=v*increment;
@@ -371,23 +380,23 @@ void Histogram<ScalarType>::Add(ScalarType v, ScalarType increment)
 }
 
 template <class ScalarType> 
-int Histogram<ScalarType>::BinCount(ScalarType v) 
+ScalarType Histogram<ScalarType>::BinCount(ScalarType v)
 {
 	return H[BinIndex(v)];
 }
 
 template <class ScalarType> 
-int Histogram<ScalarType>::BinCount(ScalarType v, ScalarType width) 
+ScalarType Histogram<ScalarType>::BinCount(ScalarType v, ScalarType width)
 {
 	return RangeCount(v-width/2.0,v+width/2.0);
 }
 
 template <class ScalarType> 
-int Histogram<ScalarType>::RangeCount(ScalarType rangeMin, ScalarType rangeMax) 
+ScalarType Histogram<ScalarType>::RangeCount(ScalarType rangeMin, ScalarType rangeMax)
 {
 	int firstBin=BinIndex(rangeMin);
 	int lastBin=BinIndex (rangeMax);
-	int sum=0;
+  ScalarType sum=0;
 	for(int i=firstBin; i<=lastBin;++i)
 		sum+=H[i];
 	return sum;
@@ -414,7 +423,7 @@ void Histogram<ScalarType>::FileWrite(const std::string &filename)
 
 
 template <class ScalarType> 
-int Histogram<ScalarType>::MaxCount() const
+ScalarType Histogram<ScalarType>::MaxCount() const
 {
 	return *(std::max_element(H.begin(),H.end()));
 }
