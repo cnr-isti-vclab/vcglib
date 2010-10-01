@@ -193,6 +193,7 @@ static size_t FaceFromVertexStrict(MeshType &m)
   return selCnt;
 }
 
+/// \brief Select all the faces with at least one selected vertex
 static size_t FaceFromVertexLoose(MeshType &m)
 {
   size_t selCnt=0;
