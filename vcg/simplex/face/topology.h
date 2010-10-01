@@ -363,35 +363,42 @@ void SwapEdge(FaceType &f, const int z)
 template <class FaceType>
 static bool CheckFlipEdge(FaceType &f, int z)
 {
-	if (z<0 || z>2)
-		return false;
+  typedef typename FaceType::VertexType VertexType;
+  typedef typename vcg::face::Pos< FaceType > PosType;
+
+  if (z<0 || z>2)  return false;
 
 	// boundary edges cannot be flipped
-	if (face::IsBorder(f, z))
-		return false;
+  if (face::IsBorder(f, z)) return false;
 
 	FaceType *g = f.FFp(z);
 	int		 w = f.FFi(z);
 
 	// check if the vertices of the edge are the same
+  // e.g. the mesh has to be well oriented
 	if (g->V(w)!=f.V1(z) || g->V1(w)!=f.V(z) )
 		return false;
 
 	// check if the flipped edge is already present in the mesh
-	typedef typename FaceType::VertexType VertexType;
-	VertexType *f_v2 = f.V2(z);
+  // f_v2 and g_v2 are the vertices of the new edge
+  VertexType *f_v2 = f.V2(z);
 	VertexType *g_v2 = g->V2(w);
-	if (f_v2 == g_v2)
-		return false;
 
-	vcg::face::Pos< FaceType > pos(&f, (z+2)%3, f.V2(z));
+  // just a sanity check. If this happens the mesh is not manifold.
+  if (f_v2 == g_v2) return false;
+
+  // Now walk around f_v2, one of the two vertexes of the new edge
+  // and check that it does not already exists.
+
+  PosType pos(&f, (z+2)%3, f_v2);
+  PosType startPos=pos;
 	do
 	{
 		pos.NextE();
-		if (g_v2==pos.f->V1(pos.z))
+    if (g_v2 == pos.VFlip())
 			return false;
 	}
-	while (&f!=pos.f);
+  while (pos != startPos);
 
 	return true;
 }
