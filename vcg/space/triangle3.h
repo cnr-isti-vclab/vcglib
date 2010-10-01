@@ -204,7 +204,14 @@ bool InterpolationParameters(const TriangleType t, const Point3<ScalarType> & N,
 	}
 }
 		
-
+/// Handy Wrapper of the above one that calculate the normal on the triangle
+template<class TriangleType, class ScalarType>
+bool InterpolationParameters(const TriangleType t, const Point3<ScalarType> & P,  Point3<ScalarType> & L)
+{
+	Point3<ScalarType> N=vcg::Normal<TriangleType>(t);
+	return (InterpolationParameters<TriangleType,ScalarType>(t,N,P,L));
+}
+	
 
 // Function that computes the barycentric coords of a 2D triangle. Used by the above function. 
 // Algorithm: simply find a base for the frame of the triangle, assuming v3 as origin (matrix T) invert it and apply to P-v3.
