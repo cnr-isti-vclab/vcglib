@@ -25,7 +25,7 @@
 
 #include <QMessageBox>
 #include <wrap/qt/col_qt_convert.h>
-
+#include <wrap/qt/checkGLError.h>
 namespace vcg
 {
 
