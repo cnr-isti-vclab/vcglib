@@ -80,7 +80,7 @@ public:
 
     @param glw the GL widget.
   */
-  virtual void Render(QGLWidget* glw);
+  virtual void Render(QGLWidget* glw,QPainter* p = NULL);
   // data
 
   /// The color used for the ticks, the ticks values and the head of the arrows.
