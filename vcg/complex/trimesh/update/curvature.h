@@ -309,7 +309,7 @@ public:
 	typedef vcg::GridStaticPtr	<FaceType, ScalarType >		MeshGridType;
 	typedef vcg::GridStaticPtr	<VertexType, ScalarType >		PointsGridType;
 
-		static void PrincipalDirectionsPCA(MeshType &m, ScalarType r, bool pointVSfaceInt = true) {
+		static void PrincipalDirectionsPCA(MeshType &m, ScalarType r, bool pointVSfaceInt = true,vcg::CallBackPos * cb = NULL) {
 			std::vector<VertexType*> closests;
 			std::vector<ScalarType> distances;
 			std::vector<CoordType> points;
@@ -330,7 +330,7 @@ public:
                     for(size_t y  = 0; y <   m.vert.size(); ++y,++vi)  (*vi).P() =  m.vert[y].P();
 					pGrid.Set(tmpM.vert.begin(),tmpM.vert.end());
 				}	else{	mGrid.Set(m.face.begin(),m.face.end()); }
-
+				int jj = 0;
 				for(vi  = m.vert.begin(); vi != m.vert.end(); ++vi){
 						vcg::Matrix33<ScalarType> A,eigenvectors;
 						vcg::Point3<ScalarType> bp,eigenvalues;
@@ -384,7 +384,11 @@ public:
 					(*vi).K2() = (2.0/5.0) * (4.0*M_PI*r5 + 15*eigenvalues[(best+1)%3]-45.0*eigenvalues[(best+2)%3])/(M_PI*r6);
 					if((*vi).K1() < (*vi).K2())	{	std::swap((*vi).K1(),(*vi).K2());
 																				std::swap((*vi).PD1(),(*vi).PD2());
-																			}
+					if (cb) 
+					{
+						(*cb)(int(100.0f * (float)jj / (float)m.vn),"Vertices Analysis");	
+						++jj;
+					}													}
 			}
 
 
