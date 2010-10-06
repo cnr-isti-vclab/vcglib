@@ -203,14 +203,6 @@ bool InterpolationParameters(const TriangleType t, const Point3<ScalarType> & N,
 			return InterpolationParameters(t,2,P,L); /* 2 > 1 ? 2 */
 	}
 }
-		
-/// Handy Wrapper of the above one that calculate the normal on the triangle
-template<class TriangleType, class ScalarType>
-bool InterpolationParameters(const TriangleType t, const Point3<ScalarType> & P,  Point3<ScalarType> & L)
-{
-	Point3<ScalarType> N=vcg::Normal<TriangleType>(t);
-	return (InterpolationParameters<TriangleType,ScalarType>(t,N,P,L));
-}
 	
 
 // Function that computes the barycentric coords of a 2D triangle. Used by the above function. 
@@ -446,6 +438,13 @@ Point3Type NormalizedNormal( Point3Type const &p0, Point3Type const & p1,  Point
 }
 
 
+/// Handy Wrapper of the above one that calculate the normal on the triangle
+template<class TriangleType, class ScalarType>
+bool InterpolationParameters(const TriangleType t, const Point3<ScalarType> & P,  Point3<ScalarType> & L)
+{
+    vcg::Point3<ScalarType> N=vcg::Normal<TriangleType>(t);
+        return (InterpolationParameters<TriangleType,ScalarType>(t,N,P,L));
+}
 
 /// Return the Double of area of the triangle
 // NOTE the old Area function has been removed to intentionally 
