@@ -44,6 +44,7 @@ sampling strategies (montecarlo, stratified etc).
 #include <vcg/complex/trimesh/update/flag.h>
 #include <vcg/space/box2.h>
 #include <vcg/space/segment2.h>
+
 namespace vcg
 {
 namespace tri
@@ -219,21 +220,21 @@ static int  PoissonRatioUniforms(double L) {
   double u;                                          // uniform random
   double lf;                                         // ln(f(x))
   double x;                                          // real sample
-  int32_t k;                                         // integer sample
+  int k;                                         // integer sample
 
   double   pois_a = L + 0.5;                               // hat center
   int mode = (int)L;                      // mode
   double   pois_g  = log(L);
   double    pois_f0 = mode * pois_g - LnFac(mode);          // value at mode
   double   pois_h = sqrt(SHAT1 * (L+0.5)) + SHAT2;         // hat width
-  double   pois_bound = (int32_t)(pois_a + 6.0 * pois_h);  // safety-bound
+  double   pois_bound = (int)(pois_a + 6.0 * pois_h);  // safety-bound
 
   while(1) {
       u = RandomDouble01();
       if (u == 0) continue;                           // avoid division by 0
       x = pois_a + pois_h * (RandomDouble01() - 0.5) / u;
       if (x < 0 || x >= pois_bound) continue;         // reject if outside valid range
-      k = (int32_t)(x);
+      k = (int)(x);
       lf = k * pois_g - LnFac(k) - pois_f0;
       if (lf >= u * (4.0 - u) - 3.0) break;           // quick acceptance
       if (u * (u - lf) > 1.0) continue;               // quick rejection
