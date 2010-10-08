@@ -25,6 +25,7 @@
 #define __VCGLIB_COLORSPACE
 
 #include <vcg/space/color4.h>
+#include<algorithm>
 
 /** 
  * EVERYTHING YOU ALWAYS WANTED TO KNOW ABOUT COLORS BUT WERE AFRAID TO ASK
