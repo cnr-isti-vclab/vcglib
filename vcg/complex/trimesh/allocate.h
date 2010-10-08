@@ -719,7 +719,7 @@ namespace vcg {
 			// Loop on the faces to correct VF and FF relations
 			m.face.resize(m.fn);
 			// resize the optional atttributes in m.face_attr to reflect the changes 
-			ResizeAttribute(m.face_attr,m.vn,m);
+			ResizeAttribute(m.face_attr,m.fn,m);
 
 			FaceIterator fi;
 			for(fi=m.face.begin();fi!=m.face.end();++fi)
