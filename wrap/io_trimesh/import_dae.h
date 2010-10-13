@@ -862,7 +862,9 @@ static Matrix44f getTransfMatrixFromNode(const QDomElement parentNode)
 							
 							geoinst_found |= true;
                             QDomNodeList geolib = info.doc->elementsByTagName("library_geometries");
-							assert(geolib.size() == 1);
+							//assert(geolib.size() == 1);
+							if (geolib.size() != 1)
+								return false;
 							//!!!!!!!!!!!!!!!!!here will be the code for geometry transformations!!!!!!!!!!!!!!!!!!!!!!
                             info.numvert = 0;
                             info.numface = 0;
@@ -924,7 +926,9 @@ static Matrix44f getTransfMatrixFromNode(const QDomElement parentNode)
 			if (!geoinst_found)
 			{
                 QDomNodeList geolib = info.doc->elementsByTagName("library_geometries");
-				assert(geolib.size() == 1);
+				//assert(geolib.size() == 1);
+				if (geolib.size() != 1)
+					return false;
 				QDomNodeList geochild = geolib.at(0).toElement().elementsByTagName("geometry");
 				//!!!!!!!!!!!!!!!!!here will be the code for geometry transformations!!!!!!!!!!!!!!!!!!!!!!
                 info.numvert = 0;
