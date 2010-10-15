@@ -389,90 +389,90 @@ std::pair< float, bool > RayLineDistance(const Ray3f & R,const Line3f & Q,Point3
   return std::make_pair(Distance(R_s,Q_t),false);
 }
 
-/*!
-  @brief Calculates the minimal distance between 2 segments.
-
-  R e Q are the segments, R_s and Q_t are set to be the closest points on 
-  the segments.
-
-  it's returned the distance from R_s and Q_t, and a boolean value which is true
-  if the segments are parallel enough.
-  @param R the first segment.
-  @param Q the second segment.
-  @param R_s the point on R closest to Q.
-  @param Q_t the point on Q closest to R.
-  @return a std::pair made with the distance from R_s to Q_t and a boolean value, true if and only if P and Q are almost parallel.
-*/
-std::pair< float, bool > SegmentSegmentDistance(const Segment3f & R, const Segment3f & Q, Point3f & R_s, Point3f & Q_t)
-{
-  float R_len=Distance(R.P0(),R.P1());
-  float Q_len=Distance(Q.P0(),Q.P1());
-  const float EPSILON_LENGTH = std::max(R_len,Q_len)*0.0001f; 
-  if(R_len < EPSILON_LENGTH){
-  	R_s=R.P0();
-  	Q_t=ClosestPoint(Q,R_s);
-  	return std::make_pair(Distance(R_s,Q_t),true);
-  }
-  if( Q_len < EPSILON_LENGTH){
-  	Q_t=Q.P0();
-  	R_s=ClosestPoint(R,Q_t);
-  	return std::make_pair(Distance(R_s,Q_t),true);
-  }  
-  Point3f r0 = R.P0(), Vr = (R.P1()-R.P0()).normalized();
-  Point3f q0 = Q.P0(), Vq = (Q.P1()-Q.P0()).normalized();
-  float VRVR = Vr.dot(Vr);
-  float VQVQ = Vq.dot(Vq);
-  float VRVQ = Vr.dot(Vq);
-  const float det = ( VRVR * VQVQ ) - ( VRVQ * VRVQ );
-  const float EPSILON = 0.00001f;
-  if ( ( det >= 0.0f ? det : -det) < EPSILON ) {
-  	Line3f lR(R.P0(),R.P1());
-  	float qa=lR.Projection(Q.P0());
-  	float qb=lR.Projection(Q.P1());
-  	if( (qa<=0.0f) && qb<=(0.0f)){
-      R_s=R.P0();
-      Q_t=ClosestPoint(Q,R_s);
-  	} else if ( (qa >= 1.0f) && (qb >= 1.0f) ){
-      R_s=R.P1();
-      Q_t=ClosestPoint(Q,R_s);
-  	} else {
-      if( (qa >= 0.0f) && (qa <= 1.0f) ){
-        Q_t=Q.P0();
-		R_s=ClosestPoint(R,Q_t);
-	  } else if((qb >= 0.0f) && (qb <= 1.0f) ){
-        Q_t=Q.P1();
-        R_s=ClosestPoint(R,Q_t);
-      } else {
-        if( ( ((qa<=0.0f)&&(qb>=1.0f)) || (((qb<=0.0f)&&(qa>=1.0f))))){
-           R_s=R.P0();
-           Q_t=ClosestPoint(Q,R_s);
-        }else{
-           assert(0);
-        }
-      }
-  	}  	
-	return std::make_pair(Distance(R_s,Q_t),true);
-  }
-  float b1= (q0 - r0).dot(Vr);
-  float b2= (r0 - q0).dot(Vq);
-  float s = ( (VQVQ * b1) + (VRVQ * b2) ) / det;
-  float t = ( (VRVQ * b1) + (VRVR * b2) ) / det;
-  if( s < 0 ){
-    R_s = R.P0();
-  }else if ( s > R_len ){
-    R_s = R.P1();
-  } else {
-    R_s = r0 + (Vr * s);
-  }
-  if( t < 0){
-  	Q_t = Q.P0(); 
-  }else if ( t > Q_len ){
-    Q_t = Q.P1();
-  }else{
-    Q_t = q0 + (Vq * t);
-  }
-  return std::make_pair(Distance(R_s,Q_t),false);
-}
+///*!
+//  @brief Calculates the minimal distance between 2 segments.
+//
+//  R e Q are the segments, R_s and Q_t are set to be the closest points on 
+//  the segments.
+//
+//  it's returned the distance from R_s and Q_t, and a boolean value which is true
+//  if the segments are parallel enough.
+//  @param R the first segment.
+//  @param Q the second segment.
+//  @param R_s the point on R closest to Q.
+//  @param Q_t the point on Q closest to R.
+//  @return a std::pair made with the distance from R_s to Q_t and a boolean value, true if and only if P and Q are almost parallel.
+//*/
+//std::pair< float, bool > SegmentSegmentDistance(const Segment3f & R, const Segment3f & Q, Point3f & R_s, Point3f & Q_t)
+//{
+//  float R_len=Distance(R.P0(),R.P1());
+//  float Q_len=Distance(Q.P0(),Q.P1());
+//  const float EPSILON_LENGTH = std::max(R_len,Q_len)*0.0001f; 
+//  if(R_len < EPSILON_LENGTH){
+//  	R_s=R.P0();
+//  	Q_t=ClosestPoint(Q,R_s);
+//  	return std::make_pair(Distance(R_s,Q_t),true);
+//  }
+//  if( Q_len < EPSILON_LENGTH){
+//  	Q_t=Q.P0();
+//  	R_s=ClosestPoint(R,Q_t);
+//  	return std::make_pair(Distance(R_s,Q_t),true);
+//  }  
+//  Point3f r0 = R.P0(), Vr = (R.P1()-R.P0()).normalized();
+//  Point3f q0 = Q.P0(), Vq = (Q.P1()-Q.P0()).normalized();
+//  float VRVR = Vr.dot(Vr);
+//  float VQVQ = Vq.dot(Vq);
+//  float VRVQ = Vr.dot(Vq);
+//  const float det = ( VRVR * VQVQ ) - ( VRVQ * VRVQ );
+//  const float EPSILON = 0.00001f;
+//  if ( ( det >= 0.0f ? det : -det) < EPSILON ) {
+//  	Line3f lR(R.P0(),R.P1());
+//  	float qa=lR.Projection(Q.P0());
+//  	float qb=lR.Projection(Q.P1());
+//  	if( (qa<=0.0f) && qb<=(0.0f)){
+//      R_s=R.P0();
+//      Q_t=ClosestPoint(Q,R_s);
+//  	} else if ( (qa >= 1.0f) && (qb >= 1.0f) ){
+//      R_s=R.P1();
+//      Q_t=ClosestPoint(Q,R_s);
+//  	} else {
+//      if( (qa >= 0.0f) && (qa <= 1.0f) ){
+//        Q_t=Q.P0();
+//		R_s=ClosestPoint(R,Q_t);
+//	  } else if((qb >= 0.0f) && (qb <= 1.0f) ){
+//        Q_t=Q.P1();
+//        R_s=ClosestPoint(R,Q_t);
+//      } else {
+//        if( ( ((qa<=0.0f)&&(qb>=1.0f)) || (((qb<=0.0f)&&(qa>=1.0f))))){
+//           R_s=R.P0();
+//           Q_t=ClosestPoint(Q,R_s);
+//        }else{
+//           assert(0);
+//        }
+//      }
+//  	}  	
+//	return std::make_pair(Distance(R_s,Q_t),true);
+//  }
+//  float b1= (q0 - r0).dot(Vr);
+//  float b2= (r0 - q0).dot(Vq);
+//  float s = ( (VQVQ * b1) + (VRVQ * b2) ) / det;
+//  float t = ( (VRVQ * b1) + (VRVR * b2) ) / det;
+//  if( s < 0 ){
+//    R_s = R.P0();
+//  }else if ( s > R_len ){
+//    R_s = R.P1();
+//  } else {
+//    R_s = r0 + (Vr * s);
+//  }
+//  if( t < 0){
+//  	Q_t = Q.P0(); 
+//  }else if ( t > Q_len ){
+//    Q_t = Q.P1();
+//  }else{
+//    Q_t = q0 + (Vq * t);
+//  }
+//  return std::make_pair(Distance(R_s,Q_t),false);
+//}
 
 /*!
   @brief Compute the point on a line closest to the ray projection of a window coordinate point.
