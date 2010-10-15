@@ -514,7 +514,7 @@ namespace vcg
 
                 if( HEdgeType::HasHFAdjacency() && FaceType::HasFHAdjacency()){
                     FaceIterator fi0  = vcg::tri::Allocator<MeshType>::AddFaces(m,1);
-                    m.face.back().ImportLocal(*e0->HFp());
+                    m.face.back().ImportData(*e0->HFp());
 
                     SetRelationsLoopFace(&(*ei0),e1->HFp());		// one loop to the old face
                     SetRelationsLoopFace(&(*ei1),&m.face.back());	// the other  to the new face
