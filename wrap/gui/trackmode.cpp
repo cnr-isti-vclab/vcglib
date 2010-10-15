@@ -110,7 +110,7 @@ Adding copyright.
 ****************************************************************************/
 
 #include <GL/glew.h>
-
+#include <vcg/space/distance3.h>
 #include <wrap/gui/trackmode.h>
 #include <wrap/gui/trackball.h>
 #include <wrap/gui/trackutils.h>
@@ -367,8 +367,11 @@ Point3f PathMode::SetStartNear(Point3f point)
   		p0=points[i-1];
   		p1=points[i];
   	}
-    Point3f segment_point=ClosestPoint(Segment3f(p0,p1),point);
-    float distance=Distance(segment_point,point);  
+    //Point3f segment_point=ClosestPoint(Segment3f(p0,p1),point);
+		Point3f segment_point;
+		float distance;
+		vcg::SegmentPointDistance<float>(Segment3f(p0,p1),point,segment_point,distance);
+   // float distance=Distance(segment_point,point);  
     if(distance<nearest_distance){
       nearest_point=segment_point;
       nearest_distance=distance;
@@ -528,7 +531,9 @@ float PathMode::HitPoint(float state, Ray3fN ray, Point3f &hit_point)
     active_segment= Segment3f(current_point,prev_point);
   } 
 
-  hit_point=ClosestPoint(active_segment,closest_point);
+  //hit_point=ClosestPoint(active_segment,closest_point);
+	float dist;
+	vcg::SegmentPointDistance<float>(active_segment,closest_point,hit_point,dist);
 
   return verse * ((hit_point-current_point).Norm() / path_length);
 }  
@@ -676,11 +681,16 @@ Point3f AreaMode::Move(Point3f start,Point3f end)
     for (i = 0, j = np-1; i < np; j = i++) {
       Segment3f side(points[i],points[j]);
       Point3f pseg,psid;
-      std::pair<float,bool> res=SegmentSegmentDistance(segment,side,pseg,psid);
+      //std::pair<float,bool> res=SegmentSegmentDistance(segment,side,pseg,psid);
+			std::pair<float,bool> res;
+			vcg::SegmentSegmentDistance(segment,side,res.first,res.second,pseg,psid);
       if(res.first < EPSILON && ! res.second){
       	float dist= Distance(pt,pseg);
       	if(dist < EPSILON){
-          Point3f pn=ClosestPoint(side,end);
+          //Point3f pn=ClosestPoint(side,end);
+					Point3f pn;
+					float dist;
+					vcg::SegmentPointDistance<float>(side,end,pn,dist);
           if(!p_on_side || (Distance(pn,end)<Distance(end,pside))){
             pside=pn;
             p_on_side=true;
@@ -749,8 +759,11 @@ Point3f AreaMode::SetStartNear(Point3f point)
   int i, j, np=int(points.size());
   for (i = 0, j = np-1; i < np; j = i++) {
     Segment3f side(points[i],points[j]);
-    Point3f side_point=ClosestPoint(side,candidate);
-    float distance=Distance(side_point,candidate);
+    //Point3f side_point=ClosestPoint(side,candidate);
+    //float distance=Distance(side_point,candidate);
+		Point3f side_point;
+		float distance;
+		vcg::SegmentPointDistance<float>(side,candidate,side_point,distance);
     if( distance < nearest_distance ){
       nearest_point=side_point;
       nearest_distance=distance;
