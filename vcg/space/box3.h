@@ -377,35 +377,6 @@ template <class T> Box3<T> Point3<T>::GetBBox(Box3<T> &bb) const {
 }
  
 
-template <class ScalarType> 
-ScalarType DistancePoint3Box3(const Point3<ScalarType> &p,
-							  const Box3<ScalarType> &b)
-{
-	///if fall inside return distance to a face
-	if (b.IsIn(p))
-	{
-		const ScalarType dx = std::min<ScalarType>(b.max.X()-p.X(), p.X()-b.min.X());
-		const ScalarType dy = std::min<ScalarType>(b.max.Y()-p.Y(), p.Y()-b.min.Y());
-		const ScalarType dz = std::min<ScalarType>(b.max.Z()-p.Z(), p.Z()-b.min.Z());
-
-		return std::min<ScalarType>(dx, std::min<ScalarType>(dy, dz));
-	}
-
-	{
-		ScalarType sq_dist = ScalarType(0);
-		for (int i=0; i<3; ++i)
-		{
-			ScalarType delta = ScalarType(0);
-			if       (p[i] < b.min[i])  delta = p[i] - b.min[i];
-			else if  (p[i] > b.max[i])  delta = p[i] - b.max[i];
-			sq_dist += delta * delta;
-		}
-
-    return math::Sqrt(sq_dist);
-	}
-}
-
-
 typedef Box3<short>  Box3s;
 typedef Box3<int>	 Box3i;
 typedef Box3<float>  Box3f;
