@@ -99,7 +99,7 @@ public:
 	inline const typename T::CoordType & P( const int j ) const {	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
 	inline const typename T::CoordType &cP( const int j ) const	{	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF) {T::ImportLocal(leftF);}
+	void ImportData(const LeftF & leftF) {T::ImportData(leftF);}
   	static bool HasFVAdjN()   { return false; }
 	static void Name(std::vector<std::string> & name){T::Name(name);}
 	inline void Alloc(const int & ns){T::Alloc();};
@@ -148,7 +148,7 @@ public:
 	inline const  CoordType & cP2( const int j ) const { return cV((j+2)%this->VN())->P();}
 
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){  for(int i  =0; i < this->VN(); ++i) V(i) = NULL; T::ImportLocal(leftF);}
+	void ImportData(const LeftF & leftF){  for(int i  =0; i < this->VN(); ++i) V(i) = NULL; T::ImportData(leftF);}
 	inline void Alloc(const int & ns) {		
 		if(_vpoly == NULL){this->SetVN(ns);
 			_vpoly = new   typename T::VertexType*[this->VN()]; 
@@ -184,7 +184,7 @@ public:
   const char &cVFi(const int j){static char z=0; return z;};
   const char &cFFi(const int j) const {static char z=0; return z;};
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){ T::ImportLocal(leftF);}
+	void ImportData(const LeftF & leftF){ T::ImportData(leftF);}
 	void Alloc(const int & ns){T::Alloc(ns);}
 	void Dealloc(){T::Dealloc();}
   static bool HasVFAdjacency()   {   return false; }
@@ -210,7 +210,7 @@ public:
   typename T::FacePointer const cVFp(const int j) const  { assert(j>=0 && j<this->VN());  return _vfpP[j]; }
   char &VFi(const int j) {return _vfiP[j]; }
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){T::ImportLocal(leftF);}
+	void ImportData(const LeftF & leftF){T::ImportData(leftF);}
 	inline void Alloc(const int & ns) { 
 		if(_vfpP == NULL){
 			this->SetVN(ns);
@@ -250,7 +250,7 @@ public:
   const char &cFFi(const int j) const { return _ffiP[j]; }
 	
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){T::ImportLocal(leftF);}
+	void ImportData(const LeftF & leftF){T::ImportData(leftF);}
 	inline void Alloc(const int & ns) {
 		if( _ffpP == NULL){	
 			this->SetVN(ns);
@@ -287,7 +287,7 @@ public:
   typename T::EdgePointer const cFEp(const int j) const  { assert(j>=0 && j<this->VN());  return _fepP[j]; }
 	
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){T::ImportLocal(leftF);}
+	void ImportData(const LeftF & leftF){T::ImportData(leftF);}
 	inline void Alloc(const int & ns) {
 	if( _fepP == NULL){	
 		this->SetVN(ns);
@@ -319,7 +319,7 @@ public:
 	typename T::HEdgePointer const cFHp() const  {  return _fhP; }
 
 	template <class LeftF>
-	void ImportLocal(const LeftF & leftF){T::ImportLocal(leftF);}
+	void ImportData(const LeftF & leftF){T::ImportData(leftF);}
 	inline void Alloc(const int & ns) {T::Alloc(ns);}
 	inline void Dealloc() {	 T::Dealloc();}
 
