@@ -139,15 +139,9 @@ public:
 	inline const CoordType & cP1( const int j ) const { return _v[(j+1)%3];}
 	inline const CoordType & cP2( const int j ) const { return _v[(j+2)%3];}
 
-
-
 	bool InterpolationParameters(const CoordType & bq, ScalarType &a, ScalarType &b, ScalarType &_c ) const{
 		return InterpolationParameters(*this, bq, a, b,_c ); 
 	}
-
-
-
-
 
 /// Return the _q of the face, the return value is in [0,sqrt(3)/2] = [0 - 0.866.. ]
 ScalarType QualityFace( ) const
@@ -258,95 +252,7 @@ bool InterpolationParameters(const TriangleType t,const Point3<ScalarType> & N,c
 	b=bary[1];
 	c=bary[2];
 	return done;
-//        else if(fp->Flags() & FaceType::NORMY )   axis = 1;
-//        else axis =2;
-//        InterpolationParameters(*fp,axis,Point,Bary);
-//const ScalarType _EPSILON = ScalarType(0.000001);
-//#define x1 (t.P(0).X())
-//#define y1 (t.P(0).Y())
-//#define z1 (t.P(0).Z())
-//#define x2 (t.P(1).X())
-//#define y2 (t.P(1).Y())
-//#define z2 (t.P(1).Z())
-//#define x3 (t.P(2).X())
-//#define y3 (t.P(2).Y())
-//#define z3 (t.P(2).Z())
-//#define px (bq[0])
-//#define py (bq[1])
-//#define pz (bq[2])
-//
-//     ScalarType t1  = px*y2;
-//     ScalarType t2  = px*y3;
-//     ScalarType t3  = py*x2;
-//     ScalarType t4  = py*x3;
-//     ScalarType t5  = x2*y3;
-//     ScalarType t6  = x3*y2;
-//     ScalarType t8  = x1*y2;
-//     ScalarType t9  = x1*y3;
-//     ScalarType t10 = y1*x2;
-//     ScalarType t11 = y1*x3;
-//     ScalarType t13 = t8-t9-t10+t11+t5-t6;
-//     if(fabs(t13)>=_EPSILON)
-//	 {
-//         ScalarType t15 = px*y1;
-//         ScalarType t16 = py*x1;
-//         a =  (t1 -t2-t3 +t4+t5-t6 )/t13;
-//         b = -(t15-t2-t16+t4+t9-t11)/t13;
-//         _c =  (t15-t1-t16+t3+t8-t10)/t13;
-//		return true;
-//     }
-//
-//     t1  = px*z2;
-//     t2  = px*z3;
-//     t3  = pz*x2;
-//     t4  = pz*x3;
-//     t5  = x2*z3;
-//     t6  = x3*z2;
-//     t8  = x1*z2;
-//     t9  = x1*z3;
-//     t10 = z1*x2;
-//     t11 = z1*x3;
-//     t13 = t8-t9-t10+t11+t5-t6;
-//     if(fabs(t13)>=_EPSILON)
-//	 {
-//		ScalarType t15 = px*z1;
-//		ScalarType t16 = pz*x1;
-//		a =  (t1 -t2-t3 +t4+t5-t6 )/t13;
-//		b = -(t15-t2-t16+t4+t9-t11)/t13;
-//		_c =  (t15-t1-t16+t3+t8-t10)/t13;
-//		return true;
-//     }
-//
-//     t1  = pz*y2; t2  = pz*y3;
-//     t3  = py*z2; t4  = py*z3;
-//     t5  = z2*y3; t6  = z3*y2;
-//     t8  = z1*y2; t9  = z1*y3;
-//     t10 = y1*z2; t11 = y1*z3;
-//     t13 = t8-t9-t10+t11+t5-t6;
-//     if(fabs(t13)>=_EPSILON)
-//	 {
-//         ScalarType t15 = pz*y1;
-//         ScalarType t16 = py*z1;
-//         a =  (t1 -t2-t3 +t4+t5-t6 )/t13;
-//         b = -(t15-t2-t16+t4+t9-t11)/t13;
-//         _c =  (t15-t1-t16+t3+t8-t10)/t13;
-//		return true;
-//     }
-//	 
-//#undef x1
-//#undef y1
-//#undef z1
-//#undef x2
-//#undef y2
-//#undef z2
-//#undef x3
-//#undef y3
-//#undef z3
-//#undef px
-//#undef py
-//#undef pz
-//
-//     return false;
+
 }
 
 
@@ -493,72 +399,6 @@ Point3<typename TriangleType::ScalarType> Circumcenter(const TriangleType &t)
                                                 t.P(2)*c2*( a2 + b2 - c2);
    c /= 2*(a2*b2 + a2*c2 + b2*c2) - a2*a2 - b2*b2 - c2*c2;
    return c;
-}
-
-/**
- * @brief Computes the distance between a triangle and a point.
- *
- * @param t         reference to the triangle
- * @param q         point location
- * @param dist      distance from p to t
- * @param closest   perpendicular projection of p onto t
- */
-
-template<class TriangleType>
-void TrianglePointDistance(const  TriangleType &t,
-							const typename TriangleType::CoordType & q,
-							typename TriangleType::ScalarType & dist, 
-							typename TriangleType::CoordType & closest )
-{
-	typedef typename TriangleType::CoordType CoordType;
-	typedef typename TriangleType::ScalarType ScalarType;
-
-	CoordType clos[3];
-	ScalarType distv[3];
-	CoordType clos_proj;
-	ScalarType distproj;
-
-	///find distance on the plane
-	vcg::Plane3<ScalarType> plane;
-	plane.Init(t.P(0),t.P(1),t.P(2));
-	clos_proj=plane.Projection(q);
-
-	///control if inside/outside
-	CoordType n=(t.P(1)-t.P(0))^(t.P(2)-t.P(0));
-	CoordType n0=(t.P(0)-clos_proj)^(t.P(1)-clos_proj);
-	CoordType n1=(t.P(1)-clos_proj)^(t.P(2)-clos_proj);
-	CoordType n2=(t.P(2)-clos_proj)^(t.P(0)-clos_proj);
-	distproj=(clos_proj-q).Norm();
-	if (((n*n0)>=0)&&((n*n1)>=0)&&((n*n2)>=0))
-	{
-		closest=clos_proj;
-		dist=distproj;
-		return;
-	}
-	
-
-	//distance from the edges
-	vcg::Segment3<ScalarType> e0=vcg::Segment3<ScalarType>(t.P(0),t.P(1));
-	vcg::Segment3<ScalarType> e1=vcg::Segment3<ScalarType>(t.P(1),t.P(2));
-	vcg::Segment3<ScalarType> e2=vcg::Segment3<ScalarType>(t.P(2),t.P(0));
-	clos[0]=ClosestPoint<ScalarType>( e0, q);
-	clos[1]=ClosestPoint<ScalarType>( e1, q);
-	clos[2]=ClosestPoint<ScalarType>( e2, q);
-	
-	distv[0]=(clos[0]-q).Norm();
-	distv[1]=(clos[1]-q).Norm();
-	distv[2]=(clos[2]-q).Norm();
-	int min=0;
-
-	///find minimum distance
-	for (int i=1;i<3;i++)
-	{
-		if (distv[i]<distv[min])
-			min=i;
-	}
-
-	closest=clos[min];
-	dist=distv[min];
 }
 
 
