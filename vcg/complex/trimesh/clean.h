@@ -1343,10 +1343,10 @@ private:
     //  if the faces share only a vertex, the opposite edge is tested against the face
     if(sv==1)
     {
-      int i0,i1; ScalarType t,a,b;
+      int i0,i1; ScalarType a,b;
       face::SharedVertex(f0,f1,i0,i1);
-      if(vcg::IntersectionSegmentTriangle(Segment3<ScalarType>((*f0).V1(i0)->P(),(*f0).V2(i0)->P()), *f1, t, a, b) )  return true;
-      if(vcg::IntersectionSegmentTriangle(Segment3<ScalarType>((*f1).V1(i1)->P(),(*f1).V2(i1)->P()), *f0, t, a, b) )  return true;
+      if(vcg::IntersectionSegmentTriangle(Segment3<ScalarType>((*f0).V1(i0)->P(),(*f0).V2(i0)->P()), *f1, a, b) )  return true;
+      if(vcg::IntersectionSegmentTriangle(Segment3<ScalarType>((*f1).V1(i1)->P(),(*f1).V2(i1)->P()), *f0, a, b) )  return true;
      }
 		return false;
 	}
