@@ -60,7 +60,7 @@ namespace vcg
 			typename TriMeshType ::VertexIterator tvi = Allocator<TriMeshType>::AddVertices(tm,pm.vert.size());
 			int cnt = 0;
 			for(tvi = tm.vert.begin(),vi = pm.vert.begin(); tvi != tm.vert.end(); ++tvi,++vi,++cnt)
-				if(!(*vi).IsD()) (*tvi).ImportLocal(*vi); else vcg::tri::Allocator<TriMeshType>::DeleteVertex(tm,(*tvi));
+				if(!(*vi).IsD()) (*tvi).ImportData(*vi); else vcg::tri::Allocator<TriMeshType>::DeleteVertex(tm,(*tvi));
 
 			typename PolyMeshType::FaceIterator fi;
 			for(fi = pm.face.begin(); fi != pm.face.end(); ++fi)
@@ -98,7 +98,7 @@ namespace vcg
 		typename TriMeshType ::ConstVertexIterator tvi;
 		typename PolyMeshType::VertexIterator vi  = vcg::tri::Allocator<PolyMeshType>::AddVertices(pm,tm.vert.size());
 		for(tvi = tm.vert.begin(); tvi != tm.vert.end(); ++tvi,++vi,++cnt) 
-			if(!(*tvi).IsD())(*vi).ImportLocal(*tvi); else vcg::tri::Allocator<PolyMeshType> ::DeleteVertex(pm,(*vi));
+			if(!(*tvi).IsD())(*vi).ImportData(*tvi); else vcg::tri::Allocator<PolyMeshType> ::DeleteVertex(pm,(*vi));
 
 		// convert the faces
 		typename TriMeshType::FaceIterator tfi;
