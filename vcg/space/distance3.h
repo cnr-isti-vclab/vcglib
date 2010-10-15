@@ -144,7 +144,7 @@ void LineLineDistance(const vcg::Line3<ScalarType> &mLine0,
 											vcg::Point3<ScalarType> &mClosestPoint0,
 											vcg::Point3<ScalarType> &mClosestPoint1)
 {
-	const ScalarType EPSILON=(ScalarType)0.000000001;
+  const ScalarType loc_EPSILON=ScalarType(0.000000001);
 	typedef typename vcg::Point3<ScalarType> CoordType;
   CoordType diff = mLine0.Origin() - mLine1.Origin();
   ScalarType a01 = -mLine0.Direction()* mLine1.Direction();
@@ -153,7 +153,7 @@ void LineLineDistance(const vcg::Line3<ScalarType> &mLine0,
   ScalarType det = fabs((ScalarType)1 - a01*a01);
   ScalarType b1, s0, s1, sqrDist;
 
-    if (det >=EPSILON)
+    if (det >=loc_EPSILON)
     {
         // Lines are not parallel.
         b1 = -diff*(mLine1.Direction());
@@ -284,7 +284,7 @@ void SegmentSegmentDistance(const vcg::Segment3<ScalarType> &s0,
 		///find the minimum distance between extremes to segments
 		ScalarType dist_test;
 		CoordType clos_test;
-		CoordType to_test[4]={s1.P0(),s1.P1(),s0.P0(),s1.P1()};
+    //CoordType to_test[4]={s1.P0(),s1.P1(),s0.P0(),s1.P1()};
 
 		///find combination of distances between all extremes and segments
 		SegmentPointSquaredDistance(s0,s1.P0(),clos_test,dist);
@@ -465,7 +465,7 @@ void TriangleTriangleDistance(const  vcg::Triangle3<ScalarType> &t0,
 															const  vcg::Triangle3<ScalarType> &t1,
 															ScalarType &dist)
 {
-	const ScalarType EPSILON=(vcg::DoubleArea(t0)+vcg::DoubleArea(t1))*(ScalarType)0.0000001;
+  const ScalarType loc_EPSILON=(vcg::DoubleArea(t0)+vcg::DoubleArea(t1))*(ScalarType)0.0000001;
  dist=std::numeric_limits<ScalarType>::max();
 
  ///test each segment of t1 with t0 
@@ -475,7 +475,7 @@ void TriangleTriangleDistance(const  vcg::Triangle3<ScalarType> &t0,
 	 vcg::Segment3<ScalarType> edge=vcg::Segment3<ScalarType>(t0.P0(i),t0.P0((i+1)%3));
 	 ScalarType test_dist;
 	 vcg::TriangleSegmentDistance<ScalarType>(t1,edge,test_dist);
-	 if (test_dist<EPSILON)
+   if (test_dist<loc_EPSILON)
 	 {
 		 dist=0;
 		 return;
@@ -489,7 +489,7 @@ void TriangleTriangleDistance(const  vcg::Triangle3<ScalarType> &t0,
 	 vcg::Segment3<ScalarType> edge=vcg::Segment3<ScalarType>(t1.P0(i),t1.P0((i+1)%3));
 	 ScalarType test_dist;
 	 vcg::TriangleSegmentDistance<ScalarType>(t0,edge,test_dist);
-	 if (test_dist<EPSILON)
+   if (test_dist<loc_EPSILON)
 	 {
 		 dist=0;
 		 return;
