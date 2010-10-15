@@ -63,7 +63,7 @@ created
 #include <vcg/math/base.h>
 #include <vcg/space/point3.h>
 #include <vcg/space/segment3.h>
-
+#include <vcg/space/distance3.h>
 
 namespace vcg {
 	namespace face{
@@ -325,8 +325,11 @@ namespace vcg {
             Box3<ScalarType> bb;
             f.GetBBox(bb);
             Segment3<ScalarType> degenTri(bb.min,bb.max);
-            Point3<ScalarType> closest= ClosestPoint( degenTri, q );
-            ScalarType d = Distance(closest, q);
+            //Point3<ScalarType> closest= ClosestPoint( degenTri, q );
+						//ScalarType d = Distance(closest, q);
+						Point3<ScalarType> closest;
+            ScalarType d;
+						vcg::SegmentPointDistance<ScalarType>(degenTri,q,closest,d);
             if( d>dist || d<-dist )			// Risultato peggiore: niente di fatto
                       return false;
             dist=d;
