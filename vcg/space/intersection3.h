@@ -670,7 +670,7 @@ bool IntersectionSegmentTriangle( const vcg::Segment3<ScalarType> & seg,
 								   const Point3<ScalarType> & vert0, 
 									const Point3<ScalarType> & vert1, const
 									Point3<ScalarType> & vert2,
-									ScalarType & a ,ScalarType & b, ScalarType & dist)
+									ScalarType & a ,ScalarType & b)
 {
 	//control intersection of bounding boxes
 	vcg::Box3<ScalarType> bb0,bb1;
@@ -688,12 +688,14 @@ bool IntersectionSegmentTriangle( const vcg::Segment3<ScalarType> & seg,
 	//first set both directions of ray
   vcg::Line3<ScalarType> line;
 	vcg::Point3<ScalarType> dir;
+	ScalarType lenght=seg.Length();
 	dir=(seg.P1()-seg.P0());
 	dir.Normalize();
   line.Set(seg.P0(),dir);
-  if(IntersectionLineTriangle<ScalarType>(line,vert0,vert1,vert2,dist,a,b))
-    return (dist>=0 && dist<=1.0);
-    return false;
+	ScalarType orig_dist;
+  if(IntersectionLineTriangle<ScalarType>(line,vert0,vert1,vert2,orig_dist,a,b))
+    return (orig_dist<=lenght);
+  return false;
 }
 /**
 * Compute the intersection between a segment and a triangle.
@@ -702,9 +704,9 @@ bool IntersectionSegmentTriangle( const vcg::Segment3<ScalarType> & seg,
 template<class TriangleType>
 bool IntersectionSegmentTriangle( const vcg::Segment3<typename TriangleType::ScalarType> & seg,
                   const TriangleType &t,
-                  typename TriangleType::ScalarType & a ,typename TriangleType::ScalarType & b, typename TriangleType::ScalarType & dist)
+                  typename TriangleType::ScalarType & a ,typename TriangleType::ScalarType & b)
 {
-  return IntersectionSegmentTriangle(seg,t.P(0),t.P(1),t.P(2),a,b,dist);
+  return IntersectionSegmentTriangle(seg,t.P(0),t.P(1),t.P(2),a,b);
 }
 
 template<class ScalarType>
