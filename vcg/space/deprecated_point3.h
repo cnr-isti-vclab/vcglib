@@ -95,6 +95,7 @@ Edited doxygen comments
 #define __VCGLIB_POINT3
 
 #include <assert.h>
+#include <algorithm>
 #include <vcg/math/base.h>
 
 namespace vcg {
@@ -556,7 +557,7 @@ inline Point3<SCALARTYPE> Abs(const Point3<SCALARTYPE> & p) {
 // probably a more uniform naming should be defined...
 template <class SCALARTYPE>
 inline Point3<SCALARTYPE> LowClampToZero(const Point3<SCALARTYPE> & p) {
-	return (Point3<SCALARTYPE>(math::Max(p[0], (SCALARTYPE)0), math::Max(p[1], (SCALARTYPE)0), math::Max(p[2], (SCALARTYPE)0)));
+  return (Point3<SCALARTYPE>(std::max(p[0], (SCALARTYPE)0), std::max(p[1], (SCALARTYPE)0), std::max(p[2], (SCALARTYPE)0)));
 }
 
 typedef Point3<short>  Point3s;
