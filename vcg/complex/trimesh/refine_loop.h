@@ -557,7 +557,7 @@ bool RefineOddEvenE(MESH_TYPE &m, ODD_VERT odd, EVEN_VERT even, PREDICATE edgePr
 	int j = 0;
     // di texture per wedge (uno per ogni edge)
 
-	ValenceAttr valence = vcg::tri::Allocator<CMeshO>::AddPerVertexAttribute<int>(m);
+  ValenceAttr valence = vcg::tri::Allocator<MESH_TYPE>:: template AddPerVertexAttribute<int>(m);
 	odd.setValenceAttr(&valence);
 	even.setValenceAttr(&valence);
 	
@@ -606,7 +606,7 @@ bool RefineOddEvenE(MESH_TYPE &m, ODD_VERT odd, EVEN_VERT even, PREDICATE edgePr
 	odd.setValenceAttr(0);
 	even.setValenceAttr(0);
 
-	vcg::tri::Allocator<CMeshO>::DeletePerVertexAttribute(m, valence);
+  vcg::tri::Allocator<MESH_TYPE>::DeletePerVertexAttribute(m, valence);
 	
 	return true;
 }
