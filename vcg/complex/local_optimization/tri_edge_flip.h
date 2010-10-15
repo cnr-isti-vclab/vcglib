@@ -113,7 +113,7 @@ public:
 	{
 		_pos = pos;
 		_localMark = mark;
-		_priority = ComputePriority();
+		_priority = this->ComputePriority();
 	}
 	
 	
@@ -144,12 +144,12 @@ public:
 		return _CoplanarAngleThresholdDeg;
 	}
 	
-	inline PosType GetPos()
+	inline PosType GetPos() const
 	{
 		return _pos;
 	}
 	
-	inline int GetMark()
+	inline int GetMark()const
 	{
 		return _localMark;
 	}
@@ -223,7 +223,7 @@ public:
 	    \|/
 	     0
 	 */
-	virtual ScalarType ComputePriority()
+	ScalarType ComputePriority()
 	{
 		CoordType v0, v1, v2, v3;
 		int i = _pos.E();
