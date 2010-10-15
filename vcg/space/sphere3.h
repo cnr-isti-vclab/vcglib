@@ -104,20 +104,20 @@ protected:
 		  T threshold = 1.01, T speed = 0.6);
 };
 
-template <class T> T Distance(const Sphere3<T> &sphere, 
-			      const Point3<T> &point) {
-  T dist = Distance(point, sphere.Center()) - sphere.Radius();
-  if(dist < 0) dist = 0;
-  return dist;
-}
-
-template <class T> T Distance(const Sphere3<T> &sphere, 
-			      const Sphere3<T> &s) {
-  T dist = Distance(s.Center(), sphere.Center()) 
-                    - sphere.Radius() - s.Radius();
-  if(dist < 0) dist = 0;
-  return dist;
-}
+//template <class T> T Distance(const Sphere3<T> &sphere, 
+//			      const Point3<T> &point) {
+//  T dist = Distance(point, sphere.Center()) - sphere.Radius();
+//  if(dist < 0) dist = 0;
+//  return dist;
+//}
+//
+//template <class T> T Distance(const Sphere3<T> &sphere, 
+//			      const Sphere3<T> &s) {
+//  T dist = Distance(s.Center(), sphere.Center()) 
+//                    - sphere.Radius() - s.Radius();
+//  if(dist < 0) dist = 0;
+//  return dist;
+//}
 
 typedef Sphere3<float> Sphere3f;
 typedef Sphere3<double> Sphere3d;
