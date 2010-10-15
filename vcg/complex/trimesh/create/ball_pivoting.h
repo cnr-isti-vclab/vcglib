@@ -94,7 +94,6 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
   }
   
   bool Seed(int &v0, int &v1, int &v2) {               
-    bool use_normals = false;     
     //get a sphere of neighbours
     std::vector<VertexType *> targets;      
     std::vector<Point3x> points;      
@@ -235,7 +234,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
     std::vector<ScalarType> dists;    
     std::vector<Point3x> points;
     
-    int n = tri::GetInSphereVertex(this->mesh, grid, middle, r + radius, targets, dists, points);
+    tri::GetInSphereVertex(this->mesh, grid, middle, r + radius, targets, dists, points);
           
     if(targets.size() == 0) {
       return -1; //this really would be strange but one never knows.

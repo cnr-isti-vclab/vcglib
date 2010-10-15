@@ -305,7 +305,7 @@ public:
 
 				numTriangles += n - 2;
 
-				size_t vBegin = vInfos.size();
+//				size_t vBegin = vInfos.size();
 
         VertexClipInfo<ScalarType> vnfo;
 				TriangleInfo tnfo;
