@@ -578,11 +578,11 @@ template <class T> Matrix44<T> &Matrix44<T>::SetColumn(const unsigned int ii,con
 }
 
 template <class T> Matrix44<T> &Matrix44<T>::SetColumn(const unsigned int ii,const Point4<T> &t) {
-	assert((ii >= 0) && (ii < 4));
-	ElementAt(0, ii) = t.X();
-	ElementAt(1, ii) = t.Y();
-	ElementAt(2, ii) = t.Z();
-	ElementAt(3, ii) = t.W();
+  assert((ii < 4));
+  ElementAt(0, ii) = t[0];
+  ElementAt(1, ii) = t[1];
+  ElementAt(2, ii) = t[2];
+  ElementAt(3, ii) = t[3];
 	return *this;
 }
 
