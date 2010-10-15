@@ -337,9 +337,9 @@ void SegmentSegmentDistance(const vcg::Segment3<ScalarType> &s0,
  */
 template<class ScalarType>
 void TrianglePointDistance(const vcg::Triangle3<ScalarType> &t,
-													 const typename vcg::Point3<ScalarType> & q,
-													 typename ScalarType & dist, 
-													 typename vcg::Point3<ScalarType> & closest )
+                           const typename vcg::Point3<ScalarType> & q,
+                           ScalarType & dist,
+                           typename vcg::Point3<ScalarType> & closest )
 {
 	typedef typename vcg::Point3<ScalarType> CoordType;
 
