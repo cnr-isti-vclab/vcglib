@@ -117,10 +117,10 @@ public:
 	  if (_p0[2]<_p1[2]) { t.min[2]=_p0[2];t.max[2]=_p1[2];} else { t.min[2]=_p1[2];t.max[2]=_p0[2];}
 	  return t; }
 		/// returns segment length
-	ScalarType Length()
+	ScalarType Length() const
 	{ return (_p0 - _p1).Norm(); }
 		/// return segment squared lenght
-	ScalarType SquaredLength()
+	ScalarType SquaredLength() const
 	{ return (_p0 - _p1).SquaredNorm(); }
 	  /// flips: a-b becomes b-a
 	void Flip()
@@ -156,54 +156,54 @@ typedef Segment3<int>	   Segment3i;
 typedef Segment3<float>  Segment3f;
 typedef Segment3<double> Segment3d;
 
-/*
-* Computes the minimum distance between a segment and a point
-* @param[in] segment	The input segment
-* @param[in] p				The input point
-* @return							The distance between the segment and the point p
-*/
-template < class ScalarType >
-ScalarType SquaredDistance(Segment3< ScalarType > &segment, Point3< ScalarType > &p)
-{
-	typedef typename vcg::Point3< ScalarType > Point3t;
-
-	Point3t	 dir = (segment.P1()-segment.P0()).Normalize();
-	ScalarType h = dir * (p-segment.P0());
-	if			(h<=ScalarType(0.0))	return vcg::SquaredDistance<ScalarType>(p, segment.P0());
-	else if (h>=segment.Length())	return vcg::SquaredDistance<ScalarType>(p, segment.P1());
-	else
-	{
-		dir = segment.P0() + dir*h;
-		return vcg::SquaredDistance<ScalarType>(p, dir);
-	}
-}; //end of Distance method
-
-template <class ScalarType> 
-Point3<ScalarType> ClosestPoint( Segment3<ScalarType> s, const Point3<ScalarType> & p) 
-{
-	vcg::Line3<ScalarType> l;
-	l.Set(s.P0(),s.P1()-s.P0());
-	l.Normalize();
-	Point3<ScalarType> clos=vcg::ClosestPoint<ScalarType,true>(l,p) ;//attention to call
-	vcg::Box3<ScalarType> b;
-	b.Add(s.P0());
-	b.Add(s.P1());
-	if (b.IsIn(clos))
-		return clos;
-	else
-	{
-		ScalarType d0=(s.P0()-p).Norm();
-		ScalarType d1=(s.P1()-p).Norm();
-		if (d0<d1)
-			return (s.P0());
-		else
-			return (s.P1());
-	}
-	/*ScalarType t = s.Projection(p); 
-	if (s<0) return s.P0();
-	if (s>1) return s.P0();
-	return s.P(t);*/ 
-}
+///*
+//* Computes the minimum distance between a segment and a point
+//* @param[in] segment	The input segment
+//* @param[in] p				The input point
+//* @return							The distance between the segment and the point p
+//*/
+//template < class ScalarType >
+//ScalarType SquaredDistance(Segment3< ScalarType > &segment, Point3< ScalarType > &p)
+//{
+//	typedef typename vcg::Point3< ScalarType > Point3t;
+//
+//	Point3t	 dir = (segment.P1()-segment.P0()).Normalize();
+//	ScalarType h = dir * (p-segment.P0());
+//	if			(h<=ScalarType(0.0))	return vcg::SquaredDistance<ScalarType>(p, segment.P0());
+//	else if (h>=segment.Length())	return vcg::SquaredDistance<ScalarType>(p, segment.P1());
+//	else
+//	{
+//		dir = segment.P0() + dir*h;
+//		return vcg::SquaredDistance<ScalarType>(p, dir);
+//	}
+//}; //end of Distance method
+//
+//template <class ScalarType> 
+//Point3<ScalarType> ClosestPoint( Segment3<ScalarType> s, const Point3<ScalarType> & p) 
+//{
+//	vcg::Line3<ScalarType> l;
+//	l.Set(s.P0(),s.P1()-s.P0());
+//	l.Normalize();
+//	Point3<ScalarType> clos=vcg::ClosestPoint<ScalarType,true>(l,p) ;//attention to call
+//	vcg::Box3<ScalarType> b;
+//	b.Add(s.P0());
+//	b.Add(s.P1());
+//	if (b.IsIn(clos))
+//		return clos;
+//	else
+//	{
+//		ScalarType d0=(s.P0()-p).Norm();
+//		ScalarType d1=(s.P1()-p).Norm();
+//		if (d0<d1)
+//			return (s.P0());
+//		else
+//			return (s.P1());
+//	}
+//	/*ScalarType t = s.Projection(p); 
+//	if (s<0) return s.P0();
+//	if (s>1) return s.P0();
+//	return s.P(t);*/ 
+//}
 
 /*@}*/
 
