@@ -1210,7 +1210,7 @@ void FitMesh(MeshType &m,
 
 static void FastFitMesh(MeshType &m,
 			 SimpleTempData<typename MeshType::VertContainer, PDVertInfo> &TDV,
-			 SimpleTempData<typename MeshType::FaceContainer, PDFaceInfo> &TDF,
+       //SimpleTempData<typename MeshType::FaceContainer, PDFaceInfo> &TDF,
 			 bool OnlySelected=false)
 {
 	//vcg::face::Pos<FaceType> ep;
@@ -1289,7 +1289,7 @@ static void VertexCoordPasoDobleFast(MeshType &m, int NormalSmoothStep, typename
 	   FaceNormalAngleThreshold(m,TDF,Sigma);
 
   for(int j=0;j<FitStep;++j)
-	  FastFitMesh(m,TDV,TDF,SmoothSelected);
+    FastFitMesh(m,TDV,SmoothSelected);
 }
 
 //! Laplacian smoothing with a reprojection on a target surface.
