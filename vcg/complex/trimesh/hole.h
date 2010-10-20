@@ -927,7 +927,7 @@ template<class EAR>
 
 			std::vector<Info > vinfo;
 			typename std::vector<Info >::iterator VIT;
-			int UBIT = GetInfo(m, Selected,vinfo);
+      GetInfo(m, Selected,vinfo);
 
 			for(VIT = vinfo.begin(); VIT != vinfo.end();++VIT)
 			{
@@ -953,7 +953,7 @@ template<class EAR>
 				ps = *ith;
 				getBoundHole(ps,app);
 
-				if(app.size() <= holeSize)
+        if(app.size() <= size_t(holeSize) )
 				{
 					typename std::vector<PosType >::iterator itP;
 					std::vector<FacePointer *> vfp;
