@@ -308,7 +308,7 @@ static const  PropDescriptor &VertDesc(int i)
 }
 
 #define _FACEDESC_FIRST_  9 // the first descriptor with possible vertex indices
-#define _FACEDESC_LAST_  20
+#define _FACEDESC_LAST_  21
 static const  PropDescriptor &FaceDesc(int i)  
 {		
 	static const 	PropDescriptor qf[_FACEDESC_LAST_]=
@@ -334,7 +334,8 @@ static const  PropDescriptor &FaceDesc(int i)
 /* 16 */			{"face", "vertex_indices", ply::T_UINT,  ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_INT,  ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
 /* 17 */			{"face", "vertex_indices", ply::T_SHORT, ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_CHAR, ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
 /* 18 */			{"face", "vertex_indices", ply::T_SHORT, ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_UCHAR,ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
-/* 19 */			{"face", "vertex_indices", ply::T_SHORT, ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_INT,  ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0}
+/* 19 */			{"face", "vertex_indices", ply::T_SHORT, ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_INT,  ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
+/* 20 */			{"face", "vertex_indices", ply::T_CHAR,  ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_UCHAR,  ply::T_CHAR,offsetof(LoadPly_FaceAux,size) ,0}
 	};
 	return qf[i];
 }
