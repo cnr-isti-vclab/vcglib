@@ -402,8 +402,8 @@ S Shot<S,RotationType>::Depth(const vcg::Point3<S> & p)const
 
 
 //--- utility definitions
-class Shotf: public Shot<float>{};
-class Shotd: public Shot<double>{};
+typedef  Shot<float> Shotf;
+typedef  Shot<double> Shotd;
 //-----------------------
 
 } // end name space
