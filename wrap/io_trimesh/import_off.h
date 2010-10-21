@@ -20,76 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.22  2008/03/13 08:48:10  granzuglia
-added two missing include files:
-1) #include <wrap/callback.h>
-2) #include <wrap/io_trimesh/io_mask.h>
-
-Revision 1.21  2007/12/13 17:57:33  cignoni
-removed harmless gcc warnings
-
-Revision 1.20  2007/03/12 16:40:17  tarini
-Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
-
-Revision 1.19  2006/03/29 08:50:10  corsini
-Fix bug in texture coordinates reading
-
-Revision 1.18  2006/03/29 08:15:46  corsini
-Fix several bugs
-Add LoadMask
-Improve parsing capabilities (account for unexpected newline)
-
-Revision 1.17  2006/03/01 08:25:30  cignoni
-Corrected bug in wrong counting the parsed tokens during the reading of color components
-
-Revision 1.16  2006/02/28 15:18:10  corsini
-Fix loading mask update
-
-Revision 1.15  2006/02/09 15:56:34  corsini
-Update load mask
-
-Revision 1.14  2006/02/09 15:18:32  corsini
-*** empty log message ***
-
-Revision 1.12  2006/02/06 13:11:01  corsini
-Renamed UnexpectedEOF as InvalidFile and
-added UnsupportedFormat and ErrorNotTriangularFace (by Laurent Saboret)
-
-Revision 1.11  2006/01/30 15:02:50  cignoni
-Added mask filling in open
-
-Revision 1.10  2006/01/10 13:20:42  cignoni
-Changed ply::PlyMask to io::Mask
-
-Revision 1.9  2005/12/01 00:58:56  cignoni
-Added and removed typenames for gcc compiling...
-
-Revision 1.8  2005/11/12 18:12:16  cignoni
-Added casts and changed integral types to remove warnings
-
-Revision 1.7  2005/09/28 10:30:14  rita_borgo
-*** empty log message ***
-
-Revision 1.6  2005/01/26 22:44:51  cignoni
-Resolved scoping of constant of OFF codes
-
-Revision 1.5  2005/01/18 12:35:18  rita_borgo
-Added #include<vcg/complex/trimesh/allocate.h>
-it was giving problems with Allocator::
-
-Revision 1.4  2005/01/03 11:18:24  cignoni
-changed a .. rfind('OFF') .. in rfind("OFF") and added some casts
-
-Revision 1.3  2004/11/23 11:56:50  cignoni
-Corrected small bug in the tokenizer (it would add a fake token for lines ending with a space before /n)
-
-
-****************************************************************************/
-
 #ifndef __VCGLIB_IMPORT_OFF
 #define __VCGLIB_IMPORT_OFF
 
@@ -251,7 +181,7 @@ namespace vcg
 					if (isColorDefined)			{ loadmask |= Mask::IOM_VERTCOLOR;loadmask |= Mask::IOM_FACECOLOR;}
 
 
-          if(onlyMaskFlag) return NoError;
+          //if(onlyMaskFlag) return NoError;
 					
 					
 					mesh.Clear();
@@ -533,9 +463,13 @@ namespace vcg
 						// NOTE: It is assumed that colored face takes exactly one text line
 						//       (otherwise it is impossible to parse color information since
 						//        color components can vary)
-						if (isColorDefined && tri::HasPerFaceColor(mesh)) 
+            size_t color_elements = tokens.size() - vert_per_face-1;
+            isColorDefined |= (color_elements>0);
+            if(isColorDefined) loadmask |= Mask::IOM_FACECOLOR;
+
+            if( (color_elements>0)  && tri::HasPerFaceColor(mesh) )
 						{
-							size_t color_elements = tokens.size() - vert_per_face-1;
+
 
 							// set per-face color attribute
 							if (color_elements > 0)
