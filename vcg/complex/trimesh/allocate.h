@@ -73,7 +73,7 @@ namespace vcg {
 		}
 
 		template <class MeshType, class ATTR_CONT>
-    void ResizeAttribute(ATTR_CONT &c,const int &   sz  , MeshType & /* m */){
+		void ResizeAttribute(ATTR_CONT &c,const int &   sz  , MeshType &m){
 			typename std::set<typename MeshType::PointerToAttribute>::iterator ai;	
 				for(ai =c.begin(); ai != c.end(); ++ai)
 					((typename MeshType::PointerToAttribute)(*ai)).Resize(sz);
@@ -127,17 +127,21 @@ namespace vcg {
 				void Clear(){newBase=oldBase=newEnd=oldEnd=0;};
 				void Update(SimplexPointerType &vp)
 				{
-					if(vp>=newBase && vp<newEnd) return;
+//					if(vp>=newBase && vp<newEnd) return;
 					assert(vp>=oldBase);
 					assert(vp<oldEnd);
 					vp=newBase+(vp-oldBase);
+					if(!remap.empty())
+						vp  = newBase +  remap[vp-newBase];
 				}
-				bool NeedUpdate() {if(oldBase && newBase!=oldBase && !preventUpdateFlag) return true; else return false;}
+				bool NeedUpdate() {if((oldBase && newBase!=oldBase && !preventUpdateFlag) || !remap.empty()) return true; else return false;}
 
 				SimplexPointerType newBase;
 				SimplexPointerType oldBase;
 				SimplexPointerType newEnd;
 				SimplexPointerType oldEnd;
+				std::vector<size_t> remap;
+
 				bool preventUpdateFlag; /// when true no update is considered necessary.
 			};
 
@@ -578,60 +582,71 @@ namespace vcg {
 			e.g. newVertIndex[i] is the new index of the vertex i
 			
 		*/
-		static void PermutateVertexVector(MeshType &m, std::vector<size_t> &newVertIndex ) 
+		static void PermutateVertexVector(MeshType &m, PointerUpdater<VertexPointer> &pu) 
 		{
 			for(unsigned int i=0;i<m.vert.size();++i)
 			{
-				if(newVertIndex[i]<size_t(m.vn))
+				if(pu.remap[i]<size_t(m.vn))
                 {
                     assert(!m.vert[i].IsD());
-										m.vert[ newVertIndex[i] ].ImportData(m.vert[i]);
+										m.vert[ pu.remap [i] ].ImportData(m.vert[i]);
 										if(HasPerVertexVFAdjacency(m) &&HasPerFaceVFAdjacency(m) )
                       if (m.vert[i].cVFp()!=0)
                         {
-                            m.vert[ newVertIndex[i] ].VFp() = m.vert[i].cVFp();
-                            m.vert[ newVertIndex[i] ].VFi() = m.vert[i].cVFi();
+                            m.vert[ pu.remap[i] ].VFp() = m.vert[i].cVFp();
+                            m.vert[ pu.remap[i] ].VFi() = m.vert[i].cVFi();
                         }
                 }
 			}
 			
 			// call a templated reordering function that manage any additional data internally stored by the vector 
 			// for the default std::vector no work is needed (some work is typically needed for the OCF stuff) 
-			ReorderVert<typename MeshType::VertexType>(newVertIndex,m.vert);
+			ReorderVert<typename MeshType::VertexType>(pu.remap,m.vert);
 			
 			// reorder the optional atttributes in m.vert_attr to reflect the changes 
-			ReorderAttribute(m.vert_attr,newVertIndex,m);
+			ReorderAttribute(m.vert_attr,pu.remap,m);
 
+			// setup the pointer updater
+			pu.oldBase  = &m.vert[0];
+			pu.oldEnd = &m.vert.back()+1;
+			
+			// resize
 			m.vert.resize(m.vn);
+			
+			// setup the pointer updater
+			pu.newBase  = (m.vert.empty())?0:&m.vert[0];
+			pu.newEnd = (m.vert.empty())?0:&m.vert.back()+1;
+
 
 			// resize the optional atttributes in m.vert_attr to reflect the changes 
 			ResizeAttribute(m.vert_attr,m.vn,m);
 
 			FaceIterator fi;
-			VertexPointer vbase=&m.vert[0];
 			for(fi=m.face.begin();fi!=m.face.end();++fi)
 				if(!(*fi).IsD())
 					for(unsigned int i=0;i<3;++i)
 					{
-						size_t oldIndex = (*fi).V(i) - vbase;
-						assert(vbase <= (*fi).V(i) && oldIndex < newVertIndex.size());
-						(*fi).V(i) = vbase+newVertIndex[oldIndex];
+						size_t oldIndex = (*fi).V(i) - pu.oldBase;
+						assert(pu.oldBase <= (*fi).V(i) && oldIndex < pu.remap.size());
+						(*fi).V(i) = pu.newBase+pu.remap[oldIndex];
 					}
+
 		}
-			
+
+
 		/* 
 		Function to compact all the vertices that have been deleted and put them to the end of the vector. 
 		after this pass the isD test in the scanning of vertex vector, is no more strongly necessary.
 		It should not be called when TemporaryData is active;
 		*/
 		
-		static void CompactVertexVector( MeshType &m ) 
+		static void CompactVertexVector( MeshType &m,   PointerUpdater<VertexPointer> &pu   ) 
 		{
 			// If already compacted fast return please!
 			if(m.vn==(int)m.vert.size()) return; 
 			
 			// newVertIndex [ <old_vert_position> ] gives you the new position of the vertex in the vector;
-			std::vector<size_t> newVertIndex(m.vert.size(),std::numeric_limits<size_t>::max() );
+			pu.remap.resize( m.vert.size(),std::numeric_limits<size_t>::max() );
 			
 			size_t pos=0;
 			size_t i=0;
@@ -640,13 +655,25 @@ namespace vcg {
 			{
 				if(!m.vert[i].IsD())
 				{
-					newVertIndex[i]=pos;
+					pu.remap[i]=pos;
 					++pos;
 				}
 			}
 			assert((int)pos==m.vn);
-			PermutateVertexVector(m,newVertIndex);
+			 
+			PermutateVertexVector(m, pu);
+			 
 		}
+
+		/* 
+		Function to compact all the verices that have been deleted and put them to the end of the vector. 
+		Wrapper if not PointerUpdater is not wanted
+		*/
+		static void CompactVertexVector( MeshType &m  ) {
+			PointerUpdater<VertexPointer>  pu;
+			CompactVertexVector(m,pu);
+		}
+
 
 		/* 
 		Function to compact all the vertices that have been deleted and put them to the end of the vector. 
@@ -654,13 +681,13 @@ namespace vcg {
 		It should not be called when TemporaryData is active;
 		*/
 		
-		static void CompactFaceVector( MeshType &m ) 
+		static void CompactFaceVector( MeshType &m, PointerUpdater<FacePointer> &pu ) 
 		{
 		  // If already compacted fast return please!
 			if(m.fn==(int)m.face.size()) return; 
 			 
 			// newFaceIndex [ <old_face_position> ] gives you the new position of the face in the vector;
-			std::vector<size_t> newFaceIndex(m.face.size(),std::numeric_limits<size_t>::max() );
+			pu.remap.resize( m.face.size(),std::numeric_limits<size_t>::max() );
 			
 			size_t pos=0;
 			size_t i=0;
@@ -688,7 +715,7 @@ namespace vcg {
                                         m.face[pos].FFi(j) = m.face[i].cFFi(j);
                                     }
                     }
-					newFaceIndex[i]=pos;
+					pu.remap[i]=pos;
 					++pos;
 				}
 			}
@@ -696,10 +723,10 @@ namespace vcg {
 			
 			// call a templated reordering function that manage any additional data internally stored by the vector 
 			// for the default std::vector no work is needed (some work is typically needed for the OCF stuff) 
-		  ReorderFace<typename MeshType::FaceType>(newFaceIndex,m.face);
+			ReorderFace<typename MeshType::FaceType>(pu.remap,m.face);
 					
 			// reorder the optional atttributes in m.face_attr to reflect the changes 
-			ReorderAttribute(m.face_attr,newFaceIndex,m);
+			ReorderAttribute(m.face_attr,pu.remap,m);
 
 			// Loop on the vertices to correct VF relation
 			VertexIterator vi;
@@ -711,13 +738,20 @@ namespace vcg {
 									if ((*vi).cVFp()!=0)
 									{
 										size_t oldIndex = (*vi).cVFp() - fbase;
-										assert(fbase <= (*vi).cVFp() && oldIndex < newFaceIndex.size());
-										(*vi).VFp() = fbase+newFaceIndex[oldIndex];
+										assert(fbase <= (*vi).cVFp() && oldIndex < pu.remap.size());
+										(*vi).VFp() = fbase+pu.remap[oldIndex];
 									}
 					}
 			
+
 			// Loop on the faces to correct VF and FF relations
+			pu.oldBase  = &m.face[0];
+			pu.oldEnd = &m.face.back()+1;
 			m.face.resize(m.fn);
+			pu.newBase  = (m.face.empty())?0:&m.face[0];
+			pu.newEnd = (m.face.empty())?0:&m.face.back()+1;
+
+
 			// resize the optional atttributes in m.face_attr to reflect the changes 
 			ResizeAttribute(m.face_attr,m.fn,m);
 
@@ -730,19 +764,33 @@ namespace vcg {
 								if ((*fi).cVFp(i)!=0)
 									{
 										size_t oldIndex = (*fi).VFp(i) - fbase;
-										assert(fbase <= (*fi).VFp(i) && oldIndex < newFaceIndex.size());
-										(*fi).VFp(i) = fbase+newFaceIndex[oldIndex];
+										assert(fbase <= (*fi).VFp(i) && oldIndex < pu.remap.size());
+										(*fi).VFp(i) = fbase+pu.remap[oldIndex];
 									}
 					if(HasFFAdjacency(m))
 										for(i=0;i<3;++i)
 											if ((*fi).cFFp(i)!=0)
 											{
 												size_t oldIndex = (*fi).FFp(i) - fbase;
-												assert(fbase <= (*fi).FFp(i) && oldIndex < newFaceIndex.size());
-												(*fi).FFp(i) = fbase+newFaceIndex[oldIndex];
+												assert(fbase <= (*fi).FFp(i) && oldIndex < pu.remap.size());
+												(*fi).FFp(i) = fbase+pu.remap[oldIndex];
 											}
 				}
+
+			 
+
 		}
+
+		/* 
+		Function to compact all the face that have been deleted and put them to the end of the vector. 
+		Wrapper if not PointerUpdater is wanted
+		*/
+		static void CompactFaceVector( MeshType &m  ) {
+			PointerUpdater<FacePointer>  pu;
+			CompactFaceVector(m,pu);
+		}
+
+
 
 public:
 
