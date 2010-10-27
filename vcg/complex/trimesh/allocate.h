@@ -127,7 +127,8 @@ namespace vcg {
 				void Clear(){newBase=oldBase=newEnd=oldEnd=0;};
 				void Update(SimplexPointerType &vp)
 				{
-//					if(vp>=newBase && vp<newEnd) return;
+					//if(vp>=newBase && vp<newEnd) return;
+					if(vp<oldBase || vp>oldEnd) return;
 					assert(vp>=oldBase);
 					assert(vp<oldEnd);
 					vp=newBase+(vp-oldBase);
