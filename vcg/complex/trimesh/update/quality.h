@@ -189,6 +189,28 @@ static void VertexClamp(MeshType &m, float qmin, float qmax)
     (*vi).Q()=std::min(qmax, std::max(qmin,(*vi).Q()));
 }
 
+/** Normalize the vertex quality so that it fits in the specified range.
+*/
+static void VertexNormalize(MeshType &m, float qmin=0.0, float qmax=1.0)
+{
+  ScalarType deltaRange = qmax-qmin;
+  std::pair<ScalarType,ScalarType> minmax = tri::Stat<MeshType>::ComputePerVertexQualityMinMax(m);
+  VertexIterator vi;
+  for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+    (*vi).Q() = qmin+deltaRange*((*vi).Q() - minmax.first)/(minmax.second - minmax.first);
+}
+
+/** Normalize the face quality so that it fits in the specified range.
+*/
+static void FaceNormalize(MeshType &m, float qmin=0.0, float qmax=1.0)
+{
+  ScalarType deltaRange = qmax-qmin;
+  std::pair<ScalarType,ScalarType> minmax = tri::Stat<MeshType>::ComputePerFaceQualityMinMax(m);
+  FaceIterator fi;
+  for(fi = m.face.begin(); fi != m.face.end(); ++fi)
+    (*fi).Q() = qmin+deltaRange*((*fi).Q() - minmax.first)/(minmax.second - minmax.first);
+}
+
 /** Assign to each face of the mesh a constant quality value. Useful for initialization.
 */
 static void FaceConstant(MeshType &m, float q)
