@@ -150,7 +150,7 @@ static void TransformGL(vcg::Camera<S> & camera, S nearDist, S farDist )
 	S sx,dx,bt,tp,nr;
 	camera.GetFrustum(sx,dx,bt,tp,nr);
 
-  if(camera.cameraType == vcg::PERSPECTIVE) {
+  if(camera.cameraType == CameraType::PERSPECTIVE) {
     S ratio = nearDist/nr;
     sx *= ratio;
     dx *= ratio;
@@ -162,10 +162,10 @@ static void TransformGL(vcg::Camera<S> & camera, S nearDist, S farDist )
 	
 	switch(camera.cameraType) 
 	{
-	 case vcg::PERSPECTIVE: glFrustum(sx,dx,bt,tp,nearDist,farDist);	break;
-	 case vcg::ORTHO:       glOrtho(sx,dx,bt,tp,nearDist,farDist); break;
-	 case vcg::ISOMETRIC:   SetGLIsometricProj(sx,dx,bt,tp,nearDist,farDist); 	break;
-     case vcg::CAVALIERI:   SetGLCavalieriProj(sx,dx,bt,tp,nearDist,farDist); 	break;
+   case CameraType::PERSPECTIVE: glFrustum(sx,dx,bt,tp,nearDist,farDist);	break;
+   case CameraType::ORTHO:       glOrtho(sx,dx,bt,tp,nearDist,farDist); break;
+   case CameraType::ISOMETRIC:   SetGLIsometricProj(sx,dx,bt,tp,nearDist,farDist); 	break;
+   case CameraType::CAVALIERI:   SetGLCavalieriProj(sx,dx,bt,tp,nearDist,farDist); 	break;
 	}
        
 	assert(glGetError()==0);
@@ -195,8 +195,8 @@ static void SetSubView(vcg::Camera<S> & camera,vcg::Point2<S> p0,S nearDist, S f
 
 	switch(camera.cameraType) 
 	{
-	 case vcg::PERSPECTIVE: glFrustum(	width* p0[0]+ sx, width* p1[0]+ sx,		height* p0[1]+ bt, height* p1[1]+bt,nearDist,farDist);	break;
-	 case vcg::ORTHO:       glOrtho(width* p0[0]+sx, width* p1[0]+sx,			height* p0[1]+ bt, height* p1[1]+bt,nearDist,farDist); break;
+   case CameraType::PERSPECTIVE: glFrustum(	width* p0[0]+ sx, width* p1[0]+ sx,		height* p0[1]+ bt, height* p1[1]+bt,nearDist,farDist);	break;
+   case CameraType::ORTHO:       glOrtho(width* p0[0]+sx, width* p1[0]+sx,			height* p0[1]+ bt, height* p1[1]+bt,nearDist,farDist); break;
 	 //case vcg::ISOMETRIC:   IsometricProj(dx-width* p1[0], dx-width* p0[0],		tp-height* p1[1], tp-height* p0[1],nearDist,farDist);	break;
 	 //case vcg::CAVALIERI:   CavalieriProj(dx-width* p1[0], dx-width* p0[0],		tp-height* p1[1], tp-height* p0[1],nearDist,farDist);	break;
 	}

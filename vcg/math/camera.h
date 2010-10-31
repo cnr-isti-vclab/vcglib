@@ -136,19 +136,18 @@ creation
 
 namespace vcg{
 
-	enum {
-		PERSPECTIVE =	0,
-		ORTHO       =	1,
-		ISOMETRIC	=   2,
-		CAVALIERI	=   3
-	};
-
 
 template<class S>
 class Camera
 {
 public:
 	typedef S ScalarType;
+  enum {
+    PERSPECTIVE =	0,
+    ORTHO       =	1,
+    ISOMETRIC	=   2,
+    CAVALIERI	=   3
+  };
 
 	Camera():
 		FocalMm(0.f),
