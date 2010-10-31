@@ -11,23 +11,25 @@ template <class ShotType>
         ShotType &shot, /// the shot that will contain the read node
         const QDomNode &node) /// The XML node to be read
 {
+  typedef typename ShotType::ScalarType ScalarType;
+  typedef vcg::Point3<typename ShotType::ScalarType> Point3x;
   if(QString::compare(node.nodeName(),"VCGCamera")==0)
   {
     QDomNamedNodeMap attr = node.attributes();
-    vcg::Point3d tra;
+    Point3x tra;
     tra[0] = attr.namedItem("TranslationVector").nodeValue().section(' ',0,0).toDouble();
     tra[1] = attr.namedItem("TranslationVector").nodeValue().section(' ',1,1).toDouble();
     tra[2] = attr.namedItem("TranslationVector").nodeValue().section(' ',2,2).toDouble();
     shot.Extrinsics.SetTra(-tra);
 
-    vcg::Matrix44d rot;
+    vcg::Matrix44<ScalarType> rot;
     QStringList values =  attr.namedItem("RotationMatrix").nodeValue().split(" ", QString::SkipEmptyParts);
     for(int y = 0; y < 4; y++)
       for(int x = 0; x < 4; x++)
         rot[y][x] = values[x + 4*y].toDouble();
     shot.Extrinsics.SetRot(rot);
 
-    vcg::Camera<double> &cam = shot.Intrinsics;
+    vcg::Camera<ScalarType> &cam = shot.Intrinsics;
     cam.FocalMm = attr.namedItem("FocalMm").nodeValue().toDouble();
     cam.ViewportPx.X() = attr.namedItem("ViewportPx").nodeValue().section(' ',0,0).toInt();
     cam.ViewportPx.Y() = attr.namedItem("ViewportPx").nodeValue().section(' ',1,1).toInt();
@@ -53,23 +55,25 @@ template <class ShotType>
 template <class ShotType>
   bool ReadShotFromOLDXML( ShotType &shot, const QDomNode &node)
 {
+  typedef typename ShotType::ScalarType ScalarType;
+
   if(QString::compare(node.nodeName(),"CamParam")==0)
   {
     QDomNamedNodeMap attr = node.attributes();
-    vcg::Point3d tra;
+    vcg::Point3<ScalarType> tra;
     tra[0] = attr.namedItem("SimTra").nodeValue().section(' ',0,0).toDouble();
     tra[1] = attr.namedItem("SimTra").nodeValue().section(' ',1,1).toDouble();
     tra[2] = attr.namedItem("SimTra").nodeValue().section(' ',2,2).toDouble();
     shot.Extrinsics.SetTra(-tra);
 
-    vcg::Matrix44d rot;
+    vcg::Matrix44<ScalarType> rot;
     QStringList values =  attr.namedItem("SimRot").nodeValue().split(" ", QString::SkipEmptyParts);
     for(int y = 0; y < 4; y++)
       for(int x = 0; x < 4; x++)
         rot[y][x] = values[x + 4*y].toDouble();
     shot.Extrinsics.SetRot(rot);
 
-    vcg::Camera<double> &cam = shot.Intrinsics;
+    vcg::Camera<ScalarType> &cam = shot.Intrinsics;
     cam.FocalMm = attr.namedItem("Focal").nodeValue().toDouble();
     cam.ViewportPx.X() = attr.namedItem("Viewport").nodeValue().section(' ',0,0).toInt();
     cam.ViewportPx.Y() = attr.namedItem("Viewport").nodeValue().section(' ',1,1).toInt();
@@ -98,12 +102,13 @@ template <class ShotType>
         const ShotType &shot, /// the shot to be written node
         QDomDocument &doc) /// The XML node to be read
 {
+  typedef typename ShotType::ScalarType ScalarType;
 
   QDomElement shotElem = doc.createElement( "VCGCamera" );
-  vcg::Point3d tra = -(shot.Extrinsics.Tra());
+  vcg::Point3<ScalarType> tra = -(shot.Extrinsics.Tra());
   QString str = QString("%1 %2 %3 1").arg(tra[0]).arg(tra[1]).arg(tra[2]);
   shotElem.setAttribute("TranslationVector", str);
-  vcg::Matrix44d rot = shot.Extrinsics.Rot();
+  vcg::Matrix44<ScalarType> rot = shot.Extrinsics.Rot();
   str = QString("%1 %2 %3 %4 %5 %6 %7 %8 %9 %10 %11 %12 %13 %14 %15 %16 ")
     .arg(rot[0][0]).arg(rot[0][1]).arg(rot[0][2]).arg(rot[0][3])
     .arg(rot[1][0]).arg(rot[1][1]).arg(rot[1][2]).arg(rot[1][3])
@@ -111,7 +116,7 @@ template <class ShotType>
     .arg(rot[3][0]).arg(rot[3][1]).arg(rot[3][2]).arg(rot[3][3]);
   shotElem.setAttribute( "RotationMatrix", str);
 
-  const vcg::Camera<double> &cam = shot.Intrinsics;
+  const vcg::Camera<ScalarType> &cam = shot.Intrinsics;
 
   shotElem.setAttribute( "FocalMm", cam.FocalMm);
 
