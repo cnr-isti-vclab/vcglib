@@ -68,6 +68,14 @@ public:
 	{
 		min = max = p;
 	}
+
+	Point2<BoxScalarType> P(const int & i) const 
+	{
+			return Point2<BoxScalarType>(
+				min[0]+ (i%2) * DimX(),
+				min[1]+ ((i / 2)%2) * DimY());
+	}
+
 		// Initializing with the values
 	inline void Set( ScalarType minx, ScalarType miny, ScalarType maxx, ScalarType maxy )
 	{
