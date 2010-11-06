@@ -463,6 +463,7 @@ template <class A, class T> class QualityOcf: public T {
 public:
 	typedef A QualityType;
 	QualityType &Q() { assert((*this).Base().QualityEnabled); return (*this).Base().QV[(*this).Index()]; }
+	const QualityType &cQ() const { assert((*this).Base().QualityEnabled); return (*this).Base().QV[(*this).Index()]; }
 	template <class LeftV>
 	void ImportData(const LeftV & leftV)
 		{
