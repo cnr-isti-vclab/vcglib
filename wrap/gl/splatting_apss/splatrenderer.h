@@ -746,10 +746,16 @@ void SplatRenderer<MeshType>::drawSplats(std::vector<MeshType*> & meshes, vcg::G
 	// check if we have to use the immediate mode
 	if(meshes.empty()) return;
 	int nV = 0;
+
+	/* temporary patch: If the number of vertices is above IMMEDIATE_MODE_THR,
+		use the immediate mode
+	*/
+	const int IMMEDIATE_MODE_THR = 0;
+
 	unsigned int ii = 0;
 	for(; ii < meshes.size();++ii){
 		nV+=meshes[ii]->vn;
-		if((nV>150000) || (meshes[ii]->vn!=(int) meshes[ii]->vert.size()))
+		if((nV>IMMEDIATE_MODE_THR) || (meshes[ii]->vn!=(int) meshes[ii]->vert.size()))
 			break; 
 	}
 	bool immediatemode =  ii<meshes.size() ;
@@ -793,7 +799,7 @@ void SplatRenderer<MeshType>::drawSplats(std::vector<MeshType*> & meshes, vcg::G
 			glTexCoordPointer(
 				1,
 				GL_FLOAT,
-				size_t(m.vert[1].cR())-size_t(m.vert[0].cR()),
+				size_t(&m.vert[1].cR())-size_t(&m.vert[0].cR()),
 				&m.vert[0].cR()
 			);
 			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
