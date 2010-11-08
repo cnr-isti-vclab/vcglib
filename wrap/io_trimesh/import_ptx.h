@@ -42,6 +42,7 @@ Added comments for documentation
 #include <vcg/complex/trimesh/allocate.h>
 #include <vcg/complex/trimesh/clean.h>
 #include <vcg/complex/trimesh/update/normal.h>
+#include <vcg/complex/trimesh/update/position.h>
 #include <vcg/complex/trimesh/update/bounding.h>
 
 namespace vcg {
@@ -190,12 +191,10 @@ namespace io {
 
 			bool hascolor;
 			bool savecolor   =  importparams.savecolor &&  VertexType::HasColor();
-			bool onlypoints  =  importparams.pointsonly;
-			bool switchside  =  importparams.switchside;
-			bool flipfaces   =  importparams.flipfaces;
+      bool switchside  =  importparams.switchside;
 
 			int total = 50;
-			if (onlypoints) total = 100;  
+      if (importparams.pointsonly) total = 100;
 			char linebuf[256];
 			
 			fscanf(fp,"%i\n",&colnum);					
@@ -254,34 +253,33 @@ namespace io {
 			(*vi).P()[0]=xx;
 			(*vi).P()[1]=yy;
 			(*vi).P()[2]=zz;
-			// updating bbox
-			m.bbox.Add( (*vi).P() );
 
 			if(VertexType::HasQuality())
 			{
 				(*vi).Q()=rf;
 			}
 
-			if(hascolor && savecolor)
-			{
-				(*vi).C()[0]=rr;
-				(*vi).C()[1]=gg;
-				(*vi).C()[2]=bb;
-			}
-			else if(!hascolor && savecolor)
-			{
-				(*vi).C()[0]=rf*255;
-				(*vi).C()[1]=rf*255;
-				(*vi).C()[2]=rf*255;
-			}
+      if(savecolor)
+      {
+        if(hascolor)
+          {
+            (*vi).C()[0]=rr;
+            (*vi).C()[1]=gg;
+            (*vi).C()[2]=bb;
+            } else {
+            (*vi).C()[0]=rf*255;
+            (*vi).C()[1]=rf*255;
+            (*vi).C()[2]=rf*255;
+          }
+       }
 			vi++;
+
+      if(switchside) std::swap(rownum,colnum);
 
 			// now for each line until end of mesh (row*col)-1
 			for(ii=0; ii<((rownum*colnum)-1); ii++)
 			{
-				char tmp[255];
-				sprintf(tmp, "PTX Mesh Loading...");
-				if(cb) cb((ii*total)/vn, tmp);	
+        if(cb && (ii%100)==0) cb((ii*total)/vn, "Vertex Loading");
 
 				// read the stream
 				if(hascolor)   
@@ -294,12 +292,8 @@ namespace io {
 				(*vi).P()[1]=yy;
 				(*vi).P()[2]=zz;
 					
-				m.bbox.Add( (*vi).P() );
 
-				if(VertexType::HasQuality())
-				{
-					(*vi).Q()=rf;
-				}
+        if(tri::HasPerVertexQuality(m)) (*vi).Q()=rf;
 
 				if(hascolor && savecolor)
 				{
@@ -317,13 +311,12 @@ namespace io {
 				vi++;
 			}
 
-			if(! onlypoints)
+      if(! importparams.pointsonly)
 			{
 				// now i can triangulate
 				int trinum = (rownum-1) * (colnum-1) * 2;
 				typename OpenMeshType::FaceIterator fi= Allocator<OpenMeshType>::AddFaces(m,trinum);
-				m.fn = trinum;
-				int v0i,v1i,v2i, t;
+        int v0i,v1i,v2i, t;
 				t=0;
 				for(int rit=0; rit<rownum-1; rit++)
 					for(int cit=0; cit<colnum-1; cit++)
@@ -331,56 +324,30 @@ namespace io {
 						t++;
 						if(cb) cb(50 + (t*50)/(rownum*colnum),"PTX Mesh Loading");	
 
-						if(!switchside)
-						{
 							v0i = (rit  ) + ((cit  ) * rownum);
 							v1i = (rit+1) + ((cit  ) * rownum);
 							v2i = (rit  ) + ((cit+1) * rownum);
-						}
-						else
-						{
-							v0i = (cit  ) + ((rit  ) * colnum);
-							v1i = (cit+1) + ((rit  ) * colnum);
-							v2i = (cit  ) + ((rit+1) * colnum);
-						}
 						
 						// upper tri
 						(*fi).V(2) = &(m.vert[v0i]);
 						(*fi).V(1) = &(m.vert[v1i]);
 						(*fi).V(0) = &(m.vert[v2i]);
-						if(flipfaces)
-						{
-							(*fi).V(2) = &(m.vert[v1i]);
-							(*fi).V(1) = &(m.vert[v0i]);
-						}
 
 						fi++;
-						if(!switchside)
-						{
+
 							v0i = (rit+1) + ((cit  ) * rownum);
 							v1i = (rit+1) + ((cit+1) * rownum);
 							v2i = (rit  ) + ((cit+1) * rownum);
-						}
-						else
-						{
-							v0i = (cit+1) + ((rit  ) * colnum);
-							v1i = (cit+1) + ((rit+1) * colnum);
-							v2i = (cit  ) + ((rit+1) * colnum);
-						}
-						// lower tri
+
+            // lower tri
 						(*fi).V(2) = &(m.vert[v0i]);
 						(*fi).V(1) = &(m.vert[v1i]);
 						(*fi).V(0) = &(m.vert[v2i]);
-						if(flipfaces)
-						{
-							(*fi).V(2) = &(m.vert[v1i]);
-							(*fi).V(1) = &(m.vert[v0i]);
-						}
 
 						fi++;
 					}
 			}	
-
+     printf("Loaded %i vert\n",m.vn);
 			// remove unsampled points
 			if(importparams.pointcull)
 			{
@@ -402,38 +369,86 @@ namespace io {
 				}
 			}
 
-			// eliminate high angle triangles
-			if(! importparams.pointsonly)
-			{				
-				if(importparams.anglecull)
-				{
-					float limit = cos( double(importparams.angle)*3.14159265358979323846/180.0 );
-					Point3f raggio;
+      float limitCos = cos( math::ToRad(importparams.angle) );
+      printf("Loaded %i vert\n",m.vn);
+      if(importparams.pointsonly)
+      { // Compute Normals and radius for points
+        // Compute the four edges around each point
+        // Some edges can be null (boundary and invalid samples)
+        if(cb) cb(85,"PTX Mesh Loading - computing vert normals");
+        for(int rit=0; rit<rownum; rit++)
+        {
+          int ritL = std::max(rit-1,0);
+          int ritR = std::min(rit+1,rownum-1);
+          for(int cit=0; cit<colnum; cit++)
+          {
+            int citT = std::max(cit-1,0);
+            int citB = std::min(cit+1,colnum-1);
+            int v0 = (rit ) + ((cit ) * rownum);
 
-					if(cb) cb(85,"PTX Mesh Loading - remove steep faces");	
-					vcg::tri::UpdateNormals<OpenMeshType>::PerFaceNormalized(m);
-					for(typename OpenMeshType::FaceIterator fi = m.face.begin(); fi != m.face.end(); fi++)
-						if(!(*fi).IsD())
-						{
-							raggio = -((*fi).V(0)->P() + (*fi).V(1)->P() + (*fi).V(2)->P()) / 3.0;
-							raggio.Normalize();
-							if((raggio.dot((*fi).N())) < limit)
-									Allocator<OpenMeshType>::DeleteFace(m,*fi);	
-							
-						}
-				}
-			}
+            if(m.vert[v0].IsD()) continue;
 
-			for(typename OpenMeshType::VertexIterator vi = m.vert.begin(); vi != m.vert.end(); vi++)
-			{
-				if(!(*vi).IsD())
-					(*vi).P() = currtrasf * (*vi).P();
-			}
+            int vL = (ritL) + ((cit ) * rownum);
+            int vR = (ritR) + ((cit) * rownum);
+            int vT = (rit ) + ((citT ) * rownum);
+            int vB = (rit ) + ((citB) * rownum);
 
-			// deleting unreferenced vertices
-			vcg::tri::Clean<OpenMeshType>::RemoveUnreferencedVertex(m);
-			vcg::tri::UpdateNormals<OpenMeshType>::PerFaceNormalized(m);
-			vcg::tri::UpdateBounding<CMeshO>::Box(m);
+            Point3f v0p=m.vert[v0].P();
+            Point3f vLp(0,0,0),vRp(0,0,0),vTp(0,0,0),vBp(0,0,0);  // Compute the 4 edges around the vertex.
+            if(!m.vert[vL].IsD()) vLp=(m.vert[vL].P()-v0p).Normalize();
+            if(!m.vert[vR].IsD()) vRp=(m.vert[vR].P()-v0p).Normalize();
+            if(!m.vert[vT].IsD()) vTp=(m.vert[vT].P()-v0p).Normalize();
+            if(!m.vert[vB].IsD()) vBp=(m.vert[vB].P()-v0p).Normalize();
+            float r=0;
+            int rc=0; Point3f v0pn = Normalize(v0p);
+            // Skip edges that are too steep
+            // Compute the four normalized vector orthogonal to each pair of consecutive edges.
+            Point3f vLTn =  (vLp ^ vTp).Normalize();
+            Point3f vTRn =  (vTp ^ vRp).Normalize();
+            Point3f vRBn =  (vRp ^ vBp).Normalize();
+            Point3f vBLn =  (vBp ^ vLp).Normalize();
+
+            // Compute an average Normal skipping null normals and normals that are too steep.
+            // Compute also the sum of non null edge lenght to compute the radius
+            Point3f N(0,0,0);
+            if((vLTn*v0pn)>limitCos)  { N+=vLTn; r += Distance(m.vert[vL].P(),v0p)+Distance(m.vert[vT].P(),v0p); rc++; }
+            if((vTRn*v0pn)>limitCos)  { N+=vTRn; r += Distance(m.vert[vT].P(),v0p)+Distance(m.vert[vR].P(),v0p); rc++; }
+            if((vRBn*v0pn)>limitCos)  { N+=vRBn; r += Distance(m.vert[vR].P(),v0p)+Distance(m.vert[vB].P(),v0p); rc++; }
+            if((vBLn*v0pn)>limitCos)  { N+=vBLn; r += Distance(m.vert[vB].P(),v0p)+Distance(m.vert[vL].P(),v0p); rc++; }
+
+            m.vert[v0].N()=-N;
+
+            if(tri::HasPerVertexRadius(m)) m.vert[v0].R() = r/(rc*2.0f);
+            // Isolated points has null normal. Delete them please.
+            if(m.vert[v0].N() == Point3f(0,0,0)) Allocator<OpenMeshType>::DeleteVertex(m,m.vert[v0]);
+          }
+        }
+      }
+      else
+      // eliminate high angle triangles
+      {
+        if(importparams.flipfaces)
+          tri::Clean<OpenMeshType>::FlipMesh(m);
+        if(importparams.anglecull)
+        {
+          if(cb) cb(85,"PTX Mesh Loading - remove steep faces");
+          tri::UpdateNormals<OpenMeshType>::PerFaceNormalized(m);
+          for(FaceIterator fi = m.face.begin(); fi != m.face.end(); fi++)
+            if(!(*fi).IsD())
+            {
+            Point3f raggio = -((*fi).P(0) + (*fi).P(1) + (*fi).P(2)) / 3.0;
+            raggio.Normalize();
+            if((raggio.dot((*fi).N())) < limitCos)
+              Allocator<OpenMeshType>::DeleteFace(m,*fi);
+          }
+          // deleting unreferenced vertices only if we are interested in faces...
+          tri::Clean<OpenMeshType>::RemoveUnreferencedVertex(m);
+        }
+      }
+
+      tri::UpdatePosition<OpenMeshType>::Matrix(m,currtrasf,true);
+      tri::Allocator<OpenMeshType>::CompactVertexVector(m);
+      tri::UpdateBounding<OpenMeshType>::Box(m);
 			if(cb) cb(100,"PTX Mesh Loading finish!");
 			return true;
 		}
