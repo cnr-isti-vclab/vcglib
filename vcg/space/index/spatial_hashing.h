@@ -115,6 +115,10 @@ namespace vcg{
 		void operator ++() {t++;}
 	};
 	
+  inline bool Empty() const
+  {
+    return hash_table.empty();
+  }
 
     size_t CellSize(const Point3i &cell)
     {

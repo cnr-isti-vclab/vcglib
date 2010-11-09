@@ -132,6 +132,7 @@ namespace vcg {
 
 
 
+    bool Empty() const {return links.empty();}
 
 		/// Date le coordinate di un grid point (corner minx,miy,minz) ritorna le celle che condividono
 		/// l'edge cell che parte dal grid point in direzione axis
