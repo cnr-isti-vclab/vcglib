@@ -95,6 +95,20 @@ public:
 		(void)_oEnd;
 	}
 
+  /**************************************************************************
+  Method Empty.
+  Description:
+    check if the spatial structure is empty.
+
+  Return Value:
+    true if it is empty.
+  **************************************************************************/
+
+  bool Empty() {
+    assert(0);      // this is a base interface.
+    return true;
+  }
+
 	/**************************************************************************
 	Method GetClosest.
 
