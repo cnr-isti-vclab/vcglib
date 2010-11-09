@@ -34,7 +34,7 @@
 #include <vcg/container/simple_temporary_data.h>
 
 namespace vcg {
-	namespace tri {
+  namespace tri {
 		/** \addtogroup trimesh */
 		
 		template<class MeshType>
@@ -54,16 +54,6 @@ namespace vcg {
 		size_t Index(MeshType &m, typename MeshType::EdgeType*  e) {return e-&*m.edge.begin();}
 		template<class MeshType>
 		size_t Index(MeshType &m, typename MeshType::HEdgeType*  h) {return h-&*m.hedge.begin();}
-
-		// Placeholder. 
-		// this one is called by the Compact and overridden by more specialized functions for OCF classes.
-		// that manage also the additional types
-		template <class face_type>
-            void ReorderFace( std::vector<size_t> & /*newVertIndex*/, std::vector<face_type>  & /*vert*/)
-		{}
-		template <class vertex_type>
-    void ReorderVert( std::vector<size_t> &/*newVertIndex*/, std::vector<vertex_type> &/*vert*/)
-		{}
 		
 		template <class MeshType, class ATTR_CONT>
 		void ReorderAttribute(ATTR_CONT &c,std::vector<size_t> & newVertIndex, MeshType & /* m */){
@@ -599,11 +589,7 @@ namespace vcg {
                         }
                 }
 			}
-			
-			// call a templated reordering function that manage any additional data internally stored by the vector 
-			// for the default std::vector no work is needed (some work is typically needed for the OCF stuff) 
-			ReorderVert<typename MeshType::VertexType>(pu.remap,m.vert);
-			
+						
 			// reorder the optional atttributes in m.vert_attr to reflect the changes 
 			ReorderAttribute(m.vert_attr,pu.remap,m);
 
@@ -721,11 +707,7 @@ namespace vcg {
 				}
 			}
 			assert((int)pos==m.fn);
-			
-			// call a templated reordering function that manage any additional data internally stored by the vector 
-			// for the default std::vector no work is needed (some work is typically needed for the OCF stuff) 
-			ReorderFace<typename MeshType::FaceType>(pu.remap,m.face);
-					
+								
 			// reorder the optional atttributes in m.face_attr to reflect the changes 
 			ReorderAttribute(m.face_attr,pu.remap,m);
 

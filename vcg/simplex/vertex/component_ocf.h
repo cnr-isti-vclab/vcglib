@@ -175,47 +175,6 @@ public:
 				(*vi)._ovp=this;
 	}
 
-// this function is called by the specialized Reorder function, that is called whenever someone call the allocator::CompactVertVector
-void ReorderVert(std::vector<size_t> &newVertIndex )
-{
-	size_t i=0;
-	assert( (!ColorEnabled)         || ( CV.size() == newVertIndex.size() ) );
-	assert( (!MarkEnabled)          || ( MV.size() == newVertIndex.size() ) );
-	assert( (!NormalEnabled)        || ( NV.size() == newVertIndex.size() ) );
-	assert( (!VFAdjacencyEnabled)   || ( AV.size() == newVertIndex.size() ) );
-	assert( (!CurvatureEnabled)     || ( CuV.size() == newVertIndex.size() ) );
-	assert( (!CurvatureDirEnabled)  || ( CuDV.size() == newVertIndex.size() ) );
-	assert( (!RadiusEnabled)        || ( RadiusV.size() == newVertIndex.size() ) );
-	assert( (!TexCoordEnabled)       || ( TV.size() == newVertIndex.size() ) );
-
-	for(i=0;i<newVertIndex.size();++i)
-		{
-			if(newVertIndex[i] != std::numeric_limits<size_t>::max() )
-				{
-					assert(newVertIndex[i] <= i);
-					if (ColorEnabled)			    CV[newVertIndex[i]] =  CV[i];
-					if (MarkEnabled)				  MV[newVertIndex[i]] =  MV[i];
-					if (NormalEnabled)        NV[newVertIndex[i]] =  NV[i];
-					if (VFAdjacencyEnabled)   AV[newVertIndex[i]] =  AV[i];
-					if (CurvatureEnabled)     CuV[newVertIndex[i]] = CuV[i];
-					if (CurvatureDirEnabled)  CuDV[newVertIndex[i]] =CuDV[i];
-					if (RadiusEnabled)        RadiusV[newVertIndex[i]] = RadiusV[i];
-					if (TexCoordEnabled)        TV[newVertIndex[i]] = TV[i];
-				}
-		}
-
-	if (ColorEnabled)         CV.resize(BaseType::size());
-	if (MarkEnabled)          MV.resize(BaseType::size());
-	if (NormalEnabled)        NV.resize(BaseType::size());
-	if (VFAdjacencyEnabled)   AV.resize(BaseType::size());
-	if (CurvatureEnabled)     CuV.resize(BaseType::size());
-	if (CurvatureDirEnabled)  CuDV.resize(BaseType::size());
-	if (RadiusEnabled)  RadiusV.resize(BaseType::size());
-	if (TexCoordEnabled)  TV.resize(BaseType::size());
-}
-
-
-
 ////////////////////////////////////////
 // Enabling Eunctions
 
@@ -741,11 +700,6 @@ namespace tri
 		else return VertexType::HasCurvatureDir();
 	}
 
-	template < class VertexType >
-	void ReorderVert( std::vector<size_t>  &newVertIndex, vertex::vector_ocf< VertexType > &vertVec)
-		{
-			vertVec.ReorderVert(newVertIndex);
-		}
 }
 }// end namespace vcg
 #endif
