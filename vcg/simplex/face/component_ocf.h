@@ -162,7 +162,6 @@ public:
    }
   void reserve(const unsigned int & _size)
   {
-    ThisTypeIterator oldbegin=(*this).begin();
     BaseType::reserve(_size);
 
     if (QualityEnabled)     QV.reserve(_size);
@@ -175,6 +174,9 @@ public:
 	if (WedgeColorEnabled)  WCV.reserve(_size);
 	if (WedgeNormalEnabled) WNV.reserve(_size);
 
+	if( BaseType::empty()) return ;
+
+    ThisTypeIterator oldbegin=(*this).begin();
     if(oldbegin!=(*this).begin()) _updateOVP((*this).begin(),(*this).end());
   }
 
@@ -592,7 +594,7 @@ public:
   WedgeColorOcf(){ }
   typedef A ColorType;
   ColorType &WC(const int i)              { assert((*this).Base().WedgeColorEnabled); return (*this).Base().WCV[(*this).Index()].wc[i]; }
-  const ColorType & cWC(const int i) const { assert((*this).Base().WedgeColorEnabled); return (*this).Base().WCV[(*this).Index()].wc[i]; }
+  const ColorType cWC(const int i) const { assert((*this).Base().WedgeColorEnabled); return (*this).Base().WCV[(*this).Index()].wc[i]; }
 	template <class LeftF>
 	void ImportData(const LeftF & leftF){
 		//if(this->Base().WedgeColorEnabled && leftF.Base().WedgeColorEnabled)  // WRONG I do not know anything about leftV!
