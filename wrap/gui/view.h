@@ -169,10 +169,14 @@ template <class T> Point3<T> View<T>::ViewPoint() const {
 // Note that p it is assumed to be in model coordinate.
 template <class T> Plane3<T> View<T>::ViewPlaneFromModel(const Point3<T> &p)
 {
+  //compute normal, pointing away from view.
+  Matrix44<T> imodel = model;
+  Invert(imodel);
   Point3<T> vp=ViewPoint();
-  Plane3<T> pl;  // plane perpedicular to view direction and passing through manip center
-  pl.n=(vp-p);
-  pl.d=pl.n*p;
+  vcg::Point3f n = imodel * vcg::Point3<T>(0.0f, 0, -1.0f) - vp;
+
+  Plane3<T> pl;
+  pl.Init(p, n);
   return pl;
 }
 
