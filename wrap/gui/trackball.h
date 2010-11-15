@@ -443,7 +443,7 @@ public:
     @brief Stores current status into an ascii stings
 
     Stores current status into an ascii stings. This is useful for example to implement cut-and-paste operations of trackball status, or to embed used trackball into a comment inside a screenshot, etc.
-    @param st The string where to export (must be allocated).
+    @param st The string where to export (must be allocated 256bytes should be enough).
   */
   void ToAscii(char * st);
   /*!
