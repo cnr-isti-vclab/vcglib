@@ -134,6 +134,8 @@ public:
   S sca;  
 };
 
+
+
 template <class S,class RotationType> Similarity<S,RotationType> &Invert(Similarity<S,RotationType> &m);
 template <class S,class RotationType> Similarity<S,RotationType> Inverse(const Similarity<S,RotationType> &m);
 template <class S,class RotationType> Point3<S> operator*(const Similarity<S,RotationType> &m, const Point3<S> &p);
@@ -231,9 +233,9 @@ template <class S,class RotationType> Similarity<S,RotationType> Inverse(const S
 
 template <class S,class RotationType> Similarity<S,RotationType> Interpolate(const Similarity<S,RotationType> &a, const Similarity<S,RotationType> &b, const S t) {
   Similarity<S,RotationType> r;
-  r.rot = interpolate(a.rot, b.rot, t);
-  r.tra = t * a.tra + (1-t) * b.tra;
-  r.sca = t * a.sca + (1-t) * b.sca;
+  r.rot = Interpolate(a.rot, b.rot, t);
+  r.tra = a.tra * t + b.tra * (1-t);
+  r.sca = a.sca * t + b.sca * (1-t);
   return r;
 }
 
@@ -245,6 +247,7 @@ template <class S,class RotationType> Point3<S> operator*(const Similarity<S,Rot
   r += m.tra;
   return r;
 }
+
 
 //typedef Similarity<float> Similarityf;
 //typedef Similarity<double>Similarityd;
