@@ -71,7 +71,7 @@ public:
   T Resolution(float dist = 1);
   bool IsOutside(Point3<T> &point);
   T Remoteness(Point3<T> &point, T radius);
-  bool IsOutside(Point3<T> &point, T radius);
+  T IsOutside(Point3<T> &point, T radius);
   T Distance(Point3<T> &point, int plane);  
   T range(Point3<T> &point, T radius, T &closest, T &farthest);
   
@@ -125,13 +125,13 @@ template <class T> T Frustum<T>::Remoteness(Point3<T> &point, T radius) {
   return 1 + (mindist / (View<T>::viewport[0] + View<T>::viewport[2]));
 }
 
-template <class T> bool Frustum<T>::IsOutside(Point3<T> &point, T radius) {
+template <class T> T Frustum<T>::IsOutside(Point3<T> &point, T radius) {
+  T dist = 0;
   for(int i = 0; i < 4; i++) {
-    T dist = Distance(point, i);   
-    if(dist < -radius) 
-      return true;  
+    T d = -Distance(point, i) - radius;
+    if(d > dist) dist = d;
   }
-  return false;
+  return dist;
 }
 
 template <class T> T Frustum<T>::range(Point3<T> &point, T radius, T &closest, T &farthest) {
