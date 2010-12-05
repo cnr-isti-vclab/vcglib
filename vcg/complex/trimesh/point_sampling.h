@@ -1015,7 +1015,7 @@ static void FaceSimilar(MetroMesh & m, VertexSampler &ps,int sampleNum, bool dua
                 S minDst = FLT_MAX;
 
                 // find the closest point (on some edge) that lies on the 2x2 squared neighborhood of the considered point
-               	for (int i=0; i<3; ++i)
+                for (int i=0; i<3; ++i)
                 {
 					if (edgeMask & (1 << i))
 					{
@@ -1376,13 +1376,15 @@ static void Texture(MetroMesh & m, VertexSampler &ps, int textureWidth, int text
 
 		printf("Similar Triangles face sampling\n");
 		for(fi=m.face.begin(); fi != m.face.end(); fi++)
-				{
-					Point2f ti[3];
-					for(int i=0;i<3;++i)
-                                            ti[i]=Point2f((*fi).WT(i).U() * textureWidth - 0.5, (*fi).WT(i).V() * textureHeight - 0.5);
-                                            // +/- 0.5 constants are used to obtain correct texture mapping
-                                        SingleFaceRaster(*fi,  ps, ti[0],ti[1],ti[2], correctSafePointsBaryCoords);
-				}
+            if (!fi->IsD())
+            {
+                Point2f ti[3];
+                for(int i=0;i<3;++i)
+                    ti[i]=Point2f((*fi).WT(i).U() * textureWidth - 0.5, (*fi).WT(i).V() * textureHeight - 0.5);
+                    // - 0.5 constants are used to obtain correct texture mapping
+
+                SingleFaceRaster(*fi,  ps, ti[0],ti[1],ti[2], correctSafePointsBaryCoords);
+            }
 }
 
 typedef GridStaticPtr<FaceType, ScalarType > TriMeshGrid;
