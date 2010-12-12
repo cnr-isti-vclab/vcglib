@@ -56,6 +56,8 @@ public:
 	inline  Box2() { min.X()= 1; max.X()= -1; min.Y()= 1; max.Y()= -1; }
 		/// Copy constructor
 	inline  Box2( const Box2 & b ) { min=b.min; max=b.max; }
+		/// Min Max constructor
+	inline  Box2( const Point2<BoxScalarType> & mi, const Point2<BoxScalarType> & ma ) { min = mi; max = ma; }
 		/// Distructor
 	inline ~Box2() { }
 		/// Operator to compare two bounding box
