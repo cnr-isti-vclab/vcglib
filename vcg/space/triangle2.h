@@ -77,47 +77,39 @@ public:
 
 /** evaluate barycentric coordinates
 	@param bq Point on the face
-	@param a barycentric value for V(0)
-	@param b barycentric value for V(1)
-	@param c barycentric value for V(2)
+	@param L0 barycentric value for V(0)
+	@param L1 barycentric value for V(1)
+	@param L2 barycentric value for V(2)
 	@return true se bq appartain to the face, false otherwise
+	from http://en.wikipedia.org/wiki/Barycentric_coordinate_system_(mathematics)
+	L1=((y2-y3)(x-x3)+(x3-x2)(y-y3))/((y2-y3)(x1-x3)+(x3-x2)(y1-y3))
+	L2=((y3-y1)(x-x3)+(x1-x3)(y-y3))/((y3-y1)(x2-x3)+(x1-x3)(y2-y3))
+	L3=1-L1-L2
 */
-bool InterpolationParameters(const CoordType & bq, ScalarType &a, ScalarType &b, ScalarType &c ) const
+bool InterpolationParameters(const CoordType & bq, ScalarType &L1, 
+							 ScalarType &L2, ScalarType &L3 ) const
 {	
 	const ScalarType EPSILON = ScalarType(0.0001f);
 
-	ScalarType AreaGlobal=(P(1) - P(0)) ^ (P(2) - P(0));
-	ScalarType Area0=((P(2) - P(1)) ^ (bq - P(1)));
-	ScalarType Area1=((P(0) - P(2)) ^ (bq - P(2)));
-	ScalarType Area2=((P(1) - P(0)) ^ (bq - P(0)));
-	//ScalarType AreaGlobal=Area0+Area1+Area2;
-	/*if ((Area0>(AreaGlobal+EPSILON))||(Area1>(AreaGlobal+EPSILON))||(Area2>(AreaGlobal+EPSILON)))
-		return false;*/
-	a=Area0/AreaGlobal;
-	b=Area1/AreaGlobal;
-	c=Area2/AreaGlobal;
+	ScalarType x1=P(0).X();
+	ScalarType x2=P(1).X();
+	ScalarType x3=P(2).X();
 
-	///test inside/outside
-	if(((a>(ScalarType)1+EPSILON)||(b>(ScalarType)1+EPSILON)||(c>(ScalarType)1+EPSILON))||
-	  ((a<-EPSILON)||(b<-EPSILON)||(c<-EPSILON)))
-		return false;
+	ScalarType y1=P(0).Y();
+	ScalarType y2=P(1).Y();
+	ScalarType y3=P(2).Y();
 
-	///approximation errors
-	if(a>1)
-		a=(ScalarType)1;
-	if(b>1)
-		b=(ScalarType)1;
-	if(c>1)
-		c=(ScalarType)1;
-	if(a<0)
-		a=(ScalarType)0;
-	if(b<0)
-		b=(ScalarType)0;
-	if(c<0)
-		c=(ScalarType)0;
-
+	ScalarType x=bq.X();
+	ScalarType y=bq.Y();
 	
-	return true;
+	L1=((y2-y3)*(x-x3)+(x3-x2)*(y-y3))/((y2-y3)*(x1-x3)+(x3-x2)*(y1-y3));
+	L2=((y3-y1)*(x-x3)+(x1-x3)*(y-y3))/((y3-y1)*(x2-x3)+(x1-x3)*(y2-y3));
+	L3=1-L1-L2;
+	bool inside=true;
+	inside&=(L1>=0-EPSILON)&&(L1<=1+EPSILON);
+	inside&=(L2>=0-EPSILON)&&(L2<=1+EPSILON);
+	inside&=(L3>=0-EPSILON)&&(L3<=1+EPSILON);
+	return inside;
 }
 
 ///return the distance to the point q and neighors point p
