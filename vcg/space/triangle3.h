@@ -98,6 +98,7 @@ Initial commit
 #include <vcg/space/point3.h>
 #include <vcg/space/plane3.h>
 #include <vcg/space/segment3.h>
+#include <vcg/space/triangle2.h>
 
 namespace vcg {
 
@@ -197,7 +198,6 @@ bool InterpolationParameters(const TriangleType t, const Point3<ScalarType> & N,
 			return InterpolationParameters(t,2,P,L); /* 2 > 1 ? 2 */
 	}
 }
-	
 
 // Function that computes the barycentric coords of a 2D triangle. Used by the above function. 
 // Algorithm: simply find a base for the frame of the triangle, assuming v3 as origin (matrix T) invert it and apply to P-v3.
@@ -208,32 +208,45 @@ bool InterpolationParameters2(const Point2<ScalarType> &V1,
 														 const Point2<ScalarType> &V3,
 														 const Point2<ScalarType> &P, Point3<ScalarType> &L)
 {
-	ScalarType T00 = V1[0]-V3[0];  ScalarType T01 = V2[0]-V3[0];  
-	ScalarType T10 = V1[1]-V3[1];  ScalarType T11 = V2[1]-V3[1]; 
-	ScalarType Det = T00 * T11 - T01*T10;
-	if(fabs(Det) < 0.0000001) 
-				return false;
-	
-	ScalarType IT00 =  T11/Det;	ScalarType IT01 = -T01/Det;	
-	ScalarType IT10 = -T10/Det;	ScalarType IT11 =  T00/Det;	
-
-	Point2<ScalarType> Delta = P-V3;
-	
-	L[0] = IT00*Delta[0] + IT01*Delta[1];
-	L[1] = IT10*Delta[0] + IT11*Delta[1]; 
- 
-	if(L[0]<0) L[0]=0;
-	if(L[1]<0) L[1]=0;
-	if(L[0]>1.) L[0]=1;
-	if(L[1]>1.) L[1]=1;
-	
-	L[2] = 1. - L[1] - L[0];
-	if(L[2]<0) L[2]=0;
-	
-	assert(L[2] >= -0.00001);
-
-	return true;
+	vcg::Triangle2<ScalarType> t2=vcg::Triangle2<ScalarType>(V1,V2,V3);
+	return (t2.InterpolationParameters(P,L.X(),L.Y(),L.Z() ));
 }
+
+//// Function that computes the barycentric coords of a 2D triangle. Used by the above function. 
+//// Algorithm: simply find a base for the frame of the triangle, assuming v3 as origin (matrix T) invert it and apply to P-v3.
+//
+//template<class ScalarType>
+//bool InterpolationParameters2(const Point2<ScalarType> &V1,
+//													   const Point2<ScalarType> &V2,
+//														 const Point2<ScalarType> &V3,
+//														 const Point2<ScalarType> &P, Point3<ScalarType> &L)
+//{
+//	ScalarType T00 = V1[0]-V3[0];  ScalarType T01 = V2[0]-V3[0];  
+//	ScalarType T10 = V1[1]-V3[1];  ScalarType T11 = V2[1]-V3[1]; 
+//	ScalarType Det = T00 * T11 - T01*T10;
+//	if(fabs(Det) < 0.0000001) 
+//				return false;
+//	
+//	ScalarType IT00 =  T11/Det;	ScalarType IT01 = -T01/Det;	
+//	ScalarType IT10 = -T10/Det;	ScalarType IT11 =  T00/Det;	
+//
+//	Point2<ScalarType> Delta = P-V3;
+//	
+//	L[0] = IT00*Delta[0] + IT01*Delta[1];
+//	L[1] = IT10*Delta[0] + IT11*Delta[1]; 
+// 
+//	if(L[0]<0) L[0]=0;
+//	if(L[1]<0) L[1]=0;
+//	if(L[0]>1.) L[0]=1;
+//	if(L[1]>1.) L[1]=1;
+//	
+//	L[2] = 1. - L[1] - L[0];
+//	if(L[2]<0) L[2]=0;
+//	
+//	assert(L[2] >= -0.00001);
+//
+//	return true;
+//}
 
 
 /** Calcola i coefficienti della combinazione convessa.
