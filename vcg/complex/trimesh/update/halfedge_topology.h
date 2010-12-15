@@ -1669,6 +1669,31 @@ namespace vcg
 
                 }
 
+			static vector<FacePointer> get_adjacent_faces(FacePointer fp)
+			{
+				assert(fp);
+				assert(!fp->IsD());
+				
+				vector<FacePointer> ret;
+				
+				Pos<MeshType> p( fp->FHp() );
+				assert(p.F() == fp);
+				
+				do
+				{
+					p.FlipF();
+					ret.push_back( p.F() );
+					p.FlipF();
+					
+					p.FlipV();
+					p.FlipE();
+					
+				} while(p.HE() != fp->FHp());
+				
+				return ret;
+				
+			}
+
                 /*!
                   * Gets all hedges incident to a vertex
                   *

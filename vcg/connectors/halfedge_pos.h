@@ -100,6 +100,17 @@ namespace vcg
                     return he->HOp()->HVp();
             }
 
+			/*!
+             * Gets opposite vertex
+             */
+            VertexPointer Vo()
+            {
+                if(!direction)
+                    return he->HVp();
+                else
+                    return he->HOp()->HVp();
+            }
+			
             /*!
              * Gets pointed hedge
              */
