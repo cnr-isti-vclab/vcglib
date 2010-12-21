@@ -63,7 +63,7 @@ namespace vcg {
 		}
 
 		template <class MeshType, class ATTR_CONT>
-		void ResizeAttribute(ATTR_CONT &c,const int &   sz  , MeshType &m){
+    void ResizeAttribute(ATTR_CONT &c,const int &   sz  , MeshType &/*m*/){
 			typename std::set<typename MeshType::PointerToAttribute>::iterator ai;	
 				for(ai =c.begin(); ai != c.end(); ++ai)
 					((typename MeshType::PointerToAttribute)(*ai)).Resize(sz);
