@@ -60,15 +60,19 @@ namespace vcg {
 
 
 
-					if( m.HasPerVertexNormal()  && (mask & io::Mask::IOM_VERTNORMAL)) 	fprintf(fpout,"N");
-					if( tri::HasPerVertexColor(m)   && (mask & io::Mask::IOM_VERTCOLOR))		fprintf(fpout,"C");
-					if( tri::HasPerVertexTexCoord(m) && (mask & io::Mask::IOM_VERTTEXCOORD))	fprintf(fpout,"ST");
+					if( tri::HasPerVertexColor(m)  && (mask & io::Mask::IOM_VERTNORMAL)) 	
+						fprintf(fpout,"N");
+					if( tri::HasPerVertexColor(m)   && (mask & io::Mask::IOM_VERTCOLOR))		
+						fprintf(fpout,"C");
+					if( tri::HasPerVertexTexCoord(m) && (mask & io::Mask::IOM_VERTTEXCOORD))	
+						fprintf(fpout,"ST");
 					fprintf(fpout,"OFF\n");
 					
 					int polynumber;
 					if (mask &io::Mask::IOM_BITPOLYGONAL) 
-								 polynumber = tri::Clean<SaveMeshType>::CountBitLargePolygons(m); 
-						else polynumber = m.fn;
+							polynumber = tri::Clean<SaveMeshType>::CountBitLargePolygons(m); 
+						else 
+							polynumber = m.fn;
 					
 					fprintf(fpout,"%d %d 0\n", m.vn, polynumber); // note that as edge number we simply write zero
           typename SaveMeshType::FaceIterator fi;
@@ -89,10 +93,10 @@ namespace vcg {
               if( tri::HasPerVertexColor(m)  && (mask & io::Mask::IOM_VERTCOLOR) )
                 fprintf(fpout,"%d %d %d %d ",vp->C()[0],vp->C()[1],vp->C()[2],vp->C()[3] );
 
-              if( m.HasPerVertexNormal()  && (mask & io::Mask::IOM_VERTNORMAL) )
+              if( tri::HasPerVertexColor(m)  && (mask & io::Mask::IOM_VERTNORMAL) )
                 fprintf(fpout,"%g %g %g ", vp->N()[0],vp->N()[1],vp->N()[2]);
 
-              if( m.HasPerVertexTexCoord()  && (mask & io::Mask::IOM_VERTTEXCOORD) )
+              if( tri::HasPerVertexTexCoord(m)  && (mask & io::Mask::IOM_VERTTEXCOORD) )
                 fprintf(fpout,"%g %g ",vp->T().u(),vp->T().v());
 								
 								fprintf(fpout,"\n");
