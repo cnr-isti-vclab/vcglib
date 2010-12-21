@@ -95,7 +95,7 @@ namespace vcg
 					// to distinguish between per-vertex and per-face color attribute.
           loadmask=0;
 					MESH_TYPE dummyMesh;
-					return (Open(dummyMesh, filename, loadmask,0,true)==NoError);
+          return (Open(dummyMesh, filename, loadmask)==NoError);
 				}
 
 				static int Open(MESH_TYPE &mesh, const char *filename,CallBackPos *cb=0)
@@ -112,7 +112,7 @@ namespace vcg
 				 *  \return             the operation result
 				 */
 				static int Open(MESH_TYPE &mesh, const char *filename, int &loadmask,
-					CallBackPos *cb=0, bool onlyMaskFlag=false )
+          CallBackPos *cb=0)
 				{
 					std::ifstream stream(filename);
 					if (stream.fail())
