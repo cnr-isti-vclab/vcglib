@@ -289,7 +289,18 @@ public:
 				// ----------------------
 					if (((oi.mask & vcg::tri::io::Mask::IOM_VERTCOLOR) != 0) && (m.HasPerVertexColor()))
 					{
-					(*vi).C() = currentColor;
+						if(numTokens>=7)
+						{
+							unsigned char r			= (unsigned char) ((ScalarType) atof(tokens[4].c_str()) * 255.0);
+							unsigned char g			= (unsigned char) ((ScalarType) atof(tokens[5].c_str()) * 255.0);
+							unsigned char b			= (unsigned char) ((ScalarType) atof(tokens[6].c_str()) * 255.0);
+							unsigned char alpha = (unsigned char) ((numTokens>=8 ? (ScalarType) atof(tokens[7].c_str()) : 1)  * 255.0);
+							(*vi).C() = Color4b(r, g, b, alpha);
+						}
+						else
+						{
+							(*vi).C() = currentColor;
+						}
 					}
 
 				++vi;  // move to next vertex iterator
@@ -865,8 +876,9 @@ public:
 
     if (length == 0) return false;
 
-    bool bHasPerFaceColor			= false;
-	bool bHasNormals = false;
+		bool bHasPerFaceColor		= false;
+		bool bHasNormals 				= false;
+		bool bHasPerVertexColor = false;
 
     oi.numVertices=0;
     oi.numFaces=0;
@@ -886,7 +898,12 @@ public:
       {
         if(line[0]=='v')
         {
-          if(line[1]==' ') oi.numVertices++;
+          if(line[1]==' ')
+					{
+						oi.numVertices++;
+						if(line.size()>=7)
+							bHasPerVertexColor = true;
+					}
           if(line[1]=='t') oi.numTexCoords++;
           if(line[1]=='n') {
             oi.numNormals ++;
@@ -902,15 +919,16 @@ public:
 		}
 		oi.mask = 0;
 		if (oi.numTexCoords)	
-			{
-        if (oi.numTexCoords==oi.numVertices)
-          oi.mask |= vcg::tri::io::Mask::IOM_VERTTEXCOORD;
+		{
+			if (oi.numTexCoords==oi.numVertices)
+				oi.mask |= vcg::tri::io::Mask::IOM_VERTTEXCOORD;
 
 			oi.mask |= vcg::tri::io::Mask::IOM_WEDGTEXCOORD;
-				// Usually if you have tex coords you also have materials
-				oi.mask |= vcg::tri::io::Mask::IOM_FACECOLOR; 
-			}
-  if(bHasPerFaceColor) 				oi.mask |= vcg::tri::io::Mask::IOM_FACECOLOR; 
+			// Usually if you have tex coords you also have materials
+			oi.mask |= vcg::tri::io::Mask::IOM_FACECOLOR; 
+		}
+  if(bHasPerFaceColor)		oi.mask |= vcg::tri::io::Mask::IOM_FACECOLOR; 
+  if(bHasPerVertexColor)	oi.mask |= vcg::tri::io::Mask::IOM_VERTCOLOR; 
   if (bHasNormals) {
     if (oi.numTexCoords==oi.numVertices)
       oi.mask |= vcg::tri::io::Mask::IOM_VERTNORMAL;

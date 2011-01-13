@@ -93,6 +93,7 @@ namespace io {
 			//vert
 			capability |= vcg::tri::io::Mask::IOM_VERTNORMAL;
       capability |= vcg::tri::io::Mask::IOM_VERTTEXCOORD;
+			capability |= vcg::tri::io::Mask::IOM_VERTCOLOR;
 
 			//face
 			capability |= vcg::tri::io::Mask::IOM_FACECOLOR;
@@ -172,11 +173,20 @@ namespace io {
         //}
 
 				//saves vertex
-				fprintf(fp,"v %f %f %f\n",(*vi).P()[0],(*vi).P()[1],(*vi).P()[2]);
+				
+				fprintf(fp,"v %f %f %f",(*vi).P()[0],(*vi).P()[1],(*vi).P()[2]);
+				if(mask & Mask::IOM_VERTCOLOR)
+					fprintf(fp," %f %f %f",double((*vi).C()[0])/255.,double((*vi).C()[1])/255.,double((*vi).C()[2])/255.);
+				fprintf(fp,"\n");
 
-				if (cb !=NULL) {
-          if(!(*cb)((100*++current)/totalPrimitives, "writing vertices ")) 
-            { fclose(fp); return E_ABORTED;} }
+				if (cb !=NULL)
+				{
+					if(!(*cb)((100*++current)/totalPrimitives, "writing vertices ")) 
+					{
+						fclose(fp);
+						return E_ABORTED;
+					}
+				}
         numvert++;
 			}
       assert(numvert == m.vn);
