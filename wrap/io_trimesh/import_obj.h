@@ -291,10 +291,13 @@ public:
 					{
 						if(numTokens>=7)
 						{
-							unsigned char r			= (unsigned char) ((ScalarType) atof(tokens[4].c_str()) * 255.0);
-							unsigned char g			= (unsigned char) ((ScalarType) atof(tokens[5].c_str()) * 255.0);
-							unsigned char b			= (unsigned char) ((ScalarType) atof(tokens[6].c_str()) * 255.0);
-							unsigned char alpha = (unsigned char) ((numTokens>=8 ? (ScalarType) atof(tokens[7].c_str()) : 1)  * 255.0);
+							ScalarType rf(atof(tokens[4].c_str())), gf(atof(tokens[5].c_str())), bf(atof(tokens[6].c_str()));
+							ScalarType scaling = (rf<=1 && gf<=1 && bf<=1) ? 255. : 1;
+							
+							unsigned char r			= (unsigned char) ((ScalarType) atof(tokens[4].c_str()) * scaling);
+							unsigned char g			= (unsigned char) ((ScalarType) atof(tokens[5].c_str()) * scaling);
+							unsigned char b			= (unsigned char) ((ScalarType) atof(tokens[6].c_str()) * scaling);
+							unsigned char alpha = (unsigned char) ((numTokens>=8 ? (ScalarType) atof(tokens[7].c_str()) : 1)  * scaling);
 							(*vi).C() = Color4b(r, g, b, alpha);
 						}
 						else
