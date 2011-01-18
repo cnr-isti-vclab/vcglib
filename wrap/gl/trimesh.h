@@ -20,94 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.27  2007/12/05 11:08:16  mischitelli
-Renamed some unmeaningful variable names (b -> array_buffers ; h -> curr_hints)
-
-Revision 1.26  2007/12/04 17:59:41  mischitelli
-- Fixed DrawFill method, which required the hint 'HNUseVArray' enabled in order to render the mesh with VBO. This was also causing extra overhead in the Update method since HNUseVArray has to be enabled and therefore extra calculation were done to copy vertices in VArrays even if the user was using only VBOs.
-
-Revision 1.25  2007/09/12 16:20:24  m_di_benedetto
-*** empty log message ***
-
-Revision 1.24  2007/09/12 14:48:50  m_di_benedetto
-Corrected indexing for non textured faces.
-
-Revision 1.23  2007/01/18 01:26:23  cignoni
-Added cast for mac compiling
-
-Revision 1.22  2006/12/12 11:06:58  cignoni
-Slightly changed the colormaterial mode for the flatwire
-
-Revision 1.21  2006/10/14 16:26:26  ponchio
-Aggiunti un paio di typename... al solito.
-
-Revision 1.20  2006/05/25 09:40:14  cignoni
-gcc dislike doubleline comments; removed.
-
-Revision 1.19  2006/02/13 13:05:05  cignoni
-Removed glew inclusion
-
-Revision 1.18  2006/02/09 10:00:39  cignoni
-Switched from rough zoffset to glpolygonoffset for hiddenline and flatlines modes. Less zfighting...
-
-Revision 1.17  2005/12/15 14:05:59  spinelli
-add test (tm==TMPerWedgeMulti)
-
-Revision 1.16  2005/12/14 00:18:43  cignoni
-multiple texture support
-
-Revision 1.15  2005/12/02 10:38:07  cignoni
-Changed a wrong uppercase in the include
-
-Revision 1.14  2005/12/02 00:03:22  cignoni
-Added support for one texture mode (perwedge)
-Changed texturemapid array into a safer vector
-
-Revision 1.13  2005/11/24 08:06:50  cignoni
-Added bound checking in texture access
-
-Revision 1.12  2005/11/22 23:57:28  cignoni
-Added a missing colormaterial for flatwire.
-
-Revision 1.11  2005/10/12 18:24:30  ponchio
-another bunch of typenames.
-
-Revision 1.10  2005/10/12 17:19:03  ponchio
-Added gazillions typenames, commented out old broken functions,
-added unsigned int TextureMapID[128], and unsigned int & TMId(int i).
-
-Revision 1.9  2005/05/09 11:28:48  spinelli
-ho tolto 2 warning del tipo unreferenced formal parameter, commentando le var che producevano tale warning.
-
-Revision 1.8  2005/04/22 15:16:48  turini
-Minor Changes To Compile With List Containers.
-
-Revision 1.7  2005/02/26 12:45:23  spinelli
-ripristinata la modalita' di render bbox....
-
-Revision 1.6  2005/01/12 14:39:41  tommyfranken
-constructor name was wrong (old class name)
-
-Revision 1.5  2004/12/15 18:45:07  tommyfranken
-*** empty log message ***
-
-Revision 1.4  2004/09/30 01:40:39  ponchio
-<gl/glew.h>  --> <GL/glew.h>
-
-Revision 1.3  2004/07/13 11:25:57  pietroni
-changed order of initial include ( it had problems with extension of openGL)
-
-Revision 1.2  2004/07/12 15:57:33  ganovelli
-first draft: it includes glew !
-
-
-
-
-****************************************************************************/
 
 #ifndef __VCG_GLTRIMESH
 #define __VCG_GLTRIMESH
@@ -161,7 +73,9 @@ public:
 		CHAll			= 0xff
 	};
 	enum HintParami {
-		HNPDisplayListSize =0
+    HNPDisplayListSize =0,
+    HNPPointDistanceAttenuation =1,
+    HNPPointSmooth = 2
 	};
 	enum HintParamf {
 		HNPCreaseAngle =0,	// crease angle in radians
@@ -222,7 +136,9 @@ public:
 		SetHintParamf(HNPCreaseAngle,float(M_PI/5));
 		SetHintParamf(HNPZTwist,0.00005f);
 		SetHintParamf(HNPPointSize,1.0f);
-	}
+    SetHintParami(HNPPointDistanceAttenuation, 1);
+    SetHintParami(HNPPointSmooth, 0);
+  }
 
 	~GlTrimesh()
 	{
@@ -725,14 +641,25 @@ template<NormalMode nm, ColorMode cm>
 void DrawPoints()
 {
   glPushAttrib(GL_ENABLE_BIT | GL_POINT_BIT);
-	glPointSize(GetHintParamf(HNPPointSize));
-
-	if (glPointParameterfv) {
-  	float camDist = (float)CameraDistance();
-	  float quadratic[] = { 0.0f, 0.0f, 1.0f/(camDist*camDist) , 0.0f };
-	  glPointParameterfv( GL_POINT_DISTANCE_ATTENUATION, quadratic );
-	  glPointParameterf( GL_POINT_SIZE_MAX, 16.0f );
-	  glPointParameterf( GL_POINT_SIZE_MIN, 1.0f );
+  if(GetHintParami(HNPPointSmooth)>0) glEnable(GL_POINT_SMOOTH);
+  else glDisable(GL_POINT_SMOOTH);
+  glPointSize(GetHintParamf(HNPPointSize));
+  if (glPointParameterfv)
+  {
+    if(GetHintParami(HNPPointDistanceAttenuation)>0)
+    {
+      float camDist = (float)CameraDistance();
+      float quadratic[] = { 0.0f, 0.0f, 1.0f/(camDist*camDist) , 0.0f };
+      glPointParameterfv( GL_POINT_DISTANCE_ATTENUATION, quadratic );
+      glPointParameterf( GL_POINT_SIZE_MAX, 16.0f );
+      glPointParameterf( GL_POINT_SIZE_MIN, 1.0f );
+    }
+    else
+    {
+      float quadratic[] = { 1.0f, 0.0f, 0.0f};
+      glPointParameterfv( GL_POINT_DISTANCE_ATTENUATION, quadratic );
+      glPointSize(GetHintParamf(HNPPointSize));
+    }
   }
 
 	if(m->vn!=(int)m->vert.size())
