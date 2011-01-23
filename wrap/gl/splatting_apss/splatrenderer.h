@@ -25,10 +25,13 @@
 #define SPLATRENDERER_H
 
 #include <QObject>
+#include <QTextStream>
+#include <QFile>
 #include <wrap/gl/trimesh.h>
 #include <wrap/gl/shaders.h>
 #include <wrap/gl/trimesh.h>
 #include <QGLFramebufferObject>
+#include <vcg/complex/trimesh/base.h>
 #define GL_TEST_ERR\
 	{\
 			GLenum eCode;\
@@ -771,7 +774,7 @@ void SplatRenderer<MeshType>::drawSplats(std::vector<MeshType*> & meshes, vcg::G
 				cm=vcg::GLW::CMNone;
 			glPushMatrix();
 			glMultMatrix( m.Tr);
-			CMeshO::VertexIterator vi;
+                        typename MeshType::VertexIterator vi;
 			glBegin(GL_POINTS);
 				if(cm==vcg::GLW::CMPerMesh)
 					glColor( m.C());
