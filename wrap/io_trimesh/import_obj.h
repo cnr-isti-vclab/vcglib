@@ -987,51 +987,65 @@ public:
 					else
 						first = false;
 					//strcpy(currentMaterial.name, tokens[1].c_str());
-          if(tokens.size() < 2) 
+                                        if(tokens.size() < 2)
 						return false; 
 					currentMaterial.materialName=tokens[1];
 				}
 				else if (header.compare("Ka")==0)
 				{
-					float r = (float) atof(tokens[1].c_str());
-					float g = (float) atof(tokens[2].c_str());
-					float b = (float) atof(tokens[3].c_str());
+                                    if (tokens.size() < 4)
+                                        return false;
+                                    float r = (float) atof(tokens[1].c_str());
+                                    float g = (float) atof(tokens[2].c_str());
+                                    float b = (float) atof(tokens[3].c_str());
 
-					currentMaterial.Ka = Point3f(r, g, b); 
+                                    currentMaterial.Ka = Point3f(r, g, b);
 				}
 				else if (header.compare("Kd")==0)
 				{
-					float r = (float) atof(tokens[1].c_str());
-					float g = (float) atof(tokens[2].c_str());
-					float b = (float) atof(tokens[3].c_str());
+                                    if (tokens.size() < 4)
+                                        return false;
+                                    float r = (float) atof(tokens[1].c_str());
+                                    float g = (float) atof(tokens[2].c_str());
+                                    float b = (float) atof(tokens[3].c_str());
 
-          currentMaterial.Kd = Point3f(r, g, b); 
+                                    currentMaterial.Kd = Point3f(r, g, b);
 				}
 				else if (header.compare("Ks")==0)
 				{
-					float r = (float) atof(tokens[1].c_str());
-					float g = (float) atof(tokens[2].c_str());
-					float b = (float) atof(tokens[3].c_str());
+                                    if (tokens.size() < 4)
+                                        return false;
+                                    float r = (float) atof(tokens[1].c_str());
+                                    float g = (float) atof(tokens[2].c_str());
+                                    float b = (float) atof(tokens[3].c_str());
 
-          currentMaterial.Ks = Point3f(r, g, b); 
+                                    currentMaterial.Ks = Point3f(r, g, b);
 				}
 				else if (	(header.compare("d")==0) ||
 									(header.compare("Tr")==0)	)	// alpha
 				{
-          currentMaterial.Tr = (float) atof(tokens[1].c_str());
+                                    if (tokens.size() < 2)
+                                        return false;
+                                    currentMaterial.Tr = (float) atof(tokens[1].c_str());
 				}
 				else if (header.compare("Ns")==0)  // shininess        
 				{
-					currentMaterial.Ns = float(atoi(tokens[1].c_str()));
+                                    if (tokens.size() < 2)
+                                        return false;
+                                    currentMaterial.Ns = float(atoi(tokens[1].c_str()));
 				}
 				else if (header.compare("illum")==0)	// specular illumination on/off
 				{
-					int illumination = atoi(tokens[1].c_str());
-          //currentMaterial.bSpecular = (illumination == 2);
-          currentMaterial.illum = illumination;
+                                    if (tokens.size() < 2)
+                                        return false;
+                                    int illumination = atoi(tokens[1].c_str());
+                                    //currentMaterial.bSpecular = (illumination == 2);
+                                    currentMaterial.illum = illumination;
 				}
 				else if( (header.compare("map_Kd")==0)	|| (header.compare("map_Ka")==0) ) // texture name
 				{
+                                        if (tokens.size() < 2)
+                                            return false;
 					std::string textureName = tokens[1];
 					//strcpy(currentMaterial.textureFileName, textureName.c_str());
 					 currentMaterial.map_Kd=textureName;
