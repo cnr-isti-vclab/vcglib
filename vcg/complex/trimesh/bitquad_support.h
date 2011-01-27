@@ -1,8 +1,10 @@
 #ifndef VCG_BITQUAD_SUPPORT
 #define VCG_BITQUAD_SUPPORT
 #include <vector>
+#include <set>
 #include <vcg/complex/trimesh/subset.h>
 #include <vcg/simplex/face/jumping_pos.h>
+#include <vcg/simplex/face/topology.h>
 #include <vcg/space/planar_polygon_tessellation.h>
 
 /** BIT-QUAD creation support:
@@ -91,6 +93,7 @@ typedef typename MeshType::FaceType* FaceTypeP;
 typedef typename MeshType::VertexType VertexType;
 typedef typename MeshType::FaceIterator FaceIterator;
 typedef typename MeshType::VertexIterator VertexIterator;
+typedef typename MeshType::VertexPointer VertexPointer;
 
 class Pos{
   FaceType *f;
@@ -1126,7 +1129,51 @@ static ScalarType Cos(const CoordType &a, const CoordType &b, const CoordType &c
   if (d==0) return 0.0;
   return (e0*e1)/d;
 }
+public:
+/**
+  Generic quad triangulation function.
+  It take in input 4 vertex pointrs and rotate them so that a simple fan triangulation is Ok.
+  It uses geometric criteria for avoiding bad shaped triangles, and folds
+  and it use an internal set of already created diagonal to avoid the creation of non manifold situations.
+  At the begin you shoud call this function with an empty vector to reset the set of existing diagonals.
+  */
+static void QuadTriangulate(std::vector<VertexPointer> &q)
+{
+  typedef typename std::set<std::pair<VertexPointer,VertexPointer> > diagSetType;
+  static diagSetType diagSet; // the set of already created diagonals
+  if(q.size()!=4)
+  {
+    diagSet.clear();
+    return;
+  }
+  const CoordType &P0=q[0]->cP();
+  const CoordType &P1=q[1]->cP();
+  const CoordType &P2=q[2]->cP();
+  const CoordType &P3=q[3]->cP();
 
+  CoordType N00 = Normal(P0,P1,P2);
+  CoordType N01 = Normal(P0,P2,P3);
+  CoordType N10 = Normal(P1,P2,P3);
+  CoordType N11 = Normal(P1,P3,P0);
+
+  ScalarType Angle0Rad=Angle(N00,N01);
+  ScalarType Angle1Rad=Angle(N10,N11);
+
+  // QualityRadii is inradius/circumradius; bad when close to zero.
+  // swap diagonal if the worst triangle improve.
+  bool qualityImprove = std::min(QualityRadii(P0,P1,P2),QualityRadii(P0,P2,P3)) < std::min(QualityRadii(P1,P2,P3),QualityRadii(P1,P3,P0));
+  bool swapCauseFlip = (Angle1Rad > M_PI/2.0) && (Angle0Rad <M_PI/2.0);
+
+  if ( qualityImprove && ! swapCauseFlip)
+         std::rotate(q.begin(), q.begin()+1, q.end());
+
+  std::pair<typename diagSetType::iterator,bool> res;
+  if(q[0]<q[2]) res= diagSet.insert(std::make_pair(q[0],q[2]));
+  else res= diagSet.insert(std::make_pair(q[2],q[0]));
+
+  if(!res.second) // res.second is false if an element with the same value existed; in that case rotate again!
+    std::rotate(q.begin(), q.begin()+1, q.end());
+}
 };
 }} // end namespace vcg::tri
 

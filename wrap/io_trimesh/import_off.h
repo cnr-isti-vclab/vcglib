@@ -29,6 +29,7 @@
 #include <assert.h>
 #include <vcg/space/color4.h>
 #include<vcg/complex/trimesh/allocate.h>
+#include<vcg/complex/trimesh/bitquad_support.h>
 #include <wrap/callback.h>
 #include <wrap/io_trimesh/io_mask.h>
 
@@ -371,6 +372,12 @@ namespace vcg
 
 					Allocator<MESH_TYPE>::AddFaces(mesh, nFaces);
 					unsigned int f0=0;
+
+
+          // Initial call to the QuadTriangulate with an empty vector to just reset the static set of existing diagonals
+          std::vector<VertexPointer> qtmp;
+          BitQuad<MESH_TYPE>::QuadTriangulate(qtmp);
+
 					for (unsigned int f=0; f < nFaces; f++)
 					{
 						f0 = f;
@@ -419,30 +426,13 @@ namespace vcg
 								k++;
 							}
                             if(vert_per_face==4)
-                            {   // To well triangulate the quad:
-                                // if the quad is flat and convex we use the shortest diag ,
-                                // else we should use the diag that makes the smallest                                
-                                
-                                const CoordType &P0=mesh.vert[vertIndices[0]].cP();
-                                const CoordType &P1=mesh.vert[vertIndices[1]].cP();
-                                const CoordType &P2=mesh.vert[vertIndices[2]].cP();
-                                const CoordType &P3=mesh.vert[vertIndices[3]].cP();
-
-                                CoordType N00 = Normal(P0,P1,P2);
-                                CoordType N01 = Normal(P0,P2,P3);
-                                CoordType N10 = Normal(P1,P2,P3);
-                                CoordType N11 = Normal(P1,P3,P0);
-
-                                ScalarType Angle0Rad=Angle(N00,N01);
-                                ScalarType Angle1Rad=Angle(N10,N11);
-
-                                // QualityRadii is inradius/circumradius; bad when close to zero. 
-                                // swap diagonal if the worst triangle improve. 
-                                bool qualityImprove = std::min(QualityRadii(P0,P1,P2),QualityRadii(P0,P2,P3)) < std::min(QualityRadii(P1,P2,P3),QualityRadii(P1,P3,P0));
-                                bool swapCauseFlip = (Angle1Rad > M_PI/2.0) && (Angle0Rad <M_PI/2.0);
-                                if(qualityImprove && ! swapCauseFlip)
-                                        std::rotate(vertIndices.begin(), vertIndices.begin()+1, vertIndices.end());
-
+                            {   // To well triangulate use the bitquad support function that reorders vertex for a simple fan
+                                std::vector<VertexPointer> q(4);
+                                for(int qqi=0;qqi<4;++qqi)
+                                  q[qqi]=& mesh.vert[vertIndices[qqi]];
+                                BitQuad<MESH_TYPE>::QuadTriangulate(q);
+                                for(int qqi=0;qqi<4;++qqi)
+                                  vertIndices[qqi] = q[qqi]- & mesh.vert[0];
                             }
                             // standard fan triangulation (we hope the polygon is convex...)
                             for (int j=0; j<=vert_per_face-3; j++)
