@@ -67,11 +67,11 @@ namespace vcg
                     vp_opp = hp->HVp();
                     fp = hp->HFp();
 
-                    VertexPointer vp_rot = vertex_rotate( vp );
+                    VertexPointer vp_rot = vertex_rotate_quad( vp );
 
                     assert(vp_rot == vp);
 
-                    return diagonal_collapse( m, fp, vp );
+                    return diagonal_collapse_quad( m, fp, vp );
                 }
 
                 /*!
@@ -84,7 +84,7 @@ namespace vcg
                   *
                   * \return Pointer to the new vertex
                   */
-                static VertexPointer diagonal_collapse(MeshType &m, FacePointer fp, VertexPointer vp)
+                static VertexPointer diagonal_collapse_quad(MeshType &m, FacePointer fp, VertexPointer vp)
                 {
 
                     assert(MeshType::VertexType::HasVHAdjacency());
@@ -99,8 +99,8 @@ namespace vcg
                     assert(fp->VN() == 4);
                     assert(!fp->IsD());
 
-                    assert( !has_doublet(fp) );
-                    assert(!is_singlet(fp));
+                    assert( !has_doublet_quad(fp) );
+                    assert(!is_singlet_quad(fp));
 
                     bool HasHE = MeshType::HEdgeType::HasHEAdjacency();
                     bool HasEH = MeshType::EdgeType::HasEHAdjacency();
@@ -226,7 +226,7 @@ namespace vcg
                   *
                   * \return Pointer to the new face
                   */
-                static FacePointer doublet_remove(MeshType &m, VertexPointer vp)
+                static FacePointer doublet_remove_quad(MeshType &m, VertexPointer vp)
                 {
                     assert(vp);
 
@@ -237,8 +237,8 @@ namespace vcg
                     FacePointer fp1 = hp->HFp();
                     FacePointer fp2 = hp->HOp()->HFp();
 
-                    assert(!is_singlet(fp1));
-                    assert(!is_singlet(fp2));
+                    assert(!is_singlet_quad(fp1));
+                    assert(!is_singlet_quad(fp2));
 
 
                     assert( fp1 );
@@ -299,7 +299,7 @@ namespace vcg
                   *
                   * \return Pointer to an halfdedge representing the new edge
                   */
-                static HEdgePointer singlet_remove(MeshType &m, FacePointer fp)
+                static HEdgePointer singlet_remove_quad(MeshType &m, FacePointer fp)
                 {
                     /*
                           2
@@ -314,7 +314,7 @@ namespace vcg
                           3
                       */
 
-                    assert( is_singlet(fp) );
+                    assert( is_singlet_quad(fp) );
 
                     bool HasHE = MeshType::HEdgeType::HasHEAdjacency();
                     bool HasEH = MeshType::EdgeType::HasEHAdjacency();
@@ -395,7 +395,7 @@ namespace vcg
                   *
                   * \return Pointer to the rotated edge
                   */
-                static HEdgePointer edge_rotate(HEdgePointer hp, bool cw)
+                static HEdgePointer edge_rotate_quad(HEdgePointer hp, bool cw)
                 {
 
                     assert( MeshType::HEdgeType::HasHFAdjacency() );
@@ -413,11 +413,11 @@ namespace vcg
                     assert( fp2 );
                     assert( fp2->VN() == 4 );
 
-                    assert(!is_singlet(fp1));
-                    assert(!is_singlet(fp2));
+                    assert(!is_singlet_quad(fp1));
+                    assert(!is_singlet_quad(fp2));
 
-                    assert(!has_doublet(fp1));
-                    assert(!has_doublet(fp2));
+                    assert(!has_doublet_quad(fp1));
+                    assert(!has_doublet_quad(fp2));
 
                     vector<FacePointer> fps;
                     typedef vector<HEdgePointer> hedge_vect;
@@ -490,7 +490,7 @@ namespace vcg
                   *
                   * \return Pointer to the rotated vertex
                   */
-                static VertexPointer vertex_rotate(VertexPointer vp)
+                static VertexPointer vertex_rotate_quad(VertexPointer vp)
                 {
 
                     assert(MeshType::VertexType::HasVHAdjacency());
@@ -1174,7 +1174,7 @@ namespace vcg
                   * \retval true if diagonal can be collapsed
                   * \retval false if diagonal cannot be collapsed
                   */
-                static bool check_diagonal_collapse(HEdgePointer hp)
+                static bool check_diagonal_collapse_quad(HEdgePointer hp)
                 {
 
                     assert(hp);
@@ -1404,7 +1404,7 @@ namespace vcg
                   * \retval true if face is a singlet
                   * \retval false if face isn't a singlet
                   */
-                static bool is_singlet(FacePointer fp)
+                static bool is_singlet_quad(FacePointer fp)
                 {
                     assert(fp);
                     assert(fp->FHp());
@@ -1544,30 +1544,31 @@ namespace vcg
 
                 }
 
-			static vector<FacePointer> get_adjacent_faces(FacePointer fp)
-			{
-				assert(fp);
-				assert(!fp->IsD());
-				
-				vector<FacePointer> ret;
-				
-				Pos<MeshType> p( fp->FHp() );
-				assert(p.F() == fp);
-				
-				do
-				{
-					p.FlipF();
-					ret.push_back( p.F() );
-					p.FlipF();
-					
-					p.FlipV();
-					p.FlipE();
-					
-				} while(p.HE() != fp->FHp());
-				
-				return ret;
-				
-			}
+
+                static vector<FacePointer> get_adjacent_faces(FacePointer fp)
+                {
+                    assert(fp);
+                    assert(!fp->IsD());
+
+                    vector<FacePointer> ret;
+
+                    Pos<MeshType> p( fp->FHp() );
+                    assert(p.F() == fp);
+
+                    do
+                    {
+                        p.FlipF();
+                        ret.push_back( p.F() );
+                        p.FlipF();
+
+                        p.FlipV();
+                        p.FlipE();
+
+                    } while(p.HE() != fp->FHp());
+
+                    return ret;
+
+                }
 
                 /*!
                   * Gets all hedges incident to a vertex
@@ -1618,9 +1619,9 @@ namespace vcg
                   * \retval true if face has at least a doublet
                   * \retval false if face hasn't any doublet
                   */
-                static bool has_doublet(FacePointer fp)
+                static bool has_doublet_quad(FacePointer fp)
                 {
-                    return ( !find_doublet_hedges(fp).empty() );
+                    return ( !find_doublet_hedges_quad(fp).empty() );
                 }
 
                 /*!
@@ -1630,7 +1631,7 @@ namespace vcg
                   *
                   * \return Vector containing the hedges
                   */
-                static vector<HEdgePointer> find_doublet_hedges(FacePointer fp)
+                static vector<HEdgePointer> find_doublet_hedges_quad(FacePointer fp)
                 {
                     assert(fp);
                     assert(fp->FHp());
