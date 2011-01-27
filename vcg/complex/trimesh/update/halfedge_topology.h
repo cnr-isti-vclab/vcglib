@@ -18,90 +18,6 @@ namespace vcg
     namespace tri
     {
 
-        template <class MeshType> class Garbage
-        {
-
-            public:
-
-                typedef typename MeshType::VertexPointer VertexPointer;
-                typedef typename MeshType::EdgePointer EdgePointer;
-                typedef typename MeshType::HEdgePointer HEdgePointer;
-                typedef typename MeshType::FacePointer FacePointer;
-
-                typedef typename MeshType::VertexType VertexType;
-                typedef typename MeshType::EdgeType EdgeType;
-                typedef typename MeshType::HEdgeType HEdgeType;
-                typedef typename MeshType::FaceType FaceType;
-
-                typedef typename std::vector<VertexPointer>::iterator VertexIterator;
-                typedef typename std::vector<EdgePointer>::iterator EdgeIterator;
-                typedef typename std::vector<HEdgePointer>::iterator HEdgeIterator;
-                typedef typename std::vector<FacePointer>::iterator FaceIterator;
-
-                std::vector<VertexPointer> vert;
-                std::vector<EdgePointer> edge;
-                std::vector<HEdgePointer> hedge;
-                std::vector<FacePointer> face;
-
-                /// Default Constructor
-                Garbage()
-                {
-                }
-
-                ~Garbage()
-                {
-                }
-
-                void undelete_hedges(MeshType &m)
-                {
-                    clear_elements<HEdgeType>(hedge);
-
-                    m.hn += hedge.size();
-                }
-
-                void undelete_edges(MeshType &m)
-                {
-                    clear_elements<EdgeType>(edge);
-
-                    m.en += edge.size();
-                }
-
-                void undelete_vertices(MeshType &m)
-                {
-                    clear_elements<VertexType>(vert);
-
-                    m.vn += vert.size();
-                }
-
-                void undelete_faces(MeshType &m)
-                {
-                    clear_elements<FaceType>(face);
-
-                    m.fn += face.size();
-                }
-
-                void clear()
-                {
-                    clear_elements<VertexType>(vert);
-                    clear_elements<EdgeType>(edge);
-                    clear_elements<HEdgeType>(hedge);
-                    clear_elements<FaceType>(face);
-                }
-
-            protected:
-
-                template <typename Type> void clear_elements(std::vector<Type*> &container)
-                {
-                    Type aux;
-
-                    for(typename std::vector<Type*>::iterator it = container.begin(); it!= container.end(); ++it)
-                    {
-                        memcpy((*it), &aux, sizeof(Type));
-                    }
-
-                }
-        };
-
         /*!
           * \brief Class containing functions to modify the topology of a halfedge based mesh
           *
@@ -120,8 +36,6 @@ namespace vcg
                 typedef typename MeshType::HEdgeIterator HEdgeIterator;
                 typedef typename MeshType::FaceIterator FaceIterator;
 
-                typedef vcg::tri::Garbage<MeshType> GarbageType;
-                typedef GarbageType* GarbagePointer;
 
                 /*!
                   * Collpases an edge shared by two quads, generating only quads.
@@ -710,7 +624,7 @@ namespace vcg
                   *
                   * \return Pointer to the new face if it has been inserted, NULL otherwise
                   */
-                static FacePointer add_face(MeshType &m, vector<VertexPointer> &vps, GarbagePointer gp = NULL)
+                static FacePointer add_face(MeshType &m, vector<VertexPointer> &vps)
                 {
 
                     assert(MeshType::VertexType::HasVHAdjacency());
@@ -737,7 +651,7 @@ namespace vcg
 
                     vector<bool> non_manifold_vertices(size, false);
 
-                    return add_face_unsafe( m,vps, hps, non_manifold_vertices, gp );
+                    return add_face_unsafe( m,vps, hps, non_manifold_vertices);
 
                 }
 
@@ -750,7 +664,7 @@ namespace vcg
                   * \retval true if face has been removed
                   * \retval false otherwise
                   */
-                static bool remove_face(MeshType &m, FacePointer fp, GarbagePointer gp = NULL)
+                static bool remove_face(MeshType &m, FacePointer fp)
                 {
 
                     assert(MeshType::VertexType::HasVHAdjacency());
@@ -762,7 +676,7 @@ namespace vcg
 
                     if( can_remove_face(fp) )
                     {
-                        remove_face_unsafe(m, fp, gp);
+                        remove_face_unsafe(m, fp);
                         return true;
                     }
 
@@ -779,7 +693,7 @@ namespace vcg
                   *
                   * \return Pointer to the new face
                   */
-                static FacePointer add_face_unsafe(MeshType &m, vector<VertexPointer> &vps, GarbagePointer gp = NULL)
+                static FacePointer add_face_unsafe(MeshType &m, vector<VertexPointer> &vps)
                 {
                     unsigned int size = vps.size();
 
@@ -794,7 +708,7 @@ namespace vcg
                             non_manifold_vertices.push_back( hps.back() == NULL );
                     }
 
-                    return add_face_unsafe(m,vps,hps, non_manifold_vertices, gp);
+                    return add_face_unsafe(m,vps,hps, non_manifold_vertices);
                 }
 
 
@@ -807,7 +721,7 @@ namespace vcg
                   *
                   * \return Pointer to the new face
                   */
-                static FacePointer add_face_unsafe(MeshType &m, vector<VertexPointer> &vps, vector<HEdgePointer> &hps, vector<bool> &non_manifold_vertices, GarbagePointer gp)
+                static FacePointer add_face_unsafe(MeshType &m, vector<VertexPointer> &vps, vector<HEdgePointer> &hps, vector<bool> &non_manifold_vertices)
                 {
 
                     assert(MeshType::VertexType::HasVHAdjacency());
@@ -830,7 +744,6 @@ namespace vcg
                     bool HasEH = MeshType::EdgeType::HasEHAdjacency();
 
                     HEdgeIterator hi;
-                    std::vector<HEdgePointer> gphps;
 
                     assert(hps.size() == size);
 
@@ -839,145 +752,84 @@ namespace vcg
 
                     FacePointer fp;
 
-                    if(!gp)
-                    {
-                        FaceIterator fi = Allocator<MeshType>::AddFaces(m,1);
-                        (*fi).Alloc( size );
-                        fp = &(*fi);
-                    }
-                    else
-                    {
-                        assert(gp->face.size() >=1 );
-
-                        fp = gp->face.back();
-                        gp->face.pop_back();
-
-                        fp->Alloc( size );
-
-                        m.fn++;
-                    }
+                    FaceIterator fi = Allocator<MeshType>::AddFaces(m,1);
+                    (*fi).Alloc( size );
+                    fp = &(*fi);
 
                     if(edge_n > 0)
                     {
 
                         EdgeIterator ei;
 
-                        if(!gp)
+                        fp->SetD();
+
+                        if(HasEH || HasHE)
                         {
-                            fp->SetD();
-
-                            if(HasEH || HasHE)
-                            {
-                                ei = Allocator<MeshType>::AddEdges(m,edge_n);
-                                for(EdgeIterator ei1 = ei; ei1 != m.edge.end(); ++ei1)
-                                    (*ei1).SetD();
-                            }
-
-                            typename Allocator<MeshType>::template PointerUpdater<HEdgePointer> pu;
-
-                            if(m.hedge.empty())
-                                pu.oldBase = 0;
-                            else
-                            {
-                                pu.oldBase = &*(m.hedge.begin());
-                                pu.oldEnd = &m.hedge.back()+1;
-                            }
-
-                            hi = Allocator<MeshType>::AddHEdges(m,2*edge_n);
-
-                            pu.newBase = &*(m.hedge.begin());
-                            pu.newEnd = &m.hedge.back()+1;
-
-                            //undelete face
-                            fp->ClearD();
-
-                            //undelete edges
+                            ei = Allocator<MeshType>::AddEdges(m,edge_n);
                             for(EdgeIterator ei1 = ei; ei1 != m.edge.end(); ++ei1)
-                                (*ei1).ClearD();
-
-                            // update hedge pointers (if needed)
-                            if( pu.NeedUpdate() )
-                                for(typename vector<HEdgePointer>::iterator hpsi = hps.begin(); hpsi != hps.end(); ++hpsi)
-                                {
-                                    if((*hpsi))
-                                        pu.Update(*hpsi);
-                                }
-
-
-                            HEdgeIterator hi1 = hi;
-                            HEdgeIterator hi2 = hi;
-
-                            ++hi2;
-
-                            EdgeIterator ei1 = ei;
-
-                            for(; hi2 != m.hedge.end(); ++hi1, ++hi2)
-                            {
-                                // EH
-                                if(HasEH)
-                                    (*ei1).EHp() = &(*hi1);
-
-                                // HE
-                                if(HasHE)
-                                {
-                                    (*hi1).HEp() = &(*ei1);
-                                    (*hi2).HEp() = &(*ei1);
-                                }
-
-                                //HO
-                                (*hi1).HOp() = &(*hi2);
-                                (*hi2).HOp() = &(*hi1);
-
-                                // HF
-                                (*hi1).HFp() = fp;
-
-                                ++hi1;
-                                ++hi2;
-                            }
-
-
+                                (*ei1).SetD();
                         }
+
+                        typename Allocator<MeshType>::template PointerUpdater<HEdgePointer> pu;
+
+                        if(m.hedge.empty())
+                            pu.oldBase = 0;
                         else
                         {
+                            pu.oldBase = &*(m.hedge.begin());
+                            pu.oldEnd = &m.hedge.back()+1;
+                        }
 
-                            assert((int) (gp->edge.size()) >= edge_n);
-                            assert((int)(gp->hedge.size()) >= 2*edge_n);
+                        hi = Allocator<MeshType>::AddHEdges(m,2*edge_n);
 
-                            m.en += edge_n;
-                            m.hn += 2*edge_n;
+                        pu.newBase = &*(m.hedge.begin());
+                        pu.newEnd = &m.hedge.back()+1;
 
-                            EdgePointer ep;
-                            HEdgePointer hp1, hp2;
+                        //undelete face
+                        fp->ClearD();
 
-                            for(int i=0; i < edge_n;i++)
+                        //undelete edges
+                        for(EdgeIterator ei1 = ei; ei1 != m.edge.end(); ++ei1)
+                            (*ei1).ClearD();
+
+                        // update hedge pointers (if needed)
+                        if( pu.NeedUpdate() )
+                            for(typename vector<HEdgePointer>::iterator hpsi = hps.begin(); hpsi != hps.end(); ++hpsi)
                             {
-                                ep = gp->edge.back();
-                                hp1 = gp->hedge.back();
-
-                                gp->edge.pop_back();
-                                gp->hedge.pop_back();
-
-                                hp2 = gp->hedge.back();
-
-                                gp->hedge.pop_back();
-
-                                gphps.push_back(hp1);
-
-                                // EH
-                                ep->EHp() = hp1;
-
-                                // HE
-                                hp1->HEp() = ep;
-                                hp2->HEp() = ep;
-
-                                //HO
-                                hp1->HOp() = hp2;
-                                hp2->HOp() = hp1;
-
-                                // HF
-                                hp1->HFp() = fp;
+                                if((*hpsi))
+                                    pu.Update(*hpsi);
                             }
 
+
+                        HEdgeIterator hi1 = hi;
+                        HEdgeIterator hi2 = hi;
+
+                        ++hi2;
+
+                        EdgeIterator ei1 = ei;
+
+                        for(; hi2 != m.hedge.end(); ++hi1, ++hi2)
+                        {
+                            // EH
+                            if(HasEH)
+                                (*ei1).EHp() = &(*hi1);
+
+                            // HE
+                            if(HasHE)
+                            {
+                                (*hi1).HEp() = &(*ei1);
+                                (*hi2).HEp() = &(*ei1);
+                            }
+
+                            //HO
+                            (*hi1).HOp() = &(*hi2);
+                            (*hi2).HOp() = &(*hi1);
+
+                            // HF
+                            (*hi1).HFp() = fp;
+
+                            ++hi1;
+                            ++hi2;
                         }
                     }
 
@@ -987,24 +839,14 @@ namespace vcg
                     {
                         if(hps[i] == NULL)
                         {
-                            if(gp)
-                            {
-                                hps1.push_back(gphps.back());
-                                gphps.pop_back();
-                            }
-                            else
-                            {
                                 hps1.push_back(&(*hi));
                                 ++hi;
                                 ++hi;
-                            }
                         }
                         else
                             hps1.push_back(hps[i]);
                     }
 
-
-                    assert( gphps.size() == 0 );
                     assert( hps1.size() == size );
 
                     for(unsigned int i = 0; i < size; i++)
@@ -1105,7 +947,7 @@ namespace vcg
                   * \param fp Face to be removed
                   *
                   */
-                static void remove_face_unsafe (MeshType &m, FacePointer fp, GarbagePointer gp = NULL)
+                static void remove_face_unsafe (MeshType &m, FacePointer fp)
                 {
 
                     vector<HEdgePointer> hps = getHEdges(fp);
@@ -1134,13 +976,6 @@ namespace vcg
                         }
                         else
                         {
-                            if(gp)
-                            {
-                                gp->hedge.push_back(hps[i]);
-                                gp->hedge.push_back(hps[i]->HOp());
-                                gp->edge.push_back(hps[i]->HEp());
-                            }
-
                             Allocator<MeshType>::DeleteHEdge( m, *hps[i] );
                             Allocator<MeshType>::DeleteHEdge( m, *(hps[i]->HOp()) );
 
@@ -1200,9 +1035,6 @@ namespace vcg
                         }
 
                     }
-
-                    if(gp)
-                        gp->face.push_back(fp);
 
                     Allocator<MeshType>::DeleteFace(m,*fp);
 
