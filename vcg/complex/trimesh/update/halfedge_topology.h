@@ -46,11 +46,11 @@ namespace vcg
                 /// Default Constructor
                 Garbage()
                 {
-                };
+                }
 
                 ~Garbage()
                 {
-                };
+                }
 
                 void undelete_hedges(MeshType &m)
                 {
@@ -133,20 +133,18 @@ namespace vcg
                   *
                   * \return Pointer to the new vertex
                   */
-                static VertexPointer edge_collapse_quad(MeshType &m, EdgePointer ep, VertexPointer vp)
+                static VertexPointer edge_collapse_quad(MeshType &m, HEdgePointer hp, VertexPointer vp)
                 {
                     assert(vp);
-                    assert(ep);
-                    assert(MeshType::EdgeType::HasEHAdjacency());
-                    assert(MeshType::HEdgeType::HasHEAdjacency());
+                    assert(hp);
                     assert(MeshType::HEdgeType::HasHVAdjacency());
-                    assert(ep->EHp()->HVp() == vp || ep->EHp()->HOp()->HVp() == vp);
-                    assert(ep->EHp()->HFp()->VN() == 4);
-                    assert(ep->EHp()->HOp()->HFp()->VN() == 4);
+                    assert(hp->HVp() == vp || hp->HOp()->HVp() == vp);
+                    assert(hp->HFp()->VN() == 4);
+                    assert(hp->HOp()->HFp()->VN() == 4);
+
 
                     VertexPointer vp_opp;
                     FacePointer fp;
-                    HEdgePointer hp = ep->EHp();
 
                     if( hp->HVp() == vp )
                         hp = hp->HOp();
@@ -176,10 +174,8 @@ namespace vcg
                 {
 
                     assert(MeshType::VertexType::HasVHAdjacency());
-                    assert(MeshType::EdgeType::HasEHAdjacency());
                     assert(MeshType::FaceType::HasFHAdjacency());
                     assert(MeshType::HEdgeType::HasHVAdjacency());
-                    assert(MeshType::HEdgeType::HasHEAdjacency());
                     assert(MeshType::HEdgeType::HasHFAdjacency());
                     assert(MeshType::HEdgeType::HasHOppAdjacency());
                     assert(MeshType::HEdgeType::HasHPrevAdjacency());
@@ -192,6 +188,8 @@ namespace vcg
                     assert( !has_doublet(fp) );
                     assert(!is_singlet(fp));
 
+                    bool HasHE = MeshType::HEdgeType::HasHEAdjacency();
+                    bool HasEH = MeshType::EdgeType::HasEHAdjacency();
 
                     HEdgePointer hp;
 
@@ -225,20 +223,25 @@ namespace vcg
                     hps[2]->HOp()->HOp()=hps[3]->HOp();
                     hps[3]->HOp()->HOp()=hps[2]->HOp();
 
-
-                    hps[1]->HOp()->HEp()=hps[0]->HEp();
-                    hps[3]->HOp()->HEp()=hps[2]->HEp();
-
-                    for(int i=0; i<3; i+=2)
-                    {
-                        if(hps[i]->HEp()->EHp() == hps[i])
-                            hps[i]->HEp()->EHp() = hps[i]->HOp();
-                    }
-
                     for(int i=0; i<4; i++)
                     {
                         if(hps[i]->HVp()->VHp() == hps[i])
                             hps[i]->HVp()->VHp() = hps[(i+4-1)%4]->HOp();
+                    }
+
+                    if(HasHE)
+                    {
+                        hps[1]->HOp()->HEp()=hps[0]->HEp();
+                        hps[3]->HOp()->HEp()=hps[2]->HEp();
+                    }
+
+                    if(HasEH && HasHE)
+                    {
+                        for(int i=0; i<3; i+=2)
+                        {
+                            if(hps[i]->HEp()->EHp() == hps[i])
+                                hps[i]->HEp()->EHp() = hps[i]->HOp();
+                        }
                     }
 
                     // there are no faces, remove hedges and edge
@@ -261,7 +264,9 @@ namespace vcg
                     {
                         if(b[j])
                         {
-                            Allocator<MeshType>::DeleteEdge(m, *(hps[i]->HEp()) );
+                            if(HasHE)
+                                Allocator<MeshType>::DeleteEdge(m, *(hps[i]->HEp()) );
+
                             Allocator<MeshType>::DeleteHEdge(m, *(hps[i]->HOp()) );
                             Allocator<MeshType>::DeleteHEdge(m, *(hps[i+1]->HOp()) );
 
@@ -285,14 +290,15 @@ namespace vcg
 
                     Allocator<MeshType>::DeleteFace(m, *(fp) );
                     Allocator<MeshType>::DeleteVertex(m, *(opposite_vertex) );
-                    Allocator<MeshType>::DeleteEdge(m, *(hps[1]->HEp()) );
-                    Allocator<MeshType>::DeleteEdge(m, *(hps[3]->HEp()) );
+                    if(HasHE)
+                    {
+                        Allocator<MeshType>::DeleteEdge(m, *(hps[1]->HEp()) );
+                        Allocator<MeshType>::DeleteEdge(m, *(hps[3]->HEp()) );
+                    }
                     Allocator<MeshType>::DeleteHEdge(m, *(hps[0]) );
                     Allocator<MeshType>::DeleteHEdge(m, *(hps[1]) );
                     Allocator<MeshType>::DeleteHEdge(m, *(hps[2]) );
                     Allocator<MeshType>::DeleteHEdge(m, *(hps[3]) );
-
-//                    assert( !is_nonManifold_vertex(m, vp) );
 
                     return vp;
 
@@ -353,8 +359,11 @@ namespace vcg
 
 
                     Allocator<MeshType>::DeleteVertex(m, *vp);
-                    Allocator<MeshType>::DeleteEdge(m, *(hp->HEp()) );
-                    Allocator<MeshType>::DeleteEdge(m, *(hp->HPp()->HEp()) );
+                    if(MeshType::HEdgeType::HasHEAdjacency())
+                    {
+                        Allocator<MeshType>::DeleteEdge(m, *(hp->HEp()) );
+                        Allocator<MeshType>::DeleteEdge(m, *(hp->HPp()->HEp()) );
+                    }
                     Allocator<MeshType>::DeleteHEdge(m, *hp );
                     Allocator<MeshType>::DeleteHEdge(m, *(hp->HOp()) );
                     Allocator<MeshType>::DeleteHEdge(m, *(hp->HPp()) );
@@ -374,9 +383,9 @@ namespace vcg
                   * \param m Mesh
                   * \param vp Vertex shared by the two consecutive edges inside the singlet
                   *
-                  * \return Pointer to the new edge
+                  * \return Pointer to an halfdedge representing the new edge
                   */
-                static EdgePointer singlet_remove(MeshType &m, FacePointer fp)
+                static HEdgePointer singlet_remove(MeshType &m, FacePointer fp)
                 {
                     /*
                           2
@@ -393,6 +402,8 @@ namespace vcg
 
                     assert( is_singlet(fp) );
 
+                    bool HasHE = MeshType::HEdgeType::HasHEAdjacency();
+                    bool HasEH = MeshType::EdgeType::HasEHAdjacency();
 
                     vector<HEdgePointer> ext_hedges;
 
@@ -409,7 +420,8 @@ namespace vcg
                         else if(vertex_valence((*hi)->HVp()) == 1)
                         {
                             Allocator<MeshType>::DeleteVertex( m, *((*hi)->HVp()) );
-                            Allocator<MeshType>::DeleteEdge( m, *((*hi)->HEp()) );
+                            if(HasHE)
+                                Allocator<MeshType>::DeleteEdge( m, *((*hi)->HEp()) );
                         }
 
                     }
@@ -425,16 +437,20 @@ namespace vcg
                         ext_hedges[0]->HOp() = ext_hedges[1];
                         ext_hedges[1]->HOp() = ext_hedges[0];
 
-                        Allocator<MeshType>::DeleteEdge( m, *(ext_hedges[1]->HEp()) );
+                        if(HasHE)
+                        {
+                            Allocator<MeshType>::DeleteEdge( m, *(ext_hedges[1]->HEp()) );
 
-                        ext_hedges[1]->HEp() = ext_hedges[0]->HEp();
+                            ext_hedges[1]->HEp() = ext_hedges[0]->HEp();
 
-                        ext_hedges[0]->HEp()->EHp() = ext_hedges[0];
+                            if(HasEH)
+                                ext_hedges[0]->HEp()->EHp() = ext_hedges[0];
+                        }
 
                         ext_hedges[0]->HVp()->VHp() = ext_hedges[0];
                         ext_hedges[1]->HVp()->VHp() = ext_hedges[1];
 
-                        return ext_hedges[0]->HEp();
+                        return ext_hedges[0];
                     }
 
                     else
@@ -442,8 +458,11 @@ namespace vcg
                         ext_hedges[0]->HVp()->VHp() = NULL;
                         ext_hedges[1]->HVp()->VHp() = NULL;
 
-                        Allocator<MeshType>::DeleteEdge( m, *( ext_hedges[0]->HEp()) );
-                        Allocator<MeshType>::DeleteEdge( m, *( ext_hedges[1]->HEp()) );
+                        if(HasHE)
+                        {
+                            Allocator<MeshType>::DeleteEdge( m, *( ext_hedges[0]->HEp()) );
+                            Allocator<MeshType>::DeleteEdge( m, *( ext_hedges[1]->HEp()) );
+                        }
                         Allocator<MeshType>::DeleteHEdge( m, *( ext_hedges[0]) );
                         Allocator<MeshType>::DeleteHEdge( m, *( ext_hedges[1]) );
 
@@ -462,16 +481,17 @@ namespace vcg
                   *
                   * \return Pointer to the rotated edge
                   */
-                static EdgePointer edge_rotate(MeshType &m, EdgePointer ep, bool cw)
+                static HEdgePointer edge_rotate(HEdgePointer hp, bool cw)
                 {
 
-                    assert( MeshType::EdgeType::HasEHAdjacency() );
                     assert( MeshType::HEdgeType::HasHFAdjacency() );
                     assert( MeshType::HEdgeType::HasHOppAdjacency() );
                     assert( MeshType::FaceType::HasFHAdjacency() );
 
-                    FacePointer fp1 = ep->EHp()->HFp();
-                    FacePointer fp2 = ep->EHp()->HOp()->HFp();
+
+                    FacePointer fp1 = hp->HFp();
+                    FacePointer fp2 = hp->HOp()->HFp();
+
 
                     assert( fp1 );
                     assert( fp1->VN() == 4 );
@@ -492,8 +512,9 @@ namespace vcg
                     fps.push_back(fp1);
                     fps.push_back(fp2);
 
-                    hps.push_back( getHEdges( fp1, ep->EHp() ) );
-                    hps.push_back( getHEdges( fp2, ep->EHp()->HOp() ) );
+
+                    hps.push_back( getHEdges( fp1, hp ) );
+                    hps.push_back( getHEdges( fp2, hp->HOp() ) );
 
 
                     for(int i=0; i< 2; i++)
@@ -541,7 +562,7 @@ namespace vcg
 
                     }
 
-                    return ep;
+                    return hp;
 
                 }
 
@@ -621,49 +642,47 @@ namespace vcg
                   *
                   * \return Pointer to the other vertex belonging to the collapsed edge
                   */
-                static VertexPointer edge_collapse(MeshType &m, EdgePointer ep, VertexPointer vp)
+                static VertexPointer edge_collapse(MeshType &m, HEdgePointer hp, VertexPointer vp)
                 {
 
-                    assert(MeshType::EdgeType::HasEHAdjacency());
                     assert(MeshType::VertexType::HasVHAdjacency());
                     assert(MeshType::HEdgeType::HasHOppAdjacency());
                     assert(MeshType::HEdgeType::HasHVAdjacency());
                     assert(MeshType::HEdgeType::HasHPrevAdjacency());
 
-                    if( ep->EHp()->HFp() )
-                        assert(ep->EHp()->HFp()->VN() > 3);
+                    if( hp->HFp() )
+                        assert(hp->HFp()->VN() > 3);
 
-                    if( ep->EHp()->HOp()->HFp())
-                        assert(ep->EHp()->HOp()->HFp()->VN() > 3);
+                    if( hp->HOp()->HFp())
+                        assert(hp->HOp()->HFp()->VN() > 3);
 
-                    assert(ep->EHp()->HFp() || ep->EHp()->HOp()->HFp());
-                    assert(ep->EHp()->HVp() == vp || ep->EHp()->HOp()->HVp() == vp);
+                    assert(hp->HFp() || hp->HOp()->HFp());
+                    assert(hp->HVp() == vp || hp->HOp()->HVp() == vp);
 
 
-                    HEdgePointer he = ep->EHp();
-                    HEdgePointer hopp = he->HOp();
+                    HEdgePointer hopp = hp->HOp();
 
                     VertexPointer vp1;
 
-                    if( he->HVp() == vp )
+                    if( hp->HVp() == vp )
                         vp1 = hopp->HVp();
                     else
-                        vp1 = he->HVp();
+                        vp1 = hp->HVp();
 
                     change_vertex( vp, vp1);
 
                     //HP
-                    he->HNp()->HPp() = he->HPp();
+                    hp->HNp()->HPp() = hp->HPp();
                     hopp->HNp()->HPp() = hopp->HPp();
 
                     //HN
-                    he->HPp()->HNp() = he->HNp();
+                    hp->HPp()->HNp() = hp->HNp();
                     hopp->HPp()->HNp() = hopp->HNp();
 
                     //FH
-                    if( he->HFp() )
-                        if( he->HFp()->FHp() == he )
-                            he->HFp()->FHp() = he->HNp();
+                    if( hp->HFp() )
+                        if( hp->HFp()->FHp() == hp )
+                            hp->HFp()->FHp() = hp->HNp();
 
                     if( hopp->HFp() )
                         if( hopp->HFp()->FHp() == hopp )
@@ -673,8 +692,9 @@ namespace vcg
                     if( vp1->VHp() == hopp )
                         vp1->VHp() = hopp->HNp();
 
-                    Allocator<MeshType>::DeleteEdge(m,*ep);
-                    Allocator<MeshType>::DeleteHEdge(m,*he);
+                    if(HasHEAdjacency(m))
+                        Allocator<MeshType>::DeleteEdge(m,*(hp->HEp()));
+                    Allocator<MeshType>::DeleteHEdge(m,*hp);
                     Allocator<MeshType>::DeleteHEdge(m,*hopp);
                     Allocator<MeshType>::DeleteVertex(m,*vp);
 
@@ -694,9 +714,7 @@ namespace vcg
                 {
 
                     assert(MeshType::VertexType::HasVHAdjacency());
-                    assert(MeshType::EdgeType::HasEHAdjacency());
                     assert(MeshType::HEdgeType::HasHVAdjacency());
-                    assert(MeshType::HEdgeType::HasHEAdjacency());
                     assert(MeshType::HEdgeType::HasHFAdjacency());
                     assert(MeshType::HEdgeType::HasHOppAdjacency());
                     assert(MeshType::HEdgeType::HasHPrevAdjacency());
@@ -736,10 +754,8 @@ namespace vcg
                 {
 
                     assert(MeshType::VertexType::HasVHAdjacency());
-                    assert(MeshType::EdgeType::HasEHAdjacency());
                     assert(MeshType::FaceType::HasFHAdjacency());
                     assert(MeshType::HEdgeType::HasHVAdjacency());
-                    assert(MeshType::HEdgeType::HasHEAdjacency());
                     assert(MeshType::HEdgeType::HasHFAdjacency());
                     assert(MeshType::HEdgeType::HasHOppAdjacency());
                     assert(MeshType::HEdgeType::HasHPrevAdjacency());
@@ -795,9 +811,7 @@ namespace vcg
                 {
 
                     assert(MeshType::VertexType::HasVHAdjacency());
-                    assert(MeshType::EdgeType::HasEHAdjacency());
                     assert(MeshType::HEdgeType::HasHVAdjacency());
-                    assert(MeshType::HEdgeType::HasHEAdjacency());
                     assert(MeshType::HEdgeType::HasHFAdjacency());
                     assert(MeshType::HEdgeType::HasHOppAdjacency());
                     assert(MeshType::HEdgeType::HasHPrevAdjacency());
@@ -811,6 +825,9 @@ namespace vcg
 //                        // all vertices must be different
 //                        assert( count(vps.begin(), vps.end(), vps[i]) == 1 );
 //                    }
+
+                    bool HasHE = MeshType::HEdgeType::HasHEAdjacency();
+                    bool HasEH = MeshType::EdgeType::HasEHAdjacency();
 
                     HEdgeIterator hi;
                     std::vector<HEdgePointer> gphps;
@@ -849,9 +866,12 @@ namespace vcg
                         {
                             fp->SetD();
 
-                            ei = Allocator<MeshType>::AddEdges(m,edge_n);
-                            for(EdgeIterator ei1 = ei; ei1 != m.edge.end(); ++ei1)
-                                (*ei1).SetD();
+                            if(HasEH || HasHE)
+                            {
+                                ei = Allocator<MeshType>::AddEdges(m,edge_n);
+                                for(EdgeIterator ei1 = ei; ei1 != m.edge.end(); ++ei1)
+                                    (*ei1).SetD();
+                            }
 
                             typename Allocator<MeshType>::template PointerUpdater<HEdgePointer> pu;
 
@@ -889,14 +909,20 @@ namespace vcg
 
                             ++hi2;
 
-                            for(EdgeIterator ei1 = ei; ei1 != m.edge.end(); ++ei1, ++hi1, ++hi2)
+                            EdgeIterator ei1 = ei;
+
+                            for(; hi2 != m.hedge.end(); ++hi1, ++hi2)
                             {
                                 // EH
-                                (*ei1).EHp() = &(*hi1);
+                                if(HasEH)
+                                    (*ei1).EHp() = &(*hi1);
 
                                 // HE
-                                (*hi1).HEp() = &(*ei1);
-                                (*hi2).HEp() = &(*ei1);
+                                if(HasHE)
+                                {
+                                    (*hi1).HEp() = &(*ei1);
+                                    (*hi2).HEp() = &(*ei1);
+                                }
 
                                 //HO
                                 (*hi1).HOp() = &(*hi2);
@@ -1117,7 +1143,9 @@ namespace vcg
 
                             Allocator<MeshType>::DeleteHEdge( m, *hps[i] );
                             Allocator<MeshType>::DeleteHEdge( m, *(hps[i]->HOp()) );
-                            Allocator<MeshType>::DeleteEdge( m, *(hps[i]->HEp()) );
+
+                            if(MeshType::HEdgeType::HasHEAdjacency())
+                                Allocator<MeshType>::DeleteEdge( m, *(hps[i]->HEp()) );
 
                             if( !hps[(i+size-1)%size]->HOp()->HFp() )
                             {
@@ -1314,7 +1342,7 @@ namespace vcg
                   * \retval true if diagonal can be collapsed
                   * \retval false if diagonal cannot be collapsed
                   */
-                static bool can_collapse_diagonal(HEdgePointer hp)
+                static bool check_diagonal_collapse(HEdgePointer hp)
                 {
 
                     assert(hp);
@@ -1324,38 +1352,21 @@ namespace vcg
 
                     vector<FacePointer> faces;
 
-                    Pos<MeshType> p(hp);
+                    HEdgePointer hopp = hp->HNp()->HNp();
+                    vector<FacePointer> faces1 = get_incident_faces(hp->HVp(), hp);
+                    vector<FacePointer> faces2 = get_incident_faces(hp->HNp()->HNp()->HVp(), hopp);
 
-                    p.FlipE();
-                    p.FlipF();
+                    faces.assign(faces1.begin()+1, faces1.end());
+                    faces.assign(faces2.begin()+1, faces2.end());
 
-                    while( p.HE() != hp )
-                    {
-                        faces.push_back(p.F());
 
-                        p.FlipE();
-                        p.FlipF();
-                    }
-
-                    HEdgePointer opp = hp->HNp()->HNp();
-
-                    p.he = opp;
-
-                    p.FlipE();
-                    p.FlipF();
-
-                    while( p.HE() != opp )
-                    {
-                        faces.push_back(p.F());
-
-                        p.FlipE();
-                        p.FlipF();
-                    }
-
+                    // First check:
 
                     unsigned int size = faces.size();
-                    int null_count = 0;
+                    bool null_face = false;
 
+
+                    // if size <=2 check is ok
                     if(size > 2)
                     {
                         for(unsigned int i = 0; i < size; i++)
@@ -1364,14 +1375,44 @@ namespace vcg
                             {
                                 if(faces[(i+1)%size] != NULL && faces[((i+size)-1)%size] != NULL )
                                 {
-                                    if(null_count > 0)
+                                    if(null_face)
                                         return false;
-                                    else
-                                        null_count++;
+
+                                    null_face=true;
                                 }
                             }
                         }
                     }
+
+                    // End of first check
+
+
+                    // Second check
+
+                    sort (faces1.begin(), faces1.end());
+                    sort (faces2.begin(), faces2.end());
+
+                    if( faces1[0] == NULL )
+                        faces1.erase(faces1.begin());
+
+                    if( faces2[0] == NULL )
+                        faces2.erase(faces2.begin());
+
+                    vector<FacePointer> intersection(faces1.size()+faces2.size());
+                    typename vector<FacePointer>::iterator it;
+
+                    it = set_intersection(faces1.begin(),faces1.end(), faces2.begin(), faces2.end(), intersection.begin());
+
+                    intersection.erase(it,intersection.end());
+
+                    size = intersection.size();
+
+                    assert( size != 0);
+
+                    if(size != 1)
+                        return false;
+
+                    // End of second check
 
                     return true;
                 }
@@ -1457,7 +1498,7 @@ namespace vcg
                 /*!
                   * Gets vertices on the 1-ring of a vertex
                   *
-                  * \param vp Vertex
+                  * \param vp Vertex. It must be a non-border vertex.
                   *
                   * \return Vector containing vertices
                   */
@@ -1495,8 +1536,9 @@ namespace vcg
                     return ret;
                 }
 
+
                 /*!
-                  * Gets facees on the 1-ring of a vertex
+                  * Gets faces on the 1-ring of a vertex
                   *
                   * \param vp Vertex
                   *
@@ -1520,6 +1562,7 @@ namespace vcg
                     return ret;
 
                 }
+
 
                 /*!
                   * Checks if a face is a singlet
