@@ -284,10 +284,10 @@ P3ScalarType Quality( Point3<P3ScalarType> const &p0, Point3<P3ScalarType> const
 	P3ScalarType a = Norm( x );
 	if(a==0) return 0; // Area zero triangles have surely quality==0;
 	P3ScalarType b = SquaredNorm( d10 );
+  if(b==0) return 0; // Again: area zero triangles have surely quality==0;
 	P3ScalarType t = b;
 	t = SquaredNorm( d20 ); if ( b<t ) b = t;
 	t = SquaredNorm( d12 ); if ( b<t ) b = t;
-	assert(b!=0.0);
 	return a/b;
 }
 
