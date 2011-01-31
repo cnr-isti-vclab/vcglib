@@ -68,6 +68,8 @@ namespace vcg{
             typedef typename TriMeshType::ScalarType ScalarType;
             typedef typename TriMeshType::FacePointer FacePointer;
 
+            typedef typename TriMeshType::template PerVertexAttributeHandle<float> Fitmap_attr;
+
         public:
 
             /// Coefficient that will be multiplied with the value of the M-Fitmap
@@ -91,7 +93,7 @@ namespace vcg{
             {
                 float lenght = Distance( V1, V2 );
 
-                typename TriMeshType::Fitmap_attr M_Fit = tri::Allocator<TriMeshType>::template GetPerVertexAttribute<float>(tm,"M-Fitmap");
+                Fitmap_attr M_Fit = tri::Allocator<TriMeshType>::template GetPerVertexAttribute<float>(tm,"M-Fitmap");
 
                 CoordType P = (V1+V2)/2;
                 float fitmap = compute_fitmap(hp, P, tm, grid, M_Fit);
@@ -110,7 +112,7 @@ namespace vcg{
               */
             static float compute_weight(HEdgePointer hp, CoordType &P, TriMeshType &tm, GRID &grid)
             {
-                typename TriMeshType::Fitmap_attr S_Fit = tri::Allocator<TriMeshType>::template GetPerVertexAttribute<float>(tm,"S-Fitmap");
+                Fitmap_attr S_Fit = tri::Allocator<TriMeshType>::template GetPerVertexAttribute<float>(tm,"S-Fitmap");
 
                 return compute_fitmap(hp, P, tm, grid, S_Fit);
             }
@@ -128,7 +130,7 @@ namespace vcg{
               *
               * \return Computed value of the fitmap
               */
-            static float compute_fitmap(HEdgePointer hp, CoordType &P, TriMeshType &tm, GRID &grid, typename TriMeshType::Fitmap_attr &attr)
+            static float compute_fitmap(HEdgePointer hp, CoordType &P, TriMeshType &tm, GRID &grid, Fitmap_attr &attr)
             {
                 CoordType N(0,0,0);
 
