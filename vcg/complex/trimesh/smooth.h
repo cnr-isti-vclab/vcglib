@@ -1309,9 +1309,7 @@ static void VertexCoordLaplacianReproject(MeshType& m, GRID& grid, MeshTypeTri& 
 template<class GRID, class MeshTypeTri>
 static void VertexCoordLaplacianReproject(MeshType& m, GRID& grid, MeshTypeTri& gridmesh, typename MeshType::VertexType* vp)
 {
-        assert(MeshType::EdgeType::HasEHAdjacency());
-        assert(MeshType::HEdgeType::HasHEAdjacency());
-        assert(MeshType::HEdgeType::HasHVAdjacency());
+    assert(MeshType::HEdgeType::HasHVAdjacency());
 
     // compute barycenter
     typedef std::vector<VertexPointer> VertexSet;
