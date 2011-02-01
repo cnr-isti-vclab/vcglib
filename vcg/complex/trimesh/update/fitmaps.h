@@ -46,7 +46,6 @@
 
 #include <vcg/complex/trimesh/nring.h>
 
-#include "mymesh.h"
 #include <vcg/complex/trimesh/smooth.h>
 
 
