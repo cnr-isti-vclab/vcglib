@@ -296,9 +296,9 @@ namespace vcg
                     {
                         if( !((*fi).IsD()) )
                         {
-                            if( HalfEdgeTopology<MeshType>::is_singlet(&(*fi)) )
+                            if( HalfEdgeTopology<MeshType>::is_singlet_quad(&(*fi)) )
                             {
-                                HalfEdgeTopology<MeshType>::singlet_remove(m, &(*fi));
+                                HalfEdgeTopology<MeshType>::singlet_remove_quad(m, &(*fi));
                                 count++;
                             }
                         }

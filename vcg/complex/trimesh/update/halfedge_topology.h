@@ -1280,7 +1280,7 @@ namespace vcg
                 }
 
                 /*!
-                  * Checks if a vertex is non-manifold, ased only on local informations
+                  * Checks if a vertex is non-manifold, based only on local informations
                   *
                   * \param vp Vertex to check
                   *
@@ -1468,12 +1468,12 @@ namespace vcg
 
             protected:
                 /*!
-                  * Gets all edges incident to a face
+                  * Gets all hedges incident to a face
                   *
                   * \param fp Face
                   * \param starting_he A hedge in the face from which to start
                   *
-                  * \return Vector containing the incident edges
+                  * \return Vector containing the incident hedges
                   */
                 static vector<HEdgePointer> getHEdges(FacePointer fp, HEdgePointer starting_he = NULL)
                 {
