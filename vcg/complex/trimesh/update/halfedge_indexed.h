@@ -29,6 +29,7 @@
 #include <vcg/complex/trimesh/clean.h>
 #include <vcg/complex/trimesh/update/topology.h>
 #include <vcg/complex/trimesh/base.h>
+#include <vcg/complex/trimesh/update/halfedge_topology.h>
 
 namespace vcg
 {
@@ -82,7 +83,6 @@ namespace vcg
                 assert(HasFVAdjacency(m));
                 assert(HasHOppAdjacency(m));
                 assert(HasHNextAdjacency(m));
-                assert(HasHEAdjacency(m));
 
                 typename MeshType::template PerFaceAttributeHandle<BitVector> flagVisited =
                         vcg::tri::Allocator<MeshType>::template AddPerFaceAttribute<BitVector>(m,"");
@@ -202,7 +202,7 @@ namespace vcg
                         {
                             if((*ei).HEp() == NULL)
                             {
-								(*ei).HEp() = &(*edge_i);
+                                (*ei).HEp() = &(*edge_i);
                                 (*ei).HOp()->HEp() = &(*edge_i);
 
                                 (*edge_i).EHp() = &(*ei);
@@ -214,28 +214,38 @@ namespace vcg
                     }
                     else
                     {
-                        assert(HasEVAdjacency(m));
 
-                        //update edge relations
-                        typename MeshType::EdgeIterator ei1;
-                        for( ei1 = m.edge.begin(); ei1 != m.edge.end(); ++ei1 )
-                            for( ei = m.hedge.begin(); ei != m.hedge.end(); ++ei )
-                                if ( ((*ei).HVp() == (*ei1).V(0))  && ((*ei).HOp()->HVp() == (*ei1).V(1)) )
+                        if(HasEVAdjacency(m) && HasHEAdjacency(m) && HasEHAdjacency(m))
+                        {
+                            //update edge relations
+
+                            for(typename MeshType::EdgeIterator ei1 = m.edge.begin(); ei1 != m.edge.end(); ++ei1 )
+                            {
+                                vector<HEdgePointer> hedges = HalfEdgeTopology<MeshType>::get_incident_hedges((*ei1).V(0));
+
+                                for(typename vector<HEdgePointer>::iterator hi = hedges.begin(); hi != hedges.end(); ++hi)
                                 {
-                            // EH
-                            (*ei1).EHp() = &(*ei);
+                                    if((*hi)->HOp()->HVp() == (*ei1).V(1))
+                                    {
 
-                            // HE
-                            (*ei).HEp() = &(*ei1);
-                            (*ei).HOp()->HEp() = &(*ei1);
+                                        assert((*hi)->HEp() == NULL);
+                                        assert((*hi)->HOp()->HEp() == NULL);
 
-                            break;
+                                        // EH
+                                        (*ei1).EHp() = *hi;
+
+                                        // HE
+                                        (*hi)->HEp() = &(*ei1);
+                                        (*hi)->HOp()->HEp() = &(*ei1);
+
+                                        break;
+                                    }
+                                }
+                            }
                         }
                     }
 
                 }
-
-
 
             }
 
@@ -260,7 +270,6 @@ namespace vcg
                 assert(MeshType::HEdgeType::HasHNextAdjacency());
                 assert(MeshType::HEdgeType::HasHOppAdjacency());
                 assert(MeshType::HEdgeType::HasHVAdjacency());
-                assert(MeshType::HEdgeType::HasHEAdjacency());
                 assert(MeshType::FaceType::HasFHAdjacency());
 
                 //bool hasHEF = ( MeshType::HEdgeType::HasHFAdjacency());
@@ -394,7 +403,7 @@ namespace vcg
                         //}while(ep!=ep1);
                     }
 
-                if(HasEHAdjacency(m))
+                if(HasEHAdjacency(m) && HasHEAdjacency(m))
                     for(EdgeIterator ei  = m.edge.begin(); ei != m.edge.end(); ++ei)
                     {
                         if(!(*ei).IsD())
