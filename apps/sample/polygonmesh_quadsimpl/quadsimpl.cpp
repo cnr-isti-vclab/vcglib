@@ -464,6 +464,9 @@ int main(int argc, char *argv[]) {
     // After loading check mesh consistency
     assert(vcg::tri::UpdateHalfEdges<MyPolyMesh>::CheckConsistency(pm));
 
+    HalfedgeQuadClean<MyPolyMesh>::remove_singlets(pm);
+    HalfedgeQuadClean<MyPolyMesh>::remove_doublets(pm);
+
     vcg::LocalOptimization<MyPolyMesh> loc(pm);
     init_heap(pm, loc, adaptive);
 
