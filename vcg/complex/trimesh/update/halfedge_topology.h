@@ -1221,32 +1221,32 @@ namespace vcg
 
                     // Second check
 
-                    sort (faces1.begin(), faces1.end());
-                    sort (faces2.begin(), faces2.end());
+                    set<VertexPointer> set1;
+                    set<VertexPointer> set2;
 
-                    if( faces1[0] == NULL )
-                        faces1.erase(faces1.begin());
+                    vector<VertexPointer> vect1 = getVertices(hp->HVp());
+                    vector<VertexPointer> vect2 = getVertices(hp->HNp()->HNp()->HVp());
 
-                    if( faces2[0] == NULL )
-                        faces2.erase(faces2.begin());
+                    set1.insert(vect1.begin(), vect1.end());
+                    set2.insert(vect2.begin(), vect2.end());
 
-                    vector<FacePointer> intersection(faces1.size()+faces2.size());
-                    typename vector<FacePointer>::iterator it;
+                    size = vect1.size();
+                    if(vect2.size() < size)
+                        size = vect2.size();
 
-                    it = set_intersection(faces1.begin(),faces1.end(), faces2.begin(), faces2.end(), intersection.begin());
+                    vector<VertexPointer> intersection(size);
 
-                    intersection.erase(it,intersection.end());
+                    typename vector<VertexPointer>::iterator it;
+                    it = set_intersection(set1.begin(), set1.end(), set2.begin(), set2.end(), intersection.begin());
 
-                    size = intersection.size();
+                    size = it- intersection.begin();
 
-                    assert( size != 0);
+                    assert( size >= 2 );
 
-                    if(size != 1)
-                        return false;
+                   return (size==2);
 
                     // End of second check
 
-                    return true;
                 }
 
                 /*!
