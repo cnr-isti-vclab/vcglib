@@ -20,79 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-$Log: not supported by cvs2svn $
-Revision 1.19  2008/05/08 23:50:44  cignoni
-renamed vertex quality smoothing
-added face normal smoothing FF (and added a VF to the previous face normal smoothing)
-
-Revision 1.18  2008/05/02 09:43:25  cignoni
-Added color smoothing, scale dependent laplacian changed a SD_old into SD fujumori, improved comments.
-
-Revision 1.17  2008/04/18 17:48:29  cignoni
-added facenormal smoothing
-
-Revision 1.16  2008/02/07 10:24:51  cignoni
-added a missing IsD() check
-
-Revision 1.15  2007/11/05 23:47:20  cignoni
-added selection to the pasodoble smoothing
-
-Revision 1.14  2007/03/27 09:40:47  cignoni
-Changed use of selected to visited flags. Improved variable namings and comments
-
-Revision 1.13  2006/11/07 15:13:56  zifnab1974
-Necessary changes for compilation with gcc 3.4.6. Especially the hash function is a problem
-
-Revision 1.12  2006/11/07 11:28:02  cignoni
-Added Quality weighted laplacian smoothing
-
-Revision 1.11  2006/10/19 07:33:03  cignoni
-Corrected Laplacian, Added selection to HCSmooth
-
-Revision 1.10  2006/09/25 09:41:41  cignoni
-Added new version of pasodoble smoothing
-
-Revision 1.9  2006/02/06 10:45:47  cignoni
-Added missing typenames
-
-Revision 1.7  2006/01/24 13:23:22  pietroni
-used template types instead of point3f and float inside function calls
-
-Revision 1.6  2005/12/06 17:55:16  pietroni
-1 bug corrected
-
-Revision 1.5  2005/12/02 16:24:56  pietroni
-corrected 1 bug in Cross Prod Gradient
-
-Revision 1.4  2005/11/23 16:24:44  pietroni
-corrected CrossProdGradient( )
-
-Revision 1.3  2005/07/11 13:12:05  cignoni
-small gcc-related compiling issues (typenames,ending cr, initialization order)
-
-Revision 1.2  2005/03/16 16:14:12  spinelli
-aggiunta funzione PasoDobleSmooth e relative:
-
-- FitMesh
-- FaceErrorGrad
-- CrossProdGradient
-- TriAreaGradient
-- NormalSmooth
-
-e le classi:
-
-- PDVertInfo
-- PDFaceInfo
-
-necessarie per utilizzare SimpleTempData
-
-Revision 1.1  2004/12/11 14:53:19  ganovelli
-first partial porting: compiled gcc,intel and msvc
-
-
-****************************************************************************/
 
 
 #ifndef __VCGLIB__SMOOTH
@@ -100,10 +27,12 @@ first partial porting: compiled gcc,intel and msvc
 
 #include <wrap/callback.h>
 #include <vcg/space/point3.h>
-#include <vcg/space/line3.h>
+#include <vcg/space/ray3.h>
 #include <vcg/container/simple_temporary_data.h>
 #include <vcg/complex/trimesh/update/normal.h>
 #include <vcg/complex/trimesh/update/halfedge_topology.h>
+#include <vcg/complex/trimesh/closest.h>
+
 
 namespace vcg
 {
