@@ -347,6 +347,72 @@ namespace vcg
 			}
 			if (callback!=NULL) (callback)(100, message);
 		};
+
+
+		static void SmoothNormalsUsingNeighbors(const VertexIterator &begin, const VertexIterator &end, const unsigned int k, bool usedistance, CallBackPos *callback=NULL)
+		{
+			BoundingBoxType dataset_bb;
+			for (VertexIterator iter=begin; iter!=end; iter++)
+				dataset_bb.Add(iter->P());
+			ScalarType max_distance = dataset_bb.Diag();
+
+			// Step 1: identify the tangent planes used to locally approximate the surface
+			int vertex_count = int( std::distance(begin, end) );
+			int step				 = int(vertex_count/100)-1;
+			int progress		 = 0;
+			int percentage;
+			char message[128];
+			sprintf(message, "Locating neighbors...");
+			
+			vcg::Octree< VertexType, ScalarType > octree_for_neighbors;
+			octree_for_neighbors.Set( begin, end );
+
+      std::vector< NormalType    > new_normals(vertex_count);
+
+			std::vector< VertexPointer > nearest_vertices;
+			std::vector< CoordType	 	 > nearest_points;
+			std::vector< ScalarType		 > distances;
+
+			for (VertexIterator iter=begin; iter!=end; iter++)
+			{
+				if (callback!=NULL && (++progress%step)==0 && (percentage=int((progress*100)/vertex_count))<100) (callback)(percentage, message);
+            VertPointDistanceFunctor vpdf;
+            DummyObjectMarker dom;
+				octree_for_neighbors.GetKClosest(vpdf, dom, k, iter->P(), max_distance, nearest_vertices, distances, nearest_points);
+
+				// for each vertex *iter, compute the normal as avarege of the k-nearest vertices of *iter
+        NormalType normal_accum(0.0, 0.0, 0.0);
+
+        ScalarType dist_max = -100.0;
+        if(usedistance)
+				  for (unsigned int n=0; n<k; n++)
+            {
+              if (distances[n] > dist_max)
+                dist_max = distances[n];
+            }
+
+				for (unsigned int n=0; n<k; n++)
+        {
+          if(usedistance)
+					  normal_accum += (nearest_vertices[n]->N() * distances[n]/dist_max);
+          else
+					  normal_accum += nearest_vertices[n]->N();
+        }
+
+        new_normals[iter-begin] = normal_accum;
+			}
+     
+			sprintf(message, "Assigning normals...");
+      progress = 0;
+			for (VertexIterator iter=begin; iter!=end; iter++)
+			{
+        if (callback!=NULL && (++progress%step)==0 && (percentage=int((progress*100)/vertex_count))<100) (callback)(percentage, message);
+        iter->N() = new_normals[iter-begin].Normalize();
+			}
+
+		};
+
+
 	};
 
 };//end of namespace vcg
