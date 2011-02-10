@@ -153,7 +153,7 @@ namespace vcg{
                     float w0;
                     float w1;
                     float w2;
-                    vcg::InterpolationParameters(*T, C, N, w0, w1, w2);
+                    vcg::InterpolationParameters(*T, N, C, w0, w1, w2);
 
                     float s0 = attr[T->V(0)];
                     float s1 = attr[T->V(1)];
@@ -292,6 +292,13 @@ namespace vcg{
                 return grid;
             }
 
+            /// Number of smoothing iterations to be performed
+            static unsigned int &smoothing_iterations()
+            {
+                static unsigned int iterations = 5;
+                return iterations;
+            }
+
             /// Default Constructor
             QuadDiagonalCollapseBase(){}
 
@@ -384,7 +391,7 @@ namespace vcg{
 
 
                     // Smoothing
-                    for(int i = 0; i < 5; i++)
+                    for(unsigned int i = 0; i < smoothing_iterations(); i++)
                     {
                         for(typename set<VertexPointer>::iterator vi = vertices.begin(); vi!= vertices.end(); ++vi)
                             if(!HalfEdgeTopology<MeshType>::isBorderVertex(*vi))
