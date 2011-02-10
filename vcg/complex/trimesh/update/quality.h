@@ -25,6 +25,7 @@
 #include <vcg/simplex/face/pos.h>
 #include <vcg/simplex/face/topology.h>
 #include <vcg/complex/trimesh/update/flag.h>
+#include <vcg/complex/trimesh/stat.h>
 #include <algorithm>
 #include <vector>
 #include <stack>
