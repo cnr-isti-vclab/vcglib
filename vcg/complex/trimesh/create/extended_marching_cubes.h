@@ -211,7 +211,7 @@ namespace vcg
 					for (n=0; n<vertices_num; ++n)
 						vertices_list.push_back( vertices_idx[ indices[n] ] );
 
-					VertexPointer feature = FindFeature( vertices_list );
+          VertexPointer feature = FindFeature( vertices_list );
 					if (feature != NULL) // i.e. is a valid vertex
 					{
 						// feature -> create triangle fan around feature vertex
@@ -289,11 +289,12 @@ namespace vcg
 
 				CoordType *points		= new CoordType[ vertices_num ];
 				CoordType *normals	= new CoordType[ vertices_num ];
-
+        Box3<ScalarType> bb;
 				for (i=0; i<vertices_num; i++)
 				{
 					points[i]		= _mesh->vert[ vertices_idx[i] ].P();
                     normals[i].Import(_mesh->vert[ vertices_idx[i] ].N());
+         bb.Add(points[i]);
 				}
 
 				// move barycenter of points into (0, 0, 0)
@@ -376,6 +377,10 @@ namespace vcg
 				// transform x to world coords
 				CoordType point((ScalarType) x[0], (ScalarType) x[1], (ScalarType) x[2]);
 				point += center;
+
+        // Safety check if the feature point found by svd is
+        // out of the bbox of the vertices perhaps it is better to put it back in the center...
+        if(!bb.IsIn(point)) point = center;
 
 				// insert the feature-point 
 				VertexPointer mean_point = &*AllocatorType::AddVertices( *_mesh, 1);
