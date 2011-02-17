@@ -176,7 +176,7 @@ public:
 	inline int					NodeCount()									const { return int(nodes.size()); }
 
 	// Return the root index
-	inline const				NodePointer Root()					const	{ return nodes[0];					}
+        inline 				NodePointer Root()					const	{ return nodes[0];					}
 
 	// Return the level of the n-th node
 	inline char					Level(const NodePointer n)	const	{ return n->level;					}
