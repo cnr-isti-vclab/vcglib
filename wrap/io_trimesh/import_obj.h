@@ -713,7 +713,7 @@ public:
 	* \param stream	The object providing the input stream
 	*	\param tokens	The "tokens" in the next line
 	*/
-	inline static const void TokenizeNextLine(std::ifstream &stream, std::vector< std::string > &tokens)
+        inline static void TokenizeNextLine(std::ifstream &stream, std::vector< std::string > &tokens)
 	{
 		if(stream.eof()) return;
 		std::string line;
@@ -744,7 +744,7 @@ public:
 		while (from<length);
 	} // end TokenizeNextLine
 
-	inline static const void SplitToken(std::string token, int &vId, int &nId, int &tId, int mask)
+        inline static void SplitToken(std::string token, int &vId, int &nId, int &tId, int mask)
 	{
   		  std::string vertex;
 			  std::string texcoord;
@@ -760,12 +760,12 @@ public:
 		if(mask & Mask::IOM_WEDGNORMAL)   nId = atoi(normal.c_str())   - 1;
 	}
 
-	inline static const void SplitVToken(std::string token, std::string &vertex) 
+        inline static void SplitVToken(std::string token, std::string &vertex)
 	{
 		vertex = token; 
 	}
 
-	inline static const void SplitVVTToken(std::string token, std::string &vertex, std::string &texcoord)
+        inline static void SplitVVTToken(std::string token, std::string &vertex, std::string &texcoord)
 	{
 		vertex.clear();
 		texcoord.clear();
@@ -794,7 +794,7 @@ public:
 		}
 	}	// end of SplitVVTToken
 
-	inline static const void SplitVVNToken(std::string token, std::string &vertex, std::string &normal)
+        inline static void SplitVVNToken(std::string token, std::string &vertex, std::string &normal)
 	{
 		vertex.clear();
 		normal.clear();
@@ -824,7 +824,7 @@ public:
 		}
 	}	// end of SplitVVNToken
 
-	inline static const void SplitVVTVNToken(std::string token, std::string &vertex, std::string &texcoord, std::string &normal)
+        inline static void SplitVVTVNToken(std::string token, std::string &vertex, std::string &texcoord, std::string &normal)
 	{
 		vertex.clear();
 		texcoord.clear();

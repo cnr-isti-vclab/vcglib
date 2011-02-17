@@ -540,7 +540,7 @@ namespace vcg
 				* \param stream	The object providing the input stream
 				*	\param tokens	The "tokens" in the next line
 				*/
-				inline static const void TokenizeNextLine(std::ifstream &stream, std::vector< std::string > &tokens)
+                                inline static void TokenizeNextLine(std::ifstream &stream, std::vector< std::string > &tokens)
 				{
 					std::string line;
 					do
@@ -558,7 +558,7 @@ namespace vcg
 						if(from!=length)
 						{
 							to = from+1;
-							while ( (line[to]!=' ' && line[to] != '\t'  || line[to] == '\r') && to!=length)
+                            while ( (((line[to]!=' ') && (line[to] != '\t'))  || (line[to] == '\r')) && to!=length)
 								to++;
 							tokens.push_back(line.substr(from, to-from).c_str());
 							from = to;
