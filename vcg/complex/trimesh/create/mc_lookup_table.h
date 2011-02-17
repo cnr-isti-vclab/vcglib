@@ -54,7 +54,7 @@ namespace vcg
 			*   0          1        0          1
 			*/
 			//-----------------------------------------------------------------------------
-			static const char Cases(unsigned char cubetype, unsigned char u)
+            static char Cases(unsigned char cubetype, unsigned char u)
 			{
 				static const char cases[256][2] = {
 					/*   0:                          */  {  0, -1 },
@@ -417,7 +417,7 @@ namespace vcg
 			* A minus sign means to invert the result of the test.
 			*/
 			//-----------------------------------------------------------------------------
-			static const char Test3(unsigned char config)
+            static char Test3(unsigned char config)
 			{
 				static const char test3[24] = {
 					/*   5: 0,    2,                 */    5,
@@ -552,7 +552,7 @@ namespace vcg
 			* A minus sign means to invert the result of the test.
 			*/
 			//-----------------------------------------------------------------------------
-			static const char Test4(unsigned char config)
+            static char Test4(unsigned char config)
 			{
 				static const char test4[8] = {
 					/*  65: 0,                6,     */   7,
@@ -710,7 +710,7 @@ namespace vcg
 			* A minus sign means to invert the result of the test.
 			*/
 			//-----------------------------------------------------------------------------
-			static const char Test6(unsigned char config, int u)
+            static char Test6(unsigned char config, int u)
 			{
 				static const char test6[48][3] = {
 					/*  67: 0, 1,             6,     */  {  2,  7,  10  },
@@ -993,7 +993,7 @@ namespace vcg
 			* A minus sign means to invert the result of the test.
 			*/
 			//-----------------------------------------------------------------------------
-			static const char Test7(unsigned char config, int u)
+            static char Test7(unsigned char config, int u)
 			{
 				static const char test7[16][5] = {
 					/*  37: 0,    2,       5,        */  {  1,  2,  5,  7,   1 },
@@ -1390,7 +1390,7 @@ namespace vcg
 			* A minus sign means to invert the result of the test.
 			*/
 			//-----------------------------------------------------------------------------
-			static const char Test10(unsigned char config, int u)
+            static char Test10(unsigned char config, int u)
 			{
 				static const char test10[6][3] = {
 					/* 195: 0, 1,             6, 7,  */  {  2,  4,  7 },
@@ -1583,7 +1583,7 @@ namespace vcg
 			* A minus sign means to invert the result of the test.
 			*/
 			//-----------------------------------------------------------------------------
-			static const char Test12(unsigned char config, int u)
+            static char Test12(unsigned char config, int u)
 			{
 				static const char test12[24][4] = {
 					/* 135: 0, 1, 2,             7,  */  {  4,  3,  7,  11 },
@@ -1845,7 +1845,7 @@ namespace vcg
 			*/
 			//-----------------------------------------------------------------------------
 			/* 13: face test */
-			static const char Test13(unsigned char config, int u)
+            static char Test13(unsigned char config, int u)
 			{
 				static const char test13[2][7] = {
 					/* 165: 0,    2,       5,    7,  */  { 1,2,3,4,5,6,7 },
@@ -1868,7 +1868,7 @@ namespace vcg
 			*/
 			//-----------------------------------------------------------------------------
 			/* 13: sub configs */
-			static const char Subconfig13(unsigned char config)
+            static char Subconfig13(unsigned char config)
 			{
 				static const char subconfig13[64] = {
 					/*  0: 0,0,0,0,0,0 */   0,
@@ -2287,7 +2287,7 @@ namespace vcg
 			* the cube is not.
 			*/
 			//-----------------------------------------------------------------------------
-			static const char CasesClassic(unsigned char u, unsigned char w)
+            static char CasesClassic(unsigned char u, unsigned char w)
 			{
 				static const char casesClassic[256][16] = {
 					/*   0:                          */  { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 },
