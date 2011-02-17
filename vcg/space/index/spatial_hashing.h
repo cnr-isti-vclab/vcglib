@@ -37,9 +37,16 @@
   #include <ext/hash_map>
   #define STDEXT __gnu_cxx
  #endif
-#else
+#else  // We are in the *nix gcc branch
+#if (__GNUC__ ==4) && (__GNUC_MINOR__ > 3) && (defined(__DEPRECATED))
+  #undef __DEPRECATED // since gcc 4.4 <ext/hash_map> was deprecated and generate warnings. Relax Deprecation Just for this...
+  #define ___WE_UNDEFINED_DEPRECATED__
+#endif
  #include <ext/hash_map>
  #define STDEXT __gnu_cxx
+#if defined(___WE_UNDEFINED_DEPRECATED__)
+#define __DEPRECATED
+#endif
 #endif
 
 
