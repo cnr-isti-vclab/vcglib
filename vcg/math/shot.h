@@ -164,9 +164,11 @@ public:
 	/// GET the i-th axis of the coordinate system of the camera
 	vcg::Point3<S> Axis(const int & i)const;
 
-	/// GET the viewpoint
-	const vcg::Point3<S> GetViewPoint()const;
-	/// SET the viewpoint
+  /// GET the viewdir
+  const vcg::Point3<S> GetViewDir()const;
+  /// GET the viewpoint
+  const vcg::Point3<S> GetViewPoint()const;
+  /// SET the viewpoint
 	void SetViewPoint(const vcg::Point3<S> & viewpoint);
 
 	/// GET fov from focal
@@ -249,6 +251,14 @@ public:
 	}
 
 }; // end class definition
+
+
+
+template <class S, class RotationType>
+const vcg::Point3<S> Shot<S,RotationType>::GetViewDir() const
+{
+  return  Extrinsics.Rot().GetRow3(2);
+}
 
 
 
