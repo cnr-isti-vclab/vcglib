@@ -101,7 +101,7 @@ class HashedPoint3i : public Point3i
 {
 public:
 
-  const size_t Hash() const
+  size_t Hash() const
   {
     return (V(0)*HASH_P0 ^ V(1)*HASH_P1 ^ V(2)*HASH_P2);
   }
@@ -239,7 +239,7 @@ class Clustering
   {
   public:
     CellType *v[3];
-    const int ii(int i) const {return *((int *)(&(v[i])));}
+    int ii(int i) const {return *((int *)(&(v[i])));}
     bool operator < ( const SimpleTri &p) const {
       return	(v[2]!=p.v[2])?(v[2]<p.v[2]):
 				(v[1]!=p.v[1])?(v[1]<p.v[1]):

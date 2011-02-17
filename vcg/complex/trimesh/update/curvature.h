@@ -100,7 +100,7 @@ public:
 
 
 private:
-		typedef struct AdjVertex {
+                struct AdjVertex {
 			VertexType * vert;
 			float doubleArea;
  			bool isBorder;

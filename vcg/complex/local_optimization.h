@@ -255,7 +255,7 @@ public:
 
     /// STL heap has the largest element as the first one.
     /// usually we mean priority as an error so we should invert the comparison
-    inline const bool operator <(const HeapElem & h) const 
+    inline bool operator <(const HeapElem & h) const
     { 
 		  return (pri > h.pri);
 		  //return (locModPtr->Priority() < h.locModPtr->Priority());

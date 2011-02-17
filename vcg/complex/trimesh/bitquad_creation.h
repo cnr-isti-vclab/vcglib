@@ -299,7 +299,7 @@ static bool MakeBitTriQuadConventional(MeshType &m){
 static bool IsBitTriQuadConventional(MeshType &m){
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
     if (fi->IsAnyF())
-    if ( fi->Flags() & ( FaceType::FAUX012 ) != FaceType::FAUX2 ) {
+    if ( (fi->Flags() & FaceType::FAUX012 ) != FaceType::FAUX2 ) {
       return false;
     } 
   }
