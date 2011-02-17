@@ -159,12 +159,12 @@ public:
 	/** Return the pointer to the ((j+1)%3)-th vertex of the face.
 		@param j Index of the face vertex.
 	 */
-  inline typename T::VertexType *      &  V0( const int j )       { return V(j);}
-  inline typename T::VertexType *      &  V1( const int j )       { return V((j+1)%3);}
-  inline typename T::VertexType *      &  V2( const int j )       { return V((j+2)%3);}
-  inline typename T::VertexType * const   V0( const int j ) const { return V(j);}
-  inline typename T::VertexType * const   V1( const int j ) const { return V((j+1)%3);}
-  inline typename T::VertexType * const   V2( const int j ) const { return V((j+2)%3);}
+  inline typename T::VertexType * & V0( const int j )       { return V(j);}
+  inline typename T::VertexType * & V1( const int j )       { return V((j+1)%3);}
+  inline typename T::VertexType * & V2( const int j )       { return V((j+2)%3);}
+  inline typename T::VertexType *   V0( const int j ) const { return V(j);}
+  inline typename T::VertexType *   V1( const int j ) const { return V((j+1)%3);}
+  inline typename T::VertexType *   V2( const int j ) const { return V((j+2)%3);}
   inline typename T::VertexType *  cV0( const int j ) const { return cV(j);}
   inline typename T::VertexType *  cV1( const int j ) const { return cV((j+1)%3);}
   inline typename T::VertexType *  cV2( const int j ) const { return cV((j+2)%3);}
