@@ -64,7 +64,7 @@ namespace vcg{
 	
 	class MatrixDiagBase{public: 
 	virtual const int & Dimension()const =0;
-	virtual const float operator[](const int & i)const = 0;
+        virtual float operator[](const int & i)const = 0;
 	};
 	template<int N, class S> 
 	class MatrixDiag: public Point<N,S>, public MatrixDiagBase{
