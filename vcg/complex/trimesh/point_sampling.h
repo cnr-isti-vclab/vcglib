@@ -1021,15 +1021,19 @@ static void FaceSimilar(MetroMesh & m, VertexSampler &ps,int sampleNum, bool dua
 					{
 						Point2<S> close;
 						S dst;
-						if ( (!flipped && n[i]<0 || flipped && n[i]>0) &&
-							 (dst = ((close = ClosestPoint(borderEdges[i], px)) - px).Norm()) < minDst &&
-							 close.X() > px.X()-1 && close.X() < px.X()+1 &&
-							 close.Y() > px.Y()-1 && close.Y() < px.Y()+1)
-						{
-							minDst = dst;
-							closePoint = close;
-							closeEdge = i;
-						}
+                        if ( ((!flipped) && (n[i]<0)) ||
+                             (  flipped  && (n[i]>0))   )
+                        {
+                            dst = ((close = ClosestPoint(borderEdges[i], px)) - px).Norm();
+                            if(dst < minDst &&
+                               close.X() > px.X()-1 && close.X() < px.X()+1 &&
+                               close.Y() > px.Y()-1 && close.Y() < px.Y()+1)
+                            {
+                                minDst = dst;
+                                closePoint = close;
+                                closeEdge = i;
+                            }
+                        }
 					}
                 }
 
