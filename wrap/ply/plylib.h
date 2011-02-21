@@ -295,12 +295,12 @@ public:
 		// Lettura du un elemento
 	int Read( void * mem );
 
-  std::vector<PlyElement> elements;	// Vettore degli elementi
-	std::vector<std::string>	   comments;	// Vettore dei commenti
+  std::vector<PlyElement>   elements;	// Vettore degli elementi
+	std::vector<std::string>  comments;	// Vettore dei commenti
 	static const char * typenames[9];
 	static const char * newtypenames[9];
 
-	inline const char * GetHeader() const { return header; }
+  inline const char * GetHeader() const { return header.c_str(); }
 protected:
 
 	GZFILE gzfp;
@@ -309,7 +309,7 @@ protected:
 	int    error;				// Errore corrente (vedi enum)
 	int    format;				// Formato del file (vedi enum )
 
-	char   header[4096];			// Testo dell'header	
+  std::string   header;			// Testo dell'header	
 
 	PlyElement * cure;			// Elemento da leggere
 

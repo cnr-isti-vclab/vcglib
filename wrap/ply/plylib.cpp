@@ -1059,7 +1059,8 @@ int PlyFile::OpenRead( const char * filename )
 		goto error;
 	}
 
-	header[0] = 0;
+  header.clear();
+  header.reserve(1536);
 
 		// ********* Parsing header ***********
 
@@ -1069,7 +1070,8 @@ int PlyFile::OpenRead( const char * filename )
 		error = E_UNESPECTEDEOF;
 		goto error;
 	}
-	strcat(header,buf);
+  header.append(buf);
+
 	if( strncmp(buf,HEADER,strlen(HEADER)) )
 	{
 		error = E_NOTHEADER;
@@ -1084,7 +1086,8 @@ int PlyFile::OpenRead( const char * filename )
 		error = E_UNESPECTEDEOF;
 		goto error;
 	}
-	strcat(header,buf);
+  header.append(buf);
+
 	token = strtok(buf,SEP);
 	if(token==0)
 	{
@@ -1131,7 +1134,7 @@ int PlyFile::OpenRead( const char * filename )
 			error = E_UNESPECTEDEOF;
 			goto error;
 		}
-		strcat(header,buf);
+    header.append(buf);
 
 		token = strtok(buf,SEP);
 		if(token==0)
