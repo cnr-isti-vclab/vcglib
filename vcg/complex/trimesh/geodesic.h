@@ -172,12 +172,13 @@ class Geo{
 	  wrapping function.
 	*/
  	static  VertexPointer Visit( 
-		 MeshType & m,
-		 std::vector<VertDist> & _inputfrontier,
-		 ScalarType & max_distance,
-		 bool farthestOnBorder = false,
-		 typename MeshType::template PerVertexAttributeHandle<VertexPointer> * sources = NULL
-		 )
+     MeshType & m,
+     std::vector<VertDist> & seedVec,
+     ScalarType & max_distance,
+     bool farthestOnBorder = false,
+     ScalarType distance_threshold  = std::numeric_limits<ScalarType>::max(),
+     typename MeshType::template PerVertexAttributeHandle<VertexPointer> * sources = NULL
+     )
 {
 	bool isLeaf;
 	std::vector<VertDist> frontier;
@@ -196,12 +197,12 @@ class Geo{
 
 	//Requirements
 	assert(m.HasVFTopology());
-	assert(!_inputfrontier.empty());
+  assert(!seedVec.empty());
 
 	TempDataType  * TD;
 	TD = new TempDataType(m.vert,unreached);
 
-	for(ifr = _inputfrontier.begin(); ifr != _inputfrontier.end(); ++ifr){
+  for(ifr = seedVec.begin(); ifr != seedVec.end(); ++ifr){
 		(*TD)[(*ifr).v].d = 0.0;	
 		(*ifr).d = 0.0;
 		(*TD)[(*ifr).v].source  = (*ifr).v;
@@ -215,7 +216,7 @@ class Geo{
 		max_distance=0.0;
 		typename std::vector<VertDist >:: iterator iv;
 
- 		while(!frontier.empty())
+    while(!frontier.empty() && max_distance < distance_threshold)
 			{  
 				pop_heap(frontier.begin(),frontier.end(),pred());
 				curr = (frontier.back()).v;
@@ -303,6 +304,7 @@ public:
 									std::vector<VertexPointer> & fro, 
 									VertexPointer & farthest,		 
 									ScalarType & distance,
+                 ScalarType distance_thr  = std::numeric_limits<ScalarType>::max(),
 									typename MeshType::template PerVertexAttributeHandle<VertexPointer> * sources = NULL){					
 
 									typename std::vector<VertexPointer>::iterator fi; 
@@ -311,7 +313,7 @@ public:
 										
 									for( fi  = fro.begin(); fi != fro.end() ; ++fi)
 										fr.push_back(VertDist(*fi,0.0));
-									farthest = Visit(m,fr,distance,false,sources); 
+                  farthest = Visit(m,fr,distance,false,distance_thr,sources);
 									return true;
 					  }
 	/*
@@ -322,11 +324,12 @@ public:
  static void FarthestVertex( MeshType & m, 
 									VertexPointer seed,
 									VertexPointer & farthest,		 
-									ScalarType & distance){	
-	std::vector<VertexPointer>  fro;
-	fro.push_back( seed );
+                  ScalarType & distance,
+                 ScalarType distance_thr  = std::numeric_limits<ScalarType>::max()){
+  std::vector<VertexPointer>  seedVec;
+  seedVec.push_back( seed );
 	VertexPointer v0;
-	FarthestVertex(m,fro,v0,distance);
+  FarthestVertex(m,seedVec,v0,distance,distance_thr);
 	farthest = v0;
 }
 
@@ -335,7 +338,7 @@ public:
 	Note: update the field Q() of the vertices
 */
  static void FarthestBVertex(MeshType & m,
-										std::vector<VertexPointer> & fro,  
+                    std::vector<VertexPointer> & seedVec,
 										VertexPointer & farthest,	     
 										ScalarType & distance,
 										typename MeshType::template PerVertexAttributeHandle<VertexPointer> * sources = NULL
@@ -344,7 +347,7 @@ public:
 	typename std::vector<VertexPointer>::iterator fi; 
 	std::vector<VertDist>fr;
 
-	for( fi  = fro.begin(); fi != fro.end() ; ++fi)
+  for( fi  = seedVec.begin(); fi != seedVec.end() ; ++fi)
 		fr.push_back(VertDist(*fi,-1));
 	farthest =  Visit(m,fr,distance,true,sources); 
 }
@@ -379,10 +382,10 @@ public:
 		if( (*vi).IsB())
 			fro.push_back(&(*vi));
 	if(fro.empty()) return false;
-	
+
 	tri::UpdateQuality<CMeshO>::VertexConstant(m,0);
 		
-	return FarthestVertex(m,fro,farthest,distance,sources);
+  return FarthestVertex(m,fro,farthest,distance,std::numeric_limits<ScalarType>::max(),sources);
 }
 
  };
