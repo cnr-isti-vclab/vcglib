@@ -20,46 +20,7 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
 
-$Log: not supported by cvs2svn $
-Revision 1.11  2007/05/04 16:34:31  ganovelli
-changes to comply "plus" types
-
-Revision 1.10  2006/05/21 07:00:01  cignoni
-Removed not working Equalized color (use funcs in stat.h)
-
-Revision 1.9  2006/03/01 10:29:55  ponchio
-HACK: MaxVal(0.0f) not defined in vcg/math/base.h as it should be,
-changing it to 1e36 (pretty close :P)
-
-Revision 1.8  2005/12/19 16:47:42  cignoni
-Better comment and a parameter more for UpdateColor::VertexBorderFlag
-
-Revision 1.7  2005/08/08 10:28:13  ganovelli
-added math:: namespace before min and max
-
-Revision 1.6  2004/08/25 15:15:26  ganovelli
-minor changes to comply gcc compiler (typename's and stuff)
-
-Revision 1.5  2004/07/15 00:13:39  cignoni
-Better doxigen documentation
-
-Revision 1.4  2004/06/24 07:56:54  cignoni
-now use std::numeric_limits instead of old max val()
-
-Revision 1.3  2004/03/12 15:22:19  cignoni
-Written some documentation and added to the trimes doxygen module
-
-Revision 1.2  2004/03/10 00:48:06  cignoni
-changed to the face::IsBorder() style
-
-Revision 1.1  2004/03/05 10:59:24  cignoni
-Changed name from plural to singular (normals->normal)
-
-
-****************************************************************************/
 #ifndef __VCG_TRI_UPDATE_COLOR
 #define __VCG_TRI_UPDATE_COLOR
 #include <limits>
@@ -69,7 +30,7 @@ Changed name from plural to singular (normals->normal)
 #include <vcg/complex/trimesh/stat.h>
 #include <vcg/math/perlin_noise.h>
 #include <vcg/math/random_generator.h>
-
+#include <vcg/complex/trimesh/clean.h>
 namespace vcg {
 namespace tri {
 
@@ -183,6 +144,24 @@ static void VertexBorderFlag( UpdateMeshType &m, Color4b BorderColor=Color4b::Bl
 				if( (*fi).V1(j)->C() == BorderColor) (*fi).V1(j)->C() = MixColor;
 			}
 
+}
+
+
+/// This function colores the face of a mesh randomly.
+/// The faux bit is used to color polygonal faces uniformly
+static void FaceRandomConnectedComponent( UpdateMeshType &m)
+{
+  std::vector< std::pair<int, typename UpdateMeshType::FacePointer> > CCV;
+  int ScatterSize= min (100,tri::Clean<UpdateMeshType>::ConnectedComponents(m, CCV)); // number of random color to be used. Never use too many.
+
+  ConnectedIterator<MeshType> ci;
+  for(unsigned int i=0;i<CCV.size();++i)
+  {
+    Color4b BaseColor = Color4b::Scatter(ScatterSize, i%ScatterSize,.4f,.7f);
+    std::vector<typename MeshType::FacePointer> FPV;
+    for(ci.start(m,CCV[i].second);!ci.completed();++ci)
+            (*ci)->C()=BaseColor;
+  }
 }
 
 /// This function colores the face of a mesh randomly.
