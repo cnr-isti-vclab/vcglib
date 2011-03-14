@@ -25,7 +25,7 @@
 #ifndef CACHE_DOOR_H
 #define CACHE_DOOR_H
 
-
+#include <QDebug>
 
 
 /*
@@ -69,32 +69,41 @@ class QDoor {
 class QDoor {
  public:
 
-  QDoor(void) : doorOpen(false) {}
+  QDoor(void) : doorOpen(false), waiting(false) {}
 
   ///opens the door. Threads trying to enter will be awakened
   void open(void) {
-    this->m.lock();
-    this->doorOpen = true;
-    this->m.unlock();
-    this->c.wakeAll();
+    m.lock();
+    doorOpen = true;
+    m.unlock();
+    c.wakeAll();
   }
 
   ///attempt to enter the door. if the door is closed the thread will wait until the door is opened.
   /** if close is true, the door will be closed after the thread is awakened, this allows to 
      have only one thread entering the door each time open() is called */
   void enter(bool close = false) {
-    this->m.lock();
-    while (!this->doorOpen) 
-      this->c.wait(&(this->m));
+    m.lock();
+    waiting = true;
+    while (!doorOpen)
+      c.wait(&(m));
     
     if(close) 
-      this->doorOpen = false;
-    this->m.unlock();
+      doorOpen = false;
+    waiting = false;
+    m.unlock();
+  }
+  bool isWaiting() {
+    m.lock();
+    bool w = waiting;
+    m.unlock();
+    return w;
   }
  private:
   QMutex m;
   QWaitCondition c;
   bool doorOpen;
+  bool waiting;
 };
 
 

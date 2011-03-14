@@ -1,6 +1,7 @@
 #ifndef GCACHE_CONTROLLER_H
 #define GCACHE_CONTROLLER_H
 
+#include <QDebug>
 #include "cache.h"
 
 /** Allows to insert tokens, update priorities and generally control the cache.
@@ -35,9 +36,12 @@ class Controller {
     caches.push_back(cache);
   }
   ///insert a token in the last provider (actual insertion is done on updatePriorities)
-  void addToken(Token *token) {
-    token->count = Token::CACHE;
-    tokens.push_back(token);
+  bool addToken(Token *token) {
+    if(token->count.testAndSetOrdered(Token::OUTSIDE, Token::CACHE)) {
+      tokens.push_back(token);
+      return true;
+    }
+    return false;
   }
 
   ///WARNING: migh stall for the time needed to drop tokens from cache.
@@ -122,8 +126,15 @@ class Controller {
   }
   ///empty all caches
   void flush() {
-    for(unsigned int i = caches.size()-1; i >= 0; i--)
+    for(int i = (int)caches.size()-1; i >= 0; i--)
       caches[i]->flush();
+  }
+  bool isWaiting() {
+    for(int i = (int)caches.size() -1; i >= 0; i--) {
+      if(!caches[i]->input->check_queue.isWaiting()) return false;
+    }
+    qDebug() << "is waiting";
+    return true;
   }
 };
 

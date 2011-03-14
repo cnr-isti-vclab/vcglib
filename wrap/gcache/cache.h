@@ -42,7 +42,7 @@ class Cache: public Provider<Token> {
   quint64 size() { return s_curr; }
   void setCapacity(quint64 c) { s_max = c; }
   ///return true if the cache is waiting for priority to change
-  bool isWaiting() { return waiting; }
+  bool isWaiting() { return input->check_queue.isWaiting(); }
 
   ///empty the cache. Make sure no resource is locked before calling this.
   void flush() {
@@ -120,9 +120,7 @@ class Cache: public Provider<Token> {
        2) make room until eliminating an element would leave space. */
     begin();
     while(!this->quit) {
-      waiting = true;
-      input->check_queue.enter(true);     //wait for cache below to load someghing or priorities to change
-      waiting = false;
+      input->check_queue.enter(true);     //wait for cache below to load something or priorities to change
 
       if(this->quit) break;
 
