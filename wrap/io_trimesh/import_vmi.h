@@ -652,15 +652,15 @@ namespace io {
             if(fnameV != nameV) return VMI_INCOMPATIBLE_VERTEX_TYPE;
             if(fnameF != nameF) return VMI_INCOMPATIBLE_FACE_TYPE;
 
-			 int offsetV=0,offsetF=0;
+			 void *  offsetV = 0,*offsetF = 0;
 
 			 if(vertSize!=0)
 				/* read the address of the first vertex */
-				fread(&offsetV,sizeof( int),1,F());
+				fread(&offsetV,sizeof( void *),1,F());
 
 			 if(faceSize!=0)
 				/* read the address of the first face */
-				fread(&offsetF,sizeof( int),1,F());
+				fread(&offsetF,sizeof( void *),1,F());
 
 			/* read the object mesh */
 			fread(&m.shot,sizeof(Shot<typename OpenMeshType::ScalarType>),1,F());
