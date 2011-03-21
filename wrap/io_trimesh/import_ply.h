@@ -431,7 +431,7 @@ static bool ErrorCritical(int err)
 }
 	
 
-/// Standard call for reading a mesh
+/// Standard call for reading a mesh, returns 0 on success.
 static int Open( OpenMeshType &m, const char * filename, CallBackPos *cb=0)
 {
 	PlyInfo pi;
@@ -453,7 +453,7 @@ static int Open( OpenMeshType &m, const char * filename, int & loadmask, CallBac
 }
 
 
-/// read a mesh with all the possible option specified in the PlyInfo obj.
+/// read a mesh with all the possible option specified in the PlyInfo obj, returns 0 on success.
 static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 {
   assert(filename!=0);

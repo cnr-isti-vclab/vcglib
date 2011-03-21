@@ -103,14 +103,14 @@ static bool FileExtension(std::string filename,  std::string extension)
   return end==extension;
 }
 
-// Open Mesh
+// Open Mesh, returns 0 on success.
 static int Open(OpenMeshType &m, const char *filename, CallBackPos *cb=0)
 {
   int dummymask = 0;
   return Open(m,filename,dummymask,cb);
 }
 
-// Open Mesh and return the load mask (the load mask must be initialized first)
+/// Open Mesh and fills the load mask (the load mask must be initialized first); returns 0 on success.
 static int Open(OpenMeshType &m, const char *filename, int &loadmask, CallBackPos *cb=0)
 {
 	int err;
