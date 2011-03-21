@@ -28,6 +28,73 @@
 
 namespace vcg {
 namespace tri {
+/// \ingroup trimesh
+/// \brief A stack for saving and restoring selection.
+/**
+  This class is used to save the current selection onto a stack for later use.
+  \todo it should be generalized to other attributes with a templated approach.
+*/
+template <class ComputeMeshType>
+class SelectionStack
+{
+  typedef typename ComputeMeshType::template PerVertexAttributeHandle< bool > vsHandle;
+  typedef typename ComputeMeshType::template PerFaceAttributeHandle< bool > fsHandle;
+
+public:
+  SelectionStack(ComputeMeshType &m)
+  {
+    _m=&m;
+  }
+
+  bool push()
+  {
+    vsHandle vsH = Allocator<ComputeMeshType>::template AddPerVertexAttribute< bool >(*_m);
+    fsHandle fsH = Allocator<ComputeMeshType>::template AddPerFaceAttribute< bool >  (*_m);
+    typename ComputeMeshType::VertexIterator vi;
+    for(vi = _m->vert.begin(); vi != _m->vert.end(); ++vi)
+      if( !(*vi).IsD() ) vsH[*vi] = (*vi).IsS() ;
+
+    typename ComputeMeshType::FaceIterator fi;
+    for(fi = _m->face.begin(); fi != _m->face.end(); ++fi)
+      if( !(*fi).IsD() ) fsH[*fi] = (*fi).IsS() ;
+
+    vsV.push_back(vsH);
+    fsV.push_back(fsH);
+    return true;
+  }
+
+  bool pop()
+  {
+    if(vsV.empty()) return false;
+    vsHandle vsH = vsV.back();
+    fsHandle fsH = fsV.back();
+    if(! (Allocator<ComputeMeshType>::template IsValidHandle(*_m, vsH))) return false;
+
+    typename ComputeMeshType::VertexIterator vi;
+    for(vi = _m->vert.begin(); vi != _m->vert.end(); ++vi)
+      if( !(*vi).IsD() )
+        if(vsH[*vi]) (*vi).SetS() ;
+        else (*vi).ClearS() ;
+
+    typename ComputeMeshType::FaceIterator fi;
+    for(fi = _m->face.begin(); fi != _m->face.end(); ++fi)
+      if( !(*fi).IsD() )
+          if(fsH[*fi]) (*fi).SetS() ;
+                  else (*fi).ClearS() ;
+
+    Allocator<ComputeMeshType>::template DeletePerVertexAttribute<bool>(*_m,vsH);
+    Allocator<ComputeMeshType>::template DeletePerFaceAttribute<bool>(*_m,fsH);
+    vsV.pop_back();
+    fsV.pop_back();
+    return true;
+  }
+
+private:
+  ComputeMeshType *_m;
+  std::vector<vsHandle> vsV;
+  std::vector<fsHandle> fsV;
+
+};
 
 /// \ingroup trimesh 
 
