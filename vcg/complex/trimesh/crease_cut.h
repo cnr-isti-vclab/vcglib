@@ -68,7 +68,7 @@ void CreaseCut(MESH_TYPE &m, float angleRad)
 	
 	tri::UpdateNormals<MESH_TYPE>::NormalizeFace(m);
 	
-	assert(m.HasFFTopology());
+  assert(tri::HasFFAdjacency(m));
   typename MESH_TYPE::ScalarType cosangle=math::Cos(angleRad);
 
 	tri::UpdateFlags<MESH_TYPE>::VertexClearV(m);
@@ -145,57 +145,3 @@ void CreaseCut(MESH_TYPE &m, float angleRad)
 } // end namespace vcg
 #endif
 
-/*
- face::Pos<FaceType> startPos=iPos;
- const FaceType * nextf;
- 
- do{
-	 size_t faceInd = Index(m,iPos.f);	
-	 assert(iPos.f->V(iPos.VInd()) ==iPos.v);
-	 qDebug("Face %2i:%i - v%2i -- %2i",faceInd,iPos.VInd(),Index(m,iPos.v),curVertexCounter);
-	 indVec[faceInd*3+ iPos.VInd()] = curVertexCounter;
-	 
-	 nextf=iPos.FFlip();
-	 ScalarType dotProd=nextf->cN() * iPos.f->N();
-	 iPos.FlipF();
-	 iPos.FlipE();
-	 if(dotProd<cosangle)
-	 {
-		 ++creaseCounter;									 
-		 if(iPos!=startPos)  
-		 {
-			 qDebug("Crease");
-			 curVertexCounter=newVertexCounter;
-			 newVertexCounter++;
-		 }
-	 }
- }
- while((iPos!=startPos) && (!iPos.IsBorder()) );
- qDebug("-- End Loop on v %i",Index(m,iPos.v));
-				 }
-	
-	// A questo punto ho un vettore che mi direbbe per ogni faccia quale vertice devo mettere. Dopo che ho aggiunto i vertici necessari,
-	// rifaccio il giro delle facce
-	qDebug("adding %i vert for %i crease edges ",newVertexCounter-m.vn, creaseCounter);				
-	tri::Allocator<MESH_TYPE>::AddVertices(m,newVertexCounter-m.vn);
- 
-	tri::UpdateFlags<MESH_TYPE>::VertexClearV(m);
-	for(fi=m.face.begin();fi!=m.face.end();++fi)
- for(int j=0;j<3;++j) // foreach unvisited vertex
- {
-			size_t faceInd = Index(m, *fi);	
-			size_t vertInd = Index(m, (*fi).V(j));	
-			int curVertexInd = indVec[faceInd*3+ j];
-			qDebug("Setting Face %2i vert %2i : %2i -> %2i",faceInd,j,vertInd,curVertexInd);
-			assert(curVertexInd != -1);
-			assert(curVertexInd < m.vn);
-			if(curVertexInd < startVn) assert(curVertexInd == vertInd); 
-			if(curVertexInd >= startVn)
-			{
-				//m.vert[curVertexInd].ImportData(*((*fi).V(j)));
-				tri::Append<CMeshO,CMeshO>::ImportVertex(m.vert[curVertexInd],*((*fi).V(j)));
-				(*fi).V(j) = & m.vert[curVertexInd];
-			}
- }		
- 
-*/
