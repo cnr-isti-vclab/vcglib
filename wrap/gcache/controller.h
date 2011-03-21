@@ -35,7 +35,7 @@ class Controller {
     assert(cache->input);
     caches.push_back(cache);
   }
-  ///insert a token in the last provider (actual insertion is done on updatePriorities)
+  ///insert the token in the cache if not already present (actual insertion is done on updatePriorities)
   bool addToken(Token *token) {
     if(token->count.testAndSetOrdered(Token::OUTSIDE, Token::CACHE)) {
       tokens.push_back(token);
@@ -133,7 +133,6 @@ class Controller {
     for(int i = (int)caches.size() -1; i >= 0; i--) {
       if(!caches[i]->input->check_queue.isWaiting()) return false;
     }
-    qDebug() << "is waiting";
     return true;
   }
 };
