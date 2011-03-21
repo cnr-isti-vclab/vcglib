@@ -148,26 +148,16 @@ Point2<ScalarType> ClosestPoint( Segment2<ScalarType> s, const Point2<ScalarType
 {
 	vcg::Line2<ScalarType> l;
 	l.Set(s.P0(),s.P1()-s.P0());
-	l.Normalize();
-	Point2<ScalarType> clos=vcg::ClosestPoint<ScalarType,true>(l,p) ;//attention to call
-	vcg::Box2<ScalarType> b;
-	b.Add(s.P0());
-	b.Add(s.P1());
-	if (b.IsIn(clos))
-		return clos;
+	l = l.Normalize();
+	ScalarType t = l.Projection(p);
+	Point2<ScalarType> clos = l.P(t);
+	int lenght = s.Length();
+	if (t <= 0)
+		return s.P0();
+	else if (t >= lenght)
+		return s.P1();
 	else
-	{
-		ScalarType d0=(s.P0()-p).Norm();
-		ScalarType d1=(s.P1()-p).Norm();
-		if (d0<d1)
-			return (s.P0());
-		else
-			return (s.P1());
-	}
-	/*ScalarType t = s.Projection(p); 
-	if (s<0) return s.P0();
-	if (s>1) return s.P0();
-	return s.P(t);*/ 
+		return clos;
 }
 
 /*@}*/
