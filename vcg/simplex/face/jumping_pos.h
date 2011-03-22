@@ -58,7 +58,8 @@ namespace vcg
 			JumpingPos(FaceType * const pFace, int const z)															: Pos<FACE_TYPE>(pFace, z)						{  }
 			JumpingPos(FaceType * const pFace, VertexType * const pVertex)							: Pos<FACE_TYPE>(pFace, pVertex)			{  }
 
-			bool FindBorder()
+      /// Move the pos to a border (if exists). Return true if actually succeed to find a border
+      bool FindBorder()
 			{
 				PosType startPos=*this;
 				do
