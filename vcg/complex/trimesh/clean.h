@@ -371,7 +371,73 @@ private:
 					return count_removed;
 			}
 			
-			
+
+      /// Removal of faces that were incident on a non manifold edge.
+      static int SplitNonManifoldVertex(MeshType& m)
+      {
+        FaceIterator fi;
+        int count_sv = 0; // split vertex counter
+        typedef std::pair<FacePointer,int> FaceInt;
+
+        std::vector<std::pair<VertexPointer, std::vector<FaceInt> > >ToSplitVec;
+
+        SelectionStack<MeshType> ss(m);
+        ss.push();
+        CountNonManifoldVertexFF(m,true);
+        UpdateFlags<MeshType>::VertexClearV(m);
+        for (fi = m.face.begin(); fi != m.face.end(); ++fi)	if (!fi->IsD())
+        {
+          for(int i=0;i<3;i++)
+            if((*fi).V(i)->IsS() && !(*fi).V(i)->IsV())
+            {
+              (*fi).V(i)->SetV();
+              face::Pos<FaceType> startPos(&*fi,i);
+              face::Pos<FaceType> curPos = startPos;
+              std::set<FaceInt> faceSet;
+              do
+              {
+                faceSet.insert(make_pair(curPos.F(),curPos.VInd()));
+                curPos.NextE();
+              } while (curPos != startPos);
+
+              ToSplitVec.push_back(make_pair((*fi).V(i),std::vector<FaceInt>()));
+
+              typename std::set<FaceInt>::const_iterator iii;
+
+              for(iii=faceSet.begin();iii!=faceSet.end();++iii)
+                ToSplitVec.back().second.push_back(*iii);
+            }
+        }
+        ss.pop();
+        // Second step actually add new vertices and split them.
+        typename tri::Allocator<MeshType>::template PointerUpdater<VertexPointer> pu;
+        VertexIterator firstVp = tri::Allocator<MeshType>::AddVertices(m,ToSplitVec.size(),pu);
+        for(int i =0;i<ToSplitVec.size();++i)
+        {
+          qDebug("Splitting Vertex %i",ToSplitVec[i].first-&*m.vert.begin());
+          VertexPointer np=ToSplitVec[i].first;
+          pu.Update(np);
+          firstVp->ImportData(*np);
+          for(int j=0;j<ToSplitVec[i].second.size();++j)
+          {
+            FaceInt ff=ToSplitVec[i].second[j];
+            ff.first->V(ff.second)=&*firstVp;
+          }
+          firstVp++;
+        }
+
+        return ToSplitVec.size();
+      }
+
+
+      // Auxiliary function for sorting the non manifold faces according to their area. Used in  RemoveNonManifoldFace
+      struct CompareAreaFP {
+          bool operator ()(FacePointer const& f1, FacePointer const& f2) const {
+             return DoubleArea(*f1) < DoubleArea(*f2);
+          }
+      };
+
+      /// Removal of faces that were incident on a non manifold edge.
       static int RemoveNonManifoldFace(MeshType& m)
       {
 				FaceIterator fi;
@@ -386,7 +452,9 @@ private:
 								(!IsManifold(*fi,2)))
 					                  ToDelVec.push_back(&*fi);
 					}
-          
+
+          std::sort(ToDelVec.begin(),ToDelVec.end(),CompareAreaFP());
+
           for(size_t i=0;i<ToDelVec.size();++i)
           {
             if(!ToDelVec[i]->IsD())
@@ -688,7 +756,7 @@ private:
       static int CountNonManifoldVertexFF( MeshType & m, bool selectVert = true )
 			{
         assert(tri::HasFFAdjacency(m));
-        UpdateSelection<MeshType>::ClearVertex(m);
+        if(selectVert) UpdateSelection<MeshType>::ClearVertex(m);
 
 				int nonManifoldCnt=0;
 				SimpleTempData<typename MeshType::VertContainer, int > TD(m.vert,0);
