@@ -146,12 +146,11 @@ typedef Segment2<double> Segment2d;
 template <class ScalarType> 
 Point2<ScalarType> ClosestPoint( Segment2<ScalarType> s, const Point2<ScalarType> & p) 
 {
-	vcg::Line2<ScalarType> l;
+	vcg::Line2<ScalarType, true> l;
 	l.Set(s.P0(),s.P1()-s.P0());
-	l = l.Normalize();
 	ScalarType t = l.Projection(p);
 	Point2<ScalarType> clos = l.P(t);
-	int lenght = s.Length();
+	ScalarType lenght = s.Length();
 	if (t <= 0)
 		return s.P0();
 	else if (t >= lenght)
