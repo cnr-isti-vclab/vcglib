@@ -20,109 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.32  2007/10/17 19:46:50  cignoni
-Added I() access function for the z member to the pos
-
-Revision 1.31  2007/05/28 14:09:41  fiorin
-Added Set method which takes a face pointer and a vertex pointer.
-
-Revision 1.30  2007/05/16 15:11:32  fiorin
-Replaced ambigous StarSize method with NumberOfIncidentVertices and NumberOfIncidentFaces
-
-Revision 1.29  2007/04/20 12:40:31  cignoni
-Corrected  V() operator. It was plainly wrong. Luckly enough it was not very used
-
-Revision 1.28  2007/01/11 10:37:08  cignoni
-Added include assert.h
-
-Revision 1.27  2007/01/02 10:06:53  giec
-Added access functions F()
-
-Revision 1.26  2006/12/29 13:13:00  giec
-Corrected wrong assert in V(i) access function
-
-Revision 1.25  2006/12/04 16:06:12  cignoni
-Added FFlip() and const VFlip() operators
-
-Revision 1.24  2006/11/13 01:57:23  cignoni
-Added a missing prototype to ismanifold
-
-Revision 1.23  2006/11/09 17:22:56  cignoni
-Added ismanifold
-
-Revision 1.22  2006/10/07 14:24:26  cignoni
-Explained the use of V() operator of a pos
-
-Revision 1.21  2006/09/25 09:57:49  cignoni
-Better comment on usage of VF iterators
-
-Revision 1.20  2005/12/15 11:57:48  corsini
-Replace Pos<FaceType> with PosType
-
-Revision 1.19  2005/12/15 11:19:00  corsini
-Fix operators
-
-Revision 1.18  2005/12/15 10:53:16  corsini
-Add constructor which takes as input a face and a vertex
-
-Revision 1.17  2005/10/16 23:30:39  ponchio
-IsBorder(...) declaration needed.
-
-Revision 1.16  2005/10/13 09:29:10  cignoni
-Removed the reference to Deprecated f->IsBorder(i) now everyone should use IsBorder(*f,i);
-
-Revision 1.15  2005/01/03 11:22:31  cignoni
-Added better documentation (with an example and the V0 V1 V2 access members
-
-Revision 1.14  2004/10/28 00:50:48  cignoni
-Better Doxygen documentation
-
-Revision 1.13  2004/10/18 17:14:42  ganovelli
-error FFP -> FFp
-
-Revision 1.12  2004/09/14 19:46:10  ganovelli
-constructor added
-
-Revision 1.11  2004/08/25 15:15:27  ganovelli
-minor changes to comply gcc compiler (typename's and stuff)
-
-Revision 1.10  2004/07/27 09:47:49  cignoni
-Added V() access function instead of V(0)
-
-Revision 1.9  2004/07/18 07:45:30  cignoni
-Removed two const modifiers from the VFIterator
-
-Revision 1.8  2004/07/15 12:03:07  ganovelli
-minor changes
-
-Revision 1.7  2004/07/15 11:28:44  ganovelli
-basefacetype to facetype
-
-Revision 1.6  2004/07/06 06:25:44  cignoni
-changed the VFIterator ++ to return a facepointer instead of a bool
-
-Revision 1.5  2004/06/02 16:25:45  ganovelli
-changed F(.. to FFp
-changed Z(   to FFi(
-
-Revision 1.4  2004/05/10 15:21:47  cignoni
-Added a constructor without vertex pointer
-
-Revision 1.3  2004/05/10 13:41:57  cignoni
-Added VFIterator
-
-Revision 1.2  2004/03/12 15:22:28  cignoni
-Written some documentation and added to the trimes doxygen module
-
-Revision 1.1  2004/03/10 08:32:30  cignoni
-Initial commit
-
-
-****************************************************************************/
 
 /** \file face/pos.h
  * Definition of vcg:face::Pos class.
@@ -398,6 +295,24 @@ public:
 		else					return count;
 	}
 
+
+
+  /*!
+  * Returns the number of faces incident on the edge the pos is currently pointing to.
+  * useful to compute the complexity of a non manifold edge
+  */
+  int NumberOfFacesOnEdge() const
+  {
+    int  count		 = 0;
+    PosType ht = *this;
+    do
+    {
+      ht.NextF();
+      ++count;
+    }
+    while (ht!=*this);
+    return count;
+  }
 	/** Function to inizialize an half-edge.
 		@param fp Puntatore alla faccia
 		@param zp Indice dell'edge
