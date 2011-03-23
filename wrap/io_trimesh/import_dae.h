@@ -119,17 +119,17 @@ namespace io {
 			return indtx;
 		}
 
-		static int WedgeColorAttribute(ColladaMesh& m,const QStringList face,const QStringList wc,const QDomNode wcsrc,const int meshfaceind,const int faceind,const int component)
+		static int VertexColorAttribute(ColladaMesh& m,const QStringList face,const QStringList wc,const QDomNode wcsrc,const int meshfaceind,const int faceind, const int vertind,const int component)
 		{
 			int indcl = -1;
 			if (!wcsrc.isNull())
 			{
 				indcl = face.at(faceind).toInt();
-				assert(indcl * 4 < wc.size());
-				m.face[meshfaceind].WC(component) = vcg::Color4b(	(unsigned char)(wc.at(indcl * 4).toFloat()),
-																													(unsigned char)(wc.at(indcl * 4 + 1).toFloat()),
-																													(unsigned char)(wc.at(indcl * 4 + 2).toFloat()),
-																													(unsigned char)(wc.at(indcl * 4 + 3).toFloat()));
+				assert(indcl * 3 < wc.size());
+				m.vert[vertind].C() = vcg::Color4b(	(unsigned char)(wc.at(indcl * 3).toFloat()*255.0),
+																													(unsigned char)(wc.at(indcl * 3 + 1).toFloat()*255.0),
+																													(unsigned char)(wc.at(indcl * 3 + 2).toFloat()*255.0),
+																													1.0);
 			}
 			return indcl;
 		}
@@ -397,7 +397,7 @@ namespace io {
 							m.face[ff].V(tt) = &(m.vert[indvt + offset]);
 
 							if(tri::HasPerWedgeNormal(m)) WedgeNormalAttribute(m,face,wa.wn,wa.wnsrc,ff,jj + wa.offnm,tt);
-							if(tri::HasPerWedgeColor(m)) 	WedgeColorAttribute(m,face,wa.wc,wa.wcsrc,ff,jj + wa.offcl,tt);
+							if(tri::HasPerVertexColor(m)) 	VertexColorAttribute(m,face,wa.wc,wa.wcsrc,ff,jj + wa.offcl,indvt + offset,tt);
 
 							if(tri::HasPerWedgeTexCoord(m) && ind_txt != -1)
 							{
@@ -522,11 +522,11 @@ namespace io {
 							m.vert[vv].N() = normalCoord;
 						}
 
-						/*if (!srcnodecolor.isNull())
+						if (!srcnodecolor.isNull())
 						{
-						assert((ii * 4 < geosrcvertcol.size()) && (ii * 4 + 1 < geosrcvertcol.size()) && (ii * 4 + 2 < geosrcvertcol.size()) && (ii * 4 + 1 < geosrcvertcol.size()));
-						m.vert[vv].C() = vcg::Color4b(geosrcvertcol[ii * 4].toFloat(),geosrcvertcol[ii * 4 + 1].toFloat(),geosrcvertcol[ii * 4 + 2].toFloat(),geosrcvertcol[ii * 4 + 3].toFloat());
-						}*/
+						//assert((ii * 4 < geosrcvertcol.size()) && (ii * 4 + 1 < geosrcvertcol.size()) && (ii * 4 + 2 < geosrcvertcol.size()) && (ii * 4 + 1 < geosrcvertcol.size()));
+							m.vert[vv].C() = vcg::Color4b(geosrcvertcol[ii * 3].toFloat()*255.0,geosrcvertcol[ii * 3 + 1].toFloat()*255.0,geosrcvertcol[ii * 3 + 2].toFloat()*255.0,1.0);
+						}
 
 						if (!srcnodetext.isNull())
 						{
@@ -542,6 +542,20 @@ namespace io {
 					QDomNodeList tripatch = geo.toElement().elementsByTagName("triangles");
 					QDomNodeList polypatch = geo.toElement().elementsByTagName("polygons");
 					QDomNodeList polylist = geo.toElement().elementsByTagName("polylist");
+					QStringList vertcount;
+					valueStringList(vertcount,polylist.at(0),"vcount");
+					int isTri=true;
+					for (int i=0; i<vertcount.size(); i++)
+					{
+						if (vertcount[i]!="3")
+						{
+							isTri=false;
+							break;
+						}
+						
+					}
+					if (isTri && tripatch.isEmpty())
+						tripatch=polylist;
 					if (tripatch.isEmpty()  && polypatch.isEmpty() && polylist.isEmpty())
 						return E_NOPOLYGONALMESH;
 					
@@ -549,7 +563,7 @@ namespace io {
 					err = LoadTriangularMesh(tripatch,m,offset,info,materialBinding);
 					//err = LoadPolygonalMesh(polypatch,m,offset,info);
 			//					err = OldLoadPolygonalListMesh(polylist,m,offset,info);
-                                        err = LoadPolygonalListMesh(polylist,m,offset,info,materialBinding);
+                    err = LoadPolygonalListMesh(polylist,m,offset,info,materialBinding);
 					if (err != E_NOERROR) 
 						return err;
 				}
@@ -806,6 +820,7 @@ static Matrix44f getTransfMatrixFromNode(const QDomElement parentNode)
 		{
 			bool bHasPerWedgeTexCoord = false;
 			bool bHasPerWedgeNormal		= false;
+			//bool bHasPerWedgeColor		= false;
 			bool bHasPerVertexColor		= false;
 			bool bHasPerFaceColor			= false;
 			bool bHasPerVertexNormal = false;
@@ -912,6 +927,9 @@ static Matrix44f getTransfMatrixFromNode(const QDomElement parentNode)
 										no = findNodeBySpecificAttributeValue(facelist.at(face),"input","semantic","NORMAL");
 										if (!no.isNull()) 
 											bHasPerWedgeNormal = true;
+										no = findNodeBySpecificAttributeValue(facelist.at(face),"input","semantic","COLOR");
+										if (!no.isNull()) 
+											bHasPerVertexColor = true;
 										no = findNodeBySpecificAttributeValue(facelist.at(face),"input","semantic","TEXCOORD");
 										if (!no.isNull()) 
 											bHasPerWedgeTexCoord = true;

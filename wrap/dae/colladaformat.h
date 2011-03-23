@@ -470,7 +470,7 @@ namespace Tags
 	class FloatArrayTag : public XMLLeafTag
 	{
 	public:
-		enum ARRAYSEMANTIC {VERTPOSITION,VERTNORMAL,FACENORMAL,WEDGETEXCOORD};
+		enum ARRAYSEMANTIC {VERTPOSITION,VERTNORMAL,VERTCOLOR, FACENORMAL,WEDGETEXCOORD};
 
 		template<typename MESHTYPE>
 		FloatArrayTag(const QString& id,const int count,const MESHTYPE& m,ARRAYSEMANTIC sem,const unsigned int componenttype)
@@ -479,7 +479,7 @@ namespace Tags
 			_attributes.push_back(TagAttribute("id",id));
 			_attributes.push_back(TagAttribute("count",QString::number(count)));
 
-			if ((sem == VERTPOSITION) || (sem == VERTNORMAL))
+			if ((sem == VERTPOSITION) || (sem == VERTNORMAL) || (sem == VERTCOLOR))
 			{
 				for(typename MESHTYPE::ConstVertexIterator vit = m.vert.begin();vit != m.vert.end();++vit)
 				{
@@ -487,6 +487,8 @@ namespace Tags
 					{
 						if (sem == VERTPOSITION)
 							_text.push_back(QString::number(vit->P()[ii]));
+						else if (sem == VERTCOLOR)
+							_text.push_back(QString::number((vit->C()[ii])/255.0));
 						else
 						{
 							typename MESHTYPE::VertexType::NormalType r = vit->cN();
@@ -617,7 +619,7 @@ namespace Tags
 	{
 	public:
 		template<typename MESHTYPE>
-		PTag(const MESHTYPE& m,const unsigned int nedge,bool norm = false,bool texcoord = false)
+		PTag(const MESHTYPE& m,const unsigned int nedge,bool vcol=false, bool norm = false,bool texcoord = false)
 			:XMLLeafTag("p")
 		{
 			int cont = 0;
@@ -627,6 +629,8 @@ namespace Tags
 				{
 					int dist  = it->V(ii) - &(*m.vert.begin());
 					_text.push_back(QString::number(dist));
+					if (vcol)
+						_text.push_back(QString::number(dist));
 					if (norm)
 						_text.push_back(QString::number(cont));
 					if (texcoord)
@@ -637,7 +641,7 @@ namespace Tags
 		}
 
 		template<typename MESHTYPE>
-		PTag(const MESHTYPE& m,const unsigned int nedge,QVector<int>& patchfaces,bool norm = false,bool texcoord = false)
+		PTag(const MESHTYPE& m,const unsigned int nedge,QVector<int>& patchfaces,bool vcol = false, bool norm = false,bool texcoord = false)
 			:XMLLeafTag("p")
 		{
 			int cont = 0;
@@ -648,6 +652,8 @@ namespace Tags
 					const typename MESHTYPE::FaceType& f = m.face[*it];
 					int dist  = f.V(ii) - &(*m.vert.begin());
 					_text.push_back(QString::number(dist));
+					if (vcol)
+						_text.push_back(QString::number(dist));
 					if (norm)
 						_text.push_back(QString::number(*it));
 					if (texcoord)
@@ -1016,6 +1022,34 @@ public:
 
 			meshnode->_sons.push_back(sourcenormal);
 		}
+
+		//CHANGE THIS PIECE OF CODE!
+		bool vcolormask = bool((mask & vcg::tri::io::Mask::IOM_VERTCOLOR));
+		if (vcolormask)
+		{
+			XNode* sourcevcolor = new XNode(new Tags::SourceTag(shape+"-lib-vcolor","vcolor"));
+
+			//we export only triangular face
+			XLeaf* floatvcolorarr = new XLeaf(new Tags::FloatArrayTag(shape+"-lib-vcolor-array",m.vert.size() * return_component_number,m,Tags::FloatArrayTag::VERTCOLOR,return_component_number));
+			XNode* techcommvcolornode = new XNode(new Tags::TechniqueCommonTag());
+			XNode* accessorvcolornode = new XNode(new Tags::AccessorTag(m.vert.size(),shape+"-lib-vcolor-array",return_component_number));
+			
+			//I have to make up the following piece of code
+			XNode* paramvcolorx = new XNode(new Tags::ParamTag("R","float"));
+			XNode* paramvcolory = new XNode(new Tags::ParamTag("G","float"));
+			XNode* paramvcolorz = new XNode(new Tags::ParamTag("B","float"));
+
+			sourcevcolor->_sons.push_back(floatvcolorarr);
+
+			accessorvcolornode->_sons.push_back(paramvcolorx);
+			accessorvcolornode->_sons.push_back(paramvcolory);
+			accessorvcolornode->_sons.push_back(paramvcolorz);
+
+			techcommvcolornode->_sons.push_back(accessorvcolornode);
+			sourcevcolor->_sons.push_back(techcommvcolornode);
+
+			meshnode->_sons.push_back(sourcevcolor);
+		}
 		
 		bool texmask = bool(mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD);
 		if (texmask)
@@ -1044,7 +1078,10 @@ public:
 
 		XNode* vertnode = new XNode(new Tags::VerticesTag(shape+"-lib-vertices"));
 		XNode* inputposnode = new XNode(new Tags::InputTag("POSITION",shape+"-lib-positions"));
+		//XNode* inputvcolnode = new XNode(new Tags::InputTag("COLOR",shape+"-lib-vcolor"));
 		vertnode->_sons.push_back(inputposnode);
+		//vertnode->_sons.push_back(inputvcolnode);
+
 		meshnode->_sons.push_back(vertnode);
 		XNode* trianglesnode = NULL;
 		//if ((m.textures.size() == 0) || (!texmask))
@@ -1083,23 +1120,33 @@ public:
 
 			XNode* inputtrinode = new XNode(new Tags::InputTag(0,"VERTEX",shape+"-lib-vertices"));
 			trianglesnode->_sons.push_back(inputtrinode);
+			int offs=1;
+			if (vcolormask)
+			{
+				XNode* inputvcolnode = new XNode(new Tags::InputTag(offs,"COLOR",shape+"-lib-vcolor"));
+				trianglesnode->_sons.push_back(inputvcolnode);
+				offs++;
+			}
+
 			if (normalmask)
 			{
-				XNode* inputnormnode = new XNode(new Tags::InputTag(1,"NORMAL",shape+"-lib-normals"));
+				XNode* inputnormnode = new XNode(new Tags::InputTag(offs,"NORMAL",shape+"-lib-normals"));
 				trianglesnode->_sons.push_back(inputnormnode);
+				offs++;
 			}
 
 			if (texmask)
 			{
-				XNode* inputwedgenode = new XNode(new Tags::InputTag(2,"TEXCOORD",shape+"-lib-map"));
+				XNode* inputwedgenode = new XNode(new Tags::InputTag(offs,"TEXCOORD",shape+"-lib-map"));
 				trianglesnode->_sons.push_back(inputwedgenode);
+				offs++;
 			}
 
 			XLeaf* polyleaf = NULL;
 			if (itp == mytripatches.end())
-				polyleaf = new XLeaf(new Tags::PTag(m,edgefacenum,normalmask,texmask));
+				polyleaf = new XLeaf(new Tags::PTag(m,edgefacenum,vcolormask,normalmask,texmask));
 			else
-				polyleaf = new XLeaf(new Tags::PTag(m,edgefacenum,(*itp),normalmask,texmask));
+				polyleaf = new XLeaf(new Tags::PTag(m,edgefacenum,(*itp),vcolormask,normalmask,texmask));
 
 			trianglesnode->_sons.push_back(polyleaf);
 			meshnode->_sons.push_back(trianglesnode);
