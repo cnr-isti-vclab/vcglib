@@ -25,6 +25,7 @@
 #define __VCG_TRI_UPDATE_COLOR
 #include <limits>
 #include <math.h>
+#include <time.h>
 #include <vcg/space/color4.h>
 #include <vcg/math/histogram.h>
 #include <vcg/complex/trimesh/stat.h>
