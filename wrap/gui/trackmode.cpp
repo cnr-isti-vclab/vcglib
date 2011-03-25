@@ -333,12 +333,12 @@ void PathMode::Init(const std::vector < Point3f > &pts)
   for(unsigned int i=1;i<npts;i++){
     seg_length=Distance(points[i-1],points[i]);
     path_length += seg_length;
-    min_seg_length = std::min(seg_length,min_seg_length);
+    min_seg_length = (std::min)(seg_length,min_seg_length);
   }
   if(wrap){
     seg_length=Distance(points[npts-1],points[0]);
     path_length += seg_length;
-    min_seg_length = std::min(seg_length,min_seg_length);
+    min_seg_length = (std::min)(seg_length,min_seg_length);
   }
 }
 
@@ -616,7 +616,7 @@ void AreaMode::Init(const std::vector < Point3f > &pts)
   }
   min_side_length=Distance(points[0],points[1]);
   for(unsigned int i=1;i<npts;i++){
-  	min_side_length=std::min(Distance(points[i-1],points[i]),min_side_length);
+  	min_side_length=(std::min)(Distance(points[i-1],points[i]),min_side_length);
   }
   rubberband_handle=old_status=status=initial_status=p0;
 }

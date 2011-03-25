@@ -752,9 +752,9 @@ void DrawUglyLetter(Trackball * tb,std::vector<Point3f> ugly_letter)
 {
   Point3f center=tb->camera.Project(tb->center);
   float offset=0;  
-  offset=std::max(offset,Distance(center,tb->camera.Project(tb->center+(Point3f(1,0,0) * tb->radius))));
-  offset=std::max(offset,Distance(center,tb->camera.Project(tb->center+(Point3f(0,1,0) * tb->radius))));
-  offset=std::max(offset,Distance(center,tb->camera.Project(tb->center+(Point3f(0,0,1) * tb->radius))));
+  offset=(std::max)(offset,Distance(center,tb->camera.Project(tb->center+(Point3f(1,0,0) * tb->radius))));
+  offset=(std::max)(offset,Distance(center,tb->camera.Project(tb->center+(Point3f(0,1,0) * tb->radius))));
+  offset=(std::max)(offset,Distance(center,tb->camera.Project(tb->center+(Point3f(0,0,1) * tb->radius))));
   glPushMatrix();
   glPushAttrib (GL_ALL_ATTRIB_BITS);
    // go to world coords
