@@ -3,7 +3,6 @@
 ######################################################################
 
 TARGET = trimesh_base
-LIBPATH += 
 DEPENDPATH += . 
 INCLUDEPATH += . ../../..
 CONFIG += console stl

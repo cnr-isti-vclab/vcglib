@@ -5,7 +5,6 @@
 #  env MINGW_IN_SHELL=1 qmake -spec win32-g++ 
 
 TARGET = trimesh_attribute
-LIBPATH += 
 DEPENDPATH += . 
 INCLUDEPATH += . ../../..
 CONFIG += console stl

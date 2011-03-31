@@ -1,5 +1,4 @@
 TARGET = trimesh_intersection
-LIBPATH += 
 DEPENDPATH += . 
 INCLUDEPATH += . ../../..
 CONFIG += console stl 

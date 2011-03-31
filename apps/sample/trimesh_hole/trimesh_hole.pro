@@ -3,7 +3,6 @@
 ######################################################################
 
 TARGET = trimesh_hole
-LIBPATH += 
 DEPENDPATH += . 
 INCLUDEPATH += . ../../..
 CONFIG += console stl

@@ -3,7 +3,6 @@
 ######################################################################
 
 TARGET = trimesh_smooth
-LIBPATH += 
 DEPENDPATH += . 
 INCLUDEPATH += . ../../..
 CONFIG += console stl 

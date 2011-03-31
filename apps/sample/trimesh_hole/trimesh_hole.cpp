@@ -1,6 +1,7 @@
 #include <vector>
 #include <iostream>
 
+#include<vcg/space/triangle3.h>
 #include<vcg/simplex/vertex/base.h>
 #include<vcg/simplex/face/base.h>
 #include<vcg/simplex/face/topology.h>
@@ -60,15 +61,14 @@ template <class MESH>
 bool NormalTest(typename face::Pos<typename MESH::FaceType> pos)
 {
 	//giro intorno al vertice e controllo le normali
-	float accum=0;
 	typename MESH::ScalarType thr = 0.0f;
-	typename MESH::CoordType NdP = Normal<typename MESH::FaceType>(*pos.f);
+        typename MESH::CoordType NdP = vcg::Normal<typename MESH::FaceType>(*pos.f);
 	typename MESH::CoordType tmp, oop, soglia = typename MESH::CoordType(thr,thr,thr);
 	face::Pos<typename MESH::FaceType> aux=pos;
 	do{
 		aux.FlipF(); 
 		aux.FlipE();
-		oop = Abs(tmp - Normal<typename MESH::FaceType>(*pos.f));
+                oop = Abs(tmp - ::vcg::Normal<typename MESH::FaceType>(*pos.f));
 		if(oop < soglia )return false;
 	}while(aux != pos && !aux.IsBorder());
 	
@@ -128,7 +128,6 @@ int main(int argc,char ** argv){
 	}
 	AVG=sumA/numA;
 	
-  tri::Hole<MyMesh> holeFiller;
 	switch(algorithm)
 	{
   case 1:			tri::Hole<MyMesh>::EarCuttingFill<tri::TrivialEar<MyMesh> >(m,holeSize,false);                	        break;

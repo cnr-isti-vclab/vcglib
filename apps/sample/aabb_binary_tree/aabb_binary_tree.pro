@@ -3,7 +3,6 @@
 ######################################################################
 
 TARGET = aabb_binary_tree
-LIBPATH += 
 DEPENDPATH += . 
 INCLUDEPATH += . ../../..
 CONFIG += console

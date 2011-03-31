@@ -155,7 +155,7 @@ int			main(int argc, char *argv[]) {
 	vcg::tri::io::PlyInfo pi;
 
 //	pm.hedge.reserve(100000);
-if(false){
+if(true){
 	/*
 	first way: 
 	1) read a polygon mesh that will be automatically converted in a triangle mesh tagging
@@ -163,7 +163,8 @@ if(false){
     2) make some cleaning
 	3) import the tagged triangle mesh in a polygon mesh
 	*/
-	vcg::tri::io::ImporterOBJ<CMesh>::Open(mesh,argv[1],loadmask);
+//	vcg::tri::io::ImporterOBJ<CMesh>::Open(mesh,argv[1],loadmask);
+	vcg::tri::io::ImporterOFF<CMesh>::Open(mesh,argv[1],loadmask);
 
 	vcg::tri::Clean<CMesh>::RemoveUnreferencedVertex(mesh);
 	vcg::tri::Clean<CMesh>::RemoveZeroAreaFace(mesh);

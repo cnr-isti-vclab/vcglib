@@ -3,7 +3,6 @@
 ######################################################################
 
 TARGET = trimesh_join
-LIBPATH += 
 DEPENDPATH += . 
 INCLUDEPATH += . ../../..
 CONFIG += console stl
