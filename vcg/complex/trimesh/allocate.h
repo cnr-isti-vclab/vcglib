@@ -1235,10 +1235,17 @@ public:
 		virtual  std::string  Name()  = 0;
 		virtual  std::string TypeID() = 0;
 
-		virtual void AddPerVertexAttribute(MeshType & m) = 0;
-		virtual void AddPerFaceAttribute(MeshType & m)	 = 0;
-		virtual void AddPerEdgeAttribute(MeshType & m)	 = 0;
-		virtual void AddPerMeshAttribute(MeshType & m)	 = 0;
+                template <class BoundMeshType>
+                        void AddPerVertexAttribute(MeshType & m){assert(0);};
+
+                template <class BoundMeshType>
+                        void AddPerFaceAttribute(MeshType & m){assert(0);};
+
+                template <class BoundMeshType>
+                        void AddPerEdgeAttribute(MeshType & m){assert(0);};
+
+                template <class BoundMeshType>
+                        void AddPerMeshAttribute(MeshType & m){assert(0);};
 
 	};
 
@@ -1251,19 +1258,26 @@ public:
 
 
 	template <class TYPE>
-			struct NameTypeBound: public NameTypeBound_Base{
-				NameTypeBound(){}
-				NameTypeBound(std::string   name){_name =  name ;}
-				std::string  Name()   {return _name;}
-				bool operator ==(const NameTypeBound & o ) const {return Name()==o.Name();}
+        struct NameTypeBound: public NameTypeBound_Base{
+                NameTypeBound(){}
+                NameTypeBound(std::string   name){_name =  name ;}
+                std::string  Name()   {return _name;}
+                bool operator ==(const NameTypeBound & o ) const {return Name()==o.Name();}
+
+                std::string TypeID(){ return typeid(TYPE).name();}
 				
-				std::string TypeID(){ return typeid(TYPE).name();}
-				
-        void AddPerVertexAttribute(MeshType & m){Allocator::template AddPerVertexAttribute<TYPE>	(m,_name);}
-        void AddPerFaceAttribute(MeshType & m)	{Allocator::template AddPerFaceAttribute<TYPE>	(m,_name);}
-        void AddPerEdgeAttribute(MeshType & m)	{Allocator::template AddPerEdgeAttribute<TYPE>	(m,_name);}
-        void AddPerMeshAttribute(MeshType & m)	{Allocator::template AddPerMeshAttribute<TYPE>	(m,_name);}
-			 private:
+                template <class BoundMeshType>
+                void AddPerVertexAttribute(BoundMeshType & m){Allocator<BoundMeshType>::template AddPerVertexAttribute<TYPE>(m,_name);}
+
+                template <class BoundMeshType>
+                void AddPerFaceAttribute(MeshType & m)	{Allocator<BoundMeshType>::template AddPerFaceAttribute<TYPE>	(m,_name);}
+
+                template <class BoundMeshType>
+                void AddPerEdgeAttribute(MeshType & m)	{Allocator<BoundMeshType>::template AddPerEdgeAttribute<TYPE>	(m,_name);}
+
+                template <class BoundMeshType>
+                void AddPerMeshAttribute(MeshType & m)	{Allocator<BoundMeshType>::template AddPerMeshAttribute<TYPE>	(m,_name);}
+                         private:
 				std::string _name;
 	};
 
