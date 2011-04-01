@@ -29,7 +29,7 @@
 namespace vcg {
 
 	template<class T>
-	class Obox3:public Box3<typename T>{
+        class Obox3:public Box3<T>{
 
 	public:
 		
@@ -39,7 +39,7 @@ namespace vcg {
 		/// The bounding box constructor
 		inline  Obox3():Box3<T>(){}
 		/// Copy constructor
-		inline  Obox3(const Obox3 &b):min(b.min),max(b.max),m(b.m),mi(b.mi){}
+                inline  Obox3(const Obox3 &b):Box3<T>(b.min,b.max),m(b.m),mi(b.mi){}
 		/// Min Max Frame constructor
 		inline Obox3(const Point3<T> &min, const Point3<T> &max, const Point3<T> *frame):Box3<T>(min,max){
 			T v[16];
@@ -55,7 +55,7 @@ namespace vcg {
 		//Verifica se un punto appartiene ad un oriented bounding box.
 		bool IsIn( Point3<T> const &p) const{
 			vcg::Point3<T> mod= m*p;
-			return Box3::IsIn(mod);
+                        return Box3<T>::IsIn(mod);
 		}
 		/// The bounding box distructor
 		inline ~Obox3(){}
