@@ -443,7 +443,7 @@ ScalarType Volume()
 }
 
 private:
-	// TriMesh cannot be copied. Use Append (see vcg/complex/trimesh/append.h)
+	// TriMesh cannot be copied. Use Append (see vcg/complex/append.h)
 	TriMesh operator =(const TriMesh &  m){assert(0);return TriMesh();}
 	TriMesh(const TriMesh & ){}
 
