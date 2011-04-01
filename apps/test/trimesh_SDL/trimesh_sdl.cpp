@@ -49,11 +49,11 @@ Initial Relase
 #include <vcg/simplex/face/base.h>
 
 /*include the base definition for the trimesh*/
-#include <vcg/complex/trimesh/base.h>
+#include <vcg/complex/complex.h>
 
 /*include the algorihm that update bounding box and normals*/
-#include <vcg/complex/trimesh/update/bounding.h>
-#include <vcg/complex/trimesh/update/normal.h>
+#include <vcg/complex/algorithms/update/bounding.h>
+#include <vcg/complex/algorithms/update/normal.h>
 
 /*include the importer from disk*/
 #include <wrap/io_trimesh/import.h>

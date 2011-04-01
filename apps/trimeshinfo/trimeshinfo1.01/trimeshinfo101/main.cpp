@@ -57,11 +57,11 @@ using namespace std;
 #include<vcg/simplex/face/pos.h>   // mi sembra di averlo aggiunto!
 
 
-#include<vcg/complex/trimesh/base.h>
-#include<vcg/complex/trimesh/update/topology.h>
-#include <vcg/complex/trimesh/update/edges.h>
-#include <vcg/complex/trimesh/update/bounding.h>
-#include <vcg/complex/trimesh/clean.h>
+#include<vcg/complex/complex.h>
+#include<vcg/complex/algorithms/update/topology.h>
+#include <vcg/complex/algorithms/update/edges.h>
+#include <vcg/complex/algorithms/update/bounding.h>
+#include <vcg/complex/algorithms/clean.h>
 #include <vcg/space/intersection/triangle_triangle3.h>
 #include <vcg/math/histogram.h>
 #include <wrap/io_trimesh/import.h>

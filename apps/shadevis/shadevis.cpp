@@ -74,12 +74,12 @@ Added GPL comments
 #include <vcg/simplex/vertex/with/vcvn.h>
 #include <vcg/simplex/face/with/fn.h>
 #include <vcg/space/index/grid_static_ptr.h>
-#include <vcg/complex/trimesh/base.h>
+#include <vcg/complex/complex.h>
 #include<wrap/io_trimesh/export_ply.h>
 #include<wrap/io_trimesh/import_ply.h>
-#include<vcg/complex/trimesh/update/normal.h>
-#include<vcg/complex/trimesh/update/bounding.h>
-#include<vcg/complex/trimesh/update/color.h>
+#include<vcg/complex/algorithms/update/normal.h>
+#include<vcg/complex/algorithms/update/bounding.h>
+#include<vcg/complex/algorithms/update/color.h>
 
 #include "visshader.h"
 using namespace vcg;

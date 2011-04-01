@@ -101,12 +101,12 @@ instantiate GridStaticPtr on the simplexClass template.
 
 #include <time.h>
 //#include "min_dist_point.h"
-#include <vcg/complex/trimesh/closest.h>
+#include <vcg/complex/algorithms/closest.h>
 #include <vcg/space/box3.h>
 #include <vcg/math/histogram.h>
 #include <vcg/space/color4.h>
 #include <vcg/simplex/face/distance.h>
-#include <vcg/complex/trimesh/update/color.h>
+#include <vcg/complex/algorithms/update/color.h>
 #include <vcg/space/index/grid_static_ptr.h>
 #include <vcg/space/index/aabb_binary_tree/aabb_binary_tree.h>
 #include <vcg/space/index/octree.h>

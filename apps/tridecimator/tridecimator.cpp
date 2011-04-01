@@ -10,21 +10,21 @@ using namespace std;
 #include <vcg/simplex/vertex/base.h>
 #include <vcg/simplex/face/base.h>
 #include <vcg/simplex/edge/base.h>
-#include <vcg/complex/trimesh/base.h>
+#include <vcg/complex/complex.h>
 
 #include <vcg/math/quadric.h>
-#include <vcg/complex/trimesh/clean.h>
+#include <vcg/complex/algorithms/clean.h>
 
 // io
 #include <wrap/io_trimesh/import.h>
 #include <wrap/io_trimesh/export_ply.h>
 
 // update
-#include <vcg/complex/trimesh/update/topology.h>
+#include <vcg/complex/algorithms/update/topology.h>
 
 // local optimization
-#include <vcg/complex/local_optimization.h>
-#include <vcg/complex/local_optimization/tri_edge_collapse_quadric.h>
+#include <vcg/complex/algorithms/local_optimization.h>
+#include <vcg/complex/algorithms/local_optimization/tri_edge_collapse_quadric.h>
 
 using namespace vcg;
 using namespace tri;

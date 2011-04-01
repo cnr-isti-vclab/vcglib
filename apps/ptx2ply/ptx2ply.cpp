@@ -12,12 +12,12 @@
 #include <vcg/simplex/face/component.h>
 #include <vcg/simplex/face/component_rt.h>
 
-#include<vcg/complex/trimesh/base.h>
-#include<vcg/complex/trimesh/create/platonic.h>
-#include<vcg/complex/trimesh/update/flag.h>
-#include<vcg/complex/trimesh/update/normal.h>
-#include<vcg/complex/trimesh/update/color.h>
-#include<vcg/complex/trimesh/clean.h>
+#include<vcg/complex/complex.h>
+#include<vcg/complex/algorithms/create/platonic.h>
+#include<vcg/complex/algorithms/update/flag.h>
+#include<vcg/complex/algorithms/update/normal.h>
+#include<vcg/complex/algorithms/update/color.h>
+#include<vcg/complex/algorithms/clean.h>
 
 #include<wrap/io_trimesh/import_ply.h>
 #include<wrap/io_trimesh/export_ply.h>

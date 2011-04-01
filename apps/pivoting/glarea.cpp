@@ -12,9 +12,9 @@
 #include "cmesh.h"
 #include <wrap/io_trimesh/import.h>
 #include <wrap/io_trimesh/export.h>
-#include <vcg/complex/trimesh/update/normal.h>
-#include <vcg/complex/trimesh/update/topology.h>
-#include <vcg/complex/trimesh/update/flag.h>
+#include <vcg/complex/algorithms/update/normal.h>
+#include <vcg/complex/algorithms/update/topology.h>
+#include <vcg/complex/algorithms/update/flag.h>
 
 #include <vcg/space/normal_extrapolation.h>
 //#include "curvature.h"

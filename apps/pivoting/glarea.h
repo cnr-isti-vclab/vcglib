@@ -7,7 +7,7 @@
 
 #include <vcg/space/box3.h>
 #include <wrap/gui/trackball.h>
-#include <vcg/complex/trimesh/create/ball_pivoting.h>
+#include <vcg/complex/algorithms/create/ball_pivoting.h>
 #include "cmesh.h"
 
 

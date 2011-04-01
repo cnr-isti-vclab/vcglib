@@ -22,8 +22,8 @@ class MyTetrahedron : public vcg::TetraATAVTQ<MyVertex,MyTetrahedron>{};
 class MyTMesh: public vcg::tetra::Tetramesh< std::vector<MyVertex>, std::vector<MyTetrahedron > >{};
 
 
-#include <vcg/complex/local_optimization.h>
-#include <vcg/complex/local_optimization/tetra_edge_collapse.h>
+#include <vcg/complex/algorithms/local_optimization.h>
+#include <vcg/complex/algorithms/local_optimization/tetra_edge_collapse.h>
 
 
 vcg::LocalOptimization<MyTMesh> *loc;

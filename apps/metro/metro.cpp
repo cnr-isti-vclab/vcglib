@@ -104,10 +104,10 @@ using namespace std;
 #include "defs.h"
 #include "sampling.h"
 #include "mesh_type.h"
-#include <vcg/complex/trimesh/update/edges.h>
-#include <vcg/complex/trimesh/update/bounding.h>
+#include <vcg/complex/algorithms/update/edges.h>
+#include <vcg/complex/algorithms/update/bounding.h>
 #include <vcg/math/histogram.h>
-#include <vcg/complex/trimesh/clean.h>
+#include <vcg/complex/algorithms/clean.h>
 #include <wrap/io_trimesh/import.h>
 #include <wrap/io_trimesh/export.h>
 

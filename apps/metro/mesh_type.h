@@ -40,7 +40,7 @@ just color and quality on the vertex
 
 #include <math.h>
 #include <vcg/space/index/grid_static_ptr.h>
-#include <vcg/complex/trimesh/base.h>
+#include <vcg/complex/complex.h>
 
 // Vertex, Face, Mesh and Grid definitions.
 #include <vcg/simplex/vertex/base.h>

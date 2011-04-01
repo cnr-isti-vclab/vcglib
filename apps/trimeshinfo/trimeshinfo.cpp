@@ -188,12 +188,12 @@ using namespace std;
 #include <vcg/simplex/face/base.h>
 #include <vcg/simplex/face/component.h>
 
-#include <vcg/complex/trimesh/base.h>
-#include <vcg/complex/trimesh/update/topology.h>
-#include <vcg/complex/trimesh/update/edges.h>
-#include <vcg/complex/trimesh/update/bounding.h>
-#include <vcg/complex/trimesh/update/flag.h>
-#include <vcg/complex/trimesh/clean.h>
+#include <vcg/complex/complex.h>
+#include <vcg/complex/algorithms/update/topology.h>
+#include <vcg/complex/algorithms/update/edges.h>
+#include <vcg/complex/algorithms/update/bounding.h>
+#include <vcg/complex/algorithms/update/flag.h>
+#include <vcg/complex/algorithms/clean.h>
 #include <vcg/space/intersection/triangle_triangle3.h>
 
 #include <vcg/math/histogram.h>
@@ -201,7 +201,7 @@ using namespace std;
 #include <wrap/io_trimesh/export.h>
 
 #include <vcg/simplex/face/pos.h> 
-#include <vcg/complex/trimesh/inertia.h> 
+#include <vcg/complex/algorithms/inertia.h> 
 
 #include "XMLTree.h"
 

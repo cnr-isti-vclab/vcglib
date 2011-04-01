@@ -5,8 +5,8 @@
 #include <vcg/simplex/face/base.h>
 #include <vcg/simplex/face/pos.h>
 #include <vcg/simplex/face/topology.h>
-#include <vcg/complex/trimesh/base.h>
-#include <vcg/complex/trimesh/update/normal.h>
+#include <vcg/complex/complex.h>
+#include <vcg/complex/algorithms/update/normal.h>
 
 #include <vector>
 

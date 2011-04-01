@@ -4,8 +4,8 @@
 #include <vcg/simplex/vertex/with/afvmvn.h>
 #include <vcg/simplex/face/with/afavfn.h>
 #include <vcg/simplex/edge/with/ae.h>
-#include <vcg/complex/trimesh/base.h>
-#include <vcg/complex/trimesh/allocate.h>
+#include <vcg/complex/complex.h>
+#include <vcg/complex/allocate.h>
 
 typedef float ScalarType;
 

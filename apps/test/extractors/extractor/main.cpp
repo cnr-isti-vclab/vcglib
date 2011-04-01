@@ -3,8 +3,8 @@
 #include "Definitions.h"
 #include "Volume.h"
 #include "Walker.h"
-#include <vcg/complex/trimesh/create/marching_cubes.h>
-#include <vcg/complex/trimesh/create/extended_marching_cubes.h>
+#include <vcg/complex/algorithms/create/marching_cubes.h>
+#include <vcg/complex/algorithms/create/extended_marching_cubes.h>
 
 int main(int argc, char *argv[])
 {
