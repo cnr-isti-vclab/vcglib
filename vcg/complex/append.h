@@ -24,8 +24,8 @@
 #ifndef __VCGLIB_APPEND
 #define __VCGLIB_APPEND
 
-#include <vcg/complex/trimesh/allocate.h>
-#include <vcg/complex/trimesh/update/flag.h>
+#include <vcg/complex/allocate.h>
+#include <vcg/complex/algorithms/update/flag.h>
 
 namespace vcg {
 namespace tri {

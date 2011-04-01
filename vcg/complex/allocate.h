@@ -30,7 +30,7 @@
 #include <string>
 #include <set>
 #include <assert.h>
-#include <vcg/complex/trimesh/base.h>
+#include <vcg/complex/complex.h>
 #include <vcg/container/simple_temporary_data.h>
 
 namespace vcg {
