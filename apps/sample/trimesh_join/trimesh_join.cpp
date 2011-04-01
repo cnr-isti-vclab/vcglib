@@ -4,12 +4,12 @@
 #include<vcg/simplex/face/base.h>
 #include<vcg/simplex/face/topology.h>
 
-#include<vcg/complex/trimesh/base.h>
-#include<vcg/complex/trimesh/allocate.h>
-#include<vcg/complex/trimesh/append.h>
-#include<vcg/complex/trimesh/clean.h>
-#include<vcg/complex/trimesh/clip.h>
-#include<vcg/complex/trimesh/update/bounding.h>
+#include<vcg/complex/complex.h>
+#include<vcg/complex/allocate.h>
+#include<vcg/complex/append.h>
+#include<vcg/complex/algorithms/clean.h>
+#include<vcg/complex/algorithms/clip.h>
+#include<vcg/complex/algorithms/update/bounding.h>
 
 
 // input output

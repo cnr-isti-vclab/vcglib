@@ -4,8 +4,8 @@
 #include <vcg/simplex/vertex/component_ocf.h>
 #include <vcg/simplex/face/base.h>
 #include <vcg/simplex/face/component_ocf.h>
-#include <vcg/complex/trimesh/base.h>
-#include <vcg/complex/trimesh/attribute_seam.h>
+#include <vcg/complex/complex.h>
+#include <vcg/complex/algorithms/attribute_seam.h>
 
 #include <wrap/io_trimesh/import_ply.h>
 #include <wrap/io_trimesh/export_ply.h>

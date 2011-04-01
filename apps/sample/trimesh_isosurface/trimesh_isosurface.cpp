@@ -4,11 +4,11 @@
 #include <vcg/math/perlin_noise.h>
 #include <vcg/simplex/vertex/base.h>
 #include <vcg/simplex/face/base.h>
-#include <vcg/complex/trimesh/base.h>
-#include <vcg/complex/trimesh/allocate.h>
-#include <vcg/complex/trimesh/create/marching_cubes.h>
-#include <vcg/complex/trimesh/create/extended_marching_cubes.h>
-#include <vcg/complex/trimesh/create/mc_trivial_walker.h>
+#include <vcg/complex/complex.h>
+#include <vcg/complex/allocate.h>
+#include <vcg/complex/algorithms/create/marching_cubes.h>
+#include <vcg/complex/algorithms/create/extended_marching_cubes.h>
+#include <vcg/complex/algorithms/create/mc_trivial_walker.h>
 #include <wrap/io_trimesh/export_ply.h>
 
 

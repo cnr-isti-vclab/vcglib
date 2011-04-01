@@ -5,19 +5,19 @@
 #include<vcg/simplex/vertex/base.h>
 #include<vcg/simplex/face/base.h>
 #include<vcg/simplex/face/topology.h>
-#include<vcg/complex/trimesh/base.h>
-#include<vcg/complex/trimesh/hole.h>
-#include<vcg/complex/local_optimization.h>
-#include<vcg/complex/local_optimization/tri_edge_flip.h>
-#include<vcg/complex/trimesh/smooth.h>
-#include<vcg/complex/trimesh/refine.h>
+#include<vcg/complex/complex.h>
+#include<vcg/complex/algorithms/hole.h>
+#include<vcg/complex/algorithms/local_optimization.h>
+#include<vcg/complex/algorithms/local_optimization/tri_edge_flip.h>
+#include<vcg/complex/algorithms/smooth.h>
+#include<vcg/complex/algorithms/refine.h>
 
-#include<vcg/complex/trimesh/update/selection.h>
+#include<vcg/complex/algorithms/update/selection.h>
 
 // topology computation
-#include<vcg/complex/trimesh/update/topology.h>
-#include <vcg/complex/trimesh/update/flag.h>
-#include <vcg/complex/trimesh/update/normal.h>
+#include<vcg/complex/algorithms/update/topology.h>
+#include <vcg/complex/algorithms/update/flag.h>
+#include <vcg/complex/algorithms/update/normal.h>
 
 // half edge iterators
 #include<vcg/simplex/face/pos.h>

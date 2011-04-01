@@ -12,11 +12,11 @@
 #include<vcg/simplex/face/component_rt.h>
 
 #include<vcg/simplex/face/distance.h>
-#include<vcg/complex/trimesh/base.h>
-#include <vcg/complex/trimesh/create/platonic.h>
-#include <vcg/complex/trimesh/update/normal.h>
-#include <vcg/complex/trimesh/update/edges.h>
-#include <vcg/complex/trimesh/update/flag.h>
+#include<vcg/complex/complex.h>
+#include <vcg/complex/algorithms/create/platonic.h>
+#include <vcg/complex/algorithms/update/normal.h>
+#include <vcg/complex/algorithms/update/edges.h>
+#include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/space/intersection3.h>
 
 #include <vcg/space/index/aabb_binary_tree/aabb_binary_tree.h>

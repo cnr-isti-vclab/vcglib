@@ -7,13 +7,13 @@ using namespace std;
 #include<vcg/simplex/edge/component.h>
 #include<vcg/simplex/vertex/base.h>
 #include<vcg/simplex/face/base.h>
-#include <vcg/complex/trimesh/base.h>
-#include <vcg/complex/trimesh/update/topology.h>
-#include <vcg/complex/trimesh/update/edges.h>
-#include <vcg/complex/trimesh/update/bounding.h>
-#include <vcg/complex/trimesh/update/flag.h>
-#include <vcg/complex/trimesh/clean.h>
-#include <vcg/complex/intersection.h>
+#include <vcg/complex/complex.h>
+#include <vcg/complex/algorithms/update/topology.h>
+#include <vcg/complex/algorithms/update/edges.h>
+#include <vcg/complex/algorithms/update/bounding.h>
+#include <vcg/complex/algorithms/update/flag.h>
+#include <vcg/complex/algorithms/clean.h>
+#include <vcg/complex/algorithms/intersection.h>
 #include <vcg/space/index/grid_static_ptr.h>
 //#include <vcg/simplex/edge/with/ae.h>
 #include <vcg/complex/edgemesh/base.h>

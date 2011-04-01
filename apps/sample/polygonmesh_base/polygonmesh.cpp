@@ -33,15 +33,15 @@
 #include <vcg/connectors/hedge.h>
 
 /*include the base definition for the trimesh*/
-#include <vcg/complex/trimesh/base.h>
+#include <vcg/complex/complex.h>
 
 /*include the algorithms for updating: */
-#include <vcg/complex/trimesh/update/topology.h>	/* topology */
-#include <vcg/complex/trimesh/update/bounding.h>	/* bounding box */
-#include <vcg/complex/trimesh/update/normal.h>		/* normal */
+#include <vcg/complex/algorithms/update/topology.h>	/* topology */
+#include <vcg/complex/algorithms/update/bounding.h>	/* bounding box */
+#include <vcg/complex/algorithms/update/normal.h>		/* normal */
 
 /*include the algorithms for mesh fixing  */
-#include <vcg/complex/trimesh/clean.h>
+#include <vcg/complex/algorithms/clean.h>
 
 /*include the importer from disk*/
 #include <wrap/io_trimesh/import.h>
@@ -50,13 +50,13 @@
 #include <wrap/io_trimesh/export_ply.h>
 
 /* include the support for polygon meshes (function to convert from/to trimesh)*/
-#include <vcg/complex/trimesh/polygon_support.h>
+#include <vcg/complex/algorithms/polygon_support.h>
 
 /* include the support for polygon meshes (the component for the face )*/
 #include <vcg/simplex/face/component_polygon.h>
 
 /* include the support for half edges */
-#include <vcg/complex/trimesh/update/halfedge_indexed.h>
+#include <vcg/complex/algorithms/update/halfedge_indexed.h>
 
 
 using namespace vcg;

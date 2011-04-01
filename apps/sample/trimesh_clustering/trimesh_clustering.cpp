@@ -2,19 +2,19 @@
 // mesh definition 
 //#include <vcg/simplex/vertex/with/vn.h>
 //#include <vcg/simplex/face/with/af.h>
-//#include <vcg/complex/trimesh/base.h>
+//#include <vcg/complex/complex.h>
 
 #include<vcg/simplex/vertex/base.h>
 #include<vcg/simplex/face/base.h>
 #include<vcg/simplex/face/topology.h>
 
-#include<vcg/complex/trimesh/base.h>
+#include<vcg/complex/complex.h>
 
-#include <vcg/complex/trimesh/update/bounding.h>
-#include <vcg/complex/trimesh/update/topology.h>
-#include <vcg/complex/trimesh/update/normal.h>
-#include <vcg/complex/trimesh/update/flag.h>
-#include <vcg/complex/trimesh/clustering.h>
+#include <vcg/complex/algorithms/update/bounding.h>
+#include <vcg/complex/algorithms/update/topology.h>
+#include <vcg/complex/algorithms/update/normal.h>
+#include <vcg/complex/algorithms/update/flag.h>
+#include <vcg/complex/algorithms/clustering.h>
 
 // input output
 #include <wrap/io_trimesh/import_ply.h>

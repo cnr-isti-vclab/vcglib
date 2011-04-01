@@ -3,11 +3,11 @@
 #include<vcg/simplex/vertex/base.h>
 #include<vcg/simplex/face/base.h>
 #include<vcg/simplex/face/topology.h>
-#include<vcg/complex/trimesh/base.h>
-#include<vcg/complex/trimesh/create/platonic.h>
+#include<vcg/complex/complex.h>
+#include<vcg/complex/algorithms/create/platonic.h>
 
 // topology computation
-#include<vcg/complex/trimesh/update/topology.h>
+#include<vcg/complex/algorithms/update/topology.h>
 
 // half edge iterators
 #include<vcg/simplex/face/pos.h>

@@ -3,15 +3,15 @@
 #include<vcg/simplex/face/component_ocf.h>
 #include<vcg/simplex/face/topology.h>
 
-#include<vcg/complex/trimesh/base.h>
+#include<vcg/complex/complex.h>
 
-#include <vcg/complex/trimesh/update/topology.h>
-#include <vcg/complex/trimesh/update/normal.h>
-#include <vcg/complex/trimesh/update/flag.h>
-#include <vcg/complex/trimesh/refine.h>
-#include <vcg/complex/trimesh/refine_loop.h>
+#include <vcg/complex/algorithms/update/topology.h>
+#include <vcg/complex/algorithms/update/normal.h>
+#include <vcg/complex/algorithms/update/flag.h>
+#include <vcg/complex/algorithms/refine.h>
+#include <vcg/complex/algorithms/refine_loop.h>
 
-#include <vcg/complex/trimesh/bitquad_creation.h>
+#include <vcg/complex/algorithms/bitquad_creation.h>
 
 // input output
 #include <wrap/io_trimesh/import_ply.h>

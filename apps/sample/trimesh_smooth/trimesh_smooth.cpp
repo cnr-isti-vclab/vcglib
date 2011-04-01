@@ -4,13 +4,13 @@
 #include<vcg/simplex/face/base.h>
 #include<vcg/simplex/face/topology.h>
 
-#include<vcg/complex/trimesh/base.h>
+#include<vcg/complex/complex.h>
 
-#include <vcg/complex/trimesh/update/topology.h>
-#include <vcg/complex/trimesh/update/normal.h>
+#include <vcg/complex/algorithms/update/topology.h>
+#include <vcg/complex/algorithms/update/normal.h>
 // to clean up a mesh
-#include<vcg/complex/trimesh/clean.h>
-#include<vcg/complex/trimesh/smooth.h>
+#include<vcg/complex/algorithms/clean.h>
+#include<vcg/complex/algorithms/smooth.h>
 
 // input output
 #include <wrap/io_trimesh/import.h>

@@ -34,7 +34,7 @@ first draft. Working but  ugly interface. right mouse of the button to place a p
 /** the definition of face */
 #include<vcg/simplex/face/base.h>
 /** definition of triangle mesh */
-#include<vcg/complex/trimesh/base.h>
+#include<vcg/complex/complex.h>
 
 /** allocation vertices and faces of triangle mesh */
 #include<wrap/io_trimesh/import_PLY.h>

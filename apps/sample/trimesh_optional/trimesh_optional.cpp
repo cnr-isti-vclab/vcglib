@@ -2,13 +2,13 @@
 #include <time.h>
 
 #include "mesh_definition.h"
-#include<vcg/complex/trimesh/allocate.h>
-#include<vcg/complex/trimesh/create/platonic.h>
-#include<vcg/complex/trimesh/update/topology.h>
-#include<vcg/complex/trimesh/update/flag.h>
-#include<vcg/complex/trimesh/update/normal.h>
-#include<vcg/complex/trimesh/update/bounding.h>
-#include <vcg/complex/trimesh/refine.h>
+#include<vcg/complex/allocate.h>
+#include<vcg/complex/algorithms/create/platonic.h>
+#include<vcg/complex/algorithms/update/topology.h>
+#include<vcg/complex/algorithms/update/flag.h>
+#include<vcg/complex/algorithms/update/normal.h>
+#include<vcg/complex/algorithms/update/bounding.h>
+#include <vcg/complex/algorithms/refine.h>
 
 using namespace vcg;
 using namespace std;

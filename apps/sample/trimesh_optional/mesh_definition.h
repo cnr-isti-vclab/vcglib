@@ -1,7 +1,7 @@
 #ifndef _MESH_DEF_
 #define _MESH_DEF_
 
-#include<vcg/complex/trimesh/base.h>
+#include<vcg/complex/complex.h>
 #include<vcg/simplex/vertex/base.h>
 #include<vcg/simplex/face/base.h>
 #include<vcg/simplex/face/topology.h>

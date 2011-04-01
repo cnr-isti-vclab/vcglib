@@ -3,8 +3,8 @@
 #include<vcg/simplex/vertex/component.h>
 #include<vcg/simplex/face/base.h>
 #include<vcg/simplex/face/component.h>
-#include<vcg/complex/trimesh/base.h>
-#include<vcg/complex/trimesh/allocate.h>
+#include<vcg/complex/complex.h>
+#include<vcg/complex/allocate.h>
 
 
 class MyEdge;

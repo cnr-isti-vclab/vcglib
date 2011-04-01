@@ -6,19 +6,19 @@ using namespace std;
 #include<vcg/simplex/edge/base.h>
 #include<vcg/simplex/vertex/base.h>
 #include<vcg/simplex/face/base.h>
-#include <vcg/complex/trimesh/base.h>
-#include <vcg/complex/trimesh/update/topology.h>
-#include <vcg/complex/trimesh/update/edges.h>
-#include <vcg/complex/trimesh/update/bounding.h>
-#include <vcg/complex/trimesh/update/quality.h>
-#include <vcg/complex/trimesh/update/color.h>
-#include <vcg/complex/trimesh/update/flag.h>
-#include <vcg/complex/trimesh/stat.h>
-#include <vcg/complex/trimesh/clean.h>
-#include <vcg/complex/intersection.h>
+#include <vcg/complex/complex.h>
+#include <vcg/complex/algorithms/update/topology.h>
+#include <vcg/complex/algorithms/update/edges.h>
+#include <vcg/complex/algorithms/update/bounding.h>
+#include <vcg/complex/algorithms/update/quality.h>
+#include <vcg/complex/algorithms/update/color.h>
+#include <vcg/complex/algorithms/update/flag.h>
+#include <vcg/complex/algorithms/stat.h>
+#include <vcg/complex/algorithms/clean.h>
+#include <vcg/complex/algorithms/intersection.h>
 #include <vcg/space/index/grid_static_ptr.h>
 #include <vcg/space/index/spatial_hashing.h>
-#include <vcg/complex/trimesh/closest.h>
+#include <vcg/complex/algorithms/closest.h>
 
 // VCG File Format Importer/Exporter
 #include <wrap/io_trimesh/import.h>

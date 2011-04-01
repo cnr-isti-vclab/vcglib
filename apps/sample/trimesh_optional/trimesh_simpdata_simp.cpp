@@ -5,10 +5,10 @@
 #include <vcg/simplex/face/base.h>   
 #include <vcg/simplex/face/component.h>   
 
-#include <vcg/complex/trimesh/base.h>   
+#include <vcg/complex/complex.h>   
 #include<vcg/container/simple_temporary_data.h>
 
-#include<vcg/complex/trimesh/create/platonic.h>
+#include<vcg/complex/algorithms/create/platonic.h>
 
 class MyEdge;
 class MyFace;

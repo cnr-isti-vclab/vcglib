@@ -45,9 +45,9 @@ cvs problem during frist committ. repeated
 #include <wrap/gl/picking.h>
 #include <wrap/gl/space.h>
 #include <wrap/gl/pos.h>
-#include <vcg/complex/trimesh/update/bounding.h>
-#include <vcg/complex/trimesh/update/normal.h>
-#include <vcg/complex/trimesh/update/topology.h>
+#include <vcg/complex/algorithms/update/bounding.h>
+#include <vcg/complex/algorithms/update/normal.h>
+#include <vcg/complex/algorithms/update/topology.h>
 
 
 GLWidget::GLWidget(QWidget *parent)

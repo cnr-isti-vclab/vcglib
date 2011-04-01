@@ -30,17 +30,17 @@
 #include<vcg/simplex/face/component.h>
 
 #include<vcg/simplex/face/topology.h>
-#include<vcg/complex/trimesh/base.h>
+#include<vcg/complex/complex.h>
 
 // input output
 #include<wrap/io_trimesh/import.h>
 #include<wrap/io_trimesh/export.h>
 
 // topology computation
-#include<vcg/complex/trimesh/update/topology.h>
+#include<vcg/complex/algorithms/update/topology.h>
 
 // normals
-#include<vcg/complex/trimesh/update/normal.h>
+#include<vcg/complex/algorithms/update/normal.h>
 
 using namespace vcg;
 using namespace std;
