@@ -27,8 +27,8 @@
 #include <vcg/math/gen_normal.h>
 #include <vcg/math/random_generator.h>
 #include <vcg/space/index/grid_static_ptr.h>
-#include <vcg/complex/trimesh/closest.h>
-#include <vcg/complex/trimesh/point_sampling.h>
+#include <vcg/complex/algorithms/closest.h>
+#include <vcg/complex/algorithms/point_sampling.h>
 
 #include <qdatetime.h>
 

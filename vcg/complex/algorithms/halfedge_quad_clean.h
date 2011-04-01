@@ -1,7 +1,7 @@
 #ifndef HALFEDGEQUADCLEAN_H
 #define HALFEDGEQUADCLEAN_H
 
-#include <vcg/complex/trimesh/update/halfedge_topology.h>
+#include <vcg/complex/algorithms/update/halfedge_topology.h>
 #include <queue>
 #include <set>
 #include<vcg/math/base.h>

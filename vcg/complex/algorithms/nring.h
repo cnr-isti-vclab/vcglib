@@ -25,8 +25,8 @@
  ****************************************************************************/
 
 #include <vcg/simplex/face/jumping_pos.h>
-#include <vcg/complex/trimesh/allocate.h>
-#include <vcg/complex/trimesh/update/flag.h>
+#include <vcg/complex/allocate.h>
+#include <vcg/complex/algorithms/update/flag.h>
 #include <vector>
 
 namespace vcg

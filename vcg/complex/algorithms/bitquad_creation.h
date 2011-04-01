@@ -1,5 +1,5 @@
-#include <vcg/complex/trimesh/bitquad_support.h>
-#include <vcg/complex/trimesh/allocate.h>
+#include <vcg/complex/algorithms/bitquad_support.h>
+#include <vcg/complex/allocate.h>
 
 /** BIT-QUAD creation support:
     a collection of methods that,

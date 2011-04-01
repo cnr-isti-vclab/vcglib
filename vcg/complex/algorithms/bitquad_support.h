@@ -2,7 +2,7 @@
 #define VCG_BITQUAD_SUPPORT
 #include <vector>
 #include <set>
-#include <vcg/complex/trimesh/subset.h>
+#include <vcg/complex/algorithms/subset.h>
 #include <vcg/simplex/face/jumping_pos.h>
 #include <vcg/simplex/face/topology.h>
 #include <vcg/space/planar_polygon_tessellation.h>

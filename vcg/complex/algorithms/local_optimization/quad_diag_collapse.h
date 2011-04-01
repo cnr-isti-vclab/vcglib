@@ -2,14 +2,14 @@
 #define QUAD_DIAGONAL_COLLAPSE_H
 
 #include<vcg/connectors/halfedge_pos.h>
-#include<vcg/complex/local_optimization.h>
-#include<vcg/complex/trimesh/smooth.h>
+#include<vcg/complex/algorithms/local_optimization.h>
+#include<vcg/complex/algorithms/smooth.h>
 
 #include<set>
 
 #include<vcg/space/ray3.h>
 
-#include<vcg/complex/trimesh/halfedge_quad_clean.h>
+#include<vcg/complex/algorithms/halfedge_quad_clean.h>
 
 namespace vcg{
     namespace tri{

@@ -44,7 +44,7 @@
 
 #include<vcg/simplex/face/pos.h>
 #include<vcg/simplex/face/topology.h>
-#include<vcg/complex/trimesh/allocate.h>
+#include<vcg/complex/allocate.h>
 
 namespace vcg{
 namespace tri{	

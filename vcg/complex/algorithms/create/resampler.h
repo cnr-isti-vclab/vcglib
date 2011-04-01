@@ -23,13 +23,13 @@
 #ifndef __VCG_MESH_RESAMPLER
 #define __VCG_MESH_RESAMPLER
 
-#include <vcg/complex/trimesh/update/normal.h>
-#include <vcg/complex/trimesh/update/flag.h>
-#include <vcg/complex/trimesh/update/bounding.h>
-#include <vcg/complex/trimesh/update/edges.h>
-#include <vcg/complex/trimesh/create/marching_cubes.h>
+#include <vcg/complex/algorithms/update/normal.h>
+#include <vcg/complex/algorithms/update/flag.h>
+#include <vcg/complex/algorithms/update/bounding.h>
+#include <vcg/complex/algorithms/update/edges.h>
+#include <vcg/complex/algorithms/create/marching_cubes.h>
 #include <vcg/space/index/grid_static_ptr.h>
-#include <vcg/complex/trimesh/closest.h>
+#include <vcg/complex/algorithms/closest.h>
 #include <vcg/space/box3.h>
 
 namespace vcg {

@@ -28,16 +28,16 @@
 #include <time.h>
 #include <vcg/space/color4.h>
 #include <vcg/math/histogram.h>
-#include <vcg/complex/trimesh/stat.h>
+#include <vcg/complex/algorithms/stat.h>
 #include <vcg/math/perlin_noise.h>
 #include <vcg/math/random_generator.h>
-#include <vcg/complex/trimesh/clean.h>
+#include <vcg/complex/algorithms/clean.h>
 namespace vcg {
 namespace tri {
 
 /// \ingroup trimesh
 
-/// \headerfile color.h vcg/complex/trimesh/update/color.h
+/// \headerfile color.h vcg/complex/algorithms/update/color.h
 
 /// \brief Generation of per-vertex and per-face colors according to various strategy.
 /**

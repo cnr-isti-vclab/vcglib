@@ -32,15 +32,15 @@
 // VCG headers
 #include <vcg/simplex/face/pos.h>
 #include <vcg/simplex/face/topology.h>
-#include <vcg/complex/trimesh/base.h>
-#include <vcg/complex/trimesh/closest.h>
+#include <vcg/complex/complex.h>
+#include <vcg/complex/algorithms/closest.h>
 #include <vcg/space/index/grid_static_ptr.h>
 #include <vcg/space/index/spatial_hashing.h>
-#include <vcg/complex/trimesh/allocate.h>
-#include <vcg/complex/trimesh/update/selection.h>
-#include <vcg/complex/trimesh/update/flag.h>
-#include <vcg/complex/trimesh/update/normal.h>
-#include <vcg/complex/trimesh/update/topology.h>
+#include <vcg/complex/allocate.h>
+#include <vcg/complex/algorithms/update/selection.h>
+#include <vcg/complex/algorithms/update/flag.h>
+#include <vcg/complex/algorithms/update/normal.h>
+#include <vcg/complex/algorithms/update/topology.h>
 #include <vcg/space/triangle3.h>
 
 

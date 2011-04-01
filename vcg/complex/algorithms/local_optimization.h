@@ -95,7 +95,7 @@
 #include<algorithm>
 #include<time.h>
 #include<math.h>
-#include<vcg/complex/trimesh/base.h>
+#include<vcg/complex/complex.h>
 
 namespace vcg{
 

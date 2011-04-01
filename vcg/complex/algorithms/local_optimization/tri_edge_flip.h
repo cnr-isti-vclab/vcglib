@@ -24,7 +24,7 @@
 #ifndef __VCG_DECIMATION_TRIFLIP
 #define __VCG_DECIMATION_TRIFLIP
 
-#include <vcg/complex/local_optimization.h>
+#include <vcg/complex/algorithms/local_optimization.h>
 #include <vcg/simplex/face/topology.h>
 #include <vcg/space/triangle3.h>
 

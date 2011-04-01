@@ -59,7 +59,7 @@ journal of graphics tools, volume 1, number 2, 1996
 #include <vcg/math/matrix33.h>
 #include <vcg/math/lin_algebra.h>
 
-#include <vcg/complex/trimesh/update/normal.h>
+#include <vcg/complex/algorithms/update/normal.h>
 namespace vcg
 {
   namespace tri

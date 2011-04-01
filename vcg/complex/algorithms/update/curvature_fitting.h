@@ -34,11 +34,11 @@
 #include <vcg/simplex/face/pos.h>
 #include <vcg/simplex/face/jumping_pos.h>
 #include <vcg/container/simple_temporary_data.h>
-#include <vcg/complex/trimesh/update/normal.h>
-#include <vcg/complex/trimesh/point_sampling.h>
-#include <vcg/complex/trimesh/append.h>
-#include <vcg/complex/intersection.h>
-#include <vcg/complex/trimesh/inertia.h>
+#include <vcg/complex/algorithms/update/normal.h>
+#include <vcg/complex/algorithms/point_sampling.h>
+#include <vcg/complex/append.h>
+#include <vcg/complex/algorithms/intersection.h>
+#include <vcg/complex/algorithms/inertia.h>
 #include <vcg/math/matrix33.h>
 
 #include <vcg/Eigen/Core>
@@ -48,7 +48,7 @@
 
 // GG include
 #include <vector>
-#include <vcg/complex/trimesh/nring.h>
+#include <vcg/complex/algorithms/nring.h>
 
 
 namespace vcg {
@@ -56,7 +56,7 @@ namespace tri {
 
 /// \ingroup trimesh
 
-/// \headerfile curvature_fitting.h vcg/complex/trimesh/update/curvature_fitting.h
+/// \headerfile curvature_fitting.h vcg/complex/algorithms/update/curvature_fitting.h
 
 /// \brief Computation of per-vertex directions and values of curvature.
 /**

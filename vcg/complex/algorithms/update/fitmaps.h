@@ -27,15 +27,15 @@
 #include <vcg/math/histogram.h>
 
 #include <vcg/simplex/face/jumping_pos.h>
-#include <vcg/complex/trimesh/allocate.h>
-#include <vcg/complex/trimesh/update/flag.h>
+#include <vcg/complex/allocate.h>
+#include <vcg/complex/algorithms/update/flag.h>
 #include <vector>
 #include <set>
-#include <vcg/complex/trimesh/update/normal.h>
-#include <vcg/complex/trimesh/update/curvature.h>
-#include <vcg/complex/trimesh/update/topology.h>
-#include <vcg/complex/trimesh/update/bounding.h>
-#include "vcg/complex/trimesh/update/curvature_fitting.h"
+#include <vcg/complex/algorithms/update/normal.h>
+#include <vcg/complex/algorithms/update/curvature.h>
+#include <vcg/complex/algorithms/update/topology.h>
+#include <vcg/complex/algorithms/update/bounding.h>
+#include "vcg/complex/algorithms/update/curvature_fitting.h"
 
 #include <vcg/Eigen/Core>
 #include <vcg/Eigen/QR>
@@ -44,9 +44,9 @@
 
 #include <algorithm>
 
-#include <vcg/complex/trimesh/nring.h>
+#include <vcg/complex/algorithms/nring.h>
 
-#include <vcg/complex/trimesh/smooth.h>
+#include <vcg/complex/algorithms/smooth.h>
 
 
 using namespace Eigen;

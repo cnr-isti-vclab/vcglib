@@ -60,7 +60,7 @@ Added History Info
 #ifndef __VCGLIB_TRISUBSET
 #define __VCGLIB_TRISUBSET
 
-#include <vcg/complex/trimesh/update/flag.h>
+#include <vcg/complex/algorithms/update/flag.h>
 
 namespace vcg {
 namespace tri {

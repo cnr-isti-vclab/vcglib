@@ -64,9 +64,9 @@
 #ifndef __VCG_DECIMATION_TRICOLLAPSE
 #define __VCG_DECIMATION_TRICOLLAPSE
 
-#include<vcg/complex/trimesh/edge_collapse.h>
+#include<vcg/complex/algorithms/edge_collapse.h>
 #include<vcg/simplex/face/pos.h>
-#include<vcg/complex/local_optimization.h>
+#include<vcg/complex/algorithms/local_optimization.h>
 
 
 namespace vcg{

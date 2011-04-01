@@ -27,7 +27,7 @@
 
 #include <assert.h>
 #include <vcg/space/point3.h>
-#include <vcg/complex/trimesh/allocate.h>
+#include <vcg/complex/allocate.h>
 #include "mc_lookup_table.h"
 
 namespace vcg

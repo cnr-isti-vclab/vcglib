@@ -24,8 +24,8 @@
 #ifndef __VCG_CREASE_CUT
 #define __VCG_CREASE_CUT
 #include<vcg/simplex/face/jumping_pos.h>
-#include<vcg/complex/trimesh/append.h>
-#include<vcg/complex/trimesh/update/normal.h>
+#include<vcg/complex/append.h>
+#include<vcg/complex/algorithms/update/normal.h>
 namespace vcg {
 namespace tri {
 	

@@ -38,13 +38,13 @@ used in the paper pseudocode.
 #include <vcg/math/matrix44.h>
 
 #include <vcg/space/index/grid_static_ptr.h>
-#include <vcg/complex/trimesh/closest.h>
-#include <vcg/complex/trimesh/update/bounding.h>
+#include <vcg/complex/algorithms/closest.h>
+#include <vcg/complex/algorithms/update/bounding.h>
 
 #include <vcg/simplex/vertex/base.h>
 #include <vcg/simplex/face/base.h>
-#include <vcg/complex/trimesh/base.h>
-#include <vcg/complex/trimesh/stat.h>
+#include <vcg/complex/complex.h>
+#include <vcg/complex/algorithms/stat.h>
 #include <wrap/io_trimesh/export_ply.h>
 
 

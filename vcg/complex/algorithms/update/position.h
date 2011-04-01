@@ -39,7 +39,7 @@ namespace tri {
 
 /// \ingroup trimesh 
 
-/// \headerfile position.h vcg/complex/trimesh/update/position.h
+/// \headerfile position.h vcg/complex/algorithms/update/position.h
 
 /// \brief This class is used to update vertex position according to a transformation matrix.
 template <class ComputeMeshType>

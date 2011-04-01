@@ -29,9 +29,9 @@
 #include <vcg/space/point3.h>
 #include <vcg/space/ray3.h>
 #include <vcg/container/simple_temporary_data.h>
-#include <vcg/complex/trimesh/update/normal.h>
-#include <vcg/complex/trimesh/update/halfedge_topology.h>
-#include <vcg/complex/trimesh/closest.h>
+#include <vcg/complex/algorithms/update/normal.h>
+#include <vcg/complex/algorithms/update/halfedge_topology.h>
+#include <vcg/complex/algorithms/closest.h>
 
 
 namespace vcg

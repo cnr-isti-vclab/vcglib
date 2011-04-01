@@ -95,7 +95,7 @@ namespace vcg {
 namespace tri {
 /// \ingroup trimesh 
 
-/// \headerfile flag.h vcg/complex/trimesh/update/flag.h
+/// \headerfile flag.h vcg/complex/algorithms/update/flag.h
 
 /// \brief Management, updating and computation of per-vertex and per-face flags (like border flags).
 

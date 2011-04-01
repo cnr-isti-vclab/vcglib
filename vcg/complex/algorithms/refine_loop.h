@@ -32,12 +32,12 @@
 
 #include <cmath>
 #include <vcg/space/point3.h>
-#include <vcg/complex/trimesh/base.h>
-#include <vcg/complex/trimesh/refine.h>
+#include <vcg/complex/complex.h>
+#include <vcg/complex/algorithms/refine.h>
 #include <vcg/space/color4.h>
 #include <vcg/container/simple_temporary_data.h>
-#include <vcg/complex/trimesh/update/flag.h>
-#include <vcg/complex/trimesh/update/color.h>
+#include <vcg/complex/algorithms/update/flag.h>
+#include <vcg/complex/algorithms/update/color.h>
 
 
 namespace vcg{

@@ -4,8 +4,8 @@
 #include <iostream>
 #include <list>
 #include <wrap/callback.h>
-#include <vcg/complex/trimesh/update/topology.h>
-#include <vcg/complex/trimesh/update/flag.h>
+#include <vcg/complex/algorithms/update/topology.h>
+#include <vcg/complex/algorithms/update/flag.h>
 #include <map>
 
 namespace vcg {

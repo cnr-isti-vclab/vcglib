@@ -76,11 +76,11 @@ corrected error in -error (see localoptimization)
 
 #include<vcg/math/quadric.h>
 #include<vcg/simplex/face/pos.h>
-#include<vcg/complex/trimesh/update/flag.h>
-#include<vcg/complex/trimesh/update/topology.h>
-#include<vcg/complex/trimesh/update/bounding.h>
-#include<vcg/complex/local_optimization/tri_edge_collapse.h>
-#include<vcg/complex/local_optimization.h>
+#include<vcg/complex/algorithms/update/flag.h>
+#include<vcg/complex/algorithms/update/topology.h>
+#include<vcg/complex/algorithms/update/bounding.h>
+#include<vcg/complex/algorithms/local_optimization/tri_edge_collapse.h>
+#include<vcg/complex/algorithms/local_optimization.h>
 
 
 namespace vcg{

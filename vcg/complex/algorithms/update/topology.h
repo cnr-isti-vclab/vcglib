@@ -91,12 +91,12 @@ Initial commit
 #include <algorithm>
 #include <vector>
 #include <vcg/simplex/face/pos.h>
-#include <vcg/complex/trimesh/base.h>
+#include <vcg/complex/complex.h>
 namespace vcg {
 namespace tri {
 /// \ingroup trimesh 
 
-/// \headerfile topology.h vcg/complex/trimesh/update/topology.h
+/// \headerfile topology.h vcg/complex/algorithms/update/topology.h
 
 /// \brief Generation of per-vertex and per-face topological information.
 
@@ -114,7 +114,7 @@ typedef typename MeshType::FacePointer    FacePointer;
 typedef typename MeshType::FaceIterator   FaceIterator;
 
 
-/// \headerfile topology.h vcg/complex/trimesh/update/topology.h
+/// \headerfile topology.h vcg/complex/algorithms/update/topology.h
 
 /// \brief Auxiliairy data structure for computing face face adjacency information. 
 /** 
@@ -277,7 +277,7 @@ static void VertexFace(MeshType &m)
 }
 
 
-/// \headerfile topology.h vcg/complex/trimesh/update/topology.h
+/// \headerfile topology.h vcg/complex/algorithms/update/topology.h
 
 /// \brief Auxiliairy data structure for computing face face adjacency information. 
 /** 

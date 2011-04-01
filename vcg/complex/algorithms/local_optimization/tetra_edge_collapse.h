@@ -27,7 +27,7 @@
 #ifndef __VCG_DECIMATION_COLLAPSE
 #define __VCG_DECIMATION_COLLAPSE
 
-#include<vcg/complex/local_optimization.h>
+#include<vcg/complex/algorithms/local_optimization.h>
 #include<vcg/simplex/tetrahedron/pos.h>
 #include<vcg/complex/tetramesh/edge_collapse.h>
 #include<vcg/space/point3.h>

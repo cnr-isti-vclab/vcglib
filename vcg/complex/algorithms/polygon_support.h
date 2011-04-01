@@ -25,7 +25,7 @@
 #define __VCGLIB_POLYGON_SUPPORT
 
 #include <vector>
-#include <vcg/complex/trimesh/subset.h>
+#include <vcg/complex/algorithms/subset.h>
 #include <vcg/simplex/face/jumping_pos.h>
 #include <vcg/space/planar_polygon_tessellation.h>
 
@@ -34,7 +34,7 @@ namespace vcg
 	namespace tri{
 		/// \ingroup trimesh 
 
-		/// \headerfile polygon_support.h vcg/complex/trimesh/polygon_support.h
+		/// \headerfile polygon_support.h vcg/complex/algorithms/polygon_support.h
 
 		/// \brief This class is used convert between polygonal meshes and triangular meshes
 

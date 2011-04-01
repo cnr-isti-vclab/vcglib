@@ -135,7 +135,7 @@ header added
 #include <vcg/simplex/vertex/distance.h>
 #include <vcg/space/intersection3.h>
 #include <vcg/space/index/space_iterators.h>
-#include <vcg/complex/trimesh/base.h>
+#include <vcg/complex/complex.h>
 
 namespace vcg {
 	namespace tri {

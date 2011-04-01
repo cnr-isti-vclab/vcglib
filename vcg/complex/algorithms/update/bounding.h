@@ -56,7 +56,7 @@ namespace tri {
 
 /// \ingroup trimesh 
 
-/// \headerfile bounding.h vcg/complex/trimesh/update/bounding.h
+/// \headerfile bounding.h vcg/complex/algorithms/update/bounding.h
 
 /// \brief Management, updating and computation of per-vertex and per-face normals.
 /** 

@@ -24,8 +24,8 @@
 #define __VCG_TRI_UPDATE_QUALITY
 #include <vcg/simplex/face/pos.h>
 #include <vcg/simplex/face/topology.h>
-#include <vcg/complex/trimesh/update/flag.h>
-#include <vcg/complex/trimesh/stat.h>
+#include <vcg/complex/algorithms/update/flag.h>
+#include <vcg/complex/algorithms/stat.h>
 #include <algorithm>
 #include <vector>
 #include <stack>
@@ -35,7 +35,7 @@ namespace vcg {
 namespace tri {
 /// \ingroup trimesh 
 
-/// \headerfile quality.h vcg/complex/trimesh/update/quality.h
+/// \headerfile quality.h vcg/complex/algorithms/update/quality.h
 
 /// \brief Generation of per-vertex and per-face qualities. 
 /**

@@ -33,11 +33,11 @@
 #include <vcg/math/matrix.h>
 #include <vcg/math/lin_algebra.h>
 #include <vcg/simplex/face/topology.h>
-#include <vcg/complex/trimesh/update/edges.h>
-#include <vcg/complex/trimesh/update/normal.h>
-#include <vcg/complex/trimesh/update/topology.h>
-#include <vcg/complex/trimesh/allocate.h>
-#include <vcg/complex/trimesh/clean.h>
+#include <vcg/complex/algorithms/update/edges.h>
+#include <vcg/complex/algorithms/update/normal.h>
+#include <vcg/complex/algorithms/update/topology.h>
+#include <vcg/complex/allocate.h>
+#include <vcg/complex/algorithms/clean.h>
 #include <vcg/space/point3.h>
 #include "emc_lookup_table.h"
 

@@ -62,11 +62,11 @@ the vertex
 #include <vcg/simplex/face/pos.h>
 #include <vcg/simplex/face/jumping_pos.h>
 #include <vcg/container/simple_temporary_data.h>
-#include <vcg/complex/trimesh/update/normal.h>
-#include <vcg/complex/trimesh/point_sampling.h>
-#include <vcg/complex/trimesh/append.h>
-#include <vcg/complex/intersection.h>
-#include <vcg/complex/trimesh/inertia.h>
+#include <vcg/complex/algorithms/update/normal.h>
+#include <vcg/complex/algorithms/point_sampling.h>
+#include <vcg/complex/append.h>
+#include <vcg/complex/algorithms/intersection.h>
+#include <vcg/complex/algorithms/inertia.h>
 #include <vcg/math/matrix33.h>
 
 
@@ -75,7 +75,7 @@ namespace tri {
 
 /// \ingroup trimesh
 
-/// \headerfile curvature.h vcg/complex/trimesh/update/curvature.h
+/// \headerfile curvature.h vcg/complex/algorithms/update/curvature.h
 
 /// \brief Management, updating and computation of per-vertex and per-face normals.
 /**

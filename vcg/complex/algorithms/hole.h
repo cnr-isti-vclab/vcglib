@@ -139,7 +139,7 @@ First Non working Version
 
 #include <wrap/callback.h>
 #include <vcg/math/base.h>
-#include <vcg/complex/trimesh/clean.h>
+#include <vcg/complex/algorithms/clean.h>
 #include <vcg/space/point3.h>
 #include <vector>
 #include <float.h>

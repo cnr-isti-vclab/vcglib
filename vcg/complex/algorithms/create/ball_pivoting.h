@@ -3,7 +3,7 @@
 
 #include "advancing_front.h"
 #include <vcg/space/index/grid_static_ptr.h>
-#include <vcg/complex/trimesh/closest.h>
+#include <vcg/complex/algorithms/closest.h>
 
 /* Ball pivoting algorithm:
    1) the vertices used in the new mesh are marked as visited

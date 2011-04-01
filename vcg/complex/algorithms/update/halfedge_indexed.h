@@ -25,18 +25,18 @@
 #define __VCGLIB_HALFEDGE_
 
 #include <vector>
-#include <vcg/complex/trimesh/allocate.h>
-#include <vcg/complex/trimesh/clean.h>
-#include <vcg/complex/trimesh/update/topology.h>
-#include <vcg/complex/trimesh/base.h>
-#include <vcg/complex/trimesh/update/halfedge_topology.h>
+#include <vcg/complex/allocate.h>
+#include <vcg/complex/algorithms/clean.h>
+#include <vcg/complex/algorithms/update/topology.h>
+#include <vcg/complex/complex.h>
+#include <vcg/complex/algorithms/update/halfedge_topology.h>
 
 namespace vcg
 {
     namespace tri{
         /// \ingroup trimesh
 
-        /// \headerfile edge_support.h vcg/complex/trimesh/edge_support.h
+        /// \headerfile edge_support.h vcg/complex/algorithms/edge_support.h
 
         /// \brief This class is used to build edge based data structure from indexed data structure and viceversa
 

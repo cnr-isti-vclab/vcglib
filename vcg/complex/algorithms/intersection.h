@@ -58,10 +58,10 @@ added vcg header
 #include<vcg/space/segment3.h>
 #include<vcg/space/intersection3.h>
 #include<vcg/complex/edgemesh/allocate.h>
-#include<vcg/complex/trimesh/allocate.h>
-#include<vcg/complex/trimesh/subset.h>
-#include<vcg/complex/trimesh/closest.h>
-#include<vcg/complex/trimesh/base.h>
+#include<vcg/complex/allocate.h>
+#include<vcg/complex/algorithms/subset.h>
+#include<vcg/complex/algorithms/closest.h>
+#include<vcg/complex/complex.h>
 
 #ifndef __VCGLIB_INTERSECTION_TRI_MESH
 #define __VCGLIB_INTERSECTION_TRI_MESH

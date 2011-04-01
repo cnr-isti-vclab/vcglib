@@ -26,7 +26,7 @@
 
 #include <vcg/space/triangle3.h>
 #include <vcg/math/matrix33.h>
-#include <vcg/complex/trimesh/update/flag.h>
+#include <vcg/complex/algorithms/update/flag.h>
 
 
 namespace vcg {
@@ -34,7 +34,7 @@ namespace tri {
 
 /// \ingroup trimesh
 
-/// \headerfile normal.h vcg/complex/trimesh/update/normal.h
+/// \headerfile normal.h vcg/complex/algorithms/update/normal.h
 
 /// \brief Management, updating and computation of per-vertex and per-face normals.
 /**

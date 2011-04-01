@@ -32,10 +32,10 @@
 #include <vcg/space/texcoord2.h>
 #include <vcg/space/color4.h>
 #include <vcg/simplex/face/pos.h>
-#include<vcg/complex/trimesh/allocate.h>
-#include<vcg/complex/trimesh/update/topology.h>
+#include<vcg/complex/allocate.h>
+#include<vcg/complex/algorithms/update/topology.h>
 #include<wrap/callback.h>
-#include <vcg/complex/trimesh/base.h>
+#include <vcg/complex/complex.h>
 #include <vcg/space/triangle3.h>
 
 namespace vcg{

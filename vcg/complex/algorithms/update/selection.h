@@ -24,7 +24,7 @@
 #define __VCG_TRI_UPDATE_SELECTION
 
 #include <queue>
-#include <vcg/complex/trimesh/update/flag.h>
+#include <vcg/complex/algorithms/update/flag.h>
 
 namespace vcg {
 namespace tri {
@@ -98,7 +98,7 @@ private:
 
 /// \ingroup trimesh 
 
-/// \headerfile selection.h vcg/complex/trimesh/update/selection.h
+/// \headerfile selection.h vcg/complex/algorithms/update/selection.h
 
 /// \brief Management, updating and computation of per-vertex and per-face normals.
 /** 

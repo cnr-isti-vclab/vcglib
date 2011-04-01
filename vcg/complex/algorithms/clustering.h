@@ -62,10 +62,10 @@ First working Version
 #ifndef __VCGLIB_CLUSTERING
 #define __VCGLIB_CLUSTERING
 
-#include<vcg/complex/trimesh/base.h>
-#include <vcg/complex/trimesh/clean.h>
+#include<vcg/complex/complex.h>
+#include <vcg/complex/algorithms/clean.h>
 #include<vcg/space/triangle3.h>
-#include<vcg/complex/trimesh/update/topology.h>
+#include<vcg/complex/algorithms/update/topology.h>
 #include<vcg/space/index/grid_util.h>
 
 #include <iostream>

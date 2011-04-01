@@ -39,7 +39,7 @@
 #include <vcg/container/simple_temporary_data.h>
 #include <vcg/simplex/face/pos.h>
 #include <vcg/simplex/face/topology.h>
-#include <vcg/complex/trimesh/update/quality.h>
+#include <vcg/complex/algorithms/update/quality.h>
 #include <deque>
 #include <vector>
 #include <list>
