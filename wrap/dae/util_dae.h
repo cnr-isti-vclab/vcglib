@@ -24,11 +24,10 @@
 #define __VCGLIB_UTILDAE
 
 
+#include <vcg/complex/append.h>
 #include <wrap/io_trimesh/additionalinfo.h>
-#include <vcg/complex/trimesh/update/normal.h>
-#include <vcg/complex/trimesh/update/position.h>
-#include <vcg/complex/trimesh/append.h>
-#include <vcg/complex/trimesh/allocate.h>
+#include <vcg/complex/algorithms/update/normal.h>
+#include <vcg/complex/algorithms/update/position.h>
 
 #include <wrap/io_trimesh/io_mask.h>
 
