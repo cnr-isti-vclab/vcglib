@@ -21,11 +21,6 @@
 *                                                                           *
 ****************************************************************************/
 
-/****************************************************************************
-  History
-
-$Log: import_raw.h,v $
-****************************************************************************/
 
 #ifndef __VCGLIB_IMPORT_ASC
 #define __VCGLIB_IMPORT_ASC
@@ -33,9 +28,8 @@ $Log: import_raw.h,v $
 #include <stdio.h>
 #include <fstream>
 #include <iostream>
-#include <vcg/complex/trimesh/allocate.h>
-#include <vcg/complex/trimesh/create/platonic.h>
-#include <vcg/complex/trimesh/clean.h>
+#include <vcg/complex/algorithms/create/platonic.h>
+#include <vcg/complex/algorithms/clean.h>
 
 namespace vcg {
 namespace tri {

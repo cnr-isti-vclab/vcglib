@@ -31,7 +31,7 @@
 #include <string>
 #include <ios>
 #include <vcg/space/color4.h>
-#include <vcg/complex/trimesh/update/bounding.h>
+#include <vcg/complex/algorithms/update/bounding.h>
 #include <wrap/io_trimesh/io_mask.h>
 #include <QString>
 #include <QFile>

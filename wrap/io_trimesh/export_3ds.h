@@ -21,122 +21,12 @@
 *                                                                           *
 ****************************************************************************/
 
-/****************************************************************************
-  History
-
- $Log: not supported by cvs2svn $
- Revision 1.7  2007/03/12 16:40:16  tarini
- Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
-
- Revision 1.6  2006/11/30 22:48:06  cignoni
- Corrected bug in exporting mesh with deleted vertices
-
- Revision 1.5  2006/11/08 15:48:50  cignoni
- Corrected management of capabilities and masks
-
- Revision 1.4  2006/03/29 09:25:49  zifnab1974
- extra includes necessary for compilation of meshlab on AMD 64 with gcc 3.4.5
-
- Revision 1.3  2006/03/07 13:20:40  cignoni
- changed include of io_material
-
- Revision 1.2  2006/02/17 23:53:36  fmazzant
- added relative Path of the Lib3ds library
-
- Revision 1.1  2006/02/16 19:28:36  fmazzant
- transfer of Export_3ds.h, Export_obj.h, Io_3ds_obj_material.h from Meshlab to vcg
-
- Revision 1.14  2006/02/06 11:26:26  fmazzant
- bug-fix comment
-
- Revision 1.13  2006/02/06 11:04:39  fmazzant
- added file material.h. it include struct Material, CreateNewMaterial(...) and MaterialsCompare(...)
-
- Revision 1.12  2006/02/04 10:18:46  fmazzant
- clean code
-
- Revision 1.11  2006/02/03 12:36:53  fmazzant
- not significant updating
-
- Revision 1.10  2006/02/03 10:04:41  fmazzant
- no significant updated
-
- Revision 1.9  2006/02/02 16:08:27  fmazzant
-  updated comment code
-
- Revision 1.8  2006/02/02 16:05:18  fmazzant
- deleted bug when saving mesh without textures.
-
- Revision 1.7  2006/02/02 15:35:15  fmazzant
- updated comment code
-
- Revision 1.6  2006/02/02 13:08:10  fmazzant
- cleaned & commented[italian] code
-
- Revision 1.5  2006/02/02 10:50:46  fmazzant
- deleted a big bug of exporter 3ds
-
- Revision 1.4  2006/01/31 09:34:30  fmazzant
- bug-fix on savemaskexporter, when press cancel returns -1.
-
- Revision 1.3  2006/01/29 23:52:43  fmazzant
- correct a small bug
-
- Revision 1.2  2006/01/29 18:33:42  fmazzant
- added some comment to the code
-
- Revision 1.1  2006/01/29 16:33:03  fmazzant
- moved export_obj and export_3ds from test/io into meshio/
-
- Revision 1.30  2006/01/26 15:57:20  fmazzant
- deleted a small bug
-
- Revision 1.29  2006/01/26 15:48:49  fmazzant
- added control on the maximum number of vertices allowed by the 3DS file format
-
- Revision 1.28  2006/01/23 14:07:39  fmazzant
- deleted bug when saving a face color.
-
- Revision 1.27  2006/01/22 23:59:01  fmazzant
- changed default value of diffuse. 1.0 -> 0.8
-
- Revision 1.26  2006/01/22 10:42:18  fmazzant
- cleaned code & optimized code of material's name 3ds
-
- Revision 1.25  2006/01/22 01:26:52  fmazzant
- deleted bug on saving name material 3ds
-
- Revision 1.24  2006/01/21 15:19:51  fmazzant
- changed:
- inserting coord texture in to map from key = index, value=coord
- to key=coord, value=index_of_vertix.
-
- Revision 1.23  2006/01/20 14:15:52  fmazzant
- added texture filename on material 3ds and coordtexture on face
-
- Revision 1.22  2006/01/19 09:36:29  fmazzant
- cleaned up history log
-
- Revision 1.21  2006/01/18 16:14:52  fmazzant
- update small error
-
- Revision 1.20  2006/01/18 16:12:58  fmazzant
- updated material
-
- Revision 1.19  2006/01/18 15:09:45  fmazzant
- added texture base
-
- Revision 1.18  2006/01/18 14:57:26  fmazzant
- added Lib3dsNode in export_3ds
-
-****************************************************************************/
 
 #ifndef __VCGLIB_EXPORT_3DS
 #define __VCGLIB_EXPORT_3DS
 
 #include <map>
 #include <wrap/callback.h>
-#include <vcg/complex/trimesh/allocate.h>
 #include <wrap/io_trimesh/io_mask.h>
 
 #include "io_material.h"
