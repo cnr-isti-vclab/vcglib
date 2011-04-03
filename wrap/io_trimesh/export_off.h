@@ -31,8 +31,8 @@
 
 #include <stdio.h>
 #include <wrap/io_trimesh/io_mask.h>
-#include <vcg/complex/trimesh/clean.h>
-#include <vcg/complex/trimesh/polygon_support.h>
+#include <vcg/complex/algorithms/clean.h>
+#include <vcg/complex/algorithms/polygon_support.h>
 
 
 namespace vcg {

@@ -26,7 +26,6 @@
 #define __VCGLIB_IMPORT_OBJ
 
 #include <wrap/callback.h>
-#include <vcg/complex/trimesh/allocate.h>
 #include <wrap/io_trimesh/io_mask.h>
 #include <wrap/io_trimesh/io_material.h>
 #ifdef __gl_h_

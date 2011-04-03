@@ -27,8 +27,6 @@
 #define __VCGLIB_EXPORT_OBJ
 
 #include <wrap/callback.h>
-#include <vcg/complex/trimesh/allocate.h>
-#include <vcg/space/texcoord2.h>
 #include <wrap/io_trimesh/io_mask.h>
 #include "io_material.h"
 #include <iostream>

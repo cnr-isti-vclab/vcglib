@@ -24,12 +24,7 @@
 #define __VCGLIB_IMPORT_OFF
 
 #include <fstream>
-#include <string>
-#include <vector>
-#include <assert.h>
-#include <vcg/space/color4.h>
-#include<vcg/complex/trimesh/allocate.h>
-#include<vcg/complex/trimesh/bitquad_support.h>
+#include<vcg/complex/algorithms/bitquad_support.h>
 #include <wrap/callback.h>
 #include <wrap/io_trimesh/io_mask.h>
 

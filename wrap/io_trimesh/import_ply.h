@@ -20,132 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.39  2008/03/22 10:24:44  cignoni
-added yet another combination of unsigned/signed elements in faces specification to comply to mathematica ply's
-
-Revision 1.38  2007/11/19 16:31:55  ponchio
-loadmask in Open is now written.
-
-Revision 1.37  2007/10/19 22:13:37  cignoni
-added support for per-vertex normal for reading ply point clouds
-
-Revision 1.36  2007/07/02 12:33:34  cignoni
-wedge colors now are loaded into face color if they are available.
-
-Revision 1.35  2007/03/12 16:40:17  tarini
-Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
-
-Revision 1.34  2007/03/03 02:28:59  cignoni
-Removed initialization of a single face in the main parsing loop. Single face cannot exist anymore with OCF. Moved into the tristrip parsing section.
-
-Revision 1.33  2007/02/14 15:30:13  ganovelli
-added treatment of HasPerVertexFlags absent
-
-Revision 1.32  2007/02/02 00:29:33  tarini
-added a few  typecasts to QualityTypefor vertices and faces (avoids warinings when short int or int is used for Quality).
-
-Revision 1.31  2006/12/18 09:46:39  callieri
-camera+shot revamp: changed field names to something with more sense, cleaning of various functions, correction of minor bugs/incongruences, removal of the infamous reference in shot.
-
-Revision 1.30  2006/11/27 10:36:13  cignoni
-Removed  flags initialization. no more necessary
-
-Revision 1.29  2006/10/14 00:18:42  cignoni
-Allowed the correct loading of meshes with 0 faces
-
-Revision 1.28  2006/05/16 15:01:30  cignoni
-Wedge colors are loaded into facecolor only if specified in the incoming pi.mask
-
-Revision 1.27  2006/05/03 21:21:21  cignoni
-Corrected bug: mismatch in the index of confidence vertex property (8 instead of 11)
-Changed HasPerFaceColor to the new syntax (HasPerFaceColor(m)  instead of FaceType::HasFaceColor() )
-
-Revision 1.26  2006/02/03 09:46:24  corsini
-Remove signed/unsigned warning
-
-Revision 1.25  2006/01/11 10:37:12  cignoni
-Removed warning for unused vars
-
-Revision 1.24  2006/01/10 13:20:42  cignoni
-Changed ply::PlyMask to io::Mask
-
-Revision 1.23  2006/01/04 16:17:03  cignoni
-Corrected use of mask and callback in function Open(m,filename,mask,callback);
-
-Revision 1.22  2005/12/30 22:30:43  cignoni
-Added support for per vertex color stored as 'diffuse_xxx' property
-
-Revision 1.21  2005/12/02 10:04:18  cignoni
-forgotten a couple of std::
-
-Revision 1.20  2005/12/02 00:01:30  cignoni
-Added loading of texturenames (normalmap still to do)
-
-Revision 1.19  2005/11/25 10:23:27  cignoni
-Added safe zero initialization of index of wedge texture
-
-Revision 1.18  2005/11/23 16:59:55  callieri
-corrected protected access methods (camera, similarity) of shot
-
-Revision 1.17  2005/11/12 18:13:30  cignoni
-Added support for non triangular faces (simple fan triangulation) and removed flags intiailization.
-
-Revision 1.16  2005/10/14 15:09:56  cignoni
-Added LoadMask without plyinfo and some comment on the mask usage
-
-Revision 1.15  2005/06/10 15:05:00  cignoni
-Made inline PlyType specializations
-
-Revision 1.14  2005/04/14 15:09:38  ponchio
-New gcc 3.3.3 (with bugs and features) now compiles.
-
-Revision 1.13  2005/03/18 00:14:39  cignoni
-removed small gcc compiling issues
-
-Revision 1.12  2005/02/08 17:28:22  tarini
-changed 120 "const static" to "static const", and added missing "format" fields to all PropDescriptor literals,  to keep Mingw compiler happy
-
-Revision 1.11  2005/01/03 10:35:47  cignoni
-Improved the compatibility for ply format for faces having the list size (e.g. number of vertexes of a face) as a char instead of a uchar.
-Added a couple of new face descriptors, corrected a bug in error reporting function (and restructured) and translated a few comments.
-Thanks to Patrick Min for the careful bug reporting
-
-Revision 1.10  2004/10/07 14:51:10  ganovelli
-added setidentity della camera
-
-Revision 1.9  2004/10/07 14:19:06  ganovelli
-shot/camera io added
-
-Revision 1.8  2004/06/23 15:36:43  cignoni
-Restructured management of error, now the standard open for any mesh type return the error code, the default success value is zero
-Any import class has a method ErrorMsg that give a verbal description of an error code.
-
-Revision 1.7  2004/06/11 17:09:41  ganovelli
-inclusion of vector..minorchanges
-
-Revision 1.6  2004/05/28 14:11:13  ganovelli
-changes to comply io_mask moving in vcg::ply namesp
-
-Revision 1.5  2004/05/12 10:19:30  ganovelli
-new line added at the end of file
-
-Revision 1.4  2004/05/04 02:36:07  ganovelli
-#ifndef __VCGLIB_IMPORTERPLY added
-
-Revision 1.3  2004/04/03 13:30:01  cignoni
-missing include allocate.h
-
-Revision 1.2  2004/03/09 21:26:47  cignoni
-cr lf mismatch
-
-Revision 1.1  2004/03/03 15:00:51  cignoni
-Initial commit
-
-****************************************************************************/
 #ifndef __VCGLIB_IMPORTERPLY
 #define __VCGLIB_IMPORTERPLY
 
@@ -153,10 +27,7 @@ Initial commit
 #include<wrap/ply/plylib.h>
 #include<wrap/io_trimesh/io_mask.h>
 #include<wrap/io_trimesh/io_ply.h>
-#include<vcg/complex/trimesh/allocate.h>
-#include<vcg/complex/trimesh/create/platonic.h>
-#include<vcg/space/color4.h>
-#include <vector>
+#include<vcg/complex/algorithms/create/platonic.h>
 
 namespace vcg {
 namespace tri {

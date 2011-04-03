@@ -20,30 +20,16 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-History
-$Log: not supported by cvs2svn $
-Revision 1.6  2006/11/28 11:36:25  cignoni
-Removed nonstandard  include io.h
-
-Revision 1.5  2006/11/21 22:34:58  cignoni
-small gcc compiling issues
-
-Revision 1.4  2006/11/21 19:23:50  e_cerisoli
-Added comments for documentation
-
-****************************************************************************/
 
 #ifndef __VCGLIB_IMPORT_PTX
 #define __VCGLIB_IMPORT_PTX
 
 #include <stdio.h>
 #include <wrap/callback.h>
-#include <vcg/complex/trimesh/allocate.h>
-#include <vcg/complex/trimesh/clean.h>
-#include <vcg/complex/trimesh/update/normal.h>
-#include <vcg/complex/trimesh/update/position.h>
-#include <vcg/complex/trimesh/update/bounding.h>
+#include <vcg/complex/algorithms/clean.h>
+#include <vcg/complex/algorithms/update/normal.h>
+#include <vcg/complex/algorithms/update/position.h>
+#include <vcg/complex/algorithms/update/bounding.h>
 
 namespace vcg {
 namespace tri {

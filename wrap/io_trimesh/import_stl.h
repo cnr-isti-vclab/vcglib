@@ -21,57 +21,10 @@
 *                                                                           *
 ****************************************************************************/
 
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.15  2007/05/24 06:56:54  cignoni
-Corrected gcc warning
-
-Revision 1.14  2006/06/10 12:49:05  mariolatronico
-file length is now computed using fseek and ftell
-
-Revision 1.13  2006/06/06 14:35:32  zifnab1974
-Changes for compilation on linux AMD64. Some remarks: Linux filenames are case-sensitive. _fileno and _filelength do not exist on linux
-
-Revision 1.12  2006/05/03 21:19:34  cignoni
-Added support for progress callback
-
-Revision 1.11  2006/01/30 15:02:50  cignoni
-Added mask filling in open
-
-Revision 1.10  2006/01/04 16:14:43  cignoni
-Added callback managment on loading of binary stl
-
-Revision 1.9  2005/09/15 09:29:45  m_di_benedetto
-#included missing <wrap/callback.h> and <vcg/complex/trimesh/allocate.h>
-
-Revision 1.8  2004/10/28 00:52:45  cignoni
-Better Doxygen documentation
-
-Revision 1.7  2004/08/25 15:27:51  ponchio
-Comma at end of enum.
-
-Revision 1.6  2004/08/25 15:15:27  ganovelli
-minor changes to comply gcc compiler (typename's and stuff)
-
-Revision 1.5  2004/06/23 15:36:44  cignoni
-Restructured management of error, now the standard open for any mesh type return the error code, the default success value is zero
-Any import class has a method ErrorMsg that give a verbal description of an error code.
-
-Revision 1.4  2004/03/18 15:30:57  cignoni
-Removed float/double warning
-
-Revision 1.3  2004/03/12 21:42:52  cignoni
-First working version!
-
-****************************************************************************/
-
 #ifndef __VCGLIB_IMPORT_STL
 #define __VCGLIB_IMPORT_STL
 #include <stdio.h>
 #include <wrap/callback.h>
-#include <vcg/complex/trimesh/allocate.h>
 
 namespace vcg {
 namespace tri {
