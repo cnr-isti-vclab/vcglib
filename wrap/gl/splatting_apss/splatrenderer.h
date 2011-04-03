@@ -31,7 +31,7 @@
 #include <wrap/gl/shaders.h>
 #include <wrap/gl/trimesh.h>
 #include <QGLFramebufferObject>
-#include <vcg/complex/trimesh/base.h>
+#include <vcg/complex/complex.h>
 #define GL_TEST_ERR\
 	{\
 			GLenum eCode;\

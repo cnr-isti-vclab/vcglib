@@ -25,7 +25,6 @@
 #define _VCG_FACE_TOPOLOGY
 
 #include <vcg/simplex/face/pos.h>
-#include <vcg/complex/trimesh/allocate.h>
 #include <algorithm>
 
 namespace vcg {
