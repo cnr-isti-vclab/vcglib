@@ -20,36 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.11  2007/05/02 13:25:45  zifnab1974
-only use typename when necessary
-
-Revision 1.10  2007/04/10 22:46:57  pietroni
-- line 152 changed call intersection to IntersectionPlaneTriangle because changing in function's name
-
-Revision 1.9  2007/01/03 15:51:28  pietroni
-added initial define and included missing files
-
-Revision 1.8  2006/01/19 14:06:37  spinelli
-add std:: namespace...
-
-Revision 1.7  2005/10/03 16:18:15  spinelli
-add template parameter for spatialindexing struction
-
-Revision 1.6  2005/05/30 09:11:20  ganovelli
-header added, error in include
-
-Revision 1.3  2005/05/17 21:19:37  ganovelli
-some std::and typename  missing  (CRS4)
-
-Revision 1.2  2005/03/08 14:42:22  ganovelli
-added vcg header
-
-
-****************************************************************************/
 
 #include<vector>
 #include <algorithm>
@@ -57,7 +27,6 @@ added vcg header
 #include<vcg/space/plane3.h>
 #include<vcg/space/segment3.h>
 #include<vcg/space/intersection3.h>
-#include<vcg/complex/edgemesh/allocate.h>
 #include<vcg/complex/allocate.h>
 #include<vcg/complex/algorithms/subset.h>
 #include<vcg/complex/algorithms/closest.h>
@@ -68,13 +37,19 @@ added vcg header
 
 namespace vcg{
 
+// NAMING CONVENTION
+// INTERSECTION<SIMPLEOBJECT,COMPLEXSTUFF>
+// and it returns the portion of Complexstuff intersected by the simpleobject.
+
 /** \addtogroup complex */
 /*@{*/
 /** 
     Function computing the intersection between  a grid and a plane. It returns all the cells intersected
 */
 template < typename  GridType,typename ScalarType>
-bool Intersect(   GridType & grid,Plane3<ScalarType> plane, std::vector<typename GridType::Cell *> &cells){					
+bool IntersectionPlaneGrid( GridType & grid, Plane3<ScalarType> plane, std::vector<typename GridType::Cell *> &cells)
+{
+  cells.clear();
 	Point3d p,_d;
 	Plane3d pl;
 	_d.Import(plane.Direction());
@@ -116,62 +91,7 @@ bool Intersect(   GridType & grid,Plane3<ScalarType> plane, std::vector<typename
 	}
 
 /*@}*/
-/** 
-	Basic Function computing the intersection between  a trimesh and a plane, provided a pointer 
-	to an space indexing data structure (e.g. a grid, an oct-tree..)
-*/
-	template < typename  TriMeshType, typename EdgeMeshType, class ScalarType, class IndexingType >
-	bool Intersection(	/*TriMeshType & m, */
-	Plane3<ScalarType>  pl,
-	EdgeMeshType & em,
-	double& ave_length,
-	IndexingType *grid,
-	typename std::vector< typename IndexingType::Cell* >& cells)
-{
-		typedef typename TriMeshType::FaceContainer FaceContainer;
-		typedef IndexingType GridType;
-		typename EdgeMeshType::VertexIterator vi;
-		typename TriMeshType::FaceIterator fi;
-		std::vector<typename TriMeshType::FaceType*> v;
-		v.clear();
-		Intersect(*grid,pl,cells);
-		Segment3<ScalarType> seg;
-		ave_length = 0.0;
-		typename std::vector<typename GridType::Cell*>::iterator ic;
-		typename GridType::Cell fs,ls;
-		for(ic = cells.begin(); ic != cells.end();++ic)
-		{
-			grid->Grid(*ic,fs,ls);
-			typename GridType::Link * lk = fs;
-			while(lk != ls){
-				typename TriMeshType::FaceType & face = *(lk->Elem());
-				if(!face.IsS())
-				{
-					face.SetS();
-					v.push_back(&face);
-					if(vcg::IntersectionPlaneTriangle(pl,face,seg))// intersezione piano triangolo
-					{
-						face.SetS();
-						// add to em
-						ave_length+=seg.Length();
-						vcg::edg::Allocator<EdgeMeshType>::AddEdges(em,1);
-						vi = vcg::edg::Allocator<EdgeMeshType>::AddVertices(em,2);
-						(*vi).P() = seg.P0();
-						em.edges.back().V(0) = &(*vi); 
-						vi++;
-						(*vi).P() = seg.P1();
-						em.edges.back().V(1) = &(*vi); 
-					}
-				}//endif 
-				lk++;
-			}//end while
-		}
-		ave_length/=em.en;
-		typename std::vector<typename TriMeshType::FaceType*>::iterator v_i;
-    for(v_i=v.begin(); v_i!=v.end(); ++v_i) (*v_i)->ClearS();
-		
-		return true;
-}
+
 
 /** \addtogroup complex */
 /*@{*/
@@ -184,7 +104,7 @@ bool Intersect(   GridType & grid,Plane3<ScalarType> plane, std::vector<typename
 // TODO si dovrebbe considerare la topologia face-face della trimesh per derivare quella della edge mesh..
 */
 template < typename  TriMeshType, typename EdgeMeshType, class ScalarType >
-bool Intersection(TriMeshType & m,
+bool IntersectionPlaneMesh(TriMeshType & m,
 									Plane3<ScalarType>  pl,
 									EdgeMeshType & em)
 {
@@ -197,13 +117,13 @@ bool Intersection(TriMeshType & m,
 		{
 			if(vcg::IntersectionPlaneTriangle(pl,*fi,seg))// intersezione piano triangolo
 							{
-								vcg::edg::Allocator<EdgeMeshType>::AddEdges(em,1);
-								vi = vcg::edg::Allocator<EdgeMeshType>::AddVertices(em,2);
+                vcg::tri::Allocator<EdgeMeshType>::AddEdges(em,1);
+                vi = vcg::tri::Allocator<EdgeMeshType>::AddVertices(em,2);
 								(*vi).P() = seg.P0();
-								em.edges.back().V(0) = &(*vi); 
+                em.edge.back().V(0) = &(*vi);
 								vi++;
 								(*vi).P() = seg.P1();
-								em.edges.back().V(1) = &(*vi); 
+                em.edge.back().V(1) = &(*vi);
 							}
 		 }//end for
 	
