@@ -20,108 +20,7 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
 
-$Log: not supported by cvs2svn $
-Revision 1.27  2006/12/06 12:59:13  pietroni
-added max distance to rayIterator
-
-Revision 1.26  2006/11/21 16:06:54  ponchio
-passing VDistFunct() to functions wanting a reference, not a value
-(why a reference btw?)
-
-Revision 1.25  2006/11/13 13:13:49  ponchio
-Added usual typename.
-
-Revision 1.24  2006/11/12 02:41:03  pietroni
-added normalization of normal in DoRay functions
-
-Revision 1.23  2006/11/10 11:41:49  pietroni
-added DoRayFuntion that return interpolated normal
-
-Revision 1.22  2006/09/20 17:18:26  ponchio
-VDistFunct() at line 292 was passed as a temporary.
-Invalid under g++. Fixed.
-
-Revision 1.21  2006/02/09 08:38:04  pietroni
-sintax error corrected
-
-Revision 1.20  2006/02/08 17:02:41  pietroni
-commented one  GetClosestFace function ... the code is the same then getClosest that return barycentric coordinates
-
-Revision 1.19  2006/01/10 13:31:54  pietroni
-correct pass of variable closest_pt by reference in getclosestFace function
-
-Revision 1.18  2005/12/02 00:13:34  cignoni
-Added and removed typenames for gcc compiling.
-removed also some template arguments specifcation that gcc disliked...
-commented out GetInSphereFace and SetMesh that are probably never used and i didnt succeed in compile
-
-Revision 1.17  2005/10/05 17:02:52  pietroni
-corrected bugs on GEtKClosestVert and GetInSphereVert
-
-Revision 1.16  2005/10/03 16:19:07  spinelli
-fixed some bugs
-
-Revision 1.15  2005/10/03 13:59:39  pietroni
-added GetInSphere and GetInBox functions
-rensmed Functions respectively with Face suffix or Vertex suffix for query on vertex or faces
-
-Revision 1.14  2005/09/30 13:10:37  pietroni
-used functor defined in face/distance.h for distance point-face
-used functor defined in intersection3.h for ray-triangle intersection
-added GetKClosest and DoRay Functions
-
-Revision 1.13  2005/09/28 08:30:48  cignoni
-changed name of include, removed use of an undefined type (scalar instead of Scalar)
-removed unused code portions (the old closest code)
-
-Revision 1.12  2005/09/21 09:24:30  pietroni
-Added RayIterators.
-Added ClosestIterators on Triangles and Vertices.
-Added Closest Functions on triangles and Vertices.
-
-Revision 1.11  2005/09/19 13:36:24  pietroni
-added ray iterator of faces
-
-Revision 1.10  2005/09/16 11:53:51  cignoni
-Small gcc compliling issues
-
-Revision 1.9  2005/09/15 13:16:10  spinelli
-fixed bugs
-
-Revision 1.8  2005/09/15 11:15:00  pietroni
-minor changes
-
-Revision 1.7  2005/09/14 12:56:47  pietroni
-used closest function from grid
-
-Revision 1.6  2005/08/26 09:12:48  cignoni
-changed  typedef A2UGridLink  da 'GridStaticPtr<MESH::FaceContainer,double>::Link' a  typedef 'GRID::Link'
-
-Revision 1.5  2005/02/08 17:49:38  pietroni
-added  if (!l->Elem()->IsD()) test on each element
-
-Revision 1.4  2005/01/28 12:00:33  cignoni
-small gcc compiling issues for namespaces
-
-Revision 1.3  2005/01/24 11:47:23  cignoni
-Now used also by the official Metro
-Removed using namespace (NEVER IN HEADERS!)
-Made  the computation of barycentric coords only when necessary
-Renamed Mindistpoint to Closest
-
-Revision 1.2  2005/01/21 17:13:09  pietroni
-included distance.h changed Dist to  vcg::face::PointDistance
-
-Revision 1.1  2004/10/04 15:32:16  ganovelli
-moved from metro core
-
-Revision 1.6  2004/05/14 00:34:36  ganovelli
-header added
-
-****************************************************************************/
 
 #ifndef __VCG_TRIMESH_CLOSEST
 #define __VCG_TRIMESH_CLOSEST
@@ -211,12 +110,10 @@ namespace vcg {
 				// f=bestf;
 				typename MESH::ScalarType alfa, beta, gamma;
 				//calcolo normale con interpolazione trilineare
-				InterpolationParameters<typename MESH::FaceType,typename MESH::ScalarType>(*bestf,bestf->N(),_closestPt, alfa, beta, gamma);
-				_normf =  (bestf->V(0)->cN())*alfa+
-					(bestf->V(1)->cN())*beta+
-					(bestf->V(2)->cN())*gamma ;
-				_ip=Point3x(alfa,beta,gamma);
-				//normf.Normalize(); inutile si assume le normali ai vertici benfatte										
+        InterpolationParameters<typename MESH::FaceType,typename MESH::ScalarType>(*bestf,bestf->N(),_closestPt, _ip);
+        _normf =  (bestf->V(0)->cN())*_ip[0]+
+          (bestf->V(1)->cN())*_ip[1]+
+          (bestf->V(2)->cN())*_ip[2] ;
 
 				_minDist = fabs(_minDist);
 				return(bestf);

@@ -1235,7 +1235,7 @@ private:
                         Triangle3<float> t1(f->P(i), f->P1(i), f->P2(i)), t2(g->P(k), g->P1(k), g->P2(k)),
                                          t3(f->P(i), g->P2(k), f->P2(i)), t4(g->P(k), f->P2(i), g->P2(k));
 
-                        if ( std::min( t1.QualityFace(), t2.QualityFace() ) < std::min( t3.QualityFace(), t4.QualityFace() ))
+                        if ( std::min( QualityFace(t1), QualityFace(t2) ) < std::min( QualityFace(t3), QualityFace(t4) ))
                         {
                             face::FlipEdge<FaceType>( *f, i );
                             ++count; ++total;

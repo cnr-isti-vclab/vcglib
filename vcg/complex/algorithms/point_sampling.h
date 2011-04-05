@@ -721,15 +721,7 @@ static int SingleFaceSubdivisionOld(int sampleNum, const CoordType & v0, const C
         else SamplePoint=((v0+v1+v2)*(1.0f/3.0f));
 
         CoordType SampleBary;
-//        int axis;
-//        if(fp->Flags() & FaceType::NORMX )   axis = 0;
-//        else if(fp->Flags() & FaceType::NORMY )   axis = 1;
-//        else {
-//            assert(fp->Flags() & FaceType::NORMZ) ;
-//            axis =2;
-//        }
-//        InterpolationParameters(*fp,axis,SamplePoint,SampleBary);
-                InterpolationParameters(*fp,SamplePoint,SampleBary[0],SampleBary[1],SampleBary[2]);
+        InterpolationParameters(*fp,SamplePoint,SampleBary);
         ps.AddFace(*fp,SampleBary);
         return 1;
     }
