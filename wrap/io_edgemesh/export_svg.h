@@ -26,7 +26,7 @@
 
 namespace vcg 
 {
-	namespace edg 
+  namespace tri
 	{
 		namespace io 
 		{
@@ -194,7 +194,7 @@ static void WriteXmlBody(FILE* fpo, EdgeMeshType &mp, SVGProperties &pro, int me
 		float scale = pro.scale;
 		if(scale==0) scale = 2.0/mp.bbox.Diag();
 		
-		for (i = mp.edges.begin(); i != mp.edges.end(); ++i)
+    for (i = mp.edge.begin(); i != mp.edge.end(); ++i) if(!(*i).IsD())
 		{
 			Point3f p0 = (-rotCenter + rotM * ((*i).V(0)->P()))*scale*1000;
 			Point3f p1 = (-rotCenter + rotM * ((*i).V(1)->P()))*scale*1000;
