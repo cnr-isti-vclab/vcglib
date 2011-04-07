@@ -1150,6 +1150,60 @@ private:
 			        		std::swap((*fi).WT(0),(*fi).WT(1));
         }
       }
+      /// Flip a mesh so that its normals are orented outside.
+      /// Just for safety it uses a voting scheme.
+      /// It assumes that
+      /// mesh has already has coherent normals.
+      /// mesh is watertight and signle component.
+      static bool FlipNormalOutside(MeshType &m)
+      {
+        if(m.vert.empty()) return false;
+
+        tri::UpdateNormals<MeshType>::PerVertexAngleWeighted(m);
+        tri::UpdateNormals<MeshType>::NormalizeVertex(m);
+
+        std::vector< VertexPointer > minVertVec;
+        std::vector< VertexPointer > maxVertVec;
+
+        // The set of directions to be choosen
+        std::vector< Point3x > dirVec;
+        dirVec.push_back(Point3x(1,0,0));
+        dirVec.push_back(Point3x(0,1,0));
+        dirVec.push_back(Point3x(0,0,1));
+        dirVec.push_back(Point3x( 1, 1,1));
+        dirVec.push_back(Point3x(-1, 1,1));
+        dirVec.push_back(Point3x(-1,-1,1));
+        dirVec.push_back(Point3x( 1,-1,1));
+        for(size_t i=0;i<dirVec.size();++i)
+        {
+          Normalize(dirVec[i]);
+          minVertVec.push_back(&*m.vert.begin());
+          maxVertVec.push_back(&*m.vert.begin());
+        }
+        for (VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi) if(!(*vi).IsD())
+        {
+          for(size_t i=0;i<dirVec.size();++i)
+          {
+            if( (*vi).cP().dot(dirVec[i]) < minVertVec[i]->P().dot(dirVec[i])) minVertVec[i] = &*vi;
+            if( (*vi).cP().dot(dirVec[i]) > maxVertVec[i]->P().dot(dirVec[i])) maxVertVec[i] = &*vi;
+          }
+        }
+
+        int voteCount=0;
+        ScalarType angleThreshold = cos(math::ToRad(85.0));
+        for(size_t i=0;i<dirVec.size();++i)
+        {
+//          qDebug("Min vert along (%f %f %f) is %f %f %f",dirVec[i][0],dirVec[i][1],dirVec[i][2],minVertVec[i]->P()[0],minVertVec[i]->P()[1],minVertVec[i]->P()[2]);
+//          qDebug("Max vert along (%f %f %f) is %f %f %f",dirVec[i][0],dirVec[i][1],dirVec[i][2],maxVertVec[i]->P()[0],maxVertVec[i]->P()[1],maxVertVec[i]->P()[2]);
+          if(minVertVec[i]->N().dot(dirVec[i]) > angleThreshold ) voteCount++;
+          if(maxVertVec[i]->N().dot(dirVec[i]) < -angleThreshold ) voteCount++;
+        }
+//        qDebug("votecount = %i",voteCount);
+        if(voteCount < dirVec.size()/2) return false;
+        FlipMesh(m);
+        return true;
+      }
+
       // Search and remove small single triangle folds
       // - a face has normal opposite to all other faces
       // - choose the edge that brings to the face f1 containing the vertex opposite to that edge.
