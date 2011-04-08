@@ -20,20 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/*#**************************************************************************
-  History
-	$Log: not supported by cvs2svn $
-	Revision 1.6  2008/01/12 19:07:05  ganovelli
-	Recompiled from previous out of date version. Still to revise but working
-	
-	Revision 1.5  2005/12/13 17:17:19  ganovelli
-	first importing from old version. NOT optimized! It works with VertexFace Adjacency even over non manifolds
-	
-
- *#**************************************************************************/
-
-
-
 #include <assert.h>
 #include <vcg/math/base.h>
 #include <vcg/container/simple_temporary_data.h>
@@ -182,30 +168,22 @@ class Geo{
 {
 	bool isLeaf;
 	std::vector<VertDist> frontier;
-	VertexIterator ii;
-	std::list<VertexPointer> children;
   VertexPointer curr,farthest=0,pw1;
-	typename std::list<VertexPointer>::iterator is;
-	std::deque<VertexPointer> leaves;
-	std::vector<VertDist> _frontier;
-	ScalarType unreached  = std::numeric_limits<ScalarType>::max();
+  ScalarType unreached  = std::numeric_limits<ScalarType>::max();
 
-	std::vector <std::pair<VertexPointer,ScalarType> > expansion;
-	typename std::vector <VertDist >::iterator ifr;
-  face::VFIterator<FaceType> x;
-	VertexPointer pw;
+  VertexPointer pw;
 
 	//Requirements
 	assert(m.HasVFTopology());
   assert(!seedVec.empty());
 
-	TempDataType  * TD;
-	TD = new TempDataType(m.vert,unreached);
+  TempDataType TD(m.vert,unreached);
 
+  typename std::vector <VertDist >::iterator ifr;
   for(ifr = seedVec.begin(); ifr != seedVec.end(); ++ifr){
-		(*TD)[(*ifr).v].d = 0.0;	
+    TD[(*ifr).v].d = 0.0;
 		(*ifr).d = 0.0;
-		(*TD)[(*ifr).v].source  = (*ifr).v;
+    TD[(*ifr).v].source  = (*ifr).v;
 		frontier.push_back(VertDist((*ifr).v,0.0));
 		}
 		// initialize Heap
@@ -220,19 +198,19 @@ class Geo{
 			{  
 				pop_heap(frontier.begin(),frontier.end(),pred());
 				curr = (frontier.back()).v;
-				curr_s = (*TD)[curr].source;
+        curr_s = TD[curr].source;
 				if(sources!=NULL) 
  					(*sources)[curr] = curr_s;
 				d_heap = (frontier.back()).d;
 				frontier.pop_back();
 
-				assert((*TD)[curr].d <= d_heap); 
+        assert(TD[curr].d <= d_heap);
 				assert(curr_s != NULL);
-				if((*TD)[curr].d < d_heap )// a vertex whose distance has been improved after it was inserted in the queue
+        if(TD[curr].d < d_heap )// a vertex whose distance has been improved after it was inserted in the queue
 					continue; 
-				assert((*TD)[curr].d == d_heap); 
+        assert(TD[curr].d == d_heap);
 
-				d_curr =  (*TD)[curr].d;
+        d_curr =  TD[curr].d;
 
 				isLeaf = (!farthestOnBorder || curr->IsB());
 
@@ -250,26 +228,24 @@ class Geo{
 						pw1=x.f->V1(x.z);
 						}
 
-						const ScalarType & d_pw1  =  (*TD)[pw1].d;
+            const ScalarType & d_pw1  =  TD[pw1].d;
 						{
-
 							const ScalarType inter  = DistanceFunctor()(curr,pw1);//(curr->P() - pw1->P()).Norm();
 							const ScalarType tol = (inter + d_curr + d_pw1)*.0001f;
 
-							if (	((*TD)[pw1].source != (*TD)[curr].source)||// not the same source
+              if (	(TD[pw1].source != TD[curr].source)||// not the same source
 									(inter + d_curr < d_pw1  +tol   ) ||
 									(inter + d_pw1  < d_curr +tol  ) ||
 									(d_curr + d_pw1  < inter +tol  )   // triangular inequality
 									 )  
 								curr_d = d_curr + DistanceFunctor()(pw,curr);//(pw->P()-curr->P()).Norm();
 							else
-								curr_d = Distance(pw,pw1,curr,d_pw1,d_curr);
-							
+                curr_d = Distance(pw,pw1,curr,d_pw1,d_curr);
 						}
 				 
-					if((*TD)[(pw)].d > curr_d){
-							(*TD)[(pw)].d = curr_d; 
-							(*TD)[pw].source = curr_s;
+          if(TD[(pw)].d > curr_d){
+              TD[(pw)].d = curr_d;
+              TD[pw].source = curr_s;
 							frontier.push_back(VertDist(pw,curr_d));
 							push_heap(frontier.begin(),frontier.end(),pred());
 			 			} 
@@ -282,15 +258,11 @@ class Geo{
 					}
 	}// end while
 
-	// scrivi le distanze sul campo qualita' (nn: farlo parametrico)
-	VertexIterator vi;
-	for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
-		(*vi).Q() =  (*TD)[&(*vi)].d; 
+  // Copy found distance onto the Quality (\todo parametric!)
+  for(VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi) if(!(*vi).IsD())
+    (*vi).Q() =  TD[&(*vi)].d;
 
-	delete TD;
-  assert(farthest);
  	return farthest;
-
  }
 	
 
@@ -383,7 +355,7 @@ public:
 			fro.push_back(&(*vi));
 	if(fro.empty()) return false;
 
-	tri::UpdateQuality<CMeshO>::VertexConstant(m,0);
+  tri::UpdateQuality<MeshType>::VertexConstant(m,0);
 		
   return FarthestVertex(m,fro,farthest,distance,std::numeric_limits<ScalarType>::max(),sources);
 }
