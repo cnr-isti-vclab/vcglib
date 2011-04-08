@@ -341,9 +341,9 @@ static void VertexAreaUniform(MetroMesh & m, VertexSampler &ps, int sampleNum)
 		if(!(*fi).IsD()) 
 		{
 			ScalarType areaThird = DoubleArea(*fi)/6.0;
-			(*fi).V(0).Q()+=areaThird;
-			(*fi).V(1).Q()+=areaThird;
-			(*fi).V(2).Q()+=areaThird;
+			(*fi).V(0)->Q()+=areaThird;
+			(*fi).V(1)->Q()+=areaThird;
+			(*fi).V(2)->Q()+=areaThird;
 		}
 	
 	VertexWeighted(m,ps,sampleNum);
