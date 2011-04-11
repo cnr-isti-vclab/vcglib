@@ -52,6 +52,10 @@
 #ifndef __VCGLIB_MATERIAL
 #define __VCGLIB_MATERIAL
 
+#include <string>
+#include <vector>
+#include <vcg/space/point3.h>
+
 namespace vcg {
 namespace tri {
 namespace io {
