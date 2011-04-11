@@ -233,12 +233,13 @@ public:
 	/*  multiply the current reference frame for the matrix passed
 	 note: it is up to the caller to check the the matrix passed is a pure rototraslation
 	 */
- 	void MultMatrix(    vcg::Matrix44<S>    m44)
-	{
-		Extrinsics.tra = m44 * Extrinsics.tra;
-		m44[0][3] = m44[1][3] = m44[2][3] =  0.0;
-		Extrinsics.rot = m44 * Extrinsics.rot ;
-	}
+  void MultMatrix(    vcg::Matrix44<S>    m44)
+  {
+    Extrinsics.tra = m44 * Extrinsics.tra;
+    m44[0][3] = m44[1][3] = m44[2][3] =  0.0; //set no translation
+    const S k = m44.GetRow3(0).Norm(); //compute scaling (assumed uniform)
+    Extrinsics.rot = Extrinsics.rot * m44.transpose() * (1/k);
+  }
 
 	/*  multiply the current reference frame for the similarity passed
 	 note: it is up to the caller to check the the matrix passed is a pure rototraslation
