@@ -247,10 +247,10 @@ private:
 
 
 template <class T>
-void ComputeNormal(T &f) {	f.N() = vcg::Normal<T>(f); }
+void ComputeNormal(T &f) {	f.N().Import(vcg::Normal<T>(f)); }
 
 template <class T>
-void ComputeNormalizedNormal(T &f) {	f.N() = vcg::NormalizedNormal<T>(f); }
+void ComputeNormalizedNormal(T &f) {	f.N().Import(vcg::NormalizedNormal<T>(f)); }
 
 template <class A, class T> class NormalAbs: public T {
 public:
