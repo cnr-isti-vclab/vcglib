@@ -206,8 +206,8 @@ public:
 	/// Dato un box in voxel ritorna gli estremi del box reale
 	void IBoxToBox( const Box3i & ib, Box3x & b ) const
 	{
-		IPToP(ib.min,b.min);
-		IPToP(ib.max,b.max);
+		IPiToPf(ib.min,b.min);
+		IPiToPf(ib.max+Point3i(1,1,1),b.max);
 	}
 };
 
