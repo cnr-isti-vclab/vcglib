@@ -25,6 +25,7 @@
 #ifndef __VCGLIB_IMPORT_OBJ
 #define __VCGLIB_IMPORT_OBJ
 
+#include<vcg/complex/allocate.h>
 #include <wrap/callback.h>
 #include <wrap/io_trimesh/io_mask.h>
 #include <wrap/io_trimesh/io_material.h>
@@ -32,6 +33,7 @@
 #include <wrap/gl/glu_tesselator.h>
 #endif
 #include <vcg/space/color4.h>
+
 
 #include <fstream>
 #include <string>
@@ -259,7 +261,7 @@ public:
 	int numVerticesPlusFaces = oi.numVertices + oi.numFaces;
   int extraTriangles=0;
 	// vertices and faces allocatetion
-	VertexIterator vi = Allocator<OpenMeshType>::AddVertices(m,oi.numVertices);
+  VertexIterator vi = vcg::tri::Allocator<OpenMeshType>::AddVertices(m,oi.numVertices);
 	//FaceIterator   fi = Allocator<OpenMeshType>::AddFaces(m,oi.numFaces);
 
   ObjIndexedFace	ff; 
@@ -639,7 +641,7 @@ public:
 	} // end while stream not eof
 	assert((numTriangles +numVertices) == numVerticesPlusFaces+extraTriangles);
 
-	FaceIterator   fi = Allocator<OpenMeshType>::AddFaces(m,numTriangles);
+	FaceIterator   fi = vcg::tri::Allocator<OpenMeshType>::AddFaces(m,numTriangles);
   //-------------------------------------------------------------------------------
 
 	// Now the final pass to convert indexes into pointers for face to vert/norm/tex references
@@ -698,7 +700,7 @@ public:
 				if (m.HasPerFaceNormal())
 				{
 					face::ComputeNormalizedNormal(m.face[i]);
-  }
+				}
 			}
 		}
 
