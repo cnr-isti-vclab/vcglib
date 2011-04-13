@@ -25,6 +25,8 @@
 #define _VCG_FACE_TOPOLOGY
 
 #include <vcg/simplex/face/pos.h>
+
+#include <vector>
 #include <algorithm>
 
 namespace vcg {
