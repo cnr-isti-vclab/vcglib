@@ -211,12 +211,13 @@ using namespace std;
 using namespace vcg;
 
 
+class CVertex;
 class CFace;
-class CEdge;
-class CVertex  : public VertexSimp2< CVertex, CEdge, CFace, vert::VFAdj, vert::Coord3f, 
-																			vert::BitFlags, vert::Normal3f > {};
-class CFace    : public FaceSimp2< CVertex, CEdge, CFace, face::FFAdj, face::VFAdj, 
-												face::VertexRef, face::Normal3f, face::BitFlags, face::Mark > {};
+
+struct MyTypes: public UsedTypes< Use<CVertex>::AsVertexType,Use<CFace>::AsFaceType>{};
+
+class CVertex  : public Vertex< MyTypes, vertex::VFAdj, vertex::Coord3f,vertex::BitFlags, vertex::Normal3f > {};
+class CFace    : public Face< MyTypes, face::FFAdj, face::VFAdj, face::VertexRef, face::Normal3f, face::BitFlags, face::Mark > {};
 class CMesh    : public vcg::tri::TriMesh< vector<CVertex>, vector<CFace> > {};
 
 typedef CMesh::VertexPointer VertexPointer;
@@ -782,8 +783,8 @@ int main(int argc, char ** argv)
 	tri::UpdateTopology<CMesh>::VertexFace(m);
 
 	// IS MANIFOLD?
-	mi.VManifold = tri::Clean<CMesh>::IsTwoManifoldVertex(m);
-	mi.FManifold = tri::Clean<CMesh>::IsTwoManifoldFace(m);
+	mi.VManifold = tri::Clean<CMesh>::CountNonManifoldVertexFF(m)>0;
+	mi.FManifold = tri::Clean<CMesh>::CountNonManifoldEdgeFF(m)>0;
  
 	// COUNT EDGES
 	tri::Clean<CMesh>::CountEdges(m, mi.count_e, mi.boundary_e);
@@ -792,11 +793,11 @@ int main(int argc, char ** argv)
 	if(mi.VManifold && mi.FManifold)
 	{
 		mi.numholes = tri::Clean<CMesh>::CountHoles(m);
-		mi.BEdges = tri::Clean<CMesh>::BorderEdges(m, mi.numholes);
+		tri::Clean<CMesh>::CountEdges(m, mi.BEdges,mi.numholes);
 	}
 
 	// CONNECTED COMPONENTS
-	mi.numcomponents = tri::Clean<CMesh>::ConnectedComponents(m);
+	mi.numcomponents = tri::Clean<CMesh>::CountConnectedComponents(m);
 
 	// ORIENTATION
 	if (mi.VManifold && mi.FManifold)
