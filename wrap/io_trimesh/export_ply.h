@@ -564,7 +564,7 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
           if(HasPerFaceFlags(m)&&( pi.mask & Mask::IOM_FACEFLAGS) )
 						fwrite(&(fp->Flags()),sizeof(int),1,fpout);
 
-          if( HasPerVertexTexCoord(m) && (pi.mask & Mask::IOM_WEDGTEXCOORD) ) // you can save VT as WT if you really want it...
+          if( HasPerVertexTexCoord(m) && (pi.mask & Mask::IOM_VERTCOORD) )
 					{
 						fwrite(&b6,sizeof(char),1,fpout);
 						float t[6];
