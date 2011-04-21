@@ -274,7 +274,7 @@ public:
 
 template <class T> class EEAdj: public T {
 public:
-  EEAdj(){_ep=0;}
+  EEAdj(){_ep[0]=0;_ep[1]=0;_zp[0]=-1;_zp[1]=-1;}
   typename T::EdgePointer &EEp(const int & i) {return _ep[i]; }
   typename T::EdgePointer cEEp(const int & i) {return _ep[i]; }
 	int &EEi(const int & i){ return _zp[i];};
