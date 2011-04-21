@@ -113,7 +113,7 @@ inline bool operator != ( const PVertex & pe ) const
 
 static void EdgeEdge(MeshType &m)
 {
-  if(!m.HasEETopology()) return;		
+  if(!HasEEAdjacency(m)) return;		
 
   vector<PVertex> v;
 	EdgeIterator pf;
@@ -123,7 +123,7 @@ static void EdgeEdge(MeshType &m)
 
 	v.resize(m.en*2);								// Alloco il vettore ausiliario
 	p = v.begin();
-	for(pf=m.edges.begin();pf!=m.edges.end();++pf)			// Lo riempio con i dati delle facce
+	for(pf=m.edge.begin();pf!=m.edge.end();++pf)			// Lo riempio con i dati delle facce
 		if( ! (*pf).IsD() )
 			for(int j=0;j<2;++j)
 			{
