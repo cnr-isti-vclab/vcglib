@@ -115,7 +115,7 @@ static void EdgeEdge(MeshType &m)
 {
   if(!HasEEAdjacency(m)) return;		
 
-  vector<PVertex> v;
+  std::vector<PVertex> v;
 	EdgeIterator pf;
 	typename vector<PVertex>::iterator p;
 
