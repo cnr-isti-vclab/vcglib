@@ -155,7 +155,8 @@ namespace vcg{
 			}
 
 			/*
-			starting from the seeds, it assign a distance value to each vertex. The distance of a vertex is its 
+      This is the low level version of the geodesic computation framework.
+      Starting from the seeds, it assign a distance value to each vertex. The distance of a vertex is its
 			approximated geodesic distance to the closest seeds.
 			This is function is not meant to be called (although is not prevented). Instead, it is invoked by 
 			wrapping function.
@@ -163,10 +164,9 @@ namespace vcg{
 			static  VertexPointer Visit( 
 				MeshType & m,
 				std::vector<VertDist> & seedVec,
-				ScalarType & max_distance,
-				bool farthestOnBorder = false,
+        bool farthestOnBorder = false,
 				ScalarType distance_threshold  = std::numeric_limits<ScalarType>::max(),
-				typename MeshType::template PerVertexAttributeHandle<VertexPointer> * sources = NULL,
+        typename MeshType::template PerVertexAttributeHandle<VertexPointer> * vertSource = NULL,
 				std::vector<VertexPointer> *InInterval=NULL)
 			{
 				bool isLeaf;
@@ -194,7 +194,7 @@ namespace vcg{
 
 				ScalarType curr_d,d_curr = 0.0,d_heap;
 				VertexPointer curr_s = NULL;
-				max_distance=0.0;
+        ScalarType max_distance=0.0;
 				typename std::vector<VertDist >:: iterator iv;
 
 				while(!frontier.empty() && max_distance < distance_threshold)
@@ -205,8 +205,8 @@ namespace vcg{
 						InInterval->push_back(curr);
 
 					curr_s = TD[curr].source;
-					if(sources!=NULL) 
-						(*sources)[curr] = curr_s;
+          if(vertSource!=NULL)
+            (*vertSource)[curr] = curr_s;
 					d_heap = (frontier.back()).d;
 					frontier.pop_back();
 
@@ -283,31 +283,33 @@ namespace vcg{
 
 		public:
 			/*
-			Given a mesh and  a vector of pointers to vertices (sources), assigns the approximated geodesic
-			distance from the cloasest source to all the mesh vertices  and returns the vertices within the 
-			specified interval
-			Note: update the field Q() of the vertices
+      Given a mesh and a vector of pointers to seed vertices, this function assigns the approximated geodesic
+      distance from the closest source to all the mesh vertices  within the
+      specified interval and returns the found vertices writing on their Quality field the distance.
+      Optionally for each vertex it can store, in a passed attribute, its corresponding seed vertex.
+      To allocate such an attribute:
+
+        typename MeshType::template PerVertexAttributeHandle<VertexPointer> sources;
+        sources =  tri::Allocator<CMeshO>::AddPerVertexAttribute<VertexPointer> (m,"sources");
+
 			*/
 			static bool FarthestVertex( MeshType & m,
-				std::vector<VertexPointer> & fro, 
-				VertexPointer & farthest,		 
-				ScalarType & distance,
-				ScalarType distance_thr  = std::numeric_limits<ScalarType>::max(),
-				typename MeshType::template PerVertexAttributeHandle<VertexPointer> * sources = NULL,
+        std::vector<VertexPointer> & seedVec,
+        VertexPointer & farthest_vert,
+        ScalarType distance_thr  = std::numeric_limits<ScalarType>::max(),
+        typename MeshType::template PerVertexAttributeHandle<VertexPointer> * sourceSeed = NULL,
 				std::vector<VertexPointer> *InInterval=NULL)
 			{					
-
 					typename std::vector<VertexPointer>::iterator fi; 
-					std::vector<VertDist>fr;
-					if(fro.empty())	return false;
-
-					for( fi  = fro.begin(); fi != fro.end() ; ++fi)
+          std::vector<VertDist> vdSeedVec;
+          if(seedVec.empty())	return false;
+          for( fi  = seedVec.begin(); fi != seedVec.end() ; ++fi)
 					{
-						fr.push_back(VertDist(*fi,0.0));
+             vdSeedVec.push_back(VertDist(*fi,0.0));
 					/*	if (InInterval==NULL)continue;
 						InInterval.push_back();*/
 					}
-					farthest = Visit(m,fr,distance,false,distance_thr,sources,InInterval);
+          farthest_vert = Visit(m, vdSeedVec, false, distance_thr, sourceSeed, InInterval);
 					return true;
 			}
 			/*
@@ -315,38 +317,16 @@ namespace vcg{
 			distance from the vertex-source to all the mesh vertices and returns the pointer to the farthest
 			Note: update the field Q() of the vertices
 			*/
-			static void FarthestVertex( MeshType & m, 
+      static bool FarthestVertex( MeshType & m,
 				VertexPointer seed,
-				VertexPointer & farthest,		 
-				ScalarType & distance,
 				ScalarType distance_thr  = std::numeric_limits<ScalarType>::max())
 			{
 					std::vector<VertexPointer>  seedVec;
 					seedVec.push_back( seed );
 					VertexPointer v0;
-					FarthestVertex(m,seedVec,v0,distance,distance_thr);
-					farthest = v0;
+          return FarthestVertex(m,seedVec,v0,distance_thr);
 			}
 			
-			/*
-			Given a mesh and  a  pointers to a vertex-source (source), assigns the approximated geodesic
-			distance from the vertex-source to all the mesh vertices and returns the vertices within the 
-			specified interval
-			Note: update the field Q() of the vertices
-			*/
-			static void FarthestVertex( MeshType & m, 
-				VertexPointer seed,
-				VertexPointer & farthest,		 
-				ScalarType & distance,
-				ScalarType distance_thr,
-				std::vector<VertexPointer> *InInterval=NULL)
-			{
-					std::vector<VertexPointer>  seedVec;
-					seedVec.push_back( seed );
-					VertexPointer v0;
-					FarthestVertex(m,seedVec,v0,distance,distance_thr,NULL,InInterval);
-					farthest = v0;
-			}
 
 			/* 
 			Same as FarthestPoint but the returned pointer is to a border vertex
@@ -387,8 +367,7 @@ namespace vcg{
 			Note: update the field Q() of the vertices
 			*/
 			static bool DistanceFromBorder(	MeshType & m,
-				ScalarType & distance,
-				typename MeshType::template PerVertexAttributeHandle<VertexPointer> * sources = NULL
+        typename MeshType::template PerVertexAttributeHandle<VertexPointer> * sources = NULL
 				){
 					std::vector<VertexPointer> fro;
 					VertexIterator vi;
@@ -400,7 +379,7 @@ namespace vcg{
 
 					tri::UpdateQuality<MeshType>::VertexConstant(m,0);
 
-					return FarthestVertex(m,fro,farthest,distance,std::numeric_limits<ScalarType>::max(),sources);
+          return FarthestVertex(m,fro,farthest,std::numeric_limits<ScalarType>::max(),sources);
 			}
 
 		};
