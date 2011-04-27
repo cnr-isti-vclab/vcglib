@@ -71,11 +71,9 @@ Revision 1.1  2004/03/31 15:27:17  ponchio
 namespace vcg {
 
 inline void glMultMatrixE(const Matrix44f &matrix) {
-  //glMultMatrixf((const GLfloat *)(matrix[0]));  
-  if(glMultTransposeMatrixf) glMultTransposeMatrixf((const GLfloat *)(matrix.V())); 
-  else  {
+
     glMultMatrixf((const GLfloat *)(matrix.transpose().V()));
-  }
+  
 }
 
 inline void glMultMatrix(const Matrix44f &matrix) {
@@ -83,10 +81,9 @@ inline void glMultMatrix(const Matrix44f &matrix) {
 }
 
 inline void glMultMatrixE(const Matrix44d &matrix) {
-  if(glMultTransposeMatrixd) glMultTransposeMatrixd((const GLdouble *)(matrix.V())); 
-  else  {
+ 
     glMultMatrixd((const GLdouble *)(matrix.transpose().V()));
-  }
+
 }
 inline void glMultMatrix(const Matrix44d &matrix) {
     glMultMatrixd((const GLdouble *)(matrix.transpose().V()));
