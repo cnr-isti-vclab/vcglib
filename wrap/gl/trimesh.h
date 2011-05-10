@@ -832,6 +832,19 @@ void DrawWire()
 			DrawFill<nm,cm,TMNone>();
 			glPopAttrib();
     }
+  if(m->fn==0 && m->en>0)
+  {
+    glPushAttrib(GL_ENABLE_BIT);
+    glDisable(GL_LIGHTING);
+    glBegin(GL_LINES);
+    for(typename mesh_type::EdgeIterator ei=m->edge.begin();ei!=m->edge.end(); ++ei)
+    {
+      glVertex((*ei).V(0)->P());
+      glVertex((*ei).V(1)->P());
+    }
+    glEnd();
+    glPopAttrib();
+  }
 	//	{
 //			if(!HasEdges()) ComputeEdges();
 
