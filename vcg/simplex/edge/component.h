@@ -264,7 +264,7 @@ public:
   typename T::EdgePointer &EEp(const int &  ) { static typename T::EdgePointer ep=0;  assert(0); return ep; }
 	const typename T::EdgePointer cEEp(const int & ) const { static typename T::EdgePointer ep=0;  assert(0); return ep; }
 	int &EEi(const int &){static int z=0; assert(0); return z;};
-	const int &cEEi(const int &) const {static int z=0; assert(0); return z;};
+  int cEEi(const int &) const {static int z=0; assert(0); return z;};
 	template < class LeftV>
 		void ImportData(const LeftV  & left ) { T::ImportData( left); }
   static bool HasEEAdjacency()   {   return false; }
@@ -276,9 +276,9 @@ template <class T> class EEAdj: public T {
 public:
   EEAdj(){_ep[0]=0;_ep[1]=0;_zp[0]=-1;_zp[1]=-1;}
   typename T::EdgePointer &EEp(const int & i) {return _ep[i]; }
-  typename T::EdgePointer cEEp(const int & i) {return _ep[i]; }
+  typename T::EdgePointer cEEp(const int & i) const {return _ep[i]; }
 	int &EEi(const int & i){ return _zp[i];};
-	const int &cEEi(const int &i ){return _zp[i];};
+  int cEEi(const int &i )const {return _zp[i];};
 
 	template < class LeftV>
 	void ImportData(const LeftV  & left ) {  T::ImportData( left); }
