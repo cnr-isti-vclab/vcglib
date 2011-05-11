@@ -114,6 +114,9 @@ typedef typename MeshType::ScalarType     ScalarType;
 typedef typename MeshType::VertexType     VertexType;
 typedef typename MeshType::VertexPointer  VertexPointer;
 typedef typename MeshType::VertexIterator VertexIterator;
+typedef typename MeshType::EdgeType       EdgeType;
+typedef typename MeshType::EdgePointer    EdgePointer;
+typedef typename MeshType::EdgeIterator   EdgeIterator;
 typedef typename MeshType::FaceType       FaceType;
 typedef typename MeshType::FacePointer    FacePointer;
 typedef typename MeshType::FaceIterator   FaceIterator;
@@ -138,7 +141,13 @@ static void VertexClear(MeshType &m, unsigned int FlagMask = 0xffffffff)
 	for(vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
 		if(!(*vi).IsD()) (*vi).Flags() &= andMask ;
 }
-
+static void EdgeClear(MeshType &m, unsigned int FlagMask = 0xffffffff)
+{
+  EdgeIterator ei;
+  int andMask = ~FlagMask;
+  for(ei=m.edge.begin(); ei!=m.edge.end(); ++ei)
+    if(!(*ei).IsD()) (*ei).Flags() &= andMask ;
+}
 static void FaceClear(MeshType &m, unsigned int FlagMask = 0xffffffff)
 {
 	FaceIterator fi;
@@ -165,6 +174,7 @@ static void FaceSet(MeshType &m, unsigned int FlagMask)
 
 static void VertexClearV(MeshType &m) { VertexClear(m,VertexType::VISITED);}
 static void VertexClearB(MeshType &m) { VertexClear(m,VertexType::BORDER);}
+static void EdgeClearV(MeshType &m) { EdgeClear(m,EdgeType::VISITED);}
 static void FaceClearV(MeshType &m) { FaceClear(m,FaceType::VISITED);}
 static void FaceClearB(MeshType &m) { FaceClear(m,FaceType::BORDER012);}
 static void FaceClearF(MeshType &m) { FaceClear(m,FaceType::FAUX012);}
