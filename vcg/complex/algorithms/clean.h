@@ -117,6 +117,7 @@ private:
 			typedef typename MeshType::VertexPointer  VertexPointer;
 			typedef typename MeshType::VertexIterator VertexIterator;
 			typedef typename MeshType::ConstVertexIterator ConstVertexIterator;
+      typedef typename MeshType::EdgeIterator   EdgeIterator;
 			typedef	typename MeshType::ScalarType			ScalarType;
 			typedef typename MeshType::FaceType       FaceType;
 			typedef typename MeshType::FacePointer    FacePointer;
@@ -188,16 +189,25 @@ private:
 						++i;
 					}
 				}
-				FaceIterator fi;
-				for(fi = m.face.begin(); fi!=m.face.end(); ++fi)
+
+        for(FaceIterator fi = m.face.begin(); fi!=m.face.end(); ++fi)
 					if( !(*fi).IsD() )
 						for(k = 0; k < 3; ++k)
 							if( mp.find( (typename MeshType::VertexPointer)(*fi).V(k) ) != mp.end() )
 							{
 								(*fi).V(k) = &*mp[ (*fi).V(k) ];
 							}
-										
-        if(RemoveDegenerateFlag) RemoveDegenerateFace(m);  
+
+
+        for(EdgeIterator ei = m.edge.begin(); ei!=m.edge.end(); ++ei)
+          if( !(*ei).IsD() )
+            for(k = 0; k < 2; ++k)
+              if( mp.find( (typename MeshType::VertexPointer)(*ei).V(k) ) != mp.end() )
+              {
+                (*ei).V(k) = &*mp[ (*ei).V(k) ];
+              }
+        if(RemoveDegenerateFlag) RemoveDegenerateFace(m);
+        if(RemoveDegenerateFlag) RemoveDegenerateEdge(m);
 				return deleted;
       }
 
@@ -334,10 +344,9 @@ private:
       */ 
       static int RemoveDegenerateFace(MeshType& m)
       {
-				FaceIterator fi;
 				int count_fd = 0;
 
-				for(fi=m.face.begin(); fi!=m.face.end();++fi)
+        for(FaceIterator fi=m.face.begin(); fi!=m.face.end();++fi)
 					if(!(*fi).IsD()) 
 					{
 							if((*fi).V(0) == (*fi).V(1) || 
@@ -351,6 +360,22 @@ private:
 				return count_fd;
 			}
 			
+      static int RemoveDegenerateEdge(MeshType& m)
+            {
+              int count_ed = 0;
+
+              for(EdgeIterator ei=m.edge.begin(); ei!=m.edge.end();++ei)
+                if(!(*ei).IsD())
+                {
+                    if((*ei).V(0) == (*ei).V(1) )
+                    {
+                      count_ed++;
+                      Allocator<MeshType>::DeleteEdge(m,*ei);
+                    }
+                }
+              return count_ed;
+            }
+
 			static int RemoveNonManifoldVertex(MeshType& m)
 			{
         /*int count_vd = */
