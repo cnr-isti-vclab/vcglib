@@ -20,72 +20,7 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
 
-$Log: not supported by cvs2svn $
-Revision 1.20  2008/04/04 10:27:34  cignoni
-minor changes to the topology correctness checks
-
-Revision 1.19  2007/05/29 00:07:06  ponchio
-VFi++ -> ++VFi
-
-Revision 1.18  2006/02/27 19:26:14  spinelli
-minor bug in Face-Face topology loop fixed
-
-Revision 1.17  2006/02/27 11:56:48  spinelli
-minor bug in Face-Face topology loop fixed
-
-Revision 1.16  2005/11/10 15:36:42  cignoni
-Added clarifying comment in an assert
-
-Revision 1.15  2004/10/20 07:33:10  cignoni
-removed FaceBorderFlags (already present in update/flags.h)
-
-Revision 1.14  2004/10/18 17:10:22  ganovelli
-added  ::FaceBorderFLags
-
-Revision 1.13  2004/10/01 15:58:00  ponchio
-Added include <vector>
-
-Revision 1.12  2004/09/09 13:02:12  ponchio
-Linux compatible path in #include
-
-Revision 1.11  2004/08/07 16:18:20  pietroni
-addet testFFTopology and testVFTopology functions used to test the rispective topology....
-
-Revision 1.10  2004/07/15 11:35:08  ganovelli
-Vfb to VFp
-
-Revision 1.9  2004/07/15 00:13:39  cignoni
-Better doxigen documentation
-
-Revision 1.8  2004/06/02 16:42:44  ganovelli
-typename for gcc compilation
-
-Revision 1.7  2004/06/02 16:28:22  ganovelli
-minor changes (swap =>> math::Swap)
-
-Revision 1.6  2004/05/10 15:23:43  cignoni
-Changed a FV -> VF in VertexFace topology computation
-
-Revision 1.5  2004/05/06 15:24:38  pietroni
-changed names to topology functions
-
-Revision 1.4  2004/03/31 14:44:43  cignoni
-Added Vertex-Face Topology
-
-Revision 1.3  2004/03/12 15:22:19  cignoni
-Written some documentation and added to the trimes doxygen module
-
-Revision 1.2  2004/03/05 21:49:21  cignoni
-First working version for face face
-
-Revision 1.1  2004/03/04 00:53:24  cignoni
-Initial commit
-
-
-****************************************************************************/
 #ifndef __VCG_TRI_UPDATE_TOPOLOGY
 #define __VCG_TRI_UPDATE_TOPOLOGY
 #include <algorithm>
@@ -109,6 +44,8 @@ typedef UpdateMeshType MeshType;
 typedef typename MeshType::VertexType     VertexType;
 typedef typename MeshType::VertexPointer  VertexPointer;
 typedef typename MeshType::VertexIterator VertexIterator;
+typedef typename MeshType::EdgePointer    EdgePointer;
+typedef typename MeshType::EdgeIterator    EdgeIterator;
 typedef typename MeshType::FaceType       FaceType;
 typedef typename MeshType::FacePointer    FacePointer;
 typedef typename MeshType::FaceIterator   FaceIterator;
@@ -478,6 +415,109 @@ static void TestFaceFace(MeshType &m)
 			
 		}
 	}
+}
+
+/// Auxiliairy data structure for computing edge edge adjacency information.
+/// It identifies an edge storing a vertex pointer and a edge pointer where it belong.
+class PVertexEdge
+{
+public:
+
+  VertexPointer  v;		// the two Vertex pointer are ordered!
+  EdgePointer    e;		  // the edge where this vertex belong
+  int      z;				      // index in [0..1] of the vertex of the edge
+
+  PVertexEdge(  ) {}
+  PVertexEdge( EdgePointer  pe, const int nz )
+{
+  assert(pe!=0);
+  assert(nz>=0);
+  assert(nz<2);
+
+  v= pe->V(nz);
+  e    = pe;
+  z    = nz;
+}
+inline bool operator  <  ( const PVertexEdge & pe ) const { return ( v<pe.v ); }
+inline bool operator ==  ( const PVertexEdge & pe ) const { return ( v==pe.v ); }
+inline bool operator !=  ( const PVertexEdge & pe ) const { return ( v!=pe.v ); }
+};
+
+
+
+static void EdgeEdge(MeshType &m)
+{
+  if(!HasEEAdjacency(m)) return;
+
+  std::vector<PVertexEdge> v;
+  if( m.en == 0 ) return;
+
+//  printf("Inserting Edges\n");
+  for(EdgeIterator pf=m.edge.begin(); pf!=m.edge.end(); ++pf)			// Lo riempio con i dati delle facce
+    if( ! (*pf).IsD() )
+      for(int j=0;j<2;++j)
+      {
+//        printf("egde %i ind %i (%i %i)\n",tri::Index(m,&*pf),j,tri::Index(m,pf->V(0)),tri::Index(m,pf->V(1)));
+        v.push_back(PVertexEdge(&*pf,j));
+      }
+
+//  printf("en = %i (%i)\n",m.en,m.edge.size());
+  sort(v.begin(), v.end());							// Lo ordino per vertici
+
+  int ne = 0;											// Numero di edge reali
+
+  typename std::vector<PVertexEdge>::iterator pe,ps;
+  for(ps = v.begin(),pe=v.begin();pe<=v.end();++pe)	// Scansione vettore ausiliario
+  {
+//    printf("v %i -> e %i\n",tri::Index(m,(*ps).v),tri::Index(m,(*ps).e));
+    if( pe==v.end() || *pe != *ps )					// Trovo blocco di edge uguali
+    {
+      typename std::vector<PVertexEdge>::iterator q,q_next;
+      for (q=ps;q<pe-1;++q)						// Scansione edge associati
+      {
+        assert((*q).z>=0);
+        assert((*q).z< 2);
+        q_next = q;
+        ++q_next;
+        assert((*q_next).z>=0);
+        assert((*q_next).z< 2);
+        (*q).e->EEp(q->z) = (*q_next).e;				// Collegamento in lista delle facce
+        (*q).e->EEi(q->z) = (*q_next).z;
+      }
+      assert((*q).z>=0);
+      assert((*q).z< 2);
+      (*q).e->EEp((*q).z) = ps->e;
+      (*q).e->EEi((*q).z) = ps->z;
+      ps = pe;
+      ++ne;										// Aggiorno il numero di edge
+    }
+  }
+}
+
+static void VertexEdge(MeshType &m)
+{
+  if(!m.HasVETopology()) return;
+
+  VertexIterator vi;
+  EdgeIterator ei;
+
+  for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+  {
+    (*vi).Ep() = 0;
+    (*vi).Ei() = 0;
+  }
+
+  for(ei=m.edges.begin();ei!=m.edges.end();++ei)
+  if( ! (*ei).IsD() )
+  {
+    for(int j=0;j<2;++j)
+    {
+      (*ei).Ev(j) = (*ei).V(j)->Ep();
+      (*ei).Zv(j) = (*ei).V(j)->Ei();
+      (*ei).V(j)->Ep() = &(*ei);
+      (*ei).V(j)->Ei() = j;
+    }
+  }
 }
 
 }; // end class
