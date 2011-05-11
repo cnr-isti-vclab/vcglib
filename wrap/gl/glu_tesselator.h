@@ -20,31 +20,14 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.4  2007/12/01 18:09:14  m_di_benedetto
-Added cast to prevent pointer truncation warning/error messages.
-
-Revision 1.3  2007/08/28 05:43:56  cignoni
-Added ifdef needed for mac gcc compilation
-
-Revision 1.2  2007/08/25 08:43:33  cignoni
-moved here callback def and added some needed opengl related casts
-
-Revision 1.1  2007/05/14 22:23:36  m_di_benedetto
-First Commit.
-
-
-
-****************************************************************************/
-
 #ifndef __VCGLIB_GLU_TESSELATOR_H
 #define __VCGLIB_GLU_TESSELATOR_H
 
 #include <vector>
-//#include <GL/glu.h>
+
+#ifndef GL_VERSION_1_1
+#error "Please include OpenGL before including this file"
+#endif
 
 #ifndef CALLBACK
 #ifdef _WIN32
