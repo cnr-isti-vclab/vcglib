@@ -236,8 +236,16 @@ namespace vcg {
     inline bool IntersectionPlaneSegment( const Plane3<T> & pl, const Segment3<T> & s, Point3<T> & p0){
 		T p1_proj = s.P1()*pl.Direction()-pl.Offset();
 		T p0_proj = s.P0()*pl.Direction()-pl.Offset();
-		if ( (p1_proj>0)-(p0_proj<0)) return false;
-		p0 =  s.P0() + (s.P1()-s.P0()) * fabs(p0_proj/(p1_proj-p0_proj));
+    if ( (p1_proj>0)-(p0_proj<0)) return false;
+
+    if(p0_proj == p1_proj) return false;
+
+    // check that we perform the computation in a way that is independent with v0 v1 swaps
+    if(p0_proj < p1_proj)
+           p0 =  s.P0() + (s.P1()-s.P0()) * fabs(p0_proj/(p1_proj-p0_proj));
+    if(p0_proj > p1_proj)
+           p0 =  s.P1() + (s.P0()-s.P1()) * fabs(p1_proj/(p0_proj-p1_proj));
+
 		return true;
   }
 
