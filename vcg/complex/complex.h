@@ -323,7 +323,7 @@ public:
 	/// Default constructor
 	TriMesh()
 	{
-		fn = vn = 0;
+    fn = en = vn = 0;
 		imark = 0;
 		attrn = 0;
 		C()=Color4b::Gray;
