@@ -51,9 +51,9 @@ namespace vcg {
 		template<class MeshType>
 		size_t Index(MeshType &m, const typename MeshType::FaceType * fp) {return fp-&*m.face.begin();}
 		template<class MeshType>
-		size_t Index(MeshType &m, typename MeshType::EdgeType*  e) {return e-&*m.edge.begin();}
+    size_t Index(MeshType &m, const typename MeshType::EdgeType*  e) {return e-&*m.edge.begin();}
 		template<class MeshType>
-		size_t Index(MeshType &m, typename MeshType::HEdgeType*  h) {return h-&*m.hedge.begin();}
+    size_t Index(MeshType &m, const typename MeshType::HEdgeType*  h) {return h-&*m.hedge.begin();}
 		
 		template <class MeshType, class ATTR_CONT>
 		void ReorderAttribute(ATTR_CONT &c,std::vector<size_t> & newVertIndex, MeshType & /* m */){
