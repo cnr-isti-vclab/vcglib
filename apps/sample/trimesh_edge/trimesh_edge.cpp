@@ -20,6 +20,7 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
+#include <QtOpenGL/qgl.h>
 
 #include<vcg/simplex/vertex/base.h>
 #include<vcg/simplex/vertex/component.h>
@@ -31,6 +32,7 @@
 
 #include<vcg/simplex/face/topology.h>
 #include<vcg/complex/complex.h>
+#include<vcg/complex/append.h>
 
 // input output
 #include<wrap/io_trimesh/import.h>
@@ -38,10 +40,12 @@
 
 // topology computation
 #include<vcg/complex/algorithms/update/topology.h>
+#include<vcg/complex/algorithms/update/bounding.h>
 
 // normals
 #include<vcg/complex/algorithms/update/normal.h>
 #include <vcg/complex/algorithms/intersection.h>
+#include <wrap/gl/glu_tessellator_cap.h>
 
 using namespace vcg;
 using namespace std;
@@ -66,7 +70,7 @@ int main( int argc, char **argv )
     return -1;
   }
 
-  MyMesh m,em;
+  MyMesh m,em,cm,full;
 
   if(tri::io::ImporterPLY<MyMesh>::Open(m,argv[1])!=0)
   {
@@ -76,53 +80,35 @@ int main( int argc, char **argv )
 
   tri::UpdateFlags<MyMesh>::FaceBorderFromFF(m);
   tri::UpdateNormals<MyMesh>::PerVertexNormalized(m);
+  tri::UpdateBounding<MyMesh>::Box(m);
 
   printf("Input mesh  vn:%i fn:%i\n",m.vn,m.fn);
   printf( "Mesh has %i vert and %i faces\n", m.vn, m.fn );
-
+  srand(time(0));
   Plane3f slicingPlane;
   Point3f planeCenter = m.bbox.Center();
-  slicingPlane.Init(planeCenter,Point3f(0,0,1));
 
-  vcg::IntersectionPlaneMesh<MyMesh, MyMesh, float>(m, slicingPlane, em );
-  tri::Clean<MyMesh>::RemoveDuplicateVertex(em);
-  std::vector< std::vector<Point3f> > outlines;
-  std::vector<Point3f> outline;
-  vcg::tri::UpdateFlags<MyMesh>::EdgeClearV(em);
-  int nv=0;
-
-  tri::UpdateTopology<MyMesh>::EdgeEdge(em);
-
-  for(size_t i=0;i<em.edge.size();i++)
+  for(int i=0;i<10;++i)
   {
-    if (!em.edge[i].IsV())
-    {
-      printf("Edge %i (%i %i) ee0=%i ee1=%i\n",i,tri::Index(em,em.edge[i].V(0)),tri::Index(em,em.edge[i].V(1)),
-             tri::Index(em,em.edge[i].EEp(0)),tri::Index(em,em.edge[i].EEp(1)));
-      MyEdge* startE=&(em.edge[i]);
-      int startI = 0;
-      int curI = startI;
-      MyEdge* curE = startE;
-      MyEdge* nextE; int nextI;
-      do
-      {
-        curE->SetV();
-        outline.push_back(curE->V(curI)->P());
-        nextE=curE->EEp((curI+1)%2);
-        nextI=curE->EEi((curI+1)%2);
-        curE=nextE;
-        curI=nextI;
-        nv++;
-      }
-      while(curE != startE);
+    cm.Clear();
+    em.Clear();
+    Point3f planeDir = Point3f(-0.5f+float(rand())/RAND_MAX,-0.5f+float(rand())/RAND_MAX,-0.5f+float(rand())/RAND_MAX);
+    planeDir.Normalize();
+    printf("slicing dir %5.2f %5.2f %5.2f\n",planeDir[0],planeDir[1],planeDir[2]);
 
-      outlines.push_back(outline);
-      printf("Found one outline of %i vertices\n\n",outline.size());
+    slicingPlane.Init(planeCenter+planeDir*0.3f*m.bbox.Diag()*float(rand())/RAND_MAX,planeDir);
 
-      outline.clear();
-    }
+    vcg::IntersectionPlaneMesh<MyMesh, MyMesh, float>(m, slicingPlane, em );
+    tri::Clean<MyMesh>::RemoveDuplicateVertex(em);
+    vcg::tri::CapEdgeMesh(em,cm);
+
+    printf("  edge mesh vn %5i en %5i fn %5i\n",em.vn,em.en,em.fn);
+    printf("sliced mesh vn %5i en %5i fn %5i\n",cm.vn,cm.en,cm.fn);
+
+    tri::Append<MyMesh,MyMesh>::Mesh(full,cm);
   }
-  printf("Found %i outlines for a total of %i vertices",outlines.size(),nv);
+
+  tri::io::ExporterPLY<MyMesh>::Save(full,"out.ply",false);
 
   return 0;
 }
