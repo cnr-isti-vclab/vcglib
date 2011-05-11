@@ -73,14 +73,17 @@ public:
     typename ComputeMeshType::VertexIterator vi;
     for(vi = _m->vert.begin(); vi != _m->vert.end(); ++vi)
       if( !(*vi).IsD() )
+      {
         if(vsH[*vi]) (*vi).SetS() ;
         else (*vi).ClearS() ;
-
+      }
     typename ComputeMeshType::FaceIterator fi;
     for(fi = _m->face.begin(); fi != _m->face.end(); ++fi)
       if( !(*fi).IsD() )
+      {
           if(fsH[*fi]) (*fi).SetS() ;
                   else (*fi).ClearS() ;
+      }
 
     Allocator<ComputeMeshType>::template DeletePerVertexAttribute<bool>(*_m,vsH);
     Allocator<ComputeMeshType>::template DeletePerFaceAttribute<bool>(*_m,fsH);
