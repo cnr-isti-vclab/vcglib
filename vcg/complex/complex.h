@@ -323,10 +323,7 @@ public:
 	/// Default constructor
 	TriMesh()
 	{
-    fn = en = vn = 0;
-		imark = 0;
-		attrn = 0;
-		C()=Color4b::Gray;
+    Clear();
 	}
 
 	/// destructor
@@ -372,10 +369,15 @@ void Clear()
 {
 	vert.clear();
 	face.clear();
+  edge.clear();
 //	textures.clear();
 //	normalmaps.clear();
 	vn = 0;
+  en = 0;
 	fn = 0;
+  imark = 0;
+  attrn = 0;
+  C()=Color4b::Gray;
 }
 
 /// Reflection functions that speak about vertex and face properties.
