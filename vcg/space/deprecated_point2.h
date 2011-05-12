@@ -354,6 +354,11 @@ inline T SquaredDistance( Point2<T> const & p1,Point2<T> const & p2 ){
     return SquaredNorm(p1-p2);
 }
 
+template <class SCALARTYPE>
+inline Point2<SCALARTYPE> Abs(const Point2<SCALARTYPE> & p) {
+  return (Point2<SCALARTYPE>(math::Abs(p[0]), math::Abs(p[1])));
+}
+
 typedef Point2<short>  Point2s;
 typedef Point2<int>	   Point2i;
 typedef Point2<float>  Point2f;
