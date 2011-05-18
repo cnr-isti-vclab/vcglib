@@ -227,7 +227,7 @@ static void FaceArea(MeshType &m)
 {
 	FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi)		
-		(*fi).Q()=vcg::DoubleArea(*fi);
+		(*fi).Q()=vcg::DoubleArea(*fi)/2;
 }
 
 static void VertexFromGaussianCurvature(MeshType &m)
