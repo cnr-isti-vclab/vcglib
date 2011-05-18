@@ -221,6 +221,14 @@ static void FaceConstant(MeshType &m, float q)
 		(*fi).Q()=q;
 }
 
+/** Assign to each face of the mesh its double area.
+*/
+static void FaceArea(MeshType &m)
+{
+	FaceIterator fi;
+	for(fi=m.face.begin();fi!=m.face.end();++fi)		
+		(*fi).Q()=vcg::DoubleArea(*fi);
+}
 
 static void VertexFromGaussianCurvature(MeshType &m)
 { 
