@@ -7,6 +7,8 @@
 #include <vcg/math/camera.h>
 #include <vcg/math/shot.h>
 
+static double precision = 0.000000001;  // 1e-9
+
 double dist2(vcg::Point2d p1, vcg::Point2d p2)
 {
 	double d = sqrt((p1[0] - p2[0]) * (p1[0] - p2[0]) + (p1[1] - p2[1]) * (p1[1] - p2[1]));
@@ -21,23 +23,28 @@ double dist3(vcg::Point3d p1, vcg::Point3d p2)
 
 // TEST1 - PROJECT A 3D POINT IN WORLD COORDINATE ON THE IMAGE PLANE
 ///////////////////////////////////////////////////////////////////////////////
-void test1(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
+bool test1(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
 {
 	vcg::Point2d p1proj, p2proj;
 
 	p1proj = shot1.Project(p1);
 	p2proj = shot2.Project(p2);
 
-	vcg::Point2d p1test(633.58101456110933, 400.0);
-	vcg::Point2d p2test(289.02943695191425, 400.0);
+	vcg::Point2d p1test(633.58101456110933, 327.22860336234237);
+	vcg::Point2d p2test(289.02943695191425, 315.42715619973069);
 
-	assert(dist2(p1proj,p1test) < 0.00000001);
-	assert(dist2(p2proj,p2test) < 0.00000001);
+	if (dist2(p1proj,p1test) > precision)
+		return false;
+
+	if (dist2(p2proj,p2test) > precision)
+		return false;
+
+	return true;
 }
 
 // TEST 2 - PROJECTION AND UNPROJECTION
 ///////////////////////////////////////////////////////////////////////////////
-void test2(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
+bool test2(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
 {	
 	vcg::Point2d p1proj, p2proj;
 
@@ -47,22 +54,23 @@ void test2(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
 	vcg::Point3d p1unproj, p2unproj;
 	vcg::Point3d pcam1, pcam2;
 
-	vcg::Matrix44d R1 = shot1.Extrinsics.Rot();
-	vcg::Point4d pp(-10.0, -5.0, -70.0, 1.0);
-	pp = R1 * pp;
-
 	pcam1 = shot1.ConvertWorldToCameraCoordinates(p1);
 	p1unproj = shot1.UnProject(p1proj, pcam1[2]);
 	pcam2 = shot2.ConvertWorldToCameraCoordinates(p2);
 	p2unproj = shot2.UnProject(p2proj, pcam2[2]);
 
-	assert(dist3(p1, p1unproj) < 0.00000001);
-	assert(dist3(p2, p2unproj) < 0.00000001);
+	if (dist3(p1, p1unproj) > precision)
+		return false;
+
+	if (dist3(p2, p2unproj) > precision)
+		return false;
+
+	return true;
 }
 
 // TEST 3 - CAMERA CONVERSION - CONVERT FOCAL IN PIXELS IN FOCAL IN MM
 ///////////////////////////////////////////////////////////////////////////////
-void test3(vcg::Shotd shot, vcg::Point3d p1)
+bool test3(vcg::Shotd shot, vcg::Point3d p1)
 {
 	vcg::Shotd shotpx = shot;
 
@@ -77,7 +85,8 @@ void test3(vcg::Shotd shot, vcg::Point3d p1)
 	vcg::Point2d p1proj;
 	p1proj = shot.Project(p1);
 
-	assert(dist2(pproj, p1proj) < 0.000000001);
+	if(dist2(pproj, p1proj) > precision)
+		return false;
 
 	// CONVERSION - (ccd is assumed to be 35mm width)
 
@@ -89,44 +98,67 @@ void test3(vcg::Shotd shot, vcg::Point3d p1)
 
 	p1proj = shotpx.Project(p1);
 
-	assert(dist2(pproj, p1proj) < 0.000000001);
+	if (dist2(pproj, p1proj) > precision)
+		return false;
+
+	return true;
 }
 
-// TEST 4 - CAMERA MODIFICATION - CHANGE SCALE FACTOR OF THE WORLD
+// TEST 4 - CAMERA-SHOT MODIFICATION - CHANGE SCALE FACTOR OF THE WORLD
 ///////////////////////////////////////////////////////////////////////////////
-void test4(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
+bool test4(vcg::Shotd shot, vcg::Point3d p1, vcg::Point3d p2)
 {
-	//...TODO...
+	vcg::Point2d p1projPX, p2projPX;
+	p1projPX = shot.Project(p1);
+	p2projPX = shot.Project(p2);
+
+	vcg::Point2d p1proj, p2proj;
+	p1proj = shot.Intrinsics.ViewportPxToLocal(p1projPX);
+	p2proj = shot.Intrinsics.ViewportPxToLocal(p2projPX);
+
+	vcg::Point2d diff;
+	double distance_before_world_scaling;
+	diff = (p2proj-p1proj);
+  distance_before_world_scaling = diff.Norm();
+
+	// WORLD SCALING
+	double scalefactor = 20.0;
+
+	// adjust World 3D points
+	p1 *= scalefactor;
+	p2 *= scalefactor;
+
+	shot.RescalingWorld(scalefactor);
+
+	p1projPX = shot.Project(p1);
+	p2projPX = shot.Project(p2);
+
+	p1proj = shot.Intrinsics.ViewportPxToLocal(p1projPX);
+	p2proj = shot.Intrinsics.ViewportPxToLocal(p2projPX);
+
+	double distance_after_world_scaling;
+	diff = (p2proj - p1proj);
+	distance_after_world_scaling = diff.Norm();
+
+	if (std::fabs(distance_before_world_scaling - (distance_after_world_scaling / scalefactor)) > precision)
+		return false;
+
+	return true;
 }
 
-// TEST 5 - CAMERA MODIFICATION - ROTATION + TRANSLATION
+// TEST 6 - SHOT MODIFICATION - ROTATION + TRANSLATION
 ///////////////////////////////////////////////////////////////////////////////
-void test5(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
+bool test5(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
 {
-	vcg::Matrix44d R = shot1.Extrinsics.Rot();
-	vcg::Point3d tr = shot1.Extrinsics.Tra();
+	// put shot1 reference frame into the origin of the World coordinates system
+	vcg::Matrix44d M = shot1.GetWorldToExtrinsicsMatrix();
+	shot1.ApplyRigidTransformation(vcg::Invert(M));
 
-	vcg::Matrix44d T;
-	T.SetIdentity();
-	R.ElementAt(3,0) = tr[0];
-	R.ElementAt(3,1) = tr[1];
-	R.ElementAt(3,2) = tr[2];
-	R.ElementAt(3,3) = 1.0;
+	// then, put in the shot2 reference frame
+	M = shot2.GetWorldToExtrinsicsMatrix();
+	shot1.ApplyRigidTransformation(M);
 
-	shot1.MultMatrix(T);
-	shot1.MultMatrix(R.transpose());
-
-	R = shot2.Extrinsics.Rot();
-	tr = shot2.Extrinsics.Tra();
-
-	T.ElementAt(3,0) = -tr[0];
-	T.ElementAt(3,1) = -tr[1];
-	T.ElementAt(3,2) = -tr[2];
-	T.ElementAt(3,3) = 1.0;
-
-	shot1.MultMatrix(R);
-	shot1.MultMatrix(T);
-
+	// test..
 	vcg::Point2d p1proj1, p2proj1, p1proj2, p2proj2;
 	p1proj1 = shot1.Project(p1);
 	p1proj2 = shot2.Project(p1);
@@ -134,15 +166,49 @@ void test5(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
 	p2proj1 = shot1.Project(p2);
 	p2proj2 = shot2.Project(p2);
 
-	assert(dist2(p1proj1, p1proj2) < 0.00001);
-	assert(dist2(p2proj1, p2proj2) < 0.00001);
+	if (dist2(p1proj1, p1proj2) > precision)
+		return false;
+
+	if (dist2(p2proj1, p2proj2) > precision)
+		return false;
+
+	return true;
+}
+
+// TEST 6 - SHOT MODIFICATION - ROTATION + TRANSLATION
+///////////////////////////////////////////////////////////////////////////////
+bool test6(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
+{
+	vcg::Matrix44d M1 = shot1.GetExtrinsicsToWorldMatrix();
+	vcg::Matrix44d M2 = shot2.GetWorldToExtrinsicsMatrix();
+	vcg::Matrix44d M;
+	M = M2 * M1;  // roto-translation that maps the frame of Shot1 in the frame of Shot2
+
+	// apply it..
+	shot1.ApplyRigidTransformation(M);
+
+	// and test it..
+	vcg::Point2d p1proj1, p2proj1, p1proj2, p2proj2;
+	p1proj1 = shot1.Project(p1);
+	p1proj2 = shot2.Project(p1);
+
+	p2proj1 = shot1.Project(p2);
+	p2proj2 = shot2.Project(p2);
+
+	if (dist2(p1proj1, p1proj2) > precision)
+		return false;
+
+	if (dist2(p2proj1, p2proj2) > precision)
+		return false;
+
+	return true;
 }
 
 
 int main() 
 {
 	vcg::Point3d p1(20.0, 25.0, 10.0);
-	vcg::Point3d p2(-6.0, 40.0, 50.0);
+	vcg::Point3d p2(-6.0, 25.0, 50.0);
 	vcg::Shotd shot1;
 	vcg::Shotd shot2;
 
@@ -164,7 +230,7 @@ int main()
 	R1.ElementAt(0,2) = std::sin(-10.0*deg2rad);
 	R1.ElementAt(0,3) = 0.0;
 	R1.ElementAt(1,0) = 0.0;
-	R1.ElementAt(1,1) = 0.0;
+	R1.ElementAt(1,1) = 1.0;
 	R1.ElementAt(1,2) = 0.0;
 	R1.ElementAt(1,3) = 0.0;
 	R1.ElementAt(2,0) = -std::sin(-10.0*deg2rad);
@@ -198,7 +264,7 @@ int main()
 	R2.ElementAt(0,2) = std::sin(-45.0*deg2rad);
 	R2.ElementAt(0,3) = 0.0;
 	R2.ElementAt(1,0) = 0.0;
-	R2.ElementAt(1,1) = 0.0;
+	R2.ElementAt(1,1) = 1.0;
 	R2.ElementAt(1,2) = 0.0;
 	R2.ElementAt(1,3) = 0.0;
 	R2.ElementAt(2,0) = -std::sin(-45.0*deg2rad);
@@ -216,19 +282,62 @@ int main()
 
 
 	// TEST 1 - project a 3D point in World coordinates on the image plane
-	test1(shot1, shot2, p1, p2);
+	if (test1(shot1, shot2, p1, p2))
+	{
+		std::cout << "TEST 1 (projection) - PASSED(!)" << std::endl;
+	}
+	else 
+		std::cout << "TEST 1 (projection) - FAILS(!)" << std::endl;
 
 	// TEST 2 - projection and unprojection
-	test2(shot1, shot2, p1, p2);
+	if (test2(shot1, shot2, p1, p2))
+	{
+		std::cout << "TEST 2 (unprojection) - PASSED(!)" << std::endl;
+	}
+	else
+	{
+		std::cout << "TEST 2 (unprojection) - FAILS(!)" << std::endl;
+	}
 
 	// TEST 3 - CAMERA CONVERSION - CONVERT FOCAL IN PIXELS IN FOCAL IN MM
-	test3(shot1, p1);
+	if (test3(shot1, p1))
+	{
+		std::cout << "TEST 3 (focal in px to focal in mm) - PASSED(!)" << std::endl;
+	}
+	else
+	{
+		std::cout << "TEST 3 (focal in px to focal in mm) - FAILS(!)" << std::endl;
+	}
 
-	// TEST 4 - CAMERA MODIFICATION - CHANGE SCALE FACTOR OF THE WORLD
-	test4(shot1, shot2, p1, p2);
+	// TEST 4 - CAMERA-SHOT MODIFICATION - CHANGE SCALE FACTOR OF THE WORLD
+	if (test4(shot1, p1, p2))
+	{
+		std::cout << "TEST 4 (scaling the World) - PASSED(!)" << std::endl;
+	}
+	else
+	{
+		std::cout << "TEST 4 (scaling the World) - FAILS(!)" << std::endl;
+	}
 
-	// TEST 5 - CAMERA MODIFICATION - ROTATION + TRANSLATION
-	test5(shot1, shot2, p1, p2);
+	// TEST 5 - SHOT MODIFICATION - ROTO-TRANSLATION OF THE SHOT COORDINATES SYSTEM
+	if (test5(shot1, shot2, p1, p2))
+	{
+		std::cout << "TEST 5 (roto-translation of the Shot coordinates system) - PASSED(!)" << std::endl;
+	}
+	else
+	{
+		std::cout << "TEST 5 (roto-translation of the Shot coordinates system) - FAILS(!)" << std::endl;
+	}
+
+	// TEST 6 - SHOT MODIFICATION - ROTO-TRANSLATION OF THE SHOT COORDINATES SYSTEM
+	if (test6(shot1, shot2, p1, p2))
+	{
+		std::cout << "TEST 6 (roto-translation of the Shot coordinates system) - PASSED(!)" << std::endl;
+	}
+	else
+	{
+		std::cout << "TEST 6 (roto-translation of the Shot coordinates system) - FAILS(!)" << std::endl;
+	}
 
   return 0;
 }
