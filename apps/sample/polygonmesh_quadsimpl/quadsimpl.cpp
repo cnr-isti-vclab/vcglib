@@ -397,7 +397,7 @@ int main(int argc, char *argv[]) {
 
     char* meshfile = NULL;
     char* trimeshfile = NULL;
-    char* outfile = NULL;
+    char* outfile = "output.off";
     int faces;
     bool adaptive = false;
 
@@ -481,12 +481,7 @@ int main(int argc, char *argv[]) {
     vcg::tri::UpdateIndexed<MyPolyMesh>::FromHalfEdges(pm );
 
 
-    int ret;
-    if(outfile)
-        ret = tri::io::ExporterOFF<MyPolyMesh>::Save(pm, outfile, tri::io::Mask::IOM_BITPOLYGONAL );
-    else
-        ret = tri::io::ExporterOFF<MyPolyMesh>::Save(pm, "output.off", tri::io::Mask::IOM_BITPOLYGONAL );
-
+    int ret = tri::io::ExporterOFF<MyPolyMesh>::Save(pm, outfile, tri::io::Mask::IOM_BITPOLYGONAL );
     if(ret != 0 )
     {
         cerr << "Error saving file" << endl;
