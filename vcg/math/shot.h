@@ -193,11 +193,19 @@ public:
 	/// look towards (dir+up)
 	void LookTowards(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up);
 
+	/* Sometimes the 3D World coordinates are known up to a scale factor. This method adjust the camera/shot parameters
+	 * to account for the re-scaling of the World.
+	 */
+	void RescalingWorld(S scalefactor);
+
+	/// Given a pure roto-translation (4-by-4) modify the reference frame accordingly.
+	void ApplyRigidTransformation(Matrix44<S> & M);
+
 	/// convert a 3d point from world to camera coordinates (do not confuse with the Shot reference frame)
-	vcg::Point3<S>  ConvertWorldToCameraCoordinates(const vcg::Point3<S> & p) const;
+	vcg::Point3<S> ConvertWorldToCameraCoordinates(const vcg::Point3<S> & p) const;
 
 	/// convert a 3d point from camera (do not confuse with the Shot reference frame) to world coordinates
-	vcg::Point3<S>  ConvertCameraToWorldCoordinates(const vcg::Point3<S> & p) const;
+	vcg::Point3<S> ConvertCameraToWorldCoordinates(const vcg::Point3<S> & p) const;
 
 	/* convert a 3d point from camera (do not confuse with the Shot reference frame) to world coordinates
 	 * it uses inverse instead of transpose for non-exactly-rigid rotation matrices (such as calculated by tsai and garcia)
@@ -222,22 +230,20 @@ public:
 // accessors
 public:
 
-	/* Returns the matrix M such that
-	  3dpoint_in_world_coordinates = M * 3dpoint_in_local_coordinates
-	*/
-		Matrix44<S> GetExtrinsicsToWorldMatrix() const {
-				Matrix44<S> rotM ;
+	  /// Returns the (4-by-4) matrix M such that 3dpoint_in_world_coordinates = M * 3dpoint_in_local_coordinates
+		Matrix44<S> GetExtrinsicsToWorldMatrix() const
+		{
+				Matrix44<S> rotM;
 				Extrinsics.rot.ToMatrix(rotM);
 				return Matrix44<S>().SetTranslate(Extrinsics.tra) * rotM.transpose();
 		}
 
-	/* Returns the matrix M such that
-	  3dpoint_in_local_coordinates = M * 3dpoint_in_world_coordinates
-	*/
-		Matrix44<S> GetWorldToExtrinsicsMatrix() const {
-				Matrix44<S> rotM ;
+	  /// Returns the (4-by-4) matrix M such that 3dpoint_in_local_coordinates = M * 3dpoint_in_world_coordinates
+		Matrix44<S> GetWorldToExtrinsicsMatrix() const
+		{
+				Matrix44<S> rotM;
 				Extrinsics.rot.ToMatrix(rotM);
-				return rotM  * Matrix44<S>().SetTranslate(-Extrinsics.tra) ;
+				return rotM * Matrix44<S>().SetTranslate(-Extrinsics.tra) ;
 		}
 
 	/*  multiply the current reference frame for the matrix passed
@@ -417,6 +423,52 @@ S Shot<S,RotationType>::Depth(const vcg::Point3<S> & p)const
 	return ConvertWorldToCameraCoordinates(p).Z();
 }
 
+/* Sometimes the 3D World coordinates are known up to a scale factor. This method adjust the camera/shot parameters
+ * to account for the re-scaling of the World.
+ */
+template <class S, class RotationType>
+void Shot<S, RotationType>::RescalingWorld(S scalefactor)
+{
+		// adjust INTRINSICS
+		
+		Intrinsics.FocalMm = Intrinsics.FocalMm * scalefactor;
+		double ccdwidth = static_cast<double>(Intrinsics.ViewportPx[0] * Intrinsics.PixelSizeMm[0]);
+		double ccdheight = static_cast<double>(Intrinsics.ViewportPx[1] * Intrinsics.PixelSizeMm[1]);
+
+		Intrinsics.PixelSizeMm[0] = (ccdwidth * scalefactor) / Intrinsics.ViewportPx[0];
+		Intrinsics.PixelSizeMm[1] = (ccdheight * scalefactor) / Intrinsics.ViewportPx[1];
+
+		// adjust EXTRINSICS
+
+		// rotation remains the same (!)
+		// nothing to do..
+
+		// the viewpoint should be modified according to the scale factor
+		Extrinsics.tra *= scalefactor;
+}
+
+/// Given a pure roto-translation matrix (4-by-4) modify the reference frame accordingly.
+template <class S, class RotationType>
+void Shot<S, RotationType>::ApplyRigidTransformation(Matrix44<S> & M)
+{
+	Matrix44<S> currentM;
+	Matrix44<S> rotM;
+	Extrinsics.rot.ToMatrix(rotM);
+
+	currentM = rotM * Matrix44<S>().SetTranslate(-Extrinsics.tra);
+
+	currentM = M * currentM; // roto-translate the current frame according to the given roto-translation
+
+	// decompose the result into a viewpoint and an orientation
+
+	Point3<S> p(currentM.ElementAt(0,3), currentM.ElementAt(1,3), currentM.ElementAt(2,3));
+	currentM.ElementAt(0,3) = 0;
+	currentM.ElementAt(1,3) = 0;
+	currentM.ElementAt(2,3) = 0;
+
+	Extrinsics.tra = -(currentM.transpose() * p);
+	Extrinsics.rot = currentM;
+}
 
 
 //--------------------------------
