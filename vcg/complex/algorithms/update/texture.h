@@ -20,11 +20,7 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
 
-$Log: position.h,v $
-****************************************************************************/
 
 #ifndef __VCG_TRI_UPDATE_TEXTURE
 #define __VCG_TRI_UPDATE_TEXTURE
@@ -38,7 +34,7 @@ namespace tri {
 
 /// \headerfile texture.h vcg/complex/algorithms/update/texture.h
 
-/// \brief This class is used to update vertex position according to a transformation matrix.
+/// \brief This class is used to update/generate texcoord position according to various critera. .
 template <class ComputeMeshType>
 class UpdateTexture
 {
@@ -53,14 +49,48 @@ typedef typename MeshType::FaceType       FaceType;
 typedef typename MeshType::FacePointer    FacePointer;
 typedef typename MeshType::FaceIterator   FaceIterator;
 
-static void WedgeTexFromPlanar(ComputeMeshType &m, Plane3<ScalarType> &pl)
+static void WedgeTexFromPlane(ComputeMeshType &m, const Point3<ScalarType> &uVec, const Point3<ScalarType> &vVec, bool aspectRatio)
 {
+  // First just project
+
 	FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 	        if(!(*fi).IsD()) 
 							{
-							
+               for(int i=0;i<3;++i)
+               {
+                 (*fi).WT(i).U()= (*fi).V(i)->cP() * uVec;
+                 (*fi).WT(i).V()= (*fi).V(i)->cP() * vVec;
+               }
 							}											
+  // second Loop normalize to
+  Box2f bb;
+  for(fi=m.face.begin();fi!=m.face.end();++fi)
+          if(!(*fi).IsD())
+              {
+               for(int i=0;i<3;++i)
+               {
+                 bb.Add((*fi).WT(i).P());
+               }
+              }
+
+
+  ScalarType wideU =  bb.max[0]- bb.min[0];
+  ScalarType wideV =  bb.max[1]- bb.min[1];
+  if(aspectRatio) {
+    wideU = std::max(wideU,wideV);
+    wideV = wideU;
+  }
+
+  for(fi=m.face.begin();fi!=m.face.end();++fi)
+          if(!(*fi).IsD())
+              {
+               for(int i=0;i<3;++i)
+               {
+                 (*fi).WT(i).U() = ((*fi).WT(i).U() - bb.min[0]) / wideU;
+                 (*fi).WT(i).V() = ((*fi).WT(i).V() - bb.min[1]) / wideV;
+               }
+              }
 }
 
 static void WedgeTexFromCamera(ComputeMeshType &m, Plane3<ScalarType> &pl)
