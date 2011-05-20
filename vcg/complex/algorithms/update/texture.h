@@ -98,6 +98,19 @@ static void WedgeTexFromCamera(ComputeMeshType &m, Plane3<ScalarType> &pl)
 	
 }
 
+static void WedgeTexFromVertexTex(ComputeMeshType &m)
+{
+  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+          if(!(*fi).IsD())
+              {
+               for(int i=0;i<3;++i)
+               {
+                 (*fi).WT(i).U() = (*fi).V(i)->T().U();
+                 (*fi).WT(i).V() = (*fi).V(i)->T().V();
+               }
+              }
+}
+
 
 /// Currently texture coords are kept for ALL the triangles of a mesh. The texture id is stored with each face. 
 /// if a given face should not have tex coord it has the default -1 value for texture ID.
