@@ -98,8 +98,11 @@
 #include<vcg/complex/complex.h>
 
 namespace vcg{
+// Base class for Parameters
+// all parameters must be derived from this.
+class BaseParameterClass { };
 
-template<class MeshType> 
+template<class MeshType>
 class LocalOptimization;
 
 enum ModifierType{	TetraEdgeCollapseOp, TriEdgeSwapOp, TriVertexSplitOp,
@@ -123,33 +126,33 @@ class LocalModification
 	virtual ModifierType IsOfType() = 0 ;
 
 	/// return true if the data have not changed since it was created
-	virtual bool IsUpToDate() = 0 ;
+  virtual bool IsUpToDate() const = 0 ;
 
 	/// return true if no constraint disallow this operation to be performed (ex: change of topology in edge collapses)
-	virtual bool IsFeasible() = 0;
+  virtual bool IsFeasible(const BaseParameterClass *pp) = 0;
 
 	/// Compute the priority to be used in the heap
-	virtual ScalarType ComputePriority()=0;
+  virtual ScalarType ComputePriority(BaseParameterClass *pp)=0;
 
 	/// Return the priority to be used in the heap (implement static priority)
 	virtual ScalarType Priority() const =0;
 
-	/// Perform the operation and return the variation in the number of simplicies (>0 is refinement, <0 is simplification)
-	virtual void Execute(MeshType &m)=0;
+  /// Perform the operation
+  virtual void Execute(MeshType &m, BaseParameterClass *pp)=0;
 
 	/// perform initialization
-	static void Init(MeshType &m, HeapType&);
+  static void Init(MeshType &m, HeapType&, BaseParameterClass *pp);
 
 	/// An approximation of the size of the heap with respect of the number of simplex
     /// of the mesh. When this number is exceeded a clear heap purging is performed. 
     /// so it is should be reasonably larger than the minimum expected size to avoid too frequent clear heap
     /// For example for symmetric edge collapse a 5 is a good guess. 
     /// while for non symmetric edge collapse a larger number like 9 is a better choice
-	static float HeapSimplexRatio() {return 6.0f;} ;
+  static float HeapSimplexRatio(BaseParameterClass *) {return 6.0f;} ;
 
   virtual const char *Info(MeshType &) {return 0;}
 	/// Update the heap as a consequence of this operation
-	virtual void UpdateHeap(HeapType&)=0;
+  virtual void UpdateHeap(HeapType&, BaseParameterClass *pp)=0;
 };	//end class local modification
 
 
@@ -164,7 +167,7 @@ template<class MeshType>
 class LocalOptimization
 {
 public:
-  LocalOptimization(MeshType &mm): m(mm){ ClearTermination();e=0.0;HeapSimplexRatio=5;}
+  LocalOptimization(MeshType &mm, BaseParameterClass *_pp): m(mm){ ClearTermination();e=0.0;HeapSimplexRatio=5; pp=_pp;}
 
 	struct  HeapElem;
 	// scalar type
@@ -172,9 +175,9 @@ public:
 	// type of the heap
 	typedef typename std::vector<HeapElem> HeapType;	
 	// modification type	
-	typedef  LocalModification <MeshType>  LocModType;
+  typedef  LocalModification <MeshType>  LocModType;
 	// modification Pointer type	
-	typedef  LocalModification <MeshType> * LocModPtrType;
+  typedef  LocalModification <MeshType> * LocModPtrType;
 	
 
 
@@ -198,6 +201,7 @@ public:
 	int		start;
 	ScalarType currMetric;
 	ScalarType targetMetric;
+  BaseParameterClass *pp;
 
   // The ratio between Heap size and the number of simplices in the current mesh
   // When this value is exceeded a ClearHeap Start;
@@ -261,7 +265,7 @@ public:
 		  //return (locModPtr->Priority() < h.locModPtr->Priority());
 	  }
 
-    bool IsUpToDate()
+    bool IsUpToDate() const
     {
 			return locModPtr->IsUpToDate();
 		}
@@ -291,15 +295,15 @@ public:
 				currMetric=h.back().pri;
         h.pop_back();
         				
-				if( locMod->IsUpToDate() )	
+        if( locMod->IsUpToDate() )
 				{	
           //printf("popped out: %s\n",locMod->Info(m));
          	// check if it is feasible
-					if (locMod->IsFeasible())
+          if (locMod->IsFeasible(this->pp))
 					{
 						nPerfmormedOps++;
-						locMod->Execute(m);
-						locMod->UpdateHeap(h);
+            locMod->Execute(m,this->pp);
+            locMod->UpdateHeap(h,this->pp);
 						}
 				}
         //else printf("popped out unfeasible\n");
@@ -317,7 +321,7 @@ void ClearHeap()
 	//int sz=h.size();
 	for(hi=h.begin();hi!=h.end();)
 	{
-		if(!(*hi).locModPtr->IsUpToDate())
+    if(!(*hi).locModPtr->IsUpToDate())
 		{
 			delete (*hi).locModPtr;
 			*hi=h.back();
@@ -339,22 +343,22 @@ void ClearHeap()
 	///initialize for all vertex the temporary mark must call only at the start of decimation
 	///by default it takes the first element in the heap and calls Init (static funcion) of that type
 	///of local modification. 
-	template <class LocalModificationType> void Init()
+  template <class LocalModificationType> void Init()
 	{
-		vcg::tri::InitVertexIMark(m);
+    vcg::tri::InitVertexIMark(m);
 		
-		// The expected size of heap depends on the type of the local modification we are using..
-		HeapSimplexRatio = LocalModificationType::HeapSimplexRatio();
+    // The expected size of heap depends on the type of the local modification we are using..
+    HeapSimplexRatio = LocalModificationType::HeapSimplexRatio(pp);
 		
-		LocalModificationType::Init(m,h);
-		std::make_heap(h.begin(),h.end());
-		if(!h.empty()) currMetric=h.front().pri;
+    LocalModificationType::Init(m,h,pp);
+    std::make_heap(h.begin(),h.end());
+    if(!h.empty()) currMetric=h.front().pri;
 	}
 
 
 	template <class LocalModificationType> void Finalize()
 	{
-		LocalModificationType::Finalize(m,h);
+    LocalModificationType::Finalize(m,h,pp);
 	}
 
 
