@@ -477,11 +477,11 @@ void Shot<S, RotationType>::ApplyRigidTransformation(Matrix44<S> & M)
 	Extrinsics.tra = M * Extrinsics.tra;
 
 	// nullify translation
-	//M.ElementAt(0,3) = 0;
-	//M.ElementAt(1,3) = 0;
-	//M.ElementAt(2,3) = 0;
+	M.ElementAt(0,3) = 0;
+	M.ElementAt(1,3) = 0;
+	M.ElementAt(2,3) = 0;
 
-	Extrinsics.rot = M.transpose() * rotM;
+	Extrinsics.rot =   rotM * M.transpose();
 }
 
 
