@@ -89,12 +89,7 @@ bool test3(vcg::Shotd shot, vcg::Point3d p1)
 		return false;
 
 	// CONVERSION - (ccd is assumed to be 35mm width)
-
-	double ccd_width = 35.0; // conventionally assumed
-	double ccd_height = (ccd_width * shotpx.Intrinsics.ViewportPx[1]) / shotpx.Intrinsics.ViewportPx[0];
-	shotpx.Intrinsics.PixelSizeMm[0] = (ccd_width / shotpx.Intrinsics.ViewportPx[0]);
-	shotpx.Intrinsics.PixelSizeMm[1] = (ccd_height / shotpx.Intrinsics.ViewportPx[1]);
-	shotpx.Intrinsics.FocalMm = (ccd_width * shotpx.Intrinsics.FocalMm) / shotpx.Intrinsics.ViewportPx[0];  // NOW FOCAL IS IN MM
+	shot.ConvertFocalToMM();
 
 	p1proj = shotpx.Project(p1);
 
@@ -152,10 +147,10 @@ bool test5(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
 {
 	// put shot1 reference frame into the origin of the World coordinates system
 	vcg::Matrix44d M = shot1.GetWorldToExtrinsicsMatrix();
-	shot1.ApplyRigidTransformation(vcg::Invert(M));
+	shot1.ApplyRigidTransformation(M);
 
 	// then, put in the shot2 reference frame
-	M = shot2.GetWorldToExtrinsicsMatrix();
+	M = shot2.GetExtrinsicsToWorldMatrix();
 	shot1.ApplyRigidTransformation(M);
 
 	// test..
@@ -185,7 +180,7 @@ bool test6(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
 	M = M2 * M1;  // roto-translation that maps the frame of Shot1 in the frame of Shot2
 
 	// apply it..
-	shot1.ApplyRigidTransformation(M);
+	shot1.ApplyRigidTransformation(vcg::Invert(M));
 
 	// and test it..
 	vcg::Point2d p1proj1, p2proj1, p1proj2, p2proj2;
@@ -200,6 +195,36 @@ bool test6(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
 
 	if (dist2(p2proj1, p2proj2) > precision)
 		return false;
+
+	return true;
+}
+
+
+// TEST 7 - SHOT MODIFICATION - ROTATION + TRANSLATION
+///////////////////////////////////////////////////////////////////////////////
+bool test7(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d)
+{
+	vcg::Matrix44d R;
+	R.SetZero();
+	R.ElementAt(0,2) = 1.0;
+	R.ElementAt(1,1) = 1.0;
+	R.ElementAt(2,0) = -1.0;
+	R.ElementAt(3,3) = 1.0;
+
+	vcg::Point2d p1proj = shot1.Project(p1);
+
+	vcg::Point3d prot = R * p1;
+	shot1.ApplyRigidTransformation(R);
+	vcg::Point2d protproj = shot1.Project(prot);
+
+	return true;
+}
+
+// TEST 8 - DEPTH COMPUTATION
+///////////////////////////////////////////////////////////////////////////////
+bool test8(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
+{
+
 
 	return true;
 }
@@ -287,7 +312,7 @@ int main()
 		std::cout << "TEST 1 (projection) - PASSED(!)" << std::endl;
 	}
 	else 
-		std::cout << "TEST 1 (projection) - FAILS(!)" << std::endl;
+		std::cout << "TEST 1 (projection) - FAILED(!)" << std::endl;
 
 	// TEST 2 - projection and unprojection
 	if (test2(shot1, shot2, p1, p2))
@@ -296,7 +321,7 @@ int main()
 	}
 	else
 	{
-		std::cout << "TEST 2 (unprojection) - FAILS(!)" << std::endl;
+		std::cout << "TEST 2 (unprojection) - FAILED(!)" << std::endl;
 	}
 
 	// TEST 3 - CAMERA CONVERSION - CONVERT FOCAL IN PIXELS IN FOCAL IN MM
@@ -306,7 +331,7 @@ int main()
 	}
 	else
 	{
-		std::cout << "TEST 3 (focal in px to focal in mm) - FAILS(!)" << std::endl;
+		std::cout << "TEST 3 (focal in px to focal in mm) - FAILED(!)" << std::endl;
 	}
 
 	// TEST 4 - CAMERA-SHOT MODIFICATION - CHANGE SCALE FACTOR OF THE WORLD
@@ -316,7 +341,7 @@ int main()
 	}
 	else
 	{
-		std::cout << "TEST 4 (scaling the World) - FAILS(!)" << std::endl;
+		std::cout << "TEST 4 (scaling the World) - FAILED(!)" << std::endl;
 	}
 
 	// TEST 5 - SHOT MODIFICATION - ROTO-TRANSLATION OF THE SHOT COORDINATES SYSTEM
@@ -326,7 +351,7 @@ int main()
 	}
 	else
 	{
-		std::cout << "TEST 5 (roto-translation of the Shot coordinates system) - FAILS(!)" << std::endl;
+		std::cout << "TEST 5 (roto-translation of the Shot coordinates system) - FAILED(!)" << std::endl;
 	}
 
 	// TEST 6 - SHOT MODIFICATION - ROTO-TRANSLATION OF THE SHOT COORDINATES SYSTEM
@@ -336,7 +361,27 @@ int main()
 	}
 	else
 	{
-		std::cout << "TEST 6 (roto-translation of the Shot coordinates system) - FAILS(!)" << std::endl;
+		std::cout << "TEST 6 (roto-translation of the Shot coordinates system) - FAILED(!)" << std::endl;
+	}
+
+	// TEST 7 - SHOT MODIFICATION - ROTO-TRANSLATION OF THE SHOT COORDINATES SYSTEM
+	if (test7(shot1, shot2, p1, p2))
+	{
+		std::cout << "TEST 7 (roto-translation of the Shot coordinates system) - PASSED(!)" << std::endl;
+	}
+	else
+	{
+		std::cout << "TEST 7 (roto-translation of the Shot coordinates system) - FAILED(!)" << std::endl;
+	}
+
+	// TEST 8 - SHOT MODIFICATION - ROTO-TRANSLATION OF THE SHOT COORDINATES SYSTEM
+	if (test8(shot1, shot2, p1, p2))
+	{
+		std::cout << "TEST 8 (depth computation) - PASSED(!)" << std::endl;
+	}
+	else
+	{
+		std::cout << "TEST 8 (depth computation) - FAILED(!)" << std::endl;
 	}
 
   return 0;
