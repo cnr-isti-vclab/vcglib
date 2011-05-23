@@ -193,6 +193,11 @@ public:
 	/// look towards (dir+up)
 	void LookTowards(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up);
 
+  /* Sometimes the focal is given in pixels. In this case, this function can be used to convert it in millimiters.
+   * NOTE: This method should be moved in vcg::Camera.
+   */
+	void ConvertFocalToMM();
+
 	/* Sometimes the 3D World coordinates are known up to a scale factor. This method adjust the camera/shot parameters
 	 * to account for the re-scaling of the World.
 	 */
@@ -423,6 +428,19 @@ S Shot<S,RotationType>::Depth(const vcg::Point3<S> & p)const
 	return ConvertWorldToCameraCoordinates(p).Z();
 }
 
+/* Sometimes the focal is given in pixels. In this case, this function can be used to convert it in millimiters.
+ * This method should be moved in vcg::Camera()
+ */
+template <class S, class RotationType>
+void Shot<S, RotationType>::ConvertFocalToMM()
+{
+	double ccd_width = 35.0; // ccd is assumed conventionally to be 35mm
+	double ccd_height = (ccd_width * Intrinsics.ViewportPx[1]) / Intrinsics.ViewportPx[0];
+	Intrinsics.PixelSizeMm[0] = (ccd_width / Intrinsics.ViewportPx[0]);
+	Intrinsics.PixelSizeMm[1] = (ccd_height / Intrinsics.ViewportPx[1]);
+	Intrinsics.FocalMm = (ccd_width * Intrinsics.FocalMm) / Intrinsics.ViewportPx[0];  // NOW FOCAL IS IN MM
+}
+
 /* Sometimes the 3D World coordinates are known up to a scale factor. This method adjust the camera/shot parameters
  * to account for the re-scaling of the World.
  */
@@ -455,19 +473,15 @@ void Shot<S, RotationType>::ApplyRigidTransformation(Matrix44<S> & M)
 	Matrix44<S> rotM;
 	Extrinsics.rot.ToMatrix(rotM);
 
-	currentM = rotM * Matrix44<S>().SetTranslate(-Extrinsics.tra);
+	// roto-translate the viewpoint
+	Extrinsics.tra = M * Extrinsics.tra;
 
-	currentM = M * currentM; // roto-translate the current frame according to the given roto-translation
+	// nullify translation
+	//M.ElementAt(0,3) = 0;
+	//M.ElementAt(1,3) = 0;
+	//M.ElementAt(2,3) = 0;
 
-	// decompose the result into a viewpoint and an orientation
-
-	Point3<S> p(currentM.ElementAt(0,3), currentM.ElementAt(1,3), currentM.ElementAt(2,3));
-	currentM.ElementAt(0,3) = 0;
-	currentM.ElementAt(1,3) = 0;
-	currentM.ElementAt(2,3) = 0;
-
-	Extrinsics.tra = -(currentM.transpose() * p);
-	Extrinsics.rot = currentM;
+	Extrinsics.rot = M.transpose() * rotM;
 }
 
 
