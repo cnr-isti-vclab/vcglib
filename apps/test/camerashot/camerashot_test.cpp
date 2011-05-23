@@ -21,6 +21,18 @@ double dist3(vcg::Point3d p1, vcg::Point3d p2)
 	return d;
 }
 
+double checkIdentity(vcg::Matrix44d M)
+{
+	double d;
+
+	d = (M.ElementAt(0,0) - 1.0) * (M.ElementAt(0,0) - 1.0) + M.ElementAt(0,1) * M.ElementAt(0,1) + M.ElementAt(0,2) * M.ElementAt(0,2) + M.ElementAt(0,3) * M.ElementAt(0,3);
+	d += M.ElementAt(1,0) * M.ElementAt(1,0) + (M.ElementAt(1,1) - 1.0) * (M.ElementAt(1,1) - 1.0) + M.ElementAt(1,2) * M.ElementAt(1,2) + M.ElementAt(1,3) * M.ElementAt(1,3);
+	d += M.ElementAt(2,0) * M.ElementAt(2,0) + M.ElementAt(2,1) * M.ElementAt(2,1) + (M.ElementAt(2,2) - 1.0) * (M.ElementAt(2,2) - 1.0) + M.ElementAt(2,3) * M.ElementAt(2,3);
+	d += M.ElementAt(3,0) * M.ElementAt(3,0) + M.ElementAt(3,1) * M.ElementAt(3,1) + M.ElementAt(3,2) * M.ElementAt(3,2) + (M.ElementAt(3,3) - 1.0) * (M.ElementAt(3,3) - 1.0);
+
+	return d;
+}
+
 // TEST1 - PROJECT A 3D POINT IN WORLD COORDINATE ON THE IMAGE PLANE
 ///////////////////////////////////////////////////////////////////////////////
 bool test1(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
@@ -68,9 +80,35 @@ bool test2(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
 	return true;
 }
 
-// TEST 3 - CAMERA CONVERSION - CONVERT FOCAL IN PIXELS IN FOCAL IN MM
+// TEST 3 - DEPTH COMPUTATION
 ///////////////////////////////////////////////////////////////////////////////
-bool test3(vcg::Shotd shot, vcg::Point3d p1)
+bool test3(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
+{
+	vcg::Point2d p1proj, p2proj;
+
+	p1proj = shot1.Project(p1);
+	p2proj = shot2.Project(p2);
+
+	vcg::Point3d p1unproj, p2unproj;
+
+	double depth1 = shot1.Depth(p1);
+	double depth2 = shot2.Depth(p2);
+
+	p1unproj = shot1.UnProject(p1proj, depth1);
+	p2unproj = shot2.UnProject(p2proj, depth2);
+
+	if (dist3(p1, p1unproj) > precision)
+		return false;
+
+	if (dist3(p2, p2unproj) > precision)
+		return false;
+
+	return true;
+}
+
+// TEST 4 - CAMERA CONVERSION - CONVERT FOCAL IN PIXELS IN FOCAL IN MM
+///////////////////////////////////////////////////////////////////////////////
+bool test4(vcg::Shotd shot, vcg::Point3d p1)
 {
 	vcg::Shotd shotpx = shot;
 
@@ -99,9 +137,9 @@ bool test3(vcg::Shotd shot, vcg::Point3d p1)
 	return true;
 }
 
-// TEST 4 - CAMERA-SHOT MODIFICATION - CHANGE SCALE FACTOR OF THE WORLD
+// TEST 5 - CAMERA-SHOT MODIFICATION - CHANGE SCALE FACTOR OF THE WORLD
 ///////////////////////////////////////////////////////////////////////////////
-bool test4(vcg::Shotd shot, vcg::Point3d p1, vcg::Point3d p2)
+bool test5(vcg::Shotd shot, vcg::Point3d p1, vcg::Point3d p2)
 {
 	vcg::Point2d p1projPX, p2projPX;
 	p1projPX = shot.Project(p1);
@@ -141,9 +179,75 @@ bool test4(vcg::Shotd shot, vcg::Point3d p1, vcg::Point3d p2)
 	return true;
 }
 
-// TEST 6 - SHOT MODIFICATION - ROTATION + TRANSLATION
+// TEST 6 - WORLD-TO-EXTRINSICS AND EXTRINSICS-TO-WORLD TRANSFORMATIONS
+bool test6(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
+{
+	vcg::Matrix44d WtoE1 = shot1.GetWorldToExtrinsicsMatrix();
+	vcg::Matrix44d WtoE2 = shot2.GetWorldToExtrinsicsMatrix();
+	vcg::Matrix44d EtoW1 = shot1.GetExtrinsicsToWorldMatrix();
+	vcg::Matrix44d EtoW2 = shot2.GetExtrinsicsToWorldMatrix();
+
+	vcg::Matrix44d I1 = WtoE1 * EtoW1;
+	vcg::Matrix44d I2 = WtoE2 * EtoW2;
+	vcg::Matrix44d I3 = EtoW1 * WtoE1;
+	vcg::Matrix44d I4 = EtoW2 * WtoE2;
+
+	if (checkIdentity(I1) > precision)
+		return false;
+
+	if (checkIdentity(I2) > precision)
+		return false;
+
+	if (checkIdentity(I3) > precision)
+		return false;
+
+	if (checkIdentity(I4) > precision)
+		return false;
+
+	vcg::Point3d axisX(1.0, 0.0, 0.0);
+	vcg::Point3d axisY(0.0, 1.0, 0.0);
+	vcg::Point3d axisZ(0.0, 0.0, 1.0);
+
+	vcg::Point3d vx = EtoW1 * axisX;
+	vcg::Point3d vy = EtoW1 * axisY;
+	vcg::Point3d vz = EtoW1 * axisZ;
+
+	if (dist3(vx, shot1.Extrinsics.Tra() + shot1.Extrinsics.Rot().GetRow3(0)) > precision)
+		return false;
+	
+	if (dist3(vy, shot1.Extrinsics.Tra() + shot1.Extrinsics.Rot().GetRow3(1)) > precision)
+		return false;
+	
+	if (dist3(vz, shot1.Extrinsics.Tra() + shot1.Extrinsics.Rot().GetRow3(2)) > precision)
+		return false;
+
+	return true;
+}
+
+
+// TEST 7 - SHOT MODIFICATION - ROTATION + TRANSLATION
 ///////////////////////////////////////////////////////////////////////////////
-bool test5(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
+bool test7(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
+{
+	vcg::Matrix44d R;
+	R.SetZero();
+	R.ElementAt(0,2) = 1.0;
+	R.ElementAt(1,1) = 1.0;
+	R.ElementAt(2,0) = -1.0;
+	R.ElementAt(3,3) = 1.0;
+
+	vcg::Point2d p1proj = shot1.Project(p1);
+
+	vcg::Point3d prot = R * p1;
+	shot1.ApplyRigidTransformation(R);
+	vcg::Point2d protproj = shot1.Project(prot);
+
+	return true;
+}
+
+// TEST 8 - SHOT MODIFICATION - ROTATION + TRANSLATION
+///////////////////////////////////////////////////////////////////////////////
+bool test8(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
 {
 	// put shot1 reference frame into the origin of the World coordinates system
 	vcg::Matrix44d M = shot1.GetWorldToExtrinsicsMatrix();
@@ -170,9 +274,9 @@ bool test5(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
 	return true;
 }
 
-// TEST 6 - SHOT MODIFICATION - ROTATION + TRANSLATION
+// TEST 9 - SHOT MODIFICATION - ROTATION + TRANSLATION
 ///////////////////////////////////////////////////////////////////////////////
-bool test6(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
+bool test9(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
 {
 	vcg::Matrix44d M1 = shot1.GetExtrinsicsToWorldMatrix();
 	vcg::Matrix44d M2 = shot2.GetWorldToExtrinsicsMatrix();
@@ -180,7 +284,7 @@ bool test6(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
 	M = M2 * M1;  // roto-translation that maps the frame of Shot1 in the frame of Shot2
 
 	// apply it..
-	shot1.ApplyRigidTransformation(vcg::Invert(M));
+	shot2.ApplyRigidTransformation(M);
 
 	// and test it..
 	vcg::Point2d p1proj1, p2proj1, p1proj2, p2proj2;
@@ -198,37 +302,6 @@ bool test6(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
 
 	return true;
 }
-
-
-// TEST 7 - SHOT MODIFICATION - ROTATION + TRANSLATION
-///////////////////////////////////////////////////////////////////////////////
-bool test7(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d)
-{
-	vcg::Matrix44d R;
-	R.SetZero();
-	R.ElementAt(0,2) = 1.0;
-	R.ElementAt(1,1) = 1.0;
-	R.ElementAt(2,0) = -1.0;
-	R.ElementAt(3,3) = 1.0;
-
-	vcg::Point2d p1proj = shot1.Project(p1);
-
-	vcg::Point3d prot = R * p1;
-	shot1.ApplyRigidTransformation(R);
-	vcg::Point2d protproj = shot1.Project(prot);
-
-	return true;
-}
-
-// TEST 8 - DEPTH COMPUTATION
-///////////////////////////////////////////////////////////////////////////////
-bool test8(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
-{
-
-
-	return true;
-}
-
 
 int main() 
 {
@@ -324,44 +397,45 @@ int main()
 		std::cout << "TEST 2 (unprojection) - FAILED(!)" << std::endl;
 	}
 
-	// TEST 3 - CAMERA CONVERSION - CONVERT FOCAL IN PIXELS IN FOCAL IN MM
-	if (test3(shot1, p1))
+	// TEST 3 - DEPTH COMPUTATION
+	if (test3(shot1, shot2, p1, p2))
 	{
-		std::cout << "TEST 3 (focal in px to focal in mm) - PASSED(!)" << std::endl;
+		std::cout << "TEST 3 (depth computation) - PASSED(!)" << std::endl;
 	}
 	else
 	{
-		std::cout << "TEST 3 (focal in px to focal in mm) - FAILED(!)" << std::endl;
+		std::cout << "TEST 3 (depth computation) - FAILED(!)" << std::endl;
 	}
 
-	// TEST 4 - CAMERA-SHOT MODIFICATION - CHANGE SCALE FACTOR OF THE WORLD
-	if (test4(shot1, p1, p2))
+
+	// TEST 4 - CAMERA CONVERSION - CONVERT FOCAL IN PIXELS IN FOCAL IN MM
+	if (test4(shot1, p1))
 	{
-		std::cout << "TEST 4 (scaling the World) - PASSED(!)" << std::endl;
+		std::cout << "TEST 4 (focal in px to focal in mm) - PASSED(!)" << std::endl;
 	}
 	else
 	{
-		std::cout << "TEST 4 (scaling the World) - FAILED(!)" << std::endl;
+		std::cout << "TEST 4 (focal in px to focal in mm) - FAILED(!)" << std::endl;
 	}
 
-	// TEST 5 - SHOT MODIFICATION - ROTO-TRANSLATION OF THE SHOT COORDINATES SYSTEM
-	if (test5(shot1, shot2, p1, p2))
+	// TEST 5 - CAMERA-SHOT MODIFICATION - CHANGE SCALE FACTOR OF THE WORLD
+	if (test5(shot1, p1, p2))
 	{
-		std::cout << "TEST 5 (roto-translation of the Shot coordinates system) - PASSED(!)" << std::endl;
+		std::cout << "TEST 5 (scaling the World) - PASSED(!)" << std::endl;
 	}
 	else
 	{
-		std::cout << "TEST 5 (roto-translation of the Shot coordinates system) - FAILED(!)" << std::endl;
+		std::cout << "TEST 5 (scaling the World) - FAILED(!)" << std::endl;
 	}
 
-	// TEST 6 - SHOT MODIFICATION - ROTO-TRANSLATION OF THE SHOT COORDINATES SYSTEM
+	// TEST 6 - WORLD-TO-EXTRINSICS AND EXTRINSICS-TO-WORLD TRANSFORMATIONS
 	if (test6(shot1, shot2, p1, p2))
 	{
-		std::cout << "TEST 6 (roto-translation of the Shot coordinates system) - PASSED(!)" << std::endl;
+		std::cout << "TEST 6 (World-to-Extrinsics and Extrinsics-to-World) - PASSED(!)" << std::endl;
 	}
 	else
 	{
-		std::cout << "TEST 6 (roto-translation of the Shot coordinates system) - FAILED(!)" << std::endl;
+		std::cout << "TEST 6 (World-to-Extrinsics and Extrinsics-to-World) - FAILE(!)" << std::endl;
 	}
 
 	// TEST 7 - SHOT MODIFICATION - ROTO-TRANSLATION OF THE SHOT COORDINATES SYSTEM
@@ -374,14 +448,24 @@ int main()
 		std::cout << "TEST 7 (roto-translation of the Shot coordinates system) - FAILED(!)" << std::endl;
 	}
 
-	// TEST 8 - SHOT MODIFICATION - ROTO-TRANSLATION OF THE SHOT COORDINATES SYSTEM
+	// TEST 7 - SHOT MODIFICATION - ROTO-TRANSLATION OF THE SHOT COORDINATES SYSTEM
 	if (test8(shot1, shot2, p1, p2))
 	{
-		std::cout << "TEST 8 (depth computation) - PASSED(!)" << std::endl;
+		std::cout << "TEST 8 (roto-translation of the Shot coordinates system) - PASSED(!)" << std::endl;
 	}
 	else
 	{
-		std::cout << "TEST 8 (depth computation) - FAILED(!)" << std::endl;
+		std::cout << "TEST 8 (roto-translation of the Shot coordinates system) - FAILED(!)" << std::endl;
+	}	
+	
+	// TEST 9 - SHOT MODIFICATION - ROTO-TRANSLATION OF THE SHOT COORDINATES SYSTEM
+	if (test9(shot1, shot2, p1, p2))
+	{
+		std::cout << "TEST 9 (roto-translation of the Shot coordinates system) - PASSED(!)" << std::endl;
+	}
+	else
+	{
+		std::cout << "TEST 9 (roto-translation of the Shot coordinates system) - FAILED(!)" << std::endl;
 	}
 
   return 0;
