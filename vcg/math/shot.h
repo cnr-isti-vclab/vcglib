@@ -204,7 +204,7 @@ public:
 	void RescalingWorld(S scalefactor);
 
 	/// Given a pure roto-translation (4-by-4) modify the reference frame accordingly.
-	void ApplyRigidTransformation(Matrix44<S> & M);
+	void ApplyRigidTransformation(const Matrix44<S> & M);
 
 	/// convert a 3d point from world to camera coordinates (do not confuse with the Shot reference frame)
 	vcg::Point3<S> ConvertWorldToCameraCoordinates(const vcg::Point3<S> & p) const;
@@ -467,7 +467,7 @@ void Shot<S, RotationType>::RescalingWorld(S scalefactor)
 
 /// Given a pure roto-translation matrix (4-by-4) modify the reference frame accordingly.
 template <class S, class RotationType>
-void Shot<S, RotationType>::ApplyRigidTransformation(Matrix44<S> & M)
+void Shot<S, RotationType>::ApplyRigidTransformation(const Matrix44<S> & M)
 {
 	Matrix44<S> currentM;
 	Matrix44<S> rotM;
@@ -476,12 +476,11 @@ void Shot<S, RotationType>::ApplyRigidTransformation(Matrix44<S> & M)
 	// roto-translate the viewpoint
 	Extrinsics.tra = M * Extrinsics.tra;
 
-	// nullify translation
-	M.ElementAt(0,3) = 0;
-	M.ElementAt(1,3) = 0;
-	M.ElementAt(2,3) = 0;
-
 	Extrinsics.rot =  rotM * M.transpose();
+
+	Extrinsics.rot.ElementAt(3,0) = 0;
+	Extrinsics.rot.ElementAt(3,1) = 0;
+	Extrinsics.rot.ElementAt(3,2) = 0;
 }
 
 
