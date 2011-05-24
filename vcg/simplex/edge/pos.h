@@ -35,6 +35,7 @@ created
 
 #ifndef __VCG_EDGE_POS
 #define __VCG_EDGE_POS
+#include <vcg/simplex/edge/topology.h>
 
 namespace vcg {
 namespace edge {
@@ -101,8 +102,16 @@ public:
 	/// Default constructor
 	Pos(){}
 	/// Constructor which associates the half-edge elementet with a face, its edge and its vertex
-	Pos(EDGETYPE  * const ep, int const zp,
-				VertexType  * const vp){e=ep;v=vp;}
+  Pos(EDGETYPE  * ep, int zp) {e=ep;v=ep->V(zp);}
+  Pos(EDGETYPE  * ep, VertexType  *vp){e=ep;v=vp;}
+
+
+  // Official Access functions functions
+   VertexType *& V(){ return v; }
+   EDGETYPE  *& E(){ return e; }
+   int VInd(){
+     return (e->V(0)==v)?0:1;
+     }
 
 	/// Operator to compare two half-edge
 	inline bool operator == ( POSTYPE const & p ) const {
@@ -164,10 +173,7 @@ public:
 		assert( (e->V(0)==v) ||(e->V(1)==v));
 		e = (e->V(0)==v)?e->EEp(0):e->EEp(1);
 	}
-	int Z(){
-		return (e->V(0)==v)?0:1;
-		}
-	// return the vertex that it should have if we make FlipV;
+  // return the vertex that it should have if we make FlipV;
 	VertexType *VFlip()
 	{
 		return (e->V(0)==v)?e->V(1):e->V(0);
@@ -185,84 +191,28 @@ public:
 	//			hei.Nextb()
 	//		while(hei!=he);
 	
-	/// Finds the next half-edge border 
-	void NextB( )
-	{
-	//	assert(f->V((z+2)%3)!=v && (f->V((z+1)%3)==v || f->V((z+0)%3)==v));
-	//	assert(f->F(z)==f); // f is border along j
-	//// Si deve cambiare faccia intorno allo stesso vertice v
-	////finche' non si trova una faccia di bordo.
-	//	do
-	//		NextE();
-	//	while(!f->IsBorder(z));
-	//	
-	//	// L'edge j e' di bordo e deve contenere v
-	//	assert(f->IsBorder(z) &&( f->V(z)==v || f->V((z+1)%3)==v )); 
-	//	
-	//	FlipV();
-	//	assert(f->V((z+2)%3)!=v && (f->V((z+1)%3)==v || f->V((z+0)%3)==v));
-	//	assert(f->F(z)==f); // f is border along j
-	}
 
-	/// Checks if the half-edge is of border
-	//bool IsBorder()
-	//{
-		//return f->IsBorder(z);
-	//}
+  /// Checks if the half-edge is of border
+  bool IsBorder()
+  {
+    return edge::IsEdgeBorder(*e,VInd());
+  }
 
-	/// Return the dimension of the star
-	//int StarSize()
-	//{
-		//int n=0;
-		//POSTYPE ht=*this;
-		//bool bf=false;
-		//do
-		//{
-		//	++n;
-		//	ht.NextE();
-		//	if(ht.IsBorder()) bf=true;
-		//} while(ht!=*this);
+  bool IsManifold()
+  {
+    return edge::IsEdgeManifold(*e,VInd());
+  }
 
-		//if(bf) return n/2;
-		//else return n;
-	//}
 
 	/** Function to inizialize an half-edge.
 		@param fp Puntatore alla faccia
 		@param zp Indice dell'edge
 		@param vp Puntatore al vertice
 	*/
-	void Set(EDGETYPE  * const ep,VertexType  * const vp)
+  void Set(EDGETYPE  * const ep, VertexType  * const vp)
 	{
 		e=ep;v=vp;
 	}
-
-	void Assert()
-	#ifdef _DEBUG
-	{/*
-		POSTYPE ht=*this;
-		ht.FlipE();
-		ht.FlipE();
-		assert(ht==*this);
-
-		ht.FlipE();
-		ht.FlipE();
-		assert(ht==*this);
-
-		ht.FlipV();
-		ht.FlipV();
-		assert(ht==*this);*/
-	}
-	#else
-	{}
-	#endif
-
-	// Controlla la coerenza di orientamento di un hpos con la relativa faccia
-	/// Checks the orientation coherence of a half-edge with the face
-	//inline bool Coherent() const
-	//{
-	//	return v == f->V(z);	// e^(ip)+1=0 ovvero E=mc^2
-	//}
 
 };
 	}	 // end namespace
