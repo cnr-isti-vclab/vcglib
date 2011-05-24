@@ -203,8 +203,14 @@ public:
 	 */
 	void RescalingWorld(S scalefactor);
 
-	/// Given a pure roto-translation (4-by-4) modify the reference frame accordingly.
+  /// Given a pure roto-translation (4-by-4) modifies the reference frame accordingly.
 	void ApplyRigidTransformation(const Matrix44<S> & M);
+
+  /// Given a similarity transformation such that p' = s R p + T modifies the reference frame accordingly.
+  void ApplySimilarity(const Matrix44<S> & M);
+
+  /// Given a similarity transformation such that p' = s R p + T modifies the reference frame accordingly.
+  void ApplySimilarity(const Similarity<S> & S);
 
 	/// convert a 3d point from world to camera coordinates (do not confuse with the Shot reference frame)
 	vcg::Point3<S> ConvertWorldToCameraCoordinates(const vcg::Point3<S> & p) const;
@@ -469,7 +475,6 @@ void Shot<S, RotationType>::RescalingWorld(S scalefactor)
 template <class S, class RotationType>
 void Shot<S, RotationType>::ApplyRigidTransformation(const Matrix44<S> & M)
 {
-	Matrix44<S> currentM;
 	Matrix44<S> rotM;
 	Extrinsics.rot.ToMatrix(rotM);
 
@@ -481,6 +486,38 @@ void Shot<S, RotationType>::ApplyRigidTransformation(const Matrix44<S> & M)
 	Extrinsics.rot.ElementAt(3,0) = 0;
 	Extrinsics.rot.ElementAt(3,1) = 0;
 	Extrinsics.rot.ElementAt(3,2) = 0;
+}
+
+/// Given a similarity transformation such that p' = s R p + T modifies the reference frame accordingly.
+template <class S, class RotationType>
+void Shot<S, RotationType>::ApplySimilarity(const Matrix44<S> & M)
+{
+  Matrix44<S> rotM;
+  Extrinsics.rot.ToMatrix(rotM);
+
+  // obtain scale factor
+  Point3<S> p = M.GetRow3(0);
+  ScalarType scalefactor = 1.0 / p.Norm();
+
+  // roto-translate the viewpoint
+  Extrinsics.tra = M * Extrinsics.tra;
+
+  vcg::Matrix44<S> M2 = M;
+
+  M2 = M2 * scalefactor;
+
+  Extrinsics.rot =  rotM * M2.transpose();
+
+  Extrinsics.rot.ElementAt(3,0) = 0;
+  Extrinsics.rot.ElementAt(3,1) = 0;
+  Extrinsics.rot.ElementAt(3,2) = 0;
+}
+
+/// Given a similarity transformation such that p' = s R p + T modifies the reference frame accordingly.
+template <class S, class RotationType>
+void Shot<S, RotationType>::ApplySimilarity(const Similarity<S> & S)
+{
+  //...TODO...
 }
 
 
