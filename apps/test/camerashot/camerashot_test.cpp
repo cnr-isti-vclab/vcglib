@@ -227,8 +227,27 @@ bool test6(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
 
 // TEST 7 - SHOT MODIFICATION - ROTATION + TRANSLATION
 ///////////////////////////////////////////////////////////////////////////////
-bool test7(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
+bool test7(vcg::Shotd shot1, vcg::Point3d p1, vcg::Point3d p2)
 {
+	// pure translation
+	vcg::Matrix44d T;
+	T.SetZero();
+	T.ElementAt(0,3) = 20.0;
+	T.ElementAt(1,3) = 20.0;
+	T.ElementAt(2,3) = 20.0;
+	T.ElementAt(3,3) = 1.0;
+
+	vcg::Point2d p1proj = shot1.Project(p1);
+
+	vcg::Point3d tr(T.ElementAt(0,3), T.ElementAt(1,3), T.ElementAt(2,3));
+	vcg::Point3d pt = p1 + tr;
+	shot1.ApplyRigidTransformation(T);
+	vcg::Point2d ptproj = shot1.Project(pt);
+
+	if (dist2(p1proj, ptproj) > precision)
+		return false;
+
+	// pure rotation
 	vcg::Matrix44d R;
 	R.SetZero();
 	R.ElementAt(0,2) = 1.0;
@@ -236,11 +255,22 @@ bool test7(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
 	R.ElementAt(2,0) = -1.0;
 	R.ElementAt(3,3) = 1.0;
 
-	vcg::Point2d p1proj = shot1.Project(p1);
-
-	vcg::Point3d prot = R * p1;
+	vcg::Point3d pr = R * p1;
 	shot1.ApplyRigidTransformation(R);
-	vcg::Point2d protproj = shot1.Project(prot);
+	vcg::Point2d prproj = shot1.Project(pr);
+
+	if (dist2(p1proj, prproj) > precision)
+		return false;
+
+	// roto-translation
+	vcg::Matrix44d RT = T * R;
+
+	vcg::Point3d prt = R * p1 + tr;
+	shot1.ApplyRigidTransformation(R);
+	vcg::Point2d prtproj = shot1.Project(prt);
+
+	if (dist2(p1proj, prtproj) > precision)
+		return false;
 
 	return true;
 }
@@ -251,6 +281,10 @@ bool test8(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
 {
 	// put shot1 reference frame into the origin of the World coordinates system
 	vcg::Matrix44d M = shot1.GetWorldToExtrinsicsMatrix();
+
+	// NOTE: The roto-translation which maps the point p in World coordinates to the Shot frame
+	//       applied to the frame bring it in the world frame.
+
 	shot1.ApplyRigidTransformation(M);
 
 	// then, put in the shot2 reference frame
@@ -281,10 +315,14 @@ bool test9(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
 	vcg::Matrix44d M1 = shot1.GetExtrinsicsToWorldMatrix();
 	vcg::Matrix44d M2 = shot2.GetWorldToExtrinsicsMatrix();
 	vcg::Matrix44d M;
-	M = M2 * M1;  // roto-translation that maps the frame of Shot1 in the frame of Shot2
+	M = M2 * M1;  // is the roto-translation that maps a point in the frame of Shot1 in a point in the frame of Shot2
+	// BUT M2 brings the frame of Shot2 in the World system and M1 brings the World system in the Shot1 reference frame
+	// HENCE the combined roto-translation which maps the frame of Shot2 in the frame of Shot2 is M1 * M2 (!!!)
+
+	vcg::Matrix44d Mframe = M1 * M2;
 
 	// apply it..
-	shot2.ApplyRigidTransformation(M);
+	shot2.ApplyRigidTransformation(Mframe);
 
 	// and test it..
 	vcg::Point2d p1proj1, p2proj1, p1proj2, p2proj2;
@@ -439,7 +477,7 @@ int main()
 	}
 
 	// TEST 7 - SHOT MODIFICATION - ROTO-TRANSLATION OF THE SHOT COORDINATES SYSTEM
-	if (test7(shot1, shot2, p1, p2))
+	if (test7(shot1, p1, p2))
 	{
 		std::cout << "TEST 7 (roto-translation of the Shot coordinates system) - PASSED(!)" << std::endl;
 	}
