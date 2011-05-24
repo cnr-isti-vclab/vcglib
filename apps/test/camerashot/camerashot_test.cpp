@@ -229,12 +229,16 @@ bool test6(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
 ///////////////////////////////////////////////////////////////////////////////
 bool test7(vcg::Shotd shot1, vcg::Point3d p1, vcg::Point3d p2)
 {
+  // store data
+  vcg::Matrix44d Rorig = shot1.Extrinsics.Rot();
+  vcg::Point3d Torig = shot1.Extrinsics.Tra();
+
 	// pure translation
 	vcg::Matrix44d T;
-	T.SetZero();
-	T.ElementAt(0,3) = 20.0;
-	T.ElementAt(1,3) = 20.0;
-	T.ElementAt(2,3) = 20.0;
+  T.SetIdentity();
+  T.ElementAt(0,3) = 10.0;
+  T.ElementAt(1,3) = 10.0;
+  T.ElementAt(2,3) = 10.0;
 	T.ElementAt(3,3) = 1.0;
 
 	vcg::Point2d p1proj = shot1.Project(p1);
@@ -246,6 +250,9 @@ bool test7(vcg::Shotd shot1, vcg::Point3d p1, vcg::Point3d p2)
 
 	if (dist2(p1proj, ptproj) > precision)
 		return false;
+
+  shot1.Extrinsics.SetTra(Torig);
+  shot1.Extrinsics.SetRot(Rorig);
 
 	// pure rotation
 	vcg::Matrix44d R;
@@ -262,11 +269,14 @@ bool test7(vcg::Shotd shot1, vcg::Point3d p1, vcg::Point3d p2)
 	if (dist2(p1proj, prproj) > precision)
 		return false;
 
+  shot1.Extrinsics.SetTra(Torig);
+  shot1.Extrinsics.SetRot(Rorig);
+
 	// roto-translation
 	vcg::Matrix44d RT = T * R;
 
 	vcg::Point3d prt = R * p1 + tr;
-	shot1.ApplyRigidTransformation(R);
+  shot1.ApplyRigidTransformation(RT);
 	vcg::Point2d prtproj = shot1.Project(prt);
 
 	if (dist2(p1proj, prtproj) > precision)
@@ -340,6 +350,71 @@ bool test9(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
 
 	return true;
 }
+
+// TEST 10 - SHOT MODIFICATION - SIMILARITY
+///////////////////////////////////////////////////////////////////////////////
+bool test10(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
+{
+  vcg::Point2d p1proj = shot1.Project(p1);
+
+  // store data
+  vcg::Matrix44d Rorig = shot1.Extrinsics.Rot();
+  vcg::Point3d Torig = shot1.Extrinsics.Tra();
+
+  // pure translation
+  vcg::Matrix44d T;
+  T.SetIdentity();
+  T.ElementAt(0,3) = 10.0;
+  T.ElementAt(1,3) = 10.0;
+  T.ElementAt(2,3) = 10.0;
+  T.ElementAt(3,3) = 1.0;
+
+  vcg::Point3d tr(T.ElementAt(0,3), T.ElementAt(1,3), T.ElementAt(2,3));
+
+  // pure rotation
+  vcg::Matrix44d R;
+  R.SetZero();
+  R.ElementAt(0,2) = 1.0;
+  R.ElementAt(1,1) = 1.0;
+  R.ElementAt(2,0) = -1.0;
+  R.ElementAt(3,3) = 1.0;
+
+  // scaling
+  vcg::Matrix44d S;
+  double scale = 10.0;
+  S.SetIdentity();
+  S *= scale;
+  S.ElementAt(3,3) = 1.0;
+
+  vcg::Point3d psim = R * S * p1 + tr;
+
+  vcg::Matrix44d SRT = T * R * S;
+
+  shot1.ApplySimilarity(SRT);
+  vcg::Point2d psimproj = shot1.Project(psim);
+
+  if (dist2(p1proj, psimproj) > precision)
+    return false;
+
+  shot1.Extrinsics.SetTra(Torig);
+  shot1.Extrinsics.SetRot(Rorig);
+
+// WORK IN PROGRESS..
+//
+//  vcg::Similarityd sm;
+//  sm.SetScale(scale);
+//  sm.SetTranslate(tr);
+//  sm.SetRotate(90.0, vcg::Point3d(0.0,1.0,0.0));
+
+//  shot1.ApplySimilarity(sm);
+//  psimproj = shot1.Project(psim);
+
+//  if (dist2(p1proj, psimproj) > precision)
+//    return false;
+
+  return true;
+}
+
 
 int main() 
 {
@@ -505,6 +580,16 @@ int main()
 	{
 		std::cout << "TEST 9 (roto-translation of the Shot coordinates system) - FAILED(!)" << std::endl;
 	}
+
+  // TEST 10 - SHOT MODIFICATION - SIMILARITY TRANSFORMATION
+  if (test10(shot1, shot2, p1, p2))
+  {
+    std::cout << "TEST 10 (similarity transform of the Shot coordinates system) - PASSED(!)" << std::endl;
+  }
+  else
+  {
+    std::cout << "TEST 10 (similarity transform of the Shot coordinates system) - FAILED(!)" << std::endl;
+  }
 
   return 0;
 }
