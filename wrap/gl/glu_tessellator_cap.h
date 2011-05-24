@@ -1,9 +1,11 @@
 #ifndef GLU_TESSELLATOR_CAP_H
 #define GLU_TESSELLATOR_CAP_H
 #include "glu_tesselator.h"
+#include <vcg/simplex/edge/pos.h>
 
 namespace vcg {
 namespace tri {
+
 
 // This function take a mesh with one or more boundary stored as edges, and fill another mesh with a triangulation of that boundaries.
 // it assumes that boundary are planar and exploits glutessellator for the triangulaiton
@@ -20,19 +22,13 @@ void CapEdgeMesh(MeshType &em, MeshType &cm)
   {
     if (!em.edge[i].IsV())
     {
-      EdgeType* startE=&(em.edge[i]);
-      int startI = 0;
-      int curI = startI;
-      EdgeType* curE = startE;
-      EdgeType* nextE; int nextI;
+      edge::Pos<EdgeType> startE(&em.edge[i],0);
+       edge::Pos<EdgeType> curE=startE;
       do
       {
-        curE->SetV();
-        outline.push_back(curE->V(curI)->P());
-        nextE=curE->EEp((curI+1)%2);
-        nextI=curE->EEi((curI+1)%2);
-        curE=nextE;
-        curI=nextI;
+        curE.E()->SetV();
+        outline.push_back(curE.V()->P());
+        curE.NextE();
         nv++;
       }
       while(curE != startE);
