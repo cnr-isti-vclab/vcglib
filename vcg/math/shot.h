@@ -506,7 +506,7 @@ void Shot<S, RotationType>::ApplySimilarity(const Matrix44<S> & M)
 
   M2 = M2 * scalefactor;
 
-  Extrinsics.rot =  rotM * M2.transpose();
+  Extrinsics.rot = rotM * M2.transpose();
 
   Extrinsics.rot.ElementAt(3,0) = 0;
   Extrinsics.rot.ElementAt(3,1) = 0;
@@ -515,9 +515,38 @@ void Shot<S, RotationType>::ApplySimilarity(const Matrix44<S> & M)
 
 /// Given a similarity transformation such that p' = s R p + T modifies the reference frame accordingly.
 template <class S, class RotationType>
-void Shot<S, RotationType>::ApplySimilarity(const Similarity<S> & S)
+void Shot<S, RotationType>::ApplySimilarity(const Similarity<S> & Sm)
 {
-  //...TODO...
+  Matrix44<S> rotM;
+  Extrinsics.rot.ToMatrix(rotM);
+
+  // similarity decomposition
+  vcg::Matrix44<S> R;
+  Sm.rot.ToMatrix(R);
+  vcg::Matrix44<S> T;
+  T.SetIdentity();
+  T.ElementAt(0,3) = Sm.tra[0];
+  T.ElementAt(1,3) = Sm.tra[1];
+  T.ElementAt(2,3) = Sm.tra[2];
+  vcg::Matrix44d S44;
+  S44.SetIdentity();
+  S44 *= Sm.sca;
+  S44.ElementAt(3,3) = 1.0;
+
+  vcg::Matrix44<S> M = T * R * S44;
+
+  // roto-translate the viewpoint
+  Extrinsics.tra = M * Extrinsics.tra;
+
+  vcg::Matrix44<S> M2 = M;
+
+  M2 = M2 * (1.0 / Sm.sca);
+
+  Extrinsics.rot = rotM * M2.transpose();
+
+  Extrinsics.rot.ElementAt(3,0) = 0;
+  Extrinsics.rot.ElementAt(3,1) = 0;
+  Extrinsics.rot.ElementAt(3,2) = 0;
 }
 
 
