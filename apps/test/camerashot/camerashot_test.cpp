@@ -251,6 +251,7 @@ bool test7(vcg::Shotd shot1, vcg::Point3d p1, vcg::Point3d p2)
 	if (dist2(p1proj, ptproj) > precision)
 		return false;
 
+  // restore the original reference frame to test another transformation
   shot1.Extrinsics.SetTra(Torig);
   shot1.Extrinsics.SetRot(Rorig);
 
@@ -269,6 +270,7 @@ bool test7(vcg::Shotd shot1, vcg::Point3d p1, vcg::Point3d p2)
 	if (dist2(p1proj, prproj) > precision)
 		return false;
 
+  // restore the original reference frame to test another transformation
   shot1.Extrinsics.SetTra(Torig);
   shot1.Extrinsics.SetRot(Rorig);
 
@@ -396,21 +398,21 @@ bool test10(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2
   if (dist2(p1proj, psimproj) > precision)
     return false;
 
+  // restore the original reference frame to test another transformation
   shot1.Extrinsics.SetTra(Torig);
   shot1.Extrinsics.SetRot(Rorig);
 
-// WORK IN PROGRESS..
-//
-//  vcg::Similarityd sm;
-//  sm.SetScale(scale);
-//  sm.SetTranslate(tr);
-//  sm.SetRotate(90.0, vcg::Point3d(0.0,1.0,0.0));
+  vcg::Similarityd sm;
+  double pihalf = 3.1415926535897932384626433832795 / 2.0;
+  sm.SetRotate(pihalf, vcg::Point3d(0.0,1.0,0.0));
+  sm.sca = scale;
+  sm.tra = tr;
 
-//  shot1.ApplySimilarity(sm);
-//  psimproj = shot1.Project(psim);
+  shot1.ApplySimilarity(sm);
+  psimproj = shot1.Project(psim);
 
-//  if (dist2(p1proj, psimproj) > precision)
-//    return false;
+  if (dist2(p1proj, psimproj) > precision)
+    return false;
 
   return true;
 }
