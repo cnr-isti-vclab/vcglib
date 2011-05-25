@@ -517,6 +517,34 @@ public:  static void Name(std::vector<std::string> & name){name.push_back(std::s
 template <class T> class Qualityd: public Quality<double, T> {
 public:  static void Name(std::vector<std::string> & name){name.push_back(std::string("Qualityd"));T::Name(name);}
 };
+
+/*-------------------------- Quality  ----------------------------------*/ 
+
+template <class A, class T> class Quality3: public T {
+public:
+	typedef vcg::Point3<A> Quality3Type;
+  Quality3Type &Q3() { return _quality; }
+  const Quality3Type &cQ3() const { return _quality; }
+	template <class RightF>
+	void ImportData(const RightF & rightF){ if(RightF::HasFaceQuality3()) Q3() = rightF.cQ3();T::ImportData(rightF);}
+	inline void Alloc(const int & ns){T::Alloc(ns);}
+	inline void Dealloc(){T::Dealloc();}
+  static bool HasFaceQuality3()   { return true; }
+  static bool HasFaceQuality3Occ()   { return true; }
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("Quality3"));T::Name(name);}
+private:
+  Quality3Type _quality;    
+};
+
+template <class T> class Quality3s: public Quality3<short, T> {
+public:  static void Name(std::vector<std::string> & name){name.push_back(std::string("Quality3s"));T::Name(name);}
+};
+template <class T> class Quality3f: public Quality3<float, T> {
+public:  static void Name(std::vector<std::string> & name){name.push_back(std::string("Quality3f"));T::Name(name);}
+};
+template <class T> class Quality3d: public Quality3<double, T> {
+public:  static void Name(std::vector<std::string> & name){name.push_back(std::string("Quality3d"));T::Name(name);}
+};
 /*-------------------------- INCREMENTAL MARK  ----------------------------------------*/ 
 
 template <class T> class Mark: public T {
