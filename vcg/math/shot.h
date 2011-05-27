@@ -137,129 +137,129 @@ namespace vcg{
 template <class S, class RotationType = Matrix44<S> >
 class Shot {
 public:
-	typedef Camera<S> CameraType;
-	typedef S ScalarType;
+  typedef Camera<S> CameraType;
+  typedef S ScalarType;
 
-	template <class ScalarType, class RotoType >
-	class ReferenceFrame {
-		friend class Shot<ScalarType, RotoType>;
-			RotoType rot;	 // rotation
-			Point3<S> tra; // viewpoint
-	public:
-			void SetIdentity(){ rot.SetIdentity(); tra = Point3<S>(0.0,0.0,0.0);}
-			void SetTra(const Point3<S> & tr) {tra = tr;}
-			void SetRot(const  RotoType & rt) {rot = rt;}
-			Point3<ScalarType>   Tra() const  { return tra;}
-			RotoType Rot() const  { return rot;}
-	};
+  template <class ScalarType, class RotoType >
+  class ReferenceFrame {
+    friend class Shot<ScalarType, RotoType>;
+      RotoType rot;	 // rotation
+      Point3<S> tra; // viewpoint
+  public:
+      void SetIdentity(){ rot.SetIdentity(); tra = Point3<S>(0.0,0.0,0.0);}
+      void SetTra(const Point3<S> & tr) {tra = tr;}
+      void SetRot(const  RotoType & rt) {rot = rt;}
+      Point3<ScalarType>   Tra() const  { return tra;}
+      RotoType Rot() const  { return rot;}
+  };
 
-	Camera<S>												Intrinsics;		// the camera that made the shot
-	ReferenceFrame<S,RotationType>	Extrinsics;		// the position and orientation of the camera
-
-
-	Shot(Camera<S> c)
-	{
-		Intrinsics = c;
-		Extrinsics.SetIdentity();
-	}
-
-	Shot()
-	{
-		Extrinsics.SetIdentity();
-	}
+  Camera<S>												Intrinsics;		// the camera that made the shot
+  ReferenceFrame<S,RotationType>	Extrinsics;		// the position and orientation of the camera
 
 
-	/// GET the i-th axis of the coordinate system of the camera
-	vcg::Point3<S> Axis(const int & i)const;
+  Shot(Camera<S> c)
+  {
+    Intrinsics = c;
+    Extrinsics.SetIdentity();
+  }
+
+  Shot()
+  {
+    Extrinsics.SetIdentity();
+  }
+
+
+  /// GET the i-th axis of the coordinate system of the camera
+  vcg::Point3<S> Axis(const int & i)const;
 
   /// GET the viewdir
   const vcg::Point3<S> GetViewDir()const;
   /// GET the viewpoint
   const vcg::Point3<S> GetViewPoint()const;
   /// SET the viewpoint
-	void SetViewPoint(const vcg::Point3<S> & viewpoint);
+  void SetViewPoint(const vcg::Point3<S> & viewpoint);
 
-	/// GET fov from focal
-	float GetFovFromFocal();
+  /// GET fov from focal
+  float GetFovFromFocal();
 
-	/// look at (point+up)
-	void LookAt(const vcg::Point3<S> & point,const vcg::Point3<S> & up);
+  /// look at (point+up)
+  void LookAt(const vcg::Point3<S> & point,const vcg::Point3<S> & up);
 
-	/// look at (opengl-like)
-	void LookAt(const S & eye_x,const S & eye_y,const S & eye_z,
-				const S & at_x,const S & at_y,const S & at_z,
-				const S & up_x,const S & up_y,const S & up_z);
+  /// look at (opengl-like)
+  void LookAt(const S & eye_x,const S & eye_y,const S & eye_z,
+        const S & at_x,const S & at_y,const S & at_z,
+        const S & up_x,const S & up_y,const S & up_z);
 
-	/// look towards (dir+up)
-	void LookTowards(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up);
+  /// look towards (dir+up)
+  void LookTowards(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up);
 
   /* Sometimes the focal is given in pixels. In this case, this function can be used to convert it in millimiters.
    * NOTE: This method should be moved in vcg::Camera.
    */
-	void ConvertFocalToMM();
+  void ConvertFocalToMM();
 
-	/* Sometimes the 3D World coordinates are known up to a scale factor. This method adjust the camera/shot parameters
-	 * to account for the re-scaling of the World.
-	 */
-	void RescalingWorld(S scalefactor);
+  /* Sometimes the 3D World coordinates are known up to a scale factor. This method adjust the camera/shot parameters
+   * to account for the re-scaling of the World.
+   */
+  void RescalingWorld(S scalefactor);
 
   /// Given a pure roto-translation (4-by-4) modifies the reference frame accordingly.
-	void ApplyRigidTransformation(const Matrix44<S> & M);
+  void ApplyRigidTransformation(const Matrix44<S> & M);
 
   /// Given a similarity transformation such that p' = s R p + T modifies the reference frame accordingly.
   void ApplySimilarity(const Matrix44<S> & M);
 
   /// Given a similarity transformation such that p' = s R p + T modifies the reference frame accordingly.
-  void ApplySimilarity(const Similarity<S> & S);
+  void ApplySimilarity(const Similarity<S> & Sim);
 
-	/// convert a 3d point from world to camera coordinates (do not confuse with the Shot reference frame)
-	vcg::Point3<S> ConvertWorldToCameraCoordinates(const vcg::Point3<S> & p) const;
+  /// convert a 3d point from world to camera coordinates (do not confuse with the Shot reference frame)
+  vcg::Point3<S> ConvertWorldToCameraCoordinates(const vcg::Point3<S> & p) const;
 
-	/// convert a 3d point from camera (do not confuse with the Shot reference frame) to world coordinates
-	vcg::Point3<S> ConvertCameraToWorldCoordinates(const vcg::Point3<S> & p) const;
+  /// convert a 3d point from camera (do not confuse with the Shot reference frame) to world coordinates
+  vcg::Point3<S> ConvertCameraToWorldCoordinates(const vcg::Point3<S> & p) const;
 
-	/* convert a 3d point from camera (do not confuse with the Shot reference frame) to world coordinates
-	 * it uses inverse instead of transpose for non-exactly-rigid rotation matrices (such as calculated by tsai and garcia)
-	 */
-	vcg::Point3<S> ConvertCameraToWorldCoordinates_Substitute(const vcg::Point3<S> & p) const;
+  /* convert a 3d point from camera (do not confuse with the Shot reference frame) to world coordinates
+   * it uses inverse instead of transpose for non-exactly-rigid rotation matrices (such as calculated by tsai and garcia)
+   */
+  vcg::Point3<S> ConvertCameraToWorldCoordinates_Substitute(const vcg::Point3<S> & p) const;
 
-	/// project a 3d point from world coordinates to 2d camera viewport (the value returned is in pixels)
-	vcg::Point2<S> Project(const vcg::Point3<S> & p) const;
+  /// project a 3d point from world coordinates to 2d camera viewport (the value returned is in pixels)
+  vcg::Point2<S> Project(const vcg::Point3<S> & p) const;
 
-	/// inverse projection from 2d camera viewport (in pixels) to 3d world coordinates (it requires the original depth of the projected point)
-	vcg::Point3<S> UnProject(const vcg::Point2<S> & p, const S & d) const;
+  /// inverse projection from 2d camera viewport (in pixels) to 3d world coordinates (it requires the original depth of the projected point)
+  vcg::Point3<S> UnProject(const vcg::Point2<S> & p, const S & d) const;
 
-	/* inverse projection from 2d camera viewport (in pixels) to 3d world coordinates (it requires the original depth of the projected point) 
-	 * uses inverse instead of trranspose for non-exactly-rigid rotation matrices (such as calculated by tsai and garcia)
-	 */
-	vcg::Point3<S> UnProject_Substitute(const vcg::Point2<S> & p, const S & d) const;
+  /* inverse projection from 2d camera viewport (in pixels) to 3d world coordinates (it requires the original depth of the projected point)
+   * uses inverse instead of trranspose for non-exactly-rigid rotation matrices (such as calculated by tsai and garcia)
+   */
+  vcg::Point3<S> UnProject_Substitute(const vcg::Point2<S> & p, const S & d) const;
 
-	/// returns the distance of point p from camera plane (z depth), required for unprojection operation
-	S Depth(const vcg::Point3<S> & p)const;
+  /// returns the distance of point p from camera plane (z depth), required for unprojection operation
+  S Depth(const vcg::Point3<S> & p)const;
 
 
 // accessors
 public:
 
-	  /// Returns the (4-by-4) matrix M such that 3dpoint_in_world_coordinates = M * 3dpoint_in_local_coordinates
-		Matrix44<S> GetExtrinsicsToWorldMatrix() const
-		{
-				Matrix44<S> rotM;
-				Extrinsics.rot.ToMatrix(rotM);
-				return Matrix44<S>().SetTranslate(Extrinsics.tra) * rotM.transpose();
-		}
+    /// Returns the (4-by-4) matrix M such that 3dpoint_in_world_coordinates = M * 3dpoint_in_local_coordinates
+    Matrix44<S> GetExtrinsicsToWorldMatrix() const
+    {
+        Matrix44<S> rotM;
+        Extrinsics.rot.ToMatrix(rotM);
+        return Matrix44<S>().SetTranslate(Extrinsics.tra) * rotM.transpose();
+    }
 
-	  /// Returns the (4-by-4) matrix M such that 3dpoint_in_local_coordinates = M * 3dpoint_in_world_coordinates
-		Matrix44<S> GetWorldToExtrinsicsMatrix() const
-		{
-				Matrix44<S> rotM;
-				Extrinsics.rot.ToMatrix(rotM);
-				return rotM * Matrix44<S>().SetTranslate(-Extrinsics.tra) ;
-		}
+    /// Returns the (4-by-4) matrix M such that 3dpoint_in_local_coordinates = M * 3dpoint_in_world_coordinates
+    Matrix44<S> GetWorldToExtrinsicsMatrix() const
+    {
+        Matrix44<S> rotM;
+        Extrinsics.rot.ToMatrix(rotM);
+        return rotM * Matrix44<S>().SetTranslate(-Extrinsics.tra) ;
+    }
 
-	/*  multiply the current reference frame for the matrix passed
-	 note: it is up to the caller to check the the matrix passed is a pure rototraslation
-	 */
+  /*  multiply the current reference frame for the matrix passed
+   note: it is up to the caller to check the the matrix passed is a pure rototraslation
+   */
   void MultMatrix(    vcg::Matrix44<S>    m44)
   {
     Extrinsics.tra = m44 * Extrinsics.tra;
@@ -268,15 +268,15 @@ public:
     Extrinsics.rot = Extrinsics.rot * m44.transpose() * (1/k);
   }
 
-	/*  multiply the current reference frame for the similarity passed
-	 note: it is up to the caller to check the the matrix passed is a pure rototraslation
-	 */
-	void MultSimilarity( const Similarity<S> & s){ MultMatrix(s.Matrix());}
-	
-	bool IsValid() const 
-	{
-		return Intrinsics.PixelSizeMm[0]>0 && Intrinsics.PixelSizeMm[1]>0;
-	}
+  /*  multiply the current reference frame for the similarity passed
+   note: it is up to the caller to check the the matrix passed is a pure rototraslation
+   */
+  void MultSimilarity( const Similarity<S> & s){ MultMatrix(s.Matrix());}
+
+  bool IsValid() const
+  {
+    return Intrinsics.PixelSizeMm[0]>0 && Intrinsics.PixelSizeMm[1]>0;
+  }
 
 }; // end class definition
 
@@ -295,13 +295,13 @@ const vcg::Point3<S> Shot<S,RotationType>::GetViewDir() const
 template <class S, class RotationType>
 const vcg::Point3<S> Shot<S,RotationType>::GetViewPoint() const
 {
-	return  Extrinsics.tra;
+  return  Extrinsics.tra;
 }
 /// SET the viewpoint
 template <class S, class RotationType>
 void Shot<S,RotationType>::SetViewPoint(const vcg::Point3<S> & viewpoint)
 {
-	Extrinsics.SetTra( viewpoint );
+  Extrinsics.SetTra( viewpoint );
 }
 //---
 
@@ -309,8 +309,8 @@ void Shot<S,RotationType>::SetViewPoint(const vcg::Point3<S> & viewpoint)
 template <class S, class RotationType>
 float Shot<S,RotationType>::GetFovFromFocal()
 {
-	double viewportYMm= Intrinsics.PixelSizeMm[1]* Intrinsics.ViewportPx[1];
-	return 2*(vcg::math::ToDeg(atanf(viewportYMm/(2*Intrinsics.FocalMm))));
+  double viewportYMm= Intrinsics.PixelSizeMm[1]* Intrinsics.ViewportPx[1];
+  return 2*(vcg::math::ToDeg(atanf(viewportYMm/(2*Intrinsics.FocalMm))));
 }
 
 //---
@@ -319,43 +319,43 @@ float Shot<S,RotationType>::GetFovFromFocal()
 template <class S, class RotationType>
 vcg::Point3<S>  Shot<S,RotationType>::Axis(const int & i) const
 {
-	vcg::Matrix44<S> m;
-	Extrinsics.rot.ToMatrix(m);
-	vcg::Point3<S> aa = m.GetRow3(i);
-	return aa;
+  vcg::Matrix44<S> m;
+  Extrinsics.rot.ToMatrix(m);
+  vcg::Point3<S> aa = m.GetRow3(i);
+  return aa;
 }
 
 /// look at (point+up)
 template <class S, class RotationType>
 void Shot<S,RotationType>::LookAt(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up)
 {
-	  LookTowards(z_dir-GetViewPoint(),up);
+    LookTowards(z_dir-GetViewPoint(),up);
 }
 
 /// look at (opengl-like)
 template <class S, class RotationType>
 void Shot<S,RotationType>::LookAt(const S & eye_x, const S & eye_y, const S & eye_z,
-					 const S & at_x, const S & at_y, const S & at_z,
-					 const S & up_x,const S & up_y,const S & up_z)
+           const S & at_x, const S & at_y, const S & at_z,
+           const S & up_x,const S & up_y,const S & up_z)
 {
-	SetViewPoint(Point3<S>(eye_x,eye_y,eye_z));
-	LookAt(Point3<S>(at_x,at_y,at_z),Point3<S>(up_x,up_y,up_z));
+  SetViewPoint(Point3<S>(eye_x,eye_y,eye_z));
+  LookAt(Point3<S>(at_x,at_y,at_z),Point3<S>(up_x,up_y,up_z));
 }
 
 /// look towards
 template <class S, class RotationType>
 void Shot<S,RotationType>::LookTowards(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up)
 {
-	vcg::Point3<S> x_dir = up ^-z_dir;
-	vcg::Point3<S> y_dir = -z_dir ^x_dir;
+  vcg::Point3<S> x_dir = up ^-z_dir;
+  vcg::Point3<S> y_dir = -z_dir ^x_dir;
 
-	Matrix44<S> m;
-	m.SetIdentity();
-	*(vcg::Point3<S> *)&m[0][0] =  x_dir/x_dir.Norm();
-	*(vcg::Point3<S> *)&m[1][0] =  y_dir/y_dir.Norm();
-	*(vcg::Point3<S> *)&m[2][0] = -z_dir/z_dir.Norm();
+  Matrix44<S> m;
+  m.SetIdentity();
+  *(vcg::Point3<S> *)&m[0][0] =  x_dir/x_dir.Norm();
+  *(vcg::Point3<S> *)&m[1][0] =  y_dir/y_dir.Norm();
+  *(vcg::Point3<S> *)&m[2][0] = -z_dir/z_dir.Norm();
 
-	Extrinsics.rot.FromMatrix(m);
+  Extrinsics.rot.FromMatrix(m);
 }
 
 //--- Space transformation methods
@@ -364,74 +364,74 @@ void Shot<S,RotationType>::LookTowards(const vcg::Point3<S> & z_dir,const vcg::P
 template <class S, class RotationType>
 vcg::Point3<S> Shot<S,RotationType>::ConvertWorldToCameraCoordinates(const vcg::Point3<S> & p) const
 {
-	Matrix44<S> rotM;
-	Extrinsics.rot.ToMatrix(rotM);
-	vcg::Point3<S> cp = rotM * (p - GetViewPoint() );
-	cp[2]=-cp[2];
-	return cp;
-	}
+  Matrix44<S> rotM;
+  Extrinsics.rot.ToMatrix(rotM);
+  vcg::Point3<S> cp = rotM * (p - GetViewPoint() );
+  cp[2]=-cp[2];
+  return cp;
+  }
 
 /// convert a 3d point from camera coordinates (do not confuse with the Shot reference frame) to world coordinates
 template <class S, class RotationType>
 vcg::Point3<S> Shot<S,RotationType>::ConvertCameraToWorldCoordinates(const vcg::Point3<S> & p) const
 {
-	Matrix44<S> rotM;
-	vcg::Point3<S> cp = p;
-	cp[2]=-cp[2];
-	Extrinsics.rot.ToMatrix(rotM);
-	cp = rotM.transpose() * cp + GetViewPoint();
-	return cp;
+  Matrix44<S> rotM;
+  vcg::Point3<S> cp = p;
+  cp[2]=-cp[2];
+  Extrinsics.rot.ToMatrix(rotM);
+  cp = rotM.transpose() * cp + GetViewPoint();
+  return cp;
 }
 
 /// convert a 3d point from camera to world coordinates, uses inverse instead of trranspose for non-exactly-rigid rotation matrices (such as calculated by tsai and garcia)
 template <class S, class RotationType>
 vcg::Point3<S> Shot<S,RotationType>::ConvertCameraToWorldCoordinates_Substitute(const vcg::Point3<S> & p) const
 {
-	Matrix44<S> rotM;
-	vcg::Point3<S> cp = p;
-	cp[2]=-cp[2];
-	Extrinsics.rot.ToMatrix(rotM);
-	cp = Inverse(rotM) * cp + GetViewPoint();
-	return cp;
+  Matrix44<S> rotM;
+  vcg::Point3<S> cp = p;
+  cp[2]=-cp[2];
+  Extrinsics.rot.ToMatrix(rotM);
+  cp = Inverse(rotM) * cp + GetViewPoint();
+  return cp;
 }
 
 /// project a 3d point from world coordinates to 2d camera viewport (the value returned is in pixel)
 template <class S, class RotationType>
 vcg::Point2<S> Shot<S,RotationType>::Project(const vcg::Point3<S> & p) const
 {
-	Point3<S> cp = ConvertWorldToCameraCoordinates(p);
-	Point2<S> pp = Intrinsics.Project(cp);
-	Point2<S> vp = Intrinsics.LocalToViewportPx(pp);
-	return vp;
+  Point3<S> cp = ConvertWorldToCameraCoordinates(p);
+  Point2<S> pp = Intrinsics.Project(cp);
+  Point2<S> vp = Intrinsics.LocalToViewportPx(pp);
+  return vp;
 }
 
 /// inverse projection from 2d camera viewport (in pixels) to 3d world coordinates (it requires the original depth of the point to unproject)
 template <class S, class RotationType>
 vcg::Point3<S> Shot<S,RotationType>::UnProject(const vcg::Point2<S> & p, const S & d) const
 {
-	Point2<S> lp = Intrinsics.ViewportPxToLocal(p);
-	Point3<S> cp = Intrinsics.UnProject(lp,d);
-	Point3<S> wp = ConvertCameraToWorldCoordinates(cp);
-	return wp;
+  Point2<S> lp = Intrinsics.ViewportPxToLocal(p);
+  Point3<S> cp = Intrinsics.UnProject(lp,d);
+  Point3<S> wp = ConvertCameraToWorldCoordinates(cp);
+  return wp;
 }
 
-/* inverse projection from 2d camera viewport (in pixels) to 3d world coordinates (it requires the original depth of the projected point) 
+/* inverse projection from 2d camera viewport (in pixels) to 3d world coordinates (it requires the original depth of the projected point)
  * uses inverse instead of trranspose for non-exactly-rigid rotation matrices (such as calculated by tsai and garcia)
  */
 template <class S, class RotationType>
 vcg::Point3<S> Shot<S,RotationType>::UnProject_Substitute(const vcg::Point2<S> & p, const S & d) const
 {
-	Point2<S> lp = Intrinsics.ViewportPxToLocal(p);
-	Point3<S> cp = Intrinsics.UnProject(lp,d);
-	Point3<S> wp = ConvertCameraToWorldCoordinates_Substitute(cp);
-	return wp;
+  Point2<S> lp = Intrinsics.ViewportPxToLocal(p);
+  Point3<S> cp = Intrinsics.UnProject(lp,d);
+  Point3<S> wp = ConvertCameraToWorldCoordinates_Substitute(cp);
+  return wp;
 }
 
 /// returns the distance of point p from camera plane (z depth), required for unprojection operation
 template <class S, class RotationType>
 S Shot<S,RotationType>::Depth(const vcg::Point3<S> & p)const
 {
-	return ConvertWorldToCameraCoordinates(p).Z();
+  return ConvertWorldToCameraCoordinates(p).Z();
 }
 
 /* Sometimes the focal is given in pixels. In this case, this function can be used to convert it in millimiters.
@@ -440,11 +440,11 @@ S Shot<S,RotationType>::Depth(const vcg::Point3<S> & p)const
 template <class S, class RotationType>
 void Shot<S, RotationType>::ConvertFocalToMM()
 {
-	double ccd_width = 35.0; // ccd is assumed conventionally to be 35mm
-	double ccd_height = (ccd_width * Intrinsics.ViewportPx[1]) / Intrinsics.ViewportPx[0];
-	Intrinsics.PixelSizeMm[0] = (ccd_width / Intrinsics.ViewportPx[0]);
-	Intrinsics.PixelSizeMm[1] = (ccd_height / Intrinsics.ViewportPx[1]);
-	Intrinsics.FocalMm = (ccd_width * Intrinsics.FocalMm) / Intrinsics.ViewportPx[0];  // NOW FOCAL IS IN MM
+  double ccd_width = 35.0; // ccd is assumed conventionally to be 35mm
+  double ccd_height = (ccd_width * Intrinsics.ViewportPx[1]) / Intrinsics.ViewportPx[0];
+  Intrinsics.PixelSizeMm[0] = (ccd_width / Intrinsics.ViewportPx[0]);
+  Intrinsics.PixelSizeMm[1] = (ccd_height / Intrinsics.ViewportPx[1]);
+  Intrinsics.FocalMm = (ccd_width * Intrinsics.FocalMm) / Intrinsics.ViewportPx[0];  // NOW FOCAL IS IN MM
 }
 
 /* Sometimes the 3D World coordinates are known up to a scale factor. This method adjust the camera/shot parameters
@@ -453,39 +453,39 @@ void Shot<S, RotationType>::ConvertFocalToMM()
 template <class S, class RotationType>
 void Shot<S, RotationType>::RescalingWorld(S scalefactor)
 {
-		// adjust INTRINSICS
-		
-		Intrinsics.FocalMm = Intrinsics.FocalMm * scalefactor;
-		double ccdwidth = static_cast<double>(Intrinsics.ViewportPx[0] * Intrinsics.PixelSizeMm[0]);
-		double ccdheight = static_cast<double>(Intrinsics.ViewportPx[1] * Intrinsics.PixelSizeMm[1]);
+    // adjust INTRINSICS
 
-		Intrinsics.PixelSizeMm[0] = (ccdwidth * scalefactor) / Intrinsics.ViewportPx[0];
-		Intrinsics.PixelSizeMm[1] = (ccdheight * scalefactor) / Intrinsics.ViewportPx[1];
+    Intrinsics.FocalMm = Intrinsics.FocalMm * scalefactor;
+    double ccdwidth = static_cast<double>(Intrinsics.ViewportPx[0] * Intrinsics.PixelSizeMm[0]);
+    double ccdheight = static_cast<double>(Intrinsics.ViewportPx[1] * Intrinsics.PixelSizeMm[1]);
 
-		// adjust EXTRINSICS
+    Intrinsics.PixelSizeMm[0] = (ccdwidth * scalefactor) / Intrinsics.ViewportPx[0];
+    Intrinsics.PixelSizeMm[1] = (ccdheight * scalefactor) / Intrinsics.ViewportPx[1];
 
-		// rotation remains the same (!)
-		// nothing to do..
+    // adjust EXTRINSICS
 
-		// the viewpoint should be modified according to the scale factor
-		Extrinsics.tra *= scalefactor;
+    // rotation remains the same (!)
+    // nothing to do..
+
+    // the viewpoint should be modified according to the scale factor
+    Extrinsics.tra *= scalefactor;
 }
 
 /// Given a pure roto-translation matrix (4-by-4) modify the reference frame accordingly.
 template <class S, class RotationType>
 void Shot<S, RotationType>::ApplyRigidTransformation(const Matrix44<S> & M)
 {
-	Matrix44<S> rotM;
-	Extrinsics.rot.ToMatrix(rotM);
+  Matrix44<S> rotM;
+  Extrinsics.rot.ToMatrix(rotM);
 
-	// roto-translate the viewpoint
-	Extrinsics.tra = M * Extrinsics.tra;
+  // roto-translate the viewpoint
+  Extrinsics.tra = M * Extrinsics.tra;
 
-	Extrinsics.rot =  rotM * M.transpose();
+  Extrinsics.rot =  rotM * M.transpose();
 
-	Extrinsics.rot.ElementAt(3,0) = 0;
-	Extrinsics.rot.ElementAt(3,1) = 0;
-	Extrinsics.rot.ElementAt(3,2) = 0;
+  Extrinsics.rot.ElementAt(3,0) = 0;
+  Extrinsics.rot.ElementAt(3,1) = 0;
+  Extrinsics.rot.ElementAt(3,2) = 0;
 }
 
 /// Given a similarity transformation such that p' = s R p + T modifies the reference frame accordingly.
