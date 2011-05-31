@@ -94,8 +94,8 @@ public:
 
 		 // Edge to Vertex  Adj
 		 if(vcg::tri::HasEVAdjacency(ml) && vcg::tri::HasEVAdjacency(mr)){
-				 el.EVp(0) = &ml.vert[remap.vert[Index(mr,er.cEVp(0))]];
-				 el.EVp(1) = &ml.vert[remap.vert[Index(mr,er.cEVp(1))]];
+         el.V(0) = &ml.vert[remap.vert[Index(mr,er.cV(0))]];
+         el.V(1) = &ml.vert[remap.vert[Index(mr,er.cV(1))]];
 		 }
 
 		 if(!sel){
