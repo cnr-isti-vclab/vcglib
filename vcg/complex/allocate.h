@@ -114,7 +114,7 @@ namespace vcg {
 			{
 			public:
 				PointerUpdater(void) : newBase(0), oldBase(0), newEnd(0), oldEnd(0), preventUpdateFlag(false) { ; }
-				void Clear(){newBase=oldBase=newEnd=oldEnd=0;};
+        void Clear(){newBase=oldBase=newEnd=oldEnd=0;}
 				void Update(SimplexPointerType &vp)
 				{
 					//if(vp>=newBase && vp<newEnd) return;
@@ -123,7 +123,7 @@ namespace vcg {
 					assert(vp<oldEnd);
 					vp=newBase+(vp-oldBase);
 					if(!remap.empty())
-						vp  = newBase +  remap[vp-newBase];
+            vp  = newBase + remap[vp-newBase];
 				}
 				bool NeedUpdate() {if((oldBase && newBase!=oldBase && !preventUpdateFlag) || !remap.empty()) return true; else return false;}
 
@@ -175,7 +175,7 @@ namespace vcg {
 					for (ei=m.edge.begin(); ei!=m.edge.end(); ++ei)
 						if(!(*ei).IsD())
 						{
-							if(HasEVAdjacency (m)) { pu.Update((*ei).EVp(0));pu.Update((*ei).EVp(1));}
+              if(HasEVAdjacency (m)) { pu.Update((*ei).V(0));pu.Update((*ei).V(1));}
 //							if(HasEVAdjacency(m))   pu.Update((*ei).EVp());
 						}
                                         HEdgeIterator hi;
@@ -608,8 +608,8 @@ namespace vcg {
 			// resize the optional atttributes in m.vert_attr to reflect the changes 
 			ResizeAttribute(m.vert_attr,m.vn,m);
 
-			FaceIterator fi;
-			for(fi=m.face.begin();fi!=m.face.end();++fi)
+       // Loop on the face to update the pointers FV relation (vertex refs)
+      for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
 				if(!(*fi).IsD())
 					for(unsigned int i=0;i<3;++i)
 					{
@@ -617,7 +617,14 @@ namespace vcg {
 						assert(pu.oldBase <= (*fi).V(i) && oldIndex < pu.remap.size());
 						(*fi).V(i) = pu.newBase+pu.remap[oldIndex];
 					}
-
+      // Loop on the edges to update the pointers EV relation
+      if(HasEVAdjacency(m))
+        for(EdgeIterator ei=m.edge.begin();ei!=m.edge.end();++ei)
+          if(!(*ei).IsD())
+            for(unsigned int i=0;i<2;++i)
+            {
+              pu.Update((*ei).V(i));
+            }
 		}
 
 
@@ -661,6 +668,104 @@ namespace vcg {
 			CompactVertexVector(m,pu);
 		}
 
+    /*
+    Function to compact all the vertices that have been deleted and put them to the end of the vector.
+    after this pass the isD test in the scanning of vertex vector, is no more strongly necessary.
+    It should not be called when TemporaryData is active;
+    */
+
+    static void CompactEdgeVector( MeshType &m,   PointerUpdater<EdgePointer> &pu   )
+    {
+      // If already compacted fast return please!
+      if(m.en==(int)m.edge.size()) return;
+
+      // remap [ <old_edge_position> ] gives you the new position of the edge in the vector;
+      pu.remap.resize( m.edge.size(),std::numeric_limits<size_t>::max() );
+
+      size_t pos=0;
+      size_t i=0;
+
+      for(i=0;i<m.edge.size();++i)
+      {
+        if(!m.edge[i].IsD())
+        {
+          pu.remap[i]=pos;
+          ++pos;
+        }
+      }
+      assert((int)pos==m.en);
+
+      // the actual copying of the data.
+      for(unsigned int i=0;i<m.edge.size();++i)
+      {
+        if(pu.remap[i]<size_t(m.vn))  // uninitialized entries in the remap vector has max_int value;
+                {
+                    assert(!m.edge[i].IsD());
+                    m.edge[ pu.remap [i] ].ImportData(m.edge[i]);
+                    // copy the vertex reference (they are not data!)
+                     m.edge[ pu.remap[i] ].V(0) = m.edge[i].cV(0);
+                     m.edge[ pu.remap[i] ].V(1) = m.edge[i].cV(1);
+                    // Now just copy the adjacency pointers (without changing them, to be done later)
+                    if(HasPerVertexVEAdjacency(m) && HasPerEdgeVEAdjacency(m) )
+                      if (m.edge[i].cVEp(0)!=0)
+                        {
+                          m.edge[ pu.remap[i] ].VEp(0) = m.edge[i].cVEp(0);
+                          m.edge[ pu.remap[i] ].VEi(0) = m.edge[i].cVEi(0);
+                          m.edge[ pu.remap[i] ].VEp(1) = m.edge[i].cVEp(1);
+                          m.edge[ pu.remap[i] ].VEi(1) = m.edge[i].cVEi(1);
+                        }
+                    if(HasEEAdjacency(m))
+                      if (m.edge[i].cEEp(0)!=0)
+                        {
+                          m.edge[ pu.remap[i] ].EEp(0) = m.edge[i].cEEp(0);
+                          m.edge[ pu.remap[i] ].EEi(0) = m.edge[i].cEEi(0);
+                          m.edge[ pu.remap[i] ].EEp(1) = m.edge[i].cEEp(1);
+                          m.edge[ pu.remap[i] ].EEi(1) = m.edge[i].cEEi(1);
+                        }
+                }
+      }
+
+      // reorder the optional attributes in m.vert_attr to reflect the changes
+      ReorderAttribute(m.edge_attr, pu.remap,m);
+
+      // setup the pointer updater
+      pu.oldBase  = &m.edge[0];
+      pu.oldEnd = &m.edge.back()+1;
+
+      // THE resize
+      m.edge.resize(m.en);
+
+      // setup the pointer updater
+      pu.newBase  = (m.edge.empty())?0:&m.edge[0];
+      pu.newEnd = (m.edge.empty())?0:&m.edge.back()+1;
+
+      // resize the optional atttributes in m.vert_attr to reflect the changes
+      ResizeAttribute(m.edge_attr,m.en,m);
+
+      // Loop on the vertices to update the pointers of VE relation
+      if(HasPerVertexVEAdjacency(m) &&HasPerEdgeVEAdjacency(m))
+          for (VertexIterator vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
+              if(!(*vi).IsD())  pu.Update((*vi).VEp());
+
+      // Loop on the edges to update the pointers EE VE relation
+       for(EdgeIterator ei=m.edge.begin();ei!=m.edge.end();++ei)
+          for(unsigned int i=0;i<2;++i)
+          {
+             if(HasPerVertexVEAdjacency(m) &&HasPerEdgeVEAdjacency(m))
+               pu.Update((*ei).VEp(i));
+             if(HasEEAdjacency(m))
+               pu.Update((*ei).EEp(i));
+          }
+    }
+
+    /*
+    Function to compact all the verices that have been deleted and put them to the end of the vector.
+    Wrapper if not PointerUpdater is not wanted
+    */
+    static void CompactEdgeVector( MeshType &m  ) {
+      PointerUpdater<EdgePointer>  pu;
+      CompactEdgeVector(m,pu);
+    }
 
 		/* 
 		Function to compact all the vertices that have been deleted and put them to the end of the vector. 
