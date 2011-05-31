@@ -18,7 +18,7 @@ void CapEdgeMesh(MeshType &em, MeshType &cm)
   UpdateFlags<MeshType>::EdgeClearV(em);
   UpdateTopology<MeshType>::EdgeEdge(em);
   int nv=0;
-  for(size_t i=0;i<em.edge.size();i++)
+  for(size_t i=0;i<em.edge.size();i++) if(!em.edge[i].IsD())
   {
     if (!em.edge[i].IsV())
     {
