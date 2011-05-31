@@ -64,7 +64,7 @@ we have to build the type a step a time (deriving from a single ancestor at a ti
 */ 
 template <class UserTypes>
 				class EdgeBase: public		  edge::EmptyEFAdj<
-																		edge::EmptyEVAdj<
+                                    edge::EmptyVEAdj<
 																		edge::EmptyEEAdj<
 																		edge::EmptyEHAdj<
 																		edge::EmptyBitFlags<
