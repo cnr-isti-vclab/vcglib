@@ -503,8 +503,8 @@ static void VertexEdge(MeshType &m)
 
   for(vi=m.vert.begin();vi!=m.vert.end();++vi)
   {
-    (*vi).Ep() = 0;
-    (*vi).Ei() = 0;
+    (*vi).VEp() = 0;
+    (*vi).VEi() = 0;
   }
 
   for(ei=m.edges.begin();ei!=m.edges.end();++ei)
@@ -512,10 +512,10 @@ static void VertexEdge(MeshType &m)
   {
     for(int j=0;j<2;++j)
     {
-      (*ei).Ev(j) = (*ei).V(j)->Ep();
-      (*ei).Zv(j) = (*ei).V(j)->Ei();
-      (*ei).V(j)->Ep() = &(*ei);
-      (*ei).V(j)->Ei() = j;
+      (*ei).VEp(j) = (*ei).V(j)->VEp();
+      (*ei).VEi(j) = (*ei).V(j)->VEi();
+      (*ei).V(j)->VEp() = &(*ei);
+      (*ei).V(j)->VEi() = j;
     }
   }
 }
