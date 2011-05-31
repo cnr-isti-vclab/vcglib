@@ -1513,14 +1513,16 @@ static int MergeCloseVertex(MeshType &m, const ScalarType radius)
 	
 static int ClusterVertex(MeshType &m, const ScalarType radius)
 	{
-			typedef vcg::SpatialHashTable<VertexType, ScalarType> SampleSHT;
+      if(m.vn==0) return 0;
+      // some spatial indexing structure does not work well with deleted vertices...
+      tri::Allocator<MeshType>::CompactVertexVector(m);
+      typedef vcg::SpatialHashTable<VertexType, ScalarType> SampleSHT;
 			SampleSHT sht;
 			tri::VertTmark<MeshType> markerFunctor;
 			typedef vcg::vertex::PointDistanceFunctor<ScalarType> VDistFunct;
 			std::vector<VertexType*> closests;
 			int mergedCnt=0;
-			Point3f closestPt;
-			sht.Set(m.vert.begin(), m.vert.end());
+      sht.Set(m.vert.begin(), m.vert.end());
 			UpdateFlags<MeshType>::VertexClearV(m);
 			for(VertexIterator viv = m.vert.begin(); viv!= m.vert.end(); ++viv) 
 				if(!(*viv).IsD() && !(*viv).IsV())
@@ -1535,7 +1537,7 @@ static int ClusterVertex(MeshType &m, const ScalarType radius)
 							float dist = Distance(p,closests[i]->cP());
 							if(dist < radius && !closests[i]->IsV())
 												{
-													printf("%f %f \n",dist,radius);
+//													printf("%f %f \n",dist,radius);
 													mergedCnt++;
 													closests[i]->SetV();
 													closests[i]->P()=p;
