@@ -53,7 +53,6 @@ First Working Release (with this comment)
  
 namespace vcg {
 
-template <class STL_CONT>
 class SimpleTempDataBase{
 public:
 	virtual ~SimpleTempDataBase() {};
@@ -62,8 +61,7 @@ public:
 	virtual void Reorder(std::vector<size_t> & newVertIndex)=0;
 	virtual int SizeOf() const  = 0;
 	virtual void * DataBegin() = 0; 
-	 
-	//virtual void CopyTo(void * ) = 0;
+	virtual void * At(unsigned int i ) = 0;
 };
 
 template <class TYPE>
@@ -110,7 +108,7 @@ private:
 };
 
 template <class STL_CONT, class ATTR_TYPE>
-class SimpleTempData:public SimpleTempDataBase<STL_CONT>{
+class SimpleTempData:public SimpleTempDataBase{
 
 	public:
 	typedef SimpleTempData<STL_CONT,ATTR_TYPE> SimpTempDataType;
@@ -138,6 +136,8 @@ class SimpleTempData:public SimpleTempDataBase<STL_CONT>{
 	ATTR_TYPE & operator[](const typename STL_CONT::iterator & cont){return data[&(*cont)-&*c.begin()];}
 	ATTR_TYPE & operator[](const int & i){return data[i];}
 
+	void * At(unsigned int i ) {return &(*this)[i];};
+
 	// update temporary data size 
 	bool UpdateSize(){
 			if(data.size() != c.size())
@@ -161,39 +161,23 @@ class SimpleTempData:public SimpleTempDataBase<STL_CONT>{
 
 	int SizeOf() const {return sizeof(ATTR_TYPE);}
 	void * DataBegin() {return data.empty()?NULL:&(*data.begin());} 
-
-	//template <typename ATTR_TYPE>
-	//void CopyTo(void * dest) {
-	//	SimpleTempData<STL_CONT,ATTR_TYPE> * destination = (SimpleTempData<STL_CONT,ATTR_TYPE> *)dest;
-	//	destination->Resize(data.size());
-	//	for(int i  = 0; i < data.size(); ++i)
-	//		memcpy((void*)(*destination)[i] , (void*) &( ((char*)( (*this)[i] ))[padding]),sizeof(ATTR_TYPE));
-	//}
-
-	 
-
-};
-
-class AttributeBase{
-	public:
-	virtual ~AttributeBase() {};
-	AttributeBase() {};
-	virtual int SizeOf()const  = 0;
-	virtual void * DataBegin() = 0; 
-
 };
 
 template <class ATTR_TYPE>
-class Attribute: public AttributeBase   {
+class Attribute: public SimpleTempDataBase   {
 public:
-typedef ATTR_TYPE AttrType;
-AttrType * attribute;
-Attribute(){attribute = new ATTR_TYPE();}
-~Attribute(){delete attribute;}
-int SizeOf()const {return sizeof(ATTR_TYPE);}
-void * DataBegin(){return attribute;}
+	typedef ATTR_TYPE AttrType;
+	AttrType * attribute;
+	Attribute(){attribute = new ATTR_TYPE();}
+	~Attribute(){delete attribute;}
+	int SizeOf()const {return sizeof(ATTR_TYPE);}
+	void * DataBegin(){return attribute;}
+
+	void Resize(const int &  ) {assert(0);}
+	void Reorder(std::vector<size_t> &  ){assert(0);}
+	void * At(unsigned int i ) {assert(0);return (void*)0;}
 };
 
-}; // end namespace vcg
+} // end namespace vcg
 
 #endif

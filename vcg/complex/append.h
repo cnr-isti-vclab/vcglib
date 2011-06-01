@@ -26,6 +26,7 @@
 
 #include <vcg/complex/allocate.h>
 #include <vcg/complex/algorithms/update/flag.h>
+#include <set>
 
 namespace vcg {
 namespace tri {
@@ -300,12 +301,59 @@ static void Mesh(MeshLeft& ml, MeshRight& mr, const bool selected = false){
 		// If the left mesh has attributes that are not in the right mesh, their values for the elements
 		// of the right mesh will be uninitialized
 
-		// to be done.
-		// note: we need to assign attribute values without knowing their type
+		unsigned int id_r;
+		typename std::set< typename MeshRight::PointerToAttribute >::iterator al,ar;
 
+		// per vertex attributes
+		for(al = ml.vert_attr.begin(); al != ml.vert_attr.end(); ++al)
+			if(!(*al)._name.empty()){
+				ar =    mr.vert_attr.find(*al);
+				if(ar!= mr.vert_attr.end()){
+					id_r = 0;
+					for(vi=mr.vert.begin();vi!=mr.vert.end();++vi,++id_r)
+						if( !(*vi).IsD() && (!selected || (*vi).IsS()))
+							memcpy((*al)._handle->At(remap.vert[Index(mr,*vi)]),(*ar)._handle->At(id_r),
+								(*al)._handle->SizeOf());
+				}
+			}
 
+		// per edge attributes
+		for(al = ml.edge_attr.begin(); al != ml.edge_attr.end(); ++al)
+			if(!(*al)._name.empty()){
+				ar =    mr.edge_attr.find(*al);
+				if(ar!= mr.edge_attr.end()){
+					id_r = 0;
+					for(ei=mr.edge.begin();ei!=mr.edge.end();++ei,++id_r)
+						if( !(*ei).IsD() && (!selected || (*ei).IsS()))
+							memcpy((*al)._handle->At(remap.vert[Index(mr,*ei)]),(*ar)._handle->At(id_r),
+								(*al)._handle->SizeOf());
+				}
+			}
 
+		// per face attributes
+		for(al = ml.face_attr.begin(); al != ml.face_attr.end(); ++al)
+			if(!(*al)._name.empty()){
+				ar =    mr.face_attr.find(*al);
+				if(ar!= mr.face_attr.end()){
+					id_r = 0;
+					for(fi=mr.face.begin();fi!=mr.face.end();++fi,++id_r)
+						if( !(*fi).IsD() && (!selected || (*fi).IsS()))
+							memcpy((*al)._handle->At(remap.vert[Index(mr,*fi)]),(*ar)._handle->At(id_r),
+								(*al)._handle->SizeOf());
+				}
+			}
+
+                // per mesh attributes
+                // if both ml and mr have an attribute with the same name, no action is done
+                // if mr has an attribute that is NOT present in ml, the attribute is added to ml
+                //for(ar = mr.mesh_attr.begin(); ar != mr.mesh_attr.end(); ++ar)
+                //        if(!(*ar)._name.empty()){
+                //                al =    ml.mesh_attr.find(*ar);
+                //                if(al== ml.mesh_attr.end())
+                //                        //...
+                //        }
 }
+
 
 
 static void Selected(MeshLeft& ml, MeshRight& mr)
