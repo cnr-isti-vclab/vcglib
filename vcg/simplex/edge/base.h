@@ -68,7 +68,8 @@ template <class UserTypes>
 																		edge::EmptyEEAdj<
 																		edge::EmptyEHAdj<
 																		edge::EmptyBitFlags<
-																		EdgeTypeHolder < UserTypes> >  > > > >{};
+																		edge::EmptyVertexRef<
+																		EdgeTypeHolder < UserTypes> >  > > > > >{};
 
 
 /* The Real Big Edge class;
