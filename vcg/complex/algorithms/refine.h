@@ -722,34 +722,40 @@ face::Pos<typename MESH_TYPE::FaceType> he(ep.f,ep.z,ep.f->V(ep.z));
 	}
 };
 
-/*
-// Nuovi punti (e.g. midpoint)
-template<class MESH_TYPE>
-struct OddPointLoop : public std::unary_function<face::Pos<typename MESH_TYPE::FaceType> , typename MESH_TYPE::CoordType>
-{
+/* The two following classes are the functor and the predicate that you need for using the refine framework to cut a mesh along a linear interpolation of the quality.
+   This can be used for example to slice a mesh with a plane. Just set the quality value as distance from plane and then functor and predicate
+   initialized 0 and invoke the refine
 
+  MyMesh A;
+  tri::UpdateQuality:MyMesh>::VertexFromPlane(plane);
+  QualityMidPointFunctor<MyMesh> slicingfunc(0.0);
+  QualityEdgePredicate<MyMesh> slicingpred(0.0);
+  tri::UpdateTopology<MyMesh>::FaceFace(A);
+  RefineE<MyMesh, QualityMidPointFunctor<MyMesh>, QualityEdgePredicate<MyMesh> > (A, slicingfunc, slicingpred, false);
 
-}
-
-// vecchi punti
-template<class MESH_TYPE>
-struct EvenPointLoop : public std::unary_function<face::Pos<typename MESH_TYPE::FaceType> , typename MESH_TYPE::CoordType>
-{
-}
-*/
+  Note that they store in the vertex quality the plane distance.
+  */
 
 template<class MESH_TYPE>
-struct MidPointPlane : public std::unary_function<face::Pos<typename MESH_TYPE::FaceType> , typename MESH_TYPE::CoordType>
+class QualityMidPointFunctor : public std::unary_function<face::Pos<typename MESH_TYPE::FaceType> , typename MESH_TYPE::CoordType>
 {
-	Plane3<typename MESH_TYPE::ScalarType> pl;
-	typedef Point3<typename MESH_TYPE::ScalarType> Point3x;
+public:
+  typedef Point3<typename MESH_TYPE::ScalarType> Point3x;
+  typedef typename MESH_TYPE::ScalarType ScalarType;
+
+  ScalarType thr;
+
+  QualityMidPointFunctor(ScalarType _thr):thr(_thr){}
+
 	
-	void operator()(typename MESH_TYPE::VertexType &nv, face::Pos<typename MESH_TYPE::FaceType> ep){
-		Point3x &p0=ep.f->V0(ep.z)->P();
-		Point3x &p1=ep.f->V1(ep.z)->P();
-		double pp= Distance(p0,pl)/(Distance(p0,pl) - Distance(p1,pl));
-		
+  void operator()(typename MESH_TYPE::VertexType &nv, const face::Pos<typename MESH_TYPE::FaceType> &ep){
+    Point3x p0=ep.f->V0(ep.z)->P();
+    Point3x p1=ep.f->V1(ep.z)->P();
+    ScalarType q0=ep.f->V0(ep.z)->Q()-thr;
+    ScalarType q1=ep.f->V1(ep.z)->Q()-thr;
+    double pp= q0/(q0-q1);
     nv.P()=p1*pp + p0*(1.0-pp);
+    nv.Q()=thr;
 	}
 
 	Color4<typename MESH_TYPE::ScalarType> WedgeInterp(Color4<typename MESH_TYPE::ScalarType> &c0, Color4<typename MESH_TYPE::ScalarType> &c1)
@@ -770,20 +776,25 @@ struct MidPointPlane : public std::unary_function<face::Pos<typename MESH_TYPE::
 };
 
 
-template <class FLT>
-class EdgeSplPlane
+template <class MESH_TYPE>
+class QualityEdgePredicate
 {
-	public:
-  Plane3<FLT> pl;
-	bool operator()(const Point3<FLT> &p0, const  Point3<FLT> &p1) const
-	{
-		if(Distance(pl,p0)>0) {
-			if(Distance(pl,p1)>0) return false;
-			else return true;
-		}
-		else if(Distance(pl,p1)<=0) return false;
-		return true;
-	}
+  public:
+  typedef Point3<typename MESH_TYPE::ScalarType> Point3x;
+  typedef typename MESH_TYPE::ScalarType ScalarType;
+  ScalarType thr;
+  QualityEdgePredicate(const ScalarType &thr):thr(thr) {}
+  bool operator()(face::Pos<typename MESH_TYPE::FaceType> ep)
+    {
+    ScalarType q0=ep.f->V0(ep.z)->Q()-thr;
+    ScalarType q1=ep.f->V1(ep.z)->Q()-thr;
+    if(q0>q1) swap(q0,q1);
+    if ( q0*q1 > 0) return false;
+    // now a small check to be sure that we do not make too thin crossing.
+    double pp= q0/(q0-q1);
+    if(fabs(pp)< 0.001) return false;
+    return true;
+  }
 };
 
 
