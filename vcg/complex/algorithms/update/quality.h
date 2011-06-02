@@ -230,6 +230,13 @@ static void FaceArea(MeshType &m)
 		(*fi).Q()=vcg::DoubleArea(*fi)/2;
 }
 
+static void VertexFromPlane(MeshType &m, Plane3<ScalarType> &pl)
+{
+  VertexIterator vi;
+  for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
+    (*vi).Q() =Distance(pl,(*vi).cP());
+}
+
 static void VertexFromGaussianCurvature(MeshType &m)
 { 
 	VertexIterator vi;
