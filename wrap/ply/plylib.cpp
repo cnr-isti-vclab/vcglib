@@ -628,7 +628,7 @@ static inline int SkipScalarA( XFILE * fp, const int tf )
 
 static inline int SkipScalarB( XFILE * fp, const int tf)
 {
-	static char dummy[8];
+  char dummy[8];
 
 	assert(fp);
 	return pb_fread(dummy,1,TypeSize[tf],fp);
@@ -636,14 +636,14 @@ static inline int SkipScalarB( XFILE * fp, const int tf)
 
 static int ReadScalarB( XFILE * fp, void * mem, const int tf, const int tm, int fmt )
 {
-	static char		ch;
-	static short	sh;
-	static int		in;
-	static uchar	uc;
-	static ushort	us;
-	static uint		ui;
-	static float	fl;
-	static double	dd;
+  char		ch;
+  short	sh;
+  int		in;
+  uchar	uc;
+  ushort	us;
+  uint		ui;
+  float	fl;
+  double	dd;
 
 	int r = 0;
 
@@ -768,14 +768,14 @@ static int ReadScalarB( XFILE * fp, void * mem, const int tf, const int tm, int 
 
 static int ReadScalarA( XFILE * fp, void * mem, const int tf, const int tm )
 {
-	static char		ch;
-	static short	sh;
-	static int		in;
-	static uchar	uc;
-	static ushort	us;
-	static uint		ui;
-	static float	fl;
-	static double	dd;
+  char		ch;
+  short	sh;
+  int		in;
+  uchar	uc;
+  ushort	us;
+  uint		ui;
+  float	fl;
+  double	dd;
 
 	int r = 0;
 
@@ -1028,18 +1028,18 @@ int PlyFile::OpenRead( const char * filename )
 {
 		// Tokens dell'intestazione
 
-	static const char * SEP			= " \t\n\r";
-	static const char * HEADER		= "ply";
-	static const char * FORMAT		= "format";
-	static const char * TASCII		= "ascii";
-	static const char * TBINBIG		= "binary_big_endian";
-	static const char * TBINLITTLE	= "binary_little_endian";
-	static const char * COMMENT		= "comment";
-	static const char * OBJ_INFO	= "obj_info";
-	static const char * ELEMENT		= "element";
-	static const char * PROPERTY	= "property";
-	static const char * ENDHEADER	= "end_header";
-	static const char * LIST		= "list";
+  const char * SEP			= " \t\n\r";
+  const char * HEADER		= "ply";
+  const char * FORMAT		= "format";
+  const char * TASCII		= "ascii";
+  const char * TBINBIG		= "binary_big_endian";
+  const char * TBINLITTLE	= "binary_little_endian";
+  const char * COMMENT		= "comment";
+  const char * OBJ_INFO	= "obj_info";
+  const char * ELEMENT		= "element";
+  const char * PROPERTY	= "property";
+  const char * ENDHEADER	= "end_header";
+  const char * LIST		= "list";
 
 	const int MAXB = 512;
 	char buf[MAXB];
@@ -1049,7 +1049,6 @@ int PlyFile::OpenRead( const char * filename )
 		// Predistruzione
 
 	Destroy();
-
 		// Apertura file
 
 	gzfp = pb_fopen(filename,"rb");
@@ -1061,7 +1060,6 @@ int PlyFile::OpenRead( const char * filename )
 
   header.clear();
   header.reserve(1536);
-
 		// ********* Parsing header ***********
 
 			// Controllo header
@@ -1087,8 +1085,8 @@ int PlyFile::OpenRead( const char * filename )
 		goto error;
 	}
   header.append(buf);
-
-	token = strtok(buf,SEP);
+  char *tokenPtr;
+  token = strtok_r(buf,SEP,&tokenPtr);
 	if(token==0)
 	{
 		error = E_UNESPECTEDEOF;
@@ -1099,7 +1097,7 @@ int PlyFile::OpenRead( const char * filename )
 		error = E_NOFORMAT;
 		goto error;
 	}
-	token = strtok(0,SEP);
+  token = strtok_r(0,SEP,&tokenPtr);
 	if(token==0)
 	{
 		error = E_UNESPECTEDEOF;
@@ -1116,14 +1114,13 @@ int PlyFile::OpenRead( const char * filename )
 		error = E_NOFORMAT;
 		goto error;
 	}
-	token = strtok(0,SEP);
+  token = strtok_r(0,SEP,&tokenPtr);
 	if(token==0)
 	{
 		error = E_UNESPECTEDEOF;
 		goto error;
 	}
 	version = float(atof(token));
-
 		//************* Ciclo lettura elementi ****************
 
 	curelement = 0;
@@ -1136,7 +1133,7 @@ int PlyFile::OpenRead( const char * filename )
 		}
     header.append(buf);
 
-		token = strtok(buf,SEP);
+    token = strtok_r(buf,SEP,&tokenPtr);
 		if(token==0)
 		{
 			error = E_UNESPECTEDEOF;
@@ -1160,14 +1157,14 @@ int PlyFile::OpenRead( const char * filename )
 		else if( !strcmp(token,ELEMENT) )
 		{
 				// Lettura nome elemento
-			char * name = strtok(0,SEP);
+      char * name = strtok_r(0,SEP,&tokenPtr);
 			if(name==0)
 			{
 				error = E_SYNTAX;
 				goto error;
 			}
 				// Lettura numero di elementi
-			token = strtok(0,SEP);
+      token = strtok_r(0,SEP,&tokenPtr);
 			if(name==0)
 			{
 				error = E_SYNTAX;
@@ -1186,7 +1183,7 @@ int PlyFile::OpenRead( const char * filename )
 				error = E_PROPOUTOFELEMENT;
 				goto error;
 			}
-			token = strtok(0,SEP);
+      token = strtok_r(0,SEP,&tokenPtr);
 			if(token==0)
 			{
 				error = E_SYNTAX;
@@ -1194,7 +1191,7 @@ int PlyFile::OpenRead( const char * filename )
 			}
 			if( !strcmp(token,LIST) )
 			{
-				token = strtok(0,SEP);
+        token = strtok_r(0,SEP,&tokenPtr);
 				if(token==0)
 				{
 					error = E_SYNTAX;
@@ -1206,7 +1203,7 @@ int PlyFile::OpenRead( const char * filename )
 					error = E_BADTYPENAME;
 					goto error;
 				}
-				token = strtok(0,SEP);
+        token = strtok_r(0,SEP,&tokenPtr);
 				if(token==0)
 				{
 					error = E_SYNTAX;
@@ -1218,7 +1215,7 @@ int PlyFile::OpenRead( const char * filename )
 					error = E_BADTYPENAME;
 					goto error;
 				}
-				token = strtok(0,SEP);
+        token = strtok_r(0,SEP,&tokenPtr);
 				if(token==0)
 				{
 					error = E_SYNTAX;
@@ -1235,7 +1232,7 @@ int PlyFile::OpenRead( const char * filename )
 					error = E_BADTYPENAME;
 					goto error;
 				}
-				token = strtok(0,SEP);
+        token = strtok_r(0,SEP,&tokenPtr);
 				if(token==0)
 				{
 					error = E_SYNTAX;
@@ -1350,7 +1347,7 @@ int PlyFile::ElemNumber( int i ) const
 
 static bool cb_skip_bin1( GZFILE fp, void * /*mem*/, PropDescriptor * /*d*/ )
 {
-	static char dummy[1];
+  char dummy[1];
 
 	assert(fp);
 	return pb_fread(dummy,1,1,fp)!=0;
@@ -1358,7 +1355,7 @@ static bool cb_skip_bin1( GZFILE fp, void * /*mem*/, PropDescriptor * /*d*/ )
 
 static bool cb_skip_bin2( GZFILE fp, void * /*mem*/, PropDescriptor * /*d*/ )
 {
-	static char dummy[2];
+  char dummy[2];
 
 	assert(fp);
 	return pb_fread(dummy,1,2,fp)!=0;
@@ -1366,7 +1363,7 @@ static bool cb_skip_bin2( GZFILE fp, void * /*mem*/, PropDescriptor * /*d*/ )
 
 static bool cb_skip_bin4( GZFILE fp, void * /*mem*/, PropDescriptor * /*d*/ )
 {
-	static char dummy[4];
+  char dummy[4];
 
 	assert(fp);
 	return pb_fread(dummy,1,4,fp)!=0;
@@ -1374,7 +1371,7 @@ static bool cb_skip_bin4( GZFILE fp, void * /*mem*/, PropDescriptor * /*d*/ )
 
 static bool cb_skip_bin8( GZFILE fp, void * /*mem*/, PropDescriptor * /*d*/ )
 {
-	static char dummy[8];
+  char dummy[8];
 
 	assert(fp);
 	return pb_fread(dummy,1,8,fp)!=0;
@@ -1382,7 +1379,7 @@ static bool cb_skip_bin8( GZFILE fp, void * /*mem*/, PropDescriptor * /*d*/ )
 
 static bool cb_skip_float_ascii( GZFILE fp, void * /*mem*/, PropDescriptor * /*d*/ )
 {
-	static float dummy;
+  float dummy;
 
 	assert(fp);
 	return fscanf(fp,"%f",&dummy)!=EOF;
@@ -1390,7 +1387,7 @@ static bool cb_skip_float_ascii( GZFILE fp, void * /*mem*/, PropDescriptor * /*d
 
 static bool cb_skip_int_ascii( GZFILE fp, void * /*mem*/, PropDescriptor * /*d*/ )
 {
-	static int dummy;
+  int dummy;
 
 	assert(fp);
 	return fscanf(fp,"%d",&dummy)!=EOF;
@@ -1848,11 +1845,11 @@ static bool cb_read_ascii( GZFILE fp, void * mem, PropDescriptor * d )
 
 
 const int SKIP_MAX_BUF = 512;
-static char skip_buf[SKIP_MAX_BUF];
 
 static bool cb_skip_list_bin1( GZFILE fp, void * /*mem*/, PropDescriptor * /*d*/ )
 {
-	uchar n;
+  char skip_buf[SKIP_MAX_BUF];
+  uchar n;
 		// Solo indici uchar
 	if( pb_fread(&n,1,1,fp)==0 ) return false;
 
@@ -1862,7 +1859,8 @@ static bool cb_skip_list_bin1( GZFILE fp, void * /*mem*/, PropDescriptor * /*d*/
 
 static bool cb_skip_list_bin2( GZFILE fp, void * /*mem*/, PropDescriptor * /*d*/ )
 {
-	uchar n;
+  char skip_buf[SKIP_MAX_BUF];
+  uchar n;
 		// Solo indici uchar
 	if( pb_fread(&n,1,1,fp)==0 ) return false;
 
@@ -1872,7 +1870,8 @@ static bool cb_skip_list_bin2( GZFILE fp, void * /*mem*/, PropDescriptor * /*d*/
 
 static bool cb_skip_list_bin4( GZFILE fp, void * /*mem*/, PropDescriptor * /*d*/ )
 {
-	uchar n;
+  char skip_buf[SKIP_MAX_BUF];
+  uchar n;
 		// Solo indici uchar
 	if( pb_fread(&n,1,1,fp)==0 ) return false;
 
@@ -1882,7 +1881,8 @@ static bool cb_skip_list_bin4( GZFILE fp, void * /*mem*/, PropDescriptor * /*d*/
 
 static bool cb_skip_list_bin8( GZFILE fp, void * /*mem*/, PropDescriptor * /*d*/ )
 {
-	uchar n;
+  char skip_buf[SKIP_MAX_BUF];
+  uchar n;
 		// Solo indici uchar
 	if( pb_fread(&n,1,1,fp)==0 ) return false;
 
