@@ -225,8 +225,8 @@ namespace io {
 		typedef typename SaveMeshType::VertexIterator VertexIterator;
 		typedef typename SaveMeshType::VertexType VertexType;
 		typedef typename SaveMeshType::FaceType FaceType;
-		typedef SimpleTempDataBase<typename SaveMeshType::VertContainer> STDBv;
-		typedef SimpleTempDataBase<typename SaveMeshType::FaceContainer> STDBf;
+    typedef SimpleTempDataBase STDBv;
+    typedef SimpleTempDataBase STDBf;
 	//	typedef typename SaveMeshType::Attribute <SaveMeshType::FaceContainer> STDBm;
 		
 		/* save Ocf Components */ 
