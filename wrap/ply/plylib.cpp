@@ -27,51 +27,6 @@ of Greg Turk and on the work of Claudio Rocchini
 
 ****************************************************************************/
 
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.12  2006/01/27 09:09:10  corsini
-Fix signed/unsigned mismatch
-
-Revision 1.11  2005/12/02 00:00:53  cignoni
-Moved and corrected interpret_texture_name from plystuff.h to plylib.cpp
-
-Revision 1.10  2005/11/26 00:22:46  cignoni
-added untested code of interpret_texture
-
-Revision 1.9  2005/11/12 07:07:47  cignoni
-Changed Offset types to remove warnings
-
-Revision 1.8  2005/03/15 11:46:52  cignoni
-Cleaning of the automatic bbox caching support for ply files. First working version.
-
-Revision 1.7  2005/01/03 10:35:59  cignoni
-Improved the compatibility for ply format for faces having the list size (e.g. number of vertexes of a face) as a char instead of a uchar.
-Added a couple of new face descriptors, corrected a bug in error reporting function (and restructured) and translated a few comments.
-Thanks to Patrick Min for the careful bug reporting
-
-Revision 1.6  2004/06/23 15:36:57  cignoni
-Restructured management of error, now the standard open for any mesh type return the error code, the default success value is zero
-Any import class has a method ErrorMsg that give a verbal description of an error code.
-
-Revision 1.5  2004/06/23 00:06:45  ponchio
-Moved #define LITTLE_MACHINE outside of #ifdef WIN32 (linux on PC is little too).
-
-Revision 1.4  2004/05/12 17:21:08  ganovelli
-inclusion of io.h removed (unnecessary)
-
-Revision 1.3  2004/05/12 10:13:29  ganovelli
-direct.h was included also without WIN32 definition
-
-Revision 1.2  2004/04/06 21:48:50  cignoni
-Commented out unused parameter names
-
-Revision 1.1  2004/03/03 15:00:51  cignoni
-Initial commit
-
-****************************************************************************/
-
 
 // Note that on ppc mac (the only bigendian machine around)
 // the preprocessor def __BIG_ENDIAN__ is always defined.
@@ -87,6 +42,7 @@ Initial commit
 #endif
 #ifdef _MSC_VER
 #pragma warning( disable : 4267 )
+#define strtok_r strtok_s
 #endif
 
 #ifdef WIN32
