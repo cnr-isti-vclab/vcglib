@@ -73,6 +73,13 @@ static void Matrix(ComputeMeshType &m, const Matrix44<ScalarType> &M, bool updat
 	}
 }
 
+static void Translate(ComputeMeshType &m, const Point3<ScalarType> &t)
+{
+  VertexIterator vi;
+  for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+          if(!(*vi).IsD()) (*vi).P()+=t;
+}
+
 
 }; // end class
 
