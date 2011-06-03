@@ -369,7 +369,7 @@ namespace io {
 				for(ai = m.mesh_attr.begin(); ai != m.mesh_attr.end(); ++ai)
 					if(!(*ai)._name.empty())
 						{
-							AttributeBase  *    handle =  (AttributeBase  *)   (*ai)._handle ;
+              SimpleTempDataBase  *    handle =  (SimpleTempDataBase  *)   (*ai)._handle ;
 	
 							WriteString(F(),"PER_MESH_ATTR_NAME");
 							WriteString(F(),(*ai)._name.c_str());
