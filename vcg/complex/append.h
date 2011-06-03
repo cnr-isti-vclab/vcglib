@@ -354,7 +354,12 @@ static void Mesh(MeshLeft& ml, MeshRight& mr, const bool selected = false){
                 //        }
 }
 
-
+static void MeshCopy(MeshLeft& ml, MeshRight& mr, bool selected=false)
+{
+  ml.Clear();
+  Mesh(ml,mr,selected);
+  ml.bbox=mr.bbox;
+}
 
 static void Selected(MeshLeft& ml, MeshRight& mr)
 {
