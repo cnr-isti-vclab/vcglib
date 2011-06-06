@@ -164,7 +164,7 @@ class Quadric5
 {
 public:
     typedef Scalar ScalarType;
-	typedef  CMeshO::VertexType::FaceType FaceType;
+//	typedef  CMeshO::VertexType::FaceType FaceType;
 	
 	// the real quadric
 	ScalarType a[15];
@@ -241,7 +241,8 @@ public:
 	
 	// computes the real quadric and the geometric quadric using the face
 	// The geometric quadric is added to the parameter qgeo
-	void byFace(FaceType &f, math::Quadric<double> &q1, math::Quadric<double> &q2, math::Quadric<double> &q3,bool QualityQuadric)
+  template <class FaceType>
+  void byFace(FaceType &f, math::Quadric<double> &q1, math::Quadric<double> &q2, math::Quadric<double> &q3,bool QualityQuadric)
 	{
 		double q = QualityFace(f);
 		
@@ -295,7 +296,8 @@ public:
 	
 		
 	// Computes the geometrical quadric if onlygeo == true and the real quadric if onlygeo == false
-	void byFace(FaceType &fi, bool onlygeo)
+  template<class FaceType>
+  void byFace(FaceType &fi, bool onlygeo)
 	{
 	  //assert(onlygeo==false);
 		ScalarType p[5]; 
@@ -335,7 +337,7 @@ public:
 		ComputeQuadricFromE1E2(e1,e2,p);
 		
 		if(IsValid())	return;
-		qDebug("Warning: failed to find a good 5D quadric try to permute stuff.");
+//		qDebug("Warning: failed to find a good 5D quadric try to permute stuff.");
 		
 		/*
 		When c is very close to 0, loss of precision causes it to be computed as a negative number,
