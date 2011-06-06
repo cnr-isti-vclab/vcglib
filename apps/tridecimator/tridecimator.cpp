@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-using namespace std;
 
 // stuff to define the mesh
 #include <vcg/simplex/vertex/base.h>
@@ -46,51 +45,41 @@ to recover the quadric.
 ******************************************************/
 // The class prototypes.
 class MyVertex;
-class MyEdge;    
+class MyEdge;
 class MyFace;
 
 struct MyUsedTypes: public UsedTypes<Use<MyVertex>::AsVertexType,Use<MyEdge>::AsEdgeType,Use<MyFace>::AsFaceType>{};
 
 class MyVertex  : public Vertex< MyUsedTypes,
-  vertex::VFAdj, 
-  vertex::Coord3f, 
-  vertex::Normal3f, 
-  vertex::Mark, 
+  vertex::VFAdj,
+  vertex::Coord3f,
+  vertex::Normal3f,
+  vertex::Mark,
   vertex::BitFlags  >{
-public: 
+public:
   vcg::math::Quadric<double> &Qd() {return q;}
 private:
   math::Quadric<double> q;
   };
 
-class DummyType; 
-class MyEdge : public Edge<MyUsedTypes,edge::VertexRef> {
-public:
-  inline MyEdge() {};
-  inline MyEdge( MyVertex * v0, MyVertex * v1){V(0) = v0; V(1) = v1; };
-	  static inline MyEdge OrderedEdge(MyVertex* v0,MyVertex* v1){
-   if(v0<v1) return MyEdge(v0,v1);
-   else return MyEdge(v1,v0);
-  }
+class MyEdge : public Edge< MyUsedTypes> {};
 
-//  inline MyEdge( Edge<MyEdge,MyVertex> &e):Edge<MyEdge,MyVertex>(e){};
-};
-
+typedef BasicVertexPair<MyVertex> VertexPair;
 
 class MyFace    : public Face< MyUsedTypes,
-  face::VFAdj, 
-  face::VertexRef, 
+  face::VFAdj,
+  face::VertexRef,
   face::BitFlags > {};
 
-/// the main mesh class 
+// the main mesh class
 class MyMesh    : public vcg::tri::TriMesh<std::vector<MyVertex>, std::vector<MyFace> > {};
 
 
-class MyTriEdgeCollapse: public vcg::tri::TriEdgeCollapseQuadric< MyMesh, MyTriEdgeCollapse, QInfoStandard<MyVertex>  > {
-						public:
-						typedef  vcg::tri::TriEdgeCollapseQuadric< MyMesh,  MyTriEdgeCollapse, QInfoStandard<MyVertex>  > TECQ;
+class MyTriEdgeCollapse: public vcg::tri::TriEdgeCollapseQuadric< MyMesh, VertexPair, MyTriEdgeCollapse, QInfoStandard<MyVertex>  > {
+            public:
+            typedef  vcg::tri::TriEdgeCollapseQuadric< MyMesh,  VertexPair, MyTriEdgeCollapse, QInfoStandard<MyVertex>  > TECQ;
             typedef  MyMesh::VertexType::EdgeType EdgeType;
-            inline MyTriEdgeCollapse(  const EdgeType &p, int i) :TECQ(p,i){}
+            inline MyTriEdgeCollapse(  const VertexPair &p, int i, BaseParameterClass *pp) :TECQ(p,i,pp){}
 };
 
 void Usage()
@@ -132,46 +121,45 @@ int main(int argc ,char**argv){
 if(argc<4) Usage();
 
   int FinalSize=atoi(argv[3]);
-	//int t0=clock();	
+  //int t0=clock();
   int err=vcg::tri::io::Importer<MyMesh>::Open(mesh,argv[1]);
-  if(err) 
+  if(err)
   {
     printf("Unable to open mesh %s : '%s'\n",argv[1],vcg::tri::io::Importer<MyMesh>::ErrorMsg(err));
     exit(-1);
   }
-	printf("mesh loaded %d %d \n",mesh.vn,mesh.fn);
+  printf("mesh loaded %d %d \n",mesh.vn,mesh.fn);
     
-  TriEdgeCollapseQuadricParameter &qparams = MyTriEdgeCollapse::Params() ;
-  MyTriEdgeCollapse::SetDefaultParams();
+  TriEdgeCollapseQuadricParameter qparams;
   qparams.QualityThr  =.3;
-  float TargetError=numeric_limits<float>::max();
+  float TargetError=std::numeric_limits<float>::max();
   bool CleaningFlag =false;
      // parse command line.
-	  for(int i=4; i < argc;)
+    for(int i=4; i < argc;)
     {
       if(argv[i][0]=='-')
         switch(argv[i][1])
-      { 
-        case 'H' : MyTriEdgeCollapse::Params().SafeHeapUpdate=true; printf("Using Safe heap option\n"); break;
+      {
+        case 'H' : qparams.SafeHeapUpdate=true; printf("Using Safe heap option\n"); break;
         case 'Q' : if(argv[i][2]=='y') { qparams.QualityCheck	= true;  printf("Using Quality Checking\n");	}
-                                  else { qparams.QualityCheck	= false; printf("NOT Using Quality Checking\n");	}                break;		
-				case 'N' : if(argv[i][2]=='y') { qparams.NormalCheck	= true;  printf("Using Normal Deviation Checking\n");	}
-                                  else { qparams.NormalCheck	= false; printf("NOT Using Normal Deviation Checking\n");	}        break;		
-				case 'O' : if(argv[i][2]=='y') { qparams.OptimalPlacement	= true;  printf("Using OptimalPlacement\n");	}
-                                  else { qparams.OptimalPlacement	= false; printf("NOT Using OptimalPlacement\n");	}        break;		
-				case 'S' : if(argv[i][2]=='y') { qparams.ScaleIndependent	= true;  printf("Using ScaleIndependent\n");	}
-                                  else { qparams.ScaleIndependent	= false; printf("NOT Using ScaleIndependent\n");	}        break;		
-				case 'B' : if(argv[i][2]=='y') { qparams.PreserveBoundary	= true;  printf("Preserving Boundary\n");	}
-                                  else { qparams.PreserveBoundary	= false; printf("NOT Preserving Boundary\n");	}        break;		
-				case 'T' : if(argv[i][2]=='y') { qparams.PreserveTopology	= true;  printf("Preserving Topology\n");	}
-                                  else { qparams.PreserveTopology	= false; printf("NOT Preserving Topology\n");	}        break;		
-				case 'q' :	qparams.QualityThr	= atof(argv[i]+2);	           printf("Setting Quality Thr to %f\n",atof(argv[i]+2)); 	 break;			
-				case 'n' :	qparams.NormalThrRad = math::ToRad(atof(argv[i]+2));  printf("Setting Normal Thr to %f deg\n",atof(argv[i]+2)); break;	
-				case 'b' :	qparams.BoundaryWeight  = atof(argv[i]+2);			printf("Setting Boundary Weight to %f\n",atof(argv[i]+2)); break;		
-				case 'e' :	TargetError = float(atof(argv[i]+2));			printf("Setting TargetError to %g\n",atof(argv[i]+2)); break;		
-				case 'P' :	CleaningFlag=true;  printf("Cleaning mesh before simplification\n"); break;	
+                                  else { qparams.QualityCheck	= false; printf("NOT Using Quality Checking\n");	}                break;
+        case 'N' : if(argv[i][2]=='y') { qparams.NormalCheck	= true;  printf("Using Normal Deviation Checking\n");	}
+                                  else { qparams.NormalCheck	= false; printf("NOT Using Normal Deviation Checking\n");	}        break;
+        case 'O' : if(argv[i][2]=='y') { qparams.OptimalPlacement	= true;  printf("Using OptimalPlacement\n");	}
+                                  else { qparams.OptimalPlacement	= false; printf("NOT Using OptimalPlacement\n");	}        break;
+        case 'S' : if(argv[i][2]=='y') { qparams.ScaleIndependent	= true;  printf("Using ScaleIndependent\n");	}
+                                  else { qparams.ScaleIndependent	= false; printf("NOT Using ScaleIndependent\n");	}        break;
+        case 'B' : if(argv[i][2]=='y') { qparams.PreserveBoundary	= true;  printf("Preserving Boundary\n");	}
+                                  else { qparams.PreserveBoundary	= false; printf("NOT Preserving Boundary\n");	}        break;
+        case 'T' : if(argv[i][2]=='y') { qparams.PreserveTopology	= true;  printf("Preserving Topology\n");	}
+                                  else { qparams.PreserveTopology	= false; printf("NOT Preserving Topology\n");	}        break;
+        case 'q' :	qparams.QualityThr	= atof(argv[i]+2);	           printf("Setting Quality Thr to %f\n",atof(argv[i]+2)); 	 break;
+        case 'n' :	qparams.NormalThrRad = math::ToRad(atof(argv[i]+2));  printf("Setting Normal Thr to %f deg\n",atof(argv[i]+2)); break;
+        case 'b' :	qparams.BoundaryWeight  = atof(argv[i]+2);			printf("Setting Boundary Weight to %f\n",atof(argv[i]+2)); break;
+        case 'e' :	TargetError = float(atof(argv[i]+2));			printf("Setting TargetError to %g\n",atof(argv[i]+2)); break;
+        case 'P' :	CleaningFlag=true;  printf("Cleaning mesh before simplification\n"); break;
 
-				default  :  printf("Unknown option '%s'\n", argv[i]);
+        default  :  printf("Unknown option '%s'\n", argv[i]);
           exit(0);
       }
       i++;
@@ -188,23 +176,24 @@ if(argc<4) Usage();
 
   printf("reducing it to %i\n",FinalSize);
 	
-	vcg::tri::UpdateBounding<MyMesh>::Box(mesh);
+  vcg::tri::UpdateBounding<MyMesh>::Box(mesh);
   
-	// decimator initialization
-  vcg::LocalOptimization<MyMesh> DeciSession(mesh);
+  // decimator initialization
+  vcg::LocalOptimization<MyMesh> DeciSession(mesh,&qparams);
 	
-	int t1=clock();		
-	DeciSession.Init<MyTriEdgeCollapse >();
-  int t2=clock();	
-  printf("Initial Heap Size %i\n",DeciSession.h.size());
+  int t1=clock();
+  DeciSession.Init<MyTriEdgeCollapse>();
+  int t2=clock();
+  printf("Initial Heap Size %i\n",int(DeciSession.h.size()));
 
-	DeciSession.SetTargetSimplices(FinalSize);
-	DeciSession.SetTimeBudget(0.5f);
-  if(TargetError< numeric_limits<float>::max() ) DeciSession.SetTargetMetric(TargetError);
+  DeciSession.SetTargetSimplices(FinalSize);
+  DeciSession.SetTimeBudget(0.5f);
+  if(TargetError< std::numeric_limits<float>::max() ) DeciSession.SetTargetMetric(TargetError);
 
   while(DeciSession.DoOptimization() && mesh.fn>FinalSize && DeciSession.currMetric < TargetError)
-    printf("Current Mesh size %7i heap sz %9i err %9g \r",mesh.fn,DeciSession.h.size(),DeciSession.currMetric);
-  int t3=clock();	
+    printf("Current Mesh size %7i heap sz %9i err %9g \r",mesh.fn, int(DeciSession.h.size()),DeciSession.currMetric);
+
+  int t3=clock();
   printf("mesh  %d %d Error %g \n",mesh.vn,mesh.fn,DeciSession.currMetric);
   printf("\nCompleted in (%i+%i) msec\n",t2-t1,t3-t2);
 	
