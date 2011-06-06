@@ -44,11 +44,10 @@ class Cache: public Provider<Token> {
   ///return true if the cache is waiting for priority to change
   bool isWaiting() { return input->check_queue.isWaiting(); }
 
-  ///empty the cache. Make sure no resource is locked before calling this.
+  ///empty the cache. Make sure no resource is locked before calling this. Require pause or stop before.
   void flush() {
     std::vector<Token *> tokens;
     {
-      QMutexLocker locker(&(this->heap_lock));
       for(int i = 0; i < this->heap.size(); i++) {
         Token *token = &(this->heap[i]);
         tokens.push_back(token);
@@ -63,7 +62,6 @@ class Cache: public Provider<Token> {
     assert(s_curr == 0);
 
     {
-      QMutexLocker locker(&(input->heap_lock));
       for(unsigned int i = 0; i < tokens.size(); i++) {
         input->heap.push(tokens[i]);
       }

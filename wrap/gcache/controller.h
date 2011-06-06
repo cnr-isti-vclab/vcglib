@@ -47,9 +47,7 @@ class Controller {
   ///WARNING: migh stall for the time needed to drop tokens from cache.
   //FUNCTOR has bool operator(Token *) and return true to remove
   template<class FUNCTOR> void removeTokens(FUNCTOR functor) {
-    stop();
-
-    std::vector<Token *> tmp;
+    stop(); //this might actually be unnecessary if you mark tokens to be removed
     for(quint32 i = 0; i < caches.size(); i++)
       caches[i]->flush(functor);
 
@@ -124,11 +122,15 @@ class Controller {
       caches[i]->heap_lock.unlock();
     paused = false;
   }
-  ///empty all caches
+  ///empty all caches AND REMOVES ALL TOKENS!
   void flush() {
+    pause();
     for(int i = (int)caches.size()-1; i >= 0; i--)
       caches[i]->flush();
+    provider.heap.clear();
+    resume();
   }
+
   bool isWaiting() {
     for(int i = (int)caches.size() -1; i >= 0; i--) {
       if(!caches[i]->input->check_queue.isWaiting()) return false;
