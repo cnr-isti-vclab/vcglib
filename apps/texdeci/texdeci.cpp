@@ -154,7 +154,7 @@ for(int i=0;i<meshNum;++i)
 {
  char buf[255];
  sprintf(buf,"out%i.ply",i);
- tri::io::ExporterPLY<MyMesh>::Save(meshVec[i],buf,false);
+ tri::io::ExporterPLY<MyMesh>::Save(meshVec[i],buf,tri::io::Mask::IOM_WEDGTEXCOORD,false);
 }
 
 //  TriEdgeCollapseQuadricParameter qparams;

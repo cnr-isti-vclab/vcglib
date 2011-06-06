@@ -1,7 +1,7 @@
 #DEFINES += VCG_USE_EIGEN
 TARGET = texdeci
 #LIBPATH +=
-DEPENDPATH += . 
+DEPENDPATH += . ../..
 INCLUDEPATH += . ../..
 CONFIG += console stl debug_and_release
 TEMPLATE = app
