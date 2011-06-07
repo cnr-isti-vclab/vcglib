@@ -443,7 +443,7 @@ class TriEdgeCollapseQuadricTex: public vcg::tri::TriEdgeCollapse< TriMeshType, 
       }
 
 
-      this->_priority = max(priority1, priority2)*(1 + (pp->ExtraTCoordWeight)*(QH::Vd(this->pos.V(0)).size()+QH::Vd(this->pos.V(1)).size() - 2));
+	  this->_priority = std::max(priority1, priority2)*(1 + (pp->ExtraTCoordWeight)*(QH::Vd(this->pos.V(0)).size()+QH::Vd(this->pos.V(1)).size() - 2));
 
       return this->_priority;
     }
