@@ -50,6 +50,7 @@ First Working Release (with this comment)
 
 #include <limits>
 #include <vector>
+#include <cstring>
  
 namespace vcg {
 
