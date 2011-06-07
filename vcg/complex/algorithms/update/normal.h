@@ -26,8 +26,9 @@
 
 #include <vcg/space/triangle3.h>
 #include <vcg/math/matrix33.h>
+#include <vcg/simplex/face/component.h>
+#include <vcg/complex/algorithms/update/normal.h>
 #include <vcg/complex/algorithms/update/flag.h>
-
 
 namespace vcg {
 namespace tri {
@@ -85,7 +86,7 @@ static void PerFace(ComputeMeshType &m)
 	if( !m.HasPerFaceNormal()) return;
 	FaceIterator f;
 	for(f=m.face.begin();f!=m.face.end();++f)
-		if( !(*f).IsD() )	face::ComputeNormal(*f);
+            if( !(*f).IsD() )	face::ComputeNormal(*f);
 }
 
 /// \brief Calculates the vertex normal. Exploiting or current face normals.
