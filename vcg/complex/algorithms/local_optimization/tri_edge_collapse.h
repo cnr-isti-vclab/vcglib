@@ -28,7 +28,7 @@
 #include<vcg/complex/algorithms/edge_collapse.h>
 #include<vcg/simplex/face/pos.h>
 #include<vcg/complex/algorithms/local_optimization.h>
-
+#include<vcg/complex/algorithms/update/topology.h>
 
 namespace vcg{
 namespace tri{
