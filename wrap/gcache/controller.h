@@ -47,13 +47,12 @@ class Controller {
   ///WARNING: migh stall for the time needed to drop tokens from cache.
   //FUNCTOR has bool operator(Token *) and return true to remove
   template<class FUNCTOR> void removeTokens(FUNCTOR functor) {
-    stop(); //this might actually be unnecessary if you mark tokens to be removed
-    for(quint32 i = 0; i < caches.size(); i++)
+    pause(); //this might actually be unnecessary if you mark tokens to be removed
+    for(int i = (int)caches.size()-1; i >= 0; i--)
       caches[i]->flush(functor);
-
     provider.flush(functor);
 
-    start();
+    resume();
   }
 
   ///if more tokens than m present in the provider, lowest priority ones will be removed
@@ -109,17 +108,25 @@ class Controller {
 
   void pause() {
     if(paused) return;
-    provider.heap_lock.lock();
+    provider.check_queue.lock();
+    for(unsigned int i = 0; i < caches.size()-1; i++)
+      caches[i]->check_queue.lock();
+/*    provider.heap_lock.lock();
     for(unsigned int i = 0; i < caches.size(); i++)
-      caches[i]->heap_lock.lock();
+      caches[i]->heap_lock.lock(); */
     paused = true;
   }
 
   void resume() {
     if(!paused) return;
-    provider.heap_lock.unlock();
+    provider.check_queue.unlock();
+    for(unsigned int i = 0; i < caches.size()-1; i++)
+      caches[i]->check_queue.unlock();
+
+
+/*    provider.heap_lock.unlock();
     for(unsigned int i = 0; i < caches.size(); i++)
-      caches[i]->heap_lock.unlock();
+      caches[i]->heap_lock.unlock(); */
     paused = false;
   }
   ///empty all caches AND REMOVES ALL TOKENS!

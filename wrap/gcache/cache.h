@@ -1,12 +1,14 @@
 #ifndef GCACHE_CACHE_H
 #define GCACHE_CACHE_H
 
+#include <iostream>
 #include <limits.h>
 #include <vector>
 
 #include <QThread>
 #include "provider.h"
 
+using namespace std;
 /* this cache system enforce the rule that the items in a cache are always in all the cache below */
 /* two mechanism to remove tokens from the cache:
       1) set token count to something low
@@ -79,7 +81,7 @@ class Cache: public Provider<Token> {
         if(functor(token)) { //drop it
           tokens.push_back(token);
           s_curr -= drop(token);
-          assert(!token->count >= Token::LOCKED);
+          assert(token->count < Token::LOCKED);
           if(final)
             token->count.testAndSetOrdered(Token::READY, Token::CACHE);
         } else

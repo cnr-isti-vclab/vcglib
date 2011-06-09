@@ -255,7 +255,7 @@ class PtrDHeap {
     heap.push_back(Item(t));
   }
   int size() { return heap.size(); }
-  void resize(int n) { assert(n < (int)heap.size()); return heap.resize(n, Item(NULL)); }
+  void resize(int n) { assert(n <= (int)heap.size()); return heap.resize(n, Item(NULL)); }
   void clear() { heap.clear(); }
   T &min() { Item &i = heap.min(); return *i.value; }
   T *popMin() { Item i = heap.popMin(); return i.value; }

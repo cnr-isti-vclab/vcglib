@@ -99,6 +99,12 @@ class QDoor {
     m.unlock();
     return w;
   }
+  void lock() { //prevend door opening and entering
+    m.lock();
+  }
+  void unlock() { //reverse effect of lock
+    m.unlock();
+  }
  private:
   QMutex m;
   QWaitCondition c;
