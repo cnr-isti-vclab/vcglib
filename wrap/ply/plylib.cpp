@@ -1041,8 +1041,12 @@ int PlyFile::OpenRead( const char * filename )
 		goto error;
 	}
   header.append(buf);
+#ifdef __MINGW32__
+  token = strtok(buf,SEP);
+#else
   char *tokenPtr;
   token = strtok_r(buf,SEP,&tokenPtr);
+#endif
 	if(token==0)
 	{
 		error = E_UNESPECTEDEOF;
@@ -1053,7 +1057,11 @@ int PlyFile::OpenRead( const char * filename )
 		error = E_NOFORMAT;
 		goto error;
 	}
+#ifdef __MINGW32__
+  token = strtok(0,SEP);
+#else
   token = strtok_r(0,SEP,&tokenPtr);
+#endif
 	if(token==0)
 	{
 		error = E_UNESPECTEDEOF;
@@ -1070,7 +1078,11 @@ int PlyFile::OpenRead( const char * filename )
 		error = E_NOFORMAT;
 		goto error;
 	}
+#ifdef __MINGW32__
+  token = strtok(0,SEP);
+#else
   token = strtok_r(0,SEP,&tokenPtr);
+#endif
 	if(token==0)
 	{
 		error = E_UNESPECTEDEOF;
@@ -1089,7 +1101,11 @@ int PlyFile::OpenRead( const char * filename )
 		}
     header.append(buf);
 
+#ifdef __MINGW32__
+    token = strtok(buf,SEP);
+#else
     token = strtok_r(buf,SEP,&tokenPtr);
+#endif
 		if(token==0)
 		{
 			error = E_UNESPECTEDEOF;
@@ -1113,14 +1129,22 @@ int PlyFile::OpenRead( const char * filename )
 		else if( !strcmp(token,ELEMENT) )
 		{
 				// Lettura nome elemento
+#ifdef __MINGW32__
+      char * name = strtok(0,SEP);
+#else
       char * name = strtok_r(0,SEP,&tokenPtr);
+#endif
 			if(name==0)
 			{
 				error = E_SYNTAX;
 				goto error;
 			}
 				// Lettura numero di elementi
+#ifdef __MINGW32__
+      token = strtok(0,SEP);
+#else
       token = strtok_r(0,SEP,&tokenPtr);
+#endif
 			if(name==0)
 			{
 				error = E_SYNTAX;
@@ -1139,7 +1163,11 @@ int PlyFile::OpenRead( const char * filename )
 				error = E_PROPOUTOFELEMENT;
 				goto error;
 			}
+#ifdef __MINGW32__
+      token = strtok(0,SEP);
+#else
       token = strtok_r(0,SEP,&tokenPtr);
+#endif
 			if(token==0)
 			{
 				error = E_SYNTAX;
@@ -1147,7 +1175,11 @@ int PlyFile::OpenRead( const char * filename )
 			}
 			if( !strcmp(token,LIST) )
 			{
+#ifdef __MINGW32__
+        token = strtok(0,SEP);
+#else
         token = strtok_r(0,SEP,&tokenPtr);
+#endif
 				if(token==0)
 				{
 					error = E_SYNTAX;
@@ -1159,7 +1191,11 @@ int PlyFile::OpenRead( const char * filename )
 					error = E_BADTYPENAME;
 					goto error;
 				}
+#ifdef __MINGW32__
+        token = strtok(0,SEP);
+#else
         token = strtok_r(0,SEP,&tokenPtr);
+#endif
 				if(token==0)
 				{
 					error = E_SYNTAX;
@@ -1171,7 +1207,11 @@ int PlyFile::OpenRead( const char * filename )
 					error = E_BADTYPENAME;
 					goto error;
 				}
+#ifdef __MINGW32__
+        token = strtok(0,SEP);
+#else
         token = strtok_r(0,SEP,&tokenPtr);
+#endif
 				if(token==0)
 				{
 					error = E_SYNTAX;
@@ -1188,7 +1228,11 @@ int PlyFile::OpenRead( const char * filename )
 					error = E_BADTYPENAME;
 					goto error;
 				}
+#ifdef __MINGW32__
+        token = strtok(0,SEP);
+#else
         token = strtok_r(0,SEP,&tokenPtr);
+#endif
 				if(token==0)
 				{
 					error = E_SYNTAX;
