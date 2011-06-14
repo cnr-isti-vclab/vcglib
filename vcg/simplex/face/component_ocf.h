@@ -437,6 +437,10 @@ public:
 	typename T::FacePointer        &FFp2( const int j )       { return FFp((j+2)%3);}
 	typename T::FacePointer  const  FFp1( const int j ) const { return FFp((j+1)%3);}
 	typename T::FacePointer  const  FFp2( const int j ) const { return FFp((j+2)%3);}
+	
+	typename T::FacePointer   &		Neigh( const int j )		{ return FFp(j);}
+	typename T::FacePointer  const  cNeigh( const int j ) const { return cFFp(j);}
+	unsigned int SizeNeigh(){return 3;}
 
 	template <class LeftF>
 	void ImportData(const LeftF & leftF){

@@ -20,80 +20,7 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
 
-$Log: not supported by cvs2svn $
-Revision 1.21  2008/02/04 21:26:45  ganovelli
-added ImportData which imports all local attributes into vertexplus and faceplus.
-A local attribute is everything (N(), C(), Q()....) except pointers to other simplices
-(i.e. FFAdj, VFAdj, VertexRef) which are set to NULL.
-Added some function for const attributes
-
-Revision 1.20  2008/01/28 08:42:51  cignoni
-added assert when writing on empty data members
-
-Revision 1.19  2008/01/19 17:49:05  ganovelli
-missing const  cVF added
-
-Revision 1.18  2007/11/20 09:43:53  ganovelli
-added missing include to color4
-
-Revision 1.17  2007/05/04 16:16:04  ganovelli
-added include to texcoor2
-
-Revision 1.16  2007/03/12 15:42:11  tarini
-Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
-
-Revision 1.15  2007/03/12 15:37:19  tarini
-Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
-
-Revision 1.14  2007/02/27 09:32:00  cignoni
-Added constructor to the VFadj component to comply to the allocator needs
-
-Revision 1.13  2007/02/12 19:01:23  ganovelli
-added Name(std:vector<std::string>& n) that fills n with the names of the attribute of the face type
-
-Revision 1.12  2007/01/11 10:22:39  cignoni
-Added intialization of vertexRef to 0.
-
-Revision 1.11  2006/12/06 00:08:57  cignoni
-Added FFp1 and FFp2 shortcuts
-
-Revision 1.10  2006/12/04 11:00:02  ganovelli
-Cambiate Has*Opt in Has*Occ e aggiunti typedef per la compilazione di Occ
-
-Revision 1.9  2006/11/28 22:34:28  cignoni
-Added default constructor with null initialization to adjacency members.
-AddFaces and AddVertices NEED to know if the topology is correctly computed to update it.
-
-Revision 1.8  2006/10/07 09:59:42  cignoni
-Added missing const to EmptyFF
-
-Revision 1.7  2006/01/09 13:58:55  cignoni
-Added Initialization of Color in Vertex and Face Components
-
-Revision 1.6  2005/11/22 15:49:39  cignoni
-removed two spurious computenormal
-
-Revision 1.5  2005/11/21 21:44:47  cignoni
-Moved ComputeNormal and ComputeNormalizedNormal out of the face class (no more a member function!)
-
-Revision 1.4  2005/11/18 15:44:49  cignoni
-Access to constant normal changed from by val to by reference
-
-Revision 1.3  2005/11/16 22:58:17  cignoni
-Added IncrementalMark and WedgeTexCoord
-Standardized name of flags. It is plural becouse each simplex has many flag.
-
-Revision 1.2  2005/11/12 18:43:14  cignoni
-added missing cFFi
-
-Revision 1.1  2005/10/14 15:07:58  cignoni
-First Really Working version
-
-
-****************************************************************************/
 #ifndef __VCG_FACE_PLUS_COMPONENT
 #define __VCG_FACE_PLUS_COMPONENT
 
@@ -642,6 +569,10 @@ public:
 	typename T::FacePointer        &FFp2( const int j )       { return FFp((j+2)%3);}
 	typename T::FacePointer  const  FFp1( const int j ) const { return FFp((j+1)%3);}
 	typename T::FacePointer  const  FFp2( const int j ) const { return FFp((j+2)%3);}
+
+	typename T::FacePointer   &		Neigh( const int j )   { return _ffp[j];}
+	typename T::FacePointer  const  cNeigh( const int j ) const { return _ffp[j];}
+	unsigned int SizeNeigh(){return 3;}
 
 	template <class RightF>
 	void ImportData(const RightF & rightF){T::ImportData(rightF);}

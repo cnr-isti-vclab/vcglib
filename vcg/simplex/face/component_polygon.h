@@ -183,6 +183,8 @@ public:
   char &FFi(const int j){static char z=0;  assert(0); return z;};
   const char &cVFi(const int j){static char z=0; return z;};
   const char &cFFi(const int j) const {static char z=0; return z;};
+  unsigned int SizeNeigh(){assert(0); return 0;}
+
 	template <class LeftF>
 	void ImportData(const LeftF & leftF){ T::ImportData(leftF);}
 	void Alloc(const int & ns){T::Alloc(ns);}
@@ -221,6 +223,8 @@ public:
 		T::Alloc(ns);
 													
 	}
+	unsigned int SizeNeigh(){ return this->VN();}
+
 	inline void Dealloc() {	if(_vfpP!=NULL){
 														delete [] _vfpP; _vfpP = NULL;
 														delete [] _vfiP; _vfiP = NULL;
