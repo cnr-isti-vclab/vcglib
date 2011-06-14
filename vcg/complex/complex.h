@@ -191,6 +191,8 @@ class TriMesh
 		typedef typename TriMesh::HEdgeContainer				HEdgeContainer;
 		typedef typename TriMesh::ConstHEdgeIterator		ConstHEdgeIterator;
 
+		typedef vcg::PointerToAttribute PointerToAttribute;
+
 	typedef TriMesh<Container0, Container1,Container2,Container3> MeshType;
 
 	typedef Box3<ScalarType> BoxType;
@@ -222,18 +224,6 @@ class TriMesh
 
 	int attrn;	// total numer of attribute created
 
-	class PointerToAttribute{
-	public:
-		SimpleTempDataBase * _handle;		// pointer to the SimpleTempData that stores the attribute
-		std::string _name;					// name of the attribute
-		int _sizeof;						// size of the attribute type (used only with VMI loading)
-		int _padding;						// padding 	(used only with VMI loading)
-
-		int n_attr;							// unique ID of the attribute
-		void Resize(const int & sz){((SimpleTempDataBase *)_handle)->Resize(sz);}
-		void Reorder(std::vector<size_t> & newVertIndex){((SimpleTempDataBase *)_handle)->Reorder(newVertIndex);}
-                bool operator<(const  PointerToAttribute    b) const {	return(_name.empty()&&b._name.empty())?(_handle < b._handle):( _name < b._name);}
-	};
 	
 	std::set< PointerToAttribute > vert_attr;
  	std::set< PointerToAttribute > edge_attr;

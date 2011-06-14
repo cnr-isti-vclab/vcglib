@@ -302,7 +302,7 @@ static void Mesh(MeshLeft& ml, MeshRight& mr, const bool selected = false){
 		// of the right mesh will be uninitialized
 
 		unsigned int id_r;
-		typename std::set< typename MeshRight::PointerToAttribute >::iterator al,ar;
+		typename std::set< PointerToAttribute  >::iterator al, ar;
 
 		// per vertex attributes
 		for(al = ml.vert_attr.begin(); al != ml.vert_attr.end(); ++al)
