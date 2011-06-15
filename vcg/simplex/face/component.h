@@ -570,10 +570,6 @@ public:
 	typename T::FacePointer  const  FFp1( const int j ) const { return FFp((j+1)%3);}
 	typename T::FacePointer  const  FFp2( const int j ) const { return FFp((j+2)%3);}
 
-	typename T::FacePointer   &		Neigh( const int j )   { return _ffp[j];}
-	typename T::FacePointer  const  cNeigh( const int j ) const { return _ffp[j];}
-	unsigned int SizeNeigh(){return 3;}
-
 	template <class RightF>
 	void ImportData(const RightF & rightF){T::ImportData(rightF);}
 	inline void Alloc(const int & ns){T::Alloc(ns);}
