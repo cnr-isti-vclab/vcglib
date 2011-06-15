@@ -511,6 +511,7 @@ void Shot<S, RotationType>::ApplySimilarity(const Matrix44<S> & M)
   Extrinsics.rot.ElementAt(3,0) = 0;
   Extrinsics.rot.ElementAt(3,1) = 0;
   Extrinsics.rot.ElementAt(3,2) = 0;
+  Extrinsics.rot.ElementAt(3,3) = 1;
 }
 
 /// Given a similarity transformation such that p' = s R p + T modifies the reference frame accordingly.
@@ -547,6 +548,8 @@ void Shot<S, RotationType>::ApplySimilarity(const Similarity<S> & Sm)
   Extrinsics.rot.ElementAt(3,0) = 0;
   Extrinsics.rot.ElementAt(3,1) = 0;
   Extrinsics.rot.ElementAt(3,2) = 0;
+  Extrinsics.rot.ElementAt(3,3) = 1;
+
 }
 
 
