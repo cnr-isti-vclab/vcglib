@@ -500,7 +500,7 @@ public:
 		return *this;
 	}
 
-	void show(FILE * fp)
+  void show(FILE * /*fp*/)
 	{
 		for(int i=0;i<3;++i)
 		    printf("| %g \t%g \t%g |\n",a[3*i+0],a[3*i+1],a[3*i+2]);

@@ -1083,14 +1083,13 @@ static bool checkPoissonDisk(MetroMesh & vmesh, SampleSHT & sht, const Point3<Sc
 {
 	// get the samples closest to the given one
 	std::vector<VertexType*> closests;
-
-	typedef VertTmark<MetroMesh> MarkerVert;
-    static MarkerVert mv;
+  typedef VertTmark<MetroMesh> MarkerVert;
+  static MarkerVert mv;
 
 	Box3f bb(p-Point3f(radius,radius,radius),p+Point3f(radius,radius,radius));
 	int nsamples = GridGetInBox(sht, mv, bb, closests);
 
-	ScalarType r2 = radius*radius;
+  ScalarType r2 = radius*radius;
 	for(int i=0; i<closests.size(); ++i)
 		if(SquaredDistance(p,closests[i]->cP()) < r2)
 			return false;
@@ -1108,7 +1107,9 @@ struct PoissonDiskParam
 		invertQuality = false;
     preGenFlag = false;
     preGenMesh = NULL;
+    geodesicDistanceFlag = false;
   }
+  bool geodesicDistanceFlag;
 	bool adaptiveRadiusFlag;
 	float radiusVariance;
 	bool invertQuality;
@@ -1207,6 +1208,7 @@ int removedCnt=0;
         qDebug("Removed %i samples in %i",removedCnt,tt.restart());
 #endif
       }
+    vertex::ApproximateGeodesicDistanceFunctor<VertexType> GDF;
     while(!montecarloSHT.AllocatedCells.empty())
     {
         removedCnt=0;
@@ -1217,7 +1219,8 @@ int removedCnt=0;
             ps.AddVert(*sp);
             ScalarType sampleRadius = diskRadius;
             if(pp.adaptiveRadiusFlag)  sampleRadius = sp->Q();
-            removedCnt += montecarloSHT.RemoveInSphere(sp->cP(),sampleRadius);
+            if(pp.geodesicDistanceFlag) removedCnt += montecarloSHT.RemoveInSphereNormal(sp->cP(),sp->cN(),GDF,sampleRadius);
+                            else        removedCnt += montecarloSHT.RemoveInSphere(sp->cP(),sampleRadius);
         }
 
 #ifdef QT_VERSION

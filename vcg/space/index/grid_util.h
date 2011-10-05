@@ -192,10 +192,10 @@ public:
 	 * @param b is the cell in <ScalarType> coordinates
 	 * @return ib is the correspondent box in integer coordinates
 	 */
-	void BoxToIBox( const Box3x & b, Box3i & ib ) const
+  inline void BoxToIBox( const Box3x & b, Box3i & ib ) const
 	{
-		PToIP(b.min, ib.min);
-		PToIP(b.max, ib.max);
+    PToIP(b.min, ib.min);
+    PToIP(b.max, ib.max);
 		//assert(ib.max[0]>=0 && ib.max[1]>=0 && ib.max[2]>=0);	
 	}
 

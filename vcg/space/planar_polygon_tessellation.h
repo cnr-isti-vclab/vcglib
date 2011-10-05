@@ -80,7 +80,6 @@ namespace vcg {
 		orient = (orient>0)? 1.0:-1.0;
 
 		int cur = 0;
-		int n_faces = 0;
 		while(output.size()<3*(points2.size()-2)){
 			v1 =  next[cur];
 			v2 =  next[v1];

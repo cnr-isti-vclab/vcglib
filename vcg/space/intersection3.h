@@ -612,48 +612,6 @@ bool IntersectionPlaneBox(const vcg::Plane3<ScalarType> &pl,
 	return true;
 }
 
-///if exists return the center and ardius of circle
-///that is the intersectionk between the sphere and 
-//the plane
-template <class ScalarType>
-bool IntersectionPlaneSphere(const Plane3<ScalarType> &pl,
-							   const Sphere3<ScalarType> &sphere,
-							   Point3<ScalarType> &center,
-							   ScalarType &radius)
-{
-	/* ///set the origin on the center of the sphere
-	vcg::Plane3<ScalarType> pl1;
-	vcg::Point3<ScalarType> p_plane=pl.Direction()*pl.Offset();
-	vcg::Point3<ScalarType> p_plane=p_plane-sphere.Center();
-
-	///set again the plane
-	pl1.Set(p_plane,pl.Direction());
-
-	///test d must be positive
-	d=pl1.Offset();
-	vcg::Point3<ScalarType> n=pl1.Direction();
-	///invert d if is <0
-	if (d<0)
-	{
-		n=-n;
-		d=-d;
-	}
-	///no intersection occour
-	if (d>r)
-		return false;
-	else
-	{
-		///calculate center and translate in back
-		center=n*d;
-		center+=sphere.Center();
-		radius=math::Sqrt((r*r)-(d*d));
-	}
-	 */
-	 assert(0);
-	 return true;
-}
-
-
 template<class ScalarType>
 bool IntersectionTriangleBox(const vcg::Box3<ScalarType>   &bbox,
 							   const vcg::Point3<ScalarType> &p0,

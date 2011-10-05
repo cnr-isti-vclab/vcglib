@@ -1053,7 +1053,7 @@ static void FaceNormalAngleThreshold(MeshType &m,
 // Nota che dovrebbe essere sempre un vettore che giace nel piano del triangolo e perpendicolare al lato opposto al vertice p.
 // Ottimizzato con Maple e poi pesantemente a mano.
 
-CoordType TriAreaGradient(CoordType &p,CoordType &p0,CoordType &p1)
+static CoordType TriAreaGradient(CoordType &p,CoordType &p0,CoordType &p1)
 {
 	CoordType dd = p1-p0;
 	CoordType d0 = p-p0;
@@ -1074,7 +1074,7 @@ CoordType TriAreaGradient(CoordType &p,CoordType &p0,CoordType &p1)
 }
 
 template <class ScalarType>
-CoordType CrossProdGradient(CoordType &p, CoordType &p0, CoordType &p1, CoordType &m)
+static CoordType CrossProdGradient(CoordType &p, CoordType &p0, CoordType &p1, CoordType &m)
 {
 	CoordType grad;
 	CoordType p00=p0-p;
@@ -1097,7 +1097,7 @@ A(...) (2-2nm)   =
 2A  -  2 (p0-p)^(p1-p) * m
 */
 
-CoordType FaceErrorGrad(CoordType &p,CoordType &p0,CoordType &p1, CoordType &m)
+static CoordType FaceErrorGrad(CoordType &p,CoordType &p0,CoordType &p1, CoordType &m)
 {
 	return     TriAreaGradient(p,p0,p1) *2.0f
 		- CrossProdGradient(p,p0,p1,m) *2.0f ;
@@ -1107,7 +1107,7 @@ CoordType FaceErrorGrad(CoordType &p,CoordType &p0,CoordType &p1, CoordType &m)
 /***************************************************************************/
 
 
-void FitMesh(MeshType &m,
+static void FitMesh(MeshType &m,
 			 SimpleTempData<typename MeshType::VertContainer, PDVertInfo> &TDV,
 			 SimpleTempData<typename MeshType::FaceContainer, PDFaceInfo> &TDF,
 			 float lambda)

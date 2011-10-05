@@ -37,10 +37,10 @@
 #include <vcg/complex/algorithms/update/bounding.h>
 #include "vcg/complex/algorithms/update/curvature_fitting.h"
 
-#include <vcg/Eigen/Core>
-#include <vcg/Eigen/QR>
-#include <vcg/Eigen/LU>
-#include <vcg/Eigen/SVD>
+#include <eigenlib/Eigen/Core>
+#include <eigenlib/Eigen/QR>
+#include <eigenlib/Eigen/LU>
+#include <eigenlib/Eigen/SVD>
 
 #include <algorithm>
 

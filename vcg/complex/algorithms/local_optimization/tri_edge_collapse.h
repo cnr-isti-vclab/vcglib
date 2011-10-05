@@ -193,7 +193,7 @@ public:
 
   ModifierType IsOfType(){ return TriEdgeCollapseOp;}
 
-  inline bool IsFeasible(const BaseParameterClass *){
+  inline bool IsFeasible(BaseParameterClass *){
     return EdgeCollapser<TriMeshType,VertexPair>::LinkConditions(pos);
 	}
 

@@ -46,7 +46,7 @@ template <class UserTypes>
 
 	template < class LeftV>
 	void ImportData(const LeftV  & /* left */ ) { }
-	static void Name(std::vector<std::string> & name){}
+  static void Name(std::vector<std::string> & /*name*/){}
 
 };
 

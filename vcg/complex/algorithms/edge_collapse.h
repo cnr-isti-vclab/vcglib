@@ -34,8 +34,8 @@ namespace tri{
 template < class VERTEX_TYPE>
 class BasicVertexPair {
 public:
-  inline BasicVertexPair() {};
-  inline BasicVertexPair( VERTEX_TYPE * v0, VERTEX_TYPE * v1){V(0) = v0; V(1) = v1; };
+  inline BasicVertexPair() {}
+  inline BasicVertexPair( VERTEX_TYPE * v0, VERTEX_TYPE * v1){V(0) = v0; V(1) = v1; }
   void Sort() {if(V(0)<V(0)) std::swap(V(0),V(0)); }
   VERTEX_TYPE *&V(int i) { return v[i]; }
   VERTEX_TYPE *cV(int i) const { return v[i]; }

@@ -119,8 +119,8 @@ class LocalModification
         typedef typename MeshType::ScalarType ScalarType;
 
 
-	inline LocalModification(){};
-	virtual ~LocalModification(){};
+  inline LocalModification(){}
+  virtual ~LocalModification(){}
   
 	/// return the type of operation
 	virtual ModifierType IsOfType() = 0 ;
@@ -129,7 +129,7 @@ class LocalModification
   virtual bool IsUpToDate() const = 0 ;
 
 	/// return true if no constraint disallow this operation to be performed (ex: change of topology in edge collapses)
-  virtual bool IsFeasible(const BaseParameterClass *pp) = 0;
+  virtual bool IsFeasible(BaseParameterClass *pp) = 0;
 
 	/// Compute the priority to be used in the heap
   virtual ScalarType ComputePriority(BaseParameterClass *pp)=0;
@@ -148,7 +148,7 @@ class LocalModification
     /// so it is should be reasonably larger than the minimum expected size to avoid too frequent clear heap
     /// For example for symmetric edge collapse a 5 is a good guess. 
     /// while for non symmetric edge collapse a larger number like 9 is a better choice
-  static float HeapSimplexRatio(BaseParameterClass *) {return 6.0f;} ;
+  static float HeapSimplexRatio(BaseParameterClass *) {return 6.0f;}
 
   virtual const char *Info(MeshType &) {return 0;}
 	/// Update the heap as a consequence of this operation
@@ -198,7 +198,7 @@ public:
 		nTargetVertices;
 
 	float	timeBudget;
-	int		start;
+  clock_t	start;
 	ScalarType currMetric;
 	ScalarType targetMetric;
   BaseParameterClass *pp;
@@ -375,7 +375,14 @@ void ClearHeap()
 		if ( IsTerminationFlag(LOnVertices)  &&  ( m.VertexNumber() <= nTargetVertices)) return true;
 		if ( IsTerminationFlag(LOnOps)		   && (nPerfmormedOps	== nTargetOps)) return true;
 		if ( IsTerminationFlag(LOMetric)		 &&  ( currMetric		> targetMetric)) return true;
-		if ( IsTerminationFlag(LOTime)			 &&	( (clock()-start)/(float)CLOCKS_PER_SEC > timeBudget)) return true;
+    if ( IsTerminationFlag(LOTime) )
+    {
+      clock_t cur = clock();
+      if(cur<start) // overflow of tick counter;
+        return true; // panic
+      else
+       if ( (cur - start)/(double)CLOCKS_PER_SEC > timeBudget) return true;
+    }
 		return false;
 	}
 

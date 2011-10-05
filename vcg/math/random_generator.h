@@ -62,6 +62,7 @@ public:
 
 	/// Generates a random number in the (0,1) real interval.
 	virtual double generate01open()=0;
+  virtual double generateRange(double minV, double maxV) { return minV+(maxV-minV)*generate01(); }
 };
 
 /**

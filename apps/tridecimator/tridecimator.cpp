@@ -92,9 +92,9 @@ void Usage()
            "   release date: "__DATE__"\n"
            "---------------------------------\n\n"
 		  "TriDecimator 1.0 \n"__DATE__"\n"
-			"Copyright 2003-2006 Visual Computing Lab I.S.T.I. C.N.R.\n"
+      "Copyright 2003-2012 Visual Computing Lab I.S.T.I. C.N.R.\n"
       "\nUsage:  "\
-      "tridecimator file1 file2 face_num [opt]\n"\
+      "tridecimator fileIn fileOut face_num [opt]\n"\
       "Where opt can be:\n"\
       "     -e# QuadricError threshold  (range [0,inf) default inf)\n"
 			"     -b# Boundary Weight (default .5)\n"

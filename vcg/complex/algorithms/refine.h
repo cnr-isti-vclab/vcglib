@@ -32,6 +32,7 @@
 #include <vcg/space/texcoord2.h>
 #include <vcg/space/color4.h>
 #include <vcg/simplex/face/pos.h>
+#include <vcg/simplex/face/topology.h>
 #include<vcg/complex/allocate.h>
 #include<vcg/complex/algorithms/update/topology.h>
 #include<wrap/callback.h>

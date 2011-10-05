@@ -16,8 +16,6 @@ using namespace std;
 int main(int , char **)
 {
 
-	vcg::tri::Allocator<CMesh>::NameTypeScope bounds;
-	vcg::tri::Allocator<CMesh>::AddNameTypeBound<float>(bounds,"myfloat");
 
 
 	CMesh cm;

@@ -153,7 +153,7 @@ static void VertexBorderFlag( UpdateMeshType &m, Color4b BorderColor=Color4b::Bl
 static void FaceRandomConnectedComponent( UpdateMeshType &m)
 {
   std::vector< std::pair<int, typename UpdateMeshType::FacePointer> > CCV;
-  int ScatterSize= min (100,tri::Clean<UpdateMeshType>::ConnectedComponents(m, CCV)); // number of random color to be used. Never use too many.
+  int ScatterSize= std::min (100,tri::Clean<UpdateMeshType>::ConnectedComponents(m, CCV)); // number of random color to be used. Never use too many.
 
   ConnectedIterator<MeshType> ci;
   for(unsigned int i=0;i<CCV.size();++i)
@@ -229,28 +229,6 @@ static int FaceSelected(UpdateMeshType &m, Color4b vs=Color4b::LightBlue)
 			else (*fi).C() = Color4b::White;
                     }
 	return cnt;
-}
-
-static void FaceColorStrip(UpdateMeshType &m, std::vector<FacePointer> &TStripF)
-{
-	 vcg::Color4b cc[7]={
-								  vcg::Color4b::White ,
-									vcg::Color4b::Red    ,
-									vcg::Color4b::Green  ,
-									vcg::Color4b::Blue   ,
-									vcg::Color4b::Cyan   ,
-									vcg::Color4b::Yellow ,
-									vcg::Color4b::Magenta
-	};
-	int cnt=0;
-
-	typename std::vector<FacePointer>::iterator fi;
-	for(fi=TStripF.begin();fi!=TStripF.end();++fi)
-		if(*fi) (**fi).C().ColorRamp(0,16,cnt);
-		else cnt=(cnt+1)%16;
-	//	if(*fi) (**fi).C()=cc[cnt];
-  //			else cnt=(cnt+1)%7;
-
 }
 
 

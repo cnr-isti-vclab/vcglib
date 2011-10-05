@@ -35,6 +35,18 @@ namespace tri
 /** \addtogroup trimesh */
 /* @{ */
 
+class PlanarEdgeFlipParameter : public BaseParameterClass
+{
+public:
+  PlanarEdgeFlipParameter() {SetDefaultParams();}
+  void SetDefaultParams()
+  {
+    CoplanarAngleThresholdDeg=0.1f;
+  }
+
+  float CoplanarAngleThresholdDeg;
+};
+
 /*!
  *	This Class is specialization of LocalModification for the edge flip
  *	It wraps the atomic operation EdgeFlip to be used in a optimization routine.
@@ -88,10 +100,10 @@ protected:
 		return im;
 	}
 	
-	static void Insert(HeapType& heap, PosType& p, int mark)
+  static void Insert(HeapType& heap, PosType& p, int mark, BaseParameterClass *pp)
 	{
 		if(!p.IsBorder() && p.F()->IsW() && p.FFlip()->IsW()) {
-			MYTYPE* newflip = new MYTYPE(p, mark);
+      MYTYPE* newflip = new MYTYPE(p, mark,pp);
 			heap.push_back(HeapElem(newflip));
 			std::push_heap(heap.begin(), heap.end());
 		}
@@ -109,11 +121,11 @@ public:
 	/*!
 	 *	Constructor with <I>pos</I> type
 	 */
-	inline PlanarEdgeFlip(PosType pos, int mark)
+  inline PlanarEdgeFlip(PosType pos, int mark,BaseParameterClass *pp)
 	{
 		_pos = pos;
 		_localMark = mark;
-		_priority = this->ComputePriority();
+    _priority = this->ComputePriority(pp);
 	}
 	
 	
@@ -138,12 +150,7 @@ public:
 	/*!
 	 * Parameter 
 	 */
-	static ScalarType &CoplanarAngleThresholdDeg()
-	{
-		static ScalarType _CoplanarAngleThresholdDeg = 0.01f;
-		return _CoplanarAngleThresholdDeg;
-	}
-	
+
 	inline PosType GetPos() const
 	{
 		return _pos;
@@ -167,9 +174,9 @@ public:
 	/*!
 	 * Check if the pos is updated
 	 */
-	bool IsUpToDate()
+  bool IsUpToDate() const
 	{
-		int lastMark = _pos.F()->V(0)->IMark();
+    int lastMark = _pos.F()->cV(0)->IMark();
     lastMark = std::max<int>(lastMark, _pos.F()->V(1)->IMark());
     lastMark = std::max<int>(lastMark, _pos.F()->V(2)->IMark());
 
@@ -181,12 +188,13 @@ public:
 	 Check if this flipping operation can be performed.
 	 It is a topological and geometrical check. 
 	 */
-	virtual bool IsFeasible()
+  virtual bool IsFeasible(BaseParameterClass *_pp)
 	{
+    PlanarEdgeFlipParameter *pp=(PlanarEdgeFlipParameter *)_pp;
 		if(!vcg::face::CheckFlipEdge(*this->_pos.F(), this->_pos.E()))
 			return false;
 		
-		if( math::ToDeg( Angle(_pos.FFlip()->cN(), _pos.F()->cN()) ) > CoplanarAngleThresholdDeg() )
+    if( math::ToDeg( Angle(_pos.FFlip()->cN(), _pos.F()->cN()) ) > pp->CoplanarAngleThresholdDeg )
 			return false;
 
 		CoordType v0, v1, v2, v3;
@@ -223,7 +231,7 @@ public:
 	    \|/
 	     0
 	 */
-	ScalarType ComputePriority()
+  ScalarType ComputePriority(BaseParameterClass *)
 	{
 		CoordType v0, v1, v2, v3;
 		int i = _pos.E();
@@ -255,7 +263,7 @@ public:
 	/*!
 	 * Execute the flipping of the edge
 	 */
-	void Execute(TRIMESH_TYPE &m)
+  void Execute(TRIMESH_TYPE &m, BaseParameterClass *)
 	{
 		int i = _pos.E();
 		int j = _pos.F()->FFi(i);
@@ -282,7 +290,7 @@ public:
 
 	/*!
 	 */
-	static void Init(TRIMESH_TYPE &mesh, HeapType &heap)
+  static void Init(TRIMESH_TYPE &mesh, HeapType &heap, BaseParameterClass *pp)
 	{
 		heap.clear();
 		FaceIterator fi;
@@ -292,7 +300,7 @@ public:
 					if( !(*fi).IsB(i) && !((*fi).FFp(i)->IsD()) && (*fi).FFp(i)->IsW() ) {
 						if((*fi).V1(i) - (*fi).V0(i) > 0) {
 							PosType p(&*fi, i);
-							Insert(heap, p,  IMark(mesh));
+              Insert(heap, p,  IMark(mesh),pp);
 						}
 							//heap.push_back( HeapElem( new MYTYPE(PosType(&*fi, i), mesh.IMark() )) );
 					} //endif
@@ -303,7 +311,7 @@ public:
 
 	/*!
 	 */
-	virtual void UpdateHeap(HeapType &heap)
+  virtual void UpdateHeap(HeapType &heap, BaseParameterClass *pp)
 	{
 		GlobalMark()++;
 		
@@ -318,17 +326,17 @@ public:
 		pos.F()->FFp(flipped)->V2(pos.F()->FFi(flipped))->IMark() = GlobalMark();
 
 		pos.FlipF(); pos.FlipE();
-		Insert(heap, pos, GlobalMark());
+    Insert(heap, pos, GlobalMark(),pp);
 
 		pos.FlipV(); pos.FlipE();
-		Insert(heap, pos, GlobalMark());
+    Insert(heap, pos, GlobalMark(),pp);
 
 		pos.FlipV(); pos.FlipE();
 		pos.FlipF(); pos.FlipE();
-		Insert(heap, pos, GlobalMark());
+    Insert(heap, pos, GlobalMark(),pp);
 
 		pos.FlipV(); pos.FlipE();
-		Insert(heap, pos, GlobalMark());
+    Insert(heap, pos, GlobalMark(),pp);
 	}
 }; // end of PlanarEdgeFlip class
 
@@ -351,11 +359,11 @@ public:
 	/*!
 	 *	Constructor with <I>pos</I> type
 	 */
-	inline TriEdgeFlip(const PosType pos, int mark)
+  inline TriEdgeFlip(const PosType pos, int mark, BaseParameterClass *pp)
 	{
 		this->_pos = pos;
 		this->_localMark = mark;
-		this->_priority = ComputePriority();
+    this->_priority = ComputePriority(pp);
 	}
 
 	/*!
@@ -369,7 +377,7 @@ public:
 	}
 	
 
-	ScalarType ComputePriority()
+  ScalarType ComputePriority(BaseParameterClass *)
 	{
 		/*
 		     1  
@@ -426,11 +434,11 @@ public:
 	/*!
 	 *	Constructor with <I>pos</I> type
 	 */
-	inline TopoEdgeFlip(const PosType pos, int mark)
+  inline TopoEdgeFlip(const PosType pos, int mark, BaseParameterClass *pp)
 	{
 		this->_pos = pos;
 		this->_localMark = mark;
-		this->_priority = ComputePriority();
+    this->_priority = ComputePriority(pp);
 	}
 
 	/*!
@@ -444,7 +452,7 @@ public:
 	}
 	
 
-	ScalarType ComputePriority()
+  ScalarType ComputePriority(BaseParameterClass *)
 	{
 		/*
 		     1  
@@ -509,7 +517,7 @@ public:
 	}
 	
 	
-	static void Init(TRIMESH_TYPE &m, HeapType &heap)
+  static void Init(TRIMESH_TYPE &m, HeapType &heap,BaseParameterClass *pp)
 	{
 		// reset quality field for each vertex
 		VertexIterator vi;
@@ -524,7 +532,7 @@ public:
 				for(int i = 0; i < 3; i++)
 					(*fi).V(i)->Q()++;
 		
-		TriEdgeFlip<TRIMESH_TYPE, MYTYPE>::Init(m, heap);
+    TriEdgeFlip<TRIMESH_TYPE, MYTYPE>::Init(m, heap, pp);
 	}
 	
 	

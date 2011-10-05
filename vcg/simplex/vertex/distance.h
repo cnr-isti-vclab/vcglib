@@ -105,6 +105,28 @@ class PointNormalDistanceFunctor {
 		}
 	};
 
+template <class VertexType>
+class ApproximateGeodesicDistanceFunctor {
+  public:
+    typedef typename VertexType::ScalarType ScalarType;
+    static inline const Point3<ScalarType> &  Pos(const VertexType & qt)  {return qt.P();}
+
+    inline bool operator () (const VertexType & v, const VertexType & vp, ScalarType & minDist, Point3<ScalarType> & q) {
+      ScalarType gd = ApproximateGeodesicDistance(v.cP(),v.cN(),vp.cP(),vp.cN());
+      if (gd <= minDist)
+      {
+        minDist =gd;		// minDist is updated to the closest distance
+        q = v.P();						// q is the current closest point
+        return true;
+      }
+      return false;
+    }
+    inline ScalarType operator () (const Point3<ScalarType>& p0, const Point3<ScalarType>& n0,
+                                   const Point3<ScalarType>& p1, const Point3<ScalarType>& n1) {
+      return  ApproximateGeodesicDistance(p0,n0,p1,n1);
+    }
+  };
+
 }	 // end namespace vertex
 	
 }	 // end namespace vcg

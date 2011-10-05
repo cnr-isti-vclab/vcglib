@@ -108,7 +108,6 @@ namespace vcg {
 			if(_maxDist> ScalarType(fabs(_minDist)))
 			{
 				// f=bestf;
-				typename MESH::ScalarType alfa, beta, gamma;
 				//calcolo normale con interpolazione trilineare
         InterpolationParameters<typename MESH::FaceType,typename MESH::ScalarType>(*bestf,bestf->N(),_closestPt, _ip);
         _normf =  (bestf->V(0)->cN())*_ip[0]+

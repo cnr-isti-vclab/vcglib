@@ -56,8 +56,8 @@ namespace vcg {
 
 class SimpleTempDataBase{
 public:
-	virtual ~SimpleTempDataBase() {};
-	SimpleTempDataBase() {};
+  virtual ~SimpleTempDataBase() {}
+  SimpleTempDataBase() {}
 	virtual void Resize(const int & sz) = 0;
 	virtual void Reorder(std::vector<size_t> & newVertIndex)=0;
 	virtual int SizeOf() const  = 0;
@@ -66,7 +66,7 @@ public:
 };
 
 template <class TYPE>
-struct VectorNBW: public std::vector<TYPE> {};
+class VectorNBW: public std::vector<TYPE> {};
 
 template <>
 class VectorNBW<bool>{
@@ -155,7 +155,7 @@ class SimpleTempData:public SimpleTempDataBase{
 
 	void Reorder(std::vector<size_t> & newVertIndex){
 		for(unsigned int i = 0 ; i < data.size(); ++i){
-			if( newVertIndex[i] != std::numeric_limits<size_t>::max())
+			if( newVertIndex[i] != (std::numeric_limits<size_t>::max)())
 				data[newVertIndex[i]] = data[i];
 		}
 	}
@@ -176,7 +176,7 @@ public:
 
 	void Resize(const int &  ) {assert(0);}
 	void Reorder(std::vector<size_t> &  ){assert(0);}
-	void * At(unsigned int i ) {assert(0);return (void*)0;}
+	void * At(unsigned int ) {assert(0);return (void*)0;}
 };
 
 } // end namespace vcg

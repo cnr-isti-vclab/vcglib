@@ -218,6 +218,13 @@ namespace vcg
 	};
 
 
+  template <typename TYPE>
+  inline static TYPE sqr(TYPE a)
+  {
+    TYPE sqr_arg = a;
+    return (sqr_arg == 0 ? 0 : sqr_arg*sqr_arg);
+  }
+
 	// Computes (a^2 + b^2)^(1/2) without destructive underflow or overflow.
 	template <typename TYPE>
 	inline static TYPE pythagora(TYPE a, TYPE b)
@@ -225,23 +232,16 @@ namespace vcg
 		TYPE abs_a = fabs(a);
 		TYPE abs_b = fabs(b);
 		if (abs_a > abs_b)
-			return abs_a*sqrt((TYPE)1.0+sqr(abs_b/abs_a));
+      return abs_a*sqrt((TYPE)1.0+sqr(abs_b/abs_a));
 		else
 			return (abs_b == (TYPE)0.0 ? (TYPE)0.0 : abs_b*sqrt((TYPE)1.0+sqr(abs_a/abs_b)));
-	};
+  }
 
 	template <typename TYPE>
 	inline static TYPE sign(TYPE a, TYPE b)
 	{
 		return (b >= 0.0 ? fabs(a) : -fabs(a));
-	};
-
-	template <typename TYPE>
-	inline static TYPE sqr(TYPE a)
-	{
-		TYPE sqr_arg = a;
-		return (sqr_arg == 0 ? 0 : sqr_arg*sqr_arg);
-	}
+  }
 
 	/*!
 	*

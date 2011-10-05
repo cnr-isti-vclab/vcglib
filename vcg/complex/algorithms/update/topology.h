@@ -300,7 +300,7 @@ static void FaceFaceFromTexCoord(MeshType &m)
 			}
 	
 	e.resize(p-e.begin());   // remove from the end of the edge vector the unitiailized ones
-	assert(p==e.end());
+	//assert(p==e.end()); // this formulation of the assert argument is not really correct, will crash on visual studio
 	sort(e.begin(), e.end());		
 
 	int ne = 0;											// number of real edges

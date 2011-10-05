@@ -193,21 +193,23 @@ public:
   /// look towards (dir+up)
   void LookTowards(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up);
 
-  /* Sometimes the focal is given in pixels. In this case, this function can be used to convert it in millimiters.
-   * NOTE: This method should be moved in vcg::Camera.
+	/* Sometimes the focal is given in pixels. In this case, this function can be used to convert it in millimiters
+	 * given the CCD width (in mm). This method should be moved in vcg::Camera().
+	 * Equivalent focal lenght is obtained by setting the ccd width to 35 mm.
    */
-  void ConvertFocalToMM();
+  void ConvertFocalToMM(S ccdwidth);
 
-  /* Sometimes the 3D World coordinates are known up to a scale factor. This method adjust the camera/shot parameters
-   * to account for the re-scaling of the World.
-   */
-  void RescalingWorld(S scalefactor);
+	/* Sometimes the 3D World coordinates are known up to a scale factor. This method adjust the camera/shot parameters
+	 * to account for the re-scaling of the World. If the intrisic parameters are just reasonable values 
+	 * the cameras need only a re-positioning.
+	 */
+  void RescalingWorld(S scalefactor, bool adjustIntrinsics);
 
   /// Given a pure roto-translation (4-by-4) modifies the reference frame accordingly.
   void ApplyRigidTransformation(const Matrix44<S> & M);
 
   /// Given a similarity transformation such that p' = s R p + T modifies the reference frame accordingly.
-  void ApplySimilarity(const Matrix44<S> & M);
+  void ApplySimilarity(  Matrix44<S>   M);
 
   /// Given a similarity transformation such that p' = s R p + T modifies the reference frame accordingly.
   void ApplySimilarity(const Similarity<S> & Sim);
@@ -434,13 +436,14 @@ S Shot<S,RotationType>::Depth(const vcg::Point3<S> & p)const
   return ConvertWorldToCameraCoordinates(p).Z();
 }
 
-/* Sometimes the focal is given in pixels. In this case, this function can be used to convert it in millimiters.
- * This method should be moved in vcg::Camera()
+/* Sometimes the focal is given in pixels. In this case, this function can be used to convert it in millimiters
+ * given the CCD width (in mm). This method should be moved in vcg::Camera().
+ * Equivalent focal lenght is obtained by setting the ccd width to 35 mm.
  */
 template <class S, class RotationType>
-void Shot<S, RotationType>::ConvertFocalToMM()
+void Shot<S, RotationType>::ConvertFocalToMM(S ccdwidth)
 {
-  double ccd_width = 35.0; // ccd is assumed conventionally to be 35mm
+  double ccd_width = ccdwidth; // ccd is assumed conventionally to be 35mm
   double ccd_height = (ccd_width * Intrinsics.ViewportPx[1]) / Intrinsics.ViewportPx[0];
   Intrinsics.PixelSizeMm[0] = (ccd_width / Intrinsics.ViewportPx[0]);
   Intrinsics.PixelSizeMm[1] = (ccd_height / Intrinsics.ViewportPx[1]);
@@ -448,19 +451,23 @@ void Shot<S, RotationType>::ConvertFocalToMM()
 }
 
 /* Sometimes the 3D World coordinates are known up to a scale factor. This method adjust the camera/shot parameters
- * to account for the re-scaling of the World.
+ * to account for the re-scaling of the World. If the intrisic parameters are just reasonable values 
+ * the cameras need only a re-positioning.
  */
 template <class S, class RotationType>
-void Shot<S, RotationType>::RescalingWorld(S scalefactor)
+void Shot<S, RotationType>::RescalingWorld(S scalefactor, bool adjustIntrinsics)
 {
-    // adjust INTRINSICS
+    // adjust INTRINSICS (if required)
 
-    Intrinsics.FocalMm = Intrinsics.FocalMm * scalefactor;
-    double ccdwidth = static_cast<double>(Intrinsics.ViewportPx[0] * Intrinsics.PixelSizeMm[0]);
-    double ccdheight = static_cast<double>(Intrinsics.ViewportPx[1] * Intrinsics.PixelSizeMm[1]);
+		if (adjustIntrinsics)
+		{
+			Intrinsics.FocalMm = Intrinsics.FocalMm * scalefactor;
+			double ccdwidth = static_cast<double>(Intrinsics.ViewportPx[0] * Intrinsics.PixelSizeMm[0]);
+			double ccdheight = static_cast<double>(Intrinsics.ViewportPx[1] * Intrinsics.PixelSizeMm[1]);
 
-    Intrinsics.PixelSizeMm[0] = (ccdwidth * scalefactor) / Intrinsics.ViewportPx[0];
-    Intrinsics.PixelSizeMm[1] = (ccdheight * scalefactor) / Intrinsics.ViewportPx[1];
+			Intrinsics.PixelSizeMm[0] = (ccdwidth * scalefactor) / Intrinsics.ViewportPx[0];
+			Intrinsics.PixelSizeMm[1] = (ccdheight * scalefactor) / Intrinsics.ViewportPx[1];
+		}
 
     // adjust EXTRINSICS
 
@@ -477,27 +484,25 @@ void Shot<S, RotationType>::ApplyRigidTransformation(const Matrix44<S> & M)
 {
   Matrix44<S> rotM;
   Extrinsics.rot.ToMatrix(rotM);
-
   // roto-translate the viewpoint
   Extrinsics.tra = M * Extrinsics.tra;
-
-  Extrinsics.rot =  rotM * M.transpose();
-
-  Extrinsics.rot.ElementAt(3,0) = 0;
-  Extrinsics.rot.ElementAt(3,1) = 0;
-  Extrinsics.rot.ElementAt(3,2) = 0;
+  Matrix44<S> newRot = rotM * M.transpose();
+  Extrinsics.SetRot(newRot);
 }
 
-/// Given a similarity transformation such that p' = s R p + T modifies the reference frame accordingly.
+/// Given a similarity transformation modifies the reference frame accordingly.
 template <class S, class RotationType>
-void Shot<S, RotationType>::ApplySimilarity(const Matrix44<S> & M)
+void Shot<S, RotationType>::ApplySimilarity( Matrix44<S>   M)
 {
   Matrix44<S> rotM;
   Extrinsics.rot.ToMatrix(rotM);
 
-  // obtain scale factor
-  Point3<S> p = M.GetRow3(0);
-  ScalarType scalefactor = 1.0 / p.Norm();
+  // normalize
+  M = M * (1/M.ElementAt(3,3));
+  M[3][3] = 1; // just for numeric precision
+
+  // compute scale factor
+  ScalarType scalefactor = 1.0 / pow(ScalarType(M.Determinant()),1/ScalarType(3.0));
 
   // roto-translate the viewpoint
   Extrinsics.tra = M * Extrinsics.tra;
@@ -505,16 +510,13 @@ void Shot<S, RotationType>::ApplySimilarity(const Matrix44<S> & M)
   vcg::Matrix44<S> M2 = M;
 
   M2 = M2 * scalefactor;
-
-  Extrinsics.rot = rotM * M2.transpose();
-
-  Extrinsics.rot.ElementAt(3,0) = 0;
-  Extrinsics.rot.ElementAt(3,1) = 0;
-  Extrinsics.rot.ElementAt(3,2) = 0;
-  Extrinsics.rot.ElementAt(3,3) = 1;
+  M2[3][3] = 1.0; //unnecessary, it will multiply a pure rotation
+   
+  rotM = rotM * M2.transpose();
+  Extrinsics.SetRot(rotM);
 }
 
-/// Given a similarity transformation such that p' = s R p + T modifies the reference frame accordingly.
+/// Given a similarity transformation modifies the reference frame accordingly.
 template <class S, class RotationType>
 void Shot<S, RotationType>::ApplySimilarity(const Similarity<S> & Sm)
 {

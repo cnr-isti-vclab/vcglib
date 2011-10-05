@@ -106,7 +106,7 @@ private:
 		/// 
 		/** \addtogroup trimesh */
 		/*@{*/
-		/// Class of static functions to clean/correct/restore meshs. 
+    /// Class of static functions to clean//restore meshs.
 		template <class CleanMeshType>
 		class Clean
 		{
@@ -401,7 +401,6 @@ private:
       static int SplitNonManifoldVertex(MeshType& m)
       {
         FaceIterator fi;
-        int count_sv = 0; // split vertex counter
         typedef std::pair<FacePointer,int> FaceInt;
 
         std::vector<std::pair<VertexPointer, std::vector<FaceInt> > >ToSplitVec;
@@ -421,7 +420,7 @@ private:
               std::set<FaceInt> faceSet;
               do
               {
-                faceSet.insert(make_pair(curPos.F(),curPos.VInd()));
+                faceSet.insert(std::make_pair(curPos.F(),curPos.VInd()));
                 curPos.NextE();
               } while (curPos != startPos);
 
@@ -437,13 +436,13 @@ private:
         // Second step actually add new vertices and split them.
         typename tri::Allocator<MeshType>::template PointerUpdater<VertexPointer> pu;
         VertexIterator firstVp = tri::Allocator<MeshType>::AddVertices(m,ToSplitVec.size(),pu);
-        for(int i =0;i<ToSplitVec.size();++i)
+        for(size_t i =0;i<ToSplitVec.size();++i)
         {
           qDebug("Splitting Vertex %i",ToSplitVec[i].first-&*m.vert.begin());
           VertexPointer np=ToSplitVec[i].first;
           pu.Update(np);
           firstVp->ImportData(*np);
-          for(int j=0;j<ToSplitVec[i].second.size();++j)
+          for(size_t j=0;j<ToSplitVec[i].second.size();++j)
           {
             FaceInt ff=ToSplitVec[i].second[j];
             ff.first->V(ff.second)=&*firstVp;
@@ -883,14 +882,15 @@ private:
 			{
         int numholev=0;
         FaceIterator fi;
+		
 				FaceIterator gi;
 				vcg::face::Pos<FaceType> he;
 				vcg::face::Pos<FaceType> hei;
 
         std::vector< std::vector<Point3x> > holes; //indices of vertices
 
-				for(fi=m.face.begin();fi!=m.face.end();++fi)
-					(*fi).ClearS();
+				vcg::tri::UpdateFlags<MeshType>::VertexClearS(m);
+
 				gi=m.face.begin(); fi=gi;
 
 				for(fi=m.face.begin();fi!=m.face.end();fi++)//for all faces do
@@ -1020,15 +1020,23 @@ private:
 			      V + F - E = 2C - 2Gs - B
 
 			where C is the number of connected components and Gs is the sum of
-			the genus of all connected components.
+			the genus of all connected components.*/
 
-			*/
-			static int MeshGenus(MeshType &m, int numholes, int numcomponents, int count_e)
+			static int MeshGenus(int nvert,int nedges,int nfaces, int numholes, int numcomponents)
 			{
-				int V = m.vn;
-				int F = m.fn;
-				int E = count_e;
-				return -((V + F - E + numholes - 2 * numcomponents) / 2);
+				return -((nvert + nfaces - nedges + numholes - 2 * numcomponents) / 2);
+			}
+			
+			static int MeshGenus(MeshType &m)
+			{
+				int nvert=m.vn;
+				int nfaces=m.fn;
+				int boundary_e,nedges;
+				CountEdges(m,nedges,boundary_e);
+				int numholes=CountHoles(m);
+				int numcomponents=CountConnectedComponents(m);
+				int G=MeshGenus(nvert,nedges,nfaces,numholes,numcomponents);
+				return G;
 			}
 
 			/**
@@ -1224,7 +1232,7 @@ private:
           if(maxVertVec[i]->N().dot(dirVec[i]) < -angleThreshold ) voteCount++;
         }
 //        qDebug("votecount = %i",voteCount);
-        if(voteCount < dirVec.size()/2) return false;
+        if(voteCount < int(dirVec.size())/2) return false;
         FlipMesh(m);
         return true;
       }
@@ -1528,13 +1536,13 @@ static int ClusterVertex(MeshType &m, const ScalarType radius)
 				if(!(*viv).IsD() && !(*viv).IsV())
 					{
 						(*viv).SetV();
-						Point3f p = viv->cP();
-						Box3f bb(p-Point3f(radius,radius,radius),p+Point3f(radius,radius,radius));
+						Point3<ScalarType> p = viv->cP();
+						Box3<ScalarType> bb(p-Point3<ScalarType>(radius,radius,radius),p+Point3<ScalarType>(radius,radius,radius));
 						GridGetInBox(sht, markerFunctor, bb, closests);
 						// qDebug("Vertex %i has %i closest", &*viv - &*m.vert.begin(),closests.size());
             for(size_t i=0; i<closests.size(); ++i)
 						{
-							float dist = Distance(p,closests[i]->cP());
+							ScalarType dist = Distance(p,closests[i]->cP());
 							if(dist < radius && !closests[i]->IsV())
 												{
 //													printf("%f %f \n",dist,radius);

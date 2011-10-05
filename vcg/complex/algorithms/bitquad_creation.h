@@ -292,6 +292,7 @@ static void MakeBitTriOnly(MeshType &m){
  */
 static bool MakeBitTriQuadConventional(MeshType &m){
   assert(0); // todo
+  return false;
 }
 
 /* returns true if mesh is a "conventional" quad mesh.

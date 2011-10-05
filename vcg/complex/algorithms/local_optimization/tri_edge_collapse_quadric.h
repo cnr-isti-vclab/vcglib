@@ -123,59 +123,61 @@ namespace tri{
 		class QInfoStandard
 		{
 		public:
-			QInfoStandard(){};
-      static void Init(){};
+      QInfoStandard(){}
+      static void Init(){}
       static math::Quadric<double> &Qd(VERTEX_TYPE &v) {return v.Qd();}
       static math::Quadric<double> &Qd(VERTEX_TYPE *v) {return v->Qd();}
-      static typename VERTEX_TYPE::ScalarType W(VERTEX_TYPE */*v*/) {return 1.0;};
-      static typename VERTEX_TYPE::ScalarType W(VERTEX_TYPE &/*v*/) {return 1.0;};
-      static void Merge(VERTEX_TYPE & v_dest, VERTEX_TYPE const & v_del){};
+      static typename VERTEX_TYPE::ScalarType W(VERTEX_TYPE */*v*/) {return 1.0;}
+      static typename VERTEX_TYPE::ScalarType W(VERTEX_TYPE &/*v*/) {return 1.0;}
+      static void Merge(VERTEX_TYPE & v_dest, VERTEX_TYPE const & v_del){}
 		};
 
 
 class TriEdgeCollapseQuadricParameter : public BaseParameterClass
 {
 public:
-	double	QualityThr; // all 
-	double	BoundaryWeight;
-	double	NormalThrRad;
-	double	CosineThr;
-	double	QuadricEpsilon;
-	double	ScaleFactor;
-	bool		UseArea;
-	bool		UseVertexWeight;
-	bool		NormalCheck;
-	bool		QualityCheck;
-	bool		OptimalPlacement;
-	bool		MemoryLess;
-	bool		QualityWeight;
-	bool		ScaleIndependent;
-	//***********************
-	bool    QualityQuadric; // During the initialization manage all the edges as border edges adding a set of additional quadrics that are useful mostly for keeping face aspect ratio good.
-	bool		PreserveTopology; 
-	bool		PreserveBoundary; 
-  bool		FastPreserveBoundary;
-	bool		SafeHeapUpdate;
+  double    BoundaryWeight;
+  double    CosineThr;
+  bool      FastPreserveBoundary;
+  bool      NormalCheck;
+  double    NormalThrRad;
+  bool      OptimalPlacement;
+  bool      PreserveTopology;
+  bool      PreserveBoundary;
+  double    QuadricEpsilon;
+  bool      QualityCheck;
+  bool      QualityQuadric; // During the initialization manage all the edges as border edges adding a set of additional quadrics that are useful mostly for keeping face aspect ratio good.
+  double    QualityThr; // all
+  bool      QualityWeight;
+  bool      SafeHeapUpdate;
+  double    ScaleFactor;
+  bool      ScaleIndependent;
+  bool      UseArea;
+  bool      UseVertexWeight;
 
   void SetDefaultParams()
   {
-    UseArea=true;
-    UseVertexWeight=false;
+    BoundaryWeight=.5;
+    CosineThr=cos(M_PI/2);
+    FastPreserveBoundary=false;
     NormalCheck=false;
     NormalThrRad=M_PI/2;
-    QualityCheck=true;
-    QualityThr=.1;
-    BoundaryWeight=.5;
-    QualityQuadric=false;
     OptimalPlacement=true;
-    ScaleIndependent=true;
-    QualityWeight=false;
-    QuadricEpsilon =1e-15;
-    ScaleFactor=1.0;
+    PreserveBoundary = false;
     PreserveTopology = false;
+    QuadricEpsilon =1e-15;
+    QualityCheck=true;
+    QualityQuadric=false;
+    QualityThr=.1;
+    QualityWeight=false;
+    SafeHeapUpdate =false;
+    ScaleFactor=1.0;
+    ScaleIndependent=true;
+    UseArea=true;
+    UseVertexWeight=false;
   }
 
-  TriEdgeCollapseQuadricParameter() {SetDefaultParams();}
+  TriEdgeCollapseQuadricParameter() {this->SetDefaultParams();}
 };
 
 
@@ -200,17 +202,6 @@ public:
 //			return p;
 //		}
 
-		enum Hint {
-			HNHasFFTopology       = 0x0001,  // La mesh arriva con la topologia ff gia'fatta
-			HNHasVFTopology       = 0x0002,  // La mesh arriva con la topologia bf gia'fatta
-			HNHasBorderFlag       = 0x0004  // La mesh arriva con i flag di bordo gia' settati
-		};
-
-		static int & Hnt(){static int hnt; return hnt;}      // the current hints
-
-		static void SetHint(Hint hn)		{	Hnt() |= hn; }
-		static void ClearHint(Hint hn)	{	Hnt()&=(~hn);}
-		static bool IsSetHint(Hint hn)  { return (Hnt()&hn)!=0; }
 
 		// puntatori ai vertici che sono stati messi non-w per preservare il boundary
 		static std::vector<typename TriMeshType::VertexPointer>  & WV(){
@@ -227,7 +218,9 @@ public:
 
     inline bool IsFeasible(BaseParameterClass *_pp){
       QParameter *pp=(QParameter *)_pp;
-      bool res = ( !pp->PreserveTopology || EdgeCollapser<TriMeshType, VertexPair>::LinkConditions(this->pos) );
+      if(!pp->PreserveTopology) return true;
+
+      bool res = ( EdgeCollapser<TriMeshType, VertexPair>::LinkConditions(this->pos) );
       if(!res) ++( TEC::FailStat::LinkConditionEdge() );
       return res;
     }
@@ -249,10 +242,6 @@ public:
     static void Finalize(TriMeshType &m, HeapType& /*h_ret*/, BaseParameterClass *_pp)
     {
       QParameter *pp=(QParameter *)_pp;
-      // if the mesh was prepared with precomputed borderflags
-      // correctly set them again.
-      if(IsSetHint(HNHasBorderFlag) ) 
-			  vcg::tri::UpdateFlags<TriMeshType>::FaceBorderFromVF(m);
 
       // If we had the boundary preservation we should clean up the writable flags
       if(pp->FastPreserveBoundary)
@@ -278,10 +267,8 @@ public:
 
   pp->CosineThr=cos(pp->NormalThrRad);
 
-  if(!IsSetHint(HNHasVFTopology) ) vcg::tri::UpdateTopology<TriMeshType>::VertexFace(m);
-
-  if(!IsSetHint(HNHasBorderFlag) )
-      vcg::tri::UpdateFlags<TriMeshType>::FaceBorderFromVF(m);
+  vcg::tri::UpdateTopology<TriMeshType>::VertexFace(m);
+  vcg::tri::UpdateFlags<TriMeshType>::FaceBorderFromVF(m);
 
   if(pp->FastPreserveBoundary)
     {

@@ -173,6 +173,7 @@ static void FaceSet(MeshType &m, unsigned int FlagMask)
 
 
 static void VertexClearV(MeshType &m) { VertexClear(m,VertexType::VISITED);}
+static void VertexClearS(MeshType &m) { VertexClear(m,VertexType::SELECTED);}
 static void VertexClearB(MeshType &m) { VertexClear(m,VertexType::BORDER);}
 static void EdgeClearV(MeshType &m) { EdgeClear(m,EdgeType::VISITED);}
 static void FaceClearV(MeshType &m) { FaceClear(m,FaceType::VISITED);}
@@ -209,9 +210,10 @@ static void FaceBorderFromFF(MeshType &m)
 static void FaceBorderFromVF(MeshType &m)
 {
   assert(HasPerFaceFlags(m));
-	VertexIterator vi;
-  assert(m.HasVFTopology());
+  assert(HasPerVertexVFAdjacency(m));
+  assert(HasPerFaceVFAdjacency(m));
 
+  FaceClearB(m);
   int visitedBit=VertexType::NewBitFlag();
 
 	// Calcolo dei bordi
@@ -220,7 +222,7 @@ static void FaceBorderFromVF(MeshType &m)
 
 		const int BORDERFLAG[3]={FaceType::BORDER0, FaceType::BORDER1, FaceType::BORDER2};
 		
-		for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+    for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
 			if(!(*vi).IsD())
 				{
 					for(face::VFIterator<FaceType> vfi(&*vi) ; !vfi.End(); ++vfi )

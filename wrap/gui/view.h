@@ -146,9 +146,9 @@ template <class T> void View<T>::GetView() {
 	Invert(inverse);
 }
 
-template <class T> void View<T>::SetView(const float *_proj = NULL,
-                                         const float *_modelview = NULL,
-                                         const int *_viewport = NULL) {
+template <class T> void View<T>::SetView(const float *_proj,
+                                         const float *_modelview,
+                                         const int *_viewport) {
   for(int i = 0; i < 4; i++) {
     for(int k =0; k < 4; k++) {
       proj[i][k] = _proj[4*i+k];

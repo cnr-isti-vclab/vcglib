@@ -83,7 +83,7 @@ namespace math {
   }
 
   // r = m*v
-  void inline prod_matvec5(ScalarType m[5][5], ScalarType v[5], ScalarType r[5])
+  void inline prod_matvec5(const ScalarType m[5][5], const ScalarType v[5], ScalarType r[5])
   {
     r[0] = inproduct5(m[0],v);
     r[1] = inproduct5(m[1],v);
@@ -242,7 +242,7 @@ public:
 	// computes the real quadric and the geometric quadric using the face
 	// The geometric quadric is added to the parameter qgeo
   template <class FaceType>
-  void byFace(FaceType &f, math::Quadric<double> &q1, math::Quadric<double> &q2, math::Quadric<double> &q3,bool QualityQuadric)
+  void byFace(FaceType &f, math::Quadric<double> &q1, math::Quadric<double> &q2, math::Quadric<double> &q3, bool QualityQuadric, ScalarType BorderWeight)
 	{
 		double q = QualityFace(f);
 		
@@ -272,6 +272,7 @@ public:
 					
 					temp.byFace(f,false);			// computes the full quadric
 					if(! f.IsB(j) ) temp.Scale(0.05);
+          else temp.Scale(BorderWeight);
 					*this+=temp;
 					
 					f.P2(j)=oldpoint;
@@ -474,7 +475,7 @@ void ComputeQuadricFromE1E2(ScalarType e1[5], ScalarType e2[5], ScalarType p[5] 
 	c = math::inproduct5(p,p)-pe1*pe1-pe2*pe2;
 }
 			
-	bool Gauss55( ScalarType x[], ScalarType C[5][5+1] )
+  static bool Gauss55( ScalarType x[], ScalarType C[5][5+1] )
 	{
 		const ScalarType keps = (ScalarType)1e-6;
 		int i,j,k;
@@ -531,6 +532,8 @@ void ComputeQuadricFromE1E2(ScalarType e1[5], ScalarType e2[5], ScalarType p[5] 
 			for (t = 0.0, j = i + 1; j < 5; j++)
 				t += C[i][j] * x[j];
 			x[i] = (C[i][5] - t) / C[i][i];
+      if(math::IsNAN(x[i])) return false;
+      assert(!math::IsNAN(x[i]));
 		}
 
 		return true;
@@ -538,7 +541,7 @@ void ComputeQuadricFromE1E2(ScalarType e1[5], ScalarType e2[5], ScalarType p[5] 
 
 	
 	// computes the minimum of the quadric, imposing the geometrical constraint (geo[3] and geo[4] are obviosly ignored)
-	bool MinimumWithGeoContraints(ScalarType x[5],ScalarType geo[5])
+  bool MinimumWithGeoContraints(ScalarType x[5],const ScalarType geo[5]) const
 	{	
 		x[0] = geo[0];
 		x[1] = geo[1];
@@ -565,12 +568,15 @@ void ComputeQuadricFromE1E2(ScalarType e1[5], ScalarType e2[5], ScalarType p[5] 
 			x[4] = C3/a[13];
 			x[3] = (C4 - a[14]*x[4])/a[13];
 		}
+    for(int i=0;i<5;++i)
+      if( math::IsNAN(x[i])) return false;
+      //assert(!math::IsNAN(x[i]));
 
 		return true;
 	}
 
 	// computes the minimum of the quadric
-	bool Minimum(ScalarType x[5])
+  bool Minimum(ScalarType x[5]) const
 	{	
 			ScalarType C[5][6];
 
@@ -718,7 +724,7 @@ computes bad the priority......this should be adjusted with the extra weight use
 	}
 
   // returns the quadric value in v
-  	ScalarType Apply(ScalarType v[5])
+    ScalarType Apply(const ScalarType v[5]) const
 	{
 
 		assert( IsValid() );

@@ -79,6 +79,12 @@ static const char *ErrorMsg(int error)
   else return stl_error_msg[error];
 };
 
+static bool LoadMask(const char * /*filename*/, int &mask)
+{
+  mask = Mask::IOM_VERTCOORD | Mask::IOM_FACEINDEX;
+  return true;
+}
+
 static int Open(OpenMeshType &mesh, const char *filename, int &loadmask, CallBackPos *cb=0)
 {
   loadmask = Mask::IOM_VERTCOORD | Mask::IOM_FACEINDEX;

@@ -142,7 +142,7 @@ static bool RotateEdge(FaceType& f, int w0a, MeshType &m, Pos *affected=NULL){
   v0= fa->V0(w0a);
   v1= fa->V1(w0a);
   
-  int w1a = (w0a+1)%3;
+//  int w1a = (w0a+1)%3;
   int w2a = (w0a+2)%3;
 
   FaceType *fb = fa->FFp(w0a);
@@ -151,7 +151,7 @@ static bool RotateEdge(FaceType& f, int w0a, MeshType &m, Pos *affected=NULL){
   MarkFaceF(fb);
   
   int w0b = fa->FFi(w0a);
-  int w1b = (w0b+1)%3;
+//  int w1b = (w0b+1)%3;
   int w2b = (w0b+2)%3;
     
   if (fa->IsF(w2a) == verse) {
@@ -325,14 +325,13 @@ static bool TestVertexRotation(const FaceType &f, int w0)
 }
 
 
-static bool RotateVertex(FaceType &f, int w0, MeshType &m, Pos *affected=NULL)
+static bool RotateVertex(FaceType &f, int w0, MeshType &/*m*/, Pos *affected=NULL)
 {
   
-  int guard = 0;
+//  int guard = 0;
 
   FaceType* pf = &f;
   int pi = w0;
-  int n = 0; // vertex valency
   
   if (pf->IsF((pi+2) % 3)) { 
       pi = (pi+2)%3;
@@ -445,7 +444,7 @@ static CoordType CounterDiag(const FaceType* f){
 /* helper function:
    collapses a single face along its faux edge. 
    Updates FF adj of other edges. */
-static void _CollapseDiagHalf(FaceType &f, int faux, MeshType& m)
+static void _CollapseDiagHalf(FaceType &f, int faux, MeshType& /*m*/)
 {
   int faux1 = (faux+1)%3;
   int faux2 = (faux+2)%3;
@@ -514,7 +513,7 @@ static void RemoveSinglet(FaceType &f, int wedge, MeshType& m, Pos* affected=NUL
   int wa2 = (wa0+2)%3 ;
   int wb0 = (fa->FFi(wa0)+1)%3;
   int wb1 = (wb0+1)%3 ; 
-  int wb2 = (wb0+2)%3 ;
+//  int wb2 = (wb0+2)%3 ;
   assert (fb == fa->FFp( wa2 ) ); // otherwise, not a singlet
   
   // valency decrease

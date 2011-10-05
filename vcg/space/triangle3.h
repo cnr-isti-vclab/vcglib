@@ -128,16 +128,16 @@ bool InterpolationParameters(const TriangleType t, const int Axis, const Point3<
 template<class TriangleType, class ScalarType>
 bool InterpolationParameters(const TriangleType t, const Point3<ScalarType> & N, const Point3<ScalarType> & P,  Point3<ScalarType> & L)
 {
-	if(N[0]>N[1])
+  if(fabs(N[0])>fabs(N[1]))
 	{
-		if(N[0]>N[2])
+    if(fabs(N[0])>fabs(N[2]))
 			return InterpolationParameters(t,0,P,L); /* 0 > 1 ? 2 */
 		else 
 			return InterpolationParameters(t,2,P,L); /* 2 > 1 ? 2 */
 		}
 	else 
 	{
-		if(N[1]>N[2])
+    if(fabs(N[1])>fabs(N[2]))
 			return InterpolationParameters(t,1,P,L); /* 1 > 0 ? 2 */
 		else 
 			return InterpolationParameters(t,2,P,L); /* 2 > 1 ? 2 */

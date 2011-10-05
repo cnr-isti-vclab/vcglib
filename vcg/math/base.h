@@ -86,6 +86,7 @@ Edited Comments and GPL license
 #ifndef __VCGLIB_MATH_BASE
 #define __VCGLIB_MATH_BASE
 
+#include <float.h>
 #include <math.h>
 #include <assert.h>
 #include <limits>
@@ -192,10 +193,11 @@ inline float   ToRad(const float &a){return float(M_PI)*a/180.0f;}
 inline double  ToDeg(const double &a){return a*180.0/M_PI;}
 inline double  ToRad(const double &a){return M_PI*a/180.0;}
 
+
 #if defined(_MSC_VER) // Microsoft Visual C++
-	template<class T> int IsNAN(T t) {    return _isnan(t); }
+template<class T> int IsNAN(T t) {    return _isnan(t) || (!_finite(t)); }
 #elif defined(__GNUC__) // GCC
-	template<class T> int IsNAN(T t) {    return isnan(t); }
+template<class T> int IsNAN(T t) {    return isnan(t) || isinf(t); }
 #else // generic
 
 template<class T> int IsNAN(T t)

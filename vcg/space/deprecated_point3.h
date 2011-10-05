@@ -475,6 +475,21 @@ inline P3ScalarType SquaredDistance( Point3<P3ScalarType> const & p1,Point3<P3Sc
     return (p1-p2).SquaredNorm();
 }
 
+template <class P3ScalarType>
+P3ScalarType ApproximateGeodesicDistance(const Point3<P3ScalarType>& p0, const Point3<P3ScalarType>& n0,
+                                       const Point3<P3ScalarType>& p1, const Point3<P3ScalarType>& n1)
+{
+    Point3<P3ScalarType> V(p0-p1);
+    V.Normalize();
+    const P3ScalarType C0 = V*n0;
+    const P3ScalarType C1 = V*n1;
+    const P3ScalarType De = Distance(p0,p1);
+    if(fabs(C0-C1)<0.0001) return De/sqrt(1-C0*C1);
+    const P3ScalarType Dg = ((asin(C0) - asin(C1))/(C0-C1));
+    return Dg*De;
+}
+
+
 	// Dot product preciso numericamente (solo double!!)
 	// Implementazione: si sommano i prodotti per ordine di esponente
 	// (prima le piu' grandi)

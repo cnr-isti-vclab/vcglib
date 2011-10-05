@@ -426,25 +426,6 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 };
 
 
-template <class T> class VNeigh: public T {
-public:
-	VNeigh(){}
-  typename T::VertexPointer       &Neigh(const int j)        { assert(j>=0 && j<_nn.size());  return _nn[j]; }
-  typename T::VertexPointer       cNeigh(const int j)       { assert(j>=0 && j<_nn.size());  return _nn[j]; }
-  size_t SizeNeigh(){return _nn.size();}
-  void ClearNeigh(){_nn.clear();}
-  void AddNeigh(typename T::VertexPointer v){_nn.push_back(v);}
-
-  template <class RightF>
-	void ImportData(const RightF & rightF){T::ImportData(rightF);}
-  static bool HasVVNeigh()      {   return true; }
-  static bool HasVVNeighOcc()   {   return false; }
-  static void Name(std::vector<std::string> & name){name.push_back(std::string("VVNeigh"));T::Name(name);}
-
-private:
-	std::vector<typename T::VertexPointer>  _nn;    
-};
-
 /*----------------------------- VEADJ ------------------------------*/
 
 template <class T> class VEAdj: public T {

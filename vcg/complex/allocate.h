@@ -1,4 +1,4 @@
-/****************************************************************************
+/***************************************************************************
 * VCGLib                                                            o o     *
 * Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
@@ -938,7 +938,7 @@ public:
 	template <class ATTR_TYPE> 
 	static
 		typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>
-	 GetPerVertexAttribute( MeshType & m, const std::string & name){
+   GetPerVertexAttribute( MeshType & m, const std::string & name){
 		assert(!name.empty());
 		PointerToAttribute h1; h1._name = name;
 		typename std::set<PointerToAttribute > :: iterator i;
@@ -963,11 +963,17 @@ public:
 	}
 
 	template <class ATTR_TYPE>
-	static void GetAllPerVertexAttribute(const MeshType & m, std::vector<std::string> &all){
+  static void GetAllPerVertexAttribute(MeshType & m, std::vector<std::string> &all){
+    all.clear();
 		typename std::set<PointerToAttribute > ::const_iterator i;
 		for(i = m.vert_attr.begin(); i != m.vert_attr.end(); ++i )
-				if((*i)._typename == typeid(ATTR_TYPE).name())
-						all.push_back((*i)._name);
+        if(!(*i)._name.empty())
+        {
+            typename MeshType:: template PerVertexAttributeHandle<ATTR_TYPE> hh;
+            hh = Allocator<MeshType>:: template GetPerVertexAttribute <ATTR_TYPE>(m,(*i)._name);
+            if(IsValidHandle<ATTR_TYPE>(m,hh))
+                all.push_back((*i)._name);
+        }
 	}
 
 	template <class ATTR_TYPE> 
@@ -1144,11 +1150,17 @@ public:
 	}
 
 	template <class ATTR_TYPE>
-	static void GetAllPerFaceAttribute(const MeshType & m, std::vector<std::string> &all){
+  static void GetAllPerFaceAttribute(MeshType & m, std::vector<std::string> &all){
+    all.clear();
 		typename std::set<PointerToAttribute > :: const_iterator i;
 		for(i = m.face_attr.begin(); i != m.face_attr.end(); ++i )
-				if((*i)._typename == typeid(ATTR_TYPE).name())
-						all.push_back((*i)._name);
+        if(!(*i)._name.empty())
+        {
+            typename MeshType:: template PerFaceAttributeHandle<ATTR_TYPE> hh;
+            hh = Allocator<MeshType>:: template GetPerFaceAttribute <ATTR_TYPE>(m,(*i)._name);
+            if(IsValidHandle<ATTR_TYPE>(m,hh))
+                all.push_back((*i)._name);
+        }
 	}
 
 	template <class ATTR_TYPE> 

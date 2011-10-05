@@ -75,7 +75,7 @@ public:
 	/// It returns a bit mask describing the field preesnt in the ply file
   int mask;  
 
-  /// a Simple callback that can be used for long obj parsing. 
+  /// a Simple callback that can be used for long obj parsing.
   // it returns the current position, and formats a string with a description of what th efunction is doing (loading vertexes, faces...)
   CallBackPos *cb;
 
@@ -265,7 +265,7 @@ public:
 	//FaceIterator   fi = Allocator<OpenMeshType>::AddFaces(m,oi.numFaces);
 
   ObjIndexedFace	ff; 
-
+  char *loadingStr = "Loading";
 	while (!stream.eof())
 	{
 		tokens.clear();
@@ -277,8 +277,13 @@ public:
 			header.clear();
 			header = tokens[0];
 
+			// callback invocation, abort loading process if the call returns false
+			if ((cb !=NULL) && (((numTriangles + numVertices)%100)==0) && !(*cb)((100*(numTriangles + numVertices))/numVerticesPlusFaces, loadingStr))
+				return E_ABORTED;
+
 			if (header.compare("v")==0)	// vertex
 			{
+			  loadingStr="Vertex Loading";
 				if (numTokens < 4) return E_BAD_VERTEX_STATEMENT;
 
 				(*vi).P()[0] = (ScalarType) atof(tokens[1].c_str());
@@ -308,13 +313,11 @@ public:
 					}
 
 				++vi;  // move to next vertex iterator
-
-				// callback invocation, abort loading process if the call returns false
-				if ((cb !=NULL) && (((numTriangles + numVertices)%100)==0) && !(*cb)((100*(numTriangles + numVertices))/numVerticesPlusFaces, "Vertex Loading"))
-					return E_ABORTED;
 			}
 			else if (header.compare("vt")==0)	// vertex texture coords
 			{
+			  loadingStr="Vertex Texture Loading";
+
 				if (numTokens < 3) return E_BAD_VERT_TEX_STATEMENT;
 
 				ObjTexCoord t;
@@ -326,6 +329,8 @@ public:
 			}
 			else if (header.compare("vn")==0)  // vertex normal
 			{
+			  loadingStr="Vertex Normal Loading";
+
 				if (numTokens != 4) return E_BAD_VERT_NORMAL_STATEMENT;
 
 				CoordType n;
@@ -338,6 +343,8 @@ public:
 			}
 				else if( (header.compare("f")==0) || (header.compare("q")==0) )  // face
 			{
+			  loadingStr="Face Loading";
+
 					bool QuadFlag = false; // QOBJ format by Silva et al for simply storing quadrangular meshes.				
 					if(header.compare("q")==0) { QuadFlag=true; assert(numTokens == 5); }
 
@@ -386,12 +393,6 @@ public:
 				++numTriangles;
 		        indexedFaces.push_back(ff);
 
-				// callback invocation, abort loading process if the call returns false
-				if ((cb !=NULL)&& (((numTriangles + numVertices)%100)==0) )
-					{
-					  if (!(*cb)( (100*(numTriangles +numVertices))/ numVerticesPlusFaces, "Face Loading"))
-					  return E_ABORTED;
-					}
 			//_END  ___ if  you are loading a GENERIC POLYGON mesh 
 				}else
 #ifdef __gl_h_
@@ -591,12 +592,6 @@ public:
           indexedFaces.push_back(ffNew);
 					ff.v[2] = v4_index;
 				}
-				// callback invocation, abort loading process if the call returns false
-				if ((cb !=NULL)&& (((numTriangles + numVertices)%100)==0) )
-					{
-					  if (!(*cb)( (100*(numTriangles +numVertices))/ numVerticesPlusFaces, "Face Loading"))
-					  return E_ABORTED;
-						}						
                     }//_END___ if  you are loading a  TRIMESH mesh
 #endif
 					}

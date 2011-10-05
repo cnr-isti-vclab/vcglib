@@ -94,7 +94,7 @@ class GridStaticObj : public BasicGrid<FLT>
 	 }
 
 	 // Dato un punto ritorna l'indice della cella
-	 inline int GridIndF( const Point3<FLT> & p ) const { return GridIndI(GridP(p)); 	}
+   inline int GridIndF( const Point3<FLT> & p ) const { return GridIndI(this->GridP(p)); 	}
   
 	void Create( const Point3i &_siz, const ObjType & init )
 	{
@@ -106,7 +106,7 @@ class GridStaticObj : public BasicGrid<FLT>
 		if(grid) delete[] grid;
 		int n = this->siz[0]*this->siz[1]*this->siz[2];
 		grid = new ObjType[n];
-		fill(grid,grid+n,init);
+    std::fill(grid,grid+n,init);
 	}
 
 	/// Crea una griglia di un dato bbox e con un certo numero di elem.

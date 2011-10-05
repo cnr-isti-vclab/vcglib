@@ -220,26 +220,26 @@ namespace vcg {
 
 
 
-		void ShowStats(FILE *fp)
-		{
-			// Conto le entry
-			//int nentry = 0;
-			//Hist H;
-			//H.SetRange(0,1000,1000);
-			//int pg;
-			//for(pg=0;pg<grid.size()-1;++pg)
-			//	if( grid[pg]!=grid[pg+1] )
-			//	{
-			//		++nentry;
-			//		H.Add(grid[pg+1]-grid[pg]);
-			//	}
+//		void ShowStats(FILE *fp)
+//		{
+//			// Conto le entry
+//			//int nentry = 0;
+//			//Hist H;
+//			//H.SetRange(0,1000,1000);
+//			//int pg;
+//			//for(pg=0;pg<grid.size()-1;++pg)
+//			//	if( grid[pg]!=grid[pg+1] )
+//			//	{
+//			//		++nentry;
+//			//		H.Add(grid[pg+1]-grid[pg]);
+//			//	}
 
-			//	fprintf(fp,"Uniform Grid: %d x %d x %d (%d voxels), %.1f%% full, %d links \nNon empty Cell Occupancy Distribution Avg: %f (%4.0f %4.0f %4.0f) \n",
-			//	siz[0],siz[1],siz[2],grid.size()-1,
-			//	double(nentry)*100.0/(grid.size()-1),links.size(),H.Avg(),H.Percentile(.25),H.Percentile(.5),H.Percentile(.75)
-			//    
-			//);
-		}
+//			//	fprintf(fp,"Uniform Grid: %d x %d x %d (%d voxels), %.1f%% full, %d links \nNon empty Cell Occupancy Distribution Avg: %f (%4.0f %4.0f %4.0f) \n",
+//			//	siz[0],siz[1],siz[2],grid.size()-1,
+//			//	double(nentry)*100.0/(grid.size()-1),links.size(),H.Avg(),H.Percentile(.25),H.Percentile(.5),H.Percentile(.75)
+//			//
+//			//);
+//		}
 
 		template <class OBJITER>
 		inline void Set(const OBJITER & _oBegin, const OBJITER & _oEnd, int _size=0)

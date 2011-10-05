@@ -307,7 +307,7 @@ public:
 		return _v[0]*p._v[0] + _v[1]*p._v[1] + _v[2]*p._v[2] + _v[3]*p._v[3];
 	}
 	inline T dot( const Point4 & p ) const { return (*this) * p; }
-	inline Point4 operator ^ (  const Point4& p ) const
+  inline Point4 operator ^ (  const Point4& /*p*/ ) const
 	{
 		assert(0);// not defined by two vectors (only put for metaprogramming)
 		return Point4();

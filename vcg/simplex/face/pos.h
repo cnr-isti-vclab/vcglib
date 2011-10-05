@@ -86,8 +86,11 @@ public:
 	// Official Access functions functions 
    VertexType *& V(){ return v; }
 	 int         & E(){ return z; }
-	 FaceType   *& F(){ return f; }
+   FaceType   *& F(){ return f; }
 
+   VertexType * V() const { return v; }
+   int          E() const { return z; }
+   FaceType   * F() const { return f; }
 
 // Returns the face index of the vertex inside the face.
 // Note that this is DIFFERENT from using the z member that denotes the edge index inside the face. 
@@ -111,7 +114,7 @@ public:
 	} 
 	/// Operator to order half-edge; it's compare at the first the face pointers, then the index of the edge and finally the vertex pointers
 	inline bool operator <= ( PosType const & p) const {
-		return	(f!=p.f)?(f<f.p):
+    return	(f!=p.f)?(f<p.f):
 						(z!=p.z)?(z<p.z):
 						(v<=p.v);
 	}	

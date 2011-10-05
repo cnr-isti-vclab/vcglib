@@ -147,7 +147,7 @@ struct LoadPly_Camera
 	float k4;
 };
 
-#define _VERTDESC_LAST_  22
+#define _VERTDESC_LAST_  29
 static const  PropDescriptor &VertDesc(int i)  
 {
 	static const PropDescriptor pv[_VERTDESC_LAST_]={
@@ -173,6 +173,14 @@ static const  PropDescriptor &VertDesc(int i)
 /*19*/ {"vertex", "intensity",    ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,intensity),0,0,0,0,0  ,0},
 /*20*/ {"vertex", "s",    ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,u),0,0,0,0,0  ,0},
 /*21*/ {"vertex", "t",    ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,v),0,0,0,0,0  ,0},
+// DOUBLE
+/*22*/ {"vertex", "x",         ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p),0,0,0,0,0  ,0},
+/*23*/ {"vertex", "y",         ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p) + sizeof(ScalarType),0,0,0,0,0  ,0},
+/*24*/ {"vertex", "z",         ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p) + 2*sizeof(ScalarType),0,0,0,0,0  ,0},
+/*25*/ {"vertex", "nx",         ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,n)                       ,0,0,0,0,0  ,0},
+/*26*/ {"vertex", "ny",         ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,n) + 1*sizeof(ScalarType),0,0,0,0,0  ,0},
+/*27*/ {"vertex", "nz",         ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,n) + 2*sizeof(ScalarType),0,0,0,0,0  ,0},
+/*28*/ {"vertex", "radius",     ply::T_DOUBLE, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,radius),0,0,0,0,0  ,0},
 
 	};
 	return pv[i];
@@ -388,9 +396,9 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 	}
 
   // Descrittori dati standard (vertex coord e faces)
-  if( pf.AddToRead(VertDesc(0))==-1 ) { pi.status = PlyInfo::E_NO_VERTEX; return pi.status; }
-	if( pf.AddToRead(VertDesc(1))==-1 ) { pi.status = PlyInfo::E_NO_VERTEX; return pi.status; }
-	if( pf.AddToRead(VertDesc(2))==-1 ) { pi.status = PlyInfo::E_NO_VERTEX; return pi.status; }
+  if( pf.AddToRead(VertDesc(0))==-1 && pf.AddToRead(VertDesc(22)) ) { pi.status = PlyInfo::E_NO_VERTEX; return pi.status; }
+  if( pf.AddToRead(VertDesc(1))==-1 && pf.AddToRead(VertDesc(23)) ) { pi.status = PlyInfo::E_NO_VERTEX; return pi.status; }
+  if( pf.AddToRead(VertDesc(2))==-1 && pf.AddToRead(VertDesc(24)) ) { pi.status = PlyInfo::E_NO_VERTEX; return pi.status; }
 	if( pf.AddToRead(FaceDesc(0))==-1 ) // Se fallisce si prova anche la sintassi di rapidform con index al posto di indices
 			{
 				int ii; 
@@ -413,10 +421,12 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 
 	 if( VertexType::HasNormal() )
 	 {
-		 if(		pf.AddToRead(VertDesc(12))!=-1 
-				 && pf.AddToRead(VertDesc(13))!=-1 
-				 && pf.AddToRead(VertDesc(14))!=-1 )
+     if(		pf.AddToRead(VertDesc(12))!=-1  && pf.AddToRead(VertDesc(13))!=-1  && pf.AddToRead(VertDesc(14))!=-1 )
 			 pi.mask |= Mask::IOM_VERTNORMAL;
+     else // try also for Normals stored with doubles
+       if(		pf.AddToRead(VertDesc(25))!=-1  && pf.AddToRead(VertDesc(26))!=-1  && pf.AddToRead(VertDesc(27))!=-1 )
+         pi.mask |= Mask::IOM_VERTNORMAL;
+
 	 }
 	 
   if( VertexType::HasQuality() )
@@ -462,6 +472,8 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 			{
 				if( pf.AddToRead(VertDesc(15))!=-1 )
 						pi.mask |= Mask::IOM_VERTRADIUS;
+        else if( pf.AddToRead(VertDesc(28))!=-1 )
+          pi.mask |= Mask::IOM_VERTRADIUS;
 			}
 			// se ci sono i flag per vertice ci devono essere anche i flag per faccia
 	if( pf.AddToRead(FaceDesc(1))!=-1 )
@@ -1049,18 +1061,25 @@ static bool LoadMask(const char * filename, int &mask, PlyInfo &pi)
 		return false;
 	}
 
-	if( pf.AddToRead(VertDesc(0))!=-1 && 
-	    pf.AddToRead(VertDesc(1))!=-1 && 
-	    pf.AddToRead(VertDesc(2))!=-1 )   mask |= Mask::IOM_VERTCOORD;
+  if( pf.AddToRead(VertDesc(0))!=-1 &&
+      pf.AddToRead(VertDesc(1))!=-1 &&
+      pf.AddToRead(VertDesc(2))!=-1 )   mask |= Mask::IOM_VERTCOORD;
+  if( pf.AddToRead(VertDesc(22))!=-1 &&
+      pf.AddToRead(VertDesc(23))!=-1 &&
+      pf.AddToRead(VertDesc(24))!=-1 )   mask |= Mask::IOM_VERTCOORD;
 
-	if( pf.AddToRead(VertDesc(12))!=-1 && 
-	    pf.AddToRead(VertDesc(13))!=-1 && 
-	    pf.AddToRead(VertDesc(14))!=-1 )   mask |= Mask::IOM_VERTNORMAL;
+  if( pf.AddToRead(VertDesc(12))!=-1 &&
+      pf.AddToRead(VertDesc(13))!=-1 &&
+      pf.AddToRead(VertDesc(14))!=-1 )   mask |= Mask::IOM_VERTNORMAL;
+  if( pf.AddToRead(VertDesc(25))!=-1 &&
+      pf.AddToRead(VertDesc(26))!=-1 &&
+      pf.AddToRead(VertDesc(27))!=-1 )   mask |= Mask::IOM_VERTNORMAL;
 
 	if( pf.AddToRead(VertDesc(3))!=-1 )		mask |= Mask::IOM_VERTFLAGS;
 	if( pf.AddToRead(VertDesc(4))!=-1 )		mask |= Mask::IOM_VERTQUALITY;
 	if( pf.AddToRead(VertDesc(11))!=-1 )	mask |= Mask::IOM_VERTQUALITY;
 	if( pf.AddToRead(VertDesc(15))!=-1 )	mask |= Mask::IOM_VERTRADIUS;
+  if( pf.AddToRead(VertDesc(28))!=-1 )	mask |= Mask::IOM_VERTRADIUS;
 	if( ( pf.AddToRead(VertDesc( 5))!=-1 ) && 
 		  ( pf.AddToRead(VertDesc( 6))!=-1 ) &&
 			( pf.AddToRead(VertDesc( 7))!=-1 )  )  mask |= Mask::IOM_VERTCOLOR;

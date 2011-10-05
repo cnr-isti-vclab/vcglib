@@ -341,14 +341,18 @@ public:
 	inline int IMark() const {return 0;}
 
 	typedef float QualityType;
+  typedef Point3f Quality3Type;
 	typedef vcg::Color4b ColorType;
+
 	ColorType &C() { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
 	const ColorType &cC() const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
 	ColorType &WC(const int) { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
 	const ColorType &cWC(const int) const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
 	QualityType &Q() { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
 	const QualityType &cQ() const { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
-  
+  Quality3Type &Q3() { static Quality3Type dummyQuality3(0,0,0);  assert(0); return dummyQuality3; }
+  const Quality3Type &cQ3() const { static Quality3Type dummyQuality3(0,0,0);  assert(0); return dummyQuality3; }
+
 	static bool HasFaceColor()   { return false; }
 	static bool HasFaceColorOcc() { return false;}
 	static bool HasFaceColorOcf() { return false;}
@@ -357,9 +361,13 @@ public:
 	static bool HasWedgeColorOcc()   { return false; }
 	static bool HasWedgeColorOcf()   { return false; }
 
-	static bool HasFaceQuality()   { return false; }
-	static bool HasFaceQualityOcc()   { return false; }
-	static bool HasFaceQualityOcf() { return false;}
+  static bool HasFaceQuality()   { return false; }
+  static bool HasFaceQualityOcc()   { return false; }
+  static bool HasFaceQualityOcf() { return false;}
+
+  static bool HasFaceQuality3()   { return false; }
+  static bool HasFaceQuality3Occ()   { return false; }
+  static bool HasFaceQuality3Ocf() { return false;}
 
 	static bool HasMark()   { return false; }
 	static bool HasMarkOcc()   { return false; }

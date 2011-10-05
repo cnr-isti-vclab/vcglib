@@ -41,11 +41,11 @@
 #include <vcg/complex/algorithms/inertia.h>
 #include <vcg/math/matrix33.h>
 
-#include <vcg/Eigen/Core>
-#include <vcg/Eigen/QR>
-#include <vcg/Eigen/LU>
-#include <vcg/Eigen/SVD>
-
+#include <eigenlib/Eigen/Core>
+#include <eigenlib/Eigen/QR>
+#include <eigenlib/Eigen/LU>
+#include <eigenlib/Eigen/SVD>
+#include <eigenlib/Eigen/Eigenvalues>
 // GG include
 #include <vector>
 #include <vcg/complex/algorithms/nring.h>
@@ -103,7 +103,7 @@ class Quadric
 
     double evaluate(double u, double v)
     {
-        return a*u*u + b*u*v + c*v*v + d*u + e*v;
+        return a()*u*u + b()*u*v + c()*v*v + d()*u + e()*v;
     }
 
     double du(double u, double v)
@@ -150,38 +150,37 @@ class Quadric
             A(c,3) = u;
             A(c,4) = v;
 
-            b[c] = n;
+            b(c,0) = n;
         }
 
         sol = ((A.transpose()*A).inverse()*A.transpose())*b;
-        return Quadric(sol[0],sol[1],sol[2],sol[3],sol[4]);
+        return Quadric(sol(0,0),sol(1,0),sol(2,0),sol(3,0),sol(4,0));
     }
 };
 
     static CoordType project(VertexType* v, VertexType* vp)
     {
-        return vp->P() - (v->N() * ((vp->P() - v->P()) * v->N()));
+      return vp->P() - (v->N() * ((vp->P() - v->P()) * v->N()));
     }
 
 
     static std::vector<CoordType> computeReferenceFrames(VertexTypeP vi)
     {
-          vcg::face::VFIterator<FaceType> vfi(vi);
+      vcg::face::VFIterator<FaceType> vfi(vi);
 
-          int i = (vfi.I()+1)%3;
-          VertexTypeP vp = vfi.F()->V(i);
+      int i = (vfi.I()+1)%3;
+      VertexTypeP vp = vfi.F()->V(i);
 
-	  CoordType x = (project(&*vi,vp) - vi->P()).Normalize();
+      CoordType x = (project(&*vi,vp) - vi->P()).Normalize();
+      //assert(fabs(x * vi->N()) < 0.1);
 
-	  assert(fabs(x * vi->N()) < 0.1);
-	  
-	  std::vector<CoordType> res(3);
-	  
-	  res[0] = x;
-          res[1] = (vi->N() ^ res[0]).Normalize();
-	  res[2] = (vi->N())/(vi->N()).Norm();
+      std::vector<CoordType> res(3);
 
-	  return res;
+      res[0] = x;
+      res[1] = (vi->N() ^ res[0]).Normalize();
+      res[2] = (vi->N())/(vi->N()).Norm();
+
+      return res;
     }
 
     static std::set<CoordType> getSecondRing(VertexTypeP v)
@@ -277,12 +276,12 @@ class Quadric
             c_val = -c_val;
 
             CoordType v1, v2;
-            v1[0] = c_vec[0];
-            v1[1] = c_vec[1];
+            v1[0] = c_vec(0,0);
+            v1[1] = c_vec(0,1);
             v1[2] = 0;
 
-            v2[0] = c_vec[2];
-            v2[1] = c_vec[3];
+            v2[0] = c_vec(1,0);
+            v2[1] = c_vec(1,1);
             v2[2] = 0;
 
             v1 = v1.Normalize();
@@ -410,7 +409,9 @@ class Quadric
                 //cout << sol << endl;
                 printf("Quadric: unsolvable vertex %d %d\n", count, ++index);
                 //return Quadric (1, 1, 1, 1, 1);
-                A.svd().solve(b, &sol);
+//                A.svd().solve(b, &sol);
+                Eigen::JacobiSVD<Eigen::MatrixXd> svd(A);
+                sol=svd.solve(b);
                 return QuadricLocal(sol[0],sol[1],sol[2],sol[3],sol[4]);
             }
             count++;
@@ -418,7 +419,11 @@ class Quadric
             //for (int i = 0; i < 100; i++)
             {
                 if (svdRes)
-                    A.svd().solve(b, &sol);
+                {
+                  Eigen::JacobiSVD<Eigen::MatrixXd> svd(A);
+                  sol=svd.solve(b);
+                  //A.svd().solve(b, &sol);
+                }
                 else
                     sol = ((A.transpose()*A).inverse()*A.transpose())*b;
 

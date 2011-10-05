@@ -107,6 +107,7 @@ static vcg::Trackball::Button GLUT2VCG (int glut_button, int )
 
 
 void Display(){
+	glViewport(0, 0, width, height);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	if(!mesh.face.empty()){

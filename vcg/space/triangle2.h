@@ -105,6 +105,7 @@ bool InterpolationParameters(const CoordType & bq, ScalarType &L1,
 	L1=((y2-y3)*(x-x3)+(x3-x2)*(y-y3))/((y2-y3)*(x1-x3)+(x3-x2)*(y1-y3));
 	L2=((y3-y1)*(x-x3)+(x1-x3)*(y-y3))/((y3-y1)*(x2-x3)+(x1-x3)*(y2-y3));
 	L3=1-L1-L2;
+  if(math::IsNAN(L1) || math::IsNAN(L2) || math::IsNAN(L3)) L1=L2=L3=(ScalarType)(1.0/3.0);
 	bool inside=true;
 	inside&=(L1>=0-EPSILON)&&(L1<=1+EPSILON);
 	inside&=(L2>=0-EPSILON)&&(L2<=1+EPSILON);

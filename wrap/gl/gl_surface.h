@@ -481,6 +481,7 @@ class gl_surface
 			glPopMatrix();
 
 			glPopAttrib();
+      return true;
 		}
 
 		bool draw_depth_attachment(int x, int y, int width, int height)
@@ -518,6 +519,7 @@ class gl_surface
 			glPopMatrix();
 
 			glPopAttrib();
+      return true;
 		}
 
 	protected:
