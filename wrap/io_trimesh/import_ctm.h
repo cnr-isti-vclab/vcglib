@@ -86,7 +86,7 @@ static const char* ErrorMsg(int error)
 };
 
 
-static int Open( OpenMeshType &m, const char * filename, int &loadmask, CallBackPos *cb=0)
+static int Open( OpenMeshType &m, const char * filename, int &loadmask, CallBackPos */*cb*/=0)
 {
     CTMcontext context;
 
@@ -106,14 +106,14 @@ static int Open( OpenMeshType &m, const char * filename, int &loadmask, CallBack
     // Extract colors
     m.Clear();
     Allocator<OpenMeshType>::AddVertices(m, vertCount);
-    for(int i=0;i<vertCount;++i)
+    for(unsigned int i=0;i<vertCount;++i)
         m.vert[i].P()=Point3f(vertices[i*3+0],vertices[i*3+1],vertices[i*3+2]);
 
     CTMenum colorAttrib = ctmGetNamedAttribMap(context,"Color");
     if(colorAttrib != CTM_NONE)
     {
       const CTMfloat *colors = ctmGetFloatArray(context,colorAttrib);
-      for(int i=0;i<vertCount;++i)
+      for(unsigned int i=0;i<vertCount;++i)
           m.vert[i].C()=Color4b(colors[i*4+0]*255,colors[i*4+1]*255,colors[i*4+2]*255,colors[i*4+3]*255);
       loadmask |= Mask::IOM_VERTCOLOR;
     }
@@ -122,13 +122,18 @@ static int Open( OpenMeshType &m, const char * filename, int &loadmask, CallBack
     if(qualityAttrib != CTM_NONE)
     {
       const CTMfloat *qualities = ctmGetFloatArray(context,colorAttrib);
-      for(int i=0;i<vertCount;++i)
+      for(unsigned int i=0;i<vertCount;++i)
           m.vert[i].Q()=qualities[i*4+0];
       loadmask |= Mask::IOM_VERTQUALITY;
     }
 
+    if(triCount==1)
+    {
+      if(indices[0]==0 && indices[1]==0 && indices[2]==0)
+        triCount=0;
+    }
     Allocator<OpenMeshType>::AddFaces(m, triCount);
-    for(int i=0;i<triCount;++i)
+    for(unsigned int i=0;i<triCount;++i)
     {
         m.face[i].V(0)=&m.vert[indices[i*3+0]];
         m.face[i].V(1)=&m.vert[indices[i*3+1]];
@@ -139,8 +144,7 @@ static int Open( OpenMeshType &m, const char * filename, int &loadmask, CallBack
     }
 
     int result = E_NOERROR;
-
-	return result;
+    return result;
 } // end of Open
 
 

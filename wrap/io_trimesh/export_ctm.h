@@ -44,7 +44,7 @@ namespace vcg {
                     std::vector<CTMfloat> aColors(aVertCount*4);
                     std::vector<CTMfloat> aQuality(aVertCount*4);
                     std::vector<CTMuint> aIndices(aTriCount*3);
-
+                    int err;
                     CTMcontext context;
                     // Create a new exporter context
                     context = ctmNewContext(CTM_EXPORT);
@@ -54,26 +54,32 @@ namespace vcg {
                       ctmVertexPrecision(context, relativePrecision);
                     }
                     // Prepare vertex and faces
-                    for(int i=0;i<aVertCount;++i)
+                    for(unsigned int i=0;i<aVertCount;++i)
                     {
                         aVertices[i*3+0]=m.vert[i].P()[0];
                         aVertices[i*3+1]=m.vert[i].P()[1];
                         aVertices[i*3+2]=m.vert[i].P()[2];
                     }
-                    for(int i=0;i<aTriCount;++i)
+                    for(unsigned int i=0;i<aTriCount;++i)
                     {
                         aIndices[i*3+0]=m.face[i].V(0)-&*m.vert.begin();
                         aIndices[i*3+1]=m.face[i].V(1)-&*m.vert.begin();
                         aIndices[i*3+2]=m.face[i].V(2)-&*m.vert.begin();
                     }
+                    if(aTriCount==0)
+                    {
+                      aIndices.resize(3,0);
+                      aTriCount=1;
+                    }
 
                     // Define our mesh representation to OpenCTM
                     ctmDefineMesh(context, &*aVertices.begin(), aVertCount, &*aIndices.begin(), aTriCount, NULL);
-
+                    err=ctmGetError(context);
+                    if(err) return err;
                     if( tri::HasPerVertexColor(m)   && (mask & io::Mask::IOM_VERTCOLOR))
                     {
                         aColors.resize(aVertCount*4);
-                        for(int i=0;i<aVertCount;++i)
+                        for(unsigned int i=0;i<aVertCount;++i)
                         {
                             aColors[i*4+0]=(float)(m.vert[i].C()[0])/255.0f;
                             aColors[i*4+1]=(float)(m.vert[i].C()[1])/255.0f;
@@ -85,7 +91,7 @@ namespace vcg {
                     if( tri::HasPerVertexQuality(m)   && (mask & io::Mask::IOM_VERTQUALITY))
                     {
                         aQuality.resize(aVertCount*4,0);
-                        for(int i=0;i<aVertCount;++i)
+                        for(unsigned int i=0;i<aVertCount;++i)
                         {
                             aQuality[i*4+0]=m.vert[i].Q();
                         }
@@ -94,9 +100,11 @@ namespace vcg {
 
                     // Save the OpenCTM file
                     ctmSave(context, filename);
+                    err=ctmGetError(context);
+                    if(err) return err;
                     // Free the context
                     ctmFreeContext(context);
-                    return 0;
+                    return err;
                 }
                 /*
             returns mask of capability one define with what are the saveable information of the format.
@@ -114,8 +122,8 @@ namespace vcg {
 
                 static const char *ErrorMsg(int error)
                 {
-                    if(error==-1) return "unable to open file";
-                    return "Ok, no errors";
+                    if(error==0) return "Ok, no errors";
+                    else return ctmErrorString((CTMenum)error);
                 }
             };
         } // end namespace io
