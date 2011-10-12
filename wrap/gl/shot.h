@@ -178,14 +178,11 @@ static void GetNearFarPlanes(vcg::Shot<ScalarType> & shot, vcg::Box3<ScalarType>
   for(int i = 0; i < 8; i++) {
     vcg::Point3<ScalarType> c = bbox.P(i);
     ScalarType d = -(zaxis * c - offset);
-    if(first || d < nr) { 
+    if(first || d < nr)  
       nr = d;
-      first = false;
-    }
-    if(first || d > fr) { 
+    if(first || d > fr)   
       fr = d;
-      first = false;
-    }
+    first = false;
   }
 }
 
