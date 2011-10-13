@@ -52,6 +52,7 @@ template <class OpenMeshType>
 class ImporterOBJ
 {
 public:
+   static int &MRGBLineCount(){static int _MRGBLineCount=0; return _MRGBLineCount;}
 
 	typedef typename OpenMeshType::VertexPointer VertexPointer;
 	typedef typename OpenMeshType::ScalarType ScalarType;
@@ -263,13 +264,13 @@ public:
 	// vertices and faces allocatetion
   VertexIterator vi = vcg::tri::Allocator<OpenMeshType>::AddVertices(m,oi.numVertices);
 	//FaceIterator   fi = Allocator<OpenMeshType>::AddFaces(m,oi.numFaces);
-
+  std::vector<Color4b> vertexColorVector;
   ObjIndexedFace	ff; 
-  char *loadingStr = "Loading";
+  const char *loadingStr = "Loading";
 	while (!stream.eof())
 	{
 		tokens.clear();
-		TokenizeNextLine(stream, tokens);
+		TokenizeNextLine(stream, tokens,&vertexColorVector);
 
 		unsigned int numTokens = static_cast<unsigned int>(tokens.size());
 		if (numTokens > 0)
@@ -341,30 +342,32 @@ public:
 
 				numVNormals++;
 			}
-				else if( (header.compare("f")==0) || (header.compare("q")==0) )  // face
+			else if( (header.compare("f")==0) || (header.compare("q")==0) )  // face
 			{
 			  loadingStr="Face Loading";
 
-					bool QuadFlag = false; // QOBJ format by Silva et al for simply storing quadrangular meshes.				
-					if(header.compare("q")==0) { QuadFlag=true; assert(numTokens == 5); }
+			  bool QuadFlag = false; // QOBJ format by Silva et al for simply storing quadrangular meshes.
+			  if(header.compare("q")==0) { QuadFlag=true; assert(numTokens == 5); }
 
-				if (numTokens < 4) return E_LESS_THAN_3VERTINFACE;
-				int vertexesPerFace = static_cast<int>(tokens.size()-1);
+			  if (numTokens < 4) return E_LESS_THAN_3VERTINFACE;
+			  int vertexesPerFace = static_cast<int>(tokens.size()-1);
 
-				if( (vertexesPerFace>3) && OpenMeshType::FaceType::HasPolyInfo() ){
-            //_BEGIN___ if  you are loading a GENERIC POLYGON mesh
-					ff.set(vertexesPerFace);
-					for(int i=0;i<vertexesPerFace;++i) // remember index starts from 1 instead of 0
-							SplitToken(tokens[i+1], ff.v[i], ff.n[i], ff.t[i], inputMask);
-
-		 if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD )
+			  if( (vertexesPerFace>3) && OpenMeshType::FaceType::HasPolyInfo() )
+			  {
+//_BEGIN___ if  you are loading a GENERIC POLYGON mesh
+				ff.set(vertexesPerFace);
+				for(int i=0;i<vertexesPerFace;++i) { // remember index starts from 1 instead of 0
+				  SplitToken(tokens[i+1], ff.v[i], ff.n[i], ff.t[i], inputMask);
+				  if(QuadFlag) ff.v[i]++; // NOTE THAT THE STUPID QOBJ FORMAT IS ZERO INDEXED!!!!
+				}
+				if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD )
 				{
-					// verifying validity of texture coords indices
-		          for(int i=0;i<vertexesPerFace;i++)
-				  if(!GoodObjIndex(ff.t[i],oi.numTexCoords)) 
-				   return E_BAD_VERT_TEX_INDEX;
+				  // verifying validity of texture coords indices
+				  for(int i=0;i<vertexesPerFace;i++)
+					if(!GoodObjIndex(ff.t[i],oi.numTexCoords))
+					  return E_BAD_VERT_TEX_INDEX;
 
-					ff.tInd=materials[currentMaterialIdx].index;
+				  ff.tInd=materials[currentMaterialIdx].index;
 				}
 
 				// verifying validity of vertex indices
@@ -372,32 +375,32 @@ public:
 				std::sort(tmp.begin(),tmp.end());
 				std::unique(tmp.begin(),tmp.end());
 				if(tmp.size() != ff.v.size())
-					result = E_VERTICES_WITH_SAME_IDX_IN_FACE;
+				  result = E_VERTICES_WITH_SAME_IDX_IN_FACE;
 
-        for(int i=0;i<vertexesPerFace;i++)
-            if(!GoodObjIndex(ff.v[i],numVertices))
-              return E_BAD_VERT_INDEX;
+				for(int i=0;i<vertexesPerFace;i++)
+				  if(!GoodObjIndex(ff.v[i],numVertices))
+					return E_BAD_VERT_INDEX;
 
-				// assigning face normal
-				if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
+
+				if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL ) // assigning face normal
 				{
-					// verifying validity of vertex normal indices
-          for(int i=0;i<vertexesPerFace;i++)
-            if(!GoodObjIndex(ff.n[i],numVNormals)) return E_BAD_VERT_NORMAL_INDEX;
+				  // verifying validity of vertex normal indices
+				  for(int i=0;i<vertexesPerFace;i++)
+					if(!GoodObjIndex(ff.n[i],numVNormals)) return E_BAD_VERT_NORMAL_INDEX;
 				}
 
-				// assigning face color
-                        if( oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR)
-					 ff.c = currentColor;
+
+				if( oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR) // assigning face color
+				  ff.c = currentColor;
 
 				++numTriangles;
-		        indexedFaces.push_back(ff);
+				indexedFaces.push_back(ff);
 
-			//_END  ___ if  you are loading a GENERIC POLYGON mesh 
-				}else
-#ifdef __gl_h_
+//_END  ___ if  you are loading a GENERIC POLYGON mesh
+			  }
+			  else
 				{
-			//_BEGIN___ if  you are loading a  TRIMESH mesh 
+//_BEGIN___ if  you are loading a  TRIMESH mesh
                         std::vector<std::vector<vcg::Point3f> > polygonVect(1); // it is a vector of polygon loops
                         polygonVect[0].resize(vertexesPerFace);
                         std::vector<int> indexVVect(vertexesPerFace);
@@ -408,12 +411,24 @@ public:
                         for(int pi=0;pi<vertexesPerFace;++pi)
                         {
                             SplitToken(tokens[pi+1], indexVVect[pi],indexNVect[pi],indexTVect[pi], inputMask);
+                            if(QuadFlag) indexVVect[pi]++; // NOTE THAT THE STUPID QOBJ FORMAT IS ZERO INDEXED!!!!
                             GoodObjIndex(indexVVect[pi],numVertices);
                             GoodObjIndex(indexTVect[pi],oi.numTexCoords);
-                           polygonVect[0][pi]=m.vert[indexVVect[pi]].cP();
+                            polygonVect[0][pi]=m.vert[indexVVect[pi]].cP();
                         }
 
-                        vcg::glu_tesselator::tesselate<vcg::Point3f>(polygonVect, indexTriangulatedVect);
+                        if(vertexesPerFace<5)
+                          InternalFanTessellator(polygonVect, indexTriangulatedVect);
+                        else
+                        {
+#ifdef __gl_h_
+                          //qDebug("OK: using opengl tessellation for a polygon of %i verteces",vertexesPerFace);
+                          vcg::glu_tesselator::tesselate<vcg::Point3f>(polygonVect, indexTriangulatedVect);
+#else
+                          //qDebug("Warning: using fan tessellation for a polygon of %i verteces",vertexesPerFace);
+                          InternalFanTessellator(polygonVect, indexTriangulatedVect);
+#endif
+                        }
                         extraTriangles+=((indexTriangulatedVect.size()/3) -1);
 #ifdef QT_VERSION
                         if( int(indexTriangulatedVect.size()/3) != vertexesPerFace-2)
@@ -428,28 +443,23 @@ public:
 
                         for(size_t pi=0;pi<indexTriangulatedVect.size();pi+=3)
                         {
-                            int i0= indexTriangulatedVect [pi+0];
-                            int i1= indexTriangulatedVect [pi+1];
-                            int i2= indexTriangulatedVect [pi+2];
-                            //qDebug("Triangle %i (%i %i %i)",pi/3,i0,i1,i2);
-
-                            ff.set(3);
-                            ff.v[0]= indexVVect[i0];
-                            ff.v[1]= indexVVect[i1];
-                            ff.v[2]= indexVVect[i2];
-                            ff.t[0]= indexTVect[i0];
-                            ff.t[1]= indexTVect[i1];
-                            ff.t[2]= indexTVect[i2];
+                          ff.set(3);
+                          int locInd[3];
+                          for(int iii=0;iii<3;++iii)
+                          {
+                            locInd[iii]=indexTriangulatedVect[pi+iii];
+                            ff.v[iii]=indexVVect[ locInd[iii] ];
+                            ff.t[iii]=indexTVect[ locInd[iii] ];
+                          }
 
                             // Setting internal edges: only edges formed by consecutive edges are external.
-                            if( (i0+1)%vertexesPerFace == i1) ff.edge[0]=false;
-                            else ff.edge[0]=true;
-                            if( (i1+1)%vertexesPerFace == i2) ff.edge[1]=false;
-                            else ff.edge[1]=true;
-                            if( (i2+1)%vertexesPerFace == i0) ff.edge[2]=false;
-                            else ff.edge[2]=true;
+                          for(int iii=0;iii<3;++iii)
+                          {
+                            if( (locInd[iii]+1)%vertexesPerFace == locInd[(iii+1)%3]) ff.edge[iii]=false;
+                                                                                 else ff.edge[iii]=true;
+                          }
 
-        if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD )
+                          if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD )
                             { // verifying validity of texture coords indices
                                 for(int i=0;i<3;i++)
                                     if(!GoodObjIndex(ff.t[i],oi.numTexCoords))  return E_BAD_VERT_TEX_INDEX;
@@ -478,122 +488,6 @@ public:
                         }
 
                     }
-#else
-				{
-                        ff.set(3);
-                        for(int i=0;i<3;++i)
-						{		// remember index starts from 1 instead of 0
-							SplitToken(tokens[i+1], ff.v[i], ff.n[i], ff.t[i], inputMask);
-							if(QuadFlag) { ff.v[i]+=1; }
-						}
-						if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD )
-						{
-					// verifying validity of texture coords indices
-          for(int i=0;i<3;i++)
-            if(!GoodObjIndex(ff.t[i],oi.numTexCoords)) 
-              return E_BAD_VERT_TEX_INDEX;
-
-					ff.tInd=materials[currentMaterialIdx].index;
-				}
-
-				// verifying validity of vertex indices
-				if ((ff.v[0] == ff.v[1]) || (ff.v[0] == ff.v[2]) || (ff.v[1] == ff.v[2]))
-					       result = E_VERTICES_WITH_SAME_IDX_IN_FACE;
-
-        for(int i=0;i<3;i++)
-            if(!GoodObjIndex(ff.v[i],numVertices))
-              return E_BAD_VERT_INDEX;
-
-				// assigning face normal
-				if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
-                        {   // verifying validity of vertex normal indices
-          for(int i=0;i<3;i++)
-            if(!GoodObjIndex(ff.n[i],numVNormals)) return E_BAD_VERT_NORMAL_INDEX;
-				}
-
-				// assigning face color
-				// --------------------
-				if( oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR)		
-          ff.c = currentColor;
-
-				// by default there are no internal edge
-				ff.edge[0]=ff.edge[1]=ff.edge[2]=false;
-				if(vertexesPerFace>3) ff.edge[2]=true;
-				++numTriangles;
-        indexedFaces.push_back(ff);
-        	/*
-					// A face polygon composed of more than three vertices is triangulated
-					// according to the following schema:
-					//                     v5
-					//                    /  \   
-					//                   /    \    
-					//                  /      \   
-					//                 v1------v4 
-					//                 |\      /
-					//                 | \    /
-					//                 |  \  /
-					//                v2---v3
-					//
-					// As shown above, the 5 vertices polygon (v1,v2,v3,v4,v5)
-					// has been split into the triangles (v1,v2,v3), (v1,v3,v4) e (v1,v4,v5).
-					// This way vertex v1 becomes the common vertex of all newly generated
-					// triangles, and this may lead to the creation of very thin triangles.
-					*/
-
-				int iVertex = 3;
-				while (iVertex < vertexesPerFace)  // add other triangles
-				{
-							oi.mask |= Mask::IOM_BITPOLYGONAL;
-					ObjIndexedFace ffNew=ff;
-          			int v4_index;
-					int vt4_index;
-					int vn4_index;
-
-							SplitToken(tokens[++iVertex], v4_index, vn4_index, vt4_index, inputMask);
-							if(QuadFlag) { v4_index+=1; }
-					if(!GoodObjIndex(v4_index, numVertices))
-						return E_BAD_VERT_INDEX;
-
-					// assigning wedge texture coordinates
-					// -----------------------------------
-					if( oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD )
-					{
-						// verifying validity of texture coords index
-						// ------------------------------------------
-            if(!GoodObjIndex(vt4_index,oi.numTexCoords))
-              return E_BAD_VERT_TEX_INDEX;
-
-				    if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
-                if(!GoodObjIndex(vn4_index,numVNormals))
-                  return E_BAD_VERT_NORMAL_INDEX;
-
-         		ffNew.t[1]=ff.t[2];
-            ffNew.t[2]=vt4_index;            
-					}
-
-					if ((ff.v[0] == v4_index) || (ff.v[2] == v4_index)) result = E_VERTICES_WITH_SAME_IDX_IN_FACE;
-					ffNew.v[1]=ff.v[2];
-          ffNew.v[2]=v4_index;            
-
-					// assigning face normal
-					// ---------------------
-					if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
-					{									  
-            ffNew.n[1]=ff.n[2];
-            ffNew.n[2]=vn4_index;            
-					}
-					// Setting internal edges: edge 1 (the opposite to vertex 0) is always an external edge. 
-          ffNew.edge[0]=true;
-					ffNew.edge[1]=false;
-					if(iVertex < vertexesPerFace) ffNew.edge[2]=true;
-																	else	ffNew.edge[2]=false;
-					++numTriangles;
-          ++extraTriangles;
-          indexedFaces.push_back(ffNew);
-					ff.v[2] = v4_index;
-				}
-                    }//_END___ if  you are loading a  TRIMESH mesh
-#endif
 					}
 			else if (header.compare("mtllib")==0)	// material library
 			{
@@ -639,67 +533,74 @@ public:
 	FaceIterator   fi = vcg::tri::Allocator<OpenMeshType>::AddFaces(m,numTriangles);
   //-------------------------------------------------------------------------------
 
-	// Now the final pass to convert indexes into pointers for face to vert/norm/tex references
-		for(int i=0; i<numTriangles; ++i)
-  {
-			assert(m.face.size() == size_t(m.fn));
-	m.face[i].Alloc(indexedFaces[i].v.size()); // it does not do anything if it is a trimesh
+	// Now the final passes:
+	// First Pass to convert indexes into pointers for face to vert/norm/tex references
+	for(int i=0; i<numTriangles; ++i)
+	{
+	  assert(m.face.size() == size_t(m.fn));
+	  m.face[i].Alloc(indexedFaces[i].v.size()); // it does not do anything if it is a trimesh
 
-    for(unsigned int j=0;j<indexedFaces[i].v.size();++j)
-    {
-				m.face[i].V(j) = &(m.vert[indexedFaces[i].v[j]]);
+	  for(unsigned int j=0;j<indexedFaces[i].v.size();++j)
+	  {
+		m.face[i].V(j) = &(m.vert[indexedFaces[i].v[j]]);
 
-				if (((oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD) != 0) && (m.HasPerWedgeTexCoord()))
-				{
-          ObjTexCoord t = texCoords[indexedFaces[i].t[j]];
-			    m.face[i].WT(j).u() = t.u;
-			    m.face[i].WT(j).v() = t.v;
-			    m.face[i].WT(j).n() = indexedFaces[i].tInd;
-      }
-      if ( oi.mask & vcg::tri::io::Mask::IOM_VERTTEXCOORD ) {
-          ObjTexCoord t = texCoords[indexedFaces[i].t[j]];
-          m.face[i].V(j)->T().u() = t.u;
-          m.face[i].V(j)->T().v() = t.v;
-          m.face[i].V(j)->T().n() = indexedFaces[i].tInd;
-      }
-      if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
-        m.face[i].WN(j).Import(normals[indexedFaces[i].n[j]]);		
-
-      if ( oi.mask & vcg::tri::io::Mask::IOM_VERTNORMAL )
-        m.face[i].V(j)->N().Import(normals[indexedFaces[i].n[j]]);
-
-			// set faux edge flags according to internals faces
-				if (indexedFaces[i].edge[j])
-				{
-					m.face[i].SetF(j);
-    }
-				else
-				{
-					m.face[i].ClearF(j);
-				}
-			}
-
-			if (((oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR) != 0) && (m.HasPerFaceColor()))
-			{
-				m.face[i].C() = indexedFaces[i].c;
-			}
-
-			if (((oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL) != 0) && (m.HasPerWedgeNormal()))
-			{
-    					// face normal is computed as an average of wedge normals
-	    m.face[i].N().Import(m.face[i].WN(0)+m.face[i].WN(1)+m.face[i].WN(2));
-			}
-			else
-			{
-				// computing face normal from position of face vertices
-				if (m.HasPerFaceNormal())
-				{
-					face::ComputeNormalizedNormal(m.face[i]);
-				}
-			}
+		if (((oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD) != 0) && (m.HasPerWedgeTexCoord()))
+		{
+		  ObjTexCoord t = texCoords[indexedFaces[i].t[j]];
+		  m.face[i].WT(j).u() = t.u;
+		  m.face[i].WT(j).v() = t.v;
+		  m.face[i].WT(j).n() = indexedFaces[i].tInd;
 		}
+		if ( oi.mask & vcg::tri::io::Mask::IOM_VERTTEXCOORD ) {
+		  ObjTexCoord t = texCoords[indexedFaces[i].t[j]];
+		  m.face[i].V(j)->T().u() = t.u;
+		  m.face[i].V(j)->T().v() = t.v;
+		  m.face[i].V(j)->T().n() = indexedFaces[i].tInd;
+		}
+		if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
+		  m.face[i].WN(j).Import(normals[indexedFaces[i].n[j]]);
 
-  return result;
+		if ( oi.mask & vcg::tri::io::Mask::IOM_VERTNORMAL )
+		  m.face[i].V(j)->N().Import(normals[indexedFaces[i].n[j]]);
+
+		// set faux edge flags according to internals faces
+		if (indexedFaces[i].edge[j]) m.face[i].SetF(j);
+								 else m.face[i].ClearF(j);
+	  }
+
+	  if (((oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR) != 0) && (m.HasPerFaceColor()))
+	  {
+		m.face[i].C() = indexedFaces[i].c;
+	  }
+
+	  if (((oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL) != 0) && (m.HasPerWedgeNormal()))
+	  {
+		// face normal is computed as an average of wedge normals
+		m.face[i].N().Import(m.face[i].WN(0)+m.face[i].WN(1)+m.face[i].WN(2));
+	  }
+	  else
+	  {
+		// computing face normal from position of face vertices
+		if (m.HasPerFaceNormal())
+		{
+		  face::ComputeNormalizedNormal(m.face[i]);
+		}
+	  }
+	}
+	// final pass to manage the ZBrush PerVertex Color that are managed into comments
+	if(vertexColorVector.size()>0)
+	{
+//	  if(vertexColorVector.size()!=m.vn){
+//		qDebug("Warning Read %i vertices and %i vertex colors",m.vn,vertexColorVector.size());
+//		qDebug("line count %i x 64 = %i",MRGBLineCount(), MRGBLineCount()*64);
+//	  }
+	  for(int i=0;i<m.vn;++i)
+	  {
+		m.vert[i].C()=vertexColorVector[i];
+	  }
+	}
+
+	return result;
 	} // end of Open
 
 
@@ -709,151 +610,187 @@ public:
 	* \param stream	The object providing the input stream
 	*	\param tokens	The "tokens" in the next line
 	*/
-        inline static void TokenizeNextLine(std::ifstream &stream, std::vector< std::string > &tokens)
+	inline static void TokenizeNextLine(std::ifstream &stream, std::vector< std::string > &tokens, std::vector<Color4b> *colVec)
 	{
-		if(stream.eof()) return;
-		std::string line;
-		do
-			std::getline(stream, line);
-		while ((line[0] == '#' || line.length()==0) && !stream.eof());  // skip comments and empty lines
-
-		if ((line[0] == '#') || (line.length() == 0))  // can be true only on last line of file
-			return;
-
-		size_t from		= 0; 
-		size_t to			= 0;
-		size_t length = line.size();
-		tokens.clear();
-		do
+	  if(stream.eof()) return;
+	  std::string line;
+	  do
+	  {
+		std::getline(stream, line);
+		if(colVec && line[0] == '#')
 		{
-			while (from!=length && (line[from]==' ' || line[from]=='\t' || line[from]=='\r') )
-				from++;
-      if(from!=length)
-      {
-				to = from+1;
-				while (to!=length && line[to]!=' ' && line[to] != '\t' && line[to]!='\r')
-					to++;
-				tokens.push_back(line.substr(from, to-from).c_str());
-				from = to;
-      }
+		  // The following MRGB block contains ZBrush Vertex Color (Polypaint)
+		  // and masking output as 4 hexadecimal values per vertex. The vertex color format is MMRRGGBB with up to 64 entries per MRGB line.
+		  if(line[1] == 'M' && line[2] == 'R' && line[3] == 'G' && line[4] == 'B')
+		  { // Parsing the polycolor of ZBrush
+			MRGBLineCount()++;
+			size_t len = line.length();
+			char buf[3]="00";
+			Color4b cc(Color4b::Black);
+			for(int i=6;(i+7)<len;i+=8)
+			{
+			  for(int j=1;j<4;j++)
+			  {
+				buf[0]=line[i+j*2+0];
+				buf[1]=line[i+j*2+1];
+				buf[2]=0;
+				char *p;
+				int val=strtoul(buf,&p,16);
+				cc[j-1]= val;
+			  }
+			  colVec->push_back(cc);
+			}
+		  }
 		}
-		while (from<length);
+	  }
+	  while (( line[0] == '#' || line.length()==0) && !stream.eof());  // skip comments and empty lines
+
+	  if ((line[0] == '#') || (line.length() == 0))  // can be true only on last line of file
+		return;
+
+	  size_t from		= 0;
+	  size_t to			= 0;
+	  size_t length = line.size();
+
+	  tokens.clear();
+	  do
+	  {
+		while (from!=length && (line[from]==' ' || line[from]=='\t' || line[from]=='\r') )
+		  from++;
+		if(from!=length)
+		{
+		  to = from+1;
+		  while (to!=length && line[to]!=' ' && line[to] != '\t' && line[to]!='\r')
+			to++;
+		  tokens.push_back(line.substr(from, to-from).c_str());
+		  from = to;
+		}
+	  }
+	  while (from<length);
 	} // end TokenizeNextLine
 
-        inline static void SplitToken(std::string token, int &vId, int &nId, int &tId, int mask)
+
+
+	// This function takes a token and, according to the mask, it returns the indexes of the involved vertex, normal and texcoord indexes.
+	// Example. if the obj file has vertex texcoord (e.g. lines 'vt 0.444 0.5555')
+	// when parsing  a line like
+	// f 46/303 619/325 624/326 623/327
+	// if in the mask you have specified to read wedge tex coord
+	// for the first token it will return inside vId and tId the corresponding indexes 46 and 303 )
+	inline static void SplitToken(std::string token, int &vId, int &nId, int &tId, int mask)
 	{
-  		  std::string vertex;
-			  std::string texcoord;
-				std::string normal;
+	  std::string vertex;
+	  std::string texcoord;
+	  std::string normal;
 
- 				if( ( mask & Mask::IOM_WEDGTEXCOORD ) && (mask & Mask::IOM_WEDGNORMAL) )   SplitVVTVNToken(token, vertex, texcoord, normal);
- 				if(!( mask & Mask::IOM_WEDGTEXCOORD ) && (mask & Mask::IOM_WEDGNORMAL) )   SplitVVNToken(token, vertex, normal);
- 				if( ( mask & Mask::IOM_WEDGTEXCOORD ) &&!(mask & Mask::IOM_WEDGNORMAL) )   SplitVVTToken(token, vertex, texcoord);
- 				if(!( mask & Mask::IOM_WEDGTEXCOORD ) &&!(mask & Mask::IOM_WEDGNORMAL) )   SplitVToken(token, vertex);
+	  if( ( mask & Mask::IOM_WEDGTEXCOORD ) && (mask & Mask::IOM_WEDGNORMAL) )   SplitVVTVNToken(token, vertex, texcoord, normal);
+	  if(!( mask & Mask::IOM_WEDGTEXCOORD ) && (mask & Mask::IOM_WEDGNORMAL) )   SplitVVNToken(token, vertex, normal);
+	  if( ( mask & Mask::IOM_WEDGTEXCOORD ) &&!(mask & Mask::IOM_WEDGNORMAL) )   SplitVVTToken(token, vertex, texcoord);
+	  if(!( mask & Mask::IOM_WEDGTEXCOORD ) &&!(mask & Mask::IOM_WEDGNORMAL) )   SplitVToken(token, vertex);
 
-		vId = atoi(vertex.c_str()) - 1;
-		if(mask & Mask::IOM_WEDGTEXCOORD) tId = atoi(texcoord.c_str()) - 1;
-		if(mask & Mask::IOM_WEDGNORMAL)   nId = atoi(normal.c_str())   - 1;
+	  vId = atoi(vertex.c_str()) - 1;
+	  if(mask & Mask::IOM_WEDGTEXCOORD) tId = atoi(texcoord.c_str()) - 1;
+	  if(mask & Mask::IOM_WEDGNORMAL)   nId = atoi(normal.c_str())   - 1;
 	}
 
-        inline static void SplitVToken(std::string token, std::string &vertex)
+	inline static void SplitVToken(std::string token, std::string &vertex)
 	{
-		vertex = token; 
+	  vertex = token;
 	}
 
-        inline static void SplitVVTToken(std::string token, std::string &vertex, std::string &texcoord)
+	inline static void SplitVVTToken(std::string token, std::string &vertex, std::string &texcoord)
 	{
-		vertex.clear();
-		texcoord.clear();
+	  vertex.clear();
+	  texcoord.clear();
 
-		size_t from		= 0; 
-		size_t to			= 0;
-		size_t length = token.size();
+	  size_t from		= 0;
+	  size_t to			= 0;
+	  size_t length = token.size();
 
-		if(from!=length)
-    {
-			char c = token[from];
-			vertex.push_back(c);
+	  if(from!=length)
+	  {
+		char c = token[from];
+		vertex.push_back(c);
 
-			to = from+1;
-            while (to<length && ((c = token[to]) !='/'))
-			{
-				vertex.push_back(c);
-				++to;
-			}
-			++to;
-            while (to<length && ((c = token[to]) !=' '))
-			{
-				texcoord.push_back(c);
-				++to;
-			}
+		to = from+1;
+		while (to<length && ((c = token[to]) !='/'))
+		{
+		  vertex.push_back(c);
+		  ++to;
 		}
+		++to;
+		while (to<length && ((c = token[to]) !=' '))
+		{
+		  texcoord.push_back(c);
+		  ++to;
+		}
+	  }
 	}	// end of SplitVVTToken
 
-        inline static void SplitVVNToken(std::string token, std::string &vertex, std::string &normal)
+	inline static void SplitVVNToken(std::string token, std::string &vertex, std::string &normal)
 	{
-		vertex.clear();
-		normal.clear();
+	  vertex.clear();
+	  normal.clear();
 
-		size_t from		= 0; 
-		size_t to			= 0;
-		size_t length = token.size();
+	  size_t from		= 0;
+	  size_t to			= 0;
+	  size_t length = token.size();
 
-		if(from!=length)
-    {
-			char c = token[from];
-			vertex.push_back(c);
+	  if(from!=length)
+	  {
+		char c = token[from];
+		vertex.push_back(c);
 
-			to = from+1;
-			while (to!=length && ((c = token[to]) !='/'))
-			{
-				vertex.push_back(c);
-				++to;
-			}
-			++to;
-			++to;  // should be the second '/'
-			while (to!=length && ((c = token[to]) !=' '))
-			{
-				normal.push_back(c);
-				++to;
-			}
+		to = from+1;
+		while (to!=length && ((c = token[to]) !='/'))
+		{
+		  vertex.push_back(c);
+		  ++to;
 		}
+		++to;
+		++to;  // should be the second '/'
+		while (to!=length && ((c = token[to]) !=' '))
+		{
+		  normal.push_back(c);
+		  ++to;
+		}
+	  }
 	}	// end of SplitVVNToken
 
-        inline static void SplitVVTVNToken(std::string token, std::string &vertex, std::string &texcoord, std::string &normal)
+	inline static void SplitVVTVNToken(std::string token, std::string &vertex, std::string &texcoord, std::string &normal)
 	{
-		vertex.clear();
-		texcoord.clear();
-		normal.clear();
+	  vertex.clear();
+	  texcoord.clear();
+	  normal.clear();
 
-		size_t from		= 0; 
-		size_t to			= 0;
-		size_t length = token.size();
+	  size_t from		= 0;
+	  size_t to			= 0;
+	  size_t length = token.size();
 
-		if(from!=length)
-    {
-			char c = token[from];
-			vertex.push_back(c);
+	  if(from!=length)
+	  {
+		char c = token[from];
+		vertex.push_back(c);
 
-			to = from+1;
-			while (to!=length && ((c = token[to]) !='/'))
-			{
-				vertex.push_back(c);
-				++to;
-			}
-			++to;
-			while (to!=length && ((c = token[to]) !='/'))
-			{
-				texcoord.push_back(c);
-				++to;
-			}
-			++to;
-			while (to!=length && ((c = token[to]) !=' '))
-			{
-				normal.push_back(c);
-				++to;
-			}
+		to = from+1;
+		while (to!=length && ((c = token[to]) !='/'))
+		{
+		  vertex.push_back(c);
+		  ++to;
 		}
+		++to;
+		while (to!=length && ((c = token[to]) !='/'))
+		{
+		  texcoord.push_back(c);
+		  ++to;
+		}
+		++to;
+		while (to!=length && ((c = token[to]) !=' '))
+		{
+		  normal.push_back(c);
+		  ++to;
+		}
+	  }
 	}	// end of SplitVVTVNToken
 
 	/*!
@@ -965,7 +902,7 @@ public:
 		while (!stream.eof())
 		{
 			tokens.clear();
-			TokenizeNextLine(stream, tokens);
+			TokenizeNextLine(stream, tokens,0);
 
 			if (tokens.size() > 0)
 			{
@@ -1074,6 +1011,39 @@ public:
 		stream.close();
 
 		return true;
+	}
+
+    // A face polygon composed of more than three vertices is triangulated
+    // according to the following schema:
+    //                     v5
+    //                    /  \
+    //                   /    \
+    //                  /      \
+    //                 v1------v4
+    //                 |\      /
+    //                 | \    /
+    //                 |  \  /
+    //                v2---v3
+    //
+    // As shown above, the 5 vertices polygon (v1,v2,v3,v4,v5)
+    // has been split into the triangles (v1,v2,v3), (v1,v3,v4) e (v1,v4,v5).
+    // This way vertex v1 becomes the common vertex of all newly generated
+    // triangles, and this may lead to the creation of very thin triangles.
+    //
+    // This function is intended as a trivial fallback when glutessellator is not available.
+    // it assumes just ONE outline
+    static void InternalFanTessellator(const std::vector< std::vector<Point3f> > & outlines, std::vector<int> & indices)
+    {
+      indices.clear();
+      if(outlines.empty()) return;
+      const std::vector<Point3f> &points=outlines[0];
+
+	  for(int i=0;i<points.size()-2;++i)
+	  {
+		indices.push_back(0);
+		indices.push_back(i+1);
+		indices.push_back(i+2);
+	  }
 	}
 
 }; // end class
