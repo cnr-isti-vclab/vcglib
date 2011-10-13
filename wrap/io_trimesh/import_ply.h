@@ -23,6 +23,7 @@
 #ifndef __VCGLIB_IMPORTERPLY
 #define __VCGLIB_IMPORTERPLY
 
+#include <stddef.h>
 #include<wrap/callback.h>
 #include<wrap/ply/plylib.h>
 #include<wrap/io_trimesh/io_mask.h>
