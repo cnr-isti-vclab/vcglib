@@ -627,9 +627,9 @@ public:
 			size_t len = line.length();
 			char buf[3]="00";
 			Color4b cc(Color4b::Black);
-			for(int i=6;(i+7)<len;i+=8)
+			for(size_t i=6;(i+7)<len;i+=8)
 			{
-			  for(int j=1;j<4;j++)
+			  for(size_t j=1;j<4;j++)
 			  {
 				buf[0]=line[i+j*2+0];
 				buf[1]=line[i+j*2+1];
@@ -1012,33 +1012,34 @@ public:
 
 		return true;
 	}
-
-    // A face polygon composed of more than three vertices is triangulated
-    // according to the following schema:
-    //                     v5
-    //                    /  \
-    //                   /    \
-    //                  /      \
-    //                 v1------v4
-    //                 |\      /
-    //                 | \    /
-    //                 |  \  /
-    //                v2---v3
-    //
-    // As shown above, the 5 vertices polygon (v1,v2,v3,v4,v5)
-    // has been split into the triangles (v1,v2,v3), (v1,v3,v4) e (v1,v4,v5).
-    // This way vertex v1 becomes the common vertex of all newly generated
-    // triangles, and this may lead to the creation of very thin triangles.
-    //
-    // This function is intended as a trivial fallback when glutessellator is not available.
-    // it assumes just ONE outline
+ /*
+  *  A face polygon composed of more than three vertices is triangulated
+  *  according to the following schema:
+  *                      v5
+  *                     /  \
+  *                    /    \
+  *                   /      \
+  *                  v1------v4
+  *                  |\      /
+  *                  | \    /
+  *                  |  \  /
+  *                 v2---v3
+  *
+  *  As shown above, the 5 vertices polygon (v1,v2,v3,v4,v5)
+  *  has been split into the triangles (v1,v2,v3), (v1,v3,v4) e (v1,v4,v5).
+  *  This way vertex v1 becomes the common vertex of all newly generated
+  *  triangles, and this may lead to the creation of very thin triangles.
+  *
+  *  This function is intended as a trivial fallback when glutessellator is not available.
+  *  it assumes just ONE outline
+  */
     static void InternalFanTessellator(const std::vector< std::vector<Point3f> > & outlines, std::vector<int> & indices)
     {
       indices.clear();
       if(outlines.empty()) return;
       const std::vector<Point3f> &points=outlines[0];
 
-	  for(int i=0;i<points.size()-2;++i)
+	  for(size_t i=0;i<points.size()-2;++i)
 	  {
 		indices.push_back(0);
 		indices.push_back(i+1);
