@@ -49,7 +49,7 @@ class MyMesh : public tri::TriMesh< vector<MyVertex>, vector<MyFace > >{};
 class MyDelaunayFlip: public vcg::tri::TriEdgeFlip< MyMesh, MyDelaunayFlip > {
 public:
 	typedef  vcg::tri::TriEdgeFlip< MyMesh,  MyDelaunayFlip > TEF;
-	inline MyDelaunayFlip(  const TEF::PosType &p, int i) :TEF(p,i){}
+	inline MyDelaunayFlip(  const TEF::PosType &p, int i,BaseParameterClass *pp) :TEF(p,i,pp){}
 };
 
 bool callback(int percent, const char *str) {
@@ -96,7 +96,7 @@ int main(int argc,char ** argv){
 	int holeSize  = atoi(argv[2]);
 	if(algorithm < 0 && algorithm > 4)
 	{
-		printf("Error in algorithm's selection\n",algorithm);
+    printf("Error in algorithm's selection %i\n",algorithm);
 		exit(0);
 	}
 
@@ -128,6 +128,7 @@ int main(int argc,char ** argv){
 	}
 	AVG=sumA/numA;
 	
+  //tri::Hole<MyMesh> holeFiller;
 	switch(algorithm)
 	{
   case 1:			tri::Hole<MyMesh>::EarCuttingFill<tri::TrivialEar<MyMesh> >(m,holeSize,false);                	        break;
@@ -177,7 +178,8 @@ int main(int argc,char ** argv){
 			f->V(2)->ClearW();
 		}
 	}
-				vcg::LocalOptimization<MyMesh> Fs(m);
+	BaseParameterClass pp;
+				vcg::LocalOptimization<MyMesh> Fs(m,&pp);
 				Fs.SetTargetMetric(0.0f);
 				Fs.Init<MyDelaunayFlip >();
 				Fs.DoOptimization();
@@ -204,7 +206,7 @@ int main(int argc,char ** argv){
 		}
 
 		//info print 
-		printf("\r Raffino [%d] - > %d",i,vf.size());
+    printf("\r Refining [%d] - > %d",i,int(vf.size()));
 		i++;
 
 		FPP.clear();
@@ -238,14 +240,15 @@ int main(int argc,char ** argv){
 			added.push_back( &(*f2) );
 		}
 
-		vcg::LocalOptimization<MyMesh> FlippingSession(m);
+		BaseParameterClass pp;
+		vcg::LocalOptimization<MyMesh> FlippingSession(m,&pp);
 		FlippingSession.SetTargetMetric(0.0f);
 		FlippingSession.Init<MyDelaunayFlip >();
 		FlippingSession.DoOptimization();
 		
 	}while(!vf.empty());
 
-	vcg::LocalOptimization<MyMesh> Fiss(m);
+	vcg::LocalOptimization<MyMesh> Fiss(m,&pp);
 	Fiss.SetTargetMetric(0.0f);
 	Fiss.Init<MyDelaunayFlip >();
 	Fiss.DoOptimization();

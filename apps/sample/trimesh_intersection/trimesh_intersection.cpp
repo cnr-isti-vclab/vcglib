@@ -16,9 +16,9 @@ using namespace std;
 #include <vcg/complex/algorithms/intersection.h>
 #include <vcg/space/index/grid_static_ptr.h>
 //#include <vcg/simplex/edge/with/ae.h>
-#include <vcg/complex/edgemesh/base.h>
-#include <vcg/complex/edgemesh/allocate.h>
-#include <vcg/complex/edgemesh/update/bounding.h>
+//#include <vcg/complex/edgemesh/base.h>
+//#include <vcg/complex/edgemesh/allocate.h>
+//#include <vcg/complex/edgemesh/update/bounding.h>
 
 // VCG File Format Importer/Exporter
 #include <wrap/io_trimesh/import.h>
@@ -44,7 +44,7 @@ class MyVertex  : public Vertex< MyUsedTypes, vertex::Coord3f, vertex::BitFlags,
 class MyEdge    : public Edge< MyUsedTypes, edge::VertexRef, edge::EVAdj> {};
 class MyFace    : public Face  <MyUsedTypes, face::VertexRef,face::FFAdj, face::BitFlags, face::Normal3f> {};
 
-class MyEdgeMesh: public vcg::edg::EdgeMesh< vector<MyVertex>, vector<MyEdge> > {};
+class MyEdgeMesh: public tri::TriMesh< vector<MyVertex>, vector<MyEdge> > {};
 class MyMesh : public tri::TriMesh< vector<MyVertex>, vector<MyFace > >{};
 
 
@@ -96,23 +96,16 @@ int main(int argc,char ** argv)
 
 	vcg::Plane3<MyMesh::ScalarType> plane(distance, direction);
 
-	double avg_length;     // average length of the edges
 	MyEdgeMesh edge_mesh;  // returned EdgeMesh (i.e. the cross-section)
 
-	// Create a static grid (for fast indexing) and fill it
-	TriMeshGrid static_grid;
-	static_grid.Set(m.face.begin(), m.face.end());
-	std::vector<TriMeshGrid::Cell *> intersected_cells;
-
-	vcg::Intersection<MyMesh, MyEdgeMesh, MyMesh::ScalarType, TriMeshGrid>(plane, 
-		edge_mesh, avg_length, &static_grid, intersected_cells);
+	vcg::IntersectionPlaneMesh<MyMesh, MyEdgeMesh, MyMesh::ScalarType>(m, plane, edge_mesh);
 
 	// Compute bounding box
-	vcg::edg::UpdateBounding<MyEdgeMesh>::Box(edge_mesh);
+	vcg::tri::UpdateBounding<MyEdgeMesh>::Box(edge_mesh);
 
 	// export the cross-section
-  edg::io::SVGProperties pro;
-  if (edg::io::ExporterSVG<MyEdgeMesh>::Save(edge_mesh, "out.svg",pro))
+	tri::io::SVGProperties pro;
+	if (tri::io::ExporterSVG<MyEdgeMesh>::Save(edge_mesh, "out.svg",pro))
 		printf("    The cross-intersection has been successfully saved (OUT.SVG).\n");
 	else
 		printf("    The cross-intersection cannot be saved.\n");
