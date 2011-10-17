@@ -24,17 +24,18 @@
 #ifndef VCG_POISSON_SOLVER
 #define VCG_POISSON_SOLVER
 
+#define EIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET
+#include <eigenlib/Eigen/Sparse>
+#include <eigenlib/Eigen/src/Sparse/SparseMatrix.h>
+#include <eigenlib/Eigen/src/Sparse/DynamicSparseMatrix.h>
+#include <eigenlib/unsupported/Eigen/SparseExtra>
+
 #include <time.h>
-//#include <vcg/complex/algorithms/update/bounding.h>
 #include <vcg/complex/allocate.h>
 #include <vcg/complex/algorithms/clean.h>
 #include <vcg/complex/algorithms/update/flag.h>
+#include <vcg/complex/algorithms/update/bounding.h>
 
-#define EIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET
-#include <Sparse>
-#include <src/Sparse/SparseMatrix.h>
-#include <src/Sparse/DynamicSparseMatrix.h>
-#include <Eigen/SparseExtra>
 
 namespace vcg {
 	namespace tri{
@@ -44,10 +45,9 @@ class PoissonSolver
 
 	typedef typename MeshType::ScalarType ScalarType;
 	typedef typename MeshType::FaceType FaceType;
-	typedef typename MeshType::FaceType FaceType;
 	typedef typename MeshType::VertexType VertexType;
 	typedef typename MeshType::CoordType CoordType;
-	typedef typename MeshType::PerFaceAttributeHandle<CoordType> PerFaceAttributeHandle;
+	typedef typename MeshType:: template PerFaceAttributeHandle<CoordType> PerFaceCoordHandle;
 
 	///the mesh itself
 	MeshType &mesh;
@@ -77,18 +77,18 @@ class PoissonSolver
 	///size of the scalar field
 	ScalarType fieldScale;
 	///handle per direction field
-	PerFaceAttributeHandle Fh0,Fh1;
+	PerFaceCoordHandle Fh0,Fh1;
 
 	int VertexIndex(VertexType* v)
 	{
-		std::map<VertexType*,int>::iterator iteMap=VertexToInd.find(v);
+		typename std::map<VertexType*,int>::iterator iteMap=VertexToInd.find(v);
 		assert(iteMap!=VertexToInd.end());
 		return ((*iteMap).second);
 	}
 	
 	VertexType* IndexVertex(int index)
 	{
-		std::map<int,VertexType*>::iterator iteMap=IndToVertex.find(index);
+		typename std::map<int,VertexType*>::iterator iteMap=IndToVertex.find(index);
 		assert(iteMap!=IndToVertex.end());
 		return ((*iteMap).second);
 	}
@@ -113,7 +113,7 @@ class PoissonSolver
 	void FindFarestVert(VertexType* &v0,
 											VertexType* &v1)
 	{
-		vcg::tri::UpdateBounding<MeshType>::Box(mesh);
+		UpdateBounding<MeshType>::Box(mesh);
 		ScalarType d0=mesh.bbox.Diag();
 		ScalarType d1=d0;
 		v0=NULL;
@@ -307,7 +307,7 @@ class PoissonSolver
 		neg_t[2] = fNorm ^ (p[1] - p[0]);
    
 		CoordType K1,K2;
-		/*MyMesh::PerFaceAttributeHandle<ScalarType> Fh = vcg::tri::Allocator<MyMesh>::AddPerVertexAttribute<float>  (m,std::string("Irradiance"));
+		/*MyMesh::PerFaceCoordHandle<ScalarType> Fh = vcg::tri::Allocator<MyMesh>::AddPerVertexAttribute<float>  (m,std::string("Irradiance"));
 		bool CrossDir0 = vcg::tri::HasPerVertexAttribute(mesh,"CrossDir0");
 				bool CrossDir1 = vcg::tri::HasPerVertexAttribute(mesh,"CrossDir1");
 				assert(CrossDir0);
@@ -562,21 +562,21 @@ public:
 		if (NNmanifoldV!=0)return false;
 		int G=vcg::tri::Clean<MeshType>::MeshGenus(mesh);
 		int numholes=vcg::tri::Clean<MeshType>::CountHoles(mesh);
-		if (numholes==0)return false;
+		if (numholes!=1) return false;
 		return (G==0);
 	}
 
 	///set the border as fixed
 	void SetBorderAsFixed()
 	{
-		for (int i=0;i<mesh.vert.size();i++) 
+		for (size_t i=0;i<mesh.vert.size();i++)
 		{
 			VertexType* v=&mesh.vert[i];
 			if (v->IsD())continue;
 			if(v->IsB())to_fix.push_back(v);
 		}
 		std::sort(to_fix.begin(),to_fix.end());
-		std::vector<VertexType*>::iterator new_end=std::unique(to_fix.begin(),to_fix.end());
+		typename std::vector<VertexType*>::iterator new_end=std::unique(to_fix.begin(),to_fix.end());
 		int dist=distance(to_fix.begin(),new_end);
 		to_fix.resize(dist);
 	}
@@ -591,7 +591,7 @@ public:
 			if(v->IsS())to_fix.push_back(v);
 		}
 		std::sort(to_fix.begin(),to_fix.end());
-		std::vector<VertexType*>::iterator new_end=std::unique(to_fix.begin(),to_fix.end());
+		typename std::vector<VertexType*>::iterator new_end=std::unique(to_fix.begin(),to_fix.end());
 		int dist=distance(to_fix.begin(),new_end);
 		to_fix.resize(dist);
 	}
@@ -642,8 +642,8 @@ public:
 			bool CrossDir1 = vcg::tri::HasPerFaceAttribute(mesh,"CrossDir1");
 			assert(CrossDir0);
 			assert(CrossDir1);
-			Fh0= vcg::tri::Allocator<MeshType>::GetPerFaceAttribute<CoordType>(mesh,std::string("CrossDir0"));
-			Fh1= vcg::tri::Allocator<MeshType>::GetPerFaceAttribute<CoordType>(mesh,std::string("CrossDir1"));
+			Fh0= vcg::tri::Allocator<MeshType> :: template GetPerFaceAttribute<CoordType>(mesh,std::string("CrossDir0"));
+			Fh1= vcg::tri::Allocator<MeshType> :: template GetPerFaceAttribute<CoordType>(mesh,std::string("CrossDir1"));
 		}	
 		correct_fixed=_correct_fixed;
 		fieldScale=_fieldScale;
