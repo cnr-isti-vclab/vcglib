@@ -1009,7 +1009,7 @@ private:
 
 			For general polyhedra the <em>Euler Formula</em> is:
 
-			      V + F - E = 2 - 2G - B
+				  V - E + F = 2 - 2G - B
 
 			where V is the number of vertices, F is the number of faces, E is the
 			number of edges, G is the genus and B is the number of <em>boundary polygons</em>.
@@ -1017,10 +1017,15 @@ private:
 			The above formula is valid for a mesh with one single connected component. 
 			By considering multiple connected components the formula becomes:
 
-			      V + F - E = 2C - 2Gs - B
+				  V - E + F = 2C - 2Gs - B   ->   2Gs = - ( V-E+F +B -2C)
 
 			where C is the number of connected components and Gs is the sum of
-			the genus of all connected components.*/
+			the genus of all connected components.
+
+			Note that in the case of a mesh with boundaries the intuitive meaning of Genus is less intuitive that it could seem.
+			A closed sphere, a sphere with one hole (e.g. a disk) and a sphere with two holes (e.g. a tube) all of them have Genus == 0
+
+			*/
 
 			static int MeshGenus(int nvert,int nedges,int nfaces, int numholes, int numcomponents)
 			{
