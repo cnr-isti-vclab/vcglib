@@ -102,8 +102,8 @@ class PoissonSolver
 	void SetValA(int Xindex,int Yindex,ScalarType val)
 	{
 		//int size=(int)S.nrows();
-		assert(0 <= Xindex && Xindex < total_size);
-		assert(0 <= Yindex && Yindex < total_size);
+		assert(0 <= Xindex && Xindex < int(total_size));
+		assert(0 <= Yindex && Yindex < int(total_size));
 		//S.A().addEntryReal(Xindex,Yindex,val);
 		//if (Xindex>=Yindex)
 		A.coeffRef(Xindex,Yindex) +=val;
@@ -208,8 +208,8 @@ class PoissonSolver
 				///add for both u and v
 				int Xindex=index[i][j][0]*2;
 				int Yindex=index[i][j][1]*2;
-				assert(Xindex<(n_vert_vars*2));
-				assert(Yindex<(n_vert_vars*2));
+				assert(Xindex<int(n_vert_vars*2));
+				assert(Yindex<int(n_vert_vars*2));
 				SetValA(Xindex,Yindex,val[i][j]);
 				SetValA(Xindex+1,Yindex+1,val[i][j]);
 			}
@@ -350,7 +350,7 @@ class PoissonSolver
 		ScalarType penalization=1000;
 		int offset_row=n_vert_vars;
 		assert(to_fix.size()>0);
-		for (int i=0;i<to_fix.size();i++)
+		for (size_t i=0;i<to_fix.size();i++)
 		{
 			///take a vertex
 			VertexType *v=to_fix[i];
@@ -486,7 +486,7 @@ class PoissonSolver
 	
 	void InitIndex()
 	{
-		for (int i=0;i<mesh.vert.size();i++)
+		for (size_t i=0;i<mesh.vert.size();i++)
 			if (!mesh.vert[i].IsD())
 				AddVertexIndex(&mesh.vert[i],i);
 	}
@@ -495,19 +495,19 @@ class PoissonSolver
 	///if normalize==true then set the 
 	///coordinates between 0 and 1
 	void MapCoords(bool normalize=false,
-				ScalarType fieldScale=1.0)
+				ScalarType /*fieldScale*/=1.0)
 	{
 		///clear Visited Flag
 		if (correct_fixed)
 			vcg::tri::UpdateFlags<MeshType>::VertexClearV(mesh);
 		//set fixed to V
-		for (int i=0;i<to_fix.size();i++)
+		for (size_t i=0;i<to_fix.size();i++)
 			to_fix[i]->SetV();
 
 		vcg::Box2<ScalarType> bbox;
 		if (normalize)
 		{
-			for (int i=0;i<n_vert_vars;i++)
+			for (size_t i=0;i<n_vert_vars;i++)
 			{
 				ScalarType U=x[i*2];
 				ScalarType V=x[(i*2)+1];
@@ -516,7 +516,7 @@ class PoissonSolver
 		}
 
 		//for each vertex
-		for (int i=0;i<n_vert_vars;i++)
+		for (size_t i=0;i<n_vert_vars;i++)
 		{
 			VertexType* v=IndexVertex(i);
 			//take U and V
@@ -538,7 +538,7 @@ class PoissonSolver
 		}
 
 		///then copy to faces
-		for (int i=0;i<mesh.face.size();i++)
+		for (size_t i=0;i<mesh.face.size();i++)
 		{
 			FaceType *f=&mesh.face[i];
 			for (int j=0;j<3;j++)
@@ -606,7 +606,7 @@ public:
 		///then fix only one vertex
 		if (use_direction_field)
 		{
-			for (int i=0;i<mesh.vert.size();i++)
+			for (size_t i=0;i<mesh.vert.size();i++)
 				if (!mesh.vert[i].IsD())
 				{
 					mesh.vert[i].T().P()=vcg::Point2<ScalarType>(0,0);
@@ -704,7 +704,7 @@ public:
 			printf("\n SOLVING \n");
 		}
 		
-		int n_vars=(n_vert_vars)*2;
+		//int n_vars=(n_vert_vars)*2;
 		//int integer_constr_size=(n_transition_vars+n_fixed_vars+n_bary_transition_vars)*2;
 		//X=std::vector< double >(n_vars+n_fixed_vars*2);
 		bool done=Solve();
