@@ -127,10 +127,13 @@ namespace vcg {
 
 			///return a specific direction given an integer 0..3
 			///considering the reference direction of the cross field
-			static CoordType CrossVector(const FaceType &f,const int &index)
+			static CoordType CrossVector(MeshType &mesh,
+										 const FaceType &f,
+										 const int &index)
 			{
+				assert((index>=0)&&(index<4));
 				CoordType axis[4];
-				CrossVector(f,axis);
+				CrossVector(mesh,f,axis);
 				return axis[index];
 			}
 
@@ -177,7 +180,6 @@ namespace vcg {
 				const typename CoordType &BaseNorm,
 				const typename CoordType &BaseDir)
 			{
-				typedef  TangentFieldGen< FaceType >::CrossField  MyCross;
 				typedef typename FaceType::CoordType CoordType;
 				typedef typename FaceType::ScalarType ScalarType;
 
@@ -192,10 +194,11 @@ namespace vcg {
 					Tdir.Normalize();
 					sum+=(Tdir*Weight[i]);
 				}
+				sum.Normalize();
 				return sum;
 			}
 
-			///interpolate cross field with barycentric coordinates
+			/*///interpolate cross field with barycentric coordinates
 			template <class FaceType>
 			typename FaceType::CoordType InterpolateCrossField(const typename FaceType::CoordType &t0,
 				const typename FaceType::CoordType &t1,
@@ -206,9 +209,20 @@ namespace vcg {
 				CoordType trans1=K_PI(t1,t0,n);
 				CoordType sum = t0*weight + MyCross::V( t1, t0, n ) * (1.0-weight);
 				return sum;
+			}*/
+			
+			
+			///return the difference of two cross field, values between [0,0.5]
+			template <class FaceType>
+			typename FaceType::ScalarType DifferenceCrossField(const typename FaceType::CoordType &t0,
+				const typename FaceType::CoordType &t1,
+				const typename FaceType::CoordType &n)
+			{
+				CoordType trans0=t0;
+				CoordType trans1=K_PI(t1,t0,n);
+				ScalarType diff = 1-fabs(trans0*trans1);
+				return diff;
 			}
-
-
 
 			///compute the mismatch between 2 faces
 			int MissMatch(const FaceType &f0,const FaceType &f1)
@@ -229,7 +243,7 @@ namespace vcg {
 					k=(-(3*i))%4;
 				return k;
 			}
-
+			
 			///this function return true if a 
 			///given vertex is a singular vertex by 
 			///moving around i n a roder wai and accounting for 
@@ -274,11 +288,34 @@ namespace vcg {
 				}while (!complete_turn);
 				return((missmatch%4)!=0);
 			}
- 
-			void CopyFromCurvature()
+			
+			/*void GetWeights(TriMeshType *mesh,
+					const std::vector<FaceType*> &faces,
+					std::vector<ScalarType> &weights)
 			{
+				weights.clear();
+				MeshType::PerFaceAttributeHandle<ScalarType> Fh0 FHRVal=
+				vcg::tri::Allocator<MeshType>::GetPerFaceAttribute<ScalarType>(mesh,std::string("CrossVal"));
+
+				for (int i=0;i<faces.size();i++)
+					weights.push_back(FHRVal[faces[i]]);
 			}
 
+			void GetTangDir(TriMeshType *mesh,
+						 const std::vector<FaceType*> &faces,
+						 std::vector<CoordType> &dir0,
+						 std::vector<CoordType> &dir1)
+			{
+				dir0.clear();
+				dir1.clear();
+				MeshType::PerFaceAttributeHandle<CoordType> FHDir0=vcg::tri::Allocator<MeshType>::GetPerFaceAttribute<CoordType>(test_mesh,std::string("CrossDir0"));
+				MeshType::PerFaceAttributeHandle<CoordType> FHDir1=vcg::tri::Allocator<MeshType>::GetPerFaceAttribute<CoordType>(test_mesh,std::string("CrossDir1"));
+				for (int i=0;i<faces.size();i++)
+				{
+					dir0.push_back(FHDir0[faces[i]]);
+					dir1.push_back(FHDir1[faces[i]]);
+				}
+			}*/
 
 		};///end class
 	} //End Namespace Tri
