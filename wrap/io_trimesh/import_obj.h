@@ -414,7 +414,7 @@ public:
                             if(QuadFlag) indexVVect[pi]++; // NOTE THAT THE STUPID QOBJ FORMAT IS ZERO INDEXED!!!!
                             GoodObjIndex(indexVVect[pi],numVertices);
                             GoodObjIndex(indexTVect[pi],oi.numTexCoords);
-                            polygonVect[0][pi]=m.vert[indexVVect[pi]].cP();
+							polygonVect[0][pi].Import(m.vert[indexVVect[pi]].cP());
                         }
 
                         if(vertexesPerFace<5)
