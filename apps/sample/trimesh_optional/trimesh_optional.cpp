@@ -44,7 +44,7 @@ cmof.face.EnableFFAdjacency();
 
 
   printf("Normal of face 0 is %f %f %f\n\n",cm.face[0].N()[0],cm.face[0].N()[1],cm.face[0].N()[2]);
-  int t0=0,t1=0,t2=0,t3=0;
+  int t0=0,t1=0;
   while(t1-t0<200)
   {
     t0=clock();
@@ -69,7 +69,7 @@ cmof.face.EnableFFAdjacency();
         {
           float q =vi->Q();
           float r =vi->R();
-          int ii = vi - cmof.vert.begin();
+//          int ii = vcg::tri::Index(cmof, *vi);
           assert(q==r);
         }
       }
@@ -82,7 +82,7 @@ cmof.face.EnableFFAdjacency();
         {
           float q =vi->Q();
           float r =vi->R();
-          int ii = vi - cmof.vert.begin();
+//          int ii = vcg::tri::Index(cmof, *vi);
           assert(q==r);
         }
       }

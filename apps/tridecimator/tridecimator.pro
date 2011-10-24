@@ -1,6 +1,5 @@
 
 TARGET = tridecimator
-LIBPATH += 
 DEPENDPATH += ../..
 INCLUDEPATH += . ../..
 CONFIG += console stl debug_and_release

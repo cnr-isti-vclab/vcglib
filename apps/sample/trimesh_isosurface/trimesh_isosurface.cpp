@@ -28,9 +28,6 @@ struct MyUsedTypes : public UsedTypes<	Use<MyVertex>		::AsVertexType,
 class MyVertex     : public Vertex< MyUsedTypes, vertex::Coord3f>{};
 class MyFace       : public Face< MyUsedTypes, face::VertexRef, face::BitFlags> {};
 
-//class MyVertex  : public vcg::Vertex< ScalarType, MyEdge, MyFace > {};
-//class MyFace		: public vcg::Face< MyVertex, MyEdge, MyFace> {};
-
 class MyMesh		: public vcg::tri::TriMesh< std::vector< MyVertex>, std::vector< MyFace > > {};
 
 
