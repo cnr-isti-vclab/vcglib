@@ -1034,7 +1034,7 @@ public:
 
 	template <class ATTR_TYPE> 
 	static
-	typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>
+	typename MeshType::template PerEdgeAttributeHandle<ATTR_TYPE>
 	 AddPerEdgeAttribute( MeshType & m){
 		 return AddPerEdgeAttribute<ATTR_TYPE>(m,std::string(""));
 	 }

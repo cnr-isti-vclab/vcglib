@@ -601,16 +601,16 @@ public:
 		_fep[1]=0;
 		_fep[2]=0;
 	}
-  typename T::FacePointer       &FEp(const int j)        { assert(j>=0 && j<3);  return _fep[j]; }
-  typename T::FacePointer const  FEp(const int j) const  { assert(j>=0 && j<3);  return _fep[j]; }
-  typename T::FacePointer const cFEp(const int j) const  { assert(j>=0 && j<3);  return _fep[j]; }
+  typename T::EdgePointer       &FEp(const int j)        { assert(j>=0 && j<3);  return _fep[j]; }
+  typename T::EdgePointer const  FEp(const int j) const  { assert(j>=0 && j<3);  return _fep[j]; }
+  typename T::EdgePointer const cFEp(const int j) const  { assert(j>=0 && j<3);  return _fep[j]; }
   char        &FEi(const int j)       { return _fei[j]; }
   const char &cFEi(const int j) const { return _fei[j]; }
 
-  typename T::FacePointer        &FEp1( const int j )       { return FEp((j+1)%3);}
-	typename T::FacePointer        &FEp2( const int j )       { return FEp((j+2)%3);}
-	typename T::FacePointer  const  FEp1( const int j ) const { return FEp((j+1)%3);}
-	typename T::FacePointer  const  FEp2( const int j ) const { return FEp((j+2)%3);}
+  typename T::EdgePointer        &FEp1( const int j )       { return FEp((j+1)%3);}
+	typename T::EdgePointer        &FEp2( const int j )       { return FEp((j+2)%3);}
+	typename T::EdgePointer  const  FEp1( const int j ) const { return FEp((j+1)%3);}
+	typename T::EdgePointer  const  FEp2( const int j ) const { return FEp((j+2)%3);}
 
 	template <class RightF>
 	void ImportData(const RightF & rightF){T::ImportData(rightF);}
@@ -620,7 +620,7 @@ public:
   static void Name(std::vector<std::string> & name){name.push_back(std::string("FEAdj"));T::Name(name);}
 
 private:
-  typename T::FacePointer _fep[3] ;    
+  typename T::EdgePointer _fep[3] ;    
   char _fei[3] ;    
 };
 

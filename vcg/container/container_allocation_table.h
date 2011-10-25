@@ -333,7 +333,8 @@ struct Env{
 						TypeNameBounds().insert(std::pair<std::string,CATBaseBase*>(n,res));
 						return res;
 				}
-				else (CAT<TYPE_1,TYPE_2> *) (*ti).second;
+				else 
+					return (CAT<TYPE_1,TYPE_2> *) (*ti).second;
 		}
 };
 
