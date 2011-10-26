@@ -60,8 +60,11 @@ class Cache: public Provider<Token> {
       }
       this->heap.clear();
     }
-
-    assert(s_curr == 0);
+    if(!s_curr == 0) {
+      qDebug() << "Cache size after flush is not ZERO!";
+      s_curr = 0;
+    }
+    //assert(s_curr == 0);
 
     {
       for(unsigned int i = 0; i < tokens.size(); i++) {

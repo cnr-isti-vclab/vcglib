@@ -103,6 +103,7 @@ class Controller {
   }
 
   void finish() {
+    flush();
     stop();
   }
 
