@@ -487,6 +487,8 @@ void Shot<S, RotationType>::ApplyRigidTransformation(const Matrix44<S> & M)
   // roto-translate the viewpoint
   Extrinsics.tra = M * Extrinsics.tra;
   Matrix44<S> newRot = rotM * M.transpose();
+  newRot[3][0] =  newRot[3][1] =  newRot[3][2] = 0.0;
+
   Extrinsics.SetRot(newRot);
 }
 
