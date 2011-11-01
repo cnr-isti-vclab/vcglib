@@ -562,7 +562,7 @@ public:
 		if (NNmanifoldV!=0)return false;
 		int G=vcg::tri::Clean<MeshType>::MeshGenus(mesh);
 		int numholes=vcg::tri::Clean<MeshType>::CountHoles(mesh);
-		if (numholes!=1) return false;
+		if (numholes==0) return false;
 		return (G==0);
 	}
 
