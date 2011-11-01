@@ -109,6 +109,18 @@ namespace vcg {
 					alpha=0;
 				return alpha;
 			}
+			
+			///return the direction of the cross field in 3D
+			///given a first direction
+			static void CrossVector(const CoordType &dir0,
+									const CoordType &norm,
+									CoordType axis[4])
+			{
+				axis[0]=dir0;
+				axis[1]=norm^axis[0];
+				axis[2]=-axis[0];
+				axis[3]=-axis[1];
+			}
 
 			///return the direction of the cross field in 3D
 			static void CrossVector(MeshType &mesh,
@@ -119,10 +131,8 @@ namespace vcg {
 				assert(CrossDir0);
 				MeshType::PerFaceAttributeHandle<CoordType> Fh0= 
 					vcg::tri::Allocator<MeshType>::GetPerFaceAttribute<CoordType>(mesh,std::string("CrossDir0"));
-				axis[0]=Fh0[&f];
-				axis[1]=f.cN()^axis[0];
-				axis[2]=-axis[0];
-				axis[3]=-axis[1];
+				CoordType dir0=Fh0[&f];
+				CrossVector(dir0,f.cN(),axis);
 			}
 
 			///return a specific direction given an integer 0..3
