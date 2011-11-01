@@ -389,8 +389,16 @@ public:
 	ScalarType &K2(){ return _curv.k2;}
 	const ScalarType &cK1() const {return _curv.k1;}
 	const ScalarType &cK2()const  {return _curv.k2;}
+	template < class LeftV>
+	void ImportData(const LeftV  & left ) {
+	  if(LeftV::HasCurvatureDir()) {
+		PD1() = left.cPD1(); PD2() = left.cPD2();
+		K1()  = left.cK1();  K2()  = left.cK2();
+	  }
+	  TT::ImportData( left);
+	}
 
-  static bool HasCurvatureDir()   { return true; }
+	static bool HasCurvatureDir()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDir"));TT::Name(name);}
 
 private:
