@@ -809,6 +809,9 @@ static void VertexCoordViewDepth(MeshType &m,
 //  The proposed
 // approach is a two step method where  in the first step the face normals
 // are adjusted and then, in a second phase, the vertex positions are updated.
+// Ref:
+// A. Belyaev and Y. Ohtake, A Comparison of Mesh Smoothing Methods, Proc. Israel-Korea Bi-Nat"l Conf. Geometric Modeling and Computer Graphics, pp. 83-87, 2003.
+
 /****************************************************************************************************************/
 /****************************************************************************************************************/
 // Classi di info
