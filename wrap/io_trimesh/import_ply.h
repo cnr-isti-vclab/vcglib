@@ -63,6 +63,7 @@ typedef typename OpenMeshType::VertexType VertexType;
 typedef typename OpenMeshType::FaceType FaceType;
 typedef typename OpenMeshType::VertexIterator VertexIterator;
 typedef typename OpenMeshType::FaceIterator FaceIterator;
+  typedef typename OpenMeshType::EdgeIterator EdgeIterator;
 
 //template <class T> int PlyType () {	assert(0);  return 0;}
 
@@ -94,6 +95,11 @@ struct LoadPly_TristripAux
 	unsigned char data[MAX_USER_DATA];  
 };
 
+struct LoadPly_EdgeAux
+{
+	int v1,v2;
+	unsigned char data[MAX_USER_DATA];
+};
 
 // Yet another auxiliary data structure for loading some strange ply files 
 // the original stanford range data...
@@ -228,6 +234,16 @@ static const  PropDescriptor &TristripDesc(int i)
 	return qf[i];
 }
 
+static const  PropDescriptor &EdgeDesc(int i)
+{
+	static const 	PropDescriptor qf[2]=
+	{
+		{"edge","vertex1", ply::T_INT,  ply::T_INT,  offsetof(LoadPly_EdgeAux,v1),		  0,0,0,0,0  ,0},
+		{"edge","vertex2", ply::T_INT,  ply::T_INT,  offsetof(LoadPly_EdgeAux,v2),		  0,0,0,0,0  ,0},
+	};
+	return qf[i];
+}
+
 // Descriptor for the Stanford Data Repository Range Maps.
 // In practice a grid with some invalid elements. Coords are saved only for good elements
 static const  PropDescriptor &RangeDesc(int i)  
@@ -279,7 +295,7 @@ static const char *ErrorMsg(int error)
     ply_error_msg[ply::E_NOERROR				]="No errors";
 	  ply_error_msg[ply::E_CANTOPEN				]="Can't open file";
     ply_error_msg[ply::E_NOTHEADER ]="Header not found";
-	  ply_error_msg[ply::E_UNESPECTEDEOF	]="Eof in header";
+      ply_error_msg[ply::E_UNESPECTEDEOF	]="Eof in header";
 	  ply_error_msg[ply::E_NOFORMAT				]="Format not found";
 	  ply_error_msg[ply::E_SYNTAX				]="Syntax error on header";
 	  ply_error_msg[ply::E_PROPOUTOFELEMENT]="Property without element";
@@ -339,6 +355,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
   assert(filename!=0);
 	std::vector<VertexPointer> index;
 	LoadPly_FaceAux fa;
+	LoadPly_EdgeAux ea;
 	LoadPly_TristripAux tsa;
 	LoadPly_VertAux<ScalarType> va;
   
@@ -416,9 +433,11 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 									
 			}
 		// Descrittori facoltativi dei flags
-	
+  if(pf.AddToRead(EdgeDesc(0) )!= -1 && pf.AddToRead(EdgeDesc(1)) != -1 )
+                  pi.mask |= Mask::IOM_EDGEINDEX;
+
   if(VertexType::HasFlags() && pf.AddToRead(VertDesc(3))!=-1 ) 
-			pi.mask |= Mask::IOM_VERTFLAGS;
+            pi.mask |= Mask::IOM_VERTFLAGS;
 
 	 if( VertexType::HasNormal() )
 	 {
@@ -677,7 +696,25 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 			for(j=0,vi=m.vert.begin();j<n;++j,++vi)
 				index[j] = &*vi;
 		}
-		else if( !strcmp( pf.ElemName(i),"face") && (n>0) )/************************************************************/
+		else if( !strcmp( pf.ElemName(i),"edge") && (n>0) )/******************** EDGE READING *******************************/
+		{
+		  assert( pi.mask & Mask::IOM_EDGEINDEX );
+		  EdgeIterator ei=Allocator<OpenMeshType>::AddEdges(m,n);
+		  pf.SetCurElement(i);
+		  for(int j=0;j<n;++j)
+		  {
+			  if(pi.cb && (j%1000)==0) pi.cb(50+j*50/n,"Edge Loading");
+			  if( pf.Read(&ea)==-1 )
+			  {
+				  pi.status = PlyInfo::E_SHORTFILE;
+				  return pi.status;
+			  }
+			  (*ei).V(0) = index[ ea.v1 ];
+			  (*ei).V(1) = index[ ea.v2 ];
+			  ++ei;
+		  }
+		}
+		else if( !strcmp( pf.ElemName(i),"face") && (n>0) )/******************** FACE READING ****************************************/
 		{
 			int j;
 			
