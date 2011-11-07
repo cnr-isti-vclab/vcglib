@@ -713,7 +713,7 @@ namespace vcg {
       // the actual copying of the data.
       for(unsigned int i=0;i<m.edge.size();++i)
       {
-        if(pu.remap[i]<size_t(m.vn))  // uninitialized entries in the remap vector has max_int value;
+        if(pu.remap[i]<size_t(m.en))  // uninitialized entries in the remap vector has max_int value;
                 {
                     assert(!m.edge[i].IsD());
                     m.edge[ pu.remap [i] ].ImportData(m.edge[i]);
