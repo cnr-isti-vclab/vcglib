@@ -117,7 +117,8 @@ private:
 			typedef typename MeshType::VertexPointer  VertexPointer;
 			typedef typename MeshType::VertexIterator VertexIterator;
 			typedef typename MeshType::ConstVertexIterator ConstVertexIterator;
-      typedef typename MeshType::EdgeIterator   EdgeIterator;
+		  typedef typename MeshType::EdgeIterator   EdgeIterator;
+		  typedef typename MeshType::EdgePointer  EdgePointer;
 			typedef	typename MeshType::ScalarType			ScalarType;
 			typedef typename MeshType::FaceType       FaceType;
 			typedef typename MeshType::FacePointer    FacePointer;
@@ -207,10 +208,37 @@ private:
                 (*ei).V(k) = &*mp[ (*ei).V(k) ];
               }
         if(RemoveDegenerateFlag) RemoveDegenerateFace(m);
-        if(RemoveDegenerateFlag) RemoveDegenerateEdge(m);
+        if(RemoveDegenerateFlag && m.en>0) {
+          RemoveDegenerateEdge(m);
+          RemoveDuplicateEdge(m);
+        }
 				return deleted;
       }
 
+			class SortedPair
+				  {
+				  public:
+				   SortedPair() {}
+					   SortedPair(unsigned int v0, unsigned int v1, EdgePointer _fp)
+					  {
+						  v[0]=v0;v[1]=v1;
+						  fp=_fp;
+						  if(v[0]>v[1]) std::swap(v[0],v[1]);
+					  }
+					  bool operator < (const SortedPair &p) const
+					  {
+						  return (v[1]!=p.v[1])?(v[1]<p.v[1]):
+									 (v[0]<p.v[0]);				}
+
+					  bool operator == (const SortedPair &s) const
+					  {
+					   if( (v[0]==s.v[0]) && (v[1]==s.v[1]) ) return true;
+					   return false;
+					  }
+
+					  unsigned int v[2];
+					  EdgePointer fp;
+				  };
       class SortedTriple
 			{ 
 			public:
@@ -269,6 +297,36 @@ private:
 					}
 				}
 				return total;
+			}
+
+			/** This function removes all duplicate faces of the mesh by looking only at their vertex reference.
+			So it should be called after unification of vertices.
+			Note that it does not update any topology relation that could be affected by this like the VT or TT relation.
+			the reason this function is usually performed BEFORE building any topology information.
+			*/
+			static int RemoveDuplicateEdge( MeshType & m)    // V1.0
+			{
+			  assert(m.fn == 0 && m.en >0); // just to be sure we are using an edge mesh...
+			  std::vector<SortedPair> eVec;
+			  for(EdgeIterator ei=m.edge.begin();ei!=m.edge.end();++ei)
+				if(!(*ei).IsD())
+				{
+				  eVec.push_back(SortedPair(	tri::Index(m,(*ei).V(0)), tri::Index(m,(*ei).V(1)), &*ei));
+				}
+			  assert (size_t(m.en) == eVec.size());
+			  //for(int i=0;i<fvec.size();++i) qDebug("fvec[%i] = (%i %i %i)(%i)",i,fvec[i].v[0],fvec[i].v[1],fvec[i].v[2],tri::Index(m,fvec[i].fp));
+			  std::sort(eVec.begin(),eVec.end());
+			  int total=0;
+			  for(size_t i=0;i<eVec.size()-1;++i)
+			  {
+				if(eVec[i]==eVec[i+1])
+				{
+				  total++;
+				  tri::Allocator<MeshType>::DeleteEdge(m, *(eVec[i].fp) );
+				  //qDebug("deleting face %i (pos in fvec %i)",tri::Index(m,fvec[i].fp) ,i);
+				}
+			  }
+			  return total;
 			}
 			/** This function removes that are not referenced by any face. The function updates the vn counter.
 			@param m The mesh
@@ -717,7 +775,41 @@ private:
         return true;
       }
 
+      /**
+       * Count the number of non manifold edges in a polylinemesh, e.g. the edges where there are more than 2 incident faces.
+       *
+       */
+      static int CountNonManifoldEdgeEE( MeshType & m, bool SelectFlag=false)
+      {
+        assert(m.fn == 0 && m.en >0); // just to be sure we are using an edge mesh...
+        assert(tri::HasEEAdjacency(m));
+        tri::UpdateTopology<MeshType>::EdgeEdge(m);
 
+        if(SelectFlag) UpdateSelection<MeshType>::ClearVertex(m);
+
+        int nonManifoldCnt=0;
+        SimpleTempData<typename MeshType::VertContainer, int > TD(m.vert,0);
+
+        // First Loop, just count how many faces are incident on a vertex and store it in the TemporaryData Counter.
+        EdgeIterator ei;
+        for (ei = m.edge.begin(); ei != m.edge.end(); ++ei)	if (!ei->IsD())
+        {
+          TD[(*ei).V(0)]++;
+          TD[(*ei).V(1)]++;
+        }
+
+        tri::UpdateFlags<MeshType>::VertexClearV(m);
+        // Second Loop, Check that each vertex have been seen 1 or 2 times.
+        for (VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)	if (!vi->IsD())
+        {
+          if( TD[vi] >2 )
+          {
+            if(SelectFlag) (*vi).SetS();
+            nonManifoldCnt++;
+          }
+        }
+        return nonManifoldCnt;
+      }
 
       /**
        * Count the number of non manifold edges in a mesh, e.g. the edges where there are more than 2 incident faces.
