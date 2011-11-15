@@ -20,48 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.9  2007/04/04 23:22:29  pietroni
-setted to const the parameter passed to function Projection
-
-Revision 1.8  2005/09/26 19:49:30  m_di_benedetto
-Method Set(off, dir) now correctly normalizes direction and offset if template parameter NORM is set.
-
-Revision 1.7  2005/03/18 16:34:42  fiorin
-minor changes to comply gcc compiler
-
-Revision 1.6  2004/10/09 13:48:02  ponchio
-Fixed bug in init.
-
-Revision 1.5  2004/05/10 13:15:54  cignoni
-missing ending newline
-
-Revision 1.4  2004/05/05 08:20:47  cignoni
-syntax error in set and better comment
-
-Revision 1.3  2004/04/28 16:36:55  turini
-Changed :
-in Distance(plane, point) :
-return plane.Direction() * point - plane.Offset;
-in
-return plane.Direction() * point - plane.Offset();
-
-Revision 1.2  2004/04/28 11:19:52  turini
-Changed :
-in Init(p0, norm)   _dist = p0 * _dir;   in   _offset = p0 * _dir;
-Changed :
-in Init(p0, p1, p2)   _offset = p0 * _dist;   in   _offset = p0 * _dir;
-
-Revision 1.1  2004/03/31 22:19:24  ponchio
-Untested first draft.
-
-
-****************************************************************************/
-
-
 
 #ifndef VCG_PLANE3_H
 #define VCG_PLANE3_H
@@ -73,9 +31,16 @@ namespace vcg {
 /** \addtogroup space */
 /*@{*/
 /** 
-Templated class for 2D planes in 3D spaces.
+  Templated class for 2D planes in 3D spaces.
   This is the class for infinite planes in 3D space. A Plane is stored just as a Point3 and a scalar:
-	a direction (not necessarily normalized), and a distance from the origin
+    * a direction (not necessarily normalized),
+    * an offset from the origin
+
+  Just to be clear, given a point P on a plane it always holds:
+
+  plane.Direction().dot(P) == plane.Offset()
+
+
 	@param T (template parameter) Specifies the type of scalar used to represent coords.
 	@param NORM: if on, the direction is always Normalized
 */
@@ -167,6 +132,7 @@ public:
   /// Calculates the plane passing through a point and the normal (Rename this method
   inline void Init(const PointType &p0, const PointType &norm) {
 	  _dir = norm;
+	  if(NORM) Normalize();
 	  _offset = p0.dot(_dir);
   }
 };	// end class Plane3
@@ -175,25 +141,15 @@ typedef Plane3<float>  Plane3f;
 typedef Plane3<double> Plane3d;
 
 ///Distance plane - point and vv. (Move these function to somewhere else)
-template<class T> T Distance(const Plane3<T> & plane, const Point3<T> & point)
+template<class T> T DistancePlanePoint(const Plane3<T,true> & plane, const Point3<T> & point)
 {
 	return plane.Direction().dot(point) - plane.Offset();
 }
 
-template<class T> T SquaredDistance(const Plane3<T> & plane, const Point3<T> & point)
-{
-	const T d = Distance(plane, point);
-	return (d * d);
-}
 
-template<class T> T Distance(const Point3<T> & point, const Plane3<T> & plane)
+template<class T> T DistancePointPlane(const Point3<T> & point, const Plane3<T,true> & plane)
 {
-	return Distance(plane, point);
-}
-
-template<class T> T SquaredDistance(const Point3<T> & point, const Plane3<T> & plane)
-{
-	return SquaredDistance(plane, point);
+	return DistancePlanePoint(plane, point);
 }
 
 } // end namespace
