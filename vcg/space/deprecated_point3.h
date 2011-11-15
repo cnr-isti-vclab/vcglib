@@ -355,8 +355,8 @@ public:
 	/**
 	 * Convert from polar coordinates to cartesian coordinates.
 	 *
-	 * Theta is the azimuth angle and ranges between [0, 2PI) degrees.
-	 * Phi is the elevation angle (not the polar angle) and ranges between [-90, 90] degrees.
+	 * Theta is the azimuth angle and ranges between [0, 2PI) radians.
+	 * Phi is the elevation angle (not the polar angle) and ranges between [-PI/2, PI/2] radians.
 	 *
 	 * \note Note that instead of the classical polar angle, which ranges between 
 	 *       0 and PI degrees, we opt for the elevation angle to obtain a more 
