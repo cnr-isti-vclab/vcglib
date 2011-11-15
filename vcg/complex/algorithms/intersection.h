@@ -93,6 +93,7 @@ bool IntersectionPlaneGrid( GridType & grid, Plane3<ScalarType> plane, std::vect
 /*@}*/
 
 
+
 /** \addtogroup complex */
 /*@{*/
 /** 
@@ -108,27 +109,79 @@ bool IntersectionPlaneMesh(TriMeshType & m,
 									Plane3<ScalarType>  pl,
 									EdgeMeshType & em)
 {
-	typename EdgeMeshType::VertexIterator vi;
-	typename TriMeshType::FaceIterator fi;
+  typename EdgeMeshType::VertexIterator vi;
+  typename TriMeshType::FaceIterator fi;
   em.Clear();
-	Segment3<ScalarType> seg;
-	for(fi=m.face.begin();fi!=m.face.end();++fi) 
-		if(!(*fi).IsD())
-		{
-			if(vcg::IntersectionPlaneTriangle(pl,*fi,seg))// intersezione piano triangolo
-							{
-                vcg::tri::Allocator<EdgeMeshType>::AddEdges(em,1);
-                vi = vcg::tri::Allocator<EdgeMeshType>::AddVertices(em,2);
-								(*vi).P() = seg.P0();
-                em.edge.back().V(0) = &(*vi);
-								vi++;
-								(*vi).P() = seg.P1();
-                em.edge.back().V(1) = &(*vi);
-							}
-		 }//end for
-	
-	return true;
+  Segment3<ScalarType> seg;
+  for(fi=m.face.begin();fi!=m.face.end();++fi)
+    if(!(*fi).IsD())
+    {
+      if(vcg::IntersectionPlaneTriangle(pl,*fi,seg))// intersezione piano triangolo
+      {
+        vcg::tri::Allocator<EdgeMeshType>::AddEdges(em,1);
+        vi = vcg::tri::Allocator<EdgeMeshType>::AddVertices(em,2);
+        (*vi).P() = seg.P0();
+        em.edge.back().V(0) = &(*vi);
+        vi++;
+        (*vi).P() = seg.P1();
+        em.edge.back().V(1) = &(*vi);
+      }
+    }//end for
+
+  return true;
 }
+
+/** \addtogroup complex */
+/*@{*/
+/**
+	Basic Function computing the intersection between  a trimesh and a plane. It returns an EdgeMesh without needing anything else.
+		Note: This version always returns a segment for each triangle of the mesh which intersects with the plane. In other
+		words there are 2*n vertices where n is the number of segments fo the mesh. You can run vcg::edge:Unify to unify
+		the vertices closer that a given value epsilon. Note that, due to subtraction error during triangle plane intersection,
+		it is not safe to put epsilon to 0.
+// TODO si dovrebbe considerare la topologia face-face della trimesh per derivare quella della edge mesh..
+*/
+template < typename  TriMeshType, typename EdgeMeshType, class ScalarType >
+bool IntersectionPlaneMeshQuality(TriMeshType & m,
+									Plane3<ScalarType>  pl,
+									EdgeMeshType & em)
+{
+  std::vector<Point3f> ptVec;
+  tri::UpdateQuality<TriMeshType>::VertexFromPlane(m,pl);
+  for(size_t i=0;i<m.face.size();i++)
+    if(!m.face[i].IsD())
+    {
+      ptVec.clear();
+      for(int j=0;j<3;++j)
+      {
+       if((m.face[i].V0(j)->Q() * m.face[i].V1(j)->Q())<0)
+       {
+         const Point3f &p0 = m.face[i].V0(j)->cP();
+         const Point3f &p1 = m.face[i].V1(j)->cP();
+//         printf("Intersection ( %3.2f %3.2f %3.2f )-( %3.2f %3.2f %3.2f )\n",p0[0],p0[1],p0[2],p1[0],p1[1],p1[2]);
+         Point3f pp;
+         Segment3f seg(p0,p1);
+         IntersectionPlaneSegment(pl,seg,pp);
+         ptVec.push_back(pp);
+       }
+       if(m.face[i].V(j)->Q()==0)  ptVec.push_back(m.face[i].V(j)->cP());
+      }
+      if(ptVec.size()>=2)
+      {
+        typename EdgeMeshType::VertexIterator vi;
+        vcg::tri::Allocator<EdgeMeshType>::AddEdges(em,1);
+        vi = vcg::tri::Allocator<EdgeMeshType>::AddVertices(em,2);
+        (*vi).P() = ptVec[0];
+        em.edge.back().V(0) = &(*vi);
+        vi++;
+        (*vi).P() = ptVec[1];
+        em.edge.back().V(1) = &(*vi);
+      }
+    }
+
+  return true;
+}
+
 
 /** \addtogroup complex */
 /*@{*/
