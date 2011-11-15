@@ -88,14 +88,14 @@ static  bool PackOccupancy(const std::vector<Box2x > & rectVec,  /// the set of 
 
     Point2x scaleFactor2(containerSize[0]/maxSize[0],containerSize[1]/maxSize[1]);
 
-    SCALAR_TYPE unitScaleFactor = std::min(scaleFactor2[0],scaleFactor2[1]);
+//    SCALAR_TYPE unitScaleFactor = std::min(scaleFactor2[0],scaleFactor2[1]);
 
     SCALAR_TYPE scaleFactor = (sqrt(areaContainer)/sqrt(areaSum))*sqrt(occupancyRatio);
 
-    printf("unitScaleFactor %6.3f\n",unitScaleFactor);
-    printf("scaleFactor %6.3f\n",scaleFactor);
-    printf("areaContainer %6.3f\n",areaContainer);
-    printf("areaSum %6.3f\n",areaSum);
+//    printf("unitScaleFactor %6.3f\n",unitScaleFactor);
+//    printf("scaleFactor %6.3f\n",scaleFactor);
+//    printf("areaContainer %6.3f\n",areaContainer);
+//    printf("areaSum %6.3f\n",areaSum);
     std::vector<vcg::Point2i> sizes(rectVec.size());
     for (size_t i=0;i<rectVec.size();++i)
     {
@@ -119,7 +119,7 @@ static  bool PackOccupancy(const std::vector<Box2x > & rectVec,  /// the set of 
 //             rectVec[i].min[0],rectVec[i].min[1],  rectVec[i].max[0],rectVec[i].max[1],
 //             sizes[i][0],sizes[i][1],  posiz[i][0],posiz[i][1]);
     }
-    printf("globalSize (%6i %6i)\n",global_size[0],global_size[1]);
+//    printf("globalSize (%6i %6i)\n",global_size[0],global_size[1]);
     coveredContainer = Point2x::Construct(global_size);
     return true;
   }

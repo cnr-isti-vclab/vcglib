@@ -97,7 +97,7 @@ static  bool PackAsEqualSquares(const std::vector< std::vector<Point2x> > &polyV
   trVec.resize(polyVec.size());
   Box2f bbMax;
   std::vector<Box2x> bbVec;
-  for(int i=0;i<polyVec.size();++i)
+  for(size_t i=0;i<polyVec.size();++i)
   {
     bbVec.push_back(getPolyBB(polyVec[i]));
     bbMax.Add(bbVec.back());
@@ -131,7 +131,7 @@ static bool PackAsAxisAlignedRect(const std::vector< std::vector<Point2x> > &pol
   trVec.clear();
   trVec.resize(polyVec.size());
   std::vector<Box2x> bbVec;
-  for(int i=0;i<polyVec.size();++i)
+  for(size_t i=0;i<polyVec.size();++i)
   {
     assert(polyVec[i].size()>0);
     bbVec.push_back(getPolyBB(polyVec[i]));
@@ -148,7 +148,7 @@ static bool PackAsObjectOrientedRect(const std::vector< std::vector<Point2x> > &
   trVec.resize(polyVec.size());
   std::vector<Box2x> bbVec;
   std::vector<float> rotVec;
-  for(int i=0;i<polyVec.size();++i)
+  for(size_t i=0;i<polyVec.size();++i)
   {
     float rot;
     bbVec.push_back(getPolyOOBB(polyVec[i],rot));
@@ -157,7 +157,7 @@ static bool PackAsObjectOrientedRect(const std::vector< std::vector<Point2x> > &
 
   bool ret= RectPacker<float>::Pack(bbVec,containerSizeX,trVec,coveredContainer);
 
-  for(int i=0;i<polyVec.size();++i)
+  for(size_t i=0;i<polyVec.size();++i)
   {
     trVec[i].rotRad=rotVec[i];
   }
