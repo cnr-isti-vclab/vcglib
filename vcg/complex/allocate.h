@@ -989,14 +989,18 @@ public:
 			assert(0);
 	}
 
+	// Generic DeleteAttribute.
+	// It must not crash if you try to delete a non existing attribute,
+	// because you do not have a way of asking for a handle of an attribute for which you do not know the type.
 	static
-		void	DeletePerVertexAttribute( MeshType & m,  std::string name){
+		bool DeletePerVertexAttribute( MeshType & m,  std::string name){
 		AttrIterator i;
 		PointerToAttribute h1; h1._name = name;
 		i = m.vert_attr.find(h1);
-		assert(i!=m.vert_attr.end());
+		if(i==m.vert_attr.end()) return false;
 		delete ((SimpleTempDataBase*)(*i)._handle);
 		m.vert_attr.erase(i);
+		return true;
 	}
 
 
@@ -1077,14 +1081,18 @@ public:
 			assert(0);
 	}
 
+	// Generic DeleteAttribute.
+	// It must not crash if you try to delete a non existing attribute,
+	// because you do not have a way of asking for a handle of an attribute for which you do not know the type.
 	static
-		void	DeletePerEdgeAttribute( MeshType & m,  std::string name){
+		bool DeletePerEdgeAttribute( MeshType & m,  std::string name){
 		AttrIterator i;
 		PointerToAttribute h1; h1._name = name;
 		i = m.edge_attr.find(h1);
-		assert(i!=m.edge_attr.end());
-                delete ((SimpleTempDataBase*)(*i)._handle);
+		if(i==m.edge_attr.end()) return false;
+		delete ((SimpleTempDataBase*)(*i)._handle);
 		m.edge_attr.erase(i);
+		return true;
 	}
 
 	/// Per Face Attributes
@@ -1176,14 +1184,18 @@ public:
 			assert(0);
 	}
 
+	// Generic DeleteAttribute.
+	// It must not crash if you try to delete a non existing attribute,
+	// because you do not have a way of asking for a handle of an attribute for which you do not know the type.
 	static
-		void	DeletePerFaceAttribute( MeshType & m,  std::string name){
+		bool	 DeletePerFaceAttribute( MeshType & m,  std::string name){
 		AttrIterator i;
 		PointerToAttribute h1; h1._name = name;
 		i = m.face_attr.find(h1);
-		assert(i!=m.face_attr.end());
-                delete ((SimpleTempDataBase*)(*i)._handle);
+		if(i==m.face_attr.end()) return false;
+		delete ((SimpleTempDataBase*)(*i)._handle);
 		m.face_attr.erase(i);
+		return true;
 	}
 
 	/// Per Mesh Attributes
