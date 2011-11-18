@@ -120,15 +120,15 @@ public:
 
 	enum Illuminant
 	{
-		ILLUMINANT_A = 0,	
-		ILLUMINANT_B = 1,	
-		ILLUMINANT_C = 2,
-		ILLUMINANT_D50 = 3,	
-		ILLUMINANT_D55 = 4,	
-		ILLUMINANT_D65 = 5,	
-		ILLUMINANT_D75 = 6,
-		ILLUMINANT_E = 7,
-		ILLUMINANT_INVALID = 8
+		VCG_ILLUMINANT_A = 0,	
+		VCG_ILLUMINANT_B = 1,	
+		VCG_ILLUMINANT_C = 2,
+		VCG_ILLUMINANT_D50 = 3,	
+		VCG_ILLUMINANT_D55 = 4,	
+		VCG_ILLUMINANT_D65 = 5,	
+		VCG_ILLUMINANT_D75 = 6,
+		VCG_ILLUMINANT_E = 7,
+		VCG_ILLUMINANT_INVALID = 8
 	};
 
 	enum RGBSpaces
@@ -1388,68 +1388,68 @@ public:
 		
 		if (rgb_space == ADOBE_RGB)
 		{
-			return ILLUMINANT_D65;
+			return VCG_ILLUMINANT_D65;
 		}
 		else if (rgb_space == APPLE_RGB)
 		{
-			return ILLUMINANT_D65;
+			return VCG_ILLUMINANT_D65;
 		}
 		else if (rgb_space == BEST_RGB)
 		{
-			return ILLUMINANT_D50;
+			return VCG_ILLUMINANT_D50;
 		}
 		else if (rgb_space == BETA_RGB)
 		{
-			return ILLUMINANT_D50;
+			return VCG_ILLUMINANT_D50;
 		}
 		else if (rgb_space == BRUCE_RGB)
 		{
-			return ILLUMINANT_D65;
+			return VCG_ILLUMINANT_D65;
 		}
 		else if (rgb_space == CIE_RGB)
 		{
-			return ILLUMINANT_E;
+			return VCG_ILLUMINANT_E;
 		}
 		else if (rgb_space == DON_RGB4)
 		{
-			return ILLUMINANT_D50;
+			return VCG_ILLUMINANT_D50;
 		}
 		else if (rgb_space == ECI_RGB)
 		{
-			return ILLUMINANT_D50;
+			return VCG_ILLUMINANT_D50;
 		}
 		else if (rgb_space == EKTA_SPACE)
 		{
-			return ILLUMINANT_D50;
+			return VCG_ILLUMINANT_D50;
 		}
 		else if (rgb_space == NTSC_RGB)
 		{
-			return ILLUMINANT_C;
+			return VCG_ILLUMINANT_C;
 		}
 		else if (rgb_space == PAL_RGB)
 		{
-			return ILLUMINANT_D65;
+			return VCG_ILLUMINANT_D65;
 		}
 		else if (rgb_space == PROPHOTO)
 		{
-			return ILLUMINANT_D50;
+			return VCG_ILLUMINANT_D50;
 		}
 		else if (rgb_space == SMPTE_C)
 		{
-			return ILLUMINANT_D65;
+			return VCG_ILLUMINANT_D65;
 		}
 		else if (rgb_space == SRGB)
 		{
-			return ILLUMINANT_D65;
+			return VCG_ILLUMINANT_D65;
 		}
 		else if (rgb_space == WIDE_GAMUT)
 		{
-			return ILLUMINANT_D50;
+			return VCG_ILLUMINANT_D50;
 		}
 		else
 		{
 			assert(false);
-			return ILLUMINANT_INVALID;
+			return VCG_ILLUMINANT_INVALID;
 		}
 	}
 
