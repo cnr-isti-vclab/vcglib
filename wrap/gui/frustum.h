@@ -142,7 +142,7 @@ template <class T> T Frustum<T>::range(Point3<T> &point, T radius, T &closest, T
 }
 
 template <class T> T Frustum<T>::Distance(Point3<T> &point, int plane) {    
-  return vcg::Distance(planes[plane], point);  
+  return vcg::DistancePlanePoint(planes[plane], point);
 }
 
 template <class T> void Frustum<T>::GetView() {
